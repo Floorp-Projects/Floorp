@@ -61,4 +61,6 @@ interface nsIImapMockChannel : nsIChannel
     void Close();
 
 	[noscript] void setSecurityInfo(in nsISupports securityInfo);
+
+    void setURI(in nsIURI uri);
 };

@@ -51,6 +51,7 @@
 
 #include "nsIIOService.h"
 #include "nsIURL.h"
+#include "nsNetCID.h"
 
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);

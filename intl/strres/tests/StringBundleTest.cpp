@@ -33,6 +33,7 @@
 #include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
+#include "nsNetCID.h"
 
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"

@@ -3665,7 +3665,7 @@ NS_IMETHODIMP nsImapMailFolder::OnStartRequest(nsIRequest *request, nsISupports 
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsImapMailFolder::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult aStatus, const PRUnichar *aMsg)
+NS_IMETHODIMP nsImapMailFolder::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult aStatus)
 {
   return NS_OK;
 }

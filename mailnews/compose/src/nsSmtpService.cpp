@@ -25,6 +25,7 @@
 #include "nsXPIDLString.h"
 #include "nsIPref.h"
 #include "nsIIOService.h"
+#include "nsNetCID.h"
 
 #include "nsSmtpService.h"
 #include "nsIMsgMailSession.h"
@@ -323,12 +324,6 @@ NS_IMETHODIMP nsMailtoChannel::GetURI(nsIURI* *aURI)
   return NS_OK; 
 }
  
-NS_IMETHODIMP nsMailtoChannel::SetURI(nsIURI* aURI)
-{
-  m_url = aURI;
-  return NS_OK; 
-}
- 
 NS_IMETHODIMP nsMailtoChannel::Open(nsIInputStream **_retval)
 {
   NS_NOTREACHED("Open");
@@ -340,13 +335,13 @@ NS_IMETHODIMP nsMailtoChannel::AsyncOpen(nsIStreamListener *listener, nsISupport
   return listener->OnStartRequest(this, ctxt);
 }
 
-NS_IMETHODIMP nsMailtoChannel::GetLoadAttributes(nsLoadFlags *aLoadAttributes)
+NS_IMETHODIMP nsMailtoChannel::GetLoadFlags(nsLoadFlags *aLoadFlags)
 {
-  *aLoadAttributes = 0;
+  *aLoadFlags = 0;
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMailtoChannel::SetLoadAttributes(nsLoadFlags aLoadAttributes)
+NS_IMETHODIMP nsMailtoChannel::SetLoadFlags(nsLoadFlags aLoadFlags)
 {
 	return NS_OK;
 }

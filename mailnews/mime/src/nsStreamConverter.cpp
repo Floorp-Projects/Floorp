@@ -527,7 +527,7 @@ nsStreamConverter::~nsStreamConverter()
 }
 
 
-NS_IMPL_ISUPPORTS4(nsStreamConverter, nsIStreamListener, nsIStreamObserver, nsIStreamConverter, nsIMimeStreamConverter)
+NS_IMPL_ISUPPORTS4(nsStreamConverter, nsIStreamListener, nsIRequestObserver, nsIStreamConverter, nsIMimeStreamConverter)
 
 ///////////////////////////////////////////////////////////////
 // nsStreamConverter definitions....
@@ -885,7 +885,7 @@ char *output = "\
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// Methods for nsIStreamObserver 
+// Methods for nsIRequestObserver 
 /////////////////////////////////////////////////////////////////////////////
 //
 // Notify the observer that the URL has started to load.  This method is
@@ -928,7 +928,7 @@ nsStreamConverter::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 // called once when the networking library has finished processing the 
 //
 nsresult 
-nsStreamConverter::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg)
+nsStreamConverter::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult status)
 {
 #ifdef DEBUG_rhp
     printf("nsStreamConverter::OnStopRequest()\n");
@@ -1007,7 +1007,7 @@ nsStreamConverter::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresul
 
   // forward on top request to any listeners
   if (mOutListener)
-    mOutListener->OnStopRequest(request, ctxt, status, errorMsg);
+    mOutListener->OnStopRequest(request, ctxt, status);
     
 
   mAlreadyKnowOutputType = PR_FALSE;

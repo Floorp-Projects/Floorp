@@ -86,7 +86,7 @@ protected:
 class nsHTTPServerListener : public nsHTTPResponseListener
 {
 public:
-    NS_DECL_NSISTREAMOBSERVER
+    NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
 
     nsHTTPServerListener(nsHTTPChannel *aConnection,
@@ -142,7 +142,7 @@ protected:
 class nsHTTPCacheListener : public nsHTTPResponseListener
 {
 public:
-    NS_DECL_NSISTREAMOBSERVER
+    NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
 
     nsHTTPCacheListener(nsHTTPChannel *aChannel,
@@ -165,7 +165,7 @@ class nsHTTPFinalListener : public nsIStreamListener
 {
 public:
     NS_DECL_ISUPPORTS
-    NS_DECL_NSISTREAMOBSERVER
+    NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
 
     nsHTTPFinalListener(nsHTTPChannel* aChannel, 

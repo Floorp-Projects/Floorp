@@ -26,7 +26,7 @@
 
 #include "nscore.h"
 #include "nsCOMPtr.h"
-#include "nsIStreamObserver.h"
+#include "nsIRequestObserver.h"
 #include "nsIInputStream.h"
 #include "nsIPipe.h"
 #include "nsIURL.h"
@@ -159,7 +159,7 @@ protected:
 #define REQUEST_RESTART_NORMAL  0
 #define REQUEST_RESTART_SSL     1
 
-class nsHTTPPipelinedRequest : public nsIStreamObserver
+class nsHTTPPipelinedRequest : public nsIRequestObserver
 {
 
 public:
@@ -167,7 +167,7 @@ public:
     nsHTTPPipelinedRequest (nsHTTPHandler* i_Handler, const char *host, PRInt32 port, PRUint32 capabilities);
 
     NS_DECL_ISUPPORTS
-    NS_DECL_NSISTREAMOBSERVER
+    NS_DECL_NSIREQUESTOBSERVER
 
     nsresult    SetTransport (nsITransport * aTransport);
     nsresult    GetTransport (nsITransport **aTransport);

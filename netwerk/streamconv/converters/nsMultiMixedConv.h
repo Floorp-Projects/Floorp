@@ -80,14 +80,14 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSISTREAMCONVERTER
     NS_DECL_NSISTREAMLISTENER
-    NS_DECL_NSISTREAMOBSERVER
+    NS_DECL_NSIREQUESTOBSERVER
 
     nsMultiMixedConv();
     virtual ~nsMultiMixedConv();
 
 protected:
     nsresult SendStart(nsIChannel *aChannel);
-    nsresult SendStop(nsresult aStatus, const PRUnichar *aStatusMsg);
+    nsresult SendStop(nsresult aStatus);
     nsresult SendData(char *aBuffer, PRUint32 aLen);
     nsresult ParseHeaders(nsIChannel *aChannel, char *&aPtr,
                           PRUint32 &aLen, PRBool *_retval);

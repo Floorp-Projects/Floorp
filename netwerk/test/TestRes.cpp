@@ -29,6 +29,7 @@
 #include "nsIEventQueueService.h"
 #include "nsIURI.h"
 #include "nsCRT.h"
+#include "nsNetCID.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
@@ -145,7 +146,7 @@ public:
     }
     
     NS_IMETHOD OnStopRequest(nsIRequest *request, nsISupports *ctxt, 
-                             nsresult aStatus, const PRUnichar* aStatusArg) {
+                             nsresult aStatus) {
         nsresult rv;
         nsCOMPtr<nsIURI> uri;
         nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
@@ -181,7 +182,7 @@ public:
     }
 };
 
-NS_IMPL_ISUPPORTS2(Listener, nsIStreamListener, nsIStreamObserver)
+NS_IMPL_ISUPPORTS2(Listener, nsIStreamListener, nsIRequestObserver)
 
 nsresult
 TestAsyncRead(const char* url)

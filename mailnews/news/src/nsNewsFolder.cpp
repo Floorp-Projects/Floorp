@@ -66,6 +66,7 @@
 
 #include "nsIWalletService.h"
 #include "nsIURL.h"
+#include "nsNetCID.h"
 #include "nsINntpUrl.h"
 #include "nsNewsSummarySpec.h"
 

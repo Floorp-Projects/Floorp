@@ -50,8 +50,8 @@ public:
   // nsIStreamListener methods
   NS_DECL_NSISTREAMLISTENER
 
-  // nsIStreamObserver methods
-  NS_DECL_NSISTREAMOBSERVER
+  // nsIRequestObserver methods
+  NS_DECL_NSIREQUESTOBSERVER
 
   ////////////////////////////////////////////////////////////////////////////
   // nsStreamConverter specific methods:

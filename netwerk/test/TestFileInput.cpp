@@ -141,7 +141,7 @@ public:
     }
 
     NS_IMETHOD OnStopRequest(nsIRequest *request, nsISupports* context,
-                             nsresult aStatus, const PRUnichar* aStatusArg) {
+                             nsresult aStatus) {
         nsresult rv;
         PR_EnterMonitor(mMonitor);
         PRIntervalTime endTime = PR_IntervalNow();
@@ -242,7 +242,7 @@ Simulated_nsFileTransport_Run(nsReader* reader, const char* path)
   done:
     NS_IF_RELEASE(bufStr);
 
-    rv = reader->OnStopRequest(nsnull, nsnull, rv, nsnull);
+    rv = reader->OnStopRequest(nsnull, nsnull, rv);
     return rv;
 }
 

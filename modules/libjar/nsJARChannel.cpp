@@ -61,7 +61,7 @@ PRLogModuleInfo* gJarProtocolLog = nsnull;
 #define NS_DEFAULT_JAR_BUFFER_MAX_SIZE          (256*1024)
 
 nsJARChannel::nsJARChannel()
-    : mLoadAttributes(LOAD_NORMAL),
+    : mLoadFlags(LOAD_NORMAL),
       mContentType(nsnull),
       mContentLength(-1),
       mJAREntry(nsnull),
@@ -95,7 +95,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS7(nsJARChannel,
                               nsIJARChannel,
                               nsIChannel,
                               nsIRequest,
-                              nsIStreamObserver,
+                              nsIRequestObserver,
                               nsIStreamListener,
                               nsIStreamIO,
                               nsIDownloadObserver)
@@ -235,14 +235,6 @@ nsJARChannel::GetURI(nsIURI* *aURI)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsJARChannel::SetURI(nsIURI* aURI)
-{
-    nsresult rv;
-    mURI = do_QueryInterface(aURI, &rv);
-    return rv;
-}
-
 nsresult
 nsJARChannel::OpenJARElement()
 {
@@ -284,21 +276,6 @@ nsJARChannel::AsyncOpen(nsIStreamListener* listener, nsISupports* ctxt)
     mUserListener = listener;
 
     if (mLoadGroup) {
-        if (mUserListener) {
-            nsCOMPtr<nsILoadGroupListenerFactory> factory;
-            //
-            // Create a load group "proxy" listener...
-            //
-            rv = mLoadGroup->GetGroupListenerFactory(getter_AddRefs(factory));
-            if (factory) {
-                nsIStreamListener *newListener;
-                rv = factory->CreateLoadGroupListener(mUserListener, &newListener);
-                if (NS_SUCCEEDED(rv)) {
-                    mUserListener = newListener;
-                    NS_RELEASE(newListener);
-                }
-            }
-        }
         rv = mLoadGroup->AddRequest(this, nsnull);
         if (NS_FAILED(rv)) return rv;
     }
@@ -331,7 +308,7 @@ nsJARChannel::EnsureJARFileAvailable()
 
     rv = NS_NewDownloader(getter_AddRefs(mDownloader),
                           mJARBaseURI, this, nsnull, mSynchronousRead, mLoadGroup, mCallbacks, 
-                          mLoadAttributes);
+                          mLoadFlags);
 
     // if DownloadComplete() was called early, need to release the reference.
     if (mSynchronousRead && mSynchronousInputStream)
@@ -339,7 +316,7 @@ nsJARChannel::EnsureJARFileAvailable()
 
   error:
     if (NS_FAILED(rv) && mLoadGroup) {
-        nsresult rv2 = mLoadGroup->RemoveRequest(this, nsnull, NS_OK, nsnull);
+        nsresult rv2 = mLoadGroup->RemoveRequest(this, nsnull, NS_OK);
         NS_ASSERTION(NS_SUCCEEDED(rv2), "RemoveChannel failed");
     }
     return rv;
@@ -374,23 +351,24 @@ nsJARChannel::AsyncReadJARElement()
            ("nsJarProtocol: AsyncRead jar entry %s", (const char*)jarURLStr));
 #endif
 
-    rv = jarTransport->AsyncRead(this, nsnull, 0, -1, 0, getter_AddRefs(mJarExtractionTransport));
+    rv = jarTransport->AsyncRead(this, nsnull, 0, PRUint32(-1), 0,
+                                 getter_AddRefs(mJarExtractionTransport));
     mJarExtractionTransport = 0;
     jarTransport = 0;
     return rv;
 }
 
 NS_IMETHODIMP
-nsJARChannel::GetLoadAttributes(PRUint32* aLoadFlags)
+nsJARChannel::GetLoadFlags(PRUint32* aLoadFlags)
 {
-    *aLoadFlags = mLoadAttributes;
+    *aLoadFlags = mLoadFlags;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsJARChannel::SetLoadAttributes(PRUint32 aLoadFlags)
+nsJARChannel::SetLoadFlags(PRUint32 aLoadFlags)
 {
-    mLoadAttributes = aLoadFlags;
+    mLoadFlags = aLoadFlags;
     return NS_OK;
 }
 
@@ -578,7 +556,7 @@ nsJARChannel::OnDownloadComplete(nsIDownloader* aDownloader, nsISupports* aClosu
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsIStreamObserver methods:
+// nsIRequestObserver methods:
 
 NS_IMETHODIMP
 nsJARChannel::OnStartRequest(nsIRequest* jarExtractionTransport,
@@ -589,7 +567,7 @@ nsJARChannel::OnStartRequest(nsIRequest* jarExtractionTransport,
 
 NS_IMETHODIMP
 nsJARChannel::OnStopRequest(nsIRequest* jarExtractionTransport, nsISupports* context, 
-                            nsresult aStatus, const PRUnichar* aStatusArg)
+                            nsresult aStatus)
 {
     nsresult rv;
 #ifdef PR_LOGGING
@@ -603,11 +581,11 @@ nsJARChannel::OnStopRequest(nsIRequest* jarExtractionTransport, nsISupports* con
     }
 #endif
 
-    rv = mUserListener->OnStopRequest(this, mUserContext, aStatus, aStatusArg);
+    rv = mUserListener->OnStopRequest(this, mUserContext, aStatus);
     NS_ASSERTION(NS_SUCCEEDED(rv), "OnStopRequest failed");
 
     if (mLoadGroup)
-        mLoadGroup->RemoveRequest(this, context, aStatus, aStatusArg);
+        mLoadGroup->RemoveRequest(this, context, aStatus);
 
     mUserListener = nsnull;
     mUserContext = nsnull;

@@ -18,9 +18,9 @@
 
 /*
  *  nsXmlRpcClient XPCOM component
- *  Version: $Revision: 1.15 $
+ *  Version: $Revision: 1.16 $
  *
- *  $Id: nsXmlRpcClient.js,v 1.15 2001/02/21 20:36:32 dougt%netscape.com Exp $
+ *  $Id: nsXmlRpcClient.js,v 1.16 2001/04/10 05:59:28 darin%netscape.com Exp $
  */
 
 /*
@@ -467,7 +467,7 @@ nsXmlRpcClient.prototype = {
         if (!iid.equals(Components.interfaces.nsISupports) &&
             !iid.equals(XMLRPCCLIENT_IID) &&
             !iid.equals(Components.interfaces.nsIXmlRpcClientListener) &&
-            !iid.equals(Components.interfaces.nsIStreamObserver) &&
+            !iid.equals(Components.interfaces.nsIRequestObserver) &&
             !iid.equals(Components.interfaces.nsIStreamListener))
             throw Components.results.NS_ERROR_NO_INTERFACE;
         return this;

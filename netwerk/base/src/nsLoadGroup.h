@@ -30,6 +30,7 @@
 #include "nsCOMPtr.h"
 #include "nsWeakPtr.h"
 #include "nsWeakReference.h"
+#include "nsIInterfaceRequestor.h"
 
 class  nsISupportsArray;
 
@@ -59,20 +60,21 @@ protected:
     virtual ~nsLoadGroup();
     nsresult Init();
 
-    nsresult MergeLoadAttributes(nsIRequest *aRequest, nsLoadFlags& flags);
+    nsresult MergeLoadFlags(nsIRequest *aRequest, nsLoadFlags& flags);
 
 protected:
-    PRUint32                    mDefaultLoadAttributes;
-    PRUint32                    mForegroundCount;
+    PRUint32                        mForegroundCount;
+    PRUint32                        mLoadFlags;
 
-    nsCOMPtr<nsIRequest>        mDefaultLoadRequest;
-    nsISupportsArray*           mRequests;
+    nsCOMPtr<nsILoadGroup>          mLoadGroup; // load groups can contain load groups
+    nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
 
-    nsWeakPtr                   mObserver;
-    // nsCOMPtr<nsIStreamObserver> mObserver;
+    nsCOMPtr<nsIRequest>            mDefaultLoadRequest;
+    nsISupportsArray*               mRequests;
+
+    nsWeakPtr                       mObserver;
     
-    nsWeakPtr                   mGroupListenerFactory;
-    nsresult                    mStatus;
+    nsresult                        mStatus;
 };
 
 #endif // nsLoadGroup_h__

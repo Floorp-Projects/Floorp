@@ -17,9 +17,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Original Author: Gagan Saksena <gagan@netscape.com>
- *
  * Contributor(s): 
+ *   Gagan Saksena <gagan@netscape.com> (original author)
  */
 
 #include "nsIURI.idl"
@@ -144,18 +143,3 @@ interface nsIStandardURL : nsISupports
               in string initialSpec,
               in nsIURI initialBaseURI);
 };
-
-%{C++
-
-#define NS_STANDARDURL_CID                           \
-{ /* de9472d0-8034-11d3-9399-00104ba0fd40 */         \
-    0xde9472d0,                                      \
-    0x8034,                                          \
-    0x11d3,                                          \
-    {0x93, 0x99, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
-}
-
-%}
-
-////////////////////////////////////////////////////////////////////////////////
-

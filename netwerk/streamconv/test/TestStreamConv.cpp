@@ -96,11 +96,11 @@ public:
         return NS_OK;
     }
 
-    // nsIStreamObserver methods
+    // nsIRequestObserver methods
     NS_IMETHOD OnStartRequest(nsIRequest* request, nsISupports *ctxt) { return NS_OK; }
 
     NS_IMETHOD OnStopRequest(nsIRequest* request, nsISupports *ctxt, 
-                             nsresult aStatus, const PRUnichar* aStatusArg) { return NS_OK; }
+                             nsresult aStatus) { return NS_OK; }
 };
 
 NS_IMPL_ISUPPORTS1(EndListener, nsIStreamListener);
@@ -249,7 +249,7 @@ main(int argc, char* argv[])
     if (NS_FAILED(rv)) return rv;    
 
     // Finish the request.
-    rv = converterListener->OnStopRequest(request, nsnull, rv, nsnull);
+    rv = converterListener->OnStopRequest(request, nsnull, rv);
     if (NS_FAILED(rv)) return rv;
 
     NS_RELEASE(converterListener);

@@ -1155,7 +1155,7 @@ NS_IMETHODIMP nsImapUrl::RemoveChannel(nsresult status)
 		if (loadGroup)
 		{
             nsCOMPtr<nsIRequest> request = do_QueryInterface(m_mockChannel);
-            loadGroup->RemoveRequest(request, nsnull, status, nsnull);
+            loadGroup->RemoveRequest(request, nsnull, status);
 		}
     // break deadly embrace between mock channel and url
     SetMockChannel(nsnull);

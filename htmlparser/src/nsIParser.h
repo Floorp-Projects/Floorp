@@ -54,7 +54,7 @@
 { 0x41421c60, 0x310a, 0x11d4, { 0x81, 0x6f, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } };
 
 class nsIContentSink;
-class nsIStreamObserver;
+class nsIRequestObserver;
 class nsIParserFilter;
 class nsString;
 class nsIURI;
@@ -234,7 +234,7 @@ class nsIParser : public nsISupports {
 
     virtual PRBool    IsParserEnabled() =0;
     
-    virtual nsresult  Parse(nsIURI* aURL,nsIStreamObserver* aListener = nsnull,PRBool aEnableVerify=PR_FALSE, void* aKey=0,nsDTDMode aMode=eDTDMode_autodetect) = 0;
+    virtual nsresult  Parse(nsIURI* aURL,nsIRequestObserver* aListener = nsnull,PRBool aEnableVerify=PR_FALSE, void* aKey=0,nsDTDMode aMode=eDTDMode_autodetect) = 0;
     virtual nsresult	Parse(nsIInputStream& aStream, const nsString& aMimeType,PRBool aEnableVerify=PR_FALSE, void* aKey=0,nsDTDMode aMode=eDTDMode_autodetect) = 0;
     virtual nsresult  Parse(const nsAReadableString& aSourceBuffer,void* aKey,const nsString& aContentType,PRBool aEnableVerify,PRBool aLastCall,nsDTDMode aMode=eDTDMode_autodetect) = 0;
     

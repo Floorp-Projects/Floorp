@@ -667,7 +667,7 @@ class nsNntpCacheStreamListener : public nsIStreamListener
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSISTREAMOBSERVER
+  NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
 
   nsNntpCacheStreamListener ();
@@ -685,7 +685,7 @@ NS_IMPL_RELEASE(nsNntpCacheStreamListener);
 
 NS_INTERFACE_MAP_BEGIN(nsNntpCacheStreamListener)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStreamListener)
-   NS_INTERFACE_MAP_ENTRY(nsIStreamObserver)
+   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
    NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
 NS_INTERFACE_MAP_END
 
@@ -723,14 +723,14 @@ nsNntpCacheStreamListener::OnStartRequest(nsIRequest *request, nsISupports * aCt
 }
 
 NS_IMETHODIMP
-nsNntpCacheStreamListener::OnStopRequest(nsIRequest *request, nsISupports * aCtxt, nsresult aStatus, const PRUnichar* aMsg)
+nsNntpCacheStreamListener::OnStopRequest(nsIRequest *request, nsISupports * aCtxt, nsresult aStatus)
 {
   nsCOMPtr <nsIRequest> ourRequest = do_QueryInterface(mChannelToUse);
-  nsresult rv = mListener->OnStopRequest(ourRequest, aCtxt, aStatus, aMsg);
+  nsresult rv = mListener->OnStopRequest(ourRequest, aCtxt, aStatus);
   nsCOMPtr <nsILoadGroup> loadGroup;
   mChannelToUse->GetLoadGroup(getter_AddRefs(loadGroup));
   if (loadGroup)
-      loadGroup->RemoveRequest(ourRequest, nsnull, aStatus, nsnull);
+      loadGroup->RemoveRequest(ourRequest, nsnull, aStatus);
 
   // clear out mem cache entry so we're not holding onto it.
   if (mRunningUrl)
@@ -1119,9 +1119,9 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 }
 
 // stop binding is a "notification" informing us that the stream associated with aURL is going away. 
-NS_IMETHODIMP nsNNTPProtocol::OnStopRequest(nsIRequest *request, nsISupports * aContext, nsresult aStatus, const PRUnichar* aMsg)
+NS_IMETHODIMP nsNNTPProtocol::OnStopRequest(nsIRequest *request, nsISupports * aContext, nsresult aStatus)
 {
-		nsMsgProtocol::OnStopRequest(request, aContext, aStatus, aMsg);
+    nsMsgProtocol::OnStopRequest(request, aContext, aStatus);
 
     // nsMsgProtocol::OnStopRequest() has called m_channelListener. There is
     // no need to be called again in CloseSocket(). Let's clear it here.
@@ -5267,10 +5267,10 @@ nsresult nsNNTPProtocol::CleanupAfterRunningUrl()
   // because it can synchronously causes a new url to get run in the
   // protocol - truly evil, but we're stuck at the moment.
 	if (m_channelListener)
-		rv = m_channelListener->OnStopRequest(this, m_channelContext, NS_OK, nsnull);
+		rv = m_channelListener->OnStopRequest(this, m_channelContext, NS_OK);
 
 	if (m_loadGroup)
-		m_loadGroup->RemoveRequest(NS_STATIC_CAST(nsIRequest *, this), nsnull, NS_OK, nsnull);
+		m_loadGroup->RemoveRequest(NS_STATIC_CAST(nsIRequest *, this), nsnull, NS_OK);
     CleanupNewsgroupList();
 
   // clear out mem cache entry so we're not holding onto it.

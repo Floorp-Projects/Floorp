@@ -40,6 +40,7 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIFileSpec.h" 
 #include "nsIURL.h"
+#include "nsNetCID.h"
 #include "nsIStringBundle.h"
 
 #include "nsMessengerMigrator.h"

@@ -69,7 +69,7 @@ NS_IMPL_RELEASE(nsURLFetcher)
 NS_INTERFACE_MAP_BEGIN(nsURLFetcher)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIURIContentListener)
    NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
-   NS_INTERFACE_MAP_ENTRY(nsIStreamObserver)
+   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
    NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
    NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
@@ -269,7 +269,7 @@ nsURLFetcher::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 }
 
 nsresult
-nsURLFetcher::OnStopRequest(nsIRequest *request, nsISupports * /* ctxt */, nsresult aStatus, const PRUnichar* aMsg)
+nsURLFetcher::OnStopRequest(nsIRequest *request, nsISupports * /* ctxt */, nsresult aStatus)
 {
 #ifdef NS_DEBUG_rhp
   printf("nsURLFetcher::OnStopRequest()\n");
@@ -321,7 +321,7 @@ nsURLFetcher::OnStopRequest(nsIRequest *request, nsISupports * /* ctxt */, nsres
 
   // Now if there is a callback, we need to call it...
   if (mCallback)
-    mCallback (mURL, aStatus, mContentType, mCharset, mTotalWritten, aMsg, mTagData);
+    mCallback (mURL, aStatus, mContentType, mCharset, mTotalWritten, nsnull, mTagData);
 
   // Time to return...
   return NS_OK;
@@ -403,7 +403,7 @@ nsURLFetcher::OnStateChange(nsIWebProgress *aProgress, nsIRequest *aRequest,
   // the url....
 
   if (NS_FAILED(aStatus))
-    OnStopRequest(aRequest, nsnull, aStatus, nsnull);
+    OnStopRequest(aRequest, nsnull, aStatus);
 
   return NS_OK;
 }

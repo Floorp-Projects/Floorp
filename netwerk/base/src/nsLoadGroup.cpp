@@ -18,11 +18,10 @@
  * Rights Reserved.
  *
  * Contributor(s):
+ *   Darin Fisher <darin@netscape.com>
  */
 
 #include "nsLoadGroup.h"
-#include "nsIStreamObserver.h"
-#include "nsIChannel.h"
 #include "nsISupportsArray.h"
 #include "nsEnumeratorUtils.h"
 #include "nsIServiceManager.h"
@@ -48,31 +47,27 @@
 // the file nspr.log
 //
 PRLogModuleInfo* gLoadGroupLog = nsnull;
+#endif
 
-#endif /* PR_LOGGING */
+#define LOG(args) PR_LOG(gLoadGroupLog, PR_LOG_DEBUG, args)
 
 ////////////////////////////////////////////////////////////////////////////////
 
 nsLoadGroup::nsLoadGroup(nsISupports* outer)
-    : mDefaultLoadAttributes(nsIChannel::LOAD_NORMAL),
-      mForegroundCount(0),
-      mRequests(nsnull),
-      mStatus(NS_OK)
+    : mLoadFlags(LOAD_NORMAL)
+    , mForegroundCount(0)
+    , mRequests(nsnull)
+    , mStatus(NS_OK)
 {
     NS_INIT_AGGREGATED(outer);
 
 #if defined(PR_LOGGING)
-    //
     // Initialize the global PRLogModule for nsILoadGroup logging
-    // if necessary...
-    //
-    if (nsnull == gLoadGroupLog) {
+    if (nsnull == gLoadGroupLog)
         gLoadGroupLog = PR_NewLogModule("LoadGroup");
-    }
-#endif /* PR_LOGGING */
+#endif
 
-    PR_LOG(gLoadGroupLog, PR_LOG_DEBUG,
-           ("LOADGROUP [%x]: Created.\n", this));
+    LOG(("LOADGROUP [%x]: Created.\n", this));
 }
 
 nsLoadGroup::~nsLoadGroup()
@@ -83,10 +78,9 @@ nsLoadGroup::~nsLoadGroup()
     NS_ASSERTION(NS_SUCCEEDED(rv), "Cancel failed");
 
     NS_IF_RELEASE(mRequests);
-    mDefaultLoadRequest = null_nsCOMPtr();
+    mDefaultLoadRequest = 0;
 
-    PR_LOG(gLoadGroupLog, PR_LOG_DEBUG,
-           ("LOADGROUP [%x]: Destroyed.\n", this));
+    LOG(("LOADGROUP [%x]: Destroyed.\n", this));
 }
 
 
@@ -114,9 +108,8 @@ nsLoadGroup::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
         rv = group->AggregatedQueryInterface(aIID, aResult);
     }
 
-    if (NS_FAILED(rv)) {
+    if (NS_FAILED(rv))
         delete group;
-    }
 
     return rv;
 }
@@ -176,12 +169,7 @@ nsLoadGroup::GetName(PRUnichar* *result)
 NS_IMETHODIMP
 nsLoadGroup::IsPending(PRBool *aResult)
 {
-    if (mForegroundCount > 0) {
-        *aResult = PR_TRUE;
-    } else {
-        *aResult = PR_FALSE;
-    }
-
+    *aResult = (mForegroundCount > 0) ? PR_TRUE : PR_FALSE;
     return NS_OK;
 }
 
@@ -223,43 +211,39 @@ nsLoadGroup::Cancel(nsresult status)
             request = NS_STATIC_CAST(nsIRequest*, mRequests->ElementAt(--count));
 
             NS_ASSERTION(request, "NULL request found in list.");
-            if (!request) {
+            if (!request)
                 continue;
-            }
 
 #if defined(PR_LOGGING)
             nsXPIDLString nameStr;
             request->GetName(getter_Copies(nameStr));
-            PR_LOG(gLoadGroupLog, PR_LOG_DEBUG,
-                   ("LOADGROUP [%x]: Canceling request %x %s.\n",
-                   this, request, NS_ConvertUCS2toUTF8(nameStr).get()));
-#endif /* PR_LOGGING */
+            LOG(("LOADGROUP [%x]: Canceling request %x %s.\n",
+                this, request, NS_ConvertUCS2toUTF8(nameStr).get()));
+#endif
 
             //
             // Remove the request from the load group...  This may cause
             // the OnStopRequest notification to fire...
             //
-            // XXX: What should the context and error message be?
+            // XXX: What should the context be?
             //
-            (void)RemoveRequest(request, nsnull, status, nsnull);
+            (void)RemoveRequest(request, nsnull, status);
 
             // Cancel the request...
             rv = request->Cancel(status);
 
             // Remember the first failure and return it...
-            if (NS_FAILED(rv) && NS_SUCCEEDED(firstError)) {
-              firstError = rv;
-            }
+            if (NS_FAILED(rv) && NS_SUCCEEDED(firstError))
+                firstError = rv;
 
             NS_RELEASE(request);
         }
 
 #if defined(DEBUG)
         (void)mRequests->Count(&count);
-
         NS_ASSERTION(count == 0,            "Request list is not empty.");
         NS_ASSERTION(mForegroundCount == 0, "Foreground URLs are active.");
-#endif /* DEBUG */
+#endif
     }
 
     mStatus = NS_OK;
@@ -285,25 +269,22 @@ nsLoadGroup::Suspend()
         nsIRequest* request = NS_STATIC_CAST(nsIRequest*, mRequests->ElementAt(--count));
 
         NS_ASSERTION(request, "NULL request found in list.");
-        if (!request) {
+        if (!request)
             continue;
-        }
 
 #if defined(PR_LOGGING)
-            nsXPIDLString nameStr;
-            request->GetName(getter_Copies(nameStr));
-            PR_LOG(gLoadGroupLog, PR_LOG_DEBUG,
-                   ("LOADGROUP [%x]: Suspending request %x %s.\n",
-                   this, request, NS_ConvertUCS2toUTF8(nameStr).get()));
-#endif /* PR_LOGGING */
+        nsXPIDLString nameStr;
+        request->GetName(getter_Copies(nameStr));
+        LOG(("LOADGROUP [%x]: Suspending request %x %s.\n",
+            this, request, NS_ConvertUCS2toUTF8(nameStr).get()));
+#endif
 
         // Suspend the request...
         rv = request->Suspend();
 
         // Remember the first failure and return it...
-        if (NS_FAILED(rv) && NS_SUCCEEDED(firstError)) {
-          firstError = rv;
-        }
+        if (NS_FAILED(rv) && NS_SUCCEEDED(firstError))
+            firstError = rv;
 
         NS_RELEASE(request);
     }
@@ -330,25 +311,22 @@ nsLoadGroup::Resume()
         nsIRequest* request = NS_STATIC_CAST(nsIRequest*, mRequests->ElementAt(--count));
 
         NS_ASSERTION(request, "NULL request found in list.");
-        if (!request) {
+        if (!request)
             continue;
-        }
 
 #if defined(PR_LOGGING)
         nsXPIDLString nameStr;
         request->GetName(getter_Copies(nameStr));
-        PR_LOG(gLoadGroupLog, PR_LOG_DEBUG,
-              ("LOADGROUP [%x]: Resuming request %x %s.\n",
-              this, request, NS_ConvertUCS2toUTF8(nameStr).get()));
-#endif /* PR_LOGGING */
+        LOG(("LOADGROUP [%x]: Resuming request %x %s.\n",
+            this, request, NS_ConvertUCS2toUTF8(nameStr).get()));
+#endif
 
         // Resume the request...
         rv = request->Resume();
 
         // Remember the first failure and return it...
-        if (NS_FAILED(rv) && NS_SUCCEEDED(firstError)) {
-          firstError = rv;
-        }
+        if (NS_FAILED(rv) && NS_SUCCEEDED(firstError))
+            firstError = rv;
 
         NS_RELEASE(request);
     }
@@ -356,32 +334,36 @@ nsLoadGroup::Resume()
     return firstError;
 }
 
+NS_IMETHODIMP
+nsLoadGroup::GetLoadFlags(PRUint32 *aLoadFlags)
+{
+    *aLoadFlags = mLoadFlags;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLoadGroup::SetLoadFlags(PRUint32 aLoadFlags)
+{
+    mLoadFlags = aLoadFlags;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLoadGroup::GetLoadGroup(nsILoadGroup **loadGroup)
+{
+    *loadGroup = mLoadGroup;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLoadGroup::SetLoadGroup(nsILoadGroup *loadGroup)
+{
+    mLoadGroup = loadGroup;
+    return NS_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsILoadGroup methods:
-
-NS_IMETHODIMP
-nsLoadGroup::Init(nsIStreamObserver *aObserver)
-{
-    nsresult rv;
-
-    rv = SetGroupObserver(aObserver);
-
-    return rv;
-}
-
-NS_IMETHODIMP
-nsLoadGroup::GetDefaultLoadAttributes(PRUint32 *aDefaultLoadAttributes)
-{
-    *aDefaultLoadAttributes = mDefaultLoadAttributes;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLoadGroup::SetDefaultLoadAttributes(PRUint32 aDefaultLoadAttributes)
-{
-    mDefaultLoadAttributes = aDefaultLoadAttributes;
-    return NS_OK;
-}
 
 NS_IMETHODIMP
 nsLoadGroup::GetDefaultLoadRequest(nsIRequest * *aRequest)
@@ -398,7 +380,6 @@ nsLoadGroup::SetDefaultLoadRequest(nsIRequest *aRequest)
     return NS_OK;
 }
 
-
 NS_IMETHODIMP
 nsLoadGroup::AddRequest(nsIRequest *request, nsISupports* ctxt)
 {
@@ -409,13 +390,12 @@ nsLoadGroup::AddRequest(nsIRequest *request, nsISupports* ctxt)
     (void)mRequests->Count(&count);
     nsXPIDLString nameStr;
     request->GetName(getter_Copies(nameStr));
-    PR_LOG(gLoadGroupLog, PR_LOG_DEBUG,
-              ("LOADGROUP [%x]: Adding request %x %s (count=%d).\n",
-              this, request, NS_ConvertUCS2toUTF8(nameStr).get(), count));
-#endif /* PR_LOGGING */
+    LOG(("LOADGROUP [%x]: Adding request %x %s (count=%d).\n",
+        this, request, NS_ConvertUCS2toUTF8(nameStr).get(), count));
+#endif
 
     nsLoadFlags flags;
-    rv = MergeLoadAttributes(request, flags);
+    rv = MergeLoadFlags(request, flags);
     if (NS_FAILED(rv)) return rv;
     
     //
@@ -426,7 +406,7 @@ nsLoadGroup::AddRequest(nsIRequest *request, nsISupports* ctxt)
     rv = mRequests->AppendElement(request) ? NS_OK : NS_ERROR_FAILURE;
     if (NS_FAILED(rv)) return rv;
 
-    if (!(flags & nsIChannel::LOAD_BACKGROUND)) {
+    if (!(flags & nsIRequest::LOAD_BACKGROUND)) {
         // Update the count of foreground URIs..
         mForegroundCount += 1;
 
@@ -436,18 +416,15 @@ nsLoadGroup::AddRequest(nsIRequest *request, nsISupports* ctxt)
         // If the notification fails then DO NOT add the request to
         // the load group.
         //
-        nsCOMPtr<nsIStreamObserver> observer (do_QueryReferent(mObserver));
+        nsCOMPtr<nsIRequestObserver> observer = do_QueryReferent(mObserver);
         if (observer) {
-            PR_LOG(gLoadGroupLog, PR_LOG_DEBUG,
-                   ("LOADGROUP [%x]: Firing OnStartRequest for request %x."
-                   "(foreground count=%d).\n",
-                   this, request, mForegroundCount));
+            LOG(("LOADGROUP [%x]: Firing OnStartRequest for request %x."
+                 "(foreground count=%d).\n", this, request, mForegroundCount));
 
             rv = observer->OnStartRequest(request, ctxt);
             if (NS_FAILED(rv)) {
-                PR_LOG(gLoadGroupLog, PR_LOG_ERROR,
-                       ("LOADGROUP [%x]: OnStartRequest for request %x FAILED.\n",
-                       this, request));
+                LOG(("LOADGROUP [%x]: OnStartRequest for request %x FAILED.\n",
+                    this, request));
                 //
                 // The URI load has been canceled by the observer.  Clean up
                 // the damage...
@@ -464,8 +441,7 @@ nsLoadGroup::AddRequest(nsIRequest *request, nsISupports* ctxt)
 }
 
 NS_IMETHODIMP
-nsLoadGroup::RemoveRequest(nsIRequest *request, nsISupports* ctxt, 
-                           nsresult aStatus, const PRUnichar* aStatusArg)
+nsLoadGroup::RemoveRequest(nsIRequest *request, nsISupports* ctxt, nsresult aStatus)
 {
     nsresult rv;
 
@@ -474,10 +450,9 @@ nsLoadGroup::RemoveRequest(nsIRequest *request, nsISupports* ctxt,
         (void)mRequests->Count(&count);
         nsXPIDLString nameStr;
         request->GetName(getter_Copies(nameStr));
-        PR_LOG(gLoadGroupLog, PR_LOG_DEBUG,
-              ("LOADGROUP [%x]: Removing request %x %s status %x (count=%d).\n",
-              this, request, NS_ConvertUCS2toUTF8(nameStr).get(), aStatus, count-1));
-#endif /* PR_LOGGING */
+        LOG(("LOADGROUP [%x]: Removing request %x %s status %x (count=%d).\n",
+            this, request, NS_ConvertUCS2toUTF8(nameStr).get(), aStatus, count-1));
+#endif
 
     //
     // Remove the request from the group.  If this fails, it means that
@@ -489,45 +464,34 @@ nsLoadGroup::RemoveRequest(nsIRequest *request, nsISupports* ctxt,
     //
     rv = mRequests->RemoveElement(request) ? NS_OK : NS_ERROR_FAILURE;
     if (NS_FAILED(rv)) {
-        PR_LOG(gLoadGroupLog, PR_LOG_ERROR,
-               ("LOADGROUP [%x]: Unable to remove request %x. Not in group!\n",
-                this, request));
+        LOG(("LOADGROUP [%x]: Unable to remove request %x. Not in group!\n",
+            this, request));
         return rv;
     }
 
     nsLoadFlags flags;
-    nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request, &rv);
-    if (NS_FAILED(rv)) 
-      return NS_ERROR_FAILURE;
-
-    rv = aChannel->GetLoadAttributes(&flags);
+    rv = request->GetLoadFlags(&flags);
     if (NS_FAILED(rv)) return rv;
 
-    if (!(flags & nsIChannel::LOAD_BACKGROUND)) {
+    if (!(flags & nsIRequest::LOAD_BACKGROUND)) {
         NS_ASSERTION(mForegroundCount > 0, "ForegroundCount messed up");
         mForegroundCount -= 1;
 
         // Fire the OnStopRequest out to the observer...
-        nsCOMPtr<nsIStreamObserver> observer (do_QueryReferent(mObserver));
+        nsCOMPtr<nsIRequestObserver> observer = do_QueryReferent(mObserver);
         if (observer) {
-            PR_LOG(gLoadGroupLog, PR_LOG_DEBUG,
-                   ("LOADGROUP [%x]: Firing OnStopRequest for request %x."
-                    "(foreground count=%d).\n",
-                    this, request, mForegroundCount));
+            LOG(("LOADGROUP [%x]: Firing OnStopRequest for request %x."
+                 "(foreground count=%d).\n", this, request, mForegroundCount));
 
-            rv = observer->OnStopRequest(request, ctxt, aStatus, aStatusArg);
-            if (NS_FAILED(rv)) {
-                PR_LOG(gLoadGroupLog, PR_LOG_ERROR,
-                       ("LOADGROUP [%x]: OnStopRequest for request %x FAILED.\n",
-                       this, request));
-            }
+            rv = observer->OnStopRequest(request, ctxt, aStatus);
+            if (NS_FAILED(rv))
+                LOG(("LOADGROUP [%x]: OnStopRequest for request %x FAILED.\n",
+                    this, request));
         }
     }
 
     return rv;
 }
-
-
 
 NS_IMETHODIMP
 nsLoadGroup::GetRequests(nsISimpleEnumerator * *aRequests)
@@ -535,126 +499,90 @@ nsLoadGroup::GetRequests(nsISimpleEnumerator * *aRequests)
     return NS_NewArrayEnumerator(aRequests, mRequests);
 }
 
-
 NS_IMETHODIMP
-nsLoadGroup::GetGroupListenerFactory(nsILoadGroupListenerFactory * *aFactory)
+nsLoadGroup::SetGroupObserver(nsIRequestObserver* aObserver)
 {
-    if (mGroupListenerFactory) {
-        mGroupListenerFactory->QueryReferent(NS_GET_IID(nsILoadGroupListenerFactory), (void**)aFactory);
-    }
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLoadGroup::SetGroupListenerFactory(nsILoadGroupListenerFactory *aFactory)
-{
-    mGroupListenerFactory = getter_AddRefs(NS_GetWeakReference(aFactory));
-    return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsLoadGroup::SetGroupObserver(nsIStreamObserver* aObserver)
-{
-    nsresult rv = NS_OK;
-
-    // Release the old observer (if any...)
-    mObserver = null_nsCOMPtr();
-#if 0
-    if (aObserver) {
-        nsCOMPtr<nsIEventQueue> eventQueue;
-        NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueService, &rv);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(eventQueue));
-        if (NS_FAILED(rv)) return rv;
-
-        rv = NS_NewAsyncStreamObserver(getter_AddRefs(mObserver),
-                                       eventQueue, aObserver);
-    }
-#else
-    //mObserver = aObserver;
     mObserver = getter_AddRefs(NS_GetWeakReference(aObserver));
-#endif
-
-    return rv;
+    return NS_OK;
 }
-
 
 NS_IMETHODIMP
-nsLoadGroup::GetGroupObserver(nsIStreamObserver* *aResult)
+nsLoadGroup::GetGroupObserver(nsIRequestObserver* *aResult)
 {
-  nsCOMPtr<nsIStreamObserver> observer (do_QueryReferent(mObserver));
-  *aResult = observer;
-  NS_IF_ADDREF(*aResult);
-  return NS_OK;
+    nsCOMPtr<nsIRequestObserver> observer = do_QueryReferent(mObserver);
+    *aResult = observer;
+    NS_IF_ADDREF(*aResult);
+    return NS_OK;
 }
-
 
 NS_IMETHODIMP
 nsLoadGroup::GetActiveCount(PRUint32* aResult)
 {
     *aResult = mForegroundCount;
+    return NS_OK;
+}
 
+NS_IMETHODIMP
+nsLoadGroup::GetNotificationCallbacks(nsIInterfaceRequestor **aCallbacks)
+{
+    NS_ENSURE_ARG_POINTER(aCallbacks);
+    *aCallbacks = mCallbacks;
+    NS_IF_ADDREF(*aCallbacks);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLoadGroup::SetNotificationCallbacks(nsIInterfaceRequestor *aCallbacks)
+{
+    mCallbacks = aCallbacks;
     return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-nsresult nsLoadGroup::MergeLoadAttributes(nsIRequest *aRequest, nsLoadFlags& outFlags)
+nsresult nsLoadGroup::MergeLoadFlags(nsIRequest *aRequest, nsLoadFlags& outFlags)
 {
-  nsresult rv;
-  nsLoadFlags flags, oldFlags;
+    nsresult rv;
+    nsLoadFlags flags, oldFlags;
 
-  nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(aRequest, &rv);
-  if (NS_FAILED(rv)) 
-      return NS_ERROR_FAILURE;
+    rv = aRequest->GetLoadFlags(&flags);
+    if (NS_FAILED(rv)) 
+        return rv;
 
-  rv = aChannel->GetLoadAttributes(&flags);
-  if (NS_FAILED(rv)) 
+    oldFlags = flags;
+    //
+    // Inherit the group cache validation policy
+    //
+    if ( !((nsIRequest::VALIDATE_NEVER | 
+            nsIRequest::VALIDATE_ALWAYS | 
+            nsIRequest::VALIDATE_ONCE_PER_SESSION) & flags) ) {
+        flags |= (nsIRequest::VALIDATE_NEVER |
+                  nsIRequest::VALIDATE_ALWAYS |
+                  nsIRequest::VALIDATE_ONCE_PER_SESSION) & mLoadFlags;
+    }
+    //
+    // Inherit the group reload policy
+    //
+    if (!(nsIRequest::FORCE_VALIDATION & flags))
+        flags |= (nsIRequest::FORCE_VALIDATION & mLoadFlags);
+    if (!(nsIRequest::FORCE_RELOAD & flags))
+        flags |= (nsIRequest::FORCE_RELOAD & mLoadFlags);
+
+    //
+    // Inherit the group persistent cache policy
+    //
+    if (!(nsIRequest::INHIBIT_PERSISTENT_CACHING & flags))
+        flags |= (nsIRequest::INHIBIT_PERSISTENT_CACHING & mLoadFlags);
+
+    //
+    // Inherit the group loading policy
+    //
+    if (!(nsIRequest::LOAD_BACKGROUND & flags))
+        flags |= (nsIRequest::LOAD_BACKGROUND & mLoadFlags);
+
+    if (flags != oldFlags)
+        rv = aRequest->SetLoadFlags(flags);
+
+    outFlags = flags;
     return rv;
-
-  oldFlags = flags;
-  //
-  // Inherit the group cache validation policy (bits 12-15)
-  //
-  if ( !((nsIChannel::VALIDATE_NEVER            | 
-          nsIChannel::VALIDATE_ALWAYS           | 
-          nsIChannel::VALIDATE_ONCE_PER_SESSION | 
-          nsIChannel::VALIDATE_HEURISTICALLY) & flags)) {
-    flags |= (nsIChannel::VALIDATE_NEVER            |
-              nsIChannel::VALIDATE_ALWAYS           |
-              nsIChannel::VALIDATE_ONCE_PER_SESSION |
-              nsIChannel::VALIDATE_HEURISTICALLY) & mDefaultLoadAttributes;
-  }
-  //
-  // Inherit the group reload policy (bits 9-10)
-  //
-  if (!(nsIChannel::FORCE_VALIDATION & flags)) {
-    flags |= (nsIChannel::FORCE_VALIDATION & mDefaultLoadAttributes);
-  }
-
-  if (!(nsIChannel::FORCE_RELOAD & flags)) {
-    flags |= (nsIChannel::FORCE_RELOAD & mDefaultLoadAttributes);
-  }
-  //
-  // Inherit the group persistent cache policy (bit 8)
-  //
-  if (!(nsIChannel::INHIBIT_PERSISTENT_CACHING & flags)) {
-    flags |= (nsIChannel::INHIBIT_PERSISTENT_CACHING & mDefaultLoadAttributes);
-  }
-  //
-  // Inherit the group loading policy (bit 0)
-  //
-  if (!(nsIChannel::LOAD_BACKGROUND & flags)) {
-    flags |= (nsIChannel::LOAD_BACKGROUND & mDefaultLoadAttributes);
-  }
-
-  if (flags != oldFlags) {
-    rv = aChannel->SetLoadAttributes(flags);
-  }
-
-  outFlags = flags;
-
-  return rv;
 }

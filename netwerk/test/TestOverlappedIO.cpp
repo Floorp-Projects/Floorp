@@ -73,12 +73,12 @@ public:
     virtual ~TestListener() {}
 
     NS_DECL_ISUPPORTS
-    NS_DECL_NSISTREAMOBSERVER
+    NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
 };
 
 NS_IMPL_ISUPPORTS2(TestListener,
-                   nsIStreamObserver,
+                   nsIRequestObserver,
                    nsIStreamListener);
 
 NS_IMETHODIMP
@@ -112,7 +112,7 @@ TestListener::OnDataAvailable(nsIRequest* request,
 
 NS_IMETHODIMP
 TestListener::OnStopRequest(nsIRequest* request, nsISupports* context,
-                            nsresult aStatus, const PRUnichar* aStatusArg)
+                            nsresult aStatus)
 {
     LOG(("TestListener::OnStopRequest [aStatus=%x]\n", aStatus));
     //gKeepRunning = 0;
@@ -132,7 +132,7 @@ public:
     virtual ~TestProvider();
 
     NS_DECL_ISUPPORTS
-    NS_DECL_NSISTREAMOBSERVER
+    NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMPROVIDER
 
 protected:
@@ -144,7 +144,7 @@ protected:
 
 NS_IMPL_ISUPPORTS2(TestProvider,
                    nsIStreamProvider,
-                   nsIStreamObserver)
+                   nsIRequestObserver)
 
 TestProvider::TestProvider(char *data)
 {
@@ -170,7 +170,7 @@ TestProvider::OnStartRequest(nsIRequest* request, nsISupports* context)
 
 NS_IMETHODIMP
 TestProvider::OnStopRequest(nsIRequest* request, nsISupports* context,
-                            nsresult aStatus, const PRUnichar* aStatusArg)
+                            nsresult aStatus)
 {
     LOG(("TestProvider::OnStopRequest [status=%x]\n", aStatus));
     return NS_OK;

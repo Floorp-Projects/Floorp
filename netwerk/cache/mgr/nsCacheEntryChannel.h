@@ -56,8 +56,6 @@ public:
     // nsIChannel methods
     NS_IMETHOD Open(nsIInputStream* *aInputStream);
     NS_IMETHOD AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext);
-    NS_IMETHOD GetLoadAttributes(nsLoadFlags *aLoadAttributes);
-    NS_IMETHOD SetLoadAttributes(nsLoadFlags aLoadAttributes);
     NS_IMETHOD GetLoadGroup(nsILoadGroup* *aLoadGroup);
     NS_IMETHOD GetURI(nsIURI * *aURI);
     NS_IMETHOD GetOriginalURI(nsIURI * *aURI);

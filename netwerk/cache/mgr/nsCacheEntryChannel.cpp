@@ -29,6 +29,7 @@
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
 #include "nsMemory.h"
+#include "nsNetCID.h"
 
 nsCacheEntryChannel::nsCacheEntryChannel(
         nsCachedNetData* aCacheEntry, 
@@ -138,14 +139,14 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(CacheOutputStream, nsIOutputStream)
 NS_IMETHODIMP
 nsCacheEntryChannel::Open(nsIInputStream **aInputStream)
 {
-    return OpenInputStream(0, -1, 0, aInputStream);
+    return OpenInputStream(0, PRUint32(-1), 0, aInputStream);
 }
 
 NS_IMETHODIMP
 nsCacheEntryChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext)
 {
     nsCOMPtr<nsIRequest> req;
-    return AsyncRead(aListener, aContext, 0, -1, 0, getter_AddRefs(req));
+    return AsyncRead(aListener, aContext, 0, PRUint32(-1), 0, getter_AddRefs(req));
 }
 
 NS_IMETHODIMP
@@ -239,18 +240,6 @@ nsCacheEntryChannel::GetLoadGroup(nsILoadGroup* *aLoadGroup)
 {
     *aLoadGroup = mLoadGroup;
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCacheEntryChannel::GetLoadAttributes(nsLoadFlags *aLoadAttributes)
-{
-    return mChannel->GetLoadAttributes(aLoadAttributes);
-}
-
-NS_IMETHODIMP
-nsCacheEntryChannel::SetLoadAttributes(nsLoadFlags aLoadAttributes)
-{
-    return mChannel->SetLoadAttributes(aLoadAttributes);
 }
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);

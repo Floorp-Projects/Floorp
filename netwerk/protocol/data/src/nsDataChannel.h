@@ -58,7 +58,7 @@ protected:
     nsCOMPtr<nsIURI>                    mOriginalURI;
     nsCOMPtr<nsIURI>                    mUrl;
     nsCOMPtr<nsIInputStream>            mDataStream;
-    PRUint32                            mLoadAttributes;
+    PRUint32                            mLoadFlags;
     nsCOMPtr<nsILoadGroup>              mLoadGroup;
     nsCString                           mContentType;
     PRInt32                             mContentLength;

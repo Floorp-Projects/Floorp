@@ -80,13 +80,13 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMIMEInfoImpl)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "nsStreamObserverProxy.h"
+#include "nsRequestObserverProxy.h"
 #include "nsStreamListenerProxy.h"
 #include "nsStreamProviderProxy.h"
 #include "nsSimpleStreamListener.h"
 #include "nsSimpleStreamProvider.h"
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsStreamObserverProxy)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsRequestObserverProxy)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsStreamListenerProxy)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsStreamProviderProxy)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSimpleStreamListener)
@@ -521,9 +521,9 @@ static void PR_CALLBACK nsNeckoShutdown(nsIModule *neckoModule)
 }
 
 static nsModuleComponentInfo gNetModuleInfo[] = {
-    { "I/O Service", 
+    { NS_IOSERVICE_CLASSNAME,
       NS_IOSERVICE_CID,
-      "@mozilla.org/network/io-service;1",
+      NS_IOSERVICE_CONTRACTID,
       nsIOService::Create },
     { "File Transport Service", 
       NS_FILETRANSPORTSERVICE_CID,
@@ -541,13 +541,13 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
       NS_DNSSERVICE_CID,
       "@mozilla.org/network/dns-service;1",
       nsDNSService::Create },
-    { "Standard URL Implementation",
+    { NS_STANDARDURL_CLASSNAME,
       NS_STANDARDURL_CID,
-      "@mozilla.org/network/standard-url;1",
+      NS_STANDARDURL_CONTRACTID,
       nsStdURL::Create },
-    { "Simple URI Implementation",
+    { NS_SIMPLEURI_CLASSNAME,
       NS_SIMPLEURI_CID,
-      "@mozilla.org/network/simple-uri;1",
+      NS_SIMPLEURI_CONTRACTID,
       nsSimpleURI::Create },
     { "External Module Manager", 
       NS_NETMODULEMGR_CID,
@@ -573,10 +573,10 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
       NS_DOWNLOADER_CID,
       "@mozilla.org/network/downloader;1",
       nsDownloader::Create },
-    { NS_STREAMOBSERVERPROXY_CLASSNAME,
-      NS_STREAMOBSERVERPROXY_CID,
-      NS_STREAMOBSERVERPROXY_CONTRACTID,
-      nsStreamObserverProxyConstructor },
+    { NS_REQUESTOBSERVERPROXY_CLASSNAME,
+      NS_REQUESTOBSERVERPROXY_CID,
+      NS_REQUESTOBSERVERPROXY_CONTRACTID,
+      nsRequestObserverProxyConstructor },
     { NS_STREAMLISTENERPROXY_CLASSNAME,
       NS_STREAMLISTENERPROXY_CID,
       NS_STREAMLISTENERPROXY_CONTRACTID,
@@ -593,10 +593,6 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
       NS_SIMPLESTREAMPROVIDER_CID,
       NS_SIMPLESTREAMPROVIDER_CONTRACTID,
       nsSimpleStreamProviderConstructor },
-    { NS_ASYNCSTREAMOBSERVER_CLASSNAME,
-      NS_ASYNCSTREAMOBSERVER_CID,
-      NS_ASYNCSTREAMOBSERVER_CONTRACTID,
-      nsAsyncStreamObserver::Create },
     { NS_ASYNCSTREAMLISTENER_CLASSNAME,
       NS_ASYNCSTREAMLISTENER_CID,
       NS_ASYNCSTREAMLISTENER_CONTRACTID,
@@ -609,15 +605,9 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
       NS_STORAGETRANSPORT_CID,
       NS_STORAGETRANSPORT_CONTRACTID,
       nsStorageTransportConstructor },
-      /*
-    { "Sync Stream Listener", 
-      NS_SYNCSTREAMLISTENER_CID,
-      "@mozilla.org/network/sync-stream-listener;1",
-      nsSyncStreamListener::Create },
-      */
-    { "Load Group", 
+    { NS_LOADGROUP_CLASSNAME,
       NS_LOADGROUP_CID,
-      "@mozilla.org/network/load-group;1",
+      NS_LOADGROUP_CONTRACTID,
       nsLoadGroup::Create },
     { NS_LOCALFILEINPUTSTREAM_CLASSNAME, 
       NS_LOCALFILEINPUTSTREAM_CID,

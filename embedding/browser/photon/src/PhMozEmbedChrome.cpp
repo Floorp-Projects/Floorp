@@ -295,8 +295,7 @@ NS_IMETHODIMP PhMozEmbedChrome::CloseStream (void)
   mDoingStream = PR_FALSE;
   rv = mStreamListener->OnStopRequest(mChannel,
 				      NULL,
-				      NS_OK,
-				      NULL);
+				      NS_OK);
   if (NS_FAILED(rv))
     return rv;
   mStream = nsnull;

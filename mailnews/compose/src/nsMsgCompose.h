@@ -154,7 +154,7 @@ public:
     virtual ~QuotingOutputStreamListener(void);
 
     NS_DECL_ISUPPORTS
-    NS_DECL_NSISTREAMOBSERVER
+    NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
 
     NS_IMETHOD  SetComposeObj(nsMsgCompose *obj);

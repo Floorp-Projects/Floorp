@@ -160,7 +160,7 @@ public:
 	virtual ~nsNNTPProtocol();
 
 	// stop binding is a "notification" informing us that the stream associated with aURL is going away. 
-	NS_IMETHOD OnStopRequest(nsIRequest *request, nsISupports * aCtxt, nsresult aStatus, const PRUnichar* aMsg);
+	NS_IMETHOD OnStopRequest(nsIRequest *request, nsISupports * aCtxt, nsresult aStatus);
 
 	char * m_ProxyServer;		/* proxy server hostname */
 

@@ -389,8 +389,8 @@ public:
     // nsIRDFXMLSource interface
     NS_DECL_NSIRDFXMLSOURCE
 
-    // nsIStreamObserver
-    NS_DECL_NSISTREAMOBSERVER
+    // nsIRequestObserver
+    NS_DECL_NSIREQUESTOBSERVER
 
     // nsIStreamListener
     NS_DECL_NSISTREAMLISTENER
@@ -597,7 +597,7 @@ NS_IMPL_ISUPPORTS6(RDFXMLDataSourceImpl,
                    nsIRDFRemoteDataSource,
                    nsIRDFXMLSink,
                    nsIRDFXMLSource,
-                   nsIStreamObserver,
+                   nsIRequestObserver,
                    nsIStreamListener);
 
 
@@ -661,7 +661,7 @@ RDFXMLDataSourceImpl::BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
             break;
     }
 
-    aConsumer->OnStopRequest(channel, nsnull, rv, nsnull);
+    aConsumer->OnStopRequest(channel, nsnull, rv);
 
     // Notify load observers
     for (i = mObservers.Count() - 1; i >= 0; --i) {
@@ -1121,7 +1121,7 @@ RDFXMLDataSourceImpl::RemoveXMLSinkObserver(nsIRDFXMLSinkObserver* aObserver)
 
 //----------------------------------------------------------------------
 //
-// nsIStreamObserver
+// nsIRequestObserver
 //
 
 NS_IMETHODIMP
@@ -1133,20 +1133,19 @@ RDFXMLDataSourceImpl::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 NS_IMETHODIMP
 RDFXMLDataSourceImpl::OnStopRequest(nsIRequest *request,
                                     nsISupports *ctxt,
-                                    nsresult status,
-                                    const PRUnichar *errorMsg)
+                                    nsresult status)
 {
     if (NS_FAILED(status)) {
         for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
             nsIRDFXMLSinkObserver* obs =
                 NS_STATIC_CAST(nsIRDFXMLSinkObserver*, mObservers[i]);
 
-            (void) obs->OnError(this, status, errorMsg);
+            (void) obs->OnError(this, status, nsnull);
         }
     }
 
     nsresult rv;
-    rv = mParser->OnStopRequest(request, ctxt, status, errorMsg);
+    rv = mParser->OnStopRequest(request, ctxt, status);
 
     mParser = nsnull; // release the parser
 

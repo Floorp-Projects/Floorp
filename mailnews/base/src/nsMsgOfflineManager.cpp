@@ -34,6 +34,7 @@
 #include "nsIMsgAccountManager.h"
 #include "nsMsgCompCID.h"
 #include "nsIIOService.h"
+#include "nsNetCID.h"
 #include "nsMsgNewsCID.h"
 #include "nsINntpService.h"
 #include "nsXPIDLString.h"

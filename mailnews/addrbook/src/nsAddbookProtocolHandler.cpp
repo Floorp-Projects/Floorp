@@ -25,7 +25,6 @@
 #include "nsIPref.h"
 #include "nsIIOService.h"
 
-#include "nsIStreamObserver.h"
 #include "nsIStreamListener.h"
 #include "nsAddbookProtocolHandler.h"
 

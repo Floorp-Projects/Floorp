@@ -34,7 +34,7 @@
 #include "nsIStreamListener.h"
 #include "nsIStreamConverter.h"
 #include "nsIStringStream.h"
-#include "nsIStreamObserver.h"
+#include "nsIRequestObserver.h"
 #include "nsNetUtil.h"
 #include "nsMimeTypes.h"
 
@@ -44,7 +44,7 @@
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsGopherDirListingConv,
                               nsIStreamConverter,
                               nsIStreamListener,
-                              nsIStreamObserver);
+                              nsIRequestObserver);
 
 // nsIStreamConverter implementation
 
@@ -232,7 +232,7 @@ nsGopherDirListingConv::OnDataAvailable(nsIRequest *request,
     return NS_OK;
 }
 
-// nsIStreamObserver implementation
+// nsIRequestObserver implementation
 NS_IMETHODIMP
 nsGopherDirListingConv::OnStartRequest(nsIRequest *request, nsISupports *ctxt) {
     // we don't care about start. move along... but start masqeurading 
@@ -242,18 +242,15 @@ nsGopherDirListingConv::OnStartRequest(nsIRequest *request, nsISupports *ctxt) {
 
 NS_IMETHODIMP
 nsGopherDirListingConv::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
-                                      nsresult aStatus,
-                                      const PRUnichar* aStatusArg) {
+                                      nsresult aStatus) {
     // we don't care about stop. move along...
     nsCOMPtr<nsILoadGroup> loadgroup;
     nsresult rv = mPartChannel->GetLoadGroup(getter_AddRefs(loadgroup));
     if (NS_FAILED(rv)) return rv;
     if (loadgroup)
-        (void)loadgroup->RemoveRequest(mPartChannel, nsnull,
-                                       aStatus, aStatusArg);
+        (void)loadgroup->RemoveRequest(mPartChannel, nsnull, aStatus);
 
-    return mFinalListener->OnStopRequest(mPartChannel, ctxt,
-                                         aStatus, aStatusArg);
+    return mFinalListener->OnStopRequest(mPartChannel, ctxt, aStatus);
 }
 
 // nsGopherDirListingConv methods

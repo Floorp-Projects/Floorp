@@ -23,43 +23,25 @@
 #include "nsIRequest.idl"
 
 interface nsIURI;
-interface nsIInputStream;
-interface nsIOutputStream;
-interface nsIStreamObserver;
-interface nsIStreamListener;
-interface nsIStreamProvider;
-interface nsILoadGroup;
 interface nsIInterfaceRequestor;
-interface nsIStreamIO;
-
-typedef unsigned long nsLoadFlags;
+interface nsIInputStream;
+interface nsIStreamListener;
 
 /**
- * The nsIChannel interface allows the user to construct get requests for
+ * The nsIChannel interface allows the user to construct GET requests for
  * specific protocols, and manage them in a uniform way. Once a channel
  * is created (via nsIIOService::NewChannel), parameters for that request
- * may be set by using the channel attributes, or by QueryInterfacing to a
- * subclass of nsIChannel for protocol-specific parameters. Then the actual
- * request can be issued in one of several ways:
- *
- *      - AsyncOpen is used for asynchronous reading, calling back the
- *        user's stream listener.
- *      - Open is used for synchronous read on the underlying channel.
+ * may be set by using the channel attributes, or by QI'ing to a subclass
+ * of nsIChannel for protocol-specific parameters. Then the actual request
+ * can be issued via Open or AsyncOpen.
  *
  * After a request has been completed, the channel is still valid for
- * accessing protocol-specific results. For example, QueryInterfacing to 
- * nsIHTTPChannel allows response headers to be retrieved that result from
- * http transactions. 
- *
+ * accessing protocol-specific results. For example, QI'ing to nsIHTTPChannel
+ * allows response headers to be retrieved for the http transaction. 
  */
-
 [scriptable, uuid(1788e79e-f947-11d3-8cda-0060b0fc14a3)]
 interface nsIChannel : nsIRequest
 {
-    ////////////////////////////////////////////////////////////////////////////
-    // nsIChannel accessors
-    ////////////////////////////////////////////////////////////////////////////
-    
     /**
      * Returns the original URL used to construct the channel.
      * This is used in the case of a redirect or URI "resolution" (e.g. 
@@ -77,7 +59,7 @@ interface nsIChannel : nsIRequest
      * or URI resolution occurs, this accessor returns the current location
      * to which the channel is referring.
      */
-    attribute nsIURI URI;
+    readonly attribute nsIURI URI;
 
     /**
      * Accesses the owner corresponding to the entity that is 
@@ -91,23 +73,10 @@ interface nsIChannel : nsIRequest
     attribute nsISupports owner;
 
     /**
-     * Accesses the load group in which the channel is a currently a member.
-     */
-    attribute nsILoadGroup loadGroup;
-
-    /**
-     * Accesses the load attributes for the channel. E.g. setting the load 
-     * attributes with the LOAD_QUIET bit set causes the loading process to
-     * not deliver status notifications to the program performing the load,
-     * and to not contribute to keeping any nsILoadGroup it may be contained
-     * in from firing its OnLoadComplete notification.
-     */
-    attribute nsLoadFlags loadAttributes;
-
-    /**
      * Accesses the capabilities callbacks of the channel. This is set by clients
      * who wish to provide a means to receive progress, status and protocol-specific 
-     * notifications.
+     * notifications.  Interfaces commonly requested include: nsIProgressEventSink
+     * and nsIPrompt.
      */
     attribute nsIInterfaceRequestor notificationCallbacks;
 
@@ -131,107 +100,22 @@ interface nsIChannel : nsIRequest
     attribute long contentLength;
 
     /**
-     * Open is used for synchronous read on the channel.
-     **/
+     * Synchronously open this channel.  Returns a blocking input stream to this
+     * channel's data.
+     */
     nsIInputStream open();
 
-    /** AsyncOpen is used for asynchronous reading, calling back the
-     *  user's stream listener.
-     **/
+    /**
+     * Asynchronously open this channel.  Data is fed to the specified stream
+     * listener as it becomes available.
+     */
     void asyncOpen(in nsIStreamListener listener, in nsISupports ctxt);
 
-    ////////////////////////////////////////////////////////////////////////////
-    // Below are Load attribute flags which may be or'd together.
-    ////////////////////////////////////////////////////////////////////////////
-    /**
-     * Note that more will follow for each protocol's implementation of a channel, 
-     * although channel writers have to be careful to not let the flag bits 
-     * overlap. Otherwise, users won't be able to create a single flag word
-     * of load attributes that applies to a number of different channel types.
+    /**************************************************************************
+     * These flags are OBSOLETE and will be removed once the old cache is
+     * removed from the code base.  Support for CACHE_AS_FILE is now provided
+     * via nsICachingChannel.
      */
-
-    /**
-     * No special load attributes -- use defaults:
-     */
-    const unsigned long LOAD_NORMAL     = 0;
-
-    /** 
-     * Don't deliver status notifications to the nsIProgressEventSink, or keep 
-     * this load from completing the nsILoadGroup it may belong to:
-     */
-    const unsigned long LOAD_BACKGROUND = 1 << 0; 
-
-    /**
-     * Used exclusively by the uriloader and docshell to indicate whether or
-     * not this channel corresponds to the toplevel document.
-     */
-    const unsigned long LOAD_DOCUMENT_URI = 1 << 1;
-
-    /** 
-     * If the end consumer for this load has been retargeted after discovering 
-     * it's content, this flag will be set:
-     */
-    const unsigned long LOAD_RETARGETED_DOCUMENT_URI = 1 << 2;
-
-    ////////////////////////////////////////////////////////////////////////////
-    /**
-     * The following flags control caching behavior.  Not all protocols pay
-     * attention to all these flags, but they are applicable to more than one
-     * protocol, so they are defined here.
-     */
-
-    /**
-     * Don't store data in the disk cache.  This can be used to preserve
-     * privacy, e.g. so that no https transactions are recorded, or to avoid
-     * caching a stream to disk that is already stored in a local file,
-     * e.g. the mailbox: protocol.
-     */
-    const unsigned long INHIBIT_PERSISTENT_CACHING = 1 <<  8;
-
-    /**
-     * Force an end-to-end download of content data from the origin server (and
-     * any intervening proxies that sit between it and the client), e.g. this
-     * flag is used for a shift-reload.
-     */
-    const unsigned long FORCE_RELOAD               = 1 <<  9;
-
-    /**
-     * Force revalidation with server (or proxy) to verify that cached content
-     * is up-to-date, e.g. by comparing last-modified date on server with that
-     * of the cached version.  For example, this flag is used when the reload
-     * button is pressed.
-     */
-    const unsigned long FORCE_VALIDATION           = 1 << 10;
-
-    /**
-     * If the CACHE_AS_FILE flag is set, any stream content is stored in the
-     * cache as a single disk file.  Content will not be cached in the memory
-     * cache nor will it be stored in any other type of cache, e.g. a flat-file
-     * cache database.  This is used to implement the jar protocol handler and
-     * to provide the stream-as-file semantics required by the classic browser
-     * plugin API.
-     */
-    const unsigned long CACHE_AS_FILE              = 1 << 11;
-
-    /**
-     * When cache data is potentially out of date, it can be revalidated with
-     * the origin server to see if the content needs to be reloaded.  The
-     * following four flags control how often this validation occurs.
-     * These flags are commonly used for "normal" loading.  Note that
-     * the VALIDATE_HEURISTICALLY and VALIDATE_ONCE_PER_SESSION flags can be
-     * combined to validate heuristically but no more than once per session.
-     */
-    const unsigned long VALIDATE_NEVER             = 1 << 12;
-    const unsigned long VALIDATE_ALWAYS            = 1 << 13;
-    const unsigned long VALIDATE_ONCE_PER_SESSION  = 1 << 14;
-    const unsigned long VALIDATE_HEURISTICALLY     = 1 << 15;
-
-	/**
-	 * This flag is used to tell the webshell not to cancel the load in cases
-	 * when the channel is receiving multipart/replace document
-	 */
-	const unsigned long LOAD_REPLACE			   = 1 << 16;
-
-
+    const unsigned long CACHE_AS_FILE          = 1 << 14;
+    const unsigned long VALIDATE_HEURISTICALLY = 1 << 15;
 };
-

@@ -47,7 +47,7 @@ NS_IMPL_ISUPPORTS4(nsDateTimeChannel,
                    nsIChannel, 
                    nsIRequest, 
                    nsIStreamListener, 
-                   nsIStreamObserver)
+                   nsIRequestObserver)
 
 nsresult
 nsDateTimeChannel::Init(nsIURI* uri)
@@ -154,13 +154,6 @@ nsDateTimeChannel::GetURI(nsIURI* *aURI)
 }
 
 NS_IMETHODIMP
-nsDateTimeChannel::SetURI(nsIURI* aURI)
-{
-    mUrl = aURI;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDateTimeChannel::Open(nsIInputStream **_retval)
 {
     nsresult rv = NS_OK;
@@ -173,7 +166,7 @@ nsDateTimeChannel::Open(nsIInputStream **_retval)
     if (NS_FAILED(rv)) return rv;
 
     transport->SetNotificationCallbacks(mCallbacks,
-                                        (mLoadAttributes & LOAD_BACKGROUND));
+                                        (mLoadFlags & LOAD_BACKGROUND));
 
     return transport->OpenInputStream(0, -1, 0, _retval);
 }
@@ -191,7 +184,7 @@ nsDateTimeChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
     if (NS_FAILED(rv)) return rv;
 
     transport->SetNotificationCallbacks(mCallbacks,
-                                        (mLoadAttributes & LOAD_BACKGROUND));
+                                        (mLoadFlags & LOAD_BACKGROUND));
 
     mListener = aListener;
     
@@ -200,16 +193,16 @@ nsDateTimeChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
 }
 
 NS_IMETHODIMP
-nsDateTimeChannel::GetLoadAttributes(PRUint32 *aLoadAttributes)
+nsDateTimeChannel::GetLoadFlags(PRUint32 *aLoadFlags)
 {
-    *aLoadAttributes = mLoadAttributes;
+    *aLoadFlags = mLoadFlags;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDateTimeChannel::SetLoadAttributes(PRUint32 aLoadAttributes)
+nsDateTimeChannel::SetLoadFlags(PRUint32 aLoadFlags)
 {
-    mLoadAttributes = aLoadAttributes;
+    mLoadFlags = aLoadFlags;
     return NS_OK;
 }
 
@@ -258,7 +251,7 @@ NS_IMETHODIMP
 nsDateTimeChannel::SetLoadGroup(nsILoadGroup* aLoadGroup)
 {
     if (mLoadGroup) // if we already had a load group remove ourselves...
-      (void)mLoadGroup->RemoveRequest(this, nsnull, NS_OK, nsnull);
+      (void)mLoadGroup->RemoveRequest(this, nsnull, NS_OK);
 
     mLoadGroup = aLoadGroup;
     if (mLoadGroup) {
@@ -305,7 +298,7 @@ nsDateTimeChannel::GetSecurityInfo(nsISupports **sec)
     return NS_OK;
 }
 
-// nsIStreamObserver methods
+// nsIRequestObserver methods
 NS_IMETHODIMP
 nsDateTimeChannel::OnStartRequest(nsIRequest *request, nsISupports *aContext) {
     return mListener->OnStartRequest(this, aContext);
@@ -314,12 +307,12 @@ nsDateTimeChannel::OnStartRequest(nsIRequest *request, nsISupports *aContext) {
 
 NS_IMETHODIMP
 nsDateTimeChannel::OnStopRequest(nsIRequest *request, nsISupports* aContext,
-                                 nsresult aStatus, const PRUnichar* aStatusArg) {
+                                 nsresult aStatus) {
     if (mLoadGroup) {
-        nsresult rv = mLoadGroup->RemoveRequest(this, nsnull, aStatus, aStatusArg);
+        nsresult rv = mLoadGroup->RemoveRequest(this, nsnull, aStatus);
         if (NS_FAILED(rv)) return rv;
     }
-    return mListener->OnStopRequest(this, aContext, aStatus, aStatusArg);
+    return mListener->OnStopRequest(this, aContext, aStatus);
 }
 
 

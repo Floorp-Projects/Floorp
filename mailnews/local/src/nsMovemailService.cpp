@@ -479,7 +479,7 @@ nsMovemailService::GetNewMail(nsIMsgWindow *aMsgWindow,
                         
                     // END
                     m_outFileStream->flush();	// try this.
-                    m_newMailParser->OnStopRequest(nsnull, nsnull, NS_OK, nsnull);
+                    m_newMailParser->OnStopRequest(nsnull, nsnull, NS_OK);
                     if (m_outFileStream->is_open())
                       m_outFileStream->close();
                     delete m_outFileStream;

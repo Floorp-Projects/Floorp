@@ -44,6 +44,7 @@
 #include "nsIIOService.h"
 #include "nsIChannel.h"
 #include "nsIInputStream.h"
+#include "nsNetCID.h"
 
 #include "jsapi.h"
 

@@ -57,6 +57,7 @@
 #include "plstr.h"
 #include "nsParserCIID.h"
 #include "nsString.h"
+#include "nsNetCID.h"
 
 #if defined(XP_PC)
 #define DOM_DLL    "jsdom.dll"

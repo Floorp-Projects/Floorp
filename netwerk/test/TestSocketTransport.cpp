@@ -39,7 +39,7 @@
 #include "nsISocketTransportService.h"
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
-#include "nsIStreamObserver.h"
+#include "nsIRequestObserver.h"
 #include "nsIStreamListener.h"
 #include "nsIPipe.h"
 #include "nsIInputStream.h"
@@ -128,7 +128,7 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIRUNNABLE
-  NS_DECL_NSISTREAMOBSERVER
+  NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
 
   // TestConnection methods...
@@ -182,11 +182,11 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class TestConnectionOpenObserver : public nsIStreamObserver 
+class TestConnectionOpenObserver : public nsIRequestObserver 
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSISTREAMOBSERVER
+  NS_DECL_NSIREQUESTOBSERVER
 
   TestConnectionOpenObserver(TestConnection* test)
     : mTestConnection(test) { 
@@ -199,7 +199,7 @@ protected:
 
 };
 
-NS_IMPL_ISUPPORTS1(TestConnectionOpenObserver, nsIStreamObserver);
+NS_IMPL_ISUPPORTS1(TestConnectionOpenObserver, nsIRequestObserver);
 
 NS_IMETHODIMP
 TestConnectionOpenObserver::OnStartRequest(nsIRequest *request, nsISupports* context)
@@ -212,7 +212,7 @@ TestConnectionOpenObserver::OnStartRequest(nsIRequest *request, nsISupports* con
 
 NS_IMETHODIMP
 TestConnectionOpenObserver::OnStopRequest(nsIRequest *request, nsISupports* context,
-                                          nsresult aStatus, const PRUnichar* aStatusArg)
+                                          nsresult aStatus)
 {
   if (gVerbose || NS_FAILED(aStatus))
     printf("\n+++ TestConnectionOpenObserver::OnStopRequest (status = %x) +++."
@@ -270,7 +270,7 @@ TestConnection::OnDataAvailable(nsIRequest *request, nsISupports* context,
 
 NS_IMETHODIMP
 TestConnection::OnStopRequest(nsIRequest *request, nsISupports* context,
-                              nsresult aStatus, const PRUnichar* aStatusArg)
+                              nsresult aStatus)
 {
   if (gVerbose || NS_FAILED(aStatus))
     printf("\n+++ TestConnection::OnStopRequest (status = %x) +++."
@@ -343,7 +343,7 @@ TestConnection::~TestConnection()
 NS_IMPL_THREADSAFE_ISUPPORTS5(TestConnection,
                               nsIRunnable,
                               nsIStreamListener,
-                              nsIStreamObserver,
+                              nsIRequestObserver,
                               nsIInterfaceRequestor,
                               nsIProgressEventSink);
 

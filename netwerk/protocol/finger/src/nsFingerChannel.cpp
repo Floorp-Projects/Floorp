@@ -58,7 +58,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS4(nsFingerChannel,
                               nsIChannel, 
                               nsIRequest,
                               nsIStreamListener, 
-                              nsIStreamObserver)
+                              nsIRequestObserver)
 
 nsresult
 nsFingerChannel::Init(nsIURI* uri)
@@ -184,13 +184,6 @@ nsFingerChannel::GetURI(nsIURI* *aURI)
 }
 
 NS_IMETHODIMP
-nsFingerChannel::SetURI(nsIURI* aURI)
-{
-    mUrl = aURI;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsFingerChannel::Open(nsIInputStream **_retval)
 {
     nsresult rv = NS_OK;
@@ -203,9 +196,9 @@ nsFingerChannel::Open(nsIInputStream **_retval)
     if (NS_FAILED(rv)) return rv;
 
     mTransport->SetNotificationCallbacks(mCallbacks,
-                                         (mLoadAttributes & LOAD_BACKGROUND));
+                                         (mLoadFlags & LOAD_BACKGROUND));
 
-    return mTransport->OpenInputStream(0, -1, 0, _retval);
+    return mTransport->OpenInputStream(0, PRUint32(-1), 0, _retval);
 }
 
 NS_IMETHODIMP
@@ -221,7 +214,7 @@ nsFingerChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
     if (NS_FAILED(rv)) return rv;
 
     mTransport->SetNotificationCallbacks(mCallbacks,
-                                         (mLoadAttributes & LOAD_BACKGROUND));
+                                         (mLoadFlags & LOAD_BACKGROUND));
 
     mListener = aListener;
     mResponseContext = ctxt;
@@ -230,16 +223,16 @@ nsFingerChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
 }
 
 NS_IMETHODIMP
-nsFingerChannel::GetLoadAttributes(PRUint32 *aLoadAttributes)
+nsFingerChannel::GetLoadFlags(PRUint32 *aLoadFlags)
 {
-    *aLoadAttributes = mLoadAttributes;
+    *aLoadFlags = mLoadFlags;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFingerChannel::SetLoadAttributes(PRUint32 aLoadAttributes)
+nsFingerChannel::SetLoadFlags(PRUint32 aLoadFlags)
 {
-    mLoadAttributes = aLoadAttributes;
+    mLoadFlags = aLoadFlags;
     return NS_OK;
 }
 
@@ -328,7 +321,7 @@ nsFingerChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
     return NS_OK;
 }
 
-// nsIStreamObserver methods
+// nsIRequestObserver methods
 NS_IMETHODIMP
 nsFingerChannel::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext) {
     if (!mActAsObserver) {
@@ -344,16 +337,16 @@ nsFingerChannel::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext) {
 
 NS_IMETHODIMP
 nsFingerChannel::OnStopRequest(nsIRequest *aRequest, nsISupports* aContext,
-                               nsresult aStatus, const PRUnichar* aStatusArg)
+                               nsresult aStatus)
 {
     nsresult rv = NS_OK;
 
     if (NS_FAILED(aStatus) || !mActAsObserver) {
         if (mLoadGroup) {
-          rv = mLoadGroup->RemoveRequest(this, nsnull, aStatus, aStatusArg);
+          rv = mLoadGroup->RemoveRequest(this, nsnull, aStatus);
           if (NS_FAILED(rv)) return rv;
         }
-        rv = mListener->OnStopRequest(this, mResponseContext, aStatus, aStatusArg);
+        rv = mListener->OnStopRequest(this, mResponseContext, aStatus);
         mTransport = 0;
         return rv;
     } else {
@@ -385,7 +378,7 @@ nsFingerChannel::OnStopRequest(nsIRequest *aRequest, nsISupports* aContext,
           converter->PreFormatHTML(PR_TRUE);
         }
 
-        return mTransport->AsyncRead(converterListener, mResponseContext, 0,-1, 0,
+        return mTransport->AsyncRead(converterListener, mResponseContext, 0, PRUint32(-1), 0,
                                      getter_AddRefs(mTransportRequest));
     }
 

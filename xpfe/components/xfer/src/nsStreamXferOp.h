@@ -78,8 +78,8 @@ public:
     NS_DECL_NSISTREAMLISTENER
 #endif
 
-    // nsIStreamObserver methods:
-    NS_DECL_NSISTREAMOBSERVER
+    // nsIRequestObserver methods:
+    NS_DECL_NSIREQUESTOBSERVER
 
 private:
     nsCOMPtr<nsIChannel>      mInputChannel;

@@ -61,6 +61,7 @@
 #include "nsMimeTypes.h"
 #include "nsIIOService.h"
 #include "nsIURI.h"
+#include "nsNetCID.h"
 #include "nsIMsgWindow.h"
 
 #include "mimeebod.h"

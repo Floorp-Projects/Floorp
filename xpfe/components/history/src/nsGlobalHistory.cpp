@@ -54,6 +54,7 @@
 #include "rdf.h"
 
 #include "nsIURL.h"
+#include "nsNetCID.h"
 
 #include "nsInt64.h"
 #include "nsMorkCID.h"

@@ -75,7 +75,7 @@ NS_IMPL_RELEASE(nsAbSyncPostEngine)
 NS_INTERFACE_MAP_BEGIN(nsAbSyncPostEngine)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIURIContentListener)
    NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
-   NS_INTERFACE_MAP_ENTRY(nsIStreamObserver)
+   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
    NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
    NS_INTERFACE_MAP_ENTRY(nsIAbSyncPostEngine)
@@ -415,7 +415,7 @@ nsAbSyncPostEngine::OnDataAvailable(nsIRequest *request, nsISupports * ctxt, nsI
 }
 
 
-// Methods for nsIStreamObserver 
+// Methods for nsIRequestObserver 
 nsresult
 nsAbSyncPostEngine::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
@@ -427,7 +427,7 @@ nsAbSyncPostEngine::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 }
 
 nsresult
-nsAbSyncPostEngine::OnStopRequest(nsIRequest *request, nsISupports * /* ctxt */, nsresult aStatus, const PRUnichar* aMsg)
+nsAbSyncPostEngine::OnStopRequest(nsIRequest *request, nsISupports * /* ctxt */, nsresult aStatus)
 {
 #ifdef NS_DEBUG_rhp
   printf("nsAbSyncPostEngine::OnStopRequest()\n");
@@ -487,8 +487,8 @@ nsAbSyncPostEngine::OnStopRequest(nsIRequest *request, nsISupports * /* ctxt */,
       if (Base64Encode((unsigned char *)mUser, nsCRT::strlen(mUser), tUser, sizeof(tUser)) < 0)
       {
         rv = NS_ERROR_FAILURE;
-        NotifyListenersOnStopAuthOperation(rv, aMsg, tProtResponse);
-        NotifyListenersOnStopSending(mTransactionID, rv, nsnull, nsnull);
+        NotifyListenersOnStopAuthOperation(rv, tProtResponse);
+        NotifyListenersOnStopSending(mTransactionID, rv, nsnull);
       }
       else 
       {
@@ -496,14 +496,14 @@ nsAbSyncPostEngine::OnStopRequest(nsIRequest *request, nsISupports * /* ctxt */,
         if (!tUser2)
         {
           rv = NS_ERROR_FAILURE;
-          NotifyListenersOnStopAuthOperation(rv, aMsg, tProtResponse);
-          NotifyListenersOnStopSending(mTransactionID, rv, nsnull, nsnull);
+          NotifyListenersOnStopAuthOperation(rv, tProtResponse);
+          NotifyListenersOnStopSending(mTransactionID, rv, nsnull);
         }
         else
         {
           mSyncProtocolRequestPrefix = PR_smprintf("cn=%s&cc=%s&", tUser2, mCookie);
           PR_FREEIF(tUser2);
-          NotifyListenersOnStopAuthOperation(aStatus, aMsg, tProtResponse);
+          NotifyListenersOnStopAuthOperation(aStatus, tProtResponse);
           KickTheSyncOperation();
         }
       }
@@ -521,8 +521,8 @@ nsAbSyncPostEngine::OnStopRequest(nsIRequest *request, nsISupports * /* ctxt */,
     }
     else
     {
-      NotifyListenersOnStopAuthOperation(rv, aMsg, tProtResponse);
-      NotifyListenersOnStopSending(mTransactionID, rv, nsnull, nsnull);
+      NotifyListenersOnStopAuthOperation(rv, tProtResponse);
+      NotifyListenersOnStopSending(mTransactionID, rv, nsnull);
     }
 
     mSyncMojo = nsnull;
@@ -530,7 +530,7 @@ nsAbSyncPostEngine::OnStopRequest(nsIRequest *request, nsISupports * /* ctxt */,
   else
   {
     tProtResponse = mProtocolResponse.ToNewCString();
-    NotifyListenersOnStopSending(mTransactionID, aStatus, aMsg, tProtResponse);
+    NotifyListenersOnStopSending(mTransactionID, aStatus, tProtResponse);
   }
 
   PR_FREEIF(tProtResponse);
@@ -614,12 +614,12 @@ nsAbSyncPostEngine::NotifyListenersOnStartAuthOperation(void)
 }
 
 nsresult
-nsAbSyncPostEngine::NotifyListenersOnStopAuthOperation(nsresult aStatus, const PRUnichar *aMsg, const char *aCookie)
+nsAbSyncPostEngine::NotifyListenersOnStopAuthOperation(nsresult aStatus, const char *aCookie)
 {
   PRInt32 i;
   for (i=0; i<mListenerArrayCount; i++)
     if (mListenerArray[i] != nsnull)
-      mListenerArray[i]->OnStopAuthOperation(aStatus, aMsg, aCookie);
+      mListenerArray[i]->OnStopAuthOperation(aStatus, nsnull, aCookie);
   return NS_OK;
 }
 
@@ -658,12 +658,12 @@ nsAbSyncPostEngine::NotifyListenersOnStatus(PRInt32 aTransactionID, PRUnichar *a
 
 nsresult
 nsAbSyncPostEngine::NotifyListenersOnStopSending(PRInt32 aTransactionID, nsresult aStatus, 
-                                                 const PRUnichar *aMsg, char *aProtocolResponse)
+                                                 char *aProtocolResponse)
 {
   PRInt32 i;
   for (i=0; i<mListenerArrayCount; i++)
     if (mListenerArray[i] != nsnull)
-      mListenerArray[i]->OnStopOperation(aTransactionID, aStatus, aMsg, aProtocolResponse);
+      mListenerArray[i]->OnStopOperation(aTransactionID, aStatus, nsnull, aProtocolResponse);
 
   return NS_OK;
 }

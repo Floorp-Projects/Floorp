@@ -205,7 +205,7 @@ nsPop3Sink::EndMailDelivery()
 	{
 		if (m_outFileStream)
 			m_outFileStream->flush();	// try this.
-		m_newMailParser->OnStopRequest(nsnull, nsnull, NS_OK, nsnull);
+		m_newMailParser->OnStopRequest(nsnull, nsnull, NS_OK);
 		delete m_newMailParser;
 		m_newMailParser = NULL;
 	}

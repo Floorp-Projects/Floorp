@@ -113,7 +113,7 @@ public:
 	// Whenever data arrives from the connection, core netlib notifies the protocol by calling
 	// OnDataAvailable. We then read and process the incoming data from the input stream. 
 	// stop binding is a "notification" informing us that the stream associated with aURL is going away. 
-    NS_DECL_NSISTREAMOBSERVER
+    NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
 
 
@@ -605,7 +605,7 @@ protected:
   // because the context is already the uri...
   nsISupports * m_channelContext;
   nsresult m_cancelStatus;
-  nsLoadFlags mLoadAttributes;
+  nsLoadFlags mLoadFlags;
   nsCOMPtr<nsIProgressEventSink> mProgressEventSink;
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   nsCOMPtr<nsISupports> mOwner;

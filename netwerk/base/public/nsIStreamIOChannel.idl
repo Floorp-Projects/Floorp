@@ -20,10 +20,11 @@
  * Contributor(s): 
  */
 
+#include "nsIChannel.idl"
+
 interface nsIURI;
 interface nsIStreamIO;
 
-#include "nsIChannel.idl"
 /**
  * nsIStreamIOChannel specializes nsIChannel to allow a simple channel to be
  * constructed from an nsIStreamIO object and a URL.
@@ -33,20 +34,3 @@ interface nsIStreamIOChannel : nsIChannel
 {
     void init(in nsIURI uri, in nsIStreamIO io);
 };
-
-%{C++
-
-#define NS_STREAMIOCHANNEL_CLASSNAME "Stream I/O Channel"
-#define NS_STREAMIOCHANNEL_CONTRACTID    "@mozilla.org/network/stream-io-channel;1"
-
-#define NS_STREAMIOCHANNEL_CID                       \
-{ /* 6ddb050c-0d04-11d4-986e-00c04fa0cf4a */         \
-    0x6ddb050c,                                      \
-    0x0d04,                                          \
-    0x11d4,                                          \
-    {0x98, 0x6e, 0x00, 0xc0, 0x4f, 0xa0, 0xcf, 0x4a} \
-}
-
-%}
-
-////////////////////////////////////////////////////////////////////////////////

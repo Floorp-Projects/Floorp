@@ -46,6 +46,7 @@
 #include "nsMsgUtils.h"
 #include "nsIFileSpec.h" 
 #include "nsIURL.h"
+#include "nsNetCID.h"
 #include "nsISmtpService.h"
 #include "nsString.h"
 #include "nsIMsgBiffManager.h"

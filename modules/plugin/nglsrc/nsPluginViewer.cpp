@@ -71,8 +71,8 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS
 
-  // nsIStreamObserver methods:
-  NS_DECL_NSISTREAMOBSERVER
+  // nsIRequestObserver methods:
+  NS_DECL_NSIREQUESTOBSERVER
 
   // nsIStreamListener methods:
   NS_DECL_NSISTREAMLISTENER
@@ -762,12 +762,12 @@ PluginListener::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 
 NS_IMETHODIMP
 PluginListener::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
-                              nsresult status, const PRUnichar *errorMsg)
+                              nsresult status)
 {
   if (nsnull == mNextStream) {
     return NS_ERROR_FAILURE;
   }
-  return mNextStream->OnStopRequest(request, ctxt, status, errorMsg);
+  return mNextStream->OnStopRequest(request, ctxt, status);
 }
 
 NS_IMETHODIMP

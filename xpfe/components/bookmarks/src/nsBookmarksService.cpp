@@ -1987,7 +1987,7 @@ nsBookmarksService::FireTimer(nsITimer* aTimer, void* aClosure)
 				nsCOMPtr<nsIChannel>	channel;
 				if (NS_SUCCEEDED(rv = NS_OpenURI(getter_AddRefs(channel), uri, nsnull)))
 				{
-					channel->SetLoadAttributes(nsIChannel::FORCE_VALIDATION | nsIChannel::VALIDATE_ALWAYS);
+					channel->SetLoadFlags(nsIRequest::FORCE_VALIDATION | nsIRequest::VALIDATE_ALWAYS);
 					nsCOMPtr<nsIHTTPChannel>	httpChannel = do_QueryInterface(channel);
 					if (httpChannel)
 					{
@@ -2054,7 +2054,7 @@ nsBookmarksService::OnDataAvailable(nsIRequest* request, nsISupports *ctxt, nsII
 
 NS_IMETHODIMP
 nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
-					nsresult status, const PRUnichar *errorMsg) 
+					nsresult status)
 {
 	nsresult		rv;
 
@@ -2542,7 +2542,7 @@ NS_IMPL_QUERY_INTERFACE8(nsBookmarksService,
 			 nsIRDFRemoteDataSource,
 			 nsIRDFObserver,
 			 nsIStreamListener,
-			 nsIStreamObserver,
+			 nsIRequestObserver,
 			 nsIObserver,
 			 nsISupportsWeakReference)
 

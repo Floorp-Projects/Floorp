@@ -26,7 +26,7 @@
 
 #include "imgIContainer.h"
 #include "imgIDecoder.h"
-#include "nsIStreamObserver.h"
+#include "nsIRequestObserver.h"
 #include "nsIChannel.h"
 #include "nsILoadGroup.h"
 #include "nsCOMPtr.h"
@@ -41,7 +41,7 @@
 
 class imgRequestProxy : public imgIRequest,
                         public imgIDecoderObserver,
-                        public nsIStreamObserver
+                        public nsIRequestObserver
 {
 public:
   NS_DECL_ISUPPORTS
@@ -49,7 +49,7 @@ public:
   NS_DECL_NSIREQUEST
   NS_DECL_IMGIDECODEROBSERVER
   NS_DECL_IMGICONTAINEROBSERVER
-  NS_DECL_NSISTREAMOBSERVER
+  NS_DECL_NSIREQUESTOBSERVER
 
   imgRequestProxy();
   virtual ~imgRequestProxy();

@@ -52,9 +52,9 @@ static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 #endif
 
 #ifdef USE_ASYNC_READ
-NS_IMPL_ISUPPORTS5(nsStreamXferOp, nsIStreamListener, nsIStreamObserver, nsIStreamTransferOperation, nsIProgressEventSink, nsIInterfaceRequestor);
+NS_IMPL_ISUPPORTS5(nsStreamXferOp, nsIStreamListener, nsIRequestObserver, nsIStreamTransferOperation, nsIProgressEventSink, nsIInterfaceRequestor);
 #else
-NS_IMPL_ISUPPORTS4(nsStreamXferOp, nsIStreamObserver, nsIStreamTransferOperation, nsIProgressEventSink, nsIInterfaceRequestor);
+NS_IMPL_ISUPPORTS4(nsStreamXferOp, nsIRequestObserver, nsIStreamTransferOperation, nsIProgressEventSink, nsIInterfaceRequestor);
 #endif
 
 // ctor - save arguments in data members.
@@ -210,7 +210,7 @@ nsStreamXferOp::Start( void ) {
                     nsCOMPtr<nsIRequest> dummyRequest;
                     rv = NS_AsyncWriteFromStream(getter_AddRefs(dummyRequest),
                                                  mOutputTransport, inStream, 0, -1, 0,
-                            NS_STATIC_CAST(nsIStreamObserver*, this));
+                            NS_STATIC_CAST(nsIRequestObserver*, this));
                     if ( NS_FAILED( rv ) ) {
                         this->OnError( kOpAsyncWrite, rv );
                     }
@@ -456,14 +456,12 @@ nsStreamXferOp::OnStatus( nsIRequest      *request,
 NS_IMETHODIMP
 nsStreamXferOp::OnStopRequest( nsIRequest      *request,
                                nsISupports     *aContext,
-                               nsresult         aStatus,
-                               const PRUnichar *aMsg ) {
+                               nsresult         aStatus) {
     nsresult rv = NS_OK;
 
     // If an error occurred, shut down.
     if ( NS_FAILED( aStatus ) ) {
         this->Stop();
-        // XXX need to use aMsg when it is provided
         this->OnError( kOpAsyncRead, aStatus );
     }
 
@@ -481,10 +479,9 @@ nsStreamXferOp::OnStopRequest( nsIRequest      *request,
 
     // Notify observer that the download is complete.
     if ( !mError && mObserver ) {
-        nsString msg(aMsg);
         rv = mObserver->Observe( (nsIStreamTransferOperation*)this,
                                   NS_ConvertASCIItoUCS2( NS_ISTREAMTRANSFER_CONTRACTID ";onCompletion" ).GetUnicode(),
-                                  msg.GetUnicode() );
+                                  nsnull );
         if ( NS_FAILED( rv ) ) {
             DEBUG_PRINTF( PR_STDOUT, "%s %d: Observe failed, rv=0x%08X\n",
                           (char*)__FILE__, (int)__LINE__, (int)rv );

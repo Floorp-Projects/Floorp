@@ -29,6 +29,7 @@
 #include "nsIURL.h"
 #include "nsJARChannel.h"
 #include "nsXPIDLString.h"
+#include "nsNetCID.h"
 
 static NS_DEFINE_CID(kIOServiceCID,      NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kJARUriCID,         NS_JARURI_CID);

@@ -44,7 +44,7 @@ extern PRLogModuleInfo* gFTPLog;
 // Client initiation is the most common case and is attempted first.
 
 nsFTPChannel::nsFTPChannel()
-    : mLoadAttributes(LOAD_NORMAL),
+    : mLoadFlags(LOAD_NORMAL),
       mSourceOffset(0),
       mAmount(0),
       mContentLength(-1),
@@ -77,7 +77,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS8(nsFTPChannel,
                               nsIInterfaceRequestor, 
                               nsIProgressEventSink,
                               nsIStreamListener,
-                              nsIStreamObserver);
+                              nsIRequestObserver);
 
 nsresult
 nsFTPChannel::Init(nsIURI* uri)
@@ -238,13 +238,6 @@ nsFTPChannel::GetURI(nsIURI* *aURL)
 }
 
 NS_IMETHODIMP
-nsFTPChannel::SetURI(nsIURI* aURL)
-{
-    mURL = aURL;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsFTPChannel::Open(nsIInputStream **result)
 {
     if (mProxyChannel)
@@ -289,20 +282,20 @@ nsFTPChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
 }
 
 NS_IMETHODIMP
-nsFTPChannel::GetLoadAttributes(PRUint32 *aLoadAttributes)
+nsFTPChannel::GetLoadFlags(PRUint32 *aLoadFlags)
 {
     if (mProxyChannel)
-        return mProxyChannel->GetLoadAttributes(aLoadAttributes);
-    *aLoadAttributes = mLoadAttributes;
+        return mProxyChannel->GetLoadFlags(aLoadFlags);
+    *aLoadFlags = mLoadFlags;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFTPChannel::SetLoadAttributes(PRUint32 aLoadAttributes)
+nsFTPChannel::SetLoadFlags(PRUint32 aLoadFlags)
 {
     if (mProxyChannel)
-        return mProxyChannel->SetLoadAttributes(aLoadAttributes);
-    mLoadAttributes = aLoadAttributes;
+        return mProxyChannel->SetLoadFlags(aLoadFlags);
+    mLoadFlags = aLoadFlags;
     return NS_OK;
 }
 
@@ -466,10 +459,10 @@ nsFTPChannel::OnProgress(nsIRequest *request, nsISupports* aContext,
 }
 
 
-// nsIStreamObserver methods.
+// nsIRequestObserver methods.
 NS_IMETHODIMP
 nsFTPChannel::OnStopRequest(nsIRequest *request, nsISupports* aContext,
-                            nsresult aStatus, const PRUnichar* aStatusArg)
+                            nsresult aStatus)
 {
     PR_LOG(gFTPLog, 
            PR_LOG_DEBUG, 
@@ -481,16 +474,16 @@ nsFTPChannel::OnStopRequest(nsIRequest *request, nsISupports* aContext,
     mStatus = aStatus;
     
     if (mObserver) {
-        rv = mObserver->OnStopRequest(this, mUserContext, aStatus, aStatusArg);
+        rv = mObserver->OnStopRequest(this, mUserContext, aStatus);
         if (NS_FAILED(rv)) return rv;
     }
 
     if (mListener) {
-        rv = mListener->OnStopRequest(this, mUserContext, aStatus, aStatusArg);
+        rv = mListener->OnStopRequest(this, mUserContext, aStatus);
         if (NS_FAILED(rv)) return rv;
     }
     if (mLoadGroup) {
-        rv = mLoadGroup->RemoveRequest(this, nsnull, aStatus, aStatusArg);
+        rv = mLoadGroup->RemoveRequest(this, nsnull, aStatus);
         if (NS_FAILED(rv)) return rv;
     }
     return rv;

@@ -42,7 +42,7 @@ NS_IMPL_THREADSAFE_RELEASE(nsCopyMessageStreamListener)
 NS_INTERFACE_MAP_BEGIN(nsCopyMessageStreamListener)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStreamListener)
    NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
-   NS_INTERFACE_MAP_ENTRY(nsIStreamObserver)
+   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
    NS_INTERFACE_MAP_ENTRY(nsICopyMessageStreamListener)
 NS_INTERFACE_MAP_END_THREADSAFE
 
@@ -150,7 +150,7 @@ NS_IMETHODIMP nsCopyMessageStreamListener::OnStartRequest(nsIRequest * request, 
 	return rv;
 }
 
-NS_IMETHODIMP nsCopyMessageStreamListener::OnStopRequest(nsIRequest* request, nsISupports *ctxt, nsresult aStatus, const PRUnichar *aMsg)
+NS_IMETHODIMP nsCopyMessageStreamListener::OnStopRequest(nsIRequest* request, nsISupports *ctxt, nsresult aStatus)
 {
 	nsresult rv = NS_OK;
 	nsCOMPtr<nsIURI> uri = do_QueryInterface(ctxt, &rv);

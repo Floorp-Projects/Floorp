@@ -385,6 +385,32 @@ nsFileTransport::Resume()
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFileTransport::GetLoadGroup(nsILoadGroup **loadGroup)
+{
+    *loadGroup = nsnull;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileTransport::SetLoadGroup(nsILoadGroup *loadGroup)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFileTransport::GetLoadFlags(nsLoadFlags *loadFlags)
+{
+    *loadFlags = nsIRequest::LOAD_NORMAL;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileTransport::SetLoadFlags(nsLoadFlags loadFlags)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // From nsITransportRequest
 ////////////////////////////////////////////////////////////////////////////////
@@ -751,7 +777,7 @@ nsFileTransport::Process(void)
         }
 
         if (mListener) {
-            mListener->OnStopRequest(this, mContext, mStatus, nsnull);
+            mListener->OnStopRequest(this, mContext, mStatus);
             mListener = 0;
         }
         if (mProgress) {
@@ -926,7 +952,7 @@ nsFileTransport::Process(void)
         mSinkWrapper = nsnull;
 
         if (mProvider) {
-            mProvider->OnStopRequest(this, mContext, mStatus, nsnull);
+            mProvider->OnStopRequest(this, mContext, mStatus);
             mProvider = 0;
         }
         if (mProgress) {

@@ -155,7 +155,7 @@ public:
                          nsIStreamListener** aResult);
 
   NS_DECL_ISUPPORTS
-  NS_DECL_NSISTREAMOBSERVER
+  NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
 };
 
@@ -340,7 +340,7 @@ nsHTTPIndexParser::Create(nsHTTPIndex* aHTTPIndex,
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsHTTPIndexParser,
                               nsIStreamListener,
-                              nsIStreamObserver);
+                              nsIRequestObserver);
 
 
 NS_IMETHODIMP
@@ -422,8 +422,7 @@ nsHTTPIndexParser::OnStartRequest(nsIRequest *request, nsISupports* aContext)
 NS_IMETHODIMP
 nsHTTPIndexParser::OnStopRequest(nsIRequest *request,
                                  nsISupports* aContext,
-                                 nsresult aStatus,
-                                 const PRUnichar* aErrorMsg)
+                                 nsresult aStatus)
 {
   // If mDirectory isn't set, then we should just bail. Either an
   // error occurred and OnStartRequest() never got called, or

@@ -40,7 +40,6 @@
 #include "nsIOutputStream.h"
 #include "nsHTTPResponseListener.h"
 #include "nsIStreamListener.h"
-#include "nsIStreamObserver.h"
 #include "nsIProxy.h"
 #include "nsIPrompt.h"
 #include "nsIHTTPEventSink.h"
@@ -118,8 +117,7 @@ public:
     nsresult            Redirect(const char *aURL,
                                  nsIChannel **aResult, PRInt32 aStatusCode);
 
-    nsresult            ResponseCompleted(nsIStreamListener *aListener,
-                                          nsresult aStatus, const PRUnichar* aStatusArg);
+    nsresult            ResponseCompleted(nsIStreamListener *aListener, nsresult aStatus);
 
     nsresult            SetResponse(nsHTTPResponse* i_pResp);
     nsresult            GetResponseContext(nsISupports** aContext);
@@ -190,7 +188,7 @@ protected:
     nsCOMPtr<nsIProgressEventSink>      mRealProgressEventSink;
     nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
 
-    PRUint32                            mLoadAttributes;
+    PRUint32                            mLoadFlags;
     nsCOMPtr<nsILoadGroup>              mLoadGroup;
 
     // nsIPrincipal
@@ -276,7 +274,7 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIRUNNABLE
     NS_DECL_NSISTREAMLISTENER
-    NS_DECL_NSISTREAMOBSERVER
+    NS_DECL_NSIREQUESTOBSERVER
 
     nsSyncHelper();
     virtual ~nsSyncHelper() {};

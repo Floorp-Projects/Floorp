@@ -35,6 +35,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIIOService.h"
 #include "nsINetDataCacheManager.h"
+#include "nsNetCID.h"
 
 static NS_DEFINE_CID(kUrlListenerManagerCID, NS_URLLISTENERMANAGER_CID);
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);

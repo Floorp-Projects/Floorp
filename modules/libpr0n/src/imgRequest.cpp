@@ -53,7 +53,7 @@ PRLogModuleInfo *gImgLog = PR_NewLogModule("imgRequest");
 
 NS_IMPL_ISUPPORTS7(imgRequest, imgIRequest, nsIRequest,
                    imgIDecoderObserver, imgIContainerObserver,
-                   nsIStreamListener, nsIStreamObserver,
+                   nsIStreamListener, nsIRequestObserver,
                    nsISupportsWeakReference)
 
 imgRequest::imgRequest() : 
@@ -164,9 +164,9 @@ nsresult imgRequest::AddObserver(imgIDecoderObserver *observer)
   }
 
   if (mState & onStopRequest) {
-    nsCOMPtr<nsIStreamObserver> ob(do_QueryInterface(observer));
+    nsCOMPtr<nsIRequestObserver> ob(do_QueryInterface(observer));
     PR_ASSERT(observer);
-    ob->OnStopRequest(nsnull, nsnull, status, nsnull);
+    ob->OnStopRequest(nsnull, nsnull, status);
   } 
 
   return NS_OK;
@@ -204,9 +204,9 @@ nsresult imgRequest::RemoveObserver(imgIDecoderObserver *observer, nsresult stat
 
       if (!(mState & onStopRequest)) {
         // make sure that observer gets an onStopRequest message sent to it
-        nsCOMPtr<nsIStreamObserver> ob(do_QueryInterface(observer));
+        nsCOMPtr<nsIRequestObserver> ob(do_QueryInterface(observer));
         PR_ASSERT(ob);
-        ob->OnStopRequest(nsnull, nsnull, NS_BINDING_ABORTED, nsnull);
+        ob->OnStopRequest(nsnull, nsnull, NS_BINDING_ABORTED);
       }
     }
   }
@@ -289,6 +289,30 @@ NS_IMETHODIMP imgRequest::Suspend()
 NS_IMETHODIMP imgRequest::Resume()
 {
     NS_NOTYETIMPLEMENTED("imgRequest::Resume");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* attribute nsILoadGroup loadGroup */
+NS_IMETHODIMP imgRequest::GetLoadGroup(nsILoadGroup **loadGroup)
+{
+    NS_NOTYETIMPLEMENTED("imgRequest::GetLoadGroup");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+NS_IMETHODIMP imgRequest::SetLoadGroup(nsILoadGroup *loadGroup)
+{
+    NS_NOTYETIMPLEMENTED("imgRequest::SetLoadGroup");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* attribute nsLoadFlags loadFlags */
+NS_IMETHODIMP imgRequest::GetLoadFlags(nsLoadFlags *flags)
+{
+    NS_NOTYETIMPLEMENTED("imgRequest::GetLoadFlags");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+NS_IMETHODIMP imgRequest::SetLoadFlags(nsLoadFlags flags)
+{
+    NS_NOTYETIMPLEMENTED("imgRequest::SetLoadFlags");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -532,7 +556,7 @@ NS_IMETHODIMP imgRequest::OnStopDecode(imgIRequest *aRequest, nsISupports *aCX, 
 
 
 
-/** nsIStreamObserver methods **/
+/** nsIRequestObserver methods **/
 
 /* void onStartRequest (in nsIRequest request, in nsISupports ctxt); */
 NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt)
@@ -552,7 +576,7 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
   while (++i < count) {
     imgIDecoderObserver *iob = NS_STATIC_CAST(imgIDecoderObserver*, mObservers[i]);
     if (iob) {
-      nsCOMPtr<nsIStreamObserver> ob(do_QueryInterface(iob));
+      nsCOMPtr<nsIRequestObserver> ob(do_QueryInterface(iob));
       if (ob) ob->OnStartRequest(aRequest, ctxt);
     }
   }
@@ -610,7 +634,7 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
 }
 
 /* void onStopRequest (in nsIRequest request, in nsISupports ctxt, in nsresult status, in wstring statusArg); */
-NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt, nsresult status, const PRUnichar *statusArg)
+NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt, nsresult status)
 {
   PR_LOG(gImgLog, PR_LOG_DEBUG,
          ("[this=%p] imgRequest::OnStopRequest\n", this));
@@ -656,8 +680,8 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
     if (item) {
       imgIDecoderObserver *iob = NS_STATIC_CAST(imgIDecoderObserver*, item);
       if (iob) {
-        nsCOMPtr<nsIStreamObserver> ob(do_QueryInterface(iob));
-        if (ob) ob->OnStopRequest(aRequest, ctxt, status, statusArg);
+        nsCOMPtr<nsIRequestObserver> ob(do_QueryInterface(iob));
+        if (ob) ob->OnStopRequest(aRequest, ctxt, status);
       }
     }
   }
@@ -665,7 +689,7 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
   // if there was an error loading the image, (mState & onStopDecode) won't be true.
   // Send an onStopDecode message
   if (!(mState & onStopDecode)) {
-    this->OnStopDecode(nsnull, nsnull, status, statusArg);
+    this->OnStopDecode(nsnull, nsnull, status, nsnull);
   }
 
   return NS_OK;

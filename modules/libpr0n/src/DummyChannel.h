@@ -45,9 +45,6 @@ public:
 private:
   /* additional members */
   nsCOMPtr<imgIRequest> mRequest;
-  nsCOMPtr<nsILoadGroup> mLoadGroup;
-
-  nsLoadFlags mLoadFlags;
 };
 
 #endif

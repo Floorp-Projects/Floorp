@@ -27,6 +27,7 @@
 #include "nsXPIDLString.h"
 
 #include "nsIURL.h"
+#include "nsNetCID.h"
 
 #include "nsIRDFResource.h"
 

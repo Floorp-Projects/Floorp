@@ -15,13 +15,12 @@ nsStreamListenerTee::OnStartRequest(nsIRequest *request,
 NS_IMETHODIMP
 nsStreamListenerTee::OnStopRequest(nsIRequest *request,
                                    nsISupports *context,
-                                   nsresult status,
-                                   const PRUnichar *statusText)
+                                   nsresult status)
 {
     NS_ENSURE_TRUE(mListener, NS_ERROR_NOT_INITIALIZED);
     mInputTee = 0;
     mSink = 0;
-    return mListener->OnStopRequest(request, context, status, statusText);
+    return mListener->OnStopRequest(request, context, status);
 }
 
 NS_IMETHODIMP

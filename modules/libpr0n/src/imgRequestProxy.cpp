@@ -42,7 +42,7 @@
 
 #include "ImageLogging.h"
 
-NS_IMPL_ISUPPORTS5(imgRequestProxy, imgIRequest, nsIRequest, imgIDecoderObserver, imgIContainerObserver, nsIStreamObserver)
+NS_IMPL_ISUPPORTS5(imgRequestProxy, imgIRequest, nsIRequest, imgIDecoderObserver, imgIContainerObserver, nsIRequestObserver)
 
 imgRequestProxy::imgRequestProxy() :
   mCanceled(PR_FALSE)
@@ -145,6 +145,30 @@ NS_IMETHODIMP imgRequestProxy::Suspend()
 /* void resume (); */
 NS_IMETHODIMP imgRequestProxy::Resume()
 {
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* attribute nsILoadGroup loadGroup */
+NS_IMETHODIMP imgRequestProxy::GetLoadGroup(nsILoadGroup **loadGroup)
+{
+    *loadGroup = nsnull;
+    return NS_OK;
+}
+NS_IMETHODIMP imgRequestProxy::SetLoadGroup(nsILoadGroup *loadGroup)
+{
+    NS_NOTYETIMPLEMENTED("imgRequestProxy::SetLoadGroup");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* attribute nsLoadFlags loadFlags */
+NS_IMETHODIMP imgRequestProxy::GetLoadFlags(nsLoadFlags *flags)
+{
+    *flags = nsIRequest::LOAD_NORMAL;
+    return NS_OK;
+}
+NS_IMETHODIMP imgRequestProxy::SetLoadFlags(nsLoadFlags flags)
+{
+    NS_NOTYETIMPLEMENTED("imgRequestProxy::SetLoadFlags");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -303,7 +327,7 @@ NS_IMETHODIMP imgRequestProxy::OnStartRequest(nsIRequest *request, nsISupports *
 }
 
 /* void onStopRequest (in nsIRequest request, in nsISupports ctxt, in nsresult statusCode, in wstring statusText); */
-NS_IMETHODIMP imgRequestProxy::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult statusCode, const PRUnichar *statusText)
+NS_IMETHODIMP imgRequestProxy::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult statusCode)
 {
   if (!mDummyChannel)
     return NS_OK;
@@ -311,7 +335,7 @@ NS_IMETHODIMP imgRequestProxy::OnStopRequest(nsIRequest *request, nsISupports *c
   nsCOMPtr<nsILoadGroup> loadGroup;
   mDummyChannel->GetLoadGroup(getter_AddRefs(loadGroup));
   if (loadGroup) {
-    loadGroup->RemoveRequest(mDummyChannel, mContext, statusCode, statusText);
+    loadGroup->RemoveRequest(mDummyChannel, mContext, statusCode);
   }
   mDummyChannel = nsnull;
 

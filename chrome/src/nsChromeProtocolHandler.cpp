@@ -47,6 +47,7 @@
 #include "nsIXULPrototypeDocument.h"
 #include "nsContentCID.h"
 #include "nsXPIDLString.h"
+#include "nsNetCID.h"
 #include "prlog.h"
 
 //----------------------------------------------------------------------
@@ -90,7 +91,7 @@ protected:
     nsCOMPtr<nsILoadGroup>      mLoadGroup;
     nsCOMPtr<nsIStreamListener> mListener;
     nsCOMPtr<nsISupports>       mContext;
-    nsLoadFlags                 mLoadAttributes;
+    nsLoadFlags                 mLoadFlags;
     nsCOMPtr<nsISupports>       mOwner;
     nsresult                    mStatus;
 
@@ -123,6 +124,10 @@ public:
     NS_IMETHOD Cancel(nsresult status)  { mStatus = status; return NS_OK; }
     NS_IMETHOD Suspend(void) { return NS_OK; }
     NS_IMETHOD Resume(void)  { return NS_OK; }
+    NS_IMETHOD GetLoadGroup(nsILoadGroup **);
+    NS_IMETHOD SetLoadGroup(nsILoadGroup *);
+    NS_IMETHOD GetLoadFlags(nsLoadFlags *);
+    NS_IMETHOD SetLoadFlags(nsLoadFlags);
     
 // nsIChannel    
     NS_DECL_NSICHANNEL
@@ -155,7 +160,7 @@ nsCachedChromeChannel::Create(nsIURI* aURI, nsIChannel** aResult)
 
 
 nsCachedChromeChannel::nsCachedChromeChannel(nsIURI* aURI)
-    : mURI(aURI), mLoadGroup(nsnull), mLoadAttributes (nsIChannel::LOAD_NORMAL), mStatus(NS_OK)
+    : mURI(aURI), mLoadGroup(nsnull), mLoadFlags (nsIRequest::LOAD_NORMAL), mStatus(NS_OK)
 {
     NS_INIT_REFCNT();
 
@@ -203,13 +208,6 @@ nsCachedChromeChannel::GetURI(nsIURI* *aURI)
 }
 
 NS_IMETHODIMP
-nsCachedChromeChannel::SetURI(nsIURI* aURI)
-{
-    mURI = aURI;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsCachedChromeChannel::Open(nsIInputStream **_retval)
 {
 //    NS_NOTREACHED("don't do that");
@@ -248,7 +246,7 @@ nsCachedChromeChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
                        ("nsCachedChromeChannel[%p]: removing self from load group %p",
                         this, mLoadGroup.get()));
 
-                (void) mLoadGroup->RemoveRequest(this, nsnull, nsnull, nsnull);
+                (void) mLoadGroup->RemoveRequest(this, nsnull, NS_OK);
             }
 
             return rv;
@@ -268,16 +266,16 @@ nsCachedChromeChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
 }
 
 NS_IMETHODIMP
-nsCachedChromeChannel::GetLoadAttributes(nsLoadFlags *aLoadAttributes)
+nsCachedChromeChannel::GetLoadFlags(nsLoadFlags *aLoadFlags)
 {
-    *aLoadAttributes = mLoadAttributes; 
+    *aLoadFlags = mLoadFlags; 
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCachedChromeChannel::SetLoadAttributes(nsLoadFlags aLoadAttributes)
+nsCachedChromeChannel::SetLoadFlags(nsLoadFlags aLoadFlags)
 {
-    mLoadAttributes = aLoadAttributes;
+    mLoadFlags = aLoadFlags;
     return NS_OK;
 }
 
@@ -436,14 +434,14 @@ nsCachedChromeChannel::HandleStopLoadEvent(PLEvent* aEvent)
             channel, channel->mListener.get()));
 
     (void) channel->mListener->OnStopRequest(request, channel->mContext, 
-                                             channel->mStatus, nsnull);
+                                             channel->mStatus);
 
     if (channel->mLoadGroup) {
         PR_LOG(gLog, PR_LOG_DEBUG,
                ("nsCachedChromeChannel[%p]: removing self from load group %p",
                 channel, channel->mLoadGroup.get()));
 
-        (void) channel->mLoadGroup->RemoveRequest(request, nsnull, nsnull, nsnull);
+        (void) channel->mLoadGroup->RemoveRequest(request, nsnull, NS_OK);
     }
 
     channel->mListener = nsnull;

@@ -57,7 +57,7 @@ PRLogModuleInfo* gResChannelLog = nsnull;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsResChannel::nsResChannel()
-: mLoadAttributes(nsIResChannel::LOAD_NORMAL),
+: mLoadFlags(nsIResChannel::LOAD_NORMAL),
       mState(QUIESCENT),
       mStatus(NS_OK)
 #ifdef DEBUG
@@ -96,7 +96,7 @@ NS_INTERFACE_MAP_BEGIN(nsResChannel)
     NS_INTERFACE_MAP_ENTRY(nsIResChannel)
     NS_INTERFACE_MAP_ENTRY(nsIFileChannel)
     NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
-    NS_INTERFACE_MAP_ENTRY(nsIStreamObserver)
+    NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIResChannel)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIRequest, nsIResChannel)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIChannel, nsIResChannel)
@@ -270,12 +270,6 @@ nsResChannel::GetURI(nsIURI* *aURI)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsResChannel::SetURI(nsIURI* aURI)
-{
-    return NS_ERROR_FAILURE;
-}
-
 nsresult
 nsResChannel::EnsureNextResolvedChannel()
 {
@@ -303,8 +297,8 @@ nsResChannel::EnsureNextResolvedChannel()
         rv = mResolvedChannel->SetLoadGroup(mLoadGroup);
         if (NS_FAILED(rv)) goto done;
     }
-    if (mLoadAttributes != nsIResChannel::LOAD_NORMAL) {
-        rv = mResolvedChannel->SetLoadAttributes(mLoadAttributes);
+    if (mLoadFlags != nsIResChannel::LOAD_NORMAL) {
+        rv = mResolvedChannel->SetLoadFlags(mLoadFlags);
         if (NS_FAILED(rv)) goto done;
     }
     if (mCallbacks) {
@@ -417,22 +411,22 @@ nsResChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
     } while (NS_FAILED(rv));
 
     if (NS_FAILED(rv))
-        (void)EndRequest(rv, nsnull);
+        (void)EndRequest(rv);
 
     return rv;
 }
 
 NS_IMETHODIMP
-nsResChannel::GetLoadAttributes(PRUint32 *aLoadAttributes)
+nsResChannel::GetLoadFlags(PRUint32 *aLoadFlags)
 {
-    *aLoadAttributes = mLoadAttributes;
+    *aLoadFlags = mLoadFlags;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsResChannel::SetLoadAttributes(PRUint32 aLoadAttributes)
+nsResChannel::SetLoadFlags(PRUint32 aLoadFlags)
 {
-    mLoadAttributes = aLoadAttributes;
+    mLoadFlags = aLoadFlags;
     return NS_OK;
 }
 
@@ -542,7 +536,7 @@ nsResChannel::OnStartRequest(nsIRequest* request, nsISupports* context)
 
 NS_IMETHODIMP
 nsResChannel::OnStopRequest(nsIRequest* request, nsISupports* context,
-                            nsresult aStatus, const PRUnichar* aStatusArg)
+                            nsresult aStatus)
 {
 #ifdef DEBUG
     NS_ASSERTION(mInitiator == PR_CurrentThread(),
@@ -559,15 +553,15 @@ nsResChannel::OnStopRequest(nsIRequest* request, nsISupports* context,
             break;
         }
     }
-    return EndRequest(aStatus, aStatusArg);
+    return EndRequest(aStatus);
 }
 
 nsresult
-nsResChannel::EndRequest(nsresult aStatus, const PRUnichar* aStatusArg)
+nsResChannel::EndRequest(nsresult aStatus)
 {
     nsresult rv;
     rv = mUserObserver->OnStopRequest(NS_STATIC_CAST(nsIResChannel*, this),
-                                      mUserContext, aStatus, aStatusArg);
+                                      mUserContext, aStatus);
 #if 0 // we don't add the resource channel to the group (although maybe we should)
     if (mLoadGroup) {
         if (NS_SUCCEEDED(rv)) {

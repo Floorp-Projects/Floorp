@@ -42,7 +42,7 @@
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetConverterManager2.h"
 #include "nsIChannel.h"
-#include "nsIStreamObserver.h"
+#include "nsIRequestObserver.h"
 
 #include "plbase64.h"
 #include "nsMsgI18N.h"

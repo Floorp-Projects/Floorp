@@ -77,7 +77,7 @@ public:
 	////////////////////////////////////////////////////////////////////////////////////////
 
 	NS_IMETHOD OnStartRequest(nsIRequest *request, nsISupports *ctxt);
-	NS_IMETHOD OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult aStatus, const PRUnichar *aMsg);
+	NS_IMETHOD OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult aStatus);
   NS_IMETHOD GetContentLength(PRInt32 * aContentLength);
 
 private:

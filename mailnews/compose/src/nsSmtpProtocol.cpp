@@ -400,9 +400,9 @@ const char * nsSmtpProtocol::GetUserDomainName()
 ////////////////////////////////////////////////////////////////////////////////////////////
 
 // stop binding is a "notification" informing us that the stream associated with aURL is going away. 
-NS_IMETHODIMP nsSmtpProtocol::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult aStatus, const PRUnichar *aMsg)
+NS_IMETHODIMP nsSmtpProtocol::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult aStatus)
 {
-	nsMsgAsyncWriteProtocol::OnStopRequest(nsnull, ctxt, aStatus, aMsg);
+	nsMsgAsyncWriteProtocol::OnStopRequest(nsnull, ctxt, aStatus);
 
 	// okay, we've been told that the send is done and the connection is going away. So 
 	// we need to release all of our state

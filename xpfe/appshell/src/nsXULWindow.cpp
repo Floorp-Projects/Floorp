@@ -44,6 +44,7 @@
 #include "nsIDOMXULDocument.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIIOService.h"
+#include "nsNetCID.h"
 #include "nsIJSContextStack.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIObserverService.h"

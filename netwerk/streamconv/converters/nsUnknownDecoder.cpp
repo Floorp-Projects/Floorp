@@ -75,7 +75,7 @@ NS_IMPL_RELEASE(nsUnknownDecoder);
 NS_INTERFACE_MAP_BEGIN(nsUnknownDecoder)
    NS_INTERFACE_MAP_ENTRY(nsIStreamConverter)
    NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
-   NS_INTERFACE_MAP_ENTRY(nsIStreamObserver)
+   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
    NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
@@ -181,7 +181,7 @@ nsUnknownDecoder::OnDataAvailable(nsIRequest* request,
 
 // ----
 //
-// nsIStreamObserver methods...
+// nsIRequestObserver methods...
 //
 // ----
 
@@ -207,7 +207,7 @@ nsUnknownDecoder::OnStartRequest(nsIRequest* request, nsISupports *aCtxt)
 
 NS_IMETHODIMP
 nsUnknownDecoder::OnStopRequest(nsIRequest* request, nsISupports *aCtxt,
-                                nsresult aStatus, const PRUnichar* aStatusArg)
+                                nsresult aStatus)
 {
   nsresult rv = NS_OK;
 
@@ -229,7 +229,7 @@ nsUnknownDecoder::OnStopRequest(nsIRequest* request, nsISupports *aCtxt,
     }
   }
 
-  rv = mNextListener->OnStopRequest(request, aCtxt, aStatus, aStatusArg);
+  rv = mNextListener->OnStopRequest(request, aCtxt, aStatus);
   mNextListener = 0;
 
   return rv;

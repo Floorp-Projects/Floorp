@@ -71,8 +71,8 @@ public:
 
   // Methods for nsIStreamListener
   NS_DECL_NSISTREAMLISTENER
-  // Methods for nsIStreamObserver
-  NS_DECL_NSISTREAMOBSERVER
+  // Methods for nsIRequestObserver
+  NS_DECL_NSIREQUESTOBSERVER
   
   NS_DECL_NSIURICONTENTLISTENER
   NS_DECL_NSIINTERFACEREQUESTOR

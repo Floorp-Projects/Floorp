@@ -57,8 +57,8 @@ public:
 	NS_DECL_NSICHANNEL
 	NS_DECL_NSIREQUEST
   
-  NS_DECL_NSISTREAMLISTENER
-  NS_DECL_NSISTREAMOBSERVER
+    NS_DECL_NSISTREAMLISTENER
+    NS_DECL_NSIREQUESTOBSERVER
 
 	// LoadUrl -- A protocol typically overrides this function, sets up any local state for the url and
 	// then calls the base class which opens the socket if it needs opened. If the socket is 
@@ -135,7 +135,7 @@ protected:
 	nsCOMPtr<nsIStreamListener> m_channelListener;
 	nsCOMPtr<nsISupports>	    	m_channelContext;
 	nsCOMPtr<nsILoadGroup>		  m_loadGroup;
-  nsLoadFlags                 mLoadAttributes;
+  nsLoadFlags                 mLoadFlags;
   nsCOMPtr<nsIProgressEventSink> mProgressEventSink;
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   nsCOMPtr<nsISupports>       mOwner;

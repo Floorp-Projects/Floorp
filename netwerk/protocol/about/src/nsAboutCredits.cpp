@@ -25,6 +25,7 @@
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
 #include "nsIURI.h"
+#include "nsNetCID.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 

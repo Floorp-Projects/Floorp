@@ -82,6 +82,7 @@
 #include "nsIPop3URL.h"
 #include "nsIMsgMailSession.h"
 #include "nsIMsgFolderCompactor.h"
+#include "nsNetCID.h"
 
 
 static NS_DEFINE_CID(kRDFServiceCID,							NS_RDFSERVICE_CID);

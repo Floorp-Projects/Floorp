@@ -52,7 +52,7 @@ nsSyncStreamListener::~nsSyncStreamListener()
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsSyncStreamListener, 
                               nsISyncStreamListener,
                               nsIStreamListener,
-                              nsIStreamObserver)
+                              nsIRequestObserver)
 
 NS_IMETHODIMP 
 nsSyncStreamListener::OnStartRequest(nsIRequest* request, nsISupports* context)

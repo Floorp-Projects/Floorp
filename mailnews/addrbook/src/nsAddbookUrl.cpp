@@ -21,6 +21,7 @@
  */
 
 #include "nsIURI.h"
+#include "nsNetCID.h"
 #include "nsAddbookUrl.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"

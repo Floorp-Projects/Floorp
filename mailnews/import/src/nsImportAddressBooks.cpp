@@ -35,6 +35,7 @@
 #include "nsCRT.h"
 #include "nsString.h"
 #include "nsIURL.h"
+#include "nsNetCID.h"
 
 #include "nsIFileSpec.h"
 

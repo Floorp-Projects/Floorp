@@ -32,6 +32,7 @@
 #include "nsIFile.h"
 #include "nsInt64.h"
 #include "nsMimeTypes.h"
+#include "nsNetCID.h"
 #include "prio.h"	// Need to pick up def of PR_RDONLY
 
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
@@ -42,7 +43,7 @@ static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 nsFileChannel::nsFileChannel()
     : mIOFlags(-1),
       mPerm(-1),
-      mLoadAttributes(LOAD_NORMAL),
+      mLoadFlags(LOAD_NORMAL),
       mTransferOffset(0),
       mTransferCount(-1),
       mBufferSegmentSize(0),
@@ -93,7 +94,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS7(nsFileChannel,
                               nsIChannel,
                               nsIRequest,
                               nsIStreamListener,
-                              nsIStreamObserver,
+                              nsIRequestObserver,
                               nsIProgressEventSink,
                               nsIInterfaceRequestor)
 
@@ -212,13 +213,6 @@ nsFileChannel::GetURI(nsIURI* *aURI)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsFileChannel::SetURI(nsIURI* aURI)
-{
-    mURI = aURI;
-    return NS_OK;
-}
-
 nsresult
 nsFileChannel::EnsureTransport()
 {
@@ -240,7 +234,7 @@ nsFileChannel::EnsureTransport()
     if (NS_FAILED(rv)) return rv;
 
     mFileTransport->SetNotificationCallbacks(mCallbacks,
-                                             (mLoadAttributes & LOAD_BACKGROUND));
+                                             (mLoadFlags & LOAD_BACKGROUND));
 
     return rv;
 }
@@ -288,20 +282,6 @@ nsFileChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
     nsCOMPtr<nsIStreamListener> tempListener = this;
 
     if (mLoadGroup) {
-        nsCOMPtr<nsILoadGroupListenerFactory> factory;
-        //
-        // Create a load group "proxy" listener...
-        //
-        rv = mLoadGroup->GetGroupListenerFactory(getter_AddRefs(factory));
-        if (factory) {
-            nsIStreamListener *newListener;
-            rv = factory->CreateLoadGroupListener(mRealListener, &newListener);
-            if (NS_SUCCEEDED(rv)) {
-                mRealListener = newListener;
-                NS_RELEASE(newListener);
-            }
-        }
-
         rv = mLoadGroup->AddRequest(this, nsnull);
         if (NS_FAILED(rv)) return rv;
     }
@@ -310,7 +290,7 @@ nsFileChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
                                    getter_AddRefs(mCurrentRequest));
 
     if (NS_FAILED(rv)) {
-        nsresult rv2 = mLoadGroup->RemoveRequest(this, ctxt, rv, nsnull);       // XXX fix error message
+        nsresult rv2 = mLoadGroup->RemoveRequest(this, ctxt, rv);  // XXX fix error message
         NS_ASSERTION(NS_SUCCEEDED(rv2), "RemoveRequest failed");
         // release the transport so that we don't think we're in progress
         mFileTransport = nsnull;
@@ -320,16 +300,16 @@ nsFileChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
 }
 
 NS_IMETHODIMP
-nsFileChannel::GetLoadAttributes(PRUint32 *aLoadAttributes)
+nsFileChannel::GetLoadFlags(PRUint32 *aLoadFlags)
 {
-    *aLoadAttributes = mLoadAttributes;
+    *aLoadFlags = mLoadFlags;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFileChannel::SetLoadAttributes(PRUint32 aLoadAttributes)
+nsFileChannel::SetLoadFlags(PRUint32 aLoadFlags)
 {
-    mLoadAttributes = aLoadAttributes;
+    mLoadFlags = aLoadFlags;
     return NS_OK;
 }
 
@@ -477,7 +457,7 @@ nsFileChannel::OnStartRequest(nsIRequest* request, nsISupports* context)
 
 NS_IMETHODIMP
 nsFileChannel::OnStopRequest(nsIRequest* request, nsISupports* context,
-                             nsresult aStatus, const PRUnichar* aStatusArg)
+                             nsresult aStatus)
 {
 #ifdef DEBUG
     NS_ASSERTION(mInitiator == PR_CurrentThread(),
@@ -486,11 +466,11 @@ nsFileChannel::OnStopRequest(nsIRequest* request, nsISupports* context,
 
     nsresult rv = NS_OK;
     if (mRealListener) {
-        rv = mRealListener->OnStopRequest(this, context, aStatus, aStatusArg);
+        rv = mRealListener->OnStopRequest(this, context, aStatus);
     }
     
     if (mLoadGroup) {
-        mLoadGroup->RemoveRequest(this, context, aStatus, aStatusArg);
+        mLoadGroup->RemoveRequest(this, context, aStatus);
     }
 
     // Release the reference to the consumer stream listener...

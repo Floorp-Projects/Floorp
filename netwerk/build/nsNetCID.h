@@ -26,31 +26,62 @@
 
 
 /******************************************************************************
- * Cache CIDs
+ * netwerk/base/ classes
  */
 
-#define NS_CACHESERVICE_CLASSNAME \
-    "Cache Service"
-#define NS_CACHESERVICE_CONTRACTID \
-    "@mozilla.org/network/cache-service;1"
-#define NS_CACHESERVICE_CID                          \
-{ /* 6c84aec9-29a5-4264-8fbc-bee8f922ea67 */         \
-    0x6c84aec9,                                      \
-    0x29a5,                                          \
-    0x4264,                                          \
-    {0x8f, 0xbc, 0xbe, 0xe8, 0xf9, 0x22, 0xea, 0x67} \
+#define NS_IOSERVICE_CLASSNAME \
+    "I/O Service"
+#define NS_IOSERVICE_CONTRACTID \
+    "@mozilla.org/network/io-service;1"
+#define NS_IOSERVICE_CID                             \
+{ /* 9ac9e770-18bc-11d3-9337-00104ba0fd40 */         \
+    0x9ac9e770,                                      \
+    0x18bc,                                          \
+    0x11d3,                                          \
+    {0x93, 0x37, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
 }
 
+#define NS_LOADGROUP_CLASSNAME \
+    "Load Group"
+#define NS_LOADGROUP_CONTRACTID \
+    "@mozilla.org/network/load-group;1"
+#define NS_LOADGROUP_CID                             \
+{ /* e1c61582-2a84-11d3-8cce-0060b0fc14a3 */         \
+    0xe1c61582,                                      \
+    0x2a84,                                          \
+    0x11d3,                                          \
+    {0x8c, 0xce, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
+}
 
-/******************************************************************************
- * Stream observer/listener/provider CIDs
- */
+#define NS_SIMPLEURI_CLASSNAME \
+    "Simple URI"
+#define NS_SIMPLEURI_CONTRACTID \
+    "@mozilla.org/network/simple-uri;1"
+#define NS_SIMPLEURI_CID                              \
+{ /* e0da1d70-2f7b-11d3-8cd0-0060b0fc14a3 */          \
+     0xe0da1d70,                                      \
+     0x2f7b,                                          \
+     0x11d3,                                          \
+     {0x8c, 0xd0, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
+}
 
-#define NS_STREAMOBSERVERPROXY_CLASSNAME \
-    "Stream Observer Proxy"
-#define NS_STREAMOBSERVERPROXY_CONTRACTID \
-    "@mozilla.org/network/stream-observer-proxy;1"
-#define NS_STREAMOBSERVERPROXY_CID                   \
+#define NS_STANDARDURL_CLASSNAME \
+    "Standard URL"
+#define NS_STANDARDURL_CONTRACTID \
+    "@mozilla.org/network/standard-url;1"
+#define NS_STANDARDURL_CID                           \
+{ /* de9472d0-8034-11d3-9399-00104ba0fd40 */         \
+    0xde9472d0,                                      \
+    0x8034,                                          \
+    0x11d3,                                          \
+    {0x93, 0x99, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
+}
+
+#define NS_REQUESTOBSERVERPROXY_CLASSNAME \
+    "Request Observer Proxy"
+#define NS_REQUESTOBSERVERPROXY_CONTRACTID \
+    "@mozilla.org/network/request-observer-proxy;1"
+#define NS_REQUESTOBSERVERPROXY_CID                  \
 { /* 51fa28c7-74c0-4b85-9c46-d03faa7b696b */         \
     0x51fa28c7,                                      \
     0x74c0,                                          \
@@ -106,18 +137,6 @@
     {0xaf, 0x40, 0x2a, 0x5e, 0xc3, 0x99, 0x27, 0x10} \
 }
 
-#define NS_ASYNCSTREAMOBSERVER_CLASSNAME \
-    "Async Stream Observer"
-#define NS_ASYNCSTREAMOBSERVER_CONTRACTID \
-    "@mozilla.org/network/async-stream-observer;1"
-#define NS_ASYNCSTREAMOBSERVER_CID                   \
-{ /* fcc7c380-91b3-11d3-8cd9-0060b0fc14a3 */         \
-    0xfcc7c380,                                      \
-    0x91b3,                                          \
-    0x11d3,                                          \
-    {0x8c, 0xd9, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
-}
-
 #define NS_ASYNCSTREAMLISTENER_CLASSNAME \
     "Async Stream Listener"
 #define NS_ASYNCSTREAMLISTENER_CONTRACTID \
@@ -142,11 +161,6 @@
     {0xb0, 0x2e, 0x77, 0xc8, 0x81, 0xcc, 0x57, 0x73} \
 }
 
-
-/******************************************************************************
- * Transport CIDs
- */
-
 #define NS_STORAGETRANSPORT_CLASSNAME \
     "Storage Transport"
 #define NS_STORAGETRANSPORT_CONTRACTID \
@@ -157,6 +171,35 @@
     0x1334,                                          \
     0x4b8f,                                          \
     {0x86, 0xb5, 0x3b, 0x0f, 0x4d, 0x54, 0xb9, 0xd2} \
+}
+
+#define NS_STREAMIOCHANNEL_CLASSNAME \
+    "Stream I/O Channel"
+#define NS_STREAMIOCHANNEL_CONTRACTID \
+    "@mozilla.org/network/stream-io-channel;1"
+#define NS_STREAMIOCHANNEL_CID                       \
+{ /* 6ddb050c-0d04-11d4-986e-00c04fa0cf4a */         \
+    0x6ddb050c,                                      \
+    0x0d04,                                          \
+    0x11d4,                                          \
+    {0x98, 0x6e, 0x00, 0xc0, 0x4f, 0xa0, 0xcf, 0x4a} \
+}
+
+
+/******************************************************************************
+ * netwerk/cache/ classes
+ */
+
+#define NS_CACHESERVICE_CLASSNAME \
+    "Cache Service"
+#define NS_CACHESERVICE_CONTRACTID \
+    "@mozilla.org/network/cache-service;1"
+#define NS_CACHESERVICE_CID                          \
+{ /* 6c84aec9-29a5-4264-8fbc-bee8f922ea67 */         \
+    0x6c84aec9,                                      \
+    0x29a5,                                          \
+    0x4264,                                          \
+    {0x8f, 0xbc, 0xbe, 0xe8, 0xf9, 0x22, 0xea, 0x67} \
 }
 
 #endif /* !defined(nsNetCID_h__) */

@@ -195,7 +195,7 @@ public:
     NS_DECL_NSIURLLISTENER
     NS_DECL_NSIMSGCOPYSERVICELISTENER
     NS_DECL_NSISTREAMLISTENER
-    NS_DECL_NSISTREAMOBSERVER
+    NS_DECL_NSIREQUESTOBSERVER
 
     nsCOMPtr<nsIFileSpec> m_fileSpec;
     nsCOMPtr<nsIOutputStream> m_outputStream;
@@ -1573,7 +1573,7 @@ nsSaveMsgListener::OnStartRequest(nsIRequest* request, nsISupports* aSupport)
 
 NS_IMETHODIMP
 nsSaveMsgListener::OnStopRequest(nsIRequest* request, nsISupports* aSupport,
-                                nsresult status, const PRUnichar* aMsg)
+                                nsresult status)
 {
   nsresult    rv = NS_OK;
 

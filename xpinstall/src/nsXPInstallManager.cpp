@@ -732,7 +732,7 @@ nsXPInstallManager::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
 
 NS_IMETHODIMP
 nsXPInstallManager::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
-                                  nsresult status, const PRUnichar *errorMsg)
+                                  nsresult status)
 {
     nsresult rv;
 

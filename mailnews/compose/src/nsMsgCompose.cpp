@@ -69,6 +69,7 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsISupportsArray.h"
 #include "nsIIOService.h"
+#include "nsNetCID.h"
 #include "nsIMsgMailSession.h"
 #include "nsMsgBaseCID.h"
 #include "nsIPrompt.h"
@@ -1147,7 +1148,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStartRequest(nsIRequest *request, n
 	return NS_OK;
 }
 
-NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, nsISupports * /* ctxt */, nsresult status, const PRUnichar * /* errorMsg */)
+NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, nsISupports * /* ctxt */, nsresult status)
 {
   nsresult rv = NS_OK;
   nsAutoString aCharset;

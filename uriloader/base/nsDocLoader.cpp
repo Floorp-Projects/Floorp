@@ -195,8 +195,8 @@ NS_IMPL_THREADSAFE_ADDREF(nsDocLoaderImpl)
 NS_IMPL_THREADSAFE_RELEASE(nsDocLoaderImpl)
 
 NS_INTERFACE_MAP_BEGIN(nsDocLoaderImpl)
-   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStreamObserver)
-   NS_INTERFACE_MAP_ENTRY(nsIStreamObserver)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIRequestObserver)
+   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
    NS_INTERFACE_MAP_ENTRY(nsIDocumentLoader)
    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
    NS_INTERFACE_MAP_ENTRY(nsIWebProgress)
@@ -455,9 +455,9 @@ nsDocLoaderImpl::OnStartRequest(nsIRequest *request, nsISupports *aCtxt)
     nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
 
     if (!mIsLoadingDocument) {
-        PRUint32 loadAttribs = 0;
-        aChannel->GetLoadAttributes(&loadAttribs);
-        if (loadAttribs & nsIChannel::LOAD_DOCUMENT_URI) {
+        PRUint32 loadFlags = 0;
+        aChannel->GetLoadFlags(&loadFlags);
+        if (loadFlags & nsIRequest::LOAD_DOCUMENT_URI) {
             mIsLoadingDocument = PR_TRUE;
             ClearInternalProgress(); // only clear our progress if we are starting a new load....
         }
@@ -507,8 +507,7 @@ nsDocLoaderImpl::OnStartRequest(nsIRequest *request, nsISupports *aCtxt)
 NS_IMETHODIMP
 nsDocLoaderImpl::OnStopRequest(nsIRequest *aRequest, 
                                nsISupports *aCtxt, 
-                               nsresult aStatus, 
-                               const PRUnichar *aMsg)
+                               nsresult aStatus)
 {
   nsresult rv = NS_OK;
 
@@ -1374,8 +1373,6 @@ nsDocLoaderImpl::FireOnStatusChange(nsIWebProgress* aWebProgress,
 nsresult nsDocLoaderImpl::AddRequestInfo(nsIRequest *aRequest)
 {
   nsresult rv;
-  PRUint32 loadAttribs=nsIChannel::LOAD_NORMAL;
-
   nsRequestInfo *info;
 
   info = new nsRequestInfo(aRequest);

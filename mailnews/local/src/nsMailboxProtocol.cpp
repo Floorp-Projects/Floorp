@@ -163,12 +163,12 @@ NS_IMETHODIMP nsMailboxProtocol::OnStartRequest(nsIRequest *request, nsISupports
 }
 
 // stop binding is a "notification" informing us that the stream associated with aURL is going away. 
-NS_IMETHODIMP nsMailboxProtocol::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult aStatus, const PRUnichar *aMsg)
+NS_IMETHODIMP nsMailboxProtocol::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult aStatus)
 {
 	if (m_nextState == MAILBOX_READ_FOLDER && m_mailboxParser)
 	{
 		// we need to inform our mailbox parser that there is no more incoming data...
-		m_mailboxParser->OnStopRequest(request, ctxt, aStatus, nsnull);
+		m_mailboxParser->OnStopRequest(request, ctxt, aStatus);
 	}
 	else if (m_nextState == MAILBOX_READ_MESSAGE) 
 	{
@@ -200,7 +200,7 @@ NS_IMETHODIMP nsMailboxProtocol::OnStopRequest(nsIRequest *request, nsISupports 
    */
 	if (aStatus == NS_BINDING_ABORTED)
 		aStatus = NS_OK;
-	nsMsgProtocol::OnStopRequest(request, ctxt, aStatus, aMsg);
+	nsMsgProtocol::OnStopRequest(request, ctxt, aStatus);
 	return CloseSocket(); 
 }
 

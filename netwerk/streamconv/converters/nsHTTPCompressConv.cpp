@@ -102,9 +102,9 @@ nsHTTPCompressConv::OnStartRequest (nsIRequest* request, nsISupports *aContext)
 
 NS_IMETHODIMP
 nsHTTPCompressConv::OnStopRequest(nsIRequest* request, nsISupports *aContext, 
-                                  nsresult aStatus, const PRUnichar* aStatusArg)
+                                  nsresult aStatus)
 {
-    return mListener->OnStopRequest(request, aContext, aStatus, aStatusArg);
+    return mListener->OnStopRequest(request, aContext, aStatus);
 } 
 
 NS_IMETHODIMP

@@ -52,7 +52,7 @@ public:
     NS_DECL_NSICHANNEL
     NS_DECL_NSIFILECHANNEL
     NS_DECL_NSIINTERFACEREQUESTOR
-    NS_DECL_NSISTREAMOBSERVER
+    NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSIPROGRESSEVENTSINK
 
@@ -76,7 +76,7 @@ protected:
     PRInt32                             mPerm;
     nsCOMPtr<nsITransport>              mFileTransport;
     nsCString                           mContentType;
-    PRUint32                            mLoadAttributes;
+    PRUint32                            mLoadFlags;
     nsCOMPtr<nsILoadGroup>              mLoadGroup;
     nsCOMPtr<nsISupports>               mOwner;
     nsCOMPtr<nsIStreamListener>         mRealListener;

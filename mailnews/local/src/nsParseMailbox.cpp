@@ -45,6 +45,7 @@
 #include "nsIMsgFilterList.h"
 #include "nsIMsgFilter.h"
 #include "nsIIOService.h"
+#include "nsNetCID.h"
 #include "nsRDFCID.h"
 #include "nsIPref.h"
 #include "nsIRDFService.h"
@@ -144,7 +145,7 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStartRequest(nsIRequest *request, nsISupport
 }
 
 // stop binding is a "notification" informing us that the stream associated with aURL is going away. 
-NS_IMETHODIMP nsMsgMailboxParser::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult aStatus, const PRUnichar *aMsg)
+NS_IMETHODIMP nsMsgMailboxParser::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult aStatus)
 {
 	DoneParsingFolder(aStatus);
 	// what can we do? we can close the stream?

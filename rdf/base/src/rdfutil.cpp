@@ -44,13 +44,12 @@
 #include "nsIURL.h"
 #include "nsIIOService.h"
 #include "nsIURL.h"
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#include "nsNetUtil.h"
 #include "nsRDFCID.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
 #include "prtime.h"
 #include "rdfutil.h"
-#include "nsNetUtil.h"
 
 ////////////////////////////////////////////////////////////////////////
 

@@ -29,6 +29,7 @@
 #include "nsIServiceManager.h"
 #include "nsProxiedService.h"
 #include "nsString.h"
+#include "nsNetCID.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);

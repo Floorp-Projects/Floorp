@@ -138,7 +138,7 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCookieServiceCID, NS_COOKIESERVICE_CID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
-static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
+static NS_DEFINE_IID(kIRequestObserverIID, NS_IREQUESTOBSERVER_IID);
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kHTTPHandlerCID, NS_IHTTPHANDLER_CID);
@@ -1001,8 +1001,8 @@ public:
   // nsIProgressEventSink methods:
   NS_DECL_NSIPROGRESSEVENTSINK
 
-  // nsIStreamObserver methods:
-  NS_DECL_NSISTREAMOBSERVER
+  // nsIRequestObserver methods:
+  NS_DECL_NSIREQUESTOBSERVER
 
   // nsIStreamListener methods:
   NS_DECL_NSISTREAMLISTENER
@@ -1070,7 +1070,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_DECL_NSISTREAMOBSERVER
+  NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
 
 private:
@@ -1124,8 +1124,7 @@ nsPluginCacheListener::OnDataAvailable(nsIRequest *request, nsISupports* ctxt,
 NS_IMETHODIMP 
 nsPluginCacheListener::OnStopRequest(nsIRequest *request, 
                                      nsISupports* aContext, 
-                                     nsresult aStatus, 
-                                     const PRUnichar* aMsg)
+                                     nsresult aStatus)
 {
   return NS_OK;
 }
@@ -1184,9 +1183,9 @@ nsresult nsPluginStreamListenerPeer::QueryInterface(const nsIID& aIID,
     return NS_OK;
   }
 
-  if (aIID.Equals(kIStreamObserverIID))
+  if (aIID.Equals(kIRequestObserverIID))
   {
-    *aInstancePtrResult = (void *)((nsIStreamObserver *)this);
+    *aInstancePtrResult = (void *)((nsIRequestObserver *)this);
     AddRef();
     return NS_OK;
   }
@@ -1454,8 +1453,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIRequest *request,
 
 NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIRequest *request, 
                                                         nsISupports* aContext,
-                                                        nsresult aStatus, 
-                                                        const PRUnichar* aMsg)
+                                                        nsresult aStatus)
 {
   nsresult rv = NS_OK;
   nsCOMPtr<nsIURI> aURL;

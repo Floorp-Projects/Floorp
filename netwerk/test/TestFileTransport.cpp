@@ -101,7 +101,7 @@ public:
     }
 
     NS_IMETHOD OnStopRequest(nsIRequest *request, nsISupports *ctxt, 
-                             nsresult aStatus, const PRUnichar* aStatusArg) {
+                             nsresult aStatus) {
         PRINTF(("ending status=%0x total=%d\n", aStatus, mTotal));
         if (--mStopCount == 0)
             gDone = PR_TRUE;
@@ -168,7 +168,7 @@ protected:
     PRUint32 mStopCount;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(MyListener, nsIStreamListener, nsIStreamObserver);
+NS_IMPL_THREADSAFE_ISUPPORTS2(MyListener, nsIStreamListener, nsIRequestObserver);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -286,7 +286,7 @@ TestAsyncWrite(const char* fileName, PRUint32 offset, PRInt32 length)
 ////////////////////////////////////////////////////////////////////////////////
 
 #if 0
-class MyOpenObserver : public nsIStreamObserver
+class MyOpenObserver : public nsIRequestObserver
 {
 public:
     NS_DECL_ISUPPORTS
@@ -307,7 +307,7 @@ public:
     }
 
     NS_IMETHOD OnStopRequest(nsIRequest *request, nsISupports *ctxt,
-                             nsresult aStatus, const PRUnichar* aStatusArg) {
+                             nsresult aStatus) {
         PRINTF(("stream closed: status %x\n", aStatus));
         return NS_OK;
     }
@@ -316,7 +316,7 @@ public:
     virtual ~MyOpenObserver() {}
 };
 
-NS_IMPL_ISUPPORTS1(MyOpenObserver, nsIStreamObserver);
+NS_IMPL_ISUPPORTS1(MyOpenObserver, nsIRequestObserver);
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////

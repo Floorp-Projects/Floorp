@@ -48,7 +48,7 @@ NS_IMPL_THREADSAFE_RELEASE(nsMsgProtocol)
 NS_INTERFACE_MAP_BEGIN(nsMsgProtocol)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIChannel)
    NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
-   NS_INTERFACE_MAP_ENTRY(nsIStreamObserver)
+   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
    NS_INTERFACE_MAP_ENTRY(nsIChannel)
    NS_INTERFACE_MAP_ENTRY(nsIRequest)
 NS_INTERFACE_MAP_END_THREADSAFE
@@ -59,7 +59,7 @@ nsMsgProtocol::nsMsgProtocol(nsIURI * aURL)
 	m_flags = 0;
 	m_startPosition = 0;
 	m_readCount = 0;
-  mLoadAttributes = 0;
+    mLoadFlags = 0;
 	m_socketIsOpen = PR_FALSE;
 		
 	m_tempMsgFileSpec = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_TemporaryDirectory);
@@ -176,7 +176,7 @@ nsresult nsMsgProtocol::SetupTransportState()
 
 	if (!m_socketIsOpen && m_transport)
 	{
-		rv = m_transport->OpenOutputStream(0, -1, 0, getter_AddRefs(m_outputStream));
+		rv = m_transport->OpenOutputStream(0, PRUint32(-1), 0, getter_AddRefs(m_outputStream));
 
 		NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create an output stream");
 		// we want to open the stream 
@@ -260,7 +260,7 @@ NS_IMETHODIMP nsMsgProtocol::OnStartRequest(nsIRequest *request, nsISupports *ct
 }
 
 // stop binding is a "notification" informing us that the stream associated with aURL is going away. 
-NS_IMETHODIMP nsMsgProtocol::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult aStatus, const PRUnichar* aMsg)
+NS_IMETHODIMP nsMsgProtocol::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult aStatus)
 {
 	nsresult rv = NS_OK;
 
@@ -268,14 +268,14 @@ NS_IMETHODIMP nsMsgProtocol::OnStopRequest(nsIRequest *request, nsISupports *ctx
 	// so pass in ourself as the channel and not the underlying socket or file channel the protocol
 	// happens to be using
 	if (!mSuppressListenerNotifications && m_channelListener)
-		rv = m_channelListener->OnStopRequest(this, m_channelContext, aStatus, aMsg);
+		rv = m_channelListener->OnStopRequest(this, m_channelContext, aStatus);
 	
   nsCOMPtr <nsIMsgMailNewsUrl> msgUrl = do_QueryInterface(ctxt, &rv);
 	if (NS_SUCCEEDED(rv) && msgUrl)
 	{
 		rv = msgUrl->SetUrlState(PR_FALSE, aStatus);
 		if (m_loadGroup)
-			m_loadGroup->RemoveRequest(NS_STATIC_CAST(nsIRequest *, this), nsnull, aStatus, nsnull);
+			m_loadGroup->RemoveRequest(NS_STATIC_CAST(nsIRequest *, this), nsnull, aStatus);
     
 	  // !NS_BINDING_ABORTED because we don't want to see an alert if the user 
 	  // cancelled the operation.  also, we'll get here because we call Cancel()
@@ -404,12 +404,6 @@ NS_IMETHODIMP nsMsgProtocol::GetURI(nsIURI* *aURI)
     return NS_OK;
 }
  
-NS_IMETHODIMP nsMsgProtocol::SetURI(nsIURI* aURI)
-{
-    m_url = aURI;
-    return NS_OK;
-}
- 
 NS_IMETHODIMP nsMsgProtocol::Open(nsIInputStream **_retval)
 {
   NS_NOTREACHED("Open");
@@ -421,37 +415,18 @@ NS_IMETHODIMP nsMsgProtocol::AsyncOpen(nsIStreamListener *listener, nsISupports 
 	// set the stream listener and then load the url
 	m_channelContext = ctxt;
 	m_channelListener = listener;
-
-	// the following load group code is completely bogus....
-	nsresult rv = NS_OK;
-	if (m_loadGroup)
-	{
-		nsCOMPtr<nsILoadGroupListenerFactory> factory;
-		//
-		// Create a load group "proxy" listener...
-		//
-		rv = m_loadGroup->GetGroupListenerFactory(getter_AddRefs(factory));
-		if (factory) 
-		{
-			nsCOMPtr<nsIStreamListener> newListener;
-			rv = factory->CreateLoadGroupListener(m_channelListener, getter_AddRefs(newListener));
-			if (NS_SUCCEEDED(rv)) 
-				m_channelListener = newListener;
-		}
-	} // if aLoadGroup
-
 	return LoadUrl(m_url, nsnull);
 }
 
-NS_IMETHODIMP nsMsgProtocol::GetLoadAttributes(nsLoadFlags *aLoadAttributes)
+NS_IMETHODIMP nsMsgProtocol::GetLoadFlags(nsLoadFlags *aLoadFlags)
 {
-    *aLoadAttributes = mLoadAttributes;
+    *aLoadFlags = mLoadFlags;
     return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgProtocol::SetLoadAttributes(nsLoadFlags aLoadAttributes)
+NS_IMETHODIMP nsMsgProtocol::SetLoadFlags(nsLoadFlags aLoadFlags)
 {
-  mLoadAttributes = aLoadAttributes;
+  mLoadFlags = aLoadFlags;
   return NS_OK;       // don't fail when trying to set this
 }
 
@@ -710,10 +685,10 @@ public:
     void Init(nsMsgAsyncWriteProtocol *aProtInstance, nsIInputStream *aInputStream) { mMsgProtocol = aProtInstance; mInStream = aInputStream;}
 
     //
-    // nsIStreamObserver implementation ...
+    // nsIRequestObserver implementation ...
     //
     NS_IMETHODIMP OnStartRequest(nsIRequest *chan, nsISupports *ctxt) { return NS_OK; }
-    NS_IMETHODIMP OnStopRequest(nsIRequest *chan, nsISupports *ctxt, nsresult status, const PRUnichar *statusText) { return NS_OK; }
+    NS_IMETHODIMP OnStopRequest(nsIRequest *chan, nsISupports *ctxt, nsresult status) { return NS_OK; }
 
     //
     // nsIStreamProvider implementation ...
@@ -757,13 +732,13 @@ protected:
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsMsgProtocolStreamProvider,
                               nsIStreamProvider,
-                              nsIStreamObserver)
+                              nsIRequestObserver)
 
 class nsMsgFilePostHelper : public nsIStreamListener 
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSISTREAMOBSERVER
+  NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
 
   nsMsgFilePostHelper() { NS_INIT_REFCNT(); mSuspendedPostFileRead = PR_FALSE;}
@@ -781,7 +756,7 @@ NS_IMPL_THREADSAFE_RELEASE(nsMsgFilePostHelper)
 
 NS_INTERFACE_MAP_BEGIN(nsMsgFilePostHelper)
   NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
-  NS_INTERFACE_MAP_ENTRY(nsIStreamObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
 NS_INTERFACE_MAP_END_THREADSAFE
 
 nsresult nsMsgFilePostHelper::Init(nsIOutputStream * aOutStream, nsMsgAsyncWriteProtocol * aProtInstance, nsIFile *aFileToPost)
@@ -808,7 +783,7 @@ NS_IMETHODIMP nsMsgFilePostHelper::OnStartRequest(nsIRequest * aChannel, nsISupp
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFilePostHelper::OnStopRequest(nsIRequest * aChannel, nsISupports *ctxt, nsresult aStatus, const PRUnichar* aMsg)
+NS_IMETHODIMP nsMsgFilePostHelper::OnStopRequest(nsIRequest * aChannel, nsISupports *ctxt, nsresult aStatus)
 {
   if (!mSuspendedPostFileRead)
     mProtInstance->PostDataFinished();

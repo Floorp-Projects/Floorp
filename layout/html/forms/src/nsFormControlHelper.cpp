@@ -53,6 +53,7 @@
 #include "nsStyleUtil.h"
 #include "nsINameSpaceManager.h"
 #include "nsIDOMHTMLInputElement.h"
+#include "nsNetCID.h"
 
 // Needed for Localization
 #include "nsIServiceManager.h"

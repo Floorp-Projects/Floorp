@@ -35,7 +35,7 @@ class nsFolderCompactState : public nsIMsgFolderCompactor, public nsIStreamListe
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSISTREAMOBSERVER
+  NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSIMSGFOLDERCOMPACTOR
 
@@ -82,7 +82,7 @@ public:
   virtual nsresult InitDB(nsIMsgDatabase *db);
 
   NS_IMETHOD OnStopRequest(nsIRequest *request, nsISupports *ctxt,
-                                    nsresult status, const PRUnichar *errorMsg);
+                                    nsresult status);
 
   NS_IMETHODIMP FinishCompact();
 };

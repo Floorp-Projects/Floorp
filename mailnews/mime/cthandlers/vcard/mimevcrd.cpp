@@ -22,6 +22,7 @@
 #define NS_IMPL_IDS
 #include "nsCOMPtr.h"
 #include "nsIIOService.h"
+#include "nsNetCID.h"
 #include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"
 

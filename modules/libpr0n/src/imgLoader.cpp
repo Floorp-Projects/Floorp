@@ -84,19 +84,16 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsILoadGroup *aLoadGroup, imgID
      */
     PRUint32 flags = 0;
     PRBool doomRequest = PR_FALSE;
-    aLoadGroup->GetDefaultLoadAttributes(&flags);
-    if (flags & nsIChannel::FORCE_RELOAD)
+    aLoadGroup->GetLoadFlags(&flags);
+    if (flags & nsIRequest::FORCE_RELOAD)
       doomRequest = PR_TRUE;
     else {
       nsCOMPtr<nsIRequest> r;
       aLoadGroup->GetDefaultLoadRequest(getter_AddRefs(r));
       if (r) {
-        nsCOMPtr<nsIChannel> c(do_QueryInterface(r));
-        if (c) {
-          c->GetLoadAttributes(&flags);
-          if (flags & nsIChannel::FORCE_RELOAD)
-            doomRequest = PR_TRUE;
-        }
+        r->GetLoadFlags(&flags);
+        if (flags & nsIRequest::FORCE_RELOAD)
+          doomRequest = PR_TRUE;
       }
     }
 
@@ -122,8 +119,8 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsILoadGroup *aLoadGroup, imgID
 
     if (aLoadGroup) {
       PRUint32 flags;
-      aLoadGroup->GetDefaultLoadAttributes(&flags);
-      newChannel->SetLoadAttributes(flags);
+      aLoadGroup->GetLoadFlags(&flags);
+      newChannel->SetLoadFlags(flags);
     }
 
     NS_NEWXPCOM(request, imgRequest);

@@ -139,7 +139,7 @@ nsMsgSendLater::~nsMsgSendLater()
 
 // Stream is done...drive on!
 NS_IMETHODIMP
-nsMsgSendLater::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg)
+nsMsgSendLater::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult status)
 {
   nsresult    rv;
 

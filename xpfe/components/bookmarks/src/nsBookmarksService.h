@@ -99,7 +99,7 @@ nsresult	GetBookmarkToPing(nsIRDFResource **theBookmark);
 	nsresult getLocaleString(const char *key, nsString &str);
 
 	// nsIStreamObserver methods:
-	NS_DECL_NSISTREAMOBSERVER
+	NS_DECL_NSIREQUESTOBSERVER
 
 	// nsIStreamListener methods:
 	NS_DECL_NSISTREAMLISTENER

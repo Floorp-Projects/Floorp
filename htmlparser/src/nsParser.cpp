@@ -311,8 +311,8 @@ nsresult nsParser::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   else if(aIID.Equals(NS_GET_IID(nsIProgressEventSink))) {
     *aInstancePtr = (nsIStreamListener*)(this);                                        
   }
-  else if(aIID.Equals(NS_GET_IID(nsIStreamObserver))) {
-    *aInstancePtr = (nsIStreamObserver*)(this);                                        
+  else if(aIID.Equals(NS_GET_IID(nsIRequestObserver))) {
+    *aInstancePtr = (nsIRequestObserver*)(this);                                        
   }
   else if(aIID.Equals(NS_GET_IID(nsIStreamListener))) {
     *aInstancePtr = (nsIStreamListener*)(this);                                        
@@ -1575,7 +1575,7 @@ PRBool nsParser::IsParserEnabled() {
  *  @param   aFilename -- const char* containing file to be parsed.
  *  @return  error code -- 0 if ok, non-zero if error.
  */
-nsresult nsParser::Parse(nsIURI* aURL,nsIStreamObserver* aListener,PRBool aVerifyEnabled, void* aKey,nsDTDMode aMode) {  
+nsresult nsParser::Parse(nsIURI* aURL,nsIRequestObserver* aListener,PRBool aVerifyEnabled, void* aKey,nsDTDMode aMode) {  
 
   NS_PRECONDITION(0!=aURL,kNullURL);
 
@@ -2369,7 +2369,7 @@ NS_PRECONDITION(((eOnStart==mParserContext->mStreamListenerState)||(eOnDataAvail
  *  @return  
  */
 nsresult nsParser::OnStopRequest(nsIRequest *request, nsISupports* aContext,
-                                 nsresult status, const PRUnichar* aMsg)
+                                 nsresult status)
 {  
 
   nsresult result=NS_OK;
@@ -2400,7 +2400,7 @@ nsresult nsParser::OnStopRequest(nsIRequest *request, nsISupports* aContext,
   // XXX Should we wait to notify our observers as well if the
   // parser isn't yet enabled?
   if (nsnull != mObserver) {
-    mObserver->OnStopRequest(request, aContext, status, aMsg);
+    mObserver->OnStopRequest(request, aContext, status);
   }
 
 #ifdef rickgdebug

@@ -469,7 +469,7 @@ nsStorageTransport::nsReadRequest::Process()
         mTransport->ReadRequestCompleted(this);
 
         // no need to proxy this callback
-        (void) mListener->OnStopRequest(this, mListenerContext, mStatus, nsnull);
+        (void) mListener->OnStopRequest(this, mListenerContext, mStatus);
     }
     else
         mWaitingForWrite = PR_TRUE;
@@ -481,7 +481,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS5(nsStorageTransport::nsReadRequest,
                               nsITransportRequest,
                               nsIRequest,
                               nsIStreamListener,
-                              nsIStreamObserver,
+                              nsIRequestObserver,
                               nsIInputStream)
 
 NS_IMETHODIMP
@@ -537,6 +537,32 @@ nsStorageTransport::nsReadRequest::Resume()
 }
 
 NS_IMETHODIMP
+nsStorageTransport::nsReadRequest::GetLoadGroup(nsILoadGroup **loadGroup)
+{
+    *loadGroup = nsnull;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsStorageTransport::nsReadRequest::SetLoadGroup(nsILoadGroup *loadGroup)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsStorageTransport::nsReadRequest::GetLoadFlags(nsLoadFlags *loadFlags)
+{
+    *loadFlags = nsIRequest::LOAD_NORMAL;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsStorageTransport::nsReadRequest::SetLoadFlags(nsLoadFlags loadFlags)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsStorageTransport::nsReadRequest::OnStartRequest(nsIRequest *aRequest,
                                      nsISupports *aContext)
 {
@@ -546,9 +572,8 @@ nsStorageTransport::nsReadRequest::OnStartRequest(nsIRequest *aRequest,
 
 NS_IMETHODIMP
 nsStorageTransport::nsReadRequest::OnStopRequest(nsIRequest *aRequest,
-                                    nsISupports *aContext,
-                                    nsresult aStatus,
-                                    const PRUnichar *aStatusText)
+                                                 nsISupports *aContext,
+                                                 nsresult aStatus)
 {
     NS_NOTREACHED("nsStorageTransport::nsReadRequest::OnStopRequest");
     return NS_ERROR_FAILURE;

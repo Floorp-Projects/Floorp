@@ -20,7 +20,7 @@
  * Contributor(s): 
  */
 
-#include "nsIStreamObserver.idl"
+#include "nsIRequestObserver.idl"
 
 interface nsIRequest;
 interface nsIInputStream;
@@ -32,7 +32,7 @@ interface nsIEventQueue;
  * data from the channel, when the channel is ready to provide it.
  */
 [scriptable, uuid(1a637020-1482-11d3-9333-00104ba0fd40)]
-interface nsIStreamListener : nsIStreamObserver
+interface nsIStreamListener : nsIRequestObserver
 {
     /**
      * Called when there is data to be read from the channel.
@@ -98,7 +98,7 @@ interface nsISimpleStreamListener : nsIStreamListener
      * @param observer - optional stream observer (can be NULL)
      */
     void init(in nsIOutputStream sink,
-              in nsIStreamObserver observer);
+              in nsIRequestObserver observer);
 };
 
 /**

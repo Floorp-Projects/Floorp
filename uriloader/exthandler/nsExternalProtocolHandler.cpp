@@ -26,6 +26,7 @@
 #include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
+#include "nsNetCID.h"
 
 // used to dispatch urls to default protocol handlers
 #include "nsCExternalHandlerService.h"
@@ -49,6 +50,8 @@ public:
 	
     nsExtProtocolChannel();
 	  virtual ~nsExtProtocolChannel();
+
+    nsresult SetURI(nsIURI*);
 
 protected:
   nsCOMPtr<nsIURI> mUrl;
@@ -156,13 +159,13 @@ NS_IMETHODIMP nsExtProtocolChannel::AsyncOpen(nsIStreamListener *listener, nsISu
   return NS_ERROR_FAILURE; // force caller to abort.
 }
 
-NS_IMETHODIMP nsExtProtocolChannel::GetLoadAttributes(nsLoadFlags *aLoadAttributes)
+NS_IMETHODIMP nsExtProtocolChannel::GetLoadFlags(nsLoadFlags *aLoadFlags)
 {
-  *aLoadAttributes = 0;
+  *aLoadFlags = 0;
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsExtProtocolChannel::SetLoadAttributes(nsLoadFlags aLoadAttributes)
+NS_IMETHODIMP nsExtProtocolChannel::SetLoadFlags(nsLoadFlags aLoadFlags)
 {
 	return NS_OK;
 }
@@ -323,7 +326,7 @@ NS_IMETHODIMP nsExternalProtocolHandler::NewChannel(nsIURI *aURI, nsIChannel **_
     NS_NEWXPCOM(channel, nsExtProtocolChannel);
     if (!channel) return NS_ERROR_OUT_OF_MEMORY;
 
-    channel->SetURI(aURI);
+    ((nsExtProtocolChannel*) channel.get())->SetURI(aURI);
 
     if (_retval)
     {

@@ -190,7 +190,7 @@ nsStreamTransfer::SelectFileAndTransferLocationSpec( char const *aURL,
         if ( NS_SUCCEEDED( rv ) && channel ) {
             // See if VALIDATE_NEVER is called for.
             if ( doNotValidate ) {
-                channel->SetLoadAttributes( nsIChannel::VALIDATE_NEVER );
+                channel->SetLoadFlags( nsIRequest::VALIDATE_NEVER );
             }
             // Post data provided?
             if ( postData ) {

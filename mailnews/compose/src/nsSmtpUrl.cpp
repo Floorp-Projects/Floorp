@@ -23,6 +23,7 @@
 #include "msgCore.h"
 
 #include "nsIURI.h"
+#include "nsNetCID.h"
 #include "nsSmtpUrl.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"

@@ -69,7 +69,7 @@ public:
     NS_DECL_NSIREQUEST
     NS_DECL_NSICHANNEL
     NS_DECL_NSISTREAMIOCHANNEL
-    NS_DECL_NSISTREAMOBSERVER
+    NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSISTREAMPROVIDER
     NS_DECL_NSIPROGRESSEVENTSINK
@@ -99,10 +99,10 @@ protected:
     nsCOMPtr<nsISupports>               mOwner;
     nsCOMPtr<nsITransport>              mFileTransport;
     nsCOMPtr<nsIRequest>                mRequest;
-    nsCOMPtr<nsIStreamObserver>         mUserObserver;
+    nsCOMPtr<nsIRequestObserver>        mUserObserver;
     PRUint32                            mBufferSegmentSize;
     PRUint32                            mBufferMaxSize;
-    PRUint32                            mLoadAttributes;
+    PRUint32                            mLoadFlags;
     nsresult                            mStatus;
 };
 

@@ -159,7 +159,7 @@ NS_INTERFACE_MAP_BEGIN(nsImapProtocol)
    NS_INTERFACE_MAP_ENTRY(nsIRunnable)
    NS_INTERFACE_MAP_ENTRY(nsIImapProtocol)
    NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
-   NS_INTERFACE_MAP_ENTRY(nsIStreamObserver)
+   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
 NS_INTERFACE_MAP_END_THREADSAFE
 
 static PRInt32 gTooFastTime = 2;
@@ -620,7 +620,7 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
           m_channel->SetNotificationCallbacks(callbacks, PR_FALSE);
         
           if (NS_SUCCEEDED(rv))
-            rv = m_channel->OpenOutputStream(0, -1, 0, getter_AddRefs(m_outputStream));
+            rv = m_channel->OpenOutputStream(0, PRUint32(-1), 0, getter_AddRefs(m_outputStream));
         }
       }
     } // if m_runningUrl
@@ -1019,7 +1019,8 @@ PRBool nsImapProtocol::ProcessCurrentURL()
   if (!TestFlag(IMAP_CONNECTION_IS_OPEN) && m_channel)
   {
       nsCOMPtr<nsIRequest> request;
-    m_channel->AsyncRead(this /* stream observer */, nsnull, 0,-1,0, getter_AddRefs(request));
+    m_channel->AsyncRead(this /* stream listener */, nsnull, 0, PRUint32(-1), 0,
+                         getter_AddRefs(request));
     SetFlag(IMAP_CONNECTION_IS_OPEN);
   }
 #ifdef DEBUG_bienvenu   
@@ -1144,7 +1145,7 @@ PRBool nsImapProtocol::ProcessCurrentURL()
         nsCOMPtr<nsIRequest> request = do_QueryInterface(m_mockChannel);
         if (!request) return NS_ERROR_FAILURE;
 
-        rv = m_channelListener->OnStopRequest(request, m_channelContext, NS_OK, nsnull);
+        rv = m_channelListener->OnStopRequest(request, m_channelContext, NS_OK);
     }
   m_lastActiveTime = PR_Now(); // ** jt -- is this the best place for time stamp
   SetFlag(IMAP_CLEAN_UP_URL_STATE);
@@ -1250,7 +1251,7 @@ NS_IMETHODIMP nsImapProtocol::OnStartRequest(nsIRequest *request, nsISupports *c
 }
 
 // stop binding is a "notification" informing us that the stream associated with aURL is going away. 
-NS_IMETHODIMP nsImapProtocol::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult aStatus, const PRUnichar* aMsg)
+NS_IMETHODIMP nsImapProtocol::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult aStatus)
 {
 
   PRBool killThread = PR_FALSE;
@@ -6709,7 +6710,7 @@ class nsImapCacheStreamListener : public nsIStreamListener
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSISTREAMOBSERVER
+  NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
 
   nsImapCacheStreamListener ();
@@ -6726,7 +6727,7 @@ NS_IMPL_RELEASE(nsImapCacheStreamListener);
 
 NS_INTERFACE_MAP_BEGIN(nsImapCacheStreamListener)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStreamListener)
-   NS_INTERFACE_MAP_ENTRY(nsIStreamObserver)
+   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
    NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
 NS_INTERFACE_MAP_END
 
@@ -6761,14 +6762,14 @@ nsImapCacheStreamListener::OnStartRequest(nsIRequest *request, nsISupports * aCt
 }
 
 NS_IMETHODIMP
-nsImapCacheStreamListener::OnStopRequest(nsIRequest *request, nsISupports * aCtxt, nsresult aStatus, const PRUnichar* aMsg)
+nsImapCacheStreamListener::OnStopRequest(nsIRequest *request, nsISupports * aCtxt, nsresult aStatus)
 {
   nsCOMPtr<nsIRequest> ourRequest = do_QueryInterface(mChannelToUse);
-  nsresult rv = mListener->OnStopRequest(ourRequest, aCtxt, aStatus, aMsg);
+  nsresult rv = mListener->OnStopRequest(ourRequest, aCtxt, aStatus);
   nsCOMPtr <nsILoadGroup> loadGroup;
   mChannelToUse->GetLoadGroup(getter_AddRefs(loadGroup));
   if (loadGroup)
-			loadGroup->RemoveRequest(ourRequest, nsnull, aStatus, nsnull);
+			loadGroup->RemoveRequest(ourRequest, nsnull, aStatus);
 
   mListener = nsnull;
   mChannelToUse = nsnull;
@@ -6798,7 +6799,7 @@ nsImapMockChannel::nsImapMockChannel()
   NS_INIT_REFCNT();
   m_channelContext = nsnull;
   m_cancelStatus = NS_OK;
-  mLoadAttributes = 0;
+  mLoadFlags = 0;
 }
 
 nsImapMockChannel::~nsImapMockChannel()
@@ -6944,24 +6945,6 @@ NS_IMETHODIMP nsImapMockChannel::AsyncOpen(nsIStreamListener *listener, nsISuppo
     }
   }
 
-  // regardless as to whether we are inserting into the cache or not, proceed with
-  // setting up the load group!
-  if (m_loadGroup)
-  {
-    nsCOMPtr<nsILoadGroupListenerFactory> factory;
-    //
-    // Create a load group "proxy" listener...
-    //
-    rv = m_loadGroup->GetGroupListenerFactory(getter_AddRefs(factory));
-    if (factory) 
-    {
-      nsCOMPtr<nsIStreamListener> newListener;
-      rv = factory->CreateLoadGroupListener(m_channelListener, getter_AddRefs(newListener));
-      if (NS_SUCCEEDED(rv)) 
-        m_channelListener = newListener;
-    }
-  } // if aLoadGroup
-
   // now, determine if we should be loading from the cache or if we have
   // to really load the msg with a protocol connection...
   if (cacheEntry && contentLength > 0 && !partialFlag)
@@ -7098,16 +7081,16 @@ nsresult nsImapMockChannel::SetupPartExtractor(nsIImapUrl * aUrl, nsIStreamListe
   return NS_OK;
 }
 
-NS_IMETHODIMP nsImapMockChannel::GetLoadAttributes(nsLoadFlags *aLoadAttributes)
+NS_IMETHODIMP nsImapMockChannel::GetLoadFlags(nsLoadFlags *aLoadFlags)
 {
-  //*aLoadAttributes = nsIChannel::LOAD_NORMAL;
-  *aLoadAttributes = mLoadAttributes;
+  //*aLoadFlags = nsIRequest::LOAD_NORMAL;
+  *aLoadFlags = mLoadFlags;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsImapMockChannel::SetLoadAttributes(nsLoadFlags aLoadAttributes)
+NS_IMETHODIMP nsImapMockChannel::SetLoadFlags(nsLoadFlags aLoadFlags)
 {
-  mLoadAttributes = aLoadAttributes;
+  mLoadFlags = aLoadFlags;
   return NS_OK;       // don't fail when trying to set this
 }
 

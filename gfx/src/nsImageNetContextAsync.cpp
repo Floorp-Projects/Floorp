@@ -115,8 +115,8 @@ public:
   
   ImageConsumer(ilIURL *aURL, ImageNetContextImpl *aContext);
   
-  // nsIStreamObserver methods:
-  NS_DECL_NSISTREAMOBSERVER
+  // nsIRequestObserver methods:
+  NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSIURICONTENTLISTENER
   NS_DECL_NSIINTERFACEREQUESTOR
@@ -173,7 +173,7 @@ NS_IMPL_THREADSAFE_RELEASE(ImageConsumer)
 NS_INTERFACE_MAP_BEGIN(ImageConsumer)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIURIContentListener)
    NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
-   NS_INTERFACE_MAP_ENTRY(nsIStreamObserver)
+   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
    NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
 NS_INTERFACE_MAP_END
@@ -484,14 +484,13 @@ void
 ImageConsumer::KeepPumpingStream(nsITimer *aTimer, void *aClosure)
 {
   ImageConsumer *consumer = (ImageConsumer *)aClosure;
-  nsAutoString status;
 
   consumer->OnStopRequest(consumer->mRequest, consumer->mUserContext,
-                          NS_BINDING_SUCCEEDED, status.GetUnicode());
+                          NS_BINDING_SUCCEEDED);
 }
 
 NS_IMETHODIMP
-ImageConsumer::OnStopRequest(nsIRequest* request, nsISupports* aContext, nsresult status, const PRUnichar* aMsg)
+ImageConsumer::OnStopRequest(nsIRequest* request, nsISupports* aContext, nsresult status)
 {
   if (mTimer) {
     mTimer->Cancel();
@@ -554,7 +553,7 @@ ImageConsumer::OnStopRequest(nsIRequest* request, nsISupports* aContext, nsresul
   reader->NetRequestDone(mURL, mStatus);
   NS_RELEASE(reader);
   
-  return mContext->RequestDone(this, request, aContext, status, aMsg);
+  return mContext->RequestDone(this, request, aContext, status, nsnull);
 }
 
 void
@@ -764,7 +763,7 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
 
    nsLoadFlags flags=0;   
    if(IsAnimationLoop)
-       flags |= nsIChannel::VALIDATE_NEVER;
+       flags |= nsIRequest::VALIDATE_NEVER;
 
     rv = NS_OpenURI(getter_AddRefs(channel), nsurl, nsnull, group, sink, flags);
     if (NS_FAILED(rv)) goto error;
@@ -791,13 +790,13 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
     }
 
 
-    rv = channel->GetLoadAttributes(&flags);
+    rv = channel->GetLoadFlags(&flags);
     if (NS_FAILED(rv)) goto error;
 
    if (aURL->GetBackgroundLoad()) 
-      flags |= nsIChannel::LOAD_BACKGROUND;
+      flags |= nsIRequest::LOAD_BACKGROUND;
        
-   (void)channel->SetLoadAttributes(flags);
+   (void)channel->SetLoadFlags(flags);
 
    nsCOMPtr<nsISupports> window (do_QueryInterface(NS_STATIC_CAST(nsIStreamListener *, ic)));
 
@@ -859,7 +858,7 @@ NS_NewImageNetContext(ilINetContext **aInstancePtrResult,
      
   PRUint32  necko_attribs;
   ImgCachePolicy imglib_attribs = USE_IMG_CACHE;
-  nsLoadFlags defchan_attribs = nsIChannel::LOAD_NORMAL;
+  nsLoadFlags defchan_attribs = nsIRequest::LOAD_NORMAL;
 
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
@@ -868,7 +867,7 @@ NS_NewImageNetContext(ilINetContext **aInstancePtrResult,
 
   if(aLoadContext){
      nsCOMPtr<nsILoadGroup> group (do_GetInterface(aLoadContext));
-     /*nsresult rv = */group->GetDefaultLoadAttributes(&necko_attribs);
+     /*nsresult rv = */group->GetLoadFlags(&necko_attribs);
 /*
 Need code to check freshness of necko cache.
 */
@@ -878,7 +877,7 @@ Need code to check freshness of necko cache.
                         getter_AddRefs(defLoadRequest))) && defLoadRequest)
      {
          channel = do_QueryInterface(defLoadRequest);
-         if (channel) channel->GetLoadAttributes(&defchan_attribs);
+         if (channel) channel->GetLoadFlags(&defchan_attribs);
      }
 
 #if defined( DEBUG )
@@ -886,9 +885,9 @@ Need code to check freshness of necko cache.
     	image_net_context_async_log_module = PR_NewLogModule("IMAGENETCTXASYNC");
      }          
 #endif
-     if((nsIChannel::FORCE_VALIDATION & defchan_attribs)||   
-        (nsIChannel::INHIBIT_PERSISTENT_CACHING & defchan_attribs)||
-        (nsIChannel::FORCE_RELOAD & defchan_attribs)) {
+     if((nsIRequest::FORCE_VALIDATION & defchan_attribs)||   
+        (nsIRequest::INHIBIT_PERSISTENT_CACHING & defchan_attribs)||
+        (nsIRequest::FORCE_RELOAD & defchan_attribs)) {
      		imglib_attribs = DONT_USE_IMG_CACHE;
 #if defined( DEBUG )
 		PR_LOG(image_net_context_async_log_module, 1, ("ImageNetContextAsync: NS_NewImageNetContext: DONT_USE_IMAGE_CACHE\n"));

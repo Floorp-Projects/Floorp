@@ -37,6 +37,7 @@
 #include "nsIRDFResource.h"
 #include "nsRDFCID.h"
 #include "nsIURL.h"
+#include "nsNetCID.h"
 #include "nsMsgComposeStringBundle.h"
 #include "nsMsgCompUtils.h"
 #include "prcmon.h"

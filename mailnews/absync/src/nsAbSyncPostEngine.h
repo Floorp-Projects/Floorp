@@ -69,7 +69,7 @@ public:
   // Methods for nsIStreamListener
   NS_DECL_NSISTREAMLISTENER
   // Methods for nsIStreamObserver
-  NS_DECL_NSISTREAMOBSERVER
+  NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSIURICONTENTLISTENER
   NS_DECL_NSIINTERFACEREQUESTOR
 
@@ -80,12 +80,12 @@ private:
   // Handy methods for listeners...
   nsresult        DeleteListeners();
   nsresult        NotifyListenersOnStartAuthOperation(void);
-  nsresult        NotifyListenersOnStopAuthOperation(nsresult aStatus, const PRUnichar *aMsg, const char *aCookie);
+  nsresult        NotifyListenersOnStopAuthOperation(nsresult aStatus, const char *aCookie);
   nsresult        NotifyListenersOnStartSending(PRInt32 aTransactionID, PRUint32 aMsgSize);
   nsresult        NotifyListenersOnProgress(PRInt32 aTransactionID, PRUint32 aProgress, PRUint32 aProgressMax);
   nsresult        NotifyListenersOnStatus(PRInt32 aTransactionID, PRUnichar *aMsg);
   nsresult        NotifyListenersOnStopSending(PRInt32 aTransactionID, nsresult aStatus, 
-                                               const PRUnichar *aMsg, char *aProtocolResponse);
+                                               char *aProtocolResponse);
 
   PRBool                          mStillRunning;  // Are we still running?
 

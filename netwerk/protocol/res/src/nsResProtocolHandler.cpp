@@ -47,6 +47,7 @@
 #include "nsXPIDLString.h"
 #include "nsIFile.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsNetCID.h"
 
 static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);

@@ -30,7 +30,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIChannel.h"
 #include "nsIURI.h"
-#include "nsIStreamObserver.h"
+#include "nsIRequestObserver.h"
 #include "nsIHTTPChannel.h"
 #include "nsXPIDLString.h"
 #include "nsIInterfaceRequestor.h"

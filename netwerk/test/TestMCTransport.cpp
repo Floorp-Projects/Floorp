@@ -62,7 +62,7 @@ class TestListener : public nsIStreamListener
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSISTREAMLISTENER
-    NS_DECL_NSISTREAMOBSERVER
+    NS_DECL_NSIREQUESTOBSERVER
 
     TestListener(char *);
     virtual ~TestListener();
@@ -74,7 +74,7 @@ private:
 
 NS_IMPL_ISUPPORTS2(TestListener,
                    nsIStreamListener,
-                   nsIStreamObserver)
+                   nsIRequestObserver)
 
 TestListener::TestListener(char *filename)
     : mFilename(filename)
@@ -100,7 +100,7 @@ TestListener::OnStartRequest(nsIRequest *req, nsISupports *ctx)
 }
 
 NS_IMETHODIMP
-TestListener::OnStopRequest(nsIRequest *req, nsISupports *ctx, nsresult status, const PRUnichar *msg)
+TestListener::OnStopRequest(nsIRequest *req, nsISupports *ctx, nsresult status)
 {
     printf("OnStopRequest: status=%x\n", status);
 

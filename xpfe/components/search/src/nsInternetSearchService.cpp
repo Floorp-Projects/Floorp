@@ -626,7 +626,7 @@ InternetSearchDataSource::FireTimer(nsITimer* aTimer, void* aClosure)
 		nsCOMPtr<nsIChannel>	channel;
 		if (NS_FAILED(rv = NS_OpenURI(getter_AddRefs(channel), uri, nsnull)))	return;
 
-		channel->SetLoadAttributes(nsIChannel::FORCE_VALIDATION | nsIChannel::VALIDATE_ALWAYS);
+		channel->SetLoadFlags(nsIRequest::FORCE_VALIDATION | nsIRequest::VALIDATE_ALWAYS);
 
 		nsCOMPtr<nsIHTTPChannel> httpChannel (do_QueryInterface(channel));
 		if (!httpChannel)	return;
@@ -829,7 +829,7 @@ NS_IMPL_RELEASE(InternetSearchDataSource);
 
 NS_INTERFACE_MAP_BEGIN(InternetSearchDataSource)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInternetSearchService)
-   NS_INTERFACE_MAP_ENTRY(nsIStreamObserver)
+   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
    NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
    NS_INTERFACE_MAP_ENTRY(nsIInternetSearchService)
    NS_INTERFACE_MAP_ENTRY(nsIRDFDataSource)
@@ -3562,7 +3562,7 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 			}
 
 			// get it just from the cache if we can (do not validate)
-			channel->SetLoadAttributes(nsIChannel::VALIDATE_NEVER);
+			channel->SetLoadFlags(nsIRequest::VALIDATE_NEVER);
 
 			if (methodStr.EqualsIgnoreCase("post"))
 			{
@@ -4423,7 +4423,7 @@ InternetSearchDataSource::OnDataAvailable(nsIRequest *request, nsISupports *ctxt
 
 NS_IMETHODIMP
 InternetSearchDataSource::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
-					nsresult status, const PRUnichar *errorMsg) 
+                                        nsresult status)
 {
 	if (!mInner)	return(NS_OK);
 

@@ -30,9 +30,7 @@
 NS_IMPL_ISUPPORTS1(DummyChannel, nsIChannel)
 
 DummyChannel::DummyChannel(imgIRequest *aRequest, nsILoadGroup *aLoadGroup) :
-  mRequest(aRequest),
-  mLoadGroup(aLoadGroup),
-  mLoadFlags(nsIChannel::LOAD_NORMAL)
+  mRequest(aRequest)
 {
   NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
@@ -58,10 +56,6 @@ NS_IMETHODIMP DummyChannel::GetURI(nsIURI * *aURI)
 {
   return mRequest->GetURI(aURI);
 }
-NS_IMETHODIMP DummyChannel::SetURI(nsIURI * aURI)
-{
-  return NS_ERROR_FAILURE;
-}
 
 /* attribute nsISupports owner; */
 NS_IMETHODIMP DummyChannel::GetOwner(nsISupports * *aOwner)
@@ -71,30 +65,6 @@ NS_IMETHODIMP DummyChannel::GetOwner(nsISupports * *aOwner)
 NS_IMETHODIMP DummyChannel::SetOwner(nsISupports * aOwner)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* attribute nsILoadGroup loadGroup; */
-NS_IMETHODIMP DummyChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
-{
-  *aLoadGroup = mLoadGroup;
-  NS_IF_ADDREF(*aLoadGroup);
-  return NS_OK;
-}
-NS_IMETHODIMP DummyChannel::SetLoadGroup(nsILoadGroup * aLoadGroup)
-{
-  return NS_ERROR_FAILURE;
-}
-
-/* attribute nsLoadFlags loadAttributes; */
-NS_IMETHODIMP DummyChannel::GetLoadAttributes(nsLoadFlags *aLoadAttributes)
-{
-  *aLoadAttributes = mLoadFlags;
-  return NS_OK;
-}
-NS_IMETHODIMP DummyChannel::SetLoadAttributes(nsLoadFlags aLoadAttributes)
-{
-  mLoadFlags = aLoadAttributes;
-  return NS_OK;
 }
 
 /* attribute nsIInterfaceRequestor notificationCallbacks; */

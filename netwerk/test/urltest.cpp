@@ -38,6 +38,7 @@
 #include "iostream.h"
 #include "nsXPIDLString.h"
 #include "nsString.h"
+#include "nsNetCID.h"
 
 // Define CIDs...
 static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);

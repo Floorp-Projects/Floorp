@@ -45,7 +45,7 @@ static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 // nsFolderCompactState
 //////////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_ISUPPORTS3(nsFolderCompactState, nsIMsgFolderCompactor, nsIStreamObserver, nsIStreamListener)
+NS_IMPL_ISUPPORTS3(nsFolderCompactState, nsIMsgFolderCompactor, nsIRequestObserver, nsIStreamListener)
 
 nsFolderCompactState::nsFolderCompactState()
 {
@@ -412,8 +412,7 @@ nsFolderCompactState::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 
 NS_IMETHODIMP
 nsFolderCompactState::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
-                                    nsresult status, 
-                                    const PRUnichar *errorMsg)
+                                    nsresult status)
 {
   nsresult rv = status;
   nsCOMPtr<nsIURI> uri;
@@ -513,8 +512,7 @@ nsOfflineStoreCompactState::InitDB(nsIMsgDatabase *db)
 
 NS_IMETHODIMP
 nsOfflineStoreCompactState::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
-                                    nsresult status, 
-                                    const PRUnichar *errorMsg)
+                                          nsresult status)
 {
   nsresult rv = status;
   nsCOMPtr<nsIURI> uri;

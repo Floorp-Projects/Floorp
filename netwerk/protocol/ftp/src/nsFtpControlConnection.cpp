@@ -40,10 +40,10 @@ public:
     virtual ~nsFtpStreamProvider() {}
 
     //
-    // nsIStreamObserver implementation ...
+    // nsIRequestObserver implementation ...
     //
     NS_IMETHODIMP OnStartRequest(nsIRequest *req, nsISupports *ctxt) { return NS_OK; }
-    NS_IMETHODIMP OnStopRequest(nsIRequest *req, nsISupports *ctxt, nsresult status, const PRUnichar *statusText) { return NS_OK; }
+    NS_IMETHODIMP OnStopRequest(nsIRequest *req, nsISupports *ctxt, nsresult status) { return NS_OK; }
 
     //
     // nsIStreamProvider implementation ...
@@ -77,7 +77,7 @@ public:
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsFtpStreamProvider,
                               nsIStreamProvider,
-                              nsIStreamObserver)
+                              nsIRequestObserver)
 
 
 //
@@ -86,7 +86,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsFtpStreamProvider,
 
 NS_IMPL_THREADSAFE_QUERY_INTERFACE2(nsFtpControlConnection, 
                                     nsIStreamListener, 
-                                    nsIStreamObserver);
+                                    nsIRequestObserver);
 
 NS_IMPL_THREADSAFE_ADDREF(nsFtpControlConnection);
 nsrefcnt nsFtpControlConnection::Release(void)
@@ -272,7 +272,7 @@ nsFtpControlConnection::OnStartRequest(nsIRequest *request, nsISupports *aContex
 
 NS_IMETHODIMP
 nsFtpControlConnection::OnStopRequest(nsIRequest *request, nsISupports *aContext,
-                            nsresult aStatus, const PRUnichar* aStatusArg)
+                            nsresult aStatus)
 {
     
     if (!mConnected) 
@@ -290,7 +290,7 @@ nsFtpControlConnection::OnStopRequest(nsIRequest *request, nsISupports *aContext
     if (!myListener)
         return NS_OK;
 
-    return myListener->OnStopRequest(request, aContext, aStatus, aStatusArg);
+    return myListener->OnStopRequest(request, aContext, aStatus);
 }
 
 

@@ -55,6 +55,7 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIWebNavigation.h"
 #include "nsIIOService.h"
+#include "nsNetCID.h"
 #include "nsIPrompt.h"
 #include "nsIRDFService.h"
 #include "nsNewsDownloader.h"

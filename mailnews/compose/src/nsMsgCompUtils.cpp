@@ -38,6 +38,7 @@
 #include "nsSpecialSystemDirectory.h"
 #include "nsIDocumentEncoder.h"    // for editor output flags
 #include "nsIURI.h"
+#include "nsNetCID.h"
 #include "nsMsgPrompts.h"
 
 /* for StrAllocCat */

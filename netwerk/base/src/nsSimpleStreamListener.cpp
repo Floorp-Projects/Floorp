@@ -31,11 +31,11 @@
 NS_IMPL_ISUPPORTS3(nsSimpleStreamListener,
                    nsISimpleStreamListener,
                    nsIStreamListener,
-                   nsIStreamObserver)
+                   nsIRequestObserver)
 
 //
 //----------------------------------------------------------------------------
-// nsIStreamObserver implementation...
+// nsIRequestObserver implementation...
 //----------------------------------------------------------------------------
 //
 NS_IMETHODIMP
@@ -49,11 +49,10 @@ nsSimpleStreamListener::OnStartRequest(nsIRequest *aRequest,
 NS_IMETHODIMP
 nsSimpleStreamListener::OnStopRequest(nsIRequest* request,
                                       nsISupports *aContext,
-                                      nsresult aStatus,
-                                      const PRUnichar *aStatusText)
+                                      nsresult aStatus)
 {
     return mObserver ?
-        mObserver->OnStopRequest(request, aContext, aStatus, aStatusText) : NS_OK;
+        mObserver->OnStopRequest(request, aContext, aStatus) : NS_OK;
 }
 
 //
@@ -85,7 +84,7 @@ nsSimpleStreamListener::OnDataAvailable(nsIRequest* request,
 //
 NS_IMETHODIMP
 nsSimpleStreamListener::Init(nsIOutputStream *aSink,
-                             nsIStreamObserver *aObserver)
+                             nsIRequestObserver *aObserver)
 {
     NS_PRECONDITION(aSink, "null output stream");
 

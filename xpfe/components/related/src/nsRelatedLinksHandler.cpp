@@ -109,8 +109,8 @@ public:
 	 NS_METHOD	Init();
      nsresult   Unescape(nsString &text);
 
-	// nsIStreamObserver
-	NS_DECL_NSISTREAMOBSERVER
+	// nsIRequestObserver
+	NS_DECL_NSIREQUESTOBSERVER
 
 	// nsIStreamListener
 	NS_DECL_NSISTREAMLISTENER
@@ -256,7 +256,7 @@ RelatedLinksStreamListener::OnStartRequest(nsIRequest *request, nsISupports *ctx
 
 NS_IMETHODIMP
 RelatedLinksStreamListener::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
-					nsresult status, const PRUnichar *errorMsg) 
+                                          nsresult status)
 {
 	 nsAutoString		trueStr; trueStr.AssignWithConversion("true");
 	 nsIRDFLiteral		*literal = nsnull;

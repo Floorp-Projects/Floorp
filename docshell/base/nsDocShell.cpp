@@ -2812,7 +2812,7 @@ NS_IMETHODIMP nsDocShell::CreateContentViewer(const char* aContentType,
 
    if(currentLoadGroup.get() != loadGroup.get())
       {
-      nsLoadFlags loadAttribs = 0;
+      nsLoadFlags loadFlags = 0;
 
       //Cancel any URIs that are currently loading...
       /// XXX: Need to do this eventually      Stop();
@@ -2828,14 +2828,14 @@ NS_IMETHODIMP nsDocShell::CreateContentViewer(const char* aContentType,
       aOpenedChannel->SetLoadGroup(loadGroup);
 
       // Mark the channel as being a document URI...
-      aOpenedChannel->GetLoadAttributes(&loadAttribs);
-      loadAttribs |= nsIChannel::LOAD_DOCUMENT_URI;
+      aOpenedChannel->GetLoadFlags(&loadFlags);
+      loadFlags |= nsIRequest::LOAD_DOCUMENT_URI;
 
-      aOpenedChannel->SetLoadAttributes(loadAttribs);
+      aOpenedChannel->SetLoadFlags(loadFlags);
 
       loadGroup->AddRequest(request, nsnull);
       if(currentLoadGroup)
-         currentLoadGroup->RemoveRequest(request, nsnull, nsnull, nsnull);
+         currentLoadGroup->RemoveRequest(request, nsnull, NS_OK);
       
       }
 
@@ -3527,30 +3527,30 @@ NS_IMETHODIMP nsDocShell::DoChannelLoad(nsIChannel *aChannel, nsURILoadCommand a
                                        const char* aWindowTarget, nsIURILoader *aURILoader)
 {
    // Mark the channel as being a document URI...
-   nsLoadFlags loadAttribs = 0;
-   (void)aChannel->GetLoadAttributes(&loadAttribs);
-   loadAttribs |= nsIChannel::LOAD_DOCUMENT_URI;
+   nsLoadFlags loadFlags = 0;
+   (void)aChannel->GetLoadFlags(&loadFlags);
+   loadFlags |= nsIRequest::LOAD_DOCUMENT_URI;
   
     // "View source" always wants VALIDATE_NEVER.
     if ( mViewMode == viewSource ) {
-        loadAttribs |= nsIChannel::VALIDATE_NEVER;
+        loadFlags |= nsIRequest::VALIDATE_NEVER;
     } else {
         // Load attributes depend on load type...
       	switch ( mLoadType )
       	{
       	 case LOAD_HISTORY:
-      	 		loadAttribs |= nsIChannel::VALIDATE_NEVER;
+      	 		loadFlags |= nsIRequest::VALIDATE_NEVER;
       	 		break;
       	 		
       	 case LOAD_RELOAD_NORMAL:
-      	 			loadAttribs |= nsIChannel::FORCE_VALIDATION;
+      	 			loadFlags |= nsIRequest::FORCE_VALIDATION;
       	 		break;
       	 		
       	 case LOAD_RELOAD_BYPASS_PROXY_AND_CACHE:
-      	 		loadAttribs |= nsIChannel::FORCE_RELOAD;
+      	 		loadFlags |= nsIRequest::FORCE_RELOAD;
       	 		break;
       	 case LOAD_REFRESH:
-      	 		loadAttribs |= nsIChannel::FORCE_RELOAD;
+      	 		loadFlags |= nsIRequest::FORCE_RELOAD;
       	 		break;
          case LOAD_NORMAL:
          case LOAD_LINK:
@@ -3563,13 +3563,13 @@ NS_IMETHODIMP nsDocShell::DoChannelLoad(nsIChannel *aChannel, nsURILoadCommand a
     		   			switch ( prefSetting )
     		   			{
     		   				case 0:
-    		   					loadAttribs |= nsIChannel::VALIDATE_ONCE_PER_SESSION;
+    		   					loadFlags |= nsIRequest::VALIDATE_ONCE_PER_SESSION;
     		   					break;
     		   				case 1:
-    		   					loadAttribs |= nsIChannel::VALIDATE_ALWAYS;
+    		   					loadFlags |= nsIRequest::VALIDATE_ALWAYS;
     		   					break;
     		   				case 2:
-    		   					loadAttribs |= nsIChannel::VALIDATE_NEVER;
+    		   					loadFlags |= nsIRequest::VALIDATE_NEVER;
     		   					break;
     		   			}
     		   		}
@@ -3578,7 +3578,7 @@ NS_IMETHODIMP nsDocShell::DoChannelLoad(nsIChannel *aChannel, nsURILoadCommand a
        }
     }
    
-   (void) aChannel->SetLoadAttributes(loadAttribs);
+   (void) aChannel->SetLoadFlags(loadFlags);
 
    NS_ENSURE_SUCCESS(aURILoader->OpenURI(aChannel, aLoadCmd,
       aWindowTarget, NS_STATIC_CAST(nsIDocShell*, this)), NS_ERROR_FAILURE);
@@ -3910,8 +3910,8 @@ NS_IMETHODIMP nsDocShell::OnLoadingSite(nsIChannel* aChannel)
     // But this notification happen after the necko notification and hence
     // overrides it. Until OnRedirect() gets settles out, let us do this.
     nsLoadFlags loadFlags = 0;
-    aChannel->GetLoadAttributes(&loadFlags);
-    if (loadFlags & nsIChannel::LOAD_REPLACE)
+    aChannel->GetLoadFlags(&loadFlags);
+    if (loadFlags & nsIRequest::LOAD_REPLACE)
         aChannel->GetURI(getter_AddRefs(uri));
     else
         aChannel->GetOriginalURI(getter_AddRefs(uri));

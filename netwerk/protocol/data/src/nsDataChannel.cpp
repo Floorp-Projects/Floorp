@@ -295,13 +295,6 @@ nsDataChannel::GetURI(nsIURI* *aURI)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDataChannel::SetURI(nsIURI* aURI)
-{
-    mUrl = aURI;
-    return NS_OK;
-}
-
 // This class 
 
 NS_IMETHODIMP
@@ -340,21 +333,21 @@ nsDataChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
     rv = listener->OnDataAvailable(this, ctxt, mDataStream, 0, streamLen);
     if (NS_FAILED(rv)) return rv;
 
-    rv = listener->OnStopRequest(this, ctxt, NS_OK, nsnull);
+    rv = listener->OnStopRequest(this, ctxt, NS_OK);
     return rv;
 }
 
 NS_IMETHODIMP
-nsDataChannel::GetLoadAttributes(PRUint32 *aLoadAttributes)
+nsDataChannel::GetLoadFlags(PRUint32 *aLoadFlags)
 {
-    *aLoadAttributes = mLoadAttributes;
+    *aLoadFlags = mLoadFlags;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDataChannel::SetLoadAttributes(PRUint32 aLoadAttributes)
+nsDataChannel::SetLoadFlags(PRUint32 aLoadFlags)
 {
-    mLoadAttributes = aLoadAttributes;
+    mLoadFlags = aLoadFlags;
     return NS_OK;
 }
 

@@ -30,7 +30,7 @@
 NS_IMPL_THREADSAFE_ISUPPORTS4(nsTXTToHTMLConv,
                               nsIStreamConverter,
                               nsITXTToHTMLConv,
-                              nsIStreamObserver,
+                              nsIRequestObserver,
                               nsIStreamListener);
 
 
@@ -53,7 +53,7 @@ nsTXTToHTMLConv::AsyncConvertData(const PRUnichar *aFromType,
 }
 
 
-// nsIStreamObserver methods
+// nsIRequestObserver methods
 NS_IMETHODIMP
 nsTXTToHTMLConv::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     mBuffer.AssignWithConversion("<html>\n<head><title>");
@@ -84,7 +84,7 @@ nsTXTToHTMLConv::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
 
 NS_IMETHODIMP
 nsTXTToHTMLConv::OnStopRequest(nsIRequest* request, nsISupports *aContext,
-                               nsresult aStatus, const PRUnichar* aStatusArg) {
+                               nsresult aStatus) {
     nsresult rv = NS_OK;
     if (mToken) {
         // we still have an outstanding token
@@ -109,7 +109,7 @@ nsTXTToHTMLConv::OnStopRequest(nsIRequest* request, nsISupports *aContext,
                                     inputData, 0, mBuffer.Length());
     if (NS_FAILED(rv)) return rv;
 
-    return mListener->OnStopRequest(request, aContext, aStatus, aStatusArg);
+    return mListener->OnStopRequest(request, aContext, aStatus);
 }
 
 // nsITXTToHTMLConv methods

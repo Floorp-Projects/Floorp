@@ -27,6 +27,7 @@
 #include "nsIFileTransportService.h"
 #include "netCore.h"
 #include "nsXPIDLString.h"
+#include "nsNetCID.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
@@ -137,7 +138,7 @@ nsInputStreamIO::GetName(char* *aName)
 nsStreamIOChannel::nsStreamIOChannel()
     : mContentType(nsnull), mContentLength(-1),
       mBufferSegmentSize(0), mBufferMaxSize(0),
-      mLoadAttributes(LOAD_NORMAL), mStatus(NS_OK)
+      mLoadFlags(LOAD_NORMAL), mStatus(NS_OK)
 {
     NS_INIT_REFCNT(); 
 }
@@ -176,7 +177,7 @@ NS_INTERFACE_MAP_BEGIN(nsStreamIOChannel)
   NS_INTERFACE_MAP_ENTRY(nsIRequest)
   NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
   NS_INTERFACE_MAP_ENTRY(nsIStreamProvider)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIStreamObserver, nsIStreamListener)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIRequestObserver, nsIStreamListener)
   NS_INTERFACE_MAP_ENTRY(nsIProgressEventSink)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStreamListener)
@@ -274,13 +275,6 @@ nsStreamIOChannel::GetURI(nsIURI* *aURI)
 }
 
 NS_IMETHODIMP
-nsStreamIOChannel::SetURI(nsIURI* aURI)
-{
-    mURI = aURI;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsStreamIOChannel::Open(nsIInputStream **result)
 {
     return mStreamIO->GetInputStream(result);
@@ -295,20 +289,6 @@ nsStreamIOChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
     SetListener(listener);
 
     if (mLoadGroup) {
-        nsCOMPtr<nsILoadGroupListenerFactory> factory;
-        //
-        // Create a load group "proxy" listener...
-        //
-        rv = mLoadGroup->GetGroupListenerFactory(getter_AddRefs(factory));
-        if (factory) {
-            nsIStreamListener *newListener;
-            rv = factory->CreateLoadGroupListener(GetListener(), &newListener);
-            if (NS_SUCCEEDED(rv)) {
-                mUserObserver = newListener;
-                NS_RELEASE(newListener);
-            }
-        }
-
         rv = mLoadGroup->AddRequest(this, nsnull);
         if (NS_FAILED(rv)) return rv;
     }
@@ -326,7 +306,7 @@ nsStreamIOChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
         nsCOMPtr<nsIInterfaceRequestor> requestor =
             do_QueryInterface(NS_STATIC_CAST(nsIRequest*, this));
         rv = mFileTransport->SetNotificationCallbacks
-                (requestor, (mLoadAttributes & nsIChannel::LOAD_BACKGROUND));
+                (requestor, (mLoadFlags & nsIRequest::LOAD_BACKGROUND));
         if (NS_FAILED(rv)) goto done;
     }
 
@@ -341,7 +321,7 @@ nsStreamIOChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
   done:
     if (NS_FAILED(rv)) {
         nsresult rv2;
-        rv2 = mLoadGroup->RemoveRequest(this, ctxt, rv, nsnull);
+        rv2 = mLoadGroup->RemoveRequest(this, ctxt, rv);
         NS_ASSERTION(NS_SUCCEEDED(rv2), "RemoveRequest failed");
         // release the transport so that we don't think we're in progress
         mFileTransport = nsnull;
@@ -350,16 +330,16 @@ nsStreamIOChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
 }
 
 NS_IMETHODIMP
-nsStreamIOChannel::GetLoadAttributes(nsLoadFlags *aLoadAttributes)
+nsStreamIOChannel::GetLoadFlags(nsLoadFlags *aLoadFlags)
 {
-    *aLoadAttributes = mLoadAttributes;
+    *aLoadFlags = mLoadFlags;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsStreamIOChannel::SetLoadAttributes(nsLoadFlags aLoadAttributes)
+nsStreamIOChannel::SetLoadFlags(nsLoadFlags aLoadFlags)
 {
-    mLoadAttributes = aLoadAttributes;
+    mLoadFlags = aLoadFlags;
     return NS_OK;
 }
 
@@ -462,7 +442,7 @@ nsStreamIOChannel::SetContentLength(PRInt32 aContentLength)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsIStreamObserver implementation:
+// nsIRequestObserver implementation:
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
@@ -473,14 +453,13 @@ nsStreamIOChannel::OnStartRequest(nsIRequest *request, nsISupports* context)
 }
 
 NS_IMETHODIMP
-nsStreamIOChannel::OnStopRequest(nsIRequest *request, nsISupports* context,
-                                 nsresult aStatus, const PRUnichar* aStatusArg)
+nsStreamIOChannel::OnStopRequest(nsIRequest *request, nsISupports* context, nsresult aStatus)
 {
     if (mUserObserver)
-        mUserObserver->OnStopRequest(this, context, aStatus, aStatusArg);
+        mUserObserver->OnStopRequest(this, context, aStatus);
 
     if (mLoadGroup)
-        mLoadGroup->RemoveRequest(this, context, aStatus, aStatusArg);
+        mLoadGroup->RemoveRequest(this, context, aStatus);
 
     // Release the reference to the consumer stream listener...
     mRequest = 0;

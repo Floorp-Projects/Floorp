@@ -88,15 +88,15 @@ NS_IMETHODIMP nsDSURIContentListener::DoContent(const char* aContentType,
       *aAbortProcess = PR_FALSE;
 
    // determine if the channel has just been retargeted to us...
-   nsLoadFlags loadAttribs = 0;
+   nsLoadFlags loadFlags = 0;
    nsCOMPtr<nsIChannel> aOpenedChannel = do_QueryInterface(request);
     
-   aOpenedChannel->GetLoadAttributes(&loadAttribs);
+   aOpenedChannel->GetLoadFlags(&loadFlags);
 
    PRUint32 loadType = mDocShell->ConvertDocShellLoadInfoToLoadType((nsDocShellInfoLoadType) aCommand);
    mDocShell->SetLoadType(loadType);
 
-   if(loadAttribs & nsIChannel::LOAD_RETARGETED_DOCUMENT_URI)
+   if(loadFlags & nsIRequest::LOAD_RETARGETED_DOCUMENT_URI)
    {
       mDocShell->StopLoad();
    }
@@ -105,7 +105,7 @@ NS_IMETHODIMP nsDSURIContentListener::DoContent(const char* aContentType,
       request, aContentHandler);
    if (NS_FAILED(rv)) return NS_ERROR_FAILURE; // it's okay if we don't know how to handle the content   
 
-   if(loadAttribs & nsIChannel::LOAD_RETARGETED_DOCUMENT_URI)
+   if(loadFlags & nsIRequest::LOAD_RETARGETED_DOCUMENT_URI)
       mDocShell->SetFocus();
 
    return NS_OK;
