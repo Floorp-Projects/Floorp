@@ -28,10 +28,31 @@ DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 CPPSRCS =				\
 	nsLatin1ToUnicode.cpp		\
+	nsISO88592ToUnicode.cpp		\
 	nsISO88597ToUnicode.cpp		\
+	nsISO88599ToUnicode.cpp		\
+	nsCP1250ToUnicode.cpp		\
+	nsCP1252ToUnicode.cpp		\
 	nsCP1253ToUnicode.cpp		\
+	nsCP1254ToUnicode.cpp		\
+	nsMacRomanToUnicode.cpp		\
+	nsMacCEToUnicode.cpp		\
+	nsMacGreekToUnicode.cpp		\
+	nsMacTurkishToUnicode.cpp	\
 	nsUTF8ToUnicode.cpp		\
 	nsUnicodeToLatin1.cpp		\
+	nsUnicodeToISO88592.cpp		\
+	nsUnicodeToISO88597.cpp		\
+	nsUnicodeToISO88599.cpp		\
+	nsUnicodeToCP1250.cpp		\
+	nsUnicodeToCP1252.cpp		\
+	nsUnicodeToCP1253.cpp		\
+	nsUnicodeToCP1254.cpp		\
+	nsUnicodeToMacRoman.cpp		\
+	nsUnicodeToMacCE.cpp		\
+	nsUnicodeToMacGreek.cpp		\
+	nsUnicodeToMacTurkish.cpp	\
+	nsUnicodeToUTF8.cpp		\
 	ns1ByteToUnicodeBase.cpp	\
 	nsUCvLatinSupport.cpp		\
 	nsUCvLatinDll.cpp		\
@@ -39,10 +60,31 @@ CPPSRCS =				\
 
 CPP_OBJS=						\
 	.\$(OBJDIR)\nsLatin1ToUnicode.obj 		\
+	.\$(OBJDIR)\nsISO88592ToUnicode.obj 		\
 	.\$(OBJDIR)\nsISO88597ToUnicode.obj 		\
+	.\$(OBJDIR)\nsISO88599ToUnicode.obj 		\
+	.\$(OBJDIR)\nsCP1250ToUnicode.obj 		\
+	.\$(OBJDIR)\nsCP1252ToUnicode.obj 		\
 	.\$(OBJDIR)\nsCP1253ToUnicode.obj 		\
+	.\$(OBJDIR)\nsCP1254ToUnicode.obj 		\
+	.\$(OBJDIR)\nsMacRomanToUnicode.obj 		\
+	.\$(OBJDIR)\nsMacCEToUnicode.obj 		\
+	.\$(OBJDIR)\nsMacGreekToUnicode.obj 		\
+	.\$(OBJDIR)\nsMacTurkishToUnicode.obj 		\
 	.\$(OBJDIR)\nsUTF8ToUnicode.obj 		\
 	.\$(OBJDIR)\nsUnicodeToLatin1.obj		\
+	.\$(OBJDIR)\nsUnicodeToISO88592.obj		\
+	.\$(OBJDIR)\nsUnicodeToISO88597.obj		\
+	.\$(OBJDIR)\nsUnicodeToISO88599.obj		\
+	.\$(OBJDIR)\nsUnicodeToCP1250.obj		\
+	.\$(OBJDIR)\nsUnicodeToCP1252.obj		\
+	.\$(OBJDIR)\nsUnicodeToCP1253.obj		\
+	.\$(OBJDIR)\nsUnicodeToCP1254.obj		\
+	.\$(OBJDIR)\nsUnicodeToMacRoman.obj		\
+	.\$(OBJDIR)\nsUnicodeToMacCE.obj		\
+	.\$(OBJDIR)\nsUnicodeToMacGreek.obj		\
+	.\$(OBJDIR)\nsUnicodeToMacTurkish.obj		\
+	.\$(OBJDIR)\nsUnicodeToUTF8.obj			\
 	.\$(OBJDIR)\ns1ByteToUnicodeBase.obj 		\
 	.\$(OBJDIR)\nsUCvLatinSupport.obj		\
 	.\$(OBJDIR)\nsUCvLatinDll.obj 			\
