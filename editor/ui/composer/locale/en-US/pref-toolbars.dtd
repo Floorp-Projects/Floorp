@@ -67,5 +67,5 @@
 <!ENTITY underline.label "Underline">
 
 <!ENTITY absolutePosition.label "Absolute positioning">
-<!ENTITY decreaseZIndex.label "Sent to back">
+<!ENTITY decreaseZIndex.label "Send to back">
 <!ENTITY increaseZIndex.label "Bring to front">
