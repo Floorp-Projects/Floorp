@@ -147,6 +147,10 @@ public:
                                    nsIDOMHTMLInputElement* aRadio);
   NS_IMETHOD GetCurrentRadioButton(const nsAString& aName,
                                    nsIDOMHTMLInputElement** aRadio);
+  NS_IMETHOD GetNextRadioButton(const nsAString& aName,
+                                const PRBool aPrevious,
+                                nsIDOMHTMLInputElement*  aFocusedRadio,
+                                nsIDOMHTMLInputElement** aRadioOut);
   NS_IMETHOD WalkRadioGroup(const nsAString& aName, nsIRadioVisitor* aVisitor);
   NS_IMETHOD AddToRadioGroup(const nsAString& aName,
                              nsIFormControl* aRadio);
@@ -1420,6 +1424,68 @@ nsHTMLFormElement::GetCurrentRadioButton(const nsAString& aName,
 {
   mSelectedRadioButtons.Get(aName, aRadio);
 
+  return NS_OK;
+}NS_IMETHODIMP
+nsHTMLFormElement::GetNextRadioButton(const nsAString& aName,
+                                      const PRBool aPrevious,
+                                      nsIDOMHTMLInputElement*  aFocusedRadio,
+                                      nsIDOMHTMLInputElement** aRadioOut)
+{
+  // Get Next (aGetAdjacentInDir == 1) or previous (-1) radio button.
+  // Return the radio button relative to the focused radio button.
+  // If no radio is focused, get the radio relative to the selected one.
+  *aRadioOut = nsnull;
+
+  nsCOMPtr<nsIDOMHTMLInputElement> currentRadio;
+  if (aFocusedRadio) {
+    currentRadio = aFocusedRadio;
+  }
+  else {
+    mSelectedRadioButtons.Get(aName, getter_AddRefs(currentRadio));
+  }
+
+  nsCOMPtr<nsISupports> itemWithName;
+  ResolveName(aName, getter_AddRefs(itemWithName));
+  nsCOMPtr<nsIDOMNodeList> radioNodeList(do_QueryInterface(itemWithName));
+
+  // XXX If ResolveName could return an nsContentList instead then we 
+  //     could get an nsIContentList instead of using this hacky upcast
+
+  nsBaseContentList *radioGroup =
+    NS_STATIC_CAST(nsBaseContentList *, (nsIDOMNodeList *)radioNodeList);
+  if (!radioGroup) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIContent> currentRadioNode(do_QueryInterface(currentRadio));
+  NS_ASSERTION(currentRadioNode, "No nsIContent for current radio button");
+  PRInt32 index = radioGroup->IndexOf(currentRadioNode, PR_TRUE);
+  if (index < 0) {
+    return NS_ERROR_FAILURE;
+  }
+
+  PRUint32 numRadios;
+  radioGroup->GetLength(&numRadios);
+  PRBool disabled;
+  nsCOMPtr<nsIDOMHTMLInputElement> radio;
+
+  do {
+    if (aPrevious) {
+      if (--index < 0) {
+        index = numRadios -1;
+      }
+    }
+    else if (++index >= numRadios) {
+      index = 0;
+    }
+    nsCOMPtr<nsIDOMNode> radioDOMNode;
+    radioGroup->Item(index, getter_AddRefs(radioDOMNode));
+    radio = do_QueryInterface(radioDOMNode);
+    NS_ASSERTION(radio, "mRadioButtons holding a non-radio button");
+    radio->GetDisabled(&disabled);
+  } while (disabled && radio != currentRadio);
+
+  NS_IF_ADDREF(*aRadioOut = radio);
   return NS_OK;
 }
 

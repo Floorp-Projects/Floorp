@@ -4117,6 +4117,64 @@ nsDocument::GetCurrentRadioButton(const nsAString& aName,
 }
 
 NS_IMETHODIMP
+nsDocument::GetNextRadioButton(const nsAString& aName,
+                               const PRBool aPrevious,
+                               nsIDOMHTMLInputElement*  aFocusedRadio,
+                               nsIDOMHTMLInputElement** aRadioOut)
+{
+  // XXX Can we combine the HTML radio button method impls of 
+  //     nsDocument and nsHTMLFormControl?
+  // XXX Why is HTML radio button stuff in nsDocument, as 
+  //     opposed to nsHTMLDocument?
+  *aRadioOut = nsnull;
+
+  nsRadioGroupStruct* radioGroup = nsnull;
+  GetRadioGroup(aName, &radioGroup);
+  if (!radioGroup) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Return the radio button relative to the focused radio button.
+  // If no radio is focused, get the radio relative to the selected one.
+  nsCOMPtr<nsIDOMHTMLInputElement> currentRadio;
+  if (aFocusedRadio) {
+    currentRadio = aFocusedRadio;
+  }
+  else {
+    currentRadio = radioGroup->mSelectedRadioButton;
+    if (!currentRadio) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+  nsCOMPtr<nsIFormControl> radioControl(do_QueryInterface(currentRadio));
+  PRInt32 index = radioGroup->mRadioButtons.IndexOf(radioControl);
+  if (index < 0) {
+    return NS_ERROR_FAILURE;
+  }
+
+  PRInt32 numRadios = radioGroup->mRadioButtons.Count();
+  PRBool disabled;
+  nsCOMPtr<nsIDOMHTMLInputElement> radio;
+  do {
+    if (aPrevious) {
+      if (--index < 0) {
+        index = numRadios -1;
+      }
+    }
+    else if (++index >= numRadios) {
+      index = 0;
+    }
+    radio = do_QueryInterface(NS_STATIC_CAST(nsIFormControl*, 
+                              radioGroup->mRadioButtons.ElementAt(index)));
+    NS_ASSERTION(radio, "mRadioButtons holding a non-radio button");
+    radio->GetDisabled(&disabled);
+  } while (disabled && radio != currentRadio);
+
+  NS_IF_ADDREF(*aRadioOut = radio);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDocument::AddToRadioGroup(const nsAString& aName,
                             nsIFormControl* aRadio)
 {
