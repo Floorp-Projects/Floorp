@@ -85,8 +85,8 @@ LINE:
                     
                     Lock();
                     unless (-d "data/taginfo/$mungedname") {
-                         system("mkdir -p data/taginfo/$mungedname");
-                         system("chmod -R 777 data/taginfo/$mungedname");
+                         system("mkdir", "-p", "data/taginfo/$mungedname");
+                         system("chmod", "-R", "777", "data/taginfo/$mungedname");
                     }
                     if (open(TAGFILE, ">> $filename")) {
                          print TAGFILE "$tagtime|" . join('|', @data) .  "\n";
@@ -119,8 +119,8 @@ LINE:
           $mungedname =~ s!^_!!;
           $filename = "data/checkinlog/$mungedname";
           unless (-d "data/checkinlog") {
-               system("mkdir -p data/checkinlog");
-               system("chmod -R 777 data/checkinlog");
+               system("mkdir", "-p", "data/checkinlog");
+               system("chmod ", "-R", "777", "data/checkinlog");
           }
           if (open(TID, ">> $filename")) {
                print TID "${appendjunk}LOGCOMMENT\n$plainlog:ENDLOGCOMMENT\n";

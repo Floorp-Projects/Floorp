@@ -517,7 +517,7 @@ sub DataDir {
 
      # Make sure it exists...
      unless (-d $dir) {
-          system ("rm -rf $dir; mkdir -p $dir");
+          system ("rm", "-rf", "$dir;", "mkdir", "-p", $dir);
           die "Couldn't create '$dir'\n"
                unless (-d $dir);
           chmod(0777, $dir);
@@ -547,7 +547,7 @@ sub LoadDirList {
      if (-f $modules) {
           if ((!(-f $dirsfile)) ||
               ((-M $dirsfile) < (-M $modules))) {
-               system("./createlegaldirs.pl $::TreeID");
+               system("./createlegaldirs.pl", $::TreeID);
           }
      }
 
