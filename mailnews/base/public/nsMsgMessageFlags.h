@@ -109,5 +109,7 @@ typedef PRInt32 MsgFlags;
 #define MSG_FLAG_TEMPLATE       0x1000000	/* this message is a template */
 #define MSG_FLAG_ATTACHMENT		0x10000000	/* this message has files attached to it */
 
+/* The list of all message flags to not write to disk. */
+#define MSG_FLAG_RUNTIME_ONLY   (MSG_FLAG_ELIDED)
 
 #endif
