@@ -40,6 +40,8 @@ Transaction interface to outside world
 #include "nsIAtom.h"
 #include "nsIDOMNode.h"
 
+class nsSelectionState;
+
 /**
  * A transaction interface mixin - for transactions that can support. 
  * the placeholder absorbtion idiom. 
@@ -49,13 +51,13 @@ public:
 
   static const nsIID& GetIID() { static nsIID iid = NS_IABSORBINGTRANSACTION_IID; return iid; }
 
-  NS_IMETHOD Init(nsWeakPtr aPresShellWeak, nsIAtom *aName, nsIDOMNode *aStartNode, PRInt32 aStartOffset)=0;
+  NS_IMETHOD Init(nsWeakPtr aPresShellWeak, nsIAtom *aName, nsSelectionState *aSelState)=0;
   
   NS_IMETHOD EndPlaceHolderBatch()=0;
   
   NS_IMETHOD GetTxnName(nsIAtom **aName)=0;
 
-  NS_IMETHOD GetStartNodeAndOffset(nsCOMPtr<nsIDOMNode> *aTxnStartNode, PRInt32 *aTxnStartOffset)=0;
+  NS_IMETHOD StartSelectionEquals(nsSelectionState *aSelState, PRBool *aResult)=0;
 
   NS_IMETHOD ForwardEndBatchTo(nsIAbsorbingTransaction *aForwardingAddress)=0;
   

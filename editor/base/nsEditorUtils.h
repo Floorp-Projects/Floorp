@@ -30,31 +30,13 @@
 #include "nsIDOMSelection.h"
 #include "nsIEditor.h"
 #include "nsIAtom.h"
-
+#include "nsVoidArray.h"
 #include "nsEditor.h"
 
-class nsAutoEditBatch
-{
-  private:
-    nsCOMPtr<nsIEditor> mEd;
-  public:
-    nsAutoEditBatch( nsIEditor *aEd) : mEd(do_QueryInterface(aEd)) 
-                   { if (mEd) mEd->BeginTransaction(); }
-    ~nsAutoEditBatch() { if (mEd) mEd->EndTransaction(); }
-};
-
-class nsAutoEditMayBatch
-{
-  private:
-    nsCOMPtr<nsIEditor> mEd;
-    PRBool mDidBatch;
-  public:
-    nsAutoEditMayBatch( nsIEditor *aEd) : mEd(do_QueryInterface(aEd)), mDidBatch(PR_FALSE) {}
-    ~nsAutoEditMayBatch() { if (mEd && mDidBatch) mEd->EndTransaction(); }
-    
-    void batch()  { if (mEd && !mDidBatch) {mEd->BeginTransaction(); mDidBatch=PR_TRUE;} }
-};
-
+/***************************************************************************
+ * stack based helper class for batching a collection of txns inside a 
+ * placeholder txn.
+ */
 class nsAutoPlaceHolderBatch
 {
   private:
@@ -66,6 +48,22 @@ class nsAutoPlaceHolderBatch
 };
 
 
+/***************************************************************************
+ * stack based helper class for batching a collection of txns.  
+ * Note: I changed this to use placeholder batching so that we get
+ * proper selection save/restore across undo/redo.
+ */
+class nsAutoEditBatch : public nsAutoPlaceHolderBatch
+{
+  public:
+    nsAutoEditBatch( nsIEditor *aEd) : nsAutoPlaceHolderBatch(aEd,nsnull)  {}
+    ~nsAutoEditBatch() {}
+};
+
+/***************************************************************************
+ * stack based helper class for saving/restoring selection.  Note that this
+ * assumes that the nodes involved are still around afterwards!
+ */
 class nsAutoSelectionReset
 {
   private:
@@ -136,7 +134,6 @@ class nsAutoTxnsConserveSelection
   nsEditor *mEd;
   PRBool mOldState;
 };
-
 
 
 #endif // nsEditorUtils_h__

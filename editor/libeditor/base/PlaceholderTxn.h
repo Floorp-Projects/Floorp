@@ -24,6 +24,7 @@
 #define AggregatePlaceholderTxn_h__
 
 #include "EditAggregateTxn.h"
+#include "nsEditorUtils.h"
 #include "nsIAbsorbingTransaction.h"
 #include "nsIDOMNode.h"
 #include "nsCOMPtr.h"
@@ -67,16 +68,18 @@ public:
   NS_IMETHOD Do(void);
 
   NS_IMETHOD Undo(void);
+  
+  NS_IMETHOD Redo(void);
 
   NS_IMETHOD Merge(PRBool *aDidMerge, nsITransaction *aTransaction);
 
 // ------------ nsIAbsorbingTransaction -----------------------
 
-  NS_IMETHOD Init(nsWeakPtr aPresShellWeak, nsIAtom *aName, nsIDOMNode *aStartNode, PRInt32 aStartOffset);
+  NS_IMETHOD Init(nsWeakPtr aPresShellWeak, nsIAtom *aName, nsSelectionState *aSelState);
   
   NS_IMETHOD GetTxnName(nsIAtom **aName);
   
-  NS_IMETHOD GetStartNodeAndOffset(nsCOMPtr<nsIDOMNode> *aTxnStartNode, PRInt32 *aTxnStartOffset);
+  NS_IMETHOD StartSelectionEquals(nsSelectionState *aSelState, PRBool *aResult);
 
   NS_IMETHOD EndPlaceHolderBatch();
 
@@ -84,6 +87,8 @@ public:
 
   NS_IMETHOD Commit();
 
+  NS_IMETHOD RememberEndingSelection();
+  
   friend class TransactionFactory;
 
   enum { kTransactionID = 11260 };
@@ -93,12 +98,15 @@ protected:
   /** the presentation shell, which we'll need to get the selection */
   nsWeakPtr   mPresShellWeak;   // weak reference to the nsIPresShell
   PRBool      mAbsorb;          // do we auto absorb any and all transaction?
-  nsCOMPtr<nsIDOMNode> mStartNode, mEndNode; // selection nodes at beginning and end of operation
-  PRInt32     mStartOffset, mEndOffset;      // selection offsets at beginning and end of operation
   nsWeakPtr   mForwarding;
   IMETextTxn *mIMETextTxn;      // first IME txn in this placeholder - used for IME merging
                                 // non-owning for now - cant nsCOMPtr it due to broken transaction interfaces
   PRBool      mCommitted;       // do we stop auto absorbing any matching placeholder txns?
+  // these next two members store the state of the selection in a safe way. 
+  // selection at the start of the txn is stored, as is the selection at the end.
+  // This is so that Undo() and Redo() can restore the selection properly.
+  nsSelectionState  *mStartSel; // use a pointer because this is constructed before we exist
+  nsSelectionState  mEndSel;
 };
 
 

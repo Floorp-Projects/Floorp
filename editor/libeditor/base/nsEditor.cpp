@@ -137,6 +137,169 @@ const PRUnichar nbsp = 160;
 PRInt32 nsEditor::gInstanceCount = 0;
 
 
+/***************************************************************************
+ * class for recording selection info.  stores selection as collection of
+ * { {startnode, startoffset} , {endnode, endoffset} } tuples.  Cant store
+ * ranges since dom gravity will possibly change the ranges.
+ */
+nsSelectionState::nsSelectionState()  {}
+
+nsSelectionState::~nsSelectionState() 
+{
+  // free any items in the array
+  SelRangeStore *item;
+  while (item = (SelRangeStore*)mArray.ElementAt(0))
+  {
+    delete item;
+    mArray.RemoveElementAt(0);
+  }
+}
+
+nsresult  
+nsSelectionState::SaveSelection(nsIDOMSelection *aSel)
+{
+  if (!aSel) return NS_ERROR_NULL_POINTER;
+  nsresult res = NS_OK;
+  PRInt32 i,rangeCount, arrayCount = mArray.Count();
+  SelRangeStore *item;
+  aSel->GetRangeCount(&rangeCount);
+  
+  // if we need more items in the array, new them
+  if (arrayCount<rangeCount)
+  {
+    PRInt32 count = rangeCount-arrayCount;
+    for (i=0; i<count; i++)
+    {
+      item = new SelRangeStore;
+      mArray.AppendElement(item);
+    }
+  }
+  
+  // else if we have too many, delete them
+  else if (rangeCount>arrayCount)
+  {
+    while (item = (SelRangeStore*)mArray.ElementAt(rangeCount))
+    {
+      delete item;
+      mArray.RemoveElementAt(rangeCount);
+    }
+  }
+  
+  // now store the selection ranges
+  for (i=0; i<rangeCount; i++)
+  {
+    item = (SelRangeStore*)mArray.ElementAt(i);
+    if (!item) return NS_ERROR_UNEXPECTED;
+    nsCOMPtr<nsIDOMRange> range;
+    res = aSel->GetRangeAt(i, getter_AddRefs(range));
+    item->StoreRange(range);
+  }
+  
+  return res;
+}
+
+nsresult  
+nsSelectionState::RestoreSelection(nsIDOMSelection *aSel)
+{
+  if (!aSel) return NS_ERROR_NULL_POINTER;
+  nsresult res = NS_OK;
+  PRInt32 i, arrayCount = mArray.Count();
+  SelRangeStore *item;
+
+  // clear ot cur selection
+  aSel->ClearSelection();
+  
+  // set the selection ranges anew
+  for (i=0; i<arrayCount; i++)
+  {
+    item = (SelRangeStore*)mArray.ElementAt(i);
+    if (!item) return NS_ERROR_UNEXPECTED;
+    nsCOMPtr<nsIDOMRange> range;
+    item->GetRange(&range);
+    if (!range) return NS_ERROR_UNEXPECTED;
+   
+    res = aSel->AddRange(range);
+    if(NS_FAILED(res)) return res;
+
+  }
+  return NS_OK;
+}
+
+PRBool
+nsSelectionState::IsCollapsed()
+{
+  if (1 != mArray.Count()) return PR_FALSE;
+  SelRangeStore *item;
+  item = (SelRangeStore*)mArray.ElementAt(0);
+  if (!item) return PR_FALSE;
+  nsCOMPtr<nsIDOMRange> range;
+  item->GetRange(&range);
+  if (!range) return PR_FALSE;
+  PRBool bIsCollapsed;
+  range->GetIsCollapsed(&bIsCollapsed);
+  return bIsCollapsed;
+}
+
+PRBool
+nsSelectionState::IsEqual(nsSelectionState *aSelState)
+{
+  if (!aSelState) return NS_ERROR_NULL_POINTER;
+  PRInt32 i, myCount = mArray.Count(), itsCount = aSelState->mArray.Count();
+  if (myCount != itsCount) return PR_FALSE;
+  if (myCount < 1) return PR_FALSE;
+
+  SelRangeStore *myItem, *itsItem;
+  
+  for (i=0; i<myCount; i++)
+  {
+    myItem = (SelRangeStore*)mArray.ElementAt(0);
+    itsItem = (SelRangeStore*)(aSelState->mArray.ElementAt(0));
+    if (!myItem || !itsItem) return PR_FALSE;
+    
+    nsCOMPtr<nsIDOMRange> myRange, itsRange;
+    myItem->GetRange(&myRange);
+    itsItem->GetRange(&itsRange);
+    if (!myRange || !itsRange) return PR_FALSE;
+  
+    PRInt32 compResult;
+    myRange->CompareEndPoints(nsIDOMRange::START_TO_START, itsRange, &compResult);
+    if (compResult) return PR_FALSE;
+    myRange->CompareEndPoints(nsIDOMRange::END_TO_END, itsRange, &compResult);
+    if (compResult) return PR_FALSE;
+  }
+  // if we got here, they are equal
+  return PR_TRUE;
+}
+
+
+
+nsresult SelRangeStore::StoreRange(nsIDOMRange *aRange)
+{
+  if (!aRange) return NS_ERROR_NULL_POINTER;
+  aRange->GetStartParent(getter_AddRefs(startNode));
+  aRange->GetEndParent(getter_AddRefs(endNode));
+  aRange->GetStartOffset(&startOffset);
+  aRange->GetEndOffset(&endOffset);
+  return NS_OK;
+}
+
+nsresult SelRangeStore::GetRange(nsCOMPtr<nsIDOMRange> *outRange)
+{
+  if (!outRange) return NS_ERROR_NULL_POINTER;
+  nsresult res = nsComponentManager::CreateInstance(kCRangeCID,
+                             nsnull,
+                             NS_GET_IID(nsIDOMRange),
+                             getter_AddRefs(*outRange));
+  if(NS_FAILED(res)) return res;
+
+  res = (*outRange)->SetStart(startNode, startOffset);
+  if(NS_FAILED(res)) return res;
+
+  res = (*outRange)->SetEnd(endNode, endOffset);
+  return res;
+}
+
+
 //class implementations are in order they are declared in nsEditor.h
 
 nsEditor::nsEditor()
@@ -146,8 +309,7 @@ nsEditor::nsEditor()
 ,  mPlaceHolderTxn(nsnull)
 ,  mPlaceHolderName(nsnull)
 ,  mPlaceHolderBatch(0)
-,  mTxnStartNode(nsnull)
-,  mTxnStartOffset(0)
+,  mSelState(nsnull)
 ,  mShouldTxnSetSelection(PR_TRUE)
 ,  mBodyElement(nsnull)
 ,  mInIMEMode(PR_FALSE)
@@ -376,8 +538,9 @@ nsEditor::Do(nsITransaction *aTxn)
 
     // save off weak reference to placeholder txn
     mPlaceHolderTxn = getter_AddRefs( NS_GetWeakReference(plcTxn) );
-    plcTxn->Init(mPresShellWeak, mPlaceHolderName, mTxnStartNode, mTxnStartOffset);
-    
+    plcTxn->Init(mPresShellWeak, mPlaceHolderName, mSelState);
+    mSelState = nsnull;  // placeholder txn took ownership of this pointer
+
     // finally we QI to an nsITransaction since that's what Do() expects
     nsCOMPtr<nsITransaction> theTxn = do_QueryInterface(plcTxn);
     nsITransaction* txn = theTxn;
@@ -588,17 +751,8 @@ nsEditor::BeginPlaceHolderTransaction(nsIAtom *aName)
     nsCOMPtr<nsIDOMSelection> selection;
     nsresult res = GetSelection(getter_AddRefs(selection));
     if (NS_FAILED(res)) return res;
-    PRBool collapsed;
-    res = selection->GetIsCollapsed(&collapsed);
-    if (NS_FAILED(res)) return res;
-    if (collapsed)  // we cant merge with previous typing/deleting if selection not collapsed
-    {
-      // need to remember colapsed selection point to Init the placeholder with later.
-      // this is because we dont actually make the placeholder until we need it, and we
-      // might have moved the selection as part of the typing processing by then.
-      res = GetStartNodeAndOffset(selection, &mTxnStartNode, &mTxnStartOffset);
-      if (NS_FAILED(res)) return res;
-    }
+    mSelState = new nsSelectionState();
+    mSelState->SaveSelection(selection);
   }
   mPlaceHolderBatch++;
 
@@ -613,8 +767,13 @@ nsEditor::EndPlaceHolderTransaction()
   {
     // time to turn off the batch
     EndUpdateViewBatch();
-    mTxnStartNode = nsnull;
-    mTxnStartOffset = 0;
+    if (mSelState)
+    {
+      // we saved the selection state, but never got to hand it to placeholder 
+      // (else we ould have nulled out this pointer), so destroy it to prevent leaks.
+      delete mSelState;
+      mSelState = nsnull;
+    }
     if (mPlaceHolderTxn)  // we might have never made a placeholder if no action took place
     {
       nsCOMPtr<nsIAbsorbingTransaction> plcTxn = do_QueryReferent(mPlaceHolderTxn);

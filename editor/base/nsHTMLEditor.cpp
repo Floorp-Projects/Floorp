@@ -218,6 +218,11 @@ nsHTMLEditor::nsHTMLEditor()
 {
 // Done in nsEditor
 // NS_INIT_REFCNT();
+  mBoldAtom = getter_AddRefs(NS_NewAtom("b"));
+  mItalicAtom = getter_AddRefs(NS_NewAtom("i"));
+  mUnderlineAtom = getter_AddRefs(NS_NewAtom("u"));
+  mFontAtom = getter_AddRefs(NS_NewAtom("font"));
+
   if (!gTypingTxnName)
     gTypingTxnName = NS_NewAtom("Typing");
   else
@@ -1053,6 +1058,7 @@ NS_IMETHODIMP nsHTMLEditor::GetInlineProperty(nsIAtom *aProperty,
 
   PRBool isCollapsed;
   selection->GetIsCollapsed(&isCollapsed);
+  nsCOMPtr<nsIDOMNode> collapsedNode;
   nsCOMPtr<nsIEnumerator> enumerator;
   result = selection->GetEnumerator(getter_AddRefs(enumerator));
   if (NS_FAILED(result)) return result;
@@ -1066,7 +1072,45 @@ NS_IMETHODIMP nsHTMLEditor::GetInlineProperty(nsIAtom *aProperty,
   if ((NS_SUCCEEDED(result)) && currentItem)
   {
     PRBool firstNodeInRange = PR_TRUE; // for each range, set a flag 
-    nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
+    nsCOMPtr<nsIDOMRange> range(do_QueryInterface(currentItem));
+
+    if (isCollapsed)
+    {
+      // efficiency hack.  we cache prior results for being collapsed in a given text node.
+      // this speeds up typing.  Note that other parts of the editor code have to clear out 
+      // this cache after certain actions.
+      range->GetStartParent(getter_AddRefs(collapsedNode));
+      if (!collapsedNode) return NS_ERROR_FAILURE;
+      // refresh the cache if we need to
+      if (collapsedNode != mCachedNode) CacheInlineStyles(collapsedNode);
+      // cache now current, use it!  But *or* it with typeInState results...
+      PRBool isSet;
+      if (aProperty == mBoldAtom.get())
+      {
+        GetTypingState(aProperty, isSet);
+        aFirst = aAny = aAll = (mCachedBoldStyle || isSet);
+        return NS_OK;
+      }
+      else if (aProperty == mItalicAtom.get())
+      {
+        GetTypingState(aProperty, isSet);
+        aFirst = aAny = aAll = (mCachedItalicStyle || isSet);
+        return NS_OK;
+      }
+      else if (aProperty == mUnderlineAtom.get())
+      {
+        GetTypingState(aProperty, isSet);
+        aFirst = aAny = aAll = (mCachedUnderlineStyle || isSet);
+        return NS_OK;
+      }
+      else if (aProperty == mFontAtom.get())
+      {
+// MOOSE!          
+        return NS_OK;
+      }
+    }
+
+    // either non-collapsed selection or no cached value: do it the hard way
     nsCOMPtr<nsIContentIterator> iter;
     result = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
                                                 nsIContentIterator::GetIID(), 
@@ -1138,7 +1182,8 @@ NS_IMETHODIMP nsHTMLEditor::GetInlineProperty(nsIAtom *aProperty,
       iter->CurrentNode(getter_AddRefs(content));
     }
   }
-  if (PR_FALSE==aAny) { // make sure that if none of the selection is set, we don't report all is set
+  if (PR_FALSE==aAny) 
+  { // make sure that if none of the selection is set, we don't report all is set
     aAll = PR_FALSE;
   }
   //if (gNoisy) { printf("  returning first=%d any=%d all=%d\n", aFirst, aAny, aAll); }
@@ -4450,6 +4495,8 @@ void nsHTMLEditor::ApplyStyleSheetToPresShellDocument(nsICSSStyleSheet* aSheet, 
 NS_IMETHODIMP
 nsHTMLEditor::StartOperation(PRInt32 opID, nsIEditor::EDirection aDirection)
 {
+  if (! ((opID==kOpInsertText) || (opID==kOpInsertIMEText)) )
+    ClearInlineStylesCache();
   if (mRules) return mRules->BeforeEdit(opID, aDirection);
   return NS_OK;
 }
@@ -4460,6 +4507,8 @@ nsHTMLEditor::StartOperation(PRInt32 opID, nsIEditor::EDirection aDirection)
 NS_IMETHODIMP
 nsHTMLEditor::EndOperation(PRInt32 opID, nsIEditor::EDirection aDirection)
 {
+  if (! ((opID==kOpInsertText) || (opID==kOpInsertIMEText)) )
+    ClearInlineStylesCache();
   if (mRules) return mRules->AfterEdit(opID, aDirection);
   return NS_OK;
 }
@@ -5882,6 +5931,22 @@ nsHTMLEditor::DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNode> &parent
 #pragma mark -
 #endif
 
+void nsHTMLEditor::CacheInlineStyles(nsIDOMNode *aNode)
+{
+  if (!aNode) return;
+  nsCOMPtr<nsIDOMNode> resultNode;
+  mCachedNode = do_QueryInterface(aNode);
+  IsTextPropertySetByContent(aNode, mBoldAtom, 0, 0, mCachedBoldStyle, getter_AddRefs(resultNode));
+  IsTextPropertySetByContent(aNode, mItalicAtom, 0, 0, mCachedItalicStyle, getter_AddRefs(resultNode));
+  IsTextPropertySetByContent(aNode, mUnderlineAtom, 0, 0, mCachedUnderlineStyle, getter_AddRefs(resultNode));
+  
+}
+
+void nsHTMLEditor::ClearInlineStylesCache()
+{
+  mCachedNode = nsnull;
+}
+
 #ifdef PRE_NODE_IN_BODY
 nsCOMPtr<nsIDOMElement> nsHTMLEditor::FindPreElement()
 {
@@ -6890,7 +6955,7 @@ nsHTMLEditor::RemoveTextPropertiesForNodeWithDifferentParents(nsIDOMNode  *aStar
           }
         }
         else 
-        { 
+        {
           skippedEndNode = PR_TRUE;
           if (gNoisy) { printf("skipping end node because aProperty not set.\n"); } 
         }
@@ -6903,13 +6968,16 @@ nsHTMLEditor::RemoveTextPropertiesForNodeWithDifferentParents(nsIDOMNode  *aStar
     }
     else
     {
-      endNode = GetChildAt(aEndNode, aEndOffset);
+      // experimental hack:  need to rewrite all of this
+      // MOOSE!
+      if (aEndOffset<0) aEndOffset=1;
+      endNode = GetChildAt(aEndNode, aEndOffset-1);
       parent = do_QueryInterface(aEndNode);
       if (!endNode || !parent) {return NS_ERROR_NULL_POINTER;}
       IsTextPropertySetByContent(endNode, aPropName, aAttribute, nsnull, textPropertySet, getter_AddRefs(resultNode));
       if (PR_TRUE==textPropertySet)
       {
-        result = RemoveTextPropertiesForNode(endNode, parent, aEndOffset, aEndOffset+1, aPropName, aAttribute);
+        result = RemoveTextPropertiesForNode(endNode, parent, aEndOffset-1, aEndOffset, aPropName, aAttribute);
       }
       else
       {
