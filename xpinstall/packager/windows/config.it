@@ -405,8 +405,18 @@ Archive=xpcom.xpi
 $InstallSize$:xpcom
 $InstallSizeSystem$
 $InstallSizeArchive$:xpcom.xpi
+;
+;DependeeX=Component A means
+;  - if Component A gets checked this component gets checked
+;  - if Component A gets unchecked this component gets unchecked
+;  - if this component is visible it can still be checked/unchecked
+;      independantly after Component A has changed its state.  I.e
+;      this components checkbox will not be disabled or hidden.
 ;Dependee0=
+;
+;DependencyX= is not supported at this time. 
 ;Dependency0=
+;
 ; Attributes can be the following values:
 ;
 ;   SELECTED      - Component is selected to be installed by default.
