@@ -192,7 +192,7 @@ public:
     *   by iterating through the appropriate indexes
     *   until the returned aCell is null
     */
-  NS_IMETHOD GetCellAt(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 aColIndex, nsIDOMElement* &aCell)=0;
+  NS_IMETHOD GetCellAt(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 aColIndex, nsIDOMElement **aCell)=0;
 
   /** Get a cell at cellmap grid coordinates and associated data
     * A cell that spans across multiple cellmap locations will
@@ -218,7 +218,7 @@ public:
     *
     * Returns NS_EDITOR_ELEMENT_NOT_FOUND if a cell is not found (passes NS_SUCCEEDED macro)
     */
-  NS_IMETHOD GetCellDataAt(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 aColIndex, nsIDOMElement* &aCell,
+  NS_IMETHOD GetCellDataAt(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 aColIndex, nsIDOMElement **aCell,
                            PRInt32& aStartRowIndex, PRInt32& aStartColIndex,
                            PRInt32& aRowSpan, PRInt32& aColSpan, 
                            PRInt32& aActualRowSpan, PRInt32& aActualColSpan, 
@@ -227,27 +227,57 @@ public:
   /** Get the first row element in a table
     *
     * @param aTableElement Any TABLE or child-of-table element in the document
-    * @param aRowIndex     The 0-based index of the row
     *
     * Returns:
-    * @param aRow        The row at the requested index
-    *                    Returns null if there are no rows in table
-    * Returns NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found (passes NS_SUCCEEDED macro)
+    * @param aRowNode  The row found or null if there are no rows in table
+    *              
+    * Returns NS_EDITOR_ELEMENT_NOT_FOUND if an row is not found (passes NS_SUCCEEDED macro)
     */
-  NS_IMETHOD GetFirstRow(nsIDOMElement* aTableElement, nsIDOMElement* &aRow)=0;
+  NS_IMETHOD GetFirstRow(nsIDOMElement* aTableElement, nsIDOMNode** aRowNode)=0;
 
-  /** Get the next row element starting the search from aTableElement
+  /** Get the next row element
     *
-    * @param aTableElement Any TR or child-of-TR element in the document
+    * @param aCurrentRowNode The row to start search from
     *
     * Returns:
-    * @param aRow        The row to start search from
-    *                    and the row returned from the search
-    *                    Returns null if there isn't another row
+    * @param aRowNode   The row found or null if there isn't another row
+    * Returns NS_EDITOR_ELEMENT_NOT_FOUND if an row is not found (passes NS_SUCCEEDED macro)
+    */
+  NS_IMETHOD GetNextRow(nsIDOMNode* aCurrentRowNode, nsIDOMNode** aRowNode)=0;
+  
+  /** Get the first cell element in a table row
+    *
+    * @param aRowNode  A table row node
+    *
+    * Returns:
+    * @param aCellNode  The cell found or null if there are no cells in row
+    *
+    * Returns NS_EDITOR_ELEMENT_NOT_FOUND if an row is not found (passes NS_SUCCEEDED macro)
+    */
+  NS_IMETHOD GetFirstCellInRow(nsIDOMNode* aRowNode, nsIDOMNode** aCellNode)=0;
+
+  /** Get the next cell node in a table row
+    *
+    * @param aCurrentCellNode The cell to start search from
+    *
+    * Returns:
+    * @param aCellNode    The next cell found or null if there isn't another cell
+    *                 
     * Returns NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found (passes NS_SUCCEEDED macro)
     */
-  NS_IMETHOD GetNextRow(nsIDOMElement* aTableElement, nsIDOMElement* &aRow)=0;
-  
+  NS_IMETHOD GetNextCellInRow(nsIDOMNode* aCurrentCellNode, nsIDOMNode** aCellNode)=0;
+
+  /** Get the first cell element in a table row
+    *
+    * @param aRowNode  A table row node
+    *
+    * Returns:
+    * @param aCellNode  The cell found or null if there are no cells in row
+    *
+    * Returns NS_EDITOR_ELEMENT_NOT_FOUND if an row is not found (passes NS_SUCCEEDED macro)
+    */
+  NS_IMETHOD GetLastCellInRow(nsIDOMNode* aRowNode, nsIDOMNode** aCellNode)=0;
+
   /** Preferred direction to search for neighboring cell
     * when trying to locate a cell to place caret in after
     * a table editing action. 
