@@ -822,6 +822,7 @@ namespace MetaData {
         case StmtNode::label:
             {
                 LabelStmtNode *l = checked_cast<LabelStmtNode *>(p);
+                bCon->setLabel(l->labelID);
                 SetupStmt(env, phase, l->stmt);
             }
             break;
@@ -4858,6 +4859,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 
     void InstanceVariable::mark()                 
     { 
+        InstanceMember::mark();
         if (type != FUTURE_TYPE)
             GCMARKOBJECT(type);
     }
@@ -4873,6 +4875,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     // gc-mark all contained JS2Objects and visit contained structures to do likewise
     void InstanceMethod::mark()                 
     { 
+        InstanceMember::mark();
         GCMARKOBJECT(fInst); 
     }
 

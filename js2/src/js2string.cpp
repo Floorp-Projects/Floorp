@@ -166,6 +166,7 @@ static js2val String_match(JS2Metadata *meta, const js2val thisValue, js2val *ar
     }
 
     RegExpInstance *thisInst = checked_cast<RegExpInstance *>(JS2VAL_TO_OBJECT(regexp));
+    DEFINE_ROOTKEEPER(rk1, thisInst);
     REState *pState = thisInst->mRegExp;
     if ((pState->flags & RE_GLOBAL) == 0) {
         return RegExp_exec(meta, regexp, &S, 1);                
