@@ -44,7 +44,7 @@ nsUrlListenerManager::~nsUrlListenerManager()
 	}
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS(nsUrlListenerManager, nsIUrlListenerManager::IID());
+NS_IMPL_THREADSAFE_ISUPPORTS(nsUrlListenerManager, nsIUrlListenerManager::GetIID());
 
 nsresult nsUrlListenerManager::RegisterListener(nsIUrlListener * aUrlListener)
 {
@@ -75,7 +75,7 @@ nsresult nsUrlListenerManager::BroadcastChange(nsIURL * aUrl, nsUrlNotifyType no
 			nsISupports *supports = m_listeners->ElementAt(i-1);
 			if(supports)
 			{
-				if(NS_SUCCEEDED(rv = supports->QueryInterface(nsIUrlListener::IID(), (void**)&listener)))
+				if(NS_SUCCEEDED(rv = supports->QueryInterface(nsIUrlListener::GetIID(), (void**)&listener)))
 				{
 					if (listener)
 					{

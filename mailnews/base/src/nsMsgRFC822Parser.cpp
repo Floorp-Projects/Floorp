@@ -99,7 +99,7 @@ nsMsgRFC822Parser::~nsMsgRFC822Parser()
 /* the following macros actually implement addref, release and query interface for our component. */
 NS_IMPL_ADDREF(nsMsgRFC822Parser)
 NS_IMPL_RELEASE(nsMsgRFC822Parser)
-NS_IMPL_QUERY_INTERFACE(nsMsgRFC822Parser, nsIMsgRFC822Parser::IID()); /* we need to pass in the interface ID of this interface */
+NS_IMPL_QUERY_INTERFACE(nsMsgRFC822Parser, nsIMsgRFC822Parser::GetIID()); /* we need to pass in the interface ID of this interface */
 
 nsresult nsMsgRFC822Parser::ParseRFC822Addresses (const char *line, char **names, char **addresses, PRUint32& numAddresses)
 {
@@ -267,7 +267,7 @@ nsresult NS_NewRFC822Parser(nsIMsgRFC822Parser** aInstancePtrResult)
 	{
 		nsMsgRFC822Parser* parser = new nsMsgRFC822Parser();
 		if (parser)
-			return parser->QueryInterface(nsIMsgRFC822Parser::IID(), (void**) aInstancePtrResult);
+			return parser->QueryInterface(nsIMsgRFC822Parser::GetIID(), (void**) aInstancePtrResult);
 		else
 			return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the object */
 	}

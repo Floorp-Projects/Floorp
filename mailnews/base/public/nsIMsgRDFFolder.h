@@ -20,7 +20,7 @@
 
 class nsIMsgRDFFolder : public nsIRDFResource {
  public: 
-  static const nsIID& IID() {
+  static const nsIID& GetIID() {
     static nsIID iid = NS_IMSGRDFFOLDER_IID;
     return iid;
   }

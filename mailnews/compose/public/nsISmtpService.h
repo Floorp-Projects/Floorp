@@ -46,7 +46,7 @@ class nsIUrlListener;
 class nsISmtpService : public nsISupports
 {
 public:
-    static const nsIID& IID() { static nsIID iid = NS_ISMTPSERVICE_IID; return iid; }
+    static const nsIID& GetIID() { static nsIID iid = NS_ISMTPSERVICE_IID; return iid; }
 	
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// SendMailMessage requires the file name of the message to send, the sender, a comma delimited list of recipients.

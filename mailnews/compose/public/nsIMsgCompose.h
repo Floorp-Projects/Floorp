@@ -28,7 +28,7 @@
 
 class nsIMsgCompose : public nsISupports {
  public: 
-  static const nsIID& IID() {
+  static const nsIID& GetIID() {
     static nsIID iid = NS_IMSGCOMPOSE_IID;
     return iid;
   }

@@ -42,7 +42,7 @@
 
 class nsIUrlListenerManager : public nsISupports {
 public:
-	 static const nsIID& IID() { static nsIID iid = NS_IURLLISTENERMANAGER_IID; return iid; }
+	 static const nsIID& GetIID() { static nsIID iid = NS_IURLLISTENERMANAGER_IID; return iid; }
 
 
 	 NS_IMETHOD RegisterListener(nsIUrlListener * aUrlListener) = 0;

@@ -35,7 +35,7 @@ class nsIMessage;
 
 class nsIMsgFolder : public nsIFolder {
  public: 
-  static const nsIID& IID() {
+  static const nsIID& GetIID() {
     static nsIID iid = NS_IMSGFOLDER_IID;
     return iid;
   }
@@ -208,7 +208,7 @@ class nsIMsgFolder : public nsIFolder {
 
 class nsIMsgLocalMailFolder : public nsISupports {
  public: 
-  static const nsIID& IID() {
+  static const nsIID& GetIID() {
     static nsIID iid = NS_IMSGLOCALMAILFOLDER_IID;
     return iid;
   }
@@ -231,7 +231,7 @@ class nsIMsgLocalMailFolder : public nsISupports {
 
 class nsIMsgImapMailFolder : public nsISupports {
  public: 
-  static const nsIID& IID() {
+  static const nsIID& GetIID() {
     static nsIID iid = NS_IMSGIMAPMAILFOLDER_IID;
     return iid;
   }

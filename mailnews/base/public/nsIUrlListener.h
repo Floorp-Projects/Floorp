@@ -34,7 +34,7 @@
 
 class nsIUrlListener : public nsISupports {
 public:
-	static const nsIID& IID() { static nsIID iid = NS_IURLLISTENER_IID; return iid; }
+	static const nsIID& GetIID() { static nsIID iid = NS_IURLLISTENER_IID; return iid; }
 	
 	NS_IMETHOD OnStartRunningUrl(nsIURL * aUrl) = 0;
 	NS_IMETHOD OnStopRunningUrl(nsIURL * aUrl, nsresult aExitCode) = 0;

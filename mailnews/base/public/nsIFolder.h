@@ -29,7 +29,7 @@
 
 class nsIFolder : public nsICollection {
  public: 
-  static const nsIID& IID() {
+  static const nsIID& GetIID() {
     static nsIID iid = NS_IFOLDER_IID;
     return iid;
   }

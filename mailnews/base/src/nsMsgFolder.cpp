@@ -28,7 +28,7 @@
 
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
-// that doesn't allow you to call ::nsISupports::IID() inside of a class
+// that doesn't allow you to call ::nsISupports::GetIID() inside of a class
 // that multiply inherits from nsISupports
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
@@ -82,7 +82,7 @@ nsMsgFolder::QueryInterface(REFNSIID iid, void** result)
 		return NS_ERROR_NULL_POINTER;
 
 	*result = nsnull;
-  if(iid.Equals(nsIMsgFolder::IID()) ||
+  if(iid.Equals(nsIMsgFolder::GetIID()) ||
      iid.Equals(kISupportsIID)) {
 		*result = NS_STATIC_CAST(nsIMsgFolder*, this);
 		AddRef();
@@ -519,7 +519,7 @@ NS_IMETHODIMP nsMsgFolder::PropagateDelete(nsIMsgFolder **folder, PRBool deleteS
 		nsISupports *supports = mSubFolders->ElementAt(i);
 		if(supports)
 		{
-			if(NS_SUCCEEDED(status = supports->QueryInterface(nsIMsgFolder::IID(), (void**)&child)))
+			if(NS_SUCCEEDED(status = supports->QueryInterface(nsIMsgFolder::GetIID(), (void**)&child)))
 			{
 				if (*folder == child)
 				{
@@ -572,7 +572,7 @@ NS_IMETHODIMP nsMsgFolder::RecursiveDelete(PRBool deleteStorage)
 		nsISupports *supports = mSubFolders->ElementAt(0);
 		nsIMsgFolder *child = nsnull;
 
-		if(NS_SUCCEEDED(status = supports->QueryInterface(nsIMsgFolder::IID(), (void**)&child)))
+		if(NS_SUCCEEDED(status = supports->QueryInterface(nsIMsgFolder::GetIID(), (void**)&child)))
 		{
 			status = child->RecursiveDelete(deleteStorage);  // recur
 
@@ -653,7 +653,7 @@ NS_IMETHODIMP nsMsgFolder::FindParentOf(nsIMsgFolder * aFolder, nsIMsgFolder ** 
   {
 		nsISupports *supports = mSubFolders->ElementAt(i);
 		nsIMsgFolder *child = nsnull;
-		if(NS_SUCCEEDED(supports->QueryInterface(nsIMsgFolder::IID(), (void**)&child)))
+		if(NS_SUCCEEDED(supports->QueryInterface(nsIMsgFolder::GetIID(), (void**)&child)))
 		{
 			if (aFolder == child)
 			{
@@ -671,7 +671,7 @@ NS_IMETHODIMP nsMsgFolder::FindParentOf(nsIMsgFolder * aFolder, nsIMsgFolder ** 
 
    	nsISupports *supports = mSubFolders->ElementAt(j);
 		nsIMsgFolder *child = nsnull;
-		if(NS_SUCCEEDED(supports->QueryInterface(nsIMsgFolder::IID(), (void**)&child)))
+		if(NS_SUCCEEDED(supports->QueryInterface(nsIMsgFolder::GetIID(), (void**)&child)))
 		{
 			child->FindParentOf(aFolder, aParent);
 			NS_RELEASE(child);
@@ -695,7 +695,7 @@ NS_IMETHODIMP nsMsgFolder::IsParentOf(nsIMsgFolder *child, PRBool deep, PRBool *
   {
 		nsISupports *supports = mSubFolders->ElementAt(i);
 		nsIMsgFolder *folder;
-		if(NS_SUCCEEDED(supports->QueryInterface(nsIMsgFolder::IID(), (void**)&folder)))
+		if(NS_SUCCEEDED(supports->QueryInterface(nsIMsgFolder::GetIID(), (void**)&folder)))
 		{
 			if (folder == child )
 				*isParent = PR_TRUE;
@@ -795,7 +795,7 @@ NS_IMETHODIMP nsMsgFolder::GetNumUnread(PRBool deep, PRUint32 *numUnread)
     {
 			nsISupports *supports = mSubFolders->ElementAt(i);
 
-			if(NS_SUCCEEDED(supports->QueryInterface(nsIMsgFolder::IID(), (void**)&folder)))
+			if(NS_SUCCEEDED(supports->QueryInterface(nsIMsgFolder::GetIID(), (void**)&folder)))
 			{
 				if (folder)
 				{
@@ -829,7 +829,7 @@ NS_IMETHODIMP nsMsgFolder::GetTotalMessages(PRBool deep, PRUint32 *totalMessages
     {
 			nsISupports *supports = mSubFolders->ElementAt(i);
 
-			if(NS_SUCCEEDED(supports->QueryInterface(nsIMsgFolder::IID(), (void**)&folder)))
+			if(NS_SUCCEEDED(supports->QueryInterface(nsIMsgFolder::GetIID(), (void**)&folder)))
 			{
 				if (folder)
 				{
@@ -976,7 +976,7 @@ NS_IMETHODIMP nsMsgFolder::GetFoldersWithFlag(PRUint32 flags, nsIMsgFolder **res
 	nsIMsgFolder *folder = nsnull;
 	for (PRUint32 i=0; i < (PRUint32)mSubFolders->Count(); i++) {
 		nsISupports *supports = mSubFolders->ElementAt(i);
-		if(NS_SUCCEEDED(supports->QueryInterface(nsIMsgFolder::IID(), (void**)&folder)))
+		if(NS_SUCCEEDED(supports->QueryInterface(nsIMsgFolder::GetIID(), (void**)&folder)))
 		{
 			// CAREFUL! if NULL is passed in for result then the caller
 			// still wants the full count!  Otherwise, the result should be at most the
@@ -1018,7 +1018,7 @@ NS_IMETHODIMP nsMsgFolder::GetExpansionArray(nsISupportsArray *expansionArray)
 		nsISupports *supports = mSubFolders->ElementAt(i);
 		nsIMsgFolder *folder = nsnull;
 
-		if(NS_SUCCEEDED(supports->QueryInterface(nsIMsgFolder::IID(), (void**)&folder)))
+		if(NS_SUCCEEDED(supports->QueryInterface(nsIMsgFolder::GetIID(), (void**)&folder)))
 		{
 			((nsISupportsArray*)expansionArray)->InsertElementAt(folder, expansionArray->Count());
 			PRUint32 flags;

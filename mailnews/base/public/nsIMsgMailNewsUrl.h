@@ -44,7 +44,7 @@
 class nsIMsgMailNewsUrl : public nsIURL
 {
 public:
-    static const nsIID& IID() { static nsIID iid = NS_IMSGMAILNEWSURL_IID; return iid; }
+    static const nsIID& GetIID() { static nsIID iid = NS_IMSGMAILNEWSURL_IID; return iid; }
 
 	///////////////////////////////////////////////////////////////////////////////
 	// Eventually we'd like to push this type of functionality up into nsIURL.

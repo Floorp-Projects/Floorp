@@ -27,7 +27,7 @@
 
 class nsIMsgCompFields : public nsISupports {
  public: 
-  static const nsIID& IID() {
+  static const nsIID& GetIID() {
     static nsIID iid = NS_IMSGCOMPFIELDS_IID;
     return iid;
   }

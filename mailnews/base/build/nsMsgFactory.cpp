@@ -83,7 +83,7 @@ nsMsgFactory::nsMsgFactory(const nsCID &aClass,
 	NS_INIT_REFCNT();
 
   // store a copy of the 
-  serviceMgrSupports->QueryInterface(nsIServiceManager::IID(),
+  serviceMgrSupports->QueryInterface(nsIServiceManager::GetIID(),
                                      (void **)&mServiceManager);
 }   
 
@@ -106,9 +106,9 @@ nsMsgFactory::QueryInterface(const nsIID &aIID, void **aResult)
   *aResult = NULL;   
 
   // we support two interfaces....nsISupports and nsFactory.....
-  if (aIID.Equals(::nsISupports::IID()))    
+  if (aIID.Equals(::nsISupports::GetIID()))    
     *aResult = (void *)(nsISupports*)this;   
-  else if (aIID.Equals(nsIFactory::IID()))   
+  else if (aIID.Equals(nsIFactory::GetIID()))   
     *aResult = (void *)(nsIFactory*)this;   
 
   if (*aResult == NULL)
@@ -166,7 +166,7 @@ nsMsgFactory::CreateInstance(nsISupports *aOuter,
 		nsUrlListenerManager * listener = nsnull;
 		listener = new nsUrlListenerManager();
 		if (listener) // we need to pick up a ref cnt...
-			listener->QueryInterface(nsIUrlListenerManager::IID(), (void **) &inst);
+			listener->QueryInterface(nsIUrlListenerManager::GetIID(), (void **) &inst);
 	}
 
 	// End of checking the interface ID code....
@@ -210,7 +210,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
 
   *aFactory = new nsMsgFactory(aClass, aClassName, aProgID, serviceMgr);
   if (aFactory)
-    return (*aFactory)->QueryInterface(nsIFactory::IID(),
+    return (*aFactory)->QueryInterface(nsIFactory::GetIID(),
                                        (void**)aFactory);
   else
     return NS_ERROR_OUT_OF_MEMORY;

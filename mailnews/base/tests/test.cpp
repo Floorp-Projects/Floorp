@@ -21,7 +21,7 @@ static NS_DEFINE_CID(kMsgRFC822ParserCID, NS_MSGRFC822PARSER_CID);
    
    nsresult res = nsRepository::CreateInstance(kMsgRFC822ParserCID, 
                                                NULL, 
-                                               nsIMsgRFC822Parser::IID(), 
+                                               nsIMsgRFC822Parser::GetIID(), 
                                                (void **) &sample); 
 
    if (res == NS_OK && sample) { 

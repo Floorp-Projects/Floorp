@@ -43,7 +43,7 @@ nsMessengerNameSet::~nsMessengerNameSet()
   
 }
 
-NS_IMPL_ISUPPORTS(nsMessengerNameSet, nsIScriptExternalNameSet::IID());
+NS_IMPL_ISUPPORTS(nsMessengerNameSet, nsIScriptExternalNameSet::GetIID());
 
 NS_IMETHODIMP
 nsMessengerNameSet::InitializeClasses(nsIScriptContext* aScriptContext)
@@ -71,7 +71,7 @@ nsMessengerNameSet::AddNameSet(nsIScriptContext *aScriptContext)
   if (NS_SUCCEEDED(rv))
     rv = manager->RegisterGlobalName("Messenger",
                                      // put the CID here, not IID
-                                     nsIMessenger::IID(),
+                                     nsIMessenger::GetIID(),
                                      PR_TRUE);
 
   return rv;

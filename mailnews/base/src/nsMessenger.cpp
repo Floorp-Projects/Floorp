@@ -78,7 +78,7 @@ private:
 
 };
 
-NS_IMPL_ISUPPORTS(nsMessengerBootstrap, nsIAppShellService::IID())
+NS_IMPL_ISUPPORTS(nsMessengerBootstrap, nsIAppShellService::GetIID())
 
 nsMessengerBootstrap::nsMessengerBootstrap(nsIServiceManager *serviceManager)
   : mServiceManager(serviceManager)
@@ -100,7 +100,7 @@ nsMessengerBootstrap::Initialize()
   nsIScriptNameSetRegistry *registry;
   nsresult rv =
     nsServiceManager::GetService(kCScriptNameSetRegistryCID,
-                                 nsIScriptNameSetRegistry::IID(),
+                                 nsIScriptNameSetRegistry::GetIID(),
                                  (nsISupports **)&registry);
   if (NS_SUCCEEDED(rv)) {
     nsMessengerNameSet* nameSet = new nsMessengerNameSet();
@@ -125,7 +125,7 @@ NS_NewMessengerBootstrap(nsIAppShellService **msgboot,
   if (!bootstrap) return NS_ERROR_OUT_OF_MEMORY;
 
   
-  return bootstrap->QueryInterface(nsIAppShellService::IID(),
+  return bootstrap->QueryInterface(nsIAppShellService::GetIID(),
                                    (void **)msgboot);
 
 }
@@ -138,7 +138,7 @@ public:
     NS_DECL_ISUPPORTS;
 };
 
-NS_IMPL_ISUPPORTS(nsMessenger, nsIMessenger::IID())
+NS_IMPL_ISUPPORTS(nsMessenger, nsIMessenger::GetIID())
 
 
 nsresult
@@ -148,7 +148,7 @@ NS_NewMessenger(nsIMessenger **msg)
   nsMessenger *messenger = 
     new nsMessenger();
   if (!messenger) return NS_ERROR_OUT_OF_MEMORY;
-  return messenger->QueryInterface(nsIMessenger::IID(),
+  return messenger->QueryInterface(nsIMessenger::GetIID(),
 			           (void**)&msg);
 }
 
