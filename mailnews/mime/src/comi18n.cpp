@@ -337,7 +337,10 @@ static PRInt32 INTL_ConvertCharset(const char* from_charset, const char* to_char
 
 static PRBool NeedCharsetConversion(const char* from_charset, const char* to_charset)
 {
-  if (!PL_strcasecmp(from_charset, to_charset)) {
+  if (nsnull == from_charset || nsnull == to_charset || 
+      '\0' == *from_charset || '\0' == *to_charset) 
+    return PR_FALSE;
+  else if (!PL_strcasecmp(from_charset, to_charset)) {
     return PR_FALSE;
   }
   else if ((!PL_strcasecmp(from_charset, "us-ascii") && !PL_strcasecmp(to_charset, "utf-8")) ||
@@ -1198,79 +1201,84 @@ char *intl_decode_mime_part2_str(const char *header, char* charset)
 
 ////////////////////////////////////////////////////////////////////////////////
 static PRInt32 INTL_ConvertCharset(const char* from_charset, const char* to_charset,
-                                    const char* inBuffer, const PRInt32 inLength,
-                                    char** outBuffer)
+                                   const char* inBuffer, const PRInt32 inLength,
+                                   char** outBuffer)
 {
-  char *dstPtr = nsnull;
-  PRInt32 dstLength = 0;
+  nsIUnicodeDecoder* decoder = nsnull;
+  nsIUnicodeEncoder* encoder = nsnull;
   nsresult res;
+
+  *outBuffer = nsnull;
 
   if (nsnull == from_charset || nsnull == to_charset || 
       '\0' == *from_charset || '\0' == *to_charset || nsnull == inBuffer) 
     return -1;
 
+  // Set up charset converters.
   NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res); 
 
-  if(NS_SUCCEEDED(res) && (nsnull != ccm)) {
-    nsString aCharset(from_charset);
-    nsIUnicodeDecoder* decoder = nsnull;
-    PRUnichar *unichars;
-    PRInt32 unicharLength;
+  if (NS_SUCCEEDED(res) && (nsnull != ccm)) {
+    nsString aCharset;
 
-    // convert to unicode
+    // get decoder (conv to unicode)
+    aCharset.SetString(from_charset);
     res = ccm->GetUnicodeDecoder(&aCharset, &decoder);
-    if(NS_SUCCEEDED(res) && (nsnull != decoder)) {
-      PRInt32 srcLen = inLength;
-      res = decoder->Length(inBuffer, 0, srcLen, &unicharLength);
-      // temporary buffer to hold unicode string
-      unichars = new PRUnichar[unicharLength];
-      if (unichars != nsnull) {
-        res = decoder->Convert(unichars, 0, &unicharLength, inBuffer, 0, &srcLen);
-
-        // convert from unicode
-        nsIUnicodeEncoder* encoder = nsnull;
-        aCharset.SetString(to_charset);
-        res = ccm->GetUnicodeEncoder(&aCharset, &encoder);
-        if(NS_SUCCEEDED(res) && (nsnull != encoder)) {
-          res = encoder->GetMaxLength(unichars, unicharLength, &dstLength);
-          // allocale an output buffer
-          dstPtr = (char *) PR_Malloc(dstLength + 1);
-          if (dstPtr != nsnull) {
-            PRInt32 originalLength = unicharLength;
-            PRInt32 estimatedLength = dstLength;
-            res = encoder->Convert(unichars, &unicharLength, dstPtr, &dstLength);
-            // buffer was too small, reallocate buffer and try again
-            if (unicharLength < originalLength) {
-              PR_Free(dstPtr);
-              unicharLength = originalLength;
-              dstLength = estimatedLength * 4;  // estimation was not correct
-              dstPtr = (char *) PR_Malloc(dstLength + 1);
-              if (dstPtr != nsnull) {
-                res = encoder->Convert(unichars, &unicharLength, dstPtr, &dstLength);
-                if (unicharLength < originalLength) {
-                  PR_FREEIF(dstPtr);
-                  dstPtr = PL_strdup(inBuffer);   // no conversion
-                  dstLength = PL_strlen(dstPtr);
-                }
-              }
-            }
-            if (dstPtr != nsnull) {
-              dstPtr[dstLength] = '\0';
-            }
-          }
-          NS_IF_RELEASE(encoder);
-        }
-        delete [] unichars;
-      }
-      NS_IF_RELEASE(decoder);
+    if (NS_FAILED(res)) {
+      decoder = nsnull;
+    }
+    // get encoder (conv from unicode)
+    aCharset.SetString(to_charset);
+    res = ccm->GetUnicodeEncoder(&aCharset, &encoder);
+    if (NS_FAILED(res)) {
+      encoder = nsnull;
+    }
+    // error, no conversion, copy the original
+    if (nsnull == decoder || nsnull == encoder) {
+      *outBuffer = PL_strdup(inBuffer); 
+      return (nsnull != *outBuffer) ? 0 : -1;
     }
   }
+  else
+    return -1;
 
-  // set the results
-  *outBuffer = dstPtr;
+  // Do the actual convertions.
+  PRUnichar *unichars;
+  PRInt32 unicharLength;
+  PRInt32 srcLen = inLength;
+  PRInt32 dstLength = 0;
+  char *dstPtr = nsnull;
+
+  res = decoder->Length(inBuffer, 0, srcLen, &unicharLength);
+  // temporary buffer to hold unicode string
+  unichars = new PRUnichar[unicharLength];
+  if (unichars == nsnull) {
+    res = NS_ERROR_OUT_OF_MEMORY;
+  }
+  else {
+    // convert to unicode
+    res = decoder->Convert(unichars, 0, &unicharLength, inBuffer, 0, &srcLen);
+
+    res = encoder->GetMaxLength(unichars, unicharLength, &dstLength);
+    // allocale an output buffer
+    dstPtr = (char *) PR_Malloc(dstLength + 1);
+    if (dstPtr == nsnull) {
+      res = NS_ERROR_OUT_OF_MEMORY;
+    }
+    else {
+      // convert from unicode
+      res = encoder->Convert(unichars, &unicharLength, dstPtr, &dstLength);
+      dstPtr[dstLength] = '\0';
+      *outBuffer = dstPtr;  // set the result string
+    }
+    delete [] unichars;
+  }
+
+  NS_IF_RELEASE(decoder);
+  NS_IF_RELEASE(encoder);
 
   return NS_SUCCEEDED(res) ? 0 : -1;
 }
+
 
 static PRInt32 INTL_ConvertToUnicode(const char* from_charset, const char* aBuffer, const PRInt32 aLength,
                                       void** uniBuffer, PRInt32* uniLength)
@@ -1345,6 +1353,140 @@ static PRInt32 INTL_ConvertFromUnicode(const char* to_charset, const void* uniBu
   return NS_SUCCEEDED(res) ? 0 : -1;
 }
 ////////////////////////////////////////////////////////////////////////////////
+
+class MimeCharsetConverterClass {
+public:
+  MimeCharsetConverterClass();
+  virtual ~MimeCharsetConverterClass();
+  PRInt32 Initialize(const char* from_charset, const char* to_charset, 
+                     const PRBool autoDetect=PR_FALSE, const PRInt32 maxNumCharsDetect=-1);
+  PRInt32 Convert(const char* inBuffer, const PRInt32 inLength, char** outBuffer, PRInt32* outLength);
+  nsIUnicodeDecoder * GetUnicodeDecoder() {return (mAutoDetect && NULL != mDecoderDetected) ? mDecoderDetected : mDecoder;}
+  nsIUnicodeEncoder * GetUnicodeEncoder() {return mEncoder;}
+
+private:
+  nsIUnicodeDecoder *mDecoder;          // decoder (convert to unicode)  
+  nsIUnicodeEncoder *mEncoder;          // encoder (convert from unicode)
+  nsIUnicodeDecoder *mDecoderDetected;  // decoder of detected charset (after when auto detection succeeded)
+  PRInt32 mMaxNumCharsDetect;           // maximum number of characters in bytes to abort auto detection 
+                                        // (-1 for no limit)
+  PRInt32 mNumChars;                    // accumulated number of characters converted in bytes
+  PRBool mAutoDetect;                   // true if apply auto detection
+};
+
+
+MimeCharsetConverterClass::MimeCharsetConverterClass()
+{
+  mDecoder = NULL;
+  mEncoder = NULL;
+  mDecoderDetected = NULL;
+  mMaxNumCharsDetect = -1;
+  mNumChars = 0;
+  mAutoDetect = PR_FALSE;
+}
+
+MimeCharsetConverterClass::~MimeCharsetConverterClass()
+{
+  NS_IF_RELEASE(mDecoder);
+  NS_IF_RELEASE(mEncoder);
+  NS_IF_RELEASE(mDecoderDetected);
+}
+
+PRInt32 MimeCharsetConverterClass::Initialize(const char* from_charset, const char* to_charset, 
+                                              const PRBool autoDetect, const PRInt32 maxNumCharsDetect)
+{
+  nsresult res;
+  // Set up charset converters.
+  NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res); 
+
+  if (NS_SUCCEEDED(res) && (nsnull != ccm)) {
+    nsString aCharset;
+
+    // create a decoder (conv to unicode)
+    aCharset.SetString(from_charset);
+    res = ccm->GetUnicodeDecoder(&aCharset, &mDecoder);
+    if (NS_FAILED(res)) {
+      return -1;
+    }
+    // create an encoder (conv from unicode)
+    aCharset.SetString(to_charset);
+    res = ccm->GetUnicodeEncoder(&aCharset, &mEncoder);
+    if (NS_FAILED(res)) {
+      return -1;
+    }
+  }
+  else {
+    return -1;
+  }
+
+  mAutoDetect = autoDetect;
+  mMaxNumCharsDetect = maxNumCharsDetect;
+
+  return 0;
+}
+
+PRInt32 MimeCharsetConverterClass::Convert(const char* inBuffer, const PRInt32 inLength, char** outBuffer, PRInt32* outLength)
+{
+  if (NULL == mDecoder || NULL == mEncoder) {
+    *outBuffer = PL_strdup(inBuffer);
+    if (*outBuffer != nsnull) {
+      *outLength = PL_strlen(*outBuffer);
+      return 0;
+    }
+    return -1;
+  }
+
+  nsIUnicodeDecoder* decoder = mDecoder;
+  nsIUnicodeEncoder* encoder = mEncoder;
+
+  // try auto detection for this string
+  if (mAutoDetect && mMaxNumCharsDetect < mNumChars) {
+  }
+
+  // update the total so far
+  mNumChars += inLength;
+
+  // do the conversion
+  nsresult res;
+  PRUnichar *unichars;
+  PRInt32 unicharLength;
+  PRInt32 srcLen = inLength;
+  PRInt32 dstLength = 0;
+  char *dstPtr;
+
+  res = decoder->Length(inBuffer, 0, srcLen, &unicharLength);
+  // allocate temporary buffer to hold unicode string
+  unichars = new PRUnichar[unicharLength];
+  if (unichars == nsnull) {
+    res = NS_ERROR_OUT_OF_MEMORY;
+  }
+  else {
+    // convert to unicode
+    res = decoder->Convert(unichars, 0, &unicharLength, inBuffer, 0, &srcLen);
+    if (NS_SUCCEEDED(res)) {
+      res = encoder->GetMaxLength(unichars, unicharLength, &dstLength);
+      // allocale an output buffer
+      dstPtr = (char *) PR_Malloc(dstLength + 1);
+      if (dstPtr == nsnull) {
+        res = NS_ERROR_OUT_OF_MEMORY;
+      }
+      else {
+        // convert from unicode
+        res = encoder->Convert(unichars, &unicharLength, dstPtr, &dstLength);
+        if (NS_SUCCEEDED(res)) {
+          dstPtr[dstLength] = '\0';
+          *outBuffer = dstPtr;      // set the result string
+          *outLength = dstLength;
+        }
+      }
+    }
+    delete [] unichars;
+  }
+
+  return NS_SUCCEEDED(res) ? 0 : -1;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // BEGIN PUBLIC INTERFACE
 extern "C" {
 #define PUBLIC
@@ -1393,10 +1535,21 @@ PRInt32 MIME_ConvertCharset(const char* from_charset, const char* to_charset,
       return -1;
     }
   }
+#if 0
   PRInt32 res = INTL_ConvertCharset(from_charset, to_charset, inBuffer, inLength, outBuffer);
   if (res == 0) {
     *outLength = PL_strlen(*outBuffer);
   }
+#else
+  PRInt32 res;
+  MimeCharsetConverterClass aMimeCharsetConverterClass;
+
+  res = aMimeCharsetConverterClass.Initialize(from_charset, to_charset, PR_FALSE, -1);
+
+  if (res != -1) {
+    res = aMimeCharsetConverterClass.Convert(inBuffer, inLength, outBuffer, outLength);
+  }
+#endif
   return res;
 }
 
