@@ -22,6 +22,12 @@
 
 #include "nsIWebBrowserSetup.idl"
 
+/*
+nsCWebBrowserSetup implements:
+-------------------------
+nsIWebBrowserSetup
+*/
+
 %{ C++
 //	{F1EAC760-87E9-11d3-AF80-00A024FFC08C} - 
 #define NS_WEBBROWSER_SETUP_CID \
