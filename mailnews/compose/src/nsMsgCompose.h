@@ -32,7 +32,7 @@
 #include "nsMsgHeaderMasks.h"
 #include "nsMsgFolderFlags.h"
 
-#include "nsIMsgCompFields.h"
+#include "nsMsgCompFields.h"
 #include "nsIMsgCompose.h"
 
 /*JFD 
@@ -83,7 +83,9 @@ public:
 
 	NS_IMETHOD Dispose();
 
+#endif  //JFD
 	virtual MSG_PaneType GetPaneType();
+#if 0 //JFD
 
 	virtual void NotifyPrefsChange(NotifyCode code);
 
@@ -114,12 +116,14 @@ public:
 	PRBool NoPendingAttachments() const;
 	char* GetAttachmentString();
 	PRBool ShouldAutoQuote();
+#endif //JFD
 	const char* GetCompHeader(MSG_HEADER_SET);
-	int SetCompHeader(MSG_HEADER_SET, const char*);
+	PRInt32 SetCompHeader(MSG_HEADER_SET, const char*);
 	PRBool GetCompBoolHeader(MSG_BOOL_HEADER_SET);
-	int SetCompBoolHeader(MSG_BOOL_HEADER_SET, PRBool);
+	PRInt32 SetCompBoolHeader(MSG_BOOL_HEADER_SET, PRBool);
 	const char* GetCompBody();
 	int SetCompBody(const char*);
+#if 0 //JFD
 	void ToggleCompositionHeader(PRUint32 header);
 	PRBool ShowingAllCompositionHeaders();
 	PRBool ShowingCompositionHeader(PRUint32 mask);
@@ -144,8 +148,10 @@ public:
 	int SaveMessageAsTemplate();
 
 	PRBool IsDuplicatePost();
+#endif //JFD
 	const char* GetCompositionMessageID();
 	void ClearCompositionMessageID();
+#if 0 //JFD
 	HJ13591
 	HJ86782
 	HJ02278
@@ -173,11 +179,13 @@ public:
 	HJ37212
 	HJ42256
 
+#endif //JFD
 	int SetHTMLAction(MSG_HTMLComposeAction action) {
 		m_htmlaction = action;
 		return 0;
 	}
 	MSG_HTMLComposeAction GetHTMLAction() {return m_htmlaction;}
+#if 0 //JFD
 
   int PutUpRecipientsDialog(void *pWnd = NULL);
 
@@ -185,10 +193,12 @@ public:
 
   PRBool m_confirmed_uuencode_p; // Have we confirmed sending uuencoded data?
 
+#endif  //JFD
   // For qutoing plain text to html then convert back to plain text
   void SetLineWidth(int width) { m_lineWidth = width; }
   int GetLineWidth() { return m_lineWidth; }
   // #$@%&*
+#if 0 //JFD
 
 protected:
 	static void QuoteHTMLDone_S(URL_Struct* url, 
@@ -253,13 +263,15 @@ protected:
 										   been downloaded, and some info about
 										   them. */
 
+#endif //JFD
 	char *m_defaultUrl;			/* Default URL for attaching, etc. */
 
-	MSG_CompositionFields* m_initfields; // What all the fields were,
+	nsMsgCompFields* m_initfields; // What all the fields were,
 										 // initially.
-	MSG_CompositionFields* m_fields; // Current value of all the fields.
+	nsMsgCompFields* m_fields; // Current value of all the fields.
 
 	char* m_messageId;			// Message-Id to use for composition.
+#if 0 //JFD
 
 	char* m_attachmentString;	// Storage for string to display in UI for
 								// the list of attachments.
@@ -295,7 +307,9 @@ protected:
 
 	HJ92535
 
+#endif //JFD
 	MSG_HTMLComposeAction m_htmlaction;
+#if 0 //JFD
 	MSG_HTMLRecipients* m_htmlrecip;
 
 	int m_status;
@@ -313,9 +327,9 @@ protected:
 
 	MSG_CompositionPaneCallbacks m_callbacks;
 	void* m_callbackclosure;
+#endif //JFD
 	int m_lineWidth; // for quoting plain text to html then convert back
 						 // to plain text
-#endif 0 //JFD
 };
 
 

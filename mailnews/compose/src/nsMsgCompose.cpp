@@ -17,6 +17,7 @@
  */
 
 #include "rosetta_mailnews.h"
+#include "nsMsgSend.h"
 #include "nsMsgComposeFact.h"
 #include "nsMsgCompose.h"
 
@@ -492,12 +493,14 @@ nsMsgCompose::Dispose() {
 	PR_FREEIF(m_messageId);
 }
 
+#endif  //JFD
 
-MSG_PaneType
-nsMsgCompose::GetPaneType() {
+MSG_PaneType nsMsgCompose::GetPaneType()
+{
 	return MSG_COMPOSITIONPANE;
 }
 
+#if 0 //JFD
 
 void nsMsgCompose::NotifyPrefsChange(NotifyCode) {
 	// ###tw  Write me!
@@ -635,7 +638,7 @@ nsMsgCompose::FigureBcc(PRBool newsBcc)
 		} else if (!tmp || !*tmp) {
 			result = PL_strdup(FE_UsersMailAddress());
 		} else {
-			result = PR_smprintf("%s, %s", FE_UsersMailAddress(), tmp);
+			result = PR_PR_smprintf("%s, %s", FE_UsersMailAddress(), tmp);
 		}
 	}
 	return result;
@@ -1328,7 +1331,7 @@ nsMsgCompose::GetUrlDone(PrintSetup* /*pptr*/)
 			CCCDataObject conv;
 			int doConv;
 			INTL_CharSetInfo c = LO_GetDocumentCharacterSetInfo(m_context);
-			int16 win_csid = INTL_GetCSIWinCSID(c);
+			PRInt16 win_csid = INTL_GetCSIWinCSID(c);
 
 			/*
 			 * We aren't actually converting character encodings here.
@@ -2138,7 +2141,7 @@ FAIL:
 	}
 	else if (status != MK_INTERRUPTED) {
 		char *errmsg;
-		errmsg = PR_smprintf(XP_GetString(MK_COMMUNICATIONS_ERROR), status);
+		errmsg = PR_PR_smprintf(XP_GetString(MK_COMMUNICATIONS_ERROR), status);
 		if (errmsg) {
 			FE_Alert(context, errmsg);
 			PR_Free(errmsg);
@@ -2389,50 +2392,58 @@ nsMsgCompose::UpdateHeaderContents(MSG_HEADER_SET which_header,
   return NULL;
 }
 
-int
-nsMsgCompose::SetCompHeader(MSG_HEADER_SET header,
+#endif //JFD
+PRInt32 nsMsgCompose::SetCompHeader(MSG_HEADER_SET header,
 								   const char *value)
 {
-	PR_ASSERT(header != MSG_ATTACHMENTS_HEADER_MASK);
+	PRInt32 retVal;
+
+	PR_ASSERT(header != MSG_ATTACHMENTS_HEADER_MASK, "Don't use this fuction for setting the attachment!");
 	ClearCompositionMessageID();
-	return m_fields->SetHeader(header, value);
+	m_fields->SetHeader(header, value, &retVal);
+
+	return retVal;
 }
 
-const char*
-nsMsgCompose::GetCompHeader(MSG_HEADER_SET header)
+const char* nsMsgCompose::GetCompHeader(MSG_HEADER_SET header)
 {
 	if (header == MSG_ATTACHMENTS_HEADER_MASK) {
-		return GetAttachmentString();
+		return (char *)NULL/*JFD GetAttachmentString()*/;
 	} else {
-		return m_fields ? m_fields->GetHeader(header) : (char *)NULL;
+		if (m_fields) {
+			char * retVal;
+			m_fields->GetHeader(header, &retVal);
+			return retVal;
+		} else
+			return (char *)NULL;
 	}
 }
 
-int
-nsMsgCompose::SetCompBoolHeader(MSG_BOOL_HEADER_SET header,
+PRInt32 nsMsgCompose::SetCompBoolHeader(MSG_BOOL_HEADER_SET header,
 									   PRBool bValue)
 {
-	return m_fields->SetBoolHeader(header, bValue);
+	PRInt32 retVal;
+
+	m_fields->SetBoolHeader(header, bValue, &retVal);
+	return retVal;
 }
 
-PRBool
-nsMsgCompose::GetCompBoolHeader(MSG_BOOL_HEADER_SET header)
+PRBool nsMsgCompose::GetCompBoolHeader(MSG_BOOL_HEADER_SET header)
 {
 	return m_fields ? m_fields->GetBoolHeader(header) : PR_FALSE;
 }
 
-const char*
-nsMsgCompose::GetCompBody()
+const char* nsMsgCompose::GetCompBody()
 {
 	return m_fields ? m_fields->GetBody() : (char *)NULL;
 }
 
-int
-nsMsgCompose::SetCompBody(const char* value)
+int nsMsgCompose::SetCompBody(const char* value)
 {
-	return m_fields->SetBody(value);
+	return m_fields->SetBody(value, NULL);
 }
 
+#if 0 //JFD
 const char*
 nsMsgCompose::GetWindowTitle()
 {
@@ -2651,7 +2662,7 @@ nsMsgCompose::DeliveryDoneCB(MWContext* context, int status,
 			FE_Alert(context, error_message);
 		} else if (status != MK_INTERRUPTED) {
 			char *errmsg;
-			errmsg = PR_smprintf(XP_GetString(MK_COMMUNICATIONS_ERROR),
+			errmsg = PR_PR_smprintf(XP_GetString(MK_COMMUNICATIONS_ERROR),
 								 status);
 			if (errmsg) {
 				FE_Alert(context, errmsg);
@@ -3290,17 +3301,17 @@ nsMsgCompose::IsDuplicatePost() {
   return m_duplicatePost;
 }
 
-void 
-nsMsgCompose::ClearCompositionMessageID()
+#endif  //JFD
+void nsMsgCompose::ClearCompositionMessageID()
 {
   PR_FREEIF(m_messageId);
 }
 
-const char*
-nsMsgCompose::GetCompositionMessageID()
+const char* nsMsgCompose::GetCompositionMessageID()
 {
   return m_messageId;
 }
+#if 0 //JFD
 
 int
 nsMsgCompose::RemoveNoCertRecipients()
@@ -3799,7 +3810,7 @@ nsMsgCompose::HasNoMarkup()
 		PRBool recognized = PR_FALSE;
 		char* newEnd = endptr;
 		
-		if (XP_STRNCASECMP(body, "<A HREF=", 8) == 0) {
+		if (PL_strncasecmp(body, "<A HREF=", 8) == 0) {
 			char* pLinkStart = PL_strchr(body, '"');		// find the open quote
 			if (pLinkStart) {
 				++pLinkStart;								// past the open quote
@@ -3843,7 +3854,7 @@ nsMsgCompose::HasNoMarkup()
 			for (SkipData* pTestItem = pSkipTags; (pTestItem->pTag != NULL) && !recognized; pTestItem++) {
 				// if len != 0, then use PL_strncasecmp
 				if (pTestItem->lenTag != 0) {
-					recognized = XP_STRNCASECMP(body, pTestItem->pTag, pTestItem->lenTag) == 0;
+					recognized = PL_strncasecmp(body, pTestItem->pTag, pTestItem->lenTag) == 0;
 				} else {
 					recognized = PL_strcasecmp(body, pTestItem->pTag) == 0;
 				}
@@ -3953,14 +3964,14 @@ nsMsgCompose::MungeThroughRecipients(PRBool* someNonHTML,
 						length = PL_strlen(ptr);
 					}
 					if (length == domainlength) {
-						if (XP_STRNCASECMP(domain, ptr, length) == 0) {
+						if (PL_strncasecmp(domain, ptr, length) == 0) {
 							found = PR_TRUE;
 							match = PR_TRUE;
 							break;
 						}
 					}
 				}
-				char* tmp = PR_smprintf("%s@%s",
+				char* tmp = PR_PR_smprintf("%s@%s",
 										XP_GetString(MK_MSG_EVERYONE),
 										domain);
 				if (!tmp) return MK_OUT_OF_MEMORY;
@@ -4007,7 +4018,7 @@ nsMsgCompose::MungeThroughRecipients(PRBool* someNonHTML,
 /*JFD
 			PRBool found = m_host->IsHTMLOKTree(tmp);
 */
-			char* desc = PR_smprintf("%s.*", tmp);
+			char* desc = PR_PR_smprintf("%s.*", tmp);
 			if (!desc) {
 				status = MK_OUT_OF_MEMORY;
 				goto FAIL;
