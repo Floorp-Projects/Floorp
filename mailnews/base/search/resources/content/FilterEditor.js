@@ -232,7 +232,7 @@ function saveFilter() {
                 dump("Need to create searchterm " + i + "\n");
                 searchTerm = gFilter.createTerm();
                 searchTermElements[i].saveTo(searchTerm);
-                gFilter.AppendTerm(searchTerm);
+                gFilter.appendTerm(searchTerm);
             }
         } catch (ex) {
 
