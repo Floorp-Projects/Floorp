@@ -297,10 +297,10 @@
 <!ENTITY window.title            "Mozilla Naptár">
 
 <!-- customizable toolbars -->
-<!ENTITY calendar.context.customize.label             "Customize">
-<!ENTITY calendar.context.customize.accesskey         "C">
-<!ENTITY calendar.maintoolbar.name                    "Main Toolbar">
-<!ENTITY calendar.maintoolbar.accesskey               "M">
+<!ENTITY calendar.context.customize.label             "Testreszabás">
+<!ENTITY calendar.context.customize.accesskey         "T">
+<!ENTITY calendar.maintoolbar.name                    "Fő eszköztár">
+<!ENTITY calendar.maintoolbar.accesskey               "F">
 
 <!-- Context Menu -->
 <!ENTITY calendar.context.newevent.label              "Új esemény">
