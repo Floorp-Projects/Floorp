@@ -463,9 +463,6 @@ if(verifyDiskSpace(fProgram, srDest))
     resetError();
 
     // register chrome
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome", "mail.jar"), "content/browser/");
-
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome", "mail.jar"), "content/passwordmgr/");
     registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome", "mail.jar"), "content/mozapps/");
     
     registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","mail.jar"),"content/autoconfig/");

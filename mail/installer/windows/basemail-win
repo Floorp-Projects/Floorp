@@ -2,6 +2,8 @@
 ; Base Thunderbird Package File for Win32
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+thunderbird/.autoreg
+
 [langenus]
 thunderbird\chrome\en-US-mail.jar
 thunderbird\chrome\en-win.jar
@@ -88,7 +90,6 @@ thunderbird\components\msgsmime.dll
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 thunderbird\chrome\qute.jar
-thunderbird\chrome\overlayinfo\messenger\content\overlays.rdf
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Default Profile Settings
@@ -188,7 +189,7 @@ thunderbird\components\appshell.xpt
 thunderbird\components\docshell.dll                 
 thunderbird\components\docshell_base.xpt            
 thunderbird\components\uriloader.xpt
-thunderbird\components\chrome.dll                   
+thunderbird\components\chrome.dll                 
 thunderbird\components\webbrwsr.dll              
 thunderbird\components\webBrowser_core.xpt
 thunderbird\components\embedcomponents.dll
