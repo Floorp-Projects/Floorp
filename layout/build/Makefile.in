@@ -70,6 +70,9 @@ REQUIRES	= xpcom \
 		  xultmpl \
 		  lwbrk \
 		  plugin \
+		  commandhandler \
+		  webbrwsr \
+		  uconv \
 		  $(NULL)
 
 CPPSRCS		= \
@@ -99,6 +102,9 @@ SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/$(LIB_PREFIX)gkconxuldoc_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)gkconshared_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)gkview_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)jsdombase_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)jsdomevents_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)jsurl_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 ifdef MOZ_XUL
@@ -190,6 +196,8 @@ INCLUDES	+= -I$(srcdir)/../base/src \
 		   -I$(srcdir)/../../content/xul/templates/src \
 		   -I$(srcdir)/../../content/events/src \
 		   -I$(topsrcdir)/view/src \
+		   -I$(topsrcdir)/dom/src/base \
+		   -I$(topsrcdir)/dom/src/jsurl \
 		   -I. \
 		   $(NULL)
 

@@ -189,6 +189,10 @@ public:
   static void ShutDown();
 };
 
+/* factory function */
+nsresult NS_CreateScriptContext(nsIScriptGlobalObject *aGlobal,
+                                nsIScriptContext **aContext);
+
 /* prototypes */
 void JS_DLL_CALLBACK NS_ScriptErrorReporter(JSContext *cx, const char *message, JSErrorReport *report);
 

@@ -108,8 +108,7 @@ EXTRA_DSO_LDOPTS += \
 		$(XPCOM_LIBS) \
 		$(MOZ_JS_LIBS) \
 		$(NSPR_LIBS) \
-		$(PNG_LIBS) \
-		-ljsdom
+		$(PNG_LIBS)
 endif
 
 ifdef MOZ_META_COMPONENTS
@@ -152,7 +151,7 @@ EXTRA_DSO_LDOPTS += \
 	$(MOZ_COMPONENT_LIBS) \
 	$(TK_LIBS) \
 	$(NULL)
-	
+
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 OS_LIBS	+= -framework QuickTime
 endif

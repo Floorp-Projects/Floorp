@@ -517,4 +517,8 @@ protected:
   nsIDocShell *mDocShell; // Weak Reference
 };
 
+/* factory function */
+nsresult NS_NewScriptGlobalObject(PRBool aIsChrome,
+                                  nsIScriptGlobalObject **aResult);
+
 #endif /* nsGlobalWindow_h___ */

@@ -161,7 +161,6 @@ components\uconv.xpt
 components\unicharutil.xpt
 
 ; dom
-components\jsdom.dll   
 components\dom.xpt                      
 components\dom_base.xpt
 components\dom_core.xpt
