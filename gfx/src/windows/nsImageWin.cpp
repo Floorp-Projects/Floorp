@@ -901,7 +901,7 @@ PRBool nsImageWin :: SetSystemPalette(HDC* aHdc)
 	if (mNumPalleteColors != 0) 
     return PR_FALSE;
 
-	if (!::GetDeviceCaps(aHdc, RASTERCAPS) & RC_PALETTE) 
+	if (!(::GetDeviceCaps(aHdc, RASTERCAPS) & RC_PALETTE)) 
     return PR_FALSE;
 
 	nsyscol = ::GetDeviceCaps(aHdc, NUMCOLORS);
