@@ -2647,3 +2647,81 @@ PK11_ListCerts(PK11CertListType type, void *pwarg)
     }
     return certList;
 }
+
+static SECItem *
+pk11_GetLowLevelKeyFromHandle(PK11SlotInfo *slot, CK_OBJECT_HANDLE handle) {
+    CK_ATTRIBUTE theTemplate[] = {
+	{ CKA_ID, NULL, 0 },
+    };
+    int tsize = sizeof(theTemplate)/sizeof(theTemplate[0]);
+    CK_RV crv;
+    SECItem *item;
+
+    item = SECITEM_AllocItem(NULL, NULL, 0);
+
+    if (item == NULL) {
+	return NULL;
+    }
+
+    crv = PK11_GetAttributes(NULL,slot,handle,theTemplate,tsize);
+    if (crv != CKR_OK) {
+	SECITEM_FreeItem(item,PR_TRUE);
+	PORT_SetError( PK11_MapError(crv) );
+	return NULL;
+    }
+
+    item->data = theTemplate[0].pValue;
+    item->len =theTemplate[0].ulValueLen;
+
+    return item;
+}
+    
+SECItem *
+PK11_GetLowLevelKeyIDForCert(PK11SlotInfo *slot,
+					CERTCertificate *cert, void *wincx)
+{
+    CK_OBJECT_CLASS certClass = CKO_CERTIFICATE;
+    CK_ATTRIBUTE theTemplate[] = {
+	{ CKA_VALUE, NULL, 0 },
+	{ CKA_CLASS, NULL, 0 }
+    };
+    /* if you change the array, change the variable below as well */
+    int tsize = sizeof(theTemplate)/sizeof(theTemplate[0]);
+    CK_OBJECT_HANDLE certHandle;
+    CK_ATTRIBUTE *attrs = theTemplate;
+    PK11SlotInfo *slotRef = NULL;
+    SECItem *item;
+    SECStatus rv;
+
+    if (slot) {
+	PK11_SETATTRS(attrs, CKA_VALUE, cert->derCert.data, 
+						cert->derCert.len); attrs++;
+
+	rv = PK11_Authenticate(slot, PR_TRUE, wincx);
+	if (rv != SECSuccess) {
+	    return NULL;
+	}
+        certHandle = pk11_getcerthandle(slot,cert,theTemplate,tsize);
+    } else {
+    	certHandle = PK11_FindObjectForCert(cert, wincx, &slotRef);
+	if (certHandle == CK_INVALID_KEY) {
+	   return pk11_mkcertKeyID(cert);
+	}
+	slot = slotRef;
+    }
+
+    if (certHandle == CK_INVALID_KEY) {
+	 return NULL;
+    }
+
+    item = pk11_GetLowLevelKeyFromHandle(slot,certHandle);
+    if (slotRef) PK11_FreeSlot(slotRef);
+    return item;
+}
+
+SECItem *
+PK11_GetLowLevelKeyIDForPrivateKey(SECKEYPrivateKey *privKey)
+{
+    return pk11_GetLowLevelKeyFromHandle(privKey->pkcs11Slot,privKey->pkcs11ID);
+}
+
