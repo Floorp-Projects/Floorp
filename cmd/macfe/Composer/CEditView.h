@@ -46,11 +46,10 @@ protected:
 
 		// overridden to handle composer flavor drops
 	virtual void ReceiveDragItem ( DragReference inDragRef, DragAttributes inDragAttrs,
-											ItemReference inItemRef, Rect & inItemBounds,
-											SPoint32 & inMouse ) ;
+											ItemReference inItemRef, Rect & inItemBounds ) ;
 
 		// must override to do the right thing
-	virtual void HandleDropOfComposerFlavor ( const char* inData, bool inDoCopy, SPoint32 & inMouse ) = 0 ;
+	virtual void HandleDropOfComposerFlavor ( const char* inData, bool inDoCopy, const Point & inMouseLocal ) = 0 ;
 
 }; // class CComposerAwareURLDragMixin
 
@@ -154,7 +153,7 @@ public:
 	virtual	Boolean	ClickTrackSelection( const SMouseDownEvent&	inMouseDown, 
 										CHTMLClickRecord& inClickRecord );
 	
-	virtual Boolean	SetDefaultCSID( Int16 inPreferredCSID );
+	virtual Boolean	SetDefaultCSID( Int16 inPreferredCSID, Boolean forceRepaginate = false );
 	CBrowserContext	*GetNSContext() { return mContext; };
 
 	void			SetHoldUpdates(HoldUpdatesProxy* inHoldUpdates) {mHoldUpdates = inHoldUpdates;};
@@ -219,7 +218,7 @@ protected:
 	virtual void		InsideDropArea( DragReference inDragRef );
 	virtual void 		EnterDropArea( DragReference inDragRef, Boolean inDragHasLeftSender );
 	virtual void		HandleDropOfComposerFlavor ( const char* inData, bool inDoCopy,
-														SPoint32 & inMouse ) ;
+														const Point & inMouseLocal ) ;
 	virtual void 		HandleDropOfPageProxy ( const char* inURL, const char* inTitle ) ;
 	virtual void		HandleDropOfLocalFile ( const char* inFileURL, const char* fileName,
 											const HFSFlavor & inFileData ) ;

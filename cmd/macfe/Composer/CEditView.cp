@@ -170,8 +170,7 @@ CComposerAwareURLDragMixin :: CComposerAwareURLDragMixin ( )
 //
 void
 CComposerAwareURLDragMixin :: ReceiveDragItem ( DragReference inDragRef, DragAttributes inDragAttrs,
-												ItemReference inItemRef, Rect & inItemBounds,
-												SPoint32 & inMouseLoc )
+												ItemReference inItemRef, Rect & inItemBounds )
 {
 	try
 	{
@@ -194,10 +193,15 @@ CComposerAwareURLDragMixin :: ReceiveDragItem ( DragReference inDragRef, DragAtt
 				ThrowIfOSErr_( err );
 	
 				vector<char> datap ( theDataSize + 1 );
-				if ( noErr == ::GetFlavorData( inDragRef, inItemRef, emComposerNativeDrag, datap.begin(), &theDataSize, 0 )
+				if ( noErr == ::GetFlavorData( inDragRef, inItemRef, emComposerNativeDrag, &(*datap.begin()), &theDataSize, 0 )
 					&& ( theDataSize > 0 ) ) {
 					datap[ theDataSize ] = 0;
-					HandleDropOfComposerFlavor ( datap.begin(), doCopy, inMouseLoc );
+					// get where the mouse is for the drag and convert it to local coords.
+					Point mouseLoc;
+					::GetDragMouse( inDragRef, &mouseLoc, NULL );
+					::GlobalToLocal( &mouseLoc );
+			
+					HandleDropOfComposerFlavor ( &(*datap.begin()), doCopy, mouseLoc );
 				}
 			}
 			break;
@@ -3039,13 +3043,13 @@ CEditView::ReceiveDragItem ( DragReference inDragRef, DragAttributes inDragAttr,
 
 	FocusDraw();
 	
+	// store this away for later, it may be necessary
 	Point mouseLoc;
 	::GetDragMouse( inDragRef, &mouseLoc, NULL );
 	::GlobalToLocal( &mouseLoc );
 	LocalToImagePoint( mouseLoc, mDropLocationImageCoords );
 	
-	CComposerAwareURLDragMixin::ReceiveDragItem ( inDragRef, inDragAttr, inItemRef, inItemBounds,
-													mDropLocationImageCoords );
+	CComposerAwareURLDragMixin::ReceiveDragItem ( inDragRef, inDragAttr, inItemRef, inItemBounds );
 													
 } // ReceiveDragItem
 
@@ -3053,17 +3057,19 @@ CEditView::ReceiveDragItem ( DragReference inDragRef, DragAttributes inDragAttr,
 //
 // HandleDropOfComposerFlavor
 //
-// Put the data in the right place, given the current mouse location and if this is a copy 
+// Put the data in the right place, given the current mouse location (in local coords) and if this is a copy 
 // or a move. Will delete the current selection if it is a move.
 //
 void
-CEditView :: HandleDropOfComposerFlavor ( const char* inData, bool inDoCopy, SPoint32 & inMouseLoc )
+CEditView :: HandleDropOfComposerFlavor ( const char* inData, bool inDoCopy, const Point & inMouseLocLocal )
 {
+	SPoint32 mouseInImageCoords;
+	LocalToImagePoint( inMouseLocLocal, mouseInImageCoords );
 	EDT_BeginBatchChanges( *GetContext() );
 	if ( inDoCopy || mDragData == NULL )
-		EDT_PositionCaret( *GetContext(), inMouseLoc.h, inMouseLoc.v );
+		EDT_PositionCaret( *GetContext(), mouseInImageCoords.h, mouseInImageCoords.v );
 	else
-		EDT_DeleteSelectionAndPositionCaret( *GetContext(), inMouseLoc.h, inMouseLoc.v );
+		EDT_DeleteSelectionAndPositionCaret( *GetContext(), mouseInImageCoords.h, mouseInImageCoords.v );
 	EDT_PasteHTML( *GetContext(), const_cast<char*>(inData), ED_PASTE_NORMAL );
 	EDT_EndBatchChanges( *GetContext() );
 
@@ -4980,7 +4986,7 @@ Boolean CEditView::ObeyCommand( CommandT inCommand, void *ioParam )
 }
 
 
-Boolean CEditView::SetDefaultCSID(Int16 prefCSID)
+Boolean CEditView::SetDefaultCSID(Int16 prefCSID, Boolean forceRepaginate /* = false */)
 {
 	int oldCSID = mContext->GetDefaultCSID();
 
