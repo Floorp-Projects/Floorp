@@ -315,6 +315,7 @@ reallocator(void* ptr, PRSize size, PRUint32& counter, PRUint32 max)
 NS_IMETHODIMP_(void *) 
 nsMemoryImpl::Alloc(PRSize size)
 {
+    NS_ASSERTION(size, "nsMemoryImpl::Alloc of 0");
     void* result = MALLOC1(size);
     if (! result) {
         // Request an asynchronous flush
