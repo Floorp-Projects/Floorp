@@ -23,6 +23,8 @@
 #include "nsString.h"
 #include "nsStringUtil.h"
 
+#include <Xm/RowColumn.h>
+
 static NS_DEFINE_IID(kMenuBarIID, NS_IMENUBAR_IID);
 NS_IMPL_ISUPPORTS(nsMenuBar, kMenuBarIID)
 
