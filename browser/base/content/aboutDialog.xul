@@ -52,7 +52,7 @@
         buttons="accept"
         onload="onLoad();"
         title="&aboutDialog.title;"
-        width="306" height="385"> 
+        style="width: 299px"> 
     
     <script type="application/x-javascript">
       <![CDATA[
@@ -72,7 +72,7 @@
           <label value="&version;"/>
         </hbox>
         <spacer flex="1"/>
-        <textbox id="userAgent" multiline="true" readonly="true" cols="60"/>
+        <textbox id="userAgent" multiline="true" readonly="true" cols="60" style="height: 5.1em"/>
         <spacer flex="1"/>
         /* XXXBlake This is a workaround.  I find that if I try to use href and I open
                     About as a modal dialog, a new browser window opens when I click the link
