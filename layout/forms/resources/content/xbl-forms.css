@@ -40,10 +40,15 @@
 
 select[size] {
   -moz-binding: url("chrome://forms/content/select.xml#select-size");
+  -moz-box-orient: vertical;
+  -moz-user-focus: normal;
 }
 
 select, select[size="1"] {
   -moz-binding: url("chrome://forms/content/select.xml#select");
+  display: -moz-box;
+  -moz-box-orient: horizontal;
+  -moz-user-focus: normal;
 }
 
 select[size] > option {
@@ -53,6 +58,18 @@ select[size] > option {
 select > option,
 select[size="1"] > option {
   -moz-binding: url("chrome://forms/content/select.xml#select-option");
+}
+
+xul|*.select-outlinercol {
+  -moz-binding: none;
+}
+
+xul|*.select-outlinerrows {
+  -moz-binding: none;
+}
+
+xul|*.select-outlinerbody {
+  -moz-binding: url("chrome://forms/content/select.xml#select-outlinerbody");
 }
 
 /*

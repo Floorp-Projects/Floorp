@@ -40,13 +40,7 @@
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <binding id="select-base" extends="chrome://global/content/bindings/outliner.xml#outliner-base">
-    <resources>
-      <stylesheet src="chrome://forms/content/select.css"/>
-    </resources>
-  </binding>
-
-  <binding id="select-outlinerbody" extends="chrome://forms/content/select.xml#select-base">
+  <binding id="select-outlinerbody">
     <implementation>
       <field name="_lastSelectedRow">
         -1
@@ -116,15 +110,14 @@
     </handlers>
   </binding>
 
-  <binding id="select-size" extends="chrome://forms/content/select.xml#select-base"
-           display="xul:outliner">
-    <content orient="vertical">
-      <xul:outlinercols>
-        <xul:outlinercol flex="1"/>
+  <binding id="select-size" extends="xul:outliner">
+    <content>
+      <xul:outlinercols class="select-outlinercols">
+        <xul:outlinercol class="select-outlinercol" flex="1"/>
       </xul:outlinercols>
-      <xul:outlinerrows class="outliner-rows" flex="1">
+      <xul:outlinerrows class="select-outlinerrows outliner-rows" flex="1">
         <xul:hbox flex="1" class="outliner-bodybox">
-          <xul:outlinerbody flex="1">
+          <xul:outlinerbody flex="1" class="select-outlinerbody">
             <xul:outlinerchildren>
               <children/>
             </xul:outlinerchildren>
@@ -520,11 +513,13 @@
         <body>
         <![CDATA[
           var selectedIndex = this.selectedIndex;
-          var item = this.childNodes[selectedIndex];
-          var newLabel = item.label;
-          if (!newLabel)
-            newLabel = item.text;
-          this.setAttribute('label', newLabel);
+          if (selectedIndex >= 0 && selectedIndex < this.childNodes.length) {
+            var item = this.childNodes[selectedIndex];
+            var newLabel = item.label;
+            if (!newLabel)
+              newLabel = item.text;
+            this.setAttribute('label', newLabel);
+          }
         ]]>
         </body>
       </method>
@@ -536,8 +531,10 @@
       </constructor>
     </implementation>
     <content sizetopopup="true">
-        <xul:label flex="1" value="   " inherits="value=label" style="border: 1px solid red"/>
-        <xul:dropmarker/>
+        <xul:hbox class="select-label-box" flex="1">
+          <xul:label flex="1" value=" " inherits="value=label"/>
+        </xul:hbox>
+        <xul:dropmarker class="select-dropmarker" type="menu"/>
         <xul:menupopup style="display:-moz-popup!important">
           <children/>
         </xul:menupopup>
@@ -559,8 +556,13 @@
         if (itemIndex == this.childNodes.length) // not found
           return;
 
+        if (itemIndex == this.selectedIndex) // nothing was changed
+          return;
+
         this.selectElement.setOptionsSelectedByIndex(itemIndex, itemIndex, true,
                                                      true, false);
+        if ("onchange" in this)
+          this.onchange();
         ]]>
       </handler>
 
@@ -570,7 +572,7 @@
 
   <binding id="select-option" extends="xul:menuitem">
     <content>
-      <xul:label inherits="value=label">
+      <xul:label inherits="value=label" class="select-menuitem">
         <children/>
       </xul:label>
     </content>
