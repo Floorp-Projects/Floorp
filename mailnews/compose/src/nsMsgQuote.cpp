@@ -239,8 +239,12 @@ SaveQuoteMessageCompleteCallback(nsIURI *aURL, nsresult aExitCode, void *tagData
   // Set us as the output stream for HTML data from libmime...
   nsCOMPtr<nsIMimeStreamConverter> mimeConverter = do_QueryInterface(mimeParser);
   if (mimeConverter)
-	  mimeConverter->SetMimeOutputType(ptr->mQuoteHeaders? nsMimeOutput::nsMimeMessageQuoting :
-	  														nsMimeOutput::nsMimeMessageBodyQuoting);
+  {
+	  if (ptr->mQuoteHeaders)
+		mimeConverter->SetMimeOutputType(nsMimeOutput::nsMimeMessageQuoting);
+	  else
+		mimeConverter->SetMimeOutputType(nsMimeOutput::nsMimeMessageBodyQuoting);
+  }
   if (NS_FAILED(mimeParser->Init(aURL, ptr->mStreamListener, nsnull /* the channel */)))
   {
     NS_RELEASE(ptr);
