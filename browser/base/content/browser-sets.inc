@@ -176,14 +176,32 @@
          modifiers="accel"/>
     <key id="focusURLBar2" key="&urlbar.accesskey;" command="Browser:OpenLocation"
          modifiers="alt"/>
+#
+# Search Command Key Logic works like this:
+# 
+# Unix: Ctrl+J (0.8, 0.9 support)
+#       Ctrl+K (cross platform binding)
+# Mac:  Ctrl+K (cross platform binding)
+# Win:  Ctrl+K (cross platform binding)
+#       Ctrl+E (IE compat)
+#
+# We support Ctrl+K on all platforms now and advertise it in the menu since it is
+# our standard - it is a "safe" choice since it is near no harmful keys like "W" as
+# "E" is. People mourning the loss of Ctrl+K for emacs compat can switch their GTK
+# system setting to use emacs emulation, and we should respect it. Focus-Search-Box
+# is a fundamental keybinding and we are maintaining a XP binding so that it is easy
+# for people to switch to Linux.
+#
+# Do *not* tamper with these values without talking to ben@mozilla.org
+#
 #ifdef XP_UNIX
 #ifndef XP_MACOSX
-    <key id="key_search" key="&searchFocusUnix.commandkey;" command="Tools:Search" modifiers="accel"/>
-#else
-    <key id="key_search" key="&searchFocus.commandkey;" command="Tools:Search" modifiers="accel"/>
+    <key id="key_search2" key="&searchFocusUnix.commandkey;" command="Tools:Search" modifiers="accel"/>
 #endif
+    <key id="key_search" key="&searchFocus.commandkey;" command="Tools:Search" modifiers="accel"/>
 #else
     <key id="key_search" key="&searchFocus.commandkey;" command="Tools:Search" modifiers="accel"/>
+    <key id="key_search2" key="&searchFocus.commandkey2;" command="Tools:Search" modifiers="accel"/>
 #endif
     <key id="openFileKb" key="&openFileCmd.commandkey;" command="Browser:OpenFile"  modifiers="accel"/>
     <key id="key_savePage" key="&savePageCmd.commandkey;" command="Browser:SavePage" modifiers="accel"/>
