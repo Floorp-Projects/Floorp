@@ -142,7 +142,7 @@
   <titledbutton id="pasteButton" class="button28" observes="Map:Paste"/>
   <titledbutton id="zoomInButton" class="button28" observes="Map:ZoomIn"/>
   <titledbutton id="zoomOutButton" class="button28" observes="Map:ZoomOut"/>
-  <titledbutton id="contrastButton" class="button28" toggled="0" onclick="highContrast()"/>
+  <titledbutton id="contrastButton" class="button28" toggled="0" oncommand="highContrast()"/>
   <spring flex="100%"/>
 </toolbar> 
 
@@ -150,10 +150,10 @@
 <box align="horizontal" flex="100">
 
   <toolbar id="toolbox" align="vertical">
-    <titledbutton id="pointerButton" class="tool" toggled="1" onclick="changeTool(event, 'pointer')"/>
-    <titledbutton id="rectButton" class="tool" onclick="changeTool(event, 'rect')"/>
-    <titledbutton id="cirButton" class="tool" onclick="changeTool(event, 'cir')"/>
-    <titledbutton id="polyButton" class="tool" onclick="changeTool(event, 'poly')"/>
+    <titledbutton id="pointerButton" class="tool" toggled="1" oncommand="changeTool(event, 'pointer')"/>
+    <titledbutton id="rectButton" class="tool" oncommand="changeTool(event, 'rect')"/>
+    <titledbutton id="cirButton" class="tool" oncommand="changeTool(event, 'cir')"/>
+    <titledbutton id="polyButton" class="tool" oncommand="changeTool(event, 'poly')"/>
     <spring flex="100%"/>
   </toolbar>
 
@@ -169,11 +169,11 @@
   <box align="horizontal">
 
     <!-- Cheap hack until I get key events hooked up
-    <titledbutton 
-    class   = "push dialog"
+    <button 
+    class   = "dialog"
     id	    = "DelButton"
     value="&delSpotCmd.label;" 
-    onclick="deleteElement(currentElement)"/> -->
+    oncommand="deleteElement(currentElement)"/> -->
     
     <spring flex="100%"/>
 

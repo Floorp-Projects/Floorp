@@ -82,7 +82,7 @@
       class   = "push dialog" 
       id      = "MoreFewerButton"
       align   = "left" 
-      onclick = "onMoreFewer()" 
+      oncommand = "onMoreFewer()" 
       persist = "more"/>
     <spring flex="1"/>
   </box>

@@ -142,7 +142,7 @@ function ValidateNumberString(value, minValue, maxValue)
 
 function ShowInputErrorMessage(message)
 {
-  editorShell.Alert(GetString("InputError"), message);
+  editorShell.AlertWithTitle(GetString("InputError"), message);
 }
 
 function GetString(name)

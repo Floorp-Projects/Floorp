@@ -41,7 +41,7 @@
   <box align="horizontal">
     <html:input type="text" class="SpellCheckWord" id="WordInput"/>
     <spring class="bigspacer"/>
-    <titledbutton class="push SizeToParent" flex="100%" id="AddWord" onclick="AddWord()" value="&AddButton.label;"/>
+    <button class="dialog" flex="100%" id="AddWord" oncommand="AddWord()" value="&AddButton.label;"/>
   </box>
   <spring class="bigspacer"/>
   <html:label for="WordInput">&DictionaryList.label;</html:label>
@@ -50,11 +50,11 @@
     <html:select class="SpellCheckList" id="DictionaryList" size="10"/>
     <spring class="bigspacer"/>
     <box align="vertical">
-      <titledbutton class="push SizeToParent"  id="ReplaceWord" onclick="ReplaceWord()" value="&ReplaceButton.label;"/>
+      <button class="dialog"  id="ReplaceWord" oncommand="ReplaceWord()" value="&ReplaceButton.label;"/>
       <spring class="spacer"/>
-      <titledbutton class="push SizeToParent"  id="RemoveWord" onclick="RemoveWord()" value="&RemoveButton.label;"/>
+      <button class="dialog"  id="RemoveWord" oncommand="RemoveWord()" value="&RemoveButton.label;"/>
       <spring flex="100%"/>
-      <titledbutton class="push CloseButton"  id="Close" onclick="onCancel()" value="&CloseButton.label;"/>
+      <button class="dialog CloseButton"  id="Close" oncommand="onCancel()" value="&CloseButton.label;"/>
     </box>
   </box>
 </box>

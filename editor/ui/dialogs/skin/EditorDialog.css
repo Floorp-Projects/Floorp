@@ -112,14 +112,15 @@ select#alignTypeSelect,label#alignLabel {
   margin-left: 5px;
 }
 
-titledbutton#MoreFewerButton[more="0"] {
+button#MoreFewerButton[more="0"] {
   margin-left: 6px;
   list-style-image: url(chrome://global/skin/scroll-down.gif);
   /* bug 9459 - changing button text doesn't resize width.
      This covers that problem, but we want this size anyway */
   width: 10em;
 }
-titledbutton#MoreFewerButton[more="1"] {
+
+button#MoreFewerButton[more="1"] {
   margin-left: 6px;
   list-style-image: url(chrome://global/skin/scroll-up.gif);
   width: 10em;
@@ -158,12 +159,6 @@ label.dialog[disabled],legend.dialog[disabled] {
     color: gray;
 }
 
-titledbutton.SizeToParent {
-  width: 100%;
-  /* A hack to get buttons to be the same width */
-  min-width: 5em;
-}
-
 spring.smallspacer {
   width:  3px;
   height: 3px;
@@ -191,19 +186,19 @@ img.AlignIcon {
   /*vertical-align: middle;*/
 }
 
-titledbutton#img-align-top {
+button#img-align-top {
 	list-style-image:url("chrome://editor/skin/images/img-align-top.gif");
 }
-titledbutton#img-align-middle {
+button#img-align-middle {
 	list-style-image:url("chrome://editor/skin/images/img-align-middle.gif");
 }
-titledbutton#img-align-bottom {
+button#img-align-bottom {
 	list-style-image:url("chrome://editor/skin/images/img-align-bottom.gif");
 }
-titledbutton#img-align-left {
+button#img-align-left {
 	list-style-image:url("chrome://editor/skin/images/img-align-left.gif");
 }
-titledbutton#img-align-right {
+button#img-align-right {
 	list-style-image:url("chrome://editor/skin/images/img-align-right.gif");
 }
 
