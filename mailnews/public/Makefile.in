@@ -23,6 +23,12 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 EXPORTS= \
+		nsIMsgHost.h \
 		$(NULL)
+
+IDLSRCS = \
+		nsIMsgHost.idl \
+		$(NULL)
+
 
 include $(topsrcdir)/config/rules.mk
