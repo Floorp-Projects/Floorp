@@ -662,7 +662,8 @@ NS_IMETHODIMP nsChromeRegistry::GetOverlayDataSource(nsIURI *aChromeURL, nsIRDFD
   if (NS_FAILED(rv)) return rv;
 
   // Retrieve the mInner data source.
-  nsCAutoString overlayFile = package;
+  nsCAutoString overlayFile = "overlayinfo/";
+  overlayFile += package;
   overlayFile += "/";
   overlayFile += provider;
   overlayFile += "/";
@@ -974,8 +975,8 @@ nsChromeRegistry::ProcessStyleSheet(nsIURL* aURL, nsICSSLoader* aLoader, nsIDocu
   return rv;
 }
 
-NS_IMETHODIMP nsChromeRegistry::ReallyUpdateOverlayFromDataSource(const PRUnichar *aDocURI,
-                                                                  char *aOverlayURI,
+NS_IMETHODIMP nsChromeRegistry::ReallyUpdateOverlayFromDataSource(char *aDocURI,
+                                                                  const PRUnichar *aOverlayURI,
                                                                   PRBool aRemove)
 {
   nsresult rv;
@@ -989,7 +990,7 @@ NS_IMETHODIMP nsChromeRegistry::ReallyUpdateOverlayFromDataSource(const PRUnicha
   if (NS_FAILED(rv))
     return NS_OK;
 
-  nsCAutoString str; str.AssignWithConversion(aDocURI);
+  nsCAutoString str(aDocURI);
   url->SetSpec(str);
   nsCOMPtr<nsIRDFDataSource> dataSource;
   GetOverlayDataSource(url, getter_AddRefs(dataSource));
@@ -998,25 +999,23 @@ NS_IMETHODIMP nsChromeRegistry::ReallyUpdateOverlayFromDataSource(const PRUnicha
     return NS_OK;
 
   nsCOMPtr<nsIRDFResource> resource;
-  nsCAutoString aDocURIString; aDocURIString.AssignWithConversion(aDocURI);
-  rv = GetResource(aDocURIString, getter_AddRefs(resource));
+  rv = GetResource(str, getter_AddRefs(resource));
 
   if (NS_FAILED(rv))
     return NS_OK;
 
   nsCOMPtr<nsIRDFContainer> container;
+  mRDFContainerUtils->MakeSeq(dataSource, resource, getter_AddRefs(container));
+  if (!container) {
+    // Already exists. Create a container instead.
+    rv = nsComponentManager::CreateInstance("component://netscape/rdf/container",
+                                      nsnull,
+                                      NS_GET_IID(nsIRDFContainer),
+                                      getter_AddRefs(container));
+    container->Init(dataSource, resource);
+  }
 
-  rv = nsComponentManager::CreateInstance("component://netscape/rdf/container",
-                                          nsnull,
-                                          NS_GET_IID(nsIRDFContainer),
-                                          getter_AddRefs(container));
-  if (NS_FAILED(rv))
-    return NS_ERROR_FAILURE;
-  
-  if (NS_FAILED(container->Init(dataSource, resource)))
-    return NS_ERROR_FAILURE;
-
-  nsAutoString unistr; unistr.AssignWithConversion(aOverlayURI);
+  nsAutoString unistr(aOverlayURI);
   nsCOMPtr<nsIRDFLiteral> literal;
   mRDFService->GetLiteral(unistr.GetUnicode(), getter_AddRefs(literal));
 
@@ -1060,7 +1059,7 @@ NS_IMETHODIMP nsChromeRegistry::UpdateOverlay(nsIRDFDataSource *aDataSource, nsI
 
   PRBool moreElements;
   arcs->HasMoreElements(&moreElements);
-  
+
   char *value;
   aResource->GetValue(&value);
 
@@ -1078,7 +1077,7 @@ NS_IMETHODIMP nsChromeRegistry::UpdateOverlay(nsIRDFDataSource *aDataSource, nsI
       if (NS_FAILED(rv))
         return rv;
 
-      ReallyUpdateOverlayFromDataSource(valueStr, value, aRemove);
+      ReallyUpdateOverlayFromDataSource(value, valueStr, aRemove);
     }
     arcs->HasMoreElements(&moreElements);
   }
@@ -1093,7 +1092,7 @@ NS_IMETHODIMP nsChromeRegistry::UpdateOverlays(nsIRDFDataSource *aDataSource,
 {
   nsresult rv;
   nsCOMPtr<nsIRDFResource> resource;
-  rv = GetResource("chrome:overlays", getter_AddRefs(resource));
+  rv = GetResource("urn:mozilla:overlays", getter_AddRefs(resource));
 
   if (!resource)
     return NS_OK;
