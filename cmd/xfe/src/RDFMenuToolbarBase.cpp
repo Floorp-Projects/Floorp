@@ -59,13 +59,6 @@
 #define CASCADE_WC(fancy) \
 ( (fancy) ? xfeBmCascadeWidgetClass : xmCascadeButtonWidgetClass )
 
-// Used to pass data to the callbacks
-typedef struct _ItemCallbackStruct
-{
-    XFE_RDFMenuToolbarBase * object;
-    HT_Resource entry;
-} ItemCallbackStruct;
-
 //////////////////////////////////////////////////////////////////////////
 XFE_RDFMenuToolbarBase::XFE_RDFMenuToolbarBase( XFE_Frame *  frame,
                           XP_Bool        onlyHeaders /*= FALSE*/,
@@ -1085,125 +1078,6 @@ XFE_RDFMenuToolbarBase::createSeparator(Widget menu)
     XtManageChild(separator);
     
     return separator;
-}
-//////////////////////////////////////////////////////////////////////////
-Widget 
-XFE_RDFMenuToolbarBase::createXfeCascade(Widget parent,HT_Resource entry)
-{
-    XP_ASSERT( XfeIsAlive(parent) );
-
-    D(printf("Create xfe cascade : %s\n",HT_GetNodeName(entry)));
-
-    Widget                  cascade;
-    Widget                  submenu;
-    Arg                     av[5];
-    Cardinal                ac;
-    ItemCallbackStruct *    data = NULL;
-
-    ac = 0;
-    XtSetArg(av[ac],XmNuserData, entry);  ac++;
-
-    cascade = XfeCreateCascade(parent,"bookmarkCascade",av,ac);
-
-    // Set the item's label
-    setItemLabelString(cascade,entry);
-
-    configureXfeCascade(cascade,entry);
-
-    // Create a new bookmark data structure for the callbacks
-    data = XP_NEW_ZAP(ItemCallbackStruct);
-
-    data->object   = this;
-    data->entry    = entry;
-
-    XtAddCallback(cascade,
-                  XmNcascadingCallback,
-                  &XFE_RDFMenuToolbarBase::item_cascading_cb,
-                  (XtPointer) data);
-
-    XtAddCallback(cascade,
-                  XmNdestroyCallback,
-                  &XFE_RDFMenuToolbarBase::item_free_data_cb,
-                  (XtPointer) data);
-
-    // Obtain the cascade's submenu
-    XtVaGetValues(cascade,XmNsubMenuId,&submenu,NULL);
-
-    // Keep track of the submenu mapping
-    trackSubmenuMapping(submenu);
-
-    return cascade;
-}
-//////////////////////////////////////////////////////////////////////////
-Widget 
-XFE_RDFMenuToolbarBase::createXfeButton(Widget parent,HT_Resource entry)
-{
-    XP_ASSERT( XfeIsAlive(parent) );
-
-    D(printf("Create xfe push : %s\n",HT_GetNodeName(entry)));
-
-    Widget                  button;
-    Arg                     av[20];
-    Cardinal                ac;
-    ItemCallbackStruct *    data = NULL;
-
-    ac = 0;
-    XtSetArg(av[ac],XmNuserData, entry);  ac++;
-
-    button = XfeCreateButton(parent,"bookmarkButton",av,ac);
-
-    // Set the item's label
-    setItemLabelString(button,entry);
-
-    configureXfeButton(button,entry);
-
-    // Create a new bookmark data structure for the callbacks
-    data = XP_NEW_ZAP(ItemCallbackStruct);
-
-    data->object    = this;
-    data->entry     = entry;
-
-    XtAddCallback(button,
-                  XmNactivateCallback,
-                  &XFE_RDFMenuToolbarBase::item_activated_cb,
-                  (XtPointer) data);
-
-    XtAddCallback(button,
-                  XmNarmCallback,
-                  &XFE_RDFMenuToolbarBase::item_armed_cb,
-                  (XtPointer) data);
-
-    XtAddCallback(button,
-                  XmNdisarmCallback,
-                  &XFE_RDFMenuToolbarBase::item_disarmed_cb,
-                  (XtPointer) data);
-
-    XtAddCallback(button,
-                  XmNenterCallback,
-                  &XFE_RDFMenuToolbarBase::item_enter_cb,
-                  (XtPointer) data);
-
-    XtAddCallback(button,
-                  XmNleaveCallback,
-                  &XFE_RDFMenuToolbarBase::item_leave_cb,
-                  (XtPointer) data);
-
-    XtAddCallback(button,
-                  XmNdestroyCallback,
-                  &XFE_RDFMenuToolbarBase::item_free_data_cb,
-                  (XtPointer) data);
-
-    return button;
-}
-//////////////////////////////////////////////////////////////////////////
-/* virtual */ void
-XFE_RDFMenuToolbarBase::configureXfeCascade(Widget /*item*/,HT_Resource /*entry*/)
-{
-}
-//////////////////////////////////////////////////////////////////////////
-/* virtual */ void
-XFE_RDFMenuToolbarBase::configureXfeButton(Widget /*item*/,HT_Resource /*entry*/)
-{
 }
 //////////////////////////////////////////////////////////////////////////
 /* virtual */ void

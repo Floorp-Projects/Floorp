@@ -73,6 +73,12 @@ protected:
     // Override RDFMenuToolbarBase methods
 	virtual void	configureXfeButton		(Widget, HT_Resource);
 	virtual void	configureXfeCascade		(Widget, HT_Resource);
+
+    // Toolbar component creation methods
+    Widget    createXfeCascade        (Widget parent, HT_Resource entry);
+    Widget    createXfeButton         (Widget parent, HT_Resource entry);
+
+    // Override RDFMenuToolbarBase methods
 	virtual void	prepareToUpdateRoot		();
 	virtual void	updateRoot      		();
 	virtual void	updateAppearance		();

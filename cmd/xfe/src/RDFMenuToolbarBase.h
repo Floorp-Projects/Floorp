@@ -34,6 +34,16 @@
 #include "RDFBase.h"
 
 class XFE_Frame;
+class XFE_RDFMenuToolbarBase;
+
+// Used to pass data to the callbacks
+typedef struct _ItemCallbackStruct
+{
+    XFE_RDFMenuToolbarBase * object;
+    HT_Resource entry;
+} ItemCallbackStruct;
+
+//////////////////////////////////////////////////////////////////////////
 
 class XFE_RDFMenuToolbarBase : public XFE_NotificationCenter,
                                public XFE_RDFBase
@@ -188,8 +198,6 @@ protected:
     virtual void    updateToolbarFolderName   ();
 
     // Configure the items
-    virtual void    configureXfeCascade       (Widget, HT_Resource);
-    virtual void    configureXfeButton        (Widget, HT_Resource);
     virtual void    configureXfeBmButton      (Widget, HT_Resource);
     virtual void    configureXfeBmCascade     (Widget, HT_Resource);
     virtual void    configureButton           (Widget, HT_Resource);
@@ -203,13 +211,11 @@ protected:
     Widget    createSeparator         (Widget menu);
     Widget    createMoreButton        (Widget menu);
 
-    // Toolbar component creation methods
-    Widget    createXfeCascade        (Widget parent, HT_Resource entry);
-    Widget    createXfeButton         (Widget parent, HT_Resource entry);
-
     HT_Resource getAddFolder          ();
     HT_Resource getMenuFolder         ();
-	XP_Bool		getOnlyHeaders			();
+	XP_Bool		getOnlyHeaders		  ();
+
+    void        setItemLabelString    (Widget menu, HT_Resource entry);
 
 private:
 
@@ -240,9 +246,6 @@ private:
     // Obtain an internationallized XmString from an entry
     static XmString  entryToXmString    (HT_Resource        entry,
                                          INTL_CharSetInfo   char_set_info);
-
-
-    void             setItemLabelString (Widget menu, HT_Resource entry);
 
     void             createPixmaps      ();
 
