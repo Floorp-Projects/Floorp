@@ -34,7 +34,7 @@ nsresult
 GetHTMLEditFactory(nsIFactory **aFactory, const nsCID & aClass)
 {
   static nsCOMPtr<nsIFactory>  g_pNSIFactory;
-  PR_EnterMonitor(getEditorMonitor());
+  PR_EnterMonitor(GetEditorMonitor());
   nsresult result = NS_ERROR_FAILURE;
   if (!g_pNSIFactory)
   {
@@ -44,7 +44,7 @@ GetHTMLEditFactory(nsIFactory **aFactory, const nsCID & aClass)
       result = NS_OK;
   }
   result = g_pNSIFactory->QueryInterface(kIFactoryIID, (void **)aFactory);
-  PR_ExitMonitor(getEditorMonitor());
+  PR_ExitMonitor(GetEditorMonitor());
   return result;
 }
 
