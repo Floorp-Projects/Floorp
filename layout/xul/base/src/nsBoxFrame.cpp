@@ -2244,6 +2244,7 @@ nsBoxFrameInner::DisplayDebugInfoFor(nsIBox* aBox,
                         nsSize minSize (0, 0);
                         nsSize maxSize (NS_INTRINSICSIZE, NS_INTRINSICSIZE);
                         nscoord flexSize = 0;
+                        nscoord ascentSize = 0;
 
 
                         nsIBox::AddCSSPrefSize(state, child, prefSizeCSS);
@@ -2255,12 +2256,14 @@ nsBoxFrameInner::DisplayDebugInfoFor(nsIBox* aBox,
                         child->GetMinSize(state, minSize);
                         child->GetMaxSize(state, maxSize);
                         child->GetFlex(state, flexSize);
+                        child->GetAscent(state, ascentSize);
 
                         char min[100];
                         char pref[100];
                         char max[100];
                         char calc[100];
                         char flex[100];
+                        char ascent[100];
                       
                         nsSize actualSize;
                         GetFrameSizeWithMargin(child, actualSize);
@@ -2271,14 +2274,16 @@ nsBoxFrameInner::DisplayDebugInfoFor(nsIBox* aBox,
                         GetValue(aPresContext, maxSize,  maxSizeCSS, max);
                         GetValue(aPresContext, actualSize, actualSizeCSS, calc);
                         GetValue(aPresContext, flexSize,  flexCSS, flex);
+                        GetValue(aPresContext, ascentSize,  NS_INTRINSICSIZE, ascent);
 
 
-                        printf("min%s, pref%s, max%s, actual%s, flex=%s\n\n", 
+                        printf("min%s, pref%s, max%s, actual%s, flex=%s, ascent=%s\n\n", 
                             min,
                             pref,
                             max,
                             calc,
-                            flex
+                            flex,
+                            ascent
                         );
 
                         return NS_OK;   

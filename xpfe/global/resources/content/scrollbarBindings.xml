@@ -70,11 +70,6 @@
     </handlers>
   </binding>
 
-  <binding id="slider">
-    <content>
-	  <xul:button align="horizontal"/>
-	</content>
-  </binding>
 
 </bindings>
 

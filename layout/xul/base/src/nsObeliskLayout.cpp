@@ -373,7 +373,8 @@ nsObeliskLayout::ComputeChildSizes(nsIBox* aBox,
     aBox->GetParentBox(&aBox);
   }
 
-  NS_ERROR("Not in GRID!!!");
+  // Not in GRID!!! do the default.
+  nsSprocketLayout::ComputeChildSizes(aBox, aState, aGivenSize, aBoxSizes, aComputedBoxSizes);
 }
 
 void 

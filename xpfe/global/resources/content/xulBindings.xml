@@ -17,24 +17,22 @@
     </content>
   </binding>
 
+  <binding id="slider">
+    <content>
+      <xul:thumb inherits="align,src" flex="1"/>
+    </content>
+  </binding>
+
   <binding id="scrollbar">
     <content>
       <xul:scrollbarbutton type="decrement">
 	      <xul:image inherits="src"/>
 	    </xul:scrollbarbutton>
-      <xul:slider flex="1" inherits="curpos,maxpos,pageincrement,increment">
-	      <xul:thumb inherits="align,src" flex="1"/>
-      </xul:slider>
+      <xul:slider flex="1" inherits="curpos,maxpos,pageincrement,increment"/>
       <xul:scrollbarbutton type="increment">
 	    <xul:image inherits="src"/>
 	  </xul:scrollbarbutton>
     </content>
-  </binding>
-
-  <binding id="slider">
-    <content>
-	  <xul:button align="horizontal"/>
-	</content>
   </binding>
 
   <binding id="tab">
