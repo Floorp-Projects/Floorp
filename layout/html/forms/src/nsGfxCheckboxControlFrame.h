@@ -38,6 +38,12 @@ public:
   }
 #endif
 
+  // overrides base class HandleEvent to do nothing
+  // events are handled by the DOM
+  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
+                         nsGUIEvent* aEvent,
+                         nsEventStatus* aEventStatus) { return NS_OK; }
+
   NS_IMETHOD Paint(nsIPresContext* aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
