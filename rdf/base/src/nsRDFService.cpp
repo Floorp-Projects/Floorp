@@ -726,11 +726,11 @@ ServiceImpl::RegisterBuiltInNamedDataSources(void)
     extern nsresult NS_NewRDFBookmarkDataSource(nsIRDFDataSource** result);
     extern nsresult NS_NewRDFHistoryDataSource(nsIRDFDataSource** result);
     extern nsresult NS_NewRDFLocalFileSystemDataSource(nsIRDFDataSource** result);
-    extern nsresult NS_NewRDFMailDataSource(nsIRDFDataSource** result);
+//    extern nsresult NS_NewRDFMailDataSource(nsIRDFDataSource** result);
 
     static DataSourceTable gTable[] = {
         "rdf:bookmarks",      NS_NewRDFBookmarkDataSource,
-        "rdf:mail",           NS_NewRDFMailDataSource, 
+//        "rdf:mail",           NS_NewRDFMailDataSource, 
 #if 0
         "rdf:history",        NS_NewRDFHistoryDataSource,
         "rdf:lfs",            NS_NewRDFLocalFileSystemDataSource,
