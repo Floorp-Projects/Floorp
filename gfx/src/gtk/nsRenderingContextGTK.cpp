@@ -296,12 +296,7 @@ NS_IMETHODIMP nsRenderingContextGTK::PopState(PRBool &aClipEmpty)
     if (mFontMetrics != state->mFontMetrics)
       SetFont(state->mFontMetrics);
 
-    if (mSurface && mClipRegion)
-    {
-      GdkRegion *rgn;
-      mClipRegion->GetNativeRegion((void*&)rgn);
-      ::gdk_gc_set_clip_region (mSurface->GetGC(), rgn);
-    }
+    mClipIsSet = PR_FALSE;
 
     if (state->mColor != mCurrentColor)
       SetColor(state->mColor);
@@ -393,12 +388,13 @@ NS_IMETHODIMP nsRenderingContextGTK::SetClipRect(const nsRect& aRect,
                                                  PRBool &aClipEmpty)
 {
   nsRect trect = aRect;
-  GdkRegion *rgn;
 
 #ifdef TRACE_SET_CLIP
   printf("nsRenderingContextGTK::SetClipRect(%s)\n",
          nsClipCombine_to_string(aCombine));
 #endif // TRACE_SET_CLIP
+
+  mClipIsSet = PR_FALSE;
 
   mTMatrix->TransformCoord(&trect.x, &trect.y,
                            &trect.width, &trect.height);
@@ -426,21 +422,30 @@ NS_IMETHODIMP nsRenderingContextGTK::SetClipRect(const nsRect& aRect,
 #endif
   aClipEmpty = mClipRegion->IsEmpty();
 
-  mClipRegion->GetNativeRegion((void*&)rgn);
-  ::gdk_gc_set_clip_region(mSurface->GetGC(),rgn);
-
   return NS_OK;
+}
+
+void nsRenderingContextGTK::DoSetClipRegion()
+{
+  if (mClipIsSet)
+    return;
+
+  GdkRegion *rgn;
+  mClipRegion->GetNativeRegion((void*&)rgn);
+  gdk_gc_set_clip_region(mSurface->GetGC(),rgn);
+
+  mClipIsSet = PR_TRUE;
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::SetClipRegion(const nsIRegion& aRegion,
                                                    nsClipCombine aCombine,
                                                    PRBool &aClipEmpty)
 {
-  GdkRegion *rgn;
- 
   if(!mClipRegion) {
     return NS_ERROR_FAILURE;
   }
+
+  mClipIsSet = PR_FALSE;
 
   switch(aCombine)
   {
@@ -459,8 +464,6 @@ NS_IMETHODIMP nsRenderingContextGTK::SetClipRegion(const nsIRegion& aRegion,
   }
 
   aClipEmpty = mClipRegion->IsEmpty();
-  mClipRegion->GetNativeRegion((void*&)rgn);
-  ::gdk_gc_set_clip_region(mSurface->GetGC(),rgn);
 
   return NS_OK;
 }
@@ -689,6 +692,8 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawLine(nscoord aX0, nscoord aY0, nscoord 
     aX1--;
   }
 
+  DoSetClipRegion();
+
   ::gdk_draw_line(mSurface->GetDrawable(),
                   mSurface->GetGC(),
                   aX0, aY0, aX1, aY1);
@@ -712,6 +717,8 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawPolyline(const nsPoint aPoints[], PRInt
     pts[i].y = p.y;
     printf("(%i,%i)\n", p.x, p.y);
   }
+
+  DoSetClipRegion();
 
   ::gdk_draw_lines(mSurface->GetDrawable(),
                    mSurface->GetGC(),
@@ -753,6 +760,9 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawRect(nscoord aX, nscoord aY, nscoord aW
   // Don't draw empty rectangles; also, w/h are adjusted down by one
   // so that the right number of pixels are drawn.
   if (w && h) {
+
+    DoSetClipRegion();
+
     ::gdk_draw_rectangle(mSurface->GetDrawable(), mSurface->GetGC(),
                          FALSE,
                          x, y,
@@ -787,6 +797,8 @@ NS_IMETHODIMP nsRenderingContextGTK::FillRect(nscoord aX, nscoord aY, nscoord aW
   // they're going to be converted from 32 bit to 16 bit.
   // It's all way off the screen anyway.
   ConditionRect(x,y,w,h);
+
+  DoSetClipRegion();
 
   ::gdk_draw_rectangle(mSurface->GetDrawable(), mSurface->GetGC(),
                        TRUE,
@@ -823,6 +835,8 @@ NS_IMETHODIMP nsRenderingContextGTK::InvertRect(nscoord aX, nscoord aY, nscoord 
   // Set XOR drawing mode
   ::gdk_gc_set_function(mSurface->GetGC(),GDK_XOR);  
 
+  DoSetClipRegion();
+
   // Fill the rect
   ::gdk_draw_rectangle(mSurface->GetDrawable(), mSurface->GetGC(),
                        TRUE,
@@ -847,6 +861,9 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawPolygon(const nsPoint aPoints[], PRInt3
 		pts[i].x = p.x;
     pts[i].y = p.y;
 	}
+
+  DoSetClipRegion();
+
   ::gdk_draw_polygon(mSurface->GetDrawable(), mSurface->GetGC(), FALSE, pts, aNumPoints);
 
   delete[] pts;
@@ -867,6 +884,9 @@ NS_IMETHODIMP nsRenderingContextGTK::FillPolygon(const nsPoint aPoints[], PRInt3
 		pts[i].x = p.x;
     pts[i].y = p.y;
 	}
+
+  DoSetClipRegion();
+
   ::gdk_draw_polygon(mSurface->GetDrawable(), mSurface->GetGC(), TRUE, pts, aNumPoints);
 
   delete[] pts;
@@ -893,6 +913,8 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawEllipse(nscoord aX, nscoord aY, nscoord
 
   mTMatrix->TransformCoord(&x,&y,&w,&h);
 
+  DoSetClipRegion();
+
   ::gdk_draw_arc(mSurface->GetDrawable(), mSurface->GetGC(), FALSE,
                  x, y, w, h,
                  0, 360 * 64);
@@ -918,6 +940,8 @@ NS_IMETHODIMP nsRenderingContextGTK::FillEllipse(nscoord aX, nscoord aY, nscoord
   h = aHeight;
 
   mTMatrix->TransformCoord(&x,&y,&w,&h);
+
+  DoSetClipRegion();
 
   ::gdk_draw_arc(mSurface->GetDrawable(), mSurface->GetGC(), TRUE,
                  x, y, w, h,
@@ -947,6 +971,8 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawArc(nscoord aX, nscoord aY,
   h = aHeight;
 
   mTMatrix->TransformCoord(&x,&y,&w,&h);
+
+  DoSetClipRegion();
 
   ::gdk_draw_arc(mSurface->GetDrawable(), mSurface->GetGC(), FALSE,
                  x, y, w, h,
@@ -978,6 +1004,8 @@ NS_IMETHODIMP nsRenderingContextGTK::FillArc(nscoord aX, nscoord aY,
   h = aHeight;
 
   mTMatrix->TransformCoord(&x,&y,&w,&h);
+
+  DoSetClipRegion();
 
   ::gdk_draw_arc(mSurface->GetDrawable(), mSurface->GetGC(), TRUE,
                  x, y, w, h,
@@ -1198,6 +1226,8 @@ nsRenderingContextGTK::DrawString(const char *aString, PRUint32 aLength,
       y += aY;
     }
 
+    DoSetClipRegion();
+
     if (nsnull != aSpacing) {
       // Render the string, one character at a time...
       const char* end = aString + aLength;
@@ -1272,6 +1302,8 @@ nsRenderingContextGTK::DrawString(const PRUnichar* aString, PRUint32 aLength,
 
     nscoord x = aX;
     nscoord y;
+
+    DoSetClipRegion();
 
     // Substract xFontStruct ascent since drawing specifies baseline
     mFontMetrics->GetMaxAscent(y);
@@ -1373,6 +1405,8 @@ nsRenderingContextGTK::DrawString(const PRUnichar* aString, PRUint32 aLength,
       mFontMetrics->GetMaxAscent(y);
       y += aY;
     }
+
+    DoSetClipRegion();
 
     if (nsnull != aSpacing) {
       // Render the string, one character at a time...
@@ -1483,6 +1517,8 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawImage(nsIImage *aImage,
   SetColor(color);
 #endif
 
+  DoSetClipRegion();
+
   return aImage->Draw(*this, mSurface,
                       x, y, w, h);
 }
@@ -1520,6 +1556,8 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawImage(nsIImage *aImage,
   FillRect(x, y, w, h);
   SetColor(color);
 #endif
+
+  DoSetClipRegion();
 
   return aImage->Draw(*this, mSurface,
                       sr.x, sr.y,
@@ -1590,6 +1628,9 @@ nsRenderingContextGTK::CopyOffScreenBits(nsDrawingSurface aSrcSurf,
 
   // gdk_draw_pixmap and copy_area do the same thing internally.
   // copy_area sounds better
+
+  DoSetClipRegion();
+
   ::gdk_window_copy_area(destsurf->GetDrawable(),
                          ((nsDrawingSurfaceGTK *)aSrcSurf)->GetGC(),
                          drect.x, drect.y,
