@@ -2400,6 +2400,9 @@ nsHttpChannel::PromptForIdentity(const char *scheme,
     if (!authPrompt)
         return NS_ERROR_NO_INTERFACE;
 
+    // XXX i18n: need to support non-ASCII realm strings (see bug 41489)
+    NS_ConvertASCIItoUTF16 realmU(realm);
+
     //
     // construct the single signon key
     //
@@ -2417,7 +2420,7 @@ nsHttpChannel::PromptForIdentity(const char *scheme,
     key.Append(PRUnichar(':'));
     key.AppendInt(port);
     key.AppendLiteral(" (");
-    AppendASCIItoUTF16(realm, key);
+    key.Append(realmU);
     key.Append(PRUnichar(')'));
 
     nsresult rv;
@@ -2434,38 +2437,24 @@ nsHttpChannel::PromptForIdentity(const char *scheme,
     // figure out what message to display...
     nsAutoString displayHost;
     CopyASCIItoUTF16(host, displayHost); // XXX IDN?
-    // Add port only if it was originally specified in the URI
+    // If not proxy auth then add port only if it was originally specified
+    // in the URI.
     PRInt32 uriPort = -1;
-    mURI->GetPort(&uriPort);
-    if (uriPort != -1) {
+    if (proxyAuth || (NS_SUCCEEDED(mURI->GetPort(&uriPort)) && uriPort != -1)) {
         displayHost.Append(PRUnichar(':'));
         displayHost.AppendInt(port);
     }
+
     nsXPIDLString message;
-    if (proxyAuth) {
-        const PRUnichar *strings[] = { displayHost.get() };
-        rv = bundle->FormatStringFromName(
-                        NS_LITERAL_STRING("EnterUserPasswordForProxy").get(),
-                        strings, 1,
-                        getter_Copies(message));
-    }
-    else {
-        nsAutoString realmU;
-        realmU.Assign(PRUnichar('\"'));
-        AppendASCIItoUTF16(realm, realmU);
-        realmU.Append(PRUnichar('\"'));
-
-        // prepend "scheme://" displayHost
-        nsAutoString schemeU;
-        CopyASCIItoUTF16(scheme, schemeU);
-        schemeU.AppendLiteral("://");
-        displayHost.Insert(schemeU, 0);
-
+    {
+        NS_NAMED_LITERAL_STRING(proxyText, "EnterUserPasswordForProxy");
+        NS_NAMED_LITERAL_STRING(originText, "EnterUserPasswordForRealm");
+        const PRUnichar *text = proxyAuth ? proxyText.get() : originText.get();
+ 
         const PRUnichar *strings[] = { realmU.get(), displayHost.get() };
-        rv = bundle->FormatStringFromName(
-                        NS_LITERAL_STRING("EnterUserPasswordForRealm").get(),
-                        strings, 2,
-                        getter_Copies(message));
+
+        rv = bundle->FormatStringFromName(text, strings, 2,
+                                          getter_Copies(message));
     }
     if (NS_FAILED(rv)) return rv;
 
