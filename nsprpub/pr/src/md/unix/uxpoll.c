@@ -173,6 +173,7 @@ static PRInt32 NativeThreadPoll(
         {
             /* make poll() ignore this entry */
             syspoll[index].fd = -1;
+            syspoll[index].events = 0;
             pds[index].out_flags = 0;
         }
     }
