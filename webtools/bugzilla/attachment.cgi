@@ -499,7 +499,7 @@ sub update
   #system ("./processmail", $bugid , $::userid);
   #my $mailresults = `./processmail $bugid $::userid`;
   my $mailresults = '';
-  open(PMAIL, "-|") or exec('./processmail', $bugid, $::userid);
+  open(PMAIL, "-|") or exec('./processmail', $bugid, DBID_to_name($::userid));
   $mailresults .= $_ while <PMAIL>;
   close(PMAIL);
  
