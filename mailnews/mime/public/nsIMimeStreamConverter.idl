@@ -1,0 +1,61 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+/*
+	I've created this interface to contain mailnews mime specific information
+	for stream converters. Most of this code is just stuff that has been moved out
+	of nsIStreamConverter.idl to make it more generic.
+*/
+
+#include "nsISupports.idl"
+#include "nsrootidl.idl"
+
+interface nsIURI;
+
+typedef long nsMimeOutputType;
+
+[scriptable, uuid(E4ED8894-3F9E-11d3-9896-001083010E9B)] 
+interface nsMimeOutput
+{ 
+    const long nsMimeMessageSplitDisplay = 0;
+    const long nsMimeMessageHeaderDisplay = 1;
+    const long nsMimeMessageBodyDisplay = 2;
+	const long nsMimeMessageQuoting = 3;
+	const long nsMimeMessageRaw = 4;
+	const long nsMimeMessageDraftOrTemplate = 5;
+	const long nsMimeMessageEditorTemplate = 6;
+	const long nsMimeUnknown = 7;
+}; 
+
+[scriptable, uuid(E4ED8892-3F9E-11d3-9896-001083010E9B)]
+interface nsIMimeStreamConverter : nsISupports {
+
+    /* 
+	 * This is used to set the desired mime output type on the converer. 
+     */
+
+	void SetMimeOutputType(in nsMimeOutputType aType);
+
+	void GetMimeOutputType(out nsMimeOutputType aOutFormat);
+    
+	/* 
+     * This is needed by libmime for MHTML link processing...the url is the URL string associated
+     * with this input stream
+     */ 
+    void SetStreamURI(in nsIURI aURI); 
+};
