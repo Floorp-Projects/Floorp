@@ -203,6 +203,7 @@ nsHTMLEditor::CheckSelectionStateForAnonymousButtons(nsISelection * aSelection)
   nsCOMPtr<nsIDOMElement> focusElement;
   // let's get the containing element of the selection
   nsresult res  = GetSelectionContainer(getter_AddRefs(focusElement));
+  if (!focusElement) return NS_OK;
   if (NS_FAILED(res)) return res;
 
   // what's its tag?
