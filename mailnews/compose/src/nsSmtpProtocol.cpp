@@ -1629,10 +1629,9 @@ NS_IMETHODIMP nsSmtpProtocol::OnLogonRedirectionReply(const PRUnichar * aHost, u
   NS_ENSURE_TRUE(smtpServer, NS_ERROR_FAILURE);
   NS_ENSURE_TRUE(m_logonRedirector, NS_ERROR_FAILURE);
  
-  // logoff 
-	nsXPIDLCString userName;
-  smtpServer->GetUsername(getter_Copies(userName));
-  m_logonRedirector->Logoff(userName);
+  // we used to logoff from the requestor but we don't want to do
+  // that anymore in the success case. We want to end up caching the
+  // external connection for the entire session.
   m_logonRedirector = nsnull; // we don't care about it anymore
 	
   // remember the logon cookie

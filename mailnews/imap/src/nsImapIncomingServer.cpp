@@ -1228,7 +1228,7 @@ nsImapIncomingServer::FEAlert(const PRUnichar* aString)
 	nsresult rv;
 	NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
 
-	rv = dialog->Alert(nsAutoString(aString).GetUnicode());
+	rv = dialog->Alert(aString);
     return rv;
 }
 
@@ -1684,14 +1684,8 @@ NS_IMETHODIMP nsImapIncomingServer::OnLogonRedirectionReply(const PRUnichar *pHo
   if (NS_SUCCEEDED(rv) && pEventQService)
         pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
                                             getter_AddRefs(aEventQueue));
-	// logoff so some one else can use the connection.
-	if (m_logonRedirector)
-	{
-		nsXPIDLCString userName;
-
-		GetUsername(getter_Copies(userName));
-		m_logonRedirector->Logoff(userName);
-	}
+  // we used to logoff the external requestor...we no longer need to do
+  // that.
 
 	m_redirectedLogonRetries = 0; // we got through, so reset this counter.
 
