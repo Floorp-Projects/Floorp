@@ -59,7 +59,9 @@
  */
 static nsresult getScriptCodebase(JSContext* cx, nsIURI* *result)
 {
-    nsIScriptContext* scriptContext = NS_REINTERPRET_CAST(nsIScriptContext*, JS_GetContextPrivate(cx));
+    nsCOMPtr<nsIScriptContext> scriptContext;
+    GetScriptContextFromJSContext(cx, getter_AddRefs(scriptContext));
+
     if (scriptContext) {
         nsCOMPtr<nsIScriptGlobalObject> scriptGlobal;
         scriptContext->GetGlobalObject(getter_AddRefs(scriptGlobal));

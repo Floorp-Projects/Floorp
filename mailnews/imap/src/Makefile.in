@@ -40,7 +40,7 @@ REQUIRES	= xpcom \
 		  necko \
 		  appshell \
 		  msgdb \
-      		  dom \
+		  dom \
 		  uconv \
 		  unicharutil \
 		  mime \

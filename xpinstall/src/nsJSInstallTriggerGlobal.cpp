@@ -237,7 +237,8 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
     {
         PRBool result;
 
-        nsCOMPtr<nsIScriptContext> scriptContext = (nsIScriptContext*) JS_GetContextPrivate(cx);
+        nsCOMPtr<nsIScriptContext> scriptContext;
+        GetScriptContextFromJSContext(cx, getter_AddRefs(scriptContext));
         if (scriptContext)
         {
             nsCOMPtr<nsIScriptGlobalObject> globalObject;
@@ -318,7 +319,9 @@ InstallTriggerGlobalInstallChrome(JSContext *cx, JSObject *obj, uintN argc, jsva
         if (item && item->IsRelativeURL())
             item->mURL.Insert( baseURL, 0 );
 
-        nsCOMPtr<nsIScriptContext> scriptContext = (nsIScriptContext*) JS_GetContextPrivate(cx);
+        nsCOMPtr<nsIScriptContext> scriptContext;
+        GetScriptContextFromJSContext(cx, getter_AddRefs(scriptContext));
+
         if (scriptContext)
         {
             nsCOMPtr<nsIScriptGlobalObject> globalObject;
@@ -368,7 +371,9 @@ InstallTriggerGlobalStartSoftwareUpdate(JSContext *cx, JSObject *obj, uintN argc
         return JS_FALSE;
     }
 
-    nsCOMPtr<nsIScriptContext> scriptContext = (nsIScriptContext*) JS_GetContextPrivate(cx);
+    nsCOMPtr<nsIScriptContext> scriptContext;
+    GetScriptContextFromJSContext(cx, getter_AddRefs(scriptContext));
+
     if (scriptContext)
     {
         nsCOMPtr<nsIScriptGlobalObject> globalObject;

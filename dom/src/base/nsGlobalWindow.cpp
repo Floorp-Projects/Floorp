@@ -3387,8 +3387,8 @@ GlobalWindowImpl::Close()
   }
 
   if (cx) {
-    nsCOMPtr<nsIScriptContext> currentCX =
-      NS_STATIC_CAST(nsIScriptContext *, ::JS_GetContextPrivate(cx));
+    nsCOMPtr<nsIScriptContext> currentCX;
+    nsJSUtils::GetDynamicScriptContext(cx, getter_AddRefs(currentCX));
 
     if (currentCX && currentCX == mContext) {
       return currentCX->SetTerminationFunction(CloseWindow,
@@ -5479,8 +5479,9 @@ GlobalWindowImpl::SecurityCheckURL(const char *aURL)
   nsCOMPtr<nsIURI> baseURI;
   nsCOMPtr<nsIURI> uriToLoad;
 
-  nsCOMPtr<nsIScriptContext> scriptcx =
-    NS_STATIC_CAST(nsIScriptContext *, ::JS_GetContextPrivate(cx));
+  nsCOMPtr<nsIScriptContext> scriptcx;
+  nsJSUtils::GetDynamicScriptContext(cx, getter_AddRefs(scriptcx));
+
   if (scriptcx) {
     nsCOMPtr<nsIScriptGlobalObject> gobj;
     scriptcx->GetGlobalObject(getter_AddRefs(gobj));

@@ -36,6 +36,7 @@ GRE_MODULE	= 1
 REQUIRES	= xpcom \
 		  string \
 		  dom \
+		  js \
 		  shistory \
 		  necko \
 		  gfx \

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -88,13 +88,7 @@ nsresult
 nsWWJSUtils::nsGetDynamicScriptContext(JSContext *aContext,
                                        nsIScriptContext** aScriptContext)
 {
-  // XXX We rely on the rule that if any JSContext in our JSRuntime has a 
-  // private set then that private *must* be a pointer to an nsISupports.
-  nsISupports *supports = (nsIScriptContext*) JS_GetContextPrivate(aContext);
-  if (!supports)
-      return nsnull;
-  return supports->QueryInterface(NS_GET_IID(nsIScriptContext),
-                                  (void**)aScriptContext);
+  return GetScriptContextFromJSContext(aContext, aScriptContext);
 }
 
 nsresult 

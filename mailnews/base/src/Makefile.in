@@ -34,6 +34,7 @@ REQUIRES	= xpcom \
 		  string \
 		  necko \
 		  dom \
+		  js \
 		  appshell \
 		  appcomps \
 		  uconv \
@@ -123,7 +124,7 @@ CPPSRCS		+= nsMessengerOS2Integration.cpp
 endif
 
 EXPORTS		= \
-        	nsMsgBaseCID.h \
+		nsMsgBaseCID.h \
 		nsMessenger.h \
 		nsMessengerBootstrap.h \
 		nsUrlListenerManager.h \

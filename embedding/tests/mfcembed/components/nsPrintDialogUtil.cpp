@@ -535,9 +535,9 @@ static HWND CreateControl(LPCTSTR          aType,
                               aRect.x, aRect.y, aRect.width, aRect.height,
                               (HWND)aHdlg, (HMENU)aId,
                               aHInst, NULL);
-  if (hWnd == NULL) return NULL;
-
   delete [] pStr;
+
+  if (hWnd == NULL) return NULL;
 
   // get the native font for the dialog and 
   // set it into the new control

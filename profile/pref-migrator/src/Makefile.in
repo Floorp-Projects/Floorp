@@ -38,6 +38,7 @@ REQUIRES	= xpcom \
 		  intl \
 		  docshell \
 		  dom \
+		  js \
 		  necko \
 		  widget \
 		  webbrwsr \

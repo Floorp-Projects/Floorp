@@ -39,6 +39,7 @@ REQUIRES	= \
 		  string \
 		  docshell \
 		  dom \
+		  js \
 		  widget \
 		  gfx \
 		  $(NULL)

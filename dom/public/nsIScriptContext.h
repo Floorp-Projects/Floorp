@@ -42,6 +42,8 @@
 #include "nscore.h"
 #include "nsString.h"
 #include "nsISupports.h"
+#include "nsCOMPtr.h"
+#include "jsapi.h"
 
 class nsIScriptGlobalObject;
 class nsIScriptSecurityManager;
@@ -332,6 +334,27 @@ public:
    */
   NS_IMETHOD SetGCOnDestruction(PRBool aGCOnDestruction) = 0;
 };
+
+inline nsresult
+GetScriptContextFromJSContext(JSContext *cx, nsIScriptContext **result)
+{
+  *result = nsnull;
+
+  if (!(::JS_GetOptions(cx) & JSOPTION_PRIVATE_IS_NSISUPPORTS)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsresult rv = NS_OK;
+
+  nsISupports *supports =
+    NS_STATIC_CAST(nsISupports *, ::JS_GetContextPrivate(cx));
+
+  if (supports) {
+    rv = CallQueryInterface(supports, result);
+  }
+
+  return rv;
+}
 
 #endif // nsIScriptContext_h__
 

@@ -209,16 +209,7 @@ nsresult
 nsContentUtils::GetDynamicScriptContext(JSContext *aContext,
                                         nsIScriptContext** aScriptContext)
 {
-  *aScriptContext = nsnull;
-
-  // XXX We rely on the rule that if any JSContext in our JSRuntime has a
-  // private set then that private *must* be a pointer to an nsISupports.
-  nsISupports *supports = (nsIScriptContext*)JS_GetContextPrivate(aContext);
-  if (!supports) {
-      return NS_OK;
-  }
-
-  return CallQueryInterface(supports, aScriptContext);
+  return GetScriptContextFromJSContext(aContext, aScriptContext);
 }
 
 template <class OutputIterator>
@@ -1360,7 +1351,7 @@ static inline void KeyAppendString(const nsAString& aString, nsACString& aKey)
   // Could escape separator here if collisions happen.  > is not a legal char
   // for a name or type attribute, so we should be safe avoiding that extra work.
 
-  aKey.Append(NS_ConvertUCS2toUTF8(aString));
+  AppendUTF16toUTF8(aString, aKey);
 }
 
 static inline void KeyAppendString(const nsACString& aString, nsACString& aKey)

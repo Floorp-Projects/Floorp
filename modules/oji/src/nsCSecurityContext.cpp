@@ -140,7 +140,10 @@ nsCSecurityContext::GetOrigin(char* buf, int buflen)
           // that case we are not done.
         
         if (!m_pPrincipal && m_pJSCX ) {
-            nsCOMPtr<nsIScriptContext> scriptContext = (nsIScriptContext*)JS_GetContextPrivate(m_pJSCX);
+            nsCOMPtr<nsIScriptContext> scriptContext;
+            GetScriptContextFromJSContext(m_pJSCX,
+                                          getter_AddRefs(scriptContext));
+
             if (scriptContext) {
                 nsCOMPtr<nsIScriptGlobalObject> global;
                 scriptContext->GetGlobalObject(getter_AddRefs(global));

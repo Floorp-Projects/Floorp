@@ -2364,7 +2364,9 @@ nsEventListenerManager::ReleaseEvent(PRInt32 aEventTypes)
   return FlipCaptureBit(aEventTypes, PR_FALSE);
 }
 
-nsresult nsEventListenerManager::FlipCaptureBit(PRInt32 aEventTypes, PRBool aInitCapture)
+nsresult
+nsEventListenerManager::FlipCaptureBit(PRInt32 aEventTypes,
+                                       PRBool aInitCapture)
 {
   EventArrayType arrayType;
   nsListenerStruct *ls;

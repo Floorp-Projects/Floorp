@@ -131,20 +131,9 @@ GetCurrentContext(nsIScriptContext **aScriptContext)
     return;
   }
 
-  if (!cx) {
-    return;
+  if (cx) {
+    GetScriptContextFromJSContext(cx, aScriptContext);
   }
-
-  nsISupports *priv =
-    (::JS_GetOptions(cx) & JSOPTION_PRIVATE_IS_NSISUPPORTS)
-    ? NS_STATIC_CAST(nsISupports*, ::JS_GetContextPrivate(cx))
-    : nsnull;
-
-  if (!priv) {
-    return;
-  }
-
-  CallQueryInterface(priv, aScriptContext);
 
   return;
 }

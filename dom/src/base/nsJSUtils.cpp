@@ -69,7 +69,7 @@ nsJSUtils::GetCallingLocation(JSContext* aContext, const char* *aFilename,
     if (frame) {
       script = ::JS_GetFrameScript(aContext, frame);
     }
-  } while ((nsnull != frame) && (nsnull == script));
+  } while (frame && !script);
 
   if (script) {
     const char* filename = ::JS_GetScriptFilename(aContext, script);
@@ -132,8 +132,8 @@ nsJSUtils::ConvertJSValToXPCObject(nsISupports** aSupports, REFNSIID aIID,
 }
 
 void 
-nsJSUtils::ConvertJSValToString(nsAString& aString,
-                                JSContext* aContext, jsval aValue)
+nsJSUtils::ConvertJSValToString(nsAString& aString, JSContext* aContext,
+                                jsval aValue)
 {
   JSString *jsstring;
   if ((jsstring = ::JS_ValueToString(aContext, aValue)) != nsnull) {
@@ -224,13 +224,6 @@ nsresult
 nsJSUtils::GetDynamicScriptContext(JSContext *aContext,
                                    nsIScriptContext** aScriptContext)
 {
-  nsISupports *supports =
-    (::JS_GetOptions(aContext) & JSOPTION_PRIVATE_IS_NSISUPPORTS)
-    ? NS_STATIC_CAST(nsISupports*, ::JS_GetContextPrivate(aContext))
-    : nsnull;
-  if (!supports)
-    return nsnull;
-  return supports->QueryInterface(NS_GET_IID(nsIScriptContext),
-                                  (void**)aScriptContext);
+  return GetScriptContextFromJSContext(aContext, aScriptContext);
 }
 
