@@ -158,10 +158,10 @@ static char* FormatJSFrame(JSContext* cx, JSStackFrame* fp,
             {
                 for(uint32 k = namedArgCount; k < argCount; k++)
                 {
-                    char num[8];
-                    JS_snprintf(num, 8, "%d", (int) k);
+                    char number[8];
+                    JS_snprintf(number, 8, "%d", (int) k);
 
-                    if(JS_GetProperty(cx, argsObj, num, &val))
+                    if(JS_GetProperty(cx, argsObj, number, &val))
                     {
                         value = JSVAL2String(cx, val, &isString);
                         buf = JS_sprintf_append(buf, "%s%s%s%s",

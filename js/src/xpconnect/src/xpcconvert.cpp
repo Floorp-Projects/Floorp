@@ -21,6 +21,7 @@
  * Contributor(s): 
  *   John Bandhauer <jband@netscape.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Mike Shaver <shaver@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -336,11 +337,11 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
 
         case nsXPTType::T_IID:
             {
-                nsID* iid = *((nsID**)s);
-                if(!iid)
+                nsID* iid2 = *((nsID**)s);
+                if(!iid2)
                     break;
                 JSObject* obj;
-                if(!(obj = xpc_NewIDObject(cx, scope, *iid)))
+                if(!(obj = xpc_NewIDObject(cx, scope, *iid2)))
                     return JS_FALSE;
                 *d = OBJECT_TO_JSVAL(obj);
                 break;
@@ -351,28 +352,10 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
                 const nsAReadableString* p = *((const nsAReadableString**)s);
                 if(!p)
                     break;
-                
-                PRUint32 length = p->Length();
-                
-                jschar* chars = (jschar *) 
-                    JS_malloc(cx, (length + 1) * sizeof(jschar));
-                if(!chars)
-                    return JS_FALSE;        
+                JSString *str = XPCStringConvert::ReadableToJSString(cx, *p);
+                if (!str)
+                    return JS_FALSE;
 
-                if(length && !CopyUnicodeTo(*p, 0, (PRUnichar*)chars, length))
-                {
-                    JS_free(cx, chars);
-                    return JS_FALSE;        
-                }
-                
-                chars[length] = 0;
-                
-                JSString* str;
-                if(!(str = JS_NewUCString(cx, chars, length)))
-                {
-                    JS_free(cx, chars);
-                    return JS_FALSE;        
-                }
                 *d = STRING_TO_JSVAL(str);
                 break;
             }
@@ -439,7 +422,6 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
     }
     return JS_TRUE;
 }
-
 
 /***************************************************************************/
 // static
@@ -618,8 +600,9 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
             static const NS_NAMED_LITERAL_STRING(sVoidString, "undefined");
 
             const PRUnichar* chars;
-            PRUint32 length;
+            JSString* str = nsnull;
             JSBool isNewString = JS_FALSE;
+            PRUint32 length;
 
             if(JSVAL_IS_VOID(s))
             {
@@ -635,7 +618,7 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
             }
             else 
             {
-                JSString* str = JS_ValueToString(cx, s);
+                str = JS_ValueToString(cx, s);
                 if(!str)
                     return JS_FALSE;
 
@@ -650,6 +633,7 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
                 }
                 else
                 {
+                    str = nsnull;
                     chars = sEmptyString.get();
                 }
             }
@@ -658,20 +642,27 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
             
             if(useAllocator)
             {
-                nsAReadableString* rs;
-                
-                // If the underlying JSString may have been created in the 
-                // JS_ValueToString call, then we need to make a copied string
-                // to avoid the possibility of the string data being gc'd before
-                // we are done.
-                if(isNewString)
-                    rs = new nsString(chars, length);
+                if (str)
+                {
+                    XPCReadableJSStringWrapper *wrapper =
+                        XPCStringConvert::JSStringToReadable(str);
+                    if (!wrapper)
+                        return JS_FALSE;
+
+                    // Ask for the shared buffer handle, which will root the
+                    // string.
+                    if (isNewString && ! wrapper->GetSharedBufferHandle())
+                            return JS_FALSE;
+
+                    *((nsAReadableString**)d) = wrapper;
+                }
                 else
-                    rs = new nsLiteralString(chars, length);
-                
-                if(!rs)
-                    return JS_FALSE;
-                *((nsAReadableString**)d) = rs;
+                {
+                    nsAReadableString *rs = new nsString(chars, length);
+                    if (!rs)
+                        return JS_FALSE;
+                    *((nsAReadableString**)d) = rs;
+                }
             }
             else
             {
@@ -1247,6 +1238,7 @@ XPCConvert::JSErrorToXPCException(JSContext* cx,
     }
     return result;
 }
+
 
 /***************************************************************************/
 

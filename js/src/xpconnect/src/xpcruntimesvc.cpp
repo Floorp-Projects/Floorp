@@ -54,7 +54,7 @@ nsJSRuntimeServiceImpl::~nsJSRuntimeServiceImpl() {
         JS_DestroyRuntime(mRuntime);
         JS_ShutDown();
 #ifdef DEBUG_shaver
-    fprintf(stderr, "nJRSI: destroyed runtime %p\n", mRuntime);
+    fprintf(stderr, "nJRSI: destroyed runtime %p\n", (void *)mRuntime);
 #endif
     }
 }
@@ -98,7 +98,7 @@ nsJSRuntimeServiceImpl::GetRuntime(JSRuntime **runtime)
     }
     *runtime = mRuntime;
 #ifdef DEBUG_shaver
-    fprintf(stderr, "nJRSI: returning %p\n", mRuntime);
+    fprintf(stderr, "nJRSI: returning %p\n", (void *)mRuntime);
 #endif
     return NS_OK;
 }

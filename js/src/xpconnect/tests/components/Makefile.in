@@ -59,6 +59,7 @@ CPPSRCS		= \
 		xpctest_inout.cpp \
 		xpctest_multiple.cpp \
 		xpctest_out.cpp \
+		xpctest_domstring.cpp \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS += \

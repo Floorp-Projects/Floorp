@@ -83,6 +83,9 @@ extern JSBool
 js_AddRoot(JSContext *cx, void *rp, const char *name);
 
 extern JSBool
+js_AddRootRT(JSRuntime *rt, void *rp, const char *name);
+
+extern JSBool
 js_RemoveRoot(JSRuntime *rt, void *rp);
 
 extern void *

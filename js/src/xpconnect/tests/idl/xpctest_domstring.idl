@@ -1,0 +1,54 @@
+/* -*- Mode: IDL; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express oqr
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ *   Mike Shaver <shaver@mozilla.org>
+ *
+ * Alternatively, the contents of this file may be used under the
+ * terms of the GNU Public License (the "GPL"), in which case the
+ * provisions of the GPL are applicable instead of those above.
+ * If you wish to allow use of your version of this file only
+ * under the terms of the GPL and not to allow others to use your
+ * version of this file under the NPL, indicate your decision by
+ * deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL.  If you do not delete
+ * the provisions above, a recipient may use your version of this
+ * file under either the NPL or the GPL.
+ */
+
+#include "nsISupports.idl"
+
+/**
+ * Interface for testing the DOMString-conversion infrastructure.
+ */
+
+[scriptable, uuid(646d0b6b-6872-43b9-aa73-3c6b89ac3080)]
+interface nsIXPCTestDOMString : nsISupports {
+    // Implementation should ask for the shared buffer interface and hold
+    // a refcount to it.
+    void hereHaveADOMString(in DOMString str);
+
+    // don't hold onto this one
+    void dontKeepThisOne(in DOMString str);
+    
+    void giveDOMStringTo(in nsIXPCTestDOMString recv);
+
+    void passDOMStringThroughTo(in DOMString str, in nsIXPCTestDOMString recv);
+};
