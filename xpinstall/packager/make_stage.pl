@@ -63,10 +63,11 @@ $inProductName    = undef;
 $inStagingScript  = undef;
 $inOs             = undef;
 $gDirMozRoot      = StageUtils::GetAbsPath("moz_root");
-$inDirSrcDist     = StageUtils::GetAbsPath("moz_dist");
 $inDirDestStage   = "$gDirMozRoot/stage";
 
 ParseArgV(@ARGV);
+
+$inDirSrcDist     = StageUtils::GetAbsPath("moz_dist") if !defined($inDirSrcDist);
 
 if(!$inProductName || !$inOs)
 {

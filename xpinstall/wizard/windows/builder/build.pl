@@ -41,8 +41,7 @@ use File::Basename;
 
 $DEPTH         = "../../../..";
 $topsrcdir     = GetTopSrcDir();
-$inStagePath   = "$topsrcdir/stage";
-$inDistPath    = "$topsrcdir/dist";
+$topobjdir     = "$topsrcdir";
 $inXpiURL      = "ftp://not.supplied.invalid";
 $inRedirIniURL = $inXpiURL;
 
@@ -54,6 +53,8 @@ require StageUtils;
 ParseArgv(@ARGV);
 
 $DEPTH            = "$topsrcdir" if !defined($DEPTH);
+$inStagePath      = "$topobjdir/stage" if !defined($inStagePath);
+$inDistPath       = "$topobjdir/dist" if !defined($inDistPath);
 $cwdBuilder       = "$topsrcdir/xpinstall/wizard/windows/builder";
 $gDistInstallPath = "$inDistPath/install";
 $gPackagerPath    = "$topsrcdir/xpinstall/packager";
@@ -92,6 +93,8 @@ sub PrintUsage
 
            -h                - this usage.
 
+           -objDir <path>    - the build directory (defaults to a srcdir build)
+
            -stagePath <path> - Full path to where the mozilla stage dir is at.
                                Default path, if one is not set, is:
                                  [mozilla]/stage
@@ -124,6 +127,14 @@ sub ParseArgv
     if($myArgv[$counter] =~ /^[-,\/]h$/i)
     {
       PrintUsage();
+    }
+    elsif($myArgv[$counter] =~ /^[-,\/]objDir$/i)
+    {
+      if($#myArgv >= ($counter + 1))
+      {
+        ++$counter;
+        $topobjdir = $myArgv[$counter];
+      }
     }
     elsif($myArgv[$counter] =~ /^[-,\/]stagePath$/i)
     {
