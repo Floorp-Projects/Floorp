@@ -319,6 +319,9 @@ const char* cEvent[] = {"event"};
 void nsTreeCellFrame::ExecuteDefaultJSEventHandler(const nsString& eventName,
                                                    nsIDOMEvent* aDOMEvent)
 {
+  /* BACKING THIS OUT, SINCE I THINK EVENT BUBBLING ACCOMPLISHED WHAT
+      I WANTED.
+
   // Get our parent, grandparent, and great-grandparent nodes
   nsCOMPtr<nsIContent> treeitem;
   nsCOMPtr<nsIContent> treebody;
@@ -415,4 +418,5 @@ void nsTreeCellFrame::ExecuteDefaultJSEventHandler(const nsString& eventName,
       }
     }
   } // XXX: Am I missing out on some necessary cleanup?
+  */
 }
