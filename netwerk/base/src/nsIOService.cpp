@@ -26,6 +26,7 @@
 #include "nsIURI.h"
 #include "nsCOMPtr.h"
 #include "prprf.h"
+#include "prmem.h"      // for PR_Malloc
 #include <ctype.h>      // for isalpha
 
 static NS_DEFINE_CID(kFileTransportService, NS_FILETRANSPORTSERVICE_CID);
@@ -109,7 +110,7 @@ GetScheme(const char* inURI, char* *scheme)
     PRUint32 length = 0;
     while ((c = *URI++) != '\0') {
         if (c == ':') {
-            char* newScheme = new char[length];
+            char* newScheme = (char *)PR_Malloc(length+1);
             if (newScheme == nsnull)
                 return NS_ERROR_OUT_OF_MEMORY;
 
