@@ -126,7 +126,7 @@ nsHTTPHandler::NewChannel(const char* verb, nsIURI* i_URL,
             pChannel = (nsHTTPChannel*)((nsIHTTPChannel*) m_pConnections->ElementAt(index));
             //Do other checks here as well... TODO
             rv = pChannel->GetURI(getter_AddRefs(channelURI));
-            if (NS_SUCCEEDED(rv) && (channelURI == i_URL))
+            if (NS_SUCCEEDED(rv) && (channelURI.get() == i_URL))
             {
                 NS_ADDREF(pChannel);
                 *o_Instance = pChannel;
