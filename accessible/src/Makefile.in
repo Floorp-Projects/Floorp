@@ -45,6 +45,8 @@ REQUIRES	= xpcom \
 		  xuldoc \
 		  imglib2 \
 		  gfx2 \
+		  uriloader \
+		  timer \
 		  $(NULL)
 
 CPPSRCS   = \
