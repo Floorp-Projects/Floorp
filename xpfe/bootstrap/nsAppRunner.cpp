@@ -396,6 +396,12 @@ int main(int argc, char* argv[])
           urlstr = "chrome://messenger/content/";
       }
     }
+    if (nsnull == urlstr) { 
+      rv = cmdLineArgs->GetCmdLineValue("-chrome", &cmdResult); 
+      if (NS_SUCCEEDED(rv) && cmdResult) { 
+          urlstr = cmdResult; 
+      } 
+    } 
     if (nsnull == urlstr)
     {    
       urlstr = "chrome://navigator/content/";
