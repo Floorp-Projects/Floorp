@@ -40,6 +40,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIFocusController.h"
 #include "nsIDOMWindowInternal.h"
+#include "nsIWebProgress.h"
 
 static NS_DEFINE_CID(kWebShellCID,         NS_WEB_SHELL_CID);
 static NS_DEFINE_IID(kChildCID,               NS_CHILD_CID);
@@ -102,7 +103,6 @@ NS_INTERFACE_MAP_BEGIN(nsWebBrowser)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebBrowser)
     NS_INTERFACE_MAP_ENTRY(nsIWebBrowser)
     NS_INTERFACE_MAP_ENTRY(nsIWebNavigation)
-    NS_INTERFACE_MAP_ENTRY(nsIWebProgress)
     NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
     NS_INTERFACE_MAP_ENTRY(nsIScrollable)
     NS_INTERFACE_MAP_ENTRY(nsITextScroll)
@@ -133,28 +133,44 @@ NS_IMETHODIMP nsWebBrowser::GetInterface(const nsIID& aIID, void** aSink)
 // nsWebBrowser::nsIWebBrowser
 //*****************************************************************************   
 
-NS_IMETHODIMP nsWebBrowser::AddWebBrowserListener(nsIInterfaceRequestor* aListener)
-{                   
-   if(!mListenerList)
-      NS_ENSURE_SUCCESS(NS_NewISupportsArray(getter_AddRefs(mListenerList)), 
-         NS_ERROR_FAILURE);
+// listeners that currently support registration through AddWebBrowserListener:
+//  - nsIWebProgressListener
+NS_IMETHODIMP nsWebBrowser::AddWebBrowserListener(nsISupports *aListener, const nsIID& aIID)
+{           
+    nsresult rv = NS_ERROR_INVALID_ARG;
+    NS_ENSURE_ARG_POINTER(aListener);
 
-   // Make sure it isn't already in the list...  This is bad!
-   NS_ENSURE_TRUE(mListenerList->IndexOf(aListener) == -1, NS_ERROR_INVALID_ARG);
+    // register this listener for the specified interface id
+    if (aIID.Equals(NS_GET_IID(nsIWebProgressListener))) {
+        if (mDocShell) {
+            nsCOMPtr<nsIWebProgress> progress(do_GetInterface(mDocShell, &rv));
+            if (NS_FAILED(rv)) return rv;
+            nsCOMPtr<nsIWebProgressListener> listener = do_QueryInterface(aListener, &rv);
+            if (NS_FAILED(rv)) return rv;
+            rv = progress->AddProgressListener(listener);
+        }
+    }
 
-   NS_ENSURE_SUCCESS(mListenerList->AppendElement(aListener), NS_ERROR_FAILURE);
-
-   return NS_OK;
+    return rv;
 }
 
-NS_IMETHODIMP nsWebBrowser::RemoveWebBrowserListener(nsIInterfaceRequestor* aListener)
+NS_IMETHODIMP nsWebBrowser::RemoveWebBrowserListener(nsISupports *aListener, const nsIID& aIID)
 {
-   NS_ENSURE_STATE(mListenerList);
-   NS_ENSURE_ARG(aListener);
+    nsresult rv = NS_ERROR_INVALID_ARG;
+    NS_ENSURE_ARG_POINTER(aListener);
 
-   NS_ENSURE_TRUE(mListenerList->RemoveElement(aListener), NS_ERROR_INVALID_ARG);
-
-   return NS_OK;
+    // un-register this listener for the specified interface id
+    if (aIID.Equals(NS_GET_IID(nsIWebProgressListener))) {
+        if (mDocShell) {
+            nsCOMPtr<nsIWebProgress> progress(do_GetInterface(mDocShell, &rv));
+            if (NS_FAILED(rv)) return rv;
+            nsCOMPtr<nsIWebProgressListener> listener = do_QueryInterface(aListener, &rv);
+            if (NS_FAILED(rv)) return rv;
+            rv = progress->RemoveProgressListener(listener);
+        }
+    }
+    
+    return rv;
 }
 
 NS_IMETHODIMP nsWebBrowser::GetContainerWindow(nsIWebBrowserChrome** aTopWindow)
@@ -572,37 +588,6 @@ NS_IMETHODIMP nsWebBrowser::SaveDocument(nsIDOMDocument *aDocument, const char *
     nsresult rv = persist->SaveDocument(doc, aFileName, aDataPath);
     persist->Release();
     return rv;
-}
-
- 
-//*****************************************************************************
-// nsWebBrowser::nsIWebProgress
-//*****************************************************************************
-
-NS_IMETHODIMP nsWebBrowser::AddProgressListener(nsIWebProgressListener* aListener)
-{
-   NS_ENSURE_STATE(mDocShell);
-   
-   return mDocShellAsProgress->AddProgressListener(aListener);
-}
-
-NS_IMETHODIMP nsWebBrowser::RemoveProgressListener(nsIWebProgressListener* aListener)
-{
-   NS_ENSURE_STATE(mDocShell);
-
-   return mDocShellAsProgress->RemoveProgressListener(aListener);
-}
-
-NS_IMETHODIMP nsWebBrowser::GetDOMWindow(nsIDOMWindow **aResult)
-{
-  nsresult rv = NS_ERROR_FAILURE;
-
-  *aResult = nsnull;
-  if (mDocShell) {
-    rv = mDocShellAsProgress->GetDOMWindow(aResult);
-  }
-
-  return rv;
 }
 
 //*****************************************************************************
@@ -1098,28 +1083,30 @@ NS_IMETHODIMP nsWebBrowser::SetDocShell(nsIDocShell* aDocShell)
          nsCOMPtr<nsIBaseWindow> baseWin(do_QueryInterface(aDocShell));
          nsCOMPtr<nsIDocShellTreeItem> item(do_QueryInterface(aDocShell));
          nsCOMPtr<nsIWebNavigation> nav(do_QueryInterface(aDocShell));
-         nsCOMPtr<nsIWebProgress> progress(do_GetInterface(aDocShell));
          nsCOMPtr<nsIScrollable> scrollable(do_QueryInterface(aDocShell));
          nsCOMPtr<nsITextScroll> textScroll(do_QueryInterface(aDocShell));
-         NS_ENSURE_TRUE(req && baseWin && item && nav && scrollable && textScroll &&
-           progress, NS_ERROR_FAILURE);
+         NS_ENSURE_TRUE(req && baseWin && item && nav && scrollable && textScroll, NS_ERROR_FAILURE);
  
          mDocShell = aDocShell;
          mDocShellAsReq = req;
          mDocShellAsWin = baseWin;
          mDocShellAsItem = item;
          mDocShellAsNav = nav;
-         mDocShellAsProgress = progress;
          mDocShellAsScrollable = scrollable;
          mDocShellAsTextScroll = textScroll;
- 
-         AddProgressListener(NS_STATIC_CAST(nsIWebProgressListener *, mDocShellTreeOwner));
+
+         nsCOMPtr<nsIWebProgressListener> listener = 
+             NS_STATIC_CAST(nsIWebProgressListener*, mDocShellTreeOwner);
+         (void)AddWebBrowserListener(listener,
+             NS_GET_IID(nsIWebProgressListener));
      }
      else
      {
          if (mDocShell)
          {
-             RemoveProgressListener(NS_STATIC_CAST(nsIWebProgressListener *, mDocShellTreeOwner));
+             nsCOMPtr<nsIWebProgressListener> listener = 
+                 NS_STATIC_CAST(nsIWebProgressListener*, mDocShellTreeOwner);
+             (void)RemoveWebBrowserListener(listener, NS_GET_IID(nsIWebProgressListener));
              mDocShellAsWin->Destroy();
          }
          mDocShell = nsnull;
@@ -1127,7 +1114,6 @@ NS_IMETHODIMP nsWebBrowser::SetDocShell(nsIDocShell* aDocShell)
          mDocShellAsWin = nsnull;
          mDocShellAsItem = nsnull;
          mDocShellAsNav = nsnull;
-         mDocShellAsProgress = nsnull;
          mDocShellAsScrollable = nsnull;
          mDocShellAsTextScroll = nsnull;
      }

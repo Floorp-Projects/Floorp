@@ -34,35 +34,39 @@ interface nsIDOMWindow;
 [scriptable, uuid(69E5DF00-7B8B-11d3-AF61-00A024FFC08C)]
 interface nsIWebBrowser : nsISupports
 {
-	/*
-	Registers a webBrowserListener to receive queries for listener interfaces.
-	This allows an embedding app to hook itself up to handle various listeners
-	that nsWebBrowser supports throwing.  This process allows multiple people
-	to register a listeners of the nsWebBrowser.  Each one has the option
-	to handle only certain interfaces.  The callback process of
-	nsIWebBrowserListener allows us to dynamically add new listener interfaces
-	without having to add additional Add/RemoveFooListener().
-
-	@param listener - The listener interface to be called when a specific 
-		listener interface is needed.
-
-	@return	NS_OK - Listener was registered successfully.
-				NS_ERROR_INVALID_ARG - The listener passed in was either nsnull, 
-						or was already registered with this listener interface.
-	 */
-	void addWebBrowserListener(in nsIInterfaceRequestor listener);
-
 	/* 
-	Removes a previously registered webBrowserListener.
-		
-	@param listener - The listener interface previously registered with 
-			addListener() this may be nsnull if a valid cookie is provided.
+    Registers a listener to receive callbacks.
 
-	@return	NS_OK - Listener was successfully unregistered.
-				NS_ERROR_INVALID_ARG - Neither the cookie nor the listener point
-					to a previously registered listener.
+    @param aListener - The listener interface pointer who's methods will be
+                       called as defined by the semantics of the listener 
+                       interface itself (specified by the IID).
+
+    @param aIID      - The IID that aListener will be registered as.
+    
+    @return          - NS_OK, successful registration.
+                       NS_ERROR_INVALID_ARG, aIID is not supposed to be 
+                         registered using this method.
+                       NS_ERROR_FAILURE, either aListener could not be QI'd
+                         for the specified IID, or some other internal error
+                         occurred.
 	*/
-	void removeWebBrowserListener(in nsIInterfaceRequestor listener);
+	void addWebBrowserListener(in nsISupports aListener, in nsIIDRef aIID);
+
+    /*
+    Removes a previously registered listener.
+
+    @param aListener - The listener interface pointer to be removed as a listener.
+
+    @param aIID      - The IID that aListener should be removed as a listener
+                       for.
+
+    @return          - NS_OK, successful removal
+                       NS_ERROR_INVALID_ARG, aIID is not supported for removal.
+                       NS_ERROR_FAILURE, either aListener could not be QI'd
+                         for the specified IID, or some other internal error
+                         occurred.
+    */
+	void removeWebBrowserListener(in nsISupports aListener, in nsIIDRef aIID);
 
 	/*
 	This is the top level window embedding the browser.  The object passed in

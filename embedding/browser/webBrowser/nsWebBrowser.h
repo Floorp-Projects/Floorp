@@ -44,7 +44,6 @@
 
 #include "nsIWebBrowser.h"
 #include "nsIWebNavigation.h"
-#include "nsIWebProgress.h"
 #include "nsIWebBrowserSetup.h"
 #include "nsIWebBrowserPersist.h"
 
@@ -64,7 +63,6 @@ public:
 
 class nsWebBrowser : public nsIWebBrowser,
                      public nsIWebNavigation,
-                     public nsIWebProgress,
                      public nsIWebBrowserSetup,
                      public nsIDocShellTreeItem,
                      public nsIBaseWindow,
@@ -87,7 +85,6 @@ public:
     NS_DECL_NSITEXTSCROLL
     NS_DECL_NSIWEBBROWSER
     NS_DECL_NSIWEBNAVIGATION
-    NS_DECL_NSIWEBPROGRESS
     NS_DECL_NSIWEBBROWSERSETUP
     NS_DECL_NSIWEBBROWSERPERSIST
 
@@ -105,13 +102,11 @@ protected:
 protected:
    nsDocShellTreeOwner*       mDocShellTreeOwner;
    nsWBURIContentListener*    mContentListener;
-   nsCOMPtr<nsISupportsArray> mListenerList;
    nsCOMPtr<nsIDocShell>      mDocShell;
    nsCOMPtr<nsIInterfaceRequestor> mDocShellAsReq;
    nsCOMPtr<nsIBaseWindow>    mDocShellAsWin;
    nsCOMPtr<nsIDocShellTreeItem> mDocShellAsItem;
    nsCOMPtr<nsIWebNavigation> mDocShellAsNav;
-   nsCOMPtr<nsIWebProgress>   mDocShellAsProgress;
    nsCOMPtr<nsIScrollable>    mDocShellAsScrollable;
    nsCOMPtr<nsITextScroll>    mDocShellAsTextScroll;
    nsCOMPtr<nsIWidget>        mInternalWidget;
