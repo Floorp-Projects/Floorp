@@ -89,12 +89,6 @@ const CommandT cmd_Home			=	1009;
 const CommandT cmd_PageServices		=	1195;
 
 //
-// NavCenter specific
-//
-const CommandT cmd_NCToggle				= 5101;		// show/hide pane
-const CommandT cmd_NCNewWindow		 	= 5100;		// create a new navcenter window
-
-//
 // NavCenter XP menu commands. 
 //
 // These constants can be computed by doing
