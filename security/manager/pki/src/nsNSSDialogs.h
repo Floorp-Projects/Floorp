@@ -40,7 +40,8 @@ class nsNSSDialogs
   public nsITokenPasswordDialogs,
   public nsIBadCertListener,
   public nsISecurityWarningDialogs,
-  public nsICertificateDialogs
+  public nsICertificateDialogs,
+  public nsIClientAuthDialogs
 {
 public:
   NS_DECL_ISUPPORTS
@@ -49,7 +50,7 @@ public:
   NS_DECL_NSIBADCERTLISTENER
   NS_DECL_NSISECURITYWARNINGDIALOGS
   NS_DECL_NSICERTIFICATEDIALOGS
-
+  NS_DECL_NSICLIENTAUTHDIALOGS
   nsNSSDialogs();
   virtual ~nsNSSDialogs();
 

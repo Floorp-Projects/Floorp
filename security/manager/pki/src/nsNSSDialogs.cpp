@@ -208,12 +208,12 @@ nsNSSDialogs::~nsNSSDialogs()
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS5(nsNSSDialogs, nsINSSDialogs, 
+NS_IMPL_THREADSAFE_ISUPPORTS6(nsNSSDialogs, nsINSSDialogs, 
                                             nsITokenPasswordDialogs,
                                             nsISecurityWarningDialogs,
                                             nsIBadCertListener,
-                                            nsICertificateDialogs)
-
+                                            nsICertificateDialogs,
+											nsIClientAuthDialogs)
 nsresult
 nsNSSDialogs::Init()
 {
@@ -691,6 +691,58 @@ nsNSSDialogs::DownloadCACert(nsIInterfaceRequestor *ctx,
 
   *_canceled = (status == 0)?PR_TRUE:PR_FALSE;
 
+  return rv;
+}
+
+NS_IMETHODIMP
+nsNSSDialogs::ChooseCertificate(nsIInterfaceRequestor *ctx, const PRUnichar *cn, const PRUnichar *organization, const PRUnichar *issuer, const PRUnichar **certNickList, PRUint32 count, PRUnichar **certNick, PRBool *canceled) 
+{
+  nsresult rv;
+  int i;
+
+  *canceled = PR_FALSE;
+
+  // Get the parent window for the dialog
+  nsCOMPtr<nsIDOMWindowInternal> parent = do_GetInterface(ctx);
+
+  nsCOMPtr<nsIDialogParamBlock> block = do_CreateInstance(kDialogParamBlockCID);
+  if (!block) return NS_ERROR_FAILURE;
+
+  // void ChangePassword(in wstring tokenName, out int status);
+  rv = block->SetString(1, cn);
+  if (NS_FAILED(rv)) return rv;
+
+  // void ChangePassword(in wstring tokenName, out int status);
+  rv = block->SetString(2, organization);
+  if (NS_FAILED(rv)) return rv;
+
+  // void ChangePassword(in wstring tokenName, out int status);
+  rv = block->SetString(3, issuer);
+  if (NS_FAILED(rv)) return rv;
+
+  for (i = 0; i < count; i++) {
+	  rv = block->SetString(i+4, certNickList[i]);
+	  if (NS_FAILED(rv)) return rv;
+  }
+
+  rv = block->SetInt(1, count);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = nsNSSDialogHelper::openDialog(nsnull,
+                                "chrome://pippki/content/clientauthask.xul",
+                                block);
+  if (NS_FAILED(rv)) return rv;
+
+  PRInt32 status;
+
+  rv = block->GetInt(1, &status);
+  if (NS_FAILED(rv)) return rv;
+
+  *canceled = (status == 0)?PR_TRUE:PR_FALSE;
+  if (!*canceled) {
+    // retrieve the nickname
+    rv = block->GetString(1, certNick);
+  }
   return rv;
 }
 
