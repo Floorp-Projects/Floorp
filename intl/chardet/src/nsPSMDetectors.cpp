@@ -171,8 +171,10 @@ public:
   NS_IMETHOD Init(nsICharsetDetectionObserver* aObserver);
   NS_IMETHOD DoIt(const char* aBuf, PRUint32 aLen, PRBool* oDontFeedMe);
   NS_IMETHOD Done();
+
 protected:
   virtual void Report(const char* charset);
+
 private:
   nsICharsetDetectionObserver* mObserver;
 };
@@ -291,7 +293,30 @@ class nsXPCOMJaDetector :
     virtual ~nsXPCOMJaDetector();
 };
 //----------------------------------------------------------
-NS_IMPL_ISUPPORTS(nsXPCOMJaDetector, nsICharsetDetector::GetIID())
+NS_IMPL_ADDREF(nsXPCOMJaDetector)
+NS_IMPL_RELEASE(nsXPCOMJaDetector)
+
+NS_IMETHODIMP nsXPCOMJaDetector::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
+{                                                                        
+  if (NULL == aInstancePtr) {                                            
+    return NS_ERROR_NULL_POINTER;                                        
+  }                                                                      
+                                                                         
+  *aInstancePtr = NULL;                                                  
+                                                                         
+  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
+  if (aIID.Equals(nsICharsetDetector::GetIID())) {                                          
+    *aInstancePtr = (void*) ((nsICharsetDetector*)this);                                        
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  }                                                                      
+  if (aIID.Equals(kISupportsIID)) {                                      
+    *aInstancePtr = (void*) ((nsISupports*)this);                        
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  }                                                                      
+  return NS_NOINTERFACE;                                                 
+}
 
 //----------------------------------------------------------
 nsXPCOMJaDetector::nsXPCOMJaDetector()
