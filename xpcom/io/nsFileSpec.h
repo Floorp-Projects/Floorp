@@ -353,6 +353,9 @@ class NS_BASE nsFileSpec
         void                    MakeUnique(ConstStr255Param inSuggestedLeafName);
         StringPtr               GetLeafPName() { return mSpec.name; }
         ConstStr255Param        GetLeafPName() const { return mSpec.name; }
+
+        OSErr                   GetCatInfo(CInfoPBRec& outInfo) const;
+
 #endif // end of Macintosh utility methods.
 
         PRBool                  Valid() const { return NS_SUCCEEDED(Error()); }
@@ -474,11 +477,6 @@ class NS_BASE nsFileSpec
                                     const nsAutoCString argsString(args);
                                     return Execute(argsString);
                                 }
-
-    protected:
-    #ifdef XP_MAC
-        OSErr                   GetCatInfo(CInfoPBRec& outInfo) const;
-    #endif
         //--------------------------------------------------
         // Data
         //--------------------------------------------------
