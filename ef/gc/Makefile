@@ -26,7 +26,7 @@ NSPR_PRIV = $(wildcard $(DEPTH)/nspr20/pr/include/private/*.h)
 NSPR_MD = $(wildcard $(DEPTH)/nspr20/pr/include/md/*.h)
 NSPR_OBS = $(wildcard $(DEPTH)/nspr20/pr/include/obsolete/*.h)
 
-import: 
+import::
 	$(INSTALL) -m 444 $(NSPR_HEADERS) $(PUBLIC)/nspr20/
 	$(INSTALL) -m 444 $(NSPR_PRIV) $(PUBLIC)/nspr20/private/
 	$(INSTALL) -m 444 $(NSPR_MD) $(PUBLIC)/nspr20/md/
