@@ -41,7 +41,7 @@ public:
   virtual ~nsDragService();
   
   // nsIDragService
-  NS_IMETHOD InvokeDragSession (nsISupportsArray * anArrayTransferables, nsIScriptableRegion * aRegion, PRUint32 aActionType);
+  NS_IMETHOD InvokeDragSession (nsIDOMNode *aDOMNode, nsISupportsArray * anArrayTransferables, nsIScriptableRegion * aRegion, PRUint32 aActionType);
   NS_IMETHOD GetCurrentSession (nsIDragSession ** aSession);
 
   // nsIDragSession

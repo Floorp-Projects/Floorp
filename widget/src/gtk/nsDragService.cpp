@@ -82,7 +82,8 @@ nsDragService::~nsDragService()
 }
 
 // nsIDragService
-NS_IMETHODIMP nsDragService::InvokeDragSession (nsISupportsArray * anArrayTransferables,
+NS_IMETHODIMP nsDragService::InvokeDragSession (nsIDOMNode *aDOMNode,
+						nsISupportsArray * anArrayTransferables,
                                                 nsIScriptableRegion * aRegion,
                                                 PRUint32 aActionType)
 {

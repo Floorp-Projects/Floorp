@@ -42,7 +42,8 @@ class nsDragService : public nsBaseDragService
    virtual ~nsDragService();
 
    // nsIDragService
-   NS_IMETHOD InvokeDragSession( nsISupportsArray *anArrayTransferables,
+   NS_IMETHOD InvokeDragSession( nsIDOMNode *aDOMNode,
+				 nsISupportsArray *anArrayTransferables,
                                  nsIRegion *aRegion, PRUint32 aActionType);
 
    // nsIDragSession
