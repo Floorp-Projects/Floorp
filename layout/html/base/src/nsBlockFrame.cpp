@@ -2412,17 +2412,14 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
       aState.UpdateMaximumWidth(aLine->mMaximumWidth);
 
       // Now reflow the line again this time without having it compute
-      // the maximum width or max-element-width.
-      // Note: we need to reset both member variables, because the inline
-      // code examines mComputeMaxElementWidth and if there is a placeholder
-      // on this line the code to reflow the float looks at both...
-      nscoord oldComputeMaxElementWidth = aState.GetFlag(BRS_COMPUTEMAXELEMENTWIDTH);
+      // the maximum width.
+      // We leave whether to compute max-element-width as-is, because
+      // making this call throws out the previous max-element-width
+      // information stored in the float cache.
       nscoord oldComputeMaximumWidth = aState.GetFlag(BRS_COMPUTEMAXWIDTH);
 
-      aState.SetFlag(BRS_COMPUTEMAXELEMENTWIDTH, PR_FALSE);
       aState.SetFlag(BRS_COMPUTEMAXWIDTH, PR_FALSE);
       rv = ReflowInlineFrames(aState, aLine, aKeepReflowGoing, aDamageDirtyArea);
-      aState.SetFlag(BRS_COMPUTEMAXELEMENTWIDTH, oldComputeMaxElementWidth);
       aState.SetFlag(BRS_COMPUTEMAXWIDTH, oldComputeMaximumWidth);
 
     } else {
