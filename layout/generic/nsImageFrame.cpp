@@ -2036,11 +2036,8 @@ nsImageFrame::CanLoadImage(nsIURI *aURI)
 
 nsresult nsImageFrame::LoadIcons(nsIPresContext *aPresContext)
 {
-  // XXX
-  // XXX: change these icons!
-  // XXX
-  nsAutoString loadingSrc(NS_LITERAL_STRING("chrome://editor/content/images/undecided_n.gif")); 
-  nsAutoString brokenSrc(NS_LITERAL_STRING("chrome://editor/content/images/tongue_n.gif")); 
+  nsAutoString loadingSrc(NS_LITERAL_STRING("resource:/res/html/loading-image.gif")); 
+  nsAutoString brokenSrc(NS_LITERAL_STRING("resource:/res/html/broken-image.gif")); 
 
   nsresult rv = NS_OK;
   PRBool doLoad = PR_FALSE;  // only load icons once...

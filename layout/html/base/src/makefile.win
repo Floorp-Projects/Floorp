@@ -134,6 +134,7 @@ install:: $(LIBRARY)
 
 install::
 	$(MAKE_INSTALL) broken-image.gif $(DIST)\bin\res\html
+	$(MAKE_INSTALL) loading-image.gif $(DIST)\bin\res\html
 	$(MAKE_INSTALL) gopher-audio.gif $(DIST)\bin\res\html
 	$(MAKE_INSTALL) gopher-binary.gif $(DIST)\bin\res\html
 	$(MAKE_INSTALL) gopher-find.gif $(DIST)\bin\res\html
