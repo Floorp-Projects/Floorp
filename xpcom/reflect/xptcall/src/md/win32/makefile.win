@@ -17,7 +17,7 @@
 
 DEPTH=..\..\..\..\..\..
 MODULE = xpcom
-IGNORE_MANIFEST=1
+
 include <$(DEPTH)\config\config.mak>
 
 DEFINES=-DWIN32_LEAN_AND_MEAN -DEXPORT_XPTC_API

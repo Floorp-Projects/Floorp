@@ -22,7 +22,7 @@ LINCS = \
         -I$(PUBLIC)\libreg      \
         $(NULL)
 
-IGNORE_MANIFEST=1
+
 
 MAKE_OBJ_TYPE	= EXE
 PROG1 = .\$(OBJDIR)\regExport.exe

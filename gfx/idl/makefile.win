@@ -16,7 +16,7 @@
 # Reserved.
 
 DEPTH=..\..
-IGNORE_MANIFEST=1
+
 
 DEFINES=-D_IMPL_NS_UI 
 MODULE=raptor 
