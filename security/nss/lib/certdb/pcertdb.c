@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.15 2001/06/20 23:14:35 ddrinan%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.16 2001/07/11 23:57:01 relyea%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -7197,6 +7197,13 @@ CERT_SaveImportedCert(CERTCertificate *cert, SECCertUsage usage,
 		trust.objectSigningFlags = CERTDB_VALID_PEER;
 	    }
 	}
+	break;
+      case certUsageAnyCA:
+	trust.sslFlags = CERTDB_VALID_CA;
+	break;
+      case certUsageSSLCA:
+	trust.sslFlags = CERTDB_VALID_CA | 
+			CERTDB_TRUSTED_CA | CERTDB_TRUSTED_CLIENT_CA;
 	break;
       default:	/* XXX added to quiet warnings; no other cases needed? */
 	break;
