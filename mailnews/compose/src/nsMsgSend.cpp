@@ -2959,7 +2959,7 @@ SendDeliveryCallback(nsIURI *aUrl, nsresult aExitCode, nsMsgDeliveryType deliver
             break;
           default:
             if (aExitCode != NS_ERROR_ABORT && !NS_IS_MSG_ERROR(aExitCode))
-              aExitCode = NS_ERROR_SEND_FAILED;
+              aExitCode = NS_ERROR_SMTP_SEND_FAILED;
             break;
         }
       msgSend->DeliverAsMailExit(aUrl, aExitCode);
