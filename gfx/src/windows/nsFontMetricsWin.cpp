@@ -1516,13 +1516,11 @@ nsFontMetricsWin::LoadGenericFont(HDC aDC, PRUnichar aChar, char** aName)
     nsAllocator::Free(*aName);
     *aName = nsnull;
     if (n && (n != (PRUint32) -1)) {
-      nsString* fontName = new nsAutoString(name);
-      if (fontName) {
-        nsFontWin* font = LoadFont(aDC, fontName);
-        delete fontName;
-        if (font && FONT_HAS_GLYPH(font->mMap, aChar)) {
-          return font;
-        }
+      nsAutoString  fontName(name);
+
+      nsFontWin* font = LoadFont(aDC, &fontName);
+      if (font && FONT_HAS_GLYPH(font->mMap, aChar)) {
+        return font;
       }
     }
   }
@@ -3069,25 +3067,23 @@ nsFontMetricsWinA::LoadGenericFont(HDC aDC, PRUnichar aChar, char** aName)
     nsAllocator::Free(*aName);
     *aName = nsnull;
     if (n && (n != (PRUint32) -1)) {
-      nsString* fontName = new nsAutoString(name);
-      if (fontName) {
-        nsFontWinA* font = (nsFontWinA*) LoadFont(aDC, fontName);
-        delete fontName;
-        if (font && FONT_HAS_GLYPH(font->mMap, aChar)) {
-          nsFontSubset** subset = font->mSubsets;
-          nsFontSubset** endSubsets = &(font->mSubsets[font->mSubsetsCount]);
-          while (subset < endSubsets) {
-            if (!(*subset)->mMap) {
-              if (!(*subset)->Load(font)) {
-                subset++;
-                continue;
-              }
+      nsAutoString fontName(name);
+
+      nsFontWinA* font = (nsFontWinA*) LoadFont(aDC, &fontName);
+      if (font && FONT_HAS_GLYPH(font->mMap, aChar)) {
+        nsFontSubset** subset = font->mSubsets;
+        nsFontSubset** endSubsets = &(font->mSubsets[font->mSubsetsCount]);
+        while (subset < endSubsets) {
+          if (!(*subset)->mMap) {
+            if (!(*subset)->Load(font)) {
+              subset++;
+              continue;
             }
-            if (FONT_HAS_GLYPH((*subset)->mMap, aChar)) {
-              return *subset;
-            }
-            subset++;
           }
+          if (FONT_HAS_GLYPH((*subset)->mMap, aChar)) {
+            return *subset;
+          }
+          subset++;
         }
       }
     }
