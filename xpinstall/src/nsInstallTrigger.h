@@ -25,7 +25,7 @@
 #define CHROME_DELAYED      0x10
 #define CHROME_SELECT       0x20
 
-class nsInstallTrigger: public nsIScriptObjectOwner, 
+class nsInstallTrigger: public nsIScriptObjectOwner,
                         public nsIDOMInstallTriggerGlobal,
                         public nsIContentHandler
 {
@@ -34,7 +34,7 @@ class nsInstallTrigger: public nsIScriptObjectOwner,
 
         nsInstallTrigger();
         virtual ~nsInstallTrigger();
-        
+
         NS_DECL_ISUPPORTS
         NS_DECL_NSICONTENTHANDLER
 
@@ -50,11 +50,9 @@ class nsInstallTrigger: public nsIScriptObjectOwner,
         NS_IMETHOD    CompareVersion(const nsString& aRegName, nsIDOMInstallVersion* aVersion, PRInt32* aReturn);
         NS_IMETHOD    GetVersion(const nsString& component, nsString& version);
 
-        
+
     private:
         void *mScriptObject;
-
-        NS_IMETHOD    InitRegistry(void);
 };
 
 #define NS_INSTALLTRIGGERCOMPONENT_CONTRACTID "@mozilla.org/xpinstall/installtrigger;1"

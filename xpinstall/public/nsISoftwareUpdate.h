@@ -10,15 +10,15 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
- * The Original Code is Mozilla Communicator client code, 
- * released March 31, 1998. 
+ * The Original Code is Mozilla Communicator client code,
+ * released March 31, 1998.
  *
- * The Initial Developer of the Original Code is Netscape Communications 
+ * The Initial Developer of the Original Code is Netscape Communications
  * Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *     Daniel Veditz <dveditz@netscape.com>
  *     Douglas Turner <dougt@netscape.com>
  */
@@ -57,20 +57,20 @@
   0xb09f, 										 \
   0x11d2,						                 \
  {0xbc, 0xde, 0x00, 0x80, 0x5f, 0x0e, 0x13, 0x53}\
-} 
+}
 
 
-class nsISoftwareUpdate : public nsISupports  
+class nsISoftwareUpdate : public nsISupports
 {
     public:
-        	NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISOFTWAREUPDATE_IID)
-            
+            NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISOFTWAREUPDATE_IID)
+
             NS_IMETHOD InstallJar(nsIFile* localFile,
                                   const PRUnichar* URL,
                                   const PRUnichar* arguments,
                                   nsIDOMWindowInternal* aParentWindow,
                                   PRUint32 flags,
-                                  nsIXPIListener* aListener = 0) = 0; 
+                                  nsIXPIListener* aListener = 0) = 0;
 
             NS_IMETHOD InstallChrome(PRUint32 aType,
                                      nsIFile* aFile,
@@ -78,38 +78,16 @@ class nsISoftwareUpdate : public nsISupports
                                      const PRUnichar* aName,
                                      PRBool aSelect,
                                      nsIXPIListener* aListener = 0) = 0;
-            
+
             NS_IMETHOD RegisterListener(nsIXPIListener *aListener) = 0;
-            
+
             /* FIX: these should be in a private interface */
-            NS_IMETHOD InstallJarCallBack()                   = 0; 
+            NS_IMETHOD InstallJarCallBack()                   = 0;
             NS_IMETHOD GetMasterListener(nsIXPIListener **aListener) = 0;
             NS_IMETHOD SetActiveListener(nsIXPIListener *aListener) = 0;
             NS_IMETHOD StartupTasks( PRBool* outAutoreg ) = 0;
 };
 
-
-// Module implementation
-class nsSoftwareUpdateModule : public nsIModule
-{
-public:
-    nsSoftwareUpdateModule();
-    virtual ~nsSoftwareUpdateModule();
-
-    NS_DECL_ISUPPORTS
-
-    NS_DECL_NSIMODULE
-
-protected:
-    nsresult Initialize();
-
-    void Shutdown();
-
-    PRBool mInitialized;
-    nsCOMPtr<nsIGenericFactory> mSoftwareUpdateFactory;
-    nsCOMPtr<nsIGenericFactory> mInstallTriggerFactory;
-    nsCOMPtr<nsIGenericFactory> mInstallVersionFactory;
-};
 
 #define XPI_ROOT_KEY    "software/mozilla/xpinstall"
 #define XPI_AUTOREG_VAL "Autoreg"

@@ -19,12 +19,12 @@ class nsInstallVersion: public nsIScriptObjectOwner, public nsIDOMInstallVersion
 
         nsInstallVersion();
         virtual ~nsInstallVersion();
-        
+
         NS_DECL_ISUPPORTS
 
         NS_IMETHOD    GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
         NS_IMETHOD    SetScriptObject(void* aScriptObject);
-        
+
         NS_IMETHOD    Init(PRInt32 aMajor, PRInt32 aMinor, PRInt32 aRelease, PRInt32 aBuild);
         NS_IMETHOD    Init(const nsString& aVersionString);
 
@@ -39,7 +39,7 @@ class nsInstallVersion: public nsIScriptObjectOwner, public nsIDOMInstallVersion
 
         NS_IMETHOD    GetBuild(PRInt32* aBuild);
         NS_IMETHOD    SetBuild(PRInt32 aBuild);
-        
+
         NS_IMETHOD    ToString(nsString& aReturn);
         NS_IMETHOD    CompareTo(nsIDOMInstallVersion* aVersion, PRInt32* aReturn);
         NS_IMETHOD    CompareTo(const nsString& aString, PRInt32* aReturn);
