@@ -43,9 +43,10 @@ PDB          = /PDB:$(PDBFILE)
 IMPFILE      = $(PROGRAM:.exe=.lib)
 IMP          = /IMPLIB:$(IMPFILE)
 XP_DEFINE   += -DXP_PC
-LIB_SUFFIX   = lib
+LIB_SUFFIX   = .lib
 DLL_SUFFIX   = dll
 OUT_NAME     = -out:
+ARCHIVE_SUFFIX = _s
 
 OS_LIBS = gdi32.lib kernel32.lib advapi32.lib user32.lib
 
@@ -53,7 +54,6 @@ GUI_LIBS =
 NSPR_LIBS = libplds21 libplc21 libnspr21 libmsgc21
 OPT_SLASH = /
 LIB_PREFIX      =
-LIB_SUFFIX      = .lib
 XP_REG_LIB      = libreg$(MOZ_BITS)
 
 

@@ -106,11 +106,14 @@ ifdef LIBRARY_NAME
 		# Win16 requires library names conforming to the 8.3 rule.
 		# other platforms do not.
 		#
-		LIBRARY        = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).lib
-		SHARED_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).dll
-		IMPORT_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).lib
+		LIBRARY        = $(OBJDIR)/lib$(LIBRARY_NAME)$(LIBRARY_VERSION)$(ARCHIVE_SUFFIX)$(LIB_SUFFIX)
+ifndef ARCHIVE_ONLY
+	    SHARED_LIBRARY = $(OBJDIR)/lib$(LIBRARY_NAME)$(LIBRARY_VERSION).dll
+		IMPORT_LIBRARY = $(OBJDIR)/lib$(LIBRARY_NAME)$(LIBRARY_VERSION)$(LIB_SUFFIX)
+endif
 	else
 		LIBRARY = $(OBJDIR)/lib$(LIBRARY_NAME).$(LIB_SUFFIX)
+ifndef ARCHIVE_ONLY
 		ifeq ($(OS_ARCH)$(OS_RELEASE), AIX4.1)
 			SHARED_LIBRARY = $(OBJDIR)/lib$(LIBRARY_NAME)_shr.a
 		else
@@ -124,6 +127,7 @@ ifdef LIBRARY_NAME
 				PURE_LIBRARY = $(OBJDIR)/purelib$(LIBRARY_NAME).$(LIB_SUFFIX)
 			endif
 		endif
+endif
 	endif
 endif
 
