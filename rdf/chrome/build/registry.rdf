@@ -1,6 +1,18 @@
 <r:RDF xmlns:r="http://www.w3.org/TR/WD-rdf-syntax#" 
          xmlns="http://chrome.mozilla.org/rdf#"> 
 
+	<chrome r:ID="chrome://global/">
+	
+    <skin> 
+      <r:Description r:ID="chrome://global/skin/">
+	    <base>resource:/res/samples/</base>
+        <main>xul.css</main> 
+      </r:Description> 
+    </skin> 
+	
+	</chrome>
+	
+
   <chrome r:ID="chrome://navigator/"> 
 
     <skin> 
@@ -53,7 +65,27 @@
       </r:Description> 
     </content> 
 
-  </chrome> 
+  </chrome>
+  
+  
+  <chrome r:ID="chrome://editor/">
+  
+    <skin> 
+      <r:Description r:ID="chrome://editor/skin/">
+	    <base>resource:/res/editor/skin/</base>
+        <main>editordialogs.css</main> 
+      </r:Description> 
+    </skin> 
+
+    <content> 
+      <r:Description r:ID="chrome://editor/content/">
+	    <base>resource:/res/editor/content/</base>
+        <main>EditorAppShell.xul</main> 
+      </r:Description> 
+    </content> 
+  
+  </chrome>
+  
 </r:RDF> 
 
 
