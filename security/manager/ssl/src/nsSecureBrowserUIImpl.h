@@ -30,7 +30,6 @@
 #include "nsXPIDLString.h"
 #include "nsString.h"
 #include "nsIObserver.h"
-#include "nsIDocumentLoaderObserver.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMWindow.h"
 #include "nsIStringBundle.h"
