@@ -367,6 +367,21 @@ public:
                                                      nsAString& aResult);
 
   /**
+   * Parse a string value into an int or pixel HTMLValue
+   *
+   * @param aString the string to parse
+   * @param aResult the resulting HTMLValue [OUT]
+   * @param aValueUnit the unit to use (eHTMLUnit_Pixel or Integer)
+   * @return whether the value could be parsed
+   */
+  static PRBool ParseValue(const nsAString& aString, nsHTMLValue& aResult,
+                                  nsHTMLUnit aValueUnit)
+  {
+    return ParseValue(aString, PR_INT32_MIN, PR_INT32_MAX, aResult, aValueUnit);
+
+  }
+  
+  /**
    * Parse a string value into an int or pixel HTMLValue with minimum value
    *
    * @param aString the string to parse
@@ -376,14 +391,18 @@ public:
    * @return whether the value could be parsed
    */
   static PRBool ParseValue(const nsAString& aString, PRInt32 aMin,
-                           nsHTMLValue& aResult, nsHTMLUnit aValueUnit);
+                           nsHTMLValue& aResult, nsHTMLUnit aValueUnit)
+  {
+    return ParseValue(aString, aMin, PR_INT32_MAX, aResult, aValueUnit);
+  }
 
   /**
-   * Parse a string value into an int or pixel HTMLValue with minimum value
+   * Parse a string value into an int or pixel HTMLValue with minimum
+   * value and maximum value
    *
    * @param aString the string to parse
    * @param aMin the minimum value (if value is less it will be bumped up)
-   * @param aMin the maximum value (if value is greater it will be chopped down)
+   * @param aMax the maximum value (if value is greater it will be chopped down)
    * @param aResult the resulting HTMLValue [OUT]
    * @param aValueUnit the unit to use (eHTMLUnit_Pixel or Integer)
    * @return whether the value could be parsed

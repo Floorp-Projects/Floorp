@@ -6509,9 +6509,6 @@ nsBlockFrame::RenumberLists(nsIPresContext* aPresContext)
         hc->GetHTMLAttribute(nsHTMLAtoms::start, value)) {
       if (eHTMLUnit_Integer == value.GetUnit()) {
         ordinal = value.GetIntValue();
-        if (ordinal <= 0) {
-          ordinal = 1;
-        }
       }
     }
   }

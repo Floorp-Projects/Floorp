@@ -90,9 +90,9 @@ protected:
                       const nsHTMLReflowState& aReflowState,
                       nsHTMLReflowMetrics& aMetrics);
 
-  void GetListItemText(nsIPresContext* aCX,
-                       const nsStyleList& aStyleList,
-                       nsString& aResult);
+  PRBool GetListItemText(nsIPresContext* aCX,
+                         const nsStyleList& aStyleList,
+                         nsString& aResult);
 
   void GetBaseURI(nsIURI **aURI);
   void GetLoadGroup(nsIPresContext *aPresContext, nsILoadGroup **aLoadGroup);
