@@ -133,6 +133,11 @@ public class NativeRegExpCtor extends NativeFunction {
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,
                        Object[] args)
     {
+        if (args.length > 0 && args[0] instanceof NativeRegExp &&
+            (args.length == 1 || args[1] == Undefined.instance))
+          {
+            return args[0];
+        }
         return construct(cx, parent, args);
     }
 

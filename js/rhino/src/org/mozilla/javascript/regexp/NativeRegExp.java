@@ -177,7 +177,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
     {
         NativeRegExp thisObj = (NativeRegExp) thisVal; // XXX check cast
         if (args.length > 0 && args[0] instanceof NativeRegExp) {
-            if (args.length > 1) {
+            if (args.length > 1 && args[1] != Undefined.instance) {
                 // report error
                 throw NativeGlobal.constructError(
                              cx, "TypeError",
@@ -195,8 +195,9 @@ public class NativeRegExp extends ScriptableObject implements Function {
             return thisObj;
         }
         String s = args.length == 0 ? "" : ScriptRuntime.toString(args[0]);
-        String global = args.length > 1 ? ScriptRuntime.toString(args[1])
-                                        : null;
+        String global = args.length > 1 && args[1] != Undefined.instance
+                            ? ScriptRuntime.toString(args[1])
+                            : null;
         thisObj.init(cx, funObj, s, global, false);
         return thisObj;
     }
