@@ -902,7 +902,7 @@ case "$target" in
         MKSHLIB_FORCE_ALL=
         MKSHLIB_UNFORCE_ALL=
     else
-        CYGWIN_WRAPPER=${srcdir}/build/cygwin-wrapper
+        CYGWIN_WRAPPER="sh ${srcdir}/build/cygwin-wrapper"
         CC=cl
         CXX=cl
         HOST_CC=cl
