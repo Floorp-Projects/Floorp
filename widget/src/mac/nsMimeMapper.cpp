@@ -152,6 +152,8 @@ nsMimeMapperMac :: ParseMappings ( const char* inMappings )
     mMappings.push_back( MimePair(flavor, mimeType) );
 
     currPosition += 10 + 2 + strlen(mimeType);  // see ExportMapping() for explanation of this calculation
+    
+    ++mCounter;
   } // while we're not at the end yet
   
 } // ParseMappings
@@ -163,7 +165,8 @@ nsMimeMapperMac :: ParseMappings ( const char* inMappings )
 // The mappings are of the form
 //   <# of pairs> 1..N of (<4 char code> <space> <mime type> <space>)
 //
-// Caller is responsible for disposing of the memory allocated here
+// Caller is responsible for disposing of the memory allocated here. |outLength| counts
+// the null at the end of the string.
 //
 char*
 nsMimeMapperMac :: ExportMapping ( short * outLength ) const
@@ -219,7 +222,7 @@ nsMimeMapperMac :: ExportMapping ( short * outLength ) const
     } // if we got the memory
   } // if there is anything in our list
   
-  *outLength = len;
+  *outLength = len + 1;  // don't forget the NULL
   return exportBuffer;
   
 } // ExportMapping
