@@ -418,6 +418,12 @@ xpfe/components/history/Makefile
 xpfe/components/history/src/Makefile
 xpfe/components/history/public/Makefile
 xpfe/components/history/resources/Makefile
+xpfe/components/prefwindow/Makefile
+xpfe/components/prefwindow/src/Makefile
+xpfe/components/prefwindow/public/Makefile
+xpfe/components/prefwindow/resources/Makefile
+xpfe/components/prefwindow/resources/content/Makefile
+xpfe/components/prefwindow/resources/skin/Makefile
 xpfe/components/related/Makefile
 xpfe/components/related/src/Makefile
 xpfe/components/related/public/Makefile
