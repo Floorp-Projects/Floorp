@@ -15,25 +15,24 @@ The JavaScript shell provides a simple way to run scripts in batch mode
 or an interactive environment for exploratory programming.
 <h2>
 Invoking the Shell</h2>
-<tt>java org.mozilla.javascript.tools.shell.Main</tt> [<i>options</i>]
-<i>file</i><tt>.js
-[<i>script-arguments</i>]</tt>
-<p>where <i>options</i> are:
-<p><tt>-e </tt><i>script-source</i>
+<tt>java org.mozilla.javascript.tools.shell.Main [<i>options</i>] 
+<i>script-filename-or-url</i> [<i>script-arguments</i>]</tt>
+<p>where <tt><i>options</i></tt> are:
+<p><tt>-e <i>script-source</i></tt>
 <blockquote>Executes <i>script-source</i> as a JavaScript script.</blockquote>
-<tt>-f </tt><i>script-filename</i>
-<blockquote>Reads filename specified by <i>script-filename</i> and executes
-it as a JavaScript script.</blockquote>
-<tt>-opt </tt><i>optLevel</i>
-<br><tt>-O</tt> <i>optLevel</i>
+<tt>-f <i>script-filename-or-url</i></tt>
+<blockquote>Reads <i>script-filename-or-url</i> content and execute it as a JavaScript script.</blockquote>
+<tt>-opt <i>optLevel</i></tt>
+<br><tt>-O <i>optLevel</i></tt>
 <ul>Optimizes at level <i>optLevel</i>, which must be an integer between
 0 and 9. See <a href="opt.html">Optimization</a> for more details.</ul>
-<tt>-version </tt><i>versionNumber</i>
+<tt>-version <i>versionNumber</i></tt>
 <ul>Specifies the language version to compile with. The string <i>versionNumber</i>
 must be one of <tt>100</tt>, <tt>110</tt>, <tt>120</tt>, <tt>130</tt>,
 or <tt>140</tt>. See <a href="overview.html#versions">JavaScript Language
 Versions</a> for more information on language versions.</ul>
 
+If the shell is invoked with the system property rhino.use_java_policy_security set to true and with a security manager installed, the shell restricts scripts permissions based on their URLs according to Java policy settings. This is available only if JVM implements Java2 security model.
 <h2>
 Predefined Properties</h2>
 Scripts executing in the shell have access to some additional properties
