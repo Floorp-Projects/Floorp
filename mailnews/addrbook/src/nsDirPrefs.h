@@ -361,10 +361,6 @@ PRBool      DIR_IsUriAttribute (DIR_Server *s, const char *attrib);
 
 nsresult DIR_AttributeNameToId (DIR_Server *server, const char *attrName, DIR_AttributeId *id);
 
-PRInt32 DIR_GetNumAttributeIDsForColumns(DIR_Server * server);
-/* caller must free returned list of ids */
-nsresult DIR_GetAttributeIDsForColumns(DIR_Server *server, DIR_AttributeId ** ids , PRInt32 * numIds);
-
 /* APIs for authentication */
 void		DIR_SetAuthDN (DIR_Server *s, const char *dn);
 void		DIR_SetPassword (DIR_Server *s, const char *password);
