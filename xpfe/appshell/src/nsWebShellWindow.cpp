@@ -537,7 +537,7 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
         // set pnsMenuBar as a nsMenuListener on aParentWindow
         nsCOMPtr<nsIMenuListener> menuListener;
         pnsMenuBar->QueryInterface(kIMenuListenerIID, getter_AddRefs(menuListener));
-        mWindow->AddMenuListener(menuListener);
+        aParentWindow->AddMenuListener(menuListener);
 
         nsCOMPtr<nsIDOMNode> menuNode;
         menubarNode->GetFirstChild(getter_AddRefs(menuNode));
@@ -559,7 +559,7 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
         } // end while (nsnull != menuNode)
           
         // Give the aParentWindow this nsMenuBar to hold onto.
-        mWindow->SetMenuBar(pnsMenuBar);
+        aParentWindow->SetMenuBar(pnsMenuBar);
       
         // HACK: force a paint for now
         pnsMenuBar->Paint();
