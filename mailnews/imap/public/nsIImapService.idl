@@ -188,7 +188,8 @@ interface nsIImapService : nsISupports
                              in boolean aInSelectedState,
                              in nsIUrlListener aUrlListener,
                              out nsIURI aURL,
-                             in nsISupports aCopyState);
+                             in nsISupports aCopyState,
+                             in nsIMsgWindow aMsgWindow);
   
   void downloadMessagesForOffline(in string aMessageIds, in nsIMsgFolder aSrcFolder,
                       in nsIUrlListener aListener, in nsIMsgWindow   aMsgWindow);

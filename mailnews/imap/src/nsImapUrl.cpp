@@ -152,7 +152,6 @@ nsImapUrl::~nsImapUrl()
   
 NS_IMPL_ADDREF_INHERITED(nsImapUrl, nsMsgMailNewsUrl)
 
-
 NS_IMPL_RELEASE_INHERITED(nsImapUrl, nsMsgMailNewsUrl)
 
 NS_INTERFACE_MAP_BEGIN(nsImapUrl)

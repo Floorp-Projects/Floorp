@@ -2725,7 +2725,8 @@ NS_IMETHODIMP nsImapMailFolder::EndCopy(PRBool copySucceeded)
                                                 this, "", PR_TRUE,
                                                 m_copyState->m_selectedState,
                                                 urlListener, nsnull,
-                                                copySupport);
+                                                copySupport,
+                                                m_copyState->m_msgWindow);
 		
     }
   return rv;
@@ -4137,9 +4138,9 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
           if (m_copyState)
           {
             nsCOMPtr<nsIMsgFolder> srcFolder = do_QueryInterface(m_copyState->m_srcSupport, &rv);
-            if (NS_SUCCEEDED(aExitCode))
+            if (m_copyState->m_isMove && !m_copyState->m_isCrossServerOp)
             {
-              if (m_copyState->m_isMove && !m_copyState->m_isCrossServerOp)
+              if (NS_SUCCEEDED(aExitCode))
               {
                 nsCOMPtr<nsIMsgDatabase> srcDB;
                 if (srcFolder)
@@ -4166,24 +4167,26 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                     srcDB->DeleteMessages(&srcKeyArray, nsnull);  
                   else
                     MarkMessagesImapDeleted(&srcKeyArray, PR_TRUE, srcDB);
-                  
-                  srcFolder->EnableNotifications(allMessageCountNotifications, PR_TRUE);
                 }
-                
+                srcFolder->EnableNotifications(allMessageCountNotifications, PR_TRUE);
                 // even if we're showing deleted messages, 
                 // we still need to notify FE so it will show the imap deleted flag
-                srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
+                srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);      
               }
-              if (m_copyState->m_msgWindow)
+              else
               {
-                nsCOMPtr<nsITransactionManager> txnMgr;
-                m_copyState->m_msgWindow->GetTransactionManager(getter_AddRefs(txnMgr));
-                if (txnMgr)
-                  txnMgr->DoTransaction(m_copyState->m_undoMsgTxn);
+                srcFolder->EnableNotifications(allMessageCountNotifications, PR_TRUE);
+                srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgFailedAtom);  
               }
+                
             }
-            else if (m_copyState->m_isMove && !m_copyState->m_isCrossServerOp && srcFolder)
-               srcFolder->EnableNotifications(allMessageCountNotifications, PR_TRUE);  //enable message count notification even if we failed.
+            if (m_copyState->m_msgWindow && NS_SUCCEEDED(aExitCode)) //we should do this only if move/copy succeeds
+            {
+              nsCOMPtr<nsITransactionManager> txnMgr;
+              m_copyState->m_msgWindow->GetTransactionManager(getter_AddRefs(txnMgr));
+              if (txnMgr)
+                txnMgr->DoTransaction(m_copyState->m_undoMsgTxn);
+            }
             if (m_copyState->m_listener)
               listener = do_QueryInterface(m_copyState->m_listener);
             ClearCopyState(aExitCode);
@@ -4253,25 +4256,31 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                   UpdateFolder(aWindow);
                 else
                   UpdatePendingCounts(PR_TRUE, PR_FALSE);
-              }
-              m_copyState->m_curIndex++;
-              if (m_copyState->m_curIndex >= m_copyState->m_totalCount)
-              {
-                if (m_copyState->m_msgWindow && m_copyState->m_undoMsgTxn)
+
+                m_copyState->m_curIndex++;
+                if (m_copyState->m_curIndex >= m_copyState->m_totalCount)
                 {
-                  nsCOMPtr<nsITransactionManager> txnMgr;
-                  m_copyState->m_msgWindow->GetTransactionManager(getter_AddRefs(txnMgr));
-                  if (txnMgr)
-                    txnMgr->DoTransaction(m_copyState->m_undoMsgTxn);
+                  if (m_copyState->m_msgWindow && m_copyState->m_undoMsgTxn)
+                  {
+                    nsCOMPtr<nsITransactionManager> txnMgr;
+                    m_copyState->m_msgWindow->GetTransactionManager(getter_AddRefs(txnMgr));
+                    if (txnMgr)
+                      txnMgr->DoTransaction(m_copyState->m_undoMsgTxn);
+                  }
+                  if (m_copyState->m_listener)
+                    listener = do_QueryInterface(m_copyState->m_listener);
+                  ClearCopyState(aExitCode);
+                  sendEndCopyNotification = PR_TRUE;
                 }
+              }
+              else
+              {  //clear the copyState if copy has failed
 
                 if (m_copyState->m_listener)
                   listener = do_QueryInterface(m_copyState->m_listener);
                 ClearCopyState(aExitCode);
                 sendEndCopyNotification = PR_TRUE;
-              }
-              else
-                NS_ASSERTION(PR_FALSE, "not clearing copy state");
+              }              
             }
             break;
         case nsIImapUrl::nsImapRenameFolder:
@@ -5322,27 +5331,28 @@ nsImapMailFolder::CopyNextStreamMessage(nsIImapProtocol* aProtocol,
                                         nsIImapUrl * aUrl,
                                         PRBool copySucceeded)
 {
+    //if copy has failed it could be either user interrupted it or for some other reason
+    //don't do any subsequent copies or delete src messages if it is move
+
+    if (!copySucceeded)
+      return NS_OK;
+
     nsresult rv = NS_ERROR_NULL_POINTER;
-    if (!aUrl) return rv;
+    if (!aUrl) 
+      return rv;
     nsCOMPtr<nsISupports> copyState;
     aUrl->GetCopyState(getter_AddRefs(copyState));
-    if (!copyState) return rv;
+    if (!copyState) 
+      return rv;
 
     nsCOMPtr<nsImapMailCopyState> mailCopyState = do_QueryInterface(copyState,
                                                                     &rv);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) 
+      return rv;
 
-    if (!mailCopyState->m_streamCopy) return NS_OK;
-    //remove the message that did not get copied successfully. 
-    if (mailCopyState->m_curIndex > 0 && !copySucceeded && mailCopyState->m_isMove)
-    {
-      rv = mailCopyState->m_messages->RemoveElementAt(mailCopyState->m_curIndex-1);
-      if (NS_SUCCEEDED(rv))
-      {
-        mailCopyState->m_curIndex--;
-        mailCopyState->m_totalCount--;
-      }
-    }
+    if (!mailCopyState->m_streamCopy) 
+      return NS_OK;
+
     if (mailCopyState->m_curIndex < mailCopyState->m_totalCount)
     {
        nsCOMPtr<nsISupports> aSupport =
@@ -6125,7 +6135,8 @@ nsImapMailFolder::CopyFileMessage(nsIFileSpec* fileSpec,
                                             messageId.get(),
                                             PR_TRUE, isDraftOrTemplate,
                                             urlListener, nsnull,
-                                            copySupport);
+                                            copySupport,
+                                            msgWindow);
     if (NS_FAILED(rv))
       ClearCopyState(rv);
 

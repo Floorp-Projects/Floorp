@@ -939,7 +939,6 @@ nsImapService::CopyMessage(const char * aSrcMailboxURI, nsIStreamListener *
               if (msgurl)
                 msgurl->SetMsgIsInLocalCache(hasMsgOffline);
             }
-
             // now try to download the message
             nsImapAction imapAction = nsIImapUrl::nsImapOnlineToOfflineCopy;
             if (moveMessage)
@@ -1620,7 +1619,6 @@ nsImapService::DeleteMessages(nsIEventQueue * aClientEventQueue,
                                           aUrlListener, urlSpec, hierarchySeparator);
 	if (NS_SUCCEEDED(rv) && imapUrl)
 	{
-
 		rv = imapUrl->SetImapAction(nsIImapUrl::nsImapMsgFetch);
         rv = SetImapUrlSink(aImapMailFolder, imapUrl);
 
@@ -2080,6 +2078,7 @@ nsImapService::OnlineMessageCopy(nsIEventQueue* aClientEventQueue,
         nsCOMPtr<nsIMsgMailNewsUrl> msgurl (do_QueryInterface(imapUrl));
 
         msgurl->SetMsgWindow(aMsgWindow);
+        imapUrl->AddChannelToLoadGroup();  //we get the loadGroup from msgWindow
         nsCOMPtr<nsIURI> uri = do_QueryInterface(imapUrl);
 
         if (isMove)
@@ -2233,7 +2232,8 @@ nsImapService::AppendMessageFromFile(nsIEventQueue* aClientEventQueue,
                                      PRBool inSelectedState, // needs to be in
                                      nsIUrlListener* aListener,
                                      nsIURI** aURL,
-                                     nsISupports* aCopyState)
+                                     nsISupports* aCopyState,
+                                     nsIMsgWindow *aMsgWindow)
 {
     nsresult rv = NS_ERROR_NULL_POINTER;
     if (!aClientEventQueue || !aFileSpec || !aDstFolder)
@@ -2246,6 +2246,14 @@ nsImapService::AppendMessageFromFile(nsIEventQueue* aClientEventQueue,
     rv = CreateStartOfImapUrl(nsnull, getter_AddRefs(imapUrl), aDstFolder, aListener, urlSpec, hierarchySeparator);
     if (NS_SUCCEEDED(rv))
     {
+        nsCOMPtr <nsIMsgMailNewsUrl> msgUrl = do_QueryInterface(imapUrl);
+        if (msgUrl && aMsgWindow)
+        {
+          //we get the loadGroup from msgWindow
+          msgUrl->SetMsgWindow(aMsgWindow);
+          imapUrl->AddChannelToLoadGroup();
+        }
+
         SetImapUrlSink(aDstFolder, imapUrl);
         imapUrl->SetMsgFileSpec(aFileSpec);
         imapUrl->SetCopyState(aCopyState);
