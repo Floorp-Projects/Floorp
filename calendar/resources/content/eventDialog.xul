@@ -214,8 +214,10 @@
                         </hbox>
                         <hbox>
                             <textbox id="uri-field"
+#ifndef MOZ_SUNBIRD
                                      type="autocomplete"
                                      searchSessions="history"
+#endif
                                      flex="1"/>
                             <button label="&newevent.uri.visit.label;"
                                     oncommand="loadURL()"/>
@@ -275,9 +277,11 @@
                                          label="&newevent.email.label;"
                                          checked="false"
                                          oncommand="commandAlarmEmail()"/>
-                               <textbox type="autocomplete"
+                               <textbox id="alarm-email-field"
+#ifndef MOZ_SUNBIRD
+                                        type="autocomplete"
                                         searchSessions="addrbook"
-                                        id="alarm-email-field"
+#endif
                                         size="39"
                                         value="" />
                            </hbox>       
