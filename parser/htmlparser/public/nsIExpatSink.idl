@@ -41,27 +41,27 @@
 [scriptable, uuid(1DEEA160-C661-11d5-84CC-0010A4E0C706)]
 interface nsIExpatSink : nsISupports 
 {
-  void HandleStartElement([const] in wstring aName,
+  void HandleStartElement(in wstring aName,
                           [array, size_is (aAttsCount)] in wstring aAtts,
-						  [const] in unsigned long aAttsCount,
-						  [const] in unsigned long aIndex,
-						  [const] in unsigned long aLineNumber);
+                          in unsigned long aAttsCount,
+                          in unsigned long aIndex,
+                          in unsigned long aLineNumber);
 
-  void HandleEndElement([const] in wstring aName);
+  void HandleEndElement(in wstring aName);
   
-  void HandleComment([const] in wstring aName);
+  void HandleComment(in wstring aName);
       
-  void HandleCDataSection([const] in wstring aData, 
-                          [const] in unsigned long aLength);
+  void HandleCDataSection(in wstring aData, 
+                          in unsigned long aLength);
   
-  void HandleDoctypeDecl([const] in wstring aDoctype);
+  void HandleDoctypeDecl(in wstring aDoctype);
 
-  void HandleCharacterData([const] in wstring aData, 
-                           [const] in unsigned long aLength);
+  void HandleCharacterData(in wstring aData, 
+                           in unsigned long aLength);
 
-  void HandleProcessingInstruction([const] in wstring aTarget, 
-                                   [const] in wstring aData);
+  void HandleProcessingInstruction(in wstring aTarget, 
+                                   in wstring aData);
 
-  void ReportError([const] in wstring aErrorText,
-                   [const] in wstring aSourceText);
+  void ReportError(in wstring aErrorText,
+                   in wstring aSourceText);
 }; 

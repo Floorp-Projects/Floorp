@@ -627,7 +627,7 @@ RDFContentSinkImpl::HandleProcessingInstruction(const PRUnichar *aTarget,
 
 NS_IMETHODIMP
 RDFContentSinkImpl::ReportError(const PRUnichar* aErrorText, 
-                              const PRUnichar* aSourceText)
+                                const PRUnichar* aSourceText)
 {
   return NS_OK;
 }

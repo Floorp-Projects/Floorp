@@ -862,9 +862,9 @@ NS_NewXULContentSink(nsIXULContentSink** aResult)
 NS_IMETHODIMP 
 XULContentSinkImpl::HandleStartElement(const PRUnichar *aName, 
                                        const PRUnichar **aAtts,
-                                       const PRUint32 aAttsCount, 
-                                       const PRUint32 aIndex, 
-                                       const PRUint32 aLineNumber)
+                                       PRUint32 aAttsCount, 
+                                       PRUint32 aIndex, 
+                                       PRUint32 aLineNumber)
 { 
   // XXX Hopefully the parser will flag this before we get here. If
   // we're in the epilog, there should be no new elements
