@@ -35,7 +35,7 @@ MOZ_TOP=mozilla
 #MOZ_BRANCH=SeaMonkey_M17_BRANCH
 #NSPR_CO_TAG=SeaMonkey_M17_BRANCH
 #PSM_CO_TAG=SeaMonkey_M17_BRANCH
-#LDAP_SDK_CO_TAG=SeaMonkey_M17_BRANCH
+#LDAPCSDK_CO_TAG=SeaMonkey_M17_BRANCH
 
 !if "$(MOZ_BRANCH)" != ""
 CVS_BRANCH=-r $(MOZ_BRANCH)
@@ -135,7 +135,7 @@ CVSCO_PSM = cvs -q $(CVS_FLAGS) co $(PSM_CO_FLAGS) -P
 #//------------------------------------------------------------------------
 
 !if "$(LDAPCSDK_CO_TAG)" != ""
-LDAPCSDK_CO_FLAGS=-r $(LDAPSDK_CO_TAG)
+LDAPCSDK_CO_FLAGS=-r $(LDAPCSDK_CO_TAG)
 !else
 LDAPCSDK_CO_FLAGS=-r LDAPCSDK_40_BRANCH
 !endif
