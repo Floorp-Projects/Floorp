@@ -78,7 +78,8 @@ static AppendItem NAME_ATTRS_ARRAY[] = {
 	{kDisplayNameColumn, "propertyDisplayName", AppendLabel},   
 	{kNicknameColumn, "propertyNickname", AppendLabel},
 	{kPriEmailColumn, "", AppendLine},       
-	{k2ndEmailColumn, "", AppendLine}
+	{k2ndEmailColumn, "", AppendLine},
+  {kAimScreenNameColumn, "propertyScreenName", AppendLabel},
 };
 
 static AppendItem PHONE_ATTRS_ARRAY[] = { 
@@ -1280,7 +1281,6 @@ NS_IMETHODIMP nsAbCardProperty::ConvertToBase64EncodedXML(char **result)
 
   xmlStr.Append(NS_LITERAL_STRING("<?xml version=\"1.0\"?>\n").get());
   xmlStr.Append(NS_LITERAL_STRING("<?xml-stylesheet type=\"text/css\" href=\"chrome://messenger/content/addressbook/print.css\"?>\n").get());
-
   xmlStr.Append(NS_LITERAL_STRING("<directory>\n").get());
 
   // Get Address Book string and set it as title of XML document
@@ -1298,7 +1298,6 @@ NS_IMETHODIMP nsAbCardProperty::ConvertToBase64EncodedXML(char **result)
       }
     }
   }
-
 
   nsXPIDLString xmlSubstr;
   rv = ConvertToXMLPrintData(getter_Copies(xmlSubstr));
