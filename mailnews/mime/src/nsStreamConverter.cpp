@@ -392,15 +392,14 @@ nsStreamConverter::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar
   // printf("nsStreamConverter::OnStopBinding()\n");
 #endif
 
-  // First close the output stream...
-  mOutStream->Close();
-
   //
   // Now complete the stream!
   //
   if (mBridgeStream)
     mime_display_stream_complete((nsMIMESession *)mBridgeStream);
-  mBridgeStream = nsnull;
+
+  // First close the output stream...
+  mOutStream->Close();
 
   // Make sure to do necessary cleanup!
   InternalCleanup();
