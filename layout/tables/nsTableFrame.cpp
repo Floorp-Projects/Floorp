@@ -73,7 +73,7 @@
 #include "nsIScrollableFrame.h"
 #include "nsHTMLReflowCommand.h"
 #include "nsIFrameManager.h"
-#include "nsStyleUtil.h"
+#include "nsCSSRendering.h"
 
 
 
@@ -6643,7 +6643,7 @@ nsTableFrame::PaintBCBorders(nsIPresContext*      aPresContext,
   PRInt32 startColX = childAreaOffset.left;                    // x position of first col in damage area
   PRInt32 startRowY = (mPrevInFlow) ? 0 : childAreaOffset.top; // y position of first row in damage area
 
-  const nsStyleBackground* bgColor = nsStyleUtil::FindNonTransparentBackground(mStyleContext);
+  const nsStyleBackground* bgColor = nsCSSRendering::FindNonTransparentBackground(mStyleContext);
   // determine the damage area in terms of rows and columns and finalize startColX and startRowY
   PRUint32 startRowIndex, endRowIndex, startColIndex, endColIndex;
   startRowIndex = endRowIndex = startColIndex = endColIndex = 0;

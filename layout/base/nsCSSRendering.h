@@ -117,6 +117,16 @@ public:
                                PRBool* aIsCanvas);
 
   /**
+   * Find a non-transparent background, for various table-related and
+   * HR-related backwards-compatibility hacks.  Be very hesitant if
+   * you're considering calling this function -- it's usually not what
+   * you want.
+   */
+  static const nsStyleBackground*
+  FindNonTransparentBackground(nsIStyleContext* aContext,
+                               PRBool aStartAtParent = PR_FALSE);
+
+  /**
    * Render the background for an element using css rendering rules
    * for backgrounds.
    *

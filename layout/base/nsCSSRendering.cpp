@@ -44,7 +44,6 @@
 #include "nsIViewManager.h"
 #include "nsIPresShell.h"
 #include "nsIStyleContext.h"
-#include "nsStyleUtil.h"
 #include "nsIScrollableView.h"
 #include "nsLayoutAtoms.h"
 #include "nsIDrawingSurface.h"
@@ -780,6 +779,7 @@ const nscolor kBlackColor = NS_RGB(0,0,0);
                   : aBorderStyle->GetBorderStyle(startSide);  
 
   // find out were x and y start
+  // XXX Unused variables
   nscoord xstart = PR_MAX(aDirtyRect.x, borderInside.x);
   nscoord ystart = PR_MAX(aDirtyRect.y, borderInside.y);
 
@@ -1583,7 +1583,7 @@ void nsCSSRendering::PaintBorder(nsIPresContext* aPresContext,
   // in NavQuirks mode we want to use the parent's context as a starting point 
   // for determining the background color
   const nsStyleBackground* bgColor = 
-    nsStyleUtil::FindNonTransparentBackground(aStyleContext, 
+    nsCSSRendering::FindNonTransparentBackground(aStyleContext, 
                                             compatMode == eCompatibility_NavQuirks ? PR_TRUE : PR_FALSE); 
   // mozBGColor is used instead of bgColor when the display type is BG_INSET or BG_OUTSET
   // AND, in quirk mode, it is set to the BODY element's background color instead of the nearest
@@ -1958,7 +1958,7 @@ void nsCSSRendering::PaintOutline(nsIPresContext* aPresContext,
 nsStyleCoord        bordStyleRadius[4];
 PRInt16             borderRadii[4],i;
 float               percent;
-const nsStyleBackground* bgColor = nsStyleUtil::FindNonTransparentBackground(aStyleContext);
+const nsStyleBackground* bgColor = nsCSSRendering::FindNonTransparentBackground(aStyleContext);
 nscoord width;
 
   // Get our style context's color struct.
@@ -2118,7 +2118,7 @@ void nsCSSRendering::PaintBorderEdges(nsIPresContext* aPresContext,
                                       PRIntn aSkipSides,
                                       nsRect* aGap)
 {
-  const nsStyleBackground* bgColor = nsStyleUtil::FindNonTransparentBackground(aStyleContext);
+  const nsStyleBackground* bgColor = nsCSSRendering::FindNonTransparentBackground(aStyleContext);
   
   if (nsnull==aBorderEdges) {  // Empty border segments
     return;
@@ -2368,6 +2368,34 @@ GetNearestScrollFrame(nsIFrame* aFrame)
 
   return nsnull;
 }
+
+const nsStyleBackground*
+nsCSSRendering::FindNonTransparentBackground(nsIStyleContext* aContext,
+                                             PRBool aStartAtParent /*= PR_FALSE*/)
+{
+  const nsStyleBackground* result = nsnull;
+  nsIStyleContext* context;
+  if (aStartAtParent) {
+    context = aContext->GetParent();  // balance ending release
+  } else {
+    context = aContext;
+    NS_IF_ADDREF(context);  // balance ending release
+  }
+  NS_ASSERTION(context, "Cannot find NonTransparentBackground in a null context" );
+  
+  while (context) {
+    ::GetStyleData(context, &result);
+    if (0 == (result->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT))
+      break;
+
+    nsIStyleContext* last = context;
+    context = context->GetParent();
+    NS_RELEASE(last);
+  }
+  NS_IF_RELEASE(context);
+  return result;
+}
+
 
 /**
  * |FindBackground| finds the correct style data to use to paint the
@@ -3468,7 +3496,7 @@ nsCSSRendering::RenderSide(nsFloatPoint aPoints[],nsIRenderingContext& aRenderin
       case NS_STYLE_BORDER_STYLE_OUTSET:
       case NS_STYLE_BORDER_STYLE_INSET:
         {
-        const nsStyleBackground* bgColor = nsStyleUtil::FindNonTransparentBackground(aStyleContext);
+        const nsStyleBackground* bgColor = nsCSSRendering::FindNonTransparentBackground(aStyleContext);
         aRenderingContext.SetColor ( MakeBevelColor (aSide, border_Style, bgColor->mBackgroundColor,sideColor, PR_TRUE));
         }
       case NS_STYLE_BORDER_STYLE_DOTTED:
@@ -3512,7 +3540,7 @@ nsCSSRendering::RenderSide(nsFloatPoint aPoints[],nsIRenderingContext& aRenderin
       case NS_STYLE_BORDER_STYLE_RIDGE:
       case NS_STYLE_BORDER_STYLE_GROOVE:
         {
-        const nsStyleBackground* bgColor = nsStyleUtil::FindNonTransparentBackground(aStyleContext);
+        const nsStyleBackground* bgColor = nsCSSRendering::FindNonTransparentBackground(aStyleContext);
         aRenderingContext.SetColor ( MakeBevelColor (aSide, border_Style, bgColor->mBackgroundColor,sideColor, PR_TRUE));
 
         polypath[0].x = NSToCoordRound(aPoints[0].x);
