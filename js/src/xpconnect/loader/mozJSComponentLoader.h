@@ -71,7 +71,6 @@ public:
 
     JSObject  *mSuperGlobal;
     JSRuntime *mRuntime;
-    JSContext *mContext;
     JSObject  *mCompMgrWrapper;
     
     PLHashTable *mModules;
@@ -80,4 +79,37 @@ public:
 
     PRBool mInitialized;
     nsSupportsArray mDeferredComponents;
+};
+
+class JSCLAutoContext
+{
+public:
+    JSCLAutoContext(JSRuntime* rt);
+    ~JSCLAutoContext();
+
+    operator JSContext*() const {return mContext;}
+    JSContext* GetContext() const {return mContext;}
+    nsresult   GetError()   const {return mError;}
+
+
+    JSCLAutoContext(); // not implemnted
+private:
+    JSContext* mContext;
+    nsresult   mError;
+    JSBool     mPopNeeded;
+    intN       mContextThread; 
+};
+
+
+class JSCLAutoErrorReporterSetter
+{
+public:
+    JSCLAutoErrorReporterSetter(JSContext* cx, JSErrorReporter reporter)
+        {mContext = cx; mOldReporter = JS_SetErrorReporter(cx, reporter);}
+    ~JSCLAutoErrorReporterSetter()
+        {JS_SetErrorReporter(mContext, mOldReporter);} 
+    JSCLAutoErrorReporterSetter(); // not implemented
+private:
+    JSContext* mContext;
+    JSErrorReporter mOldReporter;
 };
