@@ -216,9 +216,6 @@ nsToolkitCore::ShowWindow(const nsString& aUrl, nsIDOMWindow* aParent) {
   appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE, getter_AddRefs(window),
                                nsnull, nsnull, NS_SIZETOCONTENT, NS_SIZETOCONTENT);
 
-  if (window)
-    window->Show(PR_TRUE);
-
   return rv;
 }
 
@@ -340,9 +337,6 @@ nsToolkitCore::ShowWindowWithArgs(const nsString& aUrl,
   nsCOMPtr<nsIWebShellWindow>  window;
   appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE, getter_AddRefs(window),
                                nsnull, cb, NS_SIZETOCONTENT, NS_SIZETOCONTENT);
-
-  if (window)
-    window->Show(PR_TRUE);
 
   return rv;
 }
