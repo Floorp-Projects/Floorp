@@ -33,13 +33,13 @@
 
 #|
 (depict-rtf-to-local-file
- ";Test;ThrowCatchSemantics.rtf"
+ "Test/ThrowCatchSemantics.rtf"
  "Base Example Semantics"
  #'(lambda (rtf-stream)
      (depict-world-commands rtf-stream *tcw*)))
 
 (depict-html-to-local-file
- ";Test;ThrowCatchSemantics.html"
+ "Test/ThrowCatchSemantics.html"
  "Base Example Semantics"
  t
  #'(lambda (html-stream)

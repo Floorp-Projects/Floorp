@@ -322,7 +322,7 @@
 ; Write html to the text file with the given name (relative to the
 ; local directory).
 (defun write-html-to-local-file (filename html)
-  (with-open-file (stream (merge-pathnames filename *semantic-engine-directory*)
+  (with-open-file (stream (filename-to-semantic-engine-pathname filename)
                           :direction :output
                           :if-exists :supersede
                           #+mcl :mac-file-creator #+mcl "MOSS")

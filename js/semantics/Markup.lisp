@@ -225,14 +225,14 @@
   (substitute-soft-breaks
    tree
    #'(lambda (soft-break)
-       (list (make-string (soft-break-width soft-break) :initial-element #\space :element-type 'base-character)))))
+       (list (make-string (soft-break-width soft-break) :initial-element #\space :element-type #-mcl 'character #+mcl 'base-character)))))
 
 
 ; Return a freshly consed markup list for a hard line break followed by indent spaces.
 (defun hard-break-markup (indent)
   (if (zerop indent)
     (list ':new-line)
-    (list ':new-line (make-string indent :initial-element #\space :element-type 'base-character))))
+    (list ':new-line (make-string indent :initial-element #\space :element-type #-mcl 'character #+mcl 'base-character))))
 
 
 ; Destructively replace any soft-break that appears in a car position in the tree
@@ -600,7 +600,7 @@
 ; The string should contain only letters, dashes, and numbers.
 (defun string-to-mixed-case (string &optional capitalize)
   (let* ((length (length string))
-         (dst-string (make-array length :element-type 'base-character :fill-pointer 0)))
+         (dst-string (make-array length :element-type #-mcl 'character #+mcl 'base-character :fill-pointer 0)))
     (dotimes (i length)
       (let ((char (char string i)))
         (if (eql char #\-)

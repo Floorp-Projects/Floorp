@@ -384,17 +384,17 @@
 
 #|
 (depict-rtf-to-local-file
- ";JS14;ParserGrammar.rtf"
+ "JS14/ParserGrammar.rtf"
  "JavaScript 1.4 Parser Grammar"
  #'(lambda (markup-stream)
      (depict-world-commands markup-stream *jw* :visible-semantics nil)))
 
 (depict-html-to-local-file
- ";JS14;ParserGrammar.html"
+ "JS14/ParserGrammar.html"
  "JavaScript 1.4 Parser Grammar"
  t
  #'(lambda (markup-stream)
      (depict-world-commands markup-stream *jw* :visible-semantics nil)))
 
-(with-local-output (s ";JS14;ParserGrammar.txt") (print-grammar *jg* s))
+(with-local-output (s "JS14/ParserGrammar.txt") (print-grammar *jg* s))
 |#

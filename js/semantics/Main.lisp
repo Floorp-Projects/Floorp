@@ -24,24 +24,62 @@
 ;;;
 
 
+#+allegro (shadow 'state)
+#+allegro (shadow 'type)
+
 (defparameter *semantic-engine-filenames*
-  '("Utilities" "Markup" "RTF" "HTML" "GrammarSymbol" "Grammar" "Parser" "Metaparser" "Lexer" "Calculus" "CalculusMarkup"
-    ";JS20;Parser" ";JS20;Lexer" ";JS20;RegExp" #|"JSECMA;Lexer" "JSECMA;Parser"|# ))
+  '("Utilities" "Markup" "RTF" "HTML" "GrammarSymbol" "Grammar" "Parser" "Metaparser" "Lexer" "Calculus" "CalculusMarkup"))
+
+(defparameter *semantics-filenames*
+  '("JS20/Parser" "JS20/Lexer" "JS20/RegExp" #|"JSECMA/Lexer" "JSECMA/Parser"|# ))
 
 (defparameter *semantic-engine-directory*
   (make-pathname 
-   :directory (pathname-directory (truename *loading-file-source-file*))))
+   :directory (pathname-directory #-mcl *load-truename*
+                                  #+mcl (truename *loading-file-source-file*))))
+
+
+;;; Convert a filename string possibly containing slashes into a Lisp relative pathname.
+(defun filename-to-relative-pathname (filename)
+  (let ((directories nil))
+    (loop
+      (let ((slash (position #\/ filename)))
+        (if slash
+          (progn
+            (push (subseq filename 0 slash) directories)
+            (setq filename (subseq filename (1+ slash))))
+          (return (if directories
+                    (make-pathname :directory (cons ':relative (nreverse directories)) :name filename)
+                    filename)))))))
+
+
+;;; Convert a filename string possibly containing slashes relative to *semantic-engine-directory*
+;;; into a Lisp absolute pathname.
+(defun filename-to-semantic-engine-pathname (filename)
+  (merge-pathnames (filename-to-relative-pathname filename) *semantic-engine-directory*))
+
+
+(defun operate-on-files (f files &rest options)
+  (with-compilation-unit ()
+    (dolist (filename files)
+      (apply f (filename-to-semantic-engine-pathname filename) :verbose t options))))
+
+(defun compile-semantic-engine ()
+  (operate-on-files #'compile-file *semantic-engine-filenames* :load t))
 
 (defun load-semantic-engine ()
-  (dolist (filename *semantic-engine-filenames*)
-    (let ((pathname (merge-pathnames filename *semantic-engine-directory*)))
-      (load pathname :verbose t))))
+  (operate-on-files #-allegro #'load #+allegro #'load-compiled *semantic-engine-filenames*))
+
+(defun load-semantics ()
+  (operate-on-files #'load *semantics-filenames*))
+
 
 (defmacro with-local-output ((stream filename) &body body)
-  `(with-open-file (,stream (merge-pathnames ,filename *semantic-engine-directory*)
+  `(with-open-file (,stream (filename-to-semantic-engine-pathname ,filename)
                             :direction :output
                             :if-exists :supersede)
      ,@body))
 
 
 (load-semantic-engine)
+(load-semantics)
