@@ -665,7 +665,7 @@ NS_IMETHODIMP nsClipboard::ForceDataToClipboard()
       }
 
       // Now, delete the memory that was created by the transferable
-      nsCRT::free ( data );
+      nsCRT::free ( (char *) data );
     }
   }
 
