@@ -43,7 +43,7 @@
 #include <dlfcn.h>  /* For dlopen, dlsym, dlclose */
 #endif
 
-#if defined(RHAPSODY)
+#if defined(DARWIN)
 #include <crt_externs.h>
 #else
 extern char **environ;
@@ -183,7 +183,7 @@ ForkAndExec(
     childEnvp = envp;
     if (attr && attr->fdInheritBuffer) {
         if (NULL == childEnvp) {
-#ifdef RHAPSODY
+#ifdef DARWIN
             childEnvp = *(_NSGetEnviron());
 #else
             childEnvp = environ;

@@ -67,7 +67,7 @@
  * Does getcwd() take NULL as the first argument and malloc
  * the result buffer?
  */
-#if !defined(RHAPSODY) && !defined(NEXTSTEP) && !defined(VMS)
+#if !defined(DARWIN) && !defined(NEXTSTEP) && !defined(VMS)
 #define GETCWD_CAN_MALLOC
 #endif
 
