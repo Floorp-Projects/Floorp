@@ -18,13 +18,13 @@
 # Rights Reserved.
 #
 # Contributor(s): Bradley Baetz <bbaetz@student.usyd.edu.au>
+#                 Byron Jones <bugzilla@glob.com.au>
 
 use strict;
 
 package Bugzilla::CGI;
 
 use CGI qw(-no_xhtml -oldstyle_urls :private_tempfiles :unique_headers SERVER_PUSH);
-use CGI::Util qw(rearrange);
 
 use base qw(CGI);
 
@@ -111,20 +111,34 @@ sub canonicalise_query {
     return join("&", @parameters);
 }
 
-# Overwrite to handle nph parameter. This should stay here until perl 5.8.1 CGI
-# has been fixed to support -nph as a parameter
-#
+# Overwrite to ensure nph doesn't get set, and unset HEADERS_ONCE
 sub multipart_init {
-    my($self,@p) = @_;
-    my($boundary,$nph,@other) = rearrange(['BOUNDARY','NPH'],@p);
-    $boundary = $boundary || '------- =_aaaaaaaaaa0';
+    my $self = shift;
+
+    # Keys are case-insensitive, map to lowercase
+    my %args = @_;
+    my %param;
+    foreach my $key (keys %args) {
+        $param{lc $key} = $args{$key};
+    }
+
+    # Set the MIME boundary and content-type
+    my $boundary = $param{'-boundary'} || '------- =_aaaaaaaaaa0';
+    delete $param{'-boundary'};
     $self->{'separator'} = "\r\n--$boundary\r\n";
     $self->{'final_separator'} = "\r\n--$boundary--\r\n";
-    my $type = SERVER_PUSH($boundary);
+    $param{'-type'} = SERVER_PUSH($boundary);
+
+    # Note: CGI.pm::multipart_init up to v3.04 explicitly set nph to 0
+    # CGI.pm::multipart_init v3.05 explicitly sets nph to 1
+    # CGI.pm's header() sets nph according to a param or $CGI::NPH, which
+    # is the desired behavour.
+
+    # Allow multiple calls to $cgi->header()
+    $CGI::HEADERS_ONCE = 0;
+
     return $self->header(
-        -nph => 0,
-        -type => $type,
-        (map { split "=", $_, 2 } @other),
+        %param,
     ) . "WARNING: YOUR BROWSER DOESN'T SUPPORT THIS SERVER-PUSH TECHNOLOGY." . $self->multipart_end;
 }
 
@@ -145,29 +159,11 @@ sub header {
     return $self->SUPER::header(@_) || "";
 }
 
-# We override the entirety of multipart_start instead of falling through to
-# SUPER because the built-in one can't deal with cookies in any kind of sane
-# way.  This sub is gratuitously swiped from the real CGI.pm, but fixed so
-# it actually works (but only as much as we need it to).
+# Override multipart_start to ensure our cookies are added and avoid bad quoting of
+# CGI's multipart_start (bug 275108)
 sub multipart_start {
-    my(@header);
-    my($self,@p) = @_;
-    my($type,@other) = rearrange([['TYPE','CONTENT_TYPE','CONTENT-TYPE']],@p);
-    my $charset = $self->charset;
-    $type = $type || 'text/html';
-    $type .= "; charset=$charset" if $type ne '' and $type =~ m!^text/! and $type !~ /\bcharset\b/ and $charset ne '';
-
-    push(@header,"Content-Type: $type");
-
-    # Add the cookies in if we have any
-    if (scalar(@{$self->{Bugzilla_cookie_list}})) {
-        foreach my $cookie (@{$self->{Bugzilla_cookie_list}}) {
-            push @header, "Set-Cookie: $cookie";
-        }
-    }
-
-    my $header = join($CGI::CRLF,@header)."${CGI::CRLF}${CGI::CRLF}";
-    return $header;
+    my $self = shift;
+    return $self->header(@_);
 }
 
 # The various parts of Bugzilla which create cookies don't want to have to

@@ -740,9 +740,13 @@ if ($::FORM{'debug'}) {
 
 # Time to use server push to display an interim message to the user until
 # the query completes and we can display the bug list.
+my $disposition = '';
 if ($serverpush) {
-    print $cgi->multipart_init(-content_disposition => "inline; filename=$filename");
+    $filename =~ s/\\/\\\\/g; # escape backslashes
+    $filename =~ s/"/\\"/g; # escape quotes
+    $disposition = qq#inline; filename="$filename"#;
 
+    print $cgi->multipart_init(-content_disposition => $disposition);
     print $cgi->multipart_start();
 
     # Generate and return the UI (HTML page) from the appropriate template.
@@ -992,7 +996,7 @@ if ($format->{'extension'} eq "csv") {
 if ($serverpush) {
     # close the "please wait" page, then open the buglist page
     print $cgi->multipart_end();
-    print $cgi->multipart_start(-type=>$contenttype);
+    print $cgi->multipart_start(-type => $contenttype, -content_disposition => $disposition);
 } else {
     # Suggest a name for the bug list if the user wants to save it as a file.
     # If we are doing server push, then we did this already in the HTTP headers
