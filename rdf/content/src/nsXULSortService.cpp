@@ -17,9 +17,13 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
+ * Original Author(s):
+ *   Robert John Churchill    <rjc@netscape.com>
+ *   Chris Waterson           <waterson@netscape.com>
+ *   Scott Putterman          <putterman@netscape.com>
+ *
  * Contributor(s): 
- *   Robert John Churchill <rjc@netscape.com>
- *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Pierre Phaneuf           <pp@ludusdesign.com>
  *
  *
  * This Original Code has been modified by IBM Corporation.
