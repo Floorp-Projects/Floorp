@@ -33,12 +33,13 @@
 #include "nsICategoryManager.h"
 #include "nsIFileSpec.h"
 #include "nsXPIDLString.h"
+#include "nsIServiceManager.h"
 
 #define CMDLINEHANDLER_REGISTERPROC_DECLS \
 static NS_METHOD RegisterProc(nsIComponentManager *aCompMgr, nsIFile *aPath, const char *registryLocation, const char *componentType);  \
 static NS_METHOD UnregisterProc(nsIComponentManager *aCompMgr, nsIFile *aPath, const char *registryLocation);
 
-#define CMDLINEHANDLER_IMPL(macro_class,macro_cmd_line_arg,macro_pref_name,macro_chrome_url,macro_help_text, macro_progid, macro_pretty_name) \
+#define CMDLINEHANDLER_IMPL(macro_class,macro_cmd_line_arg,macro_pref_name,macro_chrome_url,macro_help_text, macro_progid, macro_pretty_name, macro_handles_args, macro_default_args) \
 NS_IMETHODIMP macro_class::GetCommandLineArgument(char **aCommandLineArgument) \
 { \
     if (!aCommandLineArgument) return NS_ERROR_FAILURE; \
@@ -63,9 +64,23 @@ NS_IMETHODIMP macro_class::GetHelpText(char **aHelpText) \
     *aHelpText = PL_strdup(macro_help_text); \
     return NS_OK; \
 } \
+NS_IMETHODIMP macro_class::GetHandlesArgs(PRBool *aHandlesArgs) \
+{ \
+    if (!aHandlesArgs) return NS_ERROR_FAILURE; \
+    *aHandlesArgs = macro_handles_args; \
+    return NS_OK; \
+} \
+NS_IMETHODIMP macro_class::GetDefaultArgs(PRUnichar **aDefaultArgs) \
+{ \
+    if (!aDefaultArgs) return NS_ERROR_FAILURE; \
+    nsString args(macro_default_args); \
+    *aDefaultArgs = args.ToNewUnicode(); \
+    return NS_OK; \
+} \
 NS_METHOD macro_class::RegisterProc(nsIComponentManager *aCompMgr, nsIFile *aPath, const char *registryLocation, const char *componentType) \
 { \
     nsresult rv; \
+    printf("registering %s under %s\n",macro_progid,COMMAND_LINE_ARGUMENT_HANDLERS); \
     nsCOMPtr<nsICategoryManager> catman = do_GetService("mozilla.categorymanager.1", &rv); \
     if (NS_FAILED(rv)) return rv; \
     nsXPIDLCString prevEntry; \
@@ -75,6 +90,7 @@ NS_METHOD macro_class::RegisterProc(nsIComponentManager *aCompMgr, nsIFile *aPat
 NS_METHOD macro_class::UnregisterProc(nsIComponentManager *aCompMgr, nsIFile *aPath, const char *registryLocation) \
 { \
     nsresult rv; \
+
     nsCOMPtr<nsICategoryManager> catman = do_GetService("mozilla.categorymanager.1", &rv); \
     if (NS_FAILED(rv)) return rv; \
     nsXPIDLCString prevEntry; \
@@ -90,8 +106,9 @@ interface nsICmdLineHandler : nsISupports
     readonly attribute string commandLineArgument;
     readonly attribute string prefNameForStartup;
     readonly attribute string chromeUrlForTask;
-
-    /* should this be a wstring? */
     readonly attribute string helpText;
+
+    readonly attribute boolean handlesArgs;
+    readonly attribute wstring defaultArgs;
 };
 

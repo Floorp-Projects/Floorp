@@ -52,7 +52,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLEditor)
 static nsModuleComponentInfo components[] = {
 #ifdef ENABLE_EDITOR_API_LOG
     { "HTML Editor", NS_HTMLEDITOR_CID,
-      "component://netscape/editor/htmleditor", nsHTMLEditorLogConstructor, },
+      "component://netscape/editor/htmleditor", nsHTMLEditorLogConstructor,
+      nsHTMLEditorLog::RegisterProc,
+      nsHTMLEditorLog::UnregisterProc, },
 #else
     { "HTML Editor", NS_HTMLEDITOR_CID,
       "component://netscape/editor/htmleditor", nsHTMLEditorConstructor, },

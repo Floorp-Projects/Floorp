@@ -37,6 +37,7 @@
 #include "nsIObserver.h"
 #include "nsISessionHistory.h"
 #include "nsIURIContentListener.h"
+#include "nsICmdLineHandler.h"
 
 #ifdef DEBUG_radha
 #include "nsISHistory.h"
@@ -66,6 +67,7 @@ class nsBrowserInstance : public nsIBrowserInstance,
                           public nsIObserver,
 					                public nsISessionHistory,
                           public nsIURIContentListener,
+                          public nsICmdLineHandler,
                           public nsSupportsWeakReference {
   public:
 
@@ -75,6 +77,9 @@ class nsBrowserInstance : public nsIBrowserInstance,
     NS_DECL_ISUPPORTS
 
     NS_DECL_NSIBROWSERINSTANCE
+
+    NS_DECL_NSICMDLINEHANDLER
+    CMDLINEHANDLER_REGISTERPROC_DECLS
 
     NS_DEFINE_STATIC_CID_ACCESSOR( NS_BROWSERINSTANCE_CID )
 

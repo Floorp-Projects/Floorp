@@ -7375,3 +7375,4 @@ nsHTMLEditor::GetNextElementByTagName(nsIDOMElement    *aCurrentElement,
 
   return res;
 }
+

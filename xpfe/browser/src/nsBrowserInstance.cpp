@@ -86,6 +86,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsCURILoader.h"
 #include "nsIContentHandler.h"
 #include "nsNetUtil.h"
+#include "nsICmdLineHandler.h"
 
 static NS_DEFINE_IID(kIWalletServiceIID, NS_IWALLETSERVICE_IID);
 static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
@@ -182,6 +183,7 @@ NS_INTERFACE_MAP_BEGIN(nsBrowserInstance)
    NS_INTERFACE_MAP_ENTRY(nsIDocumentLoaderObserver)
    NS_INTERFACE_MAP_ENTRY(nsIObserver)
    NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
+   NS_INTERFACE_MAP_ENTRY(nsICmdLineHandler)
    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIURIContentListener)
 NS_INTERFACE_MAP_END
@@ -2410,8 +2412,12 @@ static nsModuleComponentInfo components[] = {
   { "nsBrowserInstance",
     NS_BROWSERINSTANCE_CID,
     NS_IBROWSERINSTANCE_PROGID, 
-    nsBrowserInstanceConstructor }
+    nsBrowserInstanceConstructor,
+    nsBrowserInstance::RegisterProc,
+    nsBrowserInstance::UnregisterProc,
+    }
 };
 
 NS_IMPL_NSGETMODULE("nsBrowserModule", components)
 
+CMDLINEHANDLER_IMPL(nsBrowserInstance,"-chrome","general.startup.browser","chrome://navigator/content/","Start with browser",NS_IBROWSERINSTANCE_PROGID,"Browser Cmd Line Handler", PR_FALSE, "")
