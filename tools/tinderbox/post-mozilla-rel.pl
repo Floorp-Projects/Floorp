@@ -328,9 +328,9 @@ sub packit {
 
     if (is_windows()) {
       TinderUtils::run_shell_command "cp $package_location/../*.zip $stagedir/";
-      TinderUtils::run_shell_command "mkdir -p $stagedir/windows-xpi/";
       if ( scalar(@xforms_xpi) gt 0 ) {
         my $xforms_xpi_files = join(' ', @xforms_xpi);
+        TinderUtils::run_shell_command "mkdir -p $stagedir/windows-xpi/" if ( ! -e "$stagedir/windows-xpi/" );
         TinderUtils::run_shell_command "cp $xforms_xpi_files $stagedir/windows-xpi/";
       }
     } elsif (is_mac()) {
@@ -353,9 +353,9 @@ sub packit {
 	TinderUtils::print_log "No files to copy\n";
       }
 
-      TinderUtils::run_shell_command "mkdir -p $stagedir/mac-xpi/";
       if ( scalar(@xforms_xpi) gt 0 ) {
         my $xforms_xpi_files = join(' ', @xforms_xpi);
+        TinderUtils::run_shell_command "mkdir -p $stagedir/mac-xpi/" if ( ! -e "$stagedir/mac-xpi/" );
         TinderUtils::run_shell_command "cp $xforms_xpi_files $stagedir/mac-xpi/";
       }
     } else {
@@ -364,10 +364,10 @@ sub packit {
         $archive_loc = "$archive_loc/dist";
       }
       TinderUtils::run_shell_command "cp $archive_loc/*.tar.gz $stagedir/";
-      TinderUtils::run_shell_command "mkdir -p $stagedir/linux-xpi/";
       if ( scalar(@xforms_xpi) gt 0 ) {
         my $xforms_xpi_files = join(' ', @xforms_xpi);
-        TinderUtils::run_shell_command "cp $xforms_xpi_files $stagedir/linux-xpi/";
+        TinderUtils::run_shell_command "mkdir -p $stagedir/linux-xpi/" if ( ! -e "$stagedir/linux-xpi/" );
+        TinderUtils::run_shell_command "cp $xforms_xpi_files $stagedir/linux-xpi/" if ( ! -e "$stagedir/linux-xpi/" );
       }
     }
   }
