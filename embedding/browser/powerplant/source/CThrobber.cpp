@@ -305,7 +305,7 @@ NS_METHOD CThrobber::LoadImages(const nsString& aFileNameMask, PRInt32 aNumImage
   }
 
   if (nsnull != mask)
-    nsAllocator::Free(mask);
+    nsCRT::free(mask);
 
   mWidget->Invalidate(PR_TRUE);
 
