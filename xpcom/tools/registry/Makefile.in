@@ -36,7 +36,6 @@ endif
 
 LIBS		= \
 		-lxpcom \
-		-lmozjs \
 		$(LOST_SYM_LIBS) \
 		$(TK_LIBS) \
 		$(NSPR_LIBS) \
