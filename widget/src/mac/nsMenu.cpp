@@ -343,7 +343,9 @@ NS_METHOD nsMenu::AddMenuItem(nsIMenuItem * aMenuItem)
 	  mNumMenuItems++;
 	  
 	  if(mIsHelpMenu) {
-	    ::InsertMenuItem(mMacMenuHandle, c2pstr(label.ToNewCString()), mMenuItemVoidArray.Count());
+	    char labelStr[256];
+	    ::InsertMenuItem(mMacMenuHandle, c2pstr(label.ToCString(labelStr, sizeof(labelStr))),
+	                     mMenuItemVoidArray.Count());
 	  } else {
 	    ::InsertMenuItem(mMacMenuHandle, "\pa", mMenuItemVoidArray.Count());
 	    NSStringSetMenuItemText(mMacMenuHandle, mMenuItemVoidArray.Count(), label);
@@ -354,8 +356,9 @@ NS_METHOD nsMenu::AddMenuItem(nsIMenuItem * aMenuItem)
 	  aMenuItem->GetShortcutChar(keyEquivalent);
 	  if(keyEquivalent != " ") {
 	    keyEquivalent.ToUpperCase();
-	    char* foo = keyEquivalent.ToNewCString();
-	    short inKey = foo[0];
+	    char keyStr[2];
+	    keyEquivalent.ToCString(keyStr, sizeof(keyStr));
+	    short inKey = keyStr[0];
 	    ::SetItemCmd(mMacMenuHandle, mMenuItemVoidArray.Count(), inKey);
 	    //::SetMenuItemKeyGlyph(mMacMenuHandle, mNumMenuItems, 0x61);
 	  }
