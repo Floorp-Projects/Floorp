@@ -73,6 +73,7 @@ class nsIChannel;
 enum eParserCommands {
   eViewNormal,
   eViewSource,
+  eViewFragment,
   eViewErrors
 };
 
@@ -353,6 +354,7 @@ const PRUnichar kNullCh           = '\0';
 #define kXIFTextContentType   "text/xif"
 #define kPlainTextContentType "text/plain"
 #define kViewSourceCommand    "view-source"
+#define kViewFragmentCommand  "view-fragment"
 #define kTextCSSContentType   "text/css"
 #define kApplicationJSContentType   "application/x-javascript"
 #define kTextJSContentType    "text/javascript"

@@ -469,6 +469,8 @@ void nsParser::SetCommand(const char* aCommand){
   nsCAutoString theCommand(aCommand);
   if(theCommand.Equals(kViewSourceCommand))
     mCommand=eViewSource;
+  else if(theCommand.Equals(kViewFragmentCommand))
+    mCommand=eViewFragment;
   else mCommand=eViewNormal;
   mCommandStr.AssignWithConversion(aCommand);
 }
@@ -1560,6 +1562,10 @@ nsresult nsParser::Parse(const nsAString& aSourceBuffer, void* aKey,
     return result;
   }
 
+  // hack to pass on to the dtd the caller's desire to 
+  // parse a fragment without worrying about containment rules
+  if (aMode == eDTDMode_fragment)
+    mCommand = eViewFragment;
   
   // Maintain a reference to ourselves so we don't go away 
   // till we're completely done. 

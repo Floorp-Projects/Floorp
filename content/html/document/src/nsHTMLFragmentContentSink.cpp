@@ -249,6 +249,12 @@ nsHTMLFragmentContentSink::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   } 
+  if (aIID.Equals(NS_GET_IID(nsIContentSink))) {
+    nsIContentSink* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  } 
   if (aIID.Equals(kISupportsIID)) {
     *aInstancePtr = (void*) ((nsISupports*)this);
     NS_ADDREF_THIS();
