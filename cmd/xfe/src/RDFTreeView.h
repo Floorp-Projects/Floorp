@@ -84,6 +84,9 @@ public:
 	void setStandAloneState(XP_Bool state);
 	XP_Bool getStandAloneState();
 
+    // Set HT Properties
+    void setHTTreeViewProperties(HT_View); 
+
 private:
 
 	// The view as registered in the hypertree

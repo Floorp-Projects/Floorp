@@ -60,6 +60,7 @@ public:
 
 	// HT view set/get methods
 	void setHTView(HT_View view);
+    void setHTTitlebarProperties(HT_View view, Widget titleBar);
 
 	// Stand alone set/get methods
 	void setStandAloneState(XP_Bool state);

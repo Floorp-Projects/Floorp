@@ -34,6 +34,8 @@
 
 #define TREE_NAME "RdfTree"
 
+extern "C" RDF_NCVocab  gNavCenter;
+
 #ifdef DEBUG_slamm
 #define D(x) x
 #else
@@ -176,6 +178,8 @@ XFE_RDFView::notify(HT_Notification		ns,
 			XtVaSetValues(_viewLabel,XmNlabelString,xmstr,NULL);
 
 			XmStringFree(xmstr);
+            // Set the HT properties
+            setHTTitlebarProperties(htView, _viewLabel);
 		}
 	}
 	else
@@ -237,4 +241,53 @@ XFE_RDFView::getStandAloneState()
 	return _standAloneState;
 }
 //////////////////////////////////////////////////////////////////////////
+
+
+void
+XFE_RDFView::setHTTitlebarProperties(HT_View view, Widget  titleBar)
+{
+
+   Arg           av[30];
+   Cardinal      ac=0;
+   void *        data=NULL;
+   Pixel         pixel;
+   PRBool        gotit=False;
+
+   ////////////////  TITLEBAR PROPERTIES   ///////////////////
+
+   ac = 0;
+   /* titleBarFGColor */
+   HT_GetTemplateData(HT_TopNode(view),  gNavCenter->titleBarFGColor, HT_COLUMN_STRING, &data);
+   if (data)
+   {
+      gotit = fe_getPixelFromRGB(getContext(), (char *) data, &pixel);
+      if (gotit)
+         XtSetArg(av[ac], XmNforeground, pixel); ac++;
+   }
+
+
+
+   /* titleBarBGColor */
+   HT_GetTemplateData(HT_TopNode(view),  gNavCenter->titleBarBGColor, HT_COLUMN_STRING, &data);
+   if (data)
+   {
+      gotit = fe_getPixelFromRGB(getContext(), (char *) data, &pixel);
+      if (gotit)
+         XtSetArg(av[ac], XmNbackground, pixel); ac++;
+   }
+
+   /* titleBarBGURL */
+   HT_GetTemplateData(HT_TopNode(view),  gNavCenter->titleBarBGURL, HT_COLUMN_STRING, &data);
+    if (data)
+    {
+       /* Do the RDFImage thing */
+
+    }
+
+
+    XtSetValues(titleBar, av, ac);
+
+
+}
+
 

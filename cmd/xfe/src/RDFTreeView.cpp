@@ -35,6 +35,8 @@
 
 #define TREE_NAME "RdfTree"
 
+extern "C" RDF_NCVocab  gNavCenter;
+
 #ifdef DEBUG_slamm
 #define D(x) x
 #else
@@ -51,6 +53,12 @@ fe_icon XFE_RDFTreeView::openedFolder = { 0 };
 extern int XP_BKMKS_HOURS_AGO;
 extern int XP_BKMKS_DAYS_AGO;
 extern int XP_BKMKS_LESS_THAN_ONE_HOUR_AGO;
+
+extern "C"
+{
+   extern PRBool fe_getPixelFromRGB(MWContext *, char * rgbString, Pixel * pixel);
+};
+
 
 struct RDFColumnData
 {
@@ -515,26 +523,6 @@ XFE_RDFTreeView::notify(HT_Notification /* ns */, HT_Resource n,
   case HT_EVENT_VIEW_SELECTED:
     {
 		XP_ASSERT( 0 );
-
-//
-// Handled in XFE_RDFView
-//
-
-// 		D(printf("RDFView::HT_Event: %s on %s\n","HT_EVENT_VIEW_SELECTED",
-//                 HT_GetNodeName(n)););
-		
-// 		HT_View view = HT_GetView(n);
-// 		char * label = HT_GetViewName(view);
-
-  
-//		if (_ht_rdfView != view) {
-//         XtVaSetValues (viewName, 
-//                        XmNlabelString, XmStringCreateLocalized(label),
-//                        NULL);
-//       }
-
-// 		if (_ht_rdfView != view)
-// 			setHTView(view);
     }
     break;
   case HT_EVENT_NODE_OPENCLOSE_CHANGING:
@@ -591,6 +579,7 @@ XFE_RDFTreeView::setHTView(HT_View htview)
 	}
 	
 	fill_tree();
+    setHTTreeViewProperties(_ht_rdfView);
 }
 //////////////////////////////////////////////////////////////////////
 HT_View
@@ -983,4 +972,200 @@ XFE_RDFTreeView::getStandAloneState()
 	return _standAloneState;
 }
 //////////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////////
+//  Set the HT View properties to the tree
+//////////////////////////////////////////////////////////////////////////
+
+
+void
+XFE_RDFTreeView::setHTTreeViewProperties( HT_View  view)
+{
+
+   Arg           av[30];
+   Cardinal      ac=0;
+   void *        data=NULL;
+   Pixel         pixel;
+   PRBool        gotit=False;
+
+
+    
+//////////////////////////////////////////////////////////////////////////
+//  Properties common to all views
+//  Should probably go to a base class
+//////////////////////////////////////////////////////////////////////////
+
+
+   /* viewBGColor */
+   HT_GetTemplateData(HT_TopNode(view),  gNavCenter->viewBGColor, HT_COLUMN_STRING, &data);
+   if (data)
+   {
+      gotit = fe_getPixelFromRGB(getContext(), (char *) data, &pixel);
+      if (gotit) {
+         XtSetArg(av[ac], XmNbackground, pixel); ac++;
+      }
+   }
+
+
+   /* viewFGColor */
+  HT_GetTemplateData(HT_TopNode(view),  gNavCenter->viewFGColor, HT_COLUMN_STRING, &data);
+   if (data) 
+   {
+      gotit = fe_getPixelFromRGB(getContext(), (char *) data, &pixel);
+      if (gotit) {
+         XtSetArg(av[ac], XmNforeground, pixel); ac++;
+      }
+   }
+
+   /* viewBGURL */
+  HT_GetTemplateData(HT_TopNode(view),  gNavCenter->viewBGURL, HT_COLUMN_STRING, &data);
+   if (data)
+   {
+     /*   Do the RDFImage thing here */
+   }
+
+
+//////////////////////////////////////////////////////////////////////////
+//  Properties common to all trees
+//////////////////////////////////////////////////////////////////////////
+
+   /* selectionFGColor */
+   HT_GetTemplateData(HT_TopNode(view),  gNavCenter->selectionFGColor, HT_COLUMN_STRING, &data);
+   if (data)
+   {
+      gotit = fe_getPixelFromRGB(getContext(), (char *) data, &pixel);
+      if (gotit) {
+         XtSetArg(av[ac], XmNselectForeground, pixel); ac++;
+      }
+   }
+
+   /* selectionBGColor */
+   HT_GetTemplateData(HT_TopNode(view),  gNavCenter->selectionBGColor, HT_COLUMN_STRING, &data);
+   if (data)
+   {
+      gotit = fe_getPixelFromRGB(getContext(), (char *) data, &pixel);
+      if (gotit) {
+         XtSetArg(av[ac], XmNselectBackground, pixel); ac++;
+      }
+   }
+
+
+
+   /* treeConnectionColor */
+   HT_GetTemplateData(HT_TopNode(view),  gNavCenter->treeConnectionFGColor, HT_COLUMN_STRING, &data);
+   if (data)
+   {
+      gotit = fe_getPixelFromRGB(getContext(), (char *) data, &pixel);
+      if (gotit) {
+         XtSetArg(av[ac], XmNconnectingLineColor, pixel); ac++;
+      }
+   }
+
+
+   /*  showColumnHeaders */
+   HT_GetTemplateData(HT_TopNode(view),  gNavCenter->showColumnHeaders, HT_COLUMN_STRING, &data);
+   if (data)
+   {
+       char * answer = (char *) data;
+       if ((!XP_STRCASECMP(answer, "yes")) || (!XP_STRCASECMP(answer, "1")))
+       {
+         XtSetArg(av[ac], XmNheadingRows, 1);      
+         ac ++;
+         XtSetArg(av[ac], XmNhideUnhideButtons, True);
+         ac++;
+       }
+       else if ((!XP_STRCASECMP(answer, "No")) || (!XP_STRCASECMP(answer, "0")))
+       {
+         XtSetArg(av[ac], XmNheadingRows, 0);      
+         ac ++;
+         XtSetArg(av[ac], XmNhideUnhideButtons, False);
+         ac++;
+         XtSetArg(av[ac], XmNvisibleColumns, 1);
+         ac++;
+
+       }
+
+   }
+
+
+   /* useInlineEditing */ 
+   HT_GetTemplateData(HT_TopNode(view),  gNavCenter->useInlineEditing, HT_COLUMN_STRING, &data);
+   if (data)
+   {
+       /* This s'd probably go to fill_tree(); */
+   }
+
+   Widget  tree = getBaseWidget();
+   XtSetValues(tree, av, ac);
+
+
+
+
+
+#ifdef UNDEF   /* Properties that can't be set yet in the tree widget */
+
+
+   /* viewRolloverColor */
+HT_GetTemplateData(HT_TopNode(view),  gNavCenter->viewRolloverColor, HT_COLUMN_STRING, &(viewProperties->viewRolloverColor));
+
+   /* viewPressedColor */
+HT_GetTemplateData(HT_TopNode(view),  gNavCenter->viewPressedColor, HT_COLUMN_STRING, &(viewProperties->viewPressedColor));
+
+   /*  showTreeConnections */
+ HT_GetTemplateData(HT_TopNode(view),  gNavCenter->showTreeConnections, HT_COLUMN_STRING, &(viewProperties->showTreeConnections));
+
+   /* showDividers */
+ HT_GetTemplateData(HT_TopNode(view),  gNavCenter->showDivider, HT_COLUMN_STRING, &(viewProperties->showDivider)); 
+
+   /* dividerColor */
+HT_GetTemplateData(HT_TopNode(view),  gNavCenter->dividerColor, HT_COLUMN_STRING, &(viewProperties->dividerColor));
+
+   /* useSingleClick */
+HT_GetTemplateData(HT_TopNode(view),  gNavCenter->useSingleClick, HT_COLUMN_STRING, &(viewProperties->useSingleClick));
+
+   /* useSelection */
+HT_GetTemplateData(HT_TopNode(view),  gNavCenter->useSelection, HT_COLUMN_STRING, &(viewProperties->useSelection));
+
+   /* selectedColumnHeaderFGColor */
+HT_GetTemplateData(HT_TopNode(view),  gNavCenter->selectedColumnHeaderFGColor, HT_COLUMN_STRING, &(viewProperties->selectedColumnHeaderFGColor));
+
+   /* selectedColumnHeaderBGColor */
+HT_GetTemplateData(HT_TopNode(view),  gNavCenter->selectedColumnHeaderBGColor, HT_COLUMN_STRING, &(viewProperties->selectedColumnHeaderBGColor));
+
+   /* sortColumnFGColor */
+HT_GetTemplateData(HT_TopNode(view),  gNavCenter->sortColumnFGColor, HT_COLUMN_STRING, &(viewProperties->sortColumnFGColor));
+
+   /*  sortColumnBGColor */
+HT_GetTemplateData(HT_TopNode(view),  gNavCenter->sortColumnBGColor, HT_COLUMN_STRING, &(viewProperties->sortColumnBGColor));
+
+
+#endif   /* UNDEF  */
+
+
+}
+
+extern "C"
+{
+/* This s'd go to a utility file */
+PRBool
+fe_getPixelFromRGB(MWContext * context, char * color, Pixel *pixel)
+{
+    uint8 red, green, blue;
+    PRBool bColorsFound = LO_ParseRGB(color, &red, &green, &blue);
+    if (bColorsFound)
+       *pixel = fe_GetPixel(context, red, green, blue);
+
+    return (bColorsFound);
+}
+
+
+};   /* extern C  */
+
+
+
+
+
+
+
 
