@@ -31,6 +31,9 @@
 #include "nsDOMEvent.h"
 #include "nsIPresContext.h"
 #include "nsRepository.h"
+#include "nsIServiceManager.h"
+#include "nsIEventQueueService.h"
+#include "nsXPComCIID.h"
 #include "nsCRT.h"
 #include "nsVoidArray.h"
 #include "nsString.h"
@@ -273,6 +276,7 @@ public:
   NS_IMETHOD FindNext(const PRUnichar * aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound);
 
   // nsWebShell
+  PLEventQueue* GetEventQueue(void);
   void HandleLinkClickEvent(nsIContent *aContent,
                             nsLinkVerb aVerb,
                             const PRUnichar* aURLSpec,
@@ -292,6 +296,7 @@ public:
   nsresult DestroyPluginHost(void);
 
 protected:
+  PLEventQueue* mThreadEventQueue;
   nsIScriptGlobalObject *mScriptGlobal;
   nsIScriptContext* mScriptContext;
 
@@ -334,6 +339,7 @@ protected:
 //----------------------------------------------------------------------
 
 // Class IID's
+static NS_DEFINE_IID(kEventQueueServiceCID,   NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kChildCID,               NS_CHILD_CID);
 static NS_DEFINE_IID(kDeviceContextCID,       NS_DEVICE_CONTEXT_CID);
 static NS_DEFINE_IID(kDocumentLoaderCID,      NS_DOCUMENTLOADER_CID);
@@ -362,6 +368,7 @@ static NS_DEFINE_IID(kITimerCallbackIID,      NS_ITIMERCALLBACK_IID);
 static NS_DEFINE_IID(kIWebShellContainerIID,  NS_IWEB_SHELL_CONTAINER_IID);
 static NS_DEFINE_IID(kIBrowserWindowIID,      NS_IBROWSER_WINDOW_IID);
 static NS_DEFINE_IID(kIClipboardCommandsIID,  NS_ICLIPBOARDCOMMANDS_IID);
+static NS_DEFINE_IID(kIEventQueueServiceIID,  NS_IEVENTQUEUESERVICE_IID);
 
 // XXX not sure
 static NS_DEFINE_IID(kILinkHandlerIID,        NS_ILINKHANDLER_IID);
@@ -646,6 +653,25 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
                  PRBool aAllowPlugins,
                  PRBool aIsSunkenBorder)
 {
+  nsresult rv = NS_OK;
+
+  // Cache the PL_EventQueue of the current UI thread...
+  //
+  // Since this call must be made on the UI thread, we know the Event Queue
+  // will be associated with the current thread... 
+  //
+  nsIEventQueueService* eventService;
+  rv = nsServiceManager::GetService(kEventQueueServiceCID,
+                                    kIEventQueueServiceIID,
+                                    (nsISupports **)&eventService);
+  if (NS_OK == rv) {
+    // XXX: What if this fails?
+    rv = eventService->GetThreadEventQueue(PR_GetCurrentThread(), 
+                                           &mThreadEventQueue);
+    nsServiceManager::ReleaseService(kEventQueueServiceCID, eventService);
+  }
+
+
   //XXX make sure plugins have started up. this really needs to
   //be associated with the nsIContentViewerContainer interfaces,
   //not the nsIWebShell interfaces. this is a hack. MMP
@@ -658,8 +684,6 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
 
   WEB_TRACE(WEB_TRACE_CALLS,
             ("nsWebShell::Init: this=%p", this));
-
-  nsresult rv = NS_OK;
 
   // Initial error checking...
   NS_PRECONDITION(nsnull != aNativeParent, "null Parent Window");
@@ -1536,6 +1560,8 @@ OnLinkClickEvent::OnLinkClickEvent(nsWebShell* aHandler,
                                    const PRUnichar* aTargetSpec,
                                    nsIPostData* aPostData)
 {
+  PLEventQueue* eventQueue;
+
   mHandler = aHandler;
   NS_ADDREF(aHandler);
   mURLSpec = new nsString(aURLSpec);
@@ -1546,29 +1572,24 @@ OnLinkClickEvent::OnLinkClickEvent(nsWebShell* aHandler,
   NS_IF_ADDREF(mContent);
   mVerb = aVerb;
   
-#ifdef XP_PC 
   PL_InitEvent(this, nsnull,
                (PLHandleEventProc) ::HandlePLEvent,
                (PLDestroyEventProc) ::DestroyPLEvent);
 
-  PLEventQueue* eventQueue = PL_GetMainEventQueue();
-  PL_PostEvent(eventQueue, this);
+// XXX: These ifdefs should all be replaced by the code in the XP_PC case when
+//      all platforms can use the EventQueueService...
+#ifdef XP_PC 
+  eventQueue = aHandler->GetEventQueue();
 #endif
 
 #ifdef XP_UNIX
-  PL_InitEvent(this, nsnull,
-               (PLHandleEventProc) ::HandlePLEvent,
-               (PLDestroyEventProc) ::DestroyPLEvent);
-
-  PL_PostEvent(gWebShell_UnixEventQueue, this);
+  eventQueue = gWebShell_UnixEventQueue;
 #endif
 #ifdef XP_MAC 
-	PL_InitEvent(this, nsnull,
-               (PLHandleEventProc) ::HandlePLEvent,
-               (PLDestroyEventProc) ::DestroyPLEvent);
-	PLEventQueue* eventQueue = GetMacPLEventQueue();
-  	PL_PostEvent(eventQueue, this);
+	eventQueue = GetMacPLEventQueue();
 #endif
+
+	PL_PostEvent(eventQueue, this);
 }
 
 OnLinkClickEvent::~OnLinkClickEvent()
@@ -1661,6 +1682,12 @@ nsWebShell::GetTarget(const PRUnichar* aName)
   }
 
   return target;
+}
+
+PLEventQueue* nsWebShell::GetEventQueue(void)
+{
+  NS_PRECONDITION(nsnull != mThreadEventQueue, "PLEventQueue for thread is null");
+  return mThreadEventQueue;
 }
 
 void
