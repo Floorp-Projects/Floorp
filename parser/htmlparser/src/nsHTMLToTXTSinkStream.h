@@ -156,6 +156,8 @@ protected:
                                  char* aMatchKey,
                                  nsString& aValueRet);
   PRBool DoOutput();
+  PRBool MayWrap();
+  
 
 protected:
   nsIOutputStream* mStream;
@@ -169,10 +171,16 @@ protected:
   PRInt32          mCiteQuoteLevel;
   PRInt32          mColPos;
   PRInt32          mFlags;
-  PRUint32         mWrapColumn;
-  PRBool           mDoFragment;
 
-  // For format=flowed
+  // The wrap column is how many standard sized chars (western languages)
+  // should be allowed on a line. There could be less chars if the chars
+  // are wider than latin chars of more if the chars are more narrow.
+  PRUint32         mWrapColumn;
+
+  // The width of the line as it will appear on the screen (approx.) 
+  PRUint32         mCurrentLineWidth; 
+
+  PRBool           mDoFragment;
   PRInt32          mEmptyLines; // Will be the number of empty lines before
                                 // the current. 0 if we are starting a new
                                 // line and -1 if we are in a line.
