@@ -200,8 +200,6 @@ pref("browser.tabs.opentabfor.middleclick", true);
 pref("browser.tabs.opentabfor.urlbar", true);
 pref("browser.tabs.loadDivertedInBackground", false);
 pref("browser.tabs.loadBookmarksInBackground", false);
-// XXXben - Hide Single Window mode prefs for 1.0 to avoid crashes (see 266759)
-pref("browser.tabs.showSingleWindowModePrefs", true);
 
 // Smart Browsing prefs
 pref("browser.related.enabled", true);

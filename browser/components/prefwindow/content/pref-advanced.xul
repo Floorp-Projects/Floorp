@@ -49,10 +49,9 @@
           <radio label="&recentWindowOrTab.label;" value="1"/>
         </radiogroup>
       </groupbox>
-      <!--  XXXben hide single window mode prefs for 1.0 to avoid crashes (see 266759) -->
       <checkbox id="tabbedOpenForce" label="&forceNewWindowLinks.label;"
-                oncommand="updateWindowLinksBehavior()" hidden="true"/>
-      <radiogroup id="tabbedWindowLinks" hidden="true"
+                oncommand="updateWindowLinksBehavior()"/>
+      <radiogroup id="tabbedWindowLinks"
                   prefstring="browser.link.open_newwindow.ui"
                   style="margin-left: 23px">
         <radio label="&sameTabOrWindow.label;" value="1"/>

@@ -76,12 +76,6 @@ function Startup() {
   updateWindowLinksBehavior();
   parent.hPrefWindow.registerOKCallbackFunc(onOK);
 
-  // XXXben - Hide Single Window mode prefs for 1.0 to avoid crashes see 266759
-  if (parent.hPrefWindow.getPref("bool", "browser.tabs.showSingleWindowModePrefs", false)) {
-    document.getElementById("tabbedOpenForce").hidden = false;
-    document.getElementById("tabbedWindowLinks").hidden = false;
-  }
-
 #ifdef PROVISIONAL_SECURITY_UI
   var ocspEntry;
   var i;
