@@ -64,6 +64,8 @@ public:
   nsresult ChangeAt(PRInt32 aIndex, nsIFrame*& aFrame, nsIContent*& aContent,
                     nsChangeHint& aHint) const;
 
+  nsresult ChangeAt(PRInt32 aIndex, const nsStyleChangeData** aChangeData) const;
+
   nsresult AppendChange(nsIFrame* aFrame, nsIContent* aContent, nsChangeHint aHint);
 
   void Clear(void);

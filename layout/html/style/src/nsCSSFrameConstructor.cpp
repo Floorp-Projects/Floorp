@@ -113,6 +113,7 @@
 #include "nsChildIterator.h"
 #include "nsCSSRendering.h"
 #include "nsISelectElement.h"
+#include "nsLayoutErrors.h"
 
 static NS_DEFINE_CID(kTextNodeCID,   NS_TEXTNODE_CID);
 static NS_DEFINE_CID(kHTMLElementFactoryCID,   NS_HTML_ELEMENT_FACTORY_CID);
@@ -10311,11 +10312,42 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList,
                                              nsIPresContext* aPresContext)
 {
   PRInt32 count = aChangeList.Count();
-  while (0 < count--) {
+  if (!count)
+    return NS_OK;
+
+  nsCOMPtr<nsIPresShell> presShell;
+  aPresContext->GetShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIFrameManager> frameManager;
+  presShell->GetFrameManager(getter_AddRefs(frameManager));
+
+  // Mark frames so that we skip frames that die along the way, bug 123049.
+  // A frame can be in the list multiple times with different hints. Further
+  // optmization is possible if nsStyleChangeList::AppendChange could coalesce
+  PRInt32 index = count;
+  while (0 <= --index) {
+    const nsStyleChangeData* changeData;
+    aChangeList.ChangeAt(index, &changeData);
+    if (changeData->mFrame) {
+      frameManager->SetFrameProperty(changeData->mFrame,
+        nsLayoutAtoms::changeListProperty, nsnull, nsnull);
+    }
+  }
+
+  index = count;
+  while (0 <= --index) {
     nsIFrame* frame;
     nsIContent* content;
     nsChangeHint hint;
-    aChangeList.ChangeAt(count, frame, content, hint);
+    aChangeList.ChangeAt(index, frame, content, hint);
+
+    // skip any frame that has been destroyed due to a ripple effect
+    if (frame) {
+      void* dummy;
+      nsresult res = frameManager->GetFrameProperty(frame,
+        nsLayoutAtoms::changeListProperty, 0, &dummy);            
+      if (NS_IFRAME_MGR_PROP_NOT_THERE == res)
+        continue;
+    }
 
     if (hint & nsChangeHint_ReconstructDoc) {
       NS_ERROR("This shouldn't happen");
@@ -10323,6 +10355,7 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList,
     if (hint & nsChangeHint_ReconstructFrame) {
       RecreateFramesForContent(aPresContext, content);
     } else {
+      NS_ASSERTION(frame, "This shouldn't happen");
       if (hint & nsChangeHint_ReflowFrame) {
         StyleChangeReflow(aPresContext, frame, nsnull);
       }
@@ -10347,6 +10380,18 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList,
     }
 #endif
   }
+
+  // cleanup references
+  index = count;
+  while (0 <= --index) {
+    const nsStyleChangeData* changeData;
+    aChangeList.ChangeAt(index, &changeData);
+    if (changeData->mFrame) {
+      frameManager->RemoveFrameProperty(changeData->mFrame,
+        nsLayoutAtoms::changeListProperty);
+    }
+  }
+
   aChangeList.Clear();
   return NS_OK;
 }
