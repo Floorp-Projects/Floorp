@@ -25,8 +25,8 @@
 #include "nsHTTPEnums.h"
 #include "nsIBuffer.h"
 #include "nsIBufferInputStream.h"
-#include "plstr.h"
 #include "nsString.h"
+#include "nsComPtr.h"
 #include "nsIChannel.h"
 #include "nsHTTPChannel.h"
 #include "nsHTTPResponseListener.h"
@@ -943,7 +943,7 @@ nsHTTPRequest::OnStopBinding(nsISupports* i_pContext,
     PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
            ("nsHTTPRequest [this=%x]. Finished writing request to server."
             "\tStatus: %x\n", 
-            this, rv));
+            this, iStatus));
 
     if (NS_SUCCEEDED(rv)) {
         nsHTTPResponseListener* pListener;
@@ -959,13 +959,30 @@ nsHTTPRequest::OnStopBinding(nsISupports* i_pContext,
         } else {
             rv = NS_ERROR_OUT_OF_MEMORY;
         }
-    } 
+    }
+    //
+    // An error occurred when trying to write the request to the server!
+    //
+    // Call the consumer OnStopBinding(...) to end the request...
+    //
+    else {
+        nsCOMPtr<nsIStreamListener> consumer;
+        nsCOMPtr<nsISupports> consumerContext;
 
-    /*
-        Somewhere here we need to send a message up the event sink 
-        that we successfully (or not) have sent request to the 
-        server. TODO
-    */
+        PR_LOG(gHTTPLog, PR_LOG_ERROR, 
+               ("nsHTTPRequest [this=%x]. Error writing request to server."
+                "\tStatus: %x\n", 
+                this, iStatus));
+
+        (void) m_pConnection->GetResponseContext(getter_AddRefs(consumerContext));
+        rv = m_pConnection->GetResponseDataListener(getter_AddRefs(consumer));
+        if (consumer) {
+            consumer->OnStopBinding(consumerContext, iStatus, i_pMsg);
+        }
+
+        rv = iStatus;
+    }
+ 
     return rv;
 }
 
