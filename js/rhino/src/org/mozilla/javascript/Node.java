@@ -46,6 +46,16 @@ package org.mozilla.javascript;
 
 public class Node implements Cloneable {
 
+    private static class NumberNode extends Node {
+
+        NumberNode(double number) {
+            super(TokenStream.NUMBER);
+            this.number = number;
+        }
+
+        double number;
+    }
+
     public Node(int nodeType) {
         type = nodeType;
     }
@@ -78,25 +88,6 @@ public class Node implements Cloneable {
         this.datum = new Integer(value);
     }
 
-    public Node(int nodeType, double value) {
-        type = nodeType;
-        int ivalue = (int)value;
-        if (ivalue == value) {
-            if ((byte)ivalue == ivalue) {
-                this.datum = new Byte((byte)ivalue);
-            }
-            else if ((short)ivalue == ivalue) {
-                this.datum = new Short((short)ivalue);
-            }
-            else {
-                this.datum = new Integer(ivalue);
-            }
-        }
-        else {
-            this.datum = new Double(value);
-        }
-    }
-
     public Node(int nodeType, String str) {
         type = nodeType;
         this.datum = str;
@@ -115,6 +106,10 @@ public class Node implements Cloneable {
     public Node(int nodeType, Node left, Node right, Object datum) {
         this(nodeType, left, right);
         this.datum = datum;
+    }
+
+    public static Node newNumber(double number) {
+        return new NumberNode(number);
     }
 
     public int getType() {
@@ -417,12 +412,9 @@ public class Node implements Cloneable {
         return ((Number) datum).intValue();
     }
 
+    /** Can only be called when <tt>getType() == TokenStream.NUMBER</tt> */
     public double getDouble() {
-        return ((Number) datum).doubleValue();
-    }
-
-    public long getLong() {
-        return ((Number) datum).longValue();
+        return ((NumberNode)this).number;
     }
 
     public String getString() {
@@ -449,6 +441,9 @@ public class Node implements Cloneable {
             if (type == TokenStream.TARGET) {
                 sb.append(' ');
                 sb.append(hashCode());
+            } else if (type == TokenStream.NUMBER) {
+                sb.append(' ');
+                sb.append(getDouble());
             }
             if (datum != null) {
                 sb.append(' ');

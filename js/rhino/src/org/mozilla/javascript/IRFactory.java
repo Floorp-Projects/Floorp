@@ -121,7 +121,7 @@ public class IRFactory {
      * Number (for literals)
      */
     public Object createNumber(double number) {
-        return new Node(TokenStream.NUMBER, number);
+        return Node.newNumber(number);
     }
 
     /**
@@ -596,8 +596,7 @@ public class IRFactory {
                 continue;
             }
             Node addelem = new Node(TokenStream.SETELEM, createUseTemp(temp),
-                                    new Node(TokenStream.NUMBER, i),
-                                    elem);
+                                    Node.newNumber(i), elem);
             i++;
             result = new Node(TokenStream.COMMA, result, addelem);
         }
@@ -625,11 +624,11 @@ public class IRFactory {
                                           createUseTemp(temp),
                                           new Node(TokenStream.STRING,
                                                    "length"),
-                                          new Node(TokenStream.NUMBER, i));
+                                          Node.newNumber(i));
                 result = new Node(TokenStream.COMMA, result, setlength);
             }
         } else {
-            array.addChildToBack(new Node(TokenStream.NUMBER, i));
+            array.addChildToBack(Node.newNumber(i));
         }
         return new Node(TokenStream.COMMA, result, createUseTemp(temp));
     }

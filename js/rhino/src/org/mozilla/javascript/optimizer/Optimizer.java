@@ -787,8 +787,8 @@ public class Optimizer {
                   // numerical addition and string concatenation
                 if(lt == TokenStream.NUMBER && rt == TokenStream.NUMBER) {
                       // num + num
-                    replace = new Node(TokenStream.NUMBER,
-                        lChild.getDouble() + rChild.getDouble());
+                    replace = Node.
+                        newNumber(lChild.getDouble() + rChild.getDouble());
                 }
                 else if (lt == TokenStream.STRING && rt == TokenStream.STRING) {
                       // string + string
@@ -816,8 +816,8 @@ public class Optimizer {
                   // subtraction
                 if (lt == TokenStream.NUMBER && rt == TokenStream.NUMBER) {
                     //both numbers
-                    replace = new Node(TokenStream.NUMBER,
-                        lChild.getDouble() - rChild.getDouble());
+                    replace = Node.
+                        newNumber(lChild.getDouble() - rChild.getDouble());
                 }
                 else if (lt == TokenStream.NUMBER && lChild.getDouble() == 0) {
                     // first 0: 0-x -> -x
@@ -836,8 +836,8 @@ public class Optimizer {
                   // multiplication
                 if (lt == TokenStream.NUMBER && rt == TokenStream.NUMBER) {
                     // both constants -- just multiply
-                    replace = new Node(TokenStream.NUMBER,
-                        lChild.getDouble() * rChild.getDouble());
+                    replace = Node.
+                        newNumber(lChild.getDouble() * rChild.getDouble());
                 }
                 else if (lt == TokenStream.NUMBER && lChild.getDouble() == 1) {
                     // first 1: 1*x -> +x
@@ -858,8 +858,8 @@ public class Optimizer {
                 // division
                 if (lt == TokenStream.NUMBER && rt == TokenStream.NUMBER) {
                     // both constants -- just divide, trust Java to handle x/0
-                    replace = new Node(TokenStream.NUMBER,
-                        lChild.getDouble() / rChild.getDouble());
+                    replace = Node.
+                        newNumber(lChild.getDouble() / rChild.getDouble());
                 }
                 else if (rt == TokenStream.NUMBER && rChild.getDouble() == 1) {
                     // second 1: x/1 -> +x
