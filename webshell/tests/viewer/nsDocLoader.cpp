@@ -37,13 +37,15 @@
 nsDocLoader::nsDocLoader(nsIBrowserWindow* aBrowser,
                          nsViewerApp* aViewer,
                          PRInt32 aSeconds,
-                         PRBool aPostExit)
+                         PRBool aPostExit,
+                         PRBool aJiggleLayout)
 {
   NS_INIT_REFCNT();
 
   mStart = PR_FALSE;
   mDelay = aSeconds;
   mPostExit = aPostExit;
+  mJiggleLayout = aJiggleLayout;
   mDocNum = 0;
   mBrowser = aBrowser;
   mViewer = aViewer;
@@ -327,6 +329,21 @@ nsDocLoader::OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg)
   nsString* url = (nsString*)mURLList->ElementAt(mDocNum);
   fputs(*url, stdout);
   printf(": stop\n");
+
+  if (mJiggleLayout) {
+    nsRect r;
+    mBrowser->GetBounds(r);
+    nscoord oldWidth = r.width;
+    while (r.width > 100) {
+      r.width -= 10;
+      mBrowser->SizeTo(r.width, r.height);
+    }
+    while (r.width < oldWidth) {
+      r.width += 10;
+      mBrowser->SizeTo(r.width, r.height);
+    }
+  }
+
   ++mDocNum;
   if (mDocNum < mURLList->Count()) {
     LoadDoc(mDocNum, PR_TRUE);

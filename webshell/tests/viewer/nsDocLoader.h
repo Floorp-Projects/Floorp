@@ -37,7 +37,8 @@ class nsDocLoader : public nsIStreamObserver
 {
 public:
   nsDocLoader(nsIBrowserWindow* aBrowser, nsViewerApp* aViewer, 
-              PRInt32 aSeconds=1, PRBool aPostExit=PR_TRUE);
+              PRInt32 aSeconds, PRBool aPostExit,
+              PRBool aJiggleLayout);
 
   // nsISupports
   NS_DECL_ISUPPORTS
@@ -94,6 +95,7 @@ protected:
 
   PRInt32           mDocNum;
   PRBool            mStart;
+  PRBool            mJiggleLayout;
   PRInt32           mDelay;
   PRBool            mPostExit;
   nsIBrowserWindow* mBrowser;

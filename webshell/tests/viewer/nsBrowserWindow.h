@@ -97,6 +97,8 @@ public:
   void DestroyThrobberImages();
   virtual nsEventStatus DispatchMenuItem(PRInt32 aID) = 0;
 
+  void DoFileOpen();
+
 #ifdef NS_DEBUG
   void DumpContent(FILE *out = stdout);
   void DumpFrames(FILE *out = stdout);

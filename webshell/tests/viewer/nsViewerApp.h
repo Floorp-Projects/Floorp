@@ -73,7 +73,7 @@ protected:
   nsIPref* mPrefs;
   nsString mStartURL;
   PRBool mDoPurify;
-  PRBool mDoQuantify;
+  PRBool mJiggleLayout;
   PRBool mLoadTestFromFile;
   nsString mInputFileName;
   PRInt32 mNumSamples;

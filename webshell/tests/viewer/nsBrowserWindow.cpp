@@ -27,11 +27,13 @@
 #include "nsIThrobber.h"
 #include "nsIDOMDocument.h"
 #include "nsIURL.h"
+#include "nsIFileWidget.h"
 #include "nsRepository.h"
 #include "nsIFactory.h"
 #include "nsCRT.h"
 #include "nsWidgetsCID.h"
 #include "nsViewerApp.h"
+#include "prprf.h"
 
 #include "resources.h"
 
@@ -55,6 +57,7 @@
 
 static NS_DEFINE_IID(kBrowserWindowCID, NS_BROWSER_WINDOW_CID);
 static NS_DEFINE_IID(kButtonCID, NS_BUTTON_CID);
+static NS_DEFINE_IID(kFileWidgetCID, NS_FILEWIDGET_CID);
 static NS_DEFINE_IID(kTextFieldCID, NS_TEXTFIELD_CID);
 static NS_DEFINE_IID(kThrobberCID, NS_THROBBER_CID);
 static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
@@ -64,6 +67,7 @@ static NS_DEFINE_IID(kIBrowserWindowIID, NS_IBROWSER_WINDOW_IID);
 static NS_DEFINE_IID(kIButtonIID, NS_IBUTTON_IID);
 static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
+static NS_DEFINE_IID(kIFileWidgetIID, NS_IFILEWIDGET_IID);
 static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
@@ -224,6 +228,10 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
     mApp->Exit();
     return nsEventStatus_eConsumeNoDefault;
 
+  case VIEWER_FILE_OPEN:
+    DoFileOpen();
+    break;
+
   case VIEWER_DEMO0:
   case VIEWER_DEMO1:
   case VIEWER_DEMO2:
@@ -271,6 +279,68 @@ void
 nsBrowserWindow::GoTo(const nsString& aURL)
 {
   mWebShell->LoadURL(aURL, (nsIStreamObserver*) this, nsnull);
+}
+
+
+#define FILE_PROTOCOL "file://"
+
+static PRBool GetFileNameFromFileSelector(nsIWidget* aParentWindow,
+                                          nsString* aFileName)
+{
+  PRBool selectedFileName = PR_FALSE;
+  nsIFileWidget *fileWidget;
+  nsString title("Open HTML");
+  nsresult rv = NSRepository::CreateInstance(kFileWidgetCID,
+                                             nsnull,
+                                             kIFileWidgetIID,
+                                             (void**)&fileWidget);
+  if (NS_OK == rv) {
+    nsString titles[] = {"all files","html" };
+    nsString filters[] = {"*.*", "*.html"};
+    fileWidget->SetFilterList(2, titles, filters);
+    fileWidget->Create(aParentWindow,
+                       title,
+                       eMode_load,
+                       nsnull,
+                       nsnull);
+
+    PRUint32 result = fileWidget->Show();
+    if (result) {
+      fileWidget->GetFile(*aFileName);
+      selectedFileName = PR_TRUE;
+    }
+ 
+    NS_RELEASE(fileWidget);
+  }
+
+  return selectedFileName;
+}
+
+void
+nsBrowserWindow::DoFileOpen()
+{
+  nsAutoString fileName;
+  char szFile[1000];
+  if (GetFileNameFromFileSelector(mWindow, &fileName)) {
+    fileName.ToCString(szFile, sizeof(szFile));
+    PRInt32 len = strlen(szFile);
+    PRInt32 sum = len + sizeof(FILE_PROTOCOL);
+    char* lpszFileURL = new char[sum];
+    
+    // Translate '\' to '/'
+    for (PRInt32 i = 0; i < len; i++) {
+      if (szFile[i] == '\\') {
+        szFile[i] = '/';
+      }
+    }
+
+    // Build the file URL
+    PR_snprintf(lpszFileURL, sum, "%s%s", FILE_PROTOCOL, szFile);
+
+    // Ask the Web widget to load the file URL
+    LoadURL(lpszFileURL);
+    delete lpszFileURL;
+  }
 }
 
 //----------------------------------------------------------------------
