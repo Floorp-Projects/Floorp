@@ -38,6 +38,7 @@
 #include "nsIMarkupDocumentViewer.h"
 #include "nsXPIDLString.h"
 #include "nsIChromeEventHandler.h"
+#include "nsIDOMWindow.h"
 
 #ifdef XXX_NS_DEBUG       // XXX: we'll need a logging facility for debugging
 #define WEB_TRACE(_bit,_args)            \
@@ -82,8 +83,7 @@ nsDocShell::~nsDocShell()
    if(mContentListener)
       {
       mContentListener->DocShell(nsnull);
-      mContentListener->Release();
-      mContentListener = nsnull;
+      NS_RELEASE(mContentListener);
       }
 }
 
@@ -1408,9 +1408,16 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID& aIID, void** aSink)
    if(aIID.Equals(NS_GET_IID(nsIURIContentListener)) &&
       NS_SUCCEEDED(EnsureContentListener()))
       *aSink = mContentListener;
-   if(aIID.Equals(NS_GET_IID(nsIScriptGlobalObject)) &&
+   else if(aIID.Equals(NS_GET_IID(nsIScriptGlobalObject)) &&
       NS_SUCCEEDED(EnsureScriptEnvironment()))
       *aSink = mScriptGlobal;
+   else if(aIID.Equals(NS_GET_IID(nsIDOMWindow)) &&
+      NS_SUCCEEDED(EnsureScriptEnvironment()))
+      {
+      NS_ENSURE_SUCCESS(mScriptGlobal->QueryInterface(NS_GET_IID(nsIDOMWindow),
+         aSink), NS_ERROR_FAILURE);
+      return NS_OK;
+      }
    else
       return QueryInterface(aIID, aSink);
 
@@ -1628,7 +1635,7 @@ nsresult nsDocShell::EnsureContentListener()
    mContentListener = new nsDSURIContentListener();
    NS_ENSURE_TRUE(mContentListener, NS_ERROR_OUT_OF_MEMORY);
 
-   mContentListener->AddRef();
+   NS_ADDREF(mContentListener);
    mContentListener->DocShell(this);
 
    return NS_OK;
