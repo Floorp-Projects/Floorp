@@ -101,7 +101,9 @@ static void printRange(nsIDOMRange *aDomRange);
 //#define DEBUG_NAVIGATION
 
 
-
+#if DEBUG_cmanske
+//#define DEBUG_TABLE_SELECTION 1
+#endif
 
 
 class nsSelectionIterator;
@@ -278,6 +280,7 @@ public:
   NS_IMETHOD GetMouseDownState(PRBool *aState);
 
   NS_IMETHOD GetTableCellSelection(PRBool *aState){if (aState){*aState = mSelectingTableCellMode != 0; return NS_OK;}return NS_ERROR_NULL_POINTER;}
+  NS_IMETHOD ClearTableCellSelection(){mSelectingTableCellMode = 0; return NS_OK;}
   NS_IMETHOD GetTableCellSelectionStyleColor(const nsStyleColor **aStyleColor);
 
   NS_IMETHOD GetSelection(SelectionType aType, nsIDOMSelection **aDomSelection);
@@ -800,15 +803,19 @@ nsSelection::nsSelection()
   mSelectingTableCellMode = 0;
 
   mSelectedCellIndex = 0;
-//AUTO COPY REGISTRATION
+#ifdef XP_UNIX
+//AUTO COPY REGISTRATION -- FOR UNIX ONLY. 
+// TODO: Make this a pref so other platforms can use it.
   nsresult rv;
   NS_WITH_SERVICE(nsIAutoCopyService, autoCopyService, "component://netscape/autocopy", &rv);
+
   if (NS_SUCCEEDED(rv) && autoCopyService)
   {
     PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
     if (mDomSelections[index])
       autoCopyService->Listen(mDomSelections[index]);
   }
+#endif
   mDisplaySelection = nsISelectionController::SELECTION_OFF;
 
   mDelayCaretOverExistingSelection = PR_TRUE;
@@ -1709,6 +1716,10 @@ nsSelection::LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, PRInt
 
   STATUS_CHECK_RETURN_MACRO();
 
+  // Never use "slow check" when in table selection mode
+  if (aSlowCheck)
+    aSlowCheck = (mSelectingTableCellMode == 0);
+
   *aReturnDetails = nsnull;
   PRInt8 j;
   for (j = (PRInt8) 0; j < (PRInt8)nsISelectionController::NUM_SELECTIONTYPES; j++){
@@ -1729,7 +1740,7 @@ nsSelection::SetMouseDownState(PRBool aState)
   if (!mMouseDownState)
   {
     // Mouse up kills dragging-table cell selection
-#ifdef DEBUG_cmanske
+#ifdef DEBUG_TABLE_SELECTION
 printf("SetMouseDownState to FALSE - stopping cell selection\n");
 #endif
     mSelectingTableCells = PR_FALSE;
@@ -2115,7 +2126,7 @@ nsSelection::HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOf
               (mSelectingTableCellMode == TABLESELECTION_COLUMN && startColIndex == curColIndex)) 
             return NS_OK;
         }
-#ifdef DEBUG_cmanske
+#ifdef DEBUG_TABLE_SELECTION
 printf("HandleTableSelection: Dragged into a new column or row\n");
 #endif
         // Continue dragging row or column selection
@@ -2123,7 +2134,7 @@ printf("HandleTableSelection: Dragged into a new column or row\n");
       }
       else if (mSelectingTableCellMode == TABLESELECTION_CELL)
       {
-#ifdef DEBUG_cmanske
+#ifdef DEBUG_TABLE_SELECTION
 printf("HandleTableSelection: Dragged into a new cell\n");
 #endif
         // Clear this to be sure SelectBlockOfCells works correctly
@@ -2167,7 +2178,7 @@ printf("HandleTableSelection: Dragged into a new cell\n");
 
     if (mMouseDownState)
     {
-#ifdef DEBUG_cmanske
+#ifdef DEBUG_TABLE_SELECTION
 printf("HandleTableSelection: Mouse down event\n");
 #endif
       // Clear cell we stored in mouse-down
@@ -2208,7 +2219,7 @@ printf("HandleTableSelection: Mouse down event\n");
         {
           // Remember this cell to (possibly) unselect it on mouseup
           mUnselectCellOnMouseUp = childContent;
-#ifdef DEBUG_cmanske
+#ifdef DEBUG_TABLE_SELECTION
 printf("HandleTableSelection: Saving mUnselectCellOnMouseUp\n");
 #endif
         }
@@ -2218,7 +2229,11 @@ printf("HandleTableSelection: Saving mUnselectCellOnMouseUp\n");
           // but first remove existing selection if not in same table
           nsCOMPtr<nsIContent> previousCellContent = do_QueryInterface(previousCellNode);
           if (!IsInSameTable(previousCellContent, childContent, nsnull))
+          {
             mDomSelections[index]->ClearSelection();
+            // Reset selection mode that is cleared in ClearSelection
+            mSelectingTableCellMode = aTarget;
+          }
 
           nsCOMPtr<nsIDOMElement> cellElement = do_QueryInterface(childContent);
           return SelectCellElement(cellElement);
@@ -2245,17 +2260,18 @@ printf("HandleTableSelection: Saving mUnselectCellOnMouseUp\n");
         // Note: Currently, nsFrame::GetDataForTableSelection
         //       will never call us for row or column selection on mouse down
         mSelectingTableCells = PR_TRUE;
-        mSelectingTableCellMode = aTarget;
       
         // Force new selection block
         mStartSelectedCell = nsnull;
         mDomSelections[index]->ClearSelection();
+        // Always do this AFTER ClearSelection
+        mSelectingTableCellMode = aTarget;
         return SelectRowOrColumn(childContent, aTarget);
       }
     }
     else
     {
-#ifdef DEBUG_cmanske
+#ifdef DEBUG_TABLE_SELECTION
 printf("HandleTableSelection: Mouse UP event\n");
 #endif
       // First check if we are extending a block selection
@@ -2278,7 +2294,7 @@ printf("HandleTableSelection: Mouse UP event\n");
         nsCOMPtr<nsIDOMNode> previousCellParent;
         nsCOMPtr<nsIDOMRange> range;
         PRInt32 offset;
-#ifdef DEBUG_cmanske
+#ifdef DEBUG_TABLE_SELECTION
 printf("HandleTableSelection: Unselecting mUnselectCellOnMouseUp; rangeCount=%d\n", rangeCount);
 #endif
         for( PRInt32 i = 0; i < rangeCount; i++)
@@ -2309,7 +2325,7 @@ printf("HandleTableSelection: Unselecting mUnselectCellOnMouseUp; rangeCount=%d\
             // Cell is already selected
             if (rangeCount == 1)
             {
-#ifdef DEBUG_cmanske
+#ifdef DEBUG_TABLE_SELECTION
 printf("HandleTableSelection: Unselecting single selected cell\n");
 #endif
               // This was the only cell selected.
@@ -2323,7 +2339,7 @@ printf("HandleTableSelection: Unselecting single selected cell\n");
               //  (i.e., at the end of the cell's contents)?
               return mDomSelections[index]->Collapse(childNode, 0);
             }
-#ifdef DEBUG_cmanske
+#ifdef DEBUG_TABLE_SELECTION
 printf("HandleTableSelection: Removing cell from multi-cell selection\n");
 #endif
             //TODO: Should we try to reassign to a different existing cell?
@@ -2343,7 +2359,7 @@ printf("HandleTableSelection: Removing cell from multi-cell selection\n");
       //  Use it as the start of a block that 
       //  we may append by using Shift+click in another cell
       mAppendStartSelectedCell = childContent;
-#ifdef DEBUG_cmanske
+#ifdef DEBUG_TABLE_SELECTION
 printf("HandleTableSelection: Setting mAppendStartSelectedCell for append block\n");
 #endif
     }
@@ -2363,7 +2379,7 @@ nsSelection::SelectBlockOfCells(nsIContent *aEndCell)
   if (mAppendStartSelectedCell)
   {
     // We are appending a new block
-#ifdef DEBUG_cmanske
+#ifdef DEBUG_TABLE_SELECTION
 printf("SelectBlockOfCells -- using mAppendStartSelectedCell\n");
 #endif
     startCell = mAppendStartSelectedCell;
@@ -2371,14 +2387,14 @@ printf("SelectBlockOfCells -- using mAppendStartSelectedCell\n");
   else if (mStartSelectedCell)
   {
     startCell = mStartSelectedCell;
-#ifdef DEBUG_cmanske
+#ifdef DEBUG_TABLE_SELECTION
 printf("SelectBlockOfCells -- using mStartSelectedCell\n");
 #endif
   }
 
   if (!startCell)
   {
-#ifdef DEBUG_cmanske
+#ifdef DEBUG_TABLE_SELECTION
 printf("SelectBlockOfCells -- NO START CELL!\n");
 #endif
     return NS_OK;
@@ -2424,7 +2440,7 @@ printf("SelectBlockOfCells -- NO START CELL!\n");
       result = GetCellIndexes(childContent, curRowIndex, curColIndex);
       if (NS_FAILED(result)) return result;
 
-#ifdef DEBUG_cmanske
+#ifdef DEBUG_TABLE_SELECTION
 if (!range)
 printf("SelectBlockOfCells -- range is null\n");
 #endif
@@ -3988,10 +4004,14 @@ nsDOMSelection::ClearSelection()
   nsCOMPtr<nsIPresContext>  presContext;
   GetPresContext(getter_AddRefs(presContext));
 
+
   nsresult	result = Clear(presContext);
   if (NS_FAILED(result))
   	return result;
-  	
+  
+  // Turn off signal for table selection  	
+  mFrameSelection->ClearTableCellSelection();
+
   return mFrameSelection->NotifySelectionListeners(GetType());
   // Also need to notify the frames!
   // PresShell::ContentChanged should do that on DocumentChanged
@@ -4068,6 +4088,10 @@ nsDOMSelection::Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset)
   nsCOMPtr<nsIPresContext>  presContext;
   GetPresContext(getter_AddRefs(presContext));
   Clear(presContext);
+
+  // Turn off signal for table selection  	
+  if (mFrameSelection)
+    mFrameSelection->ClearTableCellSelection();
 
   nsCOMPtr<nsIDOMRange> range;
   NS_NewRange(getter_AddRefs(range));
