@@ -36,6 +36,7 @@ use vars @::legal_resolution,
   @::legal_components,
   @::legal_versions,
   @::legal_severity,
+  @::legal_target_milestone,
   %::FORM;
 
 
@@ -60,9 +61,9 @@ foreach my $name ("bug_status", "resolution", "assigned_to", "rep_platform",
                   "priority", "bug_severity", "product", "reporter", "op_sys",
                   "component", "version",
                   "email1", "emailtype1", "emailreporter1",
-                  "emailassigned_to1", "emailcc1",
+                  "emailassigned_to1", "emailcc1", "emailqa_contact1",
                   "email2", "emailtype2", "emailreporter2",
-                  "emailassigned_to2", "emailcc2") {
+                  "emailassigned_to2", "emailcc2", "emailqa_contact2") {
     $default{$name} = "";
     $type{$name} = 0;
 }
@@ -124,6 +125,20 @@ sub GenerateEmailInput {
         }
     }
 
+    my $qapart = "";
+    if (Param("useqacontact")) {
+        my $qacontact =
+            ($default{"emailqa_contact$id"} eq "1") ? "checked" : "";
+        $qapart = qq|
+<tr>
+<td></td>
+<td>
+<input type="checkbox" name="emailqa_contact$id" value=1 $qacontact>QA Contact
+</td>
+</tr>
+|;
+    }
+
     return qq|
 <table border=1 cellspacing=0 cellpadding=0>
 <tr><td>
@@ -146,7 +161,7 @@ sub GenerateEmailInput {
 <td>
 <input type="checkbox" name="emailreporter$id" value=1 $reporter>Reporter
 </td>
-</tr>
+</tr>$qapart
 <tr>
 <td align=right>(Will match any of the selected fields)</td>
 <td>
@@ -241,9 +256,16 @@ $emailinput2<p>
 
 <table>
 <tr>
-<TH ALIGN=LEFT>Program:</th>
-<TH ALIGN=LEFT>Version:</th>
-<TH ALIGN=LEFT>Component:</th>
+<TH ALIGN=LEFT VALIGN=BOTTOM>Program:</th>
+<TH ALIGN=LEFT VALIGN=BOTTOM>Version:</th>
+<TH ALIGN=LEFT VALIGN=BOTTOM>Component:</th>
+";
+
+if (Param("usetargetmilestone")) {
+    print "<TH ALIGN=LEFT VALIGN=BOTTOM>Target Milestone:</th>";
+}
+
+print "
 </tr>
 <tr>
 
@@ -263,8 +285,18 @@ $emailinput2<p>
 <SELECT NAME=\"component\" MULTIPLE SIZE=5>
 @{[make_options(\@::legal_components, $default{'component'}, $type{'component'})]}
 </SELECT>
-</td>
+</td>";
 
+if (Param("usetargetmilestone")) {
+    print "
+<td align=left valign=top>
+<SELECT NAME=\"target_milestone\" MULTIPLE SIZE=5>
+@{[make_options(\@::legal_target_milestone, $default{'component'}, $type{'component'})]}
+</SELECT>
+</td>";
+}
+
+print "
 </tr>
 </table>
 
@@ -281,11 +313,24 @@ $emailinput2<p>
 <td><input type=radio name=long_desc_type value=substr checked>Substring</td>
 <td><input type=radio name=long_desc_type value=regexp>Regexp</td>
 </tr>
+<tr>
 <td align=right>URL:</td>
 <td><input name=bug_file_loc size=30></td>
 <td><input type=radio name=bug_file_loc_type value=substr checked>Substring</td>
 <td><input type=radio name=bug_file_loc_type value=regexp>Regexp</td>
-</tr>
+</tr>";
+
+if (Param("usestatuswhiteboard")) {
+    print "
+<tr>
+<td align=right>Status whiteboard:</td>
+<td><input name=status_whiteboard size=30></td>
+<td><input type=radio name=status_whiteboard_type value=substr checked>Substring</td>
+<td><input type=radio name=status_whiteboard_type value=regexp>Regexp</td>
+</tr>";
+}
+
+print "
 </table>
 <p>
 

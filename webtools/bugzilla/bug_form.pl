@@ -37,6 +37,9 @@ select
         reporter,
         bug_file_loc,
         short_desc,
+	target_milestone,
+	qa_contact,
+	status_whiteboard,
         date_format(creation_ts,'Y-m-d')
 from bugs
 where bug_id = $::FORM{'id'}";
@@ -49,7 +52,8 @@ if (@row = FetchSQLData()) {
     foreach my $field ("bug_id", "product", "version", "rep_platform",
 		       "op_sys", "bug_status", "resolution", "priority",
 		       "bug_severity", "component", "assigned_to", "reporter",
-		       "bug_file_loc", "short_desc", "creation_ts") {
+		       "bug_file_loc", "short_desc", "target_milestone",
+                       "qa_contact", "status_whiteboard", "creation_ts") {
 	$bug{$field} = shift @row;
 	if (!defined $bug{$field}) {
 	    $bug{$field} = "";
@@ -139,8 +143,38 @@ print "
   </TR><TR>
     <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#assigned_to\">Assigned&nbsp;To:
         </A></B></TD>
-      <TD>$bug{'assigned_to'}</TD>
-  </TR><TR>
+      <TD>$bug{'assigned_to'}</TD>";
+
+if (Param("usetargetmilestone")) {
+    if ($bug{'target_milestone'} eq "") {
+        $bug{'target_milestone'} = " ";
+    }
+    print "
+<TD ALIGN=RIGHT><B>Target Milestone:</B></TD>
+<TD><SELECT NAME=target_milestone>" .
+    make_options(\@::legal_target_milestone,
+                 $bug{'target_milestone'}) .
+                     "</SELECT></TD>";
+}
+
+print "
+</TR>";
+
+if (Param("useqacontact")) {
+    my $name = $bug{'qa_contact'} > 0 ? DBID_to_name($bug{'qa_contact'}) : "";
+    print "
+  <TR>
+    <TD ALIGN=\"RIGHT\"><B>QA Contact:</B>
+    <TD COLSPAN=6>
+      <INPUT NAME=qa_contact VALUE=\"" .
+    value_quote($name) .
+    "\" SIZE=60></
+  </TR>";
+}
+
+
+print "
+  <TR>
     <TD ALIGN=\"RIGHT\">$URL
     <TD COLSPAN=6>
       <INPUT NAME=bug_file_loc VALUE=\"$bug{'bug_file_loc'}\" SIZE=60></TD>
@@ -150,7 +184,21 @@ print "
       <INPUT NAME=short_desc VALUE=\"" .
     value_quote($bug{'short_desc'}) .
     "\" SIZE=60></TD>
-  </TR>
+  </TR>";
+
+if (Param("usestatuswhiteboard")) {
+    print "
+  <TR>
+    <TD ALIGN=\"RIGHT\"><B>Status Whiteboard:</B>
+    <TD COLSPAN=6>
+      <INPUT NAME=status_whiteboard VALUE=\"" .
+    value_quote($bug{'status_whiteboard'}) .
+    "\" SIZE=60></
+  </TR>";
+}
+
+
+print "
 </TABLE>
 <br>
 <B>Additional Comments:</B>
@@ -239,3 +287,5 @@ print "
 navigation_header();
 
 print "</BODY>\n";
+
+1;

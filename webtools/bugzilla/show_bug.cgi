@@ -46,4 +46,5 @@ navigation_header();
 
 print "<HR>\n";
 
-do "bug_form.pl";
+$! = 0;
+do "bug_form.pl" || die "Error doing bug_form.pl: $!";

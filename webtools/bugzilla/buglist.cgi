@@ -48,7 +48,8 @@ use vars @::legal_platform,
     @::legal_severity,
     @::legal_priority,
     @::default_column_list,
-    @::legal_resolution_no_dup;
+    @::legal_resolution_no_dup,
+    @::legal_target_milestone;
 
 
 
@@ -151,16 +152,20 @@ DefCol("platform", "substring(bugs.rep_platform, 1, 3)", "Plt",
        "bugs.rep_platform");
 DefCol("owner", "assign.login_name", "Owner", "assign.login_name");
 DefCol("reporter", "report.login_name", "Reporter", "report.login_name");
+DefCol("qa_contact", "qacont.login_name", "QAContact", "qacont.login_name");
 DefCol("status", "substring(bugs.bug_status,1,4)", "State", "bugs.bug_status");
 DefCol("resolution", "substring(bugs.resolution,1,4)", "Result",
        "bugs.resolution");
 DefCol("summary", "substring(bugs.short_desc, 1, 60)", "Summary", "", 1);
 DefCol("summaryfull", "bugs.short_desc", "Summary", "", 1);
+DefCol("status_whiteboard", "bugs.status_whiteboard", "StatusSummary", "", 1);
 DefCol("component", "substring(bugs.component, 1, 8)", "Comp",
        "bugs.component");
 DefCol("product", "substring(bugs.product, 1, 8)", "Product", "bugs.product");
 DefCol("version", "substring(bugs.version, 1, 5)", "Vers", "bugs.version");
 DefCol("os", "substring(bugs.op_sys, 1, 4)", "OS", "bugs.op_sys");
+DefCol("target_milestone", "bugs.target_milestone", "TargetM",
+       "bugs.target_milestone");
 
 my @collist;
 if (defined $::COOKIE{'COLUMNLIST'}) {
@@ -199,7 +204,8 @@ bugs.bug_status";
 $query .= "
 from   bugs,
        profiles assign,
-       profiles report,
+       profiles report
+       left join profiles qacont on bugs.qa_contact = qacont.userid,
        versions projector
 where  bugs.assigned_to = assign.userid 
 and    bugs.reporter = report.userid
@@ -221,7 +227,8 @@ if (defined $::FORM{'sql'}) {
 } else {
   my @legal_fields = ("bug_id", "product", "version", "rep_platform", "op_sys",
                       "bug_status", "resolution", "priority", "bug_severity",
-                      "assigned_to", "reporter", "component");
+                      "assigned_to", "reporter", "component",
+                      "target_milestone");
 
   foreach my $field (keys %::FORM) {
       my $or = "";
@@ -272,7 +279,7 @@ foreach my $id ("1", "2") {
 
     my $foundone = 0;
     my $lead= "and (\n";
-    foreach my $field ("assigned_to", "reporter", "cc") {
+    foreach my $field ("assigned_to", "reporter", "cc", "qa_contact") {
         my $doit = $::FORM{"email$field$id"};
         if (!$doit) {
             next;
@@ -283,6 +290,8 @@ foreach my $id ("1", "2") {
             $table = "assign";
         } elsif ($field eq "reporter") {
             $table = "report";
+        } elsif ($field eq "qa_contact") {
+            $table = "qacont";
         } else {
             $table = "ccname";
         }
@@ -586,7 +595,29 @@ document.write(\" <input type=button value=\\\"Uncheck All\\\" onclick=\\\"SetCh
     <TD><SELECT NAME=component>$component_popup</SELECT></TD>
     <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#severity\">Severity:</A></B></TD>
     <TD><SELECT NAME=bug_severity>$sev_popup</SELECT></TD>
-</TR>
+</TR>";
+
+    if (Param("usetargetmilestone")) {
+        my $tfm_popup = make_options(\@::legal_target_milestone,
+                                     $::dontchange);
+        print "
+    <TR>
+    <TD ALIGN=RIGHT><B>Target milestone:</B></TD>
+    <TD><SELECT NAME=target_milestone>$tfm_popup</SELECT></TD>
+    </TR>";
+    }
+
+    if (Param("useqacontact")) {
+        print "
+<TR>
+<TD><B>QA Contact:</B></TD>
+<TD COLSPAN=3><INPUT NAME=qa_contact SIZE=32 VALUE=\"" .
+            value_quote($::dontchange) . "\"></TD>
+</TR>";
+    }
+        
+
+    print "
 </TABLE>
 
 <INPUT NAME=multiupdate value=Y TYPE=hidden>

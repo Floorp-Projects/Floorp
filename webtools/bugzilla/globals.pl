@@ -25,6 +25,7 @@ use strict;
 use Mysql;
 
 use Date::Format;               # For time2str().
+# use Carp;                       # for confess
 
 # Contains the version string for the current running Bugzilla.
 $::param{'version'} = '2.1';
@@ -286,6 +287,14 @@ sub GenerateVersionTable {
     }
     print FID GenerateCode('%::proddesc');
 
+    if (Param("usetargetmilestone")) {
+        my $last = Param("nummilestones");
+        my $i;
+        for ($i=1 ; $i<=$last ; $i++) {
+            push(@::legal_target_milestone, "M$i");
+        }
+        print FID GenerateCode('@::legal_target_milestone');
+    }
     print FID "1;\n";
     close FID;
     rename $tmpname, "data/versioncache" || die "Can't rename $tmpname to versioncache";
@@ -452,6 +461,9 @@ sub SplitEnumType {
 
 sub SqlQuote {
     my ($str) = (@_);
+#     if (!defined $str) {
+#         confess("Undefined passed to SqlQuote");
+#     }
     $str =~ s/([\\\'])/\\$1/g;
     $str =~ s/\0/\\0/g;
     return "'$str'";

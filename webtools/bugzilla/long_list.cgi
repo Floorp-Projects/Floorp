@@ -46,7 +46,10 @@ select
   report.login_name,
   bugs.component,
   bugs.bug_file_loc,
-  bugs.short_desc
+  bugs.short_desc,
+  bugs.target_milestone,
+  bugs.qa_contact,
+  bugs.status_whiteboard
 from bugs,profiles assign,profiles report
 where assign.userid = bugs.assigned_to and report.userid = bugs.reporter and
 ";
@@ -60,7 +63,8 @@ foreach my $bug (split(/:/, $::FORM{'buglist'})) {
     if (@row = FetchSQLData()) {
         my ($id, $product, $version, $platform, $opsys, $status, $severity,
             $priority, $resolution, $assigned, $reporter, $component, $url,
-            $shortdesc) = (@row);
+            $shortdesc, $target_milestone, $qa_contact,
+            $status_whiteboard) = (@row);
         print "<IMG SRC=\"1x1.gif\" WIDTH=1 HEIGHT=80 ALIGN=LEFT>\n";
         print "<TABLE WIDTH=100%>\n";
         print "<TD COLSPAN=4><TR><DIV ALIGN=CENTER><B><FONT =\"+3\">" .
@@ -77,10 +81,24 @@ foreach my $bug (split(/:/, $::FORM{'buglist'})) {
         print "<TR><TD><B>Resolution:</B> $resolution</TD>\n";
         print "<TD><B>Assigned To:</B> $assigned\n";
         print "<TD><B>Reported By:</B> $reporter\n";
+        if (Param("useqacontact")) {
+            my $name = "";
+            if ($qa_contact > 0) {
+                $name = DBID_to_name($qa_contact);
+            }
+            print "<TD><B>QA Contact:</B> $name\n";
+        }
         print "<TR><TD><B>Component:</B> $component\n";
+        if (Param("usetargetmilestone")) {
+            print "<TD><B>Target milestone:</B>$target_milestone\n";
+        }
         print "<TR><TD COLSPAN=6><B>URL:</B> " . html_quote($url) . "\n";
-        print "<TR><TD COLSPAN=6><B>Summary&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</B> " . html_quote($shortdesc) . "\n";
-        print "<TR><TD><B>Description&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</B>\n</TABLE>\n";
+        print "<TR><TD COLSPAN=6><B>Summary:</B> " . html_quote($shortdesc) . "\n";
+        if (Param("usestatuswhiteboard")) {
+            print "<TR><TD COLSPAN=6><B>Status Whiteboard:" .
+                html_quote($status_whiteboard) . "\n";
+        }
+        print "<TR><TD><B>Description:</B>\n</TABLE>\n";
         print "<PRE>" . html_quote(GetLongDescription($bug)) . "</PRE>\n";
         print "<HR>\n";
     }

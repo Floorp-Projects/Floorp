@@ -30,6 +30,9 @@ sub WriteParams {
     foreach my $i (@::param_list) {
 	if (!defined $::param{$i}) {
 	    $::param{$i} = $::param_default{$i};
+            if (!defined $::param{$i}) {
+                die "No default parameter ever specified for $i";
+            }
 	}
     }
     mkdir("data", 0777);
@@ -37,7 +40,7 @@ sub WriteParams {
     my $tmpname = "data/params.$$";
     open(FID, ">$tmpname") || die "Can't create $tmpname";
     my $v = $::param{'version'};
-    undef $::param{'version'};  # Don't write the version number out to
+    delete $::param{'version'};  # Don't write the version number out to
                                 # the params file.
     print FID GenerateCode('%::param');
     $::param{'version'} = $v;
@@ -82,6 +85,7 @@ sub check_numeric {
 # t -- A short text entry field (suitable for a single line)
 # l -- A long text field (suitable for many lines)
 # b -- A boolean value (either 1 or 0)
+# i -- An integer.
 # defenum -- This param defines an enum that defines a column in one of
 #	     the database tables.  The name of the parameter is of the form
 #	     "tablename.columnname".
@@ -239,4 +243,30 @@ DefParam("defaultquery",
 	 "t",
 	 "bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&product=Mozilla&order=%22Importance%22");
 
+DefParam("usetargetmilestone",
+	 "Do you wish to use the Target Milestone field?",
+	 "b",
+	 0);
+
+DefParam("nummilestones",
+         "If using Target Milestone, how many milestones do you wish to
+          appear?",
+         "t",
+         10,
+         \&check_numeric);
+
+DefParam("useqacontact",
+	 "Do you wish to use the QA Contact field?",
+	 "b",
+	 0);
+
+DefParam("usestatuswhiteboard",
+	 "Do you wish to use the Status Whiteboard field?",
+	 "b",
+	 0);
+
+	 
+
+
 1;
+

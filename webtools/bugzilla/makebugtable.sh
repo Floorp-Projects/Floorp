@@ -46,7 +46,9 @@ version varchar(16) not null,
 area enum("BUILD", "CODE", "CONTENT", "DOC", "PERFORMANCE", "TEST", "UI", "i18n", "l10n") not null,
 component varchar(50) not null,
 resolution enum("", "FIXED", "INVALID", "WONTFIX", "LATER", "REMIND", "DUPLICATE", "WORKSFORME") not null,
-
+target_milestone varchar(20) not null,
+qa_contact mediumint not null,
+status_whiteboard mediumtext not null,
 
 index (assigned_to),
 index (delta_ts),
@@ -59,7 +61,9 @@ index (reporter),
 index (version),
 index (area),
 index (component),
-index (resolution)
+index (resolution),
+index (target_milestone),
+index (qa_contact)
 
 );
 

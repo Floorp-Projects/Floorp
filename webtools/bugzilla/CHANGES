@@ -11,6 +11,20 @@ will tell you what has been changed in the last week.
 
 
 
+1/20/99 Added new fields: Target Milestone, QA Contact, and Status Whiteboard.
+These fields are all optional in the UI; there are parameters to turn them on.
+However, whether or not you use them, the fields need to be in the DB.  There
+is some code that needs them, even if you don't.
+
+To update your DB to have these fields, send the following to MySQL:
+
+        alter table bugs add column target_milestone varchar(20) not null,
+                add column qa_contact mediumint not null,
+                add column status_whiteboard mediumtext not null,
+                add index (target_milestone), add index (qa_contact);
+
+
+
 1/18/99 You can now query by CC.  To make this perform reasonably, the CC table
 needs some indices.  The following MySQL does the necessary stuff:
 

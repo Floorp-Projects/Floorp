@@ -61,7 +61,7 @@ foreach my $i (@::param_list) {
     SWITCH: for ($::param_type{$i}) {
 	/^t$/ && do {
             print "<input size=80 name=$i value=\"" .
-                value_quote($value) . '">\n';
+                value_quote($value) . "\">\n";
             last SWITCH;
 	};
 	/^l$/ && do {

@@ -122,15 +122,28 @@ sub ChangeResolution {
 
 foreach my $field ("rep_platform", "priority", "bug_severity", "url",
                    "summary", "component", "bug_file_loc", "short_desc",
-                   "product", "version", "component", "op_sys") {
+                   "product", "version", "component", "op_sys",
+                   "target_milestone", "status_whiteboard") {
     if (defined $::FORM{$field}) {
         if ($::FORM{$field} ne $::dontchange) {
             DoComma();
-            $::query .= "$field = " . SqlQuote($::FORM{$field});
+            $::query .= "$field = " . SqlQuote(trim($::FORM{$field}));
         }
     }
 }
 
+
+if (defined $::FORM{'qa_contact'}) {
+    my $name = trim($::FORM{'qa_contact'});
+    if ($name ne $dontchange) {
+        my $id = 0;
+        if ($name ne "") {
+            $id = DBNameToIdAndCheck($name);
+        }
+        DoComma();
+        $::query .= "qa_contact = $id";
+    }
+}
 
 
 ConnectToDatabase();

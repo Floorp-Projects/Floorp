@@ -31,8 +31,20 @@ print "Content-type: text/html\n";
 
 my @masterlist = ("opendate", "changeddate", "severity", "priority",
                   "platform", "owner", "reporter", "status", "resolution",
-                  "component", "product", "version", "project", "os",
-                  "summary", "summaryfull");
+                  "component", "product", "version", "project", "os");
+
+if (Param("usetargetmilestone")) {
+    push(@masterlist, "target_milestone");
+}
+if (Param("useqacontact")) {
+    push(@masterlist, "qa_contact");
+}
+if (Param("usestatuswhiteboard")) {
+    push(@masterlist, "status_whiteboard");
+}
+
+
+push(@masterlist, ("summary", "summaryfull"));
 
 
 my @collist;
