@@ -138,7 +138,7 @@ nsPluginsDir::nsPluginsDir(PRUint16 location)
 
     plugDir += "plugins";
     *(nsFileSpec*)this = plugDir;
-    PR_snprintf(path, 2000, "%s", (const char *) plugDir);
+    PR_snprintf(path, sizeof(path), "%s", (const char *) plugDir);
     
   }
 
