@@ -64,7 +64,8 @@ typedef unsigned long  mork_u4;  // make sure this is four bytes
 typedef long           mork_i4;  // make sure this is four bytes
 typedef long           mork_ip;  // make sure sizeof(mork_ip) == sizeof(void*)
 
-typedef mork_u1 mork_ch;  // small byte-sized character (never wide)
+typedef mork_u1 mork_ch;    // small byte-sized character (never wide)
+typedef mork_u1 mork_flags;  // one byte's worth of predicate bit flags
 
 typedef mork_u2 mork_base;    // 2-byte magic class signature slot in object
 typedef mork_u2 mork_derived; // 2-byte magic class signature slot in object
