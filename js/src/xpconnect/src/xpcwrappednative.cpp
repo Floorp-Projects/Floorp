@@ -268,16 +268,16 @@ nsXPCWrappedNative::~nsXPCWrappedNative()
             map->Remove(this);
         }
     }
-    if(mDynamicScriptable)
-        NS_RELEASE(mDynamicScriptable);
-    if(mClass)
-        NS_RELEASE(mClass);
     if(mFinalizeListener)
     {
         if(mObj)
             mFinalizeListener->AboutToRelease(mObj);
         NS_RELEASE(mFinalizeListener);
     }
+    if(mDynamicScriptable)
+        NS_RELEASE(mDynamicScriptable);
+    if(mClass)
+        NS_RELEASE(mClass);
     if(mObj)
         NS_RELEASE(mObj);
 }
@@ -378,11 +378,10 @@ nsXPCWrappedNative::GetIID(nsIID** iid)
 NS_IMETHODIMP
 nsXPCWrappedNative::SetFinalizeListener(nsIXPConnectFinalizeListener* aListener)
 {
+    /* if the object already has a listener, then we fail */
     if(mFinalizeListener && aListener)
-    {
-        NS_ASSERTION(0,"tried to set two FinalizeListeners on a wrapper");
         return NS_ERROR_FAILURE;
-    }
+
     if(mFinalizeListener)
         NS_RELEASE(mFinalizeListener);
     mFinalizeListener = aListener;

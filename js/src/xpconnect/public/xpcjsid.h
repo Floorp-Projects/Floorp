@@ -81,11 +81,11 @@ class nsIJSCID : public nsIJSID {
  public: 
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IJSCID_IID)
 
-  /* nsISupports createInstance (); */
-  NS_IMETHOD createInstance(nsISupports **_retval) = 0;
+  /* readonly attribute nsISupports createInstance; */
+  NS_IMETHOD GetCreateInstance(nsISupports * *aCreateInstance) = 0;
 
-  /* nsISupports getService (); */
-  NS_IMETHOD getService(nsISupports **_retval) = 0;
+  /* readonly attribute nsISupports getService; */
+  NS_IMETHOD GetGetService(nsISupports * *aGetService) = 0;
 
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);

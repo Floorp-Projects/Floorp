@@ -44,8 +44,10 @@ interface nsIJSIID : nsIJSID
 [scriptable, uuid(e3a24a60-d651-11d2-9843-006008962422)]
 interface nsIJSCID : nsIJSID
 {
-    nsISupports createInstance();
-    nsISupports getService();
+    // these are attributes that are made to be called
+    // as methods from JavaScript only.
+    readonly attribute nsISupports createInstance;
+    readonly attribute nsISupports getService;
 };
 
 /* this goes into the C++ header verbatim. */

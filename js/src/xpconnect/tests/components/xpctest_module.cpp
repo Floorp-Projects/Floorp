@@ -66,7 +66,9 @@ extern "C" PR_IMPLEMENT(nsresult)
 NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
 {
     nsresult rv;
-    printf("registering xpctest\n");
+#ifdef DEBUG
+    printf("*** Register XPConnect test components\n");
+#endif
     NS_WITH_SERVICE1(nsIComponentManager, compMgr,
                      aServMgr, kComponentManagerCID, &rv);
     if (NS_FAILED(rv)) return rv;
