@@ -57,15 +57,6 @@
 #include "xprintutil.h"
 #include "prenv.h" /* for PR_GetEnv */
 
-/* "Broken Xprt" warning dialog */
-#include "nsIStringBundle.h"
-#include "nsIWindowWatcher.h"
-#include "nsIDOMWindowInternal.h"
-#include "nsIPrompt.h" 
-#include "nsIServiceManagerUtils.h"
-
-#define NS_ERROR_GFX_PRINTER_BUNDLE_URL "chrome://communicator/locale/printing.properties"
-
 /* misc defines */
 #define XPRINT_MAKE_24BIT_VISUAL_AVAILABLE_FOR_TESTING 1
 
@@ -180,41 +171,8 @@ AlertBrokenXprt(Display *pdpy)
   /* Dialog disabled ? */
   if (PR_GetEnv("MOZILLA_XPRINT_DISABLE_BROKEN_XFREE86_WARNING") != nsnull)
     return NS_OK;
-
-  nsCOMPtr<nsIStringBundleService> stringBundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
-  if (NS_FAILED(rv))
-    return rv;
-
-  nsXPIDLString msg,
-                title;
-
-  nsCOMPtr<nsIStringBundle> myStringBundle;
-  rv = stringBundleService->CreateBundle(NS_ERROR_GFX_PRINTER_BUNDLE_URL, getter_AddRefs(myStringBundle));
-  if (NS_FAILED(rv))
-    return rv;
-
-  myStringBundle->GetStringFromName(NS_LITERAL_STRING("print_error_dialog_title").get(),     getter_Copies(title));
-  myStringBundle->GetStringFromName(NS_LITERAL_STRING("print_xprint_broken_xprt_msg").get(), getter_Copies(msg));
-
-  nsCOMPtr<nsIWindowWatcher> wwatch = do_GetService("@mozilla.org/embedcomp/window-watcher;1", &rv);
-  if (NS_FAILED(rv))
-    return rv;
-
-  nsCOMPtr<nsIDOMWindow> active;
-  wwatch->GetActiveWindow(getter_AddRefs(active));
-
-  nsCOMPtr<nsIDOMWindowInternal> parent = do_QueryInterface(active, &rv);
-  if (NS_FAILED(rv))
-    return rv;
-
-  nsCOMPtr<nsIPrompt> dialog;
-  rv = parent->GetPrompter(getter_AddRefs(dialog));
-  if (NS_FAILED(rv))
-    return rv;
-
-  dialog->Alert(title, msg);
-
-  return NS_OK;
+   
+  return NS_ERROR_GFX_PRINTER_XPRINT_BROKEN_XPRT;
 }
 
 NS_IMETHODIMP 
@@ -572,7 +530,7 @@ nsXPrintContext::SetupPrintContext(nsIDeviceContextSpecXp *aSpec)
    * ToDo: Report error to user (dialog)
    */
   if( XpuGetResolution(mPDisplay, mPContext, &mPrintResolution) == False )
-    return NS_ERROR_GFX_PRINTER_INVALID_ATTRIBUTE;
+    return NS_ERROR_GFX_PRINTER_DRIVER_CONFIGURATION_ERROR;
 
   PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("print resolution %ld\n", (long)mPrintResolution));
   

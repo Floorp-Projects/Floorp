@@ -6231,9 +6231,9 @@ DocumentViewerImpl::ShowPrintErrorDialog(nsresult aPrintError, PRBool aIsPrintin
   if (NS_FAILED(rv)) 
     return;
     
-  PRUnichar   *msg        = nsnull,
-              *title      = nsnull;
-  nsAutoString stringName;
+  nsXPIDLString msg,
+                title;
+  nsAutoString  stringName;
 
   switch(aPrintError)
   {
@@ -6264,37 +6264,41 @@ DocumentViewerImpl::ShowPrintErrorDialog(nsresult aPrintError, PRBool aIsPrintin
       NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_ORIENTATION_NOT_SUPPORTED)
       NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_COLORSPACE_NOT_SUPPORTED)
       NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_TOO_MANY_COPIES)
+      NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_DRIVER_CONFIGURATION_ERROR)
+      NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_XPRINT_BROKEN_XPRT)
 
     default:
       NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_FAILURE)
 #undef NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG      
   }
 
-  myStringBundle->GetStringFromName(stringName.get(), &msg);
+  myStringBundle->GetStringFromName(stringName.get(), getter_Copies(msg));
   if (aIsPrinting) {
-    myStringBundle->GetStringFromName(NS_LITERAL_STRING("print_error_dialog_title").get(), &title);
+    myStringBundle->GetStringFromName(NS_LITERAL_STRING("print_error_dialog_title").get(), getter_Copies(title));
   } else {
-    myStringBundle->GetStringFromName(NS_LITERAL_STRING("printpreview_error_dialog_title").get(), &title);
+    myStringBundle->GetStringFromName(NS_LITERAL_STRING("printpreview_error_dialog_title").get(), getter_Copies(title));
   }
 
   if (!msg)
     return;
     
-  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
-  if (wwatch) {
-    nsCOMPtr<nsIDOMWindow> active;
-    wwatch->GetActiveWindow(getter_AddRefs(active));
+  nsCOMPtr<nsIWindowWatcher> wwatch = do_GetService("@mozilla.org/embedcomp/window-watcher;1", &rv);
+  if (NS_FAILED(rv))
+    return;
 
-    nsCOMPtr<nsIDOMWindowInternal> parent(do_QueryInterface(active));
+  nsCOMPtr<nsIDOMWindow> active;
+  wwatch->GetActiveWindow(getter_AddRefs(active));
+
+  nsCOMPtr<nsIDOMWindowInternal> parent = do_QueryInterface(active, &rv);
+  if (NS_FAILED(rv))
+    return;
+      
+  nsCOMPtr<nsIPrompt> dialog; 
+  parent->GetPrompter(getter_AddRefs(dialog)); 
+  if (!dialog)
+    return;
     
-    if (parent) {
-      nsCOMPtr<nsIPrompt> dialog; 
-      parent->GetPrompter(getter_AddRefs(dialog)); 
-      if (dialog) {
-        dialog->Alert(title, msg);
-      }
-    }
-  }
+  dialog->Alert(title, msg);
 }
 
 // nsIContentViewerFile interface
