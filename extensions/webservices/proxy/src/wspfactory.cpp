@@ -188,7 +188,10 @@ WSPFactory::CreateProxyAsync(const nsAString & wsdlURL,
   nsCOMPtr<WSPAsyncProxyCreator> creator = new WSPAsyncProxyCreator();
   if(!creator)
     return NS_ERROR_OUT_OF_MEMORY;
-  return creator->Run(wsdlURL, portname, qualifier, isAsync, listener);
+  nsresult rv = creator->Run(wsdlURL, portname, qualifier, isAsync, listener);
+  if (rv == NS_ERROR_WSDL_NOT_ENABLED)
+    rv = creator->OnError(rv, NS_LITERAL_STRING("WSDL not enabled"));
+  return rv;
 }
 
 

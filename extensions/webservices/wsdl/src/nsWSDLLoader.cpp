@@ -48,6 +48,10 @@
 // XMLExtras includes
 #include "nsISOAPMessage.h"
 
+// pref. includes
+#include "nsIPrefService.h"
+#include "nsIPrefBranchInternal.h"
+
 #define SCHEMA_2001_NAMESPACE "http://www.w3.org/2001/XMLSchema"
 #define SCHEMA_1999_NAMESPACE "http://www.w3.org/1999/XMLSchema"
 
@@ -136,9 +140,6 @@ nsWSDLAtoms::DestroyWSDLAtoms()
 
 nsWSDLLoader::nsWSDLLoader()
 {
-  if (!nsWSDLAtoms::sDefinitions_atom) {
-    nsWSDLAtoms::CreateWSDLAtoms();
-  }
 }
 
 nsWSDLLoader::~nsWSDLLoader()
@@ -147,6 +148,23 @@ nsWSDLLoader::~nsWSDLLoader()
 
 NS_IMPL_ISUPPORTS1_CI(nsWSDLLoader, nsIWSDLLoader)
 
+nsresult 
+nsWSDLLoader::Init()
+{
+  PRBool enabled = PR_FALSE;
+  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (prefBranch) {
+    prefBranch->GetBoolPref("xml.xmlextras.soap.wsdl", &enabled);
+  }
+  
+  if (!enabled)
+    return NS_ERROR_WSDL_NOT_ENABLED;
+  
+  if (!nsWSDLAtoms::sDefinitions_atom) {
+    nsWSDLAtoms::CreateWSDLAtoms();
+  }
+  return NS_OK;
+}
 nsresult
 nsWSDLLoader::GetResolvedURI(const nsAString& aWSDLURI,
                              const char* aMethod,

@@ -38,6 +38,7 @@ REQUIRES = xpcom \
 	   content \
 	   js \
 	   necko \
+	   pref \
 	   $(NULL)
 
 CPPSRCS	= 				\

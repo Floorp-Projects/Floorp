@@ -84,6 +84,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWSDLLOADER
 
+  nsresult Init();
 protected:
   nsresult GetResolvedURI(const nsAString& aSchemaURI,
                           const char* aMethod,
