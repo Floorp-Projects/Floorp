@@ -23,6 +23,8 @@
 
 #include <limits.h>
 
+PR_BEGIN_EXTERN_C
+
 enum { SizeLetter, SizeLegal, SizeExecutive, SizeA4 };
 
 typedef struct unixprdata {
@@ -37,5 +39,7 @@ typedef struct unixprdata {
 } UnixPrData;
 
 void UnixPrDialog(UnixPrData *prData);
+
+PR_END_EXTERN_C
 
 #endif /* nsPrintdGTK_h___ */
