@@ -62,23 +62,12 @@ public:
 
     // nsISupports
   NS_DECL_ISUPPORTS
-  
-    // nsITransferable
-  NS_IMETHOD FlavorsTransferableCanExport(nsISupportsArray **_retval) ;
-  NS_IMETHOD GetTransferData(const char *aFlavor, nsISupports **aData, PRUint32 *aDataLen);
-  NS_IMETHOD GetAnyTransferData(char **aFlavor, nsISupports **aData, PRUint32 *aDataLen);
-  NS_IMETHOD IsLargeDataSet(PRBool *_retval);
-  NS_IMETHOD FlavorsTransferableCanImport(nsISupportsArray **_retval) ;
-  NS_IMETHOD SetTransferData(const char *aFlavor, nsISupports *aData, PRUint32 aDataLen);
-  NS_IMETHOD AddDataFlavor(const char *aDataFlavor) ;
-  NS_IMETHOD RemoveDataFlavor(const char *aDataFlavor) ;
-  NS_IMETHOD GetConverter(nsIFormatConverter * *aConverter);
-  NS_IMETHOD SetConverter(nsIFormatConverter * aConverter);
+  NS_DECL_NSITRANSFERABLE
 
 protected:
 
     // get flavors w/out converter
-  NS_IMETHOD GetTransferDataFlavors(nsISupportsArray** aDataFlavorList);
+  nsresult GetTransferDataFlavors(nsISupportsArray** aDataFlavorList);
  
   nsVoidArray * mDataArray;
   nsCOMPtr<nsIFormatConverter> mFormatConv;

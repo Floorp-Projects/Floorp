@@ -318,32 +318,23 @@ nsTransferable::~nsTransferable()
 // account any converter that may be registered. This list consists of
 // nsISupportsCString objects so that the flavor list can be accessed from JS.
 //
-NS_IMETHODIMP
-nsTransferable :: GetTransferDataFlavors(nsISupportsArray ** aDataFlavorList)
+nsresult
+nsTransferable::GetTransferDataFlavors(nsISupportsArray ** aDataFlavorList)
 {
-  if (!aDataFlavorList)
-    return NS_ERROR_INVALID_ARG;
+  nsresult rv = NS_NewISupportsArray ( aDataFlavorList );
+  if (NS_FAILED(rv)) return rv;
 
-  nsresult rv = NS_OK;
-  
-  NS_NewISupportsArray ( aDataFlavorList );
-  if ( *aDataFlavorList ) {
-    for ( PRInt32 i=0; i<mDataArray->Count(); ++i ) {
-      DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
-      nsCOMPtr<nsISupportsCString> flavorWrapper;
-      rv = nsComponentManager::CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID, nsnull, 
-                                               NS_GET_IID(nsISupportsCString), getter_AddRefs(flavorWrapper));
-      if ( flavorWrapper ) {
-        flavorWrapper->SetData ( data->GetFlavor() );
-        nsCOMPtr<nsISupports> genericWrapper ( do_QueryInterface(flavorWrapper) );
-        (*aDataFlavorList)->AppendElement( genericWrapper );
-      }
+  for ( PRInt32 i=0; i<mDataArray->Count(); ++i ) {
+    DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
+    nsCOMPtr<nsISupportsCString> flavorWrapper = do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID);
+    if ( flavorWrapper ) {
+      flavorWrapper->SetData ( data->GetFlavor() );
+      nsCOMPtr<nsISupports> genericWrapper ( do_QueryInterface(flavorWrapper) );
+      (*aDataFlavorList)->AppendElement( genericWrapper );
     }
   }
-  else
-    rv = NS_ERROR_OUT_OF_MEMORY;
 
-  return rv;
+  return NS_OK;
 }
 
 
@@ -355,27 +346,39 @@ nsTransferable :: GetTransferDataFlavors(nsISupportsArray ** aDataFlavorList)
 // accessable from JS.
 //
 NS_IMETHODIMP
-nsTransferable :: GetTransferData(const char *aFlavor, nsISupports **aData, PRUint32 *aDataLen)
+nsTransferable::GetTransferData(const char *aFlavor, nsISupports **aData, PRUint32 *aDataLen)
 {
-  if ( !aFlavor || !aData ||!aDataLen )
-    return NS_ERROR_INVALID_ARG;
+  NS_ENSURE_ARG_POINTER(aFlavor && aData && aDataLen);
 
-  PRBool found = PR_FALSE;
+  nsresult rv = NS_OK;
   
   // first look and see if the data is present in one of the intrinsic flavors
   PRInt32 i;
-  for ( i=0; i<mDataArray->Count(); ++i ) {
+  for (i = 0; i < mDataArray->Count(); ++i ) {
     DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
     if ( data->GetFlavor().Equals(aFlavor) ) {
       data->GetData(aData, aDataLen);
+      if (*aDataLen == kFlavorHasDataProvider) {
+        // do we have a data provider?
+        nsCOMPtr<nsIFlavorDataProvider> dataProvider = do_QueryInterface(*aData);
+        if (dataProvider) {
+          rv = dataProvider->GetFlavorData(this, aFlavor, aData, aDataLen);
+          if (NS_FAILED(rv))
+            break;    // the provider failed. fall into the conveter code below.
+        }
+      }
       if (*aData && *aDataLen > 0)
         return NS_OK;
+    
+      break;
     }
   }
 
+  PRBool found = PR_FALSE;
+
   // if not, try using a format converter to get the requested flavor
-  if ( !found && mFormatConv ) {
-    for (i=0;i<mDataArray->Count();i++) {
+  if ( mFormatConv ) {
+    for (i = 0; i < mDataArray->Count(); ++i) {
       DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
       PRBool canConvert = PR_FALSE;
       mFormatConv->CanConvert(data->GetFlavor().get(), aFlavor, &canConvert);
@@ -383,8 +386,18 @@ nsTransferable :: GetTransferData(const char *aFlavor, nsISupports **aData, PRUi
         nsCOMPtr<nsISupports> dataBytes;
         PRUint32 len;
         data->GetData(getter_AddRefs(dataBytes), &len);
+        if (len == kFlavorHasDataProvider) {
+          // do we have a data provider?
+          nsCOMPtr<nsIFlavorDataProvider> dataProvider = do_QueryInterface(dataBytes);
+          if (dataProvider) {
+            rv = dataProvider->GetFlavorData(this, aFlavor, getter_AddRefs(dataBytes), &len);
+            if (NS_FAILED(rv))
+              break;  // give up
+          }
+        }
         mFormatConv->Convert(data->GetFlavor().get(), dataBytes, len, aFlavor, aData, aDataLen);
         found = PR_TRUE;
+        break;
       }
     }
   }
@@ -401,8 +414,7 @@ nsTransferable :: GetTransferData(const char *aFlavor, nsISupports **aData, PRUi
 NS_IMETHODIMP
 nsTransferable::GetAnyTransferData(char **aFlavor, nsISupports **aData, PRUint32 *aDataLen)
 {
-  if ( !aFlavor || !aData || !aDataLen )
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_ARG_POINTER(aFlavor && aData && aDataLen);
 
   for ( PRInt32 i=0; i < mDataArray->Count(); ++i ) {
     DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
@@ -425,12 +437,11 @@ nsTransferable::GetAnyTransferData(char **aFlavor, nsISupports **aData, PRUint32
 NS_IMETHODIMP
 nsTransferable::SetTransferData(const char *aFlavor, nsISupports *aData, PRUint32 aDataLen)
 {
-  if ( !aFlavor )
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_ARG(aFlavor);
 
   // first check our intrinsic flavors to see if one has been registered.
   PRInt32 i = 0;
-  for ( i=0; i<mDataArray->Count(); ++i ) {
+  for (i = 0; i < mDataArray->Count(); ++i) {
     DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
     if ( data->GetFlavor().Equals(aFlavor) ) {
       data->SetData ( aData, aDataLen );
@@ -440,7 +451,7 @@ nsTransferable::SetTransferData(const char *aFlavor, nsISupports *aData, PRUint3
 
   // if not, try using a format converter to find a flavor to put the data in
   if ( mFormatConv ) {
-    for ( i=0; i<mDataArray->Count(); ++i) {
+    for (i = 0; i < mDataArray->Count(); ++i) {
       DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
       PRBool canConvert = PR_FALSE;
       mFormatConv->CanConvert(aFlavor, data->GetFlavor().get(), &canConvert);
@@ -470,7 +481,7 @@ nsTransferable::SetTransferData(const char *aFlavor, nsISupports *aData, PRUint3
 // Adds a data flavor to our list with no data. Error if it already exists.
 // 
 NS_IMETHODIMP
-nsTransferable :: AddDataFlavor(const char *aDataFlavor)
+nsTransferable::AddDataFlavor(const char *aDataFlavor)
 {
   if (GetDataForFlavor (mDataArray, aDataFlavor))
     return NS_ERROR_FAILURE;
@@ -512,11 +523,8 @@ nsTransferable::RemoveDataFlavor(const char *aDataFlavor)
 NS_IMETHODIMP
 nsTransferable::IsLargeDataSet(PRBool *_retval)
 {
-  if ( !_retval )
-    return NS_ERROR_FAILURE;
-  
+  NS_ENSURE_ARG_POINTER(_retval);
   *_retval = PR_FALSE;
-  
   return NS_OK;
 }
 
@@ -527,7 +535,7 @@ nsTransferable::IsLargeDataSet(PRBool *_retval)
   */
 NS_IMETHODIMP nsTransferable::SetConverter(nsIFormatConverter * aConverter)
 {
-  mFormatConv = dont_QueryInterface(aConverter);
+  mFormatConv = aConverter;
   return NS_OK;
 }
 
@@ -538,15 +546,9 @@ NS_IMETHODIMP nsTransferable::SetConverter(nsIFormatConverter * aConverter)
   */
 NS_IMETHODIMP nsTransferable::GetConverter(nsIFormatConverter * *aConverter)
 {
-  if ( !aConverter )
-    return NS_ERROR_FAILURE;
-
-  if ( mFormatConv ) {
-    *aConverter = mFormatConv;
-    NS_ADDREF(*aConverter);
-  } else
-    *aConverter = nsnull;
-
+  NS_ENSURE_ARG_POINTER(aConverter);
+  *aConverter = mFormatConv;
+  NS_IF_ADDREF(*aConverter);
   return NS_OK;
 }
 
@@ -558,10 +560,9 @@ NS_IMETHODIMP nsTransferable::GetConverter(nsIFormatConverter * *aConverter)
 // intrinsic knowledge or input data converters.
 //
 NS_IMETHODIMP
-nsTransferable :: FlavorsTransferableCanImport(nsISupportsArray **_retval)
+nsTransferable::FlavorsTransferableCanImport(nsISupportsArray **_retval)
 {
-  if ( !_retval )
-    return NS_ERROR_INVALID_ARG;
+  NS_ENSURE_ARG_POINTER(_retval);
   
   // Get the flavor list, and on to the end of it, append the list of flavors we
   // can also get to through a converter. This is so that we can just walk the list
@@ -602,10 +603,9 @@ nsTransferable :: FlavorsTransferableCanImport(nsISupportsArray **_retval)
 // intrinsic knowledge or output data converters.
 //
 NS_IMETHODIMP
-nsTransferable :: FlavorsTransferableCanExport(nsISupportsArray **_retval)
+nsTransferable::FlavorsTransferableCanExport(nsISupportsArray **_retval)
 {
-  if ( !_retval )
-    return NS_ERROR_INVALID_ARG;
+  NS_ENSURE_ARG_POINTER(_retval);
   
   // Get the flavor list, and on to the end of it, append the list of flavors we
   // can also get to through a converter. This is so that we can just walk the list

@@ -29,24 +29,66 @@
 
 // these probably shouldn't live here, but in some central repository shared
 // by the entire app.
-#define kTextMime      "text/plain"
-#define kUnicodeMime   "text/unicode"
-#define kHTMLMime      "text/html"
-#define kAOLMailMime   "AOLMAIL"
-#define kPNGImageMime  "image/png"
-#define kJPEGImageMime "image/jpg"
-#define kGIFImageMime  "image/gif"
-#define kFileMime      "application/x-moz-file"
-#define kURLMime       "text/x-moz-url"
-#define kNativeImageMime "application/x-moz-nativeimage"
-#define kNativeHTMLMime "application/x-moz-nativehtml"
+#define kTextMime                   "text/plain"
+#define kUnicodeMime                "text/unicode"
+#define kHTMLMime                   "text/html"
+#define kAOLMailMime                "AOLMAIL"
+#define kPNGImageMime               "image/png"
+#define kJPEGImageMime              "image/jpg"
+#define kGIFImageMime               "image/gif"
+#define kFileMime                   "application/x-moz-file"
+
+#define kURLMime                    "text/x-moz-url"        // data contains url\ntitle
+#define kURLDataMime                "text/x-moz-url-data"   // data contains url only
+#define kURLDescriptionMime         "text/x-moz-url-desc"   // data contains description
+#define kNativeImageMime            "application/x-moz-nativeimage"
+#define kNativeHTMLMime             "application/x-moz-nativehtml"
+
+// the source URL for a file promise
+#define kFilePromiseURLMime         "application/x-moz-file-promise-url"
+// a dataless flavor used to interact with the OS during file drags
+#define kFilePromiseMime            "application/x-moz-file-promise"
+// a synthetic flavor, put into the transferable once we know the destination directory of a file drag
+#define kFilePromiseDirectoryMime   "application/x-moz-file-promise-dir"
 
 %}
+
+
+/**
+  * nsIFlavorDataProvider allows a flavor to 'promise' data later,
+  * supplying the data lazily.
+  * 
+  * To use it, call setTransferData, passing the flavor string,
+  * a nsIFlavorDataProvider QI'd to nsISupports, and a data size of 0.
+  *
+  * When someone calls getTransferData later, if the data size is
+  * stored as 0, the nsISupports will be QI'd to nsIFlavorDataProvider,
+  * and its getFlavorData called.
+  *
+  */
+interface nsITransferable;
+
+[scriptable, uuid(7E225E5F-711C-11D7-9FAE-000393636592)]
+interface nsIFlavorDataProvider : nsISupports
+{
+
+  /**
+    * Retrieve the data from this data provider.
+    *
+    * @param  aTransferable (in parameter) the transferable we're being called for.
+    * @param  aFlavor (in parameter) the flavor of data to retrieve
+    * @param  aData the data. Some variant of class in nsISupportsPrimitives.idl
+    * @param  aDataLen the length of the data
+    */
+  void getFlavorData(in nsITransferable aTransferable, in string aFlavor, out nsISupports aData, out unsigned long aDataLen);
+};
 
 
 [scriptable, uuid(8B5314BC-DB01-11d2-96CE-0060B0FB9956)]
 interface nsITransferable : nsISupports
 {
+  const long kFlavorHasDataProvider = 0;
+  
   /**
     * Computes a list of flavors (mime types as nsISupportsCString) that the transferable 
     * can export, either through intrinsic knowledge or output data converters.
@@ -99,8 +141,9 @@ interface nsITransferable : nsISupports
     * will maintain its own copy the data, so it is not necessary to do that beforehand.
     *
     * @param  aFlavor the flavor of data that is being set
-    * @param  aData the data, some variant of class in nsISupportsPrimitives.idl
-    * @param  aDataLen the length of the data
+    * @param  aData the data, some variant of class in nsISupportsPrimitives.idl,
+    *         or an nsIFlavorDataProvider (see above)
+    * @param  aDataLen the length of the data, or 0 if passing a nsIFlavorDataProvider
     */
   void setTransferData ( in string aFlavor, in nsISupports aData, in unsigned long aDataLen ) ;
 

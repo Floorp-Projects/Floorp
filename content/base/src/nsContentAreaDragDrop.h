@@ -45,6 +45,7 @@
 #include "nsIDragDropHandler.h"
 #include "nsIDOMDragListener.h"
 #include "nsIDOMEventReceiver.h"
+#include "nsITransferable.h"
 
 class nsIDOMNode;
 class nsISelection;
@@ -54,8 +55,9 @@ class nsIPresShell;
 class nsIPresContext;
 class nsIContent;
 class nsIDocument;
+class nsIURI;
+class nsILocalFile;
 class nsISimpleEnumerator;
-
 
 // {1f34bc80-1bc7-11d6-a384-d705dd0746fc}
 #define NS_CONTENTAREADRAGDROP_CID             \
@@ -71,11 +73,14 @@ class nsISimpleEnumerator;
 // to drag and drop. Registers itself with the DOM with AddChromeListeners()
 // and removes itself with RemoveChromeListeners().
 //
-class nsContentAreaDragDrop : public nsIDOMDragListener, public nsIDragDropHandler
+class nsContentAreaDragDrop : public nsIDOMDragListener,
+                              public nsIDragDropHandler,
+                              public nsIFlavorDataProvider
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDRAGDROPHANDLER
+  NS_DECL_NSIFLAVORDATAPROVIDER
   
   nsContentAreaDragDrop ( ) ;
   virtual ~nsContentAreaDragDrop ( ) ;
@@ -91,8 +96,8 @@ public:
 private:
 
     // Add/remove the relevant listeners
-  NS_IMETHOD AddDragListener();
-  NS_IMETHOD RemoveDragListener();
+  nsresult AddDragListener();
+  nsresult RemoveDragListener();
 
     // utility routines
   static void FindFirstAnchor(nsIDOMNode* inNode, nsIDOMNode** outAnchor);
@@ -110,6 +115,8 @@ private:
   // if inNode is null, use the selection from the window
   static nsresult SerializeNodeOrSelection(const char* inMimeType, PRUint32 inFlags,
                         nsIDOMWindow* inWindow, nsIDOMNode* inNode, nsAString& outResultString);
+
+  static nsresult SaveURIToFileInDirectory(nsAString& inSourceURIString, nsILocalFile* inDestDirectory, nsILocalFile** outFile);
   
   PRBool BuildDragData(nsIDOMEvent* inMouseEvent, nsAString & outURLString, nsAString & outTitleString,
                         nsAString & outHTMLString, nsAString & outImageSourceString, nsIImage** outImage, PRBool* outIsAnchor);

@@ -52,6 +52,7 @@
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIDOMRange.h"
+#include "nsIFrame.h"
 
 #include "nsIDocShell.h"
 #include "nsIClipboardDragDropHooks.h"
@@ -69,6 +70,17 @@
 #include "nsBidiUtils.h"
 //static NS_DEFINE_CID(kUBidiUtilCID, NS_UNICHARBIDIUTIL_CID);
 #endif
+
+// image copy stuff
+#include "nsIDOMHTMLImageElement.h"
+#include "nsLayoutAtoms.h"
+#include "nsIImageLoadingContent.h"
+#include "imgIContainer.h"
+#include "imgIRequest.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
+#include "gfxIImageFrame.h"
+#include "nsIImage.h"
 
 static NS_DEFINE_CID(kCClipboardCID,           NS_CLIPBOARD_CID);
 static NS_DEFINE_CID(kCTransferableCID,        NS_TRANSFERABLE_CID);
@@ -379,3 +391,121 @@ nsresult nsCopySupport::IsPlainTextContext(nsISelection *aSel, nsIDocument *aDoc
 
   return NS_OK;
 }
+
+nsresult
+nsCopySupport::GetContents(const nsACString& aMimeType, PRUint32 aFlags, nsISelection *aSel, nsIDocument *aDoc, nsAString& outdata)
+{
+  nsresult rv = NS_OK;
+  
+  nsCOMPtr<nsIDocumentEncoder> docEncoder;
+
+  nsCAutoString encoderContractID(NS_DOC_ENCODER_CONTRACTID_BASE);
+  encoderContractID.Append(aMimeType);
+    
+  docEncoder = do_CreateInstance(encoderContractID.get());
+  NS_ENSURE_TRUE(docEncoder, NS_ERROR_FAILURE);
+
+  PRUint32 flags = aFlags;
+  
+  if (aMimeType.Equals("text/plain"))
+    flags |= nsIDocumentEncoder::OutputPreformatted;
+
+  NS_ConvertASCIItoUCS2 unicodeMimeType(aMimeType);
+  rv = docEncoder->Init(aDoc, unicodeMimeType, flags);
+  if (NS_FAILED(rv)) return rv;
+  
+  if (aSel)
+  {
+    rv = docEncoder->SetSelection(aSel);
+    if (NS_FAILED(rv)) return rv;
+  } 
+  
+  // encode the selection
+  return docEncoder->EncodeToString(outdata);
+}
+
+
+nsresult
+nsCopySupport::ImageCopy(nsIDOMHTMLImageElement* imageElement, PRInt16 aClipboardID)
+{
+  nsresult rv;
+  
+  nsCOMPtr<nsIDOMNode> imageNode = do_QueryInterface(imageElement, &rv);
+  if (NS_FAILED(rv)) return rv;
+  if (!imageNode) return NS_ERROR_FAILURE;
+  
+  nsCOMPtr<nsIImage> image;
+  rv = GetImageFromDOMNode(imageNode, getter_AddRefs(image));
+  if (NS_FAILED(rv)) return rv;
+  if (!image) return NS_ERROR_FAILURE;
+
+  // Get the Clipboard
+  nsCOMPtr<nsIClipboard> clipboard(do_GetService(kCClipboardCID, &rv));
+  if (NS_FAILED(rv)) return rv;
+  if (!clipboard) return NS_ERROR_FAILURE;
+
+  // Create a transferable for putting data on the Clipboard
+  nsCOMPtr<nsITransferable> trans = do_CreateInstance(kCTransferableCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+  if (!trans) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsISupportsInterfacePointer> ptrPrimitive(do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID, &rv));
+  if (NS_FAILED(rv)) return rv;
+  if (!ptrPrimitive)  return NS_ERROR_FAILURE;
+  ptrPrimitive->SetData(image);
+
+  trans->SetTransferData(kNativeImageMime, ptrPrimitive, sizeof(nsISupports*));
+
+  // put the transferable on the clipboard
+  return clipboard->SetData(trans, nsnull, aClipboardID);
+}
+
+//
+// GetImage
+//
+// Given a dom node that's an image, finds the nsIImage associated with it.
+//
+// XXX see also nsContentAreaDragDrop, and factor!
+nsresult
+nsCopySupport::GetImageFromDOMNode(nsIDOMNode* inNode, nsIImage**outImage)
+{
+  NS_ENSURE_ARG_POINTER(outImage);
+  *outImage = nsnull;
+
+  nsCOMPtr<nsIImageLoadingContent> content(do_QueryInterface(inNode));
+  if (!content) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsCOMPtr<imgIRequest> imgRequest;
+  content->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
+                      getter_AddRefs(imgRequest));
+  if (!imgRequest) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  
+  nsCOMPtr<imgIContainer> imgContainer;
+  imgRequest->GetImage(getter_AddRefs(imgContainer));
+
+  if (!imgContainer) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+    
+  nsCOMPtr<gfxIImageFrame> imgFrame;
+  imgContainer->GetFrameAt(0, getter_AddRefs(imgFrame));
+
+  if (!imgFrame) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  
+  nsCOMPtr<nsIInterfaceRequestor> ir = do_QueryInterface(imgFrame);
+
+  if (!ir) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  
+  return CallGetInterface(ir.get(), outImage);
+}
+
+
+

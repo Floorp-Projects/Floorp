@@ -52,6 +52,7 @@ REQUIRES	= xpcom \
 		  xuldoc \
 		  intl \
 		  windowwatcher \
+		  webbrowserpersist \
 		  imglib2 \
 		  uriloader \
 		  webbrwsr \

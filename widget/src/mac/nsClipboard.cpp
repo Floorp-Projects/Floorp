@@ -211,13 +211,19 @@ nsClipboard :: SetNativeClipboardData ( PRInt32 aWhichClipboard )
         }
       } // if unicode
       else if ( strcmp(flavorStr, kPNGImageMime) == 0 || strcmp(flavorStr, kJPEGImageMime) == 0 ||
-                  strcmp(flavorStr, kGIFImageMime) == 0 ) {
+                strcmp(flavorStr, kGIFImageMime) == 0 || strcmp(flavorStr, kNativeImageMime) == 0 ) {
         // we have an image, which is in the transferable as an nsIImage. Convert it
         // to PICT (PicHandle) and put those bits on the clipboard. The actual size
         // of the picture is the size of the handle, not sizeof(Picture).
-        nsCOMPtr<nsISupports> imageSupports;
-        errCode = mTransferable->GetTransferData ( flavorStr, getter_AddRefs(imageSupports), &dataSize );
-        nsCOMPtr<nsIImageMac> image ( do_QueryInterface(imageSupports) );
+        nsCOMPtr<nsISupports> transferSupports;
+        errCode = mTransferable->GetTransferData ( flavorStr, getter_AddRefs(transferSupports), &dataSize );
+        nsCOMPtr<nsISupportsInterfacePointer> ptrPrimitive(do_QueryInterface(transferSupports));
+        nsCOMPtr<nsIImageMac> image;
+        if (ptrPrimitive) {
+          nsCOMPtr<nsISupports> primitiveData;
+          ptrPrimitive->GetData(getter_AddRefs(primitiveData));
+          image = do_QueryInterface(primitiveData);
+        }
         if ( image ) {
           PicHandle picture = nsnull;
           image->ConvertToPICT ( &picture );

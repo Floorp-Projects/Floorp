@@ -50,13 +50,7 @@ public:
 
     // nsISupports
   NS_DECL_ISUPPORTS
-  
-    // nsIHTMLConverter
-  NS_IMETHOD GetInputDataFlavors(nsISupportsArray **_retval) ;
-  NS_IMETHOD GetOutputDataFlavors(nsISupportsArray **_retval) ;
-  NS_IMETHOD CanConvert(const char *aFromDataFlavor, const char *aToDataFlavor, PRBool *_retval) ;
-  NS_IMETHOD Convert(const char *aFromDataFlavor, nsISupports *aFromData, PRUint32 aDataLen, 
-                      const char *aToDataFlavor, nsISupports **aToData, PRUint32 *aDataToLen) ;
+  NS_DECL_NSIFORMATCONVERTER
 
 protected:
 

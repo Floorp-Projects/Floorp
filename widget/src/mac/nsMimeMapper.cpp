@@ -51,7 +51,13 @@
 #include <Drag.h>
 #include <Scrap.h>
 
-nsMimeMapperMac :: nsMimeMapperMac ( const char* inMappings )
+
+enum {
+  kScrapFlavorTypeURL       = FOUR_CHAR_CODE('url '),
+  kScrapFlavorTypeURLDesc   = FOUR_CHAR_CODE('urld')
+};
+
+nsMimeMapperMac::nsMimeMapperMac ( const char* inMappings )
   : mCounter(0)
 {
   if (inMappings && strlen(inMappings) )
@@ -59,7 +65,7 @@ nsMimeMapperMac :: nsMimeMapperMac ( const char* inMappings )
 }
 
 
-nsMimeMapperMac :: ~nsMimeMapperMac ( )
+nsMimeMapperMac::~nsMimeMapperMac ( )
 {
 
 }   
@@ -76,7 +82,7 @@ nsMimeMapperMac :: ~nsMimeMapperMac ( )
 // be exported along with the data.
 //
 ResType
-nsMimeMapperMac :: MapMimeTypeToMacOSType ( const char* aMimeStr, PRBool inAddIfNotPresent )
+nsMimeMapperMac::MapMimeTypeToMacOSType ( const char* aMimeStr, PRBool inAddIfNotPresent )
 {
   ResType format = 0;
 
@@ -101,9 +107,15 @@ nsMimeMapperMac :: MapMimeTypeToMacOSType ( const char* aMimeStr, PRBool inAddIf
     else if ( PL_strcmp(aMimeStr, kTextMime) == 0 )
       format = kScrapFlavorTypeText;
     else if ( PL_strcmp(aMimeStr, kFileMime) == 0 )
-      format = flavorTypeHFS;
+      format = kDragFlavorTypeHFS;
+    else if ( PL_strcmp(aMimeStr, kFilePromiseMime) == 0 )
+      format = kDragFlavorTypePromiseHFS;
     else if ( PL_strcmp(aMimeStr, kNativeImageMime) == 0 )
       format = kScrapFlavorTypePicture;
+    else if ( PL_strcmp(aMimeStr, kURLDataMime) == 0 )
+      format = kScrapFlavorTypeURL;
+    else if ( PL_strcmp(aMimeStr, kURLDescriptionMime) == 0 )
+      format = kScrapFlavorTypeURLDesc;
 #if NOT_YET
     else if ( PL_strcmp(aMimeStr, kPNGImageMime) == 0 )
       format = kScrapFlavorTypePicture;
@@ -140,13 +152,17 @@ nsMimeMapperMac :: MapMimeTypeToMacOSType ( const char* aMimeStr, PRBool inAddIf
 // we probably won't get a match in that case.
 //
 void
-nsMimeMapperMac :: MapMacOSTypeToMimeType ( ResType inMacType, nsCAutoString & outMimeStr )
+nsMimeMapperMac::MapMacOSTypeToMimeType ( ResType inMacType, nsCAutoString & outMimeStr )
 {
   switch ( inMacType ) {
   
-    case kScrapFlavorTypeText: outMimeStr = kTextMime; break;
-    case kScrapFlavorTypeUnicode: outMimeStr = kUnicodeMime; break;
-    case flavorTypeHFS: outMimeStr = kFileMime; break;
+    case kScrapFlavorTypeText:      outMimeStr = kTextMime;           break;
+    case kScrapFlavorTypeUnicode:   outMimeStr = kUnicodeMime;        break;
+    case kDragFlavorTypeHFS:        outMimeStr = kFileMime;           break;
+    case kDragFlavorTypePromiseHFS: outMimeStr = kFilePromiseMime;    break;
+    case kDragPromisedFlavor:       outMimeStr = kFilePromiseMime;    break;
+    case kScrapFlavorTypeURL:       outMimeStr = kURLDataMime;        break;
+    case kScrapFlavorTypeURLDesc:   outMimeStr = kURLDescriptionMime; break;
     
     // if someone gives us PICT (or we could have put it there), use
     // the native image mime type.
@@ -191,7 +207,7 @@ nsMimeMapperMac :: MapMacOSTypeToMimeType ( ResType inMacType, nsCAutoString & o
 // NOTE: we make the assumption that the data is NULL terminated.
 //
 void
-nsMimeMapperMac :: ParseMappings ( const char* inMappings )
+nsMimeMapperMac::ParseMappings ( const char* inMappings )
 {
   if ( !inMappings )
     return;
@@ -222,7 +238,7 @@ nsMimeMapperMac :: ParseMappings ( const char* inMappings )
 // the null at the end of the string.
 //
 char*
-nsMimeMapperMac :: ExportMapping ( short * outLength ) const
+nsMimeMapperMac::ExportMapping ( short * outLength ) const
 {
   NS_WARN_IF_FALSE ( outLength, "No out param provided" );
   if ( outLength )
