@@ -346,7 +346,16 @@ WeekView.prototype.createEventBox = function ( itemOccurrence )
 
     var startDate = itemOccurrence.occurrenceStartDate;
     var endDate = itemOccurrence.occurrenceEndDate;
-    
+
+    /*
+    if (calEvent.isAllDay) {
+        endDate = endDate.clone();
+        endDate.hour = 23;
+        endDate.minute = 59;
+        endDate.normalize();
+    }
+    */
+    dump("all day:   " + calEvent.isAllDay + "\n");
     dump("startdate: " + startDate + "\n");
     dump("enddate:   " + endDate + "\n");
 
@@ -354,6 +363,7 @@ WeekView.prototype.createEventBox = function ( itemOccurrence )
     var startMinutes = startDate.minute;
     var eventDuration = (endDate.jsDate - startDate.jsDate) / (60 * 60 * 1000);
 
+    dump("duration:  " + eventDuration + "\n");
 
     var eventText = calEvent.title;
 

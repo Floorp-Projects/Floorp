@@ -150,10 +150,12 @@ function loadCalendarEventDialog()
 
     gEndDate = event.endDate.jsDate;
     var displayEndDate = new Date(gEndDate);
+    /*
     if (event.isAllDay) {
         //displayEndDate == icalEndDate - 1, in the case of allday events
         displayEndDate.setDate(displayEndDate.getDate() - 1);
     }
+    */
     document.getElementById("end-datetime").value = displayEndDate;
 
     gDuration = gEndDate.getTime() - gStartDate.getTime(); //in ms
@@ -189,11 +191,11 @@ function loadCalendarEventDialog()
 
 
     //file attachments;
-    /*
-    for( var i = 0; i < event.attachmentsArray.Count(); i++ ) {
-        var thisAttachment = event.attachmentsArray.QueryElementAt( i, Components.interfaces.nsIMsgAttachment );
-
-        addAttachment( thisAttachment );
+    /* XXX this could will work when attachments are supported by calItemBase
+    var count = event.attachments.length;
+    for(var i = 0; i < count; i++) {
+        var thisAttachment = event.attachments.queryElementAt(i, Components.interfaces.nsIMsgAttachment);
+        addAttachment(thisAttachment);
     }
     */
 
@@ -258,29 +260,6 @@ function loadCalendarEventDialog()
     }
 
     /* XXX
-    setFieldValue("repeat-checkbox", gEvent.recur, "checked");
-    if( gEvent.recurInterval < 1 )
-        gEvent.recurInterval = 1;
-
-    setFieldValue( "repeat-length-field", gEvent.recurInterval );
-    if( gEvent.recurUnits )
-        setFieldValue( "repeat-length-units", gEvent.recurUnits );  //don't put the extra "value" element here, or it won't work.
-    else
-        setFieldValue( "repeat-length-units", "weeks" );
-
-    if ( gEvent.recurEnd && gEvent.recurEnd.isSet )
-        setFieldValue( "repeat-end-date-picker", new Date( gEvent.recurEnd.getTime() ) );
-    else
-        setFieldValue( "repeat-end-date-picker", new Date() ); // now
-    
-    setFieldValue( "repeat-forever-radio", (gEvent.recurForever != undefined && gEvent.recurForever != false), "selected" );
-    
-    setFieldValue( "repeat-until-radio", ( (gEvent.recurForever == undefined || gEvent.recurForever == false ) && gEvent.recurCount == 0), "selected" );
- 
-    setFieldValue( "repeat-numberoftimes-radio", (gEvent.recurCount != 0), "selected" );
-    setFieldValue( "repeat-numberoftimes-textbox", Math.max(gEvent.recurCount, 1));
-    */
-
 
     /* Categories stuff */
 
@@ -472,12 +451,6 @@ function onOKCommand()
     else
         event.deleteProperty('alarmEmailAddress');
 
-
-    /*
-      if( getFieldValue( "status-field" ) != "" )
-          gEvent.status      = eval( "gEvent."+getFieldValue( "status-field" ) );
-    */
-
     if (getFieldValue("invite-checkbox", "checked"))
         event.setProperty('inviteEmailAddress', getFieldValue("invite-email-field", "value"));
     else
@@ -485,35 +458,17 @@ function onOKCommand()
 
 
     /* File attachments */
-    //loop over the items in the listbox
-    //event.attachments.clear();
+    /* XXX this could will work when attachments are supported by calItemBase
+    var attachmentListbox = documentgetElementById("attachmentBucket");
+    var attachments = event.attachments.QueryInterface(Components.interfaces.nsIMutableArray);
 
-    var attachmentListbox = document.getElementById( "attachmentBucket" );
-
+    attachments.clear();
     for (i = 0; i < attachmentListbox.childNodes.length; i++) {
         attachment = Components.classes["@mozilla.org/messengercompose/attachment;1"].createInstance(Components.interfaces.nsIMsgAttachment);
-    attachment.url = attachmentListbox.childNodes[i].getAttribute("label");
-    // XXX
-    //event.attachments.appendElement(attachment);
+        attachment.url = attachmentListbox.childNodes[i].getAttribute("label");
+        attachments.appendElement(attachment);
     }
-
-    // Attach any specified contacts to the event
-    if (gEventCardArray) {
-        try {
-            // Remove any existing contacts
-            //event.contacts.clear();
-
-            // Add specified contacts
-            for (var cardId in gEventCardArray)
-                if (gEventCardArray[cardId]) {
-                    // XXX
-                    //event.contacts.appendElement(gEventCardArray[cardId]);
-                }
-        }
-        catch (e)
-        {
-        }
-    }
+    */
 
     /* wire up attendees */
     event.removeAllAttendees();
@@ -1294,23 +1249,21 @@ function isLastDayOfWeekOfMonth()
 
 function removeSelectedAttachment()
 {
-   var Listbox = document.getElementById( "attachmentBucket" );
+   var Listbox = document.getElementById("attachmentBucket");
 
    var SelectedItem = Listbox.selectedItem;
 
-   if( SelectedItem )
-      Listbox.removeChild( SelectedItem );
+   if(SelectedItem)
+      Listbox.removeChild(SelectedItem);
 }
 
-function addAttachment( attachmentToAdd )
+function addAttachment(attachmentToAdd)
 {
-   if( !attachmentToAdd )
-   {
+   if(!attachmentToAdd)
       return;
-   }
    
    //add a row to the listbox
-   document.getElementById( "attachmentBucket" ).appendItem( attachmentToAdd.url, attachmentToAdd.url );
+   document.getElementById("attachmentBucket").appendItem(attachmentToAdd.url, attachmentToAdd.url);
 
    sizeToContent();
 }
