@@ -23,7 +23,7 @@
 
 #if defined(_PR_PTHREADS)
 
-#if defined(OSF1)
+#if defined(OSF1) || defined(HPUX)
 /* set fd limit for select(), before including system header files */
 #define FD_SETSIZE (16 * 1024)
 #endif
@@ -195,7 +195,7 @@ static PRBool IsValidNetAddrLen(const PRNetAddr *addr, PRInt32 addr_len)
  * might hang up before an interrupt is noticed.
  */
 #define PT_DEFAULT_POLL_MSEC 5000
-#if defined(OSF1)
+#if defined(OSF1) || defined(HPUX)
 #define PT_DEFAULT_SELECT_SEC (PT_DEFAULT_POLL_MSEC/PR_MSEC_PER_SEC)
 #define PT_DEFAULT_SELECT_USEC							\
 		((PT_DEFAULT_POLL_MSEC % PR_MSEC_PER_SEC) * PR_USEC_PER_MSEC)
@@ -314,13 +314,14 @@ PR_IMPLEMENT(void) PT_FPrintStats(PRFileDesc *debug_out, const char *msg)
 
 #endif  /* DEBUG */
 
-#if defined(OSF1)
+#if defined(OSF1) || defined(HPUX)
 /*
- * OSF1 reports the POLLHUP event for a socket when the shutdown(SHUT_WR)
- * operation is called for the remote end, even though the socket is still
- * writeable. Use select(), instead of poll(), to workaround this problem.
+ * OSF1 and HPUX report the POLLHUP event for a socket when the
+ * shutdown(SHUT_WR) operation is called for the remote end, even though
+ * the socket is still writeable. Use select(), instead of poll(), to
+ * workaround this problem.
  */
-static void osf_pt_poll_now(pt_Continuation *op)
+static void pt_poll_now_with_select(pt_Continuation *op)
 {
     PRInt32 msecs;
 	fd_set rd, wr, *rdp, *wrp;
@@ -454,9 +455,9 @@ static void osf_pt_poll_now(pt_Continuation *op)
             break;
     }
 
-}  /* osf_pt_poll_now */
+}  /* pt_poll_now_with_select */
 
-#endif	/* OSF1 */
+#endif	/* OSF1  || HPUX */
 
 static void pt_poll_now(pt_Continuation *op)
 {
@@ -465,12 +466,12 @@ static void pt_poll_now(pt_Continuation *op)
     PRThread *self = PR_GetCurrentThread();
     
 	PR_ASSERT(PR_INTERVAL_NO_WAIT != op->timeout);
-#if defined (OSF1)
+#if defined (OSF1) || defined(HPUX)
 	/*
  	 * If the fd is small enough call the select-based poll operation
 	 */
 	if (op->arg1.osfd < FD_SETSIZE) {
-		osf_pt_poll_now(op);
+		pt_poll_now_with_select(op);
 		return;
 	}
 #endif
@@ -3077,7 +3078,7 @@ PR_IMPLEMENT(PRDir*) PR_OpenDir(const char *name)
     return dir;
 }  /* PR_OpenDir */
 
-PR_IMPLEMENT(PRInt32) PR_Poll(
+static PRInt32 _pr_poll_with_poll(
     PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
 {
     PRInt32 ready = 0;
@@ -3314,7 +3315,299 @@ retry:
     }
     return ready;
 
-} /* PR_Poll */
+} /* _pr_poll_with_poll */
+
+#if defined(OSF1) || defined(HPUX)
+/*
+ * OSF1 and HPUX report the POLLHUP event for a socket when the
+ * shutdown(SHUT_WR) operation is called for the remote end, even though
+ * the socket is still writeable. Use select(), instead of poll(), to
+ * workaround this problem.
+ */
+static PRInt32 _pr_poll_with_select(
+    PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
+{
+    PRInt32 ready = 0;
+    /*
+     * For restarting select() if it is interrupted by a signal.
+     * We use these variables to figure out how much time has
+     * elapsed and how much of the timeout still remains.
+     */
+    PRIntervalTime start, elapsed, remaining;
+
+    if (pt_TestAbort()) return -1;
+
+    if (0 == npds) PR_Sleep(timeout);
+    else
+    {
+#define STACK_POLL_DESC_COUNT 4
+        int stack_syspollfd[STACK_POLL_DESC_COUNT];
+        int *syspollfd;
+		fd_set rd, wr, ex, *rdp = NULL, *wrp = NULL, *exp = NULL;
+		struct timeval tv, *tvp;
+        PRIntn index, msecs, maxfd = 0;
+
+        if (npds <= STACK_POLL_DESC_COUNT)
+        {
+            syspollfd = stack_syspollfd;
+        }
+        else
+        {
+            syspollfd = (int *)PR_MALLOC(npds * sizeof(int));
+            if (NULL == syspollfd)
+            {
+                PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
+                return -1;
+            }
+        }
+		FD_ZERO(&rd);
+		FD_ZERO(&wr);
+		FD_ZERO(&ex);
+
+        for (index = 0; index < npds; ++index)
+        {
+            PRInt16 in_flags_read = 0, in_flags_write = 0;
+            PRInt16 out_flags_read = 0, out_flags_write = 0;
+
+            if ((NULL != pds[index].fd) && (0 != pds[index].in_flags))
+            {
+                if (pds[index].in_flags & PR_POLL_READ)
+                {
+                    in_flags_read = (pds[index].fd->methods->poll)(
+                        pds[index].fd,
+                        pds[index].in_flags & ~PR_POLL_WRITE,
+                        &out_flags_read);
+                }
+                if (pds[index].in_flags & PR_POLL_WRITE)
+                {
+                    in_flags_write = (pds[index].fd->methods->poll)(
+                        pds[index].fd,
+                        pds[index].in_flags & ~PR_POLL_READ,
+                        &out_flags_write);
+                }
+                if ((0 != (in_flags_read & out_flags_read))
+                || (0 != (in_flags_write & out_flags_write)))
+                {
+                    /* this one is ready right now */
+                    if (0 == ready)
+                    {
+                        /*
+                         * We will return without calling the system
+                         * poll function.  So zero the out_flags
+                         * fields of all the poll descriptors before
+                         * this one.
+                         */
+                        int i;
+                        for (i = 0; i < index; i++)
+                        {
+                            pds[i].out_flags = 0;
+                        }
+                    }
+                    ready += 1;
+                    pds[index].out_flags = out_flags_read | out_flags_write;
+                }
+                else
+                {
+                    /* now locate the NSPR layer at the bottom of the stack */
+                    PRFileDesc *bottom = PR_GetIdentitiesLayer(
+                        pds[index].fd, PR_NSPR_IO_LAYER);
+                    PR_ASSERT(NULL != bottom);  /* what to do about that? */
+                    pds[index].out_flags = 0;  /* pre-condition */
+                    if ((NULL != bottom)
+                    && (_PR_FILEDESC_OPEN == bottom->secret->state))
+                    {
+                        if (0 == ready)
+                        {
+                            syspollfd[index] = bottom->secret->md.osfd;
+                            if (in_flags_read & PR_POLL_READ)
+                            {
+                                pds[index].out_flags |=
+                                    _PR_POLL_READ_SYS_READ;
+								FD_SET(bottom->secret->md.osfd, &rd);
+								rdp = &rd;
+                            }
+                            if (in_flags_read & PR_POLL_WRITE)
+                            {
+                                pds[index].out_flags |=
+                                    _PR_POLL_READ_SYS_WRITE;
+								FD_SET(bottom->secret->md.osfd, &wr);
+								wrp = &wr;
+                            }
+                            if (in_flags_write & PR_POLL_READ)
+                            {
+                                pds[index].out_flags |=
+                                    _PR_POLL_WRITE_SYS_READ;
+								FD_SET(bottom->secret->md.osfd, &rd);
+								rdp = &rd;
+                            }
+                            if (in_flags_write & PR_POLL_WRITE)
+                            {
+                                pds[index].out_flags |=
+                                    _PR_POLL_WRITE_SYS_WRITE;
+								FD_SET(bottom->secret->md.osfd, &wr);
+								wrp = &wr;
+                            }
+                            if (pds[index].in_flags & PR_POLL_EXCEPT) {
+								FD_SET(bottom->secret->md.osfd, &ex);
+								exp = &ex;
+							}
+							if ((syspollfd[index] > maxfd) &&
+									(pds[index].out_flags ||
+									(pds[index].in_flags & PR_POLL_EXCEPT)))
+								maxfd = syspollfd[index];
+                        }
+                    }
+                    else
+                    {
+                        if (0 == ready)
+                        {
+                            int i;
+                            for (i = 0; i < index; i++)
+                            {
+                                pds[i].out_flags = 0;
+                            }
+                        }
+                        ready += 1;  /* this will cause an abrupt return */
+                        pds[index].out_flags = PR_POLL_NVAL;  /* bogii */
+                    }
+                }
+            }
+        }
+        if (0 == ready)
+        {
+			if ((maxfd + 1) > FD_SETSIZE) {
+				/*
+				 * maxfd too large to be used with select, fall back to
+				 * calling poll
+				 */
+				if (syspollfd != stack_syspollfd)
+					PR_DELETE(syspollfd);
+				return(_pr_poll_with_poll(pds, npds, timeout));
+			}
+            switch (timeout)
+            {
+            case PR_INTERVAL_NO_WAIT:
+				tv.tv_sec = 0;
+				tv.tv_usec = 0;
+				tvp = &tv;
+				break;
+            case PR_INTERVAL_NO_TIMEOUT:
+				tvp = NULL;
+				break;
+            default:
+                msecs = PR_IntervalToMilliseconds(timeout);
+				tv.tv_sec = msecs/PR_MSEC_PER_SEC;
+				tv.tv_usec = (msecs % PR_MSEC_PER_SEC) * PR_USEC_PER_MSEC;
+				tvp = &tv;
+                start = PR_IntervalNow();
+            }
+
+retry:
+            ready = select(maxfd + 1, rdp, wrp, exp, tvp);
+            if (-1 == ready)
+            {
+                PRIntn oserror = errno;
+
+                if ((EINTR == oserror) || (EAGAIN == oserror))
+                {
+                    if (timeout == PR_INTERVAL_NO_TIMEOUT)
+                        goto retry;
+                    else if (timeout == PR_INTERVAL_NO_WAIT)
+                        ready = 0;  /* don't retry, just time out */
+                    else
+                    {
+                        elapsed = (PRIntervalTime) (PR_IntervalNow()
+                                - start);
+                        if (elapsed > timeout)
+                            ready = 0;  /* timed out */
+                        else
+                        {
+                            remaining = timeout - elapsed;
+                            msecs = PR_IntervalToMilliseconds(remaining);
+							tv.tv_sec = msecs/PR_MSEC_PER_SEC;
+							tv.tv_usec = (msecs % PR_MSEC_PER_SEC) *
+													PR_USEC_PER_MSEC;
+                            goto retry;
+                        }
+                    }
+                } else if (EBADF == oserror)
+                {
+					/* find all the bad fds */
+					ready = 0;
+                	for (index = 0; index < npds; ++index)
+					{
+                    	pds[index].out_flags = 0;
+            			if ((NULL != pds[index].fd) &&
+											(0 != pds[index].in_flags))
+						{
+							if (fcntl(syspollfd[index], F_GETFL, 0) == -1)
+							{
+                    			pds[index].out_flags = PR_POLL_NVAL;
+								ready++;
+							}
+						}
+					}
+                } else 
+                    _PR_MD_MAP_SELECT_ERROR(oserror);
+            }
+            else if (ready > 0)
+            {
+                for (index = 0; index < npds; ++index)
+                {
+                    PRInt16 out_flags = 0;
+                    if ((NULL != pds[index].fd) && (0 != pds[index].in_flags))
+                    {
+						if (FD_ISSET(syspollfd[index], &rd))
+						{
+							if (pds[index].out_flags
+							& _PR_POLL_READ_SYS_READ)
+							{
+								out_flags |= PR_POLL_READ;
+							}
+							if (pds[index].out_flags
+							& _PR_POLL_WRITE_SYS_READ)
+							{
+								out_flags |= PR_POLL_WRITE;
+							}
+						}
+						if (FD_ISSET(syspollfd[index], &wr))
+						{
+							if (pds[index].out_flags
+							& _PR_POLL_READ_SYS_WRITE)
+							{
+								out_flags |= PR_POLL_READ;
+							}
+							if (pds[index].out_flags
+							& _PR_POLL_WRITE_SYS_WRITE)
+							{
+								out_flags |= PR_POLL_WRITE;
+							}
+						}
+						if (FD_ISSET(syspollfd[index], &ex))
+							out_flags |= PR_POLL_EXCEPT;
+                    }
+                    pds[index].out_flags = out_flags;
+                }
+            }
+        }
+
+        if (syspollfd != stack_syspollfd)
+            PR_DELETE(syspollfd);
+    }
+    return ready;
+
+} /* _pr_poll_with_select */
+#endif	/* OSF1 || HPUX */
+
+PR_IMPLEMENT(PRInt32) PR_Poll(
+    PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
+{
+#if defined(OSF1) || defined(HPUX)
+	return(_pr_poll_with_select(pds, npds, timeout));
+#else
+	return(_pr_poll_with_poll(pds, npds, timeout));
+#endif
+}
 
 PR_IMPLEMENT(PRDirEntry*) PR_ReadDir(PRDir *dir, PRDirFlags flags)
 {
