@@ -60,14 +60,6 @@ nsNativeBrowserWindow::InitNativeWindow()
   return NS_OK;
 }
 
-static void MenuProc(PRUint32 aId) 
-{
-  // XXX our menus are horked: we can't support multiple windows!
-  nsBrowserWindow* bw = (nsBrowserWindow*)
-    nsBrowserWindow::gBrowsers.ElementAt(0);
-  bw->DispatchMenuItem(aId);
-}
-
 nsresult
 nsNativeBrowserWindow::CreateMenuBar(PRInt32 aWidth)
 {
