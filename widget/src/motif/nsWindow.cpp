@@ -374,7 +374,7 @@ void nsWindow::Move(PRUint32 aX, PRUint32 aY)
 // Resize this component
 //
 //-------------------------------------------------------------------------
-void nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight)
+void nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
 }
 
@@ -384,7 +384,7 @@ void nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight)
 // Resize this component
 //
 //-------------------------------------------------------------------------
-void nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint32 aHeight)
+void nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
 }
 
@@ -700,7 +700,6 @@ PRBool nsWindow::DispatchEvent(nsGUIEvent* event)
 PRBool nsWindow::DispatchMouseEvent(nsMouseEvent aEvent)
 {
   PRBool result = PR_FALSE;
-
   if (nsnull == mEventCallback && nsnull == mMouseListener) {
     return result;
   }
@@ -849,7 +848,7 @@ PRBool nsWindow::DispatchFocus(PRUint32 aEventType)
  return FALSE;
 }
 
-PRBool nsWindow::OnScroll(PRUint32 scrollCode, PRUint32 cPos)
+PRBool nsWindow::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
 {
  return FALSE;
 }

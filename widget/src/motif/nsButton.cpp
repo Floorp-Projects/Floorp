@@ -28,6 +28,7 @@
 
 #include <Xm/PushB.h>
 
+#define DBG 0
 //-------------------------------------------------------------------------
 //
 // nsButton constructor
@@ -46,7 +47,7 @@ void nsButton::Create(nsIWidget *aParent,
 {
   Widget parentWidget = nsnull;
 
-//fprintf(stderr, "aParent 0x%x\n", aParent);
+  if (DBG) fprintf(stderr, "aParent 0x%x\n", aParent);
 
   if (aParent) {
     parentWidget = (Widget) aParent->GetNativeData(NS_NATIVE_WIDGET);
@@ -54,7 +55,7 @@ void nsButton::Create(nsIWidget *aParent,
     parentWidget = (Widget) aInitData ;
   }
 
-fprintf(stderr, "Parent 0x%x\n", parentWidget);
+  if (DBG) fprintf(stderr, "Parent 0x%x\n", parentWidget);
 
   mWidget = ::XtVaCreateManagedWidget("button",
                                     xmPushButtonWidgetClass, 
@@ -67,7 +68,7 @@ fprintf(stderr, "Parent 0x%x\n", parentWidget);
 		                    XmNy, aRect.y, 
                                     nsnull);
 
-fprintf(stderr, "Button 0x%x  this 0x%x\n", mWidget, this);
+  if (DBG) fprintf(stderr, "Button 0x%x  this 0x%x\n", mWidget, this);
 
   // save the event callback function
   mEventCallback = aHandleEventFunction;
