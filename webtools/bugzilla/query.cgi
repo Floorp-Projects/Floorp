@@ -127,7 +127,7 @@ sub ProcessFormStuff {
                       "rep_platform", "priority", "bug_severity",
                       "product", "reporter", "op_sys",
                       "component", "version", "chfield", "chfieldfrom",
-                      "chfieldto", "chfieldvalue",
+                      "chfieldto", "chfieldvalue", "target_milestone",
                       "email1", "emailtype1", "emailreporter1",
                       "emailassigned_to1", "emailcc1", "emailqa_contact1",
                       "emaillongdesc1",
