@@ -127,6 +127,13 @@ public:
    */
   virtual PRInt32 GetAlphaLevel() {return(mAlphaLevel);}
 
+  /**
+   * Get the alpha depth for the image mask
+   * @update - lordpixel 2001/05/16
+   * @return  the alpha mask depth for the image, ie, 0, 1 or 8
+   */
+  virtual PRInt8 GetAlphaDepth() {return(mAlphaDepth);}
+
   /** 
    * Get the DIB specific informations for this bitmap.
    * @update dc - 10/29/98
