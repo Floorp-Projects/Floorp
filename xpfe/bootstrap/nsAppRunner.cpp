@@ -125,6 +125,78 @@ apprunner_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
   extern void InstallUnixSignalHandlers(const char *ProgramName);
 #endif
 
+#if defined(XP_BEOS)
+
+#include <AppKit.h>
+#include <AppFileInfo.h>
+
+class nsBeOSApp : public BApplication
+{
+public:
+  nsBeOSApp(sem_id sem)
+  : BApplication(GetAppSig()), init(sem)
+  {
+  }
+
+  void ReadyToRun(void)
+  {
+    release_sem(init);
+  }
+
+  static int32 Main(void *args)
+  {
+    nsBeOSApp *app = new nsBeOSApp((sem_id)args);
+    if (NULL == app)
+      return B_ERROR;
+    return app->Run();
+  }
+
+private:
+  char *GetAppSig(void)
+  {
+    app_info appInfo;
+    BFile file;
+    BAppFileInfo appFileInfo;
+    image_info info;
+    int32 cookie = 0;
+    static char sig[B_MIME_TYPE_LENGTH];
+
+    sig[0] = 0;
+    if (get_next_image_info(0, &cookie, &info) != B_OK ||
+        file.SetTo(info.name, B_READ_ONLY) != B_OK ||
+        appFileInfo.SetTo(&file) != B_OK ||
+        appFileInfo.GetSignature(sig) != B_OK)
+    {
+      return "application/x-vnd.mozilla.apprunner";
+    }
+    return sig;
+  }
+
+  sem_id init;
+};
+
+static nsresult InitializeBeOSApp(void)
+{
+  nsresult rv = NS_OK;
+
+  sem_id initsem = create_sem(0, "beapp init");
+  if (initsem < B_OK)
+    return NS_ERROR_FAILURE;
+
+  thread_id tid = spawn_thread(nsBeOSApp::Main, "BApplication", B_NORMAL_PRIORITY, (void *)initsem);
+  if (tid < B_OK || B_OK != resume_thread(tid))
+    rv = NS_ERROR_FAILURE;
+
+  if (B_OK != acquire_sem(initsem))
+    rv = NS_ERROR_FAILURE;
+  if (B_OK != delete_sem(initsem))
+    rv = NS_ERROR_FAILURE;
+
+  return rv;
+}
+
+#endif // XP_BEOS
+
 #if defined(XP_MAC)
 
 #include "macstdlibextras.h"
@@ -172,7 +244,7 @@ static char *sWatcherServiceContractID = "@mozilla.org/embedcomp/window-watcher;
 /*********************************************/
 // Default implemenations for nativeAppSupport
 // If your platform implements these functions if def out this code.
-#if !defined (XP_MAC ) && !defined(NTO) && !defined( XP_PC )
+#if !defined (XP_MAC ) && !defined(NTO) && !defined( XP_PC ) && !defined( XP_BEOS )
 
 nsresult NS_CreateSplashScreen( nsISplashScreen **aResult )
 {	
@@ -206,7 +278,7 @@ PRBool NS_CanRun()
 //       then rely on nsINativeAppSupport and its use of
 //       nsISplashScreen will be removed.
 //
-#if !defined( XP_PC )
+#if !defined( XP_PC ) && !defined( XP_BEOS )
 
 nsresult NS_CreateNativeAppSupport( nsINativeAppSupport **aResult )
 {
@@ -1443,6 +1515,11 @@ int main(int argc, char* argv[])
 {
 #if defined(XP_UNIX)
   InstallUnixSignalHandlers(argv[0]);
+#endif
+
+#if defined(XP_BEOS)
+  if (NS_OK != InitializeBeOSApp())
+    return 1;
 #endif
 
   // Handle -help and -version command line arguments.
