@@ -44,22 +44,9 @@ LIBS := \
 	-ltimer_s \
 	-lraptorhtmlpars \
 	-lraptorview \
-	-labouturl \
-	-lfileurl \
-	-lftpurl \
-	-lgophurl \
-	-lhttpurl \
 	-limg \
 	-l$(MOZ_LIB_JS_PREFIX)js \
 	$(JSJ_LIB) \
-	-lmimetype \
-	-lnetcache \
-	-lnetcnvts \
-	-lnetlib \
-	-lsockstuburl \
-	-lnetwork \
-	-lpwcac \
-	-lremoturl \
 	-lsecfree \
 	-l$(MOZ_LIB_UTIL_PREFIX)util \
 	-lxpcom \
@@ -70,6 +57,28 @@ LIBS := \
 	$(TK_LIBS) \
 	$(NSPR_LIBS) \
 	$(NULL)
+
+ifndef NECKO
+LIBS += \
+	-lremoturl \
+	-lmimetype \
+	-labouturl \
+	-lfileurl \
+	-lftpurl \
+	-lgophurl \
+	-lhttpurl \
+	-lnetcache \
+	-lnetcnvts \
+	-lnetlib \
+	-lsockstuburl \
+	-lnetwork \
+	-lpwcac \
+        $(NULL)
+else
+LIBS += \
+	-lneckoutil_s \
+        $(NULL)
+endif
 
 CXXFLAGS += $(MOZ_TOOLKIT_REGISTRY_CFLAGS)
 
