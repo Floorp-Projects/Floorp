@@ -4623,12 +4623,14 @@ GetIBSpecialSibling(nsIPresContext* aPresContext,
 }
 
 /*
- * Get a next sibling, or, if there is none, get the parent's next in
- * flow's first child.
+ * Get the last-in-flow's next sibling, or, if there is none, get the
+ * parent's next in flow's first child.
  */
 static nsIFrame*
 GetNextSiblingAcrossLines(nsIPresContext *aPresContext, nsIFrame *aFrame)
 {
+  aFrame = aFrame->GetLastInFlow();
+
   nsIFrame *result;
   aFrame->GetNextSibling(&result);
   if (result)
