@@ -5,8 +5,8 @@
 # errors and creating links into the source code where the errors
 # occurred.
 
-# $Revision: 1.12 $ 
-# $Date: 2002/05/06 21:07:57 $ 
+# $Revision: 1.13 $ 
+# $Date: 2002/05/07 04:05:17 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/Error_Parse.pm,v $ 
 # $Name:  $ 
@@ -177,7 +177,7 @@ sub line_type {
 
                      ($line =~ m/Status token, FAILED, not found/) ||
 
-                     ($line =~ m!WARNING: NS_ENSURE_TRUE(presShell) failed, file /builds/tinderbox/SeaMonkey/Linux_2.2.5-22smp_Clobber/mozilla/content/html/content/src/nsGenericHTMLElement.cpp!) ||
+                     ($line =~ m!WARNING: NS_ENSURE_TRUE\(presShell\) failed, file /builds/tinderbox/SeaMonkey/Linux_2.2.5-22smp_Clobber/mozilla/content/html/content/src/nsGenericHTMLElement.cpp!) ||
 
                      # note that the word widget was followed by a
                      # quote mark which emacs thought was a bit funny
