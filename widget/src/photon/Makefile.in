@@ -31,31 +31,22 @@ LIBRARY_NAME	= widget_photon
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsWidgetPhModule
-REQUIRES	= xpcom \
-		  string \
-		  gfx \
-		  layout \
-		  content \
-		  pref \
-		  dom \
-		  appshell \
-		  timer \
-		  uconv \
-		  necko \
-		  img \
-		  view \
-		  util \
-		  rdf \
-		  uriloader \
-		  docshell \
-		  msgcompose \
-		  msgbase \
-		  editor \
-		  windowwatcher \
-		  mailnews \
-		  intl \
-		  $(NULL)
-
+REQUIRES    = xpcom \
+    	      string \
+		      appshell \
+			  gfx \
+			  pref \
+			  dom \
+			  timer \
+			  uconv \
+			  necko \
+			  view \
+			  util \
+			  docshell\
+			  layout\
+			  webshell\
+			  $(NULL)	
+			  
 CPPSRCS		= \
 		nsDragService.cpp \
 		PtRawDrawContainer.cpp \
