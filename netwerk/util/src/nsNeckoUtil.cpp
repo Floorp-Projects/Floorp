@@ -134,7 +134,7 @@ NS_NewLoadGroup(nsILoadGroup* parent, nsILoadGroup* *result)
     NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
     
-    return serv->NewLoadGroup(parent, result); // nsnull needs to be a good parent
+    return serv->NewLoadGroup(parent, result);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
