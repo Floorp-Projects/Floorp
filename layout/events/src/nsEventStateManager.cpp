@@ -756,15 +756,18 @@ nsEventStateManager :: GenerateDragGesture ( nsIPresContext* aPresContext, nsGUI
       mCurrentTarget = mGestureDownFrame;
       nsCOMPtr<nsIContent> lastContent;
       if ( mGestureDownFrame ) {
+        // the mouseDown captures the mouse, make sure we release it so that dragging
+        // to other views works correctly.
+        mGestureDownFrame->CaptureMouse ( aPresContext, PR_FALSE );
         mGestureDownFrame->GetContentForEvent(aPresContext, aEvent, getter_AddRefs(lastContent));
         if ( lastContent )
           lastContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
       }
       
       // dispatch to the frame
-      if ( mGestureDownFrame )
+      if ( mGestureDownFrame ) 
         mGestureDownFrame->HandleEvent(aPresContext, &event, &status);   
-
+      
       StopTrackingDragGesture();
     }
   }
@@ -2266,7 +2269,7 @@ nsEventStateManager::GetEventTargetContent(nsEvent* aEvent, nsIContent** aConten
   if (mCurrentTargetContent) {
     *aContent = mCurrentTargetContent;
     NS_IF_ADDREF(*aContent);
-    return NS_OK;      
+    return NS_OK;
   }
 
   if (!mCurrentTarget) {
