@@ -40,6 +40,7 @@
 
 #include "nsISupports.idl"
 #include "domstubs.idl"
+#include "nsISupportsPrimitives.idl"
 
 %{ C++
   #include "nsIDOMEvent.h"
@@ -66,5 +67,10 @@ interface nsITypeAheadFind : nsISupports
   // it must be started manually with startNewFind()
   void setAutoStart(in nsIDOMWindow aWindow, in boolean aAutoStartOn);
   boolean getAutoStart(in nsIDOMWindow aWindow);  
+
+  // Find next recurrence if typeaheadfind was the last used find, 
+  // as opposed to regular find. Returns false in nsISupportsPRBool if we
+  // don't handle the request.
+  void findNext(in boolean aReverse, in nsISupportsPRBool aDidFind);
 };
 

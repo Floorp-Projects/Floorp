@@ -49,6 +49,11 @@
 <!ENTITY findAgainCmd.label "Find Again">
 <!ENTITY findAgainCmd.key "G">
 <!ENTITY findAgainCmd.accesskey "g">
+<!ENTITY findAgainCmd.key2 "VK_F3">
+<!ENTITY findPrevCmd.label "Find Previous">
+<!ENTITY findPrevCmd.key "G">
+<!ENTITY findPrevCmd.key2 "VK_F3">
+<!ENTITY findPrevCmd.accesskey "v">
 <!ENTITY accountManagerCmd.label "Mail &amp; Newsgroups Account Settings...">
 <!ENTITY accountManagerCmd.accesskey "m">
 

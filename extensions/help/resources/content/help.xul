@@ -70,9 +70,13 @@
     <keyset id="viewZoomKeys"/>
     <keyset id="navigationKeys"/>
     <key id="key_find"
-        key="&findOnCmd.commandkey;" oncommand="find(false);" modifiers="accel"/>
+        key="&findOnCmd.commandkey;" oncommand="find(false, false);" modifiers="accel"/>
     <key id="key_findAgain"
-        key="&findAgainCmd.commandkey;" oncommand="find(true);" modifiers="accel"/>
+        key="&findAgainCmd.commandkey;" oncommand="find(true, false);" modifiers="accel"/>
+    <key id="key_findPrev"
+        key="&findPrevCmd.commandkey;" oncommand="find(true, true);" modifiers="accel, shift"/>
+    <key id="key_findAgain2" keycode="&findAgainCmd.commandkey2;" oncommand="find(true, false);" />
+    <key id="key_findPrev2"  keycode="&findPrevCmd.commandkey2;"  oncommand="find(true, true);"  modifiers="shift"/>
     <key id="key_viewSource" key="&pageSourceCmd.commandkey;"
         oncommand="BrowserViewSource();" modifiers="accel"/>
     <key id="key_viewInfo" key="&pageInfoCmd.commandkey;"

@@ -260,6 +260,7 @@ var DefaultController =
 			case "cmd_getNextNMessages":
 			case "cmd_find":
 			case "cmd_findAgain":
+			case "cmd_findPrev":
       case "cmd_search":
       case "button_mark":
 			case "cmd_markAsRead":
@@ -393,6 +394,7 @@ var DefaultController =
         return (MailAreaHasFocus() && IsFolderSelected());
       case "cmd_find":
       case "cmd_findAgain":
+      case "cmd_findPrev":
         return IsMessageDisplayedInMessagePane();
         break;
       case "cmd_search":
@@ -598,7 +600,10 @@ var DefaultController =
 				MsgFind();
 				return;
 			case "cmd_findAgain":
-				MsgFindAgain();
+				MsgFindAgain(false);
+				return;
+			case "cmd_findPrev":
+				MsgFindAgain(true);
 				return;
             case "cmd_properties":
                 MsgFolderProperties();

@@ -114,6 +114,11 @@
 <!ENTITY findAgainCmd.label "Find Again">
 <!ENTITY editfindnext.accesskey "g">
 <!ENTITY editfindnext.keybinding "g">
+<!ENTITY editfindnext.keybinding2 "VK_F3">
+<!ENTITY findPrevCmd.label "Find Previous">
+<!ENTITY editfindprev.accesskey "v">
+<!ENTITY editfindprev.keybinding "g">
+<!ENTITY editfindprev.keybinding2 "VK_F3">
 <!ENTITY checkSpellingCmd.label "Check Spelling">
 <!ENTITY validateCmd.label "Validate HTML">
 <!ENTITY validate.accesskey "v">

@@ -48,6 +48,7 @@
 #include "nsUnicharUtils.h"
 #include "nsIFindService.h"
 #include "nsIFind.h"
+#include "nsIWebBrowserFind.h"
 #include "nsWeakReference.h"
 #include "nsIAppStartupNotifier.h"
 #include "nsIPresShell.h"
@@ -112,6 +113,8 @@ protected:
   static int PR_CALLBACK PrefsReset(const char* aPrefName, void* instance);
 
   // Helper methods
+  nsresult GetWebBrowserFind(nsIWebBrowserFind **aWebBrowserFind);
+  void StartTimeout();
   nsresult Init();
   nsresult UseInWindow(nsIDOMWindow *aDomWin);
   void SetSelectionLook(nsIPresShell *aPresShell, PRBool aChangeColor, 

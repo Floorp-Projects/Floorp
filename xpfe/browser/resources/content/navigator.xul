@@ -161,7 +161,7 @@ Contributor(s):
         <textbox id="urlbar" class="chromeclass-location" flex="1"
                  type="autocomplete" searchSessions="history" 
                  timeout="50" maxrows="6" alwaysopenpopup="true"
-                 disablehistory="false"
+                 disablehistory="false" accesskey="d"
                  defaultSearchEngine="true" tabScrolling="true"
                  showCommentColumn="true"
                  inputtooltiptext="&locationBar.tooltip;"

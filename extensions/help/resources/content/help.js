@@ -408,13 +408,13 @@ function UpdateBackForwardButtons()
     forwardBroadcaster.setAttribute("disabled", !forwardDisabled);
 }
 
-function find(again)
+function find(again, reverse)
 {
   var focusedWindow = document.commandDispatcher.focusedWindow;
   if (!focusedWindow || focusedWindow == window)
     focusedWindow = window._content;
   if (again)
-    findAgainInPage(helpBrowser, window._content, focusedWindow);
+    findAgainInPage(helpBrowser, window._content, focusedWindow, reverse);
   else
     findInPage(helpBrowser, window._content, focusedWindow)
 }

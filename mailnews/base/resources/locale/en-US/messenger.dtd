@@ -232,6 +232,11 @@ Rights Reserved.
 <!ENTITY findAgainCmd.label "Find Again">
 <!ENTITY findAgainCmd.accesskey "g">
 <!ENTITY findAgainCmd.key "g">
+<!ENTITY findAgainCmd.key2 "VK_F3">
+<!ENTITY findPrevCmd.label "Find Previous">
+<!ENTITY findPrevCmd.accesskey "v">
+<!ENTITY findPrevCmd.key "g">
+<!ENTITY findPrevCmd.key2 "VK_F3">
 <!-- LOCALIZATION NOTE (searchCurrentCmd.label) : Do not translate "&lt;" and "&gt;" in below line. -->
 <!ENTITY searchCurrentCmd.label ".Search in &lt;current&gt;">
 <!ENTITY searchCurrentCmd.accesskey "">

@@ -572,6 +572,7 @@ var MessageWindowController =
 			case "cmd_getNextNMessages":
 			case "cmd_find":
 			case "cmd_findAgain":
+			case "cmd_findPrev":
       case "cmd_search":
       case "button_mark":
 			case "cmd_markAsRead":
@@ -679,6 +680,7 @@ var MessageWindowController =
 			case "cmd_previousUnreadMsg":
 				return true;
 			case "cmd_findAgain":
+			case "cmd_findPrev":
 				return MsgCanFindAgain();
       case "cmd_search":
         var loadedFolder = GetLoadedMsgFolder();
@@ -784,7 +786,10 @@ var MessageWindowController =
 				MsgFind();
 				break;
 			case "cmd_findAgain":
-				MsgFindAgain();
+				MsgFindAgain(false);
+				break;
+			case "cmd_findPrev":
+				MsgFindAgain(true);
 				break;
       case "cmd_search":
         MsgSearchMessages();

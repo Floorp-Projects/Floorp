@@ -119,7 +119,8 @@ function SetupTextEditorCommands()
   //dump("Registering plain text editor commands\n");
   
   commandManager.registerCommand("cmd_find",       nsFindCommand);
-  commandManager.registerCommand("cmd_findNext",   nsFindNextCommand);
+  controller.registerCommand("cmd_findNext",       new nsFindAgainCommand(false));
+  controller.registerCommand("cmd_findPrev",       new nsFindAgainCommand(true));
   commandManager.registerCommand("cmd_spelling",   nsSpellingCommand);
   commandManager.registerCommand("cmd_validate",   nsValidateCommand);
   commandManager.registerCommand("cmd_checkLinks", nsCheckLinksCommand);
@@ -289,6 +290,7 @@ function noUIStateUpdateNeeded(commandID)
    || commandID == "cmd_spelling"
    || commandID == "cmd_validate"
    || commandID == "cmd_findNext"
+   || commandID == "cmd_findPrev"
    || commandID == "cmd_find"
    || commandID == "cmd_preview"
    || commandID == "cmd_revert"
@@ -2395,7 +2397,13 @@ var nsFindCommand =
 };
 
 //-----------------------------------------------------------------------------------
-var nsFindNextCommand =
+
+function nsFindAgainCommand(isFindPrev)
+{
+  this.isFindPrev = isFindPrev;
+}
+
+nsFindAgainCommand.prototype =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
@@ -2412,7 +2420,12 @@ var nsFindNextCommand =
     try {
       var editorXUL = document.getElementById("content-frame");
       var findInst = editorXUL.webBrowserFind;
+      var findService = Components.classes["@mozilla.org/find/find_service;1"]
+                             .getService(Components.interfaces.nsIFindService);    
+      findInst.findBackwards = findService.findBackwards ^ this.isFindPrev;
       findInst.findNext();
+      // reset to what it was in dialog, otherwise dialog setting can get reversed
+      findInst.findBackwards = findService.findBackwards; 
     }
     catch (ex) {}
   }

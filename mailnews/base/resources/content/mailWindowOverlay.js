@@ -1191,10 +1191,10 @@ function MsgFind()
   findInPage(getMessageBrowser(), contentWindow, contentWindow)
 }
 
-function MsgFindAgain()
+function MsgFindAgain(reverse)
 {
   var contentWindow = window.top._content;
-  findAgainInPage(getMessageBrowser(), contentWindow, contentWindow)
+  findAgainInPage(getMessageBrowser(), contentWindow, contentWindow, reverse)
 }
 
 function MsgCanFindAgain()

@@ -163,6 +163,9 @@
   <key id="key_selectAll"/>
   <key id="key_find"  key="&findCmd.key;"  command="cmd_find" modifiers="accel"/>
   <key id="key_findNext"  key="&findAgainCmd.key;" command="cmd_findNext" modifiers="accel"/>
+  <key id="key_findPrev"  key="&findPrevCmd.key;"  command="cmd_findPrev" modifiers="accel, shift"/>
+  <key keycode="&findAgainCmd.key2;" command="cmd_findNext"/>
+  <key keycode="&findPrevCmd.key2;"  command="cmd_findPrev" modifiers="shift"/>
   
   <!-- Options Menu -->
   <!-- key id="key_selectAddresses" xulkey="true" key="&selectAddressCmd.key;" command="cmd_selectAddress"/ -->
@@ -246,6 +249,7 @@
           <menuseparator/>
           <menuitem label="&findCmd.label;"      key="key_find"      accesskey="&findCmd.accesskey;"      command="cmd_find"/>
           <menuitem label="&findAgainCmd.label;" key="key_findNext" accesskey="&findAgainCmd.accesskey;" command="cmd_findNext"/>
+          <menuitem label="&findPrevCmd.label;"  key="key_findPrev" accesskey="&findPrevCmd.accesskey;"  command="cmd_findPrev"/>
           <menuseparator/>
           <menuitem label="&accountManagerCmd.label;" accesskey="&accountManagerCmd.accesskey;" command="cmd_account"/>
           <menuitem id="menu_preferences" oncommand="goDoCommand('cmd_preferences')"/>

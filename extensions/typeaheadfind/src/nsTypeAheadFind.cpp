@@ -54,6 +54,7 @@
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMNSUIEvent.h"
 #include "nsIChromeEventHandler.h"
+#include "nsIFocusController.h"
 #include "nsIDOMNSEvent.h"
 #include "nsIPref.h"
 #include "nsString.h"
@@ -168,7 +169,6 @@ nsTypeAheadFind::~nsTypeAheadFind()
 nsresult
 nsTypeAheadFind::Init()
 {
-  mFindService = do_GetService("@mozilla.org/find/find_service;1");
   nsresult rv = NS_NewISupportsArray(getter_AddRefs(mManualFindWindows));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -277,6 +277,12 @@ nsTypeAheadFind::PrefsReset(const char* aPrefName, void* instance_data)
       if (stringBundleService)
         stringBundleService->CreateBundle(TYPEAHEADFIND_BUNDLE_URL,
                                           getter_AddRefs(typeAheadFind->mStringBundle));
+
+      // Observe find again commands. We'll handle them if we were the last find
+      nsCOMPtr<nsIObserverService> observerService = 
+        do_GetService("@mozilla.org/observer-service;1", &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+      observerService->AddObserver(typeAheadFind, "nsWebBrowserFind_FindAgain", PR_TRUE);
     }
   }
 
@@ -317,6 +323,12 @@ nsTypeAheadFind::Observe(nsISupports *aSubject, const char *aTopic,
   }
   else if (!nsCRT::strcmp(aTopic,"domwindowclosed")) {
     isOpening = PR_FALSE;
+  }
+  else if (!nsCRT::strcmp(aTopic,"nsWebBrowserFind_FindAgain")) {
+    // A find next command wants to be executed.
+    // We might want to handle it. If we do, return true in didExecute.
+    nsCOMPtr<nsISupportsPRBool> didExecute(do_QueryInterface(aSubject));
+    return FindNext(NS_LITERAL_STRING("up").Equals(aData), didExecute);
   }
   else {
     return NS_OK;
@@ -561,58 +573,18 @@ nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
   if (mBadKeysSinceMatch >= kMaxBadCharsBeforeCancel) {
     // If they're just quickly mashing keys onto the keyboard, stop searching
     // until typeahead find is canceled via timeout or another normal means
-    if (mTimer) {
-      mTimer->Init(this, mTimeoutLength, nsITimer::TYPE_ONE_SHOT);  // Timeout from last bad key (this one)
-    }
+    StartTimeout();  // Timeout from last bad key (this one)
     DisplayStatus(PR_FALSE, nsnull, PR_TRUE); // Status message to say find stopped
     return NS_OK;
   }
 
   // ---------- Check the keystroke --------------------------------
-  if (((charCode == 'g' || charCode=='G') && isAlt + isMeta + isCtrl == 1 && (
-      (nsTypeAheadFind::sAccelKey == nsIDOMKeyEvent::DOM_VK_CONTROL && isCtrl) ||
-      (nsTypeAheadFind::sAccelKey == nsIDOMKeyEvent::DOM_VK_ALT     && isAlt ) ||
-      (nsTypeAheadFind::sAccelKey == nsIDOMKeyEvent::DOM_VK_META    && isMeta)))
-#ifdef XP_MAC
-     // We don't use F3 for find next on Macintosh, function keys are user
-     // definable there
-     ) {
-#else
-    || (keyCode == nsIDOMKeyEvent::DOM_VK_F3 && !isCtrl && !isMeta && !isAlt)) {
-#endif
-    // We steal Accel+G, F3 (find next) and Accel+Shift+G, Shift+F3
-    // (find prev), avoid early return, so we can use our find loop
-
-    // If the global find string is different, that means it's been changed
-    // directly by the user, from the last type ahead find string, via the 
-    // find dialog. In that case, let the normal find-next happen
-    nsAutoString globalFindString;
-    mFindService->GetSearchString(globalFindString);
-    if (globalFindString != mFindNextBuffer)
-      return NS_OK;
-    mTypeAheadBuffer = mFindNextBuffer;
-
-    if (mRepeatingMode == eRepeatingChar)
-      mTypeAheadBuffer = mTypeAheadBuffer.First();
-    mRepeatingMode = (charCode=='G' || isShift)?
-      eRepeatingReverse: eRepeatingForward;
-    mLiteralTextSearchOnly = PR_TRUE;
-    aEvent->PreventDefault(); // Prevent normal processing of this keystroke
-  }
-  else if ((isAlt && !isShift) || isCtrl || isMeta) {
+  if ((isAlt && !isShift) || isCtrl || isMeta) {
     // Ignore most modified keys, but alt+shift may be used for
     // entering foreign chars.
-    CancelFind();
 
     return NS_OK;
   }
-  else if (mRepeatingMode == eRepeatingForward ||
-           mRepeatingMode == eRepeatingReverse) {
-    // Once Accel+[shift]+G has been used once,
-    // new typing will start a new find
-    CancelFind();
-  }
-
 
   PRBool isFirstVisiblePreferred = PR_FALSE;
   PRBool isBackspace = PR_FALSE;  // When backspace is pressed
@@ -634,9 +606,8 @@ nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
 
     return NS_OK;
   }
-
   // ----------- Back space ----------------------
-  if (keyCode == nsIDOMKeyEvent::DOM_VK_BACK_SPACE) {
+  else if (keyCode == nsIDOMKeyEvent::DOM_VK_BACK_SPACE) {
     if (mTypeAheadBuffer.IsEmpty()) {
       return NS_OK;
     }
@@ -654,16 +625,38 @@ nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
       return NS_OK;
     }
 
-    if (--mBadKeysSinceMatch < 0)
+    if (mBadKeysSinceMatch > 0) {
+      // Nothing to remove when a backspace is hit after a bad key
+      // because bad keys aren't added to the buffer
       mBadKeysSinceMatch = 0;
-    mTypeAheadBuffer = Substring(mTypeAheadBuffer, 0,
-                                 mTypeAheadBuffer.Length() - 1);
+    }
+    else {
+      mTypeAheadBuffer.Truncate(mTypeAheadBuffer.Length() - 1);
+    }
     isBackspace = PR_TRUE;
     mDontTryExactMatch = PR_FALSE;
   }
+  else if (keyCode) {
+    // Function key or some other non-printable key
+    return NS_OK;
+  }
   // ----------- Printable characters --------------
-  else if (mRepeatingMode != eRepeatingForward &&
-           mRepeatingMode != eRepeatingReverse) {
+  else {
+    if (mRepeatingMode == eRepeatingForward ||
+        mRepeatingMode == eRepeatingReverse) {
+      // Once Accel+[shift]+G or [shift]+F3 has been used once,
+      // new typing will start a new find
+      CancelFind();
+    }
+    // If a web page wants to use printable character keys,
+    // they have to use evt.preventDefault() after they get the key
+    nsCOMPtr<nsIDOMNSUIEvent> uiEvent(do_QueryInterface(aEvent));
+    PRBool preventDefault;
+    uiEvent->GetPreventDefault(&preventDefault);
+    if (preventDefault) {
+      return NS_OK;
+    }
+
     PRUnichar uniChar = ToLowerCase(NS_STATIC_CAST(PRUnichar, charCode));
 
     if (uniChar < ' ') {
@@ -738,6 +731,7 @@ nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
         presContext->GetEventStateManager(getter_AddRefs(esm));
         esm->GetFocusedContent(getter_AddRefs(focusedContent));
         if (focusedContent) {
+          mIsFindingText = PR_TRUE; // prevent selection listener from calling CancelFind()
           esm->MoveCaretToFocus();
           isFirstVisiblePreferred = PR_FALSE;
         }
@@ -745,14 +739,17 @@ nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
     }
   }
 
-  mIsFindingText = PR_TRUE; // prevent our listeners from calling CancelFind()
+  /*
+   *  Find the text!
+   */
+
+  aEvent->StopPropagation();  // We're using this key, no one else should
+
+  mIsFindingText = PR_TRUE; // prevent selection listener from calling CancelFind()
 
   nsresult rv = NS_ERROR_FAILURE;
 
-  // ----------- Set search options ---------------
-  mFind->SetFindBackwards(mRepeatingMode == eRepeatingReverse);
-
-  if (mBadKeysSinceMatch == 0) {   // Don't even try if the last key was already bad
+  if (mBadKeysSinceMatch <= 1) {   // Don't even try if the last key was already bad
     if (!mDontTryExactMatch) {
       // Regular find, not repeated char find
 
@@ -769,33 +766,13 @@ nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
 #endif
   }
 
-  aEvent->StopPropagation();  // We're using this key, no one else should
-
   // --- If accessibility.typeaheadfind.timeout is set,
   //     cancel find after specified # milliseconds ---
-  if (mTimeoutLength) {
-    if (!mTimer) {
-      mTimer = do_CreateInstance("@mozilla.org/timer;1");
-    }
-
-    if (mTimer) {
-      mTimer->InitWithCallback(this, mTimeoutLength, nsITimer::TYPE_ONE_SHOT);
-    }
-  }
+  StartTimeout();
 
   mIsFindingText = PR_FALSE;
 
-  if (NS_SUCCEEDED(rv)) {
-    // ------- Success!!! -----------------------------------------------------
-    // ------- Store current find string for regular find usage: find-next
-    //         or find dialog text field ---------
-    mBadKeysSinceMatch = 0;
-    mFindNextBuffer = mTypeAheadBuffer;
-    mFindService->SetSearchString(mFindNextBuffer);
-    if (mRepeatingMode == eRepeatingForward || 
-        mRepeatingMode == eRepeatingReverse)
-      mTypeAheadBuffer.Truncate();
-
+  if (NS_SUCCEEDED(rv)) {     
     if (mTypeAheadBuffer.Length() == 1) {
       // If first letter, store where the first find succeeded
       // (mStartFindRange)
@@ -809,14 +786,11 @@ nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
       }
     }
   }
-  else {
-    if (!isBackspace)
-      ++mBadKeysSinceMatch;
-    // ----- Nothing found -----
+  else {      // ----- Nothing found -----
     DisplayStatus(PR_FALSE, nsnull, PR_FALSE); // Display failure status
 
-    mRepeatingMode = eRepeatingNone;
     if (!isBackspace) {
+      ++mBadKeysSinceMatch;
       // Error beep (don't been when backspace is pressed, they're 
       // trying to correct the mistake!)
       nsCOMPtr<nsISound> soundInterface =
@@ -824,23 +798,30 @@ nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
       if (soundInterface) {
         soundInterface->Beep();
       }
+      // Remove bad character from buffer, so we can continue typing from
+      // last matched character
+      if (mTypeAheadBuffer.Length() >= 1) {
+        mTypeAheadBuffer.Truncate(mTypeAheadBuffer.Length() - 1);
+      }
     }
 
-    // Remove bad character from buffer, so we can continue typing from
-    // last matched character
+    mRepeatingMode = eRepeatingNone;
+  }
 
-    // If first character is bad, flush it away anyway
-#ifdef TYPEAHEADFIND_REMOVE_ALL_BAD_KEYS
-    // Remove all bad characters
-    if (mTypeAheadBuffer.Length() >= 1 && !isBackspace) {
-#else
-    // Remove bad *first* characters only
-    if (mTypeAheadBuffer.Length() == 1 && !isBackspace) {
-#endif
-      // Notice if () in #ifdef above!
-      mTypeAheadBuffer = Substring(mTypeAheadBuffer, 0,
-                                   mTypeAheadBuffer.Length() - 1);
-    }
+  // Store find string for find-next
+  mFindNextBuffer = mTypeAheadBuffer;
+
+  nsCOMPtr<nsIWebBrowserFind> webBrowserFind;
+  GetWebBrowserFind(getter_AddRefs(webBrowserFind));
+  if (webBrowserFind) {
+    webBrowserFind->SetSearchString(PromiseFlatString(mTypeAheadBuffer).get());
+  }
+  
+  if (!mFindService) {
+    mFindService = do_GetService("@mozilla.org/find/find_service;1");
+  }
+  if (mFindService) {
+    mFindService->SetSearchString(mTypeAheadBuffer);
   }
 
   return NS_OK;
@@ -1030,6 +1011,8 @@ nsTypeAheadFind::FindItNow(PRBool aIsRepeatingSameChar, PRBool aIsLinksOnly,
       }
 
       DisplayStatus(PR_TRUE, focusedContent, PR_FALSE);
+
+      mBadKeysSinceMatch = 0;
 
       return NS_OK;
     }
@@ -1364,6 +1347,101 @@ nsTypeAheadFind::NotifySelectionChanged(nsIDOMDocument *aDoc,
 // ---------------- nsITypeAheadFind --------------------
 
 NS_IMETHODIMP
+nsTypeAheadFind::FindNext(PRBool aFindBackwards, nsISupportsPRBool *aDidExecute)
+{
+  NS_ENSURE_TRUE(aDidExecute, NS_ERROR_FAILURE);
+
+  aDidExecute->SetData(PR_FALSE);
+  if (!mIsFindAllowedInWindow || mFindNextBuffer.IsEmpty() || !mFocusedWindow) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsPIDOMWindow> privateWindow(do_QueryInterface(mFocusedWindow));
+  NS_ENSURE_TRUE(privateWindow, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIFocusController> focusController;
+  privateWindow->GetRootFocusController(getter_AddRefs(focusController));
+  NS_ENSURE_TRUE(focusController, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDOMWindowInternal> callerWinInternal;
+  focusController->GetFocusedWindow(getter_AddRefs(callerWinInternal));
+  nsCOMPtr<nsIDOMWindow> callerWin(do_QueryInterface(callerWinInternal));
+  NS_ENSURE_TRUE(callerWin, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIPresShell> typeAheadPresShell(do_QueryReferent(mFocusedWeakShell));
+  NS_ENSURE_TRUE(typeAheadPresShell, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDOMDocument> callerDomDoc;
+  callerWin->GetDocument(getter_AddRefs(callerDomDoc));
+  nsCOMPtr<nsIDocument> callerDoc(do_QueryInterface(callerDomDoc));
+  NS_ENSURE_TRUE(callerDoc, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIPresShell> callerPresShell;
+  callerDoc->GetShellAt(0, getter_AddRefs(callerPresShell));
+  NS_ENSURE_TRUE(callerPresShell, NS_ERROR_FAILURE);
+
+  if (callerWin != mFocusedWindow || callerPresShell != typeAheadPresShell) {
+    // This means typeaheadfind is active in a different window or doc
+    // So it's not appropriate to find next for the current window
+    mFindNextBuffer.Truncate();
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIWebBrowserFind> webBrowserFind;
+  GetWebBrowserFind(getter_AddRefs(webBrowserFind));
+  NS_ENSURE_TRUE(webBrowserFind, NS_ERROR_FAILURE);
+
+  nsXPIDLString webBrowserFindString;
+  if (webBrowserFind) {
+    webBrowserFind->GetSearchString(getter_Copies(webBrowserFindString));
+    if (!webBrowserFindString.Equals(mFindNextBuffer)) {
+      // If they're not equal, then the find dialog was used last,
+      // not typeaheadfind. Typeaheadfind applies to the last find,
+      // so we should let nsIWebBrowserFind::FindNext() do it.
+      mFindNextBuffer.Truncate();
+      return NS_OK;
+    }
+
+  }
+
+  /* -------------------------------------------------------
+   * Typeaheadfind is active in the currently focused window,
+   * so do the find next operation now
+   */
+
+  aDidExecute->SetData(PR_TRUE);
+
+  if (mBadKeysSinceMatch > 0) {
+    // We know it will fail, so just return
+    return NS_OK;
+  }
+
+  mTypeAheadBuffer = mFindNextBuffer;
+
+  if (mRepeatingMode == eRepeatingChar)
+    mTypeAheadBuffer = mTypeAheadBuffer.First();
+  mRepeatingMode = aFindBackwards? eRepeatingReverse: eRepeatingForward;
+  mLiteralTextSearchOnly = PR_TRUE;
+
+  // ----------- Set search options ---------------
+  mFind->SetFindBackwards(aFindBackwards);
+
+  mIsFindingText = PR_TRUE; // prevent our listeners from calling CancelFind()
+
+  if (NS_FAILED(FindItNow(PR_FALSE, mLinksOnly, PR_FALSE, PR_FALSE))) {
+    DisplayStatus(PR_FALSE, nsnull, PR_FALSE); // Display failure status
+    mRepeatingMode = eRepeatingNone;
+  }
+
+  mTypeAheadBuffer.Truncate(); // Find buffer is now in mFindNextBuffer
+  StartTimeout();
+  mIsFindingText = PR_FALSE;
+
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
 nsTypeAheadFind::GetIsActive(PRBool *aIsActive)
 {
   *aIsActive = !mTypeAheadBuffer.IsEmpty();
@@ -1548,6 +1626,41 @@ nsTypeAheadFind::CancelFind()
 
 // ------- Helper Methods ---------------
 
+nsresult
+nsTypeAheadFind::GetWebBrowserFind(nsIWebBrowserFind **aWebBrowserFind)
+{
+  *aWebBrowserFind = nsnull;
+
+  nsCOMPtr<nsIInterfaceRequestor> ifreq(do_QueryInterface(mFocusedWindow));
+  NS_ENSURE_TRUE(ifreq, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIWebNavigation> webNav(do_GetInterface(ifreq));
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(webNav));
+  NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIWebBrowserFind> webBrowserFind(do_GetInterface(docShell));
+  NS_ENSURE_TRUE(webBrowserFind, NS_ERROR_FAILURE);
+
+  NS_ADDREF(*aWebBrowserFind = webBrowserFind);
+
+  return NS_OK;
+}
+
+
+void
+nsTypeAheadFind::StartTimeout()
+{
+  if (mTimeoutLength) {
+    if (!mTimer) {
+      mTimer = do_CreateInstance("@mozilla.org/timer;1");
+    }
+
+    if (mTimer) {
+      mTimer->InitWithCallback(this, mTimeoutLength, nsITimer::TYPE_ONE_SHOT);
+    }
+  }
+}
+
 void
 nsTypeAheadFind::SetSelectionLook(nsIPresShell *aPresShell, 
                                   PRBool aChangeColor, 
@@ -1674,7 +1787,7 @@ nsTypeAheadFind::RemoveWindowListeners(nsIDOMWindow *aDOMWin)
     // Use capturing, otherwise the normal find next will get activated when ours should
     chromeEventHandler->RemoveEventListener(NS_LITERAL_STRING("keypress"),
                                             NS_STATIC_CAST(nsIDOMKeyListener*, this),
-                                            PR_TRUE);
+                                            PR_FALSE);
   }
 
   if (aDOMWin == mFocusedWindow) {
@@ -1705,11 +1818,13 @@ nsTypeAheadFind::AttachWindowListeners(nsIDOMWindow *aDOMWin)
 {
   nsCOMPtr<nsIDOMEventTarget> chromeEventHandler;
   GetChromeEventHandler(aDOMWin, getter_AddRefs(chromeEventHandler));
-  if (chromeEventHandler)
+  if (chromeEventHandler) {
     // Use capturing, otherwise the normal find next will get activated when ours should
     chromeEventHandler->AddEventListener(NS_LITERAL_STRING("keypress"),
                                          NS_STATIC_CAST(nsIDOMKeyListener*, this),
-                                         PR_TRUE);
+                                         PR_FALSE);
+  }
+
   // Attach menu listeners, this will help us ignore keystrokes meant for menus
   chromeEventHandler->AddEventListener(NS_LITERAL_STRING("popupshown"), 
                                        NS_STATIC_CAST(nsIDOMEventListener*, this), 
