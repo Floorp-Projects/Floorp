@@ -430,6 +430,9 @@ gdk_superwin_scroll (GdkSuperWin *superwin,
     gdk_superwin_add_translation(superwin, last_resize_serial,
                                  MIN(0, dx), MIN(0, dy));
   }
+
+  /* sync so we get the windows moved now */
+  XSync(GDK_DISPLAY(), False);
 }
 
 void  
