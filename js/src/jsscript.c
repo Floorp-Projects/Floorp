@@ -537,8 +537,10 @@ script_thaw(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     /* Swap bytes in Unichars to keep frozen strings machine-independent. */
     from = (jschar *)buf;
     to = (jschar *) JS_malloc(cx, len * sizeof(jschar));
-    if (!to)
-	return JS_FALSE;
+    if (!to) {
+        JS_XDRDestroy(xdr);
+        return JS_FALSE;
+    }
     for (i = 0; i < len; i++)
 	to[i] = JSXDR_SWAB16(from[i]);
     buf = (char *)to;
