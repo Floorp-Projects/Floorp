@@ -2136,13 +2136,40 @@ nsHTMLEditor::CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement*
     newElement->SetAttribute("height","40px");
     newElement->SetAttribute("valign","top");
 
-    // Insert the default nbsp into the cell
-    nsCOMPtr<nsIDOMText>newTextNode;
-    nsresult result = mDoc->CreateTextNode("x", getter_AddRefs(newTextNode));
-    if (NS_SUCCEEDED(result) && newTextNode)
+    // Insert the default space in a cell so border displays
+    nsCOMPtr<nsIDOMNode> newCellNode = do_QueryInterface(newElement);
+    if (newCellNode)
     {
-      nsCOMPtr<nsIDOMNode>resultNode;
-      result = newElement->AppendChild(newTextNode, getter_AddRefs(resultNode));
+
+      // First create a parent paragraph node
+      // THIS SHOULD BE A RULE METHOD -- SOMETHING LIKE CreateParagraphNode
+      nsCOMPtr<nsIDOMElement> mozDivElement;
+      nsresult result = mDoc->CreateElement("div", getter_AddRefs(mozDivElement));
+      
+      if (NS_SUCCEEDED(result) && mozDivElement)
+      {
+        // Set the 'class' attribute needed so Composer 4.x doesn't eat the div
+        mozDivElement->SetAttribute("class", "moz-p");
+        
+        nsCOMPtr<nsIDOMNode>resultNode;
+        nsCOMPtr<nsIDOMNode> mozDivNode = do_QueryInterface(mozDivElement);
+        result = newCellNode->AppendChild(mozDivNode, getter_AddRefs(resultNode));
+
+        if (NS_SUCCEEDED(result) && resultNode)
+        {
+          // Append a text node
+          nsCOMPtr<nsIDOMText>newTextNode;
+          nsString space;
+          // Set contents to the &nbsp character by concatanating the char code
+          space += 160;
+          result = mDoc->CreateTextNode(space, getter_AddRefs(newTextNode));
+          if (NS_SUCCEEDED(result) && newTextNode)
+          {
+            nsCOMPtr<nsIDOMNode>resultNode2;
+            result = mozDivNode->AppendChild(newTextNode, getter_AddRefs(resultNode2));
+          }
+        }
+      }
     }
   }
   // ADD OTHER DEFAULT ATTRIBUTES HERE
@@ -2242,23 +2269,16 @@ nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)
       res = InsertNode(aElement, parentSelectedNode, offsetOfNewNode);
     } else {
       // Inserting a BLOCK element:
-      nsCOMPtr<nsIDOMNode> splitPointParent;
-      nsresult result = parentSelectedNode->GetParentNode(getter_AddRefs(splitPointParent));
-      if (NS_SUCCEEDED(result) && splitPointParent)
+      // TODO: Start with parentSelectedNode and check if its a block that can accept the 
+      //  block node we want to insert as its child. For initial testing, assume its OK
+      //
+      // Get the parent of the paragraph/container
+      nsCOMPtr<nsIDOMNode> parentNode;
+      parentSelectedNode->GetParentNode(getter_AddRefs(parentNode));
+      res = SplitNodeDeep(parentSelectedNode, parentSelectedNode, offsetOfNewNode);
+      if (NS_SUCCEEDED(res))
       {
-#if 0
-        nsCOMPtr<nsIDOMNode> node;
-        PRInt32 offset;
-        // Note: 2nd param is ptr to nsCOMPtr
-        res = GetStartNodeAndOffset(selection, &node, &offset);
-        if (NS_SUCCEEDED(result) && parent)
-        {
-        }
-#endif          
-        res = SplitNodeDeep(parentSelectedNode, splitPointParent, offsetOfNewNode);
-//        if (NS_SUCCEEDED(result))
-//          res = InsertNode(aElement, parentSelectedNode, 0);
-        
+        res = InsertNode(aElement, parentSelectedNode, offsetOfNewNode);
       }
     }
   }
@@ -2461,7 +2481,7 @@ nsHTMLEditor::SetCaretAfterElement(nsIDOMElement* aElement)
         if (NS_SUCCEEDED(res))
         {
           // Collapse selection to just after desired element,
-          selection->Collapse(parent, offsetInParent);
+          selection->Collapse(parent, offsetInParent+1);
         }
       }
     }
