@@ -78,6 +78,7 @@ class nsHTMLContentSerializer : public nsXMLContentSerializer {
                                      PRBool aTranslateEntities);
   PRBool HasLongLines(const nsString& text, PRInt32& aLastNewlineOffset);
   nsresult EscapeURI(const nsAReadableString& aURI, nsAWritableString& aEscapedURI);
+  PRBool IsJavaScript(nsIAtom* aAttrNameAtom, const nsAReadableString& aAttrValueString);
 
   nsCOMPtr<nsIParserService> mParserService;
   nsCOMPtr<nsIEntityConverter> mEntityConverter;
