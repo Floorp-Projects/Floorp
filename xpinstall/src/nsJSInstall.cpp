@@ -689,50 +689,6 @@ InstallDeleteComponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
   return JS_TRUE;
 }
 
-
-//
-// Native method DiskSpaceAvailable
-//
-PR_STATIC_CALLBACK(JSBool)
-InstallDiskSpaceAvailable(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
-  PRInt64 nativeRet;
-  nsAutoString b0;
-
-  *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
-
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  if(argc >= 1)
-  {
-    //  public int DiskSpaceAvailable ( Object localDirSpec);
-
-    ConvertJSValToStr(b0, cx, argv[0]);
-
-    if(NS_OK != nativeThis->DiskSpaceAvailable(b0, &nativeRet))
-    {
-      return JS_TRUE;
-    }
-
-    double d;
-
-    LL_L2D(d, nativeRet);
-    JS_NewDoubleValue( cx, d, rval );
-
-  }
-  else
-  {
-    JS_ReportError(cx, "Function DiskSpaceAvailable requires 1 parameters");
-  }
-
-  return JS_TRUE;
-}
-
-
 //
 // Native method Execute
 //
