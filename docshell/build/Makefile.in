@@ -54,3 +54,6 @@ INCLUDES	+= \
 		-I$(srcdir)			\
 		-I$(srcdir)/../base		\
 		$(NULL)
+
+$(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
+
