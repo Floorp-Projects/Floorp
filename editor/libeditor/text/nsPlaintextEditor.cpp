@@ -514,12 +514,11 @@ PRBool nsPlaintextEditor::IsModifiable()
 NS_IMETHODIMP nsPlaintextEditor::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent)
 {
   PRUint32 keyCode, character;
-  PRBool   isShift, ctrlKey, altKey, metaKey;
+  PRBool   ctrlKey, altKey, metaKey;
 
   if (!aKeyEvent) return NS_ERROR_NULL_POINTER;
 
   if (NS_SUCCEEDED(aKeyEvent->GetKeyCode(&keyCode)) && 
-      NS_SUCCEEDED(aKeyEvent->GetShiftKey(&isShift)) &&
       NS_SUCCEEDED(aKeyEvent->GetCtrlKey(&ctrlKey)) &&
       NS_SUCCEEDED(aKeyEvent->GetAltKey(&altKey)) &&
       NS_SUCCEEDED(aKeyEvent->GetMetaKey(&metaKey)))
@@ -538,7 +537,7 @@ NS_IMETHODIMP nsPlaintextEditor::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent)
       return TypedText(empty, eTypedText);
     }
     
-    if (character && !altKey && !ctrlKey && !isShift && !metaKey)
+    if (character && !altKey && !ctrlKey && !metaKey)
     {
       aKeyEvent->PreventDefault();
       nsAutoString key(character);

@@ -922,7 +922,6 @@ PRBool nsQBaseWidget::KeyPressEvent(QKeyEvent *aEvent)
     }
     if (nsEvent.charCode) {
        nsEvent.keyCode = 0;
-       nsEvent.isShift = PR_FALSE;
     }
     else
       nsEvent.keyCode = NS_GetKey(aEvent->key());
