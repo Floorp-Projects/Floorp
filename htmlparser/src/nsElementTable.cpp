@@ -50,111 +50,113 @@
   Now it's time to list all the html elements all with their capabilities...
 ******************************************************************************/
 
+#define DECL_TAG_LIST(name_, list_)                                           \
+  static const eHTMLTags name_##list[] = list_;                               \
+  static const TagList name_ = { NS_ARRAY_LENGTH(name_##list), name_##list };
+
+#define COMMA ,
 
 //First, define the set of taglists for tags with special parents...
-static const TagList  gAParents={1,{eHTMLTag_map}};
-static const TagList  gInAddress={1,{eHTMLTag_address}};
-static const TagList  gInHead={1,{eHTMLTag_head}};
-static const TagList  gInTable={1,{eHTMLTag_table}};
-static const TagList  gInHTML={1,{eHTMLTag_html}};
-static const TagList  gInBody={1,{eHTMLTag_body}};
-static const TagList  gInForm={1,{eHTMLTag_form}};
-static const TagList  gInFieldset={1,{eHTMLTag_fieldset}};
-static const TagList  gInTR={1,{eHTMLTag_tr}};
-static const TagList  gInDL={2,{eHTMLTag_dl,eHTMLTag_body}};
-static const TagList  gInFrameset={1,{eHTMLTag_frameset}};
-static const TagList  gInNoframes={1,{eHTMLTag_noframes}};
+DECL_TAG_LIST(gAParents,{eHTMLTag_map})
+DECL_TAG_LIST(gInAddress,{eHTMLTag_address})
+DECL_TAG_LIST(gInHead,{eHTMLTag_head})
+DECL_TAG_LIST(gInTable,{eHTMLTag_table})
+DECL_TAG_LIST(gInHTML,{eHTMLTag_html})
+DECL_TAG_LIST(gInBody,{eHTMLTag_body})
+DECL_TAG_LIST(gInForm,{eHTMLTag_form})
+DECL_TAG_LIST(gInFieldset,{eHTMLTag_fieldset})
+DECL_TAG_LIST(gInTR,{eHTMLTag_tr})
+DECL_TAG_LIST(gInDL,{eHTMLTag_dl COMMA eHTMLTag_body})
+DECL_TAG_LIST(gInFrameset,{eHTMLTag_frameset})
+DECL_TAG_LIST(gInNoframes,{eHTMLTag_noframes})
 //Removed ADDRESS to solve 24885
-static const TagList  gInP={2,{eHTMLTag_span,eHTMLTag_table}}; // added table for bug 43678, removed FORM bug 94269
-static const TagList  gOptgroupParents={2,{eHTMLTag_select,eHTMLTag_optgroup}};
-static const TagList  gBodyParents={2,{eHTMLTag_html,eHTMLTag_noframes}};
-static const TagList  gColParents={2,{eHTMLTag_table,eHTMLTag_colgroup}};
-static const TagList  gFramesetParents={2,{eHTMLTag_html,eHTMLTag_frameset}};
-static const TagList  gLegendParents={1,{eHTMLTag_fieldset}};
-static const TagList  gAreaParent={1,{eHTMLTag_map}};
-static const TagList  gParamParents={2,{eHTMLTag_applet,eHTMLTag_object}};
-static const TagList  gTRParents={4,{eHTMLTag_tbody,eHTMLTag_tfoot,eHTMLTag_thead,eHTMLTag_table}};
-static const TagList  gTREndParents={5,{eHTMLTag_tbody,eHTMLTag_tfoot,eHTMLTag_thead,eHTMLTag_table,eHTMLTag_applet}};
+DECL_TAG_LIST(gInP,{eHTMLTag_span COMMA eHTMLTag_table}) // added table for bug 43678, removed FORM bug 94269
+DECL_TAG_LIST(gOptgroupParents,{eHTMLTag_select COMMA eHTMLTag_optgroup})
+DECL_TAG_LIST(gBodyParents,{eHTMLTag_html COMMA eHTMLTag_noframes})
+DECL_TAG_LIST(gColParents,{eHTMLTag_table COMMA eHTMLTag_colgroup})
+DECL_TAG_LIST(gFramesetParents,{eHTMLTag_html COMMA eHTMLTag_frameset})
+DECL_TAG_LIST(gLegendParents,{eHTMLTag_fieldset})
+DECL_TAG_LIST(gAreaParent,{eHTMLTag_map})
+DECL_TAG_LIST(gParamParents,{eHTMLTag_applet COMMA eHTMLTag_object})
+DECL_TAG_LIST(gTRParents,{eHTMLTag_tbody COMMA eHTMLTag_tfoot COMMA eHTMLTag_thead COMMA eHTMLTag_table})
+DECL_TAG_LIST(gTREndParents,{eHTMLTag_tbody COMMA eHTMLTag_tfoot COMMA eHTMLTag_thead COMMA eHTMLTag_table COMMA eHTMLTag_applet})
 
 //*********************************************************************************************
 //  Next, define the set of taglists for tags with special kids...
 //*********************************************************************************************
 
-static const TagList  gContainsText={4,{eHTMLTag_text,eHTMLTag_newline,eHTMLTag_whitespace,eHTMLTag_entity}};
-static const TagList  gUnknownKids={2,{eHTMLTag_html,eHTMLTag_frameset}};
-static const TagList  gContainsOpts={3,{eHTMLTag_option,eHTMLTag_optgroup,eHTMLTag_script}};
-static const TagList  gContainsParam={1,{eHTMLTag_param}};
-static const TagList  gColgroupKids={1,{eHTMLTag_col}}; 
-static const TagList  gAddressKids={1,{eHTMLTag_p}};
-static const TagList  gBodyKids={8, {eHTMLTag_dd,eHTMLTag_del,eHTMLTag_dt,eHTMLTag_ins,
-                        eHTMLTag_noscript,eHTMLTag_script,eHTMLTag_li,eHTMLTag_param}}; // Added PARAM for bug 54448
-static const TagList  gButtonKids={2,{eHTMLTag_caption,eHTMLTag_legend}};
+DECL_TAG_LIST(gContainsText,{eHTMLTag_text COMMA eHTMLTag_newline COMMA eHTMLTag_whitespace COMMA eHTMLTag_entity})
+DECL_TAG_LIST(gUnknownKids,{eHTMLTag_html COMMA eHTMLTag_frameset})
+DECL_TAG_LIST(gContainsOpts,{eHTMLTag_option COMMA eHTMLTag_optgroup COMMA eHTMLTag_script})
+DECL_TAG_LIST(gContainsParam,{eHTMLTag_param})
+DECL_TAG_LIST(gColgroupKids,{eHTMLTag_col}) 
+DECL_TAG_LIST(gAddressKids,{eHTMLTag_p})
+DECL_TAG_LIST(gBodyKids,{eHTMLTag_dd COMMA eHTMLTag_del COMMA eHTMLTag_dt COMMA eHTMLTag_ins COMMA  eHTMLTag_noscript COMMA eHTMLTag_script COMMA eHTMLTag_li COMMA eHTMLTag_param}) // Added PARAM for bug 54448
+DECL_TAG_LIST(gButtonKids,{eHTMLTag_caption COMMA eHTMLTag_legend})
 
-static const TagList  gDLRootTags={5,{eHTMLTag_body,eHTMLTag_td,eHTMLTag_table,eHTMLTag_applet,eHTMLTag_dd}};
-static const TagList  gDLKids={2,{eHTMLTag_dd,eHTMLTag_dt}};
-static const TagList  gDTKids={1,{eHTMLTag_dt}};
-static const TagList  gFieldsetKids={2,{eHTMLTag_legend,eHTMLTag_text}};
-static const TagList  gFontKids={3,{eHTMLTag_legend,eHTMLTag_table,eHTMLTag_text}}; // Added table to fix bug 93365
-static const TagList  gFormKids={1,{eHTMLTag_keygen}};
-static const TagList  gFramesetKids={3,{eHTMLTag_frame,eHTMLTag_frameset,eHTMLTag_noframes}};
+DECL_TAG_LIST(gDLRootTags,{eHTMLTag_body COMMA eHTMLTag_td COMMA eHTMLTag_table COMMA eHTMLTag_applet COMMA eHTMLTag_dd})
+DECL_TAG_LIST(gDLKids,{eHTMLTag_dd COMMA eHTMLTag_dt})
+DECL_TAG_LIST(gDTKids,{eHTMLTag_dt})
+DECL_TAG_LIST(gFieldsetKids,{eHTMLTag_legend COMMA eHTMLTag_text})
+DECL_TAG_LIST(gFontKids,{eHTMLTag_legend COMMA eHTMLTag_table COMMA eHTMLTag_text}) // Added table to fix bug 93365
+DECL_TAG_LIST(gFormKids,{eHTMLTag_keygen})
+DECL_TAG_LIST(gFramesetKids,{eHTMLTag_frame COMMA eHTMLTag_frameset COMMA eHTMLTag_noframes})
 
-static const TagList  gHtmlKids={9,{eHTMLTag_body,eHTMLTag_frameset,eHTMLTag_head,eHTMLTag_map,eHTMLTag_noscript,eHTMLTag_noframes,eHTMLTag_script,eHTMLTag_newline,eHTMLTag_whitespace}};
-static const TagList  gHeadKids={8,{eHTMLTag_base,eHTMLTag_bgsound,eHTMLTag_link,eHTMLTag_meta,eHTMLTag_script,eHTMLTag_style,eHTMLTag_title,eHTMLTag_noembed}};
+DECL_TAG_LIST(gHtmlKids,{eHTMLTag_body COMMA eHTMLTag_frameset COMMA eHTMLTag_head COMMA eHTMLTag_map COMMA eHTMLTag_noscript COMMA eHTMLTag_noframes COMMA eHTMLTag_script COMMA eHTMLTag_newline COMMA eHTMLTag_whitespace})
+DECL_TAG_LIST(gHeadKids,{eHTMLTag_base COMMA eHTMLTag_bgsound COMMA eHTMLTag_link COMMA eHTMLTag_meta COMMA eHTMLTag_script COMMA eHTMLTag_style COMMA eHTMLTag_title COMMA eHTMLTag_noembed})
 
-static const TagList  gLabelKids={1,{eHTMLTag_span}};
-static const TagList  gLIKids={2,{eHTMLTag_ol,eHTMLTag_ul}};
-static const TagList  gMapKids={1,{eHTMLTag_area}};
-static const TagList  gPreKids={2,{eHTMLTag_hr,eHTMLTag_center}};  //note that CENTER is here for backward compatibility; it's not 4.0 spec.
+DECL_TAG_LIST(gLabelKids,{eHTMLTag_span})
+DECL_TAG_LIST(gLIKids,{eHTMLTag_ol COMMA eHTMLTag_ul})
+DECL_TAG_LIST(gMapKids,{eHTMLTag_area})
+DECL_TAG_LIST(gPreKids,{eHTMLTag_hr COMMA eHTMLTag_center})  //note that CENTER is here for backward compatibility; it's not 4.0 spec.
 
-static const TagList  gTableKids={9,{eHTMLTag_caption,eHTMLTag_col,eHTMLTag_colgroup,eHTMLTag_form,
-                     eHTMLTag_thead,eHTMLTag_tbody,eHTMLTag_tfoot,
-                     eHTMLTag_map,eHTMLTag_script}};// Removed INPUT - Ref. Bug 20087, 25382
+DECL_TAG_LIST(gTableKids,{eHTMLTag_caption COMMA eHTMLTag_col COMMA eHTMLTag_colgroup COMMA eHTMLTag_form COMMA  eHTMLTag_thead COMMA eHTMLTag_tbody COMMA eHTMLTag_tfoot COMMA  eHTMLTag_map COMMA eHTMLTag_script})// Removed INPUT - Ref. Bug 20087, 25382
   
-static const TagList  gTableElemKids={7,{eHTMLTag_form,eHTMLTag_map,eHTMLTag_noscript,eHTMLTag_script,eHTMLTag_td,eHTMLTag_th,eHTMLTag_tr}};
-static const TagList  gTRKids={4,{eHTMLTag_td,eHTMLTag_th,eHTMLTag_form,eHTMLTag_script}};// Removed INPUT - Ref. Bug 20087, 25382 |  Removed MAP to fix 58942
-static const TagList  gTBodyKids={2,{eHTMLTag_tr,eHTMLTag_form}}; // Removed INPUT - Ref. Bug 20087, 25382
-static const TagList  gULKids={2,{eHTMLTag_li,eHTMLTag_p}};
+DECL_TAG_LIST(gTableElemKids,{eHTMLTag_form COMMA eHTMLTag_map COMMA eHTMLTag_noscript COMMA eHTMLTag_script COMMA eHTMLTag_td COMMA eHTMLTag_th COMMA eHTMLTag_tr})
+DECL_TAG_LIST(gTRKids,{eHTMLTag_td COMMA eHTMLTag_th COMMA eHTMLTag_form COMMA eHTMLTag_script})// Removed INPUT - Ref. Bug 20087, 25382 |  Removed MAP to fix 58942
+DECL_TAG_LIST(gTBodyKids,{eHTMLTag_tr COMMA eHTMLTag_form}) // Removed INPUT - Ref. Bug 20087, 25382
+DECL_TAG_LIST(gULKids,{eHTMLTag_li COMMA eHTMLTag_p})
 
 
 //*********************************************************************************************
 // The following tag lists are used to define common set of root notes for the HTML elements...
 //*********************************************************************************************
 
-static const TagList  gRootTags={5,{eHTMLTag_body,eHTMLTag_td,eHTMLTag_table,eHTMLTag_applet,eHTMLTag_select}}; // Added SELECT to fix bug 98645
-static const TagList  gTableRootTags={6,{eHTMLTag_applet,eHTMLTag_body,eHTMLTag_dl,eHTMLTag_ol,eHTMLTag_td,eHTMLTag_th}};
-static const TagList  gHTMLRootTags={1,{eHTMLTag_unknown}};
+DECL_TAG_LIST(gRootTags,{eHTMLTag_body COMMA eHTMLTag_td COMMA eHTMLTag_table COMMA eHTMLTag_applet COMMA eHTMLTag_select}) // Added SELECT to fix bug 98645
+DECL_TAG_LIST(gTableRootTags,{eHTMLTag_applet COMMA eHTMLTag_body COMMA eHTMLTag_dl COMMA eHTMLTag_ol COMMA eHTMLTag_td COMMA eHTMLTag_th})
+DECL_TAG_LIST(gHTMLRootTags,{eHTMLTag_unknown})
  
-static const TagList  gLIRootTags={8,{eHTMLTag_ul,eHTMLTag_ol,eHTMLTag_dir,eHTMLTag_menu,eHTMLTag_p,eHTMLTag_body,eHTMLTag_td,eHTMLTag_th}};
+DECL_TAG_LIST(gLIRootTags,{eHTMLTag_ul COMMA eHTMLTag_ol COMMA eHTMLTag_dir COMMA eHTMLTag_menu COMMA eHTMLTag_p COMMA eHTMLTag_body COMMA eHTMLTag_td COMMA eHTMLTag_th})
 
-static const TagList  gOLRootTags={5,{eHTMLTag_body,eHTMLTag_li,eHTMLTag_td,eHTMLTag_th,eHTMLTag_select}};
-static const TagList  gTDRootTags={6,{eHTMLTag_tr,eHTMLTag_tbody,eHTMLTag_thead,eHTMLTag_tfoot,eHTMLTag_table,eHTMLTag_applet}};
-static const TagList  gNoframeRoot={2,{eHTMLTag_body,eHTMLTag_frameset}};
+DECL_TAG_LIST(gOLRootTags,{eHTMLTag_body COMMA eHTMLTag_li COMMA eHTMLTag_td COMMA eHTMLTag_th COMMA eHTMLTag_select})
+DECL_TAG_LIST(gTDRootTags,{eHTMLTag_tr COMMA eHTMLTag_tbody COMMA eHTMLTag_thead COMMA eHTMLTag_tfoot COMMA eHTMLTag_table COMMA eHTMLTag_applet})
+DECL_TAG_LIST(gNoframeRoot,{eHTMLTag_body COMMA eHTMLTag_frameset})
 
 //*********************************************************************************************
 // The following tag lists are used to define the autoclose properties of the html elements...
 //*********************************************************************************************
 
-static const TagList  gBodyAutoClose={1,{eHTMLTag_head}};
-static const TagList  gTBodyAutoClose={5,{eHTMLTag_thead,eHTMLTag_tfoot,eHTMLTag_tbody,eHTMLTag_td,eHTMLTag_th}};  // TD|TH inclusion - Bug# 24112
-static const TagList  gCaptionAutoClose={1,{eHTMLTag_tbody}};
-static const TagList  gLIAutoClose={2,{eHTMLTag_p,eHTMLTag_li}};
-static const TagList  gPAutoClose={2,{eHTMLTag_p,eHTMLTag_li}};
-static const TagList  gHRAutoClose={1,{eHTMLTag_p}};
-static const TagList  gOLAutoClose={2,{eHTMLTag_p,eHTMLTag_ol}};
-static const TagList  gDivAutoClose={1,{eHTMLTag_p}};
+DECL_TAG_LIST(gBodyAutoClose,{eHTMLTag_head})
+DECL_TAG_LIST(gTBodyAutoClose,{eHTMLTag_thead COMMA eHTMLTag_tfoot COMMA eHTMLTag_tbody COMMA eHTMLTag_td COMMA eHTMLTag_th})  // TD|TH inclusion - Bug# 24112
+DECL_TAG_LIST(gCaptionAutoClose,{eHTMLTag_tbody})
+DECL_TAG_LIST(gLIAutoClose,{eHTMLTag_p COMMA eHTMLTag_li})
+DECL_TAG_LIST(gPAutoClose,{eHTMLTag_p COMMA eHTMLTag_li})
+DECL_TAG_LIST(gHRAutoClose,{eHTMLTag_p})
+DECL_TAG_LIST(gOLAutoClose,{eHTMLTag_p COMMA eHTMLTag_ol})
+DECL_TAG_LIST(gDivAutoClose,{eHTMLTag_p})
 
-static const TagList  gHeadingTags={6,{eHTMLTag_h1,eHTMLTag_h2,eHTMLTag_h3,eHTMLTag_h4,eHTMLTag_h5,eHTMLTag_h6}};
+DECL_TAG_LIST(gHeadingTags,{eHTMLTag_h1 COMMA eHTMLTag_h2 COMMA eHTMLTag_h3 COMMA eHTMLTag_h4 COMMA eHTMLTag_h5 COMMA eHTMLTag_h6})
 
-static const TagList  gTableCloseTags={6,{eHTMLTag_td,eHTMLTag_tr,eHTMLTag_th,eHTMLTag_tbody,eHTMLTag_thead,eHTMLTag_tfoot}};
-static const TagList  gTRCloseTags={3,{eHTMLTag_tr,eHTMLTag_td,eHTMLTag_th}};
-static const TagList  gTDCloseTags={2,{eHTMLTag_td,eHTMLTag_th}};
-static const TagList  gDTCloseTags={3,{eHTMLTag_p,eHTMLTag_dd,eHTMLTag_dt}};
-static const TagList  gULCloseTags={1,{eHTMLTag_li}};
-static const TagList  gULAutoClose={2,{eHTMLTag_p,eHTMLTag_ul}}; //fix bug 50261..
+DECL_TAG_LIST(gTableCloseTags,{eHTMLTag_td COMMA eHTMLTag_tr COMMA eHTMLTag_th COMMA eHTMLTag_tbody COMMA eHTMLTag_thead COMMA eHTMLTag_tfoot})
+DECL_TAG_LIST(gTRCloseTags,{eHTMLTag_tr COMMA eHTMLTag_td COMMA eHTMLTag_th})
+DECL_TAG_LIST(gTDCloseTags,{eHTMLTag_td COMMA eHTMLTag_th})
+DECL_TAG_LIST(gDTCloseTags,{eHTMLTag_p COMMA eHTMLTag_dd COMMA eHTMLTag_dt})
+DECL_TAG_LIST(gULCloseTags,{eHTMLTag_li})
+DECL_TAG_LIST(gULAutoClose,{eHTMLTag_p COMMA eHTMLTag_ul}) //fix bug 50261..
 
 
-static const TagList  gExcludableParents={1,{eHTMLTag_pre}}; // Ref Bug 22913
-static const TagList  gCaptionExcludableParents={1,{eHTMLTag_td}}; //Ref Bug 26488
+DECL_TAG_LIST(gExcludableParents,{eHTMLTag_pre}) // Ref Bug 22913
+DECL_TAG_LIST(gCaptionExcludableParents,{eHTMLTag_td}) //Ref Bug 26488
 
 //*********************************************************************************************
 //Lastly, bind tags with their rules, their special parents and special kids.
