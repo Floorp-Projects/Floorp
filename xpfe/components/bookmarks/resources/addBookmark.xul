@@ -22,7 +22,7 @@
  
   Contributor(s): 
     Ben Goodger <ben@netscape.com> (Original Author)
-
+    Gervase Markham <gerv@gerv.net>
 -->
 
 <?xml-stylesheet href="chrome://communicator/skin/"?>
@@ -39,18 +39,17 @@
 <dialog id="newBookmarkDialog"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         ondialogaccept="return onOK(event)"
-        title="&newBookmark.title;" title-selectFolder="&selectFolder.label;"
+        title="&newBookmark.title;" selectFolderTitle="&selectFolder.title;"
         onload="Startup();"
-        onunload="persistTreeSize();"
         persist="screenX screenY"
         screenX="24" screenY="24">
    
   
-  <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarks.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/addBookmark.js"/>
 
   <stringbundle id="bookmarksbundle"
-                src="chrome://communicator/locale/bookmarks/bookmark.properties"/>
+                src="chrome://communicator/locale/bookmarks/bookmarks.properties"/>
 
   <broadcaster id="showaddgroup"/>
 
@@ -59,60 +58,53 @@
   <grid id="bookmarknamegrid">
     <columns>
       <column/>
-      <column flex="5"/>
       <column flex="1"/>
     </columns>
     <rows>
       <row align="center">
-        <label value="&name.label;" accesskey="&name.accesskey;" control="name"/>
+        <hbox pack="end">
+          <label value="&name.label;" accesskey="&name.accesskey;" control="name"/>
+        </hbox>
         <textbox id="name" oninput="onFieldInput();"/>
-        <spacer/>
-      </row>
-      <row>
-        <separator class="thin"/>
-        <separator class="thin"/>
-        <spacer/>
       </row>
       <row align="center">
-        <label value="&url.label;" accesskey="&url.accesskey;" control="url"/>
-        <textbox id="url" oninput="onFieldInput();"/>
-        <spacer/>
-      </row>
-      <row observes="showaddgroup">
-        <separator class="thin"/>
-        <separator class="thin"/>
-        <spacer/>
-      </row>
-      <row observes="showaddgroup">
-        <spacer/>
-        <hbox pack="start">
-          <checkbox id="addgroup" label="&addGroup.label;"
-                    accesskey="&addGroup.accesskey;" oncommand="toggleGroup();"/>
+        <hbox pack="end">
+          <label value="&url.label;" accesskey="&url.accesskey;" control="url"/>
         </hbox>
-        <spacer/>
+        <textbox id="url" oninput="onFieldInput();"/>
+      </row>
+      <row align="center">
+        <hbox pack="end">
+          <label value="&shortcutURL.label;" accesskey="&shortcutURL.accesskey;" control="shortcutURL"/>
+        </hbox>
+        <textbox id="shortcutUrl"/>
       </row>
     </rows>
   </grid>
 
-  <separator id="createinseparator"/>
+  <separator class="thin" observes="showaddgroup"/>
+  <hbox observes="showaddgroup">
+    <checkbox id="addgroup" label="&addGroup.label;"
+              accesskey="&addGroup.accesskey;"
+              oncommand="toggleGroup();"/>
+  </hbox>
+
+  <separator id="destinationSeparator"/>
 
   <vbox id="folderbox" flex="1">
-    <separator/>
-    <hbox flex="1">
-      <label id="createinlabel" value="&createin.label;"/>
-      <hbox flex="1">
-        <bookmarks-tree id="bookmarks-view" flex="1" type="folders"/>
-        <vbox>
-          <button label="&button.newfolder.label;" accesskey="&button.newfolder.accesskey;"
-                  oncommand="createNewFolder();"/>
-          <button label="&button.defaultfolder.label;" 
-                  accesskey="&button.defaultfolder.accesskey;"
-                  oncommand="useDefaultFolder();"/>
-        </vbox>
-      </hbox>
+    <label id="destinationLabel" value="&destination.label;"/>
+    <bookmarks-tree id="bookmarks-view" flex="1" type="folders"
+                    rows="10" seltype="single"/>
+
+    <separator id="folderbuttonseparator" class="thin"/>
+
+    <hbox pack="end">
+      <button label="&newFolder.label;"
+              accesskey="&newFolder.accesskey;"
+              oncommand="createNewFolder();"/>
     </hbox>
   </vbox>
 
-  <separator style="width: 36em;"/>
+  <separator style="width: 36em"/>
 
 </dialog>

@@ -62,9 +62,9 @@
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
 
   <!-- Shared Bookmarks Utility Library -->
-  <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksOverlay.js"/>
-  <!-- Bookmarks Window -->
   <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarks.js"/>
+  <!-- Bookmarks Window -->
+  <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksManager.js"/>
 
   <!-- Bookmarks Window Drag & Drop -->
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
@@ -74,7 +74,6 @@
 
   <commands id="commands">
     <commandset id="CommandUpdate_Bookmarks"
-                commandupdater="true"
                 events="focus,tree-select"
                 oncommandupdate="document.getElementById('bookmarks-view').onCommandUpdate();">
     </commandset>
@@ -86,6 +85,7 @@
     <command id="cmd_quit"/>
     <!-- Edit Menu -->
     <command id="cmd_undo"/>
+    <command id="cmd_redo"/>
   </commands>
 
   <stringbundleset id="stringbundleset"/>
@@ -96,6 +96,7 @@
     <key id="key_quit"/>
     <!-- Edit Menu -->
     <key id="key_undo"/>
+    <key id="key_redo"/>
 
     <!-- These keybindings do not have a command specified in the overlay,
          which is good, but we need to specify it ourselves here -->
@@ -140,6 +141,7 @@
       <menu id="menu_Edit">
         <menupopup>
           <menuitem id="menu_undo" disabled="true"/>
+          <menuitem id="menu_redo" disabled="true"/>
           <menuseparator/>
           <menuitem id="menu_bm_cut"
                     label="&cutCmd.label;" accesskey="&cutCmd.accesskey;"
@@ -158,9 +160,9 @@
                     label="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;"
                     key="key_selectAll" command="cmd_bm_selectAll"/>
           <menuseparator/>
-          <menuitem label="&command.fileBookmark.label;"
-                    accesskey="&command.fileBookmark.accesskey;"
-                    command="cmd_bm_fileBookmark"/>
+          <menuitem label="&command.moveBookmark.label;"
+                    accesskey="&command.moveBookmark.accesskey;"
+                    command="cmd_bm_movebookmark"/>
           <menuseparator/>
             <menuitem observes="cmd_bm_properties" key="bm_key_properties"
                       label="&command.properties.label;"
@@ -234,9 +236,9 @@
                      accesskey="&button.newSeparator.accesskey;"
                      command="cmd_bm_newseparator"/>
       <toolbarseparator/>
-      <toolbarbutton id="fileBookmark" label="&command.fileBookmark.label;"
-                     accesskey="&button.fileBookmark.accesskey;"
-                     command="cmd_bm_fileBookmark"/>
+      <toolbarbutton id="moveBookmark" label="&command.moveBookmarkShort.label;"
+                     accesskey="&command.moveBookmark.accesskey;"
+                     command="cmd_bm_movebookmark"/>
       <toolbarseparator/>
       <toolbarbutton id="properties" label="&command.properties.label;"
                      accesskey="&button.properties.accesskey;"
@@ -250,7 +252,7 @@
     </toolbar>
 
     <toolbar id="bookmarks-search" grippytooltiptext="&bookmarksSearch.tooltip;">
-      <label value="&find.label;" accesskey="&find.accesskey;" control="search-box"/>
+      <label value="&search.label;" accesskey="&search.accesskey;" control="search-box"/>
       <textbox id="search-box" flex="1"
                type="timed" timeout="500"
                callback="document.getElementById('bookmarks-view').searchBookmarks(document.getElementById('search-box').value)"/>

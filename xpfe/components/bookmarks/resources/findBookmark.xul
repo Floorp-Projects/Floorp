@@ -37,9 +37,9 @@
         onload="Startup();"
         ondialogaccept="return find();">
 
-  <stringbundle id="bookmarksBundle" src="chrome://communicator/locale/bookmarks/bookmark.properties"/>
+  <stringbundle id="bookmarksBundle" src="chrome://communicator/locale/bookmarks/bookmarks.properties"/>
   
-  <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarks.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/findBookmark.js"/>
 
   <label value="&search.for.label;"/>

@@ -96,6 +96,7 @@
 
 var gFld_Name   = null;
 var gFld_URL    = null; 
+var gFld_ShortcutURL = null; 
 var gFolderTree = null;
 var gCB_AddGroup = null;
 
@@ -113,6 +114,7 @@ function Startup()
 {
   gFld_Name = document.getElementById("name");
   gFld_URL = document.getElementById("url");
+  gFld_ShortcutURL = document.getElementById("shortcutUrl");
   gCB_AddGroup = document.getElementById("addgroup");
   var bookmarkView = document.getElementById("bookmarks-view");
 
@@ -130,9 +132,10 @@ function Startup()
     case "selectFolder":
       // If we're being opened as a folder selection window
       document.getElementById("bookmarknamegrid").hidden = true;
-      document.getElementById("createinseparator").hidden = true;
+      document.getElementById("showaddgroup").hidden = true;
+      document.getElementById("destinationSeparator").hidden = true;
       document.getElementById("nameseparator").hidden = true;
-      dialogElement.setAttribute("title", dialogElement.getAttribute("title-selectFolder"));
+      dialogElement.setAttribute("title", dialogElement.getAttribute("selectFolderTitle"));
       shouldSetOKButton = false;
       if (window.arguments[2])
         folderItem = bookmarkView.rdf.GetResource(window.arguments[2]);
@@ -143,10 +146,11 @@ function Startup()
       break;
     case "newBookmark":
       document.getElementById("showaddgroup").hidden = true;
+      document.getElementById("destinationSeparator").hidden = true;
+      document.getElementById("folderbox").hidden = true;
       setupFields();
       if (window.arguments[2])
         gCreateInFolder = window.arguments[2];
-      document.getElementById("folderbox").hidden = true;
       break;
     case "addGroup":
       setupFields();
@@ -217,8 +221,9 @@ function onOK()
   }
   // In Select Folder Mode, do nothing but tell our caller what
   // folder was selected. 
-  if (window.arguments.length > 4 && window.arguments[4] == "selectFolder")
-    window.arguments[5].selectedFolder = gCreateInFolder;
+  if (window.arguments.length > 4 && window.arguments[4] == "selectFolder") {
+    window.arguments[5].target = BookmarksUtils.getTargetFromFolder(bookmarkView.treeBuilder.getResourceAtIndex(currentIndex));
+  }
   else {
     // Otherwise add a bookmark to the selected folder. 
 
@@ -245,12 +250,12 @@ function onOK()
       const groups = window.arguments[5];
       for (var i = 0; i < groups.length; ++i) {
         url = getNormalizedURL(groups[i].url);
-        kBMS.createBookmarkInContainer(groups[i].name, url,
+        kBMS.createBookmarkInContainer(groups[i].name, url, null, null,
                                        groups[i].charset, group, -1);
       }
     } else if (gFld_URL.value) {
       url = getNormalizedURL(gFld_URL.value);
-      var newBookmark = kBMS.createBookmarkInContainer(gFld_Name.value, url, gBookmarkCharset, rFolder, -1);
+      var newBookmark = kBMS.createBookmarkInContainer(gFld_Name.value, url, gFld_ShortcutURL.value, null, gBookmarkCharset, rFolder, -1);
       if (window.arguments.length > 4 && window.arguments[4] == "newBookmark") {
         window.arguments[5].newBookmark = newBookmark;
       }
@@ -282,28 +287,17 @@ function getNormalizedURL(url)
 }
 
 var gBookmarksShell = null;
-function createNewFolder ()
+function createNewFolder()
 {
   var bookmarksView = document.getElementById("bookmarks-view");
-  bookmarksView.createNewFolder();
-}
-
-function useDefaultFolder ()
-{
-  var bookmarkView = document.getElementById("bookmarks-view");
-  var folder = BookmarksUtils.getNewBookmarkFolder();
-  var ind = bookmarkView.treeBuilder.getIndexOfResource(folder);
-  if (ind != -1) {
-    bookmarkView.tree.focus();
-    bookmarkView.treeBoxObject.selection.select(ind);
-  } else {
-    bookmarkView.treeBoxObject.selection.clearSelection();
-  }
-  gCreateInFolder = folder.Value;
+  var resource = bookmarksView.treeBuilder.getResourceAtIndex(bookmarksView.currentIndex);
+  var target = BookmarksUtils.getTargetFromFolder(resource);
+  BookmarksCommand.createNewFolder(target);
 }
 
 var gOldNameValue = "";
 var gOldURLValue = "";
+var gOldShortcutURLValue = "";
 
 function toggleGroup()
 {
@@ -318,18 +312,13 @@ function toggleGroup()
   gFld_URL.value = temp;
   gFld_URL.disabled = gCB_AddGroup.checked;
 
+  // swap between single bookmark and group shortcut url
+  temp = gOldShortcutURLValue;
+  gOldShortcutURLValue = gFld_ShortcutURL.value;
+  gFld_ShortcutURL.value = temp;
+  gFld_ShortcutURL.disabled = gCB_AddGroup.checked;
+
   gFld_Name.select();
   gFld_Name.focus();
   onFieldInput();
-}
-
-function persistTreeSize()
-{
-  if (!document.getElementById("folderbox").hidden) {
-    var bookmarkView = document.getElementById("bookmarks-view");
-    bookmarkView.setAttribute("height", bookmarkView.boxObject.height);
-    document.persist("bookmarks-view", "height");
-    bookmarkView.setAttribute("width", bookmarkView.boxObject.width);
-    document.persist("bookmarks-view", "width");
-  }
 }

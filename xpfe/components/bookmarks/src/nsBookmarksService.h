@@ -57,20 +57,19 @@
 #include "nsICacheSession.h"
 #include "nsILocalFile.h"
 
-#ifdef  DEBUG
-#ifdef  XP_MAC
+#ifdef DEBUG
+#ifdef XP_MAC
 #include <Timer.h>
 #endif
 #endif
 
-class nsBookmarksService :
-    public nsIBookmarksService,
-    public nsIRDFDataSource,
-    public nsIRDFRemoteDataSource,
-    public nsIStreamListener,
-    public nsIRDFObserver,
-    public nsIObserver,
-    public nsSupportsWeakReference
+class nsBookmarksService : public nsIBookmarksService,
+                           public nsIRDFDataSource,
+                           public nsIRDFRemoteDataSource,
+                           public nsIStreamListener,
+                           public nsIRDFObserver,
+                           public nsIObserver,
+                           public nsSupportsWeakReference
 {
 protected:
     nsIRDFDataSource*               mInner;
@@ -84,7 +83,8 @@ protected:
 
     PRUint32      htmlSize;
     PRInt32       mUpdateBatchNest;
-    nsString      mPersonalToolbarName;
+    nsXPIDLString mPersonalToolbarName;
+    nsXPIDLString mBookmarksRootName;
     PRBool        mBookmarksAvailable;
     PRBool        mDirty;
     PRBool        mBrowserIcons;
@@ -165,8 +165,6 @@ protected:
                                        const PRUnichar *iconURL,
                                        nsIRDFNode** aTarget);
 
-    nsresult getResourceFromLiteralNode(nsIRDFNode *node, nsIRDFResource **res);
-
     void AnnotateBookmarkSchedule(nsIRDFResource* aSource,
                                   PRBool scheduleFlag);
 
@@ -175,8 +173,6 @@ protected:
 
     nsresult InsertResource(nsIRDFResource* aResource,
                             nsIRDFResource* aParentFolder, PRInt32 aIndex);
-
-    nsresult ChangeURL(nsIRDFResource* aOldURL, nsIRDFResource* aNewURL);
 
     nsresult getLocaleString(const char *key, nsString &str);
 
