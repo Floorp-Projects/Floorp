@@ -2152,14 +2152,6 @@ nsGlobalHistory::ArcLabelsOut(nsIRDFResource* aSource,
 }
 
 NS_IMETHODIMP
-nsGlobalHistory::GetAllCommands(nsIRDFResource* aSource,
-                                nsIEnumerator/*<nsIRDFResource>*/** aCommands)
-{
-  NS_NOTYETIMPLEMENTED("sorry");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsGlobalHistory::GetAllCmds(nsIRDFResource* aSource,
                             nsISimpleEnumerator/*<nsIRDFResource>*/** aCommands)
 {
