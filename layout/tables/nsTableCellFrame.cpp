@@ -1064,13 +1064,6 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   aDesiredSize.ascent  += kidSize.ascent;
   aDesiredSize.descent += kidSize.descent;
 
-  if (aDesiredSize.mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
-    aDesiredSize.mMaximumWidth = kidSize.mMaximumWidth;
-    if (NS_UNCONSTRAINEDSIZE != aDesiredSize.mMaximumWidth) {
-      aDesiredSize.mMaximumWidth += leftInset + rightInset;
-      aDesiredSize.mMaximumWidth = nsTableFrame::RoundToPixel(aDesiredSize.mMaximumWidth, p2t);
-    }
-  }
   if (aDesiredSize.maxElementSize) {
     *aDesiredSize.maxElementSize = *pMaxElementSize;
     if ((0 != pMaxElementSize->height) && (NS_UNCONSTRAINEDSIZE != pMaxElementSize->height)) {
@@ -1081,6 +1074,17 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
     if (NS_UNCONSTRAINEDSIZE != aDesiredSize.maxElementSize->width) {
       aDesiredSize.maxElementSize->width += leftInset + rightInset;
       aDesiredSize.maxElementSize->width = nsTableFrame::RoundToPixel(aDesiredSize.maxElementSize->width, p2t);
+    }
+  }
+  if (aDesiredSize.mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
+    aDesiredSize.mMaximumWidth = kidSize.mMaximumWidth;
+    if (NS_UNCONSTRAINEDSIZE != aDesiredSize.mMaximumWidth) {
+      aDesiredSize.mMaximumWidth += leftInset + rightInset;
+      aDesiredSize.mMaximumWidth = nsTableFrame::RoundToPixel(aDesiredSize.mMaximumWidth, p2t);
+    }
+    // make sure the preferred width is at least as big as the max element width
+    if (aDesiredSize.maxElementSize) {
+      aDesiredSize.mMaximumWidth = PR_MAX(aDesiredSize.mMaximumWidth, aDesiredSize.maxElementSize->width);
     }
   }
 
