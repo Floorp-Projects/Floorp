@@ -162,6 +162,15 @@ PR_EXTERN(void) NS_TraceMallocCloseLogFD(int fd);
 PR_EXTERN(void) NS_TraceMallocLogTimestamp(const char *caption);
 
 /**
+ * Walk the stack, dumping frames in standard form to ofp.  If skip is 0,
+ * exclude the frames for NS_TraceStack and anything it calls to do the walk.
+ * If skip is less than 0, include -skip such frames.  If skip is positive,
+ * exclude that many frames leading to the call to NS_TraceStack.
+ */
+PR_EXTERN(void)
+NS_TraceStack(int skip, FILE *ofp);
+
+/**
  * Dump a human-readable listing of current allocations and their compressed
  * stack backtraces to the file named by pathname.  Beware this file may have
  * very long lines.

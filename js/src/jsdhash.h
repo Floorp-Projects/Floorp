@@ -41,6 +41,10 @@
 
 JS_BEGIN_EXTERN_C
 
+#ifdef DEBUG_brendan
+#define JS_DHASHMETER 1
+#endif
+
 /* Minimum table size, or gross entry count (net is at most .75 loaded). */
 #ifndef JS_DHASH_MIN_SIZE
 #define JS_DHASH_MIN_SIZE 16
@@ -179,10 +183,12 @@ struct JSDHashTable {
         uint32          misses;         /* searches that didn't find key */
         uint32          lookups;        /* number of JS_DHASH_LOOKUPs */
         uint32          addMisses;      /* adds that miss, and do work */
+        uint32          addOverRemoved; /* adds that recycled a removed entry */
         uint32          addHits;        /* adds that hit an existing entry */
         uint32          addFailures;    /* out-of-memory during add growth */
         uint32          removeHits;     /* removes that hit, and do work */
         uint32          removeMisses;   /* useless removes that miss */
+        uint32          removeFrees;    /* removes that freed entry directly */
         uint32          removeEnums;    /* removes done by Enumerate */
         uint32          grows;          /* table expansions */
         uint32          shrinks;        /* table contractions */
