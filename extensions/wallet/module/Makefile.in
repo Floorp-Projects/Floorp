@@ -17,8 +17,7 @@
 
 
 MODULE	= walletlib
-DLLNAME=walletlib
-LIBRARY_NAME=walle
+LIBRARY_NAME=walletlib
 
 DEPTH= ../../..
 topsrcdir       = @top_srcdir@
@@ -28,8 +27,8 @@ VPATH           = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/config.mk
 
-EXPORTS = nsIWalletService.h		\
-	  $(NULL)
+EXPORTS = nsIWalletService.h \
+	$(NULL)
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
 CPPSRCS = \
