@@ -2321,19 +2321,25 @@ nsComputedDOMStyle::GetBorderWidthFor(PRUint8 aSide,
 
   if(border) {
     nsStyleCoord coord;
-    switch(aSide) {
-      case NS_SIDE_TOP:
-        border->mBorder.GetTop(coord); break;
-      case NS_SIDE_BOTTOM :
-        border->mBorder.GetBottom(coord); break;
-      case NS_SIDE_LEFT :
-        border->mBorder.GetLeft(coord); break;
-      case NS_SIDE_RIGHT :
-        border->mBorder.GetRight(coord); break;
-      default:
-        NS_WARNING("double check the side");
-        break;
-    }
+   PRUint8 borderStyle = border->GetBorderStyle(aSide);
+   if (borderStyle == NS_STYLE_BORDER_STYLE_NONE) {
+     coord.SetCoordValue(0);
+   }
+   else {
+      switch(aSide) {
+        case NS_SIDE_TOP:
+          border->mBorder.GetTop(coord); break;
+        case NS_SIDE_BOTTOM :
+          border->mBorder.GetBottom(coord); break;
+        case NS_SIDE_LEFT :
+          border->mBorder.GetLeft(coord); break;
+        case NS_SIDE_RIGHT :
+          border->mBorder.GetRight(coord); break;
+        default:
+          NS_WARNING("double check the side");
+          break;
+      }
+   }
 
     switch(coord.GetUnit()) {
       case eStyleUnit_Coord:
