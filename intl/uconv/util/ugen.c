@@ -246,9 +246,15 @@ PRIVATE PRBool uCheckAndGenAlways1Byte(
 )
 {
 	/*	Don't check inlen. The caller should ensure it is larger than 0 */
-	*outlen = 1;
-	out[0] = in & 0xff;
-	return PR_TRUE;
+    /*  Oops, I don't agree. Code changed to check every time. [CATA] */
+	if(outbuflen < 1)
+		return PR_FALSE;
+	else
+	{
+        *outlen = 1;
+	    out[0] = in & 0xff;
+	    return PR_TRUE;
+    }
 }
 
 /*=================================================================================
