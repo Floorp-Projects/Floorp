@@ -49,7 +49,7 @@ class nsHTTPResponseListener : public nsIStreamListener
 
 public:
 
-    nsHTTPResponseListener();
+    nsHTTPResponseListener(nsHTTPChannel* aConnection);
     virtual ~nsHTTPResponseListener();
 
     // nsISupports functions

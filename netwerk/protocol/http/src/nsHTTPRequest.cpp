@@ -355,7 +355,7 @@ nsHTTPRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_pContext,
         nsHTTPResponseListener* pListener;
         
         //Prepare to receive the response!
-        pListener = new nsHTTPResponseListener();
+        pListener = new nsHTTPResponseListener(m_pConnection);
         if (pListener) {
             NS_ADDREF(pListener);
             rv = m_pTransport->AsyncRead(0, -1,
