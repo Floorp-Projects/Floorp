@@ -230,12 +230,12 @@ PRInt32 nsDTDContext::GetCount(void) {
  */
 void nsDTDContext::Push(eHTMLTags aTag) {
 #ifndef NS_DEBUG
-  NS_PRECONDITION(mTags.mCount<nsTagStack::eStackSize,"TagStack Overflow: DEBUG VERSION!");
+  NS_PRECONDITION(GetCount()<nsTagStack::eStackSize,"TagStack Overflow: DEBUG VERSION!");
   
-  if(GetCount()>=aDefaultSize) {
-    nsTagStack** tmp2=new nsTagStack*[2*aDefaultSize];
-    nsCRT::zero(tmp2,2*aDefaultSize*sizeof(void*));
-    nsCRT::memcpy(tmp2,mStyles,aDefaultSize*sizeof(void*));
+  if(GetCount()>=nsTagStack::eStackSize) {
+    nsTagStack** tmp2=new nsTagStack*[2*(nsTagStack::eStackSize)];
+    nsCRT::zero(tmp2,2*(nsTagStack::eStackSize)*sizeof(void*));
+    nsCRT::memcpy(tmp2,mStyles,(nsTagStack::eStackSize)*sizeof(void*));
     delete mStyles;
     mStyles=tmp2;
   }
