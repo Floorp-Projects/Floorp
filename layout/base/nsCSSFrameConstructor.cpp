@@ -5274,6 +5274,8 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsIPresShell*            aPresShell,
      rv = NS_NewMathMLmphantomFrame(aPresShell, &newFrame);
   else if (aTag == nsMathMLAtoms::mpadded_)
      rv = NS_NewMathMLmpaddedFrame(aPresShell, &newFrame);
+  else if (aTag == nsMathMLAtoms::mspace_)
+     rv = NS_NewMathMLmspaceFrame(aPresShell, &newFrame);
   else if (aTag == nsMathMLAtoms::mfenced_)
      rv = NS_NewMathMLmfencedFrame(aPresShell, &newFrame);
   else if (aTag == nsMathMLAtoms::mmultiscripts_)
