@@ -51,4 +51,39 @@
   background-color: transparent;
 }
 
+treechildren::-moz-tree-image(GeneratedName) {
+  margin-right: 2px;
+  list-style-image: url("chrome://messenger/skin/addressbook/icons/abcard.png");
+}
 
+treechildren::-moz-tree-image(GeneratedName, MailList) {
+  margin-right: 2px;
+  list-style-image: url("chrome://messenger/skin/addressbook/icons/ablist.png");
+}
+
+/* ::::: directory pane icons ::::: */
+
+treechildren::-moz-tree-image(DirCol) {
+  margin-right: 2px;
+  list-style-image: url("chrome://messenger/skin/addressbook/icons/addrbook.png");
+}
+
+treechildren::-moz-tree-image(DirCol, IsMailList-true) {
+  list-style-image: url("chrome://messenger/skin/addressbook/icons/ablist.png");
+}
+
+treechildren::-moz-tree-image(DirCol, IsRemote-true) {
+  list-style-image: url("chrome://messenger/skin/addressbook/icons/remote-addrbook.gif");
+}
+
+treechildren::-moz-tree-image(DirCol, IsRemote-true, IsSecure-true) {
+  list-style-image: url("chrome://messenger/skin/addressbook/icons/secure-remote-addrbook.gif");
+}
+
+#dirTree [sortDirection="ascending"] {
+  list-style-image: none;
+}
+
+#dirTree [sortDirection="descending"] {
+  list-style-image: none;
+}
