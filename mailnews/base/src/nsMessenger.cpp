@@ -343,7 +343,7 @@ nsMessenger::InitializeDisplayCharset()
 {
   if (mCharsetInitialized)
     return;
-  
+
   // libmime always converts to UTF-8 (both HTML and XML)
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
   if (docShell) 
@@ -357,9 +357,9 @@ nsMessenger::InitializeDisplayCharset()
       if (muDV) {
         muDV->SetForceCharacterSet(aForceCharacterSet.GetUnicode());
       }
+
+      mCharsetInitialized = PR_TRUE;
     }
-    
-    mCharsetInitialized = PR_TRUE;
   }
 }
 

@@ -32,8 +32,11 @@
 #include "nsIMsgPrintEngine.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIStreamListener.h"
+#include "nsIPrintListener.h"
+#include "nsIMsgStatusFeedback.h"
+#include "nsIStringBundle.h"
 
-class nsMsgPrintEngine : public nsIMsgPrintEngine {
+class nsMsgPrintEngine : public nsIMsgPrintEngine, public nsIPrintListener {
 
 public:
   nsMsgPrintEngine();
@@ -50,16 +53,24 @@ public:
   // For nsIDocumentLoaderObserver...
   NS_DECL_NSIDOCUMENTLOADEROBSERVER
 
+  // For nIPrintListener
+  NS_DECL_NSIPRINTLISTENER
+
 protected:
 
   NS_IMETHOD  FireThatLoadOperation(nsString *uri);
   NS_IMETHOD  StartNextPrintOperation();
   void        InitializeDisplayCharset();
   void        SetupObserver();
+  nsresult    SetStatusMessage(PRUnichar *aMsgString);
+  PRUnichar   *GetString(const PRUnichar *aStringName);
 
-  nsIDOMWindow                *mWindow;
   nsCOMPtr<nsIWebShell>       mWebShell;
+  nsCOMPtr<nsIDOMWindow>      mWindow;
   PRInt32                     mURICount;
   nsStringArray               mURIArray;
   PRInt32                     mCurrentlyPrintingURI;
+
+  nsCOMPtr<nsIStringBundle>   mStringBundle;    // String bundles...
+  nsCOMPtr<nsIMsgStatusFeedback> mFeedback;     // Tell the user something why don't ya'
 };

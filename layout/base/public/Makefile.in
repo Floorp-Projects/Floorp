@@ -86,6 +86,7 @@ $(NULL)
 XPIDLSRCS	= \
 		nsIChromeEventHandler.idl			\
 		nsISelectionController.idl \
+		nsIPrintListener.idl          \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

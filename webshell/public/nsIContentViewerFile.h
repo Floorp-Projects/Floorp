@@ -9,6 +9,7 @@
 #include "nsrootidl.h"
 #include "nsIWebShell.h"
 #include "nsIDeviceContext.h"
+#include "nsIPrintListener.h"
 
 /* starting interface:    nsIContentViewerFile */
 
@@ -37,7 +38,7 @@ class nsIContentViewerFile : public nsISupports {
    * @param aFileName -- a file pointer to output regression tests or print to a file
    * @return error status
    */
-  NS_IMETHOD Print(PRBool aSilent,FILE *aFile) = 0;
+  NS_IMETHOD Print(PRBool aSilent,FILE *aFile, nsIPrintListener *aPrintListener = nsnull) = 0;
 
   /* [noscript] void PrintContent (in nsIWebShell parent, in nsIDeviceContext DContext); */
   NS_IMETHOD PrintContent(nsIWebShell * parent, nsIDeviceContext * DContext) = 0;
@@ -50,7 +51,7 @@ class nsIContentViewerFile : public nsISupports {
 #define NS_DECL_NSICONTENTVIEWERFILE \
   NS_IMETHOD Save(void); \
   NS_IMETHOD GetSaveable(PRBool *aSaveable); \
-  NS_IMETHOD Print(PRBool aSilent,FILE *aFile); \
+  NS_IMETHOD Print(PRBool aSilent,FILE *aFile, nsIPrintListener *aPrintListener); \
   NS_IMETHOD PrintContent(nsIWebShell * parent, nsIDeviceContext * DContext); \
   NS_IMETHOD GetPrintable(PRBool *aPrintable); 
 
@@ -58,7 +59,7 @@ class nsIContentViewerFile : public nsISupports {
 #define NS_FORWARD_NSICONTENTVIEWERFILE(_to) \
   NS_IMETHOD Save(void) { return _to ## Save(); } \
   NS_IMETHOD GetSaveable(PRBool *aSaveable) { return _to ## GetSaveable(aSaveable); } \
-  NS_IMETHOD Print(PRBool aSilent,FILE *aFile) { return _to ## Print(); } \
+  NS_IMETHOD Print(PRBool aSilent,FILE *aFile, nsIPrintListener *aPrintListener) { return _to ## Print(); } \
   NS_IMETHOD PrintContent(nsIWebShell * parent, nsIDeviceContext * DContext) { return _to ## PrintContent(parent, DContext); } \
   NS_IMETHOD GetPrintable(PRBool *aPrintable) { return _to ## GetPrintable(aPrintable); } 
 

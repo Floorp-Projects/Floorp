@@ -30,7 +30,6 @@ function OnLoadPrintEngine()
 {
   PrintEngineCreateGlobals();
 	InitPrintEngineWindow();
-	printEngine.StartPrintOperation();
 }
 
 function OnUnloadPrintEngine()

@@ -613,7 +613,7 @@ PluginViewerImpl::GetSaveable(PRBool *aSaveable)
 }
 
 NS_IMETHODIMP
-PluginViewerImpl::Print(PRBool aSilent,FILE *aFile)
+PluginViewerImpl::Print(PRBool aSilent,FILE *aFile, nsIPrintListener *aPrintListener)
 {
   return NS_OK;      // XXX: hey, plug in guys!  implement me!
 }

@@ -253,7 +253,7 @@ Rights Reserved.
 		<menuitem id="threadPaneContext-print"
 			  value="&contextPrint.label;"
 			  accesskey=""
-			  oncommand="Print();"/>
+			  oncommand="PrintEnginePrint();"/>
 		<menuitem id="threadPaneContext-delete"
 			  value="&contextDelete.label;"
 			  accesskey=""
@@ -388,7 +388,7 @@ Rights Reserved.
               <menuseparator/>
               <menuitem id="menu_pageSetup"/>
               <menuitem value="&printPreviewCmd.label;" disabled="true" oncommand="PrintPreview();"/>
-              <menuitem value="&printCmd.label;" oncommand="Print();"/>
+              <menuitem value="&printCmd.label;" oncommand="PrintEnginePrint();"/>
               <menuseparator/>
             </menupopup>
           </menu>
@@ -818,7 +818,7 @@ Rights Reserved.
 
             <titledbutton id="button_next" class="other28" align="top" value="&nextButton.label;" onclick="MsgNextUnreadMessage()"/>
 			<titledbutton id="button_delete" class="other28" disabled="true" align="top" value="&deleteButton.label;" onclick="goDoCommand('button_delete')"/>
-            <titledbutton id="button_print" class="other28" align="top" value="&printButton.label;" onclick="Print()"/>
+            <titledbutton id="button_print" class="other28" align="top" value="&printButton.label;" onclick="PrintEnginePrint()"/>
             <titledbutton id="button_stop" class="other28" align="top" value="&stopButton.label;" onclick="MsgStop();"/>
             <spring flex="100%"/>
           </box>

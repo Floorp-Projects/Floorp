@@ -241,6 +241,8 @@ protected:
   nsIView           *mPrintView;
   FILE              *mFilePointer;   // a file where information can go to when printing
 
+  nsCOMPtr<nsIPrintListener>  mPrintListener; // An observer for printing...
+
   // document management data
   //   these items are specific to markup documents (html and xml)
   //   may consider splitting these out into a subclass
@@ -280,7 +282,7 @@ DocumentViewerImpl::DocumentViewerImpl()
   NS_INIT_REFCNT();
   mEnableRendering = PR_TRUE;
   mFilePointer = nsnull;
-
+  mPrintListener = nsnull;
 }
 
 DocumentViewerImpl::DocumentViewerImpl(nsIPresContext* aPresContext)
@@ -373,6 +375,7 @@ DocumentViewerImpl::~DocumentViewerImpl()
     // Break circular reference (or something)
     mPresShell->EndObservingDocument();
   }
+  
 }
 
 /*
@@ -1010,6 +1013,9 @@ void DocumentViewerImpl::DocumentReadyForPrinting()
     mIsPrinting = PR_FALSE;
 
     mPrintPS->EndObservingDocument();
+  
+    if (mPrintListener)
+      mPrintListener->OnEndPrinting(NS_OK);
 
     NS_RELEASE(mPrintPS);
     NS_RELEASE(mPrintVM);
@@ -1162,7 +1168,7 @@ static NS_DEFINE_IID(kDeviceContextSpecFactoryCID, NS_DEVICE_CONTEXT_SPEC_FACTOR
  *	@update 01/24/00 dwc
  */
 NS_IMETHODIMP
-DocumentViewerImpl::Print(PRBool aSilent,FILE *aFile)
+DocumentViewerImpl::Print(PRBool aSilent,FILE *aFile, nsIPrintListener *aPrintListener)
 {
 nsCOMPtr<nsIWebShell>                 webContainer;
 nsCOMPtr<nsIDeviceContextSpecFactory> factory;
@@ -1292,6 +1298,14 @@ PRInt32                               width,height;
           printf("    DeviceDimension w = %d h = %d\n",i1,i2);
 
 #endif
+          // Print listener setup...
+          if (aPrintListener)
+          {
+            mPrintListener = aPrintListener;
+            mPrintListener->OnStartPrinting();    
+          /* RICHIE mPrintListener->OnProgressPrinting(PRUint32 aProgress, PRUint32 aProgressMax); */
+          }
+
           //
           // The mIsPrinting flag is set when the ImageGroup observer is
           // notified that images must be loaded as a result of the 
@@ -1309,7 +1323,7 @@ PRInt32                               width,height;
 #endif
           }
         }
-      }
+      }      
     }
   }
   return NS_OK;
