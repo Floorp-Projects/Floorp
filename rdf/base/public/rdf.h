@@ -50,6 +50,9 @@ static const char* kTag##prefix##_##name = #name
 /**
  * Core RDF vocabularies that we use to infer semantic actions
  */
+
+// The real McCoy.
+//#define RDF_NAMESPACE_URI  "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 #define RDF_NAMESPACE_URI  "http://www.w3.org/TR/WD-rdf-syntax#"
 #define WEB_NAMESPACE_URI  "http://home.netscape.com/WEB-rdf#"
 #define NC_NAMESPACE_URI   "http://home.netscape.com/NC-rdf#"
