@@ -1712,12 +1712,17 @@ nsXMLContentSink::EvaluateScript(nsString& aScript, PRUint32 aLineNo, const char
         rv = docURL->GetSpec(&url);
       }
 
+      nsCOMPtr<nsIPrincipal> principal;
+      if (NS_SUCCEEDED(rv)) {
+        rv = mDocument->GetPrincipal(getter_AddRefs(principal));
+        NS_ASSERTION(principal, "principal required for document");
+      }
+
       if (NS_SUCCEEDED(rv)) {
         nsAutoString val;
         PRBool isUndefined;
 
-        // XXX need principal
-        (void) context->EvaluateString(aScript, nsnull, nsnull, url, aLineNo, aVersion,
+        (void) context->EvaluateString(aScript, nsnull, principal, url, aLineNo, aVersion,
                                        val, &isUndefined);
 
         NS_IF_RELEASE(docURL);

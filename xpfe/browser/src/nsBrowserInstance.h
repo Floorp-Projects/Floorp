@@ -83,7 +83,6 @@ class nsBrowserInstance : public nsIBrowserInstance,
     NS_DECL_NSIURICONTENTLISTENER
 
   protected:
-    NS_IMETHOD ExecuteScript(nsIScriptContext * aContext, const nsString& aScript);
     nsresult InitializeSearch(nsIFindComponent*);
     NS_IMETHOD CreateMenuItem(nsIDOMNode * , PRInt32,const PRUnichar * );
 	  NS_IMETHOD UpdateGoMenu();
