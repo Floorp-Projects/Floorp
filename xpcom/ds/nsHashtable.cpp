@@ -202,16 +202,6 @@ static PRIntn PR_CALLBACK _hashEnumerate(PLHashEntry *he, PRIntn i, void *arg)
 // HashKey
 //
 
-MOZ_DECL_CTOR_COUNTER(nsHashKey)
-
-nsHashKey::nsHashKey(void)
-{
-#ifdef DEBUG
-    mKeyType = UnknownKey;
-#endif
-    MOZ_COUNT_CTOR(nsHashKey);
-}
-
 nsHashKey::~nsHashKey(void)
 {
     MOZ_COUNT_DTOR(nsHashKey);
