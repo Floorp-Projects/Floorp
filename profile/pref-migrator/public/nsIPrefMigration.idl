@@ -56,5 +56,5 @@ interface nsIPrefMigration: nsISupports
 [scriptable, uuid(88fabfa4-1dd2-11b2-94a1-902f0abd94b1)]
 interface nsIPrefConverter: nsISupports
 {
-    void ConvertPrefsToUTF8IfNecessary();
+    void ConvertPrefsToUTF8();
 };
