@@ -34,13 +34,25 @@ CPPSRCS =			\
 	TestFileInput2.cpp 	\
 	$(NULL)
 
-BASE_LIBS =	     \
-	-lreg	     \
-	-lxpcom	     \
+BASE_LIBS =	     		\
+	-lreg        		\
+	-l$(MOZ_LIB_JS_PREFIX)js        \
+	-lxpcom      		\
+	-lsecfree    		\
+	-l$(MOZ_LIB_UTIL_PREFIX)util    \
+	-lxpcom	     		\
+	$(NULL)
+
+NETLIB_LIBS =         \
+  	-lneckoutil_s \
+	-lxp          \
+	-ljsurl       \
+	-l$(MOZ_LIB_DBM_PREFIX)dbm      \
 	$(NULL)
 
 LIBS =		       \
 	$(BASE_LIBS)   \
+	$(NETLIB_LIBS) \
 	$(NSPR_LIBS)   \
 	$(NULL)
 
