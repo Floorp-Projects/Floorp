@@ -215,29 +215,50 @@ PRInt32 ReplaceFileNow(nsIFile* replacementFile, nsIFile* doomedFile )
     PRInt32 result = nsInstall::ACCESS_DENIED;
 
     // first try to rename the doomed file out of the way (if it exists)
-    char*   leafname = nsnull;
-    nsCOMPtr<nsIFile>      tmpFile;
+    nsCOMPtr<nsIFile>      renamedDoomedFile;
     nsCOMPtr<nsILocalFile> tmpLocalFile;
     nsCOMPtr<nsIFile> parent;
+    nsXPIDLCString leafname;
     
-    doomedFile->Clone(getter_AddRefs(tmpFile));
-    tmpFile->Exists(&flagExists);
+    doomedFile->Clone(getter_AddRefs(renamedDoomedFile));
+    renamedDoomedFile->Exists(&flagExists);
     if ( flagExists )
     {
-        tmpLocalFile = do_QueryInterface(tmpFile, &rv); // Convert to an nsILocalFile
-        MakeUnique(tmpLocalFile);                       //   for the call to MakeUnique
+        tmpLocalFile = do_QueryInterface(renamedDoomedFile, &rv); // Convert to an nsILocalFile
+
+        //get the leafname so we can convert its extension to .old
+        nsXPIDLCString uniqueLeafName;
+        tmpLocalFile->GetLeafName(getter_Copies(leafname));
+        nsCString newLeafName (leafname); 
+
+        PRInt32 extpos = newLeafName.RFindChar('.');
+        if (extpos != -1)
+        {
+            // We found the extension; 
+            newLeafName.Truncate(extpos + 1); //strip off the old extension
+        }
+        newLeafName.Append("old");
+        
+        //Now reset the leafname
+        tmpLocalFile->SetLeafName(newLeafName.get());
+        
+        MakeUnique(tmpLocalFile);                                 //  for the call to MakeUnique
         
         tmpLocalFile->GetParent(getter_AddRefs(parent)); //get the parent for later use in MoveTo
-        tmpLocalFile->GetLeafName(&leafname);            //this is the new "unique" leafname
+        tmpLocalFile->GetLeafName(getter_Copies(uniqueLeafName));//this is the new "unique" leafname
 
-        doomedFile->Clone(getter_AddRefs(tmpFile));  // recreate the tmpFile as a doomedFile
-        tmpFile->MoveTo(parent, leafname);
-        
-        tmpFile = parent;              //MoveTo on Mac doesn't reset the tmpFile object to 
-        tmpFile->Append(leafname);     //the new name or location. That's why there's this 
-                                       //explict assignment and Append call.
+        rv = doomedFile->Clone(getter_AddRefs(renamedDoomedFile));// Reset renamedDoomed file so doomedfile isn't 
+                                                                  //   changed during the MoveTo call
+        if (NS_FAILED(rv)) result = nsInstall::UNEXPECTED_ERROR;
+        rv = renamedDoomedFile->MoveTo(parent, uniqueLeafName);        
+        if (NS_FAILED(rv)) result = nsInstall::UNEXPECTED_ERROR;
 
-        if (leafname) nsCRT::free( leafname );
+        renamedDoomedFile = parent;                //MoveTo on Mac doesn't reset the tmpFile object to 
+        renamedDoomedFile->Append(uniqueLeafName); //the new name or location. That's why there's this 
+                                             //explict assignment and Append call.
+
+        if (result == nsInstall::UNEXPECTED_ERROR)
+            return result;
     }
 
 
@@ -259,30 +280,26 @@ PRInt32 ReplaceFileNow(nsIFile* replacementFile, nsIFile* doomedFile )
         if(!flagIsEqual)
         {
             NS_WARN_IF_FALSE( 0, "File unpacked into a non-dest dir" );
-            replacementFile->GetLeafName(&leafname);
+            replacementFile->GetLeafName(getter_Copies(leafname));
             rv = replacementFile->MoveTo(parentofFinalFile, leafname);
         }
-        else
-        	rv = NS_OK;
         	
-        doomedFile->GetLeafName(&leafname);
-        replacementFile->GetParent(getter_AddRefs(parent));
-        if ( NS_SUCCEEDED(rv) )
-            rv = replacementFile->MoveTo(parent, leafname );
+        rv = doomedFile->GetLeafName(getter_Copies(leafname));
+        if ( NS_SUCCEEDED(rv))
+            rv = replacementFile->MoveTo(parentofReplacementFile, leafname );
 
         if ( NS_SUCCEEDED(rv) ) 
         {
             // we replaced the old file OK, now we have to
-            // get rid of it permanently
-            result = DeleteFileNowOrSchedule( tmpFile );
+            // get rid of it if it was renamed out of the way
+            result = DeleteFileNowOrSchedule( renamedDoomedFile );
         }
         else
         {
             // couldn't rename file, try to put old file back
-            tmpFile->GetParent(getter_AddRefs(parent));
-            tmpFile->MoveTo(parent, leafname);
+            renamedDoomedFile->GetParent(getter_AddRefs(parent));
+            renamedDoomedFile->MoveTo(parent, leafname);
         }
-        nsCRT::free( leafname );
     }
 
     return result;
