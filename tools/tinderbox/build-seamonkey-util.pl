@@ -21,7 +21,7 @@ use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.139 $ ';
+$::UtilsVersion = '$Revision: 1.140 $ ';
 
 package TinderUtils;
 
@@ -1912,10 +1912,35 @@ sub BloatTest2 {
     }
     my $leakchange = PercentChange($oldstats->{'leaks'}, $newstats->{'leaks'});
     my $mhschange = PercentChange($oldstats->{'mhs'}, $newstats->{'mhs'});
-    print_log "TinderboxPrint:";
-    print_log "<abbr title=\"Leaks: total bytes 'malloc'ed and not 'free'd\">Lk</abbr>:" . PrintSize($newstats->{'leaks'}) . "B,";
-    print_log "<abbr title=\"Maximum Heap: max (bytes 'malloc'ed - bytes 'free'd) over run\">MH</abbr>:" . PrintSize($newstats->{'mhs'}) . "B,";
-    print_log "<abbr title=\"Allocations: number of calls to 'malloc' and friends\">A</abbr>:" . PrintSize($newstats->{'allocs'}) . "\n";
+
+    my $leaks_testname_label   = "Leaks: total bytes 'malloc'ed and not 'free'd";
+    my $maxheap_testname_label = "Maximum Heap: max (bytes 'malloc'ed - bytes 'free'd) over run";
+    my $allocs_testname_label  = "Allocations: number of calls to 'malloc' and friends";
+
+    if($Settings::TestsPhoneHome) {
+      my $leaks_testname       = "trace_malloc_leaks";
+      my $leaks_string = "\n\nTinderboxPrint:<a title=\"" . $leaks_testname_label . "\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $leaks_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7&avg=1\">Lk:" . $newstats->{'leaks'} . "B</a>\n\n";
+      print_log $leaks_string;
+
+      my $maxheap_testname       = "trace_malloc_maxheap";
+      my $maxheap_string = "\n\nTinderboxPrint:<a title=\"" . $maxheap_testname_label . "\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $maxheap_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7&avg=1\">MH:" . $newstats->{'mhs'} . "B</a>\n\n";
+      print_log $maxheap_string;
+
+      my $allocs_testname       = "trace_malloc_allocs";
+      my $allocs_string = "\n\nTinderboxPrint:<a title=\"" . $allocs_testname_label . "\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $allocs_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7&avg=1\">A:" . $newstats->{'allocs'} . "B</a>\n\n";
+      print_log $allocs_string;
+
+      # Send results to server.
+      send_results_to_server($newstats->{'leaks'},  "--", $leaks_testname,   ::hostname() );
+      send_results_to_server($newstats->{'mhs'},    "--", $maxheap_testname, ::hostname() );
+      send_results_to_server($newstats->{'allocs'}, "--", $allocs_testname,  ::hostname() );
+
+    } else {
+      print_log "TinderboxPrint:";
+      print_log "<abbr title=\"$leaks_testname_label\">Lk</abbr>:" . PrintSize($newstats->{'leaks'}) . "B,";
+      print_log "<abbr title=\"$maxheap_testname_label\">MH</abbr>:" . PrintSize($newstats->{'mhs'}) . "B,";
+      print_log "<abbr title=\"$allocs_testname_label\">A</abbr>:" . PrintSize($newstats->{'allocs'}) . "\n";
+    }
 
     if (-e $old_sdleak_log && -e $sdleak_log) {
       print_logfile($old_leakstats_log, "previous run of bloat test leakstats");
