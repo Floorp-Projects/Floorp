@@ -2783,3 +2783,17 @@ RDFElementImpl::GetStyleHintForAttributeChange(const nsIAtom* aAttribute, PRInt3
 
   return NS_OK;
 }
+
+// Controller Methods
+NS_IMETHODIMP
+RDFElementImpl::GetController(nsIController** aResult)
+{
+  *aResult = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+RDFElementImpl::SetController(nsIController* aController)
+{
+  return NS_OK;
+}
