@@ -17,6 +17,11 @@ function doSetOKCancel(okFunc, cancelFunc, button2Func, button3Func )
 
 function doOKButton()
 {
+    var v = document.commandDispatcher.focusedElement;
+			
+    if (v && v.tagName == 'TEXTAREA')
+      return;
+    
 	var close = true;
 	
 	if ( doOKFunction )
