@@ -321,6 +321,8 @@ NS_IMETHODIMP nsDocShellBase::InitWindow(nativeWindow parentNativeWindow,
 
 NS_IMETHODIMP nsDocShellBase::Create()
 {
+   NS_ENSURE_STATE(!m_Created);
+
    // Use m_BaseInitInfo to do create
    // Then delete m_BaseInitInfo
    //XXX First Check
