@@ -55,7 +55,6 @@
 #include "nsIServiceManager.h"
 #include "nsRDFCID.h"
 
-#include "nsIPref.h"
 #include "nsMorkCID.h"
 #include "nsIMdbFactoryFactory.h"
 #include "nsXPIDLString.h"

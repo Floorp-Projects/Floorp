@@ -337,15 +337,8 @@ NS_IMPL_GETSET(nsMessenger, SendingUnsentMsgs, PRBool, mSendingUnsentMsgs)
 NS_IMETHODIMP    
 nsMessenger::SetWindow(nsIDOMWindowInternal *aWin, nsIMsgWindow *aMsgWindow)
 {
-  nsCOMPtr<nsIPrefBranchInternal> pbi;
-  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  if (prefs)
-  {
-    nsCOMPtr<nsIPrefBranch> prefBranch;
-    prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
-    if (prefBranch)
-      pbi = do_QueryInterface(prefBranch);
-  }
+  nsCOMPtr<nsIPrefBranchInternal> pbi = do_GetService(NS_PREFSERVICE_CONTRACTID);
+
   if(!aWin)
   {
     // it isn't an error to pass in null for aWin, in fact it means we are shutting
@@ -392,7 +385,6 @@ nsMessenger::SetWindow(nsIDOMWindowInternal *aWin, nsIMsgWindow *aMsgWindow)
     mDocShell = do_QueryInterface(childAsItem);
     
     if (NS_SUCCEEDED(rv) && mDocShell) {
-      
       mCurrentDisplayCharset = ""; // Important! Clear out mCurrentDisplayCharset so we reset a default charset on mDocshell the next time we try to load something into it.
       
       if (aMsgWindow) 
@@ -457,14 +449,9 @@ nsMessenger::SetDisplayProperties()
  
   PRBool allowPlugins = PR_FALSE;
 
-  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv))
-  {
-    nsCOMPtr<nsIPrefBranch> prefBranch;
-    rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
-    if (NS_SUCCEEDED(rv))
-      (void)prefBranch->GetBoolPref(MAILNEWS_ALLOW_PLUGINS_PREF_NAME, &allowPlugins);
-  }
+    prefBranch->GetBoolPref(MAILNEWS_ALLOW_PLUGINS_PREF_NAME, &allowPlugins);
   
   return mDocShell->SetAllowPlugins(allowPlugins);
 }
@@ -2145,11 +2132,7 @@ nsresult
 nsMessenger::GetLastSaveDirectory(nsILocalFile **aLastSaveDir)
 {
   nsresult rv;
-  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  nsCOMPtr<nsIPrefBranch> prefBranch;
-  rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
+  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
 
   // this can fail, and it will, on the first time we call it, as there is no default for this pref.
@@ -2165,11 +2148,7 @@ nsresult
 nsMessenger::SetLastSaveDirectory(nsILocalFile *aLocalFile)
 {
   nsresult rv;
-  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  nsCOMPtr<nsIPrefBranch> prefBranch;
-  rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
+  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
 
   nsCOMPtr <nsIFile> file = do_QueryInterface(aLocalFile, &rv);

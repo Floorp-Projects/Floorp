@@ -209,16 +209,9 @@ nsMsgAccountManagerDataSource::nsMsgAccountManagerDataSource()
     kDefaultServerAtom = NS_NewAtom("DefaultServer");
   }
 
-  nsCOMPtr<nsIPrefBranchInternal> prefBranchInternal;
-  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  if (prefs) {
-    nsCOMPtr<nsIPrefBranch> prefBranch;
-    prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
-    if (prefBranch) {
-      prefBranchInternal = do_QueryInterface(prefBranch);
-      prefBranchInternal->AddObserver(PREF_SHOW_FAKE_ACCOUNT, this, PR_FALSE);
-    }
-  }
+  nsCOMPtr<nsIPrefBranchInternal> prefBranchInternal(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (prefBranchInternal)
+    prefBranchInternal->AddObserver(PREF_SHOW_FAKE_ACCOUNT, this, PR_FALSE);
 }
 
 nsMsgAccountManagerDataSource::~nsMsgAccountManagerDataSource()
@@ -356,12 +349,11 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
                                        getter_Copies(pageTitle));
 
     else if (source == kNC_PageTitleFakeAccount) {
-      nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-      nsCOMPtr<nsIPrefBranch> prefBranch;
-      if (NS_SUCCEEDED(rv))
-        rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
       PRBool showFakeAccount;
-      rv = prefBranch->GetBoolPref(PREF_SHOW_FAKE_ACCOUNT, &showFakeAccount);
+      nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+      if (NS_SUCCEEDED(rv))
+        rv = prefBranch->GetBoolPref(PREF_SHOW_FAKE_ACCOUNT, &showFakeAccount);
+
       if (showFakeAccount) {
         nsCOMPtr<nsIStringBundleService> strBundleService =
           do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
@@ -1337,13 +1329,11 @@ PRBool
 nsMsgAccountManagerDataSource::IsFakeAccountRequired()
 {
   nsresult rv;
-  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-  nsCOMPtr<nsIPrefBranch> prefBranch;
-  if (NS_SUCCEEDED(rv))
-    rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
+  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
 
-  PRBool showFakeAccount;
-  rv = prefBranch->GetBoolPref(PREF_SHOW_FAKE_ACCOUNT, &showFakeAccount);
+  PRBool showFakeAccount = PR_FALSE;
+  if (NS_SUCCEEDED(rv))
+    rv = prefBranch->GetBoolPref(PREF_SHOW_FAKE_ACCOUNT, &showFakeAccount);
 
   if (!showFakeAccount)
     return PR_FALSE;
@@ -1398,13 +1388,11 @@ nsMsgAccountManagerDataSource::GetFakeAccountHostName(char **aHostName)
 {
   NS_ENSURE_ARG_POINTER(aHostName);
   nsresult rv;
-  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-  nsCOMPtr<nsIPrefBranch> prefBranch;
+  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
   if (NS_SUCCEEDED(rv))
-    rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
-  rv = prefBranch->GetCharPref("mailnews.fakeaccount.server", aHostName);
+    rv = prefBranch->GetCharPref("mailnews.fakeaccount.server", aHostName);
 
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -1420,16 +1408,9 @@ nsMsgAccountManagerDataSource::Observe(nsISupports *aSubject, const char *aTopic
     }
   }
   else if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
-    nsCOMPtr<nsIPrefBranchInternal> prefBranchInternal;
-    nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    if (prefs) {
-      nsCOMPtr<nsIPrefBranch> prefBranch;
-      prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
-      if (prefBranch) {
-        prefBranchInternal = do_QueryInterface(prefBranch);
-        prefBranchInternal->RemoveObserver(PREF_SHOW_FAKE_ACCOUNT, this);
-      }
-    }
+    nsCOMPtr<nsIPrefBranchInternal> prefBranchInternal = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    if (prefBranchInternal)
+      prefBranchInternal->RemoveObserver(PREF_SHOW_FAKE_ACCOUNT, this);
   }
   return NS_OK;
 }

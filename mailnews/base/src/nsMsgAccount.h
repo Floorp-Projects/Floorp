@@ -37,7 +37,7 @@
 
 #include "nscore.h"
 #include "nsIMsgAccount.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
 
 class nsMsgAccount : public nsIMsgAccount
 {
@@ -52,7 +52,7 @@ public:
   
 private:
   nsXPIDLCString m_accountKey;
-  nsIPref *m_prefs;
+  nsCOMPtr<nsIPrefBranch> m_prefs;
   nsCOMPtr<nsIMsgIncomingServer> m_incomingServer;
 
   nsCOMPtr<nsIMsgIdentity> m_defaultIdentity;
@@ -62,7 +62,5 @@ private:
   nsresult createIncomingServer();
   nsresult createIdentities();
   nsresult addIdentityInternal(nsIMsgIdentity* identity);
-
-  static void clearPrefEnum(const char *aPref, void *aClosure);
 };
 

@@ -65,6 +65,8 @@
 #include "nsILocalFile.h"
 #include "nsIURL.h"
 #include "nsNetCID.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "nsISmtpService.h"
 #include "nsIMsgBiffManager.h"
 #include "nsIMsgPurgeService.h"
@@ -96,7 +98,6 @@
 #define PREF_MAIL_ACCOUNTMANAGER_APPEND_ACCOUNTS "mail.accountmanager.appendaccounts"
 
 static NS_DEFINE_CID(kMsgAccountCID, NS_MSGACCOUNT_CID);
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kMsgFolderCacheCID, NS_MSGFOLDERCACHE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
@@ -141,13 +142,11 @@ NS_IMPL_THREADSAFE_ISUPPORTS4(nsMsgAccountManager,
 
 nsMsgAccountManager::nsMsgAccountManager() :
   m_accountsLoaded(PR_FALSE),
-  m_defaultAccount(nsnull),
   m_emptyTrashInProgress(PR_FALSE),
   m_cleanupInboxInProgress(PR_FALSE),
   m_haveShutdown(PR_FALSE),
   m_shutdownInProgress(PR_FALSE),
-  m_userAuthenticated(PR_FALSE),
-  m_prefs(0)
+  m_userAuthenticated(PR_FALSE)
 {
 }
 
@@ -220,11 +219,6 @@ nsresult nsMsgAccountManager::Shutdown()
   if (NS_SUCCEEDED(rv) && purgeService)
     purgeService->Shutdown();
   
-  if (m_prefs) {
-    nsServiceManager::ReleaseService(kPrefServiceCID, m_prefs);
-    m_prefs = 0;
-  }
-
   m_msgFolderCache = nsnull;
 
   m_haveShutdown = PR_TRUE;
@@ -305,11 +299,9 @@ nsMsgAccountManager::getPrefService()
   nsresult rv = NS_OK;
   
   if (!m_prefs)
-    rv = nsServiceManager::GetService(kPrefServiceCID,
-                                      NS_GET_IID(nsIPref),
-                                      (nsISupports**)&m_prefs);
-  if (NS_FAILED(rv)) return rv;
+    m_prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
 
+  if (NS_FAILED(rv)) return rv;
   /* m_prefs is good now */
   return NS_OK;
 }
@@ -483,7 +475,7 @@ nsMsgAccountManager::GetIncomingServer(const char* key,
   serverPref = serverPrefPrefix;
   serverPref += ".type";
   nsXPIDLCString serverType;
-  rv = m_prefs->CopyCharPref(serverPref.get(), getter_Copies(serverType));
+  rv = m_prefs->GetCharPref(serverPref.get(), getter_Copies(serverType));
   NS_ENSURE_SUCCESS(rv, NS_ERROR_NOT_INITIALIZED);
   
   //
@@ -491,13 +483,13 @@ nsMsgAccountManager::GetIncomingServer(const char* key,
   serverPref = serverPrefPrefix;
   serverPref += ".userName";
   nsXPIDLCString username;
-  rv = m_prefs->CopyCharPref(serverPref.get(), getter_Copies(username));
+  rv = m_prefs->GetCharPref(serverPref.get(), getter_Copies(username));
 
   // .hostname
   serverPref = serverPrefPrefix;
   serverPref += ".hostname";
   nsXPIDLCString hostname;
-  rv = m_prefs->CopyCharPref(serverPref.get(), getter_Copies(hostname));
+  rv = m_prefs->GetCharPref(serverPref.get(), getter_Copies(hostname));
   NS_ENSURE_SUCCESS(rv, NS_ERROR_NOT_INITIALIZED);
   
     // the server type doesn't exist. That's bad.
@@ -719,9 +711,7 @@ nsMsgAccountManager::removeKeyedAccount(const char *key)
   if (NS_FAILED(rv)) return rv;
 
   nsXPIDLCString accountList;
-  rv = m_prefs->CopyCharPref(PREF_MAIL_ACCOUNTMANAGER_ACCOUNTS,
-                             getter_Copies(accountList));
-  
+  rv = m_prefs->GetCharPref(PREF_MAIL_ACCOUNTMANAGER_ACCOUNTS, getter_Copies(accountList));
   if (NS_FAILED(rv)) return rv;
 
   // reconstruct the new account list, re-adding all accounts except
@@ -775,8 +765,7 @@ nsMsgAccountManager::GetDefaultAccount(nsIMsgAccount * *aDefaultAccount)
     }
 
     nsXPIDLCString defaultKey;
-    rv = m_prefs->CopyCharPref(PREF_MAIL_ACCOUNTMANAGER_DEFAULTACCOUNT,
-                               getter_Copies(defaultKey));
+    rv = m_prefs->GetCharPref(PREF_MAIL_ACCOUNTMANAGER_DEFAULTACCOUNT, getter_Copies(defaultKey));
     
     if (NS_SUCCEEDED(rv)) {
       GetAccount(defaultKey, getter_AddRefs(m_defaultAccount));
@@ -1344,8 +1333,7 @@ nsMsgAccountManager::LoadAccounts()
   nsXPIDLCString accountList;
   rv = getPrefService();
   if (NS_SUCCEEDED(rv)) {
-    rv = m_prefs->CopyCharPref(PREF_MAIL_ACCOUNTMANAGER_ACCOUNTS,
-                                        getter_Copies(accountList));
+    rv = m_prefs->GetCharPref(PREF_MAIL_ACCOUNTMANAGER_ACCOUNTS, getter_Copies(accountList));
     
     /** 
      * Check to see if we need to add pre-configured accounts.
@@ -1362,12 +1350,15 @@ nsMsgAccountManager::LoadAccounts()
      * This pref contains the list of pre-configured accounts that ISP/Vendor wants to
      * to add to the existing accounts list. 
      */
+    nsCOMPtr<nsIPrefService> prefservice(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+    NS_ENSURE_SUCCESS(rv,rv);
+    
     nsCOMPtr<nsIPrefBranch> defaultsPrefBranch;
-    rv = m_prefs->GetDefaultBranch(MAILNEWS_ROOT_PREF, getter_AddRefs(defaultsPrefBranch));
+    rv = prefservice->GetDefaultBranch(MAILNEWS_ROOT_PREF, getter_AddRefs(defaultsPrefBranch));
     NS_ENSURE_SUCCESS(rv,rv);
 
     nsCOMPtr<nsIPrefBranch> prefBranch;
-    rv = m_prefs->GetBranch(MAILNEWS_ROOT_PREF, getter_AddRefs(prefBranch));
+    rv = prefservice->GetBranch(MAILNEWS_ROOT_PREF, getter_AddRefs(prefBranch));
     NS_ENSURE_SUCCESS(rv,rv);
 
     PRInt32 appendAccountsCurrentVersion=0;
@@ -1383,8 +1374,7 @@ nsMsgAccountManager::LoadAccounts()
 
       // Get a list of pre-configured accounts
       nsXPIDLCString appendAccountList;
-      rv = m_prefs->CopyCharPref(PREF_MAIL_ACCOUNTMANAGER_APPEND_ACCOUNTS,
-                                          getter_Copies(appendAccountList));
+      rv = m_prefs->GetCharPref(PREF_MAIL_ACCOUNTMANAGER_APPEND_ACCOUNTS, getter_Copies(appendAccountList));
 
       // If there are pre-configured accounts, we need to add them to the existing list.
       if (!appendAccountList.IsEmpty()) {
@@ -2231,8 +2221,7 @@ NS_IMETHODIMP nsMsgAccountManager::GetLocalFoldersServer(nsIMsgIncomingServer **
     rv = getPrefService();
     NS_ENSURE_SUCCESS(rv,rv);
   }
-	rv = m_prefs->CopyCharPref(PREF_MAIL_ACCOUNTMANAGER_LOCALFOLDERSSERVER,
-                               getter_Copies(serverKey));
+	rv = m_prefs->GetCharPref(PREF_MAIL_ACCOUNTMANAGER_LOCALFOLDERSSERVER, getter_Copies(serverKey));
 
 	if (NS_SUCCEEDED(rv) && ((const char *)serverKey)) {
 		rv = GetIncomingServer(serverKey, aServer);
@@ -2352,9 +2341,9 @@ NS_IMETHODIMP
 nsMsgAccountManager::SaveAccountInfo()
 {
   nsresult rv;
-  rv = getPrefService();
+  nsCOMPtr<nsIPrefService> pref(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
   NS_ENSURE_SUCCESS(rv,rv);
-  return m_prefs->SavePrefFile(nsnull);
+  return pref->SavePrefFile(nsnull);
 }
 
 NS_IMETHODIMP

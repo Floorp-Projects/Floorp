@@ -49,7 +49,6 @@
 #include "nsFileStream.h"
 #include "nsFileSpec.h"
 #include "nsMimeTypes.h"
-#include "nsIPref.h"
 #include "nsICharsetConverterManager.h"
 #include "prprf.h"
 #include "nsMsgCreate.h" 

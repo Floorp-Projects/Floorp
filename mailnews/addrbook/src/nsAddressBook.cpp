@@ -71,9 +71,9 @@
 #include "nsIAbUpgrader.h"
 #include "nsSpecialSystemDirectory.h"
 #include "nsIFilePicker.h"
-#include "nsIPref.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
+#include "nsIPrefLocalizedString.h"
 #include "nsVoidArray.h"
 #include "nsIAbCard.h"
 #include "nsIAbMDBCard.h"
@@ -499,23 +499,26 @@ nsresult AddressBookParser::ParseFile()
         return NS_ERROR_NULL_POINTER;
 
     // Get Pretty name from prefs.
-    nsCOMPtr<nsIPref> pPref(do_GetService(NS_PREF_CONTRACTID, &rv)); 
-    if (NS_FAILED(rv) || !pPref) 
+    nsCOMPtr<nsIPrefBranch> pPref(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+    if (NS_FAILED(rv)) 
         return nsnull;
 
     nsXPIDLString dirName;
+    nsCOMPtr<nsIPrefLocalizedString> locString;
+    nsCAutoString prefName;
     if (strcmp(fileName, kPersonalAddressbook) == 0)
-        rv = pPref->GetLocalizedUnicharPref("ldap_2.servers.pab.description", getter_Copies(dirName));
+        prefName.AssignLiteral("ldap_2.servers.pab.description");
     else
-    {
-      nsCAutoString prefName;
-      prefName = NS_LITERAL_CSTRING("ldap_2.servers.") + nsDependentCString(leafName) + NS_LITERAL_CSTRING(".description");
-      rv = pPref->GetLocalizedUnicharPref(prefName.get(), getter_Copies(dirName));
-    }
+        prefName = NS_LITERAL_CSTRING("ldap_2.servers.") + nsDependentCString(leafName) + NS_LITERAL_CSTRING(".description");
+
+    rv = pPref->GetComplexValue(prefName.get(), NS_GET_IID(nsIPrefLocalizedString), getter_AddRefs(locString));
+
+    if (NS_SUCCEEDED(rv))
+       rv = locString->ToString(getter_Copies(dirName));
 
     // If a name is found then use it, otherwise use the filename as last resort.
     if (NS_FAILED(rv) || dirName.IsEmpty())
-      dirName = NS_ConvertASCIItoUCS2(leafName);
+        dirName = NS_ConvertASCIItoUCS2(leafName);
     parentDir->CreateDirectoryByURI(dirName, mDbUri, mMigrating);
         
     rv = ParseLDIFFile();

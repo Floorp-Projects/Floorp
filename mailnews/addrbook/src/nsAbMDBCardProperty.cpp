@@ -47,7 +47,6 @@
 
 #include "nsAddrDatabase.h"
 #include "nsIAddrBookSession.h"
-#include "nsIPref.h"
 #include "nsIAddressBook.h"
 
 nsAbMDBCardProperty::nsAbMDBCardProperty(void)

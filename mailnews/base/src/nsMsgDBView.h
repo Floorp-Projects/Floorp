@@ -60,7 +60,6 @@
 #include "nsIDOMElement.h"
 #include "nsIAtom.h"
 #include "nsIImapIncomingServer.h"
-#include "nsIPref.h"
 #include "nsIWeakReference.h"
 #include "nsIObserver.h"
 #include "nsIMsgFilterPlugin.h"

@@ -48,7 +48,7 @@
 #include "nsCOMPtr.h"
 #include "nsHashtable.h"
 #include "nsISmtpServer.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
 #include "nsIMsgFolderCache.h"
 #include "nsIMsgFolder.h"
 #include "nsIObserver.h"
@@ -206,7 +206,7 @@ private:
   nsresult SetSendLaterUriPref(nsIMsgIncomingServer *server);
  
   nsresult getPrefService();
-  nsIPref *m_prefs;
+  nsCOMPtr<nsIPrefBranch> m_prefs;
 
   nsresult InternalFindServer(const char* username, const char* hostname, const char* type, PRBool useRealSetting, nsIMsgIncomingServer** aResult);
 

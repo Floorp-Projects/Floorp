@@ -39,7 +39,6 @@
 #include "msgCore.h"    // precompiled header...
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
-#include "nsIPref.h"
 #include "nsIIOService.h"
 
 #include "nsIStreamListener.h"
@@ -59,9 +58,6 @@
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
 #include "prmem.h"
-
-#include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
 
 #include "nsIStringBundle.h"
 #include "nsIServiceManager.h"

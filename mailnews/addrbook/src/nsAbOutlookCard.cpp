@@ -270,11 +270,7 @@ NS_IMETHODIMP nsAbOutlookCard::EditCardToDatabase(const char *aUru)
     GetDisplayName(getter_Copies(properties [index_DisplayName])) ;
     if (*properties [index_DisplayName].get() == 0) {
       nsresult rv;
-      nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-      NS_ENSURE_SUCCESS(rv,rv);
-      
-      nsCOMPtr<nsIPrefBranch> prefBranch;
-      rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
+      nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
       NS_ENSURE_SUCCESS(rv,rv);
       
       PRInt32 format;

@@ -38,7 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIPref.h"
+#include "nsIPrefService.h"
 #include "nsAbBSDirectory.h"
 #include "nsAbUtils.h"
 

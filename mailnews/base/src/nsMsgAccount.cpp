@@ -47,7 +47,8 @@
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "nsMsgBaseCID.h"
 #include "nsMsgAccount.h"
 #include "nsIMsgAccount.h"
@@ -55,24 +56,14 @@
 #include "nsIMsgAccountManager.h"
 #include "nsIMsgMailSession.h"
 
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
-
 NS_IMPL_ISUPPORTS1(nsMsgAccount, nsIMsgAccount)
 
-nsMsgAccount::nsMsgAccount():
-  m_prefs(0),
-  m_incomingServer(nsnull),
-  m_defaultIdentity(nsnull)
+nsMsgAccount::nsMsgAccount()
 {
 }
 
 nsMsgAccount::~nsMsgAccount()
 {
-
-  // release of servers an identites happen automatically
-  // thanks to nsCOMPtrs and nsISupportsArray
-  if (m_prefs) nsServiceManager::ReleaseService(kPrefServiceCID, m_prefs);  
-  
 }
 
 NS_IMETHODIMP 
@@ -89,10 +80,13 @@ nsMsgAccount::getPrefService()
 {
   if (m_prefs) 
     return NS_OK;
-  
-  return nsServiceManager::GetService(kPrefServiceCID,
-                                      NS_GET_IID(nsIPref),
-                                      (nsISupports**)&m_prefs);
+
+  nsresult rv;
+  m_prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  if (NS_FAILED(rv))
+    m_prefs = nsnull;
+
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -129,7 +123,7 @@ nsMsgAccount::createIncomingServer()
   serverKeyPref += m_accountKey;
   serverKeyPref += ".server";
   nsXPIDLCString serverKey;
-  rv = m_prefs->CopyCharPref(serverKeyPref.get(), getter_Copies(serverKey));
+  rv = m_prefs->GetCharPref(serverKeyPref.get(), getter_Copies(serverKey));
   if (NS_FAILED(rv)) return rv;
     
 #ifdef DEBUG_alecf
@@ -143,7 +137,7 @@ nsMsgAccount::createIncomingServer()
   serverTypePref += ".type";
   
   nsXPIDLCString serverType;
-  rv = m_prefs->CopyCharPref(serverTypePref.get(), getter_Copies(serverType));
+  rv = m_prefs->GetCharPref(serverTypePref.get(), getter_Copies(serverType));
 
   // the server type doesn't exist, use "generic"
   if (NS_FAILED(rv)) {
@@ -239,7 +233,7 @@ nsMsgAccount::createIdentities()
   rv = getPrefService();
   if (NS_FAILED(rv)) return rv;
   
-  rv = m_prefs->CopyCharPref(identitiesKeyPref.get(), getter_Copies(identityKey));
+  rv = m_prefs->GetCharPref(identitiesKeyPref.get(), getter_Copies(identityKey));
 
   if (NS_FAILED(rv)) return rv;
   if (identityKey.IsEmpty())    // not an error if no identities, but 
@@ -500,14 +494,20 @@ nsMsgAccount::ClearAllValues()
     nsCAutoString rootPref("mail.account.");
     rootPref += m_accountKey;
 
-    rv = m_prefs->EnumerateChildren(rootPref.get(), clearPrefEnum, (void *)m_prefs);
+    rv = getPrefService();
+    if (NS_FAILED(rv))
+        return rv;
+
+    PRUint32 cntChild, i;
+    char **childArray;
+ 
+    rv = m_prefs->GetChildList(rootPref.get(), &cntChild, &childArray);
+    if (NS_SUCCEEDED(rv)) {
+        for (i = 0; i < cntChild; i++)
+            m_prefs->ClearUserPref(childArray[i]);
+
+        NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(cntChild, childArray);
+    }
 
     return rv;
-}
-
-void
-nsMsgAccount::clearPrefEnum(const char *aPref, void *aClosure)
-{
-    nsIPref *prefs = (nsIPref *)aClosure;
-    prefs->ClearUserPref(aPref);
 }

@@ -37,7 +37,6 @@
 #include "nsMsgPrompts.h"
 
 #include "nsMsgCopy.h"
-#include "nsIPref.h"
 #include "nsIMsgStringService.h"
 #include "nsIPrompt.h"
 #include "nsIWindowWatcher.h"

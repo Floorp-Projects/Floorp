@@ -69,7 +69,8 @@
 #include "nsIWebShellWindow.h"
 #include "nsIWidget.h"
 #include "nsIWebShellWindow.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 
 // For PLEvents
 #include "plevent.h"
@@ -377,7 +378,7 @@ nsMsgPrintEngine::StartPrintOperation(nsIPrintSettings* aPS)
 nsresult
 nsMsgPrintEngine::ShowProgressDialog(PRBool aIsForPrinting, PRBool& aDoNotify)
 {
-  nsresult rv = NS_ERROR_FAILURE;
+  nsresult rv;
 
   // default to not notifying, that if something here goes wrong
   // or we aren't going to show the progress dialog we can straight into 
@@ -389,15 +390,10 @@ nsMsgPrintEngine::ShowProgressDialog(PRBool aIsForPrinting, PRBool& aDoNotify)
 
   // if it is already being shown then don't bother to find out if it should be
   // so skip this and leave mShowProgressDialog set to FALSE
-  nsCOMPtr<nsIPrefBranch> prefBranch;
-  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) 
   {
-    rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
-    if (NS_SUCCEEDED(rv)) 
-    {
-      prefBranch->GetBoolPref("print.show_print_progress", &showProgressDialog);
-    }
+    prefBranch->GetBoolPref("print.show_print_progress", &showProgressDialog);
   }
 
   // Turning off the showing of Print Progress in Prefs overrides

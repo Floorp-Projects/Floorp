@@ -275,17 +275,10 @@ nsresult nsMsgDBView::InitLabelPrefs()
 
 nsresult nsMsgDBView::AddLabelPrefObservers()
 {
-  nsresult rv = NS_OK;
+  nsresult rv;
   nsCString prefString;
 
-  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  nsCOMPtr<nsIPrefBranch> prefBranch;
-  rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(prefBranch, &rv);
+  nsCOMPtr<nsIPrefBranchInternal> pbi(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
   NS_ENSURE_SUCCESS(rv,rv);
 
   InitLabelPrefs();
@@ -307,17 +300,10 @@ nsresult nsMsgDBView::AddLabelPrefObservers()
 
 nsresult nsMsgDBView::RemoveLabelPrefObservers()
 {
-  nsresult rv = NS_OK;
+  nsresult rv;
   nsCString prefString;
 
-  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  nsCOMPtr<nsIPrefBranch> prefBranch;
-  rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(prefBranch, &rv);
+  nsCOMPtr<nsIPrefBranchInternal> pbi(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
   NS_ENSURE_SUCCESS(rv,rv);
 
   for(PRInt32 i = 0; i < PREF_LABELS_MAX; i++)
@@ -410,15 +396,11 @@ PRUnichar * nsMsgDBView::GetString(const PRUnichar *aStringName)
 nsresult nsMsgDBView::GetPrefLocalizedString(const char *aPrefName, nsString& aResult)
 {
   nsresult rv = NS_OK;
-  nsCOMPtr<nsIPrefService> prefService;
   nsCOMPtr<nsIPrefBranch> prefBranch;
   nsCOMPtr<nsIPrefLocalizedString> pls;
   nsXPIDLString ucsval;
 
-  prefService = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = prefService->GetBranch(nsnull, getter_AddRefs(prefBranch));
+  prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = prefBranch->GetComplexValue(aPrefName, NS_GET_IID(nsIPrefLocalizedString), getter_AddRefs(pls));
@@ -432,15 +414,11 @@ nsresult nsMsgDBView::GetPrefLocalizedString(const char *aPrefName, nsString& aR
 nsresult nsMsgDBView::GetLabelPrefStringAndAtom(const char *aPrefName, nsString& aColor, nsIAtom** aColorAtom)
 {
   nsresult rv = NS_OK;
-  nsCOMPtr<nsIPrefService> prefService;
   nsCOMPtr<nsIPrefBranch> prefBranch;
   nsXPIDLCString csval;
   nsCAutoString prefColorTree(LABEL_COLOR_STRING);
 
-  prefService = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = prefService->GetBranch(nsnull, getter_AddRefs(prefBranch));
+  prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = prefBranch->GetCharPref(aPrefName, getter_Copies(csval));

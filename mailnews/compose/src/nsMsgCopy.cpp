@@ -39,7 +39,6 @@
 
 #include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
-#include "nsIPref.h"
 #include "nsMsgBaseCID.h"
 #include "nsMsgFolderFlags.h"
 #include "nsIMsgFolder.h"

@@ -310,11 +310,7 @@ nsSoundDatasource::GetTargets(nsIRDFResource *source,
 
     // add entry for the pref specified one, if a file:// url
     // if not, it's a system sound, and we already added it.
-    nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    nsCOMPtr<nsIPrefBranch> prefBranch;
-    rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
+    nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv,rv);
 
     nsXPIDLCString soundURLSpec;

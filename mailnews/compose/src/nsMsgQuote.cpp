@@ -46,7 +46,6 @@
 #include "nsIStreamConverterService.h"
 #include "nsIMimeStreamConverter.h"
 #include "nsMimeTypes.h"
-#include "nsIPref.h"
 #include "nsICharsetConverterManager.h"
 #include "prprf.h"
 #include "nsMsgQuote.h" 
