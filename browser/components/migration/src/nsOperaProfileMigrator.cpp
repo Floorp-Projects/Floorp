@@ -251,7 +251,7 @@ nsresult
 nsOperaProfileMigrator::SetBool(void* aTransform, nsIPrefBranch* aBranch)
 {
   PREFTRANSFORM* xform = (PREFTRANSFORM*)aTransform;
-  return aBranch->SetBoolPref(xform->targetPrefName, xform->intValue);
+  return aBranch->SetBoolPref(xform->targetPrefName, xform->boolValue);
 }
 
 nsresult 
