@@ -268,7 +268,7 @@ nsXPCWrappedJS::~nsXPCWrappedJS()
                     map->Remove(this);
                 }
             }
-                JS_RemoveRootRT(rt->GetJSRuntime(), &mJSObj);
+            JS_RemoveRootRT(rt->GetJSRuntime(), &mJSObj);
         }
         NS_IF_RELEASE(mClass);
     }
@@ -328,7 +328,7 @@ nsXPCWrappedJS::GetIID(nsIID** iid)
 }
 
 void 
-nsXPCWrappedJS::SystemIsBeingShutDown()
+nsXPCWrappedJS::SystemIsBeingShutDown(JSRuntime* rt)
 {
     // XXX It turns out that it is better to leak here then to do any Releases 
     // and have them propagate into all sorts of mischief as the system is being
@@ -340,12 +340,15 @@ nsXPCWrappedJS::SystemIsBeingShutDown()
 
     // NOTE: that mClass is retained so that GetInterfaceInfo can continue to 
     // work (and avoid crashing some platforms).
-
     mJSObj = nsnull;
     
+    // There is no reason to keep this root any longer. Since we've cleared
+    // mJSObj our dtor will not remove the root later. So, we do it now. 
+    JS_RemoveRootRT(rt, &mJSObj);
+
     // Notify other wrappers in the chain.
     if(mNext)
-        mNext->SystemIsBeingShutDown();
+        mNext->SystemIsBeingShutDown(rt);
 }
 
 /***************************************************************************/

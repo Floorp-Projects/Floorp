@@ -71,10 +71,11 @@ DEBUG_WrapperChecker(JSHashEntry *he, intN i, void *arg)
 JS_STATIC_DLL_CALLBACK(intN)
 WrappedJSShutdownMarker(JSHashEntry *he, intN i, void *arg)
 {
+    JSRuntime* rt = (JSRuntime*) arg;
     nsXPCWrappedJS* wrapper = (nsXPCWrappedJS*)he->value;
     NS_ASSERTION(wrapper, "found a null JS wrapper!");
     NS_ASSERTION(wrapper->IsValid(), "found an invalid JS wrapper!");
-    wrapper->SystemIsBeingShutDown();
+    wrapper->SystemIsBeingShutDown(rt);
     return HT_ENUMERATE_NEXT;
 }
 
@@ -107,7 +108,7 @@ XPCJSRuntime::~XPCJSRuntime()
         if(count)
             printf("deleting XPCJSRuntime with %d live wrapped JSObject\n", (int)count);        
 #endif
-        mWrappedJSMap->Enumerate(WrappedJSShutdownMarker, nsnull); 
+        mWrappedJSMap->Enumerate(WrappedJSShutdownMarker, mJSRuntime); 
         delete mWrappedJSMap;
     }
 
