@@ -39,7 +39,7 @@
 
 static PRInt32 g_cLockCount = 0;
 static PyThreadState *ptsGlobal = nsnull;
-PyInterpreterState *PyXPCOM_InterpreterState;
+PyInterpreterState *PyXPCOM_InterpreterState = nsnull;
 static PRLock *g_lockMain = nsnull;
 
 PRUintn tlsIndex = 0;
