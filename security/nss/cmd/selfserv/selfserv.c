@@ -1380,7 +1380,7 @@ WaitForDebugger(void)
 static void sigterm_handler(int signum)
 {
     static char err_msg[] = "selfserv: received SIGTERM\n";
-    write(2, err_msg, sizeof(err_msg) - 1);
+    write(1, err_msg, sizeof(err_msg) - 1);
     _exit(1);
 }
 #endif /* LINUX */
