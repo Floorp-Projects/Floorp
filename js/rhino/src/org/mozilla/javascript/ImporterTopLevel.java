@@ -38,6 +38,8 @@
 
 package org.mozilla.javascript;
 
+import java.io.Serializable;
+
 /**
  * Class ImporterTopLevel
  *
@@ -175,7 +177,7 @@ public class ImporterTopLevel extends ScriptableObject {
     private ObjArray importedPackages = new ObjArray();
 }
 
-final class ImporterFunctions implements IdFunctionMaster
+final class ImporterFunctions implements Serializable, IdFunctionMaster
 {
     ImporterFunctions(ImporterTopLevel importer)
     {
