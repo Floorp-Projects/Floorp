@@ -32,14 +32,15 @@ treecell {
 } 
 
 treecell[selectedcell] { 
- background-color: #BBBBCC; 
+ background-color: #666699; 
+ color: white;
 } 
 
 treehead treeitem treecell { 
- font-size: 8pt;
- background-color: #a0a0a0; 
- border: thin black solid; 
- color: black;
+ font-size: 9pt;
+ background-color: #666699; 
+ border: thin darkgray solid; 
+ color: white;
 } 
 
 treeitem > treecell > titledbutton {
@@ -64,3 +65,4 @@ treeitem[SpecialFolder="Unsent Messages"] > treecell > titledbutton {
  vertical-align: bottom;
  list-style-image: url("resource:/res/mailnews/messenger/closedOutbox.gif");
 }
+

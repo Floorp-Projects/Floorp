@@ -32,7 +32,8 @@ treecell {
 } 
 
 treecell[selectedcell] { 
- background-color: #BBBBCC; 
+ background-color: #666699; 
+ color: white;
 } 
 
 treeitem[Status="new"] {
@@ -40,10 +41,10 @@ treeitem[Status="new"] {
 }
 
 treehead treeitem treecell { 
- font-size: 8pt;
- background-color: #a0a0a0; 
- border: thin black solid; 
- color: black;
+ font-size: 9pt;
+ background-color: #666699; 
+ border: thin darkgray solid; 
+ color: white;
 } 
 
 icon {
