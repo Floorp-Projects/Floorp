@@ -59,7 +59,6 @@ CHROME_CONTENT = \
 		pref-fonts.js \
 		pref-history.xul \
 		pref-languages.xul \
-		pref-languages2.xul \
 		pref-languages-add.xul \
 		pref-languages.js \
 		pref-navigator.xul \

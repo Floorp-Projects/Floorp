@@ -60,7 +60,7 @@ function Init()
     } //catch
 
     try {
-      parent.initPanel('chrome://communicator/content/pref/pref-languages2.xul');
+      parent.initPanel('chrome://communicator/content/pref/pref-languages.xul');
     }
 
     catch(ex) {
