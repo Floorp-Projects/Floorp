@@ -391,7 +391,7 @@ class nsIWidget : public nsISupports {
      * control z-order for child widgets of other widgets.)
      * null aWidget means put on top.
      */
-    NS_IMETHOD PlaceBehind(nsIWidget *aWidget) = 0;
+    NS_IMETHOD PlaceBehind(nsIWidget *aWidget, PRBool aActivate) = 0;
 
     /**
      * Minimize, maximize or normalize the window size.

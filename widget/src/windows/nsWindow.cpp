@@ -1223,12 +1223,14 @@ NS_METHOD nsWindow::IsVisible(PRBool & bState)
 // Position the window behind the given window
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsWindow::PlaceBehind(nsIWidget *aWidget)
+NS_METHOD nsWindow::PlaceBehind(nsIWidget *aWidget, PRBool aActivate)
 {
-  HWND behind;
-  behind = aWidget ? (HWND)aWidget->GetNativeData(NS_NATIVE_WINDOW) : HWND_TOP;
-  ::SetWindowPos(mWnd, behind, 0, 0, 0, 0,
-                 SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOREPOSITION | SWP_NOSIZE);
+  HWND behind = aWidget ? (HWND)aWidget->GetNativeData(NS_NATIVE_WINDOW) : HWND_TOP;
+  UINT flags = SWP_NOMOVE | SWP_NOREPOSITION | SWP_NOSIZE;
+  if (!aActivate)
+    flags |= SWP_NOACTIVATE;
+
+  ::SetWindowPos(mWnd, behind, 0, 0, 0, 0, flags);
   return NS_OK;
 }
 
@@ -2339,15 +2341,6 @@ BOOL nsWindow::OnChar( UINT mbcsCharCode, UINT virtualKeyCode, bool isMultiByte 
 }
 
 
-
-//-------------------------------------------------------------------------
-//
-// Process all nsWindows messages
-//
-//-------------------------------------------------------------------------
-static PRBool gJustGotDeactivate = PR_FALSE;
-static PRBool gJustGotActivate = PR_FALSE;
-
 void nsWindow::ConstrainZLevel(HWND *aAfter) {
 
   nsZLevelEvent  event;
@@ -2383,6 +2376,14 @@ void nsWindow::ConstrainZLevel(HWND *aAfter) {
 
   NS_RELEASE(event.widget);
 }
+
+//-------------------------------------------------------------------------
+//
+// Process all nsWindows messages
+//
+//-------------------------------------------------------------------------
+static PRBool gJustGotDeactivate = PR_FALSE;
+static PRBool gJustGotActivate = PR_FALSE;
 
 #ifdef NS_DEBUG
 

@@ -693,7 +693,7 @@ NS_IMETHODIMP nsMacWindow::Move(PRInt32 aX, PRInt32 aY)
 // Position the window behind the given window
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsMacWindow::PlaceBehind(nsIWidget *aWidget)
+NS_METHOD nsMacWindow::PlaceBehind(nsIWidget *aWidget, PRBool aActivate)
 {
   if (aWidget) {
     WindowPtr behind = (WindowPtr)aWidget->GetNativeData(NS_NATIVE_DISPLAY);

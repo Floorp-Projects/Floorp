@@ -338,7 +338,7 @@ NS_IMETHODIMP nsBaseWidget::GetZIndex(PRInt32* aZIndex)
 // Places widget behind the given widget (platforms must override)
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsBaseWidget::PlaceBehind(nsIWidget *aWidget)
+NS_IMETHODIMP nsBaseWidget::PlaceBehind(nsIWidget *aWidget, PRBool aActivate)
 {
   return NS_OK;
 }

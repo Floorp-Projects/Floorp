@@ -69,7 +69,7 @@ public:
 
   NS_IMETHOD              SetZIndex(PRInt32 aZIndex);
   NS_IMETHOD              GetZIndex(PRInt32* aZIndex);
-  NS_IMETHOD              PlaceBehind(nsIWidget *aWidget);
+  NS_IMETHOD              PlaceBehind(nsIWidget *aWidget, PRBool aActivate);
 
   NS_IMETHOD              SetSizeMode(PRInt32 aMode);
   NS_IMETHOD              GetSizeMode(PRInt32* aMode);

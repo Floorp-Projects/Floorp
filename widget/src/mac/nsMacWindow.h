@@ -78,10 +78,10 @@ public:
 				                            nsNativeWidget aNativeParent = nsnull);
 
     NS_IMETHOD              Show(PRBool aState);
-    NS_IMETHOD                  ConstrainPosition(PRInt32 *aX, PRInt32 *aY);
-    NS_IMETHOD            	Move(PRInt32 aX, PRInt32 aY);
-    NS_IMETHOD              PlaceBehind(nsIWidget *aWidget);
-    NS_IMETHOD            	Resize(PRInt32 aWidth,PRInt32 aHeight, PRBool aRepaint);
+    NS_IMETHOD              ConstrainPosition(PRInt32 *aX, PRInt32 *aY);
+    NS_IMETHOD              Move(PRInt32 aX, PRInt32 aY);
+    NS_IMETHOD              PlaceBehind(nsIWidget *aWidget, PRBool aActivate);
+    NS_IMETHOD              Resize(PRInt32 aWidth,PRInt32 aHeight, PRBool aRepaint);
     NS_IMETHOD            	GetScreenBounds(nsRect &aRect);
     virtual PRBool          OnPaint(nsPaintEvent &event);
 
