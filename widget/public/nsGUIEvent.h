@@ -204,9 +204,11 @@ struct nsMenuEvent : public nsGUIEvent {
 #define NS_MOUSE_ENTER                  (NS_MOUSE_MESSAGE_START + 22)
 #define NS_MOUSE_EXIT                   (NS_MOUSE_MESSAGE_START + 23)
 #define NS_MOUSE_LEFT_DOUBLECLICK       (NS_MOUSE_MESSAGE_START + 24)
-#define NS_MOUSE_RIGHT_DOUBLECLICK      (NS_MOUSE_MESSAGE_START + 25)
-#define NS_MOUSE_LEFT_CLICK             (NS_MOUSE_MESSAGE_START + 26)
-#define NS_MOUSE_RIGHT_CLICK            (NS_MOUSE_MESSAGE_START + 27)
+#define NS_MOUSE_MIDDLE_DOUBLECLICK     (NS_MOUSE_MESSAGE_START + 25)
+#define NS_MOUSE_RIGHT_DOUBLECLICK      (NS_MOUSE_MESSAGE_START + 26)
+#define NS_MOUSE_LEFT_CLICK             (NS_MOUSE_MESSAGE_START + 27)
+#define NS_MOUSE_MIDDLE_CLICK           (NS_MOUSE_MESSAGE_START + 28)
+#define NS_MOUSE_RIGHT_CLICK            (NS_MOUSE_MESSAGE_START + 29)
 
 #define NS_SCROLLBAR_MESSAGE_START      1000
 #define NS_SCROLLBAR_POS                (NS_SCROLLBAR_MESSAGE_START)
@@ -221,6 +223,10 @@ struct nsMenuEvent : public nsGUIEvent {
 #define NS_IMAGE_LOAD                   (NS_STREAM_EVENT_START + 2)
 #define NS_IMAGE_ABORT                  (NS_STREAM_EVENT_START + 3)
 #define NS_IMAGE_ERROR                  (NS_STREAM_EVENT_START + 4)
+
+#define NS_FORM_EVENT_START             1200
+#define NS_FORM_SUBMIT                  (NS_FORM_EVENT_START)
+#define NS_FORM_RESET                   (NS_FORM_EVENT_START + 1)
 //@}
 
 /*
