@@ -22,11 +22,12 @@
 #include "MailNewsTypes.h"
 #include "nsString.h"
 #include "nsIMsgHeaderParser.h"
+#include "nsIMsgSearchAdapter.h"
+#include "nsIMsgHeaderParser.h"
+#include "nsIMsgFolder.h"
 #include "nsCOMPtr.h"
 
 class nsIMsgDatabase;
-class nsIMsgFolder;
-class nsIMsgSearchAdapter;
 class nsIMsgDBHdr;
 
 typedef enum

@@ -20,6 +20,7 @@
 #define _nsMsgFilterList_H_
 
 #include "nscore.h"
+#include "nsIMsgFolder.h"
 #include "nsIMsgFilterList.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsArray.h"

@@ -28,7 +28,10 @@
 { 0x66f4b80c, 0x0fb5, 0x11d3,                 \
     { 0xa5, 0x15, 0x0, 0x60, 0xb0, 0xfc, 0x04, 0xb7 } }
 
-
+class nsMsgSearchScopeTerm;
+class nsMsgSearchTermArray;
+class nsMsgResultElement;
+class nsMsgSearchValue;
 
 class nsIMsgSearchAdapter : public nsISupports
 {

@@ -19,6 +19,7 @@
 // Implementation of db search for POP and offline IMAP mail folders
 
 #include "msgCore.h"
+#include "nsIMsgDatabase.h"
 #include "nsMsgSearchCore.h"
 #include "nsMsgLocalSearch.h"
 #include "nsIStreamListener.h"
