@@ -40,18 +40,33 @@ CC			= gcc
 CCC			= g++
 RANLIB			= ranlib
 
+ifeq ($(OS_TEST),alpha)
+CPU_ARCH		= alpha
+else
 OS_REL_CFLAGS		= -Di386
 CPU_ARCH		= x86
+endif
 
-OS_CFLAGS		= $(DSO_CFLAGS) $(OS_REL_CFLAGS) -ansi -Wall -pipe -DFREEBSD -DHAVE_STRERROR -DHAVE_BSD_FLOCK
+OS_CFLAGS		= $(DSO_CFLAGS) $(OS_REL_CFLAGS) -ansi -Wall -pipe $(THREAD_FLAG) -DFREEBSD -DHAVE_STRERROR -DHAVE_BSD_FLOCK
 
-ifdef USE_PTHREADS
-	OS_LIBS		= -lc_r
-else
-	OS_LIBS		= -lc
+#
+# The default implementation strategy for FreeBSD is pthreads.
+#
+ifndef CLASSIC_NSPR
+USE_PTHREADS		= 1
+DEFINES			+= -D_THREAD_SAFE
+THREAD_FLAG		= -pthread
 endif
 
 ARCH			= freebsd
+
+MOZ_OBJFORMAT		:= $(shell test -x /usr/bin/objformat && /usr/bin/objformat || echo aout)
+
+ifeq ($(MOZ_OBJFORMAT),elf)
+DLL_SUFFIX		= so
+else
+DLL_SUFFIX		= so.1.0
+endif
 
 DSO_CFLAGS		= -fPIC
 DSO_LDOPTS		= -Bshareable
