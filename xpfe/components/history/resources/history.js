@@ -112,11 +112,27 @@ function updateHistoryCommands()
     goUpdateCommand("cmd_deleteByDomain");
 }
 
+function historyOnClick(aEvent)
+{
+  // This is kind of a hack but matches the currently implemented behaviour. 
+  // If a status bar is not present, assume we're in sidebar mode, and thus single clicks on containers
+  // will open the container. Single clicks on non-containers are handled below in historyOnSelect.
+  if (!gHistoryStatus) {
+    var currentIndex = gHistoryOutliner.currentIndex;     
+    var row = { };
+    var col = { };
+    var elt = { };
+    gHistoryOutliner.outlinerBoxObject.getCellAt(aEvent.clientX, aEvent.clientY, row, col, elt);
+    if (row.value >= 0 && isContainer(gHistoryOutliner, row.value)) 
+      gHistoryOutliner.outlinerBoxObject.view.toggleOpenState(row.value);
+  }
+}
+
 function historyOnSelect()
 {
     if (!gHistoryStatus) {
-        OpenURL(false);
-        return;
+      OpenURL(false);
+      return;
     }
 
     // every time selection changes, save the last hostname
@@ -257,7 +273,7 @@ function OpenURL(aInNewWindow)
     var currentIndex = gHistoryOutliner.currentIndex;     
     var builder = gHistoryOutliner.builder.QueryInterface(Components.interfaces.nsIXULOutlinerBuilder);
     var url = builder.getResourceAtIndex(currentIndex).Value;
-
+    
     if (aInNewWindow) {
       var count = gHistoryOutliner.outlinerBoxObject.view.selection.count;
       if (count == 1) {

@@ -185,12 +185,33 @@
       </menu>
   
       <menu id="menu_View">
-        <menupopup onpopupshowing="fillViewMenu(this)">
+        <menupopup onpopupshowing="fillViewMenu(event)"
+                   oncommand="onViewMenuSortItemSelected(event);">
           <menuitem id="viewCommandToolbar" type="checkbox" class="menuitem-iconic"
                     label="&menuitem.view.command.toolbar.label;"
                     accesskey="&menuitem.view.command.toolbar.accesskey;"
-                    oncommand="goToggleToolbar('command-toolbar', 'viewCommandToolbar');"
+                    oncommand="goToggleToolbar('command-toolbar', 'viewCommandToolbar'); event.preventBubble();"
                     persist="checked"/>
+          <menuseparator id="fill-after-this-node"/>
+          <menuitem id="natural" label="&menuitem.view.unsorted.label;"
+                    accesskey="&menuitem.view.unsorted.accesskey;"
+                    type="radio"
+                    resource="direction" name="sortSet"/>
+          <menuseparator id="fill-before-this-node"/>
+          <menuitem id="ascending" label="&menuitem.view.ascending.label;"
+                    accesskey="&menuitem.view.ascending.accesskey;"
+                    type="radio"
+                    resource="direction" name="sortDirectionSet"/>
+          <menuitem id="descending" label="&menuitem.view.descending.label;"
+                    accesskey="&menuitem.view.descending.accesskey;"
+                    type="radio"
+                    resource="direction" name="sortDirectionSet"/>
+          <menuseparator/>
+          <menu id="descending" label="&menuitem.view.show_columns.label;"
+                accesskey="&menuitem.view.show_columns.accesskey;">
+            <menupopup id="columnsPopup" onpopupshowing="fillColumnsMenu(event);"
+                       oncommand="onViewMenuColumnItemSelected(event);"/>
+          </menu>
           <menuseparator/>
           <menuitem label="&menuitem.newbookmarkfolder.label;" 
                     command="cmd_bm_setnewbookmarkfolder"
@@ -207,7 +228,7 @@
       <menu id="menu_Help"/>
     </menubar>
 
-    <toolbar class="chromeclass-toolbar" id="command-toolbar" tbalign="stretch" grippytooltiptext="&bookmarkToolbar.tooltip;">
+    <toolbar id="command-toolbar" tbalign="stretch" grippytooltiptext="&bookmarkToolbar.tooltip;">
       <toolbarbutton id="newfolder" label="&command.newFolder.label;" 
                      command="cmd_bm_newfolder"/>
       <toolbarbutton id="newseparator" label="&command.newSeparator.label;" 
@@ -225,6 +246,6 @@
     </toolbar>
   </toolbox>
   
-  <bookmarks-outliner id="bookmarks-view" flex="1"/>
+  <bookmarks-outliner id="bookmarks-view" class="inset" flex="1"/>
 </window>
 

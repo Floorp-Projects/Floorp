@@ -859,7 +859,7 @@ var BookmarksUtils = {
     var ix = kRDFC.IndexOf(aRelativeItem);
 
     var BMSvc = BMDS.QueryInterface(Components.interfaces.nsIBookmarksService);
-    return BMSvc.createFolderEx(aTitle, aParentFolder, ix);
+    return BMSvc.createFolderWithDetails(aTitle, aParentFolder, ix);
   },
 
   addBookmarkForBrowser: function (aDocShell, aShowDialog)

@@ -57,11 +57,12 @@ interface nsIBookmarksService : nsISupports
     void addBookmarkImmediately(in string aURI, in wstring aTitle, in long bmType, in wstring docCharset);
         
     nsIRDFResource createFolder(in wstring aName, in nsIRDFResource aParentFolder);
-    nsIRDFResource createFolderEx(in wstring aName, in nsIRDFResource aParentFolder, in long aIndex);
+    nsIRDFResource createFolderWithDetails(in wstring aName, in nsIRDFResource aParentFolder, 
+                                           in long aIndex);
 
     nsIRDFResource createBookmark(in wstring aName, in string aURL, in nsIRDFResource aParentFolder);
-    nsIRDFResource createBookmarkEx(in wstring aName, in string aURI, in wstring docCharSet, 
-                                    in nsIRDFResource aFolder, in long aIndex);
+    nsIRDFResource createBookmarkWithDetails(in wstring aName, in string aURI, in wstring docCharSet, 
+                                             in nsIRDFResource aFolder, in long aIndex);
 
     void updateBookmarkIcon(in string aURL, in wstring iconURL);
     void removeBookmarkIcon(in string aURL, in wstring iconURL);

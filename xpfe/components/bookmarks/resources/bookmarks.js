@@ -27,16 +27,10 @@
 function Startup()
 {
   var bookmarksView = document.getElementById("bookmarks-view");
-  // Set up the outliner controller
-  // gBookmarksShell = new nsBookmarksShell("bookmarks-outliner", "bookmarks-outlinerbody");
-  // var rdflinerObserver = new nsBookmarksRDFLinerObserver();
-  // var builder = bookmarksBody.builder.QueryInterface(Components.interfaces.nsIXULOutlinerBuilder);
-  // builder.addObserver(rdflinerObserver);
   const windowNode = document.getElementById("bookmark-window");
   // If we've been opened with a parameter, root the outliner on it.
   if ("arguments" in window && window.arguments[0]) {
     var uri = window.arguments[0];
-    dump(uri);
     bookmarksView.outliner.setAttribute("ref", uri);
 
     var title = "";
@@ -99,14 +93,135 @@ function sendBookmarksLink()
   outliner.sendLink();
 }
 
-function importIEFavorites()
+var gConstructedViewMenuSortItems = false;
+function fillViewMenu(aEvent)
+{
+  var adjacentElement = document.getElementById("fill-before-this-node");
+  var popupElement = aEvent.target;
+  
+  var bookmarksView = document.getElementById("bookmarks-view");
+  var columns = bookmarksView.columns;
+
+  if (!gConstructedViewMenuSortItems) {
+    for (var i = 0; i < columns.length; ++i) {
+      var name = columns[i].name;
+      var accesskey = columns[i].accesskey;
+      
+      var menuitem = document.createElement("menuitem");
+      var nameTemplate = bookmarksView._bundle.GetStringFromName("SortMenuItem");
+      var name = nameTemplate.replace(/%NAME%/g, columns[i].label);
+      menuitem.setAttribute("label", name);
+      menuitem.setAttribute("accesskey", columns[i].accesskey);
+      menuitem.setAttribute("resource", columns[i].resource);
+      menuitem.setAttribute("id", "sortMenuItem:" + columns[i].resource);
+      menuitem.setAttribute("checked", columns[i].sortActive);
+      menuitem.setAttribute("name", "sortSet");
+      menuitem.setAttribute("type", "radio");
+      
+      popupElement.insertBefore(menuitem, adjacentElement);
+    }
+    
+    gConstructedViewMenuSortItems = true;
+  }  
+
+  const kPrefSvcContractID = "@mozilla.org/preferences;1";
+  const kPrefSvcIID = Components.interfaces.nsIPrefService;
+  var prefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
+  var bookmarksSortPrefs = prefSvc.getBranch("browser.bookmarks.sort.");
+
+  if (gConstructedViewMenuSortItems) {
+    var resource = bookmarksSortPrefs.getCharPref("resource");
+    var element = document.getElementById("sortMenuItem:" + resource);
+    if (element)
+      element.setAttribute("checked", "true");
+  }  
+
+  var sortAscendingMenu = document.getElementById("ascending");
+  var sortDescendingMenu = document.getElementById("descending");
+  var noSortMenu = document.getElementById("natural");
+  
+  sortAscendingMenu.setAttribute("checked", "false");
+  sortDescendingMenu.setAttribute("checked", "false");
+  noSortMenu.setAttribute("checked", "false");
+  var direction = bookmarksSortPrefs.getCharPref("direction");
+  if (direction == "natural")
+    sortAscendingMenu.setAttribute("checked", "true");
+  else if (direction == "ascending") 
+    sortDescendingMenu.setAttribute("checked", "true");
+  else
+    noSortMenu.setAttribute("checked", "true");
+}
+
+function onViewMenuSortItemSelected(aEvent)
+{
+  var resource = aEvent.target.getAttribute("resource");
+  
+  const kPrefSvcContractID = "@mozilla.org/preferences;1";
+  const kPrefSvcIID = Components.interfaces.nsIPrefService;
+  var prefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
+  var bookmarksSortPrefs = prefSvc.getBranch("browser.bookmarks.sort.");
+
+  switch (resource) {
+  case "":
+    break;
+  case "direction":
+    var dirn = bookmarksSortPrefs.getCharPref("direction");
+    if (aEvent.target.id == "ascending")
+      bookmarksSortPrefs.setCharPref("direction", "natural");
+    else if (aEvent.target.id == "descending")
+      bookmarksSortPrefs.setCharPref("direction", "ascending");
+    else
+      bookmarksSortPrefs.setCharPref("direction", "descending");
+    break;
+  default:
+    bookmarksSortPrefs.setCharPref("resource", resource);
+    var direction = bookmarksSortPrefs.getCharPref("direction");
+    if (direction == "descending")
+      bookmarksSortPrefs.setCharPref("direction", "natural");
+    break;
+  }
+
+  aEvent.preventCapture();
+}  
+
+var gConstructedColumnsMenuItems = false;
+function fillColumnsMenu(aEvent) 
 {
   var bookmarksView = document.getElementById("bookmarks-view");
-  var RDFS = bookmarksView.rdf;
+  var columns = bookmarksView.columns;
+
+  if (!gConstructedColumnsMenuItems) {
+    for (var i = 0; i < columns.length; ++i) {
+      var menuitem = document.createElement("menuitem");
+      menuitem.setAttribute("label", columns[i].label);
+      menuitem.setAttribute("resource", columns[i].resource);
+      menuitem.setAttribute("id", "columnMenuItem:" + columns[i].resource);
+      menuitem.setAttribute("type", "checkbox");
+      menuitem.setAttribute("checked", columns[i].hidden != "true");
+      aEvent.target.appendChild(menuitem);
+    }
+
+    gConstructedColumnsMenuItems = true;
+  }
+  else {
+    for (var i = 0; i < columns.length; ++i) {
+      var element = document.getElementById("columnMenuItem:" + columns[i].resource);
+      if (element && columns[i].hidden != "true")
+        element.setAttribute("checked", "true");
+    }
+  }
   
-  var BMDS = bookmarksView.bookmarksDS;
-  var BMSvc = BMDS.QueryInterface(Components.interfaces.nsIBookmarksService);
-  var favFolder = BMSvc.createFolder("Imported IE Favorites", RDFS.GetResource("NC:BookmarksRoot"));
-  BMSvc.importSystemBookmarks(favFolder)
+  aEvent.preventBubble();
+}
+
+function onViewMenuColumnItemSelected(aEvent)
+{
+  var resource = aEvent.target.getAttribute("resource");
+  if (resource != "") {
+    var bookmarksView = document.getElementById("bookmarks-view");
+    bookmarksView.toggleColumnVisibility(resource);
+  }  
+
+  aEvent.preventBubble();
 }
 

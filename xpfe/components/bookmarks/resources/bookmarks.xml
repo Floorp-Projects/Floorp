@@ -116,6 +116,7 @@
         var olb = document.getAnonymousElementByAttribute(this, "anonid", "bookmarks-outliner");
         olb = olb.builder.QueryInterface(Components.interfaces.nsIXULOutlinerBuilder);
         olb.addObserver(this.builderObserver);
+        
         // need to create string bundle manually instead of using <xul:stringbundle/>
         // see bug 63370 for details
         var localeService = Components.classes["@mozilla.org/intl/nslocaleservice;1"]
@@ -123,11 +124,184 @@
         var stringBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(Components.interfaces.nsIStringBundleService);
         var bundleURL = "chrome://communicator/locale/bookmarks/bookmark.properties";
         this._bundle = stringBundleService.createBundle(bundleURL, localeService.GetApplicationLocale());
+        
+
+        // Load column settings from persisted attribute
+        var colinfostr = this.getAttribute("colinfo");
+        var colinfo = colinfostr.split(" ");
+        for (var i = 0; i < colinfo.length; ++i) {
+          if (colinfo[i] == "") continue;
+          
+          var querymarker = colinfo[i].indexOf("?");
+          var anonid = colinfo[i].substring(4, querymarker);
+          var col = document.getAnonymousElementByAttribute(this, "id", anonid);
+          
+          if (!anonid || !col) break;
+          
+          var attrstring = colinfo[i].substr(querymarker + 1);
+
+          var attrpairs = attrstring.split("&");
+          for (var j = 0; j < attrpairs.length; ++j) {
+            var pair = attrpairs[j].split("=");
+            col.setAttribute(pair[0], pair[1]);
+          }
+        }
+        
+        // Load sort data from preferences
+        this.refreshSort();
+        
+        // Observe for changes in sort from other concurrent UI
+        const kPrefSvcContractID = "@mozilla.org/preferences;1";
+        const kPrefSvcIID = Components.interfaces.nsIPrefService;
+        var prefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
+        var prefs = prefSvc.getBranch(null);
+        const kPrefBranchInternalIID = Components.interfaces.nsIPrefBranchInternal;
+        var bookmarksPrefsInternal = prefs.QueryInterface(kPrefBranchInternalIID);
+        bookmarksPrefsInternal.addObserver(this.sortChangedObserver.domain, 
+                                           this.sortChangedObserver, false);
       ]]></constructor>
       <destructor><![CDATA[
+        
         this.outlinerBuilder.removeObserver(this.builderObserver);
         this.outliner.controllers.removeController(this.controller);
+
+        // Save column settings and sort info to persisted attribute
+        var persistString = "";
+        
+        var sortResource = this.NC_NS + "Name";
+        var sortDirection = "none";
+
+        var outlinercols = document.getAnonymousElementByAttribute(this, "anonid", "outlinercols");
+        var child = outlinercols.firstChild;
+        while (child) {
+          if (child.localName != "splitter") {
+            var formatString = " col:%1%?width=%2%&hidden=%3%&ordinal=%6%";
+            formatString = formatString.replace(/%1%/, child.getAttribute("id"));
+            formatString = formatString.replace(/%2%/, child.getAttribute("width"));
+            formatString = formatString.replace(/%3%/, child.getAttribute("hidden"));
+
+            // While we're walking the columns, if we discover the column that represents the
+            // field sorted by, save the resource associated with that column so that we 
+            // can save that in prefs (see below)
+            if (child.getAttribute("sortActive") == "true") {
+              sortResource = child.getAttribute("sort");
+              sortDirection = child.getAttribute("sortDirection");
+            }
+            formatString = formatString.replace(/%6%/, child.getAttribute("ordinal"));
+            persistString += formatString;
+          }          
+          child = child.nextSibling;
+        }
+        this.setAttribute("colinfo", persistString);
+        
+        document.persist(this.id, "colinfo");
+        
+        // Unhook the sort change observer for this outliner
+        const kPrefSvcContractID = "@mozilla.org/preferences;1";
+        const kPrefSvcIID = Components.interfaces.nsIPrefService;
+        var prefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
+        var prefs = prefSvc.getBranch(null);
+        const kPrefBranchInternalIID = Components.interfaces.nsIPrefBranchInternal;
+        var bookmarksPrefsInternal = prefs.QueryInterface(kPrefBranchInternalIID);
+        bookmarksPrefsInternal.removeObserver(this.sortChangedObserver.domain, 
+                                              this.sortChangedObserver);
+
       ]]></destructor>
+
+      <field name="sortChangedObserver">
+      <![CDATA[
+      ({
+        outer: this,
+        domain: "browser.bookmarks.sort",
+        observe: function BMOL_sortChangedObserver(aSubject, aTopic, aPrefName) 
+        {
+          if (aTopic != "nsPref:changed") return;
+          if (aPrefName.substr(0, this.domain.length) != this.domain) return;
+                    
+          this.outer.refreshSort();
+        }      
+      })
+      ]]>
+      </field>
+      
+      <field name="sorted">false</field>
+      <method name="refreshSort">
+        <body>
+        <![CDATA[
+          const kPrefSvcContractID = "@mozilla.org/preferences;1";
+          const kPrefSvcIID = Components.interfaces.nsIPrefService;
+          var prefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
+          var bookmarksSortPrefs = prefSvc.getBranch("browser.bookmarks.sort.");
+          
+          // This ensures that we don't sort twice in the outliner that is clicked on 
+          // as a result of 1) the click and 2) the pref listener. 
+          if (!this.sorted) {
+            try {
+              var sortResource = bookmarksSortPrefs.getCharPref("resource");
+              var sortDirection = bookmarksSortPrefs.getCharPref("direction");
+          
+              // Walk the columns, when we find a column with a sort resource that matches the supplied
+              // data, stop and make sure it's sort active. 
+              var outlinercols = document.getAnonymousElementByAttribute(this, "anonid", "outlinercols");
+              var child = outlinercols.firstChild;
+              while (child) {
+                if (child.localName != "splitter") {
+                  if (child.getAttribute("sort") == sortResource) {
+                    child.setAttribute("sortActive", "true");
+                    child.setAttribute("sortDirection", sortDirection);
+                    this.outlinerBuilder.sort(child, false);
+                    break;
+                  }
+                }          
+                child = child.nextSibling;
+              }
+            }
+            catch (e) {
+            }
+          }
+
+          this.sorted = false;
+        ]]>
+        </body>
+      </method>
+      
+      <property name="columns">
+        <getter>
+        <![CDATA[
+          var cols = [];
+        
+          var outlinercols = document.getAnonymousElementByAttribute(this, "anonid", "outlinercols");
+          var child = outlinercols.firstChild;
+          while (child) {
+            if (child.localName != "splitter") {
+              var obj = {
+                label: child.getAttribute("label"),
+                accesskey: child.getAttribute("accesskey"),
+                resource: child.getAttribute("sort"),
+                sortActive: child.getAttribute("sortActive") == "true",
+                hidden: child.getAttribute("hidden")
+              }
+              cols.push(obj);
+            }
+            child = child.nextSibling;
+          }
+
+          return cols;
+        ]]>
+        </getter>
+      </property>
+      
+      <method name="toggleColumnVisibility">
+        <parameter name="aColumnResource"/>
+        <body>
+        <![CDATA[
+          var elt = document.getAnonymousElementByAttribute(this, "sort", aColumnResource);
+          if (elt)
+            elt.setAttribute("hidden", elt.getAttribute("hidden") != "true");
+        ]]>
+        </body>
+      </method>
+      
 
       <property name="outlinerBoxObject">
         <getter><![CDATA[
@@ -335,6 +509,7 @@
               }
               data.addDataForFlavour("moz/rdfitem", currRes.Value + "\n" + parentRes.Value);
               data.addDataForFlavour("text/unicode", currRes.Value);
+              
               aXferData.data.push(data);
             }
 
@@ -730,6 +905,16 @@
         
         onCycleHeader: function BMOLBuilderObserver_onCycleHeader(aColumnID, aHeaderElement)
         {
+          const kPrefSvcContractID = "@mozilla.org/preferences;1";
+          const kPrefSvcIID = Components.interfaces.nsIPrefService;
+          var prefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
+          var bookmarksSortPrefs = prefSvc.getBranch("browser.bookmarks.sort.");
+          
+          // Sorted! http://www.sorted.org.nz/
+          this.mOuter.sorted = true;
+
+          bookmarksSortPrefs.setCharPref("resource", aHeaderElement.getAttribute("sort"));
+          bookmarksSortPrefs.setCharPref("direction", aHeaderElement.getAttribute("sortDirection"));
         },
     
         onCycleCell: function BMOLBuilderObserver_onCycleCell(aItemIndex, aColumnID)
@@ -1079,21 +1264,25 @@
               ksRDFC.RemoveElementAt(i, false);
           }
           */
+          const kPrefSvcContractID = "@mozilla.org/preferences;1";
+          const kPrefSvcIID = Components.interfaces.nsIPrefService;
+          var prefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
+          var bookmarksPrefs = prefSvc.getBranch("browser.bookmarks.");
           for (i = rangeCount - 1; i >= 0; --i) {
             rangeMax = { };
             rangeMin = { };
             boxObject.selection.getRangeAt(i, rangeMin, rangeMax);
-            const kPrefSvcContractID = "@mozilla.org/preferences;1";
-            const kPrefSvcIID = Components.interfaces.nsIPrefService;
-            var prefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
-            var bookmarksPrefs = prefSvc.getBranch("browser.bookmarks.");
 
             for (var j = rangeMax.value; j >= rangeMin.value; --j) {
               var resource = outlinerBuilder.getResourceAtIndex(j);
               if (resource.Value == "NC:BookmarksRoot")
                 continue;
+              // If we're removing the static root, make sure we set the pref that 
+              // tells the bookmark service that it's been added so that after
+              // we remove it, the bookmark service doesn't try to add it back
+              // on subsequent launches. 
               if (resource.Value == "NC:SystemBookmarksStaticRoot")
-                bookmarksPrefs.setBoolPref("show_static_system_bookmarks", false);
+                bookmarksPrefs.setBoolPref("added_static_root", true);
 
               var currType = this.getTypeAtIndex(j);
               if (currType == this.NC_NS + "IEFavoriteFolder")
@@ -1613,9 +1802,14 @@
       <parameter name="aInNewWindow"/>
         <body><![CDATA[
           if (this.outlinerBoxObject.view.isContainer(this.outlinerBoxObject.selection.currentIndex)) {
-            dump("*** this = " + this.clickCount + "\n");
-            if (this.clickCount == 1) 
-              this.outlinerBoxObject.view.toggleOpenState(this.currentIndex);
+            if (this.clickCount == 1) {
+              var row = { };
+              var col = { };
+              var elt = { };
+              this.outlinerBoxObject.getCellAt(aEvent.clientX, aEvent.clientY, row, col, elt);
+              if (row.value >= 0) 
+                this.outlinerBoxObject.view.toggleOpenState(row.value);
+            }
             return;
           }
           
@@ -1680,7 +1874,7 @@
                   onkeypress="if (event.keyCode == 13) this.parentNode.parentNode.openItem(event, false);"
                   ondblclick="if (this.parentNode.parentNode.validOpenClickConditions(event)) this.parentNode.parentNode.openItem(event, false);"
                   ondraggesture="if (event.originalTarget.localName == 'outlinerchildren') nsDragAndDrop.startDrag(event, this.parentNode.parentNode.DNDObserver);"
-                  onselect="this.parentNode.parentNode.view.selectionChanged();">
+                  onselect="this.outlinerBoxObject.view.selectionChanged();">
           <template>
             <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
               <outlinerchildren>
@@ -1705,21 +1899,42 @@
               </outlinerchildren>
             </rule>
           </template>
-          <outlinercols>
-            <outlinercol id="Name" label="&outlinercol.name.label;" flex="1" primary="true" class="sortDirectionIndicator" persist="width hidden sortActive sortDirection ordinal" sort="rdf:http://home.netscape.com/NC-rdf#Name"
+          <outlinercols anonid="outlinercols">
+            <outlinercol id="Name" label="&outlinercol.name.label;" flex="1" primary="true" 
+                         class="sortDirectionIndicator" 
+                         persist="width hidden sortActive sortDirection ordinal" 
+                         sort="rdf:http://home.netscape.com/NC-rdf#Name"
                          sortActive="true" sortDirection="none"/>
             <splitter class="tree-splitter" />
-            <outlinercol id="URL" label="&outlinercol.url.label;" flex="1" class="sortDirectionIndicator" sort="rdf:http://home.netscape.com/NC-rdf#URL" persist="width hidden sortActive sortDirection ordinal" />
+            <outlinercol id="URL" label="&outlinercol.url.label;" 
+                         flex="1" class="sortDirectionIndicator" 
+                         sort="rdf:http://home.netscape.com/NC-rdf#URL" 
+                         persist="width hidden sortActive sortDirection ordinal" />
             <splitter class="tree-splitter" />
-            <outlinercol id="ShortcutURL" label="&outlinercol.shortcut.label;" hidden="true" flex="1" class="sortDirectionIndicator" persist="hidden width sortActive sortDirection ordinal" sort="rdf:http://home.netscape.com/NC-rdf#ShortcutURL"/>
+            <outlinercol id="ShortcutURL" label="&outlinercol.shortcut.label;" 
+                         hidden="true" flex="1" class="sortDirectionIndicator" 
+                         persist="hidden width sortActive sortDirection ordinal" 
+                         sort="rdf:http://home.netscape.com/NC-rdf#ShortcutURL"/>
             <splitter class="tree-splitter"/>
-            <outlinercol id="Description" label="&outlinercol.description.label;" hidden="true" flex="1" class="sortDirectionIndicator" persist="hidden width sortActive sortDirection ordinal" sort="rdf:http://home.netscape.com/NC-rdf#Description"/>
+            <outlinercol id="Description" label="&outlinercol.description.label;" 
+                         hidden="true" flex="1" class="sortDirectionIndicator" 
+                         persist="hidden width sortActive sortDirection ordinal" 
+                         sort="rdf:http://home.netscape.com/NC-rdf#Description"/>
             <splitter class="tree-splitter"/>
-            <outlinercol id="AddDate" label="&outlinercol.addedon.label;" hidden="true" flex="1" class="sortDirectionIndicator" sort="rdf:http://home.netscape.com/NC-rdf#BookmarkAddDate" persist="width hidden sortActive sortDirection ordinal" />
+            <outlinercol id="AddDate" label="&outlinercol.addedon.label;" 
+                         hidden="true" flex="1" class="sortDirectionIndicator" 
+                         sort="rdf:http://home.netscape.com/NC-rdf#BookmarkAddDate" 
+                         persist="width hidden sortActive sortDirection ordinal" />
             <splitter class="tree-splitter" />
-            <outlinercol id="LastModDate" label="&outlinercol.lastmod.label;" hidden="true" flex="1" class="sortDirectionIndicator" sort="rdf:http://home.netscape.com/NC-rdf#LastModifiedDate" persist="width hidden sortActive sortDirection ordinal" />
+            <outlinercol id="LastModDate" label="&outlinercol.lastmod.label;" 
+                         hidden="true" flex="1" class="sortDirectionIndicator" 
+                         sort="rdf:http://home.netscape.com/NC-rdf#LastModifiedDate" 
+                         persist="width hidden sortActive sortDirection ordinal" />
             <splitter class="tree-splitter" />
-            <outlinercol id="LastVisitDate" label="&outlinercol.lastvisit.label;" hidden="true" flex="1" class="sortDirectionIndicator" sort="rdf:http://home.netscape.com/NC-rdf#LastVisitDate" persist="width hidden sortActive sortDirection ordinal" />
+            <outlinercol id="LastVisitDate" label="&outlinercol.lastvisit.label;" 
+                         hidden="true" flex="1" class="sortDirectionIndicator" 
+                         sort="rdf:http://home.netscape.com/NC-rdf#LastVisitDate" 
+                         persist="width hidden sortActive sortDirection ordinal" />
           </outlinercols>
         </outliner>
         <statusbar class="chromeclass-status" inherits="hidden=hidestatusbar" hidden="false">
@@ -1733,11 +1948,11 @@
   </binding>
   <!-- Single column outliner -->
   <binding id="bookmarks-outliner-name" extends="chrome://communicator/content/bookmarks/bookmarks.xml#bookmarks-outliner">
-    <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" xmlns:xbl="http://www.mozilla.org/xbl"
-                 contextmenu="_child">
+    <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
+                 xmlns:xbl="http://www.mozilla.org/xbl" contextmenu="_child">
       <menupopup id="bmContext" 
                  onpopupshowing="this.parentNode.createContextMenu(event);"/>
-      <outliner anonid="bookmarks-outliner" flex="1" hidecolumnpicker="true"
+      <outliner anonid="bookmarks-outliner" flex="1" hidecolumnpicker="true" class="plain"
                 datasources="rdf:bookmarks rdf:internetsearch rdf:files rdf:localsearch" ref="NC:BookmarksRoot" flags="dont-build-content"
                 onkeypress="if (event.keyCode == 13) this.parentNode.openItem(event, false);"
                 ondraggesture="if (event.originalTarget.localName == 'outlinerchildren') nsDragAndDrop.startDrag(event, this.parentNode.DNDObserver);"
@@ -1756,14 +1971,48 @@
               <outlineritem uri="rdf:*">
                 <outlinerrow properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type rdf:http://home.netscape.com/NC-rdf#loading rdf:http://home.netscape.com/WEB-rdf#status">
                   <outlinercell label="rdf:http://home.netscape.com/NC-rdf#Name" />
+                  <outlinercell label="rdf:http://home.netscape.com/NC-rdf#URL" />
+                  <outlinercell label="rdf:http://home.netscape.com/NC-rdf#ShortcutURL" />
+                  <outlinercell label="rdf:http://home.netscape.com/NC-rdf#Description" />
+                  <outlinercell label="rdf:http://home.netscape.com/WEB-rdf#LastVisitDate"/>
+                  <outlinercell label="rdf:http://home.netscape.com/NC-rdf#BookmarkAddDate" />
+                  <outlinercell label="rdf:http://home.netscape.com/NC-rdf#LastModifiedDate" />
                 </outlinerrow>
               </outlineritem>
             </outlinerchildren>
           </rule>
         </template>
-        <outlinercols>
-          <outlinercol id="Name" label="&outlinercol.name.label;" flex="1" primary="true" class="sortDirectionIndicator" persist="width hidden sortActive sortDirection" sort="rdf:http://home.netscape.com/NC-rdf#Name"
-                       sortActive="true" sortDirection="none"/>
+        <outlinercols anonid="outlinercols">
+          <outlinercol id="Name" label="&outlinercol.name.label;" flex="1" primary="true" 
+                        class="sortDirectionIndicator" 
+                        persist="width hidden sortActive sortDirection ordinal" 
+                        sort="rdf:http://home.netscape.com/NC-rdf#Name"
+                        sortActive="true" sortDirection="none"/>
+          <splitter class="tree-splitter" />
+          <outlinercol id="URL" label="&outlinercol.url.label;" 
+                        flex="1" class="sortDirectionIndicator" 
+                        sort="rdf:http://home.netscape.com/NC-rdf#URL" 
+                        hidden="true"/>
+          <splitter class="tree-splitter" />
+          <outlinercol id="ShortcutURL" label="&outlinercol.shortcut.label;" 
+                        hidden="true" flex="1" class="sortDirectionIndicator" 
+                        sort="rdf:http://home.netscape.com/NC-rdf#ShortcutURL"/>
+          <splitter class="tree-splitter" />
+          <outlinercol id="Description" label="&outlinercol.description.label;" 
+                        hidden="true" flex="1" class="sortDirectionIndicator" 
+                        sort="rdf:http://home.netscape.com/NC-rdf#Description"/>
+          <splitter class="tree-splitter" />
+          <outlinercol id="AddDate" label="&outlinercol.addedon.label;" 
+                        hidden="true" flex="1" class="sortDirectionIndicator" 
+                        sort="rdf:http://home.netscape.com/NC-rdf#BookmarkAddDate" />
+          <splitter class="tree-splitter" />
+          <outlinercol id="LastModDate" label="&outlinercol.lastmod.label;" 
+                        hidden="true" flex="1" class="sortDirectionIndicator" 
+                        sort="rdf:http://home.netscape.com/NC-rdf#LastModifiedDate"  />
+          <splitter class="tree-splitter" />
+          <outlinercol id="LastVisitDate" label="&outlinercol.lastvisit.label;" 
+                        hidden="true" flex="1" class="sortDirectionIndicator" 
+                        sort="rdf:http://home.netscape.com/NC-rdf#LastVisitDate" />
         </outlinercols>
       </outliner>
     </xbl:content>
