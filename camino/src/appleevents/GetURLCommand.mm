@@ -34,30 +34,7 @@
 
 - (id)performDefaultImplementation 
 {
-  // get the pref that specifies if we want to re-use the existing window or
-  // open a new one. There's really no point caching this pref.
-  PRBool reuseWindow = PR_FALSE;
-  PRBool loadInBackground = PR_FALSE;
-  
-  nsCOMPtr<nsIPref> prefService ( do_GetService(NS_PREF_CONTRACTID) );
-  if ( prefService ) {
-    prefService->GetBoolPref("browser.always_reuse_window", &reuseWindow);
-    prefService->GetBoolPref("browser.tabs.loadInBackground", &loadInBackground);
-  }
-  
-  // reuse the main window if there is one. The user may have closed all of 
-  // them or we may get this event at startup before we've had time to load
-  // our window.
-  
-  BrowserWindowController* controller = NULL;  
-  if ( reuseWindow && [NSApp mainWindow] ) {
-    controller = [[NSApp mainWindow] windowController];
-    [controller openNewTabWithURL:[self directParameter] loadInBackground:loadInBackground];
-  }
-  else
-    controller = [[NSApp delegate] openBrowserWindowWithURL: [self directParameter]];
-
-  [[[controller getBrowserWrapper] getBrowserView] setActive: YES];
+  [[NSApp delegate] openNewWindowOrTabWithURL:[self directParameter]];
   return nil;
 }
 

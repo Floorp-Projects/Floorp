@@ -117,9 +117,14 @@ class BookmarksService;
 -(IBAction) closeTab:(id)aSender;
 
 -(BrowserWindowController*)openBrowserWindowWithURL: (NSString*)aURL;
+- (void)openNewWindowOrTabWithURL:(NSString*)inURLString;
+
+-(NSWindow*)getFrontmostBrowserWindow;
 
 - (MVPreferencesController *)preferencesController;
 - (void)displayPreferencesWindow:sender;
+- (CHPreferenceManager *)preferenceManager;
+- (BOOL)isMainWindowABrowserWindow;
 
 - (IBAction)showAboutBox:(id)sender;
 
