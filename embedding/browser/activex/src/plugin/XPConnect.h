@@ -40,13 +40,14 @@
 #define XPCONNECT_H
 
 #include "nsIClassInfo.h"
+#include "nsIMozAxPlugin.h"
+
+#include "LegacyPlugin.h"
 
 class nsScriptablePeer :
     public nsIClassInfo,
     public nsIMozAxPlugin
 {
-    long mRef;
-
 protected:
     virtual ~nsScriptablePeer();
 
