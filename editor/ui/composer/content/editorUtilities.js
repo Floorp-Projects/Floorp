@@ -176,9 +176,83 @@ function ConvertToCDATAString(string)
 
 function GetSelectionAsText()
 {
-  return editorShell.GetContentsAs("text/plain", 1); // OutputSelectionOnly
+  try {
+    return GetCurrentEditor().outputToString("text/plain", 1); // OutputSelectionOnly
+  } catch (e) {}
+
+  return "";
 }
 
+
+/************* General editing command utilities ***************/
+
+function GetCurrentEditor()
+{
+  // Get the actual active editor
+  //XXX Temporarily use a global until new embedding access is finished
+  if ("gEditor" in window)
+    return gEditor;
+  
+  // For dialogs: Search up parent chain to find top window with editor
+  var editor = null;
+  var parentWindow = window.opener;
+  try {
+    while ("GetCurrentEditor" in parentWindow)
+    {
+      editor = parentWindow.GetCurrentEditor();
+      if (editor)
+        return editor;
+
+      parentWindow = parentWindow.opener;
+    }
+  } catch (e) {}
+
+  return null;
+}
+
+var gAtomService;
+function GetAtomService()
+{
+  gAtomService = Components.classes["@mozilla.org/atom-service;1"].getService(Components.interfaces.nsIAtomService);
+}
+
+function EditorGetTextProperty(property, attribute, value, firstHas, anyHas, allHas)
+{
+  try {
+    if (!gAtomService) GetAtomService();
+    var propAtom = gAtomService.getAtom(property);
+
+    GetCurrentEditor().getInlineProperty(propAtom, attribute, value,
+                                         firstHas, anyHas, allHas);
+  }
+  catch(e) {}
+}
+
+function EditorSetTextProperty(property, attribute, value)
+{
+  try {
+    if (!gAtomService) GetAtomService();
+    var propAtom = gAtomService.getAtom(property);
+
+    GetCurrentEditor().setInlineProperty(propAtom, attribute, value);
+    if ("gContentWindow" in window)
+      window.gContentWindow.focus();
+  }
+  catch(e) {}
+}
+
+function EditorRemoveTextProperty(property, attribute)
+{
+  try {
+    if (!gAtomService) GetAtomService();
+    var propAtom = gAtomService.getAtom(property);
+
+    GetCurrentEditor().removeInlineProperty(propAtom, attribute);
+    if ("gContentWindow" in window)
+      window.gContentWindow.focus();
+  }
+  catch(e) {}
+}
 
 /************* Element enbabling/disabling ***************/
 
