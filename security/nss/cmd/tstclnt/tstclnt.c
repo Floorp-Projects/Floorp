@@ -136,7 +136,7 @@ void printSecurityInfo(PRFileDesc *fd)
     result = SSL_GetChannelInfo(fd, &info, sizeof info);
     if (result != SECSuccess)
     	return;
-    if (info.length >= sizeof info - sizeof info.reserved) {
+    if (info.length >= offsetof(SSLChannelInfo, reserved)) {
 	fprintf(stderr, 
 	       "SSL version %d.%d using %d-bit %s with %d-bit %s MAC\n",
 	       info.protocolVersion >> 8, info.protocolVersion & 0xff,
@@ -557,9 +557,9 @@ int main(int argc, char **argv)
 	    if (verbose)
 		SECU_PrintError(progName, "connect");
 	    milliPause(50 * multiplier);
-	    pollset[0].fd = s;
 	    pollset[0].in_flags = PR_POLL_WRITE | PR_POLL_EXCEPT;
 	    pollset[0].out_flags = 0;
+	    pollset[0].fd = s;
 	    while(1) {
 		PRINTF("%s: about to call PR_Poll for connect completion!\n", progName);
 		filesReady = PR_Poll(pollset, 1, PR_INTERVAL_NO_TIMEOUT);
