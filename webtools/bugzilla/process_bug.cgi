@@ -1120,7 +1120,7 @@ foreach my $id (@idlist) {
     my $i = 0;
     foreach my $col (@::log_columns) {
         # Consider NULL db entries to be equivalent to the empty string
-        $oldvalues[$i] ||= '';
+        $oldvalues[$i] = '' unless defined($oldvalues[$i]);
         $oldhash{$col} = $oldvalues[$i];
         if (exists $::FORM{$col}) {
             if (!CheckCanChangeField($col, $id, $oldvalues[$i], $::FORM{$col})) {
