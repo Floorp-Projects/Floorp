@@ -2595,6 +2595,19 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetParameters(PRUint16& n, const char*const
                         }
                       }
 */
+                      /* According to the HTML 4.01 spec, at
+                       * http://www.w3.org/TR/html4/types.html#type-cdata
+                       * ''User agents may ignore leading and trailing
+                       * white space in CDATA attribute values (e.g., "
+                       * myval " may be interpreted as "myval"). Authors
+                       * should not declare attribute values with
+                       * leading or trailing white space.''
+                       */
+                      name.CompressWhitespace();
+                      val.CompressWhitespace();
+                      mParamNames[mNumParams] = name.ToNewUTF8String();
+                      mParamVals[mNumParams]  = val.ToNewUTF8String();
+                      mNumParams++;
                       mParamNames[mNumParams] = name.ToNewUTF8String();
                       mParamVals[mNumParams]  = val.ToNewUTF8String();
                       mNumParams++;
