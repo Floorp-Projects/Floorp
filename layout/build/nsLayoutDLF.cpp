@@ -84,6 +84,7 @@ static char* gImageTypes[] = {
   "image/jpeg",
   "image/png",
   "image/x-art",
+  "image/x-jg",
   0
 };
 
