@@ -2486,12 +2486,6 @@ JS_ClearTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
 {
 }
 
-JS_FRIEND_API(void)
-js_ForceGC(JSContext *cx)
-{
-    nyi();
-}
-
 JS_PUBLIC_API(JSBool)
 JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
            JSTrapHandler handler, void *closure)

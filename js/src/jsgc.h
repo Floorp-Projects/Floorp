@@ -167,9 +167,6 @@ struct GCMarkNode {
 
 #endif /* !GC_MARK_DEBUG */
 
-extern JS_FRIEND_API(void)
-js_ForceGC(JSContext *cx);
-
 /*
  * Flags to modify how a GC marks and sweeps:
  *   GC_KEEP_ATOMS      Don't sweep unmarked atoms, they may be in use by the
@@ -182,6 +179,9 @@ js_ForceGC(JSContext *cx);
  */
 #define GC_KEEP_ATOMS       0x1
 #define GC_LAST_CONTEXT     0x2
+
+extern void
+js_ForceGC(JSContext *cx, uintN gcflags);
 
 extern void
 js_GC(JSContext *cx, uintN gcflags);

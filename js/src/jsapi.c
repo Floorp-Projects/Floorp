@@ -652,7 +652,7 @@ JS_NewRuntime(uint32 maxbytes)
     rt->rtLock = JS_NEW_LOCK();
     if (!rt->rtLock)
         goto bad;
-    rt->stateChange = JS_NEW_CONDVAR(rt->rtLock);
+    rt->stateChange = JS_NEW_CONDVAR(rt->gcLock);
     if (!rt->stateChange)
         goto bad;
     rt->setSlotLock = JS_NEW_LOCK();
@@ -684,10 +684,10 @@ JS_DestroyRuntime(JSRuntime *rt)
 {
 #ifdef DEBUG
     /* Don't hurt everyone in leaky ol' Mozilla with a fatal JS_ASSERT! */
-    if (rt->contextList.next != &rt->contextList) {
+    if (!JS_CLIST_IS_EMPTY(&rt->contextList)) {
         JSContext *cx, *iter = NULL;
         uintN cxcount = 0;
-        while ((cx = js_ContextIterator(rt, &iter)) != NULL)
+        while ((cx = js_ContextIterator(rt, JS_TRUE, &iter)) != NULL)
             cxcount++;
         fprintf(stderr,
 "JS API usage error: %u contexts left in runtime upon JS_DestroyRuntime.\n",
@@ -925,7 +925,7 @@ JS_GetRuntime(JSContext *cx)
 JS_PUBLIC_API(JSContext *)
 JS_ContextIterator(JSRuntime *rt, JSContext **iterp)
 {
-    return js_ContextIterator(rt, iterp);
+    return js_ContextIterator(rt, JS_TRUE, iterp);
 }
 
 JS_PUBLIC_API(JSVersion)
@@ -1641,7 +1641,7 @@ JS_GC(JSContext *cx)
         JS_FinishArenaPool(&cx->stackPool);
     JS_FinishArenaPool(&cx->codePool);
     JS_FinishArenaPool(&cx->tempPool);
-    js_ForceGC(cx);
+    js_ForceGC(cx, 0);
 }
 
 JS_PUBLIC_API(void)

@@ -67,6 +67,7 @@ typedef struct JSPropertyTreeEntry {
 } JSPropertyTreeEntry;
 
 struct JSRuntime {
+    /* Runtime state, synchronized by the stateChange/gcLock condvar/lock. */
     JSRuntimeState      state;
 
     /* Garbage collector state, used by jsgc.c. */
@@ -107,7 +108,7 @@ struct JSRuntime {
     /* Empty string held for use by this runtime's contexts. */
     JSString            *emptyString;
 
-    /* List of active contexts sharing this runtime. */
+    /* List of active contexts sharing this runtime; protected by gcLock. */
     JSCList             contextList;
 
     /* These are used for debugging -- see jsprvtd.h and jsdbgapi.h. */
@@ -157,7 +158,7 @@ struct JSRuntime {
     jsword              rtLockOwner;
 #endif
 
-    /* Used to synchronize down/up state change; uses rtLock. */
+    /* Used to synchronize down/up state change; protected by gcLock. */
     PRCondVar           *stateChange;
 
     /* Used to serialize cycle checks when setting __proto__ or __parent__. */
@@ -400,11 +401,19 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize);
 extern void
 js_DestroyContext(JSContext *cx, JSGCMode gcmode);
 
+/*
+ * Return true if cx points to a context in rt->contextList, else return false.
+ * NB: the caller (see jslock.c:ClaimScope) must hold rt->gcLock.
+ */
 extern JSBool
-js_LiveContext(JSRuntime *rt, JSContext *cx);
+js_ValidContextPointer(JSRuntime *rt, JSContext *cx);
 
+/*
+ * If unlocked, acquire and release rt->gcLock around *iterp update; otherwise
+ * the caller must be holding rt->gcLock.
+ */
 extern JSContext *
-js_ContextIterator(JSRuntime *rt, JSContext **iterp);
+js_ContextIterator(JSRuntime *rt, JSBool unlocked, JSContext **iterp);
 
 /*
  * Report an exception, which is currently realized as a printf-style format

@@ -968,15 +968,15 @@ gc_lock_marker(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 num, void *arg)
     return JS_DHASH_NEXT;
 }
 
-JS_FRIEND_API(void)
-js_ForceGC(JSContext *cx)
+void
+js_ForceGC(JSContext *cx, uintN gcflags)
 {
     uintN i;
 
     for (i = 0; i < GCX_NTYPES; i++)
         cx->newborn[i] = NULL;
     cx->runtime->gcPoke = JS_TRUE;
-    js_GC(cx, 0);
+    js_GC(cx, gcflags);
     JS_ArenaFinish();
 }
 
@@ -1015,9 +1015,16 @@ js_GC(JSContext *cx, uintN gcflags)
     JS_ASSERT(!JS_IS_RUNTIME_LOCKED(rt));
 #endif
 
-    /* Don't run gc if it is disabled (unless this is the last context). */
-    if (rt->gcDisabled && !(gcflags & GC_LAST_CONTEXT))
+    /*
+     * Don't collect garbage if the runtime is down or if GC is disabled, and
+     * we're not the last context in the runtime.  The last context must force
+     * a GC, and nothing should disable that final collection or there may be
+     * shutdown leaks, or runtime bloat until the next new context is created.
+     */
+    if ((rt->state != JSRTS_UP || rt->gcDisabled) &&
+        !(gcflags & GC_LAST_CONTEXT)) {
         return;
+    }
 
     /*
      * Let the API user decide to defer a GC if it wants to (unless this
@@ -1065,7 +1072,7 @@ js_GC(JSContext *cx, uintN gcflags)
          * keep a sub-list of contexts having the same id?
          */
         iter = NULL;
-        while ((acx = js_ContextIterator(rt, &iter)) != NULL) {
+        while ((acx = js_ContextIterator(rt, JS_FALSE, &iter)) != NULL) {
             if (acx->thread == cx->thread && acx->requestDepth)
                 requestDebit++;
         }
@@ -1157,7 +1164,7 @@ restart:
         JS_DHashTableEnumerate(rt->gcLocksHash, gc_lock_marker, cx);
     js_MarkAtomState(&rt->atomState, gcflags, gc_mark_atom_key_thing, cx);
     iter = NULL;
-    while ((acx = js_ContextIterator(rt, &iter)) != NULL) {
+    while ((acx = js_ContextIterator(rt, JS_TRUE, &iter)) != NULL) {
         /*
          * Iterate frame chain and dormant chains. Temporarily tack current
          * frame onto the head of the dormant list to ease iteration.

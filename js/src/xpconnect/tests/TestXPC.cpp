@@ -51,7 +51,6 @@
 #include "nsIVariant.h"
 
 #include "jsapi.h"
-#include "jsgc.h"   // for js_ForceGC
 
 #include "xpctest.h"
 
@@ -764,8 +763,8 @@ int main()
         DIE("FAILED to pop the current jscontext from the nsThreadJSContextStack service!\n");
 
     JS_ClearScope(jscontext, glob);
-    js_ForceGC(jscontext);
-    js_ForceGC(jscontext);
+    JS_GC(jscontext);
+    JS_GC(jscontext);
     JS_DestroyContext(jscontext);
     xpc->SyncJSContexts();
     xpc->DebugDump(4);
