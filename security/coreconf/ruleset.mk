@@ -147,18 +147,9 @@ endif
 
 ifdef LIBRARY_NAME
 	ifeq ($(OS_ARCH), WINNT)
-		#
-		# Win16 requires library names conforming to the 8.3 rule.
-		# other platforms do not.
-		#
 		LIBRARY        = $(OBJDIR)/$(LIBRARY_NAME).lib
-		ifeq ($(OS_TARGET), WIN16)
-			SHARED_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION)16$(JDK_DEBUG_SUFFIX).dll
-			IMPORT_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION)16$(JDK_DEBUG_SUFFIX).lib
-		else
-			SHARED_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION)32$(JDK_DEBUG_SUFFIX).dll
-			IMPORT_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION)32$(JDK_DEBUG_SUFFIX).lib
-		endif
+		SHARED_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION)32$(JDK_DEBUG_SUFFIX).dll
+		IMPORT_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION)32$(JDK_DEBUG_SUFFIX).lib
 	else
 		LIBRARY = $(OBJDIR)/lib$(LIBRARY_NAME).$(LIB_SUFFIX)
 		ifeq ($(OS_ARCH)$(OS_RELEASE), AIX4.1)
@@ -194,30 +185,20 @@ ifndef OBJS
 		$(addsuffix $(OBJ_SUFFIX), $(JMC_GEN)) \
 		$(CSRCS:.c=$(OBJ_SUFFIX)) \
 		$(CPPSRCS:.cpp=$(OBJ_SUFFIX)) \
-		$(ASFILES:$(ASM_SUFFIX)=$(OBJ_SUFFIX))
-	OBJS = $(BUILT_CSRCS:.c=$(OBJ_SUFFIX)) \
+		$(ASFILES:$(ASM_SUFFIX)=$(OBJ_SUFFIX)) \
+	        $(BUILT_CSRCS:.c=$(OBJ_SUFFIX)) \
 		$(BUILT_CPPSRCS:.cpp=$(OBJ_SUFFIX)) \
-		$(BUILT_ASFILES:$(ASM_SUFFIX)=$(OBJ_SUFFIX)) \
-		$(addprefix $(OBJDIR)/$(PROG_PREFIX), $(SIMPLE_OBJS)) 
+		$(BUILT_ASFILES:$(ASM_SUFFIX)=$(OBJ_SUFFIX))
+	OBJS = 	$(addprefix $(OBJDIR)/$(PROG_PREFIX), $(SIMPLE_OBJS)) 
 endif
 
-ifeq ($(OS_TARGET), WIN16)
-	comma   := ,
-	empty   :=
-	space   := $(empty) $(empty)
-	W16OBJS := $(subst $(space),$(comma)$(space),$(strip $(OBJS)))
-	W16TEMP  = $(OS_LIBS) $(EXTRA_LIBS)
-	ifeq ($(strip $(W16TEMP)),)
-		W16LIBS =
-	else
-		W16LIBS := library $(subst $(space),$(comma)$(space),$(strip $(W16TEMP)))
-	endif
+ifndef BUILT_SRCS
+	BUILT_SRCS = $(addprefix $(OBJDIR)/$(PROG_PREFIX), \
+			$(BUILT_CSRCS) $(BUILT_CPPSRCS) $(BUILT_ASFILES))
 endif
+
 
 ifeq ($(OS_ARCH),WINNT)
-	ifneq ($(OS_TARGET), WIN16)
-		OBJS += $(RES)
-	endif
 	MAKE_OBJDIR		= $(INSTALL) -D $(OBJDIR)
 else
 	define MAKE_OBJDIR
@@ -234,7 +215,8 @@ ALL_TRASH :=	$(TARGETS) $(OBJS) $(OBJDIR) LOGS TAGS $(GARBAGE) \
 		$(JRI_HEADER_CFILES) $(JRI_STUB_CFILES) $(JNI_HEADERS) $(JMC_STUBS) \
 		$(JMC_HEADERS) $(JMC_EXPORT_FILES) so_locations \
 		_gen _jmc _jri _jni _stubs \
-		$(wildcard $(JAVA_DESTPATH)/$(PACKAGE)/*.class)
+		$(wildcard $(JAVA_DESTPATH)/$(PACKAGE)/*.class) \
+		$(BUILT_SOURCES)
 
 ifdef JDIRS
 	ALL_TRASH += $(addprefix $(JAVA_DESTPATH)/,$(JDIRS))
@@ -268,16 +250,12 @@ else
 endif
 
 ifdef REQUIRES
-ifeq ($(OS_TARGET),WIN16)
-	INCLUDES        += -I$(SOURCE_XP_DIR)/public/win16
-else
 	MODULE_INCLUDES := $(addprefix -I$(SOURCE_XP_DIR)/public/, $(REQUIRES))
 	INCLUDES        += $(MODULE_INCLUDES)
 	ifeq ($(MODULE), sectools)
 		PRIVATE_INCLUDES := $(addprefix -I$(SOURCE_XP_DIR)/private/, $(REQUIRES))
 		INCLUDES         += $(PRIVATE_INCLUDES)
 	endif
-endif
 endif
 
 ifdef SYSTEM_INCL_DIR
@@ -308,28 +286,4 @@ ifneq ($(OS_ARCH),WINNT)
 else
 	REGCOREDEPTH = $(subst \\,/,$(CORE_DEPTH))
 	REGDATE = $(subst \ ,, $(shell perl  $(CORE_DEPTH)/$(MODULE)/scripts/now))
-endif
-
-#
-# export control policy patcher program and arguments
-#
-
-PLCYPATCH     = $(SOURCE_BIN_DIR)/plcypatch$(PROG_SUFFIX)
-
-DOMESTIC_POLICY = -us
-EXPORT_POLICY   = -ex
-FRANCE_POLICY   = -fr
-
-ifeq ($(POLICY), domestic)
-	PLCYPATCH_ARGS = $(DOMESTIC_POLICY)
-else
-	ifeq ($(POLICY), export)
-		PLCYPATCH_ARGS = $(EXPORT_POLICY)
-	else
-		ifeq ($(POLICY), france)
-			PLCYPATCH_ARGS = $(FRANCE_POLICY)
-		else
-			PLCYPATCH_ARGS =
-		endif
-	endif
 endif
