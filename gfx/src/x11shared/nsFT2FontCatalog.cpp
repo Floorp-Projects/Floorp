@@ -147,6 +147,9 @@ nsFT2FontCatalog::nsFT2FontCatalog()
 
 nsFT2FontCatalog::~nsFT2FontCatalog()
 {
+#if (defined(MOZ_ENABLE_FREETYPE2))
+  FreeGlobals();
+#endif
 }
 
 NS_IMETHODIMP
@@ -186,6 +189,7 @@ nsFT2FontCatalog::GetFontCatalogEntries(const nsACString & aFamilyName,
     entries->InsertElementAt(genericFce, 0);
   }
  
+  free(fc->fonts);
   free(fc);
   *_retval = entries;
   NS_ADDREF(*_retval);
@@ -539,8 +543,35 @@ nsFT2FontCatalog::FreeFontCatalog(nsFontCatalog *fc)
     fce = fc->fonts[i];
     FreeFontCatalogEntry(fce);
   }
+  free(fc->fonts);
   free(fc);
 }
+
+void
+nsFT2FontCatalog::FreeDirCatalog(nsDirCatalog *dc)
+{
+  int i;
+  for (i=0; i<dc->numDirs; i++) {
+    nsDirCatalogEntry *dce;
+    dce = dc->dirs[i];
+    FreeDirCatalogEntry(dce);
+  }
+  free(dc->dirs);
+  free(dc);
+}
+
+void
+nsFT2FontCatalog::FreeDirCatalogEntry(nsDirCatalogEntry *dce)
+{
+  if (!dce) {
+    NS_ASSERTION(dce, "dce is null");
+    return;
+  }
+
+  FREE_IF(dce->mDirName);
+  free(dce);
+}
+
 
 void
 nsFT2FontCatalog::FreeFontCatalogEntry(nsFontCatalogEntry *fce)
@@ -1232,6 +1263,7 @@ nsFT2FontCatalog::InitGlobals(FT_Library lib)
   GetFontCatalog(lib, mFontCatalog, dirCatalog);
   NS_TIMELINE_STOP_TIMER("nsFT2FontCatalog::GetFontCatalog");
   NS_TIMELINE_MARK_TIMER("nsFT2FontCatalog::GetFontCatalog");
+  FreeDirCatalog(dirCatalog);
 
   FixUpFontCatalog(mFontCatalog);
 #ifdef DEBUG
