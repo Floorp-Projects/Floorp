@@ -93,18 +93,18 @@ CPP = \
 	NewShortArray_1.cpp \
 	NewShortArray_2.cpp \
 	NewShortArray_3.cpp \
-	ReleaseBooleanArrayElements_1.cpp \
-	ReleaseBooleanArrayElements_2.cpp \
-	ReleaseBooleanArrayElements_3.cpp \
+	ReleaseBoolArrayElems_1.cpp \
+	ReleaseBoolArrayElems_2.cpp \
+	ReleaseBoolArrayElems_3.cpp \
 	ReleaseByteArrayElements_1.cpp \
 	ReleaseByteArrayElements_2.cpp \
 	ReleaseByteArrayElements_3.cpp \
 	ReleaseCharArrayElements_1.cpp \
 	ReleaseCharArrayElements_2.cpp \
 	ReleaseCharArrayElements_3.cpp \
-	ReleaseDoubleArrayElements_1.cpp \
-	ReleaseDoubleArrayElements_2.cpp \
-	ReleaseDoubleArrayElements_3.cpp \
+	ReleaseDblArrayElems_1.cpp \
+	ReleaseDblArrayElems_2.cpp \
+	ReleaseDblArrayElems_3.cpp \
 	ReleaseFloatArrayElements_1.cpp \
 	ReleaseFloatArrayElements_2.cpp \
 	ReleaseFloatArrayElements_3.cpp \
@@ -208,18 +208,18 @@ OBJS = \
 	$(OBJ_DIR)/NewShortArray_1.o \
 	$(OBJ_DIR)/NewShortArray_2.o \
 	$(OBJ_DIR)/NewShortArray_3.o \
-	$(OBJ_DIR)/ReleaseBooleanArrayElements_1.o \
-	$(OBJ_DIR)/ReleaseBooleanArrayElements_2.o \
-	$(OBJ_DIR)/ReleaseBooleanArrayElements_3.o \
+	$(OBJ_DIR)/ReleaseBoolArrayElems_1.o \
+	$(OBJ_DIR)/ReleaseBoolArrayElems_2.o \
+	$(OBJ_DIR)/ReleaseBoolArrayElems_3.o \
 	$(OBJ_DIR)/ReleaseByteArrayElements_1.o \
 	$(OBJ_DIR)/ReleaseByteArrayElements_2.o \
 	$(OBJ_DIR)/ReleaseByteArrayElements_3.o \
 	$(OBJ_DIR)/ReleaseCharArrayElements_1.o \
 	$(OBJ_DIR)/ReleaseCharArrayElements_2.o \
 	$(OBJ_DIR)/ReleaseCharArrayElements_3.o \
-	$(OBJ_DIR)/ReleaseDoubleArrayElements_1.o \
-	$(OBJ_DIR)/ReleaseDoubleArrayElements_2.o \
-	$(OBJ_DIR)/ReleaseDoubleArrayElements_3.o \
+	$(OBJ_DIR)/ReleaseDblArrayElems_1.o \
+	$(OBJ_DIR)/ReleaseDblArrayElems_2.o \
+	$(OBJ_DIR)/ReleaseDblArrayElems_3.o \
 	$(OBJ_DIR)/ReleaseFloatArrayElements_1.o \
 	$(OBJ_DIR)/ReleaseFloatArrayElements_2.o \
 	$(OBJ_DIR)/ReleaseFloatArrayElements_3.o \

@@ -37,7 +37,11 @@ JNI_OJIAPITest(JNIEnv_GetMethodID_14)
   }
 }
 
-JNIEXPORT void JNICALL Java_Test1_mprint
+
+#if defined(__cplusplus)
+extern "C" 
+#endif
+JNIEXPORT void JNICALL Java_Test11_mprint
   (JNIEnv * env, jobject obj, jint jInt){
 
   jclass clazz = env->FindClass("Test11");

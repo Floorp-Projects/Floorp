@@ -21,7 +21,7 @@
 #include "JNIEnvTests.h"
 #include "CallingInstanceMethods.h"
 
-JNI_OJIAPITest(JNIEnv_CallNonvirtualObjectMethod_6)
+JNI_OJIAPITest(JNIEnv_CallNonvirtualObjectMethod_5)
 {
   GET_JNI_FOR_TEST
 
@@ -34,7 +34,7 @@ JNI_OJIAPITest(JNIEnv_CallNonvirtualObjectMethod_6)
   jstring str = env->NewString(str_chars, 4); 
   jobject obj_arr = env->NewObject(clazz_arr, methodID_obj, str);
   jobjectArray arr = env->NewObjectArray(4, clazz_arr, obj_arr);
-  jvalue *args  = new jvalue[9];
+  jvalue *args  = new jvalue[10];
   args[0].z = JNI_FALSE;
   args[1].b = MIN_JBYTE;
   args[2].c = 'a';
@@ -44,9 +44,12 @@ JNI_OJIAPITest(JNIEnv_CallNonvirtualObjectMethod_6)
   args[6].f = 0;
   args[7].d = 100;
   args[8].l = jpath;
-  args[9].l = NULL;
+  args[9].l = arr;
   jobjectArray value = (jobjectArray)env->CallNonvirtualObjectMethodA(obj, env->GetSuperclass(clazz), MethodID, args);
-  if(value == NULL){
+  jstring str_ret = (jstring)env->GetObjectArrayElement(value, (jsize) 1);
+  char* str_chars_ret = (char *) env->GetStringUTFChars(str, NULL);
+  jsize len_ret = env->GetArrayLength(value);
+  if((len_ret == 4) && (strcmp(str_chars_ret, "Test") == 0)){
      return TestResult::PASS("CallNonvirtualObjectMethodA for public not inherited method (sig = (ZBCSIJFDLjava/lang/String;[Ljava/lang/String;)[Ljava/lang/String;) return correct value");
   }else{
      return TestResult::FAIL("CallNonvirtualObjectMethodA for public not inherited method (sig = (ZBCSIJFDLjava/lang/String;[Ljava/lang/String;)[Ljava/lang/String;) return incorrect value");

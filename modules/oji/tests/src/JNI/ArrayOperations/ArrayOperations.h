@@ -18,21 +18,3 @@
  *
  * Contributor(s): 
  */
-#ifdef XP_UNIX
-#define MAX_JDOUBLE jlong_MAXINT
-#define MIN_JDOUBLE jlong_MININT
-#else
-#define MAX_JDOUBLE 0x7FEFFFFFFFFFFFFFL
-#define MIN_JDOUBLE 0x1L
-#endif
-
-#define MAX_JINT 2147483647
-#define MIN_JINT -2147483648
-#define MAX_JBYTE 2
-#define MIN_JBYTE -2
-#define MAX_JFLOAT 1
-#define MIN_JFLOAT 0
-#define MAX_JLONG 1
-#define MIN_JLONG 0
-#define MAX_JSHORT 1
-#define MIN_JSHORT 0

@@ -25,10 +25,10 @@ JNI_OJIAPITest(JNIEnv_CallStaticByteMethod_2)
 {
   GET_JNI_FOR_TEST
 
-  IMPLEMENT_GetStaticMethodID_METHOD("Test1", "Test1_method_byte_byte", "(ZBCSIJFDLjava/lang/String;[Ljava/lang/String;)B");
+  IMPLEMENT_GetStaticMethodID_METHOD("Test1", "Test1_method_byte_static", "(ZBCSIJFDLjava/lang/String;[Ljava/lang/String;)B");
   char *path = "asdf";
   jstring jpath=env->NewStringUTF("sdsadasdasd");
-  jvalue *args  = new jvalue[9];
+  jvalue *args  = new jvalue[10];
   args[0].z = JNI_FALSE;
   args[1].b = MIN_JBYTE;
   args[2].c = 'a';

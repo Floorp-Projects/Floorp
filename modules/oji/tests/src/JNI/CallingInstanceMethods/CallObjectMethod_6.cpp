@@ -34,7 +34,7 @@ JNI_OJIAPITest(JNIEnv_CallObjectMethod_6)
   jstring str = env->NewString(str_chars, 4); 
   jobject obj_arr = env->NewObject(clazz_arr, methodID_obj, str);
   jobjectArray arr = env->NewObjectArray(4, clazz_arr, obj_arr);
-  jvalue *args  = new jvalue[9];
+  jvalue *args  = new jvalue[10];
   args[0].z = JNI_FALSE;
   args[1].b = MIN_JBYTE;
   args[2].c = 'a';

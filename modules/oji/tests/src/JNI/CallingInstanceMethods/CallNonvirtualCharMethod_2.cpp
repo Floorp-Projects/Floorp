@@ -28,7 +28,7 @@ JNI_OJIAPITest(JNIEnv_CallNonvirtualCharMethod_2)
   IMPLEMENT_GetMethodID_METHOD("Test1", "Test1_method_char", "(ZBCSIJFDLjava/lang/String;[Ljava/lang/String;)C");
   char *path = "asdf";
   jstring jpath=env->NewStringUTF("sdsadasdasd");
-  jvalue *args  = new jvalue[9];
+  jvalue *args  = new jvalue[10];
   args[0].z = JNI_FALSE;
   args[1].b = MIN_JBYTE;
   args[2].c = 'a';
