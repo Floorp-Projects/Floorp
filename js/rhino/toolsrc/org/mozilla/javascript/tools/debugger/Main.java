@@ -1012,6 +1012,12 @@ class FileWindow extends JInternalFrame implements ActionListener {
         textArea.select(docEnd, docEnd);
         textArea.select(start, end);
     }
+
+    public void dispose() {
+        db.removeWindow(this);
+        super.dispose();
+    }
+
 };
 
 class MyTableModel extends AbstractTableModel {
