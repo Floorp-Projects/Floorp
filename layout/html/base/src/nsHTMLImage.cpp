@@ -154,6 +154,7 @@ nsHTMLImageLoader::nsHTMLImageLoader()
   mLoadImageFailed = PR_FALSE;
   mLoadBrokenImageFailed = PR_FALSE;
   mURLSpec = nsnull;
+  mBaseHREF = nsnull;
 }
 
 nsHTMLImageLoader::~nsHTMLImageLoader()
@@ -161,6 +162,9 @@ nsHTMLImageLoader::~nsHTMLImageLoader()
   NS_IF_RELEASE(mImageLoader);
   if (nsnull != mURLSpec) {
     delete mURLSpec;
+  }
+  if (nsnull != mBaseHREF) {
+    delete mBaseHREF;
   }
 }
 
@@ -200,6 +204,19 @@ nsHTMLImageLoader::SetURL(const nsString& aURLSpec)
 }
 
 nsresult
+nsHTMLImageLoader::SetBaseHREF(const nsString& aBaseHREF)
+{
+  if (nsnull != mBaseHREF) {
+    delete mBaseHREF;
+  }
+  mBaseHREF = new nsString(aBaseHREF);
+  if (nsnull == mBaseHREF) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return NS_OK;
+}
+
+nsresult
 nsHTMLImageLoader::LoadImage(nsIPresContext* aPresContext,
                              nsIFrame* aForFrame,
                              PRBool aNeedSizeUpdate,
@@ -214,6 +231,9 @@ nsHTMLImageLoader::LoadImage(nsIPresContext* aPresContext,
     src.Append(BROKEN_IMAGE_URL);
   } else {
     nsAutoString baseURL;
+    if (nsnull != mBaseHREF) {
+      baseURL = *mBaseHREF;
+    }
 
     // Get documentURL
     nsIPresShell* shell;
@@ -393,14 +413,18 @@ ImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
     //
     // We can't use that approach yet, because currently the compositor doesn't
     // support transparent views...
-  #if 0
+#if 0
     nsHTMLBase::CreateViewForFrame(aPresContext, this, mStyleContext, PR_TRUE);
-  #endif
+#endif
 
     // Setup url before starting the image load
-    nsAutoString src;
+    nsAutoString src, base;
     if (eContentAttr_HasValue == mContent->GetAttribute("SRC", src)) {
       mImageLoader.SetURL(src);
+      if (eContentAttr_HasValue ==
+          mContent->GetAttribute(NS_HTML_BASE_HREF, base)) {
+        mImageLoader.SetBaseHREF(base);
+      }
     }
     mImageLoader.GetDesiredSize(aPresContext, aReflowState, aDesiredSize);
   }
@@ -738,7 +762,8 @@ ImageFrame::HandleEvent(nsIPresContext& aPresContext,
       }
       else {
         suppress = GetSuppress();
-        nsAutoString baseURL;/* XXX */
+        nsAutoString baseURL;
+        mContent->GetAttribute(NS_HTML_BASE_HREF, baseURL);
         nsAutoString src;
         mContent->GetAttribute("src", src);
         NS_MakeAbsoluteURL(docURL, baseURL, src, absURL);

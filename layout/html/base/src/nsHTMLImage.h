@@ -50,8 +50,17 @@ public:
 
   nsresult SetURL(const nsString& aURLSpec);
 
+  nsresult SetBaseHREF(const nsString& aBaseHREF);
+
   void GetURL(nsString& aResult) {
     aResult = *mURLSpec;
+  }
+
+  void GetBaseHREF(nsString& aResult) {
+    aResult.Truncate();
+    if (nsnull != mBaseHREF) {
+      aResult = *mBaseHREF;
+    }
   }
 
   nsresult LoadImage(nsIPresContext* aPresContext,
@@ -74,6 +83,7 @@ protected:
   PRPackedBool mLoadImageFailed;
   PRPackedBool mLoadBrokenImageFailed;
   nsString* mURLSpec;
+  nsString* mBaseHREF;
 };
 
 #endif /* nsHTMLImage_h___ */
