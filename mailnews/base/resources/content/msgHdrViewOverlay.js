@@ -378,7 +378,9 @@ function InsertEmailAddressUnderEnclosingBox(parentBox, parentDiv, emailAddress,
     var item = document.createElement("titledbutton");
     if ( item && parentDiv) 
     { 
-   
+      item.setAttribute("class", "emailDisplayButton");
+      item.setAttribute("value", fullAddress); 
+
       if (parentDiv.childNodes.length)
       {
         var child = parentDiv.childNodes[parentDiv.childNodes.length - 1]; 
