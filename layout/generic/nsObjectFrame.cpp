@@ -523,9 +523,9 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
 
   // could be an image
   nsIFrame * child = mFrames.FirstChild();
-  if(child != nsnull) {
-  	nsresult imageResult = HandleImage(aPresContext, aMetrics, aReflowState, aStatus, child);
-  }
+  if(child != nsnull)
+  	return HandleImage(aPresContext, aMetrics, aReflowState, aStatus, child);
+
   // if mInstance is null, we need to determine what kind of object we are and instantiate ourselves
   if(!mInstanceOwner)
   {
