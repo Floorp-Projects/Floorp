@@ -132,7 +132,6 @@ gfx/src/Makefile
 gfx/src/beos/Makefile
 gfx/src/gtk/Makefile
 gfx/src/ps/Makefile
-gfx/src/motif/Makefile
 gfx/src/photon/Makefile
 gfx/src/rhapsody/Makefile
 gfx/src/mac/Makefile
@@ -506,7 +505,6 @@ webshell/tests/viewer/Makefile
 webshell/tests/viewer/public/Makefile
 webshell/tests/viewer/unix/Makefile
 webshell/tests/viewer/unix/gtk/Makefile
-webshell/tests/viewer/unix/motif/Makefile
 webshell/tests/viewer/unix/qt/Makefile
 webshell/tests/viewer/unix/xlib/Makefile
 webshell/embed/Makefile
@@ -521,8 +519,6 @@ widget/src/build/Makefile
 widget/src/gtk/Makefile
 widget/src/gtksuperwin/Makefile
 widget/src/gtkxtbin/Makefile
-widget/src/motif/Makefile
-widget/src/motif/app_context/Makefile
 widget/src/photon/Makefile
 widget/src/rhapsody/Makefile
 widget/src/mac/Makefile
@@ -541,7 +537,6 @@ widget/timer/src/beos/Makefile
 widget/timer/src/rhapsody/Makefile
 widget/timer/src/unix/Makefile
 widget/timer/src/unix/gtk/Makefile
-widget/timer/src/unix/motif/Makefile
 widget/timer/src/unix/photon/Makefile
 widget/timer/src/unix/xlib/Makefile
 widget/timer/src/unix/qt/Makefile

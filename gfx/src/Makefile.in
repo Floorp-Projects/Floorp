@@ -48,7 +48,7 @@ DIRS		= ps
 endif
 
 # Build xlibrgb only for X toolkits and/or Xprint
-ifneq (,$(filter motif xlib,$(MOZ_WIDGET_TOOLKIT))$(MOZ_ENABLE_XLIB)$(MOZ_ENABLE_XPRINT))
+ifneq (,$(filter xlib,$(MOZ_WIDGET_TOOLKIT))$(MOZ_ENABLE_XLIB)$(MOZ_ENABLE_XPRINT))
 DIRS		+= xlibrgb
 endif
 
@@ -61,9 +61,6 @@ DIRS		+= gtk
 endif
 ifdef MOZ_ENABLE_GTK2
 DIRS		+= gtk2
-endif
-ifdef MOZ_ENABLE_MOTIF
-DIRS		+= motif
 endif
 ifdef MOZ_ENABLE_QT
 DIRS		+= qt

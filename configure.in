@@ -91,7 +91,6 @@ GTK2_VERSION=1.3.7
 
 dnl Set various checks
 dnl ========================================================
-MISSING_MOTIF=
 MISSING_NSPR=
 MISSING_X=
 
@@ -1153,8 +1152,7 @@ then
 	dnl ========================================================
 	AC_ARG_ENABLE(toolkit,
 	[  --enable-toolkit=\$val   Enable \$val fe (defaults to gtk)],
-	  [	if test "$enableval" = "motif" \
-            -o "$enableval" = "gtk" \
+	  [	if test "$enableval" = "gtk" \
             -o "$enableval" = "qt" \
             -o "$enableval" = "gtk2" \
             -o "$enableval" = "xlib"
@@ -1163,7 +1161,7 @@ then
 		     dnl so ignore everything after the first comma (",").
 		     MOZ_WIDGET_TOOLKIT=`echo "$enableval" | sed -e "s/,.*$//"`
 		else
-		     AC_MSG_ERROR(Toolkit must be xlib, gtk, gtk2, qt, or motif.)
+		     AC_MSG_ERROR(Toolkit must be xlib, gtk, gtk2 or qt.)
 		fi], 
 
 	  [	MOZ_WIDGET_TOOLKIT="gtk" ])
@@ -1258,7 +1256,6 @@ dnl XXX BROKEN dnl =
 dnl XXX BROKEN dnl = Choices are:
 dnl XXX BROKEN dnl = 
 dnl XXX BROKEN dnl = gtk
-dnl XXX BROKEN dnl = motif
 dnl XXX BROKEN dnl = xlib
 dnl XXX BROKEN dnl = 
 dnl XXX BROKEN dnl = Default is whatever MOZ_WIDGET_TOOLKIT is
@@ -1268,10 +1265,8 @@ dnl XXX BROKEN dnl =
 dnl XXX BROKEN dnl = widget       gfx
 dnl XXX BROKEN dnl = ------       ---
 dnl XXX BROKEN dnl = gtk          gtk
-dnl XXX BROKEN dnl = motif        motif
 dnl XXX BROKEN dnl = xlib         xlib
 dnl XXX BROKEN dnl = 
-dnl XXX BROKEN dnl = motif        xlib (broken)
 dnl XXX BROKEN dnl = gtk          xlib (not tested yet)
 dnl XXX BROKEN dnl = 
 dnl XXX BROKEN dnl ========================================================
@@ -1325,13 +1320,6 @@ then
 	MOZ_ENABLE_QT=1
     MOZ_ENABLE_XREMOTE=1
 	AC_DEFINE(MOZ_WIDGET_QT)
-fi
-
-if test "$MOZ_WIDGET_TOOLKIT" = "motif"
-then
-	MOZ_ENABLE_MOTIF=1
-    MOZ_ENABLE_XREMOTE=1
-	AC_DEFINE(MOZ_WIDGET_MOTIF)
 fi
 
 if test "$MOZ_WIDGET_TOOLKIT" = "photon"
@@ -1519,129 +1507,6 @@ dnl ========================================================
 
 dnl ========================================================
 dnl =													   =
-dnl = --with-motif										   =
-dnl = 													   =
-dnl = Motif support hackery                                =
-dnl = 													   =
-dnl ========================================================
-if test "$no_x" != "yes"
-then
-	AC_ARG_WITH(motif,
-	[  --with-motif            Enable Motif support ],
-	[
-		if test "$withval" = "yes"
-		then
-			MOZ_ENABLE_MOTIF=1
-    	else
-			MOZ_ENABLE_MOTIF=
-    	fi
-	])
-fi
-
-if test "$MOZ_ENABLE_MOTIF"
-then
-	AC_MSG_CHECKING(for motif insanity)
-
-    if test "$x_includes"
-	then
-		MOTIF_XINCS="-xif -I$x_includes"
-    fi
-
-    detect_motif="${srcdir}/config/mkdetect/detect_motif.sh -cc $CC $MOTIF_XINCS"
-    MOTIF_VERSION=`${detect_motif}`
-    MOTIF_INCLUDES=`${detect_motif} -if`
-    MOTIF_STATIC_FLAGS=`${detect_motif} -sf`
-    MOTIF_DYNAMIC_FLAGS=`${detect_motif} -df`
-    MOTIF_DYNAMIC_PATHS=`${detect_motif} -dp`
-dnl    MOTIF_REQUIRES_XPM=`${detect_motif} -xpm`
-    MOTIF_REQUIRES_XPM="False"
-
-    ${srcdir}/config/mkdetect/detect_motif.sh --cleanup
-
-    if test "$MOTIF_REQUIRES_XPM" = "True" -o "$MOTIF_VERSION" = "2.1"
-	then
-        _SAVE_LDFLAGS="$LDFLAGS"
-    	LDFLAGS="$XLDFLAGS $LDFLAGS"
-	fi
-
-	if test "$MOTIF_REQUIRES_XPM" = "True"
-	then
-	    AC_CHECK_LIB(Xpm, XpmWriteFileFromImage, 
-		XPM_LIBS="-lXpm", 
-		[MISSING_MOTIF="$MISSING_MOTIF -lXpm"], $XLIBS)
-	fi
-
-	if test "$MOTIF_VERSION" = "2.1"
-	then
-	    AC_CHECK_LIB(Xp, XpGetPrinterList, 
-		MOTIF_XP_LIBS="-lXp",
-		[MISSING_MOTIF="$MISSING_MOTIF -lXp"], $XEXT_LIBS $XLIBS)
-	fi
-
-	LDFLAGS="$_SAVE_LDFLAGS"
-
-    MOZ_MOTIF_LDFLAGS="$XLDFLAGS $MOZ_MOTIF_LDFLAGS"
-
-    if test "$MOTIF_STATIC_LIB" = "unknown" -a "$MOTIF_DYNAMIC_LIB" = "unknown"
-	then
-		AC_MSG_RESULT(no)
-	else
-		AC_MSG_RESULT(yes)
-    fi
-
-    # Get rid of offending error values
-    if test "$MOTIF_DYNAMIC_PATHS" = "unknown"
-	then 
-		MOTIF_DYNAMIC_PATHS=
-    fi
-
-    if test "$MOTIF_DYNAMIC_FLAGS" = "unknown"
-	then 
-		MOTIF_DYNAMIC_FLAGS=
-    fi
-
-    if test "$MOTIF_STATIC_FLAGS" = "unknown"
-	then 
-		MOTIF_STATIC_FLAGS=
-    fi
-
-    if test "$MOTIF_INCLUDE_DIR" = "unknown"
-	then
-		MOTIF_INCLUDE_DIR=
-    fi
-
-    MOZ_MOTIF_LDFLAGS="$MOTIF_XP_LIBS $MOZ_MOTIF_LDFLAGS $X_LIBS $XT_LIBS $XMU_LIBS $XPM_LIBS $XEXT_LIBS $X11_LIBS $XSM_LIBS $XICE_LIBS"
-
-    AC_ARG_WITH(static-motif,
-    [  --with-static-motif     Link Motif statically if possible],
-	sysstaticmotif=$withval)
-
-    if test "$sysstaticmotif" != "yes"; then
-	_SAVE_LDFLAGS="$LDFLAGS"
-    	LDFLAGS="$MOTIF_DYNAMIC_PATHS $XLDFLAGS $LDFLAGS"
-    	AC_CHECK_LIB(Xm, XmStringCreate, 
-	    MOZ_MOTIF_LDFLAGS="$MOTIF_DYNAMIC_PATHS $MOTIF_DYNAMIC_FLAGS $MOZ_MOTIF_LDFLAGS",
-	    [MISSING_MOTIF="$MISSING_MOTIF $MOTIF_DYNAMIC_FLAGS"], 
-	    $MOTIF_DYNAMIC_PATHS $MOZ_MOTIF_LDFLAGS $XLIBS)
-	LDFLAGS="$_SAVE_LDFLAGS"
-    else
-    	AC_CHECK_LIB(Xm, XmStringCreate, 
-	    MOZ_MOTIF_LDFLAGS="$MOTIF_STATIC_FLAGS $MOZ_MOTIF_LDFLAGS",
-	    [MISSING_MOTIF="$MISSING_MOTIF $MOTIF_STATIC_FLAGS"], 
-	    $MOZ_MOTIF_LDFLAGS $XLIBS)
-    fi
-
-    MOZ_MOTIF_CFLAGS="$MOTIF_INCLUDES"
-fi
-dnl ========================================================
-dnl = 													   =
-dnl = End Motif support hackery                            =
-dnl = 													   =
-dnl ========================================================
-
-
-dnl ========================================================
-dnl =													   =
 dnl = --with-xlib										   =
 dnl = 													   =
 dnl = Xlib support hackery                                 =
@@ -1812,12 +1677,6 @@ then
 	TK_LIBS="$MOZ_QT_LDFLAGS"
 fi
 
-if test "$MOZ_WIDGET_TOOLKIT" = "motif"
-then
-	TK_CFLAGS="$MOZ_MOTIF_CFLAGS"
-	TK_LIBS="$MOZ_MOTIF_LDFLAGS"
-fi
-
 dnl ========================================================
 dnl = 													   =
 dnl = Make sure a default toolkit is set                   =
@@ -1830,7 +1689,6 @@ AC_SUBST(TK_CFLAGS)
 AC_SUBST(TK_LIBS)
 
 AC_SUBST(MOZ_ENABLE_GTK)
-AC_SUBST(MOZ_ENABLE_MOTIF)
 AC_SUBST(MOZ_ENABLE_XLIB)
 AC_SUBST(MOZ_ENABLE_GTK2)
 AC_SUBST(MOZ_ENABLE_QT)
@@ -1840,8 +1698,6 @@ AC_SUBST(MOZ_GTK_CFLAGS)
 AC_SUBST(MOZ_GTK_LDFLAGS)
 AC_SUBST(MOZ_GTK2_CFLAGS)
 AC_SUBST(MOZ_GTK2_LDFLAGS)
-AC_SUBST(MOZ_MOTIF_CFLAGS)
-AC_SUBST(MOZ_MOTIF_LDFLAGS)
 AC_SUBST(MOZ_XLIB_CFLAGS)
 AC_SUBST(MOZ_XLIB_LDFLAGS)
 AC_SUBST(MOZ_XPRINT_CFLAGS)
@@ -1866,7 +1722,7 @@ AC_SUBST(XLIBS)
 AC_SUBST(MOC)
 
 if test "$MOZ_ENABLE_GTK" || test "$MOZ_ENABLE_QT" \
-|| test "$MOZ_ENABLE_XLIB" || test "$MOZ_ENABLE_MOTIF" \
+|| test "$MOZ_ENABLE_XLIB" \
 || test "$MOZ_ENABLE_GTK2"
 then
 AC_DEFINE(MOZ_X11)
@@ -4436,9 +4292,6 @@ if test ! -z "$MISSING_X"; then
    AC_MSG_ERROR([ Could not find the following X libraries: $MISSING_X ]);
 fi
 
-if test ! -z "$MISSING_MOTIF"; then
-   AC_MSG_ERROR([ Could not find the following Motif libraries: $MISSING_MOTIF ]);
-fi
 fi # $no_x
 
 dnl Set various defines and substitutions
