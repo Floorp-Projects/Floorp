@@ -37,19 +37,10 @@
   <script type="application/x-javascript">
   <![CDATA[
     var panel = "chrome://browser/content/pref/pref-appearance.xul";
-    var _elementIDs = ["generalStartupBrowser", "showHideTooltips", "useSiteIcons"];
+    var _elementIDs = ["showHideTooltips", "useSiteIcons"];
   ]]>
   </script>
           
-  <groupbox id="generalStartupPreferences" align="start">
-    <caption label="&onStartLegend.label;"/>
-    <!-- XXX remove when navigator overlays.rdf works -->
-    <checkbox id="generalStartupBrowser"
-              label="&navCheck.label;" accesskey="&navCheck.accesskey;"
-              prefstring="general.startup.browser"/>
-    <!-- XXX -->
-  </groupbox>
-  
   <vbox class="box-padded" align="start">
     <separator class="thin" />
 
