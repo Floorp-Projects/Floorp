@@ -63,7 +63,7 @@ function PREF_onload()
   doSetOKCancel( this.onok, null );
   // create pref object
   try {
-    this.pref = Components.classes["component://netscape/preferences"].createInstance();
+    this.pref = Components.classes["component://netscape/preferences"].getService();
     if(this.pref)
       this.pref = this.pref.QueryInterface( Components.interfaces.nsIPref );
   }
@@ -101,7 +101,6 @@ function PREF_DoSavePrefs()
 {
   for( var i in window.handle.wsm.PageData ) {
     for ( var k in window.handle.wsm.PageData[i] ) {
-      dump("*** FOO id: " + k + "; value: " + window.handle.wsm.PageData[i][k].value + "\n");
       window.handle.ParsePref( k, window.handle.wsm.PageData[i][k] );
     }
   }
@@ -113,33 +112,42 @@ function PREF_ParsePref( elementID, elementObject )
   
   // since we no longer use the convoluted id strings, we now use the id passed
   // in as an argument to this function to grab the appropriate element in the
-  //dump("*** elementObject.prefString: " + elementObject.prefstring + "; value: " + elementObject.value + "; id: " + elementID + "\n" );
   if( elementObject.pref ) {
     switch( elementObject.preftype ) {
       case "bool":
+        if( elementObject.prefindex === "true" || elementObject.prefindex === "false" ) {
+          // bool prefs with a prefindex, e.g. boolean radios. the value we set
+          // is actually the prefindex, not the checked value. 
+          if( elementObject.value == true ) {
+            if( typeof( elementObject.prefindex ) == "string" ) {
+              if( elementObject.prefindex == "true" ) 
+                elementObject.prefindex = true;
+              else
+                elementObject.prefindex = false;
+            }
+            dump("*** going to set a " + typeof( elementObject.prefindex ) + " pref: " + elementObject.prefindex + "\n");
+            var tempPref = elementObject.prefindex;
+            whp.SetBoolPref( elementObject.prefstring, tempPref );  // bool pref
+            dump("*** just set a " + typeof( tempPref ) + " pref: " + tempPref + "\n");
+            break;
+          }
+        }
         whp.SetBoolPref( elementObject.prefstring, elementObject.value );  // bool pref
         break;
       case "int":
         if( elementObject.value ) { // only want checked radio items! 
-          if( elementObject.nodeName.toLowerCase() == "select" ) {
-            // may need to add extra elements here if they do not have easily 
-            // gleanable idxes as radio buttons do.
-            elementObject.prefindex = elementObject.value;  
-          }
           if( !elementObject.prefindex ) {
+            // element object does not have a prefindex (e.g. select widgets)
             var prefvalue = elementObject.value;
           }
           else {
-            // element object has prefindex attribute
+            // element object has prefindex attribute (e.g. radio buttons)
             var prefvalue = elementObject.prefindex;
           }
           whp.SetIntPref( elementObject.prefstring, prefvalue );  // integer pref
         }
         break;
       case "string":
-        dump("*** SetCharPref: " + elementObject.prefstring + "; value: " + elementObject.value + "\n");
-        //XXX there's some kind of bug here with this such that this throws an UNEXPECTED
-        //XXX exception. look into this later.
         whp.SetCharPref( elementObject.prefstring, elementObject.value );  // string pref
         break;
       default:
@@ -197,7 +205,7 @@ function PREF_onpageload( tag )
     // yes I know this is an evil function to use, sue me. 
     prefElements = window.frames[this.contentFrame].document.getElementsByAttribute( "pref", "true" );
 
-    this.wsm.PageData[tag]          = [];   // need to declare these as arrays
+    this.wsm.PageData[tag] = [];   
     for( var i = 0; i < prefElements.length; i++ )
     {
       var prefstring  = prefElements[i].getAttribute("prefstring");
@@ -208,15 +216,18 @@ function PREF_onpageload( tag )
         case "bool":
           try {
             var prefvalue = this.pref.GetBoolPref( prefstring );
+            dump("*** user prefs\n");
           }
           catch(e) {
             try {
               var prefvalue = this.pref.GetDefaultBoolPref( prefstring );
             }
             catch(e) {
-              dump("*** NO DEFAULT PREF for " + prefstring + ", AND ONE *IS* NEEDED! GO MAKE ONE, FOOL!\n");
+              // radio elements need to have at least one element be set.
+              dump("*** failed in default prefs\n")
+              if( prefElements[i].nodeName.toLowerCase() == "radio" )
+                dump("*** NO DEFAULT PREF for " + prefstring + ", and one IS needed for radio items.\n");
               continue;
-              return false;
             }
           }
           break;
@@ -229,9 +240,10 @@ function PREF_onpageload( tag )
               var prefvalue = this.pref.GetDefaultIntPref( prefstring );
             }
             catch(e) {
-              dump("*** NO DEFAULT PREF for " + prefstring + ", AND ONE *IS* NEEDED! GO MAKE ONE, FOOL!\n");
+              // radio elements need at least one value to be set.
+              if( prefElements[i].nodeName.toLowerCase() == "radio" )
+                dump("*** NO DEFAULT PREF for " + prefstring + ", and one IS needed for radio items.\n");
               continue;
-              return false;
             }
           }
           break;
@@ -244,9 +256,7 @@ function PREF_onpageload( tag )
               var prefvalue = this.pref.CopyDefaultCharPref( prefstring );
             }
             catch(e) {
-              dump("*** NO DEFAULT PREF for " + prefstring + ", AND ONE *IS* NEEDED! GO MAKE ONE, FOOL!\n");
               continue;
-              return false;
             }
           }
           break;
@@ -254,8 +264,7 @@ function PREF_onpageload( tag )
           // TODO: define cases for other pref types if required
           break;
       }
-      //dump("*** elementvalue: " + prefvalue + "\n");
-      this.wsm.PageData[tag][prefid]  = [];   // otherwise jseng complains
+      this.wsm.PageData[tag][prefid]  = [];   
       var root                        = this.wsm.PageData[tag][prefid];
       root["id"]                      = prefid;
       if( prefElements[i].type.toLowerCase() == "radio") {
@@ -268,11 +277,13 @@ function PREF_onpageload( tag )
         var prefindex = prefElements[i].getAttribute("prefindex");
         if( prefElements[i].getAttribute("preftype").toLowerCase() == "bool" )
           prefvalue = prefvalue.toString(); // need to explicitly type convert on bool prefs.
-
+        
+        dump("*** prefindex = " + prefindex + "; prefvalue = " + prefvalue + "\n");
         if( prefindex == prefvalue ) 
           prefvalue = true;     // match! this element is checked!
-        else if( prefElements[i].getAttribute("preftype").toLowerCase() != "bool" ) 
+        else 
           prefvalue = false;    // no match. This element.checked = false;
+        dump("*** prefvalue = " + prefvalue + "\n");
       }
       root["value"]     = prefvalue;
     }

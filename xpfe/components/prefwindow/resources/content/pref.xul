@@ -50,7 +50,7 @@ Contributor(s): ______________________________________. -->
     <!-- we may like to load this into a tabpanel set as per mpt's post -->
     <spring style="width: 7px;"/>
     <!-- tree sidebar -->
-    <tree flex="4" style="width: 0px;" id="prefsTree" class="inset"/>
+    <tree id="prefsTree" class="inset"/>
     <spring style="width: 10px;"/>
     <!-- content frame -->
     <html:iframe id="panelFrame" name="panelFrame" style="width:0px" flex="6"/>
