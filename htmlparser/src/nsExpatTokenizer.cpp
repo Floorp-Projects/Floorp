@@ -312,8 +312,10 @@ void nsExpatTokenizer::HandleCharacterData(void *userData, const XML_Char *s, in
     }
     
     if(newToken) {
-      nsString& theString=newToken->GetStringValueXXX();
-      theString.Append(s,len);
+      if ((s[0] != kNewLine) && (s[0] != CR)) {
+        nsString& theString=newToken->GetStringValueXXX();
+        theString.Append(s,len);
+      }
       AddToken(newToken,NS_OK,*gTokenDeque);
     }
     else {
