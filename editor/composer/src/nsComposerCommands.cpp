@@ -510,7 +510,7 @@ nsIndentCommand::DoCommand(const nsAReadableString & aCommandName, nsISupports *
   nsresult rv = NS_OK;
   if (editorShell)
   {
-    nsAutoString indentStr(NS_LITERAL_STRING("indent"));
+    NS_NAMED_LITERAL_STRING(indentStr, "indent");
     rv = editorShell->Indent(indentStr.get());
   }
   
@@ -548,7 +548,7 @@ nsOutdentCommand::DoCommand(const nsAReadableString & aCommandName, nsISupports 
   nsresult rv = NS_OK;
   if (editorShell && EditingHTML(editorShell))
   {
-    nsAutoString indentStr(NS_LITERAL_STRING("outdent"));
+    NS_NAMED_LITERAL_STRING(indentStr, "outdent");
     rv = editorShell->Indent(indentStr.get());
   }
   

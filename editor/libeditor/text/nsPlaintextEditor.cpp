@@ -291,15 +291,14 @@ nsPlaintextEditor::SetDocumentCharacterSet(const nsAReadableString & characterSe
           metaElement = do_QueryInterface(metaNode); 
           if (!metaElement) continue; 
 
-          NS_NAMED_LITERAL_STRING(charset, "charset=");
-          NS_NAMED_LITERAL_STRING(content, "content");
           nsString currentValue; 
-
           if (NS_FAILED(metaElement->GetAttribute(NS_LITERAL_STRING("http-equiv"), currentValue))) continue; 
 
           if (kNotFound != currentValue.Find("content-type", PR_TRUE)) { 
+            NS_NAMED_LITERAL_STRING(content, "content");
             if (NS_FAILED(metaElement->GetAttribute(content, currentValue))) continue; 
 
+            NS_NAMED_LITERAL_STRING(charset, "charset=");
             PRInt32 offset = currentValue.Find(charset.get(), PR_TRUE); 
             if (kNotFound != offset) {
               currentValue.Left(newMetaString, offset); // copy current value before "charset=" (e.g. text/html) 
@@ -316,15 +315,13 @@ nsPlaintextEditor::SetDocumentCharacterSet(const nsAReadableString & characterSe
 
       if (newMetaCharset) { 
         nsCOMPtr<nsIDOMNodeList>headList; 
-        nsCOMPtr<nsIDOMNode>headNode; 
-        nsCOMPtr<nsIDOMNode>resultNode; 
-
         result = domdoc->GetElementsByTagName(NS_LITERAL_STRING("head"),getter_AddRefs(headList)); 
         if (NS_SUCCEEDED(result) && headList) { 
+          nsCOMPtr<nsIDOMNode>headNode; 
           headList->Item(0, getter_AddRefs(headNode)); 
           if (headNode) { 
+            nsCOMPtr<nsIDOMNode>resultNode; 
             // Create a new meta charset tag 
-              // can't use |NS_LITERAL_STRING| here until |CreateNode| is fixed to accept readables
             result = CreateNode(NS_LITERAL_STRING("meta"), headNode, 0, getter_AddRefs(resultNode)); 
             if (NS_FAILED(result)) 
               return NS_ERROR_FAILURE; 
@@ -576,7 +573,7 @@ NS_IMETHODIMP nsPlaintextEditor::CreateBRImpl(nsCOMPtr<nsIDOMNode> *aInOutParent
   nsCOMPtr<nsIDOMNode> node = *aInOutParent;
   PRInt32 theOffset = *aInOutOffset;
   nsCOMPtr<nsIDOMCharacterData> nodeAsText = do_QueryInterface(node);
-  nsAutoString brType(NS_LITERAL_STRING("br"));
+  NS_NAMED_LITERAL_STRING(brType, "br");
   nsCOMPtr<nsIDOMNode> brNode;
   if (nodeAsText)  
   {
@@ -1024,8 +1021,7 @@ NS_IMETHODIMP nsPlaintextEditor::InsertLineBreak()
   {
     // create the new BR node
     nsCOMPtr<nsIDOMNode> newNode;
-    nsAutoString tag(NS_LITERAL_STRING("BR"));
-    res = DeleteSelectionAndCreateNode(tag, getter_AddRefs(newNode));
+    res = DeleteSelectionAndCreateNode(NS_LITERAL_STRING("BR"), getter_AddRefs(newNode));
     if (!newNode) res = NS_ERROR_NULL_POINTER; // don't return here, so DidDoAction is called
     if (NS_SUCCEEDED(res))
     {
@@ -1274,7 +1270,7 @@ nsPlaintextEditor::SetWrapWidth(PRInt32 aWrapColumn)
   if (!bodyElement) return NS_ERROR_NULL_POINTER;
 
   // Get the current style for this body element:
-  nsAutoString styleName(NS_LITERAL_STRING("style"));
+  NS_NAMED_LITERAL_STRING(styleName, "style");
   nsAutoString styleValue;
   res = bodyElement->GetAttribute(styleName, styleValue);
   if (NS_FAILED(res)) return res;
@@ -1776,7 +1772,7 @@ nsPlaintextEditor::Rewrap(PRBool aRespectNewlines)
   if (NS_FAILED(rv)) return rv;
 
   // Variables we'll need either way
-  nsAutoString format(NS_LITERAL_STRING("text/plain"));
+  NS_NAMED_LITERAL_STRING(format, "text/plain");
   nsAutoString current;
   nsString wrapped;
 
@@ -1839,7 +1835,7 @@ nsPlaintextEditor::StripCites()
   if (NS_FAILED(rv)) return rv;
 
   // Variables we'll need either way
-  nsAutoString format(NS_LITERAL_STRING("text/plain"));
+  NS_NAMED_LITERAL_STRING(format, "text/plain");
   nsAutoString current;
   nsString stripped;
 
