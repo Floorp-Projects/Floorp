@@ -11,7 +11,7 @@
  *
  */
 
-// nsMsgPrintEngine.cpp: provides a WebShell container for use 
+// nsMsgPrintEngine.cpp: provides a DocShell container for use 
 // in printing
 
 #include "nscore.h"
@@ -25,6 +25,7 @@
 #include "nsEscape.h"
 #include "nsXPIDLString.h"
 #include "nsIWebShell.h"
+#include "nsIDocShell.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocumentViewer.h"
 #include "nsIPresContext.h"
@@ -56,7 +57,7 @@ static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 nsMsgPrintEngine::nsMsgPrintEngine() :
-  mWebShell(nsnull),
+  mDocShell(nsnull),
   mWindow(nsnull)
 {
   mCurrentlyPrintingURI = -1;
@@ -103,9 +104,8 @@ nsMsgPrintEngine::OnEndDocumentLoad(nsIDocumentLoader *loader, nsIChannel *aChan
   SetStatusMessage( msg );
   PR_FREEIF(msg);
 
-  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
-  NS_ASSERTION(docShell,"can't print, there is no webshell");
-  if ( (!docShell) || (!aChannel) ) 
+  NS_ASSERTION(mDocShell,"can't print, there is no docshell");
+  if ( (!mDocShell) || (!aChannel) ) 
   {
     return StartNextPrintOperation();
   }
@@ -125,7 +125,7 @@ nsMsgPrintEngine::OnEndDocumentLoad(nsIDocumentLoader *loader, nsIChannel *aChan
     }
   }
 
-  docShell->GetContentViewer(getter_AddRefs(viewer));  
+  mDocShell->GetContentViewer(getter_AddRefs(viewer));  
   if (viewer) 
   {
     nsCOMPtr<nsIContentViewerFile> viewerFile = do_QueryInterface(viewer);
@@ -181,7 +181,7 @@ nsMsgPrintEngine::SetWindow(nsIDOMWindow *aWin)
   }
 
   mWindow = aWin;
-  nsAutoString  webShellName; webShellName.AssignWithConversion("printengine");
+  nsAutoString  docShellName; docShellName.AssignWithConversion("printengine");
 
   nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(aWin) );
   NS_ENSURE_TRUE(globalObj, NS_ERROR_FAILURE);
@@ -203,9 +203,9 @@ nsMsgPrintEngine::SetWindow(nsIDOMWindow *aWin)
   rootAsNode->FindChildWithName(childName.GetUnicode(), PR_TRUE, PR_FALSE, nsnull,
     getter_AddRefs(childItem));
 
-  mWebShell = do_QueryInterface(childItem);
+  mDocShell = do_QueryInterface(childItem);
 
-  if(mWebShell)
+  if(mDocShell)
     SetupObserver();
 
   return NS_OK;
@@ -256,7 +256,7 @@ nsMsgPrintEngine::StartNextPrintOperation()
     return NS_OK;
   }
 
-  if (!mWebShell)
+  if (!mDocShell)
     return StartNextPrintOperation();
 
   nsString *uri = mURIArray.StringAt(mCurrentlyPrintingURI);
@@ -288,13 +288,14 @@ nsMsgPrintEngine::FireThatLoadOperation(nsString *uri)
   
   if (NS_SUCCEEDED(rv) && messageService)
   {
-    rv = messageService->DisplayMessageForPrinting(tString, mWebShell, nsnull, nsnull, nsnull);
+    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
+    rv = messageService->DisplayMessageForPrinting(tString, webShell, nsnull, nsnull, nsnull);
     ReleaseMessageServiceFromURI(tString, messageService);
   }
   //If it's not something we know about, then just load try loading it directly.
   else
   {
-    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebShell));
+    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
     if (webNav)
       rv = webNav->LoadURI(uri->GetUnicode());
   }
@@ -307,12 +308,11 @@ void
 nsMsgPrintEngine::InitializeDisplayCharset()
 {
   // libmime always converts to UTF-8 (both HTML and XML)
-  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
-  if (docShell) 
+  if (mDocShell) 
   {
     nsAutoString aForceCharacterSet; aForceCharacterSet.AssignWithConversion("UTF-8");
     nsCOMPtr<nsIContentViewer> cv;
-    docShell->GetContentViewer(getter_AddRefs(cv));
+    mDocShell->GetContentViewer(getter_AddRefs(cv));
     if (cv) 
     {
       nsCOMPtr<nsIMarkupDocumentViewer> muDV = do_QueryInterface(cv);
@@ -327,13 +327,12 @@ nsMsgPrintEngine::InitializeDisplayCharset()
 void
 nsMsgPrintEngine::SetupObserver()
 {
-  if (!mWebShell)
+  if (!mDocShell)
     return;
 
-  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
-  if (docShell)
+  if (mDocShell)
   {
-    docShell->SetDocLoaderObserver((nsIDocumentLoaderObserver *)this);
+    mDocShell->SetDocLoaderObserver((nsIDocumentLoaderObserver *)this);
   }
 }
 

@@ -70,7 +70,6 @@
 #include "nsIMessenger.h"
 #include "nsMsgBaseCID.h"
 #include "nsMsgI18N.h"
-#include "nsIWebShell.h"
 #include "nsIDocShell.h"
 #include "nsIPrompt.h"
 #include "nsIInterfaceRequestor.h"
@@ -1257,16 +1256,15 @@ NS_IMETHODIMP nsMsgLocalMailFolder::DeleteSubFolders(
   if (isChildOfTrash)
     return nsMsgFolder::DeleteSubFolders(folders, msgWindow);
 
-  nsCOMPtr<nsIWebShell> webShell;
+  nsCOMPtr<nsIDocShell> docShell;
   if (!msgWindow) return NS_ERROR_NULL_POINTER;
-  msgWindow->GetRootWebShell(getter_AddRefs(webShell));
+  msgWindow->GetRootDocShell(getter_AddRefs(docShell));
   if (!mMsgStringService)
     mMsgStringService = do_GetService(NS_MSG_POPSTRINGSERVICE_PROGID);
   if (!mMsgStringService) return NS_ERROR_FAILURE;
   PRUnichar *alertString = nsnull;
   mMsgStringService->GetStringByID(POP3_MOVE_FOLDER_TO_TRASH, &alertString);
   if (!alertString) return rv;
-  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(webShell));
   if (docShell)
   {
     nsCOMPtr<nsIPrompt> dialog(do_GetInterface(docShell));

@@ -56,7 +56,6 @@
 #include "nsIMsgFilter.h"
 #include "nsImapMoveCoalescer.h"
 #include "nsIPrompt.h"
-#include "nsIWebShell.h"
 #include "nsIDocShell.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsINetSupportDialogService.h"
@@ -1546,11 +1545,9 @@ nsImapMailFolder::DeleteSubFolders(nsISupportsArray* folders, nsIMsgWindow *msgW
         if (NS_SUCCEEDED(rv))
         {
             rv = GetTrashFolder(getter_AddRefs(trashFolder));
-            nsCOMPtr<nsIWebShell> webShell;
             if (!msgWindow) return NS_ERROR_NULL_POINTER;
-            msgWindow->GetRootWebShell(getter_AddRefs(webShell));
             nsCOMPtr<nsIDocShell> docShell;
-            if (webShell) docShell = do_QueryInterface(webShell);
+            msgWindow->GetRootDocShell(getter_AddRefs(docShell));
             nsCOMPtr<nsIPrompt> dialog;
             if (docShell) dialog = do_GetInterface(docShell);
             PRUnichar *moveToTrashStr = IMAPGetStringByID(IMAP_MOVE_FOLDER_TO_TRASH);

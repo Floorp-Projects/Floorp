@@ -41,6 +41,7 @@
 #include "nsIMsgProtocolInfo.h"
 
 #include "nsIPref.h"
+#include "nsIDocShell.h"
 #include "nsIWebShell.h"
 #include "nsIWebShellWindow.h"
 #include "nsINetPrompt.h"
@@ -613,8 +614,10 @@ nsMsgIncomingServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, const
         if (aMsgWindow)
         {
             // prompt the user for the password
-            nsCOMPtr<nsIWebShell> webShell;
-            rv = aMsgWindow->GetRootWebShell(getter_AddRefs(webShell));
+            nsCOMPtr<nsIDocShell> docShell;
+            rv = aMsgWindow->GetRootDocShell(getter_AddRefs(docShell));
+            if (NS_FAILED(rv)) return rv;
+            nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell, &rv));
             if (NS_FAILED(rv)) return rv;
             // get top level window
             nsCOMPtr<nsIWebShellContainer> topLevelWindow;
@@ -909,6 +912,8 @@ nsMsgIncomingServer::GetFilterList(nsIMsgFilterList **aResult)
       nsCOMPtr<nsIFileSpec> thisFolder;
       rv = msgFolder->GetPath(getter_AddRefs(thisFolder));
       NS_ENSURE_SUCCESS(rv, rv);
+      
+      nsFileSpec filterFile;
       
       rv = thisFolder->GetFileSpec(&mFilterFile);
       NS_ENSURE_SUCCESS(rv, rv);

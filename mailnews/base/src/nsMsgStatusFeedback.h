@@ -25,8 +25,6 @@
 
 #include "nsIWebProgressListener.h"
 #include "nsIDOMWindow.h"
-#include "nsIWebShell.h"
-#include "nsIWebShellWindow.h"
 #include "nsIObserver.h"
 #include "nsITimer.h"
 #include "nsCOMPtr.h"

@@ -256,15 +256,14 @@ NS_IMETHODIMP nsAddressBook::PrintCard()
   nsresult rv = NS_ERROR_FAILURE;
   nsCOMPtr<nsIContentViewer> viewer;
 
-  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
-  if (!docShell) {
+  if (!mDocShell) {
 #ifdef DEBUG_seth
-        printf("can't print, there is no webshell\n");
+        printf("can't print, there is no docshell\n");
 #endif
         return rv;
   }
 
-  docShell->GetContentViewer(getter_AddRefs(viewer));
+  mDocShell->GetContentViewer(getter_AddRefs(viewer));
 
   if (viewer) 
   {
@@ -295,7 +294,7 @@ NS_IMETHODIMP nsAddressBook::PrintAddressbook()
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsAddressBook::SetWebShellWindow(nsIDOMWindow *aWin)
+NS_IMETHODIMP nsAddressBook::SetDocShellWindow(nsIDOMWindow *aWin)
 {
    NS_PRECONDITION(aWin != nsnull, "null ptr");
    if (!aWin)
@@ -306,14 +305,13 @@ NS_IMETHODIMP nsAddressBook::SetWebShellWindow(nsIDOMWindow *aWin)
      return NS_ERROR_FAILURE;
    }
  
-   nsCOMPtr<nsIDocShell> docShell;
-   globalObj->GetDocShell(getter_AddRefs(docShell));
-   nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell));
-   if (!webShell)
+   globalObj->GetDocShell(&mDocShell);
+   if (!mDocShell)
      return NS_ERROR_NOT_INITIALIZED;
- 
-   mWebShell = webShell;
 
+   // Make reference weak by releasing
+   mDocShell->Release();
+ 
    return NS_OK;
 }
 

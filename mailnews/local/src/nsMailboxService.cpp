@@ -136,9 +136,9 @@ nsresult nsMailboxService::FetchMessage(const char* aMessageURI,
     nsCOMPtr<nsIMsgMailNewsUrl> msgUrl (do_QueryInterface(url));
     msgUrl->SetMsgWindow(aMsgWindow);
 
-		// instead of running the mailbox url like we used to, let's try to run the url in the webshell...
+		// instead of running the mailbox url like we used to, let's try to run the url in the docshell...
       nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aDisplayConsumer, &rv));
-    // if we were given a webshell, run the url in the webshell..otherwise just run it normally.
+    // if we were given a webshell, run the url in the docshell..otherwise just run it normally.
     if (NS_SUCCEEDED(rv) && docShell)
 	  rv = docShell->LoadURI(url, nsnull);
     else

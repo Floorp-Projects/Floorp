@@ -84,8 +84,6 @@
 #include "nsIPref.h"
 
 #include "nsIMsgWindow.h"
-#include "nsIWebShell.h"
-#include "nsIWebShellWindow.h"
 #include "nsINetPrompt.h"
 #include "nntpCore.h"
 
@@ -1951,9 +1949,9 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommandResponse()
 
         if (NS_SUCCEEDED(rv) && group_name) {
 			//  the right thing todo is:  
-            //  get the right webshell, gotten from the nsIMsgWindow
+            //  get the right docshell, gotten from the nsIMsgWindow
             //  build up a data url
-            //  call (webshell)->LoadURL() with that data url
+            //  call (docshell)->LoadURL() with that data url
 #ifdef NOT_WORKING_YET
         	char outputBuffer[OUTPUT_BUFFER_SIZE];
             PRUint32 count = 0;

@@ -36,8 +36,6 @@
 #include "nsINntpIncomingServer.h"
 #include "nsINNTPProtocol.h"
 
-#include "nsIWebShell.h"  // mscott - this dependency should only be temporary!
-
 #include "nsINNTPNewsgroupList.h"
 #include "nsINNTPArticleList.h"
 #include "nsINNTPHost.h"
@@ -196,7 +194,6 @@ private:
     nsCOMPtr <nsIMsgNewsFolder> m_newsFolder;
     nsCOMPtr <nsIMsgWindow> m_msgWindow;
 
-	nsCOMPtr<nsIWebShell> m_displayConsumer;
 	nsCOMPtr<nsIBufferInputStream> mDisplayInputStream;
 	nsCOMPtr<nsIBufferOutputStream> mDisplayOutputStream;
 	nsMsgLineStreamBuffer   * m_lineStreamBuffer; // used to efficiently extract lines from the incoming data stream

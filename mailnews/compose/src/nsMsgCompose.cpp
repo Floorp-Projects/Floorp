@@ -532,7 +532,8 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode,
       PRInt32     bodyLength;
       char        *attachment1_type = TEXT_HTML;  // we better be "text/html" at this point
       
-      mMsgSend->SetWebShell(m_webShell);
+      nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(m_webShell));
+      mMsgSend->SetDocShell(docShell);
 
       if (!mEntityConversionDone)
       {

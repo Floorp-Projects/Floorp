@@ -27,7 +27,7 @@
 #include "nsIAbCard.h"
 #include "nsCOMPtr.h"
 #include "nsIAddrDatabase.h"
-#include "nsIWebShell.h"
+#include "nsIDocShell.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIFileSpecWithUI.h"
 #include "nsICmdLineHandler.h"
@@ -57,7 +57,7 @@ protected:
 					   nsISupportsArray *arguments);
 
 private:
-	 nsIWebShell        *mWebShell;            // weak reference
+	 nsIDocShell        *mDocShell;            // weak reference
 };
 
 #endif

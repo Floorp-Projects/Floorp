@@ -26,7 +26,7 @@
 #include "nsIMsgFolder.idl"
 
 interface nsITransactionManager;
-interface nsIWebShell;
+interface nsIDocShell;
 interface nsIDOMWindow;
 interface nsIMsgHeaderSink;
 /*
@@ -42,7 +42,7 @@ interface nsIMsgWindow : nsISupports {
     attribute nsITransactionManager transactionManager;
 	attribute nsIMessageView messageView;
 	attribute nsIMsgFolder openFolder;
-	attribute nsIWebShell rootWebShell;
+	attribute nsIDocShell rootDocShell;
 	
 	void SetDOMWindow(in nsIDOMWindow window);
 	void StopUrls();

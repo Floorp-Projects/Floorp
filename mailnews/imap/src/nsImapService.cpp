@@ -465,7 +465,7 @@ nsresult nsImapService::FetchMimePart(nsIImapUrl * aImapUrl,
 					aImapServer->PseudoInterruptMsgLoad(aImapUrl, &interrupted);
 			}
 	   }
-      // if the display consumer is a webshell, then we should run the url in the webshell.
+      // if the display consumer is a docshell, then we should run the url in the docshell.
       // otherwise, it should be a stream listener....so open a channel using AsyncRead
       // and the provided stream listener....
 
@@ -492,7 +492,7 @@ nsresult nsImapService::FetchMimePart(nsIImapUrl * aImapUrl,
         }
         else // do what we used to do before
         {
-          // I'd like to get rid of this code as I believe that we always get a webshell
+          // I'd like to get rid of this code as I believe that we always get a docshell
           // or stream listener passed into us in this method but i'm not sure yet...
           // I'm going to use an assert for now to figure out if this is ever getting called
 #ifdef DEBUG_mscott
@@ -811,7 +811,7 @@ nsImapService::FetchMessage(nsIImapUrl * aImapUrl,
 					aImapServer->PseudoInterruptMsgLoad(aImapUrl, &interrupted);
 			}
 	   }
-      // if the display consumer is a webshell, then we should run the url in the webshell.
+      // if the display consumer is a docshell, then we should run the url in the docshell.
       // otherwise, it should be a stream listener....so open a channel using AsyncRead
       // and the provided stream listener....
 
@@ -840,7 +840,7 @@ nsImapService::FetchMessage(nsIImapUrl * aImapUrl,
         }
         else // do what we used to do before
         {
-          // I'd like to get rid of this code as I believe that we always get a webshell
+          // I'd like to get rid of this code as I believe that we always get a docshell
           // or stream listener passed into us in this method but i'm not sure yet...
           // I'm going to use an assert for now to figure out if this is ever getting called
 #ifdef DEBUG_mscott

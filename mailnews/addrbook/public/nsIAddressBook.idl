@@ -43,7 +43,7 @@ interface nsIAddressBook : nsISupports {
     void deleteAddressBooks(in nsIRDFCompositeDataSource db, in nsISupportsArray parentDir, in nsIDOMNodeList node);
     void printCard();
     void printAddressbook();
-    void setWebShellWindow(in nsIDOMWindow win);
+    void setDocShellWindow(in nsIDOMWindow win);
 	void importAddressBook();
     void convertLDIFtoMAB(in nsIFileSpec fileSpec, in boolean migrating);
     void convertNA2toLDIF(in nsIFileSpec srcFileSpec, in nsIFileSpec dstFileSpec);

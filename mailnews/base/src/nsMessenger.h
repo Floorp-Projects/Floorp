@@ -30,7 +30,7 @@
 #include "nsITransactionManager.h"
 #include "nsIDocumentLoaderObserver.h"
 #include "nsFileSpec.h"
-#include "nsIWebShell.h"
+#include "nsIDocShell.h"
 #include "nsIStringBundle.h"
 #include "nsIFindComponent.h"
 
@@ -64,7 +64,7 @@ private:
   /* rhp - need this to drive message display */
   nsIDOMWindow              *mWindow;
   nsCOMPtr<nsIMsgWindow>    mMsgWindow;
-  nsCOMPtr<nsIWebShell>     mWebShell;
+  nsCOMPtr<nsIDocShell>     mDocShell;
 
   // String bundles...
   nsCOMPtr<nsIStringBundle>   mStringBundle;

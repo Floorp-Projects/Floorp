@@ -53,9 +53,8 @@
 #include "nsIContentViewerFile.h"
 #include "nsIContentViewer.h" 
 
-/* for access to webshell */
+/* for access to docshell */
 #include "nsIDOMWindow.h"
-#include "nsIWebShellWindow.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
@@ -281,7 +280,7 @@ nsMessenger::SetWindow(nsIDOMWindow *aWin, nsIMsgWindow *aMsgWindow)
 
 			mMsgWindow->GetStatusFeedback(getter_AddRefs(aStatusFeedback));
 			if (aStatusFeedback)
-				aStatusFeedback->SetWebShell(nsnull, nsnull);
+				aStatusFeedback->SetDocShell(nsnull, nsnull);
 		}
     // it isn't an error to pass in null for aWin, in fact it means we are shutting
     // down and we should start cleaning things up...
@@ -290,7 +289,7 @@ nsMessenger::SetWindow(nsIDOMWindow *aWin, nsIMsgWindow *aMsgWindow)
 
   mMsgWindow = aMsgWindow;
 
-  nsAutoString  webShellName; webShellName.AssignWithConversion("messagepane");
+  nsAutoString  docShellName; docShellName.AssignWithConversion("messagepane");
   NS_IF_RELEASE(mWindow);
   mWindow = aWin;
   NS_ADDREF(aWin);
@@ -300,11 +299,6 @@ nsMessenger::SetWindow(nsIDOMWindow *aWin, nsIMsgWindow *aMsgWindow)
 
   nsCOMPtr<nsIDocShell> docShell;
   globalObj->GetDocShell(getter_AddRefs(docShell));
-  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell));
-  if (!webShell) 
-  {
-    return NS_ERROR_FAILURE;
-  }
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
   NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
 
@@ -316,12 +310,12 @@ nsMessenger::SetWindow(nsIDOMWindow *aWin, nsIMsgWindow *aMsgWindow)
   if (rootDocShellAsNode) 
   {
     nsCOMPtr<nsIDocShellTreeItem> childAsItem;
-    nsresult rv = rootDocShellAsNode->FindChildWithName(webShellName.GetUnicode(),
+    nsresult rv = rootDocShellAsNode->FindChildWithName(docShellName.GetUnicode(),
       PR_TRUE, PR_FALSE, nsnull, getter_AddRefs(childAsItem));
 
-    mWebShell = do_QueryInterface(childAsItem);
+    mDocShell = do_QueryInterface(childAsItem);
 
-    if (NS_SUCCEEDED(rv) && mWebShell) {
+    if (NS_SUCCEEDED(rv) && mDocShell) {
 
         if (aMsgWindow) {
             nsCOMPtr<nsIMsgStatusFeedback> aStatusFeedback;
@@ -329,9 +323,10 @@ nsMessenger::SetWindow(nsIDOMWindow *aWin, nsIMsgWindow *aMsgWindow)
             aMsgWindow->GetStatusFeedback(getter_AddRefs(aStatusFeedback));
             m_docLoaderObserver = do_QueryInterface(aStatusFeedback);
             if (aStatusFeedback)
-                aStatusFeedback->SetWebShell(mWebShell, mWindow);
-            nsCOMPtr<nsIDocShell> childDocShell(do_QueryInterface(mWebShell));
-            childDocShell->SetDocLoaderObserver(m_docLoaderObserver);
+            {
+                aStatusFeedback->SetDocShell(mDocShell, mWindow);
+            }
+            mDocShell->SetDocLoaderObserver(m_docLoaderObserver);
             aMsgWindow->GetTransactionManager(getter_AddRefs(mTxnMgr));
         }
     }
@@ -348,12 +343,11 @@ nsMessenger::InitializeDisplayCharset()
     return;
 
   // libmime always converts to UTF-8 (both HTML and XML)
-  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
-  if (docShell) 
+  if (mDocShell) 
   {
     nsAutoString aForceCharacterSet; aForceCharacterSet.AssignWithConversion("UTF-8");
     nsCOMPtr<nsIContentViewer> cv;
-    docShell->GetContentViewer(getter_AddRefs(cv));
+    mDocShell->GetContentViewer(getter_AddRefs(cv));
     if (cv) 
     {
       nsCOMPtr<nsIMarkupDocumentViewer> muDV = do_QueryInterface(cv);
@@ -374,7 +368,7 @@ nsMessenger::InitializeSearch( nsIFindComponent *finder )
 
     if (!mSearchContext )
     {
-        nsCOMPtr<nsIInterfaceRequestor> docShellIR = do_QueryInterface(mWebShell);
+        nsCOMPtr<nsIInterfaceRequestor> docShellIR = do_QueryInterface(mDocShell);
         if (!docShellIR) return NS_ERROR_FAILURE;
         
         nsCOMPtr<nsIDOMWindow> domWindow;
@@ -445,7 +439,7 @@ nsMessenger::OpenURL(const char * url)
     printf("nsMessenger::OpenURL(%s)\n",url);
 #endif    
 
-    // This is to setup the display WebShell as UTF-8 capable...
+    // This is to setup the display DocShell as UTF-8 capable...
     InitializeDisplayCharset();
     
     char* unescapedUrl = PL_strdup(url);
@@ -461,14 +455,15 @@ nsMessenger::OpenURL(const char * url)
       
       if (NS_SUCCEEDED(rv) && messageService)
       {
-        messageService->DisplayMessage(url, mWebShell, mMsgWindow, nsnull, nsnull);
+        nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
+        messageService->DisplayMessage(url, webShell, mMsgWindow, nsnull, nsnull);
         ReleaseMessageServiceFromURI(url, messageService);
       }
       //If it's not something we know about, then just load the url.
       else
       {
         nsAutoString urlStr; urlStr.AssignWithConversion(unescapedUrl);
-        nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebShell));
+        nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
         if(webNav)
           webNav->LoadURI(urlStr.GetUnicode());
       }
@@ -990,10 +985,9 @@ nsMessenger::Alert(const char *stringName)
 {
     nsresult rv = NS_OK;
     nsString errorMessage = GetString(NS_ConvertASCIItoUCS2(stringName).GetUnicode());
-    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
-    if (docShell)
+    if (mDocShell)
     {
-        nsCOMPtr<nsIPrompt> dialog(do_GetInterface(docShell));
+        nsCOMPtr<nsIPrompt> dialog(do_GetInterface(mDocShell));
         
         if (dialog)
             rv = dialog->Alert(errorMessage.GetUnicode());
@@ -1314,20 +1308,19 @@ nsMessenger::GetTransactionManager(nsITransactionManager* *aTxnMgr)
 NS_IMETHODIMP nsMessenger::SetDocumentCharset(const PRUnichar *characterSet)
 {
 	// Set a default charset of the webshell.
-   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell)); 
-	if (docShell) 
-  {
-    nsCOMPtr<nsIContentViewer> cv;
-    docShell->GetContentViewer(getter_AddRefs(cv));
-    if (cv) 
+    if (mDocShell) 
     {
-      nsCOMPtr<nsIMarkupDocumentViewer> muDV = do_QueryInterface(cv);
-      if (muDV)
-		    muDV->SetDefaultCharacterSet(characterSet);
-    }
+        nsCOMPtr<nsIContentViewer> cv;
+        mDocShell->GetContentViewer(getter_AddRefs(cv));
+        if (cv) 
+        {
+            nsCOMPtr<nsIMarkupDocumentViewer> muDV = do_QueryInterface(cv);
+            if (muDV)
+                muDV->SetDefaultCharacterSet(characterSet);
+        }
 	}
   
-  return NS_OK;
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -1431,11 +1424,10 @@ NS_IMETHODIMP nsMessenger::DoPrint()
 
   nsresult rv = NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
-  NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIContentViewer> viewer;
-  docShell->GetContentViewer(getter_AddRefs(viewer));
+  mDocShell->GetContentViewer(getter_AddRefs(viewer));
 
   if (viewer) 
   {

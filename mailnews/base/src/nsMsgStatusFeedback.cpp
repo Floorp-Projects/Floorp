@@ -31,7 +31,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDocShell.h"
-
+#include "nsIDocShellTreeItem.h"
 
 #define MSGFEEDBACK_TIMER_INTERVAL 500
 
@@ -226,7 +226,7 @@ NS_IMETHODIMP nsMsgStatusFeedback::CloseWindow()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgStatusFeedback::SetWebShell(nsIWebShell *shell, nsIDOMWindow *aWindow)
+NS_IMETHODIMP nsMsgStatusFeedback::SetDocShell(nsIDocShell *shell, nsIDOMWindow *aWindow)
 {
 
   if (aWindow)

@@ -69,6 +69,7 @@
 #include "nsINetPrompt.h"
 #include "nsIAppShellService.h"
 #include "nsMailHeaders.h"
+#include "nsIDocShell.h"
 
 // This will go away once select is passed a prompter interface
 #include "nsAppShellCIDs.h" // TODO remove later
@@ -205,7 +206,7 @@ nsMsgComposeAndSend::nsMsgComposeAndSend() :
   mCompFieldLocalAttachments = 0;
   mCompFieldRemoteAttachments = 0;
   mMessageWarningSize = 0;
-  mWebShell = nsnull;
+  mDocShell = nsnull;
 
 	NS_INIT_REFCNT();
 }
@@ -2809,12 +2810,13 @@ nsMsgComposeAndSend::DeliverFileAsMail()
 	  nsCOMPtr<nsIFileSpec> aFileSpec;
 	  NS_NewFileSpecWithSpec(*mTempFileSpec, getter_AddRefs(aFileSpec));
 
-    // rhp: we don't always have a mWebShell...
+    // rhp: we don't always have a mDocShell...
     nsCOMPtr<nsINetPrompt> netPrompt = nsnull;
-    if (mWebShell)
+    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
+    if (webShell)
     {
       nsCOMPtr<nsIWebShellContainer> topLevelWindow;
-      rv = mWebShell->GetTopLevelWindow(getter_AddRefs(topLevelWindow));
+      rv = webShell->GetTopLevelWindow(getter_AddRefs(topLevelWindow));
       netPrompt = do_QueryInterface(topLevelWindow, &rv);
     }
     else
@@ -4139,14 +4141,14 @@ nsMsgComposeAndSend::SetGUINotificationState(PRBool aEnableFlag)
 }
 
 NS_IMETHODIMP
-nsMsgComposeAndSend::SetWebShell(nsIWebShell *aWebShell)
+nsMsgComposeAndSend::SetDocShell(nsIDocShell *aDocShell)
 {
     // Yes we are not doing AddRef() here!!!!
     // Why? I am just doing what nsMsgCompose was doing. There seems have a
     // reason not using nsCOMPtr and not ref counting it. This is bad, bad,
     // bad. We need to come back to solve this very soon.
-    if (!aWebShell) return NS_ERROR_NULL_POINTER;
-    mWebShell = aWebShell;
+    if (!aDocShell) return NS_ERROR_NULL_POINTER;
+    mDocShell = aDocShell;
     return NS_OK;
 }
 

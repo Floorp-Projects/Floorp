@@ -293,7 +293,7 @@ public:
   //
   // All vars necessary for this implementation
   //
-  nsIWebShell *mWebShell;
+  nsIDocShell *mDocShell; // Weak reference
   nsMsgKey                  m_messageKey;        // jt -- Draft/Template support; newly created key
   nsCOMPtr<nsIMsgIdentity>  mUserIdentity;
   nsCOMPtr<nsMsgCompFields> mCompFields;         // All needed composition fields (header, etc...)

@@ -56,8 +56,8 @@
 #include "nsMsgBaseCID.h"
 
 #include "nsIMsgWindow.h"
+#include "nsIDocShell.h"
 #include "nsIWebShell.h"
-#include "nsIWebShellWindow.h"
 #include "nsINetPrompt.h"
 
 #include "nsXPIDLString.h"
@@ -1405,22 +1405,27 @@ nsMsgNewsFolder::GetGroupPasswordWithUI(const PRUnichar * aPromptMessage, const
     NS_ENSURE_ARG_POINTER(aGroupPassword);
 
     if (!mGroupPassword) {
-		 // prompt the user for the password
-        
-		nsCOMPtr<nsINetPrompt> dialog;
+        // prompt the user for the password
 
-		NS_ASSERTION(aMsgWindow,"no msg window, fix this, for now, use the hidden window");
+        nsCOMPtr<nsINetPrompt> dialog;
+
+        NS_ASSERTION(aMsgWindow,"no msg window, fix this, for now, use the hidden window");
 		if (aMsgWindow) {
-			nsCOMPtr<nsIWebShell> webShell;
-			rv = aMsgWindow->GetRootWebShell(getter_AddRefs(webShell));
-			if (NS_FAILED(rv)) return rv;
+            nsCOMPtr<nsIDocShell> docShell;
 
-			nsCOMPtr<nsIWebShellContainer> topLevelWindow;
-			rv = webShell->GetTopLevelWindow(getter_AddRefs(topLevelWindow));
-			if (NS_FAILED(rv)) return rv;
+            rv = aMsgWindow->GetRootDocShell(getter_AddRefs(docShell));
+            if (NS_FAILED(rv)) return rv;
+
+            nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell, &rv));
+            if (NS_FAILED(rv)) return rv;
+
+            // get top level window
+            nsCOMPtr<nsIWebShellContainer> topLevelWindow;
+            rv = webShell->GetTopLevelWindow(getter_AddRefs(topLevelWindow));
+            if (NS_FAILED(rv)) return rv;
 			dialog = do_QueryInterface(topLevelWindow, &rv);
 			if (NS_FAILED(rv)) return rv;
-		}
+        }
 		else {
 			nsCOMPtr <nsIAppShellService> appshellservice = do_GetService(kAppShellServiceCID, &rv);
 			if (NS_FAILED(rv)) return rv;
@@ -1483,16 +1488,19 @@ nsMsgNewsFolder::GetGroupUsernameWithUI(const PRUnichar * aPromptMessage, const
 
 		NS_ASSERTION(aMsgWindow,"no msg window, fix this, for now, use the hidden window");
 		if (aMsgWindow) {
-			nsCOMPtr<nsIWebShell> webShell;
-			rv = aMsgWindow->GetRootWebShell(getter_AddRefs(webShell));
+            // prompt the user for the password
+            nsCOMPtr<nsIDocShell> docShell;
+            rv = aMsgWindow->GetRootDocShell(getter_AddRefs(docShell));
+            if (NS_FAILED(rv)) return rv;
+            nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell, &rv));
+            if (NS_FAILED(rv)) return rv;
+            // get top level window
+            nsCOMPtr<nsIWebShellContainer> topLevelWindow;
+            rv = webShell->GetTopLevelWindow(getter_AddRefs(topLevelWindow));
+            if (NS_FAILED(rv)) return rv;
+            dialog = do_QueryInterface(topLevelWindow, &rv);
 			if (NS_FAILED(rv)) return rv;
-
-			nsCOMPtr<nsIWebShellContainer> topLevelWindow;
-			rv = webShell->GetTopLevelWindow(getter_AddRefs(topLevelWindow));
-			if (NS_FAILED(rv)) return rv;
-			dialog = do_QueryInterface(topLevelWindow, &rv);
-			if (NS_FAILED(rv)) return rv;
-		}
+        }
 		else {
 			nsCOMPtr <nsIAppShellService> appshellservice = do_GetService(kAppShellServiceCID, &rv);
 			if (NS_FAILED(rv)) return rv;

@@ -189,8 +189,8 @@ nsresult nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aD
     msgUrl->SetMsgWindow(aMsgWindow);
     nntpUrl->SetNewsAction(nsINntpUrl::ActionDisplayArticle);
 
-    // now is where our behavior differs....if the consumer is the webshell then we want to 
-    // run the url in the webshell in order to display it. If it isn't a webshell then just
+    // now is where our behavior differs....if the consumer is the docshell then we want to 
+    // run the url in the webshell in order to display it. If it isn't a docshell then just
     // run the news url like we would any other news url. 
 	  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aDisplayConsumer, &rv));
     if (NS_SUCCEEDED(rv) && docShell)

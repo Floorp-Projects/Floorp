@@ -29,6 +29,7 @@
 #include "nsIDocumentLoader.h"
 #include "nsILoadGroup.h"
 #include "nsIWebShell.h"
+#include "nsIDocShell.h"
 
 static NS_DEFINE_CID(kUrlListenerManagerCID, NS_URLLISTENERMANAGER_CID);
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
@@ -227,8 +228,9 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetLoadGroup(nsILoadGroup **aLoadGroup)
 	{
 		if (m_msgWindow)
 		{
-			nsCOMPtr <nsIWebShell> webShell;
-			m_msgWindow->GetRootWebShell(getter_AddRefs(webShell));
+            nsCOMPtr<nsIDocShell> docShell;
+            m_msgWindow->GetRootDocShell(getter_AddRefs(docShell));
+            nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell));
 			if (webShell)
 			{
 				nsCOMPtr <nsIDocumentLoader> docLoader;

@@ -28,7 +28,7 @@
 #include "nsITransactionManager.h"
 #include "nsIMessageView.h"
 #include "nsIMsgFolder.h"
-#include "nsIWebShell.h"
+#include "nsIDocShell.h"
 #include "nsIURIContentListener.h"
 #include "nsIMimeMiscStatus.h"
 
@@ -40,23 +40,23 @@ public:
 
   NS_DECL_ISUPPORTS
 
-	nsMsgWindow();
-	virtual ~nsMsgWindow();
-	nsresult Init();
-	NS_DECL_NSIMSGWINDOW
+  nsMsgWindow();
+  virtual ~nsMsgWindow();
+  nsresult Init();
+  NS_DECL_NSIMSGWINDOW
   NS_DECL_NSIURICONTENTLISTENER
 
 protected:
   nsCOMPtr<nsIMsgHeaderSink> mMsgHeaderSink;
-	nsCOMPtr<nsIMsgStatusFeedback> mStatusFeedback;
-	nsCOMPtr<nsITransactionManager> mTransactionManager;
-	nsCOMPtr<nsIMessageView> mMessageView;
-	nsCOMPtr<nsIMsgFolder> mOpenFolder;
-	nsCOMPtr<nsIMsgWindowCommands> mMsgWindowCommands;
+  nsCOMPtr<nsIMsgStatusFeedback> mStatusFeedback;
+  nsCOMPtr<nsITransactionManager> mTransactionManager;
+  nsCOMPtr<nsIMessageView> mMessageView;
+  nsCOMPtr<nsIMsgFolder> mOpenFolder;
+  nsCOMPtr<nsIMsgWindowCommands> mMsgWindowCommands;
 
-	// let's not make this a strong ref - we don't own it.
-	nsIWebShell *mRootWebShell;
-  nsIWebShell *mMessageWindowWebShell;
+  // let's not make this a strong ref - we don't own it.
+  nsIDocShell *mRootDocShell;
+  nsIDocShell *mMessageWindowDocShell;
 };
 
 #endif

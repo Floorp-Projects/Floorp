@@ -20,13 +20,13 @@
 
 // nsMsgPrintEngine.h: declaration of nsMsgPrintEngine class
 // implementing mozISimpleContainer,
-// which provides a WebShell container for use in simple programs
+// which provides a DocShell container for use in simple programs
 // using the layout engine
 
 #include "nscore.h"
 #include "nsCOMPtr.h"
 
-#include "nsIWebShell.h"
+#include "nsIDocShell.h"
 #include "nsVoidArray.h"
 #include "nsIDocShell.h"
 #include "nsIMsgPrintEngine.h"
@@ -65,7 +65,7 @@ protected:
   nsresult    SetStatusMessage(PRUnichar *aMsgString);
   PRUnichar   *GetString(const PRUnichar *aStringName);
 
-  nsCOMPtr<nsIWebShell>       mWebShell;
+  nsCOMPtr<nsIDocShell>       mDocShell;
   nsCOMPtr<nsIDOMWindow>      mWindow;
   PRInt32                     mURICount;
   nsStringArray               mURIArray;

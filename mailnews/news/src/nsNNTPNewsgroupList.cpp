@@ -79,7 +79,7 @@
 #include "nsIScriptGlobalObjectOwner.h"
 #include "nsIMsgWindow.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIWebShell.h"
+#include "nsIDocShell.h"
 #include "nsIScriptContext.h"
 
 static NS_DEFINE_CID(kCNewsDB, NS_NEWSDB_CID);
@@ -229,12 +229,12 @@ openWindow(nsIMsgWindow *aMsgWindow, const char *chromeURL, nsIDialogParamBlock 
 
 	if (!aMsgWindow) return NS_ERROR_NULL_POINTER;
 
-	nsCOMPtr<nsIWebShell> webShell;
-	rv = aMsgWindow->GetRootWebShell(getter_AddRefs(webShell));
+	nsCOMPtr<nsIDocShell> docShell;
+	rv = aMsgWindow->GetRootDocShell(getter_AddRefs(docShell));
     if (NS_FAILED(rv)) return rv;
-	NS_ENSURE_TRUE(webShell, NS_ERROR_FAILURE);
+	NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
 
-   	nsCOMPtr<nsIScriptGlobalObjectOwner> globalObjectOwner(do_QueryInterface(webShell));
+   	nsCOMPtr<nsIScriptGlobalObjectOwner> globalObjectOwner(do_QueryInterface(docShell));
 	NS_ENSURE_TRUE(globalObjectOwner, NS_ERROR_FAILURE);
 
 	nsCOMPtr<nsIScriptGlobalObject> globalObject;
