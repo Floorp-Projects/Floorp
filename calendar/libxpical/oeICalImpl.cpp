@@ -2090,12 +2090,12 @@ NS_IMETHODIMP oeICalFilter::SetLocation(const char * aNewVal)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP oeICalFilter::GetCategory(char **aRetVal)
+NS_IMETHODIMP oeICalFilter::GetCategories(char **aRetVal)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP oeICalFilter::SetCategory(const char * aNewVal)
+NS_IMETHODIMP oeICalFilter::SetCategories(const char * aNewVal)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

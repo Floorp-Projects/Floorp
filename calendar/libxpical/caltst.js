@@ -99,7 +99,7 @@ function TestAddEvent()
     iCalEvent.title = DEFAULT_TITLE;
     iCalEvent.description = DEFAULT_DESCRIPTION;
     iCalEvent.location = DEFAULT_LOCATION;
-    iCalEvent.category = DEFAULT_CATEGORY;
+    iCalEvent.categories = DEFAULT_CATEGORY;
     iCalEvent.privateEvent = DEFAULT_PRIVATE;
     iCalEvent.allDay = DEFAULT_ALLDAY;
     iCalEvent.alarm = DEFAULT_ALARM;
@@ -138,7 +138,7 @@ function TestAddEvent()
        alert( "Invalid Description" );
     if( iCalEvent.location != DEFAULT_LOCATION )
        alert( "Invalid Location" );
-    if( iCalEvent.category != DEFAULT_CATEGORY )
+    if( iCalEvent.categories != DEFAULT_CATEGORY )
        alert( "Invalid Category" );
     if( iCalEvent.privateEvent != DEFAULT_PRIVATE )
        alert( "Invalid PrivateEvent Setting" );
@@ -179,7 +179,7 @@ function TestFetchEvent( id )
        alert( "Invalid Description" );
     if( iCalEvent.location != DEFAULT_LOCATION )
        alert( "Invalid Location" );
-    if( iCalEvent.category != DEFAULT_CATEGORY )
+    if( iCalEvent.categories != DEFAULT_CATEGORY )
        alert( "Invalid Category" );
     if( iCalEvent.privateEvent != DEFAULT_PRIVATE )
        alert( "Invalid PrivateEvent Setting" );
@@ -214,7 +214,7 @@ function TestUpdateEvent( iCalEvent )
     iCalEvent.title = DEFAULT_TITLE+"*NEW*";
     iCalEvent.description = DEFAULT_DESCRIPTION+"*NEW*";
     iCalEvent.location = DEFAULT_LOCATION+"*NEW*";
-    iCalEvent.category = DEFAULT_CATEGORY+"*NEW*";
+    iCalEvent.categories = DEFAULT_CATEGORY+"*NEW*";
     iCalEvent.privateEvent = !DEFAULT_PRIVATE;
     iCalEvent.allDay = !DEFAULT_ALLDAY;
     iCalEvent.alarm = !DEFAULT_ALARM;
@@ -243,7 +243,7 @@ function TestUpdateEvent( iCalEvent )
        alert( "Invalid Description" );
     if( iCalEvent.location != DEFAULT_LOCATION+"*NEW*" )
        alert( "Invalid Location" );
-    if( iCalEvent.category != DEFAULT_CATEGORY+"*NEW*" )
+    if( iCalEvent.categories != DEFAULT_CATEGORY+"*NEW*" )
        alert( "Invalid Category" );
     if( iCalEvent.privateEvent != !DEFAULT_PRIVATE )
        alert( "Invalid PrivateEvent Setting" );
@@ -320,7 +320,7 @@ function TestAddTodo()
     iCalTodo.title = DEFAULT_TITLE;
     iCalTodo.description = DEFAULT_DESCRIPTION;
     iCalTodo.location = DEFAULT_LOCATION;
-    iCalTodo.category = DEFAULT_CATEGORY;
+    iCalTodo.categories = DEFAULT_CATEGORY;
     iCalTodo.privateEvent = DEFAULT_PRIVATE;
     iCalTodo.allDay = DEFAULT_ALLDAY;
     iCalTodo.alarm = DEFAULT_ALARM;
@@ -356,7 +356,7 @@ function TestAddTodo()
        alert( "Invalid Description" );
     if( iCalTodo.location != DEFAULT_LOCATION )
        alert( "Invalid Location" );
-    if( iCalTodo.category != DEFAULT_CATEGORY )
+    if( iCalTodo.categories != DEFAULT_CATEGORY )
        alert( "Invalid Category" );
     if( iCalTodo.privateEvent != DEFAULT_PRIVATE )
        alert( "Invalid PrivateEvent Setting" );
@@ -397,7 +397,7 @@ function TestFetchTodo( id )
        alert( "Invalid Description" );
     if( iCalEvent.location != DEFAULT_LOCATION )
        alert( "Invalid Location" );
-    if( iCalEvent.category != DEFAULT_CATEGORY )
+    if( iCalEvent.categories != DEFAULT_CATEGORY )
        alert( "Invalid Category" );
     if( iCalEvent.privateEvent != DEFAULT_PRIVATE )
        alert( "Invalid PrivateEvent Setting" );
@@ -432,7 +432,7 @@ function TestUpdateTodo( iCalTodo )
     iCalTodo.title = DEFAULT_TITLE+"*NEW*";
     iCalTodo.description = DEFAULT_DESCRIPTION+"*NEW*";
     iCalTodo.location = DEFAULT_LOCATION+"*NEW*";
-    iCalTodo.category = DEFAULT_CATEGORY+"*NEW*";
+    iCalTodo.categories = DEFAULT_CATEGORY+"*NEW*";
     iCalTodo.privateEvent = !DEFAULT_PRIVATE;
     iCalTodo.allDay = !DEFAULT_ALLDAY;
     iCalTodo.alarm = !DEFAULT_ALARM;
@@ -455,7 +455,7 @@ function TestUpdateTodo( iCalTodo )
        alert( "Invalid Description" );
     if( iCalTodo.location != DEFAULT_LOCATION+"*NEW*" )
        alert( "Invalid Location" );
-    if( iCalTodo.category != DEFAULT_CATEGORY+"*NEW*" )
+    if( iCalTodo.categories != DEFAULT_CATEGORY+"*NEW*" )
        alert( "Invalid Category" );
     if( iCalTodo.privateEvent != !DEFAULT_PRIVATE )
        alert( "Invalid PrivateEvent Setting" );

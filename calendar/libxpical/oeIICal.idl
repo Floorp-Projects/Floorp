@@ -74,7 +74,7 @@ interface oeIICalEvent : nsISupports
     attribute string title;
     attribute string description;
     attribute string location;
-    attribute string category;
+    attribute string categories;
     attribute boolean privateEvent;
     attribute string syncId;
     attribute boolean allDay;

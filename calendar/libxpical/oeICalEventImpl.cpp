@@ -356,10 +356,10 @@ NS_IMETHODIMP oeICalEventImpl::SetLocation(const char * aNewVal)
 }
 
 /* attribute string Category; */
-NS_IMETHODIMP oeICalEventImpl::GetCategory(char **aRetVal)
+NS_IMETHODIMP oeICalEventImpl::GetCategories(char **aRetVal)
 {
 #ifdef ICAL_DEBUG_ALL
-    printf( "GetCategory() = " );
+    printf( "GetCategories() = " );
 #endif
     
     if( m_category ) {
@@ -375,10 +375,10 @@ NS_IMETHODIMP oeICalEventImpl::GetCategory(char **aRetVal)
    return NS_OK;
 }
 
-NS_IMETHODIMP oeICalEventImpl::SetCategory(const char * aNewVal)
+NS_IMETHODIMP oeICalEventImpl::SetCategories(const char * aNewVal)
 {
 #ifdef ICAL_DEBUG_ALL
-    printf( "SetCategory( %s )\n", aNewVal );
+    printf( "SetCategories( %s )\n", aNewVal );
 #endif
     if( m_category )
         nsMemory::Free( m_category );
@@ -1227,7 +1227,7 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
     prop = icalcomponent_get_first_property( vevent, ICAL_CATEGORIES_PROPERTY );
     if ( prop != 0) {
         tmpstr = (char *)icalproperty_get_categories( prop );
-        SetCategory( tmpstr );
+        SetCategories( tmpstr );
     } else if( m_category ) {
         nsMemory::Free( m_category );
         m_category= nsnull;
