@@ -31,7 +31,6 @@ LIBRARY_NAME	= widget_photon
 REQUIRES	= util img xpcom raptor netlib
 
 OLD_WIDGETS = \
-		nsButton.cpp \
 		nsCheckButton.cpp \
 		nsComboBox.cpp \
 		nsLabel.cpp \
@@ -40,13 +39,15 @@ OLD_WIDGETS = \
 		nsMenuBar.cpp \
 		nsMenuItem.cpp \
 		nsPopUpMenu.cpp \
-		nsRadioButton.cpp \
-		nsTextAreaWidget.cpp \
-		nsTextHelper.cpp \
-		nsTextWidget.cpp
+		nsRadioButton.cpp
+	
 
 						
 CPPSRCS		= \
+		nsButton.cpp \
+		nsTextAreaWidget.cpp \
+		nsTextHelper.cpp \
+		nsTextWidget.cpp \
 		PtRawDrawContainer.cpp \
 		nsAppShell.cpp \
 		nsClipboard.cpp \

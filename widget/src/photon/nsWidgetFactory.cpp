@@ -24,13 +24,14 @@
 #include "nsIFactory.h"
 #include "nsISupports.h"
 
-#if 0
+
 #include "nsIButton.h"
+#include "nsITextWidget.h"
+#include "nsITextAreaWidget.h"
+#if 0
 #include "nsILabel.h"
 #include "nsICheckButton.h"
 #include "nsIRadioButton.h"
-#include "nsITextWidget.h"
-#include "nsITextAreaWidget.h"
 #include "nsIListBox.h"
 #include "nsIComboBox.h"
 #endif
@@ -47,12 +48,13 @@
 #include "nsWindow.h"
 #include "nsAppShell.h"
 #include "nsLookAndFeel.h"
-#if 0
+
 #include "nsButton.h"
-#include "nsCheckButton.h"
-#include "nsRadioButton.h"
 #include "nsTextWidget.h"
 #include "nsTextAreaWidget.h"
+#if 0
+#include "nsCheckButton.h"
+#include "nsRadioButton.h"
 #include "nsListBox.h"
 #include "nsComboBox.h"
 #include "nsLabel.h"
@@ -71,14 +73,15 @@ struct PRLogModuleInfo  *PhWidLog =  nsnull;
 
 static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
 static NS_DEFINE_IID(kCChild,         NS_CHILD_CID);
-#if 0
+
 static NS_DEFINE_IID(kCButton,        NS_BUTTON_CID);
+static NS_DEFINE_IID(kCTextArea,      NS_TEXTAREA_CID);
+static NS_DEFINE_IID(kCTextField,     NS_TEXTFIELD_CID);
+#if 0
 static NS_DEFINE_IID(kCCheckButton,   NS_CHECKBUTTON_CID);
 static NS_DEFINE_IID(kCCombobox,      NS_COMBOBOX_CID);
 static NS_DEFINE_IID(kCListbox,       NS_LISTBOX_CID);
 static NS_DEFINE_IID(kCRadioButton,   NS_RADIOBUTTON_CID);
-static NS_DEFINE_IID(kCTextArea,      NS_TEXTAREA_CID);
-static NS_DEFINE_IID(kCTextField,     NS_TEXTFIELD_CID);
 static NS_DEFINE_IID(kCLabel,         NS_LABEL_CID);
 #endif
 
@@ -255,7 +258,19 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports *aOuter,
         PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsTransferable\n" ));
         inst = (nsISupports*)new nsTransferable();
     }
-#if 0
+    else if (mClassID.Equals(kCButton)) {
+	  PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsButton\n" ));
+      inst = (nsISupports *)(nsBaseWidget*)(nsWidget *)new nsButton();
+    }
+    else if (mClassID.Equals(kCTextArea)) {
+      inst = (nsISupports *)(nsBaseWidget*)(nsWidget *) new nsTextAreaWidget();
+	  PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of TextArea\n" ));
+    }
+    else if (mClassID.Equals(kCTextField)) {
+    PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidgetFactory::CreateInstance of TextField\n"));
+      inst = (nsISupports *)(nsBaseWidget*)(nsWidget *) new nsTextWidget();
+    }    
+#if 0    
     else if (mClassID.Equals(kCCheckButton)) {
 	  PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsCheckButton\n" ));
       inst = (nsISupports *)(nsBaseWidget*)(nsWidget *)new nsCheckButton();
@@ -264,10 +279,6 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports *aOuter,
 	  PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsRadioButton\n" ));
       inst = (nsISupports *)(nsBaseWidget*)(nsWidget *)new nsRadioButton();
     }
-    else if (mClassID.Equals(kCTextArea)) {
-      inst = (nsISupports *)(nsBaseWidget*)(nsWidget *) new nsTextAreaWidget();
-	  PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of TextArea\n" ));
-    }
     else if (mClassID.Equals(kCListbox)) {
       inst = (nsISupports *)(nsBaseWidget*)(nsWidget *) new nsListBox();
 	  PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsListBox\n" ));
@@ -275,14 +286,6 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports *aOuter,
     else if (mClassID.Equals(kCCombobox)) {
       inst = (nsISupports *)(nsBaseWidget*)(nsWidget *) new nsComboBox();
  	  PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsComboBox\n" ));
-    }
-    else if (mClassID.Equals(kCButton)) {
-	  PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsButton\n" ));
-      inst = (nsISupports *)(nsBaseWidget*)(nsWidget *)new nsButton();
-    }
-    else if (mClassID.Equals(kCTextField)) {
-    PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidgetFactory::CreateInstance of TextField\n"));
-      inst = (nsISupports *)(nsBaseWidget*)(nsWidget *) new nsTextWidget();
     }
     else if (mClassID.Equals(kCLabel)) {
       PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsLabel\n" ));
