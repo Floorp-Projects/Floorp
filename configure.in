@@ -2556,37 +2556,6 @@ fi
 AC_SUBST(HAVE_GCC3_ABI)
 
 
-AC_MSG_CHECKING(for ios::binary)
-AC_CACHE_VAL(ac_cv_ios_binary,
- [AC_TRY_COMPILE([#include <iostream.h>]
-	         [#include <fstream.h>],
-                 [char *buffer = "config.log";
-		  fstream *mFileStream=new fstream(buffer, ios::binary);],
-                 [ac_cv_ios_binary=true],
-                 [ac_cv_ios_binary=false])])
-if test "$ac_cv_ios_binary" = true ; then
-  AC_DEFINE(HAVE_IOS_BINARY)
-  AC_MSG_RESULT(yes)
-else
-  AC_MSG_RESULT(no)
-fi  
-
-
-AC_MSG_CHECKING(for ios::bin)
-AC_CACHE_VAL(ac_cv_ios_bin,
- [AC_TRY_COMPILE([#include <iostream.h>]
-               [#include <fstream.h>],
-                 [char *buffer = "config.log";
-                fstream *mFileStream=new fstream(buffer, ios::bin);],
-                 [ac_cv_ios_bin=true],
-                 [ac_cv_ios_bin=false])])
-if test "$ac_cv_ios_bin" = true ; then
-  AC_DEFINE(HAVE_IOS_BIN)
-  AC_MSG_RESULT(yes)
-else
-  AC_MSG_RESULT(no)
-fi  
-
 AC_CACHE_CHECK(for C++ \"explicit\" keyword,
                ac_cv_cpp_explicit,
                [AC_TRY_COMPILE(class X {
