@@ -17,7 +17,7 @@
         <children/>
       </xul:vbox>
           
-      <xul:hbox class="dialog-button-box" pack="end"
+      <xul:hbox class="dialog-button-box" pack="end" anonid="buttons"
                 xbl:inherits="pack=buttonpack,align=buttonalign,dir=buttondir,orient=buttonorient">
         <xul:button dlgtype="accept" class="dialog-button"/>
         <xul:button dlgtype="extra1" class="dialog-button" hidden="true" label=""/>
@@ -187,8 +187,13 @@
             var button = buttons[dlgtype];
             buttons[dlgtype].addEventListener("command", this._handleButtonCommand, true);
             // don't override custom labels with pre-defined labels on explicit buttons
-            if (!button.hasAttribute("label"))
+            if (!button.hasAttribute("label")) {
               button.setAttribute("label", this.mStrBundle.GetStringFromName("button-"+dlgtype));
+              var accessKey = this.mStrBundle.GetStringFromName("accesskey-"+dlgtype);
+              if (accessKey) {
+                button.setAttribute("accesskey", accessKey);
+              }
+            }
           }
           
           // ensure that hitting enter triggers ondialogaccept
