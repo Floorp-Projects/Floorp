@@ -37,9 +37,9 @@
 #include "nshtmlpars.h"
 #include "nsIDTD.h"
 #include "nsIContentSink.h"
-#include "nsHTMLTokens.h"
 #include "nsVoidArray.h"
 #include "nsParserCIID.h"
+#include "nsHTMLTags.h"
 
 
 class nsParser;
@@ -53,6 +53,7 @@ class nsEntryStack;
 class nsCParserNode;
 class nsTokenAllocator;
 class CNodeRecycler;
+class CToken;
 
 //*** This enum is used to define the known universe of XIF tags.
 //*** The use of this table doesn't preclude of from using non-standard
@@ -343,12 +344,6 @@ private:
      * DEPRECATED
      * @update	gpk 06/18/98
      */
-    CTokenHandler* GetTokenHandler(eHTMLTokenTypes aType) const;
-
-    /**
-     * DEPRECATED
-     * @update	gpk 06/18/98
-     */
     CTokenHandler* AddTokenHandler(CTokenHandler* aHandler);
 
     /**
@@ -419,7 +414,7 @@ private:
 
 protected:
 
-    nsresult    WillHandleToken(CToken* aToken,eHTMLTokenTypes& aType);
+    nsresult    WillHandleToken(CToken* aToken,PRInt32& aType);
     nsresult    DidHandleToken(CToken* aToken, nsresult aResult=NS_OK);
     nsresult    WillHandleStartToken(CToken* aToken,eXIFTags aTag, nsIParserNode& aNode);
     nsresult    DidHandleStartToken(CToken* aToken,eXIFTags aTag, nsIParserNode& aNode);

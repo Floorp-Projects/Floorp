@@ -23,6 +23,7 @@
 #include <ctype.h>      // for isdigit()
 
 #include "CNavDTD.h"
+#include "nsXIFDTD.h"
 #include "nsParserCIID.h"
 #include "nsIParser.h"
 #include "nsIHTMLContentSink.h"
@@ -31,21 +32,6 @@
 #include "nsIComponentManager.h"
 
 extern "C" void NS_SetupRegistry();
-
-// This is copied from the header files so that we don't accidentally
-// include nsHTMLTokens.h and get all the inline junk that confuses
-// gcc-2.7.2.3.
-
-inline nsresult NS_NewXIFDTD(nsIDTD** aInstancePtrResult)
-{
-  NS_DEFINE_CID(kXIFDTDCID, NS_XIF_DTD_CID);
-  return nsComponentManager::CreateInstance(kXIFDTDCID,
-                                            nsnull,
-                                            NS_GET_IID(nsIDTD),
-                                            (void**)aInstancePtrResult);
-}
-
-
 
 #ifdef XP_PC
 #define PARSER_DLL "gkparser.dll"

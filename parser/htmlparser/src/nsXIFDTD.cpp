@@ -452,7 +452,7 @@ nsresult nsXIFDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIPars
  *  @return  
  */
 
-nsresult nsXIFDTD::WillHandleToken(CToken* aToken,eHTMLTokenTypes& aType) {
+nsresult nsXIFDTD::WillHandleToken(CToken* aToken,PRInt32& aType) {
   NS_ASSERTION(aToken!=nsnull,"invalid token");
 
   if(aToken) {
@@ -486,7 +486,7 @@ nsresult nsXIFDTD::HandleToken(CToken* aToken,nsIParser* aParser){
 
   if(aToken) {
 
-    eHTMLTokenTypes theType=eToken_unknown;
+    PRInt32 theType=eToken_unknown;
     result=WillHandleToken(aToken,theType);
     
     if(result==NS_OK) {
