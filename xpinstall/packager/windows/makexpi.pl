@@ -94,12 +94,6 @@ if(-e "$inStagePath\\$inComponentName\\$inComponentName.xpi")
   unlink("$inDestPath\\$inComponentName.xpi");
 }
 
-if(CreateTmpStage($inComponentName, $inStagePath, $inDestPath) != 0)
-{
-  exit(1);
-}
-$tmpStagePath = "$inDestPath\\tmpstage";
-
 # delete install.js
 if(-e "install.js")
 {
@@ -107,7 +101,7 @@ if(-e "install.js")
 }
 
 # make sure inDestPath exists
-if(!(-e "$inDestPath"))
+if(!(-d "$inDestPath"))
 {
   system("mkdir $inDestPath");
 }
@@ -118,12 +112,19 @@ $saveCwdir = cwd();
 
 # change directory to where the files are, else zip will store
 # unwanted path information.
-chdir("$tmpStagePath\\$inComponentName");
-system("zip -r $inDestPath\\$inComponentName.xpi *");
+chdir("$inStagePath\\$inComponentName");
+if(system("zip -r $inDestPath\\$inComponentName.xpi *"))
+{
+  chdir("$saveCwdir");
+  die "\n Error: zip -r $inDestPath\\$inComponentName.xpi *\n";
+}
 chdir("$saveCwdir");
 
 copy("$inComponentName.js", "install.js");
-system("zip -g $inDestPath\\$inComponentName.xpi install.js");
+if(system("zip -g $inDestPath\\$inComponentName.xpi install.js"))
+{
+  die "\n Error: zip -g $inDestPath\\$inComponentName.xpi install.js\n";
+}
 
 # delete install.js
 if(-e "install.js")
@@ -131,121 +132,8 @@ if(-e "install.js")
   unlink("install.js");
 }
 
-if(-e "$inDestPath\\tmpstage")
-{
-  system("perl rdir.pl $inDestPath\\tmpstage");
-}
-
-print " done!\n";
+print "\n $inComponentName.xpi done!\n";
 
 # end of script
 exit(0);
-
-sub CreateTmpStage()
-{
-  my($inComponentName, $inStagePath, $inDestPath) = @_;
-  my(@ignoreList);
-
-  if(-d "$inDestPath\\tmpstage")
-  {
-    system("perl rdir.pl $inDestPath\\tmpstage");
-  }
-
-  # Copy the component's staging dir locally so that the chrome packages, locales, and skins dirs can be
-  # removed prior to creating the .xpi file.
-  mkdir("$inDestPath\\tmpstage", 775);
-  mkdir("$inDestPath\\tmpstage\\$inComponentName", 775);
-
-  if(system("xcopy /s/e $inStagePath\\$inComponentName $inDestPath\\tmpstage\\$inComponentName\\") != 0)
-  {
-    die "\n Error: xcopy /s/e $inStagePath\\$inComponentName $inDestPath\\tmpstage\\$inComponentName\\\n";
-  }
-
-  # Remove the locales, packages, and skins dirs if they exist.
-  if(-d "$inDestPath\\tmpstage\\$inComponentName\\bin\\chrome\\locales")
-  {
-    system("perl rdir.pl $inDestPath\\tmpstage\\$inComponentName\\bin\\chrome\\locales");
-  }
-  if(-d "$inDestPath\\tmpstage\\$inComponentName\\bin\\chrome\\packages")
-  {
-    system("perl rdir.pl $inDestPath\\tmpstage\\$inComponentName\\bin\\chrome\\packages");
-  }
-  if(-d "$inDestPath\\tmpstage\\$inComponentName\\bin\\chrome\\skins")
-  {
-    system("perl rdir.pl $inDestPath\\tmpstage\\$inComponentName\\bin\\chrome\\skins");
-  }
-
-#  # This ignore list is to try to copy the least amount of files as necessary from the staging
-#  # area to the tmpstage area because some of the directories might be deleted immediatealy after being
-#  # copied to tmpstage.
-#  @ignoreList = ("tmpchrome", "temp");
-#  print "\n Copying $inStagePath\\$inComponentName $inDestPath\\tmpstage\\$inComponentName\n\n";
-#  if(CopyWithExclusion("$inStagePath\\$inComponentName", "$inDestPath\\tmpstage\\$inComponentName", @ignoreList) != 0)
-#  {
-#    return(1);
-#  }
-#
-#  # Remove the tmpchrome dir if it exists.
-#  if(-e "$inDestPath\\tmpstage\\$inComponentName\\tmpchrome")
-#  {
-#    system("perl rdir.pl $inDestPath\\tmpstage\\$inComponentName\\tmpchrome");
-#  }
-}
-
-sub CopyWithExclusion()
-{
-  my($inSrc, $inDest, @ignoreList) = @_;
-  my(@sDirList);
-  my($sDir);
-  my($sDirComponent);
-  my($sItem);
-  my($component);
-
-  $inSrc    =~ s/\//\\/g;
-  $inDest   =~ s/\//\\/g;
-  @sDirList = <$inSrc\\*>;
-  foreach $sDir (@sDirList)
-  {
-    $sDir          =~ s/\//\\/g;
-    @sDirComponent = split(/\\/, $sDir);
-    $sItem         = $sDirComponent[$#sDirComponent];
-    if(!MatchList($sItem, @ignoreList))
-    {
-      if(-d $sDir)
-      {
-        # Copy directory and its subdirectories
-        if(system("xcopy /s/f $sDir $inDest\\$sItem\\") != 0)
-        {
-          print "Error: xcopy /s/f $sDir $inDest\\$sItem\\\n";
-          return(1);
-        }
-      }
-      else
-      {
-        # Copy files only
-        if(system("copy $sDir $inDest\\$sItem") != 0)
-        {
-          print "Error: copy $sDir $inDest\\$sItem\n";
-          return(1);
-        }
-      }
-    }
-  }
-  return(0);
-}
-
-sub MatchList()
-{
-  my($component, @ignoreList) = @_;
-  my($item);
-
-  foreach $item (@ignoreList)
-  {
-    if($item =~ /^$component$/i)
-    {
-      return(1);
-    }
-  }
-  return(0);
-}
 
