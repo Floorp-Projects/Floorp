@@ -50,6 +50,7 @@ public:
   // nsThrobber
   nsresult Init(nsIWidget* aParent, const nsRect& aBounds,
                 const nsString& aFileNameMask, PRInt32 aNumImages);
+  void Destroy();
   nsresult MoveTo(PRInt32 aX, PRInt32 aY);
   nsresult Show();
   nsresult Hide();
