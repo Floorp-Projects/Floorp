@@ -184,15 +184,12 @@ nsPositionedInlineFrame::Reflow(nsIPresContext&          aPresContext,
     // code, then we're all done
     if (handled) {
       // Just return our current size as our desired size
-      aDesiredSize.width = mRect.width;
-      aDesiredSize.height = mRect.height;
-      // XXX This isn't correct...
-      aDesiredSize.ascent = mRect.height;
-      aDesiredSize.descent = 0;
-  
-      // Whether or not we're complete hasn't changed
-      aStatus = (nsnull != mNextInFlow) ? NS_FRAME_NOT_COMPLETE : NS_FRAME_COMPLETE;
-      return rv;
+      // XXX I don't know how to compute that without a reflow, so for the
+      // time being pretend a resize reflow occured
+      nsHTMLReflowState reflowState(aReflowState);
+      reflowState.reason = eReflowReason_Resize;
+      reflowState.reflowCommand = nsnull;
+      return nsInlineFrame::Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
     }
   }
 
