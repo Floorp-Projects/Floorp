@@ -339,34 +339,34 @@ static PRInt32 FindLastIndexOfTag(eHTMLTags aTag,nsDeque &aTagStack) {
 }
 
 /**
- * This method scans the sequence of tokens to determine the 
- * well formedness of each tag structure. This is used to 
- * disable residual-style handling in well formed cases.
+ * This method scans the sequence of tokens to determine whether or not the
+ * tag structure of the document is well formed. In well formed cases, we can
+ * skip doing residual style handling and allow inlines to contain block-level
+ * elements.
  *
  * @update	gess 1Sep2000
  * @param 
  * @return
  */
 nsresult nsHTMLTokenizer::ScanDocStructure(PRBool aFinalChunk) {
-  nsresult result=NS_OK;
+  nsresult result = NS_OK;
   if (!mTokenDeque.GetSize())
     return result;
 
-  CHTMLToken  *theRootToken=0;
+  CHTMLToken* theToken = (CHTMLToken*)mTokenDeque.ObjectAt(mTokenScanPos);
 
     //*** start by finding the first start tag that hasn't been reviewed.
 
-  while(mTokenScanPos>0) {
-    theRootToken=(CHTMLToken*)mTokenDeque.ObjectAt(mTokenScanPos);
-    if(theRootToken) {
-      eHTMLTokenTypes theType=eHTMLTokenTypes(theRootToken->GetTokenType());  
-      if(eToken_start==theType) {
-        if(eFormUnknown==theRootToken->GetContainerInfo()) {
+  while(mTokenScanPos > 0) {
+    if(theToken) {
+      eHTMLTokenTypes theType = eHTMLTokenTypes(theToken->GetTokenType());  
+      if(eToken_start == theType) {
+        if(eFormUnknown == theToken->GetContainerInfo()) {
           break;
         }
-      }      
+      }
     }
-    mTokenScanPos--;
+    theToken = (CHTMLToken*)mTokenDeque.ObjectAt(--mTokenScanPos);
   }
 
   /*----------------------------------------------------------------------
@@ -375,90 +375,78 @@ nsresult nsHTMLTokenizer::ScanDocStructure(PRBool aFinalChunk) {
    *  of fresh tokens.
    *---------------------------------------------------------------------*/
 
-  theRootToken=(CHTMLToken*)mTokenDeque.ObjectAt(mTokenScanPos); //init to root
-
   nsDeque       theStack(0);
-  eHTMLTags     theRootTag=eHTMLTag_unknown;
-  CHTMLToken    *theToken=theRootToken; //init to root
-  PRInt32       theStackDepth=0;    
+  nsDeque       tempStack(0);
+  PRInt32       theStackDepth = 0;
+  //Don't bother if we get ridiculously deep.
+  static  const PRInt32 theMaxStackDepth = 200;
 
-  static  const PRInt32 theMaxStackDepth=200;   //dont bother if we get ridiculously deep.
+  while(theToken && theStackDepth < theMaxStackDepth) {
+    eHTMLTokenTypes theType = eHTMLTokenTypes(theToken->GetTokenType());
+    eHTMLTags       theTag  = (eHTMLTags)theToken->GetTypeID();
 
-  while(theToken && (theStackDepth<theMaxStackDepth)) {
+    if(nsHTMLElement::IsContainer(theTag)) { //bug 54117
+      PRBool theTagIsBlock  = gHTMLElements[theTag].IsMemberOf(kBlockEntity);
+      PRBool theTagIsInline = (theTagIsBlock) ?
+                                PR_FALSE :
+                                gHTMLElements[theTag].IsMemberOf(kInlineEntity);
 
-    eHTMLTokenTypes theType=eHTMLTokenTypes(theToken->GetTokenType());
-    eHTMLTags       theTag=(eHTMLTags)theToken->GetTypeID();
-
-    PRBool          theTagIsContainer=nsHTMLElement::IsContainer(theTag);  //bug54117...
-
-    if(theTagIsContainer) {
-      PRBool          theTagIsBlock=gHTMLElements[theTag].IsMemberOf(kBlockEntity);
-      PRBool          theTagIsInline= (theTagIsBlock) ? PR_FALSE : gHTMLElements[theTag].IsMemberOf(kInlineEntity);
-
-      if(theTagIsBlock || theTagIsInline || (eHTMLTag_table==theTag)) {
-
+      if(theTagIsBlock || theTagIsInline || eHTMLTag_table == theTag) {
         switch(theType) {
-
           case eToken_start:
-            if(0==theStack.GetSize()) {
-                //track the tag on the top of the stack...
-              theRootToken=theToken;
-              theRootTag=theTag;
-            }
             theStack.Push(theToken);
             ++theStackDepth;
             break;
-
           case eToken_end: 
             {
-              CHTMLToken *theLastToken= NS_STATIC_CAST(CHTMLToken*, theStack.Peek());
+              CHTMLToken *theLastToken = NS_STATIC_CAST(CHTMLToken*, theStack.Peek());
               if(theLastToken) {
-                if(theTag==theLastToken->GetTypeID()) {
-                  theStack.Pop(); //yank it for real 
+                if(theTag == theLastToken->GetTypeID()) {
+                  theStack.Pop(); // Yank it for real 
                   theStackDepth--;
                   theLastToken->SetContainerInfo(eWellFormed);
-
-                  //in addition, let's look above this container to see if we can find 
-                  //any tags that are already marked malformed. If so, pop them too!
-
-                  theLastToken= NS_STATIC_CAST(CHTMLToken*, theStack.Peek());
-                  while(theLastToken) {
-                    if(eMalformed==theRootToken->GetContainerInfo()) {
-                      theStack.Pop(); //yank the malformed token for real.
-                      theLastToken= NS_STATIC_CAST(CHTMLToken*, theStack.Peek());
-                      continue;
-                    }
-                    break;
-                  }
                 }
                 else {
-                  //the topmost token isn't what we expected, so that container must
-                  //be malformed. If the tag is a block, we don't really care (but we'll
-                  //mark it anyway). If it's an inline we DO care, especially if the 
-                  //inline tried to contain a block (that's when RS handling kicks in).
-                  if(theTagIsInline) {
-                    PRInt32 theIndex=FindLastIndexOfTag(theTag,theStack);
-                    if(kNotFound!=theIndex) {
-                      theToken=(CHTMLToken*)theStack.ObjectAt(theIndex);                        
-                      theToken->SetContainerInfo(eMalformed);
-                    }
-                    //otherwise we ignore an out-of-place end tag.
-                  }
-                  else {
-                  }
-                }
-              }
-            } 
-            break;
+                  // This token wasn't what we expected it to be! We need to
+                  // go searching for its real start tag on our stack. Each
+                  // tag in between the end tag and start tag must be malformed
 
+                  if(FindLastIndexOfTag(theTag, theStack) != kNotFound) {
+                    // Find theTarget in the stack, marking each (malformed!)
+                    // tag in our way.
+                    theStack.Pop(); // pop off theLastToken for real.
+                    do {
+                      theLastToken->SetContainerInfo(eMalformed);
+                      tempStack.Push(theLastToken);
+                      theLastToken = NS_STATIC_CAST(CHTMLToken*, theStack.Pop());
+                    } while(theLastToken && theTag != theLastToken->GetTypeID());
+                    // XXX The above test can confuse two different userdefined 
+                    // tags.
+
+                    NS_ASSERTION(theLastToken,
+                                 "FindLastIndexOfTag lied to us!"
+                                 " We couldn't find theTag on theStack");
+                    theLastToken->SetContainerInfo(eMalformed);
+
+                    // Great, now push all of the other tokens back onto the
+                    // stack to preserve the general structure of the document.
+                    // Note that we don't push the target token back onto the
+                    // the stack (since it was just closed).
+                    while(tempStack.GetSize() != 0) {
+                      theStack.Push(tempStack.Pop());
+                    }
+                  } // else ignore a bogus end tag.
+                }
+              } // if (theLastToken)
+            }
+            break;
           default:
             break; 
         } //switch
-
       }
     }
 
-    theToken=(CHTMLToken*)mTokenDeque.ObjectAt(++mTokenScanPos);
+    theToken = (CHTMLToken*)mTokenDeque.ObjectAt(++mTokenScanPos);
   }
 
   return result;
