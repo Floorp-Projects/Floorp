@@ -121,32 +121,6 @@ int nsToolkitBase::QuartzChangedCallback(const char* pref, void* data)
   return NS_OK;
 }
 
-
-static CFBundleRef GetBundle(CFStringRef frameworkPath)
-{
-  CFBundleRef bundle = NULL;
- 
-  //	Make a CFURLRef from the CFString representation of the bundle's path.
-  //	See the Core Foundation URL Services chapter for details.
-  CFURLRef bundleURL = CFURLCreateWithFileSystemPath(NULL, frameworkPath, kCFURLPOSIXPathStyle, true);
-  if (bundleURL != NULL) {
-    bundle = CFBundleCreate(NULL, bundleURL);
-    if (bundle != NULL)
-      CFBundleLoadExecutable(bundle);
-    CFRelease(bundleURL);
-  }
-
-  return bundle;
-}
-
-static void* GetQDFunction(CFStringRef functionName)
-{
-  static CFBundleRef systemBundle = GetBundle(CFSTR("/System/Library/Frameworks/ApplicationServices.framework"));
-  if (systemBundle)
-    return CFBundleGetFunctionPointerForName(systemBundle, functionName);
-  return NULL;
-}
-
 //
 // SetupQuartzRendering
 //
@@ -155,7 +129,7 @@ static void* GetQDFunction(CFStringRef functionName)
 //
 void nsToolkitBase::SetupQuartzRendering()
 {
-  // from Apple's technote, yet un-numbered.
+  // from Apple's technote at http://developer.apple.com/qa/qa2001/qa1193.html
 #if UNIVERSAL_INTERFACES_VERSION <= 0x0400
   enum {
     kQDDontChangeFlags = 0xFFFFFFFF,         // don't change anything
@@ -167,37 +141,31 @@ void nsToolkitBase::SetupQuartzRendering()
 #endif
 
   const int kFlagsWeUse = kQDUseCGTextRendering | kQDUseCGTextMetrics;
-  
+
   // turn on quartz rendering if we find the symbol in the app framework. Just turn
   // on the bits that we need, don't turn off what someone else might have wanted. If
   // the pref isn't found, assume we want it on. That way, we have to explicitly put
   // in a pref to disable it, rather than force everyone who wants it to carry around
   // an extra pref.
+  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
+  if (!prefs)
+    return;
 
-  typedef UInt32 (*qd_procptr)(UInt32);  
-  static qd_procptr SwapQDTextFlagsProc = (qd_procptr)GetQDFunction(CFSTR("SwapQDTextFlags"));
-  if (SwapQDTextFlagsProc)
-  {
-    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
-    if (!prefs)
-      return;
-
-    PRBool enableQuartz = PR_TRUE;
-    nsresult rv = prefs->GetBoolPref(kQuartzRenderingPref, &enableQuartz);
-    UInt32 oldFlags = SwapQDTextFlagsProc(kQDDontChangeFlags);
-    if (NS_FAILED(rv) || enableQuartz) {
-      SwapQDTextFlagsProc(oldFlags | kFlagsWeUse);
-      
-      // the system defaults to not anti-aliasing small fonts, but some people
-      // think it looks better that way. If the pref is set, turn them on
-      PRBool antiAliasAllFontSizes = PR_FALSE;
-      rv = prefs->GetBoolPref(kAllFontSizesPref, &antiAliasAllFontSizes);
-      if (NS_SUCCEEDED(rv) && antiAliasAllFontSizes)
-        SetOutlinePreferred(true);
-    }
-    else 
-      SwapQDTextFlagsProc(oldFlags & !kFlagsWeUse);
+  PRBool enableQuartz = PR_TRUE;
+  nsresult rv = prefs->GetBoolPref(kQuartzRenderingPref, &enableQuartz);
+  UInt32 oldFlags = QDSwapTextFlags(kQDDontChangeFlags);
+  if (NS_FAILED(rv) || enableQuartz) {
+    QDSwapTextFlags(oldFlags | kFlagsWeUse);
+    
+    // the system defaults to not anti-aliasing small fonts, but some people
+    // think it looks better that way. If the pref is set, turn them on
+    PRBool antiAliasAllFontSizes = PR_FALSE;
+    rv = prefs->GetBoolPref(kAllFontSizesPref, &antiAliasAllFontSizes);
+    if (NS_SUCCEEDED(rv) && antiAliasAllFontSizes)
+      SetOutlinePreferred(true);
   }
+  else 
+    QDSwapTextFlags(oldFlags & !kFlagsWeUse);
 }
 
 

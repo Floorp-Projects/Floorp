@@ -61,7 +61,8 @@ NS_IMETHODIMP nsBidiKeyboard::IsLangRTL(PRBool *aIsRTL)
   static fpKLGetKeyboardLayoutProperty_type fpKLGetKeyboardLayoutProperty = NULL;
 
   if (!checked) {
-    CFBundleRef bundle =        ::CFBundleGetBundleWithIdentifier(CFSTR("com.apple.Carbon"));
+    CFBundleRef bundle =
+        ::CFBundleGetBundleWithIdentifier(CFSTR("com.apple.Carbon"));
     if (bundle) {
       fpKLGetCurrentKeyboardLayout =
           ::CFBundleGetFunctionPointerForName(bundle, CFSTR("KLGetCurrentKeyboardLayout"));

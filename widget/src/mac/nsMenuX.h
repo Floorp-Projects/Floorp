@@ -57,6 +57,41 @@ class nsIMenuListener;
 //static PRInt16      mMacMenuIDCount;    // use GetUniqueMenuID()
 extern PRInt16 mMacMenuIDCount;// = kMacMenuID;
 
+#if DEBUG
+// utility instance counter class
+class nsInstanceCounter
+{
+public:
+        nsInstanceCounter(const char* inDesc)
+        : mInstanceCount(0)
+        , mDescription(inDesc)
+        {
+        }
+        
+        ~nsInstanceCounter()
+        {
+          printf("%s %ld\n", mDescription, mInstanceCount);
+        }
+
+        nsInstanceCounter& operator ++()          // prefix
+        {
+          ++ mInstanceCount;
+          return *this;                
+        }
+
+        nsInstanceCounter& operator -- ()        // prefix
+        {
+          -- mInstanceCount;
+          return *this;
+        }
+
+protected:
+
+  PRInt32     mInstanceCount;
+  const char* mDescription;
+
+};
+#endif
 
 class nsMenuX : public nsIMenu,
                 public nsIMenuListener,

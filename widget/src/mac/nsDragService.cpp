@@ -639,7 +639,6 @@ nsDragService::GetData ( nsITransferable * aTransferable, PRUint32 aItemIndex )
           nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks(flavorStr.get(), &dataBuff, NS_REINTERPRET_CAST(int*, &dataSize));
 
           unsigned char *dataPtr = (unsigned char *) dataBuff;
-#if TARGET_CARBON
           // skip BOM (Byte Order Mark to distinguish little or big endian) in 'utxt'
           // 10.2 puts BOM for 'utxt', we need to remove it here
           // for little endian case, we also need to convert the data to big endian
@@ -651,7 +650,6 @@ nsDragService::GetData ( nsITransferable * aTransferable, PRUint32 aItemIndex )
             dataSize -= sizeof(PRUnichar);
             dataPtr += sizeof(PRUnichar);
           }
-#endif
           nsPrimitiveHelpers::CreatePrimitiveForData(flavorStr.get(), (void *) dataPtr, dataSize, getter_AddRefs(genericDataWrapper));
         }
         

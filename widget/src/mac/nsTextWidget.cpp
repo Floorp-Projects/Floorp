@@ -41,13 +41,11 @@
 
 #include <ToolUtils.h>
 #include <Appearance.h>
+#include <ControlDefinitions.h>
+
 #include <memory>
 
 using std::auto_ptr;
-
-#if TARGET_CARBON || (UNIVERSAL_INTERFACES_VERSION >= 0x0330)
-#include <ControlDefinitions.h>
-#endif
 
 NS_IMPL_ADDREF(nsTextWidget)
 NS_IMPL_RELEASE(nsTextWidget)
@@ -310,15 +308,10 @@ PRBool nsTextWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 										            selectionLen + 1);
 										
 										// copy it to the scrapMgr
-#if TARGET_CARBON
                     ::ClearCurrentScrap();
                     ScrapRef scrap;
                     ::GetCurrentScrap(&scrap);
                     ::PutScrapFlavor(scrap, 'TEXT', 0L /* ??? */, selectionLen, cRepOfSelection.get());
-#else
-										::ZeroScrap();
-										::PutScrap ( selectionLen, 'TEXT', cRepOfSelection.get() );
-#endif						
 										// if we're cutting, remove the text from the widget
 										if ( menuItem == cmd_Cut ) {
 											unused = 0;
@@ -335,7 +328,6 @@ PRBool nsTextWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 								{
 									long scrapOffset;
                   Handle scrapH = ::NewHandle(0);
-#if TARGET_CARBON
                   ScrapRef scrap;
                   OSStatus err;
                   err = ::GetCurrentScrap(&scrap);
@@ -344,10 +336,6 @@ PRBool nsTextWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
                   // XXX uhh.. i don't think this is right..
                   long scrapLen = scrapOffset;
                   if ( scrapOffset > 0 )
-#else             
-									long scrapLen = ::GetScrap(scrapH, 'TEXT', &scrapOffset);
-									if (scrapLen > 0)
-#endif
 									{
 										::HLock(scrapH);
 

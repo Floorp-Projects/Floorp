@@ -48,26 +48,16 @@
 #include "nsGUIEvent.h"
 #include "nsCarbonHelpers.h"
 #include "nsGfxUtils.h"
-#include "DefProcFakery.h"
 #include "nsMacResources.h"
 #include "nsIRollupListener.h"
 #include "nsCRT.h"
 #include "nsWidgetSupport.h"
 
-#if TARGET_CARBON
 #include <CFString.h>
-#endif
 
 #include <Gestalt.h>
 #include <Quickdraw.h>
 #include <MacWindows.h>
-
-#if UNIVERSAL_INTERFACES_VERSION < 0x0340
-enum {
-  kEventWindowConstrain = 83
-};
-const UInt32 kWindowLiveResizeAttribute = (1L << 28);
-#endif
 
 static const char sScreenManagerContractID[] = "@mozilla.org/gfx/screenmanager;1";
 
@@ -83,10 +73,6 @@ static const char sScreenManagerContractID[] = "@mozilla.org/gfx/screenmanager;1
 extern nsIRollupListener * gRollupListener;
 extern nsIWidget         * gRollupWidget;
 
-#if !TARGET_CARBON
-pascal long BorderlessWDEF ( short inCode, WindowPtr inWindow, short inMessage, long inParam ) ;
-long CallSystemWDEF ( short inCode, WindowPtr inWindow, short inMessage, long inParam ) ;
-#endif
 
 #define kWindowPositionSlop 20
 
@@ -194,10 +180,6 @@ nsMacWindow::nsMacWindow() : Inherited()
   , mResizeIsFromUs(PR_FALSE)
   , mShown(PR_FALSE)
   , mMacEventHandler(nsnull)
-#if !TARGET_CARBON
-  , mPhantomScrollbar(nsnull)
-  , mPhantomScrollbarData(nsnull)
-#endif
 {
   mMacEventHandler.reset(new nsMacEventHandler(this));
   WIDGET_SET_CLASSNAME("nsMacWindow");  
@@ -223,13 +205,6 @@ nsMacWindow::~nsMacWindow()
     if ( mWindowType == eWindowType_popup )
       RemoveBorderlessDefProc ( mWindowPtr );
 
-#if !TARGET_CARBON
-    // cleanup the struct we hang off the scrollbar's refcon  
-    if ( mPhantomScrollbar ) {
-      ::SetControlReference(mPhantomScrollbar, (long)nsnull);
-      delete mPhantomScrollbarData;
-    }
-#endif    
       
     // clean up DragManager stuff
     if ( mDragTrackingHandlerUPP ) {
@@ -601,7 +576,6 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 }
 
 
-#if TARGET_CARBON
 
 pascal OSStatus
 nsMacWindow :: ScrollEventHandler ( EventHandlerCallRef inHandlerChain, EventRef inEvent, void* userData )
@@ -704,7 +678,6 @@ nsMacWindow :: WindowEventHandler ( EventHandlerCallRef inHandlerChain, EventRef
   
 } // WindowEventHandler
 
-#endif
 
 
 //-------------------------------------------------------------------------
@@ -735,17 +708,6 @@ NS_IMETHODIMP nsMacWindow::Create(nsNativeWidget aNativeParent,   // this is a w
 void 
 nsMacWindow :: InstallBorderlessDefProc ( WindowPtr inWindow )
 {
-#if !TARGET_CARBON
-  // stash the real WDEF so we can call it later
-  Handle systemPopupWDEF = ((WindowPeek)inWindow)->windowDefProc;
-
-  // load the stub WDEF and stash it away. If this fails, we'll just use the normal one.
-  WindowDefUPP wdef = NewWindowDefUPP( BorderlessWDEF );
-  Handle fakedDefProc;
-  DefProcFakery::CreateDefProc ( wdef, systemPopupWDEF, &fakedDefProc );
-  if ( fakedDefProc )
-    ((WindowPeek)inWindow)->windowDefProc = fakedDefProc;
-#endif
 } // InstallBorderlessDefProc
 
 
@@ -759,12 +721,6 @@ nsMacWindow :: InstallBorderlessDefProc ( WindowPtr inWindow )
 void
 nsMacWindow :: RemoveBorderlessDefProc ( WindowPtr inWindow )
 {
-#if !TARGET_CARBON
-  Handle fakedProc = ((WindowPeek)inWindow)->windowDefProc;
-  Handle oldProc = DefProcFakery::GetSystemDefProc(fakedProc);
-  DefProcFakery::DestroyDefProc ( fakedProc );
-  ((WindowPeek)inWindow)->windowDefProc = oldProc;
-#endif
 }
 
 
@@ -775,13 +731,11 @@ nsMacWindow :: RemoveBorderlessDefProc ( WindowPtr inWindow )
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsMacWindow::Show(PRBool bState)
 {
-#if TARGET_CARBON
   // Mac OS X sheet support
   nsIWidget *parentWidget = mParent;
   nsCOMPtr<nsPIWidgetMac> piParentWidget ( do_QueryInterface(parentWidget) );
   WindowRef parentWindowRef = (parentWidget) ?
     reinterpret_cast<WindowRef>(parentWidget->GetNativeData(NS_NATIVE_DISPLAY)) : nsnull;
-#endif
 
   Inherited::Show(bState);
   
@@ -789,7 +743,6 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool bState)
   // necessary activate/deactivate events. Calling ::ShowHide() is
   // not adequate, unless we don't want activation (popups). (pinkerton).
   if ( bState && !mBounds.IsEmpty() ) {
-#if TARGET_CARBON
     if ( mIsSheet && parentWindowRef ) {
         WindowPtr top = GetWindowTop(parentWindowRef);
         if (piParentWidget)
@@ -809,7 +762,6 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool bState)
         gEventDispatchHandler.DispatchGuiEvent(this, NS_ACTIVATE);
     }
     else
-#endif
     if ( mAcceptsActivation )
       ::ShowWindow(mWindowPtr);
     else {
@@ -834,7 +786,6 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool bState)
       NS_IF_RELEASE(gRollupListener);
       NS_IF_RELEASE(gRollupWidget);
     }
-#if TARGET_CARBON
     // Mac OS X sheet support
     if (mIsSheet) {
       if (piParentWidget)
@@ -878,7 +829,6 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool bState)
       }
     }
     else
-#endif
       if ( mWindowPtr ) {
         ::HideWindow(mWindowPtr);
       }
@@ -1075,11 +1025,8 @@ NS_IMETHODIMP nsMacWindow::Move(PRInt32 aX, PRInt32 aY)
     // coordinates (within a pixel or two) as a window's current location, it will 
     // move to (0,0,-1,-1). The fix is to not move the window if we're already
     // there. (radar# 2669004)
-#if TARGET_CARBON
+
     const PRInt32 kMoveThreshold = 2;
-#else
-    const PRInt32 kMoveThreshold = 0;
-#endif
     Rect currBounds;
     ::GetWindowBounds ( mWindowPtr, kWindowGlobalPortRgn, &currBounds );
     if ( abs(currBounds.left-aX) > kMoveThreshold || abs(currBounds.top-aY) > kMoveThreshold ) {
@@ -1784,62 +1731,3 @@ void nsMacWindow::IsActive(PRBool* aActive)
 }
 
 
-#if !TARGET_CARBON
-
-// needed for CallWindowDefProc() to work correctly
-#pragma options align=mac68k
-
-
-//
-// BorderlessWDEF
-//
-// The window defproc for borderless windows. 
-//
-// NOTE: Assumes the window was created with a variant of |plainDBox| so our
-// content/structure adjustments work correctly.
-// 
-pascal long
-BorderlessWDEF ( short inCode, WindowPtr inWindow, short inMessage, long inParam )
-{
-  switch ( inMessage ) {
-    case kWindowMsgDraw:
-    case kWindowMsgDrawGrowOutline:
-    case kWindowMsgGetFeatures:
-      break;
-      
-    default:
-      return CallSystemWDEF(inCode, inWindow, inMessage, inParam);
-      break;
-  }
-
-  return 0;
-}
-
-
-//
-// CallSystemWDEF
-//
-// We really don't want to reinvent the wheel, so call back into the system wdef we have
-// stashed away.
-//
-long
-CallSystemWDEF ( short inCode, WindowPtr inWindow, short inMessage, long inParam )
-{
-  // extract the real system wdef out of the fake one we've stored in the window
-  Handle fakedWDEF = ((WindowPeek)inWindow)->windowDefProc;
-  Handle systemDefProc = DefProcFakery::GetSystemDefProc ( fakedWDEF );
-  
-  SInt8 state = ::HGetState(systemDefProc);
-  ::HLock(systemDefProc);
-
-  long retval = CallWindowDefProc( (RoutineDescriptorPtr)*systemDefProc, inCode, inWindow, inMessage, inParam);
-
-  ::HSetState(systemDefProc, state);
-  
-  return retval;
-}
-
-
-#pragma options align=reset
-
-#endif

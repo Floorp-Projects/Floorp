@@ -45,7 +45,6 @@
 
 #include "nsMenuBarX.h"
 #include "nsMenuX.h"
-#include "nsDynamicMDEF.h"
 
 #include "nsISupports.h"
 #include "nsIWidget.h"
@@ -65,6 +64,7 @@
 #include <Resources.h>
 #include <Appearance.h>
 #include <Gestalt.h>
+
 #include "nsMacResources.h"
 
 #include "nsGUIEvent.h"
@@ -148,11 +148,6 @@ nsMenuBarX::MenuSelected(const nsMenuEvent & aMenuEvent)
   nsCOMPtr<nsIMenuListener> menuListener;
   //((nsISupports*)mMenuVoidArray[i-1])->QueryInterface(NS_GET_IID(nsIMenuListener), (void**)&menuListener);
   //printf("gPreviousMenuStack.Count() = %d \n", gPreviousMenuStack.Count());
-#if !TARGET_CARBON
-  nsCOMPtr<nsIMenu> theMenu;
-  gPreviousMenuStack.GetMenuAt(gPreviousMenuStack.Count() - 1, getter_AddRefs(theMenu));
-  menuListener = do_QueryInterface(theMenu);
-#endif
   if (menuListener) {
     //TODO: MenuSelected is the right thing to call...
     //eventStatus = menuListener->MenuSelected(aMenuEvent);
@@ -499,9 +494,6 @@ nsMenuBarX::MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWin
           if ( menuIDstring.EqualsLiteral("menu_Help") ) {
             nsMenuEvent event;
             MenuHandle handle = nsnull;
-#if !TARGET_CARBON
-            ::HMGetHelpMenuHandle(&handle);
-#endif
             event.mCommand = (unsigned int) handle;
             nsCOMPtr<nsIMenuListener> listener(do_QueryInterface(pnsMenu));
             listener->MenuSelected(event);

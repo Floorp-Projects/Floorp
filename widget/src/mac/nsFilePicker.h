@@ -90,11 +90,7 @@ protected:
   PRInt16 PutLocalFile(const nsString& inTitle, const nsString& inDefaultName, nsILocalFile** outFile);
   
   void MapFilterToFileTypes ( ) ;
-#if TARGET_CARBON
   void SetupFormatMenuItems (NavDialogCreationOptions* dialogCreateOptions) ;
-#else
-  void SetupFormatMenuItems (NavDialogOptions* dialogOptions) ;
-#endif
   Boolean IsTypeInFilterList ( ResType inType ) ;
   Boolean IsExtensionInFilterList ( StrFileName & inFileName ) ;
   void HandleShowPopupMenuSelect( NavCBRecPtr callBackParms ) ;

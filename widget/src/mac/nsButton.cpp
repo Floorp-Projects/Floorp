@@ -35,10 +35,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsButton.h"
-#if TARGET_CARBON || (UNIVERSAL_INTERFACES_VERSION >= 0x0330)
 #include <ControlDefinitions.h>
-#endif
+
+#include "nsButton.h"
 
 NS_IMPL_ADDREF(nsButton)
 NS_IMPL_RELEASE(nsButton)

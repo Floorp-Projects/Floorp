@@ -36,11 +36,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 
+#include <ControlDefinitions.h>
+
 #include "nsNativeScrollbar.h"
 #include "nsIDeviceContext.h"
-#if TARGET_CARBON || (UNIVERSAL_INTERFACES_VERSION >= 0x0330)
-#include <ControlDefinitions.h>
-#endif
 
 #include "nsWidgetAtoms.h"
 #include "nsWatchTask.h"
@@ -102,9 +101,9 @@ nsNativeScrollbar::nsNativeScrollbar()
   , mContent(nsnull)
   , mMediator(nsnull)
   , mScrollbar(nsnull)
-  , mLineIncrement(0)
   , mMaxValue(0)
   , mVisibleImageSize(0)
+  , mLineIncrement(0)
   , mMouseDownInScroll(PR_FALSE)
   , mClickedPartCode(0)
 {
@@ -494,11 +493,7 @@ nsNativeScrollbar::GetNarrowSize(PRInt32* outSize)
   if ( *outSize )
     return NS_ERROR_FAILURE;
   SInt32 width = 0;
-#if TARGET_CARBON
   ::GetThemeMetric(kThemeMetricScrollBarWidth, &width);
-#else
-  width = 16;
-#endif
   *outSize = width;
   return NS_OK;
 }

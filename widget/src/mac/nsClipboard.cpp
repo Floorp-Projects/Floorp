@@ -114,11 +114,7 @@ nsClipboard :: SetNativeClipboardData ( PRInt32 aWhichClipboard )
   
   nsMimeMapperMac theMapper;
 
-#if TARGET_CARBON
   ::ClearCurrentScrap();
-#else
-  ::ZeroScrap();
-#endif
 
   // get flavor list that includes all flavors that can be written (including ones 
   // obtained through conversion)
@@ -284,15 +280,9 @@ nsClipboard :: PutOnClipboard ( ResType inFlavor, const void* inData, PRInt32 in
 {
   nsresult errCode = NS_OK;
   
-#if TARGET_CARBON
   ScrapRef scrap;
   ::GetCurrentScrap(&scrap);
   ::PutScrapFlavor( scrap, inFlavor, kScrapFlavorMaskNone, inLen, inData );
-#else
-  long numBytes = ::PutScrap ( inLen, inFlavor, inData );
-  if ( numBytes != noErr )
-    errCode = NS_ERROR_FAILURE;
-#endif
 
   return errCode;
   
@@ -426,7 +416,6 @@ nsClipboard :: GetNativeClipboardData ( nsITransferable * aTransferable, PRInt32
           nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks ( flavorStr, &clipboardData, &dataSize );
           
           unsigned char *clipboardDataPtr = (unsigned char *) clipboardData;
-#if TARGET_CARBON
           // skip BOM (Byte Order Mark to distinguish little or big endian) in 'utxt'
           // 10.2 puts BOM for 'utxt', we need to remove it here
           // for little endian case, we also need to convert the data to big endian
@@ -438,7 +427,6 @@ nsClipboard :: GetNativeClipboardData ( nsITransferable * aTransferable, PRInt32
             dataSize -= sizeof(PRUnichar);
             clipboardDataPtr += sizeof(PRUnichar);
           }
-#endif
 
           // put it into the transferable
           nsCOMPtr<nsISupports> genericDataWrapper;
@@ -476,7 +464,6 @@ nsClipboard :: GetDataOffClipboard ( ResType inMacFlavor, void** outData, PRInt3
       *outDataSize = 0;
 
 
-#if TARGET_CARBON
   ScrapRef scrap;
   long dataSize;
   OSStatus err;
@@ -506,32 +493,6 @@ nsClipboard :: GetDataOffClipboard ( ResType inMacFlavor, void** outData, PRInt3
       *outDataSize = dataSize;
     *outData = dataBuff;
   }
-#else
-  long clipResult = ::GetScrap(NULL, inMacFlavor, &offsetUnused);
-  if ( clipResult > 0 ) {
-    Handle dataHand = ::NewHandle(0);
-    if ( !dataHand )
-      return NS_ERROR_OUT_OF_MEMORY;
-    long dataSize = ::GetScrap ( dataHand, inMacFlavor, &offsetUnused );
-    NS_ASSERTION(dataSize > 0, "nsClipboard:: Error getting data off the clipboard, size negative");
-    if ( dataSize > 0 ) {
-      char* dataBuff = NS_REINTERPRET_CAST(char*, nsMemory::Alloc(dataSize));
-      if ( !dataBuff )
-        return NS_ERROR_OUT_OF_MEMORY;
-      ::HLock(dataHand);
-      ::BlockMoveData ( *dataHand, dataBuff, dataSize );
-      ::HUnlock(dataHand);
-      
-      ::DisposeHandle(dataHand);
-      
-      if ( outDataSize )
-        *outDataSize = dataSize;
-      *outData = dataBuff;
-    } 
-    else
-      return NS_ERROR_FAILURE;
-  }
-#endif /* TARGET_CARBON */
   return NS_OK;
   
 } // GetDataOffClipboard
@@ -613,7 +574,6 @@ nsClipboard :: CheckIfFlavorPresent ( ResType inMacFlavor )
 {
   PRBool retval = PR_FALSE;
 
-#if TARGET_CARBON
   ScrapRef scrap = nsnull;
   OSStatus err = ::GetCurrentScrap(&scrap);
   if ( scrap ) {
@@ -637,12 +597,5 @@ nsClipboard :: CheckIfFlavorPresent ( ResType inMacFlavor )
     }
 
   }
-#else
-  long offsetUnused = 0;
-  long clipResult = ::GetScrap(NULL, inMacFlavor, &offsetUnused);
-  if ( clipResult > 0 )   
-    retval = PR_TRUE;   // we found one!
-#endif
-
   return retval;
 } // CheckIfFlavorPresent

@@ -282,11 +282,10 @@ protected:
   
   // Routines for iterating over the rects of a region. Carbon and pre-Carbon
   // do this differently so provide a way to do both.
-#if TARGET_CARBON
   static OSStatus PaintUpdateRectProc (UInt16 message, RgnHandle rgn, const Rect *rect, void *refCon);
   static OSStatus AddRectToArrayProc (UInt16 message, RgnHandle rgn, const Rect *rect, void *refCon);
   static OSStatus CountRectProc (UInt16 message, RgnHandle rgn, const Rect *rect, void *refCon);
-#endif
+
 
   static void PaintUpdateRect (Rect * r, void* data) ;
   static void AddRectToArray (Rect * r, void* data) ;
