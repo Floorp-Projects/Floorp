@@ -796,8 +796,9 @@ static nsresult MangleUrl(const char *url, char **result)
 	temp.ReplaceSubstring(".","-");
 
 	*result = PL_strdup((const char *)temp);
-
+#ifdef DEBUG_sspitzer
 	printf("mangling %s into %s\n", url, *result);
+#endif
 	return NS_OK;
 }
 
