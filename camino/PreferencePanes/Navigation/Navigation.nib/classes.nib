@@ -1,0 +1,36 @@
+{
+    IBClasses = (
+        {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
+        {
+            CLASS = NSPreferencePane; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                _firstKeyView = NSView; 
+                _initialKeyView = NSView; 
+                _lastKeyView = NSView; 
+                _window = NSWindow; 
+            }; 
+            SUPERCLASS = NSObject; 
+        }, 
+        {
+            ACTIONS = {
+                buttonSystemPreferencesClicked = id; 
+                checkboxClicked = id; 
+                checkboxStartPageClicked = id; 
+                historyDaysModified = id; 
+            }; 
+            CLASS = OrgMozillaChimeraPreferenceNavigation; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                buttonSystemPreferences = NSButton; 
+                checkboxNewTabBlank = NSButton; 
+                checkboxNewWindowBlank = NSButton; 
+                checkboxOpenTabs = NSButton; 
+                sliderHistoryDays = NSSlider; 
+                textFieldHistoryDays = NSTextField; 
+            }; 
+            SUPERCLASS = NSPreferencePane; 
+        }
+    ); 
+    IBVersion = 1; 
+}
