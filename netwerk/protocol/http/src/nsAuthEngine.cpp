@@ -62,13 +62,13 @@ nsAuthEngine::Logout()
 
     count = mAuthList.Count();
     for (i=0; i<count; ++i)
-        delete mAuthList[i];
+        delete NS_STATIC_CAST(nsAuth*, mAuthList[i]);
     mAuthList.Clear();
     mAuthList.Compact();
 
     count = mProxyAuthList.Count();
     for (i=0; i<count; ++i)
-        delete mProxyAuthList[i];
+        delete NS_STATIC_CAST(nsAuth*, mProxyAuthList[i]);
     mProxyAuthList.Clear();
     mProxyAuthList.Compact();
 

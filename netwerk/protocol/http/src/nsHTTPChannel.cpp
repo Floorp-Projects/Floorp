@@ -2746,9 +2746,21 @@ nsHTTPChannel::SetReferrer(nsIURI *referrer, PRUint32 referrerLevel)
     referrer->GetSpec(getter_Copies(spec));
     if (spec && (referrerLevel <= mHandler->ReferrerLevel()))
     {
+        nsCAutoString ref(spec.get());
+        nsXPIDLCString prehost; 
+        referrer->GetPreHost(getter_Copies(prehost));
+        if (prehost.get())
+        {
+            // 8 = 7 for http:// +  1 for @ 
+            NS_ASSERTION(7 == ref.Find(prehost.get(), PR_TRUE), "bad url!");
+            PRInt32 remainingStart = 8 + PL_strlen(prehost.get());
+            ref = Substring(ref, 0, 7) +
+                Substring(ref, remainingStart, ref.Length()-remainingStart);
+        }
+
         if ((referrerLevel == nsIHTTPChannel::REFERRER_NON_HTTP) || 
-            (0 == PL_strncasecmp((const char*)spec, "http",4)))
-            return SetRequestHeader(nsHTTPAtoms::Referer, spec);
+                (0 == PL_strncasecmp(ref.GetBuffer(), "http",4)))
+            return SetRequestHeader(nsHTTPAtoms::Referer, ref.GetBuffer());
     }
     return NS_OK; 
 }
