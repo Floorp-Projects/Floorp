@@ -927,7 +927,5 @@ function setFutureBreakpoint (filePattern, line)
     }
     
     console.breakpoints.appendChild (bpr);
-    feedback (getMsg(MSN_FBP_CREATED, [filePattern, line]));
-    
     return bpr;
 }

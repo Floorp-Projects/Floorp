@@ -37,7 +37,7 @@ function initHandlers()
 {
     function wwObserve (subject, topic, data)
     {
-        dd ("wwObserver::Observe " + subject + ", " + topic);
+        //dd ("wwObserver::Observe " + subject + ", " + topic);
         if (topic == "domwindowopened")
             console.onWindowOpen (subject);
         else

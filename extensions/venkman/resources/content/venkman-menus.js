@@ -135,7 +135,8 @@ function initMenus()
 
     /* Context menu for source view */
     C("source-outliner", "source");
-     m("break", {enabledif: "cx.lineIsExecutable && !has('breakpointRec')"});
+     m("break",  {enabledif: "cx.lineIsExecutable && !has('breakpointRec')"});
+     m("fbreak", {enabledif: "!cx.lineIsExecutable && !has('breakpointRec')"});
      m("clear");
      m("-");
      m("cont");

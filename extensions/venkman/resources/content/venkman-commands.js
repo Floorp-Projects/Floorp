@@ -488,7 +488,7 @@ function cmdEvald (e)
 
 function cmdFBreak(e)
 {
-    if (!e.filePattern)
+    if (!e.fileName)
     {  /* if no input data, just list the breakpoints */
         var bplist = console.breakpoints.childData;
 
@@ -508,7 +508,8 @@ function cmdFBreak(e)
         return true;
     }
 
-    setFutureBreakpoint (e.filePattern, e.lineNumber);
+    if (setFutureBreakpoint (e.fileName, e.lineNumber))
+        feedback (e, getMsg(MSN_FBP_CREATED, [e.fileName, e.lineNumber]));
     return true;
 }
 
