@@ -58,7 +58,6 @@ endif
 
 ifdef MOZ_OJI
 OJI_LIBS =\
-		-loji 
 		-ljsj \
 		$(NULL)
 endif
