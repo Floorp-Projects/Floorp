@@ -809,6 +809,19 @@ PluginViewerImpl::GetNewPrintSettings(nsIPrintSettings * *aNewPrintSettings)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+/* readonly attribute wstring defaultPrinterName; */
+NS_IMETHODIMP 
+PluginViewerImpl::GetDefaultPrinterName(PRUnichar * *aDefaultPrinterName)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void initPrintSettingsFromPrinter (in wstring aPrinterName, in nsIPrintSettings aPrintSettings); */
+NS_IMETHODIMP 
+PluginViewerImpl::InitPrintSettingsFromPrinter(const PRUnichar *aPrinterName, nsIPrintSettings *aPrintSettings)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
 /* readonly attribute nsIPrintSettings globalPrintSettings; */
 NS_IMETHODIMP 
 PluginViewerImpl::GetGlobalPrintSettings(nsIPrintSettings * *aGlobalPrintSettings)

@@ -544,6 +544,12 @@ NS_IMETHODIMP nsPrinterEnumeratorBeOS::EnumeratePrinters(PRUint32* aCount, PRUni
   return NS_OK;
 }
 
+/* void initPrintSettingsFromPrinter (in wstring aPrinterName, in nsIPrintSettings aPrintSettings); */
+NS_IMETHODIMP nsPrinterEnumeratorBeOS::InitPrintSettingsFromPrinter(const PRUnichar *aPrinterName, nsIPrintSettings *aPrintSettings)
+{
+    return NS_OK;
+}
+
 NS_IMETHODIMP nsPrinterEnumeratorBeOS::DisplayPropertiesDlg(const PRUnichar *aPrinter, nsIPrintSettings *aPrintSettings)
 {
   /* fixme: We simply ignore the |aPrinter| argument here

@@ -960,17 +960,13 @@ NS_IMETHODIMP nsDeviceContextWin :: GetDeviceContextFor(nsIDeviceContextSpec *aD
   devSpecWin->GetDriverName(drivername); // sets pointer do not free
 
   HDC dc = NULL;
-  if (devSpecWin->IsDEVMODEGlobalHandle()) {
-    HGLOBAL hGlobal;
-    devSpecWin->GetGlobalDevMode(hGlobal);
-    LPDEVMODE devmode = (DEVMODE *)::GlobalLock(hGlobal);
-    dc = ::CreateDC(drivername, devicename, NULL, devmode);
-    ::GlobalUnlock(hGlobal);
-  } else {
-    LPDEVMODE devmode;
-    devSpecWin->GetDevMode(devmode);
+  LPDEVMODE devmode;
+  devSpecWin->GetDevMode(devmode);
+  NS_ASSERTION(devmode, "DevMode can't be NULL here");
+  if (devmode) {
     dc = ::CreateDC(drivername, devicename, NULL, devmode);
   }
+  devSpecWin->UnlockDevMode();
 
   return devConWin->Init(dc, this); // take ownership of the DC
 }

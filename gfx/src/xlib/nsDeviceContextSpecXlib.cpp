@@ -482,6 +482,12 @@ NS_IMETHODIMP nsPrinterEnumeratorXlib::EnumeratePrinters(PRUint32* aCount, PRUni
   return NS_OK;
 }
 
+/* void initPrintSettingsFromPrinter (in wstring aPrinterName, in nsIPrintSettings aPrintSettings); */
+NS_IMETHODIMP nsPrinterEnumeratorXlib::InitPrintSettingsFromPrinter(const PRUnichar *aPrinterName, nsIPrintSettings *aPrintSettings)
+{
+    return NS_OK;
+}
+
 NS_IMETHODIMP nsPrinterEnumeratorXlib::DisplayPropertiesDlg(const PRUnichar *aPrinter, nsIPrintSettings *aPrintSettings)
 {
   /* fixme: We simply ignore the |aPrinter| argument here
