@@ -15,7 +15,7 @@ function init_sidebar(name, uri, width) {
 
   // Open/close sidebar based on saved pref.
   // This may be replaced by another system by hyatt.
-  pref = Components.classes['component://netscape/preferences'];
+  prefs = Components.classes['component://netscape/preferences'];
   if (prefs) {
     prefs = prefs.getService();
   }
@@ -27,7 +27,7 @@ function init_sidebar(name, uri, width) {
 
     // The sidebar is closed by default, so open it only if the
     //    preference is set to true.
-    if (pref.GetBoolPref(sidebar_pref + '.open')) {
+    if (prefs.GetBoolPref(sidebar_pref + '.open')) {
       toggle_open_close();
     }
   }
