@@ -1760,6 +1760,8 @@ nsXULElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
     // freak out.
     NS_ASSERTION(mChildren.IndexOf(aKid) < 0, "element is already a child");
 
+    PRBool isAppend = aIndex == mChildren.Count();
+
     mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, aNotify);
 
     if (!mChildren.InsertElementAt(aKid, aIndex))
@@ -1769,20 +1771,28 @@ nsXULElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
     aKid->SetParent(this);
     //nsRange::OwnerChildInserted(this, aIndex);
 
-    aKid->SetDocument(mDocument, aDeepSetDocument, PR_TRUE);
+    if (mDocument) {
+        aKid->SetDocument(mDocument, aDeepSetDocument, PR_TRUE);
 
-    if (mDocument && HasMutationListeners(this,
-                                          NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
-      nsMutationEvent mutation(NS_MUTATION_NODEINSERTED, aKid);
-      mutation.mRelatedNode =
-          do_QueryInterface(NS_STATIC_CAST(nsIStyledContent*, this));
+        if (aNotify) {
+            if (isAppend) {
+                mDocument->ContentAppended(this, aIndex);
+            } else {
+                mDocument->ContentInserted(this, aKid, aIndex);
+            }
+        }
 
-      nsEventStatus status = nsEventStatus_eIgnore;
-      aKid->HandleDOMEvent(nsnull, &mutation, nsnull, NS_EVENT_FLAG_INIT, &status);
-    }
+        if (HasMutationListeners(this,
+                                 NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
+            nsMutationEvent mutation(NS_MUTATION_NODEINSERTED, aKid);
+            mutation.mRelatedNode =
+                do_QueryInterface(NS_STATIC_CAST(nsIStyledContent*, this));
 
-    if (aNotify && mDocument) {
-      mDocument->ContentInserted(NS_STATIC_CAST(nsIStyledContent*, this), aKid, aIndex);
+            nsEventStatus status = nsEventStatus_eIgnore;
+            aKid->HandleDOMEvent(nsnull, &mutation, nsnull, NS_EVENT_FLAG_INIT,
+                                 &status);
+        }
+
     }
 
     return NS_OK;
@@ -1868,7 +1878,7 @@ nsXULElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
             if (aNotify) {
                 mDocument->ContentAppended(this, mChildren.Count() - 1);
             }
-        
+
             if (HasMutationListeners(this,
                                      NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
                 nsMutationEvent mutation(NS_MUTATION_NODEINSERTED, aKid);

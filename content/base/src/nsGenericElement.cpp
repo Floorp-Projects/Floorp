@@ -2408,17 +2408,28 @@ nsGenericElement::InsertChildAt(nsIContent* aKid,
 {
   NS_PRECONDITION(aKid, "null ptr");
   mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, aNotify);
-  
+
+  PRBool isAppend;
+
+  if (aNotify) {
+    isAppend = aIndex == GetChildCount();
+  }
+
   if (!InternalInsertChildAt(aKid, aIndex)) {
     return NS_OK;
   }
 
   aKid->SetParent(this);
   nsRange::OwnerChildInserted(this, aIndex);
+
   if (mDocument) {
     aKid->SetDocument(mDocument, aDeepSetDocument, PR_TRUE);
     if (aNotify) {
-      mDocument->ContentInserted(this, aKid, aIndex);
+      if (isAppend) {
+        mDocument->ContentAppended(this, aIndex);
+      } else {
+        mDocument->ContentInserted(this, aKid, aIndex);
+      }
     }
 
     if (HasMutationListeners(this, NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
@@ -2429,6 +2440,7 @@ nsGenericElement::InsertChildAt(nsIContent* aKid,
       aKid->HandleDOMEvent(nsnull, &mutation, nsnull, NS_EVENT_FLAG_INIT, &status);
     }
   }
+
   return NS_OK;
 }
 
@@ -2446,8 +2458,9 @@ nsGenericElement::ReplaceChildAt(nsIContent* aKid,
   if (!InternalReplaceChildAt(aKid, aIndex)) {
     return NS_OK;
   }
-  
+
   aKid->SetParent(this);
+
   if (mDocument) {
     aKid->SetDocument(mDocument, aDeepSetDocument, PR_TRUE);
     if (aNotify) {
@@ -2484,6 +2497,7 @@ nsGenericElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
   
   aKid->SetParent(this);
   // ranges don't need adjustment since new child is at end of list
+
   if (mDocument) {
     aKid->SetDocument(mDocument, aDeepSetDocument, PR_TRUE);
     if (aNotify) {
@@ -2498,6 +2512,7 @@ nsGenericElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
       aKid->HandleDOMEvent(nsnull, &mutation, nsnull, NS_EVENT_FLAG_INIT, &status);
     }
   }
+
   return NS_OK;
 }
 
@@ -2631,7 +2646,6 @@ nsGenericElement::doInsertBefore(nsIContent *aElement, nsIDOMNode *aNewChild,
   case nsIDOMNode::ENTITY_REFERENCE_NODE :
   case nsIDOMNode::PROCESSING_INSTRUCTION_NODE :
   case nsIDOMNode::COMMENT_NODE :
-    break;
   case nsIDOMNode::DOCUMENT_FRAGMENT_NODE :
     break;
   default:
@@ -2663,7 +2677,7 @@ nsGenericElement::doInsertBefore(nsIContent *aElement, nsIDOMNode *aNewChild,
   }
 
   /*
-   * Check if this is a document fragment. If it is, we need
+   * Check if we're inserting a document fragment. If we are, we need
    * to remove the children of the document fragment and add them
    * individually (i.e. we don't add the actual document fragment).
    */
