@@ -219,84 +219,62 @@ extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* aServMgr)
 
 extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *path)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
+  nsresult finalResult = NS_OK;
 
-  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
+  NS_WITH_SERVICE(nsIComponentManager, compMgr, kComponentManagerCID, &rv); 
   if (NS_FAILED(rv)) return rv;
-
-  nsIComponentManager* compMgr;
-  rv = servMgr->GetService(kComponentManagerCID, 
-                           nsIComponentManager::GetIID(), 
-                           (nsISupports**)&compMgr);
-  if (NS_FAILED(rv)) return rv;
-
-#ifdef DEBUG
-  printf("*** The NEW and Improved Mime being registered\n");
-#endif
 
   // Content type handler object class access interface
   rv = compMgr->RegisterComponent(kCMimeMimeObjectClassAccessCID, NULL, NULL, path, 
                                   PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
+  if (NS_FAILED(rv)) finalResult = rv;
 
   // I18N Header Conversion routines
   rv = compMgr->RegisterComponent(kCMimeConverterCID, NULL, NULL, path, 
                                   PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
+  if (NS_FAILED(rv)) finalResult = rv;
 
   // Message Header Parser
   rv = compMgr->RegisterComponent(kCMsgHeaderParserCID,
                                        "Header Parser",
                                        nsnull,
                                        path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
+  if (NS_FAILED(rv)) finalResult = rv;
   
   // The new interface for stream conversion                              
   rv = compMgr->RegisterComponent(kINetPluginMIMECID, NULL, PROGRAM_ID, path, 
                                   PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
+  if (NS_FAILED(rv)) finalResult = rv;
 
   // The interface for URL utils
   rv = compMgr->RegisterComponent(kCIMimeURLUtilsCID, NULL, NULL, path, 
                                   PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
+  if (NS_FAILED(rv)) finalResult = rv;
 
-  done:
-  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
-  return rv;
+  return finalResult;
 }
 
 extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char *path)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
+  nsresult finalResult = NS_OK;
 
-  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
+  NS_WITH_SERVICE(nsIComponentManager, compMgr, kComponentManagerCID, &rv); 
   if (NS_FAILED(rv)) return rv;
 
-  nsIComponentManager* compMgr;
-  rv = servMgr->GetService(kComponentManagerCID, 
-                           nsIComponentManager::GetIID(), 
-                           (nsISupports**)&compMgr);
-  if (NS_FAILED(rv)) return rv;
-
-#ifdef NS_DEBUG
-  printf("*** Mime being unregistered\n");
-#endif
   rv = compMgr->UnregisterComponent(kCMimeMimeObjectClassAccessCID, path);
-  if (NS_FAILED(rv)) goto done;
-  if (NS_FAILED(rv)) goto done;
+  if (NS_FAILED(rv)) finalResult = rv;
   rv = compMgr->UnregisterComponent(kCMimeConverterCID, path);
-  if (NS_FAILED(rv)) goto done;
+  if (NS_FAILED(rv)) finalResult = rv;
 	rv = compMgr->UnregisterComponent(kINetPluginMIMECID, path);
-  if (NS_FAILED(rv)) goto done;
+  if (NS_FAILED(rv)) finalResult = rv;
   rv = compMgr->UnregisterComponent(kCMsgHeaderParserCID, path);
-  if (NS_FAILED(rv)) goto done;
+  if (NS_FAILED(rv)) finalResult = rv;
   rv = compMgr->UnregisterComponent(kCIMimeURLUtilsCID, path);
-  if (NS_FAILED(rv)) goto done;
+  if (NS_FAILED(rv)) finalResult = rv;
 
-  done:
-  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
-  return rv;
+  return finalResult;
 }
 
 ////////////////////////////////////////////////////////////////////////////
