@@ -128,7 +128,7 @@
 #define JS_EXTERN_DATA(__type) extern __type
 #define JS_EXPORT_DATA(__type) __type
 #define JS_DLL_CALLBACK  _Optlink
-#define JS_STATIC_DLL_CALLBACK(__x) __x JS_DLL_CALLBACK
+#define JS_STATIC_DLL_CALLBACK(__x) static __x JS_DLL_CALLBACK
 
 #else /* Unix */
 
