@@ -43,6 +43,7 @@
 #include "nsIServiceManager.h"
 #include "nsFileSpec.h"
 #include "nsMimeTransition.h"
+#include "comi18n.h"
 
 #ifdef MOZ_SECURITY
 #include HG01944
@@ -145,22 +146,27 @@ mime_convert_charset (const char *input_line, PRInt32 input_length,
                       char **output_ret, PRInt32 *output_size_ret,
                       void *stream_closure)
 {
-  struct mime_stream_data *msd = (struct mime_stream_data *) stream_closure;
-  unsigned char *converted;
+extern PRInt32 INTL_ConvertCharset(const char* from_charset, const char* to_charset,
+                            const char* inBuffer, const PRInt32 inLength,
+                            char** outBuffer);
 
-  converted = INTL_ConvMailToWinCharCode(msd->context,
-                                         (unsigned char *) input_line,
-                                         input_length);
-  if (converted)
-    {
-      *output_ret = (char *) converted;
-      *output_size_ret = PL_strlen((char *) converted);
-    }
-  else
-    {
+  struct mime_stream_data *msd = (struct mime_stream_data *) stream_closure;
+
+  // Now do conversion to UTF-8 for output
+  char  *convertedString = NULL;
+  PRInt32 res = INTL_ConvertCharset(input_charset, "UTF-8", input_line, input_length, &convertedString);
+
+  if (res != 0)
+  {
       *output_ret = 0;
       *output_size_ret = 0;
-    }
+  }
+  else
+  {
+    *output_ret = (char *) convertedString;
+    *output_size_ret = PL_strlen((char *) convertedString);
+  }  
+
   return 0;
 }
 
@@ -470,7 +476,8 @@ mime_insert_html_convert_charset (const char *input_line, PRInt32 input_length,
                                   void *stream_closure)
 {
   struct mime_stream_data *msd = (struct mime_stream_data *) stream_closure;
-  int status;
+  int                     status;
+
   INTL_CharSetInfo csi = LO_GetDocumentCharacterSetInfo(msd->context);
   PRUint16 old_csid = INTL_GetCSIDocCSID(csi);
 

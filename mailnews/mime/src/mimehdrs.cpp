@@ -34,6 +34,8 @@
 #include "nsMimeTransition.h"
 #include "nsMsgMessageFlags.h"
 #include "nsMimeAddress.h"
+#include "comi18n.h"
+#include "nsMailHeaders.h"
 
 extern "C" int MK_OUT_OF_MEMORY;
 extern "C" int MK_MSG_NO_HEADERS;
@@ -92,6 +94,32 @@ extern "C" char *MIME_DecodeMimePartIIStr(const char *header, char *charset);
 extern "C" 
 char *
 MIME_StripContinuations(char *original);
+
+static int
+MimeHeaders_convert_rfc1522(MimeDisplayOptions *opt,
+							const char *input, PRInt32 input_length,
+							char **output_ret, PRInt32 *output_length_ret);
+
+char *
+MimeHeaders_convert_header_value(MimeDisplayOptions *opt, char **value)
+{
+  char        *converted;
+  PRInt32     converted_length;
+
+  if ((!value) || (!*value))
+    return *value;
+
+  PRInt32 contents_length = PL_strlen(*value);
+  int     status = MimeHeaders_convert_rfc1522(opt, *value, contents_length,
+					                          				   &converted, &converted_length);
+  if (status == 0) 
+  {
+    PR_FREEIF(*value);
+    *value = converted;
+  }
+
+  return(*value);
+}
 
 
 MimeHeaders *
@@ -862,9 +890,7 @@ MimeHeaders_convert_rfc1522(MimeDisplayOptions *opt,
 	{
 	  char *converted = 0;
 	  PRInt32 converted_len = 0;
-	  const char *output_charset = (opt->override_charset
-									? opt->override_charset
-									: opt->default_charset);
+    const char *output_charset = "UTF-8";
 	  int status =
 		opt->rfc1522_conversion_fn(input, input_length,
 								   0, output_charset,  /* no input charset? */
@@ -1965,11 +1991,12 @@ MimeHeaders_write_all_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt, PRBoo
     else
     status = MimeHeaders_write_random_header_1(hdrs, name, c2, opt, PR_FALSE);
     ****************************************/
-
     if (attachment)
-      status = mimeEmitter->AddAttachmentField(name, c2);
+      status = mimeEmitter->AddAttachmentField(name, 
+                                MimeHeaders_convert_header_value(opt, &c2));
     else
-      status = mimeEmitter->AddHeaderField(name, c2);
+      status = mimeEmitter->AddHeaderField(name, 
+                                MimeHeaders_convert_header_value(opt, &c2));
 
     PR_Free(name);
     PR_Free(c2);
@@ -2663,3 +2690,4 @@ MimeHeaders_do_unix_display_hook_hack(MimeHeaders *hdrs)
   }
 }
 #endif /* XP_UNIX */
+

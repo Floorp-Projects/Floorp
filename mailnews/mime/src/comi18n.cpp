@@ -319,7 +319,7 @@ static  char *  intl_decode_mime_part2_str(const char *, int , char* );
 static char *DecodeBase64Buffer(char *subject);
 static char *EncodeBase64Buffer(char *subject, size_t size);
 
-static PRInt32 INTL_ConvertCharset(const char* from_charset, const char* to_charset,
+PRInt32 INTL_ConvertCharset(const char* from_charset, const char* to_charset,
                                     const char* inBuffer, const PRInt32 inLength,
                                     char** outBuffer);
 
@@ -1176,7 +1176,7 @@ char *intl_decode_mime_part2_str(const char *header, char* charset)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-static PRInt32 INTL_ConvertCharset(const char* from_charset, const char* to_charset,
+PRInt32 INTL_ConvertCharset(const char* from_charset, const char* to_charset,
                                     const char* inBuffer, const PRInt32 inLength,
                                     char** outBuffer)
 {
