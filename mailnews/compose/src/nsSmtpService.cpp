@@ -330,18 +330,17 @@ nsSmtpService::GetDefaultSmtpServer(nsISmtpServer **aServer)
   *aServer = nsnull;
   // always returns NS_OK, just leaving *aServer at nsnull
   if (!mDefaultSmtpServer) {
-    nsCOMPtr<nsIEnumerator> enumerator;
-    rv = mSmtpServers->Enumerate(getter_AddRefs(enumerator));
-    if (NS_FAILED(rv)) return NS_OK;
-    
-    rv = enumerator->First();
-    if (NS_FAILED(rv)) return NS_OK;
-
-    nsCOMPtr<nsISupports> curItem;
-    rv = enumerator->CurrentItem(getter_AddRefs(curItem));
-    if (NS_FAILED(rv)) return NS_OK;
-    
-    mDefaultSmtpServer = do_QueryInterface(curItem);
+      PRUint32 count;
+      rv = mSmtpServers->Count(&count);
+      if (count == 0) {
+          rv = CreateSmtpServer(getter_AddRefs(mDefaultSmtpServer));
+          if (NS_FAILED(rv)) return rv;
+      } else {
+          nsCOMPtr<nsISupports> supports;
+          rv = mSmtpServers->GetElementAt(0, getter_AddRefs(supports));
+          if (NS_FAILED(rv)) return rv;
+          mDefaultSmtpServer = do_QueryInterface(supports);
+      }
   }
 
   // XXX still need to make sure the default SMTP server is
