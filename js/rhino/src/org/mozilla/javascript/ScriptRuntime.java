@@ -42,6 +42,7 @@ package org.mozilla.javascript;
 
 import java.util.*;
 import java.lang.reflect.*;
+import org.mozilla.classfile.DefiningClassLoader;
 
 /**
  * This is the class that implements the runtime.
@@ -2029,48 +2030,14 @@ public class ScriptRuntime {
         cx.currentActivation = activation;
     }
 
-    private static Method getContextClassLoaderMethod;
-    static {
-        try {
-            // Don't use "Thread.class": that performs the lookup
-            // in the class initializer, which doesn't allow us to
-            // catch possible security exceptions.
-            Class threadClass = Class.forName("java.lang.Thread");
-            // We'd like to use "getContextClassLoader", but 
-            // that's only available on Java2. 
-            getContextClassLoaderMethod = 
-                threadClass.getDeclaredMethod("getContextClassLoader", 
-                                               new Class[0]);
-        } catch (ClassNotFoundException e) {
-            // ignore exceptions; we'll use Class.forName instead.
-        } catch (NoSuchMethodException e) {
-            // ignore exceptions; we'll use Class.forName instead.
-        } catch (SecurityException e) {
-            // ignore exceptions; we'll use Class.forName instead.
-        }
-    }
-        
     public static Class loadClassName(String className) 
         throws ClassNotFoundException
     {
         try {
-            if (getContextClassLoaderMethod != null) {
-                ClassLoader cl = (ClassLoader) 
-                                  getContextClassLoaderMethod.invoke(
-                                    Thread.currentThread(), 
-                                    new Object[0]);
-                if (cl != null)
-                    return cl.loadClass(className);
-            } else {
-                ClassLoader cl = ScriptRuntime.class.getClassLoader();
-                if (cl != null)
-                    return cl.loadClass(className);
-            }
+            ClassLoader cl = DefiningClassLoader.getContextClassLoader();
+            if (cl != null)
+                return cl.loadClass(className);
         } catch (SecurityException e) {
-            // fall through...
-        } catch (IllegalAccessException e) {
-            // fall through...
-        } catch (InvocationTargetException e) {
             // fall through...
         } catch (ClassNotFoundException e) {
             // Rather than just letting the exception propagate

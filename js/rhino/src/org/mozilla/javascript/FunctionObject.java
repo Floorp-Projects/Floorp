@@ -576,7 +576,7 @@ public class FunctionObject extends NativeFunction {
     /** Get default master implementation or null if not available */
     private static Invoker newInvokerMaster() {
         try {
-            Class cl = Class.forName(INVOKER_MASTER_CLASS);
+            Class cl = ScriptRuntime.loadClassName(INVOKER_MASTER_CLASS);
             return (Invoker)cl.newInstance();
         }
         catch (ClassNotFoundException ex) {}
