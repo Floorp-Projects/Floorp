@@ -87,7 +87,7 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStartRequest(nsIChannel * /* aChannel */, ns
 		// okay, now fill in our event sinks...Note that each getter ref counts before
 		// it returns the interface to us...we'll release when we are done
 		nsXPIDLCString fileName;
-		url->DirFile(getter_Copies(fileName));
+		url->GetFilePath(getter_Copies(fileName));
 		url->GetFileName(getter_Copies(m_folderName));
 		if (fileName)
 		{

@@ -742,6 +742,13 @@ nsReadFromSocket(void* closure,
   len = PR_Read(fd, toRawSegment, count);
   if (len > 0) {
     *readCount = (PRUint32)len;
+#ifdef DEBUG
+    for (PRUint32 i = 0; i < len; i++) {
+      if (toRawSegment[i] == '\0') {
+        printf("null at %d in %p %d %p\n", i, toRawSegment, len, toRawSegment + len);
+      }
+    }
+#endif
   } 
   //
   // The read operation has completed...

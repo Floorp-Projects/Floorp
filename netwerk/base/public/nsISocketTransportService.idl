@@ -23,12 +23,12 @@ interface nsIChannel;
 [scriptable, uuid(05331390-6884-11d3-9382-00104ba0fd40)]
 interface nsISocketTransportService : nsISupports 
 {
-    nsIChannel CreateTransport(in string host,
+    nsIChannel createTransport(in string host,
                                in long port);
-    nsIChannel CreateTransportOfType(in string socketType,
+    nsIChannel createTransportOfType(in string socketType,
                                      in string host, 
                                      in long port);
-    void Shutdown();
+    void shutdown();
 };
 
 %{C++

@@ -82,7 +82,7 @@ nsFileChannel::Init(nsIFileProtocolHandler* handler, const char* command, nsIURI
     nsCOMPtr<nsIURL> aUrl = do_QueryInterface(mURI, &rv);
     if (NS_SUCCEEDED(rv) && aUrl) { // does it support the url interface?
         nsXPIDLCString fileString;
-        aUrl->DirFile(getter_Copies(fileString));
+        aUrl->GetFilePath(getter_Copies(fileString));
         // to be mac friendly you need to convert a file path to a nsFilePath before
         // passing it to a nsFileSpec...
 #ifdef XP_MAC

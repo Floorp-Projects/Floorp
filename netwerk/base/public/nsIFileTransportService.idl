@@ -30,23 +30,23 @@ native nsFileSpec(nsFileSpec&);
 [scriptable, uuid(d4ced500-6882-11d3-9382-00104ba0fd40)]
 interface nsIFileTransportService : nsISupports
 {
-    [noscript] nsIChannel CreateTransport(in nsFileSpec spec,       // XXX change to nsIFile later
+    [noscript] nsIChannel createTransport(in nsFileSpec spec,       // XXX change to nsIFile later
                                           in string command,
                                           in nsIEventSinkGetter getter);
 
     // This version can be used with an existing input stream to serve
     // as a data pump:
-    nsIChannel CreateTransportFromStream(in nsIInputStream fromStream,
+    nsIChannel createTransportFromStream(in nsIInputStream fromStream,
                                          in string contentType,
                                          in long contentLength,
                                          in string command,
                                          in nsIEventSinkGetter getter);
 
-    void DispatchRequest(in nsIRunnable runnable);
-    void Suspend(in nsIRunnable trans);
-    void Resume(in nsIRunnable trans);
-    void ProcessPendingRequests();
-    void Shutdown();
+    void dispatchRequest(in nsIRunnable runnable);
+    void suspend(in nsIRunnable trans);
+    void resume(in nsIRunnable trans);
+    void processPendingRequests();
+    void shutdown();
 };
 
 %{C++

@@ -49,7 +49,7 @@ interface nsIMailboxUrl : nsISupports {
     attribute nsIStreamListener mailboxCopyHandler;
 
     // mailbox URL state
-    readonly attribute nsFileSpecPtr filePath;
+    readonly attribute nsFileSpecPtr fileSpec;
 
     // a message db header for that message.
     readonly attribute nsIMsgDBHdr messageHeader;

@@ -332,7 +332,22 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetFileName(char * *aFileName)
 	return m_baseURL->GetFileName(aFileName);
 }
 
+NS_IMETHODIMP nsMsgMailNewsUrl::GetFileBaseName(char * *aFileBaseName)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsMsgMailNewsUrl::SetFileBaseName(const char * aFileBaseName)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP nsMsgMailNewsUrl::GetFileExtension(char * *aFileExtension)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsMsgMailNewsUrl::SetFileExtension(const char * aFileExtension)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -372,8 +387,13 @@ NS_IMETHODIMP nsMsgMailNewsUrl::SetRef(const char *aRef)
 	return m_baseURL->SetRef(aRef);
 }
 
-NS_IMETHODIMP nsMsgMailNewsUrl::DirFile(char **o_DirFile)
+NS_IMETHODIMP nsMsgMailNewsUrl::GetFilePath(char **o_DirFile)
 {
-	return m_baseURL->DirFile(o_DirFile);
+	return m_baseURL->GetFilePath(o_DirFile);
+}
+
+NS_IMETHODIMP nsMsgMailNewsUrl::SetFilePath(const char *i_DirFile)
+{
+	return m_baseURL->SetFilePath(i_DirFile);
 }
 

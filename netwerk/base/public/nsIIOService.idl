@@ -38,13 +38,13 @@ interface nsIIOService : nsISupports
     /**
      * Returns a protocol handler for a given URI scheme.
      */
-    nsIProtocolHandler GetProtocolHandler(in string scheme);
+    nsIProtocolHandler getProtocolHandler(in string scheme);
 
     /**
      * Returns an absolute URI string from a relative specification and
      * a base URI.
      */
-    string MakeAbsolute(in string aRelativeSpec, in nsIURI aBaseURI);
+    string makeAbsolute(in string aRelativeSpec, in nsIURI aBaseURI);
 
     /**
      * This method constructs a new URI by first determining the scheme
@@ -52,14 +52,14 @@ interface nsIIOService : nsISupports
      * to the protocol handler for that scheme. QueryInterface can be used
      * on the resulting URI object to obtain a more specific type of URI.
      */
-    nsIURI NewURI(in string aSpec, in nsIURI aBaseURI);
+    nsIURI newURI(in string aSpec, in nsIURI aBaseURI);
 
     /**
      * Creates a channel for a given URI. The eventSinkGetter is used to
      * obtain the appropriate callbacks for the URI's protocol from the
      * application.
      */
-    nsIChannel NewChannelFromURI(in string verb,
+    nsIChannel newChannelFromURI(in string verb,
                                  in nsIURI aURI,
                                  in nsILoadGroup aLoadGroup,
                                  in nsIEventSinkGetter eventSinkGetter);
@@ -68,7 +68,7 @@ interface nsIIOService : nsISupports
      * Convenience routine that first creates a URI by calling NewURI, and
      * then passes the URI to NewChannelFromURI. 
      */
-    nsIChannel NewChannel(in string verb,
+    nsIChannel newChannel(in string verb,
                           in string aSpec,
                           in nsIURI aBaseURI,
                           in nsILoadGroup aLoadGroup,
@@ -78,35 +78,35 @@ interface nsIIOService : nsISupports
      * Get the application name string that will be used as part
      * of a HTTP request.
      */
-    readonly attribute wstring AppCodeName;
+    readonly attribute wstring appCodeName;
   
     /**
      * Get the application version string that will be used as part
      * of a HTTP request.
      */
-    readonly attribute wstring AppVersion;
+    readonly attribute wstring appVersion;
 
     /**
      * Get the application name.
      */
-    readonly attribute wstring AppName;
+    readonly attribute wstring appName;
 
     /**
      * Get the translation of the application. The value for language
      * is usually a 2-letter code such as "en" and occasionally a 
      * five-character code to indicate a language subtype, such as "zh_CN". 
      */
-    attribute wstring Language;
+    attribute wstring language;
 
     /**
      * Get the current platform (machine type).
      */
-    readonly attribute wstring Platform;
+    readonly attribute wstring platform;
 
     /**
      * Get the HTTP advertised user agent string.
      */
-    readonly attribute wstring UserAgent;
+    readonly attribute wstring userAgent;
 
     /**
      * Returns a new stream observer that marshals data from another
@@ -114,7 +114,7 @@ interface nsIIOService : nsISupports
      * If the event queue is null, the current thread's event queue is
      * used.
      */
-    nsIStreamObserver NewAsyncStreamObserver(in nsIStreamObserver receiver,
+    nsIStreamObserver newAsyncStreamObserver(in nsIStreamObserver receiver,
                                              in nsIEventQueue eventQueue);
 
     /**
@@ -122,21 +122,21 @@ interface nsIIOService : nsISupports
      * by the thread's event queue. The receiver stream listener is then used to receive
      * the data on the other thread.
      */
-    nsIStreamListener NewAsyncStreamListener(in nsIStreamListener receiver,
+    nsIStreamListener newAsyncStreamListener(in nsIStreamListener receiver,
                                              in nsIEventQueue eventQueue);
 
     /**
      * A synchronous stream listener pushes data through a pipe that ends up
      * in an input stream to be read by another thread.
      */
-    nsIStreamListener NewSyncStreamListener(out nsIInputStream inStream,
+    nsIStreamListener newSyncStreamListener(out nsIInputStream inStream,
                                             out nsIBufferOutputStream outStream);
 
     /**
      * This convenience routine first looks up the file protocol handler, and
      * then uses it to construct a file channel from a native path string.
      */
-    nsIFileChannel NewChannelFromNativePath(in string nativePath);
+    nsIFileChannel newChannelFromNativePath(in string nativePath);
 
     /**
      * Returns a new load group. Load groups can be used to manage collections
@@ -144,7 +144,7 @@ interface nsIIOService : nsISupports
      * their use is not required by other parts of the system, they are primarily
      * a convenience for the caller. The outer parameter can be used for aggregation.
      */
-    nsILoadGroup NewLoadGroup(in nsISupports outer,
+    nsILoadGroup newLoadGroup(in nsISupports outer,
                               in nsIStreamObserver observer, 
                               in nsILoadGroup parent);
 
@@ -154,7 +154,7 @@ interface nsIIOService : nsISupports
      * by the channel's GetURI method. This routine is a convenience facililty
      * for protocol writers.
      */
-    nsIChannel NewInputStreamChannel(in nsIURI uri,
+    nsIChannel newInputStreamChannel(in nsIURI uri,
                                      in string contentType, 
                                      in long contentLength,
                                      in nsIInputStream inStr,

@@ -26,13 +26,13 @@ interface nsIRequest : nsISupports
      * after completion or successful calling Cancel. Suspended requests
      * are still considered pending.
      */
-    boolean IsPending();
+    boolean isPending();
 
     /**
      * Cancels the current request. This will close any open input or
      * output streams and terminate any async requests. 
      */
-    void Cancel();
+    void cancel();
 
     /**
      * Suspends the current requests. This may have the effect of closing
@@ -40,12 +40,12 @@ interface nsIRequest : nsISupports
      * any open streams remain logically opened and will continue delivering
      * data when the transport is resumed. 
      */
-    void Suspend();
+    void suspend();
 
     /**
      * Resumes the current request. This may have the effect of re-opening
      * any underlying transport and will resume the delivery of data to 
      * any open streams. 
      */
-    void Resume();
+    void resume();
 };

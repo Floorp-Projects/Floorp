@@ -213,7 +213,7 @@ nsresult nsMailboxUrl::GetMailboxCopyHandler(nsIStreamListener ** aMailboxCopyHa
 	return  NS_OK;
 }
 
-nsresult nsMailboxUrl::GetFilePath(nsFileSpec ** aFilePath)
+nsresult nsMailboxUrl::GetFileSpec(nsFileSpec ** aFilePath)
 {
 	if (aFilePath)
 		*aFilePath = m_filePath;
@@ -253,7 +253,7 @@ NS_IMETHODIMP nsMailboxUrl::GetURI(char ** aURI)
 	if (aURI)
 	{
 		nsFileSpec * filePath = nsnull;
-		GetFilePath(&filePath);
+		GetFileSpec(&filePath);
 		if (filePath)
 		{
             char * baseuri = nsMailboxGetURI(m_file);
@@ -347,7 +347,7 @@ nsresult nsMailboxUrl::ParseUrl(const nsString& aSpec)
 {
 	if (m_filePath)
 		delete m_filePath;
-	DirFile(getter_Copies(m_file));
+	GetFilePath(getter_Copies(m_file));
 	ParseSearchPart();
 	m_filePath = new nsFileSpec(nsFilePath(m_file));
     return NS_OK;

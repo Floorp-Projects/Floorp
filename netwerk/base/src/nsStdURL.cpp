@@ -1087,7 +1087,7 @@ nsStdURL::SetPath(const char* i_Path)
 }
     
 NS_METHOD
-nsStdURL::DirFile(char **o_DirFile)
+nsStdURL::GetFilePath(char **o_DirFile)
 {
     if (!o_DirFile)
         return NS_ERROR_NULL_POINTER;
@@ -1105,4 +1105,22 @@ nsStdURL::DirFile(char **o_DirFile)
     if (!*o_DirFile)
         return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
+}
+
+NS_METHOD
+nsStdURL::SetFilePath(const char *filePath)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_METHOD
+nsStdURL::GetFileBaseName(char **o_name)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_METHOD
+nsStdURL::SetFileBaseName(const char *name)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -34,46 +34,8 @@ class nsSimpleURI : public nsIURI
 {
 public:
     NS_DECL_AGGREGATED
+    NS_DECL_NSIURI
 
-    ////////////////////////////////////////////////////////////////////////////
-    // nsIURI methods:
-
-    /* attribute string Spec; */
-    NS_IMETHOD GetSpec(char * *aSpec);
-    NS_IMETHOD SetSpec(const char * aSpec);
-
-    /* attribute string Scheme; */
-    NS_IMETHOD GetScheme(char * *aScheme);
-    NS_IMETHOD SetScheme(const char * aScheme);
-
-    /* attribute string PreHost; */
-    NS_IMETHOD GetPreHost(char * *aPreHost);
-    NS_IMETHOD SetPreHost(const char * aPreHost);
-
-    /* attribute string Host; */
-    NS_IMETHOD GetHost(char * *aHost);
-    NS_IMETHOD SetHost(const char * aHost);
-
-    /* attribute long Port; */
-    NS_IMETHOD GetPort(PRInt32 *aPort);
-    NS_IMETHOD SetPort(PRInt32 aPort);
-
-    /* attribute string Path; */
-    NS_IMETHOD GetPath(char * *aPath);
-    NS_IMETHOD SetPath(const char * aPath);
-
-    /* boolean Equals (in nsIURI other); */
-    NS_IMETHOD Equals(nsIURI *other, PRBool *_retval);
-
-    /* nsIURI Clone (); */
-    NS_IMETHOD Clone(nsIURI **_retval);
-
-    /* void SetRelativePath (in string i_RelativePath); */
-    NS_IMETHOD SetRelativePath(const char *i_RelativePath) { 
-         NS_ASSERTION(PR_FALSE, "This is meaningless in hack context!"); 
-         return NS_ERROR_FAILURE;};
-
-    ////////////////////////////////////////////////////////////////////////////
     // nsSimpleURI methods:
 
     nsSimpleURI(nsISupports* outer);
