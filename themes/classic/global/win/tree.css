@@ -245,13 +245,9 @@ treecol[hideheader="true"] {
 
 treecol:hover:active,
 treecolpicker:hover:active {
-  border-top: 2px solid;
-  border-right: 1px solid;
-  border-bottom: 1px solid;
-  border-left: 2px solid;
   -moz-border-top-colors: ThreeDShadow -moz-Dialog;
-  -moz-border-right-colors: ThreeDShadow;
-  -moz-border-bottom-colors: ThreeDShadow;
+  -moz-border-right-colors: ThreeDShadow -moz-Dialog;
+  -moz-border-bottom-colors: ThreeDShadow -moz-Dialog;
   -moz-border-left-colors: ThreeDShadow -moz-Dialog;
 }
 
@@ -259,10 +255,10 @@ treecolpicker:hover:active {
 /* ::::: column drag and drop styles ::::: */
 
 treecol[dragging="true"] {
-  -moz-border-top-colors: ThreeDDarkShadow transparent !important;
-  -moz-border-right-colors: ThreeDDarkShadow transparent!important;
-  -moz-border-bottom-colors: ThreeDDarkShadow transparent !important;
-  -moz-border-left-colors: ThreeDDarkShadow transparent !important;
+  -moz-border-top-colors: ThreeDDarkShadow ThreeDShadow !important;
+  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow !important;
+  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow !important;
+  -moz-border-left-colors: ThreeDDarkShadow ThreeDShadow !important;
   background-color: ThreeDShadow !important;
   color: ThreeDHighlight !important;
 }
