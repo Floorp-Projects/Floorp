@@ -28,6 +28,7 @@ REQUIRES=xpcom js nspr netlib
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS=    nsNNTPProtocol.cpp				\
+			nsNntpUrl.cpp					\
 			nsNNTPArticleSet.cpp			\
 			nsNNTPArticleList.cpp			\
 			nsNNTPNewsgroupList.cpp			\
@@ -35,6 +36,7 @@ CPPSRCS=    nsNNTPProtocol.cpp				\
 			$(NULL)
 
 CPP_OBJS=   nsNNTPProtocol.obj				\
+			nsNntpUrl.obj					\
 			nsNNTPArticleSet.obj			\
 			nsNNTPArticleList.obj			\
 			nsNNTPNewsgroupList.obj			\
@@ -43,6 +45,11 @@ CPP_OBJS=   nsNNTPProtocol.obj				\
 
 
 EXPORTS=	nsNNTPProtocol.h				\
+			nsNntpUrl.h						\
+			nsNNTPArticleSet.h				\
+			nsNNTPNewsgroupList.h			\
+			nsNNTPNewsgroup.h				\
+			nntpCore.h						\
             $(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\mailnews -I$(PUBLIC)\raptor -I$(PUBLIC)\netlib -I$(PUBLIC)\security -I$(PUBLIC)\rdf
