@@ -1513,7 +1513,7 @@ public class Interpreter extends LabelTable {
         DebugFrame debuggerFrame = null;
         boolean useActivationVars = false;
         if (cx.debugger != null) {
-            if (!theData.itsNeedsActivation) {
+            if (theData.itsFunctionType != 0 && !theData.itsNeedsActivation) {
                 useActivationVars = true;
                 scope = ScriptRuntime.initVarObj(cx, scope, fnOrScript,
                                                  thisObj, args);
