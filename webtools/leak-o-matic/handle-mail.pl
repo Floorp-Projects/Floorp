@@ -20,7 +20,7 @@
 # Contributor(s):
 # Chris Waterson <waterson@netscape.com>
 # 
-# $Id: handle-mail.pl,v 1.3 1999/11/18 03:29:11 waterson%netscape.com Exp $
+# $Id: handle-mail.pl,v 1.4 1999/11/18 03:38:24 waterson%netscape.com Exp $
 #
 
 #
@@ -46,22 +46,28 @@ use File::Copy;
 GetOptions("datadir=s");
 chdir('/tmp');
 
+# Open a pipe to ``uudecode'' so we can unstuff the binary
+open(OUT, "|uudecode");
+
 LINE: while (<>) {
+    # Ignore anything up until the ``begin'' directive
     if (/^begin \d\d\d (.*)/) {
 	$::file = $1;
-
-	open(OUT, "|uudecode");
 	print OUT $_;
-
 	last LINE;
     }
 }
 
+# No file means we read the entire message and found nothing
 $::file || die;
 
 while (<>) {
 	print OUT $_;
 }
+
+# Be sure to close the pipe (so uudecode can complete) before moving
+# the file
+close(OUT);
 
 # Move to the data directory, if there is one.
 move($::file, $::opt_datadir) if $::opt_datadir;
