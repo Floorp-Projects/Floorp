@@ -24,6 +24,7 @@ install::
 	$(MAKE_INSTALL) messengercompose.dtd $(DIST)\bin\chrome\messengercompose\locale\en-US
 	$(MAKE_INSTALL) addressingWidgetOverlay.dtd $(DIST)\bin\chrome\messengercompose\locale\en-US
 	$(MAKE_INSTALL) MsgAttachPage.dtd $(DIST)\bin\chrome\messengercompose\locale\en-US
+	$(MAKE_INSTALL) composeMsgs_en.properties $(DIST)\bin\chrome\messengercompose\locale\en-US
 
 clobber::
 	rm -f $(DIST)\bin\chrome\messengercompose\locale\en-US\messengercompose.dtd
