@@ -149,18 +149,15 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext*         aTableSty
   if (!tableIsAutoWidth && (specifiedTableWidth > 0)) {
     maxWidth = PR_MIN(specifiedTableWidth, aMaxWidthIn); // specifiedWidth usually == aMaxWidthIn for fixed table
   }
-  // reduce the maxWidth by border and padding in some cases, since we will be dealing with content width
-  if (!tableIsAutoWidth && (maxWidth != NS_UNCONSTRAINEDSIZE)) {
-    const nsStylePosition* position;
-    mTableFrame->GetStyleData(eStyleStruct_Position, ((const nsStyleStruct *&)position));
-    if (eStyleUnit_Percent != position->mWidth.GetUnit()) {
-      const nsStyleSpacing* spacing;
-      mTableFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
-      nsMargin borderPadding;
-      spacing->CalcBorderPaddingFor(mTableFrame, borderPadding);
-      maxWidth -= borderPadding.left + borderPadding.right;
-      maxWidth = PR_MAX(0, maxWidth);
-    }
+  // reduce the maxWidth by border and padding, since we will be dealing with content width
+  // XXX should this be done in aMaxWidthIn by the caller?
+  if (maxWidth != NS_UNCONSTRAINEDSIZE) {
+    const nsStyleSpacing* spacing;
+    mTableFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
+    nsMargin borderPadding;
+    spacing->CalcBorderPaddingFor(mTableFrame, borderPadding);
+    maxWidth -= borderPadding.left + borderPadding.right;
+    maxWidth = PR_MAX(0, maxWidth);
   }
   // set the table's columns to the min width
   // initialize the col percent and cell percent values to 0.
