@@ -47,3 +47,4 @@ include <$(DEPTH)\config\config.mak>
 
 install:: $(LIBRARY)
 	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+    $(MAKE_INSTALL) appstrings.properties $(DIST)\bin\chrome\global\locale\en-US
