@@ -238,9 +238,9 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
     else {
       nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(source, &rv);
       if (NS_SUCCEEDED(rv)) {
-		PRUint32 depth;
-		rv = folder->GetDepth(&depth);
-		if(NS_SUCCEEDED(rv) && depth == 0)
+        PRBool isServer;
+		rv = folder->GetIsServer(&isServer);
+		if(NS_SUCCEEDED(rv) && isServer)
 		{
 			nsXPIDLString prettyName;
 			rv = folder->GetPrettyName(getter_Copies(prettyName));
