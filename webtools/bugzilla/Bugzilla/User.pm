@@ -206,7 +206,7 @@ sub in_group {
 
     my $dbh = Bugzilla->dbh;
 
-    my $res = $dbh->selectrow(q{SELECT 1
+    my ($res) = $dbh->selectrow_array(q{SELECT 1
                                   FROM groups, user_group_map
                                  WHERE groups.id=user_group_map.group_id
                                    AND user_group_map.user_id=?
