@@ -1090,47 +1090,30 @@ NS_IMETHODIMP nsDocShell::GetSessionHistory(nsISHistory** aSessionHistory)
 // nsDocShell::nsIWebProgress
 //*****************************************************************************
 
-NS_IMETHODIMP nsDocShell::AddProgressListener(nsIWebProgressListener* aListener, 
-   PRInt32* aCookie)
+NS_IMETHODIMP nsDocShell::AddProgressListener(nsIWebProgressListener* aListener)
 {
-   //XXXTAB First Check
-	/*
-	Registers a listener to be notified of Progress Events
+   if(!mWebProgressListenerList)
+      NS_ENSURE_SUCCESS(NS_NewISupportsArray(getter_AddRefs(mWebProgressListenerList)),
+         NS_ERROR_FAILURE);
 
-	@param listener - The listener interface to be called when a progress event
-			occurs.
+   // Make sure it isn't already in the list...  This is bad!
+   NS_ENSURE_ARG(mWebProgressListenerList->IndexOf(aListener) == -1);
 
-	@param cookie - This is an optional parameter to receieve a cookie to use
-			to unregister rather than the original interface pointer.  This may
-			be nsnull.
+   NS_ENSURE_SUCCESS(mWebProgressListenerList->AppendElement(aListener),
+      NS_ERROR_FAILURE);
 
-	@return	NS_OK - Listener was registered successfully.
-				NS_INVALID_ARG - The listener passed in was either nsnull, 
-						or was already registered with this progress interface.
-	 */
-   return NS_ERROR_FAILURE;
+   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShell::RemoveProgressListener(nsIWebProgressListener* listener, 
-   PRInt32 cookie)
+NS_IMETHODIMP nsDocShell::RemoveProgressListener(nsIWebProgressListener* aListener)
 {
-   //XXXTAB First Check
-   //XXX First Check
-	/* 
-	Removes a previously registered listener of Progress Events
-		
-	@param listener - The listener interface previously registered with 
-			AddListener() this may be nsnull if a valid cookie is provided.
+   NS_ENSURE_STATE(mWebProgressListenerList);
+   NS_ENSURE_ARG(aListener);
 
-	@param cookie - A cookie that was returned from a previously called
-		AddListener() call.  This may be nsnull if a valid listener interface
-		is passed in.
+   NS_ENSURE_TRUE(mWebProgressListenerList->RemoveElement(aListener),
+      NS_ERROR_INVALID_ARG);
 
-	@return	NS_OK - Listener was successfully unregistered.
-				NS_ERROR_INVALID_ARG - Neither the cookie nor the listener point
-					to a previously registered listener.
-	*/
-   return NS_ERROR_FAILURE;
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShell::GetProgressStatusFlags(PRInt32* aProgressStatusFlags)
