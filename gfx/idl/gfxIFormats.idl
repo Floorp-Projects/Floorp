@@ -36,7 +36,7 @@
  * @version 0.0
  * @see gfx_format
  */
-[scriptable]
+[scriptable, uuid(96d086e6-1dd1-11b2-b6b2-b77b59390247)]
 interface gfxIFormats
 {
   /**
