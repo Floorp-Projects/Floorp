@@ -2458,6 +2458,40 @@ nsCSSFrameConstructor::ConstructCheckboxControlFrame(nsIPresContext*     		aPres
   return rv;
 }
 
+nsresult 
+nsCSSFrameConstructor::ConstructButtonLabelFrame(nsIPresContext *aPresContext,
+                                              nsIContent     *aContent,
+												                      nsIFrame       *&aFrame, 
+												                      nsFrameConstructorState& aState,
+												                      nsFrameItems&  aFrameItems)
+{
+    // Construct a button label using generated content specified
+    // through style. A style rule of following form must be
+    // present in ua.css or other style sheet 
+    //   input[type=button][value]:-moz-buttonlabel {
+    //      content:attr(value);
+    //   }
+    // The default for the label is specified with a rule similar to
+    // the following:
+    //   input[type=reset]:-moz-buttonlabel {
+    //      content:"Reset";
+    //   }
+   nsresult rv = NS_OK;
+   nsIStyleContext*  styleContext = nsnull;
+   nsIFrame* generatedFrame = nsnull;
+
+     // Probe for generated content before
+   aFrame->GetStyleContext(&styleContext);
+   if (CreateGeneratedContentFrame(aPresContext, aState, aFrame, aContent,
+                                styleContext, nsCSSAtoms::buttonLabelPseudo,
+                                PR_FALSE, PR_FALSE, &generatedFrame)) {
+      // Add the generated frame to the child list
+     aFrameItems.AddChild(generatedFrame);
+   }
+   return rv;
+}
+
+
 nsresult
 nsCSSFrameConstructor::ConstructButtonControlFrame(nsIPresContext*     		aPresContext,
                                                 	 nsIFrame*&          		aNewFrame)
@@ -2814,6 +2848,10 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*          aPresContext
                              PR_TRUE, childItems);
       }
 
+      if (nsHTMLAtoms::input == aTag) {
+				 // Construct button label frame using generated content
+				ConstructButtonLabelFrame(aPresContext, aContent, newFrame, aState, childItems);
+			}
 
       // if there are any anonymous children create frames for them
       CreateAnonymousFrames(aPresContext, aTag, aState, aContent, newFrame,

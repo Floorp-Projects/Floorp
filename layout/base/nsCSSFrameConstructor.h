@@ -417,6 +417,12 @@ protected:
   nsresult ConstructCheckboxControlFrame(nsIPresContext*      aPresContext,
                                      nsIFrame*&               aNewFrame);
 
+  nsresult ConstructButtonLabelFrame(nsIPresContext *aPresContext,
+                                  nsIContent     *aContent,
+												          nsIFrame       *&aFrame, 
+												          nsFrameConstructorState& aState,
+												          nsFrameItems&  aFrameItems);
+
   nsresult ConstructButtonControlFrame(nsIPresContext*      	aPresContext,
                                      nsIFrame*&               aNewFrame);
 

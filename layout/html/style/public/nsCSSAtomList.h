@@ -40,6 +40,8 @@ CSS_ATOM(afterPseudo, ":after")
 
 CSS_ATOM(beforePseudo, ":before")
 
+CSS_ATOM(buttonLabelPseudo, ":-moz-buttonlabel")
+
 CSS_ATOM(checkedPseudo, ":checked")
 
 CSS_ATOM(disabledPseudo, ":disabled")

@@ -421,6 +421,49 @@ form {
   display: block;
   margin: 1em 0;
 }
+
+
+/* button */
+input[type=button]:-moz-buttonlabel {
+  content:"   ";
+  font-family: sans-serif;
+  font-size: small;
+  background-color:inherit;
+}
+
+input[type=button][value]:-moz-buttonlabel {
+  content:attr(value);
+  font-family: sans-serif;
+  font-size: small;
+  background-color:inherit;
+}
+
+/* submit */
+input[type=submit]:-moz-buttonlabel {
+  content:"submit";
+  font-family: sans-serif;
+  font-size: small;
+}
+
+input[type=submit][value]:-moz-buttonlabel {
+  content:attr(value);
+  font-family: sans-serif;
+  font-size: small;
+}
+
+/* reset */
+input[type=reset]:-moz-buttonlabel {
+  content:"reset";
+  font-family: sans-serif;
+  font-size: small;
+}
+
+input[type=reset][value]:-moz-buttonlabel {
+  content:attr(value);
+  font-family: sans-serif;
+  font-size: small;
+}
+
 input {
   vertical-align: bottom;
   border: 2px inset rgb(204, 204, 204);
@@ -442,6 +485,12 @@ input[type=file] {
 input[type=file] input[type=button] {
   height:inherit;
 }
+
+input[type=file] input[type=button]:-moz-buttonlabel {
+  content:"Browse...";
+  font-family: sans-serif;
+}
+
 
 input[type=radio] {
   /* these margins are for NavQuirks, we need a Standard ua.css */  
@@ -606,13 +655,11 @@ input[type="button"] {
   border: 2px outset rgb(156, 154, 156);
   background-color: rgb(206, 207, 206);
   color:black; 
-
   padding: 1px;
 }
 
 input[type="button"]:active {
   border-style: inset;
-
   padding-left: 2px;
   padding-right: 0px;
   padding-top: 2px;
@@ -648,7 +695,6 @@ input[type="button"]:focus:-moz-focus-inner {
    padding-right : 1px;
    padding-top   : 0px;
    padding-bottom: 0px;
- 
    margin: 0px;
    border : 1px dotted black;
 }
@@ -872,6 +918,7 @@ optgroup:before {
   display:block;
   content:attr(label);
 }
+
 
 textarea {
   vertical-align: bottom;

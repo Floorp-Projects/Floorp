@@ -19,52 +19,46 @@
 #ifndef nsGfxButtonControlFrame_h___
 #define nsGfxButtonControlFrame_h___
 
-#include "nsNativeFormControlFrame.h"
-#include "nsButtonControlFrame.h"
-#include "nsButtonFrameRenderer.h"
+#include "nsFormControlFrame.h"
+#include "nsHTMLButtonControlFrame.h"
 
-class nsGfxButtonControlFrame : public nsButtonControlFrame {
-private:
-	typedef nsButtonControlFrame Inherited;
+// Class which implements the input[type=button, reset, submit] and
+// browse button for input[type=file].
+// The label for button is specified through generated content
+// in the ua.css file.
 
+class nsGfxButtonControlFrame : public nsHTMLButtonControlFrame {
 public:
-
   nsGfxButtonControlFrame();
 
-   NS_IMETHOD  Init(nsIPresContext&  aPresContext,
-                   nsIContent*      aContent,
-                   nsIFrame*        aParent,
-                   nsIStyleContext* aContext,
-                   nsIFrame*        asPrevInFlow);
-
-  NS_IMETHOD  ReResolveStyleContext ( nsIPresContext* aPresContext, 
-                                      nsIStyleContext* aParentContext,
-                                      PRInt32 aParentChange,
-                                      nsStyleChangeList* aChangeList,
-                                      PRInt32* aLocalChange) ;
-
-  NS_IMETHOD Paint(nsIPresContext& aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect& aDirtyRect,
-                   nsFramePaintLayer aWhichLayer);
-
-  NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
+     //nsIFrame
+  NS_IMETHOD Reflow(nsIPresContext&          aCX,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
+  virtual const nsIID& GetCID();
+  virtual const nsIID& GetIID();
 
-  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
-                              nsIContent*     aChild,
-                              nsIAtom*        aAttribute,
-                              PRInt32         aHint);
-
-   NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
+  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
                          nsGUIEvent* aEvent,
                          nsEventStatus& aEventStatus);
 
-protected:
-   //GFX-rendered state variables
-   nsButtonFrameRenderer mRenderer;
+ 
+   // nsFormControlFrame
+  NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);
+  NS_IMETHOD GetFrameName(nsString& aResult) const;
+  PRBool IsSuccessful(nsIFormControlFrame* aSubmitter);
+  virtual PRInt32 GetMaxNumValues();
+  virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
+                                nsString* aValues, nsString* aNames);
+  virtual void MouseClicked(nsIPresContext* aPresContext);
+
+private:
+  NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
+  NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
+
+  nscoord mSuggestedWidth;
+  nscoord mSuggestedHeight;
 };
 
 
