@@ -82,15 +82,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
     RemoveQuotes(lpszCmdLine, szBuf);
     GetShortPathName(szBuf, SrcIni, _MAX_DIR);
 
-    if(GetFileAttributes(SrcIni) == -1)
-    {
-        sprintf(szBuf, "%s not found!\n", SrcIni);
-        MessageBox(NULL, szBuf, "Usage", MB_OK);
-
-        free(SrcIni);
-        exit(1);
-    }
-
     temp            = (char *)calloc(_MAX_SIZE_, sizeof(char));
     KeyValue        = (char *)calloc(_MAX_SIZE_, sizeof(char));
     ReturnedKeys    = (char *)calloc(_MAX_SIZE_, sizeof(char));
