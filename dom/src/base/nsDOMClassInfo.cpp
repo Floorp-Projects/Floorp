@@ -282,6 +282,7 @@
 #include "nsITreeSelection.h"
 #include "nsITreeContentView.h"
 #include "nsITreeView.h"
+#include "nsIXULTemplateBuilder.h"
 #endif
 #include "nsIDOMXPathEvaluator.h"
 
@@ -822,6 +823,10 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOCUMENT_SCRIPTABLE_FLAGS |
                            nsIXPCScriptable::WANT_ENUMERATE)
 
+#ifdef MOZ_XUL
+  NS_DEFINE_CLASSINFO_DATA(XULTreeBuilder, nsDOMGenericSH,
+                           DEFAULT_SCRIPTABLE_FLAGS)
+#endif
 };
 
 nsIXPConnect *nsDOMClassInfo::sXPConnect = nsnull;
@@ -2223,6 +2228,13 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
   DOM_CLASSINFO_MAP_END
+
+#ifdef MOZ_XUL
+  DOM_CLASSINFO_MAP_BEGIN(XULTreeBuilder, nsIXULTreeBuilder)
+    DOM_CLASSINFO_MAP_ENTRY(nsIXULTreeBuilder)
+    DOM_CLASSINFO_MAP_ENTRY(nsITreeView)
+  DOM_CLASSINFO_MAP_END
+#endif
 
 #ifdef NS_DEBUG
   {
