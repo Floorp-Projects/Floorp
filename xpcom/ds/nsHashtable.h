@@ -50,7 +50,7 @@ public:
 
 // Enumerator callback function. Use
 
-typedef PRBool (* PR_CALLBACK nsHashtableEnumFunc)(nsHashKey *aKey, void *aData, void* closure);
+typedef PRBool (*PR_CALLBACK nsHashtableEnumFunc)(nsHashKey *aKey, void *aData, void* closure);
 
 class NS_COM nsHashtable {
 protected:
@@ -77,7 +77,7 @@ public:
 // nsObjectHashtable: an nsHashtable where the elements are C++ objects to be
 // deleted
 
-typedef void* (*nsHashtableCloneElementFunc)(nsHashKey *aKey, void *aData, void* closure);
+typedef void* (*PR_CALLBACK nsHashtableCloneElementFunc)(nsHashKey *aKey, void *aData, void* closure);
 
 class NS_COM nsObjectHashtable : public nsHashtable {
 public:
