@@ -1111,8 +1111,8 @@ nsresult nsImapMailFolder::GetDBFolderInfoAndDB(
 					nsXPIDLCString name;
 					rv = nsImapURI2FullName(kImapRootURI, hostname, uri, getter_Copies(name));
 					m_onlineFolderName = name;
-					nsAutoString onlineName(name);
-					rv = (*folderInfo)->SetProperty("onlineName", &onlineName);
+					nsAutoString autoOnlineName(name);
+					rv = (*folderInfo)->SetProperty("onlineName", &autoOnlineName);
 					PR_FREEIF(uri);
 					PR_FREEIF(hostname);
 				}
