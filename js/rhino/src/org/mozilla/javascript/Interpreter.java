@@ -46,108 +46,128 @@ public class Interpreter
 {
 
 // Additional interpreter-specific codes
-    private static final int BASE_ICODE = Token.LAST_BYTECODE_TOKEN;
 
     private static final int
 
     // Stack: ... value1 -> ... value1 value1
-        Icode_DUP                       = BASE_ICODE + 1,
+        Icode_DUP                       = -1,
 
     // Stack: ... value2 value1 -> ... value2 value1 value2 value1
-        Icode_DUP2                      = BASE_ICODE + 2,
+        Icode_DUP2                      = -2,
 
     // Stack: ... value2 value1 -> ... value1 value2
-        Icode_SWAP                      = BASE_ICODE + 3,
+        Icode_SWAP                      = -3,
 
     // To jump conditionally and pop additional stack value
-        Icode_IFEQ_POP                  = BASE_ICODE + 4,
+        Icode_IFEQ_POP                  = -4,
 
     // various types of ++/--
-        Icode_NAMEINC                   = BASE_ICODE + 5,
-        Icode_PROPINC                   = BASE_ICODE + 6,
-        Icode_ELEMINC                   = BASE_ICODE + 7,
-        Icode_VARINC                    = BASE_ICODE + 8,
-        Icode_NAMEDEC                   = BASE_ICODE + 9,
-        Icode_PROPDEC                   = BASE_ICODE + 10,
-        Icode_ELEMDEC                   = BASE_ICODE + 11,
-        Icode_VARDEC                    = BASE_ICODE + 12,
+        Icode_NAMEINC                   = -5,
+        Icode_PROPINC                   = -6,
+        Icode_ELEMINC                   = -7,
+        Icode_VARINC                    = -8,
+        Icode_NAMEDEC                   = -9,
+        Icode_PROPDEC                   = -10,
+        Icode_ELEMDEC                   = -11,
+        Icode_VARDEC                    = -12,
 
     // helper codes to deal with activation
-        Icode_SCOPE                     = BASE_ICODE + 13,
-        Icode_TYPEOFNAME                = BASE_ICODE + 14,
+        Icode_SCOPE                     = -13,
+        Icode_TYPEOFNAME                = -14,
 
     // helper for function calls
-        Icode_NAME_FAST_THIS            = BASE_ICODE + 15,
-        Icode_NAME_SLOW_THIS            = BASE_ICODE + 16,
-        Icode_PUSH_PARENT               = BASE_ICODE + 17,
+        Icode_NAME_FAST_THIS            = -15,
+        Icode_NAME_SLOW_THIS            = -16,
+        Icode_PUSH_PARENT               = -17,
 
     // Access to parent scope and prototype
-        Icode_GETPROTO                  = BASE_ICODE + 18,
-        Icode_GETSCOPEPARENT            = BASE_ICODE + 19,
-        Icode_SETPROTO                  = BASE_ICODE + 20,
-        Icode_SETPARENT                 = BASE_ICODE + 21,
+        Icode_GETPROTO                  = -18,
+        Icode_GETSCOPEPARENT            = -19,
+        Icode_SETPROTO                  = -20,
+        Icode_SETPARENT                 = -21,
 
     // Create closure object for nested functions
-        Icode_CLOSURE                   = BASE_ICODE + 22,
+        Icode_CLOSURE                   = -22,
 
     // Special calls
-        Icode_CALLSPECIAL               = BASE_ICODE + 23,
+        Icode_CALLSPECIAL               = -23,
 
     // To return undefined value
-        Icode_RETUNDEF                  = BASE_ICODE + 24,
+        Icode_RETUNDEF                  = -24,
 
     // Exception handling implementation
-        Icode_CATCH                     = BASE_ICODE + 25,
-        Icode_GOSUB                     = BASE_ICODE + 26,
-        Icode_RETSUB                    = BASE_ICODE + 27,
+        Icode_CATCH                     = -25,
+        Icode_GOSUB                     = -26,
+        Icode_RETSUB                    = -27,
 
     // To indicating a line number change in icodes.
-        Icode_LINE                      = BASE_ICODE + 28,
+        Icode_LINE                      = -28,
 
     // To store shorts and ints inline
-        Icode_SHORTNUMBER               = BASE_ICODE + 29,
-        Icode_INTNUMBER                 = BASE_ICODE + 30,
+        Icode_SHORTNUMBER               = -29,
+        Icode_INTNUMBER                 = -30,
 
     // To create and populate array to hold values for [] and {} literals
-        Icode_LITERAL_NEW               = BASE_ICODE + 31,
-        Icode_LITERAL_SET               = BASE_ICODE + 32,
+        Icode_LITERAL_NEW               = -31,
+        Icode_LITERAL_SET               = -32,
 
     // Array literal with skipped index like [1,,2]
-        Icode_SPARE_ARRAYLIT            = BASE_ICODE + 33,
+        Icode_SPARE_ARRAYLIT            = -33,
 
     // Load index register to prepare for the following index operation
-        Icode_REG_IND_C0                = BASE_ICODE + 34,
-        Icode_REG_IND_C1                = BASE_ICODE + 35,
-        Icode_REG_IND_C2                = BASE_ICODE + 36,
-        Icode_REG_IND_C3                = BASE_ICODE + 37,
-        Icode_REG_IND_C4                = BASE_ICODE + 38,
-        Icode_REG_IND_C5                = BASE_ICODE + 39,
-        Icode_REG_IND1                  = BASE_ICODE + 40,
-        Icode_REG_IND2                  = BASE_ICODE + 41,
-        Icode_REG_IND4                  = BASE_ICODE + 42,
+        Icode_REG_IND_C0                = -34,
+        Icode_REG_IND_C1                = -35,
+        Icode_REG_IND_C2                = -36,
+        Icode_REG_IND_C3                = -37,
+        Icode_REG_IND_C4                = -38,
+        Icode_REG_IND_C5                = -39,
+        Icode_REG_IND1                  = -40,
+        Icode_REG_IND2                  = -41,
+        Icode_REG_IND4                  = -42,
 
     // Load string register to prepare for the following string operation
-        Icode_REG_STR_C0                = BASE_ICODE + 43,
-        Icode_REG_STR_C1                = BASE_ICODE + 44,
-        Icode_REG_STR_C2                = BASE_ICODE + 45,
-        Icode_REG_STR_C3                = BASE_ICODE + 46,
-        Icode_REG_STR1                  = BASE_ICODE + 47,
-        Icode_REG_STR2                  = BASE_ICODE + 48,
-        Icode_REG_STR4                  = BASE_ICODE + 49,
+        Icode_REG_STR_C0                = -43,
+        Icode_REG_STR_C1                = -44,
+        Icode_REG_STR_C2                = -45,
+        Icode_REG_STR_C3                = -46,
+        Icode_REG_STR1                  = -47,
+        Icode_REG_STR2                  = -48,
+        Icode_REG_STR4                  = -49,
 
     // Version of getvar/setvar that read var index directly from bytecode
-        Icode_GETVAR1               = BASE_ICODE + 50,
-        Icode_SETVAR1               = BASE_ICODE + 51,
+        Icode_GETVAR1                   = -50,
+        Icode_SETVAR1                   = -51,
 
     // Last icode
-        MAX_ICODE                       = BASE_ICODE + 51;
+        MIN_ICODE                       = -51;
 
     static {
-        if (MAX_ICODE > 127) {
-            // This allows to drop (0xFF & ...) in the interpreter loop
-            System.err.println("MAX_ICODE should be <= 127");
-            throw new IllegalStateException("MAX_ICODE should be <= 127");
+        if (Token.LAST_BYTECODE_TOKEN > 127) {
+            String str = "Violation of Token.LAST_BYTECODE_TOKEN <= 127";
+            System.err.println(str);
+            throw new IllegalStateException(str);
         }
+        if (MIN_ICODE < -128) {
+            String str = "Violation of Interpreter.MIN_ICODE >= -128";
+            System.err.println(str);
+            throw new IllegalStateException(str);
+        }
+    }
+
+    private static boolean validIcode(int icode)
+    {
+        return MIN_ICODE <= icode && icode <= -1;
+    }
+
+    private static boolean validTokenCode(int token)
+    {
+        return Token.FIRST_BYTECODE_TOKEN <= token
+               && token <= Token.LAST_BYTECODE_TOKEN;
+    }
+
+    private static boolean validBytecode(int bytecode)
+    {
+        return validIcode(bytecode) || validTokenCode(bytecode);
     }
 
     public Object compile(Scriptable scope,
@@ -1268,7 +1288,7 @@ public class Interpreter
         int targetPC = itsLabelTable[label];
 
         int gotoPC = iCodeTop;
-        if (gotoOp > BASE_ICODE) {
+        if (validIcode(gotoOp)) {
             iCodeTop = addIcode(gotoOp, iCodeTop);
         } else {
             iCodeTop = addToken(gotoOp, iCodeTop);
@@ -1351,17 +1371,13 @@ public class Interpreter
 
     private int addToken(int token, int iCodeTop)
     {
-        if (!(Token.FIRST_BYTECODE_TOKEN <= token
-            && token <= Token.LAST_BYTECODE_TOKEN))
-        {
-            Kit.codeBug();
-        }
+        if (!validTokenCode(token)) Kit.codeBug();
         return addByte(token, iCodeTop);
     }
 
     private int addIcode(int icode, int iCodeTop)
     {
-        if (!(BASE_ICODE < icode && icode <= MAX_ICODE)) Kit.codeBug();
+        if (!validIcode(icode)) Kit.codeBug();
         return addByte(icode, iCodeTop);
     }
 
@@ -1431,7 +1447,7 @@ public class Interpreter
         }
         itsLastStringIndex = index;
         if (index < 4) {
-            iCodeTop = addIcode(Icode_REG_STR_C0 + index, iCodeTop);
+            iCodeTop = addIcode(Icode_REG_STR_C0 - index, iCodeTop);
         } else if (index <= 0xFF) {
             iCodeTop = addIcode(Icode_REG_STR1, iCodeTop);
             iCodeTop = addByte(index, iCodeTop);
@@ -1442,7 +1458,7 @@ public class Interpreter
             iCodeTop = addIcode(Icode_REG_STR4, iCodeTop);
             iCodeTop = addInt(index, iCodeTop);
         }
-        if (op > BASE_ICODE) {
+        if (validIcode(op)) {
             iCodeTop = addIcode(op, iCodeTop);
         } else {
             iCodeTop = addToken(op, iCodeTop);
@@ -1454,7 +1470,7 @@ public class Interpreter
     {
         if (index < 0) Kit.codeBug();
         if (index < 6) {
-            iCodeTop = addIcode(Icode_REG_IND_C0 + index, iCodeTop);
+            iCodeTop = addIcode(Icode_REG_IND_C0 - index, iCodeTop);
         } else if (index <= 0xFF) {
             iCodeTop = addIcode(Icode_REG_IND1, iCodeTop);
             iCodeTop = addByte(index, iCodeTop);
@@ -1465,7 +1481,7 @@ public class Interpreter
             iCodeTop = addIcode(Icode_REG_IND4, iCodeTop);
             iCodeTop = addInt(index, iCodeTop);
         }
-        if (op > BASE_ICODE) {
+        if (validIcode(op)) {
             iCodeTop = addIcode(op, iCodeTop);
         } else {
             iCodeTop = addToken(op, iCodeTop);
@@ -1555,238 +1571,243 @@ public class Interpreter
         return best;
     }
 
-    private static String icodeToName(int icode)
+    private static String bytecodeName(int bytecode)
     {
-        if (Token.printICode) {
-            if (icode <= Token.LAST_BYTECODE_TOKEN) {
-                return Token.name(icode);
-            } else {
-                switch (icode) {
-                    case Icode_DUP:              return "DUP";
-                    case Icode_DUP2:             return "DUP2";
-                    case Icode_SWAP:             return "SWAP";
-                    case Icode_IFEQ_POP:         return "IFEQ_POP";
-                    case Icode_NAMEINC:          return "NAMEINC";
-                    case Icode_PROPINC:          return "PROPINC";
-                    case Icode_ELEMINC:          return "ELEMINC";
-                    case Icode_VARINC:           return "VARINC";
-                    case Icode_NAMEDEC:          return "NAMEDEC";
-                    case Icode_PROPDEC:          return "PROPDEC";
-                    case Icode_ELEMDEC:          return "ELEMDEC";
-                    case Icode_VARDEC:           return "VARDEC";
-                    case Icode_SCOPE:            return "SCOPE";
-                    case Icode_TYPEOFNAME:       return "TYPEOFNAME";
-                    case Icode_NAME_FAST_THIS:   return "NAME_FAST_THIS";
-                    case Icode_NAME_SLOW_THIS:   return "NAME_SLOW_THIS";
-                    case Icode_GETPROTO:         return "GETPROTO";
-                    case Icode_PUSH_PARENT:      return "PUSH_PARENT";
-                    case Icode_GETSCOPEPARENT:   return "GETSCOPEPARENT";
-                    case Icode_SETPROTO:         return "SETPROTO";
-                    case Icode_SETPARENT:        return "SETPARENT";
-                    case Icode_CLOSURE:          return "CLOSURE";
-                    case Icode_CALLSPECIAL:      return "CALLSPECIAL";
-                    case Icode_RETUNDEF:         return "RETUNDEF";
-                    case Icode_CATCH:            return "CATCH";
-                    case Icode_GOSUB:            return "GOSUB";
-                    case Icode_RETSUB:           return "RETSUB";
-                    case Icode_LINE:             return "LINE";
-                    case Icode_SHORTNUMBER:      return "SHORTNUMBER";
-                    case Icode_INTNUMBER:        return "INTNUMBER";
-                    case Icode_LITERAL_NEW:      return "LITERAL_NEW";
-                    case Icode_LITERAL_SET:      return "LITERAL_SET";
-                    case Icode_SPARE_ARRAYLIT:   return "SPARE_ARRAYLIT";
-                    case Icode_REG_IND_C0:       return "REG_IND_C0";
-                    case Icode_REG_IND_C1:       return "REG_IND_C1";
-                    case Icode_REG_IND_C2:       return "REG_IND_C2";
-                    case Icode_REG_IND_C3:       return "REG_IND_C3";
-                    case Icode_REG_IND_C4:       return "REG_IND_C4";
-                    case Icode_REG_IND_C5:       return "REG_IND_C5";
-                    case Icode_REG_IND1:         return "LOAD_IND1";
-                    case Icode_REG_IND2:         return "LOAD_IND2";
-                    case Icode_REG_IND4:         return "LOAD_IND4";
-                    case Icode_REG_STR_C0:       return "REG_STR_C0";
-                    case Icode_REG_STR_C1:       return "REG_STR_C1";
-                    case Icode_REG_STR_C2:       return "REG_STR_C2";
-                    case Icode_REG_STR_C3:       return "REG_STR_C3";
-                    case Icode_REG_STR1:         return "LOAD_STR1";
-                    case Icode_REG_STR2:         return "LOAD_STR2";
-                    case Icode_REG_STR4:         return "LOAD_STR4";
-                    case Icode_GETVAR1:      return "GETVAR1";
-                    case Icode_SETVAR1:      return "SETVAR1";
-                }
-            }
-            return "<UNKNOWN ICODE: "+icode+">";
+        if (!validBytecode(bytecode)) {
+            throw new IllegalArgumentException(String.valueOf(bytecode));
         }
-        return "";
+
+        if (!Token.printICode) {
+            return String.valueOf(bytecode);
+        }
+
+        if (validTokenCode(bytecode)) {
+            return Token.name(bytecode);
+        }
+
+        switch (bytecode) {
+          case Icode_DUP:              return "DUP";
+          case Icode_DUP2:             return "DUP2";
+          case Icode_SWAP:             return "SWAP";
+          case Icode_IFEQ_POP:         return "IFEQ_POP";
+          case Icode_NAMEINC:          return "NAMEINC";
+          case Icode_PROPINC:          return "PROPINC";
+          case Icode_ELEMINC:          return "ELEMINC";
+          case Icode_VARINC:           return "VARINC";
+          case Icode_NAMEDEC:          return "NAMEDEC";
+          case Icode_PROPDEC:          return "PROPDEC";
+          case Icode_ELEMDEC:          return "ELEMDEC";
+          case Icode_VARDEC:           return "VARDEC";
+          case Icode_SCOPE:            return "SCOPE";
+          case Icode_TYPEOFNAME:       return "TYPEOFNAME";
+          case Icode_NAME_FAST_THIS:   return "NAME_FAST_THIS";
+          case Icode_NAME_SLOW_THIS:   return "NAME_SLOW_THIS";
+          case Icode_GETPROTO:         return "GETPROTO";
+          case Icode_PUSH_PARENT:      return "PUSH_PARENT";
+          case Icode_GETSCOPEPARENT:   return "GETSCOPEPARENT";
+          case Icode_SETPROTO:         return "SETPROTO";
+          case Icode_SETPARENT:        return "SETPARENT";
+          case Icode_CLOSURE:          return "CLOSURE";
+          case Icode_CALLSPECIAL:      return "CALLSPECIAL";
+          case Icode_RETUNDEF:         return "RETUNDEF";
+          case Icode_CATCH:            return "CATCH";
+          case Icode_GOSUB:            return "GOSUB";
+          case Icode_RETSUB:           return "RETSUB";
+          case Icode_LINE:             return "LINE";
+          case Icode_SHORTNUMBER:      return "SHORTNUMBER";
+          case Icode_INTNUMBER:        return "INTNUMBER";
+          case Icode_LITERAL_NEW:      return "LITERAL_NEW";
+          case Icode_LITERAL_SET:      return "LITERAL_SET";
+          case Icode_SPARE_ARRAYLIT:   return "SPARE_ARRAYLIT";
+          case Icode_REG_IND_C0:       return "REG_IND_C0";
+          case Icode_REG_IND_C1:       return "REG_IND_C1";
+          case Icode_REG_IND_C2:       return "REG_IND_C2";
+          case Icode_REG_IND_C3:       return "REG_IND_C3";
+          case Icode_REG_IND_C4:       return "REG_IND_C4";
+          case Icode_REG_IND_C5:       return "REG_IND_C5";
+          case Icode_REG_IND1:         return "LOAD_IND1";
+          case Icode_REG_IND2:         return "LOAD_IND2";
+          case Icode_REG_IND4:         return "LOAD_IND4";
+          case Icode_REG_STR_C0:       return "REG_STR_C0";
+          case Icode_REG_STR_C1:       return "REG_STR_C1";
+          case Icode_REG_STR_C2:       return "REG_STR_C2";
+          case Icode_REG_STR_C3:       return "REG_STR_C3";
+          case Icode_REG_STR1:         return "LOAD_STR1";
+          case Icode_REG_STR2:         return "LOAD_STR2";
+          case Icode_REG_STR4:         return "LOAD_STR4";
+          case Icode_GETVAR1:          return "GETVAR1";
+          case Icode_SETVAR1:          return "SETVAR1";
+        }
+
+        // icode without name
+        throw new IllegalStateException(String.valueOf(bytecode));
     }
 
     private static void dumpICode(InterpreterData idata)
     {
-        if (Token.printICode) {
-            int iCodeLength = idata.itsICodeTop;
-            byte iCode[] = idata.itsICode;
-            String[] strings = idata.itsStringTable;
-            PrintStream out = System.out;
-            out.println("ICode dump, for " + idata.itsName
-                        + ", length = " + iCodeLength);
-            out.println("MaxStack = " + idata.itsMaxStack);
-
-            int indexReg = 0;
-            for (int pc = 0; pc < iCodeLength; ) {
-                out.flush();
-                out.print(" [" + pc + "] ");
-                int token = iCode[pc] & 0xFF;
-                int icodeLength = icodeTokenLength(token);
-                String tname = icodeToName(token);
-                int old_pc = pc;
-                ++pc;
-                switch (token) {
-                    default:
-                        if (icodeLength != 1) Kit.codeBug();
-                        out.println(tname);
-                        break;
-
-                    case Icode_GOSUB :
-                    case Token.GOTO :
-                    case Token.IFEQ :
-                    case Token.IFNE :
-                    case Icode_IFEQ_POP : {
-                        int newPC = pc + getShort(iCode, pc) - 1;
-                        out.println(tname + " " + newPC);
-                        pc += 2;
-                        break;
-                    }
-                    case Icode_CALLSPECIAL : {
-                        int callType = iCode[pc] & 0xFF;
-                        boolean isNew =  (iCode[pc + 1] != 0);
-                        int line = getShort(iCode, pc+2);
-                        out.println(tname+" "+callType+" "+isNew
-                                    +" "+indexReg+" "+line);
-                        pc += 4;
-                        break;
-                    }
-                    case Token.REGEXP :
-                        out.println(
-                            tname+" "+idata.itsRegExpLiterals[indexReg]);
-                        break;
-                    case Token.OBJECTLIT :
-                    case Icode_SPARE_ARRAYLIT :
-                        out.println(
-                            tname+" "+idata.literalIds[indexReg]);
-                        break;
-                    case Icode_CLOSURE :
-                        out.println(
-                            tname+" "+idata.itsNestedFunctions[indexReg]);
-                        break;
-                    case Token.NEW :
-                    case Token.CALL :
-                        out.println(tname+' '+indexReg);
-                        pc += 2;
-                        break;
-                    case Token.THROW : {
-                        int line = getShort(iCode, pc);
-                        out.println(tname + " : " + line);
-                        pc += 2;
-                        break;
-                    }
-                    case Icode_SHORTNUMBER : {
-                        int value = getShort(iCode, pc);
-                        out.println(tname + " " + value);
-                        pc += 2;
-                        break;
-                    }
-                    case Icode_INTNUMBER : {
-                        int value = getInt(iCode, pc);
-                        out.println(tname + " " + value);
-                        pc += 4;
-                        break;
-                    }
-                    case Token.NUMBER : {
-                        double value = idata.itsDoubleTable[indexReg];
-                        out.println(tname + " " + value);
-                        pc += 2;
-                        break;
-                    }
-                    case Icode_LINE : {
-                        int line = getShort(iCode, pc);
-                        out.println(tname + " : " + line);
-                        pc += 2;
-                        break;
-                    }
-                    case Icode_REG_STR1: {
-                        String str = strings[0xFF & iCode[pc]];
-                        out.println(tname + " \"" + str + '"');
-                        ++pc;
-                        break;
-                    }
-                    case Icode_REG_STR2: {
-                        String str = strings[getIndex(iCode, pc)];
-                        out.println(tname + " \"" + str + '"');
-                        pc += 2;
-                        break;
-                    }
-                    case Icode_REG_STR4: {
-                        String str = strings[getInt(iCode, pc)];
-                        out.println(tname + " \"" + str + '"');
-                        pc += 4;
-                        break;
-                    }
-                    case Icode_REG_IND1: {
-                        indexReg = 0xFF & iCode[pc];
-                        out.println(tname+" "+indexReg);
-                        ++pc;
-                        break;
-                    }
-                    case Icode_REG_IND2: {
-                        indexReg = getIndex(iCode, pc);
-                        out.println(tname+" "+indexReg);
-                        pc += 2;
-                        break;
-                    }
-                    case Icode_REG_IND4: {
-                        indexReg = getInt(iCode, pc);
-                        out.println(tname+" "+indexReg);
-                        pc += 4;
-                        break;
-                    }
-                    case Icode_GETVAR1:
-                    case Icode_SETVAR1:
-                        indexReg = iCode[pc];
-                        ++pc;
-                        out.println(tname+" "+indexReg);
-                        break;
-                }
-                if (old_pc + icodeLength != pc) Kit.codeBug();
-            }
-
-            int[] table = idata.itsExceptionTable;
-            if (table != null) {
-                out.println("Exception handlers: "
-                             +table.length / EXCEPTION_SLOT_SIZE);
-                for (int i = 0; i != table.length;
-                     i += EXCEPTION_SLOT_SIZE)
-                {
-                    int tryStart       = table[i + EXCEPTION_TRY_START_SLOT];
-                    int tryEnd         = table[i + EXCEPTION_TRY_END_SLOT];
-                    int catchStart     = table[i + EXCEPTION_CATCH_SLOT];
-                    int finallyStart   = table[i + EXCEPTION_FINALLY_SLOT];
-                    int withDepth      = table[i + EXCEPTION_WITH_DEPTH_SLOT];
-                    int exceptionLocal = table[i + EXCEPTION_LOCAL_SLOT];
-
-                    out.println(" tryStart="+tryStart+" tryEnd="+tryEnd
-                                +" catchStart="+catchStart
-                                +" finallyStart="+finallyStart
-                                +" withDepth="+withDepth
-                                +" exceptionLocal="+exceptionLocal);
-                }
-            }
-            out.flush();
+        if (!Token.printICode) {
+            return;
         }
+
+        int iCodeLength = idata.itsICodeTop;
+        byte iCode[] = idata.itsICode;
+        String[] strings = idata.itsStringTable;
+        PrintStream out = System.out;
+        out.println("ICode dump, for " + idata.itsName
+                    + ", length = " + iCodeLength);
+        out.println("MaxStack = " + idata.itsMaxStack);
+
+        int indexReg = 0;
+        for (int pc = 0; pc < iCodeLength; ) {
+            out.flush();
+            out.print(" [" + pc + "] ");
+            int token = iCode[pc];
+            int icodeLength = bytecodeSpan(token);
+            String tname = bytecodeName(token);
+            int old_pc = pc;
+            ++pc;
+            switch (token) {
+              default:
+                if (icodeLength != 1) Kit.codeBug();
+                out.println(tname);
+                break;
+
+              case Icode_GOSUB :
+              case Token.GOTO :
+              case Token.IFEQ :
+              case Token.IFNE :
+              case Icode_IFEQ_POP : {
+                int newPC = pc + getShort(iCode, pc) - 1;
+                out.println(tname + " " + newPC);
+                pc += 2;
+                break;
+              }
+              case Icode_CALLSPECIAL : {
+                int callType = iCode[pc] & 0xFF;
+                boolean isNew =  (iCode[pc + 1] != 0);
+                int line = getShort(iCode, pc+2);
+                out.println(tname+" "+callType+" "+isNew+" "+indexReg+" "+line);
+                pc += 4;
+                break;
+              }
+              case Token.REGEXP :
+                out.println(tname+" "+idata.itsRegExpLiterals[indexReg]);
+                break;
+              case Token.OBJECTLIT :
+              case Icode_SPARE_ARRAYLIT :
+                out.println(tname+" "+idata.literalIds[indexReg]);
+                break;
+              case Icode_CLOSURE :
+                out.println(tname+" "+idata.itsNestedFunctions[indexReg]);
+                break;
+              case Token.NEW :
+              case Token.CALL :
+                out.println(tname+' '+indexReg);
+                pc += 2;
+                break;
+              case Token.THROW : {
+                int line = getShort(iCode, pc);
+                out.println(tname + " : " + line);
+                pc += 2;
+                break;
+              }
+              case Icode_SHORTNUMBER : {
+                int value = getShort(iCode, pc);
+                out.println(tname + " " + value);
+                pc += 2;
+                break;
+              }
+              case Icode_INTNUMBER : {
+                int value = getInt(iCode, pc);
+                out.println(tname + " " + value);
+                pc += 4;
+                break;
+              }
+              case Token.NUMBER : {
+                double value = idata.itsDoubleTable[indexReg];
+                out.println(tname + " " + value);
+                pc += 2;
+                break;
+              }
+              case Icode_LINE : {
+                int line = getShort(iCode, pc);
+                out.println(tname + " : " + line);
+                pc += 2;
+                break;
+              }
+              case Icode_REG_STR1: {
+                String str = strings[0xFF & iCode[pc]];
+                out.println(tname + " \"" + str + '"');
+                ++pc;
+                break;
+              }
+              case Icode_REG_STR2: {
+                String str = strings[getIndex(iCode, pc)];
+                out.println(tname + " \"" + str + '"');
+                pc += 2;
+                break;
+              }
+              case Icode_REG_STR4: {
+                String str = strings[getInt(iCode, pc)];
+                out.println(tname + " \"" + str + '"');
+                pc += 4;
+                break;
+              }
+              case Icode_REG_IND1: {
+                indexReg = 0xFF & iCode[pc];
+                out.println(tname+" "+indexReg);
+                ++pc;
+                break;
+              }
+              case Icode_REG_IND2: {
+                indexReg = getIndex(iCode, pc);
+                out.println(tname+" "+indexReg);
+                pc += 2;
+                break;
+              }
+              case Icode_REG_IND4: {
+                indexReg = getInt(iCode, pc);
+                out.println(tname+" "+indexReg);
+                pc += 4;
+                break;
+              }
+              case Icode_GETVAR1:
+              case Icode_SETVAR1:
+                indexReg = iCode[pc];
+                out.println(tname+" "+indexReg);
+                ++pc;
+                break;
+            }
+            if (old_pc + icodeLength != pc) Kit.codeBug();
+        }
+
+        int[] table = idata.itsExceptionTable;
+        if (table != null) {
+            out.println("Exception handlers: "
+                         +table.length / EXCEPTION_SLOT_SIZE);
+            for (int i = 0; i != table.length;
+                 i += EXCEPTION_SLOT_SIZE)
+            {
+                int tryStart       = table[i + EXCEPTION_TRY_START_SLOT];
+                int tryEnd         = table[i + EXCEPTION_TRY_END_SLOT];
+                int catchStart     = table[i + EXCEPTION_CATCH_SLOT];
+                int finallyStart   = table[i + EXCEPTION_FINALLY_SLOT];
+                int withDepth      = table[i + EXCEPTION_WITH_DEPTH_SLOT];
+                int exceptionLocal = table[i + EXCEPTION_LOCAL_SLOT];
+
+                out.println(" tryStart="+tryStart+" tryEnd="+tryEnd
+                            +" catchStart="+catchStart
+                            +" finallyStart="+finallyStart
+                            +" withDepth="+withDepth
+                            +" exceptionLocal="+exceptionLocal);
+            }
+        }
+        out.flush();
     }
 
-    private static int icodeTokenLength(int op)
+    private static int bytecodeSpan(int bytecode)
     {
-        switch (op) {
+        switch (bytecode) {
             case Token.THROW :
                 // source line
                 return 1 + 2;
@@ -1851,8 +1872,7 @@ public class Interpreter
                 // line number
                 return 1 + 2;
         }
-        if (!(Token.FIRST_BYTECODE_TOKEN <= op && op <= MAX_ICODE))
-            throw Kit.codeBug();
+        if (!validBytecode(bytecode)) throw Kit.codeBug();
         return 1;
     }
 
@@ -1863,14 +1883,14 @@ public class Interpreter
         int iCodeLength = data.itsICodeTop;
         byte[] iCode = data.itsICode;
         for (int pc = 0; pc != iCodeLength;) {
-            int icodeToken = iCode[pc] & 0xFF;
-            int icodeLength = icodeTokenLength(icodeToken);
-            if (icodeToken == Icode_LINE) {
-                if (icodeLength != 3) Kit.codeBug();
+            int bytecode = iCode[pc];
+            int span = bytecodeSpan(bytecode);
+            if (bytecode == Icode_LINE) {
+                if (span != 3) Kit.codeBug();
                 int line = getShort(iCode, pc + 1);
                 presentLines.put(line, 0);
             }
-            pc += icodeLength;
+            pc += span;
         }
 
         return presentLines.getKeys();
@@ -2442,7 +2462,8 @@ switch (op) {
     case Icode_PROPDEC : {
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.postIncrDecr(lhs, stringReg, scope, op == Icode_PROPINC);
+        stack[stackTop] = ScriptRuntime.postIncrDecr(lhs, stringReg, scope,
+                                                     op == Icode_PROPINC);
         continue Loop;
     }
     case Icode_ELEMINC :
@@ -2452,7 +2473,8 @@ switch (op) {
         --stackTop;
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.postIncrDecrElem(lhs, rhs, scope, op == Icode_ELEMINC);
+        stack[stackTop] = ScriptRuntime.postIncrDecrElem(lhs, rhs, scope,
+                                                         op == Icode_ELEMINC);
         continue Loop;
     }
     case Token.LOCAL_SAVE :
@@ -2608,7 +2630,8 @@ switch (op) {
         continue Loop;
     case Icode_NAMEINC :
     case Icode_NAMEDEC :
-        stack[++stackTop] = ScriptRuntime.postIncrDecr(scope, stringReg, op == Icode_NAMEINC);
+        stack[++stackTop] = ScriptRuntime.postIncrDecr(scope, stringReg,
+                                                       op == Icode_NAMEINC);
         continue Loop;
     case Icode_SETVAR1:
         indexReg = iCode[pc++];
@@ -2699,7 +2722,8 @@ switch (op) {
         --withDepth;
         continue Loop;
     case Token.CATCH_SCOPE :
-        stack[stackTop] = ScriptRuntime.newCatchScope(stringReg, stack[stackTop]);
+        stack[stackTop] = ScriptRuntime.newCatchScope(stringReg,
+                                                      stack[stackTop]);
         continue Loop;
     case Token.ENUM_INIT : {
         Object lhs = stack[stackTop];
@@ -3319,7 +3343,7 @@ switch (op) {
     private static int getJavaCatchPC(byte[] iCode)
     {
         int pc = iCode.length - 1;
-        if ((iCode[pc] & 0xFF) != Icode_CATCH) Kit.codeBug();
+        if (iCode[pc] != Icode_CATCH) Kit.codeBug();
         return pc;
     }
 
