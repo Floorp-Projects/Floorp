@@ -2549,7 +2549,8 @@ NET_GetURL (URL_Struct *URL_s,
 		URL_s->allow_content_change = TRUE;
     /* check for the url in the cache
      */
-    cache_method = NET_FindURLInCache(URL_s, window_id);
+	if (type != FILE_TYPE_URL)
+		cache_method = NET_FindURLInCache(URL_s, window_id);
 
 	if (!cache_method)
 	  {
