@@ -384,7 +384,7 @@ PRProcess * _PR_CreateOS2Process(
        goto errorExit;
     }
  
-    if (ulAppType & FAPPTYP_WINDOWAPI) {
+    if ((ulAppType & FAPPTYP_WINDOWAPI) == FAPPTYP_WINDOWAPI) {
         startData.SessionType = SSF_TYPE_PM;
     }
     else if (ulAppType & FAPPTYP_WINDOWCOMPAT) {
@@ -414,7 +414,7 @@ PRProcess * _PR_CreateOS2Process(
     startData.PgmName = pszEXEName;
  
     startData.Length = sizeof(startData);
-    startData.Related = SSF_RELATED_CHILD;
+    startData.Related = SSF_RELATED_INDEPENDENT;
     startData.ObjectBuffer = pszObjectBuffer;
     startData.ObjectBuffLen = CCHMAXPATH;
     startData.Environment = envBlock;
