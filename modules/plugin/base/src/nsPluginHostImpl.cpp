@@ -177,6 +177,10 @@
 #endif
 #endif
 
+#ifdef XP_OS2
+#include "nsILegacyPluginWrapperOS2.h"
+#endif 
+
 // this is the name of the directory which will be created
 // to cache temporary files.
 #define kPluginTmpDirName NS_LITERAL_CSTRING("plugtmp")
@@ -4569,7 +4573,11 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
 
       // need to get the plugin factory from this plugin.
       nsFactoryProc nsGetFactory = nsnull;
+#ifdef XP_OS2
+      nsGetFactory = (nsFactoryProc) PR_FindSymbol(pluginTag->mLibrary, "_NSGetFactory");
+#else
       nsGetFactory = (nsFactoryProc) PR_FindSymbol(pluginTag->mLibrary, "NSGetFactory");
+#endif
       if(nsGetFactory != nsnull && IsCompatibleExecutable(pluginTag->mFullPath))
       {
 // XPCOM-style plugins (or at least the OJI one) cause crashes on
@@ -4582,6 +4590,25 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
           plugin->Initialize();
 #endif
       }
+#ifdef XP_OS2
+      // on OS2, first check if this might be legacy XPCOM module.
+      else if (PR_FindSymbol(pluginTag->mLibrary, "NSGetFactory") &&
+               IsCompatibleExecutable(pluginTag->mFullPath))
+      {
+        // Possibly a legacy XPCOM module. We'll need to create a calling
+        // vtable/calling convention wrapper for it.
+        nsCOMPtr<nsILegacyPluginWrapperOS2> wrapper =
+                       do_GetService(NS_LEGACY_PLUGIN_WRAPPER_CONTRACTID, &rv);
+        if (NS_SUCCEEDED(rv))
+        {
+          rv = wrapper->GetFactory(serviceManager, kPluginCID, nsnull, nsnull,
+                                   pluginTag->mLibrary, &pluginTag->mEntryPoint);
+          plugin = pluginTag->mEntryPoint;
+          if (plugin != NULL)
+            plugin->Initialize();
+        }
+      }
+#endif
       else
       {
        // Now lets try to get the entry point from a 4.x plugin
