@@ -1,0 +1,9 @@
+#include "nsISupports.idl"
+#include "nsIComponentManager.idl"
+
+[scriptable, uuid(d4867a7e-1dd1-11b2-a009-b111ab5d7639)]
+
+interface bcIBlackConnectInit : nsISupports
+{
+    void initComponentManager(in nsIComponentManager cm);
+};

@@ -24,10 +24,12 @@
 DEPTH = ..\..\..
 
 DIRS=   \
+	xpidl \
         loader \
 	src \
 	classes \
-	test \
+#	test \
+	components \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

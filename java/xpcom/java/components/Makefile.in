@@ -20,13 +20,36 @@
 # Contributor(s):
 # Igor Kushnirskiy <idk@eng.sun.com>
 #
-DEPTH   = ../../..
-topsrcdir       = @top_srcdir@
-VPATH           = @srcdir@
-srcdir          = @srcdir@
+
+
+DEPTH		= ../../../..
+topsrcdir	= ../../../..
+srcdir		= .
+VPATH		= .
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS= 	xpidl src  loader  classes components
+MODULE		= blackConnectInit
+LIBRARY_NAME    = blackConnectInit
+IS_COMPONENT    = 1
+XPIDL_MODULE	= blackConnectInit
+XPIDLSRCS	= bcIBlackConnectInit.idl
+CPPSRCS         = bcBlackConnectInit.cpp
 
 include $(topsrcdir)/config/rules.mk
+
+COMPONENT=bcBlackConnectInit
+CLASSES=bcIBlackConnectInit.class bcBlackConnectInit.class 
+
+$(COMPONENT).jar.comp: manifest $(CLASSES)
+	$(JDKHOME)/bin/jar cvfm $(COMPONENT).jar.comp  manifest *.class
+.java.class:
+	$(JDKHOME)/bin/javac -classpath .:../classes $<
+install-component: $(COMPONENT).jar.comp $(COMPONENT).jar.info
+	cp  $(COMPONENT).jar.comp $(COMPONENT).jar.info $(DEPTH)/dist/bin/components/
+clobber-java:
+	rm -f *.class *.jar
+clobber:: clobber-java
+clobber_all:: clobber-java
+install:: install-component
+
