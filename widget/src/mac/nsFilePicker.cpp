@@ -153,31 +153,26 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
   nsString filterList;
   char *filterBuffer = ToNewCString(filterList);
     
-  FSSpec theFile;
+  nsCOMPtr<nsILocalFileMac> theFile(do_CreateInstance("@mozilla.org/file/local;1"));
+  if (!theFile)
+    return NS_ERROR_FAILURE;
+    
   PRInt16 userClicksOK = returnCancel;
   
   // XXX Ignore the filter list for now....
   
   if (mMode == modeOpen || mMode == modeOpenMultiple)
-    userClicksOK = GetLocalFile(mTitle, &theFile);
+    userClicksOK = GetLocalFile(mTitle, theFile);
   else if (mMode == modeSave)
-    userClicksOK = PutLocalFile(mTitle, mDefault, &theFile);
+    userClicksOK = PutLocalFile(mTitle, mDefault, theFile);
   else if (mMode == modeGetFolder)
-    userClicksOK = GetLocalFolder(mTitle, &theFile);
+    userClicksOK = GetLocalFolder(mTitle, theFile);
 
   // Clean up filter buffers
   delete[] filterBuffer;
 
   if (userClicksOK == returnOK || userClicksOK == returnReplace)
-  {
-    nsCOMPtr<nsILocalFile>    localFile(do_CreateInstance("@mozilla.org/file/local;1"));
-	  nsCOMPtr<nsILocalFileMac> macFile(do_QueryInterface(localFile));
-
-    nsresult rv = macFile->InitWithFSSpec(&theFile);
-    if (NS_FAILED(rv)) return rv;
-
-    mFile = do_QueryInterface(macFile);
-  }
+    mFile = theFile;
   
   *retval = userClicksOK;
   return NS_OK;
@@ -357,12 +352,14 @@ nsFilePicker :: FileDialogFilterProc ( AEDesc* theItem, void* theInfo,
 // GetFile
 //
 // Use NavServices to do a GetFile. Returns PR_TRUE if the user presses OK in the dialog. If
-// they do so, the selected file is in the FSSpec.
+// they do so, ioLocalFile is initialized to that file.
 //
 //-------------------------------------------------------------------------
 PRInt16
-nsFilePicker::GetLocalFile(const nsString & inTitle, /* filter list here later */ FSSpec* outSpec)
+nsFilePicker::GetLocalFile(const nsString& inTitle, nsILocalFileMac* ioLocalFile)
 {
+  NS_ENSURE_ARG_POINTER(ioLocalFile);
+
   PRInt16 retVal = returnCancel;
   NavEventUPP eventProc = NewNavEventUPP(FileDialogEventHandlerProc);  // doesn't really matter if this fails
   NavObjectFilterUPP filterProc = NewNavObjectFilterUPP(FileDialogFilterProc);  // doesn't really matter if this fails
@@ -412,27 +409,14 @@ nsFilePicker::GetLocalFile(const nsString & inTitle, /* filter list here later *
         AEKeyword   theKeyword;
         DescType    actualType;
         Size        actualSize;
-        FSSpec      theFSSpec;
         FSRef       theFSRef;
         
           // Get the FSRef for the file to be opened (or directory in case of a package)
         anErr = ::AEGetNthPtr(&(reply.selection), 1, typeFSRef, &theKeyword, &actualType,
                               &theFSRef, sizeof(theFSRef), &actualSize);
-        if (anErr == noErr) {
-          // Convert to FSSpec
-          anErr = ::FSGetCatalogInfo(
-                                     &theFSRef,
-                                     0,
-                                     NULL,
-                                     NULL,
-                                     &theFSSpec,
-                                     NULL);
-         
-          if (anErr == noErr) {
-            *outSpec = theFSSpec;	// Return the FSSpec
+        if (anErr == noErr && NS_SUCCEEDED(ioLocalFile->InitWithFSRef(&theFSRef))) {
             retVal = returnOK;
           }
-        }
         // Some housekeeping for Nav Services 
         ::NavDisposeReply(&reply);
       }
@@ -458,13 +442,15 @@ nsFilePicker::GetLocalFile(const nsString & inTitle, /* filter list here later *
 //
 // GetFolder
 //
-// Use NavServices to do a PutFile. Returns PR_TRUE if the user presses OK in the dialog. If
-// they do so, the folder location is in the FSSpec.
+// Use NavServices to do a GetFolder. Returns PR_TRUE if the user presses OK in the dialog. If
+// they do so, ioLocalFile is initialized to be the chosen folder.
 //
 //-------------------------------------------------------------------------
 PRInt16
-nsFilePicker::GetLocalFolder(const nsString & inTitle, FSSpec* outSpec)
+nsFilePicker::GetLocalFolder(const nsString& inTitle, nsILocalFileMac* ioLocalFile)
 {
+  NS_ENSURE_ARG_POINTER(ioLocalFile);
+  
   PRInt16 retVal = returnCancel;
   NavEventUPP eventProc = NewNavEventUPP(FileDialogEventHandlerProc);  // doesn't really matter if this fails
   NavDialogRef dialog;
@@ -503,13 +489,12 @@ nsFilePicker::GetLocalFolder(const nsString & inTitle, FSSpec* outSpec)
         AEKeyword   theKeyword;
         DescType    actualType;
         Size        actualSize;
-        FSSpec      theFSSpec;
+        FSRef       theFSRef;
          
-        // Get the FSSpec for the selected folder
-        anErr = ::AEGetNthPtr(&(reply.selection), 1, typeFSS, &theKeyword, &actualType,
-                              &theFSSpec, sizeof(theFSSpec), &actualSize);
-        if (anErr == noErr) {
-          *outSpec = theFSSpec;	// Return the FSSpec
+        // Get the FSRef for the selected folder
+        anErr = ::AEGetNthPtr(&(reply.selection), 1, typeFSRef, &theKeyword, &actualType,
+                              &theFSRef, sizeof(theFSRef), &actualSize);
+        if (anErr == noErr && NS_SUCCEEDED(ioLocalFile->InitWithFSRef(&theFSRef))) {
           retVal = returnOK;
         }
         // Some housekeeping for Nav Services 
@@ -530,8 +515,10 @@ nsFilePicker::GetLocalFolder(const nsString & inTitle, FSSpec* outSpec)
 } // GetFolder
 
 PRInt16
-nsFilePicker::PutLocalFile(const nsString & inTitle, const nsString & inDefaultName, FSSpec* outFileSpec)
+nsFilePicker::PutLocalFile(const nsString& inTitle, const nsString& inDefaultName, nsILocalFileMac* ioLocalFile)
 {
+  NS_ENSURE_ARG_POINTER(ioLocalFile);
+
   PRInt16 retVal = returnCancel;
   NavEventUPP eventProc = NewNavEventUPP(FileDialogEventHandlerProc);  // doesn't really matter if this fails
   OSType typeToSave = 'TEXT';
@@ -588,64 +575,27 @@ nsFilePicker::PutLocalFile(const nsString & inTitle, const nsString & inDefaultN
         AEKeyword   theKeyword;
         DescType    actualType;
         Size        actualSize;
-        FSSpec      theFSSpec;
         FSRef       theFSRef;
-        FSCatalogInfo catalogInfo;
 
-        // Get the FSRef for the directory where the file to be saved
+        // Create a CFURL of the file to be saved. The impl of InitWithCFURL in
+        // nsLocalFileMac.cpp handles truncating a too-long file name since only
+        // it has that problem.
         anErr = ::AEGetNthPtr(&(reply.selection), 1, typeFSRef, &theKeyword, &actualType,
                               &theFSRef, sizeof(theFSRef), &actualSize);
         if (anErr == noErr) {
-          // Convert to FSSpec, also get nodeID.
-          anErr = ::FSGetCatalogInfo(
-                                     &theFSRef,
-                                     kFSCatInfoNodeID,
-                                     &catalogInfo,
-                                     NULL,
-                                     &theFSSpec,
-                                     NULL);
-          if (anErr == noErr) {
-            theFSSpec.parID = catalogInfo.nodeID;
-            TextEncoding theEncoding;
-            anErr = ::UpgradeScriptInfoToTextEncoding(
-                                                      smSystemScript, 
-                                                      kTextLanguageDontCare,
-                                                      kTextRegionDontCare,
-                                                      NULL,
-                                                      &theEncoding);
-            if (anErr != noErr)
-              theEncoding = kTextEncodingMacRoman;
-
-            // Until we switch to the HFS+ APIs for Mac file system calls
-            // reduce the name to a max of 31 characters
-            // Conditionalize for non mach-o builds since XP_MACOSX target
-            // doesn't currently link against nsLocalFileMac for NS_TruncNodeName
-            char  origName[256];
-            char  truncBuf[32];
-            ::CFStringGetCString(reply.saveFileName, origName, 256, theEncoding);
-#ifndef XP_MACOSX
-            const char * truncName = NS_TruncNodeName(origName, truncBuf);
-            PRUint32 truncNameLen = strlen(truncName);
-            if (truncNameLen)
-              BlockMoveData(truncName, &theFSSpec.name[1], truncNameLen);
-            theFSSpec.name[0] = truncNameLen;
-#else
-            PRUint32 origNameLen = strlen(origName);
-            // Just lop it off at 63 characters for now
-            if (origNameLen > 63)
-              origNameLen = 63;
-            if (origNameLen)
-              BlockMoveData(origName, &theFSSpec.name[1], origNameLen);
-            theFSSpec.name[0] = origNameLen;
-#endif            
-            *outFileSpec = theFSSpec;	// Return the FSSpec
-
-            if (reply.replacing)
-              retVal = returnReplace;
-            else
-              retVal = returnOK;
+          CFURLRef fileURL;
+          CFURLRef parentURL = ::CFURLCreateFromFSRef(NULL, &theFSRef);
+          if (parentURL) {
+            fileURL = ::CFURLCreateCopyAppendingPathComponent(NULL, parentURL, reply.saveFileName, PR_FALSE);
+            if (fileURL) {
+              if (NS_SUCCEEDED(ioLocalFile->InitWithCFURL(fileURL)))
+                  retVal = reply.replacing ? returnReplace : returnOK;
+              ::CFRelease(fileURL);
+            }
+            ::CFRelease(parentURL);
           }
         }  			  
+
         // Some housekeeping for Nav Services 
         ::NavCompleteSave(&reply, kNavTranslateInPlace);
         ::NavDisposeReply(&reply);
@@ -677,7 +627,7 @@ nsFilePicker::PutLocalFile(const nsString & inTitle, const nsString & inDefaultN
 //
 //-------------------------------------------------------------------------
 PRInt16
-nsFilePicker::GetLocalFile(const nsString & inTitle, /* filter list here later */ FSSpec* outSpec)
+nsFilePicker::GetLocalFile(const nsString& inTitle, nsILocalFileMac* ioLocalFile)
 {
  	PRInt16 retVal = returnCancel;
 	NavReplyRecord reply;
@@ -730,7 +680,7 @@ nsFilePicker::GetLocalFile(const nsString & inTitle, /* filter list here later *
 			
 			if (anErr == noErr)
 			{
-				*outSpec = theFSSpec;	// Return the FSSpec
+        if (NS_SUCCEEDED(ioLocalFile->InitWithFSSpec(&theFSSpec)))
 				retVal = returnOK;
 				
 				// Some housekeeping for Nav Services 
@@ -757,7 +707,7 @@ nsFilePicker::GetLocalFile(const nsString & inTitle, /* filter list here later *
 //
 //-------------------------------------------------------------------------
 PRInt16
-nsFilePicker::GetLocalFolder(const nsString & inTitle, FSSpec* outSpec)
+nsFilePicker::GetLocalFolder(const nsString& inTitle, nsILocalFileMac* ioLocalFile)
 {
  	PRInt16 retVal = returnCancel;
 	NavReplyRecord reply;
@@ -798,7 +748,7 @@ nsFilePicker::GetLocalFolder(const nsString & inTitle, FSSpec* outSpec)
 				&theFSSpec, sizeof(theFSSpec), &actualSize);
 			
 			if (anErr == noErr) {
-				*outSpec = theFSSpec;	// Return the FSSpec
+        if (NS_SUCCEEDED(ioLocalFile->InitWithFSSpec(&theFSSpec)))
 				retVal = returnOK;
 				
 				// Some housekeeping for Nav Services 
@@ -815,7 +765,7 @@ nsFilePicker::GetLocalFolder(const nsString & inTitle, FSSpec* outSpec)
 } // GetFolder
 
 PRInt16
-nsFilePicker::PutLocalFile(const nsString & inTitle, const nsString & inDefaultName, FSSpec* outFileSpec)
+nsFilePicker::PutLocalFile(const nsString& inTitle, const nsString& inDefaultName, nsILocalFileMac* ioLocalFile)
 {
  	PRInt16 retVal = returnCancel;
 	NavReplyRecord reply;
@@ -875,12 +825,8 @@ nsFilePicker::PutLocalFile(const nsString & inTitle, const nsString & inDefaultN
 				&theFSSpec, sizeof(theFSSpec), &actualSize);
 			
 			if (anErr == noErr) {
-				*outFileSpec = theFSSpec;	// Return the FSSpec
-				
-				if (reply.replacing)
-					retVal = returnReplace;
-				else
-					retVal = returnOK;
+        if (NS_SUCCEEDED(ioLocalFile->InitWithFSSpec(&theFSSpec)))
+          retVal = reply.replacing ? returnReplace : returnOK;
 				
 				// Some housekeeping for Nav Services 
 				::NavCompleteSave(&reply, kNavTranslateInPlace);

@@ -2988,9 +2988,9 @@ NS_IMETHODIMP nsLocalFile::InitWithCFURL(CFURLRef aCFURL)
       // Get the FSRef from the parent and the FSSpec from that
       FSRef parentFSRef;
       FSSpec parentFSSpec;
-      if (::CFURLGetFSRef(parentURL, &parentFSRef) == noErr &&
-          ::FSGetCatalogInfo(&parentFSRef, kFSCatInfoNone,
-                             nsnull, nsnull, &parentFSSpec, nsnull) == noErr)
+      if ((::CFURLGetFSRef(parentURL, &parentFSRef) == PR_TRUE) &&
+          (::FSGetCatalogInfo(&parentFSRef, kFSCatInfoNone,
+                             nsnull, nsnull, &parentFSSpec, nsnull) == noErr))
       {
         // Get the leaf name of the file and turn it into a string HFS can use.
         CFStringRef fileNameRef = ::CFURLCopyLastPathComponent(aCFURL);

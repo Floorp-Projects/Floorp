@@ -31,6 +31,8 @@
 #include "nsILocalFile.h"
 #include <Navigation.h>
 
+class nsILocalFileMac;
+
 #define	kMaxTypeListCount	10
 #define kMaxTypesPerFilter	9
 
@@ -68,9 +70,10 @@ protected:
   NS_IMETHOD            OnCancel();
 
     // actual implementations of get/put dialogs using NavServices
-  PRInt16 PutLocalFile(const nsString & inTitle, const nsString & inDefaultName, FSSpec* outFileSpec);
-  PRInt16 GetLocalFile(const nsString & inTitle, FSSpec* outFileSpec);
-  PRInt16 GetLocalFolder(const nsString & inTitle, FSSpec* outFileSpec);
+  PRInt16 GetLocalFile(const nsString& inTitle, nsILocalFileMac* ioLocalFile);
+  PRInt16 GetLocalFolder(const nsString& inTitle, nsILocalFileMac* ioLocalFile);
+  PRInt16 PutLocalFile(const nsString& inTitle, const nsString& inDefaultName, nsILocalFileMac* ioLocalFile);
+  
   void MapFilterToFileTypes ( ) ;
 #if TARGET_CARBON
   void SetupFormatMenuItems (NavDialogCreationOptions* dialogCreateOptions) ;
