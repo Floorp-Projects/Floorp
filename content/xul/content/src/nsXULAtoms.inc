@@ -31,6 +31,8 @@
  */
 
 NS_XULATOM(action);
+NS_XULATOM(binding);
+NS_XULATOM(bindings);
 NS_XULATOM(child);
 NS_XULATOM(conditions);
 NS_XULATOM(container);
