@@ -81,6 +81,7 @@ template <class CharT>
 class nsBufferHandle
   {
     public:
+      nsBufferHandle() { }
       nsBufferHandle( CharT* aDataStart, CharT* aDataEnd ) : mDataStart(aDataStart), mDataEnd(aDataEnd) { }
 
       void          DataStart( CharT* aNewDataStart )       { mDataStart = aNewDataStart; }
@@ -102,10 +103,15 @@ template <class CharT>
 class nsConstBufferHandle
   {
     public:
+      nsConstBufferHandle() { }
       nsConstBufferHandle( const CharT* aDataStart, const CharT* aDataEnd ) : mDataStart(aDataStart), mDataEnd(aDataEnd) { }
 
+      void          DataStart( const CharT* aNewDataStart ) { mDataStart = aNewDataStart; }
       const CharT*  DataStart() const                       { return mDataStart; }
+
+      void          DataEnd( const CharT* aNewDataEnd )     { mDataEnd = aNewDataEnd; }
       const CharT*  DataEnd() const                         { return mDataEnd; }
+
       ptrdiff_t     DataLength() const                      { return mDataEnd - mDataStart; }
 
     protected:
