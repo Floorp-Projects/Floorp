@@ -41,6 +41,7 @@
 #include "nsIXBLService.h"
 #include "nsIInputStream.h"
 #include "nsHashtable.h"
+#include "nsDoubleHashtable.h"
 #include "nsIURI.h"
 #include "nsIURL.h"
 #include "nsIChannel.h"
@@ -215,6 +216,142 @@ nsAnonymousContentList::GetInsertionPointAt(PRUint32 i, nsIXBLInsertionPoint** a
   return NS_OK;
 }
 
+// nsDoubleHashtable stuff to create a generic string -> nsISupports
+// table
+
+class StringToObjectEntry : public PLDHashCStringEntry {
+public:
+  StringToObjectEntry(const void* aKey) : PLDHashCStringEntry(aKey) {
+    MOZ_COUNT_CTOR(StringToObjectEntry);
+  }
+  ~StringToObjectEntry() {
+    MOZ_COUNT_DTOR(StringToObjectEntry);
+  }
+
+  nsISupports* GetValue() { return mValue; }
+  void SetValue(nsISupports* aValue) { mValue = aValue; }
+
+private:
+  nsCOMPtr<nsISupports> mValue;
+};
+
+DECL_DHASH_WRAPPER(StringToObjectTable, StringToObjectEntry, const nsACString&)
+DHASH_WRAPPER(StringToObjectTable, StringToObjectEntry, const nsACString&)
+
+//
+// Generic pldhash table stuff for mapping one nsISupports to another
+//
+// These values are never null - a null value implies that this
+// whole key should be removed (See SetOrRemoveObject)
+class ObjectEntry : public PLDHashEntryHdr
+{
+public:
+
+  // note that these are allocated within the PLDHashTable, but we
+  // want to keep track of them anyway
+  ObjectEntry() { MOZ_COUNT_CTOR(ObjectEntry); }
+  ~ObjectEntry() { MOZ_COUNT_DTOR(ObjectEntry); }
+  
+  nsISupports* GetValue() { return mValue; }
+  nsISupports* GetKey() { return mKey; }
+  void SetValue(nsISupports* aValue) { mValue = aValue; }
+  void SetKey(nsISupports* aKey) { mKey = aKey; }
+  
+private:
+  nsCOMPtr<nsISupports> mKey;
+  nsCOMPtr<nsISupports> mValue;
+};
+
+PR_STATIC_CALLBACK(void)
+ClearObjectEntry(PLDHashTable* table, PLDHashEntryHdr *entry)
+{
+  ObjectEntry* objEntry = NS_STATIC_CAST(ObjectEntry*, entry);
+  objEntry->~ObjectEntry();
+}
+
+PR_STATIC_CALLBACK(void)
+InitObjectEntry(PLDHashTable* table, PLDHashEntryHdr* entry, const void* key)
+{
+  new (entry) ObjectEntry;
+}
+  
+
+
+static PLDHashTableOps ObjectTableOps = {
+  PL_DHashAllocTable,
+  PL_DHashFreeTable,
+  PL_DHashGetKeyStub,
+  PL_DHashVoidPtrKeyStub,
+  PL_DHashMatchEntryStub,
+  PL_DHashMoveEntryStub,
+  ClearObjectEntry,
+  PL_DHashFinalizeStub,
+  InitObjectEntry
+};
+
+// helper routine for adding a new entry
+static nsresult
+AddObjectEntry(PLDHashTable& table, nsISupports* aKey, nsISupports* aValue)
+{
+  NS_ASSERTION(aKey, "key must be non-null");
+  if (!aKey) return NS_ERROR_INVALID_ARG;
+  
+  ObjectEntry *entry =
+    NS_STATIC_CAST(ObjectEntry*,
+                   PL_DHashTableOperate(&table, aKey, PL_DHASH_ADD));
+
+  if (!entry)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  // only add the key if the entry is new
+  if (!entry->GetKey())
+    entry->SetKey(aKey);
+
+  // now attach the new entry - note that entry->mValue could possibly
+  // have a value already, this will release that.
+  entry->SetValue(aValue);
+  
+  return NS_OK;
+}
+
+// helper routine for looking up an existing entry. Note that the
+// return result is NOT addreffed
+static nsISupports*
+LookupObject(PLDHashTable& table, nsISupports* aKey)
+{
+  ObjectEntry *entry =
+    NS_STATIC_CAST(ObjectEntry*,
+                   PL_DHashTableOperate(&table, aKey, PL_DHASH_LOOKUP));
+
+  if (PL_DHASH_ENTRY_IS_BUSY(entry))
+    return entry->GetValue();
+
+  return nsnull;
+}
+
+inline void
+RemoveObjectEntry(PLDHashTable& table, nsISupports* aKey)
+{
+  PL_DHashTableOperate(&table, aKey, PL_DHASH_REMOVE);
+}
+
+static nsresult
+SetOrRemoveObject(PLDHashTable& table, nsISupports* aKey, nsISupports* aValue)
+{
+  // lazily create the table, but don't create it just to remove a
+  // non-existent element!
+  if (!table.ops && aValue)
+    PL_DHashTableInit(&table, &ObjectTableOps, nsnull,
+                      sizeof(ObjectEntry), 16);
+
+  if (aValue)
+    return AddObjectEntry(table, aKey, aValue);
+
+  // no value, so remove the key from the table
+  if (table.ops)
+    RemoveObjectEntry(table, aKey);
+  return NS_OK;
+}
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -306,43 +443,51 @@ protected:
 
 // MEMBER VARIABLES
 protected: 
-  // A mapping from nsIContent* to the nsIXBLBinding* that is installed on that element.
-  nsSupportsHashtable* mBindingTable;
+  // A mapping from nsIContent* to the nsIXBLBinding* that is
+  // installed on that element.
+  PLDHashTable mBindingTable;
 
-  // A mapping from nsIContent* to an nsIDOMNodeList* (nsAnonymousContentList*).  
-  // This list contains an accurate reflection of our *explicit* children (once intermingled with
+  // A mapping from nsIContent* to an nsIDOMNodeList*
+  // (nsAnonymousContentList*).  This list contains an accurate
+  // reflection of our *explicit* children (once intermingled with
   // insertion points) in the altered DOM.
-  nsSupportsHashtable* mContentListTable;
+  PLDHashTable mContentListTable;
 
-  // A mapping from nsIContent* to an nsIDOMNodeList* (nsAnonymousContentList*).  
-  // This list contains an accurate reflection of our *anonymous* children (if and only if they are
-  // intermingled with insertion points) in the altered DOM.  This table is not used
-  // if no insertion points were defined directly underneath a <content> tag in a
-  // binding.  The NodeList from the <content> is used instead as a performance
-  // optimization.
-  nsSupportsHashtable* mAnonymousNodesTable;
+  // A mapping from nsIContent* to an nsIDOMNodeList*
+  // (nsAnonymousContentList*).  This list contains an accurate
+  // reflection of our *anonymous* children (if and only if they are
+  // intermingled with insertion points) in the altered DOM.  This
+  // table is not used if no insertion points were defined directly
+  // underneath a <content> tag in a binding.  The NodeList from the
+  // <content> is used instead as a performance optimization.
+  PLDHashTable mAnonymousNodesTable;
 
-  // A mapping from nsIContent* to nsIContent*.  The insertion parent is our one true
-  // parent in the transformed DOM.  This gives us a more-or-less O(1) way of obtaining
-  // our transformed parent.
-  nsSupportsHashtable* mInsertionParentTable;
+  // A mapping from nsIContent* to nsIContent*.  The insertion parent
+  // is our one true parent in the transformed DOM.  This gives us a
+  // more-or-less O(1) way of obtaining our transformed parent.
+  PLDHashTable mInsertionParentTable;
 
-  // A mapping from nsIContent* to nsIXPWrappedJS* (an XPConnect wrapper for JS objects).
-  // For XBL bindings that implement XPIDL interfaces, and that get referred to from C++,
-  // this table caches the XPConnect wrapper for the binding.  By caching it, I control
-  // its lifetime, and I prevent a re-wrap of the same script object (in the case where
-  // multiple bindings in an XBL inheritance chain both implement an XPIDL interface).
-  nsSupportsHashtable* mWrapperTable;
+  // A mapping from nsIContent* to nsIXPWrappedJS* (an XPConnect
+  // wrapper for JS objects).  For XBL bindings that implement XPIDL
+  // interfaces, and that get referred to from C++, this table caches
+  // the XPConnect wrapper for the binding.  By caching it, I control
+  // its lifetime, and I prevent a re-wrap of the same script object
+  // (in the case where multiple bindings in an XBL inheritance chain
+  // both implement an XPIDL interface).
+  PLDHashTable mWrapperTable;
 
-  // A mapping from nsIDocument* to nsIXBLDocumentInfo*.  This table is the cache of
-  // all binding documents that have been loaded by a given bound document.
-  nsSupportsHashtable* mDocumentTable;
+  // A mapping from a URL (a string) to nsIXBLDocumentInfo*.  This table
+  // is the cache of all binding documents that have been loaded by a
+  // given bound document.
+  StringToObjectTable mDocumentTable;
 
-  // The currently loading binding docs.  If they're in this table, they have not yet
-  // finished loading.
-  nsSupportsHashtable* mLoadingDocTable;
+  // A mapping from a URL (a string) to a nsIStreamListener. This
+  // table is the currently loading binding docs.  If they're in this
+  // table, they have not yet finished loading.
+  StringToObjectTable mLoadingDocTable;
 
-  // A queue of binding attached event handlers that are awaiting execution.
+  // A queue of binding attached event handlers that are awaiting
+  // execution.
   nsCOMPtr<nsISupportsArray> mAttachedQueue;
 };
 
@@ -358,76 +503,67 @@ nsBindingManager::nsBindingManager(void)
 {
   NS_INIT_ISUPPORTS();
 
-  mBindingTable = nsnull;
-  mContentListTable = nsnull;
-  mAnonymousNodesTable = nsnull;
-  mInsertionParentTable = nsnull;
-  mWrapperTable = nsnull;
-  mDocumentTable = nsnull;
-  mLoadingDocTable = nsnull;
+  mBindingTable.ops = nsnull;
+  mContentListTable.ops = nsnull;
+  mAnonymousNodesTable.ops = nsnull;
+  mInsertionParentTable.ops = nsnull;
+  mWrapperTable.ops = nsnull;
 
   mAttachedQueue = nsnull;
 }
 
 nsBindingManager::~nsBindingManager(void)
 {
-  delete mBindingTable;
-  delete mContentListTable;
-  delete mAnonymousNodesTable;
-  delete mInsertionParentTable;
-  delete mWrapperTable;
-  delete mDocumentTable;
-  delete mLoadingDocTable;
+  if (mBindingTable.ops)
+    PL_DHashTableFinish(&mBindingTable);
+  if (mContentListTable.ops)
+    PL_DHashTableFinish(&mContentListTable);
+  if (mAnonymousNodesTable.ops)
+    PL_DHashTableFinish(&mAnonymousNodesTable);
+  if (mInsertionParentTable.ops)
+    PL_DHashTableFinish(&mInsertionParentTable);
+  if (mWrapperTable.ops)
+    PL_DHashTableFinish(&mWrapperTable);
 }
 
 NS_IMETHODIMP
 nsBindingManager::GetBinding(nsIContent* aContent, nsIXBLBinding** aResult) 
-{ 
-  if (mBindingTable) {
-    nsISupportsKey key(aContent);
-    *aResult = NS_STATIC_CAST(nsIXBLBinding*, mBindingTable->Get(&key));
+{
+  if (mBindingTable.ops) {
+    *aResult = NS_STATIC_CAST(nsIXBLBinding*,
+                              LookupObject(mBindingTable, aContent));
+    NS_IF_ADDREF(*aResult);
   }
   else {
     *aResult = nsnull;
   }
-
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsBindingManager::SetBinding(nsIContent* aContent, nsIXBLBinding* aBinding)
 {
-  if (!mBindingTable)
-    mBindingTable = new nsSupportsHashtable;
-
-  nsISupportsKey key(aContent);
-
-  nsCOMPtr<nsISupports> old = getter_AddRefs(mBindingTable->Get(&key));
-  if (old && aBinding)
-    NS_ERROR("Binding already installed!");
-
-  if (aBinding) {
-    mBindingTable->Put(&key, aBinding);
-  }
-  else {
-    mBindingTable->Remove(&key);
-
-    // The death of the bindings means the death of the JS wrapper, and the flushing
-    // of our explicit and anonymous insertion point lists.
+  nsresult rv =
+    SetOrRemoveObject(mBindingTable, aContent, aBinding);
+  if (!aBinding) {
+    // The death of the bindings means the death of the JS wrapper,
+    // and the flushing of our explicit and anonymous insertion point
+    // lists.
     SetWrappedJS(aContent, nsnull);
     SetContentListFor(aContent, nsnull);
     SetAnonymousNodesFor(aContent, nsnull);
   }
 
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP
 nsBindingManager::GetInsertionParent(nsIContent* aContent, nsIContent** aResult) 
 { 
-  if (mInsertionParentTable) {
-    nsISupportsKey key(aContent);
-    *aResult = NS_STATIC_CAST(nsIContent*, mInsertionParentTable->Get(&key));
+  if (mInsertionParentTable.ops) {
+    *aResult = NS_STATIC_CAST(nsIContent*,
+                              LookupObject(mInsertionParentTable, aContent));
+    NS_IF_ADDREF(*aResult);
   }
   else {
     *aResult = nsnull;
@@ -439,25 +575,15 @@ nsBindingManager::GetInsertionParent(nsIContent* aContent, nsIContent** aResult)
 NS_IMETHODIMP
 nsBindingManager::SetInsertionParent(nsIContent* aContent, nsIContent* aParent)
 {
-  if (!mInsertionParentTable)
-    mInsertionParentTable = new nsSupportsHashtable;
-
-  nsISupportsKey key(aContent);
-  if (aParent) {
-    mInsertionParentTable->Put(&key, aParent);
-  }
-  else
-    mInsertionParentTable->Remove(&key);
-
-  return NS_OK;
+  return SetOrRemoveObject(mInsertionParentTable, aContent, aParent);
 }
 
 NS_IMETHODIMP
 nsBindingManager::GetWrappedJS(nsIContent* aContent, nsIXPConnectWrappedJS** aResult) 
 { 
-  if (mWrapperTable) {
-    nsISupportsKey key(aContent);
-    *aResult = NS_STATIC_CAST(nsIXPConnectWrappedJS*, mWrapperTable->Get(&key));
+  if (mWrapperTable.ops) {
+    *aResult = NS_STATIC_CAST(nsIXPConnectWrappedJS*, LookupObject(mWrapperTable, aContent));
+    NS_IF_ADDREF(*aResult);
   }
   else {
     *aResult = nsnull;
@@ -469,17 +595,7 @@ nsBindingManager::GetWrappedJS(nsIContent* aContent, nsIXPConnectWrappedJS** aRe
 NS_IMETHODIMP
 nsBindingManager::SetWrappedJS(nsIContent* aContent, nsIXPConnectWrappedJS* aWrappedJS)
 {
-  if (!mWrapperTable)
-    mWrapperTable = new nsSupportsHashtable;
-
-  nsISupportsKey key(aContent);
-  if (aWrappedJS) {
-    mWrapperTable->Put(&key, aWrappedJS);
-  }
-  else
-    mWrapperTable->Remove(&key);
-
-  return NS_OK;
+  return SetOrRemoveObject(mWrapperTable, aContent, aWrappedJS);
 }
 
 NS_IMETHODIMP
@@ -564,9 +680,10 @@ nsBindingManager::GetContentListFor(nsIContent* aContent, nsIDOMNodeList** aResu
   // Locate the primary binding and get its node list of anonymous children.
   *aResult = nsnull;
   
-  if (mContentListTable) {
-    nsISupportsKey key(aContent);
-    *aResult = NS_STATIC_CAST(nsIDOMNodeList*, mContentListTable->Get(&key));
+  if (mContentListTable.ops) {
+    *aResult = NS_STATIC_CAST(nsIDOMNodeList*,
+                              LookupObject(mContentListTable, aContent));
+    NS_IF_ADDREF(*aResult);
   }
   
   if (!*aResult) {
@@ -579,33 +696,22 @@ nsBindingManager::GetContentListFor(nsIContent* aContent, nsIDOMNodeList** aResu
 
 NS_IMETHODIMP
 nsBindingManager::SetContentListFor(nsIContent* aContent, nsISupportsArray* aList)
-{ 
-  if (!mContentListTable) {
-    if (!aList) 
-      return NS_OK;
-    mContentListTable = new nsSupportsHashtable;
-  }
-
-  nsISupportsKey key(aContent);
+{
+  nsIDOMNodeList* contentList = nsnull;
   if (aList) {
-    nsAnonymousContentList* contentList = new nsAnonymousContentList(aList);
-    mContentListTable->Put(&key, (nsIDOMNodeList*)contentList);
+    contentList = new nsAnonymousContentList(aList);
+    if (!contentList) return NS_ERROR_OUT_OF_MEMORY;
   }
-  else
-    mContentListTable->Remove(&key);
 
-  return NS_OK;
+  return SetOrRemoveObject(mContentListTable, aContent, contentList);
 }
 
 NS_IMETHODIMP
 nsBindingManager::HasContentListFor(nsIContent* aContent, PRBool* aResult)
 {
   *aResult = PR_FALSE;
-  if (mContentListTable) {
-    nsISupportsKey key(aContent);
-    nsCOMPtr<nsIDOMNodeList> list =
-      NS_STATIC_CAST(nsIDOMNodeList*, mContentListTable->Get(&key));
-
+  if (mContentListTable.ops) {
+    nsISupports* list = LookupObject(mContentListTable, aContent);
     *aResult = (list != nsnull);
   }
 
@@ -617,9 +723,10 @@ nsBindingManager::GetAnonymousNodesFor(nsIContent* aContent, nsIDOMNodeList** aR
 { 
   // Locate the primary binding and get its node list of anonymous children.
   *aResult = nsnull;
-  if (mAnonymousNodesTable) {
-    nsISupportsKey key(aContent);
-    *aResult = NS_STATIC_CAST(nsIDOMNodeList*, mAnonymousNodesTable->Get(&key));
+  if (mAnonymousNodesTable.ops) {
+    *aResult = NS_STATIC_CAST(nsIDOMNodeList*,
+                              LookupObject(mAnonymousNodesTable, aContent));
+    NS_IF_ADDREF(*aResult);
   }
 
   if (!*aResult) {
@@ -634,22 +741,14 @@ nsBindingManager::GetAnonymousNodesFor(nsIContent* aContent, nsIDOMNodeList** aR
 
 NS_IMETHODIMP
 nsBindingManager::SetAnonymousNodesFor(nsIContent* aContent, nsISupportsArray* aList)
-{ 
-  if (!mAnonymousNodesTable) {
-    if (!aList) 
-      return NS_OK;
-    mAnonymousNodesTable = new nsSupportsHashtable;
-  }
-
-  nsISupportsKey key(aContent);
+{
+  nsIDOMNodeList* contentList = nsnull;
   if (aList) {
-    nsAnonymousContentList* contentList = new nsAnonymousContentList(aList);
-    mAnonymousNodesTable->Put(&key, (nsIDOMNodeList*)contentList);
+    contentList = new nsAnonymousContentList(aList);
+    if (!contentList) return NS_ERROR_OUT_OF_MEMORY;
   }
-  else
-    mAnonymousNodesTable->Remove(&key);
-
-  return NS_OK;
+  
+  return SetOrRemoveObject(mAnonymousNodesTable, aContent, contentList);
 }
 
 NS_IMETHODIMP
@@ -671,9 +770,10 @@ nsBindingManager::GetXBLChildNodesFor(nsIContent* aContent, nsIDOMNodeList** aRe
   // If we don't have any anonymous kids, we next check to see if we have 
   // insertion points.
   if (! *aResult) {
-    if (mContentListTable) {
-      nsISupportsKey key(aContent);
-      *aResult = NS_STATIC_CAST(nsIDOMNodeList*, mContentListTable->Get(&key));
+    if (mContentListTable.ops) {
+      *aResult = NS_STATIC_CAST(nsIDOMNodeList*,
+                                LookupObject(mContentListTable, aContent));
+      NS_IF_ADDREF(*aResult);
     }
   }
   return NS_OK;
@@ -893,11 +993,13 @@ nsBindingManager::ProcessAttachedQueue()
   return NS_OK;
 }
 
-PRBool PR_CALLBACK ExecuteDetachedHandler(nsHashKey* aKey, void* aData, void* aClosure)
+PR_STATIC_CALLBACK(PLDHashOperator)
+ExecuteDetachedHandler(PLDHashTable* aTable, PLDHashEntryHdr* aHdr, PRUint32 aNumber, void* aClosure)
 {
-  nsIXBLBinding* binding = (nsIXBLBinding*)aData;
+  ObjectEntry* entry = NS_STATIC_CAST(ObjectEntry*, aHdr);
+  nsIXBLBinding* binding = NS_STATIC_CAST(nsIXBLBinding*, entry->GetValue());
   binding->ExecuteDetachedHandler();
-  return PR_TRUE;
+  return PL_DHASH_NEXT;
 }
 
 
@@ -905,16 +1007,16 @@ NS_IMETHODIMP
 nsBindingManager::ExecuteDetachedHandlers()
 {
   // Walk our hashtable of bindings.
-  if (mBindingTable)
-    mBindingTable->Enumerate(ExecuteDetachedHandler);
+  if (mBindingTable.ops)
+    PL_DHashTableEnumerate(&mBindingTable, ExecuteDetachedHandler, nsnull);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsBindingManager::PutXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo)
 {
-  if (!mDocumentTable)
-    mDocumentTable = new nsSupportsHashtable();
+  if (!mDocumentTable.mHashTable.ops)
+    mDocumentTable.Init(16);
 
   nsCOMPtr<nsIDocument> doc;
   aDocumentInfo->GetDocument(getter_AddRefs(doc));
@@ -923,16 +1025,18 @@ nsBindingManager::PutXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo)
   doc->GetDocumentURL(getter_AddRefs(uri));
   nsCAutoString str;
   uri->GetSpec(str);
-  
-  nsCStringKey key(str.get());
-  mDocumentTable->Put(&key, aDocumentInfo);
+
+  StringToObjectEntry* entry = mDocumentTable.AddEntry(str);
+  if (!entry) return NS_ERROR_OUT_OF_MEMORY;
+
+  entry->SetValue(aDocumentInfo);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsBindingManager::RemoveXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo)
 {
-  if (!mDocumentTable)
+  if (!mDocumentTable.mHashTable.ops)
     return NS_OK;
 
   nsCOMPtr<nsIDocument> doc;
@@ -942,9 +1046,8 @@ nsBindingManager::RemoveXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo)
   doc->GetDocumentURL(getter_AddRefs(uri));
   nsCAutoString str;
   uri->GetSpec(str);
-  
-  nsCStringKey key(str.get());
-  mDocumentTable->Remove(&key);
+
+  mDocumentTable.Remove(str);
   return NS_OK;
 }
 
@@ -952,11 +1055,12 @@ NS_IMETHODIMP
 nsBindingManager::GetXBLDocumentInfo(const nsCString& aURL, nsIXBLDocumentInfo** aResult)
 {
   *aResult = nsnull;
-  if (!mDocumentTable)
+  if (!mDocumentTable.mHashTable.ops)
     return NS_OK;
 
-  nsCStringKey key(aURL);
-  *aResult = NS_STATIC_CAST(nsIXBLDocumentInfo*, mDocumentTable->Get(&key)); // Addref happens here.
+  StringToObjectEntry *entry = mDocumentTable.GetEntry(aURL);
+  *aResult = NS_STATIC_CAST(nsIXBLDocumentInfo*, entry->GetValue());
+  NS_IF_ADDREF(*aResult);
 
   return NS_OK;
 }
@@ -964,11 +1068,12 @@ nsBindingManager::GetXBLDocumentInfo(const nsCString& aURL, nsIXBLDocumentInfo**
 NS_IMETHODIMP
 nsBindingManager::PutLoadingDocListener(const nsCString& aURL, nsIStreamListener* aListener)
 {
-  if (!mLoadingDocTable)
-    mLoadingDocTable = new nsSupportsHashtable();
+  if (!mLoadingDocTable.mHashTable.ops)
+    mLoadingDocTable.Init(16);
 
-  nsCStringKey key(aURL);
-  mLoadingDocTable->Put(&key, aListener);
+  StringToObjectEntry* entry = mLoadingDocTable.AddEntry(aURL);
+  if (!entry) return NS_ERROR_OUT_OF_MEMORY;
+  entry->SetValue(aListener);
 
   return NS_OK;
 }
@@ -977,33 +1082,38 @@ NS_IMETHODIMP
 nsBindingManager::GetLoadingDocListener(const nsCString& aURL, nsIStreamListener** aResult)
 {
   *aResult = nsnull;
-  if (!mLoadingDocTable)
+  if (!mLoadingDocTable.mHashTable.ops)
     return NS_OK;
 
-  nsCStringKey key(aURL);
-  *aResult = NS_STATIC_CAST(nsIStreamListener*, mLoadingDocTable->Get(&key)); // Addref happens here.
+  StringToObjectEntry* entry = mLoadingDocTable.GetEntry(aURL);
+  if (entry) {
+    *aResult = NS_STATIC_CAST(nsIStreamListener*, entry->GetValue());
+    NS_IF_ADDREF(*aResult);
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsBindingManager::RemoveLoadingDocListener(const nsCString& aURL)
 {
-  if (!mLoadingDocTable)
+  if (!mLoadingDocTable.mHashTable.ops)
     return NS_OK;
 
-  nsCStringKey key(aURL);
-  mLoadingDocTable->Remove(&key);
+  mLoadingDocTable.Remove(aURL);
 
   return NS_OK;
 }
 
-PRBool PR_CALLBACK MarkForDeath(nsHashKey* aKey, void* aData, void* aClosure)
+PR_STATIC_CALLBACK(PLDHashOperator)
+MarkForDeath(PLDHashTable* aTable, PLDHashEntryHdr* aHdr, PRUint32 aNumber, void* aClosure)
 {
+  ObjectEntry* entry = NS_STATIC_CAST(ObjectEntry*, aHdr);
+  nsIXBLBinding* binding = NS_STATIC_CAST(nsIXBLBinding*, entry->GetValue());
+  
   PRBool marked = PR_FALSE;
-  nsIXBLBinding* binding = (nsIXBLBinding*)aData;
   binding->MarkedForDeath(&marked);
   if (marked)
-    return PR_TRUE; // Already marked for death.
+    return PL_DHASH_NEXT; // Already marked for death.
 
   nsCAutoString uriStr;
   binding->GetDocURI(uriStr);
@@ -1015,14 +1125,14 @@ PRBool PR_CALLBACK MarkForDeath(nsHashKey* aKey, void* aData, void* aClosure)
     if (!strncmp(path.get(), "/skin", 5))
       binding->MarkForDeath();
   }
-  return PR_TRUE;
+  return PL_DHASH_NEXT;
 }
 
 NS_IMETHODIMP
 nsBindingManager::FlushSkinBindings()
 {
-  if (mBindingTable)
-    mBindingTable->Enumerate(MarkForDeath);
+  if (mBindingTable.ops)
+    PL_DHashTableEnumerate(&mBindingTable, MarkForDeath, nsnull);
   return NS_OK;
 }
 
@@ -1390,7 +1500,7 @@ nsBindingManager::ContentAppended(nsIDocument* aDocument,
                                   PRInt32     aNewIndexInContainer)
 {
   // XXX This is hacked and not quite correct. See below.
-  if (aNewIndexInContainer == -1 || !mContentListTable)
+  if (aNewIndexInContainer == -1 || !mContentListTable.ops)
     // It's anonymous.
     return NS_OK;
 
@@ -1443,7 +1553,7 @@ nsBindingManager::ContentInserted(nsIDocument* aDocument,
                            PRInt32 aIndexInContainer)
 {
 // XXX This is hacked just to make menus work again.
-  if (aIndexInContainer == -1 || !mContentListTable)
+  if (aIndexInContainer == -1 || !mContentListTable.ops)
     // It's anonymous.
     return NS_OK;
  
@@ -1498,7 +1608,7 @@ nsBindingManager::ContentRemoved(nsIDocument* aDocument,
                                  PRInt32 aIndexInContainer)
 
 {
-  if (aIndexInContainer == -1 || !mContentListTable)
+  if (aIndexInContainer == -1 || !mContentListTable.ops)
     // It's anonymous.
     return NS_OK;
  
