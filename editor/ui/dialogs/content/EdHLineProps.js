@@ -88,7 +88,7 @@ function InitDialog()
   // Get the width attribute of the element, stripping out "%"
   // This sets contents of menulist (adds pixel and percent menuitems elements)
   dialog.widthInput.value = InitPixelOrPercentMenulist(globalElement, hLineElement, "width","pixelOrPercentMenulist");
-  align = globalElement.getAttribute("align");
+  align = globalElement.getAttribute("align").toLowerCase();
   if (align == "center") {
     dialog.centerAlign.checked = true;
   } else if (align == "right") {
