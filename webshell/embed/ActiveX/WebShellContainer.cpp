@@ -10,6 +10,8 @@ static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
 CWebShellContainer::CWebShellContainer(CMozillaBrowser *pOwner)
 {
 	m_pOwner = pOwner;
+	m_pEvents1 = m_pOwner;
+	m_pEvents2 = m_pOwner;
 }
 
 
@@ -92,10 +94,13 @@ CWebShellContainer::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
 	VARIANT_BOOL bCancel = VARIANT_FALSE;
 	long lFlags = 0;
 
-	m_pOwner->Fire_BeforeNavigate(bstrURL, lFlags, bstrTargetFrameName, pvPostData, bstrHeaders, &bCancel);
+	m_pEvents1->Fire_BeforeNavigate(bstrURL, lFlags, bstrTargetFrameName, pvPostData, bstrHeaders, &bCancel);
+	// TODO m_pEvents2->Fire_BeforeNavigate2(...)
+
 	SysFreeString(bstrURL);
 	SysFreeString(bstrTargetFrameName);
 	SysFreeString(bstrHeaders);
+
 
 	if (bCancel == VARIANT_TRUE)
 	{
@@ -116,7 +121,8 @@ NS_IMETHODIMP
 CWebShellContainer::ProgressLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aProgress, PRInt32 aProgressMax)
 {
 	ATLTRACE(_T("CWebShellContainer::ProgressLoadURL()\n"));
-	m_pOwner->Fire_ProgressChange(aProgress, aProgressMax);
+	m_pEvents1->Fire_ProgressChange(aProgress, aProgressMax);
+	m_pEvents2->Fire_ProgressChange(aProgress, aProgressMax);
 	return NS_OK;
 }
 
@@ -128,7 +134,8 @@ CWebShellContainer::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt
 	USES_CONVERSION;
 	OLECHAR *pszURL = W2OLE((WCHAR *) aURL);
 	BSTR bstrURL = SysAllocString(pszURL);
-	m_pOwner->Fire_NavigateComplete(bstrURL);
+	m_pEvents1->Fire_NavigateComplete(bstrURL);
+// TODO m_pEvents2->Fire_NavigateComplete2(...)
 	m_pOwner->m_bBusy = FALSE;
 	SysFreeString(bstrURL);
 
@@ -161,7 +168,7 @@ NS_IMETHODIMP
 CWebShellContainer::OnStartBinding(nsIURL* aURL, const char *aContentType)
 {
 	ATLTRACE(_T("CWebShellContainer::OnStartBinding()\n"));
-	return NS_ERROR_FAILURE;
+	return NS_OK;
 }
 
 
@@ -169,7 +176,7 @@ NS_IMETHODIMP
 CWebShellContainer::OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax)
 {
 	ATLTRACE(_T("CWebShellContainer::OnProgress()\n"));
-	return NS_ERROR_FAILURE;
+	return NS_OK;
 }
 
 
@@ -177,7 +184,14 @@ NS_IMETHODIMP
 CWebShellContainer::OnStatus(nsIURL* aURL, const nsString &aMsg)
 {
 	ATLTRACE(_T("CWebShellContainer::OnStatus()\n"));
-	return NS_ERROR_FAILURE;
+
+	USES_CONVERSION;
+	BSTR bstrText = SysAllocString(W2OLE((PRUnichar *) aMsg));
+	m_pEvents1->Fire_StatusTextChange(bstrText);
+	m_pEvents2->Fire_StatusTextChange(bstrText);
+	SysFreeString(bstrText);
+
+	return NS_OK;
 }
 
 
@@ -185,5 +199,5 @@ NS_IMETHODIMP
 CWebShellContainer::OnStopBinding(nsIURL* aURL, PRInt32 aStatus, const nsString &aMsg)
 {
 	ATLTRACE(_T("CWebShellContainer::OnStopBinding()\n"));
-	return NS_ERROR_FAILURE;
+	return NS_OK;
 }

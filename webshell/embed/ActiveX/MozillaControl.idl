@@ -421,7 +421,6 @@ library MOZILLACONTROLLib
 		interface IWebBrowser;
 		interface IWebBrowserApp;
 		interface IDispatch;
-//		[default, source] dispinterface DWebBrowserEvents2;
-		[default, source] dispinterface DWebBrowserEvents;
+		[default, source] dispinterface DWebBrowserEvents2;
 	};
 };

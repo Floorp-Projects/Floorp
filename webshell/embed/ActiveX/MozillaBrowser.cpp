@@ -756,6 +756,12 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Busy(VARIANT_BOOL __RPC_FAR *pBoo
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::Quit(void)
 {
+    if (!IsValid())
+	{
+		NG_ASSERT(0);
+		return E_UNEXPECTED;
+	}
+
 	// TODO fire quit event
 	return S_OK;
 }
@@ -763,6 +769,12 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Quit(void)
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::ClientToWindow(int __RPC_FAR *pcx, int __RPC_FAR *pcy)
 {
+    if (!IsValid())
+	{
+		NG_ASSERT(0);
+		return E_UNEXPECTED;
+	}
+
 	// TODO convert points to be relative to browser
 	return S_OK;
 }
@@ -770,6 +782,12 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::ClientToWindow(int __RPC_FAR *pcx, in
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::PutProperty(BSTR szProperty, VARIANT vtValue)
 {
+    if (!IsValid())
+	{
+		NG_ASSERT(0);
+		return E_UNEXPECTED;
+	}
+
 	if (szProperty == NULL)
 	{
 		return E_INVALIDARG;
@@ -797,6 +815,12 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::PutProperty(BSTR szProperty, VARIANT 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::GetProperty(BSTR Property, VARIANT __RPC_FAR *pvtValue)
 {
+    if (!IsValid())
+	{
+		NG_ASSERT(0);
+		return E_UNEXPECTED;
+	}
+
 	NG_ASSERT(Property);
 	NG_ASSERT_POINTER(pvtValue, VARIANT);
 	
@@ -823,6 +847,12 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::GetProperty(BSTR Property, VARIANT __
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Name(BSTR __RPC_FAR *Name)
 {
+    if (!IsValid())
+	{
+		NG_ASSERT(0);
+		return E_UNEXPECTED;
+	}
+
 	NG_ASSERT_POINTER(Name, BSTR);
 	if (Name == NULL)
 	{
@@ -835,6 +865,12 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Name(BSTR __RPC_FAR *Name)
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_HWND(long __RPC_FAR *pHWND)
 {
+    if (!IsValid())
+	{
+		NG_ASSERT(0);
+		return E_UNEXPECTED;
+	}
+
 	NG_ASSERT_POINTER(pHWND, HWND);
 	if (pHWND == NULL)
 	{
@@ -846,6 +882,12 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_HWND(long __RPC_FAR *pHWND)
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_FullName(BSTR __RPC_FAR *FullName)
 {
+    if (!IsValid())
+	{
+		NG_ASSERT(0);
+		return E_UNEXPECTED;
+	}
+
 	NG_ASSERT_POINTER(FullName, BSTR);
 	if (FullName == NULL)
 	{
@@ -858,6 +900,12 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_FullName(BSTR __RPC_FAR *FullName
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Path(BSTR __RPC_FAR *Path)
 {
+    if (!IsValid())
+	{
+		NG_ASSERT(0);
+		return E_UNEXPECTED;
+	}
+
 	NG_ASSERT_POINTER(Path, BSTR);
 	if (Path == NULL)
 	{
@@ -870,6 +918,12 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Path(BSTR __RPC_FAR *Path)
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Visible(VARIANT_BOOL __RPC_FAR *pBool)
 {
+    if (!IsValid())
+	{
+		NG_ASSERT(0);
+		return E_UNEXPECTED;
+	}
+
 	NG_ASSERT_POINTER(pBool, int);
 	if (pBool == NULL)
 	{
@@ -882,12 +936,24 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Visible(VARIANT_BOOL __RPC_FAR *p
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_Visible(VARIANT_BOOL Value)
 {
+    if (!IsValid())
+	{
+		NG_ASSERT(0);
+		return E_UNEXPECTED;
+	}
+
 	return S_OK;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_StatusBar(VARIANT_BOOL __RPC_FAR *pBool)
 {
+    if (!IsValid())
+	{
+		NG_ASSERT(0);
+		return E_UNEXPECTED;
+	}
+
 	NG_ASSERT_POINTER(pBool, int);
 	if (pBool == NULL)
 	{
@@ -900,12 +966,24 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_StatusBar(VARIANT_BOOL __RPC_FAR 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_StatusBar(VARIANT_BOOL Value)
 {
+    if (!IsValid())
+	{
+		NG_ASSERT(0);
+		return E_UNEXPECTED;
+	}
+
 	return S_OK;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_StatusText(BSTR __RPC_FAR *StatusText)
 {
+    if (!IsValid())
+	{
+		NG_ASSERT(0);
+		return E_UNEXPECTED;
+	}
+
 	NG_ASSERT_POINTER(StatusText, BSTR);
 	if (StatusText == NULL)
 	{
@@ -918,12 +996,24 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_StatusText(BSTR __RPC_FAR *Status
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_StatusText(BSTR StatusText)
 {
+    if (!IsValid())
+	{
+		NG_ASSERT(0);
+		return E_UNEXPECTED;
+	}
+
 	return S_OK;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_ToolBar(int __RPC_FAR *Value)
 {
+    if (!IsValid())
+	{
+		NG_ASSERT(0);
+		return E_UNEXPECTED;
+	}
+
 	NG_ASSERT_POINTER(Value, int);
 	if (Value == NULL)
 	{
@@ -936,6 +1026,12 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_ToolBar(int __RPC_FAR *Value)
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_ToolBar(int Value)
 {
+    if (!IsValid())
+	{
+		NG_ASSERT(0);
+		return E_UNEXPECTED;
+	}
+
 	// No toolbar in control!
 	return S_OK;
 }
@@ -943,6 +1039,12 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_ToolBar(int Value)
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_MenuBar(VARIANT_BOOL __RPC_FAR *Value)
 {
+    if (!IsValid())
+	{
+		NG_ASSERT(0);
+		return E_UNEXPECTED;
+	}
+
 	NG_ASSERT_POINTER(Value, int);
 	if (Value == NULL)
 	{
@@ -955,6 +1057,12 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_MenuBar(VARIANT_BOOL __RPC_FAR *V
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_MenuBar(VARIANT_BOOL Value)
 {
+    if (!IsValid())
+	{
+		NG_ASSERT(0);
+		return E_UNEXPECTED;
+	}
+
 	// No menu in control!
 	return S_OK;
 }
@@ -962,6 +1070,12 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_MenuBar(VARIANT_BOOL Value)
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_FullScreen(VARIANT_BOOL __RPC_FAR *pbFullScreen)
 {
+    if (!IsValid())
+	{
+		NG_ASSERT(0);
+		return E_UNEXPECTED;
+	}
+
 	NG_ASSERT_POINTER(pbFullScreen, VARIANT_BOOL);
 	if (pbFullScreen == NULL)
 	{
@@ -974,6 +1088,12 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_FullScreen(VARIANT_BOOL __RPC_FAR
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_FullScreen(VARIANT_BOOL bFullScreen)
 {
+    if (!IsValid())
+	{
+		NG_ASSERT(0);
+		return E_UNEXPECTED;
+	}
+
 	// No fullscreen mode in control!
 	return S_OK;
 }
@@ -985,114 +1105,234 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_FullScreen(VARIANT_BOOL bFullScre
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate2(VARIANT __RPC_FAR *URL, VARIANT __RPC_FAR *Flags, VARIANT __RPC_FAR *TargetFrameName, VARIANT __RPC_FAR *PostData, VARIANT __RPC_FAR *Headers)
 {
-	return E_NOTIMPL;
+    if (!IsValid())
+	{
+		NG_ASSERT(0);
+		return E_UNEXPECTED;
+	}
+
+	CComVariant vURLAsString;
+	if (vURLAsString.ChangeType(VT_BSTR, URL) != S_OK)
+	{
+		return E_INVALIDARG;
+	}
+
+	return Navigate(vURLAsString.bstrVal, Flags, TargetFrameName, PostData, Headers);
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::QueryStatusWB(OLECMDID cmdID, OLECMDF __RPC_FAR *pcmdf)
 {
+    if (!IsValid())
+	{
+		NG_ASSERT(0);
+		return E_UNEXPECTED;
+	}
+
 	return E_NOTIMPL;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::ExecWB(OLECMDID cmdID, OLECMDEXECOPT cmdexecopt, VARIANT __RPC_FAR *pvaIn, VARIANT __RPC_FAR *pvaOut)
 {
+    if (!IsValid())
+	{
+		NG_ASSERT(0);
+		return E_UNEXPECTED;
+	}
+
 	return E_NOTIMPL;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::ShowBrowserBar(VARIANT __RPC_FAR *pvaClsid, VARIANT __RPC_FAR *pvarShow, VARIANT __RPC_FAR *pvarSize)
 {
+    if (!IsValid())
+	{
+		NG_ASSERT(0);
+		return E_UNEXPECTED;
+	}
+
 	return E_NOTIMPL;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_ReadyState(READYSTATE __RPC_FAR *plReadyState)
 {
+    if (!IsValid())
+	{
+		NG_ASSERT(0);
+		return E_UNEXPECTED;
+	}
+
 	return E_NOTIMPL;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Offline(VARIANT_BOOL __RPC_FAR *pbOffline)
 {
+    if (!IsValid())
+	{
+		NG_ASSERT(0);
+		return E_UNEXPECTED;
+	}
+
 	return E_NOTIMPL;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_Offline(VARIANT_BOOL bOffline)
 {
+    if (!IsValid())
+	{
+		NG_ASSERT(0);
+		return E_UNEXPECTED;
+	}
+
 	return E_NOTIMPL;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Silent(VARIANT_BOOL __RPC_FAR *pbSilent)
 {
+    if (!IsValid())
+	{
+		NG_ASSERT(0);
+		return E_UNEXPECTED;
+	}
+
 	return E_NOTIMPL;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_Silent(VARIANT_BOOL bSilent)
 {
+    if (!IsValid())
+	{
+		NG_ASSERT(0);
+		return E_UNEXPECTED;
+	}
+
 	return E_NOTIMPL;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_RegisterAsBrowser(VARIANT_BOOL __RPC_FAR *pbRegister)
 {
+    if (!IsValid())
+	{
+		NG_ASSERT(0);
+		return E_UNEXPECTED;
+	}
+
 	return E_NOTIMPL;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_RegisterAsBrowser(VARIANT_BOOL bRegister)
 {
+    if (!IsValid())
+	{
+		NG_ASSERT(0);
+		return E_UNEXPECTED;
+	}
+
 	return E_NOTIMPL;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_RegisterAsDropTarget(VARIANT_BOOL __RPC_FAR *pbRegister)
 {
+    if (!IsValid())
+	{
+		NG_ASSERT(0);
+		return E_UNEXPECTED;
+	}
+
 	return E_NOTIMPL;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_RegisterAsDropTarget(VARIANT_BOOL bRegister)
 {
+    if (!IsValid())
+	{
+		NG_ASSERT(0);
+		return E_UNEXPECTED;
+	}
+
 	return E_NOTIMPL;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_TheaterMode(VARIANT_BOOL __RPC_FAR *pbRegister)
 {
+    if (!IsValid())
+	{
+		NG_ASSERT(0);
+		return E_UNEXPECTED;
+	}
+
 	return E_NOTIMPL;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_TheaterMode(VARIANT_BOOL bRegister)
 {
+    if (!IsValid())
+	{
+		NG_ASSERT(0);
+		return E_UNEXPECTED;
+	}
+
 	return E_NOTIMPL;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_AddressBar(VARIANT_BOOL __RPC_FAR *Value)
 {
+    if (!IsValid())
+	{
+		NG_ASSERT(0);
+		return E_UNEXPECTED;
+	}
+
 	return E_NOTIMPL;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_AddressBar(VARIANT_BOOL Value)
 {
+    if (!IsValid())
+	{
+		NG_ASSERT(0);
+		return E_UNEXPECTED;
+	}
+
 	return E_NOTIMPL;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Resizable(VARIANT_BOOL __RPC_FAR *Value)
 {
+    if (!IsValid())
+	{
+		NG_ASSERT(0);
+		return E_UNEXPECTED;
+	}
+
 	return E_NOTIMPL;
 }
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_Resizable(VARIANT_BOOL Value)
 {
+    if (!IsValid())
+	{
+		NG_ASSERT(0);
+		return E_UNEXPECTED;
+	}
+
 	return E_NOTIMPL;
 }
 
