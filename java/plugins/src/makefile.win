@@ -53,16 +53,16 @@ REQUIRES = java plug xpcom raptor
 OBJS =  \
 	.\$(OBJDIR)\Pluglet.obj \
 	.\$(OBJDIR)\PlugletEngine.obj \
-	.\$(OBJDIR)\PlugletList.obj   \
+	.\$(OBJDIR)\List.obj   \
 	.\$(OBJDIR)\PlugletLoader.obj \
 	.\$(OBJDIR)\PlugletsDir.obj \
-	.\$(OBJDIR)\PlugletInstance.obj \
+	.\$(OBJDIR)\PlugletFactory.obj \
 	.\$(OBJDIR)\PlugletStreamListener.obj \
 	.\$(OBJDIR)\PlugletStreamInfo.obj \
-	.\$(OBJDIR)\PlugletInstancePeer.obj \
+	.\$(OBJDIR)\PlugletPeer.obj \
 	.\$(OBJDIR)\PlugletManager.obj \
 	.\$(OBJDIR)\PlugletInputStream.obj \
-	.\$(OBJDIR)\PlugletInstanceView.obj \
+	.\$(OBJDIR)\PlugletView.obj \
 !ifndef OJI_DISABLE
 	.\$(OBJDIR)\PlugletSecurityContext.obj \
 !endif

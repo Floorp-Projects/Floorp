@@ -35,7 +35,7 @@ OBJS =  \
 	.\$(OBJDIR)\org_mozilla_pluglet_mozilla_PlugletStreamInfoImpl.obj \
 	.\$(OBJDIR)\org_mozilla_pluglet_mozilla_PlugletInputStream.obj \
 	.\$(OBJDIR)\org_mozilla_pluglet_mozilla_PlugletOutputStream.obj \
-	.\$(OBJDIR)\org_mozilla_pluglet_mozilla_PlugletInstancePeerImpl.obj \
+	.\$(OBJDIR)\org_mozilla_pluglet_mozilla_PlugletPeerImpl.obj \
 	.\$(OBJDIR)\org_mozilla_pluglet_mozilla_PlugletManagerImpl.obj \
 	.\$(OBJDIR)\org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl.obj \
 	.\$(OBJDIR)\PlugletTagInfo2.obj \

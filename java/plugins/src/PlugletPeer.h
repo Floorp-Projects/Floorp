@@ -18,34 +18,18 @@
  *
  * Contributor(s): 
  */
-#ifndef __PlugletList_h__
-#define __PlugletList_h__
-#include "Pluglet.h"
-class PlugletListIterator;
+#ifndef __PlugletPeer_h__
+#define __PlugletPeer_h__
+#include "nsIPluginInstancePeer.h"
+#include "jni.h"
 
-class PlugletList {
-    friend class PlugletListIterator;
+class PlugletPeer {
  public:
-    PlugletList();
-    ~PlugletList();
-    void Add(Pluglet *pluglet);
-    PlugletListIterator * GetIterator(void);
+    static jobject GetJObject(const nsIPluginInstancePeer *instancePeer);
  private:
-    struct PlugletListNode {
-	PlugletListNode(Pluglet *v,PlugletListNode *n = NULL);
-	Pluglet * value;
-	PlugletListNode * next;
-    };
-    PlugletListNode * head;
-    PlugletListNode * tail;
+    static void Initialize(void);
+    static void Destroy(void);
+    static jclass    clazz;
+    static jmethodID initMID;
 };
-class PlugletListIterator {
- public:
-    PlugletListIterator(PlugletList *list);
-    Pluglet * Get(void);
-    Pluglet * Next(void);
- private:
-    PlugletList::PlugletListNode *current;
-};
-    
-#endif /* __PlugletList_h__ */
+#endif /*  __PlugletPeer_h__ */

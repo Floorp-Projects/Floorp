@@ -1,37 +1,32 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- 
- * The contents of this file are subject to the Mozilla Public
- * License Version 1.1 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/MPL/
+ * The contents of this file are subject to the Mozilla Public License
+ * Version 1.0 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
  *
- * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
- * implied. See the License for the specific language governing
- * rights and limitations under the License.
- *
- * The Original Code is mozilla.org code.
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
+ * the License for the specific language governing rights and limitations
+ * under the License.
  *
  * The Initial Developer of the Original Code is Sun Microsystems,
- * Inc. Portions created by Sun are
- * Copyright (C) 1999 Sun Microsystems, Inc. All
- * Rights Reserved.
- *
- * Contributor(s): 
+ * Inc. Portions created by Sun are Copyright (C) 1999 Sun Microsystems,
+ * Inc. All Rights Reserved. 
  */
 
 #include "nsIPluginInstancePeer.h"
 #include "nsIPluginTagInfo2.h"
 #include "PlugletOutputStream.h"
 #include "PlugletTagInfo2.h"
-#include "org_mozilla_pluglet_mozilla_PlugletInstancePeerImpl.h"
+#include "org_mozilla_pluglet_mozilla_PlugletPeerImpl.h"
 
 static jfieldID peerFID = NULL;
 /*
- * Class:     org_mozilla_pluglet_mozilla_PlugletInstancePeerImpl
+ * Class:     org_mozilla_pluglet_mozilla_PlugletPeerImpl
  * Method:    getMIMEType
  * Signature: ()Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_org_mozilla_pluglet_mozilla_PlugletInstancePeerImpl_getMIMEType
+JNIEXPORT jstring JNICALL Java_org_mozilla_pluglet_mozilla_PlugletPeerImpl_getMIMEType
     (JNIEnv *env, jobject jthis) {
     nsIPluginInstancePeer * instancePeer = (nsIPluginInstancePeer*)env->GetLongField(jthis, peerFID);
     if (!instancePeer) {
@@ -45,31 +40,31 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_pluglet_mozilla_PlugletInstancePeerIm
 }
 
 /*
- * Class:     org_mozilla_pluglet_mozilla_PlugletInstancePeerImpl
+ * Class:     org_mozilla_pluglet_mozilla_PlugletPeerImpl
  * Method:    getMode
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_org_mozilla_pluglet_mozilla_PlugletInstancePeerImpl_getMode
+JNIEXPORT jint JNICALL Java_org_mozilla_pluglet_mozilla_PlugletPeerImpl_getMode
     (JNIEnv *, jobject) {
     return 1; //nb
 }
 
 /*
- * Class:     org_mozilla_pluglet_mozilla_PlugletInstancePeerImpl
+ * Class:     org_mozilla_pluglet_mozilla_PlugletPeerImpl
  * Method:    getValue
  * Signature: (I)Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_org_mozilla_pluglet_mozilla_PlugletInstancePeerImpl_getValue
+JNIEXPORT jstring JNICALL Java_org_mozilla_pluglet_mozilla_PlugletPeerImpl_getValue
     (JNIEnv *, jobject, jint) {
     return NULL; //nb
 }
 
 /*
- * Class:     org_mozilla_pluglet_mozilla_PlugletInstancePeerImpl
+ * Class:     org_mozilla_pluglet_mozilla_PlugletPeerImpl
  * Method:    newStream
  * Signature: (Ljava/lang/String;Ljava/lang/String;)Ljava/io/OutputStream;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_pluglet_mozilla_PlugletInstancePeerImpl_newStream
+JNIEXPORT jobject JNICALL Java_org_mozilla_pluglet_mozilla_PlugletPeerImpl_newStream
     (JNIEnv *env, jobject jthis, jstring _type, jstring _target) {
     nsMIMEType mimeType = NULL;
     if ( _type == NULL
@@ -102,11 +97,11 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_pluglet_mozilla_PlugletInstancePeerIm
 }
 
 /*
- * Class:     org_mozilla_pluglet_mozilla_PlugletInstancePeerImpl
+ * Class:     org_mozilla_pluglet_mozilla_PlugletPeerImpl
  * Method:    showStatus
  * Signature: (Ljava/lang/String;)V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletInstancePeerImpl_showStatus
+JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletPeerImpl_showStatus
     (JNIEnv *env, jobject jthis, jstring _msg) {
     nsIPluginInstancePeer * instancePeer = (nsIPluginInstancePeer*)env->GetLongField(jthis, peerFID);
     if (!instancePeer) {
@@ -121,11 +116,11 @@ JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletInstancePeerImpl_
 }
 
 /*
- * Class:     org_mozilla_pluglet_mozilla_PlugletInstancePeerImpl
+ * Class:     org_mozilla_pluglet_mozilla_PlugletPeerImpl
  * Method:    setWindowSize
  * Signature: (II)V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletInstancePeerImpl_setWindowSize
+JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletPeerImpl_setWindowSize
     (JNIEnv *env, jobject jthis, jint width, jint height) {
     nsIPluginInstancePeer * instancePeer = (nsIPluginInstancePeer*)env->GetLongField(jthis, peerFID);
     if (!instancePeer) {
@@ -139,11 +134,11 @@ JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletInstancePeerImpl_
 
 static NS_DEFINE_IID(kIPluginTagInfo2,NS_IPLUGINTAGINFO2_IID);
 /*
- * Class:     org_mozilla_pluglet_mozilla_PlugletInstancePeerImpl
+ * Class:     org_mozilla_pluglet_mozilla_PlugletPeerImpl
  * Method:    getTagInfo
  * Signature: ()Lorg/mozilla/pluglet/mozilla/PlugletTagInfo;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_pluglet_mozilla_PlugletInstancePeerImpl_getTagInfo
+JNIEXPORT jobject JNICALL Java_org_mozilla_pluglet_mozilla_PlugletPeerImpl_getTagInfo
     (JNIEnv *env, jobject jthis) {
      nsIPluginInstancePeer * instancePeer = (nsIPluginInstancePeer*)env->GetLongField(jthis, peerFID);
      nsIPluginTagInfo2 * info = NULL;
@@ -154,11 +149,11 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_pluglet_mozilla_PlugletInstancePeerIm
 }
 
 /*
- * Class:     org_mozilla_pluglet_mozilla_PlugletInstancePeerImpl
+ * Class:     org_mozilla_pluglet_mozilla_PlugletPeerImpl
  * Method:    nativeFinalize
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletInstancePeerImpl_nativeFinalize
+JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletPeerImpl_nativeFinalize
     (JNIEnv *env, jobject jthis) {
     nsIPluginInstancePeer * instancePeer = (nsIPluginInstancePeer*)env->GetLongField(jthis, peerFID);
     if (instancePeer) {
@@ -168,11 +163,11 @@ JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletInstancePeerImpl_
 }
 
 /*
- * Class:     org_mozilla_pluglet_mozilla_PlugletInstancePeerImpl
+ * Class:     org_mozilla_pluglet_mozilla_PlugletPeerImpl
  * Method:    nativeInitialize
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletInstancePeerImpl_nativeInitialize
+JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletPeerImpl_nativeInitialize
     (JNIEnv *env, jobject jthis) {
     if(!peerFID) {
 	peerFID = env->GetFieldID(env->GetObjectClass(jthis),"peer","J");

@@ -22,26 +22,35 @@
 #define __Pluglet_h__
 #include "nsplugin.h"
 #include "jni.h"
+#include "PlugletView.h"
 
-class Pluglet {
+class Pluglet : public nsIPluginInstance {
  public:
-    nsresult CreatePluginInstance(const char* aPluginMIMEType, void **aResult);
-    nsresult Initialize(void);
-    nsresult Shutdown(void); 
-    nsresult GetMIMEDescription(const char* *result);
-    /*****************************************/
-    ~Pluglet(void);
-    int Compare(const char * mimeType);
-    static Pluglet * Load(const char * path);
+    NS_IMETHOD HandleEvent(nsPluginEvent* event, PRBool* handled);
+    NS_IMETHOD Initialize(nsIPluginInstancePeer* peer);
+    NS_IMETHOD GetPeer(nsIPluginInstancePeer* *result);
+    NS_IMETHOD Start(void);
+    NS_IMETHOD Stop(void);
+    NS_IMETHOD Destroy(void);
+    NS_IMETHOD NewStream(nsIPluginStreamListener** listener);
+    NS_IMETHOD SetWindow(nsPluginWindow* window);
+    NS_IMETHOD Print(nsPluginPrint* platformPrint);
+    NS_IMETHOD GetValue(nsPluginInstanceVariable variable, void *value);
+    NS_DECL_ISUPPORTS
+
+    Pluglet(jobject object);
+    virtual ~Pluglet(void);
  private:
     jobject jthis;
-    static jmethodID createPlugletInstanceMID;
-    static jmethodID initializeMID; 
-    static jmethodID shutdownMID;
-    /*****************************************/
-    char *mimeDescription;
-    char *path;
-    Pluglet(const char *mimeDescription,const char * path);
-};    
-
+    static  jmethodID initializeMID;
+    static  jmethodID startMID;
+    static  jmethodID stopMID;
+    static  jmethodID destroyMID;
+    static  jmethodID newStreamMID;
+    static  jmethodID setWindowMID;
+    static  jmethodID printMID; 
+    static  jmethodID getValueMID;
+    nsIPluginInstancePeer *peer;
+    PlugletView *view;
+};
 #endif /* __Pluglet_h__ */

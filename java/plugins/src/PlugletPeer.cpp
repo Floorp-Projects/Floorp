@@ -19,15 +19,15 @@
  * Contributor(s): 
  */
 #include "nsISupports.h"
-#include "PlugletInstancePeer.h"
+#include "PlugletPeer.h"
 #include "PlugletEngine.h"
 
-jclass    PlugletInstancePeer::clazz = NULL;
-jmethodID PlugletInstancePeer::initMID = NULL;
+jclass    PlugletPeer::clazz = NULL;
+jmethodID PlugletPeer::initMID = NULL;
 
-void PlugletInstancePeer::Initialize(void) {
+void PlugletPeer::Initialize(void) {
     JNIEnv * env = PlugletEngine::GetJNIEnv();
-    clazz = env->FindClass("org/mozilla/pluglet/mozilla/PlugletInstancePeerImpl");
+    clazz = env->FindClass("org/mozilla/pluglet/mozilla/PlugletPeerImpl");
     if (env->ExceptionOccurred()) {
 	env->ExceptionDescribe();
         clazz = NULL;
@@ -43,7 +43,7 @@ void PlugletInstancePeer::Initialize(void) {
     }
 }
 
-void PlugletInstancePeer::Destroy(void) {
+void PlugletPeer::Destroy(void) {
     //nb  who gonna cal it?
     JNIEnv * env = PlugletEngine::GetJNIEnv();
     if(clazz) {
@@ -51,7 +51,7 @@ void PlugletInstancePeer::Destroy(void) {
     }
 }
 
-jobject PlugletInstancePeer::GetJObject(const nsIPluginInstancePeer *stream) {
+jobject PlugletPeer::GetJObject(const nsIPluginInstancePeer *peer) {
     jobject res = NULL;
     JNIEnv *env = PlugletEngine::GetJNIEnv();
     if(!clazz) {
@@ -60,7 +60,7 @@ jobject PlugletInstancePeer::GetJObject(const nsIPluginInstancePeer *stream) {
 	    return NULL;
 	}
     }
-    res = env->NewObject(clazz,initMID,(jlong)stream);
+    res = env->NewObject(clazz,initMID,(jlong)peer);
     if (env->ExceptionOccurred()) {
 	env->ExceptionDescribe();
 	res = NULL;

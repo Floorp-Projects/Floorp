@@ -28,7 +28,7 @@ PlugletsDir::PlugletsDir(void) {
 
 PlugletsDir::~PlugletsDir(void) {
     if (list) {
-	for (PlugletListIterator *iter = list->GetIterator();iter->Get();delete iter->Get(),iter->Next())
+	for (ListIterator *iter = list->GetIterator();iter->Get();delete iter->Get(),iter->Next())
 	    ;
 	delete list;
     }
@@ -36,10 +36,10 @@ PlugletsDir::~PlugletsDir(void) {
 
 void PlugletsDir::LoadPluglets() {
     if (!list) {
-	list = new PlugletList();
+	list = new List();
 	char * path = PR_GetEnv("PLUGLET");
 	int pathLength = strlen(path);
-	Pluglet *pluglet;
+	PlugletFactory *plugletFactory;
 	nsFileSpec dir(path);
 	for (nsDirectoryIterator iter(dir,PR_TRUE); iter.Exists(); iter++) {
 	    const nsFileSpec& file = iter;
@@ -49,25 +49,25 @@ void PlugletsDir::LoadPluglets() {
 	       || strcmp(name+length - 4,".jar") ) {
 		continue;
 	    }
-	    if ( (pluglet = Pluglet::Load(name)) ) {
-		list->Add(pluglet);
+	    if ( (plugletFactory = PlugletFactory::Load(name)) ) {
+		list->Add(plugletFactory);
 	    }
 	}
     }
 }
 
-nsresult PlugletsDir::GetPluglet(const char * mimeType, Pluglet **pluglet) {
-    if(!pluglet) {
+nsresult PlugletsDir::GetPlugletFactory(const char * mimeType, PlugletFactory **plugletFactory) {
+    if(!plugletFactory) {
 	return NS_ERROR_NULL_POINTER;
     }
-    *pluglet = NULL;
+    *plugletFactory = NULL;
     nsresult res = NS_ERROR_FAILURE;
     if(!list) {
 	LoadPluglets();
     }
-    for (PlugletListIterator *iter = list->GetIterator();iter->Get();iter->Next()) {
-	if(iter->Get()->Compare(mimeType)) {
-	    *pluglet = iter->Get();
+    for (ListIterator *iter = list->GetIterator();iter->Get();iter->Next()) {
+	if(((PlugletFactory*)(iter->Get()))->Compare(mimeType)) {
+	    *plugletFactory = (PlugletFactory*)iter->Get();
 	    res = NS_OK;
 	    break;
 	}

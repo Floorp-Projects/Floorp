@@ -30,7 +30,7 @@ import java.security.*;
 
 public class PlugletLoader {
     //  path to jar file. Name of main class sould to be in MANIFEST.
-    public static Pluglet getPluglet(String path) {
+    public static PlugletFactory getPluglet(String path) {
 	try {
 	    org.mozilla.util.Debug.print("-- PlugletLoader.getPluglet("+path+")\n"); 
 	    URL url = new URL("file:/"+path);
@@ -41,7 +41,7 @@ public class PlugletLoader {
 	    Attributes attr = manifest.getMainAttributes();
 	    String plugletClassName = attr.getValue("Pluglet-Class");
 	    org.mozilla.util.Debug.print("-- PlugletLoader.getPluglet class name "+plugletClassName+"\n");
-            org.mozilla.util.Debug.print("-- PL url[0] "+loader.getURLs()[0]);
+            org.mozilla.util.Debug.print("-- PL url[0] "+loader.getURLs()[0]+"\n");
 	    if (plugletClassName == null) {
 		//nb
 		return null;
@@ -58,9 +58,11 @@ public class PlugletLoader {
 	    collection.add(perm);
 	    policy.grantPermission(codesource,collection);
 	    Object pluglet = loader.loadClass(plugletClassName).newInstance();
-	    if (pluglet instanceof Pluglet) {
-		return (Pluglet) pluglet;
+	    if (pluglet instanceof PlugletFactory) {
+                org.mozilla.util.Debug.print("-- ok we have a PlugletFactory"+"\n");
+		return (PlugletFactory) pluglet;
 	    } else {
+                org.mozilla.util.Debug.print("-- oups we do not have a PlugletFactory"+"\n");
 		return null;
 	    }
 	} catch (Exception e) {

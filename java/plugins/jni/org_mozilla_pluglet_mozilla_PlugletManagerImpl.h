@@ -54,7 +54,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_pluglet_mozilla_PlugletManagerImpl_us
 /*
  * Class:     org_mozilla_pluglet_mozilla_PlugletManagerImpl
  * Method:    getURL
- * Signature: (Lorg/mozilla/pluglet/PlugletInstance;Ljava/net/URL;Ljava/lang/String;Lorg/mozilla/pluglet/PlugletStreamListener;Ljava/lang/String;Ljava/net/URL;Z)V
+ * Signature: (Lorg/mozilla/pluglet/Pluglet;Ljava/net/URL;Ljava/lang/String;Lorg/mozilla/pluglet/PlugletStreamListener;Ljava/lang/String;Ljava/net/URL;Z)V
  */
 JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletManagerImpl_getURL
   (JNIEnv *, jobject, jobject, jobject, jstring, jobject, jstring, jobject, jboolean);
@@ -62,7 +62,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletManagerImpl_getUR
 /*
  * Class:     org_mozilla_pluglet_mozilla_PlugletManagerImpl
  * Method:    postURL
- * Signature: (Lorg/mozilla/pluglet/PlugletInstance;Ljava/net/URL;I[BZLjava/lang/String;Lorg/mozilla/pluglet/PlugletStreamListener;Ljava/lang/String;Ljava/net/URL;ZI[B)V
+ * Signature: (Lorg/mozilla/pluglet/Pluglet;Ljava/net/URL;I[BZLjava/lang/String;Lorg/mozilla/pluglet/PlugletStreamListener;Ljava/lang/String;Ljava/net/URL;ZI[B)V
  */
 JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletManagerImpl_postURL
   (JNIEnv *, jobject, jobject, jobject, jint, jbyteArray, jboolean, jstring, jobject, jstring, jobject, jboolean, jint, jbyteArray);

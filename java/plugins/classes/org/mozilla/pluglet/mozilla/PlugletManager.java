@@ -47,7 +47,7 @@ public interface  PlugletManager {
     public String userAgent();
     /**
      * Fetches a URL.
-     * @param plugletInst the pluglet making the request. 
+     * @param pluglet the pluglet making the request. 
      *        If null, the URL is fetched in the background.
      * @param url the URL to fetch
      * @param target the target window into which to load the URL
@@ -62,7 +62,7 @@ public interface  PlugletManager {
      *        'javascript:' URLs, even if the user currently has JavaScript 
      *        disabled (usually specify false)
      */
-    public void getURL(PlugletInstance plugletInst,
+    public void getURL(Pluglet pluglet,
                        URL url, String target,
                        PlugletStreamListener streamListener,
                        String altHost, URL referrer,
@@ -70,7 +70,7 @@ public interface  PlugletManager {
     /**
      * Posts to a URL with post data and/or post headers.
      *
-     * @param plugletInst the pluglet making the request. If null, the URL
+     * @param pluglet the pluglet making the request. If null, the URL
      *   is fetched in the background.
      * @param url the URL to fetch
      * @param target the target window into which to load the URL
@@ -93,7 +93,7 @@ public interface  PlugletManager {
      *   are no post headers
      */
 
-    public void postURL(PlugletInstance plugletInst,
+    public void postURL(Pluglet pluglet,
             URL url,
             int postDataLen, 
             byte[] postData,

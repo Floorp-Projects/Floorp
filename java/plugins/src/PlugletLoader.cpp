@@ -59,7 +59,7 @@ void PlugletLoader::Initialize(void) {
         clazz = NULL;
 	return;
     }
-    getPlugletMID = env->GetStaticMethodID(clazz,"getPluglet","(Ljava/lang/String;)Lorg/mozilla/pluglet/Pluglet;");
+    getPlugletMID = env->GetStaticMethodID(clazz,"getPluglet","(Ljava/lang/String;)Lorg/mozilla/pluglet/PlugletFactory;");
     if (env->ExceptionOccurred()) {
 	env->ExceptionDescribe();
         clazz = NULL;

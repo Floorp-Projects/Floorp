@@ -20,8 +20,8 @@
  */
 #ifndef __PlugletsDir_h__
 #define __PlugletsDir_h__
-#include "Pluglet.h"
-#include "PlugletList.h"
+#include "PlugletFactory.h"
+#include "List.h"
 
 class PlugletsDir {
     friend class PlugletsDirIterator;
@@ -29,9 +29,9 @@ class PlugletsDir {
     PlugletsDir(void);
     ~PlugletsDir(void);
     void LoadPluglets();
-    nsresult GetPluglet(const char * mimeType,Pluglet **pluglet);
+    nsresult GetPlugletFactory(const char * mimeType,PlugletFactory **plugletFactory);
  private:
-    PlugletList * list;
+    List * list;
 };
 #endif /* __PlugletsDir_h__ */
 

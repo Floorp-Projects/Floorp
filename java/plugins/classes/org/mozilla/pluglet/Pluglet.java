@@ -19,27 +19,66 @@
  * Contributor(s): 
  */
 package org.mozilla.pluglet;
-
 import org.mozilla.pluglet.mozilla.*;
+import java.awt.Frame;
+import java.awt.print.PrinterJob;
 
 public interface Pluglet {
     /**
-     * Creates a new pluglet instance, based on a MIME type. This
-     * allows different impelementations to be created depending on
-     * the specified MIME type.
+     * Initializes a newly created pluglet instance, passing to it the pluglet
+     * instance peer which it should use for all communication back to the browser.
+     * 
+     * @param peer the corresponding pluglet peer
      */
-    public PlugletInstance createPlugletInstance(String mimeType);
+    void initialize(PlugletPeer peer);
     /**
-     * Initializes the pluglet and will be called before any new instances are
-     * created.
+     * Called to instruct the pluglet instance to start. This will be called after
+     * the pluglet is first created and initialized, and may be called after the
+     * pluglet is stopped (via the Stop method) if the pluglet instance is returned
+     * to in the browser window's history.
      */
-    public void initialize(PlugletManager manager);
+    void start();
     /**
-     * Called when the browser is done with the pluglet factory, or when
-     * the pluglet is disabled by the user.
+     * Called to instruct the pluglet instance to stop, thereby suspending its state.
+     * This method will be called whenever the browser window goes on to display
+     * another page and the page containing the pluglet goes into the window's history
+     * list.
      */
-    public void shutdown();
+    void stop();
+    /**
+     * Called to instruct the pluglet instance to destroy itself. This is called when
+     * it become no longer possible to return to the pluglet instance, either because 
+     * the browser window's history list of pages is being trimmed, or because the
+     * window containing this page in the history is being closed.
+     */
+    void destroy();
+    /**
+     * Called to tell the pluglet that the initial src/data stream is
+     * ready. 
+     * 
+     * @result PlugletStreamListener
+     */
+    PlugletStreamListener newStream();
+    /**
+     * Called when the window containing the pluglet instance changes.
+     *
+     * @param frame the pluglet panel
+     */
+    void setWindow(Frame frame);
+     /**
+     * Called to instruct the pluglet instance to print itself to a printer.
+     *
+     * @param print printer information.
+     */ 
+    void print(PrinterJob printerJob);
 }
+    
+
+
+
+
+
+
 
 
 

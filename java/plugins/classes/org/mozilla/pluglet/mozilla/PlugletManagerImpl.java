@@ -50,7 +50,7 @@ public class PlugletManagerImpl implements PlugletManager {
     public native String userAgent();
     /**
      * Fetches a URL.
-     * @param plugletInst the pluglet making the request. 
+     * @param pluglet the pluglet making the request. 
      *        If null, the URL is fetched in the background.
      * @param url the URL to fetch
      * @param target the target window into which to load the URL
@@ -65,7 +65,7 @@ public class PlugletManagerImpl implements PlugletManager {
      *        'javascript:' URLs, even if the user currently has JavaScript 
      *        disabled (usually specify false)
      */
-    public native void getURL(PlugletInstance plugletInst,
+    public native void getURL(Pluglet pluglet,
                        URL url, String target,
                        PlugletStreamListener streamListener,
                        String altHost, URL referrer,
@@ -73,7 +73,7 @@ public class PlugletManagerImpl implements PlugletManager {
     /**
      * Posts to a URL with post data and/or post headers.
      *
-     * @param plugletInst the pluglet making the request. If null, the URL
+     * @param pluglet the pluglet making the request. If null, the URL
      *   is fetched in the background.
      * @param url the URL to fetch
      * @param target the target window into which to load the URL
@@ -96,7 +96,7 @@ public class PlugletManagerImpl implements PlugletManager {
      *   are no post headers
      */
 
-    public native void postURL(PlugletInstance plugletInst,
+    public native void postURL(Pluglet pluglet,
             URL url,
             int postDataLen, 
             byte[] postData,

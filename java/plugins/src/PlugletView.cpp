@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -19,19 +19,19 @@
  * Contributor(s): 
  */
 #include <windows.h>
-#include "PlugletInstanceView.h"
+#include "PlugletView.h"
 #include "PlugletEngine.h"
 
 
-jclass   PlugletInstanceView::clazz = NULL;
-jmethodID  PlugletInstanceView::initMID = NULL;
+jclass   PlugletView::clazz = NULL;
+jmethodID  PlugletView::initMID = NULL;
 
-PlugletInstanceView::PlugletInstanceView() {
+PlugletView::PlugletView() {
     hWND = NULL;
     frame = NULL;
     isCreated = FALSE;
 }
-void PlugletInstanceView::Initialize() {
+void PlugletView::Initialize() {
     JNIEnv *env = PlugletEngine::GetJNIEnv();
     clazz = env->FindClass("sun/awt/windows/WEmbeddedFrame");
     if (!clazz) {
@@ -46,7 +46,7 @@ void PlugletInstanceView::Initialize() {
     }
 }
 
-BOOLEAN  PlugletInstanceView::SetWindow(nsPluginWindow* window) {
+BOOLEAN  PlugletView::SetWindow(nsPluginWindow* window) {
     if (!window || !window->window) {
         if (isCreated) {
             isCreated = FALSE;
@@ -78,7 +78,7 @@ BOOLEAN  PlugletInstanceView::SetWindow(nsPluginWindow* window) {
     return TRUE;
 }
 
-jobject PlugletInstanceView::GetJObject() {
+jobject PlugletView::GetJObject() {
     return frame;
 }
 

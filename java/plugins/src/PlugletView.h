@@ -18,18 +18,33 @@
  *
  * Contributor(s): 
  */
-#ifndef __PlugletInstancePeer_h__
-#define __PlugletInstancePeer_h__
-#include "nsIPluginInstancePeer.h"
+#ifndef __PlugletView_h__
+#define __PlugletView_h__
+#include <windows.h>
+#include "nsplugindefs.h"
 #include "jni.h"
 
-class PlugletInstancePeer {
+class PlugletView {
  public:
-    static jobject GetJObject(const nsIPluginInstancePeer *instancePeer);
+    PlugletView(void);
+    jobject GetJObject(void);
+    BOOLEAN SetWindow(nsPluginWindow* window);
  private:
-    static void Initialize(void);
-    static void Destroy(void);
-    static jclass    clazz;
-    static jmethodID initMID;
+    static  void Initialize(void);
+    static  jclass clazz;
+    static  jmethodID initMID;
+    HWND    hWND;
+    BOOL    isCreated;
+    jobject frame;
 };
-#endif /*  __PlugletInputStream_h__ */
+#endif /* __PlugletInstanceView_h__ */
+
+
+
+
+
+
+
+
+
+

@@ -25,7 +25,7 @@ import java.awt.event.*;
 import java.awt.print.*;
 import java.io.*;
 
-public class test implements Pluglet {
+public class test implements PlugletFactory {
     public test() {
 	org.mozilla.util.Debug.print("--test.test()\n");
     }
@@ -34,7 +34,7 @@ public class test implements Pluglet {
      * allows different impelementations to be created depending on
      * the specified MIME type.
      */
-    public PlugletInstance createPlugletInstance(String mimeType) {
+    public Pluglet createPluglet(String mimeType) {
 	org.mozilla.util.Debug.print("--test.createPlugletInstance\n");
  	return new TestInstance();
     }
@@ -54,11 +54,11 @@ public class test implements Pluglet {
     }
 }
 
-class TestInstance implements PlugletInstance {
+class TestInstance implements Pluglet {
     Panel panel;
     Button button;
     List list;
-    PlugletInstancePeer peer;
+    PlugletPeer peer;
     public TestInstance() {
 	org.mozilla.util.Debug.print("--TestInstance.TestInstance() \n");
 	panel = new Panel();
@@ -89,7 +89,7 @@ class TestInstance implements PlugletInstance {
      * @param peer the corresponding pluglet instance peer
      */
 
-    public void initialize(PlugletInstancePeer peer) {
+    public void initialize(PlugletPeer peer) {
 	this.peer = peer;
 	org.mozilla.util.Debug.print("--TestInstance.initialize\n");
 	peer.showStatus("Hello world");
@@ -131,6 +131,7 @@ class TestInstance implements PlugletInstance {
      * window containing this page in the history is being closed.
      */
     public void destroy() {
+       org.mozilla.util.Debug.print("--TestInstance.destroy\n");
     }
     /**
      * Called to tell the pluglet that the initial src/data stream is

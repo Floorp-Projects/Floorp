@@ -70,14 +70,14 @@ NS_METHOD PlugletEngine::CreatePluginInstance(nsISupports *aOuter, REFNSIID aIID
     if (!aResult) {
 	return NS_ERROR_FAILURE; 
     }
-    Pluglet * pluglet = NULL;
+    PlugletFactory * plugletFactory = NULL;
     nsresult res = NS_ERROR_NULL_POINTER; 
-    if ((res = dir->GetPluglet(aPluginMIMEType,&pluglet)) != NS_OK
-	|| !pluglet) {
+    if ((res = dir->GetPlugletFactory(aPluginMIMEType,&plugletFactory)) != NS_OK
+	|| !plugletFactory) {
         return res; 
     }
     //we do not delete pluglet because we do not allocate new memory in dir->GetPluglet()
-    return pluglet->CreatePluginInstance(aPluginMIMEType,aResult);
+    return plugletFactory->CreatePluginInstance(aPluginMIMEType,aResult);
 }
 
 NS_METHOD PlugletEngine::GetMIMEDescription(const char* *result) {

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- 
+/* 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -20,161 +20,170 @@
  */
 #include "Pluglet.h"
 #include "PlugletEngine.h"
-#include "PlugletLoader.h"
-#include "PlugletInstance.h"
-#include "string.h"
+#include "PlugletStreamListener.h"
+#include "PlugletPeer.h"
+#include "Registry.h"
 
-jmethodID Pluglet::createPlugletInstanceMID = NULL;
-jmethodID Pluglet::initializeMID = NULL;  
-jmethodID Pluglet::shutdownMID = NULL;
+jmethodID Pluglet::initializeMID = NULL;
+jmethodID Pluglet::startMID = NULL;
+jmethodID Pluglet::stopMID = NULL;
+jmethodID Pluglet::destroyMID = NULL;
+jmethodID Pluglet::newStreamMID = NULL;
+jmethodID Pluglet::setWindowMID = NULL;
+jmethodID Pluglet::printMID = NULL;
 
+static NS_DEFINE_IID(kIPluginInstanceIID, NS_IPLUGININSTANCE_IID);
 
-nsresult Pluglet::CreatePluginInstance(const char* aPluginMIMEType, void **aResult) {
-    if(!aResult
-       || Initialize() != NS_OK) {
-	return NS_ERROR_FAILURE;
-    }
-    JNIEnv *env = PlugletEngine::GetJNIEnv();
-    if(!env) {
-	return NS_ERROR_FAILURE;
-    }
-    jstring jstr = env->NewStringUTF(aPluginMIMEType);
-    jobject obj = env->CallObjectMethod(jthis,createPlugletInstanceMID, jstr);
-    if (!obj) {
-        return NS_ERROR_FAILURE;
-    }
-    if (env->ExceptionOccurred()) {
-        env->ExceptionDescribe();
-        return NS_ERROR_FAILURE;
-    }
-	nsISupports * instance = new PlugletInstance(obj);
-	NS_ADDREF(instance);
-	*aResult = instance;
+NS_IMPL_ISUPPORTS(Pluglet, kIPluginInstanceIID);
+
+Pluglet::Pluglet(jobject object) {
+    NS_INIT_REFCNT();
+    jthis = PlugletEngine::GetJNIEnv()->NewGlobalRef(object);
+    //nb check for null
+    peer = NULL;
+    view = new PlugletView();
+    Registry::SetPeer(jthis,(jlong)this);
+}
+
+Pluglet::~Pluglet() {
+    Registry::Remove(jthis);
+    PlugletEngine::GetJNIEnv()->DeleteGlobalRef(jthis);
+    NS_RELEASE(peer);
+}
+
+NS_METHOD Pluglet::HandleEvent(nsPluginEvent* event, PRBool* handled) {
+    //nb we do not need it under win32
     return NS_OK;
 }
 
-nsresult Pluglet::Initialize(void) {
+NS_METHOD Pluglet::Initialize(nsIPluginInstancePeer* _peer) {
     JNIEnv *env = PlugletEngine::GetJNIEnv();
-    if(!env) {
-        return NS_ERROR_FAILURE;
-    }
-    if (!initializeMID) { 
+    if (!printMID) {
 	jclass clazz = env->FindClass("org/mozilla/pluglet/Pluglet");
-	if(!clazz) {
-	    return NS_ERROR_FAILURE;
-	}
-	createPlugletInstanceMID = env->GetMethodID(clazz,"createPlugletInstance","(Ljava/lang/String;)Lorg/mozilla/pluglet/PlugletInstance;");
-	if (!createPlugletInstanceMID) {
-	    return NS_ERROR_FAILURE;
-	}
-	shutdownMID = env->GetMethodID(clazz,"shutdown","()V");
-	if (!shutdownMID) {
-	    return NS_ERROR_FAILURE;
-	}   
-	initializeMID = env->GetMethodID(clazz,"initialize","(Lorg/mozilla/pluglet/mozilla/PlugletManager;)V");
-	if (!initializeMID) {
-	    return NS_ERROR_FAILURE;
-	}
-	
-    }
-    if (!jthis) {
-	jthis = PlugletLoader::GetPluglet(path);
-	if (!jthis) {
-	    return NS_ERROR_FAILURE;
-	}
-	env->CallVoidMethod(jthis,initializeMID,PlugletEngine::GetPlugletManager());
 	if (env->ExceptionOccurred()) {
-	    env->ExceptionDescribe();
-	    return NS_ERROR_FAILURE;
-	}
+            env->ExceptionDescribe();
+            return NS_ERROR_FAILURE;
+        }
+	initializeMID = env->GetMethodID(clazz,"initialize","(Lorg/mozilla/pluglet/mozilla/PlugletPeer;)V");
+        if (env->ExceptionOccurred()) {
+            env->ExceptionDescribe();
+            return NS_ERROR_FAILURE;
+        }
+	startMID = env->GetMethodID(clazz,"start","()V");
+	if (env->ExceptionOccurred()) {
+            env->ExceptionDescribe();
+            return NS_ERROR_FAILURE;
+        }
+	stopMID = env->GetMethodID(clazz,"stop","()V");
+	if (env->ExceptionOccurred()) {
+            env->ExceptionDescribe();
+            return NS_ERROR_FAILURE;
+        }
+	destroyMID = env->GetMethodID(clazz,"destroy","()V");
+	if (env->ExceptionOccurred()) {
+            env->ExceptionDescribe();
+            return NS_ERROR_FAILURE;
+        }
+	newStreamMID = env->GetMethodID(clazz,"newStream","()Lorg/mozilla/pluglet/PlugletStreamListener;");
+	if (env->ExceptionOccurred()) {
+            env->ExceptionDescribe();
+            return NS_ERROR_FAILURE;
+        }
+	setWindowMID = env->GetMethodID(clazz,"setWindow","(Ljava/awt/Frame;)V");
+	if (env->ExceptionOccurred()) {
+            env->ExceptionDescribe();
+            return NS_ERROR_FAILURE;
+        }
+	printMID = env->GetMethodID(clazz,"print","(Ljava/awt/print/PrinterJob;)V");
+	if (env->ExceptionOccurred()) {
+            env->ExceptionDescribe();
+            return NS_ERROR_FAILURE;
+        }
     }
+    peer = _peer;
+    peer->AddRef();
+    jobject obj = PlugletPeer::GetJObject(peer);
+    if (!obj) {
+	return NS_ERROR_FAILURE;
+    }
+    env->CallVoidMethod(jthis,initializeMID,obj);
     return NS_OK;
 }
 
-nsresult Pluglet::Shutdown(void) {
-    
-    if(!jthis) {
-	return NS_ERROR_FAILURE;
-    }
-    JNIEnv *env = PlugletEngine::GetJNIEnv();
-    if(!env) {
-	return NS_ERROR_FAILURE;
-    }
-    env->CallVoidMethod(jthis,shutdownMID);
+NS_METHOD Pluglet::GetPeer(nsIPluginInstancePeer* *result) {
+    peer->AddRef();
+    *result = peer;
+    return NS_OK;
+}
+
+NS_METHOD Pluglet::Start(void) {
+    JNIEnv * env = PlugletEngine::GetJNIEnv();
+    env->CallVoidMethod(jthis,startMID);
     if (env->ExceptionOccurred()) {
-	env->ExceptionDescribe();
+            env->ExceptionDescribe();
+            return NS_ERROR_FAILURE;
+     }
+    return NS_OK;
+}
+NS_METHOD Pluglet::Stop(void) {
+    JNIEnv * env = PlugletEngine::GetJNIEnv();
+    env->CallVoidMethod(jthis,stopMID);
+    if (env->ExceptionOccurred()) {
+            env->ExceptionDescribe();
+            return NS_ERROR_FAILURE;
+    }
+    return NS_OK;
+}
+NS_METHOD Pluglet::Destroy(void) {
+    JNIEnv * env = PlugletEngine::GetJNIEnv();
+    env->CallVoidMethod(jthis,destroyMID);
+    if (env->ExceptionOccurred()) {
+            env->ExceptionDescribe();
+            return NS_ERROR_FAILURE;
+     }
+    return NS_OK;
+}
+
+NS_METHOD Pluglet::NewStream(nsIPluginStreamListener** listener) {
+    if(!listener) {
 	return NS_ERROR_FAILURE;
+    }
+    JNIEnv * env = PlugletEngine::GetJNIEnv();
+    jobject obj = env->CallObjectMethod(jthis,newStreamMID);
+    if (env->ExceptionOccurred()) {
+            env->ExceptionDescribe();
+            return NS_ERROR_FAILURE;
+    }
+    if (obj) {
+	*listener = new PlugletStreamListener(obj);
+	(*listener)->AddRef();
     }
     return NS_OK;
 }
 
-nsresult Pluglet::GetMIMEDescription(const char* *result) {
-    if(!result) {
-	return NS_ERROR_FAILURE;
-    }
-    *result = mimeDescription;
-    return (*result) ? NS_OK : NS_ERROR_FAILURE;
+NS_METHOD Pluglet::GetValue(nsPluginInstanceVariable variable, void *value) {
+    return NS_ERROR_FAILURE;
 }
 
-Pluglet::Pluglet(const char *mimeDescription, const char *path) {
-    jthis = NULL;
-    this->path = new char[strlen(path)+1];
-    strcpy(this->path,path);
-    this->mimeDescription = new char[strlen(mimeDescription)+1];
-    strcpy(this->mimeDescription,mimeDescription);
-    
-}
- 
-Pluglet::~Pluglet(void) {
-    if (path != NULL) {
-        delete[] path;
-    }
-    if (mimeDescription != NULL) {
-        delete[] mimeDescription;
-    }
+NS_METHOD Pluglet::SetWindow(nsPluginWindow* window) {
     JNIEnv *env = PlugletEngine::GetJNIEnv();
-    if (env != NULL) {
-        env->DeleteGlobalRef(jthis);
+    if (view->SetWindow(window)) {
+      env->CallVoidMethod(jthis,setWindowMID,view->GetJObject());
     }
+    return NS_OK;
 }
 
-Pluglet * Pluglet::Load(const char * path) {
-    char * mime = PlugletLoader::GetMIMEDescription(path);
-    Pluglet * result = NULL;
-    if (mime) {
-	result = new Pluglet(mime,path);
-	//delete[] mime;  //nb we have a strange exception here 
-    }
-    return result;
+NS_METHOD Pluglet::Print(nsPluginPrint* platformPrint) {
+    //nb
+    return NS_OK;
 }
 
-/*
-  1 if good
-  0 if not good
- */
-int Pluglet::Compare(const char *mimeType) {
-    /* mimedDescription mimeTypes:extensions:description
-       mimeTypes mimeType;mimeType;...
-       extensions extension;extension;...
-    */
-    if (!mimeType) {
-        return 0;
-    }
-    char * terminator = strchr(mimeDescription,':'); // terminator have to be not equal to NULL;
-    char *p1 = mimeDescription;
-    char *p2 = strchr(p1,';');
-    while ( p1 != NULL && p1 < terminator ) {
-        size_t n = sizeof(char) * ( ( (p2 == NULL) ? terminator : p2) - p1 );
-        if (PL_strncasecmp(p1,mimeType,n) == 0) {
-            return 1;
-        }
-        p1 = p2 ;
-        if (p2 != NULL) {
-            p2 = strchr(++p2,';');
-            p1++;
-        }
-    }
-    return 0;
-}
+
+
+
+
+
+
+
 
 

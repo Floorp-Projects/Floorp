@@ -18,31 +18,28 @@
  *
  * Contributor(s): 
  */
-#ifndef __PlugletInstanceView_h__
-#define __PlugletInstanceView_h__
-#include <windows.h>
-#include "nsplugindefs.h"
-#include "jni.h"
+package org.mozilla.pluglet;
 
-class PlugletInstanceView {
- public:
-    PlugletInstanceView(void);
-    jobject GetJObject(void);
-    BOOLEAN SetWindow(nsPluginWindow* window);
- private:
-    static  void Initialize(void);
-    static  jclass clazz;
-    static  jmethodID initMID;
-    HWND    hWND;
-    BOOL    isCreated;
-    jobject frame;
-};
-#endif /* __PlugletInstanceView_h__ */
+import org.mozilla.pluglet.mozilla.*;
 
-
-
-
-
+public interface PlugletFactory {
+    /**
+     * Creates a new pluglet instance, based on a MIME type. This
+     * allows different impelementations to be created depending on
+     * the specified MIME type.
+     */
+    public Pluglet createPluglet(String mimeType);
+    /**
+     * Initializes the pluglet and will be called before any new instances are
+     * created.
+     */
+    public void initialize(PlugletManager manager);
+    /**
+     * Called when the browser is done with the pluglet factory, or when
+     * the pluglet is disabled by the user.
+     */
+    public void shutdown();
+}
 
 
 
