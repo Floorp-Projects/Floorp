@@ -242,8 +242,8 @@ nsresult nsDateTimeFormatWin::ConvertToUnicode(const char *inString, const PRInt
       PRUnichar *unichars = outString;
 
       if (nsnull != unichars) {
-        res = decoder->Convert(unichars, 0, &unicharLength,
-                               inString, 0, &srcLength);
+        res = decoder->Convert(inString, &srcLength,
+                               unichars, &unicharLength);
         if (NS_SUCCEEDED(res)) {
           *outLen = unicharLength;
         }

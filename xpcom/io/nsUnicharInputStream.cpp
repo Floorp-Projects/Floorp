@@ -280,8 +280,8 @@ PRInt32 ConverterInputStream::Fill(nsresult * aErrorCode)
   // Now convert as much of the byte buffer to unicode as possible
   PRInt32 dstLen = mUnicharData->GetBufferSize();
   PRInt32 srcLen = remainder + nb;
-  *aErrorCode = mConverter->Convert(mUnicharData->GetBuffer(), 0, &dstLen,
-                                    mByteData->GetBuffer(), 0, &srcLen);
+  *aErrorCode = mConverter->Convert(mByteData->GetBuffer(), &srcLen,
+                                    mUnicharData->GetBuffer(), &dstLen);
   mUnicharDataOffset = 0;
   mUnicharDataLength = dstLen;
   mByteDataOffset += srcLen;

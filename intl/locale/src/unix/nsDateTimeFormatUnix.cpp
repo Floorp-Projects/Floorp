@@ -152,8 +152,8 @@ nsresult nsDateTimeFormatUnix::FormatTMTime(nsILocale* locale,
       PRUnichar *unichars = new PRUnichar [ unicharLength ];
   
       if (nsnull != unichars) {
-        res = decoder->Convert(unichars, 0, &unicharLength,
-                               strOut, 0, &srcLength);
+        res = decoder->Convert(strOut, &srcLength,
+                               unichars, &unicharLength);
         if (NS_SUCCEEDED(res)) {
           stringOut.SetString(unichars, unicharLength);
         }

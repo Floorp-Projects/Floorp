@@ -152,7 +152,7 @@ int main(int argc, const char** argv)
      {
         medsize=MEDBUFSIZE;
         
-	res = decoder->Convert(medbuffer, 0, &medsize,inbuffer,0,&insize);
+	res = decoder->Convert(inbuffer,&insize, medbuffer, &medsize);
         if(NS_FAILED(res)) {
             fprintf(stderr, "failed in decoder->Convert %x\n",res);
 	    return -1;

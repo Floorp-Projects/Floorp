@@ -120,7 +120,7 @@ nsresult ConvertToUnicode(const nsString& aCharset,
       unichars = (PRUnichar *) PR_Malloc(unicharLength * sizeof(PRUnichar));
       if (unichars != nsnull) {
         // convert to unicode
-        res = decoder->Convert(unichars, 0, &unicharLength, inCString, 0, &srcLen);
+        res = decoder->Convert(inCString, &srcLen, unichars, &unicharLength);
         outString.SetString(unichars, unicharLength);
         PR_Free(unichars);
       }

@@ -183,7 +183,7 @@ nsresult testDecoder(nsIUnicodeDecoder * aDec,
   PRInt32 destLen = GENERAL_BUFFER/2;
 
   // conversion
-  res = aDec->Convert(dest, 0, &destLen, aSrc, 0, &srcLen);
+  res = aDec->Convert(aSrc, &srcLen, dest, &destLen);
   // we want a perfect result here - the test data should be complete!
   if (res != NS_OK) {
     printf("ERROR at %s.easy.Decode() code=0x%x.\n",aTestName,res);
@@ -305,7 +305,7 @@ nsresult testStressDecoder(nsIUnicodeDecoder * aDec,
 
   // controlled conversion
   for (;srcOff < aSrcLength;) {
-    res = aDec->Convert(dest, destOff, &destLen, aSrc, srcOff, &srcLen);
+    res = aDec->Convert(aSrc + srcOff, &srcLen, dest + destOff, &destLen);
     if (NS_FAILED(res)) {
       printf("ERROR at %s.stress.Convert() code=0x%x.\n",aTestName,res);
       return res;
