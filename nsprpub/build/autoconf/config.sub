@@ -237,7 +237,7 @@ case $basic_machine in
 	| mips16 | mips64 | mips64el | mips64orion | mips64orionel \
 	| mips64vr4100 | mips64vr4100el | mips64vr4300 \
 	| mips64vr4300el | mips64vr5000 | mips64vr5000el \
-	| mipsbe | mipseb | mipsel | mipsle | mipstx39 | mipstx39el \
+	| mipsbe | mipseb | mips*el | mipsle | mipstx39 | mipstx39el \
 	| mipsisa32 \
 	| mn10200 | mn10300 \
 	| ns16k | ns32k \
@@ -297,7 +297,7 @@ case $basic_machine in
 	| mips-* | mips16-* | mips64-* | mips64el-* | mips64orion-* \
 	| mips64orionel-* | mips64vr4100-* | mips64vr4100el-* \
 	| mips64vr4300-* | mips64vr4300el-* | mipsbe-* | mipseb-* \
-	| mipsle-* | mipsel-* | mipstx39-* | mipstx39el-* \
+	| mipsle-* | mips*el-* | mipstx39-* | mipstx39el-* \
 	| none-* | np1-* | ns16k-* | ns32k-* \
 	| orion-* \
 	| pdp10-* | pdp11-* | pj-* | pjl-* | pn-* | power-* \
