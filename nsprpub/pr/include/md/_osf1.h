@@ -156,4 +156,14 @@ extern int __select (int, fd_set *, fd_set *, fd_set *, struct timeval *);
 #define _MD_POLL __poll
 extern int __poll(struct pollfd filedes[], unsigned int nfds, int timeout);
 
+/*
+ * Atomic operations
+ */
+#include <machine/builtins.h>
+#define _PR_HAVE_ATOMIC_OPS
+#define _MD_INIT_ATOMIC()
+#define _MD_ATOMIC_INCREMENT(val) (__ATOMIC_INCREMENT_LONG(val) + 1)
+#define _MD_ATOMIC_DECREMENT(val) (__ATOMIC_DECREMENT_LONG(val) - 1)
+#define _MD_ATOMIC_SET(val, newval) __ATOMIC_EXCH_LONG(val, newval)
+
 #endif /* nspr_osf1_defs_h___ */
