@@ -11,7 +11,7 @@ of the Bugzilla Guide in the docs/ directory.
 1. Decide from which URL and directory under your webserver root you
    will be serving the Bugzilla webpages from.
    
-2. Unpack distribution into the chosen directory (there is no copy or
+2. Unpack distribution into the chosen directory (there is no copying or
    installation involved). 
 
 3. Run ./checksetup.pl, look for unsolved requirements, install them.
