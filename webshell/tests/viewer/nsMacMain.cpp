@@ -75,7 +75,12 @@ enum
 	cmd_DebugToggleSelection,
 	cmd_DebugRobot,
 	cmd_ShowContentQuality,
-	
+	cmd_GFXWidgetMode,
+	cmd_NativeWidgetMode,
+
+	item_GFXWidgetMode = 24,
+	item_NativeWidgetMode,
+
 	cmd_Compatibility_NavQuirks	= 4200,
 	cmd_Compatibility_Standard,
 	
@@ -288,6 +293,16 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 				case cmd_DebugToggleSelection:	xpID = VIEWER_TOGGLE_SELECTION;			break;
 				case cmd_DebugRobot:						xpID = VIEWER_DEBUGROBOT;						break;
 				case cmd_ShowContentQuality:		xpID =VIEWER_SHOW_CONTENT_QUALITY;	break;
+				case cmd_GFXWidgetMode:
+					xpID =VIEWER_GFX_WIDGET_MODE;
+					::CheckItem(GetMenuHandle(menu_Debug), item_GFXWidgetMode, true);
+					::CheckItem(GetMenuHandle(menu_Debug), item_NativeWidgetMode, false);
+					break;
+				case cmd_NativeWidgetMode:
+					xpID =VIEWER_NATIVE_WIDGET_MODE;
+					::CheckItem(GetMenuHandle(menu_Debug), item_GFXWidgetMode, false);
+					::CheckItem(GetMenuHandle(menu_Debug), item_NativeWidgetMode, true);
+					break;
 			}
 			break;
 			
