@@ -27,7 +27,7 @@
 #include "nsMsgCompCID.h"
 
 #include <stdio.h>
-#ifdef XP_PC
+#if defined(XP_PC) && !defined(XP_OS2)
 #include <windows.h>
 #endif
 
@@ -163,7 +163,7 @@ int main(int argc, char *argv[])
     pMsgSendLater->SendUnsentMessages(identity, nsnull);
   }
 
-#ifdef XP_PC
+#if defined(XP_PC) && !defined(XP_OS2)
   printf("Sitting in an event processing loop ...Hit Cntl-C to exit...");
   while (1)
   {

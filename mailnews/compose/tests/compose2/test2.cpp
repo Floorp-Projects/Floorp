@@ -27,7 +27,7 @@
 #include "nsMsgCompCID.h"
 
 #include <stdio.h>
-#ifdef XP_PC
+#if defined(XP_PC) && !defined(XP_OS2)
 #include <windows.h>
 #endif
 
@@ -52,8 +52,13 @@
 #include "nsFileStream.h"
 
 #ifdef XP_PC
+#ifdef XP_OS2
+#define XPCOM_DLL  "xpcom.dll"
+#define PREF_DLL   "xppref.dll"
+#else
 #define XPCOM_DLL  "xpcom32.dll"
 #define PREF_DLL   "xppref32.dll"
+#endif
 #define APPSHELL_DLL "appshell.dll"
 #define MIME_DLL "mime.dll"
 #else
@@ -441,7 +446,7 @@ int main(int argc, char *argv[])
     }    
   }
 
-#ifdef XP_PC
+#if defined(XP_PC) && !defined(XP_OS2)
   printf("Sitting in an event processing loop ...Hit Cntl-C to exit...");
   while (keepOnRunning)
   {
