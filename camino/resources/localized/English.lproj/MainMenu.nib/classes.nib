@@ -10,6 +10,7 @@
         {
             ACTIONS = {
                 aboutServers = id; 
+                aboutWindow = id; 
                 addBookmark = id; 
                 addFolder = id; 
                 addSeparator = id; 

@@ -63,6 +63,7 @@
 #import "PreferenceManager.h"
 #import "SharedMenusObj.h"
 
+#include "nsBuildID.h"
 #include "nsCOMPtr.h"
 #include "nsEmbedAPI.h"
 #include "nsString.h"
@@ -142,7 +143,12 @@ const int kReuseWindowOnAE = 2;
 
     NSString* url = [defaults stringForKey:USER_DEFAULTS_URL_KEY];
     mStartURL = url ? [url retain] : nil;
+#if 0
+// there's a lot of debate about having a splash screen. good cocoa apps don't have them
+// at all. turning off here (but not removing any code) for a time to get community feedback.
+// users can get the buildID from the about window if necessary.
     mSplashScreen = [[SplashScreenWindow alloc] initWithImage:[NSImage imageNamed:@"splash"] withFade:NO];
+#endif
     mFindDialog = nil;
     mMenuBookmarks = nil;
     
@@ -1220,7 +1226,20 @@ const int kReuseWindowOnAE = 2;
 {
   [[aNotification object] release];
 }
- 
+
+//
+// -aboutWindow:
+//
+// Show the (slightly modified) standard about window, with the build id instead of the
+// typical application version. It'll display like "2003120403 (v0.7+)". 
+//
+-(IBAction)aboutWindow:(id)sender
+{
+  NSString* version = [NSString stringWithFormat:@"%010u", NS_BUILD_ID];
+  NSDictionary* d = [NSDictionary dictionaryWithObject:version forKey:@"ApplicationVersion"];
+  [NSApp orderFrontStandardAboutPanelWithOptions:d];
+}
+
 // services
 
 - (void)openURL:(NSPasteboard *) pboard userData:(NSString *) userData error:(NSString **) error

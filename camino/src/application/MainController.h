@@ -88,6 +88,8 @@
     NSMutableDictionary*    mCharsets;
 }
 
+-(IBAction)aboutWindow:(id)sender;
+
 // File menu actions.
 -(IBAction) newWindow:(id)aSender;
 -(IBAction) openFile:(id)aSender;
