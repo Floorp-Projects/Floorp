@@ -181,9 +181,9 @@ public class ScriptOrFnNode extends Node {
 
     public final void setCompilerData(Object data)
     {
-        if (data == null) Kit.argBug();
+        if (data == null) throw new IllegalArgumentException();
         // Can only call once
-        if (compilerData != null) Kit.stateBug();
+        if (compilerData != null) throw new IllegalStateException();
         compilerData = data;
     }
 

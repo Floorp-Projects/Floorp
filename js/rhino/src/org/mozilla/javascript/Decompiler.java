@@ -301,11 +301,11 @@ public class Decompiler
         if (length == 0) { return ""; }
 
         int indent = properties.getInt(INITIAL_INDENT_PROP, 0);
-        if (indent < 0) Kit.argBug();
+        if (indent < 0) throw new IllegalArgumentException();
         int indentGap = properties.getInt(INDENT_GAP_PROP, 4);
-        if (indentGap < 0) Kit.argBug();
+        if (indentGap < 0) throw new IllegalArgumentException();
         int caseGap = properties.getInt(CASE_GAP_PROP, 2);
-        if (caseGap < 0) Kit.argBug();
+        if (caseGap < 0) throw new IllegalArgumentException();
 
         StringBuffer result = new StringBuffer();
         boolean justFunctionBody = (0 != (flags & Decompiler.ONLY_BODY_FLAG));
