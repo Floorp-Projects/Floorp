@@ -812,6 +812,17 @@ static HGLOBAL CreateGlobalDevModeAndInit(LPTSTR aPrintName, nsIPrintSettings* a
       memcpy(devMode, pNewDevMode, dwNeeded);
       // Initialize values from the PrintSettings
       SetupDevModeFromSettings(devMode, aPS);
+
+      // Sets back the changes we made to the DevMode into the Printer Driver
+      dwRet = ::DocumentProperties(gParentWnd, hPrinter, aPrintName, devMode, devMode, DM_IN_BUFFER | DM_OUT_BUFFER);
+      if (dwRet != IDOK) {
+        ::GlobalUnlock(hGlobalDevMode);
+        ::GlobalFree(hGlobalDevMode);
+        ::HeapFree(::GetProcessHeap(), 0, pNewDevMode);
+        ::ClosePrinter(hPrinter);
+         return NULL;
+      }
+
       ::GlobalUnlock(hGlobalDevMode);
     } else {
       ::GlobalFree(hGlobalDevMode);
