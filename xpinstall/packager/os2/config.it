@@ -819,7 +819,7 @@ File=[SETUP PATH]\$MainExeFile$
 Parameters=-mail
 Working Dir=[SETUP PATH]
 Location=[Default Folder]
-Object ID=<CCINBOX>
+Object ID=<MOZILLAMAIL>
 
 [Strings]
 ;*** LOCALIZE ME BABY ***
