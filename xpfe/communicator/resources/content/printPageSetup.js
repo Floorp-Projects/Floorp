@@ -44,6 +44,7 @@ var gPrefs         = null;
 var gPrintService  = null;
 var gPrintSettings = null;
 var gStringBundle  = null;
+var gDoingMetric   = false;
 
 var gPrintSettingsInterface = Components.interfaces.nsIPrintSettings;
 var gDoDebug = false;
@@ -136,7 +137,8 @@ function setOrientation()
     gPageHeight = gPageWidth;
     gPageWidth = temp;
   }
-  style += "width:" + gPageWidth/10 + unitString() + ";height:" + gPageHeight/10 + unitString() + ";";
+  var div = gDoingMetric ? 100 : 10;
+  style += "width:" + gPageWidth/div + unitString() + ";height:" + gPageHeight/div + unitString() + ";";
   gDialog.marginPage.setAttribute( "style", style );
 }
 
@@ -178,7 +180,8 @@ function changeMargin( node )
     nodeToStyle = gDialog.marginRight;
     val = checkMargin( val, gPageWidth, gDialog.leftInput );
   }
-  var style = attr + ":" + val/10 + unitString() + ";";
+  val /= gDoingMetric ? 100 : 10;
+  var style = attr + ":" + val + unitString() + ";";
   nodeToStyle.setAttribute( "style", style );
 }
 
@@ -318,11 +321,30 @@ function loadDialog()
 
   setPrinterDefaultsForSelectedPrinter();
 
+  gDialog.printBG.checked = gPrintSettings.printBGColors || gPrintSettings.printBGImages;
+
+  gDialog.shrinkToFit.checked   = gPrintSettings.shrinkToFit;
+
+  gDialog.scalingLabel.disabled = gDialog.scalingInput.disabled = gDialog.shrinkToFit.checked;
+
+  var marginGroupLabel = gDialog.marginGroup.label;
+  if (gPrintSettings.paperSizeUnit == gPrintSettingsInterface.kPaperSizeInches) {
+    marginGroupLabel = marginGroupLabel.replace(/#1/, gDialog.strings["marginUnits.inches"]);
+    gDoingMetric = false;
+  } else {
+    marginGroupLabel = marginGroupLabel.replace(/#1/, gDialog.strings["marginUnits.metric"]);
+    // Also, set global page dimensions for A4 paper, in millimeters (assumes portrait at this point).
+    gPageWidth = 2100;
+    gPageHeight = 2970;
+    gDoingMetric = true;
+  }
+  gDialog.marginGroup.label = marginGroupLabel;
+
   print_orientation   = gPrintSettings.orientation;
-  print_margin_top    = gPrintSettings.marginTop;
-  print_margin_left   = gPrintSettings.marginLeft;
-  print_margin_right  = gPrintSettings.marginRight;
-  print_margin_bottom = gPrintSettings.marginBottom;
+  print_margin_top    = convertMarginInchesToUnits(gPrintSettings.marginTop, gDoingMetric);
+  print_margin_left   = convertMarginInchesToUnits(gPrintSettings.marginLeft, gDoingMetric);
+  print_margin_right  = convertMarginInchesToUnits(gPrintSettings.marginRight, gDoingMetric);
+  print_margin_bottom = convertMarginInchesToUnits(gPrintSettings.marginBottom, gDoingMetric);
 
   if (gDoDebug) {
     dump("print_orientation   "+print_orientation+"\n");
@@ -333,28 +355,11 @@ function loadDialog()
     dump("print_margin_bottom "+print_margin_bottom+"\n");
   }
 
-  gDialog.printBG.checked = gPrintSettings.printBGColors || gPrintSettings.printBGImages;
-
-  gDialog.shrinkToFit.checked   = gPrintSettings.shrinkToFit;
-
-  gDialog.scalingLabel.disabled = gDialog.scalingInput.disabled = gDialog.shrinkToFit.checked;
-
   if (print_orientation == gPrintSettingsInterface.kPortraitOrientation) {
     gDialog.orientation.selectedItem = gDialog.portrait;
   } else if (print_orientation == gPrintSettingsInterface.kLandscapeOrientation) {
     gDialog.orientation.selectedItem = gDialog.landscape;
   }
-
-  var marginGroupLabel = gDialog.marginGroup.label;
-  if (gPrintSettings.paperSizeUnit == gPrintSettingsInterface.kPaperSizeInches) {
-    marginGroupLabel = marginGroupLabel.replace(/#1/, gDialog.strings["marginUnits.inches"]);
-  } else {
-    marginGroupLabel = marginGroupLabel.replace(/#1/, gDialog.strings["marginUnits.metric"]);
-    // Also, set global page dimensions for A4 paper, in millimeters (assumes portrait at this point).
-    gPageWidth = 210;
-    gPageHeight = 297;
-  }
-  gDialog.marginGroup.label = marginGroupLabel;
 
   // Set orientation the first time on a timeout so the dialog sizes to the
   // maximum height specified in the .xul file.  Otherwise, if the user switches
@@ -414,6 +419,24 @@ function onLoad()
   }
 }
 
+function convertUnitsMarginToInches(aVal, aIsMetric)
+{
+  if (aIsMetric) {
+    return aVal / 254;
+  } else {
+    return aVal;
+  }
+}
+
+function convertMarginInchesToUnits(aVal, aIsMetric)
+{
+  if (aIsMetric) {
+    return aVal * 254;
+  } else {
+    return aVal;
+  }
+}
+
 //---------------------------------------------------
 function onAccept()
 {
@@ -426,10 +449,10 @@ function onAccept()
     }
 
     // save these out so they can be picked up by the device spec
-    gPrintSettings.marginTop    = gDialog.topInput.value;
-    gPrintSettings.marginLeft   = gDialog.leftInput.value;
-    gPrintSettings.marginBottom = gDialog.bottomInput.value;
-    gPrintSettings.marginRight  = gDialog.rightInput.value;
+    gPrintSettings.marginTop    = convertUnitsMarginToInches(gDialog.topInput.value, gDoingMetric);
+    gPrintSettings.marginLeft   = convertUnitsMarginToInches(gDialog.leftInput.value, gDoingMetric);
+    gPrintSettings.marginBottom = convertUnitsMarginToInches(gDialog.bottomInput.value, gDoingMetric);
+    gPrintSettings.marginRight  = convertUnitsMarginToInches(gDialog.rightInput.value, gDoingMetric);
 
     gPrintSettings.headerStrLeft   = hfIdToValue(gDialog.hLeftOption);
     gPrintSettings.headerStrCenter = hfIdToValue(gDialog.hCenterOption);
