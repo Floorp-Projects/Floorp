@@ -2447,6 +2447,8 @@ dnl ========================================================
 AC_PROG_GCC_TRADITIONAL
 AC_FUNC_MEMCMP
 AC_CHECK_FUNCS(random qsort strerror lchown fchmod snprintf localtime_r statvfs memmove usleep rint)
+AC_CHECK_HEADERS(gnu/libc-version.h)
+AC_CHECK_FUNCS(nl_langinfo gnu_get_libc_version)
 
 AC_MSG_CHECKING(how to call gettimeofday)
 AC_CACHE_VAL(ac_cv_gettimeofday_args,
