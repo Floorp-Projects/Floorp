@@ -11,7 +11,6 @@ sub GetSystemInfo {
     $Settings::OS = `uname -s`;
     my $os_ver = `uname -r`;
     $Settings::CPU = `uname -m`;
-    $Settings::BuildName = ''; 
     $Settings::ObjDir = '';
     my $build_type = $Settings::BuildDepend ? 'Depend' : 'Clobber';
     my $host = ::hostname();
@@ -38,15 +37,13 @@ sub GetSystemInfo {
         $os_ver = '5.0';
     }
     
-    unless ("$host" eq '') {
-        $Settings::BuildName = "$host $Settings::OS $build_type";
-    }
+    $Settings::BuildName = "$host $Settings::OS $build_type";
     $Settings::DirName = "${Settings::OS}_${os_ver}_$build_type";
     
     # Make the build names reflect architecture/OS
     
     if ($Settings::OS eq 'AIX') {
-        # Assumes 4.2.1 for now.
+        # $Settings::BuildName set above.
     }
     if ($Settings::OS eq 'BSD_OS') {
         $Settings::BuildName = "$host BSD/OS $os_ver $build_type";
@@ -55,8 +52,10 @@ sub GetSystemInfo {
         $Settings::BuildName = "$host $Settings::OS/$Settings::CPU $os_ver $build_type";
     }
     if ($Settings::OS eq 'HP-UX') {
+        $Settings::BuildName = "$host $Settings::OS $os_ver $build_type";
     }
     if ($Settings::OS eq 'IRIX') {
+        # $Settings::BuildName set above.
     }
     if ($Settings::OS eq 'Linux') {
         if ($Settings::CPU eq 'alpha' or $Settings::CPU eq 'sparc') {
@@ -66,10 +65,7 @@ sub GetSystemInfo {
         } elsif ($Settings::CPU eq 'ppc') {
             $Settings::BuildName = "$host $Settings::OS/$Settings::CPU $os_ver $build_type";
         } else {
-            $Settings::BuildName = "$host $Settings::OS $build_type";
-            
-            # What's the right way to test for this?
-            $Settings::ObjDir .= 'libc1' if $host eq 'truth';
+            # $Settings::BuildName set above
         }
     }
     if ($Settings::OS eq 'NetBSD') {
