@@ -149,8 +149,45 @@ NS_METHOD nsScrollbar::GetMaxRange (PRUint32 & aMaxRange)
 //-------------------------------------------------------------------------
 NS_METHOD nsScrollbar::SetPosition (PRUint32 aPos)
 {
-  if (mAdjustment)
-    gtk_adjustment_set_value (GTK_ADJUSTMENT (mAdjustment), (float) aPos);
+//   if (mAdjustment)
+//     gtk_adjustment_set_value (GTK_ADJUSTMENT (mAdjustment), (float) aPos);
+
+  if (mAdjustment && mWidget)
+  {
+    //
+    // The following bit of code borrowed from gtkrange.c,
+    // gtk_range_adjustment_value_changed():
+    //
+    // Ok, so, like, the problem is that the view manager expects
+    // SetPosition() to simply do that - set the position of the 
+    // scroll bar.  Nothing else!
+    //
+    // Unfortunately, calling gtk_adjustment_set_value() causes
+    // the adjustment object (mAdjustment) to emit a 
+    // "value_changed" signal which in turn causes the
+    // scrollbar widget (mWidget) to scroll to the given position.
+    //
+    // The net result of this is that the content is scrolled
+    // twice, once by the view manager and once by the 
+    // scrollbar - and things get messed up from then onwards.
+    //
+    // The following bit of code does the equivalent of 
+    // gtk_adjustment_set_value(), except no signal is emitted.
+    //
+    GtkRange * range = GTK_RANGE(mWidget);
+    GtkAdjustment * adjustment = GTK_ADJUSTMENT(mAdjustment);
+      
+    adjustment->value = (float) aPos;
+      
+    if (range->old_value != adjustment->value)
+    {
+      gtk_range_slider_update (range);
+      gtk_range_clear_background (range);
+      
+      range->old_value = adjustment->value;
+    }
+  }
+
   return NS_OK;
 }
 
