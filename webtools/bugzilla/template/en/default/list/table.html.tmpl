@@ -81,6 +81,9 @@
     </colgroup>
 
     <tr align="left">
+      [% IF dotweak %]
+      <th>&nbsp;</th>
+      [% END %]
       <th colspan="[% splitheader ? 2 : 1 %]">
         <a href="buglist.cgi?
                   [% urlquerypart FILTER html %]&amp;order=bugs.bug_id">ID</a>
@@ -142,8 +145,12 @@
              bz_[% bug.resolution FILTER css_class_quote %]
              [%+ "bz_secure" IF bug.isingroups %]">
 
+    [% IF dotweak %]
     <td>
-      [% IF dotweak %]<input type="checkbox" name="id_[% bug.bug_id %]">[% END %]
+      <input type="checkbox" name="id_[% bug.bug_id %]">
+    </td>
+    [% END %]
+    <td>
       <a href="show_bug.cgi?id=[% bug.bug_id %]">[% bug.bug_id %]</a>
     </td>
 
