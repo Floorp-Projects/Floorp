@@ -95,6 +95,7 @@ typedef unsigned long HMTX;
 #include "nsICharsetConverterManager.h"
 #include "nsISocketTransportService.h"
 #include "nsILayoutHistoryState.h"
+#include "nsTextFormatter.h"
 
 #include "nsIHTTPChannel.h" // add this to the ick include list...we need it to QI for post data interface
 #include "nsHTTPEnums.h"
@@ -1189,7 +1190,6 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
 
    if(mDocLoader == loader && NS_FAILED(aStatus))
       {
-      nsAutoString errorMsg;
       nsXPIDLCString host;
       NS_ENSURE_SUCCESS(aURL->GetHost(getter_Copies(host)), NS_ERROR_FAILURE);
 
@@ -1270,11 +1270,11 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
             NS_ConvertASCIItoUCS2("dnsNotFound").GetUnicode(), 
             getter_Copies(messageStr)), NS_ERROR_FAILURE);
 
-         errorMsg.AssignWithConversion(host);
-         errorMsg.AppendWithConversion(' ');
-         errorMsg.Append(messageStr);
+         PRUnichar *msg = nsTextFormatter::smprintf(messageStr, (const char*)host);
+         if (!msg) return NS_ERROR_OUT_OF_MEMORY;
 
-         prompter->Alert(nsnull, errorMsg.GetUnicode());
+         prompter->Alert(nsnull, msg);
+         nsTextFormatter::smprintf_free(msg);
          } 
       else if(aStatus == NS_ERROR_CONNECTION_REFUSED)
          {// Doc failed to load because we couldn't connect to the server.
@@ -1293,16 +1293,17 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
             NS_ConvertASCIItoUCS2("connectionFailure").GetUnicode(), 
             getter_Copies(messageStr)), NS_ERROR_FAILURE);
 
-         errorMsg.Assign(messageStr);
-         errorMsg.AppendWithConversion(' ');
-         errorMsg.AppendWithConversion(host);
-         if(port > 0)
-            {
-            errorMsg.AppendWithConversion(':');
-            errorMsg.AppendInt(port);
-            }
-         errorMsg.AppendWithConversion('.');
-         prompter->Alert(nsnull, errorMsg.GetUnicode());
+         // build up the host:port string.
+         nsCAutoString combo(host);
+         if (port > 0) {
+             combo.Append(':');
+             combo.AppendInt(port);
+         }
+         PRUnichar *msg = nsTextFormatter::smprintf(messageStr, combo.GetBuffer());
+         if (!msg) return NS_ERROR_OUT_OF_MEMORY;
+
+         prompter->Alert(nsnull, msg);
+         nsTextFormatter::smprintf_free(msg);
          } 
       else if(aStatus == NS_ERROR_NET_TIMEOUT)
          {// Doc failed to load because the socket function timed out.
@@ -1319,12 +1320,11 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
             NS_ConvertASCIItoUCS2("netTimeout").GetUnicode(), 
             getter_Copies(messageStr)), NS_ERROR_FAILURE);
 
-         errorMsg.Assign(messageStr);
-         errorMsg.AppendWithConversion(' ');
-         errorMsg.AppendWithConversion(host);
-         errorMsg.AppendWithConversion('.');
+         PRUnichar *msg = nsTextFormatter::smprintf(messageStr, (const char*)host);
+         if (!msg) return NS_ERROR_OUT_OF_MEMORY;
 
-         prompter->Alert(nsnull, errorMsg.GetUnicode());            
+         prompter->Alert(nsnull, msg);            
+         nsTextFormatter::smprintf_free(msg);
          } // end NS_ERROR_NET_TIMEOUT
       } // end mDocLoader == loader
 

@@ -41,6 +41,7 @@
 #include "nsPoint.h"
 #include "nsGfxCIID.h"
 #include "nsIPrompt.h"
+#include "nsTextFormatter.h"
 
 // Local Includes
 #include "nsDocShell.h"
@@ -1040,12 +1041,14 @@ NS_IMETHODIMP nsDocShell::LoadURI(const PRUnichar* aURI)
       // extract the scheme
       nsAutoString scheme;
       uriString.Left(scheme, colon);
+      nsCAutoString cScheme;
+      cScheme.AssignWithConversion(scheme);
 
-      nsAutoString dnsMsg(scheme);
-      dnsMsg.AppendWithConversion(' ');
-      dnsMsg.Append(messageStr);
+      PRUnichar *msg = nsTextFormatter::smprintf(messageStr, cScheme.GetBuffer());
+      if (!msg) return NS_ERROR_OUT_OF_MEMORY;
 
-      prompter->Alert(nsnull, dnsMsg.GetUnicode());
+      prompter->Alert(nsnull, msg);
+      nsTextFormatter::smprintf_free(msg);
       } // end unknown protocol
 
    if(!uri)
