@@ -43,7 +43,7 @@ public:
   NS_IMETHOD ImgDCBInitTransparentPixel();
   NS_IMETHOD ImgDCBDestroyTransparentPixel();
   NS_IMETHOD ImgDCBSetupColorspaceConverter();
-  NS_IMETHOD_(NI_ColorSpace *) ImgDCBCreateGreyScaleColorSpace();
+  NS_IMETHOD ImgDCBCreateGreyScaleColorSpace();
 
   NS_IMETHOD_(void*) ImgDCBSetTimeout(TimeoutCallbackFunction func,
                                       void* closure, uint32 msecs);

@@ -38,29 +38,29 @@ static void il_png_error_handler(png_structp png_ptr, png_const_charp msg);
 
 
 
-int
+PRBool
 il_png_init(il_container *ic)
 {
 
-	ipng_struct *ipng_p;
+    ipng_struct *ipng_p;
     NI_ColorSpace *src_color_space = ic->src_header->color_space;
 
-	ipng_p = PR_NEWZAP(ipng_struct);
-	if (ipng_p) 
-	{
-		ic->ds = ipng_p;
-		ipng_p->state = PNG_INIT;
-		ipng_p->ic = ic;
+    ipng_p = PR_NEWZAP(ipng_struct);
+    if (!ipng_p) 
+        return PR_FALSE;
+    
+        ic->ds = ipng_p;
+        ipng_p->state = PNG_INIT;
+        ipng_p->ic = ic;
 
         /* Initialize the container's source image header. */
-	    /* Always decode to 24 bit pixdepth */
+        /* Always decode to 24 bit pixdepth */
 
         src_color_space->type = NI_TrueColor;
         src_color_space->pixmap_depth = 24;
         src_color_space->bit_alloc.index_depth = 0;
-        return 0;
-	}
-    return -1;
+
+    return PR_TRUE;
 
 }
 
@@ -73,7 +73,7 @@ il_png_write(il_container *ic, const unsigned char *buf, int32 len)
   
    
     PR_ASSERT(ic != NULL);
-	ipng_p = (ipng_structp)ic->ds;   
+    ipng_p = (ipng_structp)ic->ds;   
 
     if (ipng_p->state == PNG_ERROR)
         return -1;
@@ -144,9 +144,9 @@ int
 il_png_complete(il_container *ic)
 {
 #ifndef WE_DONT_HAVE_SUBSEQUENT_IMAGES
-	ipng_structp ipng_p = (ipng_structp)ic->ds;
+    ipng_structp ipng_p = (ipng_structp)ic->ds;
 
-	il_png_abort(ic);
+    il_png_abort(ic);
 #endif
    
     /* notify observers that the current frame has completed. */
@@ -157,22 +157,22 @@ il_png_complete(il_container *ic)
 #ifndef WE_DONT_HAVE_SUBSEQUENT_IMAGES
     /* An image can specify a delay time before which to display
        subsequent images.  Block until the appointed time. */
-	if(ipng_p->delay_time < MINIMUM_DELAY_TIME )
-		ipng_p->delay_time = MINIMUM_DELAY_TIME ;
-	if (ipng_p->delay_time){
-			ipng_p->delay_timeout =
-			ic->imgdcb->ImgDCBSetTimeout(il_png_delay_time_callback, ipng_p, ipng_p->delay_time);
+    if(ipng_p->delay_time < MINIMUM_DELAY_TIME )
+        ipng_p->delay_time = MINIMUM_DELAY_TIME ;
+    if (ipng_p->delay_time){
+            ipng_p->delay_timeout =
+            ic->imgdcb->ImgDCBSetTimeout(il_png_delay_time_callback, ipng_p, ipng_p->delay_time);
 
-			/* Essentially, tell the decoder state machine to wait
-			forever.  The delay_time callback routine will wake up the
-			state machine and force it to decode the next image. */
-			ipng_p->state = PNG_DELAY;
+            /* Essentially, tell the decoder state machine to wait
+            forever.  The delay_time callback routine will wake up the
+            state machine and force it to decode the next image. */
+            ipng_p->state = PNG_DELAY;
      } else {
-		    ipng_p->state = PNG_INIT;
+            ipng_p->state = PNG_INIT;
      }
 #endif
  
-	return 0;
+    return 0;
 }
 
 int
@@ -193,7 +193,7 @@ il_png_abort(il_container *ic)
 #endif
     }
     /*   il_abort( ic ); */
-	return 0;
+    return 0;
 }
 
 

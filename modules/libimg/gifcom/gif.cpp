@@ -76,39 +76,35 @@ mailing address.
 PRLogModuleInfo *il_log_module = NULL;
 
 #ifndef MAX
-#    define MAX(x, y)	(((x) > (y)) ? (x) : (y))
+#    define MAX(x, y)   (((x) > (y)) ? (x) : (y))
 #endif
 
 PR_BEGIN_EXTERN_C
 extern int MK_OUT_OF_MEMORY;
 PR_END_EXTERN_C
 
-#ifdef PROFILE
-#    pragma profile on
-#endif
-
 /* List of possible parsing states */
 typedef enum {
-	gif_gather,
-	gif_init,					/*1*/
-	gif_type,
-	gif_version,
-	gif_global_header,
-	gif_global_colormap,
-	gif_image_start,			/*6*/
-	gif_image_header,
-	gif_image_colormap,
-	gif_image_body,
-	gif_lzw_start,
-	gif_lzw,					/*11*/
-	gif_sub_block,
-	gif_extension,
-	gif_control_extension,
-	gif_consume_block,
-	gif_skip_block,
-	gif_done,					/*17*/
-	gif_oom,
-	gif_error,
+    gif_gather,
+    gif_init,                   /*1*/
+    gif_type,
+    gif_version,
+    gif_global_header,
+    gif_global_colormap,
+    gif_image_start,            /*6*/
+    gif_image_header,
+    gif_image_colormap,
+    gif_image_body,
+    gif_lzw_start,
+    gif_lzw,                    /*11*/
+    gif_sub_block,
+    gif_extension,
+    gif_control_extension,
+    gif_consume_block,
+    gif_skip_block,
+    gif_done,                   /*17*/
+    gif_oom,
+    gif_error,
     gif_comment_extension,
     gif_application_extension,
     gif_netscape_extension_block,
@@ -128,9 +124,9 @@ typedef enum
     DISPOSE_OVERWRITE_PREVIOUS = 4  /* Save-under */
 } gdispose;
 
-#define MAX_HOLD 768		/* for now must be big enough for a cmap */
+#define MAX_HOLD 768        /* for now must be big enough for a cmap */
 
-#define	MAX_LZW_BITS	      12
+#define MAX_LZW_BITS          12
 #define MAX_BITS            4097 /* 2^MAX_LZW_BITS+1 */
 #define MINIMUM_DELAY_TIME    10
 
@@ -139,48 +135,48 @@ typedef enum
 
 typedef struct
 gif_struct {
-	/* Parsing state machine */
-	gstate state;               /* Curent decoder master state */
+    /* Parsing state machine */
+    gstate state;               /* Curent decoder master state */
     uint8 *hold;                /* Accumulation buffer */
     int32 hold_size;            /* Capacity, in bytes, of accumulation buffer */
     uint8 *gather_head;         /* Next byte to read in accumulation buffer */
     int32 gather_request_size;  /* Number of bytes to accumulate */
-	int32 gathered;             /* bytes accumulated so far*/
-	gstate post_gather_state;   /* State after requested bytes accumulated */
+    int32 gathered;             /* bytes accumulated so far*/
+    gstate post_gather_state;   /* State after requested bytes accumulated */
     int32 requested_buffer_fullness; /* For netscape application extension */
 
-	/* LZW decoder state machine */
+    /* LZW decoder state machine */
     uint8 *stack;               /* Base of decoder stack */
-	uint8 *stackp;              /* Current stack pointer */
-	uint16 *prefix;
-	uint8 *suffix;
-	int datasize;
+    uint8 *stackp;              /* Current stack pointer */
+    uint16 *prefix;
+    uint8 *suffix;
+    int datasize;
     int codesize;
     int codemask;
-	int clear_code;             /* Codeword used to trigger dictionary reset */
+    int clear_code;             /* Codeword used to trigger dictionary reset */
     int avail;                  /* Index of next available slot in dictionary */
     int oldcode;
-	uint8 firstchar;
-	int count;                  /* Remaining # bytes in sub-block */
+    uint8 firstchar;
+    int count;                  /* Remaining # bytes in sub-block */
     int bits;                   /* Number of unread bits in "datum" */
-	int32 datum;                /* 32-bit input buffer */
+    int32 datum;                /* 32-bit input buffer */
 
     /* Output state machine */
-	int ipass;                  /* Interlace pass; Ranges 1-4 if interlaced. */
+    int ipass;                  /* Interlace pass; Ranges 1-4 if interlaced. */
     uint rows_remaining;        /* Rows remaining to be output */
-	uint irow;                  /* Current output row, starting at zero */
-	uint8 *rgbrow;              /* Temporary storage for dithering/mapping */
-	uint8 *rowbuf;              /* Single scanline temporary buffer */
-	uint8 *rowend;              /* Pointer to end of rowbuf */
-	uint8 *rowp;                /* Current output pointer */
+    uint irow;                  /* Current output row, starting at zero */
+    uint8 *rgbrow;              /* Temporary storage for dithering/mapping */
+    uint8 *rowbuf;              /* Single scanline temporary buffer */
+    uint8 *rowend;              /* Pointer to end of rowbuf */
+    uint8 *rowp;                /* Current output pointer */
 
     /* Image parameters */
     uint x_offset, y_offset;    /* With respect to "screen" origin */
-	uint height, width;
+    uint height, width;
     uint last_x_offset, last_y_offset; /* With respect to "screen" origin */
-	uint last_height, last_width;
-	int interlaced;             /* TRUE, if scanlines arrive interlaced order */
-	int tpixel;                 /* Index of transparent pixel */
+    uint last_height, last_width;
+    int interlaced;             /* TRUE, if scanlines arrive interlaced order */
+    int tpixel;                 /* Index of transparent pixel */
     int is_transparent;         /* TRUE, if tpixel is valid */
     int control_extension;      /* TRUE, if image control extension present */
     int is_local_colormap_defined;
@@ -194,13 +190,13 @@ gif_struct {
 
     /* Global (multi-image) state */
     int screen_bgcolor;         /* Logical screen background color */
-	int version;                /* Either 89 for GIF89 or 87 for GIF87 */
+    int version;                /* Either 89 for GIF89 or 87 for GIF87 */
     uint screen_width;          /* Logical screen width & height */
     uint screen_height;
     IL_RGB *global_colormap;    /* Default colormap if local not supplied  */
     int global_colormap_size;   /* Size of global colormap array. */
     int images_decoded;         /* Counts images for multi-part GIFs */
-	il_container *ic;           /* Back pointer to requesting image_container */
+    il_container *ic;           /* Back pointer to requesting image_container */
     void *delay_timeout;        /* Used to delay after displaying picture */
     int destroy_pending;        /* Stream has ended */
 } gif_struct;
@@ -216,7 +212,7 @@ do {gs->state=gif_gather; gs->gather_request_size = (n);                      \
 /* Get a 32-bit value stored in little-endian format */
 #define GETINT32(p)   (((p)[3]<<24) | ((p)[2]<<16) | ((p)[1]<<8) | ((p)[0]))
 
-/*	binary block Allocate and Concatenate
+/*  binary block Allocate and Concatenate
  *
  *   destination_length  is the length of the existing block
  *   source_length   is the length of the block being added to the 
@@ -224,26 +220,26 @@ do {gs->state=gif_gather; gs->gather_request_size = (n);                      \
  */
 char * 
 il_BACat (char **destination, 
-		   size_t destination_length, 
-		   const char *source, 
-		   size_t source_length)
+           size_t destination_length, 
+           const char *source, 
+           size_t source_length)
 {
     if (source) 
-	  {
+      {
         if (*destination) 
-	      {
-      	    *destination = (char *) PR_REALLOC (*destination, destination_length + source_length);
+          {
+            *destination = (char *) PR_REALLOC (*destination, destination_length + source_length);
             if (*destination == NULL) 
-	          return(NULL);
+              return(NULL);
 
             nsCRT::memmove(*destination + destination_length, source, source_length);
 
           } 
-		else 
-		  {
+        else 
+          {
             *destination = (char *) PR_MALLOC (source_length);
             if (*destination == NULL) 
-	          return(NULL);
+              return(NULL);
 
             nsCRT::memcpy(*destination, source, source_length);
           }
@@ -268,8 +264,8 @@ output_row(gif_struct *gs)
      * loaded. Adjust pixel vertical positions to avoid the appearance of the
      * image crawling up the screen as successive passes are drawn.
      */
-	if (gs->progressive_display && gs->interlaced && (gs->ipass < 4))
-	{
+    if (gs->progressive_display && gs->interlaced && (gs->ipass < 4))
+    {
         uint row_dup=0, row_shift=0;
 
         switch (gs->ipass) {
@@ -290,11 +286,11 @@ output_row(gif_struct *gs)
             break;
         }
 
-		drow_start -= row_shift;
-		drow_end = drow_start + row_dup;
+        drow_start -= row_shift;
+        drow_end = drow_start + row_dup;
 
-		/* Extend if bottom edge isn't covered because of the shift upward. */
-		if (((gs->height - 1) - drow_end) <= row_shift)
+        /* Extend if bottom edge isn't covered because of the shift upward. */
+        if (((gs->height - 1) - drow_end) <= row_shift)
             drow_end = gs->height - 1;
 
         /* Clamp first and last rows to upper and lower edge of image. */
@@ -327,57 +323,57 @@ output_row(gif_struct *gs)
            
     }
 
-	gs->rowp = gs->rowbuf;
+    gs->rowp = gs->rowbuf;
 
-	if(!gs->interlaced)
-	{
-		gs->irow++;
-	}
-	else
-	{
+    if(!gs->interlaced)
+    {
+        gs->irow++;
+    }
+    else
+    {
         do{
-		    switch(gs->ipass)
-		    {
-			    case 1:
-				    gs->irow += 8;
-				    if(gs->irow >= gs->height)
-				    {
-					    gs->ipass++;
-					    gs->irow = 4;
-				    }
-				    break;
+            switch(gs->ipass)
+            {
+                case 1:
+                    gs->irow += 8;
+                    if(gs->irow >= gs->height)
+                    {
+                        gs->ipass++;
+                        gs->irow = 4;
+                    }
+                    break;
 
-			    case 2:
-				    gs->irow += 8;
-				    if(gs->irow >= gs->height)
-				    {
-					    gs->ipass++;
-					    gs->irow = 2;
-				    }
-				    break;
+                case 2:
+                    gs->irow += 8;
+                    if(gs->irow >= gs->height)
+                    {
+                        gs->ipass++;
+                        gs->irow = 2;
+                    }
+                    break;
 
-			    case 3:
-				    gs->irow += 4;
-				    if(gs->irow >= gs->height)
-				    {
-					    gs->ipass++;
-					    gs->irow = 1;
-				    }
-				    break;
+                case 3:
+                    gs->irow += 4;
+                    if(gs->irow >= gs->height)
+                    {
+                        gs->ipass++;
+                        gs->irow = 1;
+                    }
+                    break;
 
-			    case 4:
-				    gs->irow += 2;
-				    if(gs->irow >= gs->height){
-					    gs->ipass++;
+                case 4:
+                    gs->irow += 2;
+                    if(gs->irow >= gs->height){
+                        gs->ipass++;
                         gs->irow = 0;
                     }
-				    break;
+                    break;
 
-			    default:
-				    PR_ASSERT(0);
-		    }
+                default:
+                    PR_ASSERT(0);
+            }
         }while(gs->irow > gs->height - 1);
-	}
+    }
 }
 
 /* Perform Lempel-Ziv-Welch decoding */
@@ -410,107 +406,107 @@ do_lzw(gif_struct *gs, const uint8 *q)
     uint rows_remaining = gs->rows_remaining;
 
 
-#define OUTPUT_ROW(gs)    													  \
-    {																		  \
-        output_row(gs);														  \
-        rows_remaining--;													  \
-        rowp = gs->rowp;													  \
-        if (!rows_remaining)												  \
-            goto END;														  \
+#define OUTPUT_ROW(gs)                                                        \
+    {                                                                         \
+        output_row(gs);                                                       \
+        rows_remaining--;                                                     \
+        rowp = gs->rowp;                                                      \
+        if (!rows_remaining)                                                  \
+            goto END;                                                         \
     }
 
     for (ch=q; count-- > 0; ch++) 
     {
         /* Feed the next byte into the decoder's 32-bit input buffer. */
-		datum += ((int32) *ch) << bits;
-		bits += 8;
+        datum += ((int32) *ch) << bits;
+        bits += 8;
         
         /* Check for underflow of decoder's 32-bit input buffer. */
-		while (bits >= codesize) 
-		{
+        while (bits >= codesize) 
+        {
             /* Get the leading variable-length symbol from the data stream */
-			code = datum & codemask;
-			datum >>= codesize;
-			bits -= codesize;
+            code = datum & codemask;
+            datum >>= codesize;
+            bits -= codesize;
 
             /* Reset the dictionary to its original state, if requested */
-			if (code == clear_code) 
-			{
-				codesize = gs->datasize + 1;
-				codemask = (1 << codesize) - 1;
-				avail = clear_code + 2;
-				oldcode = -1;
-				continue;
-			}
+            if (code == clear_code) 
+            {
+                codesize = gs->datasize + 1;
+                codemask = (1 << codesize) - 1;
+                avail = clear_code + 2;
+                oldcode = -1;
+                continue;
+            }
 
             /* Check for explicit end-of-stream code */
-			if (code == (clear_code + 1))
- 	               return 0;
+            if (code == (clear_code + 1))
+                   return 0;
 
-			if (oldcode == -1) 
-			{
-				*rowp++ = suffix[code];
-				if (rowp == rowend) {
-					OUTPUT_ROW(gs);
+            if (oldcode == -1) 
+            {
+                *rowp++ = suffix[code];
+                if (rowp == rowend) {
+                    OUTPUT_ROW(gs);
         }
                 
-				firstchar = oldcode = code;
-				continue;
-			}
+                firstchar = oldcode = code;
+                continue;
+            }
 
             /* Check for a code not defined in the dictionary yet. */
-			if (code > avail) 
-			{
-				ILTRACE(3,("il:gif: code too large %d %d", code, avail));
-				return -1;
-			}
+            if (code > avail) 
+            {
+                ILTRACE(3,("il:gif: code too large %d %d", code, avail));
+                return -1;
+            }
 
-			incode = code;
-			if (code == avail) 
-			{	   
-				/* the first code is always < avail */
-				*stackp++ = firstchar;
-				code = oldcode;
-			}
+            incode = code;
+            if (code == avail) 
+            {      
+                /* the first code is always < avail */
+                *stackp++ = firstchar;
+                code = oldcode;
+            }
 
 
-			while(code > clear_code)
-			{		
-				if(code == prefix[code])
-					return -1;
+            while(code > clear_code)
+            {       
+                if(code == prefix[code])
+                    return -1;
 
-				*stackp++ = suffix[code];
-				code = prefix[code];
-				
-			}
+                *stackp++ = suffix[code];
+                code = prefix[code];
+                
+            }
 
             /* Define a new codeword in the dictionary. */
-			*stackp++ = firstchar = suffix[code];
-			prefix[avail] = oldcode;
-			suffix[avail] = firstchar;
-			avail++;
-			if(avail >= MAX_BITS)
-				return -1;
+            *stackp++ = firstchar = suffix[code];
+            prefix[avail] = oldcode;
+            suffix[avail] = firstchar;
+            avail++;
+            if(avail >= MAX_BITS)
+                return -1;
 
             /* If we've used up all the codewords of a given length
              * increase the length of codewords by one bit, but don't
              * exceed the specified maximum codeword size of 12 bits.
              */
-			if (((avail & codemask) == 0) && (avail < 4096)) 
-			{
-				codesize++;
-				codemask += avail;
-			}
-			oldcode = incode;
+            if (((avail & codemask) == 0) && (avail < 4096)) 
+            {
+                codesize++;
+                codemask += avail;
+            }
+            oldcode = incode;
             
             /* Copy the decoded data out to the scanline buffer. */
-			do {
-				*rowp++ = *--stackp;
-				if (rowp == rowend) {
-					OUTPUT_ROW(gs);
+            do {
+                *rowp++ = *--stackp;
+                if (rowp == rowend) {
+                    OUTPUT_ROW(gs);
                 }
-			} while (stackp > stack);
-		}
+            } while (stackp > stack);
+        }
     }
 
   END:
@@ -534,28 +530,28 @@ do_lzw(gif_struct *gs, const uint8 *q)
 /*
  * setup an ic for gif decoding
  */
-int
+PRBool
 il_gif_init(il_container *ic)
 {
-	gif_struct *gs;
+    gif_struct *gs;
     NI_ColorSpace *src_color_space = ic->src_header->color_space;
 
-	gs = PR_NEWZAP(gif_struct);
-	if (gs) 
-	{
-		ic->ds = gs;
-		gs->state = gif_init;
-		gs->post_gather_state = gif_error;
+    gs = PR_NEWZAP(gif_struct);
+    if (gs) 
+    {
+        ic->ds = gs;
+        gs->state = gif_init;
+        gs->post_gather_state = gif_error;
                 gs->gathered = 0;
-		gs->ic = ic;
-	}
+        gs->ic = ic;
+    }
 
     /* Initialize the container's source image header. */
     src_color_space->type = NI_PseudoColor;
     src_color_space->pixmap_depth = 8;
     src_color_space->bit_alloc.index_depth = 8;
 
-	return gs != 0;
+    return (gs != 0);
 }
 
 static int
@@ -643,7 +639,7 @@ il_gif_compute_percentage_complete(int row, il_container *ic)
 PRUint8
 il_gif_write_ready(il_container *ic)
 {
-	gif_struct *gs = (gif_struct *)ic->ds;
+    gif_struct *gs = (gif_struct *)ic->ds;
     int32 max;
     
     if (!gs)
@@ -661,7 +657,7 @@ static void
 process_buffered_gif_input_data(gif_struct* gs)
 {
     gstate state;
-	il_container *ic = gs->ic;
+    il_container *ic = gs->ic;
     uint8 err = 0;
 
     /* Force any data we've buffered up to be processed. */
@@ -672,6 +668,9 @@ process_buffered_gif_input_data(gif_struct* gs)
        we're actually done handling all of that data, call the stream
        completion routine again, but this time for real. */
     state = gs->state;
+
+    if(ic->state==IC_ABORT_PENDING)
+        state = gif_error;
 
     /* test, stop loopers if error */
     if( state == gif_error){
@@ -730,7 +729,7 @@ gif_clear_screen(gif_struct *gs)
     {
         if ((gs->width  != gs->screen_width) ||
             (gs->height != gs->screen_height) ||
-			 gs->is_transparent)
+             gs->is_transparent)
         {
             erase = PR_TRUE;
             erase_width  = gs->screen_width;
@@ -837,22 +836,22 @@ il_gif_write(il_container *ic, const uint8 *buf, int32 len)
         return MK_INTERRUPTED;
     
     q = NULL;                   /* Initialize to shut up gcc warnings */
-	
-	while (p <= ep)
-	{
-		ILTRACE(9,("il:gif: state %d len %d buf %u p %u q %u ep %u",
+    
+    while (p <= ep)
+    {
+        ILTRACE(9,("il:gif: state %d len %d buf %u p %u q %u ep %u",
                    gs->state,len,buf,p,q,ep));
-		switch(gs->state)
-		{
+        switch(gs->state)
+        {
         case gif_lzw:
             if (do_lzw(gs, q) < 0)
             {
                 gs->state=gif_error;
                 break;
-            }			
+            }           
             GETN(1,gif_sub_block);
             break;
-		
+        
         case gif_lzw_start:
         {
             int i;
@@ -865,10 +864,13 @@ il_gif_write(il_container *ic, const uint8 *buf, int32 len)
                 return MK_IMAGE_LOSSAGE;
 
             /* Now we know how many colors are in our colormap. */
-            if (gs->is_local_colormap_defined || (gs->images_decoded == 0))
-              if(ic->imgdcb)
-                ic->imgdcb->ImgDCBSetupColorspaceConverter(); 
-
+            if (gs->is_local_colormap_defined || (gs->images_decoded == 0)){
+                if(ic->imgdcb){
+                nsresult rv = ic->imgdcb->ImgDCBSetupColorspaceConverter(); 
+                if(NS_FAILED(rv))
+                    return MK_IMAGE_LOSSAGE;
+                }
+            }
             /* Initialize LZW parser/decoder */
             gs->datasize = *q;
             if(gs->datasize > MAX_LZW_BITS)
@@ -885,13 +887,13 @@ il_gif_write(il_container *ic, const uint8 *buf, int32 len)
 
             gs->datum = gs->bits = 0;
 
-			if (!gs->prefix)		
+            if (!gs->prefix)        
                 gs->prefix = (uint16 *)PR_Calloc(sizeof(uint16), MAX_BITS);
             if (!gs->suffix)
                 gs->suffix = ( uint8 *)PR_Calloc(sizeof(uint8),  MAX_BITS);
             if (!gs->stack)
                 gs->stack  = ( uint8 *)PR_Calloc(sizeof(uint8),  MAX_BITS);
-					
+                    
             if( !gs->prefix || !gs->suffix || !gs->stack)
             {
                 /* complete from abort will free prefix & suffix */
@@ -969,7 +971,7 @@ il_gif_write(il_container *ic, const uint8 *buf, int32 len)
              * within the screen.
              */
                     
-            gs->screen_width = GETINT16(q);	
+            gs->screen_width = GETINT16(q); 
             gs->screen_height = GETINT16(q+2);
 
             gs->screen_bgcolor = q[5];
@@ -988,8 +990,8 @@ il_gif_write(il_container *ic, const uint8 *buf, int32 len)
                 {
 #ifdef DEBUG
                     float aspect = (float)((q[6] + 15) / 64.0);
-#endif
                     ILTRACE(2, ("il:gif: %f aspect ratio", aspect));
+#endif
                 }
             }
 
@@ -1085,7 +1087,7 @@ il_gif_write(il_container *ic, const uint8 *buf, int32 len)
             case 0x01:
                 ILTRACE(2,("il:gif: ignoring plain text extension"));
                 break;
-							
+                            
             case 0xff:
                 es = gif_application_extension;
                 break;
@@ -1114,7 +1116,7 @@ il_gif_write(il_container *ic, const uint8 *buf, int32 len)
             }
         }
         break;
-			
+            
         case gif_skip_block:
             GETN(1, gif_consume_block);
             break;
@@ -1191,11 +1193,11 @@ il_gif_write(il_container *ic, const uint8 *buf, int32 len)
                     if (ic->loop_count == 0)
                         ic->loop_count = -1;
 
-					/* Tell the front end that the stop state might have changed */
-					/* because of the looping GIF.                               */
+                    /* Tell the front end that the stop state might have changed */
+                    /* because of the looping GIF.                               */
 #ifndef M12N                    /* XXXM12N Fix me. */
-					if (ic->net_cx)
-					  FE_UpdateStopState(ic->net_cx);
+                    if (ic->net_cx)
+                      FE_UpdateStopState(ic->net_cx);
 #endif /* M12N */
                 }
 
@@ -1227,7 +1229,7 @@ il_gif_write(il_container *ic, const uint8 *buf, int32 len)
 
             /* Get image width and height. */
             width  = GETINT16(q + 4);            
-			height = GETINT16(q + 6);
+            height = GETINT16(q + 6);
 
             ILTRACE(2,("il:gif: screen %dx%d, image %dx%d", 
                        gs->screen_width, gs->screen_height, width, height));
@@ -1236,7 +1238,7 @@ il_gif_write(il_container *ic, const uint8 *buf, int32 len)
              * size has weird width or height.  We assume that GIF87a
              * files don't contain animations.
              */
-	     if ((gs->images_decoded == 0) &&
+         if ((gs->images_decoded == 0) &&
                 ((gs->screen_height < height) || (gs->screen_width < width) ||
                  (gs->version == 87))){           
                 gs->screen_height = height;
@@ -1247,7 +1249,7 @@ il_gif_write(il_container *ic, const uint8 *buf, int32 len)
             /* Work around more broken GIF files that have zero image
                width or height */
             if (!height || !width) 
-			{
+            {
                 height = gs->screen_height;
                 width = gs->screen_width;
             }
@@ -1260,29 +1262,34 @@ il_gif_write(il_container *ic, const uint8 *buf, int32 len)
             /* than the screen size, we need to reallocate buffers.     */
             if (gs->screen_width < width) {
 
-				gs->rgbrow = (uint8*)PR_REALLOC(gs->rgbrow, 3 * width);
-				gs->rowbuf = (uint8*)PR_REALLOC(gs->rowbuf, width);
-			
-				gs->screen_width = width;
-				if(gs->screen_height < gs->height )
-					gs->screen_height = gs->height;
+                gs->rgbrow = (uint8*)PR_REALLOC(gs->rgbrow, 3 * width);
+                gs->rowbuf = (uint8*)PR_REALLOC(gs->rowbuf, width);
 
-				ic->src_header->width = gs->width;
-				ic->src_header->height = gs->height;
-				ic->image->header.width = gs->width;
-				ic->image->header.height = gs->height;
-				ic->image->header.widthBytes = (ic->image->header.width * ic->image->header.color_space->pixmap_depth + 7)/8; 
+                if((!gs->rgbrow)||(!gs->rowbuf)){
+                  gs->state = gif_oom;
+                  break;
+                }
+            
+                gs->screen_width = width;
+                if(gs->screen_height < gs->height )
+                    gs->screen_height = gs->height;
 
-				ic->image->header.widthBytes = ROUNDUP(ic->image->header.widthBytes, 4);
+                ic->src_header->width = gs->width;
+                ic->src_header->height = gs->height;
+                ic->image->header.width = gs->width;
+                ic->image->header.height = gs->height;
+                ic->image->header.widthBytes = (ic->image->header.width * ic->image->header.color_space->pixmap_depth + 7)/8; 
 
-				if(ic->imgdcb){
-				  nsresult rv = ic->imgdcb->ImgDCBImageSize();
+                ic->image->header.widthBytes = ROUNDUP(ic->image->header.widthBytes, 4);
+
+                if(ic->imgdcb){
+                  nsresult rv = ic->imgdcb->ImgDCBImageSize();
                  
                   if(NS_FAILED(rv)){
                       gs->state = gif_error;
-			          break;
+                      break;
                   }
-				}
+                }
                 else{    //no callback is an error too.
                     gs->state = gif_error;
                     break;
@@ -1291,24 +1298,24 @@ il_gif_write(il_container *ic, const uint8 *buf, int32 len)
                 ic->img_cx->img_cb->NewPixmap(ic->img_cx->dpy_cx, ic->dest_width,
                             ic->dest_height, ic->image, ic->mask);
     
-				if((!ic->scalerow)||(!ic->image->bits)||(ic->mask && !ic->mask->bits)){
-					gs->state=gif_oom;
-					break;
-				}
-	    }
+                if((!ic->scalerow)||(!ic->image->bits)||(ic->mask && !ic->mask->bits)){
+                    gs->state=gif_oom;
+                    break;
+                }
+        }
         else{
-			if (!gs->rgbrow)
-				gs->rgbrow = (uint8*)PR_MALLOC(3 * gs->screen_width);
+            if (!gs->rgbrow)
+                gs->rgbrow = (uint8*)PR_MALLOC(3 * gs->screen_width);
 
-			if (!gs->rowbuf)
-				gs->rowbuf = (uint8*)PR_MALLOC(gs->screen_width);
-	    }
+            if (!gs->rowbuf)
+                gs->rowbuf = (uint8*)PR_MALLOC(gs->screen_width);
+        }
 
             if (!gs->rowbuf || !gs->rgbrow)
             {
-                	ILTRACE(0,("il:gif: MEM row"));
-                	gs->state=gif_oom;
-               	 	break;
+                    ILTRACE(0,("il:gif: MEM row"));
+                    gs->state=gif_oom;
+                    break;
             }
                     
             /* Free transparency from earlier image in multi-image sequence. */
@@ -1320,14 +1327,14 @@ il_gif_write(il_container *ic, const uint8 *buf, int32 len)
                 src_header->width = gs->screen_width;
                 src_header->height = gs->screen_height;
 
-		        if(ic->imgdcb){
-				    nsresult rv = ic->imgdcb->ImgDCBImageSize();
+                if(ic->imgdcb){
+                    nsresult rv = ic->imgdcb->ImgDCBImageSize();
                  
                     if(NS_FAILED(rv)){
                         gs->state = gif_error;
-			            break;
+                        break;
                     }
-				}
+                }
                 else{    //no callback is an error too.
                     gs->state = gif_error;
                     break;
@@ -1343,7 +1350,7 @@ il_gif_write(il_container *ic, const uint8 *buf, int32 len)
                 gs->interlaced = FALSE;
                 gs->ipass = 0;
             }
-			
+            
             if (gs->images_decoded == 0)
             {
                 gs->progressive_display = ic->img_cx->progressive_display;
@@ -1479,9 +1486,9 @@ il_gif_write(il_container *ic, const uint8 *buf, int32 len)
 
                 /* An image can specify a delay time before which to display
                    subsequent images.  Block until the appointed time. */
-				if(gs->delay_time < MINIMUM_DELAY_TIME )
-					gs->delay_time = MINIMUM_DELAY_TIME;
-				if (gs->delay_time){
+                if(gs->delay_time < MINIMUM_DELAY_TIME )
+                    gs->delay_time = MINIMUM_DELAY_TIME;
+                if (gs->delay_time){
           if(ic->imgdcb){
               gs->delay_timeout = (void *)
                       ic->imgdcb->ImgDCBSetTimeout(gif_delay_time_callback, gs->ic, gs->delay_time);
@@ -1503,7 +1510,7 @@ il_gif_write(il_container *ic, const uint8 *buf, int32 len)
             break;
 
         case gif_delay:
-        case gif_gather:	
+        case gif_gather:    
         {
             int32 gather_remaining;
             int32 request_size = gs->gather_request_size;
@@ -1576,10 +1583,10 @@ il_gif_write(il_container *ic, const uint8 *buf, int32 len)
             ILTRACE(0,("il:gif: unknown state"));
             PR_ASSERT(0);
             break;
-		}
-	}
+        }
+    }
 
-	return 0;
+    return 0;
 }
 
 void
@@ -1587,7 +1594,7 @@ il_gif_complete(il_container *ic)
 {
     if (ic->ds)
     {
-		    gif_struct *gs = (gif_struct*) ic->ds;
+            gif_struct *gs = (gif_struct*) ic->ds;
 
         /* No more data in the stream, but we may still have work to do,
            so don't actually free any of the data structures. */
@@ -1615,9 +1622,9 @@ il_gif_complete(il_container *ic)
 void
 il_gif_abort(il_container *ic)
 {
-	if (ic->ds) 
-	{
-		gif_struct *gs = (gif_struct*) ic->ds;
+    if (ic->ds) 
+    {
+        gif_struct *gs = (gif_struct*) ic->ds;
 
         /* Clear any pending timeouts */
         if (gs->delay_timeout) {
@@ -1650,12 +1657,8 @@ il_gif_abort(il_container *ic)
             }
         }
        
-		PR_FREEIF(gs);
-		ic->ds = 0;
-	}
+        PR_FREEIF(gs);
+        ic->ds = 0;
+    }
 }
-
-#ifdef PROFILE
-#pragma profile off
-#endif
 

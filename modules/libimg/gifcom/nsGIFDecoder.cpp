@@ -41,14 +41,14 @@ GIFDecoder::~GIFDecoder(void)
 NS_IMETHODIMP
 GIFDecoder::ImgDInit()
 {
-   int ret;
+   PRBool ret=PR_FALSE;
 
    if(ilContainer != NULL) {
      ret=il_gif_init(ilContainer);
-    
-     if(ret==1)
+   } 
+   if(ret)
        return NS_OK;
-   }
+   else
    return NS_ERROR_FAILURE;  
 }
 

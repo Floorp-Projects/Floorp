@@ -43,10 +43,6 @@ PR_END_EXTERN_C
 #define HOWMANY(x, r)     (((x) + ((r) - 1)) / (r))
 #define ROUNDUP(x, r)     (HOWMANY(x, r) * (r))
 
-#ifdef PROFILE
-#pragma profile on
-#endif
-
 int il_debug=0;
 
 /* Global list of image group contexts. */
@@ -55,27 +51,41 @@ static IL_GroupContext *il_global_img_cx_list = NULL;
 /*-----------------------------------------*/
 NS_IMETHODIMP ImgDCallbk::ImgDCBSetupColorspaceConverter()
 {  
+  PRBool ret=PR_FALSE;
   if( ilContainer != NULL ) {
-    il_setup_color_space_converter(ilContainer);
+    ret = il_setup_color_space_converter(ilContainer);
   }
-  return 0;
+  if(ret)
+    return NS_OK;
+  else
+    return NS_ERROR_FAILURE;
 }
 
-NI_ColorSpace*
+NS_IMETHODIMP
 ImgDCallbk::ImgDCBCreateGreyScaleColorSpace()
 {
+  PRBool ret=PR_FALSE;
   if( ilContainer != NULL ) {
-    return IL_CreateGreyScaleColorSpace(1,1);
+      NI_PixmapHeader *maskhdr = &ilContainer->mask->header;
+      ret = IL_CreateGreyScaleColorSpace(1,1, &(maskhdr->color_space));
   }
-  return 0;
+  if(ret)
+     return NS_OK;
+  else
+     return NS_ERROR_FAILURE;
 }
   
-NS_IMETHODIMP ImgDCallbk::ImgDCBResetPalette()
-{
+NS_IMETHODIMP 
+ImgDCallbk::ImgDCBResetPalette()
+{  
+   PRBool ret=PR_FALSE;
    if( ilContainer != NULL ) {
-       il_reset_palette(ilContainer);
+       ret = il_reset_palette(ilContainer);
   }
-  return 0;
+  if(ret)
+     return NS_OK;
+  else
+     return NS_ERROR_FAILURE;
 }
 
 
@@ -85,28 +95,30 @@ ImgDCallbk::ImgDCBHaveHdr(int destwidth, int destheight)
   if( ilContainer != NULL ) {
     il_dimensions_notify(ilContainer, destwidth, destheight);
   }
-  return 0;
-
+  return NS_OK;   //no mem allocated here.
 }
 
 NS_IMETHODIMP
 ImgDCallbk::ImgDCBInitTransparentPixel()
 {
-    if( ilContainer != NULL ) {
-      il_init_image_transparent_pixel(ilContainer);
-  }
-  return 0;
+  PRBool ret=PR_FALSE;
 
+  if( ilContainer != NULL ) {
+      ret = il_init_image_transparent_pixel(ilContainer);
+  }
+  if(ret)
+     return NS_OK;
+  else
+     return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 ImgDCallbk::ImgDCBDestroyTransparentPixel()
 {
-    if( ilContainer != NULL ) {
-      il_destroy_image_transparent_pixel(ilContainer);
+  if( ilContainer != NULL ) {
+       il_destroy_image_transparent_pixel(ilContainer);
   }
-  return 0;
-
+  return NS_OK; //no mem allocated here.
 }
 
 NS_IMETHODIMP 
@@ -116,12 +128,17 @@ ImgDCallbk :: ImgDCBHaveRow(uint8 *rowbuf, uint8* rgbrow,
                             uint8 draw_mode, 
                             int pass )
 {
+  PRBool ret=PR_FALSE;
+
   if( ilContainer != NULL ) {
     
-  	il_emit_row(ilContainer, rowbuf, rgbrow, x_offset, len,
+    ret = il_emit_row(ilContainer, rowbuf, rgbrow, x_offset, len,
                        row, dup_rowcnt, (il_draw_mode)draw_mode, pass );
   }
-  return 0;
+  if(ret)
+     return NS_OK;
+  else
+     return NS_ERROR_FAILURE;
 
 }
 
@@ -131,25 +148,30 @@ ImgDCallbk :: ImgDCBHaveImageFrame()
   if( ilContainer != NULL ) {
          il_frame_complete_notify(ilContainer);
   }
-  return 0;
+  return NS_OK; //no mem allocated here.
 }
 
 NS_IMETHODIMP 
 ImgDCallbk::ImgDCBFlushImage()
 {
   if( ilContainer != NULL ) {
-	  il_flush_image_data(ilContainer);
+      il_flush_image_data(ilContainer);
   }
-  return 0;
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
 ImgDCallbk:: ImgDCBImageSize()
 { 
+  int ret = 0; 
   if( ilContainer != NULL ) {
-    il_size(ilContainer);
+    ret = il_size(ilContainer); //still uses old imglib error msgs
+                                // ret!=0 indicates error.
   }
-  return 0;
+  if(ret == 0)
+     return NS_OK;
+  else
+     return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP 
@@ -158,7 +180,7 @@ ImgDCallbk :: ImgDCBHaveImageAll()
   if( ilContainer != NULL ) {
     il_image_complete(ilContainer);
   }
-  return 0;
+  return NS_OK;
 
 }
 
@@ -166,10 +188,11 @@ NS_IMETHODIMP
 ImgDCallbk :: ImgDCBError()
 {
   if( ilContainer != NULL ) {
+      //implement me
   }
-  return 0;
+  return NS_OK; //no mem allocated here.
 
-}	
+}   
 
 void*
 ImgDCallbk :: ImgDCBSetTimeout(TimeoutCallbackFunction func, void* closure, uint32 msecs)
@@ -182,7 +205,7 @@ NS_IMETHODIMP
 ImgDCallbk :: ImgDCBClearTimeout(void *timer_id)
 {
   IL_ClearTimeout(timer_id);
-  return 0;
+  return NS_OK;
 }
 
 /*********************** Image Observer Notification. *************************
@@ -207,8 +230,8 @@ il_description_notify(il_container *ic)
     PR_snprintf(buf, sizeof(buf), XP_GetString(XP_MSG_IMAGE_PIXELS), ic->type,
                img_header->width, img_header->height);
 
-	PR_ASSERT(ic->clients);
-	for (image_req = ic->clients; image_req; image_req = image_req->next) {
+    PR_ASSERT(ic->clients);
+    for (image_req = ic->clients; image_req; image_req = image_req->next) {
         if (image_req->is_view_image) {
             message_data.image_instance = image_req;
             message_data.description = buf; /* Note scope limitation.  Observer
@@ -227,7 +250,7 @@ il_dimensions_notify(il_container *ic, int dest_width, int dest_height)
     
     nsCRT::zero(&message_data, sizeof(IL_MessageData));
 
-	PR_ASSERT(ic->clients);
+    PR_ASSERT(ic->clients);
     for (image_req = ic->clients; image_req; image_req = image_req->next) {
         message_data.image_instance = image_req;
         message_data.width = dest_width;   /* Note: these are stored as */
@@ -245,7 +268,7 @@ il_transparent_notify(il_container *ic)
     
     nsCRT::zero(&message_data, sizeof(IL_MessageData));
 
-	PR_ASSERT(ic->clients);
+    PR_ASSERT(ic->clients);
     for (image_req = ic->clients; image_req; image_req = image_req->next) {
         message_data.image_instance = image_req;
         XP_NotifyObservers(image_req->obs_list, IL_IS_TRANSPARENT,
@@ -268,7 +291,7 @@ il_pixmap_update_notify(il_container *ic)
     update_rect->width = (uint16)ic->image->header.width;
     update_rect->height = (uint16)(ic->update_end_row-ic->update_start_row+1);
 
-	PR_ASSERT(ic->clients);
+    PR_ASSERT(ic->clients);
     for(image_req = ic->clients; image_req; image_req = image_req->next) {
         /* The user aborted the image loading.  Don't display any more image
            data */
@@ -523,11 +546,11 @@ il_init_scaling(il_container *ic)
         
     /* Allocate temporary scale space */
     if (scaled_width != (int)ic->src_header->width)
-	{
+    {
         PR_FREEIF(ic->scalerow);
         
         if (!(ic->scalerow = (unsigned char *)PR_MALLOC(scaled_width * 3)))
-		{
+        {
             ILTRACE(0,("il: MEM scale row"));
             return MK_OUT_OF_MEMORY;
         }
@@ -539,7 +562,7 @@ il_init_scaling(il_container *ic)
    the Image Library's preferred transparency color i.e. the background color
    passed into IL_GetImage.  The image decoder is encouraged to use this
    color, but may opt not to do so. */
-int
+PRBool
 il_init_image_transparent_pixel(il_container *ic)
 {
     IL_IRGB *img_trans_pixel = ic->image->header.transparent_pixel;
@@ -598,24 +621,24 @@ il_size(il_container *ic)
     src_width = src_header->width;
     src_height = src_header->height;
 
-	/* Ensure that the source image has a sane area. */
-	if (!src_width || !src_height            ||
+    /* Ensure that the source image has a sane area. */
+    if (!src_width || !src_height            ||
         (src_width > MAX_IMAGE_WIDTH)        ||
         (src_height > MAX_IMAGE_HEIGHT)) {            
-		ILTRACE(1,("il: bad image size: %dx%d", src_width, src_height));
-		return MK_IMAGE_LOSSAGE;
-	}
+        ILTRACE(1,("il: bad image size: %dx%d", src_width, src_height));
+        return MK_IMAGE_LOSSAGE;
+    }
 
-	ic->state = IC_SIZED;
-	if (ic->state == IC_MULTI)
-		return 0;
+    ic->state = IC_SIZED;
+    if (ic->state == IC_MULTI)
+        return 0;
 
     if(ic->display_type == IL_Printer){
-		req_w = ic->dest_width;
-		req_h = ic->dest_height;
-		ic->dest_width = 0;   /*to decode natural size*/
-		ic->dest_height = 0;
-	}
+        req_w = ic->dest_width;
+        req_h = ic->dest_height;
+        ic->dest_width = 0;   /*to decode natural size*/
+        ic->dest_height = 0;
+    }
 
     /* For now, we don't allow an image to change output size on the
      * fly, but we do allow the source image size to change, and thus
@@ -674,7 +697,7 @@ il_size(il_container *ic)
         return MK_IMAGE_LOSSAGE;
     }
 
-	ILTRACE(2,("il: size %dx%d, scaled from %dx%d, ic = 0x%08x\n",
+    ILTRACE(2,("il: size %dx%d, scaled from %dx%d, ic = 0x%08x\n",
                ic->dest_width, ic->dest_height, src_width, src_height, ic));
 
     /* Determine the number of bytes per scan-line.  Image data must be
@@ -697,22 +720,24 @@ il_size(il_container *ic)
             }
 
             mask_header = &ic->mask->header;
-			if(img_header->alpha_bits)
-                mask_header->color_space = IL_CreateGreyScaleColorSpace(1, img_header->alpha_bits);
-			else
-                mask_header->color_space = IL_CreateGreyScaleColorSpace(1, 1);
+            PRBool  ret;
+            if(img_header->alpha_bits)
+                ret = IL_CreateGreyScaleColorSpace(1, img_header->alpha_bits, &mask_header->color_space);
+            else
+                ret = IL_CreateGreyScaleColorSpace(1, 1, &mask_header->color_space);
 
-            if (!mask_header->color_space)
+            if ((!ret)||(!mask_header->color_space))
                 return MK_OUT_OF_MEMORY;
-			
-			mask_header->alpha_bits = img_header->alpha_bits;
+
+            mask_header->alpha_bits = img_header->alpha_bits;
+            mask_header->is_mask = PR_TRUE;
 
             mask_header->width = img_header->width;
             mask_header->height = img_header->height;
-			if(img_header->alpha_bits == 1)
+            if(img_header->alpha_bits == 1)
                 mask_header->widthBytes = (mask_header->width + 7) / 8;
-			if(img_header->alpha_bits == 8)
-				mask_header->widthBytes = mask_header->width;
+            if(img_header->alpha_bits == 8)
+                mask_header->widthBytes = mask_header->width;
 
             /* Mask data must be quadlet aligned for optimizations */
             mask_header->widthBytes = ROUNDUP(mask_header->widthBytes, 4);
@@ -750,16 +775,18 @@ il_size(il_container *ic)
 
     /* If the display front-end doesn't support scaling, IMGCBIF_NewPixmap will
        set the image and mask dimensions to scaled_width and scaled_height. */
-    img_cx->img_cb->NewPixmap(img_cx->dpy_cx, ic->dest_width,
+    nsresult rv = img_cx->img_cb->NewPixmap(img_cx->dpy_cx, ic->dest_width,
                               ic->dest_height, ic->image, ic->mask);
-    
-	if (!ic->image->bits)
-		return MK_OUT_OF_MEMORY;
+    if (NS_FAILED(rv))
+           return MK_OUT_OF_MEMORY;
 
-	if (ic->mask && !ic->mask->bits)
-		return MK_OUT_OF_MEMORY;
+    if (!ic->image->haveBits)
+        return MK_OUT_OF_MEMORY;
 
-	/* Adjust the total cache byte count to reflect any departure from the
+    if (ic->mask && !ic->mask->haveBits)
+        return MK_OUT_OF_MEMORY;
+
+    /* Adjust the total cache byte count to reflect any departure from the
        original predicted byte count for this image. */
     image_bytes = (int32)img_header->widthBytes * img_header->height;
     if (image_bytes - old_image_bytes)
@@ -783,33 +810,33 @@ il_size(il_container *ic)
 
 
     /* XXXM12N Clean this up */
-	/* Get memory for quantizing.  (required amount depends on image width) */
-	if (img_header->color_space->type == NI_PseudoColor) {
-		if (!il_init_quantize(ic)) {
-			ILTRACE(0,("il: MEM il_init_quantize"));
-			return MK_OUT_OF_MEMORY;
-		}
-	}
+    /* Get memory for quantizing.  (required amount depends on image width) */
+    if (img_header->color_space->type == NI_PseudoColor) {
+        if (!il_init_quantize(ic)) {
+            ILTRACE(0,("il: MEM il_init_quantize"));
+            return MK_OUT_OF_MEMORY;
+        }
+    }
 
     if((ic->display_type == IL_Printer)&& (req_w || req_h)){
-		ic->dest_width = req_w;
-		ic->dest_height = req_h;
-	}
+        ic->dest_width = req_w;
+        ic->dest_height = req_h;
+    }
 
-	return 0;
+    return 0;
 }
 
 
 #ifdef XP_OS2
 #define IL_SIZE_CHUNK   16384
 #else
-#define IL_SIZE_CHUNK	128
+#define IL_SIZE_CHUNK   128
 #endif
 #ifdef XP_MAC
 #    if GENERATINGPOWERPC
 #        define IL_PREFERRED_CHUNK 8192
 #        define IL_OFFSCREEN_CHUNK 128
-#    else	/* normal mac */
+#    else   /* normal mac */
 #        define IL_PREFERRED_CHUNK 4096
 #        define IL_OFFSCREEN_CHUNK 128
 #    endif
@@ -838,15 +865,15 @@ IL_StreamWriteReady(il_container *ic)
     if(max_read == 0)
         return 0; //send no more data please
 
-	/*
+    /*
      * It could be that layout aborted image loading by calling IL_FreeImage
      * before the netlib finished transferring data.  Don't do anything.
      */
 
     if(ic->state == IC_ABORT_PENDING)
         return IL_OFFSCREEN_CHUNK;
-	if (!ic->sized)
-		/* A (small) default initial chunk */
+    if (!ic->sized)
+        /* A (small) default initial chunk */
          return IL_SIZE_CHUNK;
 
     return IL_PREFERRED_CHUNK;
@@ -857,38 +884,38 @@ IL_StreamWriteReady(il_container *ic)
 PRBool
 sniffout_mimetype(const char *buf, int32 len, char* aContentType)
 {
-	int i;
+    int i;
 
     if (len >= 4 && !nsCRT::strncmp(buf, "GIF8", 4)) 
-	{
+    {
         PR_snprintf(aContentType, 10,"%s", "image/gif");
-		return PR_TRUE;
-	}
+        return PR_TRUE;
+    }
 
-  	/* for PNG */
-	if (len >= 4 && ((unsigned char)buf[0]==0x89 &&
-		             (unsigned char)buf[1]==0x50 &&
-					 (unsigned char)buf[2]==0x4E &&
-					 (unsigned char)buf[3]==0x47))
-	{ 
+    /* for PNG */
+    if (len >= 4 && ((unsigned char)buf[0]==0x89 &&
+                     (unsigned char)buf[1]==0x50 &&
+                     (unsigned char)buf[2]==0x4E &&
+                     (unsigned char)buf[3]==0x47))
+    { 
         PR_snprintf(aContentType, 10,"%s","image/png");
-		return PR_TRUE;
-	}
+        return PR_TRUE;
+    }
 
 
-	/* JFIF files start with SOI APP0 but older files can start with SOI DQT
-	 * so we test for SOI followed by any marker, i.e. FF D8 FF
-	 * this will also work for SPIFF JPEG files if they appear in the future.
-	 *
-	 * (JFIF is 0XFF 0XD8 0XFF 0XE0 <skip 2> 0X4A 0X46 0X49 0X46 0X00)
+    /* JFIF files start with SOI APP0 but older files can start with SOI DQT
+     * so we test for SOI followed by any marker, i.e. FF D8 FF
+     * this will also work for SPIFF JPEG files if they appear in the future.
+     *
+     * (JFIF is 0XFF 0XD8 0XFF 0XE0 <skip 2> 0X4A 0X46 0X49 0X46 0X00)
      */
-	if (len >= 3 &&
-	   ((unsigned char)buf[0])==0xFF &&
-	   ((unsigned char)buf[1])==0xD8 &&
-	   ((unsigned char)buf[2])==0xFF)
-	{
+    if (len >= 3 &&
+       ((unsigned char)buf[0])==0xFF &&
+       ((unsigned char)buf[1])==0xD8 &&
+       ((unsigned char)buf[2])==0xFF)
+    {
                 PR_snprintf(aContentType, 11,"%s", "image/jpeg");
-		return PR_TRUE;
+        return PR_TRUE;
     }
 
   /* ART begins with JG (4A 47). Major version offset 2.
@@ -900,41 +927,41 @@ sniffout_mimetype(const char *buf, int32 len, char* aContentType)
      ((unsigned char) buf[4])==0x00 )
   {
         PR_snprintf(aContentType, 10,"%s", "image/art");
-		return PR_TRUE;
+        return PR_TRUE;
   }
 
 
-	/* no simple test for XBM vs, say, XPM so punt for now */
-	if (len >= 8 && !strncmp(buf, "#define ", 8) ) 
-	{
+    /* no simple test for XBM vs, say, XPM so punt for now */
+    if (len >= 8 && !strncmp(buf, "#define ", 8) ) 
+    {
         /* Don't contradict the given type, since this ID isn't definitive */
         PR_snprintf(aContentType, 8,"%s", "unknown");
-		return PR_TRUE;
-	}
+        return PR_TRUE;
+    }
 
-	if (len < 12) 
-	{
-		ILTRACE(1,("il: too few bytes to determine type"));
+    if (len < 12) 
+    {
+        ILTRACE(1,("il: too few bytes to determine type"));
         PR_snprintf(aContentType, 8,"%s", "unknown");
-		return PR_FALSE;
-	}
+        return PR_FALSE;
+    }
 
-	/* all the servers return different formats so root around */
-	for (i=0; i<28; i++)
-	{
+    /* all the servers return different formats so root around */
+    for (i=0; i<28; i++)
+    {
         if (!strncmp(&buf[i], "Not Fou", 7)){
              PR_snprintf(aContentType, 8,"%s", "unknown");
-			return PR_FALSE;
+            return PR_FALSE;
         }
-	}
+    }
 
     //just in case
     PR_snprintf(aContentType, 8,"%s", "unknown");
-	return PR_FALSE;
+    return PR_FALSE;
 }
 
 /*
- *	determine what kind of image data we are dealing with
+ *  determine what kind of image data we are dealing with
  */
 
 
@@ -967,15 +994,15 @@ IL_StreamWrite(il_container *ic, const unsigned char *str, int32 len)
 
     ic->bytes_consumed += len;
     
-	if (len)
-		   rv = ic->imgdec->ImgDWrite(str,  len);
+    if (len)
+           rv = ic->imgdec->ImgDWrite(str,  len);
 
       /* Notify observers of image progress. */
     il_progress_notify(ic);
 
     if(NS_FAILED(rv))
-		return -1;
-	else
+        return -1;
+    else
         return len;
 }
 
@@ -985,33 +1012,33 @@ IL_StreamFirstWrite(il_container *ic, const unsigned char *str, int32 len)
 {
   nsresult rv = NS_OK;
 
-	PR_ASSERT(ic);
-	PR_ASSERT(ic->image);
+    PR_ASSERT(ic);
+    PR_ASSERT(ic->image);
     
     /* If URL redirection occurs, the url stored in the
     image container is the redirect url not the image file url.
     If the image is animated, the imglib will never match the
     file name in the cache unless you update ic->url_address.
     ic->fetch_url keeps the actual url for you.
-     */	
+     */ 
 
 
     FREE_IF_NOT_NULL(ic->fetch_url);
 
     if (ic->url){
-	    ic->fetch_url = ic->url->GetAddress();
+        ic->fetch_url = ic->url->GetAddress();
     }
     else{
-	if(ic->url_address) /* check needed because of mkicons.c */
-        	ic->fetch_url = PL_strdup(ic->url_address);
-	else
-		ic->fetch_url = NULL;
+    if(ic->url_address) /* check needed because of mkicons.c */
+            ic->fetch_url = PL_strdup(ic->url_address);
+    else
+        ic->fetch_url = NULL;
     }
  
-	/* Grab the URL's expiration date */
+    /* Grab the URL's expiration date */
 
   if (ic->url)
-	  ic->expires = ic->url->GetExpires();
+      ic->expires = ic->url->GetExpires();
 
   /* if our mime sniffer can recognize what's in the
     data stream and it is one of our std vanilla types.
@@ -1028,7 +1055,7 @@ IL_StreamFirstWrite(il_container *ic, const unsigned char *str, int32 len)
         }
   }
 
-  nsIImgDecoder *imgdec ;	
+  nsIImgDecoder *imgdec ;   
   char imgtypestr[200];
 
   PR_snprintf(imgtypestr, sizeof(imgtypestr), "component://netscape/image/decoder&type=%s"
@@ -1056,8 +1083,8 @@ IL_StreamFirstWrite(il_container *ic, const unsigned char *str, int32 len)
     ILTRACE(0,("il: image init failed"));
     return MK_OUT_OF_MEMORY;
   }
-		
-	return 0; //ok
+        
+    return 0; //ok
 }
 
 
@@ -1131,12 +1158,12 @@ il_bad_container(il_container *ic)
 void
 IL_NetRequestDone(il_container *ic, ilIURL *url, int status)
 {
-	IL_ImageReq *image_req;
-	PR_ASSERT(ic);
+    IL_ImageReq *image_req;
+    PR_ASSERT(ic);
 
-	/* Record the fact that NetLib is done loading. */
+    /* Record the fact that NetLib is done loading. */
     if (ic->url == url) {
-	    ic->is_url_loading = PR_FALSE;
+        ic->is_url_loading = PR_FALSE;
     }
     /* The (ic->url == url) check is for a weird timer issue, see the comment at the
        end of this function. */    
@@ -1146,28 +1173,28 @@ IL_NetRequestDone(il_container *ic, ilIURL *url, int status)
      * before the netlib finished transferring data.  If so, really do the
      * freeing of the data that was deferred there.
      */
-	if (ic->state == IC_ABORT_PENDING) {
-		il_delete_container(ic);
+    if (ic->state == IC_ABORT_PENDING) {
+        il_delete_container(ic);
         NS_RELEASE(url);
         return;
     }
     
-	if (status < 0) {
-		ILTRACE(2,("il:net done ic=0x%08x, status=%d, ic->state=0x%02x\n",
+    if (status < 0) {
+        ILTRACE(2,("il:net done ic=0x%08x, status=%d, ic->state=0x%02x\n",
                    ic, status, ic->state));
 
         /* Netlib detected failure before a stream was even created. */
-		if (ic->state < IC_BAD)	{
-			if (status == MK_OBJECT_NOT_IN_CACHE)
-				ic->state = IC_NOCACHE;
-			else if (status == MK_UNABLE_TO_LOCATE_FILE)
+        if (ic->state < IC_BAD) {
+            if (status == MK_OBJECT_NOT_IN_CACHE)
+                ic->state = IC_NOCACHE;
+            else if (status == MK_UNABLE_TO_LOCATE_FILE)
                 ic->state = IC_MISSING;
             else {
                 /* status is probably MK_INTERRUPTED */
-				ic->state = IC_INCOMPLETE; /* try again on reload */
+                ic->state = IC_INCOMPLETE; /* try again on reload */
             }
 
-			if (!ic->sized)	{
+            if (!ic->sized) {
                 if (status == MK_OBJECT_NOT_IN_CACHE) {
                     for (image_req = ic->clients; image_req;
                          image_req = image_req->next)
@@ -1189,19 +1216,19 @@ IL_NetRequestDone(il_container *ic, ilIURL *url, int status)
                         il_icon_notify(image_req, IL_IMAGE_BAD_DATA,
                                        IL_ERROR_IMAGE_DATA_ILLEGAL);
                 }
-			}
+            }
         }
-	}
-	else {
+    }
+    else {
         /* It is possible for NetLib to call the exit routine with a success status,
            even though the stream was never created (this can happen when fetching
            a mime image part which contains no image data.)  Show a missing image
            icon. */ 
-	    if (ic->state < IC_STREAM) {
-		    ic->state = IC_MISSING;
-	        for (image_req = ic->clients; image_req; image_req = image_req->next)
+        if (ic->state < IC_STREAM) {
+            ic->state = IC_MISSING;
+            for (image_req = ic->clients; image_req; image_req = image_req->next)
                 il_icon_notify(image_req, IL_IMAGE_NOT_FOUND, IL_ERROR_NO_DATA);
-	    }
+        }
     }
 
     if (ic->url == url) {
@@ -1221,7 +1248,7 @@ void
 il_image_abort(il_container *ic)
 {
   if (ic->imgdec)
-	  ic->imgdec->ImgDAbort();
+      ic->imgdec->ImgDAbort();
 
     /* Clear any pending timeouts */
     if (ic->row_output_timeout) {
@@ -1234,26 +1261,26 @@ void
 IL_StreamComplete(il_container *ic, PRBool is_multipart)
 {
 #ifdef DEBUG
-	PRTime cur_time;
-	PRInt32 difference;
+    PRTime cur_time;
+    PRInt32 difference;
 #endif /* DEBUG */
 
-	PR_ASSERT(ic);
+    PR_ASSERT(ic);
     if(ic->type){
         nsCRT::free(ic->type);
         ic->type = NULL;
     }
 #ifdef DEBUG
-	cur_time = PR_Now();
-	LL_SUB(cur_time, cur_time, ic->start_time);
-	difference = LL_L2I(difference, cur_time);
+    cur_time = PR_Now();
+    LL_SUB(cur_time, cur_time, ic->start_time);
+    difference = LL_L2I(difference, cur_time);
     ILTRACE(1, ("il: complete: %d seconds for %s\n",
                 difference, ic->url_address));
 #endif /* DEBUG */
 
     ic->is_multipart = is_multipart;
 
-	if (ic->imgdec)
+    if (ic->imgdec)
         ic->imgdec->ImgDComplete();
     else
         il_image_complete(ic);
@@ -1365,7 +1392,7 @@ il_container_complete(il_container *ic)
         /* This is a looping image whose loop count has reached zero, so
            set the container's state to indicate that it is no longer
            looping. */
-        ic->is_looping = PR_FALSE;			 
+        ic->is_looping = PR_FALSE;           
 
         /* Inform the client contexts that the container has stopped
            looping. */
@@ -1385,7 +1412,7 @@ il_image_complete(il_container *ic)
 {
     NI_PixmapHeader *src_header = ic->src_header;
     IL_DisplayType display_type = ic->display_type;
-	ilINetReader *reader;
+    ilINetReader *reader;
 
 
     switch( ic->state ){
@@ -1409,35 +1436,35 @@ il_image_complete(il_container *ic)
         case IC_SIZED:
         case IC_MULTI:
          
-		    PR_ASSERT(ic->image && ic->image->bits);
+            PR_ASSERT(ic->image && ic->image->haveBits);
 
-		    ILTRACE(1,("il: complete %d image width %d (%d) height %d,"
+            ILTRACE(1,("il: complete %d image width %d (%d) height %d,"
                    " depth %d, %d colors",
-				           ic->multi,
-				           ic->image->header.width,
+                           ic->multi,
+                           ic->image->header.width,
                    ic->image->header.widthBytes,
                    ic->image->header.height,
                    ic->image->header.color_space->pixmap_depth, 
-				           ic->image->header.color_space->cmap.num_colors));
+                           ic->image->header.color_space->cmap.num_colors));
 
-		        /* 3 cases: simple, multipart MIME, multi-image animation */
-		        if (!ic->loop_count && !ic->is_multipart) {
+                /* 3 cases: simple, multipart MIME, multi-image animation */
+                if (!ic->loop_count && !ic->is_multipart) {
                 /* A single frame, single part image. */
                 il_container_complete(ic);
             }
             else {
                 /* Display the rest of the last image before starting a new one */
-			           il_flush_image_data(ic);
+                       il_flush_image_data(ic);
 
                 /* Force new colormap to be loaded in case its different from the
                  * LOSRC or previous images in the multipart message.
                  * XXX - fur - Shouldn't do this for COLORMAP case.
                  */
-                il_reset_palette(ic);
+                PRBool ret=il_reset_palette(ic); 
 
                 FREE_IF_NOT_NULL(src_header->color_space->cmap.map);
                 FREE_IF_NOT_NULL(src_header->transparent_pixel);
-			          il_destroy_image_transparent_pixel(ic);
+                      il_destroy_image_transparent_pixel(ic);
                 FREE_IF_NOT_NULL(ic->comment);
                 ic->comment_length = 0;
 
@@ -1450,8 +1477,13 @@ il_image_complete(il_container *ic)
                 
                     ILTRACE(1,("il: loop %s", ic->url_address));
 
+                    if(ic->net_cx){ //ptn test
                     netRequest = ic->net_cx->CreateURL(ic->fetch_url, NET_DONT_RELOAD);
                     if (!netRequest) {   /* OOM */
+                        il_container_complete(ic);
+                        break;
+                    }
+                    }else{
                         il_container_complete(ic);
                         break;
                     }
@@ -1504,10 +1536,10 @@ il_image_complete(il_container *ic)
 
                         /* Suppress thermo & progress bar */
                         /* Call to netlib for net cache data happens here. */
-					              netRequest->SetBackgroundLoad(PR_TRUE);
-					              reader = IL_NewNetReader(ic);
+                                  netRequest->SetBackgroundLoad(PR_TRUE);
+                                  reader = IL_NewNetReader(ic);
                         (void) ic->net_cx->GetURL(ic->url, NET_CACHE_ONLY_RELOAD /*NET_DONT_RELOAD*/, 
-											      reader);
+                                                  reader);
                         /* Release reader, GetURL will keep a ref to it. */
                         NS_RELEASE(reader);
                     } else {
@@ -1517,11 +1549,11 @@ il_image_complete(il_container *ic)
                     }
                 }
                 else if (ic->is_multipart) {
-				           ic->multi++;
-				           ic->state = IC_MULTI;
+                           ic->multi++;
+                           ic->state = IC_MULTI;
                 }
             }
-		    break;
+            break;
         
         case IC_MISSING:
         case IC_NOCACHE:
@@ -1529,7 +1561,7 @@ il_image_complete(il_container *ic)
         default:
             break;
 
-	}/*switch*/
+    }/*switch*/
     
     
     /* Clear any pending timeouts */
@@ -1548,11 +1580,11 @@ void
 IL_StreamAbort(il_container *ic, int status)
 {
     int old_state;
-    IL_ImageReq *image_req;	
+    IL_ImageReq *image_req; 
 
-	PR_ASSERT(ic);
+    PR_ASSERT(ic);
 
-	ILTRACE(4,("il: abort, status=%d ic->state=%d", status, ic->state));
+    ILTRACE(4,("il: abort, status=%d ic->state=%d", status, ic->state));
 
     /* Abort the image. */
     il_image_abort(ic);
@@ -1562,22 +1594,22 @@ IL_StreamAbort(il_container *ic, int status)
     }
 
 
-	if(ic->state >= IC_SIZED || (ic->state == IC_ABORT_PENDING)){
-		if (status == MK_INTERRUPTED){
-			il_container_aborted(ic);
-		}
-		else{
-			for (image_req = ic->clients; image_req; image_req = image_req->next)
+    if(ic->state >= IC_SIZED || (ic->state == IC_ABORT_PENDING)){
+        if (status == MK_INTERRUPTED){
+            il_container_aborted(ic);
+        }
+        else{
+            for (image_req = ic->clients; image_req; image_req = image_req->next)
                 il_icon_notify(image_req, IL_IMAGE_BAD_DATA,
                            IL_ERROR_IMAGE_DATA_ILLEGAL);
-		}
-	}
-	/*
+        }
+    }
+    /*
      * It could be that layout aborted image loading by calling IL_DestroyImage()
      * before the netlib finished transferring data.  Don't do anything.
      */
-	if (ic->state == IC_ABORT_PENDING)
-		return;
+    if (ic->state == IC_ABORT_PENDING)
+        return;
 
     old_state = ic->state;
         
@@ -1592,24 +1624,24 @@ IL_StreamAbort(il_container *ic, int status)
 
 PRBool
 IL_StreamCreated(il_container *ic,
-				 ilIURL *url,
-				 char* type)
+                 ilIURL *url,
+                 char* type)
 {
-	PR_ASSERT(ic);
+    PR_ASSERT(ic);
 
-	/*
+    /*
      * It could be that layout aborted image loading by calling IL_FreeImage()
      * before the netlib finished transferring data.  Don't do anything.
      */
-	if (ic->state == IC_ABORT_PENDING)
-		return PR_FALSE;
-	
+    if (ic->state == IC_ABORT_PENDING)
+        return PR_FALSE;
+    
     ic->type = nsCRT::strdup(type); //mime string
-	ic->content_length = url->GetContentLength();
+    ic->content_length = url->GetContentLength();
     char* addr = url->GetAddress();
-	ILTRACE(4,("il: new stream, type %s, %s", ic->type, addr));
+    ILTRACE(4,("il: new stream, type %s, %s", ic->type, addr));
     nsCRT::free(addr);
-	ic->state = IC_STREAM;
+    ic->state = IC_STREAM;
 
 #ifndef M12N                    /* XXXM12N Fix me. */
 #ifdef XP_MAC
@@ -1617,7 +1649,7 @@ IL_StreamCreated(il_container *ic,
 #endif
 #endif /* M12N */
 
-	return PR_TRUE;
+    return PR_TRUE;
 }
 
 
@@ -1625,14 +1657,14 @@ IL_StreamCreated(il_container *ic,
 uint32
 il_hash(const char *ubuf)
 {
-	unsigned char * buf = (unsigned char*) ubuf;
-	uint32 h=1;
-	while(*buf)
-	{
-		h = 0x63c63cd9*h + 0x9c39c33d + (int32)*buf;
-		buf++;
-	}
-	return h;
+    unsigned char * buf = (unsigned char*) ubuf;
+    uint32 h=1;
+    while(*buf)
+    {
+        h = 0x63c63cd9*h + 0x9c39c33d + (int32)*buf;
+        buf++;
+    }
+    return h;
 }
 
 #define IL_LAST_ICON 62
@@ -1645,160 +1677,160 @@ il_setup_icon_table(void)
 {
     int inum = 0;
 
-	/* gopher/ftp icons */
-	il_icon_table[inum++] = il_hash("internal-gopher-text");
-	il_icon_table[inum++] = IL_GOPHER_TEXT;
-	il_icon_table[inum++] = il_hash("internal-gopher-image");
-	il_icon_table[inum++] = IL_GOPHER_IMAGE;
-	il_icon_table[inum++] = il_hash("internal-gopher-binary");
-	il_icon_table[inum++] = IL_GOPHER_BINARY;
-	il_icon_table[inum++] = il_hash("internal-gopher-sound");
-	il_icon_table[inum++] = IL_GOPHER_SOUND;
-	il_icon_table[inum++] = il_hash("internal-gopher-movie");
-	il_icon_table[inum++] = IL_GOPHER_MOVIE;
-	il_icon_table[inum++] = il_hash("internal-gopher-menu");
-	il_icon_table[inum++] = IL_GOPHER_FOLDER;
-	il_icon_table[inum++] = il_hash("internal-gopher-index");
-	il_icon_table[inum++] = IL_GOPHER_SEARCHABLE;
-	il_icon_table[inum++] = il_hash("internal-gopher-telnet");
-	il_icon_table[inum++] = IL_GOPHER_TELNET;
-	il_icon_table[inum++] = il_hash("internal-gopher-unknown");
-	il_icon_table[inum++] = IL_GOPHER_UNKNOWN;
+    /* gopher/ftp icons */
+    il_icon_table[inum++] = il_hash("internal-gopher-text");
+    il_icon_table[inum++] = IL_GOPHER_TEXT;
+    il_icon_table[inum++] = il_hash("internal-gopher-image");
+    il_icon_table[inum++] = IL_GOPHER_IMAGE;
+    il_icon_table[inum++] = il_hash("internal-gopher-binary");
+    il_icon_table[inum++] = IL_GOPHER_BINARY;
+    il_icon_table[inum++] = il_hash("internal-gopher-sound");
+    il_icon_table[inum++] = IL_GOPHER_SOUND;
+    il_icon_table[inum++] = il_hash("internal-gopher-movie");
+    il_icon_table[inum++] = IL_GOPHER_MOVIE;
+    il_icon_table[inum++] = il_hash("internal-gopher-menu");
+    il_icon_table[inum++] = IL_GOPHER_FOLDER;
+    il_icon_table[inum++] = il_hash("internal-gopher-index");
+    il_icon_table[inum++] = IL_GOPHER_SEARCHABLE;
+    il_icon_table[inum++] = il_hash("internal-gopher-telnet");
+    il_icon_table[inum++] = IL_GOPHER_TELNET;
+    il_icon_table[inum++] = il_hash("internal-gopher-unknown");
+    il_icon_table[inum++] = IL_GOPHER_UNKNOWN;
 
-	/* news icons */
-	il_icon_table[inum++] = il_hash("internal-news-catchup-group");
-	il_icon_table[inum++] = IL_NEWS_CATCHUP;
-	il_icon_table[inum++] = il_hash("internal-news-catchup-thread");
-	il_icon_table[inum++] = IL_NEWS_CATCHUP_THREAD;
-	il_icon_table[inum++] = il_hash("internal-news-followup");
-	il_icon_table[inum++] = IL_NEWS_FOLLOWUP;
-	il_icon_table[inum++] = il_hash("internal-news-go-to-newsrc");
-	il_icon_table[inum++] = IL_NEWS_GOTO_NEWSRC;
-	il_icon_table[inum++] = il_hash("internal-news-next-article");
-	il_icon_table[inum++] = IL_NEWS_NEXT_ART;
-	il_icon_table[inum++] = il_hash("internal-news-next-article-gray");
-	il_icon_table[inum++] = IL_NEWS_NEXT_ART_GREY;
-	il_icon_table[inum++] = il_hash("internal-news-next-thread");
-	il_icon_table[inum++] = IL_NEWS_NEXT_THREAD;
-	il_icon_table[inum++] = il_hash("internal-news-next-thread-gray");
-	il_icon_table[inum++] = IL_NEWS_NEXT_THREAD_GREY;
-	il_icon_table[inum++] = il_hash("internal-news-post");
-	il_icon_table[inum++] = IL_NEWS_POST;
-	il_icon_table[inum++] = il_hash("internal-news-prev-article");
-	il_icon_table[inum++] = IL_NEWS_PREV_ART;
-	il_icon_table[inum++] = il_hash("internal-news-prev-article-gray");
-	il_icon_table[inum++] = IL_NEWS_PREV_ART_GREY;
-	il_icon_table[inum++] = il_hash("internal-news-prev-thread");
-	il_icon_table[inum++] = IL_NEWS_PREV_THREAD;
-	il_icon_table[inum++] = il_hash("internal-news-prev-thread-gray");
-	il_icon_table[inum++] = IL_NEWS_PREV_THREAD_GREY;
-	il_icon_table[inum++] = il_hash("internal-news-reply");
-	il_icon_table[inum++] = IL_NEWS_REPLY;
-	il_icon_table[inum++] = il_hash("internal-news-rtn-to-group");
-	il_icon_table[inum++] = IL_NEWS_RTN_TO_GROUP;
-	il_icon_table[inum++] = il_hash("internal-news-show-all-articles");
-	il_icon_table[inum++] = IL_NEWS_SHOW_ALL_ARTICLES;
-	il_icon_table[inum++] = il_hash("internal-news-show-unread-articles");
-	il_icon_table[inum++] = IL_NEWS_SHOW_UNREAD_ARTICLES;
-	il_icon_table[inum++] = il_hash("internal-news-subscribe");
-	il_icon_table[inum++] = IL_NEWS_SUBSCRIBE;
-	il_icon_table[inum++] = il_hash("internal-news-unsubscribe");
-	il_icon_table[inum++] = IL_NEWS_UNSUBSCRIBE;
-	il_icon_table[inum++] = il_hash("internal-news-newsgroup");
-	il_icon_table[inum++] = IL_NEWS_FILE;
-	il_icon_table[inum++] = il_hash("internal-news-newsgroups");
-	il_icon_table[inum++] = IL_NEWS_FOLDER;
+    /* news icons */
+    il_icon_table[inum++] = il_hash("internal-news-catchup-group");
+    il_icon_table[inum++] = IL_NEWS_CATCHUP;
+    il_icon_table[inum++] = il_hash("internal-news-catchup-thread");
+    il_icon_table[inum++] = IL_NEWS_CATCHUP_THREAD;
+    il_icon_table[inum++] = il_hash("internal-news-followup");
+    il_icon_table[inum++] = IL_NEWS_FOLLOWUP;
+    il_icon_table[inum++] = il_hash("internal-news-go-to-newsrc");
+    il_icon_table[inum++] = IL_NEWS_GOTO_NEWSRC;
+    il_icon_table[inum++] = il_hash("internal-news-next-article");
+    il_icon_table[inum++] = IL_NEWS_NEXT_ART;
+    il_icon_table[inum++] = il_hash("internal-news-next-article-gray");
+    il_icon_table[inum++] = IL_NEWS_NEXT_ART_GREY;
+    il_icon_table[inum++] = il_hash("internal-news-next-thread");
+    il_icon_table[inum++] = IL_NEWS_NEXT_THREAD;
+    il_icon_table[inum++] = il_hash("internal-news-next-thread-gray");
+    il_icon_table[inum++] = IL_NEWS_NEXT_THREAD_GREY;
+    il_icon_table[inum++] = il_hash("internal-news-post");
+    il_icon_table[inum++] = IL_NEWS_POST;
+    il_icon_table[inum++] = il_hash("internal-news-prev-article");
+    il_icon_table[inum++] = IL_NEWS_PREV_ART;
+    il_icon_table[inum++] = il_hash("internal-news-prev-article-gray");
+    il_icon_table[inum++] = IL_NEWS_PREV_ART_GREY;
+    il_icon_table[inum++] = il_hash("internal-news-prev-thread");
+    il_icon_table[inum++] = IL_NEWS_PREV_THREAD;
+    il_icon_table[inum++] = il_hash("internal-news-prev-thread-gray");
+    il_icon_table[inum++] = IL_NEWS_PREV_THREAD_GREY;
+    il_icon_table[inum++] = il_hash("internal-news-reply");
+    il_icon_table[inum++] = IL_NEWS_REPLY;
+    il_icon_table[inum++] = il_hash("internal-news-rtn-to-group");
+    il_icon_table[inum++] = IL_NEWS_RTN_TO_GROUP;
+    il_icon_table[inum++] = il_hash("internal-news-show-all-articles");
+    il_icon_table[inum++] = IL_NEWS_SHOW_ALL_ARTICLES;
+    il_icon_table[inum++] = il_hash("internal-news-show-unread-articles");
+    il_icon_table[inum++] = IL_NEWS_SHOW_UNREAD_ARTICLES;
+    il_icon_table[inum++] = il_hash("internal-news-subscribe");
+    il_icon_table[inum++] = IL_NEWS_SUBSCRIBE;
+    il_icon_table[inum++] = il_hash("internal-news-unsubscribe");
+    il_icon_table[inum++] = IL_NEWS_UNSUBSCRIBE;
+    il_icon_table[inum++] = il_hash("internal-news-newsgroup");
+    il_icon_table[inum++] = IL_NEWS_FILE;
+    il_icon_table[inum++] = il_hash("internal-news-newsgroups");
+    il_icon_table[inum++] = IL_NEWS_FOLDER;
 
-	/* httpd file icons */
-	il_icon_table[inum++] = il_hash("/mc-icons/menu.gif");
-	il_icon_table[inum++] = IL_GOPHER_FOLDER;
-	il_icon_table[inum++] = il_hash("/mc-icons/unknown.gif");  
-	il_icon_table[inum++] = IL_GOPHER_UNKNOWN;
-	il_icon_table[inum++] = il_hash("/mc-icons/text.gif");	
-	il_icon_table[inum++] = IL_GOPHER_TEXT;
-	il_icon_table[inum++] = il_hash("/mc-icons/image.gif"); 
-	il_icon_table[inum++] = IL_GOPHER_IMAGE;
-	il_icon_table[inum++] = il_hash("/mc-icons/sound.gif");	 
-	il_icon_table[inum++] = IL_GOPHER_SOUND;
-	il_icon_table[inum++] = il_hash("/mc-icons/movie.gif");	 
-	il_icon_table[inum++] = IL_GOPHER_MOVIE;
-	il_icon_table[inum++] = il_hash("/mc-icons/binary.gif"); 
-	il_icon_table[inum++] = IL_GOPHER_BINARY;
+    /* httpd file icons */
+    il_icon_table[inum++] = il_hash("/mc-icons/menu.gif");
+    il_icon_table[inum++] = IL_GOPHER_FOLDER;
+    il_icon_table[inum++] = il_hash("/mc-icons/unknown.gif");  
+    il_icon_table[inum++] = IL_GOPHER_UNKNOWN;
+    il_icon_table[inum++] = il_hash("/mc-icons/text.gif");  
+    il_icon_table[inum++] = IL_GOPHER_TEXT;
+    il_icon_table[inum++] = il_hash("/mc-icons/image.gif"); 
+    il_icon_table[inum++] = IL_GOPHER_IMAGE;
+    il_icon_table[inum++] = il_hash("/mc-icons/sound.gif");  
+    il_icon_table[inum++] = IL_GOPHER_SOUND;
+    il_icon_table[inum++] = il_hash("/mc-icons/movie.gif");  
+    il_icon_table[inum++] = IL_GOPHER_MOVIE;
+    il_icon_table[inum++] = il_hash("/mc-icons/binary.gif"); 
+    il_icon_table[inum++] = IL_GOPHER_BINARY;
 
     /* Duplicate httpd icons, but using new naming scheme. */
-	il_icon_table[inum++] = il_hash("/ns-icons/menu.gif");
-	il_icon_table[inum++] = IL_GOPHER_FOLDER;
-	il_icon_table[inum++] = il_hash("/ns-icons/unknown.gif");  
-	il_icon_table[inum++] = IL_GOPHER_UNKNOWN;
-	il_icon_table[inum++] = il_hash("/ns-icons/text.gif");	
-	il_icon_table[inum++] = IL_GOPHER_TEXT;
-	il_icon_table[inum++] = il_hash("/ns-icons/image.gif"); 
-	il_icon_table[inum++] = IL_GOPHER_IMAGE;
-	il_icon_table[inum++] = il_hash("/ns-icons/sound.gif");	 
-	il_icon_table[inum++] = IL_GOPHER_SOUND;
-	il_icon_table[inum++] = il_hash("/ns-icons/movie.gif");	 
-	il_icon_table[inum++] = IL_GOPHER_MOVIE;
-	il_icon_table[inum++] = il_hash("/ns-icons/binary.gif"); 
-	il_icon_table[inum++] = IL_GOPHER_BINARY;
+    il_icon_table[inum++] = il_hash("/ns-icons/menu.gif");
+    il_icon_table[inum++] = IL_GOPHER_FOLDER;
+    il_icon_table[inum++] = il_hash("/ns-icons/unknown.gif");  
+    il_icon_table[inum++] = IL_GOPHER_UNKNOWN;
+    il_icon_table[inum++] = il_hash("/ns-icons/text.gif");  
+    il_icon_table[inum++] = IL_GOPHER_TEXT;
+    il_icon_table[inum++] = il_hash("/ns-icons/image.gif"); 
+    il_icon_table[inum++] = IL_GOPHER_IMAGE;
+    il_icon_table[inum++] = il_hash("/ns-icons/sound.gif");  
+    il_icon_table[inum++] = IL_GOPHER_SOUND;
+    il_icon_table[inum++] = il_hash("/ns-icons/movie.gif");  
+    il_icon_table[inum++] = IL_GOPHER_MOVIE;
+    il_icon_table[inum++] = il_hash("/ns-icons/binary.gif"); 
+    il_icon_table[inum++] = IL_GOPHER_BINARY;
 
-	/* ... and names for all the image icons */
-	il_icon_table[inum++] = il_hash("internal-icon-delayed"); 
-	il_icon_table[inum++] = IL_IMAGE_DELAYED;
-	il_icon_table[inum++] = il_hash("internal-icon-notfound"); 
-	il_icon_table[inum++] = IL_IMAGE_NOT_FOUND;
-	il_icon_table[inum++] = il_hash("internal-icon-baddata"); 
-	il_icon_table[inum++] = IL_IMAGE_BAD_DATA;
-	il_icon_table[inum++] = il_hash("internal-icon-insecure"); 
-	il_icon_table[inum++] = IL_IMAGE_INSECURE;
-	il_icon_table[inum++] = il_hash("internal-icon-embed"); 
-	il_icon_table[inum++] = IL_IMAGE_EMBED;
+    /* ... and names for all the image icons */
+    il_icon_table[inum++] = il_hash("internal-icon-delayed"); 
+    il_icon_table[inum++] = IL_IMAGE_DELAYED;
+    il_icon_table[inum++] = il_hash("internal-icon-notfound"); 
+    il_icon_table[inum++] = IL_IMAGE_NOT_FOUND;
+    il_icon_table[inum++] = il_hash("internal-icon-baddata"); 
+    il_icon_table[inum++] = IL_IMAGE_BAD_DATA;
+    il_icon_table[inum++] = il_hash("internal-icon-insecure"); 
+    il_icon_table[inum++] = IL_IMAGE_INSECURE;
+    il_icon_table[inum++] = il_hash("internal-icon-embed"); 
+    il_icon_table[inum++] = IL_IMAGE_EMBED;
 
-	/* This belongs up in the `news icons' section */
-	il_icon_table[inum++] = il_hash("internal-news-followup-and-reply");
-	il_icon_table[inum++] = IL_NEWS_FOLLOWUP_AND_REPLY;
+    /* This belongs up in the `news icons' section */
+    il_icon_table[inum++] = il_hash("internal-news-followup-and-reply");
+    il_icon_table[inum++] = IL_NEWS_FOLLOWUP_AND_REPLY;
 
-	/* editor icons. */
-	il_icon_table[inum++] = il_hash("internal-edit-named-anchor");
-	il_icon_table[inum++] = IL_EDIT_NAMED_ANCHOR;
-	il_icon_table[inum++] = il_hash("internal-edit-form-element");
-	il_icon_table[inum++] = IL_EDIT_FORM_ELEMENT;
-	il_icon_table[inum++] = il_hash("internal-edit-unsupported-tag");
-	il_icon_table[inum++] = IL_EDIT_UNSUPPORTED_TAG;
-	il_icon_table[inum++] = il_hash("internal-edit-unsupported-end-tag");
-	il_icon_table[inum++] = IL_EDIT_UNSUPPORTED_END_TAG;
-	il_icon_table[inum++] = il_hash("internal-edit-java");
-	il_icon_table[inum++] = IL_EDIT_JAVA;
-	il_icon_table[inum++] = il_hash("internal-edit-PLUGIN");
-	il_icon_table[inum++] = IL_EDIT_PLUGIN;
+    /* editor icons. */
+    il_icon_table[inum++] = il_hash("internal-edit-named-anchor");
+    il_icon_table[inum++] = IL_EDIT_NAMED_ANCHOR;
+    il_icon_table[inum++] = il_hash("internal-edit-form-element");
+    il_icon_table[inum++] = IL_EDIT_FORM_ELEMENT;
+    il_icon_table[inum++] = il_hash("internal-edit-unsupported-tag");
+    il_icon_table[inum++] = IL_EDIT_UNSUPPORTED_TAG;
+    il_icon_table[inum++] = il_hash("internal-edit-unsupported-end-tag");
+    il_icon_table[inum++] = IL_EDIT_UNSUPPORTED_END_TAG;
+    il_icon_table[inum++] = il_hash("internal-edit-java");
+    il_icon_table[inum++] = IL_EDIT_JAVA;
+    il_icon_table[inum++] = il_hash("internal-edit-PLUGIN");
+    il_icon_table[inum++] = IL_EDIT_PLUGIN;
 
-	/* Security Advisor and S/MIME icons */
-	il_icon_table[inum++] = il_hash("internal-sa-signed");
+    /* Security Advisor and S/MIME icons */
+    il_icon_table[inum++] = il_hash("internal-sa-signed");
     il_icon_table[inum++] = IL_SA_SIGNED;
-	il_icon_table[inum++] = il_hash("internal-sa-encrypted");
+    il_icon_table[inum++] = il_hash("internal-sa-encrypted");
     il_icon_table[inum++] = IL_SA_ENCRYPTED;
-	il_icon_table[inum++] = il_hash("internal-sa-nonencrypted");
+    il_icon_table[inum++] = il_hash("internal-sa-nonencrypted");
     il_icon_table[inum++] = IL_SA_NONENCRYPTED;
-	il_icon_table[inum++] = il_hash("internal-sa-signed-bad");
+    il_icon_table[inum++] = il_hash("internal-sa-signed-bad");
     il_icon_table[inum++] = IL_SA_SIGNED_BAD;
-	il_icon_table[inum++] = il_hash("internal-sa-encrypted-bad");
+    il_icon_table[inum++] = il_hash("internal-sa-encrypted-bad");
     il_icon_table[inum++] = IL_SA_ENCRYPTED_BAD;
-	il_icon_table[inum++] = il_hash("internal-smime-attached");
+    il_icon_table[inum++] = il_hash("internal-smime-attached");
     il_icon_table[inum++] = IL_SMIME_ATTACHED;
-	il_icon_table[inum++] = il_hash("internal-smime-signed");
+    il_icon_table[inum++] = il_hash("internal-smime-signed");
     il_icon_table[inum++] = IL_SMIME_SIGNED;
-	il_icon_table[inum++] = il_hash("internal-smime-encrypted");
+    il_icon_table[inum++] = il_hash("internal-smime-encrypted");
     il_icon_table[inum++] = IL_SMIME_ENCRYPTED;
-	il_icon_table[inum++] = il_hash("internal-smime-encrypted-signed");
+    il_icon_table[inum++] = il_hash("internal-smime-encrypted-signed");
     il_icon_table[inum++] = IL_SMIME_ENC_SIGNED;
-	il_icon_table[inum++] = il_hash("internal-smime-signed-bad");
+    il_icon_table[inum++] = il_hash("internal-smime-signed-bad");
     il_icon_table[inum++] = IL_SMIME_SIGNED_BAD;
-	il_icon_table[inum++] = il_hash("internal-smime-encrypted-bad");
+    il_icon_table[inum++] = il_hash("internal-smime-encrypted-bad");
     il_icon_table[inum++] = IL_SMIME_ENCRYPTED_BAD;
-	il_icon_table[inum++] = il_hash("internal-smime-encrypted-signed-bad");
+    il_icon_table[inum++] = il_hash("internal-smime-encrypted-signed-bad");
     il_icon_table[inum++] = IL_SMIME_ENC_SIGNED_BAD;
 
-	/* LibMsg Attachment Icon */
-	il_icon_table[inum++] = il_hash("internal-attachment-icon");
+    /* LibMsg Attachment Icon */
+    il_icon_table[inum++] = il_hash("internal-attachment-icon");
     il_icon_table[inum++] = IL_MSG_ATTACH;
 
     PR_ASSERT(inum <= (int)(sizeof(il_icon_table) / sizeof(il_icon_table[0])));
@@ -1808,19 +1840,19 @@ il_setup_icon_table(void)
 static uint32
 il_internal_image(const char *image_url)
 {
-	int i;
+    int i;
     uint32 hash = il_hash(image_url);
-	if (il_icon_table[0]==0)
-		il_setup_icon_table();
+    if (il_icon_table[0]==0)
+        il_setup_icon_table();
 
-	for (i=0; i < (int)(sizeof(il_icon_table) / sizeof(il_icon_table[0])); i++)
-	{
-		if (il_icon_table[i<<1] == hash)
-		{
-			return il_icon_table[(i<<1)+1];
-		}
-	}
-	return 0;
+    for (i=0; i < (int)(sizeof(il_icon_table) / sizeof(il_icon_table[0])); i++)
+    {
+        if (il_icon_table[i<<1] == hash)
+        {
+            return il_icon_table[(i<<1)+1];
+        }
+    }
+    return 0;
 }
 
 
@@ -1840,10 +1872,10 @@ IL_GetImage(const char* image_url,
     ilIURL *url = NULL;
 
     IL_ImageReq *image_req;
-	  ilINetReader *reader;
-	  il_container *ic = NULL;
+      ilINetReader *reader;
+      il_container *ic = NULL;
     int req_depth = img_cx->color_space->pixmap_depth;
-	  int err;
+      int err;
     int is_view_image;
 
     /* Create a new instance for this image request. */
@@ -1860,43 +1892,44 @@ IL_GetImage(const char* image_url,
      * handle on this backup net context.
      */
     image_req->net_cx = net_cx->Clone();
-	  if (!image_req->net_cx) {
-		  PR_FREEIF(image_req);
-		  return NULL;
+      if (!image_req->net_cx) {
+          PR_FREEIF(image_req);
+          return NULL;
     }
+
     image_req->obs_list = obs_list;
     XP_SetObserverListObservable(obs_list, (void *)image_req);
     
     ILTRACE(1, ("il: IL_GetImage, url=%s\n", image_url));
 
-	  if (!image_url)
+      if (!image_url)
     {
-		    ILTRACE(0,("il: no url, sending delayed icon"));
+            ILTRACE(0,("il: no url, sending delayed icon"));
         il_icon_notify(image_req, IL_IMAGE_DELAYED, IL_ERROR_NO_DATA);
         return image_req;
     }
 
     /* Check for any special internal-use URLs */
-	  if (*image_url == 'i'                  ||
+      if (*image_url == 'i'                  ||
         !PL_strncmp(image_url, "/mc-", 4)  ||
         !PL_strncmp(image_url, "/ns-", 4))
     {
-		    uint32 icon;
+            uint32 icon;
 
         /* A built-in icon ? */
         icon = il_internal_image(image_url);
-		    if (icon)
+            if (icon)
         {
-			      ILTRACE(4,("il: internal icon %d", icon));
+                  ILTRACE(4,("il: internal icon %d", icon));
 
             /* XXXM12N In response to this notification, layout should set
                lo_image->image_attr->attrmask |= LO_ATTR_INTERNAL_IMAGE; */
             il_icon_notify(image_req, icon, IL_INTERNAL_IMAGE);
 
             return image_req;
-		}
+        }
 
-	}
+    }
 
     ic = il_get_container(img_cx, cache_reload_policy, image_url,
                           background_color, img_cx->dither_mode, req_depth,
@@ -1920,7 +1953,7 @@ IL_GetImage(const char* image_url,
     }
 
     /* If the image is already in memory ... */
-	  if (ic->state != IC_VIRGIN) {
+      if (ic->state != IC_VIRGIN) {
         switch (ic->state) {
         case IC_BAD:
             il_icon_notify(image_req, IL_IMAGE_BAD_DATA,
@@ -1969,18 +2002,18 @@ IL_GetImage(const char* image_url,
             return NULL;
         }
 
-		    /* NOCACHE falls through to be tried again */
+            /* NOCACHE falls through to be tried again */
         if (ic->state != IC_NOCACHE)
              return image_req;
     }
 
     /* This is a virgin (never-used) image container. */
-	  else
+      else
     {
-		   ic->forced = FORCE_RELOAD(cache_reload_policy);
-	}
+           ic->forced = FORCE_RELOAD(cache_reload_policy);
+    }
 
-	ic->state = IC_START;
+    ic->state = IC_START;
     
 #ifdef DEBUG
     ic->start_time = PR_Now();
@@ -2014,12 +2047,12 @@ IL_GetImage(const char* image_url,
 
     ic->is_looping = PR_FALSE;
     ic->url = url;
-	/* Record the fact that we are calling NetLib to load a URL. */
+    /* Record the fact that we are calling NetLib to load a URL. */
     ic->is_url_loading = PR_TRUE;
 
     /* save away the container */
-	reader = IL_NewNetReader(ic);
-	if (!reader) {
+    reader = IL_NewNetReader(ic);
+    if (!reader) {
         //NS_RELEASE(image_req->net_cx);
         //PR_FREEIF(image_req);
         /* This takes the image_req out of the ic client list,
@@ -2027,11 +2060,11 @@ IL_GetImage(const char* image_url,
         */
         il_delete_client(ic, image_req);
         return NULL;
-	}
+    }
     err = ic->net_cx->GetURL(url, cache_reload_policy, reader);
     /* Release reader, GetURL will keep a ref to it. */
     NS_RELEASE(reader);
-	return image_req;
+    return image_req;
 }
 
 
@@ -2082,13 +2115,13 @@ IL_InterruptContext(IL_GroupContext *img_cx)
 {
     il_container *ic;
     IL_ImageReq *image_req;
-	il_container_list *ic_list;
+    il_container_list *ic_list;
 
     if (!img_cx)
         return;
 
     /* Mark all clients in this context as interrupted. */
-	for (ic_list = img_cx->container_list; ic_list; ic_list = ic_list->next) {
+    for (ic_list = img_cx->container_list; ic_list; ic_list = ic_list->next) {
         ic = ic_list->ic;
         for (image_req = ic->clients; image_req; image_req = image_req->next) {
             if (image_req->img_cx == img_cx) {
@@ -2103,7 +2136,7 @@ IL_IMPLEMENT(void)
 IL_InterruptRequest(IL_ImageReq *image_req)
 {
   if (image_req != NULL) {
-	image_req->stopped = PR_TRUE;
+    image_req->stopped = PR_TRUE;
   }
 }
 
@@ -2231,117 +2264,6 @@ IL_RemoveGroupObserver(IL_GroupContext *img_cx, XP_ObserverProc observer,
 }
 
 
-/* Display a rectangular portion of an image.  x and y refer to the top left
-   corner of the image, measured in pixels, with respect to the document origin.
-   x_offset and y_offset are measured in pixels, with the upper-left-hand corner
-   of the pixmap as the origin, increasing left-to-right, top-to-bottom.
-
-   If the width and height values would otherwise cause the sub-image
-   to extend off the edge of the source image, the function should
-   perform tiling of the source image.  This is used to draw document,
-   layer and table cell backdrops.  (Note: it is assumed this case will
-   apply only to images which do not require any scaling.)
-
-   If at any time the image library determines that an image request cannot
-   be fulfilled or that the image has been delayed, it will notify the client
-   synchronously through the observer mechanism.  The client may then choose to
-   request that an icon be drawn instead by making a call to IL_DisplayIcon. */
-IL_IMPLEMENT(void)
-IL_DisplaySubImage(IL_ImageReq *image_req, int x, int y, int x_offset,
-                   int y_offset, int width, int height)
-{
-    IL_GroupContext *img_cx;
-    void *dpy_cx;
-    il_container *ic;
-    IL_Rect *displayable_rect;
-    NI_PixmapHeader *img_header;
-    
-    /* If we were passed a NULL image handle, don't do anything. */
-    if (!image_req)
-        return;
-
-    /* Determine the image context and the display context for this display
-       operation. */
-    img_cx = image_req->img_cx;
-    dpy_cx = img_cx->dpy_cx;
-    if (!dpy_cx)
-        return;
-    
-    /* Determine the image container. */
-    ic = image_req->ic;
-	
-    if (!ic )
-	     return;
-
-    /* Perform the drawing operation, but only do so for displayable areas
-       of the image pixmap. */
-    displayable_rect = &ic->displayable_rect;
-    img_header = &ic->image->header;
-        
-    if (displayable_rect->width < img_header->width ||
-        displayable_rect->height < img_header->height) {
-        /* The image pixmap is only partially displayable (since the image
-           is only partially decoded,) so draw the intersection of the
-           requested area with the displayable area.  The client will
-           receive observer notification as the pixmap is updated, and it
-           is expected to call the image library again to display the
-           updated area.  Note that tiling operations are not performed
-           unless the entire image pixmap is displayable. */
-        int32 display_left, display_top, display_bottom, display_right;
-        int32 display_width, display_height;
-            
-        /* Determine the intersection of the requested area and the
-           displayable area, in pixmap coordinates. */
-        display_left = MAX(x_offset, displayable_rect->x_origin);
-        display_top = MAX(y_offset, displayable_rect->y_origin);
-        display_right = MIN(x_offset + width, displayable_rect->x_origin
-                            + displayable_rect->width);
-        display_bottom = MIN(y_offset + height, displayable_rect->y_origin
-                             + displayable_rect->height);
-        display_width = display_right - display_left;
-        display_height = display_bottom - display_top;
-        
-        /* Draw the intersection of the requested area and the displayable
-           area. */
-        if ((display_width > 0) && (display_height > 0)) {
-            img_cx->img_cb->DisplayPixmap(dpy_cx, ic->image, ic->mask,
-                                          x, y, display_left, display_top,
-                                          display_width, display_height);
-
-        }
-    }
-    else {
-        /* The entire image pixmap is displayable, (although this does not
-           necessarily mean that the image has finished decoding,) so draw
-           the entire area requested.  In the event that the requested
-           area extends beyond the bounds of the image pixmap, tiling will
-           be performed. */
-        if (width && height) {
-            img_cx->img_cb->DisplayPixmap(dpy_cx, ic->image, ic->mask,
-                                          x, y, x_offset, y_offset, 
-                                          width, height);
-
-        }
-    }
-}
-
-
-/* Display an icon.  x and y refer to the top left corner of the icon, measured
-   in pixels, with respect to the document origin.  x_offset, y_offset, width
-   and height specify a clipping rectangle for this drawing request. */
-IL_IMPLEMENT(void)
-IL_DisplayIcon(IL_GroupContext *img_cx, int icon_number, int x, int y)
-{
-    /* Check for a NULL image context. */
-    if (!img_cx)
-        return;
-
-    /* Ask the Front End to display the icon. */
-    img_cx->img_cb->DisplayIcon(img_cx->dpy_cx, x, y, icon_number);
-
-}
-
-
 /* Return the dimensions of an icon. */
 IL_IMPLEMENT(void)
 IL_GetIconDimensions(IL_GroupContext *img_cx, int icon_number, int *width,
@@ -2362,7 +2284,7 @@ IL_IMPLEMENT(IL_Pixmap *)
 IL_GetImagePixmap(IL_ImageReq *image_req)
 {
     if ((image_req && image_req->ic)&&
-		(image_req->ic->state == IC_COMPLETE)||(image_req->ic->state == IC_SIZED))
+        (image_req->ic->state == IC_COMPLETE)||(image_req->ic->state == IC_SIZED))
         return image_req->ic->image;
     else
         return NULL;
@@ -2385,30 +2307,23 @@ IL_GetMaskPixmap(IL_ImageReq *image_req)
 IL_IMPLEMENT(void)
 IL_GetNaturalDimensions(IL_ImageReq *image_req, int *width, int *height)
 {
-	NI_PixmapHeader *src_header;
+    NI_PixmapHeader *src_header;
 
-	if (width)	
-		*width = 0;
-	if (height)
-		*height = 0;
+    if (width)  
+        *width = 0;
+    if (height)
+        *height = 0;
 
-	if (!image_req || !image_req->ic)
+    if (!image_req || !image_req->ic)
         return;
 
-	src_header = image_req->ic->src_header;
+    src_header = image_req->ic->src_header;
 
-	if (src_header) {
-		if (width)
-			*width = src_header->width;
-		if (height)
-			*height = src_header->height;
-	}
+    if (src_header) {
+        if (width)
+            *width = src_header->width;
+        if (height)
+            *height = src_header->height;
+    }
 }
-
-
-
-#ifdef PROFILE
-#pragma profile off
-#endif
-
 

@@ -18,7 +18,7 @@
 
 /*   if.h --- Top-level image library internal routines
  *
- * $Id: if.h,v 3.12 1999/10/21 22:16:45 pnunn%netscape.com Exp $
+ * $Id: if.h,v 3.13 1999/11/04 23:11:03 sfraser%netscape.com Exp $
  */
 
 #ifndef _if_h
@@ -109,6 +109,12 @@ extern PRLogModuleInfo *il_log_module;
 #undef MIN
 #endif
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
+
+//ptn test
+/* Conversion of imglib errors to XPCOM errors */
+#define NS_CONVERT_ERROR_CODE(e)  \
+      (NS_ERROR_GENERATE((e) ? NS_ERROR_SEVERITY_ERROR : NS_ERROR_SEVERITY_SUCCESS, NS_ERROR_MODULE_IMGLIB, (e) & 0xFFFF))
+
 
 /* Last output pass of an image */
 #define IL_FINAL_PASS     -1
@@ -396,7 +402,7 @@ extern void il_quantize_fs_dither(il_container * ic,
                                   uint8 XP_HUGE *samp_out,
                                   int width);
 
-extern void il_emit_row(il_container *ic, uint8 *buf, uint8 *rgbbuf,
+extern PRBool il_emit_row(il_container *ic, uint8 *buf, uint8 *rgbbuf,
                         int start_column, int len, int row, int row_count,
                         il_draw_mode draw_mode, int ipass);
 
@@ -409,7 +415,7 @@ extern void il_convert_image_to_default_colormap(il_container *ic);
 extern int  il_set_color_palette(MWContext *cx, il_container *ic);
 #endif /* M12N */
 
-extern void il_reset_palette(il_container *ic);
+extern PRBool il_reset_palette(il_container *ic);
 
 extern void il_reverse_bits(uint8 *buf, int n);
 extern void il_reconnect(il_container *cx);

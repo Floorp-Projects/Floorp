@@ -50,7 +50,7 @@ PNGDecoder::ImgDInit()
 
   if( ilContainer != NULL ) {
      ret = il_png_init(ilContainer);
-     if(ret != 0)
+     if(!ret)
          return NS_ERROR_FAILURE;
   }
   return NS_OK;

@@ -17,7 +17,7 @@
  */
 /* 
  *  ni_pixmp.h --- Cross platform pixmap data structure.
- *  $Id: ni_pixmp.h,v 3.2 1998/07/27 16:09:11 hardts%netscape.com Exp $
+ *  $Id: ni_pixmp.h,v 3.3 1999/11/04 23:11:01 sfraser%netscape.com Exp $
  */
 
 
@@ -164,6 +164,7 @@ typedef struct _NI_PixmapHeader
     uint8 alpha_shift;          /* Offset for alpha channel bits. */
     int32 is_interleaved_alpha; /* Is alpha channel interleaved with
                                    image data? */
+    PRPackedBool is_mask;       /* Is this image a mask? (Boolean) */
 
     /* Gamma/color correction. */
     NI_ColorSpec color_spec;
@@ -175,6 +176,11 @@ typedef struct _NI_Pixmap
 {
     NI_PixmapHeader header;     /* Header information. */
     void XP_HUGE *bits;         /* Pointer to the bits. */
+    PRBool   haveBits;          /* true if we successfully allocated bits. Can't just
+                                     test the bits ptr directly, because this pointer
+                                     is only really valid between Lock and Unlock calls
+                                     on the pixels of the image */
+ 
     void *client_data;          /* Pixmap-specific data opaque to the Image
 								   Library e.g. display front-ends which
 								   support scaling may use this to store the
