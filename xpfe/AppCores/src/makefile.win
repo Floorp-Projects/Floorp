@@ -69,7 +69,6 @@ OBJS = \
     .\$(OBJDIR)\nsMailCoreFactory.obj       \
     .\$(OBJDIR)\nsToolbarCoreFactory.obj       \
     .\$(OBJDIR)\nsBrowserAppCoreFactory.obj       \
-    .\$(OBJDIR)\nsThrobberGlue.obj           \
     .\$(OBJDIR)\nsAppCoresManager.obj       \
     .\$(OBJDIR)\nsAppCoresManagerFactory.obj       \
     .\$(OBJDIR)\nsJSBaseAppCore.obj       \
