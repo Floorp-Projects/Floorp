@@ -56,6 +56,8 @@ interface nsIComponentRegistrar : nsISupports
      * symbols which this loader defines.  For example, if the given file is a
      * native library (which is built into XPCOM), it must export the symbol 
      * "NSGetModule".  Other loaders may have different semantics.
+     *
+     * This method may only be called from the main thread.
      * 
      * @param aSpec    : Filename spec for component file's location. If aSpec 
      *                   is a directory, then every component file in the
@@ -73,6 +75,7 @@ interface nsIComponentRegistrar : nsISupports
      * autoUnregister
      *
      * Unregister a component file or all component files in a directory.  
+     * This method may only be called from the main thread.
      *
      * @param aSpec    : Filename spec for component file's location. If aSpec 
      *                   is a directory, the every component file in the directory 

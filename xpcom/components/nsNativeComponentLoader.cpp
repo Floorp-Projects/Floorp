@@ -41,7 +41,6 @@
 #include "nsHashtableEnumerator.h"
 #include "nsXPIDLString.h"
 #include "nsCRT.h"
-
 #include "nsIObserverService.h"
 
 #if defined(XP_MAC)  // sdagley dougt fix
@@ -87,7 +86,7 @@ nsNativeComponentLoader::~nsNativeComponentLoader()
     delete mDllStore;
 }
     
-NS_IMPL_ISUPPORTS1(nsNativeComponentLoader, nsIComponentLoader);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsNativeComponentLoader, nsIComponentLoader);
 
 NS_IMETHODIMP
 nsNativeComponentLoader::GetFactory(const nsIID & aCID,
@@ -180,14 +179,17 @@ nsNativeComponentLoader::Init(nsIComponentManager *aCompMgr, nsISupports *aReg)
     if (NS_FAILED(rv))
         return rv;
 
-    if (!mDllStore) {
-        mDllStore = new nsObjectHashtable(nsnull, nsnull, // never copy
-                                          nsDll_Destroy, nsnull,
-                                          256, /* Thead Safe */ PR_TRUE);
-        if (!mDllStore)
-            return NS_ERROR_OUT_OF_MEMORY;
-    }
 
+    NS_ASSERTION(!mDllStore, "Init must not be called more than once");
+
+    mDllStore = new nsObjectHashtable(nsnull, 
+                                      nsnull,    // never copy
+                                      nsDll_Destroy, 
+                                      nsnull,
+                                      256,
+                                      PR_TRUE); // thread safe
+    if (!mDllStore)
+        return NS_ERROR_OUT_OF_MEMORY;
 
     // Read in all dll entries and populate the mDllStore
     nsCOMPtr<nsIEnumerator> dllEnum;
@@ -979,13 +981,14 @@ nsNativeComponentLoader::RegisterDeferredComponents(PRInt32 aWhen,
             mDeferredComponents.RemoveElementAt(i);
         }
     }
-
+#ifdef DEBUG
     if (*aRegistered)
         fprintf(stderr, "nNCL: registered deferred, %d left\n",
                 mDeferredComponents.Count());
     else
         fprintf(stderr, "nNCL: didn't register any components, %d left\n",
                 mDeferredComponents.Count());
+#endif
     /* are there any fatal errors? */
     return NS_OK;
 }
