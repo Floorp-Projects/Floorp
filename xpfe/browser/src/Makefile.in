@@ -25,16 +25,11 @@ include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
 
 EXPORT_RESOURCE_SAMPLES = \
-	$(srcdir)/appshell.html \
 	$(srcdir)/status.xul \
-	$(srcdir)/status.html \
 	$(srcdir)/toolbar.xml \
-	$(srcdir)/BrowserInitPage.html \
 	$(srcdir)/contentframe.css \
-	$(srcdir)/contentframe.html \
 	$(srcdir)/contentframe.js \
 	$(srcdir)/contentframe.xul \
-	$(srcdir)/sidebar.html \
 	$(srcdir)/xul.css \
 	$(srcdir)/dialogs.css \
 	$(srcdir)/navigator.css \
