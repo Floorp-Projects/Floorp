@@ -357,6 +357,8 @@ NS_IMETHODIMP nsImportService::SystemStringFromUnicode(const PRUnichar *uniStr, 
 
 			// get an unicode converter
 			rv = ccm2->GetUnicodeEncoder(charsetAtom, &m_pEncoder);
+      if (NS_SUCCEEDED(rv))
+        rv = m_pEncoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nsnull, '?');
 		}
 	}
 
