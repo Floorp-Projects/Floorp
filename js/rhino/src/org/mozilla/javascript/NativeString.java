@@ -72,8 +72,9 @@ final class NativeString extends IdScriptableObject
         Id_length                    =  1,
         MAX_INSTANCE_ID              =  1;
 
+    protected int getMaxInstanceId()
     {
-        setMaxInstanceId(0, MAX_INSTANCE_ID);
+        return MAX_INSTANCE_ID;
     }
 
     protected int findInstanceIdInfo(String s)

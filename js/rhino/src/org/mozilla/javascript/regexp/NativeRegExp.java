@@ -2383,8 +2383,9 @@ System.out.println("Testing at " + gData.cp + ", op = " + op);
 
         MAX_INSTANCE_ID = 5;
 
+    protected int getMaxInstanceId()
     {
-        setMaxInstanceId(0, MAX_INSTANCE_ID);
+        return MAX_INSTANCE_ID;
     }
 
     protected int findInstanceIdInfo(String s)

@@ -2813,8 +2813,8 @@ public class ScriptRuntime {
         if (cx.topCallScope == null)
             throw new IllegalStateException();
 
-        String[] argNames = funObj.argNames;
-        if (argNames != null) {
+        int varCount = funObj.getParamAndVarCount();
+        if (varCount != 0) {
 
             Scriptable varScope = scope;
             // Never define any variables from var statements inside with
@@ -2823,8 +2823,8 @@ public class ScriptRuntime {
                 varScope = varScope.getParentScope();
             }
 
-            for (int i = argNames.length; i-- != 0;) {
-                String name = argNames[i];
+            for (int i = varCount; i-- != 0;) {
+                String name = funObj.getParamOrVarName(i);
                 // Don't overwrite existing def if already defined in object
                 // or prototypes of object.
                 if (!ScriptableObject.hasProperty(scope, name)) {

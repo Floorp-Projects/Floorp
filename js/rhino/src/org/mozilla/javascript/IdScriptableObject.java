@@ -59,7 +59,6 @@ may override scopeInit or fillConstructorProperties methods.
 public abstract class IdScriptableObject extends ScriptableObject
     implements IdFunctionCall
 {
-    private int maxInstanceId;
     private transient volatile PrototypeValues prototypeValues;
 
     private static final class PrototypeValues implements Serializable
@@ -336,18 +335,26 @@ public abstract class IdScriptableObject extends ScriptableObject
         super(scope, prototype);
     }
 
+    protected final Object defaultGet(String name)
+    {
+        return super.get(name, this);
+    }
+
+    protected final void defaultPut(String name, Object value)
+    {
+        super.put(name, this, value);
+    }
+
     public boolean has(String name, Scriptable start)
     {
-        if (maxInstanceId != 0) {
-            int info = findInstanceIdInfo(name);
-            if (info != 0) {
-                int attr = (info >>> 16);
-                if ((attr & PERMANENT) != 0) {
-                    return true;
-                }
-                int id = (info & 0xFFFF);
-                return NOT_FOUND != getInstanceIdValue(id);
+        int info = findInstanceIdInfo(name);
+        if (info != 0) {
+            int attr = (info >>> 16);
+            if ((attr & PERMANENT) != 0) {
+                return true;
             }
+            int id = (info & 0xFFFF);
+            return NOT_FOUND != getInstanceIdValue(id);
         }
         if (prototypeValues != null) {
             int id = prototypeValues.findId(name);
@@ -360,12 +367,10 @@ public abstract class IdScriptableObject extends ScriptableObject
 
     public Object get(String name, Scriptable start)
     {
-        if (maxInstanceId != 0) {
-            int info = findInstanceIdInfo(name);
-            if (info != 0) {
-                int id = (info & 0xFFFF);
-                return getInstanceIdValue(id);
-            }
+        int info = findInstanceIdInfo(name);
+        if (info != 0) {
+            int id = (info & 0xFFFF);
+            return getInstanceIdValue(id);
         }
         if (prototypeValues != null) {
             int id = prototypeValues.findId(name);
@@ -378,25 +383,23 @@ public abstract class IdScriptableObject extends ScriptableObject
 
     public void put(String name, Scriptable start, Object value)
     {
-        if (maxInstanceId != 0) {
-            int info = findInstanceIdInfo(name);
-            if (info != 0) {
-                if (start == this && isSealed()) {
-                    throw Context.reportRuntimeError1("msg.modify.sealed",
-                                                      name);
-                }
-                int attr = (info >>> 16);
-                if ((attr & READONLY) == 0) {
-                    if (start == this) {
-                        int id = (info & 0xFFFF);
-                        setInstanceIdValue(id, value);
-                    }
-                    else {
-                        start.put(name, start, value);
-                    }
-                }
-                return;
+        int info = findInstanceIdInfo(name);
+        if (info != 0) {
+            if (start == this && isSealed()) {
+                throw Context.reportRuntimeError1("msg.modify.sealed",
+                                                  name);
             }
+            int attr = (info >>> 16);
+            if ((attr & READONLY) == 0) {
+                if (start == this) {
+                    int id = (info & 0xFFFF);
+                    setInstanceIdValue(id, value);
+                }
+                else {
+                    start.put(name, start, value);
+                }
+            }
+            return;
         }
         if (prototypeValues != null) {
             int id = prototypeValues.findId(name);
@@ -414,18 +417,16 @@ public abstract class IdScriptableObject extends ScriptableObject
 
     public void delete(String name)
     {
-        if (maxInstanceId != 0) {
-            int info = findInstanceIdInfo(name);
-            if (info != 0) {
-                // Let the super class to throw exceptions for sealed objects
-                if (!isSealed()) {
-                    int attr = (info >>> 16);
-                    if ((attr & PERMANENT) == 0) {
-                        int id = (info & 0xFFFF);
-                        setInstanceIdValue(id, NOT_FOUND);
-                    }
-                    return;
+        int info = findInstanceIdInfo(name);
+        if (info != 0) {
+            // Let the super class to throw exceptions for sealed objects
+            if (!isSealed()) {
+                int attr = (info >>> 16);
+                if ((attr & PERMANENT) == 0) {
+                    int id = (info & 0xFFFF);
+                    setInstanceIdValue(id, NOT_FOUND);
                 }
+                return;
             }
         }
         if (prototypeValues != null) {
@@ -442,12 +443,10 @@ public abstract class IdScriptableObject extends ScriptableObject
 
     public int getAttributes(String name)
     {
-        if (maxInstanceId != 0) {
-            int info = findInstanceIdInfo(name);
-            if (info != 0) {
-                int attr = (info >>> 16);
-                return attr;
-            }
+        int info = findInstanceIdInfo(name);
+        if (info != 0) {
+            int attr = (info >>> 16);
+            return attr;
         }
         if (prototypeValues != null) {
             int id = prototypeValues.findId(name);
@@ -461,16 +460,14 @@ public abstract class IdScriptableObject extends ScriptableObject
     public void setAttributes(String name, int attributes)
     {
         ScriptableObject.checkValidAttributes(attributes);
-        if (maxInstanceId != 0) {
-            int info = findInstanceIdInfo(name);
-            if (info != 0) {
-                int currentAttributes = (info >>> 16);
-                if (attributes != currentAttributes) {
-                    throw new RuntimeException(
-                        "Change of attributes for this id is not supported");
-                }
-                return;
+        int info = findInstanceIdInfo(name);
+        if (info != 0) {
+            int currentAttributes = (info >>> 16);
+            if (attributes != currentAttributes) {
+                throw new RuntimeException(
+                    "Change of attributes for this id is not supported");
             }
+            return;
         }
         if (prototypeValues != null) {
             int id = prototypeValues.findId(name);
@@ -490,6 +487,7 @@ public abstract class IdScriptableObject extends ScriptableObject
             result = prototypeValues.getNames(getAll, result);
         }
 
+        int maxInstanceId = getMaxInstanceId();
         if (maxInstanceId != 0) {
             Object[] ids = null;
             int count = 0;
@@ -528,30 +526,12 @@ public abstract class IdScriptableObject extends ScriptableObject
         return result;
     }
 
-    /** Get maximum id findInstanceIdInfo can generate */
-    protected final int getMaxInstanceId()
-    {
-        return maxInstanceId;
-    }
-
     /**
-     * Set maximum id findInstanceIdInfo can generate.
-     *
-     * @param maxInstanceId new value of maximum id.
-     * @param prevMaxId the current result of {@link #getMaxInstanceId()}.
-     *                  It is used for consitency checks.
+     * Get maximum id findInstanceIdInfo can generate.
      */
-    protected final void setMaxInstanceId(int prevMaxId, int maxInstanceId)
+    protected int getMaxInstanceId()
     {
-        if (prevMaxId != this.maxInstanceId) {
-            // Consitency check
-            throw new IllegalStateException();
-        }
-        if (this.maxInstanceId >= maxInstanceId) {
-            // maxInstanceId can only go up
-            throw new IllegalArgumentException();
-        }
-        this.maxInstanceId = maxInstanceId;
+        return 0;
     }
 
     protected static int instanceIdInfo(int attributes, int id)

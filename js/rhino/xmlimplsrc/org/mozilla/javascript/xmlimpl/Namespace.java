@@ -167,12 +167,9 @@ class Namespace extends IdScriptableObject
         Id_uri                  = 2,
         MAX_INSTANCE_ID         = 2;
 
-// maxId for superclass
-    private static int idBase = -1;
-
+    protected int getMaxInstanceId()
     {
-        if (idBase < 0) idBase = getMaxInstanceId();
-        setMaxInstanceId(idBase, idBase + MAX_INSTANCE_ID);
+        return super.getMaxInstanceId() + MAX_INSTANCE_ID;
     }
 
     protected int findInstanceIdInfo(String s)
@@ -197,13 +194,13 @@ class Namespace extends IdScriptableObject
             break;
           default: throw new IllegalStateException();
         }
-        return instanceIdInfo(attr, idBase + id);
+        return instanceIdInfo(attr, super.getMaxInstanceId() + id);
     }
 // #/string_id_map#
 
     protected String getInstanceIdName(int id)
     {
-        switch (id - idBase) {
+        switch (id - super.getMaxInstanceId()) {
           case Id_prefix: return "prefix";
           case Id_uri: return "uri";
         }
@@ -212,7 +209,7 @@ class Namespace extends IdScriptableObject
 
     protected Object getInstanceIdValue(int id)
     {
-        switch (id - idBase) {
+        switch (id - super.getMaxInstanceId()) {
           case Id_prefix:
             if (prefix == null) return Undefined.instance;
             return prefix;

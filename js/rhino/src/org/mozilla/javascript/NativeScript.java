@@ -55,7 +55,7 @@ import java.io.IOException;
  * @author Norris Boyd
  */
 
-class NativeScript extends NativeFunction
+class NativeScript extends BaseFunction
 {
     private static final Object SCRIPT_TAG = new Object();
 
@@ -102,12 +102,12 @@ class NativeScript extends NativeFunction
         return 0;
     }
 
-    public String getEncodedSource()
+    String decompile(int indent, int flags)
     {
         if (script instanceof NativeFunction) {
-            return ((NativeFunction)script).getEncodedSource();
+            return ((NativeFunction)script).decompile(indent, flags);
         }
-        return super.getEncodedSource();
+        return super.decompile(indent, flags);
     }
 
     protected void initPrototypeId(int id)

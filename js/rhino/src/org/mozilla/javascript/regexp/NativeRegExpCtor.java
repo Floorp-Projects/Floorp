@@ -53,7 +53,7 @@ import java.lang.reflect.Method;
  * @author Brendan Eich
  * @author Norris Boyd
  */
-class NativeRegExpCtor extends NativeFunction {
+class NativeRegExpCtor extends BaseFunction {
 
     NativeRegExpCtor()
     {
@@ -121,12 +121,9 @@ class NativeRegExpCtor extends NativeFunction {
 
         MAX_INSTANCE_ID = DOLLAR_ID_BASE + 9;
 
-// maxId for superclass
-    private static int idBase = -1;
-
+    protected int getMaxInstanceId()
     {
-        if (idBase < 0) idBase = getMaxInstanceId();
-        setMaxInstanceId(idBase, idBase + MAX_INSTANCE_ID);
+        return super.getMaxInstanceId() + MAX_INSTANCE_ID;
     }
 
     protected int findInstanceIdInfo(String s) {
@@ -179,14 +176,14 @@ class NativeRegExpCtor extends NativeFunction {
             break;
         }
 
-        return instanceIdInfo(attr, idBase + id);
+        return instanceIdInfo(attr, super.getMaxInstanceId() + id);
     }
 
 // #/string_id_map#
 
     protected String getInstanceIdName(int id)
     {
-        int shifted = id - idBase;
+        int shifted = id - super.getMaxInstanceId();
         if (1 <= shifted && shifted <= MAX_INSTANCE_ID) {
             switch (shifted) {
                 case Id_multiline:    return "multiline";
@@ -217,7 +214,7 @@ class NativeRegExpCtor extends NativeFunction {
 
     protected Object getInstanceIdValue(int id)
     {
-        int shifted = id - idBase;
+        int shifted = id - super.getMaxInstanceId();
         if (1 <= shifted && shifted <= MAX_INSTANCE_ID) {
             RegExpImpl impl = getImpl();
             Object stringResult;
@@ -266,7 +263,8 @@ class NativeRegExpCtor extends NativeFunction {
 
     protected void setInstanceIdValue(int id, Object value)
     {
-        switch (id - idBase) {
+        int shifted = id - super.getMaxInstanceId();
+        switch (shifted) {
             case Id_multiline:
             case Id_STAR:
                 getImpl().multiline = ScriptRuntime.toBoolean(value);

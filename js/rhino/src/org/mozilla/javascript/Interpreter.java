@@ -3117,7 +3117,7 @@ switch (op) {
         } else {
             Object val = stack[stackTop];
             if (val == DBL_MRK) val = ScriptRuntime.wrapNumber(sDbl[stackTop]);
-            stringReg = frame.fnOrScript.argNames[indexReg];
+            stringReg = frame.idata.argNames[indexReg];
             frame.scope.put(stringReg, frame.scope, val);
         }
         continue Loop;
@@ -3130,7 +3130,7 @@ switch (op) {
             stack[stackTop] = vars[indexReg];
             sDbl[stackTop] = varDbls[indexReg];
         } else {
-            stringReg = frame.fnOrScript.argNames[indexReg];
+            stringReg = frame.idata.argNames[indexReg];
             stack[stackTop] = frame.scope.get(stringReg, frame.scope);
         }
         continue Loop;
@@ -3153,7 +3153,7 @@ switch (op) {
             varDbls[indexReg] = d2;
             sDbl[stackTop] = ((incrDecrMask & Node.POST_FLAG) == 0) ? d2 : d;
         } else {
-            String varName = frame.fnOrScript.argNames[indexReg];
+            String varName = frame.idata.argNames[indexReg];
             stack[stackTop] = ScriptRuntime.nameIncrDecr(frame.scope, varName,
                                                          incrDecrMask);
         }

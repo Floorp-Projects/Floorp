@@ -105,8 +105,9 @@ public class BaseFunction extends IdScriptableObject implements Function
 
         MAX_INSTANCE_ID = 5;
 
+    protected int getMaxInstanceId()
     {
-        setMaxInstanceId(0, MAX_INSTANCE_ID);
+        return MAX_INSTANCE_ID;
     }
 
     protected int findInstanceIdInfo(String s)
@@ -143,11 +144,7 @@ public class BaseFunction extends IdScriptableObject implements Function
                    : DONTENUM;
             break;
           case Id_arguments:
-            if (argumentsProperty == null) {
-                attr = DONTENUM;
-            } else {
-                attr = EMPTY;
-            }
+            attr = DONTENUM | PERMANENT;
             break;
           default: throw new IllegalStateException();
         }
@@ -187,8 +184,11 @@ public class BaseFunction extends IdScriptableObject implements Function
             }
             return;
         } else if (id == Id_arguments) {
-            argumentsProperty = (value != null)
-                                ? value : UniqueTag.NULL_VALUE;
+            if (value == NOT_FOUND) {
+                // This should not be called since "arguments" is PERMANENT
+                Kit.codeBug();
+            }
+            defaultPut("arguments", value);
         }
         super.setInstanceIdValue(id, value);
     }
@@ -429,13 +429,14 @@ public class BaseFunction extends IdScriptableObject implements Function
       // <Function name>.arguments is deprecated, so we use a slow
       // way of getting it that doesn't add to the invocation cost.
       // TODO: add warning, error based on version
-      Object value = argumentsProperty;
-      if (value != null) {
+      Object value = defaultGet("arguments");
+      if (value != NOT_FOUND) {
           // Should after changing <Function name>.arguments its
           // activation still be available during Function call?
-          // This code assumes it should not: argumentsProperty != null
-          // means assigned or delete arguments
-          return (value == UniqueTag.NULL_VALUE) ? null : value;
+          // This code assumes it should not:
+          // defaultGet("arguments") != NOT_FOUND
+          // means assigned arguments
+          return value;
       }
       Context cx = Context.getContext();
       NativeCall activation = ScriptRuntime.findFunctionActivation(cx, this);
@@ -535,6 +536,5 @@ public class BaseFunction extends IdScriptableObject implements Function
 
     private Object prototypeProperty;
     private boolean isPrototypePropertyImmune;
-    private Object argumentsProperty;
 }
 

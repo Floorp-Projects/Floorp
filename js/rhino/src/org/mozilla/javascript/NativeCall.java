@@ -65,12 +65,14 @@ public final class NativeCall extends IdScriptableObject
         this.originalArgs = (args == null) ? ScriptRuntime.emptyArgs : args;
 
         // initialize values of arguments
-        String[] argNames = function.argNames;
-        if (argNames != null) {
-            for (int i=0; i < function.argCount; i++) {
+        int paramAndVarCount = function.getParamAndVarCount();
+        int paramCount = function.getParamCount();
+        if (paramAndVarCount != 0) {
+            for (int i = 0; i != paramCount; ++i) {
+                String name = function.getParamOrVarName(i);
                 Object val = i < args.length ? args[i]
                                              : Undefined.instance;
-                defineProperty(argNames[i], val, PERMANENT);
+                defineProperty(name, val, PERMANENT);
             }
         }
 
@@ -80,9 +82,9 @@ public final class NativeCall extends IdScriptableObject
             defineProperty("arguments", new Arguments(this), PERMANENT);
         }
 
-        if (argNames != null) {
-            for (int i = function.argCount; i != argNames.length; i++) {
-                String name = argNames[i];
+        if (paramAndVarCount != 0) {
+            for (int i = paramCount; i != paramAndVarCount; ++i) {
+                String name = function.getParamOrVarName(i);
                 if (!super.has(name, this)) {
                     defineProperty(name, Undefined.instance, PERMANENT);
                 }

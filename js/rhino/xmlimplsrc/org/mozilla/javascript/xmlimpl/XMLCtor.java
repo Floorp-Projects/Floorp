@@ -53,7 +53,7 @@ class XMLCtor extends IdFunctionObject
     private void writeSetting(Scriptable target)
     {
         for (int i = 1; i <= MAX_INSTANCE_ID; ++i) {
-            int id = idBase + i;
+            int id = super.getMaxInstanceId() + i;
             String name = getInstanceIdName(id);
             Object value = getInstanceIdValue(id);
             ScriptableObject.putProperty(target, name, value);
@@ -63,7 +63,7 @@ class XMLCtor extends IdFunctionObject
     private void readSettings(Scriptable source)
     {
         for (int i = 1; i <= MAX_INSTANCE_ID; ++i) {
-            int id = idBase + i;
+            int id = super.getMaxInstanceId() + i;
             String name = getInstanceIdName(id);
             Object value = ScriptableObject.getProperty(source, name);
             if (value == ScriptableObject.NOT_FOUND) {
@@ -101,14 +101,9 @@ class XMLCtor extends IdFunctionObject
 
         MAX_INSTANCE_ID                 = 5;
 
-// maxId for superclass
-    private static int idBase = -1;
-
+    protected int getMaxInstanceId()
     {
-        if (idBase < 0) {
-            idBase = getMaxInstanceId();
-        }
-        setMaxInstanceId(idBase, idBase + MAX_INSTANCE_ID);
+        return super.getMaxInstanceId() + MAX_INSTANCE_ID;
     }
 
     protected int findInstanceIdInfo(String s) {
@@ -141,14 +136,14 @@ class XMLCtor extends IdFunctionObject
             break;
           default: throw new IllegalStateException();
         }
-        return instanceIdInfo(attr, idBase + id);
+        return instanceIdInfo(attr, super.getMaxInstanceId() + id);
     }
 
 // #/string_id_map#
 
     protected String getInstanceIdName(int id)
     {
-        switch (id - idBase) {
+        switch (id - super.getMaxInstanceId()) {
           case Id_ignoreComments:               return "ignoreComments";
           case Id_ignoreProcessingInstructions: return "ignoreProcessingInstructions";
           case Id_ignoreWhitespace:             return "ignoreWhitespace";
@@ -160,7 +155,7 @@ class XMLCtor extends IdFunctionObject
 
     protected Object getInstanceIdValue(int id)
     {
-        switch (id - idBase) {
+        switch (id - super.getMaxInstanceId()) {
           case Id_ignoreComments:
             return ScriptRuntime.wrapBoolean(lib.ignoreComments);
           case Id_ignoreProcessingInstructions:
@@ -177,7 +172,7 @@ class XMLCtor extends IdFunctionObject
 
     protected void setInstanceIdValue(int id, Object value)
     {
-        switch (id - idBase) {
+        switch (id - super.getMaxInstanceId()) {
           case Id_ignoreComments:
             lib.ignoreComments = ScriptRuntime.toBoolean(value);
             return;

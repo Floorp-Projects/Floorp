@@ -171,7 +171,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
         if (slot == null) {
             return Scriptable.NOT_FOUND;
         }
-        if (slot.complexSlotFlag != 0) {
+        if (slot instanceof GetterSlot) {
             GetterSlot gslot = (GetterSlot)slot;
             if (gslot.getter != null) {
                 return getByGetter(gslot, start);
@@ -233,7 +233,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
         if ((slot.attributes & ScriptableObject.READONLY) != 0) {
             return;
         }
-        if (slot.complexSlotFlag != 0) {
+        if (slot instanceof GetterSlot) {
             GetterSlot gslot = (GetterSlot)slot;
             if (gslot.setter != null) {
                 setBySetter(gslot, start, value);
@@ -1109,7 +1109,6 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
             gslot.setter.prepareInvokerOptimization();
         }
         gslot.attributes = (short) attributes;
-        gslot.complexSlotFlag = 1;
         Slot inserted = addSlot(propertyName, propertyName.hashCode(), gslot);
         if (inserted != gslot) {
             throw new RuntimeException("Property already exists");
@@ -1940,10 +1939,8 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
     // associated values are not serialized
     private transient volatile Hashtable associatedValues;
 
-    private static class Slot implements Serializable {
-        static final int HAS_GETTER  = 0x01;
-        static final int HAS_SETTER  = 0x02;
-
+    private static class Slot implements Serializable
+    {
         private void readObject(ObjectInputStream in)
             throws IOException, ClassNotFoundException
         {
@@ -1951,18 +1948,16 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
             if (stringKey != null) {
                 intKey = stringKey.hashCode();
             }
-            complexSlotFlag = (this instanceof GetterSlot) ? (byte)1 : (byte)0;
         }
 
         int intKey;
         String stringKey;
         Object value;
         short attributes;
-        transient byte complexSlotFlag;
         transient byte wasDeleted;
     }
 
-    private static class GetterSlot extends Slot
+    private static final class GetterSlot extends Slot
     {
         Object delegateTo;
         MemberBox getter;

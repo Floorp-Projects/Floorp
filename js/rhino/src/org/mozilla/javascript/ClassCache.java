@@ -158,15 +158,20 @@ public class ClassCache
     }
 
     /**
-     * To optimize invocation of reflected Java methods, the engine generates
-     * special glue classes that will call the methods directly. By default
-     * the optimization is enabled since it allows to speedup method invocation
-     * compared with calling <tt>Method.invoke</tt> by factor 2-2.5 under JDK
-     * 1.4.2 and by factor 10-15 under JDK 1.3.1. If increase memory
-     * consumption is too high or the optimization brings no benefits in a
-     * particular VM, then the optimization can be disabled.
+     * Control if invocation of Java methods through reflection should be
+     * replaced by direct calls to invoker code generated at runtime.
+     * On many JVMs cost of calling Java method through reflection can be
+     * reduced significantly if a special invoker classes are generated at
+     * runtime to call the Java methods directly. For example, under JDK 1.3.1
+     * on Linux the reflection calls can be speedup by factor of 10-15. On JDK
+     * 1.4.2 the the speedup can rich factor of 2-2.5. The drawback of this
+     * optimization is increased memory consumption and longer runtime
+     * initialization since class generating and loading is slow.
+     * <p>
+     * By default the optimization is enabled.
      *
-     * @param enabled if true, invoke optimization is enabled.
+     * @param enabled if true enable invoker optimization or if false disable
+     *        it and clear all cached generated classes.
      */
     public synchronized void setInvokerOptimizationEnabled(boolean enabled)
     {

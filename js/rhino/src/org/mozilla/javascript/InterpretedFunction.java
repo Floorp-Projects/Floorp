@@ -84,7 +84,7 @@ final class InterpretedFunction extends NativeFunction implements Script
     {
         InterpretedFunction f;
         f = new InterpretedFunction(idata, staticSecurityDomain);
-        f.initScriptObject(idata.languageVersion, idata.argNames);
+        f.initScriptObject();
         return f;
     }
 
@@ -128,8 +128,7 @@ final class InterpretedFunction extends NativeFunction implements Script
 
     private void initInterpretedFunction(Context cx, Scriptable scope)
     {
-        initScriptFunction(cx, scope, idata.languageVersion, idata.itsName,
-                           idata.argNames, idata.argCount);
+        initScriptFunction(cx, scope, idata.itsName);
         if (idata.itsRegExpLiterals != null) {
             functionRegExps = createRegExpWraps(cx, scope);
         }
@@ -159,5 +158,26 @@ final class InterpretedFunction extends NativeFunction implements Script
     {
         return idata;
     }
+
+    protected int getLanguageVersion()
+    {
+        return idata.languageVersion;
+    }
+
+    protected int getParamCount()
+    {
+        return idata.argCount;
+    }
+
+    protected int getParamAndVarCount()
+    {
+        return idata.argNames.length;
+    }
+
+    protected String getParamOrVarName(int index)
+    {
+        return idata.argNames[index];
+    }
+
 }
 

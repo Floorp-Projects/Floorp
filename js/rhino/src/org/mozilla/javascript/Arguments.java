@@ -61,8 +61,9 @@ final class Arguments extends IdScriptableObject
         NativeFunction f = activation.function;
         calleeObj = f;
 
-        if (f.version <= Context.VERSION_1_3
-            && f.version != Context.VERSION_DEFAULT)
+        int version = f.getLanguageVersion();
+        if (version <= Context.VERSION_1_3
+            && version != Context.VERSION_DEFAULT)
         {
             callerObj = null;
         } else {
@@ -92,7 +93,7 @@ final class Arguments extends IdScriptableObject
             if (value != NOT_FOUND) {
                 if (sharedWithActivation(index)) {
                     NativeFunction f = activation.function;
-                    String argName = f.argNames[index];
+                    String argName = f.getParamOrVarName(index);
                     value = activation.get(argName, activation);
                     if (value == NOT_FOUND) Kit.codeBug();
                 }
@@ -105,14 +106,14 @@ final class Arguments extends IdScriptableObject
     private boolean sharedWithActivation(int index)
     {
         NativeFunction f = activation.function;
-        int definedCount = f.argCount;
+        int definedCount = f.getParamCount();
         if (index < definedCount) {
             // Check if argument is not hidden by later argument with the same
             // name as hidden arguments are not shared with activation
             if (index < definedCount - 1) {
-                String argName = f.argNames[index];
+                String argName = f.getParamOrVarName(index);
                 for (int i = index + 1; i < definedCount; i++) {
-                    if (argName.equals(f.argNames[i])) {
+                    if (argName.equals(f.getParamOrVarName(i))) {
                         return false;
                     }
                 }
@@ -127,7 +128,8 @@ final class Arguments extends IdScriptableObject
         if (0 <= index && index < args.length) {
             if (args[index] != NOT_FOUND) {
                 if (sharedWithActivation(index)) {
-                    String argName = activation.function.argNames[index];
+                    String argName;
+                    argName = activation.function.getParamOrVarName(index);
                     activation.put(argName, activation, value);
                     return;
                 }
@@ -170,8 +172,9 @@ final class Arguments extends IdScriptableObject
 
         MAX_INSTANCE_ID     = 3;
 
+    protected int getMaxInstanceId()
     {
-        setMaxInstanceId(0, MAX_INSTANCE_ID);
+        return MAX_INSTANCE_ID;
     }
 
     protected int findInstanceIdInfo(String s)
