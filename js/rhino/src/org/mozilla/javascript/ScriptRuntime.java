@@ -978,36 +978,6 @@ public class ScriptRuntime {
         return s.getParentScope();
     }
 
-    public static Object setProto(Object obj, Object value, Scriptable scope) {
-        Scriptable start = toObject(scope, obj);
-        Scriptable result = value == null ? null : toObject(scope, value);
-        Scriptable s = result;
-        while (s != null) {
-            if (s == start) {
-                throw Context.reportRuntimeError1(
-                    "msg.cyclic.value", "__proto__");
-            }
-            s = s.getPrototype();
-        }
-        start.setPrototype(result);
-        return result;
-    }
-
-    public static Object setParent(Object obj, Object value, Scriptable scope) {
-        Scriptable start = toObject(scope, obj);
-        Scriptable result = value == null ? null : toObject(scope, value);
-        Scriptable s = result;
-        while (s != null) {
-            if (s == start) {
-                throw Context.reportRuntimeError1(
-                    "msg.cyclic.value", "__parent__");
-            }
-            s = s.getParentScope();
-        }
-        start.setParentScope(result);
-        return result;
-    }
-
     public static Object setProp(Object obj, String id, Object value,
                                  Scriptable scope)
     {
@@ -1182,13 +1152,6 @@ public class ScriptRuntime {
     }
 
     static Object getStrIdElem(Scriptable obj, String id) {
-        int l = id.length();
-        if (l == 9) {
-            if (id.equals("__proto__")) { return obj.getPrototype(); }
-        }
-        else if (l == 10) {
-            if (id.equals("__parent__")) { return obj.getParentScope(); }
-        }
         Object result = ScriptableObject.getProperty(obj, id);
         if (result != Scriptable.NOT_FOUND)
             return result;
@@ -1244,13 +1207,6 @@ public class ScriptRuntime {
     static Object setStrIdElem(Scriptable obj, String id, Object value,
                                Scriptable scope)
     {
-        int l = id.length();
-        if (l == 9) {
-            if (id.equals("__proto__")) return setProto(obj, value, scope);
-        }
-        else if (l == 10) {
-            if (id.equals("__parent__")) return setParent(obj, value, scope);
-        }
         ScriptableObject.putProperty(obj, id, value);
         return value;
     }
@@ -1282,7 +1238,7 @@ public class ScriptRuntime {
     }
 
     public static Object specialReference(final Object obj,
-                                          String specialProperty,
+                                          final String specialProperty,
                                           Context cx,
                                           final Scriptable scope)
     {
@@ -1296,23 +1252,40 @@ public class ScriptRuntime {
         } else {
             throw Kit.codeBug();
         }
+        final Scriptable sobj = toObject(scope, obj);
         return new Reference() {
             public Object get()
             {
                 if (id == PROTO) {
-                    return getProto(obj, scope);
+                    return getProto(sobj, scope);
                 } else {
-                    return getParent(obj, scope);
+                    return getParent(sobj, scope);
                 }
             }
 
             public Object set(Object value)
             {
-                if (id == PROTO) {
-                    return setProto(obj, value, scope);
+                Scriptable result;
+                if (value == null) {
+                    result = null;
                 } else {
-                    return setParent(obj, value, scope);
+                    result = toObject(scope, value);
+                    Scriptable s = result;
+                    do {
+                        if (s == sobj) {
+                            throw Context.reportRuntimeError1(
+                                "msg.cyclic.value", specialProperty);
+                        }
+                        s = (id == PROTO)
+                            ? s.getPrototype() : s.getParentScope();
+                    } while (s != null);
                 }
+                if (id == PROTO) {
+                    sobj.setPrototype(result);
+                } else {
+                    sobj.setParentScope(result);
+                }
+                return result;
             }
         };
     }
