@@ -121,6 +121,7 @@ class nsLDAPConnection : public nsILDAPConnection,
     nsCOMPtr<nsILDAPMessageListener> mInitListener; // Init callback
     nsCOMPtr<nsIRequest> mDNSRequest;   // The "active" DNS request
     nsresult mDNSStatus;                // The status of DNS lookup (rv cache)
+    PRBool mDNSFinished;                // Flag if DNS lookup has finished
 };
 
 // This class implements the nsIRunnable interface, in this case just a

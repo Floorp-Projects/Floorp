@@ -64,7 +64,8 @@ nsLDAPConnection::nsLDAPConnection()
       mBindName(0),
       mPendingOperations(0),
       mRunnable(0),
-      mDNSRequest(0)
+      mDNSRequest(0),
+      mDNSFinished(PR_FALSE)
 {
   NS_INIT_ISUPPORTS();
 }
@@ -240,12 +241,15 @@ nsLDAPConnection::Init(const char *aHost, PRInt16 aPort,
         return NS_ERROR_FAILURE;
     }
 
-    // get a proxy object so the callback happens on the main thread
+    // Get a proxy object so the callback happens on the main thread.
+    // This is now a Synchronous proxy, due to the fact that the DNS
+    // service hands out data which it later deallocates, and the async
+    // proxy makes this unreliable. See bug 102227 for more details.
     //
     rv = NS_GetProxyForObject(NS_CURRENT_EVENTQ,
                               NS_GET_IID(nsIDNSListener), 
                               NS_STATIC_CAST(nsIDNSListener*, this), 
-                              PROXY_ASYNC | PROXY_ALWAYS, 
+                              PROXY_SYNC | PROXY_ALWAYS, 
                               getter_AddRefs(selfProxy));
 
     if (NS_FAILED(rv)) {
@@ -286,6 +290,16 @@ nsLDAPConnection::Init(const char *aHost, PRInt16 aPort,
         default:
             return NS_ERROR_UNEXPECTED;
         }
+    }
+
+    // The DNS service can actually call the listeners even before the
+    // Lookup() function has returned. If that happens, we can still hold
+    // a reference to the DNS request, even after the DNS lookup is done.
+    // If this happens, lets just get rid of the DNS request, since we won't
+    // need it any more.
+    //
+    if (mDNSFinished && mDNSRequest) {
+        mDNSRequest = 0;
     }
 
     return NS_OK;
@@ -896,10 +910,6 @@ nsLDAPConnection::OnStopLookup(nsISupports *aContext,
     nsCOMPtr<nsILDAPMessageListener> selfProxy;
     nsresult rv = NS_OK;
 
-    // Release our reference to the DNS Request...
-    //
-    mDNSRequest = 0;
-
     if (NS_FAILED(mDNSStatus)) {
         // We failed previously in the OnFound() callback
         //
@@ -998,9 +1008,11 @@ nsLDAPConnection::OnStopLookup(nsISupports *aContext,
         }
     }
 
-    // Drop the DNS request object, we no longer need it.
+    // Drop the DNS request object, we no longer need it, and set the flag
+    // indicating that DNS has finished.
     //
     mDNSRequest = 0;
+    mDNSFinished = PR_TRUE;
 
     // Call the listener, and then we can release our reference to it.
     //
