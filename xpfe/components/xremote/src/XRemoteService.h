@@ -63,6 +63,7 @@ class XRemoteService : public nsIXRemoteService {
 
   // get the primary browser chrome location
   nsresult GetBrowserLocation(char **_retval);
+  nsresult GetMailLocation(char **_retval);
 
   // remote command handlers
   nsresult OpenURL(nsCString &aArgument,
@@ -70,6 +71,14 @@ class XRemoteService : public nsIXRemoteService {
 		   PRBool aOpenBrowser);
 
   nsresult OpenURLDialog(nsIDOMWindowInternal *aParent);
+
+  // handle xfe commands
+  nsresult XfeDoCommand(nsCString &aArgument,
+			nsIDOMWindowInternal *aParent);
+
+  // find the most recent window of a certain type
+  nsresult FindWindow(const PRUnichar *aType,
+		      nsIDOMWindowInternal **_retval);
 
   // hidden window for proxy requests
   nsCOMPtr<nsIWidget> mProxyWindow;
