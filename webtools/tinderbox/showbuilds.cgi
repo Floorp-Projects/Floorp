@@ -23,10 +23,8 @@ require 'globals.pl';
 require 'lloydcgi.pl';
 require 'imagelog.pl';
 require 'header.pl';
-require 'utils.pl';
 $|=1;
 
-$default_root = pickDefaultRepository();
 
 #
 # show 12 hours by default
@@ -233,8 +231,14 @@ sub display_build_table_row {
     my ($tt, $hour_color);
     $tt = &print_time($build_time_times->[$t]);
 
-    my ($qr) = '';
-    my ($er) = '';
+    if( $tree2 ne ""){
+        $qr = "";
+        $er = "";
+    }
+    else {
+        $qr = &query_ref( $td1, $build_time_times->[$t]);
+        $er = "</a>";
+    }
 
     if ($build_time_times->[$t] % 7200 > 3600) {
         $hour_color = "";
@@ -246,10 +250,6 @@ sub display_build_table_row {
     if ($lasthour == $hour) {
       $tt =~ s/^.*&nbsp;//;
     } else {
-      if ($tree2 eq '') {
-	$qr = &query_ref( $td1, $build_time_times->[$t]);
-	$er = "</a>";
-      }
       $lasthour = $hour;
     }
 
@@ -443,11 +443,7 @@ sub query_ref {
     my( $td, $mindate, $maxdate, $who ) = @_;
     my( $output ) = '';
 
-    $output = "<a href=../bonsai/cvsquery.cgi?module=$td->{cvs_module}";
-    $output .= "&branch=$td->{cvs_branch}" if $td->{cvs_branch} ne 'HEAD';
-    $output .= "&cvsroot=$td->{cvs_root}" if $td->{cvs_root} ne $default_root;
-    $output .= "&date=explicit&mindate=$mindate";
-    $output .= "&maxdate=$maxdate" if $maxdate ne '';
+    $output = "<a href=../bonsai/cvsquery.cgi?module=$td->{cvs_module}&branch=$td->{cvs_branch}&cvsroot=$td->{cvs_root}&date=explicit&mindate=$mindate&maxdate=$maxdate";
     $output .= "&who=$who" if $who ne '';
     $output .= ">";
 }
@@ -544,7 +540,7 @@ function js_what_menu(d,noteid,logfile,errorparser,buildname,buildtime) {
     l = document.layers['popup'];
     l.document.write(
         "<table border=1 cellspacing=1><tr><td>" + 
-        note[noteid] + 
+        note_array[noteid] + 
         "</tr></table>");
     l.document.close();
 
@@ -561,10 +557,7 @@ function js_what_menu(d,noteid,logfile,errorparser,buildname,buildtime) {
     return false;
 }
 
-note = new Array();
-tree = new Array();
-name = new Array();
-err = new Array();
+note_array = new Array();
 
 </script>
 
@@ -577,9 +570,9 @@ err = new Array();
 <SCRIPT>
 function log_popup(e,buildindex,logfile,buildtime)
 {
-    tree = tree[buildindex];
-    buildname = name[buildindex];
-    errorparser = err[buildindex];
+    tree = eval("tree_b" + buildindex);
+    buildname = eval("name_b" + buildindex);
+    errorparser = eval("error_b" + buildindex);
 
     urlparams = "tree=" + tree
            + "&errorparser=" + errorparser
@@ -615,47 +608,43 @@ function log_popup(e,buildindex,logfile,buildtime)
     q.document.close();
     return false;
 }
+</SCRIPT>
 ENDJS
 
 $script_str .= "
+<script>
+
 function js_qr(tree,mindate, maxdate, who ){
     if (tree == 0 ){
         return '../bonsai/cvsquery.cgi?module=${cvs_module}&branch=${cvs_branch}&cvsroot=${cvs_root}&date=explicit&mindate=' 
             + mindate + '&maxdate=' +maxdate + '&who=' + who ;
-    }";
-$script_str .= "
+    }
     else {
         return '../bonsai/cvsquery.cgi?module=$td2->{cvs_module}&branch=$td2->{cvs_branch}&cvsroot=$td2->{cvs_root}&date=explicit&mindate=' 
             + mindate + '&maxdate=' +maxdate + '&who=' + who ;
-    }" if $tree2 ne '';
-$script_str .= "
+    }
 }
 
 function js_qr24(tree,who){
     if (tree == 0 ){
         return '../bonsai/cvsquery.cgi?module=${cvs_module}&branch=${cvs_branch}&cvsroot=${cvs_root}&date=day' 
             + '&who=' +who;
-    }";
-$script_str .= "
+    }
     else{
         return '../bonsai/cvsquery.cgi?module=$td2->{cvs_module}&branch=$td2->{cvs_branch}&cvsroot=$td2->{cvs_root}&date=day' 
             + '&who=' +who;
-    }" if $tree2 ne '';
-$script_str .= "
+    }
 }
 ";
 
-$ii = 0;
-while( $ii < @note_array ){
-  $ss = $note_array[$ii];
-  while( $ii < @note_array && $note_array[$ii] eq $ss ){
-    $script_str .= "note[$ii] = ";
-    $ii++;
-  }
-  $ss =~ s/\\/\\\\/g;
-  $ss =~ s/\"/\\\"/g;
-  $ss =~ s/\n/\\n/g;
-  $script_str .= "\"$ss\";\n";
+$i = 0;
+while( $i < @note_array ){
+    $s = $note_array[$i];
+    $s =~ s/\\/\\\\/g;
+    $s =~ s/\"/\\\"/g;
+    $s =~ s/\n/\\n/g;
+    $script_str .= "note_array[$i] = \"$s\";\n";
+    $i++;
 }
 
 $ii = 1;
@@ -663,16 +652,16 @@ while ($ii <= $name_count) {
   if (defined($br = $build_table->[1][$ii])) {
     if ($br != -1) {
       $bn = $build_name_names->[$ii];
-      $script_str .= "tree[$ii]='$br->{td}{name}';\n";
-      $script_str .= "name[$ii]='$bn';\n";
-      $script_str .= " err[$ii]='$br->{errorparser}';\n";
+      $script_str .= "tree_b${ii}='$br->{td}{name}';\n";
+      $script_str .= " name_b${ii}='$bn';\n";
+      $script_str .= "  error_b${ii}='$br->{errorparser}';\n";
     }
   }
   $ii++;
 }
 
 
-$script_str .= "</SCRIPT>\n";
+$script_str .= "</script>\n";
 
 }
 
