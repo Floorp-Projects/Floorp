@@ -30,6 +30,7 @@
 #include "prefInfo.h"
 #include "mailmisc.h"
 #include "libi18n.h"
+#include "edt.h"
 
 //
 // If the mouse is over a link or an image, allow the user to copy the URL
@@ -1061,8 +1062,14 @@ void CNetscapeView::OnPopupLoadFrameNewWindow()
 // Load link location in a Composer window
 void CNetscapeView::OnPopupLoadLinkInEditor()
 {
-    if ( GetContext()->GetContext() && !m_csRBLink.IsEmpty() ) {
-        FE_LoadUrl((char*)LPCSTR(m_csRBLink), LOAD_URL_COMPOSER);
+    MWContext *pMWContext = GetContext()->GetContext();
+    if( pMWContext && !m_csRBLink.IsEmpty() )
+    {
+        char *pURL = (char*)LPCSTR(m_csRBLink);
+        // Jump to internal Target tag within Composer if possible,
+        //   else edit link in Composer window
+        if( !EDT_IS_EDITOR(pMWContext) || !EDT_ScrollToTarget(pMWContext, pURL) )
+            FE_LoadUrl(pURL, LOAD_URL_COMPOSER);
     }
 }
 

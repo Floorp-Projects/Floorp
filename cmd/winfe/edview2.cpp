@@ -1232,13 +1232,12 @@ void CNetscapeEditView::OnUpdateDisplayTables(CCmdUI* pCmdUI)
 }
 
 void CNetscapeEditView::OnRButtonDown(UINT uFlags, CPoint cpPoint)
-//	Purpose:	Bring up the popup menu.
+//	Purpose:	Bring up the popup menu - extremely state-dependent on: element type, selection, clipboard, is in table, etc
 //	Arguments:	uFlags	What meta keys are currently pressed, ignored.
 //				cpPoint	The point at which the mouse was clicked in relative to the upper left corner of the window.
-//	Returns:	void
-//	Comments:	Saves the point in a class member, so other handling can occur through messages generated in the popup.
 //	Revision History:
 //		11-03-95	created CLM
+//      --> today   One of the most revised pieces of code in Composer!
 //
 {
 	MWContext *pMWContext = GET_MWCONTEXT;
@@ -1383,6 +1382,7 @@ void CNetscapeEditView::OnRButtonDown(UINT uFlags, CPoint cpPoint)
     BOOL bHaveText, bHaveLink, bHaveImage, bHaveTable;
     BOOL bCanPaste = wfe_GetClipboardTypes(pMWContext, bHaveText, bHaveImage, bHaveLink, bHaveTable );
     BOOL bIsLink = !m_csRBLink.IsEmpty();
+    char *pLinkURL = bIsLink ? (char*)LPCSTR(m_csRBLink) : 0;
 
     // Pasting a table in a table offers a submenu of options
     BOOL bCanPasteTableInTable = bInTable ? bHaveTable : FALSE;
@@ -1542,6 +1542,7 @@ void CNetscapeEditView::OnRButtonDown(UINT uFlags, CPoint cpPoint)
     }
     HMENU hSelectMenu = 0;
     HMENU hInsertMenu = 0;
+    HMENU hInsertTableMenu = 0;
     HMENU hDeleteMenu = 0;
     HMENU hPasteTableMenu = 0;
     HMENU hPasteMenu = 0;
@@ -1565,11 +1566,11 @@ void CNetscapeEditView::OnRButtonDown(UINT uFlags, CPoint cpPoint)
 
         // We are in a cell, so we can do Select, Insert and Delete table commands,
         // Use menus shared with Frame's Table Menu
-        hInsertMenu = ::LoadMenu(AfxGetResourceHandle(), MAKEINTRESOURCE(IDM_COMPOSER_TABLE_INSERTMENU));
+        hInsertTableMenu = ::LoadMenu(AfxGetResourceHandle(), MAKEINTRESOURCE(IDM_COMPOSER_TABLE_INSERTMENU));
         hDeleteMenu = ::LoadMenu(AfxGetResourceHandle(), MAKEINTRESOURCE(IDM_COMPOSER_TABLE_DELETEMENU));
         hSelectMenu = ::LoadMenu(AfxGetResourceHandle(), MAKEINTRESOURCE(IDM_COMPOSER_TABLE_SELECTMENU));
-        if( hInsertMenu )
-            cmPopup.AppendMenu(MF_POPUP, (UINT)hInsertMenu, szLoadString(IDS_SUBMENU_INSERT_TABLE));
+        if( hInsertTableMenu )
+            cmPopup.AppendMenu(MF_POPUP, (UINT)hInsertTableMenu, szLoadString(IDS_SUBMENU_INSERT_TABLE));
         if( hDeleteMenu )
             cmPopup.AppendMenu(MF_POPUP, (UINT)hDeleteMenu, szLoadString(IDS_SUBMENU_DELETE_TABLE));
         if( hSelectMenu )
@@ -1606,30 +1607,17 @@ void CNetscapeEditView::OnRButtonDown(UINT uFlags, CPoint cpPoint)
         // Open link into a browse window
     	cmPopup.AppendMenu(uMailtoState, ID_POPUP_LOADLINKNEWWINDOW, csEntry);
 
-        // Open link into an edit window
-    	cmPopup.AppendMenu(uMailtoState,ID_POPUP_EDIT_LINK,
-    	                   szLoadString(IDS_POPUP_EDIT_LINK));
+        // Jump to internal Target or open link into an edit window
+        cmPopup.AppendMenu(uMailtoState, ID_POPUP_EDIT_LINK,
+    	                   szLoadString(EDT_IsInternalLink(pMWContext, pLinkURL) ? 
+                                            IDS_EDIT_JUMP_TARGET : IDS_POPUP_EDIT_LINK));
         bLinkPopup = TRUE;
     }
-    nIDS = 0;
-    if ( bCanSetHREF )
+    if ( bCanSetHREF && bIsSelected  && bNoLinks )
     {
-        if( bIsSelected  && bNoLinks ){
-            // We have selection and no current link
-            nIDS = IDS_POPUP_CREATE_LINK;
-        }
-    } else if( !bSelectTableOrCell )
-    {
-        // We are in non-link text and don't have a selection
-        nIDS = IDS_POPUP_INSERT_LINK;
-    }
-    if(nIDS)
-    {
-        // Why on earth does ID_PROPS_LINK get disabled if used here???
-        cmPopup.AppendMenu(MF_ENABLED, ID_MAKE_LINK /*ID_POPUP_PROPS_LINK*/, szLoadString(nIDS));
+        cmPopup.AppendMenu(MF_ENABLED, ID_MAKE_LINK, szLoadString(IDS_POPUP_CREATE_LINK));
         bLinkPopup = TRUE;
     }
-
 	if( (type == ED_ELEMENT_TEXT ||
 	     type == ED_ELEMENT_SELECTION) )
     {
@@ -1692,12 +1680,24 @@ void CNetscapeEditView::OnRButtonDown(UINT uFlags, CPoint cpPoint)
 		XP_FREEIF(pImageEditor);
     }
 
-
     if ( bIsSelected )
     {
         cmPopup.AppendMenu(MF_ENABLED, ID_EDIT_CUT, szLoadString(IDS_EDIT_CUT));
 	    cmPopup.AppendMenu(MF_ENABLED, ID_EDIT_COPY, szLoadString(IDS_EDIT_COPY));
     }
+    else
+    {
+        hInsertMenu = ::LoadMenu(AfxGetResourceHandle(), MAKEINTRESOURCE(IDM_COMPOSER_INSERTMENU));
+        if( hInsertMenu )
+        {
+            cmPopup.AppendMenu(MF_POPUP, (UINT)hInsertMenu, szLoadString(IDS_POPUP_INSERT));
+  // Should we do this? If we don't then insert Table is on 2 submenus
+            // Delete the "Table" item -- its already in the Table Insert submenu
+  //          if( hInsertTableMenu )
+  //              ::DeleteMenu(hInsertMenu, ID_INSERT_TABLE, MF_BYCOMMAND);
+        }
+    }
+
     if( bHaveText && bHaveImage )
     {
         if( bCanPasteTableInTable || !bHaveTable )
@@ -1725,7 +1725,8 @@ void CNetscapeEditView::OnRButtonDown(UINT uFlags, CPoint cpPoint)
     }
     if( EDT_CanPasteStyle(pMWContext) )
     {
-	    cmPopup.AppendMenu(MF_ENABLED, ID_PASTE_CHARACTER_STYLE, szLoadString(IDS_PASTE_CHARACTER_SYLE_POPUP));
+	    cmPopup.AppendMenu(MF_ENABLED, ID_PASTE_CHARACTER_STYLE, 
+                           szLoadString(IDS_PASTE_CHARACTER_SYLE_POPUP));
     }
     // Remove last item if its a separator
     int iLastItem = cmPopup.GetMenuItemCount() - 1;
@@ -1747,9 +1748,10 @@ void CNetscapeEditView::OnRButtonDown(UINT uFlags, CPoint cpPoint)
     GetContext()->m_bInPopupMenu = FALSE;
 
     if( hSelectMenu) ::DestroyMenu(hSelectMenu);
-    if( hInsertMenu) ::DestroyMenu(hInsertMenu);
+    if( hInsertTableMenu) ::DestroyMenu(hInsertTableMenu);
     if( hDeleteMenu) ::DestroyMenu(hDeleteMenu);
     if( hPasteTableMenu) ::DestroyMenu(hPasteTableMenu);
+    if( hInsertMenu) ::DestroyMenu(hInsertMenu);
     if( hPasteMenu) ::DestroyMenu(hPasteMenu);
     if( pCharData ) EDT_FreeCharacterData(pCharData);
 }

@@ -392,6 +392,17 @@ BEGIN
    MENUITEM "&Cell"                        ID_DELETE_TABLE_CELL
 END
 
+// A clone of some items from the Insert Menu to put on right-mouse popup
+IDM_COMPOSER_INSERTMENU MENU DISCARDABLE
+BEGIN
+	MENUITEM "&Link...\tCtrl+Shift+L",      ID_INSERT_LINK
+	MENUITEM "T&arget...",                  ID_INSERT_TARGET
+	MENUITEM "&Image...",                   ID_INSERT_IMAGE
+    MENUITEM "&Table..."                    ID_INSERT_TABLE
+	MENUITEM "H&orizontal Line",            ID_INSERT_HRULE
+	MENUITEM "&HTML Tag...",                ID_INSERT_TAG
+END
+
 //////////////////////////////////////////////////////////////////////////////
 //
 // Message Composer Menu

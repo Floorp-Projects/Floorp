@@ -447,7 +447,7 @@ BEGIN
     IDS_POPUP_TABLE_CELL_PROPS  "Table C&ell Properties"
     IDS_MERGE_NEXT_CELL         "&Join with Cell to the Right"
     IDS_SUBMENU_SELECT_TABLE    "&Select"
-    IDS_SUBMENU_INSERT_TABLE    "&Insert"
+    IDS_SUBMENU_INSERT_TABLE    "Table &Insert"
     IDS_SUBMENU_DELETE_TABLE    "&Delete"
     IDS_SUBMENU_PASTE_TABLE     "Paste into &Table"
     IDS_REPLACE_SELECTED_CELLS  "Replace &Selected Cells"
@@ -528,7 +528,6 @@ BEGIN
     ID_INSERT_BREAK_BOTH    "Insert break to continue text below images to the left and the right"
     ID_INSERT_TARGET        "Insert a Target\nInsert Target\nTarget"
     ID_INSERT_TAG           "Insert an arbitrary HTML Tag at the insertion location\nInsert HTML Tag"
-    IDS_POPUP_CREATE_LINK   "Create &Link Using Selected..."
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 
@@ -554,6 +553,8 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
+    IDS_POPUP_INSERT        "&Insert"
+    IDS_POPUP_CREATE_LINK   "Create &Link Using Selected..."
     IDS_POPUP_INSERT_LINK   "Insert New &Link..."
     IDS_CAPTION_NONE        "None"
     IDS_CAPTION_ABOVE       "Above table"
@@ -600,6 +601,7 @@ BEGIN
     IDS_POPUP_LOAD_LINK_EDT "&Browse to: "
     IDS_POPUP_LOADLINKNEWWINDOW_EDT "Open Link in &New Navigator Window"
     IDS_POPUP_COPYLINKCLIPBOARD_EDT "&Copy Link to Clipboard"
+    IDS_EDIT_JUMP_TARGET    "&Jump to Target in this page"
     IDS_POPUP_EDIT_LINK     "Open Link in Compos&er"
 END
 

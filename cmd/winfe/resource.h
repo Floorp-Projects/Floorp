@@ -43,6 +43,7 @@
 #define IDM_COMPOSER_TABLE_DELETEMENU   72
 #define IDM_COMPOSER_TABLE_PASTEMENU    73
 #define IDM_COMPOSER_PASTEMENU          74
+#define IDM_COMPOSER_INSERTMENU         75
 #define VK_APPS                         0x5D
 #define IDD_ABOUTBOX                    100
 #define HOTLIST1_DIALOG                 101
@@ -2671,9 +2672,10 @@
 #define ID_INSERT_BREAK_LEFT            42103
 #define ID_INSERT_BREAK_RIGHT           42104
 #define ID_INSERT_BREAK_BOTH            42105
-#define ID_INSERT_TARGET                42108
-#define ID_INSERT_TAG                   42109
-#define IDS_CREATE_LINK                 42110
+#define ID_INSERT_TARGET                42106
+#define ID_INSERT_TAG                   42107
+#define IDS_CREATE_LINK                 42109
+#define IDS_POPUP_INSERT                42110
 #define IDS_POPUP_CREATE_LINK           42111
 #define IDS_POPUP_INSERT_LINK           42112
 #define IDS_CAPTION_NONE                42113
@@ -2717,8 +2719,9 @@
 #define ID_POPUP_EDIT_IMAGE             42156
 #define IDS_POPUP_LOADLINKNEWWINDOW_EDT 42157
 #define IDS_POPUP_COPYLINKCLIPBOARD_EDT 42158
-#define IDS_POPUP_EDIT_LINK             42159
-#define IDS_POPUP_SAVELINKCONTENTS_EDT  42160
+#define IDS_EDIT_JUMP_TARGET            42159
+#define IDS_POPUP_EDIT_LINK             42160
+#define IDS_POPUP_SAVELINKCONTENTS_EDT  42161
 #define IDS_POPUP_ADDLINK2BOOKMARKS_EDT 42162
 #define IDS_TEXT                        42163
 #define IDS_LINK_TEXT                   42164
