@@ -96,11 +96,9 @@ NS_IMETHODIMP nsWebBrowserFind::FindNext(PRBool *outDidFind)
     gUseTextServices = PR_TRUE;
     nsCOMPtr<nsIPref> prefService = do_GetService(kPrefServiceCID, &rv);
     if (NS_SUCCEEDED(rv) && prefService) {
-        printf("Got the pref service\n");
         PRBool newFind = PR_FALSE;
         prefService->GetBoolPref("browser.new_find", &newFind);
         gUseTextServices = !newFind;
-        printf("Got the pref: newFind = %d, useText = %d\n", newFind, gUseTextServices);
     }
 #endif /* TEXT_SVCS_TEST */
 
