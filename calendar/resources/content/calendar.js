@@ -644,25 +644,12 @@ function newEventCommand( event )
 
 
 /** 
-* Called when the new event button is clicked
+* Called when the new task button is clicked
 */
 
 function newToDoCommand()
 {
-    var calendarToDo = createToDo();
-
-    // created todo has no start or due date unless user wants one
-    calendarToDo.start.setTime( k_NO_DATE );
-    calendarToDo.due.setTime( k_NO_DATE );
-
-    var args = new Object();
-    args.mode = "new";
-    args.onOk =  self.addToDoDialogResponse;
-    args.calendarEvent = calendarToDo;
-
-    window.setCursor( "wait" );
-    // open the dialog modally
-    openDialog("chrome://calendar/content/toDoDialog.xul", "caEditEvent", "chrome,modal", args );
+  newToDo( null, null ); // new task button defaults to undated todo
 }
 
 
@@ -696,8 +683,9 @@ function isToDo ( aObject )
 
 
 /** 
-* Helper function to launch the event composer to create a new event.
-* When the user clicks OK "addEventDialogResponse" is called
+* Defaults null start/end date based on selected date in current view.
+* Defaults calendarFile to the selected calendar file.
+* Calls editNewEvent. 
 */
 
 function newEvent( startDate, endDate, allDay )
@@ -726,42 +714,67 @@ function newEvent( startDate, endDate, allDay )
    if( allDay )
      calendarEvent.allDay = true;
    
-   //get the selected calendar
-   var selectedCalendarItem = document.getElementById( "list-calendars-listbox" ).selectedItem;
-   
-   var server = null;
-
-   if( selectedCalendarItem )
-   {
-      server = selectedCalendarItem.getAttribute( "calendarPath" );
-   }
+   var server = getSelectedCalendarPathOrNull();
    
    editNewEvent( calendarEvent, server );
 }
 
+/*
+* Defaults null start/due date to the no_date date.
+* Defaults calendarFile to the selected calendar file.
+* Calls editNewToDo.
+*/
+function newToDo ( startDate, dueDate ) {
+    var calendarToDo = createToDo();
+   
+    // created todo has no start or due date unless user wants one
+    if (! startDate ) 
+      calendarToDo.start.clear();
+    if (! dueDate ) 
+      calendarToDo.due.clear();
+
+    var server = getSelectedCalendarPathOrNull();
+   
+    editNewToDo(calendarToDo, server);
+}
+
+function getSelectedCalendarPathOrNull()
+{
+   //get the selected calendar
+   var selectedCalendarItem = document.getElementById( "list-calendars-listbox" ).selectedItem;
+   
+   if ( selectedCalendarItem )
+     return selectedCalendarItem.getAttribute( "calendarPath" );
+   else
+     return null;
+}
 
 /**
-* Helper function to launch the event composer to edit a new event.
+* Launch the event dialog to edit a new (created, imported, or pasted) event.
+* 'server' is calendarPath.
 * When the user clicks OK "addEventDialogResponse" is called
 */
 
 function editNewEvent( calendarEvent, server )
 {
-   // set up a bunch of args to pass to the dialog
-
-   var args = new Object();
-   args.mode = "new";
-   args.onOk =  self.addEventDialogResponse;
-   args.calendarEvent = calendarEvent;
-   
-   if( server )
-      args.server = server;
-
-   window.setCursor( "wait" );
-   // open the dialog modally
-   openDialog("chrome://calendar/content/eventDialog.xul", "caEditEvent", "chrome,modal", args );
+  openEventDialog(calendarEvent,
+                  "new",
+                  self.addEventDialogResponse,
+                  server);
 }
 
+/**
+* Launch the todo dialog to edit a new (created, imported, or pasted) ToDo.
+* 'server' is calendarPath.
+* When the user clicks OK "addToDoDialogResponse" is called
+*/
+function editNewToDo( calendarToDo, server )
+{
+  openToDoDialog(calendarToDo,
+                 "new",
+                 self.addToDoDialogResponse,
+                 server);
+}
 
 /** 
 * Called when the user clicks OK in the new event dialog
@@ -794,20 +807,12 @@ function addToDoDialogResponse( calendarToDo, Server )
 
 function editEvent( calendarEvent )
 {
-   // set up a bunch of args to pass to the dialog
-   
-   var args = new Object();
-   args.mode = "edit";
-   args.onOk = self.modifyEventDialogResponse;           
-   args.calendarEvent = calendarEvent;
-
-   // open the dialog modally
-   
-   window.setCursor( "wait" );
-   openDialog("chrome://calendar/content/eventDialog.xul", "caEditEvent", "chrome,modal", args );
+  openEventDialog(calendarEvent,
+                  "edit",
+                  self.modifyEventDialogResponse,
+                  null);
 }
    
-
 /** 
 * Helper function to launch the event composer to edit an event.
 * When the user clicks OK "modifyEventDialogResponse" is called
@@ -815,19 +820,12 @@ function editEvent( calendarEvent )
 
 function editToDo( calendarToDo )
 {
-   // set up a bunch of args to pass to the dialog
-   
-   var args = new Object();
-   args.mode = "edit";
-   args.onOk = self.modifyToDoDialogResponse;           
-   args.calendarEvent = calendarToDo;
-   
-   window.setCursor( "wait" );
-   // open the dialog modally
-   openDialog("chrome://calendar/content/toDoDialog.xul", "caEditToDo", "chrome,modal", args );
+  openToDoDialog(calendarToDo,
+                 "edit",
+                 self.modifyToDoDialogResponse,
+                 null);
 }
    
-
 /** 
 * Called when the user clicks OK in the edit event dialog
 *
@@ -853,6 +851,47 @@ function modifyToDoDialogResponse( calendarToDo, Server )
     refreshRemoteCalendarAndRunFunction( calendarToDo, Server, "modifyTodo" );
 }
 
+
+/** PRIVATE: open event dialog in mode, and call onOk if ok is clicked.
+    'mode' is "new" or "edit".
+    'server' is path to calendar to update.
+ **/
+function openEventDialog(calendarEvent, mode, onOk, server)
+{
+  // set up a bunch of args to pass to the dialog
+  var args = new Object();
+  args.calendarEvent = calendarEvent;
+  args.mode = mode;
+  args.onOk = onOk;
+
+  if( server )
+    args.server = server;
+
+  // wait cursor will revert to auto in eventDialog.js loadCalendarEventDialog
+  window.setCursor( "wait" );
+  // open the dialog modally
+  openDialog("chrome://calendar/content/eventDialog.xul", "caEditEvent", "chrome,modal", args );
+}
+
+/** PRIVATE: open todo dialog in mode, and call onOk if ok is clicked.
+    'mode' is "new" or "edit".
+    'server' is path to calendar to update.
+ **/
+function openToDoDialog(calendarToDo, mode, onOk, server)
+{
+  // set up a bunch of args to pass to the dialog
+  var args = new Object();
+  args.calendarEvent = calendarToDo;
+  args.mode = mode;
+  args.onOk = onOk;
+  if( server )
+    args.server = server;
+   
+  // wait cursor will revert to auto in todoDialog.js loadCalendarEventDialog
+  window.setCursor( "wait" );
+  // open the dialog modally
+  openDialog("chrome://calendar/content/toDoDialog.xul", "caEditToDo", "chrome,modal", args );
+}
 
 /**
 *  This is called from the unifinder's edit command
