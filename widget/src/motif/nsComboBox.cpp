@@ -21,6 +21,7 @@
 #include "nsGUIEvent.h"
 #include "nsString.h"
 #include "nsStringUtil.h"
+#include "nsDeviceContextUnix.h"
 
 #include <Xm/RowColumn.h>
 #include <Xm/PushB.h>
@@ -56,6 +57,30 @@ nsComboBox::~nsComboBox()
   if (mItems != nsnull) {
     delete[] mItems;
   }
+}
+
+//-------------------------------------------------------------------------
+//
+// Set the foreground color
+//
+//-------------------------------------------------------------------------
+void nsComboBox::SetForegroundColor(const nscolor &aColor)
+{
+  nsWindow::SetForegroundColor(aColor);
+  PRUint32 pixel = ((nsDeviceContextUnix *)mContext)->ConvertPixel(aColor);
+  XtVaSetValues(mOptionMenu, XtNforeground, pixel, nsnull);
+}
+
+//-------------------------------------------------------------------------
+//
+// Set the background color
+//
+//-------------------------------------------------------------------------
+void nsComboBox::SetBackgroundColor(const nscolor &aColor)
+{
+  nsWindow::SetForegroundColor(aColor);
+  PRUint32 pixel = ((nsDeviceContextUnix *)mContext)->ConvertPixel(aColor);
+  XtVaSetValues(mOptionMenu, XtNbackground, pixel, nsnull);
 }
 
 //-------------------------------------------------------------------------
