@@ -254,16 +254,16 @@ var DefaultController =
 		}
 	},
 
-	isCommandEnabled: function(command)
-	{
+  isCommandEnabled: function(command)
+  {
     var enabled = new Object();
     enabled.value = false;
     var checkStatus = new Object();
 //    dump('entering is command enabled for: ' + command + '\n');
-		switch ( command )
-		{
-			case "button_delete":
-			case "cmd_delete":
+    switch ( command )
+    {
+      case "button_delete":
+      case "cmd_delete":
         var uri = GetFirstSelectedMessage();
         if ( GetNumSelectedMessages() < 2 ) 
         {
@@ -294,96 +294,96 @@ var DefaultController =
         if (gDBView)
           gDBView.getCommandStatus(nsMsgViewCommandType.deleteMsg, enabled, checkStatus);
         return enabled.value;
- 			case "cmd_shiftDelete":
+      case "cmd_shiftDelete":
         if (gDBView)
-         gDBView.getCommandStatus(nsMsgViewCommandType.deleteNoTrash, enabled, checkStatus);
-       return enabled.value;
-			case "cmd_killThread":
-				return MailAreaHasFocus() && IsViewNavigationItemEnabled();
-			case "cmd_watchThread":
-        if (gDBView)
+          gDBView.getCommandStatus(nsMsgViewCommandType.deleteNoTrash, enabled, checkStatus);
+        return enabled.value;
+      case "cmd_killThread":
+        return ((GetNumSelectedMessages() == 1) && MailAreaHasFocus() && IsViewNavigationItemEnabled());
+      case "cmd_watchThread":
+        if ((GetNumSelectedMessages() == 1) && gDBView)
           gDBView.getCommandStatus(nsMsgViewCommandType.toggleThreadWatched, enabled, checkStatus);
         return enabled.value;
-			case "cmd_reply":
-			case "button_reply":
-			case "cmd_replySender":
-			case "cmd_replyGroup":
-			case "cmd_replyall":
-			case "button_replyall":
-			case "cmd_forward":
-			case "button_forward":
-			case "cmd_forwardInline":
-			case "cmd_forwardAttachment":
-			case "cmd_editAsNew":
-			case "cmd_openMessage":
+      case "cmd_reply":
+      case "button_reply":
+      case "cmd_replySender":
+      case "cmd_replyGroup":
+      case "cmd_replyall":
+      case "button_replyall":
+      case "cmd_forward":
+      case "button_forward":
+      case "cmd_forwardInline":
+      case "cmd_forwardAttachment":
+      case "cmd_editAsNew":
+      case "cmd_openMessage":
       case "button_print":
-			case "cmd_print":
-			case "cmd_saveAsFile":
-			case "cmd_saveAsTemplate":
-			case "cmd_viewPageSource":
-			case "cmd_reload":
-			case "cmd_markThreadAsRead":
-			case "cmd_markAsFlagged":
+      case "cmd_print":
+      case "cmd_saveAsFile":
+      case "cmd_saveAsTemplate":
+      case "cmd_viewPageSource":
+      case "cmd_reload":
+      case "cmd_markThreadAsRead":
+      case "cmd_markAsFlagged":
       case "button_file":
-			case "cmd_file":
-				return ( GetNumSelectedMessages() > 0 );
-			case "cmd_editDraft":
+      case "cmd_file":
+        return ( GetNumSelectedMessages() > 0 );
+      case "cmd_editDraft":
                 return (gIsEditableMsgFolder && (GetNumSelectedMessages() > 0));
-			case "cmd_nextMsg":
+      case "cmd_nextMsg":
       case "button_next":
-			case "cmd_nextUnreadMsg":
-			case "cmd_nextUnreadThread":
-			case "cmd_previousMsg":
-			case "cmd_previousUnreadMsg":
-				return MailAreaHasFocus() && IsViewNavigationItemEnabled();
+      case "cmd_nextUnreadMsg":
+      case "cmd_nextUnreadThread":
+      case "cmd_previousMsg":
+      case "cmd_previousUnreadMsg":
+        return MailAreaHasFocus() && IsViewNavigationItemEnabled();
       case "cmd_downloadSelected":
       case "button_mark":
-			case "cmd_markAsRead":
-				if(!MailAreaHasFocus())
-					return false;
-				else
-					return(GetNumSelectedMessages() > 0);
-			case "cmd_markAllRead":
+      case "cmd_markAsRead":
+        if(!MailAreaHasFocus())
+          return false;
+        else
+          return(GetNumSelectedMessages() > 0);
+      case "cmd_markAllRead":
       case "cmd_downloadFlagged":
-				return(MailAreaHasFocus() && IsFolderSelected());
-			case "cmd_find":
-			case "cmd_findAgain":
-				return IsFindEnabled();
-				break;
-            // these are enabled on when we are in threaded mode
-            case "cmd_selectThread":
-			    if (GetNumSelectedMessages() <= 0) return false;
-			case "cmd_expandAllThreads":
-			case "cmd_collapseAllThreads":
-                if (!gDBView) return false;
-                return (gDBView.sortType == nsMsgViewSortType.byThread);
-				break;
-			case "cmd_nextFlaggedMsg":
-			case "cmd_previousFlaggedMsg":
-				return IsViewNavigationItemEnabled();
-			case "cmd_viewAllMsgs":
-			case "cmd_sortByThread":
-  		case "cmd_viewUnreadMsgs":
+        return(MailAreaHasFocus() && IsFolderSelected());
+      case "cmd_find":
+      case "cmd_findAgain":
+        return IsFindEnabled();
+        break;
+      // these are enabled on when we are in threaded mode
+      case "cmd_selectThread":
+        if (GetNumSelectedMessages() <= 0) return false;
+      case "cmd_expandAllThreads":
+      case "cmd_collapseAllThreads":
+        if (!gDBView) return false;
+          return (gDBView.sortType == nsMsgViewSortType.byThread);
+        break;
+      case "cmd_nextFlaggedMsg":
+      case "cmd_previousFlaggedMsg":
+        return IsViewNavigationItemEnabled();
+      case "cmd_viewAllMsgs":
+      case "cmd_sortByThread":
+      case "cmd_viewUnreadMsgs":
       case "cmd_viewThreadsWithUnread":
       case "cmd_viewWatchedThreadsWithUnread":
         return true;
       case "cmd_undo":
       case "cmd_redo":
           return SetupUndoRedoCommand(command);
-			case "cmd_renameFolder":
-				return IsRenameFolderEnabled();
+      case "cmd_renameFolder":
+        return IsRenameFolderEnabled();
       case "button_getNewMessages":
-			case "cmd_getNewMessages":
+      case "cmd_getNewMessages":
       case "cmd_getMsgsForAuthAccounts":
         return IsGetNewMessagesEnabled();
-			case "cmd_getNextNMessages":
-				return IsGetNextNMessagesEnabled();
-			case "cmd_emptyTrash":
-				return IsEmptyTrashEnabled();
-			case "cmd_compactFolder":
-				return IsCompactFolderEnabled();
-			case "cmd_setFolderCharset":
-				return IsFolderCharsetEnabled();
+      case "cmd_getNextNMessages":
+        return IsGetNextNMessagesEnabled();
+      case "cmd_emptyTrash":
+        return IsEmptyTrashEnabled();
+      case "cmd_compactFolder":
+        return IsCompactFolderEnabled();
+      case "cmd_setFolderCharset":
+        return IsFolderCharsetEnabled();
       case "cmd_close":
       case "cmd_toggleWorkOffline":
       case "cmd_synchronizeOffline":
@@ -391,11 +391,11 @@ var DefaultController =
             case "cmd_selectFlagged":
                 // disable select flagged until I finish the code in nsMsgDBView.cpp
                 return false;
-			default:
-				return false;
-		}
-		return false;
-	},
+      default:
+        return false;
+    }
+    return false;
+  },
 
 	doCommand: function(command)
 	{
