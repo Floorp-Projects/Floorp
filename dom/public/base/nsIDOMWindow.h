@@ -37,6 +37,7 @@ class nsIDOMHistory;
 class nsIDOMWindowCollection;
 class nsIDOMEvent;
 class nsISidebar;
+class nsISupports;
 class nsIDOMWindow;
 class nsIControllers;
 
@@ -199,6 +200,12 @@ public:
   NS_IMETHOD    Escape(const nsString& aStr, nsString& aReturn)=0;
 
   NS_IMETHOD    Unescape(const nsString& aStr, nsString& aReturn)=0;
+
+  NS_IMETHOD    AddXPConnectObject(const nsString& aId, nsISupports* aXPConnectObj)=0;
+
+  NS_IMETHOD    RemoveXPConnectObject(const nsString& aId, nsISupports* aXPConnectObj)=0;
+
+  NS_IMETHOD    GetXPConnectObject(const nsString& aId, nsISupports** aReturn)=0;
 };
 
 
@@ -285,6 +292,9 @@ public:
   NS_IMETHOD    UpdateCommands(const nsString& aAction);  \
   NS_IMETHOD    Escape(const nsString& aStr, nsString& aReturn);  \
   NS_IMETHOD    Unescape(const nsString& aStr, nsString& aReturn);  \
+  NS_IMETHOD    AddXPConnectObject(const nsString& aId, nsISupports* aXPConnectObj);  \
+  NS_IMETHOD    RemoveXPConnectObject(const nsString& aId, nsISupports* aXPConnectObj);  \
+  NS_IMETHOD    GetXPConnectObject(const nsString& aId, nsISupports** aReturn);  \
 
 
 
@@ -371,6 +381,9 @@ public:
   NS_IMETHOD    UpdateCommands(const nsString& aAction) { return _to UpdateCommands(aAction); }  \
   NS_IMETHOD    Escape(const nsString& aStr, nsString& aReturn) { return _to Escape(aStr, aReturn); }  \
   NS_IMETHOD    Unescape(const nsString& aStr, nsString& aReturn) { return _to Unescape(aStr, aReturn); }  \
+  NS_IMETHOD    AddXPConnectObject(const nsString& aId, nsISupports* aXPConnectObj) { return _to AddXPConnectObject(aId, aXPConnectObj); }  \
+  NS_IMETHOD    RemoveXPConnectObject(const nsString& aId, nsISupports* aXPConnectObj) { return _to RemoveXPConnectObject(aId, aXPConnectObj); }  \
+  NS_IMETHOD    GetXPConnectObject(const nsString& aId, nsISupports** aReturn) { return _to GetXPConnectObject(aId, aReturn); }  \
 
 
 extern nsresult NS_InitWindowClass(nsIScriptContext *aContext, nsIScriptGlobalObject *aGlobal);
