@@ -73,6 +73,7 @@ namespace JSTypes {
         JSValue() : f64(0.0) {}
             
         explicit JSValue(float64 f64) : f64(f64) {}
+        explicit JSValue(JSObject* obj) : object(obj) {}
     };
 
 #if defined(XP_MAC)
@@ -93,6 +94,8 @@ namespace JSTypes {
      */
     typedef std::vector<JSValue, gc_allocator<JSValue> > JSValues;
 
+    extern const JSValue kUndefinedValue;
+
     /**
      * Basic behavior of all JS objects, mapping a name to a value.
      * This is provided mainly to avoid having an awkward implementation
@@ -101,12 +104,36 @@ namespace JSTypes {
      */
     class JSMap : public gc_base {
     protected:
-        std::map<String, JSValue, std::less<String>,
-            gc_map_allocator> properties;
+        typedef std::map<String, JSValue, std::less<String>, gc_map_allocator> JSProperties;
+        JSProperties mProperties;
+        JSMap* mPrototype;
     public:
         JSValue& operator[](const String& name)
         {
-            return properties[name];
+            return mProperties[name];
+        }
+        
+        const JSValue& getProperty(const String& name) const
+        {
+        #ifdef XP_MAC
+            JSProperties::const_iterator i = mProperties.find(name);
+            if (i != mProperties.end())
+                return i->second;
+        #else
+            // XXX should use map.find() to do this efficiently, but
+            // unfortunately, find() returns an iterator that is different
+            // on different STL implementations.
+            if (mProperties.count(name))
+                return mProperties[name];
+        #endif
+            if (mPrototype)
+                return mPrototype->getProperty(name);
+            return kUndefinedValue;
+        }
+        
+        JSValue& setProperty(const String& name, const JSValue& value)
+        {
+            return (mProperties[name] = value);
         }
     };
 
@@ -131,7 +158,7 @@ namespace JSTypes {
     public:
         JSValue& defineProperty(const String& name, JSValue &v)
         {
-            return (properties[name] = v);
+            return (mProperties[name] = v);
         }
                 
         // FIXME:  need to copy the ICodeModule's instruction stream.    
@@ -139,10 +166,10 @@ namespace JSTypes {
         {
             JSValue value;
             value.function = new JSFunction(iCode);
-            return properties[name] = value;
+            return mProperties[name] = value;
         }
     };
-        
+    
     /**
      * Private representation of a JavaScript array.
      */
