@@ -223,7 +223,7 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
         delete inst;         
     }
     else {
-      NS_RELEASE(inst);
+//      NS_RELEASE(inst);
     }
         
     return res;
