@@ -803,10 +803,10 @@ nsMsgFolderDataSource::OnItemUnicharPropertyChanged(nsISupports *item,
                                                     const PRUnichar *oldValue,
                                                     const PRUnichar *newValue)
 {
-  nsresult rv;
+  nsresult rv=NS_OK;
 
   if (kNameAtom == property) {
-    nsCOMPtr<nsIRDFResource> resource = do_QueryInterface(item);
+    nsCOMPtr<nsIRDFResource> resource = do_QueryInterface(item, &rv);
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(item, &rv);
       if (NS_SUCCEEDED(rv)) {
