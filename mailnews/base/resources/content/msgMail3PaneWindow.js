@@ -377,17 +377,16 @@ function verifyAccounts() {
 
 
 function loadStartPage() {
-
-	var startpage = "about:blank";
-
     try {
 		startpageenabled= pref.GetBoolPref("mailnews.start_page.enabled");
         
-		if (startpageenabled)
+		if (startpageenabled) {
 			startpage = pref.CopyCharPref("mailnews.start_page.url");
-        window.frames["messagepane"].location = startpage;
-
-        dump("start message pane with: " + startpage + "\n");
+            if (startpage != "") {
+                window.frames["messagepane"].location = startpage;
+                dump("start message pane with: " + startpage + "\n");
+            }
+        }
 	}
     catch (ex) {
         dump("Error loading start page.\n");
