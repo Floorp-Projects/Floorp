@@ -35,7 +35,6 @@
 #include "nsILoadGroup.h"
 #include "nsIHistoryEntry.h"
 
-#include "nsIWebBrowserPrint.h"
 #include "nsIPrintOptions.h"
 
 #include "nsIDOMEventReceiver.h"

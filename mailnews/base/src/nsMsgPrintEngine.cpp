@@ -143,24 +143,24 @@ nsMsgPrintEngine::OnStateChange(nsIWebProgress* aWebProgress,
           mDocShell->GetContentViewer(getter_AddRefs(mContentViewer));  
           if (mContentViewer) 
           {
-            mViewerFile = do_QueryInterface(mContentViewer);
-            if (mViewerFile) 
+            mWebBrowserPrint = do_QueryInterface(mContentViewer);
+            if (mWebBrowserPrint) 
             {
-              if (!mPrintSettings) {
+              if (!mPrintSettings) 
+              {
                 nsCOMPtr<nsIPrintOptions> printService = do_GetService(kPrintOptionsCID, &rv);
-                if (NS_SUCCEEDED(rv)) {
-                  if (mPrintSettings == nsnull) {
-                    printService->CreatePrintSettings(getter_AddRefs(mPrintSettings));
-                  }
+                if (NS_SUCCEEDED(rv)) 
+                {
+                  printService->CreatePrintSettings(getter_AddRefs(mPrintSettings));
                   NS_ASSERTION(mPrintSettings, "You can't PrintPreview without a PrintSettings!");
                 }
               }
-
-              rv = mViewerFile->Print((mCurrentlyPrintingURI != 0), mPrintSettings, (nsIWebProgressListener *)this);
+              mPrintSettings->SetPrintSilent(mCurrentlyPrintingURI != 0);
+              rv = mWebBrowserPrint->Print(mPrintSettings, (nsIWebProgressListener *)this);
 
               if (NS_FAILED(rv))
               {
-                mViewerFile = nsnull;
+                mWebBrowserPrint = nsnull;
                 mContentViewer = nsnull;
                 PRBool isPrintingCancelled = PR_FALSE;
                 if (mPrintSettings)

@@ -53,7 +53,8 @@
 #include "nsIURI.h"
 #include "nsIWebBrowserPersist.h"
 #include "nsCWebBrowserPersist.h"
-#include "nsIPrintSettings.h"
+#include "nsIWebBrowserPrint.h"
+#include "nsIServiceManager.h"
 
 // for painting the background window
 #include "nsIRenderingContext.h"
@@ -61,12 +62,6 @@
 
 // Printing Includes
 #include "nsIContentViewer.h"
-#include "nsIContentViewerFile.h"
-
-// Print Options
-#include "nsIPrintOptions.h"
-#include "nsGfxCIID.h"
-#include "nsIServiceManager.h"
 
 // PSM2 includes
 #include "nsISecureBrowserUI.h"
@@ -159,7 +154,6 @@ NS_INTERFACE_MAP_BEGIN(nsWebBrowser)
     NS_INTERFACE_MAP_ENTRY(nsIWebBrowserSetup)
     NS_INTERFACE_MAP_ENTRY(nsIWebBrowserPersist)
     NS_INTERFACE_MAP_ENTRY(nsIWebBrowserFocus)
-    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserPrint)
     NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
     NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
@@ -175,8 +169,22 @@ NS_IMETHODIMP nsWebBrowser::GetInterface(const nsIID& aIID, void** aSink)
    if(NS_SUCCEEDED(QueryInterface(aIID, aSink)))
       return NS_OK;
 
-   if(mDocShell)
-      return mDocShellAsReq->GetInterface(aIID, aSink);
+   if (mDocShell) {
+       if (aIID.Equals(NS_GET_IID(nsIWebBrowserPrint))) {
+           nsCOMPtr<nsIContentViewer> viewer;
+           mDocShell->GetContentViewer(getter_AddRefs(viewer));
+           if (viewer) {
+               nsCOMPtr<nsIWebBrowserPrint> webBrowserPrint(do_QueryInterface(viewer));
+               nsIWebBrowserPrint* print = (nsIWebBrowserPrint*)webBrowserPrint.get();
+               NS_ASSERTION(print, "This MUST support this interface!");
+               NS_ADDREF(print);
+               *aSink = print;
+               return NS_OK;
+           }
+       } else {
+           return mDocShellAsReq->GetInterface(aIID, aSink);
+       }
+   }
 
    return NS_NOINTERFACE;
 }
@@ -1758,152 +1766,6 @@ NS_IMETHODIMP nsWebBrowser::GetFocusedElement(nsIDOMElement * *aFocusedElement)
 
 NS_IMETHODIMP nsWebBrowser::SetFocusedElement(nsIDOMElement * aFocusedElement)
 {
-  return NS_OK;
-}
-
-
-/* helper function */
-nsresult nsWebBrowser::DoPrintOrPrintPreview(nsIDOMWindow *aDOMWindow, 
-                                             nsIPrintSettings *aThePrintSettings,
-                                             nsIWebProgressListener *aProgressListener,
-                                             PRBool            aDoPrinting)
-{
-  // this is if we want to have the ability to switch between having 
-  // each window have their own PrintSettings, or having them all share it.
-#ifdef ENABLE_GLOBAL_PRINTSETTINGS
-  PRBool useGlobalPrintSettings = PR_FALSE;
-  nsresult rv = NS_ERROR_FAILURE;
-  nsCOMPtr<nsIPrintOptions> printService = do_GetService(kPrintOptionsCID, &rv);
-  if (NS_SUCCEEDED(rv) && printService) {
-    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
-    if (pref) {
-      pref->GetBoolPref(&useGlobalPrintSettings);
-      if (useGlobalPrintSettings && aThePrintSettings != nsnull) {
-        printService->GetPrintSettingsValues("print.use_global_printsettings", aThePrintSettings);
-      }
-    }
-  }
-#endif
-
-  nsresult rv = NS_ERROR_FAILURE;
-  // XXX this next line may need to be changed
-  // it is unclear what the correct way is to get the document.
-  nsCOMPtr<nsIDOMWindow> thisDOMWin;
-  GetContentDOMWindow(getter_AddRefs(thisDOMWin));
-  if (aDOMWindow == thisDOMWin.get()) {
-     nsCOMPtr<nsIContentViewer> contentViewer;
-     mDocShell->GetContentViewer(getter_AddRefs(contentViewer));
-     if (contentViewer) {
-       nsCOMPtr<nsIContentViewerFile> contentViewerFile(do_QueryInterface(contentViewer));
-       if (contentViewerFile) {
-         if (aDoPrinting) {
-           // should we print silent?
-           PRBool printSilent = PR_FALSE;
-           if (aThePrintSettings) {
-             aThePrintSettings->GetPrintSilent(&printSilent);
-           }
-           rv = contentViewerFile->Print(printSilent, aThePrintSettings, aProgressListener);
-         } else {
-           rv = contentViewerFile->PrintPreview(aThePrintSettings);
-         }
-       }
-     }
-  }
-
-#ifdef ENABLE_GLOBAL_PRINTSETTINGS
-  if (useGlobalPrintSettings && aThePrintSettings != nsnull && printService) {
-    printService->SetPrintSettingsValues(aThePrintSettings);
-  }
-#endif
-
-  return rv;
-}
-
-//*****************************************************************************
-// nsWebBrowser::nsIWebBrowserPrint
-//*****************************************************************************   
-
-/* void Print (in nsIDOMWindow aDOMWindow, in nsIPrintSettings aThePrintSettings); */
-NS_IMETHODIMP nsWebBrowser::Print(nsIDOMWindow *aDOMWindow, 
-                                  nsIPrintSettings *aThePrintSettings,
-                                  nsIWebProgressListener * aProgressListener)
-{
-  return DoPrintOrPrintPreview(aDOMWindow, aThePrintSettings, aProgressListener, PR_TRUE);
-}
-
-/* void PrintPreview (in nsIPrintSettings aThePrintSettings); */
-NS_IMETHODIMP nsWebBrowser::PrintPreview(nsIDOMWindow *aDOMWindow, 
-                                         nsIPrintSettings *aThePrintSettings)
-{
-  return DoPrintOrPrintPreview(aDOMWindow, aThePrintSettings, nsnull, PR_FALSE);
-}
-
-  /* void Cancel (); */
-NS_IMETHODIMP nsWebBrowser::Cancel(void)
-{
-  nsresult rv;
-  nsCOMPtr<nsIPrintOptions> printService = 
-           do_GetService(kPrintOptionsCID, &rv);
-  if (NS_SUCCEEDED(rv) && printService) {
-    return printService->SetIsCancelled(PR_TRUE);
-  }
-  return NS_OK;
-}
-
-/* attribute nsIPrintSettings printSettings; */
-/**
- * Creates a PrintSettings Object to be used for Printing 
- */
-NS_IMETHODIMP nsWebBrowser::GetPrintSettings(nsIPrintSettings * *aPrintSettings)
-{
-  nsresult rv = NS_OK;
-  if (!mPrintSettings) {
-    nsCOMPtr<nsIPrintOptions> printService = do_GetService(kPrintOptionsCID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      printService->CreatePrintSettings(getter_AddRefs(mPrintSettings));
-    }
-  }
-  *aPrintSettings = mPrintSettings;
-  NS_IF_ADDREF(*aPrintSettings);
-  return rv;
-}
-
-NS_IMETHODIMP nsWebBrowser::SetPrintSettings(nsIPrintSettings * aPrintSettings)
-{
-  mPrintSettings = aPrintSettings;
-  return NS_OK;
-}
-
-
-/* attribute nsIPrintSettings globalPrintSettings; */
-/**
- * gets/set the PS into the the PrintOptions
- */
-NS_IMETHODIMP nsWebBrowser::GetGlobalPrintSettings(nsIPrintSettings * *aPrintSettings)
-{
-  NS_ENSURE_ARG_POINTER(aPrintSettings);
-  NS_ENSURE_ARG_POINTER(*aPrintSettings);
-
-  nsresult rv = NS_OK;
-  if (aPrintSettings != nsnull && *aPrintSettings != nsnull) {
-    nsCOMPtr<nsIPrintOptions> printService = do_GetService(kPrintOptionsCID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      printService->GetPrintSettingsValues(aPrintSettings);
-    }
-  }
-  *aPrintSettings = mPrintSettings;
-  NS_IF_ADDREF(*aPrintSettings);
-  return rv;
-}
-
-NS_IMETHODIMP nsWebBrowser::SetGlobalPrintSettings(nsIPrintSettings * aPrintSettings)
-{
-  NS_ENSURE_ARG_POINTER(aPrintSettings);
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIPrintOptions> printService = do_GetService(kPrintOptionsCID, &rv);
-  if (NS_SUCCEEDED(rv)) {
-    printService->SetPrintSettingsValues(aPrintSettings);
-  }
   return NS_OK;
 }
 

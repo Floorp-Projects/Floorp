@@ -61,12 +61,18 @@
 #include "nsIProfileChangeStatus.h"
 #include "nsIURI.h"
 #include "plstr.h"
+#include "nsIInterfaceRequestor.h"
 
 // Local header files
 #include "winEmbed.h"
 #include "WebBrowserChrome.h"
 #include "WindowCreator.h"
 #include "resource.h"
+
+// Printing header files
+#include "nsIPrintSettings.h"
+#include "nsIWebBrowserPrint.h"
+
 
 #define MAX_LOADSTRING 100
 
@@ -592,10 +598,12 @@ BOOL CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
     }
     nsCOMPtr<nsIWebBrowser> webBrowser;
     nsCOMPtr<nsIWebNavigation> webNavigation;
+    nsCOMPtr<nsIWebBrowserPrint> webBrowserPrint;
     if (chrome)
     {
         chrome->GetWebBrowser(getter_AddRefs(webBrowser));
         webNavigation = do_QueryInterface(webBrowser);
+        webBrowserPrint = do_GetInterface(webBrowser);
     }
 
     // Test the message
@@ -680,16 +688,17 @@ BOOL CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                 //       contentviewer AT ALL. This code below will break one
                 //       day but will have to do until the embedding API has
                 //       a cleaner way to do the same thing.
-
-                nsCOMPtr <nsIDocShell> rootDocShell = do_GetInterface(webBrowser);
-                nsCOMPtr<nsIContentViewer> pContentViewer;
-                nsresult res = rootDocShell->GetContentViewer(getter_AddRefs(pContentViewer));
-
-                if (NS_SUCCEEDED(res))
-                {
-                    nsCOMPtr<nsIContentViewerFile> spContentViewerFile = do_QueryInterface(pContentViewer); 
-                    spContentViewerFile->Print(PR_TRUE, nsnull, (nsIWebProgressListener*)nsnull);
-                }
+              if (webBrowserPrint)
+              {
+                  nsCOMPtr<nsIPrintSettings> printSettings;
+                  webBrowserPrint->GetGlobalPrintSettings(getter_AddRefs(printSettings));
+                  NS_ASSERTION(printSettings, "You can't PrintPreview without a PrintSettings!");
+                  if (printSettings) 
+                  {
+                      printSettings->SetPrintSilent(PR_TRUE);
+                      webBrowserPrint->Print(printSettings, (nsIWebProgressListener*)nsnull);
+                  }
+              }
             }
             break;
 

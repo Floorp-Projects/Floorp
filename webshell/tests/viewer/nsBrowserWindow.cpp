@@ -2185,7 +2185,7 @@ nsBrowserWindow::ShowPrintPreview(PRInt32 aID)
   {
     nsCOMPtr<nsIContentViewerFile> viewerFile = do_QueryInterface(viewer);
     if (viewerFile) {
-      viewerFile->PrintPreview(nsnull);
+      //viewerFile->PrintPreview(nsnull);
     }
   }
 }
@@ -2200,7 +2200,7 @@ void nsBrowserWindow::DoPrint(void)
   {
     nsCOMPtr<nsIContentViewerFile> viewerFile = do_QueryInterface(viewer);
     if (viewerFile) {
-      viewerFile->Print(PR_FALSE, nsnull, (nsIWebProgressListener*)nsnull);
+      //viewerFile->Print(PR_FALSE, nsnull, (nsIWebProgressListener*)nsnull);
     }
   }
 }

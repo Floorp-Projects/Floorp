@@ -66,6 +66,7 @@ REQUIRES	= xpcom \
 		  mimetype \
 		  windowwatcher \
 		  profile \
+		  webBrowser_core \
 		  $(NULL)
 
 CPPSRCS		= \

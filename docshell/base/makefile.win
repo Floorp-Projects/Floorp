@@ -65,7 +65,7 @@ XPIDLSRCS=						\
 		.\nsIDocShellTreeOwner.idl			\
 		.\nsIContentViewer.idl		\
 		.\nsIContentViewerEdit.idl	\
-#		.\nsIContentViewerFile.idl	\
+		.\nsIContentViewerFile.idl	\
 		.\nsIMarkupDocumentViewer.idl	\
 		.\nsIScrollable.idl		\
 		.\nsITextScroll.idl		\

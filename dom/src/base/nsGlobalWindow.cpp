@@ -74,7 +74,7 @@
 #include "nsICharsetConverterManager.h"
 #include "nsICodebasePrincipal.h"
 #include "nsIContent.h"
-#include "nsIContentViewerFile.h"
+#include "nsIWebBrowserPrint.h"
 #include "nsIContentViewerEdit.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellLoadInfo.h"
@@ -1980,39 +1980,13 @@ NS_IMETHODIMP GlobalWindowImpl::Stop()
   return webNav->Stop(nsIWebNavigation::STOP_ALL);
 }
 
-nsresult GlobalWindowImpl::DoPrint(PRBool aDoPreview,
-                                   nsIPrintSettings* aPS)
-{
-  if (mDocShell) {
-    nsCOMPtr<nsIContentViewer> viewer;
-    mDocShell->GetContentViewer(getter_AddRefs(viewer));
-    if (viewer) {
-      nsCOMPtr<nsIContentViewerFile> viewerFile(do_QueryInterface(viewer));
-      if (viewerFile) {
-        if (aDoPreview) {
-          return viewerFile->PrintPreview(aPS);
-        } else {
-          return viewerFile->Print(PR_FALSE, aPS, nsnull);
-        }
-      }
-    }
-  }
-  return NS_OK;
-}
-
 NS_IMETHODIMP GlobalWindowImpl::Print()
 {
-  return DoPrint(PR_FALSE);
-}
-
-NS_IMETHODIMP GlobalWindowImpl::PrintPreview(nsIPrintSettings* aPS)
-{
-  return DoPrint(PR_TRUE, aPS);
-}
-
-NS_IMETHODIMP GlobalWindowImpl::PrintWithSettings(nsIPrintSettings* aPS)
-{
-  return DoPrint(PR_FALSE, aPS);
+  nsCOMPtr<nsIWebBrowserPrint> webBrowserPrint;
+  if (NS_SUCCEEDED(GetInterface(NS_GET_IID(nsIWebBrowserPrint), getter_AddRefs(webBrowserPrint)))) {
+    webBrowserPrint->Print(nsnull, nsnull);        
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP GlobalWindowImpl::MoveTo(PRInt32 aXPos, PRInt32 aYPos)
@@ -3404,13 +3378,32 @@ NS_IMETHODIMP GlobalWindowImpl::GetInterface(const nsIID & aIID, void **aSink)
   if (aIID.Equals(NS_GET_IID(nsIDocCharset))) {
     if (mDocShell) {
       nsCOMPtr<nsIDocCharset> docCharset(do_QueryInterface(mDocShell));
-      *aSink = docCharset;
+      nsIDocCharset* docCS = (nsIDocCharset*)docCharset.get();
+      NS_ASSERTION(docCS, "This MUST support this interface!");
+      NS_ADDREF(docCS);
+      *aSink = docCS;
     }
   }
   else if (aIID.Equals(NS_GET_IID(nsIWebNavigation))) {
     if (mDocShell) {
-      nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
+      nsCOMPtr<nsIWebNavigation> webNavigation(do_QueryInterface(mDocShell));
+      nsIWebNavigation* webNav = (nsIWebNavigation*)webNavigation.get();
+      NS_ASSERTION(webNav, "This MUST support this interface!");
+      NS_ADDREF(webNav);
       *aSink = webNav;
+    }
+  }
+  else if (aIID.Equals(NS_GET_IID(nsIWebBrowserPrint))) {
+    if (mDocShell) {
+      nsCOMPtr<nsIContentViewer> viewer;
+      mDocShell->GetContentViewer(getter_AddRefs(viewer));
+      if (viewer) {
+        nsCOMPtr<nsIWebBrowserPrint> webBrowserPrint(do_QueryInterface(viewer));
+        nsIWebBrowserPrint* print = (nsIWebBrowserPrint*)webBrowserPrint.get();
+        NS_ASSERTION(print, "This MUST support this interface!");
+        NS_ADDREF(print);
+        *aSink = print;
+      }
     }
   }
   else {

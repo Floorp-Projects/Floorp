@@ -69,8 +69,11 @@
 // gecko
 #include "nsLayoutCID.h"
 #include "nsIMarkupDocumentViewer.h"
-#include "nsIContentViewerFile.h"
 #include "nsIContentViewer.h" 
+#include "nsIWebShell.h" 
+
+// embedding
+#include "nsIWebBrowserPrint.h"
 
 /* for access to docshell */
 #include "nsIDOMWindowInternal.h"
@@ -1485,9 +1488,9 @@ NS_IMETHODIMP nsMessenger::DoPrint()
 
   if (viewer) 
   {
-    nsCOMPtr<nsIContentViewerFile> viewerFile = do_QueryInterface(viewer);
-    if (viewerFile) {
-      rv = viewerFile->Print(PR_FALSE, nsnull, (nsIWebProgressListener*)nsnull);
+    nsCOMPtr<nsIWebBrowserPrint> webBrowserPrint = do_QueryInterface(viewer);
+    if (webBrowserPrint) {
+      rv = webBrowserPrint->Print(nsnull, (nsIWebProgressListener*)nsnull);
     }
 #ifdef DEBUG_MESSENGER
     else {

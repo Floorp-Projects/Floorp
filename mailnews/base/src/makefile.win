@@ -60,6 +60,7 @@ REQUIRES	= xpcom \
 		  msgsearch \
 		  layout_xul \
 		  profile \
+		  webBrowser_core \
 		  $(NULL)
 
 include <$(DEPTH)\config\config.mak>

@@ -982,10 +982,10 @@ void CBrowserView::OnFilePrint()
   nsCOMPtr<nsIDOMWindow> domWindow;
 	mWebBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
   if(domWindow) {
-	  nsCOMPtr<nsIWebBrowserPrint> print(do_GetInterface(mWebBrowser));
+    nsCOMPtr<nsIWebBrowserPrint> print(do_GetInterface(mWebBrowser));
 	  if(print)
 	  {
-      CPrintProgressDialog  dlg(mWebBrowser, domWindow, m_PrintSettings);
+      CPrintProgressDialog  dlg(mWebBrowser, m_PrintSettings);
 
 	    nsCOMPtr<nsIURI> currentURI;
 	    nsresult rv = mWebNav->GetCurrentURI(getter_AddRefs(currentURI));

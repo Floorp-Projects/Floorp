@@ -47,13 +47,13 @@
 #include "nsIWebBrowserSetup.h"
 #include "nsIWebBrowserPersist.h"
 #include "nsIWebBrowserFocus.h"
-#include "nsIWebBrowserPrint.h"
 #include "nsIWindowWatcher.h"
 #include "nsIPrintSettings.h"
 
 #include "nsVoidArray.h"
 #include "nsWeakPtr.h"
 
+class nsIContentViewerFile;
 
 class nsWebBrowserInitInfo
 {
@@ -90,7 +90,6 @@ class nsWebBrowser : public nsIWebBrowser,
                      public nsIInterfaceRequestor,
                      public nsIWebBrowserPersist,
                      public nsIWebBrowserFocus,
-                     public nsIWebBrowserPrint,
                      public nsIWebProgressListener,
                      public nsSupportsWeakReference
 {
@@ -110,7 +109,6 @@ public:
     NS_DECL_NSIWEBBROWSERSETUP
     NS_DECL_NSIWEBBROWSERPERSIST
     NS_DECL_NSIWEBBROWSERFOCUS
-    NS_DECL_NSIWEBBROWSERPRINT
     NS_DECL_NSIWEBPROGRESSLISTENER
 
 protected:
@@ -123,12 +121,6 @@ protected:
     NS_IMETHOD BindListener(nsISupports *aListener, const nsIID& aIID);
     NS_IMETHOD UnBindListener(nsISupports *aListener, const nsIID& aIID);
     NS_IMETHOD EnableGlobalHistory(PRBool aEnable);
-
-    // helper function for Printing and Print Preview 
-    nsresult DoPrintOrPrintPreview(nsIDOMWindow *aDOMWindow, 
-                                   nsIPrintSettings *aThePrintSettings,
-                                   nsIWebProgressListener* aPrgressListener,
-                                   PRBool            aDoPrinting);
 
     static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
 

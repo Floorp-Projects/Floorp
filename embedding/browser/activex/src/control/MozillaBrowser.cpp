@@ -1446,16 +1446,11 @@ HRESULT CMozillaBrowser::PrintDocument(BOOL promptUser)
     }
 
     // Print the contents
-    nsCOMPtr<nsIWebBrowserPrint> browserAsPrint = do_QueryInterface(mWebBrowser);
-    nsCOMPtr<nsIDOMWindow> window;
-    mWebBrowser->GetContentDOMWindow(getter_AddRefs(window));
-    if (window)
-    {
-        PrintListener *listener = new PrintListener;
-        nsCOMPtr<nsIWebProgressListener> printListener = do_QueryInterface(listener);
-        browserAsPrint->Print(window, nsnull, nsnull);
-        listener->WaitForComplete();
-    }
+    nsCOMPtr<nsIWebBrowserPrint> browserAsPrint = do_GetInterface(mWebBrowser);
+    PrintListener *listener = new PrintListener;
+    nsCOMPtr<nsIWebProgressListener> printListener = do_QueryInterface(listener);
+    browserAsPrint->Print(nsnull, nsnull);
+    listener->WaitForComplete();
 
     if (printService)
     {

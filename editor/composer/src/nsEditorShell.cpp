@@ -118,6 +118,7 @@
 #include "nsHTMLTags.h"
 #include "nsEditorParserObserver.h"
 #include "nsIDOMEventReceiver.h"
+#include "nsIWebBrowserPrint.h"
 
 ///////////////////////////////////////
 
@@ -1800,9 +1801,9 @@ nsEditorShell::Print()
   mContentAreaDocShell->GetContentViewer(getter_AddRefs(viewer));    
   if (nsnull != viewer) 
   {
-    nsCOMPtr<nsIContentViewerFile> viewerFile = do_QueryInterface(viewer);
-    if (viewerFile) {
-      NS_ENSURE_SUCCESS(viewerFile->Print(PR_FALSE, nsnull, (nsIWebProgressListener*)nsnull), NS_ERROR_FAILURE);
+    nsCOMPtr<nsIWebBrowserPrint> webBrowserPrint = do_QueryInterface(viewer);
+    if (webBrowserPrint) {
+      NS_ENSURE_SUCCESS(webBrowserPrint->Print(nsnull, (nsIWebProgressListener*)nsnull), NS_ERROR_FAILURE);
     }
   }
   return NS_OK;

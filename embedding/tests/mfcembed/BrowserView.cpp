@@ -268,9 +268,9 @@ HRESULT CBrowserView::CreateBrowser()
 	// Finally, show the web browser window
 	mBaseWindow->SetVisibility(PR_TRUE);
 
-	nsCOMPtr<nsIWebBrowserPrint> print(do_GetInterface(mWebBrowser));
+  nsCOMPtr<nsIWebBrowserPrint> print(do_GetInterface(mWebBrowser));
   if (print) {
-    print->GetPrintSettings(getter_AddRefs(m_PrintSettings));
+    print->GetNewPrintSettings(getter_AddRefs(m_PrintSettings));
   }
 
 	return S_OK;
@@ -994,39 +994,31 @@ void CBrowserView::OnFilePrint()
   else
 	NS_ASSERTION(PR_FALSE, "Could not get preferences service");
 
-  nsCOMPtr<nsIDOMWindow> domWindow;
-	mWebBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
-  if(domWindow) {
-	  nsCOMPtr<nsIWebBrowserPrint> print(do_GetInterface(mWebBrowser));
-	  if(print)
-	  {
-      CPrintProgressDialog  dlg(mWebBrowser, domWindow, m_PrintSettings);
+  nsCOMPtr<nsIWebBrowserPrint> print(do_GetInterface(mWebBrowser));
+	if(print)
+	{
+    CPrintProgressDialog  dlg(mWebBrowser, m_PrintSettings);
 
-	    nsCOMPtr<nsIURI> currentURI;
-	    nsresult rv = mWebNav->GetCurrentURI(getter_AddRefs(currentURI));
-      if(NS_SUCCEEDED(rv) || currentURI) 
-      {
-	      nsXPIDLCString path;
-	      currentURI->GetPath(getter_Copies(path));
-        dlg.SetURI(path.get());
-      }
-      m_bCurrentlyPrinting = TRUE;
-      dlg.DoModal();
-      m_bCurrentlyPrinting = FALSE;
+	  nsCOMPtr<nsIURI> currentURI;
+	  nsresult rv = mWebNav->GetCurrentURI(getter_AddRefs(currentURI));
+    if(NS_SUCCEEDED(rv) || currentURI) 
+    {
+	    nsXPIDLCString path;
+	    currentURI->GetPath(getter_Copies(path));
+      dlg.SetURI(path.get());
     }
+    m_bCurrentlyPrinting = TRUE;
+    dlg.DoModal();
+    m_bCurrentlyPrinting = FALSE;
   }
 }
 
 void CBrowserView::OnFilePrintPreview()
 {
-  nsCOMPtr<nsIDOMWindow> domWindow;
-	mWebBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
-  if(domWindow) {
-	  nsCOMPtr<nsIWebBrowserPrint> print(do_GetInterface(mWebBrowser));
-	  if(print)
-	  {
-      print->PrintPreview(domWindow, m_PrintSettings);
-    }
+  nsCOMPtr<nsIWebBrowserPrint> print(do_GetInterface(mWebBrowser));
+	if(print)
+	{
+    print->PrintPreview(m_PrintSettings);
   }
 }
 

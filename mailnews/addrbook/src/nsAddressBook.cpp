@@ -64,7 +64,6 @@
 #include "nsIAppShellService.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIContentViewer.h"
-#include "nsIContentViewerFile.h"
 #include "nsIDocShell.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
