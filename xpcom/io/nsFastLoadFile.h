@@ -299,22 +299,27 @@ class NS_COM nsFastLoadFileReader
                 PL_DHashTableFinish(&mURIMap);
         }
 
+        // These can't be static within GetID and GetSharpObjectEntry or the
+        // toolchains on HP-UX 10.20's, RH 7.0, and Mac OS X all barf at link
+        // time ("common symbols not allowed with MY_DHLIB output format", to
+        // quote the OS X rev of gcc).
+        static nsID gDummyID;
+        static nsObjectMapEntry gDummySharpObjectEntry;
+
         const nsID& GetID(NSFastLoadID aFastId) const {
-            static nsID dummy;
             PRUint32 index = aFastId - 1;
             NS_ASSERTION(index < mNumIDs, "aFastId out of range");
             if (index >= mNumIDs)
-                return dummy;
+                return gDummyID;
             return mIDMap[index];
         }
 
         nsObjectMapEntry&
         GetSharpObjectEntry(NSFastLoadOID aOID) const {
-            static nsObjectMapEntry dummy;
             PRUint32 index = MFL_OID_TO_SHARP_INDEX(aOID);
             NS_ASSERTION(index < mNumSharpObjects, "aOID out of range");
             if (index >= mNumSharpObjects)
-                return dummy;
+                return gDummySharpObjectEntry;
             return mObjectMap[index];
         }
 

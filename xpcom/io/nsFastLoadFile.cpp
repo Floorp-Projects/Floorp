@@ -230,6 +230,9 @@ static const char magic[] = MFL_FILE_MAGIC;
 
 // -------------------------- nsFastLoadFileReader --------------------------
 
+nsID nsFastLoadFileReader::nsFastLoadFooter::gDummyID;
+nsFastLoadFileReader::nsObjectMapEntry nsFastLoadFileReader::nsFastLoadFooter::gDummySharpObjectEntry; 
+
 NS_IMPL_ISUPPORTS_INHERITED3(nsFastLoadFileReader,
                              nsBinaryInputStream,
                              nsIObjectInputStream,
