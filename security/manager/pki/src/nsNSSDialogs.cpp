@@ -731,15 +731,14 @@ nsNSSDialogs::ChooseCertificate(nsIInterfaceRequestor *ctx, const PRUnichar *cn,
   nsCOMPtr<nsIDialogParamBlock> block(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1"));
   if (!block) return NS_ERROR_FAILURE;
 
-  // void ChangePassword(in wstring tokenName, out int status);
+  block->SetNumberStrings(4+count*2);
+
   rv = block->SetString(1, cn);
   if (NS_FAILED(rv)) return rv;
 
-  // void ChangePassword(in wstring tokenName, out int status);
   rv = block->SetString(2, organization);
   if (NS_FAILED(rv)) return rv;
 
-  // void ChangePassword(in wstring tokenName, out int status);
   rv = block->SetString(3, issuer);
   if (NS_FAILED(rv)) return rv;
 
@@ -788,6 +787,8 @@ nsNSSDialogs::PickCertificate(nsIInterfaceRequestor *ctx, const PRUnichar *title
 
   nsCOMPtr<nsIDialogParamBlock> block(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1"));
   if (!block) return NS_ERROR_FAILURE;
+
+  block->SetNumberStrings(3+count*2);
 
   rv = block->SetString(1, title);
   if (NS_FAILED(rv)) return rv;
@@ -938,6 +939,8 @@ nsNSSDialogs::ChooseToken(nsIInterfaceRequestor *aCtx, const PRUnichar **aTokenL
 
   nsCOMPtr<nsIDialogParamBlock> block(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1"));
   if (!block) return NS_ERROR_FAILURE;
+
+  block->SetNumberStrings(aCount);
 
   for (i = 0; i < aCount; i++) {
 	  rv = block->SetString(i+1, aTokenList[i]);
