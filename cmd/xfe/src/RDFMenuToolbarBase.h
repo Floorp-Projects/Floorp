@@ -216,6 +216,8 @@ protected:
 	XP_Bool		getOnlyHeaders		  ();
 
     void        setItemLabelString    (Widget menu, HT_Resource entry);
+    XmString getStringFromResource(HT_Resource );
+    void getStyleAndLayout(HT_Resource , int32 *, unsigned char * );
 
     // Item callbacks
     static void      item_armed_cb      (Widget,XtPointer,XtPointer);
@@ -240,6 +242,7 @@ private:
 
     // Format item blah blah blah
     static XmString  formatItem         (HT_Resource        entry, 
+                                         Boolean            no_indent,
                                          int16              charset);
 
     // Obtain an internationallized XmString from an entry

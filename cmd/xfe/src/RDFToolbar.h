@@ -87,6 +87,9 @@ private:
     XFE_Frame *	    _frame;
     XFE_Toolbox *   _toolbox;
     Widget          _toolbar;
+
+  // callbacks
+    static void tooltipCB(Widget, XtPointer,  XmString *, Boolean *);
 };
 
 #endif /*_xfe_rdftoolbar_*/

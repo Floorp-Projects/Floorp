@@ -57,6 +57,7 @@
 #define D(x)
 #endif
 
+extern "C" RDF_NCVocab  gNavCenter;
 #define CASCADE_WC(fancy) \
 ( (fancy) ? xfeBmCascadeWidgetClass : xmCascadeButtonWidgetClass )
 
@@ -356,8 +357,7 @@ XFE_RDFMenuToolbarBase::item_activated_cb(Widget       w,
         XP_ASSERT( context != NULL );
         XP_ASSERT( he != NULL );
 
-        address = he->address;
-        
+        address = he->address;        
         title = (he->title && *he->title) ? he->title : address;
 
         lastAccess = he->last_access;
@@ -1518,7 +1518,8 @@ XFE_RDFMenuToolbarBase::entryToXmString(HT_Resource        entry,
     char *                psz;
 
     tmp = XFE_RDFMenuToolbarBase::formatItem(entry,
-                                             INTL_DefaultWinCharSetID(NULL));
+                                       True,
+                                       INTL_DefaultWinCharSetID(NULL));
     
     // Mid truncate the name
     if (XmStringGetLtoR(tmp,XmSTRING_DEFAULT_CHARSET,&psz))
@@ -1545,62 +1546,133 @@ XFE_RDFMenuToolbarBase::entryToXmString(HT_Resource        entry,
 //////////////////////////////////////////////////////////////////////////
 XmString
 XFE_RDFMenuToolbarBase::formatItem(HT_Resource        entry, 
-                                   int16            charset)
+                             Boolean        no_indent,
+                             int16            charset)
 {
-  XmString xmstring;
+  XmString xmhead, xmtail, xmcombo;
+  int depth = (no_indent ? 0 : HT_GetItemIndentation(entry));
+  char head [255];
   char buf [1024];
-  char *name = HT_GetNodeName(entry);
+  int j = 0;
+  char *title = HT_GetNodeName(entry);
   char *url = HT_GetNodeURL(entry);
+  int indent = 2;
+  int left_offset = 2;
   XmFontList font_list;
+
+  if (! no_indent)
+    {
+      head [j++] = (HT_IsContainer(entry)
+                    ? (HT_IsContainerOpen(entry) ? '-' : '+') :
+                    HT_IsSeparator(entry) ? ' ' :
+                    /* ### item->last_visit == 0*/ 0 ? '?' : ' ');
+      while (j < ((depth * indent) + left_offset))
+          head [j++] = ' ';
+    }
+  head [j] = 0;
 
   if (HT_IsSeparator(entry))
     {
       strcpy (buf, "-------------------------");
     }
-  else if (name || url)
+  else if (title || url)
     {
-      fe_FormatDocTitle (name, url, buf, 1024);
+      fe_FormatDocTitle (title, url, buf, 1024);
     }
-#if CAN_HAVE_EMPTY_URL_ENTRIES
+#if 0
   else if (HT_IsUrl(entry))
     {
-      // It is a url entry with no url or title.  Very strange.
-      // The rdf backend currently disallows this.
       strcpy (buf, XP_GetString( XFE_GG_EMPTY_LL ) );
     }
 #endif
 
-  if (!*buf)
-  {
-      xmstring = 0;
-  }
-  else if (name || url)
-  {
-      xmstring = fe_ConvertToXmString ((unsigned char *) buf, charset, 
-                                       NULL, XmFONT_IS_FONT, &font_list);
-  }
+  if (!*head)
+    xmhead = 0;
   else
-  {
+    xmhead = XmStringSegmentCreate (head, "ICON", XmSTRING_DIRECTION_L_TO_R,
+                    False);
+
+  if (!*buf)
+    xmtail = 0;
+  else if (title || url)
+    xmtail = fe_ConvertToXmString ((unsigned char *) buf, charset, 
+                                   NULL, XmFONT_IS_FONT, &font_list);
+  else
+    {
       char *loc;
 
       loc = (char *) fe_ConvertToLocaleEncoding (charset,
                                                  (unsigned char *) buf);
-      xmstring = XmStringSegmentCreate (loc, "HEADING",
-                                        XmSTRING_DIRECTION_L_TO_R, False);
+      xmtail = XmStringSegmentCreate (loc, "HEADING",
+                                      XmSTRING_DIRECTION_L_TO_R, False);
       if (loc != buf)
       {
           XP_FREE(loc);
       }
-  }
+    }
 
-  if (xmstring)
-  {
-      return (xmstring);
-  }
+  if (xmhead && xmtail)
+    {
+      int size = XmStringLength (xmtail);
+
+      /*
+     There is a bug down under XmStringNConcat() where, in the process of
+     appending the two strings, it will read up to four bytes past the end
+     of the second string.  It doesn't do anything with the data it reads
+     from there, but people have been regularly crashing as a result of it,
+     because sometimes these strings end up at the end of the page!!
+
+     I tried making the second string a bit longer (by adding some spaces
+     to the end of `buf') and passing in a correspondingly smaller length
+     to XmStringNConcat(), but that causes it not to append *any* of the
+     characters in the second string.  So XmStringNConcat() would seem to
+     simply not work at all when the length isn't exactly the same as the
+     length of the second string.
+
+     Plan B is to simply realloc() the XmString to make it a bit larger,
+     so that we know that it's safe to go off the end.
+
+     The NULLs at the beginning of the data we append probably aren't
+     necessary, but they are read and parsed as a length, even though the
+     data is not used (with the current structure of the XmStringNConcat()
+     code.)  (The initialization of this memory is only necessary at all
+     to keep Purify from (rightly) squawking about it.)
+
+     And oh, by the way, the strncpy() down there, which I have verified
+     is doing strncpy( <the-right-place> , <the-string-below>, 15 )
+     actually writes 15 \000 bytes instead of four \000 bytes plus the
+     random text below.  So I seem to have stumbled across a bug in
+     strncpy() as well, even though it doesn't hose me.  THIS TIME. -- jwz
+       */
+#define MOTIF_BUG_BUFFER "\000\000\000\000 MOTIF BUG"
+#ifdef MOTIF_BUG_BUFFER
+      xmtail = (XmString) realloc ((void *) xmtail,
+                   size + sizeof (MOTIF_BUG_BUFFER));
+      strncpy (((char *) xmtail) + size, MOTIF_BUG_BUFFER,
+           sizeof (MOTIF_BUG_BUFFER));
+# undef MOTIF_BUG_BUFFER
+#endif /* MOTIF_BUG_BUFFER */
+
+      xmcombo = XmStringNConcat (xmhead, xmtail, size);
+    }
+  else if (xmhead)
+    {
+      xmcombo = xmhead;
+      xmhead = 0;
+    }
+  else if (xmtail)
+    {
+      xmcombo = xmtail;
+      xmtail = 0;
+    }
   else
-  {
-      return XmStringCreateLtoR ("", XmFONTLIST_DEFAULT_TAG);
-  }
+    {
+      xmcombo = XmStringCreateLtoR ("", XmFONTLIST_DEFAULT_TAG);
+    }
+
+  if (xmhead) XmStringFree (xmhead);
+  if (xmtail) XmStringFree (xmtail);
+  return (xmcombo);
 }
 //////////////////////////////////////////////////////////////////////////
 void 
@@ -1608,7 +1680,6 @@ XFE_RDFMenuToolbarBase::setItemLabelString(Widget item,HT_Resource entry)
 {
     XP_ASSERT( XfeIsAlive(item) );
     XP_ASSERT( entry != NULL );
-
     XP_ASSERT( XmIsLabel(item) || 
                XmIsLabelGadget(item) ||
                XfeIsLabel(item) );
@@ -1620,13 +1691,106 @@ XFE_RDFMenuToolbarBase::setItemLabelString(Widget item,HT_Resource entry)
     // Create am XmString from the entry
     XmString xmname = 
         XFE_RDFMenuToolbarBase::entryToXmString(entry, charSetInfo);
-    
+
     if (xmname != NULL)
     {
         XtVaSetValues(item,XmNlabelString,xmname,NULL);
 
         XmStringFree(xmname);
     }
+}
+//////////////////////////////////////////////////////////////////////////
+
+XmString
+XFE_RDFMenuToolbarBase::getStringFromResource(HT_Resource entry)
+{
+
+  XmString xmname;
+
+   XP_ASSERT( entry != NULL );
+
+    MWContext * context = _frame->getContext();
+    INTL_CharSetInfo charSetInfo =
+        LO_GetDocumentCharacterSetInfo(context);
+
+    // Create am XmString from the entry
+     xmname = 
+        XFE_RDFMenuToolbarBase::entryToXmString(entry, charSetInfo);
+
+    return(xmname);
+
+}
+//////////////////////////////////////////////////////////////////////////
+void
+XFE_RDFMenuToolbarBase::getStyleAndLayout(HT_Resource  entry, int32 * toolbar_style, unsigned char * layout)
+{
+    void * data = NULL;
+
+    /* Get the Toolbar displaymode from HT */
+    HT_GetTemplateData(HT_TopNode(HT_GetView(entry)), gNavCenter->toolbarDisplayMode, HT_COLUMN_STRING, &data);
+    if (!data)
+    {
+      /* No value provided initially. So get it from prefs and set in HT */
+      int result = PREF_GetIntPref("browser.chrome.toolbar_style", 
+                                 toolbar_style);
+
+       if (*toolbar_style == BROWSER_TOOLBAR_TEXT_ONLY)
+         HT_SetNodeData(HT_TopNode(HT_GetView(entry)), gNavCenter->toolbarDisplayMode, HT_COLUMN_STRING, "text");
+       else if (*toolbar_style == BROWSER_TOOLBAR_ICONS_ONLY)
+         HT_SetNodeData(HT_TopNode(HT_GetView(entry)), gNavCenter->toolbarDisplayMode, HT_COLUMN_STRING, "pictures");
+       else
+          HT_SetNodeData(HT_TopNode(HT_GetView(entry)), gNavCenter->toolbarDisplayMode, HT_COLUMN_STRING, "PicturesAndText");
+    }
+    else {
+      /* Value is found in HT */
+      char * answer = (char *) data;
+      
+      if ((!XP_STRCASECMP(answer, "text")))
+      { 
+         *toolbar_style = BROWSER_TOOLBAR_TEXT_ONLY;
+      }
+      else if ((!XP_STRCASECMP(answer, "icons")))
+      {
+         *toolbar_style = BROWSER_TOOLBAR_ICONS_ONLY;
+      }
+      else
+         *toolbar_style = BROWSER_TOOLBAR_ICONS_AND_TEXT;
+    }
+
+    if (*toolbar_style == BROWSER_TOOLBAR_ICONS_AND_TEXT) {
+
+       /* Get the Toolbar bitmap position from HT */
+       HT_GetTemplateData(HT_TopNode(HT_GetView(entry)), gNavCenter->toolbarBitmapPosition, HT_COLUMN_STRING, &data);
+       if (data)
+       {
+          char * answer = (char *) data;
+          if ((!XP_STRCASECMP(answer, "top")))
+          { 
+             *layout = XmBUTTON_LABEL_ON_BOTTOM;
+          }
+          else if ((!XP_STRCASECMP(answer, "side")))
+          {
+             *layout = XmBUTTON_LABEL_ON_RIGHT;
+          }
+       }
+       else {
+          // Value not provided. It is top for command buttons and side 
+          // for personal
+          if (ht_IsFECommand(entry))
+             *layout = XmBUTTON_LABEL_ON_BOTTOM;
+          else
+             *layout = XmBUTTON_LABEL_ON_RIGHT;
+       }
+    }
+    else if (*toolbar_style == BROWSER_TOOLBAR_ICONS_ONLY)
+    {
+          *layout = XmBUTTON_PIXMAP_ONLY;
+    } 
+    else if (*toolbar_style == BROWSER_TOOLBAR_TEXT_ONLY)
+    {
+          *layout = XmBUTTON_LABEL_ONLY;
+    }
+
 }
 //////////////////////////////////////////////////////////////////////////
 void

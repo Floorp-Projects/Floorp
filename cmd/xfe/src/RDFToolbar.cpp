@@ -24,11 +24,14 @@
 #include "Logo.h"
 
 #include "prefapi.h"
+#include "felocale.h"
+#include "intl_csi.h"
 
 #include <Xfe/ToolItem.h>
 #include <Xfe/ToolBar.h>
+#include <Xfe/ToolTip.h>
 
-#if DEBUG_slamm
+#if DEBUG_radha
 #define D(x) x
 #else
 #define D(x)
@@ -37,6 +40,18 @@
 #define MIN_TOOLBAR_HEIGHT				26
 #define MAX_CHILD_WIDTH					100
 #define LOGO_NAME						"logo"
+
+extern "C"  {
+extern RDF_NCVocab  gNavCenter;
+extern XmString fe_ConvertToXmString(unsigned char *, int16, fe_Font, XmFontType, XmFontList * );
+extern INTL_CharSetInfo LO_GetDocumentCharacterSetInfo(MWContext *);
+}
+
+typedef struct _tbarTooltipCBStruct {
+  HT_Resource entry;
+  XFE_RDFToolbar * obj;
+} tbarTooltipCBStruct;
+
 
 XFE_RDFToolbar::XFE_RDFToolbar(XFE_Frame * frame, 
                                XFE_Toolbox * toolbox,
@@ -290,9 +305,10 @@ XFE_RDFToolbar::updateRoot()
 XFE_RDFToolbar::configureXfeButton(Widget item,HT_Resource entry)
 {
     int32 toolbar_style;
+   unsigned char layout;
 
-    int result = PREF_GetIntPref("browser.chrome.toolbar_style", 
-                                 &toolbar_style);
+    getStyleAndLayout(entry, &toolbar_style, &layout);
+
 
     if (toolbar_style == BROWSER_TOOLBAR_TEXT_ONLY)
 	{
@@ -301,7 +317,7 @@ XFE_RDFToolbar::configureXfeButton(Widget item,HT_Resource entry)
 					  XmNpixmapMask,		XmUNSPECIFIED_PIXMAP,
 					  NULL);
 
-		XtVaSetValues(item,XmNbuttonLayout,XmBUTTON_LABEL_ONLY,NULL);
+		XtVaSetValues(item, XmNbuttonLayout, layout, NULL);
 	}
 	else
 	{
@@ -309,24 +325,6 @@ XFE_RDFToolbar::configureXfeButton(Widget item,HT_Resource entry)
 		Pixmap pixmapMask;
 
 		getPixmapsForEntry(entry,&pixmap,&pixmapMask,NULL,NULL);
-		
-        unsigned char layout;
-
-        if (ht_IsFECommand(entry))
-        {
-            if (toolbar_style == BROWSER_TOOLBAR_ICONS_ONLY)
-            {
-                layout = XmBUTTON_PIXMAP_ONLY;
-            } 
-            else
-            {
-                layout = XmBUTTON_LABEL_ON_BOTTOM;
-            }
-        }
-        else
-        {
-            layout = XmBUTTON_LABEL_ON_RIGHT;
-        }
         XtVaSetValues(item,
                       XmNpixmap,		pixmap,
                       XmNpixmapMask,	pixmapMask,
@@ -347,10 +345,10 @@ XFE_RDFToolbar::configureXfeButton(Widget item,HT_Resource entry)
 XFE_RDFToolbar::configureXfeCascade(Widget item,HT_Resource entry)
 {
     int32 toolbar_style;
-    PREF_GetIntPref("browser.chrome.toolbar_style", &toolbar_style);
+    unsigned char layout;
 
-    D(printf("XFE_RDFToolbar::configureXfeCascade: toolbar_style = %d\n",
-             toolbar_style););
+    getStyleAndLayout(entry, &toolbar_style, &layout);
+    D(printf("XFE_RDFToolbar::configureXfeCascade: toolbar_style = %d layout = %d\n", toolbar_style, layout););
 
     if (toolbar_style == BROWSER_TOOLBAR_TEXT_ONLY)
 	{
@@ -361,7 +359,7 @@ XFE_RDFToolbar::configureXfeCascade(Widget item,HT_Resource entry)
 					  XmNarmedPixmapMask,	XmUNSPECIFIED_PIXMAP,
 					  NULL);
 
-		XtVaSetValues(item,XmNbuttonLayout,XmBUTTON_LABEL_ONLY,NULL);
+		XtVaSetValues(item,XmNbuttonLayout,layout,NULL);
 	}
 	else
 	{
@@ -388,7 +386,7 @@ XFE_RDFToolbar::configureXfeCascade(Widget item,HT_Resource entry)
 
 		XtSetValues(item,av,ac);
 
-		XtVaSetValues(item,XmNbuttonLayout,XmBUTTON_LABEL_ON_RIGHT,NULL);
+		XtVaSetValues(item,XmNbuttonLayout,layout,NULL);
 	}
 
 #ifdef NOT_YET
@@ -400,6 +398,8 @@ XFE_RDFToolbar::configureXfeCascade(Widget item,HT_Resource entry)
 #endif
 }
 //////////////////////////////////////////////////////////////////////////
+
+
 Widget 
 XFE_RDFToolbar::createXfeButton(Widget parent,HT_Resource entry)
 {
@@ -411,13 +411,32 @@ XFE_RDFToolbar::createXfeButton(Widget parent,HT_Resource entry)
     Arg                     av[20];
     Cardinal                ac;
     ItemCallbackStruct *    data = NULL;
+    tbarTooltipCBStruct *   ttip = NULL;
 
     ac = 0;
     XtSetArg(av[ac],XmNuserData, entry);  ac++;
     XtSetArg(av[ac],XmNforceDimensionToMax, False);  ac++;
 
     button = XfeCreateButton(parent,"bookmarkButton",av,ac);
+    /*
+    XtManageChild(button);
+    XtRealizeWidget(button);
+    	XfeTipStringSetEnabledState(button, True);
+    XfeTipStringGlobalSetEnabledState(True);
+    */
+    XfeTipStringAdd(button);
+    ttip = XP_NEW_ZAP(tbarTooltipCBStruct);
+    ttip->obj = this;
+    ttip->entry = entry;
 
+    XfeTipStringSetObtainCallback(button, (XfeTipStringObtainCallback)tooltipCB, (XtPointer) ttip);
+
+#ifdef NOTYET
+    XfeDocStringGlobalSetEnabledState(True);
+    XfeDocStringAdd(button);
+    XfeDocStringSetObtainCallback(button, (XfeTipStringObtainCallback)tooltipCB, (XtPointer)this, (XtPointer) entry);
+    XfeDocStringSetEnabledState(button, True);
+#endif  /* NOTYET  */
     // Set the item's label
     setItemLabelString(button,entry);
 
@@ -474,12 +493,26 @@ XFE_RDFToolbar::createXfeCascade(Widget parent,HT_Resource entry)
     Arg                     av[5];
     Cardinal                ac;
     ItemCallbackStruct *    data = NULL;
+    tbarTooltipCBStruct *   ttip = NULL;
 
     ac = 0;
     XtSetArg(av[ac],XmNuserData, entry);  ac++;
     XtSetArg(av[ac],XmNforceDimensionToMax, False);  ac++;
 
     cascade = XfeCreateCascade(parent,"bookmarkCascade",av,ac);
+    /*
+    XtManageChild(cascade);
+    XtRealizeWidget(cascade);
+   	XfeTipStringSetEnabledState(cascade, True);
+    */
+    XfeTipStringAdd(cascade);
+    
+    ttip = XP_NEW_ZAP(tbarTooltipCBStruct);
+    ttip->obj = this;
+    ttip->entry = entry;
+    
+    XfeTipStringSetObtainCallback(cascade, (XfeTipStringObtainCallback)tooltipCB, (XtPointer) ttip);
+
 
     // Set the item's label
     setItemLabelString(cascade,entry);
@@ -494,6 +527,16 @@ XFE_RDFToolbar::createXfeCascade(Widget parent,HT_Resource entry)
 
     XtAddCallback(cascade,
                   XmNcascadingCallback,
+                  &XFE_RDFMenuToolbarBase::item_cascading_cb,
+                  (XtPointer) data);
+
+    XtAddCallback(cascade,
+                  XmNenterCallback,
+                  &XFE_RDFMenuToolbarBase::item_cascading_cb,
+                  (XtPointer) data);
+
+    XtAddCallback(cascade,
+                  XmNleaveCallback,
                   &XFE_RDFMenuToolbarBase::item_cascading_cb,
                   (XtPointer) data);
 
@@ -529,3 +572,37 @@ XFE_RDFToolbar::updateAppearance()
 	updateRoot();
 }
 //////////////////////////////////////////////////////////////////////////
+/* static */
+void
+XFE_RDFToolbar::tooltipCB(Widget w, XtPointer client_data, XmString * string_return, Boolean * need_to_free_string )
+{
+
+    tbarTooltipCBStruct * ttip = (tbarTooltipCBStruct * )client_data;
+    XFE_RDFToolbar * obj = (XFE_RDFToolbar *) ttip->obj;
+    HT_Resource  entry = (HT_Resource) ttip->entry;
+
+    void *        data=NULL;
+    XmFontList    font_list;
+    XmString      str = NULL;
+
+    HT_GetTemplateData(HT_TopNode(HT_GetView(entry)), gNavCenter->buttonTooltipText, HT_COLUMN_STRING, &data);
+    if (data) {
+       MWContext * context = (obj->getFrame())->getContext();
+       INTL_CharSetInfo charSetInfo =
+            LO_GetDocumentCharacterSetInfo(context);
+    
+       str = fe_ConvertToXmString((unsigned char *) data,
+                                        INTL_GetCSIWinCSID(charSetInfo) ,
+                                        NULL, XmFONT_IS_FONT, &font_list);
+
+    
+       *string_return = str;
+       *need_to_free_string = True;
+    }
+    else {
+      *string_return = obj->getStringFromResource(entry);
+      *need_to_free_string = True;
+    }
+    XP_FREE(ttip);
+
+}
