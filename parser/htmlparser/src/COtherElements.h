@@ -2251,7 +2251,6 @@ void CElementTable::InitializeElements() {
   
   CPhraseElement::Initialize(       mDfltElements[eHTMLTag_em],         eHTMLTag_em);
   CElement::Initialize(   mDfltElements[eHTMLTag_embed],                eHTMLTag_embed);
-  CBlockElement::Initialize(        mDfltElements[eHTMLTag_endnote],    eHTMLTag_endnote);
 
   CElement::Initialize(             mDfltElements[eHTMLTag_fieldset],   eHTMLTag_fieldset, CBlockElement::GetGroup(),  CFlowElement::GetContainedGroups());
   mDfltElements[eHTMLTag_fieldset].mIncludeKids=kFieldsetKids;

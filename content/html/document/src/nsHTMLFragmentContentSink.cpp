@@ -123,6 +123,8 @@ public:
   // nsIFragmentContentSink
   NS_IMETHOD GetFragment(nsIDOMDocumentFragment** aFragment);
   NS_IMETHOD SetTargetDocument(nsIDocument* aDocument);
+  NS_IMETHOD WillBuildContent();
+  NS_IMETHOD DidBuildContent();
 
   nsIContent* GetCurrentContent();
   PRInt32 PushContent(nsIContent *aContent);
@@ -140,13 +142,12 @@ public:
 
   nsresult Init();
 
-  PRBool mHitSentinel;
-  PRBool mSeenBody;
+  PRPackedBool mAllContent;
+  PRPackedBool mProcessing;
+  PRPackedBool mSeenBody;
 
-  nsIContent* mRoot;
-  nsIParser* mParser;
-  nsIDOMHTMLFormElement* mCurrentForm;
-  nsGenericHTMLElement* mCurrentMap;
+  nsCOMPtr<nsIContent> mRoot;
+  nsCOMPtr<nsIParser> mParser;
 
   nsVoidArray* mContentStack;
 
@@ -192,22 +193,14 @@ NS_NewHTMLFragmentContentSink(nsIFragmentContentSink** aResult)
 }
 
 nsHTMLFragmentContentSink::nsHTMLFragmentContentSink(PRBool aAllContent)
+  : mAllContent(aAllContent),
+    mProcessing(aAllContent),
+    mSeenBody(!aAllContent),
+    mContentStack(nsnull),
+    mText(nsnull),
+    mTextLength(0),
+    mTextSize(0)
 {
-  if (aAllContent) {
-    mHitSentinel = PR_TRUE;
-    mSeenBody = PR_FALSE;
-  } else {
-    mHitSentinel = PR_FALSE;
-    mSeenBody = PR_TRUE;
-  }
-  mRoot = nsnull;
-  mParser = nsnull;
-  mCurrentForm = nsnull;
-  mCurrentMap = nsnull;
-  mContentStack = nsnull;
-  mText = nsnull;
-  mTextLength = 0;
-  mTextSize = 0;
 }
 
 nsHTMLFragmentContentSink::~nsHTMLFragmentContentSink()
@@ -215,10 +208,6 @@ nsHTMLFragmentContentSink::~nsHTMLFragmentContentSink()
   // Should probably flush the text buffer here, just to make sure:
   //FlushText();
 
-  NS_IF_RELEASE(mRoot);
-  NS_IF_RELEASE(mParser);
-  NS_IF_RELEASE(mCurrentForm);
-  NS_IF_RELEASE(mCurrentMap);
   if (nsnull != mContentStack) {
     // there shouldn't be anything here except in an error condition
     PRInt32 indx = mContentStack->Count();
@@ -256,7 +245,9 @@ nsHTMLFragmentContentSink::WillBuildModel(void)
   nsresult rv = NS_NewDocumentFragment(getter_AddRefs(frag), mTargetDocument);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return CallQueryInterface(frag, &mRoot);
+  mRoot = do_QueryInterface(frag, &rv);
+  
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -266,7 +257,7 @@ nsHTMLFragmentContentSink::DidBuildModel(void)
 
   // Drop our reference to the parser to get rid of a circular
   // reference.
-  NS_IF_RELEASE(mParser);
+  mParser = nsnull;
 
   return NS_OK;
 }
@@ -286,9 +277,7 @@ nsHTMLFragmentContentSink::WillResume(void)
 NS_IMETHODIMP
 nsHTMLFragmentContentSink::SetParser(nsIParser* aParser)
 {
-  NS_IF_RELEASE(mParser);
   mParser = aParser;
-  NS_IF_ADDREF(mParser);
 
   return NS_OK;
 }
@@ -449,15 +438,9 @@ nsHTMLFragmentContentSink::OpenContainer(const nsIParserNode& aNode)
 {
   NS_ENSURE_TRUE(mNodeInfoManager, NS_ERROR_NOT_INITIALIZED);
 
-  nsAutoString tag;
   nsresult result = NS_OK;
 
-  tag.Assign(aNode.GetText());
-
-  if (nsHTMLAtoms::endnote->Equals(tag)) {
-    mHitSentinel = PR_TRUE;
-  }
-  else if (mHitSentinel) {
+  if (mProcessing) {
     FlushText();
 
     nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
@@ -522,7 +505,7 @@ nsHTMLFragmentContentSink::OpenContainer(const nsIParserNode& aNode)
 NS_IMETHODIMP
 nsHTMLFragmentContentSink::CloseContainer(const nsHTMLTag aTag)
 {
-  if (mHitSentinel && (nsnull != GetCurrentContent())) {
+  if (mProcessing && (nsnull != GetCurrentContent())) {
     nsIContent* content;
     FlushText();
     content = PopContent();
@@ -597,7 +580,7 @@ nsHTMLFragmentContentSink::AddLeaf(const nsIParserNode& aNode)
           if(nodeType == eHTMLTag_script    ||
              nodeType == eHTMLTag_style     ||
              nodeType == eHTMLTag_textarea  ||
-             nodeType == eHTMLTag_xmp) {
+             nodeType == eHTMLTag_server) {
 
             // Create a text node holding the content
             nsCOMPtr<nsIDTD> dtd;
@@ -707,6 +690,25 @@ nsHTMLFragmentContentSink::SetTargetDocument(nsIDocument* aTargetDocument)
 
   mTargetDocument = aTargetDocument;
   mNodeInfoManager = aTargetDocument->NodeInfoManager();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLFragmentContentSink::WillBuildContent()
+{
+  mProcessing = PR_TRUE;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLFragmentContentSink::DidBuildContent()
+{
+  if (!mAllContent) {
+    FlushText();
+    mProcessing = PR_FALSE;
+  }
 
   return NS_OK;
 }

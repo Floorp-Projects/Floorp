@@ -111,8 +111,6 @@ static const PRUnichar sHTMLTagUnicodeName_em[] =
   {'e', 'm', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_embed[] =
   {'e', 'm', 'b', 'e', 'd', '\0'};
-static const PRUnichar sHTMLTagUnicodeName_endnote[] =
-  {'e', 'n', 'd', 'n', 'o', 't', 'e', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_fieldset[] =
   {'f', 'i', 'e', 'l', 'd', 's', 'e', 't', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_font[] =
