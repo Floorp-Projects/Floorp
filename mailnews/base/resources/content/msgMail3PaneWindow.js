@@ -54,8 +54,6 @@ var gHaveLoadedMessage;
 var gBatching = false;
 
 
-// for checking if the folder loaded is Draft or Unsent which msg is editable
-var gIsEditableMsgFolder = false;
 
 // the folderListener object
 var folderListener = {
