@@ -1536,7 +1536,7 @@ nsLocalFile::IsWritable(PRBool *_retval)
     if (NS_FAILED(rv))
         return rv;  
     
-    *_retval = (PRBool) !( mFileAttrData.dwFileAttributes & FILE_ATTRIBUTE_READONLY  != 0); 
+    *_retval = !((mFileAttrData.dwFileAttributes & FILE_ATTRIBUTE_READONLY) != 0); 
 
     return NS_OK;
 }
@@ -1608,7 +1608,7 @@ nsLocalFile::IsDirectory(PRBool *_retval)
     if (NS_FAILED(rv))
         return rv;
     
-    *_retval = (PRBool)( mFileAttrData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY  != 0); 
+    *_retval = ((mFileAttrData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0); 
 
     return NS_OK;
 }
@@ -1633,7 +1633,7 @@ nsLocalFile::IsHidden(PRBool *_retval)
     if (NS_FAILED(rv))
         return rv;
     
-    *_retval =  ( mFileAttrData.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN  != 0); 
+    *_retval =  ((mFileAttrData.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)  != 0); 
 
     return NS_OK;
 }
@@ -1673,7 +1673,7 @@ nsLocalFile::IsSpecial(PRBool *_retval)
     if (NS_FAILED(rv))
         return rv;
     
-    *_retval = (PRBool) ( mFileAttrData.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM  != 0); 
+    *_retval = ((mFileAttrData.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM)  != 0); 
 
     return NS_OK;
 }
