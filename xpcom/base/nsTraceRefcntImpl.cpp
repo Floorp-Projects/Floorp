@@ -880,6 +880,8 @@ SYMUNDNAME _SymUnDName;
 
 SYMGETMODULEINFO _SymGetModuleInfo;
 
+ENUMLOADEDMODULES _EnumerateLoadedModules;
+
 PR_END_EXTERN_C
 
 static PRBool
@@ -917,6 +919,9 @@ EnsureImageHlpInitialized()
 
     _SymGetModuleInfo = (SYMGETMODULEINFO)GetProcAddress(module, "SymGetModuleInfo");
     if (!_SymGetModuleInfo) return PR_FALSE;
+
+    _EnumerateLoadedModules = (ENUMLOADEDMODULES)GetProcAddress(module, "EnumerateLoadedModules");
+    if (!_EnumerateLoadedModules) return PR_FALSE;
 
     gInitialized = PR_TRUE;
   }
@@ -984,7 +989,7 @@ BOOL SymGetModuleInfoEspecial(HANDLE aProcess, DWORD aAddr, PIMAGEHLP_MODULE aMo
          * Not loaded, here's the magic.
          * Go through all the modules.
          */
-        enumRes = EnumerateLoadedModules(aProcess, callbackEspecial, (PVOID)aAddr);
+        enumRes = _EnumerateLoadedModules(aProcess, callbackEspecial, (PVOID)aAddr);
         if(FALSE != enumRes)
         {
             /*
