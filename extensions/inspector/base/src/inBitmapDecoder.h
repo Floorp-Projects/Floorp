@@ -30,7 +30,7 @@
 #include "imgIContainer.h"
 #include "imgIDecoderObserver.h"
 #include "gfxIImageFrame.h"
-#include "imgIRequest.h"
+#include "imgILoad.h"
 
 class inBitmapDecoder : public imgIDecoder
 {
@@ -45,7 +45,6 @@ public:
 private:
   nsCOMPtr<imgIContainer> mImage;
   nsCOMPtr<gfxIImageFrame> mFrame;
-  nsCOMPtr<imgIRequest> mRequest;
   nsCOMPtr<imgIDecoderObserver> mObserver; // this is just qi'd from mRequest for speed
 };
 
