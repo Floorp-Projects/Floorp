@@ -130,7 +130,7 @@ protected:
     PRBool mNeedSizeUpdate;
   };
   PerFrameData* mFrames;
-
+  PerFrameData* mCurNotifiedFrame;
   friend NS_LAYOUT nsresult NS_NewFrameImageLoader(nsIFrameImageLoader**);
 };
 

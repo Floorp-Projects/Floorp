@@ -67,7 +67,8 @@ nsFrameImageLoader::nsFrameImageLoader()
     mImageLoadStatus(NS_IMAGE_LOAD_STATUS_NONE),
     mImageLoadError( nsImageError(-1) ),
     mNotifyLockCount(0),
-    mFrames(nsnull)
+    mFrames(nsnull),
+    mCurNotifiedFrame(nsnull)
 {
   NS_INIT_REFCNT();
 }
@@ -224,8 +225,8 @@ nsFrameImageLoader::AddFrame(nsIFrame* aFrame,
     // Fire notification callback right away so that caller doesn't
     // miss it...
 #ifdef NOISY_IMAGE_LOADING
-    printf("%p: AddFrame: notify frame=%p status=%x\n",
-           this, pfd->mFrame, mImageLoadStatus);
+    printf("%p: AddFrame %p: notify frame=%p status=%x\n",
+           this, pfd, pfd->mFrame, mImageLoadStatus);
 #endif
     (*aCallBack)(mPresContext, this, pfd->mFrame, pfd->mClosure,
                  mImageLoadStatus);
@@ -243,6 +244,8 @@ nsFrameImageLoader::RemoveFrame(void* aKey)
   while (nsnull != (pfd = *pfdp)) {
     if (pfd->mKey == aKey) {
       *pfdp = pfd->mNext;
+      if (pfd == mCurNotifiedFrame)
+        mCurNotifiedFrame = pfd->mNext;
       delete pfd;
       return NS_OK;
     }
@@ -560,25 +563,25 @@ nsFrameImageLoader::NotifyError(nsIImageRequest *aImageRequest,
 void
 nsFrameImageLoader::NotifyFrames(PRBool aIsSizeUpdate)
 {
-  PerFrameData** pfdp = &mFrames;
-  PerFrameData* pfd = *pfdp;
-  while (nsnull != (pfd = *pfdp)) {
+  mCurNotifiedFrame = mFrames;
+  PerFrameData* pfd; // Initialized on the next line
+  while (nsnull != (pfd = mCurNotifiedFrame)) {
     if ((aIsSizeUpdate && pfd->mNeedSizeUpdate) || !aIsSizeUpdate) {
       if (pfd->mCallBack) {
 #ifdef NOISY_IMAGE_LOADING
-        printf("  notify frame=%p status=%x\n", pfd->mFrame, mImageLoadStatus);
+        printf("  notify pfd = %p frame=%p status=%x\n", pfd, pfd->mFrame, mImageLoadStatus);
 #endif
         (*pfd->mCallBack)(mPresContext, this, pfd->mFrame, pfd->mClosure,
                           mImageLoadStatus);
       }
-      if (pfd != *pfdp) {
+      if (pfd != mCurNotifiedFrame) {
         continue; //pfd has been deleted in the callback, don't chain to next
       }
       if (aIsSizeUpdate) {
         pfd->mNeedSizeUpdate = PR_FALSE;
       }
     }
-    pfdp = &pfd->mNext;
+    mCurNotifiedFrame = pfd->mNext;
   }
   
 }
