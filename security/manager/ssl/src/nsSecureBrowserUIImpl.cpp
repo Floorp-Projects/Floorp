@@ -542,6 +542,11 @@ nsSecureBrowserUIImpl::CheckMixedContext(nsISecurityEventSink *eventSink,
 
   newSecurityState = GetSecurityStateFromChannel(aChannel);
 
+  // Deal with http redirect to https //
+  if (mSecurityState == STATE_IS_INSECURE && newSecurityState != STATE_IS_INSECURE) {
+      return CheckProtocolContextSwitch(eventSink, aRequest, aChannel);
+  }
+
   if ((newSecurityState == STATE_IS_INSECURE ||
        newSecurityState == STATE_IS_BROKEN) &&
       IS_SECURE(mSecurityState)) {
