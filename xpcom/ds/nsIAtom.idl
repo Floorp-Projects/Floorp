@@ -38,14 +38,39 @@
 interface nsIAtom : nsISupports
 {
   /**
-   * Translate the unicode string into the stringbuf.
+   * Get the Unicode or UTF8 value for the string
    */
-  [noscript] AString toString(); 
-	
+  AString toString(); 
+  AUTF8String toUTF8String();
+  
   /**
-   * Return a pointer to a zero terminated unicode string.
+   * Return a pointer to a zero terminated UTF8 string.
    */
-   void GetUnicode([shared, retval] out wstring aResult);
+  [noscript] void getUTF8String([shared, retval] out string aResult);
+
+  /**
+   * Compare the atom to a specific string value
+   * Note that this will NEVER return/throw an error condition.
+   */
+  boolean equals(in AString aString);
+  
+  boolean equalsUTF8(in AUTF8String aString);
+
+%{C++
+  // note this is NOT virtual so this won't muck with the vtable!
+  inline PRBool Equals(const nsAString& s) {
+    PRBool result;
+    Equals(s, &result);
+    return result;
+  }
+
+  inline PRBool EqualsUTF8(const nsACString& s) {
+    PRBool result;
+    EqualsUTF8(s, &result);
+    return result;
+  }
+%}
+  
 };
 
 
@@ -71,13 +96,20 @@ interface nsIAtom : nsISupports
  * Find an atom that matches the given ISO-Latin1 C string. The
  * C string is translated into its unicode equivalent.
  */
-extern NS_COM nsIAtom* NS_NewAtom(const char* isolatin1);
-extern NS_COM nsIAtom* NS_NewPermanentAtom(const char* isolatin1);
+extern NS_COM nsIAtom* NS_NewAtom(const char* utf8String);
+extern NS_COM nsIAtom* NS_NewAtom(const nsACString& utf8String);
+extern NS_COM nsIAtom* NS_NewPermanentAtom(const char* utf8String);
+extern NS_COM nsIAtom* NS_NewPermanentAtom(const nsACString& utf8String);
 
-inline already_AddRefed<nsIAtom> do_GetAtom(const char* isolatin1)
-    { return NS_NewAtom(isolatin1); }
-inline already_AddRefed<nsIAtom> do_GetPermanentAtom(const char* isolatin1)
-    { return NS_NewPermanentAtom(isolatin1); }
+inline already_AddRefed<nsIAtom> do_GetAtom(const char* utf8String)
+    { return NS_NewAtom(utf8String); }
+inline already_AddRefed<nsIAtom> do_GetAtom(const nsACString& utf8String)
+    { return NS_NewAtom(utf8String); }
+ 
+inline already_AddRefed<nsIAtom> do_GetPermanentAtom(const char* utf8String)
+    { return NS_NewPermanentAtom(utf8String); }
+inline already_AddRefed<nsIAtom> do_GetPermanentAtom(const nsACString& utf8String)
+    { return NS_NewPermanentAtom(utf8String); }
 
 /**
  * Find an atom that matches the given unicode string. The string is assumed

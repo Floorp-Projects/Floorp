@@ -3587,9 +3587,9 @@ nsEditor::NodeIsType(nsIDOMNode *aNode, nsIAtom *aTag)
   {
     nsAutoString tag;
     element->GetTagName(tag);
-    const PRUnichar *unicodeString;
-    aTag->GetUnicode(&unicodeString);
-    if (tag.Equals(unicodeString, nsCaseInsensitiveStringComparator()))
+    const char *tagStr;
+    aTag->GetUTF8String(&tagStr);
+    if (tag.EqualsIgnoreCase(tagStr))
     {
       return PR_TRUE;
     }

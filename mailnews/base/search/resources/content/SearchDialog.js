@@ -193,8 +193,8 @@ var gFolderListener = {
     OnItemPropertyFlagChanged: function(item, property, oldFlag, newFlag) {},
 
     OnItemEvent: function(folder, event) {
-        var eventType = event.GetUnicode();
-
+        var eventType = event.toString();
+        
         if (eventType == "DeleteOrMoveMsgCompleted") {
             HandleDeleteOrMoveMessageCompleted(folder);
         }     

@@ -308,9 +308,9 @@ PRInt32 generate_encodedwords(char *pUTF8, const char *charset, char method, cha
           nsMemory::Free(_pUCS2);
         return -1;
       }
-      const PRUnichar *charsetName;
-      charsetAtom->GetUnicode(&charsetName);
-      strncpy(_charset, NS_ConvertUCS2toUTF8(charsetName).get(), sizeof(_charset)-1);
+      const char *charsetName;
+      charsetAtom->GetUTF8String(&charsetName);
+      strncpy(_charset, charsetName, sizeof(_charset)-1);
       _charset[sizeof(_charset)-1] = '\0';
       if (_charset[0])
         charset = _charset;

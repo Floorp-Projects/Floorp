@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,17 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Static Atom classes.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2002
+ * Netscape Communications Corp.
+ * Portions created by the Initial Developer are Copyright (C) 2003
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Axel Hecht <axel@pike.org>
- *   Peter Van der Beken <peterv@netscape.com>
- *
+ *   Alec Flett <alecf@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,42 +36,30 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef txStringUtils_h__
-#define txStringUtils_h__
+#ifndef nsStaticAtom_h__
+#define nsStaticAtom_h__
 
-#include "nsAString.h"
 #include "nsIAtom.h"
 
-#ifndef TX_EXE
+// see http://www.mozilla.org/projects/xpcom/atoms.html to use this stuff
 
-#include "nsUnicharUtils.h"
-typedef nsCaseInsensitiveStringComparator txCaseInsensitiveStringComparator;
-
-#define TX_ToLowerCase ToLowerCase
-
-#else
-
-// These only work for ASCII ranges!
-
-class txCaseInsensitiveStringComparator
-: public nsStringComparator
-{
-public:
-  virtual int operator()(const char_type*, const char_type*, PRUint32 aLength) const;
-  virtual int operator()(char_type, char_type) const;
+// class for declaring a static list of atoms, for use with gperf
+// Keep this VERY simple
+// mString: the value of the atom - the policy is that this is only
+//          ASCII, in order to avoid unnecessary conversions if
+//          someone asks for this in unicode
+// mAtom:   a convienience pointer - if you want to store the value of
+//          the atom created by this structure somewhere, put its
+//          address here
+struct nsStaticAtom {
+    const char* mString;
+    nsIAtom ** mAtom;
 };
 
-void TX_ToLowerCase(nsAString& aString);
-void TX_ToLowerCase(const nsAString& aSource, nsAString& aDest);
+
+// register your lookup function with the atom table. Your function
+// will be called when at atom is not found in the main atom table.
+NS_COM nsresult
+NS_RegisterStaticAtoms(const nsStaticAtom*, PRUint32 aAtomCount);
 
 #endif
-
-/**
- * Check equality between a string and an atom.
- */
-static PRBool TX_StringEqualsAtom(const nsAString& aString, nsIAtom* aAtom)
-{
-  return aAtom->Equals(aString);
-};
-
-#endif // txStringUtils_h__

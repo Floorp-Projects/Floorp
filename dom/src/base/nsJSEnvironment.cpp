@@ -906,14 +906,14 @@ AtomToEventHandlerName(nsIAtom *aName, char *charName, PRUint32 charNameSize)
   // optimized to avoid ns*Str*.h explicit/implicit copying and malloc'ing
   // even nsCAutoString may call an Append that copy-constructs an nsStr from
   // a const PRUnichar*
-  const PRUnichar *name;
-  aName->GetUnicode(&name);
+  const char *name;
+  aName->GetUTF8String(&name);
   char c;
   PRUint32 i = 0;
 
   do {
     NS_ASSERTION(name[i] < 128, "non-ASCII event handler name");
-    c = char(name[i]);
+    c = name[i];
 
     // The HTML content sink must have folded to lowercase already.
     NS_ASSERTION(c == '\0' || isalpha(c), "non-alphabetic event handler name");

@@ -93,26 +93,22 @@ NS_NewXMLElement(nsIContent** aInstancePtrResult, nsINodeInfo *aNodeInfo)
   return NS_OK;
 }
 
-static nsIAtom* kSimpleAtom;  // XXX these should get moved to nsXMLAtoms
 static nsIAtom* kHrefAtom;
 static nsIAtom* kShowAtom;
 static nsIAtom* kTypeAtom;
 static nsIAtom* kBaseAtom;
 static nsIAtom* kActuateAtom;
-static nsIAtom* kOnLoadAtom;
 static nsIAtom* kEmbedAtom;
 static PRUint32 kElementCount;
 
 nsXMLElement::nsXMLElement() : mIsLink(PR_FALSE)
 {
   if (0 == kElementCount++) {
-    kSimpleAtom = NS_NewAtom("simple");
     kHrefAtom = NS_NewAtom("href");
     kShowAtom = NS_NewAtom("show");
     kTypeAtom = NS_NewAtom("type");
     kBaseAtom = NS_NewAtom("base");
     kActuateAtom = NS_NewAtom("actuate");
-    kOnLoadAtom = NS_NewAtom("onLoad");
     kEmbedAtom = NS_NewAtom("embed");
   }
 }
@@ -120,13 +116,11 @@ nsXMLElement::nsXMLElement() : mIsLink(PR_FALSE)
 nsXMLElement::~nsXMLElement()
 {
   if (0 == --kElementCount) {
-    NS_RELEASE(kSimpleAtom);
     NS_RELEASE(kHrefAtom);
     NS_RELEASE(kShowAtom);
     NS_RELEASE(kTypeAtom);
     NS_RELEASE(kBaseAtom);
     NS_RELEASE(kActuateAtom);
-    NS_RELEASE(kOnLoadAtom);
     NS_RELEASE(kEmbedAtom);
   }
 }
@@ -321,17 +315,12 @@ nsXMLElement::SetAttr(nsINodeInfo *aNodeInfo,
   NS_ENSURE_ARG_POINTER(aNodeInfo);
 
   if (aNodeInfo->Equals(kTypeAtom, kNameSpaceID_XLink)) { 
-    const PRUnichar* simpleStr;
-    kSimpleAtom->GetUnicode(&simpleStr);
-    if (aValue.Equals(simpleStr)) {
-      // NOTE: This really is a link according to the XLink spec,
-      //       we do not need to check other attributes. If there
-      //       is no href attribute, then this link is simply
-      //       untraversible [XLink 3.2].
-      mIsLink = PR_TRUE;
-    } else {
-      mIsLink = PR_FALSE;
-    }
+    
+    // NOTE: This really is a link according to the XLink spec,
+    //       we do not need to check other attributes. If there
+    //       is no href attribute, then this link is simply
+    //       untraversible [XLink 3.2].
+    mIsLink = aValue.Equals(NS_LITERAL_STRING("simple"));
 
     // We will check for actuate="onLoad" in MaybeTriggerAutoLink
   }
@@ -408,10 +397,7 @@ nsXMLElement::MaybeTriggerAutoLink(nsIWebShell *aShell)
   nsresult rv = NS_OK;
 
   if (mIsLink) {
-    // preload and precalculate length of atom outside of loop
-    const PRUnichar *onloadUnicode;
-    kOnLoadAtom->GetUnicode(&onloadUnicode);
-    nsDependentString onloadString(onloadUnicode);
+    NS_NAMED_LITERAL_STRING(onloadString, "onLoad");
     do {
       // actuate="onLoad" ?
       nsAutoString value;

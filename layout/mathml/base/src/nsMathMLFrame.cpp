@@ -615,9 +615,6 @@ nsMathMLFrame::MapAttributesIntoCSS(nsIPresContext* aPresContext,
     if (attrValue.IsEmpty())
       continue;
 
-    const PRUnichar* attrName;
-    attrAtom->GetUnicode(&attrName);
-
     // don't add rules that are already in mathml.css
     // (this will also clean up whitespace before units - see bug 125303)
     if (attrAtom == nsMathMLAtoms::fontsize_ || attrAtom == nsMathMLAtoms::mathsize_) {
@@ -632,9 +629,12 @@ nsMathMLFrame::MapAttributesIntoCSS(nsIPresContext* aPresContext,
     else
       cssProperty.Append(attrValue);
 
+    nsAutoString attrName;
+    attrAtom->ToString(attrName);
+
     // make a style rule that maps to the equivalent CSS property
     nsAutoString cssRule;
-    cssRule.Assign(NS_LITERAL_STRING("[")  + nsDependentString(attrName) +
+    cssRule.Assign(NS_LITERAL_STRING("[")  + attrName +
                    NS_LITERAL_STRING("='") + attrValue +
                    NS_LITERAL_STRING("']{") + cssProperty + NS_LITERAL_STRING("}"));
 
@@ -662,7 +662,7 @@ nsMathMLFrame::MapAttributesIntoCSS(nsIPresContext* aPresContext,
     // XXX bug 142648 - GetSourceSelectorText is in the format *[color=blue] (i.e., no quotes...) 
     // XXXrbs need to keep this in sync with the fix for bug 142648
     nsAutoString selector;
-    selector.Assign(NS_LITERAL_STRING("*[") + nsDependentString(attrName) +
+    selector.Assign(NS_LITERAL_STRING("*[") + attrName +
                     NS_LITERAL_STRING("=") + attrValue +
                     NS_LITERAL_STRING("]"));
     PRInt32 k, count;
