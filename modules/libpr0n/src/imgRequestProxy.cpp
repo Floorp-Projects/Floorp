@@ -61,7 +61,7 @@ imgRequestProxy::~imgRequestProxy()
 {
   /* destructor code */
 
-  if (!mCanceled) {
+  if (!mCanceled && mOwner) {
     PR_Lock(mLock);
 
     mCanceled = PR_TRUE;
@@ -151,7 +151,7 @@ NS_IMETHODIMP imgRequestProxy::GetStatus(nsresult *aStatus)
 /* void cancel (in nsresult status); */
 NS_IMETHODIMP imgRequestProxy::Cancel(nsresult status)
 {
-  if (mCanceled)
+  if (mCanceled || !mOwner)
     return NS_ERROR_FAILURE;
 
   LOG_SCOPE(gImgLog, "imgRequestProxy::Cancel");
