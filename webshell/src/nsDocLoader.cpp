@@ -35,6 +35,7 @@
 #include "nsIRefreshUrl.h"
 #include "nsITimer.h"
 #include "nsIDocumentLoaderObserver.h"
+#include "nsIExternalDocumentLoadObserver.h"
 #include "nsVoidArray.h"
 #include "nsIHttpURL.h"
 #include "nsILoadAttribs.h"
@@ -863,6 +864,7 @@ public:
     void SetDocumentUrl(nsIURL* aUrl);
 protected:
     virtual ~nsDocLoaderImpl();
+    void BuildExternalDocLoadOberverList(void);
 
 private:
     static PRBool StopBindInfoEnumerator (nsISupports* aElement, void* aData);
@@ -877,7 +879,7 @@ protected:
     nsISupportsArray*          m_LoadingDocsList;
 
     nsVoidArray                mChildGroupList;
-    nsVoidArray                mDocObservers;
+    nsVoidArray                mDocObservers;    
     nsILoadAttribs*            m_LoadAttrib;
     nsIStreamObserver*         mStreamObserver;
     nsIContentViewerContainer* mContainer;
@@ -895,6 +897,11 @@ protected:
      * notification is fired...
      */
     PRBool mIsLoadingDocument;
+
+    /* The list of external document load observers.  These observers monitor
+       the document load progress by registering as observers with the observer
+       service under the topic "Webshell/DocumentLoad" */
+    nsVoidArray mExternalObservers;
 };
 
 
@@ -1026,7 +1033,6 @@ nsDocLoaderImpl::GetDocumentFactory(nsIDocumentLoaderFactory** aResult)
 	return NS_OK;
 }
 
-
 NS_IMETHODIMP
 nsDocLoaderImpl::LoadDocument(const nsString& aURLSpec, 
                               const char* aCommand,
@@ -1054,6 +1060,18 @@ nsDocLoaderImpl::LoadDocument(const nsString& aURLSpec,
   if (nsnull == aContainer) {
       rv = NS_ERROR_NULL_POINTER;
       goto done;
+  }
+
+  /* In case this is a top level document loader, look up
+   * external document load observers and add them to the
+   * list.  The observers; refcounts are not incremented because the 
+   * observer list is rebuilt from scratch for each document load.  
+   * The observer is expected to unregister itself with the observer
+   * service only between document loads, not while a document load is
+   * going on.
+   */
+  if (nsnull == mParent) {
+    BuildExternalDocLoadOberverList();
   }
 
   NS_NEWXPCOM(loader, nsDocumentBindInfo);
@@ -1404,6 +1422,27 @@ void nsDocLoaderImpl::FireOnStartDocumentLoad(nsIURL* aURL,
   if (nsnull != mParent) {
     mParent->FireOnStartDocumentLoad(aURL, aCommand);
   }
+
+  /* 
+   * If this is the top level document loader, notify external 
+   * document load observers.
+   */
+  if (nsnull == mParent) {
+    count = mExternalObservers.Count();
+    if (count > 0) {
+      nsIExternalDocumentLoadObserver* observer = nsnull;    
+      PRUnichar* temp;
+
+      aURL->ToString(&temp);
+      nsAutoString url(temp);    
+      delete [] temp;    
+      for (index = 0; index < count; index++) {
+        observer = (nsIExternalDocumentLoadObserver*) mExternalObservers.ElementAt(index);
+        observer->OnStartDocumentLoad((PRUint32) mContainer, url, aCommand);
+      }
+    }
+  }
+
 }
 
 void nsDocLoaderImpl::FireOnEndDocumentLoad(PRInt32 aStatus)
@@ -1425,6 +1464,27 @@ void nsDocLoaderImpl::FireOnEndDocumentLoad(PRInt32 aStatus)
   if (nsnull != mParent) {
     mParent->FireOnEndDocumentLoad(aStatus);
   }
+
+  /* 
+   * If this is the top level document loader, notify external 
+   * document load observers.
+   */
+  if (nsnull == mParent) {
+    count = mExternalObservers.Count();
+    if (count > 0) {
+      nsIExternalDocumentLoadObserver* observer = nsnull;
+      PRUnichar *temp;
+
+      mDocumentUrl->ToString(&temp);
+      nsAutoString url(temp);    
+      delete [] temp;
+      for (index = 0; index < count; index++) {
+        observer = (nsIExternalDocumentLoadObserver*) mExternalObservers.ElementAt(index);      
+        observer->OnEndDocumentLoad((PRUint32) mContainer, url, aStatus);      
+      }    
+    }
+  }
+
 }
 
 void nsDocLoaderImpl::FireOnStartURLLoad(nsIURL* aURL, const char* aContentType, 
@@ -1447,6 +1507,27 @@ void nsDocLoaderImpl::FireOnStartURLLoad(nsIURL* aURL, const char* aContentType,
   if (nsnull != mParent) {
     mParent->FireOnStartURLLoad(aURL, aContentType, aViewer);
   }
+
+  /* 
+   * If this is the top level document loader, notify external 
+   * document load observers.
+   */
+  if (nsnull == mParent) {
+    count = mExternalObservers.Count();
+    if (count > 0) {
+      nsIExternalDocumentLoadObserver* observer = nsnull;
+      PRUnichar *temp;
+
+      aURL->ToString(&temp);
+      nsAutoString url(temp);    
+      delete [] temp;
+      for (index = 0; index < count; index++) {
+        observer = (nsIExternalDocumentLoadObserver*) mExternalObservers.ElementAt(index);
+        observer->OnStartURLLoad((PRUint32) mContainer, url, aContentType);
+      }    
+    }
+  }
+
 }
 
 void nsDocLoaderImpl::FireOnProgressURLLoad(nsIURL* aURL, PRUint32 aProgress,
@@ -1469,6 +1550,27 @@ void nsDocLoaderImpl::FireOnProgressURLLoad(nsIURL* aURL, PRUint32 aProgress,
   if (nsnull != mParent) {
     mParent->FireOnProgressURLLoad(aURL, aProgress, aProgressMax);
   }
+
+  /* 
+   * If this is the top level document loader, notify external 
+   * document load observers.
+   */
+  if (nsnull == mParent) {
+    count = mExternalObservers.Count();
+    if (count > 0) {
+      nsIExternalDocumentLoadObserver* observer = nsnull;
+      PRUnichar *temp;
+
+      aURL->ToString(&temp);
+      nsAutoString url(temp);    
+      delete [] temp;
+      for (index = 0; index < count; index++) {      
+        observer = (nsIExternalDocumentLoadObserver*) mExternalObservers.ElementAt(index);    
+        observer->OnProgressURLLoad((PRUint32) mContainer, url, aProgress, aProgressMax);
+      }
+    }
+  }
+
 }
 
 void nsDocLoaderImpl::FireOnStatusURLLoad(nsIURL* aURL, nsString& aMsg)
@@ -1490,6 +1592,26 @@ void nsDocLoaderImpl::FireOnStatusURLLoad(nsIURL* aURL, nsString& aMsg)
   if (nsnull != mParent) {
     mParent->FireOnStatusURLLoad(aURL, aMsg);
   }
+
+  /* 
+   * If this is the top level document loader, notify external 
+   * document load observers.
+   */
+  if (nsnull == mParent) {
+    count = mExternalObservers.Count();
+    if (count > 0) {
+      nsIExternalDocumentLoadObserver* observer = nsnull;
+      PRUnichar *temp;
+
+      aURL->ToString(&temp);
+      nsAutoString url(temp);    
+      delete [] temp;
+      for (index = 0; index < count; index++) {      
+        observer = (nsIExternalDocumentLoadObserver*) mExternalObservers.ElementAt(index);    
+        observer->OnStatusURLLoad((PRUint32) mContainer, url, aMsg);
+      }    
+    }
+  }
 }
 
 void nsDocLoaderImpl::FireOnEndURLLoad(nsIURL* aURL, PRInt32 aStatus)
@@ -1510,6 +1632,26 @@ void nsDocLoaderImpl::FireOnEndURLLoad(nsIURL* aURL, PRInt32 aStatus)
    */
   if (nsnull != mParent) {
     mParent->FireOnEndURLLoad(aURL, aStatus);
+  }
+
+  /* 
+   * If this is the top level document loader, notify external 
+   * document load observers.
+   */
+  if (nsnull == mParent) {
+    count = mExternalObservers.Count();
+    if (count > 0) {
+      nsIExternalDocumentLoadObserver* observer = nsnull;
+      PRUnichar *temp;
+
+      aURL->ToString(&temp);
+      nsAutoString url(temp);    
+      delete [] temp;
+      for (index = 0; index < count; index++) {      
+        observer = (nsIExternalDocumentLoadObserver*) mExternalObservers.ElementAt(index);    
+        observer->OnEndURLLoad((PRUint32) mContainer, url, aStatus);
+      }
+    }
   }
 }
 
@@ -1677,6 +1819,13 @@ PRBool nsDocLoaderImpl::IsBusyEnumerator(void* aElement, void* aData)
   }
 
   return !(*result);
+}
+
+/* Look up external document load observers by consulting the observer service and
+   add them to mExternalObservers.  */
+void nsDocLoaderImpl::BuildExternalDocLoadOberverList(void)
+{
+  
 }
 
 /****************************************************************************
