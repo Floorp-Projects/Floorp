@@ -33,6 +33,8 @@
 #include "nsIDeviceContext.h"
 #include "nsRenderingContextOS2.h"
 
+#define ROP_NOTSRCAND 0x22 // NOT(SRC) AND DST
+
 NS_IMPL_ISUPPORTS(nsImageOS2, NS_GET_IID(nsIImage));
 
 //------------------------------------------------------------
@@ -179,6 +181,8 @@ void nsImageOS2::ImageUpdated( nsIDeviceContext *aContext,
    // the bitmap colour table as the mColorMap->Index thing, but the formats
    // are unfortunately different.  Rats.
 
+   aContext->GetDepth( mDeviceDepth);
+
    if( aFlags & nsImageUpdateFlags_kColorMapChanged && mInfo->cBitCount == 8)
    {
       PRGB2 pBmpEntry  = mInfo->argbColor;
@@ -190,8 +194,6 @@ void nsImageOS2::ImageUpdated( nsIDeviceContext *aContext,
          pBmpEntry->bGreen = *pMapByte++;
          pBmpEntry->bBlue  = *pMapByte++;
       }
-
-      aContext->GetDepth( mDeviceDepth);
    }
    else if( aFlags & nsImageUpdateFlags_kBitsChanged)
    {
@@ -264,9 +266,7 @@ nsresult nsImageOS2::Draw( nsIRenderingContext &aContext,
       // > There's probably a really good reason why ROP_SRCAND does the
       // > right thing in true colour...
 
-      #define ROP_NOTSRCAND 0x22 // NOT(SRC) AND DST
-
-      long lRop = (mDeviceDepth >= 8) ? ROP_NOTSRCAND : ROP_SRCAND;
+      long lRop = (mDeviceDepth <= 8) ? ROP_NOTSRCAND : ROP_SRCAND;
 
       // Apply mask to target, clear pels we will fill in from the image
       DrawBitmap( surf->mPS, 4, aptl, lRop, PR_TRUE);
@@ -403,14 +403,146 @@ nsImageOS2::DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
                               nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,
                               nscoord aWidth, nscoord aHeight)
 {
-  PRInt32 x,y;
+   PRBool didTile = PR_FALSE;
+   LONG tileWidth = aX1-aX0;
+   LONG tileHeight = aY1-aY0;
 
-  // OS2TODO - use the old way... slow, but will always work.
-  for(y=aY0;y<aY1;y+=aHeight){
-    for(x=aX0;x<aX1;x+=aWidth){
-      this->Draw(aContext,aSurface,x,y,aWidth,aHeight);
-    }
-  } 
-  return(PR_TRUE);
+   // Don't bother tiling if we only have to draw the bitmap a couple of times
+   if( (aWidth <= tileWidth/2) || (aHeight <= tileHeight/2))
+   {
+      nsDrawingSurfaceOS2 *surf = (nsDrawingSurfaceOS2*) aSurface;
+   
+      // Find the compatible device context and create a memory one
+      HDC hdcCompat = GpiQueryDevice( surf->mPS);
+      HBITMAP hBmp;
+      DEVOPENSTRUC dop = { 0, 0, 0, 0, 0 };
+      HDC mDC = DevOpenDC( (HAB)0, OD_MEMORY, "*", 5,
+                           (PDEVOPENDATA) &dop, hdcCompat);
+   
+      if( DEV_ERROR != mDC)
+      {
+         // create the PS
+         SIZEL sizel = { 0, 0 };
+         HPS mPS = GpiCreatePS( (HAB)0, mDC, &sizel,
+                                PU_PELS | GPIT_MICRO | GPIA_ASSOC);
+   
+         if( GPI_ERROR != mPS)
+         {
+            // now create a bitmap of the right size
+            BITMAPINFOHEADER2 hdr = { 0 };
+         
+            hdr.cbFix = sizeof( BITMAPINFOHEADER2);
+            // Maximum size of tiled area (could do this better)
+            LONG endWidth = aWidth * 2;
+            while( endWidth < tileWidth)
+            {
+               endWidth *= 2;
+            } 
+            LONG endHeight = aHeight * 2;
+            while( endHeight < tileHeight)
+            {
+               endHeight *= 2;
+            } 
+            hdr.cx = endWidth;
+            hdr.cy = endHeight;
+            hdr.cPlanes = 1;
+   
+            // find bitdepth
+            LONG lBitCount = 0;
+            DevQueryCaps( hdcCompat, CAPS_COLOR_BITCOUNT, 1, &lBitCount);
+            hdr.cBitCount = (USHORT) lBitCount;
+         
+            hBmp = GpiCreateBitmap( mPS, &hdr, 0, 0, 0);
+   
+            if( GPI_ERROR != hBmp)
+            {
+               nsRect trect( aX0, aY0, tileWidth, tileHeight);
+               RECTL  rcl;
+               ((nsRenderingContextOS2 &)aContext).NS2PM_ININ( trect, rcl); // !! !! !!
+   
+               GpiSetBitmap( mPS, hBmp);
+   
+               // Set up blit coord array
+               POINTL aptl[ 4] = { { 0, 0 },
+                                   { aWidth - 1, aHeight - 1 },
+                                   { 0, 0 },
+                                   { mInfo->cx, mInfo->cy } };
+   
+               // Draw bitmap once into temporary PS
+               DrawBitmap( mPS, 4, aptl, ROP_SRCCOPY, PR_FALSE);
+            
+               // Copy bitmap horizontally, doubling each time
+               while( aWidth < tileWidth)
+               {
+                  POINTL aptlCopy[ 4] = { { aWidth, 0 },
+                                          { 2*aWidth, aHeight },
+                                          { 0, 0 },
+                                          { aWidth, aHeight } };
+            
+               
+                  GpiBitBlt( mPS, mPS, 4, aptlCopy, ROP_SRCCOPY, 0L);
+                  aWidth *= 2;
+               } 
+               // Copy bitmap vertically, doubling each time
+               while( aHeight < tileHeight)
+               {
+                  POINTL aptlCopy[ 4] = { { 0, aHeight },
+                                          { aWidth, 2*aHeight },
+                                          { 0, 0 },
+                                          { aWidth, aHeight } };
+               
+                  GpiBitBlt( mPS, mPS, 4, aptlCopy, ROP_SRCCOPY, 0L);
+                  aHeight *= 2;
+               } 
+   
+               POINTL aptlTile[ 4] = { { rcl.xLeft, rcl.yBottom },
+                                       { rcl.xRight + 1, rcl.yTop + 1 },
+                                       { 0, aHeight - tileHeight },
+                                       { tileWidth, aHeight } };
+   
+               // Copy tiled bitmap into destination PS
+               if( mAlphaDepth == 0)
+               {
+                  // no transparency, just blit it
+                  GpiBitBlt( surf->mPS, mPS, 4, aptlTile, ROP_SRCCOPY, 0L);
+               }
+               else
+               {
+                  // For some reason, only ROP_NOTSRCAND seems to work here....
+//                  long lRop = (mDeviceDepth <= 8) ? ROP_NOTSRCAND : ROP_SRCAND;
+                  long lRop = ROP_NOTSRCAND;
+
+                  // Apply mask to target, clear pels we will fill in from the image
+                  GpiBitBlt( surf->mPS, mPS, 4, aptlTile, lRop, 0L);
+                  // Now combine image with target
+                  GpiBitBlt( surf->mPS, mPS, 4, aptlTile, ROP_SRCPAINT, 0L);
+               }
+   
+               // Tiling successful
+               didTile = PR_TRUE;
+   
+               // Must deselect bitmap from PS before freeing bitmap and PS.
+               GpiSetBitmap( mPS, NULLHANDLE);
+               GpiDeleteBitmap( hBmp);
+            }
+            GpiDestroyPS( mPS);
+         }
+         DevCloseDC( mDC);
+      }
+   }
+
+   // If we failed to tile the bitmap, then use the old, slow, reliable way
+   if( didTile == PR_FALSE)
+   {
+      PRInt32 x,y;
+
+      for(y=aY0;y<aY1;y+=aHeight){
+         for(x=aX0;x<aX1;x+=aWidth){
+            this->Draw(aContext,aSurface,x,y,aWidth,aHeight);
+         }
+      } 
+   }
+
+   return(PR_TRUE);
 }
 
