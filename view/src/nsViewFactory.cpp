@@ -110,7 +110,7 @@ nsresult nsViewFactory::LockFactory(PRBool aLock)
 }
 
 //Uncomment the following line to go back to the "new" compositor.
-//#define USE_NEW_COMPOSITOR 1
+#define USE_NEW_COMPOSITOR 1
 
 #if USE_NEW_COMPOSITOR
 #include "nsViewManager.h"
