@@ -156,6 +156,7 @@ static const char* const nonDecodableTypes [] = {
 
 static const char* const nonDecodableExtensions [] = {
   "gz",
+  "tgz",
   "zip",
   "Z",
   0
