@@ -894,7 +894,7 @@ nsPICS::OnEndURLLoad(nsIDocumentLoader* loader,
                   nsAutoString hostStr(uHost);
 
                   // Construct a chrome URL and use it to look up a resource.
-                  nsAutoString rootStr = protocolStr + "://" + hostStr + "/";
+                  nsAutoString rootStr(protocolStr + "://" + hostStr + "/");
                 
                   // XXX if we're no longer calling GetRootURL, these calls can go away
                   // rv = NS_NewURI(&rootURL, rootStr);
