@@ -183,6 +183,6 @@ nsGfxMacModuleDtor(nsIModule *self)
   nsUnicodeMappingUtil::FreeSingleton();
 }
 
-NS_IMPL_NSGETMODULE_WITH_DTOR(nsGfxModule, components, nsGfxMacModuleDtor)
+NS_IMPL_NSGETMODULE_WITH_DTOR(nsGfxMacModule, components, nsGfxMacModuleDtor)
 
 

@@ -96,20 +96,21 @@ XPIDLSRCS	+= \
 		nsIDragHelperService.idl \
 		$(NULL)
 
+SHARED_LIBRARY_LIBS = $(DIST)/lib/libxpwidgets_s.a
+
+EXTRA_DSO_LDOPTS += \
+		$(MOZ_UNICHARUTIL_LIBS) \
+                $(TK_LIBS) \
+                $(MOZ_COMPONENT_LIBS) \
+                -lgkgfx \
+                $(NULL)
+
 GARBAGE		+= $(GFX_LCPPSRCS)
 
 include $(topsrcdir)/config/rules.mk
 
 export:: $(addprefix $(topsrcdir)/gfx/src/mac/,$(GFX_LCPPSRCS))
 	$(INSTALL) $^ .
-
-EXTRA_DSO_LDOPTS += \
-		$(MOZ_UNICHARUTIL_LIBS) \
-                $(DIST)/lib/libxpwidgets_s.a \
-                $(TK_LIBS) \
-                $(MOZ_COMPONENT_LIBS) \
-                -lgkgfx \
-                $(NULL)
 
 LOCAL_INCLUDES	= \
 	$(TK_CFLAGS) \
