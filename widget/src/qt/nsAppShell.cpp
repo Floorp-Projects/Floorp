@@ -44,7 +44,6 @@ nsAppShell::nsAppShell()
            ("nsAppShell::nsAppShell()\n"));
     NS_INIT_REFCNT();
     mDispatchListener = 0;
-    mStyle            = nsnull;
 }
 
 //-------------------------------------------------------------------------
@@ -58,7 +57,6 @@ nsAppShell::~nsAppShell()
            PR_LOG_DEBUG, 
            ("nsAppShell::~nsAppShell()\n"));
     delete mApplication;
-    delete mStyle;
 }
 
 //-------------------------------------------------------------------------
@@ -129,10 +127,9 @@ NS_METHOD nsAppShell::Create(int *bac, char **bav)
     {
         return NS_ERROR_NOT_INITIALIZED;
     }
-    mStyle = new QWindowsStyle();
 
-    mApplication->setStyle(mStyle);
-    
+    mApplication->setStyle(new QWindowsStyle);
+
     return NS_OK;
 }
 
