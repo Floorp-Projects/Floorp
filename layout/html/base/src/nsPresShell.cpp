@@ -4872,8 +4872,6 @@ PresShell::UnsuppressAndInvalidate()
 
   if (focusController) // Unsuppress now that we've shown the new window and focused it.
     focusController->SetSuppressFocus(PR_FALSE, "PresShell suppression on Web page loads");
-
-  mViewManager->SynthesizeMouseMove(PR_FALSE);
 }
 
 NS_IMETHODIMP
@@ -6047,13 +6045,6 @@ PresShell::HandleEventWithTarget(nsEvent* aEvent, nsIFrame* aFrame, nsIContent* 
   return NS_OK;
 }
 
-inline PRBool
-IsSynthesizedMouseMove(nsEvent* aEvent)
-{
-  return aEvent->eventStructType == NS_MOUSE_EVENT &&
-         NS_STATIC_CAST(nsMouseEvent*, aEvent)->reason != nsMouseEvent::eReal;
-}
-
 nsresult
 PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
                                PRUint32 aFlags, nsEventStatus* aStatus)
@@ -6092,10 +6083,7 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
                                  aStatus, aView);
 
     // 2. Give event to the DOM for third party and JS use.
-    if ((GetCurrentEventFrame()) && NS_SUCCEEDED(rv) &&
-         // We want synthesized mouse moves to cause mouseover and mouseout
-         // DOM events (PreHandleEvent above), but not mousemove DOM events.
-         !IsSynthesizedMouseMove(aEvent)) {
+    if ((GetCurrentEventFrame()) && NS_SUCCEEDED(rv)) {
       if (mCurrentEventContent) {
         rv = mCurrentEventContent->HandleDOMEvent(mPresContext, aEvent, nsnull,
                                                   aFlags, aStatus);
@@ -6345,8 +6333,6 @@ PresShell::DidDoReflow()
   HandlePostedDOMEvents();
   HandlePostedAttributeChanges();
   HandlePostedReflowCallbacks();
-  if (!mPaintingSuppressed)
-    mViewManager->SynthesizeMouseMove(PR_FALSE);
 }
 
 nsresult

@@ -1581,6 +1581,11 @@ nsEventStateManager::DoWheelScroll(nsIPresContext* aPresContext,
   nsIScrollableView* sv = nsnull;
   nsIFrame* focusFrame = nsnull;
   
+  // Create a mouseout event that we fire to the content before
+  // scrolling, to allow tooltips to disappear, etc.
+
+  nsMouseEvent mouseOutEvent(NS_MOUSE_EXIT, aMSEvent->widget);
+
   nsIPresShell *presShell = aPresContext->PresShell();
 
   // Otherwise, check for a focused content element
@@ -1622,6 +1627,8 @@ nsEventStateManager::DoWheelScroll(nsIPresContext* aPresContext,
 
   PRBool passToParent;
   if (sv) {
+    GenerateMouseEnterExit(aPresContext, &mouseOutEvent);
+
     // If we're already at the scroll limit for this view, scroll the
     // parent view instead.
 
