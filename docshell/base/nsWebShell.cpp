@@ -732,8 +732,8 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
 
       nsXPIDLCString oldSpec;
       url->GetSpec(getter_Copies(oldSpec));
-      nsAutoString oldSpecW; oldSpecW.AssignWithConversion(oldSpec.get());
-
+      NS_ConvertUTF8toUCS2 oldSpecW(oldSpec);
+      
       //
       // First try keyword fixup
       //
