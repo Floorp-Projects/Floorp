@@ -40,6 +40,7 @@ nsFtpProtocolConnection::nsFtpProtocolConnection()
     : mUrl(nsnull), mConnected(PR_FALSE) {
 
     mEventQueue = PL_CreateEventQueue("FTP Event Queue", PR_CurrentThread());
+    NS_INIT_REFCNT();
 }
 
 nsFtpProtocolConnection::~nsFtpProtocolConnection() {
