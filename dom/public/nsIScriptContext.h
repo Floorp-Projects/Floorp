@@ -142,6 +142,11 @@ public:
    *        and ASCII, and should not be longer than 63 chars.  This bound on
    *        length is enforced only by assertions, so caveat caller!
    * @param aBody the event handler function's body
+   * @param aShared flag telling whether the compiled event handler will be
+   *        shared via nsIScriptEventHandlerOwner, in which case any static
+   *        link compiled into it based on aTarget should be cleared, both
+   *        to avoid entraining garbage to be collected, and to trigger static
+   *        link re-binding in BindCompiledEventHandler (see below).
    * @param aHandler the out parameter in which a void pointer to the compiled
    *        function object is returned on success; may be null, meaning the
    *        caller doesn't need to store the handler for later use.
@@ -151,6 +156,7 @@ public:
   NS_IMETHOD CompileEventHandler(void* aTarget,
                                  nsIAtom* aName,
                                  const nsString& aBody,
+                                 PRBool aShared,
                                  void** aHandler) = 0;
 
   /**
@@ -172,7 +178,9 @@ public:
   /**
    * Bind an already-compiled event handler function to a name in the given
    * scope object.  The same restrictions on aName (lowercase ASCII, not too
-   * long) applies here as for CompileEventHandler.
+   * long) applies here as for CompileEventHandler.  Scripting languages with
+   * static scoping must re-bind the scope chain for aHandler to begin (after
+   * the activation scope for aHandler itself, typically) with aTarget's scope.
    *
    * @param aTarget an object telling the scope in which to bind the compiled
    *        event handler function.

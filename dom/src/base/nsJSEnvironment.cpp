@@ -126,15 +126,15 @@ NS_ScriptErrorReporter(JSContext *cx,
 #endif
 
   // XXX do we really want to be doing this?
-  JS_ClearPendingException(cx);
+  ::JS_ClearPendingException(cx);
 }
 
 nsJSContext::nsJSContext(JSRuntime *aRuntime)
 {
   mRefCnt = 0;
-  mContext = JS_NewContext(aRuntime, gStackSize);
+  mContext = ::JS_NewContext(aRuntime, gStackSize);
   if (mContext) {
-    JS_SetContextPrivate(mContext, (void *)this);
+    ::JS_SetContextPrivate(mContext, (void *)this);
 
     // Check for the JS strict option, which enables extra error checks
     nsresult rv;
@@ -158,7 +158,7 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime)
       }
 #endif
       if (options)
-        JS_SetOptions(mContext, options);
+        ::JS_SetOptions(mContext, options);
     }
   }
   mIsInitialized = PR_FALSE;
@@ -183,8 +183,8 @@ nsJSContext::~nsJSContext()
     return;
 
   /* Remove global object reference to window object, so it can be collected. */
-  JS_SetGlobalObject(mContext, nsnull);
-  JS_DestroyContext(mContext);
+  ::JS_SetGlobalObject(mContext, nsnull);
+  ::JS_DestroyContext(mContext);
 
   // Let xpconnect resync its JSContext tracker (this is optional)
   nsresult rv;
@@ -218,7 +218,7 @@ nsJSContext::EvaluateString(const nsString& aScript,
 {
   nsresult rv;
   if (!aScopeObject)
-    aScopeObject = JS_GetGlobalObject(mContext);
+    aScopeObject = ::JS_GetGlobalObject(mContext);
 
   // Safety first: get an object representing the script's principals, i.e.,
   // the entities who signed this script, or the fully-qualified-domain-name
@@ -276,12 +276,12 @@ nsJSContext::EvaluateString(const nsString& aScript,
     // and unknown.  Do execute with the default version (and avoid thrashing
     // the context's version) if aVersion is not specified.
     ok = (!aVersion ||
-          (newVersion = JS_StringToVersion(aVersion)) != JSVERSION_UNKNOWN);
+          (newVersion = ::JS_StringToVersion(aVersion)) != JSVERSION_UNKNOWN);
     if (ok) {
       JSVersion oldVersion;
 
       if (aVersion)
-        oldVersion = JS_SetVersion(mContext, newVersion);
+        oldVersion = ::JS_SetVersion(mContext, newVersion);
       mRef = nsnull;
       mTerminationFunc = nsnull;
       ok = ::JS_EvaluateUCScriptForPrincipals(mContext,
@@ -293,7 +293,7 @@ nsJSContext::EvaluateString(const nsString& aScript,
                                               aLineNo,
                                               &val);
       if (aVersion)
-        JS_SetVersion(mContext, oldVersion);
+        ::JS_SetVersion(mContext, oldVersion);
     }
   }
 
@@ -303,9 +303,9 @@ nsJSContext::EvaluateString(const nsString& aScript,
   // If all went well, convert val to a string (XXXbe unless undefined?).
   if (ok) {
     *aIsUndefined = JSVAL_IS_VOID(val);
-    JSString* jsstring = JS_ValueToString(mContext, val);
+    JSString* jsstring = ::JS_ValueToString(mContext, val);
     if (jsstring)
-      aRetValue.SetString(JS_GetStringChars(jsstring));
+      aRetValue.SetString(::JS_GetStringChars(jsstring));
     else
       rv = NS_ERROR_OUT_OF_MEMORY;
   }
@@ -337,7 +337,7 @@ nsJSContext::CompileScript(const PRUnichar* aText,
   NS_ENSURE_ARG_POINTER(aPrincipal);
 
   if (!aScopeObject)
-    aScopeObject = JS_GetGlobalObject(mContext);
+    aScopeObject = ::JS_GetGlobalObject(mContext);
 
   JSPrincipals *jsprin;
   aPrincipal->GetJSPrincipals(&jsprin);
@@ -361,10 +361,10 @@ nsJSContext::CompileScript(const PRUnichar* aText,
     // and unknown.  Do compile with the default version (and avoid thrashing
     // the context's version) if aVersion is not specified.
     if (!aVersion ||
-        (newVersion = JS_StringToVersion(aVersion)) != JSVERSION_UNKNOWN) {
+        (newVersion = ::JS_StringToVersion(aVersion)) != JSVERSION_UNKNOWN) {
       JSVersion oldVersion;
       if (aVersion)
-        oldVersion = JS_SetVersion(mContext, newVersion);
+        oldVersion = ::JS_SetVersion(mContext, newVersion);
 
       JSScript* script =
         ::JS_CompileUCScriptForPrincipals(mContext,
@@ -385,7 +385,7 @@ nsJSContext::CompileScript(const PRUnichar* aText,
         rv = NS_ERROR_OUT_OF_MEMORY;
 
       if (aVersion)
-        JS_SetVersion(mContext, oldVersion);
+        ::JS_SetVersion(mContext, oldVersion);
     }
   }
 
@@ -403,7 +403,7 @@ nsJSContext::ExecuteScript(void* aScriptObject,
   nsresult rv;
 
   if (!aScopeObject)
-    aScopeObject = JS_GetGlobalObject(mContext);
+    aScopeObject = ::JS_GetGlobalObject(mContext);
 
   // Push our JSContext on our thread's context stack, in case native code
   // called from JS calls back into JS via XPConnect.
@@ -423,7 +423,7 @@ nsJSContext::ExecuteScript(void* aScriptObject,
   mTerminationFunc = nsnull;
   ok = ::JS_ExecuteScript(mContext,
                           (JSObject*) aScopeObject,
-                          (JSScript*) JS_GetPrivate(mContext,
+                          (JSScript*) ::JS_GetPrivate(mContext,
                                                     (JSObject*)aScriptObject),
                           &val);
 
@@ -432,9 +432,9 @@ nsJSContext::ExecuteScript(void* aScriptObject,
     if (aIsUndefined)
       *aIsUndefined = JSVAL_IS_VOID(val);
     if (aRetValue) {
-      JSString* jsstring = JS_ValueToString(mContext, val);
+      JSString* jsstring = ::JS_ValueToString(mContext, val);
       if (jsstring)
-        aRetValue->SetString(JS_GetStringChars(jsstring));
+        aRetValue->SetString(::JS_GetStringChars(jsstring));
       else
         rv = NS_ERROR_OUT_OF_MEMORY;
     }
@@ -481,7 +481,7 @@ AtomToEventHandlerName(nsIAtom *aName, char *charName, PRUint32 charNameSize)
 
 NS_IMETHODIMP
 nsJSContext::CompileEventHandler(void *aTarget, nsIAtom *aName, const nsString& aBody,
-                                 void** aHandler)
+                                 PRBool aShared, void** aHandler)
 {
   JSPrincipals *jsprin = nsnull;
 
@@ -500,28 +500,27 @@ nsJSContext::CompileEventHandler(void *aTarget, nsIAtom *aName, const nsString& 
   char charName[64];
   AtomToEventHandlerName(aName, charName, sizeof charName);
 
+  JSObject *target = (JSObject*)aTarget;
   JSFunction* fun =
-      JS_CompileUCFunctionForPrincipals(mContext,
-                                        (JSObject*)aTarget, jsprin,
-                                        charName, 1, gEventArgv,
-                                        (jschar*)aBody.GetUnicode(),
-                                        aBody.Length(),
-                                        //XXXbe filename, lineno:
-                                        nsnull, 0);
+      ::JS_CompileUCFunctionForPrincipals(mContext, target, jsprin,
+                                          charName, 1, gEventArgv,
+                                          (jschar*)aBody.GetUnicode(),
+                                          aBody.Length(),
+                                          //XXXbe filename, lineno:
+                                          nsnull, 0);
 
   if (jsprin)
     JSPRINCIPALS_DROP(mContext, jsprin);
   if (!fun)
     return NS_ERROR_FAILURE;
+
+  JSObject *handler = ::JS_GetFunctionObject(fun);
   if (aHandler)
-    *aHandler = (void*) JS_GetFunctionObject(fun);
+    *aHandler = (void*) handler;
 
-  nsISupports* supports = NS_STATIC_CAST(nsISupports*, JS_GetPrivate(mContext, (JSObject*)aTarget));
-  nsCOMPtr<nsIScriptEventHandlerOwner> owner = do_QueryInterface(supports);
-
-  if (owner) {
-    /* Break scope link to avoid entraining compilation scope. */
-    JS_SetParent(mContext, (JSObject *)*aHandler, nsnull);
+  if (aShared) {
+    /* Break scope link to avoid entraining shared compilation scope. */
+    ::JS_SetParent(mContext, handler, nsnull);
   }
   return NS_OK;
 }
@@ -539,7 +538,7 @@ nsJSContext::CallEventHandler(void *aTarget, void *aHandler, PRUint32 argc,
     return NS_ERROR_FAILURE;
 
   jsval funval = OBJECT_TO_JSVAL(aHandler);
-  JSFunction* fun = JS_ValueToFunction(mContext, funval);
+  JSFunction* fun = ::JS_ValueToFunction(mContext, funval);
 
   PRBool ok;
   rv = securityManager->CanExecuteFunction(fun, &ok);
@@ -561,8 +560,8 @@ nsJSContext::CallEventHandler(void *aTarget, void *aHandler, PRUint32 argc,
 
   jsval val;
   if (ok) {
-    ok = JS_CallFunctionValue(mContext, (JSObject *)aTarget, funval,
-                              argc, (jsval *)argv, &val);
+    ok = ::JS_CallFunctionValue(mContext, (JSObject *)aTarget, funval,
+                                argc, (jsval *)argv, &val);
   }
   *aBoolResult = ok
                  ? !JSVAL_IS_BOOLEAN(val) || JSVAL_TO_BOOLEAN(val)
@@ -586,8 +585,8 @@ nsJSContext::BindCompiledEventHandler(void *aTarget, nsIAtom *aName, void *aHand
   JSObject *target = (JSObject*) aTarget;
 
   // Make sure the handler function is parented by its event target object
-  if (funobj && JS_GetParent(mContext, funobj) != target) {
-    funobj = JS_CloneFunctionObject(mContext, funobj, target);
+  if (funobj && ::JS_GetParent(mContext, funobj) != target) {
+    funobj = ::JS_CloneFunctionObject(mContext, funobj, target);
     if (!funobj)
       return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -603,18 +602,18 @@ nsJSContext::BindCompiledEventHandler(void *aTarget, nsIAtom *aName, void *aHand
 NS_IMETHODIMP
 nsJSContext::SetDefaultLanguageVersion(const char* aVersion)
 {
-  (void) JS_SetVersion(mContext, JS_StringToVersion(aVersion));
+  (void) ::JS_SetVersion(mContext, ::JS_StringToVersion(aVersion));
   return NS_OK;
 }
 
 NS_IMETHODIMP_(nsIScriptGlobalObject*)
 nsJSContext::GetGlobalObject()
 {
-  JSObject *global = JS_GetGlobalObject(mContext);
+  JSObject *global = ::JS_GetGlobalObject(mContext);
   nsIScriptGlobalObject *script_global = nsnull;
 
   if (nsnull != global) {
-    nsISupports* sup = (nsISupports *)JS_GetPrivate(mContext, global);
+    nsISupports* sup = (nsISupports *)::JS_GetPrivate(mContext, global);
     if (nsnull != sup) {
       sup->QueryInterface(NS_GET_IID(nsIScriptGlobalObject), (void**) &script_global);
     }
@@ -646,10 +645,10 @@ nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
 
     // init standard classes
     if (NS_SUCCEEDED(rv) && ::JS_InitStandardClasses(mContext, global)) {
-      JS_SetGlobalObject(mContext, global);
+      ::JS_SetGlobalObject(mContext, global);
       rv = InitClasses(); // this will complete the global object initialization
     }
-		// XXX there ought to be an else here!
+    // XXX there ought to be an else here!
 
     if (NS_SUCCEEDED(rv)) {
       ::JS_SetErrorReporter(mContext, NS_ScriptErrorReporter);
@@ -680,7 +679,7 @@ nsJSContext::InitializeLiveConnectClasses()
     if (NS_SUCCEEDED(jvmManager->IsJavaEnabled(&javaEnabled)) && javaEnabled) {
       nsCOMPtr<nsILiveConnectManager> liveConnectManager = do_QueryInterface(jvmManager);
       if (liveConnectManager) {
-        rv = liveConnectManager->InitLiveConnectClasses(mContext, JS_GetGlobalObject(mContext));
+        rv = liveConnectManager->InitLiveConnectClasses(mContext, ::JS_GetGlobalObject(mContext));
       }
     }
   }
@@ -716,7 +715,7 @@ nsJSContext::InitClasses()
   if (NS_SUCCEEDED(rv)) {
     NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
     if (NS_SUCCEEDED(rv)) {
-      rv = xpc->InitClasses(mContext, JS_GetGlobalObject(mContext));
+      rv = xpc->InitClasses(mContext, ::JS_GetGlobalObject(mContext));
     }
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to init xpconnect classes");
   }
@@ -745,7 +744,7 @@ nsJSContext::RemoveReference(void *aSlot, void *aScriptObject)
 NS_IMETHODIMP
 nsJSContext::GC()
 {
-  JS_GC(mContext);
+  ::JS_GC(mContext);
   return NS_OK;
 }
 
