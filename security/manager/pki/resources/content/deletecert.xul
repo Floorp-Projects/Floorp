@@ -57,7 +57,7 @@
       <button id="cancel-button" class="dialog" label="&certmgr.cancel.label;"
               oncommand="window.close();"/> 
       <button id="help-button" class="dialog" label="&certmgr.help.label;"
-              oncommand="openHelp('chrome://help/content/help.xul?delete_my_certs');"/> 
+              oncommand="doHelp();"/> 
     </hbox>
   </vbox>
 
