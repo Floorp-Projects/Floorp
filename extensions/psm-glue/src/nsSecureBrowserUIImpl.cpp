@@ -382,7 +382,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
                                 // will memcpy just return if size == 0?
                                 memcpy(str + CERT_PREFIX_STR_LENGTH, caName.data, caName.len);
                                 *(str + CERT_PREFIX_STR_LENGTH + caName.len) = '\0';
-                                res = mCertificateAuthorityDisplay->SetAttribute( NS_ConvertASCIItoUCS2("value"), NS_ConvertASCIItoUCS2(str) );
+                                res = mCertificateAuthorityDisplay->SetAttribute( NS_ConvertASCIItoUCS2("tooltiptext"), NS_ConvertASCIItoUCS2(str) );
                                 nsMemory::Free(str);
                             }
                         }
