@@ -26,19 +26,10 @@
 #include "nsIServiceManager.h"
 #include "nsITimer.h"
 
+#include "xlibrgb.h"
+
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
-
-extern "C"
-void
-xlib_rgb_init (Display *display, Screen *screen);
-
-extern "C"
-Visual *
-xlib_rgb_get_visual (void);
-
-extern "C" XVisualInfo *
-xlib_rgb_get_visual_info (void);
 
 // this is so that we can get the timers in the base.  most widget
 // toolkits do this through some set of globals.  not here though.  we
