@@ -198,14 +198,6 @@ static const char kRDFNameSpaceURI[]
                   "couldn't get resource");
 
     }
-
-    NS_VERIFY(NS_SUCCEEDED(NS_NewTimer(&mTimer)),
-	"couldn't get timer");
-    if (mTimer)
-    {
-        mTimer->Init(this, /* PR_TRUE, */ 1L);
-    }
-
     ++gRefCnt;
 }
 
@@ -285,15 +277,29 @@ RDFGenericBuilderImpl::QueryInterface(REFNSIID iid, void** aResult)
 NS_IMETHODIMP
 RDFGenericBuilderImpl::SetDocument(nsIRDFDocument* aDocument)
 {
-    NS_PRECONDITION(aDocument != nsnull, "null ptr");
-    if (! aDocument)
-        return NS_ERROR_NULL_POINTER;
-
-    NS_PRECONDITION(mDocument == nsnull, "already initialized");
-    if (mDocument)
-        return NS_ERROR_ALREADY_INITIALIZED;
+    // note: null now allowed, it indicates document going away
 
     mDocument = aDocument; // not refcounted
+    if (aDocument)
+    {
+    	if (nsnull == mTimer)
+    	{
+		NS_VERIFY(NS_SUCCEEDED(NS_NewTimer(&mTimer)), "couldn't get timer");
+		if (mTimer)
+		{
+			mTimer->Init(this, /* PR_TRUE, */ 1L);
+		}
+	}
+    }
+    else
+    {
+    	if (mTimer)
+    	{
+    		mTimer->Cancel();
+    		NS_RELEASE(mTimer);
+    		mTimer = nsnull;
+    	}
+    }
     return NS_OK;
 }
 
