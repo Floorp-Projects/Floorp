@@ -58,7 +58,8 @@ function highlightCurrentProfile()
       return;
     var currentProfileItem = document.getElementById( ( "profileName_" + currentProfile ) );
     var profileList = document.getElementById( "profiles" );
-    profileList.selectItem( currentProfileItem );
+    if( currentProfileItem )
+      profileList.selectItem( currentProfileItem );
   }
   catch(e) {
     dump("*** failed to select current profile in list\n");
@@ -85,6 +86,7 @@ function AddItem( aChildren, aProfileObject )
   //  var roaming = document.getElementById("roamingitem");
   //  kids.insertBefore(item,roaming);
   kids.appendChild(item);
+  return item;
 }
 
 function Profile ( aName, aDir, aMigrated ) 
