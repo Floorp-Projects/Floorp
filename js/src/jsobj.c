@@ -1972,8 +1972,9 @@ static JSBool
 FindConstructor(JSContext *cx, JSObject *start, const char *name, jsval *vp)
 {
     JSAtom *atom;
-    JSObject *obj;
-    JSDHashTable *table;
+    JSObject *obj, *pobj;
+    JSProperty *prop;
+    JSScopeProperty *sprop;
 
     atom = js_Atomize(cx, name, strlen(name), 0);
     if (!atom)
@@ -1993,27 +1994,19 @@ FindConstructor(JSContext *cx, JSObject *start, const char *name, jsval *vp)
         }
     }
 
-    /*
-     * Don't call OBJ_GET_PROPERTY and risk a strict warning if we are in the
-     * middle of suppressing js_LookupProperty recursion, doing lazy standard
-     * class initialization.
-     */
-    table = cx->resolvingTable;
-    if (table) {
-        JSResolvingKey key;
-        JSResolvingEntry *entry;
-
-        key.obj = obj;
-        key.id = (jsid) atom;
-        entry = (JSResolvingEntry *)
-                JS_DHashTableOperate(table, &key, JS_DHASH_LOOKUP);
-        if (entry->flags & JSRESFLAG_LOOKUP) {
-            *vp = JSVAL_VOID;
-            return JS_TRUE;
-        }
+    if (!OBJ_LOOKUP_PROPERTY(cx, obj, (jsid)atom, &pobj, &prop))
+        return JS_FALSE;
+    if (!prop)  {
+        *vp = JSVAL_VOID;
+        return JS_TRUE;
     }
 
-    return OBJ_GET_PROPERTY(cx, obj, (jsid)atom, vp);
+    JS_ASSERT(OBJ_IS_NATIVE(pobj));
+    sprop = (JSScopeProperty *) prop;
+    JS_ASSERT(SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(pobj)));
+    *vp = OBJ_GET_SLOT(cx, pobj, sprop->slot);
+    OBJ_DROP_PROPERTY(cx, pobj, prop);
+    return JS_TRUE;
 }
 
 JSObject *
