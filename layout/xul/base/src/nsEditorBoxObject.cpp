@@ -36,6 +36,8 @@ public:
 
   nsEditorBoxObject();
   virtual ~nsEditorBoxObject();
+//NS_PIBOXOBJECT interfaces
+  NS_IMETHOD SetDocument(nsIDocument* aDocument);
   
 protected:
   nsCOMPtr<nsIEditorShell> mEditorShell;
@@ -44,6 +46,15 @@ protected:
 /* Implementation file */
 NS_IMPL_ADDREF(nsEditorBoxObject)
 NS_IMPL_RELEASE(nsEditorBoxObject)
+
+
+NS_IMETHODIMP
+nsEditorBoxObject::SetDocument(nsIDocument* aDocument)
+{
+  mEditorShell = nsnull;
+  return nsBoxObject::SetDocument(aDocument);
+}
+
 
 NS_IMETHODIMP 
 nsEditorBoxObject::QueryInterface(REFNSIID iid, void** aResult)
