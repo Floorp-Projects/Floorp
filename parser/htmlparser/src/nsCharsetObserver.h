@@ -41,12 +41,13 @@ public:
 
   /*
    *   Subject call observer when the parser hit the tag
+   *   @param aDocumentID- ID of the document
    *   @param aTag- the tag
    *   @param numOfAttributes - number of attributes
    *   @param nameArray - array of name. 
    *   @param valueArray - array of value
    */
-  NS_IMETHOD Notify(const nsString& aTag, PRUint32 numOfAttributes, 
+  NS_IMETHOD Notify(PRUint32 aDocumentID, const nsString& aTag, PRUint32 numOfAttributes, 
                     const nsString* nameArray, const nsString* valueArray,
                     PRBool* oContinue);
 
