@@ -60,6 +60,8 @@ import org.mozilla.xpcom.*;
  */
 
 public class TestArray {
+  public static final String NS_ARRAY_CID = "@mozilla.org/array;1";
+
   public static void main(String [] args) {
     System.loadLibrary("javaxpcom");
 
@@ -68,10 +70,11 @@ public class TestArray {
       throw new RuntimeException("MOZILLA_FIVE_HOME system property not set.");
     }
 
-    nsILocalFile localFile = GeckoEmbed.NS_NewLocalFile(mozillaPath, true);
-    GeckoEmbed.NS_InitEmbedding(localFile, null);
+    nsILocalFile localFile = GeckoEmbed.newLocalFile(mozillaPath, true);
+    GeckoEmbed.initEmbedding(localFile, null);
 
-    nsIMutableArray array = GeckoEmbed.NS_NewArray();
+    nsIComponentManager componentManager = GeckoEmbed.getComponentManager();
+    nsIMutableArray array = (nsIMutableArray) componentManager.createInstanceByContractID(NS_ARRAY_CID, null, nsIMutableArray.NS_IMUTABLEARRAY_IID);
     if (array == null) {
       throw new RuntimeException("Failed to create nsIMutableArray.");
     }
@@ -157,7 +160,14 @@ public class TestArray {
     fillArray(array, 4);
     dumpArray(array, 4, fillResult, 4);
 
-    GeckoEmbed.NS_TermEmbedding();
+    // test deleting of array
+    System.out.println("release array:");
+    array = null;
+    System.gc();
+
+    componentManager = null;
+    System.gc();
+    GeckoEmbed.termEmbedding();
 
     System.out.println("Test Passed.");
   }
