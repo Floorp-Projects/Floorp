@@ -51,6 +51,10 @@ sunbird::
 	mkdir ./MozillaSunbird
 	cd MozillaSunbird
 	mkdir -p ./MozillaSunbird/chrome/
+	mkdir -p ./MozillaSunbird/chrome/overlayinfo/communicator/content/
+	mkdir -p ./MozillaSunbird/chrome/overlayinfo/navigator/content/
+	mkdir -p ./MozillaSunbird/chrome/overlayinfo/messenger/content/
+	mkdir -p ./MozillaSunbird/chrome/overlayinfo/browser/content/
 	mkdir -p ./MozillaSunbird/components/
 	mkdir -p ./MozillaSunbird/defaults/pref
 	mkdir -p ./MozillaSunbird/defaults/profile/chrome
@@ -99,6 +103,10 @@ sunbird::
 	cp $(topsrcdir)/dist/bin/chrome/en-unix.jar ./MozillaSunbird/chrome
 	cp $(topsrcdir)/dist/bin/chrome/pipnss.jar ./MozillaSunbird/chrome
 	cp $(topsrcdir)/dist/bin/chrome/toolkit.jar ./MozillaSunbird/chrome
+	cp $(topsrcdir)/dist/bin/chrome/overlayinfo/communicator/content/overlays.rdf ./MozillaSunbird/chrome/overlayinfo/communicator/content
+	cp $(topsrcdir)/dist/bin/chrome/overlayinfo/navigator/content/overlays.rdf ./MozillaSunbird/chrome/overlayinfo/navigator/content
+	cp $(topsrcdir)/dist/bin/chrome/overlayinfo/browser/content/overlays.rdf ./MozillaSunbird/chrome/overlayinfo/browser/content
+	cp $(topsrcdir)/dist/bin/chrome/overlayinfo/messenger/content/overlays.rdf ./MozillaSunbird/chrome/overlayinfo/messenger/content
 	cp $(topsrcdir)/dist/bin/defaults/pref/security-prefs.js ./MozillaSunbird/defaults/pref
 	cp $(topsrcdir)/dist/bin/defaults/pref/all.js ./MozillaSunbird/defaults/pref
 	cp $(topsrcdir)/dist/bin/defaults/pref/mailnews.js ./MozillaSunbird/defaults/pref
