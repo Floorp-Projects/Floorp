@@ -360,12 +360,20 @@ public:
   virtual nsIFrame * GetFrame() = 0;
 
   /**
-   * Move child widgets around by (dx, dy). deltas are in widget
-   * coordinate space.
-   * @param aDx x delta
-   * @param aDy y delta
+   * Get the nearest widget in this view or a parent of this view and
+   * the offset from the view that contains the widget to this view
+   * @param aDx out parameter for x offset
+   * @param aDy out parameter for y offset
+   * @return widget (if there is one) closest to view
    */
-  virtual void AdjustChildWidgets(nscoord aDx, nscoord aDy) = 0;
+  virtual nsIWidget * GetOffsetFromWidget(nscoord *aDx, nscoord *aDy) = 0;
+
+  /**
+   * Get the visible offset of scrollable view (if any) that contains this view
+   * @param aDx out parameter for x offset
+   * @param aDy out parameter for y offset
+   */
+  virtual void GetScrollOffset(nscoord *aDx, nscoord *aDy) = 0;
 
   /**
    * Output debug info to FILE
@@ -393,5 +401,10 @@ public:
 
 //during event propagation, see if sibling views can handle the event
 #define NS_VIEW_FLAG_CHECK_SIBLINGS 0x0010
+
+//passed down through the class hierarchy
+//to indicate that the clip is set by an
+//outer class
+#define NS_VIEW_FLAG_CLIP_SET       0x0020
 
 #endif

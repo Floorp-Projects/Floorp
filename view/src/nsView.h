@@ -90,7 +90,8 @@ public:
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
   virtual void SetFrame(nsIFrame *aFrame);
   virtual nsIFrame * GetFrame();
-  virtual void AdjustChildWidgets(nscoord aDx, nscoord aDy);
+  virtual nsIWidget * GetOffsetFromWidget(nscoord *aDx, nscoord *aDy);
+  virtual void GetScrollOffset(nscoord *aDx, nscoord *aDy);
 
 protected:
   //

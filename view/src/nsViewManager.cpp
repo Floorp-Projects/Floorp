@@ -31,6 +31,7 @@ static const PRBool gsDebug = PR_FALSE;
 #define UPDATE_QUANTUM  1000 / 40
 
 //#define USE_DIRTY_RECT
+//#define NO_DOUBLE_BUFFER
 
 static void vm_timer_callback(nsITimer *aTimer, void *aClosure)
 {
@@ -288,6 +289,10 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsI
   if (mTransCnt > 0)
     aUpdateFlags |= NS_VMREFRESH_DOUBLE_BUFFER;
 
+#ifdef NO_DOUBLE_BUFFER
+    aUpdateFlags &= ~NS_VMREFRESH_DOUBLE_BUFFER;
+#endif
+
   if (nsnull == aContext)
   {
     localcx = CreateRenderingContext(*aView);
@@ -350,6 +355,10 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsR
 
   if (mTransCnt > 0)
     aUpdateFlags |= NS_VMREFRESH_DOUBLE_BUFFER;
+
+#ifdef NO_DOUBLE_BUFFER
+    aUpdateFlags &= ~NS_VMREFRESH_DOUBLE_BUFFER;
+#endif
 
   if (nsnull == aContext)
   {
@@ -448,6 +457,7 @@ void nsViewManager :: UpdateView(nsIView *aView, nsIRegion *aRegion, PRUint32 aU
     nsRect  trect;
 
     aView->GetBounds(trect);
+    trect.x = trect.y = 0;
     UpdateView(aView, trect, aUpdateFlags);
   }
 }
