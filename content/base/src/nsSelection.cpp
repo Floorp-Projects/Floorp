@@ -165,10 +165,10 @@ public:
   nsresult      GetPresContext(nsIPresContext **aPresContext);
   nsresult      GetPresShell(nsIPresShell **aPresShell);
   nsresult      GetRootScrollableView(nsIScrollableView **aScrollableView);
-  nsresult      GetFrameToRootViewOffset(nsIFrame *aFrame, nscoord *aXOffset, nscoord *aYOffset);
+  nsresult      GetFrameToScrolledViewOffsets(nsIScrollableView *aScrollableView, nsIFrame *aFrame, nscoord *aXOffset, nscoord *aYOffset);
   nsresult      GetPointFromOffset(nsIFrame *aFrame, PRInt32 aContentOffset, nsPoint *aPoint);
-  nsresult      GetSelectionRegionRect(SelectionRegion aRegion, nsRect *aRect);
-  nsresult      ScrollRectIntoView(nsRect& aRect, PRIntn  aVPercent, PRIntn  aHPercent);
+  nsresult      GetSelectionRegionRectAndScrollableView(SelectionRegion aRegion, nsRect *aRect, nsIScrollableView **aScrollableView);
+  nsresult      ScrollRectIntoView(nsIScrollableView *aScrollableView, nsRect& aRect, PRIntn  aVPercent, PRIntn  aHPercent, PRBool aScrollParentViews);
 
   NS_IMETHOD    ScrollIntoView(SelectionRegion aRegion=nsISelectionController::SELECTION_FOCUS_REGION);
   nsresult      AddItem(nsIDOMRange *aRange);
@@ -225,6 +225,11 @@ public:
   nsresult     StartAutoScrollTimer(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint, PRUint32 aDelay);
   nsresult     StopAutoScrollTimer();
   nsresult     DoAutoScroll(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint);
+  nsresult     DoAutoScrollView(nsIPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRBool aScrollParentViews);
+  nsresult     ScrollPointIntoClipView(nsIPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRBool *aDidScroll);
+  nsresult     ScrollPointIntoView(nsIPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRBool aScrollParentViews, PRBool *aDidScroll);
+  nsresult     GetViewAncestorOffset(nsIView *aView, nsIView *aAncestorView, nscoord *aXOffset, nscoord *aYOffset);
+  nsresult     GetClosestScrollableView(nsIView *aView, nsIScrollableView **aScrollableView);
 
   SelectionType GetType(){return mType;}
   void          SetType(SelectionType aType){mType = aType;}
@@ -466,22 +471,20 @@ public:
   NS_DECL_ISUPPORTS
 
   nsAutoScrollTimer()
-      : mSelection(0), mFrame(0), mPresContext(0), mPoint(0,0), mScrollPoint(0,0), mDelay(30)
+      : mSelection(0), mView(0), mPresContext(0), mPoint(0,0), mDelay(30)
   {
     NS_INIT_ISUPPORTS();
   }
 
   virtual ~nsAutoScrollTimer()
   {
-    if (mTimer)
-    {
-      mTimer->Cancel();
-    }
+   if (mTimer)
+       mTimer->Cancel();
   }
 
-  nsresult Start(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint &aPoint)
+  nsresult Start(nsIPresContext *aPresContext, nsIView *aView, nsPoint &aPoint)
   {
-    mFrame       = aFrame;
+    mView        = aView;
     mPresContext = aPresContext;
     mPoint       = aPoint;
 
@@ -525,40 +528,47 @@ public:
 
   NS_IMETHOD_(void) Notify(nsITimer *timer)
   {
-    if (mSelection && mPresContext && mFrame)
+    if (mSelection && mPresContext && mView)
     {
+      void *clientData = 0;
+      mView->GetClientData(clientData);
+      nsIFrame *frame = (nsIFrame *)clientData;
+
+      if (!frame)
+        return;
+
       //the frame passed in here will be a root frame for the view. there is no need to call the constrain
       //method here. the root frame has NO content now unfortunately...
       PRInt32 startPos = 0;
       PRInt32 contentOffsetEnd = 0;
       PRBool  beginOfContent;
       nsCOMPtr<nsIContent> newContent;
-      nsresult result = mFrame->GetContentAndOffsetsFromPoint(mPresContext, mPoint,
+      nsresult result = frame->GetContentAndOffsetsFromPoint(mPresContext, mPoint,
                                                    getter_AddRefs(newContent), 
                                                    startPos, contentOffsetEnd,beginOfContent);
 
       if (NS_SUCCEEDED(result))
-      {
         result = mFrameSelection->HandleClick(newContent, startPos, contentOffsetEnd , PR_TRUE, PR_FALSE, beginOfContent);
-      }
+
       //mFrameSelection->HandleDrag(mPresContext, mFrame, mPoint);
-      mSelection->DoAutoScroll(mPresContext, mFrame, mPoint);
+      mSelection->DoAutoScrollView(mPresContext, mView, mPoint, PR_TRUE);
     }
   }
 private:
   nsSelection    *mFrameSelection;
   nsDOMSelection *mSelection;
   nsCOMPtr<nsITimer> mTimer;
-  nsIFrame       *mFrame;
+  nsIView        *mView;
   nsIPresContext *mPresContext;
   nsPoint         mPoint;
-  nsPoint         mScrollPoint;
   PRUint32        mDelay;
 };
 
 NS_IMPL_ADDREF(nsAutoScrollTimer)
 NS_IMPL_RELEASE(nsAutoScrollTimer)
 NS_IMPL_QUERY_INTERFACE1(nsAutoScrollTimer, nsITimerCallback)
+
+nsresult NS_NewAutoScrollTimer(nsAutoScrollTimer **aResult);
 
 nsresult NS_NewAutoScrollTimer(nsAutoScrollTimer **aResult)
 {
@@ -4001,6 +4011,444 @@ nsDOMSelection::StopAutoScrollTimer()
 }
 
 nsresult
+nsDOMSelection::GetViewAncestorOffset(nsIView *aView, nsIView *aAncestorView, nscoord *aXOffset, nscoord *aYOffset)
+{
+  // Note: A NULL aAncestorView pointer means that the caller wants
+  //       the view's global offset.
+
+  if (!aView || !aXOffset || !aYOffset)
+    return NS_ERROR_FAILURE;
+
+  *aXOffset = 0;
+  *aYOffset = 0;
+
+  nsIView *view = aView;
+
+  while (view && view != aAncestorView)
+  {
+    nscoord x = 0, y = 0;
+    nsresult result = view->GetPosition(&x, &y);
+
+    if (NS_FAILED(result))
+      return result;
+
+    *aXOffset += x;
+    *aYOffset += y;
+
+    result = view->GetParent(view);
+
+    if (NS_FAILED(result))
+      return result;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsDOMSelection::GetClosestScrollableView(nsIView *aView, nsIScrollableView **aScrollableView)
+{
+  if (!aView || !aScrollableView)
+    return NS_ERROR_FAILURE;
+
+  *aScrollableView = 0;
+
+  while (!*aScrollableView && aView)
+  {
+    nsresult result = aView->QueryInterface(NS_GET_IID(nsIScrollableView), (void **)aScrollableView);
+
+    if (!*aScrollableView)
+    {
+      result = aView->GetParent(aView);
+
+      if (NS_FAILED(result))
+        return result;
+    }
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsDOMSelection::ScrollPointIntoClipView(nsIPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRBool *aDidScroll)
+{
+  nsresult result;
+
+  if (!aPresContext || !aView || !aDidScroll)
+    return NS_ERROR_NULL_POINTER;
+
+  *aDidScroll = PR_FALSE;
+
+  //
+  // Get aView's scrollable view.
+  //
+
+  nsIScrollableView *scrollableView = 0;
+
+  result = GetClosestScrollableView(aView, &scrollableView);
+
+  if (NS_FAILED(result))
+    return result;
+
+  if (!scrollableView)
+    return NS_OK; // Nothing to do!
+
+  //
+  // Get the clip view.
+  //
+
+  const nsIView *cView = 0;
+
+  result = scrollableView->GetClipView(&cView);
+
+  if (NS_FAILED(result))
+    return result;
+
+  //
+  // Get the view that is being scrolled.
+  //
+
+  nsIView *scrolledView = 0;
+
+  result = scrollableView->GetScrolledView(scrolledView);
+  if (!cView)
+    return NS_ERROR_FAILURE;
+  
+  //
+  // Now walk up aView's hierarchy, this time keeping track of
+  // the view offsets until you hit the scrolledView.
+  //
+
+  nsPoint viewOffset(0,0);
+
+  result = GetViewAncestorOffset(aView, scrolledView, &viewOffset.x, &viewOffset.y);
+
+  if (NS_FAILED(result))
+    return result;
+
+  //
+  // See if aPoint is outside the clip view's boundaries.
+  // If it is, scroll the view till it is inside the visible area!
+  //
+
+  nsRect bounds;
+
+  result = cView->GetBounds(bounds);
+
+  if (NS_FAILED(result))
+    return result;
+
+  result = scrollableView->GetScrollPosition(bounds.x,bounds.y);
+
+  if (NS_FAILED(result))
+    return result;
+
+  //
+  // Calculate the amount we would have to scroll in
+  // the vertical and horizontal directions to get the point
+  // within the clip area.
+  //
+
+  nscoord dx = 0, dy = 0;
+  nsPoint ePoint = aPoint;
+
+  ePoint.x += viewOffset.x;
+  ePoint.y += viewOffset.y;
+  
+  nscoord x1 = bounds.x;
+  nscoord x2 = bounds.x + bounds.width;
+  nscoord y1 = bounds.y;
+  nscoord y2 = bounds.y + bounds.height;
+
+  if (ePoint.x < x1)
+    dx = ePoint.x - x1;
+  else if (ePoint.x > x2)
+    dx = ePoint.x - x2;
+      
+  if (ePoint.y < y1)
+    dy = ePoint.y - y1;
+  else if (ePoint.y > y2)
+    dy = ePoint.y - y2;
+
+  //
+  // Now clip the scroll amounts so that we don't scroll
+  // beyond the ends of the document.
+  //
+
+  nscoord scrollX = 0, scrollY = 0;
+  nscoord docWidth = 0, docHeight = 0;
+
+  result = scrollableView->GetScrollPosition(scrollX, scrollY);
+
+  if (NS_SUCCEEDED(result))
+    result = scrollableView->GetContainerSize(&docWidth, &docHeight);
+
+  if (NS_SUCCEEDED(result))
+  {
+    if (dx < 0 && scrollX == 0)
+      dx = 0;
+    else if (dx > 0)
+    {
+      x1 = scrollX + dx + bounds.width;
+
+      if (x1 > docWidth)
+        dx -= x1 - docWidth;
+    }
+
+
+    if (dy < 0 && scrollY == 0)
+      dy = 0;
+    else if (dy > 0)
+    {
+      y1 = scrollY + dy + bounds.height;
+
+      if (y1 > docHeight)
+        dy -= y1 - docHeight;
+    }
+
+    //
+    // Now scroll the view if neccessary.
+    //
+
+    if (dx != 0 || dy != 0)
+    {
+      // Get the PresShell
+      nsCOMPtr<nsIPresShell> presShell;
+      result = aPresContext->GetShell(getter_AddRefs(presShell));
+      NS_ENSURE_TRUE(presShell,result);
+
+      // Get the ViewManager
+      nsCOMPtr<nsIViewManager> viewManager;
+      result = presShell->GetViewManager(getter_AddRefs(viewManager));
+      NS_ENSURE_TRUE(viewManager,result);
+
+      // Make sure latest bits are available before we scroll them.
+      
+      viewManager->Composite();
+
+      // Now scroll the view!
+
+      result = scrollableView->ScrollTo(scrollX + dx, scrollY + dy, NS_VMREFRESH_NO_SYNC);
+
+      if (NS_FAILED(result))
+        return result;
+
+      nsPoint newPos;
+
+      result = scrollableView->GetScrollPosition(newPos.x, newPos.y);
+
+      if (NS_FAILED(result))
+        return result;
+
+      *aDidScroll = (bounds.x != newPos.x || bounds.y != newPos.y);
+    }
+  }
+
+  return result;
+}
+
+nsresult
+nsDOMSelection::ScrollPointIntoView(nsIPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRBool aScrollParentViews, PRBool *aDidScroll)
+{
+  if (!aPresContext || !aView || !aDidScroll)
+    return NS_ERROR_NULL_POINTER;
+
+  nsresult result;
+
+  *aDidScroll = PR_FALSE;
+
+  //
+  // Calculate the global offset of the view.
+  //
+
+  nsPoint globalOffset;
+
+  result = GetViewAncestorOffset(aView, nsnull, &globalOffset.x, &globalOffset.y);
+
+  if (NS_FAILED(result))
+    return result;
+
+  //
+  // Convert aPoint into global coordinates so it is easier to map
+  // into other views.
+  //
+
+  nsPoint globalPoint = aPoint + globalOffset;
+
+  //
+  // Scroll the point into the visible rect of the closest
+  // scrollable view.
+  //
+  result = ScrollPointIntoClipView(aPresContext, aView, aPoint, aDidScroll);
+
+  if (NS_FAILED(result))
+    return result;
+
+  //
+  // Now scroll the parent scrollable views.
+  //
+
+  if (aScrollParentViews)
+  {
+    //
+    // Find aView's parent scrollable view.
+    //
+
+    nsIScrollableView *scrollableView = 0;
+
+    result = GetClosestScrollableView(aView, &scrollableView);
+
+    if (NS_FAILED(result))
+      return result;
+
+    if (scrollableView)
+    {
+      //
+      // Convert scrollableView to nsIView.
+      //
+
+      nsIView *scrolledView = 0;
+      nsIView *view = 0;
+
+      result = scrollableView->QueryInterface(NS_GET_IID(nsIView), (void**)&view);
+
+      if (view)
+      {
+        //
+        // Now get the scrollableView's parent, then search for it's
+        // closest scrollable view.
+        //
+
+        result = view->GetParent(view);
+
+        if (NS_FAILED(result))
+          return result;
+
+        while (view)
+        {
+          result = GetClosestScrollableView(view, &scrollableView);
+
+          if (NS_FAILED(result))
+            return result;
+
+          if (!scrollableView)
+            break;
+
+          scrolledView = 0;
+          result = scrollableView->GetScrolledView(scrolledView);
+          
+          if (NS_FAILED(result))
+            return result;
+
+          //
+          // Map the global point into this scrolledView's coordinate space.
+          //
+
+          result = GetViewAncestorOffset(scrolledView, nsnull, &globalOffset.x, &globalOffset.y);
+
+          if (NS_FAILED(result))
+            return result;
+
+          nsPoint newPoint = globalPoint - globalOffset;
+
+          //
+          // Scroll the point into the visible rect of the scrolled view.
+          //
+
+          PRBool parentDidScroll = PR_FALSE;
+
+          result = ScrollPointIntoClipView(aPresContext, scrolledView, newPoint, &parentDidScroll);
+
+          if (NS_FAILED(result))
+            return result;
+
+          *aDidScroll = *aDidScroll || parentDidScroll;
+
+          //
+          // Now get the parent of this scrollable view so we
+          // can scroll the next parent view.
+          //
+
+          view = 0;
+          result = scrollableView->QueryInterface(NS_GET_IID(nsIView), (void**)&view);
+
+          if (NS_FAILED(result))
+            return result;
+
+          if (view)
+            view->GetParent(view);
+        }
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsDOMSelection::DoAutoScrollView(nsIPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRBool aScrollParentViews)
+{
+  if (!aPresContext || !aView)
+    return NS_ERROR_NULL_POINTER;
+
+  nsresult result;
+
+  if (mAutoScrollTimer)
+    result = mAutoScrollTimer->Stop();
+
+  //
+  // Calculate the global offset of the view.
+  //
+
+  nsPoint globalOffset;
+
+  result = GetViewAncestorOffset(aView, nsnull, &globalOffset.x, &globalOffset.y);
+
+  if (NS_FAILED(result))
+    return result;
+
+  //
+  // Convert aPoint into global coordinates so we can get back
+  // to the same point after all the parent views have scrolled.
+  //
+
+  nsPoint globalPoint = aPoint + globalOffset;
+
+  //
+  // Now scroll aPoint into view.
+  //
+
+  PRBool didScroll = PR_FALSE;
+
+  result = ScrollPointIntoView(aPresContext, aView, aPoint, aScrollParentViews, &didScroll);
+
+  if (NS_FAILED(result))
+    return result;
+
+  //
+  // Start the AutoScroll timer if neccessary.
+  //
+
+  if (didScroll && mAutoScrollTimer)
+  {
+    //
+    // Map the globalPoint back into aView's coordinate system. We
+    // have to get the globalOffsets again because aView's
+    // window and it's parents may have changed their offsets.
+    //
+    result = GetViewAncestorOffset(aView, nsnull, &globalOffset.x, &globalOffset.y);
+
+    if (NS_FAILED(result))
+      return result;
+
+    nsPoint svPoint = globalPoint - globalOffset;
+
+    result = mAutoScrollTimer->Start(aPresContext, aView, svPoint);
+  }
+
+  return NS_OK;
+}
+
+nsresult
 nsDOMSelection::DoAutoScroll(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint)
 {
   nsresult result;
@@ -4008,196 +4456,50 @@ nsDOMSelection::DoAutoScroll(nsIPresContext *aPresContext, nsIFrame *aFrame, nsP
   if (!aPresContext || !aFrame)
     return NS_ERROR_NULL_POINTER;
 
-  if (mAutoScrollTimer)
-    result = mAutoScrollTimer->Stop();
-
   //
-  // Get a hold of the root scrollable view for presShell.
+  // Find the closest view to the frame!
   //
 
-  nsIScrollableView *scrollableView = 0;
+  nsIView *closestView = 0;
 
-  result = GetRootScrollableView(&scrollableView);
-  if (NS_SUCCEEDED(result) && scrollableView)
+  result = aFrame->GetView(aPresContext, &closestView);
+
+  if (NS_FAILED(result))
+    return result;
+
+  if (!closestView)
   {
     //
-    // Get a hold of the scrollable view's clip view.
+    // aFrame doesn't contain a view, so walk aFrame's parent hierarchy
+    // till you find a parent with a view.
     //
 
-    const nsIView *cView = 0;
-    nsIView *scrolledView;
-    result = scrollableView->GetClipView(&cView);
-    scrollableView->GetScrolledView(scrolledView);
-    if (NS_SUCCEEDED(result) && cView)
+    nsIFrame *parentFrame = aFrame;
+
+    result = aFrame->GetParent(&parentFrame);
+
+    if (NS_FAILED(result))
+      return result;
+
+    if (!parentFrame)
+      return NS_ERROR_FAILURE;
+
+    while (!closestView && parentFrame)
     {
-      //
-      // Find out if this frame's view is in the parent hierarchy of the clip view.
-      // If it is, then we know the drag is happening outside of the clip view,
-      // so we may need to auto scroll.
-      //
+      result = parentFrame->GetView(aPresContext, &closestView);
 
-      // Get the frame's parent view.
+      if (NS_FAILED(result))
+        return result;
 
-      nsPoint viewOffset(0,0);
-
-      nsIView *frameView = 0;
-
-      nsIFrame *parentFrame = aFrame;
-
-      while (NS_SUCCEEDED(result) && parentFrame && !frameView)
-      {
-        result = parentFrame->GetView(aPresContext, &frameView);
-        if (NS_SUCCEEDED(result) && !frameView)
-          result = parentFrame->GetParent(&parentFrame);
-      }
-
-      if (NS_SUCCEEDED(result) && frameView)
-      {
-        //
-        // Now make sure that the frame's view is in the
-        // scrollable view's parent hierarchy.
-        //
-
-        nsIView *view = (nsIView*)frameView;
-        nscoord x, y;
-
-        while (view && view != cView)
-        {
-          result = view->GetParent(view);
-
-          if (NS_FAILED(result))
-            view = 0;
-          else if (view && view != cView) 
-          {
-            result = view->GetPosition(&x, &y);
-
-            if (NS_FAILED(result))
-              view = 0;
-            else
-            {
-              //
-              // Keep track of the view offsets so we can
-              // translate aPoint into the scrollable view's
-              // coordinate system.
-              //
-
-              viewOffset.x += x;
-              viewOffset.y += y;
-            }
-          }
-        }
-        if (cView)
-        {
-          //
-          // See if aPoint is outside the clip view's boundaries.
-          // If it is, scroll the view till it is inside the visible area!
-          //
-
-          nsRect bounds;
-
-          result = cView->GetBounds(bounds);
-          scrollableView->GetScrollPosition(bounds.x,bounds.y);
-          if (NS_SUCCEEDED(result))
-          {
-            //
-            // Calculate the amount we would have to scroll in
-            // the vertical and horizontal directions to get the point
-            // within the clip area.
-            //
-
-            nscoord dx = 0, dy = 0;
-            nsPoint ePoint = aPoint;
-
-            ePoint.x -= viewOffset.x;
-            ePoint.y -= viewOffset.y;
-            
-            nscoord x1 = bounds.x;
-            nscoord x2 = bounds.x + bounds.width;
-            nscoord y1 = bounds.y;
-            nscoord y2 = bounds.y + bounds.height;
-
-            if (ePoint.x < x1)
-              dx = ePoint.x - x1;
-            else if (ePoint.x > x2)
-              dx = ePoint.x - x2;
-                
-            if (ePoint.y < y1)
-              dy = ePoint.y - y1;
-            else if (ePoint.y > y2)
-              dy = ePoint.y - y2;
-
-            //
-            // Now clip the scroll amounts so that we don't scroll
-            // beyond the ends of the document.
-            //
-
-            nscoord scrollX = 0, scrollY = 0;
-            nscoord docWidth = 0, docHeight = 0;
-
-            result = scrollableView->GetScrollPosition(scrollX, scrollY);
-
-            if (NS_SUCCEEDED(result))
-              result = scrollableView->GetContainerSize(&docWidth, &docHeight);
-
-            if (NS_SUCCEEDED(result))
-            {
-              if (dx < 0 && scrollX == 0)
-                dx = 0;
-              else if (dx > 0)
-              {
-                x1 = scrollX + dx + bounds.width;
-
-                if (x1 > docWidth)
-                  dx -= x1 - docWidth;
-              }
-
-
-              if (dy < 0 && scrollY == 0)
-                dy = 0;
-              else if (dy > 0)
-              {
-                y1 = scrollY + dy + bounds.height;
-
-                if (y1 > docHeight)
-                  dy -= y1 - docHeight;
-              }
-
-              //
-              // Now scroll the view if neccessary.
-              //
-
-              if (dx != 0 || dy != 0)
-              {
-// make sure latest bits are available before we scroll them.
-//get the presshell
-                nsCOMPtr<nsIPresShell> presShell;
-                result = aPresContext->GetShell(getter_AddRefs(presShell));
-                NS_ENSURE_TRUE(presShell,result);
-
-//get viewmanager
-                nsCOMPtr<nsIViewManager> viewManager;
-                result = presShell->GetViewManager(getter_AddRefs(viewManager));
-                NS_ENSURE_TRUE(viewManager,result);
-
-                viewManager->Composite();
-                result = scrollableView->ScrollTo(scrollX + dx, scrollY + dy, NS_VMREFRESH_NO_SYNC);
-                if (mAutoScrollTimer)
-                {
-                  nsPoint point(aPoint.x + dx,aPoint.y + dy);
-                  result = mAutoScrollTimer->Start(aPresContext, parentFrame, point);
-#ifdef DEBUG_SELECTION
-printf("point out of view: x=%u, y=%u\n", (point.x), (point.y));
-#endif
-                }
-              }
-            }
-          }
-        }
-      }
+      if (!closestView)
+        result = parentFrame->GetParent(&parentFrame);
     }
+
+    if (!closestView)
+      return NS_ERROR_FAILURE;
   }
 
-  return result;
+  return DoAutoScrollView(aPresContext, closestView, aPoint, PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -5727,28 +6029,18 @@ nsDOMSelection::GetRootScrollableView(nsIScrollableView **aScrollableView)
 }
 
 nsresult
-nsDOMSelection::GetFrameToRootViewOffset(nsIFrame *aFrame, nscoord *aX, nscoord *aY)
+nsDOMSelection::GetFrameToScrolledViewOffsets(nsIScrollableView *aScrollableView, nsIFrame *aFrame, nscoord *aX, nscoord *aY)
 {
   nsresult rv = NS_OK;
   if (!mFrameSelection)
     return NS_ERROR_FAILURE;//nothing to do
 
-  if (!aFrame || !aX || !aY) {
+  if (!aScrollableView || !aFrame || !aX || !aY) {
     return NS_ERROR_NULL_POINTER;
   }
 
   *aX = 0;
   *aY = 0;
-
-  nsIScrollableView* scrollingView = 0;
-
-  rv = GetRootScrollableView(&scrollingView);
-
-  if (NS_FAILED(rv))
-    return rv;
-
-  if (!scrollingView)
-    return NS_ERROR_NULL_POINTER;
 
   nsIView*  scrolledView;
   nsPoint   offset;
@@ -5756,7 +6048,7 @@ nsDOMSelection::GetFrameToRootViewOffset(nsIFrame *aFrame, nscoord *aX, nscoord 
           
   // Determine the offset from aFrame to the scrolled view. We do that by
   // getting the offset from its closest view and then walking up
-  scrollingView->GetScrolledView(scrolledView);
+  aScrollableView->GetScrolledView(scrolledView);
   nsIFocusTracker *tracker = mFrameSelection->GetTracker();
 
   if (!tracker)
@@ -5883,13 +6175,13 @@ nsDOMSelection::GetPointFromOffset(nsIFrame *aFrame, PRInt32 aContentOffset, nsP
 }
 
 nsresult
-nsDOMSelection::GetSelectionRegionRect(SelectionRegion aRegion, nsRect *aRect)
+nsDOMSelection::GetSelectionRegionRectAndScrollableView(SelectionRegion aRegion, nsRect *aRect, nsIScrollableView **aScrollableView)
 {
   nsresult result = NS_OK;
   if (!mFrameSelection)
     return NS_ERROR_FAILURE;//nothing to do
 
-  if (!aRect)
+  if (!aRect || !aScrollableView)
     return NS_ERROR_NULL_POINTER;
 
   // Init aRect:
@@ -5898,6 +6190,8 @@ nsDOMSelection::GetSelectionRegionRect(SelectionRegion aRegion, nsRect *aRect)
   aRect->y = 0;
   aRect->width  = 0;
   aRect->height = 0;
+
+  *aScrollableView = 0;
 
   nsIDOMNode *node       = 0;
   PRInt32     nodeOffset = 0;
@@ -5934,11 +6228,59 @@ nsDOMSelection::GetSelectionRegionRect(SelectionRegion aRegion, nsRect *aRect)
   }
   else
     result = NS_ERROR_FAILURE;
+
   if(NS_FAILED(result))
     return result;
 
   if (!frame)
     return NS_ERROR_NULL_POINTER;
+
+  //
+  // Get the frame's scrollable view.
+  //
+
+  nsCOMPtr<nsIPresContext> presContext;
+
+  result = GetPresContext(getter_AddRefs(presContext));
+
+  if (NS_FAILED(result))
+    return result;
+
+  if (!presContext)
+    return NS_ERROR_FAILURE;
+
+
+  nsIView *view = 0;
+  nsIFrame *parentWithView = 0;
+
+  result = frame->GetParentWithView(presContext, &parentWithView);
+
+  if (NS_FAILED(result))
+    return result;
+
+  if (!parentWithView)
+    return NS_ERROR_FAILURE;
+
+  result = parentWithView->GetView(presContext, &view);
+
+  if (NS_FAILED(result))
+    return result;
+
+  if (!view)
+    return NS_ERROR_FAILURE;
+
+  result = GetClosestScrollableView(view, aScrollableView);
+
+  if (NS_FAILED(result))
+    return result;
+
+  if (!*aScrollableView)
+    return NS_OK;
+
+  //
+  // Figure out what node type we have, then get the
+  // appropriate rect for it's nodeOffset.
+  //
 
   PRUint16 nodeType = nsIDOMNode::ELEMENT_NODE;
 
@@ -5986,7 +6328,7 @@ nsDOMSelection::GetSelectionRegionRect(SelectionRegion aRegion, nsRect *aRect)
     //
     // Translate the frame's rect into root view coordinates.
     //
-    result = GetFrameToRootViewOffset(frame, &aRect->x, &aRect->y);
+    result = GetFrameToScrolledViewOffsets(*aScrollableView, frame, &aRect->x, &aRect->y);
 
     if (NS_FAILED(result))
       return result;
@@ -6001,22 +6343,15 @@ nsDOMSelection::GetSelectionRegionRect(SelectionRegion aRegion, nsRect *aRect)
     // padding!
     //
 
-    nsIScrollableView *scrollingView = 0;
-
-    result = GetRootScrollableView(&scrollingView);
-
-    if (NS_FAILED(result))
-      return result;
-
     const nsIView* clipView = 0;
     nsRect clipRect;
 
-    result = scrollingView->GetScrollPosition(clipRect.x, clipRect.y);
+    result = (*aScrollableView)->GetScrollPosition(clipRect.x, clipRect.y);
 
     if (NS_FAILED(result))
       return result;
 
-    result = scrollingView->GetClipView(&clipView);
+    result = (*aScrollableView)->GetClipView(&clipView);
 
     if (NS_FAILED(result))
       return result;
@@ -6056,29 +6391,24 @@ nsDOMSelection::GetSelectionRegionRect(SelectionRegion aRegion, nsRect *aRect)
     if (NS_FAILED(result))
       return result;
 
-    result = GetFrameToRootViewOffset(frame, &aRect->x, &aRect->y);
+    result = GetFrameToScrolledViewOffsets(*aScrollableView, frame, &aRect->x, &aRect->y);
   }
 
   return result;
 }
 
 nsresult
-nsDOMSelection::ScrollRectIntoView(nsRect& aRect,
+nsDOMSelection::ScrollRectIntoView(nsIScrollableView *aScrollableView,
+                              nsRect& aRect,
                               PRIntn  aVPercent, 
-                              PRIntn  aHPercent)
+                              PRIntn  aHPercent,
+                              PRBool aScrollParentViews)
 {
   nsresult rv = NS_OK;
   if (!mFrameSelection)
     return NS_OK;//nothing to do
 
-  nsIScrollableView *scrollingView = 0;
-
-  rv = GetRootScrollableView(&scrollingView);
-
-  if (NS_FAILED(rv))
-    return rv;
-
-  if (! scrollingView)
+  if (!aScrollableView)
     return NS_ERROR_NULL_POINTER;
 
   // Determine the visible rect in the scrolled view's coordinate space.
@@ -6086,8 +6416,8 @@ nsDOMSelection::ScrollRectIntoView(nsRect& aRect,
   const nsIView*  clipView;
   nsRect          visibleRect;
 
-  scrollingView->GetScrollPosition(visibleRect.x, visibleRect.y);
-  scrollingView->GetClipView(&clipView);
+  aScrollableView->GetScrollPosition(visibleRect.x, visibleRect.y);
+  aScrollableView->GetClipView(&clipView);
   clipView->GetDimensions(&visibleRect.width, &visibleRect.height);
 
   // The actual scroll offsets
@@ -6136,8 +6466,88 @@ nsDOMSelection::ScrollRectIntoView(nsRect& aRect,
     nscoord frameAlignX = aRect.x + (aRect.width * aHPercent) / 100;
     scrollOffsetX = frameAlignX - (visibleRect.width * aHPercent) / 100;
   }
-      
-  scrollingView->ScrollTo(scrollOffsetX, scrollOffsetY, NS_VMREFRESH_IMMEDIATE);
+
+  aScrollableView->ScrollTo(scrollOffsetX, scrollOffsetY, NS_VMREFRESH_IMMEDIATE);
+
+  if (aScrollParentViews)
+  {
+    //
+    // Get aScrollableView's scrolled view.
+    //
+
+    nsIView *scrolledView = 0;
+
+    rv = aScrollableView->GetScrolledView(scrolledView);
+
+    if (NS_FAILED(rv))
+      return rv;
+
+    if (!scrolledView)
+      return NS_ERROR_FAILURE;
+
+    //
+    // Check if aScrollableRect has a parent scrollable view!
+    //
+
+    nsIView *view = 0;
+
+    rv = aScrollableView->QueryInterface(NS_GET_IID(nsIView), (void **)&view);
+
+    if (NS_FAILED(rv))
+      return rv;
+
+    if (!view)
+      return NS_ERROR_FAILURE;
+
+    rv = view->GetParent(view);
+
+    if (NS_FAILED(rv))
+      return rv;
+
+    if (view)
+    {
+      nsIScrollableView *parentSV = 0;
+
+      rv = GetClosestScrollableView(view, &parentSV);
+
+      if (NS_FAILED(rv))
+        return rv;
+
+      if (parentSV)
+      {
+        //
+        // We have a parent scrollable view, so now map aRect
+        // into it's scrolled view's coordinate space.
+        //
+        
+        nsRect newRect;
+
+        rv = parentSV->GetScrolledView(view);
+
+        if (NS_FAILED(rv))
+          return rv;
+
+        if (!view)
+          return NS_ERROR_FAILURE;
+
+        rv = GetViewAncestorOffset(scrolledView, view, &newRect.x, &newRect.y);
+
+        if (NS_FAILED(rv))
+          return rv;
+
+        newRect.x     += aRect.x;
+        newRect.y     += aRect.y;
+        newRect.width  = aRect.width;
+        newRect.height = aRect.height;
+
+        //
+        // Now scroll the rect into the parent's view.
+        //
+
+        rv = ScrollRectIntoView(parentSV, newRect, aVPercent, aHPercent, aScrollParentViews);
+      }
+    }
+  }
 
   return rv;
 }
@@ -6169,13 +6579,22 @@ nsDOMSelection::ScrollIntoView(SelectionRegion aRegion)
     //
     // Scroll the selection region into view.
     //
+
     nsRect rect;
-    result = GetSelectionRegionRect(aRegion, &rect);
+    nsIScrollableView *scrollableView = 0;
+
+    result = GetSelectionRegionRectAndScrollableView(aRegion, &rect, &scrollableView);
 
     if (NS_FAILED(result))
       return result;
 
-    result = ScrollRectIntoView(rect, NS_PRESSHELL_SCROLL_ANYWHERE, NS_PRESSHELL_SCROLL_ANYWHERE);
+    //
+    // It's ok if we don't have a scrollable view, just return early.
+    //
+    if (!scrollableView)
+      return NS_OK;
+
+    result = ScrollRectIntoView(scrollableView, rect, NS_PRESSHELL_SCROLL_ANYWHERE, NS_PRESSHELL_SCROLL_ANYWHERE, PR_TRUE);
   }
   return result;
 }
