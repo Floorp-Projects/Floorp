@@ -129,10 +129,6 @@ public:
 
   void FreeLineBox(nsLineBox* aLine);
 
-  void StoreMaxElementWidth(nsIFrame* aFloater, nscoord aWidth) {
-    mBand.StoreMaxElementWidth(mPresContext, aFloater, aWidth);
-  }
-
   //----------------------------------------
 
   // This state is the "global" state computed once for the reflow of

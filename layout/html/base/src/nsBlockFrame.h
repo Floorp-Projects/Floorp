@@ -368,10 +368,6 @@ protected:
                      nsLineBox* aLine,
                      nscoord aMaxElementWidth);
 
-  void ComputeLineMaxElementWidth(nsBlockReflowState& aState,
-                                  nsLineBox* aLine,
-                                  nscoord* aMaxElementWidth);
-
   // XXX where to go
   PRBool ShouldJustifyLine(nsBlockReflowState& aState,
                            line_iterator aLine);
@@ -428,9 +424,7 @@ protected:
   // but only if the available height is constrained.
   nsresult ReflowFloater(nsBlockReflowState& aState,
                          nsPlaceholderFrame* aPlaceholder,
-                         nsRect&             aCombinedRectResult,
-                         nsMargin&           aMarginResult,
-                         nsMargin&           aComputedOffsetsResult,
+                         nsFloaterCache*     aFloaterCache,
                          nsReflowStatus&     aReflowStatus);
 
   //----------------------------------------
