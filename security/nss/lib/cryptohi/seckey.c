@@ -89,10 +89,9 @@ const SEC_ASN1Template SECKEY_DHPublicKeyTemplate[] = {
 };
 
 const SEC_ASN1Template SECKEY_DHParamKeyTemplate[] = {
-    { SEC_ASN1_SEQUENCE,  0, NULL, sizeof(PQGParams) },
-    { SEC_ASN1_INTEGER, offsetof(PQGParams,prime), },
-    { SEC_ASN1_INTEGER, offsetof(PQGParams,subPrime), },
-    { SEC_ASN1_INTEGER, offsetof(PQGParams,base), },
+    { SEC_ASN1_SEQUENCE,  0, NULL, sizeof(SECKEYPublicKey) },
+    { SEC_ASN1_INTEGER, offsetof(SECKEYPublicKey,u.dh.prime), },
+    { SEC_ASN1_INTEGER, offsetof(SECKEYPublicKey,u.dh.base), },
     /* XXX chrisk: this needs to be expanded for decoding of j and validationParms (RFC2459 7.3.2) */
     { SEC_ASN1_SKIP_REST },
     { 0, }
@@ -867,8 +866,7 @@ seckey_ExtractPublicKey(CERTSubjectPublicKeyInfo *spki)
 	rv = SEC_ASN1DecodeItem(arena, pubk, SECKEY_DHPublicKeyTemplate, &os);
 	if (rv != SECSuccess) break;
 
-        rv = SEC_ASN1DecodeItem(arena, &pubk->u.dh,
-                             SECKEY_DHParamKeyTemplate,
+        rv = SEC_ASN1DecodeItem(arena, pubk, SECKEY_DHParamKeyTemplate,
                                  &spki->algorithm.parameters); 
 
 	if (rv == SECSuccess) return pubk;
