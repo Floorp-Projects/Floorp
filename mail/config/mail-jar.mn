@@ -26,7 +26,6 @@ content/editor-region,                                comm/content/editor-region
 content/communicator-region,                          comm/content/communicator-region,
 content/communicator-platform,                        comm/content/communicator-platform
 content/communicator/contents.rdf, 		                comm/content/communicator/contents.rdf
-content/communicator/communicator.css,                comm/content/communicator/communicator.css
 content/communicator/communicatorOverlay.xul,         comm/content/communicator/communicatorOverlay.xul 
 content/communicator/utilityOverlay.xul,              comm/content/communicator/utilityOverlay.xul 
 content/communicator/utilityOverlay.js,               comm/content/communicator/utilityOverlay.js 

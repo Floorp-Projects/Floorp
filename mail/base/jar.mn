@@ -28,6 +28,7 @@ messenger.jar:
 *+  content/messenger/junkMail.xul                  (content/junkMail.xul)
 *+  content/messenger/junkMail.js                   (content/junkMail.js)
 *+  content/messenger/msgSelectOffline.xul          (content/msgSelectOffline.xul)
+*+  content/messenger/msgPrintEngine.xul            (content/msgPrintEngine.xul)
 *+  content/messenger-views/contents.rdf            (content/messenger-views.rdf)
     content/messenger/about-thunderbird.png         (content/about-thunderbird.png)
     content/messenger/about-credits.png             (content/about-credits.png)

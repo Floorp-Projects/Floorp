@@ -40,13 +40,16 @@
    ========================================================================== */
 
 @import url("chrome://global/skin/");
-@import url("chrome://communicator/content/communicator.css");
 @import url("chrome://global/skin/formatting.css");
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 .toolbar-primary {
   -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbar");
+}
+
+toolbar[printpreview="true"] {
+  -moz-binding: url("chrome://global/content/printPreviewBindings.xml#printpreviewtoolbar");
 }
 
 /* ::::: throbber ::::: */
