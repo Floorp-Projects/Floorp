@@ -39,6 +39,10 @@ sub RegisterConfig {
         ['owIndex', 1, 1, 0],
         ['veryow', 1, 1, ['OOOOWWWW!!!', 'GETOFF!!!', '/me fights back', 'Yikes! I\'m being attacked!!', '/me hits % over the head with a 2-by-4']],
         ['veryowIndex', 1, 1, 0],
+        ['hit', 1, 1, ['/me smacks %target', '/me hits %target over the head with a hammer', '/me trips %target up and laughs', '%target! look over there! *smack*', '/me pokes %target in the ribs']],
+        ['hitIndex', 1, 1, 0],
+        ['hitProtected', 1, 1, {'hixie' => '%target: %source wanted me to hurt you but don\'t worry, i wuv you, i\'d never hurt you...', 'me' => '/me wacks %source in the legs with a crowbar', '' => '%source: Oh you\'d like that, wouldn\'t you, you sadist pervert.', 'yourself' => 'hey look everyone! %source likes to see others hurt themselves!'}],
+        ['hitEnabled', 1, 1, 1], # set to 0 to disable hitting
         ['yousuck', 1, 1, ['%: no, *you* suck!', '/me pouts', '/me cries', '/me . o O ( now what have i done... )']],
         ['yousuckIndex', 1, 1, 0],
         ['thanks', 1, 1, ['sure thing %', 'np', '%: np', '%: just doing my job!']],
@@ -106,6 +110,10 @@ sub Told {
         $self->Perform($event, 'happy');
     } elsif ($message =~ /^\s*(?:i|we)\s+love\s+you[.!1\s]*(?:[;:8][-o]?[]()\|O0<>[]\s*)?$/osi) {
         $self->Perform($event, 'happy');
+    } elsif ($message =~ /^\s*(?:please[\s,.]+)?(?:(?:would|will)\s+you\s+)?(?:hit|smack)\s+(\S+?)(?:[\s,.]+please)?[.!?\s]*\s*$/osi) {
+        if ($self->{'hitEnabled'}) {
+            $self->PerformOnOther($event, 'hit', $1);
+        }
     } elsif ($message =~ /^\s*die[!1.\s]*$/osi) {
         $self->Perform($event, 'unhappy');
     } elsif ($message =~ /^\s*(?:how\s+are\s+you|how\s+do\s+you\s+do|how\'?s\s+things|are\s+you\s+ok)(?:[?!1.,\s]+$expandedme)?\s*[?!1.\s]*$/osi) {
@@ -142,7 +150,7 @@ sub Heard {
     }
     my $me = quotemeta($event->{'bot'}->nick);
     my $expandedme = join('+', split(//gos, $me)).'+';
-    if ($message =~ /^\s*(?:(?:hi|heya?|w+a+s+u+p+|hello|mornin[g\']?|greetings|yo(?:\s+yo)*|bonjour|hoi)\s+$me|$expandedme\s*)[!1\s]*$/si) {
+    if ($message =~ /^\s*(?:(?:hi|heya?|w+a+s+u+p+|hello|mornin[g\']?|greetings|yo(?:\s+yo)*|bonjour|hoi)\s+$me|$expandedme\s*)[!1\s]*|o+h[\s,.!?]+look[\s,.!?]+a\s+$me[\s.!1]*$/si) {
         if ($self->canGreet($event)) {
             $self->Perform($event, 'greetings');
         }
@@ -207,7 +215,7 @@ sub Felt {
         $self->Perform($event, 'yousuck');
     } elsif ($message =~ /^\s*(?:glares|stares)\s+at\s+$me[\s!1.]*$/si) {
         $self->Perform($event, 'yousuck');
-    } elsif ($message =~ /^\s*(?:hugs|kisses)\s+$me[\s!1.]*$/si) {
+    } elsif ($message =~ /^\s*(?:hugs|kisses|loves)\s+$me[\s!1.]*$/si) {
         $self->Perform($event, 'vhappy');
     } elsif ($message =~ /^\s*(?:gives|hands|passes|offers)\s+$me\s+(?:a\s+(?:bot\s*)?(?:snack|cookie)|a\s+present|cash|congratulations|applause|praise)[\s!1.]*$/si) {
         $self->Perform($event, 'happy');
@@ -315,6 +323,24 @@ sub Expand {
     my ($event, $data) = @_;
     $data =~ s/%/$event->{'from'}/gos;
     return $data;
+}
+
+sub PerformOnOther {
+    my $self = shift;
+    my ($event, $list, $other) = @_;
+    my $data;
+    my $me = quotemeta($event->{'bot'}->nick);
+    if ($other =~ m/^$me$/si and
+        defined $self->{"${list}Protected"}->{''}) {
+        $data = $self->{"${list}Protected"}->{''};
+    } elsif (defined $self->{"${list}Protected"}->{lc $other}) {
+        $data = $self->{"${list}Protected"}->{lc $other};
+    } else {
+        $data = $self->GetNext($list);
+    }
+    $data =~ s/%source/$event->{'from'}/gos;
+    $data =~ s/%target/$other/gos;
+    $self->sayOrEmote($event, $data); 
 }
 
 sub DoSeen {
