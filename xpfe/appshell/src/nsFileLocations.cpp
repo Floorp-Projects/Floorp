@@ -25,6 +25,9 @@
 #include "nsFileLocations.h"
 #include "nsIFileLocator.h"
 
+#include "nsFileSpec.h"
+
+#include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 #include "nsSpecialSystemDirectory.h"
 #include "nsDebug.h"
@@ -43,10 +46,21 @@
 #include <sys/param.h>
 #endif
 
+// header file for profiles
+#ifdef XP_PC
+#include "nsIProfile.h"
+#endif //XP_PC
+
 #include "plstr.h"
 #include "prenv.h"
 
 static NS_DEFINE_IID(kIFileLocatorIID, NS_IFILELOCATOR_IID);
+
+// for profile manager
+#ifdef XP_PC
+	static NS_DEFINE_CID(kProfileCID,           NS_PROFILE_CID);
+#endif // XP_PC
+
 
 #if XP_PC
 //----------------------------------------------------------------------------------------
@@ -85,9 +99,9 @@ nsSpecialFileSpec::~nsSpecialFileSpec()
 void nsSpecialFileSpec::operator = (Type aType)
 //----------------------------------------------------------------------------------------
 {
-    *this = (const char*)nsnull;
-    switch (aType)
-    {
+	*this = (const char*)nsnull;
+	switch (aType)
+	{
         
 	#ifdef XP_MAC
         case App_PrefsDirectory30:
@@ -105,7 +119,7 @@ void nsSpecialFileSpec::operator = (Type aType)
             break;    
         case App_PrefsDirectory50:
 	        {
-	            *this = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+	            *this = nsSpecialFileSpec(App_UserProfileDirectory50);
 	            break;
 	        }
 	#else
@@ -122,12 +136,13 @@ void nsSpecialFileSpec::operator = (Type aType)
         
         case App_UserProfileDirectory30:
         case App_UserProfileDirectory40:
+            NS_NOTYETIMPLEMENTED("Write me!");
+            break;    
         case App_UserProfileDirectory50:
             {
                 // The app profile directory comes from the profile manager.
-                // Once the profile manager knows which profile needs to be accessed
-                // it needs to tell us "somehow" about the directory. I think we can
-                // provide a static method for that communication.
+                // Once the profile manager knows which profile needs to be
+				// accessed it tells us about the directory. 
 
                 // And if the profile manager doesn't return anything, we got to fallback
                 // to these. For now I am using these until the profile stuff picks up and
@@ -135,22 +150,46 @@ void nsSpecialFileSpec::operator = (Type aType)
                 // UNIX	: ~/.mozilla
                 // WIN	: ./profile
                 // MAC	: ./profile
-#ifdef XP_UNIX
-                // ~/.mozilla
-                *this = PR_GetEnv("HOME");
-                *this += ".mozilla";
-#elif defined(XP_MAC)
-                // XXX Fix Me. For now use ./profile
-                *this = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_CurrentWorkingDirectory);
-                *this += "profile";
-#else /* XP_PC */
-                // XXX Fix Me. For now use ./profile
-                *this = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_CurrentWorkingDirectory);
-                *this += "profile";
-#endif
+
+				    #ifdef XP_PC
+						nsIProfile *profile = nsnull;
+						static nsFileSpec* profileDir = nsnull;
+
+						if (!profileDir)
+						{
+                            nsIProfile* profile = nsnull;
+                            nsresult rv = nsServiceManager::GetService(kProfileCID, 
+														nsIProfile::GetIID(), 
+														(nsISupports **)&profile);
+                            if (NS_FAILED(rv)) {
+                               return;
+							}
+
+                            profile->Startup(nsnull);
+
+                            profileDir = new nsFileSpec;
+                            profile->GetCurrentProfileDir(&profileDir);
+						}
+						if (profileDir) {
+							*this = *profileDir;
+						}
+					#endif // XP_PC
+
+					#ifdef XP_UNIX
+						// ~/.mozilla
+						*this = PR_GetEnv("HOME");
+						*this += ".mozilla";
+					#endif //XP_UNIX
+					
+					#ifdef XP_MAC
+						// XXX Fix Me. For now use ./profile
+						*this = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_CurrentWorkingDirectory);
+						*this += "profile";
+					#endif //XP_MAC
             }
             break;    
-        
+     
+			
         case App_PreferencesFile30:
 	        {
 	            *this = nsSpecialFileSpec(App_PrefsDirectory30);
