@@ -496,7 +496,7 @@ pref("network.proxy.no_proxies_on",         "");
 pref("network.online",                      true); //online/offline
 pref("network.accept_cookies",              0);     // 0 = Always, 1 = warn, 2 = never
 pref("network.foreign_cookies",             0); // 0 = Accept, 1 = Don't accept
-pref("network.cookie.cookieBehavior",       0); // 0-Accept, 1-dontAcceptForeign, 2-dontUse, 3-p3p
+pref("network.cookie.cookieBehavior",       3); // 0-Accept, 1-dontAcceptForeign, 2-dontUse, 3-p3p
 pref("network.cookie.warnAboutCookies",     false);
 pref("network.cookie.lifetime.enabled",     false);
 pref("network.cookie.lifetime.behavior",    0);
