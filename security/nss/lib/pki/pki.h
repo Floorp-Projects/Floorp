@@ -35,7 +35,7 @@
 #define PKI_H
 
 #ifdef DEBUG
-static const char PKI_CVS_ID[] = "@(#) $RCSfile: pki.h,v $ $Revision: 1.7 $ $Date: 2001/11/28 16:23:43 $ $Name:  $";
+static const char PKI_CVS_ID[] = "@(#) $RCSfile: pki.h,v $ $Revision: 1.8 $ $Date: 2001/12/14 17:32:19 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIT_H
@@ -52,6 +52,43 @@ NSS_EXTERN NSSCertificate *
 nssCertificate_AddRef
 (
   NSSCertificate *c
+);
+
+/* putting here for now, needs more thought */
+NSS_EXTERN PRStatus
+nssCryptoContext_ImportTrust
+(
+  NSSCryptoContext *cc,
+  NSSTrust *trust
+);
+
+NSS_EXTERN NSSTrust *
+nssCryptoContext_FindTrustForCertificate
+(
+  NSSCryptoContext *cc,
+  NSSCertificate *cert
+);
+
+NSS_EXTERN PRStatus
+nssCryptoContext_ImportSMIMEProfile
+(
+  NSSCryptoContext *cc,
+  nssSMIMEProfile *profile
+);
+
+NSS_EXTERN nssSMIMEProfile *
+nssCryptoContext_FindSMIMEProfileForCertificate
+(
+  NSSCryptoContext *cc,
+  NSSCertificate *cert
+);
+
+NSS_EXTERN nssSMIMEProfile *
+nssSMIMEProfile_Create
+(
+  NSSCertificate *cert,
+  NSSItem *profileTime,
+  NSSItem *profileData
 );
 
 PR_END_EXTERN_C

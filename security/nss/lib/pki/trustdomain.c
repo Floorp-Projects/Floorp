@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.20 $ $Date: 2001/12/11 20:28:38 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.21 $ $Date: 2001/12/14 17:32:23 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -355,51 +355,6 @@ NSSTrustDomain_ImportEncodedPublicKey
     return NULL;
 }
 
-struct get_best_cert_arg_str {
-    NSSCertificate *cert;
-    NSSTime *time;
-    NSSUsage *usage;
-    NSSPolicies *policies;
-};
-
-static PRStatus 
-get_best_cert(NSSCertificate *c, void *arg)
-{
-    struct get_best_cert_arg_str *best = (struct get_best_cert_arg_str *)arg;
-    nssDecodedCert *dc, *bestdc;
-    dc = nssCertificate_GetDecoding(c);
-    if (!best->cert) {
-	/* usage */
-	if (best->usage->anyUsage || dc->matchUsage(dc, best->usage)) {
-	    best->cert = c;
-	}
-	return PR_SUCCESS;
-    }
-    bestdc = nssCertificate_GetDecoding(best->cert);
-    /* time */
-    if (bestdc->isValidAtTime(bestdc, best->time)) {
-	/* The current best cert is valid at time */
-	if (!dc->isValidAtTime(dc, best->time)) {
-	    /* If the new cert isn't valid at time, it's not better */
-	    return PR_SUCCESS;
-	}
-    } else {
-	/* The current best cert is not valid at time */
-	if (dc->isValidAtTime(dc, best->time)) {
-	    /* If the new cert is valid at time, it's better */
-	    best->cert = c;
-	    return PR_SUCCESS;
-	}
-    }
-    /* either they are both valid at time, or neither valid; take the newer */
-    /* XXX later -- defer to policies */
-    if (!bestdc->isNewerThan(bestdc, dc)) {
-	best->cert = c;
-    }
-    /* policies */
-    return PR_SUCCESS;
-}
-
 struct collect_arg_str {
     nssList *list;
     PRUint32 maximum;
@@ -412,6 +367,7 @@ collect_certs(NSSCertificate *c, void *arg)
 {
     struct collect_arg_str *ca = (struct collect_arg_str *)arg;
     /* Add the cert to the return list */
+    nssCertificate_AddRef(c);
     nssList_AddUnique(ca->list, (void *)c);
     if (ca->maximum > 0 && nssList_Count(ca->list) >= ca->maximum) {
 	/* signal the end of collection) */
@@ -434,18 +390,15 @@ NSSTrustDomain_FindBestCertificateByNickname
     PRStatus nssrv;
     NSSToken *token;
     nssTokenCertSearch search;
-    struct get_best_cert_arg_str best;
+    nssBestCertificateCB best;
     nssList *nameList;
     /* set the criteria for determining the best cert */
-    best.cert = NULL;
-    best.time = (timeOpt) ? timeOpt : NSSTime_Now(NULL);
-    best.usage = usage;
-    best.policies = policiesOpt;
+    nssBestCertificate_SetArgs(&best, timeOpt, usage, policiesOpt);
     /* find all matching certs in the cache */
     nameList = nssList_Create(NULL, PR_FALSE);
     (void)nssTrustDomain_GetCertsForNicknameFromCache(td, name, nameList);
     /* set the search criteria */
-    search.callback = get_best_cert;
+    search.callback = nssBestCertificate_Callback;
     search.cbarg = &best;
     search.cached = nameList;
     search.searchType = nssTokenSearchType_AllObjects; /* XXX */
@@ -567,18 +520,15 @@ NSSTrustDomain_FindBestCertificateBySubject
     PRStatus nssrv;
     NSSToken *token;
     nssList *subjectList;
-    struct get_best_cert_arg_str best;
+    nssBestCertificateCB best;
     nssTokenCertSearch search;
     /* set the criteria for determining the best cert */
-    best.cert = NULL;
-    best.time = (timeOpt) ? timeOpt : NSSTime_Now(NULL);
-    best.usage = usage;
-    best.policies = policiesOpt;
+    nssBestCertificate_SetArgs(&best, timeOpt, usage, policiesOpt);
     /* find all matching certs in the cache */
     subjectList = nssList_Create(NULL, PR_FALSE);
     (void)nssTrustDomain_GetCertsForSubjectFromCache(td, subject, subjectList);
     /* set the search criteria */
-    search.callback = get_best_cert;
+    search.callback = nssBestCertificate_Callback;
     search.cbarg = &best;
     search.cached = subjectList;
     search.searchType = nssTokenSearchType_AllObjects; /* XXX */
@@ -722,19 +672,16 @@ NSSTrustDomain_FindCertificateByEmail
 {
     PRStatus nssrv;
     NSSToken *token;
-    struct get_best_cert_arg_str best;
+    nssBestCertificateCB best;
     nssTokenCertSearch search;
     nssList *emailList;
     /* set the criteria for determining the best cert */
-    best.cert = NULL;
-    best.time = (timeOpt) ? timeOpt : NSSTime_Now(NULL);
-    best.usage = usage;
-    best.policies = policiesOpt;
+    nssBestCertificate_SetArgs(&best, timeOpt, usage, policiesOpt);
     /* find all matching certs in the cache */
     emailList = nssList_Create(NULL, PR_FALSE);
     (void)nssTrustDomain_GetCertsForEmailAddressFromCache(td, email, emailList);
     /* set the search criteria */
-    search.callback = get_best_cert;
+    search.callback = nssBestCertificate_Callback;
     search.cbarg = &best;
     search.cached = emailList;
     search.searchType = nssTokenSearchType_AllObjects; /* XXX */

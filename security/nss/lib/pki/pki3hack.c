@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.11 $ $Date: 2001/12/12 00:07:25 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.12 $ $Date: 2001/12/14 17:32:19 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -42,6 +42,10 @@ static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.11 $ $D
 #ifndef NSSPKI_H
 #include "nsspki.h"
 #endif /* NSSPKI_H */
+
+#ifndef PKI_H
+#include "pki.h"
+#endif /* PKI_H */
 
 #ifndef PKIM_H
 #include "pkim.h"
@@ -603,23 +607,49 @@ STAN_ChangeCertTrust(CERTCertificate *cc, CERTCertTrust *trust)
     NSSCertificate *c = STAN_GetNSSCertificate(cc);
     NSSToken *tok;
     NSSTrustDomain *td;
-    NSSTrust nssTrust;
+    NSSTrust *nssTrust;
+    NSSArena *arena;
     nssListIterator *tokens;
     PRBool moving_object;
     /* Set the CERTCertificate's trust */
     cc->trust = trust;
     /* Set the NSSCerticate's trust */
-    nssTrust.certificate = c;
-    nssTrust.object.arena = nssArena_Create();
-    nssTrust.object.refCount = 1;
-    nssTrust.object.instanceList = nssList_Create(nssTrust.object.arena, 
-                                                  PR_FALSE);
-    nssTrust.object.instances = nssList_CreateIterator(
-                                                nssTrust.object.instanceList);
-    nssTrust.serverAuth = get_stan_trust(trust->sslFlags, PR_FALSE);
-    nssTrust.clientAuth = get_stan_trust(trust->sslFlags, PR_TRUE);
-    nssTrust.emailProtection = get_stan_trust(trust->emailFlags, PR_FALSE);
-    nssTrust.codeSigning = get_stan_trust(trust->objectSigningFlags, PR_FALSE);
+    arena = nssArena_Create();
+    if (!arena) return PR_FAILURE;
+    nssTrust = nss_ZNEW(arena, NSSTrust);
+    nssTrust->object.arena = arena;
+    nssTrust->object.refCount = 1;
+    nssTrust->object.instanceList = nssList_Create(arena, PR_FALSE);
+    if (!nssTrust->object.instanceList) {
+	nssArena_Destroy(arena);
+	return PR_FAILURE;
+    }
+    nssTrust->object.instances = nssList_CreateIterator(
+                                                nssTrust->object.instanceList);
+    if (!nssTrust->object.instances) {
+	nssArena_Destroy(arena);
+	return PR_FAILURE;
+    }
+    nssTrust->certificate = c;
+    nssTrust->serverAuth = get_stan_trust(trust->sslFlags, PR_FALSE);
+    nssTrust->clientAuth = get_stan_trust(trust->sslFlags, PR_TRUE);
+    nssTrust->emailProtection = get_stan_trust(trust->emailFlags, PR_FALSE);
+    nssTrust->codeSigning = get_stan_trust(trust->objectSigningFlags, PR_FALSE);
+    if (c->object.cryptoContext != NULL) {
+	/* The cert is in a context, set the trust there */
+	NSSCryptoContext *cc = c->object.cryptoContext;
+	nssrv = nssCryptoContext_ImportTrust(cc, nssTrust);
+	if (nssrv != PR_SUCCESS) {
+	    nssPKIObject_Destroy(&nssTrust->object);
+	    return nssrv;
+	}
+	if (nssList_Count(c->object.instanceList) == 0) {
+	    /* The context is the only instance, finished */
+	    return nssrv;
+	}
+	/* prevent it from being destroyed */
+	nssPKIObject_AddRef(&nssTrust->object);
+    }
     td = STAN_GetDefaultTrustDomain();
     if (PK11_IsReadOnly(cc->slot)) {
 	tokens = nssList_CreateIterator(td->tokenList);
@@ -646,11 +676,11 @@ STAN_ChangeCertTrust(CERTCertificate *cc, CERTCertTrust *trust)
 	    nssrv = nssToken_ImportCertificate(tok, NULL, c, PR_TRUE);
 	    if (nssrv != PR_SUCCESS) return nssrv;
 	}
-	nssrv = nssToken_ImportTrust(tok, NULL, &nssTrust, PR_TRUE);
+	nssrv = nssToken_ImportTrust(tok, NULL, nssTrust, PR_TRUE);
     } else {
 	nssrv = PR_FAILURE;
     }
-    (void)nssPKIObject_Destroy(&nssTrust.object);
+    (void)nssPKIObject_Destroy(&nssTrust->object);
     return nssrv;
 }
 

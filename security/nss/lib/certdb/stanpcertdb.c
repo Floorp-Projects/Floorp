@@ -55,7 +55,7 @@
 #define NSS_3_4_CODE
 #endif /* NSS_3_4_CODE */
 #include "nsspki.h"
-#include "pkit.h"
+#include "pki.h"
 #include "pkim.h"
 #include "pki3hack.h"
 #include "ckhelper.h"
@@ -104,7 +104,6 @@ cert_parseNickname(char *nickname)
 }
 #endif
 
-/* XXX needs work */
 SECStatus
 CERT_ChangeCertTrust(CERTCertDBHandle *handle, CERTCertificate *cert,
 		    CERTCertTrust *trust)
@@ -231,7 +230,19 @@ CERT_FindCertByIssuerAndSN(CERTCertDBHandle *handle, CERTIssuerAndSN *issuerAndS
 {
     PK11SlotInfo *slot;
     CERTCertificate *cert;
+    NSSDER issuer, serial;
+    NSSCryptoContext *cc;
+    NSSCertificate *c;
 
+    NSSITEM_FROM_SECITEM(&issuer, &issuerAndSN->derIssuer);
+    NSSITEM_FROM_SECITEM(&serial, &issuerAndSN->serialNumber);
+    cc = STAN_GetDefaultCryptoContext();
+    c = NSSCryptoContext_FindCertificateByIssuerAndSerialNumber(cc, 
+                                                                &issuer, 
+                                                                &serial);
+    if (c) {
+	return STAN_GetCERTCertificate(c);
+    }
     cert = PK11_FindCertByIssuerAndSN(&slot,issuerAndSN,NULL);
     if (slot) {
         PK11_FreeSlot(slot);
@@ -246,11 +257,17 @@ CERT_FindCertByName(CERTCertDBHandle *handle, SECItem *name)
     NSSCertificate *c;
     NSSDER subject;
     NSSUsage usage;
+    NSSCryptoContext *cc;
     NSSITEM_FROM_SECITEM(&subject, name);
     usage.anyUsage = PR_TRUE;
-    c = NSSTrustDomain_FindBestCertificateBySubject(handle, &subject, 
-                                                    NULL, &usage, NULL);
-    if (!c) return NULL;
+    cc = STAN_GetDefaultCryptoContext();
+    c = NSSCryptoContext_FindBestCertificateBySubject(cc, &subject, 
+                                                      NULL, &usage, NULL);
+    if (!c) {
+	c = NSSTrustDomain_FindBestCertificateBySubject(handle, &subject, 
+	                                                NULL, &usage, NULL);
+	if (!c) return NULL;
+    }
     return STAN_GetCERTCertificate(c);
 }
 
@@ -276,18 +293,32 @@ CERT_FindCertByKeyID(CERTCertDBHandle *handle, SECItem *name, SECItem *keyID)
 CERTCertificate *
 CERT_FindCertByNickname(CERTCertDBHandle *handle, char *nickname)
 {
+    NSSCryptoContext *cc;
+    NSSCertificate *c;
+    NSSUsage usage;
+    usage.anyUsage = PR_TRUE;
+    cc = STAN_GetDefaultCryptoContext();
+    c = NSSCryptoContext_FindBestCertificateByNickname(cc, nickname, 
+                                                       NULL, &usage, NULL);
+    if (c) {
+	return STAN_GetCERTCertificate(c);
+    }
     return PK11_FindCertFromNickname(nickname, NULL);
 }
 
 CERTCertificate *
 CERT_FindCertByDERCert(CERTCertDBHandle *handle, SECItem *derCert)
 {
+    NSSCryptoContext *cc;
     NSSCertificate *c;
     NSSDER encoding;
     NSSITEM_FROM_SECITEM(&encoding, derCert);
-    c = NSSTrustDomain_FindCertificateByEncodedCertificate(handle, &encoding);
+    cc = STAN_GetDefaultCryptoContext();
+    c = NSSCryptoContext_FindCertificateByEncodedCertificate(cc, &encoding);
     if (!c) {
-	return NULL;
+	c = NSSTrustDomain_FindCertificateByEncodedCertificate(handle, 
+	                                                       &encoding);
+	if (!c) return NULL;
     }
     return STAN_GetCERTCertificate(c);
 }
@@ -295,35 +326,51 @@ CERT_FindCertByDERCert(CERTCertDBHandle *handle, SECItem *derCert)
 CERTCertificate *
 CERT_FindCertByNicknameOrEmailAddr(CERTCertDBHandle *handle, char *name)
 {
-    CERTCertificate *cc = PK11_FindCertFromNickname(name, NULL);
-    if (!cc) {
-	NSSCertificate *c;
-	NSSUsage usage;
-	usage.anyUsage = PR_TRUE;
-	c = NSSTrustDomain_FindCertificateByEmail(handle, name,
-	                                          NULL, &usage, NULL);
-	if (c) {
-	    cc = STAN_GetCERTCertificate(c);
-	}
+    NSSCryptoContext *cc;
+    NSSCertificate *c;
+    NSSUsage usage;
+    usage.anyUsage = PR_TRUE;
+    cc = STAN_GetDefaultCryptoContext();
+    c = NSSCryptoContext_FindBestCertificateByNickname(cc, name, 
+                                                       NULL, &usage, NULL);
+    if (c) {
+	return STAN_GetCERTCertificate(c);
     }
-    return cc;
+    c = NSSCryptoContext_FindBestCertificateByEmail(cc, name, 
+                                                    NULL, &usage, NULL);
+    if (c) {
+	return STAN_GetCERTCertificate(c);
+    }
+    return PK11_FindCertFromNickname(name, NULL);
 }
 
 CERTCertList *
 CERT_CreateSubjectCertList(CERTCertList *certList, CERTCertDBHandle *handle,
 			   SECItem *name, int64 sorttime, PRBool validOnly)
 {
+    NSSCryptoContext *cc;
     NSSCertificate **subjectCerts;
     NSSCertificate *c;
     NSSDER subject;
     PRUint32 i;
     SECStatus secrv;
+    cc = STAN_GetDefaultCryptoContext();
     NSSITEM_FROM_SECITEM(&subject, name);
-    subjectCerts = NSSTrustDomain_FindCertificatesBySubject(handle,
-                                                            &subject,
-                                                            NULL,
-                                                            0,
-                                                            NULL);
+    subjectCerts = NSSCryptoContext_FindCertificatesBySubject(cc,
+                                                              &subject,
+                                                              NULL,
+                                                              0,
+                                                              NULL);
+    if (!subjectCerts) {
+	subjectCerts = NSSTrustDomain_FindCertificatesBySubject(handle,
+	                                                        &subject,
+	                                                        NULL,
+	                                                        0,
+	                                                        NULL);
+	if (!subjectCerts) {
+	    return NULL;
+	}
+    }
     i = 0;
     if (certList == NULL && subjectCerts) {
 	certList = CERT_NewCertList();
@@ -372,7 +419,15 @@ CERT_DestroyCertificate(CERTCertificate *cert)
 	    NSSTrustDomain *td = STAN_GetDefaultTrustDomain();
 	    NSSCertificate *tmp = STAN_GetNSSCertificate(cert);
 	    if (tmp) {
+		NSSCryptoContext *cc = tmp->object.cryptoContext;
 		nssTrustDomain_RemoveCertFromCache(td, tmp);
+		/* In 4.0, in context references of this cert would go
+		 * away with the context.  but here the context persists,
+		 * so explicity remove the cert.
+		 */
+		if (cc != NULL) {
+		    nssCertificateStore_Remove(cc->certStore, tmp);
+		}
 		NSSCertificate_Destroy(tmp);
 	    }
 	    /* zero cert before freeing. Any stale references to this cert
@@ -503,9 +558,13 @@ CERT_SaveSMimeProfile(CERTCertificate *cert, SECItem *emailProfile,
     SECStatus rv = SECFailure;
     PRBool saveit;
     char *emailAddr;
+    SECItem oldprof;
     SECItem *oldProfile = NULL;
     SECItem *oldProfileTime = NULL;
     PK11SlotInfo *slot = NULL;
+    NSSCertificate *c;
+    NSSCryptoContext *cc;
+    nssSMIMEProfile *stanProfile;
     
     emailAddr = cert->emailAddr;
     
@@ -514,10 +573,21 @@ CERT_SaveSMimeProfile(CERTCertificate *cert, SECItem *emailProfile,
 	goto loser;
     }
 
-    saveit = PR_FALSE;
-   
-    oldProfile = PK11_FindSMimeProfile(&slot, emailAddr, &cert->derSubject, 
+    c = STAN_GetNSSCertificate(cert);
+    if (!c) return SECFailure;
+    cc = c->object.cryptoContext;
+    if (cc != NULL) {
+	stanProfile = nssCryptoContext_FindSMIMEProfileForCertificate(cc, c);
+	if (stanProfile) {
+	    SECITEM_FROM_NSSITEM(&oldprof, stanProfile->profileData);
+	    oldProfile = &oldprof;
+	}
+    } else {
+	oldProfile = PK11_FindSMimeProfile(&slot, emailAddr, &cert->derSubject, 
 							&oldProfileTime); 
+    }
+
+    saveit = PR_FALSE;
     
     /* both profileTime and emailProfile have to exist or not exist */
     if ( emailProfile == NULL ) {
@@ -558,8 +628,40 @@ CERT_SaveSMimeProfile(CERTCertificate *cert, SECItem *emailProfile,
 
 
     if (saveit) {
-	rv = PK11_SaveSMimeProfile(slot, emailAddr, &cert->derSubject, 
+	if (cc) {
+	    if (stanProfile) {
+		/* well, it's hashed and in an arena, might as well just
+		 * overwrite the buffer
+		 */
+		NSSITEM_FROM_SECITEM(stanProfile->profileTime, profileTime);
+		NSSITEM_FROM_SECITEM(stanProfile->profileData, emailProfile);
+	    } else {
+		PRStatus nssrv;
+		NSSDER subject;
+		NSSItem profTime, profData;
+		NSSItem *pprofTime, *pprofData;
+		NSSITEM_FROM_SECITEM(&subject, &cert->derSubject);
+		if (profileTime) {
+		    NSSITEM_FROM_SECITEM(&profTime, profileTime);
+		    pprofTime = &profTime;
+		} else {
+		    pprofTime = NULL;
+		}
+		if (emailProfile) {
+		    NSSITEM_FROM_SECITEM(&profData, emailProfile);
+		    pprofData = &profData;
+		} else {
+		    pprofData = NULL;
+		}
+		stanProfile = nssSMIMEProfile_Create(c, pprofTime, pprofData);
+		if (!stanProfile) goto loser;
+		nssrv = nssCryptoContext_ImportSMIMEProfile(cc, stanProfile);
+		rv = (nssrv == PR_SUCCESS) ? SECSuccess : SECFailure;
+	    }
+	} else {
+	    rv = PK11_SaveSMimeProfile(slot, emailAddr, &cert->derSubject, 
 						emailProfile, profileTime);
+	}
     } else {
 	rv = SECSuccess;
     }
@@ -579,6 +681,25 @@ SECItem *
 CERT_FindSMimeProfile(CERTCertificate *cert)
 {
     PK11SlotInfo *slot = NULL;
+    NSSCertificate *c;
+    NSSCryptoContext *cc;
+    c = STAN_GetNSSCertificate(cert);
+    if (!c) return NULL;
+    cc = c->object.cryptoContext;
+    if (cc != NULL) {
+	SECItem *rvItem = NULL;
+	nssSMIMEProfile *stanProfile;
+	stanProfile = nssCryptoContext_FindSMIMEProfileForCertificate(cc, c);
+	if (stanProfile) {
+	    rvItem = SECITEM_AllocItem(NULL, NULL, 
+	                               stanProfile->profileData->size);
+	    if (rvItem) {
+		rvItem->data = stanProfile->profileData->data;
+	    }
+	    nssPKIObject_Destroy(&stanProfile->object);
+	}
+	return rvItem;
+    }
     return 
 	PK11_FindSMimeProfile(&slot, cert->emailAddr, &cert->derSubject, NULL);
 }
