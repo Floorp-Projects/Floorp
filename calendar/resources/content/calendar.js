@@ -722,7 +722,7 @@ function deleteEventCommand( DoNotConfirm )
 {
    if( unifinderToDoHasFocus() )
    {
-      unifinderDeleteToDoCommand( DoNotConfirm );
+      deleteToDoCommand( DoNotConfirm );
       return;
    }
    
