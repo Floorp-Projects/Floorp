@@ -68,8 +68,20 @@ extern int gettimeofday(struct timeval *tv);
 #ifdef XP_MAC
 extern UnsignedWide		dstLocalBaseMicroseconds;
 extern PRUintn			gJanuaryFirst1970Seconds;
-extern void MyReadLocation(MachineLocation* l);
-#endif
+
+static void MyReadLocation(MachineLocation * loc)
+{
+	static MachineLocation storedLoc;	// InsideMac, OSUtilities, page 4-20
+	static Boolean didReadLocation = FALSE;
+	if (!didReadLocation)
+	{	
+		ReadLocation(&storedLoc);
+		didReadLocation = TRUE;
+	}
+	*loc = storedLoc;
+}
+
+#endif /* XP_MAC */
 
 #define IS_LEAP(year) \
    (year != 0 && ((((year & 0x3) == 0) &&  \
