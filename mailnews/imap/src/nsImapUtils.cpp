@@ -178,7 +178,7 @@ nsImapURI2FullName(const char* rootURI, const char* hostname, char* uriStr,
 }
 
 /* parses ImapMessageURI */
-nsresult nsParseImapMessageURI(const char* uri, nsCString& folderURI, PRUint32 *key)
+nsresult nsParseImapMessageURI(const char* uri, nsCString& folderURI, PRUint32 *key, char **part)
 {
 	if(!key)
 		return NS_ERROR_NULL_POINTER;
@@ -201,9 +201,19 @@ nsresult nsParseImapMessageURI(const char* uri, nsCString& folderURI, PRUint32 *
 		PRInt32 errorCode;
 		*key = keyStr.ToInteger(&errorCode);
 
-		return errorCode;
+    if (part && keyEndSeparator != -1)
+    {
+      PRInt32 partPos = uriStr.Find("part=", PR_FALSE, keyEndSeparator);
+      if (partPos != -1)
+      {
+        nsCString partSubStr;
+        uriStr.Right(partSubStr, uriStr.Length() - keyEndSeparator);
+        *part = partSubStr.ToNewCString();
+
+      }
+    }
 	}
-	return NS_ERROR_FAILURE;
+	return NS_OK;
 
 }
 

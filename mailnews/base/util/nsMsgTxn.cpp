@@ -24,8 +24,8 @@
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kITransactionIID, NS_ITRANSACTION_IID);
 
-NS_IMPL_ADDREF(nsMsgTxn)
-NS_IMPL_RELEASE(nsMsgTxn)
+NS_IMPL_THREADSAFE_ADDREF(nsMsgTxn)
+NS_IMPL_THREADSAFE_RELEASE(nsMsgTxn)
 
 // note that aEditor is not refcounted
 nsMsgTxn::nsMsgTxn() 

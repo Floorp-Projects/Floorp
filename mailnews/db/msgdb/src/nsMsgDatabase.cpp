@@ -672,34 +672,6 @@ void nsMsgDatabase::UnixToNative(char*& ioPath)
 	}
 }
 
-void nsMsgDatabase::NativeToUnix(char*& ioPath)
-// This just does string manipulation.  It doesn't check reality, or canonify, or
-// anything
-//----------------------------------------------------------------------------------------
-{
-	size_t len = strlen(ioPath);
-	char* result = new char[len + 2]; // ... but allow for the initial colon in a partial name
-	if (result)
-	{
-		char* dst = result;
-		const char* src = ioPath;
-		if (*src == ':')		 	// * partial path, and not just a leaf name
-			src++;
-		else if (strchr(src, ':'))	// * full path
-			*dst++ = '/';
-		strcpy(dst, src);
-
-		while ( *dst != 0)
-		{
-			if (*dst == ':')
-				*dst++ = '/';
-			else
-				*dst++;
-		}
-		PR_Free(ioPath);
-		ioPath = result;
-	}
-}
 #endif /* XP_MAC */
 
 NS_IMETHODIMP nsMsgDatabase::Open(nsIFileSpec *folderName, PRBool create, PRBool upgrading, nsIMsgDatabase** pMessageDB)

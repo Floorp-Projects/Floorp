@@ -296,6 +296,42 @@ NS_IMETHODIMP nsImapService::GetCanFetchMimeParts(PRBool *canFetchMimeParts)
   return NS_OK;
 }
 
+/* void OpenAttachment (in nsIURI aURI, in nsISupports aDisplayConsumer, in nsIMsgWindow aMsgWindow, in nsIUrlListener aUrlListener, out nsIURI aURL); */
+NS_IMETHODIMP nsImapService::OpenAttachment(nsIURI *aURI, const char *aMessageURI, nsISupports *aDisplayConsumer, nsIMsgWindow *aMsgWindow, nsIUrlListener *aUrlListener, nsIURI **aURL)
+{
+	nsresult rv = NS_OK;
+  nsCOMPtr<nsIMsgFolder> folder;
+  nsXPIDLCString msgKey;
+  nsXPIDLCString mimePart;
+	nsCAutoString	folderURI;
+	nsMsgKey key;
+
+  rv = DecomposeImapURI(aMessageURI, getter_AddRefs(folder), getter_Copies(msgKey));
+	rv = nsParseImapMessageURI(aMessageURI, folderURI, &key, getter_Copies(mimePart));
+	if (NS_SUCCEEDED(rv))
+	{
+    	nsCOMPtr<nsIImapMessageSink> imapMessageSink(do_QueryInterface(folder, &rv));
+		if (NS_SUCCEEDED(rv))
+    {
+      nsCOMPtr<nsIImapUrl> imapUrl = do_QueryInterface(aURI);
+      nsCAutoString urlSpec;
+      PRUnichar hierarchySeparator = GetHierarchyDelimiter(folder);
+      nsCOMPtr<nsIMsgMailNewsUrl> msgurl (do_QueryInterface(aURI));
+
+      msgurl->SetMsgWindow(aMsgWindow);
+      msgurl->RegisterListener(aUrlListener);
+
+      if (mimePart)
+      {
+        return FetchMimePart(imapUrl, nsIImapUrl::nsImapMsgFetch, folder, imapMessageSink,
+                        aURL, aDisplayConsumer, msgKey, mimePart);
+      }
+    }
+  }
+  return rv;
+}
+
+
 NS_IMETHODIMP nsImapService::DisplayMessage(const char* aMessageURI,
                                             nsISupports * aDisplayConsumer,  
                                             nsIMsgWindow * aMsgWindow,
@@ -305,8 +341,12 @@ NS_IMETHODIMP nsImapService::DisplayMessage(const char* aMessageURI,
 	nsresult rv = NS_OK;
   nsCOMPtr<nsIMsgFolder> folder;
   nsXPIDLCString msgKey;
+  nsXPIDLCString mimePart;
+	nsCAutoString	folderURI;
+	nsMsgKey key;
 
   rv = DecomposeImapURI(aMessageURI, getter_AddRefs(folder), getter_Copies(msgKey));
+	rv = nsParseImapMessageURI(aMessageURI, folderURI, &key, getter_Copies(mimePart));
 	if (NS_SUCCEEDED(rv))
 	{
     	nsCOMPtr<nsIImapMessageSink> imapMessageSink(do_QueryInterface(folder, &rv));
@@ -318,6 +358,12 @@ NS_IMETHODIMP nsImapService::DisplayMessage(const char* aMessageURI,
       rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl), folder, aUrlListener, urlSpec, hierarchySeparator);
       if (NS_FAILED(rv)) 
         return rv;
+      if (mimePart)
+      {
+        return FetchMimePart(imapUrl, nsIImapUrl::nsImapMsgFetch, folder, imapMessageSink,
+                        aURL, aDisplayConsumer, msgKey, mimePart);
+      }
+
       nsCOMPtr<nsIMsgMailNewsUrl> msgurl (do_QueryInterface(imapUrl));
 
       PRUint32 messageSize;
@@ -347,6 +393,125 @@ NS_IMETHODIMP nsImapService::DisplayMessage(const char* aMessageURI,
     }
 	}
 	return rv;
+}
+
+
+nsresult nsImapService::FetchMimePart(nsIImapUrl * aImapUrl,
+                            nsImapAction aImapAction,
+                            nsIMsgFolder * aImapMailFolder, 
+                            nsIImapMessageSink * aImapMessage,
+                            nsIURI ** aURL,
+							              nsISupports * aDisplayConsumer, 
+                            const char *messageIdentifierList,
+                            const char *mimePart) 
+{
+  nsresult rv = NS_OK;
+
+	// create a protocol instance to handle the request.
+	// NOTE: once we start working with multiple connections, this step will be much more complicated...but for now
+	// just create a connection and process the request.
+    NS_ASSERTION (aImapUrl && aImapMailFolder &&  aImapMessage,"Oops ... null pointer");
+    if (!aImapUrl || !aImapMailFolder || !aImapMessage)
+        return NS_ERROR_NULL_POINTER;
+
+    nsCAutoString urlSpec;
+    rv = SetImapUrlSink(aImapMailFolder, aImapUrl);
+
+    rv = aImapUrl->SetImapMessageSink(aImapMessage);
+    if (NS_SUCCEEDED(rv))
+	{
+      nsXPIDLCString currentSpec;
+      nsCOMPtr<nsIURI> url = do_QueryInterface(aImapUrl);
+      url->GetSpec(getter_Copies(currentSpec));
+      urlSpec.Assign(currentSpec);
+
+      PRUnichar hierarchySeparator = GetHierarchyDelimiter(aImapMailFolder); 
+
+	  urlSpec.Append("fetch>");
+	  urlSpec.Append(uidString);
+	  urlSpec.Append(">");
+	  urlSpec.Append(hierarchySeparator);
+
+	  nsXPIDLCString folderName;
+	  GetFolderName(aImapMailFolder, getter_Copies(folderName));
+	  urlSpec.Append((const char *) folderName);
+	  urlSpec.Append(">");
+	  urlSpec.Append(messageIdentifierList);
+    urlSpec.Append(mimePart);
+
+
+    // rhp: If we are displaying this message for the purpose of printing, we
+    // need to append the header=print option.
+    //
+    if (mPrintingOperation)
+      urlSpec.Append("?header=print");
+
+		  // mscott - this cast to a char * is okay...there's a bug in the XPIDL
+		  // compiler that is preventing in string parameters from showing up as
+		  // const char *. hopefully they will fix it soon.
+		  rv = url->SetSpec((char *) urlSpec.GetBuffer());
+
+	    rv = aImapUrl->SetImapAction(aImapAction /* nsIImapUrl::nsImapMsgFetch */);
+	   if (aImapMailFolder && aDisplayConsumer)
+	   {
+			nsCOMPtr<nsIMsgIncomingServer> aMsgIncomingServer;
+			rv = aImapMailFolder->GetServer(getter_AddRefs(aMsgIncomingServer));
+			if (NS_SUCCEEDED(rv) && aMsgIncomingServer)
+			{
+				PRBool interrupted;
+				nsCOMPtr<nsIImapIncomingServer>
+					aImapServer(do_QueryInterface(aMsgIncomingServer, &rv));
+				if (NS_SUCCEEDED(rv) && aImapServer)
+					aImapServer->PseudoInterruptMsgLoad(aImapUrl, &interrupted);
+			}
+	   }
+      // if the display consumer is a webshell, then we should run the url in the webshell.
+      // otherwise, it should be a stream listener....so open a channel using AsyncRead
+      // and the provided stream listener....
+
+      nsCOMPtr<nsIWebShell> webShell = do_QueryInterface(aDisplayConsumer, &rv);
+      if (NS_SUCCEEDED(rv) && webShell)
+         rv = webShell->LoadURI(url, "view", nsnull, PR_TRUE);
+      else
+      {
+        nsCOMPtr<nsIStreamListener> aStreamListener = do_QueryInterface(aDisplayConsumer, &rv);
+        if (NS_SUCCEEDED(rv) && aStreamListener)
+        {
+          nsCOMPtr<nsIChannel> aChannel;
+		      nsCOMPtr<nsILoadGroup> aLoadGroup;
+		      nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(aImapUrl, &rv);
+		      if (NS_SUCCEEDED(rv) && mailnewsUrl)
+			      mailnewsUrl->GetLoadGroup(getter_AddRefs(aLoadGroup));
+
+          rv = NewChannel(nsnull, url, aLoadGroup, nsnull, nsIChannel::LOAD_NORMAL,
+                          nsnull, 0, 0, getter_AddRefs(aChannel));
+          if (NS_FAILED(rv)) return rv;
+
+          nsCOMPtr<nsISupports> aCtxt = do_QueryInterface(url);
+          //  now try to open the channel passing in our display consumer as the listener 
+          rv = aChannel->AsyncRead(0, -1, aCtxt, aStreamListener);
+        }
+        else // do what we used to do before
+        {
+          // I'd like to get rid of this code as I believe that we always get a webshell
+          // or stream listener passed into us in this method but i'm not sure yet...
+          // I'm going to use an assert for now to figure out if this is ever getting called
+#ifdef DEBUG_mscott
+          NS_ASSERTION(0, "oops...someone still is reaching this part of the code");
+#endif
+          nsCOMPtr<nsIEventQueue> queue;	
+          // get the Event Queue for this thread...
+	        NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv);
+
+          if (NS_FAILED(rv)) return rv;
+
+          rv = pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
+          if (NS_FAILED(rv)) return rv;
+          rv = GetImapConnectionAndLoadUrl(queue, aImapUrl, aDisplayConsumer, aURL);
+        }
+      }
+	}
+  return rv;
 }
 
 //
@@ -476,7 +641,7 @@ nsresult nsImapService::DecomposeImapURI(const char * aMessageURI, nsIMsgFolder 
 
 	nsCAutoString	folderURI;
     nsMsgKey msgKey;
-	rv = nsParseImapMessageURI(aMessageURI, folderURI, &msgKey);
+	rv = nsParseImapMessageURI(aMessageURI, folderURI, &msgKey, nsnull);
 	if (NS_SUCCEEDED(rv))
 	{
 		nsCOMPtr<nsIRDFResource> res;

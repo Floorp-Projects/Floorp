@@ -39,7 +39,7 @@ nsImapURI2FullName(const char* rootURI, const char* hostname, char* uriStr,
                    char **name);
 
 extern nsresult
-nsParseImapMessageURI(const char* uri, nsCString& folderURI, PRUint32 *key);
+nsParseImapMessageURI(const char* uri, nsCString& folderURI, PRUint32 *key, char **part);
 
 extern nsresult 
 nsBuildImapMessageURI(const char *baseURI, PRUint32 key, nsCString& uri);

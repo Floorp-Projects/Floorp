@@ -205,6 +205,13 @@ nsresult nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aD
   return rv;
 }
 
+/* void OpenAttachment (in nsIURI aURI, in nsISupports aDisplayConsumer, in nsIMsgWindow aMsgWindow, in nsIUrlListener aUrlListener, out nsIURI aURL); */
+NS_IMETHODIMP nsNntpService::OpenAttachment(nsIURI *aURI, const char *aMessageURI, nsISupports *aDisplayConsumer, nsIMsgWindow *aMsgWindow, nsIUrlListener *aUrlListener, nsIURI **aURL)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
 /* readonly attribute canFetchMimeParts; */
 NS_IMETHODIMP nsNntpService::GetCanFetchMimeParts(PRBool *canFetchMimeParts)
 {

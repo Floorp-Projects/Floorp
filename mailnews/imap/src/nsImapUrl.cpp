@@ -307,14 +307,13 @@ NS_IMETHODIMP nsImapUrl::CreateListOfMessageIdsString(char ** aResult)
 NS_IMETHODIMP nsImapUrl::GetImapPartToFetch(char **result) 
 {
 	//  here's the old code:
-#if 0
-	char *wherepart = NULL, *rv = NULL;
+	char *wherepart = NULL;
 	if (m_listOfMessageIds && (wherepart = PL_strstr(m_listOfMessageIds, "/;section=")) != NULL)
 	{
 		wherepart += 10; // nsCRT::strlen("/;section=")
 		if (wherepart)
 		{
-			char *wherelibmimepart = XP_STRSTR(wherepart, "&part=");
+			char *wherelibmimepart = PL_strstr(wherepart, "&part=");
 			int len = PL_strlen(m_listOfMessageIds), numCharsToCopy = 0;
 			if (wherelibmimepart)
 				numCharsToCopy = (wherelibmimepart - wherepart);
@@ -322,15 +321,15 @@ NS_IMETHODIMP nsImapUrl::GetImapPartToFetch(char **result)
 				numCharsToCopy = PL_strlen(m_listOfMessageIds) - (wherepart - m_listOfMessageIds);
 			if (numCharsToCopy)
 			{
-				rv = (char *) PR_Malloc(sizeof(char) * (numCharsToCopy + 1));
-				if (rv)
+				*result = (char *) PR_Malloc(sizeof(char) * (numCharsToCopy + 1));
+				if (*result)
 				{
-					XP_STRNCPY_SAFE(rv, wherepart, numCharsToCopy + 1);	// appends a \0
+					PL_strncpy(*result, wherepart, numCharsToCopy + 1);	// appends a \0
+          (*result)[numCharsToCopy] = '\0';
 				}
 			}
 		}
 	}
-#endif // 0 
   return NS_OK;
 }
 

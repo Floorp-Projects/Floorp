@@ -256,14 +256,13 @@ NS_IMETHODIMP nsMsgLocalMailFolder::AddSubfolder(nsAutoString *name,
   
 	if(NS_FAILED(rv)) return rv;
 
-	nsCAutoString uri;
+	nsAutoString uri;
 	uri.Append(mURI);
 	uri.Append('/');
-
 	uri.Append(*name);
 
 	nsCOMPtr<nsIRDFResource> res;
-	rv = rdf->GetResource(uri, getter_AddRefs(res));
+	rv = rdf->GetUnicodeResource(uri.GetUnicode(), getter_AddRefs(res));
 	if (NS_FAILED(rv))
 		return rv;
 

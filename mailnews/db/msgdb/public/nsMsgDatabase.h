@@ -281,9 +281,6 @@ protected:
 #if defined(XP_PC) || defined(XP_MAC)	// this should go away when we can provide our own file stream to MDB/Mork
 	static void		UnixToNative(char*& ioPath);
 #endif
-#if defined(XP_MAC)
-	static void		NativeToUnix(char*& ioPath);
-#endif
 
 	// Flag handling routines
 	virtual nsresult SetKeyFlag(nsMsgKey key, PRBool set, PRUint32 flag,

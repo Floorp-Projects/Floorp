@@ -81,6 +81,15 @@ protected:
     nsresult ResetImapConnection(nsIImapUrl* aImapUrl, const char *folderName);
     nsresult SetImapUrlSink(nsIMsgFolder* aMsgFolder,
                               nsIImapUrl* aImapUrl);
+    nsresult FetchMimePart(nsIImapUrl * aImapUrl,
+                            nsImapAction aImapAction,
+                            nsIMsgFolder * aImapMailFolder, 
+                            nsIImapMessageSink * aImapMessage,
+                            nsIURI ** aURL,
+							              nsISupports * aDisplayConsumer, 
+                            const char *messageIdentifierList,
+                            const char *mimePart);
+
 	nsresult DiddleFlags(nsIEventQueue * aClientEventQueue,
                          nsIMsgFolder * aImapMailFolder, 
                          nsIUrlListener * aUrlListener, 

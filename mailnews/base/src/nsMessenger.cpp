@@ -494,6 +494,8 @@ nsMessenger::OpenAttachment(const char * url, const char * displayName,
   char * unescapedDisplayName = nsnull;
   nsCOMPtr<nsIURI> aURL;
   nsAutoString tempStr;
+  PRBool canFetchMimeParts = PR_FALSE;
+  nsCAutoString fullMessageUri = messageUri;
   
   NS_WITH_SERVICE(nsIStreamConverterService,
                   streamConverterService,  
@@ -554,6 +556,8 @@ nsMessenger::OpenAttachment(const char * url, const char * displayName,
   NS_ADDREF(aListener);
 
   urlString = unescapedUrl;
+
+  urlString.ReplaceSubstring("/;section", "?section");
   urlCString = urlString.ToNewCString();
 
   rv = CreateStartupUrl(urlCString, getter_AddRefs(aURL));
@@ -561,35 +565,58 @@ nsMessenger::OpenAttachment(const char * url, const char * displayName,
 
   if (NS_FAILED(rv)) goto done;
 
-  aListener->m_channel = null_nsCOMPtr();
-  rv = NS_NewInputStreamChannel(aURL,
-                                nsnull,      // contentType
-                                -1,          // contentLength
-                                nsnull,      // inputStream
-                                nsnull,      // loadGroup
-                                nsnull,      // notificationCallbacks
-                                nsIChannel::LOAD_NORMAL,
-                                nsnull,      // originalURI
-                                0, 0, 
-                                getter_AddRefs(aListener->m_channel));
-  if (NS_FAILED(rv)) goto done;
-
-  from = MESSAGE_RFC822;
-  to = "text/xul";
-  
-  channelSupport = do_QueryInterface(aListener->m_channel);
-
-  rv = streamConverterService->AsyncConvertData(
-      from.GetUnicode(), to.GetUnicode(), aListener,
-      channelSupport, getter_AddRefs(convertedListener));
-  if (NS_FAILED(rv)) goto done;
-
   rv = GetMessageServiceFromURI(messageUri, &messageService);
   if (NS_FAILED(rv)) goto done;
-            
-  rv = messageService->DisplayMessage(messageUri,
-                                      convertedListener,mMsgWindow,
-                                      nsnull, nsnull); 
+
+  messageService->GetCanFetchMimeParts(&canFetchMimeParts);
+
+  if (canFetchMimeParts)
+  {
+    PRInt32 sectionPos = urlString.Find("?section");
+    nsString mimePart;
+
+    urlString.Right(mimePart, urlString.Length() - sectionPos);
+    fullMessageUri.Append(mimePart);
+   
+//    nsCOMPtr <nsIStreamListener> streamListener = do_QueryInterface((nsIStreamListener *) aListener);
+//    nsCOMPtr <nsISupports> supportsListener = streamListener;
+    messageUri = fullMessageUri.GetBuffer();
+//    rv = messageService->DisplayMessage(fullMessageUri.GetBuffer(),
+//                                      supportsListener, mMsgWindow,
+//                                      nsnull, nsnull); 
+
+  }
+  {
+    aListener->m_channel = null_nsCOMPtr();
+    rv = NS_NewInputStreamChannel(aURL,
+                                  nsnull,      // contentType
+                                  -1,          // contentLength
+                                  nsnull,      // inputStream
+                                  nsnull,      // loadGroup
+                                  nsnull,      // notificationCallbacks
+                                  nsIChannel::LOAD_NORMAL,
+                                  nsnull,      // originalURI
+                                  0, 0, 
+                                  getter_AddRefs(aListener->m_channel));
+    if (NS_FAILED(rv)) goto done;
+
+    from = MESSAGE_RFC822;
+    to = "text/xul";
+  
+    channelSupport = do_QueryInterface(aListener->m_channel);
+
+    rv = streamConverterService->AsyncConvertData(
+        from.GetUnicode(), to.GetUnicode(), aListener,
+        channelSupport, getter_AddRefs(convertedListener));
+    if (NS_FAILED(rv)) goto done;
+
+    if (canFetchMimeParts)
+      rv = messageService->OpenAttachment(aURL, messageUri, convertedListener, mMsgWindow, nsnull,nsnull);
+    else
+      rv = messageService->DisplayMessage(messageUri,
+                                        convertedListener,mMsgWindow,
+                                        nsnull, nsnull); 
+  }
 
 done:
     if (messageService)

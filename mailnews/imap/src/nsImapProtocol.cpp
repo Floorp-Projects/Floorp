@@ -1681,7 +1681,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
                   IMAP_CONTENT_MODIFIED_VIEW_AS_LINKS;
 
                 nsIMAPBodyShell *foundShell = nsnull;
-                res = m_hostSessionList->FindShellInCacheForHost(GetImapHostName(),
+                res = m_hostSessionList->FindShellInCacheForHost(GetImapServerKey(),
                     GetServerStateParser().GetSelectedMailboxName(), messageIdString, modType, &foundShell);
                 if (!foundShell)
                 {
@@ -1747,7 +1747,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
                 SetContentModified(modType);  // This will be looked at by the cache
                 if (bMessageIdsAreUids)
                 {
-                  res = m_hostSessionList->FindShellInCacheForHost(GetImapHostName(),
+                  res = m_hostSessionList->FindShellInCacheForHost(GetImapServerKey(),
                     GetServerStateParser().GetSelectedMailboxName(), messageIdString, modType, &foundShell);
                   if (foundShell)
                   {

@@ -513,35 +513,6 @@ void nsAddrDatabase::UnixToNative(char*& ioPath)
 		ioPath = result;
 	}
 }
-
-void nsAddrDatabase::NativeToUnix(char*& ioPath)
-// This just does string manipulation.  It doesn't check reality, or canonify, or
-// anything
-//----------------------------------------------------------------------------------------
-{
-	size_t len = PL_strlen(ioPath);
-	char* result = new char[len + 2]; // ... but allow for the initial colon in a partial name
-	if (result)
-	{
-		char* dst = result;
-		const char* src = ioPath;
-		if (*src == ':')		 	// * partial path, and not just a leaf name
-			src++;
-		else if (PL_strchr(src, ':'))	// * full path
-			*dst++ = '/';
-		PL_strcpy(dst, src);
-
-		while ( *dst != 0)
-		{
-			if (*dst == ':')
-				*dst++ = '/';
-			else
-				*dst++;
-		}
-		PR_Free(ioPath);
-		ioPath = result;
-	}
-}
 #endif /* XP_MAC */
 
 /* caller need to delete *aDbPath */

@@ -78,6 +78,18 @@ interface nsIMsgMessageService : nsISupports {
 						out nsIURI aURL);
 
      /////////////////////////////////////////////////////////////////////
+     //  OpenAttachment: When you want an attachment downloaded
+     //  aURL is a url representing the attachment.
+     //  aDisplayConsumer is (for now) a nsIWebshell which we'll use to load 
+     // the message into. 
+     ///////////////////////////////////////////////////////////////////
+
+	void OpenAttachment(in nsIURI aURI, in string aMessageUri, in nsISupports aDisplayConsumer, 
+						in nsIMsgWindow aMsgWindow,
+						in nsIUrlListener aUrlListener, 
+						out nsIURI aURL);
+
+     /////////////////////////////////////////////////////////////////////
      // SaveMessageToDisk: When you want to spool a message out to a file
 	 // on disk. This is an asynch operation of course. You must pass in a
 	 // url listener in order to figure out when the operation is done.

@@ -154,6 +154,13 @@ nsresult nsMailboxService::DisplayMessage(const char* aMessageURI,
   return FetchMessage(aMessageURI, aDisplayConsumer, aMsgWindow,aUrlListener, nsIMailboxUrl::ActionDisplayMessage, aURL);
 }
 
+/* void OpenAttachment (in nsIURI aURI, in nsISupports aDisplayConsumer, in nsIMsgWindow aMsgWindow, in nsIUrlListener aUrlListener, out nsIURI aURL); */
+NS_IMETHODIMP nsMailboxService::OpenAttachment(nsIURI *aURI, const char *aMessageURI, nsISupports *aDisplayConsumer, nsIMsgWindow *aMsgWindow, nsIUrlListener *aUrlListener, nsIURI **aURL)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
 NS_IMETHODIMP 
 nsMailboxService::SaveMessageToDisk(const char *aMessageURI, 
                                     nsIFileSpec *aFile, 

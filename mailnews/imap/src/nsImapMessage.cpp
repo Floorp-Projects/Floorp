@@ -64,7 +64,7 @@ nsresult nsImapMessage::GetFolderFromURI(nsIMsgFolder **folder)
 		resource->GetValue( getter_Copies(uri) );
 		nsCAutoString messageFolderURIStr;
 		nsMsgKey key;
-		nsParseImapMessageURI(uri, messageFolderURIStr, &key);
+		nsParseImapMessageURI(uri, messageFolderURIStr, &key, nsnull);
 		nsCAutoString folderOnly, folderURIStr;
 
 		if (messageFolderURIStr.Find(kImapRootURI) != ((PRInt32)-1))

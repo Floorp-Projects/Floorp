@@ -247,7 +247,7 @@ nsMimeHtmlDisplayEmitter::StartAttachment(const char *name, const char *contentT
     }
 
     if (NS_SUCCEEDED(rv))
-      headerSink->HandleAttachment(escapedUrl, unicodeHeaderValue, uriString, aNotDownloaded);
+      headerSink->HandleAttachment(url /* was escapedUrl */, unicodeHeaderValue, uriString, aNotDownloaded);
     nsCRT::free(escapedUrl);
     mSkipAttachment = PR_TRUE;
   }
