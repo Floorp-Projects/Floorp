@@ -116,6 +116,7 @@ nsRenderingContextXlib::Init(nsIDeviceContext* aContext, nsDrawingSurface aSurfa
 nsresult nsRenderingContextXlib::CommonInit(void)
 {
   // put common stuff in here.
+  return NS_OK;
 }
 
 NS_IMETHODIMP
