@@ -119,6 +119,8 @@
 
 #define MSG_FOLDER_FLAG_IMAP_NOSELECT	0x1000000	/* This folder is an IMAP \Noselect folder */
 
+#define MSG_FOLDER_FLAG_CREATED_OFFLINE 0x2000000	/* this folder created offline */
+
 #define MSG_FOLDER_PREF_CACHED  0x80000000			/* we've retrieved prefs from db */
 
 #endif
