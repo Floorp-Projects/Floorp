@@ -34,13 +34,51 @@ var gFolderPicker;
 var gThreadTree;
 var gStatusFeedback = new nsMsgStatusFeedback;
 var RDF;
+var Bundle;
+
+// Datasource search listener -- made global as it has to be registered
+// and unregistered in different functions.
+var gDataSourceSearchListener;
+
+var gIsSearchHit = false;
+
+// nsIMsgSearchNotify object
+var gSearchNotificationListener = 
+{
+    onSearchHit: function(header, folder) 
+    {
+        if (!gIsSearchHit) {
+            gIsSearchHit = true;		
+        }
+    },
+
+    onSearchDone: function(status) 
+    {
+        // if there are no hits, it means no matches were found in the search.
+        if (!gIsSearchHit) {
+            gStatusFeedback.ShowStatusString(Bundle.GetStringFromName("searchFailureMessage"));
+        }
+        else
+        {
+            gStatusFeedback.ShowStatusString(Bundle.GetStringFromName("searchSuccessMessage"));
+            gIsSearchHit = false;
+        }
+    },
+	
+    onNewSearch: function() 
+    {
+        gStatusFeedback.ShowStatusString(Bundle.GetStringFromName("searchingMessage"));
+    }
+}
 
 function searchOnLoad()
 {
     initializeSearchWidgets();
     initializeSearchWindowWidgets();
 
+    Bundle = srGetStrBundle("chrome://messenger/locale/search.properties");
     setupDatasource();
+    setupSearchListener();
 
     if (window.arguments && window.arguments[0])
         selectFolder(window.arguments[0].folder);
@@ -50,8 +88,13 @@ function searchOnLoad()
 
 }
 
+
 function searchOnUnload()
 {
+    // unregister listeners
+    gSearchSession.unregisterListener(gDataSourceSearchListener);
+    gSearchSession.unregisterListener(gSearchNotificationListener);
+
     // release this early because msgWindow holds a weak reference
     msgWindow.rootDocShell = null;
 }
@@ -217,9 +260,15 @@ function setupDatasource() {
     gThreadTree.database.AddDataSource(messageDatasource);
     
     // the datasource is a listener on the search results
-    searchListener = gSearchDatasource.QueryInterface(Components.interfaces.nsIMsgSearchNotify);
-    gSearchSession.registerListener(searchListener);
+    gDataSourceSearchListener = gSearchDatasource.QueryInterface(Components.interfaces.nsIMsgSearchNotify);
+    gSearchSession.registerListener(gDataSourceSearchListener);
+}
 
+
+function setupSearchListener()
+{
+    // Setup the javascript object as a listener on the search results
+    gSearchSession.registerListener(gSearchNotificationListener);
 }
 
 
