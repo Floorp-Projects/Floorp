@@ -49,7 +49,6 @@ DEFINES		+= -DUSE_TLS_FOR_TOOLKIT
 
 CPPSRCS		= \
 		nsBaseWidget.cpp \
-		nsBaseFilePicker.cpp \
 		nsTransferable.cpp \
 		nsHTMLFormatConverter.cpp \
 		nsBaseDragService.cpp \
