@@ -6,14 +6,14 @@
 
   <binding id="groupbox-base">
     <resources>
-      <stylesheet src="chrome://global/skin/titledbox.css"/>
+      <stylesheet src="chrome://global/skin/groupbox.css"/>
     </resources>
   </binding>
 
-  <binding id="groupbox" extends="chrome://global/content/bindings/titledbox.xml#groupbox-base">
+  <binding id="groupbox" extends="chrome://global/content/bindings/groupbox.xml#groupbox-base">
     <content>
       <xul:hbox class="groupbox-title" align="center" pack="start">
-        <children includes="label"/>
+        <children includes="caption"/>
       </xul:hbox>
       <xul:box flex="1" class="groupbox-body" inherits="orient,align,pack">
         <children/>
@@ -21,16 +21,16 @@
     </content>
   </binding>
 
-  <!-- titledbox included for backwards compatibility purposes; to be removed at a later date -->
-
-  <binding id="titledbox" extends="chrome://global/content/bindings/titledbox.xml#groupbox-base">
+  <binding id="caption" extends="chrome://global/content/bindings/general.xml#basetext">
     <content>
-      <xul:hbox class="groupbox-title" align="center">
-        <children includes="label"/>
-      </xul:hbox>
-      <xul:box flex="1" class="groupbox-body" inherits="orient,align,pack">
-        <children/>
+      <xul:box inherits="orient,align,pack,dir" align="center" pack="center">
+        <children>
+          <xul:image class="caption-icon" inherits="src=image"/>
+          <xul:label class="caption-text" flex="1"
+                     inherits="default,value=label,crop,accesskey"/>
+        </children>
       </xul:box>
-    </content>    
+    </content>
   </binding>
+
 </bindings>
