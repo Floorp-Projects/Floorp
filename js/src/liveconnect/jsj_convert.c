@@ -450,9 +450,60 @@ if (!JSVAL_IS_NUMBER(jsvalue)) {                                         \
     }
 
 #else
+#ifdef XP_OS2
+
+/* OS2 utility macro for jsj_ConvertJSValueToJavaValue(), below             */
+/* jlong is a structure, see jri_md.h, where the jlong_ macros are defined. */
+#define JSVAL_TO_JLONG_JVALUE(member_name, member_type, jsvalue, java_value) \
+   if (!JSVAL_IS_NUMBER(jsvalue)) {                                      \
+      if (!JS_ConvertValue(cx, jsvalue, JSTYPE_NUMBER, &jsvalue))        \
+         goto conversion_error;                                          \
+      (*cost)++;                                                         \
+   }                                                                     \
+   {                                                                     \
+      member_type member_name;                                           \
+                                                                         \
+      if (JSVAL_IS_INT(jsvalue)) {                                       \
+          jsint ival = JSVAL_TO_INT(jsvalue);                            \
+          jlong_I2L(member_name,ival);                                   \
+                                                                         \
+       } else {                                                          \
+            jdouble dval = *JSVAL_TO_DOUBLE(jsvalue);                    \
+                                                                         \
+            /* NaN becomes zero when converted to integral value */      \
+            if (JSDOUBLE_IS_NaN(dval))                                   \
+                jlong_I2L(member_name,0);                                \
+                                                                         \
+            /* Unrepresentably large numbers, including infinities, */   \
+            /* cause an error. */                                        \
+            else if ((dval > member_type ## _MAX_VALUE) ||               \
+                     (dval < member_type ## _MIN_VALUE)) {               \
+                goto numeric_conversion_error;                           \
+            } else                                                       \
+                jlong_D2L(member_name,dval);                             \
+                                                                         \
+            /* Don't allow a non-integral number to be converted         \
+               to an integral type */                                    \
+            /* Actually, we have to allow this for LC1 compatibility */  \
+            /*if (jlong_to_jdouble(member_name) != dval)                 \
+                (*cost)++;*/                                             \
+        }                                                                \
+        if (java_value)                                                  \
+            java_value->member_name = member_name;                       \
+    }
+
+static jdouble jlong_to_jdouble(jlong lvalue)
+{
+   jdouble d;
+   jlong_L2D(d,lvalue);
+   return d;
+}
+
+#else
 
 #define jlong_to_jdouble(lvalue) ((jdouble) lvalue)
 
+#endif
 #endif
 
 /*
@@ -517,7 +568,7 @@ jsj_ConvertJSValueToJavaValue(JSContext *cx, JNIEnv *jEnv, jsval v_arg,
         break;
 
     case JAVA_SIGNATURE_LONG:
-#if XP_MAC
+#if defined(XP_MAC) || (defined(XP_OS2) && !defined(HAVE_LONG_LONG))
         JSVAL_TO_JLONG_JVALUE(j, jlong, v, java_value);
 #else
         JSVAL_TO_INTEGRAL_JVALUE(long, j, jlong, v, java_value);

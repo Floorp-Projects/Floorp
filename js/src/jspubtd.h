@@ -116,7 +116,7 @@ typedef struct JSXDRState	 JSXDRState;
 typedef struct JSExceptionState  JSExceptionState;
 
 #ifndef CRT_CALL
-#ifdef XP_OS2
+#ifdef XP_OS2_VACPP
 #define CRT_CALL _Optlink
 #else
 #define CRT_CALL

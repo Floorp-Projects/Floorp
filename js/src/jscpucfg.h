@@ -84,7 +84,7 @@
 
 #elif defined(XP_PC)
 
-#ifdef _WIN32
+#if defined( _WIN32) || defined(XP_OS2)
 #define IS_LITTLE_ENDIAN 1
 #undef  IS_BIG_ENDIAN
 
@@ -128,7 +128,7 @@
 #define JS_BYTES_PER_WORD_LOG2   2L
 #define JS_BYTES_PER_DWORD_LOG2  3L
 #define PR_WORDS_PER_DWORD_LOG2  1L
-#endif /* _WIN32 */
+#endif /* _WIN32 || XP_OS2 */
 
 #if defined(_WINDOWS) && !defined(_WIN32) /* WIN16 */
 #define IS_LITTLE_ENDIAN 1

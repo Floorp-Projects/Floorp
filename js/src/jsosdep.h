@@ -44,7 +44,7 @@
 
 #ifdef XP_PC
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined (XP_OS2)
 #define JS_HAVE_LONG_LONG
 #else
 #undef JS_HAVE_LONG_LONG
