@@ -271,7 +271,7 @@ nsDOMCSSAttributeDeclaration::ParsePropertyValue(const nsAString& aPropName,
     return result;
   }
 
-  PRInt32 hint;
+  PRInt32 hint = NS_STYLE_HINT_NONE;
   if (doc) {
     doc->BeginUpdate();
     doc->AttributeWillChange(mContent, kNameSpaceID_None, nsHTMLAtoms::style);
