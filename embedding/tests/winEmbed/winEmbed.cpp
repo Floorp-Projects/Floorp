@@ -134,7 +134,19 @@ public:
 
 int main(int argc, char *argv[])
 {
-    printf("\nYou are embedded, man!\n\n");
+    printf("You are embedded, man!\n\n");
+    printf("******************************************************************\n");
+    printf("*                                                                *\n");
+    printf("*  IMPORTANT NOTE:                                               *\n");
+    printf("*                                                                *\n");
+    printf("*  WinEmbed is not supported!!! Do not raise bugs on it unless   *\n");
+    printf("*  it is badly broken (e.g. crash on start/exit, build errors)   *\n");
+    printf("*  or you have the patch to make it better! MFCEmbed is now our  *\n");
+    printf("*  embedding test application on Win32 and all testing should    *\n");
+    printf("*  be done on that.                                              *\n");
+    printf("*                                                                *\n");
+    printf("******************************************************************\n");
+    printf("\n\n");
     
     // Sophisticated command-line parsing in action
     char *szFirstURL = "http://www.mozilla.org/projects/embedding";
