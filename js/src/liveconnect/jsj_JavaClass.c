@@ -539,12 +539,12 @@ done:
 
 JSObjectOps JavaClass_ops = {
     /* Mandatory non-null function pointer members. */
-    NULL,                       /* newObjectMap */
-    NULL,                       /* destroyObjectMap */
+    jsj_wrapper_newObjectMap,       /* newObjectMap */
+    jsj_wrapper_destroyObjectMap,   /* destroyObjectMap */
     JavaClass_lookupProperty,
     JavaClass_defineProperty,
-    JavaClass_getPropertyById,  /* getProperty */
-    JavaClass_setPropertyById,  /* setProperty */
+    JavaClass_getPropertyById,      /* getProperty */
+    JavaClass_setPropertyById,      /* setProperty */
     JavaClass_getAttributes,
     JavaClass_setAttributes,
     JavaClass_deleteProperty,
@@ -553,18 +553,18 @@ JSObjectOps JavaClass_ops = {
     JavaClass_checkAccess,
 
     /* Optionally non-null members start here. */
-    NULL,                       /* thisObject */
-    NULL,                       /* dropProperty */
-    jsj_JavaConstructorWrapper, /* call */
-    jsj_JavaConstructorWrapper, /* construct */
-    NULL,                       /* xdrObject */
-    JavaClass_hasInstance,      /* hasInstance */
-    NULL,                       /* setProto */
-    NULL,                       /* setParent */
-    NULL,                       /* mark */
-    NULL,                       /* clear */
-    NULL,                       /* getRequiredSlot */
-    NULL                        /* setRequiredSlot */
+    NULL,                           /* thisObject */
+    NULL,                           /* dropProperty */
+    jsj_JavaConstructorWrapper,     /* call */
+    jsj_JavaConstructorWrapper,     /* construct */
+    NULL,                           /* xdrObject */
+    JavaClass_hasInstance,          /* hasInstance */
+    NULL,                           /* setProto */
+    NULL,                           /* setParent */
+    NULL,                           /* mark */
+    NULL,                           /* clear */
+    jsj_wrapper_getRequiredSlot,    /* getRequiredSlot */
+    jsj_wrapper_setRequiredSlot     /* setRequiredSlot */
 };
 
 JS_STATIC_DLL_CALLBACK(JSObjectOps *)
@@ -731,11 +731,6 @@ extern JS_IMPORT_DATA(JSObjectOps) js_ObjectOps;
 JSBool
 jsj_init_JavaClass(JSContext *cx, JSObject *global_obj)
 {
-    JavaClass_ops.newObjectMap = js_ObjectOps.newObjectMap;
-    JavaClass_ops.destroyObjectMap = js_ObjectOps.destroyObjectMap;
-    JavaClass_ops.getRequiredSlot = js_ObjectOps.getRequiredSlot;
-    JavaClass_ops.setRequiredSlot = js_ObjectOps.setRequiredSlot;
-    
     /* Define JavaClass class */
     if (!JS_InitClass(cx, global_obj, 0, &JavaClass_class, JavaClass_construct, 0, 0, 0, 0, 0))
         return JS_FALSE;
