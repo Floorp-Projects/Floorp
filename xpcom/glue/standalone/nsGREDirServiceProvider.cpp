@@ -133,7 +133,7 @@ GRE_GetCurrentProcessDirectory(char* buffer)
 
 #ifdef XP_WIN
     DWORD bufLength = ::GetModuleFileName(0, buffer, MAXPATHLEN);
-    if (bufLength == 0 || bufLength >= MAXPATHLEN)
+    if (bufLength == 0 || bufLength == MAXPATHLEN)
         return PR_FALSE;
     // chop of the executable name by finding the rightmost backslash
     unsigned char* lastSlash = _mbsrchr((unsigned char*) buffer, '\\');
