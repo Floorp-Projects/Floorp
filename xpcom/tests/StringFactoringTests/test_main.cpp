@@ -6,7 +6,6 @@
 
 #include "nsString.h"
 #include "nsSharedString.h"
-#include "nsWorkString.h"
 
 #ifdef TEST_STD_STRING
 #include "nsStdStringWrapper.h"
@@ -295,6 +294,78 @@ test_cut( basic_nsAWritableString<CharT>& aWritable )
     return tests_failed;
   }
 
+template <class CharT>
+int
+test_self_assign( basic_nsAWritableString<CharT>& aWritable )
+  {
+    int tests_failed = 0;
+    string_class_traits<CharT>::implementation_t oldValue(aWritable);
+
+    aWritable = aWritable;
+    if ( aWritable != oldValue )
+      {
+        cout << "FAILED self assignment." << endl;
+        ++tests_failed;
+      }
+
+    aWritable = oldValue;
+    return tests_failed;
+  }
+
+template <class CharT>
+int
+test_self_append( basic_nsAWritableString<CharT>& aWritable )
+  {
+    int tests_failed = 0;
+    string_class_traits<CharT>::implementation_t oldValue(aWritable);
+
+    aWritable += aWritable;
+    if ( aWritable != oldValue + oldValue )
+      {
+        cout << "FAILED self append." << endl;
+        ++tests_failed;
+      }
+
+    aWritable = oldValue;
+    return tests_failed;
+  }
+
+template <class CharT>
+int
+test_self_insert( basic_nsAWritableString<CharT>& aWritable )
+  {
+    int tests_failed = 0;
+    string_class_traits<CharT>::implementation_t oldValue(aWritable);
+
+    aWritable.Insert(aWritable, 0);
+    if ( aWritable != oldValue + oldValue )
+      {
+        cout << "FAILED self insert." << endl;
+        ++tests_failed;
+      }
+
+    aWritable = oldValue;
+    return tests_failed;
+  }
+
+template <class CharT>
+int
+test_self_replace( basic_nsAWritableString<CharT>& aWritable )
+  {
+    int tests_failed = 0;
+    string_class_traits<CharT>::implementation_t oldValue(aWritable);
+
+    aWritable.Replace(0, 0, aWritable);
+    if ( aWritable != oldValue + oldValue )
+      {
+        cout << "FAILED self insert." << endl;
+        ++tests_failed;
+      }
+
+    aWritable = oldValue;
+    return tests_failed;
+  }
+
 
 
 template <class CharT>
@@ -321,6 +392,10 @@ test_writable( basic_nsAWritableString<CharT>& aWritable )
     tests_failed += test_SetLength(aWritable);
     tests_failed += test_insert(aWritable);
     tests_failed += test_cut(aWritable);
+    tests_failed += test_self_assign(aWritable);
+    tests_failed += test_self_append(aWritable);
+    tests_failed += test_self_insert(aWritable);
+    tests_failed += test_self_replace(aWritable);
 
     return tests_failed;
   }
@@ -424,18 +499,6 @@ main()
         }
     }
 
-
-    {
-      nsWorkCString s16("He");
-
-      s16.Append("llo");
-
-      if ( int failures = test_readable_hello(s16) )
-        {
-          tests_failed += failures;
-          cout << "FAILED to append to a work string." << endl;
-        }
-    }
 
     {
       nsLiteralCString str1("Hello");
