@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.34 2002/07/30 19:32:33 nelsonb%netscape.com Exp $
+ * $Id: certdb.c,v 1.35 2002/07/30 23:15:43 nelsonb%netscape.com Exp $
  */
 
 #include "nssilock.h"
@@ -1313,9 +1313,11 @@ cert_VerifySubjectAltName(CERTCertificate *cert, const char *hn)
 
     rv = CERT_FindCertExtension(cert, SEC_OID_X509_SUBJECT_ALT_NAME, 
 				&subAltName);
-    if (rv != SECSuccess) 
+    if (rv != SECSuccess) {
+	if (PORT_GetError() == SEC_ERROR_EXTENSION_NOT_FOUND)
+	    PORT_SetError(SSL_ERROR_BAD_CERT_DOMAIN);
 	goto finish;
-
+    }
     rv = SECFailure;
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
     if (!arena) 
