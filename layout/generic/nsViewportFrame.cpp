@@ -295,24 +295,18 @@ ViewportFrame::Reflow(nsPresContext*          aPresContext,
       command->GetType(reflowType);
   }
 
-  PRBool wasHandled = PR_FALSE;
   if (reflowType != eReflowType_UserDefined &&
       aReflowState.reason == eReflowReason_Incremental) {
     // Incremental reflow
-    rv = mFixedContainer.IncrementalReflow(this, aPresContext, reflowState,
-                                           reflowState.mComputedWidth,
-                                           reflowState.mComputedHeight,
-                                           wasHandled);
+     mFixedContainer.IncrementalReflow(this, aPresContext, reflowState,
+                                       reflowState.mComputedWidth,
+                                       reflowState.mComputedHeight);
   }
 
-  if (!wasHandled) {
-    // It's the initial reflow or some other non-incremental reflow or
-    // IncrementalReflow() didn't handle it.  Just reflow all the
-    // fixed-pos frames.
-    rv = mFixedContainer.Reflow(this, aPresContext, reflowState,
-                                reflowState.mComputedWidth, 
-                                reflowState.mComputedHeight);
-  }
+  // Just reflow all the fixed-pos frames.
+  rv = mFixedContainer.Reflow(this, aPresContext, reflowState,
+                              reflowState.mComputedWidth, 
+                              reflowState.mComputedHeight);
 
   // If this is an initial reflow, resize reflow, or style change reflow
   // then do a repaint

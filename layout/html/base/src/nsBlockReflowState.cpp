@@ -354,7 +354,7 @@ nsBlockReflowState::ClearPastFloats(PRUint8 aBreakType)
 #ifdef NOISY_FLOAT_CLEARING
     nsFrame::ListTag(stdout, mBlock);
     printf(": ClearPastFloats: mPrevBottomMargin=%d saveY=%d oldY=%d newY=%d deltaY=%d\n",
-           mPrevBottomMargin, saveY, saveY - mPrevBottomMargin, mY,
+           mPrevBottomMargin.get(), saveY, saveY - mPrevBottomMargin.get(), mY,
            mY - saveY);
 #endif
 

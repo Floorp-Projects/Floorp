@@ -110,19 +110,24 @@ public:
                   nscoord                  aContainingBlockHeight,
                   nsRect*                  aChildBounds = nsnull);
 
-  // Called only for a reflow reason of eReflowReason_Incremental. The
-  // aWasHandled return value indicates whether the reflow command was
-  // handled (i.e., the reflow command involved an absolutely positioned
-  // child element), or whether the caller should handle it.
-  // Returns (in the local coordinate space) the bounding rect of the absolutely
-  // positioned child elements taking into account their overflow area (if it
-  // is visible). This is only set if the reflow command was handled
-  nsresult IncrementalReflow(nsIFrame*                aDelegatingFrame,
-                             nsPresContext*          aPresContext,
-                             const nsHTMLReflowState& aReflowState,
-                             nscoord                  aContainingBlockWidth,
-                             nscoord                  aContainingBlockHeight,
-                             PRBool&                  aWasHandled);
+  // Called by the delegating frame to determine whether the
+  // incremental reflow is entirely targeted at absolute children
+  PRBool ReflowingAbsolutesOnly(nsIFrame* aDelegatingFrame,
+                                const nsHTMLReflowState& aReflowState);
+
+  // Called only for a reflow reason of eReflowReason_Incremental.
+  // Returns (in the local coordinate space) the bounding rect of the
+  // absolutely positioned child elements taking into account their
+  // overflow area (if it is visible).
+  void IncrementalReflow(nsIFrame*                aDelegatingFrame,
+                         nsPresContext*           aPresContext,
+                         const nsHTMLReflowState& aReflowState,
+                         nscoord                  aContainingBlockWidth,
+                         nscoord                  aContainingBlockHeight);
+
+  // Returns PR_TRUE if any absolute frames depend on the position of their
+  // placeholders
+  PRBool FramesDependOnContainer(PRBool aWidthChanged, PRBool aHeightChanged);
 
   void DestroyFrames(nsIFrame*       aDelegatingFrame,
                      nsPresContext* aPresContext);

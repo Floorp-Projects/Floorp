@@ -138,7 +138,7 @@ IsMarginZero(nsStyleUnit aUnit, nsStyleCoord &aCoord)
 }
 
 /* virtual */ PRBool
-nsInlineFrame::IsEmpty()
+nsInlineFrame::IsFrameEmpty()
 {
 #if 0
   // I used to think inline frames worked this way, but it seems they
@@ -170,11 +170,20 @@ nsInlineFrame::IsEmpty()
                     margin->mMargin.GetLeft(coord))) {
     return PR_FALSE;
   }
+}
+
+PRBool
+nsInlineFrame::IsEmpty()
+{
+  if (!IsFrameEmpty()) {
+    return PR_FALSE;
+  }
 
   for (nsIFrame *kid = mFrames.FirstChild(); kid; kid = kid->GetNextSibling()) {
     if (!kid->IsEmpty())
       return PR_FALSE;
   }
+
   return PR_TRUE;
 }
 
@@ -1220,39 +1229,8 @@ nsPositionedInlineFrame::Reflow(nsPresContext*          aPresContext,
 {
   nsresult  rv = NS_OK;
 
-  nsRect oldRect(mRect);
-
-  // See if it's an incremental reflow command
-  if (mAbsoluteContainer.HasAbsoluteFrames() &&
-      eReflowReason_Incremental == aReflowState.reason) {
-    // Give the absolute positioning code a chance to handle it
-    PRBool  handled;
-    nscoord containingBlockWidth = -1;
-    nscoord containingBlockHeight = -1;
-    
-    mAbsoluteContainer.IncrementalReflow(this, aPresContext, aReflowState,
-                                         containingBlockWidth, containingBlockHeight,
-                                         handled);
-
-    // If the incremental reflow command was handled by the absolute positioning
-    // code, then we're all done
-    if (handled) {
-      // Just return our current size as our desired size
-      // XXX I don't know how to compute that without a reflow, so for the
-      // time being pretend a resize reflow occured
-      nsHTMLReflowState reflowState(aReflowState);
-      reflowState.reason = eReflowReason_Resize;
-      reflowState.path = nsnull;
-      rv = nsInlineFrame::Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
-
-      // Factor the absolutely positioned child bounds into the overflow area
-      // Don't include this frame's bounds, nor its inline descendants' bounds,
-      // and don't store the overflow property.
-      // That will all be done by nsLineLayout::RelativePositionFrames.
-      mAbsoluteContainer.CalculateChildBounds(aPresContext, aDesiredSize.mOverflowArea);
-      return rv;
-    }
-  }
+  // Don't bother optimizing for fast incremental reflow of absolute
+  // children of an inline
 
   // Let the inline frame do its reflow first
   rv = nsInlineFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
@@ -1267,10 +1245,7 @@ nsPositionedInlineFrame::Reflow(nsPresContext*          aPresContext,
   // changed, the reflow would have been targeted at us so we'd satisfy
   // condition 1.
   if (NS_SUCCEEDED(rv) &&
-      mAbsoluteContainer.HasAbsoluteFrames() &&
-      (eReflowReason_Incremental != aReflowState.reason ||
-       aReflowState.path->mReflowCommand ||
-       mRect != oldRect)) {
+      mAbsoluteContainer.HasAbsoluteFrames()) {
     // The containing block for the abs pos kids is formed by our content edge.
     nscoord containingBlockWidth = aDesiredSize.width -
       (aReflowState.mComputedBorderPadding.left +
@@ -1278,6 +1253,14 @@ nsPositionedInlineFrame::Reflow(nsPresContext*          aPresContext,
     nscoord containingBlockHeight = aDesiredSize.height -
       (aReflowState.mComputedBorderPadding.top +
        aReflowState.mComputedBorderPadding.bottom);
+
+    // Do any incremental reflows ... would be nice to merge with
+    // the reflows below but that would be more work, and more risky
+    if (eReflowReason_Incremental == aReflowState.reason) {
+      mAbsoluteContainer.IncrementalReflow(this, aPresContext, aReflowState,
+                                           containingBlockWidth,
+                                           containingBlockHeight);
+    }
 
     // Factor the absolutely positioned child bounds into the overflow area
     // Don't include this frame's bounds, nor its inline descendants' bounds,

@@ -92,12 +92,6 @@ nsPlaceholderFrame::GetType() const
   return nsLayoutAtoms::placeholderFrame; 
 }
 
-/* virtual */ PRBool
-nsPlaceholderFrame::IsEmpty()
-{
-  return PR_TRUE;
-}
-
 #ifdef DEBUG
 NS_IMETHODIMP
 nsPlaceholderFrame::Paint(nsPresContext*      aPresContext,

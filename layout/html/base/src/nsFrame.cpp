@@ -2851,6 +2851,12 @@ nsFrame::IsEmpty()
   return PR_FALSE;
 }
 
+/* virtual */ PRBool
+nsFrame::IsFrameEmpty()
+{
+  return PR_FALSE;
+}
+
 NS_IMETHODIMP
 nsFrame::GetSelectionController(nsPresContext *aPresContext, nsISelectionController **aSelCon)
 {
