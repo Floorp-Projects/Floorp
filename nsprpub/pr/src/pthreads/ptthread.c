@@ -358,8 +358,10 @@ static PRThread* _PR_CreateThread(
             PR_LOG(_pr_thread_lm, PR_LOG_MIN,
                 ("_PR_CreateThread: no thread scheduling privilege"));
             /* Try creating the thread again without setting priority. */
+#if defined(_POSIX_THREAD_PRIORITY_SCHEDULING)
             rv = pthread_attr_setinheritsched(&tattr, PTHREAD_INHERIT_SCHED);
             PR_ASSERT(0 == rv);
+#endif
             rv = PTHREAD_CREATE(&id, tattr, _pt_root, thred);
         }
 #endif
