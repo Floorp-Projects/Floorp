@@ -288,7 +288,7 @@ protected:
 
   PRUint8 mPlacedFloaters;
   PRInt32 mTotalPlacedFrames;
-  nsVoidArray mWordFrames;
+  nsAutoVoidArray mWordFrames;
 
   nscoord mTopEdge;
   nscoord mBottomEdge;
