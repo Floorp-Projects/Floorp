@@ -13,7 +13,8 @@
 #    modules2dir.pl.
 #  * Checks out core config files, nspr, and module directories.
 #  * Based on this resulting tree, allmakefiles.sh is generated
-#    on the fly with a module name "bootstrap".
+#    on the fly with a module name "bootstrap".  modules.mk file
+#    generated with DIRS in leaf-first order.
 #  * A build is attemped with this configure option:
 #      --enable-standalone-modules=bootstrap
 #
