@@ -41,6 +41,8 @@
 #include "nsIContent.h"
 #include "nsFrameList.h"
 #include "nsLayoutAtoms.h"
+#include "nsIAtom.h"
+#include "nsCSSPseudoElements.h"
 
 /**
  * A namespace class for static layout utilities.
@@ -139,7 +141,8 @@ nsLayoutUtils::GetBeforeFrame(nsIFrame* aFrame, nsIPresContext* aPresContext)
   aFrame->GetContent(getter_AddRefs(content));
   nsIFrame* firstFrame = GetFirstChildFrame(aPresContext, aFrame, content);
 
-  if (firstFrame && firstFrame->IsGeneratedContentFrame()) {
+  if (firstFrame && IsGeneratedContentFor(nsnull, firstFrame,
+                                          nsCSSPseudoElements::before)) {
     return firstFrame;
   }
 
@@ -156,13 +159,15 @@ nsLayoutUtils::GetAfterFrame(nsIFrame* aFrame, nsIPresContext* aPresContext)
   aFrame->GetContent(getter_AddRefs(content));
   nsIFrame* lastFrame = GetLastChildFrame(aPresContext, aFrame, content);
 
-  if (lastFrame && lastFrame->IsGeneratedContentFrame()) {
+  if (lastFrame && IsGeneratedContentFor(nsnull, lastFrame,
+                                         nsCSSPseudoElements::after)) {
     return lastFrame;
   }
 
   return nsnull;
 }
 
+// static
 nsIFrame*
 nsLayoutUtils::GetPageFrame(nsIFrame* aFrame)
 {
@@ -177,3 +182,30 @@ nsLayoutUtils::GetPageFrame(nsIFrame* aFrame)
   }
   return nsnull;
 }
+
+// static
+PRBool
+nsLayoutUtils::IsGeneratedContentFor(nsIContent* aContent,
+                                     nsIFrame* aFrame,
+                                     nsIAtom* aPseudoElement)
+{
+  NS_PRECONDITION(aFrame, "Must have a frame");
+  NS_PRECONDITION(aPseudoElement, "Must have a pseudo name");
+
+  if (!aFrame->IsGeneratedContentFrame()) {
+    return PR_FALSE;
+  }
+
+  if (aContent) {
+    nsCOMPtr<nsIContent> content;
+    aFrame->GetContent(getter_AddRefs(content));
+    if (content != aContent) {
+      return PR_FALSE;
+    }
+  }
+
+  nsStyleContext* styleContext = aFrame->GetStyleContext();
+  nsCOMPtr<nsIAtom> pseudoType = styleContext->GetPseudoType();
+  return pseudoType == aPseudoElement;
+}
+

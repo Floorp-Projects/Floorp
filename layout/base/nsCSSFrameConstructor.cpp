@@ -113,6 +113,7 @@
 #include "nsCSSRendering.h"
 #include "nsISelectElement.h"
 #include "nsLayoutErrors.h"
+#include "nsLayoutUtils.h"
 #include "nsAutoPtr.h"
 #include "nsScrollPortFrame.h"
 #include "nsXULAtoms.h"
@@ -7731,35 +7732,6 @@ nsCSSFrameConstructor::GetFloaterContainingBlock(nsIPresContext* aPresContext,
   return containingBlock;
 }
 
-// Helper function to determine whether a given frame is generated content
-// for the specified content object. Returns PR_TRUE if the frame is associated
-// with generated content and PR_FALSE otherwise
-static inline PRBool
-IsGeneratedContentFor(nsIContent* aContent, nsIFrame* aFrame, nsIAtom* aPseudoElement)
-{
-  NS_PRECONDITION(aFrame, "null frame pointer");
-  nsFrameState  state;
-  PRBool        result = PR_FALSE;
-
-  // First check the frame state bit
-  aFrame->GetFrameState(&state);
-  if (state & NS_FRAME_GENERATED_CONTENT) {
-    nsCOMPtr<nsIContent> content;
-
-    // Check that it has the same content pointer
-    aFrame->GetContent(getter_AddRefs(content));
-    if (content == aContent) {
-      nsStyleContext* styleContext = aFrame->GetStyleContext();
-
-      // See if the pseudo element type matches
-      nsCOMPtr<nsIAtom> pseudoType = styleContext->GetPseudoType();
-      result = (pseudoType == aPseudoElement);
-    }
-  }
-
-  return result;
-}
-
 /**
  * This function is called by ContentAppended() and ContentInserted()
  * when appending flowed frames to a parent's principal child list. It
@@ -7774,18 +7746,24 @@ nsCSSFrameConstructor::AppendFrames(nsIPresContext*  aPresContext,
                                     nsIFrame*        aParentFrame,
                                     nsIFrame*        aFrameList)
 {
-  nsIFrame* firstChild;
-  aParentFrame->FirstChild(aPresContext, nsnull, &firstChild);
-  nsFrameList frames(firstChild);
-  nsIFrame* lastChild = frames.LastChild();
+  // See if the parent has an :after pseudo-element.  Check for the presence
+  // of style first, since nsLayoutUtils::GetAfterFrame is sorta expensive.
+  nsStyleContext* parentStyle = aParentFrame->GetStyleContext();
+  if (nsLayoutUtils::HasPseudoStyle(aContainer, parentStyle,
+                                    nsCSSPseudoElements::after,
+                                    aPresContext)) {
+    nsIFrame* afterFrame = nsLayoutUtils::GetAfterFrame(aParentFrame,
+                                                        aPresContext);
+    if (afterFrame) {
+      nsIFrame* firstChild;
+      aParentFrame->FirstChild(aPresContext, nsnull, &firstChild);
+      nsFrameList frames(firstChild);
 
-  // See if the parent has an :after pseudo-element
-  if (lastChild && IsGeneratedContentFor(aContainer, lastChild,
-                                         nsCSSPseudoElements::after)) {
-    // Insert the frames before the :after pseudo-element.
-    return aFrameManager->InsertFrames(aPresContext, *aPresShell, aParentFrame,
-                                       nsnull, frames.GetPrevSiblingFor(lastChild),
+      // Insert the frames before the :after pseudo-element.
+      return aFrameManager->InsertFrames(aPresContext, *aPresShell, aParentFrame,
+                                       nsnull, frames.GetPrevSiblingFor(afterFrame),
                                        aFrameList);
+    }
   }
 
   nsresult rv = NS_OK;
@@ -9248,8 +9226,9 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext*        aPresContext,
         nsIFrame* firstChild;
         parentFrame->FirstChild(aPresContext, nsnull, &firstChild);
 
-        if (firstChild && IsGeneratedContentFor(aContainer, firstChild,
-                                                nsCSSPseudoElements::before)) {
+        if (firstChild &&
+            nsLayoutUtils::IsGeneratedContentFor(aContainer, firstChild,
+                                                 nsCSSPseudoElements::before)) {
           // Insert the new frames after the :before pseudo-element
           prevSibling = firstChild;
         }
@@ -9568,21 +9547,6 @@ nsCSSFrameConstructor::RemoveMappingsForFrameSubtree(nsIPresContext* aPresContex
   CaptureStateFor(aPresContext, aRemovedFrame, mTempFrameTreeState);
 
   return DeletingFrameSubtree(aPresContext, presShell, frameManager, aRemovedFrame);
-}
-
-static PRBool
-HasPseudoStyle(nsIPresContext* aPresContext,
-               nsIContent* aContent,
-               nsStyleContext* aStyleContext,
-               nsIAtom* aPseudoElement)
-{
-  nsRefPtr<nsStyleContext> pseudoStyleContext;
-  if (aContent) {
-    pseudoStyleContext = aPresContext->ProbePseudoStyleContextFor(aContent,
-                                                                  aPseudoElement,
-                                                                  aStyleContext);
-  }
-  return pseudoStyleContext != nsnull;
 }
 
 NS_IMETHODIMP
@@ -11694,8 +11658,8 @@ nsCSSFrameConstructor::FindFrameWithContent(nsIPresContext*  aPresContext,
             // next sibling.
 
             if (aContent->IsContentOfType(nsIContent::eELEMENT) &&
-                IsGeneratedContentFor(aContent, kidFrame,
-                                      nsCSSPseudoElements::before)) {
+                nsLayoutUtils::IsGeneratedContentFor(aContent, kidFrame,
+                                                     nsCSSPseudoElements::before)) {
               kidFrame->GetNextSibling(&kidFrame);
 #ifdef DEBUG
               NS_ASSERTION(kidFrame, ":before with no next sibling");
@@ -11707,8 +11671,8 @@ nsCSSFrameConstructor::FindFrameWithContent(nsIPresContext*  aPresContext,
                 // make sure it's not the :after pseudo frame.
 
                 NS_ASSERTION(nextSiblingContent.get() == aContent &&
-                             !IsGeneratedContentFor(aContent, kidFrame,
-                                                    nsCSSPseudoElements::after),
+                             !nsLayoutUtils::IsGeneratedContentFor(aContent, kidFrame,
+                                                                   nsCSSPseudoElements::after),
                              ":before frame not followed by primary frame");
               }
 #endif
@@ -12136,8 +12100,9 @@ nsCSSFrameConstructor::HaveFirstLetterStyle(nsIPresContext* aPresContext,
                                             nsIContent* aContent,
                                             nsStyleContext* aStyleContext)
 {
-  return HasPseudoStyle(aPresContext, aContent, aStyleContext,
-                        nsCSSPseudoElements::firstLetter);
+  return nsLayoutUtils::HasPseudoStyle(aContent, aStyleContext,
+                                       nsCSSPseudoElements::firstLetter,
+                                       aPresContext);
 }
 
 PRBool
@@ -12145,8 +12110,9 @@ nsCSSFrameConstructor::HaveFirstLineStyle(nsIPresContext* aPresContext,
                                           nsIContent* aContent,
                                           nsStyleContext* aStyleContext)
 {
-  return HasPseudoStyle(aPresContext, aContent, aStyleContext,
-                        nsCSSPseudoElements::firstLine);
+  return nsLayoutUtils::HasPseudoStyle(aContent, aStyleContext,
+                                       nsCSSPseudoElements::firstLine,
+                                       aPresContext);
 }
 
 void

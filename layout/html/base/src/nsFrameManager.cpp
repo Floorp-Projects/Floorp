@@ -1889,19 +1889,14 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
         if (!prevInFlow) {
           // Checking for a :before frame is cheaper than getting the
           // :before style context.
-          nsIFrame* beforeFrame = nsLayoutUtils::GetBeforeFrame(aFrame,
-                                                                aPresContext);
-          if (!beforeFrame) {
-            // Look for a new :before style context
-            nsRefPtr<nsStyleContext> newBeforeContext = aPresContext->ProbePseudoStyleContextFor(localContent,
-                                                     nsCSSPseudoElements::before,
-                                                     newContext);
-            if (newBeforeContext) {
-              // Have to create the new :before frame
-              NS_UpdateHint(aMinChange, nsChangeHint_ReconstructFrame);
-              aChangeList.AppendChange(aFrame, content,
-                                       nsChangeHint_ReconstructFrame);
-            }
+          if (!nsLayoutUtils::GetBeforeFrame(aFrame, aPresContext) &&
+              nsLayoutUtils::HasPseudoStyle(localContent, newContext,
+                                            nsCSSPseudoElements::before,
+                                            aPresContext)) {
+            // Have to create the new :before frame
+            NS_UpdateHint(aMinChange, nsChangeHint_ReconstructFrame);
+            aChangeList.AppendChange(aFrame, content,
+                                     nsChangeHint_ReconstructFrame);
           }
         }
       }
@@ -1910,29 +1905,24 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
     
     if (!(aMinChange & (nsChangeHint_ReconstructFrame | nsChangeHint_ReconstructDoc))) {
       if (localContent && localContent->IsContentOfType(nsIContent::eELEMENT)) {
-        // Check for new :after content, but only if the frame is the first-in-flow.
+        // Check for new :after content, but only if the frame is the
+        // first-in-flow.
         nsIFrame* nextInFlow = nsnull;
         aFrame->GetNextInFlow(&nextInFlow);
 
         if (!nextInFlow) {
-          // Getting the :after frame is
-          // more expensive than getting the pseudo context, so get the
-          // pseudo context first.
-          nsRefPtr<nsStyleContext> newAfterContext = aPresContext->ProbePseudoStyleContextFor(localContent,
-                                                   nsCSSPseudoElements::after,
-                                                   newContext);
-          if (newAfterContext) {
-            // Check whether we already have an :after frame
-            nsIFrame* afterFrame = nsLayoutUtils::GetAfterFrame(aFrame,
-                                                                aPresContext);
-            if (!afterFrame) {
-              // have to create one 
-              NS_UpdateHint(aMinChange, nsChangeHint_ReconstructFrame);
-              aChangeList.AppendChange(aFrame, content,
-                                       nsChangeHint_ReconstructFrame);
-            }
+          // Getting the :after frame is more expensive than getting the pseudo
+          // context, so get the pseudo context first.
+          if (nsLayoutUtils::HasPseudoStyle(localContent, newContext,
+                                            nsCSSPseudoElements::after,
+                                            aPresContext) &&
+              !nsLayoutUtils::GetAfterFrame(aFrame, aPresContext)) {
+            // have to create the new :after frame
+            NS_UpdateHint(aMinChange, nsChangeHint_ReconstructFrame);
+            aChangeList.AppendChange(aFrame, content,
+                                     nsChangeHint_ReconstructFrame);
           }
-        }        
+        }      
       }
     }
     

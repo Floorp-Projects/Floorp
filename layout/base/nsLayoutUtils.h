@@ -40,6 +40,12 @@
 
 class nsIFrame;
 class nsIPresContext;
+class nsIContent;
+class nsIAtom;
+
+#include "prtypes.h"
+#include "nsStyleContext.h"
+#include "nsAutoPtr.h"
 
 /**
  * nsLayoutUtils is a namespace class used for various helper
@@ -72,11 +78,58 @@ public:
    */
   static nsIFrame* GetAfterFrame(nsIFrame* aFrame, nsIPresContext* aPresContext);
 
-  /** ---------------------------------------------------
-   *  Giving a child frame it searches "up" the tree until it
-   *  finds a "Page" frame.
+  /** 
+   * Given a frame, search up the frame tree until we find an
+   * ancestor "Page" frame, if any.
+   *
+   * @param the frame to start at
+   * @return a frame of type nsLayoutAtoms::pageFrame or nsnull if no
+   *         such ancestor exists
    */
   static nsIFrame* GetPageFrame(nsIFrame* aFrame);
+
+  /**
+   * IsGeneratedContentFor returns PR_TRUE if aFrame is generated
+   * content of type aPseudoElement for aContent
+   *
+   * @param aContent the content node we're looking at.  If this is
+   *        null, then we just assume that aFrame has the right content
+   *        pointer.
+   * @param aFrame the frame we're looking at
+   * @param aPseudoElement the pseudo type we're interested in
+   * @return whether aFrame is the generated aPseudoElement frame for aContent
+   */
+  static PRBool IsGeneratedContentFor(nsIContent* aContent, nsIFrame* aFrame,
+                                      nsIAtom* aPseudoElement);
+  
+  /**
+   * HasPseudoStyle returns PR_TRUE if aContent (whose primary style
+   * context is aStyleContext) has the aPseudoElement pseudo-style
+   * attached to it; returns PR_FALSE otherwise.
+   *
+   * @param aContent the content node we're looking at
+   * @param aStyleContext aContent's style context
+   * @param aPseudoElement the name of the pseudo style we care about
+   * @param aPresContext the presentation context
+   * @return whether aContent has aPseudoElement style attached to it
+   */
+  static PRBool HasPseudoStyle(nsIContent* aContent,
+                               nsStyleContext* aStyleContext,
+                               nsIAtom* aPseudoElement,
+                               nsIPresContext* aPresContext)
+  {
+    NS_PRECONDITION(aPresContext, "Must have a prescontext");
+    NS_PRECONDITION(aPseudoElement, "Must have a pseudo name");
+
+    nsRefPtr<nsStyleContext> pseudoContext;
+    if (aContent) {
+      pseudoContext = aPresContext->ProbePseudoStyleContextFor(aContent,
+                                                               aPseudoElement,
+                                                               aStyleContext);
+    }
+    return pseudoContext != nsnull;
+  }
+  
 };
 
 #endif // nsLayoutUtils_h__
