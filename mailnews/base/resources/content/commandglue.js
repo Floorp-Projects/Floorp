@@ -208,8 +208,11 @@ function LoadMessage(messageNode)
 {
   var uri = messageNode.getAttribute('id');
   dump(uri);
-  if(uri)
+  if(uri != gCurrentDisplayedMessage)
+  {
+	  gCurrentDisplayedMessage = uri;
 	  OpenURL(uri);
+  }
 }
 
 function ChangeFolderByDOMNode(folderNode)

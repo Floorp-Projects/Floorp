@@ -66,6 +66,7 @@ var gCurrentFolderToReroot;
 var gCurrentLoadingFolderIsThreaded = false;
 var gCurrentLoadingFolderSortID ="";
 
+var gCurrentDisplayedMessage = null;
 
 // the folderListener object
 var folderListener = {
@@ -595,6 +596,7 @@ function ClearThreadTreeSelection()
 
 function ClearMessagePane()
 {
+	gCurrentDisplayedMessage = null;
     if (window.frames["messagepane"].location != "about:blank")
         window.frames["messagepane"].location = "about:blank";
     // hide the message header view AND the message pane...
