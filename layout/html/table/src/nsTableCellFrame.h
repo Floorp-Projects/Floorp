@@ -57,6 +57,7 @@ public:
 
   // default constructor supplied by the compiler
 
+  nsTableCellFrame();
   ~nsTableCellFrame();
 
   NS_IMETHOD Init(nsIPresContext*  aPresContext,
@@ -64,6 +65,12 @@ public:
                   nsIFrame*        aParent,
                   nsIStyleContext* aContext,
                   nsIFrame*        aPrevInFlow);
+
+  NS_IMETHOD  AttributeChanged(nsIPresContext* aPresContext,
+                               nsIContent*     aChild,
+                               PRInt32         aNameSpaceID,
+                               nsIAtom*        aAttribute,
+                               PRInt32         aHint);
 
   // table cells contain an area frame which does most of the work, and
   // so these functions should never be called. They assert and return

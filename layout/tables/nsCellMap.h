@@ -183,6 +183,13 @@ protected:
 
   PRBool CreateEmptyRow(PRInt32 aRowIndex,
                         PRInt32 aNumCols);
+
+  PRInt32 GetColSpan(PRInt32 aRowIndex,
+                     PRInt32 aColIndex);
+
+  PRInt32 GetRowSpan(PRInt32 aRowIndex,
+                     PRInt32 aColIndex);
+
   /** an array containing col array. It can be larger than mRowCount due to
     * row spans extending beyond the table */
   nsVoidArray mRows; 
