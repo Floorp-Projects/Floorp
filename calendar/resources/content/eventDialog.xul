@@ -75,6 +75,9 @@
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:nc="http://home.netscape.com/NC-rdf#">
     
+<stringbundleset id="stringbundleset">
+  <stringbundle id="bundle_calendar" src="chrome://calendar/locale/calendar.properties"/>
+</stringbundleset>
    
 <!-- Javascript DTD To Variable -->
 <script type="application/x-javascript" src="chrome://communicator/content/utilityOverlay.js"/>
