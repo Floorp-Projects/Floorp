@@ -95,7 +95,9 @@ enum nsBorderStyle {
                   ///no border
                 eBorderStyle_none,
                   ///dialog box border + title area
-                eBorderStyle_dialog
+                eBorderStyle_dialog,
+                  ///window border
+                eBorderStyle_window
               }; 
 
 /**
@@ -132,12 +134,14 @@ enum nsCursor {   ///(normal cursor,       usually rendered as an arrow)
 
 struct nsWidgetInitData {
   nsWidgetInitData()
-    : clipChildren(PR_FALSE)
+    : clipChildren(PR_FALSE),
+      mBorderStyle(eBorderStyle_window)
   {
   }
 
   // when painting exclude area occupied by child windows
   PRPackedBool  clipChildren;
+  nsBorderStyle mBorderStyle;
 };
 
 /**
