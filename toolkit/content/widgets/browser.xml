@@ -350,14 +350,12 @@
         <parameter name="evt"/>
         <body>
           <![CDATA[
-            alert("GOT HERE!");
             if (!this.pageReport) {
               this.pageReport = new Array();
               this.updatePageReport(); 
             }
 
-            this.pageReport.push(evt.location);
-            alert(evt.location);
+            this.pageReport.push(evt.target.location);
           ]]> 
         </body>
       </method>
