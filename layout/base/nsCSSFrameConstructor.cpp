@@ -5219,21 +5219,9 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsIPresShell*            aPresShell,
       addedToFrameList = PR_TRUE;
     }
   }
-  else if (nsHTMLAtoms::object == aTag) {
-    if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
-      ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
-    }
-    isReplaced = PR_TRUE;
-    rv = NS_NewObjectFrame(aPresShell, &newFrame);
-  }
-  else if (nsHTMLAtoms::applet == aTag) {
-    if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
-      ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
-    }
-    isReplaced = PR_TRUE;
-    rv = NS_NewObjectFrame(aPresShell, &newFrame);
-  }
-  else if (nsHTMLAtoms::embed == aTag) {
+  else if (nsHTMLAtoms::object == aTag ||
+           nsHTMLAtoms::applet == aTag ||
+           nsHTMLAtoms::embed == aTag) {
     if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
       ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
     }
