@@ -120,11 +120,11 @@
 // Misc
 #include "TextEditorTest.h"
 #include "nsEditorUtils.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 const PRUnichar nbsp = 160;
 
 static NS_DEFINE_CID(kCRangeCID,      NS_RANGE_CID);
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCParserCID,     NS_PARSER_CID);
 
 // Drag & Drop, Clipboard Support
@@ -1903,9 +1903,10 @@ nsHTMLEditor::InsertAsPlaintextQuotation(const nsAString & aQuotedText,
   // The quotesPreformatted pref is a temporary measure. See bug 69638.
   // Eventually we'll pick one way or the other.
   PRBool quotesInPre;
-  nsCOMPtr<nsIPref> prefs = do_GetService(kPrefServiceCID, &rv);
-  if (NS_SUCCEEDED(rv) && prefs)
-    prefs->GetBoolPref("editor.quotesPreformatted", &quotesInPre);
+  nsCOMPtr<nsIPrefBranch> prefBranch =
+    do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv) && prefBranch)
+    prefBranch->GetBoolPref("editor.quotesPreformatted", &quotesInPre);
 
   nsCOMPtr<nsIDOMNode> preNode;
   // get selection

@@ -69,7 +69,8 @@
 #include "nsIStyleContext.h"
 #include "nsIPresShell.h"
 #include "nsLayoutCID.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "nsIDOMNamedNodeMap.h"
 
 #include "nsEditorUtils.h"
@@ -87,7 +88,6 @@ const static PRUnichar nbsp = 160;
 
 static NS_DEFINE_IID(kContentIteratorCID, NS_CONTENTITERATOR_CID);
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 enum
 {
@@ -231,13 +231,14 @@ nsHTMLEditRules::Init(nsPlaintextEditor *aEditor, PRUint32 aFlags)
   if (NS_FAILED(res)) return res;
 
   // cache any prefs we care about
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &res));
+  nsCOMPtr<nsIPrefBranch> prefBranch =
+    do_GetService(NS_PREFSERVICE_CONTRACTID, &res);
   if (NS_FAILED(res)) return res;
 
   char *returnInEmptyLIKillsList = 0;
-  res = prefs->CopyCharPref("editor.html.typing.returnInEmptyListItemClosesList",
-                               &returnInEmptyLIKillsList);
-                          
+  res = prefBranch->GetCharPref("editor.html.typing.returnInEmptyListItemClosesList",
+                                &returnInEmptyLIKillsList);
+
   if (NS_SUCCEEDED(res) && returnInEmptyLIKillsList)
   {
     if (!strncmp(returnInEmptyLIKillsList, "false", 5))

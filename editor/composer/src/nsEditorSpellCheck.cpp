@@ -46,14 +46,15 @@
 
 #include "nsIComponentManager.h"
 #include "nsXPIDLString.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
+#include "nsISupportsPrimitives.h"
 #include "nsIServiceManagerUtils.h"
 #include "nsIChromeRegistry.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 
 static NS_DEFINE_CID(kCTextServicesDocumentCID, NS_TEXTSERVICESDOCUMENT_CID);
-static NS_DEFINE_CID(kPrefServiceCID,           NS_PREF_CID);
 
 NS_IMPL_ISUPPORTS1(nsEditorSpellCheck, nsIEditorSpellCheck);
 
@@ -107,11 +108,18 @@ nsEditorSpellCheck::InitSpellChecker(nsIEditor* editor)
 
   nsXPIDLString dictName;
 
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &rv));
+  nsCOMPtr<nsIPrefBranch> prefBranch =
+    do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
 
-  if (NS_SUCCEEDED(rv) && prefs)
-    rv = prefs->CopyUnicharPref("spellchecker.dictionary",
-                                getter_Copies(dictName));
+  if (NS_SUCCEEDED(rv) && prefBranch) {
+    nsCOMPtr<nsISupportsString> prefString;
+    rv = prefBranch->GetComplexValue("spellchecker.dictionary",
+                                     NS_GET_IID(nsISupportsString),
+                                     getter_AddRefs(prefString));
+    if (prefString) {
+      prefString->ToString(getter_Copies(dictName));
+    }
+  }
 
   if (NS_FAILED(rv) || dictName.IsEmpty())
   {
@@ -360,16 +368,26 @@ nsEditorSpellCheck::UninitSpellChecker()
 
   // Save the last used dictionary to the user's preferences.
   nsresult rv;
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &rv));
+  nsCOMPtr<nsIPrefBranch> prefBranch =
+    do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
 
-  if (NS_SUCCEEDED(rv) && prefs)
+  if (NS_SUCCEEDED(rv) && prefBranch)
   {
     PRUnichar *dictName = nsnull;
 
     rv = GetCurrentDictionary(&dictName);
 
-    if (NS_SUCCEEDED(rv) && dictName && *dictName)
-      rv = prefs->SetUnicharPref("spellchecker.dictionary", dictName);
+    if (NS_SUCCEEDED(rv) && dictName && *dictName) {
+      nsCOMPtr<nsISupportsString> prefString =
+        do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
+
+      if (NS_SUCCEEDED(rv) && prefString) {
+        prefString->SetData(nsDependentString(dictName));
+        rv = prefBranch->SetComplexValue("spellchecker.dictionary",
+                                         NS_GET_IID(nsISupportsString),
+                                         prefString);
+      }
+    }
 
     if (dictName)
       nsMemory::Free(dictName);
