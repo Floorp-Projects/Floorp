@@ -32,7 +32,7 @@ package			Moz;
 require			Exporter;
 
 @ISA				= qw(Exporter);
-@EXPORT			= qw(BuildProject BuildProjectClean OpenErrorLog MakeAlias StopForErrors DontStopForErrors InstallFromManifest);
+@EXPORT			= qw(BuildProject BuildProjectClean OpenErrorLog MakeAlias StopForErrors DontStopForErrors InstallFromManifest SetBuildNumber SetAgentString SetTimeBomb);
 @EXPORT_OK	= qw(CloseErrorLog UseCodeWarriorLib QUIET);
 
 	use Cwd;
@@ -357,13 +357,68 @@ sub InstallFromManifest($;$)
 			}
 	}
 
+ sub SetBuildNumber
+ {
 
+   open (OUTPUT, ">:mozilla:config:build_number") || die "could not open buildnumber";
+
+   open (BDATE, "perl :mozilla:config:bdate.pl|");
+   
+   while (<BDATE>) {
+     print OUTPUT $_;
+   }
+
+   close (BDATE);
+   close (OUTPUT);
+
+   system ("perl :mozilla:config:aboutime.pl :mozilla:l10n:us:xp:about-all.html :mozilla:config:build_number");
+
+ }
+
+sub SetAgentString
+{
+	
+	open (BDATE, ":mozilla:config:build_number") || die "could not open buildnumber";
+	   
+	while (<BDATE>) {
+		$build_number = $_;
+	}
+	
+	close (BDATE);
+	
+	open (ORIGFILE, ":mozilla:cmd:macfe:restext:custom.r") || die "no original file";
+	open (OUTPUT, ">:mozilla:cmd:macfe:restext:agent.r") || die "no output file";
+	
+	chop($build_number);
+	
+	while (<ORIGFILE>) {
+	
+		$tempstring = $_;
+		if ($tempstring =~	"\#define		VERSION_MAJOR_STR") {
+			$tempstring = "\#define		VERSION_MAJOR_STR	\"5.0a1-" . $build_number . " Development\"\n";
+		}
+		print OUTPUT $tempstring;
+	}
+	
+	close (ORIGFILE);
+	close (OUTPUT);
+	
+	unlink (":mozilla:cmd:macfe:restext:custom.r");
+	rename (":mozilla:cmd:macfe:restext:agent.r", ":mozilla:cmd:macfe:restext:custom.r");
+}
+
+sub SetTimeBomb
+{
+
+  system("perl :mozilla:config:mac-set-timebomb.pl");
+	
+}
 
 1;
 
 =head1 AUTHORS
 
-Scott Collins <scc@netscape.com>, Simon Fraser <sfraser@netscape.com>
+Scott Collins <scc@netscape.com>, Simon Fraser <sfraser@netscape.com>, Chris Yeh <cyeh@netscape.com>
 
 =head1 SEE ALSO
 
