@@ -166,6 +166,13 @@ PK11SDR_Encrypt(SECItem *keyid, SECItem *data, SECItem *result, void *cx)
   /* Use triple-DES */
   type = CKM_DES3_CBC;
 
+  /*
+   * Login to the internal token before we look for the key, otherwise we
+   * won't find it.
+   */
+  rv = PK11_Authenticate(slot, PR_TRUE, cx);
+  if (rv != SECSuccess) goto loser;
+
   /* Find the key to use */
   pKeyID = keyid;
   if (pKeyID->len == 0) {
