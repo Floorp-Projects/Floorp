@@ -42,7 +42,7 @@ nsEntityConverter::nsEntityConverter()
 	nsIURI* url = nsnull;
 	nsIInputStream* in = nsnull;
 	nsresult	res;
-	nsString	aUrl("resource:/res/latin1_entites.properties");
+	nsString	aUrl("resource:/res/entityTables/html40Latin1.properties");
 
 	res = NS_NewURI(&url,aUrl,nsnull);
 	if (NS_FAILED(res)) return;
