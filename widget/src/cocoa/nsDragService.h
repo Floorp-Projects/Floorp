@@ -95,16 +95,19 @@ private:
     // compute a screen rect from the frame associated with the given dom node
   PRBool ComputeGlobalRectFromFrame ( nsIDOMNode* aDOMNode, Rect & outScreenRect ) ;
 
+  OSErr HandleHFSPromiseDrop(DragReference inDragRef, unsigned int inItemIndex,
+            FlavorType inFlavor, const nsAString& inSourceURL, void** outData, unsigned int* outDataSize);
+  
     // callback for the MacOS DragManager when a drop site asks for data
   static pascal OSErr DragSendDataProc ( FlavorType inFlavor, void* inRefCon,
   										 ItemReference theItemRef, DragReference inDragRef ) ;
 
-  PRBool mImageDraggingSupported;
   DragSendDataUPP mDragSendDataUPP;
   DragReference mDragRef;        // reference to _the_ drag. There can be only one.
   nsISupportsArray* mDataItems;  // cached here for when we start the drag so the 
                                  // DragSendDataProc has access to them. 
                                  // ONLY VALID DURING A DRAG STARTED WITHIN THIS APP.
+  PRBool mImageDraggingSupported;
 
 }; // class nsDragService
 
