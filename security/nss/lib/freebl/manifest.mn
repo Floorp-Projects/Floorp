@@ -56,8 +56,9 @@ CSRCS = \
 	sha_fast.c \
 	md2.c \
 	md5.c \
-	dh_bsf.c \
 	blapi_bsf.c \
+	$(MPI_SRCS) \
+	dh.c \
 	$(NULL)
 else
 CSRCS = \

@@ -40,7 +40,8 @@ ifdef MOZILLA_SECURITY_BUILD
 	CRYPTOLIB=$(DIST)/lib/crypto.lib
 endif
 ifdef MOZILLA_BSAFE_BUILD
-	CRYPTOLIB=$(DIST)/lib/bsafe41.lib
+	CRYPTOLIB+=$(DIST)/lib/bsafe$(BSAFEVER).lib
+	CRYPTOLIB+=$(DIST)/lib/freebl.lib
 endif
 
 EXTRA_LIBS += \
@@ -79,7 +80,8 @@ ifdef MOZILLA_SECURITY_BUILD
 	CRYPTOLIB=$(DIST)/lib/libcrypto.$(LIB_SUFFIX)
 endif
 ifdef MOZILLA_BSAFE_BUILD
-	CRYPTOLIB=$(DIST)/lib/libbsafe.$(LIB_SUFFIX)
+	CRYPTOLIB+=$(DIST)/lib/libbsafe.$(LIB_SUFFIX)
+	CRYPTOLIB+=$(DIST)/lib/libfreebl.$(LIB_SUFFIX)
 endif
 EXTRA_LIBS += \
 	$(DIST)/lib/libsmime.$(LIB_SUFFIX) \
