@@ -156,7 +156,7 @@ NS_IMETHODIMP nsTransferable::GetTransferData(nsIDataFlavor * aDataFlavor, void 
     }
   }
 
-  if (nsnull != mFormatConv) {
+  if ( mFormatConv ) {
     for (i=0;i<mDataArray->Count();i++) {
       DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
       if (NS_OK == mFormatConv->CanConvert(data->mFlavor, aDataFlavor)) {
@@ -260,7 +260,7 @@ NS_IMETHODIMP nsTransferable::SetConverter(nsIFormatConverter * aConverter)
   */
 NS_IMETHODIMP nsTransferable::GetConverter(nsIFormatConverter ** aConverter)
 {
-  if (nsnull != mFormatConv) {
+  if ( mFormatConv ) {
     *aConverter = mFormatConv;
     NS_ADDREF(*aConverter);
   }
