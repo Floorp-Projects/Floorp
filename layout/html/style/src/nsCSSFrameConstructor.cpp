@@ -10386,14 +10386,6 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIPresContext* aPresContext,
 {
   nsresult rv = NS_OK;
 
-  // Flush our anonymous content. When the frame gets recreated,
-  // it may have different anonymous content.
-  NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
-  if (!xblService)
-    return rv;
-  // Flush our old bindings.
-  xblService->FlushBindings(aContent);
-
   nsIContent* container;
   rv = aContent->GetParent(container);
   if (NS_SUCCEEDED(rv) && container) {
