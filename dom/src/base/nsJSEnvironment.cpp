@@ -97,15 +97,23 @@ NS_ScriptErrorReporter(JSContext *cx,
       nsCOMPtr<nsIDocShell> docShell;
       globalObject->GetDocShell(getter_AddRefs(docShell));
       if (docShell) {
+        static PRInt32 errorDepth = 0; // Recursion prevention
+        errorDepth++;
+
         nsCOMPtr<nsIPresContext> presContext;
         docShell->GetPresContext(getter_AddRefs(presContext));
-        if(presContext) {
+
+        if(presContext && errorDepth < 2) {
           nsEvent errorevent;
           errorevent.eventStructType = NS_EVENT;
           errorevent.message = NS_SCRIPT_ERROR;
 
+          // HandleDOMEvent() must be synchronous for the recursion block
+          // (errorDepth) to work.
           globalObject->HandleDOMEvent(presContext, &errorevent, nsnull, NS_EVENT_FLAG_INIT, &status);
         }
+
+        errorDepth--;
       }
 
       if (status != nsEventStatus_eConsumeNoDefault) {
