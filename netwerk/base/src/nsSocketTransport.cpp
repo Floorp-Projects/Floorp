@@ -769,25 +769,9 @@ nsSocketTransport::OpenOutputStream(nsIOutputStream* *result)
   }
 
   if (NS_SUCCEEDED(rv) && !mWriteStream) {
-    nsIByteBufferInputStream* tmp = nsnull;
-    rv = NS_NewByteBufferInputStream(&tmp, PR_FALSE, 
-                                     MAX_IO_BUFFER_SIZE);
-    if (NS_SUCCEEDED(rv)) {
-      rv = tmp->QueryInterface(kIInputStreamIID, (void **) mWriteStream);
-      NS_RELEASE(tmp);
-      if (NS_FAILED(rv)) return rv;
-    }
-  }
-
-  if (NS_SUCCEEDED(rv)) {
-    //NS_IF_RELEASE(mWriteStream);
-    //mWriteStream = nsnull;
-
-    NS_IF_RELEASE(mContext);
-    mContext = nsnull;
-
-    NS_IF_RELEASE(mListener);
-    rv = NS_NewSyncOutStreamListener(&mListener, result);
+    rv = NS_NewPipe(&mWriteStream,
+           result,
+           PR_FALSE, MAX_IO_BUFFER_SIZE);
   }
 
   if (NS_SUCCEEDED(rv)) {
