@@ -109,8 +109,8 @@ protected:
   nsresult WillMakeBasicBlock(nsIDOMSelection *aSelection, const nsString *aBlockType, PRBool *aCancel, PRBool *aHandled);
   nsresult DidMakeBasicBlock(nsIDOMSelection *aSelection, nsRulesInfo *aInfo, nsresult aResult);
 
-  nsresult AlignTableElement(nsIDOMNode *aNode, const nsString *alignType);
-  nsresult AlignTableCellContents(nsIDOMNode *aNode, const nsString *alignType);
+  nsresult AlignInnerBlocks(nsIDOMNode *aNode, const nsString *alignType);
+  nsresult AlignBlockContents(nsIDOMNode *aNode, const nsString *alignType);
   nsresult GetInnerContent(nsIDOMNode *aNode, nsISupportsArray *outArrayOfNodes, PRBool aList = PR_TRUE, PRBool aTble = PR_TRUE);
 
   nsresult InsertTab(nsIDOMSelection *aSelection, nsString *outString);
@@ -146,12 +146,13 @@ protected:
   nsresult GetListActionNodes(nsCOMPtr<nsISupportsArray> *outArrayOfNodes, PRBool aDontTouchContent=PR_FALSE);
   nsresult GetDefinitionListItemTypes(nsIDOMNode *aNode, PRBool &aDT, PRBool &aDD);
   nsresult GetParagraphFormatNodes(nsCOMPtr<nsISupportsArray> *outArrayOfNodes, PRBool aDontTouchContent=PR_FALSE);
+  nsresult BustUpInlinesAtRangeEndpoints(nsRangeStore &inRange);
   nsresult BustUpInlinesAtBRs(nsIDOMNode *inNode, 
                                    nsCOMPtr<nsISupportsArray> *outArrayOfNodes);
+  nsCOMPtr<nsIDOMNode> GetHighestInlineParent(nsIDOMNode* aNode);
   nsresult MakeTransitionList(nsISupportsArray *inArrayOfNodes, 
                                    nsVoidArray *inTransitionArray);
                                    
-  nsresult ShouldMakeEmptyBlock(nsIDOMSelection *aSelection, const nsString *blockTag, PRBool *outMakeEmpty);
   nsresult ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsString *aBlockTag);
   nsresult MakeBlockquote(nsISupportsArray *arrayOfNodes);
   nsresult SplitAsNeeded(const nsString *aTag, nsCOMPtr<nsIDOMNode> *inOutParent, PRInt32 *inOutOffset);

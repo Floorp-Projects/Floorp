@@ -477,7 +477,7 @@ nsTextEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel, P
             printf("It's a moz quote -- splitting\n");
             nsCOMPtr<nsIDOMNode> outLeftNode;
             nsCOMPtr<nsIDOMNode> outRightNode;
-            res = mEditor->SplitNodeDeep(preNode, selNode, selOffset, &newOffset, &outLeftNode, &outRightNode);
+            res = mEditor->SplitNodeDeep(preNode, selNode, selOffset, &newOffset, PR_TRUE, &outLeftNode, &outRightNode);
             if (NS_FAILED(res)) return res;
             PRBool bIsEmptyNode;
             

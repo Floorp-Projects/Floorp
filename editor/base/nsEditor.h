@@ -80,8 +80,10 @@ class nsISelectionController;
  */
 
 // first a helper struct for saving/setting ranges
-struct SelRangeStore 
+struct nsRangeStore 
 {
+  nsRangeStore();
+  ~nsRangeStore();
   nsresult StoreRange(nsIDOMRange *aRange);
   nsresult GetRange(nsCOMPtr<nsIDOMRange> *outRange);
         
@@ -89,6 +91,7 @@ struct SelRangeStore
   PRInt32              startOffset;
   nsCOMPtr<nsIDOMNode> endNode;
   PRInt32              endOffset;
+  // DEBUG:   static PRInt32 n;
 };
 
 class nsSelectionState
@@ -104,6 +107,26 @@ class nsSelectionState
     PRBool   IsEqual(nsSelectionState *aSelState);
     void     MakeEmpty();
     PRBool   IsEmpty();
+  protected:    
+    nsVoidArray mArray;
+    
+    friend class nsRangeUpdater;
+};
+
+class nsRangeUpdater
+{
+  public:    
+  
+    nsRangeUpdater();
+    ~nsRangeUpdater();
+  
+    void* RegisterRange(nsIDOMRange *aRange);
+    nsCOMPtr<nsIDOMRange> ReclaimRange(void *aCookie);
+    void DropRange(void *aCookie);
+    void RegisterRangeItem(nsRangeStore *aRangeItem);
+    void DropRangeItem(nsRangeStore *aRangeItem);
+    nsresult RegisterSelectionState(nsSelectionState &aSelState);
+    nsresult DropSelectionState(nsSelectionState &aSelState);
     
     // editor selection gravity routines.  Note that we can't always depend on
     // DOM Range gravity to do what we want to the "real" selection.  For instance,
@@ -131,7 +154,7 @@ class nsSelectionState
     nsresult DidInsertContainer();
     nsresult WillMoveNode();
     nsresult DidMoveNode(nsIDOMNode *aOldParent, PRInt32 aOldOffset, nsIDOMNode *aNewParent, PRInt32 aNewOffset);
-    
+  protected:    
     nsVoidArray mArray;
     PRBool mLock;
 };
@@ -483,6 +506,14 @@ public:
    *  with a call to EndOperation */
   NS_IMETHOD EndOperation();
 
+  /** routines for managing the preservation of selection across 
+   *  various editor actions */
+  PRBool   ArePreservingSelection();
+  nsresult PreserveSelectionAcrossActions(nsIDOMSelection *aSel);
+  nsresult RestorePreservedSelection(nsIDOMSelection *aSel);
+  void     StopPreservingSelection();
+
+
   /** return the string that represents text nodes in the content tree */
   static nsresult GetTextNodeTag(nsString& aOutString);
 
@@ -725,6 +756,7 @@ public:
                          nsIDOMNode *aSplitPointParent, 
                          PRInt32 aSplitPointOffset,
                          PRInt32 *outOffset,
+                         PRBool  aNoEmptyContainers = PR_FALSE,
                          nsCOMPtr<nsIDOMNode> *outLeftNode = 0,
                          nsCOMPtr<nsIDOMNode> *outRightNode = 0);
   nsresult JoinNodeDeep(nsIDOMNode *aLeftNode, nsIDOMNode *aRightNode, nsCOMPtr<nsIDOMNode> *aOutJoinNode, PRInt32 *outOffset); 
@@ -748,15 +780,16 @@ protected:
   nsCOMPtr<nsITransactionManager> mTxnMgr;
   nsCOMPtr<nsIEditProperty>  mEditProperty;
   nsCOMPtr<nsICSSStyleSheet> mLastStyleSheet;			// is owning this dangerous?
-  nsWeakPtr       mPlaceHolderTxn;     // weak reference to placeholder for begin/end batch purposes
-  nsIAtom        *mPlaceHolderName;    // name of placeholder transaction
-  PRInt32         mPlaceHolderBatch;   // nesting count for batching
-  nsSelectionState *mSelState;         // saved selection state for placeholder txn batching
-  nsSelectionState *mSavedSel;         // cached selection for nsAutoSelectionReset
-  PRBool          mShouldTxnSetSelection;  // turn off for conservative selection adjustment by txns
+  nsWeakPtr         mPlaceHolderTxn;     // weak reference to placeholder for begin/end batch purposes
+  nsIAtom          *mPlaceHolderName;    // name of placeholder transaction
+  PRInt32           mPlaceHolderBatch;   // nesting count for batching
+  nsSelectionState *mSelState;           // saved selection state for placeholder txn batching
+  nsSelectionState  mSavedSel;           // cached selection for nsAutoSelectionReset
+  nsRangeUpdater    mRangeUpdater;       // utility class object for maintaining preserved ranges
+  PRBool            mShouldTxnSetSelection;  // turn off for conservative selection adjustment by txns
   nsCOMPtr<nsIDOMElement> mBodyElement;    // cached body node
-  PRInt32         mAction;             // the current editor action
-  EDirection      mDirection;          // the current direction of editor action
+  PRInt32           mAction;             // the current editor action
+  EDirection        mDirection;          // the current direction of editor action
   
   // data necessary to build IME transactions
   PRBool						mInIMEMode;          // are we inside an IME composition?

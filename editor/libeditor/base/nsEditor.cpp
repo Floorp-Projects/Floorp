@@ -152,17 +152,11 @@ PRInt32 nsEditor::gInstanceCount = 0;
  * { {startnode, startoffset} , {endnode, endoffset} } tuples.  Cant store
  * ranges since dom gravity will possibly change the ranges.
  */
-nsSelectionState::nsSelectionState() : mArray(), mLock(PR_FALSE) {}
+nsSelectionState::nsSelectionState() : mArray(){}
 
 nsSelectionState::~nsSelectionState() 
 {
-  // free any items in the array
-  SelRangeStore *item;
-  while ((item = (SelRangeStore*)mArray.ElementAt(0)))
-  {
-    delete item;
-    mArray.RemoveElementAt(0);
-  }
+  MakeEmpty();
 }
 
 nsresult  
@@ -171,7 +165,7 @@ nsSelectionState::SaveSelection(nsIDOMSelection *aSel)
   if (!aSel) return NS_ERROR_NULL_POINTER;
   nsresult res = NS_OK;
   PRInt32 i,rangeCount, arrayCount = mArray.Count();
-  SelRangeStore *item;
+  nsRangeStore *item;
   aSel->GetRangeCount(&rangeCount);
   
   // if we need more items in the array, new them
@@ -180,7 +174,7 @@ nsSelectionState::SaveSelection(nsIDOMSelection *aSel)
     PRInt32 count = rangeCount-arrayCount;
     for (i=0; i<count; i++)
     {
-      item = new SelRangeStore;
+      item = new nsRangeStore;
       mArray.AppendElement(item);
     }
   }
@@ -188,7 +182,7 @@ nsSelectionState::SaveSelection(nsIDOMSelection *aSel)
   // else if we have too many, delete them
   else if (rangeCount>arrayCount)
   {
-    while ((item = (SelRangeStore*)mArray.ElementAt(rangeCount)))
+    while ((item = (nsRangeStore*)mArray.ElementAt(rangeCount)))
     {
       delete item;
       mArray.RemoveElementAt(rangeCount);
@@ -198,7 +192,7 @@ nsSelectionState::SaveSelection(nsIDOMSelection *aSel)
   // now store the selection ranges
   for (i=0; i<rangeCount; i++)
   {
-    item = (SelRangeStore*)mArray.ElementAt(i);
+    item = (nsRangeStore*)mArray.ElementAt(i);
     if (!item) return NS_ERROR_UNEXPECTED;
     nsCOMPtr<nsIDOMRange> range;
     res = aSel->GetRangeAt(i, getter_AddRefs(range));
@@ -214,7 +208,7 @@ nsSelectionState::RestoreSelection(nsIDOMSelection *aSel)
   if (!aSel) return NS_ERROR_NULL_POINTER;
   nsresult res = NS_OK;
   PRInt32 i, arrayCount = mArray.Count();
-  SelRangeStore *item;
+  nsRangeStore *item;
 
   // clear out selection
   aSel->ClearSelection();
@@ -222,7 +216,7 @@ nsSelectionState::RestoreSelection(nsIDOMSelection *aSel)
   // set the selection ranges anew
   for (i=0; i<arrayCount; i++)
   {
-    item = (SelRangeStore*)mArray.ElementAt(i);
+    item = (nsRangeStore*)mArray.ElementAt(i);
     if (!item) return NS_ERROR_UNEXPECTED;
     nsCOMPtr<nsIDOMRange> range;
     item->GetRange(&range);
@@ -239,8 +233,8 @@ PRBool
 nsSelectionState::IsCollapsed()
 {
   if (1 != mArray.Count()) return PR_FALSE;
-  SelRangeStore *item;
-  item = (SelRangeStore*)mArray.ElementAt(0);
+  nsRangeStore *item;
+  item = (nsRangeStore*)mArray.ElementAt(0);
   if (!item) return PR_FALSE;
   nsCOMPtr<nsIDOMRange> range;
   item->GetRange(&range);
@@ -258,12 +252,12 @@ nsSelectionState::IsEqual(nsSelectionState *aSelState)
   if (myCount != itsCount) return PR_FALSE;
   if (myCount < 1) return PR_FALSE;
 
-  SelRangeStore *myItem, *itsItem;
+  nsRangeStore *myItem, *itsItem;
   
   for (i=0; i<myCount; i++)
   {
-    myItem = (SelRangeStore*)mArray.ElementAt(0);
-    itsItem = (SelRangeStore*)(aSelState->mArray.ElementAt(0));
+    myItem = (nsRangeStore*)mArray.ElementAt(0);
+    itsItem = (nsRangeStore*)(aSelState->mArray.ElementAt(0));
     if (!myItem || !itsItem) return PR_FALSE;
     
     nsCOMPtr<nsIDOMRange> myRange, itsRange;
@@ -281,22 +275,137 @@ nsSelectionState::IsEqual(nsSelectionState *aSelState)
   return PR_TRUE;
 }
 
-// notification routines used to update the saved selection state in response to 
-// document editing.
+void     
+nsSelectionState::MakeEmpty()
+{
+  // free any items in the array
+  nsRangeStore *item;
+  while ((item = (nsRangeStore*)mArray.ElementAt(0)))
+  {
+    delete item;
+    mArray.RemoveElementAt(0);
+  }
+}
+
+PRBool   
+nsSelectionState::IsEmpty()
+{
+  return (mArray.Count() == 0);
+}
+
+/***************************************************************************
+ * nsRangeUpdater:  class for updating nsIDOMRanges in response to editor actions.
+ */
+
+nsRangeUpdater::nsRangeUpdater() : mArray(), mLock(PR_FALSE) {}
+
+nsRangeUpdater::~nsRangeUpdater()
+{
+  // free any items in the array
+  nsRangeStore *item;
+  while ((item = (nsRangeStore*)mArray.ElementAt(0)))
+  {
+    delete item;
+    mArray.RemoveElementAt(0);
+  }
+}
+  
+void* 
+nsRangeUpdater::RegisterRange(nsIDOMRange *aRange)
+{
+  nsRangeStore *item = new nsRangeStore;
+  if (!item) return nsnull;
+  item->StoreRange(aRange);
+  mArray.AppendElement(item);
+  return item;
+}
+
+nsCOMPtr<nsIDOMRange> 
+nsRangeUpdater::ReclaimRange(void *aCookie)
+{
+  nsRangeStore *item = NS_STATIC_CAST(nsRangeStore*,aCookie);
+  if (!item) return nsnull;
+  nsCOMPtr<nsIDOMRange> outRange;
+  item->GetRange(&outRange);
+  mArray.RemoveElement(aCookie);
+  delete item;
+  return outRange;
+}
+    
+void 
+nsRangeUpdater::DropRange(void *aCookie)
+{
+  nsRangeStore *item = NS_STATIC_CAST(nsRangeStore*,aCookie);
+  if (!item) return;
+  mArray.RemoveElement(aCookie);
+  delete item;
+}
+
+void 
+nsRangeUpdater::RegisterRangeItem(nsRangeStore *aRangeItem)
+{
+  if (!aRangeItem) return;
+  mArray.AppendElement(aRangeItem);
+  return;
+}
+
+void 
+nsRangeUpdater::DropRangeItem(nsRangeStore *aRangeItem)
+{
+  if (!aRangeItem) return;
+  mArray.RemoveElement(aRangeItem);
+  return;
+}
+
+nsresult 
+nsRangeUpdater::RegisterSelectionState(nsSelectionState &aSelState)
+{
+  PRInt32 i, theCount = aSelState.mArray.Count();
+  if (theCount < 1) return NS_ERROR_FAILURE;
+
+  nsRangeStore *item;
+  
+  for (i=0; i<theCount; i++)
+  {
+    item = (nsRangeStore*)aSelState.mArray.ElementAt(i);
+    RegisterRangeItem(item);
+  }
+
+  return NS_OK;;
+}
+
+nsresult 
+nsRangeUpdater::DropSelectionState(nsSelectionState &aSelState)
+{
+  PRInt32 i, theCount = aSelState.mArray.Count();
+  if (theCount < 1) return NS_ERROR_FAILURE;
+
+  nsRangeStore *item;
+  
+  for (i=0; i<theCount; i++)
+  {
+    item = (nsRangeStore*)aSelState.mArray.ElementAt(i);
+    DropRangeItem(item);
+  }
+
+  return NS_OK;;
+}
+
+// gravity methods:
 
 nsresult
-nsSelectionState::SelAdjCreateNode(nsIDOMNode *aParent, PRInt32 aPosition)
+nsRangeUpdater::SelAdjCreateNode(nsIDOMNode *aParent, PRInt32 aPosition)
 {
   if (mLock) return NS_OK;  // lock set by Will/DidReplaceParent, etc...
   if (!aParent) return NS_ERROR_NULL_POINTER;
   PRInt32 i, count = mArray.Count();
   if (!count) return NS_OK;
 
-  SelRangeStore *item;
+  nsRangeStore *item;
   
   for (i=0; i<count; i++)
   {
-    item = (SelRangeStore*)mArray.ElementAt(i);
+    item = (nsRangeStore*)mArray.ElementAt(i);
     if (!item) return NS_ERROR_NULL_POINTER;
     
     if ((item->startNode.get() == aParent) && (item->startOffset > aPosition))
@@ -308,25 +417,25 @@ nsSelectionState::SelAdjCreateNode(nsIDOMNode *aParent, PRInt32 aPosition)
 }
 
 nsresult
-nsSelectionState::SelAdjInsertNode(nsIDOMNode *aParent, PRInt32 aPosition)
+nsRangeUpdater::SelAdjInsertNode(nsIDOMNode *aParent, PRInt32 aPosition)
 {
   return SelAdjCreateNode(aParent, aPosition);
 }
 
 
 nsresult
-nsSelectionState::SelAdjDeleteNode(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 aOffset)
+nsRangeUpdater::SelAdjDeleteNode(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 aOffset)
 {
   if (mLock) return NS_OK;  // lock set by Will/DidReplaceParent, etc...
   if (!aNode) return NS_ERROR_NULL_POINTER;
   PRInt32 i, count = mArray.Count();
   if (!count) return NS_OK;
 
-  SelRangeStore *item;
+  nsRangeStore *item;
   
   for (i=0; i<count; i++)
   {
-    item = (SelRangeStore*)mArray.ElementAt(i);
+    item = (nsRangeStore*)mArray.ElementAt(i);
     if (!item) return NS_ERROR_NULL_POINTER;
     
     if ((item->startNode.get() == aParent) && (item->startOffset > aOffset))
@@ -341,7 +450,7 @@ nsSelectionState::SelAdjDeleteNode(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt
 
 
 nsresult
-nsSelectionState::SelAdjSplitNode(nsIDOMNode *aOldRightNode, PRInt32 aOffset, nsIDOMNode *aNewLeftNode)
+nsRangeUpdater::SelAdjSplitNode(nsIDOMNode *aOldRightNode, PRInt32 aOffset, nsIDOMNode *aNewLeftNode)
 {
   if (mLock) return NS_OK;  // lock set by Will/DidReplaceParent, etc...
   if (!aOldRightNode || !aNewLeftNode) return NS_ERROR_NULL_POINTER;
@@ -358,11 +467,11 @@ nsSelectionState::SelAdjSplitNode(nsIDOMNode *aOldRightNode, PRInt32 aOffset, ns
   if (NS_FAILED(result)) return result;
 
   // next step is to check for range enpoints inside aOldRightNode
-  SelRangeStore *item;
+  nsRangeStore *item;
   
   for (i=0; i<count; i++)
   {
-    item = (SelRangeStore*)mArray.ElementAt(i);
+    item = (nsRangeStore*)mArray.ElementAt(i);
     if (!item) return NS_ERROR_NULL_POINTER;
     
     if (item->startNode.get() == aOldRightNode)
@@ -393,7 +502,7 @@ nsSelectionState::SelAdjSplitNode(nsIDOMNode *aOldRightNode, PRInt32 aOffset, ns
 
 
 nsresult
-nsSelectionState::SelAdjJoinNodes(nsIDOMNode *aLeftNode, 
+nsRangeUpdater::SelAdjJoinNodes(nsIDOMNode *aLeftNode, 
                                   nsIDOMNode *aRightNode, 
                                   nsIDOMNode *aParent, 
                                   PRInt32 aOffset,
@@ -404,11 +513,11 @@ nsSelectionState::SelAdjJoinNodes(nsIDOMNode *aLeftNode,
   PRInt32 i, count = mArray.Count();
   if (!count) return NS_OK;
 
-  SelRangeStore *item;
+  nsRangeStore *item;
 
   for (i=0; i<count; i++)
   {
-    item = (SelRangeStore*)mArray.ElementAt(i);
+    item = (nsRangeStore*)mArray.ElementAt(i);
     if (!item) return NS_ERROR_NULL_POINTER;
     
     // adjust endpoints in aParent
@@ -450,7 +559,7 @@ nsSelectionState::SelAdjJoinNodes(nsIDOMNode *aLeftNode,
 
 
 nsresult
-nsSelectionState::SelAdjInsertText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, const nsString &aString)
+nsRangeUpdater::SelAdjInsertText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, const nsString &aString)
 {
   if (mLock) return NS_OK;  // lock set by Will/DidReplaceParent, etc...
   return NS_OK;
@@ -458,7 +567,7 @@ nsSelectionState::SelAdjInsertText(nsIDOMCharacterData *aTextNode, PRInt32 aOffs
 
 
 nsresult
-nsSelectionState::SelAdjDeleteText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, PRInt32 aLength)
+nsRangeUpdater::SelAdjDeleteText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, PRInt32 aLength)
 {
   if (mLock) return NS_OK;  // lock set by Will/DidReplaceParent, etc...
   return NS_OK;
@@ -466,7 +575,7 @@ nsSelectionState::SelAdjDeleteText(nsIDOMCharacterData *aTextNode, PRInt32 aOffs
 
 
 nsresult
-nsSelectionState::WillReplaceContainer()
+nsRangeUpdater::WillReplaceContainer()
 {
   if (mLock) return NS_ERROR_UNEXPECTED;  
   mLock = PR_TRUE;
@@ -475,7 +584,7 @@ nsSelectionState::WillReplaceContainer()
 
 
 nsresult
-nsSelectionState::DidReplaceContainer(nsIDOMNode *aOriginalNode, nsIDOMNode *aNewNode)
+nsRangeUpdater::DidReplaceContainer(nsIDOMNode *aOriginalNode, nsIDOMNode *aNewNode)
 {
   if (!mLock) return NS_ERROR_UNEXPECTED;  
   mLock = PR_FALSE;
@@ -484,11 +593,11 @@ nsSelectionState::DidReplaceContainer(nsIDOMNode *aOriginalNode, nsIDOMNode *aNe
   PRInt32 i, count = mArray.Count();
   if (!count) return NS_OK;
 
-  SelRangeStore *item;
+  nsRangeStore *item;
   
   for (i=0; i<count; i++)
   {
-    item = (SelRangeStore*)mArray.ElementAt(i);
+    item = (nsRangeStore*)mArray.ElementAt(i);
     if (!item) return NS_ERROR_NULL_POINTER;
     
     if (item->startNode.get() == aOriginalNode)
@@ -501,7 +610,7 @@ nsSelectionState::DidReplaceContainer(nsIDOMNode *aOriginalNode, nsIDOMNode *aNe
 
 
 nsresult
-nsSelectionState::WillRemoveContainer()
+nsRangeUpdater::WillRemoveContainer()
 {
   if (mLock) return NS_ERROR_UNEXPECTED;  
   mLock = PR_TRUE;
@@ -510,7 +619,7 @@ nsSelectionState::WillRemoveContainer()
 
 
 nsresult
-nsSelectionState::DidRemoveContainer(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 aOffset, PRUint32 aNodeOrigLen)
+nsRangeUpdater::DidRemoveContainer(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 aOffset, PRUint32 aNodeOrigLen)
 {
   if (!mLock) return NS_ERROR_UNEXPECTED;  
   mLock = PR_FALSE;
@@ -519,11 +628,11 @@ nsSelectionState::DidRemoveContainer(nsIDOMNode *aNode, nsIDOMNode *aParent, PRI
   PRInt32 i, count = mArray.Count();
   if (!count) return NS_OK;
 
-  SelRangeStore *item;
+  nsRangeStore *item;
   
   for (i=0; i<count; i++)
   {
-    item = (SelRangeStore*)mArray.ElementAt(i);
+    item = (nsRangeStore*)mArray.ElementAt(i);
     if (!item) return NS_ERROR_NULL_POINTER;
     
     if (item->startNode.get() == aNode)
@@ -546,7 +655,7 @@ nsSelectionState::DidRemoveContainer(nsIDOMNode *aNode, nsIDOMNode *aParent, PRI
 
 
 nsresult
-nsSelectionState::WillInsertContainer()
+nsRangeUpdater::WillInsertContainer()
 {
   if (mLock) return NS_ERROR_UNEXPECTED;  
   mLock = PR_TRUE;
@@ -555,7 +664,7 @@ nsSelectionState::WillInsertContainer()
 
 
 nsresult
-nsSelectionState::DidInsertContainer()
+nsRangeUpdater::DidInsertContainer()
 {
   if (!mLock) return NS_ERROR_UNEXPECTED;  
   mLock = PR_FALSE;
@@ -564,7 +673,7 @@ nsSelectionState::DidInsertContainer()
 
 
 nsresult
-nsSelectionState::WillMoveNode()
+nsRangeUpdater::WillMoveNode()
 {
   if (mLock) return NS_ERROR_UNEXPECTED;  
   mLock = PR_TRUE;
@@ -573,7 +682,7 @@ nsSelectionState::WillMoveNode()
 
 
 nsresult
-nsSelectionState::DidMoveNode(nsIDOMNode *aOldParent, PRInt32 aOldOffset, nsIDOMNode *aNewParent, PRInt32 aNewOffset)
+nsRangeUpdater::DidMoveNode(nsIDOMNode *aOldParent, PRInt32 aOldOffset, nsIDOMNode *aNewParent, PRInt32 aNewOffset)
 {
   if (!mLock) return NS_ERROR_UNEXPECTED;  
   mLock = PR_FALSE;
@@ -582,11 +691,11 @@ nsSelectionState::DidMoveNode(nsIDOMNode *aOldParent, PRInt32 aOldOffset, nsIDOM
   PRInt32 i, count = mArray.Count();
   if (!count) return NS_OK;
 
-  SelRangeStore *item;
+  nsRangeStore *item;
   
   for (i=0; i<count; i++)
   {
-    item = (SelRangeStore*)mArray.ElementAt(i);
+    item = (nsRangeStore*)mArray.ElementAt(i);
     if (!item) return NS_ERROR_NULL_POINTER;
     
     // like a delete in aOldParent
@@ -607,10 +716,21 @@ nsSelectionState::DidMoveNode(nsIDOMNode *aOldParent, PRInt32 aOldOffset, nsIDOM
 
 
 /***************************************************************************
- * helper class for nsSelectionState.  SelRangeStore stores range endpoints.
+ * helper class for nsSelectionState.  nsRangeStore stores range endpoints.
  */
 
-nsresult SelRangeStore::StoreRange(nsIDOMRange *aRange)
+  // DEBUG: PRInt32 nsRangeStore::n = 0;
+
+nsRangeStore::nsRangeStore() 
+{ 
+  // DEBUG: n++;  printf("range store alloc count=%d\n", n); 
+}
+nsRangeStore::~nsRangeStore()
+{
+  // DEBUG: n--;  printf("range store alloc count=%d\n", n); 
+}
+
+nsresult nsRangeStore::StoreRange(nsIDOMRange *aRange)
 {
   if (!aRange) return NS_ERROR_NULL_POINTER;
   aRange->GetStartContainer(getter_AddRefs(startNode));
@@ -620,7 +740,7 @@ nsresult SelRangeStore::StoreRange(nsIDOMRange *aRange)
   return NS_OK;
 }
 
-nsresult SelRangeStore::GetRange(nsCOMPtr<nsIDOMRange> *outRange)
+nsresult nsRangeStore::GetRange(nsCOMPtr<nsIDOMRange> *outRange)
 {
   if (!outRange) return NS_ERROR_NULL_POINTER;
   nsresult res = nsComponentManager::CreateInstance(kCRangeCID,
@@ -644,22 +764,22 @@ nsresult SelRangeStore::GetRange(nsCOMPtr<nsIDOMRange> *outRange)
 class nsAutoReplaceContainerSelNotify
 {
   private:
-    nsSelectionState *mSel;
+    nsRangeUpdater &mRU;
     nsIDOMNode *mOriginalNode;
     nsIDOMNode *mNewNode;
 
   public:
-    nsAutoReplaceContainerSelNotify(nsSelectionState *aSelState, nsIDOMNode *aOriginalNode, nsIDOMNode *aNewNode) :
-    mSel(aSelState)
+    nsAutoReplaceContainerSelNotify(nsRangeUpdater &aRangeUpdater, nsIDOMNode *aOriginalNode, nsIDOMNode *aNewNode) :
+    mRU(aRangeUpdater)
     ,mOriginalNode(aOriginalNode)
     ,mNewNode(aNewNode)
     {
-      if (mSel) mSel->WillReplaceContainer();
+      mRU.WillReplaceContainer();
     }
     
     ~nsAutoReplaceContainerSelNotify()
     {
-      if (mSel) mSel->DidReplaceContainer(mOriginalNode, mNewNode);
+      mRU.DidReplaceContainer(mOriginalNode, mNewNode);
     }
 };
 
@@ -672,30 +792,30 @@ class nsAutoReplaceContainerSelNotify
 class nsAutoRemoveContainerSelNotify
 {
   private:
-    nsSelectionState *mSel;
+    nsRangeUpdater &mRU;
     nsIDOMNode *mNode;
     nsIDOMNode *mParent;
     PRInt32    mOffset;
     PRUint32   mNodeOrigLen;
 
   public:
-    nsAutoRemoveContainerSelNotify(nsSelectionState *aSelState, 
+    nsAutoRemoveContainerSelNotify(nsRangeUpdater &aRangeUpdater, 
                                    nsIDOMNode *aNode, 
                                    nsIDOMNode *aParent, 
                                    PRInt32 aOffset, 
                                    PRUint32 aNodeOrigLen) :
-    mSel(aSelState)
+    mRU(aRangeUpdater)
     ,mNode(aNode)
     ,mParent(aParent)
     ,mOffset(aOffset)
     ,mNodeOrigLen(aNodeOrigLen)
     {
-      if (mSel) mSel->WillRemoveContainer();
+      mRU.WillRemoveContainer();
     }
     
     ~nsAutoRemoveContainerSelNotify()
     {
-      if (mSel) mSel->DidRemoveContainer(mNode, mParent, mOffset, mNodeOrigLen);
+      mRU.DidRemoveContainer(mNode, mParent, mOffset, mNodeOrigLen);
     }
 };
 
@@ -707,18 +827,18 @@ class nsAutoRemoveContainerSelNotify
 class nsAutoInsertContainerSelNotify
 {
   private:
-    nsSelectionState *mSel;
+    nsRangeUpdater &mRU;
 
   public:
-    nsAutoInsertContainerSelNotify(nsSelectionState *aSelState) :
-    mSel(aSelState)
+    nsAutoInsertContainerSelNotify(nsRangeUpdater &aRangeUpdater) :
+    mRU(aRangeUpdater)
     {
-      if (mSel) mSel->WillInsertContainer();
+      mRU.WillInsertContainer();
     }
     
     ~nsAutoInsertContainerSelNotify()
     {
-      if (mSel) mSel->DidInsertContainer();
+      mRU.DidInsertContainer();
     }
 };
 
@@ -731,30 +851,30 @@ class nsAutoInsertContainerSelNotify
 class nsAutoMoveNodeSelNotify
 {
   private:
-    nsSelectionState *mSel;
+    nsRangeUpdater &mRU;
     nsIDOMNode *mOldParent;
     nsIDOMNode *mNewParent;
     PRInt32    mOldOffset;
     PRInt32    mNewOffset;
 
   public:
-    nsAutoMoveNodeSelNotify(nsSelectionState *aSelState, 
+    nsAutoMoveNodeSelNotify(nsRangeUpdater &aRangeUpdater, 
                             nsIDOMNode *aOldParent, 
                             PRInt32 aOldOffset, 
                             nsIDOMNode *aNewParent, 
                             PRInt32 aNewOffset) :
-    mSel(aSelState)
+    mRU(aRangeUpdater)
     ,mOldParent(aOldParent)
     ,mNewParent(aNewParent)
     ,mOldOffset(aOldOffset)
     ,mNewOffset(aNewOffset)
     {
-      if (mSel) mSel->WillMoveNode();
+      mRU.WillMoveNode();
     }
     
     ~nsAutoMoveNodeSelNotify()
     {
-      if (mSel) mSel->DidMoveNode(mOldParent, mOldOffset, mNewParent, mNewOffset);
+      mRU.DidMoveNode(mOldParent, mOldOffset, mNewParent, mNewOffset);
     }
 };
 
@@ -774,7 +894,8 @@ nsEditor::nsEditor()
 ,  mPlaceHolderName(nsnull)
 ,  mPlaceHolderBatch(0)
 ,  mSelState(nsnull)
-,  mSavedSel(nsnull)
+,  mSavedSel()
+,  mRangeUpdater()
 ,  mShouldTxnSetSelection(PR_TRUE)
 ,  mBodyElement(nsnull)
 ,  mInIMEMode(PR_FALSE)
@@ -1595,7 +1716,7 @@ NS_IMETHODIMP nsEditor::CreateNode(const nsString& aTag,
   // The transaction system (if any) has taken ownwership of txn
   NS_IF_RELEASE(txn);
   
-  if (mSavedSel) mSavedSel->SelAdjCreateNode(aParent, aPosition);
+  mRangeUpdater.SelAdjCreateNode(aParent, aPosition);
   
   if (mActionListeners)
   {
@@ -1637,7 +1758,7 @@ NS_IMETHODIMP nsEditor::InsertNode(nsIDOMNode * aNode,
   // The transaction system (if any) has taken ownwership of txn
   NS_IF_RELEASE(txn);
 
-  if (mSavedSel) mSavedSel->SelAdjInsertNode(aParent, aPosition);
+  mRangeUpdater.SelAdjInsertNode(aParent, aPosition);
 
   if (mActionListeners)
   {
@@ -1686,7 +1807,7 @@ nsEditor::SplitNode(nsIDOMNode * aNode,
   // The transaction system (if any) has taken ownwership of txn
   NS_IF_RELEASE(txn);
 
-  if (mSavedSel) mSavedSel->SelAdjSplitNode(aNode, aOffset, *aNewLeftNode);
+  mRangeUpdater.SelAdjSplitNode(aNode, aOffset, *aNewLeftNode);
 
   if (mActionListeners)
   {
@@ -1743,7 +1864,7 @@ nsEditor::JoinNodes(nsIDOMNode * aLeftNode,
   // The transaction system (if any) has taken ownwership of txn
   NS_IF_RELEASE(txn);
 
-  if (mSavedSel) mSavedSel->SelAdjJoinNodes(aLeftNode, aRightNode, aParent, offset, (PRInt32)oldLeftNodeLen);
+  mRangeUpdater.SelAdjJoinNodes(aLeftNode, aRightNode, aParent, offset, (PRInt32)oldLeftNodeLen);
   
   if (mActionListeners)
   {
@@ -1789,7 +1910,7 @@ NS_IMETHODIMP nsEditor::DeleteNode(nsIDOMNode * aElement)
   // The transaction system (if any) has taken ownwership of txn
   NS_IF_RELEASE(txn);
 
-  if (mSavedSel) mSavedSel->SelAdjDeleteNode(aElement, parent, offset);
+  mRangeUpdater.SelAdjDeleteNode(aElement, parent, offset);
   
   if (mActionListeners)
   {
@@ -1856,8 +1977,8 @@ nsEditor::ReplaceContainer(nsIDOMNode *inNode,
   
   // notify our internal selection state listener
   // (Note: A nsAutoSelectionReset object must be created
-  //  before calling this to initialize mSavedSel)
-  nsAutoReplaceContainerSelNotify selStateNotify(mSavedSel, inNode, *outNode);
+  //  before calling this to initialize mRangeUpdater)
+  nsAutoReplaceContainerSelNotify selStateNotify(mRangeUpdater, inNode, *outNode);
   
   nsCOMPtr<nsIDOMNode> child;
   PRBool bHasMoreChildren;
@@ -1908,7 +2029,7 @@ nsEditor::RemoveContainer(nsIDOMNode *inNode)
   nodeList->GetLength(&nodeOrigLen);
 
   // notify our internal selection state listener
-  nsAutoRemoveContainerSelNotify selNotify(mSavedSel, inNode, parent, offset, nodeOrigLen);
+  nsAutoRemoveContainerSelNotify selNotify(mRangeUpdater, inNode, parent, offset, nodeOrigLen);
                                    
   nsCOMPtr<nsIDOMNode> child;
   while (bHasMoreChildren)
@@ -1970,7 +2091,7 @@ nsEditor::InsertContainerAbove( nsIDOMNode *inNode,
   }
   
   // notify our internal selection state listener
-  nsAutoInsertContainerSelNotify selNotify(mSavedSel);
+  nsAutoInsertContainerSelNotify selNotify(mRangeUpdater);
   
   // put inNode in new parent, outNode
   res = DeleteNode(inNode);
@@ -2009,7 +2130,7 @@ nsEditor::MoveNode(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 aOffset)
   if ((aParent == oldParent.get()) && (oldOffset == aOffset)) return NS_OK;
   
   // notify our internal selection state listener
-  nsAutoMoveNodeSelNotify selNotify(mSavedSel, oldParent, oldOffset, aParent, aOffset);
+  nsAutoMoveNodeSelNotify selNotify(mRangeUpdater, oldParent, oldOffset, aParent, aOffset);
   
   // need to adjust aOffset if we are moving aNode further along in it's current parent
   if ((aParent == oldParent.get()) && (oldOffset < aOffset)) 
@@ -2249,6 +2370,44 @@ nsEditor::DebugUnitTests(PRInt32 *outNumTests, PRInt32 *outNumTestsFailed)
   NS_NOTREACHED("This should never get called. Overridden by subclasses");
   return NS_OK;
 }
+
+#ifdef XP_MAC
+#pragma mark -
+#pragma mark  support for selection preservation
+#pragma mark -
+#endif
+
+PRBool   
+nsEditor::ArePreservingSelection()
+{
+  if (mSavedSel.IsEmpty()) return PR_FALSE;
+  return PR_TRUE;
+}
+
+nsresult 
+nsEditor::PreserveSelectionAcrossActions(nsIDOMSelection *aSel)
+{
+  mSavedSel.SaveSelection(aSel);
+  mRangeUpdater.RegisterSelectionState(mSavedSel);
+  return NS_OK;
+}
+
+nsresult 
+nsEditor::RestorePreservedSelection(nsIDOMSelection *aSel)
+{
+  if (mSavedSel.IsEmpty()) return NS_ERROR_FAILURE;
+  mSavedSel.RestoreSelection(aSel);
+  StopPreservingSelection();
+  return NS_OK;
+}
+
+void     
+nsEditor::StopPreservingSelection()
+{
+  mRangeUpdater.DropSelectionState(mSavedSel);
+  mSavedSel.MakeEmpty();
+}
+
 
 #ifdef XP_MAC
 #pragma mark -
@@ -4985,6 +5144,7 @@ nsEditor::SplitNodeDeep(nsIDOMNode *aNode,
                         nsIDOMNode *aSplitPointParent, 
                         PRInt32 aSplitPointOffset,
                         PRInt32 *outOffset,
+                        PRBool  aNoEmptyContainers,
                         nsCOMPtr<nsIDOMNode> *outLeftNode,
                         nsCOMPtr<nsIDOMNode> *outRightNode)
 {
@@ -5006,12 +5166,12 @@ nsEditor::SplitNodeDeep(nsIDOMNode *aNode,
     // this nsEditor routine.
     
     nsCOMPtr<nsIDOMCharacterData> nodeAsText = do_QueryInterface(nodeToSplit);
-    PRUint32 textLen=0;
-    if (nodeAsText)
-      nodeAsText->GetLength(&textLen);
+    PRUint32 len;
     PRBool bDoSplit = PR_FALSE;
+    res = GetLengthOfDOMNode(nodeToSplit, len);
+    if (NS_FAILED(res)) return res;
     
-    if (!nodeAsText || (offset && (offset != (PRInt32)textLen)))
+    if (!(aNoEmptyContainers || nodeAsText) || (offset && (offset != (PRInt32)len)))
     {
       bDoSplit = PR_TRUE;
       res = SplitNode(nodeToSplit, offset, getter_AddRefs(tempNode));

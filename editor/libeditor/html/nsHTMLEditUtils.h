@@ -63,6 +63,9 @@ public:
   static PRBool IsMozDiv(nsIDOMNode *aNode);
   static PRBool IsMailCite(nsIDOMNode *aNode);
   static PRBool IsDescendantOf(nsIDOMNode *aNode, nsIDOMNode *aParent);
+  
+  static PRBool IsLeafNode(nsIDOMNode *aNode);
+
 };
 
 #endif /* nsHTMLEditUtils_h__ */
