@@ -125,6 +125,24 @@ xp_iconv(iconv_t converter,
     return res;
 }
 
+static inline void
+xp_iconv_reset(iconv_t converter)
+{
+    // NOTE: the man pages on Solaris claim that you can pass NULL
+    // for all parameter to reset the converter, but beware the 
+    // evil Solaris crash if you go down this route >:-)
+    
+    const char *zero_char_in_ptr  = NULL;
+    char       *zero_char_out_ptr = NULL;
+    size_t      zero_size_in      = 0,
+                zero_size_out     = 0;
+
+    xp_iconv(converter, &zero_char_in_ptr,
+                        &zero_size_in,
+                        &zero_char_out_ptr,
+                        &zero_size_out);
+}
+
 static inline iconv_t
 xp_iconv_open(const char **to_list, const char **from_list)
 {
@@ -325,18 +343,18 @@ nsNativeCharsetConverter::~nsNativeCharsetConverter()
 {
     // reset converters for next time
     if (gNativeToUnicode != INVALID_ICONV_T)
-        xp_iconv(gNativeToUnicode, NULL, NULL, NULL, NULL);
+        xp_iconv_reset(gNativeToUnicode);
     if (gUnicodeToNative != INVALID_ICONV_T)
-        xp_iconv(gUnicodeToNative, NULL, NULL, NULL, NULL);
+        xp_iconv_reset(gUnicodeToNative);
 #if defined(ENABLE_UTF8_FALLBACK_SUPPORT)
     if (gNativeToUTF8 != INVALID_ICONV_T)
-        xp_iconv(gNativeToUTF8, NULL, NULL, NULL, NULL);
+        xp_iconv_reset(gNativeToUTF8);
     if (gUTF8ToNative != INVALID_ICONV_T)
-        xp_iconv(gUTF8ToNative, NULL, NULL, NULL, NULL);
+        xp_iconv_reset(gUTF8ToNative);
     if (gUnicodeToUTF8 != INVALID_ICONV_T)
-        xp_iconv(gUnicodeToUTF8, NULL, NULL, NULL, NULL);
+        xp_iconv_reset(gUnicodeToUTF8);
     if (gUTF8ToUnicode != INVALID_ICONV_T)
-        xp_iconv(gUTF8ToUnicode, NULL, NULL, NULL, NULL);
+        xp_iconv_reset(gUTF8ToUnicode);
 #endif
     Unlock();
 }
@@ -364,7 +382,7 @@ nsNativeCharsetConverter::NativeToUnicode(const char **input,
         NS_WARNING("conversion from native to ucs-2 failed");
 
         // reset converter
-        xp_iconv(gNativeToUnicode, NULL, NULL, NULL, NULL);
+        xp_iconv_reset(gNativeToUnicode);
     }
 #if defined(ENABLE_UTF8_FALLBACK_SUPPORT)
     else if ((gNativeToUTF8 != INVALID_ICONV_T) &&
@@ -402,8 +420,8 @@ nsNativeCharsetConverter::NativeToUnicode(const char **input,
         }
 
         // reset converters
-        xp_iconv(gNativeToUTF8, NULL, NULL, NULL, NULL);
-        xp_iconv(gUTF8ToUnicode, NULL, NULL, NULL, NULL);
+        xp_iconv_reset(gNativeToUTF8);
+        xp_iconv_reset(gUTF8ToUnicode);
     }
 #endif
 
@@ -435,7 +453,7 @@ nsNativeCharsetConverter::UnicodeToNative(const PRUnichar **input,
         NS_ERROR("iconv failed");
 
         // reset converter
-        xp_iconv(gUnicodeToNative, NULL, NULL, NULL, NULL);
+        xp_iconv_reset(gUnicodeToNative);
     }
 #if defined(ENABLE_UTF8_FALLBACK_SUPPORT)
     else if ((gUnicodeToUTF8 != INVALID_ICONV_T) &&
@@ -477,8 +495,8 @@ nsNativeCharsetConverter::UnicodeToNative(const PRUnichar **input,
         }
 
         // reset converters
-        xp_iconv(gUnicodeToUTF8, NULL, NULL, NULL, NULL);
-        xp_iconv(gUTF8ToNative, NULL, NULL, NULL, NULL);
+        xp_iconv_reset(gUnicodeToUTF8);
+        xp_iconv_reset(gUTF8ToNative);
     }
 #endif
 
