@@ -310,14 +310,22 @@ NS_COM PRUint32 CountCharInReadable( const nsAString& aStr,
 NS_COM PRUint32 CountCharInReadable( const nsACString& aStr,
                                      char aChar );
 
-NS_COM PRBool StringBeginsWith( const nsAString& aSource,
-                                const nsAString& aSubstring);
-NS_COM PRBool StringBeginsWith( const nsACString& aSource,
-                                const nsACString& aSubstring);
-NS_COM PRBool StringEndsWith( const nsAString& aSource,
-                              const nsAString& aSubstring);
-NS_COM PRBool StringEndsWith( const nsACString& aSource,
-                              const nsACString& aSubstring);
+NS_COM PRBool
+StringBeginsWith( const nsAString& aSource, const nsAString& aSubstring,
+                  const nsStringComparator& aComparator =
+                                              nsDefaultStringComparator() );
+NS_COM PRBool
+StringBeginsWith( const nsACString& aSource, const nsACString& aSubstring,
+                  const nsCStringComparator& aComparator =
+                                               nsDefaultCStringComparator() );
+NS_COM PRBool
+StringEndsWith( const nsAString& aSource, const nsAString& aSubstring,
+                const nsStringComparator& aComparator =
+                                            nsDefaultStringComparator() );
+NS_COM PRBool
+StringEndsWith( const nsACString& aSource, const nsACString& aSubstring,
+                const nsCStringComparator& aComparator =
+                                             nsDefaultCStringComparator() );
 
 NS_COM PRUint32 HashString( const nsAString& aStr );
 NS_COM PRUint32 HashString( const nsACString& aStr );
