@@ -23,7 +23,7 @@
 
   <box class="box-header" id="header" value="&profileWizard.title;"/>
   <box id="contentarea" flex="1">
-  	<html:iframe src="about:blank" style="width: 40em; overflow: auto;" name="content" id="content" flex="1"/>
+  	<html:iframe src="about:blank" style="width: 40em; height: 17em; overflow: auto;" name="content" id="content" flex="1"/>
   </box>
 	<box id="wizardButtons"/>
   <box class="box-status" id="status" value="&window.title.label;" progress=""/>

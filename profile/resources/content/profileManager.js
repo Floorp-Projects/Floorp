@@ -37,7 +37,10 @@ function CreateProfileWizard()
 function CreateProfile( aProfName, aProfDir )
 {
   var profile = new Profile( aProfName, aProfDir, "yes" );
-  AddItem( "profilekids", profile );
+  var item = AddItem( "profilekids", profile );
+  var profileTree = document.getElementById( "profiles" );
+  if( item )
+    profileTree.selectItem( item );
 }
 
 // rename the selected profile
@@ -142,6 +145,7 @@ function DeleteProfile( deleteFiles )
   var profileTree = document.getElementById( "profiles" );
   var profileKids = document.getElementById( "profilekids" )
   var selected = profileTree.selectedItems[0];
+  var firstAdjacent = selected.previousSibling;
   var name = selected.getAttribute( "rowName" );
   try {
     profile.deleteProfile( name, deleteFiles );
@@ -152,6 +156,8 @@ function DeleteProfile( deleteFiles )
     lString = lString.replace(/\s*<html:br\/>/g,"\n");
     alert( lString );
   }
+  if( firstAdjacent )
+    profileTree.selectCell( firstAdjacent );
   // set the button state
   DoEnabling();
 }
