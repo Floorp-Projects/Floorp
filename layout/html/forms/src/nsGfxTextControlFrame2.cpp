@@ -1767,6 +1767,25 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
+nsGfxTextControlFrame2::Reflow(nsIPresContext*   aPresContext,
+                               nsHTMLReflowMetrics&     aDesiredSize,
+                               const nsHTMLReflowState& aReflowState,
+                               nsReflowStatus&          aStatus)
+{
+  DO_GLOBAL_REFLOW_COUNT("nsGfxTextControlFrame2", aReflowState.reason);
+
+  // make sure the the form registers itself on the initial/first reflow
+  if (mState & NS_FRAME_FIRST_REFLOW) {
+    nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
+    nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
+    mNotifyOnInput = PR_TRUE;//its ok to notify now. all has been prepared.
+  }
+
+  return nsStackFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+}
+
+
+NS_IMETHODIMP
 nsGfxTextControlFrame2::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
 {
   if (!DoesNeedRecalc(mPrefSize)) {
@@ -1796,13 +1815,6 @@ nsGfxTextControlFrame2::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
 
   if (!aReflowState)
     return NS_OK;
-
-  if (mState & NS_FRAME_FIRST_REFLOW)
-  {
-    nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
-    nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
-    mNotifyOnInput = PR_TRUE;//its ok to notify now. all has been prepared.
-  }
 
   nsCompatibility mode;
   aPresContext->GetCompatibilityMode(&mode); 
