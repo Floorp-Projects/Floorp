@@ -56,7 +56,6 @@ static NS_DEFINE_IID(kINetServiceIID,     NS_INETSERVICE_IID);
 static CTokenRecycler* gTokenRecycler=0;
 static nsDeque* gTokenDeque=0;
 static XML_Parser gExpatParser=0;
-static const char* kXMLDeclPrefix = "<?xml";
 static const char* kDocTypeDeclPrefix = "<!DOCTYPE";
 
 /**
