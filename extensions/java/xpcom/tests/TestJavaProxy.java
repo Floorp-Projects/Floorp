@@ -71,6 +71,10 @@ public class TestJavaProxy {
 			System.out.println(file.getPath());
 		}
 
+    // cleanup
+    directory = null;
+    entries = null;
+
 		XPCOM.shutdownXPCOM(null);
 	}
 }

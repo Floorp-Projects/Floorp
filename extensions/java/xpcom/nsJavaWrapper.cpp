@@ -374,27 +374,22 @@ SetupParams(JNIEnv *env, const jobject aParam, const nsXPTParamInfo &aParamInfo,
               rv = NS_ERROR_OUT_OF_MEMORY;
               break;
             }
+            NS_RELEASE(xpcom_obj);
             xpcom_obj = weakref;
             NS_ADDREF(xpcom_obj);
-            aVariant.SetValIsAllocated();
           } else { // if is native XPCOM object
             nsCOMPtr<nsISupportsWeakReference> supportsweak =
                                                    do_QueryInterface(xpcom_obj);
             if (supportsweak) {
               nsWeakPtr weakref;
               supportsweak->GetWeakReference(getter_AddRefs(weakref));
+              NS_RELEASE(xpcom_obj);
               xpcom_obj = weakref;
               NS_ADDREF(xpcom_obj);
             } else {
               xpcom_obj = nsnull;
             }
           }
-
-        } else if (isXPTCStub) {
-          aVariant.SetValIsAllocated();
-
-        } else { // if is native XPCOM object
-          xpcom_obj->Release();
         }
       } else {
         xpcom_obj = nsnull;
@@ -618,7 +613,6 @@ FinalizeParams(JNIEnv *env, const jobject aParam,
             PRUint32 length = nsCRT::strlen((const PRUnichar*) aVariant.val.p);
             str = env->NewString((const jchar*) aVariant.val.p, length);
           }
-          nsMemory::Free(aVariant.val.p);
           if (!str) {
             rv = NS_ERROR_OUT_OF_MEMORY;
             break;
@@ -693,11 +687,7 @@ FinalizeParams(JNIEnv *env, const jobject aParam,
         env->SetObjectArrayElement((jobjectArray) aParam, 0, java_obj);
       }
 
-      // If VAL_IS_ALLOCD is set, that means that an XPCOM object was created
-      // is SetupParams that now needs to be released.
-      if (xpcom_obj && aVariant.IsValAllocated()) {
-        NS_RELEASE(xpcom_obj);
-      }
+      NS_IF_RELEASE(xpcom_obj);
     }
     break;
 
@@ -770,6 +760,9 @@ FinalizeParams(JNIEnv *env, const jobject aParam,
   return rv;
 }
 
+/**
+ * Handles 'retval' and 'dipper' params.
+ */
 nsresult
 SetRetval(JNIEnv *env, const nsXPTParamInfo &aParamInfo,
           const nsXPTMethodInfo* aMethodInfo, nsIInterfaceInfo* aIInfo,
@@ -901,12 +894,13 @@ SetRetval(JNIEnv *env, const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_DOMSTRING:
     {
       if (aVariant.ptr) {
-        nsString* str = (nsString*) aVariant.ptr;
+        nsString* str = NS_STATIC_CAST(nsString*, aVariant.ptr);
         *result = env->NewString(str->get(), str->Length());
         if (*result == nsnull) {
           rv = NS_ERROR_OUT_OF_MEMORY;
           break;
         }
+        delete str;
       }
     }
     break;
@@ -915,12 +909,13 @@ SetRetval(JNIEnv *env, const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_CSTRING:
     {
       if (aVariant.ptr) {
-        nsCString* str = (nsCString*) aVariant.ptr;
+        nsCString* str = NS_STATIC_CAST(nsCString*, aVariant.ptr);
         *result = env->NewStringUTF(str->get());
         if (*result == nsnull) {
           rv = NS_ERROR_OUT_OF_MEMORY;
           break;
         }
+        delete str;
       }
     }
     break;
@@ -1094,7 +1089,7 @@ JAVAPROXY_NATIVE(callXPCOMMethod) (JNIEnv *env, jclass that, jobject aJavaProxy,
         rv = SetupParams(env, env->GetObjectArrayElement(aParams, i), paramInfo,
                          methodInfo, iinfo, methodIndex, params, params[i]);
       } else if (paramInfo.IsDipper()) {
-        LOG(("dipper"));
+        LOG(("dipper\n"));
         const nsXPTType &type = paramInfo.GetType();
         switch (type.TagPart())
         {
@@ -1173,7 +1168,7 @@ JAVAPROXY_NATIVE(callXPCOMMethod) (JNIEnv *env, jclass that, jobject aJavaProxy,
     const nsXPTParamInfo &paramInfo = methodInfo->GetParam(j);
     const nsXPTType &type = paramInfo.GetType();
     if (type.TagPart() == nsXPTType::T_IID) {
-      nsID* iid = (nsID*) params[j].ptr;
+      nsID* iid = (nsID*) params[j].val.p;
       delete iid;
     }
   }
@@ -1243,8 +1238,8 @@ CreateJavaProxy(JNIEnv* env, nsISupports* aXPCOMObject, const nsIID& aIID,
 #ifdef DEBUG_JAVAXPCOM
       char* iid_str = aIID.ToString();
       LOG(("+ CreateJavaProxy (Java=%08x | XPCOM=%08x | IID=%s)\n",
-           env->CallIntMethod(java_obj, hashCodeMID),
-           (int) aXPCOMObject, iid_str));
+           (PRUint32) env->CallIntMethod(java_obj, hashCodeMID),
+           (PRUint32) aXPCOMObject, iid_str));
       PR_Free(iid_str);
 #endif
 
@@ -1285,8 +1280,8 @@ GetXPCOMInstFromProxy(JNIEnv* env, jobject aJavaObject, void** aResult)
   inst->InterfaceInfo()->GetInterfaceIID(&iid);
   char* iid_str = iid->ToString();
   LOG(("< GetXPCOMInstFromProxy (Java=%08x | XPCOM=%08x | IID=%s)\n",
-       env->CallIntMethod(aJavaObject, hashCodeMID),
-       (int) inst->GetInstance(), iid_str));
+       (PRUint32) env->CallIntMethod(aJavaObject, hashCodeMID),
+       (PRUint32) inst->GetInstance(), iid_str));
   PR_Free(iid_str);
   nsMemory::Free(iid);
 #endif
@@ -1299,33 +1294,38 @@ GetXPCOMInstFromProxy(JNIEnv* env, jobject aJavaObject, void** aResult)
 extern "C" JX_EXPORT void JNICALL
 JAVAPROXY_NATIVE(finalizeProxy) (JNIEnv *env, jclass that, jobject aJavaProxy)
 {
+#ifdef DEBUG_JAVAXPCOM
+  PRUint32 xpcom_addr = 0;
+#endif
+
   // Due to Java's garbage collection, this finalize statement may get called
   // after FreeJavaGlobals().  So check to make sure that everything is still
   // initialized.
-  if (gJavaXPCOMLock) {
-    nsAutoLock lock(gJavaXPCOMLock);
+  if (gJavaXPCOMMonitor) {
+    nsAutoMonitor mon(gJavaXPCOMMonitor);
 
     // Get native XPCOM instance
     void* xpcom_obj;
     nsresult rv = GetXPCOMInstFromProxy(env, aJavaProxy, &xpcom_obj);
     if (NS_SUCCEEDED(rv)) {
       JavaXPCOMInstance* inst = NS_STATIC_CAST(JavaXPCOMInstance*, xpcom_obj);
+#ifdef DEBUG_JAVAXPCOM
+      xpcom_addr = NS_REINTERPRET_CAST(PRUint32, inst->GetInstance());
+#endif
       nsIID* iid;
       rv = inst->InterfaceInfo()->GetInterfaceIID(&iid);
       if (NS_SUCCEEDED(rv)) {
         rv = gNativeToJavaProxyMap->Remove(env, inst->GetInstance(), *iid);
-#ifdef DEBUG_JAVAXPCOM
-        char* iid_str = iid->ToString();
-        LOG(("- Finalize (Java=%08x | XPCOM=%08x | IID=%s)\n",
-             env->CallIntMethod(aJavaProxy, hashCodeMID),
-             (int) inst->GetInstance(), iid_str));
-        PR_Free(iid_str);
-#endif
         nsMemory::Free(iid);
       }
       NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to RemoveJavaProxy");
       delete inst;
     }
   }
+
+#ifdef DEBUG_JAVAXPCOM
+  LOG(("- Finalize (Java=%08x | XPCOM=%08x)\n",
+       (PRUint32) env->CallIntMethod(aJavaProxy, hashCodeMID), xpcom_addr));
+#endif
 }
 

@@ -89,7 +89,7 @@ jmethodID proxyToStringMID = nsnull;
 NativeToJavaProxyMap* gNativeToJavaProxyMap = nsnull;
 JavaToXPTCStubMap* gJavaToXPTCStubMap = nsnull;
 
-PRLock* gJavaXPCOMLock = nsnull;
+PRMonitor* gJavaXPCOMMonitor = nsnull;
 
 
 /******************************
@@ -98,7 +98,7 @@ PRLock* gJavaXPCOMLock = nsnull;
 PRBool
 InitializeJavaGlobals(JNIEnv *env)
 {
-  if (gJavaXPCOMLock)
+  if (gJavaXPCOMMonitor)
     return PR_TRUE;
 
   jclass clazz;
@@ -244,7 +244,7 @@ InitializeJavaGlobals(JNIEnv *env)
     goto init_error;
   }
 
-  gJavaXPCOMLock = PR_NewLock();
+  gJavaXPCOMMonitor = nsAutoMonitor::NewMonitor("Javaconnect Monitor");
   return PR_TRUE;
 
 init_error:
@@ -260,8 +260,22 @@ init_error:
 void
 FreeJavaGlobals(JNIEnv* env)
 {
-  PR_Lock(gJavaXPCOMLock);
+  PR_EnterMonitor(gJavaXPCOMMonitor);
 
+  // Free the mappings first, since that process depends on some of the Java
+  // globals that are freed later.
+  if (gNativeToJavaProxyMap) {
+    gNativeToJavaProxyMap->Destroy(env);
+    delete gNativeToJavaProxyMap;
+    gNativeToJavaProxyMap = nsnull;
+  }
+  if (gJavaToXPTCStubMap) {
+    gJavaToXPTCStubMap->Destroy();
+    delete gJavaToXPTCStubMap;
+    gJavaToXPTCStubMap = nsnull;
+  }
+
+  // Free remaining Java globals
   if (booleanClass) {
     env->DeleteGlobalRef(booleanClass);
     booleanClass = nsnull;
@@ -311,18 +325,9 @@ FreeJavaGlobals(JNIEnv* env)
     xpcomJavaProxyClass = nsnull;
   }
 
-  if (gNativeToJavaProxyMap) {
-    delete gNativeToJavaProxyMap;
-    gNativeToJavaProxyMap = nsnull;
-  }
-  if (gJavaToXPTCStubMap) {
-    delete gJavaToXPTCStubMap;
-    gJavaToXPTCStubMap = nsnull;
-  }
-
-  PR_Unlock(gJavaXPCOMLock);
-  PR_DestroyLock(gJavaXPCOMLock);
-  gJavaXPCOMLock = nsnull;
+  PR_ExitMonitor(gJavaXPCOMMonitor);
+  nsAutoMonitor::DestroyMonitor(gJavaXPCOMMonitor);
+  gJavaXPCOMMonitor = nsnull;
 }
 
 
@@ -348,11 +353,6 @@ static PLDHashTableOps hash_ops =
 // So we optimize the common case by using a hash table.  Then, if there are
 // multiple Java proxies, we cycle through the linked list, comparing IIDs.
 
-NativeToJavaProxyMap::~NativeToJavaProxyMap()
-{
-  PL_DHashTableDestroy(mHashTable);
-}
-
 nsresult
 NativeToJavaProxyMap::Init()
 {
@@ -362,10 +362,61 @@ NativeToJavaProxyMap::Init()
   return NS_OK;
 }
 
+PLDHashOperator
+DestroyJavaProxyMappingEnum(PLDHashTable* aTable, PLDHashEntryHdr* aHeader,
+                            PRUint32 aNumber, void* aData)
+{
+  JNIEnv* env = NS_STATIC_CAST(JNIEnv*, aData);
+  NativeToJavaProxyMap::Entry* entry =
+                          NS_STATIC_CAST(NativeToJavaProxyMap::Entry*, aHeader);
+
+  // first, delete XPCOM instances from the Java proxies
+  nsresult rv;
+  NativeToJavaProxyMap::ProxyList* item = entry->list;
+  while(item != nsnull) {
+    void* xpcom_obj;
+    jobject javaObject = env->NewLocalRef(item->javaObject);
+    rv = GetXPCOMInstFromProxy(env, javaObject, &xpcom_obj);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to get XPCOM instance from Java proxy");
+
+    if (NS_SUCCEEDED(rv)) {
+      JavaXPCOMInstance* inst = NS_STATIC_CAST(JavaXPCOMInstance*, xpcom_obj);
+#ifdef DEBUG_JAVAXPCOM
+      char* iid_str = item->iid.ToString();
+      LOG(("- NativeToJavaProxyMap (Java=%08x | XPCOM=%08x | IID=%s)\n",
+           (PRUint32) env->CallIntMethod(javaObject, hashCodeMID),
+           (PRUint32) entry, iid_str));
+      PR_Free(iid_str);
+#endif
+      delete inst;  // releases native XPCOM object
+    }
+
+    NativeToJavaProxyMap::ProxyList* next = item->next;
+    delete item;
+    item = next;
+  }
+
+  return PL_DHASH_REMOVE;
+}
+
+nsresult
+NativeToJavaProxyMap::Destroy(JNIEnv* env)
+{
+  nsAutoMonitor mon(gJavaXPCOMMonitor);
+
+  PL_DHashTableEnumerate(mHashTable, DestroyJavaProxyMappingEnum, env);
+  PL_DHashTableDestroy(mHashTable);
+  mHashTable = nsnull;
+
+  return NS_OK;
+}
+
 nsresult
 NativeToJavaProxyMap::Add(JNIEnv* env, nsISupports* aXPCOMObject,
                           const nsIID& aIID, jobject aProxy)
 {
+  nsAutoMonitor mon(gJavaXPCOMMonitor);
+
   Entry* e = NS_STATIC_CAST(Entry*, PL_DHashTableOperate(mHashTable,
                                                          aXPCOMObject,
                                                          PL_DHASH_ADD));
@@ -384,7 +435,8 @@ NativeToJavaProxyMap::Add(JNIEnv* env, nsISupports* aXPCOMObject,
 #ifdef DEBUG_JAVAXPCOM
   char* iid_str = aIID.ToString();
   LOG(("+ NativeToJavaProxyMap (Java=%08x | XPCOM=%08x | IID=%s)\n",
-       env->CallIntMethod(aProxy, hashCodeMID), (int) aXPCOMObject, iid_str));
+       (PRUint32) env->CallIntMethod(aProxy, hashCodeMID),
+       (PRUint32) aXPCOMObject, iid_str));
   PR_Free(iid_str);
 #endif
   return NS_OK;
@@ -397,6 +449,8 @@ NativeToJavaProxyMap::Find(JNIEnv* env, nsISupports* aNativeObject,
   NS_PRECONDITION(aResult != nsnull, "null ptr");
   if (!aResult)
     return NS_ERROR_FAILURE;
+
+  nsAutoMonitor mon(gJavaXPCOMMonitor);
 
   *aResult = nsnull;
   Entry* e = NS_STATIC_CAST(Entry*, PL_DHashTableOperate(mHashTable,
@@ -415,8 +469,8 @@ NativeToJavaProxyMap::Find(JNIEnv* env, nsISupports* aNativeObject,
 #ifdef DEBUG_JAVAXPCOM
         char* iid_str = aIID.ToString();
         LOG(("< NativeToJavaProxyMap (Java=%08x | XPCOM=%08x | IID=%s)\n",
-             env->CallIntMethod(*aResult, hashCodeMID),
-             (int) aNativeObject, iid_str));
+             (PRUint32) env->CallIntMethod(*aResult, hashCodeMID),
+             (PRUint32) aNativeObject, iid_str));
         PR_Free(iid_str);
 #endif
       }
@@ -431,6 +485,8 @@ nsresult
 NativeToJavaProxyMap::Remove(JNIEnv* env, nsISupports* aNativeObject,
                              const nsIID& aIID)
 {
+  nsAutoMonitor mon(gJavaXPCOMMonitor);
+
   Entry* e = NS_STATIC_CAST(Entry*, PL_DHashTableOperate(mHashTable,
                                                          aNativeObject,
                                                          PL_DHASH_LOOKUP));
@@ -447,8 +503,8 @@ NativeToJavaProxyMap::Remove(JNIEnv* env, nsISupports* aNativeObject,
 #ifdef DEBUG_JAVAXPCOM
       char* iid_str = aIID.ToString();
       LOG(("- NativeToJavaProxyMap (Java=%08x | XPCOM=%08x | IID=%s)\n",
-           env->CallIntMethod(item->javaObject, hashCodeMID),
-           (int) aNativeObject, iid_str));
+           (PRUint32) env->CallIntMethod(item->javaObject, hashCodeMID),
+           (PRUint32) aNativeObject, iid_str));
       PR_Free(iid_str);
 #endif
 
@@ -473,11 +529,6 @@ NativeToJavaProxyMap::Remove(JNIEnv* env, nsISupports* aNativeObject,
   return NS_ERROR_FAILURE;
 }
 
-JavaToXPTCStubMap::~JavaToXPTCStubMap()
-{
-  PL_DHashTableDestroy(mHashTable);
-}
-
 nsresult
 JavaToXPTCStubMap::Init()
 {
@@ -487,9 +538,39 @@ JavaToXPTCStubMap::Init()
   return NS_OK;
 }
 
+
+PLDHashOperator
+DestroyXPTCMappingEnum(PLDHashTable* aTable, PLDHashEntryHdr* aHeader,
+                       PRUint32 aNumber, void* aData)
+{
+  JavaToXPTCStubMap::Entry* entry =
+                             NS_STATIC_CAST(JavaToXPTCStubMap::Entry*, aHeader);
+
+  // The XPTC stub will be released by the XPCOM side, if it hasn't been
+  // already.  We just need to delete the Java global ref held by the XPTC stub,
+  // so the Java garbage collector can handle the Java object when necessary.
+  entry->xptcstub->DeleteStrongRef();
+
+  return PL_DHASH_REMOVE;
+}
+
+nsresult
+JavaToXPTCStubMap::Destroy()
+{
+  nsAutoMonitor mon(gJavaXPCOMMonitor);
+
+  PL_DHashTableEnumerate(mHashTable, DestroyXPTCMappingEnum, nsnull);
+  PL_DHashTableDestroy(mHashTable);
+  mHashTable = nsnull;
+
+  return NS_OK;
+}
+
 nsresult
 JavaToXPTCStubMap::Add(JNIEnv* env, jobject aJavaObject, nsJavaXPTCStub* aProxy)
 {
+  nsAutoMonitor mon(gJavaXPCOMMonitor);
+
   jint hash = env->CallIntMethod(aJavaObject, hashCodeMID);
   Entry* e = NS_STATIC_CAST(Entry*, PL_DHashTableOperate(mHashTable,
                                                          NS_INT32_TO_PTR(hash),
@@ -509,7 +590,7 @@ JavaToXPTCStubMap::Add(JNIEnv* env, jobject aJavaObject, nsJavaXPTCStub* aProxy)
   iface_info->GetInterfaceIID(&iid);
   char* iid_str = iid->ToString();
   LOG(("+ JavaToXPTCStubMap (Java=%08x | XPCOM=%08x | IID=%s)\n",
-       hash, (int) aProxy, iid_str));
+       (PRUint32) hash, (PRUint32) aProxy, iid_str));
   PR_Free(iid_str);
   nsMemory::Free(iid);
   NS_RELEASE(iface_info);
@@ -524,6 +605,8 @@ JavaToXPTCStubMap::Find(JNIEnv* env, jobject aJavaObject, const nsIID& aIID,
   NS_PRECONDITION(aResult != nsnull, "null ptr");
   if (!aResult)
     return NS_ERROR_FAILURE;
+
+  nsAutoMonitor mon(gJavaXPCOMMonitor);
 
   *aResult = nsnull;
   jint hash = env->CallIntMethod(aJavaObject, hashCodeMID);
@@ -540,7 +623,7 @@ JavaToXPTCStubMap::Find(JNIEnv* env, jobject aJavaObject, const nsIID& aIID,
   if (NS_SUCCEEDED(rv)) {
     char* iid_str = aIID.ToString();
     LOG(("< JavaToXPTCStubMap (Java=%08x | XPCOM=%08x | IID=%s)\n",
-         hash, (int) *aResult, iid_str));
+         (PRUint32) hash, (PRUint32) *aResult, iid_str));
     PR_Free(iid_str);
   }
 #endif
@@ -554,11 +637,13 @@ JavaToXPTCStubMap::Find(JNIEnv* env, jobject aJavaObject, const nsIID& aIID,
 nsresult
 JavaToXPTCStubMap::Remove(JNIEnv* env, jobject aJavaObject)
 {
+  nsAutoMonitor mon(gJavaXPCOMMonitor);
+
   jint hash = env->CallIntMethod(aJavaObject, hashCodeMID);
   PL_DHashTableOperate(mHashTable, NS_INT32_TO_PTR(hash), PL_DHASH_REMOVE);
 
 #ifdef DEBUG_JAVAXPCOM
-  LOG(("- JavaToXPTCStubMap (Java=%08x)\n", hash));
+  LOG(("- JavaToXPTCStubMap (Java=%08x)\n", (PRUint32) hash));
 #endif
 
   return NS_OK;
@@ -617,6 +702,8 @@ GetNewOrUsedJavaObject(JNIEnv* env, nsISupports* aXPCOMObject,
     return NS_OK;
   }
 
+  nsAutoMonitor mon(gJavaXPCOMMonitor);
+
   // Get associated Java object from hash table
   rv = gNativeToJavaProxyMap->Find(env, aXPCOMObject, aIID, aResult);
   if (NS_FAILED(rv))
@@ -663,6 +750,8 @@ GetNewOrUsedXPCOMObject(JNIEnv* env, jobject aJavaObject, const nsIID& aIID,
       return NS_OK;
     }
   }
+
+  nsAutoMonitor mon(gJavaXPCOMMonitor);
 
   *aIsXPTCStub = PR_TRUE;
 
@@ -808,6 +897,16 @@ ThrowException(JNIEnv* env, const nsresult aErrorCode, const char* aMessage)
     methodSig.AppendLiteral("Ljava/lang/String;");
   }
   methodSig.AppendLiteral(")V");
+
+  // In some instances (such as in shutdownXPCOM() and termEmbedding()), we
+  // will need to throw an exception when Javaconnect has already been
+  // terminated.  In such a case, 'xpcomExceptionClass' will be null.  So we
+  // reset it temporarily in order to throw the appropriate exception.
+  if (xpcomExceptionClass == nsnull) {
+    xpcomExceptionClass = env->FindClass("org/mozilla/xpcom/XPCOMException");
+    if (!xpcomExceptionClass)
+      return;
+  }
 
   // create exception object
   jthrowable throwObj = nsnull;
