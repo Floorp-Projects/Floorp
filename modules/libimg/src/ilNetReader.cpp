@@ -74,8 +74,6 @@ NetReaderImpl::WriteReady(PRUint32* max_read)
 {
     if (ilContainer != NULL) {
         *max_read =IL_StreamWriteReady(ilContainer);      
-        if (*max_read < 0)
-            *max_read = 0;
     }
     return NS_OK;
 }
