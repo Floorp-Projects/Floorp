@@ -49,6 +49,8 @@ typedef unsigned int uint32_t;
 #ifndef __cplusplus
 typedef int bool;
 #endif /* __cplusplus */
+#elif defined(bsdi)
+#define bool int
 #else
 #include <stdint.h>
 
