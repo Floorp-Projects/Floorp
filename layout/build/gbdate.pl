@@ -24,4 +24,4 @@
 ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime;
 # localtime returns year minus 1900
 $year = $year + 1900;
-printf("#define PRODUCT_VERSION \"%04d%02d%02d\"\n", $year, 1+$mon, $mday);
+printf("#define PRODUCT_VERSION NS_LITERAL_STRING(\"%04d%02d%02d\").get()\n", $year, 1+$mon, $mday);
