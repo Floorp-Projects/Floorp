@@ -527,9 +527,7 @@ nsListControlFrame::Paint(nsIPresContext*      aPresContext,
   // Start by assuming we are visible and need to be painted
   PRBool isVisible = PR_TRUE;
 
-  PRBool isPaginated;
-  aPresContext->IsPaginated(&isPaginated);
-  if (isPaginated) {
+  if (aPresContext->IsPaginated()) {
     if (aPresContext->IsRenderingOnlySelection()) {
       // Check the quick way first
       PRBool isSelected = (mState & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
@@ -1713,9 +1711,7 @@ nsListControlFrame::HandleEvent(nsIPresContext* aPresContext,
 {
   NS_ENSURE_ARG_POINTER(aEventStatus);
   // temp fix until Bug 124990 gets fixed
-  PRBool isPaginated = PR_FALSE;
-  aPresContext->IsPaginated(&isPaginated);
-  if (isPaginated && NS_IS_MOUSE_EVENT(aEvent)) {
+  if (aPresContext->IsPaginated() && NS_IS_MOUSE_EVENT(aEvent)) {
     return NS_OK;
   }
 

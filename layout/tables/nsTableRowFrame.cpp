@@ -796,8 +796,7 @@ nsTableRowFrame::ReflowChildren(nsIPresContext*          aPresContext,
 
   nsIFrame* tablePrevInFlow;
   aTableFrame.GetPrevInFlow(&tablePrevInFlow);
-  PRBool isPaginated;
-  aPresContext->IsPaginated(&isPaginated);
+  PRBool isPaginated = aPresContext->IsPaginated();
 
   nsresult rv = NS_OK;
 

@@ -44,9 +44,7 @@ public:
   GalleyContext();
   ~GalleyContext();
 
-  NS_IMETHOD IsPaginated(PRBool* aResult);
-  NS_IMETHOD SetPaginatedScrolling(PRBool aResult)  { return NS_ERROR_FAILURE; }
-  NS_IMETHOD GetPaginatedScrolling(PRBool* aResult);
+  virtual void SetPaginatedScrolling(PRBool aResult) {}
   virtual void GetPageDim(nsRect* aActualRect, nsRect* aAdjRect);
   virtual void SetPageDim(nsRect* aRect);
 };
@@ -58,25 +56,6 @@ GalleyContext::GalleyContext()
 
 GalleyContext::~GalleyContext()
 {
-}
-
-NS_IMETHODIMP
-GalleyContext::IsPaginated(PRBool* aResult)
-{
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aResult = PR_FALSE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-GalleyContext::GetPaginatedScrolling(PRBool* aResult)
-{
-  NS_ENSURE_ARG_POINTER(aResult);
-  *aResult = PR_FALSE;
-  return NS_OK;
 }
 
 void

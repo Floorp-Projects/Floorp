@@ -1208,7 +1208,7 @@ SuppressEventHandlers(nsIPresContext* aPresContext)
     // In the current implementation, we only paginate when
     // printing or in print preview.
 
-    aPresContext->IsPaginated(&suppressHandlers);
+    suppressHandlers = aPresContext->IsPaginated();
 
 #endif
   }
@@ -3126,9 +3126,7 @@ nsTextControlFrame::HandleEvent(nsIPresContext* aPresContext,
   NS_ENSURE_ARG_POINTER(aEventStatus);
 
   // temp fix until Bug 124990 gets fixed
-  PRBool isPaginated = PR_FALSE;
-  aPresContext->IsPaginated(&isPaginated);
-  if (isPaginated && NS_IS_MOUSE_EVENT(aEvent)) {
+  if (aPresContext->IsPaginated() && NS_IS_MOUSE_EVENT(aEvent)) {
     return NS_OK;
   }
 

@@ -1925,13 +1925,11 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext*          aPresContext,
   }
   aStatus = NS_FRAME_COMPLETE;
 
-  PRBool isPaginated;
-  aPresContext->IsPaginated(&isPaginated);
   PRBool needUpdateMetrics = PR_TRUE;
 
   if ((eReflowReason_Resize    == aOuterRS.reason)  &&
       (aOuterRS.availableWidth == mPriorAvailWidth) &&
-      !isPaginated                                  &&
+      !aPresContext->IsPaginated()                  &&
       !::IsPctHeight(mInnerTableFrame)) {
     // don't do much if we are resize reflowed exactly like last time
     aDesiredSize.width  = mRect.width;

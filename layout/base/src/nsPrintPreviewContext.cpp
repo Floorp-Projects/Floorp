@@ -56,9 +56,11 @@ public:
 // another class. Only the base class should use NS_DECL_ISUPPORTS
   NS_DECL_ISUPPORTS_INHERITED
 
-  NS_IMETHOD IsPaginated(PRBool* aResult);
-  NS_IMETHOD SetPaginatedScrolling(PRBool aResult) { mCanPaginatedScroll = aResult; return NS_OK; }
-  NS_IMETHOD GetPaginatedScrolling(PRBool* aResult);
+  virtual void SetPaginatedScrolling(PRBool aResult)
+  {
+    mCanPaginatedScroll = aResult;
+  }
+
   virtual void GetPageDim(nsRect* aActualRect, nsRect* aAdjRect);
   virtual void SetPageDim(nsRect* aRect);
   virtual void SetImageAnimationMode(PRUint16 aMode);
@@ -69,14 +71,12 @@ public:
 
 protected:
   nsRect mPageDim;
-  PRBool mCanPaginatedScroll;
   nsCOMPtr<nsIPrintSettings> mPrintSettings;
   PRPackedBool mDoScaledTwips;
 };
 
 PrintPreviewContext::PrintPreviewContext() :
   mPageDim(-1,-1,-1,-1),
-  mCanPaginatedScroll(PR_TRUE),
   mDoScaledTwips(PR_TRUE)
 {
   SetBackgroundImageDraw(PR_FALSE);
@@ -85,6 +85,8 @@ PrintPreviewContext::PrintPreviewContext() :
   mImageAnimationMode = imgIContainer::kDontAnimMode;
   mNeverAnimate = PR_TRUE;
   mMedium = nsLayoutAtoms::print;
+  mPaginated = PR_TRUE;
+  mCanPaginatedScroll = PR_TRUE;
 }
 
 PrintPreviewContext::~PrintPreviewContext()
@@ -106,22 +108,6 @@ PrintPreviewContext::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
 
   return nsPresContext::QueryInterface(aIID, aInstancePtr);
-}
-
-NS_IMETHODIMP
-PrintPreviewContext::IsPaginated(PRBool* aResult)
-{
-  NS_ENSURE_ARG_POINTER(aResult);
-  *aResult = PR_TRUE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-PrintPreviewContext::GetPaginatedScrolling(PRBool* aResult)
-{
-  NS_ENSURE_ARG_POINTER(aResult);
-  *aResult = mCanPaginatedScroll;
-  return NS_OK;
 }
 
 void

@@ -342,9 +342,7 @@ nsGfxScrollFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
 {
   // Don't create scrollbars if we're printing/print previewing
   // Get rid of this code when printing moves to its own presentation
-  PRBool isPaginated = PR_FALSE;
-  aPresContext->IsPaginated(&isPaginated);
-  if (isPaginated) {
+  if (aPresContext->IsPaginated()) {
     // allow scrollbars if this is the child of the viewport, because
     // we must be the scrollbars for the print preview window
     nsIFrame* parent = GetParent();

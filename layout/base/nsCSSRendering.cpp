@@ -3005,9 +3005,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
     aPresContext->PresShell()->GetRootFrame(&rootFrame);
     NS_ASSERTION(rootFrame, "no root frame");
 
-    PRBool isPaginated = PR_FALSE;
-    aPresContext->IsPaginated(&isPaginated);
-    if (isPaginated) {
+    if (aPresContext->IsPaginated()) {
       nsIFrame* page = nsLayoutUtils::GetPageFrame(aForFrame);
       NS_ASSERTION(page, "no page");
       rootFrame = page;

@@ -836,8 +836,6 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   SetPriorAvailWidth(aReflowState.availableWidth);
   nsIFrame* firstKid = mFrames.FirstChild();
 
-  PRBool isPaginated;
-  aPresContext->IsPaginated(&isPaginated);
   nscoord computedPaginatedHeight = 0;
 
   if (aReflowState.mFlags.mSpecialHeightReflow || 
@@ -845,7 +843,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
     ((nsHTMLReflowState&)aReflowState).mComputedHeight = mRect.height - topInset - bottomInset;
     DISPLAY_REFLOW_CHANGE();
   }
-  else if (isPaginated) {
+  else if (aPresContext->IsPaginated()) {
     computedPaginatedHeight = CalcUnpaginagedHeight(aPresContext, (nsTableCellFrame&)*this, *tableFrame, topInset + bottomInset);
     if (computedPaginatedHeight > 0) {
       ((nsHTMLReflowState&)aReflowState).mComputedHeight = computedPaginatedHeight;

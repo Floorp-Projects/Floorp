@@ -59,9 +59,7 @@ public:
   PrintContext();
   ~PrintContext();
 
-  NS_IMETHOD IsPaginated(PRBool* aResult);
-  NS_IMETHOD SetPaginatedScrolling(PRBool aResult)  { return NS_ERROR_FAILURE; }
-  NS_IMETHOD GetPaginatedScrolling(PRBool* aResult);
+  virtual void SetPaginatedScrolling(PRBool aResult) {}
   virtual void GetPageDim(nsRect* aActualRect, nsRect* aAdjRect);
   virtual void SetPageDim(nsRect* aRect);
   virtual void SetImageAnimationMode(PRUint16 aMode);
@@ -82,6 +80,7 @@ PrintContext::PrintContext() :
   mImageAnimationMode = imgIContainer::kDontAnimMode;
   mNeverAnimate = PR_TRUE;
   mMedium = nsLayoutAtoms::print;
+  mPaginated = PR_TRUE;
 }
 
 PrintContext::~PrintContext()
@@ -105,22 +104,6 @@ PrintContext::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
 
   return nsPresContext::QueryInterface(aIID, aInstancePtr);
-}
-
-NS_IMETHODIMP
-PrintContext::IsPaginated(PRBool* aResult)
-{
-  NS_ENSURE_ARG_POINTER(aResult);
-  *aResult = PR_TRUE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-PrintContext::GetPaginatedScrolling(PRBool* aResult)
-{
-  NS_ENSURE_ARG_POINTER(aResult);
-  *aResult = PR_FALSE;
-  return NS_OK;
 }
 
 void
