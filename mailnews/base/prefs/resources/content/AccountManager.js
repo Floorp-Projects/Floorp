@@ -208,8 +208,17 @@ function onDeleteAccount(event) {
 
     var protocolinfo = Components.classes["component://netscape/messenger/protocol/info;type=" + type].getService(Components.interfaces.nsIMsgProtocolInfo);
     if (!protocolinfo.canDelete) return;
+
+    var confirmDeleteAccount =
+      Bundle.GetStringFromName("confirmDeleteAccount");
+    if (!window.confirm(confirmDeleteAccount)) return;
     
     try {
+      // clear cached data out of the account array
+      if (accountArray[result.serverId])
+        accountArray[result.serverId] = null;
+      currentServerId = currentPageId = null;
+      
       accountManager.removeAccount(account);
       selectFirstAccount();
     }
