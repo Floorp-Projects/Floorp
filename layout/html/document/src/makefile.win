@@ -39,7 +39,7 @@ CPPSRCS=					\
 CPP_OBJS=					\
 	.\$(OBJDIR)\nsHTMLContentSink.obj	\
 	.\$(OBJDIR)\nsHTMLDocument.obj		\
-	.\$(OBJDIR)\nsHTMLFragmentContentSink.cpp	\
+	.\$(OBJDIR)\nsHTMLFragmentContentSink.obj	\
 	.\$(OBJDIR)\nsFrameFrame.obj		\
 	.\$(OBJDIR)\nsFrameSetFrame.obj		\
 	.\$(OBJDIR)\nsImageDocument.obj		\
