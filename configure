@@ -10682,8 +10682,8 @@ if test "$HAVE_DEMANGLE"
 then
   case "$target" in
     *-linux*)
-        # Demangle only for debug builds
-        if test "$MOZ_DEBUG"
+        # Demangle only for debug or trace-malloc builds
+        if test "$MOZ_DEBUG" || test "$NS_TRACE_MALLOC"
         then
             MOZ_DEMANGLE_SYMBOLS=1
             cat >> confdefs.h <<\EOF
