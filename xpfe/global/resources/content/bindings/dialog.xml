@@ -29,7 +29,7 @@
       <property name="buttons"
                 onget="return this.getAttribute('buttons');"
                 onset="this._configureButtons(val); return val;"/>
-                
+
       <method name="acceptDialog">
         <body>
         <![CDATA[
@@ -67,9 +67,17 @@
         this._configureButtons(this.getAttribute("buttons"));
 
         // give focus to the first focusable element in the dialog
-        document.commandDispatcher.advanceFocusIntoSubtree(this);
+        this.addEventListener("load", this.setInitialFocus, true);
       ]]>
       </constructor>
+
+      <method name="setInitialFocus">
+        <body>
+        <![CDATA[
+          document.commandDispatcher.advanceFocusIntoSubtree(this);
+        ]]>
+        </body>
+      </method>                
 
       <property name="mStrBundle">
         <getter>

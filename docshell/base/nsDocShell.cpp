@@ -3026,7 +3026,7 @@ nsDocShell::FocusAvailable(nsIBaseWindow * aCurrentFocus,
     }
 
 
-    //Otherwise, check the chilren and offer it to the next sibling.
+    //Otherwise, check the children and offer it to the next sibling.
     PRInt32 i;
     PRInt32 n = mChildren.Count();
     for (i = 0; i < n; i++) {
@@ -3076,7 +3076,11 @@ nsDocShell::FocusAvailable(nsIBaseWindow * aCurrentFocus,
 
     // Call again to offer focus upwards and to start at the beginning of our
     // child list if no one above us wants focus.
-    return FocusAvailable(this, aForward, aTookFocus);
+    if (NS_STATIC_CAST(nsIBaseWindow*, this) != aCurrentFocus)
+      return FocusAvailable(this, aForward, aTookFocus);
+    
+    *aTookFocus = PR_FALSE;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
