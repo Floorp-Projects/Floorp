@@ -983,6 +983,10 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
     break;
   case eHTMLTag_table:
     mSink->mInMonolithicContainer++;
+  case eHTMLTag_layer:
+  case eHTMLTag_thead:
+  case eHTMLTag_tbody:
+  case eHTMLTag_tfoot:
   case eHTMLTag_tr:
   case eHTMLTag_td:
   case eHTMLTag_th:
@@ -1069,7 +1073,7 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
         return rv;
       }
       switch (nodeType) {
-      case eHTMLTag_img:
+      case eHTMLTag_img:    // elements with 'SRC='
       case eHTMLTag_frame:
       case eHTMLTag_input:
         mSink->AddBaseTagInfo(content);     
@@ -1705,7 +1709,7 @@ HTMLContentSink::OpenBody(const nsIParserNode& aNode)
   // Open body. Note that we pre-append the body to the root so that
   // incremental reflow during document loading will work properly.
   mCurrentContext->SetPreAppend(PR_TRUE);
-  nsresult rv = mCurrentContext->OpenContainer(aNode);
+   nsresult rv = mCurrentContext->OpenContainer(aNode);
   mCurrentContext->SetPreAppend(PR_FALSE);
   if (NS_OK != rv) {
     return rv;
