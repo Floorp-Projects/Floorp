@@ -38,12 +38,26 @@
 #include "jsobj.h"
 #include "jsstr.h"
 
+
+/* Determine if the id represents an array index.
+ * 
+ * An id is an array index according to ECMA by (15.4):
+ *
+ * "Array objects give special treatment to a certain class of property names.
+ * A property name P (in the form of a string value) is an array index if and
+ * only if ToString(ToUint32(P)) is equal to P and ToUint32(P) is not equal 
+ * to 2^32-1."
+ * 
+ * In our implementation, it would be sufficient to check for JSVAL_IS_INT(id)
+ * except that by using signed 32-bit integers we miss the top half of the 
+ * valid range. This function checks the string representation itself; note
+ * that calling a standard conversion routine might allow strings such as 
+ * "08" or "4.0" as array indices, which they are not.
+ */
 static JSBool
 IdIsIndex(jsid id, jsuint *indexp)
 {
-    jsint i;
-    jsdouble d;
-    JSBool ok;
+    jsuint i;
     JSString *str;
     jschar *ep;
 
@@ -57,14 +71,23 @@ IdIsIndex(jsid id, jsuint *indexp)
 
     /* It must be a string. */
     str = JSVAL_TO_STRING(id);
-    ok = (str->length > 0 && JS7_ISDEC(str->chars[0]) &&
-          js_strtod(str->chars, &ep, &d));
-    if (!ok || d < 0 || js_DoubleToInteger(d) != d || d > 4294967294.0)
+    ep = str->chars;
+    if (str->length == 0 || *ep < '1' || *ep > '9')
         return JS_FALSE;
-
-    *indexp = (jsuint)d;
+    i = 0;
+    while (*ep != 0 && JS7_ISDEC(*ep)) {
+        jsuint i2 = i*10 + (*ep - '0');
+        if (i2 < i)
+            return JS_FALSE;    /* overflow */
+        i = i2;
+        ep++;
+    }
+    if (*ep != 0 || i == 4294967295)    /* 4294967295 == 2^32-1 */
+        return JS_FALSE;
+    *indexp = i;
     return JS_TRUE;
 }
+
 
 static JSBool
 ValueIsLength(JSContext *cx, jsval v, jsuint *lengthp)
