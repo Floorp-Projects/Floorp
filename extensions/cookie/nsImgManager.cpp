@@ -287,7 +287,7 @@ nsImgManager::Observe(nsISupports *aSubject,
         mBlockerPref = kImageBlockerPrefDefault;
       }
     } else if (pref.Equals(kImageBlockImageInMailNewsPrefName)) {
-      rv = mPrefBranch->GetIntPref(kImageBlockImageInMailNewsPrefName, &mBlockInMailNewsPref);
+      rv = mPrefBranch->GetBoolPref(kImageBlockImageInMailNewsPrefName, &mBlockInMailNewsPref);
       if (NS_FAILED(rv)) {
         mBlockInMailNewsPref = kImageBlockImageInMailNewsPrefDefault;
       }
