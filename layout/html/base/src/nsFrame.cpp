@@ -1046,6 +1046,13 @@ nsFrame::MoveInSpaceManager(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
+nsFrame::VerticalAlignFrames(nscoord aLineHeight,
+                             nscoord aDistanceFromTopEdge)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsFrame::ContentChanged(nsIPresContext* aPresContext,
                         nsIContent*     aChild,
                         nsISupports*    aSubContent)
@@ -1287,13 +1294,6 @@ NS_IMETHODIMP nsFrame::IsPercentageBase(PRBool& aBase) const
   }
   return NS_OK;
 }
-
-NS_IMETHODIMP nsFrame::GetAutoMarginSize(PRUint8 aSide, nscoord& aSize) const
-{
-  aSize = 0;  // XXX probably not right, subclass override?
-  return NS_OK;
-}
-
 
 // Sibling pointer used to link together frames
 
