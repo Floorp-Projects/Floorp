@@ -51,6 +51,7 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 GFX_LCPPSRCS = \
+		nsRepeater.cpp \
 		nsRegionMac.cpp \
 		nsWatchTask.cpp \
 		$(NULL)
@@ -106,7 +107,6 @@ EXTRA_DSO_LDOPTS += \
                 $(TK_LIBS) \
                 $(MOZ_COMPONENT_LIBS) \
                 -lgkgfx \
-                -ltimer_mac \
                 $(NULL)
 
 LOCAL_INCLUDES	= \
