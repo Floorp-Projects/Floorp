@@ -311,7 +311,7 @@
                        observes="viewHistorySidebar"
                        tooltiptext="&historyButton.tooltip;"/>
 
-#ifdef XP_WIN
+#ifdef HAVE_SHELL_SERVICE
         <toolbarbutton id="mail-button" type="menu" class="toolbarbutton-1"
                        label="&mailButton.label;" orient="vertical"
                        onmouseover="MailIntegration.updateUnreadCount();"

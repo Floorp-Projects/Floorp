@@ -51,13 +51,6 @@ interface nsIWindowsShellService : nsIShellService
     void restoreFileSettings(in boolean aForAllUsers);
 
     /** 
-     * The desktop background color, visible when no background image is 
-     * used, or if the background image is centered and does not fill the 
-     * entire screen. A rgb value, where (r << 24 | g << 16 | b)
-     */
-    attribute unsigned long desktopBackgroundColor;
-
-    /** 
      * The number of unread mail messages for the current user.
      * 
      * @return The number of unread (new) mail messages for the current user.

@@ -55,10 +55,19 @@ endif
 SHARED_LIBRARY_LIBS = \
 	$(DIST)/lib/$(LIB_PREFIX)bookmarks_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)migration_s.$(LIB_SUFFIX) \
-  $(DIST)/lib/$(LIB_PREFIX)shellservice_s.$(LIB_SUFFIX) \
 	$(NULL)
 
+ifneq (,$(filter windows mac gtk2, $(MOZ_WIDGET_TOOLKIT)))
+SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)shellservice_s.$(LIB_SUFFIX)
+endif
+
+# Link to gkgfx for GNOME shell service
+ifeq ($(MOZ_WIDGET_TOOLKIT), gtk2)
+EXTRA_DSO_LIBS += gkgfx
+endif
+
 EXTRA_DSO_LDOPTS += \
+	$(LIBS_DIR) \
 	$(EXTRA_DSO_LIBS) \
 	$(MOZ_UNICHARUTIL_LIBS) \
 	$(MOZ_XPCOM_OBSOLETE_LIBS) \

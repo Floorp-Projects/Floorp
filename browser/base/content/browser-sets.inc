@@ -81,7 +81,7 @@
 
     <command id="Browser:SendLink" oncommand="MailIntegration.sendLinkForContent();"/>
     <command id="Browser:NewMessage" oncommand="MailIntegration.sendMessage('', '');"/>
-#ifdef XP_WIN
+#ifdef HAVE_SHELL_SERVICE
     <command id="Browser:ReadMail" oncommand="MailIntegration.readMail();"/>
     <command id="Browser:ReadNews" oncommand="MailIntegration.readNews();"/>
 #endif

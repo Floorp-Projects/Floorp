@@ -12,13 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Shell Service.
+ * The Original Code is the Mozilla GNOME integration code.
  *
- * The Initial Developer of the Original Code is mozilla.org.
+ * The Initial Developer of the Original Code is
+ * IBM Corporation.
  * Portions created by the Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Brian Ryner <bryner@brianryner.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,30 +36,21 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsgnomeshellservice_h____
-#define nsgnomeshellservice_h____
+#ifndef nsGnomeVFSService_h_
+#define nsGnomeVFSService_h_
 
-#include "nsIShellService.h"
-#include "nsString.h"
+#include "nsIGnomeVFSService.h"
 
-class nsGNOMEShellService : public nsIShellService
+#define NS_GNOMEVFSSERVICE_CID \
+{0x5f43022c, 0x6194, 0x4b37, {0xb2, 0x6d, 0xe4, 0x10, 0x24, 0x62, 0x52, 0x64}}
+
+class nsGnomeVFSService : public nsIGnomeVFSService
 {
 public:
-  nsGNOMEShellService() : mCheckedThisSession(PR_FALSE) { }
-
   NS_DECL_ISUPPORTS
-  NS_DECL_NSISHELLSERVICE
+  NS_DECL_NSIGNOMEVFSSERVICE
 
-  nsresult Init() NS_HIDDEN;
-
-private:
-  ~nsGNOMEShellService() {}
-
-  NS_HIDDEN_(PRBool) KeyMatchesAppName(const char *aKeyValue) const;
-
-  PRPackedBool mCheckedThisSession;
-  PRPackedBool mUseLocaleFilenames;
-  nsCString    mAppPath;
+  NS_HIDDEN_(nsresult) Init();
 };
 
-#endif // nsgnomeshellservice_h____
+#endif

@@ -51,10 +51,11 @@
         title="&setWallpaper.title;"
         style="width: 299px"> 
     
+    <script type="application/x-javascript" src="chrome://browser/content/utilityOverlay.js"/>
+
     <script type="application/x-javascript">
       <![CDATA[
         const xulNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-        const ISS = Components.interfaces.nsIShellService;
         var gMode = ISS.BACKGROUND_STRETCH;
         var gMonitor;
         var gWidth, gHeight;
@@ -77,10 +78,11 @@
         }       
         
        function onLoad() {
-          var shell = Components.classes["@mozilla.org/browser/shell-service;1"]
-                                .getService(Components.interfaces.nsIWindowsShellService);
+          var color = 0;
+          var shell = getShellService();
+          if (shell)
+            color = shell.desktopBackgroundColor;
           gMonitor = document.getElementById("monitor");
-          var color = shell.desktopBackgroundColor;
           const rMask = 4294901760;
           const gMask = 65280;
           const bMask = 255;
@@ -124,15 +126,16 @@
           
         function onAccept() {
           var pos = parseInt(document.getElementById("menuPosition").value);
-          var shell = Components.classes["@mozilla.org/browser/shell-service;1"]
-                                .getService(Components.interfaces.nsIWindowsShellService);
-          shell.setDesktopBackground(window.arguments[0], pos);
-          
           var colorpicker = document.getElementById("desktopColor");
           var r = HexToR(colorpicker.color);
           var g = HexToG(colorpicker.color);
           var b = HexToB(colorpicker.color);
-          shell.desktopBackgroundColor = (r << 16) | (g << 8) | b;
+
+          var shell = getShellService();
+          if (shell) {
+            shell.setDesktopBackground(window.arguments[0], pos);
+            shell.desktopBackgroundColor = (r << 16) | (g << 8) | b;
+          }
         }
         
         function updatePreviewColor(color) {

@@ -12,13 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Shell Service.
+ * The Original Code is the Mozilla GNOME integration code.
  *
- * The Initial Developer of the Original Code is mozilla.org.
+ * The Initial Developer of the Original Code is
+ * IBM Corporation.
  * Portions created by the Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Brian Ryner <bryner@brianryner.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,30 +36,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsgnomeshellservice_h____
-#define nsgnomeshellservice_h____
+#include "nsGConfService.h"
+#include "nsGnomeVFSService.h"
+#include "nsIGenericFactory.h"
 
-#include "nsIShellService.h"
-#include "nsString.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGConfService, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGnomeVFSService, Init)
 
-class nsGNOMEShellService : public nsIShellService
-{
-public:
-  nsGNOMEShellService() : mCheckedThisSession(PR_FALSE) { }
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSISHELLSERVICE
-
-  nsresult Init() NS_HIDDEN;
-
-private:
-  ~nsGNOMEShellService() {}
-
-  NS_HIDDEN_(PRBool) KeyMatchesAppName(const char *aKeyValue) const;
-
-  PRPackedBool mCheckedThisSession;
-  PRPackedBool mUseLocaleFilenames;
-  nsCString    mAppPath;
+static const nsModuleComponentInfo components[] = {
+  { "GConf Service",
+    NS_GCONFSERVICE_CID,
+    NS_GCONFSERVICE_CONTRACTID,
+    nsGConfServiceConstructor },
+  { "GnomeVFS Service",
+    NS_GNOMEVFSSERVICE_CID,
+    NS_GNOMEVFSSERVICE_CONTRACTID,
+    nsGnomeVFSServiceConstructor }
 };
 
-#endif // nsgnomeshellservice_h____
+NS_IMPL_NSGETMODULE(mozgnome, components)

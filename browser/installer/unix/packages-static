@@ -170,7 +170,9 @@ bin/components/xpinstall.xpt
 bin/components/xremoteservice.xpt
 bin/components/xuldoc.xpt
 bin/components/xultmpl.xpt
+bin/components/shellservice.xpt
 ; JavaScript components
+bin/components/nsSetDefaultBrowser.js
 bin/components/jsconsole-clhandler.js
 bin/components/nsCloseAllWindows.js
 bin/components/nsDictionary.js
@@ -191,12 +193,20 @@ bin/components/update.xpt
 ; Kerberos NegotiateAuth
 bin/components/libnegotiateauth.so
 
+; GNOME hooks
+bin/components/libmozgnome.so
+bin/components/mozgnome.xpt
+
 ; [Browser Chrome Files]
 bin/chrome/browser.jar
 bin/chrome/classic.jar
 bin/chrome/comm.jar
 bin/chrome/toolkit.jar
 bin/chrome/icons/default/default.xpm
+
+; shell icons
+bin/icons/*.xpm
+bin/icons/*.png
 
 ; [Default Preferences]
 ; All the pref files must be part of base to prevent migration bugs

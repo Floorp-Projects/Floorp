@@ -100,3 +100,14 @@ nsMacShellService::OpenPreferredApplication(PRInt32 aApplication)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsMacShellService::GetDesktopBackgroundColor(PRUint32 *aColor)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMacShellService::SetDesktopBackgroundColor(PRUint32 *aColor)
+{
+  return NS_OK;
+}

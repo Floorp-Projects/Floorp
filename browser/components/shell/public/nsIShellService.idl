@@ -103,5 +103,11 @@ interface nsIShellService : nsISupports
    */
   void openPreferredApplication(in long aApplication);
 
+  /** 
+   * The desktop background color, visible when no background image is 
+   * used, or if the background image is centered and does not fill the 
+   * entire screen. A rgb value, where (r << 16 | g << 8 | b)
+   */
+  attribute unsigned long desktopBackgroundColor;
 };
  

@@ -238,6 +238,10 @@ ifndef MOZ_XUL
 tier_9_dirs    += embedding/minimo/chromelite
 endif
 
+ifdef MOZ_ENABLE_GTK2
+tier_9_dirs    += toolkit/components/gnome
+endif
+
 #
 # tier 40 - security
 #

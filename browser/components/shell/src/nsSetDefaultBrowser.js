@@ -67,9 +67,15 @@ nsSetDefaultBrowser.prototype = {
     get prefNameForStartup()  { throw Components.results.NS_ERROR_NOT_IMPLEMENTED; },
 
     get chromeUrlForTask()    { 
-      // First, get winhooks service.
-      var shell = Components.classes["@mozilla.org/browser/shell-service;1"]
+      // First, get shell service
+      var shell;
+      try {
+        shell = Components.classes["@mozilla.org/browser/shell-service;1"]
                             .getService(Components.interfaces.nsIShellService);
+      } catch(e) { }
+      if (!shell)
+	throw Components.results.NS_ERROR_NOT_AVAILABLE;
+
       shell.setDefaultBrowser(true, true);
       
       // Now, get the cmd line service.

@@ -99,9 +99,8 @@ function onOK()
       homeButton.setAttribute("tooltiptext", parent.homepage);
   }
 
-  var shell = Components.classes["@mozilla.org/browser/shell-service;1"]
-                        .getService(Components.interfaces.nsIShellService);      
-  if ("shouldBeDefaultBrowser" in parent && parent.shouldBeDefautBrowser)
+  var shell = getShellService();
+  if (shell && "shouldBeDefaultBrowser" in parent && parent.shouldBeDefautBrowser)
     shell.setDefaultBrowser(true, false);
 }
 
@@ -119,7 +118,13 @@ function Startup()
     // prefwindow wasn't opened from a browser window, so no current page
     useButton.disabled = true;
   }
-    
+ 
+#ifdef MOZ_WIDGET_GTK2
+  var shell = getShellService();
+  if (!shell)
+    document.getElementById("defaultBrowserPrefs").hidden = true;
+#endif
+
   parent.hPrefWindow.registerOKCallbackFunc(onOK);
 }
       
@@ -211,9 +216,7 @@ function saveFontPrefs()
 #ifdef XP_WIN
 function checkNow()
 {
-  var shell = Components.classes["@mozilla.org/browser/shell-service;1"]
-                        .getService(Components.interfaces.nsIShellService);
-
+  var shell = getShellService();
   var brandBundle = document.getElementById("bundle_brand");
   var shellBundle = document.getElementById("bundle_shell");
   var brandShortName = brandBundle.getString("brandShortName");

@@ -356,3 +356,13 @@ function gatherTextUnder ( root )
   text = text.replace( /\s+/g, " " );
   return text;
 }
+
+function getShellService()
+{
+  var shell = null;
+  try {
+    shell = Components.classes["@mozilla.org/browser/shell-service;1"]
+      .getService(Components.interfaces.nsIShellService);
+  } catch (e) {}
+  return shell;
+}
