@@ -471,10 +471,10 @@ ifeq ($(GNU_CC)$(GNU_CXX),)
 EXTRA_DSO_LDOPTS += -Wl,-Bsymbolic
 ifneq ($(HAS_EXTRAEXPORTS),1)
 MKSHLIB  += -Wl,+eNSGetModule -Wl,+eerrno
-MKCSHLIB += -Wl,+eNSGetModule -Wl,+eerrno
+MKCSHLIB += +eNSGetModule +eerrno
 ifneq ($(OS_TEST),ia64)
 MKSHLIB  += -Wl,+e_shlInit
-MKCSHLIB += -Wl,+e_shlInit
+MKCSHLIB += +e_shlInit
 endif # !ia64
 endif # !HAS_EXTRAEXPORTS
 endif # non-gnu compilers
