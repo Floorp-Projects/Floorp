@@ -563,7 +563,9 @@ xpfe/components/search/resources/Makefile
 xpfe/components/search/public/Makefile
 xpfe/components/search/src/Makefile
 xpfe/components/sidebar/Makefile
+xpfe/components/sidebar/public/Makefile
 xpfe/components/sidebar/resources/Makefile
+xpfe/components/sidebar/src/Makefile
 xpfe/components/xfer/Makefile
 xpfe/components/xfer/public/Makefile
 xpfe/components/xfer/src/Makefile
