@@ -432,11 +432,11 @@
 <!ENTITY calendar.importoutlook.outlookendtime.label "終了時刻" >
 <!ENTITY calendar.importoutlook.outlooklocation.label "場所" >
 <!ENTITY calendar.importoutlook.outlookdescription.label "内容" >
-<!ENTITY calendar.importoutlook.outlookallday.label "終日ｲﾍﾞﾝﾄ" >
-<!ENTITY calendar.importoutlook.outlookprivate.label "ﾌﾟﾗｲﾍﾞｰﾄ" >
-<!ENTITY calendar.importoutlook.outlookalarm.label "ｱﾗｰﾑ ｵﾝ/ｵﾌ" >
-<!ENTITY calendar.importoutlook.outlookalarmdate.label "ｱﾗｰﾑ日付" >
-<!ENTITY calendar.importoutlook.outlookalarmtime.label "ｱﾗｰﾑ時刻" >
+<!ENTITY calendar.importoutlook.outlookallday.label "終日イベント" >
+<!ENTITY calendar.importoutlook.outlookprivate.label "プライベート" >
+<!ENTITY calendar.importoutlook.outlookalarm.label "アラーム オン/オフ" >
+<!ENTITY calendar.importoutlook.outlookalarmdate.label "アラーム日付" >
+<!ENTITY calendar.importoutlook.outlookalarmtime.label "アラーム時刻" >
 <!ENTITY calendar.importoutlook.outlookcategories.label "分類" >
 <!ENTITY calendar.importoutlook.selectmeaning.label "方法を選択してください: " >
 <!ENTITY calendar.importoutlook.true.label "有効" >
