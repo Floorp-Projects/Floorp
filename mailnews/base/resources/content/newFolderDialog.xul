@@ -34,7 +34,6 @@
         title="&newFolderDialog.title;"
         align="vertical"
         class="dialog"
-        width="200" height="180"
         onload="onLoad();">
 
   <stringbundleset id="stringbundleset"/>
