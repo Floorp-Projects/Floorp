@@ -77,7 +77,8 @@
 #include "nsTimer.h"
 #include "nsIBaseWindow.h"
 #include "nsIDocShell.h"
-#include "nsIDocShellContainer.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIDocShellTreeNode.h"
 #include "nsCURILoader.h"
 
 #include "nsILocaleService.h"
@@ -168,8 +169,9 @@ class nsWebShell : public nsIWebShell,
                    public nsIClipboardCommands,
                    public nsIInterfaceRequestor,
                    public nsIBaseWindow,
-                   public nsIDocShell, 
-                   public nsIDocShellContainer,
+                   public nsIDocShell,
+                   public nsIDocShellTreeItem, 
+                   public nsIDocShellTreeNode,
                    public nsIScriptGlobalObjectOwner
 {
 public:
@@ -372,8 +374,11 @@ public:
   // nsIDocShell
   NS_DECL_NSIDOCSHELL
 
-  // nsIDocShellContainer
-  NS_DECL_NSIDOCSHELLCONTAINER
+  // nsIDocShellTreeItem
+  NS_DECL_NSIDOCSHELLTREEITEM
+
+  // nsIDocShellTreeNode
+  NS_DECL_NSIDOCSHELLTREENODE
 
   // nsWebShell
   nsIEventQueue* GetEventQueue(void);
@@ -422,7 +427,7 @@ protected:
   nsIDocumentLoader* mDocLoader;
   nsIDocumentLoaderObserver* mDocLoaderObserver;
 
-  nsCOMPtr<nsIDocShell> mParent;
+  nsIDocShellTreeItem*     mParent;
   nsVoidArray mChildren;
   nsString mName;
   nsString mDefaultCharacterSet;
@@ -642,6 +647,7 @@ nsWebShell::nsWebShell()
   mHistoryService = nsnull;
   mHistoryState = nsnull;
   mParentContentListener = nsnull;
+  mParent = nsnull;
 }
 
 nsWebShell::~nsWebShell()
@@ -728,7 +734,7 @@ nsWebShell::ReleaseChildren()
 {
   PRInt32 i, n = mChildren.Count();
   for (i = 0; i < n; i++) {
-    nsCOMPtr<nsIDocShell> shell = (nsIDocShell*) mChildren.ElementAt(i);
+    nsCOMPtr<nsIDocShellTreeItem> shell = dont_AddRef((nsIDocShellTreeItem*)mChildren.ElementAt(i));
     shell->SetParent(nsnull);
 
     //Break circular reference of webshell to contentviewer
@@ -743,7 +749,7 @@ nsWebShell::DestroyChildren()
 {
   PRInt32 i, n = mChildren.Count();
   for (i = 0; i < n; i++) {
-    nsIDocShell * shell = (nsIDocShell*) mChildren.ElementAt(i);
+    nsIDocShellTreeItem * shell = (nsIDocShellTreeItem*) mChildren.ElementAt(i);
     shell->SetParent(nsnull);
     nsCOMPtr<nsIBaseWindow> shellWin(do_QueryInterface(shell));
     shellWin->Destroy();
@@ -774,7 +780,8 @@ NS_INTERFACE_MAP_BEGIN(nsWebShell)
    NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
    NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
    NS_INTERFACE_MAP_ENTRY(nsIDocShell)
-   NS_INTERFACE_MAP_ENTRY(nsIDocShellContainer)
+   NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeItem)
+   NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeNode)
 NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
@@ -1321,7 +1328,9 @@ nsWebShell::GetRootWebShellEvenIfChrome(nsIWebShell** aResult)
 NS_IMETHODIMP
 nsWebShell::SetParent(nsIWebShell* aParent)
 {
-   mParent = do_QueryInterface(aParent);
+   nsCOMPtr<nsIDocShellTreeItem> parentAsTreeItem(do_QueryInterface(aParent));
+
+   mParent = parentAsTreeItem.get();
    return NS_OK;
 }
 
@@ -1376,22 +1385,22 @@ nsWebShell::AddChild(nsIWebShell* aChild)
 {
    NS_ENSURE_ARG(aChild);
 
-   nsCOMPtr<nsIDocShell> docShellChild(do_QueryInterface(aChild));
-   return AddChild(docShellChild);
+   nsCOMPtr<nsIDocShellTreeItem> treeItemChild(do_QueryInterface(aChild));
+   return AddChild(treeItemChild);
 }
 
 NS_IMETHODIMP
 nsWebShell::RemoveChild(nsIWebShell* aChild)
 {
    NS_ENSURE_ARG(aChild);
-   nsCOMPtr<nsIDocShell> docShellChild(do_QueryInterface(aChild));
-   return RemoveChild(docShellChild);
+   nsCOMPtr<nsIDocShellTreeItem> treeItemChild(do_QueryInterface(aChild));
+   return RemoveChild(treeItemChild);
 }
 
 NS_IMETHODIMP
 nsWebShell::ChildAt(PRInt32 aIndex, nsIWebShell*& aResult)
 {
-   nsCOMPtr<nsIDocShell> child;
+   nsCOMPtr<nsIDocShellTreeItem> child;
 
    NS_ENSURE_SUCCESS(GetChildAt(aIndex, getter_AddRefs(child)),
       NS_ERROR_FAILURE);
@@ -1442,33 +1451,13 @@ NS_IMETHODIMP
 nsWebShell::FindChildWithName(const PRUnichar* aName1,
                               nsIWebShell*& aResult)
 {
-  aResult = nsnull;
-  nsString aName(aName1);
+   nsCOMPtr<nsIDocShellTreeItem> treeItem;
 
-  nsXPIDLString   childName;
-  PRInt32 i, n = mChildren.Count();
-  for (i = 0; i < n; i++) {
-    nsIDocShell* child = (nsIDocShell*) mChildren.ElementAt(i);
-    nsCOMPtr<nsIWebShell> webShellChild(do_QueryInterface(child));
-    if (nsnull != child) {
-      child->GetName(getter_Copies(childName));
-      if (aName.Equals(childName)) {
-        aResult = webShellChild;
-        NS_ADDREF(aResult);
-        break;
-      }
+   NS_ENSURE_SUCCESS(FindChildWithName(aName1, getter_AddRefs(treeItem)),
+      NS_ERROR_FAILURE);
+   CallQueryInterface(treeItem.get(), &aResult);
 
-      // See if child contains the shell with the given name
-      nsresult rv = webShellChild->FindChildWithName(aName.GetUnicode(), aResult);
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-      if (nsnull != aResult) {
-        break;
-      }
-    }
-  }
-  return NS_OK;
+   return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -4214,18 +4203,6 @@ NS_IMETHODIMP nsWebShell::SetDocument(nsIDOMDocument *aDOMDoc,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWebShell::GetName(PRUnichar** aName)
-{
-  *aName = mName.ToNewUnicode(); 
-  return NS_OK; 
-}
-
-NS_IMETHODIMP nsWebShell::SetName(const PRUnichar* aName)
-{
-  mName = aName;
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsWebShell::GetPresContext(nsIPresContext** aPresContext)
 {
    NS_ENSURE_ARG_POINTER(aPresContext);
@@ -4248,38 +4225,6 @@ NS_IMETHODIMP nsWebShell::GetContentViewer(nsIContentViewer** aContentViewer)
 
    *aContentViewer = mContentViewer;
    NS_IF_ADDREF(*aContentViewer);
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsWebShell::GetParent(nsIDocShell** parent)
-{
-   NS_ENSURE_ARG_POINTER(parent);
-   
-   *parent = mParent;
-   NS_IF_ADDREF(*parent);
-
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsWebShell::SetParent(nsIDocShell* aParent)
-{
-   mParent = aParent;
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsWebShell::GetTreeOwner(nsIDocShellTreeOwner** aTreeOwner)
-{
-   NS_ENSURE_ARG_POINTER(aTreeOwner);
-
-   //XXXIMPL
-   NS_WARN_IF_FALSE(PR_FALSE, "Not Implemented!");
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsWebShell::SetTreeOwner(nsIDocShellTreeOwner* aTreeOwner)
-{
-   //XXXIMPL
-   NS_WARN_IF_FALSE(PR_FALSE, "Not Implemented!");
    return NS_OK;
 }
 
@@ -4321,22 +4266,6 @@ NS_IMETHODIMP nsWebShell::SetPrefs(nsIPref* aPrefs)
   NS_IF_RELEASE(mPrefs);
   mPrefs = aPrefs;
   NS_IF_ADDREF(mPrefs);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsWebShell::GetRootDocShell(nsIDocShell** aRootDocShell)
-{
-  NS_ENSURE_ARG_POINTER(aRootDocShell);
-  *aRootDocShell = NS_STATIC_CAST(nsIDocShell*, this);
-
-  nsCOMPtr<nsIDocShell> parent;
-  NS_ENSURE_TRUE(GetParent(getter_AddRefs(parent)), NS_ERROR_FAILURE);
-  while (parent)
-  {
-    *aRootDocShell = parent;
-    NS_ENSURE_TRUE(GetParent(getter_AddRefs(parent)), NS_ERROR_FAILURE);
-  }
-  NS_IF_ADDREF(*aRootDocShell);
   return NS_OK;
 }
 
@@ -4440,7 +4369,86 @@ nsWebShell::SetMarginHeight(PRInt32 aHeight)
 }
 
 //*****************************************************************************
-// nsWebShell::nsIDocShellContainer
+// nsWebShell::nsIDocShellTreeItem
+//*****************************************************************************   
+
+NS_IMETHODIMP nsWebShell::GetName(PRUnichar** aName)
+{
+   NS_ENSURE_ARG_POINTER(aName);
+   *aName = nsnull;
+   if(0 != mName.Length())
+      *aName = mName.ToNewUnicode();
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsWebShell::SetName(const PRUnichar* aName)
+{
+  if (aName) {
+    mName = aName;  // this does a copy of aName
+  }
+  else {
+    mName = "";
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsWebShell::GetParent(nsIDocShellTreeItem** parent)
+{
+   NS_ENSURE_ARG_POINTER(parent);
+
+   *parent = mParent;
+   NS_IF_ADDREF(*parent);
+
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsWebShell::SetParent(nsIDocShellTreeItem* aParent)
+{
+  // null aParent is ok
+   /*
+   Note this doesn't do an addref on purpose.  This is because the parent
+   is an implied lifetime.  We don't want to create a cycle by refcounting
+   the parent.
+   */
+   mParent = aParent;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsWebShell::GetRootTreeItem(nsIDocShellTreeItem** aRootTreeItem)
+{
+  NS_ENSURE_ARG_POINTER(aRootTreeItem);
+  *aRootTreeItem = NS_STATIC_CAST(nsIDocShellTreeItem*, this);
+
+  nsCOMPtr<nsIDocShellTreeItem> parent;
+  NS_ENSURE_TRUE(GetParent(getter_AddRefs(parent)), NS_ERROR_FAILURE);
+  while (parent)
+  {
+    *aRootTreeItem = parent;
+    NS_ENSURE_TRUE(parent->GetParent(getter_AddRefs(parent)), NS_ERROR_FAILURE);
+  }
+  NS_IF_ADDREF(*aRootTreeItem);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsWebShell::GetTreeOwner(nsIDocShellTreeOwner** aTreeOwner)
+{
+   NS_ENSURE_ARG_POINTER(aTreeOwner);
+
+   //XXXIMPL Implement this!
+   NS_WARN_IF_FALSE(PR_FALSE, "Not Implemented");
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsWebShell::SetTreeOwner(nsIDocShellTreeOwner* aTreeOwner)
+{
+   //XXXIMPL Implement this!
+   NS_WARN_IF_FALSE(PR_FALSE, "Not Implemented");
+
+   return NS_OK;
+}
+
+//*****************************************************************************
+// nsWebShell::nsIDocShellTreeNode
 //*****************************************************************************   
 
 NS_IMETHODIMP nsWebShell::GetChildCount(PRInt32 *aChildCount)
@@ -4450,105 +4458,104 @@ NS_IMETHODIMP nsWebShell::GetChildCount(PRInt32 *aChildCount)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWebShell::AddChild(nsIDocShell *aChild)
+NS_IMETHODIMP nsWebShell::AddChild(nsIDocShellTreeItem *aChild)
 {
-  NS_ENSURE_ARG_POINTER(aChild);
+   NS_ENSURE_ARG_POINTER(aChild);
 
-  NS_ENSURE_SUCCESS(aChild->SetParent(this), NS_ERROR_FAILURE);
-  mChildren.AppendElement(aChild);
-  NS_ADDREF(aChild);
+   NS_ENSURE_SUCCESS(aChild->SetParent(this), NS_ERROR_FAILURE);
+   mChildren.AppendElement(aChild);
+   NS_ADDREF(aChild);
 
-  PRUnichar *defaultCharset=nsnull;
-  PRUnichar *forceCharset=nsnull;
-  nsCOMPtr<nsIContentViewer> cv;
-  NS_ENSURE_SUCCESS(GetContentViewer(getter_AddRefs(cv)), NS_ERROR_FAILURE);
-  if (cv)
-  {
-    nsCOMPtr<nsIMarkupDocumentViewer> muDV = do_QueryInterface(cv);
-    if (muDV)
-    {
+   nsCOMPtr<nsIDocShell> childAsDocShell(do_QueryInterface(aChild));
+   if(!childAsDocShell)
+      return NS_OK;
+
+   // Do some docShell Specific stuff.
+   PRUnichar *defaultCharset=nsnull;
+   PRUnichar *forceCharset=nsnull;
+   NS_ENSURE_TRUE(mContentViewer, NS_ERROR_FAILURE);
+
+   nsCOMPtr<nsIMarkupDocumentViewer> muDV = do_QueryInterface(mContentViewer);
+   if(muDV)
+      {
       NS_ENSURE_SUCCESS(muDV->GetDefaultCharacterSet (&defaultCharset), NS_ERROR_FAILURE);
       NS_ENSURE_SUCCESS(muDV->GetForceCharacterSet (&forceCharset), NS_ERROR_FAILURE);
-    }
-    nsCOMPtr<nsIContentViewer> childCV;
-    NS_ENSURE_SUCCESS(aChild->GetContentViewer(getter_AddRefs(childCV)), NS_ERROR_FAILURE);
-    if (childCV)
-    {
-      nsCOMPtr<nsIMarkupDocumentViewer> childmuDV = do_QueryInterface(cv);
-      if (childmuDV)
-      {
-        NS_ENSURE_SUCCESS(childmuDV->SetDefaultCharacterSet(defaultCharset), NS_ERROR_FAILURE);
-        NS_ENSURE_SUCCESS(childmuDV->SetForceCharacterSet(forceCharset), NS_ERROR_FAILURE);
       }
-    }
-    if (defaultCharset) {
-      Recycle(defaultCharset);
-    }
-    if (forceCharset) {
-      Recycle(forceCharset);
-    }
-  }
+   nsCOMPtr<nsIContentViewer> childCV;
+   NS_ENSURE_SUCCESS(childAsDocShell->GetContentViewer(getter_AddRefs(childCV)),
+      NS_ERROR_FAILURE);
+   if(childCV)
+      {
+      nsCOMPtr<nsIMarkupDocumentViewer> childmuDV = do_QueryInterface(childCV);
+      if(childmuDV)
+         {
+         NS_ENSURE_SUCCESS(childmuDV->SetDefaultCharacterSet(defaultCharset), 
+            NS_ERROR_FAILURE);
+         NS_ENSURE_SUCCESS(childmuDV->SetForceCharacterSet(forceCharset), 
+            NS_ERROR_FAILURE);
+         }
+      }
 
   return NS_OK;
 }
 
-// tiny semantic change from webshell.  aChild is only effected if it was actually a child of this docshell
-NS_IMETHODIMP nsWebShell::RemoveChild(nsIDocShell *aChild)
+NS_IMETHODIMP nsWebShell::RemoveChild(nsIDocShellTreeItem *aChild)
 {
-  NS_ENSURE_ARG_POINTER(aChild);
+   NS_ENSURE_ARG_POINTER(aChild);
 
-  PRBool childRemoved = mChildren.RemoveElement(aChild);
-  if (PR_TRUE==childRemoved)
-  {
-    NS_ENSURE_SUCCESS(aChild->SetParent(nsnull), NS_ERROR_FAILURE);
-    NS_RELEASE(aChild);
-  }
-  return NS_OK;
+   if(mChildren.RemoveElement(aChild))
+      {
+      NS_ENSURE_SUCCESS(aChild->SetParent(nsnull), NS_ERROR_FAILURE);
+      NS_RELEASE(aChild);
+      }
+   else
+      NS_ENSURE_TRUE(PR_FALSE, NS_ERROR_INVALID_ARG);
+
+   return NS_OK;
 }
 
-NS_IMETHODIMP nsWebShell::GetChildAt(PRInt32 aIndex, nsIDocShell** aDocShell)
+NS_IMETHODIMP nsWebShell::GetChildAt(PRInt32 aIndex, nsIDocShellTreeItem** aChild)
 {
-   NS_ENSURE_ARG_POINTER(aDocShell);
+   NS_ENSURE_ARG_POINTER(aChild);
    NS_ENSURE_ARG_RANGE(aIndex, 0, mChildren.Count() - 1);
 
-   *aDocShell = (nsIDocShell*) mChildren.ElementAt(aIndex);
-   NS_IF_ADDREF(*aDocShell);
+   *aChild = (nsIDocShellTreeItem*) mChildren.ElementAt(aIndex);
+   NS_IF_ADDREF(*aChild);
 
    return NS_OK;
 }
 
 /* depth-first search for a child shell with aName */
-NS_IMETHODIMP nsWebShell::FindChildWithName(const PRUnichar *aName, nsIDocShell **_retval)
+NS_IMETHODIMP nsWebShell::FindChildWithName(const PRUnichar *aName, nsIDocShellTreeItem **_retval)
 {
-  NS_ENSURE_ARG(aName);
-  NS_ENSURE_ARG_POINTER(_retval);
+   NS_ENSURE_ARG(aName);
+   NS_ENSURE_ARG_POINTER(_retval);
   
-  *_retval = nsnull;  // if we don't find one, we return NS_OK and a null result 
-  nsAutoString name(aName);
-  PRUnichar *childName;
-  PRInt32 i, n = mChildren.Count();
-  for (i = 0; i < n; i++) 
-  {
-    nsIDocShell* child = (nsIDocShell*) mChildren.ElementAt(i); // doesn't addref the result
-    if (nsnull != child) {
+   *_retval = nsnull;  // if we don't find one, we return NS_OK and a null result 
+   nsAutoString name(aName);
+   PRUnichar *childName;
+   PRInt32 i, n = mChildren.Count();
+   for (i = 0; i < n; i++) 
+      {
+      nsIDocShellTreeItem* child = (nsIDocShellTreeItem*) mChildren.ElementAt(i); // doesn't addref the result
+      NS_ENSURE_TRUE(child, NS_ERROR_FAILURE);
       child->GetName(&childName);
-      if (name.Equals(childName)) {
-        *_retval = child;
-        NS_ADDREF(child);
-        break;
-      }
+      if(name.Equals(childName))
+         {
+         *_retval = child;
+         NS_ADDREF(child);
+         break;
+         }
 
       // See if child contains the shell with the given name
-      nsCOMPtr<nsIDocShellContainer> childAsContainer = do_QueryInterface(child);
-      if (child)
-      {
-        NS_ENSURE_SUCCESS(childAsContainer->FindChildWithName(name.GetUnicode(), _retval), NS_ERROR_FAILURE);
+      nsCOMPtr<nsIDocShellTreeNode> childAsNode = do_QueryInterface(child);
+      if(child)
+         {
+         NS_ENSURE_SUCCESS(childAsNode->FindChildWithName(name.GetUnicode(), _retval), NS_ERROR_FAILURE);
+         }
+      if (*_retval)   // found it
+         break;
       }
-      if (*_retval) {  // found it
-        break;
-      }
-    }
-  }
   return NS_OK;
 }
 
