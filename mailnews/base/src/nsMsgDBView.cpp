@@ -1912,7 +1912,10 @@ FnSortIdPRTime(const void *pItem1, const void *pItem2, void *privateData)
         return(-1);
 }
 
-// XXX are these still correct? 
+// XXX are these still correct?
+//To compensate for memory alignment required for
+//systems such as HP-UX these values must be 4 bytes
+//aligned.  Don't break this when modify the constants
 const int kMaxSubjectKey = 160;
 const int kMaxLocationKey = 160;
 const int kMaxAuthorKey = 160;
@@ -2322,6 +2325,17 @@ NS_IMETHODIMP nsMsgDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgViewSortOr
       else {
         *pTemp = 0;
       }
+      //In order to align memory for systems that require it, such as HP-UX
+      //calculate the correct value to pad the bytesToCopy value
+      PRInt32 bytesToPad = sizeof(PRInt32) - (bytesToCopy & 0x00000003);
+
+      //if bytesToPad is not 4 then alignment is needed so add the padding
+      //otherwise memory is already aligned - no need to add padding
+      if (bytesToPad != sizeof(PRInt32)) {
+        //Add the necessary padding to bytesToCopy
+        bytesToCopy += bytesToPad; 
+      }
+
       pTemp += bytesToCopy;
       ++numSoFar;
       PR_FREEIF(keyValue);
