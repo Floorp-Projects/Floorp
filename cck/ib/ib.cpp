@@ -1091,6 +1091,7 @@ CString GetBrowser(void)
 	return retflag;
 }
 
+extern "C" __declspec(dllexport)
 void EraseDirectory(CString sPath)
 {
 	CFileFind finder;
