@@ -490,7 +490,7 @@ PRBool nsCellMap::RowIsSpannedInto(PRInt32 aRowIndex) const
 		CellData* cd = GetCellAt(aRowIndex, colIndex);
 		if (cd) { // there's really a cell at (aRowIndex, colIndex)
 			if (!cd->mOrigCell) { // the cell at (aRowIndex, colIndex) is the result of a span
-				if (nsnull != cd->mRowSpanData->mOrigCell)
+				if (cd->mRowSpanData && cd->mRowSpanData->mOrigCell)
           return PR_TRUE;
 			}
 		}
@@ -525,7 +525,7 @@ PRBool nsCellMap::ColIsSpannedInto(PRInt32 aColIndex) const
 		CellData* cd = GetCellAt(rowIndex, aColIndex);
 		if (cd) { // there's really a cell at (aRowIndex, colIndex)
 			if (!cd->mOrigCell) { // the cell at (aRowIndex, colIndex) is the result of a span
-				if (nsnull != cd->mColSpanData->mOrigCell)
+				if (cd->mColSpanData && cd->mColSpanData->mOrigCell)
           return PR_TRUE;
 			}
 		}
