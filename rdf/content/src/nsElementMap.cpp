@@ -172,9 +172,9 @@ nsElementMap::Remove(const nsString& aID, nsIContent* aContent)
     // XXX Don't comment out this assert: if you get here, something
     // has gone dreadfully, horribly wrong. Curse. Scream. File a bug
     // against waterson@netscape.com.
-    NS_ASSERTION(hep != nsnull && *hep != nsnull, "attempt to remove an element that was never added");
+    //NS_ASSERTION(hep != nsnull && *hep != nsnull, "attempt to remove an element that was never added");
     if (!hep || !*hep)
-        return NS_ERROR_ILLEGAL_VALUE;
+        return NS_OK;
 
     ContentListItem* head = NS_REINTERPRET_CAST(ContentListItem*, (*hep)->value);
 
