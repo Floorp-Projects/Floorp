@@ -335,7 +335,7 @@
                   <menuitem label="&mailButton.readMail.label;" 
                                    id="readMailItem"
                                    accesskey="&mailButton.readMail.accesskey;"
-                                   command="Browser:ReadMail"/>
+                                   key="key_newMessage" command="Browser:ReadMail"/>
                   <menuitem label="&mailButton.newMessage.label;" 
                                    accesskey="&mailButton.newMessage.accesskey;"
                                    command="Browser:NewMessage"/>
