@@ -52,22 +52,27 @@ nsCCertPrincipal::IsTrusted(char* scope, PRBool *pbIsTrusted)
 /**
  * returns the certificate's data that is passes in via Initialize method.
  *
- * @param certByteData     - The ceritificate's byte array data including the chain.
- * @param certByteDataSize - the length of certificate byte array.
+ * @param certChain        - An array of pointers, with each pointer 
+ *                           pointing to a certificate data.
+ * @param certChainLengths  - An array of intergers. Each integer indicates 
+ *                            the length of the cert that is in CertChain 
+ *                             parametr.
+ * @param noOfCerts - the number of certifcates that are in the certChain array
  */
 NS_METHOD
-nsCCertPrincipal::GetCertData(unsigned char **certByteData, PRUint32 *certByteDataSize)
+nsCCertPrincipal::GetCertData(const unsigned char ***certChain, 
+                              PRUint32 **certChainLengths, 
+                              PRUint32 *noOfCerts)
 {
-   if(m_pNSPrincipal == NULL)
-   {
-      *certByteData     = NULL;
-      *certByteDataSize = 0;
-      return NS_ERROR_ILLEGAL_VALUE;
-   }
-	  *certByteData     = (unsigned char *)m_pNSPrincipal->getKey();
-  	*certByteDataSize = m_pNSPrincipal->getKeyLength();
-
-   return NS_OK;
+    *certChain     = NULL;
+    *certChainLengths = 0;
+    *noOfCerts = 0;
+    if (m_pNSPrincipal == NULL)
+    {
+        return NS_ERROR_ILLEGAL_VALUE;
+    }
+    /* XXX: Raman fix it. Return the correct data */
+    return NS_OK;
 }
 
 /**
@@ -80,7 +85,7 @@ nsCCertPrincipal::GetCertData(unsigned char **certByteData, PRUint32 *certByteDa
 NS_METHOD
 nsCCertPrincipal::GetPublicKey(unsigned char **publicKey, PRUint32 *publicKeySize)
 {
-   // =-= sudu/raman: fix it.
+   // XXX raman: fix it.
    PR_ASSERT(PR_FALSE);
    return NS_OK;
 }
@@ -173,10 +178,13 @@ nsCCertPrincipal::GetFingerPrint(const char **ppFingerPrint)
 ////////////////////////////////////////////////////////////////////////////
 // from nsCCertPrincipal:
 
-nsCCertPrincipal::nsCCertPrincipal(const unsigned char *certByteData, PRUint32 certByteDataSize, nsresult *result)
+nsCCertPrincipal::nsCCertPrincipal(const unsigned char **certChain, 
+                                   PRUint32 *certChainLengths, 
+                                   PRUint32 noOfCerts, 
+                                   nsresult *result)
 {
-   // XXX raman fix the error condition.
-   m_pNSPrincipal = new nsPrincipal(nsPrincipalType_Cert, (void *)certByteData, certByteDataSize);
+   m_pNSPrincipal = new nsPrincipal(nsPrincipalType_Cert, certChain, 
+                                    certChainLengths, noOfCerts);
    if(m_pNSPrincipal == NULL)
    {
       *result = NS_ERROR_OUT_OF_MEMORY;

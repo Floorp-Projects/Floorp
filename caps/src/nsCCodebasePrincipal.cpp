@@ -68,10 +68,12 @@ nsCCodebasePrincipal::GetURL(const char **ppCodeBaseURL)
 ////////////////////////////////////////////////////////////////////////////
 // from nsCCodebasePrincipal:
 
-nsCCodebasePrincipal::nsCCodebasePrincipal(const char *codebaseURL, nsresult *result)
+nsCCodebasePrincipal::nsCCodebasePrincipal(const char *codebaseURL, 
+                                           nsresult *result)
 {
-   // XXX raman fix the error condition.
-   m_pNSPrincipal = new nsPrincipal(nsPrincipalType_CodebaseExact, (void *)codebaseURL, XP_STRLEN(codebaseURL));
+   m_pNSPrincipal = new nsPrincipal(nsPrincipalType_CodebaseExact, 
+                                    (void *)codebaseURL, 
+                                    XP_STRLEN(codebaseURL));
    if(m_pNSPrincipal == NULL)
    {
       *result = NS_ERROR_OUT_OF_MEMORY;

@@ -42,11 +42,15 @@ public:
     /**
      * returns the certificate's data that is passes in via Initialize method.
      *
-     * @param certByteData     - The ceritificate's byte array data including the chain.
-     * @param certByteDataSize - the length of certificate byte array.
+     * @param certChain        - An array of pointers, with each pointer 
+     *                           pointing to a certificate data.
+     * @param certChainLengths  - An array of intergers. Each integer indicates 
+     *                            the length of the cert that is in CertChain 
+     *                             parametr.
+     * @param noOfCerts - the number of certifcates that are in the certChain array
      */
     NS_IMETHOD
-    GetCertData(unsigned char **certByteData, PRUint32 *certByteDataSize);
+    GetCertData(const unsigned char ***certChain, PRUint32 **certChainLengths, PRUint32 *noOfCerts);
 
     /**
      * Returns the public key of the certificate.
@@ -108,7 +112,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     // from nsCCodeSourcePrincipal:
-    nsCCodeSourcePrincipal(const unsigned char *certByteData, PRUint32 certByteDataSize, const char *codebaseURL, nsresult *result);
+    nsCCodeSourcePrincipal(const unsigned char **certChain, PRUint32 *certChainLengths, PRUint32 noOfCerts, const char *codebaseURL, nsresult *result);
     virtual ~nsCCodeSourcePrincipal(void);
 
 protected:
