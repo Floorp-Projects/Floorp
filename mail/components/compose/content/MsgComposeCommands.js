@@ -2768,12 +2768,15 @@ var envelopeDragObserver = {
 
   onDragOver: function (aEvent, aFlavour, aDragSession)
     {
-      // make sure the attachment box is visible during drag over
-      var attachmentBox = document.getElementById("attachments-box");
-      if (attachmentBox.hidden)
+      if (aFlavour.contentType != "text/x-moz-address")
       {
-        attachmentBox.hidden = false;
-        document.getElementById("attachmentbucket-sizer").hidden=false;
+        // make sure the attachment box is visible during drag over
+        var attachmentBox = document.getElementById("attachments-box");
+        if (attachmentBox.hidden)
+        {
+          attachmentBox.hidden = false;
+          document.getElementById("attachmentbucket-sizer").hidden=false;
+        }
       }
     },
 
