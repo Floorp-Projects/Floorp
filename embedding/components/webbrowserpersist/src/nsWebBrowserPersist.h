@@ -136,6 +136,7 @@ private:
     PRBool                    mCurrentDataPathIsRelative;
     nsCString                 mCurrentRelativePathToData;
     nsCOMPtr<nsIURI>          mCurrentBaseURI;
+    PRUint32                  mCurrentThingsToPersist;
 
     nsCOMPtr<nsIMIMEService>  mMIMEService;
     nsCOMPtr<nsIURI>          mURI;

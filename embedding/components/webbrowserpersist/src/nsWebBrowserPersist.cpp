@@ -126,7 +126,8 @@ nsWebBrowserPersist::nsWebBrowserPersist() :
     mPersistResult(NS_OK),
     mReplaceExisting(PR_TRUE),
     mEncodingFlags(0),
-    mWrapColumn(72)
+    mWrapColumn(72),
+    mCurrentThingsToPersist(0)
 {
     NS_INIT_REFCNT();
 }
@@ -793,31 +794,15 @@ nsresult nsWebBrowserPersist::SaveDocumentInternal(
         // 4. After URI persistence completes save the list of documents,
         //    fixing it up as it goes out to file.
 
-        if (localDataPath)
-        {
-            localDataPath->Create(nsILocalFile::DIRECTORY_TYPE, 0755);
-            PRBool exists = PR_FALSE;
-            PRBool isDirectory = PR_FALSE;
-            localDataPath->Exists(&exists);
-            localDataPath->IsDirectory(&isDirectory);
-            if (!exists || !isDirectory)
-            {
-                EndDownload(NS_ERROR_FAILURE);
-                mCurrentBaseURI = oldBaseURI;
-                return NS_ERROR_FAILURE;
-            }
-        }
-
-        // Test if the data path is relative to the base directory -
-        // the one that the document is saved into.
-        
         nsCOMPtr<nsIURI> oldDataPath = mCurrentDataPath;
         PRBool oldDataPathIsRelative = mCurrentDataPathIsRelative;
         nsCString oldCurrentRelativePathToData = mCurrentRelativePathToData;
+        PRUint32 oldThingsToPersist = mCurrentThingsToPersist;
 
         mCurrentDataPathIsRelative = PR_FALSE;
         mCurrentDataPath = aDataPath;
         mCurrentRelativePathToData = "";
+        mCurrentThingsToPersist = 0;
 
         // Determine if the specified data path is relative to the
         // specified file, (e.g. c:\docs\htmldata is relative to
@@ -877,6 +862,26 @@ nsresult nsWebBrowserPersist::SaveDocumentInternal(
         nsDOMWalker walker;
         walker.WalkDOM(docAsNode, this);
 
+        // If there are things to persist, create a directory to hold them
+        if (mCurrentThingsToPersist > 0)
+        {
+            if (localDataPath)
+            {
+                localDataPath->Create(nsILocalFile::DIRECTORY_TYPE, 0755);
+                PRBool exists = PR_FALSE;
+                PRBool isDirectory = PR_FALSE;
+                localDataPath->Exists(&exists);
+                localDataPath->IsDirectory(&isDirectory);
+                if (!exists || !isDirectory)
+                {
+                    EndDownload(NS_ERROR_FAILURE);
+                    mCurrentBaseURI = oldBaseURI;
+                    return NS_ERROR_FAILURE;
+                }
+            }
+        }
+
+        mCurrentThingsToPersist = oldThingsToPersist;
         mCurrentDataPath = oldDataPath;
         mCurrentDataPathIsRelative = oldDataPathIsRelative;
         mCurrentRelativePathToData = oldCurrentRelativePathToData;
@@ -1715,6 +1720,7 @@ nsWebBrowserPersist::SaveSubframeContent(
     rv = AppendPathToURI(frameDataURI, newFrameDataPath);
     NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
+    mCurrentThingsToPersist++;
     SaveDocumentInternal(aFrameContent, frameURI, frameDataURI);
 
     return NS_OK;
@@ -1833,6 +1839,9 @@ nsWebBrowserPersist::MakeAndStoreLocalFilenameInURIMap(
     data->mDataPath = mCurrentDataPath;
     data->mDataPathIsRelative = mCurrentDataPathIsRelative;
     data->mRelativePathToData = mCurrentRelativePathToData;
+
+    if (aNeedsPersisting)
+        mCurrentThingsToPersist++;
 
     mURIMap.Put(&key, data);
     if (aData)
