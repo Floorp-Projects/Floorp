@@ -136,28 +136,170 @@ PRIVATE int16 utf8ShiftT[] = {
 /* for those font csid, it do not shift GR/GL */
 PRIVATE	int16*	npcShiftTable[MAXCSIDINTBL] =
 {
-	sbShiftT,	sbShiftT,	sbShiftT,	0,				sjisShiftT,	0,			sbShiftT,	big5ShiftT,	
-	tbGRShiftT,	0,			sbShiftT,	sbShiftT,		tbKSCShiftT,	0,			sbShiftT,	sbShiftT,
-	sbShiftT,	sbShiftT,	sbShiftT,	sbShiftT,		sbShiftT,	sbShiftT,	sbShiftT,	sbShiftT,
-	tbShiftT,	tbShiftT,	tbShiftT,	sbShiftT,		tbShiftT,	sbShiftT,	tbShiftT,	tbShiftT,
-	0,			0,			0,			0,				0,			big5ShiftT,	0,			sbShiftT,
-	sbShiftT,	sbShiftT,	sbShiftT,	sbShiftT,		sbShiftT,	sbShiftT,	sbShiftT,			0,
-	0,			0,			0,			0,				0,			0,			0,			0,
-	0,			0,			0,			0,				0,			0,			sbShiftT,	0
+/* 0x00-0x07 */
+sbShiftT,
+sbShiftT,
+sbShiftT,
+0,
+sjisShiftT,
+0,
+sbShiftT,
+big5ShiftT,
+
+/* 0x08-0x0F */
+tbGRShiftT,
+0,
+sbShiftT,
+sbShiftT,
+tbKSCShiftT,
+0,
+sbShiftT,
+sbShiftT,
+
+/* 0x10-0x17 */
+sbShiftT,
+sbShiftT,
+sbShiftT,
+sbShiftT,
+sbShiftT,
+sbShiftT,
+sbShiftT,
+sbShiftT,
+
+/* 0x18-0x1F */
+tbShiftT,
+tbShiftT,
+tbShiftT,
+sbShiftT,
+tbShiftT,
+sbShiftT,
+tbShiftT,
+tbShiftT,
+
+/* 0x20-0x27 */
+0,
+0,
+0,
+0,
+0,
+big5ShiftT,
+0,
+sbShiftT,
+
+/* 0x28-0x2F */
+sbShiftT,
+sbShiftT,
+sbShiftT,
+sbShiftT,
+sbShiftT,
+sbShiftT,
+sbShiftT,
+0,
+
+/* 0x30-0x37 */
+0,
+0,
+0,
+0,
+0,
+0,
+0,
+0,
+
+/* 0x38-0x3F */
+0,
+0,
+0,
+0,
+0,
+0,
+sbShiftT,
+0
 };
 
 /* This table is used for unicode to single encoding conversion */
 /* for those font csid, it always shift GR/GL */
 PRIVATE	int16*	strShiftTable[MAXCSIDINTBL] =
 {
-	sbShiftT,	sbShiftT,	sbShiftT,	0,				sjisShiftT,	0,			sbShiftT,	big5ShiftT,	
-	tbGRShiftT,	0,			sbShiftT,	sbShiftT,		tbKSCShiftT,	0,			sbShiftT,	sbShiftT,
-	sbShiftT,	sbShiftT,	sbShiftT,	sbShiftT,		sbShiftT,	sbShiftT,	sbShiftT,	sbShiftT,
-	tbGRShiftT,	cns2ShiftT,	tbGRShiftT,	x0201ShiftT,	tbGRShiftT,	sbShiftT,	x0212ShiftT,tbGRShiftT,
-	0,			0,			utf8ShiftT,	0,				0,			big5ShiftT,	0,			sbShiftT,
-	sbShiftT,	sbShiftT,	sbShiftT,	sbShiftT,		sbShiftT,	sbShiftT,	sbShiftT,			0,
-	0,			0,			0,			0,				0,			0,			0,			0,
-	0,	0,	0,	0,	0,	0,	sbShiftT,	sbShiftT
+/* 0x00-0x07 */
+sbShiftT,
+sbShiftT,
+sbShiftT,
+0,
+sjisShiftT,
+0,
+sbShiftT,
+big5ShiftT,
+
+/* 0x08-0x0F */
+tbGRShiftT,
+0,
+sbShiftT,
+sbShiftT,
+tbKSCShiftT,
+0,
+sbShiftT,
+sbShiftT,
+
+/* 0x10-0x17 */
+sbShiftT,
+sbShiftT,
+sbShiftT,
+sbShiftT,
+sbShiftT,
+sbShiftT,
+sbShiftT,
+sbShiftT,
+
+/* 0x18-0x1F */
+tbGRShiftT,
+cns2ShiftT,
+tbGRShiftT,
+x0201ShiftT,
+tbGRShiftT,
+sbShiftT,
+x0212ShiftT,
+tbGRShiftT,
+
+/* 0x20-0x27 */
+0,
+0,
+utf8ShiftT,
+0,
+0,
+big5ShiftT,
+0,
+sbShiftT,
+
+/* 0x28-0x2F */
+sbShiftT,
+sbShiftT,
+sbShiftT,
+sbShiftT,
+sbShiftT,
+sbShiftT,
+sbShiftT,
+0,
+
+/* 0x30-0x37 */
+0,
+0,
+0,
+0,
+0,
+0,
+0,
+0,
+
+/* 0x38-0x3F */
+0,
+0,
+0,
+0,
+0,
+0,
+sbShiftT,
+sbShiftT
 };
 
 PRIVATE UnicodeTableSet unicodetableset[] =
