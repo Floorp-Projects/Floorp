@@ -8,6 +8,7 @@
 <!ENTITY cookieBlockCookiesCmd.label "Block Cookies from this Site">
 <!ENTITY cookieBlockCookiesCmd.accesskey "b">
 <!ENTITY cookieBlockCookiesMsg.label "Cookies from this site will always be rejected">
+
 <!ENTITY cookieDisplayImagesCmd.label "Manage Image Permissions">
 <!ENTITY cookieDisplayImagesCmd.accesskey "m">
 <!ENTITY cookieAllowImagesCmd.label "Unblock Images from this Site">
@@ -16,19 +17,22 @@
 <!ENTITY cookieBlockImagesCmd.label "Block Images from this Site">
 <!ENTITY cookieBlockImagesCmd.accesskey "b">
 <!ENTITY cookieBlockImagesMsg.label "Images from this site will never be downloaded">
-<!ENTITY cookieDisplayPopupsCmd.label "Manage Pop-up Permissions">
-<!ENTITY cookieDisplayPopupsCmd.accesskey "m">
-<!ENTITY cookieAllowPopupsCmd.label "Unblock Pop-ups from this Site">
-<!ENTITY cookieAllowPopupsCmd.accesskey "u">
-<!ENTITY cookieAllowPopupsMsg.label "Pop-up windows from this site will always be allowed">
-<!ENTITY cookieBlockPopupsCmd.label "Block Pop-ups from this Site">
-<!ENTITY cookieBlockPopupsCmd.accesskey "b">
-<!ENTITY cookieBlockPopupsMsg.label "Pop-up windows from this site will always be blocked">
+
+<!ENTITY cookieDisplayPopupsCmd.label                "Manage Popup Permissions">
+<!ENTITY cookieDisplayPopupsCmd.accesskey            "M">
+<!ENTITY cookieAllowPopupsCmd.label                  "Allow Popups from this Site">
+<!ENTITY cookieAllowPopupsCmd.accesskey              "A">
+<!ENTITY cookieAllowPopupsMsg.label                  "Popup windows from this site will always be allowed">
+<!ENTITY cookieBlockPopupsCmd.label                  "Suppress Popups from this Site">
+<!ENTITY cookieBlockPopupsCmd.accesskey              "S">
+<!ENTITY cookieBlockPopupsMsg.label                  "Popup windows from this site will always be blocked">
+
 <!ENTITY cookieTutorialCmd.label "Understanding Privacy">
 <!ENTITY cookieTutorialCmd.accesskey "u">
+
 <!ENTITY cookieCookieManager.label "Cookie Manager">
 <!ENTITY cookieCookieManager.accesskey "c">
 <!ENTITY cookieImageManager.label "Image Manager">
 <!ENTITY cookieImageManager.accesskey "i">
-<!ENTITY cookiePopupManager.label "Pop-up Manager">
+<!ENTITY cookiePopupManager.label "Popup Manager">
 <!ENTITY cookiePopupManager.accesskey "o">
