@@ -284,29 +284,17 @@ nsViewerApp::Initialize(int argc, char** argv)
     return rv;
   }
 
-#if 0
-  // XXX where should this live
-  for (int i=0; i<MAX_RL; i++)
-    gRLList[i] = nsnull;
-  mRelatedLinks = NS_NewRelatedLinks();
-  gRelatedLinks = mRelatedLinks;
-  if (mRelatedLinks) {
-    mRLWindow = mRelatedLinks->MakeRLWindowWithCallback(DumpRLValues, this);
-  }
-#endif
-
-    rv = nsComponentManager::CreateInstance(kSilentDownloadCID, 
-                                      nsnull,
-                                      kISilentDownloadIID,
-                                      (void**) &silentDownload);
-    if (rv == NS_OK)
-    {
-        if (silentDownload->Startup() != NS_OK)
-        {
-            silentDownload->Shutdown();
-            NS_RELEASE(silentDownload);
-        }
+  // XXX silent download
+  rv = nsComponentManager::CreateInstance(kSilentDownloadCID, 
+                                          nsnull,
+                                          kISilentDownloadIID,
+                                          (void**) &silentDownload);
+  if (rv == NS_OK) {
+    if (silentDownload->Startup() != NS_OK) {
+      silentDownload->Shutdown();
+      NS_RELEASE(silentDownload);
     }
+  }
 
   // Finally process our arguments
   rv = ProcessArguments(argc, argv);
@@ -609,6 +597,7 @@ nsViewerApp::OpenWindow()
   mCrawler->GetBrowserWindow(&bwCurrent);
   if (!bwCurrent) {
 	  mCrawler->SetBrowserWindow(bw);
+    bw->SetWebCrawler(mCrawler);
   }
   NS_IF_RELEASE(bwCurrent);
 
