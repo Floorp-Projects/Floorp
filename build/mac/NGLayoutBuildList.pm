@@ -235,6 +235,7 @@ sub BuildClientDist()
 	_assertRightDirectory();
 	
 	my $distdirectory = ":mozilla:dist"; # the parent directory in dist, including all the headers
+	my $dist_dir = _getDistDirectory(); # the subdirectory with the libs and executable.
 
 	InstallFromManifest(":mozilla:lib:mac:Misc:MANIFEST",							"$distdirectory:mac:common:");
 
@@ -281,6 +282,9 @@ sub BuildClientDist()
 
 	#LIBREG
     InstallFromManifest(":mozilla:modules:libreg:include:MANIFEST",					"$distdirectory:libreg:");
+
+	#PREFS
+	InstallFromManifest(":mozilla:modules:libpref:src:MANIFEST_PREFS",				$dist_dir."Components:", 1);
 
 	#XPCOM
 	InstallFromManifest(":mozilla:xpcom:base:MANIFEST_IDL",							"$distdirectory:idl:");
