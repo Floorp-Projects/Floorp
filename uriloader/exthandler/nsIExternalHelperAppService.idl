@@ -76,6 +76,9 @@ interface nsIHelperAppLauncher : nsISupports
   // attempting to load
   readonly attribute nsIMIMEInfo MIMEInfo;
 
+  // the source url
+  readonly attribute nsIURI source;
+
   // saveToDisk: called when we want to just save the content to a particular file
   // aNewFileLocation --> location where the content should be saved
   void saveToDisk(in nsIFile aNewFileLocation, in boolean aRememberThisPreference);
