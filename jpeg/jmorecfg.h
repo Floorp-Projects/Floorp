@@ -109,7 +109,9 @@ typedef short JCOEF;
 
 #if defined(XP_WIN32) && defined(_M_IX86) && !defined(__GNUC__)
 #define HAVE_MMX_INTEL_MNEMONICS 
-#define HAVE_SSE2_INTEL_MNEMONICS 
+
+/* SSE2 code appears broken for some cpus (bug 247437) */
+/* #define HAVE_SSE2_INTEL_MNEMONICS */
 #endif
 
 /* Compressed datastreams are represented as arrays of JOCTET.
