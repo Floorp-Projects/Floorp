@@ -42,7 +42,6 @@ public:
   static nsIAtom* button;
 
   static nsIAtom* checkbox;
-  static nsIAtom* tristatecheckbox;
   static nsIAtom* spinner;
   static nsIAtom* scrollbar;
   static nsIAtom* slider;

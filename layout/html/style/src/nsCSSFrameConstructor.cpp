@@ -1669,7 +1669,6 @@ nsCSSFrameConstructor::TableIsValidCellContent(nsIPresContext* aPresContext,
   if (  (nsXULAtoms::button          == tag.get())  ||
 	    (nsXULAtoms::titledbutton    == tag.get())  ||
         (nsXULAtoms::checkbox        == tag.get())  ||
-        (nsXULAtoms::tristatecheckbox == tag.get())  ||
         (nsXULAtoms::slider == tag.get())  ||
         (nsXULAtoms::spinner == tag.get())  ||
         (nsXULAtoms::scrollbar == tag.get())  ||
@@ -2614,8 +2613,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
     if (aTag == nsXULAtoms::button)
       rv = NS_NewButtonControlFrame(newFrame);
     else if (aTag == nsXULAtoms::checkbox)
-      rv = NS_NewCheckboxControlFrame(newFrame);
-    else if (aTag == nsXULAtoms::tristatecheckbox)
       rv = NS_NewTriStateCheckboxFrame(newFrame);
     else if (aTag == nsXULAtoms::slider)
       rv = NS_NewSliderFrame(newFrame);
