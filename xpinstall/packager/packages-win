@@ -141,6 +141,7 @@ bin\components\xml-rpc.xpt
 bin\components\nsDictionary.js
 bin\components\nsProxyAutoConfig.js
 bin\components\nsXmlRpcClient.js
+plugins\npnul32.dll
 bin\components\xmlsoap.xpt
 bin\components\xmlschema.xpt
 bin\components\helperAppDlg.xpt

@@ -199,7 +199,6 @@ components\necko_ftp.xpt
 ; Optional - only if you need plugin support
 components\gkplugin.dll
 components\plugin.xpt
-plugins\npnul32.dll
 
 ; wallet
 ; Optional - only if you need password persistence
