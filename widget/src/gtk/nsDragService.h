@@ -43,7 +43,7 @@ public:
                                PRUint32 aActionType);
 
   // Native Impl.
-  NS_IMETHOD GetData (nsITransferable * aTransferable);
+  NS_IMETHOD GetData (nsITransferable * aTransferable, PRUint32 aItemIndex);
 
   static void SetTopLevelWidget(GtkWidget* w);
 
