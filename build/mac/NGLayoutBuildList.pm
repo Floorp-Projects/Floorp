@@ -412,13 +412,21 @@ sub MakeResourceAliases()
 	{
 		my($editor_chrome_dir) = "$chrome_dir" . "Editor";
 
-		_InstallResources(":mozilla:editor:ui:composer:content:MANIFEST",			"$editor_chrome_dir:content:default:", 0);
-		_InstallResources(":mozilla:editor:ui:composer:skin:MANIFEST",				"$editor_chrome_dir:skin:default:", 0);
-		_InstallResources(":mozilla:editor:ui:composer:locale:en-US:MANIFEST",	"$editor_chrome_dir:locale:en-US:", 0);
+		_InstallResources(":mozilla:editor:ui:composer:content:MANIFEST",				"$editor_chrome_dir:content:default:", 0);
+		_InstallResources(":mozilla:editor:ui:composer:skin:MANIFEST",					"$editor_chrome_dir:skin:default:", 0);
+		_InstallResources(":mozilla:editor:ui:composer:locale:en-US:MANIFEST",			"$editor_chrome_dir:locale:en-US:", 0);
 
 		_InstallResources(":mozilla:editor:ui:dialogs:content:MANIFEST",				"$editor_chrome_dir:content:default:", 0);
 		_InstallResources(":mozilla:editor:ui:dialogs:skin:MANIFEST",					"$editor_chrome_dir:skin:default:", 0);
-		_InstallResources(":mozilla:editor:ui:dialogs:locale:en-US:MANIFEST",		"$editor_chrome_dir:locale:en-US:", 0);
+		_InstallResources(":mozilla:editor:ui:dialogs:locale:en-US:MANIFEST",			"$editor_chrome_dir:locale:en-US:", 0);
+	}
+
+	if ($main::build{extensions})
+	{
+		my($irc_bin_dir) = "$dist_dir"."irc";
+		_InstallResources(":mozilla:extensions:irc:js:lib:MANIFEST",					"$irc_bin_dir:js:lib");
+		_InstallResources(":mozilla:extensions:irc:xul:lib:MANIFEST",					"$irc_bin_dir:xul:lib");
+		_InstallResources(":mozilla:extensions:irc:xul:tests:MANIFEST",					"$irc_bin_dir:tests");
 	}
 
 	# if ($main::build{mailnews})
@@ -909,7 +917,7 @@ sub BuildClientDist()
 	_InstallFromManifest(":mozilla:xpfe:appshell:public:MANIFEST",					"$distdirectory:xpfe:");
 	_InstallFromManifest(":mozilla:xpfe:appshell:public:MANIFEST_IDL",				"$distdirectory:idl:");
 	_InstallFromManifest(":mozilla:xpfe:browser:public:MANIFEST_IDL",				"$distdirectory:idl:");
-
+	
 	# MAILNEWS
 	 _InstallFromManifest(":mozilla:mailnews:public:MANIFEST",						"$distdirectory:mailnews:");
 	 _InstallFromManifest(":mozilla:mailnews:public:MANIFEST_IDL",					"$distdirectory:idl:");
@@ -1185,9 +1193,9 @@ sub BuildIDLProjects()
 
 	BuildIDLProject(":mozilla:caps:macbuild:CapsIDL.mcp",							"caps");
 
-	BuildIDLProject(":mozilla:intl:locale:macbuild:nsLocaleIDL.mcp",					"nsLocale");
+	BuildIDLProject(":mozilla:intl:locale:macbuild:nsLocaleIDL.mcp",				"nsLocale");
 	BuildIDLProject(":mozilla:intl:strres:macbuild:strresIDL.mcp",					"nsIStringBundle");
-	BuildIDLProject(":mozilla:intl:unicharutil:macbuild:unicharutilIDL.mcp",					"unicharutil");
+	BuildIDLProject(":mozilla:intl:unicharutil:macbuild:unicharutilIDL.mcp",		"unicharutil");
 	BuildIDLProject(":mozilla:intl:uconv:macbuild:uconvIDL.mcp",					"uconv");
 
 	print("--- IDL projects complete ----\n");
@@ -1582,6 +1590,26 @@ sub BuildXPAppProjects()
 
 
 #//--------------------------------------------------------------------------------------------------
+#// Build Extensions Projects
+#//--------------------------------------------------------------------------------------------------
+
+sub BuildExtensionsProjects()
+{
+	unless( $main::build{extensions} ) { return; }
+	_assertRightDirectory();
+
+	# $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
+	my($D) = $main::DEBUG ? "Debug" : "";
+	my($dist_dir) = _getDistDirectory();
+
+	print("--- Starting Extensions projects ----\n");
+
+	# not building any extensions yet. chatzilla is all JS and XUL!
+	
+	print("--- Extensions projects complete ----\n");
+}
+
+#//--------------------------------------------------------------------------------------------------
 #// Build MailNews Projects
 #//--------------------------------------------------------------------------------------------------
 
@@ -1705,6 +1733,7 @@ sub BuildProjects()
 	BuildEditorProjects();
 	BuildViewerProjects();
 	BuildXPAppProjects();
+	BuildExtensionsProjects();
 	BuildMailNewsProjects();
 	BuildMozilla();
 }
