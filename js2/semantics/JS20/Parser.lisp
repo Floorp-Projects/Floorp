@@ -38,10 +38,12 @@
     (deftag ok)
     (deftag inaccessible)
     (deftag uninitialised)
+    (deftag reject)
     
-    (deftype object (union undefined null boolean long u-long float32 float64 character string namespace compound-attribute class method-closure prototype instance package global))
+    (deftype object (union undefined null boolean long u-long float32 float64 character string namespace compound-attribute
+                           class method-closure prototype instance package global))
     (deftype primitive-object (union undefined null boolean long u-long float32 float64 character string))
-    (deftype dynamic-object (union prototype dynamic-instance global))
+    (deftype dynamic-object (union prototype simple-instance callable-instance global))
     
     (deftype object-opt (union object (tag none)))
     (deftype object-i (union object (tag inaccessible)))
@@ -118,7 +120,9 @@
       (allow-null boolean)
       (final boolean)
       (call (-> (object argument-list phase) object))
-      (construct (-> (argument-list phase) object)))
+      (construct (-> (argument-list phase) object))
+      (implicit-coerce (-> (object) object) :opt-const)
+      (default-value object))
     (deftype class-opt (union class (tag none)))
     
     (%text :comment "Return an ordered list of class " (:local c) :apostrophe "s ancestors, including " (:local c) " itself.")
@@ -160,33 +164,36 @@
     
     
     (%heading (3 :semantics) "Class Instances")
-    (deftype instance (union non-alias-instance alias-instance))
-    (deftype non-alias-instance (union fixed-instance dynamic-instance))
+    (deftype instance (union simple-instance callable-instance alias-instance))
     
-    (defrecord fixed-instance
+    (deftag fixed)
+    (defrecord simple-instance
       (type class)
-      (call (-> (object argument-list environment phase) object))
-      (construct (-> (argument-list environment phase) object))
-      (env environment)
-      (typeof-string string)
-      (slots (list-set slot) :var))
-    
-    (defrecord dynamic-instance
-      (type class)
-      (call (-> (object argument-list environment phase) object))
-      (construct (-> (argument-list environment phase) object))
-      (env environment)
       (typeof-string string)
       (slots (list-set slot) :var)
-      (dynamic-properties (list-set dynamic-property) :var))
+      (dynamic-properties (union (list-set dynamic-property) (tag fixed)) :var))
+    
+    (defrecord callable-instance
+      (type class)
+      (typeof-string string)
+      (slots (list-set slot) :var)
+      (dynamic-properties (union (list-set dynamic-property) (tag fixed)) :var)
+      (call (-> (object argument-list environment phase) object))
+      (construct (-> (argument-list environment phase) object))
+      (env environment))
     
     (defrecord alias-instance
-      (original non-alias-instance)
+      (original callable-instance)
       (env environment))
     
     (defrecord open-instance
-      (instantiate (-> (environment) non-alias-instance))
-      (cache (union non-alias-instance (tag none)) :var))
+      (type class)
+      (typeof-string string)
+      (default-slots (list-set slot))
+      (build-prototype boolean)
+      (call (-> (object argument-list environment phase) object))
+      (construct (-> (argument-list environment phase) object))
+      (cache (union callable-instance (tag none)) :var))
     
     
     (%heading (4 :semantics) "Slots")
@@ -317,8 +324,7 @@
       (static-write-bindings (list-set static-binding) :var)
       (plurality plurality)
       (this object-i-opt)
-      (prototype boolean)
-      (signature signature :opt-const))
+      (prototype boolean))
     
     (defrecord block-frame
       (static-read-bindings (list-set static-binding) :var)
@@ -535,10 +541,10 @@
     
     
     (%heading (2 :semantics) "Object Utilities")
-    (define (resolve-alias (o instance)) non-alias-instance
+    (define (resolve-alias (o instance)) (union simple-instance callable-instance)
       (case o
-        (:narrow non-alias-instance (return o))
-        (:narrow alias-instance (return (& original o)))))
+        (:narrow alias-instance (return (& original o)))
+        (:narrow (union simple-instance callable-instance) (return o))))
     
     (%heading (3 :semantics) (:global object-type nil))
     (%text :comment (:global-call object-type o) " returns an " (:type object) " " (:local o) :apostrophe "s most specific type.")
@@ -753,13 +759,6 @@
       (case o
         (:narrow primitive-object (return o))
         (:select (union namespace compound-attribute class method-closure prototype instance package global) (return (to-string o phase)))))
-    
-    
-    (%heading (3 :semantics) (:global assignment-conversion nil))
-    (define (assignment-conversion (o object) (type class)) object
-      (rwhen (relaxed-has-type o type)
-        (return o))
-      (todo))
     
     
     (%heading (3 :semantics) "Attributes")
@@ -988,7 +987,18 @@
       (return multiname))
       
     
-    (define (define-hoisted-var (env environment) (id string)) void
+    (%text :comment (:global-call define-hoisted-var env id initial-value) " defines a hoisted variable with the name " (:local id)
+           " in the environment " (:local env) ". Hoisted variables are hoisted to the global or enclosing function scope. "
+           "Multiple hoisted variables may be defined in the same scope, but they may not coexist with non-hoisted variables with the same name. "
+           "A hoisted variable can be defined using either a " (:character-literal "var") " or a " (:character-literal "function") " statement. "
+           "If it is defined using " (:character-literal "var") ", then " (:local initial-value) " is always " (:tag undefined)
+           " (if the " (:character-literal "var") " statement has an initialiser, then the variable" :apostrophe "s value will be written later when the "
+           (:character-literal "var") " statement is executed). "
+           "If it is defined using " (:character-literal "function") ", then " (:local initial-value) " must be a function instance or open instance. "
+           "According to rules inherited from ECMAScript Edition 3, if there are multiple definitions of a hoisted variable, "
+           "then the initial value of that variable is " (:tag undefined) " if none of the definitions is a " (:character-literal "function")
+           " definition; otherwise, the initial value is the last " (:character-literal "function") " definition.")
+    (define (define-hoisted-var (env environment) (id string) (initial-value (union (tag undefined) instance open-instance))) hoisted-var
       (const qname qualified-name (new qualified-name public-namespace id))
       (const regional-env (vector frame) (get-regional-environment env))
       (var regional-frame frame (nth regional-env (- (length regional-env) 1)))
@@ -1009,12 +1019,22 @@
                                          (= (& qname b) qname qualified-name)))))))
       (cond
        ((empty existing-bindings)
-        (const v hoisted-var (new hoisted-var undefined false))
-        (add-static-bindings regional-frame read-write (list-set (new static-binding qname v false))))
-       ((some existing-bindings b (not-in (& content b) hoisted-var))
+        (const v hoisted-var (new hoisted-var initial-value (not-in initial-value (tag undefined))))
+        (add-static-bindings regional-frame read-write (list-set (new static-binding qname v false)))
+        (return v))
+       ((/= (length existing-bindings) 1)
         (throw definition-error))
        (nil
-        (// "A hoisted binding of the same " (:character-literal "var") " already exists, so there is no need to create another one."))))
+        (const b static-binding (unique-elt-of existing-bindings))
+        (const m static-member (& content b))
+        (rwhen (not-in m hoisted-var :narrow-false)
+          (throw definition-error))
+        (// "A hoisted binding of the same " (:character-literal "var") " already exists, so there is no need to create another one. "
+            "Overwrite its initial value if the new definition is a " (:character-literal "function") " definition.")
+        (when (not-in initial-value (tag undefined))
+          (&= value m initial-value)
+          (&= has-function-initialiser m true))
+        (return m))))
     
     
     (%heading (3 :semantics) "Adding Instance Definitions")
@@ -1108,10 +1128,17 @@
     (%heading (3 :semantics) "Instantiation")
     
     (define (instantiate-open-instance (oi open-instance) (env environment)) instance
-      (const cache (union fixed-instance dynamic-instance (tag none)) (& cache oi))
+      (const cache (union callable-instance (tag none)) (& cache oi))
       (cond
        ((in cache (tag none) :narrow-false)
-        (const i non-alias-instance ((& instantiate oi) env))
+        (var slots (list-set slot) (map (& default-slots oi) s (new slot (& id s) (& value s))))
+        (var dynamic-properties (union (list-set dynamic-property) (tag fixed)))
+        (cond
+         ((& build-prototype oi)
+          (<- dynamic-properties (list-set-of dynamic-property))
+          (todo))
+         (nil (<- dynamic-properties fixed)))
+        (const i callable-instance (new callable-instance (& type oi) (& typeof-string oi) slots dynamic-properties (& call oi) (& construct oi) env))
         (var reuse boolean)
         (/* "At the implementation" :apostrophe "s discretion, either " (:local reuse) :nbsp :assign-10 :nbsp (:tag true) ", or "
             (:local reuse) :nbsp :assign-10 :nbsp (:tag false) ". An implementation may make different choices at different times. "
@@ -1333,8 +1360,8 @@
         (:narrow (union undefined null boolean general-number character string namespace compound-attribute method-closure instance)
           (const c class (object-type container))
           (const qname qualified-name-opt (resolve-instance-member-name c multiname read phase))
-          (if (and (in qname (tag none)) (in container dynamic-instance :narrow-true))
-            (return (read-dynamic-property container multiname kind phase))
+          (if (and (in qname (tag none)) (in container instance :narrow-true))
+            (return (read-dynamic-property (resolve-alias container) multiname kind phase))
             (return (read-instance-member container c qname phase))))
         (:narrow (union system-frame global package parameter-frame block-frame)
           (const m static-member-opt (find-flat-member container multiname read phase))
@@ -1418,7 +1445,8 @@
       (rwhen (in phase (tag compile))
         (throw compile-expression-error))
       (reserve dp)
-      (rwhen (some (& dynamic-properties container) dp (= (& name dp) name string) :define-true)
+      (const dynamic-properties (union (list-set dynamic-property) (tag fixed)) (& dynamic-properties container))
+      (rwhen (and (not-in dynamic-properties (tag fixed) :narrow-true) (some dynamic-properties dp (= (& name dp) name string) :define-true))
         (return (& value dp)))
       (when (in container prototype :narrow-true)
         (const parent prototype-opt (& parent container))
@@ -1449,7 +1477,7 @@
           (&= value v inaccessible)
           (const type class (get-variable-type v phase))
           (const new-value object (value))
-          (const coerced-value object (assignment-conversion new-value type))
+          (const coerced-value object ((&opt implicit-coerce type) new-value))
           (&= value v coerced-value)
           (return new-value))))
     
@@ -1487,8 +1515,8 @@
         (:narrow instance
           (const c class (object-type container))
           (const qname qualified-name-opt (resolve-instance-member-name (object-type container) multiname write phase))
-          (if (and (in qname (tag none)) (in container dynamic-instance :narrow-true))
-            (return (write-dynamic-property container multiname create-if-missing new-value phase))
+          (if (in qname (tag none))
+            (return (write-dynamic-property (resolve-alias container) multiname create-if-missing new-value phase))
             (return (write-instance-member container c qname new-value phase))))
         (:narrow limited-instance
           (const superclass class-opt (& super (& limit container)))
@@ -1508,7 +1536,7 @@
           (const s slot (find-slot this m))
           (rwhen (and (& immutable m) (not-in (& value s) (tag uninitialised)))
             (throw property-access-error))
-          (const coerced-value object (assignment-conversion new-value (&opt type m)))
+          (const coerced-value object ((&opt implicit-coerce (&opt type m)) new-value))
           (&= value s coerced-value)
           (return ok))
         (:select instance-method
@@ -1516,7 +1544,7 @@
         (:narrow instance-getter
           (bottom (:local m) " cannot be an " (:type instance-getter) " because these are only represented as read-only members."))
         (:narrow instance-setter
-          (const coerced-value object (assignment-conversion new-value (&opt type m)))
+          (const coerced-value object ((&opt implicit-coerce (&opt type m)) new-value))
           ((& call m) this coerced-value (& env m) phase)
           (return ok))))
     
@@ -1534,7 +1562,7 @@
         (:narrow getter
           (bottom (:local m) " cannot be a " (:type getter) " because these are only represented as read-only members."))
         (:narrow setter
-          (const coerced-value object (assignment-conversion new-value (& type m)))
+          (const coerced-value object ((&opt implicit-coerce (& type m)) new-value))
           (const env environment-i (& env m))
           (assert (not-in env (tag inaccessible) :narrow-true) "Note that all instances are resolved for the " (:tag run) " phase, so " (:assertion) ".")
           ((& call m) coerced-value env phase)
@@ -1546,8 +1574,11 @@
       (const name string-opt (select-public-name multiname))
       (rwhen (in name (tag none) :narrow-false)
         (return none))
+      (const dynamic-properties (union (list-set dynamic-property) (tag fixed)) (& dynamic-properties container))
+      (rwhen (in dynamic-properties (tag fixed) :narrow-false)
+        (return none))
       (reserve dp)
-      (rwhen (some (& dynamic-properties container) dp (= (& name dp) name string) :define-true)
+      (rwhen (some dynamic-properties dp (= (& name dp) name string) :define-true)
         (&= value dp new-value)
         (return ok))
       (rwhen (not create-if-missing)
@@ -1556,13 +1587,13 @@
       (var m (union (tag none) static-member qualified-name))
       (case container
         (:select prototype (<- m none))
-        (:narrow dynamic-instance
+        (:narrow (union simple-instance callable-instance)
           (<- m (resolve-instance-member-name (object-type container) multiname read phase)))
         (:narrow global
           (<- m (find-flat-member container multiname read phase))))
       (rwhen (not-in m (tag none))
         (return none))
-      (&= dynamic-properties container (set+ (& dynamic-properties container) (list-set (new dynamic-property name new-value))))
+      (&= dynamic-properties container (set+ dynamic-properties (list-set (new dynamic-property name new-value))))
       (return ok))
     
     
@@ -1587,7 +1618,7 @@
       (rwhen (or (in (& value v) (tag inaccessible))
                  (and (& immutable v) (not-in (& value v) (tag uninitialised))))
         (throw property-access-error))
-      (const coerced-value object (assignment-conversion new-value type))
+      (const coerced-value object ((&opt implicit-coerce type) new-value))
       (&= value v coerced-value))
     
     
@@ -1597,8 +1628,8 @@
         (:narrow (union undefined null boolean general-number character string namespace compound-attribute method-closure instance)
           (const c class (object-type container))
           (const qname qualified-name-opt (resolve-instance-member-name c multiname read phase))
-          (if (and (in qname (tag none)) (in container dynamic-instance :narrow-true))
-            (return (delete-dynamic-property container multiname))
+          (if (and (in qname (tag none)) (in container instance :narrow-true))
+            (return (delete-dynamic-property (resolve-alias container) multiname))
             (return (delete-instance-member c qname))))
         (:narrow (union system-frame global package parameter-frame block-frame)
           (const m static-member-opt (find-flat-member container multiname read phase))
@@ -1648,10 +1679,13 @@
       (const name string-opt (select-public-name multiname))
       (rwhen (in name (tag none) :narrow-false)
         (return none))
+      (const dynamic-properties (union (list-set dynamic-property) (tag fixed)) (& dynamic-properties container))
+      (rwhen (in dynamic-properties (tag fixed) :narrow-false)
+        (return none))
       (reserve dp)
       (cond
-       ((some (& dynamic-properties container) dp (= (& name dp) name string) :define-true)
-        (&= dynamic-properties container (set- (& dynamic-properties container) (list-set dp)))
+       ((some dynamic-properties dp (= (& name dp) name string) :define-true)
+        (&= dynamic-properties container (set- dynamic-properties (list-set dp)))
         (return true))
        (nil (return none))))
     
@@ -1660,11 +1694,6 @@
     (%heading (2 :semantics) "Invocation")
     (define (bad-construct (args argument-list :unused) (runtime-env environment :unused) (phase phase :unused)) object
       (throw property-access-error))
-    
-    
-    
-    (%heading (2 :semantics) "Pre-Evaluation")
-    (defvar pre-evaluators (vector (-> () void)) (vector-of (-> () void)))
     
     
     
@@ -1711,61 +1740,74 @@
            (throw syntax-error))
          (return (& private-namespace c)))))
     
-    (rule :simple-qualified-identifier ((multiname (writable-cell multiname)) (validate (-> (context environment) void)))
+    (rule :simple-qualified-identifier ((multiname (writable-cell multiname)) (validate (-> (context environment) void)) (setup (-> () void)))
       (production :simple-qualified-identifier (:identifier) simple-qualified-identifier-identifier
         ((validate cxt (env :unused))
          (const multiname multiname (map (& open-namespaces cxt) ns (new qualified-name ns (name :identifier))))
-         (action<- (multiname :simple-qualified-identifier 0) multiname)))
+         (action<- (multiname :simple-qualified-identifier 0) multiname))
+        ((setup)))
       (production :simple-qualified-identifier (:qualifier \:\: :identifier) simple-qualified-identifier-qualifier
         ((validate cxt env)
          (const q namespace ((validate :qualifier) cxt env))
-         (action<- (multiname :simple-qualified-identifier 0) (list-set (new qualified-name q (name :identifier)))))))
+         (action<- (multiname :simple-qualified-identifier 0) (list-set (new qualified-name q (name :identifier)))))
+        ((setup))))
     
-    (rule :expression-qualified-identifier ((multiname (writable-cell multiname)) (validate (-> (context environment) void)))
+    (rule :expression-qualified-identifier ((multiname (writable-cell multiname)) (validate (-> (context environment) void)) (setup (-> () void)))
       (production :expression-qualified-identifier (:paren-expression \:\: :identifier) expression-qualified-identifier-identifier
         ((validate cxt env)
          ((validate :paren-expression) cxt env)
+         ((setup :paren-expression))
          (const r obj-or-ref ((eval :paren-expression) env compile))
          (const q object (read-reference r compile))
          (rwhen (not-in q namespace :narrow-false) (throw bad-value-error))
-         (action<- (multiname :expression-qualified-identifier 0) (list-set (new qualified-name q (name :identifier)))))))
+         (action<- (multiname :expression-qualified-identifier 0) (list-set (new qualified-name q (name :identifier)))))
+        ((setup))))
     
-    (rule :qualified-identifier ((multiname (writable-cell multiname)) (validate (-> (context environment) void)))
+    (rule :qualified-identifier ((multiname (writable-cell multiname)) (validate (-> (context environment) void)) (setup (-> () void)))
       (production :qualified-identifier (:simple-qualified-identifier) qualified-identifier-simple
         ((validate cxt env)
          ((validate :simple-qualified-identifier) cxt env)
-         (action<- (multiname :qualified-identifier 0) (multiname :simple-qualified-identifier))))
+         (action<- (multiname :qualified-identifier 0) (multiname :simple-qualified-identifier)))
+        ((setup) :forward))
       (production :qualified-identifier (:expression-qualified-identifier) qualified-identifier-expression
         ((validate cxt env)
          ((validate :expression-qualified-identifier) cxt env)
-         (action<- (multiname :qualified-identifier 0) (multiname :expression-qualified-identifier)))))
-    (%print-actions ("Validation and Evaluation" multiname validate))
+         (action<- (multiname :qualified-identifier 0) (multiname :expression-qualified-identifier)))
+        ((setup) :forward)))
+    (%print-actions ("Validation" multiname validate) ("Setup" setup))
     
     
     (%heading 2 "Primary Expressions")
-    (rule :primary-expression ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
+    (rule :primary-expression ((validate (-> (context environment) void)) (setup (-> () void)) (eval (-> (environment phase) obj-or-ref)))
       (production :primary-expression (null) primary-expression-null
         ((validate (cxt :unused) (env :unused)))
+        ((setup) :forward)
         ((eval (env :unused) (phase :unused)) (return null)))
       (production :primary-expression (true) primary-expression-true
         ((validate (cxt :unused) (env :unused)))
+        ((setup) :forward)
         ((eval (env :unused) (phase :unused)) (return true)))
       (production :primary-expression (false) primary-expression-false
         ((validate (cxt :unused) (env :unused)))
+        ((setup) :forward)
         ((eval (env :unused) (phase :unused)) (return false)))
       (production :primary-expression (public) primary-expression-public
         ((validate (cxt :unused) (env :unused)))
+        ((setup) :forward)
         ((eval (env :unused) (phase :unused)) (return public-namespace)))
       (production :primary-expression ($number) primary-expression-number
         ((validate (cxt :unused) (env :unused)))
+        ((setup) :forward)
         ((eval (env :unused) (phase :unused)) (return (value $number))))
       (production :primary-expression ($string) primary-expression-string
         ((validate (cxt :unused) (env :unused)))
+        ((setup) :forward)
         ((eval (env :unused) (phase :unused)) (return (value $string))))
       (production :primary-expression (this) primary-expression-this
         ((validate (cxt :unused) env)
          (rwhen (in (find-this env true) (tag none))
            (throw syntax-error)))
+        ((setup) :forward)
         ((eval env (phase :unused))
          (const this object-i-opt (find-this env true))
          (assert (not-in this (tag none) :narrow-true) "Note that " (:action validate) " ensured that " (:local this) " cannot be " (:tag none) " at this point.")
@@ -1774,29 +1816,37 @@
          (return this)))
       (production :primary-expression ($regular-expression) primary-expression-regular-expression
         ((validate (cxt :unused) (env :unused)))
+        ((setup) :forward)
         ((eval (env :unused) (phase :unused)) (todo)))
       (production :primary-expression (:paren-list-expression) primary-expression-paren-list-expression
         ((validate cxt env) ((validate :paren-list-expression) cxt env))
+        ((setup) :forward)
         ((eval env phase) (return ((eval :paren-list-expression) env phase))))
       (production :primary-expression (:array-literal) primary-expression-array-literal
-        ((validate (cxt :unused) (env :unused)) (todo))
-        ((eval (env :unused) (phase :unused)) (todo)))
+        ((validate cxt env) ((validate :array-literal) cxt env))
+        ((setup) :forward)
+        ((eval env phase) (return ((eval :array-literal) env phase))))
       (production :primary-expression (:object-literal) primary-expression-object-literal
         ((validate cxt env) ((validate :object-literal) cxt env))
+        ((setup) :forward)
         ((eval env phase) (return ((eval :object-literal) env phase))))
       (production :primary-expression (:function-expression) primary-expression-function-expression
         ((validate cxt env) ((validate :function-expression) cxt env))
+        ((setup) :forward)
         ((eval env phase) (return ((eval :function-expression) env phase)))))
     
-    (rule :paren-expression ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
+    (rule :paren-expression ((validate (-> (context environment) void)) (setup (-> () void)) (eval (-> (environment phase) obj-or-ref)))
       (production :paren-expression (\( (:assignment-expression allow-in) \)) paren-expression-assignment-expression
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase) (return ((eval :assignment-expression) env phase)))))
     
-    (rule :paren-list-expression ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref))
+    (rule :paren-list-expression ((validate (-> (context environment) void)) (setup (-> () void))
+                                  (eval (-> (environment phase) obj-or-ref))
                                   (eval-as-list (-> (environment phase) (vector object))))
       (production :paren-list-expression (:paren-expression) paren-list-expression-paren-expression
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase) (return ((eval :paren-expression) env phase)))
         ((eval-as-list env phase)
          (const r obj-or-ref ((eval :paren-expression) env phase))
@@ -1804,6 +1854,7 @@
          (return (vector elt))))
       (production :paren-list-expression (\( (:list-expression allow-in) \, (:assignment-expression allow-in) \)) paren-list-expression-list-expression
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :list-expression) env phase))
          (exec (read-reference ra phase))
@@ -1814,39 +1865,59 @@
          (const r obj-or-ref ((eval :assignment-expression) env phase))
          (const elt object (read-reference r phase))
          (return (append elts (vector elt))))))
-    (%print-actions ("Validation" validate) ("Evaluation" eval))
+    (%print-actions ("Validation" validate) ("Setup" setup) ("Evaluation" eval))
     
     
     (%heading 2 "Function Expressions")
-    (rule :function-expression ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
-      (production :function-expression (function :function-signature :block) function-expression-anonymous
+    (rule :function-expression ((f (writable-cell open-instance))
+                                (validate (-> (context environment) void))
+                                (setup (-> () void))
+                                (eval (-> (environment phase) obj-or-ref)))
+      (production :function-expression (function :function-common) function-expression-anonymous
+        ((validate cxt env)
+         (const unchecked boolean (and (not (& strict cxt)) (untyped :function-common)))
+         (action<- (unchecked :function-common) unchecked)
+         (const this (tag none inaccessible) (if unchecked inaccessible none))
+         (action<- (f :function-expression 0) ((validate-static-function :function-common) cxt env this unchecked)))
+        ((setup) ((setup :function-common)))
+        ((eval env phase)
+         (rwhen (in phase (tag compile))
+           (throw compile-expression-error))
+         (return (instantiate-open-instance (f :function-expression 0) env))))
+      (production :function-expression (function :identifier :function-common) function-expression-named
         ((validate (cxt :unused) (env :unused)) (todo)) ;***** Clear break and continue inside cxt
-        ((eval (env :unused) (phase :unused)) (todo)))
-      (production :function-expression (function :identifier :function-signature :block) function-expression-named
-        ((validate (cxt :unused) (env :unused)) (todo)) ;***** Clear break and continue inside cxt
-        ((eval (env :unused) (phase :unused)) (todo))))
-    (%print-actions ("Validation" validate) ("Evaluation" eval))
+        ((setup) ((setup :function-common)))
+        ((eval env phase)
+         (rwhen (in phase (tag compile))
+           (throw compile-expression-error))
+         (return (instantiate-open-instance (f :function-expression 0) env)))))
+    (%print-actions ("Validation" f validate) ("Setup" setup) ("Evaluation" eval))
     
     
     (%heading 2 "Object Literals")
-    (rule :object-literal ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
+    (rule :object-literal ((validate (-> (context environment) void)) (setup (-> () void))
+                           (eval (-> (environment phase) obj-or-ref)))
       (production :object-literal (\{ \}) object-literal-empty
         ((validate (cxt :unused) (env :unused)))
+        ((setup) :forward)
         ((eval (env :unused) phase)
          (rwhen (in phase (tag compile))
            (throw compile-expression-error))
          (return (new prototype object-prototype (list-set-of dynamic-property)))))
       (production :object-literal (\{ :field-list \}) object-literal-list
         ((validate cxt env) (exec ((validate :field-list) cxt env)))
+        ((setup) :forward)
         ((eval env phase)
          (rwhen (in phase (tag compile))
            (throw compile-expression-error))
          (const properties (list-set dynamic-property) ((eval :field-list) env phase))
          (return (new prototype object-prototype properties)))))
     
-    (rule :field-list ((validate (-> (context environment) (list-set string))) (eval (-> (environment phase) (list-set dynamic-property))))
+    (rule :field-list ((validate (-> (context environment) (list-set string))) (setup (-> () void))
+                       (eval (-> (environment phase) (list-set dynamic-property))))
       (production :field-list (:literal-field) field-list-one
         ((validate cxt env) (return ((validate :literal-field) cxt env)))
+        ((setup) :forward)
         ((eval env phase)
          (const na named-argument ((eval :literal-field) env phase))
          (return (list-set (new dynamic-property (& name na) (& value na))))))
@@ -1857,6 +1928,7 @@
          (rwhen (nonempty (set* names1 names2))
            (throw syntax-error))
          (return (set+ names1 names2)))
+        ((setup) :forward)
         ((eval env phase)
          (const properties (list-set dynamic-property) ((eval :field-list) env phase))
          (const na named-argument ((eval :literal-field) env phase))
@@ -1864,57 +1936,71 @@
            (throw argument-mismatch-error))
          (return (set+ properties (list-set (new dynamic-property (& name na) (& value na))))))))
     
-    (rule :literal-field ((validate (-> (context environment) (list-set string))) (eval (-> (environment phase) named-argument)))
+    (rule :literal-field ((validate (-> (context environment) (list-set string))) (setup (-> () void))
+                          (eval (-> (environment phase) named-argument)))
       (production :literal-field (:field-name \: (:assignment-expression allow-in)) literal-field-assignment-expression
         ((validate cxt env)
          (const names (list-set string) ((validate :field-name) cxt env))
          ((validate :assignment-expression) cxt env)
          (return names))
+        ((setup) :forward)
         ((eval env phase)
          (const name string ((eval :field-name) env phase))
          (const r obj-or-ref ((eval :assignment-expression) env phase))
          (const value object (read-reference r phase))
          (return (new named-argument name value)))))
     
-    (rule :field-name ((validate (-> (context environment) (list-set string))) (eval (-> (environment phase) string)))
+    (rule :field-name ((validate (-> (context environment) (list-set string))) (setup (-> () void))
+                       (eval (-> (environment phase) string)))
       (production :field-name (:identifier) field-name-identifier
         ((validate (cxt :unused) (env :unused)) (return (list-set (name :identifier))))
+        ((setup))
         ((eval (env :unused) (phase :unused)) (return (name :identifier))))
       (production :field-name ($string) field-name-string
         ((validate (cxt :unused) (env :unused)) (return (list-set (value $string))))
+        ((setup))
         ((eval (env :unused) (phase :unused)) (return (value $string))))
       (production :field-name ($number) field-name-number
         ((validate (cxt :unused) (env :unused)) (return (list-set (to-string (value $number) compile))))
+        ((setup))
         ((eval (env :unused) (phase :unused)) (return (to-string (value $number) compile))))
       (? js2
         (production :field-name (:paren-expression) field-name-paren-expression
           ((validate cxt env)
            ((validate :paren-expression) cxt env)
            (return (list-set-of string)))
+          ((setup) ((setup :paren-expression)))
           ((eval env phase)
            (const r obj-or-ref ((eval :paren-expression) env phase))
            (const a object (read-reference r phase))
            (return (to-string a phase))))))
-    (%print-actions ("Validation" validate) ("Evaluation" eval))
+    (%print-actions ("Validation" validate) ("Setup" setup) ("Evaluation" eval))
     
     
     (%heading 2 "Array Literals")
-    (production :array-literal ([ :element-list ]) array-literal-list)
+    (rule :array-literal ((validate (-> (context environment) void)) (setup (-> () void))
+                          (eval (-> (environment phase) obj-or-ref)))
+      (production :array-literal ([ :element-list ]) array-literal-list
+        ((validate (cxt :unused) (env :unused)) (todo))
+        ((setup) (todo))
+        ((eval (env :unused) (phase :unused)) (todo))))
     
     (production :element-list (:literal-element) element-list-one)
     (production :element-list (:element-list \, :literal-element) element-list-more)
     
     (production :literal-element () literal-element-none)
     (production :literal-element ((:assignment-expression allow-in)) literal-element-assignment-expression)
-    (%print-actions ("Validation" validate) ("Evaluation" eval))
+    (%print-actions ("Validation" validate) ("Setup" setup) ("Evaluation" eval))
     
     
     (%heading 2 "Super Expressions")
-    (rule :super-expression ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-optional-limit)))
+    (rule :super-expression ((validate (-> (context environment) void)) (setup (-> () void))
+                             (eval (-> (environment phase) obj-optional-limit)))
       (production :super-expression (super) super-expression-super
         ((validate (cxt :unused) env)
          (rwhen (or (in (get-enclosing-class env) (tag none)) (in (find-this env false) (tag none)))
            (throw syntax-error)))
+        ((setup) :forward)
         ((eval env phase)
          (const this object-i-opt (find-this env false))
          (assert (not-in this (tag none) :narrow-true) "Note that " (:action validate) " ensured that " (:local this) " cannot be " (:tag none) " at this point.")
@@ -1928,12 +2014,13 @@
          (rwhen (in (get-enclosing-class env) (tag none))
            (throw syntax-error))
          ((validate :paren-expression) cxt env))
+        ((setup) :forward)
         ((eval env phase)
          (const r obj-or-ref ((eval :paren-expression) env phase))
          (const limit class-opt (get-enclosing-class env))
          (assert (not-in limit (tag none) :narrow-true) "Note that " (:action validate) " ensured that " (:local limit) " cannot be " (:tag none) " at this point.")
          (return (read-limited-reference r limit phase)))))
-    (%print-actions ("Validation" validate) ("Evaluation" eval))
+    (%print-actions ("Validation" validate) ("Setup" setup) ("Evaluation" eval))
     
     
     (%text :comment (:global-call read-limited-reference r phase) " reads the reference, if any, inside " (:local r)
@@ -1951,28 +2038,35 @@
     
     
     (%heading 2 "Postfix Expressions")
-    (rule :postfix-expression ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
+    (rule :postfix-expression ((validate (-> (context environment) void)) (setup (-> () void))
+                               (eval (-> (environment phase) obj-or-ref)))
       (production :postfix-expression (:attribute-expression) postfix-expression-attribute-expression
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase) (return ((eval :attribute-expression) env phase))))
       (production :postfix-expression (:full-postfix-expression) postfix-expression-full-postfix-expression
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase) (return ((eval :full-postfix-expression) env phase))))
       (production :postfix-expression (:short-new-expression) postfix-expression-short-new-expression
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase) (return ((eval :short-new-expression) env phase)))))
     
-    (rule :attribute-expression ((strict (writable-cell boolean)) (validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
+    (rule :attribute-expression ((strict (writable-cell boolean)) (validate (-> (context environment) void)) (setup (-> () void))
+                                 (eval (-> (environment phase) obj-or-ref)))
       (production :attribute-expression (:simple-qualified-identifier) attribute-expression-simple-qualified-identifier
         ((validate cxt env)
          ((validate :simple-qualified-identifier) cxt env)
          (action<- (strict :attribute-expression 0) (& strict cxt)))
+        ((setup) :forward)
         ((eval env (phase :unused))
          (return (new lexical-reference env (multiname :simple-qualified-identifier) (strict :attribute-expression 0)))))
       (production :attribute-expression (:attribute-expression :member-operator) attribute-expression-member-operator
         ((validate cxt env)
          ((validate :attribute-expression) cxt env)
          ((validate :member-operator) cxt env))
+        ((setup) :forward)
         ((eval env phase)
          (const r obj-or-ref ((eval :attribute-expression) env phase))
          (const a object (read-reference r phase))
@@ -1981,6 +2075,7 @@
         ((validate cxt env)
          ((validate :attribute-expression) cxt env)
          ((validate :arguments) cxt env))
+        ((setup) :forward)
         ((eval env phase)
          (const r obj-or-ref ((eval :attribute-expression) env phase))
          (const f object (read-reference r phase))
@@ -1988,23 +2083,28 @@
          (const args argument-list ((eval :arguments) env phase))
          (return (call base f args phase)))))
     
-    (rule :full-postfix-expression ((strict (writable-cell boolean)) (validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
+    (rule :full-postfix-expression ((strict (writable-cell boolean)) (validate (-> (context environment) void)) (setup (-> () void))
+                                    (eval (-> (environment phase) obj-or-ref)))
       (production :full-postfix-expression (:primary-expression) full-postfix-expression-primary-expression
         ((validate cxt env) ((validate :primary-expression) cxt env))
+        ((setup) :forward)
         ((eval env phase) (return ((eval :primary-expression) env phase))))
       (production :full-postfix-expression (:expression-qualified-identifier) full-postfix-expression-expression-qualified-identifier
         ((validate cxt env)
          ((validate :expression-qualified-identifier) cxt env)
          (action<- (strict :full-postfix-expression 0) (& strict cxt)))
+        ((setup) :forward)
         ((eval env (phase :unused))
          (return (new lexical-reference env (multiname :expression-qualified-identifier) (strict :full-postfix-expression 0)))))
       (production :full-postfix-expression (:full-new-expression) full-postfix-expression-full-new-expression
         ((validate cxt env) ((validate :full-new-expression) cxt env))
+        ((setup) :forward)
         ((eval env phase) (return ((eval :full-new-expression) env phase))))
       (production :full-postfix-expression (:full-postfix-expression :member-operator) full-postfix-expression-member-operator
         ((validate cxt env)
          ((validate :full-postfix-expression) cxt env)
          ((validate :member-operator) cxt env))
+        ((setup) :forward)
         ((eval env phase)
          (const r obj-or-ref ((eval :full-postfix-expression) env phase))
          (const a object (read-reference r phase))
@@ -2013,6 +2113,7 @@
         ((validate cxt env)
          ((validate :super-expression) cxt env)
          ((validate :member-operator) cxt env))
+        ((setup) :forward)
         ((eval env phase)
          (const a obj-optional-limit ((eval :super-expression) env phase))
          (return ((eval :member-operator) env a phase))))
@@ -2020,6 +2121,7 @@
         ((validate cxt env)
          ((validate :full-postfix-expression) cxt env)
          ((validate :arguments) cxt env))
+        ((setup) :forward)
         ((eval env phase)
          (const r obj-or-ref ((eval :full-postfix-expression) env phase))
          (const f object (read-reference r phase))
@@ -2028,6 +2130,7 @@
          (return (call base f args phase))))
       (production :full-postfix-expression (:postfix-expression :no-line-break ++) full-postfix-expression-increment
         ((validate cxt env) ((validate :postfix-expression) cxt env))
+        ((setup) :forward)
         ((eval env phase)
          (rwhen (in phase (tag compile) :narrow-false)
            (throw compile-expression-error))
@@ -2039,6 +2142,7 @@
          (return b)))
       (production :full-postfix-expression (:postfix-expression :no-line-break --) full-postfix-expression-decrement
         ((validate cxt env) ((validate :postfix-expression) cxt env))
+        ((setup) :forward)
         ((eval env phase)
          (rwhen (in phase (tag compile) :narrow-false)
            (throw compile-expression-error))
@@ -2049,32 +2153,39 @@
          (write-reference r c phase)
          (return b))))
     
-    (rule :full-new-expression ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
+    (rule :full-new-expression ((validate (-> (context environment) void)) (setup (-> () void))
+                                (eval (-> (environment phase) obj-or-ref)))
       (production :full-new-expression (new :full-new-subexpression :arguments) full-new-expression-new
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase)
          (const r obj-or-ref ((eval :full-new-subexpression) env phase))
          (const f object (read-reference r phase))
          (const args argument-list ((eval :arguments) env phase))
          (return (construct f args phase)))))
     
-    (rule :full-new-subexpression ((strict (writable-cell boolean)) (validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
+    (rule :full-new-subexpression ((strict (writable-cell boolean)) (validate (-> (context environment) void)) (setup (-> () void))
+                                   (eval (-> (environment phase) obj-or-ref)))
       (production :full-new-subexpression (:primary-expression) full-new-subexpression-primary-expression
         ((validate cxt env) ((validate :primary-expression) cxt env))
+        ((setup) :forward)
         ((eval env phase) (return ((eval :primary-expression) env phase))))
       (production :full-new-subexpression (:qualified-identifier) full-new-subexpression-qualified-identifier
         ((validate cxt env)
          ((validate :qualified-identifier) cxt env)
          (action<- (strict :full-new-subexpression 0) (& strict cxt)))
+        ((setup) :forward)
         ((eval env (phase :unused))
          (return (new lexical-reference env (multiname :qualified-identifier) (strict :full-new-subexpression 0)))))
       (production :full-new-subexpression (:full-new-expression) full-new-subexpression-full-new-expression
         ((validate cxt env) ((validate :full-new-expression) cxt env))
+        ((setup) :forward)
         ((eval env phase) (return ((eval :full-new-expression) env phase))))
       (production :full-new-subexpression (:full-new-subexpression :member-operator) full-new-subexpression-member-operator
         ((validate cxt env)
          ((validate :full-new-subexpression) cxt env)
          ((validate :member-operator) cxt env))
+        ((setup) :forward)
         ((eval env phase)
          (const r obj-or-ref ((eval :full-new-subexpression) env phase))
          (const a object (read-reference r phase))
@@ -2083,26 +2194,32 @@
         ((validate cxt env)
          ((validate :super-expression) cxt env)
          ((validate :member-operator) cxt env))
+        ((setup) :forward)
         ((eval env phase)
          (const a obj-optional-limit ((eval :super-expression) env phase))
          (return ((eval :member-operator) env a phase)))))
     
-    (rule :short-new-expression ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
+    (rule :short-new-expression ((validate (-> (context environment) void)) (setup (-> () void))
+                                 (eval (-> (environment phase) obj-or-ref)))
       (production :short-new-expression (new :short-new-subexpression) short-new-expression-new
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase)
          (const r obj-or-ref ((eval :short-new-subexpression) env phase))
          (const f object (read-reference r phase))
          (return (construct f (new argument-list (vector-of object) (list-set-of named-argument)) phase)))))
     
-    (rule :short-new-subexpression ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
+    (rule :short-new-subexpression ((validate (-> (context environment) void)) (setup (-> () void))
+                                    (eval (-> (environment phase) obj-or-ref)))
       (production :short-new-subexpression (:full-new-subexpression) short-new-subexpression-new-full
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase) (return ((eval :full-new-subexpression) env phase))))
       (production :short-new-subexpression (:short-new-expression) short-new-subexpression-new-short
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase) (return ((eval :short-new-expression) env phase)))))
-    (%print-actions ("Validation" strict validate) ("Evaluation" eval))
+    (%print-actions ("Validation" strict validate) ("Setup" setup) ("Evaluation" eval))
     
     
     (%text :comment (:global-call reference-base r) " returns " (:type reference) " " (:local r) :apostrophe "s base or "
@@ -2122,8 +2239,12 @@
         (:select (union undefined null boolean general-number character string namespace compound-attribute prototype package global) (throw bad-value-error))
         (:narrow class (return ((& call a) this args phase)))
         (:narrow instance
-          (// "Note that " (:global resolve-alias) " is not called when getting the " (:label instance env) " field.")
-          (return ((& call (resolve-alias a)) this args (& env a) phase)))
+          (const b (union simple-instance callable-instance) (resolve-alias a))
+          (case b
+            (:select simple-instance (throw bad-value-error))
+            (:narrow callable-instance
+              (// "Note that " (:global resolve-alias) " is not called when getting the " (:label (union callable-instance alias-instance) env) " field.")
+              (return ((& call b) this args (& env (assert-in a (union callable-instance alias-instance))) phase)))))
         (:narrow method-closure
           (const code instance (& code (& method a)))
           (return (call (& this a) code args phase)))))
@@ -2133,55 +2254,74 @@
         (:select (union undefined null boolean general-number character string namespace compound-attribute method-closure prototype package global) (throw bad-value-error))
         (:narrow class (return ((& construct a) args phase)))
         (:narrow instance
-          (// "Note that " (:global resolve-alias) " is not called when getting the " (:label instance env) " field.")
-          (return ((& construct (resolve-alias a)) args (& env a) phase)))))
+          (const b (union simple-instance callable-instance) (resolve-alias a))
+          (case b
+            (:select simple-instance (throw bad-value-error))
+            (:narrow callable-instance
+              (// "Note that " (:global resolve-alias) " is not called when getting the " (:label (union callable-instance alias-instance) env) " field.")
+              (return ((& construct b) args (& env (assert-in a (union callable-instance alias-instance))) phase)))))))
     
     
     (%heading 2 "Member Operators")
-    (rule :member-operator ((validate (-> (context environment) void)) (eval (-> (environment obj-optional-limit phase) obj-or-ref)))
+    (rule :member-operator ((validate (-> (context environment) void)) (setup (-> () void))
+                            (eval (-> (environment obj-optional-limit phase) obj-or-ref)))
       (production :member-operator (\. :qualified-identifier) member-operator-qualified-identifier
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval (env :unused) base (phase :unused)) (return (new dot-reference base (multiname :qualified-identifier)))))
       (production :member-operator (:brackets) member-operator-brackets
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env base phase)
          (const args argument-list ((eval :brackets) env phase))
          (return (new bracket-reference base args)))))
     
-    (rule :brackets ((validate (-> (context environment) void)) (eval (-> (environment phase) argument-list)))
+    (rule :brackets ((validate (-> (context environment) void)) (setup (-> () void))
+                     (eval (-> (environment phase) argument-list)))
       (production :brackets ([ ]) brackets-none
         ((validate (cxt :unused) (env :unused)))
+        ((setup) :forward)
         ((eval (env :unused) (phase :unused)) (return (new argument-list (vector-of object) (list-set-of named-argument)))))
       (production :brackets ([ (:list-expression allow-in) ]) brackets-unnamed
         ((validate cxt env) ((validate :list-expression) cxt env))
+        ((setup) :forward)
         ((eval env phase)
          (const positional (vector object) ((eval-as-list :list-expression) env phase))
          (return (new argument-list positional (list-set-of named-argument)))))
       (production :brackets ([ :named-argument-list ]) brackets-named
         ((validate cxt env) (exec ((validate :named-argument-list) cxt env)))
+        ((setup) :forward)
         ((eval env phase) (return ((eval :named-argument-list) env phase)))))
     
-    (rule :arguments ((validate (-> (context environment) void)) (eval (-> (environment phase) argument-list)))
+    (rule :arguments ((validate (-> (context environment) void)) (setup (-> () void))
+                      (eval (-> (environment phase) argument-list)))
       (production :arguments (:paren-expressions) arguments-paren-expressions
         ((validate cxt env) ((validate :paren-expressions) cxt env))
+        ((setup) :forward)
         ((eval env phase) (return ((eval :paren-expressions) env phase))))
       (production :arguments (\( :named-argument-list \)) arguments-named
         ((validate cxt env) (exec ((validate :named-argument-list) cxt env)))
+        ((setup) :forward)
         ((eval env phase) (return ((eval :named-argument-list) env phase)))))
     
-    (rule :paren-expressions ((validate (-> (context environment) void)) (eval (-> (environment phase) argument-list)))
+    (rule :paren-expressions ((validate (-> (context environment) void)) (setup (-> () void))
+                              (eval (-> (environment phase) argument-list)))
       (production :paren-expressions (\( \)) paren-expressions-none
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval (env :unused) (phase :unused)) (return (new argument-list (vector-of object) (list-set-of named-argument)))))
       (production :paren-expressions (:paren-list-expression) paren-expressions-some
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase)
          (const positional (vector object) ((eval-as-list :paren-list-expression) env phase))
          (return (new argument-list positional (list-set-of named-argument))))))
     
-    (rule :named-argument-list ((validate (-> (context environment) (list-set string))) (eval (-> (environment phase) argument-list)))
+    (rule :named-argument-list ((validate (-> (context environment) (list-set string))) (setup (-> () void))
+                                (eval (-> (environment phase) argument-list)))
       (production :named-argument-list (:literal-field) named-argument-list-one
         ((validate cxt env) (return ((validate :literal-field) cxt env)))
+        ((setup) :forward)
         ((eval env phase)
          (const na named-argument ((eval :literal-field) env phase))
          (return (new argument-list (vector-of object) (list-set na)))))
@@ -2189,6 +2329,7 @@
         ((validate cxt env)
          ((validate :list-expression) cxt env)
          (return ((validate :literal-field) cxt env)))
+        ((setup) :forward)
         ((eval env phase)
          (const positional (vector object) ((eval-as-list :list-expression) env phase))
          (const na named-argument ((eval :literal-field) env phase))
@@ -2200,24 +2341,28 @@
          (rwhen (nonempty (set* names1 names2))
            (throw syntax-error))
          (return (set+ names1 names2)))
+        ((setup) :forward)
         ((eval env phase)
          (const args argument-list ((eval :named-argument-list) env phase))
          (const na named-argument ((eval :literal-field) env phase))
          (rwhen (some (& named args) na2 (= (& name na2) (& name na) string))
            (throw argument-mismatch-error))
          (return (new argument-list (& positional args) (set+ (& named args) (list-set na)))))))
-    (%print-actions ("Validation" validate) ("Evaluation" eval))
+    (%print-actions ("Validation" validate) ("Setup" setup) ("Evaluation" eval))
     
     
     (%heading 2 "Unary Operators")
-    (rule :unary-expression ((strict (writable-cell boolean)) (validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
+    (rule :unary-expression ((strict (writable-cell boolean)) (validate (-> (context environment) void)) (setup (-> () void))
+                             (eval (-> (environment phase) obj-or-ref)))
       (production :unary-expression (:postfix-expression) unary-expression-postfix
         ((validate cxt env) ((validate :postfix-expression) cxt env))
+        ((setup) :forward)
         ((eval env phase) (return ((eval :postfix-expression) env phase))))
       (production :unary-expression (delete :postfix-expression) unary-expression-delete
         ((validate cxt env)
          ((validate :postfix-expression) cxt env)
          (action<- (strict :unary-expression 0) (& strict cxt)))
+        ((setup) :forward)
         ((eval env phase)
          (rwhen (in phase (tag compile) :narrow-false)
            (throw compile-expression-error))
@@ -2225,12 +2370,14 @@
          (return (delete-reference r (strict :unary-expression 0) phase))))
       (production :unary-expression (void :unary-expression) unary-expression-void
         ((validate cxt env) ((validate :unary-expression) cxt env))
+        ((setup) :forward)
         ((eval env phase)
          (const r obj-or-ref ((eval :unary-expression) env phase))
          (exec (read-reference r phase))
          (return undefined)))
       (production :unary-expression (typeof :unary-expression) unary-expression-typeof
         ((validate cxt env) ((validate :unary-expression) cxt env))
+        ((setup) :forward)
         ((eval env phase)
          (const r obj-or-ref ((eval :unary-expression) env phase))
          (const a object (read-reference r phase))
@@ -2250,6 +2397,7 @@
            (:narrow instance (return (& typeof-string (resolve-alias a)))))))
       (production :unary-expression (++ :postfix-expression) unary-expression-increment
         ((validate cxt env) ((validate :postfix-expression) cxt env))
+        ((setup) :forward)
         ((eval env phase)
          (rwhen (in phase (tag compile) :narrow-false)
            (throw compile-expression-error))
@@ -2261,6 +2409,7 @@
          (return c)))
       (production :unary-expression (-- :postfix-expression) unary-expression-decrement
         ((validate cxt env) ((validate :postfix-expression) cxt env))
+        ((setup) :forward)
         ((eval env phase)
          (rwhen (in phase (tag compile) :narrow-false)
            (throw compile-expression-error))
@@ -2272,33 +2421,38 @@
          (return c)))
       (production :unary-expression (+ :unary-expression) unary-expression-plus
         ((validate cxt env) ((validate :unary-expression) cxt env))
+        ((setup) :forward)
         ((eval env phase)
          (const r obj-or-ref ((eval :unary-expression) env phase))
          (const a object (read-reference r phase))
          (return (plus a phase))))
       (production :unary-expression (- :unary-expression) unary-expression-minus
         ((validate cxt env) ((validate :unary-expression) cxt env))
+        ((setup) :forward)
         ((eval env phase)
          (const r obj-or-ref ((eval :unary-expression) env phase))
          (const a object (read-reference r phase))
          (return (minus a phase))))
       (production :unary-expression (- $negated-min-long) unary-expression-min-long
         ((validate (cxt :unused) (env :unused)))
+        ((setup) :forward)
         ((eval (env :unused) (phase :unused))
          (return (new long (neg (expt 2 63))))))
       (production :unary-expression (~ :unary-expression) unary-expression-bitwise-not
         ((validate cxt env) ((validate :unary-expression) cxt env))
+        ((setup) :forward)
         ((eval env phase)
          (const r obj-or-ref ((eval :unary-expression) env phase))
          (const a object (read-reference r phase))
          (return (bit-not a phase))))
       (production :unary-expression (! :unary-expression) unary-expression-logical-not
         ((validate cxt env) ((validate :unary-expression) cxt env))
+        ((setup) :forward)
         ((eval env phase)
          (const r obj-or-ref ((eval :unary-expression) env phase))
          (const a object (read-reference r phase))
          (return (logical-not a phase)))))
-    (%print-actions ("Validation" strict validate) ("Evaluation" eval))
+    (%print-actions ("Validation" strict validate) ("Setup" setup) ("Evaluation" eval))
     
     
     (%text :comment (:global-call plus a phase) " returns the value of the unary expression " (:character-literal "+") (:local a) ". If "
@@ -2337,12 +2491,15 @@
     
         
     (%heading 2 "Multiplicative Operators")
-    (rule :multiplicative-expression ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
+    (rule :multiplicative-expression ((validate (-> (context environment) void)) (setup (-> () void))
+                                      (eval (-> (environment phase) obj-or-ref)))
       (production :multiplicative-expression (:unary-expression) multiplicative-expression-unary
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase) (return ((eval :unary-expression) env phase))))
       (production :multiplicative-expression (:multiplicative-expression * :unary-expression) multiplicative-expression-multiply
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :multiplicative-expression) env phase))
          (const a object (read-reference ra phase))
@@ -2351,6 +2508,7 @@
          (return (multiply a b phase))))
       (production :multiplicative-expression (:multiplicative-expression / :unary-expression) multiplicative-expression-divide
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :multiplicative-expression) env phase))
          (const a object (read-reference ra phase))
@@ -2359,13 +2517,14 @@
          (return (divide a b phase))))
       (production :multiplicative-expression (:multiplicative-expression % :unary-expression) multiplicative-expression-remainder
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :multiplicative-expression) env phase))
          (const a object (read-reference ra phase))
          (const rb obj-or-ref ((eval :unary-expression) env phase))
          (const b object (read-reference rb phase))
          (return (remainder a b phase)))))
-    (%print-actions ("Validation" validate) ("Evaluation" eval))
+    (%print-actions ("Validation" validate) ("Setup" setup) ("Evaluation" eval))
     
     (define (multiply (a object) (b object) (phase phase)) object
       (const x general-number (to-general-number a phase))
@@ -2410,12 +2569,15 @@
     
     
     (%heading 2 "Additive Operators")
-    (rule :additive-expression ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
+    (rule :additive-expression ((validate (-> (context environment) void)) (setup (-> () void))
+                                (eval (-> (environment phase) obj-or-ref)))
       (production :additive-expression (:multiplicative-expression) additive-expression-multiplicative
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase) (return ((eval :multiplicative-expression) env phase))))
       (production :additive-expression (:additive-expression + :multiplicative-expression) additive-expression-add
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :additive-expression) env phase))
          (const a object (read-reference ra phase))
@@ -2424,13 +2586,14 @@
          (return (add a b phase))))
       (production :additive-expression (:additive-expression - :multiplicative-expression) additive-expression-subtract
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :additive-expression) env phase))
          (const a object (read-reference ra phase))
          (const rb obj-or-ref ((eval :multiplicative-expression) env phase))
          (const b object (read-reference rb phase))
          (return (subtract a b phase)))))
-    (%print-actions ("Validation" validate) ("Evaluation" eval))
+    (%print-actions ("Validation" validate) ("Setup" setup) ("Evaluation" eval))
     
     (define (add (a object) (b object) (phase phase)) object
       (const ap primitive-object (to-primitive a null phase))
@@ -2464,12 +2627,15 @@
     
     
     (%heading 2 "Bitwise Shift Operators")
-    (rule :shift-expression ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
+    (rule :shift-expression ((validate (-> (context environment) void)) (setup (-> () void))
+                             (eval (-> (environment phase) obj-or-ref)))
       (production :shift-expression (:additive-expression) shift-expression-additive
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase) (return ((eval :additive-expression) env phase))))
       (production :shift-expression (:shift-expression << :additive-expression) shift-expression-left
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :shift-expression) env phase))
          (const a object (read-reference ra phase))
@@ -2478,6 +2644,7 @@
          (return (shift-left a b phase))))
       (production :shift-expression (:shift-expression >> :additive-expression) shift-expression-right-signed
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :shift-expression) env phase))
          (const a object (read-reference ra phase))
@@ -2486,13 +2653,14 @@
          (return (shift-right a b phase))))
       (production :shift-expression (:shift-expression >>> :additive-expression) shift-expression-right-unsigned
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :shift-expression) env phase))
          (const a object (read-reference ra phase))
          (const rb obj-or-ref ((eval :additive-expression) env phase))
          (const b object (read-reference rb phase))
          (return (shift-right-unsigned a b phase)))))
-    (%print-actions ("Validation" validate) ("Evaluation" eval))
+    (%print-actions ("Validation" validate) ("Setup" setup) ("Evaluation" eval))
     
     (define (shift-left (a object) (b object) (phase phase)) object
       (const x general-number (to-general-number a phase))
@@ -2550,12 +2718,15 @@
     
     
     (%heading 2 "Relational Operators")
-    (rule (:relational-expression :beta) ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
+    (rule (:relational-expression :beta) ((validate (-> (context environment) void)) (setup (-> () void))
+                                          (eval (-> (environment phase) obj-or-ref)))
       (production (:relational-expression :beta) (:shift-expression) relational-expression-shift
        ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase) (return ((eval :shift-expression) env phase))))
       (production (:relational-expression :beta) ((:relational-expression :beta) < :shift-expression) relational-expression-less
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :relational-expression) env phase))
          (const a object (read-reference ra phase))
@@ -2564,6 +2735,7 @@
          (return (is-less a b phase))))
       (production (:relational-expression :beta) ((:relational-expression :beta) > :shift-expression) relational-expression-greater
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :relational-expression) env phase))
          (const a object (read-reference ra phase))
@@ -2572,6 +2744,7 @@
          (return (is-less b a phase))))
       (production (:relational-expression :beta) ((:relational-expression :beta) <= :shift-expression) relational-expression-less-or-equal
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :relational-expression) env phase))
          (const a object (read-reference ra phase))
@@ -2580,6 +2753,7 @@
          (return (is-less-or-equal a b phase))))
       (production (:relational-expression :beta) ((:relational-expression :beta) >= :shift-expression) relational-expression-greater-or-equal
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :relational-expression) env phase))
          (const a object (read-reference ra phase))
@@ -2588,17 +2762,21 @@
          (return (is-less-or-equal b a phase))))
       (production (:relational-expression :beta) ((:relational-expression :beta) is :shift-expression) relational-expression-is
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval (env :unused) (phase :unused)) (todo)))
       (production (:relational-expression :beta) ((:relational-expression :beta) as :shift-expression) relational-expression-as
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval (env :unused) (phase :unused)) (todo)))
       (production (:relational-expression allow-in) ((:relational-expression allow-in) in :shift-expression) relational-expression-in
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval (env :unused) (phase :unused)) (todo)))
       (production (:relational-expression :beta) ((:relational-expression :beta) instanceof :shift-expression) relational-expression-instanceof
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval (env :unused) (phase :unused)) (todo))))
-    (%print-actions ("Validation" validate) ("Evaluation" eval))
+    (%print-actions ("Validation" validate) ("Setup" setup) ("Evaluation" eval))
     
     (define (is-less (a object) (b object) (phase phase)) boolean
       (const ap primitive-object (to-primitive a null phase))
@@ -2616,12 +2794,15 @@
     
     
     (%heading 2 "Equality Operators")
-    (rule (:equality-expression :beta) ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
+    (rule (:equality-expression :beta) ((validate (-> (context environment) void)) (setup (-> () void))
+                                        (eval (-> (environment phase) obj-or-ref)))
       (production (:equality-expression :beta) ((:relational-expression :beta)) equality-expression-relational
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase) (return ((eval :relational-expression) env phase))))
       (production (:equality-expression :beta) ((:equality-expression :beta) == (:relational-expression :beta)) equality-expression-equal
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :equality-expression) env phase))
          (const a object (read-reference ra phase))
@@ -2630,6 +2811,7 @@
          (return (is-equal a b phase))))
       (production (:equality-expression :beta) ((:equality-expression :beta) != (:relational-expression :beta)) equality-expression-not-equal
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :equality-expression) env phase))
          (const a object (read-reference ra phase))
@@ -2639,6 +2821,7 @@
          (return (not c))))
       (production (:equality-expression :beta) ((:equality-expression :beta) === (:relational-expression :beta)) equality-expression-strict-equal
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :equality-expression) env phase))
          (const a object (read-reference ra phase))
@@ -2647,6 +2830,7 @@
          (return (is-strictly-equal a b phase))))
       (production (:equality-expression :beta) ((:equality-expression :beta) !== (:relational-expression :beta)) equality-expression-strict-not-equal
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :equality-expression) env phase))
          (const a object (read-reference ra phase))
@@ -2654,7 +2838,7 @@
          (const b object (read-reference rb phase))
          (const c boolean (is-strictly-equal a b phase))
          (return (not c)))))
-    (%print-actions ("Validation" validate) ("Evaluation" eval))
+    (%print-actions ("Validation" validate) ("Setup" setup) ("Evaluation" eval))
     
     (define (is-equal (a object) (b object) (phase phase)) boolean
       (case a
@@ -2696,12 +2880,15 @@
     
     
     (%heading 2 "Binary Bitwise Operators")
-    (rule (:bitwise-and-expression :beta) ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
+    (rule (:bitwise-and-expression :beta) ((validate (-> (context environment) void)) (setup (-> () void))
+                                           (eval (-> (environment phase) obj-or-ref)))
       (production (:bitwise-and-expression :beta) ((:equality-expression :beta)) bitwise-and-expression-equality
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase) (return ((eval :equality-expression) env phase))))
       (production (:bitwise-and-expression :beta) ((:bitwise-and-expression :beta) & (:equality-expression :beta)) bitwise-and-expression-and
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :bitwise-and-expression) env phase))
          (const a object (read-reference ra phase))
@@ -2709,12 +2896,15 @@
          (const b object (read-reference rb phase))
          (return (bit-and a b phase)))))
     
-    (rule (:bitwise-xor-expression :beta) ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
+    (rule (:bitwise-xor-expression :beta) ((validate (-> (context environment) void)) (setup (-> () void))
+                                           (eval (-> (environment phase) obj-or-ref)))
       (production (:bitwise-xor-expression :beta) ((:bitwise-and-expression :beta)) bitwise-xor-expression-bitwise-and
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase) (return ((eval :bitwise-and-expression) env phase))))
       (production (:bitwise-xor-expression :beta) ((:bitwise-xor-expression :beta) ^ (:bitwise-and-expression :beta)) bitwise-xor-expression-xor
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :bitwise-xor-expression) env phase))
          (const a object (read-reference ra phase))
@@ -2722,19 +2912,22 @@
          (const b object (read-reference rb phase))
          (return (bit-xor a b phase)))))
     
-    (rule (:bitwise-or-expression :beta) ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
+    (rule (:bitwise-or-expression :beta) ((validate (-> (context environment) void)) (setup (-> () void))
+                                          (eval (-> (environment phase) obj-or-ref)))
       (production (:bitwise-or-expression :beta) ((:bitwise-xor-expression :beta)) bitwise-or-expression-bitwise-xor
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase) (return ((eval :bitwise-xor-expression) env phase))))
       (production (:bitwise-or-expression :beta) ((:bitwise-or-expression :beta) \| (:bitwise-xor-expression :beta)) bitwise-or-expression-or
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :bitwise-or-expression) env phase))
          (const a object (read-reference ra phase))
          (const rb obj-or-ref ((eval :bitwise-xor-expression) env phase))
          (const b object (read-reference rb phase))
          (return (bit-or a b phase)))))
-    (%print-actions ("Validation" validate) ("Evaluation" eval))
+    (%print-actions ("Validation" validate) ("Setup" setup) ("Evaluation" eval))
     
     (define (bit-and (a object) (b object) (phase phase)) general-number
       (const x general-number (to-general-number a phase))
@@ -2786,12 +2979,15 @@
     
     
     (%heading 2 "Binary Logical Operators")
-    (rule (:logical-and-expression :beta) ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
+    (rule (:logical-and-expression :beta) ((validate (-> (context environment) void)) (setup (-> () void))
+                                           (eval (-> (environment phase) obj-or-ref)))
       (production (:logical-and-expression :beta) ((:bitwise-or-expression :beta)) logical-and-expression-bitwise-or
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase) (return ((eval :bitwise-or-expression) env phase))))
       (production (:logical-and-expression :beta) ((:logical-and-expression :beta) && (:bitwise-or-expression :beta)) logical-and-expression-and
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :logical-and-expression) env phase))
          (const a object (read-reference ra phase))
@@ -2801,12 +2997,15 @@
            (return (read-reference rb phase)))
           (nil (return a))))))
     
-    (rule (:logical-xor-expression :beta) ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
+    (rule (:logical-xor-expression :beta) ((validate (-> (context environment) void)) (setup (-> () void))
+                                           (eval (-> (environment phase) obj-or-ref)))
       (production (:logical-xor-expression :beta) ((:logical-and-expression :beta)) logical-xor-expression-logical-and
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase) (return ((eval :logical-and-expression) env phase))))
       (production (:logical-xor-expression :beta) ((:logical-xor-expression :beta) ^^ (:logical-and-expression :beta)) logical-xor-expression-xor
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :logical-xor-expression) env phase))
          (const a object (read-reference ra phase))
@@ -2816,12 +3015,15 @@
          (const bb boolean (to-boolean b phase))
          (return (xor ba bb)))))
     
-    (rule (:logical-or-expression :beta) ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
+    (rule (:logical-or-expression :beta) ((validate (-> (context environment) void)) (setup (-> () void))
+                                          (eval (-> (environment phase) obj-or-ref)))
       (production (:logical-or-expression :beta) ((:logical-xor-expression :beta)) logical-or-expression-logical-xor
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase) (return ((eval :logical-xor-expression) env phase))))
       (production (:logical-or-expression :beta) ((:logical-or-expression :beta) \|\| (:logical-xor-expression :beta)) logical-or-expression-or
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :logical-or-expression) env phase))
          (const a object (read-reference ra phase))
@@ -2830,16 +3032,19 @@
           (nil
            (const rb obj-or-ref ((eval :logical-xor-expression) env phase))
            (return (read-reference rb phase)))))))
-    (%print-actions ("Validation" validate) ("Evaluation" eval))
+    (%print-actions ("Validation" validate) ("Setup" setup) ("Evaluation" eval))
     
     
     (%heading 2 "Conditional Operator")
-    (rule (:conditional-expression :beta) ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
+    (rule (:conditional-expression :beta) ((validate (-> (context environment) void)) (setup (-> () void))
+                                           (eval (-> (environment phase) obj-or-ref)))
       (production (:conditional-expression :beta) ((:logical-or-expression :beta)) conditional-expression-logical-or
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase) (return ((eval :logical-or-expression) env phase))))
       (production (:conditional-expression :beta) ((:logical-or-expression :beta) ? (:assignment-expression :beta) \: (:assignment-expression :beta)) conditional-expression-conditional
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :logical-or-expression) env phase))
          (const a object (read-reference ra phase))
@@ -2851,12 +3056,15 @@
            (const rc obj-or-ref ((eval :assignment-expression 2) env phase))
            (return (read-reference rc phase)))))))
     
-    (rule (:non-assignment-expression :beta) ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
+    (rule (:non-assignment-expression :beta) ((validate (-> (context environment) void)) (setup (-> () void))
+                                              (eval (-> (environment phase) obj-or-ref)))
       (production (:non-assignment-expression :beta) ((:logical-or-expression :beta)) non-assignment-expression-logical-or
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase) (return ((eval :logical-or-expression) env phase))))
       (production (:non-assignment-expression :beta) ((:logical-or-expression :beta) ? (:non-assignment-expression :beta) \: (:non-assignment-expression :beta)) non-assignment-expression-conditional
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :logical-or-expression) env phase))
          (const a object (read-reference ra phase))
@@ -2867,18 +3075,23 @@
           (nil
            (const rc obj-or-ref ((eval :non-assignment-expression 2) env phase))
            (return (read-reference rc phase)))))))
-    (%print-actions ("Validation" validate) ("Evaluation" eval))
+    (%print-actions ("Validation" validate) ("Setup" setup) ("Evaluation" eval))
     
     
     (%heading 2 "Assignment Operators")
-    (rule (:assignment-expression :beta) ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
+    (rule (:assignment-expression :beta) ((validate (-> (context environment) void)) (setup (-> () void))
+                                          (eval (-> (environment phase) obj-or-ref)))
       (production (:assignment-expression :beta) ((:conditional-expression :beta)) assignment-expression-conditional
         ((validate cxt env) ((validate :conditional-expression) cxt env))
+        ((setup) ((setup :conditional-expression)))
         ((eval env phase) (return ((eval :conditional-expression) env phase))))
       (production (:assignment-expression :beta) (:postfix-expression = (:assignment-expression :beta)) assignment-expression-assignment
         ((validate cxt env)
          ((validate :postfix-expression) cxt env)
          ((validate :assignment-expression) cxt env))
+        ((setup)
+         ((setup :postfix-expression))
+         ((setup :assignment-expression)))
         ((eval env phase)
          (rwhen (in phase (tag compile) :narrow-false)
            (throw compile-expression-error))
@@ -2891,6 +3104,9 @@
         ((validate cxt env)
          ((validate :postfix-expression) cxt env)
          ((validate :assignment-expression) cxt env))
+        ((setup)
+         ((setup :postfix-expression))
+         ((setup :assignment-expression)))
         ((eval env phase)
          (rwhen (in phase (tag compile) :narrow-false)
            (throw compile-expression-error))
@@ -2905,6 +3121,9 @@
         ((validate cxt env)
          ((validate :postfix-expression) cxt env)
          ((validate :assignment-expression) cxt env))
+        ((setup)
+         ((setup :postfix-expression))
+         ((setup :assignment-expression)))
         ((eval env phase)
          (rwhen (in phase (tag compile) :narrow-false)
            (throw compile-expression-error))
@@ -2946,14 +3165,16 @@
     (deftag and-eq)
     (deftag xor-eq)
     (deftag or-eq)
-    (%print-actions ("Validation" validate) ("Evaluation" op operator eval))
+    (%print-actions ("Validation" validate) ("Setup" setup) ("Evaluation" op operator eval))
     
     
     (%heading 2 "Comma Expressions")
-    (rule (:list-expression :beta) ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref))
+    (rule (:list-expression :beta) ((validate (-> (context environment) void)) (setup (-> () void))
+                                    (eval (-> (environment phase) obj-or-ref))
                                     (eval-as-list (-> (environment phase) (vector object))))
       (production (:list-expression :beta) ((:assignment-expression :beta)) list-expression-assignment
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase) (return ((eval :assignment-expression) env phase)))
         ((eval-as-list env phase)
          (const r obj-or-ref ((eval :assignment-expression) env phase))
@@ -2961,6 +3182,7 @@
          (return (vector elt))))
       (production (:list-expression :beta) ((:list-expression :beta) \, (:assignment-expression :beta)) list-expression-comma
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :list-expression) env phase))
          (exec (read-reference ra phase))
@@ -2974,20 +3196,22 @@
     
     (production :optional-expression ((:list-expression allow-in)) optional-expression-expression)
     (production :optional-expression () optional-expression-empty)
-    (%print-actions ("Validation" validate) ("Evaluation" eval))
+    (%print-actions ("Validation" validate) ("Setup" setup) ("Evaluation" eval))
     
     
     (%heading 2 "Type Expressions")
-    (rule (:type-expression :beta) ((validate (-> (context environment) void)) (eval (-> (environment) class)))
+    (rule (:type-expression :beta) ((validate (-> (context environment) void))
+                                    (setup-and-eval (-> (environment) class)))
       (production (:type-expression :beta) ((:non-assignment-expression :beta)) type-expression-non-assignment-expression
         ((validate cxt env) ((validate :non-assignment-expression) cxt env))
-        ((eval env)
+        ((setup-and-eval env)
+         ((setup :non-assignment-expression))
          (const r obj-or-ref ((eval :non-assignment-expression) env compile))
          (const o object (read-reference r compile))
          (rwhen (not-in o class :narrow-false)
            (throw bad-value-error))
          (return o))))
-    (%print-actions ("Validation" validate) ("Evaluation" eval))
+    (%print-actions ("Validation" validate) ("Setup and Evaluation" setup-and-eval))
     
     
     (%heading 1 "Statements")
@@ -2998,110 +3222,146 @@
                       full)        ;semicolon required at the end
     (grammar-argument :omega_2 abbrev full)
     
-    (rule (:statement :omega) ((validate (-> (context environment (list-set label) jump-targets plurality) void)) (eval (-> (environment object) object)))
+    (rule (:statement :omega) ((validate (-> (context environment (list-set label) jump-targets plurality) void)) (setup (-> () void))
+                               (eval (-> (environment object) object)))
       (production (:statement :omega) (:expression-statement (:semicolon :omega)) statement-expression-statement
         ((validate cxt env (sl :unused) (jt :unused) (pl :unused)) ((validate :expression-statement) cxt env))
+        ((setup) :forward)
         ((eval env (d :unused)) (return ((eval :expression-statement) env))))
       (production (:statement :omega) (:super-statement (:semicolon :omega)) statement-super-statement
         ((validate cxt env (sl :unused) (jt :unused) (pl :unused)) ((validate :super-statement) cxt env))
+        ((setup) :forward)
         ((eval env (d :unused)) (return ((eval :super-statement) env))))
       (production (:statement :omega) (:block) statement-block
         ((validate cxt env (sl :unused) jt pl) ((validate :block) cxt env jt pl))
+        ((setup) :forward)
         ((eval env d) (return ((eval :block) env d))))
       (production (:statement :omega) ((:labeled-statement :omega)) statement-labeled-statement
         ((validate cxt env sl jt (pl :unused)) ((validate :labeled-statement) cxt env sl jt))
+        ((setup) :forward)
         ((eval env d) (return ((eval :labeled-statement) env d))))
       (production (:statement :omega) ((:if-statement :omega)) statement-if-statement
         ((validate cxt env (sl :unused) jt (pl :unused)) ((validate :if-statement) cxt env jt))
+        ((setup) :forward)
         ((eval env d) (return ((eval :if-statement) env d))))
       (production (:statement :omega) (:switch-statement) statement-switch-statement
-        ((validate (cxt :unused) (env :unused) (sl :unused) (jt :unused) (pl :unused)) (todo))
-        ((eval (env :unused) (d :unused)) (todo)))
+        ((validate cxt env (sl :unused) jt (pl :unused)) ((validate :switch-statement) cxt env jt))
+        ((setup) :forward)
+        ((eval env d) (return ((eval :switch-statement) env d))))
       (production (:statement :omega) (:do-statement (:semicolon :omega)) statement-do-statement
         ((validate cxt env sl jt (pl :unused)) ((validate :do-statement) cxt env sl jt))
+        ((setup) :forward)
         ((eval env d) (return ((eval :do-statement) env d))))
       (production (:statement :omega) ((:while-statement :omega)) statement-while-statement
         ((validate cxt env sl jt (pl :unused)) ((validate :while-statement) cxt env sl jt))
+        ((setup) :forward)
         ((eval env d) (return ((eval :while-statement) env d))))
       (production (:statement :omega) ((:for-statement :omega)) statement-for-statement
-        ((validate (cxt :unused) (env :unused) (sl :unused) (jt :unused) (pl :unused)) (todo))
-        ((eval (env :unused) (d :unused)) (todo)))
+        ((validate cxt env sl jt (pl :unused)) ((validate :for-statement) cxt env sl jt))
+        ((setup) :forward)
+        ((eval env d) (return ((eval :for-statement) env d))))
       (production (:statement :omega) ((:with-statement :omega)) statement-with-statement
-        ((validate (cxt :unused) (env :unused) (sl :unused) (jt :unused) (pl :unused)) (todo))
-        ((eval (env :unused) (d :unused)) (todo)))
+        ((validate cxt env (sl :unused) jt (pl :unused)) ((validate :with-statement) cxt env jt))
+        ((setup) :forward)
+        ((eval env d) (return ((eval :with-statement) env d))))
       (production (:statement :omega) (:continue-statement (:semicolon :omega)) statement-continue-statement
         ((validate (cxt :unused) (env :unused) (sl :unused) jt (pl :unused)) ((validate :continue-statement) jt))
+        ((setup) :forward)
         ((eval env d) (return ((eval :continue-statement) env d))))
       (production (:statement :omega) (:break-statement (:semicolon :omega)) statement-break-statement
         ((validate (cxt :unused) (env :unused) (sl :unused) jt (pl :unused)) ((validate :break-statement) jt))
+        ((setup) :forward)
         ((eval env d) (return ((eval :break-statement) env d))))
       (production (:statement :omega) (:return-statement (:semicolon :omega)) statement-return-statement
         ((validate cxt env (sl :unused) (jt :unused) (pl :unused)) ((validate :return-statement) cxt env))
+        ((setup) :forward)
         ((eval env (d :unused)) (return ((eval :return-statement) env))))
       (production (:statement :omega) (:throw-statement (:semicolon :omega)) statement-throw-statement
         ((validate cxt env (sl :unused) (jt :unused) (pl :unused)) ((validate :throw-statement) cxt env))
+        ((setup) :forward)
         ((eval env (d :unused)) (return ((eval :throw-statement) env))))
       (production (:statement :omega) (:try-statement) statement-try-statement
-        ((validate (cxt :unused) (env :unused) (sl :unused) (jt :unused) (pl :unused)) (todo))
-        ((eval (env :unused) (d :unused)) (todo))))
+        ((validate cxt env (sl :unused) jt (pl :unused)) ((validate :try-statement) cxt env jt))
+        ((setup) :forward)
+        ((eval env d) (return ((eval :try-statement) env d)))))
     
     
-    (rule (:substatement :omega) ((enabled (writable-cell boolean)) (validate (-> (context environment (list-set label) jump-targets) void))
+    (rule (:substatement :omega) ((enabled (writable-cell boolean))
+                                  (validate (-> (context environment (list-set label) jump-targets) void))
+                                  (setup (-> () void))
                                   (eval (-> (environment object) object)))
       (production (:substatement :omega) (:empty-statement) substatement-empty-statement
         ((validate (cxt :unused) (env :unused) (sl :unused) (jt :unused)))
+        ((setup))
         ((eval (env :unused) d) (return d)))
       (production (:substatement :omega) ((:statement :omega)) substatement-statement
         ((validate cxt env sl jt) ((validate :statement) cxt env sl jt plural))
+        ((setup) ((setup :statement)))
         ((eval env d) (return ((eval :statement) env d))))
       (production (:substatement :omega) (:simple-variable-definition (:semicolon :omega)) substatement-simple-variable-definition
         ((validate cxt env (sl :unused) (jt :unused)) ((validate :simple-variable-definition) cxt env))
+        ((setup) ((setup :simple-variable-definition)))
         ((eval env d) (return ((eval :simple-variable-definition) env d))))
       (production (:substatement :omega) (:attributes :no-line-break { :substatements }) substatement-annotated-group
         ((validate cxt env (sl :unused) jt)
          ((validate :attributes) cxt env)
+         ((setup :attributes))
          (const attr attribute ((eval :attributes) env compile))
          (rwhen (not-in attr boolean :narrow-false)
            (throw bad-value-error))
          (action<- (enabled :substatement 0) attr)
          (when attr
            ((validate :substatements) cxt env jt)))
+        ((setup)
+         (when (enabled :substatement 0)
+           ((setup :substatements))))
         ((eval env d)
          (if (enabled :substatement 0)
            (return ((eval :substatements) env d))
            (return d)))))
     
     
-    (rule :substatements ((validate (-> (context environment jump-targets) void)) (eval (-> (environment object) object)))
+    (rule :substatements ((validate (-> (context environment jump-targets) void)) (setup (-> () void))
+                          (eval (-> (environment object) object)))
       (production :substatements () substatements-none
         ((validate (cxt :unused) (env :unused) (jt :unused)))
+        ((setup) :forward)
         ((eval (env :unused) d) (return d)))
       (production :substatements (:substatements-prefix (:substatement abbrev)) substatements-more
         ((validate cxt env jt)
          ((validate :substatements-prefix) cxt env jt)
          ((validate :substatement) cxt env (list-set-of label) jt))
+        ((setup) :forward)
         ((eval env d)
          (const o object ((eval :substatements-prefix) env d))
          (return ((eval :substatement) env o)))))
     
-    (rule :substatements-prefix ((validate (-> (context environment jump-targets) void)) (eval (-> (environment object) object)))
+    (rule :substatements-prefix ((validate (-> (context environment jump-targets) void)) (setup (-> () void))
+                                 (eval (-> (environment object) object)))
       (production :substatements-prefix () substatements-prefix-none
         ((validate (cxt :unused) (env :unused) (jt :unused)))
+        ((setup) :forward)
         ((eval (env :unused) d) (return d)))
       (production :substatements-prefix (:substatements-prefix (:substatement full)) substatements-prefix-more
         ((validate cxt env jt)
          ((validate :substatements-prefix) cxt env jt)
          ((validate :substatement) cxt env (list-set-of label) jt))
+        ((setup) :forward)
         ((eval env d)
          (const o object ((eval :substatements-prefix) env d))
          (return ((eval :substatement) env o)))))
     
     
-    (production (:semicolon :omega) (\;) semicolon-semicolon)
-    (production (:semicolon :omega) ($virtual-semicolon) semicolon-virtual-semicolon)
-    (production (:semicolon abbrev) () semicolon-abbrev)
-    (production (:semicolon no-short-if) () semicolon-no-short-if)
-    (%print-actions ("Validation" enabled validate) ("Evaluation" eval))
+    (rule (:semicolon :omega) ((setup (-> () void)))
+      (production (:semicolon :omega) (\;) semicolon-semicolon
+        ((setup)))
+      (production (:semicolon :omega) ($virtual-semicolon) semicolon-virtual-semicolon
+        ((setup)))
+      (production (:semicolon abbrev) () semicolon-abbrev
+        ((setup)))
+      (production (:semicolon no-short-if) () semicolon-no-short-if
+        ((setup))))
+    (%print-actions ("Validation" enabled validate) ("Setup" setup) ("Evaluation" eval))
     
     
     (%heading 2 "Empty Statement")
@@ -3109,27 +3369,34 @@
     
     
     (%heading 2 "Expression Statement")
-    (rule :expression-statement ((validate (-> (context environment) void)) (eval (-> (environment) object)))
+    (rule :expression-statement ((validate (-> (context environment) void)) (setup (-> () void))
+                                 (eval (-> (environment) object)))
       (production :expression-statement ((:- function {) (:list-expression allow-in)) expression-statement-list-expression
-        ((validate cxt env) :forward)
+        ((validate cxt env) ((validate :list-expression) cxt env))
+        ((setup) ((setup :list-expression)))
         ((eval env)
          (const r obj-or-ref ((eval :list-expression) env run))
          (return (read-reference r run)))))
-    (%print-actions ("Validation" validate) ("Evaluation" eval))
+    (%print-actions ("Validation" validate) ("Setup" setup) ("Evaluation" eval))
     
     
     (%heading 2 "Super Statement")
-    (rule :super-statement ((validate (-> (context environment) void)) (eval (-> (environment) object)))
+    (rule :super-statement ((validate (-> (context environment) void)) (setup (-> () void))
+                            (eval (-> (environment) object)))
       (production :super-statement (super :arguments) super-statement-super-arguments
         ((validate (cxt :unused) (env :unused)) (todo))
+        ((setup) ((setup :arguments)))
         ((eval (env :unused)) (todo))))
-    (%print-actions ("Validation" validate) ("Evaluation" eval))
+    (%print-actions ("Validation" validate) ("Setup" setup) ("Evaluation" eval))
     
     
     (%heading 2 "Block Statement")
     (rule :block ((compile-frame (writable-cell block-frame))
-                  (validate (-> (context environment jump-targets plurality) void)) (validate-using-frame (-> (context environment jump-targets plurality frame) void))
-                  (eval (-> (environment object) object)) (eval-using-frame (-> (environment frame object) object)))
+                  (validate (-> (context environment jump-targets plurality) void))
+                  (validate-using-frame (-> (context environment jump-targets plurality frame) void))
+                  (setup (-> () void))
+                  (eval (-> (environment object) object))
+                  (eval-using-frame (-> (environment frame object) object)))
       (production :block ({ :directives }) block-directives
         ((validate cxt env jt pl)
          (const compile-frame block-frame (new block-frame (list-set-of static-binding) (list-set-of static-binding) pl))
@@ -3137,6 +3404,7 @@
          (exec ((validate :directives) cxt (cons compile-frame env) jt pl none)))
         ((validate-using-frame cxt env jt pl frame)
          (exec ((validate :directives) cxt (cons frame env) jt pl none)))
+        ((setup) ((setup :directives)))
         ((eval env d)
          (const compile-frame block-frame (compile-frame :block 0))
          (var runtime-frame block-frame)
@@ -3148,11 +3416,12 @@
          (return ((eval :directives) (cons runtime-frame env) d)))
         ((eval-using-frame env frame d)
          (return ((eval :directives) (cons frame env) d)))))
-    (%print-actions ("Validation" validate validate-using-frame) ("Evaluation" eval eval-using-frame))
+    (%print-actions ("Validation" validate validate-using-frame) ("Setup" setup) ("Evaluation" eval eval-using-frame))
     
     
     (%heading 2 "Labeled Statements")
-    (rule (:labeled-statement :omega) ((validate (-> (context environment (list-set label) jump-targets) void)) (eval (-> (environment object) object)))
+    (rule (:labeled-statement :omega) ((validate (-> (context environment (list-set label) jump-targets) void)) (setup (-> () void))
+                                       (eval (-> (environment object) object)))
       (production (:labeled-statement :omega) (:identifier \: (:substatement :omega)) labeled-statement-label
         ((validate cxt env sl jt)
          (const name string (name :identifier))
@@ -3160,20 +3429,23 @@
            (throw syntax-error))
          (const jt2 jump-targets (new jump-targets (set+ (& break-targets jt) (list-set-of label name)) (& continue-targets jt)))
          ((validate :substatement) cxt env (set+ sl (list-set-of label name)) jt2))
+        ((setup) ((setup :substatement)))
         ((eval env d)
          (catch ((return ((eval :substatement) env d)))
            (x) (if (and (in x break :narrow-true) (= (& label x) (name :identifier) label))
                  (return (& value x))
                  (throw x))))))
-    (%print-actions ("Validation" validate) ("Evaluation" eval))
+    (%print-actions ("Validation" validate) ("Setup" setup) ("Evaluation" eval))
     
     
     (%heading 2 "If Statement")
-    (rule (:if-statement :omega) ((validate (-> (context environment jump-targets) void)) (eval (-> (environment object) object)))
+    (rule (:if-statement :omega) ((validate (-> (context environment jump-targets) void)) (setup (-> () void))
+                                  (eval (-> (environment object) object)))
       (production (:if-statement abbrev) (if :paren-list-expression (:substatement abbrev)) if-statement-if-then-abbrev
         ((validate cxt env jt)
          ((validate :paren-list-expression) cxt env)
          ((validate :substatement) cxt env (list-set-of label) jt))
+        ((setup) :forward)
         ((eval env d)
          (const r obj-or-ref ((eval :paren-list-expression) env run))
          (const o object (read-reference r run))
@@ -3184,6 +3456,7 @@
         ((validate cxt env jt)
          ((validate :paren-list-expression) cxt env)
          ((validate :substatement) cxt env (list-set-of label) jt))
+        ((setup) :forward)
         ((eval env d)
          (const r obj-or-ref ((eval :paren-list-expression) env run))
          (const o object (read-reference r run))
@@ -3196,17 +3469,26 @@
          ((validate :paren-list-expression) cxt env)
          ((validate :substatement 1) cxt env (list-set-of label) jt)
          ((validate :substatement 2) cxt env (list-set-of label) jt))
+        ((setup) :forward)
         ((eval env d)
          (const r obj-or-ref ((eval :paren-list-expression) env run))
          (const o object (read-reference r run))
          (if (to-boolean o run)
            (return ((eval :substatement 1) env d))
            (return ((eval :substatement 2) env d))))))
-    (%print-actions ("Validation" validate) ("Evaluation" eval))
+    (%print-actions ("Validation" validate) ("Setup" setup) ("Evaluation" eval))
     
     
     (%heading 2 "Switch Statement")
-    (production :switch-statement (switch :paren-list-expression { :case-statements }) switch-statement-cases)
+    (rule :switch-statement ((validate (-> (context environment jump-targets) void)) (setup (-> () void))
+                             (eval (-> (environment object) object)))
+      (production :switch-statement (switch :paren-list-expression { :case-statements }) switch-statement-cases
+        ((validate cxt env (jt :unused))
+         ((validate :paren-list-expression) cxt env)
+         (todo))
+        ((setup) (todo))
+        ((eval (env :unused) (d :unused))
+         (todo))))
     
     (production :case-statements () case-statements-none)
     (production :case-statements (:case-label) case-statements-one)
@@ -3220,11 +3502,12 @@
     
     (production :case-label (case (:list-expression allow-in) \:) case-label-case)
     (production :case-label (default \:) case-label-default)
-    (%print-actions ("Validation" validate) ("Evaluation" eval))
+    (%print-actions ("Validation" validate) ("Setup" setup) ("Evaluation" eval))
     
     
     (%heading 2 "Do-While Statement")
-    (rule :do-statement ((labels (writable-cell (list-set label))) (validate (-> (context environment (list-set label) jump-targets) void))
+    (rule :do-statement ((labels (writable-cell (list-set label)))
+                         (validate (-> (context environment (list-set label) jump-targets) void)) (setup (-> () void))
                          (eval (-> (environment object) object)))
       (production :do-statement (do (:substatement abbrev) while :paren-list-expression) do-statement-do-while
         ((validate cxt env sl jt)
@@ -3235,6 +3518,7 @@
                                    (set+ (& continue-targets jt) continue-labels)))
          ((validate :substatement) cxt env (list-set-of label) jt2)
          ((validate :paren-list-expression) cxt env))
+        ((setup) :forward)
         ((eval env d)
          (catch ((var d1 object d)
                  (while true
@@ -3249,11 +3533,12 @@
            (x) (if (and (in x break :narrow-true) (= (& label x) default label))
                  (return (& value x))
                  (throw x))))))
-    (%print-actions ("Validation" labels validate) ("Evaluation" eval))
+    (%print-actions ("Validation" labels validate) ("Setup" setup) ("Evaluation" eval))
     
     
     (%heading 2 "While Statement")
-    (rule (:while-statement :omega) ((labels (writable-cell (list-set label))) (validate (-> (context environment (list-set label) jump-targets) void))
+    (rule (:while-statement :omega) ((labels (writable-cell (list-set label)))
+                                     (validate (-> (context environment (list-set label) jump-targets) void)) (setup (-> () void))
                                      (eval (-> (environment object) object)))
       (production (:while-statement :omega) (while :paren-list-expression (:substatement :omega)) while-statement-while
         ((validate cxt env sl jt)
@@ -3264,6 +3549,7 @@
                                    (set+ (& break-targets jt) (list-set-of label default))
                                    (set+ (& continue-targets jt) continue-labels)))
          ((validate :substatement) cxt env (list-set-of label) jt2))
+        ((setup) :forward)
         ((eval env d)
          (catch ((var d1 object d)
                  (while (to-boolean (read-reference ((eval :paren-list-expression) env run) run) run)
@@ -3275,13 +3561,21 @@
            (x) (if (and (in x break :narrow-true) (= (& label x) default label))
                  (return (& value x))
                  (throw x))))))
-    (%print-actions ("Validation" labels validate) ("Evaluation" eval))
+    (%print-actions ("Validation" labels validate) ("Setup" setup) ("Evaluation" eval))
     
     
     (%heading 2 "For Statements")
-    (production (:for-statement :omega) (for \( :for-initialiser \; :optional-expression \; :optional-expression \)
-                                             (:substatement :omega)) for-statement-c-style)
-    (production (:for-statement :omega) (for \( :for-in-binding in (:list-expression allow-in) \) (:substatement :omega)) for-statement-in)
+    (rule (:for-statement :omega) ((validate (-> (context environment (list-set label) jump-targets) void)) (setup (-> () void))
+                                   (eval (-> (environment object) object)))
+      (production (:for-statement :omega) (for \( :for-initialiser \; :optional-expression \; :optional-expression \)
+                                               (:substatement :omega)) for-statement-c-style
+        ((validate (cxt :unused) (env :unused) (sl :unused) (jt :unused)) (todo))
+        ((setup) (todo))
+        ((eval (env :unused) (d :unused)) (todo)))
+      (production (:for-statement :omega) (for \( :for-in-binding in (:list-expression allow-in) \) (:substatement :omega)) for-statement-in
+        ((validate (cxt :unused) (env :unused) (sl :unused) (jt :unused)) (todo))
+        ((setup) (todo))
+        ((eval (env :unused) (d :unused)) (todo))))
     
     (production :for-initialiser () for-initialiser-empty)
     (production :for-initialiser ((:list-expression no-in)) for-initialiser-expression)
@@ -3291,90 +3585,175 @@
     (production :for-in-binding (:postfix-expression) for-in-binding-expression)
     (production :for-in-binding (:variable-definition-kind (:variable-binding no-in)) for-in-binding-variable-definition)
     (production :for-in-binding (:attributes :no-line-break :variable-definition-kind (:variable-binding no-in)) for-in-binding-attribute-variable-definition)
-    (%print-actions ("Validation" validate) ("Evaluation" eval))
+    (%print-actions ("Validation" validate) ("Setup" setup) ("Evaluation" eval))
     
     
     (%heading 2 "With Statement")
-    (production (:with-statement :omega) (with :paren-list-expression (:substatement :omega)) with-statement-with)
-    (%print-actions ("Validation" validate) ("Evaluation" eval))
+    (rule (:with-statement :omega) ((validate (-> (context environment jump-targets) void)) (setup (-> () void))
+                                    (eval (-> (environment object) object)))
+      (production (:with-statement :omega) (with :paren-list-expression (:substatement :omega)) with-statement-with
+        ((validate cxt env jt)
+         ((validate :paren-list-expression) cxt env)
+         ((validate :substatement) cxt env (list-set-of label) jt))
+        ((setup) :forward)
+        ((eval (env :unused) (d :unused)) (todo))))
+    (%print-actions ("Validation" validate) ("Setup" setup) ("Evaluation" eval))
     
     
     (%heading 2 "Continue and Break Statements")
-    (rule :continue-statement ((validate (-> (jump-targets) void)) (eval (-> (environment object) object)))
+    (rule :continue-statement ((validate (-> (jump-targets) void)) (setup (-> () void))
+                               (eval (-> (environment object) object)))
       (production :continue-statement (continue) continue-statement-unlabeled
         ((validate jt)
          (rwhen (set-not-in default (& continue-targets jt))
            (throw syntax-error)))
+        ((setup))
         ((eval (env :unused) d) (throw (new continue d default))))
       (production :continue-statement (continue :no-line-break :identifier) continue-statement-labeled
         ((validate jt)
          (rwhen (set-not-in (name :identifier) (& continue-targets jt))
            (throw syntax-error)))
+        ((setup))
         ((eval (env :unused) d) (throw (new continue d (name :identifier))))))
     
-    (rule :break-statement ((validate (-> (jump-targets) void)) (eval (-> (environment object) object)))
+    (rule :break-statement ((validate (-> (jump-targets) void)) (setup (-> () void))
+                            (eval (-> (environment object) object)))
       (production :break-statement (break) break-statement-unlabeled
         ((validate jt)
          (rwhen (set-not-in default (& break-targets jt))
            (throw syntax-error)))
+        ((setup))
         ((eval (env :unused) d) (throw (new break d default))))
       (production :break-statement (break :no-line-break :identifier) break-statement-labeled
         ((validate jt)
          (rwhen (set-not-in (name :identifier) (& break-targets jt))
            (throw syntax-error)))
+        ((setup))
         ((eval (env :unused) d) (throw (new break d (name :identifier))))))
-    (%print-actions ("Validation" validate) ("Evaluation" eval))
+    (%print-actions ("Validation" validate) ("Setup" setup) ("Evaluation" eval))
     
     
     (%heading 2 "Return Statement")
-    (rule :return-statement ((validate (-> (context environment) void)) (eval (-> (environment) object)))
+    (rule :return-statement ((validate (-> (context environment) void)) (setup (-> () void))
+                             (eval (-> (environment) object)))
       (production :return-statement (return) return-statement-default
         ((validate (cxt :unused) env)
          (rwhen (not-in (get-regional-frame env) parameter-frame)
            (throw syntax-error)))
+        ((setup) :forward)
         ((eval (env :unused)) (throw (new returned-value undefined))))
       (production :return-statement (return :no-line-break (:list-expression allow-in)) return-statement-expression
         ((validate cxt env)
          (rwhen (not-in (get-regional-frame env) parameter-frame)
            (throw syntax-error))
          ((validate :list-expression) cxt env))
+        ((setup) :forward)
         ((eval env)
          (const r obj-or-ref ((eval :list-expression) env run))
          (const a object (read-reference r run))
          (throw (new returned-value a)))))
-    (%print-actions ("Validation" validate) ("Evaluation" eval))
+    (%print-actions ("Validation" validate) ("Setup" setup) ("Evaluation" eval))
     
     
     (%heading 2 "Throw Statement")
-    (rule :throw-statement ((validate (-> (context environment) void)) (eval (-> (environment) object)))
+    (rule :throw-statement ((validate (-> (context environment) void)) (setup (-> () void))
+                            (eval (-> (environment) object)))
       (production :throw-statement (throw :no-line-break (:list-expression allow-in)) throw-statement-throw
         ((validate cxt env) ((validate :list-expression) cxt env))
+        ((setup) ((setup :list-expression)))
         ((eval env)
          (const r obj-or-ref ((eval :list-expression) env run))
          (const a object (read-reference r run))
          (throw (new thrown-value a)))))
-    (%print-actions ("Validation" validate) ("Evaluation" eval))
+    (%print-actions ("Validation" validate) ("Setup" setup) ("Evaluation" eval))
     
     
     (%heading 2 "Try Statement")
-    (production :try-statement (try :block :catch-clauses) try-statement-catch-clauses)
-    (production :try-statement (try :block :finally-clause) try-statement-finally-clause)
-    (production :try-statement (try :block :catch-clauses :finally-clause) try-statement-catch-clauses-finally-clause)
+    (rule :try-statement ((validate (-> (context environment jump-targets) void)) (setup (-> () void))
+                          (eval (-> (environment object) object)))
+      (production :try-statement (try :block :catch-clauses) try-statement-catch-clauses
+        ((validate cxt env jt)
+         ((validate :block) cxt env jt plural)
+         ((validate :catch-clauses) cxt env jt))
+        ((setup) :forward)
+        ((eval env d)
+         (catch ((return ((eval :block) env d)))
+           (x)
+           (rwhen (not-in x thrown-value :narrow-false)
+             (throw x))
+           (const exception object (& value x))
+           (const r (union object (tag reject)) ((eval :catch-clauses) env exception))
+           (if (not-in r (tag reject) :narrow-true)
+             (return r)
+             (throw x)))))
+      
+      (production :try-statement (try :block :catch-clauses-opt finally :block) try-statement-catch-clauses-finally
+        ((validate cxt env jt)
+         ((validate :block 1) cxt env jt plural)
+         ((validate :catch-clauses-opt) cxt env jt)
+         ((validate :block 2) cxt env jt plural))
+        ((setup) :forward)
+        ((eval env d)
+         (var result (union object semantic-exception))
+         (catch ((<- result ((eval :block 1) env d)))
+           (x) (<- result x))
+         (when (in result thrown-value)
+           (const exception object (& value (assert-in result thrown-value)))
+           (catch ((const r (union object (tag reject)) ((eval :catch-clauses-opt) env exception))
+                   (when (not-in r (tag reject) :narrow-true)
+                     (<- result r)))
+             (y) (<- result y)))
+         (exec ((eval :block 2) env undefined))
+         (case result
+           (:narrow object (return result))
+           (:narrow semantic-exception (throw result))))))
     
-    (production :catch-clauses (:catch-clause) catch-clauses-one)
-    (production :catch-clauses (:catch-clauses :catch-clause) catch-clauses-more)
+    (rule :catch-clauses-opt ((validate (-> (context environment jump-targets) void)) (setup (-> () void))
+                              (eval (-> (environment object) (union object (tag reject)))))
+      (production :catch-clauses-opt () catch-clauses-opt-none
+        ((validate cxt env jt) :forward)
+        ((setup) :forward)
+        ((eval (env :unused) (exception :unused))
+         (return reject)))
+      (production :catch-clauses-opt (:catch-clauses) catch-clauses-opt-some
+        ((validate cxt env jt) :forward)
+        ((setup) :forward)
+        ((eval env exception)
+         (return ((eval :catch-clauses) env exception)))))
     
-    (production :catch-clause (catch \( :parameter \) :block) catch-clause-block)
+    (rule :catch-clauses ((validate (-> (context environment jump-targets) void)) (setup (-> () void))
+                          (eval (-> (environment object) (union object (tag reject)))))
+      (production :catch-clauses (:catch-clause) catch-clauses-one
+        ((validate cxt env jt) :forward)
+        ((setup) :forward)
+        ((eval env exception)
+         (return ((eval :catch-clause) env exception))))
+      (production :catch-clauses (:catch-clauses :catch-clause) catch-clauses-more
+        ((validate cxt env jt) :forward)
+        ((setup) :forward)
+        ((eval env exception)
+         (const r (union object (tag reject)) ((eval :catch-clauses) env exception))
+         (if (not-in r (tag reject) :narrow-true)
+           (return r)
+           (return ((eval :catch-clause) env exception))))))
     
-    (production :finally-clause (finally :block) finally-clause-block)
-    (%print-actions ("Validation" validate) ("Evaluation" eval))
+    (rule :catch-clause ((validate (-> (context environment jump-targets) void)) (setup (-> () void))
+                         (eval (-> (environment object) (union object (tag reject)))))
+      (production :catch-clause (catch \( :parameter \) :block) catch-clause-block
+        ((validate (cxt :unused) (env :unused) (jt :unused)) (todo))
+        ((setup) (todo))
+        ((eval (env :unused) (exception :unused)) (todo))))
+    (%print-actions ("Validation" validate) ("Setup" setup) ("Evaluation" eval))
     
     
     (%heading 1 "Directives")
-    (rule (:directive :omega_2) ((enabled (writable-cell boolean)) (validate (-> (context environment jump-targets plurality attribute-opt-not-false) context))
+    (rule (:directive :omega_2) ((enabled (writable-cell boolean))
+                                 (validate (-> (context environment jump-targets plurality attribute-opt-not-false) context))
+                                 (setup (-> () void))
                                  (eval (-> (environment object) object)))
       (production (:directive :omega_2) (:empty-statement) directive-empty-statement
         ((validate cxt (env :unused) (jt :unused) (pl :unused) (attr :unused)) (return cxt))
+        ((setup))
         ((eval (env :unused) d) (return d)))
       (production (:directive :omega_2) ((:statement :omega_2)) directive-statement
         ((validate cxt env jt pl attr)
@@ -3382,19 +3761,25 @@
            (throw syntax-error))
          ((validate :statement) cxt env (list-set-of label) jt pl)
          (return cxt))
+        ((setup) ((setup :statement)))
         ((eval env d) (return ((eval :statement) env d))))
       (production (:directive :omega_2) ((:annotatable-directive :omega_2)) directive-annotatable-directive
         ((validate cxt env (jt :unused) pl attr) (return ((validate :annotatable-directive) cxt env pl attr)))
+        ((setup) ((setup :annotatable-directive)))
         ((eval env d) (return ((eval :annotatable-directive) env d))))
       (production (:directive :omega_2) (:attributes :no-line-break (:annotatable-directive :omega_2)) directive-attributes-and-directive
         ((validate cxt env (jt :unused) pl attr)
          ((validate :attributes) cxt env)
+         ((setup :attributes))
          (const attr2 attribute ((eval :attributes) env compile))
          (const attr3 attribute (combine-attributes attr attr2))
          (action<- (enabled :directive 0) (not-in attr3 false-type))
          (if (not-in attr3 false-type :narrow-true)
            (return ((validate :annotatable-directive) cxt env pl attr3))
            (return cxt)))
+        ((setup)
+         (when (enabled :directive 0)
+           ((setup :annotatable-directive))))
         ((eval env d)
          (if (enabled :directive 0)
            (return ((eval :annotatable-directive) env d))
@@ -3402,104 +3787,132 @@
       (production (:directive :omega_2) (:attributes :no-line-break { :directives }) directive-annotated-group
         ((validate cxt env jt pl attr)
          ((validate :attributes) cxt env)
+         ((setup :attributes))
          (const attr2 attribute ((eval :attributes) env compile))
          (const attr3 attribute (combine-attributes attr attr2))
          (action<- (enabled :directive 0) (not-in attr3 false-type))
          (rwhen (in attr3 false-type :narrow-false)
            (return cxt))
          (return ((validate :directives) cxt env jt pl attr3)))
+        ((setup)
+         (when (enabled :directive 0)
+           ((setup :directives))))
         ((eval env d)
          (if (enabled :directive 0)
            (return ((eval :directives) env d))
            (return d))))
       (production (:directive :omega_2) (:package-definition) directive-package-definition
         ((validate (cxt :unused) (env :unused) (jt :unused) (pl :unused) attr) (if (in attr (tag none true)) (todo) (throw syntax-error)))
+        ((setup) (todo))
         ((eval (env :unused) (d :unused)) (todo)))
       (? js2
         (production (:directive :omega_2) (:include-directive (:semicolon :omega_2)) directive-include-directive
           ((validate (cxt :unused) (env :unused) (jt :unused) (pl :unused) attr) (if (in attr (tag none true)) (todo) (throw syntax-error)))
+          ((setup) (todo))
           ((eval (env :unused) (d :unused)) (todo))))
       (production (:directive :omega_2) (:pragma (:semicolon :omega_2)) directive-pragma
         ((validate cxt (env :unused) (jt :unused) (pl :unused) attr) (if (in attr (tag none true)) (return ((validate :pragma) cxt)) (throw syntax-error)))
+        ((setup))
         ((eval (env :unused) d) (return d))))
     
-    (rule (:annotatable-directive :omega_2) ((validate (-> (context environment plurality attribute-opt-not-false) context)) (eval (-> (environment object) object)))
+    (rule (:annotatable-directive :omega_2) ((validate (-> (context environment plurality attribute-opt-not-false) context))
+                                             (setup (-> () void))
+                                             (eval (-> (environment object) object)))
       (production (:annotatable-directive :omega_2) (:export-definition (:semicolon :omega_2)) annotatable-directive-export-definition
         ((validate (cxt :unused) (env :unused) (pl :unused) (attr :unused)) (todo))
+        ((setup) (todo))
         ((eval (env :unused) (d :unused)) (todo)))
       (production (:annotatable-directive :omega_2) (:variable-definition (:semicolon :omega_2)) annotatable-directive-variable-definition
         ((validate cxt env (pl :unused) attr)
          ((validate :variable-definition) cxt env attr)
          (return cxt))
+        ((setup) ((setup :variable-definition)))
         ((eval env d) (return ((eval :variable-definition) env d))))
       (production (:annotatable-directive :omega_2) (:function-definition) annotatable-directive-function-definition
         ((validate cxt env pl attr)
          ((validate :function-definition) cxt env pl attr)
          (return cxt))
+        ((setup) ((setup :function-definition)))
         ((eval (env :unused) d) (return d)))
       (production (:annotatable-directive :omega_2) (:class-definition) annotatable-directive-class-definition
         ((validate cxt env pl attr)
          ((validate :class-definition) cxt env pl attr)
          (return cxt))
+        ((setup) ((setup :class-definition)))
         ((eval env d) (return ((eval :class-definition) env d))))
       (production (:annotatable-directive :omega_2) (:namespace-definition (:semicolon :omega_2)) annotatable-directive-namespace-definition
         ((validate cxt env pl attr)
          ((validate :namespace-definition) cxt env pl attr)
          (return cxt))
+        ((setup))
         ((eval (env :unused) d) (return d)))
       ;(production (:annotatable-directive :omega_2) ((:interface-definition :omega_2)) annotatable-directive-interface-definition
       ;  ((validate (cxt :unused) (env :unused) (pl :unused) (attr :unused)) (todo))
+      ;  ((setup) (todo))
       ;  ((eval (env :unused) (d :unused)) (todo)))
       (production (:annotatable-directive :omega_2) (:import-directive (:semicolon :omega_2)) annotatable-directive-import-directive
         ((validate (cxt :unused) (env :unused) (pl :unused) (attr :unused)) (todo))
+        ((setup) (todo))
         ((eval (env :unused) (d :unused)) (todo)))
       (production (:annotatable-directive :omega_2) (:use-directive (:semicolon :omega_2)) annotatable-directive-use-directive
         ((validate cxt env (pl :unused) attr)
          (if (in attr (tag none true))
            (return ((validate :use-directive) cxt env))
            (throw syntax-error)))
+        ((setup))
         ((eval (env :unused) d) (return d))))
     
     
-    (rule :directives ((validate (-> (context environment jump-targets plurality attribute-opt-not-false) context)) (eval (-> (environment object) object)))
+    (rule :directives ((validate (-> (context environment jump-targets plurality attribute-opt-not-false) context)) (setup (-> () void))
+                       (eval (-> (environment object) object)))
       (production :directives () directives-none
         ((validate cxt (env :unused) (jt :unused) (pl :unused) (attr :unused)) (return cxt))
+        ((setup) :forward)
         ((eval (env :unused) d) (return d)))
       (production :directives (:directives-prefix (:directive abbrev)) directives-more
         ((validate cxt env jt pl attr)
          (const cxt2 context ((validate :directives-prefix) cxt env jt pl attr))
          (return ((validate :directive) cxt2 env jt pl attr)))
+        ((setup) :forward)
         ((eval env d)
          (const o object ((eval :directives-prefix) env d))
          (return ((eval :directive) env o)))))
     
-    (rule :directives-prefix ((validate (-> (context environment jump-targets plurality attribute-opt-not-false) context)) (eval (-> (environment object) object)))
+    (rule :directives-prefix ((validate (-> (context environment jump-targets plurality attribute-opt-not-false) context)) (setup (-> () void))
+                              (eval (-> (environment object) object)))
       (production :directives-prefix () directives-prefix-none
         ((validate cxt (env :unused) (jt :unused) (pl :unused) (attr :unused)) (return cxt))
+        ((setup) :forward)
         ((eval (env :unused) d) (return d)))
       (production :directives-prefix (:directives-prefix (:directive full)) directives-prefix-more
         ((validate cxt env jt pl attr)
          (const cxt2 context ((validate :directives-prefix) cxt env jt pl attr))
          (return ((validate :directive) cxt2 env jt pl attr)))
+        ((setup) :forward)
         ((eval env d)
          (const o object ((eval :directives-prefix) env d))
          (return ((eval :directive) env o)))))
-    (%print-actions ("Validation" validate) ("Evaluation" eval))
+    (%print-actions ("Validation" validate) ("Setup" setup) ("Evaluation" eval))
     
     
     (%heading 2 "Attributes")
-    (rule :attributes ((validate (-> (context environment) void)) (eval (-> (environment phase) attribute)))
+    (rule :attributes ((validate (-> (context environment) void)) (setup (-> () void))
+                       (eval (-> (environment phase) attribute)))
       (production :attributes (:attribute) attributes-one
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase) (return ((eval :attribute) env phase))))
       (production :attributes (:attribute-combination) attributes-attribute-combination
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase) (return ((eval :attribute-combination) env phase)))))
     
     
-    (rule :attribute-combination ((validate (-> (context environment) void)) (eval (-> (environment phase) attribute)))
+    (rule :attribute-combination ((validate (-> (context environment) void)) (setup (-> () void))
+                                  (eval (-> (environment phase) attribute)))
       (production :attribute-combination (:attribute :no-line-break :attributes) attribute-combination-more
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase)
          (const a attribute ((eval :attribute) env phase))
          (rwhen (in a false-type :narrow-false)
@@ -3508,9 +3921,11 @@
          (return (combine-attributes a b)))))
     
     
-    (rule :attribute ((validate (-> (context environment) void)) (eval (-> (environment phase) attribute)))
+    (rule :attribute ((validate (-> (context environment) void)) (setup (-> () void))
+                      (eval (-> (environment phase) attribute)))
       (production :attribute (:attribute-expression) attribute-attribute-expression
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase)
          (const r obj-or-ref ((eval :attribute-expression) env phase))
          (const a object (read-reference r phase))
@@ -3519,34 +3934,42 @@
          (return a)))
       (production :attribute (true) attribute-true
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval (env :unused) (phase :unused)) (return true)))
       (production :attribute (false) attribute-false
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval (env :unused) (phase :unused)) (return false)))
       (production :attribute (public) attribute-public
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval (env :unused) (phase :unused)) (return public-namespace)))
       (production :attribute (:nonexpression-attribute) attribute-nonexpression-attribute
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase) (return ((eval :nonexpression-attribute) env phase)))))
     
     
-    (rule :nonexpression-attribute ((validate (-> (context environment) void)) (eval (-> (environment phase) attribute)))
+    (rule :nonexpression-attribute ((validate (-> (context environment) void)) (setup (-> () void))
+                                    (eval (-> (environment phase) attribute)))
       (production :nonexpression-attribute (final) nonexpression-attribute-final
         ((validate (cxt :unused) (env :unused)))
+        ((setup))
         ((eval (env :unused) (phase :unused)) (return (new compound-attribute (list-set-of namespace) false false final none false false))))
       (production :nonexpression-attribute (private) nonexpression-attribute-private
         ((validate (cxt :unused) env)
          (rwhen (in (get-enclosing-class env) (tag none))
            (throw syntax-error)))
+        ((setup))
         ((eval env (phase :unused))
          (const c class-opt (get-enclosing-class env))
          (assert (not-in c (tag none) :narrow-true) "Note that " (:action validate) " ensured that " (:local c) " cannot be " (:tag none) " at this point.")
          (return (& private-namespace c))))
       (production :nonexpression-attribute (static) nonexpression-attribute-static
         ((validate (cxt :unused) (env :unused)))
+        ((setup))
         ((eval (env :unused) (phase :unused)) (return (new compound-attribute (list-set-of namespace) false false static none false false)))))
-    (%print-actions ("Validation" validate) ("Evaluation" eval))
+    (%print-actions ("Validation" validate) ("Setup" setup) ("Evaluation" eval))
     
     
     
@@ -3555,6 +3978,7 @@
       (production :use-directive (use namespace :paren-list-expression) use-directive-normal
         ((validate cxt env)
          ((validate :paren-list-expression) cxt env)
+         ((setup :paren-list-expression))
          (const values (vector object) ((eval-as-list :paren-list-expression) env compile))
          (var namespaces (list-set namespace) (list-set-of namespace))
          (for-each values v
@@ -3677,11 +4101,13 @@
     
     
     (%heading 2 "Variable Definition")
-    (rule :variable-definition ((validate (-> (context environment attribute-opt-not-false) void)) (eval (-> (environment object) object)))
+    (rule :variable-definition ((validate (-> (context environment attribute-opt-not-false) void)) (setup (-> () void))
+                                (eval (-> (environment object) object)))
       (production :variable-definition (:variable-definition-kind (:variable-binding-list allow-in)) variable-definition-definition
         ((validate cxt env attr)
          (const immutable boolean (immutable :variable-definition-kind))
          ((validate :variable-binding-list) cxt env attr immutable))
+        ((setup) ((setup :variable-binding-list)))
         ((eval env d)
          (const immutable boolean (immutable :variable-definition-kind))
          ((eval :variable-binding-list) env immutable)
@@ -3692,41 +4118,109 @@
       (production :variable-definition-kind (const) variable-definition-kind-const (immutable true)))
     
     (rule (:variable-binding-list :beta) ((validate (-> (context environment attribute-opt-not-false boolean) void))
+                                           (setup (-> () void))
                                           (eval (-> (environment boolean) void)))
       (production (:variable-binding-list :beta) ((:variable-binding :beta)) variable-binding-list-one
         ((validate cxt env attr immutable) :forward)
+        ((setup) :forward)
         ((eval env immutable) ((eval :variable-binding) env immutable)))
       (production (:variable-binding-list :beta) ((:variable-binding-list :beta) \, (:variable-binding :beta)) variable-binding-list-more
         ((validate cxt env attr immutable) :forward)
+        ((setup) :forward)
         ((eval env immutable)
          ((eval :variable-binding-list) env immutable)
          ((eval :variable-binding) env immutable))))
     
-    (deftag hoisted)
-    (deftag instance)
-    (rule (:variable-binding :beta) ((kind (writable-cell (tag hoisted static instance))) (multiname (writable-cell multiname))
-                                     (pre-eval (-> (environment (union variable instance-variable) overridden-member overridden-member) void))
+    (rule (:variable-binding :beta) ((compile-env (writable-cell environment))
+                                     (compile-var (writable-cell (union hoisted-var variable instance-variable)))
+                                     (overridden-read (writable-cell overridden-member))
+                                     (overridden-write (writable-cell overridden-member))
+                                     (multiname (writable-cell multiname))
                                      (validate (-> (context environment attribute-opt-not-false boolean) void))
+                                     (setup (-> () void))
                                      (eval (-> (environment boolean) void)))
       (production (:variable-binding :beta) ((:typed-identifier :beta) (:variable-initialisation :beta)) variable-binding-full
-        ((pre-eval env v overridden-read overridden-write)
+        ((validate cxt env attr immutable)
+         ((validate :typed-identifier) cxt env)
+         ((validate :variable-initialisation) cxt env)
+         (action<- (compile-env :variable-binding 0) env)
+         (const name string (name :typed-identifier))
+         (cond
+          ((and (not (& strict cxt)) (in (get-regional-frame env) (union global parameter-frame))
+                (not immutable) (in attr (tag none)) (not (type-present :typed-identifier)))
+           (const qname qualified-name (new qualified-name public-namespace name))
+           (action<- (multiname :variable-binding 0) (list-set qname))
+           (action<- (compile-var :variable-binding 0) (define-hoisted-var env name undefined)))
+          (nil
+           (const a compound-attribute (to-compound-attribute attr))
+           (rwhen (or (& dynamic a) (& prototype a))
+             (throw definition-error))
+           (var member-mod member-modifier (& member-mod a))
+           (if (in (nth env 0) class)
+             (when (in member-mod (tag none))
+               (<- member-mod final))
+             (rwhen (not-in member-mod (tag none))
+               (throw definition-error)))
+           (case member-mod
+             (:select (tag none static)
+               (function (eval-type) class
+                 (const type class-opt ((setup-and-eval :typed-identifier) env))
+                 (rwhen (in type (tag none) :narrow-false)
+                   (return object-class))
+                 (return type))
+               (function (eval-initialiser) object
+                 ((setup :variable-initialisation))
+                 (const value object-opt ((eval :variable-initialisation) env compile))
+                 (rwhen (in value (tag none) :narrow-false)
+                   (throw compile-expression-error))
+                 (return value))
+               (var initial-value variable-value inaccessible)
+               (when immutable
+                 (<- initial-value eval-initialiser))
+               (const v variable (new variable eval-type initial-value immutable))
+               (const multiname multiname (define-static-member env name (& namespaces a) (& override-mod a) (& explicit a) read-write v))
+               (action<- (multiname :variable-binding 0) multiname)
+               (action<- (compile-var :variable-binding 0) v))
+             (:narrow (tag virtual final)
+               (const c class (assert-in (nth env 0) class))
+               (function (eval-initial-value) object-opt
+                 (return ((eval :variable-initialisation) env run)))
+               (const v instance-variable (new instance-variable :uninit eval-initial-value immutable (in member-mod (tag final))))
+               (const os override-status-pair (define-instance-member c cxt name (& namespaces a) (& override-mod a) (& explicit a) read-write v))
+               (action<- (compile-var :variable-binding 0) v)
+               (action<- (overridden-read :variable-binding 0) (& overridden-member (& read-status os)))
+               (action<- (overridden-write :variable-binding 0) (& overridden-member (& write-status os))))
+             (:select (tag constructor)
+               (throw definition-error))))))
+        
+        ((setup)
+         (const env environment (compile-env :variable-binding 0))
+         (const v (union hoisted-var variable instance-variable) (compile-var :variable-binding 0))
          (case v
+           (:select hoisted-var
+             ((setup :variable-initialisation)))
            (:narrow variable
              (const type class (get-variable-type v compile))
-             (const value variable-value (& value v))
-             (when (in value (-> () object) :narrow-true)
-               (&= value v inaccessible)
-               (catch ((const new-value object (value))
-                       (const coerced-value object (assignment-conversion new-value type))
-                       (&= value v coerced-value))
-                 (x)
-                 (rwhen (not-in x (tag compile-expression-error))
-                   (throw x))
-                 (// "If a " (:tag compile-expression-error) " occurred, then the initialiser is not a compile-time constant expression. "
-                     "In this case, ignore the error and leave the value of the variable " (:tag inaccessible) " until it is defined at run time."))))
+             (case (assert-not-in (& value v) (union (tag uninitialised) open-instance))
+               (:select object)
+               (:select (tag inaccessible) ((setup :variable-initialisation)))
+               (:select (-> () object)
+                 (&= value v inaccessible)
+                 ((setup :variable-initialisation))
+                 (catch ((const value object-opt ((eval :variable-initialisation) env compile))
+                         (when (not-in value (tag none) :narrow-true)
+                           (const coerced-value object ((&opt implicit-coerce type) value))
+                           (&= value v coerced-value)))
+                   (x)
+                   (rwhen (not-in x (tag compile-expression-error))
+                     (throw x))
+                   (// "If a " (:tag compile-expression-error) " occurred, then the initialiser is not a compile-time constant expression. "
+                       "In this case, ignore the error and leave the value of the variable " (:tag inaccessible) " until it is defined at run time.")))))
            (:narrow instance-variable
-             (var t class-opt ((eval :typed-identifier) env))
+             (var t class-opt ((setup-and-eval :typed-identifier) env))
              (when (in t (tag none))
+               (const overridden-read overridden-member (overridden-read :variable-binding 0))
+               (const overridden-write overridden-member (overridden-write :variable-binding 0))
                (cond
                 ((not-in overridden-read (tag none potential-conflict) :narrow-true)
                  (assert (not-in overridden-read instance-method :narrow-true) "Note that " (:global define-instance-member)
@@ -3738,75 +4232,16 @@
                  (<- t (&opt type overridden-write)))
                 (nil
                  (<- t object-class))))
-             (&const= type v (assert-not-in t (tag none))))))
-        
-        ((validate cxt env attr immutable)
-         ((validate :typed-identifier) cxt env)
-         ((validate :variable-initialisation) cxt env)
-         (const name string (name :typed-identifier))
-         (cond
-          ((and (not (& strict cxt)) (in (get-regional-frame env) (union global parameter-frame))
-                (not immutable) (in attr (tag none)) (not (type-present :typed-identifier)))
-           (action<- (kind :variable-binding 0) hoisted)
-           (const qname qualified-name (new qualified-name public-namespace name))
-           (action<- (multiname :variable-binding 0) (list-set qname))
-           (define-hoisted-var env name))
-          (nil
-           (const a compound-attribute (to-compound-attribute attr))
-           (rwhen (or (& dynamic a) (& prototype a))
-             (throw definition-error))
-           (var member-mod member-modifier (& member-mod a))
-           (if (in (nth env 0) class)
-             (when (in member-mod (tag none))
-               (<- member-mod final))
-             (rwhen (not-in member-mod (tag none))
-               (throw definition-error)))
-           (var v (union variable instance-variable))
-           (var overridden-read overridden-member none)
-           (var overridden-write overridden-member none)
-           (case member-mod
-             (:select (tag none static)
-               (function (eval-type) class
-                 (const type class-opt ((eval :typed-identifier) env))
-                 (rwhen (in type (tag none) :narrow-false)
-                   (return object-class))
-                 (return type))
-               (function (eval-initialiser) object
-                 (const value object-opt ((eval :variable-initialisation) env compile))
-                 (rwhen (in value (tag none) :narrow-false)
-                   (throw compile-expression-error))
-                 (return value))
-               (var initial-value variable-value inaccessible)
-               (when immutable
-                 (<- initial-value eval-initialiser))
-               (<- v (new variable eval-type initial-value immutable))
-               (const multiname multiname (define-static-member env name (& namespaces a) (& override-mod a) (& explicit a) read-write (assert-in v variable)))
-               (action<- (multiname :variable-binding 0) multiname)
-               (action<- (kind :variable-binding 0) static))
-             (:narrow (tag virtual final)
-               (const c class (assert-in (nth env 0) class))
-               (function (eval-initial-value) object-opt
-                 (return ((eval :variable-initialisation) env run)))
-               (<- v (new instance-variable :uninit eval-initial-value immutable (in member-mod (tag final))))
-               (const os override-status-pair (define-instance-member c cxt name (& namespaces a) (& override-mod a) (& explicit a)
-                                                read-write (assert-in v instance-variable)))
-               (<- overridden-read (& overridden-member (& read-status os)))
-               (<- overridden-write (& overridden-member (& write-status os)))
-               (action<- (kind :variable-binding 0) instance))
-             (:select (tag constructor)
-               (throw definition-error)))
-           (// "The following sets up " (:action pre-eval) " to be called during the pre-evaluation pass.")
-           (function (pre-evaluate) void
-             ((pre-eval :variable-binding 0) env v overridden-read overridden-write))
-           (<- pre-evaluators (append pre-evaluators (vector pre-evaluate))))))
+             (&const= type v (assert-not-in t (tag none)))
+             ((setup :variable-initialisation)))))
         
         ((eval env immutable)
-         (case (kind :variable-binding 0)
-           (:select (tag hoisted)
+         (case (compile-var :variable-binding 0)
+           (:select hoisted-var
              (const value object-opt ((eval :variable-initialisation) env run))
              (when (not-in value (tag none) :narrow-true)
                (lexical-write env (multiname :variable-binding 0) value false run)))
-           (:select (tag static)
+           (:select variable
              (const local-frame frame (nth env 0))
              (const members (list-set static-member) (map (& static-write-bindings local-frame) b (& content b) (set-in (& qname b) (multiname :variable-binding 0))))
              (// "Note that the " (:local members) " set consists of exactly one " (:type variable) " element because " (:local local-frame)
@@ -3817,47 +4252,58 @@
                (const type class (get-variable-type v run))
                (var coerced-value object-u)
                (cond
-                ((not-in value (tag none) :narrow-true) (<- coerced-value (assignment-conversion value type)))
+                ((not-in value (tag none) :narrow-true) (<- coerced-value ((&opt implicit-coerce type) value)))
                 (immutable (<- coerced-value uninitialised))
-                (nil (<- coerced-value (assignment-conversion undefined type))))
+                (nil (<- coerced-value (& default-value type))))
                (&= value v coerced-value)))
-           (:select (tag instance))))))
+           (:select instance-variable)))))
     
-    (rule (:variable-initialisation :beta) ((validate (-> (context environment) void)) (eval (-> (environment phase) object-opt)))
+    (rule (:variable-initialisation :beta) ((validate (-> (context environment) void)) (setup (-> () void))
+                                            (eval (-> (environment phase) object-opt)))
       (production (:variable-initialisation :beta) () variable-initialisation-none
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval (env :unused) (phase :unused)) (return none)))
       (production (:variable-initialisation :beta) (= (:variable-initialiser :beta)) variable-initialisation-variable-initialiser
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase) (return ((eval :variable-initialiser) env phase)))))
     
-    (rule (:variable-initialiser :beta) ((validate (-> (context environment) void)) (eval (-> (environment phase) object)))
+    (rule (:variable-initialiser :beta) ((validate (-> (context environment) void)) (setup (-> () void))
+                                         (eval (-> (environment phase) object)))
       (production (:variable-initialiser :beta) ((:assignment-expression :beta)) variable-initialiser-assignment-expression
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase)
          (const r obj-or-ref ((eval :assignment-expression) env phase))
          (return (read-reference r phase))))
       (production (:variable-initialiser :beta) (:nonexpression-attribute) variable-initialiser-nonexpression-attribute
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase) (return ((eval :nonexpression-attribute) env phase))))
       (production (:variable-initialiser :beta) (:attribute-combination) variable-initialiser-attribute-combination
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase) (return ((eval :attribute-combination) env phase)))))
     
     
-    (rule (:typed-identifier :beta) ((name string) (type-present boolean) (validate (-> (context environment) void)) (eval (-> (environment) class-opt)))
+    (rule (:typed-identifier :beta) ((name string) (type-present boolean)
+                                     (validate (-> (context environment) void))
+                                     (setup-and-eval (-> (environment) class-opt)))
       (production (:typed-identifier :beta) (:identifier) typed-identifier-identifier
         (name (name :identifier))
         (type-present false)
         ((validate (cxt :unused) (env :unused)))
-        ((eval (env :unused)) (return none)))
+        ((setup-and-eval (env :unused)) (return none)))
       (production (:typed-identifier :beta) (:identifier \: (:type-expression :beta)) typed-identifier-identifier-and-type
         (name (name :identifier))
         (type-present true)
         ((validate cxt env) ((validate :type-expression) cxt env))
-        ((eval env) (return ((eval :type-expression) env)))))
+        ((setup-and-eval env) (return ((setup-and-eval :type-expression) env)))))
     ;(production (:typed-identifier :beta) ((:type-expression :beta) :identifier) typed-identifier-type-and-identifier)
-    (%print-actions ("Validation" name type-present immutable kind multiname validate) ("Pre-Evaluation" pre-eval) ("Evaluation" eval))
+    (%print-actions ("Validation" compile-env compile-var overridden-read overridden-write multiname name type-present immutable validate)
+                    ("Setup" setup)
+                    ("Evaluation" setup-and-eval eval))
     
     
     (%heading 2 "Simple Variable Definition")
@@ -3865,53 +4311,58 @@
            " expansions that may be used when the variable definition is used as a " (:grammar-symbol (:substatement :omega))
            " instead of a " (:grammar-symbol (:directive :omega_2)) " in non-strict mode. "
            "In strict mode variable definitions may not be used as substatements.")
-    (rule :simple-variable-definition ((validate (-> (context environment) void)) (eval (-> (environment object) object)))
+    (rule :simple-variable-definition ((validate (-> (context environment) void)) (setup (-> () void))
+                                       (eval (-> (environment object) object)))
       (production :simple-variable-definition (var :untyped-variable-binding-list) simple-variable-definition-definition
         ((validate cxt env)
          (rwhen (or (& strict cxt) (not-in (get-regional-frame env) (union global parameter-frame)))
            (throw syntax-error))
          ((validate :untyped-variable-binding-list) cxt env))
+        ((setup) ((setup :untyped-variable-binding-list)))
         ((eval env d)
          ((eval :untyped-variable-binding-list) env)
          (return d))))
     
-    (rule :untyped-variable-binding-list ((validate (-> (context environment) void)) (eval (-> (environment) void)))
+    (rule :untyped-variable-binding-list ((validate (-> (context environment) void)) (setup (-> () void))
+                                          (eval (-> (environment) void)))
       (production :untyped-variable-binding-list (:untyped-variable-binding) untyped-variable-binding-list-one
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env) ((eval :untyped-variable-binding) env)))
       (production :untyped-variable-binding-list (:untyped-variable-binding-list \, :untyped-variable-binding) untyped-variable-binding-list-more
         ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env)
          ((eval :untyped-variable-binding-list) env)
          ((eval :untyped-variable-binding) env))))
     
-    (rule :untyped-variable-binding ((validate (-> (context environment) void)) (eval (-> (environment) void)))
+    (rule :untyped-variable-binding ((validate (-> (context environment) void)) (setup (-> () void))
+                                     (eval (-> (environment) void)))
       (production :untyped-variable-binding (:identifier (:variable-initialisation allow-in)) untyped-variable-binding-full
         ((validate cxt env)
          ((validate :variable-initialisation) cxt env)
-         (define-hoisted-var env (name :identifier)))
+         (exec (define-hoisted-var env (name :identifier) undefined)))
+        ((setup) ((setup :variable-initialisation)))
         ((eval env)
          (const value object-opt ((eval :variable-initialisation) env run))
          (when (not-in value (tag none) :narrow-true)
            (const qname qualified-name (new qualified-name public-namespace (name :identifier)))
            (lexical-write env (list-set qname) value false run)))))
-    (%print-actions ("Validation" validate) ("Evaluation" eval))
+    (%print-actions ("Validation" validate) ("Setup" setup) ("Evaluation" eval))
     
     
     (%heading 2 "Function Definition")
-    (rule :function-definition ((pre-eval (-> (context environment parameter-frame boolean) void))
-                                (validate (-> (context environment plurality attribute-opt-not-false) void)))
-      (production :function-definition (function :function-name :function-signature :block) function-definition-definition
-        ((pre-eval cxt compile-env compile-frame unchecked)
-         (&const= signature compile-frame ((pre-eval :function-signature) cxt compile-env unchecked)))
-        
+    (rule :function-definition ((validate (-> (context environment plurality attribute-opt-not-false) void))
+                                (setup (-> () void)))
+      (production :function-definition (function :function-name :function-common) function-definition-definition
         ((validate cxt env pl attr)
          (const name string (name :function-name))
          (const kind function-kind (kind :function-name))
          (const a compound-attribute (to-compound-attribute attr))
          (rwhen (& dynamic a)
            (throw definition-error))
-         (const unchecked boolean (and (not (& strict cxt)) (not-in (nth env 0) class) (in kind (tag normal)) (untyped :function-signature)))
+         (const unchecked boolean (and (not (& strict cxt)) (not-in (nth env 0) class) (in kind (tag normal)) (untyped :function-common)))
+         (action<- (unchecked :function-common) unchecked)
          (const prototype boolean (or unchecked (& prototype a)))
          (var member-mod member-modifier (& member-mod a))
          (if (in (nth env 0) class)
@@ -3921,66 +4372,35 @@
              (throw definition-error)))
          (rwhen (and prototype (or (not-in kind (tag normal)) (in member-mod (tag constructor))))
            (throw definition-error))
-         (var compile-this (tag none inaccessible) none)
+         (var this (tag none inaccessible) none)
          (when (or prototype (in member-mod (tag constructor virtual final)))
-           (<- compile-this inaccessible))
-         (const compile-frame parameter-frame (new parameter-frame (list-set-of static-binding) (list-set-of static-binding) plural compile-this prototype :uninit))
-         (const compile-env environment (cons compile-frame env))
-         ((validate :function-signature) cxt compile-env)
-         ((validate :block) cxt compile-env (new jump-targets (list-set-of label) (list-set-of label)) plural)
-         (cond
-          ((and unchecked (in (nth env 0) (union global parameter-frame)) (in attr (tag none)))
-           (const v hoisted-var (new hoisted-var undefined true))
-           (define-hoisted-var env name)
-           (todo))
-          (nil
-           (case member-mod
-             (:select (tag none static)
-               (function (call (this object) (args argument-list) (runtime-env environment) (phase phase)) object
-                 (rwhen (in phase (tag compile))
-                   (throw compile-expression-error))
-                 (var runtime-this object-opt)
-                 (case compile-this
-                   (:select (tag none) (<- runtime-this none))
-                   (:select (tag inaccessible)
-                     (<- runtime-this this)
-                     (const g (union package global) (get-package-or-global-frame runtime-env))
-                     (when (and prototype (in runtime-this (tag null undefined)) (in g global :narrow-true))
-                       (<- runtime-this g))))
-                 (const runtime-frame parameter-frame
-                   (new parameter-frame (list-set-of static-binding) (list-set-of static-binding) singular runtime-this prototype (&opt signature compile-frame)))
-                 (instantiate-frame compile-frame runtime-frame (cons runtime-frame runtime-env))
-                 (assign-arguments runtime-frame (&opt signature compile-frame) unchecked args)
-                 (catch ((exec ((eval :block) (cons runtime-frame runtime-env) undefined))
-                         (throw (new returned-value undefined)))
-                   (x) (cond
-                        ((in x returned-value :narrow-true)
-                         (return (& value x)))
-                        (nil (throw x)))))
-               (function (construct (args argument-list) (runtime-env environment) (phase phase)) object
-                 (todo))
-               (var f (union instance open-instance))
-               (cond
-                ((in kind (tag get set))
-                 (todo))
-                (prototype
-                 (todo))
-                (nil
-                 (function (instantiate (runtime-env environment)) non-alias-instance
-                   (return (new fixed-instance function-class call bad-construct env "Function" (list-set-of slot))))
-                 (<- f (new open-instance instantiate none))))
-               (when (in pl (tag singular))
-                 (<- f (instantiate-open-instance (assert-in f open-instance) env)))
-               (const v variable (new variable function-class f true))
-               (exec (define-static-member env name (& namespaces a) (& override-mod a) (& explicit a) read-write v)))
-             (:narrow (tag virtual final)
+           (<- this inaccessible))
+         (case member-mod
+           (:select (tag none static)
+             (var f (union instance open-instance))
+             (cond
+              ((in kind (tag get set))
                (todo))
-             (:select (tag constructor)
-               (todo)))))
-         (// "The following sets up " (:action pre-eval) " to be called during the pre-evaluation pass.")
-         (function (pre-evaluate) void
-           ((pre-eval :function-definition 0) cxt compile-env compile-frame unchecked))
-         (<- pre-evaluators (append pre-evaluators (vector pre-evaluate))))))
+              (nil
+               (<- f ((validate-static-function :function-common) cxt env this prototype))))
+             (when (in pl (tag singular))
+               (<- f (instantiate-open-instance (assert-in f open-instance) env)))
+             (cond
+              ((and unchecked
+                    (in attr (tag none))
+                    (or (in (nth env 0) global) (and (in (nth env 0) block-frame) (in (nth env 0) parameter-frame))))
+               (exec (define-hoisted-var env name f)))
+              (nil
+               (const v variable (new variable function-class f true))
+               (exec (define-static-member env name (& namespaces a) (& override-mod a) (& explicit a) read-write v)))))
+           (:narrow (tag virtual final)
+             (todo))
+           (:select (tag constructor)
+             (todo))))
+        
+        ((setup)
+         ((setup :function-common)))))
+    
     
     (rule :function-name ((kind function-kind) (name string))
       (production :function-name (:identifier) function-name-function
@@ -3992,24 +4412,102 @@
       (production :function-name (set :no-line-break :identifier) function-name-setter
         (kind set)
         (name (name :identifier))))
-    (%print-actions ("Validation" kind name signature validate) ("Pre-Evaluation" pre-eval))
     
-    (define (assign-arguments (runtime-frame parameter-frame) (sig signature) (unchecked boolean) (args argument-list)) void
+    
+    (rule :function-common ((untyped boolean)
+                            (unchecked (writable-cell boolean))
+                            (compile-env (writable-cell environment))
+                            (compile-frame (writable-cell parameter-frame))
+                            (signature (writable-cell signature))
+                            (validate (-> (context environment (tag none inaccessible) boolean) integer))
+                            (setup (-> () void))
+                            (eval-normal-call (-> (object argument-list environment phase) object))
+                            (eval-prototype-call (-> (object argument-list environment phase) object))
+                            (eval-prototype-construct (-> (argument-list environment phase) object))
+                            (validate-static-function (-> (context environment (tag none inaccessible) boolean) open-instance)))
+      (production :function-common (\( :parameters \) :result :block) function-common-signatures-and-block
+        (untyped (and (untyped :parameters) (untyped :result)))
+        ((validate cxt env this prototype)
+         (const compile-frame parameter-frame (new parameter-frame (list-set-of static-binding) (list-set-of static-binding) plural this prototype))
+         (const compile-env environment (cons compile-frame env))
+         (action<- (compile-frame :function-common 0) compile-frame)
+         (action<- (compile-env :function-common 0) compile-env)
+         (const n-fixed-parameters integer ((validate :parameters) cxt compile-env))
+         ((validate :result) cxt compile-env)
+         ((validate :block) cxt compile-env (new jump-targets (list-set-of label) (list-set-of label)) plural)
+         (return n-fixed-parameters))
+
+        ((setup)
+         ;***** Write signature
+         (todo))
+        
+        ((eval-normal-call (this :unused) args runtime-env phase)
+         (rwhen (in phase (tag compile))
+           (throw compile-expression-error))
+         (const runtime-frame parameter-frame
+           (new parameter-frame (list-set-of static-binding) (list-set-of static-binding) singular none false))
+         (instantiate-frame (compile-frame :function-common 0) runtime-frame (cons runtime-frame runtime-env))
+         (assign-arguments runtime-frame (signature :function-common 0) (unchecked :function-common 0) args)
+         (var result object)
+         (catch ((exec ((eval :block) (cons runtime-frame runtime-env) undefined))
+                 (<- result undefined))
+           (x) (if (in x returned-value :narrow-true)
+                 (<- result (& value x))
+                 (throw x)))
+         (return result))
+        
+        ((eval-prototype-call this args runtime-env phase)
+         (rwhen (in phase (tag compile))
+           (throw compile-expression-error))
+         (var runtime-this object this)
+         (const g (union package global) (get-package-or-global-frame runtime-env))
+         (when (and (in runtime-this (tag null undefined)) (in g global :narrow-true))
+           (<- runtime-this g))
+         (const runtime-frame parameter-frame
+           (new parameter-frame (list-set-of static-binding) (list-set-of static-binding) singular runtime-this true))
+         (instantiate-frame (compile-frame :function-common 0) runtime-frame (cons runtime-frame runtime-env))
+         (assign-arguments runtime-frame (signature :function-common 0) (unchecked :function-common 0) args)
+         (var result object)
+         (catch ((exec ((eval :block) (cons runtime-frame runtime-env) undefined))
+                 (<- result undefined))
+           (x) (if (in x returned-value :narrow-true)
+                 (<- result (& value x))
+                 (throw x)))
+         (return result))
+        
+        ((eval-prototype-construct (args :unused) (runtime-env :unused) (phase :unused))
+         (todo))
+        
+        ((validate-static-function cxt env this prototype)
+         (const n-fixed-parameters integer ((validate :function-common 0) cxt env this prototype))
+         (cond
+          (prototype
+           (todo))
+          (nil
+           (const initial-slots (list-set slot)
+             (list-set (new slot
+                         (assert-in (find-instance-member function-class (new qualified-name public-namespace "length") read) instance-variable)
+                         (real-to-float64 n-fixed-parameters))))
+           ;***** This would be better using a function that constructs the slots out of the Function type.
+           (return (new open-instance function-class "Function" initial-slots false (eval-normal-call :function-common 0) bad-construct none)))))))
+
+    (%print-actions ("Validation" kind name untyped unchecked compile-env compile-frame signature validate validate-static-function)
+                    ("Setup" setup)
+                    ("Evaluation" eval-normal-call eval-prototype-call eval-prototype-construct))
+    
+    
+    (define (assign-arguments (runtime-frame parameter-frame :unused) (sig signature :unused) (unchecked boolean :unused) (args argument-list :unused)) void
       (todo))
     
     
-    (rule :function-signature ((untyped boolean)
-                               (validate (-> (context environment) void))
-                               (pre-eval (-> (context environment boolean) signature)))
-      (production :function-signature (:parameter-signature :result-signature) function-signature-parameter-and-result-signatures
-        (untyped false)
-        ((validate (cxt :unused) (env :unused)) (todo))
-        ((pre-eval (cxt :unused) (env :unused) (unchecked :unused)) (todo))))
-    
-    (production :parameter-signature (\( :parameters \)) parameter-signature-parameters)
-    
-    (production :parameters () parameters-none)
-    (production :parameters (:all-parameters) parameters-all-parameters)
+    (rule :parameters ((untyped boolean)
+                       (validate (-> (context environment) integer)))
+      (production :parameters () parameters-none
+        (untyped true)
+        ((validate (cxt :unused) (env :unused)) (return 0)))
+      (production :parameters (:all-parameters) parameters-all-parameters
+        (untyped (todo))
+        ((validate (cxt :unused) (env :unused)) (todo))))
     
     (production :all-parameters (:parameter) all-parameters-parameter)
     (production :all-parameters (:parameter \, :all-parameters) all-parameters-parameter-and-more)
@@ -4045,14 +4543,23 @@
     (production :named-rest-parameter (\.\.\. const named :identifier) named-rest-parameter-const-named-identifier)
     (production :named-rest-parameter (\.\.\. named const :identifier) named-rest-parameter-named-const-identifier)
     
-    (production :result-signature () result-signature-none)
-    (production :result-signature (\: (:type-expression allow-in)) result-signature-colon-and-type-expression)
-    ;(production :result-signature ((:- {) (:type-expression allow-in)) result-signature-type-expression)
-    (%print-actions ("Validation" validate) ("Pre-Evaluation" pre-eval))
+    (rule :result ((untyped boolean)
+                   (validate (-> (context environment) void)))
+      (production :result () result-none
+        (untyped true)
+        ((validate cxt env) :forward))
+      (production :result (\: (:type-expression allow-in)) result-colon-and-type-expression
+        (untyped false)
+        ((validate cxt env) :forward))
+      ;(production :result ((:- {) (:type-expression allow-in)) result-type-expression)
+      )
+    (%print-actions ("Validation" untyped validate) ("Setup" setup))
     
     
     (%heading 2 "Class Definition")
-    (rule :class-definition ((class (writable-cell class)) (validate (-> (context environment plurality attribute-opt-not-false) void))
+    (rule :class-definition ((class (writable-cell class))
+                             (validate (-> (context environment plurality attribute-opt-not-false) void))
+                             (setup (-> () void))
                              (eval (-> (environment object) object)))
       (production :class-definition (class :identifier :inheritance :block) class-definition-definition
         ((validate cxt env pl attr)
@@ -4081,12 +4588,21 @@
          (const private-namespace namespace (new namespace "private"))
          (const dynamic boolean (or (& dynamic a) (& dynamic superclass)))
          (const c class (new class (list-set-of static-binding) (list-set-of static-binding) (list-set-of instance-binding) (list-set-of instance-binding)
-                             (vector-of instance-variable) false superclass prototype private-namespace dynamic true final call construct))
+                             (vector-of instance-variable) false superclass prototype private-namespace dynamic true final call construct :uninit null))
+         (function (coerce (o object)) object
+           (rwhen (relaxed-has-type o c)
+             (return o))
+           (throw bad-value-error))
+         (&const= implicit-coerce c coerce)
          (action<- (class :class-definition 0) c)
          (const v variable (new variable class-class c true))
          (exec (define-static-member env (name :identifier) (& namespaces a) (& override-mod a) (& explicit a) read-write v))
          ((validate-using-frame :block) cxt env (new jump-targets (list-set-of label) (list-set-of label)) pl c)
          (&= complete c true))
+        
+        ((setup)
+         ((setup :block)))
+        
         ((eval env d)
          (const c class (class :class-definition 0))
          (return ((eval-using-frame :block) env c d)))))
@@ -4098,12 +4614,12 @@
       (production :inheritance (extends (:type-expression allow-in)) inheritance-extends
         ((validate cxt env)
          ((validate :type-expression) cxt env)
-         (return ((eval :type-expression) env))))
+         (return ((setup-and-eval :type-expression) env))))
       #|(production :inheritance (implements :type-expression-list) inheritance-implements
         ((validate (cxt :unused) (env :unused)) (return object-class)))
       (production :inheritance (extends (:type-expression allow-in) implements :type-expression-list) inheritance-extends-implements
         ((validate (cxt :unused) (env :unused)) (return object-class)))|#)
-    (%print-actions ("Validation" class validate) ("Evaluation" eval))
+    (%print-actions ("Validation" class validate) ("Setup" setup) ("Evaluation" eval))
     
     
     ;(%heading 2 "Interface Definition")
@@ -4150,11 +4666,8 @@
       (production :program (:directives) program-directives
         (eval-program
          (begin
-          (const saved-pre-evaluators (vector (-> () void)) pre-evaluators)
-          (<- pre-evaluators (vector-of (-> () void)))
           (exec ((validate :directives) initial-context initial-environment (new jump-targets (list-set-of label) (list-set-of label)) singular none))
-          (for-each pre-evaluators v (v))
-          (<- pre-evaluators saved-pre-evaluators)
+          ((setup :directives))
           (return ((eval :directives) initial-environment undefined))))))
     (%print-actions ("Evaluation" eval-program))
     
@@ -4164,32 +4677,34 @@
     
     
     (%heading (1 :semantics) "Built-in Classes")
-    (define (make-built-in-class (superclass class-opt) (dynamic boolean) (allow-null boolean) (final boolean)) class
+    (define (make-built-in-class (superclass class-opt) (dynamic boolean) (allow-null boolean) (final boolean) (default-value object)) class
       (function (call (this object :unused) (args argument-list :unused) (phase phase :unused)) object
         (todo))
       (function (construct (args argument-list :unused) (phase phase :unused)) object
         (todo))
+      (function (coerce (o object :unused)) object
+        (todo))
       (const private-namespace namespace (new namespace "private"))
       (return (new class (list-set-of static-binding) (list-set-of static-binding) (list-set-of instance-binding) (list-set-of instance-binding)
-                   (vector-of instance-variable) true superclass null private-namespace dynamic allow-null final call construct)))
+                   (vector-of instance-variable) true superclass null private-namespace dynamic allow-null final call construct coerce default-value)))
     
-    (define object-class class (make-built-in-class none false true false))
-    (define undefined-class class (make-built-in-class object-class false false true))
-    (define null-class class (make-built-in-class object-class false true true))
-    (define boolean-class class (make-built-in-class object-class false false true))
-    (define general-number-class class (make-built-in-class object-class false false false))
-    (define long-class class (make-built-in-class general-number-class false false true))
-    (define u-long-class class (make-built-in-class general-number-class false false true))
-    (define float-class class (make-built-in-class general-number-class false false true))
-    (define number-class class (make-built-in-class general-number-class false false true))
-    (define character-class class (make-built-in-class object-class false false true))
-    (define string-class class (make-built-in-class object-class false true true))
-    (define namespace-class class (make-built-in-class object-class false true true))
-    (define attribute-class class (make-built-in-class object-class false true true))
-    (define class-class class (make-built-in-class object-class false true true))
-    (define function-class class (make-built-in-class object-class false true true))
-    (define prototype-class class (make-built-in-class object-class true true true))
-    (define package-class class (make-built-in-class object-class true true true))
+    (define object-class class (make-built-in-class none false true false undefined))
+    (define undefined-class class (make-built-in-class object-class false false true undefined))
+    (define null-class class (make-built-in-class object-class false true true null))
+    (define boolean-class class (make-built-in-class object-class false false true false))
+    (define general-number-class class (make-built-in-class object-class false false false nan64))
+    (define long-class class (make-built-in-class general-number-class false false true (new long 0)))
+    (define u-long-class class (make-built-in-class general-number-class false false true (new u-long 0)))
+    (define float-class class (make-built-in-class general-number-class false false true nan32))
+    (define number-class class (make-built-in-class general-number-class false false true nan64))
+    (define character-class class (make-built-in-class object-class false false true #?0000))
+    (define string-class class (make-built-in-class object-class false true true null))
+    (define namespace-class class (make-built-in-class object-class false true true null))
+    (define attribute-class class (make-built-in-class object-class false true true null))
+    (define class-class class (make-built-in-class object-class false true true null))
+    (define function-class class (make-built-in-class object-class false true true null))
+    (define prototype-class class (make-built-in-class object-class true true true null))
+    (define package-class class (make-built-in-class object-class true true true null))
     
     
     (define object-prototype prototype (new prototype none (list-set-of dynamic-property))) ;***** Add some properties here
