@@ -96,7 +96,8 @@ sub show_bug {
     # The caller is meant to have checked this. Abort here so that
     # we don't get obscure SQL errors, below
     if (!MoreSQLData()) {
-        ThrowCodeError("No data when fetching bug $id");
+        $vars->{'bug_id'} = $id;
+        ThrowCodeError("no_bug_data");
     }
 
     my $value;

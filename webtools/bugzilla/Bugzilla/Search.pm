@@ -95,7 +95,7 @@ sub init {
         my $c = &::trim($F{'votes'});
         if ($c ne "") {
             if ($c !~ /^[0-9]*$/) {
-                $vars->{'value'} = $c;
+                $::vars->{'value'} = $c;
                 &::ThrowUserError("illegal_at_least_x_votes");
             }
             push(@specialchart, ["votes", "greaterthan", $c - 1]);
@@ -179,7 +179,7 @@ sub init {
         if (@clist) {
             push(@specialchart, \@clist);
         } else {
-            $vars->{'email'} = $email;
+            $::vars->{'email'} = $email;
             &::ThrowUserError("missing_email_type");
         }
     }
@@ -189,7 +189,7 @@ sub init {
         my $c = &::trim($F{'changedin'});
         if ($c ne "") {
             if ($c !~ /^[0-9]*$/) {
-                $vars->{'value'} = $c;
+                $::vars->{'value'} = $c;
                 &::ThrowUserError("illegal_changed_in_last_x_days");
             }
             push(@specialchart, ["changedin",
@@ -437,7 +437,7 @@ sub init {
                      push(@list, "$table.keywordid = $id");
                  }
                  else {
-                     $vars->{'keyword'} = $v;
+                     $::vars->{'keyword'} = $v;
                      &::ThrowUserError("unknown_keyword");
                  }
              }
@@ -776,11 +776,10 @@ sub init {
                     push(@orlist, $term);
                 }
                 else {
-                    my $errstr =
-                      qq|Cannot seem to handle <code>$F{"field$chart-$row-$col"}</code>
-                         and <code>$F{"type$chart-$row-$col"}</code> together|;
-                    $chart < 0 ? die "Internal error: $errstr"
-                               : &::ThrowCodeError($errstr);
+                    # This field and this type don't work together.
+                    $::vars->{'field'} = $F{"field$chart-$row-$col"};
+                    $::vars->{'type'} = $F{"type$chart-$row-$col"};
+                    &::ThrowCodeError("field_type_mismatch");
                 }
             }
             if (@orlist) {
@@ -842,7 +841,7 @@ sub SqlifyDate {
     }
     my $date = str2time($str);
     if (!defined($date)) {
-        $vars->{'date'} = $str;
+        $::vars->{'date'} = $str;
         ThrowUserError("illegal_date");
     }
     return time2str("%Y-%m-%d %H:%M:%S", $date);

@@ -42,6 +42,10 @@
     to any [% parameters %] which you may have set before calling
     ThrowCodeError.
 
+  [% ELSIF error == "field_type_mismatch" %]
+    Cannot seem to handle <code>[% field %]</code>
+    and <code>[% type %]</code> together.
+ 
   [% ELSIF error == "group_bit_invalid" %]
     One of the group bits submitted was invalid.
 
@@ -51,6 +55,9 @@
   [% ELSIF error == "inactive_group" %]
     Attempted to add bug to an inactive group, identified by the bit 
     '[% bit FILTER html %]'.
+    
+  [% ELSIF error == "no_bug_data" %]
+    No data when fetching bug [% bug_id %].
     
   [% ELSIF error == "template_error" %]
     [% template_error_msg %]
@@ -62,11 +69,14 @@
     Unknown action [% action FILTER html %]!
     
   [% ELSE %]
-    [%# Cope with legacy calling convention, where "error" was the string
-      # to print. 
-      #%]
-        
-    [% error %]
+    [%# Give sensible error if error functions are used incorrectly.
+      #%]        
+    You are using Bugzilla's ThrowCodeError() function incorrectly. You
+    passed in the string '[% message_tag %]'. The correct use is to pass
+    in a tag, and define that tag in the file code-error.html.tmpl.<br>
+    <br>
+    If you are a Bugzilla end-user seeing this message, please save this
+    page and send it to [% Param('maintainer') %].
   [% END %]
 [% END %]
 
