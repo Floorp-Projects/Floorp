@@ -230,6 +230,13 @@ static void UnhideAction(Widget w, XEvent *event, String *, Cardinal *);
 static void MenuArm(Widget w, XEvent *event, String *, Cardinal *);
 static void MenuDisarm(Widget w, XEvent *event, String *, Cardinal *);
 static int SizeColumnsToFit(XmLGridWidget g, int start_at);
+static void GridCrossingEH(Widget w, XtPointer closure, XEvent *event,
+						   Boolean *ctd);
+static void	GridInvokeCellCrossingCallbacks(Widget w,XtCallbackList list,
+											int reason,XEvent * event,
+											int row,int col);
+static void GridCrossingEH(Widget w,XtPointer closure,XEvent * event,
+						   Boolean * ctd);
 
 /* XmLGridRow */
 
@@ -882,6 +889,43 @@ static XtResource resources[] =
 		XtOffset(XmLGridWidget, grid.popupCallback),
 		XmRImmediate, (XtPointer)0,
 		},
+		{
+			XmNenterCellCallback, 
+			XmCCallback,
+			XmRCallback, 
+			sizeof(XtCallbackList),
+			XtOffset(XmLGridWidget, grid . enterCellCallback),
+			XmRImmediate, 
+			(XtPointer) NULL
+		},
+		{
+			XmNleaveCellCallback, 
+			XmCCallback,
+			XmRCallback, 
+			sizeof(XtCallbackList),
+			XtOffset(XmLGridWidget, grid . leaveCellCallback),
+			XmRImmediate, 
+			(XtPointer) NULL
+		},
+		{
+			XmNenterGridCallback, 
+			XmCCallback,
+			XmRCallback, 
+			sizeof(XtCallbackList),
+			XtOffset(XmLGridWidget, grid . enterGridCallback),
+			XmRImmediate, 
+			(XtPointer) NULL
+		},
+		{
+			XmNleaveGridCallback, 
+			XmCCallback,
+			XmRCallback, 
+			sizeof(XtCallbackList),
+			XtOffset(XmLGridWidget, grid . leaveGridCallback),
+			XmRImmediate, 
+			(XtPointer) NULL
+		},
+
 		/* Row Resources */
 		{
 		XmNrow, XmCGridRow,
@@ -1516,6 +1560,24 @@ Initialize(Widget reqW,
 	g->grid.dragTimerSet = 0;
 	g->grid.editTimerSet = 0;
 	g->grid.gc = 0;
+
+	/*
+	 * Support for:
+	 *
+	 * XmNenterCellCallback 
+	 * XmNenterCellCallback
+	 * XmNenterCallback
+	 * XmNleaveCallback
+	 */
+	g->grid.lastCursorMotionRow = -1;
+	g->grid.lastCursorMotionCol = -1;
+
+	XtAddEventHandler(newW, 
+					  EnterWindowMask | LeaveWindowMask,
+					  True,
+					  (XtEventHandler) GridCrossingEH,
+					  (XtPointer) NULL);
+
 	reg = g->grid.reg;
 	for (i = 0; i < 9; i++)
 			{
@@ -7043,12 +7105,13 @@ DragTimer(XtPointer clientData,
 		80, DragTimer, (caddr_t)g);
 	}
 
+/*----------------------------------------------------------------------*/
 static void
 CursorMotion(Widget w,
-	     XEvent *event,
-	     String *params,
-	     Cardinal *nparam)
-	{
+			 XEvent *event,
+			 String *params,
+			 Cardinal *nparam)
+{
 	XmLGridWidget g;
 	XMotionEvent *me;
 	int isVert, row, col;
@@ -7059,16 +7122,64 @@ CursorMotion(Widget w,
 	g = (XmLGridWidget)w;
 	me = (XMotionEvent *)event;
 	defineCursor = CursorNormal;
-	if (PosIsResize(g, me->x, me->y, &row, &col, &isVert))
+
+	{
+		int motionRow;
+		int motionCol;
+		int newMotionRow = -1;
+		int newMotionCol = -1;
+		Boolean invokeEnterCellCallback = False;
+
+		if (XYToRowCol(g,me->x,me->y,&motionRow,&motionCol) != -1)
 		{
+			if (motionRow != g->grid.lastCursorMotionRow ||
+				motionCol != g->grid.lastCursorMotionCol)
+			{
+				newMotionRow = motionRow;
+				newMotionCol = motionCol;
+
+				invokeEnterCellCallback = True;
+			}			
+		}
+
+		if (g->grid.lastCursorMotionRow != -1 &&
+			g->grid.lastCursorMotionCol != -1)
+		{
+			/* Invoke XmNleaveCellCallback */
+			GridInvokeCellCrossingCallbacks(w,
+											g->grid.leaveCellCallback,
+											XmCR_LEAVE_CELL,
+											event,
+											g->grid.lastCursorMotionRow,
+											g->grid.lastCursorMotionCol);
+		}
+
+		if (invokeEnterCellCallback)
+		{
+			/* Invoke XmNenterCellCallback */
+			GridInvokeCellCrossingCallbacks(w,
+											g->grid.enterCellCallback,
+											XmCR_ENTER_CELL,
+											event,
+											newMotionRow,
+											newMotionCol);
+		}
+
+		g->grid.lastCursorMotionRow = newMotionRow;
+		g->grid.lastCursorMotionCol = newMotionCol;
+	}
+
+	if (PosIsResize(g, me->x, me->y, &row, &col, &isVert))
+	{
 		if (isVert)
 			defineCursor = CursorVResize;
 		else
 			defineCursor = CursorHResize;
-		}
-	DefineCursor(g, defineCursor);
 	}
 
+	DefineCursor(g, defineCursor);
+}
+/*----------------------------------------------------------------------*/
 static void
 Edit(Widget w,
      XEvent *event,
@@ -10966,5 +11077,100 @@ SizeColumnsToFit(XmLGridWidget g, int starting_at)
 
 	return delta;
 }
+/*----------------------------------------------------------------------*/
+static void
+GridInvokeCallbacks(Widget			w,
+					XtCallbackList	list,
+					int				reason,
+					XEvent *		event)
+{
+    XmLGridWidget g = (XmLGridWidget)w;
 
+	/* Make sure widget is alive and callback list is not NULL */
+	if (!g->core.being_destroyed && list)
+	{
+		XmAnyCallbackStruct cbs;
+		
+		cbs.event 	= event;
+		cbs.reason	= reason;
 
+		/* Invoke the Callback List */
+		XtCallCallbackList(w,list,&cbs);
+	}
+}
+/*----------------------------------------------------------------------*/
+static void
+GridInvokeCellCrossingCallbacks(Widget			w,
+								XtCallbackList	list,
+								int				reason,
+								XEvent *		event,
+								int				row,
+								int				col)
+{
+    XmLGridWidget g = (XmLGridWidget)w;
+
+	/* Make sure widget is alive and callback list is not NULL */
+	if (!g->core.being_destroyed && list)
+	{
+		if (row != -1 && col != -1)
+		{
+			XmLGridCell				cell;
+			XmLGridCallbackStruct	cbs;
+
+			cell = GetCell(g, row, col);
+
+			if (cell)
+			{
+				cbs.reason		= XmCR_CELL_FOCUS_OUT;
+				cbs.columnType	= ColPosToType(g, col);
+				cbs.column		= ColPosToTypePos(g, cbs.columnType, col);
+				cbs.rowType		= RowPosToType(g, row);
+				cbs.row			= RowPosToTypePos(g, cbs.rowType, row);
+
+/* 				XmLGridCellAction(cell, (Widget)g, &cbs); */
+
+				/* Invoke the Callback List */
+				XtCallCallbackList(w,list,&cbs);
+			}
+		}
+	}
+}
+/*----------------------------------------------------------------------*/
+static void 
+GridCrossingEH(Widget		w, 
+			   XtPointer	closure, 
+			   XEvent *		event,
+			   Boolean *	ctd)
+{
+    XmLGridWidget g = (XmLGridWidget)w;
+
+	if (event)
+	{
+		if (event->type == EnterNotify)
+		{
+			/* Invoke XmNenterGridCallback */
+			GridInvokeCallbacks(w,
+								g->grid.enterGridCallback,
+								XmCR_ENTER_GRID,
+								event);
+
+/* 			printf("Enter(%s)\n",XtName(w)); */
+		}
+		else if (event->type == LeaveNotify)
+		{
+			g->grid.lastCursorMotionRow = -1;
+			g->grid.lastCursorMotionCol = -1;
+
+			/* Invoke XmNleaveGridCallback */
+			GridInvokeCallbacks(w,
+								g->grid.leaveGridCallback,
+								XmCR_LEAVE_GRID,
+								event);
+
+/* 			printf("Leave(%s)\n",XtName(w)); */
+		}
+	}
+
+	*ctd = True;
+}
+/*----------------------------------------------------------------------*/

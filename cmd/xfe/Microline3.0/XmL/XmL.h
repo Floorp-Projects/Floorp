@@ -255,6 +255,11 @@ typedef struct
 #define XmNminColumnWidth "minColumnWidth"
 #define XmCMinColumnWidth "MinColumnWidth"
 
+#define XmNenterCellCallback "enterCellCallback"
+#define XmNleaveCellCallback "leaveCellCallback"
+
+#define XmNenterGridCallback "enterGridCallback"
+#define XmNleaveGridCallback "leaveGridCallback"
 
 /* Grid Row/Column/Cell resources */
 
@@ -412,10 +417,15 @@ typedef struct _XmLGridCallbackStruct
 #define XmCR_DESELECT_COLUMN 927
 #define XmCR_DESELECT_ROW    928
 
-	/* xfe added callback reason */
+/* xfe added callback reason */
 #define XmCR_RESIZE_GRID     929
 #define XmCR_SHOW_POPUP      930
 #define XmCR_SINGLECLICK     931
+
+#define XmCR_ENTER_CELL	     931
+#define XmCR_ENTER_GRID	     932
+#define XmCR_LEAVE_CELL	     933
+#define XmCR_LEAVE_GRID	     934
 
 /* Grid defines */
 

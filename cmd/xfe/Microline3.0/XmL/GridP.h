@@ -327,6 +327,11 @@ typedef struct _XmLGridPart
 	XtCallbackList selectCallback, deselectCallback;
 	XtCallbackList resizeCallback, scrollCallback;
 
+	XtCallbackList enterCellCallback;
+	XtCallbackList leaveCellCallback;
+	XtCallbackList enterGridCallback;
+	XtCallbackList leaveGridCallback;
+
         /* XFE Additions */
       XtCallbackList popupCallback;
       Boolean hideUnhideButtons;
@@ -343,6 +348,9 @@ typedef struct _XmLGridPart
       Dimension iconSpacing;
 
       Dimension minColWidth;
+
+      int lastCursorMotionRow;
+      int lastCursorMotionCol;
 
 	/* private data */
 	GC gc;
