@@ -1520,11 +1520,22 @@ public final class Context {
     }
     
     /**
+     * Set a WrapHandler for this Context.
+     * <p>
+     * The WrapHandler allows custom object wrapping behavior for 
+     * Java object manipulated with JavaScript.
+     * @see org.mozilla.javascript.WrapHandler
+     * @since 1.5 Release 2 
      */
     public void setWrapHandler(WrapHandler wrapHandler) {
         this.wrapHandler = wrapHandler;
     }
     
+    /**
+     * Return the current WrapHandler, or null if none is defined.
+     * @see org.mozilla.javascript.WrapHandler
+     * @since 1.5 Release 2 
+     */
     public WrapHandler getWrapHandler() {
         return wrapHandler;
     }
