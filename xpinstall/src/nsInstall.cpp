@@ -2140,7 +2140,7 @@ nsInstall::Alert(nsString& string)
 {
     nsresult res;  
 
-    NS_WITH_PROXIED_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, nsnull, &res);
+    NS_WITH_PROXIED_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, NS_UI_THREAD_EVENTQ, &res);
     if (NS_FAILED(res)) 
         return res;
     
@@ -2153,7 +2153,7 @@ nsInstall::Confirm(nsString& string, PRBool* aReturn)
     *aReturn = PR_FALSE; /* default value */
     
     nsresult res;  
-    NS_WITH_PROXIED_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, nsnull, &res);
+    NS_WITH_PROXIED_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, NS_UI_THREAD_EVENTQ, &res);
     if (NS_FAILED(res)) 
         return res;
     
