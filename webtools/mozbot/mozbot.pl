@@ -504,9 +504,9 @@ sub on_connect {
         BotModules::Admin->create('Admin', ''), # admin commands
     );
     foreach (@modulenames) {
-        my $result = LoadModule($_); 
+        my $result = LoadModule($_);
         if (ref($result)) {
-            &debug("loaded $_");        
+            &debug("loaded $_");
         } else {
             &debug("failed to load $_", $result);
         }
@@ -530,15 +530,20 @@ sub on_connect {
         } else {
             $self->join($channel);
         }
+        foreach (@modules) {
+            # XXX this hack will be removed once JoinedChannel really gets called
+            # when we join a channel -- see bug 112049
+            $_->JoinedChannel({'bot' => $self, 'channel' => $channel}, $channel);
+        }
     }
-    
+
     # try to get our hostname
     $self->whois($self->nick);
 
     # tell the modules to set up the scheduled commands
     &debug('setting up scheduler...');
     foreach my $module (@modules) { $module->Schedule({'bot'=>$self}); } 
-    
+
     # enable the drainmsgqueue
     &drainmsgqueue($self);
 
