@@ -197,6 +197,8 @@ XFE_RDFTreeView::XFE_RDFTreeView(XFE_Component *	toplevel,
 	XtAddCallback(_tree, XmNdeselectCallback, deselect_cb, this);
 	XtAddCallback(_tree, XmNpopupCallback, popup_cb, this);
 	
+    XtManageChild(_tree);
+
 	//fe_AddTipStringCallback(outline, XFE_Outliner::tip_cb, this);
 }
 //////////////////////////////////////////////////////////////////////////
@@ -698,8 +700,8 @@ XFE_RDFTreeView::add_row
                       XmNcellEditable, is_editable,
                       NULL);
 
-        if (HT_GetNodeData (node, column_data->token,
-                            column_data->token_type, &data)
+        if (column_data && HT_GetNodeData (node, column_data->token,
+                                           column_data->token_type, &data)
             && data) 
        {
             time_t dateVal;
