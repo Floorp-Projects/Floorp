@@ -33,6 +33,7 @@
 #include <PP_Messages.h>		// for PP standard menu commands
 #include "nsMacMessagePump.h"	// for the windowless menu event handler
 
+
 #if DEBUG
 #include "macstdlibextras.h"
 #endif
@@ -54,7 +55,11 @@ enum
 	cmd_Sample0					= 1000,
 	cmd_PrintOneColumn	= 2000,
 	cmd_Find						= 3000,
-	
+
+	cmd_ViewSource			= 2200,
+	cmd_ViewTreeView,
+	cmd_ViewToolbar,
+
 	cmd_DebugMode				= 4000,
 	cmd_ReflowTest,
 	cmd_DumpContents,
@@ -84,7 +89,6 @@ enum
 static nsNativeViewerApp* gTheApp;
 
 
-#pragma mark -
 //----------------------------------------------------------------------
 
 nsNativeViewerApp::nsNativeViewerApp()
@@ -155,6 +159,32 @@ nsNativeBrowserWindow::~nsNativeBrowserWindow()
 {
 }
 
+
+nsresult
+nsNativeBrowserWindow::InitNativeWindow()
+{
+	// this is where we get a chance to set up the window refCon
+	NS_PRECONDITION(nsnull != mWindow, "Null window in InitNativeWindow");
+	
+	WindowPtr		wind = (WindowPtr)mWindow->GetNativeData(NS_NATIVE_GRAPHIC);
+	if (!wind) return NS_ERROR_NULL_POINTER;
+
+	::SetWRefCon(wind, (long)this);
+	return NS_OK;
+}
+
+static void CloseFrontWindow()
+{
+	WindowPtr		wind = ::FrontWindow();
+	if (!wind) return;
+	
+	nsBrowserWindow		*browserWindow = (nsBrowserWindow *)GetWRefCon(wind);
+	if (!browserWindow) return;
+	
+	browserWindow->Close();
+}
+
+
 nsresult
 nsNativeBrowserWindow::CreateMenuBar(PRInt32 aWidth)
 {
@@ -195,36 +225,35 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 		case menu_File:
 			switch (menuItem)
 			{
-				case cmd_New:		xpID = VIEWER_WINDOW_OPEN;		break;
-				case cmd_Open:		xpID = VIEWER_FILE_OPEN;		break;
+				case cmd_New:			xpID = VIEWER_WINDOW_OPEN;		break;
+				case cmd_Open:		xpID = VIEWER_FILE_OPEN;			break;
 				case cmd_Close:
-					  WindowPtr whichwindow = FrontWindow();
-				      nsIWidget* raptorWindow = *(nsIWidget**)::GetWRefCon(whichwindow);
-				      raptorWindow->Destroy();
+					CloseFrontWindow();
 					break;
-				case 2000:		xpID = VIEW_SOURCE;				break;
-				case 2001:		xpID = VIEWER_TREEVIEW;			break;
-				case 2002:		xpID = VIEWER_TOOLBARDEMO;
-				case cmd_Save:		/*n.a.*/						break;
-				case cmd_SaveAs:	/*n.a.*/						break;
-				case cmd_Revert:	/*n.a.*/						break;
+
+				case cmd_ViewSource:			xpID = VIEW_SOURCE;					break;
+				case cmd_ViewTreeView:		xpID = VIEWER_TREEVIEW;			break;
+				case cmd_ViewToolbar:			xpID = VIEWER_TOOLBARDEMO;	break;
+				case cmd_Save:			/*n.a.*/						break;
+				case cmd_SaveAs:		/*n.a.*/						break;
+				case cmd_Revert:		/*n.a.*/						break;
 				case cmd_PageSetup:	/*n.a.*/						break;
-				case cmd_Print:		xpID = VIEWER_PRINT;	break;
-				case cmd_Quit:		xpID = VIEWER_EXIT;				break;
+				case cmd_Print:					xpID = VIEWER_PRINT;			break;
+				case cmd_Quit:					xpID = VIEWER_EXIT;				break;
 			}
 			break;
 
 		case menu_Edit:
 			switch (menuItem)
 			{
-				case cmd_Undo:		/*n.a.*/						break;
-				case cmd_Cut:		xpID = VIEWER_EDIT_CUT;			break;
-				case cmd_Copy:		xpID = VIEWER_EDIT_COPY;		break;
-				case cmd_Paste:		xpID = VIEWER_EDIT_PASTE;		break;
-				case cmd_Clear:		/*n.a.*/						break;
-				case cmd_SelectAll:	xpID = VIEWER_EDIT_SELECTALL;	break;
-				case cmd_Find:		xpID = VIEWER_EDIT_FINDINPAGE;	break;
-				case cmd_Preferences:	xpID = VIEWER_PREFS;		break;
+				case cmd_Undo:		/*n.a.*/														break;
+				case cmd_Cut:					xpID = VIEWER_EDIT_CUT;					break;
+				case cmd_Copy:				xpID = VIEWER_EDIT_COPY;				break;
+				case cmd_Paste:				xpID = VIEWER_EDIT_PASTE;				break;
+				case cmd_Clear:		/*n.a.*/														break;
+				case cmd_SelectAll:		xpID = VIEWER_EDIT_SELECTALL;		break;
+				case cmd_Find:				xpID = VIEWER_EDIT_FINDINPAGE;	break;
+				case cmd_Preferences:	xpID = VIEWER_PREFS;						break;
 			}
 			break;
 
@@ -294,7 +323,7 @@ int main(int argc, char **argv)
 
   // Set up the toolbox and (if DEBUG) the console
   InitializeMacToolbox();
-
+	
   // Hack to get il_ss set so it doesn't fail in xpcompat.c
   nsIImageManager *manager;
   NS_NewImageManager(&manager);
