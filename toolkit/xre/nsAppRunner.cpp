@@ -86,7 +86,6 @@
 #include "nsIXULAppInfo.h"
 
 #include "nsCRT.h"
-#include "nsCommandLineServiceMac.h"
 #include "nsCOMPtr.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
@@ -121,6 +120,7 @@
 
 #ifdef XP_MACOSX
 #include "nsILocalFileMac.h"
+#include "nsCommandLineServiceMac.h"
 #endif
 
 // for X remote support
