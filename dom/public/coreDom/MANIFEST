@@ -35,3 +35,4 @@ nsIDOMText.h
 nsIDOMStyleSheet.h
 nsIDOMStyleSheetCollection.h
 nsIDOMNSDocument.h
+nsIDOMRange.h
