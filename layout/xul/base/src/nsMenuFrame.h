@@ -50,6 +50,10 @@ public:
                                         nsIAtom** aListName) const;
   NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
 
+  // Overridden to prevent events from ever going to children of the menu.
+  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, 
+                              nsIFrame**     aFrame);
+
 protected:
   nsFrameList mPopupFrames;
 }; // class nsMenuFrame

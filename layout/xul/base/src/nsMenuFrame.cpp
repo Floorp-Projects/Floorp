@@ -112,3 +112,12 @@ nsMenuFrame::DeleteFrame(nsIPresContext& aPresContext)
   mPopupFrames.DeleteFrames(aPresContext);
   return nsAreaFrame::DeleteFrame(aPresContext);
 }
+
+// Called to prevent events from going to anything inside the menu.
+NS_IMETHODIMP
+nsMenuFrame::GetFrameForPoint(const nsPoint& aPoint, 
+                              nsIFrame**     aFrame)
+{
+  *aFrame = this; // Capture all events so that we can perform selection
+  return NS_OK;
+}

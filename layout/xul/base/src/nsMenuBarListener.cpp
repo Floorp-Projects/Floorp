@@ -149,7 +149,7 @@ nsMenuBarListener::MouseMove(nsIDOMEvent* aMouseEvent)
     if (tag && (tag.get() == nsXULAtoms::xpmenu)) {
       // We found a menu.
       mMenuBarFrame->SetCurrentMenuItem(current);
-      break;
+      return NS_OK;
     }
 
     // Get our parent.
@@ -253,7 +253,8 @@ nsMenuBarListener::KeyDown(nsIDOMEvent* aKeyEvent)
            theChar == NS_VK_DOWN) {
     // The arrow keys were pressed. User is moving around within
     // the menus.
-    mMenuBarFrame->KeyboardNavigation(theChar);
+    if (mMenuBarFrame->IsActive()) 
+      mMenuBarFrame->KeyboardNavigation(theChar);
   }
 
   if (mMenuBarFrame->IsActive())
