@@ -28,7 +28,6 @@ LIBRARY_NAME=mailnewsbase_s
 EXPORTS = \
 	nsMessenger.h			\
 	nsMsgKeyArray.h			\
-	nsMsgRFC822Parser.h		\
 	nsUrlListenerManager.h 	\
 	nsMsgMailSession.h 		\
 	nsMsgAppCore.h			\
@@ -41,7 +40,6 @@ CPPSRCS = \
 	nsMessenger.cpp	\
 	nsIMessenger.cpp	\
 	nsMessengerNameSet.cpp \
-	nsMsgRFC822Parser.cpp \
 	nsMsgKeyArray.cpp	\
 	nsMsgImapMailFolder.cpp \
 	nsUrlListenerManager.cpp \

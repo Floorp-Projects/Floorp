@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include "nsIComponentManager.h" 
 #include "nsMsgBaseCID.h"
-#include "nsIMsgRFC822Parser.h"
+#include "nsIMsgHeaderParser.h"
 
-static NS_DEFINE_CID(kMsgRFC822ParserCID, NS_MSGRFC822PARSER_CID); 
+static NS_DEFINE_CID(kMsgHeaderParserCID, NS_MSGHEADERPARSER_CID); 
 
 /* This is just a testing stub added by mscott. All I'm doing is loading a component,
    and querying it for a particular interface.
@@ -14,22 +14,22 @@ static NS_DEFINE_CID(kMsgRFC822ParserCID, NS_MSGRFC822PARSER_CID);
 
  int main(int argc, char *argv[]) 
  { 
-   nsIMsgRFC822Parser *sample; 
+   nsIMsgHeaderParser *sample; 
 
    // register our dll
-   nsComponentManager::RegisterComponent(kMsgRFC822ParserCID, NULL, NULL, "mailnews.dll", PR_FALSE, PR_FALSE);
+   nsComponentManager::RegisterComponent(kMsgHeaderParserCID, NULL, NULL, "mailnews.dll", PR_FALSE, PR_FALSE);
    
-   nsresult res = nsComponentManager::CreateInstance(kMsgRFC822ParserCID, 
+   nsresult res = nsComponentManager::CreateInstance(kMsgHeaderParserCID, 
                                                NULL, 
-                                               nsIMsgRFC822Parser::GetIID(), 
+                                               nsIMsgHeaderParser::GetIID(), 
                                                (void **) &sample); 
 
    if (res == NS_OK && sample) { 
-	 printf("We succesfully obtained a nsIMsgRFC822Parser interface....\n");
+	 printf("We succesfully obtained a nsIMsgHeaderParser interface....\n");
 	 char * names = NULL;
 	 char * addresses = NULL;
 	 PRUint32 numAddresses = 0; 
-	 sample->ParseRFC822Addresses(NULL, "Scott MacGregor <mscott@netscape.com>", &names, &addresses, numAddresses);
+	 sample->ParseHeaderAddresses(NULL, "Scott MacGregor <mscott@netscape.com>", &names, &addresses, numAddresses);
 	 if (names)
 	 {
 		 printf(names);

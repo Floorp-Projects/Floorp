@@ -11,7 +11,7 @@
 #include "xp_time.h"
 #include "nsMsgSendFact.h"
 #include "nsMsgBaseCID.h"
-#include "nsIMsgRFC822Parser.h"
+#include "nsIMsgHeaderParser.h"
 #include "nsINetService.h"
 #include "nsISmtpService.h"  // for actually sending the message...
 #include "nsMsgCompPrefs.h"
@@ -24,7 +24,7 @@
 static NS_DEFINE_IID(kIMsgSend, NS_IMSGSEND_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);
-static NS_DEFINE_CID(kMsgRFC822ParserCID, NS_MSGRFC822PARSER_CID); 
+static NS_DEFINE_CID(kMsgHeaderParserCID, NS_MSGHEADERPARSER_CID); 
 static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID); 
 
 #if 0 //JFD
@@ -1638,15 +1638,15 @@ static char * mime_fix_header_1 (const char *string, PRBool addr_p, PRBool news_
 		return 0;
 
 	if (addr_p) {
-		nsIMsgRFC822Parser * pRfc822;
-		nsresult rv = nsComponentManager::CreateInstance(kMsgRFC822ParserCID, 
+		nsIMsgHeaderParser * pHeader;
+		nsresult rv = nsComponentManager::CreateInstance(kMsgHeaderParserCID, 
                                                NULL, 
-                                               nsIMsgRFC822Parser::GetIID(), 
-                                               (void **) &pRfc822);
+                                               nsIMsgHeaderParser::GetIID(), 
+                                               (void **) &pHeader);
 		if (NS_SUCCEEDED(rv)) {
 			char *n;
-			pRfc822->ReformatRFC822Addresses(nsnull, string, &n);
-			pRfc822->Release();
+			pHeader->ReformatHeaderAddresses(nsnull, string, &n);
+			pHeader->Release();
 			if (n)
 				return n;
 		}

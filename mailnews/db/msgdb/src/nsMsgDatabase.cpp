@@ -29,7 +29,7 @@
 #include "nsMsgThread.h"
 #include "nsFileStream.h"
 #include "nsString2.h"
-#include "nsIMsgRFC822Parser.h"
+#include "nsIMsgHeaderParser.h"
 #include "nsMsgBaseCID.h"
 
 #include "nsIMimeConverter.h"
@@ -58,7 +58,7 @@ static NS_DEFINE_IID(kILocaleIID, NS_ILOCALE_IID);
 static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
 static NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);
 static NS_DEFINE_IID(kICollationFactoryIID, NS_ICOLLATIONFACTORY_IID);
-static NS_DEFINE_CID(kMsgRFC822ParserCID, NS_MSGRFC822PARSER_CID); 
+static NS_DEFINE_CID(kMsgHeaderParserCID, NS_MSGHEADERPARSER_CID); 
 
 
 #ifdef WE_HAVE_MDBINTERFACES
@@ -305,7 +305,7 @@ nsMsgDatabase::nsMsgDatabase()
 	  m_threadUnreadChildrenColumnToken(0),
 	  m_messageThreadIdColumnToken(0),
 	  m_numReferencesColumnToken(0),
-	  m_rfc822Parser(nsnull)
+	  m_HeaderParser(nsnull)
 {
 	NS_INIT_REFCNT();
 }
@@ -313,10 +313,10 @@ nsMsgDatabase::nsMsgDatabase()
 nsMsgDatabase::~nsMsgDatabase()
 {
 //	Close(FALSE);	// better have already been closed.
-	if (m_rfc822Parser)
+	if (m_HeaderParser)
 	{
-		NS_RELEASE(m_rfc822Parser);
-		m_rfc822Parser = nsnull;
+		NS_RELEASE(m_HeaderParser);
+		m_HeaderParser = nsnull;
 	}
     if (m_ChangeListeners) 
 	{
@@ -2106,19 +2106,19 @@ nsresult nsMsgDatabase::RowCellColumnToCollationKey(nsIMdbRow *row, mdb_token co
 	return err;
 }
 
-nsIMsgRFC822Parser *nsMsgDatabase::GetRFC822Parser()
+nsIMsgHeaderParser *nsMsgDatabase::GetHeaderParser()
 {
 
-	if (!m_rfc822Parser)
+	if (!m_HeaderParser)
 	{
-		nsresult rv = nsComponentManager::CreateInstance(kMsgRFC822ParserCID, 
+		nsresult rv = nsComponentManager::CreateInstance(kMsgHeaderParserCID, 
 													NULL, 
-													nsIMsgRFC822Parser::GetIID(), 
-													(void **) &m_rfc822Parser);
+													nsIMsgHeaderParser::GetIID(), 
+													(void **) &m_HeaderParser);
 		if (!NS_SUCCEEDED(rv))
-			m_rfc822Parser = nsnull;
+			m_HeaderParser = nsnull;
 	}
-	return m_rfc822Parser;
+	return m_HeaderParser;
 }
 
 

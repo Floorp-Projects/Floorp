@@ -24,7 +24,7 @@
 #include "nsIStreamListener.h"
 #include "nsITransport.h"
 #include "nsMsgLineBuffer.h"
-#include "nsMsgRFC822Parser.h"
+#include "nsIMsgHeaderParser.h"
 
 class nsFileSpec;
 class nsByteArray;
@@ -87,7 +87,7 @@ public:
 	static PRBool	msg_StripRE(const char **stringP, PRUint32 *lengthP);
 	static int		msg_UnHex(char C); 
 
-	nsIMsgRFC822Parser* m_rfc822AddressParser;
+	nsIMsgHeaderParser* m_HeaderAddressParser;
 
 	nsMailDatabase	*GetMailDB() {return m_mailDB;}
 	nsIMessage		*m_newMsgHdr;		/* current message header we're building */

@@ -78,6 +78,7 @@ LINCS=  -I$(PUBLIC)\xpcom \
 		-I$(PUBLIC)\rdfutil \
 		-I$(PUBLIC)\pref \
 		-I$(PUBLIC)\js \
+		-I$(PUBLIC)\mime \
 		$(NULL)
 
 LCFLAGS = \

@@ -23,8 +23,7 @@
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
-#include "nsIMsgRFC822Parser.h"
-#include "nsMsgRFC822Parser.h"
+#include "nsIMsgHeaderParser.h"
 #include "nsFileStream.h"
 
 #include "nsINetService.h"
@@ -39,7 +38,7 @@
 
 
 static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
-static NS_DEFINE_CID(kRFC822ParserCID, NS_MSGRFC822PARSER_CID);
+static NS_DEFINE_CID(kHeaderParserCID, NS_MSGHEADERPARSER_CID);
 
 extern "C" {
 	char * NET_SACopy (char **destination, const char *source);
@@ -615,10 +614,10 @@ PRInt32 nsSmtpProtocol::SendHeloResponse(nsIInputStream * inputStream, PRUint32 
 	else
 	{
 		/* else send the MAIL FROM: command */
- 	  	 nsIMsgRFC822Parser * parser = nsnull;
-         nsComponentManager::CreateInstance(kRFC822ParserCID,
+ 	  	 nsIMsgHeaderParser * parser = nsnull;
+         nsComponentManager::CreateInstance(kHeaderParserCID,
                                             nsnull,
-                                            nsIMsgRFC822Parser::GetIID(),
+                                            nsIMsgHeaderParser::GetIID(),
                                             (void **)&parser);
 
 		 char * s = nsnull;
@@ -1315,10 +1314,10 @@ PRInt32 nsSmtpProtocol::LoadURL(nsIURL * aURL)
 				*/
 
 				char * addresses = nsnull;
-				nsIMsgRFC822Parser * parser = nsnull;
-                nsComponentManager::CreateInstance(kRFC822ParserCID,
+				nsIMsgHeaderParser * parser = nsnull;
+                nsComponentManager::CreateInstance(kHeaderParserCID,
                                                    nsnull,
-                                                   nsIMsgRFC822Parser::GetIID(),
+                                                   nsIMsgHeaderParser::GetIID(),
                                                    (void **)&parser);
 
 				m_runningURL->GetAllRecipients(&addresses);
@@ -1334,7 +1333,7 @@ PRInt32 nsSmtpProtocol::LoadURL(nsIURL * aURL)
 					*/
 					if (addrs1 && *addrs1)
 					{
-						rv = parser->ParseRFC822Addresses(nsnull, addrs1, nsnull, &addrs2, m_addressesLeft);
+						rv = parser->ParseHeaderAddresses(nsnull, addrs1, nsnull, &addrs2, m_addressesLeft);
 						PR_FREEIF (addrs1);
 					}
 

@@ -35,7 +35,7 @@ class nsNewsSet;
 class nsMsgThread;
 class nsIMsgThread;
 class nsIDBFolderInfo;
-class nsIMsgRFC822Parser;
+class nsIMsgHeaderParser;
 
 class nsMsgDatabase : public nsIMsgDatabase 
 {
@@ -191,7 +191,7 @@ public:
 	nsIMdbEnv				*GetEnv() {return m_mdbEnv;}
 	nsIMdbStore				*GetStore() {return m_mdbStore;}
 	virtual PRUint32		GetCurVersion();
-	nsIMsgRFC822Parser		*GetRFC822Parser();
+	nsIMsgHeaderParser		*GetHeaderParser();
 
 	static nsMsgDatabase* FindInCache(nsFileSpec &dbName);
 
@@ -304,7 +304,7 @@ protected:
 	mdb_token			m_threadUnreadChildrenColumnToken;
 	mdb_token			m_messageThreadIdColumnToken;
 	mdb_token			m_numReferencesColumnToken;
-	nsIMsgRFC822Parser	*m_rfc822Parser;
+	nsIMsgHeaderParser	*m_HeaderParser;
 };
 
 #endif

@@ -95,6 +95,7 @@ OBJS=							\
 			.\$(OBJDIR)\mimebuf.obj		\
 			.\$(OBJDIR)\mimecom.obj		\
 			.\$(OBJDIR)\mimemoz2.obj	\
+			.\$(OBJDIR)\nsMsgHeaderParser.obj \
 #
 # THIS WILL NEED WORK AFTER WE GET A LIBMSG MORE XP-COM-afied
 #			.\$(OBJDIR)\mimedrft.obj	\

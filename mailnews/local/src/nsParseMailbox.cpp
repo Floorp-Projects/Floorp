@@ -369,12 +369,12 @@ nsParseMailMessageState::nsParseMailMessageState()
 	m_state = MBOX_PARSE_BODY;
 	Clear();
 
-    NS_DEFINE_CID(kMsgRFC822ParserCID, NS_MSGRFC822PARSER_CID);
+    NS_DEFINE_CID(kMsgHeaderParserCID, NS_MSGHEADERPARSER_CID);
     
-    nsComponentManager::CreateInstance(kMsgRFC822ParserCID,
+    nsComponentManager::CreateInstance(kMsgHeaderParserCID,
                                        nsnull,
-                                       nsIMsgRFC822Parser::GetIID(),
-                                       (void **)&m_rfc822AddressParser);
+                                       nsIMsgHeaderParser::GetIID(),
+                                       (void **)&m_HeaderAddressParser);
 }
 
 nsParseMailMessageState::~nsParseMailMessageState()
@@ -382,7 +382,7 @@ nsParseMailMessageState::~nsParseMailMessageState()
 	ClearAggregateHeader (m_toList);
 	ClearAggregateHeader (m_ccList);
 	
-	NS_RELEASE(m_rfc822AddressParser);
+	NS_RELEASE(m_HeaderAddressParser);
 }
 
 void nsParseMailMessageState::Init(PRUint32 fileposition)
@@ -939,9 +939,9 @@ nsresult nsParseMailMessageState::InternRfc822 (struct message_header *header,
 	NS_ASSERTION (header->length == (short) nsCRT::strlen (header->value), "invalid message_header");
 	NS_ASSERTION (ret_name != NULL, "null ret_name");
 
-	if (m_rfc822AddressParser)
+	if (m_HeaderAddressParser)
 	{
-		ret = m_rfc822AddressParser->ExtractRFC822AddressName (nsnull, header->value, &s);
+		ret = m_HeaderAddressParser->ExtractHeaderAddressName (nsnull, header->value, &s);
 		if (! s)
 			return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1094,7 +1094,7 @@ int nsParseMailMessageState::FinalizeHeaders()
 				char	*names;
 				char	*addresses;
 
-				ret = m_rfc822AddressParser->ParseRFC822Addresses (nsnull, recipient->value, &names, &addresses, numAddresses);
+				ret = m_HeaderAddressParser->ParseHeaderAddresses (nsnull, recipient->value, &names, &addresses, numAddresses);
 				if (ret == NS_OK)
 				{
 					m_newMsgHdr->SetRecipientsArray(names, addresses, numAddresses);
@@ -1110,7 +1110,7 @@ int nsParseMailMessageState::FinalizeHeaders()
 				char	*names;
 				char	*addresses;
 
-				ret = m_rfc822AddressParser->ParseRFC822Addresses (nsnull, ccList->value, &names, &addresses, numAddresses);
+				ret = m_HeaderAddressParser->ParseHeaderAddresses (nsnull, ccList->value, &names, &addresses, numAddresses);
 				if (ret == NS_OK)
 				{
 					m_newMsgHdr->SetCCListArray(names, addresses, numAddresses);

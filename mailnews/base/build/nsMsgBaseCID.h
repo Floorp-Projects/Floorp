@@ -23,11 +23,6 @@
 #include "nsIFactory.h"
 #include "nsIComponentManager.h"
 
-#define NS_MSGRFC822PARSER_CID                    \
-{ /* 26D71620-7421-11d2-804A-006008128C4E */      \
- 0x26d71620, 0x7421, 0x11d2,                      \
- {0x80, 0x4a, 0x0, 0x60, 0x8, 0x12, 0x8c, 0x4e}}
-
 #define NS_MSGFOLDEREVENT_CID				              \
 { /* FBFEBE7A-C1DD-11d2-8A40-0060B0FC04D2 */      \
  0xfbfebe7a, 0xc1dd, 0x11d2,                      \

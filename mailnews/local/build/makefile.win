@@ -59,6 +59,7 @@ LINCS=  -I$(DEPTH)\mailnews\local\src	\
 		-I$(PUBLIC)\rdf					\
 		-I$(PUBLIC)\rdfutil				\
 		-I$(PUBLIC)\netlib				\
+		-I$(PUBLIC)\mime				\
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

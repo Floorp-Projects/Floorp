@@ -35,8 +35,6 @@
 #include "nsMsgAppCore.h"
 
 /* Include all of the interfaces our factory can generate components for */
-#include "nsIMsgRFC822Parser.h"
-#include "nsMsgRFC822Parser.h"
 
 #include "nsIUrlListenerManager.h"
 #include "nsUrlListenerManager.h"
@@ -55,7 +53,6 @@ static NS_DEFINE_CID(kCUrlListenerManagerCID, NS_URLLISTENERMANAGER_CID);
 static NS_DEFINE_CID(kCMessengerCID, NS_MESSENGER_CID);
 static NS_DEFINE_CID(kCMessengerBootstrapCID, NS_MESSENGERBOOTSTRAP_CID);
 
-static NS_DEFINE_CID(kCMsgRFC822ParserCID, NS_MSGRFC822PARSER_CID);
 static NS_DEFINE_CID(kCMsgFolderEventCID, NS_MSGFOLDEREVENT_CID);
 
 static NS_DEFINE_CID(kCMsgAppCoreCID, NS_MSGAPPCORE_CID);
@@ -162,12 +159,7 @@ nsMsgFactory::CreateInstance(nsISupports *aOuter,
 	// ClassID check happens here
 	// Whenever you add a new class that supports an interface, plug it in here!!!
 	
-	// do they want an RFC822 Parser interface ?
-	if (mClassID.Equals(kCMsgRFC822ParserCID)) 
-	{
-		return NS_NewRFC822Parser(aIID, aResult);
-	}
-	else if (mClassID.Equals(kCMsgFolderEventCID)) 
+  if (mClassID.Equals(kCMsgFolderEventCID)) 
 	{
 		NS_NOTREACHED("hello? what happens here?");
 		return NS_OK;
@@ -294,12 +286,6 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                                        path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) goto done;
 
-  rv = compMgr->RegisterComponent(kCMsgRFC822ParserCID,
-                                       "RFC822 Parser",
-                                       nsnull,
-                                       path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
-
   rv = compMgr->RegisterComponent(kCMessengerCID,
                                        "Netscape Messenger",
                                        "component://netscape/messenger/application",
@@ -386,8 +372,6 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
   if (NS_FAILED(rv)) return rv;
 
   rv = compMgr->UnregisterComponent(kCUrlListenerManagerCID, path);
-  if (NS_FAILED(rv)) goto done;
-  rv = compMgr->UnregisterComponent(kCMsgRFC822ParserCID, path);
   if (NS_FAILED(rv)) goto done;
   rv = compMgr->UnregisterComponent(kCMessengerCID, path);
   if (NS_FAILED(rv)) goto done;

@@ -39,7 +39,7 @@
 #include "nsRDFCursorUtils.h"
 #include "nsIMessage.h"
 #include "nsMsgFolder.h"
-#include "nsIMsgRFC822Parser.h"
+#include "nsIMsgHeaderParser.h"
 #include "nsMsgBaseCID.h"
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
@@ -58,7 +58,7 @@ typedef struct _nsMsgRDFNotification {
 
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,    NS_RDFINMEMORYDATASOURCE_CID);
-static NS_DEFINE_CID(kMsgRFC822ParserCID,			NS_MSGRFC822PARSER_CID); 
+static NS_DEFINE_CID(kMsgHeaderParserCID,			NS_MSGHEADERPARSER_CID); 
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
@@ -110,7 +110,7 @@ DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, NewFolder);
 // The cached service managers
 
 static nsIRDFService* gRDFService = nsnull;
-static nsIMsgRFC822Parser *gRFC822Parser = nsnull;
+static nsIMsgHeaderParser *gHeaderParser = nsnull;
 ////////////////////////////////////////////////////////////////////////
 // Utilities
 
@@ -228,10 +228,10 @@ nsMSGFolderDataSource::nsMSGFolderDataSource()
                                              nsIRDFService::GetIID(),
                                              (nsISupports**) &gRDFService); // XXX probably need shutdown listener here
 
-	rv = nsComponentManager::CreateInstance(kMsgRFC822ParserCID, 
+	rv = nsComponentManager::CreateInstance(kMsgHeaderParserCID, 
 													NULL, 
-													nsIMsgRFC822Parser::GetIID(), 
-													(void **) &gRFC822Parser);
+													nsIMsgHeaderParser::GetIID(), 
+													(void **) &gHeaderParser);
 
   PR_ASSERT(NS_SUCCEEDED(rv));
 }
@@ -268,9 +268,9 @@ nsMSGFolderDataSource::~nsMSGFolderDataSource (void)
   NS_RELEASE2(kNC_NewFolder, refcnt);
 
   nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService); // XXX probably need shutdown listener here
-	if(gRFC822Parser)		
-		NS_RELEASE(gRFC822Parser);	
-  gRFC822Parser =  nsnull;
+	if(gHeaderParser)		
+		NS_RELEASE(gHeaderParser);	
+  gHeaderParser =  nsnull;
   gRDFService = nsnull;
 }
 
@@ -403,11 +403,11 @@ nsresult nsMSGFolderDataSource::GetSenderName(nsAutoString& sender, nsAutoString
 {
 	//XXXOnce we get the csid, use Intl version
 	nsresult rv = NS_OK;
-	if(gRFC822Parser)
+	if(gHeaderParser)
 	{
 		char *name;
 		char *senderStr = sender.ToNewCString();
-		if(NS_SUCCEEDED(rv = gRFC822Parser->ExtractRFC822AddressName (nsnull, senderStr, &name)))
+		if(NS_SUCCEEDED(rv = gHeaderParser->ExtractHeaderAddressName (nsnull, senderStr, &name)))
 		{
 			*senderUserName = name;
 		}

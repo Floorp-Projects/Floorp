@@ -50,8 +50,7 @@
 
 /* include event sink interfaces for news */
 
-#include "nsIMsgRFC822Parser.h" 
-#include "nsMsgRFC822Parser.h"
+#include "nsIMsgHeaderParser.h" 
 
 #include "nsINntpUrl.h"
 #include "nsNNTPHost.h"
@@ -3446,20 +3445,20 @@ PRInt32 nsNNTPProtocol::Cancel()
   rv = m_newsHost->QueryExtension("CANCELCHK",&cancelchk);
   if (NS_SUCCEEDED(rv) && cancelchk)
   {
-    nsIMsgRFC822Parser *parser;
+    nsIMsgHeaderParser *parser;
     nsresult rv;
     PRBool ok = PR_FALSE;
-    NS_DEFINE_CID(kCRFC822Parser, NS_MSGRFC822PARSER_CID);
+    NS_DEFINE_CID(kCHeaderParser, NS_MSGHEADERPARSER_CID);
                   
-    rv = nsComponentManager::CreateInstance(kCRFC822Parser,
+    rv = nsComponentManager::CreateInstance(kCHeaderParser,
                                             nsnull,
-                                            nsIMsgRFC822Parser::IID(),
+                                            nsIMsgHeaderParser::IID(),
                                             (void **)&parser);
     if (NS_SUCCEEDED(rv)) 
 	{
 		char *us, *them;
-		nsresult rv1 = parser->ExtractRFC822AddressMailboxes(nsnull, from, &us);
-		nsresult rv2 = parser->ExtractRFC822AddressMailboxes(nsnull, old_from, &them);
+		nsresult rv1 = parser->ExtractHeaderAddressMailboxes(nsnull, from, &us);
+		nsresult rv2 = parser->ExtractHeaderAddressMailboxes(nsnull, old_from, &them);
 		ok = (NS_SUCCEEDED(rv1) && NS_SUCCEEDED(rv2) && !PL_strcasecmp(us, them));
 
 		if (NS_SUCCEEDED(rv1)) PR_Free(us);

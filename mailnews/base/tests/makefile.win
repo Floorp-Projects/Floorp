@@ -74,6 +74,7 @@ LLIBS=	 $(LLIBS) ole32.lib	\
 
 LINCS=$(LINCS)  -I. \
 		-I$(PUBLIC)\mailnews   \
+		-I$(PUBLIC)\mime   \
                 -I$(PUBLIC)\xpcom
 
 # clobber and clobber_all will remove the following garbage:

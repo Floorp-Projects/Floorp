@@ -82,6 +82,7 @@ CPPSRCS = \
 		mimemoz2.cpp	\
 		comi18n.cpp		\
 		nsMimeTransition.cpp \
+		nsMsgHeaderParser.cpp \
 		$(NULL)
 
 CSRCS = \

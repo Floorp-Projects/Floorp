@@ -63,6 +63,7 @@ LINCS=							\
 		-I$(PUBLIC)\netlib		\
 		-I$(PUBLIC)\security	\
 		-I$(PUBLIC)\rdf			\
+		-I$(PUBLIC)\mime			\
 		$(NULL)
 
 LCFLAGS = \
