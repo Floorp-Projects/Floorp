@@ -34,10 +34,13 @@ CPPSRCS= \
 	nsImageButton.cpp        \
 	nsDataFlavor.cpp         \
 	nsTransferable.cpp       \
-	nsBaseClipboard.cpp      \
 	nsXIFFormatConverter.cpp \
 	nsBaseDragService.cpp    \
 	$(NULL)
+
+ifdef FOO_NEW_CLIPBOARD_SUPPORT
+	CPPSRCS += nsBaseClipboard.cpp
+endif
 
 LOCAL_INCLUDES := \
 	-I$(srcdir)/../$(MOZ_TOOLKIT) \
