@@ -295,13 +295,16 @@ public class Codegen extends Interpreter {
             generatedClassName = getScriptClassName(null, isPrimary);
             superClassName = SCRIPT_SUPER_CLASS_NAME;
         }
-        generatedClassSignature = classNameToSignature(generatedClassName);
 
         itsSourceFile = null;
         // default is to generate debug info
         if (!cx.isGeneratingDebugChanged() || cx.isGeneratingDebug()) {
             itsSourceFile = scriptOrFn.getSourceName();
         }
+
+        cfw = new ClassFileWriter(generatedClassName, superClassName,
+                                  itsSourceFile);
+        generatedClassSignature = cfw.classNameToSignature(generatedClassName);
 
         // Generate nested function code
         int functionCount = scriptOrFn.getFunctionCount();
@@ -310,9 +313,6 @@ public class Codegen extends Interpreter {
             Codegen codegen = new Codegen(mainCodegen);
             codegen.generateCode(cx, fn, names, classFiles);
         }
-
-        cfw = new ClassFileWriter(generatedClassName, superClassName,
-                                  itsSourceFile);
 
         Node codegenBase;
         if (fnCurrent != null) {
@@ -375,8 +375,8 @@ public class Codegen extends Interpreter {
             for (int i = 0; i != N; ++i) {
                 OptFunctionNode fn = (OptFunctionNode)directCallTargets.get(i);
                 cfw.addField(getDirectTargetFieldName(i),
-                                   classNameToSignature(fn.getClassName()),
-                                   (short)0);
+                             cfw.classNameToSignature(fn.getClassName()),
+                             (short)0);
             }
         }
 
@@ -484,14 +484,12 @@ public class Codegen extends Interpreter {
         final byte ALOAD_CONTEXT = ByteCode.ALOAD_1;
         final byte ALOAD_SCOPE = ByteCode.ALOAD_2;
 
-        String slashName = generatedClassName.replace('.', '/');
-
         // to begin a script, call the initScript method
         cfw.add(ByteCode.ALOAD_0); // load 'this'
         cfw.add(ALOAD_SCOPE);
         cfw.add(ALOAD_CONTEXT);
         cfw.addInvoke(ByteCode.INVOKEVIRTUAL,
-                      slashName,
+                      generatedClassName,
                       "initScript",
                       "(Lorg/mozilla/javascript/Scriptable;"
                       +"Lorg/mozilla/javascript/Context;"
@@ -503,7 +501,7 @@ public class Codegen extends Interpreter {
         cfw.add(ByteCode.DUP);
         cfw.add(ByteCode.ACONST_NULL);
         cfw.addInvoke(ByteCode.INVOKEVIRTUAL,
-                      slashName,
+                      generatedClassName,
                       "call",
                       "(Lorg/mozilla/javascript/Context;"
                       +"Lorg/mozilla/javascript/Scriptable;"
@@ -721,11 +719,10 @@ public class Codegen extends Interpreter {
             String constantName = "jsK_" + i;
             String constantType = getStaticConstantWrapperType(num);
             cfw.addField(constantName, constantType,
-                               ClassFileWriter.ACC_STATIC);
+                         ClassFileWriter.ACC_STATIC);
             pushNewNumberObject(num);
-            cfw.add(ByteCode.PUTSTATIC,
-                          cfw.fullyQualifiedForm(generatedClassName),
-                          constantName, constantType);
+            cfw.add(ByteCode.PUTSTATIC, generatedClassName,
+                    constantName, constantType);
         }
 
         cfw.add(ByteCode.RETURN);
@@ -748,8 +745,7 @@ public class Codegen extends Interpreter {
         } else {
             String constantName = "jsK_" + addNumberConstant(num);
             String constantType = getStaticConstantWrapperType(num);
-            cfw.add(ByteCode.GETSTATIC,
-                    cfw.fullyQualifiedForm(generatedClassName),
+            cfw.add(ByteCode.GETSTATIC, generatedClassName,
                     constantName, constantType);
         }
     }
@@ -782,6 +778,29 @@ public class Codegen extends Interpreter {
         if (isInteger) { cfw.addPush(inum); }
         else { cfw.addPush(num); }
         cfw.addInvoke(ByteCode.INVOKESPECIAL, wrapperType, "<init>", signature);
+    }
+
+    private int addNumberConstant(double num)
+    {
+        // NaN is provided via ScriptRuntime.NaNobj
+        if (num != num) Context.codeBug();
+        int N = itsConstantListSize;
+        if (N == 0) {
+            itsConstantList = new double[128];
+        } else {
+            double[] array = itsConstantList;
+            for (int i = 0; i != N; ++i) {
+                if (array[i] == num) { return i; }
+            }
+            if (N == array.length) {
+                array = new double[N * 2];
+                System.arraycopy(itsConstantList, 0, array, 0, N);
+                itsConstantList = array;
+            }
+        }
+        itsConstantList[N] = num;
+        itsConstantListSize = N + 1;
+        return N;
     }
 
     private String getStaticConstantWrapperType(double num)
@@ -1194,7 +1213,7 @@ public class Codegen extends Interpreter {
                 break;
 
               case Token.REGEXP:
-                visitObject(node);
+                visitRegexp(node);
                 break;
 
               case Token.TRY:
@@ -1679,7 +1698,7 @@ public class Codegen extends Interpreter {
             cfw.add(ByteCode.SWAP);
             cfw.add(ByteCode.PUTFIELD, mainCodegen.generatedClassName,
                     getDirectTargetFieldName(directTargetIndex),
-                    classNameToSignature(fn.getClassName()));
+                    cfw.classNameToSignature(fn.getClassName()));
         }
 
         // Dup function reference for function expressions to have it
@@ -1841,11 +1860,11 @@ public class Codegen extends Interpreter {
             int directTargetIndex = target.getDirectTargetIndex();
             cfw.add(ByteCode.ALOAD_0);
             cfw.add(ByteCode.GETFIELD, generatedClassName,
-                          MAIN_SCRIPT_FIELD,
-                          mainCodegen.generatedClassSignature);
+                    MAIN_SCRIPT_FIELD,
+                    mainCodegen.generatedClassSignature);
             cfw.add(ByteCode.GETFIELD, mainCodegen.generatedClassName,
-                          getDirectTargetFieldName(directTargetIndex),
-                          classNameToSignature(target.getClassName()));
+                    getDirectTargetFieldName(directTargetIndex),
+                    cfw.classNameToSignature(target.getClassName()));
 
             short stackHeight = cfw.getStackTop();
 
@@ -1857,9 +1876,9 @@ public class Codegen extends Interpreter {
             if (!itsUseDynamicScope) {
                 cfw.add(ByteCode.DUP);
                 cfw.addInvoke(ByteCode.INVOKEINTERFACE,
-                                    "org/mozilla/javascript/Scriptable",
-                                    "getParentScope",
-                                    "()Lorg/mozilla/javascript/Scriptable;");
+                              "org/mozilla/javascript/Scriptable",
+                              "getParentScope",
+                              "()Lorg/mozilla/javascript/Scriptable;");
             } else {
                 cfw.addALoad(variableObjectLocal);
             }
@@ -3082,15 +3101,13 @@ public class Codegen extends Interpreter {
         }
     }
 
-    private void visitObject(Node node)
+    private void visitRegexp(Node node)
     {
         int i = node.getExistingIntProp(Node.REGEXP_PROP);
         String fieldName = getRegexpFieldName(i);
         cfw.addALoad(funObjLocal);
-        cfw.add(ByteCode.GETFIELD,
-                      cfw.fullyQualifiedForm(generatedClassName),
-                      fieldName,
-                      "Lorg/mozilla/javascript/regexp/NativeRegExp;");
+        cfw.add(ByteCode.GETFIELD, generatedClassName,
+                fieldName, "Lorg/mozilla/javascript/regexp/NativeRegExp;");
     }
 
     private void visitName(Node node)
@@ -3463,29 +3480,6 @@ public class Codegen extends Interpreter {
             cfw.addALoad(local);
     }
 
-    private int addNumberConstant(double num)
-    {
-        // NaN is provided via ScriptRuntime.NaNobj
-        if (num != num) Context.codeBug();
-        int N = itsConstantListSize;
-        if (N == 0) {
-            itsConstantList = new double[128];
-        } else {
-            double[] array = itsConstantList;
-            for (int i = 0; i != N; ++i) {
-                if (array[i] == num) { return i; }
-            }
-            if (N == array.length) {
-                array = new double[N * 2];
-                System.arraycopy(itsConstantList, 0, array, 0, N);
-                itsConstantList = array;
-            }
-        }
-        itsConstantList[N] = num;
-        itsConstantListSize = N + 1;
-        return N;
-    }
-
     private void addScriptRuntimeInvoke(String methodName,
                                         String methodSignature)
     {
@@ -3584,11 +3578,6 @@ public class Codegen extends Interpreter {
     {
         cfw.add(ByteCode.GETSTATIC, "org/mozilla/javascript/Undefined",
                 "instance", "Lorg/mozilla/javascript/Scriptable;");
-    }
-
-    private static String classNameToSignature(String className)
-    {
-        return 'L'+className.replace('.', '/')+';';
     }
 
     private static String getRegexpFieldName(int i)
