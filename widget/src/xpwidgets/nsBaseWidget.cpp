@@ -20,6 +20,7 @@
 #include "nsIAppShell.h"
 #include "nsIDeviceContext.h"
 #include "nsCOMPtr.h"
+#include "nsIMenuListener.h"
 
 #include "nsGfxCIID.h"
 #include "nsWidgetsCID.h"
@@ -94,6 +95,7 @@ nsBaseWidget::nsBaseWidget() :
 //-------------------------------------------------------------------------
 nsBaseWidget::~nsBaseWidget()
 {
+	NS_IF_RELEASE(mMenuListener);
 }
 
 //-------------------------------------------------------------------------
@@ -599,13 +601,18 @@ NS_METHOD nsBaseWidget::AddEventListener(nsIEventListener * aListener)
 }
 
 /**
-* Processes a menu event
+* Add a menu listener
+* This interface should only be called by the menu services manager
+* This will AddRef() the menu listener
+* This will Release() a previously set menu listener
 *
 **/
 
 NS_METHOD nsBaseWidget::AddMenuListener(nsIMenuListener * aListener)
 {
   NS_PRECONDITION(mMenuListener == nsnull, "Null menu listener");
+  NS_IF_RELEASE(mMenuListener);
+  NS_IF_ADDREF(aListener);
   mMenuListener = aListener;
   return NS_OK;
 }

@@ -30,8 +30,36 @@ static NS_DEFINE_IID(kIMenuBarIID,  NS_IMENUBAR_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIPopUpMenuIID, NS_IPOPUPMENU_IID);
 static NS_DEFINE_IID(kIMenuItemIID, NS_IMENUITEM_IID);
-NS_IMPL_ISUPPORTS(nsMenuItem, kIMenuItemIID)
+//NS_IMPL_ISUPPORTS(nsMenuItem, kIMenuItemIID)
 
+nsresult nsMenuItem::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
+{                                                                        
+  if (NULL == aInstancePtr) {                                            
+    return NS_ERROR_NULL_POINTER;                                        
+  }                                                                      
+                                                                         
+  *aInstancePtr = NULL;                                                  
+                                                                                        
+  if (aIID.Equals(kIMenuItemIID)) {                                         
+    *aInstancePtr = (void*)(nsIMenuItem*)this;                                        
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  }                                                                      
+  if (aIID.Equals(kISupportsIID)) {                                      
+    *aInstancePtr = (void*)(nsISupports*)(nsIMenuItem*)this;                     
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  }
+  if (aIID.Equals(kIMenuListenerIID)) {                                      
+    *aInstancePtr = (void*)(nsIMenuListener*)this;                        
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  }                                                     
+  return NS_NOINTERFACE;                                                 
+}
+
+NS_IMPL_ADDREF(nsMenuItem)
+NS_IMPL_RELEASE(nsMenuItem)
 
 //-------------------------------------------------------------------------
 //
@@ -45,6 +73,7 @@ nsMenuItem::nsMenuItem() : nsIMenuItem()
   mMenuParent  = nsnull;
   mPopUpParent = nsnull;
   mTarget      = nsnull;
+  mXULCommand  = nsnull;
 }
 
 //-------------------------------------------------------------------------
@@ -66,6 +95,7 @@ void nsMenuItem::Create(nsIWidget      *aMBParent,
                         const nsString &aLabel, 
                         PRUint32        aCommand)
 {
+  /*
   mTarget  = aMBParent;
   mCommand = aCommand;
   mLabel   = aLabel;
@@ -87,6 +117,7 @@ void nsMenuItem::Create(nsIWidget      *aMBParent,
                 (nsIMenuItem *)this);
 
   delete[] nameStr;
+  */
 
 }
 //-------------------------------------------------------------------------
@@ -158,6 +189,7 @@ NS_METHOD nsMenuItem::Create(nsIMenu        *aParent,
                              PRUint32       aCommand)
                             
 {
+/*
   if (nsnull == aParent) {
     return NS_ERROR_FAILURE;
   }
@@ -174,7 +206,7 @@ NS_METHOD nsMenuItem::Create(nsIMenu        *aParent,
 
  // Create(widget, GetNativeParent(), aLabel, aCommand);
   aParent->AddMenuItem(this);
-
+*/
   return NS_OK;
 }
 
@@ -235,3 +267,29 @@ NS_METHOD nsMenuItem::GetNativeData(void *& aData)
   return NS_OK;
 }
 
+//-------------------------------------------------------------------------
+// nsIMenuListener interface
+//-------------------------------------------------------------------------
+nsEventStatus nsMenuItem::MenuSelected(const nsMenuEvent & aMenuEvent)
+{
+  // Execute the XULCommand
+  if(mXULCommand)
+  { 
+    mXULCommand->DoCommand();
+    return nsEventStatus_eConsumeNoDefault;
+  }
+  else
+  	return nsEventStatus_eIgnore;
+}
+
+//-------------------------------------------------------------------------
+// Set the nsIXULCommand to poke when we get a nsMenuEvent from the user
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::SetXULCommand(nsIXULCommand * aXULCommand)
+{
+  // We may support more than one XULCommand later, but not at this moment
+  NS_IF_RELEASE(mXULCommand);
+  NS_IF_ADDREF(aXULCommand);
+  mXULCommand = aXULCommand;
+  return NS_OK;
+}
