@@ -107,6 +107,7 @@ bin/components/content_html.xpt
 bin/components/content_htmldoc.xpt
 bin/components/content_xmldoc.xpt
 bin/components/content_xslt.xpt
+bin/components/txmgr.xpt
 bin/components/webBrowser_core.xpt
 bin/components/locale.xpt
 bin/components/mozbrwsr.xpt
@@ -261,7 +262,6 @@ bin/components/msglocal.xpt
 bin/components/msgnews.xpt
 bin/components/msgsearch.xpt
 bin/components/nsLDAPPrefsService.js
-bin/components/txmgr.xpt
 bin/components/import.xpt
 bin/chrome/messenger.jar
 bin/components/msgsmime.xpt
