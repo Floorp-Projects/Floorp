@@ -44,7 +44,6 @@ final class InterpretedScript extends NativeScript
     {
         itsData = theData;
         functionName = "";
-        nestedFunctions = itsData.itsNestedFunctions;
         version = (short)cx.getLanguageVersion();
         argNames = itsData.argNames;
         argCount = (short)itsData.argCount;

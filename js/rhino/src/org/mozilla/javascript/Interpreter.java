@@ -143,7 +143,7 @@ public class Interpreter {
         if (functionList == null) return;
 
         int N = functionList.size();
-        InterpretedFunction[] array = new InterpretedFunction[N];
+        InterpreterData[] array = new InterpreterData[N];
         for (int i = 0; i != N; i++) {
             FunctionNode def = (FunctionNode)functionList.get(i);
             Interpreter jsi = new Interpreter();
@@ -154,7 +154,7 @@ public class Interpreter {
             jsi.itsInFunctionFlag = true;
             jsi.debugSource = debugSource;
             jsi.generateFunctionICode(cx, scope, def);
-            array[i] = new InterpretedFunction(cx, jsi.itsData);
+            array[i] = jsi.itsData;
             def.putIntProp(Node.FUNCTION_PROP, i);
         }
         itsData.itsNestedFunctions = array;
@@ -1285,8 +1285,8 @@ public class Interpreter {
                         }
                         case TokenStream.CLOSURE : {
                             int i = getIndex(iCode, pc);
-                            InterpretedFunction f = idata.itsNestedFunctions[i];
-                            out.println(tname + " " + f);
+                            InterpreterData data2 = idata.itsNestedFunctions[i];
+                            out.println(tname + " " + data2);
                             pc += 2;
                             break;
                         }
@@ -1624,7 +1624,7 @@ public class Interpreter {
             if (idata.itsFunctionType != 0 && !idata.itsNeedsActivation)
                 Context.codeBug();
             for (int i = 0; i < idata.itsNestedFunctions.length; i++) {
-                InterpreterData fdata = idata.itsNestedFunctions[i].itsData;
+                InterpreterData fdata = idata.itsNestedFunctions[i];
                 if (fdata.itsFunctionType == FunctionNode.FUNCTION_STATEMENT) {
                     createFunction(cx, scope, fdata, idata.itsFromEvalCode);
                 }
@@ -2436,7 +2436,7 @@ public class Interpreter {
         break;
     case TokenStream.CLOSURE : {
         int i = getIndex(iCode, pc + 1);
-        InterpreterData closureData = idata.itsNestedFunctions[i].itsData;
+        InterpreterData closureData = idata.itsNestedFunctions[i];
         InterpretedFunction closure = createFunction(cx, scope, closureData,
                                                      idata.itsFromEvalCode);
         closure.itsClosure = scope;

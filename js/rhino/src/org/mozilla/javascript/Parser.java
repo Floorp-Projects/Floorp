@@ -1588,21 +1588,43 @@ class Parser {
     static String decompile(NativeFunction f, int version,
                             int indent, boolean justbody)
     {
-           StringBuffer result = new StringBuffer();
-           Object[] srcData = new Object[1];
-           decompile_r(f, version, indent, true, justbody, srcData, result);
-           return result.toString();
+        StringBuffer result = new StringBuffer();
+        Object[] srcData = new Object[1];
+        int type = f.fromFunctionConstructor ? CONSTRUCTED_FUNCTION
+                                             : TOP_LEVEL_SCRIPT_OR_FUNCTION;
+
+        // The following casts can be avoided via additional interface
+        // but it is not worth it to replace a simple if sequence by more
+        // spread code
+        Object fdata;
+        if (f instanceof InterpretedFunction) {
+            fdata = ((InterpretedFunction)f).itsData;
+        } else if (f instanceof InterpretedScript) {
+            fdata = ((InterpretedScript)f).itsData;
+        } else {
+            fdata = f;
+        }
+        decompile_r(fdata, version, indent, type, justbody, srcData, result);
+        return result.toString();
     }
 
-    private static void decompile_r(NativeFunction f, int version, int indent,
-                                    boolean toplevel, boolean justbody,
+    private static void decompile_r(Object fdata, int version, int indent,
+                                    int type, boolean justbody,
                                     Object[] srcData, StringBuffer result)
     {
-        String source = f.source;
-        int length = source.length();
+        String source;
+        Object[] nestedFunctions;
+        if (fdata instanceof InterpreterData) {
+            InterpreterData idata = (InterpreterData)fdata;
+            source = idata.itsSource;
+            nestedFunctions = idata.itsNestedFunctions;
+        } else {
+            NativeFunction f = (NativeFunction)fdata;
+            source = f.source;
+            nestedFunctions = f.nestedFunctions;
+        }
 
-        NativeFunction[] nestedFunctions = f.nestedFunctions;
-        boolean fromFunctionConstructor = f.fromFunctionConstructor;
+        int length = source.length();
 
         // Spew tokens in source, for debugging.
         // as TYPE number char
@@ -1634,7 +1656,7 @@ class Parser {
             // decompiling the toplevel script, otherwise it a function
             // and should start with TokenStream.FUNCTION
 
-            if (toplevel) {
+            if (type != NESTED_FUNCTION) {
                 // add an initial newline to exactly match js.
                 if (!justbody)
                     result.append('\n');
@@ -1648,7 +1670,7 @@ class Parser {
                 if (!justbody) {
                     result.append("function ");
 
-                    /* version != 1.2 Function constructor behavior - 
+                    /* version != 1.2 Function constructor behavior -
                      * print 'anonymous' as the function name if the
                      * version (under which the function was compiled) is
                      * less than 1.2... or if it's greater than 1.2, because
@@ -1656,7 +1678,7 @@ class Parser {
                      */
                     if (source.charAt(i) == TokenStream.LP
                         && version != Context.VERSION_1_2
-                        && fromFunctionConstructor)
+                        && type == CONSTRUCTED_FUNCTION)
                     {
                         result.append("anonymous");
                     }
@@ -1766,7 +1788,7 @@ class Parser {
                          new Integer(functionNumber)));
                 }
                 decompile_r(nestedFunctions[functionNumber], version,
-                            indent, false, false, srcData, result);
+                            indent, NESTED_FUNCTION, false, srcData, result);
                 break;
             }
             case TokenStream.COMMA:
@@ -1784,7 +1806,7 @@ class Parser {
                  * toplevel function and we're called from
                  * decompileFunctionBody.
                  */
-                if (justbody && toplevel && i + 1 == length)
+                if (justbody && type != NESTED_FUNCTION && i + 1 == length)
                     break;
 
                 if (nextIs(source, length, i, TokenStream.EOL))
@@ -2182,7 +2204,7 @@ class Parser {
         }
 
         // add that trailing newline if it's an outermost function.
-        if (toplevel && !justbody)
+        if (type != NESTED_FUNCTION && !justbody)
             result.append('\n');
     }
 
@@ -2253,6 +2275,10 @@ class Parser {
 
     // less how much for case labels
     private final static int SETBACK = 2;
+
+    private static final int TOP_LEVEL_SCRIPT_OR_FUNCTION = 0;
+    private static final int CONSTRUCTED_FUNCTION = 1;
+    private static final int NESTED_FUNCTION = 2;
 
     // whether to do a debug print of the source information, when
     // decompiling.

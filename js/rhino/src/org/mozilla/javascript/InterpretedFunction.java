@@ -47,7 +47,6 @@ final class InterpretedFunction extends NativeFunction
         itsData = theData;
         functionName = itsData.itsName;
         source = itsData.itsSource;
-        nestedFunctions = itsData.itsNestedFunctions;
         version = (short)cx.getLanguageVersion();
         argNames = itsData.argNames;
         argCount = (short)itsData.argCount;

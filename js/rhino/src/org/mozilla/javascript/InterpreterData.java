@@ -69,7 +69,7 @@ final class InterpreterData implements Serializable, DebuggableScript {
 
     String[] itsStringTable;
     double[] itsDoubleTable;
-    InterpretedFunction[] itsNestedFunctions;
+    InterpreterData[] itsNestedFunctions;
     Object[] itsRegExpLiterals;
 
     byte[] itsICode;
