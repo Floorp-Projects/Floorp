@@ -30,7 +30,6 @@
 #include "nsIImapServerSink.h"
 #include "nsIStringBundle.h"
 #include "nsIMsgLogonRedirector.h"
-#include "nsINntpProtocol.h"
 
 /* get some implementation from nsMsgIncomingServer */
 class nsImapIncomingServer : public nsMsgIncomingServer,
