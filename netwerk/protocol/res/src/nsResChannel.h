@@ -76,7 +76,7 @@ protected:
         nsCOMPtr<nsIURI>                mResourceURI;
         nsCStringArray*                 mSubstitutions;
     };
-    friend Substitutions;
+    friend class Substitutions;
 
 #define GET_SUBSTITUTIONS_CHANNEL(_this) \
     ((nsResChannel*)((char*)(_this) - offsetof(nsResChannel, mSubstitutions)))
