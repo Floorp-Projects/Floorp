@@ -42,6 +42,8 @@ var gImagesPref, gImagesEnabled, gImagesRestricted;
 var policyButton = null;
 var manageTree = null;
 
+const nsIPermissionManager = Components.interfaces.nsIPermissionManager;
+
 function Startup()
 {
   policyButton = document.getElementById("popupPolicy");
@@ -299,7 +301,7 @@ function AddPermission() {
   var nameToURI = name.value.replace(" ", "");    
   var uri = Components.classes['@mozilla.org/network/standard-url;1'].createInstance(Components.interfaces.nsIURI);
   uri.spec = nameToURI;
-  popupmanager.add(uri, true);
+  permissionmanager.add(uri, nsIPermissionManager.POPUP_TYPE, nsIPermissionManager.ALLOW_ACTION);
   loadPermissions();
 }
 
@@ -322,13 +324,7 @@ function FinalizePermissionDeletions() {
                     .getService(Components.interfaces.nsIIOService);
 
   for (var p=0; p<deletedPermissions.length; p++) {
-    if (deletedPermissions[p].type == 2) {
-      // we lost the URI's original scheme, but this will do because the scheme
-      // is stripped later anyway.
-      var uri = ioService.newURI("http://"+deletedPermissions[p].host, null, null);
-      popupmanager.remove(uri);
-    } else
-      permissionmanager.remove(deletedPermissions[p].host, deletedPermissions[p].type);
+    permissionmanager.remove(deletedPermissions[p].host, deletedPermissions[p].type);
   }
   deletedPermissions.length = 0;
 }
