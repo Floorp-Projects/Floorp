@@ -38,7 +38,8 @@
 /*========================================================
   This is a Generated file. Please don't edit it.
 
-  The tool which used to generate this file is called fromu.
+  The tool which used to generate this file is called umaptable.
+  You can find this tool under mozilla/intl/uconv/tools/umaptable.c.
   If you have any problem of this file. Please contact 
   Netscape Client International Team or 
   ftang@netscape <Frank Tang> 
@@ -46,9 +47,9 @@
               Table in Debug form 
 Begin of Item 0000
  Format 0
-  srcBegin = 0000
+  srcBegin = 0020
   srcEnd = 007E
-  destBegin = 0000
+  destBegin = 0020
 End of Item 0000 
 
 Begin of Item 0001
@@ -64,11 +65,11 @@ Begin of Item 0001
   2020 00B0 00A2 00A3 00A7 2022 00B6 00DF 
   00AE 0160 2122 00B4 00A8 2260 017D 00D8 
   221E 00B1 2264 2265 2206 00B5 2202 2211 
-  220F 0161 222B 00AA 00BA 2126 017E 00F8 
+  220F 0161 222B 00AA 00BA 03A9 017E 00F8 
   00BF 00A1 00AC 221A 0192 2248 0106 00AB 
   010C 2026 00A0 00C0 00C3 00D5 0152 0153 
   0110 2014 201C 201D 2018 2019 00F7 25CA 
-  F8FF 00A9 2044 00A4 2039 203A 00C6 00BB 
+  F8FF 00A9 2044 20AC 2039 203A 00C6 00BB 
   2013 00B7 201A 201E 2030 00C2 0107 00C1 
   010D 00C8 00CD 00CE 00CF 00CC 00D3 00D4 
   0111 00D2 00DA 00DB 00D9 0131 02C6 02DC 
@@ -97,7 +98,7 @@ End of Item 0001
 0x0010, 
 /*-------------------------------------------------------*/
 /*       Offset=0x0005   Start of MapCell Array */ 
-/* 0000 */    0x0000, 0x007E, 0x0000, 
+/* 0000 */    0x0020, 0x007E, 0x0020, 
 /* 0001 */    0x0080, 0x00FF, 0x0000, 
 /*-------------------------------------------------------*/
 /*       Offset=0x000B   Start of MappingTable */ 
@@ -109,11 +110,11 @@ End of Item 0001
 /* 0020 */    0x2020, 0x00B0, 0x00A2, 0x00A3, 0x00A7, 0x2022, 0x00B6, 0x00DF, 
 /* 0028 */    0x00AE, 0x0160, 0x2122, 0x00B4, 0x00A8, 0x2260, 0x017D, 0x00D8, 
 /* 0030 */    0x221E, 0x00B1, 0x2264, 0x2265, 0x2206, 0x00B5, 0x2202, 0x2211, 
-/* 0038 */    0x220F, 0x0161, 0x222B, 0x00AA, 0x00BA, 0x2126, 0x017E, 0x00F8, 
+/* 0038 */    0x220F, 0x0161, 0x222B, 0x00AA, 0x00BA, 0x03A9, 0x017E, 0x00F8, 
 /* 0040 */    0x00BF, 0x00A1, 0x00AC, 0x221A, 0x0192, 0x2248, 0x0106, 0x00AB, 
 /* 0048 */    0x010C, 0x2026, 0x00A0, 0x00C0, 0x00C3, 0x00D5, 0x0152, 0x0153, 
 /* 0050 */    0x0110, 0x2014, 0x201C, 0x201D, 0x2018, 0x2019, 0x00F7, 0x25CA, 
-/* 0058 */    0xF8FF, 0x00A9, 0x2044, 0x00A4, 0x2039, 0x203A, 0x00C6, 0x00BB, 
+/* 0058 */    0xF8FF, 0x00A9, 0x2044, 0x20AC, 0x2039, 0x203A, 0x00C6, 0x00BB, 
 /* 0060 */    0x2013, 0x00B7, 0x201A, 0x201E, 0x2030, 0x00C2, 0x0107, 0x00C1, 
 /* 0068 */    0x010D, 0x00C8, 0x00CD, 0x00CE, 0x00CF, 0x00CC, 0x00D3, 0x00D4, 
 /* 0070 */    0x0111, 0x00D2, 0x00DA, 0x00DB, 0x00D9, 0x0131, 0x02C6, 0x02DC, 

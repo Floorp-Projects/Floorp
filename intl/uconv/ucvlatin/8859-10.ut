@@ -38,7 +38,8 @@
 /*========================================================
   This is a Generated file. Please don't edit it.
 
-  The tool which used to generate this file is called fromu.
+  The tool which used to generate this file is called umaptable.
+  You can find this tool under mozilla/intl/uconv/tools/umaptable.c.
   If you have any problem of this file. Please contact 
   Netscape Client International Team or 
   ftang@netscape <Frank Tang> 
@@ -81,7 +82,7 @@ Begin of Item 0004
   0104 0112 0122 012A 0128 0136 00A7 013B 
   0110 0160 0166 017D 00AD 016A 014A 00B0 
   0105 0113 0123 012B 0129 0137 00B7 013C 
-  0111 0161 0167 017E 2014 016B 014B 0100 
+  0111 0161 0167 017E 2015 016B 014B 0100 
   FFFD FFFD FFFD FFFD FFFD FFFD 012E 010C 
   00C9 0118 00CB 0116 00CD 00CE 00CF 00D0 
   0145 014C 00D3 00D4 00D5 00D6 0168 00D8 
@@ -125,7 +126,7 @@ End of Item 0004
 /* 0000 */    0x0104, 0x0112, 0x0122, 0x012A, 0x0128, 0x0136, 0x00A7, 0x013B, 
 /* 0008 */    0x0110, 0x0160, 0x0166, 0x017D, 0x00AD, 0x016A, 0x014A, 0x00B0, 
 /* 0010 */    0x0105, 0x0113, 0x0123, 0x012B, 0x0129, 0x0137, 0x00B7, 0x013C, 
-/* 0018 */    0x0111, 0x0161, 0x0167, 0x017E, 0x2014, 0x016B, 0x014B, 0x0100, 
+/* 0018 */    0x0111, 0x0161, 0x0167, 0x017E, 0x2015, 0x016B, 0x014B, 0x0100, 
 /* 0020 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x012E, 0x010C, 
 /* 0028 */    0x00C9, 0x0118, 0x00CB, 0x0116, 0x00CD, 0x00CE, 0x00CF, 0x00D0, 
 /* 0030 */    0x0145, 0x014C, 0x00D3, 0x00D4, 0x00D5, 0x00D6, 0x0168, 0x00D8, 

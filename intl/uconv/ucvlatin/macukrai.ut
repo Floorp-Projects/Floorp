@@ -38,7 +38,8 @@
 /*========================================================
   This is a Generated file. Please don't edit it.
 
-  The tool which used to generate this file is called fromu.
+  The tool which used to generate this file is called umaptable.
+  You can find this tool under mozilla/intl/uconv/tools/umaptable.c.
   If you have any problem of this file. Please contact 
   Netscape Client International Team or 
   ftang@netscape <Frank Tang> 
@@ -46,9 +47,9 @@
               Table in Debug form 
 Begin of Item 0000
  Format 0
-  srcBegin = 0000
+  srcBegin = 0020
   srcEnd = 007E
-  destBegin = 0000
+  destBegin = 0020
 End of Item 0000 
 
 Begin of Item 0001
@@ -84,7 +85,7 @@ End of Item 0003
 Begin of Item 0004
  Format 2
   srcBegin = 00FF
-  destBegin = 00A4
+  destBegin = 20AC
 End of Item 0004 
 
 ========================================================*/
@@ -109,11 +110,11 @@ End of Item 0004
 0x1000, 0x0002, 
 /*-------------------------------------------------------*/
 /*       Offset=0x0006   Start of MapCell Array */ 
-/* 0000 */    0x0000, 0x007E, 0x0000, 
+/* 0000 */    0x0020, 0x007E, 0x0020, 
 /* 0001 */    0x0080, 0x009F, 0x0410, 
 /* 0002 */    0x00E0, 0x00FE, 0x0430, 
 /* 0003 */    0x00A0, 0x00DF, 0x0000, 
-/* 0004 */    0x00FF, 0x0000, 0x00A4, 
+/* 0004 */    0x00FF, 0x0000, 0x20AC, 
 /*-------------------------------------------------------*/
 /*       Offset=0x0015   Start of MappingTable */ 
 
