@@ -208,7 +208,7 @@ nsresult nsXMLTokenizer::ConsumeComment(PRUnichar aChar,CToken*& aToken,nsScanne
     nsAutoString  theEmpty;
     aToken=theRecycler->CreateTokenOfType(eToken_comment,eHTMLTag_comment,theEmpty);
     if(aToken) {
-      result=aToken->Consume(aChar,aScanner,eParseMode_noquirks);
+      result=aToken->Consume(aChar,aScanner,eDTDMode_strict);
       AddToken(aToken,result,&mTokenDeque,theRecycler);
     }
   }
@@ -251,7 +251,7 @@ nsresult nsXMLTokenizer::ConsumeSpecialMarkup(PRUnichar aChar,CToken*& aToken,ns
     if(isComment) aToken = theRecycler->CreateTokenOfType(eToken_comment,eHTMLTag_comment,theEmpty);
  
     if(aToken) {
-      result=aToken->Consume(aChar,aScanner,eParseMode_noquirks);
+      result=aToken->Consume(aChar,aScanner,eDTDMode_strict);
       AddToken(aToken,result,&mTokenDeque,theRecycler);
     }
   }

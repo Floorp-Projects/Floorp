@@ -58,13 +58,12 @@ public:
                     PRBool aCopyUnused=PR_FALSE); 
     
     CParserContext( const CParserContext& aContext);
-
     ~CParserContext();
 
     void  SetMimeType(const nsString& aMimeType);
 
     CParserContext*     mPrevContext;
-    eParseMode          mParseMode;
+    nsDTDMode           mDTDMode;
     eParserDocType      mDocType;
     nsAutoString        mMimeType;
 

@@ -317,11 +317,6 @@ CLASS_EXPORT_HTMLPARS COtherDTD : public nsIDTD {
      */
     nsresult    HandleStartToken(CToken* aToken);
     nsresult    HandleEndToken(CToken* aToken);
-    nsresult    HandleEntityToken(CToken* aToken);
-    nsresult    HandleCommentToken(CToken* aToken);
-    nsresult    HandleAttributeToken(CToken* aToken);
-    nsresult    HandleScriptToken(const nsIParserNode *aNode);
-    nsresult    HandleProcessingInstructionToken(CToken* aToken);
     nsresult    HandleDocTypeDeclToken(CToken* aToken);
 
 
@@ -329,36 +324,6 @@ CLASS_EXPORT_HTMLPARS COtherDTD : public nsIDTD {
     //these cover methods mimic the sink, and are used
     //by the parser to manage its context-stack.
     //*************************************************
-
-    /**
-     * The next set of method open given HTML elements of
-	   * various types.
-     * 
-     * @update	gess5/11/98
-     * @param   node to be opened in content sink.
-     * @return  error code representing error condition-- usually 0.
-     */
-    nsresult OpenHTML(const nsIParserNode *aNode);
-    nsresult OpenHead(const nsIParserNode *aNode);
-    nsresult OpenBody(const nsIParserNode *aNode);
-    nsresult OpenForm(const nsIParserNode *aNode);
-    nsresult OpenMap(const nsIParserNode *aNode);
-    nsresult OpenFrameset(const nsIParserNode *aNode);
-    nsresult OpenContainer(const nsIParserNode *aNode,eHTMLTags aTag,PRBool aClosedByStartTag,nsEntryStack* aStyleStack=0);
-
-    /**
-     * The next set of methods close the given HTML element.
-     * 
-     * @update	gess5/11/98
-     * @param   HTML (node) to be opened in content sink.
-     * @return  error code - 0 if all went well.
-     */
-    nsresult CloseHTML(const nsIParserNode *aNode);
-    nsresult CloseHead(const nsIParserNode *aNode);
-    nsresult CloseBody(const nsIParserNode *aNode);
-    nsresult CloseForm(const nsIParserNode *aNode);
-    nsresult CloseMap(const nsIParserNode *aNode);
-    nsresult CloseFrameset(const nsIParserNode *aNode);
     
     /**
      * The special purpose methods automatically close
@@ -370,15 +335,7 @@ CLASS_EXPORT_HTMLPARS COtherDTD : public nsIDTD {
     nsresult CloseContainersTo(eHTMLTags aTag,PRBool aClosedByStartTag);
     nsresult CloseContainersTo(PRInt32 anIndex,eHTMLTags aTag,PRBool aClosedByStartTag);
 
-    /**
-     * Causes leaf to be added to sink at current vector pos.
-     * @update	gess5/11/98
-     * @param   aNode is leaf node to be added.
-     * @return  error code - 0 if all went well.
-     */
-    nsresult AddLeaf(const nsIParserNode *aNode);
-    nsresult AddHeadLeaf(nsIParserNode *aNode);
-
+    static void ReleaseTable(void);
 
 protected:
 
@@ -414,7 +371,7 @@ protected:
     eHTMLTags           mSkipTarget;
     nsDeque             mSharedNodes;
     nsresult            mDTDState;
-    eParseMode          mParseMode;
+    nsDTDMode           mDTDMode;
     eParserCommands     mParserCommand;   //tells us to viewcontent/viewsource/viewerrors...
 
     PRUint32            mComputedCRC32;

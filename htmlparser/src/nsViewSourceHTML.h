@@ -260,7 +260,7 @@ protected:
     nsAutoString        mKey;
     nsAutoString        mValue;
     nsAutoString        mPopupTag;
-    eParseMode          mParseMode;
+    nsDTDMode           mDTDMode;
     eParserCommands     mParserCommand;   //tells us to viewcontent/viewsource/viewerrors...
     eParserDocType      mDocType;
     nsAutoString        mMimeType;  
