@@ -55,110 +55,110 @@ Rights Reserved.
 <observes element="dialog.start" attribute="ready" onchange="ComposeStartup()"/>
 
 <menubar>
-	<menu id="fileMenu" name="&fileMenu.label;">
-		<menuitem name="&newCmd.label;" cmd="nsCmd:ComposeNew"/>
-		<menuitem name="&saveCmd.label;" cmd="nsCmd:ComposeSave"/>
-		<menuitem name="&saveAsCmd.label;" onclick="SaveAsDraft()"/>
-		<menuitem name="&saveAsTemplateCmd.label;" onclick="SaveAsTemplate()"/>
-		<menuitem name="&attachCmd.label;" cmd="nsCmd:ComposeAttach"/>
-		<separator/>
-		<menuitem name="&sendNowCmd.label;" onclick="SendMessage()"/>
-		<menuitem name="&sendLaterCmd.label;" onclick="SendMessageLater()"/>
-		<menuitem name="&quoteOrigCmd.label;" cmd="nsCmd:ComposeQuote"/>
-		<menuitem name="&selectAddressCmd.label;" onclick="SelectAddress()"/>
-		<separator/>
+	<menu id="fileMenu" value="&fileMenu.label;">
+		<menuitem value="&newCmd.label;" cmd="nsCmd:ComposeNew"/>
+		<menuitem value="&saveCmd.label;" cmd="nsCmd:ComposeSave"/>
+		<menuitem value="&saveAsCmd.label;" onaction="SaveAsDraft()"/>
+		<menuitem value="&saveAsTemplateCmd.label;" onaction="SaveAsTemplate()"/>
+		<menuitem value="&attachCmd.label;" cmd="nsCmd:ComposeAttach"/>
+		<menuseparator/>
+		<menuitem value="&sendNowCmd.label;" onaction="SendMessage()"/>
+		<menuitem value="&sendLaterCmd.label;" onaction="SendMessageLater()"/>
+		<menuitem value="&quoteOrigCmd.label;" cmd="nsCmd:ComposeQuote"/>
+		<menuitem value="&selectAddressCmd.label;" onaction="SelectAddress()"/>
+		<menuseparator/>
 		<menuitem id="pageSetup"/>
-		<menuitem name="&printPreviewCmd.label;" cmd="nsCmd:BrowserPrintPreview"/>
-		<menuitem name="&printCmd.label;" cmd="nsCmd:BrowserPrint"/>
-		<separator/>
-		<menuitem name="&closeCmd.label;" onclick="CloseWindow();"/>
+		<menuitem value="&printPreviewCmd.label;" cmd="nsCmd:BrowserPrintPreview"/>
+		<menuitem value="&printCmd.label;" cmd="nsCmd:BrowserPrint"/>
+		<menuseparator/>
+		<menuitem value="&closeCmd.label;" onaction="CloseWindow();"/>
 	</menu>
-    <menu name="&editMenu.label;">
-		<menuitem name="&undoCmd.label;" cmd="nsCmd:ComposeNYI"/>
-		<separator/>
-		<menuitem name="&cutCmd.label;" cmd="nsCmd:ComposeNYI"/>
-		<menuitem name="&copyCmd.label;" cmd="nsCmd:ComposeNYI"/>
-		<menuitem name="&pasteCmd.label;" cmd="nsCmd:ComposeNYI"/>
-		<menuitem name="&pasteAsQuotCmd.label;" cmd="nsCmd:ComposeNYI"/>
-		<menuitem name="&deleteCmd.label;" cmd="nsCmd:ComposeNYI"/>
-		<menuitem name="&selectAllCmd.label;" cmd="nsCmd:ComposeNYI"/>
-		<separator/>
-		<menuitem name="&findCmd.label;" cmd="nsCmd:ComposeNYI"/>
-		<menuitem name="&findAgainCmd.label;" cmd="nsCmd:ComposeNYI"/>
-		<separator/>
-		<menuitem name="&doNotCompleteAddrCmd.label;" cmd="nsCmd:ComposeNYI"/>
-		<menuitem name="&showMatchingAddrCmd.label;" cmd="nsCmd:ComposeNYI"/>
-		<separator/>
-		<menuitem name="&prefsCmd.label;" cmd="nsCmd:ComposeNYI"/>
+    <menu value="&editMenu.label;">
+		<menuitem value="&undoCmd.label;" cmd="nsCmd:ComposeNYI"/>
+		<menuseparator/>
+		<menuitem value="&cutCmd.label;" cmd="nsCmd:ComposeNYI"/>
+		<menuitem value="&copyCmd.label;" cmd="nsCmd:ComposeNYI"/>
+		<menuitem value="&pasteCmd.label;" cmd="nsCmd:ComposeNYI"/>
+		<menuitem value="&pasteAsQuotCmd.label;" cmd="nsCmd:ComposeNYI"/>
+		<menuitem value="&deleteCmd.label;" cmd="nsCmd:ComposeNYI"/>
+		<menuitem value="&selectAllCmd.label;" cmd="nsCmd:ComposeNYI"/>
+		<menuseparator/>
+		<menuitem value="&findCmd.label;" cmd="nsCmd:ComposeNYI"/>
+		<menuitem value="&findAgainCmd.label;" cmd="nsCmd:ComposeNYI"/>
+		<menuseparator/>
+		<menuitem value="&doNotCompleteAddrCmd.label;" cmd="nsCmd:ComposeNYI"/>
+		<menuitem value="&showMatchingAddrCmd.label;" cmd="nsCmd:ComposeNYI"/>
+		<menuseparator/>
+		<menuitem value="&prefsCmd.label;" cmd="nsCmd:ComposeNYI"/>
     </menu>
-    <menu name="&viewMenu.label;">
-		<menuitem name="&showCmd.label;" cmd="nsCmd:ComposeNYI"/>
-		<separator/>
-		<menuitem name="&addressCmd.label;" cmd="nsCmd:ComposeNYI"/>
-		<menuitem name="&attachmentsCmd.label;" cmd="nsCmd:ComposeNYI"/>
-		<separator/>
-		<menuitem name="&wrapCmd.label;" cmd="nsCmd:ComposeNYI"/>
-		<separator/>
-      		<menu name="&dcharMenu.label;">
-			<menuitem name="&dcharIso1Cmd.label;" onclick="SetDocumentCharacterSet('ISO-8859-1');"/>
-			<menuitem name="&dcharIso2Cmd.label;" onclick="SetDocumentCharacterSet('ISO-8859-2');"/>
-			<menuitem name="&dcharIso3Cmd.label;" onclick="SetDocumentCharacterSet('ISO-8859-3');"/>
-			<menuitem name="&dcharIso4Cmd.label;" onclick="SetDocumentCharacterSet('ISO-8859-4');"/>
-			<menuitem name="&dcharIso9Cmd.label;" onclick="SetDocumentCharacterSet('ISO-8859-9');"/>
-			<menuitem name="&dcharIso10Cmd.label;" onclick="SetDocumentCharacterSet('ISO-8859-10');"/>
-			<menuitem name="&dcharIso14Cmd.label;" onclick="SetDocumentCharacterSet('ISO-8859-14');"/>
-			<menuitem name="&dcharIso15Cmd.label;" onclick="SetDocumentCharacterSet('ISO-8859-15');"/>
-			 <separator />
-			<menuitem name="&dcharJapanCmd.label;" onclick="SetDocumentCharacterSet('ISO-2022-JP');"/>
-			 <separator />
-			<menuitem name="&dcharTradChiBigCmd.label;" onclick="SetDocumentCharacterSet('Big5');"/>
-			<menuitem name="&dcharSimpChiGbCmd.label;" onclick="SetDocumentCharacterSet('GB2312');"/>
-			 <separator />
-			<menuitem name="&dcharKoreanCmd.label;" onclick="SetDocumentCharacterSet('EUC-KR');"/>
-			 <separator />
-			<menuitem name="&dcharUtf8Cmd.label;" onclick="SetDocumentCharacterSet('UTF-8');"/>
-			 <separator />
-			<menuitem name="&dcharRusCmd.label; " onclick="SetDocumentCharacterSet('KOI8-R');"/>
-			<menuitem name="&dcharUkrCmd.label;" onclick="SetDocumentCharacterSet('KOI8-U');"/>
-			 <separator />
-			<menuitem name="&dcharIsoGreekCmd.label;" onclick="SetDocumentCharacterSet('ISO-8859-7');"/>
-			 <separator />
-			<menuitem name="&dcharVietViCmd.label;" onclick="SetDocumentCharacterSet('VISCII');"/>
-			 <separator />
-			<menuitem name="&dcharThaiCmd.label;" onclick="SetDocumentCharacterSet('TIS-620');"/>
-			 <separator />
-			<menuitem name="&dcharArmCmd.label;" onclick="SetDocumentCharacterSet('ARMSCII-8');"/>
+    <menu value="&viewMenu.label;">
+		<menuitem value="&showCmd.label;" cmd="nsCmd:ComposeNYI"/>
+		<menuseparator/>
+		<menuitem value="&addressCmd.label;" cmd="nsCmd:ComposeNYI"/>
+		<menuitem value="&attachmentsCmd.label;" cmd="nsCmd:ComposeNYI"/>
+		<menuseparator/>
+		<menuitem value="&wrapCmd.label;" cmd="nsCmd:ComposeNYI"/>
+		<menuseparator/>
+      		<menu value="&dcharMenu.label;">
+			<menuitem value="&dcharIso1Cmd.label;" onaction="SetDocumentCharacterSet('ISO-8859-1');"/>
+			<menuitem value="&dcharIso2Cmd.label;" onaction="SetDocumentCharacterSet('ISO-8859-2');"/>
+			<menuitem value="&dcharIso3Cmd.label;" onaction="SetDocumentCharacterSet('ISO-8859-3');"/>
+			<menuitem value="&dcharIso4Cmd.label;" onaction="SetDocumentCharacterSet('ISO-8859-4');"/>
+			<menuitem value="&dcharIso9Cmd.label;" onaction="SetDocumentCharacterSet('ISO-8859-9');"/>
+			<menuitem value="&dcharIso10Cmd.label;" onaction="SetDocumentCharacterSet('ISO-8859-10');"/>
+			<menuitem value="&dcharIso14Cmd.label;" onaction="SetDocumentCharacterSet('ISO-8859-14');"/>
+			<menuitem value="&dcharIso15Cmd.label;" onaction="SetDocumentCharacterSet('ISO-8859-15');"/>
+			 <menuseparator />
+			<menuitem value="&dcharJapanCmd.label;" onaction="SetDocumentCharacterSet('ISO-2022-JP');"/>
+			 <menuseparator />
+			<menuitem value="&dcharTradChiBigCmd.label;" onaction="SetDocumentCharacterSet('Big5');"/>
+			<menuitem value="&dcharSimpChiGbCmd.label;" onaction="SetDocumentCharacterSet('GB2312');"/>
+			 <menuseparator />
+			<menuitem value="&dcharKoreanCmd.label;" onaction="SetDocumentCharacterSet('EUC-KR');"/>
+			 <menuseparator />
+			<menuitem value="&dcharUtf8Cmd.label;" onaction="SetDocumentCharacterSet('UTF-8');"/>
+			 <menuseparator />
+			<menuitem value="&dcharRusCmd.label; " onaction="SetDocumentCharacterSet('KOI8-R');"/>
+			<menuitem value="&dcharUkrCmd.label;" onaction="SetDocumentCharacterSet('KOI8-U');"/>
+			 <menuseparator />
+			<menuitem value="&dcharIsoGreekCmd.label;" onaction="SetDocumentCharacterSet('ISO-8859-7');"/>
+			 <menuseparator />
+			<menuitem value="&dcharVietViCmd.label;" onaction="SetDocumentCharacterSet('VISCII');"/>
+			 <menuseparator />
+			<menuitem value="&dcharThaiCmd.label;" onaction="SetDocumentCharacterSet('TIS-620');"/>
+			 <menuseparator />
+			<menuitem value="&dcharArmCmd.label;" onaction="SetDocumentCharacterSet('ARMSCII-8');"/>
 	   </menu>
     </menu>
-    <menu name="&insertMenu.label;">
+    <menu value="&insertMenu.label;">
     </menu>
-    <menu name="&formatMenu.label;">
+    <menu value="&formatMenu.label;">
     </menu>
-    <menu name="&messageMenu.label;">
-	   	<menu name="&priorityMenu.label;" onclick="PriorityMenuSelect(event.target);">
-    		<menuitem name="&lowestPriorityCmd.label;" id="lowest"/>
-    		<menuitem name="&lowPriorityCmd.label;" id="low"/>
-    		<menuitem name="&normalPriorityCmd.label;" id="normal"/>
-    		<menuitem name="&highPriorityCmd.label;" id="high"/>
-    		<menuitem name="&highestPriorityCmd.label;" id="highest"/>
+    <menu value="&messageMenu.label;">
+	   	<menu value="&priorityMenu.label;" onaction="PriorityMenuSelect(event.target);">
+    		<menuitem value="&lowestPriorityCmd.label;" id="lowest"/>
+    		<menuitem value="&lowPriorityCmd.label;" id="low"/>
+    		<menuitem value="&normalPriorityCmd.label;" id="normal"/>
+    		<menuitem value="&highPriorityCmd.label;" id="high"/>
+    		<menuitem value="&highestPriorityCmd.label;" id="highest"/>
 	   	</menu>
-    	<menuitem name="&returnReceiptCmd.label;" onclick="ReturnReceiptMenuSelect();"/>
-	   	<menuitem name="&uuEncodeCmd.label;" onclick="UUEncodeMenuSelect();"/>
-	   	<menu name="&outputFormatMenu.label;" onclick="OutputFormatMenuSelect(event.target);">
-    		<menuitem name="&askmeFormatCmd.label;" id="1"/>
-    		<menuitem name="&plainTextFormatCmd.label;" id="2"/>
-    		<menuitem name="&htmlFormatCmd.label;" id="3"/>
-    		<menuitem name="&bothFormatCmd.label;" id="4"/>
+    	<menuitem value="&returnReceiptCmd.label;" onaction="ReturnReceiptMenuSelect();"/>
+	   	<menuitem value="&uuEncodeCmd.label;" onaction="UUEncodeMenuSelect();"/>
+	   	<menu value="&outputFormatMenu.label;" onaction="OutputFormatMenuSelect(event.target);">
+    		<menuitem value="&askmeFormatCmd.label;" id="1"/>
+    		<menuitem value="&plainTextFormatCmd.label;" id="2"/>
+    		<menuitem value="&htmlFormatCmd.label;" id="3"/>
+    		<menuitem value="&bothFormatCmd.label;" id="4"/>
 	   	</menu>
-    	<separator/>
-		<menu name="&fileCarbonCopyCmd.label;" datasources="rdf:mailnewsfolders rdf:msgaccountmanager" ref="msgaccounts:/" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild" 
-			onclick="MessageFcc(event.target)">
+    	<menuseparator/>
+		<menu value="&fileCarbonCopyCmd.label;" datasources="rdf:mailnewsfolders rdf:msgaccountmanager" ref="msgaccounts:/" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild" 
+			onaction="MessageFcc(event.target)">
                   <template>
                     <rule iscontainer="true" isempty="false">
-                      <menu uri="..." name="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                      <menu uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
                     </rule>
                     <rule>
-                      <menuitem uri="..." name="rdf:http://home.netscape.com/NC-rdf#Name" onclick="MsgCopyMessage(event.target)" />
+                      <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" onaction="MsgCopyMessage(event.target)" />
                     </rule>
                   </template>
 		</menu>
