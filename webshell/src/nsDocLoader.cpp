@@ -352,6 +352,17 @@ nsDocLoaderImpl::Init()
 
 nsDocLoaderImpl::~nsDocLoaderImpl()
 {
+		/*
+			|ClearWeakReferences()| here is intended to prevent people holding weak references
+			from re-entering this destructor since |QueryReferent()| will |AddRef()| me, and the
+			subsequent |Release()| will try to destroy me.  At this point there should be only
+			weak references remaining (otherwise, we wouldn't be getting destroyed).
+
+			An alternative would be incrementing our refcount (consider it a compressed flag
+			saying "Don't re-destroy.").  I haven't yet decided which is better. [scc]
+		*/
+	ClearWeakReferences();
+
   Destroy();
 
   PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
