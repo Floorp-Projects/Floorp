@@ -723,18 +723,18 @@ nsMsgSendPart::Write()
           buffer[hdrLen+1] = '\0';
         }
         
-        if (!PL_strncasecmp(line, "BCC:", 4) ||
-          !PL_strncasecmp(line, "FCC:", 4) ||
-          !PL_strncasecmp(line, CONTENT_LENGTH ":",
-                  CONTENT_LENGTH_LEN + 1) ||
-                  !PL_strncasecmp(line, "Lines:", 6) ||
-                  !PL_strncasecmp(line, "Status:", 7) ||
-                  !PL_strncasecmp(line, X_MOZILLA_STATUS ":",
-                  X_MOZILLA_STATUS_LEN+1) ||
-                  !PL_strncasecmp(line, X_MOZILLA_NEWSHOST ":",
-                  X_MOZILLA_NEWSHOST_LEN+1) ||
-                  !PL_strncasecmp(line, X_UIDL ":", X_UIDL_LEN+1) ||
-                  !PL_strncasecmp(line, "X-VM-", 5)) /* hi Kyle */
+        if (!PL_strncasecmp(line, "From -", 6) ||
+            !PL_strncasecmp(line, "BCC:", 4) ||
+            !PL_strncasecmp(line, "FCC:", 4) ||
+            !PL_strncasecmp(line, CONTENT_LENGTH ":", CONTENT_LENGTH_LEN+1) ||
+            !PL_strncasecmp(line, "Lines:", 6) ||
+            !PL_strncasecmp(line, "Status:", 7) ||
+            !PL_strncasecmp(line, X_MOZILLA_STATUS ":", X_MOZILLA_STATUS_LEN+1) ||
+            !PL_strncasecmp(line, X_MOZILLA_STATUS2 ":", X_MOZILLA_STATUS2_LEN+1) ||
+            !PL_strncasecmp(line, X_MOZILLA_DRAFT_INFO ":", X_MOZILLA_DRAFT_INFO_LEN+1) ||
+            !PL_strncasecmp(line, X_MOZILLA_NEWSHOST ":", X_MOZILLA_NEWSHOST_LEN+1) ||
+            !PL_strncasecmp(line, X_UIDL ":", X_UIDL_LEN+1) ||
+            !PL_strncasecmp(line, "X-VM-", 5)) /* hi Kyle */
         {
           skipping = PR_TRUE;
           continue;
