@@ -24,14 +24,15 @@
 #include "nsIFontMetrics.h"
 #include "nspr.h"
 #include "nsxpfcstrings.h"
+#include "nsIStreamListener.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kXPFCHTMLCanvasCID, NS_XPFC_HTML_CANVAS_CID);
 
 #define kNotFound -1
 
-#define DEFAULT_WIDTH  25
-#define DEFAULT_HEIGHT 25
+#define DEFAULT_WIDTH  400
+#define DEFAULT_HEIGHT 400
 
 nsXPFCHTMLCanvas :: nsXPFCHTMLCanvas(nsISupports* outer) : nsXPFCCanvas(outer)
 {
@@ -41,7 +42,10 @@ nsXPFCHTMLCanvas :: nsXPFCHTMLCanvas(nsISupports* outer) : nsXPFCCanvas(outer)
 
 nsXPFCHTMLCanvas :: ~nsXPFCHTMLCanvas()
 {
-  NS_IF_RELEASE(mWebShell);
+  if (nsnull != mWebShell) {
+    mWebShell->Destroy();
+    NS_RELEASE(mWebShell);
+  }
 }
 
 nsresult nsXPFCHTMLCanvas::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
@@ -86,6 +90,32 @@ nsresult nsXPFCHTMLCanvas :: Init()
                   0,
                   DEFAULT_WIDTH, 
                   DEFAULT_HEIGHT);
+
+  nsIWebShellContainer * container = nsnull;
+
+  static NS_DEFINE_IID(kIWebShellContainerIID, NS_IWEB_SHELL_CONTAINER_IID);
+  static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
+
+  res = mWebShell->QueryInterface(kIWebShellContainerIID, (void**)&container);
+
+  if (res == NS_OK)
+  {
+    //mWebShell->SetContainecontainer);
+    NS_RELEASE(container);
+  }
+
+  nsIStreamObserver * observer = nsnull;
+
+  res = mWebShell->QueryInterface(kIStreamObserverIID, (void**)&observer);
+
+  if (res == NS_OK)
+  {
+    mWebShell->SetObserver(observer);
+    NS_RELEASE(observer);
+  }
+
+  //mWebShell->SetPrefs(aPrefs);
+  mWebShell->SetBounds(0,0,400,400);
 
   mWebShell->Show();
 
