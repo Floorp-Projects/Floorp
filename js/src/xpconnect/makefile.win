@@ -17,6 +17,6 @@
 DEPTH=..\..\..
 
 
-DIRS=public idl src tests shell
+DIRS=public idl src tests shell loader
 
 include <$(DEPTH)\config\rules.mak>
