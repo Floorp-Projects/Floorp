@@ -20,24 +20,12 @@
  * Contributor(s): 
  */
 
-		.file "x86Linux.S"
+#include <md/Asm.h>
 
-#define ALIGN						.align 16
-#define SYMBOL_NAME(name)			name
-#define SYMBOL_NAME_LABEL(name)		name##:
-		
-#define GLOBAL_ENTRY_START(name)												\
-		ALIGN;																	\
-		.globl SYMBOL_NAME(name);												\
-		.type SYMBOL_NAME(name),@function;										\
-		SYMBOL_NAME_LABEL(name)
-		
-#define GLOBAL_ENTRY_END(name)													\
-		SYMBOL_NAME_LABEL(.L##name);											\
-		.size SYMBOL_NAME(name),SYMBOL_NAME(.L##name)-SYMBOL_NAME(name)
+		.file "x86Stub_gas.S"
 
 
-GLOBAL_ENTRY_START(staticCompileStub)	
+GLOBAL_ENTRY(staticCompileStub)	
 
 		push	%ebp					/* Make stack frame */
 		mov		%esp,%ebp
@@ -53,14 +41,14 @@ GLOBAL_ENTRY_START(staticCompileStub)
 		/* Call compileAndBackPatchMethod() with 2 args */
 		push	16(%esp)				/* Push the second argument to compileAndBackPatchMethod (return address) */
 		push	%eax				    /* Push the first argument to compileAndBackPatchMethod (cacheEntry) */
-		call	compileAndBackPatchMethod
+		call	SYMBOL_NAME(compileAndBackPatchMethod)
 		
 		mov		%ebp,%esp				/* Pop stack frame */
 		pop		%ebp
 		
 		jmp		*%eax					/* Jump to function leaving the return address at the top of the stack */
 
-GLOBAL_ENTRY_END(staticCompileStub)	
+END_ENTRY(staticCompileStub)	
 
 /*
  * 64bit Arithmetic Support Functions
@@ -74,7 +62,7 @@ GLOBAL_ENTRY_END(staticCompileStub)
  * Out:		64 bit result
  * Note:	Only works in range 1 <= b <= 63, b is extraction amount
  */
-GLOBAL_ENTRY_START(x86Extract64Bit)
+GLOBAL_ENTRY(x86Extract64Bit)
 
 		mov		4(%esp),%eax			/* load low byte of a */
 
@@ -103,7 +91,7 @@ greater32:
 		sar		%cl,%edx
 		ret		$12
 
-GLOBAL_ENTRY_END(x86Extract64Bit)
+END_ENTRY(x86Extract64Bit)
 
 /*
  * 3WayCompare
@@ -116,7 +104,7 @@ GLOBAL_ENTRY_END(x86Extract64Bit)
  *				equal = 0
  *				greater = 1
  */
-GLOBAL_ENTRY_START(x86ThreeWayCMP_L)
+GLOBAL_ENTRY(x86ThreeWayCMP_L)
 		
 		/* edx:eax is tos, ecx:ebx is nos */
 		mov		8(%esp),%ecx
@@ -148,7 +136,7 @@ lcmp_1:
 		mov		$1,%eax
 		ret		$16
 
-GLOBAL_ENTRY_END(x86ThreeWayCMP_L)
+END_ENTRY(x86ThreeWayCMP_L)
 
 /*
  * llmul
@@ -162,7 +150,7 @@ GLOBAL_ENTRY_END(x86ThreeWayCMP_L)
  * Note:	parameters are removed from the stack
  * Uses:	ECX
  */
-GLOBAL_ENTRY_START(x86Mul64Bit)
+GLOBAL_ENTRY(x86Mul64Bit)
 
 		/* A*B = (A.lo * B.lo) + (A.lo * B.hi) + (B.lo * A.hi) ??? */
 		mov		8(%esp),%eax			/* A.hi */
@@ -197,7 +185,7 @@ hard:
 
 		ret		$16						/*  callee restores the stack */
 
-GLOBAL_ENTRY_END(x86Mul64Bit)
+END_ENTRY(x86Mul64Bit)
 
 /*
  * lldiv
@@ -211,7 +199,7 @@ GLOBAL_ENTRY_END(x86Mul64Bit)
  * Note:	parameters are removed from the stack
  * Uses:	ECX
  */
-GLOBAL_ENTRY_START(x86Div64Bit)
+GLOBAL_ENTRY(x86Div64Bit)
 
 		push	%edi
 		push	%esi
@@ -323,7 +311,7 @@ L8:
 
 		ret		$16
 
-GLOBAL_ENTRY_END(x86Div64Bit)
+END_ENTRY(x86Div64Bit)
 
 /*
  * llrem
@@ -337,7 +325,7 @@ GLOBAL_ENTRY_END(x86Div64Bit)
  * Note:	parameters are removed from the stack
  * Uses:	%ECX
  */
-GLOBAL_ENTRY_START(x86Mod64Bit)
+GLOBAL_ENTRY(x86Mod64Bit)
 
 		push	%ebx
 		push	%edi
@@ -456,7 +444,7 @@ LL8:
 
 		ret		$16
 
-GLOBAL_ENTRY_END(x86Mod64Bit)
+END_ENTRY(x86Mod64Bit)
 
 /*
  * llshl
@@ -470,7 +458,7 @@ GLOBAL_ENTRY_END(x86Mod64Bit)
  * Note:	parameters are removed from the stack
  * Uses:	%ECX, destroyed
  */
-GLOBAL_ENTRY_START(x86Shl64Bit)
+GLOBAL_ENTRY(x86Shl64Bit)
 
 		/* prepare from stack */
 		mov		4(%esp),%eax
@@ -501,7 +489,7 @@ RETZERO:
 		xor		%edx,%edx
 		ret		$12
 
-GLOBAL_ENTRY_END(x86Shl64Bit)
+END_ENTRY(x86Shl64Bit)
 
 
 /*
@@ -516,7 +504,7 @@ GLOBAL_ENTRY_END(x86Shl64Bit)
  * Note:	parameters are removed from the stack
  * Uses:	%ECX, destroyed
  */
-GLOBAL_ENTRY_START(x86Shr64Bit)
+GLOBAL_ENTRY(x86Shr64Bit)
 
 		/* prepare from stack */
 		mov		4(%esp),%eax
@@ -547,7 +535,7 @@ RRETZERO:
 		xor		%edx,%edx
 		ret		$12
 
-GLOBAL_ENTRY_END(x86Shr64Bit)
+END_ENTRY(x86Shr64Bit)
 
 /*
  * llsar
@@ -561,7 +549,7 @@ GLOBAL_ENTRY_END(x86Shr64Bit)
  * Note:	parameters are removed from the stack
  * Uses:	%ECX, destroyed
  */
-GLOBAL_ENTRY_START(x86Sar64Bit)
+GLOBAL_ENTRY(x86Sar64Bit)
 
 		/* prepare from stack */
 		mov		4(%esp),%eax
@@ -594,4 +582,4 @@ RETSIGN:
 		mov		%edx,%eax
 		ret		$12
 
-GLOBAL_ENTRY_END(x86Sar64Bit)
+END_ENTRY(x86Sar64Bit)
