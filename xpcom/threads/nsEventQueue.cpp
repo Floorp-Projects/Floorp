@@ -239,14 +239,14 @@ nsEventQueueImpl::HandleEvent(PLEvent* aEvent)
 }
 
 NS_IMETHODIMP
-nsEventQueueImpl::WaitForEvent()
+nsEventQueueImpl::WaitForEvent(PLEvent** aResult)
 {
     PRBool correctThread = PL_IsQueueOnCurrentThread(mEventQueue);
     NS_ASSERTION(correctThread, "attemping to process events on the wrong thread");
     if (!correctThread)
       return NS_ERROR_FAILURE;
 
-    PL_WaitForEvent(mEventQueue);
+    *aResult = PL_WaitForEvent(mEventQueue);
     CheckForDeactivation();
     return NS_OK;
 }
