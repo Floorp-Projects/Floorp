@@ -44,6 +44,8 @@ EXPORTS		= \
 		nsIDOMBarProp.h \
 		nsIDOMDOMException.h \
 		nsPIDOMWindow.h \
+    nsPIWindowRoot.h \
+    nsIFocusController.h \
 		nsIDOMAbstractView.h \
 		nsIDOMViewCSS.h \
 		nsIDOMCRMFObject.h \

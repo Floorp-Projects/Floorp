@@ -40,6 +40,7 @@ CPPSRCS		= \
 		nsJSNavigator.cpp \
 		nsJSLocation.cpp \
 		nsJSWindowCollection.cpp \
+    nsFocusController.cpp \
 		nsGlobalWindow.cpp \
 		nsLocation.cpp \
 		nsDOMWindowList.cpp \
@@ -57,6 +58,7 @@ CPPSRCS		= \
 		nsJSCRMFObject.cpp \
 		nsJSCrypto.cpp \
 		nsJSPkcs11.cpp \
+    nsWindowRoot.cpp \
 		$(NULL)
 
 EXPORTS		= nsJSUtils.h

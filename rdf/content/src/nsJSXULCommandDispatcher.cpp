@@ -55,10 +55,7 @@ static NS_DEFINE_IID(kIControllersIID, NS_ICONTROLLERS_IID);
 //
 enum XULCommandDispatcher_slots {
   XULCOMMANDDISPATCHER_FOCUSEDELEMENT = -1,
-  XULCOMMANDDISPATCHER_FOCUSEDWINDOW = -2,
-  XULCOMMANDDISPATCHER_SUPPRESSFOCUS = -3,
-  XULCOMMANDDISPATCHER_SUPPRESSFOCUSSCROLL = -4,
-  XULCOMMANDDISPATCHER_ACTIVE = -5
+  XULCOMMANDDISPATCHER_FOCUSEDWINDOW = -2
 };
 
 /***********************************************************************/
@@ -103,42 +100,6 @@ GetXULCommandDispatcherProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
           if (NS_SUCCEEDED(rv)) {
             // get the js object
             nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-          }
-        }
-        break;
-      }
-      case XULCOMMANDDISPATCHER_SUPPRESSFOCUS:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULCOMMANDDISPATCHER_SUPPRESSFOCUS, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          PRBool prop;
-          rv = a->GetSuppressFocus(&prop);
-          if (NS_SUCCEEDED(rv)) {
-            *vp = BOOLEAN_TO_JSVAL(prop);
-          }
-        }
-        break;
-      }
-      case XULCOMMANDDISPATCHER_SUPPRESSFOCUSSCROLL:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULCOMMANDDISPATCHER_SUPPRESSFOCUSSCROLL, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          PRBool prop;
-          rv = a->GetSuppressFocusScroll(&prop);
-          if (NS_SUCCEEDED(rv)) {
-            *vp = BOOLEAN_TO_JSVAL(prop);
-          }
-        }
-        break;
-      }
-      case XULCOMMANDDISPATCHER_ACTIVE:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULCOMMANDDISPATCHER_ACTIVE, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          PRBool prop;
-          rv = a->GetActive(&prop);
-          if (NS_SUCCEEDED(rv)) {
-            *vp = BOOLEAN_TO_JSVAL(prop);
           }
         }
         break;
@@ -210,51 +171,6 @@ SetXULCommandDispatcherProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
         }
         break;
       }
-      case XULCOMMANDDISPATCHER_SUPPRESSFOCUS:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULCOMMANDDISPATCHER_SUPPRESSFOCUS, PR_TRUE);
-        if (NS_SUCCEEDED(rv)) {
-          PRBool prop;
-          if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
-            rv = NS_ERROR_DOM_NOT_BOOLEAN_ERR;
-            break;
-          }
-      
-          rv = a->SetSuppressFocus(prop);
-          
-        }
-        break;
-      }
-      case XULCOMMANDDISPATCHER_SUPPRESSFOCUSSCROLL:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULCOMMANDDISPATCHER_SUPPRESSFOCUSSCROLL, PR_TRUE);
-        if (NS_SUCCEEDED(rv)) {
-          PRBool prop;
-          if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
-            rv = NS_ERROR_DOM_NOT_BOOLEAN_ERR;
-            break;
-          }
-      
-          rv = a->SetSuppressFocusScroll(prop);
-          
-        }
-        break;
-      }
-      case XULCOMMANDDISPATCHER_ACTIVE:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULCOMMANDDISPATCHER_ACTIVE, PR_TRUE);
-        if (NS_SUCCEEDED(rv)) {
-          PRBool prop;
-          if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
-            rv = NS_ERROR_DOM_NOT_BOOLEAN_ERR;
-            break;
-          }
-      
-          rv = a->SetActive(prop);
-          
-        }
-        break;
-      }
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, obj, id, vp);
     }
@@ -276,9 +192,6 @@ static JSPropertySpec XULCommandDispatcherProperties[] =
 {
   {"focusedElement",    XULCOMMANDDISPATCHER_FOCUSEDELEMENT,    JSPROP_ENUMERATE},
   {"focusedWindow",    XULCOMMANDDISPATCHER_FOCUSEDWINDOW,    JSPROP_ENUMERATE},
-  {"suppressFocus",    XULCOMMANDDISPATCHER_SUPPRESSFOCUS,    JSPROP_ENUMERATE},
-  {"suppressFocusScroll",    XULCOMMANDDISPATCHER_SUPPRESSFOCUSSCROLL,    JSPROP_ENUMERATE},
-  {"active",    XULCOMMANDDISPATCHER_ACTIVE,    JSPROP_ENUMERATE},
   {0}
 };
 

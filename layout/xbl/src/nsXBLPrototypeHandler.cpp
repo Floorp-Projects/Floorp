@@ -42,12 +42,13 @@
 #include "nsIDOMNSHTMLTextAreaElement.h"
 #include "nsIDOMNSHTMLInputElement.h"
 #include "nsIDOMText.h"
-#include "nsIDOMXULCommandDispatcher.h"
+#include "nsIFocusController.h"
 #include "nsIEventListenerManager.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMEventListener.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsPIDOMWindow.h"
+#include "nsPIWindowRoot.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
@@ -218,29 +219,36 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver, nsIDOMEven
     // Instead of executing JS, let's get the controller for the bound
     // element and call doCommand on it.
     nsCOMPtr<nsIController> controller;
+    nsCOMPtr<nsIFocusController> focusController;
     
-    nsCOMPtr<nsPIDOMWindow> privateWindow(do_QueryInterface(aReceiver));
-    if (!privateWindow) {
-      nsCOMPtr<nsIContent> elt(do_QueryInterface(aReceiver));
-      nsCOMPtr<nsIDocument> doc;
-      if (elt)
-        elt->GetDocument(*getter_AddRefs(doc));
+    nsCOMPtr<nsPIWindowRoot> windowRoot(do_QueryInterface(aReceiver));
+    if (windowRoot) {
+      windowRoot->GetFocusController(getter_AddRefs(focusController));
+    }
+    else {
+      nsCOMPtr<nsPIDOMWindow> privateWindow(do_QueryInterface(aReceiver));
+      if (!privateWindow) {
+        nsCOMPtr<nsIContent> elt(do_QueryInterface(aReceiver));
+        nsCOMPtr<nsIDocument> doc;
+        if (elt)
+          elt->GetDocument(*getter_AddRefs(doc));
       
-      if (!doc)
-        doc = do_QueryInterface(aReceiver);
+        if (!doc)
+          doc = do_QueryInterface(aReceiver);
       
-      if (!doc)
-        return NS_ERROR_FAILURE;
+        if (!doc)
+          return NS_ERROR_FAILURE;
 
-      nsCOMPtr<nsIScriptGlobalObject> globalObject;
-      doc->GetScriptGlobalObject(getter_AddRefs(globalObject));
-      privateWindow = do_QueryInterface(globalObject);
+        nsCOMPtr<nsIScriptGlobalObject> globalObject;
+        doc->GetScriptGlobalObject(getter_AddRefs(globalObject));
+        privateWindow = do_QueryInterface(globalObject);
+      }
+
+      privateWindow->GetRootFocusController(getter_AddRefs(focusController));
     }
 
-    nsCOMPtr<nsIDOMXULCommandDispatcher> commandDispatcher;
-    privateWindow->GetRootCommandDispatcher(getter_AddRefs(commandDispatcher));
-    if (commandDispatcher)
-      commandDispatcher->GetControllerForCommand(command, getter_AddRefs(controller));
+    if (focusController)
+      focusController->GetControllerForCommand(command, getter_AddRefs(controller));
     else GetController(aReceiver, getter_AddRefs(controller)); // We're attached to the receiver possibly.
 
     if (controller)
@@ -271,12 +279,25 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver, nsIDOMEven
       mHandlerElement->GetAttribute(kNameSpaceID_None, kOnCommandAtom, handlerText);
       if (handlerText.IsEmpty())
         return NS_ERROR_FAILURE; // For whatever reason, they didn't give us anything to do.
- aEvent->PreventDefault(); // Preventing default for XUL key handlers
+      aEvent->PreventDefault(); // Preventing default for XUL key handlers
     }
   }
   
   // Compile the handler and bind it to the element.
-  nsCOMPtr<nsIScriptGlobalObject> boundGlobal(do_QueryInterface(aReceiver));
+  nsCOMPtr<nsIScriptGlobalObject> boundGlobal;
+  nsCOMPtr<nsPIWindowRoot> winRoot(do_QueryInterface(aReceiver));
+  if (winRoot) {
+    nsCOMPtr<nsIFocusController> focusController;
+    winRoot->GetFocusController(getter_AddRefs(focusController));
+    nsCOMPtr<nsIDOMWindowInternal> win;
+    focusController->GetFocusedWindow(getter_AddRefs(win));
+    nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(win));
+    nsCOMPtr<nsIDOMWindowInternal> rootWin;
+    piWin->GetPrivateRoot(getter_AddRefs(rootWin));
+    boundGlobal = do_QueryInterface(rootWin);
+  }
+  else boundGlobal = do_QueryInterface(aReceiver);
+  
   if (!boundGlobal) {
     nsCOMPtr<nsIDocument> boundDocument(do_QueryInterface(aReceiver));
     if (!boundDocument) {
@@ -293,7 +314,8 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver, nsIDOMEven
   nsCOMPtr<nsIScriptContext> boundContext;
   boundGlobal->GetContext(getter_AddRefs(boundContext));
 
-  nsCOMPtr<nsIScriptObjectOwner> owner(do_QueryInterface(aReceiver));
+  nsCOMPtr<nsIScriptObjectOwner> owner(do_QueryInterface(winRoot ? boundGlobal : aReceiver));
+  
   void* scriptObject;
   owner->GetScriptObject(boundContext, &scriptObject);
   

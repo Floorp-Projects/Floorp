@@ -34,6 +34,8 @@
 
 class nsIDocShell;
 class nsIDOMWindowInternal;
+class nsIChromeEventHandler;
+class nsIFocusController;
 
 #define NS_PIDOMWINDOW_IID \
 { 0x3aa80781, 0x7e6a, 0x11d3, { 0xbf, 0x87, 0x0, 0x10, 0x5a, 0x1b, 0x6, 0x27 } }
@@ -55,7 +57,9 @@ public:
   NS_IMETHOD Activate() = 0;
   NS_IMETHOD Deactivate() = 0;
 
-  NS_IMETHOD GetRootCommandDispatcher(nsIDOMXULCommandDispatcher ** aDispatcher)=0;
+  NS_IMETHOD GetChromeEventHandler(nsIChromeEventHandler** aHandler)=0;
+
+  NS_IMETHOD GetRootFocusController(nsIFocusController** aResult)=0;
 
   /* from nsIBaseWindow */
   /* void setPositionAndSize (in long x, in long y, in long cx, in long cy, in boolean fRepaint); */

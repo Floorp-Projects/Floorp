@@ -102,6 +102,8 @@
 #include "nsDOMCID.h"
 #include "nsDOMError.h"
 
+#include "nsWindowRoot.h"
+
 // XXX An unfortunate dependency exists here (two XUL files).
 #include "nsIDOMXULDocument.h"
 #include "nsIDOMXULCommandDispatcher.h"
@@ -306,12 +308,12 @@ NS_IMETHODIMP GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument)
       // browser scrolling and other browser commands.
       nsCOMPtr<nsIDOMWindowInternal> internal;
       GetPrivateRoot(getter_AddRefs(internal));
-      nsCOMPtr<nsIDOMWindowInternal> us(do_QueryInterface((nsIDOMWindow*)this));
+      nsCOMPtr<nsIDOMWindowInternal> us(do_QueryInterface(NS_STATIC_CAST(nsIDOMWindow*,this)));
       if (internal == us) {
         nsresult rv;
         NS_WITH_SERVICE(nsIXBLService, xblService, "@mozilla.org/xbl;1", &rv);
         if (xblService) {
-          nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(internal));
+          nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(mChromeEventHandler));
           xblService->AttachGlobalKeyHandler(rec);
         }
       }
@@ -434,10 +436,23 @@ NS_IMETHODIMP GlobalWindowImpl::SetDocShell(nsIDocShell* aDocShell)
 
     // Get our enclosing chrome shell and retrieve its global window impl, so
     // that we can do some forwarding to the chrome document.
-    nsCOMPtr<nsIChromeEventHandler> chromeEventHandler;
-    mDocShell->GetChromeEventHandler(getter_AddRefs(chromeEventHandler));
-    if (chromeEventHandler)
-      mChromeEventHandler = chromeEventHandler.get();   //   ref
+    mDocShell->GetChromeEventHandler(getter_AddRefs(mChromeEventHandler));
+    if (!mChromeEventHandler) {
+      // We have no chrome event handler. If we have a parent,
+      // get our chrome event handler from the parent.  If
+      // we don't have a parent, then we need to make a new
+      // window root object that will function as a chrome event
+      // handler and receive all events that occur anywhere inside
+      // our window.
+      nsCOMPtr<nsIDOMWindow> parentWindow;
+      GetParent(getter_AddRefs(parentWindow));
+      if (parentWindow.get() != NS_STATIC_CAST(nsIDOMWindow*,this)) {
+        nsCOMPtr<nsPIDOMWindow> piWindow(do_QueryInterface(parentWindow));
+        nsCOMPtr<nsIChromeEventHandler> handler;
+        piWindow->GetChromeEventHandler(getter_AddRefs(mChromeEventHandler));
+      }
+      else NS_NewWindowRoot(this, getter_AddRefs(mChromeEventHandler));
+    }
   }
   return NS_OK;
 }
@@ -2098,48 +2113,23 @@ NS_IMETHODIMP GlobalWindowImpl::Close(JSContext* cx, jsval* argv, PRUint32 argc)
 
 NS_IMETHODIMP GlobalWindowImpl::UpdateCommands(const nsAReadableString& anAction)
 {
-  if (mChromeEventHandler) {
-    // Just jump out to the chrome event handler.
-    nsCOMPtr<nsIContent> content = do_QueryInterface(mChromeEventHandler);
-    if (content) {
-      // Cross the chrome/content boundary and get the nearest enclosing
-      // chrome window.
-      nsCOMPtr<nsIDocument> doc;
-      content->GetDocument(*getter_AddRefs(doc));
-      nsCOMPtr<nsIScriptGlobalObject> global;
-      if (!doc)
-        return NS_ERROR_NULL_POINTER;
-      doc->GetScriptGlobalObject(getter_AddRefs(global));
-      nsCOMPtr<nsIDOMWindowInternal> domWindow = do_QueryInterface(global);
-      return domWindow->UpdateCommands(anAction);
-    }
-    else {
-      // XXX Handle the embedding case.  The chrome handler could be told
-      // to poke menu items/update commands etc.  This can be used by
-      // embedders if we set it up right and lets them know all sorts of
-      // interesting things about Ender text fields.
-    }
+  nsCOMPtr<nsIDOMWindowInternal> rootWindow;
+  GetPrivateRoot(getter_AddRefs(rootWindow));
+  if (!rootWindow)
+    return NS_OK;
 
-  }
-  else {
+  nsCOMPtr<nsIDOMDocument> document;
+  rootWindow->GetDocument(getter_AddRefs(document));
+
+  if (document) {
     // See if we contain a XUL document.
-    nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(mDocument);
+    nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(document);
     if (xulDoc) {
       // Retrieve the command dispatcher and call updateCommands on it.
       nsCOMPtr<nsIDOMXULCommandDispatcher> xulCommandDispatcher;
       xulDoc->GetCommandDispatcher(getter_AddRefs(xulCommandDispatcher));
       xulCommandDispatcher->UpdateCommands(anAction);
     }
-
-    // Now call UpdateCommands on our parent window.
-    nsCOMPtr<nsIDOMWindow> parent;
-    GetParent(getter_AddRefs(parent));
-    // GetParent returns self at the top
-    if (NS_STATIC_CAST(nsIDOMWindow *, this) == parent.get())
-      return NS_OK;
-
-    nsCOMPtr<nsIDOMWindowInternal> parentInternal = do_QueryInterface(parent);
-    return parentInternal->UpdateCommands(anAction);
   }
 
   return NS_OK;
@@ -2597,6 +2587,10 @@ NS_IMETHODIMP GlobalWindowImpl::GetPrivateRoot(nsIDOMWindowInternal ** aParent)
   if(parentTop == nsnull)
     return NS_ERROR_FAILURE;
   parentTop->GetDocShell(getter_AddRefs(docShell));
+
+  // Get the chrome event handler from the doc shell, since we only
+  // want to deal with XUL chrome handlers and not the new kind of
+  // window root handler.
   nsCOMPtr<nsIChromeEventHandler> chromeEventHandler;
   docShell->GetChromeEventHandler(getter_AddRefs(chromeEventHandler));
 
@@ -2806,31 +2800,35 @@ NS_IMETHODIMP GlobalWindowImpl::Deactivate()
 }
 
 NS_IMETHODIMP
-GlobalWindowImpl::GetRootCommandDispatcher(nsIDOMXULCommandDispatcher **
-                                           aDispatcher)
+GlobalWindowImpl::GetChromeEventHandler(nsIChromeEventHandler** aHandler)
 {
-  if (!aDispatcher)
-    return NS_ERROR_FAILURE;
-
-  *aDispatcher = nsnull;
-
-  nsCOMPtr<nsIDOMXULCommandDispatcher> commandDispatcher;
-  nsCOMPtr<nsIDOMWindowInternal> rootWindow;
-  
-  GetPrivateRoot(getter_AddRefs(rootWindow));
-  if (rootWindow) {
-    nsCOMPtr<nsIDOMDocument> rootDocument;
-    rootWindow->GetDocument(getter_AddRefs(rootDocument));
-
-    nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(rootDocument);
-    if (xulDoc) {
-      xulDoc->GetCommandDispatcher(aDispatcher);
-    }
-  }
+  *aHandler = mChromeEventHandler;
+  NS_IF_ADDREF(*aHandler);
   return NS_OK;
 }
 
+NS_IMETHODIMP
+GlobalWindowImpl::GetRootFocusController(nsIFocusController** aController)
+{
+  *aController = nsnull;
 
+  nsCOMPtr<nsIDOMWindowInternal> rootWindow;
+  GetPrivateRoot(getter_AddRefs(rootWindow));
+  if (rootWindow) {
+    // Obtain the chrome event handler.
+    nsCOMPtr<nsIChromeEventHandler> chromeHandler;
+    nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(rootWindow));
+    piWin->GetChromeEventHandler(getter_AddRefs(chromeHandler));
+    if (chromeHandler) {
+      nsCOMPtr<nsPIWindowRoot> windowRoot(do_QueryInterface(chromeHandler));
+      if (windowRoot) {
+        windowRoot->GetFocusController(getter_AddRefs(aController));
+      }
+    }
+  }
+
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 GlobalWindowImpl::SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx,

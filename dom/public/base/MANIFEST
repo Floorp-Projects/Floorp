@@ -35,6 +35,8 @@ nsIDOMPluginArray.h
 nsIDOMBarProp.h
 nsIDOMDOMException.h
 nsPIDOMWindow.h
+nsPIWindowRoot.h
+nsIFocusController.h
 nsIDOMAbstractView.h
 nsIDOMCrypto.h
 nsIDOMCRMFObject.h

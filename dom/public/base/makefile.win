@@ -28,9 +28,9 @@ EXPORTS=nsIDOMWindow.h nsIDOMWindowInternal.h nsIDOMNavigator.h \
 	nsIDOMWindowCollection.h nsIDOMScreen.h nsIDOMHistory.h \
 	nsIDOMMimeType.h nsIDOMMimeTypeArray.h \
 	nsIDOMPlugin.h nsIDOMPluginArray.h nsIDOMBarProp.h \
-	nsIDOMDOMException.h nsPIDOMWindow.h nsIDOMAbstractView.h \
+	nsIDOMDOMException.h nsPIDOMWindow.h nsPIWindowRoot.h nsIDOMAbstractView.h \
 	nsIDOMViewCSS.h nsIDOMCRMFObject.h nsIDOMCrypto.h nsIDOMPkcs11.h \
-	nsIDOMWindowEventOwner.h
+	nsIDOMWindowEventOwner.h nsIFocusController.h
 
 MODULE=dom 
 
