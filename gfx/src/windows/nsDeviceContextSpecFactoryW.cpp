@@ -25,6 +25,7 @@
 
 nsDeviceContextSpecFactoryWin :: nsDeviceContextSpecFactoryWin()
 {
+  NS_INIT_REFCNT();
 }
 
 nsDeviceContextSpecFactoryWin :: ~nsDeviceContextSpecFactoryWin()

@@ -42,14 +42,6 @@ typedef enum {
     nsMaskRequirements_kNeeds8Bit
 } nsMaskRequirements;
 
-typedef enum{
-  nsLowQual=0,
-  nsLowMedQual,
-  nsMedQual,
-  nsHighMedQual,
-  nsHighQual
-}nsBlendQuality;
-
 
 #define  nsImageUpdateFlags_kColorMapChanged 0x1
 #define  nsImageUpdateFlags_kBitsChanged     0x2
@@ -66,7 +58,7 @@ class nsIImage : public nsISupports
 public:
 
   /**
-   * Build and initialize the pixelmap
+   * Build and initialize the nsIImage
    * @param aWidth The width in pixels of the desired pixelmap
    * @param aHeight The height in pixels of the desired pixelmap
    * @param aDepth The number of bits per pixel for the pixelmap
@@ -75,7 +67,7 @@ public:
   virtual nsresult Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirements aMaskRequirements) = 0;
 
   /**
-   * Get the number of bytes/pixel for this image
+   * Get the number of bytes per pixel for this image
    * @update - dwc 2/3/99
    * @return - the number of bytes per pixel
    */
@@ -83,103 +75,105 @@ public:
 
   /**
    * Get the width for the pixelmap
-   @return The width in pixels for the pixelmap
+   * @update - dwc 2/1/99
+   * @return The width in pixels for the pixelmap
    */
   virtual PRInt32 GetWidth() = 0;
 
   /**
    * Get the height for the pixelmap
-   @return The height in pixels for the pixelmap
+   * @update - dwc 2/1/99
+   * @return The height in pixels for the pixelmap
    */
   virtual PRInt32 GetHeight() = 0;
 
   /**
    * Get a pointer to the bits for the pixelmap, only if it is not optimized
-   @return address of the DIB pixel array
+   * @update - dwc 2/1/99
+   * @return address of the DIB pixel array
    */
   virtual PRUint8 * GetBits() = 0;
 
   /**
    * Get the number of bytes needed to get to the next scanline for the pixelmap
+   * @update - dwc 2/1/99
    @return The number of bytes in each scanline
    */
   virtual PRInt32 GetLineStride() = 0;
 
   /**
    * Get a pointer to the bits for the alpha mask
-   @return address of the alpha mask pixel array
+   * @update - dwc 2/1/99
+   * @return address of the alpha mask pixel array
    */
   virtual PRUint8 * GetAlphaBits() = 0;
 
   /**
-    * Get the width of the alpha mask
-    @return The width in pixels
-    */
+   * Get the width of the alpha mask
+   * @update - dwc 2/1/99
+   * @return The width in pixels
+   */
   virtual PRInt32     GetAlphaWidth() = 0;
 
   /**
-    * Get the height of the alpha mask
-    @return The width in pixels
-    */
+   * Get the height of the alpha mask
+   * @update - dwc 2/1/99
+   * @return The width in pixels
+   */
   virtual PRInt32     GetAlphaHeight()  = 0;
 
   /**
-    * Get the x location of the upper corner of the alpha mask
-    @return The x location in pixels
-    */
-  virtual PRInt32     GetAlphaXLoc() = 0;
-
-  /**
-    * Get the y location of the upper corner of the alpha mask
-    @return The y location in pixels
-    */
-  virtual PRInt32     GetAlphaYLoc() = 0;
-
-  /**
-   * Get the number of bytes needed to get to the next scanline for the alpha mask
-   @return The number of bytes in each scanline
+   * Get the number of bytes per scanline for the alpha mask
+   * @update - dwc 2/1/99
+   * @return The number of bytes in each scanline
    */
   virtual PRInt32 GetAlphaLineStride() = 0;
 
   /**
-   * Will update a pixelmaps color table
-   @param aFlags Used to pass in parameters for the update
-   @param aUpdateRect The rectangle to update
+   * Update the nsIImage color table
+   * @update - dwc 2/1/99
+   * @param aFlags Used to pass in parameters for the update
+   * @param aUpdateRect The rectangle to update
    */
   virtual void ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect) = 0;
 
   /**
    * Returns if the pixelmap has been converted to an optimized pixelmap
-   @return If true, it is optimized
+   * @update - dwc 2/1/99
+   * @return If true, it is optimized
    */
   virtual PRBool IsOptimized() = 0;
 
   /**
    * Converted this pixelmap to an optimized pixelmap for the device
-   @param aContext The device to optimize for
-   @return the result of the operation, if NS_OK, then the pixelmap is optimized
+   * @update - dwc 2/1/99
+   * @param aContext The device to optimize for
+   * @return the result of the operation, if NS_OK, then the pixelmap is optimized
    */
   virtual nsresult Optimize(nsIDeviceContext* aContext) = 0;
 
   /**
-   * Get the colormap for the pixelmap
-   @return if non null, the colormap for the pixelmap,otherwise the image is not color mapped
+   * Get the colormap for the nsIImage
+   * @update - dwc 2/1/99
+   * @return if non null, the colormap for the pixelmap,otherwise the image is not color mapped
    */
   virtual nsColorMap * GetColorMap() = 0;
 
   /**
-   * BitBlit the pixelmap to a device, the source can be scale to the dest
-   @param aSurface  the surface to blit to
-   @param aX The destination horizontal location
-   @param aY The destination vertical location
-   @param aWidth The destination width of the pixelmap
-   @param aHeight The destination height of the pixelmap
-   @return if TRUE, no errors
+   * BitBlit the nsIImage to a device, the source can be scaled to the dest
+   * @update - dwc 2/1/99
+   * @param aSurface  the surface to blit to
+   * @param aX The destination horizontal location
+   * @param aY The destination vertical location
+   * @param aWidth The destination width of the pixelmap
+   * @param aHeight The destination height of the pixelmap
+   * @return if TRUE, no errors
    */
   NS_IMETHOD Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight) = 0;
 
   /**
-   * BitBlit the pixelmap to a device, the source and dest can be scaled
+   * BitBlit the nsIImage to a device, the source and dest can be scaled
+   * @update - dwc 2/1/99
    * @param aSurface  the surface to blit to
    * @param aSX The source width of the pixelmap
    * @param aSY The source vertical location
@@ -195,27 +189,23 @@ public:
                   PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight) = 0;
 
   /**
-   * Build an alpha mask using this image
-   * @param aTheMaskImage The image to build the mask from
-   * @return true if the mask was set up.
-   */
-  virtual PRBool  SetAlphaMask(nsIImage *aTheMask) = 0;
-
-  /**
    * Set the alpha level for the image
+   * @update - dwc 2/1/99
    * @param  the alpha level to set for the image, from 0 to 100%
    */
   virtual void  SetAlphaLevel(PRInt32 aAlphaLevel) = 0;
 
   /**
    * Get the alpha level for the image
+   * @update - dwc 2/1/99
    * @return  the alpha level for the image, from 0 to 100%
    */
   virtual PRInt32 GetAlphaLevel() = 0;
 
   /**
    * Return information about the bits for this structure
-   @return a bitmap info structure for the Device Dependent Bits
+   * @update - dwc 2/1/99
+   * @return a bitmap info structure for the Device Dependent Bits
    */
   virtual void* GetBitInfo() = 0;
 

@@ -79,7 +79,6 @@ public:
    * @return the number of bytes in this span
    */
   PRInt32  CalcBytesSpan(PRUint32  aWidth);
-  PRBool  SetAlphaMask(nsIImage *aTheMask);
   virtual void  SetAlphaLevel(PRInt32 /* aAlphaLevel */) {}
   virtual PRInt32 GetAlphaLevel() {return(0);}
   virtual void  MoveAlphaMask(PRInt32 /* aX */, PRInt32 /* aY */) {}
