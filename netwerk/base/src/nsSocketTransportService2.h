@@ -54,10 +54,9 @@
 // set NSPR_LOG_MODULES=nsSocketTransport:5
 //
 extern PRLogModuleInfo *gSocketTransportLog;
-#define LOG(args) PR_LOG(gSocketTransportLog, PR_LOG_DEBUG, args)
-#else
-#define LOG(args)
 #endif
+#define LOG(args)     PR_LOG(gSocketTransportLog, PR_LOG_DEBUG, args)
+#define LOG_ENABLED() PR_LOG_TEST(gSocketTransportLog, PR_LOG_DEBUG)
 
 //-----------------------------------------------------------------------------
 

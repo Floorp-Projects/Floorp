@@ -35,6 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_LOGGING
+#define FORCE_PR_LOG
+#endif
+
 #include "nsSocketTransport2.h"
 #include "nsIOService.h"
 #include "nsStreamUtils.h"
@@ -751,9 +755,11 @@ nsSocketTransport::ResolveHost()
         PR_SetNetAddr(PR_IpAddrAny, PR_AF_INET6, SocketPort(), mNetAddr);
         memcpy(&mNetAddr->ipv6.ip, &addr, sizeof(addr));
 #ifdef PR_LOGGING
-        char buf[128];
-        PR_NetAddrToString(mNetAddr, buf, sizeof(buf));
-        LOG((" -> using cached ip address [%s]\n", buf));
+        if (LOG_ENABLED()) {
+            char buf[128];
+            PR_NetAddrToString(mNetAddr, buf, sizeof(buf));
+            LOG((" -> using cached ip address [%s]\n", buf));
+        }
 #endif
         // suppress resolving status message since we are bypassing that step.
         mState = STATE_RESOLVING;
@@ -1027,9 +1033,11 @@ nsSocketTransport::RecoverFromError()
         if (nextAddr) {
             mNetAddr = nextAddr;
 #if defined(PR_LOGGING)
-            char buf[64];
-            PR_NetAddrToString(mNetAddr, buf, sizeof(buf));
-            LOG(("  ...trying next address: %s\n", buf));
+            if (LOG_ENABLED()) {
+                char buf[64];
+                PR_NetAddrToString(mNetAddr, buf, sizeof(buf));
+                LOG(("  ...trying next address: %s\n", buf));
+            }
 #endif
             tryAgain = PR_TRUE;
         }
@@ -1615,9 +1623,11 @@ nsSocketTransport::OnFound(nsISupports *ctx,
                 PR_ConvertIPv4AddrToIPv6(*(PRUint32 *)(*addrList), &addr->ipv6.ip);
             ++addrList;
 #if defined(PR_LOGGING)
-            char buf[50];
-            PR_NetAddrToString(addr, buf, sizeof(buf));
-            LOG(("  => %s\n", buf));
+            if (LOG_ENABLED()) {
+                char buf[50];
+                PR_NetAddrToString(addr, buf, sizeof(buf));
+                LOG(("  => %s\n", buf));
+            }
 #endif
         }
 

@@ -79,6 +79,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsStreamTransportService, Init)
 
 #include "nsSocketTransportService2.h"
 #undef LOG
+#undef LOG_ENABLED
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsSocketTransportService, Init)
 
 #include "nsAsyncStreamCopier.h"
@@ -133,6 +134,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsStreamListenerTee)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHttpNTLMAuth, Init)
 #endif
 #undef LOG
+#undef LOG_ENABLED
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHttpHandler, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHttpsHandler, Init)
