@@ -199,7 +199,7 @@ pull_clientmak:
 
 clobber_all: clobber_nspr clobber_psm clobber_seamonkey
 
-build_all: build_nspr build_psm build_seamonkey
+build_all: build_nspr build_seamonkey
 
 clobber_nspr:
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
