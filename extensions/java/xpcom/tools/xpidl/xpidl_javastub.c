@@ -284,7 +284,7 @@ interface_declaration(TreeState *state)
      * Create the finalize() method
      */
     fputs("    protected void finalize() throws Throwable {\n", state->file);
-    fputs("        XPCOM.FinalizeStub(this);\n    }", state->file);
+    fputs("        XPCOMPrivate.FinalizeStub(this);\n    }", state->file);
 /*    fputs("        try {\n", state->file);
     fputs("            XPCOM.FinalizeStub(this);\n", state->file);
     fputs("        } finally {\n            super.finalize();\n", state->file);
@@ -1092,37 +1092,37 @@ method_declaration(TreeState *state)
 
         switch (jtype) {
             case JAVA_BYTE:
-                fputs("XPCOM.CallXPCOMMethodByte", state->file);
+                fputs("XPCOMPrivate.CallXPCOMMethodByte", state->file);
                 break;
             case JAVA_BYTEARRAY:
-                fputs("(byte[]) XPCOM.CallXPCOMMethodObj", state->file);
+                fputs("(byte[]) XPCOMPrivate.CallXPCOMMethodObj", state->file);
                 break;
             case JAVA_SHORT:
-                fputs("XPCOM.CallXPCOMMethodShort", state->file);
+                fputs("XPCOMPrivate.CallXPCOMMethodShort", state->file);
                 break;
             case JAVA_INT:
-                fputs("XPCOM.CallXPCOMMethodInt", state->file);
+                fputs("XPCOMPrivate.CallXPCOMMethodInt", state->file);
                 break;
             case JAVA_LONG:
-                fputs("XPCOM.CallXPCOMMethodLong", state->file);
+                fputs("XPCOMPrivate.CallXPCOMMethodLong", state->file);
                 break;
             case JAVA_FLOAT:
-                fputs("XPCOM.CallXPCOMMethodFloat", state->file);
+                fputs("XPCOMPrivate.CallXPCOMMethodFloat", state->file);
                 break;
             case JAVA_DOUBLE:
-                fputs("XPCOM.CallXPCOMMethodDouble", state->file);
+                fputs("XPCOMPrivate.CallXPCOMMethodDouble", state->file);
                 break;
             case JAVA_CHAR:
-                fputs("XPCOM.CallXPCOMMethodChar", state->file);
+                fputs("XPCOMPrivate.CallXPCOMMethodChar", state->file);
                 break;
             case JAVA_BOOL:
-                fputs("XPCOM.CallXPCOMMethodBool", state->file);
+                fputs("XPCOMPrivate.CallXPCOMMethodBool", state->file);
                 break;
             case JAVA_STRING:
                 fputs("(String", state->file);
                 if (is_array)
                     fputs("[]", state->file);
-                fputs(") XPCOM.CallXPCOMMethodObj", state->file);
+                fputs(") XPCOMPrivate.CallXPCOMMethodObj", state->file);
                 break;
             case JAVA_NSISUPPORTS:
                 fputs("(", state->file);
@@ -1138,10 +1138,10 @@ method_declaration(TreeState *state)
                 }
                 if (is_array)
                     fputs("[]", state->file);
-                fputs(") XPCOM.CallXPCOMMethodObj", state->file);
+                fputs(") XPCOMPrivate.CallXPCOMMethodObj", state->file);
                 break;
             case JAVA_OBJECT:
-                fputs("XPCOM.CallXPCOMMethodObj", state->file);
+                fputs("XPCOMPrivate.CallXPCOMMethodObj", state->file);
                 break;
             default:
                 g_error("Unknown jtype: %d\n", jtype);
@@ -1153,7 +1153,7 @@ method_declaration(TreeState *state)
 
         state->tree = orig_tree;
     } else {
-        fputs("XPCOM.CallXPCOMMethodVoid", state->file);
+        fputs("XPCOMPrivate.CallXPCOMMethodVoid", state->file);
     }
     fputs("(this, ", state->file);
 
@@ -1290,44 +1290,44 @@ attribute_declaration(TreeState *state)
     fputs("return ", state->file);
     switch (jtype) {
         case JAVA_BYTE:
-            fputs("XPCOM.CallXPCOMMethodByte", state->file);
+            fputs("XPCOMPrivate.CallXPCOMMethodByte", state->file);
             break;
         case JAVA_BYTEARRAY:
-            fputs("(byte[]) XPCOM.CallXPCOMMethodObj", state->file);
+            fputs("(byte[]) XPCOMPrivate.CallXPCOMMethodObj", state->file);
             break;
         case JAVA_SHORT:
-            fputs("XPCOM.CallXPCOMMethodShort", state->file);
+            fputs("XPCOMPrivate.CallXPCOMMethodShort", state->file);
             break;
         case JAVA_INT:
-            fputs("XPCOM.CallXPCOMMethodInt", state->file);
+            fputs("XPCOMPrivate.CallXPCOMMethodInt", state->file);
             break;
         case JAVA_LONG:
-            fputs("XPCOM.CallXPCOMMethodLong", state->file);
+            fputs("XPCOMPrivate.CallXPCOMMethodLong", state->file);
             break;
         case JAVA_FLOAT:
-            fputs("XPCOM.CallXPCOMMethodFloat", state->file);
+            fputs("XPCOMPrivate.CallXPCOMMethodFloat", state->file);
             break;
         case JAVA_DOUBLE:
-            fputs("XPCOM.CallXPCOMMethodDouble", state->file);
+            fputs("XPCOMPrivate.CallXPCOMMethodDouble", state->file);
             break;
         case JAVA_CHAR:
-            fputs("XPCOM.CallXPCOMMethodChar", state->file);
+            fputs("XPCOMPrivate.CallXPCOMMethodChar", state->file);
             break;
         case JAVA_BOOL:
-            fputs("XPCOM.CallXPCOMMethodBool", state->file);
+            fputs("XPCOMPrivate.CallXPCOMMethodBool", state->file);
             break;
         case JAVA_STRING:
-            fputs("(String) XPCOM.CallXPCOMMethodObj", state->file);
+            fputs("(String) XPCOMPrivate.CallXPCOMMethodObj", state->file);
             break;
         case JAVA_NSISUPPORTS:
             fputs("(", state->file);
             if (!xpcom_to_java_type(state, ATTR_TYPE_DECL(state->tree))) {
                 return FALSE;
             }
-            fputs(") XPCOM.CallXPCOMMethodObj", state->file);
+            fputs(") XPCOMPrivate.CallXPCOMMethodObj", state->file);
             break;
         case JAVA_OBJECT:
-            fputs("XPCOM.CallXPCOMMethodObj", state->file);
+            fputs("XPCOMPrivate.CallXPCOMMethodObj", state->file);
             break;
         default:
             g_error("Unknown jtype: %d\n", jtype);
@@ -1382,7 +1382,7 @@ attribute_declaration(TreeState *state)
         /*
          * Write CallXPCOMMethod invocation
          */
-        fputs("XPCOM.CallXPCOMMethodVoid(this, ", state->file);
+        fputs("XPCOMPrivate.CallXPCOMMethodVoid(this, ", state->file);
         numMethods = PRIVDATA(state)->numMethods;
 		if (PRIVDATA(state)->bHasBaseClass) {
             numMethods++;
