@@ -21,33 +21,25 @@
  *   Chak Nanga <chak@netscape.com> 
  */
 
-#ifndef _DIALOGS_H_
-#define _DIALOGS_H_
+// stdafx.h : include file for standard system include files,
+//  or project specific include files that are used frequently, but
+//      are changed infrequently
+//
 
-#include "resource.h"
+#ifndef _STDAFX_H
+#define _STDAFX_H
 
-class CBrowserView;
+#define VC_EXTRALEAN	// Exclude rarely-used stuff from Windows headers
 
-class CFindDialog : public CFindReplaceDialog	
-{
-public:
-	CFindDialog(CString& csSearchStr, PRBool bMatchCase,
-				PRBool bMatchWholeWord, PRBool bWrapAround,
-				PRBool bSearchBackwards, CBrowserView* pOwner);
-	BOOL WrapAround();
-	BOOL SearchBackwards();
+#include <afxwin.h>         // MFC core and standard components
+#include <afxext.h>         // MFC extensions
+#include <afxdtctl.h>		// MFC support for Internet Explorer 4 Common Controls
+#include <afxpriv.h>		// Needed for MFC MBCS/Unicode Conversion Macros
+#ifndef _AFX_NO_AFXCMN_SUPPORT
+#include <afxcmn.h>			// MFC support for Windows Common Controls
+#endif // _AFX_NO_AFXCMN_SUPPORT
 
-private:
-	CString m_csSearchStr;
-	PRBool m_bMatchCase;
-	PRBool m_bMatchWholeWord;
-	PRBool m_bWrapAround;
-	PRBool m_bSearchBackwards;
-	CBrowserView* m_pOwner;
+//{{AFX_INSERT_LOCATION}}
+// Microsoft Visual C++ will insert additional declarations immediately before the previous line.
 
-protected:
-	virtual BOOL OnInitDialog();
-	virtual void PostNcDestroy();
-};
-
-#endif //_DIALOG_H_
+#endif //_STDAFX_H
