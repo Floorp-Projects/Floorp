@@ -976,7 +976,7 @@ nsRenderingContextMac :: GetWidth(const char* aString, PRUint32 aLength, nscoord
 	aWidth = NSToCoordRound(float(textWidth) * mP2T);
 
 	// add a bit for italic
-	switch (font.style)
+	switch (font->style)
 	{
 		case NS_FONT_STYLE_ITALIC:
 		case NS_FONT_STYLE_OBLIQUE:
