@@ -26,7 +26,8 @@ DIRS=\
         datasource      \
         build           \
         brprof          \
-		chrome			\
+	chrome		\
+        tests           \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
