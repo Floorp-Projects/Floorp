@@ -868,7 +868,7 @@ handle_gdk_event (GdkEvent *event, gpointer data)
         // superwin is a child of the grabbing gtk widget.  if it is,
         // pass it to the nsWindow to be handled
         //
-        nsWindow *grabbingWindow = window->GetGrabWindow();
+        nsWindow *grabbingWindow = nsWindow::GetGrabWindow();
         GdkWindow *grabbingGdkWindow = (GdkWindow *)grabbingWindow->GetNativeData(NS_NATIVE_WINDOW);
         GtkWidget *grabbingMozArea = grabbingWindow->GetMozArea();
         NS_RELEASE(grabbingWindow);
@@ -893,7 +893,60 @@ handle_gdk_event (GdkEvent *event, gpointer data)
     }
   else
   {
+
+    // we need to make sure that if we're doing a gdk_pointer_grab on
+    // a superwin that we check to make sure that we account for a
+    // real GtkWidget being inside of it.  the grab code in gtk that
+    // checks to see if a window is contained within a grabbed window
+    // only knows how to walk up a heirarchy of GtkWidget objects, not
+    // GdkWindow objects.  so, we have to fake it out.
+    
+    // the most obvious example of this is a popup scrolling window
+    // with a gtk scrollbar in it.
+    
+    nsWindow  *grabbingWindow = nsWindow::GetGrabWindow();
+    GtkWidget *tempWidget = NULL;
+    if (grabbingWindow)
+    {
+      // get the GdkWindow that we are grabbing on
+      GdkWindow *grabbingGdkWindow = (GdkWindow *)grabbingWindow->GetNativeData(NS_NATIVE_WINDOW);
+      // release our nsIWidget
+      NS_RELEASE(grabbingWindow);
+      // only if this is a GtkWidget object
+      if (GTK_IS_WIDGET(object))
+      {
+        tempWidget = (GtkWidget *)object;
+        // check to see if this widget is the child of the GdkWindow
+        // that we are grabbing on.
+        if (gtk_widget_child_of_gdk_window(tempWidget, grabbingGdkWindow))
+        {
+          // this is so awesome.  gtk_grab_add/gtk_grab_remove don't
+          // have exact push and pop semantics.  if we call grab_add
+          // on the object and as part of the dispatching of this
+          // event another grab_add is called on it, we can end up
+          // releasing the grab early because we always call
+          // grab_remove on the object after dispatching the event.
+          // we can end up with a widget that doesn't have a grab on
+          // it, even though it should.  the scrollbar does this.
+          //
+          // so, what we do here is to check and see if the widget in
+          // question has a parent.  if it does and it's a mozbox
+          // object we slam a grab on that instead of the widget
+          // itself.  we know that no one is doing grabs on those.
+          if (tempWidget->parent)
+          {
+            if (GTK_IS_MOZBOX(tempWidget->parent))
+            {
+              tempWidget = tempWidget->parent;
+            }
+          }
+          gtk_grab_add(tempWidget);
+        }
+      }
+    }
     gtk_main_do_event (event);
+    if (tempWidget)
+      gtk_grab_remove(tempWidget);
   }
 }
 
