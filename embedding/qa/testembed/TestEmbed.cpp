@@ -55,11 +55,11 @@
 
 // Local Includes
 #include "stdafx.h"
+#include "BrowserImpl.h"
 #include "TestEmbed.h"
 #include "BrowserFrm.h"
 #include "winEmbedFileLocProvider.h"
 #include "ProfileMgr.h"
-#include "BrowserImpl.h"
 #include "BrowserView.h"
 #include "nsIWindowWatcher.h"
 #include "plstr.h"
@@ -246,6 +246,22 @@ BOOL CTestEmbedApp::InitInstance()
 
 	Enable3dControls();
 
+	//
+	// 1. Determine the name of the dir from which the MRE based app is being run
+	// from [It's OK to do this even if you're not running in an MRE env]
+	//
+	// 2. Create an nsILocalFile out of it which will passed in to NS_InitEmbedding()
+	//
+	// Please see http://www.mozilla.org/projects/embedding/MRE.html
+	// for more info. on MRE
+
+	char curDir[_MAX_PATH+1];
+	::GetCurrentDirectory(_MAX_PATH, curDir);
+	nsresult rv;
+	nsCOMPtr<nsILocalFile> mreAppDir;
+	rv = NS_NewNativeLocalFile(nsDependentCString(curDir), TRUE, getter_AddRefs(mreAppDir));
+	NS_ASSERTION(NS_SUCCEEDED(rv), "failed to create mreAppDir localfile");
+
 	// Take a look at 
 	// http://www.mozilla.org/projects/xpcom/file_locations.html
 	// for more info on File Locations
@@ -257,8 +273,7 @@ BOOL CTestEmbedApp::InitInstance()
         return FALSE;
     }
 
-    nsresult rv;
-    rv = NS_InitEmbedding(nsnull, provider);
+    rv = NS_InitEmbedding(mreAppDir, provider);
     if(NS_FAILED(rv))
     {
 		QAOutput("TestEmbed didn't start up.");

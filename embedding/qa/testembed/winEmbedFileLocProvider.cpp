@@ -47,7 +47,7 @@
 #define CHROME_DIR_NAME             NS_LITERAL_CSTRING("chrome")
 #define PLUGINS_DIR_NAME            NS_LITERAL_CSTRING("plugins")
 #define SEARCH_DIR_NAME             NS_LITERAL_CSTRING("searchplugins")
-
+#define COMPONENTS_DIR_NAME         NS_LITERAL_CSTRING("components")
 
 //*****************************************************************************
 // winEmbedFileLocProvider::Constructor/Destructor
@@ -148,14 +148,113 @@ winEmbedFileLocProvider::GetFile(const char *prop, PRBool *persistant, nsIFile *
         if (NS_SUCCEEDED(rv))
             rv = localFile->AppendRelativeNativePath(SEARCH_DIR_NAME);
     }
-    
+    //---------------------------------------------------------------
+    // Note that by returning a valid localFile's for NS_MRE_DIR and
+    // NS_NRE_COMPONENT_DIR your app is indicating to XPCOM that 
+    // it found an MRE version with which it's compatible with and 
+    // it intends to be "run against" that MRE
+    //
+    // Please see http://www.mozilla.org/projects/embedding/MRE.html
+    // for more info. on MRE
+    //---------------------------------------------------------------
+    else if (nsCRT::strcmp(prop, NS_MRE_DIR) == 0)
+    {
+        rv = GetMreDirectory(getter_AddRefs(localFile));
+    }    
+    else if (nsCRT::strcmp(prop, NS_MRE_COMPONENT_DIR) == 0)
+    {
+        rv = GetMreDirectory(getter_AddRefs(localFile));
+        if (NS_SUCCEEDED(rv))
+            rv = localFile->AppendRelativeNativePath(COMPONENTS_DIR_NAME);
+    }    
+   
 	if (localFile && NS_SUCCEEDED(rv))
 		return localFile->QueryInterface(NS_GET_IID(nsIFile), (void**)_retval);
 		
 	return rv;
 }
 
+// Get the location of the MRE version we're compatible with from 
+// the registry
+//
+static char * GetMreLocationFromRegistry()
+{
+    char szKey[256];
+    HKEY hRegKey = NULL;
+    DWORD dwLength = _MAX_PATH * sizeof(char);
+    long rc;
+    char keyValue[_MAX_PATH + 1];
+    char *pMreLocation = NULL;
 
+    // A couple of key points here:
+    // 1. Note the usage of the "Software\\Mozilla\\MRE" subkey - this allows
+    //    us to have multiple versions of MREs on the same machine by having
+    //    subkeys such as 1.0, 1.1, 2.0 etc. under it.
+    // 2. In this sample below we're looking for the location of MRE version 1.0
+    //    i.e. we're compatible with MRE 1.0 and we're trying to find it's install
+    //    location.
+    //
+    // Please see http://www.mozilla.org/projects/embedding/MRE.html for
+    // more info.
+    //
+    strcpy(szKey, "Software\\Mozilla\\MRE\\1.0");
+
+    if (::RegOpenKeyEx(HKEY_LOCAL_MACHINE, szKey, 0, KEY_QUERY_VALUE, &hRegKey) == ERROR_SUCCESS) 
+    {
+        if ((rc = ::RegQueryValueEx(hRegKey, "MreHome", NULL, NULL, (BYTE *)keyValue, &dwLength))==ERROR_SUCCESS)
+        {
+            pMreLocation = ::strdup(keyValue);
+            ::RegCloseKey(hRegKey);
+        }
+    }
+
+    return pMreLocation;
+}
+
+// Create and return the location of the MRE the application is 
+// currently using, if any, via the |aLocalFile| param
+//
+// If an embedding application is written to use an MRE it determines
+// the compatible MRE's location by looking in the Windows registry
+// In this case GetMreDirectory() creates a new localFile based on the
+// MRE path it just read from the registry
+//
+// If the embedding appliction is not using an MRE and is running in
+// a "regular" embedding scenario GetMreDirectory() simply returns a
+// failure code indicating to the caller to fallback to a non-MRE
+// based operation - which is the default mode of operation.
+// 
+// Please see http://www.mozilla.org/projects/embedding/MRE.html for 
+// more information on the Mozilla Runtime Environment(MRE) and for 
+// the actual registry key whichs contains the MRE path, if any.
+
+NS_METHOD winEmbedFileLocProvider::GetMreDirectory(nsILocalFile **aLocalFile)
+{
+    NS_ENSURE_ARG_POINTER(aLocalFile);
+    nsresult rv = NS_ERROR_FAILURE;
+
+    // Get the path of the MRE which is compatible with our embedding application
+    // from the registry
+    //
+    char *pMreDir = GetMreLocationFromRegistry();
+    if(pMreDir)
+    {
+        nsCOMPtr<nsILocalFile> tempLocal;
+	    rv = NS_NewNativeLocalFile(nsDependentCString(pMreDir), TRUE, getter_AddRefs(tempLocal));
+
+        if (tempLocal)
+        {
+           *aLocalFile = tempLocal;
+           NS_ADDREF(*aLocalFile);
+           rv = NS_OK;
+        }
+
+        ::free(pMreDir);
+    }
+
+    return rv;
+}
+ 
 NS_METHOD winEmbedFileLocProvider::CloneMozBinDirectory(nsILocalFile **aLocalFile)
 {
     NS_ENSURE_ARG_POINTER(aLocalFile);

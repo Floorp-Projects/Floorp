@@ -47,7 +47,8 @@ protected:
    NS_METHOD            CloneMozBinDirectory(nsILocalFile **aLocalFile);   
    NS_METHOD            GetProductDirectory(nsILocalFile **aLocalFile);
    NS_METHOD            GetDefaultUserProfileRoot(nsILocalFile **aLocalFile);
- 
+   NS_METHOD            GetMreDirectory(nsILocalFile **aLocalFile); 
+
    char                 mProductDirName[256];
    nsCOMPtr<nsILocalFile> mMozBinDirectory;
 };
