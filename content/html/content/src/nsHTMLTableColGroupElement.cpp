@@ -144,7 +144,7 @@ nsHTMLTableColGroupElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 
 NS_IMPL_STRING_ATTR(nsHTMLTableColGroupElement, Align, align)
 NS_IMPL_STRING_ATTR(nsHTMLTableColGroupElement, Ch, ch)
-NS_IMPL_STRING_ATTR(nsHTMLTableColGroupElement, ChOff, choff)
+NS_IMPL_STRING_ATTR(nsHTMLTableColGroupElement, ChOff, charoff)
 NS_IMPL_INT_ATTR(nsHTMLTableColGroupElement, Span, span)
 NS_IMPL_STRING_ATTR(nsHTMLTableColGroupElement, VAlign, valign)
 NS_IMPL_STRING_ATTR(nsHTMLTableColGroupElement, Width, width)
@@ -159,7 +159,7 @@ nsHTMLTableColGroupElement::StringToAttribute(nsIAtom* aAttribute,
      ch
    */
   /* attributes that resolve to integers */
-  if (aAttribute == nsHTMLAtoms::choff) {
+  if (aAttribute == nsHTMLAtoms::charoff) {
     if (ParseValue(aValue, 0, aResult, eHTMLUnit_Integer)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
@@ -201,7 +201,7 @@ nsHTMLTableColGroupElement::AttributeToString(nsIAtom* aAttribute,
      ch
    */
   /* ignore attributes that are of standard types
-     choff, repeat
+     charoff, repeat
    */
   if (aAttribute == nsHTMLAtoms::align) {
     if (TableCellHAlignValueToString(aValue, aResult)) {

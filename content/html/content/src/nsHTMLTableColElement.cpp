@@ -162,7 +162,7 @@ nsHTMLTableColElement::StringToAttribute(nsIAtom* aAttribute,
 {
   /* ignore these attributes, stored simply as strings ch */
   /* attributes that resolve to integers */
-  if (aAttribute == nsHTMLAtoms::choff) {
+  if (aAttribute == nsHTMLAtoms::charoff) {
     if (ParseValue(aValue, 0, aResult, eHTMLUnit_Integer)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
@@ -204,7 +204,7 @@ nsHTMLTableColElement::AttributeToString(nsIAtom* aAttribute,
      ch
    */
   /* ignore attributes that are of standard types
-     choff, span
+     charoff, span
    */
   if (aAttribute == nsHTMLAtoms::align) {
     if (TableCellHAlignValueToString(aValue, aResult)) {

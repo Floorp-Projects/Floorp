@@ -329,7 +329,7 @@ NS_IMPL_STRING_ATTR(nsHTMLTableCellElement, Align, align)
 NS_IMPL_STRING_ATTR(nsHTMLTableCellElement, Axis, axis)
 NS_IMPL_STRING_ATTR(nsHTMLTableCellElement, BgColor, bgcolor)
 NS_IMPL_STRING_ATTR(nsHTMLTableCellElement, Ch, ch)
-NS_IMPL_STRING_ATTR(nsHTMLTableCellElement, ChOff, choff)
+NS_IMPL_STRING_ATTR(nsHTMLTableCellElement, ChOff, charoff)
 NS_IMPL_INT_ATTR(nsHTMLTableCellElement, ColSpan, colspan)
 NS_IMPL_STRING_ATTR(nsHTMLTableCellElement, Headers, headers)
 NS_IMPL_STRING_ATTR(nsHTMLTableCellElement, Height, height)
@@ -358,7 +358,7 @@ nsHTMLTableCellElement::StringToAttribute(nsIAtom* aAttribute,
   /* ignore these attributes, stored simply as strings
      abbr, axis, ch, headers
    */
-  if (aAttribute == nsHTMLAtoms::choff) {
+  if (aAttribute == nsHTMLAtoms::charoff) {
     /* attributes that resolve to integers with a min of 0 */
 
     if (ParseValue(aValue, 0, aResult, eHTMLUnit_Integer)) {
@@ -427,7 +427,7 @@ nsHTMLTableCellElement::AttributeToString(nsIAtom* aAttribute,
      abbr, axis, ch, headers
    */
   /* ignore attributes that are of standard types
-     choff, colspan, rowspan, height, width, nowrap, background, bgcolor
+     charoff, colspan, rowspan, height, width, nowrap, background, bgcolor
    */
   if (aAttribute == nsHTMLAtoms::align) {
     if (TableCellHAlignValueToString(aValue, aResult)) {

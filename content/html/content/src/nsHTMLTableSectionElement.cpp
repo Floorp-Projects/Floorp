@@ -155,7 +155,7 @@ nsHTMLTableSectionElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 NS_IMPL_STRING_ATTR(nsHTMLTableSectionElement, Align, align)
 NS_IMPL_STRING_ATTR(nsHTMLTableSectionElement, VAlign, valign)
 NS_IMPL_STRING_ATTR(nsHTMLTableSectionElement, Ch, ch)
-NS_IMPL_STRING_ATTR(nsHTMLTableSectionElement, ChOff, choff)
+NS_IMPL_STRING_ATTR(nsHTMLTableSectionElement, ChOff, charoff)
 
 
 NS_IMETHODIMP
@@ -255,7 +255,7 @@ nsHTMLTableSectionElement::StringToAttribute(nsIAtom* aAttribute,
      ch
    */
   /* attributes that resolve to integers */
-  if (aAttribute == nsHTMLAtoms::choff) {
+  if (aAttribute == nsHTMLAtoms::charoff) {
     if (ParseValue(aValue, 0, aResult, eHTMLUnit_Integer)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
@@ -297,7 +297,7 @@ nsHTMLTableSectionElement::AttributeToString(nsIAtom* aAttribute,
      ch
    */
   /* ignore attributes that are of standard types
-     choff, height, width, background, bgcolor
+     charoff, height, width, background, bgcolor
    */
   if (aAttribute == nsHTMLAtoms::align) {
     if (TableCellHAlignValueToString(aValue, aResult)) {
