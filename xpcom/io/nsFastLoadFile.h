@@ -141,7 +141,7 @@ typedef PRUint32 NSFastLoadOID;         // nsFastLoadFooter::mObjectMap index
 
 #define MFL_FILE_VERSION_0      0
 #define MFL_FILE_VERSION_1      1000
-#define MFL_FILE_VERSION        2       // experimental, muxed doc support
+#define MFL_FILE_VERSION        3       // fix to store dependency mtimes
 
 /**
  * Compute Fletcher's 16-bit checksum over aLength bytes starting at aBuffer,

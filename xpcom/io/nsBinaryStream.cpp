@@ -410,7 +410,7 @@ nsBinaryInputStream::Read64(PRUint64* a64)
 
     rv = Read(NS_REINTERPRET_CAST(char*, a64), sizeof *a64, &bytesRead);
     if (NS_FAILED(rv)) return rv;
-    if (bytesRead != sizeof a64)
+    if (bytesRead != sizeof *a64)
         return NS_ERROR_FAILURE;
     *a64 = NS_SWAP64(*a64);
     return rv;

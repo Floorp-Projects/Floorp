@@ -3360,10 +3360,6 @@ nsXULDocument::SetDir(const nsAReadableString& aDirection)
 NS_IMETHODIMP
 nsXULDocument::GetPopupNode(nsIDOMNode** aNode)
 {
-#ifdef DEBUG_dr
-    printf("dr :: nsXULDocument::GetPopupNode\n");
-#endif
-
     nsresult rv;
 
     // get focus controller
@@ -3380,10 +3376,6 @@ nsXULDocument::GetPopupNode(nsIDOMNode** aNode)
 NS_IMETHODIMP
 nsXULDocument::SetPopupNode(nsIDOMNode* aNode)
 {
-#ifdef DEBUG_dr
-    printf("dr :: nsXULDocument::SetPopupNode\n");
-#endif
-
     nsresult rv;
 
     // get focus controller
@@ -4876,10 +4868,10 @@ nsXULDocument::StartFastLoad()
         rv = fastLoadService->NewInputStream(input, getter_AddRefs(objectInput));
 
         if (NS_SUCCEEDED(rv)) {
-            nsCOMPtr<nsIFastLoadReadControl>
-                readControl(do_QueryInterface(objectInput));
-            if (readControl) {
-                if (gChecksumXULFastLoadFile) {
+            if (gChecksumXULFastLoadFile) {
+                nsCOMPtr<nsIFastLoadReadControl>
+                    readControl(do_QueryInterface(objectInput));
+                if (readControl) {
                     // Verify checksum, using the fastLoadService's checksum
                     // cache to avoid computing more than once per session.
                     PRUint32 checksum;
@@ -4890,21 +4882,9 @@ nsXULDocument::StartFastLoad()
                                                               readControl,
                                                               &verified);
                         if (NS_SUCCEEDED(rv) && verified != checksum) {
-                            NS_WARNING("bad FastLoad file checksum");
-                            rv = NS_ERROR_FAILURE;
-                        }
-                    }
-                }
-
-                if (NS_SUCCEEDED(rv)) {
-                    // Check dependencies, fail if any is newer than file.
-                    PRTime dtime, mtime;
-                    rv = fastLoadService->MaxDependencyModifiedTime(readControl,
-                                                                    &dtime);
-                    if (NS_SUCCEEDED(rv)) {
-                        rv = file->GetLastModificationDate(&mtime);
-                        if (NS_SUCCEEDED(rv) && LL_CMP(mtime, <, dtime)) {
-                            NS_WARNING("FastLoad file out of date");
+#ifdef DEBUG
+                            printf("bad FastLoad file checksum\n");
+#endif
                             rv = NS_ERROR_FAILURE;
                         }
                     }
@@ -4919,7 +4899,9 @@ nsXULDocument::StartFastLoad()
                 rv = objectInput->Read32(&version);
                 if (NS_SUCCEEDED(rv)) {
                     if (version != XUL_FASTLOAD_FILE_VERSION) {
-                        NS_WARNING("bad FastLoad file version");
+#ifdef DEBUG
+                        printf("bad FastLoad file version\n");
+#endif
                         rv = NS_ERROR_UNEXPECTED;
                     } else {
                         nsXPIDLCString fileChromePath;
@@ -4963,13 +4945,26 @@ nsXULDocument::StartFastLoad()
         nsCOMPtr<nsIObjectOutputStream> objectOutput;
         rv = fastLoadService->NewOutputStream(output,
                                               getter_AddRefs(objectOutput));
-        if (NS_FAILED(rv)) return rv;
+        if (NS_SUCCEEDED(rv)) {
+            rv = objectOutput->Write32(XUL_FASTLOAD_FILE_VERSION);
+            if (NS_SUCCEEDED(rv))
+                rv = objectOutput->WriteStringZ(chromePath);
+        }
 
-        rv = objectOutput->Write32(XUL_FASTLOAD_FILE_VERSION);
-        if (NS_FAILED(rv)) return rv;
+        // Remove here even though some errors above will lead to a FastLoad
+        // file invalidation.  Other errors (failure to note the dependency on
+        // installed-chrome.txt, e.g.) will not cause invalidation, and we may
+        // as well tidy up now.
+        if (NS_FAILED(rv)) {
+            if (objectOutput)
+                objectOutput->Close();
+            else
+                output->Close();
+            xio->mOutputStream = nsnull;
 
-        rv = objectOutput->WriteStringZ(chromePath);
-        if (NS_FAILED(rv)) return rv;
+            file->Remove(PR_FALSE);
+            return rv;
+        }
 
         fastLoadService->SetOutputStream(objectOutput);
     }
@@ -5976,6 +5971,7 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
                                 const char* string)
 {
     // print a load error on bad status
+    // XXXbe shouldn't we do this only #ifdef DEBUG
     if (NS_FAILED(aStatus)) {
         nsCOMPtr<nsIRequest> request;
         aLoader->GetRequest(getter_AddRefs(request));

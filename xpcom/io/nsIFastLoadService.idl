@@ -85,7 +85,6 @@ interface nsIFastLoadService : nsISupports
     void   endMuxedDocument(in nsISupports aURI);
 
     void   addDependency(in nsIFile aFile);
-    PRTime maxDependencyModifiedTime(in nsIFastLoadReadControl aControl);
 
     PRUint32 computeChecksum(in nsIFile aFile,
                              in nsIFastLoadReadControl aControl);
