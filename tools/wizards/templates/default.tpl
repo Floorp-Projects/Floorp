@@ -11,7 +11,7 @@ license_copyright     = Copyright (C) 1998 Netscape Communications Corporation.
 license_contrib       =
 
 # type of license
-license_type = MPL-GPL
+license_type = MPL-GPL-LGPL
 
 # license files
 license_dir = ${top_wizard_dir}templates/licenses/${license_type}
