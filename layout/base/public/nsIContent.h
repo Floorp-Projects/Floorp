@@ -55,7 +55,7 @@ enum nsContentAttr {
 class nsIContent : public nsISupports
 {
 public:
-  virtual nsIDocument* GetDocument() const = 0;
+  NS_IMETHOD GetDocument(nsIDocument*& aResult) const = 0;
   virtual void SetDocument(nsIDocument* aDocument) = 0;
 
   virtual nsIContent* GetParent() const = 0;
@@ -65,10 +65,20 @@ public:
   virtual PRInt32 ChildCount() const = 0;
   virtual nsIContent* ChildAt(PRInt32 aIndex) const = 0;
   virtual PRInt32 IndexOf(nsIContent* aPossibleChild) const = 0;
-  virtual PRBool InsertChildAt(nsIContent* aKid, PRInt32 aIndex) = 0;
-  virtual PRBool ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex) = 0;
-  virtual PRBool AppendChild(nsIContent* aKid) = 0;
-  virtual PRBool RemoveChildAt(PRInt32 aIndex) = 0;
+
+  NS_IMETHOD InsertChildAt(nsIContent* aKid,
+                           PRInt32 aIndex,
+                           PRBool aNotify) = 0;
+
+  NS_IMETHOD ReplaceChildAt(nsIContent* aKid,
+                            PRInt32 aIndex,
+                            PRBool aNotify) = 0;
+
+  NS_IMETHOD AppendChild(nsIContent* aKid,
+                         PRBool aNotify) = 0;
+
+  NS_IMETHOD RemoveChildAt(PRInt32 aIndex,
+                           PRBool aNotify) = 0;
 
   /**
    * Test and see if this piece of content is synthetic. Synthetic content
