@@ -9066,14 +9066,10 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
 #endif // INCLUDE_XUL
 
   if (childFrame) {
-    // Get the childFrame's parent frame
-    nsIFrame* parentFrame;
-    childFrame->GetParent(&parentFrame);
-
     // If the frame we are manipulating is a special frame then do
     // something different instead of just inserting newly created
     // frames.
-    if (IsFrameSpecial(parentFrame)) {
+    if (IsFrameSpecial(childFrame)) {
       // We are pretty harsh here (and definitely not optimal) -- we
       // wipe out the entire containing block and recreate it from
       // scratch. The reason is that because we know that a special
@@ -9082,13 +9078,17 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
       // around. This logic guarantees a correct answer.
 #ifdef DEBUG
       if (gNoisyContentUpdates) {
-        printf("nsCSSFrameConstructor::ContentRemoved: parentFrame=");
-        nsFrame::ListTag(stdout, parentFrame);
+        printf("nsCSSFrameConstructor::ContentRemoved: childFrame=");
+        nsFrame::ListTag(stdout, childFrame);
         printf(" is special\n");
       }
 #endif
-      return ReframeContainingBlock(aPresContext, parentFrame);
+      return ReframeContainingBlock(aPresContext, childFrame);
     }
+
+    // Get the childFrame's parent frame
+    nsIFrame* parentFrame;
+    childFrame->GetParent(&parentFrame);
 
     // Examine the containing-block for the removed content and see if
     // :first-letter style applies.
