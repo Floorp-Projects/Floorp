@@ -114,9 +114,6 @@ nsTextEditRules::GetFlags(PRUint32 *aFlags)
   return NS_OK;
 }
 
-// Initial style for plaintext
-static char* PlaintextInitalStyle = "white-space: -moz-pre-wrap; width: 72ch;";
-
 NS_IMETHODIMP
 nsTextEditRules::SetFlags(PRUint32 aFlags)
 {
@@ -130,16 +127,9 @@ nsTextEditRules::SetFlags(PRUint32 aFlags)
   {
     if (!(mFlags & nsIHTMLEditor::eEditorPlaintextMask))
     {
-      // we are converting TO a plaintext editor
-      // put a "white-space: pre" style on the body
-      nsCOMPtr<nsIDOMElement> bodyElement;
-      nsresult res = mEditor->GetBodyElement(getter_AddRefs(bodyElement));
-      if (NS_FAILED(res)) return res;
-      if (!bodyElement) return NS_ERROR_NULL_POINTER;
-      // not going through the editor to do this.
-      // XXX This is not the right way to do this; we need an editor style
-      // system so that we can add & replace style attrs.
-      bodyElement->SetAttribute("style", PlaintextInitalStyle);
+      // Call the editor's SetBodyWrapWidth(), which will
+      // set the styles appropriately for plaintext:
+      mEditor->SetBodyWrapWidth(72);
     }
   }
   mFlags = aFlags;

@@ -3364,6 +3364,24 @@ NS_IMETHODIMP nsHTMLEditor::GetBodyWrapWidth(PRInt32 *aWrapColumn)
 }
 
 //
+// See if the style value includes this attribute, and if it does,
+// cut out everything from the attribute to the next semicolon.
+//
+static void CutStyle(const char* stylename, nsString& styleValue)
+{
+  // Find the current wrapping type:
+  PRInt32 styleStart = styleValue.Find(stylename, PR_TRUE);
+  if (styleStart >= 0)
+  {
+    PRInt32 styleEnd = styleValue.Find(";", PR_FALSE, styleStart);
+    if (styleEnd > styleStart)
+      styleValue.Cut(styleStart, styleEnd - styleStart + 1);
+    else
+      styleValue.Cut(styleStart, styleValue.Length() - styleStart);
+  }
+}
+
+//
 // Change the wrap width on the first <PRE> tag in this document.
 // (Eventually want to search for more than one in case there are
 // interspersed quoted text blocks.)
@@ -3386,28 +3404,10 @@ NS_IMETHODIMP nsHTMLEditor::SetBodyWrapWidth(PRInt32 aWrapColumn)
   res = bodyElement->GetAttribute(styleName, styleValue);
   if (NS_FAILED(res)) return res;
 
-  // Find the current wrapping type:
-  PRInt32 whitespaceStart=-1, whitespaceEnd=-1, widthStart=-1, widthEnd=-1;
-  whitespaceStart = styleValue.Find("white-space", PR_TRUE);
-  if (whitespaceStart >= 0)
-    whitespaceEnd = styleValue.Find(";", PR_FALSE, whitespaceStart);
-  if (whitespaceStart >= 0)
-  {
-    if (whitespaceEnd > whitespaceStart)
-      styleValue.Cut(whitespaceStart, whitespaceEnd - whitespaceStart + 1);
-    else
-      styleValue.Cut(whitespaceStart, styleValue.Length() - whitespaceStart);
-  }
-  widthStart = styleValue.Find("width", PR_TRUE);
-  if (widthStart >= 0)
-    widthEnd = styleValue.Find(";", PR_FALSE, widthStart);
-  if (widthStart >= 0)
-  {
-    if (widthEnd > widthStart)
-      styleValue.Cut(widthStart, widthEnd - widthStart + 1);
-    else
-      styleValue.Cut(widthStart, styleValue.Length() - widthStart);
-  }
+  // We'll replace styles for these values:
+  CutStyle("white-space", styleValue);
+  CutStyle("width", styleValue);
+  CutStyle("font-family", styleValue);
 
   // If we have other style left, trim off any existing semicolons
   // or whitespace, then add a known semicolon-space:
@@ -3417,6 +3417,10 @@ NS_IMETHODIMP nsHTMLEditor::SetBodyWrapWidth(PRInt32 aWrapColumn)
     styleValue.Append("; ");
   }
 
+  // Make sure we have fixed-width font.  This should be done for us,
+  // but it isn't, see bug 22502:, so we have to add "font: monospace;".
+  styleValue.Append("font-family: monospace; ");
+
   // and now we're ready to set the new whitespace/wrapping style.
   if (aWrapColumn > 0)        // Wrap to a fixed column
   {
@@ -3425,17 +3429,22 @@ NS_IMETHODIMP nsHTMLEditor::SetBodyWrapWidth(PRInt32 aWrapColumn)
     styleValue.Append("ch;");
   }
   else if (aWrapColumn == 0)
-    styleValue.Append("white-space: -moz-pre-wrap");
+    styleValue.Append("white-space: -moz-pre-wrap;");
   else
-    styleValue.Append("white-space: pre");
+    styleValue.Append("white-space: pre;");
+
+  res = bodyElement->SetAttribute(styleName, styleValue);
 
 #ifdef DEBUG_akkana
   char* curstyle = styleValue.ToNewCString();
-  printf("Setting style: [%s]\n", curstyle);
-  nsCRT::free(curstyle);
+  printf("Setting style: [%s]\nNow body looks like:\n", curstyle);
+  Recycle(curstyle);
+  //nsCOMPtr<nsIContent> nodec (do_QueryInterface(bodyElement));
+  //if (nodec) nodec->List(stdout);
+  //printf("-----\n");
 #endif /* DEBUG_akkana */
 
-  return bodyElement->SetAttribute(styleName, styleValue);
+  return res;
 }
 
 NS_IMETHODIMP
