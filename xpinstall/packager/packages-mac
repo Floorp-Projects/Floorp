@@ -393,3 +393,9 @@ viewer:chrome:inspector.jar
 viewer:defaults:pref:inspector.js
 viewer:res:inspector:viewer-registry.rdf
 viewer:res:inspector:search-registry.rdf
+
+[spellcheck]
+viewer:Components:libmyspell.dylib
+viewer:Components:libspellchecker.dylib
+viewer:Components:spellchecker.xpt
+viewer:Components:myspell:*
