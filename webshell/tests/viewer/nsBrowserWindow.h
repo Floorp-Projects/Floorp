@@ -69,6 +69,8 @@ public:
   NS_IMETHOD LoadURL(const nsString& aURL);
   NS_IMETHOD SetTitle(const nsString& aTitle);
   NS_IMETHOD GetTitle(nsString& aResult);
+  NS_IMETHOD SetStatus(const nsString& aStatus);
+  NS_IMETHOD GetStatus(nsString& aResult);
   NS_IMETHOD GetWebShell(nsIWebShell*& aResult);
 
   // nsIStreamObserver

@@ -74,6 +74,10 @@ public:
 
   NS_IMETHOD GetTitle(nsString& aResult) = 0;
 
+  NS_IMETHOD SetStatus(const nsString& aStatus) = 0;
+
+  NS_IMETHOD GetStatus(nsString& aResult) = 0;
+
   NS_IMETHOD GetWebShell(nsIWebShell*& aResult) = 0;
 
   // XXX minimize, maximize

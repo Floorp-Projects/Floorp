@@ -751,6 +751,20 @@ nsBrowserWindow::GetTitle(nsString& aResult)
 }
 
 NS_IMETHODIMP
+nsBrowserWindow::SetStatus(const nsString& aStatus)
+{
+  NS_PRECONDITION(nsnull != mStatus, "null window");
+  mStatus->SetText(aStatus);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBrowserWindow::GetStatus(nsString& aResult)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsBrowserWindow::WillLoadURL(nsIWebShell* aShell, const nsString& aURL)
 {
   if (mStatus) {
