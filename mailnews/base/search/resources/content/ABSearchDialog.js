@@ -56,6 +56,7 @@ var gRDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Compo
 
 var gSearchAbViewListener = {
   onSelectionChanged: function() {
+    UpdateCardView();
   },
   onCountChanged: function(total) {
     if (total == 0)

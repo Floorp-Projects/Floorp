@@ -68,8 +68,5 @@ function AbResultsPaneOnClick(event)
        if (event.detail == 2) {
          AbResultsPaneDoubleClick(gAbView.getCardFromRow(row));
        }
-       else {
-         UpdateCardView();
-       }
     }
 }
