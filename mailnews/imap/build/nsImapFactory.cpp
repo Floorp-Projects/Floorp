@@ -127,7 +127,7 @@ NS_IMETHODIMP nsMsgImapModule::GetClassObject(nsIComponentManager *aCompMgr,
                                const nsIID& aIID,
                                void** r_classObj)
 {
-    nsresult rv;
+    nsresult rv = NS_OK;
 
     // Defensive programming: Initialize *r_classObj in case of error below
     if (!r_classObj)
