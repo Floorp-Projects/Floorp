@@ -41,7 +41,8 @@ struct Selector {
   nsString mTag;     // weight 1
   nsString mID;      // weight 100
   nsString mClass;   // weight 10
-  nsString mPseudo;  // weight 10 (== class)
+  nsString mPseudoClass;  // weight 10 (== class)
+  nsString mPseudoElement;  // weight 10 (== class) ??
   PRUint32 mMask;    // which fields have values
 
   Selector();
@@ -53,10 +54,11 @@ struct Selector {
 #endif
 };
 
-#define SELECTOR_TAG 0x1
-#define SELECTOR_ID 0x2
-#define SELECTOR_CLASS 0x4
-#define SELECTOR_PSEUDO 0x8
+#define SELECTOR_TAG            0x01
+#define SELECTOR_ID             0x02
+#define SELECTOR_CLASS          0x04
+#define SELECTOR_PSEUDO_CLASS   0x08
+#define SELECTOR_PSEUDO_ELEMENT 0x10
 
 #define SELECTOR_WEIGHT_BASE 10
 
@@ -73,7 +75,7 @@ PRInt32 Selector::Weight() const
 {
   return (((0 != (SELECTOR_TAG & mMask)) ? 1 : 0) + 
           ((0 != (SELECTOR_ID & mMask)) ? (SELECTOR_WEIGHT_BASE * SELECTOR_WEIGHT_BASE) : 0) + 
-          ((0 != ((SELECTOR_CLASS | SELECTOR_PSEUDO) & mMask)) ? SELECTOR_WEIGHT_BASE : 0));
+          ((0 != ((SELECTOR_CLASS | SELECTOR_PSEUDO_CLASS | SELECTOR_PSEUDO_ELEMENT) & mMask)) ? SELECTOR_WEIGHT_BASE : 0));
 }
 
 #ifdef NS_DEBUG
@@ -96,10 +98,16 @@ void Selector::Dump() const
     fputs(mClass, stdout);
     needSpace = PR_TRUE;
   }
-  if (mPseudo.Length() > 0) {
+  if (mPseudoClass.Length() > 0) {
     if (needSpace) fputs(" ", stdout);
     fputs(":", stdout);
-    fputs(mPseudo, stdout);
+    fputs(mPseudoClass, stdout);
+    needSpace = PR_TRUE;
+  }
+  if (mPseudoElement.Length() > 0) {
+    if (needSpace) fputs(" ", stdout);
+    fputs(":", stdout);
+    fputs(mPseudoElement, stdout);
     needSpace = PR_TRUE;
   }
 }
@@ -641,19 +649,30 @@ PRBool CSSParserImpl::ParseRuleSet(PRInt32* aErrorCode)
 
   SelectorList* list = slist;
   nsCSSSelector selector;
-  nsICSSStyleRule* rule;
+  nsICSSStyleRule* rule = nsnull;
 
   while (nsnull != list) {
     PRInt32 selIndex = list->mSelectors.Count();
 
     Selector* sel = (Selector*)list->mSelectors[--selIndex];
-    selector.Set(sel->mTag, sel->mID, sel->mClass, sel->mPseudo);
+    if (0 < sel->mPseudoElement.Length()) { // only pseudo elements at end selector
+      nsString  nullStr;
+      selector.Set(sel->mPseudoElement, nullStr, nullStr, nullStr);
+      NS_NewCSSStyleRule(&rule, selector);
+    }
+    selector.Set(sel->mTag, sel->mID, sel->mClass, sel->mPseudoClass);
     PRInt32 weight = sel->Weight();
 
-    if (NS_OK == NS_NewCSSStyleRule(&rule, selector)) {
+    if (nsnull == rule) {
+      NS_NewCSSStyleRule(&rule, selector);
+    }
+    else {
+      rule->AddSelector(selector);
+    }
+    if (nsnull != rule) {
       while (--selIndex >= 0) {
         Selector* sel = (Selector*)list->mSelectors[selIndex];
-        selector.Set(sel->mTag, sel->mID, sel->mClass, sel->mPseudo);
+        selector.Set(sel->mTag, sel->mID, sel->mClass, sel->mPseudoClass);
 
         rule->AddSelector(selector);
         weight += sel->Weight();
@@ -729,6 +748,15 @@ PRBool CSSParserImpl::ParseSelectorGroup(PRInt32* aErrorCode,
   return (PRBool) (aList->mSelectors.Count() > 0);
 }
 
+static PRBool IsPseudoClass(const nsString& aBuffer)
+{
+  return (aBuffer.EqualsIgnoreCase("link") ||
+          aBuffer.EqualsIgnoreCase("visited") ||
+          aBuffer.EqualsIgnoreCase("hover") ||
+          aBuffer.EqualsIgnoreCase("out-of-date") ||  // XXX ??
+          aBuffer.EqualsIgnoreCase("active"));
+}
+
 /**
  * These are the 15 possible kinds of CSS1 style selectors:
  * <UL>
@@ -753,10 +781,11 @@ PRBool CSSParserImpl::ParseSelector(PRInt32* aErrorCode,
                                     Selector* aSelectorResult)
 {
   PRUint32 mask = 0;
-  aSelectorResult->mTag.SetLength(0);
-  aSelectorResult->mClass.SetLength(0);
-  aSelectorResult->mID.SetLength(0);
-  aSelectorResult->mPseudo.SetLength(0);
+  aSelectorResult->mTag.Truncate(0);
+  aSelectorResult->mClass.Truncate(0);
+  aSelectorResult->mID.Truncate(0);
+  aSelectorResult->mPseudoClass.Truncate(0);
+  aSelectorResult->mPseudoElement.Truncate(0);
 
   nsCSSToken* tk = &mToken;
   if (!GetToken(aErrorCode, PR_TRUE)) {
@@ -782,7 +811,6 @@ PRBool CSSParserImpl::ParseSelector(PRInt32* aErrorCode,
   }
   if ((eCSSToken_Symbol == tk->mType) && ('.' == tk->mSymbol)) {
     // .class
-    mask |= SELECTOR_CLASS;
     if (!GetToken(aErrorCode, PR_FALSE)) {
       return PR_FALSE;
     }
@@ -791,6 +819,7 @@ PRBool CSSParserImpl::ParseSelector(PRInt32* aErrorCode,
       UngetToken();
       return PR_FALSE;
     }
+    mask |= SELECTOR_CLASS;
     aSelectorResult->mClass.Append(tk->mIdent);
     if (!GetToken(aErrorCode, PR_FALSE)) {
       // premature eof is ok (here!)
@@ -799,7 +828,6 @@ PRBool CSSParserImpl::ParseSelector(PRInt32* aErrorCode,
   }
   if ((eCSSToken_Symbol == tk->mType) && (':' == tk->mSymbol)) {
     // :pseudo
-    mask |= SELECTOR_PSEUDO;
     if (!GetToken(aErrorCode, PR_FALSE)) {
       // premature eof
       return PR_FALSE;
@@ -809,7 +837,37 @@ PRBool CSSParserImpl::ParseSelector(PRInt32* aErrorCode,
       UngetToken();
       return PR_FALSE;
     }
-    aSelectorResult->mPseudo.Append(tk->mIdent);
+    if (IsPseudoClass(tk->mIdent)) {
+      mask |= SELECTOR_PSEUDO_CLASS;
+      aSelectorResult->mPseudoClass.Append(tk->mIdent);
+    }
+    else {
+      mask |= SELECTOR_PSEUDO_ELEMENT;
+      aSelectorResult->mPseudoElement.Append(':');  // keep the colon
+      aSelectorResult->mPseudoElement.Append(tk->mIdent);
+    }
+    if (!GetToken(aErrorCode, PR_FALSE)) {
+      // premature eof is ok (here!)
+      return PR_TRUE;
+    }
+  }
+  if ((eCSSToken_Symbol == tk->mType) && (':' == tk->mSymbol)) {
+    // :pseudo
+    if (!GetToken(aErrorCode, PR_FALSE)) {
+      // premature eof
+      return PR_FALSE;
+    }
+    if (eCSSToken_Ident != tk->mType) {
+      // malformed selector
+      UngetToken();
+      return PR_FALSE;
+    }
+    if (! IsPseudoClass(tk->mIdent)) {
+      mask |= SELECTOR_PSEUDO_ELEMENT;
+      aSelectorResult->mPseudoElement.Truncate(0);
+      aSelectorResult->mPseudoElement.Append(':');  // keep the colon
+      aSelectorResult->mPseudoElement.Append(tk->mIdent);
+    }
     tk = nsnull;
   }
   if (nsnull != tk) {
