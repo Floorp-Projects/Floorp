@@ -227,7 +227,6 @@ PRInt32 nsMsgSearchBoolExpression::GenerateEncodeStr(nsCString * buffer)
     
     if (m_boolOp == nsMsgSearchBooleanOp::BooleanAND)
     {
-        buffer[0] = '\0';
         numBytesAdded = m_leftChild->GenerateEncodeStr(buffer); // insert left expression
 
         numBytesAdded = m_rightChild->GenerateEncodeStr(buffer);
