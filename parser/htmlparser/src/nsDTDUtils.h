@@ -59,36 +59,30 @@ PRUint32 AccumulateCRC(PRUint32 crc_accum, char *data_blk_ptr, int data_blk_size
   also the regular tags.
  **************************************************************/
 
-typedef struct _nsTagStruct{
-  _nsTagStruct():mTokenBank(new nsDeque(nsnull)),mTag(eHTMLTag_unknown){}
-  ~_nsTagStruct(){delete mTokenBank;}
+struct nsTagEntry {
   eHTMLTags mTag;
-  nsDeque*  mTokenBank;
-}nsTags;
+  PRInt8    mBankIndex;
+  PRInt8    mStyleIndex;
+};
 
 class nsTagStack {
 public:
-
-#ifdef NS_DEBUG
-  enum {eStackSize=200};
-#else
-  enum {eStackSize=30};
-#endif
-              nsTagStack(int aDefaultSize=eStackSize);
+              nsTagStack();
               ~nsTagStack();
   void        Push(eHTMLTags aTag);
   eHTMLTags   Pop();
   eHTMLTags   First() const;
-  eHTMLTags   TagAt(PRInt32 anIndex) const;
+  eHTMLTags   TagAt(PRUint32 anIndex) const;
+  nsTagEntry& EntryAt(PRUint32 anIndex) const;
   PRInt32     GetTopmostIndexOf(eHTMLTags aTag) const;
-  eHTMLTags   operator[](PRInt32 anIndex) const;
+  eHTMLTags   operator[](PRUint32 anIndex) const;
   eHTMLTags   Last() const;
   void        Empty(void); 
+  PRInt32     GetSize(void) const {return mCount;}
 
-  void        SaveToken(CToken* aToken, PRInt32 aID);
-  CToken*     RestoreTokenFrom(PRInt32 aID);
-  PRInt32     TokenCountAt(PRInt32 aID);
-  nsDeque*    mTags;
+  nsTagEntry* mEntries;
+  PRUint32    mCount;
+  PRUint32    mCapacity;
 };
 
 
@@ -101,7 +95,7 @@ public:
 
 class nsDTDContext {
 public:
-                nsDTDContext(int aDefaultSize=nsTagStack::eStackSize);
+                nsDTDContext();
                 ~nsDTDContext();
   void          Push(eHTMLTags aTag);
   eHTMLTags     Pop();
@@ -111,15 +105,18 @@ public:
   eHTMLTags     Last() const;
   void          Empty(void); 
   PRInt32       GetCount(void);
+  nsTagStack*   GetStyles(void) const;
 
-  nsTagStack    mTags;
+  void          SaveToken(CToken* aToken, PRInt32 aID);
+  CToken*       RestoreTokenFrom(PRInt32 aID);
+  PRInt32       TokenCountAt(PRInt32 aID);
 
-#ifndef NS_DEBUG
-  nsTagStack**  mStyles;
-#else
-  nsTagStack*   mStyles[nsTagStack::eStackSize];
+  nsTagStack    mStack;
+  nsDeque       mSkipped; //each entry will hold a deque full of skipped tokens...
+  nsDeque       mStyles;  //each entry will hold a tagstack full of style tags...
+#ifdef  NS_DEBUG
+  eHTMLTags   mTags[100];
 #endif
-  int           mOpenStyles;
 };
 
 

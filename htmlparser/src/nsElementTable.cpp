@@ -48,7 +48,7 @@ PRBool CTagList::Contains(eHTMLTags aTag){
  * @return
  */
 PRInt32 CTagList::GetTopmostIndexOf(nsTagStack& aTagStack){
-  int max = aTagStack.mTags->GetSize();
+  int max = aTagStack.GetSize();
   int index;
   for(index=max-1;index>=0;index--){
     if(Contains(aTagStack[index])) {
@@ -65,7 +65,7 @@ PRInt32 CTagList::GetTopmostIndexOf(nsTagStack& aTagStack){
  * @return
  */
 PRInt32 CTagList::GetBottommostIndexOf(nsTagStack& aTagStack,PRInt32 aStartOffset){
-  int max = aTagStack.mTags->GetSize();
+  int max = aTagStack.GetSize();
   int index;
   for(index=aStartOffset;index<max;index++){
     if(Contains(aTagStack[index])) {

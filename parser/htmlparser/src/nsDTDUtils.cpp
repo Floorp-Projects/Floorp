@@ -29,17 +29,22 @@
 /**
  * Default constructor
  * @update	harishd 04/04/99
+ * @update  gess 04/22/99
  */
-nsTagStack::nsTagStack(int aDefaultSize) {
-  mTags =new nsDeque(nsnull);
+nsTagStack::nsTagStack()  {
+  mCapacity=0;
+  mCount=0;
+  mEntries=0;
 }
 
 /**
  * Default destructor
  * @update  harishd 04/04/99
+ * @update  gess 04/22/99
  */
 nsTagStack::~nsTagStack() {
-  delete mTags;
+  if(mEntries)
+    delete [] mEntries;
 }
 
 /**
@@ -47,30 +52,54 @@ nsTagStack::~nsTagStack() {
  * @update harishd 04/04/99
  */
 void nsTagStack::Empty(void) {
-  mTags->Empty();
+  mCount=0;
 }
 
 /**
  * 
- * @update  harishd 04/04/99
+ * @update  gess 04/22/99
  */
 void nsTagStack::Push(eHTMLTags aTag) {
-  nsTags* result = new nsTags();
-  result->mTag=aTag;
-  mTags->Push(result);
+  if(mCount==mCapacity){ 
+    nsTagEntry* temp=new nsTagEntry[mCapacity+50]; 
+    if(mCapacity){
+      PRUint32 index=0; 
+      for(index=0;index<mCount;index++) {
+        temp[index]=mEntries[index];
+      }
+      delete [] mEntries;
+    }
+    mEntries=temp;
+  }
+  mCapacity+=50;
+  mEntries[mCount].mTag=aTag;
+  mEntries[mCount].mBankIndex=-1;
+  mEntries[mCount++].mStyleIndex=-1;
 }
 
 
 /**
  * 
  * @update  harishd 04/04/99
+ * @update  gess 04/21/99
  */
 eHTMLTags nsTagStack::Pop() {
   eHTMLTags result=eHTMLTag_unknown;
-  if(mTags->GetSize() > 0) {
-    nsTags* t = (nsTags*)mTags->Pop();
-    result=t->mTag;
-    delete t;
+  if(0<mCount) {
+    result=mEntries[--mCount].mTag;
+  }
+  return result;
+} 
+ 
+/**
+ * 
+ * @update  harishd 04/04/99
+ * @update  gess 04/21/99
+ */
+eHTMLTags nsTagStack::First() const {
+  eHTMLTags result=eHTMLTag_unknown;
+  if(0<mCount){
+    result=mEntries[0].mTag;
   }
   return result;
 }
@@ -78,112 +107,67 @@ eHTMLTags nsTagStack::Pop() {
 /**
  * 
  * @update  harishd 04/04/99
+ * @update  gess 04/21/99
  */
-eHTMLTags nsTagStack::First() const {
-  if(mTags->GetSize() > 0) {
-    nsTags* result = (nsTags*)mTags->Peek();
-    return result->mTag;
+eHTMLTags nsTagStack::TagAt(PRUint32 anIndex) const {
+  eHTMLTags result=eHTMLTag_unknown;
+  if(anIndex<mCount) {
+    result=mEntries[anIndex].mTag;
   }
-  return eHTMLTag_unknown;
+  return result;
 }
 
 /**
  * 
- * @update  harishd 04/04/99
+ * @update  gess 04/21/99
  */
-eHTMLTags nsTagStack::TagAt(PRInt32 anIndex) const {
-  if((anIndex>=0) && (anIndex<mTags->GetSize())) {
-    nsTags* result = (nsTags*)mTags->ObjectAt(anIndex);
-    return result->mTag; 
+nsTagEntry& nsTagStack::EntryAt(PRUint32 anIndex) const {
+  static nsTagEntry gSentinel;
+  if(anIndex<mCount) {
+    return mEntries[anIndex];
   }
-  return eHTMLTag_unknown;
-
-}
-
-/**
- * 
- * @update  harishd 04/04/99
- */
-eHTMLTags nsTagStack::operator[](PRInt32 anIndex) const {
-  if((anIndex>=0) && (anIndex<mTags->GetSize())) {
-    nsTags* result = (nsTags*)mTags->ObjectAt(anIndex);
-    return result->mTag; 
-  }
-  return eHTMLTag_unknown;
+  return gSentinel;
 }
 
 
 /**
  * 
  * @update  harishd 04/04/99
+ * @update  gess 04/21/99
+ */
+eHTMLTags nsTagStack::operator[](PRUint32 anIndex) const {
+  eHTMLTags result=eHTMLTag_unknown;
+  if(anIndex<mCount) {
+    result=mEntries[anIndex].mTag;
+  }
+  return result;
+}
+
+
+/**
+ * 
+ * @update  harishd 04/04/99
+ * @update  gess 04/21/99
  */
 eHTMLTags nsTagStack::Last() const {
-  PRInt32 size = mTags->GetSize();
-  if(size > 0) {
-    nsTags* result = (nsTags*)mTags->ObjectAt(size - 1);
-    return result->mTag;
-  }
-  return eHTMLTag_unknown;
-
+  return TagAt(mCount-1);
 }
 
 /**
  * 
  * @update  harishd 04/04/99
+ * @update  gess 04/21/99
  */
 PRInt32 nsTagStack::GetTopmostIndexOf(eHTMLTags aTag) const {
   int theIndex=0;
-  nsTags* result;
-  for(theIndex=(mTags->GetSize() - 1);theIndex>=0;theIndex--){
-    result = (nsTags*)mTags->ObjectAt(theIndex);
-    if(result->mTag==aTag)
+  for(theIndex=mCount-1;theIndex>=0;theIndex--){
+    if(aTag==TagAt(theIndex))
       return theIndex;
   }
   return kNotFound;
 
 }
 
-/**
- * 
- * @update  harishd 04/04/99
- */
-void nsTagStack::SaveToken(CToken* aToken, PRInt32 aID)
-{ 
-  NS_PRECONDITION(aID <= mTags->GetSize() && aID > -1,"Out of bounds");
-
-  if(aToken) {
-    nsTags* result = (nsTags*)mTags->ObjectAt(aID);
-    result->mTokenBank->Push(aToken);
-  }
-}
-
-/**
- * 
- * @update  harishd 04/04/99
- */
-CToken*  nsTagStack::RestoreTokenFrom(PRInt32 aID)
-{ 
-  NS_PRECONDITION(aID <= mTags->GetSize() && aID > -1,"Out of bounds");
-
-  if(mTags->GetSize() > 0) {
-    nsTags* result = (nsTags*)mTags->ObjectAt(aID);
-    return (CToken*)result->mTokenBank->PopFront();
-  }
-  return nsnull;
-}
-
-/**
- * 
- * @update  harishd 04/04/99
- */
-PRInt32  nsTagStack::TokenCountAt(PRInt32 aID) 
-{ 
-  NS_PRECONDITION(aID <= mTags->GetSize(),"Out of bounds");
-  if(aID < 0)
-    return kNotFound;
-  nsTags* result = (nsTags*)mTags->ObjectAt(aID);
-  return result->mTokenBank->GetSize();
-}
 
 
 
@@ -196,12 +180,10 @@ PRInt32  nsTagStack::TokenCountAt(PRInt32 aID)
  * 
  * @update	gess9/10/98
  */
-nsDTDContext::nsDTDContext(int aDefaultSize) {
-#ifndef NS_DEBUG
-  mStyles =new nsTagStack*[aDefaultSize];
+nsDTDContext::nsDTDContext() : mStack(), mSkipped(0), mStyles(0) {
+#ifdef  NS_DEBUG
+  nsCRT::zero(mTags,sizeof(mTags));
 #endif
-  mOpenStyles=0;
-  nsCRT::zero(mStyles,aDefaultSize*sizeof(void*));
 } 
  
 
@@ -210,10 +192,6 @@ nsDTDContext::nsDTDContext(int aDefaultSize) {
  * @update	gess9/10/98
  */
 nsDTDContext::~nsDTDContext() {
-#ifndef NS_DEBUG
-  delete mStyles;
-  mStyles=0;
-#endif
 }
 
 /**
@@ -221,7 +199,7 @@ nsDTDContext::~nsDTDContext() {
  * @update  gess7/9/98, harishd 04/04/99 
  */
 PRInt32 nsDTDContext::GetCount(void) {
-  return mTags.mTags->GetSize();
+  return mStack.GetSize();
 }
 
 /**
@@ -229,31 +207,24 @@ PRInt32 nsDTDContext::GetCount(void) {
  * @update  gess7/9/98, harishd 04/04/99
  */
 void nsDTDContext::Push(eHTMLTags aTag) {
-#ifndef NS_DEBUG
-  NS_PRECONDITION(GetCount()<nsTagStack::eStackSize,"TagStack Overflow: DEBUG VERSION!");
-  
-  if(GetCount()>=nsTagStack::eStackSize) {
-    nsTagStack** tmp2=new nsTagStack*[2*(nsTagStack::eStackSize)];
-    nsCRT::zero(tmp2,2*(nsTagStack::eStackSize)*sizeof(void*));
-    nsCRT::memcpy(tmp2,mStyles,(nsTagStack::eStackSize)*sizeof(void*));
-    delete mStyles;
-    mStyles=tmp2;
-  }
+#ifdef  NS_DEBUG
+  if(mStack.mCount<sizeof(mTags))
+    mTags[mStack.mCount]=aTag;
 #endif
-  mTags.Push(aTag);
+
+  mStack.Push(aTag);
 }
 
 /** 
  * @update  gess7/9/98, harishd 04/04/99
  */
 eHTMLTags nsDTDContext::Pop() {
-  eHTMLTags result=eHTMLTag_unknown;
-  PRInt32   size = GetCount();
-  if(size>0) {
-    result=mTags.Pop();
-    size--;
-    mStyles[size]=0;
-  }
+#ifdef  NS_DEBUG
+  if(mStack.mCount>0)
+    mTags[mStack.mCount-1]=eHTMLTag_unknown;
+#endif
+
+  eHTMLTags result=mStack.Pop();
   return result;
 }
 
@@ -262,7 +233,7 @@ eHTMLTags nsDTDContext::Pop() {
  * @update  gess7/9/98
  */
 eHTMLTags nsDTDContext::First() const {
-  return mTags.First();
+  return mStack.First();
 }
 
 /**
@@ -270,7 +241,7 @@ eHTMLTags nsDTDContext::First() const {
  * @update  gess7/9/98
  */
 eHTMLTags nsDTDContext::TagAt(PRInt32 anIndex) const {
-  return mTags.TagAt(anIndex);
+  return mStack.TagAt(anIndex);
 }
 
 
@@ -279,7 +250,7 @@ eHTMLTags nsDTDContext::TagAt(PRInt32 anIndex) const {
  * @update  gess7/9/98
  */
 eHTMLTags nsDTDContext::operator[](PRInt32 anIndex) const {
-  return mTags[anIndex];
+  return mStack[anIndex];
 }
 
 /**
@@ -287,9 +258,83 @@ eHTMLTags nsDTDContext::operator[](PRInt32 anIndex) const {
  * @update  gess7/9/98
  */
 eHTMLTags nsDTDContext::Last() const {
-  return mTags.Last();
+  return mStack.Last();
 }
 
+/**
+ * 
+ * @update  gess7/9/98
+ */
+nsTagStack* nsDTDContext::GetStyles(void) const {
+  PRInt32 theIndex=mStack.mEntries[mStack.mCount-1].mStyleIndex;
+  nsTagStack* result=0;
+  if(-1<theIndex){
+    result=(nsTagStack*)mStyles.ObjectAt(theIndex);
+  }
+  return result;
+}
+
+/**
+ * 
+ * @update  harishd 04/04/99
+ * @update  gess 04/21/99
+ */
+void nsDTDContext::SaveToken(CToken* aToken, PRInt32 aID)
+{ 
+  NS_PRECONDITION(aID <= mStack.GetSize() && aID > -1,"Out of bounds");
+
+  if(aToken) {
+    nsTagEntry& theEntry=mStack.EntryAt(aID);
+    //ok, now go get the right tokenbank deque...
+    nsDeque* theDeque=0;
+    if(-1<theEntry.mBankIndex)
+      theDeque=(nsDeque*)mSkipped.ObjectAt(theEntry.mBankIndex);
+    if(!theDeque){
+      //time to make a databank for this element...
+      theDeque=new nsDeque(0);
+      mSkipped.Push(theDeque);
+      theEntry.mBankIndex=mSkipped.GetSize()-1;
+    }
+    theDeque->Push(aToken);
+  }
+}
+
+/**
+ * 
+ * @update  harishd 04/04/99
+ * @update  gess 04/21/99
+ */
+CToken*  nsDTDContext::RestoreTokenFrom(PRInt32 aID)
+{ 
+  NS_PRECONDITION(aID <= mStack.GetSize() && aID > -1,"Out of bounds");
+  CToken* result=0;
+  if(0<mStack.GetSize()) {
+    nsTagEntry theEntry=mStack.EntryAt(aID);
+    nsDeque* theDeque=(nsDeque*)mSkipped.ObjectAt(theEntry.mBankIndex);
+    if(theDeque){
+      result=(CToken*)theDeque->PopFront();
+    }
+  }
+  return result;
+}
+
+/**
+ * 
+ * @update  harishd 04/04/99
+ * @update  gess 04/21/99
+ */
+PRInt32  nsDTDContext::TokenCountAt(PRInt32 aID) 
+{ 
+  NS_PRECONDITION(aID <= mStack.GetSize(),"Out of bounds");
+
+  nsTagEntry theEntry=mStack.EntryAt(aID);
+  nsDeque* theDeque=(nsDeque*)mSkipped.ObjectAt(theEntry.mBankIndex);
+  if(theDeque){
+    return theDeque->GetSize();
+  }
+
+  return kNotFound;
+}
 
 /**************************************************************
   Now define the tokenrecycler class...
