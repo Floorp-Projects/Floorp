@@ -150,7 +150,7 @@ my $last_slashdot = 0;
 # leave $freshmeat tuned to undef if you don't want freshmeat
 # headlines checked every two hours
 
-# my $freshmeat = "http://freshmeat.net/files/freshmeat/recentnews.txt";
+my $freshmeat = "http://freshmeat.net/files/freshmeat/recentnews.txt";
 my @freshmeat;
 my $last_freshmeat = 0;
 
@@ -196,7 +196,7 @@ $bot->schedule (0, \&checksourcechange);
 $bot->schedule (0, \&mozillazine);
 $bot->schedule (0, \&mozillaorg);
 $bot->schedule (0, \&slashdot);
-$bot->schedule (0, \&freshmeat);
+# $bot->schedule (0, \&freshmeat);
 $bot->schedule (0, \&stocks);
 
 &debug ("connecting to $server $port as $nick on $channel");
