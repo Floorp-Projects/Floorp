@@ -66,6 +66,8 @@ public:
 private:
   void                 CalcBarBounds(void);
   void                 LayoutBar(void);
+  nsresult             NextPage(void);
+  nsresult             PrevPage(void);
   PRUint32             mMaxRange;
   PRUint32             mPosition;
   PRUint32             mThumbSize;

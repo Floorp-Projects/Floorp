@@ -125,6 +125,16 @@ NS_IMETHODIMP nsWindow::Update()
   return NS_OK;
 }
 
+NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
+{
+  printf("nsWindow::Scroll()\n");
+  if (aClipRect)
+    Invalidate(*aClipRect, PR_TRUE);
+  else 
+    Invalidate(PR_TRUE);
+  return NS_OK;
+}
+
 ChildWindow::ChildWindow(): nsWindow()
 {
   name = "nsChildWindow";

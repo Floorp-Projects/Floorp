@@ -29,6 +29,7 @@ class nsWindow : public nsWidget
   NS_IMETHOD Invalidate(PRBool aIsSynchronous);
   NS_IMETHOD Invalidate(const nsRect & aRect, PRBool aIsSynchronous);
   NS_IMETHOD Update();
+  NS_IMETHOD Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
 protected:
   void DestroyNative(void);
   void CreateNative(Window aParent, nsRect aRect);
