@@ -16,7 +16,7 @@
  * Reserved.
  */
 
-#include "nsIUrl.h"
+#include "nsIURL.h"
 #include "nsHTTPRequest.h"
 #include "nsVoidArray.h"
 #include "nsHeaderPair.h"

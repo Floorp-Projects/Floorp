@@ -17,7 +17,7 @@
  */
 
 #include "nsHTTPResponse.h"
-#include "nsIUrl.h"
+#include "nsIURL.h"
 #include "nsIHTTPChannel.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
