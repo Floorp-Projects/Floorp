@@ -46,6 +46,7 @@ BASE_DSO_FLAGS = -lgmbasemotif
 endif
 
 EXTRA_DSO_LDOPTS = \
+	$(LD_ALL) \
 	-L$(DIST)/lib \
 	-ljsdombase_s	\
 	-ljsdomcore_s	\
@@ -53,6 +54,7 @@ EXTRA_DSO_LDOPTS = \
 	-ljsdomhtml_s	\
 	-ljsdomcss_s	\
 	-ljsurl		\
+	$(LD_NONE) \
 	-L$(DIST)/bin	\
 	-lraptorbase	\
 	-lraptorgfx	\
