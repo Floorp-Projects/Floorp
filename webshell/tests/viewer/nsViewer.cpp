@@ -48,7 +48,10 @@
 #include "nsIScriptContext.h"
 #include "nsDocLoader.h"
 #include "nsIFileWidget.h"
-
+#include "nsIContent.h"
+#include "nsIFrame.h"
+#include "nsIPresShell.h"
+#include "nsISizeOfHandler.h"
 
 static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
 static NS_DEFINE_IID(kIFileWidgetIID, NS_IFILEWIDGET_IID);
@@ -98,6 +101,80 @@ static char gInputFileName[MAXPATHLEN];
 extern "C" {
 extern int  NET_PollSockets();
 };
+
+//----------------------------------------------------------------------
+
+void
+WindowData::ShowContentSize()
+{
+  if (nsnull == ww) {
+    return;
+  }
+  nsISizeOfHandler* szh;
+  if (NS_OK != NS_NewSizeOfHandler(&szh)) {
+    return;
+  }
+
+  nsIDocument* doc;
+  doc = ww->GetDocument();
+  if (nsnull != doc) {
+    nsIContent* content;
+    content = doc->GetRootContent();
+    if (nsnull != content) {
+      content->SizeOf(szh);
+      PRUint32 totalSize;
+      szh->GetSize(totalSize);
+      printf("Content model size is approximately %d bytes\n", totalSize);
+      NS_RELEASE(content);
+    }
+    NS_RELEASE(doc);
+  }
+  NS_RELEASE(szh);
+}
+
+void
+WindowData::ShowFrameSize()
+{
+  if (nsnull == ww) {
+    return;
+  }
+
+  nsIDocument* doc;
+
+  doc = ww->GetDocument();
+  if (nsnull != doc ){
+    PRInt32 i, shells = doc->GetNumberOfShells();
+    for (i = 0; i < shells; i++) {
+      nsIPresShell* shell = doc->GetShellAt(i);
+      if (nsnull != shell) {
+        nsISizeOfHandler* szh;
+        if (NS_OK != NS_NewSizeOfHandler(&szh)) {
+          return;
+        }
+        nsIFrame* root;
+        root = shell->GetRootFrame();
+        if (nsnull != root) {
+          root->SizeOf(szh);
+          PRUint32 totalSize;
+          szh->GetSize(totalSize);
+          printf("Frame model for shell=%p size is approximately %d bytes\n",
+                 shell, totalSize);
+        }
+        NS_RELEASE(szh);
+        NS_RELEASE(shell);
+      }
+    }
+    NS_RELEASE(doc);
+  }
+}
+
+void
+WindowData::ShowStyleSize()
+{
+  if (nsnull == ww) {
+    return;
+  }
+}
 
 //----------------------------------------------------------------------
 
@@ -815,12 +892,10 @@ nsEventStatus nsViewer::DispatchMenuItem(nsGUIEvent *aEvent)
   nsEventStatus result = nsEventStatus_eIgnore;
  
   switch(aEvent->message) {
-
     case NS_MENU_SELECTED:
       nsMenuEvent* menuEvent = (nsMenuEvent*)aEvent;
       WindowData* wd = FindWindowData(aEvent->widget);
       switch(menuEvent->menuItem) {
-
         case VIEWER_EXIT:
           ExitViewer();
           return nsEventStatus_eConsumeNoDefault;
@@ -902,6 +977,24 @@ nsEventStatus nsViewer::DispatchMenuItem(nsGUIEvent *aEvent)
 
         case VIEWER_DEBUGROBOT:
           DoDebugRobot(wd);
+          break;
+
+        case VIEWER_SHOW_CONTENT_SIZE:
+          if (nsnull != wd) {
+            wd->ShowContentSize();
+          }
+          break;
+
+        case VIEWER_SHOW_FRAME_SIZE:
+          if (nsnull != wd) {
+            wd->ShowFrameSize();
+          }
+          break;
+
+        case VIEWER_SHOW_STYLE_SIZE:
+          if (nsnull != wd) {
+            wd->ShowStyleSize();
+          }
           break;
 
         case VIEWER_ONE_COLUMN:

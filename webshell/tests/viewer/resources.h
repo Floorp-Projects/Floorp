@@ -44,6 +44,9 @@
 #define VIEWER_DUMP_STYLE_SHEETS    40025
 #define VIEWER_DUMP_STYLE_CONTEXTS  40026
 #define VIEWER_DEBUGROBOT           40027
+#define VIEWER_SHOW_CONTENT_SIZE    40028
+#define VIEWER_SHOW_FRAME_SIZE      40029
+#define VIEWER_SHOW_STYLE_SIZE      40030
 
 // Note: must be in ascending sequential order
 #define VIEWER_ONE_COLUMN       40031
