@@ -77,6 +77,7 @@ typedef unsigned long HMTX;
 #include "nsIWebShellServices.h"
 #include "nsIGlobalHistory.h"
 #include "prmem.h"
+#include "prthread.h"
 #include "nsXPIDLString.h"
 #include "nsDOMError.h"
 #include "nsIDOMHTMLElement.h"
@@ -167,7 +168,7 @@ nsWebShell::nsWebShell() : nsDocShell()
 #endif
 
   NS_INIT_REFCNT();
-  mThreadEventQueue = nsnull;
+  mThread = nsnull;
   InitFrameData();
   mItemType = typeContent;
   mCharsetReloadState = eCharsetReloadInit;
@@ -193,7 +194,6 @@ nsWebShell::~nsWebShell()
   ++mRefCnt; // following releases can cause this destructor to be called
              // recursively if the refcount is allowed to remain 0
 
-  NS_IF_RELEASE(mThreadEventQueue);
   mContentViewer=nsnull;
   mDeviceContext=nsnull;
   NS_IF_RELEASE(mContainer);
@@ -703,8 +703,6 @@ OnLinkClickEvent::OnLinkClickEvent(nsWebShell* aHandler,
                                    nsIInputStream* aPostDataStream,
                                    nsIInputStream* aHeadersDataStream)
 {
-  nsIEventQueue* eventQueue;
-
   mHandler = aHandler;
   NS_ADDREF(aHandler);
   mURLSpec = new nsString(aURLSpec);
@@ -721,9 +719,11 @@ OnLinkClickEvent::OnLinkClickEvent(nsWebShell* aHandler,
                (PLHandleEventProc) ::HandlePLEvent,
                (PLDestroyEventProc) ::DestroyPLEvent);
 
-  eventQueue = aHandler->GetEventQueue();
-  eventQueue->PostEvent(this);
-  NS_RELEASE(eventQueue);
+  nsCOMPtr<nsIEventQueue> eventQueue;
+  aHandler->GetEventQueue(getter_AddRefs(eventQueue));
+  NS_ASSERTION(eventQueue, "no event queue");
+  if (eventQueue)
+    eventQueue->PostEvent(this);
 }
 
 OnLinkClickEvent::~OnLinkClickEvent()
@@ -758,11 +758,16 @@ nsWebShell::OnLinkClick(nsIContent* aContent,
   return rv;
 }
 
-nsIEventQueue* nsWebShell::GetEventQueue(void)
+nsresult
+nsWebShell::GetEventQueue(nsIEventQueue **aQueue)
 {
-  NS_PRECONDITION(nsnull != mThreadEventQueue, "EventQueue for thread is null");
-  NS_ADDREF(mThreadEventQueue);
-  return mThreadEventQueue;
+  NS_ENSURE_ARG_POINTER(aQueue);
+  *aQueue = 0;
+
+  nsCOMPtr<nsIEventQueueService> eventService(do_GetService(kEventQueueServiceCID));
+  if (eventService)
+    eventService->GetThreadEventQueue(mThread, aQueue);
+  return *aQueue ? NS_OK : NS_ERROR_FAILURE;
 }
 
 void
@@ -1386,16 +1391,13 @@ nsWebShell::FindNext(const PRUnichar * aSearchStr, PRBool aMatchCase, PRBool aSe
 
 NS_IMETHODIMP nsWebShell::Create()
 {
-     // Cache the PL_EventQueue of the current UI thread...
+  // Remember the current thread (in current and forseeable implementations,
+  // it'll just be the unique UI thread)
   //
   // Since this call must be made on the UI thread, we know the Event Queue
   // will be associated with the current thread...
   //
-  nsCOMPtr<nsIEventQueueService> eventService(do_GetService(kEventQueueServiceCID));
-  NS_ENSURE_TRUE(eventService, NS_ERROR_FAILURE);
-
-  NS_ENSURE_SUCCESS(eventService->GetThreadEventQueue(NS_CURRENT_THREAD,
-   &mThreadEventQueue), NS_ERROR_FAILURE);
+  mThread = PR_GetCurrentThread();
 
   WEB_TRACE(WEB_TRACE_CALLS,
             ("nsWebShell::Init: this=%p", this));
