@@ -53,7 +53,7 @@ HWND              InstantiateDialog(HWND hParent, DWORD dwDlgID, LPSTR szTitle, 
 void              InitSequence(HINSTANCE hInstance);
 void              DlgSequence(int iDirection);
 void              PaintGradientShade(HWND hWnd, HDC hdc);
-BOOL              BrowseForDirectory(HWND hDlg, char *szCurrDir);
+void              BrowseForDirectory(HWND hDlg);
 LRESULT CALLBACK  BrowseHookProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 void              ShowMessage(LPSTR szMessage, BOOL bShow);
 void              DrawLBText(LPDRAWITEMSTRUCT lpdis, DWORD dwACFlag);

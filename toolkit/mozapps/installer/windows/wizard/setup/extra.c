@@ -3335,6 +3335,8 @@ HRESULT InitDlgWelcome(diW *diDialog)
   diDialog->bShowDialog = FALSE;
   if((diDialog->szTitle = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
+  if((diDialog->szMessageWelcome = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
   if((diDialog->szMessage0 = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
   if((diDialog->szMessage1 = NS_GlobalAlloc(MAX_BUF)) == NULL)
@@ -3350,6 +3352,7 @@ HRESULT InitDlgWelcome(diW *diDialog)
 void DeInitDlgWelcome(diW *diDialog)
 {
   FreeMemory(&(diDialog->szTitle));
+  FreeMemory(&(diDialog->szMessageWelcome));
   FreeMemory(&(diDialog->szMessage0));
   FreeMemory(&(diDialog->szMessage1));
   FreeMemory(&(diDialog->szMessage2));
@@ -3367,11 +3370,9 @@ HRESULT InitDlgLicense(diL *diDialog)
     return(1);
   if((diDialog->szMessage0 = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
-  if((diDialog->szMessage1 = NS_GlobalAlloc(MAX_BUF)) == NULL)
+  if((diDialog->szRadioAccept = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
-  if((diDialog->szMessage2 = NS_GlobalAlloc(MAX_BUF)) == NULL)
-    return(1);
-  if((diDialog->szMessage3 = NS_GlobalAlloc(MAX_BUF)) == NULL)
+  if((diDialog->szRadioDecline = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
 
   return(0);
@@ -3383,9 +3384,8 @@ void DeInitDlgLicense(diL *diDialog)
   FreeMemory(&(diDialog->szSubTitle));
   FreeMemory(&(diDialog->szLicenseFilename));
   FreeMemory(&(diDialog->szMessage0));
-  FreeMemory(&(diDialog->szMessage1));
-  FreeMemory(&(diDialog->szMessage2));
-  FreeMemory(&(diDialog->szMessage3));
+  FreeMemory(&(diDialog->szRadioAccept));
+  FreeMemory(&(diDialog->szRadioDecline));
 }
 
 HRESULT InitDlgQuickLaunch(diQL *diDialog)
@@ -7301,6 +7301,7 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   /* Welcome dialog */
   GetPrivateProfileString("Dialog Welcome",             "Show Dialog",     "", szShowDialog,                  sizeof(szShowDialog), szFileIniConfig);
   GetPrivateProfileString("Dialog Welcome",             "Title",           "", diWelcome.szTitle,             MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Welcome",             "MessageWelcome",  "", diWelcome.szMessageWelcome,    MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog Welcome",             "Message0",        "", diWelcome.szMessage0,          MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog Welcome",             "Message1",        "", diWelcome.szMessage1,          MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog Welcome",             "Message2",        "", diWelcome.szMessage2,          MAX_BUF, szFileIniConfig);
@@ -7314,9 +7315,8 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   GetPrivateProfileString("Dialog License",             "Sub Title",       "", diLicense.szSubTitle,          MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog License",             "License File",    "", diLicense.szLicenseFilename,   MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog License",             "Message0",        "", diLicense.szMessage0,          MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("Dialog License",             "Message1",        "", diLicense.szMessage1,          MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("Dialog License",             "Message2",        "", diLicense.szMessage2,          MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("Dialog License",             "Message3",        "", diLicense.szMessage3,          MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog License",             "RadioAccept",     "", diLicense.szRadioAccept,       MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog License",             "RadioDecline",    "", diLicense.szRadioDecline,      MAX_BUF, szFileIniConfig);
   if(lstrcmpi(szShowDialog, "TRUE") == 0)
     diLicense.bShowDialog = TRUE;
 
@@ -7751,8 +7751,10 @@ HRESULT ParseInstallIni()
   GetPrivateProfileString("General", "TOTALDOWNLOADSIZE", "", sgInstallGui.szTotalDownloadSize, sizeof(sgInstallGui.szTotalDownloadSize), szFileIniInstall);
   GetPrivateProfileString("General", "SPACEAVAILABLE", "", sgInstallGui.szSpaceAvailable, sizeof(sgInstallGui.szSpaceAvailable), szFileIniInstall);
   GetPrivateProfileString("General", "COMPONENTS_", "", sgInstallGui.szComponents_, sizeof(sgInstallGui.szComponents_), szFileIniInstall);
+  GetPrivateProfileString("General", "BROWSEINFO", "", sgInstallGui.szBrowseInfo, sizeof(sgInstallGui.szBrowseInfo), szFileIniInstall);
   GetPrivateProfileString("General", "DESTINATIONDIRECTORY", "", sgInstallGui.szDestinationDirectory, sizeof(sgInstallGui.szDestinationDirectory), szFileIniInstall);
   GetPrivateProfileString("General", "BROWSE_", "", sgInstallGui.szBrowse_, sizeof(sgInstallGui.szBrowse_), szFileIniInstall);
+  GetPrivateProfileString("General", "DOWNLOADSIZE", "", sgInstallGui.szDownloadSize, sizeof(sgInstallGui.szDownloadSize), szFileIniInstall);
   GetPrivateProfileString("General", "CURRENTSETTINGS", "", sgInstallGui.szCurrentSettings, sizeof(sgInstallGui.szCurrentSettings), szFileIniInstall);
   GetPrivateProfileString("General", "INSTALL_", "", sgInstallGui.szInstall_, sizeof(sgInstallGui.szInstall_), szFileIniInstall);
   GetPrivateProfileString("General", "DELETE_", "", sgInstallGui.szDelete_, sizeof(sgInstallGui.szDelete_), szFileIniInstall);

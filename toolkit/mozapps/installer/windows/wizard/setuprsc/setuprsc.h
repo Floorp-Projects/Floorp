@@ -104,6 +104,15 @@
 #define IDC_CHECK_TURBO_MODE            1075
 #define IDC_CHECK_RECAPTURE_HOMEPAGE    1076
 #define IDC_STATIC_MSG1                 1079
+#define IDC_STATIC_TITLE                1080
+#define IDC_RADIO_ACCEPT                1081
+#define IDC_RADIO_DECLINE               1082
+#define IDC_FOLDER_ICON                 1083
+#define IDC_PRIMARY_COMPONENT           1084
+#define IDC_OPTIONAL_COMPONENTS         1085
+#define IDC_INSTALL_FOLDER              1086
+#define IDC_INSTALL_FOLDER_LABEL        1087
+#define IDC_STATIC_DOWNLOAD_SIZE        1088
 #define DLG_WELCOME                     2001
 #define DLG_LICENSE                     2002
 #define DLG_SETUP_TYPE                  2003

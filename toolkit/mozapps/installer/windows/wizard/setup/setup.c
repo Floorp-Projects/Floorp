@@ -42,6 +42,7 @@ HANDLE          hAccelTable;
 HWND            hDlgCurrent;
 HWND            hDlgMessage;
 HWND            hWndMain;
+HWND            hWizardWnd;
 
 LPSTR           szEGlobalAlloc;
 LPSTR           szEStringLoad;
