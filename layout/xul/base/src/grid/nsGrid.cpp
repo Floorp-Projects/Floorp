@@ -1475,6 +1475,9 @@ nsGrid::GetScrolledBox(nsIBox* aChild)
 nsIBox*
 nsGrid::GetScrollBox(nsIBox* aChild)
 {
+  if (!aChild)
+    return nsnull;
+
   // get parent
   nsIBox* parent = nsnull;
   nsCOMPtr<nsIBoxLayout> layout;

@@ -91,7 +91,8 @@ nsGridRowLayout::GetParentGridPart(nsIBox* aBox, nsIBox** aParentBox, nsIGridPar
   aBox = nsGrid::GetScrollBox(aBox);
 
   // get the parent
-  aBox->GetParentBox(&aBox);
+  if (aBox)
+      aBox->GetParentBox(&aBox);
 
   if (aBox)
   {
