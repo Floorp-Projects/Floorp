@@ -116,7 +116,7 @@ MRJContext::MRJContext(MRJSession* session, MRJPluginInstance* instance)
 		mPluginWindow(NULL), mPluginClipping(NULL), mPluginPort(NULL),
 		mDocumentBase(NULL), mAppletHTML(NULL), mPage(NULL), mSecurityContext(NULL)
 #if TARGET_CARBON
-        , mAppletFrame(NULL), mAppletControl(NULL), mScrollCounter(0)
+        , mAppletFrame(NULL), mAppletObject(NULL), mAppletControl(NULL), mScrollCounter(0)
 #endif
 {
 	instance->GetPeer(&mPeer);
@@ -191,6 +191,10 @@ MRJContext::~MRJContext()
 #if TARGET_CARBON
     if (mSession) {
         JNIEnv* env = mSession->getCurrentEnv();
+        if (mAppletObject != NULL) {
+            env->DeleteGlobalRef(mAppletObject);
+            mAppletObject = NULL;
+        }
     	if (mAppletFrame != NULL) {
     	    OSStatus status;
     	    
@@ -1240,10 +1244,47 @@ void MRJContext::resumeApplet()
 #endif
 }
 
+static const char* getAttribute(nsIPluginInstancePeer* peer, const char* name)
+{
+    const char* value = NULL;
+    nsIPluginTagInfo* tagInfo = NULL;
+    if (NS_SUCCEEDED(peer->QueryInterface(NS_GET_IID(nsIPluginTagInfo), (void**)&tagInfo))) {
+        tagInfo->GetAttribute(name, &value);
+		NS_RELEASE(tagInfo);
+	}
+    return value;
+}
+
 jobject MRJContext::getApplet()
 {
 #if TARGET_CARBON
-    // we'll have a member variable for this.
+    if (appletLoaded() && mAppletObject == NULL) {
+        // mAppletFrame implements the interface java.applet.AppletContext, as of Mac OS X 10.1.
+        // This code simply looks for the getApplet(String) accessor method of whatever class the object happens
+        // to be. Hopefully Apple will maintain this level of compatibility.
+        JNIEnv* env = mSession->getCurrentEnv();
+        jclass frameClass = env->GetObjectClass(mAppletFrame);
+        if (frameClass) {
+		    jmethodID getAppletMethod = env->GetMethodID(frameClass, "getApplet", "(Ljava/lang/String;)Ljava/applet/Applet;");
+            if (getAppletMethod) {
+                jstring name = env->NewStringUTF(getAttribute(mPeer, "name"));
+                if (name) {
+                    jobject applet = env->CallObjectMethod(mAppletFrame, getAppletMethod, name);
+                    env->DeleteLocalRef(name);
+                    if (applet) {
+                        mAppletObject = env->NewGlobalRef(applet);
+                        env->DeleteLocalRef(applet);
+                    }
+                } else {
+                    // FIXME:  use the getApplets() call when we don't have the name of the apple in question.
+                }
+            } else {
+                env->ExceptionClear();
+            }
+            env->DeleteLocalRef(frameClass);
+        }
+    }
+    return mAppletObject;
 #else
 	if (appletLoaded() && &::JMGetAppletJNIObject != NULL) {
 		JNIEnv* env = ::JMGetCurrentEnv(mSessionRef);
@@ -1275,7 +1316,6 @@ jobject MRJContext::getApplet()
 		return appletObject;
 	}
 #endif
-	return NULL;
 }
 
 nsIPluginInstance* MRJContext::getInstance()
