@@ -3885,7 +3885,7 @@ nsBookmarksService::exportBookmarks(nsISupportsArray *aArguments)
     rv = NS_NewLocalFile(nsDependentString(pathUni), PR_TRUE, getter_AddRefs(file));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (NS_LITERAL_STRING("RDF").Equals(format, nsCaseInsensitiveStringComparator()))
+    if (format && NS_LITERAL_STRING("RDF").Equals(format, nsCaseInsensitiveStringComparator()))
     {
         nsCOMPtr<nsIURI> uri;
         nsresult rv = NS_NewFileURI(getter_AddRefs(uri), file);
