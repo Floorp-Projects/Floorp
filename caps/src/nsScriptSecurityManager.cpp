@@ -1965,7 +1965,7 @@ PR_STATIC_CALLBACK(void)
 enumeratePolicy(const char *prefName, void *policies) {
     if (!prefName || !*prefName)
         return;
-    int count = 0;
+    unsigned count = 0;
     const char *dots[5];
     const char *p;
     for (p=prefName; *p; p++) {
@@ -2000,16 +2000,11 @@ enumeratePolicy(const char *prefName, void *policies) {
 NS_IMETHODIMP
 nsScriptSecurityManager::InitFromPrefs()
 {
-	nsresult rv;
-	NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
-	if (NS_FAILED(rv))
-		return NS_ERROR_FAILURE;
-    /*
-    Comment out for now; for some reason nsIPref.idl isn't getting built
-    into inIPref.h in time.
-
+    nsresult rv;
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+    if (NS_FAILED(rv))
+        return NS_ERROR_FAILURE;
     prefs->EnumerateChildren("security.policy", enumeratePolicy,
                              (void *) domPropertyPolicyTypes);
-    */
     return NS_OK;
 }
