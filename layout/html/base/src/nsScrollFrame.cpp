@@ -196,27 +196,17 @@ nsScrollFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
 {
   NS_PRECONDITION(nsnull != aChildList, "no child frame");
 
-  // Create a scroll view frame
-  mFirstChild = new nsScrollViewFrame(mContent, this);
-  if (nsnull == mFirstChild) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  // Unless it's already a body frame, scrolled frames that are a container
+  // need to be wrapped in a body frame.
+  // XXX Check for it already being a body frame...
+  nsIFrame* wrapperFrame;
+  if (CreateWrapperFrame(aPresContext, aChildList, wrapperFrame)) {
+    mFirstChild = wrapperFrame;
+  } else {
+    mFirstChild = aChildList;
   }
-  // Have it use our style context
-  mFirstChild->SetStyleContext(&aPresContext, mStyleContext);
 
-  // Reset the child frame's geometric and content parent to be
-  // the scroll view frame
-#ifdef NS_DEBUG
-  // Verify that there's only one child frame
-  nsIFrame* nextSibling;
-  aChildList->GetNextSibling(nextSibling);
-  NS_ASSERTION(nsnull == nextSibling, "expected only one child");
-#endif
-  aChildList->SetGeometricParent(mFirstChild);
-  aChildList->SetContentParent(mFirstChild);
-
-  // Init the scroll view frame passing it the child list
-  return mFirstChild->Init(aPresContext, aChildList);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -230,13 +220,13 @@ nsScrollFrame::DidReflow(nsIPresContext&   aPresContext,
     // and size and position our view
     rv = nsFrame::DidReflow(aPresContext, aStatus);
     
-    // Send the DidReflow notification to the scroll view frame
+    // Send the DidReflow notification to the scrolled frame's view
     nsIHTMLReflow*  htmlReflow;
     
     mFirstChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow);
     htmlReflow->DidReflow(aPresContext, aStatus);
 
-    // Size the scroll view frame's view. Don't change its position
+    // Size the scrolled frame's view. Leave its position alone
     nsSize          size;
     nsIViewManager* vm;
     nsIView*        scrolledView;
