@@ -108,9 +108,14 @@ foreach $ac_file (@makefiles) {
     $top_srcdir = "$ac_dots$ac_given_srcdir";
   }
 
-#  mkdir $subdir, 0777 if not -d $subdir;
+  mkdir $subdir, 0777 unless -d $subdir;
 
-  print STDERR "creating $ac_file\n";
+  if (-e $ac_file) {
+    next if -M _ < -M $ac_file_in;
+    print STDERR "updating $ac_file\n";
+  } else {
+    print STDERR "creating $ac_file\n";
+  }
 
   open (INFILE, "<$ac_file_in")
     or ( warn "can't read $ac_file_in: No such file or directory\n" and next);
