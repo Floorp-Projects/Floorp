@@ -92,6 +92,7 @@ OBJS=											\
 		.\$(OBJDIR)\mimetext.obj			\
 		.\$(OBJDIR)\mimethtm.obj			\
 		.\$(OBJDIR)\mimetpla.obj			\
+		.\$(OBJDIR)\mimetpfl.obj			\
 		.\$(OBJDIR)\mimetric.obj			\
 		.\$(OBJDIR)\mimeunty.obj			\
 		.\$(OBJDIR)\mimecth.obj				\

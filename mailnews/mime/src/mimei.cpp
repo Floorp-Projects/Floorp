@@ -46,6 +46,7 @@
 #include "mimeleaf.h"	/*   |--- MimeLeaf (abstract)						*/
 #include "mimetext.h"	/*   |     |--- MimeInlineText (abstract)			*/
 #include "mimetpla.h"	/*   |     |     |--- MimeInlineTextPlain			*/
+#include "mimetpfl.h" /*   |     |     |--- MimeInlineTextPlainFlowed         */
 #include "mimethtm.h"	/*   |     |     |--- MimeInlineTextHTML			*/
 #include "mimetric.h"	/*   |     |     |--- MimeInlineTextRichtext		*/
 #include "mimetenr.h"	/*   |     |     |     |--- MimeInlineTextEnriched	*/
@@ -313,7 +314,33 @@ mime_find_class (const char *content_type, MimeHeaders *hdrs,
       else if (!nsCRT::strcasecmp(content_type+5,		"richtext"))
         clazz = (MimeObjectClass *)&mimeInlineTextRichtextClass;
       else if (!nsCRT::strcasecmp(content_type+5,		"plain"))
-        clazz = (MimeObjectClass *)&mimeInlineTextPlainClass;
+      {
+        // Check for format=flowed, damn, it is already stripped away from
+        // the contenttype!
+        // Look in headers instead even though it's expensive and clumsy
+        // First find Content-Type:
+        char *content_type_row = (hdrs
+                                  ? MimeHeaders_get(hdrs, HEADER_CONTENT_TYPE,
+                                                    PR_FALSE, PR_FALSE)
+                                  : 0);
+        // Then the format parameter if there is one.
+        // I would rather use a PARAM_FORMAT but I can't find the right
+        // place to put the define. The others seems to be in net.h
+        // but is that really really the right place? There is also
+        // a nsMimeTypes.h but that one isn't included. Bug?
+        char *content_type_format =
+          (content_type_row
+           ? MimeHeaders_get_parameter(content_type_row, "format", NULL, NULL)
+           : 0);
+        if(content_type_format && (!nsCRT::strcasecmp(content_type_format, "flowed")))
+          clazz = (MimeObjectClass *)&mimeInlineTextPlainFlowedClass;
+        else
+          clazz = (MimeObjectClass *)&mimeInlineTextPlainClass;
+       
+        PR_FREEIF(content_type_format);
+        PR_FREEIF(content_type_row);
+       
+      }
       else if (!exact_match_p)
         clazz = (MimeObjectClass *)&mimeInlineTextPlainClass;
     }

@@ -14,6 +14,9 @@
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
+ * 
+ * Contributors:
+ *     Ben Bucksch <mozilla@bucksch.org>
  */
 #include "prtypes.h"
 #include "prmem.h"
@@ -356,6 +359,146 @@ ItMatches(const char *line, PRInt32 lineLen, const char *rep)
   return PR_FALSE;
 }
 
+enum LIMTYPE
+{
+  LT_IGNORE,     // limitation not checked
+  LT_DELIMITER,  // not alphanumeric and not rep[0]
+  LT_ALPHA       // alpha char
+};
+
+// Deleteme: Do I leak here?
+/* Deleteme: I compared the times appearing on the console during
+   rendering/display. Is this correct? */
+/*
+  This performs poorly. But I've made a test and didn't notice a performance
+  decrease between this code and no struct phrase transformation at all.
+  @param text (in): the source string
+  @param start (in): offset of text specifying the start of the new object
+  @return a new (local) object containing the substring
+ */
+nsCAutoString
+Right(const nsCAutoString& text, PRInt32 start)
+{
+  nsCAutoString result;
+  text.Right(result, text.Length() - start);
+  return result;
+}
+
+/*
+  @param text (in): the string to search through.
+         If before = IGNORE,
+           rep is compared starting at 1. char of text (text[0]),
+           else starting at 2. char of text (text[1]).
+  @param rep (in): the string to look for
+  @param before (in): limitation before rep
+  @param after (in): limitation after rep
+  @return true, if rep is matched and limitation spec is met or rep is empty
+*/
+PRBool
+ItMatchesDelimited(const nsCAutoString& text, const nsAutoString& rep,
+                   LIMTYPE before, LIMTYPE after)
+{
+  if (
+      text.IsEmpty() || rep.IsEmpty() ||
+      before != LT_IGNORE && after != LT_IGNORE && text.Length() < 3 ||
+      (before != LT_IGNORE || after != LT_IGNORE) && text.Length() < 2
+     )
+    return PR_FALSE;
+
+  PRUint32 afterPos = rep.Length() + (before == LT_IGNORE ? 0 : 1);
+  if (
+      before == LT_ALPHA
+        &&
+        (
+          !nsString::IsAlpha(text.First()) ||
+          Right(text, 1).Compare(rep, PR_TRUE, rep.Length())
+               // returns true for mismatch
+        ) ||
+      before == LT_DELIMITER
+        &&
+        (
+          nsString::IsAlpha(text.First()) ||
+          nsString::IsDigit(text.First()) ||
+          text.First() == rep.First() ||
+          Right(text, 1).Compare(rep, PR_TRUE, rep.Length())
+        ) ||
+      before == LT_IGNORE
+        && text.Compare(rep, PR_TRUE, rep.Length()) ||
+      after == LT_ALPHA
+        && !nsString::IsAlpha(text[afterPos]) ||
+      after == LT_DELIMITER
+        &&
+        (
+          nsString::IsAlpha(text[afterPos]) ||
+          nsString::IsDigit(text[afterPos]) ||
+          text[afterPos] == rep.First()
+        )
+     )
+    return PR_FALSE;
+
+  return PR_TRUE;
+}
+
+/*
+  @param see ItMatchesDelimited
+  @return Number of ItMatchesDelimited in text
+*/
+PRInt32
+NumberOfMatches(const nsCAutoString& text, const nsAutoString& rep,
+                LIMTYPE before, LIMTYPE after)
+{
+  PRInt32 result = 0;
+  for (PRInt32 i = 0; i < text.Length(); i++)
+    if (ItMatchesDelimited(Right(text, i), rep, before, after))
+      result++;
+  return result;
+}
+
+/*
+  @param text (in): line of text possibly with tagTXT, starting one character
+              before tagTXT or, if col0 is true, with tagTXT
+  @param col0 (in): tagTXT is on the beginning of the text.
+              open must be 0 then.
+  @param tagTXT (in): Tag to search for, e.g. "*"
+  @param tagHTML (in): HTML-Tag to replace tagTXT with,
+              without "<" and ">", e.g. "strong"
+  @param outputHTML (out): string to insert in output stream
+  @param open (in/out): Number of currently open tags of type tagHTML
+  @return Conversion succeeded
+*/
+PRBool
+StructPhraseHit(const nsCAutoString text, PRBool col0,
+     const nsAutoString& tagTXT, const nsAutoString& tagHTML,
+     nsAutoString& outputHTML, PRInt32& openTags)
+{
+  // opening tag
+  if (
+      ItMatchesDelimited(text, tagTXT,
+           (col0 ? LT_IGNORE : LT_DELIMITER), LT_ALPHA) // opening tag
+        && NumberOfMatches(Right(text, (col0 ? 0 : 1)), tagTXT,
+             LT_ALPHA, LT_DELIMITER) /* remaining closing tags */ > openTags
+             /* I don't special case tagTXT before EOL,
+                because text hopefully includes EOL,
+                which counts as LT_DELIMITER */
+     )
+  {
+    openTags++;
+    outputHTML = '<';  // unfortunately, there's no operator+ (char, nsString&)
+    outputHTML += tagHTML; outputHTML += '>';
+    return PR_TRUE;
+  }
+
+  // closing tag
+  if (openTags > 0 && ItMatchesDelimited(text, tagTXT, LT_ALPHA, LT_DELIMITER))
+  {
+    openTags--;
+    outputHTML = "</"; outputHTML += tagHTML; outputHTML += '>';
+    return PR_TRUE;
+  }
+
+  return PR_FALSE;
+}
+
 PRBool
 GlyphHit(const char *line, PRInt32 line_size, char **outputHTML, PRInt32 *glyphTextLen)
 {
@@ -423,12 +566,13 @@ IsThisAnAmbitiousLinkType(char *link, char *mailToTag, char **linkPrefix)
 
 nsresult
 nsMimeURLUtils::ScanForURLs(const char *input, PRInt32 input_size,
-                            char *output, int output_size, PRBool urls_only)
+                            char *output, PRInt32 output_size, PRBool urls_only)
+     //Deleteme: output_size was int, why?
 {
   int col = 0;
-  const char *cp;
   const char *end = input + input_size;
   char *output_ptr = output;
+  //Deleteme: 40 should be much too less with Glyphs, if this is the max. number of chars in output for one char in input. Please add better desc.
   char *end_of_buffer = output + output_size - 40; /* add safty zone :( */
   PRBool line_is_citation = PR_FALSE;
   const char *cite_open1, *cite_close1;
@@ -537,25 +681,41 @@ nsMimeURLUtils::ScanForURLs(const char *input, PRInt32 input_size,
 		}
 	}
 
+  mailToTag = FindAmbitiousMailToTag(input, (PRInt32)input_size);
+
+
+  /* See if we should get cute with text to glyph replacement and 
+     structured phrases */
+
   PRBool      do_glyph_substitution = PR_TRUE;
+  PRBool      do_struct_phrase = PR_TRUE;
   nsresult    rv;
   
-  // See if we should get cute with text to glyph replacement
   NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
   if (NS_SUCCEEDED(rv) && prefs)
+    {
     prefs->GetBoolPref("mail.do_glyph_substitution", &do_glyph_substitution);
+    prefs->GetBoolPref("mail.do_struct_phrase", &do_struct_phrase);
+    }
 
-  // We shouldn't do the fun smiley stuff if we are only looking for URL's
+  // We shouldn't do the fun smiley stuff etc. if we are only looking for URL's
   if (urls_only)
+    {
     do_glyph_substitution = PR_FALSE;
+    do_struct_phrase = PR_FALSE;
+    }
 
-  mailToTag = FindAmbitiousMailToTag(input, (PRInt32)input_size);
+  PRInt32 structPhrase_strong = 0;  // Number of currently open tags
+  PRInt32 structPhrase_underline = 0;
+  PRInt32 structPhrase_italic = 0;
+  //  PRInt32 structPhrase_code = 0;
 
   /* Normal lines are scanned for buried references to URL's
      Unfortunately, it may screw up once in a while (nobody's perfect)
    */
-  for(cp = input; cp < end && output_ptr < end_of_buffer; cp++)
+  for(const char* cp = input; cp < end && output_ptr < end_of_buffer; cp++)
 	{
+      //Deleteme: Move comment down, but place?
 	  /* if URLType returns true then it is most likely a URL
 		 But only match protocol names if at the very beginning of
 		 the string, or if the preceeding character was not alphanumeric;
@@ -567,7 +727,78 @@ nsMimeURLUtils::ScanForURLs(const char *input, PRInt32 input_size,
     char    *glyphHTML;
     PRInt32 glyphTextLen;
 
-    if ((do_glyph_substitution) && GlyphHit(cp, (PRInt32)end - (PRInt32)cp, &glyphHTML, &glyphTextLen))
+    // Structured Phrases
+    // E.g. *Bold* -> <strong>
+    /* We're searching for the following pattern:
+       LT_DELIMITER - "*" - ALPHA -
+       [ some text (maybe more "*"-pairs) - ALPHA ] "*" - LT_DELIMITER.
+       <strong> is only inserted, if existance of a pair could be verified */
+    if (do_struct_phrase)
+    {
+      nsAutoString HTMLnsStr;
+      switch (*cp)
+      {
+      // *bold* -> <strong>
+      case '*':
+        if (StructPhraseHit(cp == input ? cp : cp - 1, cp == input,
+             '*', "strong", HTMLnsStr, structPhrase_strong))
+        {
+          char* HTMLCStr = HTMLnsStr.ToNewCString();
+          PR_snprintf(output_ptr, output_size - (output_ptr-output),
+               HTMLCStr);
+          Recycle(HTMLCStr);
+          output_ptr += HTMLnsStr.Length();
+          cp++;
+        }
+        break;
+      // _underline_ / _italic_ -> <em>
+      case '_':
+        if (StructPhraseHit(cp == input ? cp : cp - 1, cp == input,
+             '_', "em", HTMLnsStr, structPhrase_underline))
+             // <u> is deprecated
+        {
+          char* HTMLCStr = HTMLnsStr.ToNewCString();
+          PR_snprintf(output_ptr, output_size - (output_ptr-output),
+               HTMLCStr);
+          Recycle(HTMLCStr);
+          output_ptr += HTMLnsStr.Length();
+          cp++;
+        }
+        break;
+      // /italic/ -> <em>
+      case '/':
+        if (StructPhraseHit(cp == input ? cp : cp - 1, cp == input,
+             '/', "em", HTMLnsStr, structPhrase_italic))
+        {
+          char* HTMLCStr = HTMLnsStr.ToNewCString();
+          PR_snprintf(output_ptr, output_size - (output_ptr-output),
+               HTMLCStr);
+          Recycle(HTMLCStr);
+          output_ptr += HTMLnsStr.Length();
+          cp++;
+        }
+        break;
+      // |code| -> <code>
+      /* <code> formatting is not rendered visible at the moment :-(
+      case '|':
+        if (StructPhraseHit(cp == input ? cp : cp - 1, cp == input,
+             '|', "code", HTMLnsStr, structPhrase_code))
+        {
+          char* HTMLCStr = HTMLnsStr.ToNewCString();
+          PR_snprintf(output_ptr, output_size - (output_ptr-output),
+               HTMLCStr);
+          Recycle(HTMLCStr);
+          output_ptr += HTMLnsStr.Length();
+          cp++;
+        }
+        break;
+      */
+      } //switch
+    } //if
+
+    // Glyphs (Smilies etc.)
+    /*Deleteme - Should be more 64bit save */
+    if ((do_glyph_substitution) && GlyphHit(cp, end - cp, &glyphHTML, &glyphTextLen))
     {
       PRInt32   size_available = output_size - (output_ptr-output);
       PR_snprintf(output_ptr, size_available, glyphHTML);
@@ -577,6 +808,7 @@ nsMimeURLUtils::ScanForURLs(const char *input, PRInt32 input_size,
       continue;
     }
 
+    // URLs
     ambitiousHit = PR_FALSE;
     if (mailToTag)
       AmbitiousURLType(cp, &type, mailToTag);
@@ -680,6 +912,7 @@ nsMimeURLUtils::ScanForURLs(const char *input, PRInt32 input_size,
 		  cp = cp2-1;  /* go to next word */
 		}
 	  else
+        // Special symbols
 		{
 		  /* Make sure that special symbols don't screw up the HTML parser
 		   */
@@ -702,6 +935,7 @@ nsMimeURLUtils::ScanForURLs(const char *input, PRInt32 input_size,
 			  col++;
 			}
 		  else
+            // Normal characters
 			{
 			  *output_ptr++ = *cp;
 			  col++;

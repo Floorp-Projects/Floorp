@@ -148,6 +148,7 @@
 #define PARAM_MICALG_SHA1_5                 "rsa-sha"
 #define PARAM_X_MAC_CREATOR                 "x-mac-creator"
 #define PARAM_X_MAC_TYPE                    "x-mac-type"
+#define PARAM_FORMAT                        "format"
 
 #define UNKNOWN_CONTENT_TYPE                "application/x-unknown-content-type"
 

@@ -56,6 +56,7 @@ CPPSRCS		= \
 		mimetext.cpp \
 		mimethtm.cpp \
 		mimetpla.cpp \
+		mimetpfl.cpp \
 		mimetric.cpp \
 		mimeunty.cpp \
 		mimecth.cpp \
