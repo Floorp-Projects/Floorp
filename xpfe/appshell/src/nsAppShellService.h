@@ -59,13 +59,13 @@ protected:
   typedef void (nsAppShellService::*EnumeratorMemberFunction)(const nsCID&);
   void EnumerateComponents( void (nsAppShellService::*function)(const nsCID&) );
 
-  nsIAppShell* mAppShell;
-  nsISupportsArray* mWindowList;
-  nsICmdLineService* mCmdLineService;
+  nsCOMPtr<nsIAppShell> mAppShell;
+  nsCOMPtr<nsISupportsArray> mWindowList;
+  nsCOMPtr<nsICmdLineService> mCmdLineService;
   nsCOMPtr<nsIWindowMediator> mWindowMediator;
   nsCOMPtr<nsIXULWindow>      mHiddenWindow;
   PRBool mDeleteCalled;
-  nsISplashScreen *mSplashScreen;
+  nsCOMPtr<nsISplashScreen> mSplashScreen;
 
   // Set when the appshell service is going away.
   PRBool mShuttingDown;

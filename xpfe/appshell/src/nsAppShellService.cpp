@@ -73,32 +73,25 @@ static NS_DEFINE_CID(kMetaCharsetCID, NS_META_CHARSET_CID);
 static char *gEQActivatedNotification = "nsIEventQueueActivated";
 static char *gEQDestroyedNotification = "nsIEventQueueDestroyed";
 
-nsAppShellService::nsAppShellService() : mWindowMediator( NULL ), mShuttingDown( PR_FALSE )
+nsAppShellService::nsAppShellService() : 
+  mAppShell( nsnull ),
+  mWindowList( nsnull ),
+  mCmdLineService( nsnull ),
+  mWindowMediator( nsnull ), 
+  mHiddenWindow( nsnull ),
+  mDeleteCalled( PR_FALSE ),
+  mSplashScreen( nsnull ),
+  mShuttingDown( PR_FALSE )
 {
   NS_INIT_REFCNT();
-
-  mAppShell     = nsnull;
-  mWindowList   = nsnull;
-  mCmdLineService = nsnull;
-  mDeleteCalled		= PR_FALSE;
-  mSplashScreen = nsnull;
 }
 
 nsAppShellService::~nsAppShellService()
 {
   mDeleteCalled = PR_TRUE;
-  NS_IF_RELEASE(mAppShell);
-  NS_IF_RELEASE(mWindowList);
-  NS_IF_RELEASE(mCmdLineService);
-  NS_IF_RELEASE(mSplashScreen);
   nsCOMPtr<nsIWebShellWindow> hiddenWin(do_QueryInterface(mHiddenWindow));
   if(hiddenWin)
     hiddenWin->Close();
-  
-  hiddenWin = nsnull;
-  mHiddenWindow = nsnull;
-
-  mWindowMediator = nsnull;
   /* Note we don't unregister with the observer service
      (RegisterObserver(PR_FALSE)) because, being refcounted, we can't have
      reached our own destructor until after the ObserverService has shut down
@@ -129,44 +122,38 @@ nsAppShellService::Initialize( nsICmdLineService *aCmdLineService,
   
   // Remember cmd line service.
   mCmdLineService = aCmdLineService;
-  NS_IF_ADDREF( mCmdLineService );
 
   // Remember the splash screen.
   mSplashScreen = aSplashScreen;
-  NS_IF_ADDREF( mSplashScreen );
 
   // Create the Event Queue for the UI thread...
-  nsIEventQueueService* eventQService;
-  rv = nsServiceManager::GetService(kEventQueueServiceCID,
-                                    NS_GET_IID(nsIEventQueueService),
-                                    (nsISupports **)&eventQService);
+  NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID,
+                  &rv);
   if (NS_OK == rv) {
     // XXX: What if this fails?
     rv = eventQService->CreateThreadEventQueue();
   }
 
+  NS_WITH_SERVICE(nsIMetaCharsetService, metacharset, kMetaCharsetCID, &rv);
+  if(NS_FAILED(rv)) {
+    goto done;
+  }
+
   // Create the toplevel window list...
-  rv = NS_NewISupportsArray(&mWindowList);
+  rv = NS_NewISupportsArray(getter_AddRefs(mWindowList));
   if (NS_FAILED(rv)) {
     goto done;
   }
 
-  nsIMetaCharsetService* metacharset;
-  rv = nsServiceManager::GetService(kMetaCharsetCID,
-                                    NS_GET_IID(nsIMetaCharsetService),
-                                     (nsISupports **) &metacharset);
-   if(NS_FAILED(rv)) {
-      goto done;
-   }
-   rv = metacharset->Start();
-   if(NS_FAILED(rv)) {
-      goto done;
-   }
-   rv = nsServiceManager::ReleaseService(kMetaCharsetCID, metacharset);
+  rv = metacharset->Start();
+  if(NS_FAILED(rv)) {
+    goto done;
+  }
 
   // Create widget application shell
-  rv = nsComponentManager::CreateInstance(kAppShellCID, nsnull, NS_GET_IID(nsIAppShell),
-                                    (void**)&mAppShell);
+  rv = nsComponentManager::CreateInstance(kAppShellCID, nsnull,
+                                          NS_GET_IID(nsIAppShell),
+                                          (void**)getter_AddRefs(mAppShell));
   if (NS_FAILED(rv)) {
     goto done;
   }
@@ -197,17 +184,18 @@ NS_IMETHODIMP
 nsAppShellService::CreateHiddenWindow()
 {
   nsresult rv;
-  nsIURI* url = nsnull;
+  nsCOMPtr<nsIURI> url;
 
 #if XP_MAC
-  rv = NS_NewURI(&url, "chrome://global/content/hiddenWindow.xul");
+  rv = NS_NewURI(getter_AddRefs(url), 
+                 "chrome://global/content/hiddenWindow.xul");
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIXULWindow> newWindow;
     rv = JustCreateTopWindow(nsnull, url, PR_FALSE, PR_FALSE,
                         0, 0, 0,
                         getter_AddRefs(newWindow));
 #else
-  rv = NS_NewURI(&url, "about:blank");
+  rv = NS_NewURI(getter_AddRefs(url), "about:blank");
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIXULWindow> newWindow;
     	 rv = JustCreateTopWindow(nsnull, url, PR_FALSE, PR_FALSE,
@@ -218,7 +206,6 @@ nsAppShellService::CreateHiddenWindow()
       mHiddenWindow = newWindow;
       // RegisterTopLevelWindow(newWindow); -- Mac only
     }
-    NS_RELEASE(url);
   }
   NS_ASSERTION(NS_SUCCEEDED(rv), "HiddenWindow not created");
   return(rv);
@@ -234,13 +221,11 @@ nsAppShellService::CreateHiddenWindow()
 void
 nsAppShellService::EnumerateComponents( EnumeratorMemberFunction function ) {
     nsresult rv;
-    nsIRegistry *registry = 0;
     nsRegistryKey key;
-    nsIEnumerator *components = 0;
+    nsCOMPtr<nsIEnumerator> components;
     const char *failed = "GetService";
-    if ( NS_SUCCEEDED( ( rv = nsServiceManager::GetService( NS_REGISTRY_PROGID,
-                                                          NS_GET_IID(nsIRegistry),
-                                                          (nsISupports**)&registry ) ) )
+    NS_WITH_SERVICE(nsIRegistry, registry, NS_REGISTRY_PROGID, &rv);
+    if ( NS_SUCCEEDED(rv) 
          &&
          ( failed = "Open" )
          &&
@@ -255,21 +240,22 @@ nsAppShellService::EnumerateComponents( EnumeratorMemberFunction function ) {
          ( failed = "EnumerateSubtrees" )
          &&
          NS_SUCCEEDED( ( rv = registry->EnumerateSubtrees( key,
-                                                           &components ) ) )
+                                               getter_AddRefs(components )) ) )
          &&
          ( failed = "First" )
          &&
          NS_SUCCEEDED( ( rv = components->First() ) ) ) {
         // Enumerate all subtrees
         while ( NS_SUCCEEDED( rv ) && (NS_OK != components->IsDone()) ) {
-            nsISupports *base;
+            nsCOMPtr<nsISupports> base;
             
-            rv = components->CurrentItem( &base );
+            rv = components->CurrentItem( getter_AddRefs(base) );
             if ( NS_SUCCEEDED( rv ) ) {
                 // Get specific interface.
-                nsIRegistryNode *node;
+                nsCOMPtr<nsIRegistryNode> node;
                 nsIID nodeIID = NS_IREGISTRYNODE_IID;
-                rv = base->QueryInterface( nodeIID, (void**)&node );
+                rv = base->QueryInterface( nodeIID,
+                                           (void**)getter_AddRefs(node) );
                 // Test that result.
                 if ( NS_SUCCEEDED( rv ) ) {
                     // Get node name.
@@ -286,15 +272,11 @@ nsAppShellService::EnumerateComponents( EnumeratorMemberFunction function ) {
                     } else {
                         // Unable to get subkey name, ignore it.
                     }
-                    // Release the node.
                     nsCRT::free(name);
-                    NS_RELEASE( node );
                 } else {
                     // Unable to convert item to registry node, ignore it.
                 }
 
-                // Release the current (generic) item.
-                NS_RELEASE( base );
             } else {
                 // Unable to get current item, ignore it.
             }
@@ -308,15 +290,6 @@ nsAppShellService::EnumerateComponents( EnumeratorMemberFunction function ) {
             printf( "Unable to enumerator app shell components, %s rv=0x%08X\n",
                     failed, (int)rv );
         #endif
-    }
-
-    // Clean up.
-    if ( registry ) {
-        // Release enumerator (if necessary).
-        NS_IF_RELEASE( components );
-
-        // Release nsIRegistry service.
-        nsServiceManager::ReleaseService( NS_REGISTRY_PROGID, registry );
     }
 
     return;
@@ -802,7 +775,6 @@ nsAppShellService::HideSplashScreen() {
     // Hide the splash screen (and release it) if there is one.
     if ( mSplashScreen ) {
         mSplashScreen->Hide();
-        NS_RELEASE( mSplashScreen );
     }
     return NS_OK;
 }
