@@ -55,17 +55,15 @@ public final class NSSInit {
     /********************************************************************/
 
     public static final String
-    JAR_JSS_VERSION     = "JSS_VERSION = JSS_2_1   11 Dec 2000";
+    JAR_JSS_VERSION     = "JSS_VERSION = JSS_3_0";
     public static final String
     JAR_JDK_VERSION     = "JDK_VERSION = JDK 1.2.2";
     public static final String
-    JAR_SVRCORE_VERSION = "SVRCORE_VERSION = SVRCORE_2_5_1";
+    JAR_NSS_VERSION     = "NSS_VERSION = NSS_3_2_RTM";
     public static final String
-    JAR_NSS_VERSION     = "NSS_VERSION = NSS_2_8_4_RTM";
+    JAR_DBM_VERSION     = "DBM_VERSION = NSS_3_1_1_RTM";
     public static final String
-    JAR_DBM_VERSION     = "DBM_VERSION = DBM_1_54";
-    public static final String
-    JAR_NSPR_VERSION    = "NSPR_VERSION = v3.5.1";
+    JAR_NSPR_VERSION    = "NSPR_VERSION = NSPRPUB_RELEASE_4_1";
 
     /**
      * Loads the JSS dynamic library if necessary.
@@ -82,7 +80,7 @@ public final class NSSInit {
         {
             try {
                 Debug.trace(Debug.VERBOSE, "about to load jss library");
-                System.loadLibrary("jss21");
+                System.loadLibrary("jss3");
                 Debug.trace(Debug.VERBOSE, "jss library loaded");
             } catch( UnsatisfiedLinkError e) {
                 Debug.trace(Debug.ERROR, "ERROR: Unable to load jss library");

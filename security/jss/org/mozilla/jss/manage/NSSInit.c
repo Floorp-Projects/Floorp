@@ -45,12 +45,11 @@
 /*                                                                  */
 /********************************************************************/
 
-static const char* DLL_JSS_VERSION     = "JSS_VERSION = JSS_2_1   11 Dec 2000";
+static const char* DLL_JSS_VERSION     = "JSS_VERSION = JSS_3_0";
 static const char* DLL_JDK_VERSION     = "JDK_VERSION = JDK 1.2.2";
-static const char* DLL_SVRCORE_VERSION = "SVRCORE_VERSION = SVRCORE_2_5_1";
-static const char* DLL_NSS_VERSION     = "NSS_VERSION = NSS_2_8_4_RTM";
-static const char* DLL_DBM_VERSION     = "DBM_VERSION = DBM_1_54";
-static const char* DLL_NSPR_VERSION    = "NSPR_VERSION = v3.5.1";
+static const char* DLL_NSS_VERSION     = "NSS_VERSION = NSS_3_2_RTM";
+static const char* DLL_DBM_VERSION     = "DBM_VERSION = NSS_3_1_1_RTM";
+static const char* DLL_NSPR_VERSION    = "NSPR_VERSION = NSPRPUB_RELEASE_4_1";
 
 /***********************************************************************
  * NSSInit.initializeNative
