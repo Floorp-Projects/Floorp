@@ -26,7 +26,7 @@
 <!-- File menu items -->
 <!ENTITY fileMenu.label "File">
 <!ENTITY filemenu.accesskey "f">
-<!ENTITY newBlankPageCmd.label "New Blank Page">
+<!ENTITY newBlankPageCmd.label "New Composer Page">
 <!ENTITY newBlankPage.accesskey "n" >
 <!ENTITY newMenu.label "New">
 <!ENTITY newMenu.accesskey "e">
@@ -47,10 +47,10 @@
 <!ENTITY filesaveas.accesskey "a">
 <!ENTITY saveAsCharsetCmd.label "Save As Charset...">
 <!ENTITY filesaveascharset.accesskey "h">
-<!ENTITY previewCmd.label "Preview in Browser">
+<!ENTITY previewCmd.label "Preview in Navigator">
 <!ENTITY filepreview.accesskey "b">
 <!ENTITY sendPageCmd.label "Send Page">
-<!ENTITY sendPage.accesskey "d">
+<!ENTITY sendPage.accesskey "g">
 <!ENTITY printSetupCmd.label "Page Setup...">
 <!ENTITY fileprintsetup.accesskey "u">
 <!ENTITY printPreviewCmd.label "Print Preview">
@@ -259,12 +259,9 @@
 <!ENTITY inserthline.accesskey "o">
 <!ENTITY insertTableCmd.label "Table...">
 <!ENTITY inserttable.accesskey "t">
-<!ENTITY insertLineBreakCmd.label "Line Break">
-<!ENTITY insertlinebreak.accesskey "n">
-<!ENTITY insertBreakBelowImagesCmd.label "Break Below Image(s)">
-<!ENTITY insertbreak.accesskey "b">
+<!ENTITY insertHTMLCmd.label "HTML...">
+<!ENTITY insertHTMLCmd.accesskey "h">
 
-<!-- Used in both Edit and View menus -->
 <!ENTITY HTMLSourceCmd.label "HTML Source">
 <!ENTITY HTMLsource.accesskey "h">
 
@@ -273,13 +270,14 @@
 <!ENTITY formatmenu.accesskey "o">
 
 <!-- Font Face SubMenu -->
-<!ENTITY FontFaceSelect.tooltip "Choose a font from the drop-down list">
+<!ENTITY FontFaceSelect.tooltip "Choose a font">
 <!ENTITY fontfaceMenu.label "Font">
 <!ENTITY formatfontmenu.accesskey "f">
 <!ENTITY fontVarWidth.label "Variable Width">
 <!ENTITY fontvarwidth.accesskey "v">
 <!ENTITY fontFixedWidth.label "Fixed Width">
 <!ENTITY fontfixedwidth.accesskey "x">
+<!ENTITY formatfontfixed.keybinding "t">
 <!ENTITY fontHelveticaFont.label "Arial, Helvetica">
 <!ENTITY fonthelvetica.accesskey "l">
 <!ENTITY fontTimes.label "Times">
@@ -427,7 +425,7 @@
 <!ENTITY listprops.accesskey "l">
 
 <!-- Shared among Heading, Paragraph, and List submenus, and in toolbar menulist -->
-<!ENTITY ParagraphSelect.tooltip "Choose a paragraph format from the drop-down list">
+<!ENTITY ParagraphSelect.tooltip "Choose a paragraph format">
 <!ENTITY normalCmd.label "Normal">
 <!ENTITY normal.accesskey "n">
 <!ENTITY noneCmd.label "None">
@@ -464,10 +462,10 @@
 <!ENTITY alignJustify.label "Justify">
 <!ENTITY alignjustify.accesskey "j">
 
-<!ENTITY increaseIndent.label "Increase indent">
+<!ENTITY increaseIndent.label "Increase Indent">
 <!ENTITY increaseindent.accesskey "i">
 <!ENTITY increaseindentkb "=">
-<!ENTITY decreaseIndent.label "Decrease indent">
+<!ENTITY decreaseIndent.label "Decrease Indent">
 <!ENTITY decreaseindent.accesskey "d">
 <!ENTITY decreaseindentkb "-">
 
@@ -559,7 +557,7 @@
 <!ENTITY setFocusCmd.label "Set Focus">
 
 <!-- toolbar-only items -->
-<!ENTITY newToolbarCmd.tooltip "Create a new blank page">
+<!ENTITY newToolbarCmd.tooltip "Create a new Composer page">
 <!ENTITY openToolbarCmd.label "Open">
 <!ENTITY openToolbarCmd.tooltip "Open a local file">
 <!ENTITY saveToolbarCmd.tooltip "Save file locally">
@@ -570,7 +568,7 @@
 <!ENTITY findToolbarCmd.label "Find">
 <!ENTITY findToolbarCmd.tooltip "Find text in page">
 <!ENTITY spellToolbarCmd.label "Spell">
-<!ENTITY spellToolbarCmd.tooltip "Check Spelling of Selection or Entire Page">
+<!ENTITY spellToolbarCmd.tooltip "Check spelling of selection or entire page">
 <!ENTITY imageToolbarCmd.label "Image">
 <!ENTITY imageToolbarCmd.tooltip "Insert new image or edit selected image properties">
 <!ENTITY hruleToolbarCmd.label "H.Line">
@@ -583,11 +581,11 @@
 <!ENTITY anchorToolbarCmd.tooltip "Insert new anchor (target) or edit anchor properties">
 <!ENTITY textColorCaption.label "Text Color">
 <!ENTITY TextColorPopupButton.tooltip "Choose color for text">
-<!ENTITY BackColorPopupButton.tooltip "Choose color for page background">
+<!ENTITY BackColorPopupButton.tooltip "Choose color for background">
 
 <!-- editor toolbar -->
-<!ENTITY decreaseFontSizeToolbarCmd.tooltip "Decrease Font Size">
-<!ENTITY increaseFontSizeToolbarCmd.tooltip "Increase Font Size">
+<!ENTITY decreaseFontSizeToolbarCmd.tooltip "Smaller font size">
+<!ENTITY increaseFontSizeToolbarCmd.tooltip "Larger font size">
 <!ENTITY boldToolbarCmd.tooltip "Bold">
 <!ENTITY italicToolbarCmd.tooltip "Italic">
 <!ENTITY underlineToolbarCmd.tooltip "Underline">
@@ -596,6 +594,10 @@
 <!ENTITY outdentToolbarCmd.tooltip "Outdent text (move left)">
 <!ENTITY indentToolbarCmd.tooltip "Indent text (move right)">
 <!ENTITY AlignPopupButton.tooltip "Choose text alignment">
+<!ENTITY alignLeftButton.tooltip "Align text along left margin">
+<!ENTITY alignCenterButton.tooltip "Align text centered">
+<!ENTITY alignRightButton.tooltip "Align text along right margin">
+<!ENTITY alignjustifyButton.tooltip "Align text along left and right margins">
 
 <!-- formatting toolbar not used, but may be in future -->
 <!ENTITY formatToolbar.boldChar "B">
