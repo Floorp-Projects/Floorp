@@ -35,6 +35,23 @@
 { 0xf46e4171, 0xdeaa, 0x11d1, \
   { 0x97, 0xfc, 0x0, 0x60, 0x97, 0x3, 0xc1, 0x4e } }
 
+/** nsSelectionStruct is used to pass structured parameters to the SelectionCalls.
+ */
+struct nsSelectionStruct
+{
+  enum {SELON = 1,SELALL = 2,SELTOEND = 4,SELTOBEGIN = 8,CHECKANCHOR=16,CHECKFOCUS=32};//this is not a bit flag
+  PRUint32 mType;
+  PRUint32 mStartContent;//in content offsets.
+  PRUint32 mEndContent;
+  PRUint32 mStartFrame;
+  PRUint32 mEndFrame;
+  PRUint32 mAnchorOffset;
+  PRUint32 mFocusOffset;
+  nsDirection mDir; //tells you if you have to swap the begin and end points.
+  PRBool   mForceRedraw;
+};
+
+
 //----------------------------------------------------------------------
 
 // Selection interface

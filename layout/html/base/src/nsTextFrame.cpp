@@ -49,6 +49,7 @@
 #include "nsTextFragment.h"
 #include "nsTextTransformer.h"
 #include "nsLayoutAtoms.h"
+#include "nsIFrameSelection.h"
 
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 
@@ -128,11 +129,10 @@ public:
                          PRUint32&       aAcutalContentOffset,
                          PRInt32&        aOffset);
 
-  NS_IMETHOD SetSelected(PRBool aSelected, PRInt32 aBeginOffset, PRInt32 aEndOffset, PRBool aForceRedraw);
-  NS_IMETHOD SetSelectedContentOffsets(PRBool aSelected, PRInt32 aBeginContentOffset, PRInt32 aEndContentOffset,
-                                        PRInt32 aAnchorOffset, PRInt32 aFocusOffset, PRBool aForceRedraw, 
-                                        nsIFocusTracker *aTracker,
-                                        nsIFrame **aActualSelected);
+  NS_IMETHOD SetSelected(nsSelectionStruct *aSS);
+  NS_IMETHOD SetSelectedContentOffsets(nsSelectionStruct *aSS, 
+                                       nsIFocusTracker *aTracker,
+                                       nsIFrame **aActualSelected);
   NS_IMETHOD GetSelected(PRBool *aSelected, PRInt32 *aBeginOffset, PRInt32 *aEndOffset, PRInt32 *aBeginContentOffset);
   NS_IMETHOD PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection,  PRInt32 aStartOffset, 
                         nsIFrame **aResultFrame, PRInt32 *aFrameOffset, PRInt32 *aContentOffset,
@@ -317,8 +317,8 @@ protected:
   PRInt32 mColumn;
   nscoord mComputedWidth;
 
-  PRInt32 mSelectionOffset;//<0 =0 >mContentLength = mContentLength
-  PRInt32 mSelectionEnd; //-1 == all
+  PRUint32 mSelectionOffset;
+  PRUint32 mSelectionEnd; 
 };
 
 // Flag information used by rendering code. This information is
@@ -812,7 +812,6 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
   PrepareUnicodeText(tx,
                      displaySelection ? ip : nsnull,
                      paintBuf, textLength, width);
-  ip[mContentLength] = ip[mContentLength-1]+1; //must set up last one for selection beyond edge
   PRUnichar* text = paintBuf;
   if (0 != textLength) {
     if (!displaySelection || !mSelected || mSelectionOffset > mContentLength) { 
@@ -824,8 +823,7 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
                            dx, dy, width);
     }
     else {
-/*      SelectionInfo si;
-      ComputeSelectionInfo(aRenderingContext, doc, ip, textLength, si);*/
+      ip[mContentLength] = ip[mContentLength-1]+1; //must set up last one for selection beyond edge
 
       nscoord textWidth;
       if (mSelectionOffset < 0)
@@ -1154,7 +1152,6 @@ TextFrame::PaintTextSlowly(nsIPresContext& aPresContext,
   aTextStyle.mNumSpaces = PrepareUnicodeText(tx,
                                              displaySelection ? ip : nsnull,
                                              paintBuf, textLength, width);
-  ip[mContentLength] = ip[mContentLength-1]+1; //must set up last one for selection beyond edge
   if (mRect.width > mComputedWidth) {
     if (0 != aTextStyle.mNumSpaces) {
       nscoord extra = mRect.width - mComputedWidth;
@@ -1182,6 +1179,7 @@ TextFrame::PaintTextSlowly(nsIPresContext& aPresContext,
                    text, textLength, dx, dy, width);
     }
     else {
+      ip[mContentLength] = ip[mContentLength-1]+1; //must set up last one for selection beyond edge
       nscoord textWidth;
       if (mSelectionOffset < 0)
         mSelectionOffset = 0;
@@ -1330,9 +1328,6 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
     }
     else {
       ip[mContentLength] = ip[mContentLength-1]+1; //must set up last one for selection beyond edge
-/*      SelectionInfo si;
-      ComputeSelectionInfo(aRenderingContext, doc, ip, textLength, si);*/
-
       nscoord textWidth;
       if (mSelectionOffset < 0)
         mSelectionOffset = 0;
@@ -1591,89 +1586,105 @@ TextFrame::GetPosition(nsIPresContext& aCX,
 }
 
 NS_IMETHODIMP
-TextFrame::SetSelected(PRBool aSelected, PRInt32 aBeginOffset, PRInt32 aEndOffset, PRBool aForceRedraw)
+TextFrame::SetSelected(nsSelectionStruct *aSelStruct)
 {
-  if (aSelected){
-    aEndOffset = PR_MIN(aEndOffset,mContentLength);
-    aBeginOffset = PR_MIN(aBeginOffset,mContentLength);
+  if (!aSelStruct)
+    return NS_ERROR_NULL_POINTER;
+  if (aSelStruct->mType & nsSelectionStruct::SELON){
+    
+    aSelStruct->mEndFrame = PR_MIN(aSelStruct->mEndFrame,mContentLength);
+    aSelStruct->mStartFrame= PR_MIN(aSelStruct->mStartFrame,mContentLength);
 
-    if (aEndOffset < 0)
-      aEndOffset = mContentLength;
-    if (aBeginOffset < 0)
-      aBeginOffset = mContentLength;
+    if (aSelStruct->mType & nsSelectionStruct::SELTOEND)
+      aSelStruct->mEndFrame = mContentLength;
+    if (aSelStruct->mType & nsSelectionStruct::SELTOBEGIN)
+      aSelStruct->mStartFrame = 0;
+    PRUint32 trueBegin(aSelStruct->mStartFrame);
+    PRUint32 trueEnd(aSelStruct->mEndFrame);
+    if (aSelStruct->mDir == eDirPrevious){//change the settings around, 
+      //the frame doesnt track direction it only tracks begin and end. 
+      trueBegin = aSelStruct->mEndFrame;
+      trueEnd = aSelStruct->mStartFrame;
+    }
 
-    if (mSelectionOffset != aBeginOffset || mSelectionEnd != aEndOffset) {
-      mSelectionOffset = aBeginOffset;
-      mSelectionEnd = aEndOffset;
-      aForceRedraw = PR_TRUE;
+    if (mSelectionOffset != trueBegin || mSelectionEnd != trueEnd) {
+      mSelectionOffset = trueBegin;
+      mSelectionEnd = trueEnd;
+      aSelStruct->mForceRedraw = PR_TRUE;
     }
   }
-  return nsFrame::SetSelected(aSelected, aBeginOffset, aEndOffset, aForceRedraw);
+  return nsFrame::SetSelected(aSelStruct);//this will do the actual
+  //turning on of the mSelected flag in the nsframe header.
 }
 
 NS_IMETHODIMP
-TextFrame::SetSelectedContentOffsets(PRBool aSelected, PRInt32 aBeginContentOffset, PRInt32 aEndContentOffset,
-                                     PRInt32 aAnchorOffset, PRInt32 aFocusOffset, PRBool aForceRedraw, 
+TextFrame::SetSelectedContentOffsets(nsSelectionStruct *aSS, 
                                      nsIFocusTracker *aTracker,
                                      nsIFrame **aActualSelected)
 {
-  if (!aActualSelected)
+  if (!aActualSelected || !aSS)
     return NS_ERROR_NULL_POINTER;
 
-  PRInt32 beginOffset(aBeginContentOffset);
-  if (aBeginContentOffset != -1){ //-1 signified the end of the current content
-    beginOffset = aBeginContentOffset - mContentOffset;
-    //haha you almost got me.  the content offset does include the ws but no one can see it.
-    //here is where we aknowledge that it doesnt exist.
-  }
+  PRInt32 beginOffset(aSS->mStartContent - mContentOffset);
   if (beginOffset >= mContentLength){
-    //this is not the droid we are looking for.
-    SetSelected(PR_FALSE, 0, 0, aForceRedraw);
+    //this is not the droid we are looking for. keep looking
+    nsSelectionStruct ss = {0};//turn it ALL off
+    ss.mForceRedraw = aSS->mForceRedraw;
+    SetSelected(&ss);
     nsIFrame *nextInFlow =GetNextInFlow();
     if (nextInFlow)
-      return nextInFlow->SetSelectedContentOffsets(aSelected, aBeginContentOffset, aEndContentOffset, 
-                                                   aAnchorOffset, aFocusOffset, aForceRedraw, aTracker, aActualSelected);
+      return nextInFlow->SetSelectedContentOffsets(aSS, aTracker, aActualSelected);
     else
       return NS_ERROR_FAILURE;
   }
-  if (beginOffset <0)
-    beginOffset = 0;  //start from the beginning
-  else{
-    if (aAnchorOffset == aBeginContentOffset )
-      aTracker->SetFocus(nsnull, this);
-    if (aFocusOffset == aBeginContentOffset )
-      aTracker->SetFocus(this, nsnull);
+  if (aSS->mType & nsSelectionStruct::CHECKANCHOR && aSS->mAnchorOffset == aSS->mStartContent ){
+    aTracker->SetFocus(nsnull, this);
+    aSS->mType = aSS->mType-nsSelectionStruct::CHECKANCHOR;
+  }
+  if (aSS->mType & nsSelectionStruct::CHECKFOCUS && aSS->mFocusOffset == aSS->mStartContent ){
+    aTracker->SetFocus(this, nsnull);
+    aSS->mType = aSS->mType-nsSelectionStruct::CHECKFOCUS;
   }
   *aActualSelected = this;
-  PRInt32 endOffset(aEndContentOffset);
-  if (endOffset != -1){ //-1 signified the end of the current content
-    endOffset = aEndContentOffset - mContentOffset;
-  }
 
-  nsIFrame *nextInFlow =GetNextInFlow();
+  nsIFrame *nextInFlow = GetNextInFlow();
   if (nextInFlow){
-    if (endOffset == -1 || endOffset > mContentLength){ //-1 means until the end of the content
-        nextInFlow->SetSelectedContentOffsets(aSelected, aBeginContentOffset, aEndContentOffset,
-                                              aAnchorOffset, aFocusOffset,aForceRedraw, aTracker ,aActualSelected);
+    if (aSS->mType & nsSelectionStruct::SELTOEND || aSS->mEndContent > (mContentLength + mContentOffset)){ 
+        nextInFlow->SetSelectedContentOffsets(aSS, aTracker ,aActualSelected);
     }
-    else if (aSelected == PR_TRUE) { //we must shut off all folowing selected frames if we are selecting frames 
-      if (aAnchorOffset == aEndContentOffset )
+    else if (aSS->mType & nsSelectionStruct::SELON) { //we must shut off all folowing selected frames if we are selecting frames 
+      if (aSS->mType & nsSelectionStruct::CHECKANCHOR && aSS->mAnchorOffset == aSS->mEndContent ){
         aTracker->SetFocus(nsnull, this);
-      if (aFocusOffset == aEndContentOffset )
+        aSS->mType = aSS->mType - nsSelectionStruct::CHECKANCHOR;
+      }
+      if (aSS->mType & nsSelectionStruct::CHECKFOCUS && aSS->mFocusOffset == aSS->mEndContent ){
         aTracker->SetFocus(this, nsnull);
+        aSS->mType = aSS->mType - nsSelectionStruct::CHECKFOCUS;
+      }
+      nsSelectionStruct ss={0, 0,0, 0,0, 0,0, eDirNext, aSS->mForceRedraw};
       do {
-        nextInFlow->SetSelected(PR_FALSE, 0, 0, aForceRedraw);
+        nextInFlow->SetSelected(&ss);
       }
       while (NS_SUCCEEDED(nextInFlow->GetNextInFlow(&nextInFlow)) && nextInFlow);//this is ok because frames arent reference counted this is not a leak!
     }
   }
   else {
-    if (aAnchorOffset == aEndContentOffset )
+    if (aSS->mType & nsSelectionStruct::CHECKANCHOR && aSS->mAnchorOffset == aSS->mEndContent ){
       aTracker->SetFocus(nsnull, this);
-    if (aFocusOffset == aEndContentOffset )
+      aSS->mType = aSS->mType - nsSelectionStruct::CHECKANCHOR;
+    }
+    if (aSS->mType & nsSelectionStruct::CHECKFOCUS && aSS->mFocusOffset == aSS->mEndContent ){
       aTracker->SetFocus(this, nsnull);
+      aSS->mType = aSS->mType - nsSelectionStruct::CHECKFOCUS;
+    }
   }
-  return SetSelected(aSelected, beginOffset, endOffset, aForceRedraw);
+  if (mContentOffset > aSS->mStartContent){
+    aSS->mStartFrame = 0;
+  }
+  else
+    aSS->mStartFrame = aSS->mStartContent - mContentOffset;
+  aSS->mEndFrame   = aSS->mEndContent   - mContentOffset;
+  return SetSelected(aSS);
 }
 
 NS_IMETHODIMP
@@ -1958,10 +1969,10 @@ TextFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection, PRInt32
   if (NS_FAILED(result)){
     *aResultFrame = this;
     *aContentOffset = mContentOffset;
-    if (aDirection == eDirNext){
+    if (eDirNext == aDirection ){
       *aFrameOffset = mContentLength;
     }
-    else if (aDirection == eDirPrevious){
+    else if (eDirPrevious == aDirection){
       *aFrameOffset = 0;
     }
     result = NS_OK;

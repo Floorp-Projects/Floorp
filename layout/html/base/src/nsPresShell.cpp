@@ -40,7 +40,6 @@
 #include "nsIEventStateManager.h"
 #include "nsDOMEvent.h"
 #include "nsHTMLParts.h"
-#include "nsIFrameSelection.h"
 #include "nsIDOMSelection.h"
 #include "nsLayoutCID.h"
 #include "nsIDOMRange.h"
@@ -62,12 +61,13 @@
 #include "nsParserCIID.h"
 #include "nsHTMLContentSinkStream.h"
 #include "nsXIFDTD.h"
+#include "nsIFrameSelection.h"
 
 
 static PRBool gsNoisyRefs = PR_FALSE;
 #undef NOISY
 
-
+ 
 // comment out to hide caret
 #define SHOW_CARET
 
