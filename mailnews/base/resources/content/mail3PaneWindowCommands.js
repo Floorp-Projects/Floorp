@@ -84,7 +84,9 @@ var FolderPaneController =
 				catch (ex) {
 					//dump("specialFolder failure: " + ex + "\n");
 				} 
-        if (specialFolder == "Inbox" || specialFolder == "Trash" || specialFolder == "Drafts" || specialFolder == "Sent" || specialFolder == "Templates" || specialFolder == "Unsent Messages" || specialFolder == "Junk" || isServer == "true")
+        if (specialFolder == "Inbox" || specialFolder == "Trash" || specialFolder == "Drafts" ||
+            specialFolder == "Sent" || specialFolder == "Templates" || specialFolder == "Unsent Messages" ||
+            (specialFolder == "Junk" && !CanRenameDeleteJunkMail(GetSelectedFolderURI())) || isServer == "true")
           canDeleteThisFolder = false;
         else
           canDeleteThisFolder = true;
@@ -915,7 +917,7 @@ function MsgDeleteFolder()
             if ((specialFolder == "Sent" || 
                 specialFolder == "Drafts" || 
                 specialFolder == "Templates" ||
-                specialFolder == "Junk") &&
+                (specialFolder == "Junk" && !CanRenameDeleteJunkMail(GetSelectedFolderURI()))) &&
                 !protocolInfo.specialFoldersDeletionAllowed)
             {
                 var errorMessage = gMessengerBundle.getFormattedString("specialFolderDeletionErr",
@@ -1116,3 +1118,34 @@ function IsFakeAccount() {
   return false;
 }
 
+//
+// This function checks if the configured junk mail can be renamed or deleted.
+//
+function CanRenameDeleteJunkMail(aFolderUri)
+{
+  if (!aFolderUri)
+    return false;
+
+  // Go through junk mail settings for all servers and see if the folder is set/used by anyone.
+  try
+  {
+    var allServers = accountManager.allServers;
+
+    for (var i=0;i<allServers.Count();i++)
+    {
+      var currentServer = allServers.GetElementAt(i).QueryInterface(Components.interfaces.nsIMsgIncomingServer);
+      var settings = currentServer.spamSettings;
+      // If junk mail control or move junk mail to folder option is disabled then
+      // allow the folder to be removed/renamed since the folder is not used in this case.
+      if (!settings.level || !settings.moveOnSpam)
+        continue;
+      if (settings.spamFolderURI == aFolderUri)
+        return false;
+    }
+  }
+  catch(ex)
+  {
+      dump("Can't get all servers\n");
+  }
+  return true;
+}

@@ -6974,6 +6974,11 @@ NS_IMETHODIMP nsImapMailFolder::RenameClient(nsIMsgWindow *msgWindow, nsIMsgFold
         msgFolder->SetParent(nsnull);
         msgParent->PropagateDelete(msgFolder,PR_FALSE, nsnull);
 
+        // Reset online status now that the folder is renamed.
+        nsCOMPtr <nsIMsgImapMailFolder> oldImapFolder = do_QueryInterface(msgFolder);
+        if (oldImapFolder)
+          oldImapFolder->SetVerifiedAsOnlineFolder(PR_FALSE);
+
         nsCOMPtr<nsISupports> childSupports(do_QueryInterface(child));
         nsCOMPtr<nsISupports> parentSupports;
         rv = QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(parentSupports));
