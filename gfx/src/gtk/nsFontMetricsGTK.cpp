@@ -53,27 +53,6 @@ static nsIPref* gPref = nsnull;
 nsFontMetricsGTK::nsFontMetricsGTK()
 {
   NS_INIT_REFCNT();
-  mDeviceContext = nsnull;
-  mFont = nsnull;
-  mFontHandle = nsnull;
-
-  mLeading = 0;
-  mEmHeight = 0;
-  mEmAscent = 0;
-  mEmDescent = 0;
-  mMaxHeight = 0;
-  mMaxAscent = 0;
-  mMaxDescent = 0;
-  mMaxAdvance = 0;
-  mXHeight = 0;
-  mSuperscriptOffset = 0;
-  mSubscriptOffset = 0;
-  mStrikeoutSize = 0;
-  mStrikeoutOffset = 0;
-  mUnderlineSize = 0;
-  mUnderlineOffset = 0;
-  mSpaceWidth = 0;
-
   gFontMetricsGTKCount++;
 }
 
