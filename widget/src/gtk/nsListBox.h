@@ -25,8 +25,7 @@
 /**
  * Native GTK+ Listbox wrapper
  */
-#define nsListBoxSuper nsWidget
-class nsListBox :   public nsListBoxSuper,
+class nsListBox :   public nsWidget,
                     public nsIListWidget,
                     public nsIListBox
 {

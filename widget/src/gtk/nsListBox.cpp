@@ -24,8 +24,8 @@
 #include "nsString.h"
 #include "nsStringUtil.h"
 
-NS_IMPL_ADDREF_INHERITED(nsListBox, nsListBoxSuper)
-NS_IMPL_RELEASE_INHERITED(nsListBox, nsListBoxSuper)
+NS_IMPL_ADDREF_INHERITED(nsListBox, nsWidget)
+NS_IMPL_RELEASE_INHERITED(nsListBox, nsWidget)
 
 //-------------------------------------------------------------------------
 //

@@ -26,8 +26,7 @@
 /**
  * Native Win32 tab control wrapper
  */
-#define nsTabWidgetSuper nsWidget
-class nsTabWidget : public nsTabWidgetSuper,
+class nsTabWidget : public nsWidget,
                     public nsITabWidget
 {
 

@@ -28,8 +28,8 @@
 
 #define DBG 0
 
-NS_IMPL_ADDREF_INHERITED(nsTextHelper, nsTextHelperSuper)
-NS_IMPL_RELEASE_INHERITED(nsTextHelper, nsTextHelperSuper)
+NS_IMPL_ADDREF_INHERITED(nsTextHelper, nsWidget)
+NS_IMPL_RELEASE_INHERITED(nsTextHelper, nsWidget)
 
 //-------------------------------------------------------------------------
 //

@@ -25,8 +25,7 @@
 /**
  * Native GTK+ button wrapper
  */
-#define nsButtonSuper nsWidget
-class nsButton : public nsButtonSuper,
+class nsButton : public nsWidget,
                  public nsIButton
 {
 
