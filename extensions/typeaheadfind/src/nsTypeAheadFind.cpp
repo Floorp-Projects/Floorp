@@ -69,7 +69,6 @@
 #include "nsIContent.h"
 #include "nsIFrame.h"
 #include "nsFrameTraversal.h"
-#include "nsIStyleContext.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLElement.h"
@@ -2376,14 +2375,10 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
     return PR_FALSE;
   }
 
-  nsCOMPtr<nsIStyleContext> styleContext;
-  frame->GetStyleContext(getter_AddRefs(styleContext));
-  if (styleContext) {
-    const nsStyleVisibility* vis = 
-      (const nsStyleVisibility*)styleContext->GetStyleData(eStyleStruct_Visibility);
-    if (!vis || !vis->IsVisible()) {
-      return PR_FALSE;
-    }
+  const nsStyleVisibility* vis = nsnull;
+  ::GetStyleData(frame, &vis);
+  if (!vis || !vis->IsVisible()) {
+    return PR_FALSE;
   }
 
 

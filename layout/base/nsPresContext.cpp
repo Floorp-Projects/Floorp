@@ -64,7 +64,7 @@
 #include "nsNetUtil.h"
 #include "nsXPIDLString.h"
 #include "nsIWeakReferenceUtils.h"
-
+#include "nsCSSRendering.h"
 #include "prprf.h"
 #include "nsContentPolicyUtils.h"
 #include "nsIScriptGlobalObject.h"
@@ -957,6 +957,19 @@ nsPresContext::ResolveStyleContextFor(nsIContent* aContent,
 }
 
 NS_IMETHODIMP
+nsPresContext::ResolveStyleContextAndGetStyleData(nsIContent* aContent,
+                                                  int aSID,
+                                                  const nsStyleStruct*& aStyleStruct)
+{
+  nsCOMPtr<nsIStyleContext> sc;
+  nsresult rv = ResolveStyleContextFor(aContent, nsnull, getter_AddRefs(sc));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  aStyleStruct = sc->GetStyleData((nsStyleStructID) aSID);
+  return aStyleStruct ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
 nsPresContext::ResolveStyleContextForNonElement(
                                       nsIStyleContext* aParentContext,
                                       nsIStyleContext** aResult)
@@ -1777,6 +1790,17 @@ nsPresContext::SysColorChanged()
   // later, because when generating change hints, any style structs which have
   // been cleared and not reread are assumed to not be used at all.
   return ClearStyleDataAndReflow();
+}
+
+NS_IMETHODIMP
+nsPresContext::FindFrameBackground(nsIFrame* aFrame,
+                                   const nsStyleBackground** aBackground,
+                                   PRBool* aIsCanvas,
+                                   PRBool* aFoundBackground)
+{
+  *aFoundBackground = nsCSSRendering::FindBackground(this, aFrame,
+                                                     aBackground, aIsCanvas);
+  return NS_OK;
 }
 
 #ifdef MOZ_REFLOW_PERF

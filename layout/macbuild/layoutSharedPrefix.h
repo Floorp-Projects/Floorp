@@ -22,5 +22,6 @@
 
 #define MOZ_XUL 1
 #define INCLUDE_XUL 1
+#define _IMPL_NS_LAYOUT 1
 
 #include "MacSharedPrefix.h"

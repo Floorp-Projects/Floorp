@@ -87,6 +87,9 @@ public:
   NS_IMETHOD ResolveStyleContextFor(nsIContent* aContent,
                                     nsIStyleContext* aParentContext,
                                     nsIStyleContext** aResult);
+  NS_IMETHOD ResolveStyleContextAndGetStyleData(nsIContent* aContent,
+                                                int aSID,
+                                                const nsStyleStruct*& aStyleStruct);
   NS_IMETHOD ResolveStyleContextForNonElement(nsIStyleContext* aParentContext,
                                               nsIStyleContext** aResult);
   NS_IMETHOD ResolvePseudoStyleContextFor(nsIContent* aParentContent,
@@ -195,6 +198,10 @@ public:
   NS_IMETHOD GetTheme(nsITheme** aResult);
   NS_IMETHOD ThemeChanged();
   NS_IMETHOD SysColorChanged();
+  NS_IMETHOD FindFrameBackground(nsIFrame* aFrame,
+                                 const nsStyleBackground** aBackground,
+                                 PRBool* aIsCanvas,
+                                 PRBool* aFoundBackground);
 
 protected:
   nsPresContext();

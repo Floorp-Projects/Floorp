@@ -27,7 +27,6 @@
 #include "nsIFrame.h"
 #include "nsIImageFrame.h"
 #include "imgIRequest.h"
-#include "nsIStyleContext.h"
 #include "nsICanvasFrame.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLElement.h"
@@ -291,15 +290,10 @@ nsContextMenuInfo::GetBackgroundImageRequest(nsIDOMNode * aDOMNode, imgIRequest 
   if (NS_SUCCEEDED(rv) && frame)
   {
     // look for a background image on the element
-    nsCOMPtr<nsIStyleContext> styleContext;
-    rv = presShell->GetStyleContextFor(frame, getter_AddRefs(styleContext));
-    if (NS_FAILED(rv) || !styleContext) return rv;
-
     do {
-      bg = (const nsStyleBackground*)
-      styleContext->GetStyleData(eStyleStruct_Background);
-      styleContext = dont_AddRef(styleContext->GetParent());
-    } while (bg && bg->mBackgroundImage.IsEmpty() && styleContext.get());
+      ::GetStyleData(frame, &bg);
+      frame->GetParent(&frame);
+    } while (bg && bg->mBackgroundImage.IsEmpty() && frame);
      
     if (bg && !bg->mBackgroundImage.IsEmpty())
     {
@@ -332,7 +326,8 @@ nsContextMenuInfo::GetBackgroundImageRequest(nsIDOMNode * aDOMNode, imgIRequest 
   nsICanvasFrame* canvasFrame;
   if (NS_SUCCEEDED(frame->QueryInterface(NS_GET_IID(nsICanvasFrame), (void**)&canvasFrame))) {
     PRBool isCanvas;
-    FindBackground(presContext, frame, &bg, &isCanvas);
+    PRBool foundBackground;
+    presContext->FindFrameBackground(frame, &bg, &isCanvas, &foundBackground);
     if (bg && !bg->mBackgroundImage.IsEmpty())
     {
       nsIFrame *pBGFrame = nsnull;
@@ -407,157 +402,3 @@ nsresult nsContextMenuInfo::GetFrameForBackgroundUpdate(nsIPresContext *aPresCon
 
   return rv;
 }
-
-inline PRBool
-nsContextMenuInfo::FindCanvasBackground(nsIPresContext* aPresContext,
-                     nsIFrame* aForFrame,
-                     const nsStyleBackground** aBackground)
-{
-
-  // XXXldb What if the root element is positioned, etc.?  (We don't
-  // allow that yet, do we?)
-  nsIFrame *firstChild;
-  aForFrame->FirstChild(aPresContext, nsnull, &firstChild);
-  if (firstChild) {
-    const nsStyleBackground *result;
-    GetStyleData(firstChild, &result);
-  
-    // for printing and print preview.. this should be a pageContentFrame
-    nsCOMPtr<nsIAtom> frameType;
-    nsCOMPtr<nsIStyleContext> parentContext;
-
-    firstChild->GetFrameType(getter_AddRefs(frameType));
-    nsCOMPtr<nsIAtom> mTag_pageContentFrame = getter_AddRefs(NS_NewAtom("PageContentFrame"));   
-    if ( (frameType == mTag_pageContentFrame) ){
-      // we have to find the background style ourselves.. since the 
-      // pageContentframe does not have content
-      while(firstChild){
-        for (nsIFrame* kidFrame = firstChild; nsnull != kidFrame; ) {
-          kidFrame->GetStyleContext(getter_AddRefs(parentContext));
-          result = (nsStyleBackground*)parentContext->GetStyleData(eStyleStruct_Background);
-          if (!result->BackgroundIsTransparent()){
-            GetStyleData(kidFrame, aBackground);
-            return PR_TRUE;
-          } else {
-            kidFrame->GetNextSibling(&kidFrame); 
-          }
-        }
-        firstChild->FirstChild(aPresContext, nsnull, &firstChild);
-      }
-      return PR_FALSE;    // nothing found for this
-    }
-
-    // Check if we need to do propagation from BODY rather than HTML.
-    if (result->BackgroundIsTransparent()) {
-      nsCOMPtr<nsIContent> content;
-      aForFrame->GetContent(getter_AddRefs(content));
-      if (content) {
-        nsCOMPtr<nsIDOMNode> node( do_QueryInterface(content) );
-        // Use |GetOwnerDocument| so it works during destruction.
-        nsCOMPtr<nsIDOMDocument> doc;
-        node->GetOwnerDocument(getter_AddRefs(doc));
-        nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(doc);
-        if (htmlDoc) {
-          nsCOMPtr<nsIDOMHTMLElement> body;
-          htmlDoc->GetBody(getter_AddRefs(body));
-          nsCOMPtr<nsIContent> bodyContent = do_QueryInterface(body);
-          // We need to null check the body node (bug 118829) since
-          // there are cases, thanks to the fix for bug 5569, where we
-          // will reflow a document with no body.  In particular, if a
-          // SCRIPT element in the head blocks the parser and then has a
-          // SCRIPT that does "document.location.href = 'foo'", then
-          // nsParser::Terminate will call |DidBuildModel| methods
-          // through to the content sink, which will call |StartLayout|
-          // and thus |InitialReflow| on the pres shell.  See bug 119351
-          // for the ugly details.
-          if (bodyContent) {
-            nsCOMPtr<nsIPresShell> shell;
-            aPresContext->GetShell(getter_AddRefs(shell));
-            nsIFrame *bodyFrame;
-            nsresult rv = shell->GetPrimaryFrameFor(bodyContent, &bodyFrame);
-            if (NS_SUCCEEDED(rv) && bodyFrame)
-              ::GetStyleData(bodyFrame, &result);
-          }
-        }
-      }
-    }
-
-    *aBackground = result;
-  } else {
-    // This should always give transparent, so we'll fill it in with the
-    // default color if needed.  This seems to happen a bit while a page is
-    // being loaded.
-    GetStyleData(aForFrame, aBackground);
-  }
-
-  return PR_TRUE;
-}
-
-inline PRBool
-nsContextMenuInfo::FindElementBackground(nsIPresContext* aPresContext,
-                      nsIFrame* aForFrame,
-                      const nsStyleBackground** aBackground)
-{
-  nsIFrame *parentFrame;
-  aForFrame->GetParent(&parentFrame);
-  // XXXldb We shouldn't have to null-check |parentFrame| here.
-  if (parentFrame && IsCanvasFrame(parentFrame)) {
-    // Check that we're really the root (rather than in another child list).
-    nsIFrame *childFrame;
-    parentFrame->FirstChild(aPresContext, nsnull, &childFrame);
-    if (childFrame == aForFrame)
-      return PR_FALSE; // Background was already drawn for the canvas.
-  }
-
-  ::GetStyleData(aForFrame, aBackground);
-
-  nsCOMPtr<nsIContent> content;
-  aForFrame->GetContent(getter_AddRefs(content));
-  if (!content || !content->IsContentOfType(nsIContent::eHTML))
-    return PR_TRUE;  // not frame for an HTML element
-  
-  if (!parentFrame)
-    return PR_TRUE; // no parent to look at
-  
-  nsCOMPtr<nsIAtom> tag;
-  content->GetTag(*getter_AddRefs(tag));
-  nsCOMPtr<nsIAtom> mTag_body = getter_AddRefs(NS_NewAtom("body"));
-  if (tag != mTag_body)
-    return PR_TRUE; // not frame for <BODY> element
-
-  // We should only look at the <html> background if we're in an HTML document
-  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(content));
-  nsCOMPtr<nsIDOMDocument> doc;
-  node->GetOwnerDocument(getter_AddRefs(doc));
-  nsCOMPtr<nsIDOMHTMLDocument> htmlDoc(do_QueryInterface(doc));
-  if (!htmlDoc)
-    return PR_TRUE;
-
-  const nsStyleBackground *htmlBG;
-  ::GetStyleData(parentFrame, &htmlBG);
-  return !htmlBG->BackgroundIsTransparent();
-}
-
-PRBool
-nsContextMenuInfo::IsCanvasFrame(nsIFrame *aFrame)
-{
-  nsCOMPtr<nsIAtom> mTag_canvasFrame      = getter_AddRefs(NS_NewAtom("CanvasFrame"));   
-  nsCOMPtr<nsIAtom> mTag_rootFrame        = getter_AddRefs(NS_NewAtom("RootFrame"));  
-  nsCOMPtr<nsIAtom> mTag_pageFrame        = getter_AddRefs(NS_NewAtom("PageFrame")); 
-  nsCOMPtr<nsIAtom> frameType;
-  aFrame->GetFrameType(getter_AddRefs(frameType));
-  return (frameType == mTag_canvasFrame ||
-          frameType == mTag_rootFrame ||
-          frameType == mTag_pageFrame);
-}
-
-PRBool
-nsContextMenuInfo::FindBackground(nsIPresContext* aPresContext,
-                               nsIFrame* aForFrame,
-                               const nsStyleBackground** aBackground,
-                               PRBool* aIsCanvas)
-{
-  *aIsCanvas = PR_TRUE;
-  return FindCanvasBackground(aPresContext, aForFrame, aBackground);
-}
-

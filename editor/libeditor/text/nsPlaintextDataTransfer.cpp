@@ -68,8 +68,6 @@
 #include "nsIDocumentObserver.h"
 #include "nsIDocumentStateListener.h"
 
-#include "nsIStyleContext.h"
-
 #include "nsIEnumerator.h"
 #include "nsIContent.h"
 #include "nsIContentIterator.h"

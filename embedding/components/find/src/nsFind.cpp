@@ -51,7 +51,6 @@
 #include "nsIPresShell.h"
 #include "nsIFrame.h"
 #include "nsIDocument.h"
-#include "nsIStyleContext.h"
 #include "nsTextFragment.h"
 #include "nsString.h"
 #include "nsIAtom.h"
@@ -488,14 +487,11 @@ PRBool nsFind::IsVisibleNode(nsIDOMNode *aDOMNode)
     return PR_FALSE;
   }
 
-  nsCOMPtr<nsIStyleContext> styleContext;
-  frame->GetStyleContext(getter_AddRefs(styleContext));
-  if (styleContext) {
-    const nsStyleVisibility* vis = 
-      (const nsStyleVisibility*)styleContext->GetStyleData(eStyleStruct_Visibility);
-    if (!vis || !vis->IsVisible()) {
-      return PR_FALSE;
-    }
+  const nsStyleVisibility* vis;
+  ::GetStyleData(frame, &vis);
+  if (!vis || !vis->IsVisible())
+  {
+    return PR_FALSE;
   }
 
   return PR_TRUE;

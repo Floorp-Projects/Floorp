@@ -134,7 +134,6 @@
 #endif
 
 #include "nsIFrame.h"
-#include "nsIStyleContext.h"
 
 // for embedding
 #include "nsIWebBrowserChromeFocus.h"

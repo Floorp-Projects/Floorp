@@ -41,6 +41,8 @@
 #include "nsRuleNode.h"
 #include "nsString.h"
 #include "nsLayoutAtoms.h"
+#include "nsIDocument.h"
+#include "nsIPresShell.h"
 
 nsInspectorCSSUtils::nsInspectorCSSUtils()
 {
@@ -111,12 +113,10 @@ nsInspectorCSSUtils::AdjustRectForMargins(nsIFrame* aFrame, nsRect& aRect)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsInspectorCSSUtils::GetStyleContextForFrame(nsIFrame* aFrame,
                                              nsIStyleContext** aStyleContext)
 {
-    NS_PRECONDITION(aFrame, "We'd better have a frame!");
-
     nsCOMPtr<nsIStyleContext> styleContext;
     aFrame->GetStyleContext(getter_AddRefs(styleContext));
     if (!styleContext) {
@@ -142,17 +142,56 @@ nsInspectorCSSUtils::GetStyleContextForFrame(nsIFrame* aFrame,
     return NS_OK;
 }    
 
-NS_IMETHODIMP
-nsInspectorCSSUtils::IsWhiteSpaceSignificant(nsIStyleContext* aStyleContext,
-                                             PRBool *aIsSignificant)
+nsresult
+nsInspectorCSSUtils::GetStyleContextForContent(nsIContent* aContent,
+                                               nsIPresShell* aPresShell,
+                                               nsIStyleContext** aStyleContext)
 {
-  NS_PRECONDITION(aStyleContext, "We'd better have a style context!");
-  NS_PRECONDITION(aIsSignificant, "We'd better have an out pointer!");
+    nsIFrame* frame = nsnull;
+    aPresShell->GetPrimaryFrameFor(aContent, &frame);
+    if (frame)
+        return GetStyleContextForFrame(frame, aStyleContext);
 
-  const nsStyleText* text = nsnull;
-  ::GetStyleData(aStyleContext, &text);
-  NS_ASSERTION(text, "Could not get a style struct!");
+    // No frame has been created, so resolve the style ourself.
+    nsCOMPtr<nsIStyleContext> parentContext;
+    nsCOMPtr<nsIContent> parent;
+    aContent->GetParent(*getter_AddRefs(parent));
+    if (parent) {
+        nsresult rv = GetStyleContextForContent(aContent, aPresShell,
+                                                getter_AddRefs(parentContext));
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
 
-  *aIsSignificant = text->WhiteSpaceIsSignificant();
-  return NS_OK;
+    nsCOMPtr<nsIPresContext> presContext;
+    aPresShell->GetPresContext(getter_AddRefs(presContext));
+    NS_ENSURE_TRUE(presContext, NS_ERROR_UNEXPECTED);
+
+    if (aContent->IsContentOfType(nsIContent::eELEMENT))
+        return presContext->ResolveStyleContextFor(aContent, parentContext,
+                                                   aStyleContext);
+
+    return presContext->ResolveStyleContextForNonElement(parentContext,
+                                                         aStyleContext);
+}
+
+NS_IMETHODIMP
+nsInspectorCSSUtils::GetRuleNodeForContent(nsIContent* aContent,
+                                           nsRuleNode** aRuleNode)
+{
+    *aRuleNode = nsnull;
+
+    nsCOMPtr<nsIDocument> doc;
+    aContent->GetDocument(*getter_AddRefs(doc));
+    NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
+
+    nsCOMPtr<nsIPresShell> presShell;
+    doc->GetShellAt(0, getter_AddRefs(presShell));
+    NS_ENSURE_TRUE(presShell, NS_ERROR_UNEXPECTED);
+
+    nsCOMPtr<nsIStyleContext> sContext;
+    nsresult rv = GetStyleContextForContent(aContent, presShell,
+                                            getter_AddRefs(sContext));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return sContext->GetRuleNode(aRuleNode);
 }

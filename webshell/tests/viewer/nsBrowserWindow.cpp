@@ -2399,7 +2399,6 @@ nsBrowserWindow::DoEditorTest(nsIDocShell *aDocShell, PRInt32 aCommandID)
 #include "nsIContent.h"
 #include "nsIFrame.h"
 #include "nsIFrameDebug.h"
-#include "nsIStyleContext.h"
 #include "nsIStyleSet.h"
 
 
@@ -2515,7 +2514,7 @@ DumpFramesRecurse(nsIDocShell* aDocShell, FILE* out, nsString *aFilterName)
         shell->GetPresContext(&presContext);
 
         nsIFrameDebug* fdbg;
-        if (NS_SUCCEEDED(root->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&fdbg))) {
+        if (NS_SUCCEEDED(CallQueryInterface(root, &fdbg))) {
           fdbg->List(presContext, out, 0);
         }
         NS_IF_RELEASE(presContext);
@@ -2814,15 +2813,7 @@ nsBrowserWindow::DumpStyleContexts(FILE* out)
       if (nsnull == root) {
         fputs("null root frame\n", out);
       } else {
-        nsIStyleContext* rootContext;
-        root->GetStyleContext(&rootContext);
-        if (nsnull != rootContext) {
-          styleSet->ListContexts(rootContext, out);
-          NS_RELEASE(rootContext);
-        }
-        else {
-          fputs("null root context", out);
-        }
+        styleSet->ListContexts(root, out);
       }
     }
     NS_RELEASE(shell);
@@ -3065,13 +3056,11 @@ GatherStyleDataSizes(nsISizeOfHandler* aHandler, nsIDocShell* aDocShell)
       if (nsnull == root) {
         puts("null root frame\n");
       } else {
-        nsIStyleContext* rootContext;
-        root->GetStyleContext(&rootContext);
-        if (nsnull != rootContext) {
+        nsIFrameDebug* fdbg;
+        if (NS_SUCCEEDED(root->QueryInterface(NS_GET_IID(nsIFrameDebug),
+                                              (void**) &fdbg))) {
           PRUint32 contextSize;
-          // get the sizes from the root context
-          rootContext->SizeOf(aHandler, contextSize);
-          NS_RELEASE(rootContext);
+          fdbg->SizeOfStyleContext(aHandler, contextSize);
         }
       }
       NS_RELEASE(shell);

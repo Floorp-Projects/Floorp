@@ -43,7 +43,6 @@
 //
 
 #include "nsScrollbarButtonFrame.h"
-#include "nsIStyleContext.h"
 #include "nsIPresContext.h"
 #include "nsIContent.h"
 #include "nsCOMPtr.h"

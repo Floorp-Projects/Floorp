@@ -48,7 +48,6 @@
 #include "nsISupportsArray.h"
 #include "nsCRT.h"
 #include "nsIArena.h"
-#include "nsIStyleContext.h"
 #include "nsHTMLAtoms.h"
 #include "nsIHTMLContent.h"
 #include "nsVoidArray.h"

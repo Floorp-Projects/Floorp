@@ -38,7 +38,6 @@
 #include "FixedTableLayoutStrategy.h"
 #include "nsTableFrame.h"
 #include "nsTableCellFrame.h"
-#include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsVoidArray.h"
 

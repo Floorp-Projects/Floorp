@@ -109,7 +109,6 @@
 #include "nsIRDFService.h"
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
-#include "nsIStyleContext.h"
 #include "nsIStyleSet.h"
 #include "nsIStyleSheet.h"
 #include "nsITextContent.h"

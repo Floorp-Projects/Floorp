@@ -76,7 +76,6 @@
 #include "nsIEventStateManager.h"
 
 #include "nsIFrame.h"
-#include "nsIStyleContext.h"
 
 // on win32 and os/2, context menus come up on mouse up. On other platforms,
 // they appear on mouse down. Certain bits of code care about this difference.

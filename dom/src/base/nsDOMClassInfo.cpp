@@ -4367,13 +4367,13 @@ nsElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   shell->GetPresContext(getter_AddRefs(pctx));
   NS_ENSURE_TRUE(pctx, NS_ERROR_UNEXPECTED);
 
-  nsCOMPtr<nsIStyleContext> sctx;
-  rv = pctx->ResolveStyleContextFor(content, nsnull,
-                                    getter_AddRefs(sctx));
-  NS_ENSURE_SUCCESS(rv, rv);
+  // XXX this is a hack so that we don't take a performance hit by using
+  // the DOM computed style API.  We can get rid of this hack if we merge
+  // the jsdom library with layout.
 
-  const nsStyleDisplay* display =
-    (const nsStyleDisplay*)sctx->GetStyleData(eStyleStruct_Display);
+  const nsStyleDisplay* display;
+  pctx->ResolveStyleContextAndGetStyleData(content, eStyleStruct_Display,
+                                           (const nsStyleStruct*) display);
   NS_ENSURE_TRUE(display, NS_ERROR_UNEXPECTED);
 
   if (display->mBinding.IsEmpty()) {

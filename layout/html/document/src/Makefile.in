@@ -89,3 +89,4 @@ libs:: $(_FILES) $(srcdir)/forms.css  $(PLATFORM_FORMS_CSS)
 install:: $(_FILES) $(srcdir)/forms.css ua.css $(PLATFORM_FORMS_CSS)
 	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/res
 
+DEFINES += -D_IMPL_NS_LAYOUT

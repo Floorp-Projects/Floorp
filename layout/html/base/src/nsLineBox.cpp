@@ -39,7 +39,6 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsLineBox.h"
 #include "nsSpaceManager.h"
-#include "nsIStyleContext.h"
 #include "nsLineLayout.h"
 #include "prprf.h"
 #include "nsBlockFrame.h"

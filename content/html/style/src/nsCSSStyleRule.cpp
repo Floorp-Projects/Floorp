@@ -47,7 +47,6 @@
 #include "nsICSSLoader.h"
 #include "nsIHTMLContentContainer.h"
 #include "nsIURL.h"
-#include "nsIStyleContext.h"
 #include "nsIPresContext.h"
 #include "nsIDocument.h"
 #include "nsIDeviceContext.h"

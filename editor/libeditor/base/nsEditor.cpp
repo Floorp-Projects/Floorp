@@ -66,7 +66,6 @@
 #include "nsIEnumerator.h"
 #include "nsIAtom.h"
 #include "nsICaret.h"
-#include "nsIStyleContext.h"
 #include "nsIEditActionListener.h"
 #include "nsIEditorObserver.h"
 #include "nsIKBStateControl.h"
@@ -4098,7 +4097,6 @@ nsEditor::IsPreformatted(nsIDOMNode *aNode, PRBool *aResult)
   nsresult result;
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
   nsIFrame *frame;
-  nsCOMPtr<nsIStyleContext> styleContext;
   const nsStyleText* styleText;
   PRBool bPreformatted;
   
@@ -4111,8 +4109,8 @@ nsEditor::IsPreformatted(nsIDOMNode *aNode, PRBool *aResult)
   result = ps->GetPrimaryFrameFor(content, &frame);
   if (NS_FAILED(result)) return result;
   
-  result = ps->GetStyleContextFor(frame, getter_AddRefs(styleContext));
-  if (NS_FAILED(result))
+  ::GetStyleData(frame, &styleText);
+  if (!styleText)
   {
     // Consider nodes without a style context to be NOT preformatted:
     // For instance, this is true of JS tags inside the body (which show
@@ -4120,8 +4118,6 @@ nsEditor::IsPreformatted(nsIDOMNode *aNode, PRBool *aResult)
     *aResult = PR_FALSE;
     return NS_OK;
   }
-
-  styleText = (const nsStyleText*)styleContext->GetStyleData(eStyleStruct_Text);
 
   bPreformatted = (NS_STYLE_WHITESPACE_PRE == styleText->mWhiteSpace) ||
     (NS_STYLE_WHITESPACE_MOZ_PRE_WRAP == styleText->mWhiteSpace);

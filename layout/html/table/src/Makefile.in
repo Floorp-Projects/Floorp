@@ -59,7 +59,7 @@ FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES         += -DDEBUG_TABLE_REFLOW_TIMING_off -DDEBUG_TABLE_STRATEGY_off
+DEFINES         += -DDEBUG_TABLE_REFLOW_TIMING_off -DDEBUG_TABLE_STRATEGY_off -D_IMPL_NS_LAYOUT
 
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/../../base/src \

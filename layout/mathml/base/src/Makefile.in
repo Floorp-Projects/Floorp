@@ -106,3 +106,4 @@ libs:: $(_PROPERTIES)
 install:: $(_PROPERTIES)
 	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/res/fonts
 
+DEFINES += -D_IMPL_NS_LAYOUT

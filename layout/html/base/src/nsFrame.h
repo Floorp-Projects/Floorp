@@ -258,6 +258,7 @@ public:
   NS_IMETHOD  DumpRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent, PRBool aIncludeStyleData);
   NS_IMETHOD  SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
   NS_IMETHOD  VerifyTree() const;
+  virtual void SizeOfStyleContext(nsISizeOfHandler* aHandler, PRUint32& aSize);
 #endif
 
   NS_IMETHOD  SetSelected(nsIPresContext* aPresContext, nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread);
@@ -395,6 +396,9 @@ public:
                                nsIAtom*                aPropertyName,
                                void*                   aPropertyValue,
                                NSFramePropertyDtorFunc aPropDtorFunc);
+
+  NS_IMETHOD GetStyleDataExternal(nsStyleStructID aSID,
+                                  const nsStyleStruct*& aStyleStruct);
 
 #ifdef IBMBIDI
   NS_IMETHOD GetBidiProperty(nsIPresContext* aPresContext,

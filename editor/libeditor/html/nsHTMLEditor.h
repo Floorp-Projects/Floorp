@@ -620,15 +620,6 @@ protected:
                                           nsIDOMNode       **aStyleNode,
                                           nsAString *outValue = nsnull) const;
 
-  /** style-based query returns PR_TRUE if (aProperty, aAttribute) is set in aSC.
-    * WARNING: not well tested yet since we don't do style-based queries anywhere.
-    */
-  virtual void IsTextStyleSet(nsIStyleContext *aSC, 
-                              nsIAtom         *aProperty, 
-                              const nsAString  *aAttributes, 
-                              PRBool          &aIsSet) const;
-
-
   void ResetTextSelectionForRange(nsIDOMNode *aParent,
                                   PRInt32     aStartOffset,
                                   PRInt32     aEndOffset,

@@ -1092,14 +1092,13 @@ static PRBool IsAlreadyStyled(nsIFrame* aFrame, PRUint8 aWidgetType) {
         return PR_FALSE;
       }
 
-      nsCOMPtr<nsIStyleContext> styleContext;
-      aFrame->GetStyleContext(getter_AddRefs(styleContext));
-      
-      const nsStyleBackground* ourBG = (const nsStyleBackground*)styleContext->GetStyleData(eStyleStruct_Background);
+      const nsStyleBackground* ourBG;
+      ::GetStyleData(aFrame, &ourBG);
       if (ourBG->mBackgroundColor != bgColor && ourBG->mBackgroundColor != disabledBG)
         return PR_TRUE;
 
-      const nsStyleBorder* ourBorder = (const nsStyleBorder*)styleContext->GetStyleData(eStyleStruct_Border);
+      const nsStyleBorder* ourBorder;
+      ::GetStyleData(aFrame, &ourBorder);
       //see if any sides are dotted, dashed or solid
       for (PRInt32 cnt = 0; cnt < 4; cnt++) {
         if ((ourBorder->GetBorderStyle(cnt) == NS_STYLE_BORDER_STYLE_DOTTED) || 

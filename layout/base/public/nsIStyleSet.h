@@ -309,7 +309,7 @@ public:
 
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) = 0;
-  virtual void ListContexts(nsIStyleContext* aRootContext, FILE* out = stdout, PRInt32 aIndent = 0) = 0;
+  virtual void ListContexts(nsIFrame* aRootFrame, FILE* out = stdout, PRInt32 aIndent = 0) = 0;
   virtual void SizeOf(nsISizeOfHandler *aSizeofHandler, PRUint32 &aSize) = 0;
 #endif
 

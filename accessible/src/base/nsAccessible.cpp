@@ -77,7 +77,6 @@
 #include "nsGUIEvent.h"
 
 #include "nsILink.h"
-#include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsReadableUtils.h"
 #include "nsIBindingManager.h"
@@ -731,12 +730,10 @@ PRBool nsAccessible::IsPartiallyVisible(PRBool *aIsOffscreen)
     return PR_FALSE;
 
   // If visibility:hidden or visibility:collapsed then mark with STATE_INVISIBLE
-  nsCOMPtr<nsIStyleContext> styleContext;
-  frame->GetStyleContext(getter_AddRefs(styleContext));
-  if (styleContext) {
-    const nsStyleVisibility* vis = 
-      (const nsStyleVisibility*)styleContext->GetStyleData(eStyleStruct_Visibility);
-    if (!vis || !vis->IsVisible())
+  const nsStyleVisibility* vis;
+  ::GetStyleData(frame, &vis);
+  if (!vis || !vis->IsVisible())
+  {
       return PR_FALSE;
   }
 
@@ -1330,15 +1327,14 @@ NS_IMETHODIMP nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent
           // If this text is inside a block level frame (as opposed to span level), we need to add spaces around that 
           // block's text, so we don't get words jammed together in final name
           // Extra spaces will be trimmed out later
-          nsCOMPtr<nsIStyleContext> styleContext;
-          frame->GetStyleContext(getter_AddRefs(styleContext));
-          if (styleContext) {
-            const nsStyleDisplay* display = (const nsStyleDisplay*)styleContext->GetStyleData(eStyleStruct_Display);
-            if (display->IsBlockLevel() || display->mDisplay == NS_STYLE_DISPLAY_TABLE_CELL) {
+          const nsStyleDisplay* display;
+          ::GetStyleData(frame, &display);
+          if (display && (display->IsBlockLevel() ||
+                          display->mDisplay == NS_STYLE_DISPLAY_TABLE_CELL))
+          {
               isHTMLBlock = PR_TRUE;
               if (!aFlatString->IsEmpty())
                 aFlatString->Append(NS_LITERAL_STRING(" "));
-            }
           }
         }
       }

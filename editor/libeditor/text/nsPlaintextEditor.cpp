@@ -98,8 +98,6 @@
 #include "nsEditorUtils.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
-#include "nsStyleConsts.h"
-#include "nsIStyleContext.h"
 #include "nsUnicharUtils.h"
 
 #include "nsAOLCiter.h"
@@ -1194,24 +1192,6 @@ nsPlaintextEditor::GetMaxTextLength(PRInt32* aMaxTextLength)
     return NS_ERROR_INVALID_POINTER;
   *aMaxTextLength = mMaxTextLength;
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPlaintextEditor::GetBodyStyleContext(nsIStyleContext** aStyleContext)
-{
-  nsCOMPtr<nsIDOMElement> body;
-  nsresult res = GetRootElement(getter_AddRefs(body));
-  if (NS_FAILED(res)) return res;
-  nsCOMPtr<nsIContent> content = do_QueryInterface(body);
-
-  nsIFrame *frame;
-  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
-  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
-  if (!ps) return NS_ERROR_NOT_INITIALIZED;
-  res = ps->GetPrimaryFrameFor(content, &frame);
-  if (NS_FAILED(res)) return res;
-  
-  return ps->GetStyleContextFor(frame, aStyleContext);
 }
 
 //
