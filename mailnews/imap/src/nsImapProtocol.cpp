@@ -5266,11 +5266,8 @@ PRBool nsImapProtocol::DeleteSubFolders(const char* selectedMailbox)
             m_runningUrl->AllocateServerPath(longestName,
                                              onlineDirSeparator,
                                              &serverName);
-            char *convertedName = serverName ?
-                CreateUtf7ConvertedString(serverName, PR_TRUE) : 0;
-            PR_FREEIF(serverName);
-            PR_Free(longestName);
-            longestName = convertedName;
+            PR_FREEIF(longestName);
+            longestName = serverName;
         }
       
       // some imap servers include the selectedMailbox in the list of 
