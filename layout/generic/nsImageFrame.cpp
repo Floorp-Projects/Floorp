@@ -997,14 +997,13 @@ nsImageFrame::Reflow(nsIPresContext*          aPresContext,
   aMetrics.ascent  = aMetrics.height;
   aMetrics.descent = 0;
 
-  if (nsnull != aMetrics.maxElementSize) {
+  if (aMetrics.mComputeMEW) {
     // If we have a percentage based width, then our MES width is 0
     if (eStyleUnit_Percent == aReflowState.mStylePosition->mWidth.GetUnit()) {
-      aMetrics.maxElementSize->width = 0;
+      aMetrics.mMaxElementWidth = 0;
     } else {
-      aMetrics.maxElementSize->width = aMetrics.width;
+      aMetrics.mMaxElementWidth = aMetrics.width;
     }
-    aMetrics.maxElementSize->height = aMetrics.height;
   }
   if (aMetrics.mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
     aMetrics.mMaximumWidth = aMetrics.width;

@@ -53,7 +53,7 @@
 nsBoxLayoutState::nsBoxLayoutState(nsIPresContext* aPresContext):mPresContext(aPresContext), 
                                                                  mReflowState(nsnull), 
                                                                  mType(Dirty),
-                                                                 mMaxElementSize(nsnull),
+                                                                 mMaxElementWidth(nsnull),
                                                                  mScrolledBlockSizeConstraint(-1,-1),
                                                                  mIncludeOverFlow(PR_TRUE),
                                                                  mLayoutFlags(0),
@@ -66,7 +66,7 @@ nsBoxLayoutState::nsBoxLayoutState(const nsBoxLayoutState& aState)
   mPresContext = aState.mPresContext;
   mType        = aState.mType;
   mReflowState = aState.mReflowState;
-  mMaxElementSize = aState.mMaxElementSize;
+  mMaxElementWidth = aState.mMaxElementWidth;
   mScrolledBlockSizeConstraint = aState.mScrolledBlockSizeConstraint;
   mLayoutFlags = aState.mLayoutFlags;
   mDisablePainting = aState.mDisablePainting;
@@ -74,7 +74,7 @@ nsBoxLayoutState::nsBoxLayoutState(const nsBoxLayoutState& aState)
 
 nsBoxLayoutState::nsBoxLayoutState(nsIPresShell* aShell):mReflowState(nsnull), 
                                                          mType(Dirty),
-                                                         mMaxElementSize(nsnull),
+                                                         mMaxElementWidth(nsnull),
                                                          mScrolledBlockSizeConstraint(-1,-1),
                                                          mIncludeOverFlow(PR_TRUE),
                                                          mLayoutFlags(0),
@@ -96,15 +96,13 @@ nsBoxLayoutState::nsBoxLayoutState(nsIPresContext* aPresContext,
                                                                                         
 
 {
-  mMaxElementSize = aDesiredSize.maxElementSize;
+  mMaxElementWidth = &aDesiredSize.mMaxElementWidth;
 }
 
-void 
-nsBoxLayoutState::GetMaxElementSize(nsSize** aMaxElementSize)
+nscoord*
+nsBoxLayoutState::GetMaxElementWidth()
 {
-  *aMaxElementSize = nsnull;
-  if (mReflowState)
-     *aMaxElementSize = mMaxElementSize;
+  return mReflowState ? mMaxElementWidth : nsnull;
 }
 
 void 

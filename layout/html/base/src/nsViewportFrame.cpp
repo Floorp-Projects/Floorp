@@ -495,7 +495,7 @@ ViewportFrame::Reflow(nsIPresContext*          aPresContext,
   DO_GLOBAL_REFLOW_COUNT("ViewportFrame", aReflowState.reason);
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
   NS_FRAME_TRACE_REFLOW_IN("ViewportFrame::Reflow");
-  NS_PRECONDITION(nsnull == aDesiredSize.maxElementSize, "unexpected request");
+  NS_PRECONDITION(!aDesiredSize.mComputeMEW, "unexpected request");
 
   // Initialize OUT parameter
   aStatus = NS_FRAME_COMPLETE;

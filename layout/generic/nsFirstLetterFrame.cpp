@@ -232,7 +232,7 @@ nsFirstLetterFrame::Reflow(nsIPresContext*          aPresContext,
     // line context is when its floating.
     nsHTMLReflowState rs(aPresContext, aReflowState, kid, availSize);
     nsLineLayout ll(aPresContext, nsnull, &aReflowState,
-                    nsnull != aMetrics.maxElementSize);
+                    aMetrics.mComputeMEW);
     ll.BeginLineReflow(0, 0, NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE,
                        PR_FALSE, PR_TRUE);
     rs.mLineLayout = &ll;
@@ -251,7 +251,8 @@ nsFirstLetterFrame::Reflow(nsIPresContext*          aPresContext,
     ll->BeginSpan(this, &aReflowState, bp.left, availSize.width);
     ll->ReflowFrame(kid, aReflowStatus, &aMetrics, pushedFrame);
     nsSize size;
-    ll->EndSpan(this, size, aMetrics.maxElementSize);
+    ll->EndSpan(this, size,
+                aMetrics.mComputeMEW ? &aMetrics.mMaxElementWidth : nsnull);
   }
 
   // Place and size the child and update the output metrics
@@ -262,9 +263,8 @@ nsFirstLetterFrame::Reflow(nsIPresContext*          aPresContext,
   aMetrics.height += tb;
   aMetrics.ascent += bp.top;
   aMetrics.descent += bp.bottom;
-  if (aMetrics.maxElementSize) {
-    aMetrics.maxElementSize->width += lr;
-    aMetrics.maxElementSize->height += tb;
+  if (aMetrics.mComputeMEW) {
+    aMetrics.mMaxElementWidth += lr;
   }
 
   // Create a continuation or remove existing continuations based on

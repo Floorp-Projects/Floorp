@@ -825,9 +825,8 @@ nsPageBreakFrame::GetDesiredSize(nsIPresContext*          aPresContext,
     aDesiredSize.height -= aDesiredSize.height % onePixel;
   }
 
-  if (aDesiredSize.maxElementSize) {
-    aDesiredSize.maxElementSize->width  = onePixel;
-    aDesiredSize.maxElementSize->height = aDesiredSize.height;
+  if (aDesiredSize.mComputeMEW) {
+    aDesiredSize.mMaxElementWidth  = onePixel;
   }
   aDesiredSize.ascent  = 0;
   aDesiredSize.descent = 0;

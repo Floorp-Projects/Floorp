@@ -98,9 +98,8 @@ nsMathMLContainerFrame::ReflowError(nsIPresContext*      aPresContext,
   aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
   aDesiredSize.width = mBoundingMetrics.width;
 
-  if (aDesiredSize.maxElementSize) {
-    aDesiredSize.maxElementSize->width = aDesiredSize.width;
-    aDesiredSize.maxElementSize->height = aDesiredSize.height;
+  if (aDesiredSize.mComputeMEW) {
+    aDesiredSize.mMaxElementWidth = aDesiredSize.width;
   }
   // Also return our bounding metrics
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;
@@ -491,9 +490,8 @@ nsMathMLContainerFrame::FinalizeReflow(nsIPresContext*      aPresContext,
               defaultSize, aDesiredSize);
     }
   }
-  if (aDesiredSize.maxElementSize) {
-    aDesiredSize.maxElementSize->width = aDesiredSize.width;
-    aDesiredSize.maxElementSize->height = aDesiredSize.height;
+  if (aDesiredSize.mComputeMEW) {
+    aDesiredSize.mMaxElementWidth = aDesiredSize.width;
   }
   // Also return our bounding metrics
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;
@@ -1100,7 +1098,7 @@ printf("\n");
 
   nsReflowStatus childStatus;
   nsSize availSize(aReflowState.mComputedWidth, aReflowState.mComputedHeight);
-  nsHTMLReflowMetrics childDesiredSize(aDesiredSize.maxElementSize,
+  nsHTMLReflowMetrics childDesiredSize(aDesiredSize.mComputeMEW,
                       aDesiredSize.mFlags | NS_REFLOW_CALC_BOUNDING_METRICS);
   nsIFrame* childFrame = mFrames.FirstChild();
   while (childFrame) {
@@ -1164,6 +1162,10 @@ printf("\n");
       }
       childFrame->GetNextSibling(&childFrame);
     }
+  }
+
+  if (aDesiredSize.mComputeMEW) {
+    aDesiredSize.mMaxElementWidth = childDesiredSize.mMaxElementWidth;
   }
 
   /////////////

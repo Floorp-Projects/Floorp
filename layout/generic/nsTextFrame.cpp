@@ -5399,9 +5399,8 @@ nsTextFrame::Reflow(nsIPresContext*          aPresContext,
     aMetrics.height = 0;
     aMetrics.ascent = 0;
     aMetrics.descent = 0;
-    if (nsnull != aMetrics.maxElementSize) {
-      aMetrics.maxElementSize->width = 0;
-      aMetrics.maxElementSize->height = 0;
+    if (aMetrics.mComputeMEW) {
+      aMetrics.mMaxElementWidth = 0;
     }
 #ifdef MOZ_MATHML
     if (NS_REFLOW_CALC_BOUNDING_METRICS & aMetrics.mFlags)
@@ -5532,7 +5531,7 @@ nsTextFrame::Reflow(nsIPresContext*          aPresContext,
     }
     if (!mNextInFlow &&
         (mState & TEXT_OPTIMIZE_RESIZE) &&
-        !aMetrics.maxElementSize &&
+        !aMetrics.mComputeMEW &&
         (lastTimeWeSkippedLeadingWS == skipWhitespace) &&
         ((wrapping && (maxWidth >= realWidth)) ||
          (!wrapping && (prevColumn == column))) &&
@@ -5557,7 +5556,7 @@ nsTextFrame::Reflow(nsIPresContext*          aPresContext,
   // Local state passed to the routines that do the actual text measurement
   TextReflowData  textData(startingOffset, wrapping, skipWhitespace, 
                            measureText, inWord, lineLayout.GetFirstLetterStyleOK(),
-                           lineLayout.LineIsBreakable(), nsnull != aMetrics.maxElementSize, 
+                           lineLayout.LineIsBreakable(), aMetrics.mComputeMEW, 
                            PR_FALSE);
   
   // Measure the text
@@ -5595,9 +5594,8 @@ nsTextFrame::Reflow(nsIPresContext*          aPresContext,
   if (!wrapping) {
     textData.mMaxWordWidth = textData.mX;
   }
-  if (nsnull != aMetrics.maxElementSize) {
-    aMetrics.maxElementSize->width = textData.mMaxWordWidth;
-    aMetrics.maxElementSize->height = aMetrics.height;
+  if (aMetrics.mComputeMEW) {
+    aMetrics.mMaxElementWidth = textData.mMaxWordWidth;
   }
 
   // Set content offset and length

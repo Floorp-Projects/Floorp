@@ -77,7 +77,7 @@ public:
 
   virtual nsIPresContext* GetPresContext() { return mPresContext.get(); }
   virtual nsresult GetPresShell(nsIPresShell** aShell);
-  virtual void GetMaxElementSize(nsSize** aMaxElementSize);
+  virtual nscoord* GetMaxElementWidth();
 
   virtual void GetScrolledBlockSizeConstraint(nsSize& aSize);
   virtual void SetScrolledBlockSizeConstraint(const nsSize& aSize);
@@ -110,7 +110,7 @@ private:
   nsCOMPtr<nsIPresContext> mPresContext;
   const nsHTMLReflowState* mReflowState;
   eBoxLayoutReason mType;
-  nsSize* mMaxElementSize;
+  nscoord* mMaxElementWidth;
   nsSize mScrolledBlockSizeConstraint;
   PRBool mIncludeOverFlow;
   PRUint32 mLayoutFlags;

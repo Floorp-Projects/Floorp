@@ -220,12 +220,12 @@ public:
   // Resize Reflow Optimiaztion Methods
   static void SetupCachedSizes(nsSize& aCacheSize,
                                nscoord& aCachedAscent,
-                               nsSize& aCachedMaxElementSize,
+                               nscoord& aCachedMaxElementWidth,
                                nsHTMLReflowMetrics& aDesiredSize);
 
   static void SkipResizeReflow(nsSize& aCacheSize,
                                nscoord& aCachedAscent,
-                               nsSize& aCachedMaxElementSize,
+                               nscoord& aCachedMaxElementWidth,
                                nsSize& aCachedAvailableSize,
                                nsHTMLReflowMetrics& aDesiredSize,
                                const nsHTMLReflowState& aReflowState,
@@ -332,7 +332,7 @@ protected:
   // Reflow Optimization
   nsSize       mCacheSize;
   nscoord      mCachedAscent;
-  nsSize       mCachedMaxElementSize;
+  nscoord      mCachedMaxElementWidth;
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }

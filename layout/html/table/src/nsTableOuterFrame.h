@@ -298,10 +298,10 @@ protected:
 
   // end Incremental Reflow methods
 
-  nsSize GetMaxElementSize(PRUint8         aCaptionSide,
-                           const nsMargin& aInnerMargin,
-                           const nsMargin& aInnerPadding,
-                           const nsMargin& aCaptionMargin);
+  nscoord GetMaxElementWidth(PRUint8         aCaptionSide,
+                             const nsMargin& aInnerMargin,
+                             const nsMargin& aInnerPadding,
+                             const nsMargin& aCaptionMargin);
 
   nscoord GetMaxWidth(PRUint8         aCaptionSide,
                       const nsMargin& aInnerMargin,

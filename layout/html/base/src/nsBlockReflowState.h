@@ -101,7 +101,7 @@ public:
     return mReflowState.mComputedMargin;
   }
 
-  void UpdateMaxElementSize(const nsSize& aMaxElementSize);
+  void UpdateMaxElementWidth(nscoord aMaxElementWidth);
 
   void UpdateMaximumWidth(nscoord aMaximumWidth);
 
@@ -129,8 +129,8 @@ public:
 
   void FreeLineBox(nsLineBox* aLine);
 
-  void StoreMaxElementSize(nsIFrame* aFloater, const nsSize& aSize) {
-    mBand.StoreMaxElementSize(mPresContext, aFloater, aSize);
+  void StoreMaxElementWidth(nsIFrame* aFloater, nscoord aWidth) {
+    mBand.StoreMaxElementWidth(mPresContext, aFloater, aWidth);
   }
 
   //----------------------------------------
@@ -226,7 +226,7 @@ public:
   // being N^2.
   nsFloaterCacheFreeList mBelowCurrentLineFloaters;
 
-  nsSize mMaxElementSize;
+  nscoord mMaxElementWidth;
   nscoord mMaximumWidth;
 
   nscoord mMinLineHeight;
@@ -242,7 +242,7 @@ public:
 #define BRS_ISTOPMARGINROOT       0x00000020  // Is this frame a root for top/bottom margin collapsing?
 #define BRS_ISBOTTOMMARGINROOT    0x00000040
 #define BRS_APPLYTOPMARGIN        0x00000080  // See ShouldApplyTopMargin
-#define BRS_COMPUTEMAXELEMENTSIZE 0x00000100
+#define BRS_COMPUTEMAXELEMENTWIDTH 0x00000100
 #define BRS_COMPUTEMAXWIDTH       0x00000200
 #define BRS_DAMAGECONSTRAINED     0x00000400  // is the target of an incremental reflow command inside a text control
 #define BRS_LASTFLAG              BRS_DAMAGECONSTRAINED

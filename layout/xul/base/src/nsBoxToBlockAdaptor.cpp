@@ -136,7 +136,6 @@ nsBoxToBlockAdaptor::nsBoxToBlockAdaptor(nsIPresShell* aPresShell, nsIFrame* aFr
 {
   mFrame = aFrame;
   mWasCollapsed = PR_FALSE;
-  mCachedMaxElementHeight = 0;
   mStyleChange = PR_FALSE;
   mOverflow.width = 0;
   mOverflow.height = 0;
@@ -146,7 +145,6 @@ nsBoxToBlockAdaptor::nsBoxToBlockAdaptor(nsIPresShell* aPresShell, nsIFrame* aFr
 
   // If we're wrapping a block (we may not be!), be sure the block
   // gets a space manager.
-  static const nsIID kBlockFrameCID = NS_BLOCK_FRAME_CID;
   void *block;
   mFrame->QueryInterface(kBlockFrameCID, &block);
   if (block) {
@@ -340,7 +338,7 @@ nsBoxToBlockAdaptor::RefreshSizeCache(nsBoxLayoutState& aState)
   if (reflowState) {
     nsIPresContext* presContext = aState.GetPresContext();
     nsReflowStatus status = NS_FRAME_COMPLETE;
-    nsHTMLReflowMetrics desiredSize(nsnull);
+    nsHTMLReflowMetrics desiredSize(PR_FALSE);
     nsReflowReason reason;
 
     PRBool useHTMLConstraints = UseHTMLReflowConstraints(this, aState);
@@ -349,7 +347,7 @@ nsBoxToBlockAdaptor::RefreshSizeCache(nsBoxLayoutState& aState)
     // be changed. Incremental dirty reflows targeted at us can be converted to Resize if we are not dirty. So make sure
     // we look at the reason returned.
     nsReflowPath *path = nsnull;
-    PRBool canSetMaxElementSize = CanSetMaxElementSize(aState, reason, &path);
+    PRBool canSetMaxElementWidth = CanSetMaxElementWidth(aState, reason, &path);
 
     NS_ASSERTION(reason != eReflowReason_Incremental || path,
                  "HandleIncrementalReflow should have changed the reason to dirty.");
@@ -370,10 +368,9 @@ nsBoxToBlockAdaptor::RefreshSizeCache(nsBoxLayoutState& aState)
     // if we can set the maxElementSize then 
     // tell the metrics we want it. And also tell it we want
     // to compute the max width. This will allow us to get the min width and the pref width.
-    nsSize maxElementSize(0,0);
-    if (canSetMaxElementSize) {
+    if (canSetMaxElementWidth) {
        desiredSize.mFlags |= NS_REFLOW_CALC_MAX_WIDTH;
-       desiredSize.maxElementSize = &maxElementSize;
+       desiredSize.mComputeMEW = PR_TRUE;
     } else {
       // if we can't set the maxElementSize. Then we must reflow
       // uncontrained.
@@ -415,32 +412,24 @@ nsBoxToBlockAdaptor::RefreshSizeCache(nsBoxLayoutState& aState)
     }
 
     // if someone asked the nsBoxLayoutState to get the max size lets handle that.
-    nsSize* stateMaxElementSize = nsnull;
-    aState.GetMaxElementSize(&stateMaxElementSize);
+    nscoord* stateMaxElementWidth = aState.GetMaxElementWidth();
 
     // the max element size is the largest height and width
-    if (stateMaxElementSize) {
-
-      if (mBlockMinSize.width > stateMaxElementSize->width)
-        stateMaxElementSize->width = mBlockMinSize.width;
-
-      if (mBlockMinSize.height > stateMaxElementSize->height)
-         stateMaxElementSize->height = mBlockMinSize.height;
-
-      mCachedMaxElementHeight = stateMaxElementSize->height;
+    if (stateMaxElementWidth) {
+      if (mBlockMinSize.width > *stateMaxElementWidth)
+        *stateMaxElementWidth = mBlockMinSize.width;
     }
  
     mBlockMinSize.height = 0;
     // if we can use the maxElmementSize then lets use it
     // if not then just use the desired.
-    if (canSetMaxElementSize) {
+    if (canSetMaxElementWidth) {
       mBlockPrefSize.width  = desiredSize.mMaximumWidth;
-      mBlockMinSize.width   = maxElementSize.width; 
+      mBlockMinSize.width   = desiredSize.mMaxElementWidth; 
       // ok we need the max ascent of the items on the line. So to do this
       // ask the block for its line iterator. Get the max ascent.
-      nsresult rv;
-      nsCOMPtr<nsILineIterator> lines = do_QueryInterface(mFrame, &rv);
-      if (NS_SUCCEEDED(rv) && lines) 
+      nsCOMPtr<nsILineIterator> lines = do_QueryInterface(mFrame);
+      if (lines) 
       {
         mBlockMinSize.height = 0;
         int count = 0;
@@ -636,73 +625,63 @@ nsBoxToBlockAdaptor::IsCollapsed(nsBoxLayoutState& aState, PRBool& aCollapsed)
 nsresult
 nsBoxToBlockAdaptor::DoLayout(nsBoxLayoutState& aState)
 {
-   nsRect ourRect(0,0,0,0);
-   GetBounds(ourRect);
+  nsRect ourRect(0,0,0,0);
+  GetBounds(ourRect);
 
-   const nsHTMLReflowState* reflowState = aState.GetReflowState();
-   nsIPresContext* presContext = aState.GetPresContext();
-   nsReflowStatus status = NS_FRAME_COMPLETE;
-   nsHTMLReflowMetrics desiredSize(nsnull);
-   nsresult rv = NS_OK;
+  const nsHTMLReflowState* reflowState = aState.GetReflowState();
+  nsIPresContext* presContext = aState.GetPresContext();
+  nsReflowStatus status = NS_FRAME_COMPLETE;
+  nsHTMLReflowMetrics desiredSize(PR_FALSE);
+  nsresult rv = NS_OK;
  
-   if (reflowState) {
+  if (reflowState) {
 
-    nsSize* currentSize = nsnull;
-    aState.GetMaxElementSize(&currentSize);
-    nsSize maxElementSize(0,0);
+    nscoord* currentMEW = aState.GetMaxElementWidth();
 
-    if (currentSize) {
-       desiredSize.maxElementSize = &maxElementSize;
+    if (currentMEW) {
+      desiredSize.mComputeMEW = PR_TRUE;
     }
 
-     rv = Reflow(aState,
-                 presContext, 
-                  desiredSize, 
-                  *reflowState, 
-                  status,
-                  ourRect.x,
-                  ourRect.y,
-                  ourRect.width,
-                  ourRect.height);
+    rv = Reflow(aState, presContext, desiredSize, *reflowState, status,
+                ourRect.x, ourRect.y, ourRect.width, ourRect.height);
 
-    if (currentSize) {
-      if (maxElementSize.width > currentSize->width)
-         currentSize->width = maxElementSize.width;
-  
-      if (mCachedMaxElementHeight > currentSize->height) {
-        currentSize->height = mCachedMaxElementHeight;
-      }
+    if (currentMEW && desiredSize.mMaxElementWidth > *currentMEW) {
+      *currentMEW = desiredSize.mMaxElementWidth;
     }
 
-     PRBool collapsed = PR_FALSE;
-     IsCollapsed(aState, collapsed);
-     if (collapsed) {
-       mFrame->SizeTo(presContext, 0, 0);
-     } else {
+    PRBool collapsed = PR_FALSE;
+    IsCollapsed(aState, collapsed);
+    if (collapsed) {
+      mFrame->SizeTo(presContext, 0, 0);
+    } else {
 
-       // if our child needs to be bigger. This might happend with wrapping text. There is no way to predict its
-       // height until we reflow it. Now that we know the height reshuffle upward.
-       if (desiredSize.width > ourRect.width || desiredSize.height > ourRect.height) {
+      // if our child needs to be bigger. This might happend with
+      // wrapping text. There is no way to predict its height until we
+      // reflow it. Now that we know the height reshuffle upward.
+      if (desiredSize.width > ourRect.width ||
+          desiredSize.height > ourRect.height) {
 
 #ifdef DEBUG_GROW
-            DumpBox(stdout);
-            printf(" GREW from (%d,%d) -> (%d,%d)\n", ourRect.width, ourRect.height, desiredSize.width, desiredSize.height);
+        DumpBox(stdout);
+        printf(" GREW from (%d,%d) -> (%d,%d)\n",
+               ourRect.width, ourRect.height,
+               desiredSize.width, desiredSize.height);
 #endif
 
-         if (desiredSize.width > ourRect.width)
-            ourRect.width = desiredSize.width;
+        if (desiredSize.width > ourRect.width)
+          ourRect.width = desiredSize.width;
 
-         if (desiredSize.height > ourRect.height)
-            ourRect.height = desiredSize.height;
-       }
+        if (desiredSize.height > ourRect.height)
+          ourRect.height = desiredSize.height;
+      }
 
-       // ensure our size is what we think is should be. Someone could have
-       // reset the frame to be smaller or something dumb like that. 
-       mFrame->SizeTo(presContext, ourRect.width, ourRect.height);
-     }
-   }
+      // ensure our size is what we think is should be. Someone could have
+      // reset the frame to be smaller or something dumb like that. 
+      mFrame->SizeTo(presContext, ourRect.width, ourRect.height);
+    }
+  }
 
-   SyncLayout(aState);
+  SyncLayout(aState);
 
   return rv;
 }
@@ -863,7 +842,7 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
          // maxElementSize does not work on style change reflows.
          // so remove it if set.
          // XXXwaterson why doesn't MES computation work with a style change reflow?
-         aDesiredSize.maxElementSize = nsnull;
+         aDesiredSize.mComputeMEW = PR_FALSE;
 
          reflowState.reason = eReflowReason_StyleChange;
       }
@@ -1165,7 +1144,7 @@ nsBoxToBlockAdaptor::SetWasCollapsed(nsBoxLayoutState& aState, PRBool aCollapsed
 }
 
 PRBool 
-nsBoxToBlockAdaptor::CanSetMaxElementSize(nsBoxLayoutState& aState, nsReflowReason& aReason, nsReflowPath **aReflowPath)
+nsBoxToBlockAdaptor::CanSetMaxElementWidth(nsBoxLayoutState& aState, nsReflowReason& aReason, nsReflowPath **aReflowPath)
 {
       PRBool redrawAfterReflow = PR_FALSE;
       PRBool needsReflow = PR_FALSE;

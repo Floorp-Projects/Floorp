@@ -2184,9 +2184,8 @@ nsFrame::Reflow(nsIPresContext*          aPresContext,
   aDesiredSize.height = 0;
   aDesiredSize.ascent = 0;
   aDesiredSize.descent = 0;
-  if (nsnull != aDesiredSize.maxElementSize) {
-    aDesiredSize.maxElementSize->width = 0;
-    aDesiredSize.maxElementSize->height = 0;
+  if (aDesiredSize.mComputeMEW) {
+    aDesiredSize.mMaxElementWidth = 0;
   }
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
@@ -2655,9 +2654,8 @@ nsFrame::IsFrameTreeTooDeep(const nsHTMLReflowState& aReflowState,
     aMetrics.mOverflowArea.y = 0;
     aMetrics.mOverflowArea.width = 0;
     aMetrics.mOverflowArea.height = 0;
-    if (aMetrics.maxElementSize) {
-      aMetrics.maxElementSize->width = 0;
-      aMetrics.maxElementSize->height = 0;
+    if (aMetrics.mComputeMEW) {
+      aMetrics.mMaxElementWidth = 0;
     }
     return PR_TRUE;
   }
@@ -5502,8 +5500,8 @@ void nsFrame::DisplayReflowExit(nsIPresContext*      aPresContext,
     DR_state.PrettyUC(aMetrics.height, height);
     printf("d=%s,%s ", width, height);
 
-    if (aMetrics.maxElementSize) {
-      DR_state.PrettyUC(aMetrics.maxElementSize->width, width);
+    if (aMetrics.mComputeMEW) {
+      DR_state.PrettyUC(aMetrics.mMaxElementWidth, width);
       printf("me=%s ", width);
     }
     if (aMetrics.mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
@@ -5519,8 +5517,8 @@ void nsFrame::DisplayReflowExit(nsIPresContext*      aPresContext,
       aPresContext->GetScaledPixelsToTwips(&p2t);
       CheckPixelError(aMetrics.width, p2t);
       CheckPixelError(aMetrics.height, p2t);
-      if (aMetrics.maxElementSize) 
-        CheckPixelError(aMetrics.maxElementSize->width, p2t);
+      if (aMetrics.mComputeMEW) 
+        CheckPixelError(aMetrics.mMaxElementWidth, p2t);
       if (aMetrics.mFlags & NS_REFLOW_CALC_MAX_WIDTH) 
         CheckPixelError(aMetrics.mMaximumWidth, p2t);
     }

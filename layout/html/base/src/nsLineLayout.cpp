@@ -155,13 +155,13 @@ MOZ_DECL_CTOR_COUNTER(nsLineLayout)
 nsLineLayout::nsLineLayout(nsIPresContext* aPresContext,
                            nsSpaceManager* aSpaceManager,
                            const nsHTMLReflowState* aOuterReflowState,
-                           PRBool aComputeMaxElementSize)
+                           PRBool aComputeMaxElementWidth)
   : mPresContext(aPresContext),
     mSpaceManager(aSpaceManager),
     mBlockReflowState(aOuterReflowState),
     mBlockRS(nsnull),/* XXX temporary */
     mMinLineHeight(0),
-    mComputeMaxElementSize(aComputeMaxElementSize),
+    mComputeMaxElementWidth(aComputeMaxElementWidth),
     mTextIndent(0),
     mWordFrames(0)
 {
@@ -574,7 +574,7 @@ nsLineLayout::BeginSpan(nsIFrame* aFrame,
 void
 nsLineLayout::EndSpan(nsIFrame* aFrame,
                       nsSize& aSizeResult,
-                      nsSize* aMaxElementSize)
+                      nscoord* aMaxElementWidth)
 {
   NS_ASSERTION(mSpanDepth > 0, "end-span without begin-span");
 #ifdef NOISY_REFLOW
@@ -586,7 +586,6 @@ nsLineLayout::EndSpan(nsIFrame* aFrame,
   nscoord width = 0;
   nscoord maxHeight = 0;
   nscoord maxElementWidth = 0;
-  nscoord maxElementHeight = 0;
   if (nsnull != psd->mLastFrame) {
     width = psd->mX - psd->mLeftEdge;
     PerFrameData* pfd = psd->mFirstFrame;
@@ -603,17 +602,12 @@ nsLineLayout::EndSpan(nsIFrame* aFrame,
          ) {
         if (pfd->mBounds.height > maxHeight) maxHeight = pfd->mBounds.height;
 
-        // Compute max-element-size if necessary
-        if (aMaxElementSize) {
-          nscoord mw = pfd->mMaxElementSize.width +
+        // Compute max-element-width if necessary
+        if (aMaxElementWidth) {
+          nscoord mw = pfd->mMaxElementWidth +
             pfd->mMargin.left + pfd->mMargin.right;
           if (maxElementWidth < mw) {
             maxElementWidth = mw;
-          }
-          nscoord mh = pfd->mMaxElementSize.height +
-            pfd->mMargin.top + pfd->mMargin.bottom;
-          if (maxElementHeight < mh) {
-            maxElementHeight = mh;
           }
         }
       }
@@ -622,16 +616,14 @@ nsLineLayout::EndSpan(nsIFrame* aFrame,
   }
   aSizeResult.width = width;
   aSizeResult.height = maxHeight;
-  if (aMaxElementSize) {
+  if (aMaxElementWidth) {
     if (psd->mNoWrap) {
-      // When we have a non-breakable span, it's max-element-size
+      // When we have a non-breakable span, it's max-element-width
       // width is its entire width.
-      aMaxElementSize->width = width;
-      aMaxElementSize->height = maxHeight;
+      *aMaxElementWidth = width;
     }
     else {
-      aMaxElementSize->width = maxElementWidth;
-      aMaxElementSize->height = maxElementHeight;
+      *aMaxElementWidth = maxElementWidth;
     }
   }
 
@@ -1013,18 +1005,14 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   // parents border/padding is <b>inside</b> the parent
   // frame. Therefore we have to subtract out the parents
   // border+padding before translating.
-  nsSize innerMaxElementSize;
-  nsHTMLReflowMetrics metrics(mComputeMaxElementSize
-                              ? &innerMaxElementSize
-                              : nsnull);
+  nsHTMLReflowMetrics metrics(mComputeMaxElementWidth);
 #ifdef DEBUG
   metrics.width = nscoord(0xdeadbeef);
   metrics.height = nscoord(0xdeadbeef);
   metrics.ascent = nscoord(0xdeadbeef);
   metrics.descent = nscoord(0xdeadbeef);
-  if (mComputeMaxElementSize) {
-    metrics.maxElementSize->width = nscoord(0xdeadbeef);
-    metrics.maxElementSize->height = nscoord(0xdeadbeef);
+  if (mComputeMaxElementWidth) {
+    metrics.mMaxElementWidth = nscoord(0xdeadbeef);
   }
 #endif
   nscoord tx = x - psd->mReflowState->mComputedBorderPadding.left;
@@ -1186,28 +1174,22 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
       nsFrame::ListTag(stdout, aFrame);
       printf(" metrics=%d,%d!\n", metrics.width, metrics.height);
     }
-    if (mComputeMaxElementSize &&
-        ((nscoord(0xdeadbeef) == metrics.maxElementSize->width) ||
-         (nscoord(0xdeadbeef) == metrics.maxElementSize->height))) {
+    if (mComputeMaxElementWidth &&
+        (nscoord(0xdeadbeef) == metrics.mMaxElementWidth)) {
       printf("nsLineLayout: ");
       nsFrame::ListTag(stdout, aFrame);
-      printf(" didn't set max-element-size!\n");
-      metrics.maxElementSize->width = 0;
-      metrics.maxElementSize->height = 0;
+      printf(" didn't set max-element-width!\n");
     }
 #ifdef REALLY_NOISY_MAX_ELEMENT_SIZE
     // Note: there are common reflow situations where this *correctly*
     // occurs; so only enable this debug noise when you really need to
     // analyze in detail.
-    if (mComputeMaxElementSize &&
-        ((metrics.maxElementSize->width > metrics.width) ||
-         (metrics.maxElementSize->height > metrics.height))) {
+    if (mComputeMaxElementWidth &&
+        (metrics.mMaxElementWidth > metrics.width)) {
       printf("nsLineLayout: ");
       nsFrame::ListTag(stdout, aFrame);
-      printf(": WARNING: maxElementSize=%d,%d > metrics=%d,%d\n",
-             metrics.maxElementSize->width,
-             metrics.maxElementSize->height,
-             metrics.width, metrics.height);
+      printf(": WARNING: maxElementWidth=%d > metrics=%d\n",
+             metrics.mMaxElementWidth, metrics.width);
     }
 #endif
     if ((metrics.width == nscoord(0xdeadbeef)) ||
@@ -1222,15 +1204,14 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   }
 #endif
 #ifdef DEBUG
-  if (nsBlockFrame::gNoisyMaxElementSize) {
+  if (nsBlockFrame::gNoisyMaxElementWidth) {
     nsFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent);
     if (!NS_INLINE_IS_BREAK_BEFORE(aReflowStatus)) {
-      if (mComputeMaxElementSize) {
+      if (mComputeMaxElementWidth) {
         printf("  ");
         nsFrame::ListTag(stdout, aFrame);
-        printf(": maxElementSize=%d,%d wh=%d,%d,\n",
-               metrics.maxElementSize->width,
-               metrics.maxElementSize->height,
+        printf(": maxElementWidth=%d wh=%d,%d,\n",
+               metrics.mMaxElementWidth,
                metrics.width, metrics.height);
       }
     }
@@ -1249,8 +1230,8 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   }
   pfd->mBounds.width = metrics.width;
   pfd->mBounds.height = metrics.height;
-  if (mComputeMaxElementSize) {
-    pfd->mMaxElementSize = *metrics.maxElementSize;
+  if (mComputeMaxElementWidth) {
+    pfd->mMaxElementWidth = metrics.mMaxElementWidth;
   }
 
   // Size the frame and size its view (if it has one)
@@ -1394,7 +1375,7 @@ nsLineLayout::ApplyStartMargin(PerFrameData* pfd,
 
   // Only apply start-margin on the first-in flow for inline frames
   if (HasPrevInFlow(pfd->mFrame)) {
-    // Zero this out so that when we compute the max-element-size of
+    // Zero this out so that when we compute the max-element-width of
     // the frame we will properly avoid adding in the starting margin.
     if (ltr)
       pfd->mMargin.left = 0;
@@ -1442,7 +1423,7 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
 
     if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
       // Only apply end margin for the last-in-flow. Zero this out so
-      // that when we compute the max-element-size of the frame we
+      // that when we compute the max-element-width of the frame we
       // will properly avoid adding in the end margin.
       if (ltr)
         pfd->mMargin.right = 0;
@@ -1692,8 +1673,8 @@ nsLineLayout::AddBulletFrame(nsIFrame* aFrame,
     // Note: y value will be updated during vertical alignment
     aFrame->GetRect(pfd->mBounds);
     pfd->mCombinedArea = aMetrics.mOverflowArea;
-    if (mComputeMaxElementSize) {
-      pfd->mMaxElementSize.SizeTo(aMetrics.width, aMetrics.height);
+    if (mComputeMaxElementWidth) {
+      pfd->mMaxElementWidth = aMetrics.width;
     }
   }
   return rv;
@@ -1822,7 +1803,7 @@ PRBool IsPercentageAwareFrame(nsIPresContext *aPresContext, nsIFrame *aFrame)
 
 void
 nsLineLayout::VerticalAlignLine(nsLineBox* aLineBox,
-                                nsSize& aMaxElementSizeResult)
+                                nscoord* aMaxElementWidthResult)
 {
   // Synthesize a PerFrameData for the block frame
   PerFrameData rootPFD;
@@ -1895,7 +1876,6 @@ nsLineLayout::VerticalAlignLine(nsLineBox* aLineBox,
   // (propagate it upward too)
   PerFrameData* pfd = psd->mFirstFrame;
   nscoord maxElementWidth = 0;
-  nscoord maxElementHeight = 0;
   PRBool prevFrameAccumulates = PR_FALSE;
   nscoord accumulatedWidth = 0;
 #ifdef HACK_MEW
@@ -1910,10 +1890,10 @@ nsLineLayout::VerticalAlignLine(nsLineBox* aLineBox,
 
   while (nsnull != pfd) {
 
-    // Compute max-element-size if necessary
-    if (mComputeMaxElementSize) {
+    // Compute max-element-width if necessary
+    if (mComputeMaxElementWidth) {
 
-      nscoord mw = pfd->mMaxElementSize.width +
+      nscoord mw = pfd->mMaxElementWidth +
         pfd->mMargin.left + pfd->mMargin.right + indent;
       // Zero |indent| after including the 'text-indent' only for the
       // frame that is indented.
@@ -1927,7 +1907,7 @@ nsLineLayout::VerticalAlignLine(nsLineBox* aLineBox,
 #ifdef HACK_MEW
 
 #ifdef DEBUG
-      if (nsBlockFrame::gNoisyMaxElementSize) 
+      if (nsBlockFrame::gNoisyMaxElementWidth) 
         frameCount++;
 #endif
         // if in Quirks mode and in a table cell with an unconstrained width, then emulate an IE
@@ -1939,7 +1919,7 @@ nsLineLayout::VerticalAlignLine(nsLineBox* aLineBox,
 
           nscoord imgSizes = AccumulateImageSizes(*mPresContext, *pfd->mFrame);
           PRBool curFrameAccumulates = (imgSizes > 0) || 
-                                       (pfd->mMaxElementSize.width == pfd->mCombinedArea.width &&
+                                       (pfd->mMaxElementWidth == pfd->mCombinedArea.width &&
                                         pfd->GetFlag(PFD_ISNONWHITESPACETEXTFRAME));
             // NOTE: we check for the maxElementWidth == the CombinedAreaWidth to detect when
             //       a textframe has whitespace in it and thus should not be used as the basis
@@ -1955,7 +1935,7 @@ nsLineLayout::VerticalAlignLine(nsLineBox* aLineBox,
           prevFrameAccumulates = curFrameAccumulates;
         
 #ifdef DEBUG
-          if (nsBlockFrame::gNoisyMaxElementSize) {
+          if (nsBlockFrame::gNoisyMaxElementWidth) {
             nsFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent);
             printf("(%d) last frame's MEW=%d | Accumulated MEW=%d\n", frameCount, mw, accumulatedWidth);
           }
@@ -1970,12 +1950,6 @@ nsLineLayout::VerticalAlignLine(nsLineBox* aLineBox,
         if (maxElementWidth < mw) {
           maxElementWidth = mw;
         }
-      }
-
-      nscoord mh = pfd->mMaxElementSize.height +
-        pfd->mMargin.top + pfd->mMargin.bottom;
-      if (maxElementHeight < mh) {
-        maxElementHeight = mh;
       }
     }
     PerSpanData* span = pfd->mSpan;
@@ -2029,22 +2003,21 @@ nsLineLayout::VerticalAlignLine(nsLineBox* aLineBox,
     pfd = pfd->mNext;
   }
 
-  // Fill in returned line-box and max-element-size data
+  // Fill in returned line-box and max-element-width data
   aLineBox->mBounds.x = psd->mLeftEdge;
   aLineBox->mBounds.y = mTopEdge;
   aLineBox->mBounds.width = psd->mX - psd->mLeftEdge;
   aLineBox->mBounds.height = lineHeight;
   mFinalLineHeight = lineHeight;
-  aMaxElementSizeResult.width = maxElementWidth;
-  aMaxElementSizeResult.height = maxElementHeight;
+  *aMaxElementWidthResult = maxElementWidth;
   aLineBox->SetAscent(baselineY - mTopEdge);
 #ifdef NOISY_VERTICAL_ALIGN
   printf(
-    "  [line]==> bounds{x,y,w,h}={%d,%d,%d,%d} lh=%d a=%d mes{w,h}={%d,%d}\n",
+    "  [line]==> bounds{x,y,w,h}={%d,%d,%d,%d} lh=%d a=%d mew=%d\n",
     aLineBox->mBounds.x, aLineBox->mBounds.y,
     aLineBox->mBounds.width, aLineBox->mBounds.height,
     mFinalLineHeight, aLineBox->GetAscent(),
-    aMaxElementSizeResult.width, aMaxElementSizeResult.height);
+    *aMaxElementWidthResult);
 #endif
 
   // Undo root-span mFrame pointer to prevent brane damage later on...
@@ -2851,8 +2824,7 @@ nsLineLayout::TrimTrailingWhiteSpaceIn(PerSpanData* psd,
         pfd->mBounds.width -= deltaWidth;
         pfd->mCombinedArea.width -= deltaWidth;
         if (0 == pfd->mBounds.width) {
-          pfd->mMaxElementSize.width = 0;
-          pfd->mMaxElementSize.height = 0;
+          pfd->mMaxElementWidth = 0;
         }
 
         // See if the text frame has already been placed in its parent

@@ -1259,9 +1259,8 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext*          aPresContext,
     delete[] mChildBorderColors;
   }
 
-  if (nsnull != aDesiredSize.maxElementSize) {
-    aDesiredSize.maxElementSize->width = aDesiredSize.width;
-    aDesiredSize.maxElementSize->height = aDesiredSize.height;
+  if (aDesiredSize.mComputeMEW) {
+    aDesiredSize.mMaxElementWidth = aDesiredSize.width;
   }
 
   aStatus = NS_FRAME_COMPLETE;

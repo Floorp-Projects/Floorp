@@ -44,8 +44,6 @@
 // for MOZ_MATHML
 #include "nsIRenderingContext.h" //to get struct nsBoundingMetrics
 
-struct nsSize;
-
 //----------------------------------------------------------------------
 
 // Option flags
@@ -131,8 +129,7 @@ struct nsHTMLReflowMetrics {
   nscoord width, height;        // [OUT] desired width and height
   nscoord ascent, descent;      // [OUT] ascent and descent information
 
-  // Set this to null if you don't need to compute the max element size
-  nsSize* maxElementSize;       // [OUT]
+  nscoord mMaxElementWidth;     // [OUT]
 
   // Used for incremental reflow. If the NS_REFLOW_CALC_MAX_WIDTH flag is set,
   // then the caller is requesting that you update and return your maximum width
@@ -165,10 +162,14 @@ struct nsHTMLReflowMetrics {
   PRUint32 mFlags;
  
   // used by tables to optimize common cases
-  PRBool mNothingChanged;
+  PRPackedBool mNothingChanged;
 
-  nsHTMLReflowMetrics(nsSize* aMaxElementSize, PRUint32 aFlags = 0) {
-    maxElementSize = aMaxElementSize;
+  // Should we compute mMaxElementWidth?
+  PRPackedBool mComputeMEW;
+
+  nsHTMLReflowMetrics(PRBool aComputeMEW, PRUint32 aFlags = 0) {
+    mComputeMEW = aComputeMEW;
+    mMaxElementWidth = 0;
     mMaximumWidth = 0;
     mFlags = aFlags;
     mOverflowArea.x = 0;
@@ -187,17 +188,9 @@ struct nsHTMLReflowMetrics {
     ascent = descent = 0;
   }
   
-  void AddBorderPaddingToMaxElementSize(const nsMargin& aBorderPadding) {
-    maxElementSize->width += aBorderPadding.left + aBorderPadding.right;
-    maxElementSize->height += aBorderPadding.top + aBorderPadding.bottom;
-  }
-
   nsHTMLReflowMetrics& operator=(const nsHTMLReflowMetrics& aOther)
   {
-    if (maxElementSize && aOther.maxElementSize) {
-      maxElementSize->width = aOther.maxElementSize->width;
-      maxElementSize->height = aOther.maxElementSize->height;
-    }
+    mMaxElementWidth = aOther.mMaxElementWidth;
     mMaximumWidth = aOther.mMaximumWidth;
     mFlags = aOther.mFlags;
     mCarriedOutBottomMargin = aOther.mCarriedOutBottomMargin;

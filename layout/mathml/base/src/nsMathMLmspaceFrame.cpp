@@ -124,9 +124,8 @@ nsMathMLmspaceFrame::Reflow(nsIPresContext*          aPresContext,
   aDesiredSize.descent = mDepth;
   aDesiredSize.width = mWidth;
   aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
-  if (nsnull != aDesiredSize.maxElementSize) {
-    aDesiredSize.maxElementSize->width = aDesiredSize.width;
-    aDesiredSize.maxElementSize->height = aDesiredSize.height;
+  if (aDesiredSize.mComputeMEW) {
+    aDesiredSize.mMaxElementWidth = aDesiredSize.width;
   }
   // Also return our bounding metrics
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;

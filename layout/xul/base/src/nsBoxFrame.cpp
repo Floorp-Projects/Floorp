@@ -925,31 +925,20 @@ nsBoxFrame::Reflow(nsIPresContext*          aPresContext,
 
   // max sure the max element size reflects
   // our min width
-  nsSize* maxElementSize = nsnull;
-  state.GetMaxElementSize(&maxElementSize);
-  if (maxElementSize)
+  nscoord* maxElementWidth = state.GetMaxElementWidth();
+  if (maxElementWidth)
   {
      nsSize minSize(0,0);
      GetMinSize(state,  minSize);
 
      if (mRect.width > minSize.width) {
        if (aReflowState.mComputedWidth == NS_INTRINSICSIZE) {
-         maxElementSize->width = minSize.width;
+         *maxElementWidth = minSize.width;
        } else {
-         maxElementSize->width = mRect.width;
+         *maxElementWidth = mRect.width;
        }
      } else {
-        maxElementSize->width = mRect.width;
-     }
-
-     if (mRect.height > minSize.height) {
-       if (aReflowState.mComputedHeight == NS_INTRINSICSIZE) {
-         maxElementSize->height = minSize.height;
-       } else {
-         maxElementSize->height = mRect.height;
-       }
-     } else {
-        maxElementSize->height = mRect.height;
+        *maxElementWidth = mRect.width;
      }
   }
 #ifdef DO_NOISY_REFLOW
@@ -957,9 +946,9 @@ nsBoxFrame::Reflow(nsIPresContext*          aPresContext,
     printf("%p ** nsBF(done) W:%d H:%d  ", this, aDesiredSize.width, aDesiredSize.height);
 
     if (maxElementSize) {
-      printf("MW:%d MH:%d\n", maxElementSize->width, maxElementSize->height); 
+      printf("MW:%d\n", *maxElementWidth); 
     } else {
-      printf("MW:? MH:?\n"); 
+      printf("MW:?\n"); 
     }
 
   }
@@ -1569,7 +1558,6 @@ nsBoxFrame::PaintChildren(nsIPresContext*      aPresContext,
   nsMargin debugMargin;
   nsMargin debugPadding;
   nsMargin border;
-  nscoord onePixel;
   nsRect inner;
 
   GetBorder(border);
@@ -1577,10 +1565,6 @@ nsBoxFrame::PaintChildren(nsIPresContext*      aPresContext,
   if (mState & NS_STATE_CURRENTLY_IN_DEBUG) 
   {
         PRBool isHorizontal = IsHorizontal();
-
-        float p2t;
-        aPresContext->GetScaledPixelsToTwips(&p2t);
-        onePixel = NSIntPixelsToTwips(1, p2t);
 
         GetDebugBorder(debugBorder);
         PixelMarginToTwips(aPresContext, debugBorder);
@@ -1699,6 +1683,10 @@ nsBoxFrame::PaintChildren(nsIPresContext*      aPresContext,
 
   if (mState & NS_STATE_CURRENTLY_IN_DEBUG) 
   {
+    float p2t;
+    aPresContext->GetScaledPixelsToTwips(&p2t);
+    nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+
     GetContentRect(r);
 
     if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
@@ -2605,14 +2593,14 @@ nsBoxFrame::CreateViewForFrame(nsIPresContext*  aPresContext,
             // object's child elements, we can't tell if it's a leaf by looking
             // at whether the frame has any child frames
             nsCOMPtr<nsIContent> content;
-            PRBool      result = PR_FALSE;
+            PRBool canContainChildren = PR_FALSE;
 
             aFrame->GetContent(getter_AddRefs(content));
             if (content) {
-              content->CanContainChildren(result);
+              content->CanContainChildren(canContainChildren);
             }
 
-            if (result) {
+            if (canContainChildren) {
               // The view needs to be visible, but marked as having transparent
               // content
               viewHasTransparentContent = PR_TRUE;

@@ -902,11 +902,9 @@ nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
   nsresult  result;
 
 #ifdef DEBUG
-  nsSize* saveMaxElementSize = aDesiredSize.maxElementSize;
 #ifdef REALLY_NOISY_MAX_ELEMENT_SIZE
-  if (nsnull != aDesiredSize.maxElementSize) {
-    aDesiredSize.maxElementSize->width = nscoord(0xdeadbeef);
-    aDesiredSize.maxElementSize->height = nscoord(0xdeadbeef);
+  if (aDesiredSize.mComputeMEW) {
+    aDesiredSize.mMaxElementWidth = nscoord(0xdeadbeef);
   }
 #endif
 #endif
@@ -928,20 +926,12 @@ nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
                              aStatus);
 
 #ifdef DEBUG
-  if (saveMaxElementSize != aDesiredSize.maxElementSize) {
-    printf("nsContainerFrame: ");
-    nsFrame::ListTag(stdout, aKidFrame);
-    printf(" changed the maxElementSize *pointer* (baaaad boy!)\n");
-  }
 #ifdef REALLY_NOISY_MAX_ELEMENT_SIZE
-  if ((nsnull != aDesiredSize.maxElementSize) &&
-      ((nscoord(0xdeadbeef) == aDesiredSize.maxElementSize->width) ||
-       (nscoord(0xdeadbeef) == aDesiredSize.maxElementSize->height))) {
+  if (aDesiredSize.mComputeMEW &&
+      (nscoord(0xdeadbeef) == aDesiredSize.mMaxElementWidth)) {
     printf("nsContainerFrame: ");
     nsFrame::ListTag(stdout, aKidFrame);
-    printf(" didn't set max-element-size!\n");
-    aDesiredSize.maxElementSize->width = 0;
-    aDesiredSize.maxElementSize->height = 0;
+    printf(" didn't set max-element-width!\n");
   }
 #endif
 #endif

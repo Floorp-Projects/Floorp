@@ -125,9 +125,8 @@ BRFrame::Reflow(nsIPresContext* aPresContext,
 {
   DO_GLOBAL_REFLOW_COUNT("BRFrame", aReflowState.reason);
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aMetrics, aStatus);
-  if (aMetrics.maxElementSize) {
-    aMetrics.maxElementSize->width = 0;
-    aMetrics.maxElementSize->height = 0;
+  if (aMetrics.mComputeMEW) {
+    aMetrics.mMaxElementWidth = 0;
   }
   aMetrics.height = 0; // BR frames with height 0 are ignored in quirks
                        // mode by nsLineLayout::VerticalAlignFrames .
@@ -187,14 +186,9 @@ BRFrame::Reflow(nsIPresContext* aPresContext,
       // XXX This also fixes bug 10036!
       aMetrics.width = 1;
 
-      // Update max-element-size to keep us honest
-      if (aMetrics.maxElementSize) {
-        if (aMetrics.width > aMetrics.maxElementSize->width) {
-          aMetrics.maxElementSize->width = aMetrics.width;
-        }
-        if (aMetrics.height > aMetrics.maxElementSize->height) {
-          aMetrics.maxElementSize->height = aMetrics.height;
-        }
+      // Update max-element-width to keep us honest
+      if (aMetrics.mComputeMEW && aMetrics.width > aMetrics.mMaxElementWidth) {
+        aMetrics.mMaxElementWidth = aMetrics.width;
       }
     }
 

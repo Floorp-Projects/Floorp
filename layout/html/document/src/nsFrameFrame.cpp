@@ -466,11 +466,11 @@ nsHTMLFrameOuterFrame::GetDesiredSize(nsIPresContext* aPresContext,
   aDesiredSize.ascent = aDesiredSize.height;
   aDesiredSize.descent = 0;
 
-  // For unknown reasons, the maxElementSize for the InnerFrame is used, but the
-  // maxElementSize for the OuterFrame is ignored, the following is not used!
-  if (aDesiredSize.maxElementSize) {
-    aDesiredSize.maxElementSize->width = aDesiredSize.width;
-    aDesiredSize.maxElementSize->height = aDesiredSize.height;
+  // For unknown reasons, the max-element-width for the InnerFrame is
+  // used, but the max-element-width for the OuterFrame is ignored, the
+  // following is not used!
+  if (aDesiredSize.mComputeMEW) {
+    aDesiredSize.mMaxElementWidth = aDesiredSize.width;
   }
 }
 
@@ -530,9 +530,8 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext*          aPresContext,
   } else {
     aDesiredSize.width  = aReflowState.availableWidth; // FRAME
     aDesiredSize.height = aReflowState.availableHeight;
-    if (aDesiredSize.maxElementSize) { // Probably not used...
-      aDesiredSize.maxElementSize->width = aDesiredSize.width;
-      aDesiredSize.maxElementSize->height = aDesiredSize.height;
+    if (aDesiredSize.mComputeMEW) { // Probably not used...
+      aDesiredSize.mMaxElementWidth = aDesiredSize.width;
     }
   }
 
@@ -556,7 +555,7 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext*          aPresContext,
   // an incremental reflow to a dirty reflow unless our child is along
   // the path.
   nsIFrame* firstChild = mFrames.FirstChild();
-  nsHTMLReflowMetrics kidMetrics(aDesiredSize.maxElementSize);
+  nsHTMLReflowMetrics kidMetrics(aDesiredSize.mComputeMEW);
   nsHTMLReflowState   kidReflowState(aPresContext, aReflowState, firstChild,
                                      innerSize);
   ReflowChild(firstChild, aPresContext, kidMetrics, kidReflowState,
@@ -567,15 +566,17 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext*          aPresContext,
   // maxElementSize for the OuterFrame is ignored, add in border here to prevent
   // a table from shrinking inside the iframe's border when resized.
   if (IsInline()) {
-    if (kidMetrics.maxElementSize) {
-      kidMetrics.maxElementSize->width += border.left + border.right;
-      kidMetrics.maxElementSize->height += border.top + border.bottom;
+    if (kidMetrics.mComputeMEW) {
+      kidMetrics.mMaxElementWidth += border.left + border.right;
     }
   }
 
   // Place and size the child
   FinishReflowChild(firstChild, aPresContext, nsnull,
                     kidMetrics, offset.x, offset.y, 0);
+  if (aDesiredSize.mComputeMEW) {
+    aDesiredSize.mMaxElementWidth = kidMetrics.mMaxElementWidth;
+  }
 
   // Determine if we need to repaint our border
   CheckInvalidateBorder(aPresContext, aDesiredSize, aReflowState);
@@ -1313,31 +1314,20 @@ nsHTMLFrameInnerFrame::GetDesiredSize(nsIPresContext* aPresContext,
   aDesiredSize.ascent = aDesiredSize.height;
   aDesiredSize.descent = 0;
 
-  // For unknown reasons, the maxElementSize for the InnerFrame is
-  // used, but the maxElementSize for the OuterFrame is ignored, make
+  // For unknown reasons, the maxElementWidth for the InnerFrame is
+  // used, but the maxElementWidth for the OuterFrame is ignored, make
   // sure to get it right here!
 
-  if (aDesiredSize.maxElementSize) {
+  if (aDesiredSize.mComputeMEW) {
     if ((NS_UNCONSTRAINEDSIZE == aReflowState.availableWidth) ||
         (eStyleUnit_Percent ==
          aReflowState.mStylePosition->mWidth.GetUnit())) {
       // percent width springy down to 0 px
 
-      aDesiredSize.maxElementSize->width = 0;
+      aDesiredSize.mMaxElementWidth = 0;
     }
     else {
-      aDesiredSize.maxElementSize->width = aDesiredSize.width;
-    }
-
-    if ((NS_UNCONSTRAINEDSIZE == aReflowState.availableHeight) ||
-        (eStyleUnit_Percent ==
-         aReflowState.mStylePosition->mHeight.GetUnit())) {
-      // percent height springy down to 0px
-
-      aDesiredSize.maxElementSize->height = 0;
-    }
-    else {
-      aDesiredSize.maxElementSize->height = aDesiredSize.height;
+      aDesiredSize.mMaxElementWidth = aDesiredSize.width;
     }
   }
 }

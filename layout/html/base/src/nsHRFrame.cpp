@@ -309,29 +309,29 @@ HRuleFrame::Reflow(nsIPresContext*          aPresContext,
   aDesiredSize.ascent = aDesiredSize.height;
   aDesiredSize.descent = 0;
 
-  // HR's do not impact the max-element-size, unless a width is
+  // HR's do not impact the max-element-width, unless a width is
   // specified otherwise tables behave badly. This makes sense -- they
   // are springy.
-  if (nsnull != aDesiredSize.maxElementSize) {
+  if (aDesiredSize.mComputeMEW) {
     if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedWidth) {
       nsStyleUnit widthUnit = aReflowState.mStylePosition->mWidth.GetUnit();
       if ((eStyleUnit_Percent == widthUnit) || 
           (eStyleUnit_Auto == widthUnit)) {
         // When the HR is using an 'auto' or percentage width, make sure it
         // remains springy.
-        aDesiredSize.maxElementSize->width = onePixel;
+        aDesiredSize.mMaxElementWidth = onePixel;
         aDesiredSize.width = PR_MAX(aDesiredSize.width, onePixel);
       }
       else {
-        aDesiredSize.maxElementSize->width = aReflowState.mComputedWidth;
+        aDesiredSize.mMaxElementWidth = aReflowState.mComputedWidth;
       }
     }
     else {
-      aDesiredSize.maxElementSize->width = onePixel;
+      aDesiredSize.mMaxElementWidth = onePixel;
       aDesiredSize.width = PR_MAX(aDesiredSize.width, onePixel);
     }
-    NS_ASSERTION(aDesiredSize.maxElementSize->width <= aDesiredSize.width, "bad max-element-size width");
-    aDesiredSize.maxElementSize->height = aDesiredSize.height;
+    NS_ASSERTION(aDesiredSize.mMaxElementWidth <= aDesiredSize.width,
+                 "bad max-element-width");
   }
 
   aStatus = NS_FRAME_COMPLETE;

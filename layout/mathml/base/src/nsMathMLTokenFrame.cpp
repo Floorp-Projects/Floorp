@@ -157,7 +157,7 @@ printf("\n");
   aDesiredSize.mBoundingMetrics.Clear();
 
   // ask our children to compute their bounding metrics
-  nsHTMLReflowMetrics childDesiredSize(aDesiredSize.maxElementSize,
+  nsHTMLReflowMetrics childDesiredSize(aDesiredSize.mComputeMEW,
                       aDesiredSize.mFlags | NS_REFLOW_CALC_BOUNDING_METRICS);
   nsSize availSize(aReflowState.mComputedWidth, aReflowState.mComputedHeight);
   PRInt32 count = 0;
@@ -183,6 +183,10 @@ printf("\n");
 
     count++;
     childFrame->GetNextSibling(&childFrame);
+  }
+
+  if (aDesiredSize.mComputeMEW) {
+    aDesiredSize.mMaxElementWidth = childDesiredSize.mMaxElementWidth;
   }
 
   // cache the frame's mBoundingMetrics

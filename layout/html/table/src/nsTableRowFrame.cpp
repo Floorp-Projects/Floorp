@@ -1010,7 +1010,6 @@ nsTableRowFrame::ReflowChildren(nsIPresContext*          aPresContext,
           nsSize  kidAvailSize(availColWidth, aReflowState.availableHeight);
           nsReflowReason reason = eReflowReason_Resize;
           PRBool cellToWatch = PR_FALSE;
-          nsSize maxElementSize;
           // If it's a dirty frame, then check whether it's the initial reflow
           if (frameState & NS_FRAME_FIRST_REFLOW) {
             reason = eReflowReason_Initial;
@@ -1033,7 +1032,7 @@ nsTableRowFrame::ReflowChildren(nsIPresContext*          aPresContext,
                 desiredSize.mFlags |= NS_REFLOW_CALC_MAX_WIDTH; 
               }
               // request to get the max element size 
-              desiredSize.maxElementSize = &maxElementSize;
+              desiredSize.mComputeMEW = PR_TRUE;
             }
             else {
               cellToWatch = PR_FALSE;
@@ -1056,11 +1055,11 @@ nsTableRowFrame::ReflowChildren(nsIPresContext*          aPresContext,
             nscoord maxWidth = (NS_UNCONSTRAINEDSIZE == availCellWidth) 
                                 ? desiredSize.width : desiredSize.mMaximumWidth;
             // save the max element width and max width
-            if (desiredSize.maxElementSize) {
-              cellFrame->SetPass1MaxElementWidth(desiredSize.width, desiredSize.maxElementSize->width);
-              if (desiredSize.maxElementSize->width > desiredSize.width) {
+            if (desiredSize.mComputeMEW) {
+              cellFrame->SetPass1MaxElementWidth(desiredSize.width, desiredSize.mMaxElementWidth);
+              if (desiredSize.mMaxElementWidth > desiredSize.width) {
                 NS_ASSERTION(PR_FALSE, "max element width exceeded desired width");
-                desiredSize.width = desiredSize.maxElementSize->width;
+                desiredSize.width = desiredSize.mMaxElementWidth;
               }
             }
             cellFrame->SetMaximumWidth(maxWidth);
@@ -1287,11 +1286,10 @@ nsTableRowFrame::IR_TargetIsChild(nsIPresContext*          aPresContext,
     nsSize  cellAvailSize(cellAvailWidth, NS_UNCONSTRAINEDSIZE);
 
     // Pass along the reflow command
-    nsSize              kidMaxElementSize;
     // Unless this is a fixed-layout table, then have the cell incrementally
     // update its maximum width. 
-    nsHTMLReflowMetrics cellMet(&kidMaxElementSize, isAutoLayout ? 
-                                                    NS_REFLOW_CALC_MAX_WIDTH : 0);
+    nsHTMLReflowMetrics cellMet(PR_TRUE,
+                                isAutoLayout ? NS_REFLOW_CALC_MAX_WIDTH : 0);
     GET_PIXELS_TO_TWIPS(aPresContext, p2t);
     nsTableCellReflowState kidRS(aPresContext, aReflowState, aNextFrame, cellAvailSize, 
                                  aReflowState.reason);
@@ -1320,7 +1318,7 @@ nsTableRowFrame::IR_TargetIsChild(nsIPresContext*          aPresContext,
     nscoord initCellDesDescent = cellMet.descent;
     
     // cache the max-elem and maximum widths
-    cellFrame->SetPass1MaxElementWidth(cellMet.width, kidMaxElementSize.width);
+    cellFrame->SetPass1MaxElementWidth(cellMet.width, cellMet.mMaxElementWidth);
     cellFrame->SetMaximumWidth(cellMet.mMaximumWidth);
 
     // Calculate the cell's actual size given its pass2 size. This function
