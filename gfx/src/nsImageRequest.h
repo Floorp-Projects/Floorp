@@ -58,9 +58,12 @@ public:
   // Interrupt loading of just this image.
   virtual void Interrupt();
 
+  // XXX These should go: fix ns_observer_proc to be a static method
   IL_ImageReq *GetImageRequest() { return mImageReq; }
   void SetImageRequest(IL_ImageReq *aImageReq) { mImageReq = aImageReq; }
   nsVoidArray *GetObservers() { return mObservers; }
+
+  void ImageDestroyed();
 
 private:
   IL_ImageReq *mImageReq;
