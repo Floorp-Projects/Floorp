@@ -1383,6 +1383,36 @@ nsEditorShell::InsertText(const PRUnichar *textToInsert)
 }
 
 NS_IMETHODIMP
+nsEditorShell::InsertSource(const PRUnichar *aSourceToInsert)
+{
+  nsresult  err = NS_NOINTERFACE;
+  
+  nsAutoString sourceToInsert(aSourceToInsert);
+  
+  switch (mEditorType)
+  {
+    case ePlainTextEditorType:
+      {
+        nsCOMPtr<nsITextEditor>  textEditor = do_QueryInterface(mEditor);
+        if (textEditor)
+          err = textEditor->InsertText(sourceToInsert);
+      }
+      break;
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
+        if (htmlEditor)
+          err = htmlEditor->InsertHTML(sourceToInsert);
+      }
+      break;
+    default:
+      err = NS_NOINTERFACE;
+  }
+
+  return err;
+}
+
+NS_IMETHODIMP
 nsEditorShell::InsertBreak()
 {
   nsresult  err = NS_NOINTERFACE;
@@ -1592,7 +1622,12 @@ nsEditorShell::GetWrapColumn(PRInt32* aWrapColumn)
       {
         nsCOMPtr<nsITextEditor>  textEditor = do_QueryInterface(mEditor);
         if (textEditor)
-          err = textEditor->GetBodyWrapWidth(aWrapColumn);
+        {
+          PRUint32 wc;
+          err = textEditor->GetBodyWrapWidth(&wc);
+          if (NS_SUCCEEDED(err))
+            *aWrapColumn = (PRInt32)wc;
+        }
       }
       break;
     default:

@@ -39,6 +39,7 @@
 
 #include "nsIHTMLContentSink.h"
 
+#include "nsHTMLTags.h"
 
 #define NS_HTMLTOTEXTSINK_STREAM_CID  \
   {0xa39c6bff, 0x15f0, 0x11d2, \
@@ -107,7 +108,11 @@ class nsHTMLToTXTSinkStream : public nsIHTMLContentSink
   NS_IMETHOD BeginContext(PRInt32 aPosition);
   NS_IMETHOD EndContext(PRInt32 aPosition);
 
-  NS_IMETHOD DoPrettyPrint(PRBool aDoPrettyPrint);
+  /*******************************************************************
+   * The following methods are specific to this class.
+   *******************************************************************/
+  NS_IMETHOD SetWrapColumn(PRUint32 aWrapCol)   { mWrapColumn = aWrapCol; return NS_OK; };
+  NS_IMETHOD DoPrettyPrint(PRBool aPP)          { mPrettyPrint = aPP; return NS_OK; };
 
 protected:
   void EnsureBufferSize(PRInt32 aNewSize);
@@ -127,7 +132,15 @@ protected:
   PRBool           mDoOutput;
   PRBool           mPreformatted;
   PRBool           mPrettyPrint;
-  PRInt32          mWrapColumn;
+  PRUint32         mWrapColumn;
+
+  // The tag stack: the stack of tags we're operating on, so we can nest:
+  nsHTMLTag       *mTagStack;
+  PRUint32         mTagStackIndex;
+
+  // The stack for ordered lists:
+  PRInt32         *mOLStack;
+  PRUint32         mOLStackIndex;
 
   char*            mBuffer;
   PRInt32          mBufferLength;  // The length of the data in the buffer
@@ -141,11 +154,13 @@ extern NS_HTMLPARS nsresult
 NS_New_HTMLToTXT_SinkStream(nsIHTMLContentSink** aInstancePtrResult, 
                             nsIOutputStream* aOutStream,
                             const nsString* aCharsetOverride=nsnull,
+                            PRUint32 aWrapColumn=0,
                             PRBool aPrettyPrint=PR_FALSE);
 
 extern NS_HTMLPARS nsresult
 NS_New_HTMLToTXT_SinkStream(nsIHTMLContentSink** aInstancePtrResult, 
                             nsString* aOutString,
+                            PRUint32 aWrapColumn=0,
                             PRBool aPrettyPrint=PR_FALSE);
 
 #endif

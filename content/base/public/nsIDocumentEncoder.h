@@ -110,6 +110,7 @@ public:
   NS_IMETHOD SubstituteURL(const nsString& aOriginal,
                            const nsString& aReplacement) = 0;
   NS_IMETHOD PrettyPrint(PRBool aYes) = 0;
+  NS_IMETHOD SetWrapColumn(PRUint32 aWC) = 0;
 };
 
 
@@ -123,6 +124,7 @@ public:
   // Get embedded objects -- images, links, etc.
   // NOTE: we may want to use an enumerator
   NS_IMETHOD PrettyPrint(PRBool aYes) = 0;
+  NS_IMETHOD SetWrapColumn(PRUint32 aWC) = 0;
 };
 
 

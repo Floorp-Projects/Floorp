@@ -194,7 +194,7 @@
       <menuitem name="Image..." onclick="EditorInsertImage()"/>
       <menuitem name="Horizontal Line" onclick="EditorInsertHLine()"/>
       <menuitem name=".Table" onclick=""/>
-      <menuitem name=".HTML Tag..." onclick=""/>
+      <menuitem name=".HTML Source" onclick="EditorInsertHTML()"/>
       <separator />
       <menuitem name=".Line Break" onclick=""/>
       <menuitem name=".Break Below Image(s)" onclick=""/>

@@ -1440,7 +1440,7 @@ findPreElement(nsIDOMDocument* domdoc)
 // Get the wrap width for the first PRE tag in the document.
 // If no PRE tag, throw an error.
 //
-NS_IMETHODIMP nsTextEditor::GetBodyWrapWidth(PRInt32 *aWrapColumn)
+NS_IMETHODIMP nsTextEditor::GetBodyWrapWidth(PRUint32 *aWrapColumn)
 {
   nsresult res;
 
@@ -1500,12 +1500,11 @@ NS_IMETHODIMP nsTextEditor::GetBodyWrapWidth(PRInt32 *aWrapColumn)
 // (Eventually want to search for more than one in case there are
 // interspersed quoted text blocks.)
 // 
-NS_IMETHODIMP nsTextEditor::SetBodyWrapWidth(PRInt32 aWrapColumn)
+NS_IMETHODIMP nsTextEditor::SetBodyWrapWidth(PRUint32 aWrapColumn)
 {
   nsresult res;
 
-  if (! aWrapColumn)
-    return NS_ERROR_NULL_POINTER;
+  mWrapColumn = aWrapColumn;
 
   nsCOMPtr<nsIDOMDocument> domdoc;
   nsEditor::GetDocument(getter_AddRefs(domdoc));
@@ -1591,6 +1590,7 @@ NS_IMETHODIMP nsTextEditor::OutputTextToString(nsString& aOutputString, PRBool a
 	  
     // Try to turn on pretty printing, but don't panic if it doesn't work:
     (void)encoder->PrettyPrint(PR_TRUE);
+    (void)encoder->SetWrapColumn(mWrapColumn);
 
     rv = encoder->EncodeToString(aOutputString);
   }
@@ -1689,6 +1689,7 @@ NS_IMETHODIMP nsTextEditor::OutputTextToStream(nsIOutputStream* aOutputStream, n
 
   // Try to turn on pretty printing, but don't panic if it doesn't work:
   (void)encoder->PrettyPrint(PR_TRUE);
+  (void)encoder->SetWrapColumn(mWrapColumn);
 
   return encoder->EncodeToStream(aOutputStream);
 }
