@@ -207,7 +207,7 @@ NS_IMPL_ISUPPORTS(nsDocFactoryImpl,kIDocumentLoaderFactoryIID);
 static char* gValidTypes[] = {"text/html","application/rtf",0};
 static char* gXMLTypes[] = {"text/xml", "application/xml", 0};
 
-static char* gImageTypes[] = {"image/gif", "image/jpeg", 0 };
+static char* gImageTypes[] = {"image/gif", "image/jpeg", "image/png", 0 };
 
 static char* gPluginTypes[] = {
     "video/quicktime",
