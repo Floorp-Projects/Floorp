@@ -217,6 +217,16 @@ protected:
 
     void        setItemLabelString    (Widget menu, HT_Resource entry);
 
+    // Item callbacks
+    static void      item_armed_cb      (Widget,XtPointer,XtPointer);
+    static void      item_disarmed_cb   (Widget,XtPointer,XtPointer);
+    static void      item_activated_cb  (Widget,XtPointer,XtPointer);
+    static void      item_cascading_cb  (Widget,XtPointer,XtPointer);
+    static void      item_enter_cb      (Widget,XtPointer,XtPointer);
+    static void      item_leave_cb      (Widget,XtPointer,XtPointer);
+    static void      item_free_data_cb  (Widget,XtPointer,XtPointer);
+    static void      pane_mapping_eh    (Widget,XtPointer,XEvent *,Boolean *);
+
 private:
 
     XFE_Frame *        _frame;                // The ancestor frame
@@ -227,16 +237,6 @@ private:
     char *             _dropAddressBuffer;    // 
     char *             _dropTitleBuffer;      // 
     time_t             _dropLastAccess;       // 
-
-    // Item callbacks
-    static void      item_armed_cb      (Widget,XtPointer,XtPointer);
-    static void      item_disarmed_cb   (Widget,XtPointer,XtPointer);
-    static void      item_activated_cb  (Widget,XtPointer,XtPointer);
-    static void      item_cascading_cb  (Widget,XtPointer,XtPointer);
-    static void      item_enter_cb      (Widget,XtPointer,XtPointer);
-    static void      item_leave_cb      (Widget,XtPointer,XtPointer);
-    static void      item_free_data_cb  (Widget,XtPointer,XtPointer);
-    static void      pane_mapping_eh    (Widget,XtPointer,XEvent *,Boolean *);
 
     // Format item blah blah blah
     static XmString  formatItem         (HT_Resource        entry, 
