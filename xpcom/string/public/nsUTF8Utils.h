@@ -263,7 +263,6 @@ class CalculateUTF8Length
           {
             NS_ERROR("Not a UTF-8 string. This code should only be used for converting from known UTF-8 strings.");
             mErrorEncountered = PR_TRUE;
-            mLength = 0;
             return N;
           }
         return p - start;
