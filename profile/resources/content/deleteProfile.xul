@@ -27,8 +27,8 @@
   <box orient="vertical" flex="1">
     <html>&intro;</html> 
     <html>&question;</html> 
-    <separator class="groove"/>
-    <box id="okCancelButtons" class="Button1"/>
+    <separator/>
+    <box id="okCancelButtonsRight" class="Button1"/>
   </box>
 
 </window>

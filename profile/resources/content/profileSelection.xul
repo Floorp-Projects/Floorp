@@ -29,6 +29,7 @@
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/profile/profile.css" type="text/css"?>
+
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window [
@@ -57,16 +58,16 @@
     <key id="fooKey" key="s" xulkey="true" shift="true" onkeydown="foo()"/>
   </keyset>
 
-  <box class="box-header" id="header" value="&windowtitle.label;"/>
+  <box class="box-header" id="header" title="&profilemanager.label;" description="&windowtitle.label;"/>
   
-  <box id="contentarea" flex="1">
+  <box class="wizard-box" flex="1">
 
     <!-- instructions -->
     <deck id="prattle">
       <html id="intro" style="width: 17em;" flex="1">&introgeneral.label;</html>
       <box orient="vertical" id="manager">
         <html style="width: 17em;" class="label">&pmTextA.label;</html>
-        <spring flex="1"/>
+        <separator/>
         <box>
           <box orient="vertical" flex="1" id="managebuttons">
             <button id="newbutton" value="&newButton.label;" oncommand="CreateProfileWizard();"/>

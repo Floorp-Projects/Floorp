@@ -12,7 +12,7 @@
 ]>
 
 
-<window title="&newprofile.title;" align="vertical"
+<window title="&newprofile.title;" orient="vertical"
         class="color-dialog"
         xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -27,11 +27,11 @@
 	<script language="javascript" src="chrome://global/content/wizardManager.js"></script>
 	<script language="javascript" src="chrome://global/content/widgetStateManager.js"></script>
 
-  <box class="box-header" id="header" value="&profileWizard.title;"/>
-  <box id="contentarea" flex="1">
-  	<html:iframe src="about:blank" style="width: 40em; height: 18em; overflow: auto;" name="content" id="content" flex="1"/>
+  <box class="box-header" id="header" title="&window.title.label;" description="&profileWizard.title;"/>
+  <box class="wizard-box" flex="1">
+  	<html:iframe src="about:blank" style="width: 40em; height: 20em; overflow: auto;" name="content" id="content" flex="1"/>
   </box>
+  <separator class="groove"/>
 	<box id="wizardButtons"/>
-  <box class="box-status" id="status" value="&window.title.label;" progress=""/>
 
 </window>

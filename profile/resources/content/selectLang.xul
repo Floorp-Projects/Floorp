@@ -39,7 +39,8 @@
       </template>
 
     </tree>
-  
-  <box id="okCancelButtons"/>
+
+  <separator/>  
+  <box id="okCancelButtonsRight"/>
         
 </window>        
