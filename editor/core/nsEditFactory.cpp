@@ -39,7 +39,7 @@ getEditFactory(nsIFactory **aFactory)
   {
     nsEditFactory *factory = new nsEditFactory(getter_AddRefs(g_pNSIFactory));
     *aFactory = g_pNSIFactory;
-    NS_IF_RELEASE(*aFactory);
+    NS_IF_ADDREF(*aFactory);
     if (factory)
       result = NS_OK;
   }
