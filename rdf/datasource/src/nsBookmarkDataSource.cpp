@@ -1125,34 +1125,36 @@ BookmarkDataSourceImpl::ReadBookmarks(void)
 	bookmarksFile += "rdf";
 	bookmarksFile += "bookmarks.html";
 
-	nsInputFileStream strm(bookmarksFile);
-
-	if (! strm.is_open())
-	{
-		NS_ERROR("unable to open file");
-		return NS_ERROR_FAILURE;
-	}
-
-	BookmarkParser parser;
-	parser.Init(&strm, NS_STATIC_CAST(nsIRDFDataSource *, this));
-
-#ifdef	XP_MAC
-	parser.SetIEFavoritesRoot(kURINC_IEFavoritesRoot);
-#endif
-
-#ifdef	XP_WIN
-	nsCOMPtr<nsIRDFResource>	ieFolder;
-	nsSpecialSystemDirectory	ieFavoritesFile(nsSpecialSystemDirectory::Win_Favorites);
-	nsFileURL			ieFavoritesURLSpec(ieFavoritesFile);
-	const char			*ieFavoritesURL = ieFavoritesURLSpec.GetAsString();
-	parser.SetIEFavoritesRoot(ieFavoritesURL);
-#endif
-
-	parser.Parse(kNC_BookmarksRoot, kNC_Bookmark);
-
 	PRBool	foundIERoot = PR_FALSE;
-	parser.ParserFoundIEFavoritesRoot(&foundIERoot);
+	{ // <-- scope the stream to get the open/close automatically.
+		nsInputFileStream strm(bookmarksFile);
 
+		if (! strm.is_open())
+		{
+			NS_ERROR("unable to open file");
+			return NS_ERROR_FAILURE;
+		}
+
+		BookmarkParser parser;
+		parser.Init(&strm, NS_STATIC_CAST(nsIRDFDataSource *, this));
+
+	#ifdef	XP_MAC
+		parser.SetIEFavoritesRoot(kURINC_IEFavoritesRoot);
+	#endif
+
+	#ifdef	XP_WIN
+		nsCOMPtr<nsIRDFResource>	ieFolder;
+		nsSpecialSystemDirectory	ieFavoritesFile(nsSpecialSystemDirectory::Win_Favorites);
+		nsFileURL			ieFavoritesURLSpec(ieFavoritesFile);
+		const char			*ieFavoritesURL = ieFavoritesURLSpec.GetAsString();
+		parser.SetIEFavoritesRoot(ieFavoritesURL);
+	#endif
+
+		parser.Parse(kNC_BookmarksRoot, kNC_Bookmark);
+
+		parser.ParserFoundIEFavoritesRoot(&foundIERoot);
+	} // <-- scope the stream to get the open/close automatically.
+	
 	// look for and import any IE Favorites
 	nsAutoString	ieTitle("Imported IE Favorites");		// XXX localization?
 
@@ -1162,7 +1164,7 @@ BookmarkDataSourceImpl::ReadBookmarks(void)
 	ieFavoritesFile += "Favorites.html";
 
 	nsInputFileStream	ieStream(ieFavoritesFile);
-	if (strm.is_open())
+	if (ieStream.is_open())
 	{
 		NS_WITH_SERVICE(nsIRDFContainerUtils, rdfc, kRDFContainerUtilsCID, &rv);
 		if (NS_SUCCEEDED(rv))
@@ -1180,7 +1182,7 @@ BookmarkDataSourceImpl::ReadBookmarks(void)
 				}
 				
 				// if the IE Favorites root isn't somewhere in bookmarks.html, add it
-				if (foundIERoot == PR_FALSE)
+				if (!foundIERoot)
 				{
 					nsCOMPtr<nsIRDFContainer> bookmarksRoot;
 					rv = NS_NewRDFContainer(mInner, kNC_BookmarksRoot, getter_AddRefs(bookmarksRoot));
@@ -1204,7 +1206,7 @@ BookmarkDataSourceImpl::ReadBookmarks(void)
 		}
 
 		// if the IE Favorites root isn't somewhere in bookmarks.html, add it
-		if (foundIERoot == PR_FALSE)
+		if (!foundIERoot)
 		{
 			nsCOMPtr<nsIRDFContainer> container;
 			rv = NS_NewRDFContainer(mInner, kNC_BookmarksRoot, getter_AddRefs(container));
