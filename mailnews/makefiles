@@ -12,6 +12,8 @@ mailnews/addrbook/src/Makefile
 mailnews/addrbook/resources/Makefile
 mailnews/addrbook/resources/content/Makefile
 mailnews/addrbook/resources/skin/Makefile
+mailnews/addrbook/resources/locale/Makefile
+mailnews/addrbook/resources/locale/en-US/Makefile
 mailnews/addrbook/prefs/Makefile
 mailnews/addrbook/prefs/resources/Makefile
 mailnews/addrbook/prefs/resources/content/Makefile

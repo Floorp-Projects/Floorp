@@ -16,19 +16,16 @@
 # This is a list of local files which get copied to the res\mailnews\messenger directory
 #
 
-addressbook.xul
+abCardOverlay.js
+abCardOverlay.xul
+abCardViewOverlay.js
+abCardViewOverlay.xul
+abCommon.js
+abDirTreeOverlay.xul
+abEditCardDialog.xul
+abNewCardDialog.xul
+abResultsTreeOverlay.xul
+abSelectAddressesDialog.js
+abSelectAddressesDialog.xul
 addressbook.js
-dirPane.xul
-dirPane.js
-resultPane.xul
-resultPane.js
-cardviewPane.xul
-cardviewPane.js
-addresspanes.html
-editcard.xul
-editcard.js
-newcardDialog.xul
-editcardDialog.xul
-selectaddress.xul
-selectaddress.js
-addressbucket.xul
+addressbook.xul

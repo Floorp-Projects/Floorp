@@ -30,8 +30,6 @@ SAMPLES_DIR = $(DIST)/bin/chrome/addressbook/skin/default
 
 EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/addressbook.css \
-	$(srcdir)/dirPane.css \
-	$(srcdir)/resultPane.css \
 	$(srcdir)/newcard.gif \
 	$(srcdir)/newlist.gif \
 	$(srcdir)/property.gif \

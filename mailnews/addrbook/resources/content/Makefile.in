@@ -29,22 +29,19 @@ include $(topsrcdir)/config/rules.mk
 SAMPLES_DIR = $(DIST)/bin/chrome/addressbook/content/default
 
 EXPORT_RESOURCE_SAMPLES = \
-	$(srcdir)/addressbook.xul \
+	$(srcdir)/abCardOverlay.js \
+	$(srcdir)/abCardOverlay.xul \
+	$(srcdir)/abCardViewOverlay.js \
+	$(srcdir)/abCardViewOverlay.xul \
+	$(srcdir)/abCommon.js \
+	$(srcdir)/abDirTreeOverlay.xul \
+	$(srcdir)/abEditCardDialog.xul \
+	$(srcdir)/abNewCardDialog.xul \
+	$(srcdir)/abResultsTreeOverlay.xul \
+	$(srcdir)/abSelectAddressesDialog.js \
+	$(srcdir)/abSelectAddressesDialog.xul \
 	$(srcdir)/addressbook.js \
-	$(srcdir)/dirPane.xul \
-	$(srcdir)/dirPane.js \
-	$(srcdir)/resultPane.xul \
-	$(srcdir)/resultPane.js \
-	$(srcdir)/cardviewPane.xul \
-	$(srcdir)/cardviewPane.js \
-	$(srcdir)/addresspanes.html \
-	$(srcdir)/editcard.xul \
-	$(srcdir)/editcard.js \
-	$(srcdir)/newcardDialog.xul \
-	$(srcdir)/editcardDialog.xul \
-	$(srcdir)/selectaddress.xul \
-	$(srcdir)/selectaddress.js \
-	$(srcdir)/addressbucket.xul \
+	$(srcdir)/addressbook.xul \
 	$(NULL)
 
 EXPORT_RESOURCE_SAMPLES_TO_REMOVE := $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))

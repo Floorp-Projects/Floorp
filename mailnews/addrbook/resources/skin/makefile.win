@@ -22,8 +22,6 @@ include <$(DEPTH)\config\rules.mak>
 
 install:: 
 	$(MAKE_INSTALL) addressbook.css	$(DIST)\bin\chrome\addressbook\skin\default
-	$(MAKE_INSTALL) dirPane.css	$(DIST)\bin\chrome\addressbook\skin\default
-	$(MAKE_INSTALL) resultPane.css	$(DIST)\bin\chrome\addressbook\skin\default
 	$(MAKE_INSTALL) newcard.gif 	$(DIST)\bin\chrome\addressbook\skin\default
 	$(MAKE_INSTALL) newlist.gif 	$(DIST)\bin\chrome\addressbook\skin\default
 	$(MAKE_INSTALL) property.gif 	$(DIST)\bin\chrome\addressbook\skin\default
@@ -35,8 +33,6 @@ install::
 
 clobber::
 	rm -f $(DIST)\chrome\addressbook\skin\default\addressbook.css
-	rm -f $(DIST)\chrome\addressbook\skin\default\dirPane.css
-	rm -f $(DIST)\chrome\addressbook\skin\default\resultPane.css
 	rm -f $(DIST)\chrome\addressbook\skin\default\newcard.gif
 	rm -f $(DIST)\chrome\addressbook\skin\default\newlist.gif
 	rm -f $(DIST)\chrome\addressbook\skin\default\property.gif

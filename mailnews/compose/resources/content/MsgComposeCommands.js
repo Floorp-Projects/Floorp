@@ -380,8 +380,8 @@ function SelectAddress()
 	var bccAddress = msgCompFields.GetBcc();
 	
 	dump("toAddress: " + toAddress + "\n");
-	var dialog = window.openDialog("chrome://addressbook/content/selectaddress.xul",
-								   "selectAddress",
+	var dialog = window.openDialog("chrome://addressbook/content/abSelectAddressesDialog.xul",
+								   "",
 								   "chrome",
 								   {composeWindow:top.window,
 								    msgCompFields:msgCompFields,
