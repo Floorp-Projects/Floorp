@@ -456,7 +456,7 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
             else if (value instanceof NativeJavaArray) {
                 return JSTYPE_JAVA_ARRAY;
             }
-            else if (value instanceof NativeJavaObject) {
+            else if (value instanceof Wrapper) {
                 return JSTYPE_JAVA_OBJECT;
             }
             else {

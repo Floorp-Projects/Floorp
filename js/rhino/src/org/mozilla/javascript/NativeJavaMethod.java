@@ -189,8 +189,6 @@ public class NativeJavaMethod extends NativeFunction implements Function {
         if (methods.length == 0) {
             throw new RuntimeException("No methods defined for call");
         }
-        Object[] origArgs = args;
-        args = unwrapArgs(args);
         Method meth = (Method) findFunction(methods, args);
         if (meth == null) {
             Class c = methods[0].getDeclaringClass();
@@ -204,6 +202,7 @@ public class NativeJavaMethod extends NativeFunction implements Function {
         Class paramTypes[] = meth.getParameterTypes();
 
         // First, we marshall the args.
+        Object[] origArgs = args;
         for (int i = 0; i < args.length; i++) {
             Object arg = args[i];
             Object coerced = NativeJavaObject.coerceType(paramTypes[i], arg,
@@ -321,35 +320,8 @@ public class NativeJavaMethod extends NativeFunction implements Function {
     }
 
     /**
-     * If args arrray contains instances of {@link Wrapper}, return a new array
-     * with all such objects unwrapped, otherwise return the original array.
-     */
-    static Object[] unwrapArgs(Object[] args)
-    {
-        Object[] result = args;
-        for (int i = 0, N = args.length; i != N; ++i) {
-            Object arg = args[i];
-            if (arg instanceof Wrapper) {
-                Object unwrapped = ((Wrapper)arg).unwrap();
-                if (!(unwrapped instanceof Number)) {
-                    // Since numbers are internally represented as
-                    // java.lang.Double, etc. then java.lang.Doubles are
-                    // distinquished by being wrapped. Thus don't unwrap
-                    // here or we'll get overloading wrong.
-                    if (result == args) {
-                        result = (Object[])args.clone();
-                    }
-                    result[i] = unwrapped;
-                }
-            }
-        }
-        return result;
-    }
-
-    /**
      * Find the correct function to call given the set of methods
-     * or constructors and the arguments. Assume that all instances of
-     * {@link Wrapper} are alreday unwrapped by unwrapArgs.
+     * or constructors and the arguments. 
      * If no function can be found to call, return null.
      */
     static Member findFunction(Member[] methodsOrCtors, Object[] args) {
