@@ -22,6 +22,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+include $(topsrcdir)/config/config.mk
+
 LIBRARY_NAME = raptorhtmlpars
 
 DEFINES += -D_IMPL_NS_HTMLPARS
@@ -73,17 +75,17 @@ EXPORTS =     \
   nsParserCIID.h \
   $(NULL)
 
+EXTRA_EXPORTS = \
+	$(OBJDIR)/nsHTMLTags.h \
+	$(NULL)
+
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
-EXTRA_EXPORTS =					\
-	$(OBJDIR)/nsHTMLTags.h				\
-	$(NULL)
+EXPORTS += $(EXTRA_EXPORTS)
 
 MODULE = raptor
 
 REQUIRES = xpcom netlib raptor
-
-include $(topsrcdir)/config/config.mk
 
 GARBAGE	+= $(OBJDIR)/nsHTMLTags.h $(OBJDIR)/nsHTMLTags.cpp $(OBJDIR)/nsHTMLEntities.cpp
 
@@ -91,24 +93,24 @@ include $(topsrcdir)/config/rules.mk
 
 INCLUDES += -I.
 
-export:: removecheckedinkludge generate
+export:: generate
 	$(INSTALL) $(EXTRA_EXPORTS) $(PUBLIC)/$(MODULE)
 
 # Why are generated files being checked in?
 removecheckedinkludge:
-	@rm -f $(srcdir)/nsHTMLTags.h $(srcdir)/nsHTMLEntities.cpp
+	rm -f $(srcdir)/nsHTMLTags.h $(srcdir)/nsHTMLEntities.cpp
  
-generate: removecheckedinkludge $(OBJDIR)/nsHTMLTags.h $(OBJDIR)/nsHTMLEntities.cpp
+generate: $(OBJDIR)/nsHTMLTags.h $(OBJDIR)/nsHTMLEntities.cpp
 
 $(OBJDIR)/nsHTMLTags.o: $(OBJDIR)/nsHTMLTags.h
 
 GENTAGS = $(topsrcdir)/htmlparser/tools/gentags.pl
 GENENTITIES = $(topsrcdir)/htmlparser/tools/genentities.pl
 
-$(OBJDIR)/nsHTMLTags.h: $(GENTAGS)
+$(OBJDIR)/nsHTMLTags.h: removecheckedinkludge $(GENTAGS)
 	rm -f $@
 	$(PERL) $(GENTAGS) nsHTMLTags
 
-$(OBJDIR)/nsHTMLEntities.cpp: $(GENENTITIES)
+$(OBJDIR)/nsHTMLEntities.cpp: removecheckedinkludge $(GENENTITIES)
 	rm -f $@
 	$(PERL) $(GENENTITIES) nsHTMLEntities
