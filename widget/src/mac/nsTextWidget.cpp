@@ -160,11 +160,16 @@ PRBool nsTextWidget::DispatchMouseEvent(nsMouseEvent &aEvent)
 }
 
 //-------------------------------------------------------------------------
+//	DispatchWindowEvent
 //
-//
+//		Handle the following events: keys, focus, edit menu commands.
+//		The strategy for key events is to use the native OS event
+//		when it exists, otherwise use the Raptor nsKeyEvent.
 //-------------------------------------------------------------------------
 PRBool nsTextWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 {
+#define enterKey			0x03		/* ascii code for enter key */
+
 	// filter cursor keys
 	PRBool passKeyEvent = PR_TRUE;
 	switch (aEvent.message)
@@ -174,13 +179,13 @@ PRBool nsTextWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 		{
 			// hack: if Enter is pressed, pass Return
   			nsKeyEvent* keyEvent = (nsKeyEvent*)&aEvent;
-			if (keyEvent->keyCode == 0x03)
-			{
+			if (keyEvent->keyCode == enterKey)
 				keyEvent->keyCode = NS_VK_RETURN;
-				EventRecord* theOSEvent = (EventRecord*)aEvent.nativeMsg;
-				if (theOSEvent)
-					theOSEvent->message = (theOSEvent->message & ~charCodeMask) + NS_VK_RETURN;
-			}
+
+			EventRecord* theOSEvent = (EventRecord*)aEvent.nativeMsg;
+			if (theOSEvent && ((theOSEvent->message & charCodeMask) == enterKey))
+				theOSEvent->message = (theOSEvent->message & ~charCodeMask) + NS_VK_RETURN;
+
 			switch (keyEvent->keyCode)
 			{
 //				case NS_VK_PAGE_UP:
