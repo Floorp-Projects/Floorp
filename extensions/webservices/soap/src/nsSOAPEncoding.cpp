@@ -219,7 +219,7 @@ nsresult nsSOAPEncoding::GetSchemaCollection(nsISchemaCollection** aSchemaCollec
 /* readonly attribute AString styleURI; */
 NS_IMETHODIMP nsSOAPEncoding::GetStyleURI(nsAString & aStyleURI)
 {
-  NS_SOAP_ENSURE_ARG_STRING(aStyleURI);
+  NS_ENSURE_ARG_POINTER(&aStyleURI);
   aStyleURI.Assign(mStyleURI);
   return NS_OK;
 }
