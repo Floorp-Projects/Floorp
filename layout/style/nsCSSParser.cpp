@@ -402,7 +402,10 @@ static void ReportUnexpectedToken(nsCSSScanner *sc,
                                   nsCSSToken& tok,
                                   const nsAString& err)
 {
-  nsAutoString error(err + NS_LITERAL_STRING(" '"));
+  // Flatten the string so we don't append to a concatenation, since
+  // that goes into an infinite loop.  See bug 70083.
+  nsAutoString error(err);
+  error += NS_LITERAL_STRING(" '");
   tok.AppendToString(error);
   error += NS_LITERAL_STRING("'.");
   sc->AddToError(error);
@@ -1682,14 +1685,15 @@ PRBool CSSParserImpl::ParseSelectorGroup(PRInt32& aErrorCode,
     }
   }
   if (!list) {
-    REPORT_UNEXPECTED(NS_LITERAL_STRING("Selector expected"));
+    REPORT_UNEXPECTED(NS_LITERAL_STRING("Selector expected."));
   }
   if (PRUnichar(0) != combinator) { // no dangling combinators
     if (list) {
       delete list;
     }
     list = nsnull;
-    REPORT_UNEXPECTED(NS_LITERAL_STRING("Dangling combinator"));
+    // This should report the problematic combinator
+    REPORT_UNEXPECTED(NS_LITERAL_STRING("Dangling combinator."));
   }
   aList = list;
   if (nsnull != list) {
@@ -1835,7 +1839,8 @@ void CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&  aDataMask,
         NS_IF_RELEASE(prefix);
       } // else, no delcared namespaces
       if (kNameSpaceID_Unknown == nameSpaceID) {  // unknown prefix, dump it
-        REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Unknown namespace prefix"));
+        REPORT_UNEXPECTED(NS_LITERAL_STRING("Unknown namespace prefix '") +
+                          buffer + NS_LITERAL_STRING("'."));
         aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
         return;
       }
@@ -2023,8 +2028,8 @@ void CSSParserImpl::ParseAttributeSelector(PRInt32&  aDataMask,
         NS_IF_RELEASE(prefix);
       } // else, no delcared namespaces
       if (kNameSpaceID_Unknown == nameSpaceID) {  // unknown prefix, dump it
-        REPORT_UNEXPECTED_TOKEN(
-        NS_LITERAL_STRING("Unknown namespace prefix"));
+        REPORT_UNEXPECTED(NS_LITERAL_STRING("Unknown namespace prefix '") +
+                          attr + NS_LITERAL_STRING("'."));
         aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
         return;
       }
