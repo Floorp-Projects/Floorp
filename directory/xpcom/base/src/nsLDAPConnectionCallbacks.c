@@ -197,7 +197,6 @@ nsLDAPThreadFuncsInit(LDAP *aLDAP)
 
     if (ldap_set_option(aLDAP, LDAP_OPT_THREAD_FN_PTRS, 
 			(void *)&kLDAPThreadFuncs) != 0) {
-	ldap_perror(aLDAP, "ldap_set_option: LDAP_OPT_THREAD_FN_PTRS\n" );
 	return 0;
     }
 

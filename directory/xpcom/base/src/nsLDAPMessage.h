@@ -60,15 +60,6 @@ class nsLDAPMessage : public nsILDAPMessage
     nsLDAPMessage();
     virtual ~nsLDAPMessage();
 
-    // XXXdmose - cleanup: turn an error condition associated with this 
-    // message into a string
-    //
-    char *GetErrorString(void);
-
-    // XXXdmose - cleanup: wrapper for ldap_msgtype()
-    //
-    int Type(void);
-
   protected:
     nsresult IterateAttrErrHandler(PRInt32 aLderrno, PRUint32 *aAttrCount, 
 			    char** *aAttributes, BerElement *position);
@@ -78,6 +69,14 @@ class nsLDAPMessage : public nsILDAPMessage
     nsCOMPtr<nsILDAPOperation> mOperation;  // operation this msg relates to
     nsCOMPtr<nsILDAPConnection> mConnection; // cached connection this op is on
     LDAP *mConnectionHandle; // cached connection handle
+
+    // the next five member vars are returned by ldap_parse_result()
+    //
+    int mErrorCode;
+    char *mMatchedDn;
+    char *mErrorMessage;
+    char **mReferrals;
+    LDAPControl **mServerControls;
 };
 
 #endif /* _nsLDAPMessage_h */

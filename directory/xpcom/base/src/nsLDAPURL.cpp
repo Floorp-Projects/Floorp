@@ -62,9 +62,6 @@ nsLDAPURL::GetSpec(char* *aSpec)
 
     // copy it out
     //
-    // XXXdmose: should this (and netwerk base stuff) use ToNewUTF8String 
-    // instead?
-    //
     *aSpec = mSpec.ToNewCString();
 
     // XXXdmose - presumably this is the right thing.  nsString.h doesn't
@@ -252,8 +249,13 @@ NS_IMETHODIMP nsLDAPURL::Resolve(const char *relativePath, char **_retval)
 /* attribute string dn; */
 NS_IMETHODIMP nsLDAPURL::GetDn(char * *aDn)
 {
-    NS_ENSURE_ARG_POINTER(aDn);
-    NS_ENSURE_FALSE(mDesc == nsnull, NS_ERROR_NOT_INITIALIZED);
+    if (!aDn) {
+	return NS_ERROR_ILLEGAL_VALUE;
+    }
+
+    if (!mDesc) {
+	return NS_ERROR_NOT_INITIALIZED;
+    }
 
     if ( mDesc->lud_dn == NULL ) {
 	*aDn = nsCRT::strdup(kEmptyString);

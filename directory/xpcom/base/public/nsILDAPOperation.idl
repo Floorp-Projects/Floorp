@@ -44,6 +44,8 @@ interface nsILDAPOperation : nsISupports
 {
     /**
      * The connection this operation is on. 
+     * 
+     * @exception NS_ERROR_ILLEGAL_VALUE	a NULL pointer was passed in
      */
     readonly attribute nsILDAPConnection connection;
 
@@ -51,13 +53,15 @@ interface nsILDAPOperation : nsISupports
      * Callback for individual result messages related to this operation (set
      * by the init() method).  This is actually an nsISupports proxy object, 
      * as the callback will happen from another thread.
+     * 
+     * @exception NS_ERROR_ILLEGAL_VALUE	a NULL pointer was passed in
      */
     readonly attribute nsILDAPMessageListener messageListener;
 
     /**
      * The message-id associated with this operation.
      *
-     * @exception NS_ERROR_INVALID_POINTER      if a NULL pointer is passed in
+     * @exception NS_ERROR_ILLEGAL_VALUE	a NULL pointer was passed in
      */
     readonly attribute long messageId;
 
@@ -71,8 +75,8 @@ interface nsILDAPOperation : nsISupports
      * @param aConnection       connection this operation should use
      * @param aMessageListener  interface used to call back the results.
      *
-     * @exception NS_ERROR_INVALID_POINTER
-     * @exception NS_ERROR_FAILURE		failed to get connection handle
+     * @exception NS_ERROR_ILLEGAL_VALUE	a NULL pointer was passed in
+     * @exception NS_ERROR_UNEXPECTED		failed to get connection handle
      */
     void init(in nsILDAPConnection aConnection, 
               in nsILDAPMessageListener aMessageListener);
@@ -81,6 +85,12 @@ interface nsILDAPOperation : nsISupports
      * wrapper for ldap_simple_bind()
      * 
      * @param passwd    the password used for binding; NULL for anon-binds
+     *
+     * @exception NS_ERROR_LDAP_ENCODING_ERROR	problem encoding bind request
+     * @exception NS_ERROR_FAILURE 		server down (XXX rebinds?)
+     * @exception NS_ERROR_OUT_OF_MEMORY	ran out of memory
+     * @exception NS_ERROR_UNEXPECTED		internal error
+     * 
      */
     void simpleBind(in string passwd);
 
@@ -88,6 +98,9 @@ interface nsILDAPOperation : nsISupports
     // XXX this doesn't currently work right, because the connection has 
     // doesn't know what result came for whom.  also, the it calls
     // a synchronous bind function under the hood
+    //
+    // XXXdmose should probably get rid of this method, due to it's 
+    // synchronity, and since we have other classes to 
     //
     void urlSearch(in string url, in boolean attrsonly);
 
@@ -100,7 +113,7 @@ interface nsILDAPOperation : nsISupports
      * @param aTimeOut          How long to wait
      * @param aSizeLimit        Maximum number of entries to return.
      *
-     * @exception NS_ERROR_ILLEGAL_VALUE
+     * @exception NS_ERROR_NOT_INITIALIZED
      * @exception NS_ERROR_LDAP_ENCODING_ERROR
      * @exception NS_ERROR_LDAP_SERVER_DOWN
      * @exception NS_ERROR_OUT_OF_MEMORY
@@ -116,7 +129,7 @@ interface nsILDAPOperation : nsISupports
      * wrapper for ldap_abandon_ext() with NULL LDAPControl
      * parameters, equivalent to old-style ldap_abandon(), thus the name.
      *
-     * @exception NS_ERROR_ILLEGAL_VALUE  	an argument was invalid
+     * @exception NS_ERROR_NOT_INITIALIZED	operation not initialized
      * @exception NS_ERROR_LDAP_ENCODING_ERROR  error during BER-encoding
      * @exception NS_ERROR_LDAP_SERVER_DOWN	the LDAP server did not
      *						receive	the request or the

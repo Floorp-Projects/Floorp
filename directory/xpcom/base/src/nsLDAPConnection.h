@@ -72,7 +72,6 @@ class nsLDAPConnection : public nsILDAPConnection, nsIRunnable
     //
     nsresult InvokeMessageCallback(LDAPMessage *aMsgHandle, 
 				   nsILDAPMessage *aMsg,
-				   PRInt32 aReturnCode,
 				   PRBool aRemoveOpFromConnQ);
 
     LDAP *mConnectionHandle;		// the LDAP C SDK's connection object

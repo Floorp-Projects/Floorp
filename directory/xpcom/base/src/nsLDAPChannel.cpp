@@ -43,13 +43,13 @@
 #include "nsILDAPURL.h"
 #include "nsIProxyObjectManager.h"
 #include "nsIServiceManager.h"
+#include "nsIConsoleService.h"
 
 #if !INVOKE_LDAP_CALLBACKS_ON_MAIN_THREAD
 #include "nsNetUtil.h"
 #include "nsIEventQueueService.h"
 #endif
 
-static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 static NS_DEFINE_IID(kILDAPMessageListenerIID, NS_ILDAPMESSAGELISTENER_IID);
 static NS_DEFINE_IID(kILoadGroupIID, NS_ILOADGROUP_IID);
 static NS_DEFINE_IID(kIProgressEventSink, NS_IPROGRESSEVENTSINK_IID);
@@ -83,7 +83,11 @@ nsLDAPChannel::Init(nsIURI *uri)
     //
     mConnection = do_CreateInstance("@mozilla.org/network/ldap-connection;1", 
                                     &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv)) {
+        NS_ERROR("nsLDAPChannel::Init(): could not create "
+                 "@mozilla.org/network/ldap-connection;1");
+        return NS_ERROR_FAILURE;
+    }
 
     // i think that in the general case, it will be worthwhile to leave the
     // callbacks for this channel be invoked on the LDAP connection thread.
@@ -97,8 +101,12 @@ nsLDAPChannel::Init(nsIURI *uri)
     // get the proxy object manager
     //
     nsCOMPtr<nsIProxyObjectManager> proxyObjMgr = 
-        do_GetService(kProxyObjectManagerCID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv); 
+        do_GetService("@mozilla.org/xpcomproxy;1", &rv);
+    if (NS_FAILED(rv)) {
+        NS_ERROR("nsLDAPChannel::Init(): could not create "
+                 "proxy object manager");
+        return NS_ERROR_FAILURE;
+    }
 
     // and use it to get a proxy for this callback, saving it off in mCallback
     //
@@ -108,7 +116,11 @@ nsLDAPChannel::Init(nsIURI *uri)
                                                        , this),
                                         PROXY_ASYNC|PROXY_ALWAYS,
                                         getter_AddRefs(mCallback));
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv)) {
+        NS_ERROR("nsLDAPChannel::Init(): could not create proxy object");
+        return NS_ERROR_FAILURE;
+    }
+
 #else 	
     mCallback = this;
 #endif
@@ -168,6 +180,7 @@ nsLDAPChannel::Cancel(nsresult aStatus)
     mStatus = aStatus;
 
     // if there is an operation running, abandon it and remove it from the 
+    // queue
     //
     if (mCurrentOperation) {
 
@@ -176,11 +189,18 @@ nsLDAPChannel::Cancel(nsresult aStatus)
         rv = mCurrentOperation->Abandon();
         NS_ASSERTION(NS_SUCCEEDED(rv), "nsLDAPChannel::Cancel(): "
                      "mCurrentOperation->Abandon() failed\n");
+        
+        // make nsCOMPtr call Release()
+        // 
+        mCurrentOperation = 0;
+
     }
 
     // if the read pipe exists and hasn't already been closed, close it
     //
     if (mReadPipeOut != 0 && !mReadPipeClosed) {
+        
+        // XXX set mReadPipeClosed?
 
         // if this fails in a non-debug build, there's not much we can do
         //
@@ -344,7 +364,9 @@ nsLDAPChannel::SetLoadAttributes(nsLoadFlags aLoadAttributes)
 NS_IMETHODIMP
 nsLDAPChannel::GetContentType(char* *aContentType)
 {
-    NS_ENSURE_ARG_POINTER(aContentType);
+    if (!aContentType) {
+        return NS_ERROR_ILLEGAL_VALUE;
+    }
 
     *aContentType = nsCRT::strdup(TEXT_PLAIN);
     if (!*aContentType) {
@@ -437,8 +459,12 @@ nsLDAPChannel::SetLoadGroup(nsILoadGroup* aLoadGroup)
     // get the proxy object manager
     //
     nsCOMPtr<nsIProxyObjectManager> proxyObjMgr = 
-        do_GetService(kProxyObjectManagerCID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv); 
+        do_GetService("@mozilla.org/xpcomproxy;1", &rv);
+    if (NS_FAILED(rv)) {
+        NS_ERROR("nsLDAPChannel::SetLoadGroup(): could not create "
+                 "proxy object manager");
+        return NS_ERROR_FAILURE;
+    }
 
     // and use it to get and save a proxy for the load group
     //
@@ -446,8 +472,11 @@ nsLDAPChannel::SetLoadGroup(nsILoadGroup* aLoadGroup)
                                         mUnproxiedLoadGroup, 
                                         PROXY_SYNC|PROXY_ALWAYS,
                                         getter_AddRefs(mLoadGroup));
-    NS_ENSURE_SUCCESS(rv, rv);
-
+    if (NS_FAILED(rv)) {
+        NS_ERROR("nsLDAPChannel::SetLoadGroup(): could not create proxy "
+                 "event");
+        return NS_ERROR_FAILURE;
+    }
 #endif
 
     return NS_OK;
@@ -497,10 +526,10 @@ nsLDAPChannel::SetNotificationCallbacks(nsIInterfaceRequestor*
         // get the proxy object manager
         //
         nsCOMPtr<nsIProxyObjectManager> proxyObjMgr = 
-            do_GetService(kProxyObjectManagerCID, &rv);
+            do_GetService("@mozilla.org/xpcomproxy;1", &rv);
         if (NS_FAILED(rv)) {
-            NS_ERROR("nsLDAPChannel::SetNotificationCallbacks(): "
-                     "couldn't get proxy object manager");
+            NS_ERROR("nsLDAPChannel::SetNotificationCallbacks(): could not "
+                     "create proxy object manager");
             return NS_ERROR_FAILURE;
         }
 
@@ -673,10 +702,17 @@ nsLDAPChannel::AsyncRead(nsIStreamListener* aListener,
     // slurp out relevant pieces of the URL
     //
     rv = mURI->GetHost(getter_Copies(host));
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv)) {
+        NS_ERROR("nsLDAPChannel::AsyncRead(): mURI->GetHost failed\n");
+        return NS_ERROR_FAILURE;
+    }
 
     rv = mURI->GetPort(&port);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv)) {
+        NS_ERROR("nsLDAPChannel::AsyncRead(): mURI->GetPort failed\n");
+        return NS_ERROR_FAILURE;
+    }
+
     if (port == -1)
         port = LDAP_PORT;
 
@@ -698,7 +734,10 @@ nsLDAPChannel::AsyncRead(nsIStreamListener* aListener,
                         NS_PIPE_DEFAULT_SEGMENT_SIZE, 
                         NS_PIPE_DEFAULT_BUFFER_SIZE,
                         PR_TRUE, PR_FALSE, nsnull);
-        NS_ENSURE_SUCCESS(rv, rv);
+        if (NS_FAILED(rv)) {
+            NS_ERROR("nsLDAPChannel::AsyncRead(): unable to create new pipe");
+            return NS_ERROR_FAILURE;
+        }
     } 
 
     // get an AsyncStreamListener to proxy for mListener, if we're
@@ -710,29 +749,53 @@ nsLDAPChannel::AsyncRead(nsIStreamListener* aListener,
 #else
     rv = NS_NewAsyncStreamListener(getter_AddRefs(mListener), 
                                    mUnproxiedListener, NS_UI_THREAD_EVENTQ);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv)) {
+        NS_ERROR("nsLDAPChannel::AsyncRead(): unable to create new "
+                 "AsyncStreamListener");
+        return NS_ERROR_FAILURE;
+    }
+
 #endif
 
     // we already know the content type, so we can fire this now
     //
     mUnproxiedListener->OnStartRequest(this, mResponseContext);
-
+    if (NS_FAILED(rv)) {
+        NS_ERROR("nsLDAPChannel::AsyncRead(): error firing OnStartRequest");
+        return NS_ERROR_FAILURE;
+    }
+    
     // initialize it with the defaults
     // XXXdmose - need to deal with bind name
     //
     rv = mConnection->Init(host, port, NULL);
-    NS_ENSURE_SUCCESS(rv, rv);
+    switch (rv) {
+    case NS_OK:
+        break;
+
+    case NS_ERROR_OUT_OF_MEMORY:
+    case NS_ERROR_NOT_AVAILABLE:
+    case NS_ERROR_FAILURE:
+        return rv;
+
+    case NS_ERROR_ILLEGAL_VALUE:
+    default:
+        return NS_ERROR_UNEXPECTED;
+    }
 
     // create and initialize an LDAP operation (to be used for the bind)
     //	
     mCurrentOperation = do_CreateInstance(
         "@mozilla.org/network/ldap-operation;1", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv)) {
+        return NS_ERROR_FAILURE;
+    }
 
     // our OnLDAPMessage accepts all result callbacks
     //
     rv = mCurrentOperation->Init(mConnection, mCallback);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv))
+        return NS_ERROR_UNEXPECTED; // this should never happen
 
     // kick off a bind operation 
     // 
@@ -742,10 +805,7 @@ nsLDAPChannel::AsyncRead(nsIStreamListener* aListener,
 
         // XXXdmose better error handling / passthrough; deal with password
         //
-#ifdef DEBUG
-        PR_fprintf(PR_STDERR, "mCurrentOperation->SimpleBind failed. rv=%d\n",
-                   rv);
-#endif
+        NS_WARNING("mCurrentOperation->SimpleBind failed.");
         return(rv);
     }
 
@@ -776,17 +836,29 @@ nsLDAPChannel::AsyncWrite(nsIInputStream* fromStream,
  * Messages received are passed back via this function.
  *
  * @arg aMessage  The message that was returned, NULL if none was.
- * @arg aRetVal   the return value from ldap_result()
  *
- * void OnLDAPMessage (in nsILDAPMessage aMessage, in PRInt32 aRetVal
+ * void OnLDAPMessage (in nsILDAPMessage aMessage)
  */
 NS_IMETHODIMP 
-nsLDAPChannel::OnLDAPMessage(nsILDAPMessage *aMessage, PRInt32 aRetVal)
+nsLDAPChannel::OnLDAPMessage(nsILDAPMessage *aMessage)
 {
-    switch (aRetVal) {
+    PRInt32 messageType;
+
+    // figure out what sort of message was returned
+    //
+    nsresult rv = aMessage->GetType(&messageType);
+    if (NS_FAILED(rv)) {
+        NS_ERROR("nsLDAPChannel::OnLDAPMessage(): unexpected error in "
+                 "nsLDAPChannel::GetType()");
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    switch (messageType) {
 
     case LDAP_RES_BIND:
+
         // a bind has completed
+        //
         return OnLDAPBind(aMessage);
         break;
 
@@ -805,11 +877,26 @@ nsLDAPChannel::OnLDAPMessage(nsILDAPMessage *aMessage, PRInt32 aRetVal)
         break;
 
     default:
-        // XXX bogus.  but for now..
+        NS_WARNING("nsLDAPChannel::OnLDAPMessage(): unexpected LDAP message "
+                   "received");
+
+        // get the console service so we can log a message
         //
-#ifdef DEBUG	
-        PR_fprintf(PR_STDERR, "unexpected LDAP message received.\n");
-#endif
+        nsCOMPtr<nsIConsoleService> consoleSvc = 
+            do_GetService("@mozilla.org/consoleservice;1", &rv);
+        if (NS_FAILED(rv)) {
+            NS_ERROR("nsLDAPChannel::OnLDAPMessage() couldn't get console "
+                     "service");
+            break;
+        }
+
+        // log the message
+        //
+        rv = consoleSvc->LogStringMessage(
+            NS_LITERAL_STRING("LDAP: WARNING: nsLDAPChannel::OnLDAPMessage(): "
+                              "unexpected LDAP message received"));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "nsLDAPChannel::OnLDAPMessage(): "
+                     "consoleSvc->LogStringMessage() failed");
         break;
     }
 
@@ -827,13 +914,18 @@ nsLDAPChannel::OnLDAPBind(nsILDAPMessage *aMessage)
 
     // XXX should call ldap_parse_result() here
 
-    mCurrentOperation = 0;	// done with bind operation
+    mCurrentOperation = 0;	// done with bind op; make nsCOMPtr release it
 
-    // create and initialize an LDAP operation (to be used for the bind)
+    // create and initialize an LDAP operation (to be used for the search
     //	
     mCurrentOperation = do_CreateInstance(
         "@mozilla.org/network/ldap-operation;1", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv)) {
+        NS_ERROR("nsLDAPChannel::OnLDAPBind(): couldn't create "
+                 "@mozilla.org/network/ldap-operation;1");
+        // XXX abort entire asyncread
+        return NS_ERROR_FAILURE;
+    }
 
     rv = mCurrentOperation->Init(mConnection, mCallback);
     NS_ENSURE_SUCCESS(rv, rv);

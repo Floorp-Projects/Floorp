@@ -46,8 +46,15 @@ nsLDAPMessage::nsLDAPMessage()
 {
     NS_INIT_ISUPPORTS();
 
-    mMsgHandle = NULL;
-    mConnectionHandle = NULL;
+    mMsgHandle = 0;
+    mConnectionHandle = 0;
+
+    // stuff returned by ldap_parse_result
+    //
+    mMatchedDn = 0;
+    mErrorMessage = 0;
+    mReferrals = 0;
+    mServerControls = 0;
 }
 
 // destructor
@@ -56,7 +63,7 @@ nsLDAPMessage::~nsLDAPMessage(void)
 {
     int rc;
 
-    if (mMsgHandle != NULL) {
+    if (mMsgHandle) {
         rc = ldap_msgfree(mMsgHandle);
 
         switch(rc) {
@@ -73,12 +80,14 @@ nsLDAPMessage::~nsLDAPMessage(void)
         case LDAP_RES_ANY:
             // success
             break;
+
         case LDAP_SUCCESS:
             // timed out (dunno why LDAP_SUCCESS is used to indicate this) 
             PR_LOG(gLDAPLogModule, PR_LOG_WARNING, 
                    ("nsLDAPMessage::~nsLDAPMessage: ldap_msgfree() "
                     "timed out\n"));
             break;
+
         default:
             // other failure
             PR_LOG(gLDAPLogModule, PR_LOG_WARNING, 
@@ -88,6 +97,22 @@ nsLDAPMessage::~nsLDAPMessage(void)
         }
     }
 
+    if (mMatchedDn) {
+        ldap_memfree(mMatchedDn);
+    }
+
+    if (mErrorMessage) {
+        ldap_memfree(mErrorMessage);
+    }
+
+    if (mReferrals) {
+        ldap_value_free(mReferrals);
+    }
+
+    if (mServerControls) {
+        ldap_controls_free(mServerControls);
+    }
+
 }
 
 // associate this message with an existing operation
@@ -95,11 +120,13 @@ nsLDAPMessage::~nsLDAPMessage(void)
 NS_IMETHODIMP
 nsLDAPMessage::Init(nsILDAPConnection *aConnection, LDAPMessage *aMsgHandle)
 {
-    nsresult rv;
+    int parseResult; 
 
-    NS_ENSURE_ARG_POINTER(aConnection);
-    NS_ENSURE_ARG_POINTER(aMsgHandle);
-    
+    if (!aConnection || !aMsgHandle) {
+        NS_WARNING("Null pointer passed in to nsLDAPMessage::Init()");
+        return NS_ERROR_ILLEGAL_VALUE;
+    }
+
     // initialize the appropriate member vars
     //
     mConnection = aConnection;
@@ -107,67 +134,115 @@ nsLDAPMessage::Init(nsILDAPConnection *aConnection, LDAPMessage *aMsgHandle)
 
     // cache the connection handle associated with this operation
     //
-    rv = mConnection->GetConnectionHandle(&mConnectionHandle);
-    if (NS_FAILED(rv))
-        return NS_ERROR_FAILURE;
+    nsresult rv = mConnection->GetConnectionHandle(&mConnectionHandle);
+    if (NS_FAILED(rv)) {
+        NS_WARNING("nsLDAPMessage::Init(): mConnection->GetConnectionHandle() "
+                   "failed");
+        return NS_ERROR_UNEXPECTED;
+    }
 
-    return NS_OK;
-}
+    // do any useful message parsing
+    //
+    const int msgType = ldap_msgtype(mMsgHandle);
+    if ( msgType == -1) {
+        NS_ERROR("nsLDAPMessage::Init(): ldap_msgtype() failed");
+        return NS_ERROR_UNEXPECTED;
+    }
 
-// XXX - both this and GetErrorString should be based on a separately
-// broken out ldap_parse_result
-//
-NS_IMETHODIMP
-nsLDAPMessage::GetErrorCode(PRInt32 *aErrCode)
-{
-    PRInt32 rc;
+    switch (msgType) {
 
-    rc = ldap_parse_result(mConnectionHandle, mMsgHandle, aErrCode, 
-                           NULL, NULL, NULL, NULL, 0);
+    case LDAP_RES_SEARCH_REFERENCE:
+        // XXX should do something here?
+        break;
 
-    if (rc != LDAP_SUCCESS) {
+    case LDAP_RES_SEARCH_ENTRY:
+        // nothing to do here
+        break;
 
-#ifdef DEBUG
-        PR_fprintf(PR_STDERR,
-                   "nsLDAPMessage::ErrorToString: ldap_parse_result: %s\n",
-                   ldap_err2string(rc));
-#endif  
-        return NS_ERROR_FAILURE;
+    case LDAP_RES_EXTENDED:
+        // XXX should do something here?
+        break;
+
+    case LDAP_RES_BIND:
+    case LDAP_RES_SEARCH_RESULT:
+    case LDAP_RES_MODIFY:
+    case LDAP_RES_ADD:
+    case LDAP_RES_DELETE:
+    case LDAP_RES_MODRDN:
+    case LDAP_RES_COMPARE:
+        parseResult = ldap_parse_result(mConnectionHandle, mMsgHandle,
+                                        &mErrorCode, &mMatchedDn,
+                                        &mErrorMessage,&mReferrals, 
+                                        &mServerControls, 0);
+        switch (parseResult) {
+        case LDAP_SUCCESS: 
+            // we're good
+            break;
+
+        case LDAP_DECODING_ERROR:
+            NS_WARNING("nsLDAPMessage::Init(): ldap_parse_result() hit a "
+                       "decoding error");
+            return NS_ERROR_LDAP_DECODING_ERROR;
+            break;
+
+        case LDAP_NO_MEMORY:
+            NS_WARNING("nsLDAPMessage::Init(): ldap_parse_result() ran out " 
+                       "of memory");
+            return NS_ERROR_OUT_OF_MEMORY;
+            break;
+
+        case LDAP_PARAM_ERROR:
+        case LDAP_MORE_RESULTS_TO_RETURN:
+        case LDAP_NO_RESULTS_RETURNED:
+        default:
+            NS_ERROR("nsLDAPMessage::Init(): ldap_parse_result returned "
+                     "unexpected return code");
+            return NS_ERROR_UNEXPECTED;
+            break;
+        }
+
+        break;
+
+    default:
+        NS_ERROR("nsLDAPMessage::Init(): unexpected message type");
+        return NS_ERROR_UNEXPECTED;
+        break;
     }
 
     return NS_OK;
 }
 
-// XXX deal with extra params (make client not have to use ldap_memfree() on 
-// result)
-// XXX better error-handling than fprintf()
-//
-char *
-nsLDAPMessage::GetErrorString(void)
+/**
+ * The result code of the (possibly partial) operation.
+ *
+ * @exception NS_ERROR_ILLEGAL_VALUE    null pointer passed in
+ *
+ * readonly attribute long errorCode;
+ */
+NS_IMETHODIMP
+nsLDAPMessage::GetErrorCode(PRInt32 *aErrorCode)
 {
-  int errcode;
-  char *matcheddn;
-  char *errmsg;
-  char **referrals;
-  LDAPControl **serverctrls;
+    if (!aErrorCode) {
+        return NS_ERROR_ILLEGAL_VALUE;
+    }
 
-  int rc;
+    *aErrorCode = mErrorCode;
+    return NS_OK;
+}
 
-  rc = ldap_parse_result(mConnectionHandle, mMsgHandle, &errcode, &matcheddn,
-                         &errmsg, &referrals, &serverctrls, 0);
-  if (rc != LDAP_SUCCESS) {
-      PR_fprintf(PR_STDERR, 
-                 "nsLDAPMessage::ErrorToString: ldap_parse_result: %s\n",
-                 ldap_err2string(rc));
-      // XXX need real err handling here
-  }
+NS_IMETHODIMP
+nsLDAPMessage::GetType(PRInt32 *aType)
+{
+    if (!aType) {
+        return NS_ERROR_ILLEGAL_VALUE;
+    }
 
-  if (matcheddn) ldap_memfree(matcheddn);
-  if (errmsg) ldap_memfree(errmsg);
-  if (referrals) ldap_memfree(referrals);
-  if (serverctrls) ldap_memfree(serverctrls);
+    *aType = ldap_msgtype(mMsgHandle);
+    if (*aType == -1) {
+        return NS_ERROR_UNEXPECTED;
+    };
 
-  return(ldap_err2string(errcode));
+    return NS_OK;
 }
 
 // we don't get to use exceptions, so we'll fake it.  this is an error
@@ -350,14 +425,6 @@ nsLDAPMessage::IterateAttributes(PRUint32 *aAttrCount, char** *aAttributes,
     }
 
     return NS_OK;
-}
-
-// wrapper for ldap_msgtype()
-//
-int
-nsLDAPMessage::Type(void)
-{
-    return (ldap_msgtype(mMsgHandle));
 }
 
 /*

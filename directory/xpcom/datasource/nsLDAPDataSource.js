@@ -231,19 +231,18 @@ nsLDAPDataSource.prototype = {
 
 	     getTargetsBoundCallback.prototype.onLDAPMessage = 
 
-	         function(aMessage, aRetVal) {
+	         function(aMessage) {
 
 		     if (DEBUG) {
 			 dump("boundCallback() called with scope: \n\t" +
 			      aSource.Value + "\n\t" + aProperty.Value + 
 			      "\n\t" + aTruthValue + "\n");
-			 dump("\taRetVal = " + aRetVal + "\n\n");
 		     }
 
 		     // XXX how do we deal with this in release builds?
 		     // XXX deal with already bound case
 		     //
-		     if (aRetVal != LDAP_RES_BIND) {
+		     if (aMessage.type != LDAP_RES_BIND) {
 			 dump("bind failed\n");
 		     }
 
@@ -271,9 +270,9 @@ nsLDAPDataSource.prototype = {
 
 	     getTargetsSearchCallback.prototype.onLDAPMessage = 
 
-	         function(aMessage, aRetVal ) {
-		     dump("getTargetsSearchCallback() called with aRetVal=" +
-			  aRetVal + "\n\n");
+	         function(aMessage) {
+		     dump("getTargetsSearchCallback() called with message " +
+			  "of type " + aMessage.type + "\n\n");
 		 }
 	     return new getTargetsSearchCallback();
 	 }

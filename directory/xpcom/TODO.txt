@@ -1,17 +1,28 @@
 housecleaning for first 0.x release
 -----------------------------------
+* error handling: sort out what should be NS_ASSERTIONs vs. normal
+  error conditions (eg network & data errors), especially in nsLDAPChannel.  
+  also shouldn't be casting results of nsILDAPConnection::GetErrorString to
+  void in ldapSearch.  (ideally this would use xpidl nsresult decls
+  (bug 13423), but that's not done yet).  This also requires some 
+  threadsafety work related to the data and interfaces touched by 
+  nsLDAPChannel::Cancel, since these are used in the connection
+  callbacks, and we also need to be able to cancel from the connection
+  callbacks themselves.
+
 * audit for and fix leaks / bloat
 
-* grep for XXXs and fix the issues 
-
-items blocked waiting for other work
------------------------------------- 
 * destroy connection & thread when done with it; deal with timeouts 
   (blocked on LDAP C SDK 4.1, in the hopes that the NSPR 
   binding of the IO functions will provide us with some way to pop out
   of the select() that's called under ldap_result().  It may not be worth 
-  implementing this until nsLDAPService is ressurected.
+  implementing this until nsLDAPService is resurrected.  If this
+  doesn't work, we may have to give nsLDAPConnection an event queue &
+  loop of its own, instead of using the LDAP C SDK as a vector to get
+  events over there.
 
+items blocked waiting for other work
+------------------------------------ 
 * go through the various options that can be used with the SDK function 
   ldap_set_options() and decide if and where the various functions should 
   be used.  This will include memory allocator settings, and possibly 
@@ -48,18 +59,14 @@ items blocked waiting for other work
 
 misc
 ----
-* error handling: sort out what should be NS_ASSERTIONs vs. normal
-  error conditions (eg network & data errors).  should audit interface
-  boundaries to make sure they do appropriate checking.  also,
-  shouldn't be casting results of nsILDAPConnection::GetErrorString to
-  void in ldapSearch.  (ideally this would use xpidl nsresult decls
-  (bug 13423), but that's not done yet).
-
 * verify that ldap_parse_result() and ldap_get_ldaperrno() aren't
   required to be called from the same thread as ldap_result() and
-  before the thread-specific ldaperrno has a chance to change.
+  before the thread-specific ldaperrno has a chance to change.  Note:
+  now that ldap_parse_result is only called inside the initializer
+  nsLDAPMessage::Init(), this is probably no longer an issue there at
+  least.  Need to confirm.
 
-* investigate use of DNS in LDAP sdk.  are sync functions used in the 
+* investigate use of DNS in LDAP sdk.  I think sync functions used in the 
   wrong places (eg they end up getting called from Mozilla on the UI thread)?
 
 * audit for and implement any appropriate NOT_IMPLEMENTED functions
@@ -88,6 +95,8 @@ misc
   heuristic to figure out if they're a string.  I wonder how
   ldapsearch does this.
 
+* grep for XXXs and fix the issues 
+
 rdf datasource 
 --------------
 
@@ -107,7 +116,7 @@ testing
 
 perf
 ----
-* rather than having one thread per nsILDAPConnection, have identical
+* rather than having one thread per nsILDAPConnection, have multiple
   nsILDAPConnections share the same thread.  possibly pre-spin up a
   thread-pool to handle this?
 
@@ -122,8 +131,12 @@ perf
 
 later
 -----
+* rationalize the logging strategy.  right now there is a mix of 
+  PR_LOG/NS{WARNING|ERROR} and nsIConsoleService and non-logging, 
+  as I have been vacillating on how much logging it's really important to have
+  (part of my thought process about the XPCOM-wrapper being part of 
+  Mozilla-as-platform)
 * get rid of inappropriate use of nsVoidKey by implementing an nsPRInt32Key
-* get rid of "friend"liness of nsLDAP{Message,Connection,Operation} classes?
 * handle referrals
 * failover
 * addressbook/mail UI glue

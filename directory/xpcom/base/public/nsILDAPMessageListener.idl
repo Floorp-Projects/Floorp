@@ -45,8 +45,9 @@ interface nsILDAPMessageListener : nsISupports
      * Messages received are passed back via this function.
      *
      * @arg aMessage  The message that was returned, NULL if none was.
-     * @arg aRetVal   the return value from ldap_result()
+     *
+     * XXX semantics of NULL?
      */
-    void onLDAPMessage(in nsILDAPMessage aMessage, in PRInt32 aRetVal);
+    void onLDAPMessage(in nsILDAPMessage aMessage);
 };
 
