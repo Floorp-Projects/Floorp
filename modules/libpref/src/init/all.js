@@ -645,6 +645,8 @@ pref("security.directory",              "");
 pref("signed.applets.codebase_principal_support", false);
 pref("security.checkloaduri", true);
 pref("security.xpconnect.plugin.unrestricted", true);
+// security-sensitive dialogs should delay focus. In milliseconds.
+pref("security.dialog_enable_delay", 2000);
 
 // Modifier key prefs: default to Windows settings,
 // menu access key = alt, accelerator key = control.

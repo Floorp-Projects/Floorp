@@ -163,25 +163,54 @@ function commonDialogOnLoad()
 
   if (gCommonDialogParam.GetInt(3) == 0) // If no text fields
   {
+    var dButton;
     var defaultButton = gCommonDialogParam.GetInt(5);
     switch (defaultButton) {
       case 3:
-        document.documentElement.getButton("extra2").focus();
+        dButton = document.documentElement.getButton("extra2");
         break;
       case 2:
-        document.documentElement.getButton("extra1").focus();
+        dButton = document.documentElement.getButton("extra1");
         break;
       case 1:
-        document.documentElement.getButton("cancel").focus();
+        dButton = document.documentElement.getButton("cancel");
         break;
       default:
       case 0:
-        document.documentElement.getButton("accept").focus();
+        dButton = document.documentElement.getButton("accept");
         break;
     }
+    // move the default attribute and focus from the accept button
+    // to the one specified in the dialog params
+    document.documentElement.getButton("accept").setAttribute("default",false);
+    dButton.setAttribute("default", true);
+    dButton.focus();
+  }
+
+  if (gCommonDialogParam.GetInt(6) != 0) // delay button enable
+  {
+    var delayInterval = 2000;
+    try {
+      var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                  .getService(Components.interfaces.nsIPrefBranch);
+      delayInterval = prefs.getIntPref("security.dialog_enable_delay");
+    } catch (e) {}
+
+    document.documentElement.getButton("accept").disabled = true;
+    document.documentElement.getButton("extra1").disabled = true;
+    document.documentElement.getButton("extra2").disabled = true;
+
+    setTimeout(commonDialogReenableButtons, delayInterval);
   }
 
   getAttention();
+}
+
+function commonDialogReenableButtons()
+{
+    document.documentElement.getButton("accept").disabled = false;
+    document.documentElement.getButton("extra1").disabled = false;
+    document.documentElement.getButton("extra2").disabled = false;
 }
 
 function initTextbox(aName, aLabelIndex, aValueIndex, aAlwaysLabel)

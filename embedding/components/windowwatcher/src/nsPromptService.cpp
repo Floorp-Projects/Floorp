@@ -291,6 +291,8 @@ nsPromptService::ConfirmEx(nsIDOMWindow *parent,
 #define BUTTON_DEFAULT_MASK 0x03000000
 
   block->SetInt(eDefaultButton, (buttonFlags & BUTTON_DEFAULT_MASK) >> 24);
+  block->SetInt(eDelayButtonEnable, buttonFlags & BUTTON_DELAY_ENABLE);
+ 
   PRInt32 numberButtons = 0;
   for (int i = 0; i < 3; i++) { 
     
