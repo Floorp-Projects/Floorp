@@ -275,7 +275,7 @@ float ToFloat(PRInt32* aErrorCode) const;
  * @param   aErrorCode will contain error if one occurs
  * @return  int rep of string value
  */
-PRInt32 ToInteger(PRInt32* aErrorCode) const;
+PRInt32 ToInteger(PRInt32* aErrorCode,PRInt32 aRadix=10) const;
 
 /**********************************************************************
   String manipulation methods...                

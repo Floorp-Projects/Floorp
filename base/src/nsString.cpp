@@ -540,54 +540,60 @@ float nsString::ToFloat(PRInt32* aErrorCode) const
 }
 
 /**
- * Perform string to int conversion.
- * @update	gess 7/27/98
+ * Perform numeric string to int conversion with given radix.
+ * @update	gess 10/01/98
  * @param   aErrorCode will contain error if one occurs
+ * @param   aRadix tells us what base to expect the string in.
  * @return  int rep of string value
  */
-PRInt32 nsString::ToInteger(PRInt32* aErrorCode) const {
-  PRInt32 rv = 0;
-  PRUnichar* cp = mStr;
-  PRUnichar* end = mStr + mLength;
+PRInt32 nsString::ToInteger(PRInt32* aErrorCode,PRInt32 aRadix) const {
+  PRInt32     result = 0;
+  PRUnichar*  cp = mStr + mLength-1;
+  char        digit=0;
+  PRUnichar   theChar;
+  PRInt32     theShift=0;
+  PRInt32     theMult=1;
 
-  // Skip leading whitespace
-  while (cp < end) {
-    PRUnichar ch = *cp;
-    if (!IsSpace(ch)) {
+  // Skip trailing non-numeric...
+  while (cp >= mStr) {
+    theChar = *cp;
+    if((theChar>='0') && (theChar<='9')){
       break;
     }
-    cp++;
-  }
-  if (cp == end) {
-    *aErrorCode = (PRInt32) NS_ERROR_ILLEGAL_VALUE;
-    return rv;
-  }
-
-  // Check for sign
-  PRUnichar sign = '+';
-  if ((*cp == '+') || (*cp == '-')) {
-    sign = *cp++;
-  }
-  if (cp == end) {
-    *aErrorCode = (PRInt32) NS_ERROR_ILLEGAL_VALUE;
-    return rv;
-  }
-
-  // Convert the number
-  while (cp < end) {
-    PRUnichar ch = *cp++;
-    if ((ch < '0') || (ch > '9')) {
-      *aErrorCode = (PRInt32) NS_ERROR_ILLEGAL_VALUE;
+    else if((theChar>='a') && (theChar<='f')) {
       break;
     }
-    rv = rv * 10 + (ch - '0');
+    else if((theChar>='A') && (theChar<='F')) {
+      break;
+    }
+    cp--;
   }
 
-  if (sign == '-') {
-    rv = -rv;
+    //now iterate the numeric chars and build our result
+  while(cp>=mStr) {
+    theChar=*cp--;
+    if((theChar>='0') && (theChar<='9')){
+      digit=theChar-'0';
+    }
+    else if((theChar>='a') && (theChar<='f')) {
+      digit=(theChar-'a')+10;
+    }
+    else if((theChar>='A') && (theChar<='F')) {
+      digit=(theChar-'A')+10;
+    }
+    else if('-'==theChar) {
+      result=-result;
+      break;
+    }
+    else{
+      break;
+    }
+    result+=digit*theMult;
+    theMult*=aRadix;
   }
+  
   *aErrorCode = NS_OK;
-  return rv;
+  return result;
 }
 
 /**
