@@ -37,7 +37,6 @@ PROG11 = .\$(OBJDIR)\PropertiesTest.exe
 PROG12 = .\$(OBJDIR)\TestAutoLock.exe
 PROG13 = .\$(OBJDIR)\TestThreads.exe
 PROG14 = .\$(OBJDIR)\TestObserverService.exe
-PROG15 = .\$(OBJDIR)\TestBuffers.exe
 PROG16 = .\$(OBJDIR)\TestPipes.exe
 PROG17 = .\$(OBJDIR)\TestShutdown.exe
 PROG18 = .\$(OBJDIR)\TestStackCrawl.exe
@@ -55,7 +54,6 @@ PROGRAMS = $(PROG1) $(PROG2) $(PROG3) $(PROG4) $(PROG5) \
         $(PROG12) \
         $(PROG13) \
         $(PROG14) \
-        $(PROG15) \
         $(PROG16) \
         $(PROG17) \
         $(PROG18) \
@@ -124,8 +122,6 @@ $(PROG12): $(OBJDIR) TestAutoLock.cpp
 $(PROG13): $(OBJDIR) TestThreads.cpp
 
 $(PROG14): $(OBJDIR) TestObserverService.cpp
-
-$(PROG15): $(OBJDIR) TestBuffers.cpp
 
 $(PROG16): $(OBJDIR) TestPipes.cpp
 
