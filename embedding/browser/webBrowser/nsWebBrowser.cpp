@@ -800,6 +800,8 @@ NS_IMETHODIMP nsWebBrowser::Create()
       
    NS_ENSURE_SUCCESS(mDocShellAsWin->Create(), NS_ERROR_FAILURE);
 
+   mDocShellTreeOwner->AddToWatcher(); // evil twin of Remove in SetDocShell(0)
+
    delete mInitInfo;
    mInitInfo = nsnull;
 
@@ -1220,7 +1222,10 @@ NS_IMETHODIMP nsWebBrowser::SetDocShell(nsIDocShell* aDocShell)
      }
      else
      {
-         if (mDocShellAsWin) (void)mDocShellAsWin->Destroy();
+         if (mDocShellAsWin)
+           mDocShellAsWin->Destroy();
+         if (mDocShellTreeOwner)
+           mDocShellTreeOwner->RemoveFromWatcher(); // evil twin of Add in Create()
 
          mDocShell = nsnull;
          mDocShellAsReq = nsnull;
