@@ -30,15 +30,16 @@ Rights Reserved.
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/SearchDialog.dtd" >
 
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<window id="searchMailWindow"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:nc="http://home.netscape.com/NC-rdf#"
         onload="searchOnLoad();"
         onunload="searchOnUnload();"
         onclose="onSearchStop();"
         windowtype="mailnews:search"
         title="&searchDialogTitle.label;"
-        width="640" height="470"
-        persist="screenX screenY width height">
+        style="width: 52em; height: 36em;"
+        persist="screenX screenY width height sizemode">
 
   <stringbundle id="bundle_search" src="chrome://messenger/locale/search.properties"/>
   <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
@@ -80,7 +81,7 @@ Rights Reserved.
 
   <dummy class="usesMailWidgets"/>
     
-    <vbox flex="1">
+    <vbox id="searchTerms" flex="3" persist="height">
       <vbox>
          <hbox align="center">
          <label value="&searchHeading.label;" accesskey="&searchHeading.accesskey;"
@@ -111,7 +112,7 @@ Rights Reserved.
       <grippy/>
     </splitter>
     
-    <vbox flex="1">
+    <vbox id="searchResultListBox" flex="4" persist="height">
        <vbox id="searchResultListBox" flex="1" >
             <tree id="threadTree" flex="1" context="threadPaneContext"/>
        </vbox>
