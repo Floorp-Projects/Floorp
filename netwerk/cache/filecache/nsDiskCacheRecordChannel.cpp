@@ -34,6 +34,7 @@
 #include "netCore.h"
 #include "nsIMIMEService.h"
 #include "nsISupportsUtils.h"
+#include "prio.h"
 
 //static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
