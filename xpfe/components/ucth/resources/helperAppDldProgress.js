@@ -36,7 +36,7 @@ var startTime;
 // since this progress dialog is brought up after we've already started downloading, we need to record the # bytes already 
 // downloaded before we started showing progress. This is used to make sure our time remaining calculation works correctly...
 var initialByteOffset;
-var elapsed;
+var elapsed = 0;
 var interval = 1000; // Update every 1000 milliseconds.
 var lastUpdate = -interval; // Update initially.
 
