@@ -590,27 +590,26 @@ nsresult nsDiskCacheDevice::updateDiskCacheEntry(nsCacheEntry* entry)
 
 nsresult nsDiskCacheDevice::readDiskCacheEntry(nsCString* key, nsCacheEntry ** result)
 {
-    nsresult rv = NS_ERROR_OUT_OF_MEMORY;
-    nsCacheEntry* entry = nsnull;
+    // up front, check to see if the file we are looking for exists.
+    nsCOMPtr<nsIFile> file;
+    nsresult rv = getFileForKey(key->get(), PR_TRUE, getter_AddRefs(file));
+    if (NS_FAILED(rv)) return rv;
+    PRBool exists;
+    rv = file->Exists(&exists);
+    if (NS_FAILED(rv) || !exists) return NS_ERROR_NOT_AVAILABLE;
+
+    nsCString* newKey = new nsCString(key->get());
+    if (!newKey) return NS_ERROR_OUT_OF_MEMORY;
+    
+    nsCacheEntry* entry = new nsCacheEntry(newKey, PR_TRUE, nsICache::STORE_ON_DISK);
+    if (!entry) { delete newKey; return NS_ERROR_OUT_OF_MEMORY; }
+        
     do {
-        nsCString* newKey = new nsCString(key->get());
-        if (!newKey) return NS_ERROR_OUT_OF_MEMORY;
-        
-        entry = new nsCacheEntry(newKey, PR_TRUE, nsICache::STORE_ON_DISK);
-        if (!entry) {
-            delete newKey;
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
-        
         DiskCacheEntry* diskEntry = ensureDiskCacheEntry(entry);
         if (!diskEntry) break;
 
         nsCOMPtr<nsITransport>& transport = diskEntry->getMetaTransport(nsICache::ACCESS_READ);
         if (!transport) {
-            nsCOMPtr<nsIFile> file;
-            nsresult rv = getFileForKey(key->get(), PR_TRUE, getter_AddRefs(file));
-            if (NS_FAILED(rv)) break;
-
             rv = getTransportForFile(file, nsICache::ACCESS_READ, getter_AddRefs(transport));
             if (NS_FAILED(rv)) break;
         }
