@@ -199,7 +199,7 @@ function onCancel()
 
 function doHelpButton()
 {
-  openHelp('chrome://help/content/help.xul?validation_prefs');
+  openHelp('validation_prefs');
 }
 
 function onAccept()

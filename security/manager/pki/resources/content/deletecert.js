@@ -56,28 +56,28 @@ function setWindowName()
      title = bundle.GetStringFromName("deleteUserCertTitle");
      confirm = bundle.GetStringFromName("deleteUserCertConfirm");
      impact = bundle.GetStringFromName("deleteUserCertImpact");
-     helpUrl = "chrome://help/content/help.xul?delete_my_certs"
+     helpUrl = "delete_my_certs"
   }
   else if(typeFlag == bundle.GetStringFromName("deleteSslCertFlag"))
   {
      title = bundle.GetStringFromName("deleteSslCertTitle");
      confirm = bundle.GetStringFromName("deleteSslCertConfirm");
      impact = bundle.GetStringFromName("deleteSslCertImpact");
-     helpUrl = "chrome://help/content/help.xul?delete_web_certs"
+     helpUrl = "delete_web_certs"
   }
   else if(typeFlag == bundle.GetStringFromName("deleteCaCertFlag"))
   {
      title = bundle.GetStringFromName("deleteCaCertTitle");
      confirm = bundle.GetStringFromName("deleteCaCertConfirm");
      impact = bundle.GetStringFromName("deleteCaCertImpact");
-     helpUrl = "chrome://help/content/help.xul?delete_ca_certs"   
+     helpUrl = "delete_ca_certs"   
   }
   else if(typeFlag == bundle.GetStringFromName("deleteEmailCertFlag"))
   {
      title = bundle.GetStringFromName("deleteEmailCertTitle");
      confirm = bundle.GetStringFromName("deleteEmailCertConfirm");
      impact = bundle.GetStringFromName("deleteEmailCertImpact");
-     helpUrl = "chrome://help/content/help.xul?delete_email_certs"
+     helpUrl = "delete_email_certs"
   }
   else
   {

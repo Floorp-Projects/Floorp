@@ -103,6 +103,6 @@ function onAccept()
 
 function doHelpButton()
 {
-  openHelp('chrome://help/content/help.xul?validation_prefs');
+  openHelp('validation_prefs');
 }
 

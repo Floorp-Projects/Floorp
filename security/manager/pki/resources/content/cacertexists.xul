@@ -31,7 +31,7 @@
   onload="setWindowName();">
 
   <script type="application/x-javascript" src="chrome://pippki/content/cacertexists.js"/>
-  <script type="application/x-javascript" src="chrome://help/content/help.js"/>
+  <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
 
   <vbox flex="1">

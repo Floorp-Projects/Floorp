@@ -34,7 +34,6 @@ const nsIPKIParamBlock    = Components.interfaces.nsIPKIParamBlock;
 const nsPKIParamBlock    = "@mozilla.org/security/pkiparamblock;1";
 
 
-var helpURL = "chrome://help/content/help.xul";
 var key;
 
 var selected_certs = [];
@@ -106,16 +105,15 @@ function getSelectedTab()
   var selTab = document.getElementById('certMgrTabbox').selectedItem;
   var selTabID = selTab.getAttribute('id');
   if (selTabID == 'mine_tab') {
-    key = "?my_certs";
+    key = "my_certs";
   } else if (selTabID == "others_tab") {
-    key = "?others_certs";
+    key = "others_certs";
   } else if (selTabID == "websites_tab") {
-    key = "?web_certs";
+    key = "web_certs";
   } else if (selTabID == "ca_tab") {
-    key = "?ca_certs";
+    key = "ca_certs";
   }  
-  var context = helpURL + key;
-  return context;
+  return key;
 }
 
 

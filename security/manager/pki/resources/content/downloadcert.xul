@@ -33,7 +33,7 @@
 <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
 <script type="application/x-javascript" src="chrome://pippki/content/downloadcert.js"/>
 <script type="application/x-javascript" src="chrome://pippki/content/pippki.js"/>
-<script type="application/x-javascript" src="chrome://help/content/help.js"/>
+<script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
 
 <vbox style="margin: 5px;" flex="1">
