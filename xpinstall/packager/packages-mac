@@ -167,6 +167,7 @@ res:throbber:*
 res:ua.css 
 res:maccharset.properties 
 res:charsetalias.properties 
+res:entityTables:*
 
 [mail] 
 Components:MsgAddrbook.shlb 
