@@ -705,7 +705,7 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
     nsCOMPtr<nsIURI> docURL;
     nsCOMPtr<nsIDocument> doc;
     mContent->GetDocument(*getter_AddRefs(doc));
-    NS_ASSERTION(doc, "No document found in Form Submit!\n");
+    if (!doc) return NS_OK; // No doc means don't submit, see Bug 28988
 
     doc->GetBaseURL(*getter_AddRefs(docURL));
     NS_ASSERTION(docURL, "No Base URL found in Form Submit!\n");
