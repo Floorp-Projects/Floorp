@@ -46,7 +46,7 @@
 #include "prinrval.h"
 
 #include "nsMenuX.h"
-#include "nsMenubarX.h"
+#include "nsMenuBarX.h"
 #include "nsIMenu.h"
 #include "nsIMenuBar.h"
 #include "nsIMenuItem.h"
