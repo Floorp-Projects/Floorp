@@ -131,6 +131,8 @@ CPPSRCS		= \
                   nsUnicodeToUCS4LE.cpp \
                   nsUnicodeToT61.cpp \
                   nsUnicodeToUserDefined.cpp \
+                  nsUnicodeToSymbol.cpp \
+                  nsUnicodeToZapfDingbat.cpp \
                   ns1ByteToUnicodeBase.cpp \
 		  nsUCvLatinSupport.cpp \
                   nsUCvLatinDll.cpp \
