@@ -284,7 +284,7 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
   // Enter the socket transport lock...  
   // This lock protects access to socket transport member data...
   //
-  nsAutoLock aLock(mLock);
+  PR_Lock(mLock);
 
   PR_LOG(gSocketLog, PR_LOG_DEBUG, 
          ("+++ Entering nsSocketTransport::Process() [this=%x].\t"
@@ -490,6 +490,7 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
           "CurrentState = %d\n\n",
           this, rv, mCurrentState));
 
+  PR_Unlock(mLock);
   return rv;
 }
 
@@ -1433,6 +1434,7 @@ nsSocketTransport::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
   }
 #else
   if (NS_SUCCEEDED(rv) && !mReadPipeIn) {
+    // XXXbe calling out of module with a lock held...
     rv = NS_NewPipe(getter_AddRefs(mReadPipeIn),
                     getter_AddRefs(mReadPipeOut),
                     this,       // nsIPipeObserver
@@ -1591,6 +1593,7 @@ nsSocketTransport::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
       NS_IF_ADDREF(*result);
     }
 #else
+    // XXXbe calling out of module with a lock held...
     rv = NS_NewPipe(getter_AddRefs(mReadPipeIn),
                     getter_AddRefs(mReadPipeOut),
                     this,       // nsIPipeObserver
@@ -1655,6 +1658,7 @@ nsSocketTransport::OpenOutputStream(PRUint32 startPosition, nsIOutputStream* *re
     rv = NS_NewPipe(getter_AddRefs(in), getter_AddRefs(out),
                     MAX_IO_BUFFER_SIZE, MAX_IO_BUFFER_SIZE, PR_TRUE, this);
 #else
+    // XXXbe calling out of module with a lock held...
     rv = NS_NewPipe(getter_AddRefs(in), getter_AddRefs(out),
                     this,       // nsIPipeObserver
                     NS_SOCKET_TRANSPORT_SEGMENT_SIZE,
