@@ -24,6 +24,8 @@
  *   Dan Veditz <dveditz@netscape.com>
  */
 
+var gProfileManagerBundle;
+var gBrandBundle;
 var profile     = Components.classes["@mozilla.org/profile/manager;1"].getService();
 if (profile)
   profile       = profile.QueryInterface(Components.interfaces.nsIProfileInternal);
@@ -32,6 +34,9 @@ var Registry;
 
 function StartUp()
 {
+  gProfileManagerBundle = document.getElementById("bundle_profileManager");
+  gBrandBundle = document.getElementById("bundle_brand");
+
   SetUpOKCancelButtons();
   centerWindowOnScreen();
   if(window.location && window.location.search && window.location.search == "?manage=true" )
@@ -161,10 +166,11 @@ function onStart()
     
   var profilename = selected.getAttribute("profile_name");
   if( selected.firstChild.firstChild.getAttribute("rowMigrate") == "no" ) {
-    var lString = bundle.GetStringFromName("migratebeforestart");
+    var lString = gProfileManagerBundle.getString("migratebeforestart");
     lString = lString.replace(/\s*<html:br\/>/g,"\n");
-    lString = lString.replace(/%brandShortName%/gi, brandBundle.GetStringFromName("brandShortName"));
-    var title = bundle.GetStringFromName("migratetitle");   
+    lString = lString.replace(/%brandShortName%/gi,
+                              gBrandBundle.getString("brandShortName"));
+    var title = gProfileManagerBundle.getString("migratetitle");   
     
     if (commonDialogService.Confirm(window, title, lString))
       profile.migrateProfile( profilename, true );
@@ -183,8 +189,8 @@ function onStart()
     ExitApp();
   }
   catch (ex) {
-    //var stringA = bundle.GetStringFromName(failProfileStartA);
-    //var stringB = bundle.GetStringFromName(failProfileStartB);
+    //var stringA = gProfileManagerBundle.getString(failProfileStartA);
+    //var stringB = gProfileManagerBundle.getString(failProfileStartB);
     //alert(stringA + " " + profilename + " " + stringB);
   }
   return true;
@@ -247,9 +253,10 @@ function SetUpOKCancelButtons()
   var cancelButtonString;
   
   try {
-    okButtonString = bundle.GetStringFromName("startButton");
-    okButtonString = okButtonString.replace(/%brandShortName%/, brandBundle.GetStringFromName("brandShortName"));
-    cancelButtonString = bundle.GetStringFromName("exitButton");
+    okButtonString = gProfileManagerBundle.getString("startButton");
+    okButtonString = okButtonString.replace(/%brandShortName%/,
+                                            gBrandBundle.getString("brandShortName"));
+    cancelButtonString = gProfileManagerBundle.getString("exitButton");
   } catch (e) {
     okButtonString = "Start Yah";
     cancelButtonString = "Exit Yah";

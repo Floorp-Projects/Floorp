@@ -22,10 +22,11 @@
  *   Ben Goodger <ben@netscape.com>
  */
 
+//NOTE: This script expects gBrandBundle and gProfileManagerBundle to be
+//      instanciated elsewhere (currently from StartUp in profileSelection.js)
+
 var commonDialogService = nsJSComponentManager.getService("@mozilla.org/appshell/commonDialogs;1",
                                                           "nsICommonDialogs");
-var bundle = srGetStrBundle("chrome://communicator/locale/profile/profileManager.properties");
-var brandBundle = srGetStrBundle("chrome://global/locale/brand.properties");
 var profileManagerMode = "selection";
 var set = null;
 
@@ -58,10 +59,10 @@ function RenameProfile()
   var selected = profileTree.selectedItems[0];
   if( selected.firstChild.firstChild.getAttribute("rowMigrate") == "no" ) {
     // migrate if the user wants to
-    var lString = bundle.GetStringFromName("migratebeforerename");
+    var lString = gProfileManagerBundle.getString("migratebeforerename");
     lString = lString.replace(/\s*<html:br\/>/g,"\n");
-    lString = lString.replace(/%brandShortName%/, brandBundle.GetStringFromName("brandShortName"));
-    var title = bundle.GetStringFromName("migratetitle");
+    lString = lString.replace(/%brandShortName%/, gBrandBundle.getString("brandShortName"));
+    var title = gProfileManagerBundle.getString("migratetitle");
     if (commonDialogService.Confirm(window, title, lString))
       profile.migrateProfile( profilename, true );
     else
@@ -70,8 +71,8 @@ function RenameProfile()
   else {
     var oldName = selected.getAttribute("rowName");
     var result = { };
-    var dialogTitle = bundle.GetStringFromName("renameprofiletitle");
-    var msg = bundle.GetStringFromName("renameProfilePrompt");
+    var dialogTitle = gProfileManagerBundle.getString("renameprofiletitle");
+    var msg = gProfileManagerBundle.getString("renameProfilePrompt");
     msg = msg.replace(/%oldProfileName%/gi, oldName);
     while (1) {
       var rv = commonDialogService.Prompt(window, dialogTitle, msg, oldName, result);
@@ -82,8 +83,8 @@ function RenameProfile()
         for( var i = 0; i < invalidChars.length; i++ )
         {
           if( newName.indexOf( invalidChars[i] ) != -1 ) {
-            var aString = bundle.GetStringFromName("invalidCharA");
-            var bString = bundle.GetStringFromName("invalidCharB");
+            var aString = gProfileManagerBundle.getString("invalidCharA");
+            var bString = gProfileManagerBundle.getString("invalidCharB");
             bString = bString.replace(/\s*<html:br\/>/g,"\n");
             var lString = aString + invalidChars[i] + bString;
             alert( lString );
@@ -99,8 +100,8 @@ function RenameProfile()
           selected.setAttribute( "profile_name", newName );
         }
         catch(e) {
-          var lString = bundle.GetStringFromName("profileExists");
-          var profileExistsTitle = bundle.GetStringFromName("profileExistsTitle");
+          var lString = gProfileManagerBundle.getString("profileExists");
+          var profileExistsTitle = gProfileManagerBundle.getString("profileExistsTitle");
           commonDialogService.Alert(window, profileExistsTitle, lString);
           continue;
         }
@@ -125,10 +126,10 @@ function ConfirmDelete()
 
   if( selected.firstChild.firstChild.getAttribute("rowMigrate") == "no" ) {
       // auto migrate if the user wants to. THIS IS REALLY REALLY DUMB PLEASE FIX THE BACK END.
-    var lString = bundle.GetStringFromName("migratebeforedelete");
+    var lString = gProfileManagerBundle.getString("migratebeforedelete");
     lString = lString.replace(/\s*<html:br\/>/g,"\n");
-    lString = lString.replace(/%brandShortName%/, brandBundle.GetStringFromName("brandShortName"));
-    var title = bundle.GetStringFromName("deletetitle");
+    lString = lString.replace(/%brandShortName%/, gBrandBundle.getString("brandShortName"));
+    var title = gProfileManagerBundle.getString("deletetitle");
     if (commonDialogService.Confirm(window, title, lString)) {
       profile.deleteProfile( name, false );
       var profileKids = document.getElementById( "profilekids" )
@@ -167,8 +168,8 @@ function DeleteProfile( deleteFiles )
 
 function ConfirmMigrateAll()
 {
-  var string = bundle.GetStringFromName("migrateallprofiles");
-  var title = bundle.GetStringFromName("migrateallprofilestitle");
+  var string = gProfileManagerBundle.getString("migrateallprofiles");
+  var title = gProfileManagerBundle.getString("migrateallprofilestitle");
   if (commonDialogService.Confirm(window, title, string))
     return true;
   else 
@@ -187,7 +188,7 @@ function SwitchProfileManagerMode()
     prattleIndex = 1;                                       // need to switch to manager's index
     
     try {
-      captionLine = bundle.GetStringFromName( "pm_title" );   // get manager's caption
+      captionLine = gProfileManagerBundle.getString("pm_title"); // get manager's caption
     } catch(e) {
       captionLine = "Manage Profiles *";
     }
@@ -200,7 +201,7 @@ function SwitchProfileManagerMode()
   else {
     prattleIndex = 0;
     try {
-      captionLine = bundle.GetStringFromName( "ps_title" );
+      captionLine = gProfileManagerBundle.getString("ps_title");
     } catch(e) {
       captionLine = "Select Profile *";
     }

@@ -21,7 +21,7 @@
  *   Ben Goodger (03/11/99)
  */
 
-var bundle = srGetStrBundle("chrome://communicator/locale/profile/newProfile1_2.properties");
+var gNewProfile1_2Bundle;
 
 // the getting procedure is unique to each page, since each page can different
 // types of elements (not necessarily form elements). So each page must provide
@@ -68,6 +68,8 @@ function initFields()
   var displayField = document.getElementById( "ProfileDir" );
   if ( !displayField.value || !displayField.rootFolder )
     setDisplayToDefaultFolder();
+  
+  gNewProfile1_2Bundle = document.getElementById("bundle_newProfile1_2");
 }
 
 // function createProfileWizard.js::chooseProfileFolder();
@@ -77,7 +79,7 @@ function chooseProfileFolder( aRootFolder )
   if( !aRootFolder ) {
     try {
       var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(Components.interfaces.nsIFilePicker);
-      fp.init(window, bundle.GetStringFromName("chooseFolder"), Components.interfaces.nsIFilePicker.modeGetFolder);
+      fp.init(window, gNewProfile1_2Bundle.getString("chooseFolder"), Components.interfaces.nsIFilePicker.modeGetFolder);
       fp.appendFilters(Components.interfaces.nsIFilePicker.filterAll);
       fp.show();
       // later change to 

@@ -49,7 +49,11 @@
   onclose="onExit();"
   onload="StartUp();"> 
       
-  <script language="javascript" src="chrome://global/content/strres.js"></script>
+  <stringbundle id="bundle_profileManager"
+                src="chrome://communicator/locale/profile/profileManager.properties"/>
+  <stringbundle id="bundle_brand"
+                src="chrome://global/locale/brand.properties"/>
+  
   <script language="javascript" src="chrome://global/content/nsJSComponentManager.js"></script>
   <script language="javascript" src="chrome://communicator/content/profile/profileSelection.js"></script>
   <script language="javascript" src="chrome://communicator/content/profile/profileManager.js"></script>
