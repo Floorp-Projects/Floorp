@@ -38,17 +38,20 @@ use vars qw(
   $vars
 );
 
+# Just in case someone already has an account, let them get the correct footer
+# on an error message.  The user is logged out just before the account is
+# actually created.
+Bugzilla->login();
+
 # If we're using LDAP for login, then we can't create a new account here.
 unless (Bugzilla::Auth->can_edit('new')) {
-  # Just in case someone already has an account, let them get the correct
-  # footer on the error message
-  Bugzilla->login();
-  ThrowUserError("auth_cant_create_account");
+    ThrowUserError("auth_cant_create_account");
 }
 
-# Clear out the login cookies.  Make people log in again if they create an
-# account; otherwise, they'll probably get confused.
-Bugzilla->logout();
+my $createexp = Param('createemailregexp');
+unless ($createexp) {
+    ThrowUserError("account_creation_disabled");
+}
 
 my $cgi = Bugzilla->cgi;
 print $cgi->header();
@@ -68,12 +71,13 @@ if (defined($login)) {
         exit;
     }
 
-    my $createexp = Param('createemailregexp');
-    if (!($createexp)
-        || ($login !~ /$createexp/)) {
+    if ($login !~ /$createexp/) {
         ThrowUserError("account_creation_disabled");
     }
     
+    # Clear out the login cookies in case the user is currently logged in.
+    Bugzilla->logout();
+
     # Create account
     my $password = insert_new_user($login, $realname);
     MailPassword($login, $password);
