@@ -39,6 +39,7 @@
    style="min-width:20em">
 
   <!-- Methods common to all editor dialogs -->
+  <script type="application/x-javascript" src="chrome://editor/content/editorUtilities.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
   <script type="application/x-javascript" src="chrome://global/content/dialogOverlay.js" />
   <!--- Element-specific methods -->

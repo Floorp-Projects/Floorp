@@ -27,6 +27,7 @@
 <overlay id="editorOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
+<script type="application/x-javascript" src="chrome://editor/content/editorUtilities.js"/>
 <script type="application/x-javascript" src="chrome://editor/content/editorOverlay.js"/>
 <script type="application/x-javascript" src="chrome://editor/content/ComposerCommands.js"/>
 
@@ -78,13 +79,11 @@
     <command id="cmd_open"                                          oncommand="goDoCommand('cmd_open')"/>
     <command id="cmd_openRemote"   label="&openremoteCmd.label;"    oncommand="goDoCommand('cmd_openRemote')"/>
     <command id="cmd_close"        label="&closeCmd.label;"         oncommand="goDoCommand('cmd_close')"/>
-
     <command id="cmd_printSetup"   label="&printSetupCmd.label;"    oncommand="goDoCommand('cmd_printSetup')"/>
 <!--
     <command id="cmd_printPreview" label="&printPreviewCmd.label;"  oncommand="goDoCommand('cmd_printPreview')"/>
 -->
     <command id="cmd_print"                                         oncommand="goDoCommand('cmd_print')"/>
-    
     <command id="cmd_quit"         oncommand="goDoCommand('cmd_quit')"/>
   </commandset>
 
@@ -104,7 +103,7 @@
     <command id="cmd_hline"            oncommand="goDoCommand('cmd_hline')"/>
     <command id="cmd_table"            oncommand="goDoCommand('cmd_table')"/>
     <command id="cmd_objectProperties" oncommand="goDoCommand('cmd_objectProperties')"/>
-    <command id="cmd_insertChars"      oncommand="goDoCommand('cmd_insertChars')"     label="&insertCharsCmd.label;"/>
+    <command id="cmd_insertChars"      oncommand="goDoCommand('cmd_insertChars')"    label="&insertCharsCmd.label;"/>
     <command id="cmd_insertHTML"       oncommand="goDoCommand('cmd_insertHTML')"     label="&insertHTMLCmd.label;"/>
 
     <command id="cmd_insertBreak"      oncommand="goDoCommand('cmd_insertBreak')"/>
@@ -113,6 +112,8 @@
     <command id="cmd_AllTagsMode"      oncommand="goDoCommand('cmd_AllTagsMode')"    label="&AllTagsMode.label;"/>
     <command id="cmd_HTMLSourceMode"   oncommand="goDoCommand('cmd_HTMLSourceMode')"/>
     <command id="cmd_PreviewMode"      oncommand="goDoCommand('cmd_PreviewMode')"    label="&PreviewMode.label;"/>
+
+    <!-- only used in context popup menu -->
     <command id="cmd_editLink"         oncommand="goDoCommand('cmd_editLink')"/>
 
     <!-- dummy command used just to disable things in non-HTML modes -->
@@ -128,6 +129,8 @@
     <command id="cmd_saveAs"         label="&saveAsCmd.label;"         oncommand="goDoCommand('cmd_saveAs')"/>
     <command id="cmd_exportToText"   label="&exportToTextCmd.label;"   oncommand="goDoCommand('cmd_exportToText')"/>
     <command id="cmd_saveAsCharset"  label="&saveAsCharsetCmd.label;"  oncommand="goDoCommand('cmd_saveAsCharset')"/>
+    <command id="cmd_publish"                                          oncommand="goDoCommand('cmd_publish')"/>
+    <command id="cmd_publishAs"                                        oncommand="goDoCommand('cmd_publishAs')"/>
     <command id="cmd_revert"         label="&fileRevert.label;"        oncommand="goDoCommand('cmd_revert')"/>
     <command id="cmd_preview"                                          oncommand="goDoCommand('cmd_preview')"/>
     <command id="cmd_editSendPage"   label="&sendPageCmd.label;"
@@ -157,7 +160,7 @@
     <command id="cmd_validate"      oncommand="goDoCommand('cmd_validate')"/>
     <command id="cmd_checkLinks"    oncommand="goDoCommand('cmd_checkLinks')"/>
     <command id="cmd_pasteQuote"    oncommand="goDoCommand('cmd_pasteQuote')" label="&pasteAsQuotationCmd.label;"/>
-
+    <command id="cmd_publishSettings" oncommand="goDoCommand('cmd_publishSettings')"/>
   </commandset>
 
   <!-- style related commands that update on creation, and on selection change -->
@@ -290,18 +293,24 @@
         <menupopup id="menupopup_RecentFiles"/>
           <!-- menuitems appended at runtime -->
       </menu>
-      <menuseparator/>
-
       <menuitem accesskey="&fileclose.accesskey;"      key="closekb"        observes="cmd_close"/>
+      <menuseparator/>
       <menuitem accesskey="&filesave.accesskey;"       key="savekb"         observes="cmd_save"/>
       <menuitem accesskey="&filesaveas.accesskey;"                          observes="cmd_saveAs"/>
       <menuitem accesskey="&filesaveascharset.accesskey;"                   observes="cmd_saveAsCharset"/>
+      <menu label="&publish.label;" accesskey="&publishmenu.accesskey;">
+        <menupopup>
+          <menuitem label="&publish.label;" accesskey="&publishcmd.accesskey;"   observes="cmd_publish"/>
+        </menupopup>
+      </menu>
+      <menuitem label="&publishAsCmd.label;" accesskey="&publishas.accesskey;" observes="cmd_publishAs"/>
+      <menuseparator/>
       <menuitem accesskey="&fileexporttotext.accesskey;"                    observes="cmd_exportToText" id="fileExportToText"/>
       <menuitem accesskey="&filerevert.accesskey;" observes="cmd_revert"/>
       <menuseparator/>
-      <menuitem label="&previewCmd.label;"  accesskey="&filepreview.accesskey;" observes="cmd_preview"/>
+      <menuitem id="previewInBrowser" label="&previewCmd.label;"  accesskey="&filepreview.accesskey;" observes="cmd_preview"/>
       <!-- menuitem id="menu_SendPage" is merged here from mailEditorOverlay.xul,
-           where "position" is assumed to be 14. Change that label if menu position changes.      -->
+           where "position" is assumed to be just after 'previewInBrowser'  -->
       <!--Page setup gets overlaid here from platformGlobalOverlay.xul / -->
       <menuitem id="printMenuItem" accesskey="&fileprint.accesskey;" key="printkb" observes="cmd_print" label="&printCmd.label;"/>
       <!-- The Exit/Quit item is merged from platformGlobalOverlay.xul -->
@@ -341,7 +350,8 @@
       <menuitem id="menu_validate" observes="cmd_validate"
         label="&validateCmd.label;"/>
       <menuseparator id="menu_PrefsSeparator"/>
-      <menuitem id="menu_preferences"                                                                  observes="cmd_preferences"/>
+      <menuitem id="menu_publishSettings" label="&publishSettings.label;" accesskey="&publishSettings.accesskey;" observes="cmd_publishSettings"/>
+      <menuitem id="menu_preferences"     observes="cmd_preferences"/>
     </menupopup>
   </menu>
 

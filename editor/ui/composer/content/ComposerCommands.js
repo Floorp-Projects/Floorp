@@ -169,6 +169,9 @@ function SetupComposerWindowCommands()
   commandManager.registerCommand("cmd_saveAs",         nsSaveAsCommand);
   commandManager.registerCommand("cmd_exportToText",   nsExportToTextCommand);
   commandManager.registerCommand("cmd_saveAsCharset",  nsSaveAsCharsetCommand);
+  commandManager.registerCommand("cmd_publish",        nsPublishCommand);
+  commandManager.registerCommand("cmd_publishAs",      nsPublishAsCommand);
+  commandManager.registerCommand("cmd_publishSettings",nsPublishSettingsCommand);
   commandManager.registerCommand("cmd_revert",         nsRevertCommand);
   commandManager.registerCommand("cmd_openRemote",     nsOpenRemoteCommand);
   commandManager.registerCommand("cmd_preview",        nsPreviewCommand);
@@ -324,7 +327,7 @@ var nsSaveCommand =
   {
     return window.editorShell && 
       (window.editorShell.documentModified || 
-       window.editorShell.editorDocument.location == "about:blank" ||
+       IsUrlAboutBlank(window.editorShell.editorDocument.location) ||
        window.gHTMLSourceChanged);
   },
   
@@ -333,7 +336,7 @@ var nsSaveCommand =
     if (window.editorShell)
     {
       FinishHTMLSource(); // In editor.js
-      var doSaveAs = window.editorShell.editorDocument.location == "about:blank";
+      var doSaveAs = IsUrlAboutBlank(window.editorShell.editorDocument.location);
       var result = window.editorShell.saveDocument(doSaveAs, false, editorShell.contentsMIMEType);
       window._content.focus();
       return result;
@@ -420,13 +423,102 @@ var nsSaveAsCharsetCommand =
 };
 
 //-----------------------------------------------------------------------------------
+var nsPublishCommand =
+{
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    return window.editorShell && 
+      (window.editorShell.documentModified || 
+       IsUrlAboutBlank(window.editorShell.editorDocument.location) ||
+       window.gHTMLSourceChanged);
+  },
+  
+  doCommand: function(aCommand)
+  {
+    if (window.editorShell)
+    {
+      FinishHTMLSource(); // In editor.js
+
+      // If new page, we must use the publish dialog 
+      if (IsUrlAboutBlank(window.editorShell.editorDocument.location))
+        goDoCommand("cmd_publishAs");
+
+      // TODO: ADD ONE-BUTTON-PUBLISH HERE! 
+      // (Get current location, build URI and go!)
+
+      window._content.focus();
+      return true;
+    }
+    return false;
+  }
+}
+
+var nsPublishAsCommand =
+{
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    return (window.editorShell && window.editorShell.documentEditable);
+  },
+
+  doCommand: function(aCommand)
+  {
+    if (window.editorShell)
+    {
+      FinishHTMLSource();
+
+      // Launch Publish dialog
+      // Object to pass back data from dialog
+      var publishData = { 
+        SiteName : "",
+        UserName : "",
+        Password : "",
+        Filename : "",
+        DestinationDir : "",
+        BrowseDir : "",
+        RelatedDocs : {}
+      }
+
+      window.ok = window.openDialog("chrome://editor/content/EditorPublish.xul","_blank", "chrome,close,titlebar,modal", "", publishData);
+      if (window.ok)
+      {
+dump(" * Publishing info: UserName="+publishData.UserName+", Password="+publishData.Password+", Filename="+publishData.Filename+"\n   Destination="+publishData.DestinationDir+", Browse dir="+publishData.BrowseDir+"\n");
+      }    
+      window._content.focus();
+      return window.ok;
+    }
+    return false;
+  }
+}
+
+var nsPublishSettingsCommand =
+{
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    return (window.editorShell && window.editorShell.documentEditable);
+  },
+
+  doCommand: function(aCommand)
+  {
+    if (window.editorShell)
+    {
+      // Launch Publish Settings dialog
+
+      window.ok = window.openDialog("chrome://editor/content/EditorPublishSettings.xul","_blank", "chrome,close,titlebar,modal", "");
+      window._content.focus();
+      return window.ok;
+    }
+    return false;
+  }
+}
+
+//-----------------------------------------------------------------------------------
 var nsRevertCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
     return (window.editorShell && 
             window.editorShell.documentModified &&
-            window.editorShell.editorDocument.location != "about:blank");
+            !IsUrlAboutBlank(window.editorShell.editorDocument.location));
   },
 
   doCommand: function(aCommand)

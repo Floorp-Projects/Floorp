@@ -63,26 +63,12 @@ var gFormatToolbar;
 var gFormatToolbarHidden = false;
 var gFormatToolbarCollapsed;
 var gEditModeBar;
-// Bummer! Can't get at enums from nsIDocumentEncoder.h
-var gOutputSelectionOnly = 1;
-var gOutputFormatted     = 2;
-//var gOutputNoDoctype     = 4;  // OutputNoDoctype has been obsoleted
-var gOutputBodyOnly      = 8;
-var gOutputPreformatted  = 16;
-var gOutputWrap          = 32;
-var gOutputFormatFlowed  = 64;
-var gOutputAbsoluteLinks = 128;
-var gOutputEncodeEntities = 256;
 var gNormalModeButton;
 var gTagModeButton;
 var gSourceModeButton;
 var gPreviewModeButton;
-var gIsWindows;
-var gIsMac;
-var gIsUNIX;
 var gIsHTMLEditor = false;
 var gColorObj = new Object();
-var gPrefs;
 var gDefaultTextColor = "";
 var gDefaultBackgroundColor = "";
 
@@ -287,20 +273,15 @@ function EditorSharedStartup()
         editorShell.contentsMIMEType = "text/plain";
         break;
   }
-
-  gIsWindows = navigator.appVersion.indexOf("Win") != -1;
-  gIsUNIX = (navigator.appVersion.indexOf("X11") ||
-             navigator.appVersion.indexOf("nux")) != -1;
-  gIsMac = !gIsWindows && !gIsUNIX;
-  //dump("IsWin="+gIsWindows+", IsUNIX="+gIsUNIX+", IsMac="+gIsMac+"\n");
+  var isMac = (GetOS() == gMac);
 
   // Set platform-specific hints for how to select cells
   // Mac uses "Cmd", all others use "Ctrl"
-  var tableKey = GetString(gIsMac ? "XulKeyMac" : "TableSelectKey");
+  var tableKey = GetString(isMac ? "XulKeyMac" : "TableSelectKey");
   var dragStr = tableKey+GetString("Drag");
   var clickStr = tableKey+GetString("Click");
 
-  var delStr = GetString(gIsMac ? "Clear" : "Del");
+  var delStr = GetString(isMac ? "Clear" : "Del");
 
   SafeSetAttribute("menu_SelectCell", "acceltext", clickStr);
   SafeSetAttribute("menu_SelectRow", "acceltext", dragStr);
@@ -314,9 +295,8 @@ function EditorSharedStartup()
   // hide UI that we don't have components for
   RemoveInapplicableUIElements();
 
-  // Use global prefs if EditorStartup already run,
-  //   else get service for other editor users
-  if (!gPrefs) GetPrefsService();
+  // gPrefs and GetPrefsService() are in editorUtilities.js
+  gPrefs = GetPrefsService();
 
   // Use browser colors as initial values for editor's default colors
   var BrowserColors = GetDefaultBrowserColors();
@@ -329,38 +309,6 @@ function EditorSharedStartup()
   // For new window, no default last-picked colors
   gColorObj.LastTextColor = "";
   gColorObj.LastBackgroundColor = "";
-}
-
-// Get these to use for initial default text and background,
-//  and also pass to prefs and color dialogs
-function GetDefaultBrowserColors()
-{
-  var colors = new Object();
-  if (!colors) return null;
-  //Initialize to avoid JS warnings
-  colors.TextColor = "";
-  colors.BackgroundColor = "";
-
-  var useSysColors = false;
-  try { useSysColors = gPrefs.getBoolPref("browser.display.use_system_colors"); } catch (e) {}
-
-  if (!useSysColors)
-  {
-    try { colors.TextColor = gPrefs.getCharPref("browser.display.foreground_color"); } catch (e) {}
-
-    try { colors.BackgroundColor = gPrefs.getCharPref("browser.display.background_color"); } catch (e) {}
-  }
-  // Use OS colors for text and background if explicitly asked or pref is not set
-  if (!colors.TextColor)
-    colors.TextColor = "windowtext";
-
-  if (!colors.BackgroundColor)
-    colors.BackgroundColor = "window";
-
-  try { colors.LinkColor = gPrefs.getCharPref("browser.anchor_color"); } catch (e) {}
-  try { colors.VisitedLinkColor = gPrefs.getCharPref("browser.visited_color"); } catch (e) {}
-
-  return colors;
 }
 
 function _EditorNotImplemented()
@@ -378,12 +326,6 @@ function SafeSetAttribute(nodeID, attributeName, attributeValue)
     var theNode = document.getElementById(nodeID);
     if (theNode)
         theNode.setAttribute(attributeName, attributeValue);
-}
-
-// We use this alot!
-function GetString(id)
-{
-  return editorShell.GetString(id);
 }
 
 function FindAndSelectEditorWindowWithURL(urlToMatch)
@@ -404,19 +346,21 @@ function FindAndSelectEditorWindowWithURL(urlToMatch)
   var enumerator = windowManagerInterface.getEnumerator( "composer:html" );
   if ( !enumerator )
     return false;
-
-  while ( enumerator.hasMoreElements() )
-  {
-    var window = windowManagerInterface.convertISupportsToDOMWindow( enumerator.getNext() );
-    if ( window )
+  try {
+    while ( enumerator.hasMoreElements() )
     {
-      if (editorShell.checkOpenWindowForURLMatch(urlToMatch, window))
+      var window = windowManagerInterface.convertISupportsToDOMWindow( enumerator.getNext() );
+      if ( window )
       {
-        window.focus();
-        return true;
+        if (editorShell.checkOpenWindowForURLMatch(urlToMatch, window))
+        {
+          window.focus();
+          return true;
+        }
       }
     }
   }
+  catch (ex) {}
 
   // not found
   return false;
@@ -431,7 +375,7 @@ function DocumentHasBeenSaved()
     return false;
   }
 
-  if (fileurl == "" || fileurl == "about:blank")
+  if (fileurl == "" || IsUrlAboutBlank(fileurl))
     return false;
 
   // We have a file URL already
@@ -547,7 +491,7 @@ function EditorSetDocumentCharacterSet(aCharset)
   if(editorShell)
   {
     editorShell.SetDocumentCharacterSet(aCharset);
-    if( editorShell.editorDocument.location != "about:blank")
+    if( !IsUrlAboutBlank(editorShell.editorDocument.location))
     {
       // reloading the document will reverse any changes to the META charset, 
       // we need to put them back in, which is achieved by a dedicated listener
@@ -565,7 +509,7 @@ function updateCharsetPopupMenu(menuPopup)
     for (var i = 0; i < menuPopup.childNodes.length; i++)
     {
       var menuItem = menuPopup.childNodes[i];
-    menuItem.setAttribute('disabled', 'true');
+      menuItem.setAttribute('disabled', 'true');
     }
   }
 }
@@ -1298,16 +1242,6 @@ function CollapseItem(id, collapse)
   }
 }
 
-function DisableItem(id, disable)
-{
-  var item = document.getElementById(id);
-  if (item)
-  {
-    if(disable != (item.getAttribute("disabled") == "true"))
-      item.setAttribute("disabled", disable ? "true" : "");
-  }
-}
-
 function SetDisplayMode(mode)
 {
   if (gIsHTMLEditor)
@@ -1469,7 +1403,6 @@ function BuildRecentMenu(savePrefs)
   //  but we don't include it in the menu.
   var curTitle = window.editorShell.editorDocument.title;
   var curUrl = window.editorShell.editorDocument.location;
-  var newDoc = (curUrl == "about:blank");
   var historyCount = 10;
   try { historyCount = gPrefs.getIntPref("editor.history.url_maximum"); } catch(e) {}
   var titleArray = new Array(historyCount);
@@ -1479,7 +1412,7 @@ function BuildRecentMenu(savePrefs)
   var i;
   var disableMenu = true;
 
-  if(!newDoc)
+  if(!IsUrlAboutBlank(curUrl))
   {
     // Always put latest-opened URL at start of array
     titleArray[0] = curTitle;
@@ -1818,8 +1751,7 @@ function EditorSetDefaultPrefsAndDoctype()
   }
 
   /* only set default prefs for new documents */
-  var newDoc = window.editorShell.editorDocument.location == "about:blank";
-  if (!newDoc)
+  if (!IsUrlAboutBlank(window.editorShell.editorDocument.location))
     return;
 
   // search for author meta tag.
@@ -2036,8 +1968,11 @@ function onButtonUpdate(button, commmandID)
 {
   var commandNode = document.getElementById(commmandID);
   var state = commandNode.getAttribute("state");
-
   button.checked = state == "true";
+
+  // XXX why doesn't button.checked make the right thing happen here?
+  // Did it ever?
+  button.setAttribute("checked", state);
 }
 
 //--------------------------------------------------------------------
@@ -2047,32 +1982,13 @@ function onStateButtonUpdate(button, commmandID, onState)
   var state = commandNode.getAttribute("state");
 
   button.checked = state == onState;
-}
 
+  // XXX why doesn't button.checked make the right thing happen here?
+  // Did it ever?
+  button.setAttribute("checked", state == onState);
+}
 
 // --------------------------- Status calls ---------------------------
-function onStyleChange(theStyle)
-{
-  //dump("in onStyleChange with " + theStyle + "\n");
-
-  var broadcaster = document.getElementById("cmd_" + theStyle);
-  var isOn = broadcaster.getAttribute("state");
-
-  // PrintObject(broadcaster);
-
-  var theButton = document.getElementById(theStyle + "Button");
-  if (theButton)
-  {
-    theButton.checked = isOn == "true";
-  }
-
-  var theMenuItem = document.getElementById(theStyle + "MenuItem");
-  if (theMenuItem)
-  {
-    theMenuItem.setAttribute("checked", isOn);
-  }
-}
-
 function getColorAndSetColorWell(ColorPickerID, ColorWellID)
 {
   var colorWell;
@@ -2156,22 +2072,6 @@ function RemoveItem(id)
   var item = document.getElementById(id);
   if (item)
     item.parentNode.removeChild(item);
-}
-
-function GetPrefsService()
-{
-  // Store the prefs object
-  try {
-    var prefsService = Components.classes["@mozilla.org/preferences-service;1"]
-                                 .getService(Components.interfaces.nsIPrefService);
-    gPrefs = prefsService.getBranch(null);
-    if (!gPrefs)
-      dump("failed to get prefs service!\n");
-  }
-  catch(ex)
-  {
-    dump("failed to get prefs service!\n");
-  }
 }
 
 // Command Updating Strategy:

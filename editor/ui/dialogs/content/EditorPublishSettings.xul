@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+
+<!--
+   - The contents of this file are subject to the Netscape Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/NPL/
+   -  
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   -  
+   - The Original Code is Mozilla Communicator client code, released
+   - March 31, 1998.
+   - 
+   - The Initial Developer of the Original Code is Netscape
+   - Communications Corporation. Portions created by Netscape are
+   - Copyright (C) 2001 Netscape Communications Corporation. All
+   - Rights Reserved.
+   - 
+   - Contributor(s): 
+  -->
+
+<?xml-stylesheet href="chrome://editor/skin/editor.css" type="text/css"?>
+<?xml-stylesheet href="chrome://editor/skin/EditorDialog.css" type="text/css"?>
+
+<?xul-overlay href="chrome://editor/content/EdDialogOverlay.xul"?> 
+<?xul-overlay href="chrome://editor/content/EditorPublishOverlay.xul"?> 
+
+<!DOCTYPE window SYSTEM "chrome://editor/locale/EditorPublish.dtd">
+
+<dialog title="&windowTitle.label;"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="Startup()"
+        buttons="accept,cancel,help"
+        ondialogaccept="return onAccept();"
+        ondialogcancel="return onCancel();"
+        ondialoghelp="return doHelpButton();">
+
+  <!-- Methods common to all editor dialogs -->
+  <script type="application/x-javascript" src="chrome://editor/content/editorUtilities.js"/>
+  <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
+  <script type="application/x-javascript" src="chrome://editor/content/EditorPublishSettings.js"/>
+  <script type="application/x-javascript" src="chrome://editor/content/PublishPrefs.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/dialogOverlay.js" />
+  <script type="application/x-javascript" src="chrome://help/content/help.js"/>
+
+  <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
+  <broadcaster id="args" value=""/>
+
+  <hbox id="SettingsPanel">
+    <groupbox align="center">
+      <caption label="&publishSites.label;"/>
+      <!-- XXX: If tree isn't wrapped in vbox, it appears BELOW next vbox -->
+      <vbox flex="1">
+        <tree rows="4" class="list" id="SiteList" flex="1"  onselect="SelectSiteList();">
+          <treecolgroup>
+            <treecol/>
+            <treecol flex="1"/>
+          </treecolgroup>
+        </tree>
+      </vbox>
+      <hbox pack="center">
+        <vbox>
+          <button id="NewSiteButton"      label="&newSiteButton.label;"      oncommand="AddNewSite();"/>
+          <button id="SetDefaultButton"   label="&setDefaultButton.label;"   oncommand="SetDefault();"/>
+          <button id="RemoveSiteButton"   label="&removeButton.label;"       oncommand="RemoveSite();"/>
+        </vbox>
+      </hbox>
+    </groupbox>
+    <!-- from EditorPublishOverlay.xul -->
+    <vbox id="PublishSettingsInputs"/>
+  </hbox>
+  <spacer class="spacer"/>
+</dialog>

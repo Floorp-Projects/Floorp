@@ -70,3 +70,8 @@ EditorSaveAsCharset.xul
 EditorSaveAsCharset.js
 EdConvertToTable.xul
 EdConvertToTable.js
+EditorPublish.js
+EditorPublish.xul
+EditorPublishSettings.js
+EditorPublishSettings.xul
+EditorPublishOverlay.xul

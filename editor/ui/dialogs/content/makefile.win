@@ -73,6 +73,11 @@ CHROME_CONTENT = \
 	.\EditorSaveAsCharset.js \
 	.\EdConvertToTable.xul \
 	.\EdConvertToTable.js \
+	.\EditorPublish.xul \
+	.\EditorPublish.js \
+	.\EditorPublishSettings.xul \
+	.\EditorPublishSettings.js \
+	.\EditorPublishOverlay.xul \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

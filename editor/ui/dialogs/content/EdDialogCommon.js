@@ -29,9 +29,6 @@
   var bundle = srGetStrBundle("chrome://global/locale/filepicker.properties");
 */
 
-/**** NAMESPACES ****/
-const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-
 // Each editor window must include this file
 // Variables  shared by all dialogs:
 var editorShell;
@@ -39,23 +36,7 @@ var editorShell;
 // Object to attach commonly-used widgets (all dialogs should use this)
 var gDialog = {};
 
-// Bummer! Can't get at enums from nsIDocumentEncoder.h
-var gOutputSelectionOnly = 1;
-var gOutputFormatted     = 2;
-var gOutputNoDoctype     = 4;
-var gOutputBodyOnly      = 8;
-var gOutputPreformatted  = 16;
-var gOutputWrap          = 32;
-var gOutputFormatFlowed  = 64;
-var gOutputAbsoluteLinks = 128;
-var gOutputEncodeEntities = 256;
-var gStringBundle;
 var gValidationError = false;
-var gIOService;
-var gOS = "";
-const gWin = "Win";
-const gUNIX = "UNIX";
-const gMac = "Mac";
 
 // Use for 'defaultIndex' param in InitPixelOrPercentMenulist
 var gPixel = 0;
@@ -91,14 +72,6 @@ function InitEditorShell()
   window.editorShell = editorShell;
 
   return true;
-}
-
-function StringExists(string)
-{
-  if (string != null && string != "undefined" && string.length > 0)
-    return true;
-
-  return false;
 }
 
 /* Validate contents of an input field 
@@ -259,175 +232,6 @@ function ShowInputErrorMessage(message)
   window.focus();
 }
 
-function AlertWithTitle(title, message)
-{
-  var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
-  promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
-
-  if (promptService)
-  {
-    if (!title)
-      title = GetString("Alert");
-
-    // "window" is the calling dialog window
-    promptService.alert(window, title, message);
-  }
-}
-
-// Optional: Caller may supply text to substitue for "Ok" and/or "Cancel"
-function ConfirmWithTitle(title, message, okButtonText, cancelButtonText)
-{
-  var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
-  promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
-
-  if (promptService)
-  {
-    var result = {value:0};
-    var okFlag = okButtonText ? promptService.BUTTON_TITLE_IS_STRING : promptService.BUTTON_TITLE_OK;
-    var cancelFlag = cancelButtonText ? promptService.BUTTON_TITLE_IS_STRING : promptService.BUTTON_TITLE_CANCEL;
-
-    promptService.confirmEx(window, title, message,
-                            (okFlag * promptService.BUTTON_POS_0) +
-                            (cancelFlag * promptService.BUTTON_POS_1),
-                            okButtonText, cancelButtonText, null, null, {value:0}, result);
-    return (result.value == 0);      
-  }
-  return false;
-}
-
-function GetString(name)
-{
-  if (editorShell)
-  {
-    return editorShell.GetString(name);
-  }
-  else
-  {
-    // Non-editors (like prefs) may use these methods
-    if (!gStringBundle)
-    {
-      gStringBundle = srGetStrBundle("chrome://editor/locale/editor.properties");
-      if (!gStringBundle)
-        return null;
-    }
-    return gStringBundle.GetStringFromName(name);
-  }
-  return null;
-}
-
-function TrimStringLeft(string)
-{
-  if(!string) return "";
-  return string.replace(/^\s+/, "");
-}
-
-function TrimStringRight(string)
-{
-  if (!string) return "";
-  return string.replace(/\s+$/, '');
-}
-
-// Remove whitespace from both ends of a string
-function TrimString(string)
-{
-  if (!string) return "";
-  return string.replace(/(^\s+)|(\s+$)/g, '')
-}
-
-function IsWhitespace(string)
-{
-  return /^\s/.test(string);
-}
-
-function TruncateStringAtWordEnd(string, maxLength, addEllipses)
-{
-    // Return empty if string is null, undefined, or the empty string
-    if (!string)
-      return "";
-
-    // We assume they probably don't want whitespace at the beginning
-    string = string.replace(/^\s+/, '');
-    if (string.length <= maxLength)
-      return string;
-
-    // We need to truncate the string to maxLength or fewer chars
-    if (addEllipses)
-      maxLength -= 3;
-    string = string.replace(RegExp("(.{0," + maxLength + "})\\s.*"), "$1")
-
-    if (string.length > maxLength)
-      string = string.slice(0, maxLength);
-
-    if (addEllipses)
-      string += "...";
-    return string;
-}
-
-// Replace all whitespace characters with supplied character
-// E.g.: Use charReplace = " ", to "unwrap" the string by removing line-end chars
-//       Use charReplace = "_" when you don't want spaces (like in a URL)
-function ReplaceWhitespace(string, charReplace)
-{
-  return string.replace(/(^\s+)|(\s+$)/g,'').replace(/\s+/g,charReplace)
-}
-
-// Replace whitespace with "_" and allow only HTML CDATA
-//   characters: "a"-"z","A"-"Z","0"-"9", "_", ":", "-", ".",
-//   and characters above ASCII 127
-function ConvertToCDATAString(string)
-{
-  return string.replace(/\s+/g,"_").replace(/[^a-zA-Z0-9_\.\-\:\u0080-\uFFFF]+/g,'');
-}
-
-// this function takes an elementID and a flag
-// if the element can be found by ID, then it is either enabled (by removing "disabled" attr)
-// or disabled (setAttribute) as specified in the "doEnable" parameter
-function SetElementEnabledById( elementID, doEnable )
-{
-  var element = document.getElementById(elementID);
-  if ( element )
-  {
-    if ( doEnable )
-    {
-      element.removeAttribute( "disabled" );
-    }
-    else
-    {
-      element.setAttribute( "disabled", "true" );
-    }
-  }
-  else
-  {
-    dump("Element "+elementID+" not found in SetElementEnabledById\n");
-  }
-}
-
-// This function relies on css classes for enabling and disabling
-// This function takes an ID for a label and a flag
-// if an element can be found by its ID, then it is either enabled or disabled
-// The class is set to either "enabled" or "disabled" depending on the flag passed in.
-// This function relies on css having a special appearance for these two classes.
-
-function SetClassEnabledById( elementID, doEnable )
-{
-  element = document.getElementById(elementID);
-  if ( element )
-  {
-    if ( doEnable )
-    {
-     element.setAttribute( "class", "enabled" );
-    }
-    else
-    {
-     element.setAttribute( "class", "disabled" );
-    }
-  }
-  else
-  {
-    dump( "not changing element "+elementID+"\n" );
-  }
-}
-
 // Get the text appropriate to parent container
 //  to determine what a "%" value is refering to.
 // elementForAtt is element we are actually setting attributes on
@@ -444,47 +248,6 @@ function GetAppropriatePercentString(elementForAtt, elementInDoc)
     return GetString("PercentOfCell");
   else
     return GetString("PercentOfWindow");
-}
-
-function InitPixelOrPercentMenulist(elementForAtt, elementInDoc, attribute, menulistID, defaultIndex)
-{
-  if (!defaultIndex) defaultIndex = gPixel;
-
-  var size  = elementForAtt.getAttribute(attribute);
-  var menulist = document.getElementById(menulistID);
-  var pixelItem;
-  var percentItem;
-
-  if (!menulist)
-  {
-    dump("NO MENULIST found for ID="+menulistID+"\n");
-    return size;
-  }
-
-  ClearMenulist(menulist);
-  pixelItem = AppendStringToMenulist(menulist, GetString("Pixels"));
-
-  if (!pixelItem) return 0;
-
-  percentItem = AppendStringToMenulist(menulist, GetAppropriatePercentString(elementForAtt, elementInDoc));
-  if (size && size.length > 0)
-  {
-    // Search for a "%" character
-    var percentIndex = size.search(/%/);
-    if (percentIndex > 0)
-    {
-      // Strip out the %
-      size = size.substr(0, percentIndex);
-      if (percentItem)
-        menulist.selectedItem = percentItem;
-    }
-    else
-      menulist.selectedItem = pixelItem;
-  }
-  else
-    menulist.selectedIndex = defaultIndex;
-
-  return size;
 }
 
 function AppendStringToMenulistById(menulist, stringID)
@@ -752,6 +515,46 @@ function LimitStringLength(elementID, length)
     editField.value = stringIn.slice(0,length);
 }
 
+function InitPixelOrPercentMenulist(elementForAtt, elementInDoc, attribute, menulistID, defaultIndex)
+{
+  if (!defaultIndex) defaultIndex = gPixel;
+
+  var size  = elementForAtt.getAttribute(attribute);
+  var menulist = document.getElementById(menulistID);
+  var pixelItem;
+  var percentItem;
+
+  if (!menulist)
+  {
+    dump("NO MENULIST found for ID="+menulistID+"\n");
+    return size;
+  }
+
+  ClearMenulist(menulist);
+  pixelItem = AppendStringToMenulist(menulist, GetString("Pixels"));
+
+  if (!pixelItem) return 0;
+
+  percentItem = AppendStringToMenulist(menulist, GetAppropriatePercentString(elementForAtt, elementInDoc));
+  if (size && size.length > 0)
+  {
+    // Search for a "%" character
+    var percentIndex = size.search(/%/);
+    if (percentIndex > 0)
+    {
+      // Strip out the %
+      size = size.substr(0, percentIndex);
+      if (percentItem)
+        menulist.selectedItem = percentItem;
+    }
+    else
+      menulist.selectedItem = pixelItem;
+  }
+  else
+    menulist.selectedIndex = defaultIndex;
+
+  return size;
+}
 
 function onAdvancedEdit()
 {
@@ -770,47 +573,6 @@ function onAdvancedEdit()
       InitDialog();
     }
   }
-}
-
-function GetSelectionAsText()
-{
-  return editorShell.GetContentsAs("text/plain", gOutputSelectionOnly);
-}
-
-
-// ** getSelection ()
-// ** This function checks for existence of table around the focus node
-// ** Brian King - XML Workshop
-
-function getContainer ()
-{
-  tagName = "img";
-  selImage = editorShell.GetSelectedElement(tagName);
-  if (selImage)  // existing image
-  {
-    oneup = selImage.parentNode;
-    return oneup;
-  }
-  else if (!selImage)  // new image insertion
-  {
-    dump("Not an image element -- Trying for caret selection\n");
-    var selection = window.editorShell.editorSelection;
-    if (selection)
-    {
-        var focusN = selection.focusNode;
-        if (focusN.nodeName.toLowerCase == "td")
-          return focusN
-                else
-        {
-          oneup = focusN.parentNode;
-          return oneup;
-         }
-    }
-    else
-      return null;
-   }
-   else
-     return null;
 }
 
 function getColor(ColorPickerID)
@@ -928,25 +690,6 @@ function SwitchToValidatePanel()
 {
   // no default implementation
   // Only EdTableProps.js currently implements this
-}
-
-function GetPrefs()
-{
-  try {
-    var prefService = Components.classes["@mozilla.org/preferences-service;1"]
-                                .getService(Components.interfaces.nsIPrefService);
-    var prefs = prefService.getBranch(null);
-    if (prefs)
-      return prefs;
-    else
-      dump("failed to get prefs service!\n");
-
-  }
-  catch(ex)
-  {
-    dump("failed to get prefs service!\n");
-  }
-  return null;
 }
 
 const nsIFilePicker = Components.interfaces.nsIFilePicker;
@@ -1153,46 +896,6 @@ function onCancel()
   return true;
 }
 
-function GetDefaultBrowserColors()
-{
-  var prefs = GetPrefs();
-  var colors = new Object();
-  var useSysColors = false;
-  colors.TextColor = 0;
-  colors.BackgroundColor = 0;
-  try { useSysColors = prefs.getBoolPref("browser.display.use_system_colors"); } catch (e) {}
-
-  if (!useSysColors)
-  {
-    try { colors.TextColor = prefs.getCharPref("browser.display.foreground_color"); } catch (e) {}
-
-    try { colors.BackgroundColor = prefs.getCharPref("browser.display.background_color"); } catch (e) {}
-  }
-  // Use OS colors for text and background if explicitly asked or pref is not set
-  if (!colors.TextColor)
-    colors.TextColor = "windowtext";
-
-  if (!colors.BackgroundColor)
-    colors.BackgroundColor = "window";
-
-  colors.LinkColor = prefs.getCharPref("browser.anchor_color");
-  colors.VisitedLinkColor = prefs.getCharPref("browser.visited_color");
-
-  return colors;
-}
-
-function TextIsURI(selectedText)
-{
-  if (selectedText)
-  {
-    var text = selectedText.toLowerCase();
-    return text.match(/^http:\/\/|^https:\/\/|^file:\/\/|^ftp:\/\/|\
-                      ^about:|^mailto:|^news:|^snews:|^telnet:|\
-                      ^ldap:|^ldaps:|^gopher:|^finger:|^javascript:/);
-  }
-  return false;
-}
-
 function SetRelativeCheckbox()
 {
   var checkbox = document.getElementById("MakeRelativeCheckbox");
@@ -1288,273 +991,3 @@ function MakeInputValueRelativeOrAbsolute()
   }
 }
 
-function MakeRelativeUrl(url)
-{
-  var inputUrl = TrimString(url);
-  if (!inputUrl)
-    return inputUrl;
-
-  // Get the filespec relative to current document's location
-  // NOTE: Can't do this if file isn't saved yet!
-  var docUrl = GetDocumentBaseUrl();
-  var docScheme = GetScheme(docUrl);
-
-  // Can't relativize if no doc scheme (page hasn't been saved)
-  if (!docScheme)
-    return inputUrl;
-
-  var urlScheme = GetScheme(inputUrl);
-
-  // Do nothing if not the same scheme or url is already relativized
-  if (docScheme != urlScheme)
-    return inputUrl;
-
-  var IOService = GetIOService();
-  if (!IOService)
-    return inputUrl;
-
-  // Host must be the same
-  var docHost = GetHost(docUrl);
-  var urlHost = GetHost(inputUrl);
-  if (docHost != urlHost)
-    return inputUrl;
-
-  // Get just the file path part of the urls
-  var docPath = IOService.extractUrlPart(docUrl, IOService.url_Path, {start:0}, {end:0}); 
-  var urlPath = IOService.extractUrlPart(inputUrl, IOService.url_Path, {start:0}, {end:0});
-
-  // We only return "urlPath", so we can convert
-  //  the entire docPath for case-insensitive comparisons
-  var os = GetOS();
-  var doCaseInsensitive = (docScheme.toLowerCase() == "file" && os == gWin);
-  if (doCaseInsensitive)
-    docPath = docPath.toLowerCase();
-
-  // Get document filename before we start chopping up the docPath
-  var docFilename = GetFilename(docPath);
-
-  // Both url and doc paths now begin with "/"
-  // Look for shared dirs starting after that
-  urlPath = urlPath.slice(1);
-  docPath = docPath.slice(1);
-
-  var firstDirTest = true;
-  var nextDocSlash = 0;
-  var done = false;
-
-  // Remove all matching subdirs common to both doc and input urls
-  do {
-    nextDocSlash = docPath.indexOf("\/");
-    var nextUrlSlash = urlPath.indexOf("\/");
-
-    if (nextUrlSlash == -1)
-    {
-      // We're done matching and all dirs in url
-      // what's left is the filename
-      done = true;
-
-      // Remove filename for named anchors in the same file
-      if (nextDocSlash == -1 && docFilename)
-      { 
-        var anchorIndex = urlPath.indexOf("#");
-        if (anchorIndex > 0)
-        {
-          var urlFilename = doCaseInsensitive ? urlPath.toLowerCase() : urlPath;
-        
-          if (urlFilename.indexOf(docFilename) == 0)
-            urlPath = urlPath.slice(anchorIndex);
-        }
-      }
-    }
-    else if (nextDocSlash >= 0)
-    {
-      // Test for matching subdir
-      var docDir = docPath.slice(0, nextDocSlash);
-      var urlDir = urlPath.slice(0, nextUrlSlash);
-      if (doCaseInsensitive)
-        urlDir = urlDir.toLowerCase();
-
-      if (urlDir == docDir)
-      {
-
-        // Remove matching dir+"/" from each path
-        //  and continue to next dir
-        docPath = docPath.slice(nextDocSlash+1);
-        urlPath = urlPath.slice(nextUrlSlash+1);
-      }
-      else
-      {
-        // No match, we're done
-        done = true;
-
-        // Be sure we are on the same local drive or volume 
-        //   (the first "dir" in the path) because we can't 
-        //   relativize to different drives/volumes.
-        // UNIX doesn't have volumes, so we must not do this else
-        //  the first directory will be misinterpreted as a volume name
-        if (firstDirTest && docScheme == "file" && os != gUNIX)
-          return inputUrl;
-      }
-    }
-    else  // No more doc dirs left, we're done
-      done = true;
-
-    firstDirTest = false;
-  }
-  while (!done);
-
-  // Add "../" for each dir left in docPath
-  while (nextDocSlash > 0)
-  {
-    urlPath = "../" + urlPath;
-    nextDocSlash = docPath.indexOf("\/", nextDocSlash+1);
-  }
-  return urlPath;
-}
-
-function MakeAbsoluteUrl(url)
-{
-  var resultUrl = TrimString(url);
-  if (!resultUrl)
-    return resultUrl;
-
-  // Check if URL is already absolute, i.e., it has a scheme
-  var urlScheme = GetScheme(resultUrl);
-
-  if (urlScheme)
-    return resultUrl;
-
-  var docUrl = GetDocumentBaseUrl();
-  var docScheme = GetScheme(docUrl);
-
-  // Can't relativize if no doc scheme (page hasn't been saved)
-  if (!docScheme)
-    return resultUrl;
-
-  var  IOService = GetIOService();
-  if (!IOService)
-    return resultUrl;
-  
-  // Make a URI object to use its "resolve" method
-  var absoluteUrl = resultUrl;
-  var docUri = IOService.newURI(docUrl, null);
-
-  try {
-    absoluteUrl = docUri.resolve(resultUrl);
-    // This is deprecated and buggy! 
-    // If used, we must make it a path for the parent directory (remove filename)
-    //absoluteUrl = IOService.resolveRelativePath(resultUrl, docUrl);
-  } catch (e) {}
-
-  return absoluteUrl;
-}
-
-// Get the HREF of the page's <base> tag or the document location
-// returns empty string if no base href and document hasn't been saved yet
-function GetDocumentBaseUrl()
-{
-  if (window.editorShell)
-  {
-    var docUrl;
-
-    // if document supplies a <base> tag, use that URL instead 
-    var baseList = editorShell.editorDocument.getElementsByTagName("base");
-    if (baseList)
-    {
-      var base = baseList.item(0);
-      if (base)
-        docUrl = base.getAttribute("href");
-    }
-    if (!docUrl)
-      docUrl = editorShell.editorDocument.location.href;
-
-    if (docUrl != "about:blank")
-      return docUrl;
-  }
-  return "";
-}
-
-function GetIOService()
-{
-  if (gIOService)
-    return gIOService;
-
-  var CID = Components.classes["@mozilla.org/network/io-service;1"];
-  gIOService = CID.getService(Components.interfaces.nsIIOService);
-  return gIOService;
-}
-
-// Extract the scheme (e.g., 'file', 'http') from a URL string
-function GetScheme(url)
-{
-  var resultUrl = TrimString(url);
-  // Unsaved document URL has no acceptable scheme yet
-  if (!resultUrl || resultUrl == "about:blank")
-    return "";
-
-  var IOService = GetIOService();
-  if (!IOService)
-    return "";
-
-  var scheme = "";
-  try {
-    // This fails if there's no scheme
-    scheme = IOService.extractScheme(resultUrl, {schemeStartPos:0}, {schemeEndPos:0});
-   } catch (e) {}
-
-  return scheme ? scheme : "";
-}
-
-function GetHost(url)
-{
-  var IOService = GetIOService();
-  if (!IOService)
-    return "";
-
-  var host = "";
-  if (url)
-  {
-    try {
-      host = IOService.extractUrlPart(url, IOService.url_Host, {start:0}, {end:0}); 
-     } catch (e) {}
-  }
-  return host;
-}
-
-function GetFilename(url)
-{
-  var IOService = GetIOService();
-  if (!IOService)
-    return "";
-
-  var filename;
-
-  if (url)
-  {
-    try {
-      filename = IOService.extractUrlPart(url, IOService.url_FileBaseName, {start:0}, {end:0});
-      if (filename)
-      {
-        var ext = IOService.extractUrlPart(url, IOService.url_FileExtension, {start:0}, {end:0});
-        if (ext)
-          filename += "."+ext;
-      }
-     } catch (e) {}
-  }
-  return filename ? filename : "";
-}
-
-function GetOS()
-{
-  if (gOS)
-    return gOS;
-
-  if (navigator.platform.toLowerCase().indexOf("win") >= 0)
-    gOS = gWin;
-  else if (navigator.platform.toLowerCase().indexOf("mac") >=0)
-    gOS = gMac;
-  else
-    gOS = gUNIX;
-
-  return gOS;
-}
