@@ -20,6 +20,7 @@
 #include "nsIFontMetrics.h"
 #include "nsIDeviceContext.h"
 #include "nsCOMPtr.h"
+#include "nsToolkit.h"
 
 
 NS_IMPL_ADDREF(ChildWindow)
@@ -37,7 +38,7 @@ ChildWindow::ChildWindow() : nsWindow()
 // nsWindow constructor
 //
 //-------------------------------------------------------------------------
-nsWindow::nsWindow() : nsBaseWidget()
+nsWindow::nsWindow() : nsBaseWidget() , nsDeleteObserved(this)
 {
   NS_INIT_REFCNT();
   strcpy(gInstanceClassName, "nsWindow");
@@ -56,6 +57,7 @@ nsWindow::nsWindow() : nsBaseWidget()
   mWindowPtr = nsnull;
   mDrawing = PR_FALSE;
 	mDestroyCalled = PR_FALSE;
+	mDestructorCalled = PR_FALSE;
 
 	SetBackgroundColor(NS_RGB(255, 255, 255));
 	SetForegroundColor(NS_RGB(0, 0, 0));
@@ -69,9 +71,12 @@ nsWindow::nsWindow() : nsBaseWidget()
 //-------------------------------------------------------------------------
 nsWindow::~nsWindow()
 {
-	//Destroy();
+	mDestructorCalled = PR_TRUE;
 
-	mEventCallback = nsnull;	 // prevent the widget from causing additional events
+//еее	if (mToolkit && ((nsToolkit*)mToolkit)->GetFocus() == this )
+//еее		((nsToolkit*)mToolkit)->SetFocus(nsnull);
+
+	//Destroy();
 
 	if (mWindowRegion != nsnull)
 	{
@@ -80,7 +85,7 @@ nsWindow::~nsWindow()
 	}
 			
 	NS_IF_RELEASE(mTempRenderingContext);
-    NS_IF_RELEASE(mMenuListener);
+  NS_IF_RELEASE(mMenuListener);
 }
 
 
@@ -174,20 +179,12 @@ NS_IMETHODIMP nsWindow::Destroy()
 	if (mDestroyCalled)
 		return NS_OK;
 	mDestroyCalled = PR_TRUE;
-	
-#if 0
-	// if the window being destroyed has the focus, lose it so that there isn't a dangling reference
-	if (mToolkit && ((nsToolkit*)mToolkit)->GetFocus() == this )
-#else
-	//еееTEMPORARYеее
-	// We clear the focus when destroying a top level window. If we check whether
-	// this window has the focus (as we should - see above), the focus isn't cleared
-	// and we crash in the following case: open window A, open window B, select A, close A => crash
-	if (mToolkit && (mParent == nsnull))
-#endif
-	{
-		((nsToolkit*)mToolkit)->SetFocus(nsnull);
-	}
+
+//еее	// if the window being destroyed has the focus, lose it so that there isn't a dangling reference
+//еее	if (mToolkit && ((nsToolkit*)mToolkit)->GetFocus() == this )
+//еее	{
+//еее		((nsToolkit*)mToolkit)->SetFocus(nsnull);
+//еее	}
 	
 	nsBaseWidget::OnDestroy();
 	nsBaseWidget::Destroy();
@@ -888,24 +885,25 @@ PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
 {
-	nsIWidget* aWidget = event->widget;
-	NS_IF_ADDREF(aWidget);
-
   aStatus = nsEventStatus_eIgnore;
-  
-  if (nsnull != mMenuListener){
-    if(NS_MENU_EVENT == event->eventStructType)
-  	  aStatus = mMenuListener->MenuSelected( static_cast<nsMenuEvent&>(*event) );
-  }
-  if (mEventCallback)
-    aStatus = (*mEventCallback)(event);
+	if (! mDestructorCalled)
+	{
+		nsIWidget* aWidget = event->widget;
+		NS_IF_ADDREF(aWidget);
+	  
+	  if (nsnull != mMenuListener){
+	    if(NS_MENU_EVENT == event->eventStructType)
+	  	  aStatus = mMenuListener->MenuSelected( static_cast<nsMenuEvent&>(*event) );
+	  }
+	  if (mEventCallback)
+	    aStatus = (*mEventCallback)(event);
 
-	// Dispatch to event listener if event was not consumed
-  if ((aStatus != nsEventStatus_eIgnore) && (mEventListener != nsnull))
-    aStatus = mEventListener->ProcessEvent(*event);
+		// Dispatch to event listener if event was not consumed
+	  if ((aStatus != nsEventStatus_eIgnore) && (mEventListener != nsnull))
+	    aStatus = mEventListener->ProcessEvent(*event);
 
-	NS_IF_RELEASE(aWidget);
-
+		NS_IF_RELEASE(aWidget);
+	}
   return NS_OK;
 }
 

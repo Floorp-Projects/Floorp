@@ -20,8 +20,7 @@
 
 #include "nsISupports.h"
 #include "nsBaseWidget.h"
-
-#include "nsToolkit.h"
+#include "nsDeleteObserver.h"
 
 #include "nsIWidget.h"
 #include "nsIEnumerator.h"
@@ -45,7 +44,7 @@
 //-------------------------------------------------------------------------
 //	Generic object
 
-class nsWindow : public nsBaseWidget
+class nsWindow : public nsBaseWidget, public nsDeleteObserved
 {
 
 public:
@@ -170,6 +169,7 @@ protected:
 	RgnHandle				mWindowRegion;				// the region defining this window
 	WindowPtr				mWindowPtr;
 	PRBool					mDestroyCalled;
+	PRBool					mDestructorCalled;
 
 	PRBool								mDrawing;
   nsIRenderingContext*  mTempRenderingContext;
