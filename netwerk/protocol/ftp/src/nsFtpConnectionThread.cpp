@@ -2239,17 +2239,16 @@ nsFtpState::Init(nsIFTPChannel* aChannel,
     // pull any username and/or password out of the uri
     nsCAutoString uname;
     rv = mURL->GetUsername(uname);
-    if (NS_FAILED(rv)) {
+    if (NS_FAILED(rv))
         return rv;
-    } else {
-        if (!uname.IsEmpty()) {
-            mAnonymous = PR_FALSE;
-            mUsername = NS_ConvertUTF8toUCS2(NS_UnescapeURL(uname));
 
-            // return an error if we find a CR or LF in the username
-            if (uname.FindCharInSet(CRLF) >= 0)
-                return NS_ERROR_MALFORMED_URI;
-        }
+    if (!uname.IsEmpty() && !uname.Equals(NS_LITERAL_CSTRING("anonymous"))) {
+        mAnonymous = PR_FALSE;
+        mUsername = NS_ConvertUTF8toUCS2(NS_UnescapeURL(uname));
+        
+        // return an error if we find a CR or LF in the username
+        if (uname.FindCharInSet(CRLF) >= 0)
+            return NS_ERROR_MALFORMED_URI;
     }
 
     nsCAutoString password;
