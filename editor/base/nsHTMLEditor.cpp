@@ -4151,7 +4151,6 @@ nsHTMLEditor::GetDocumentLength(PRInt32 *aCount)
     NS_ASSERTION(0<=end, "GetAbsoluteOffsetsForPoints failed to set end correctly.");
     if (0<=end) {
       *aCount = end;
-      printf ("count = %d\n", *aCount);
     }
   }
   return result;
