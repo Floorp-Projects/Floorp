@@ -84,3 +84,4 @@ NS_IMETHODIMP nsWebBrowserSetup::GetUserList(nsIEnumerator** enumerator)
    //XXX Implement
    return NS_ERROR_FAILURE;
 }
+
