@@ -194,7 +194,7 @@ PK11SDR_Encrypt(SECItem *keyid, SECItem *data, SECItem *result, void *cx)
   sdrResult.data.len = paddedData.len;
   sdrResult.data.data = (unsigned char *)PORT_ArenaAlloc(arena, sdrResult.data.len);
 
-  rv = PK11_CipherOp(ctx, sdrResult.data.data, &sdrResult.data.len, sdrResult.data.len,
+  rv = PK11_CipherOp(ctx, sdrResult.data.data, (int*)&sdrResult.data.len, sdrResult.data.len,
                      paddedData.data, paddedData.len);
   if (rv != SECSuccess) goto loser;
 
@@ -266,7 +266,7 @@ PK11SDR_Decrypt(SECItem *data, SECItem *result, void *cx)
   paddedResult.len = sdrResult.data.len;
   paddedResult.data = PORT_ArenaAlloc(arena, paddedResult.len);
 
-  rv = PK11_CipherOp(ctx, paddedResult.data, &paddedResult.len, paddedResult.len,
+  rv = PK11_CipherOp(ctx, paddedResult.data, (int*)&paddedResult.len, paddedResult.len,
                      sdrResult.data.data, sdrResult.data.len);
   if (rv != SECSuccess) goto loser;
 
