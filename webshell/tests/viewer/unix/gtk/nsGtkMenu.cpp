@@ -86,6 +86,7 @@ GtkItemFactoryEntry menu_items[] =
   { "/Debug/Event Debugging/Toggle Paint Dumping",		nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_TOGGLE_PAINT_DUMPING,nsnull },
   { "/Debug/Event Debugging/Toggle Invalidate Dumping",		nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_TOGGLE_INVALIDATE_DUMPING,nsnull },
   { "/Debug/Event Debugging/Toggle Event Dumping",		nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_TOGGLE_EVENT_DUMPING,nsnull },
+  { "/Debug/Event Debugging/sep1", nsnull,	nsnull,			0,			"<Separator>" },
   { "/Debug/Event Debugging/Toggle Motion Event Dumping",		nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_TOGGLE_MOTION_EVENT_DUMPING,nsnull },
   { "/Debug/Event Debugging/Toggle Crossing Event Dumping",		nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_TOGGLE_CROSSING_EVENT_DUMPING,nsnull },
   { "/Debug/sep1",			nsnull,	nsnull,			0,			"<Separator>" },
