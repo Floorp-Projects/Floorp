@@ -816,7 +816,7 @@ void initArrayObject(JS2Metadata *meta)
         { NULL }
     };
 
-    meta->arrayClass->prototype = new ArrayInstance(meta, meta->objectClass->prototype, meta->arrayClass);
+    meta->arrayClass->prototype = OBJECT_TO_JS2VAL(new ArrayInstance(meta, OBJECT_TO_JS2VAL(meta->objectClass->prototype), meta->arrayClass));
     meta->initBuiltinClass(meta->arrayClass, &prototypeFunctions[0], NULL, Array_Constructor, Array_Constructor);
 }
 

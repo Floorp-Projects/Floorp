@@ -63,8 +63,6 @@ namespace JavaScript {
         class JS2Class;
         class Member;
         class Multiname;
-        class OverrideStatus;
-        typedef std::pair<OverrideStatus *, OverrideStatus *> OverrideStatusPair;
         class FunctionWrapper;
         class BlockFrame;
         typedef uint32 LabelID;

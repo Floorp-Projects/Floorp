@@ -57,7 +57,7 @@ namespace MetaData {
 
 js2val error_ConstructorCore(JS2Metadata *meta, JS2Class *errorClass, js2val arg)
 {
-    JS2Object *obj = new PrototypeInstance(meta, errorClass->prototype, errorClass);
+    JS2Object *obj = new SimpleInstance(meta, OBJECT_TO_JS2VAL(errorClass->prototype), errorClass);
     js2val thatValue = OBJECT_TO_JS2VAL(obj);
 
     if (!JS2VAL_IS_VOID(arg)) {
@@ -126,9 +126,10 @@ static void initErrorClass(JS2Metadata *meta, JS2Class *c, Constructor *construc
 {
 // XXX Or make 'name' a static class member?
     c->construct = constructor;
-    c->prototype = new PrototypeInstance(meta, NULL, c);
+    c->prototype = new SimpleInstance(meta, JS2VAL_NULL, c);
     js2val nameVal = meta->engine->allocString(c->name);
-    meta->writeDynamicProperty(c->prototype, new Multiname(&meta->world.identifiers["name"], meta->publicNamespace), true, nameVal, RunPhase);
+    QualifiedName qName(meta->publicNamespace, &meta->world.identifiers["name"])
+    meta->createDynamicProperty(c->prototype, &qName, nameVal, true, true);
 }
 
 void initErrorObject(JS2Metadata *meta)

@@ -63,8 +63,7 @@
                     // XXX this won't last - if a non-primitive is returned from the function,
                     // it's supposed to supplant the constructed object. XXX and I think the
                     // stack is out of balance anyway...
-                    js2val protoVal;
-                    JS2Object *protoObj = meta->objectClass->prototype;
+                    js2val protoVal = OBJECT_TO_JS2VAL(meta->objectClass->prototype);
                     Multiname mn(prototype_StringAtom);     // gc safe because the content is rooted elsewhere
                     LookupKind lookup(true, JS2VAL_NULL);   // make it a lexical lookup since we want it to
                                                             // fail if 'prototype' hasn't been defined
@@ -72,7 +71,6 @@
                     if (meta->readProperty(&a, &mn, &lookup, RunPhase, &protoVal)) {
                         if (!JS2VAL_IS_OBJECT(protoVal))
                             meta->reportError(Exception::badValueError, "Non-object prototype value", errorPos());
-                        protoObj = JS2VAL_TO_OBJECT(protoVal);
                     }
 
                     if (fWrap->code) {  // native code, pass pointer to argument base
@@ -83,10 +81,7 @@
                     else {
                         pFrame = new ParameterFrame(fWrap->compileFrame);
                         pFrame->instantiate(meta->env);
-                        if (protoObj->kind == PrototypeInstanceKind)
-                            baseVal = OBJECT_TO_JS2VAL(new PrototypeInstance(meta, protoObj, (checked_cast<PrototypeInstance *>(protoObj))->type));
-                        else
-                            baseVal = OBJECT_TO_JS2VAL(new PrototypeInstance(meta, protoObj, meta->objectClass));
+                        baseVal = OBJECT_TO_JS2VAL(new SimpleInstance(meta, protoVal, meta->objectType(protoVal)));
                         pFrame->thisObject = baseVal;
                         pFrame->assignArguments(meta, obj, base(argCount), argCount);
                         jsr(phase, fWrap->bCon, base(argCount + 1) - execStack, baseVal, fWrap->env);   // seems out of order, but we need to catch the current top frame 
@@ -116,11 +111,6 @@
                         && (meta->objectType(b) == meta->functionClass)) {
                 fWrap = (checked_cast<SimpleInstance *>(fObj))->fWrap;
             }
-            else
-                if ((fObj->kind == PrototypeInstanceKind)
-                        && ((checked_cast<PrototypeInstance *>(fObj))->type == meta->functionClass)) {
-                    fWrap = (checked_cast<FunctionInstance *>(fObj))->fWrap;
-                }
             if (fWrap) {
                 if (fWrap->compileFrame->prototype) {
                     if (JS2VAL_IS_VOID(a) || JS2VAL_IS_NULL(a)) {
@@ -262,34 +252,39 @@
             if (!JS2VAL_IS_OBJECT(b))
                 meta->reportError(Exception::typeError, "Object expected for instanceof", errorPos());
             JS2Object *obj = JS2VAL_TO_OBJECT(b);
-            if ((obj->kind == PrototypeInstanceKind)
-                    && (checked_cast<PrototypeInstance *>(obj)->type == meta->functionClass)) {
+            if ((obj->kind == SimpleInstanceKind)
+                    && (checked_cast<SimpleInstance *>(obj)->type == meta->functionClass)) {
                 // XXX this is [[hasInstance]] from ECMA3
                 if (!JS2VAL_IS_OBJECT(a))
                     push(JS2VAL_FALSE);
                 else {
-                    if (JS2VAL_TO_OBJECT(a)->kind != PrototypeInstanceKind)
-                        meta->reportError(Exception::typeError, "PrototypeInstance expected for instanceof", errorPos());
-                    JS2Object *a_protoObj = checked_cast<PrototypeInstance *>(JS2VAL_TO_OBJECT(a))->parent;
+                    JS2Object *aObj = JS2VAL_TO_OBJECT(a);
+                    if (aObj->kind != SimpleInstanceKind)
+                        meta->reportError(Exception::typeError, "Prototype instance expected for instanceof", errorPos());
+                    js2val a_protoVal = checked_cast<SimpleInstance *>(aObj)->super;
 
                     js2val b_protoVal;
-                    JS2Object *b_protoObj = NULL;
                     Multiname mn(prototype_StringAtom);     // gc safe because the content is rooted elsewhere
                     LookupKind lookup(true, JS2VAL_NULL);   // make it a lexical lookup since we want it to
                                                             // fail if 'prototype' hasn't been defined
                                                             // XXX (prototype should always exist for functions)
-                    if (meta->readProperty(&a, &mn, &lookup, RunPhase, &b_protoVal)) {
+                    JS2Class *limit = meta->objectType(b);
+                    if (limit->read(meta, b, limit, &mn, &lookup, RunPhase, &b_protoVal)) {
                         if (!JS2VAL_IS_OBJECT(b_protoVal))
                             meta->reportError(Exception::typeError, "Non-object prototype value in instanceOf", errorPos());
-                        b_protoObj = JS2VAL_TO_OBJECT(b_protoVal);
                     }
                     bool result = false;
-                    while (a_protoObj) {
-                        if (b_protoObj == a_protoObj) {
+                    while (!JS2VAL_IS_NULL(a_protoVal) && !JS2VAL_IS_UNDEFINED(a_protoVal)) {
+                        if (b_protoVal == a_protoVal) {
                             result = true;
                             break;
                         }
-                        a_protoObj = checked_cast<PrototypeInstance *>(a_protoObj)->parent;
+                        if (!JS2VAL_IS_OBJECT(a_protoVal))
+                            meta->reportError(Exception::typeError, "Non-object prototype value in instanceOf", errorPos());
+                        aObj = JS2VAL_TO_OBJECT(a_protoVal);
+                        if (aObj->kind != SimpleInstanceKind)
+                            meta->reportError(Exception::typeError, "Prototype instance expected for instanceof", errorPos());
+                        a_protoVal = checked_cast<SimpleInstance *>(aObj)->super;
                     }
                     push(BOOLEAN_TO_JS2VAL(result));
                 }
@@ -300,19 +295,25 @@
                     if (!JS2VAL_IS_OBJECT(a))
                         push(JS2VAL_FALSE);
                     else {
-                        if (JS2VAL_TO_OBJECT(a)->kind != PrototypeInstanceKind)
-                            meta->reportError(Exception::typeError, "PrototypeInstance expected for instanceof", errorPos());
-                        JS2Object *a_protoObj = checked_cast<PrototypeInstance *>(JS2VAL_TO_OBJECT(a))->parent;
+                        JS2Object *aObj = JS2VAL_TO_OBJECT(a);
+                        if (aObj->kind != SimpleInstanceKind)
+                            meta->reportError(Exception::typeError, "Prototype instance expected for instanceof", errorPos());
+                        js2val a_protoVal = checked_cast<SimpleInstance *>(aObj)->super;
 
-                        JS2Object *b_protoObj = checked_cast<JS2Class *>(obj)->prototype;
+                        js2val b_protoVal = checked_cast<JS2Class *>(obj)->prototype;
 
                         bool result = false;
-                        while (a_protoObj) {
-                            if (b_protoObj == a_protoObj) {
+                        while (!JS2VAL_IS_NULL(a_protoVal) && !JS2VAL_IS_UNDEFINED(a_protoVal)) {
+                            if (b_protoVal == a_protoVal) {
                                 result = true;
                                 break;
                             }
-                            a_protoObj = checked_cast<PrototypeInstance *>(a_protoObj)->parent;
+                            if (!JS2VAL_IS_OBJECT(a_protoVal))
+                                meta->reportError(Exception::typeError, "Non-object prototype value in instanceOf", errorPos());
+                            aObj = JS2VAL_TO_OBJECT(a_protoVal);
+                            if (aObj->kind != SimpleInstanceKind)
+                                meta->reportError(Exception::typeError, "Prototype instance expected for instanceof", errorPos());
+                            a_protoVal = checked_cast<SimpleInstance *>(aObj)->super;
                         }
                         push(BOOLEAN_TO_JS2VAL(result));
                     }

@@ -588,7 +588,7 @@ namespace MetaData {
         case TYPE_PTR:
             {
                 JS2Class *c = BytecodeContainer::getType(pc);
-                stdOut << " " << *c->name;
+                stdOut << " " << *c->getName();
                 pc += sizeof(JS2Class *);
             }
             break;
@@ -1080,9 +1080,13 @@ namespace MetaData {
                 }
                 if (it == length) {
                     if (obj->kind == SimpleInstanceKind) {
-                        obj = (checked_cast<SimpleInstance *>(obj))->super;
-                        if (obj)
-                            return buildNameList();
+                        js2val protoval = (checked_cast<SimpleInstance *>(obj))->super;
+                        if (!JS2VAL_IS_NULL(protoval)) {
+                            if (JS2VAL_IS_OBJECT(protoval)) {
+                                obj = JS2VAL_TO_OBJECT(protoval);
+                                return buildNameList();
+                            }
+                        }
                     }
                     return false;
                 }

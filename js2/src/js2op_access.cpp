@@ -39,7 +39,7 @@
             pc += sizeof(short);
             b = pop();
             
-            JS2Class *limit = objectType(b);
+            JS2Class *limit = meta->objectType(b);
             if (!limit->read(meta, b, limit, mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
             push(a);
@@ -53,8 +53,8 @@
             pc += sizeof(short);
             b = pop();
             bool result;
-            JS2Class *limit = objectType(b);
-            if (!limit->deleteProperty(meta, b, limit, mn, &lookup, RunPhase, &result))
+            JS2Class *limit = meta->objectType(b);
+            if (!limit->deleteProperty(meta, b, limit, mn, &lookup, &result))
                 push(JS2VAL_FALSE);
             else
                 push(BOOLEAN_TO_JS2VAL(result));
@@ -70,7 +70,7 @@
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
             b = pop();
-            JS2Class *limit = objectType(b);
+            JS2Class *limit = meta->objectType(b);
             if (!limit->write(meta, b, limit, mn, &lookup, true, a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
             push(a);
@@ -84,7 +84,7 @@
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
             b = pop();
-            JS2Class *limit = objectType(b);
+            JS2Class *limit = meta->objectType(b);
             if (!limit->read(meta, b, limit, mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
             push(b);
@@ -140,7 +140,7 @@
         {
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
-            a = meta->env->lexicalRead(meta, mn, phase);
+            meta->env->lexicalRead(meta, mn, phase, &a);
             push(JS2VAL_NULL);
             push(a);
         }
@@ -153,8 +153,8 @@
             b = pop();
             astr = meta->toString(indexVal);
             Multiname mn(&meta->world.identifiers[*astr], meta->publicNamespace);
-            JS2Class *limit = objectType(b);
-            if (!limit->bracketRead(meta, b, limit, mn, RunPhase, &a))
+            JS2Class *limit = meta->objectType(b);
+            if (!limit->bracketRead(meta, b, limit, &mn, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
             push(a);
             indexVal = JS2VAL_VOID;
@@ -170,8 +170,8 @@
             astr = meta->toString(indexVal);
             Multiname mn(&meta->world.identifiers[*astr], meta->publicNamespace);
             bool result;
-            JS2Class *limit = objectType(b);
-            if (!limit->bracketDelete(meta, b, limit, mn, &result))
+            JS2Class *limit = meta->objectType(b);
+            if (!limit->bracketDelete(meta, b, limit, &mn, &result))
                 push(JS2VAL_FALSE);
             else
                 push(BOOLEAN_TO_JS2VAL(result));
@@ -189,9 +189,8 @@
             b = pop();
             astr = meta->toString(indexVal);
             Multiname mn(&meta->world.identifiers[*astr], meta->publicNamespace);
-            meta->writeProperty(b, &mn, &lookup, true, a, RunPhase);
-            JS2Class *limit = objectType(b);
-            if (!limit->bracketWrite(meta, b, limit, mn, a))
+            JS2Class *limit = meta->objectType(b);
+            if (!limit->bracketWrite(meta, b, limit, &mn, a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
             push(a);
             indexVal = JS2VAL_VOID;
@@ -207,8 +206,8 @@
             b = top();
             astr = meta->toString(indexVal);
             Multiname mn(&meta->world.identifiers[*astr], meta->publicNamespace);
-            JS2Class *limit = objectType(b);
-            if (!limit->bracketRead(meta, b, limit, mn, RunPhase, &a))
+            JS2Class *limit = meta->objectType(b);
+            if (!limit->bracketRead(meta, b, limit, &mn, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
             push(a);
             indexVal = JS2VAL_VOID;
@@ -225,8 +224,8 @@
             astr = meta->toString(indexVal);
             push(STRING_TO_JS2VAL(astr));
             Multiname mn(&meta->world.identifiers[*astr], meta->publicNamespace);
-            JS2Class *limit = objectType(b);
-            if (!limit->bracketRead(meta, b, limit, mn, RunPhase, &a))
+            JS2Class *limit = meta->objectType(b);
+            if (!limit->bracketRead(meta, b, limit, &mn, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
             push(a);
             indexVal = JS2VAL_VOID;
@@ -243,8 +242,8 @@
             ASSERT(JS2VAL_IS_STRING(indexVal));
             b = pop();
             Multiname mn(&meta->world.identifiers[*JS2VAL_TO_STRING(indexVal)], meta->publicNamespace);
-            JS2Class *limit = objectType(b);
-            if (!limit->bracketWrite(meta, b, limit, mn, a))
+            JS2Class *limit = meta->objectType(b);
+            if (!limit->bracketWrite(meta, b, limit, &mn, a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
             push(a);
             indexVal = JS2VAL_VOID;

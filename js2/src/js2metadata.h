@@ -64,6 +64,7 @@ typedef bool (Write)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname 
 typedef bool (DeleteProperty)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool *result);
 typedef bool (BracketRead)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, Phase phase, js2val *rval);
 typedef bool (BracketWrite)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, js2val newValue);
+typedef bool (BracketDelete)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, bool *result);
 
 extern void initDateObject(JS2Metadata *meta);
 extern void initStringObject(JS2Metadata *meta);
@@ -195,14 +196,12 @@ public:
     void *operator new(size_t s)    { return alloc(s); }
     void operator delete(void *p)   { unalloc(p); }
 
-    virtual void markChildren()     { }
+    virtual void markChildren()     { } // XXX !!!! XXXX these are supposed to not have vtables !!!!
     bool isMarked()                 { return ((PondScum *)this)[-1].isMarked(); }
     void markObject()               { ((PondScum *)this)[-1].mark(); }
 
     static void mark(const void *p)       { ((PondScum *)p)[-1].mark(); }
     static void markJS2Value(js2val v);
-
-    virtual void writeProperty(JS2Metadata *meta, const String *name, js2val newValue, uint32 flags)  { ASSERT(false); }
 };
 
 class RootKeeper {
@@ -354,7 +353,7 @@ public:
 class DynamicVariable : public LocalMember {
 public:
     DynamicVariable() : LocalMember(Member::DynamicVariableKind), value(JS2VAL_UNDEFINED), sealed(false) { }
-    DynamicVariable(js2val value) : LocalMember(Member::DynamicVariableKind), value(value), sealed(false) { }
+    DynamicVariable(js2val value, bool sealed) : LocalMember(Member::DynamicVariableKind), value(value), sealed(sealed) { }
 
     js2val value;                   // This variable's current value
                                     // XXX may be an uninstantiated function at compile time
@@ -402,7 +401,7 @@ public:
 // the other binding is for writing only).
 class LocalBinding {
 public:
-    LocalBinding(AccessSet accesses, LocalMember *content) : accesses(accesses), content(content), xplicit(false) { }
+    LocalBinding(AccessSet accesses, LocalMember *content, bool enumerable) : accesses(accesses), content(content), xplicit(false), enumerable(enumerable) { }
 
 // The qualified name is to be inferred from the map where this binding is kept
 //    QualifiedName qname;        // The qualified name bound by this binding
@@ -410,6 +409,7 @@ public:
     AccessSet accesses;
     LocalMember *content;       // The member to which this qualified name was bound
     bool xplicit;               // true if this binding should not be imported into the global scope by an import statement
+    bool enumerable;
 };
 
 class InstanceMember : public Member {
@@ -608,7 +608,7 @@ private:
 
 class JS2Class : public NonWithFrame {
 public:
-    JS2Class(JS2Class *super, JS2Object *proto, Namespace *privateNamespace, bool dynamic, bool allowNull, bool final, const String *name);
+    JS2Class(JS2Class *super, js2val proto, Namespace *privateNamespace, bool dynamic, bool allowNull, bool final, const String *name);
 
     const String *getName()                     { return typeofString; }
         
@@ -616,7 +616,7 @@ public:
     InstanceBindingMap instanceBindings;        // Map of qualified names to instance members defined in this class    
     InstanceVariable **instanceInitOrder;       // List of instance variables defined in this class in the order in which they are initialised
     bool complete;                              // true after all members of this class have been added to this CLASS record
-    JS2Object   *prototype;                     // An object that serves as this class's prototype for compatibility with ECMAScript 3; may be null
+    js2val prototype;                           // The default value of the super field of newly created simple instances of this class; <none> for most classes
     const String *typeofString;
     Namespace *privateNamespace;                // This class's private namespace
     bool dynamic;                               // true if this class or any of its ancestors was defined with the dynamic attribute
@@ -632,9 +632,11 @@ public:
 
 
     Read *read;    
-    Write *write;    
+    Write *write;
+    DeleteProperty *deleteProperty;
     BracketRead *bracketRead;    
-    BracketWrite *bracketWrite;    
+    BracketWrite *bracketWrite;
+    BracketDelete *bracketDelete;
 
 
     bool isAncestor(JS2Class *heir);
@@ -688,10 +690,10 @@ public:
 // Instances which do not respond to the function call or new operators are represented as SIMPLEINSTANCE records
 class SimpleInstance : public JS2Object {
 public:
-    SimpleInstance(JS2Metadata *meta, JS2Object *parent, JS2Class *type);
+    SimpleInstance(JS2Metadata *meta, js2val parent, JS2Class *type);
 
     LocalBindingMap     localBindings;
-    js2val              super;
+    js2val              super;              // Optional link ot the next object in this instance's prototype chain
     bool sealed;
     JS2Class            *type;              // This instance's type
     Slot                *slots;             // A set of slots that hold this instance's fixed property values
@@ -700,16 +702,13 @@ public:
 
     virtual void markChildren();
     virtual ~SimpleInstance()            { }
-
-    virtual void writeProperty(JS2Metadata *meta, const String *name, js2val newValue, uint32 flags);
-
 };
 
 // Date instances are simple instances created by the Date class, they have an extra field 
 // that contains the millisecond count
 class DateInstance : public SimpleInstance {
 public:
-    DateInstance(JS2Metadata *meta, JS2Object *parent, JS2Class *type) : SimpleInstance(meta, parent, type) { }
+    DateInstance(JS2Metadata *meta, js2val parent, JS2Class *type) : SimpleInstance(meta, parent, type) { }
 
     float64     ms;
 };
@@ -718,7 +717,7 @@ public:
 // that contains the string data
 class StringInstance : public SimpleInstance {
 public:
-    StringInstance(JS2Metadata *meta, JS2Object *parent, JS2Class *type) : SimpleInstance(meta, parent, type), mValue(NULL) { }
+    StringInstance(JS2Metadata *meta, js2val parent, JS2Class *type) : SimpleInstance(meta, parent, type), mValue(NULL) { }
 
     String     *mValue;             // has been allocated by engine in the GC'able Pond
 
@@ -730,7 +729,7 @@ public:
 // that contains the float64 data
 class NumberInstance : public SimpleInstance {
 public:
-    NumberInstance(JS2Metadata *meta, JS2Object *parent, JS2Class *type) : SimpleInstance(meta, parent, type), mValue(0.0) { }
+    NumberInstance(JS2Metadata *meta, js2val parent, JS2Class *type) : SimpleInstance(meta, parent, type), mValue(0.0) { }
 
     float64     mValue;
     virtual ~NumberInstance()            { }
@@ -740,7 +739,7 @@ public:
 // that contains the bool data
 class BooleanInstance : public SimpleInstance {
 public:
-    BooleanInstance(JS2Metadata *meta, JS2Object *parent, JS2Class *type) : SimpleInstance(meta, parent, type), mValue(false) { }
+    BooleanInstance(JS2Metadata *meta, js2val parent, JS2Class *type) : SimpleInstance(meta, parent, type), mValue(false) { }
 
     bool     mValue;
     virtual ~BooleanInstance()           { }
@@ -750,7 +749,7 @@ public:
 // that contains a pointer to the function implementation
 class FunctionInstance : public SimpleInstance {
 public:
-    FunctionInstance(JS2Metadata *meta, JS2Object *parent, JS2Class *type);
+    FunctionInstance(JS2Metadata *meta, js2val parent, JS2Class *type);
 
     FunctionWrapper *fWrap;
 
@@ -763,9 +762,8 @@ public:
 // are added.
 class ArrayInstance : public SimpleInstance {
 public:
-    ArrayInstance(JS2Metadata *meta, JS2Object *parent, JS2Class *type) : SimpleInstance(meta, parent, type) { setLength(meta, this, 0); }
+    ArrayInstance(JS2Metadata *meta, js2val parent, JS2Class *type) : SimpleInstance(meta, parent, type) { setLength(meta, this, 0); }
 
-    virtual void writeProperty(JS2Metadata *meta, const String *name, js2val newValue, uint32 flags);
     virtual ~ArrayInstance()             { }
 };
 
@@ -773,7 +771,7 @@ public:
 // that contains the RegExp object
 class RegExpInstance : public SimpleInstance {
 public:
-    RegExpInstance(JS2Metadata *meta, JS2Object *parent, JS2Class *type) : SimpleInstance(meta, parent, type) { }
+    RegExpInstance(JS2Metadata *meta, js2val parent, JS2Class *type) : SimpleInstance(meta, parent, type) { }
 
     void setLastIndex(JS2Metadata *meta, js2val a);
     void setGlobal(JS2Metadata *meta, js2val a);
@@ -801,8 +799,8 @@ public:
 
     virtual ~AlienInstance()    { }
 
-    virtual bool readProperty(Multiname *m, js2val *rval);      // return true/false to signal whether the property is available
-    virtual void writeProperty(Multiname *m, js2val rval);
+    bool readProperty(Multiname *m, js2val *rval);      // return true/false to signal whether the property is available
+    void writeProperty(Multiname *m, js2val rval);
 };
 
 // A helper class for 'for..in' statements
@@ -1144,35 +1142,46 @@ public:
 
     DynamicVariable *defineHoistedVar(Environment *env, const String *id, StmtNode *p, bool isVar);
     Multiname *defineLocalMember(Environment *env, const String *id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, LocalMember *m, size_t pos);
-    OverrideStatusPair *defineInstanceMember(JS2Class *c, Context *cxt, const String *id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, InstanceMember *m, size_t pos);
-    OverrideStatus *resolveOverrides(JS2Class *c, Context *cxt, const String *id, NamespaceList *namespaces, Access access, bool expectMethod, size_t pos);
-    OverrideStatus *searchForOverrides(JS2Class *c, const String *id, NamespaceList *namespaces, Access access, size_t pos);
+    InstanceMember *defineInstanceMember(JS2Class *c, Context *cxt, const String *id, NamespaceList *namespaces, 
+                                                                    Attribute::OverrideModifier overrideMod, bool xplicit,
+                                                                    InstanceMember *m, size_t pos);
+    InstanceMember *searchForOverrides(JS2Class *c, Multiname *multiname, Access access, size_t pos);
     InstanceMember *findInstanceMember(JS2Class *c, QualifiedName *qname, Access access);
     Slot *findSlot(js2val thisObjVal, InstanceVariable *id);
-    bool findLocalMember(JS2Class *c, Multiname *multiname, Access access, Phase phase, MemberDescriptor *result);
+    LocalMember *findLocalMember(JS2Object *container, Multiname *multiname, Access access);
+    js2val getSuperObject(JS2Object *obj);
     JS2Class *getVariableType(Variable *v, Phase phase, size_t pos);
+    InstanceMember *getDerivedInstanceMember(JS2Class *c, InstanceMember *mBase, Multiname *multiname, Access access)
+    InstanceMember *findBaseInstanceMember(JS2Class *limit, Multiname *multiname, Access access);
+    InstanceBinding *findLocalInstanceMember(JS2Class *limit, Multiname *multiname, Access access);
 
     js2val invokeFunction(const char *fname);
     bool invokeFunctionOnObject(js2val thisValue, const String *fnName, js2val &result);
     js2val invokeFunction(JS2Object *fnObj, js2val thisValue, js2val *argv, uint32 argc);
 
-    bool readProperty(js2val *container, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
-    bool readProperty(Frame *pf, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
-    bool readDynamicProperty(JS2Object *container, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
+    void createDynamicProperty(JS2Object *obj, QualifiedName *qName, js2val initVal, Access access, bool sealed, bool enumerable);
+    void createDynamicProperty(JS2Object *obj, const String *name, js2val initVal, Access access, bool sealed, bool enumerable) 
+            { QualifiedName qName(publicNamespace, qName); createDynamicProperty(obj, &qName, initVal, access, sealed, enumerable); }
+
+
+
+//    bool readProperty(js2val *container, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
+//    bool readProperty(Frame *pf, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
+//    bool readDynamicProperty(JS2Object *container, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
     bool readLocalMember(LocalMember *m, Phase phase, js2val *rval);
     bool readInstanceMember(js2val containerVal, JS2Class *c, QualifiedName *qname, Phase phase, js2val *rval);
     JS2Object *lookupDynamicProperty(JS2Object *obj, const String *name);
     bool JS2Metadata::hasOwnProperty(JS2Object *obj, const String *name);
 
-    bool writeProperty(js2val container, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, Phase phase);
-    bool writeProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, Phase phase, bool initFlag);
-    bool writeDynamicProperty(JS2Object *container, Multiname *multiname, bool createIfMissing, js2val newValue, Phase phase);
+//    bool writeProperty(js2val container, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, Phase phase);
+//    bool writeProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, Phase phase, bool initFlag);
+//    bool writeDynamicProperty(JS2Object *container, Multiname *multiname, bool createIfMissing, js2val newValue, Phase phase);
     bool writeLocalMember(LocalMember *m, js2val newValue, Phase phase, bool initFlag);
     bool writeInstanceMember(js2val containerVal, JS2Class *c, QualifiedName *qname, js2val newValue, Phase phase);
 
-    bool deleteProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, Phase phase, bool *result);
-    bool deleteProperty(js2val container, Multiname *multiname, LookupKind *lookupKind, Phase phase, bool *result);
-    bool deleteDynamicProperty(JS2Object *container, Multiname *multiname, LookupKind *lookupKind, bool *result);
+//    bool deleteProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, Phase phase, bool *result);
+//    bool deleteProperty(js2val container, Multiname *multiname, LookupKind *lookupKind, Phase phase, bool *result);
+//    bool deleteDynamicProperty(JS2Object *container, Multiname *multiname, LookupKind *lookupKind, bool *result);
     bool deleteLocalMember(LocalMember *m, bool *result);
     bool deleteInstanceMember(JS2Class *c, QualifiedName *qname, bool *result);
 

@@ -109,7 +109,7 @@ namespace MetaData {
                     pb = pb->next;
                 }
                 if (prototype)
-                    result->writeProperty(this, engine->length_StringAtom, INT_TO_JS2VAL(pCount), DynamicPropertyValue::READONLY);
+                    createDynamicProperty(result, engine->length_StringAtom, INT_TO_JS2VAL(pCount), ReadAccess, true, false);
                 pb = fnDef->parameters;
                 compileFrame->positional = new Variable *[pCount];
                 compileFrame->positionalCount = pCount;
@@ -2940,8 +2940,7 @@ doUnary:
         return mOverridden;
     }
 
-
-    defineLocalMember
+#if 0
 
     // Find the possible override conflicts that arise from the given id and namespaces
     // Fall back on the currently open namespace list if no others are specified.
@@ -3267,8 +3266,8 @@ static const uint8 urlCharType[256] =
     {
         SimpleInstance *fInst = new SimpleInstance(functionClass);
         fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), code, env);
-        writeDynamicProperty(glob, new Multiname(&world.identifiers[name], publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
-        fInst->writeProperty(this, engine->length_StringAtom, INT_TO_JS2VAL(length), DynamicPropertyValue::READONLY | DynamicPropertyValue::PERMANENT);
+        createDynamicProperty(glob, &world.identifiers[name], OBJECT_TO_JS2VAL(fInst), ReadWriteAccess, false, true);
+        createDynamicProperty(fInst, engine->length_StringAtom, INT_TO_JS2VAL(length), ReadAccess, true, false);
     }
 
     static js2val Object_toString(JS2Metadata *meta, const js2val thisValue, js2val /* argv */ [], uint32 /* argc */)
@@ -3514,11 +3513,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     }
 
 
-    void SimpleInstance::writeProperty(JS2Metadata * /* meta */, const String *name, js2val newValue, uint32 flags)
-    {
-        ASSERT(false);
-    }
-
+/*
     void ArrayInstance::writeProperty(JS2Metadata *meta, const String *name, js2val newValue, uint32 flags)
     {
         // An index has to pass the test that :
@@ -3545,7 +3540,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 setLength(meta, this, index + 1);
         }
     }
-
+*/
 
     InstanceBinding *JS2Metadata::findLocalInstanceMember(JS2Class *limit, Multiname *multiname, Access access)
     {
@@ -3566,7 +3561,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         return result;
     }        
 
-    InstanceMember* JS2Metadata::findBaseInstanceMember(JS2Class *limit, Multiname *multiname, Access access)
+    InstanceMember *JS2Metadata::findBaseInstanceMember(JS2Class *limit, Multiname *multiname, Access access)
     {
         InstanceMember *result = NULL;
         if (limit->super) {
@@ -3580,7 +3575,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     // whose access includes access. The caller of getDerivedInstanceMember ensures that such a member always exists. 
     // If accesses is readWrite then it is possible that this search could find both a getter and a setter defined in the same class;
     // in this case either the getter or the setter is returned at the implementation's discretion
-    InstanceMember *getDerivedInstanceMember(JS2Class *c, InstanceMember *mBase, Multiname *multiname, Access access)
+    InstanceMember *JS2Metadata::getDerivedInstanceMember(JS2Class *c, InstanceMember *mBase, Multiname *multiname, Access access)
     {
         InstanceBindingEntry **ibeP = c->instanceBindings[*multiname->name];
         if (ibeP) {
@@ -3852,7 +3847,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 Multiname mn(qName);
                 if ( (meta->findBaseInstanceMember(limit, &mn, ReadAccess, NULL) == NULL)
                         && (meta->findCommonMember(base, &mn, ReadAccess, true, NULL) == NULL) ) {
-                    meta->createDynamicProperty(JS2VAL_TO_OBJECT(base), &qName, newValue, ReadWriteAccess);
+                    meta->createDynamicProperty(JS2VAL_TO_OBJECT(base), &qName, newValue, ReadWriteAccess, false, true);
                     return true;
                 }
             }
@@ -3961,10 +3956,10 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     }
 
     // The caller must make sure that the created property does not already exist and does not conflict with any other property.
-    void JS2Metadata::createDynamicProperty(JS2Object *obj, QualifiedName *qName, js2val initVal, Access access)
+    void JS2Metadata::createDynamicProperty(JS2Object *obj, QualifiedName *qName, js2val initVal, Access access, bool sealed, bool enumerable)
     {
-        DynamicVariable *dv = new DynamicVariable(initVal);
-        LocalBinding *new_b = new LocalBinding(access, dv);
+        DynamicVariable *dv = new DynamicVariable(initVal, sealed);
+        LocalBinding *new_b = new LocalBinding(access, dv, enumerable);
         LocalBindingMap *lMap;
         if (obj->kind == SimpleInstanceKind)
             lMap = &checked_cast<SimpleInstance *>(obj)->localBindings;
@@ -4281,10 +4276,10 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     
     // Construct a Simple instance of a class. Set the
     // initial value of all slots to uninitialized.
-    SimpleInstance::SimpleInstance(JS2Metadata *meta, JS2Object *parent, JS2Class *type) 
+    SimpleInstance::SimpleInstance(JS2Metadata *meta, js2val parent, JS2Class *type) 
         : JS2Object(SimpleInstanceKind),
             sealed(false),
-            super(OBJECT_TO_JS2VAL(parent)),
+            super(parent),
             type(type), 
             slots(new Slot[type->slotCount]),
             fWrap(NULL)

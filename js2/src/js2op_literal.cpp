@@ -115,16 +115,14 @@
         {
             uint16 argCount = BytecodeContainer::getShort(pc);
             pc += sizeof(uint16);
-            PrototypeInstance *pInst = new PrototypeInstance(meta, meta->objectClass->prototype, meta->objectClass);
-            baseVal = OBJECT_TO_JS2VAL(pInst);
+            SimpleInstance *sInst = new SimpleInstance(meta, OBJECT_TO_JS2VAL(meta->objectClass->prototype), meta->objectClass);
+            baseVal = OBJECT_TO_JS2VAL(sInst);
             for (uint16 i = 0; i < argCount; i++) {
                 a = pop();
                 ASSERT(JS2VAL_IS_STRING(a));
                 astr = JS2VAL_TO_STRING(a);
-                const StringAtom &nameAtom = meta->world.identifiers[*astr];
                 b = pop();
-                DynamicPropertyBinding *dpb = new DynamicPropertyBinding(nameAtom, DynamicPropertyValue(b, DynamicPropertyValue::ENUMERATE));
-                pInst->dynamicProperties.insert(dpb->name, dpb); 
+                meta->createDynamicProperty(sInst, astr, b, false, true);
             }
             push(baseVal);
             baseVal = JS2VAL_VOID;
@@ -136,12 +134,11 @@
         {
             uint16 argCount = BytecodeContainer::getShort(pc);
             pc += sizeof(uint16);
-            ArrayInstance *aInst = new ArrayInstance(meta, meta->arrayClass->prototype, meta->arrayClass);
+            ArrayInstance *aInst = new ArrayInstance(meta, OBJECT_TO_JS2VAL(meta->arrayClass->prototype), meta->arrayClass);
             baseVal = OBJECT_TO_JS2VAL(aInst);
             for (uint16 i = 0; i < argCount; i++) {
                 b = pop();
-                DynamicPropertyBinding *dpb = new DynamicPropertyBinding(*numberToString((argCount - 1) - i), DynamicPropertyValue(b, DynamicPropertyValue::ENUMERATE));
-                aInst->dynamicProperties.insert(dpb->name, dpb);
+                meta->createDynamicProperty(aInst, numberToString((argCount - 1) - i), b, false, true);
             }
             setLength(meta, aInst, argCount);
             push(baseVal);
