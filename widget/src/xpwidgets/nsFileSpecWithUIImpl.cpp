@@ -18,7 +18,6 @@
 
 #include "nsFileSpecWithUIImpl.h"
 
-#include "nsIFileWidget.h"
 #include "nsWidgetsCID.h"
 #include "nsIComponentManager.h"
 
@@ -53,7 +52,8 @@ nsFileSpecWithUIImpl::~nsFileSpecWithUIImpl()
 //----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsFileSpecWithUIImpl::ChooseOutputFile(
 	const char *windowTitle,
-	const char *suggestedLeafName)
+	const char *suggestedLeafName,
+  nsIFileSpecWithUI::StandardFilterMask outMask)
 //----------------------------------------------------------------------------------------
 {
     if (!mBaseFileSpec)
@@ -68,8 +68,13 @@ NS_IMETHODIMP nsFileSpecWithUIImpl::ChooseOutputFile(
     	return rv;
     
     fileWidget->SetDefaultString(suggestedLeafName);
+
+    SetFileWidgetFilterList(fileWidget, outMask, nsnull, nsnull);
+
     nsFileSpec spec;
-    nsFileDlgResults result = fileWidget->PutFile(nsnull, windowTitle, spec);
+    nsString winTitle(windowTitle);
+
+    nsFileDlgResults result = fileWidget->PutFile(nsnull, winTitle, spec);
     if (result != nsFileDlgResults_OK)
     	return NS_FILE_FAILURE;
     if (spec.Exists() && result != nsFileDlgResults_Replace)
@@ -85,82 +90,105 @@ NS_IMETHODIMP nsFileSpecWithUIImpl::ChooseFile(const char *title, char **_retval
 	return rv;
 }
 
-//----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecWithUIImpl::ChooseInputFile(
-		const char *inTitle,
-		nsIFileSpecWithUI::StandardFilterMask inMask,
-		const char *inExtraFilterTitle, const char *inExtraFilter)
-//----------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+void nsFileSpecWithUIImpl::SetFileWidgetFilterList(
+  nsIFileWidget* fileWidget, nsIFileSpecWithUI::StandardFilterMask mask,
+  const char *inExtraFilterTitle, const char *inExtraFilter)
 {
-    if (!mBaseFileSpec)
-    	return NS_ERROR_NULL_POINTER;
-	nsresult rv = NS_OK;
+  if (!fileWidget) return;
 	nsString* nextTitle;
 	nsString* nextFilter;
-    nsFileSpec spec;
-    nsCOMPtr<nsIFileWidget> fileWidget; 
-    rv = nsComponentManager::CreateInstance(
-    	kCFileWidgetCID,
-        nsnull,
-        nsCOMTypeInfo<nsIFileWidget>::GetIID(),
-        (void**)getter_AddRefs(fileWidget));
-	if (NS_FAILED(rv))
-		return rv;
 	nsString* titles = nsnull;
 	nsString* filters = nsnull;
 	titles = new nsString[1 + kNumStandardFilters];
 	if (!titles)
 	{
-		rv = NS_ERROR_OUT_OF_MEMORY;
 		goto Clean;
 	}
 	filters = new nsString[1 + kNumStandardFilters];
 	if (!filters)
 	{
-		rv = NS_ERROR_OUT_OF_MEMORY;
 		goto Clean;
 	}
 	nextTitle = titles;
 	nextFilter = filters;
-	if (inMask & eAllReadable)
+	if (mask & eAllReadable)
 	{
 		*nextTitle++ = "All Readable Files";
 		*nextFilter++ = "*.htm; *.html; *.xml; *.gif; *.jpg; *.jpeg; *.png";
 	}
-	if (inMask & eHTMLFiles)
+	if (mask & eHTMLFiles)
 	{
 		*nextTitle++ = "HTML Files";
 		*nextFilter++ = "*.htm; *.html";
 	}
-	if (inMask & eXMLFiles)
+	if (mask & eXMLFiles)
 	{
 		*nextTitle++ = "XML Files";
 		*nextFilter++ =  "*.xml";
 	}
-	if (inMask & eImageFiles)
+	if (mask & eImageFiles)
 	{
 		*nextTitle++ = "Image Files";
 		*nextFilter++ = "*.gif; *.jpg; *.jpeg; *.png";
 	}
-	if (inMask & eExtraFilter)
+  if (mask & eMailFiles)
+  {
+    *nextTitle++ = "Mail Files";
+    *nextFilter++ = "*.eml";
+  }
+  if (mask & eTextFiles)
+  {
+    *nextTitle++ = "Text Files";
+    *nextFilter++ = "*.txt";
+  }
+	if (mask & eExtraFilter)
 	{
 		*nextTitle++ = inExtraFilterTitle;
 		*nextFilter++ = inExtraFilter;
 	}
-	if (inMask & eAllFiles)
+	if (mask & eAllFiles)
 	{
 		*nextTitle++ = "All Files";
 		*nextFilter++ = "*.*";
 	}
 
 	fileWidget->SetFilterList(nextFilter - filters, titles, filters);
-	if (fileWidget->GetFile(nsnull, inTitle, spec) != nsFileDlgResults_OK)
-		rv = NS_FILE_FAILURE;
-    rv = mBaseFileSpec->SetFromFileSpec(spec);
+
+	return;
 
 Clean:
 	delete [] titles;
 	delete [] filters;
+}
+
+//----------------------------------------------------------------------------------------
+NS_IMETHODIMP nsFileSpecWithUIImpl::ChooseInputFile(
+  const char *inTitle,
+  nsIFileSpecWithUI::StandardFilterMask inMask,
+  const char *inExtraFilterTitle, const char *inExtraFilter)
+//----------------------------------------------------------------------------------------
+{
+  if (!mBaseFileSpec)
+    return NS_ERROR_NULL_POINTER;
+  nsresult rv = NS_OK;
+  nsFileSpec spec;
+  nsCOMPtr<nsIFileWidget> fileWidget; 
+  rv = nsComponentManager::CreateInstance(kCFileWidgetCID,
+                                          nsnull,
+                                          nsCOMTypeInfo<nsIFileWidget>::GetIID(),
+                                          (void**)getter_AddRefs(fileWidget));
+  if (NS_FAILED(rv))
+		return rv;
+
+  SetFileWidgetFilterList(fileWidget, inMask, 
+                          inExtraFilterTitle, inExtraFilter);
+  nsString winTitle(inTitle);
+	if (fileWidget->GetFile(nsnull, winTitle, spec) != nsFileDlgResults_OK)
+		rv = NS_FILE_FAILURE;
+  else
+    rv = mBaseFileSpec->SetFromFileSpec(spec);
+
 	return rv;
 } // nsFileSpecWithUIImpl::ChooseInputFile
 
