@@ -1027,15 +1027,14 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
   }
 
   if (!key.IsEmpty()) {
-    nsAutoString charCode(aCharCode);
     if ((mKeyMask & cShift) != 0)
-      ToUpperCase(charCode);
+      ToUpperCase(key);
     else
-      ToLowerCase(charCode);
+      ToLowerCase(key);
 
     // We have a charcode.
     mMisc = 1;
-    mDetail = charCode[0];
+    mDetail = key[0];
   }
   else {
     key.Assign(aKeyCode);
