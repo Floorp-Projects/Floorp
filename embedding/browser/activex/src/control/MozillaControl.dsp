@@ -240,6 +240,18 @@ SOURCE=.\WebBrowserContainer.h
 # Begin Group "Resource Files"
 
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
+# Begin Source File
+
+SOURCE=.\MozillaBrowser.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\MozillaBrowser.rgs
+# End Source File
+# Begin Source File
+
+SOURCE=.\MozillaControl.rc
+# End Source File
 # End Group
 # Begin Source File
 
