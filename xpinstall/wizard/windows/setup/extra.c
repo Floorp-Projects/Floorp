@@ -274,7 +274,7 @@ BOOL VerifyRestrictedAccess(void)
   return(bRv);
 }
 
-void UnsetDownloadState(void)
+void UnsetSetupState(void)
 {
   char szKey[MAX_BUF_TINY];
 
@@ -286,27 +286,25 @@ void UnsetDownloadState(void)
   DeleteWinRegValue(HKEY_CURRENT_USER, szKey, "Setup State");
 }
 
-void SetDownloadState(void)
+void SetSetupState(char *szState)
 {
   char szKey[MAX_BUF_TINY];
-  char szValue[MAX_BUF_TINY];
 
   wsprintf(szKey,
            SETUP_STATE_REG_KEY,
            sgProduct.szCompanyName,
            sgProduct.szProductNameInternal,
            sgProduct.szUserAgent);
-  lstrcpy(szValue, "downloading");
 
   SetWinReg(HKEY_CURRENT_USER, szKey, TRUE, "Setup State", TRUE,
-            REG_SZ, szValue, lstrlen(szValue), TRUE, FALSE);
+            REG_SZ, szState, lstrlen(szState), TRUE, FALSE);
 }
 
-BOOL CheckForPreviousUnfinishedDownload(void)
+DWORD GetPreviousUnfinishedState(void)
 {
   char szBuf[MAX_BUF_TINY];
   char szKey[MAX_BUF_TINY];
-  BOOL bRv = FALSE;
+  DWORD dwRv = PUS_NONE;
 
   if(sgProduct.szCompanyName &&
      sgProduct.szProductNameInternal &&
@@ -318,11 +316,15 @@ BOOL CheckForPreviousUnfinishedDownload(void)
              sgProduct.szProductNameInternal,
              sgProduct.szUserAgent);
     GetWinReg(HKEY_CURRENT_USER, szKey, "Setup State", szBuf, sizeof(szBuf));
-    if(lstrcmpi(szBuf, "downloading") == 0)
-      bRv = TRUE;
+    if(lstrcmpi(szBuf, SETUP_STATE_DOWNLOAD) == 0)
+      dwRv = PUS_DOWNLOAD;
+    else if(lstrcmpi(szBuf, SETUP_STATE_UNPACK_XPCOM) == 0)
+      dwRv = PUS_UNPACK_XPCOM;
+    else if(lstrcmpi(szBuf, SETUP_STATE_INSTALL_XPI) == 0)
+      dwRv = PUS_INSTALL_XPI;
   }
 
-  return(bRv);
+  return(dwRv);
 }
 
 void UnsetSetupCurrentDownloadFile(void)
@@ -1519,7 +1521,6 @@ long RetrieveArchives()
   DWORD     dwIndex0;
   DWORD     dwFileCounter;
   BOOL      bDone;
-  BOOL      bDownloadTriggered;
   siC       *siCObject = NULL;
   long      lResult;
   char      szFileIdiGetArchives[MAX_BUF];
@@ -1541,7 +1542,7 @@ long RetrieveArchives()
   GetSetupCurrentDownloadFile(szPartiallyDownloadedFilename,
                               sizeof(szPartiallyDownloadedFilename));
 
-  bDownloadTriggered = FALSE;
+  gbDownloadTriggered= FALSE;
   lResult            = WIZ_OK;
   dwIndex0           = 0;
   dwFileCounter      = 0;
@@ -1576,7 +1577,7 @@ long RetrieveArchives()
     siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
   }
 
-  SetDownloadState();
+  SetSetupState(SETUP_STATE_DOWNLOAD);
 
   /* iCRCRetries is initially set to 0 because the first attemp at downloading
    * the archives is not considered a "retry".  Subsequent downloads are
@@ -1589,7 +1590,7 @@ long RetrieveArchives()
        any archives needed to be downloaded */
     if(FileExists(szFileIdiGetArchives))
     {
-      bDownloadTriggered = TRUE;
+      gbDownloadTriggered = TRUE;
       lResult = DownloadFiles(szFileIdiGetArchives,               /* input idi file to parse                 */
                               szTempDir,                          /* download directory                      */
                               diAdvancedSettings.szProxyServer,   /* proxy server name                       */
@@ -1653,7 +1654,7 @@ long RetrieveArchives()
   }
   else
   {
-    if(bDownloadTriggered)
+    if(gbDownloadTriggered)
       LogISComponentsFailedCRC(NULL, W_DOWNLOAD);
   }
 
@@ -1664,7 +1665,7 @@ long RetrieveArchives()
   {
     LogISDownloadStatus("ok", NULL);
   }
-  else if(bDownloadTriggered)
+  else if(gbDownloadTriggered)
   {
     wsprintf(szBuf, "failed: %d", lResult);
     LogISDownloadStatus(szBuf, szFailedFile);
@@ -1676,7 +1677,7 @@ long RetrieveArchives()
   if(lResult == WIZ_OK)
   {
     UnsetSetupCurrentDownloadFile();
-    UnsetDownloadState();
+    UnsetSetupState();
   }
 
   return(lResult);
@@ -4952,65 +4953,124 @@ int PreCheckInstance(char *szSection, char *szIniFile)
   char  *ptrName = NULL;
   HKEY  hkeyRoot;
   int   iRv = WIZ_OK;
+  DWORD dwCounter = 0;
+  BOOL  bContinue = TRUE;
+  char  szExtraCmd[] = "Extra Cmd";
+  char  szExtraCmdKey[MAX_BUF];
 
-  /* Read the win reg key path */
-  GetPrivateProfileString(szSection,
-                          "Extra Cmd Reg Key",
-                          "",
-                          szKey,
-                          sizeof(szKey),
-                          szIniFile);
-  if(*szKey == '\0')
-    return(iRv);
-
-  /* Read the win reg root key */
-  GetPrivateProfileString(szSection,
-                          "Extra Cmd Reg Key Root",
-                          "",
-                          szBuf,
-                          sizeof(szBuf),
-                          szIniFile);
-  if(*szBuf == '\0')
-    return(iRv);
-  hkeyRoot = ParseRootKey(szBuf);
-
-  /* Read the win reg name value */
-  GetPrivateProfileString(szSection,
-                          "Extra Cmd Reg Name",
-                          "",
-                          szName,
-                          sizeof(szName),
-                          szIniFile);
-  if(*szName == '\0')
-    ptrName = NULL;
-  else
-    ptrName = szName;
-
-  /* Read the parameter to use for quitting the browser's turbo mode */
-  GetPrivateProfileString(szSection,
-                          "Extra Cmd Parameter",
-                          "",
-                          szParameter,
-                          sizeof(szParameter),
-                          szIniFile);
-
-  /* Read the win reg key that contains the path to the browser */
-  GetWinReg(hkeyRoot, szKey, ptrName, szFile, sizeof(szFile));
-  ParsePath(szFile, szPath, sizeof(szPath), FALSE, PP_PATH_ONLY);
-
-  /* Make sure the file exists */
-  if(FileExists(szFile))
+  do
   {
-    /* Run the file */
-    WinSpawn(szFile, szParameter, szPath, SW_HIDE, TRUE);
+    /* Read the win reg key path */
+    wsprintf(szExtraCmdKey, "%s%d Reg Key", szExtraCmd, dwCounter);
+    GetPrivateProfileString(szSection,
+                            szExtraCmdKey,
+                            "",
+                            szKey,
+                            sizeof(szKey),
+                            szIniFile);
+    if(*szKey == '\0')
+    {
+      bContinue = FALSE;
+      continue;
+    }
 
-    /* Even though WinSpawn is suppose to wait for the app to finish, this
-     * does not really work that way for trying to quit the browser when
-     * it's in turbo mode, so we wait 2 secs for it to complete. */
-    Delay(2);
-  }
+    /* Read the win reg root key */
+    wsprintf(szExtraCmdKey, "%s%d Reg Key Root", szExtraCmd, dwCounter);
+    GetPrivateProfileString(szSection,
+                            szExtraCmdKey,
+                            "",
+                            szBuf,
+                            sizeof(szBuf),
+                            szIniFile);
+    if(*szBuf == '\0')
+    {
+      bContinue = FALSE;
+      continue;
+    }
+    hkeyRoot = ParseRootKey(szBuf);
+
+    /* Read the win reg name value */
+    wsprintf(szExtraCmdKey, "%s%d Reg Name", szExtraCmd, dwCounter);
+    GetPrivateProfileString(szSection,
+                            szExtraCmdKey,
+                            "",
+                            szName,
+                            sizeof(szName),
+                            szIniFile);
+    if(*szName == '\0')
+      ptrName = NULL;
+    else
+      ptrName = szName;
+
+    /* Read the parameter to use for quitting the browser's turbo mode */
+    wsprintf(szExtraCmdKey, "%s%d Parameter", szExtraCmd, dwCounter);
+    GetPrivateProfileString(szSection,
+                            szExtraCmdKey,
+                            "",
+                            szParameter,
+                            sizeof(szParameter),
+                            szIniFile);
+
+    /* Read the win reg key that contains the path to the browser */
+    GetWinReg(hkeyRoot, szKey, ptrName, szFile, sizeof(szFile));
+    ParsePath(szFile, szPath, sizeof(szPath), FALSE, PP_PATH_ONLY);
+
+    /* Make sure the file exists */
+    if(FileExists(szFile))
+    {
+      // we've found a file, so let's execute it and stop.  No need to look
+      // for other keys to parse.  We only want to do that if the file is
+      // _not_ found.  This is for when we change the name of the browser
+      // app file and still need to deal with locating it and calling
+      // -kill on it. ie.
+      //   previous name: netscp6.exe
+      //   new name: netscp.exe
+      // We only need to call one of them, not both.
+      bContinue = FALSE;
+
+      /* Run the file */
+      WinSpawn(szFile, szParameter, szPath, SW_HIDE, TRUE);
+
+      /* Even though WinSpawn is suppose to wait for the app to finish, this
+       * does not really work that way for trying to quit the browser when
+       * it's in turbo mode, so we wait 2 secs for it to complete. */
+      Delay(2);
+    }
+
+    ++dwCounter;
+  } while(bContinue);
 
   return(iRv);
+}
+
+// Windows callback function that processes each window found to be running.
+// This function will close all the _visible_ windows that match a processes
+// passed in from lParam.
+BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)
+{
+  DWORD dwProcessId;
+
+  GetWindowThreadProcessId(hwnd, &dwProcessId);
+  if(dwProcessId == (DWORD)lParam)
+  {
+    // only close the windows that are visible
+    if(GetWindowLong(hwnd, GWL_STYLE) & WS_VISIBLE)
+      SendMessage(hwnd, WM_CLOSE, (WPARAM)1, (LPARAM)0);
+  }
+
+  return(TRUE); // continue with the enumeration! it will automatically stop
+                // when there's no more windows to process.
+}
+
+
+DWORD CloseAllWindowsOfWindowHandle(HWND hwndWindow)
+{
+  DWORD dwProcessId;
+
+  GetWindowThreadProcessId(hwndWindow, &dwProcessId);
+  EnumWindows(EnumWindowsProc, dwProcessId);
+
+  return(WIZ_OK);
 }
 
 HRESULT CheckInstances()
@@ -5019,11 +5079,14 @@ HRESULT CheckInstances()
   char  szProcessName[MAX_BUF];
   char  szClassName[MAX_BUF];
   char  szWindowName[MAX_BUF];
+  char  szCloseAllWindows[MAX_BUF];
   char  szAttention[MAX_BUF];
   char  szMessage[MAX_BUF];
+  char  szMessageFullInstaller[MAX_BUF];
   char  szIndex[MAX_BUF];
   int   iIndex;
   BOOL  bContinue;
+  BOOL  bCloseAllWindows;
   HWND  hwndFW;
   LPSTR szWN;
   LPSTR szCN;
@@ -5034,18 +5097,22 @@ HRESULT CheckInstances()
   iIndex    = -1;
   while(bContinue)
   {
-    ZeroMemory(szClassName,  sizeof(szClassName));
-    ZeroMemory(szWindowName, sizeof(szWindowName));
-    ZeroMemory(szMessage,    sizeof(szMessage));
+    ZeroMemory(szClassName,            sizeof(szClassName));
+    ZeroMemory(szWindowName,           sizeof(szWindowName));
+    ZeroMemory(szMessage,              sizeof(szMessage));
+    ZeroMemory(szMessageFullInstaller, sizeof(szMessageFullInstaller));
 
     ++iIndex;
     itoa(iIndex, szIndex, 10);
     lstrcpy(szSection, "Check Instance");
     lstrcat(szSection, szIndex);
 
-
     GetPrivateProfileString("Messages", "MB_ATTENTION_STR", "", szAttention, sizeof(szAttention), szFileIniInstall);
     GetPrivateProfileString(szSection, "Message", "", szMessage, sizeof(szMessage), szFileIniConfig);
+    GetPrivateProfileString(szSection, "Message Full Installer", "", szMessageFullInstaller, sizeof(szMessageFullInstaller), szFileIniConfig);
+    if(!gbDownloadTriggered && !gbPreviousUnfinishedDownload && (*szMessageFullInstaller != '\0'))
+      lstrcpy(szMessage, szMessageFullInstaller);
+
     if(GetPrivateProfileString(szSection, "Process Name", "", szProcessName, sizeof(szProcessName), szFileIniConfig) != 0L)
     {
       if(*szProcessName != '\0')
@@ -5099,6 +5166,12 @@ HRESULT CheckInstances()
       continue;
     }
 
+    GetPrivateProfileString(szSection, "Close All Process Windows", "", szCloseAllWindows, sizeof(szCloseAllWindows), szFileIniConfig);
+    if(lstrcmpi(szCloseAllWindows, "TRUE") == 0)
+      bCloseAllWindows = TRUE;
+    else
+      bCloseAllWindows = FALSE;
+
     /* Process Name= key did not exist, so look for other keys */
     dwRv0 = GetPrivateProfileString(szSection, "Class Name",  "", szClassName,  sizeof(szClassName), szFileIniConfig);
     dwRv1 = GetPrivateProfileString(szSection, "Window Name", "", szWindowName, sizeof(szWindowName), szFileIniConfig);
@@ -5139,20 +5212,34 @@ HRESULT CheckInstances()
                 case IDRETRY:
                 case IDOK:
                   /* User selected to retry.  Reset counter */
+                  if(bCloseAllWindows)
+                      CloseAllWindowsOfWindowHandle(hwndFW);
+
                   iIndex = -1;
                   break;
               }
               break;
 
             case AUTO:
+              /* Setup mode is AUTO.  Show message, timeout, then auto close
+               * all the windows associated with the process */
+
               ShowMessage(szMessage, TRUE);
               Delay(5);
               ShowMessage(szMessage, FALSE);
 
-              /* Setup mode is AUTO.  Show message, timeout, then cancel because we can't allow user to continue */
+              if(bCloseAllWindows)
+                CloseAllWindowsOfWindowHandle(hwndFW);
+
               return(TRUE);
 
             case SILENT:
+              /* Setup mode is SILENT.  Just auto close
+               * all the windows associated with the process */
+
+              if(bCloseAllWindows)
+                CloseAllWindowsOfWindowHandle(hwndFW);
+
               return(TRUE);
           }
         }
@@ -5388,6 +5475,7 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   char szMsgInitSetup[MAX_BUF];
   char szPreviousPath[MAX_BUF];
   char szShowDialog[MAX_BUF];
+  DWORD dwPreviousUnfinishedState;
 
   if(InitSetupGeneral())
     return(1);
@@ -5890,7 +5978,8 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
 
   /* check the windows registry to see if a previous instance of setup finished downloading
    * all the required archives. */
-  gbPreviousUnfinishedDownload = CheckForPreviousUnfinishedDownload();
+  dwPreviousUnfinishedState = GetPreviousUnfinishedState();
+  gbPreviousUnfinishedDownload = dwPreviousUnfinishedState == PUS_DOWNLOAD;
   if(gbPreviousUnfinishedDownload)
   {
     char szTitle[MAX_BUF_TINY];
@@ -5907,7 +5996,34 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
         if(MessageBox(hWndMain, szBuf, szTitle, MB_YESNO | MB_ICONQUESTION) == IDNO)
         {
           UnsetSetupCurrentDownloadFile();
-          UnsetDownloadState(); /* unset the download state so that the archives can be deleted */
+          UnsetSetupState(); /* unset the download state so that the archives can be deleted */
+          DeleteArchives(DA_ONLY_IF_NOT_IN_ARCHIVES_LST);
+        }
+        break;
+    }
+  }
+  else if((dwPreviousUnfinishedState == PUS_UNPACK_XPCOM) || (dwPreviousUnfinishedState == PUS_INSTALL_XPI))
+  {
+    char szTitle[MAX_BUF_TINY];
+
+    // need to set this var to true even though the previous state was not the
+    // download state.  This is because it is used for disk space calculation
+    // wrt saved downloaded files and making sure CRC checks are performed on
+    // them.
+    gbPreviousUnfinishedDownload = TRUE;
+    switch(sgProduct.dwMode)
+    {
+      case NORMAL:
+        if(!GetPrivateProfileString("Messages", "STR_MESSAGEBOX_TITLE", "", szBuf, sizeof(szBuf), szFileIniInstall))
+          lstrcpy(szTitle, "Setup");
+        else
+          wsprintf(szTitle, szBuf, sgProduct.szProductName);
+
+        GetPrivateProfileString("Strings", "Message Unfinished Install Xpi Restart", "", szBuf, sizeof(szBuf), szFileIniConfig);
+        if(MessageBox(hWndMain, szBuf, szTitle, MB_YESNO | MB_ICONQUESTION) == IDNO)
+        {
+          UnsetSetupCurrentDownloadFile();
+          UnsetSetupState(); /* unset the installing xpis state so that the archives can be deleted */
           DeleteArchives(DA_ONLY_IF_NOT_IN_ARCHIVES_LST);
         }
         break;
@@ -6969,7 +7085,7 @@ void DeleteArchives(DWORD dwDeleteCheck)
 
   ZeroMemory(szArchiveName, sizeof(szArchiveName));
 
-  if((!bSDUserCanceled) && (CheckForPreviousUnfinishedDownload() == FALSE))
+  if((!bSDUserCanceled) && (GetPreviousUnfinishedState() == PUS_NONE))
   {
     dwIndex0 = 0;
     siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);

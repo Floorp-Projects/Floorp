@@ -225,6 +225,16 @@ typedef int PRInt32;
 #define SS_HIDE                         0
 #define SS_SHOW                         1
 
+/* PUS: Previous Unfinished State */
+#define PUS_NONE                         0
+#define PUS_DOWNLOAD                     1
+#define PUS_UNPACK_XPCOM                 2
+#define PUS_INSTALL_XPI                  3
+#define SETUP_STATE_DOWNLOAD             "downloading"
+#define SETUP_STATE_UNPACK_XPCOM         "unpacking xpcom"
+#define SETUP_STATE_INSTALL_XPI          "installing xpi"
+
+
 typedef struct dlgSetup
 {
   DWORD   dwDlgID;

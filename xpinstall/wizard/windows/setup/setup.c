@@ -72,9 +72,11 @@ BOOL            bCreateDestinationDir;
 BOOL            bReboot;
 BOOL            gbILUseTemp;
 BOOL            gbPreviousUnfinishedDownload;
+BOOL            gbPreviousUnfinishedInstallXpi;
 BOOL            gbIgnoreRunAppX;
 BOOL            gbIgnoreProgramFolderX;
 BOOL            gbRestrictedAccess;
+BOOL            gbDownloadTriggered;
 
 setupGen        sgProduct;
 diS             diSetup;

@@ -381,21 +381,20 @@ exe_param=
 Class Name=MozillaMessageWindow
 Window Name=
 ;*** LOCALIZE ME BABY ***
-Message=Download of $ProductName$ was successful.  Close any $ProductName$ windows to proceed with installation.  To do this, open the File menu in $ProductName$ and choose Exit.  Then click OK in this dialog box to continue installation.
+Message=Download of $ProductName$ was successful. $ProductNameNoVersion$ must be closed to proceed with installation. Click OK to exit $ProductNameNoVersion$ automatically and to begin installation.
+;*** LOCALIZE ME BABY ***
+Message Full Installer=$ProductNameNoVersion$ must be closed to proceed with installation. Click OK to exit $ProductNameNoVersion$ automatically and to begin installation.
+
+; This key indicates whether or not to close all the windows associated with
+; the process id of this app instance window found.
+Close All Process Windows=TRUE
 
 ; These keys are not normally necessary for checking instances.  They are
 ; set here because Mozilla requires a way to shut down it's turbo mode.
-Extra Cmd Reg Key Root=HKEY_LOCAL_MACHINE
-Extra Cmd Reg Key=Software\Microsoft\Windows\CurrentVersion\App Paths\$MainExeFile$
-Extra Cmd Reg Name=
-Extra Cmd Parameter=-kill
-
-[Check Instance1]
-Class Name=MozillaWindowClass
-Window Name=
-;*** LOCALIZE ME BABY ***
-Message=Download of $ProductName$ was successful.  Close any $ProductName$ windows to proceed with installation.  To do this, open the File menu in $ProductName$ and choose Exit.  Then click OK in this dialog box to continue installation.
-
+Extra Cmd0 Reg Key Root=HKEY_LOCAL_MACHINE
+Extra Cmd0 Reg Key=Software\Microsoft\Windows\CurrentVersion\App Paths\$MainExeFile$
+Extra Cmd0 Reg Name=
+Extra Cmd0 Parameter=-kill
 
 
 [Component XPCOM]
@@ -1189,6 +1188,8 @@ Restricted Access=ONLY_RESTRICTED
 [Strings]
 ;*** LOCALIZE ME BABY ***
 Message Unfinished Download Restart=A previous session of Setup did not finish downloading all the necessary files.  Would you like to use the files previously downloaded, to avoid downloading them again?
+;*** LOCALIZE ME BABY ***
+Message Unfinished Install Xpi Restart=A previous session of Setup did not finish with installation of all the necessary files.  Would you like to use the files previously downloaded, to avoid downloading them again?
 ;*** LOCALIZE ME BABY ***
 Error Corrupted Archives Detected=Setup has detected that the following archives within this Setup are corrupted:%sYou will need to obtain another copy of the $ProductName$ Setup in order for installation to proceed.
 ;*** LOCALIZE ME BABY ***

@@ -167,6 +167,8 @@ LPSTR             GetArgV(LPSTR lpszCommandLine,
 DWORD             ParseCommandLine(LPSTR lpszCmdLine);
 void              SetSetupRunMode(LPSTR szMode);
 void              Delay(DWORD dwSeconds);
+void              UnsetSetupState(void);
+void              SetSetupState(char *szState);
 siCD              *InitWinInitNodes(char *szInFile);
 void              UpdateWininit(LPSTR szUninstallFilename);
 char              *GetSaveInstallerPath(char *szBuf, DWORD dwBufSize);
@@ -207,6 +209,7 @@ char              *GetSetupCurrentDownloadFile(char *szCurrentDownloadFile,
 BOOL              DeleteWGetLog(void);
 DWORD             ParseOSType(char *szOSType);
 BOOL              ShowAdditionalOptionsDialog(void);
+DWORD             GetPreviousUnfinishedState(void);
 
 #endif /* _EXTRA_H_ */
 
