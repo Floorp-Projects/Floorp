@@ -366,7 +366,7 @@ function EditorNewPlaintext()
   window.openDialog( "chrome://editor/content/TextEditorAppShell.xul",
                      "_blank",
                      "chrome,dialog=no,all",
-                     "chrome://editor/content/EditorInitPagePlain.html");
+                     "about:blank");
 }
 
 // returns wasSavedSuccessfully
@@ -1067,6 +1067,13 @@ function EditorDeleteTableCell()
 {
   // TODO: Get the number of cells to delete from the selection
   editorShell.DeleteTableCell(1);
+  contentWindow.focus();
+}
+
+function EditorDeleteTableCellContents()
+{
+  // TODO: Get the number of cells to delete from the selection
+  editorShell.DeleteTableCellContents();
   contentWindow.focus();
 }
 

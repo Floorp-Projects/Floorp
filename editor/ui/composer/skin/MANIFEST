@@ -24,25 +24,16 @@ editor.css
 
 #skin directory
 
-images:center.gif
-images:copy.gif
-images:hline.gif
-images:indent.gif
 images:left.gif
 images:center.gif
 images:right.gif
 images:justify.gif
-images:numbers.gif
-images:redo.gif
-images:spell.gif
 images:anchor.gif
 images:anchor-in-doc.gif
-images:undo.gif
 images:bullets.gif
 images:copy.gif
 images:cut.gif
 images:outdent.gif
-images:find.gif
 images:hline.gif
 images:image.gif
 images:img-align-bottom.gif
@@ -52,14 +43,12 @@ images:img-align-right.gif
 images:img-align-top.gif
 images:indent.gif
 images:italic.gif
-images:left.gif
 images:link.gif
 images:numbers.gif
 images:paste.gif
 images:redo.gif
 images:spell.gif
 images:table.gif
-images:target.gif
 images:underline.gif
 images:undo.gif
 images:bold.gif
