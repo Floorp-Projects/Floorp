@@ -292,7 +292,7 @@ GrafPtr		theport;
 }
 
 /**-------------------------------------------------------------------------------
- * Resizes the button, currently handles by nsWindow
+ * Resizes the TEXT, currently handles by nsWindow
  * @update  dc 08/31/98
  * @Param aEvent -- The event for this resize
  * @return -- True if the event was handled, PR_FALSE is always return for now
@@ -418,7 +418,7 @@ LongRect			macRect;
   event.windowSize = &mBounds;
   event.eventStructType = NS_SIZE_EVENT;
   event.widget = this;
- 	this->DispatchEvent(&event, eventStatus);
+ 	//this->DispatchEvent(&event, eventStatus);
 	return NS_OK;
 }
 
@@ -467,7 +467,7 @@ LongRect			macRect;
   event.windowSize = &mBounds;
   event.widget = this;
   event.eventStructType = NS_SIZE_EVENT;
- 	this->DispatchEvent(&event, eventStatus);
+ 	//this->DispatchEvent(&event, eventStatus);
 	return NS_OK;
 }
 

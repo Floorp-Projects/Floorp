@@ -60,6 +60,8 @@ public:
   NS_IMETHOD     GetLabel(nsString& aBuffer);
   NS_IMETHOD 		 SetState(const PRBool aState);
   NS_IMETHOD     GetState(PRBool& aState);
+  NS_IMETHOD     Resize(PRUint32 aWidth,PRUint32 aHeight, PRBool aRepaint);
+  NS_IMETHOD     Resize(PRUint32 aX, PRUint32 aY,PRUint32 aWidth,PRUint32 aHeight, PRBool aRepaint);
 
 	// event handling
   virtual PRBool OnPaint(nsPaintEvent & aEvent);

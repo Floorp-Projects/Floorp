@@ -195,6 +195,62 @@ PRBool nsRadioButton::OnResize(nsSizeEvent &aEvent)
 	return PR_FALSE;
 }
 
+/**-------------------------------------------------------------------------------
+ * Resizes the Resizes the bounds
+ * @update  dc 10/23/98
+ * @Param aWidth -- The new width
+ * @Param aHeight -- The new width
+ * @Param aRepaint -- a boolean which tells if we need to repaint
+ * @return -- True if the event was handled, NS_OK is always return for now
+ */ 
+NS_IMETHODIMP nsRadioButton::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
+{
+
+  mBounds.width  = aWidth;
+  mBounds.height = aHeight;
+  
+   if(nsnull!=mWindowRegion)
+  	::DisposeRgn(mWindowRegion);
+	mWindowRegion = NewRgn();
+	SetRectRgn(mWindowRegion,mBounds.x,mBounds.y,mBounds.x+mBounds.width,mBounds.y+mBounds.height);		 
+ 
+  if (aRepaint){
+  	UpdateVisibilityFlag();
+  	UpdateDisplay();
+  	}
+  return(NS_OK);
+}
+
+    
+/**-------------------------------------------------------------------------------
+ * Resizes the Resizes the bounds
+ * @update  dc 10/23/98
+ * @Param aX -- the left position of the bounds
+ * @Param aY -- the top position of the bounds
+ * @Param aWidth -- The new width
+ * @Param aHeight -- The new width
+ * @Param aRepaint -- a boolean which tells if we need to repaint
+ * @return -- True if the event was handled, NS_OK is always return for now
+ */ 
+NS_IMETHODIMP nsRadioButton::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
+{
+nsSizeEvent 	event;
+
+  mBounds.x      = aX;
+  mBounds.y      = aY;
+  mBounds.width  = aWidth;
+  mBounds.height = aHeight;
+  if(nsnull!=mWindowRegion)
+  	::DisposeRgn(mWindowRegion);
+	mWindowRegion = NewRgn();
+	SetRectRgn(mWindowRegion,mBounds.x,mBounds.y,mBounds.x+mBounds.width,mBounds.y+mBounds.height);
+
+  if (aRepaint){
+  	UpdateVisibilityFlag();
+  	UpdateDisplay();
+  }
+ 	return(NS_OK);
+}
 
 /**-------------------------------------------------------------------------------
  * DispatchMouseEvent handle an event for this button
