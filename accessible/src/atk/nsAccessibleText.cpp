@@ -920,12 +920,13 @@ PRBool nsAccessibleEditableText::IsSingleLineTextControl(nsIDOMNode *aDomNode)
 
 nsresult nsAccessibleEditableText::FireTextChangeEvent(AtkTextChange *aTextData)
 {
-  nsCOMPtr<nsPIAccessible> privAccessible(do_QueryInterface(NS_STATIC_CAST(nsIAccessibleText*, this)));
+  nsCOMPtr<nsIAccessible> accessible(do_QueryInterface(NS_STATIC_CAST(nsIAccessibleText*, this)));
+  nsCOMPtr<nsPIAccessible> privAccessible(do_QueryInterface(accessible));
   if (privAccessible) {
 #ifdef DEBUG
     printf("  [start=%d, length=%d, add=%d]\n", aTextData->start, aTextData->length, aTextData->add);
 #endif
-    privAccessible->FireToolkitEvent(nsIAccessibleEventReceiver::EVENT_ATK_TEXT_CHANGE, privAccessible, aTextData);
+    privAccessible->FireToolkitEvent(nsIAccessibleEventReceiver::EVENT_ATK_TEXT_CHANGE, accessible, aTextData);
   }
 
   return NS_OK;
