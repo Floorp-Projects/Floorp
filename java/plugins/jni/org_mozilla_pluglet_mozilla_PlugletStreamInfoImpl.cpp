@@ -134,13 +134,15 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_pluglet_mozilla_PlugletStreamInfoImpl
  */
 JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletStreamInfoImpl_requestRead
     (JNIEnv *env, jobject jthis, jobject object) {
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	   ("PlugletStreamInfoImpl.requestRead\n"));
     nsIPluginStreamInfo * streamInfo = (nsIPluginStreamInfo*)env->GetLongField(jthis, peerFID);
-    if (!streamInfo) {
+    if (!streamInfo 
+	|| !object ) { //nb we need to add some Exception throwing
 	return;
     }
     nsByteRange* range = ByteRanges::GetByteRanges(env,object);
-    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
-	    ("PlugletStreamInfoImpl.requestRead\n"));
+
     streamInfo->RequestRead(range);
     ByteRanges::FreeByteRanges(range);
 }
