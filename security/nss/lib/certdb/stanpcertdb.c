@@ -158,6 +158,8 @@ __CERT_AddTempCertToPerm(CERTCertificate *cert, char *nickname,
     /* reset the CERTCertificate fields */
     cert->nssCertificate = NULL;
     cert = STAN_GetCERTCertificate(c); /* will return same pointer */
+    cert->istemp = PR_FALSE;
+    cert->isperm = PR_TRUE;
     return (STAN_ChangeCertTrust(cert, trust) == PR_SUCCESS) ? 
 							SECSuccess: SECFailure;
 }
@@ -238,6 +240,8 @@ __CERT_NewTempCertificate(CERTCertDBHandle *handle, SECItem *derCert,
 	goto loser;
     }
     c->object.trustDomain = STAN_GetDefaultTrustDomain();
+    cc->istemp = PR_TRUE;
+    cc->isperm = PR_FALSE;
     return cc;
 loser:
     nssPKIObject_Destroy(&c->object);
@@ -500,37 +504,37 @@ CERT_DestroyCertificate(CERTCertificate *cert)
 #else
 	if (tmp) {
 	    /* delete the NSSCertificate */
+	    PK11SlotInfo *slot = cert->slot;
+	    PRBool freeSlot = cert->ownSlot;
 	    NSSTrustDomain *td = STAN_GetDefaultTrustDomain();
 	    refCount = (int)tmp->object.refCount;
-	    if (tmp) {
-		/* This is a hack.  For 3.4, there are persistent references
-		 * to 4.0 certificates during the lifetime of a cert.  In the
-		 * case of a temp cert, the persistent reference is in the
-		 * cert store of the global crypto context.  For a perm cert,
-		 * the persistent reference is in the cache.  Thus, the last
-		 * external reference is really the penultimate NSS reference.
-		 * When the count drops to two, it is really one, but the
-		 * persistent reference must be explicitly deleted.  In 4.0,
-		 * this ugliness will not appear.  Crypto contexts will remove
-		 * their own cert references, and the cache will have its
-		 * own management code also.
-		 */
-		if (refCount == 2) {
-		    NSSCryptoContext *cc = tmp->object.cryptoContext;
-		    if (cc != NULL) {
-			nssCertificateStore_Remove(cc->certStore, tmp);
-		    } else {
-			nssTrustDomain_RemoveCertFromCache(td, tmp);
-		    }
-		    refCount = (int)tmp->object.refCount;
+	    /* This is a hack.  For 3.4, there are persistent references
+	     * to 4.0 certificates during the lifetime of a cert.  In the
+	     * case of a temp cert, the persistent reference is in the
+	     * cert store of the global crypto context.  For a perm cert,
+	     * the persistent reference is in the cache.  Thus, the last
+	     * external reference is really the penultimate NSS reference.
+	     * When the count drops to two, it is really one, but the
+	     * persistent reference must be explicitly deleted.  In 4.0,
+	     * this ugliness will not appear.  Crypto contexts will remove
+	     * their own cert references, and the cache will have its
+	     * own management code also.
+	     */
+	    if (refCount == 2) {
+		NSSCryptoContext *cc = tmp->object.cryptoContext;
+		if (cc != NULL) {
+		    nssCertificateStore_Remove(cc->certStore, tmp);
+		} else {
+		    nssTrustDomain_RemoveCertFromCache(td, tmp);
 		}
-		NSSCertificate_Destroy(tmp);
-		/* another hack...  the destroy *must* decrement the count */
-		--refCount;
+		refCount = (int)tmp->object.refCount;
 	    }
-	} else {
-	    refCount = 0;
-	}
+	    NSSCertificate_Destroy(tmp);
+	    /* another hack...  the destroy *must* decrement the count */
+	    if (--refCount == 0) {
+		if (freeSlot) PK11_FreeSlot(slot);
+	    }
+	} 
 #endif
     }
     return;
