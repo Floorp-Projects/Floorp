@@ -160,8 +160,8 @@ sub show_graph {
   }
 
   if (($AVG) and (-e $DATAFILE_AVG)) {
-    #$plot_cmd .= ", \"$DATAFILE_AVG\" using 1:2 with lines ls 3";
-    $plot_cmd .= ", \"$DATAFILE_AVG\" using 1:2 smooth bezier ls 3";
+    $plot_cmd .= ", \"$DATAFILE_AVG\" using 1:2 with lines ls 3";
+    #$plot_cmd .= ", \"$DATAFILE_AVG\" using 1:2 smooth bezier ls 3";
   }
 
   # interpolate params into gnuplot command
