@@ -41,6 +41,7 @@
 #   MOZ_CO_MODULE        - Module to checkout (default: SeaMonkeyEditor)
 #   MOZ_CVS_FLAGS        - Flags to pass cvs (default: -q -z3)
 #   MOZ_CO_FLAGS         - Flags to pass after 'cvs co' (default: -P)
+#   MOZ_MAKE_FLAGS       - Flags to pass to $(MAKE)
 
 CWD		:= $(shell pwd)
 ifeq (mozilla, $(notdir $(CWD)))
@@ -248,6 +249,7 @@ $(OBJDIR)/Makefile $(OBJDIR)/config.status: $(CONFIG_STATUS_DEPS)
 	  $(TOPSRCDIR)/configure \
 	  || ( echo "*** Fix above errors and then restart with\
                \"$(MAKE) -f client.mk build\"" && exit 1 )
+	@touch $(OBJDIR)/Makefile
 
 ifdef CONFIG_STATUS
 $(OBJDIR)/config/autoconf.mk: $(TOPSRCDIR)/config/autoconf.mk.in
@@ -260,13 +262,16 @@ endif
 # Depend
 
 depend: $(OBJDIR)/Makefile $(OBJDIR)/config.status
-	cd $(OBJDIR); $(MAKE) $@;
+	cd $(OBJDIR); $(MAKE) $(MOZ_MAKE_FLAGS) $@;
 
 ####################################
 # Build it
 
 build:  $(OBJDIR)/Makefile $(OBJDIR)/config.status
-	cd $(OBJDIR); $(MAKE);
+	cd $(OBJDIR); \
+	  $(MAKE) $(MOZ_MAKE_FLAGS) export && \
+	  $(MAKE) $(MOZ_MAKE_FLAGS) libs   && \
+	  $(MAKE) $(MOZ_MAKE_FLAGS) install
 
 ####################################
 # Other targets
