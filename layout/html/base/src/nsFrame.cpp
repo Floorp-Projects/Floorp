@@ -358,8 +358,8 @@ nsFrame::RemoveFrame(nsIPresContext& aPresContext,
 NS_IMETHODIMP
 nsFrame::DeleteFrame(nsIPresContext& aPresContext)
 {
-  PRBool isGeneratedContent = (mState & NS_FRAME_GENERATED_CONTENT) == NS_FRAME_GENERATED_CONTENT;
-  if (mState & NS_FRAME_EXTERNAL_REFERENCE || mState & NS_FRAME_SELECTED_CONTENT) {
+  if ((mState & NS_FRAME_EXTERNAL_REFERENCE) ||
+      (mState & NS_FRAME_SELECTED_CONTENT)) {
     nsCOMPtr<nsIPresShell> shell;
     nsresult rv = aPresContext.GetShell(getter_AddRefs(shell));
     if (NS_SUCCEEDED(rv) && shell) {
@@ -1416,7 +1416,7 @@ nsFrame::List(FILE* out, PRInt32 aIndent) const
   if (0 != mState) {
     fprintf(out, " [state=%08x]", mState);
   }
-  fputs("<>\n", out);
+  fputs("\n", out);
   return NS_OK;
 }
 
