@@ -213,6 +213,9 @@ void NS_FreeSVGRendererLibartGlobals();
 void NS_InitSVGRendererGDIPlusGlobals();
 void NS_FreeSVGRendererGDIPlusGlobals();
 #endif
+
+// defined in nsSVGElementFactory.cpp
+extern PRBool SVGEnabled();
 #endif
 
 //-----------------------------------------------------------------------------
@@ -306,6 +309,8 @@ Initialize(nsIModule* aSelf)
 #endif
 
 #ifdef MOZ_SVG
+  if (SVGEnabled())
+    nsContentDLF::RegisterSVG();
   nsSVGAtoms::AddRefAtoms();
 #ifdef MOZ_SVG_RENDERER_LIBART
   NS_InitSVGRendererLibartGlobals();

@@ -41,7 +41,8 @@
 #include "nsIAtom.h"
 #include "nsINodeInfo.h"
 #include "nsSVGAtoms.h"
-
+#include "nsContentDLF.h"
+#include "nsContentUtils.h"
 
 nsresult
 NS_NewSVGPolylineElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
@@ -96,9 +97,45 @@ NS_NewSVGTitleElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
 NS_NewSVGClipPathElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 
+static PRBool gSVGEnabled;
+static const char SVG_PREF_STR[] = "svg.enabled";
+
+PR_STATIC_CALLBACK(int)
+SVGPrefChanged(const char *aPref, void *aClosure)
+{
+  PRBool prefVal = nsContentUtils::GetBoolPref(SVG_PREF_STR);
+  if (prefVal == gSVGEnabled)
+    return 0;
+
+  gSVGEnabled = prefVal;
+  if (gSVGEnabled)
+    nsContentDLF::RegisterSVG();
+  else
+    nsContentDLF::UnregisterSVG();
+
+  return 0;
+}
+
+PRBool
+SVGEnabled()
+{
+  static PRBool sInitialized = PR_FALSE;
+
+  if (sInitialized)
+    return gSVGEnabled;
+
+  gSVGEnabled = nsContentUtils::GetBoolPref(SVG_PREF_STR);
+  nsContentUtils::RegisterPrefCallback(SVG_PREF_STR, SVGPrefChanged, nsnull);
+  sInitialized = PR_TRUE;
+  return gSVGEnabled;
+}
+
 nsresult
 NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
 {
+  if (!SVGEnabled())
+    return NS_NewXMLElement(aResult, aNodeInfo);
+
   nsIAtom *name = aNodeInfo->NameAtom();
   
   if (name == nsSVGAtoms::polyline)

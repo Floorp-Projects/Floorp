@@ -106,7 +106,10 @@ CPPSRCS		= \
 		nsContentDLF.cpp \
 		$(NULL)
 
-EXPORTS		= nsLayoutCID.h
+EXPORTS		= \
+		nsLayoutCID.h \
+		nsContentDLF.h \
+		$(NULL)
 
 SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/$(LIB_PREFIX)gkbase_s.$(LIB_SUFFIX) \
