@@ -102,12 +102,14 @@ static NS_DEFINE_CID(kRDFXMLDataSourceCID,         NS_RDFXMLDATASOURCE_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID,  NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kTextToSubURICID,             NS_TEXTTOSUBURI_CID);
 
-static const char kURINC_SearchEngineRoot[]           = "NC:SearchEngineRoot";
-static const char kURINC_SearchResultsSitesRoot[]     = "NC:SearchResultsSitesRoot";
-static const char kURINC_LastSearchRoot[]             = "NC:LastSearchRoot";
-static const char kURINC_SearchCategoryRoot[]         = "NC:SearchCategoryRoot";
-static const char kURINC_SearchCategoryPrefix[]       = "NC:SearchCategory?category=";
-static const char kURINC_SearchCategoryEnginePrefix[] = "NC:SearchCategory?engine=";
+static const char kURINC_SearchEngineRoot[]                   = "NC:SearchEngineRoot";
+static const char kURINC_SearchResultsSitesRoot[]             = "NC:SearchResultsSitesRoot";
+static const char kURINC_LastSearchRoot[]                     = "NC:LastSearchRoot";
+static const char kURINC_SearchCategoryRoot[]                 = "NC:SearchCategoryRoot";
+static const char kURINC_SearchCategoryPrefix[]               = "NC:SearchCategory?category=";
+static const char kURINC_SearchCategoryEnginePrefix[]         = "NC:SearchCategory?engine=";
+static const char kURINC_SearchCategoryEngineBasenamePrefix[] = "NC:SearchCategory?engine=urn:search:engine:";
+ 
 static const char kURINC_FilterSearchURLsRoot[]       = "NC:FilterSearchURLsRoot";
 static const char kURINC_FilterSearchSitesRoot[]      = "NC:FilterSearchSitesRoot";
 static const char kSearchCommand[]                    = "http://home.netscape.com/NC-rdf#command?";
@@ -470,21 +472,6 @@ InternetSearchDataSource::InternetSearchDataSource(void)
 
 		NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF container utils");
 
-		rv = NS_NewLoadGroup(getter_AddRefs(mLoadGroup), nsnull);
-		PR_ASSERT(NS_SUCCEEDED(rv));
-
-		if (!mTimer)
-		{
-			rv = NS_NewTimer(getter_AddRefs(mTimer));
-			if (mTimer)
-			{
-				mTimer->Init(InternetSearchDataSource::FireTimer, this,
-					SEARCH_UPDATE_TIMEOUT, NS_PRIORITY_LOWEST, NS_TYPE_REPEATING_SLACK);
-				// Note: don't addref "this" as we'll cancel the timer in the
-				//       InternetSearchDataSource destructor
-			}
-		}
-
 		gRDFService->GetResource(kURINC_SearchEngineRoot,                &kNC_SearchEngineRoot);
 		gRDFService->GetResource(kURINC_LastSearchRoot,                  &kNC_LastSearchRoot);
 		gRDFService->GetResource(kURINC_SearchResultsSitesRoot,          &kNC_SearchResultsSitesRoot);
@@ -716,19 +703,22 @@ InternetSearchDataSource::resolveSearchCategoryEngineURI(nsIRDFResource *engine,
 
 	if ((!categoryDataSource) || (!mInner))	return(NS_ERROR_UNEXPECTED);
 
-	nsresult		rv;
-	nsCOMPtr<nsIRDFNode>	catNode;
-	rv = categoryDataSource->GetTarget(engine, kNC_Name, PR_TRUE, getter_AddRefs(catNode));
-	if (NS_FAILED(rv))	return(rv);
+	nsresult	rv;
+	const char	*uriUni = nsnull;
+	if (NS_FAILED(rv = engine->GetValueConst(&uriUni)))	return(rv);
+	if (!uriUni)	return(NS_ERROR_NULL_POINTER);
 
-	nsCOMPtr<nsIRDFLiteral>	catName = do_QueryInterface(catNode);
-	if (!catName)		return(NS_ERROR_UNEXPECTED);
+	nsAutoString		uri(uriUni);
+	if (uri.Find(kURINC_SearchCategoryEngineBasenamePrefix) !=0)	return(NS_ERROR_UNEXPECTED);
+
+	nsCOMPtr<nsIRDFLiteral>	basenameLiteral;
+	if (NS_FAILED(rv = gRDFService->GetLiteral(uri.GetUnicode(),
+			getter_AddRefs(basenameLiteral))))	return(rv);
 
 	nsCOMPtr<nsIRDFResource>	catSrc;
-	rv = mInner->GetSource(kNC_Name, catName, PR_TRUE, getter_AddRefs(catSrc));
+	rv = mInner->GetSource(kNC_URL, basenameLiteral, PR_TRUE, getter_AddRefs(catSrc));
 	if (NS_FAILED(rv))	return(rv);
 	if (!catSrc)		return(NS_ERROR_UNEXPECTED);
-	
 	*trueEngine = catSrc;
 	NS_IF_ADDREF(*trueEngine);
 	return(NS_OK);
@@ -764,7 +754,26 @@ InternetSearchDataSource::Init()
 	if (NS_FAILED(rv = gRDFService->RegisterDataSource(this, PR_FALSE)))
 		return(rv);
 
+	rv = NS_NewLoadGroup(getter_AddRefs(mLoadGroup), nsnull);
+	PR_ASSERT(NS_SUCCEEDED(rv));
+
+	if (!mTimer)
+	{
+		rv = NS_NewTimer(getter_AddRefs(mTimer));
+		if (mTimer)
+		{
+			mTimer->Init(InternetSearchDataSource::FireTimer, this,
+				SEARCH_UPDATE_TIMEOUT, NS_PRIORITY_LOWEST, NS_TYPE_REPEATING_SLACK);
+			// Note: don't addref "this" as we'll cancel the timer in the
+			//       InternetSearchDataSource destructor
+		}
+	}
+
 	mEngineListBuilt = PR_FALSE;
+
+	// we now build up the list of engines immediately, 
+	// but still defer loading in of the contents until needed
+	DeferredInit();
 
 	return(rv);
 }
@@ -788,14 +797,14 @@ InternetSearchDataSource::DeferredInit()
 			
 			// read in category list
 			rv = GetCategoryList();
+		}
 
 #ifdef	XP_MAC
-			// on Mac, use system's search files too
-			nsSpecialSystemDirectory	searchSitesDir(nsSpecialSystemDirectory::Mac_InternetSearchDirectory);
-			nativeDir = searchSitesDir;
-			rv = GetSearchEngineList(nativeDir, PR_TRUE);
+		// on Mac, use system's search files too
+		nsSpecialSystemDirectory	searchSitesDir(nsSpecialSystemDirectory::Mac_InternetSearchDirectory);
+		nativeDir = searchSitesDir;
+		rv = GetSearchEngineList(nativeDir, PR_TRUE);
 #endif
-		}
 	}
 	return(rv);
 }
@@ -942,6 +951,13 @@ InternetSearchDataSource::GetTarget(nsIRDFResource *source,
 			NS_IF_ADDREF(*target);
 			return(rv);
 		}
+	}
+
+	if (isEngineURI(source))
+	{
+		// if we're asking for info on a search engine, (deferred) load it if needed
+		nsAutoString	data;
+		FindData(source, data);
 	}
 
 	if (mInner)
@@ -1256,6 +1272,13 @@ InternetSearchDataSource::ArcLabelsOut(nsIRDFResource *source,
 		rv = resolveSearchCategoryEngineURI(source, getter_AddRefs(trueEngine));
 		if (NS_FAILED(rv) || (!trueEngine))	return(rv);
 		source = trueEngine;
+	}
+
+	if (isEngineURI(source))
+	{
+		// if we're asking for info on a search engine, (deferred) load it if needed
+		nsAutoString	data;
+		FindData(source, data);
 	}
 
 	if (mInner)
@@ -1910,7 +1933,7 @@ InternetSearchDataSource::AddSearchEngine(const char *engineURL, const char *ico
 	if (!iconURL)	return(NS_ERROR_NULL_POINTER);
 	// Note: suggestedTitle & suggestedCategory can be null or empty strings, which is OK
 
-#ifdef	DEBUG
+#ifdef	DEBUG_SEARCH_OUTPUT
 	printf("AddSearchEngine: engine='%s'\n", engineURL);
 	printf("AddSearchEngine:   icon='%s'\n", iconURL);
 #endif
@@ -2035,32 +2058,20 @@ InternetSearchDataSource::saveContents(nsIChannel* channel, nsIInternetSearchCon
 		}
 		outputStream.close();
 
-		// compose appropriate URI for new file
-		const char	*childURL = fileSpec;
-		nsAutoString	uri(childURL);
-
+		// save the file basename
+		nsNativeFileSpec	native(fileSpec);
+		nsAutoString		searchURL;
+		native.GetLeafName(searchURL);
 		if (contextType == nsIInternetSearchContext::ICON_DOWNLOAD_CONTEXT)
 		{
 			// tweak the URI to point to the search engine file, not this icon file
-			if ((extensionOffset = uri.RFindChar(PRUnichar('.'))) > 0)
+			if ((extensionOffset = searchURL.RFindChar(PRUnichar('.'))) > 0)
 			{
-				uri.Truncate(extensionOffset);
-				uri.Append(".src");
+				searchURL.Truncate(extensionOffset);
+				searchURL.Append(".src");
 			}
 		}
-
-		nsAutoString	searchURL(kEngineProtocol);
-		char		*uriC = uri.ToNewCString();
-		if (!uriC)
-			return(NS_ERROR_UNEXPECTED);
-
-		char		*uriCescaped = nsEscape(uriC, url_Path);
-		nsCRT::free(uriC);
-		if (!uriCescaped)
-			return(NS_ERROR_UNEXPECTED);
-
-		searchURL += uriCescaped;
-		nsCRT::free(uriCescaped);
+		searchURL.Insert(kURINC_SearchCategoryEngineBasenamePrefix, 0);
 
 		if (contextType == nsIInternetSearchContext::ENGINE_DOWNLOAD_CONTEXT)
 		{
@@ -2678,6 +2689,10 @@ InternetSearchDataSource::FindData(nsIRDFResource *engine, nsString &data)
 		if (!baseFilename)
 			return(rv);
 
+#ifdef	DEBUG_SEARCH_OUTPUT
+		printf("InternetSearchDataSource::FindData - reading in '%s'\n", baseFilename);
+#endif
+
 		nsFileSpec	engineSpec(baseFilename);
 		rv = ReadFileContents(engineSpec, data);
 
@@ -2697,6 +2712,31 @@ InternetSearchDataSource::FindData(nsIRDFResource *engine, nsString &data)
 				mInner->Assert(engine, kNC_Data, dataLiteral, PR_TRUE);
 			}
 		}
+
+		// save name of search engine (as specified in file)
+		nsAutoString	nameValue;
+		if (NS_SUCCEEDED(rv = GetData(data, "search", 0, "name", nameValue)))
+		{
+			nsCOMPtr<nsIRDFLiteral>	nameLiteral;
+			if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(nameValue.GetUnicode(),
+					getter_AddRefs(nameLiteral))))
+			{
+				mInner->Assert(engine, kNC_Name, nameLiteral, PR_TRUE);
+			}
+		}
+
+		// save description of search engine (if specified)
+		nsAutoString	descValue;
+		if (NS_SUCCEEDED(rv = GetData(data, "search", 0, "description", descValue)))
+		{
+			nsCOMPtr<nsIRDFLiteral>	descLiteral;
+			if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(descValue.GetUnicode(),
+					getter_AddRefs(descLiteral))))
+			{
+				mInner->Assert(engine, kNC_Description, descLiteral, PR_TRUE);
+			}
+		}
+
 	}
 	return(rv);
 }
@@ -3032,7 +3072,7 @@ InternetSearchDataSource::SaveEngineInfoIntoGraph(const nsString &searchURL, con
 			nsCOMPtr<nsIRDFResource>	catRes;
 			if (catURI)
 			{
-				nsAutoString	catList("NC:SearchCategory?category=");
+				nsAutoString	catList(kURINC_SearchCategoryPrefix);
 				catList.Append(catURI);
 				gRDFService->GetUnicodeResource(catList.GetUnicode(), getter_AddRefs(catRes));
 			}
@@ -3054,7 +3094,12 @@ InternetSearchDataSource::SaveEngineInfoIntoGraph(const nsString &searchURL, con
 				}
 				if (NS_SUCCEEDED(rv))
 				{
-					rv = container->AppendElement(searchRes);
+					PRInt32		searchIndex = -1;
+					if (NS_SUCCEEDED(rv = container->IndexOf(searchRes, &searchIndex))
+						&& (searchIndex < 0))
+					{
+						rv = container->AppendElement(searchRes);
+					}
 				}
 				if (NS_SUCCEEDED(rv))
 				{
@@ -3066,6 +3111,20 @@ InternetSearchDataSource::SaveEngineInfoIntoGraph(const nsString &searchURL, con
 						remoteCategoryStore->Flush();
 					}
 				}
+			}
+		}
+
+		// save the basename reference
+		const char	*searchURI = nsnull;
+		searchRes->GetValueConst(&searchURI);
+		if (searchURI)
+		{
+			nsAutoString		searchStr(searchURI);
+			nsCOMPtr<nsIRDFLiteral>	searchLiteral;
+			if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(searchStr.GetUnicode(),
+					getter_AddRefs(searchLiteral))))
+			{
+				mInner->Assert(searchRes, kNC_URL, searchLiteral, PR_TRUE);
 			}
 		}
 
@@ -3104,111 +3163,141 @@ InternetSearchDataSource::GetSearchEngineList(nsFileSpec nativeDir, PRBool check
 		const nsFileSpec	fileSpec = (const nsFileSpec &)i;
 		if (fileSpec.IsHidden())
 		{
+			// Ignore hidden files/directories
 			continue;
 		}
-
-		const char		*childURL = fileSpec;
 
 		if (fileSpec.IsDirectory())
 		{
 			GetSearchEngineList(fileSpec, checkMacFileType);
+			continue;
 		}
-		else
-		if (childURL != nsnull)
+
+		const char	*childURL = fileSpec;
+		if (childURL == nsnull)
 		{
-			nsAutoString	uri(childURL);
-			PRInt32		len = uri.Length();
-			if (len > 4)
+			continue;
+		}
+
+		nsAutoString	uri(childURL);
+		PRInt32		len = uri.Length();
+		if (len < 5)
+		{
+			continue;
+		}
+
+		// check for various icons
+		nsAutoString	iconURL;
+		PRInt32		extensionOffset;
+		extensionOffset = uri.RFind(".src", PR_TRUE);
+		if ((extensionOffset >= 0) && (extensionOffset == len-4))
+		{
+			nsAutoString	temp;
+
+			uri.Left(temp, uri.Length()-4);
+			temp += ".gif";
+			const	nsFileSpec	gifIconFile(temp);
+			if (gifIconFile.IsFile())
 			{
-				// check for various icons
-				nsAutoString	iconURL;
-				PRInt32		extensionOffset;
-				extensionOffset = uri.RFind(".src", PR_TRUE);
-				if ((extensionOffset >= 0) && (extensionOffset == len-4))
-				{
-					nsAutoString	temp;
-
-					uri.Left(temp, uri.Length()-4);
-					temp += ".gif";
-					const	nsFileSpec	gifIconFile(temp);
-					if (gifIconFile.IsFile())
-					{
-						nsFileURL	gifIconFileURL(gifIconFile);
-						iconURL = gifIconFileURL.GetURLString();
-					}
-					uri.Left(temp, uri.Length()-4);
-					temp += ".jpg";
-					const	nsFileSpec	jpgIconFile(temp);
-					if (jpgIconFile.IsFile())
-					{
-						nsFileURL	jpgIconFileURL(jpgIconFile);
-						iconURL = jpgIconFileURL.GetURLString();
-					}
-					uri.Left(temp, uri.Length()-4);
-					temp += ".jpeg";
-					const	nsFileSpec	jpegIconFile(temp);
-					if (jpegIconFile.IsFile())
-					{
-						nsFileURL	jpegIconFileURL(jpegIconFile);
-						iconURL = jpegIconFileURL.GetURLString();
-					}
-					uri.Left(temp, uri.Length()-4);
-					temp += ".png";
-					const	nsFileSpec	pngIconFile(temp);
-					if (pngIconFile.IsFile())
-					{
-						nsFileURL	pngIconFileURL(pngIconFile);
-						iconURL = pngIconFileURL.GetURLString();
-					}
-				}
-
-#ifdef	XP_MAC
-				if (checkMacFileType == PR_TRUE)
-				{
-					CInfoPBRec	cInfo;
-					OSErr		err;
-
-					err = fileSpec.GetCatInfo(cInfo);
-					if ((err) || (cInfo.hFileInfo.ioFlFndrInfo.fdType != 'issp') ||
-						(cInfo.hFileInfo.ioFlFndrInfo.fdCreator != 'fndf'))
-						continue;
-				}
-#endif
-
-				// check the extension
-				nsAutoString	extension;
-				if ((uri.Right(extension, 4) == 4) && (extension.EqualsIgnoreCase(".src")))
-				{
-					char	c;
-#ifdef	XP_WIN
-					c = '\\';
-#elif	XP_MAC
-					c = ':';
-#else
-					c = '/';
-#endif
-					PRInt32	separatorOffset = uri.RFindChar(PRUnichar(c));
-					if (separatorOffset > 0)
-					{
-						nsAutoString	searchURL(kEngineProtocol);
-
-						char		*uriC = uri.ToNewCString();
-						if (!uriC)	continue;
-						char		*uriCescaped = nsEscape(uriC, url_Path);
-						nsCRT::free(uriC);
-						if (!uriCescaped)	continue;
-						searchURL += uriCescaped;
-						nsCRT::free(uriCescaped);
-
-						nsAutoString	data;
-						rv = ReadFileContents(fileSpec, data);
-						if (NS_FAILED(rv))	continue;
-						rv = SaveEngineInfoIntoGraph(searchURL, nsnull, iconURL, data, checkMacFileType);
-						if (NS_FAILED(rv))	continue;
-					}
-				}
+				nsFileURL	gifIconFileURL(gifIconFile);
+				iconURL = gifIconFileURL.GetURLString();
+			}
+			uri.Left(temp, uri.Length()-4);
+			temp += ".jpg";
+			const	nsFileSpec	jpgIconFile(temp);
+			if (jpgIconFile.IsFile())
+			{
+				nsFileURL	jpgIconFileURL(jpgIconFile);
+				iconURL = jpgIconFileURL.GetURLString();
+			}
+			uri.Left(temp, uri.Length()-4);
+			temp += ".jpeg";
+			const	nsFileSpec	jpegIconFile(temp);
+			if (jpegIconFile.IsFile())
+			{
+				nsFileURL	jpegIconFileURL(jpegIconFile);
+				iconURL = jpegIconFileURL.GetURLString();
+			}
+			uri.Left(temp, uri.Length()-4);
+			temp += ".png";
+			const	nsFileSpec	pngIconFile(temp);
+			if (pngIconFile.IsFile())
+			{
+				nsFileURL	pngIconFileURL(pngIconFile);
+				iconURL = pngIconFileURL.GetURLString();
 			}
 		}
+
+#ifdef	XP_MAC
+		if (checkMacFileType == PR_TRUE)
+		{
+			CInfoPBRec	cInfo;
+			OSErr		err;
+
+			err = fileSpec.GetCatInfo(cInfo);
+			if ((err) || (cInfo.hFileInfo.ioFlFndrInfo.fdType != 'issp') ||
+				(cInfo.hFileInfo.ioFlFndrInfo.fdCreator != 'fndf'))
+			{
+				continue;
+			}
+		}
+#endif
+
+		// check the extension (must be ".src")
+		nsAutoString	extension;
+		if ((uri.Right(extension, 4) != 4) || (!extension.EqualsIgnoreCase(".src")))
+		{
+			continue;
+		}
+
+		nsAutoString	searchURL(kEngineProtocol);
+
+		char		*uriC = uri.ToNewCString();
+		if (!uriC)
+		{
+			continue;
+		}
+		char		*uriCescaped = nsEscape(uriC, url_Path);
+		nsCRT::free(uriC);
+		if (!uriCescaped)
+		{
+			continue;
+		}
+		searchURL += uriCescaped;
+		nsCRT::free(uriCescaped);
+
+		nsCOMPtr<nsIRDFResource>	searchRes;
+		if (NS_FAILED(rv = gRDFService->GetUnicodeResource(searchURL.GetUnicode(),
+			getter_AddRefs(searchRes))))
+		{
+			continue;
+		}
+
+		// save icon url (if we have one)
+		if (iconURL.Length() > 0)
+		{
+			nsCOMPtr<nsIRDFLiteral>	iconLiteral;
+			if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(iconURL.GetUnicode(),
+					getter_AddRefs(iconLiteral))))
+			{
+				mInner->Assert(searchRes, kNC_Icon, iconLiteral, PR_TRUE);
+			}
+		}
+
+		// save the file basename
+		nsNativeFileSpec	native(fileSpec);
+		nsAutoString		basename;
+		native.GetLeafName(basename);
+		basename.Insert(kURINC_SearchCategoryEngineBasenamePrefix, 0);
+		nsCOMPtr<nsIRDFLiteral>	basenameLiteral;
+		if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(basename.GetUnicode(),
+				getter_AddRefs(basenameLiteral))))
+		{
+			mInner->Assert(searchRes, kNC_URL, basenameLiteral, PR_TRUE);
+		}
+
+		// Note: add the child relationship last
+		mInner->Assert(kNC_SearchEngineRoot, kNC_Child, searchRes, PR_TRUE);
 	}
 	return(rv);
 }
