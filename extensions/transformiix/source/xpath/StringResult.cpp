@@ -66,7 +66,7 @@ void StringResult::stringValue(String& str)  {
 } //-- stringValue
 
 MBool StringResult::booleanValue() {
-   return (MBool)(this->value.length());
+   return value.length() > 0;
 } //-- booleanValue
 
 double StringResult::numberValue() {

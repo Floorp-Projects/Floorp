@@ -93,10 +93,10 @@ MBool BasicNodeExpr::matches(Node* node, Node* context, ContextState* cs) {
             return (MBool)(node->getNodeType() == Node::PROCESSING_INSTRUCTION_NODE &&
                             !nodeNameSet || nodeName.isEqual(node->getNodeName()));
         default: //-- node()
-            if (node->getNodeType() == Node::TEXT_NODE)
+            if (node->getNodeType() == Node::TEXT_NODE ||
+                node->getNodeType() == Node::CDATA_SECTION_NODE)
                 return !cs->isStripSpaceAllowed(node);
             return MB_TRUE;
-            break;
     }
     return MB_TRUE;
 } //-- matches

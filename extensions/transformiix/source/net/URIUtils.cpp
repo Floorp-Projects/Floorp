@@ -85,36 +85,12 @@ istream* URIUtils::getInputStream
     return inStream;
 
 } //-- getInputStream
-#endif
 
 /**
     * Returns the document base of the href argument
     * @return the document base of the given href
 **/
 void URIUtils::getDocumentBase(const String& href, String& dest) {
-#ifndef TX_EXE
-    String docBase("");
-    nsCOMPtr<nsIURI> pURL;
-    nsresult result = NS_OK;
-
-    nsCOMPtr<nsIIOService> pService(do_GetService(NS_IOSERVICE_CONTRACTID,
-                                                  &result));
-    if (NS_SUCCEEDED(result)) {
-        // XXX This is ugly, there must be an easier (cleaner way).
-        char *uriStr = (((String)href).getConstNSString()).ToNewCString();
-        result = pService->NewURI(uriStr, nsnull, getter_AddRefs(pURL));
-        nsCRT::free(uriStr);
-        if (NS_SUCCEEDED(result)) {
-            nsCOMPtr<nsIURL> tURL = do_QueryInterface(pURL);
-            nsXPIDLCString temp;
-
-            tURL->SetFileName("");
-            tURL->GetSpec(getter_Copies(temp));
-            docBase = (const char *)temp;
-        }
-    }
-    dest.append(docBase);
-#else
     //-- use temp str so the subString method doesn't destroy dest
     String docBase("");
 
@@ -138,8 +114,8 @@ void URIUtils::getDocumentBase(const String& href, String& dest) {
         delete uri;
     }
     dest.append(docBase);
-#endif
 } //-- getDocumentBase
+#endif
 
 /**
  * Resolves the given href argument, using the given documentBase

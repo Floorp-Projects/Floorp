@@ -960,7 +960,8 @@ void XSLTProcessor::processAction
     short nodeType = xslAction->getNodeType();
 
     //-- handle text nodes
-    if (nodeType == Node::TEXT_NODE) {
+    if (nodeType == Node::TEXT_NODE ||
+        nodeType == Node::CDATA_SECTION_NODE) {
         String textValue;
         if ( ps->isXSLStripSpaceAllowed(xslAction) ) {
             //-- strip whitespace
@@ -968,7 +969,7 @@ void XSLTProcessor::processAction
             //-- I was thinking about removing whitespace while reading in the
             //-- XSL document, but this won't handle the case of Dynamic XSL
             //-- documents
-            const String curValue = ((Text*)xslAction)->getData();
+            const String curValue = xslAction->getNodeValue();
 
             //-- set leading + trailing whitespace stripping flags
             #ifdef DEBUG_ah
@@ -984,7 +985,7 @@ void XSLTProcessor::processAction
             else textValue=curValue;
         }
         else {
-            textValue = ((Text*)xslAction)->getData();
+            textValue = xslAction->getNodeValue();
         }
         //-- create new text node and add it to the result tree
         //-- if necessary
@@ -1131,6 +1132,7 @@ void XSLTProcessor::processAction
                 else {
                     notifyError("missing required name attribute for xsl:call-template");
                 }
+                break;
             }
             // xsl:if
             case XSLType::CHOOSE :
@@ -1249,7 +1251,11 @@ void XSLTProcessor::processAction
             {
                 String selectAtt  = actionElement->getAttribute(SELECT_ATTR);
 
-                if ( selectAtt.length() == 0 ) selectAtt = "*"; //-- default
+                if (selectAtt.length() == 0)
+                {
+                    notifyError("missing required select attribute for xsl:for-each");
+                    break;
+                }
 
                 pExpr = ps->getPatternExpr(selectAtt);
 
@@ -1816,8 +1822,10 @@ void XSLTProcessor::processTemplateParams
                 }
                 else break;
             }
-            else if (nodeType == Node::TEXT_NODE) {
-                if (!XMLUtils::isWhitespace(((Text*)tmpNode)->getData())) break;
+            else if (nodeType == Node::TEXT_NODE ||
+                     nodeType == Node::CDATA_SECTION_NODE) {
+                if (!XMLUtils::isWhitespace(tmpNode->getNodeValue()))
+                    break;
             }
             tmpNode = tmpNode->getNextSibling();
         }

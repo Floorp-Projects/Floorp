@@ -804,6 +804,7 @@ MBool ProcessorState::isStripSpaceAllowed(Node* node) {
             break;
         }
         case Node::TEXT_NODE:
+        case Node::CDATA_SECTION_NODE:
             if (!XMLUtils::shouldStripTextnode(node->getNodeValue()))
                 return MB_FALSE;
             return isStripSpaceAllowed(node->getParentNode());
@@ -954,6 +955,7 @@ ProcessorState::XMLSpaceMode ProcessorState::getXMLSpaceMode(Node* node) {
                 break;
             }
             case Node::TEXT_NODE:
+            case Node::CDATA_SECTION_NODE:
                 //-- we will only see this the first time through the loop
                 //-- if the argument node is a text node
                 break;

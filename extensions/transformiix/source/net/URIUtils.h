@@ -53,6 +53,7 @@ class URIUtils {
 
 public:
 
+#ifdef TX_EXE
     static const String HTTP_PROTOCOL;
     static const String FILE_PROTOCOL;
 
@@ -85,6 +86,7 @@ public:
      * The document base will be appended to the given dest String
     **/
     static void getDocumentBase(const String& href, String& dest);
+#endif
 
     /**
      * Resolves the given href argument, using the given documentBase
@@ -108,6 +110,7 @@ public:
 
 private:
 
+#ifdef TX_EXE
     static const short PROTOCOL_MODE;
     static const short HOST_MODE;
     static const short PORT_MODE;
@@ -124,8 +127,7 @@ private:
 
     static istream* openStream(ParsedURI* uri);
     static ParsedURI* parseURI(const String& uri);
-
-
+#endif
 
 }; //-- URIUtils
 
