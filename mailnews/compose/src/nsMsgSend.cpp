@@ -2754,8 +2754,15 @@ nsMsgComposeAndSend::DoFcc()
     // If we hit here, the copy operation FAILED and we should at least tell the
     // user that it did fail but the send operation has already succeeded.
     //
-    PRUnichar  *eMsg = ComposeGetStringByID(rv);
-    Fail(rv, eMsg);
+    PRBool oopsGiveMeBackTheComposeWindow = PR_FALSE;
+
+    PRUnichar  *eMsg = ComposeGetStringByID(NS_MSG_FAILED_COPY_OPERATION);
+    Fail(NS_ERROR_BUT_DONT_SHOW_ALERT, eMsg);
+
+    nsMsgAskBooleanQuestionByString(eMsg, &oopsGiveMeBackTheComposeWindow);
+    if (!oopsGiveMeBackTheComposeWindow)
+    	rv = NS_OK;
+
     NotifyListenersOnStopCopy(rv);
 	nsCRT::free(eMsg);
   }
@@ -3390,9 +3397,11 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
   // First, we we need to put a Berkeley "From - " delimiter at the head of 
   // the file for parsing...
   //
-  turi = GetFolderURIFromUserPrefs(mode, mUserIdentity);
+  if (mode == nsMsgDeliverNow && fcc_header)
+  	turi = PL_strdup(fcc_header);
+  else
+  	turi = GetFolderURIFromUserPrefs(mode, mUserIdentity);
   status = MessageFolderIsLocal(mUserIdentity, mode, turi, &folderIsLocal);
-  PR_FREEIF(turi);
   if (NS_FAILED(status)) { goto FAIL; }
 
   if ( (envelopeLine) && (folderIsLocal) )
@@ -3649,18 +3658,15 @@ FAIL:
   // If we weren't successful, then we should just return the error and 
   // bail out.
   //
-  if (NS_FAILED(status))
+	if (NS_SUCCEEDED(status))
 	{
-	  // Fail, and return...
-	  return status;
+		//
+		// If we are here, time to start the async copy service operation!
+		//
+		status = StartMessageCopyOperation(mCopyFileSpec, mode, turi);
 	}
-  else
-	{
-	  //
-    // If we are here, time to start the async copy service operation!
-    //
-    return StartMessageCopyOperation(mCopyFileSpec, mode);
-	}
+	PR_FREEIF(turi);
+	return status;
 }
 
 //
@@ -3669,7 +3675,8 @@ FAIL:
 //
 nsresult 
 nsMsgComposeAndSend::StartMessageCopyOperation(nsIFileSpec        *aFileSpec, 
-                                               nsMsgDeliverMode   mode)
+                                               nsMsgDeliverMode   mode,
+                                               char          	  *dest_uri)
 {
   char        *uri = nsnull;
 
@@ -3683,7 +3690,10 @@ nsMsgComposeAndSend::StartMessageCopyOperation(nsIFileSpec        *aFileSpec,
   //
   nsresult    rv;
 
-  uri = GetFolderURIFromUserPrefs(mode, mUserIdentity);
+  if (dest_uri && *dest_uri)
+  	uri = PL_strdup(dest_uri);
+  else
+  	uri = GetFolderURIFromUserPrefs(mode, mUserIdentity);
   rv = mCopyObj->StartCopyOperation(mUserIdentity, aFileSpec, mode, 
                                     this, uri, mMsgToReplace);
   PR_FREEIF(uri);

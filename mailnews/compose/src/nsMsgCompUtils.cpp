@@ -2073,7 +2073,12 @@ GetFolderURIFromUserPrefs(nsMsgDeliverMode   aMode,
   }
   else 
   {
-    rv = identity->GetFccFolder(&uri);
+  	PRBool doFcc = PR_FALSE;
+    rv = identity->GetDoFcc(&doFcc);
+    if (doFcc)
+    	rv = identity->GetFccFolder(&uri);
+    else
+    	uri = PL_strdup("");
   }
 
   return uri;

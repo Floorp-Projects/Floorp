@@ -65,8 +65,8 @@ ComposeGetStringByID(PRInt32 stringID)
 
 			if (NS_FAILED(res)) 
 			{
-				resultString = "[StringID";
-				resultString.Append(stringID, 10);
+				resultString = "[StringID(hex)=";
+				resultString.Append(stringID, 16);
 				resultString += "?]";
 				return resultString.ToNewUnicode();
 			}

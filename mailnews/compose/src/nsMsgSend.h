@@ -194,7 +194,8 @@ public:
 
   nsresult    DoFcc();
   nsresult    StartMessageCopyOperation(nsIFileSpec        *aFileSpec, 
-                                        nsMsgDeliverMode   mode);
+                                        nsMsgDeliverMode   mode,
+                                        char			   *dest_uri);
 
   void	      Clear();
   void	      Fail(nsresult failure_code, const PRUnichar * error_msg);
