@@ -486,6 +486,53 @@ SelectionCollapseToEnd(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 
 
 //
+// Native method SelectAllChildren
+//
+PR_STATIC_CALLBACK(JSBool)
+SelectionSelectAllChildren(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMSelection *nativeThis = (nsIDOMSelection*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
+  nsCOMPtr<nsIDOMNode> b0;
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_SELECTION_SELECTALLCHILDREN, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+    if (argc < 1) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+    }
+
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
+                                           kINodeIID,
+                                           NS_ConvertASCIItoUCS2("Node"),
+                                           cx,
+                                           argv[0])) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
+    }
+
+    result = nativeThis->SelectAllChildren(b0);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method ContainsNode
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -1005,6 +1052,7 @@ static JSFunctionSpec SelectionMethods[] =
   {"extend",          SelectionExtend,     2},
   {"collapseToStart",          SelectionCollapseToStart,     0},
   {"collapseToEnd",          SelectionCollapseToEnd,     0},
+  {"selectAllChildren",          SelectionSelectAllChildren,     1},
   {"containsNode",          SelectionContainsNode,     2},
   {"deleteFromDocument",          SelectionDeleteFromDocument,     0},
   {"addRange",          SelectionAddRange,     1},

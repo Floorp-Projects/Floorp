@@ -251,7 +251,6 @@ private:
   nsFormFrame *mFormFrame;
   nsTextInputSelectionImpl *mTextSelImpl;
   nsTextInputListener *mTextListener;
-
 };
 
 #endif

@@ -296,8 +296,7 @@ nsTextInputListener::KeyPress(nsIDOMEvent* aKeyEvent)
 
 //END KeyListener
 
-//BEGIN NS_IDOMSELECITONLISTENER
-
+//BEGIN NS_IDOMSELECTIONLISTENER
 
 NS_IMETHODIMP
 nsTextInputListener::NotifySelectionChanged(nsIDOMDocument* aDoc, nsIDOMSelection* aSel, PRInt16 aReason)
@@ -309,31 +308,39 @@ nsTextInputListener::NotifySelectionChanged(nsIDOMDocument* aDoc, nsIDOMSelectio
   // Fire the select event
   // The specs don't exactly say when we should fire the select event.
   // IE: Whenever you add/remove a character to/from the selection. Also
-  //     if you get to the end of the text field you will get new event for each
-  //     keypress or a continuous stream of events if you use the mouse. IE will
-  //     fire select event when the selection collapses to nothing if you are holding down
+  //     each time for select all. Also if you get to the end of the text 
+  //     field you will get new event for each keypress or a continuous 
+  //     stream of events if you use the mouse. IE will fire select event 
+  //     when the selection collapses to nothing if you are holding down
   //     the shift or mouse button.
   // Mozilla: If we have non-empty selection we will fire a new event for each
-  //          keypress (or mouseup) if the selection changed. Mozilla will never 
-  //          create an event if the selection collapses to nothing.
-  if (!collapsed && ((aReason & MOUSEUP_REASON) || (aReason & KEYPRESS_REASON))) {
+  //          keypress (or mouseup) if the selection changed. Mozilla will also
+  //          create the event each time select all is called, even if everything
+  //          was previously selected, becase technically select all will first collapse
+  //          and then extend. Mozilla will never create an event if the selection 
+  //          collapses to nothing.
+  if (!collapsed && (aReason & (nsIDOMSelectionListener::MOUSEUP_REASON | 
+                                nsIDOMSelectionListener::KEYPRESS_REASON |
+                                nsIDOMSelectionListener::SELECTALL_REASON)))
+  {
     nsCOMPtr<nsIContent> content;
     mFrame->GetFormContent(*getter_AddRefs(content));
-    if (content) {
-      nsEventStatus status = nsEventStatus_eIgnore;
-      nsEvent event;
-      event.eventStructType = NS_EVENT;
-      event.message = NS_FORM_SELECTED;
-
+    if (content) 
+    {
       nsCOMPtr<nsIDocument> doc;
-      if (NS_SUCCEEDED(content->GetDocument(*getter_AddRefs(doc)))) {
-        if (doc) {
+      if (NS_SUCCEEDED(content->GetDocument(*getter_AddRefs(doc)))) 
+      {
+        if (doc) 
+        {
           nsCOMPtr<nsIPresShell> presShell = dont_AddRef(doc->GetShellAt(0));
-          if (presShell) {
-            nsCOMPtr<nsIPresContext> context;
-            if (NS_SUCCEEDED(presShell->GetPresContext(getter_AddRefs(context)))&& context) {
-              content->HandleDOMEvent(context, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
-            }
+          if (presShell) 
+          {
+            nsEventStatus status = nsEventStatus_eIgnore;
+            nsEvent event;
+            event.eventStructType = NS_EVENT;
+            event.message = NS_FORM_SELECTED;
+
+            presShell->HandleEventWithTarget(&event,mFrame,content,&status);
           }
         }
       }
@@ -343,7 +350,7 @@ nsTextInputListener::NotifySelectionChanged(nsIDOMDocument* aDoc, nsIDOMSelectio
   // if the collapsed state did not change, don't fire notifications
   if (mKnowSelectionCollapsed && collapsed == mSelectionWasCollapsed)
     return NS_OK;
-    
+  
   mSelectionWasCollapsed = collapsed;
   mKnowSelectionCollapsed = PR_TRUE;
 

@@ -136,6 +136,7 @@ public:
   NS_IMETHOD    Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset);
   NS_IMETHOD    CollapseToStart();
   NS_IMETHOD    CollapseToEnd();
+	NS_IMETHOD    SelectAllChildren(nsIDOMNode* parentNode);
   NS_IMETHOD    Extend(nsIDOMNode* aParentNode, PRInt32 aOffset);
   NS_IMETHOD    ContainsNode(nsIDOMNode* aNode, PRBool aRecursive, PRBool* aAYes);
   NS_IMETHOD    DeleteFromDocument();
@@ -1468,14 +1469,12 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aA
     case nsIDOMKeyEvent::DOM_VK_HOME :
         InvalidateDesiredX();
         pos.mAmount = eSelectBeginLine;
-        InvalidateDesiredX();
         mHint = HINTRIGHT;//stick to opposite of movement
         PostReason(nsIDOMSelectionListener::KEYPRESS_REASON);
       break;
     case nsIDOMKeyEvent::DOM_VK_END :
         InvalidateDesiredX();
         pos.mAmount = eSelectEndLine;
-        InvalidateDesiredX();
         mHint = HINTLEFT;//stick to this line
         PostReason(nsIDOMSelectionListener::KEYPRESS_REASON);
      break;
@@ -1626,7 +1625,6 @@ nsDOMSelection::GetHint(PRBool *aHintRight)
     *aHintRight = PR_FALSE;
   return rv;
 }
-
 
 NS_IMETHODIMP
 nsSelection::HandleClick(nsIContent *aNewFocus, PRUint32 aContentOffset, 
@@ -5518,6 +5516,45 @@ nsDOMSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
   if (!mFrameSelection)
     return NS_OK;//nothing to do
   return mFrameSelection->NotifySelectionListeners(GetType());
+}
+
+static inline nsresult GetChildOffset(nsIDOMNode *aChild, nsIDOMNode *aParent, PRInt32 &aOffset)
+{
+  NS_ASSERTION((aChild && aParent), "bad args");
+  if (!aChild || !aParent) return NS_ERROR_NULL_POINTER;
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aParent);
+  nsCOMPtr<nsIContent> cChild = do_QueryInterface(aChild);
+  if (!cChild || !content) return NS_ERROR_NULL_POINTER;
+  nsresult res = content->IndexOf(cChild, aOffset);
+  return res;
+}
+
+NS_IMETHODIMP
+nsDOMSelection::SelectAllChildren(nsIDOMNode* aParentNode)
+{
+  NS_ENSURE_ARG_POINTER(aParentNode);
+  
+  if (mFrameSelection) 
+  {
+    mFrameSelection->PostReason(nsIDOMSelectionListener::SELECTALL_REASON);
+  }
+  nsresult result = Collapse(aParentNode, 0);
+  if (NS_SUCCEEDED(result))
+  {
+    nsCOMPtr<nsIDOMNode>lastChild;
+    result = aParentNode->GetLastChild(getter_AddRefs(lastChild));
+    if ((NS_SUCCEEDED(result)) && lastChild)
+    {
+      PRInt32 numBodyChildren=0;
+      GetChildOffset(lastChild, aParentNode, numBodyChildren);
+      if (mFrameSelection) 
+      {
+        mFrameSelection->PostReason(nsIDOMSelectionListener::SELECTALL_REASON);
+      }
+      result = Extend(aParentNode, numBodyChildren+1);
+    }
+  }
+  return result;
 }
 
 NS_IMETHODIMP

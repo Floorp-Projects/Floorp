@@ -2991,18 +2991,7 @@ NS_IMETHODIMP nsEditor::SelectEntireDocument(nsIDOMSelection *aSelection)
     nsCOMPtr<nsIDOMNode>bodyNode = do_QueryInterface(bodyElement);
     if (bodyNode)
     {
-      result = aSelection->Collapse(bodyNode, 0);
-      if (NS_SUCCEEDED(result))
-      {
-        PRInt32 numBodyChildren=0;
-        nsCOMPtr<nsIDOMNode>lastChild;
-        result = bodyNode->GetLastChild(getter_AddRefs(lastChild));
-        if ((NS_SUCCEEDED(result)) && lastChild)
-        {
-          GetChildOffset(lastChild, bodyNode, numBodyChildren);
-          result = aSelection->Extend(bodyNode, numBodyChildren+1);
-        }
-      }
+      result = aSelection->SelectAllChildren(bodyNode);
     }
     else {
       return NS_ERROR_NO_INTERFACE;
