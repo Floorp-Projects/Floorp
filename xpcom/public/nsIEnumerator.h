@@ -21,11 +21,13 @@
 
 #include "nsISupports.h"
 
-// {646F4FB0-B1F2-11d1-AA29-000000000000}
-#define NS_IENUMERATOR_IID \
-{0x646f4fb0, 0xb1f2, 0x11d1, \
-    { 0xaa, 0x29, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 } }
-
+#define NS_IENUMERATOR_IID                           \
+{ /* ad385286-cbc4-11d2-8cca-0060b0fc14a3 */         \
+    0xad385286,                                      \
+    0xcbc4,                                          \
+    0x11d2,                                          \
+    {0x8c, 0xca, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
+}
 
 class nsIEnumerator : public nsISupports {
 public:
