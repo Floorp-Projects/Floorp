@@ -33,6 +33,7 @@
 #include "nsIStreamConverterService.h"
 #include "nsIStreamConverter.h"
 #include "nsRepository.h"
+#include "nsIByteArrayInputStream.h"
 
 #include "nsHTTPAtoms.h"
 #include "nsIHttpNotify.h"
@@ -242,6 +243,7 @@ nsHTTPServerListener::nsHTTPServerListener(nsHTTPChannel* aChannel, nsHTTPHandle
                       mResponse(nsnull),
                       mFirstLineParsed(PR_FALSE),
                       mHeadersDone(PR_FALSE),
+                      mSimpleResponse (PR_FALSE),
                       mBytesReceived(0),
                       mBodyBytesReceived (0),
                       mCompressHeaderChecked (PR_FALSE),
@@ -426,6 +428,22 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
         mBytesReceived += i_Length;
         mDataStream = i_pStream;
     } else {
+
+        if (mSimpleResponse && mHeaderBuffer.Length ())
+        {
+
+            const char * cp = mHeaderBuffer.GetBuffer ();
+            nsCOMPtr<nsIByteArrayInputStream>   is;
+
+            nsresult rv1 = 
+                NS_NewByteArrayInputStream (getter_AddRefs (is), strdup (cp), mHeaderBuffer.Length ());            
+            
+            if (NS_SUCCEEDED (rv1))
+                mResponseDataListener -> OnDataAvailable (mChannel, 
+                        mChannel -> mResponseContext, is, 0, mHeaderBuffer.Length ());
+            
+            mSimpleResponse = PR_FALSE;
+        }
 
         //
         // Abort the connection if the consumer has been released.  This will 
@@ -882,6 +900,23 @@ nsresult nsHTTPServerListener::ParseStatusLine(nsIBufferInputStream* in,
   if (NS_FAILED(rv)) return rv;
 
   *aBytesRead += actualBytesRead;
+
+  PRUint32 bL = mHeaderBuffer.Length ();
+
+  if (bL > 0
+      && PL_strncmp (mHeaderBuffer, "HTTP/", bL > 5 ? 5 : bL))
+  {
+      // this is simple http response
+      mSimpleResponse = PR_TRUE;
+      mHeadersDone    = PR_TRUE;
+      mFirstLineParsed= PR_TRUE;
+
+      mResponse -> SetStatus (200);
+      mResponse -> SetServerVersion ("HTTP/1.0" );
+      mResponse -> SetContentType   ("text/html");
+
+      return NS_OK;
+  }
 
   // Wait for more data to arrive before processing the header...
   if (!bFoundString) return NS_OK;

@@ -117,6 +117,7 @@ protected:
     nsHTTPResponse*             mResponse;
     PRBool                      mFirstLineParsed;
     PRBool                      mHeadersDone;
+    PRBool                      mSimpleResponse;
 
     nsCOMPtr<nsIInputStream>    mDataStream;
     PRUint32                    mBytesReceived; 
