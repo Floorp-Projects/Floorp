@@ -89,7 +89,7 @@ FixedTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
   }
   nsCRT::memset(propInfo, 0, numCols*sizeof(nscoord));
   nscoord propTotal = 0;
-
+  nscoord percTotal = 0;
   // for every column, determine its specified width
   for (colX = 0; colX < numCols; colX++) { 
     // Get column information
@@ -106,12 +106,15 @@ FixedTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
     // get the fixed width if available
     if (eStyleUnit_Coord == colPosition->mWidth.GetUnit()) { 
       colWidths[colX] = colPosition->mWidth.GetCoordValue();
+      colFrame->SetWidth(MIN_CON, colWidths[colX]);
     } // get the percentage width
     else if ((eStyleUnit_Percent == colPosition->mWidth.GetUnit()) &&
              (aComputedWidth != NS_UNCONSTRAINEDSIZE)) { 
       // Only apply percentages if we're constrained.
       float percent = colPosition->mWidth.GetPercentValue();
       colWidths[colX] = nsTableFrame::RoundToPixel(NSToCoordRound(percent * (float)availWidth), aPixelToTwips); 
+      colFrame->SetWidth(PCT, colWidths[colX]);
+      percTotal+=colWidths[colX];
     }
     else if (eStyleUnit_Proportional == colPosition->mWidth.GetUnit() &&
       colPosition->mWidth.GetIntValue() > 0) {
@@ -130,11 +133,14 @@ FixedTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
         // Get fixed cell width if available
         if (eStyleUnit_Coord == cellPosition->mWidth.GetUnit()) {
           colWidths[colX] = cellPosition->mWidth.GetCoordValue() / colSpan;
+                 colFrame->SetWidth(MIN_CON, colWidths[colX]);
         }
         else if ((eStyleUnit_Percent == cellPosition->mWidth.GetUnit()) &&
                  (aComputedWidth != NS_UNCONSTRAINEDSIZE)) {
           float percent = cellPosition->mWidth.GetPercentValue();
           colWidths[colX] = nsTableFrame::RoundToPixel(NSToCoordRound(percent * (float)availWidth / (float)colSpan), aPixelToTwips); 
+          colFrame->SetWidth(PCT, colWidths[colX]);
+          percTotal += colWidths[colX];
         }
       }
     }
@@ -146,6 +152,8 @@ FixedTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
  
   nscoord lastColAllocated = -1;
   nscoord remainingWidth = availWidth - totalColWidth;
+  if(availWidth == NS_UNCONSTRAINEDSIZE)
+    remainingWidth = 0; 
   if (remainingWidth >= 500000) {
     // let's put a cap on the width so that it doesn't become insane.
     remainingWidth = 100;
@@ -189,7 +197,7 @@ FixedTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
     }
   }
 
-  nscoord overAllocation = (availWidth >= 0) 
+  nscoord overAllocation = ((availWidth >= 0) && (availWidth != NS_UNCONSTRAINEDSIZE))  
     ? totalColWidth - availWidth : 0;
   // set the column widths
   for (colX = 0; colX < numCols; colX++) {
@@ -197,9 +205,26 @@ FixedTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
       colWidths[colX] = 0;
     // if there was too much allocated due to rounding, remove it from the last col
     if ((colX == lastColAllocated) && (overAllocation != 0)) {
-      colWidths[colX] += overAllocation;
+      colWidths[colX] -= overAllocation;
+      totalColWidth -= colWidths[colX] - PR_MAX(0, colWidths[colX]);
       colWidths[colX] = PR_MAX(0, colWidths[colX]);
     }
+  }
+  overAllocation = ((availWidth >= 0) && (availWidth != NS_UNCONSTRAINEDSIZE))  
+    ? totalColWidth - availWidth : 0;
+  if(overAllocation > 0){
+    // reduce over specified percent col
+    for (colX = 0; colX < numCols; colX++) {
+      nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX);
+      if(( colFrame->GetWidth(PCT) > 0) && ( percTotal > 0)){
+        colWidths[colX] -= nsTableFrame::RoundToPixel(NSToCoordRound(overAllocation* colWidths[colX] / (float) percTotal), aPixelToTwips);
+        totalColWidth -= colWidths[colX] - PR_MAX(0, colWidths[colX]);
+      colWidths[colX] = PR_MAX(0, colWidths[colX]);
+        colFrame->SetWidth(PCT, colWidths[colX]);
+         }
+    }
+  }
+  for (colX = 0; colX < numCols; colX++) {
     mTableFrame->SetColumnWidth(colX, colWidths[colX]);
   }
 
