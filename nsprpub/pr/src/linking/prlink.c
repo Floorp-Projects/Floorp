@@ -542,34 +542,21 @@ PR_LoadLibrary(const char *name)
     return PR_LoadLibraryWithFlags(libSpec, 0);
 }
 
-#if TARGET_CARBON
-
-/*
-** Returns a CFBundleRef if the FSSpec refers to a Mac OS X bundle directory.
-** The caller is responsible for calling CFRelease() to deallocate.
-*/
-static CFBundleRef getLibraryBundle(const FSSpec* spec)
+#if defined(USE_MACH_DYLD)
+static NSModule
+pr_LoadMachDyldModule(const char *name)
 {
-    CFBundleRef bundle = NULL;
-    FSRef ref;
-    OSErr err = FSpMakeFSRef(spec, &ref);
-    char path[512];
-    if (err == noErr && ((UInt32)(FSRefMakePath) != kUnresolvedCFragSymbolAddress)) {
-        err = FSRefMakePath(&ref, (UInt8*)path, sizeof(path) - 1);
-        if (err == noErr) {
-            CFStringRef pathRef = CFStringCreateWithCString(NULL, path, kCFStringEncodingUTF8);
-            if (pathRef) {
-            	CFURLRef bundleURL = CFURLCreateWithFileSystemPath(NULL, pathRef, kCFURLPOSIXPathStyle, true);
-            	if (bundleURL != NULL) {
-                    bundle = CFBundleCreate(NULL, bundleURL);
-                    CFRelease(bundleURL);
-            	}
-            	CFRelease(pathRef);
-            }
-        }
+    NSObjectFileImage ofi;
+    NSModule h = NULL;
+    if (NSCreateObjectFileImageFromFile(name, &ofi)
+            == NSObjectFileImageSuccess) {
+        h = NSLinkModule(ofi, name, NSLINKMODULE_OPTION_PRIVATE);
     }
-    return bundle;
+    return h;
 }
+#endif
+
+#if defined(XP_MAC) || defined(XP_MACOSX)
 
 #ifdef XP_MACOSX
 static void* TV2FP(CFMutableDictionaryRef dict, const char* name, void *tvp)
@@ -591,14 +578,12 @@ static void* TV2FP(CFMutableDictionaryRef dict, const char* name, void *tvp)
                     MakeDataExecutable(newGlue, sizeof(glue));
                     CFDictionaryAddValue(dict, nameRef, glueData);
                     CFRelease(glueData);
-#ifdef DEBUG
-                    printf("[TV2FP:  created wrapper for CFM function %s().]\n", name);
-#endif
+
+                    PR_LOG(_pr_linker_lm, PR_LOG_MIN, ("TV2FP: created wrapper for CFM function %s().", name));
                 }
             } else {
-#ifdef DEBUG
-                printf("[TV2FP:  found wrapper for CFM function %s().]\n", name);
-#endif
+                PR_LOG(_pr_linker_lm, PR_LOG_MIN, ("TV2FP: found wrapper for CFM function %s().", name));
+
                 newGlue = (uint32*) CFDataGetMutableBytePtr(glueData);
             }
             CFRelease(nameRef);
@@ -609,7 +594,205 @@ static void* TV2FP(CFMutableDictionaryRef dict, const char* name, void *tvp)
 }
 #endif
 
+/*
+** macLibraryLoadProc is a function definition for a Mac shared library
+** loading method. The "name" param is the same full or partial pathname
+** that was passed to pr_LoadLibraryByPathName. The function must fill
+** in the fields of "lm" which apply to its library type. Returns
+** PR_SUCCESS if successful.
+*/
+
+typedef PRStatus (*macLibraryLoadProc)(const char *name, PRLibrary *lm);
+
+static PRStatus
+pr_LoadViaCFM(const char *name, PRLibrary *lm)
+{
+    OSErr err;
+    char cName[64];
+    Str255 errName;
+    
+#if !defined(XP_MACOSX)
+    Str255 pName;
+    /*
+     * Algorithm: The "name" passed in could be either a shared
+     * library name that we should look for in the normal library
+     * search paths, or a full path name to a specific library on
+     * disk.  Since the full path will always contain a ":"
+     * (shortest possible path is "Volume:File"), and since a
+     * library name can not contain a ":", we can test for the
+     * presence of a ":" to see which type of library we should load.
+     * or its a full UNIX path which we for now assume is Java
+     * enumerating all the paths (see below)
+     */
+    if (strchr(name, PR_PATH_SEPARATOR) == NULL) {
+        if (strchr(name, PR_DIRECTORY_SEPARATOR) == NULL) {
+            /*
+             * The name did not contain a ":", so it must be a
+             * library name.  Convert the name to a Pascal string
+             * and try to find the library.
+             */
+        } else {
+            /*
+             * name contained a "/" which means we need to suck off
+             * the last part of the path and pass that on the
+             * NSGetSharedLibrary. this may not be what we really
+             * want to do .. because Java could be iterating through
+             * the whole LD path, and we'll find it if it's anywhere
+             * on that path -- it appears that's what UNIX and the
+             * PC do too...so we'll emulate but it could be wrong.
+             */
+            name = strrchr(name, PR_DIRECTORY_SEPARATOR) + 1;
+        }
+
+        PStrFromCStr(name, pName);
+
+        /*
+         * beard: NSGetSharedLibrary was so broken that I just decided to
+         * use GetSharedLibrary for now.  This will need to change for
+         * plugins, but those should go in the Extensions folder anyhow.
+         */
+        err = GetSharedLibrary(pName, kCompiledCFragArch, kReferenceCFrag,
+                               &lm->connection, &lm->main, errName);
+        if (err != noErr)
+            return PR_FAILURE;
+    }
+    else
 #endif
+    {
+        /*
+         * The name did contain a ":", so it must be a full path name.
+         * Now we have to do a lot of work to convert the path name to
+         * an FSSpec (silly, since we were probably just called from the
+         * MacFE plug-in code that already knew the FSSpec and converted
+         * it to a full path just to pass to us).  Make an FSSpec from
+         * the full path and call GetDiskFragment.
+         */
+        FSSpec fileSpec;
+        Boolean tempUnusedBool;
+
+#if defined(XP_MACOSX)
+        {
+            /* Use direct conversion of POSIX path to FSRef to FSSpec. */
+            FSRef ref;
+            err = FSPathMakeRef((const UInt8*)name, &ref, NULL);
+            if (err == noErr)
+                err = FSGetCatalogInfo(&ref, kFSCatInfoNone, NULL, NULL,
+                                       &fileSpec, NULL);
+        }
+#else
+        PStrFromCStr(name, pName);
+        err = FSMakeFSSpec(0, 0, pName, &fileSpec);
+#endif
+        if (err != noErr)
+            return PR_FAILURE;
+
+        /* Resolve an alias if this was one */
+        err = ResolveAliasFile(&fileSpec, true, &tempUnusedBool,
+                               &tempUnusedBool);
+        if (err != noErr)
+            return PR_FAILURE;
+
+        /* Finally, try to load the library */
+        err = GetDiskFragment(&fileSpec, 0, kCFragGoesToEOF, fileSpec.name,
+                              kLoadCFrag, &lm->connection, &lm->main, errName);
+
+#if TARGET_CARBON
+        p2cstrcpy(cName, fileSpec.name);
+#else
+        memcpy(cName, fileSpec.name + 1, fileSpec.name[0]);
+        cName[fileSpec.name[0]] = '\0';
+#endif
+
+#ifdef XP_MACOSX
+        if (err == noErr && lm->connection) {
+            /*
+             * if we're a mach-o binary, need to wrap all CFM function
+             * pointers. need a hash-table of already seen function
+             * pointers, etc.
+             */
+            lm->wrappers = CFDictionaryCreateMutable(NULL, 16,
+                           &kCFTypeDictionaryKeyCallBacks,
+                           &kCFTypeDictionaryValueCallBacks);
+            if (lm->wrappers) {
+                lm->main = TV2FP(lm->wrappers, "main", lm->main);
+            } else
+                err = memFullErr;
+        }
+#endif
+    }
+    return (err == noErr) ? PR_SUCCESS : PR_FAILURE;
+}
+
+/*
+** Creates a CFBundleRef if the pathname refers to a Mac OS X bundle
+** directory. The caller is responsible for calling CFRelease() to
+** deallocate.
+*/
+
+#if TARGET_CARBON
+static PRStatus
+pr_LoadCFBundle(const char *name, PRLibrary *lm)
+{
+    CFURLRef bundleURL;
+    CFBundleRef bundle = NULL;
+    
+#ifdef XP_MACOSX
+    char pathBuf[PATH_MAX];
+    const char *resolvedPath;
+    CFStringRef pathRef;
+
+    /* Takes care of relative paths and symlinks */
+    resolvedPath = realpath(name, pathBuf);
+    if (!resolvedPath)
+        return PR_FAILURE;
+        
+    pathRef = CFStringCreateWithCString(NULL, pathBuf, kCFStringEncodingUTF8);
+    if (pathRef) {
+        bundleURL = CFURLCreateWithFileSystemPath(NULL, pathRef,
+                                                  kCFURLPOSIXPathStyle, true);
+        if (bundleURL) {
+            bundle = CFBundleCreate(NULL, bundleURL);
+            CFRelease(bundleURL);
+        }
+        CFRelease(pathRef);
+    }
+#else
+    OSErr err;
+    Str255 pName;
+    FSSpec fsSpec;
+    FSRef fsRef;
+
+    if ((UInt32)(CFURLCreateFromFSRef) == kUnresolvedCFragSymbolAddress)
+        return PR_FAILURE;
+    PStrFromCStr(name, pName);
+    err = FSMakeFSSpec(0, 0, pName, &fsSpec);
+    if (err != noErr)
+        return PR_FAILURE;
+    err = FSpMakeFSRef(&fsSpec, &fsRef);
+    if (err != noErr)
+        return PR_FAILURE;
+    bundleURL = CFURLCreateFromFSRef(NULL, &fsRef);
+    if (bundleURL) {
+        bundle = CFBundleCreate(NULL, bundleURL);
+        CFRelease(bundleURL);
+    }
+#endif
+
+    lm->bundle = bundle;
+    return (bundle != NULL) ? PR_SUCCESS : PR_FAILURE;
+}
+#endif
+
+#ifdef XP_MACOSX
+static PRStatus
+pr_LoadViaDyld(const char *name, PRLibrary *lm)
+{
+    lm->dlh = pr_LoadMachDyldModule(name);
+    return (lm->dlh != NULL) ? PR_SUCCESS : PR_FAILURE;
+}
+#endif
+
+#endif /* defined(XP_MAC) || defined(XP_MACOSX) */
 
 /*
 ** Dynamically load a library. Only load libraries once, so scan the load
@@ -684,172 +867,37 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
     }
 #endif /* WIN32 || WIN16 */
 
-#if (defined(XP_MAC) && TARGET_RT_MAC_CFM) || defined(XP_MACOSX)
+#if defined(XP_MAC) || defined(XP_MACOSX)
     {
-    OSErr                 err;
-    Str255                errName;
-    Str255                pName;
-    char                  cName[64];
-    const char*           libName;
+    int     i;
+    PRStatus status;
 
-#if !defined(XP_MACOSX)
-    /*
-     * Algorithm: The "name" passed in could be either a shared
-     * library name that we should look for in the normal library
-     * search paths, or a full path name to a specific library on
-     * disk.  Since the full path will always contain a ":"
-     * (shortest possible path is "Volume:File"), and since a
-     * library name can not contain a ":", we can test for the
-     * presence of a ":" to see which type of library we should load.
-     * or its a full UNIX path which we for now assume is Java
-     * enumerating all the paths (see below)
-     */
-    if (strchr(name, PR_PATH_SEPARATOR) == NULL) {
-        if (strchr(name, PR_DIRECTORY_SEPARATOR) == NULL) {
-            /*
-             * The name did not contain a ":", so it must be a
-             * library name.  Convert the name to a Pascal string
-             * and try to find the library.
-             */
-        } else {
-            /* name contained a "/" which means we need to suck off the last part */
-            /* of the path and pass that on the NSGetSharedLibrary */
-            /* this may not be what we really want to do .. because Java could */
-            /* be iterating through the whole LD path, and we'll find it if it's */
-            /* anywhere on that path -- it appears that's what UNIX and the PC do */
-            /* too...so we'll emulate but it could be wrong. */
-            name = strrchr(name, PR_DIRECTORY_SEPARATOR) + 1;
-        }
-        
-        PStrFromCStr(name, pName);
-    
-        /*
-         * beard: NSGetSharedLibrary was so broken that I just decided to
-         * use GetSharedLibrary for now.  This will need to change for
-         * plugins, but those should go in the Extensions folder anyhow.
-         */
-        err = GetSharedLibrary(pName, kCompiledCFragArch, kReferenceCFrag,
-                               &lm->connection, &lm->main, errName);
-        if (err != noErr) {
-            oserr = err;
-            PR_DELETE(lm);
-            goto unlock;    
-        }
-        
-        libName = name;
-    } else
-#endif
-    {
-        /*
-         * The name did contain a ":", so it must be a full path name.
-         * Now we have to do a lot of work to convert the path name to
-         * an FSSpec (silly, since we were probably just called from the
-         * MacFE plug-in code that already knew the FSSpec and converted
-         * it to a full path just to pass to us).  First we copy out the
-         * volume name (the text leading up to the first ":"); then we
-         * separate the file name (the text following the last ":") from
-         * rest of the path.  After converting the strings to Pascal
-         * format we can call GetCatInfo to get the parent directory ID
-         * of the file, and then (finally) make an FSSpec and call
-         * GetDiskFragment.
-         */
-        FSSpec fileSpec;
-        Boolean tempUnusedBool;
-
+    static const macLibraryLoadProc loadProcs[] = {
 #if defined(XP_MACOSX)
-        {
-            /* Use direct conversion of POSIX path to FSRef to FSSpec. */
-            FSRef ref;
-            err = FSPathMakeRef((const UInt8*)name, &ref, NULL);
-            if (err == noErr)
-                err = FSGetCatalogInfo(&ref, kFSCatInfoNone, NULL, NULL, &fileSpec, NULL);
-        }
+        pr_LoadViaDyld, pr_LoadCFBundle, pr_LoadViaCFM
+#elif TARGET_CARBON
+        pr_LoadViaCFM, pr_LoadCFBundle
 #else
-        PStrFromCStr(name, pName);
-        err = FSMakeFSSpec(0, 0, pName, &fileSpec);
+        pr_LoadViaCFM
 #endif
-        if (err != noErr) {
-            oserr = _MD_ERRNO();
-            PR_DELETE(lm);
-            goto unlock;
-        }
+    };
 
-        /* Resolve an alias if this was one */
-        err = ResolveAliasFile(&fileSpec, true, &tempUnusedBool, &tempUnusedBool);
-        if (err != noErr) {
-#ifdef DEBUG
-            printf("[NSPR:  oops couldn't resolve an alias.]\n");
-#endif
-            oserr = err;
-            PR_DELETE(lm);
-            goto unlock;
-        }
-
-        /* Finally, try to load the library */
-        err = GetDiskFragment(&fileSpec, 0, kCFragGoesToEOF, fileSpec.name, 
-                              kLoadCFrag, &lm->connection, &lm->main, errName);
-
-#if TARGET_CARBON
-        p2cstrcpy(cName, fileSpec.name);
-#else
-        memcpy(cName, fileSpec.name + 1, fileSpec.name[0]);
-        cName[fileSpec.name[0]] = '\0';
-#endif
-        libName = cName;
-
-#ifdef XP_MACOSX
-        if (err == noErr && lm->connection) {
-            /* if we're a mach-o binary, need to wrap all CFM function pointers. */
-            /* need a hash-table of already seen function pointers, etc. */
-            lm->wrappers = CFDictionaryCreateMutable(NULL, 16,
-                                                     &kCFTypeDictionaryKeyCallBacks,
-                                                     &kCFTypeDictionaryValueCallBacks);
-            if (lm->wrappers) {
-                lm->main = TV2FP(lm->wrappers, "main", lm->main);
-            }
-        }
-#endif
-        
-        if (err != noErr) {
-#if TARGET_CARBON
-            /* If not a CFM library, perhaps it's a CFBundle. */
-            lm->bundle = getLibraryBundle(&fileSpec);
-#ifdef DEBUG
-            if (lm->bundle) printf("[NSPR:  bundle loaded succesfully: %s]\n", name);
-#endif
-            if (lm->bundle == NULL) {
-#if defined(USE_MACH_DYLD)
-                goto next;
-#else
-                oserr = err;
-                PR_DELETE(lm);
-                goto unlock;
-#endif
-            }
-#else
-            oserr = err;
-            PR_DELETE(lm);
-            goto unlock;
-#endif
-        }
+    for (i = 0; i < sizeof(loadProcs) / sizeof(loadProcs[0]); i++) {
+        if ((status = loadProcs[i](name, lm)) == PR_SUCCESS)
+            break;
     }
-    
-    lm->name = strdup(libName);
+    if (status != PR_SUCCESS) {
+        oserr = cfragNoLibraryErr;
+        PR_DELETE(lm);
+        goto unlock;        
+    }
+    lm->name = strdup(name);
     lm->next = pr_loadmap;
     pr_loadmap = lm;
-    /*
-     * we need to initalize the refCount here because the goto success skips over
-     * the code which would ordinarily set it below (below the #ifdef XP_UNIX
-     * code.) This is ugly, but there is no truly good way to deal with this
-     * without re-writing this function.
-     */
-    lm->refCount = 1;
-    goto success;
     }
-  next:
 #endif
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
 #ifdef HAVE_DLL
     {
 #if defined(USE_DLFCN)
@@ -895,12 +943,7 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
     /* No equivalent of PR_LD_GLOBAL and PR_LD_LOCAL. */
     h = shl_load(name, shl_flags, 0L);
 #elif defined(USE_MACH_DYLD)
-    NSObjectFileImage ofi;
-    NSModule h = NULL;
-    if (NSCreateObjectFileImageFromFile(name, &ofi)
-            == NSObjectFileImageSuccess) {
-        h = NSLinkModule(ofi, name, NSLINKMODULE_OPTION_PRIVATE);
-    }
+    NSModule h = pr_LoadMachDyldModule(name);
 #else
 #error Configuration error
 #endif
@@ -1009,7 +1052,6 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
     }
 #endif
 
-  success:
     result = lm;    /* success */
     PR_LOG(_pr_linker_lm, PR_LOG_MIN, ("Loaded library %s (load lib)", lm->name));
 
@@ -1213,7 +1255,7 @@ PR_UnloadLibrary(PRLibrary *lib)
     }
 #endif  /* XP_PC */
 
-#if (defined(XP_MAC) && TARGET_RT_MAC_CFM) || defined(XP_MACOSX)
+#if defined(XP_MAC) || defined(XP_MACOSX)
     /* Close the connection */
     if (lib->connection)
         CloseConnection(&(lib->connection));
@@ -1322,9 +1364,8 @@ pr_FindSymbolInLib(PRLibrary *lm, const char *name)
         CFragSymbolClass    symClass;
         Str255              pName;
         
-#ifdef DEBUG
-        printf("[NSPR: looking up symbol:  %s]\n", name + SYM_OFFSET);
-#endif        
+        PR_LOG(_pr_linker_lm, PR_LOG_MIN, ("Looking up symbol: %s", name + SYM_OFFSET));
+        
         PStrFromCStr(name + SYM_OFFSET, pName);
         
 #if defined(XP_MACOSX)
