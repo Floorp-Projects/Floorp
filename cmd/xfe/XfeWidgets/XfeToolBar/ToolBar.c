@@ -1728,8 +1728,8 @@ PreferredVertical(Widget w,Dimension * width,Dimension * height)
 				/* Obtain the dimensions for the child */
 				GetChildDimensions(child,&child_width,&child_height);
 				
-				assert( child_width > 0 );
-				assert( child_height > 0 );
+/* 				assert( child_width > 0 ); */
+/* 				assert( child_height > 0 ); */
 				
 				*height += (child_height + _XfeOrientedSpacing(w));
 			}
@@ -1881,12 +1881,15 @@ LayoutVertical(Widget w)
 			{
 				/* Obtain the dimensions for the child */
 				GetChildDimensions(child,&width,&height);
-				
-				assert( width > 0 );
-				assert( height > 0 );
-				
-				_XfeConfigureWidget(child,x,y,width,height);
-				
+
+/* 				assert( width > 0 ); */
+/* 				assert( height > 0 ); */
+
+				if ((width > 0) && (height > 0))
+				{
+					_XfeConfigureWidget(child,x,y,width,height);
+				}
+
 				y += (_XfeHeight(child) + _XfeOrientedSpacing(w));
 			}
 		}

@@ -68,6 +68,7 @@ private:
 	
 	XP_Bool				m_isFloating;
 	XFE_Frame *			m_parentFrame;
+	Widget				m_actionButton;
 
 #ifdef MOZ_MAIL_NEWS
 	XP_Bool				m_biffNoticeInstalled;

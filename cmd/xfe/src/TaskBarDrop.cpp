@@ -32,7 +32,7 @@
 #ifdef EDITOR
 #include "EditorFrame.h"
 #endif
-#include <Xfe/Xfe.h>
+#include <Xfe/Button.h>
 #include "xfe2_extern.h"
 
 #ifdef DEBUG_sgidev

@@ -100,7 +100,8 @@ XFE_TaskBar::XFE_TaskBar(Widget			parent,
 						 XP_Bool		is_floating) :
 	XFE_Component(parent_frame),
     m_isFloating(is_floating),
-	m_parentFrame(parent_frame)
+	m_parentFrame(parent_frame),
+	m_actionButton(NULL)
 #ifdef MOZ_MAIL_NEWS
     ,m_biffNoticeInstalled(False)
 #endif
@@ -472,7 +473,10 @@ XFE_TaskBar::updateFloatingAppearance()
 
 	unsigned char	button_layout;
 
-	button_layout = XFE_Toolbar::styleToLayout(fe_globalPrefs.toolbar_style);
+    int32 toolbar_style;
+    PREF_GetIntPref("browser.chrome.toolbar_style", &toolbar_style);
+
+	button_layout = XFE_Toolbar::styleToLayout(toolbar_style);
 
 	XtVaSetValues(m_widget,XmNbuttonLayout,button_layout,NULL);
 }
