@@ -107,17 +107,21 @@ protected:
 
   nsIFrameImageLoader* mImageLoader;
 
+public:
+  struct _indFlags {
+    PRUint32 mLoadImageFailed : 1;
+    PRUint32 mHaveIntrinsicImageSize : 1;
+    PRUint32 mNeedIntrinsicImageSize : 1;
+    PRUint32 mAutoImageSize : 1;
+    PRUint32 mHaveComputedSize : 1;
+    PRUint32 mSquelchCallback : 1;
+    PRUint32 mNeedSizeNotification : 1;
+  } ;
+
+protected:
   union {
     PRUint32 mAllFlags;
-    struct {
-      PRUint32 mLoadImageFailed : 1;
-      PRUint32 mHaveIntrinsicImageSize : 1;
-      PRUint32 mNeedIntrinsicImageSize : 1;
-      PRUint32 mAutoImageSize : 1;
-      PRUint32 mHaveComputedSize : 1;
-      PRUint32 mSquelchCallback : 1;
-      PRUint32 mNeedSizeNotification : 1;
-    } mFlags;
+    _indFlags mFlags;
   };
 
   nsSize mIntrinsicImageSize;
