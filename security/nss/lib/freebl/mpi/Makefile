@@ -36,7 +36,7 @@
 ## GPL.
 ## 
 ##
-## $Id: Makefile,v 1.7 2000/08/22 01:45:25 nelsonb%netscape.com Exp $
+## $Id: Makefile,v 1.8 2000/08/31 02:43:56 nelsonb%netscape.com Exp $
 ##
 
 ## Define CC to be the C compiler you wish to use.  The GNU cc
@@ -59,7 +59,7 @@ PERL=perl
 ## Conditional compilation options are no longer here; see
 ## the file 'mpi-config.h' instead.
 ##
-MPICMN = -I. -DMP_API_COMPATIBLE 
+MPICMN = -I. -DMP_API_COMPATIBLE -DMP_IOFUNC
 CFLAGS= -O $(MPICMN)
 #CFLAGS=-ansi -fullwarn -woff 1521 -O3 $(MPICMN)
 #CFLAGS=-ansi -fullwarn -woff 1521 -L/usr/linguist/lib -g -DMP_DEBUG=1 $(MPICMN)
@@ -67,14 +67,15 @@ CFLAGS= -O $(MPICMN)
 #CFLAGS=-ansi -pedantic -Wall -g -O2 -DMP_DEBUG=1 $(MPICMN)
 
 #IRIX
-#MPICMN += -DMP_ASSEMBLY_MULTIPLY -DMP_MONT_USE_MP_MUL
+#MPICMN += -DMP_MONT_USE_MP_MUL
+#MPICMN += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE
 #AS_OBJS = mpi_mips.o
 #ASFLAGS = -O -OPT:Olimit=4000 -dollar -fullwarn -xansi -n32 -mips3 -exceptions -mips3 
-#CFLAGS=-ansi -n32 -O3 -fullwarn -woff 1429 -D_SGI_SOURCE -DMP_IOFUNC $(MPICMN)
-#CFLAGS=-ansi -n32 -O2 -fullwarn -woff 1429 -D_SGI_SOURCE -DMP_IOFUNC $(MPICMN)
-#CFLAGS=-ansi -n32 -g -fullwarn -woff 1429 -D_SGI_SOURCE -DMP_IOFUNC $(MPICMN)
-#CFLAGS=-ansi -n32 -g -fullwarn -woff 1429 -D_SGI_SOURCE -DMP_IOFUNC \
- -DMP_USE_32 $(MPICMN)
+#CFLAGS=-ansi -n32 -O3 -fullwarn -woff 1429 -D_SGI_SOURCE $(MPICMN)
+#CFLAGS=-ansi -n32 -O2 -fullwarn -woff 1429 -D_SGI_SOURCE $(MPICMN)
+#CFLAGS=-ansi -n32 -g -fullwarn -woff 1429 -D_SGI_SOURCE $(MPICMN)
+#CFLAGS=-ansi -n32 -g -fullwarn -woff 1429 -D_SGI_SOURCE -DMP_NO_MP_WORD \
+ $(MPICMN)
 
 #Alpha/OSF1
 #CFLAGS= -O -Olimit 4000 -ieee_with_inexact -std1 -DOSF1 -D_REENTRANT $(MPICMN)
@@ -94,6 +95,21 @@ CFLAGS= -O $(MPICMN)
 #CFLAGS= -O -DHPUX10 -D_POSIX_C_SOURCE=199506L -Ae +Z -DHPUX -Dhppa \
  -D_HPUX_SOURCE +DAportable +DS1.1 -DHPUX11 -DXP_UNIX $(MPICMN)
 
+#Linux
+#AS_OBJS = mpi_x86.o
+#MPICMN += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE -DMP_ASSEMBLY_DIV_2DX1D
+#MPICMN += -DMP_MONT_USE_MP_MUL
+#CFLAGS= -O2 -fPIC -DLINUX1_2 -Di386 -D_XOPEN_SOURCE -DLINUX2_1 -ansi -Wall \
+ -pipe -DLINUX -Dlinux -D_POSIX_SOURCE -D_BSD_SOURCE -DHAVE_STRERROR \
+ -DXP_UNIX -UDEBUG -DNDEBUG -D_REENTRANT $(MPICMN)
+
+#CFLAGS= -g -fPIC -DLINUX1_2 -Di386 -D_XOPEN_SOURCE -DLINUX2_1 -ansi -Wall \
+ -pipe -DLINUX -Dlinux -D_POSIX_SOURCE -D_BSD_SOURCE -DHAVE_STRERROR \
+ -DXP_UNIX -DDEBUG -UNDEBUG -D_REENTRANT $(MPICMN)
+
+#CFLAGS= -g -fPIC -DLINUX1_2 -Di386 -D_XOPEN_SOURCE -DLINUX2_1 -ansi -Wall \
+ -pipe -DLINUX -Dlinux -D_POSIX_SOURCE -D_BSD_SOURCE -DHAVE_STRERROR \
+ -DXP_UNIX -UDEBUG -DNDEBUG -D_REENTRANT $(MPICMN)
 
 ##
 ## Define LIBS to include any libraries you need to link against.
@@ -215,7 +231,7 @@ EXTRAOBJS = bbsrand.o bbs_rand.o prng.o
 UTILOBJS = primegen.o metime.o identest.o basecvt.o fact.o exptmod.o pi.o \
 	makeprime.o karatsuba.o gcd.o invmod.o lap.o isprime.o \
 	dec2hex.o hex2dec.o
-UTILS = $(UTILOBJS:.o=)
+UTILS = $(UTILOBJS:.o=) 
 
 $(UTILS): % : %.o libmpi.a $(LIBS)
 	$(CC) $(CFLAGS) -o $@ $^ 
