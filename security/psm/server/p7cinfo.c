@@ -256,11 +256,11 @@ SSMP7ContentInfo_GetAttr(SSMResource *res,
 }
 
 SSMStatus SSMP7ContentInfo_VerifyDetachedSignature(SSMP7ContentInfo *ci,
-						  SECCertUsage usage,
-						  HASH_HashType hash,
-						  PRBool keepCerts,
-						  PRIntn digestLen,
-						  char *detachedDigest)
+                                                   SECCertUsage usage,
+                                                   HASH_HashType hash,
+                                                   PRBool keepCerts,
+                                                   PRIntn digestLen,
+                                                   char *detachedDigest)
 {
 	SSMStatus rv = PR_FAILURE;
 	SECItem digest;
