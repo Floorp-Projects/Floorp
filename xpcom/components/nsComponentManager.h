@@ -84,14 +84,19 @@ protected:
                                     const char *aType);
     nsresult GetLoaderForType(const char *aType, 
                               nsIComponentLoader **aLoader);
-
+    nsresult FindFactory(const char *contractID, nsIFactory **aFactory) ;
     nsresult LoadFactory(nsFactoryEntry *aEntry, nsIFactory **aFactory);
-    nsFactoryEntry *GetFactoryEntry(const nsCID &aClass, PRBool checkRegistry);
+
+    nsFactoryEntry *GetFactoryEntry(const char *aContractID, int checkRegistry = -1);
+    nsFactoryEntry *GetFactoryEntry(const nsCID &aClass, int checkRegistry = -1);
+    nsFactoryEntry *GetFactoryEntry(const nsCID &aClass, nsIDKey &cidKey, int checkRegistry = -1);
 
     nsresult SyncComponentsInDir(PRInt32 when, nsIFile *dirSpec);
     nsresult SelfRegisterDll(nsDll *dll);
     nsresult SelfUnregisterDll(nsDll *dll);
-    nsresult HashContractID(const char *acontractID, const nsCID &aClass);
+    nsresult HashContractID(const char *acontractID, nsFactoryEntry *fe_ptr);
+    nsresult HashContractID(const char *acontractID, const nsCID &aClass, nsFactoryEntry **fe_ptr = NULL);
+    nsresult HashContractID(const char *acontractID, const nsCID &aClass, nsIDKey &cidKey, nsFactoryEntry **fe_ptr = NULL);
     nsresult UnloadLibraries(nsIServiceManager *servmgr, PRInt32 when);
 
     // The following functions are the only ones that operate on the persistent
@@ -200,6 +205,11 @@ public:
     nsFactoryEntry(const nsCID &aClass, nsIFactory *aFactory);
     ~nsFactoryEntry();
 
+    nsresult ReInit(const nsCID &aClass, const char *location,
+                    const char *aType, nsIComponentLoader *aLoader);
+
+    nsresult ReInit(const nsCID &aClass, nsIFactory *aFactory);
+
     nsresult GetFactory(nsIFactory **aFactory, 
                         nsComponentManagerImpl * mgr) {
         if (factory) {
@@ -207,6 +217,9 @@ public:
             NS_ADDREF(*aFactory);
             return NS_OK;
         }
+
+        if (!type)
+            return NS_ERROR_FAILURE;
 
         nsresult rv;
         if (!loader.get()) {

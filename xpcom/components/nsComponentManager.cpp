@@ -116,10 +116,9 @@ const static char XPCOM_ABSCOMPONENT_PREFIX[] = "abs:";
 const static char XPCOM_RELCOMPONENT_PREFIX[] = "rel:";
 const char XPCOM_LIB_PREFIX[]          = "lib:";
 
-// We define a CID that is used to indicate the non-existence of a
-// contractid in the hash table.
-#define NS_NO_CID { 0x0, 0x0, 0x0, { 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 } }
-static NS_DEFINE_CID(kNoCID, NS_NO_CID);
+// Nonexistent factory entry
+// This is used to mark non-existent contractid mappings
+static nsFactoryEntry * kNonExistentContractID = (nsFactoryEntry*) 1;
 
 // Build is using USE_NSREG to turn off xpcom using registry
 // but internally we use USE_REGISTRY. Map them propertly.
@@ -204,8 +203,6 @@ nsCreateInstanceFromCategory::operator()( const nsIID& aIID,
 PRBool PR_CALLBACK
 nsFactoryEntry_Destroy(nsHashKey *aKey, void *aData, void* closure);
 
-PRBool PR_CALLBACK
-nsCID_Destroy(nsHashKey *aKey, void *aData, void* closure);
 ////////////////////////////////////////////////////////////////////////////////
 // nsFactoryEntry
 ////////////////////////////////////////////////////////////////////////////////
@@ -236,6 +233,24 @@ nsFactoryEntry::~nsFactoryEntry(void)
     loader = 0;
 }
 
+nsresult
+nsFactoryEntry::ReInit(const nsCID &aClass, const char *aLocation,
+                       const char *aType, nsIComponentLoader *aLoader)
+{
+    cid = aClass;
+    location = aLocation;
+    type = aType;
+    loader = aLoader;
+    return NS_OK;
+}
+
+nsresult
+nsFactoryEntry::ReInit(const nsCID &aClass, nsIFactory *aFactory)
+{
+    cid = aClass;
+    factory = aFactory;
+    return NS_OK;
+}
 ////////////////////////////////////////////////////////////////////////////////
 // nsComponentManagerImpl
 ////////////////////////////////////////////////////////////////////////////////
@@ -255,16 +270,6 @@ nsFactoryEntry_Destroy(nsHashKey *aKey, void *aData, void* closure)
 {
     nsFactoryEntry* entry = NS_STATIC_CAST(nsFactoryEntry*, aData);
     delete entry;
-    return PR_TRUE;
-}
-
-PRBool
-nsCID_Destroy(nsHashKey *aKey, void *aData, void* closure)
-{
-    nsCID* entry = NS_STATIC_CAST(nsCID*, aData);
-    // nasty hack. We "know" that kNoCID was entered into the hash table.
-    if (entry != &kNoCID)
-        delete entry;
     return PR_TRUE;
 }
 
@@ -291,9 +296,11 @@ nsresult nsComponentManagerImpl::Init(void)
             return NS_ERROR_OUT_OF_MEMORY;
     }
     if (mContractIDs == NULL) {
+        // No destroy function for these as they hold weak references to the factory entry.
+        // The owning ref is from the mFactories hash table.
         mContractIDs = new nsObjectHashtable(nsnull, nsnull,      // should never be copied
-                                         nsCID_Destroy, nsnull,
-                                         256, /* Thread Safe */ PR_TRUE);
+                                             nsnull, nsnull,
+                                             256, /* Thread Safe */ PR_TRUE);
         if (mContractIDs == NULL)
             return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -920,17 +927,14 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
                                       getter_Copies(cidString));
         if (NS_FAILED(rv)) continue;
 
-        nsCID *aClass = new nsCID();
-        if (!aClass) continue;        // Protect against out of memory.
-        if (!(aClass->Parse(cidString)))
+        nsCID aClass;
+        if (!(aClass.Parse(cidString)))
         {
-            delete aClass;
             continue;
         }
 
         // put the {contractid, Cid} mapping into our map
-        nsCStringKey key(contractidString);
-        mContractIDs->Put(&key, aClass);
+        HashContractID(contractidString, aClass);
         //  printf("Populating [ %s, %s ]\n", cidString, contractidString);
     }
 
@@ -946,34 +950,46 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
 // HashContractID
 //
 nsresult 
-nsComponentManagerImpl::HashContractID(const char *aContractID, const nsCID &aClass)
+nsComponentManagerImpl::HashContractID(const char *aContractID, const nsCID &aClass, nsFactoryEntry **pfe)
+{
+    nsIDKey cidKey(aClass);
+    return HashContractID(aContractID, aClass, cidKey, pfe);
+}
+
+
+nsresult 
+nsComponentManagerImpl::HashContractID(const char *aContractID, const nsCID &aClass, nsIDKey &cidKey, nsFactoryEntry **pfe)
 {
     if(!aContractID)
     {
         return NS_ERROR_NULL_POINTER;
     }
     
-    nsCStringKey key(aContractID);
-    nsCID* cid = (nsCID*) mContractIDs->Get(&key);
-    if (cid)
-    {
-        if (cid == &kNoCID)
-        {
-            // we don't delete this ptr as it's static (ugh)
-        }
-        else
-        {
-            delete cid;
-        }
+    // Find the factory entry corresponding to the CID.
+    nsFactoryEntry *entry = GetFactoryEntry(aClass, cidKey);
+    if (!entry) {
+        // Non existent. We use the special kNonExistentContractID to mark
+        // that this contractid does not have a mapping.
+        entry = kNonExistentContractID;
     }
+
+    nsresult rv = HashContractID(aContractID, entry);
+    if (NS_FAILED(rv))
+        return rv;
+
+    // Fill the entry out parameter
+    if (pfe) *pfe = entry;
+    return NS_OK;
+}
+
+nsresult 
+nsComponentManagerImpl::HashContractID(const char *aContractID, nsFactoryEntry *fe)
+{
+    if(!aContractID)
+        return NS_ERROR_NULL_POINTER;
     
-    cid = new nsCID(aClass);
-    if (!cid)
-    {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-        
-    mContractIDs->Put(&key, cid);
+    nsCStringKey key(aContractID);
+    mContractIDs->Put(&key, fe);
     return NS_OK;
 }
 
@@ -1011,24 +1027,71 @@ nsComponentManagerImpl::LoadFactory(nsFactoryEntry *aEntry,
     return NS_OK;
 }
 
+nsFactoryEntry *
+nsComponentManagerImpl::GetFactoryEntry(const char *aContractID, int checkRegistry)
+{
+    nsCStringKey key(aContractID);
+    nsFactoryEntry *fe = (nsFactoryEntry *) mContractIDs->Get(&key);
+
+#ifdef USE_REGISTRY
+    if (!fe)
+    {
+        if (checkRegistry < 0) {
+            // default
+            checkRegistry = !mPrePopulationDone;
+        }
+
+        if (checkRegistry)
+        {
+            nsCID cid;
+            nsresult rv = PlatformContractIDToCLSID(aContractID, &cid);
+            if (NS_SUCCEEDED(rv)) {
+                HashContractID(aContractID, cid, &fe);
+            }
+        }
+    }
+#endif /* USE_REGISTRY */
+
+    // If no mapping found, add a special non-existent mapping
+    // so the next time around, we dont have to waste time doing the
+    // same mapping over and over again
+    if (!fe) {
+        fe = kNonExistentContractID;
+        HashContractID(aContractID, fe);
+    }
+
+    return (fe);
+}
+
 
 nsFactoryEntry *
-nsComponentManagerImpl::GetFactoryEntry(const nsCID &aClass, PRBool checkRegistry)
+nsComponentManagerImpl::GetFactoryEntry(const nsCID &aClass, int checkRegistry)
 {
-    nsIDKey key(aClass);
-    nsFactoryEntry *entry = (nsFactoryEntry*) mFactories->Get(&key);
+    nsIDKey cidKey(aClass);
+    return GetFactoryEntry(aClass, cidKey, checkRegistry);
+}
+
+
+nsFactoryEntry *
+nsComponentManagerImpl::GetFactoryEntry(const nsCID &aClass, nsIDKey &cidKey, int checkRegistry)
+{
+    nsFactoryEntry *entry = (nsFactoryEntry*) mFactories->Get(&cidKey);
 
 #ifdef USE_REGISTRY
     if (!entry)
     {
-        if (checkRegistry)
-        {
+        if (checkRegistry < 0) {
+            // default
+            checkRegistry = !mPrePopulationDone;
+        }
+
+        if (checkRegistry) {
             nsresult rv = PlatformFind(aClass, &entry);
 
             // If we got one, cache it in our hashtable
             if (NS_SUCCEEDED(rv))
             {
-                mFactories->Put(&key, entry);
+                mFactories->Put(&cidKey, entry);
             }
         }
     }
@@ -1036,6 +1099,7 @@ nsComponentManagerImpl::GetFactoryEntry(const nsCID &aClass, PRBool checkRegistr
 
     return (entry);
 }
+
 
 /**
  * FindFactory()
@@ -1052,9 +1116,24 @@ nsComponentManagerImpl::FindFactory(const nsCID &aClass,
 {
     PR_ASSERT(aFactory != NULL);
 
-    nsFactoryEntry *entry = GetFactoryEntry(aClass, !mPrePopulationDone);
+    nsFactoryEntry *entry = GetFactoryEntry(aClass);
 
     if (!entry)
+        return NS_ERROR_FACTORY_NOT_REGISTERED;
+
+    return entry->GetFactory(aFactory, this);
+}
+
+
+nsresult
+nsComponentManagerImpl::FindFactory(const char *contractID,
+                                    nsIFactory **aFactory) 
+{
+    PR_ASSERT(aFactory != NULL);
+
+    nsFactoryEntry *entry = GetFactoryEntry(contractID);
+
+    if (!entry || entry == kNonExistentContractID)
         return NS_ERROR_FACTORY_NOT_REGISTERED;
 
     return entry->GetFactory(aFactory, this);
@@ -1113,41 +1192,11 @@ nsComponentManagerImpl::ContractIDToClassID(const char *aContractID, nsCID *aCla
 
     nsresult res = NS_ERROR_FACTORY_NOT_REGISTERED;
 
-#ifdef USE_REGISTRY
-    nsCStringKey key(aContractID);
-    nsCID* cid = (nsCID*) mContractIDs->Get(&key);
-    if (cid) {
-        if (cid == &kNoCID) {
-            // we've already tried to map this ContractID to a CLSID, and found
-            // that there _was_ no such mapping in the registry.
-        }
-        else {
-            *aClass = *cid;
-            res = NS_OK;
-        }
+    nsFactoryEntry *fe = GetFactoryEntry(aContractID);
+    if (fe && fe != kNonExistentContractID) {
+        *aClass = fe->cid;
+        res = NS_OK;
     }
-    else {
-        // This is the first time someone has asked for this
-        // ContractID. Go to the registry to find the CID.
-        if (!mPrePopulationDone)
-            res = PlatformContractIDToCLSID(aContractID, aClass);
-
-        if (NS_SUCCEEDED(res)) {
-            // Found it. So put it into the cache.
-            cid = new nsCID(*aClass);
-            if (!cid)
-                return NS_ERROR_OUT_OF_MEMORY;
-
-            mContractIDs->Put(&key, cid);
-        }
-        else {
-            // Didn't find it. Put a special CID in the cache so we
-            // don't need to hit the registry on subsequent requests
-            // for the same ContractID.
-            mContractIDs->Put(&key, (void *)&kNoCID);
-        }
-    }
-#endif /* USE_REGISTRY */
 
     if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_ALWAYS)) {
         char *buf = 0;
@@ -1264,10 +1313,41 @@ nsComponentManagerImpl::CreateInstanceByContractID(const char *aContractID,
                                                const nsIID &aIID,
                                                void **aResult)
 {
-    nsCID clsid;
-    nsresult rv = ContractIDToClassID(aContractID, &clsid);
-    if (NS_FAILED(rv)) return rv; 
-    return CreateInstance(clsid, aDelegate, aIID, aResult);
+    // test this first, since there's no point in creating a component during
+    // shutdown -- whether it's available or not would depend on the order it
+    // occurs in the list
+    if (gShuttingDown) {
+        // When processing shutdown, dont process new GetService() requests
+#ifdef DEBUG_dp
+        NS_WARN_IF_FALSE(PR_FALSE, "Creating new instance on shutdown. Denied.");
+#endif /* DEBUG_dp */
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    if (aResult == NULL)
+    {
+        return NS_ERROR_NULL_POINTER;
+    }
+    *aResult = NULL;
+        
+    nsIFactory *factory = NULL;
+    nsresult res = FindFactory(aContractID, &factory);
+    if (NS_SUCCEEDED(res))
+    {
+        res = factory->CreateInstance(aDelegate, aIID, aResult);
+        NS_RELEASE(factory);
+    }
+    else
+    {
+        // Translate error values
+        res = NS_ERROR_FACTORY_NOT_REGISTERED;
+    }
+
+    PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
+           ("nsComponentManager: CreateInstanceByContractID(%s) %s", aContractID,
+            NS_SUCCEEDED(res) ? "succeeded" : "FAILED"));
+    
+    return res;
 }
 
 /*
@@ -1422,7 +1502,8 @@ nsComponentManagerImpl::RegisterFactory(const nsCID &aClass,
     nsFactoryEntry *entry = NULL;
 
     nsIDKey key(aClass);
-    entry = (nsFactoryEntry *)mFactories->Get(&key);
+    entry = GetFactoryEntry(aClass, key,
+                            0 /* dont check registry */);
 
     if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_ALWAYS))
     {
@@ -1442,21 +1523,19 @@ nsComponentManagerImpl::RegisterFactory(const nsCID &aClass,
         return NS_ERROR_FACTORY_EXISTS;
     }
 
-    nsFactoryEntry *newEntry = new nsFactoryEntry(aClass, aFactory);
-    if (newEntry == NULL)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    if (entry) {                // aReplace implied by above check
-        PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
-               ("\t\tdeleting old Factory Entry."));
-        mFactories->RemoveAndDelete(&key);
-        entry = NULL;
+    if (entry) {
+        entry->ReInit(aClass, aFactory);
     }
-    mFactories->Put(&key, newEntry);
+    else {
+        entry = new nsFactoryEntry(aClass, aFactory);
+        if (entry == NULL)
+            return NS_ERROR_OUT_OF_MEMORY;
+        mFactories->Put(&key, entry);
+    }
 
     // Update the ContractID->CLSID Map
     if (aContractID) {
-        nsresult rv = HashContractID(aContractID, aClass);
+        nsresult rv = HashContractID(aContractID, entry);
         if(NS_FAILED(rv)) {
             PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
                    ("\t\tFactory register succeeded. "
@@ -1554,6 +1633,7 @@ nsComponentManagerImpl::RegisterComponentLib(const nsCID &aClass,
  * or hand it to nsFactoryEntry.  Common exit point ``out'' helps keep us
  * sane.
  */
+
 nsresult
 nsComponentManagerImpl::RegisterComponentCommon(const nsCID &aClass,
                                                 const char *aClassName,
@@ -1564,12 +1644,9 @@ nsComponentManagerImpl::RegisterComponentCommon(const nsCID &aClass,
                                                 const char *aType)
 {
     nsresult rv = NS_OK;
-    nsFactoryEntry* newEntry = nsnull;
 
     nsIDKey key(aClass);
     nsFactoryEntry *entry = GetFactoryEntry(aClass, !mPrePopulationDone);
-    nsCOMPtr<nsIComponentLoader> loader;
-    PRBool sanity;
 
     // Normalize proid and classname
     const char *contractID = (aContractID && *aContractID) ? aContractID : NULL;
@@ -1589,8 +1666,7 @@ nsComponentManagerImpl::RegisterComponentCommon(const nsCID &aClass,
     if (entry && !aReplace) {
         PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
                ("\t\tFactory already registered."));
-        rv = NS_ERROR_FACTORY_EXISTS;
-        goto out;
+        return NS_ERROR_FACTORY_EXISTS;
     }
 
 #ifdef USE_REGISTRY
@@ -1599,53 +1675,44 @@ nsComponentManagerImpl::RegisterComponentCommon(const nsCID &aClass,
         rv = AddComponentToRegistry(aClass, className, contractID,
                                     aRegistryName, aType);
         if (NS_FAILED(rv)) {
-        PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
-           ("\t\tadding %s %s to registry FAILED", className, contractID));
-            goto out;
-    }
+            PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
+                   ("\t\tadding %s %s to registry FAILED", className, contractID));
+            return rv;
+        }
     }
 #endif
 
+    nsCOMPtr<nsIComponentLoader> loader;
     rv = GetLoaderForType(aType, getter_AddRefs(loader));
     if (NS_FAILED(rv)) {
-    PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
-           ("\t\tgetting loader for %s FAILED\n", aType));
-        goto out;
+        PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
+               ("\t\tgetting loader for %s FAILED\n", aType));
+        return rv;
     }
 
-    newEntry = new nsFactoryEntry(aClass, aRegistryName, aType, loader);
-    if (!newEntry) {
-        rv = NS_ERROR_OUT_OF_MEMORY;
-        goto out;
+    if (entry) {
+        entry->ReInit(aClass, aRegistryName, aType, loader);
+    }
+    else {
+        entry = new nsFactoryEntry(aClass, aRegistryName, aType, loader);
+        if (!entry)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        mFactories->Put(&key, entry);
     }
 
-    if (entry) {                // aReplace implicit from test above
-    delete entry;
-    }
-
-    /* unless the fabric of the universe bends, we'll get entry back */
-    sanity = (entry == mFactories->Put(&key, newEntry));
-    PR_ASSERT(sanity);
-
-    /* don't try to clean up, just drop everything and run */
-    if (!sanity)
-    return NS_ERROR_FACTORY_NOT_REGISTERED;
-
-    /* we've put the new entry in the hash table, so don't delete on error */
-    newEntry = nsnull;
- 
    // Update the ContractID->CLSID Map
     if (contractID
 #ifdef USE_REGISTRY
         && (mPrePopulationDone || !aPersist)
 #endif
         ) {
-        rv = HashContractID(contractID, aClass);
+        rv = HashContractID(contractID, entry);
         if (NS_FAILED(rv)) {
-        PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
-           ("\t\tHashContractID(%s) FAILED\n", contractID));
-            goto out;
-    }
+            PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
+                   ("\t\tHashContractID(%s) FAILED\n", contractID));
+            return rv;
+        }
     }
 
     // Let the loader do magic things now
@@ -1655,17 +1722,12 @@ nsComponentManagerImpl::RegisterComponentCommon(const nsCID &aClass,
         PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
                ("\t\tloader->OnRegister FAILED for %s \"%s\" %s %s", aType,
                 className, contractID, aRegistryName));
-        goto out;
+        return rv;
     }
     
     PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
            ("\t\tRegisterComponentCommon() %s",
             NS_SUCCEEDED(rv) ? "succeeded" : "FAILED"));
- out:
-    if (NS_FAILED(rv)) {
-        if (newEntry)
-            delete newEntry;
-    }
     return rv;
 }
 
@@ -1789,7 +1851,8 @@ nsComponentManagerImpl::UnregisterFactory(const nsCID &aClass,
         
     nsIDKey key(aClass);
     nsresult res = NS_ERROR_FACTORY_NOT_REGISTERED;
-    nsFactoryEntry *old = (nsFactoryEntry *) mFactories->Get(&key);
+    nsFactoryEntry *old = GetFactoryEntry(aClass, key,
+                                          0 /* dont check registry */);
     if (old != NULL)
     {
         if (old->factory.get() == aFactory)
@@ -1821,7 +1884,8 @@ nsComponentManagerImpl::UnregisterComponent(const nsCID &aClass,
 
     // Remove any stored factory entries
     nsIDKey key(aClass);
-    nsFactoryEntry *entry = (nsFactoryEntry *) mFactories->Get(&key);
+    nsFactoryEntry *entry = GetFactoryEntry(aClass, key,
+                                            0 /* dont check registry */);
     if (entry && entry->location && PL_strcasecmp(entry->location, registryName))
     {
         mFactories->RemoveAndDelete(&key);
@@ -2200,7 +2264,7 @@ nsComponentManagerImpl::IsRegistered(const nsCID &aClass,
         NS_ASSERTION(0, "null ptr");
         return NS_ERROR_NULL_POINTER;
     }
-    *aRegistered = (nsnull != GetFactoryEntry(aClass, !mPrePopulationDone));
+    *aRegistered = (nsnull != GetFactoryEntry(aClass));
     return NS_OK;
 }
 
