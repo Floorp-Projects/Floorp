@@ -79,6 +79,11 @@ private:
   nsIWebShell        *mWebShell;
 };
 
+nsresult nsMsgAppCore::SetDocumentCharset(class nsString const &) 
+{
+	return NS_OK;
+}
+
 //
 // nsMsgAppCore
 //
