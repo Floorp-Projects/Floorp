@@ -1,12 +1,12 @@
 #include "nsFileSpec.h"
-#include <iostream>
+#include <iostream.h>
 
 #include "nsFileStream.h"
 
-namespace FileTest
+NS_NAMESPACE FileTest
 {
 	void WriteStuff(ostream& s);
-}
+} NS_NAMESPACE_END
 
 //----------------------------------------------------------------------------------------
 void FileTest::WriteStuff(ostream& s)
@@ -14,11 +14,11 @@ void FileTest::WriteStuff(ostream& s)
 {
 	// Initialize a URL from a string without suffix.  Change the path to suit your machine.
 	nsFileURL fileURL("file:///Development/MPW/MPW%20Shell");
-	s << "File URL initialized to:     \"" << (string&)fileURL << "\""<< endl;
+	s << "File URL initialized to:     \"" << fileURL << "\""<< endl;
 	
 	// Initialize a Unix path from a URL
 	nsFilePath filePath(fileURL);
-	s << "As a unix path:              \"" << (string&)filePath << "\""<< endl;
+	s << "As a unix path:              \"" << (const char*)filePath << "\""<< endl;
 	
 	// Initialize a native file spec from a URL
 	nsNativeFileSpec fileSpec(fileURL);
@@ -30,11 +30,11 @@ void FileTest::WriteStuff(ostream& s)
 	
 	// Assign the spec to a URL
 	fileURL = fileSpec;
-	s << "File URL assigned from spec: \"" << (string&)fileURL << "\""<< endl;
+	s << "File URL assigned from spec: \"" << fileURL << "\""<< endl;
 	
 	// Assign a unix path using a string with a suffix.
 	filePath = "/Development/MPW/SysErrs.err";
-	s << "File path reassigned to:     \"" << (string&)filePath << "\""<< endl;	
+	s << "File path reassigned to:     \"" << (const char*)filePath << "\""<< endl;	
 	
 	// Assign to a file spec using a unix path.
 	fileSpec = filePath;
@@ -65,7 +65,7 @@ void main()
 	nsFilePath myTextFilePath("/Development/iotest.txt");
 
 	{
-		cout << "WRITING IDENTICAL OUTPUT TO " << myTextFilePath << endl << endl;
+		cout << "WRITING IDENTICAL OUTPUT TO " << (const char*)myTextFilePath << endl << endl;
 		nsOutputFileStream testStream(myTextFilePath);
 		FileTest::WriteStuff(testStream);
 	}	// <-- Scope closes the stream (and the file).
@@ -73,7 +73,7 @@ void main()
 	// Test of nsInputFileStream
 
 	{
-		cout << "READING BACK DATA FROM " << myTextFilePath << endl << endl;
+		cout << "READING BACK DATA FROM " << (const char*)myTextFilePath << endl << endl;
 		nsInputFileStream testStream2(myTextFilePath);
 		char line[1000];
 		while (!testStream2.eof())

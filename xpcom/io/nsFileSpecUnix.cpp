@@ -20,16 +20,23 @@
 //	implementations.
 
 //----------------------------------------------------------------------------------------
-void nsNativeFileSpec::SetLeafName(const string& inLeafName)
+void nsNativeFileSpec::SetLeafName(const char* inLeafName)
 //----------------------------------------------------------------------------------------
 {
 	nsFileHelpers::LeafReplace(mPath, '/', inLeafName);
 } // nsNativeFileSpec::SetLeafName
 
 //----------------------------------------------------------------------------------------
-string nsNativeFileSpec::GetLeafName() const
+char* nsNativeFileSpec::GetLeafName() const
 //----------------------------------------------------------------------------------------
 {
 	return nsFileHelpers::GetLeaf(mPath, '/');
 } // nsNativeFileSpec::GetLeafName
+
+//----------------------------------------------------------------------------------------
+bool nsNativeFileSpec::Exists() const
+//----------------------------------------------------------------------------------------
+{
+	return false; // fixme
+} // nsNativeFileSpec::Exists
 
