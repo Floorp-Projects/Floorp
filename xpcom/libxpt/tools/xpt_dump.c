@@ -91,7 +91,7 @@ main(int argc, char **argv)
     XPTCursor curs, *cursor = &curs;
     XPTHeader *header;
     struct stat file_stat;
-    int flen;
+    size_t flen;
     char *whole;
     FILE *in;
 
@@ -138,7 +138,15 @@ main(int argc, char **argv)
     }
 
     if (flen > 0) {
-        fread(whole, flen, 1, in);
+        size_t rv = fread(whole, 1, flen, in);
+        if (rv < 0) {
+            perror("FAILED: reading typelib file");
+            return 1;
+        }
+        if (rv < flen) {
+            fprintf(stderr, "short read (%d vs %d)! ouch!\n", rv, flen);
+            return 1;
+        }
         if (ferror(in) != 0 || fclose(in) != 0)
             perror("FAILED: Unable to read typelib file.\n");
         
