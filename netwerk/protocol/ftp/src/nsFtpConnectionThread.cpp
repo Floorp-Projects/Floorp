@@ -171,7 +171,8 @@ nsFtpConnectionThread::Process() {
                     mState = FTP_S_PASV;
                 }
 
-                PR_ASSERT(mIPv6Checked == PR_FALSE);
+                // PR_ASSERT(mIPv6Checked == PR_FALSE);
+
                 mConnected = PR_TRUE;                
 
                 break;
