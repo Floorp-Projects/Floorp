@@ -1110,7 +1110,6 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   }
   NS_TIMELINE_LEAVE("init event service");
 
-  NS_TIMELINE_ENTER("init observer service");
   // Setup an autoreg obserer, so that we can update a progress
   // string in the splash screen
   nsCOMPtr<nsIObserverService> obsService(do_GetService("@mozilla.org/observer-service;1"));
@@ -1122,7 +1121,6 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
       obsService->AddObserver(splashScreenObserver, NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID, PR_FALSE);
     }
   }
-  NS_TIMELINE_LEAVE("init observer service");
 
 #if XP_MAC
   stTSMCloser  tsmCloser;
@@ -1311,7 +1309,11 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
     remoteService->Shutdown();
 #endif /* MOZ_ENABLE_XREMOTE */
 
-  NS_TIMELINE_LEAVE("main1");
+#ifdef MOZ_TIMELINE
+  // Make sure we print this out even if timeline is runtime disabled
+  if (NS_FAILED(NS_TIMELINE_LEAVE("main1")))
+      NS_TimelineForceMark("...main1");
+#endif
 
   return rv;
 }
