@@ -25,13 +25,14 @@
 nsresult
 nsAbsoluteFrame::NewFrame(nsIFrame**  aInstancePtrResult,
                           nsIContent* aContent,
-                          nsIFrame*   aParent)
+                          nsIFrame*   aParent,
+                          nsIFrame*   aAbsoluteFrame)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsIFrame* it = new nsAbsoluteFrame(aContent, aParent);
+  nsIFrame* it = new nsAbsoluteFrame(aContent, aParent, aAbsoluteFrame);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -39,9 +40,12 @@ nsAbsoluteFrame::NewFrame(nsIFrame**  aInstancePtrResult,
   return NS_OK;
 }
 
-nsAbsoluteFrame::nsAbsoluteFrame(nsIContent* aContent, nsIFrame* aParent)
+nsAbsoluteFrame::nsAbsoluteFrame(nsIContent* aContent,
+                                 nsIFrame*   aParent,
+                                 nsIFrame*   aAbsoluteFrame)
   : nsFrame(aContent, aParent)
 {
+  mFrame = aAbsoluteFrame;
 }
 
 nsAbsoluteFrame::~nsAbsoluteFrame()
@@ -53,31 +57,10 @@ NS_IMETHODIMP nsAbsoluteFrame::Reflow(nsIPresContext&      aPresContext,
                                       const nsReflowState& aReflowState,
                                       nsReflowStatus&      aStatus)
 {
-  // Have we created the absolutely positioned item yet?
-  if (nsnull == mFrame) {
-    // If the content object is a container then wrap it in a body pseudo-frame
-    PRBool canHaveKids;
-    mContent->CanContainChildren(canHaveKids);
-    if (canHaveKids) {
-      nsBodyFrame::NewFrame(&mFrame, mContent, this);
-
-      // Use our style context for the pseudo-frame
-      mFrame->SetStyleContext(&aPresContext, mStyleContext);
-
-    } else {
-      // XXX CONSTRUCTION
-#if 0
-      // Ask the content delegate to create the frame
-      nsIContentDelegate* delegate = mContent->GetDelegate(&aPresContext);
-  
-      nsresult rv = delegate->CreateFrame(&aPresContext, mContent, this,
-                                          mStyleContext, mFrame);
-      NS_RELEASE(delegate);
-      if (NS_OK != rv) {
-        return rv;
-      }
-#endif
-    }
+  if (eReflowReason_Initial == aReflowState.reason) {
+    // By this point we expect to have been told which absolute frame we're
+    // associated with
+    NS_ASSERTION(nsnull != mFrame, "no absolute frame");
 
     // Get the containing block
     nsIFrame* containingBlock = GetContainingBlock();

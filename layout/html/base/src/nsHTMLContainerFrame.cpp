@@ -160,6 +160,105 @@ nsHTMLContainerFrame::CreatePlaceholderFrame(nsIPresContext& aPresContext,
   return placeholder;
 }
 
+nsAbsoluteFrame*
+nsHTMLContainerFrame::CreateAbsolutePlaceholderFrame(nsIPresContext& aPresContext,
+                                                     nsIFrame*       aAbsoluteFrame)
+{
+  nsIContent* content;
+  aAbsoluteFrame->GetContent(content);
+
+  nsAbsoluteFrame* placeholder;
+  nsAbsoluteFrame::NewFrame((nsIFrame**)&placeholder, content, this, aAbsoluteFrame);
+  NS_IF_RELEASE(content);
+
+  // Let the placeholder share the same style context as the floated element
+  nsIStyleContext*  kidSC;
+  aAbsoluteFrame->GetStyleContext(&aPresContext, kidSC);
+  placeholder->SetStyleContext(&aPresContext, kidSC);
+  NS_RELEASE(kidSC);
+  
+  return placeholder;
+}
+
+PRBool
+nsHTMLContainerFrame::CreateWrapperFrame(nsIPresContext& aPresContext,
+                                         nsIFrame*       aFrame,
+                                         nsIFrame*&      aWrapperFrame)
+{
+  // If the floated element can contain children then wrap it in a
+  // BODY frame before floating it
+  nsIContent* content;
+  PRBool      isContainer;
+
+  aFrame->GetContent(content);
+  content->CanContainChildren(isContainer);
+  if (isContainer) {
+    // Wrap the floated element in a BODY frame.
+    NS_NewBodyFrame(content, this, aWrapperFrame);
+
+    // The body wrapper frame gets the original style context, and the floated
+    // frame gets a pseudo style context
+    nsIStyleContext*  kidStyle;
+    aFrame->GetStyleContext(&aPresContext, kidStyle);
+    aWrapperFrame->SetStyleContext(&aPresContext, kidStyle);
+    NS_RELEASE(kidStyle);
+
+    nsIStyleContext*  pseudoStyle;
+    pseudoStyle = aPresContext.ResolvePseudoStyleContextFor(nsHTMLAtoms::columnPseudo,
+                                                            aWrapperFrame);
+    aFrame->SetStyleContext(&aPresContext, pseudoStyle);
+    NS_RELEASE(pseudoStyle);
+
+    // Init the body frame
+    aWrapperFrame->Init(aPresContext, aFrame);
+  }
+
+  NS_RELEASE(content);
+  return isContainer;
+}
+
+PRBool
+nsHTMLContainerFrame::MoveFrameOutOfFlow(nsIPresContext&        aPresContext,
+                                         nsIFrame*              aFrame,
+                                         const nsStyleDisplay*  aDisplay,
+                                         const nsStylePosition* aPosition,
+                                         nsIFrame*&             aPlaceholderFrame)
+{
+  aPlaceholderFrame = nsnull;
+
+  // See if the element wants to be floated or absolutely positioned
+  if (NS_STYLE_FLOAT_NONE != aDisplay->mFloats) {
+    // Create a placeholder frame that will serve as the anchor point.
+    nsPlaceholderFrame* placeholder =
+      CreatePlaceholderFrame(aPresContext, aFrame);
+
+    // See if we need to wrap the frame in a BODY frame
+    nsIFrame*  wrapperFrame;
+    if (CreateWrapperFrame(aPresContext, aFrame, wrapperFrame)) {
+      // Bind the wrapper frame to the placeholder
+      placeholder->SetAnchoredItem(wrapperFrame);
+    }
+
+    aPlaceholderFrame = placeholder;
+
+  } else if (NS_STYLE_POSITION_ABSOLUTE == aPosition->mPosition) {
+    // Create a placeholder frame that will serve as the anchor point.
+    nsAbsoluteFrame* placeholder =
+      CreateAbsolutePlaceholderFrame(aPresContext, aFrame);
+
+    // See if we need to wrap the frame in a BODY frame
+    nsIFrame*  wrapperFrame;
+    if (CreateWrapperFrame(aPresContext, aFrame, wrapperFrame)) {
+      // Bind the wrapper frame to the placeholder
+      placeholder->SetAbsoluteFrame(wrapperFrame);
+    }
+
+    aPlaceholderFrame = placeholder;
+  }
+
+  return aPlaceholderFrame != nsnull;
+}
+
 /**
  * Create a next-in-flow for aFrame. Will return the newly created
  * frame in aNextInFlowResult <b>if and only if</b> a new frame is
