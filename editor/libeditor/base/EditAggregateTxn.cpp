@@ -24,6 +24,7 @@
 EditAggregateTxn::EditAggregateTxn()
   : EditTxn()
 {
+  NS_INIT_REFCNT();
   mChildren = new nsVoidArray();
 }
 
@@ -106,7 +107,18 @@ nsresult EditAggregateTxn::GetIsTransient(PRBool *aIsTransient)
 
 nsresult EditAggregateTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
 {
-  return NS_OK;
+  nsresult result=NS_OK;  // it's legal (but not very useful) to have an empty child list
+  if (nsnull!=aDidMerge)
+    *aDidMerge=PR_FALSE;
+  if (nsnull!=mChildren)
+  {
+    PRInt32 i;
+    PRInt32 count = mChildren->Count();
+    EditTxn *txn = (EditTxn*)(mChildren->ElementAt(count-1));
+    result = txn->Merge(aDidMerge, aTransaction);
+  }
+  return result;
+
 }
 
 nsresult EditAggregateTxn::Write(nsIOutputStream *aOutputStream)
@@ -138,6 +150,56 @@ nsresult EditAggregateTxn::AppendChild(EditTxn *aTxn)
   return NS_ERROR_NULL_POINTER;
 }
 
+nsresult EditAggregateTxn::SetName(nsIAtom *aName)
+{
+  mName = aName;
+  return NS_OK;
+}
+
+nsresult EditAggregateTxn::GetName(nsIAtom **aName)
+{
+  if (aName)
+  {
+    if (mName)
+    {
+      *aName = mName;
+      NS_ADDREF(*aName);
+      return NS_OK;
+    }
+  }
+  return NS_ERROR_NULL_POINTER;
+}
+
+nsresult EditAggregateTxn::GetCount(PRInt32 *aCount)
+{
+  if (!aCount) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  *aCount=0;
+  if (mChildren) {
+    *aCount = mChildren->Count();
+  }
+  return NS_OK;
+}
+
+nsresult EditAggregateTxn::GetTxnAt(PRInt32 aIndex, EditTxn **aTxn)
+{
+  if (!aTxn) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (!mChildren) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  const PRInt32 txnCount = mChildren->Count();
+  if (0>aIndex || txnCount<=aIndex) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  *aTxn = (EditTxn *)(mChildren->ElementAt(aIndex));
+  if (!*aTxn)
+    return NS_ERROR_UNEXPECTED;
+  NS_ADDREF(*aTxn);
+  return NS_OK;
+}
 
 
 

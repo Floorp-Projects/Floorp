@@ -69,9 +69,14 @@ TransactionFactory::GetNewTransaction(REFNSIID aTxnType, EditTxn **aResult)
     *aResult = new JoinElementTxn();
   else if (aTxnType.Equals(kEditAggregateTxnIID))
     *aResult = new EditAggregateTxn();
+  else
+    result = NS_ERROR_NO_INTERFACE;
   
-  if (nsnull==*aResult)
-    result = NS_ERROR_INVALID_ARG;
+  if (NS_SUCCEEDED(result) && nsnull==*aResult)
+    result = NS_ERROR_OUT_OF_MEMORY;
+
+  if (NS_SUCCEEDED(result))
+    NS_ADDREF(*aResult);
 
   return result;
 }

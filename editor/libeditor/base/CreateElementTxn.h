@@ -39,6 +39,13 @@ public:
 
   enum { eAppend=-1 };
 
+  /** Initialize the transaction.
+    * @param aDoc    the document containing aParent
+    * @param aTag    the tag (P, HR, TABLE, etc.) for the new element
+    * @param aParent the node into which the new element will be inserted
+    * @param aOffsetInParent the location in aParent to insert the new element
+    *                        if eAppend, the new element is appended as the last child
+    */
   virtual nsresult Init(nsIDOMDocument *aDoc,
                         const nsString& aTag,
                         nsIDOMNode *aParent,

@@ -38,6 +38,11 @@ class JoinElementTxn : public EditTxn
 {
 public:
 
+  /** initialize the transaction
+    * @param aEditor    the provider of core editing operations
+    * @param aLeftNode  the first of two nodes to join
+    * @param aRightNode the second of two nodes to join
+    */
   virtual nsresult Init(nsIEditor  *aEditor,
                         nsIDOMNode *aLeftNode,
                         nsIDOMNode *aRightNode);
@@ -73,8 +78,8 @@ protected:
   nsCOMPtr<nsIDOMNode> mRightNode;
 
   /** the offset into mNode where the children of mElement are split (for undo).<BR>
-    * mOffset is the index of the last child in the left node. 
-    * -1 means the left node gets no children.
+    * mOffset is the index of the first child in the right node. 
+    * -1 means the left node had no children.
     */
   PRUint32  mOffset;
 

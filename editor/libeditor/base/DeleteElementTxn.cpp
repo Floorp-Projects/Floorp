@@ -33,17 +33,14 @@ DeleteElementTxn::DeleteElementTxn()
 {
 }
 
-nsresult DeleteElementTxn::Init(nsIDOMNode *aElement,
-                                nsIDOMNode *aParent)
+nsresult DeleteElementTxn::Init(nsIDOMNode *aElement)
 {
-  if ((nsnull!=aElement) && (nsnull!=aParent))
-  {
+  if (nsnull!=aElement)  {
     mElement = aElement;
-    mParent = aParent;
-    return NS_OK;
   }
-  else
+  else 
     return NS_ERROR_NULL_POINTER;
+  return NS_OK;
 }
 
 
@@ -53,8 +50,17 @@ DeleteElementTxn::~DeleteElementTxn()
 
 nsresult DeleteElementTxn::Do(void)
 {
-  if (!mParent  ||  !mElement)
+  if (!mElement)
     return NS_ERROR_NULL_POINTER;
+
+  nsresult result = mElement->GetParentNode(getter_AddRefs(mParent));
+  if (NS_FAILED(result)) {
+    return result;
+  }
+  if (!mParent) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
 #ifdef NS_DEBUG
   // begin debug output
   nsCOMPtr<nsIDOMElement> element(mElement);
@@ -76,17 +82,10 @@ nsresult DeleteElementTxn::Do(void)
     delete [] p;
   }
   // end debug output
-  // begin sanity check 1: parent-child relationship
-  nsresult testResult;
-  nsCOMPtr<nsIDOMNode> parentNode;
-  testResult = mElement->GetParentNode(getter_AddRefs(parentNode));
-  NS_ASSERTION((NS_SUCCEEDED(testResult)), "bad mElement, couldn't get parent");
-  NS_ASSERTION((parentNode==mParent), "bad mParent, mParent!=mElement->GetParent() ");
-  // end sanity check 1.
 #endif
 
   // remember which child mElement was (by remembering which child was next)
-  nsresult result = mElement->GetNextSibling(getter_AddRefs(mRefNode));  // can return null mRefNode
+  result = mElement->GetNextSibling(getter_AddRefs(mRefNode));  // can return null mRefNode
 
   nsCOMPtr<nsIDOMNode> resultNode;
   result = mParent->RemoveChild(mElement, getter_AddRefs(resultNode));

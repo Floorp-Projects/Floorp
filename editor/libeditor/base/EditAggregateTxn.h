@@ -20,6 +20,8 @@
 #define EditAggregateTxn_h__
 
 #include "EditTxn.h"
+#include "nsIAtom.h"
+#include "nsCOMPtr.h"
 
 #define EDIT_AGGREGATE_TXN_IID \
 {/* 345921a0-ac49-11d2-86d8-000064657374 */ \
@@ -56,12 +58,30 @@ public:
 
   virtual nsresult GetRedoString(nsString **aString);
 
+  /** append a transaction to this aggregate */
   virtual nsresult AppendChild(EditTxn *aTxn);
+
+  /** get the number of nested txns.  
+    * This is the number of top-level txns, it does not do recursive decent.
+    */
+  virtual nsresult GetCount(PRInt32 *aCount);
+
+  /** get the txn at index aIndex.
+    * returns NS_ERROR_UNEXPECTED if there is no txn at aIndex.
+    */
+  virtual nsresult GetTxnAt(PRInt32 aIndex, EditTxn **aTxn);
+
+  /** set the name assigned to this aggregate txn */
+  virtual nsresult SetName(nsIAtom *aName);
+
+  /** get the name assigned to this aggregate txn */
+  virtual nsresult GetName(nsIAtom **aName);
 
 protected:
 
   //XXX: if this was an nsISupportsArray, it would handle refcounting for us
-  nsVoidArray *mChildren;
+  nsVoidArray * mChildren;
+  nsCOMPtr<nsIAtom> mName;
 
 };
 

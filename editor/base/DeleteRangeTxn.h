@@ -40,6 +40,9 @@ class DeleteRangeTxn : public EditAggregateTxn
 {
 public:
 
+  /** initialize the transaction.
+    * @param aRange  the range to delete
+    */
   virtual nsresult Init(nsIDOMRange *aRange);
 
 private:

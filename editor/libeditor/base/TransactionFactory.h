@@ -34,6 +34,10 @@ protected:
   virtual ~TransactionFactory();
 
 public:
+  /** return a transaction object of aTxnType, refcounted 
+    * @return NS_ERROR_NO_INTERFACE if aTxnType is unknown, 
+    *         NS_ERROR_OUT_OF_MEMORY if the allocations fails.
+    */
   static nsresult GetNewTransaction(REFNSIID aTxnType, EditTxn **aResult);
 
 };

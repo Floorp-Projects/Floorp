@@ -31,18 +31,26 @@
 class nsIPresShell;
 
 /**
- * A transaction that changes an attribute of a content node. 
- * This transaction covers add, remove, and change attribute.
- * TODO: do we need to add a direction field, and do the insert and
- *       merging based on the direction?
- */
+  * A transaction that inserts text into a content node. 
+  */
 class InsertTextTxn : public EditTxn
 {
 public:
+
+  /** used to name aggregate transactions that consist only of a single InsertTextTxn,
+    * or a DeleteSelection followed by an InsertTextTxn.
+    */
+  static nsIAtom *gInsertTextTxnName;
 	
+  /** initialize the transaction
+    * @param aElement the text content node
+    * @param aOffset  the location in aElement to do the insertion
+    * @param aString  the new text to insert
+    * @param aPresShell used to get and set the selection
+    */
   virtual nsresult Init(nsIDOMCharacterData *aElement,
                         PRUint32 aOffset,
-                        const nsString& aStringToInsert,
+                        const nsString& aString,
                         nsIPresShell* aPresShell);
 
 private:
@@ -73,6 +81,9 @@ public:
 
   /** return the string data associated with this transaction */
   virtual nsresult GetData(nsString& aResult);
+
+  /** must be called before any InsertTextTxn is instantiated */
+  static nsresult ClassInit();
 
 protected:
 
