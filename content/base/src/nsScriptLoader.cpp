@@ -43,7 +43,6 @@
 #include "nsIScriptElement.h"
 #include "nsIDocShell.h"
 #include "jsapi.h"
-#include "nsIHttpChannel.h"
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
