@@ -1835,6 +1835,20 @@ nsLocalFile::GetDirectoryEntries(nsISimpleEnumerator * *entries)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsLocalFile::GetPersistentDescriptor(char * *aPersistentDescriptor)
+{
+    NS_ENSURE_ARG_POINTER(aPersistentDescriptor);
+    return GetPath(aPersistentDescriptor);
+}
+
+NS_IMETHODIMP
+nsLocalFile::SetPersistentDescriptor(const char * aPersistentDescriptor)
+{
+   NS_ENSURE_ARG(aPersistentDescriptor); 
+   return InitWithPath(aPersistentDescriptor);   
+}
+
 
 nsresult 
 NS_NewLocalFile(const char* path, PRBool followLinks, nsILocalFile* *result)
@@ -1846,10 +1860,12 @@ NS_NewLocalFile(const char* path, PRBool followLinks, nsILocalFile* *result)
 
     file->SetFollowLinks(followLinks);
     
-    nsresult rv = file->InitWithPath(path);
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(file);
-        return rv;
+    if (path) {
+        nsresult rv = file->InitWithPath(path);
+        if (NS_FAILED(rv)) {
+            NS_RELEASE(file);
+            return rv;
+        }
     }
     
     *result = file;

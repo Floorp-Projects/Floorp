@@ -1328,6 +1328,20 @@ nsLocalFile::Load(PRLibrary **_retval)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsLocalFile::GetPersistentDescriptor(char * *aPersistentDescriptor)
+{
+    NS_ENSURE_ARG_POINTER(aPersistentDescriptor);
+    return GetPath(aPersistentDescriptor);
+}
+
+NS_IMETHODIMP
+nsLocalFile::SetPersistentDescriptor(const char * aPersistentDescriptor)
+{
+   NS_ENSURE_ARG(aPersistentDescriptor); 
+   return InitWithPath(aPersistentDescriptor);   
+}
+
 nsresult 
 NS_NewLocalFile(const char* path, PRBool followSymlinks, nsILocalFile* *result)
 {
@@ -1336,10 +1350,12 @@ NS_NewLocalFile(const char* path, PRBool followSymlinks, nsILocalFile* *result)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(file);
 
-    nsresult rv = file->InitWithPath(path);
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(file);
-        return rv;
+    if (path) {
+        nsresult rv = file->InitWithPath(path);
+        if (NS_FAILED(rv)) {
+            NS_RELEASE(file);
+            return rv;
+        }
     }
     *result = file;
     return NS_OK;
