@@ -26,13 +26,13 @@
 #include "imgContainer.h"
 
 #include "nsIServiceManager.h"
+#include "nsIImage.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "gfxIImageFrame.h"
-#include "nsIImage.h"
 #include "nsMemory.h"
 
-NS_IMPL_ISUPPORTS3(imgContainer, imgIContainer, nsITimerCallback,imgIDecoderObserver)
+NS_IMPL_ISUPPORTS3(imgContainer, imgIContainer, nsITimerCallback, imgIDecoderObserver)
 
 //******************************************************************************
 imgContainer::imgContainer() :
@@ -105,10 +105,13 @@ NS_IMETHODIMP imgContainer::GetHeight(nscoord *aHeight)
 /* readonly attribute gfxIImageFrame currentFrame; */
 NS_IMETHODIMP imgContainer::GetCurrentFrame(gfxIImageFrame * *aCurrentFrame)
 {
-  if (mCompositingFrame)
-    return mCompositingFrame->QueryInterface(NS_GET_IID(gfxIImageFrame), (void**)aCurrentFrame); // addrefs again
-  else
-    return this->GetFrameAt(mCurrentAnimationFrameIndex, aCurrentFrame);
+  if (mCompositingFrame) {
+    *aCurrentFrame = mCompositingFrame;
+    NS_ADDREF(*aCurrentFrame);
+    return NS_OK;
+  }
+
+  return this->GetFrameAt(mCurrentAnimationFrameIndex, aCurrentFrame);
 }
 
 //******************************************************************************
@@ -162,10 +165,14 @@ NS_IMETHODIMP imgContainer::AppendFrame(gfxIImageFrame *item)
        (numFrames >= 1)) // Not sure if I want to create a composite frame for every anim. Could be smarter.
     {
       mCompositingFrame = do_CreateInstance("@mozilla.org/gfx/image/frame;2");
-      mCompositingFrame->Init(0, 0, mSize.width, mSize.height, gfxIFormats::RGB_A1); 
-      nsCOMPtr<nsIImage> img(do_GetInterface(mCompositingFrame));
-      img->SetDecodedRect(0, 0, mSize.width, mSize.height);
-      
+      mCompositingFrame->Init(0, 0, mSize.width, mSize.height, gfxIFormats::RGB_A1);
+
+      nsCOMPtr<nsIInterfaceRequestor> ireq(do_QueryInterface(mCompositingFrame));
+      if (ireq) {
+        nsCOMPtr<nsIImage> img(do_GetInterface(ireq));
+        img->SetDecodedRect(0, 0, mSize.width, mSize.height);
+      }
+
       nsCOMPtr<gfxIImageFrame> firstFrame;
       this->GetFrameAt(0, getter_AddRefs(firstFrame));
       
@@ -243,6 +250,14 @@ NS_IMETHODIMP imgContainer::EndFrameDecode(PRUint32 aFrameNum, PRUint32 aTimeout
 NS_IMETHODIMP imgContainer::DecodingComplete(void)
 {
   mDoneDecoding = PR_TRUE;
+
+  PRUint32 numFrames;
+  mFrames.Count(&numFrames);
+  if (numFrames == 1) {
+    nsCOMPtr<gfxIImageFrame> currentFrame;
+    GetFrameAt(0, getter_AddRefs(currentFrame));
+    currentFrame->SetMutable(PR_FALSE);
+  }
   return NS_OK;
 }
 
@@ -568,7 +583,7 @@ NS_IMETHODIMP imgContainer::OnDataAvailable(imgIRequest *aRequest, nsISupports *
     aFrame->DrawTo(mCompositingFrame, x, aRect->y, aRect->width, aRect->height);
     BuildCompositeMask(mCompositingFrame, aFrame);
   }
-    return NS_OK;
+  return NS_OK;
 }
 
 //******************************************************************************
