@@ -699,6 +699,24 @@ XRemoteService::GetComposeLocation(const char **_retval)
   return NS_OK;
 }
 
+nsresult
+XRemoteService::GetCalendarLocation(char **_retval)
+{
+  // get the calendar chrome URL
+  nsCOMPtr<nsIPref> prefs;
+  prefs = do_GetService(NS_PREF_CONTRACTID);
+  if (!prefs)
+    return NS_ERROR_FAILURE;
+
+  prefs->CopyCharPref("calendar.chromeURL", _retval);
+
+  // fallback
+  if (!*_retval)
+    *_retval = nsCRT::strdup("chrome://calendar/content/calendar.xul");
+
+  return NS_OK;
+}
+
 PRBool
 XRemoteService::MayOpenURL(const nsCString &aURL)
 {
@@ -1085,6 +1103,36 @@ XRemoteService::XfeDoCommand(nsCString &aArgument,
     nsCOMPtr<nsIDOMWindow> newWindow;
     rv = OpenChromeWindow(0, composeLocation, "chrome,all,dialog=no",
                           arg, getter_AddRefs(newWindow));
+  }
+
+  // open a new calendar window
+  else if (aArgument.LowerCaseEqualsLiteral("opencalendar")) {
+
+    // check to see if it's already running
+    nsCOMPtr<nsIDOMWindowInternal> domWindow;
+
+    rv = FindWindow(NS_LITERAL_STRING("calendarMainWindow").get(),
+		    getter_AddRefs(domWindow));
+
+    if (NS_FAILED(rv))
+      return rv;
+
+    // focus the window if it was found
+    if (domWindow) {
+      domWindow->Focus();
+    }
+
+    // otherwise open a new calendar window
+    else {
+      nsXPIDLCString calendarChrome;
+      rv = GetCalendarLocation(getter_Copies(calendarChrome));
+      if (NS_FAILED(rv))
+        return rv;
+
+      nsCOMPtr<nsIDOMWindow> newWindow;
+      rv = OpenChromeWindow(0, calendarChrome, "chrome,all,dialog=no",
+                            arg, getter_AddRefs(newWindow));
+    }
   }
 
   return rv;
