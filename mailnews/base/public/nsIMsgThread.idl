@@ -17,9 +17,11 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIMessage.idl"
+#include "nsIMsgHdr.idl"
 #include "nsIEnumerator.idl"
 #include "MailNewsTypes.idl"
+
+interface nsIMsgHdr;
 
 [object, uuid(df64af90-e2da-11d2-8d6c-00805f8a6617)]
 interface nsIMsgThread : nsISupports {
@@ -28,10 +30,10 @@ interface nsIMsgThread : nsISupports {
   readonly attribute unsigned long numChildren;
   readonly attribute unsigned long numUnreadChildren;
 
-  void AddChild(in nsIMessage child, in boolean threadInThread);
-  nsIMessage GetChildAt(in long index);
-  nsIMessage GetChild(in nsMsgKey msgKey);
-  nsIMessage GetChildHdrAt(in long index);
+  void AddChild(in nsIMsgDBHdr child, in boolean threadInThread);
+  nsIMsgDBHdr GetChildAt(in long index);
+  nsIMsgDBHdr GetChild(in nsMsgKey msgKey);
+  nsIMsgDBHdr GetChildHdrAt(in long index);
 
   void RemoveChildAt(in long index);
   void RemoveChild(in nsMsgKey msgKey);
