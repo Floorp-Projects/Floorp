@@ -24,26 +24,28 @@
 #include "nsIInputStream.h"
 #include "nsIStreamListener.h"
 #include "nsIEventSinkGetter.h"
+#include "nsString2.h"
 
-extern NS_NET nsresult
+// Warning: These functions should NOT be defined with NS_NET because
+// the intention is that they'll be linked with the library/DLL that 
+// uses them. NS_NET is for DLL imports.
+
+extern nsresult
 NS_NewURI(nsIURI* *result, const char* spec, nsIURI* baseURI = nsnull);
 
-extern NS_NET nsresult
+extern nsresult
+NS_NewURI(nsIURI* *result, nsString2& spec, nsIURI* baseURI = nsnull);
+
+extern nsresult
 NS_OpenURI(nsIURI* uri, nsIInputStream* *result);
 
-extern NS_NET nsresult
+extern nsresult
 NS_OpenURI(nsIURI* uri, nsIStreamListener* aConsumer);
 
-extern NS_NET nsresult
-NS_MakeAbsoluteURI(const char* spec, nsIURI* base, char* *result);
+extern nsresult
+NS_MakeAbsoluteURI(const char* spec, nsIURI* baseURI, char* *result);
 
-////////////////////////////////////////////////////////////////////////////////
-// Temporary stuff:
-
-#include "nsIURL.h"
-
-// XXX temporary, until we fix up the rest of the code to use URIs instead of URLs:
-extern NS_NET nsresult
-NS_NewURL(nsIURL* *result, const char* spec, nsIURL* baseURL = nsnull);
+extern nsresult
+NS_MakeAbsoluteURI(nsString2& spec, nsIURI* baseURI, nsString2& result);
 
 #endif // nsNeckoUtil_h__
