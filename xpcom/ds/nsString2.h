@@ -410,7 +410,11 @@ nsString2& operator=(char aChar) {return Assign(aChar);}
 nsString2& operator=(PRUnichar aChar) {return Assign(aChar);}
 nsString2& operator=(const char* aCString) {return Assign(aCString);}
 nsString2& operator=(const PRUnichar* aString) {return Assign(aString);}
+#ifdef AIX
+nsString2& operator=(const nsSubsumeStr& aSubsumeString);  // AIX requires a const here
+#else
 nsString2& operator=(nsSubsumeStr& aSubsumeString);
+#endif
 
 /**
  * Here's a bunch of append mehtods for varying types...
@@ -749,7 +753,11 @@ public:
     nsAutoString2(const nsStr& aString,eCharSize aCharSize=kDefaultCharSize);
     nsAutoString2(const nsString2& aString,eCharSize aCharSize=kDefaultCharSize);
     nsAutoString2(const nsAutoString2& aString,eCharSize aCharSize=kDefaultCharSize);
+#ifdef AIX
+    nsAutoString2(const nsSubsumeStr& aSubsumeStr);  // AIX requires a const
+#else
     nsAutoString2(nsSubsumeStr& aSubsumeStr);
+#endif // AIX
     nsAutoString2(PRUnichar aChar,eCharSize aCharSize=kDefaultCharSize);
     virtual ~nsAutoString2();
 
