@@ -881,8 +881,8 @@ nsStandardURL::SetUsername(const char *username)
         mSpec.Insert(username, mAuthority.mPos, len + 1);
         mSpec.SetCharAt('@', mAuthority.mPos + len);
         mUsername.mPos = mAuthority.mPos;
-        mAuthority.mLen += len;
         shift = len + 1;
+        mAuthority.mLen += shift;
     }
     else
         shift = ReplaceSegment(mUsername.mPos, mUsername.mLen, username, len);
@@ -924,6 +924,7 @@ nsStandardURL::SetPassword(const char *password)
     if (mPassword.mLen < 0) {
         mPassword.mPos = mUsername.mPos + mUsername.mLen;
         mSpec.Insert(':', mPassword.mPos);
+        shift = 1;
         mPassword.mPos++;
         mPassword.mLen = 0;
     }
@@ -935,10 +936,11 @@ nsStandardURL::SetPassword(const char *password)
         len = escaped.Length();
     }
 
-    shift = ReplaceSegment(mPassword.mPos, mPassword.mLen, password, len);
+    shift += ReplaceSegment(mPassword.mPos, mPassword.mLen, password, len);
 
     if (shift) {
         mPassword.mLen = len;
+        mAuthority.mLen += shift;
         ShiftFromHostname(shift);
     }
     return NS_OK;
