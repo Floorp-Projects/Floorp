@@ -125,6 +125,14 @@ FilterString(const char *str, nsCString &result)
     PRBool writing = PR_FALSE;
     result.Truncate();
     const char *p = str;
+
+    // Remove leading spaces, tabs, CR, LF if any.
+    while (*p == ' ' || *p == '\t' || *p == '\r' || *p == '\n') {
+        writing = PR_TRUE;
+        str = p + 1;
+        p++;
+    }
+
     for (; *p; ++p) {
         if (*p == '\t' || *p == '\r' || *p == '\n') {
             writing = PR_TRUE;
@@ -134,8 +142,16 @@ FilterString(const char *str, nsCString &result)
             str = p + 1;
         }
     }
+
+    // Remove trailing spaces if any
+    while (((p-1) >= str) && (*(p-1) == ' ')) {
+        writing = PR_TRUE;
+        p--;
+    }
+
     if (writing && p > str)
         result.Append(str, p - str);
+
     return writing ? result.get() : str;
 }
 
@@ -993,6 +1009,9 @@ nsStandardURL::SetSpec(const nsACString &input)
     LOG(("nsStandardURL::SetSpec [spec=%s]\n", spec));
 
     Clear();
+
+    if (!spec)
+        return NS_OK;
 
     // filter out unexpected chars "\r\n\t" if necessary
     nsCAutoString buf1;
