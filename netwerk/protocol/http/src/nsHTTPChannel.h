@@ -77,7 +77,6 @@ public:
     NS_IMETHOD GetLoadAttributes(PRUint32 *aLoadAttributes);
     NS_IMETHOD SetLoadAttributes(PRUint32 aLoadAttributes);
     NS_IMETHOD GetContentType(char * *aContentType);
-    NS_IMETHOD Open();
 
     // nsIHTTPChannel methods:
     NS_IMETHOD GetRequestHeader(const char *headerName, char **_retval);
@@ -91,8 +90,10 @@ public:
 
     // nsHTTPChannel methods:
     nsresult            Init();
+    nsresult            Open();
     nsIEventQueue*      EventQueue(void) const { return m_pEventQ; };
     nsresult            SetResponse(nsHTTPResponse* i_pResp);
+    nsresult            GetResponseContext(nsISupports** aContext);
 
 protected:
     nsCOMPtr<nsIURI>            m_URI;
@@ -105,6 +106,8 @@ protected:
     nsHTTPResponse*             m_pResponse;
     nsIStreamListener*          m_pResponseDataListener;
     PRUint32                    mLoadAttributes;
+
+    nsCOMPtr<nsISupports>       mResponseContext;
 };
 
 #endif /* _nsHTTPChannel_h_ */

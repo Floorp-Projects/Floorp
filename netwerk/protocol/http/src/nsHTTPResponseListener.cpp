@@ -52,7 +52,8 @@ nsHTTPResponseListener::nsHTTPResponseListener():
     m_pConsumer(nsnull),
     m_ReadLength(0),
     m_bHeadersDone(PR_FALSE),
-    m_HeaderBuffer(eOneByte)
+    m_HeaderBuffer(eOneByte),
+    m_ResponseContext(nsnull)
 {
     NS_INIT_REFCNT();
 
@@ -101,6 +102,7 @@ nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
             return NS_ERROR_OUT_OF_MEMORY;
         }
         NS_ADDREF(m_pResponse);
+        // XXX:  This is *evil*.  Fix it!
         nsHTTPChannel* pTestCon = NS_STATIC_CAST(nsHTTPChannel*, m_pConnection);
         pTestCon->SetResponse(m_pResponse);
     }
@@ -137,7 +139,11 @@ nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
 
     if (m_pConsumer) {
         if (i_Length) {
-            rv = m_pConsumer->OnDataAvailable(m_pConnection, i_pStream, 0, 
+            PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+                   ("\tOnDataAvailable [this=%x]. Calling consumer "
+                    "OnDataAvailable.\tlength:%d\n", this, i_Length));
+
+            rv = m_pConsumer->OnDataAvailable(m_ResponseContext, i_pStream, 0, 
                                               i_Length);
         }
     } else {
@@ -172,16 +178,19 @@ nsHTTPResponseListener::OnStartBinding(nsISupports* i_pContext)
         rv = NS_ERROR_NULL_POINTER;
     }
 
-    // Cache the nsIStreamListener of the consumer...
+    // Cache the nsIStreamListener and ISupports context of the consumer...
     if (NS_SUCCEEDED(rv)) {
         rv = m_pConnection->GetResponseDataListener(&m_pConsumer);
+
+        // XXX:  This is *evil*.  Fix it!
+        nsHTTPChannel* pHTTPChannel = NS_STATIC_CAST(nsHTTPChannel*, m_pConnection);
+        pHTTPChannel->GetResponseContext(getter_AddRefs(m_ResponseContext));
     }
 
     if (NS_SUCCEEDED(rv)) {
         // Pass the notification out to the consumer...
         if (m_pConsumer) {
-            // XXX: This is the wrong context being passed out to the consumer
-            rv = m_pConsumer->OnStartBinding(i_pContext);
+            rv = m_pConsumer->OnStartBinding(m_ResponseContext);
         } else {
             NS_ERROR("No Stream Listener...");
             rv = NS_ERROR_NULL_POINTER;
@@ -203,8 +212,7 @@ nsHTTPResponseListener::OnStopBinding(nsISupports* i_pContext,
 
     // Pass the notification out to the consumer...
     if (m_pConsumer) {
-        // XXX: This is the wrong context being passed out to the consumer
-        rv = m_pConsumer->OnStopBinding(i_pContext, i_Status, i_pMsg);
+        rv = m_pConsumer->OnStopBinding(m_ResponseContext, i_Status, i_pMsg);
     } else {
         NS_ERROR("No Stream Listener...");
         rv = NS_ERROR_NULL_POINTER;
@@ -215,6 +223,9 @@ nsHTTPResponseListener::OnStopBinding(nsISupports* i_pContext,
 
     // The HTTPChannel is no longer needed...
     NS_IF_RELEASE(m_pConnection);
+
+    // The Response Context is no longer needed...
+    m_ResponseContext = nsnull;
 
     return rv;
 }
