@@ -27,6 +27,7 @@
 #include "nsXPBaseWindow.h"
 #endif
 
+#include "nsINetSupport.h"
 #include "nsIAppShell.h"
 #include "nsIWidget.h"
 #include "nsIDOMDocument.h"
@@ -46,6 +47,7 @@
 #include "nsHTMLContentSinkStream.h"
 #include "nsIDocument.h"
 #include "nsIDOMEventReceiver.h"
+#include "nsIDOMElement.h"
 #include "nsWindowListener.h"
 
 
@@ -63,6 +65,8 @@
 static NS_DEFINE_IID(kXPBaseWindowCID, NS_XPBASE_WINDOW_CID);
 static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
 static NS_DEFINE_IID(kWindowCID, NS_WINDOW_CID);
+static NS_DEFINE_IID(kDialogCID, NS_DIALOG_CID);
+
 
 static NS_DEFINE_IID(kIXPBaseWindowIID, NS_IXPBASE_WINDOW_IID);
 static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
@@ -78,7 +82,7 @@ static NS_DEFINE_IID(kIDOMMouseListenerIID,   NS_IDOMMOUSELISTENER_IID);
 static NS_DEFINE_IID(kIDOMEventReceiverIID,   NS_IDOMEVENTRECEIVER_IID);
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 
-static NS_DEFINE_IID(kINetSupportIID, NS_INETSUPPORT_IID);
+//static NS_DEFINE_IID(kINetSupportIID, NS_INETSUPPORT_IID);
 
 //----------------------------------------------------------------------
 nsXPBaseWindow::nsXPBaseWindow() :
@@ -185,25 +189,33 @@ HandleXPDialogEvent(nsGUIEvent *aEvent)
 
 
 //----------------------------------------------------------------------
-nsresult nsXPBaseWindow::Init(nsIAppShell* aAppShell,
-                              nsIPref* aPrefs,
-                              const nsString& aDialogURL,
-                              const nsString& aTitle,
-                              const nsRect& aBounds,
-                              PRUint32 aChromeMask,
-                              PRBool aAllowPlugins)
+nsresult nsXPBaseWindow::Init(nsXPBaseWindowType aType,
+                              nsIAppShell*       aAppShell,
+                              nsIPref*           aPrefs,
+                              const nsString&    aDialogURL,
+                              const nsString&    aTitle,
+                              const nsRect&      aBounds,
+                              PRUint32           aChromeMask,
+                              PRBool             aAllowPlugins)
 {
   mAllowPlugins = aAllowPlugins;
-
-  mAppShell = aAppShell;
+  mWindowType   = aType;
+  mAppShell     = aAppShell;
   NS_IF_ADDREF(mAppShell);
 
   mPrefs = aPrefs;
   NS_IF_ADDREF(mPrefs);
 
   // Create top level window
-  nsresult rv = nsRepository::CreateInstance(kWindowCID, nsnull, kIWidgetIID,
+  nsresult rv;
+  if (aType == eXPBaseWindowType_window) {
+    nsRepository::CreateInstance(kWindowCID, nsnull, kIWidgetIID,
                                              (void**)&mWindow);
+  } else {
+    nsRepository::CreateInstance(kDialogCID, nsnull, kIWidgetIID,
+                                             (void**)&mWindow);
+  }
+
   if (NS_OK != rv) {
     return rv;
   }
@@ -583,7 +595,7 @@ NS_IMETHODIMP nsXPBaseWindow::NewWebShell(nsIWebShell*& aNewWebShell)
     nsRect  bounds;
     GetBounds(bounds);
 
-    rv = dialogWindow->Init(mAppShell, mPrefs, mDialogURL, mTitle, bounds, 0, mAllowPlugins);
+    rv = dialogWindow->Init(mWindowType, mAppShell, mPrefs, mDialogURL, mTitle, bounds, 0, mAllowPlugins);
     if (NS_OK == rv) {
       dialogWindow->SetVisible(PR_TRUE);
       nsIWebShell *shell;
