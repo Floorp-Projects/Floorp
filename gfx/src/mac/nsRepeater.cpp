@@ -34,12 +34,14 @@ Repeater::Repeater()
   mNextRptr = 0;
   mPrevIdlr = 0;
   mNextIdlr = 0;
+  
 }
 
 Repeater::~Repeater()
 {
   if (mRepeating) RemoveFromRepeatList();
   if (mIdling) RemoveFromIdleList();
+  
 }
 
 // protected helper functs
@@ -78,7 +80,7 @@ void Repeater::AddToIdleList()
 
 //----------------------------------------------------------------------------
 void Repeater::RemoveFromIdleList()
-{
+{    
   if (sIdlers == this) sIdlers = mNextIdlr;
   if (mPrevIdlr) mPrevIdlr->mNextIdlr = mNextIdlr;
   if (mNextIdlr) mNextIdlr->mPrevIdlr = mPrevIdlr;
@@ -112,8 +114,9 @@ void Repeater::DoRepeaters(const EventRecord &aMacEvent)
   Repeater* theRepeater = sRepeaters;
   while (theRepeater)
   {
+    Repeater* nextRepeater = theRepeater->mNextRptr;
     theRepeater->RepeatAction(aMacEvent);
-    theRepeater = theRepeater->mNextRptr;
+    theRepeater = nextRepeater;
   }
 }
 
@@ -142,8 +145,9 @@ void Repeater::DoIdlers(const EventRecord &aMacEvent)
   Repeater* theIdler = sIdlers;
   while (theIdler)
   {
+    Repeater* nextIdler = theIdler->mNextIdlr;
     theIdler->RepeatAction(aMacEvent);
-    theIdler = theIdler->mNextIdlr;
+    theIdler = nextIdler;
   }
 }
 
