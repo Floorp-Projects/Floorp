@@ -1,21 +1,6 @@
-/* jband - 10/26/98 -  */
-
 js/jsd contains code for debugging support for the C-based JavaScript engine 
-in js/src.
-
-Currently the makefiles are for Win32 only (using MS nmake.exe from MSDEV 4.2).
-jsd.mak will build a standalone dll. jsdshell.mak will build the dll and also
-a version of the js/src/js.c shell which will launch a Java VM and run the 
-JavaSript Debugger (built in js/jsdj). This version assumes that you have a 
-JRE compatible JVM installed. Only Windows is supported for this Java-based 
-debugging.
-
-The makefile assumes that the jdk/include directory is part of the path
-in your 'include' environment variable so that is can find jni.h.
-
-Though only Windows makefiles are supplied, the basic code in js/jsd should 
-compile for other platforms -- it is a newer version of code that builds and 
-ships with Communicator 4.x on many platforms.
+in js/src.  jsd_xpc.cpp provides an XPCOM binding for the library.
 
 js/jsd/jsdb is a console debugger using only native code (see README in that 
-directory)
+directory.)  This debugger is no longer being actively developed, though it
+should work.
