@@ -24,30 +24,20 @@
 
     function getColorFromPickerAndSetWell(menuID, colorfield)
     {
-      var menu = document.getElementById( menuID );
+      var picker = document.getElementById( menuID );
       var colorValue = document.getElementById( colorfield );
-      if( menu ) {
-      	var colorWell = menu.firstChild.nextSibling;
-      	var colorPicker = menu.firstChild.nextSibling.nextSibling.firstChild;
-        colorWell.style.backgroundColor = colorValue.getAttribute("value");
-        colorPicker.setAttribute( "color", colorValue.getAttribute("value") );
+      if (picker) {
+        picker.color = colorValue.getAttribute("value");
       }
     }
     
-    function setColorWell(menu, colorfield) 
+    function setColorWell(aPicker) 
     {
-    	// Find the colorWell and colorPicker in the hierarchy.
-    	var colorWell = menu.firstChild.nextSibling;
-    	var colorPicker = menu.firstChild.nextSibling.nextSibling.firstChild;
-    
-    	// Extract color from colorPicker and assign to colorWell.
-    	var color = colorPicker.getAttribute('color');
-    	colorWell.style.backgroundColor = color;
-      document.getElementById(colorfield).setAttribute("value",color);
+      var colorRef = aPicker.nextSibling; 
+      colorRef.setAttribute("value", aPicker.color );
     }
 
     dump("*** foopy noopy\n");
-
 
   ]]>
   </script>
@@ -74,7 +64,7 @@
 	<separator class="thin"/>
 	<html>&displayText.label;</html>
     <box class="indent" autostretch="never">
-	  <text class="label" value="&style.label;" accesskey="&style.accesskey;" for="mailQuotedStyle"/>
+      <text class="label" value="&style.label;" accesskey="&style.accesskey;" for="mailQuotedStyle"/>
       <menulist id="mailQuotedStyle" pref="true" preftype="int" prefstring="mail.quoted_style"
                 prefattribute="data">
         <menupopup>
@@ -96,14 +86,8 @@
       </menulist>
       
       <text class="label" value="&color.label;" accesskey="&color.accesskey;"/>
-      <menu id="citationmenu" allowevents="true" class="colorpicker">
-        <titledbutton class="popup" align="right"/> 
-        <html:div style="width:30px; background-color:white"/>
-        <menupopup>
-          <colorpicker id="citation" palettename="standard" onclick="setColorWell(this.parentNode.parentNode,'mailCitationColor');"/>
-        </menupopup>
-        <broadcaster id="mailCitationColor" pref="true" preftype="color" prefstring="mail.citation_color" prefattribute="value" wsm_attributes="value"/>
-      </menu>  
+      <colorpicker type="button" id="citationmenu" palettename="standard" onclick="setColorWell(this)"/>
+      <broadcaster id="mailCitationColor" pref="true" preftype="color" prefstring="mail.citation_color" prefattribute="value" wsm_attributes="value"/>
     </box>		
 
 	<separator class="thin"/>
