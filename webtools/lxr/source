@@ -1,5 +1,5 @@
 #!/usr/bonsaitools/bin/perl
-# $Id: source,v 1.1 1998/06/11 23:56:17 jwz Exp $
+# $Id: source,v 1.2 1998/06/15 21:51:41 jwz Exp $
 
 # source --	Present sourcecode as html, complete with references
 #
@@ -62,15 +62,16 @@ sub descexpand {
 
 
 sub diricon {
+    my $img, $link;
     if ($filename eq '..') {
-	return(&fileref("<img src=\"/icons/back.gif\"".
-			" border=0 alt=\"Back\">", 
-			$parentdir));
+	$img = "/icons/back.gif";
+	$link = $parentdir;
     } else {
-	return(&fileref("<img src=\"/icons/folder.gif\"".
-			" border=0 alt=\"Folder\">",
-			$Path->{'virt'}.$filename));
+#	$img = "/icons/folder.gif";
+	$img = "internal-gopher-menu";
+	$link = $Path->{'virt'}.$filename;
     }
+    return(&fileref("<IMG ALIGN=ABSBOTTOM BORDER=0 SRC=\"$img\">", $link));
 }
 
 sub dirname {
@@ -86,20 +87,22 @@ sub dirname {
 
 
 sub fileicon {
+    my $img;
+
     if ($filename =~ /^.*\.[ch]$/) {
-	return(&fileref("<img src=\"/icons/c.gif\"".
-			" border=0 alt=\"C file\">",
-			$Path->{'virt'}.$filename));
+#	$img = "/icons/c.gif";
+	$img = "internal-gopher-text";
     } elsif ($filename =~ /^.*\.(cpp|cc)$/) {
 	# TODO: Find a nice icon for c++ files (KDE?)
-	return(&fileref("<img src=\"/icons/c.gif\"".
-			" border=0 alt=\"C++ file\">",
-			$Path->{'virt'}.$filename));
+#	$img = "/icons/c.gif";
+	$img = "internal-gopher-text";
     } else {		
-	return(&fileref("<img src=\"/icons/text.gif\"".
-			" border=0 alt=\"File\">",
-			$Path->{'virt'}.$filename));
+#	$img = "/icons/text.gif";
+	$img = "internal-gopher-unknown";
     }
+
+    return(&fileref("<IMG ALIGN=ABSBOTTOM BORDER=0 SRC=\"$img\">",
+		    $Path->{'virt'}.$filename));
 }
 
 
@@ -126,11 +129,27 @@ sub filesize {
 
 
 sub modtime {
-    my @t = gmtime((stat($Path->{'real'}.$filename))[9]);
-    $t[5] += 1900;
-    $t[4]++;
-#   return(sprintf("%04d-%02d-%02d %02d:%02d:%02d", reverse(splice(@t, 0, 6))));
-    return(sprintf("%04d-%02d-%02d %02d:%02d", reverse(splice(@t, 0, 6))));
+
+    my $current_time = time;
+    my $file_time = (stat($Path->{'real'}.$filename))[9];
+
+    my @t = gmtime($file_time);
+
+    my @months = ("Jan", "Feb", "Mar", "Apr", "May", "Jun",
+		  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec");
+    my ($sec, $min, $hour, $mday, $mon, $year) = @t;
+    $year += 1900;
+    $mon = $months[$mon];
+
+    my $one_hour = (60 * 60);
+    my $six_months = $one_hour * 24 * int(365/2);
+
+    if ($file_time <= ($current_time - $six_months) ||
+	$file_time >= ($current_time + $one_hour)) {
+	return sprintf("%s %2d  %04d", $mon, $mday, $year);
+    } else {
+	return sprintf("%s %2d %02d:%02d", $mon, $mday, $hour, $min);
+    }
 }
 
 sub bgcolor {
@@ -154,7 +173,7 @@ sub direxpand {
 	$direx .= &expandtemplate($templ,
 				  ('iconlink',		\&diricon),
 				  ('namelink',		\&dirname),
-				  ('filesize',		sub {return('')}),
+				  ('filesize',		sub {return('-')}),
 				  ('modtime',		\&modtime),
 				  ('bgcolor',		\&bgcolor),
 				  ('description',	\&descexpand));
@@ -198,7 +217,9 @@ sub printdir {
 	
     if (opendir(DIR, $Path->{'real'})) {
 	foreach $f (sort(grep/^[^\.]/,readdir(DIR))) {
-	    if (-d $Path->{'real'}.$f) {
+	    if ($f eq "CVS") {
+		# skip it
+	    } elsif (-d $Path->{'real'}.$f) {
 		push(@dirs,"$f/");
 	    } else {
 		push(@files,$f);
