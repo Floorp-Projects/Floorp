@@ -384,7 +384,7 @@
             var newTitle = "";
             var docTitle;
             if (this.docShell.contentViewer)
-              docTitle = this.contentDocument.title;
+              docTitle = this.contentTitle;
             
 	    if (!docTitle)
 	      docTitle = this.ownerDocument.documentElement.getAttribute("titledefault");
@@ -1340,6 +1340,10 @@
 
       <property name="contentDocument"
                 onget="return this.mCurrentBrowser.contentDocument;"
+                readonly="true"/>
+
+      <property name="contentTitle"
+                onget="return this.mCurrentBrowser.contentTitle;"
                 readonly="true"/>
 
       <property name="securityUI"
