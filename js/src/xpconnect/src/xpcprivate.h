@@ -1197,6 +1197,8 @@ public:
                                       XPCNativeInterface* newInterface,
                                       PRUint16 position);
 
+    static void ClearCacheEntryForClassInfo(nsIClassInfo* classInfo);
+
     inline JSBool FindMember(jsval name, XPCNativeMember** pMember,
                              PRUint16* pInterfaceIndex) const;
 
