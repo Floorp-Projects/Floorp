@@ -1213,13 +1213,28 @@ nsNntpService::GetProtocolForUri(nsIURI *aUri, nsIMsgWindow *aMsgWindow, nsINNTP
 
   nsCAutoString spec;
   rv = aUri->GetSpec(spec);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+#if 0 // this not ready yet. 
+  nsNewsAction action = nsINntpUrl::ActionUnknown;
+  nsCOMPtr <nsINntpUrl> nntpUrl = do_QueryInterface(aUri);
+  if (nntpUrl) {
+    rv = nntpUrl->GetNewsAction(&action);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
 
   // if this is a news-message:/ uri, decompose it and set hasMsgOffline on the uri
   // Or, if it's of this form, we need to do the same.
   // "news://news.mozilla.org:119/3D612B96.1050301%40netscape.com?part=1.2&type=image/gif&filename=hp_icon_logo.gif"
 
-  if (!PL_strncmp(spec.get(), kNewsMessageRootURI, kNewsMessageRootURILen)
-    || !PL_strncmp(spec.get(), kNewsRootURI, kNewsRootURILen)) {
+  // XXX todo, or do we want to check if it is a news-message:// uri or
+  // a news:// uri (but action is not a fetch related action?)
+  if (!PL_strncmp(spec.get(), kNewsMessageRootURI, kNewsMessageRootURILen) ||
+      (action == nsINntpUrl::ActionFetchPart || action == nsINntpUrl::ActionFetchArticle)) {
+#else
+  // if this is a news-message:/ uri, decompose it and set hasMsgOffline on the uri
+  if (!PL_strncmp(spec.get(), kNewsMessageRootURI, kNewsMessageRootURILen)) {
+#endif
     nsCOMPtr <nsIMsgFolder> folder;
     nsMsgKey key = nsMsgKey_None;
     rv = DecomposeNewsMessageURI(spec.get(), getter_AddRefs(folder), &key);
