@@ -307,6 +307,8 @@ protected:
     static LRESULT CALLBACK MozSpecialMsgFilter(int code, WPARAM wParam, LPARAM lParam);
     static LRESULT CALLBACK MozSpecialWndProc(int code, WPARAM wParam, LPARAM lParam);
     static LRESULT CALLBACK MozSpecialMouseProc(int code, WPARAM wParam, LPARAM lParam);
+    static VOID    CALLBACK HookTimerForPopups( HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime );
+    static void             ScheduleHookTimer(HWND aWnd, UINT aMsgId);
 
     static void             RegisterSpecialDropdownHooks();
     static void             UnregisterSpecialDropdownHooks();
