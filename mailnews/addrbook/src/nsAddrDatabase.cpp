@@ -4030,6 +4030,7 @@ nsresult nsAddrDatabase::GetRowForEmailAddress(const char *emailAddress, nsIMdbR
 			result = GetRowForCharColumn(pUTF8Str, m_LowerPriEmailColumnToken, PR_TRUE, cardRow);
 			Recycle(pUTF8Str);
 		}	
+		PR_Free(unicodeStr);
 	}
 	return result;
 }
