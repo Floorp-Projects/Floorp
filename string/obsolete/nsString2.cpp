@@ -712,7 +712,6 @@ PRInt32 _ToInteger(nsString& aString,PRInt32* anErrorCode,PRUint32 aRadix) {
   *anErrorCode = NS_OK;
 
     //now iterate the numeric chars and build our result
-  char theChar=0;
   char theDigit=0;
   while(--cp>=aString.mStr){
     char theChar=*cp;
@@ -1885,7 +1884,7 @@ void nsString::Recycle(nsString* aString){
 #endif
 }
 
-
+#if 0
 /**
  * 
  * @update	gess 01/04/99
@@ -1927,7 +1926,7 @@ ostream& operator<<(ostream& aStream,const nsString& aString){
   }    
 	return aStream;
 }
-
+#endif
 
 /**
  * 

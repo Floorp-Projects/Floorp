@@ -65,7 +65,7 @@ inline PRUnichar GetCharAt(const char* aString,PRUint32 anIndex) {
  */
 void ShiftCharsLeft(char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint32 aCount) { 
   PRUint32 theMax=aLength-anOffset;
-  PRUint32 theLength=(theMax<aCount) ? theMax : aCount;
+  //PRUint32 theLength=(theMax<aCount) ? theMax : aCount;
 
   char* first= aDest+anOffset+aCount;
   char* last = aDest+aLength;
@@ -110,7 +110,7 @@ void ShiftCharsRight(char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint32 aCo
  */
 void ShiftDoubleCharsLeft(char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint32 aCount) { 
   PRUint32 theMax=aLength-anOffset;
-  PRUint32 theLength=(theMax<aCount) ? theMax : aCount;
+  //PRUint32 theLength=(theMax<aCount) ? theMax : aCount;
 
   PRUnichar* theBuf=(PRUnichar*)aDest;
   PRUnichar* first= theBuf+anOffset+aCount;
@@ -540,7 +540,7 @@ public:
     mListener = new HandleCaseConversionShutdown3();
     if(mListener){
       mListener->AddRef();
-      nsresult result=nsServiceManager::GetService(kUnicharUtilCID, kICaseConversionIID,(nsISupports**) &gCaseConv, mListener);
+      nsServiceManager::GetService(kUnicharUtilCID, kICaseConversionIID,(nsISupports**) &gCaseConv, mListener);
     }
   }
 protected:
@@ -619,7 +619,6 @@ CaseConverters gCaseConverters[]={&ConvertCase1,&ConvertCase2};
  * @return  the new length of the given buffer
  */
 PRInt32 CompressChars1(char* aString,PRUint32 aLength,const char* aSet){ 
-  PRInt32 result=0;
 
   typedef char  chartype;
   chartype*  from = aString;
@@ -663,7 +662,6 @@ PRInt32 CompressChars1(char* aString,PRUint32 aLength,const char* aSet){
  * @return  the new length of the given buffer
  */
 PRInt32 CompressChars2(char* aString,PRUint32 aLength,const char* aSet){ 
-  PRInt32 result=0;
 
   typedef PRUnichar  chartype;
   chartype*  from = (chartype*)aString;
