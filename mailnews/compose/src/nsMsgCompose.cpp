@@ -4449,17 +4449,17 @@ nsresult nsMsgCompose::SetBodyAttributes(nsString& attributes)
         else
         {
           /* we found the end of an attribute value */
-        attributeValue.Assign(start, data - start);
-        rv = SetBodyAttribute(m_editor, rootElement, attributeName, attributeValue);
-        NS_ENSURE_SUCCESS(rv, rv);
+          attributeValue.Assign(start, data - start);
+          rv = SetBodyAttribute(m_editor, rootElement, attributeName, attributeValue);
+          NS_ENSURE_SUCCESS(rv, rv);
 
-        /* restart the search for the next pair of attribute */
-        start = data + 1;
-        attributeName.Truncate();
-        attributeValue.Truncate();
-        delimiter = '=';
+          /* restart the search for the next pair of attribute */
+          start = data + 1;
+          attributeName.Truncate();
+          attributeValue.Truncate();
+          delimiter = '=';
+        }
       }
-    }
     }
 
     data ++;
