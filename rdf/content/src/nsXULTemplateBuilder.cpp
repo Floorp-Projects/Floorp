@@ -1997,19 +1997,30 @@ RDFGenericBuilderImpl::IsElementInWidget(nsIContent* aElement)
 {
     // Make sure that we're actually creating content for the tree
     // content model that we've been assigned to deal with.
-    nsCOMPtr<nsIContent> rootElement;
-    if (NS_FAILED(FindWidgetRootElement(aElement, getter_AddRefs(rootElement))))
-        return PR_FALSE;
 
-    nsCOMPtr<nsIAtom> rootTag;
-    nsCOMPtr<nsIAtom> elementTag;
-    mRoot->GetTag(*getter_AddRefs(rootTag));
-    rootElement->GetTag(*getter_AddRefs(elementTag));
+    // Walk up the parent chain from us to the root and
+    // see what we find.
+    if (aElement == mRoot)
+      return PR_TRUE;
 
-    if (rootTag.get() != elementTag.get())
-        return PR_FALSE;
+    // walk up the tree until you find rootAtom
+    nsCOMPtr<nsIContent> element(do_QueryInterface(aElement));
+    nsCOMPtr<nsIContent> parent;
+    element->GetParent(*getter_AddRefs(parent));
+    element = parent;
+    
+    while (element) {
+        
+        if (element.get() == mRoot)
+          return PR_TRUE;
 
-    return PR_TRUE;
+        // up to the parent...
+        nsCOMPtr<nsIContent> parent;
+        element->GetParent(*getter_AddRefs(parent));
+        element = parent;
+    }
+    
+    return PR_FALSE;
 }
 
 nsresult
