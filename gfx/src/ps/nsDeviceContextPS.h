@@ -19,34 +19,15 @@
 #ifndef nsDeviceContextPS_h___
 #define nsDeviceContextPS_h___
 
+#include <windows.h>
 #include "nsDeviceContext.h"
 #include "nsUnitConversion.h"
 #include "nsIWidget.h"
 #include "nsIView.h"
 #include "nsIRenderingContext.h"
-#include "nsPrintManager.h"
 #include "nsVoidArray.h"
-#include "nsPSStructs.h"
 
-extern "C" void xl_begin_document(PSContext *aCX);
-extern "C" void xl_initialize_translation(PSContext *aCX, PrintSetup* aPS);
-extern "C" void xl_end_document(PSContext *aCX);
-extern "C" void xl_begin_page(PSContext *aCX, int aPN);
-extern "C" void xl_end_page(PSContext *aCX, int aPN);
-extern "C" void xl_finalize_translation(PSContext *aCX);
-extern "C" void xl_show(PSContext *aCX, char* aTxt, int aLen, char *aAlign);
-extern "C" void xl_translate(PSContext* aCX, int aX, int aY);
-extern "C" void xl_moveto(PSContext* aCX, int aX, int aY);
-extern "C" void xl_line(PSContext* aCX, int aX1, int aY1, int aX2, int aY2, int aThick);
-extern "C" void xl_box(PSContext* aCX, int w, int h);
-extern "C" void xl_moveto_loc(PSContext* aCX, int aX, int aY);
-extern "C" void xl_lineto(PSContext* aCX, int aX1, int aY1);
-extern "C" void xl_stroke(PSContext* aCX);
-extern "C" void xl_fill(PSContext* aCX);
-extern "C" void xl_closepath(PSContext* aCX);
-extern "C" void xl_graphics_save(PSContext *aCX);
-extern "C" void xl_graphics_restore(PSContext *aCX);
-
+class nsPostScriptObj;
 class nsDeviceContextWin;       // need to be a friend of the class using us.
 
 class nsDeviceContextPS : public DeviceContextImpl
@@ -96,17 +77,14 @@ protected:
   
   nsDrawingSurface 			mSurface;
   PRUint32 							mDepth;
-  PSContext             *mPrintContext; 
   nsIDeviceContextSpec  *mSpec;
-  PrintSetup            *mPrintSetup;
   float                 mPixelScale;
   nsVoidArray           mFontMetrics;  // we are not using the normal font cache, this is special for PostScript.
-  PRUint16              mPageNumber;
-
+  nsPostScriptObj       *mPSObj;
 
 public:
   //static bool   GetMacFontNumber(const nsString& aFontName, short &fontNum);
-  PSContext*    GetPrintContext() { return mPrintContext; }
+  nsPostScriptObj*    GetPrintContext() { return mPSObj; }
 
 public:
   HDC           mDC;               // this is temporary!!!

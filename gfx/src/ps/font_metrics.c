@@ -2106,6 +2106,8 @@ PS_FontInfo PSFE_Courier_BoldOblique = {
    { 600, 0, { -20, -142, 694, 625 } },
   }
 };
+
+
 PS_FontInfo *PSFE_MaskToFI[8] = {
  &PSFE_Times_Roman,
  &PSFE_Times_Bold,
@@ -2116,3 +2118,12 @@ PS_FontInfo *PSFE_MaskToFI[8] = {
  &PSFE_Courier_Oblique,
  &PSFE_Courier_BoldOblique,
 };
+
+
+
+void 
+INTL_CharSetIDToName(int16 csid, char  *charset)
+{
+	//XXX: Fill me in with code from mozilla/lib/libi18n
+}
+
