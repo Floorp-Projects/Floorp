@@ -1449,7 +1449,7 @@ nsMsgCompose::ProcessSignature(nsOutputFileStream *aAppendFileStream)
       if (m_composeHTML)
         urlStr = "chrome://messengercompose/content/defaultHtmlBody.html";
       else
-        urlStr = "chrome://messengercompose/content/defaultHtmlBody.txt";
+        urlStr = "chrome://messengercompose/content/defaultTextBody.txt";
     }
     else
     {
@@ -1484,7 +1484,7 @@ nsMsgCompose::ProcessSignature(nsOutputFileStream *aAppendFileStream)
     if (m_composeHTML)
       urlStr = "chrome://messengercompose/content/defaultHtmlBody.html";
     else
-      urlStr = "chrome://messengercompose/content/defaultHtmlBody.txt";
+      urlStr = "chrome://messengercompose/content/defaultTextBody.txt";
   }
 
   PR_FREEIF(sigFilePath);
