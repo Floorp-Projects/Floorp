@@ -532,7 +532,11 @@ SSMStatus SSMKeyGenContext_GetAttr(SSMResource *res,
                                    SSMResourceAttrType attrType,
                                    SSMAttributeValue *value)
 {
+    SSMKeyGenContext *cxt;
+    SSMStatus rv;
+
     PR_ASSERT(SSM_IsAKindOf(res, SSM_RESTYPE_KEYGEN_CONTEXT));
+    cxt = (SSMKeyGenContext*)res;
     switch(attrID) {
     case SSM_FID_CLIENT_CONTEXT:
       SSM_DEBUG("Getting the Key Gen UI context");
@@ -542,6 +546,39 @@ SSMStatus SSMKeyGenContext_GetAttr(SSMResource *res,
       }
       memcpy(value->u.string.data, res->m_clientContext.data, res->m_clientContext.len);
       value->u.string.len = res->m_clientContext.len;
+      break;
+    case SSM_FID_CHOOSE_TOKEN_URL:
+      {
+        PRUint32 width, height;
+        char * mech, *url;
+
+        mech = PR_smprintf("mech=%d&task=keygen&unused=unused",
+                           SSMKeyGenContext_GenMechToAlgMech(cxt->mech));
+        rv = SSM_GenerateURL(res->m_connection,"get", "select_token", res, 
+                             mech, &width, &height, &url);
+        PR_FREEIF(mech);
+        if (rv != SSM_SUCCESS) {
+            goto loser;
+        }
+        value->u.string.data = (unsigned char*)url;
+        value->u.string.len  = PL_strlen(url);
+        value->type = SSM_STRING_ATTRIBUTE;
+      }
+      break;
+    case SSM_FID_INIT_DB_URL:
+      {
+        PRUint32 width, height;
+        char *url;
+
+        rv = SSM_GenerateURL(res->m_connection,"get", "set_password", res, 
+                             "slot=all&mech=1", &width, &height, &url);
+        if (rv != SSM_SUCCESS) {
+            goto loser;
+        }
+        value->u.string.data = (unsigned char*)url;
+        value->u.string.len  = PL_strlen(url);
+        value->type = SSM_STRING_ATTRIBUTE;
+      }
       break;
     default:
       SSM_DEBUG("Got unkown KeyGenContext Get Attribute Request %d\n", attrID);
