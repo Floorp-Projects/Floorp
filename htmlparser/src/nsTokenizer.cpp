@@ -85,7 +85,7 @@ CTokenizer::CTokenizer(ITokenizerDelegate* aDelegate,eParseMode aMode) :
  */
 CTokenizer::~CTokenizer() {
   delete mScanner;
-  delete mDelegate;
+  mDelegate->Destroy();
   mScanner=0;
 }
 
@@ -189,6 +189,8 @@ PRInt32 CTokenizer::Tokenize(nsString& aSourceBuffer,PRBool appendTokens){
         mTokenDeque.Push(theToken);
       }
     }
+    else if (theToken)
+      delete theToken;
   } 
   if(kEOF==result)
     result=kNoError;
