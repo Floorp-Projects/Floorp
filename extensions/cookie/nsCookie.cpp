@@ -34,6 +34,7 @@
 #include "nsIFileLocator.h"
 #include "nsIFileSpec.h"
 #include "nsFileLocations.h"
+#include "nsINetSupportDialogService.h"
 
 extern "C" {
 #include "xp.h"
@@ -67,6 +68,7 @@ static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);*/
 static NS_DEFINE_IID(kIFileLocatorIID, NS_IFILELOCATOR_IID);
 static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
+static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 
 #define MAX_NUMBER_OF_COOKIES  300
 #define MAX_COOKIES_PER_SERVER 20
@@ -89,9 +91,7 @@ MODULE_PRIVATE time_t
 NET_ParseDate(char *date_string);
 
 PRBool
-ET_PostCheckConfirmBox(char* szMainMessage, char* szCheckMessage,
-	                    char* szOKMessage, char* szCancelMessage,
-	                    XP_Bool *bChecked);
+Cookie_CheckConfirm(char * szMessage, char * szCheckMessage, PRBool* checkValue);
 
 PRIVATE Bool cookies_changed = FALSE;
 PRIVATE Bool cookie_permissions_changed = FALSE;
@@ -1496,11 +1496,8 @@ net_IntSetCookieString(char * cur_url,
 
 	    {
 		Bool old_cookie_remember_checked = cookie_remember_checked;
-        PRBool userHasAccepted = ET_PostCheckConfirmBox
-		    (new_string,
-		     remember_string,
-		     0,0,
-		     &cookie_remember_checked);
+        PRBool userHasAccepted = Cookie_CheckConfirm
+		    (new_string, remember_string, &cookie_remember_checked);
 		PR_FREEIF(new_string);
 		PR_FREEIF(remember_string);
 		if (cookie_remember_checked) {
@@ -3380,14 +3377,37 @@ NET_ParseURL (const char *url, int parts_requested)
     return rv;
 }
 
+#define REAL_DIALOG 1
 
 PRBool
-ET_PostCheckConfirmBox(char* szMainMessage, char* szCheckMessage,
-	char* szOKMessage, char* szCancelMessage,
-	XP_Bool *bChecked)
+Cookie_CheckConfirm(char * szMessage, char * szCheckMessage, PRBool* checkValue)
 {
+#ifdef REAL_DIALOG
+  PRBool retval = PR_TRUE; /* default value */
+
+  nsresult res;  
+  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
+  if (NS_FAILED(res)) {
+    *checkValue = 0;
+    return retval;
+  }
+
+  const nsString message = szMessage;
+  const nsString checkMessage = szCheckMessage;
+  retval = PR_FALSE; /* in case user exits dialog by clicking X */
+  res = dialog->ConfirmCheck(message.GetUnicode(), checkMessage.GetUnicode(), checkValue, &retval);
+  if (NS_FAILED(res)) {
+    *checkValue = 0;
+  }
+  if (*checkValue!=0 && *checkValue!=1) {
+    *checkValue = 0; /* this should never happen but it is happening!!! */
+  }
+  return retval;
+
+#else
+
  //   MOZ_FUNCTION_STUB;
-    fprintf(stdout, "%c%s  (y/n)?  ", '\007', szMainMessage); /* \007 is BELL */
+    fprintf(stdout, "%c%s  (y/n)?  ", '\007', szMessage); /* \007 is BELL */
     char c;
     XP_Bool result;
     for (;;) {
@@ -3405,13 +3425,14 @@ ET_PostCheckConfirmBox(char* szMainMessage, char* szCheckMessage,
     for (;;) {
 	c = getchar();
         if (tolower(c) == 'y') {
-	    *bChecked = PR_TRUE;
+	    *checkValue = PR_TRUE;
 	    break;
 	}
         if (tolower(c) == 'n') {
-	    *bChecked = PR_FALSE;
+	    *checkValue = PR_FALSE;
 	    break;
 	}
     }
     return result;
+#endif
 }
