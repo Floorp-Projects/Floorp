@@ -84,6 +84,11 @@
      The custom sort order specified in your form submission contains an
      invalid column name <em>[% fragment FILTER html %]</em>.
          
+  [% ELSIF error == "invalid_component" %]
+    [% title = "Invalid Component" %]
+    The [% component FILTER html %] component doesn't exist in the 
+    [% product FILTER html %] product.
+    
   [% ELSIF error == "mismatched_bug_ids_on_obsolete" %]
     Attachment [% attach_id FILTER html %] ([% description FILTER html %]) 
     is attached to bug [% attach_bug_id FILTER html %], but you tried to 

@@ -55,24 +55,12 @@ if ($action eq "show") {
 }
 
 if ($action eq "add") {
+    (Param('enablequips') eq "on") || ThrowUserError("no_new_quips");
+    
     # Add the quip 
     my $comment = $::FORM{"quip"};
-    if (!$comment) {
-        DisplayError("Please enter a quip in the text field.");
-        exit();
-    }
-
-    if (Param('enablequips') ne "on") {
-        ThrowUserError("no_new_quips");
-        exit();
-    }
-    
-
-    if ($comment =~ m/</) {
-        DisplayError("Sorry - for security reasons, support for HTML tags has 
-                      been turned off in quips.");
-        exit();
-    }
+    $comment || ThrowUserError("need_quip");
+    $comment !~ m/</ || ThrowUserError("no_html_in_quips");
 
     SendSQL("INSERT INTO quips (userid, quip) VALUES (". $userid . ", " . SqlQuote($comment) . ")");
 

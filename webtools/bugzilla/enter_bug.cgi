@@ -79,9 +79,7 @@ if (!defined $::FORM{'product'}) {
  
     my $prodsize = scalar(keys %products);
     if ($prodsize == 0) {
-        DisplayError("Either no products have been defined to enter bugs ".
-                     "against or you have not been given access to any.\n");
-        exit;
+        ThrowUserError("no_products");
     } 
     elsif ($prodsize > 1) {
         $vars->{'proddesc'} = \%products;
@@ -225,34 +223,19 @@ if(Param("usebuggroupsentry")
    && GroupExists($product) 
    && !UserInGroup($product)) 
 {
-    DisplayError("Sorry; you do not have the permissions necessary to " .
-                 "enter a bug against this product.\n");         
-    exit;
+    ThrowUserError("entry_access_denied", { product => $product});         
 }
 
 GetVersionTable();
 
 if (lsearch(\@::enterable_products, $product) == -1) {
-    DisplayError("'" . html_quote($product) . "' is not a valid product.");
-    exit;
+    ThrowUserError("invalid_product_name", { product => $product});
 }
 
 my $product_id = get_product_id($product);
 
-if (0 == @{$::components{$product}}) {
-    my $error = "Sorry; there needs to be at least one component for this " .
-                "product in order to create a new bug. ";
-    if (UserInGroup('editcomponents')) {
-        $error .= "<a href=\"editcomponents.cgi\">" . 
-                  "Create a new component</a>\n";
-    }
-    else {              
-        $error .= "Please contact " . Param("maintainer") . ", detailing " .
-                  "the product in which you tried to create a new bug.\n";
-    }
-        
-    DisplayError($error);   
-    exit;
+if (0 == @{$::components{$product}}) {        
+    ThrowUserError("no_components");   
 } 
 elsif (1 == @{$::components{$product}}) {
     # Only one component; just pick it.

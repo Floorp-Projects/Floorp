@@ -84,9 +84,7 @@ if (defined $::FORM{'id'}) {
 }
 
 # Make sure there are bugs to process.
-scalar(@idlist)
-  || DisplayError("You did not select any bugs to modify.")
-  && exit;
+scalar(@idlist) || ThrowUserError("no_bugs_chosen");
 
 # If we are duping bugs, let's also make sure that we can change 
 # the original.  This takes care of issue A on bug 96085.
@@ -616,11 +614,9 @@ foreach my $field ("rep_platform", "priority", "bug_severity",
 my $prod_id; # Remember, can't use this for mass changes
 if ($::FORM{'product'} ne $::dontchange) {
     $prod_id = get_product_id($::FORM{'product'});
-    if (! $prod_id) {
-        DisplayError("The <tt>" . html_quote($::FORM{'product'}) .
-                     "</tt> product doesn't exist.");
-        exit;
-    }
+    $prod_id ||
+      ThrowUserError("invalid_product_name", {product => $::FORM{'product'});
+      
     DoComma();
     $::query .= "product_id = $prod_id";
 } else {
@@ -637,12 +633,10 @@ if ($::FORM{'component'} ne $::dontchange) {
     }
     $comp_id = get_component_id($prod_id,
                                 $::FORM{'component'});
-    if (! $comp_id) {
-        DisplayError("The <tt>" . html_quote($::FORM{'component'}) .
-                     "</tt> component doesn't exist in the <tt>" .
-                     html_quote($::FORM{'product'}) . "</tt> product");
-        exit;
-    }
+    $comp_id || ThrowCodeError("invalid_component", 
+                               {component => $::FORM{'component'},
+                                product => $::FORM{'product'}});
+    
     DoComma();
     $::query .= "component_id = $comp_id";
 }

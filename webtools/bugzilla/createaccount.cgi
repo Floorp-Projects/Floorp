@@ -44,11 +44,7 @@ if(Param('useLDAP')) {
   # Just in case someone already has an account, let them get the correct
   # footer on the error message
   quietly_check_login();
-  DisplayError("This site is using LDAP for authentication.  Please contact 
-                an LDAP administrator to get a new account created.",
-               "Can't create LDAP accounts");
-  PutFooter();
-  exit;
+  ThrowUserError("ldap_cant_create_account");
 }
 
 # Clear out the login cookies.  Make people log in again if they create an

@@ -94,23 +94,15 @@ umask 0;
 
 # Some sanity checking
 if(Param("usebuggroupsentry") && GroupExists($product)) {
-    if(!UserInGroup($product)) {
-        DisplayError("Sorry; you do not have the permissions necessary to enter
-                      a bug against this product.", "Permission Denied");
-        exit;
-    }
+    UserInGroup($product) || 
+      ThrowUserError("entry_access_denied", {product => $product});
 }
 
 my $component_id = get_component_id($product_id, $::FORM{component});
-if (!$component_id) {
-    DisplayError("You must choose a component that corresponds to this bug.
-                  If necessary, just guess.");
-    exit;
-}
+$component_id || ThrowUserError("require_component");
 
 if (!defined $::FORM{'short_desc'} || trim($::FORM{'short_desc'}) eq "") {
-    DisplayError("You must enter a summary for this bug.");
-    exit;
+    ThrowUserError("require_summary");
 }
 
 # If bug_file_loc is "http://", the default, strip it out and use an empty

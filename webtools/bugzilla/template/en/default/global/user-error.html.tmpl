@@ -147,6 +147,11 @@
     [% title = "Email Address Email Address Confirmation Failed" %]
     Email address confirmation failed.
 
+  [% ELSIF error == "entry_access_denied" %]
+    [% title = "Permission Denied" %]
+     Sorry; you do not have the permissions necessary to enter a bug against
+     the [% product FILTER html %] product.
+     
   [% ELSIF error == "file_not_specified" %]
     [% title = "No File Specified" %]
     You did not specify a file to attach.
@@ -272,6 +277,11 @@
     [% title = "Invalid Username Or Password" %]
     The username or password you entered is not valid.
                     
+  [% ELSIF error == "ldap_cant_create_account" %]
+    [% title = "Can't create LDAP accounts" %]
+     This site is using LDAP for authentication.  Please contact 
+     an LDAP administrator to get a new account created.
+     
   [% ELSIF error == "login_needed_for_password_change" %]
     [% title = "Login Name Required" %]
     You must enter a login name when requesting to change your password.
@@ -316,10 +326,16 @@
         
   [% ELSIF error == "need_component" %]
     [% title = "Component Required" %]
-    You must specify a component to help determine the new owner of these bugs.                            
+    You must specify a component to help determine the new owner of these bugs.
+                  
   [% ELSIF error == "need_product" %]
     [% title = "Product Required" %]
-    You must specify a product to help determine the new owner of these bugs.                 
+    You must specify a product to help determine the new owner of these bugs.
+    
+  [% ELSIF error == "need_quip" %]
+    [% title = "Quip Required" %]
+    Please enter a quip in the text field.
+    
   [% ELSIF error == "no_bugs_chosen" %]
     [% title = "No Bugs Chosen" %]
     You apparently didn't choose any bugs to modify.
@@ -329,6 +345,17 @@
     You cannot change the component for a list of bugs covering more than 
     one product.
                        
+  [% ELSIF error == "no_components" %]
+    [% title = "No Components" %]
+    Sorry; there needs to be at least one component for this product in order 
+    to create a new bug.
+    [% IF UserInGroup("editcomponents") %]
+      <a href="editcomponents.cgi">Create a new component</a>.      
+    [% ELSE %]
+       Please contact [% Param("maintainer") %], giving the name of 
+       the product in which you tried to create a new bug.      
+    [% END %]
+                            
   [% ELSIF error == "no_dupe_stats" %]
     [% title = "Cannot Find Duplicate Statistics" %]
     There are no duplicate statistics for today ([% today %]) or yesterday.
@@ -347,6 +374,11 @@
     There are no duplicate statistics for today ([% today %]), and an error
     occurred opening yesterday's dupes file: [% error_msg FILTER html %].
     
+  [% ELSIF error == "no_html_in_quips" %]
+    [% title = "No HTML In Quips" %]
+     Sorry - for security reasons, support for HTML tags has been turned off 
+     in quips.
+         
   [% ELSIF error == "no_new_quips" %]
     [% title = "No New Quips" %]
     This site does not permit the addition of new quips.
@@ -355,6 +387,11 @@
     [% title = "No Page Specified" %]
     You did not specify the id of a page to display.
 
+  [% ELSIF error == "no_products" %]
+    [% title = "No Products" %]
+     Either no products have been defined to enter bugs against or you have not
+     been given access to any.
+     
   [% ELSIF error == "patch_too_large" %]
     [% title = "File Too Large" %]
     The file you are trying to attach is [% filesize %] kilobytes (KB) in size.
@@ -383,9 +420,18 @@
       100 users.  Enter more of the name to bring the number of matches 
       down to a reasonable amount.
   
+  [% ELSIF error == "require_component" %]
+    [% title = "Component Needed" %]
+    You must choose a component to file this bug in. If necessary, 
+    just guess.
+    
   [% ELSIF error == "require_new_password" %]
      [% title = "New Password Needed" %]
      You cannot change your password without submitting a new one.
+
+  [% ELSIF error == "require_summary" %]
+     [% title = "Summary Needed" %]
+     You must enter a summary for this bug.
 
   [% ELSIF error == "token_inexistent" %]
      [% title = "Token Does Not Exist" %]
