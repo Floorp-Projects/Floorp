@@ -119,15 +119,6 @@
 // Defines....
 static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
 
-static PRInt32 GetReplyOnTop()
-{
-  PRInt32 reply_on_top = 1;
-  nsCOMPtr<nsIPref> prefs (do_GetService(NS_PREF_CONTRACTID));
-  if (prefs)
-    prefs->GetIntPref("mailnews.reply_on_top", &reply_on_top);
-  return reply_on_top;
-}
-
 static nsresult GetReplyHeaderInfo(PRInt32* reply_header_type, 
                                    PRUnichar** reply_header_locale,
                                    PRUnichar** reply_header_authorwrote,
@@ -586,59 +577,63 @@ nsMsgCompose::ConvertAndLoadComposeWindow(nsString& aPrefix,
     if (aBuf.IsEmpty())
       m_editor->BeginningOfDocument();
     else
-      switch (GetReplyOnTop())
-      {
-        // This should set the cursor after the body but before the sig
-        case 0  :
+    {
+      PRInt32 reply_on_top = 0;
+      m_identity->GetReplyOnTop(&reply_on_top);
+      switch (reply_on_top)
         {
-          if (!textEditor)
+          // This should set the cursor after the body but before the sig
+          case 0  :
           {
-            m_editor->BeginningOfDocument();
+            if (!textEditor)
+            {
+              m_editor->BeginningOfDocument();
+              break;
+            }
+
+            nsCOMPtr<nsISelection> selection = nsnull; 
+            nsCOMPtr<nsIDOMNode>      parent = nsnull; 
+            PRInt32                   offset;
+            nsresult                  rv;
+
+            // get parent and offset of mailcite
+            rv = GetNodeLocation(nodeInserted, address_of(parent), &offset);
+            if (NS_FAILED(rv) || (!parent))
+            {
+              m_editor->BeginningOfDocument();
+              break;
+            }
+
+            // get selection
+            m_editor->GetSelection(getter_AddRefs(selection));
+            if (!selection)
+            {
+              m_editor->BeginningOfDocument();
+              break;
+            }
+
+            // place selection after mailcite
+            selection->Collapse(parent, offset+1);
+
+            // insert a break at current selection
+            textEditor->InsertLineBreak();
+
+            // i'm not sure if you need to move the selection back to before the
+            // break. expirement.
+            selection->Collapse(parent, offset+1);
+   
             break;
           }
-
-          nsCOMPtr<nsISelection> selection = nsnull; 
-          nsCOMPtr<nsIDOMNode>      parent = nsnull; 
-          PRInt32                   offset;
-          nsresult                  rv;
-
-          // get parent and offset of mailcite
-          rv = GetNodeLocation(nodeInserted, address_of(parent), &offset);
-          if (NS_FAILED(rv) || (!parent))
-          {
-            m_editor->BeginningOfDocument();
-            break;
-          }
-
-          // get selection
-          m_editor->GetSelection(getter_AddRefs(selection));
-          if (!selection)
-          {
-            m_editor->BeginningOfDocument();
-            break;
-          }
-
-          // place selection after mailcite
-          selection->Collapse(parent, offset+1);
-
-          // insert a break at current selection
-          textEditor->InsertLineBreak();
-
-          // i'm not sure if you need to move the selection back to before the
-          // break. expirement.
-          selection->Collapse(parent, offset+1);
- 
+        
+        case 2  : 
+        {
+          m_editor->SelectAll();
           break;
         }
-      
-      case 2  : 
-      {
-        m_editor->SelectAll();
-        break;
+        
+        // This should set the cursor to the top!
+        default : m_editor->BeginningOfDocument();    break;
       }
-      
-      // This should set the cursor to the top!
-      default : m_editor->BeginningOfDocument();    break;
     }
 
     nsCOMPtr<nsISelectionController> selCon;
@@ -1724,7 +1719,9 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const char * originalMs
         }
       }
 
-      if (GetReplyOnTop() == 1) 
+      PRInt32 reply_on_top = 0;
+      mIdentity->GetReplyOnTop(&reply_on_top);
+      if (reply_on_top == 1)
         mCitePrefix += NS_LITERAL_STRING("<br><br>");
 
       
@@ -2414,9 +2411,7 @@ nsMsgCompose::QuoteOriginalMessage(const char *originalMsgURI, PRInt32 what) // 
     return NS_ERROR_FAILURE;
 
   PRBool bAutoQuote = PR_TRUE;
-  nsCOMPtr<nsIPref> prefs (do_GetService(NS_PREF_CONTRACTID));
-  if (prefs)
-    prefs->GetBoolPref("mail.auto_quote", &bAutoQuote);
+  m_identity->GetAutoQuote(&bAutoQuote);
 
   // Create the consumer output stream.. this will receive all the HTML from libmime
   mQuoteStreamListener =
@@ -3232,8 +3227,8 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
   // for all sorts of user defined stuff, like signatures and editor
   // types and the like!
   //
-  //    user_pref(".....signature_file", "y:\\sig.html");
-  //    user_pref(".....use_signature_file", true);
+  //    user_pref(".....sig_file", "y:\\sig.html");
+  //    user_pref(".....attach_signature", true);
   //
   // Note: We will have intelligent signature behavior in that we
   // look at the signature file first...if the extension is .htm or 

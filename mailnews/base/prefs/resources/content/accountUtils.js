@@ -136,6 +136,9 @@ function verifyAccounts(wizardcallback) {
     try {
         var am = Components.classes[accountManagerContractID].getService(Components.interfaces.nsIMsgAccountManager);
 
+        // migrate quoting preferences from global to per account
+        migrateGlobalQuotingPrefs(am.allIdentities);
+
         var accounts = am.accounts;
 
         // as long as we have some accounts, we're fine.
@@ -249,5 +252,41 @@ function loadInboxForNewAccount()
     window.focus();
     setTimeout(MsgGetMessage, 0);
     gNewAccountToLoad = null;
+  }
+}
+
+function migrateGlobalQuotingPrefs(allIdentities)
+{
+  // if reply_on_top and auto_quote exist then, if non-default
+  // migrate and delete, if default just delete.  
+  var reply_on_top = 0;
+  var auto_quote = true;
+  var quotingPrefs = 0;
+  try {
+    var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+                                .getService(Components.interfaces.nsIPrefService);
+    var pref = prefService.getBranch(null);
+    quotingPrefs = pref.getIntPref("mailnews.quotingPrefs.version");
+  } catch (ex) {}
+  
+  // If the quotingPrefs version is 0 then we need to migrate our preferences
+  if (quotingPrefs == 0) {
+    try {
+      reply_on_top = pref.getIntPref("mailnews.reply_on_top");
+      auto_quote = pref.getBoolPref("mail.auto_quote");
+    } catch (ex) {}
+
+    if (!auto_quote || reply_on_top) {
+      var numIdentities = allIdentities.Count();
+      var identity = null;
+      for (var j = 0; j < numIdentities; j++) {
+        identity = allIdentities.QueryElementAt(j, Components.interfaces.nsIMsgIdentity);
+        if (identity.valid) {
+          identity.autoQuote = auto_quote;
+          identity.replyOnTop = reply_on_top;
+        }
+      }
+    }
+    pref.setIntPref("mailnews.quotingPrefs.version", 1);
   }
 }

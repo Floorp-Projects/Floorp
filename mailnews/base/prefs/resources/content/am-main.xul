@@ -79,14 +79,6 @@
 
       <separator class="thin"/>
       
-      <hbox align="center">
-        <checkbox wsm_persist="true" id="identity.composeHtml" label="&useHtml.label;"
-                  prefattribute="value"
-                  prefstring="mail.identity.%identitykey%.compose_html"/>
-      </hbox>
-
-      <separator class="thin"/>
-
       <hbox>
         <spacer flex="1"/>
         <button oncommand="onAdvanced();" label="&advancedButton.label;"

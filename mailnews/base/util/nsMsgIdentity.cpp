@@ -461,6 +461,9 @@ NS_IMPL_IDPREF_BOOL(ComposeHtml, "compose_html");
 NS_IMPL_IDPREF_BOOL(AttachVCard, "attach_vcard");
 NS_IMPL_IDPREF_BOOL(AttachSignature, "attach_signature");
 
+NS_IMPL_IDPREF_BOOL(AutoQuote, "auto_quote");
+NS_IMPL_IDPREF_INT(ReplyOnTop, "reply_on_top");
+
 NS_IMPL_IDPREF_INT(SignatureDate,"sig_date");
 
 NS_IMPL_IDPREF_BOOL(DoFcc, "fcc");
@@ -789,6 +792,8 @@ nsMsgIdentity::Copy(nsIMsgIdentity *identity)
     COPY_IDENTITY_STR_VALUE(identity,GetStationeryFolder,SetStationeryFolder)
     COPY_IDENTITY_BOOL_VALUE(identity,GetAttachSignature,SetAttachSignature)
     COPY_IDENTITY_FILE_VALUE(identity,GetSignature,SetSignature)
+    COPY_IDENTITY_BOOL_VALUE(identity,GetAutoQuote,SetAutoQuote)
+    COPY_IDENTITY_INT_VALUE(identity,GetReplyOnTop,SetReplyOnTop)
     COPY_IDENTITY_INT_VALUE(identity,GetSignatureDate,SetSignatureDate)
 
     return NS_OK;

@@ -1,6 +1,7 @@
 <!-- extracted from am-addressing.xul -->
 
-<!ENTITY addressing.label          "Addressing">
+<!ENTITY addressing.label          "Addressing &amp; Composition">
+<!ENTITY addressingGroupTitle.label "Addressing">
 <!ENTITY addressingText.label      "When looking up addresses:">
 <!-- LOCALIZATION NOTE (override.label) : do not translate "LDAP" in below line -->
 <!ENTITY useGlobal.label           "Use my global LDAP server preferences for this account">
@@ -12,3 +13,18 @@
 <!-- LOCALIZATION NOTE : this is part of an inline-style attribute on the directoriesList 
      drop down List box, which specifies the width of the dropdown listbox. -->
 <!ENTITY directoriesList.width "512">
+
+<!ENTITY compositionGroupTitle.label "Composition">
+<!-- LOCALIZATION NOTE (useHtml.label) : do not translate "html" in below line -->
+<!ENTITY useHtml.label "Compose messages in HTML format">
+<!ENTITY autoQuote.label                      "Automatically quote the original message when replying">
+<!ENTITY autoQuote.accesskey                  "A">
+<!-- LOCALIZATION NOTE (then.label): This will concatenate with the 4 strings that follow. -->
+<!ENTITY then.label                           "Then,">
+<!ENTITY then.accesskey                       "t">
+<!ENTITY aboveQuote.label                     "start my reply above the quoted text">
+<!ENTITY aboveQuote.accesskey                 "v">
+<!ENTITY belowQuote.label                     "start my reply below the quoted text">
+<!ENTITY belowQuote.accesskey                 "b">
+<!ENTITY selectAndQuote.label                 "select the quoted text">
+<!ENTITY selectAndQuote.accesskey             "e">

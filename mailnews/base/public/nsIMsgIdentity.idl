@@ -82,6 +82,12 @@ interface nsIMsgIdentity : nsISupports {
   /* should we attach a vcard by default? */
   attribute boolean attachVCard;
 
+  /* should we automatically quote the original message? */
+  attribute boolean autoQuote;
+
+  /* what should our quoting preference be? */
+  attribute long replyOnTop;
+
   /* the current signature */
   /*  after PR1, let's make this a real object */
   /*  attribute nsIMsgSignature signature; */

@@ -20,7 +20,7 @@ Rights Reserved.
 
 <!ENTITY pane.title                           "Composition">
 <!ENTITY pane.description                     "Composing mail messages">
-<!ENTITY forwardReply.label                   "Forwarding and Replying to Messages">
+<!ENTITY forwardReply.label                   "Forwarding Messages">
 <!ENTITY forwardMsg.label                     "Forward messages:">
 <!ENTITY forwardMsg.accesskey                 "f">
 <!ENTITY inline.label                         "Inline">
@@ -29,17 +29,7 @@ Rights Reserved.
 <!ENTITY quoted.accesskey                     "q">
 <!ENTITY asAttachment.label                   "As Attachment">
 <!ENTITY asAttachment.accesskey               "A">
-<!ENTITY autoQuote.label                      "Automatically quote the original message when replying">
-<!ENTITY autoQuote.accesskey                  "A">
-<!-- LOCALIZATION NOTE (then.label): This will concatenate with the 4 strings that follow. -->
-<!ENTITY then.label                           "Then,">
-<!ENTITY then.accesskey                       "t">
-<!ENTITY aboveQuote.label                     "start my reply above the quoted text">
-<!ENTITY aboveQuote.accesskey                 "v">
-<!ENTITY belowQuote.label                     "start my reply below the quoted text">
-<!ENTITY belowQuote.accesskey                 "b">
-<!ENTITY selectAndQuote.label                 "select the quoted text">
-<!ENTITY selectAndQuote.accesskey             "e">
+
 <!ENTITY warnOnSendAccelKey.label             "Confirm when using keyboard shortcut to send message">
 <!ENTITY warnOnSendAccelKey.accesskey         "C">
 

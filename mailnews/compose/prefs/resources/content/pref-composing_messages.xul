@@ -15,7 +15,7 @@
     
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["forwardMessageMode", "autoQuote", "replyOnTop", "spellCheckBeforeSend", "strictlyMime", 
+    var _elementIDs = ["forwardMessageMode", "spellCheckBeforeSend", "strictlyMime", 
                        "wrapLength", "sendDefaultCharsetList", "mailWarnOnSendAccelKey",
                        "FontSelect", "fontSizeSelect", "textColor", "backgroundColor"];
     var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
@@ -28,22 +28,6 @@
 
       getColorFromWellAndSetValue("textColorButton");
       getColorFromWellAndSetValue("backgroundColorButton");
-
-      doEnabling();
-    }
-
-    function doEnabling()
-    {
-      var quotebox = document.getElementById("thenBox");
-      var quotecheck = document.getElementById("autoQuote");
-      if( quotecheck.checked && !quotecheck.disabled ) {
-        quotebox.firstChild.removeAttribute("disabled");
-        quotebox.lastChild.removeAttribute("disabled");
-      }
-      else {
-        quotebox.firstChild.setAttribute("disabled","true");
-        quotebox.lastChild.setAttribute("disabled","true");
-      }
     }
 
     function setColorWell(aPicker)
@@ -92,22 +76,6 @@
           <menuitem value="0" label="&asAttachment.label;" accesskey="&asAttachment.accesskey;"/>
         </menupopup>
       </menulist>
-    </hbox>
-    <hbox align="center">
-      <checkbox id="autoQuote" label="&autoQuote.label;" 
-                prefstring="mail.auto_quote"
-                oncommand="doEnabling();"
-                accesskey="&autoQuote.accesskey;"/>
-    </hbox>
-    <hbox class="indent" align="center" id="thenBox">
-      <label value="&then.label;" accesskey="&then.accesskey;" control="replyOnTop"/>
-      <menulist id="replyOnTop" preftype="int" prefstring="mailnews.reply_on_top">
-        <menupopup>
-          <menuitem value="1" label="&aboveQuote.label;" accesskey="&aboveQuote.accesskey;"/>
-          <menuitem value="0" label="&belowQuote.label;" accesskey="&belowQuote.accesskey;"/>
-          <menuitem value="2" label="&selectAndQuote.label;" accesskey="&selectAndQuote.accesskey;"/>
-        </menupopup>
-      </menulist>        
     </hbox>
   </groupbox>
 

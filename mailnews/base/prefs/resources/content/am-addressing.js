@@ -11,6 +11,7 @@ function onInit()
 {
   setupDirectoriesList();
   enabling();
+  quoteEnabling();
 }
 
 function onPreInit(account, accountValues)
@@ -101,3 +102,18 @@ function onSave()
       break;
   } 
 }
+
+function quoteEnabling()
+{
+  var quotebox = document.getElementById("thenBox");
+  var quotecheck = document.getElementById("identity.autoQuote");
+  if (quotecheck.checked && !quotecheck.disabled) {
+    quotebox.firstChild.removeAttribute("disabled");
+    quotebox.lastChild.removeAttribute("disabled");
+  }
+  else {
+    quotebox.firstChild.setAttribute("disabled", "true");
+    quotebox.lastChild.setAttribute("disabled", "true");
+  }
+}
+

@@ -47,6 +47,7 @@ Contributors:
   
   <separator class="thin"/>
   <groupbox>
+    <caption label="&addressingGroupTitle.label;"/>
     <description>&addressingText.label;</description>
 	  <radiogroup class="indent" id="ldapAutocomplete" wsm_persist="true" oncommand="enabling();">
       <observes element="identity.overrideGlobalPref" attribute="disabled"/>
@@ -59,6 +60,37 @@ Contributors:
         <button id="editButton" label="&editDirectories.label;" oncommand="onEditDirectories();"/>
       </hbox>
     </radiogroup>      
+  </groupbox>
+
+  <separator class="thin"/>
+  <groupbox>
+    <caption label="&compositionGroupTitle.label;"/>
+    <hbox align="center">
+      <checkbox wsm_persist="true" id="identity.composeHtml" label="&useHtml.label;"
+                prefattribute="value"
+                prefstring="mail.identity.%identitykey%.compose_html"/>
+    </hbox>
+
+    <separator class="thin"/>
+
+    <hbox align="center">
+      <checkbox wsm_persist="true" id="identity.autoQuote" label="&autoQuote.label;"
+                oncommand="quoteEnabling();" accesskey="&autoQuote.accesskey;"
+                pref="true" preftype="bool" prefattribute="value"
+                prefstring="mail.identity.%identitykey%.auto_quote"/>
+    </hbox>
+    <hbox class="indent" align="center" id="thenBox">
+      <label value="&then.label;" accesskey="&then.accesskey;" control="quoteList"/>
+      <menulist wsm_persist="true" id="identity.replyOnTop"
+                pref="true" preftype="int" prefattribute="value"
+                prefstring="mail.identity.%identitykey%.reply_on_top">
+        <menupopup>
+          <menuitem value="1" label="&aboveQuote.label;" accesskey="&aboveQuote.accesskey;"/>
+          <menuitem value="0" label="&belowQuote.label;" accesskey="&belowQuote.accesskey;"/>
+          <menuitem value="2" label="&selectAndQuote.label;" accesskey="&selectAndQuote.accesskey;"/>
+        </menupopup>
+      </menulist>        
+    </hbox>
   </groupbox>
 
 </page>
