@@ -18,7 +18,7 @@ class nsIStyleRuleSupplier : public nsISupports {
   NS_IMETHOD UseDocumentRules(nsIContent* aContent, PRBool* aResult)=0;
   NS_IMETHOD WalkRules(nsIStyleSet* aStyleSet, 
                        nsISupportsArrayEnumFunc aFunc, void* aData,
-                       nsIContent* aContent)=0;;
+                       nsIContent* aContent)=0;
 };
 
 #endif /* _nsIStyleRuleSupplier_h */
