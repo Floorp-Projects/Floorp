@@ -150,7 +150,7 @@ function RemoveFieldSet()
     // which inserts any <BR>s needed
     RemoveElementKeepingChildren(fieldsetElement);
   } finally {
-    editorShell.endTransaction();
+    editor.endTransaction();
   }
   SaveWindowLocation();
   window.close();
