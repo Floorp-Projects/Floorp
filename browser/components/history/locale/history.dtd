@@ -35,3 +35,9 @@
 <!ENTITY fileMenu.accesskey        "F">
 <!ENTITY find.label                "Find:">
 <!ENTITY find.accesskey            "n">
+<!ENTITY helpMenu.label            "Help">
+<!ENTITY helpMenu.accesskey        "H">
+<!ENTITY releaseCmd.label          "Release Notes">
+<!ENTITY releaseCmd.accesskey      "R">
+<!ENTITY aboutCmd.label         "About &brandShortName;">
+<!ENTITY aboutCmd.accesskey       "A">

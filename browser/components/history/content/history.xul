@@ -28,7 +28,12 @@
 <?xul-overlay href="chrome://browser/content/history/historyTreeOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://browser/locale/history/history.dtd" >
+<!DOCTYPE window [
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % historyDTD SYSTEM "chrome://browser/locale/history/history.dtd" >
+%historyDTD;
+]>
 
 <window title="&historyWindowTitle.label;" id="history-window"
         onload="HistoryWindowInit();"
@@ -105,7 +110,18 @@
         oncommand="return SortInNewDirection('descending');"/>
     </menupopup>
   </menu>
-  <menu id="menu_Help"/>
+  <menu label="&helpMenu.label;"
+        accesskey="&helpMenu.accesskey;">
+    <menupopup>
+      <menuitem accesskey="&releaseCmd.accesskey;"
+                label="&releaseCmd.label;"
+                oncommand="openTopWin('&releaseURL;');"/>
+      <menuseparator/>
+      <menuitem accesskey="&aboutCmd.accesskey;"
+                label="&aboutCmd.label;"
+                oncommand="openAboutDialog();"/>
+    </menupopup>
+  </menu>
 </menubar>
 <toolbar>
   <hbox align="center" pack="center">
