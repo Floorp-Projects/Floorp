@@ -31,19 +31,14 @@
 * file under either the NPL or the GPL.
 */
 
-    // Get a multiname literal and push the resulting multiname object
-    case eMultiname: 
-        {
-            push(OBJECT_TO_JS2VAL(mn));
-        }
-        break;
-
     case eDotRead:
         {
+            LookupKind lookup(false, NULL);
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
             js2val baseVal = pop();
-            readProperty
+            if (!meta->readProperty(baseVal, mn, &lookup, RunPhase, &retval))
+                meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
         }
         break;
 

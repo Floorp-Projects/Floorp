@@ -173,9 +173,11 @@ namespace MetaData {
                                     break;
                                 case Attribute::Virtual:
                                     m = new InstanceVariable(immutable, false);
+                                    c->slotCount++;
                                     break;
                                 case Attribute::Final: 
                                     m = new InstanceVariable(immutable, true);
+                                    c->slotCount++;
                                     break;
                                 }
                                 defineInstanceMember(c, cxt, *name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, m, p->pos);
@@ -782,8 +784,6 @@ doBinary:
                 Namespace *ns = checked_cast<Namespace *>(obj);
                 
                 returnRef = new LexicalReference(name, ns, cxt.strict);
-                // Calling emitBindBytecode causes the multiname to get loaded onto the stack
-                ((LexicalReference *)returnRef)->emitBindBytecode(bCon, p->pos);
             }
             break;
         case ExprNode::identifier:
@@ -791,7 +791,6 @@ doBinary:
                 IdentifierExprNode *i = checked_cast<IdentifierExprNode *>(p);
                 returnRef = new LexicalReference(i->name, cxt.strict);
                 ((LexicalReference *)returnRef)->variableMultiname->addNamespace(cxt);
-                ((LexicalReference *)returnRef)->emitBindBytecode(bCon, p->pos);
             }
             break;
         case ExprNode::dot:
@@ -801,15 +800,14 @@ doBinary:
                 if (baseVal) baseVal->emitReadBytecode(bCon, p->pos);
 
                 if (b->op2->getKind() == ExprNode::identifier) {
+                    IdentifierExprNode *i = checked_cast<IdentifierExprNode *>(b->op2);
                     returnRef = new DotReference(i->name);
-                    ((DotReference *)returnRef)->emitBindBytecode(bCon, p->pos);
                 } 
                 else {
                     if (b->op2->getKind() == ExprNode::qualify) {
                         Reference *rVal = EvalExprNode(env, phase, b->op2);                        
                         ASSERT(rVal && checked_cast<LexicalReference *>(rVal));
                         returnRef = new DotReference(((LexicalReference *)rVal)->variableMultiname);
-                        ((DotReference *)returnRef)->emitBindBytecode(bCon, p->pos);
                     }
                     // else bracketRef...
                 }
@@ -1160,9 +1158,9 @@ doBinary:
                     os->multiname.addNamespace(namespaces);
                 }
                 else {
-                    os->potentialConflict = true;   // Didn't find the member with a specified namespace, but did with
-                                                    // the use'd ones. That'll be an error unless the override is 
-                                                    // disallowed (in defineInstanceMember below)
+                    os->overriddenMember = PotentialConflict;   // Didn't find the member with a specified namespace, but did with
+                                                                // the use'd ones. That'll be an error unless the override is 
+                                                                // disallowed (in defineInstanceMember below)
                     os->multiname.addNamespace(namespaces);
                 }
                 delete os3;
@@ -1193,11 +1191,11 @@ doBinary:
         }
         // Make sure we're getting what we expected
         if (expectMethod) {
-            if (os->overriddenMember && !os->potentialConflict && (os->overriddenMember->kind != InstanceMember::InstanceMethodKind))
+            if (os->overriddenMember && (os->overriddenMember != PotentialConflict) && (os->overriddenMember->kind != InstanceMember::InstanceMethodKind))
                 reportError(Exception::definitionError, "Illegal override, expected method", pos);
         }
         else {
-            if (os->overriddenMember && !os->potentialConflict && (os->overriddenMember->kind == InstanceMember::InstanceMethodKind))
+            if (os->overriddenMember && (os->overriddenMember != PotentialConflict) && (os->overriddenMember->kind == InstanceMember::InstanceMethodKind))
                 reportError(Exception::definitionError, "Illegal override, didn't expect method", pos);
         }
 
@@ -1221,13 +1219,13 @@ doBinary:
         else
             writeStatus = new OverrideStatus(NULL, id);
 
-        if ((!readStatus->potentialConflict && (readStatus->overriddenMember != NULL))
-                || (!writeStatus->potentialConflict && (writeStatus->overriddenMember != NULL))) {
+        if ((!readStatus->overriddenMember && (readStatus->overriddenMember != PotentialConflict))
+                || (!writeStatus->overriddenMember && (writeStatus->overriddenMember != PotentialConflict))) {
             if ((overrideMod != Attribute::DoOverride) && (overrideMod != Attribute::OverrideUndefined))
                 reportError(Exception::definitionError, "Illegal override", pos);
         }
         else {
-            if (readStatus->potentialConflict || writeStatus->potentialConflict) {
+            if ((readStatus->overriddenMember = PotentialConflict) || (writeStatus->overriddenMember == PotentialConflict)) {
                 if ((overrideMod != Attribute::DontOverride) && (overrideMod != Attribute::OverrideUndefined))
                     reportError(Exception::definitionError, "Illegal override", pos);
             }
@@ -1319,24 +1317,24 @@ doBinary:
     }
 
     // objectType(o) returns an OBJECT o's most specific type.
-    JS2Class *JS2Metadata::objectType(js2val obj)
+    JS2Class *JS2Metadata::objectType(js2val objVal)
     {
-        if (JS2VAL_IS_VOID(obj))
+        if (JS2VAL_IS_VOID(objVal))
             return undefinedClass;
-        if (JS2VAL_IS_NULL(obj))
+        if (JS2VAL_IS_NULL(objVal))
             return nullClass;
-        if (JS2VAL_IS_BOOLEAN(obj))
+        if (JS2VAL_IS_BOOLEAN(objVal))
             return booleanClass;
-        if (JS2VAL_IS_NUMBER(obj))
+        if (JS2VAL_IS_NUMBER(objVal))
             return numberClass;
-        if (JS2VAL_IS_STRING(obj)) {
-            if (JS2VAL_TO_STRING(obj)->length() == 1)
+        if (JS2VAL_IS_STRING(objVal)) {
+            if (JS2VAL_TO_STRING(objVal)->length() == 1)
                 return characterClass;
             else 
                 return stringClass;
         }
-        ASSERT(JS2VAL_IS_OBJECT(obj));
-        JS2Object *obj = JS2VAL_TO_OBJECT(obj);
+        ASSERT(JS2VAL_IS_OBJECT(objVal));
+        JS2Object *obj = JS2VAL_TO_OBJECT(objVal);
         switch (obj->kind) {
         case AttributeObjectKind:
             return attributeClass;
@@ -1513,15 +1511,15 @@ doBinary:
         if (JS2VAL_IS_PRIMITIVE(containerVal)) {
 readClassProperty:
             JS2Class *c = objectType(containerVal);
-            InstanceBinding *ib = resolveInstanceMemberName(c, multiname, ReadAccess, Phase phase);
+            InstanceBinding *ib = resolveInstanceMemberName(c, multiname, ReadAccess, phase);
             if ((ib == NULL) && isDynamicInstance) 
                 return readDynamicProperty(JS2VAL_TO_OBJECT(containerVal), multiname, lookupKind, phase, rval);
             else 
                 // XXX passing a primitive here ???
-                return readInstanceMember(containerVal, c, (ib)? &ib->qname : NULL, phase, rval);
+                return readInstanceMember(containerVal, c, (ib) ? &ib->qname : NULL, phase, rval);
         }
-        JS2Object *obj = JS2VAL_TO_OBJECT(containerVal);
-        switch (obj->kind) {
+        JS2Object *container = JS2VAL_TO_OBJECT(containerVal);
+        switch (container->kind) {
         case AttributeObjectKind:
         case MultinameKind:
         case FixedInstanceKind: 
@@ -1536,56 +1534,59 @@ readClassProperty:
         case FunctionKind: 
         case BlockKind: 
             {
+                StaticMember *m = findFlatMember(checked_cast<Frame *>(container), multiname, ReadAccess, phase);
+                if (!m && (container->kind == GlobalObjectKind))
+                    return readDynamicProperty(container, multiname, lookupKind, phase, rval);
+                else
+                    return readStaticMember(m, phase, rval);
             }
             break;
         case ClassKind:
             {
+                MemberDescriptor m2;
+                if (findStaticMember(checked_cast<JS2Class *>(container), multiname, ReadAccess, phase, &m2) && m2.staticMember)
+                    return readStaticMember(m2.staticMember, phase, rval);
+                else {
+                    if (lookupKind->isPropertyLookup()) {
+                        // 'this' is {generic}
+                        // XXX is ??? in spec.
+                    }
+                    else {
+                    }
+                }
             }
             break;
 
         case PrototypeInstanceKind: 
-            return readDynamicProperty(obj, multiname, lookupKind, phase, rval);
+            return readDynamicProperty(container, multiname, lookupKind, phase, rval);
         default:
             ASSERT(false);
             return false;
         }
     }
-/*
-m: INSTANCEMEMBEROPT ¨ findInstanceMember(c, qname, read);
-case m of
-{none} do return none;
-INSTANCEVARIABLE do
-if phase = compile and not m.immutable then throw compileExpressionError
-end if;
-v: OBJECTU ¨ findSlot(this, m).value;
-if v = uninitialised then throw uninitialisedError end if;
-return v;
-INSTANCEMETHOD do return METHODCLOSURE·this: this, method: mÒ;
-INSTANCEGETTER do return m.call(this, m.env, phase);
-INSTANCESETTER do
-m cannot be an INSTANCESETTER because these are only represented as write-only members.
-end case
-end proc;
-*/
 
-proc findSlot(o: OBJECT, id: INSTANCEVARIABLE): SLOT
-o must be an INSTANCE;
-matchingSlots: SLOT{} ¨ {s | "s Œ resolveAlias(o).slots such that s.id = id};
-return the one element of matchingSlots
-end proc;
-
-    JS2MetaData::findSlot(js2val thisObjVal, InstanceVariable *id)
+    Slot *JS2Metadata::findSlot(js2val thisObjVal, InstanceVariable *id)
     {
         ASSERT(JS2VAL_IS_OBJECT(thisObjVal) 
                     && ((JS2VAL_TO_OBJECT(thisObjVal)->kind == DynamicInstanceKind)
                         || (JS2VAL_TO_OBJECT(thisObjVal)->kind == FixedInstanceKind)));
         JS2Object *thisObj = JS2VAL_TO_OBJECT(thisObjVal);
-        Slots *s;
-        if (thisObj->kind == DynamicInstanceKind)
+        Slot *s;
+        uint32 slotCount;
+        if (thisObj->kind == DynamicInstanceKind) {
             s = checked_cast<DynamicInstance *>(thisObj)->slots;
-        else
+            slotCount = checked_cast<DynamicInstance *>(thisObj)->type->slotCount;
+        }
+        else {
             s = checked_cast<FixedInstance *>(thisObj)->slots;
-
+            slotCount = checked_cast<FixedInstance *>(thisObj)->type->slotCount;
+        }
+        for (uint32 i = 0; i < slotCount; i++) {
+            if (s[i].id == id)
+                return &s[i];
+        }
+        ASSERT(false);
+        return NULL;
     }
 
 
@@ -1594,16 +1595,24 @@ end proc;
         InstanceMember *m = findInstanceMember(c, qname, ReadAccess);
         if (m == NULL) return false;
         switch (m->kind) {
-        case InstanceVariableKind:
-            if ((phase == CompilePhase) && !checked_cast<InstanceVariable *>(m)->immutable)
-                reportError(Exception::compileExpressionError, "Inappropriate compile time expression", engine->errorPos());
-            findSlot(containerVal, m);
-            
+        case InstanceMember::InstanceVariableKind:
+            {
+                InstanceVariable *mv = checked_cast<InstanceVariable *>(m);
+                if ((phase == CompilePhase) && !mv->immutable)
+                    reportError(Exception::compileExpressionError, "Inappropriate compile time expression", engine->errorPos());
+                Slot *s = findSlot(containerVal, mv);
 
-        case InstanceMethodKind:
-        case InstanceAccessorKind:
+                *rval = s->value;
+                return true;
+            }
+            break;
+
+        case InstanceMember::InstanceMethodKind:
+        case InstanceMember::InstanceAccessorKind:
             break;
         }
+        ASSERT(false);
+        return false;
     }
 
     // Read the value of a property in the frame. Return true/false if that frame has
@@ -1661,6 +1670,65 @@ end proc;
             b++;
         }
         return found;
+    }
+
+
+    bool JS2Metadata::findStaticMember(JS2Class *c, Multiname *multiname, Access access, Phase phase, MemberDescriptor *result)
+    {
+        JS2Class *s = c;
+        while (s) {
+            StaticBindingIterator b, end;
+            if (access & ReadAccess) {
+                b = s->staticReadBindings.lower_bound(multiname->name);
+                end = s->staticReadBindings.upper_bound(multiname->name);
+            }
+            else {
+                b = s->staticWriteBindings.lower_bound(multiname->name);
+                end = s->staticWriteBindings.upper_bound(multiname->name);
+            }
+            StaticMember *found = NULL;
+            while (b != end) {
+                if (multiname->matches(b->second->qname)) {
+                    if (found && (b->second->content != found))
+                        reportError(Exception::propertyAccessError, "Ambiguous reference to {0}", engine->errorPos(), multiname->name);
+                    else
+                        found = b->second->content;
+                }
+                b++;
+            }
+            if (found) {
+                result->staticMember = found;
+                result->qname = NULL;
+                return true;
+            }
+
+            InstanceBinding *iFound = NULL;
+            InstanceBindingIterator ib, iend;
+            if (access & ReadAccess) {
+                ib = s->instanceReadBindings.lower_bound(multiname->name);
+                iend = s->instanceReadBindings.upper_bound(multiname->name);
+            }
+            else {
+                ib = s->instanceWriteBindings.lower_bound(multiname->name);
+                iend = s->instanceWriteBindings.upper_bound(multiname->name);
+            }
+            while (ib != iend) {
+                if (multiname->matches(ib->second->qname)) {
+                    if (iFound && (ib->second->content != iFound->content))
+                        reportError(Exception::propertyAccessError, "Ambiguous reference to {0}", engine->errorPos(), multiname->name);
+                    else
+                        iFound = ib->second;
+                }
+                b++;
+            }
+            if (iFound) {
+                result->staticMember = NULL;
+                result->qname = &iFound->qname;
+                return true;
+            }
+            s = s->super;
+        }
+        return false;
     }
 
     /*
@@ -1842,23 +1910,48 @@ end proc;
             final(final),
             call(NULL),
             construct(JS2Engine::defaultConstructor),
+            slotCount(0),
             name(name)
     { 
     }
 
-    // examine the instancebinding map to determine the number of slots required
-    uint32 JS2Class::countSlots()
+ 
+ /************************************************************************************
+ *
+ *  DynamicInstance
+ *
+ ************************************************************************************/
+
+
+    DynamicInstance::DynamicInstance(JS2Class *type) 
+        : JS2Object(DynamicInstanceKind), 
+            type(type), 
+            call(NULL), 
+            construct(NULL), 
+            env(NULL), 
+            typeofString(type->getName()),
+            slots(new Slot[type->slotCount])
     {
-        uint32 count = 0;
-        InstanceBindingIterator b, end;
-        for (b = instanceReadBindings.begin(), end = instanceReadBindings.end(); (b != end); b++) {
-                
-        }
-        for (b = instanceWriteBindings.begin(), end = instanceWriteBindings.end(); (b != end); b++) {
-        
-        }
     }
 
+ 
+ /************************************************************************************
+ *
+ *  FixedInstance
+ *
+ ************************************************************************************/
+
+
+    FixedInstance::FixedInstance(JS2Class *type) 
+        : JS2Object(FixedInstanceKind), 
+            type(type), 
+            call(NULL), 
+            construct(NULL), 
+            env(NULL), 
+            typeofString(type->getName()),
+            slots(new Slot[type->slotCount])
+    {
+    }
 
 
  /************************************************************************************

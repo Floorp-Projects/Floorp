@@ -277,9 +277,6 @@ int JS2Engine::getStackEffect(JS2Op op)
     case eToBoolean:    // pop object, push boolean
         return 0;
 
-    case eMultiname:
-        return 1;       // push the multiname object
-
     case ePushFrame:    // affect the frame stack...
     case ePopFrame:     // ...not the exec stack
         return 0;

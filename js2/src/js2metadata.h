@@ -337,13 +337,13 @@ public:
 };
 
 // Override status is used to resolve overriden definitions for instance members
+#define PotentialConflict ((InstanceMember *)(-1))
 class OverrideStatus {
 public:
     OverrideStatus(InstanceMember *overriddenMember, const StringAtom &name)
-        : overriddenMember(overriddenMember), potentialConflict(false), multiname(name) { }
+        : overriddenMember(overriddenMember), multiname(name) { }
     
     InstanceMember *overriddenMember;   // NULL for none
-    bool potentialConflict;
     Multiname multiname;
 };
 typedef std::pair<OverrideStatus *, OverrideStatus *> OverrideStatusPair;
@@ -400,7 +400,7 @@ public:
     Callor *call;                               // A procedure to call when this class is used in a call expression
     Constructor *construct;                     // A procedure to call when this class is used in a new expression
 
-    uint32 countSlots();
+    uint32 slotCount;
 
     const StringAtom &name;
 
@@ -425,7 +425,7 @@ public:
 // Instances of non-dynamic classes are represented as FIXEDINSTANCE records. These instances can contain only fixed properties.
 class FixedInstance : public JS2Object {
 public:
-    FixedInstance(JS2Class *type) : JS2Object(FixedInstanceKind), type(type), call(NULL), construct(NULL), env(NULL), typeofString(type->getName()) { }
+    FixedInstance(JS2Class *type);
 
     JS2Class    *type;          // This instance's type
     Invokable   *call;          // A procedure to call when this instance is used in a call expression
@@ -438,7 +438,7 @@ public:
 // Instances of dynamic classes are represented as DYNAMICINSTANCE records. These instances can contain fixed and dynamic properties.
 class DynamicInstance : public JS2Object {
 public:
-    DynamicInstance(JS2Class *type) : JS2Object(DynamicInstanceKind), type(type), call(NULL), construct(NULL), env(NULL), typeofString(type->getName())  { }
+    DynamicInstance(JS2Class *type);
 
     JS2Class    *type;          // This instance's type
     Invokable   *call;          // A procedure to call when this instance is used in a call expression
@@ -648,6 +648,11 @@ public:
     bool unused;                    // true if the unused attribute has been given
 };
 
+struct MemberDescriptor {
+    StaticMember *staticMember;
+    QualifiedName *qname;
+};
+
 class JS2Metadata {
 public:
     
@@ -683,6 +688,8 @@ public:
     OverrideStatus *resolveOverrides(JS2Class *c, Context *cxt, const StringAtom &id, NamespaceList *namespaces, Access access, bool expectMethod, size_t pos);
     OverrideStatus *searchForOverrides(JS2Class *c, const StringAtom &id, NamespaceList *namespaces, Access access, size_t pos);
     InstanceMember *findInstanceMember(JS2Class *c, QualifiedName *qname, Access access);
+    Slot *findSlot(js2val thisObjVal, InstanceVariable *id);
+    bool findStaticMember(JS2Class *c, Multiname *multiname, Access access, Phase phase, MemberDescriptor *result);
 
 
     bool readProperty(js2val container, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
