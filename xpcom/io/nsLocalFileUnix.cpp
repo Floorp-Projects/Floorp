@@ -28,6 +28,7 @@
  *   Brendan Eich           <brendan@mozilla.org>
  *   Pete Collins           <petejc@mozdev.org>
  *   Paul Ashford           <arougthopher@lizardland.net>
+ *   Fredrik Holmqvist      <thesuckiestemail@yahoo.se>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -444,7 +445,6 @@ nsLocalFile::CreateAndKeepOpen(PRUint32 type, PRIntn flags,
 #endif
         result = createFunc(mPath.get(), flags, permissions, _retval);
     }
-
     return NSRESULT_FOR_RETURN(result);
 }
 
@@ -1221,6 +1221,67 @@ nsLocalFile::GetParent(nsIFile **aParent)
  * The results of Exists, isWritable and isReadable are not cached.
  */
 
+
+#ifdef XP_BEOS
+// access() is buggy in BeOS POSIX implementation, at least for BFS, using stat() instead
+// see bug 169506, https://bugzilla.mozilla.org/show_bug.cgi?id=169506
+NS_IMETHODIMP
+nsLocalFile::Exists(PRBool *_retval)
+{
+    CHECK_mPath();
+    NS_ENSURE_ARG_POINTER(_retval);
+    struct stat buf;
+
+    *_retval = (stat(mPath.get(), &buf) == 0);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLocalFile::IsWritable(PRBool *_retval)
+{
+    CHECK_mPath();
+    NS_ENSURE_ARG_POINTER(_retval);
+    struct stat buf;
+
+    *_retval = (stat(mPath.get(), &buf) == 0);
+    if (*_retval || errno == EACCES) {
+        *_retval = *_retval && (buf.st_mode & (S_IWUSR | S_IWGRP | S_IWOTH ));
+        return NS_OK;
+    }
+    return NSRESULT_FOR_ERRNO();
+}
+
+NS_IMETHODIMP
+nsLocalFile::IsReadable(PRBool *_retval)
+{
+    CHECK_mPath();
+    NS_ENSURE_ARG_POINTER(_retval);
+    struct stat buf;
+
+    *_retval = (stat(mPath.get(), &buf) == 0);
+    if (*_retval || errno == EACCES) {
+        *_retval = *_retval && (buf.st_mode & (S_IRUSR | S_IRGRP | S_IROTH ));
+        return NS_OK;
+    }
+    return NSRESULT_FOR_ERRNO();
+}
+
+NS_IMETHODIMP
+nsLocalFile::IsExecutable(PRBool *_retval)
+{
+    CHECK_mPath();
+    NS_ENSURE_ARG_POINTER(_retval);
+    struct stat buf;
+
+    *_retval = (stat(mPath.get(), &buf) == 0);
+    if (*_retval || errno == EACCES) {
+        *_retval = *_retval && (buf.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH ));
+        return NS_OK;
+    }
+    return NSRESULT_FOR_ERRNO();
+}
+#else
+
 NS_IMETHODIMP
 nsLocalFile::Exists(PRBool *_retval)
 {
@@ -1231,47 +1292,7 @@ nsLocalFile::Exists(PRBool *_retval)
     return NS_OK;
 }
 
-#ifdef XP_BEOS
-// access() is buggy in BeOS POSIX implementation, at least for BFS, using stat() instead
-NS_IMETHODIMP
-nsLocalFile::IsWritable(PRBool *_retval)
-{
-    CHECK_mPath();
-    NS_ENSURE_ARG_POINTER(_retval);
-    struct stat buf;
-    *_retval = (stat(mPath.get(), &buf) == 0);
-    *_retval = *_retval && (buf.st_mode & (S_IWUSR | S_IWGRP | S_IWOTH ));
-    if (*_retval || errno == EACCES)
-        return NS_OK;
-    return NSRESULT_FOR_ERRNO();
-}
 
-NS_IMETHODIMP
-nsLocalFile::IsReadable(PRBool *_retval)
-{
-    CHECK_mPath();
-    NS_ENSURE_ARG_POINTER(_retval);
-    struct stat buf;
-    *_retval = (stat(mPath.get(), &buf) == 0);
-    *_retval = *_retval && (buf.st_mode & (S_IRUSR | S_IRGRP | S_IROTH ));
-    if (*_retval || errno == EACCES)
-        return NS_OK;
-    return NSRESULT_FOR_ERRNO();
-}
-
-NS_IMETHODIMP
-nsLocalFile::IsExecutable(PRBool *_retval)
-{
-    CHECK_mPath();
-    NS_ENSURE_ARG_POINTER(_retval);
-    struct stat buf;
-    *_retval = (stat(mPath.get(), &buf) == 0);
-    *_retval = *_retval && (buf.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH ));
-    if (*_retval || errno == EACCES)
-        return NS_OK;
-    return NSRESULT_FOR_ERRNO();
-}
-#else
 NS_IMETHODIMP
 nsLocalFile::IsWritable(PRBool *_retval)
 {
@@ -1565,25 +1586,30 @@ nsLocalFile::SetPersistentDescriptor(const nsACString &aPersistentDescriptor)
 NS_IMETHODIMP
 nsLocalFile::Reveal()
 {
-  BPath bPath(mPath.get());
-  bPath.GetParent(&bPath);
-  entry_ref ref;
-  get_ref_for_path(bPath.Path(),&ref);
-  BMessage message(B_REFS_RECEIVED);
-  message.AddRef("refs",&ref);
-  BMessenger messenger("application/x-vnd.Be-TRAK");
-  messenger.SendMessage(&message);
- return NS_OK;
+    BPath bPath(mPath.get());
+    PRBool isDirectory;
+    if (NS_FAILED(IsDirectory(&isDirectory)))
+        return NS_ERROR_FAILURE;
+  
+    if(!isDirectory)
+        bPath.GetParent(&bPath);
+    entry_ref ref;
+    get_ref_for_path(bPath.Path(),&ref);
+    BMessage message(B_REFS_RECEIVED);
+    message.AddRef("refs",&ref);
+    BMessenger messenger("application/x-vnd.Be-TRAK");
+    messenger.SendMessage(&message);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsLocalFile::Launch()
 {
-  entry_ref ref;
-  get_ref_for_path (mPath.get(), &ref);
-  be_roster->Launch (&ref);
+    entry_ref ref;
+    get_ref_for_path (mPath.get(), &ref);
+    be_roster->Launch (&ref);
 
-  return NS_OK;
+    return NS_OK;
 }
 #else
 NS_IMETHODIMP
