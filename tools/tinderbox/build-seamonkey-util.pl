@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.286 $ ';
+$::UtilsVersion = '$Revision: 1.287 $ ';
 
 package TinderUtils;
 
@@ -819,37 +819,12 @@ sub BuildIt {
         # you this.  Thanks to cls for figuring this out.
         if ($Settings::UseTimeStamp) {
             $start_time = adjust_start_time($start_time);
-            my $time_str = POSIX::strftime("%m/%d/%Y %H:%M", localtime($start_time));
+            my $time_str = POSIX::strftime("%m/%d/%Y %H:%M +0000", gmtime($start_time));
 
             # Global, sorry.  Tests need this, it's everywhere.
             # Switch to format the graph server uses, to be consistant.
             $co_time_str = POSIX::strftime("%Y:%m:%d:%H:%M:%S", localtime($start_time));
 
-            # Figure out the timezone.  Some platform issues here:
-            #
-            # Win32/Activate returns the long form, e.g. "Pacific Daylight Time"
-            # which chokes win32 cvs.  Win32/cygwin perl returns "".
-            #
-            # Jaguar/MacOSX 10.2 posix call crashes.
-            #
-
-            my $timezone;
-
-            if ($Settings::Timezone) {
-                # If this is set in tinder-config.pl, use it.
-                $timezone = $Settings::Timezone;
-            } elsif (not ($Settings::OS =~ /^(Darwin|WIN)/)) {
-                # Try posix call to find timezone.
-                # Don't do this for Darwin, Win32.
-                $timezone = POSIX::strftime("%Z", localtime($start_time));
-            } else {
-                # Fallback to what `date` says.
-                chomp($timezone = `date "+%Z"`);
-            }
-
-            print "timezone = $timezone\n";
-
-            $time_str .= " $timezone";
             $ENV{MOZ_CO_DATE} = "$time_str";
             # command.com/win9x loathes single quotes in command line
             $cvsco = "$Settings::CVSCO -D \"$time_str\"";

@@ -144,9 +144,6 @@ $Compiler = 'gcc';
 $NSPRArgs = '';
 $ShellOverride = '';
 
-# allow override of timezone value (for win32 POSIX::strftime)
-$Timezone = '';
-
 # Release build options
 $ReleaseBuild  = 1;
 $shiptalkback  = 1;
