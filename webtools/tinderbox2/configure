@@ -24,13 +24,23 @@
 # Contributor(s): 
 
 
-destdir=/web/cgibins/cgi-forms/tinderbox
-htmldir=/accts/kestes/htdocs/tinderbox
+# Users can set these variables or accept the defaults.  These
+# variables can either be set in configure (like in gnu configure) or
+# overridden in the makefile.
 
-builddir=./build
+# I do not wish to bother writing a command line parser in shell and
+# configure can not easily be extended to handle other directories.
+
+: ${prefix:=/home/web/tinderbox} > /dev/null
+: ${cgibin_prefix:="\$(prefix)/bin"} > /dev/null
+: ${htmldir:="/home/httpd/html/tinderbox"} > /dev/null
 
 
-config_script=./config.out
+
+: ${builddir:=./build} > /dev/null
+
+
+config_script='./config.out'
 tinder_version='0.08'
 perl_flags='-T'
 
@@ -48,10 +58,11 @@ perl_flags='-T'
 ( find ./src -type f -print) | \
 	egrep -v '/CVS/' | egrep -v '\#' | egrep -v '~' | \
 	perl	\
-		-e "\$destdir = \"$destdir\";"		\
-		-e "\$htmldir = \"$htmldir\";"		\
-		-e "\$builddir = \"$builddir\";"	\
-		-e "\$config_script=\"$config_script\";"\
+		-e "\$prefix = '$prefix';"		\
+		-e "\$cgibin_prefix = '$cgibin_prefix';"\
+		-e "\$htmldir = '$htmldir';"		\
+		-e "\$builddir = '$builddir';"	\
+		-e "\$config_script='$config_script';"\
 		-e '
 	use File::Basename;
 
@@ -70,9 +81,18 @@ perl_flags='-T'
 # Makefile Variables
 # ------------------
 
-prefix=$destdir
-builddir=$builddir
+
+# the prefix where most of the binaries will be install
+prefix=$prefix
+
+# the directory where the cgibin files must go
+cgibin_prefix=$cgibin_prefix
+
+# the root of the html directory
 htmldir=$htmldir
+
+# where files will be built before they are installed
+builddir=$builddir
 
 config_script=$config_script
 confdir=localconf
@@ -138,8 +158,11 @@ EOF1
 		my ($build_file) = $_;
 		my ($dest_file) = $_;
 		$build_file =~ s!\./src!\$\(builddir\)!;
-		$dest_file =~ s!\./src!\$\(prefix\)!;
-
+		if ($build_file =~ m/\.cgi$/) {
+			$dest_file = '\'\$\(cgibin_prefix\)/\''.basename($dest_file);
+		} else {
+			$dest_file =~ s!\./src!\$\(prefix\)!;
+		}
 		$deps=<<EOF2;
 build_files: $build_file
 install_files: $dest_file
@@ -207,10 +230,13 @@ pwd=`/bin/pwd`
 /bin/echo  >> $config_script
 /bin/echo "  # Set the library search path with suitable interposing directories." >> $config_script
 
-/bin/echo "  s!\#tinder_libdir\#!$destdir/local_conf',\n   '$destdir/default_conf',\n   '$destdir/lib',\n   '$pwd/$builddir/local_conf',\n   '$pwd/$builddir/default_conf',\n   '$pwd/$builddir/lib!;" >> $config_script
+/bin/echo "  s!\#tinder_libdir\#!$prefix/local_conf',\n   '$prefix/default_conf',\n   '$prefix/lib',\n   '$pwd/$builddir/local_conf',\n   '$pwd/$builddir/default_conf',\n   '$pwd/$builddir/lib!;" >> $config_script
 /bin/echo >> $config_script
-/bin/echo "  # Use Taint Perl mode for security." >> $config_script
 
+/bin/echo "  s!\#prefix\#!$prefix!;" >> $config_script
+/bin/echo "  s!\#cgibin_prefix\#!$cgibin_prefix!;" >> $config_script
+
+/bin/echo "  # Use Taint Perl mode for security." >> $config_script
 /bin/echo "  s!\#perlflags\#!$perl_flags!;" >> $config_script
 /bin/echo "  s!\#tinder_version\#!$tinder_version!;" >> $config_script
 
