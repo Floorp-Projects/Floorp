@@ -1681,7 +1681,7 @@ nsPluginCacheListener::~nsPluginCacheListener()
 
 
 ////////////////////////////////////////////////////////////////////////
-NS_IMPL_ISUPPORTS1(nsPluginCacheListener, nsIStreamListener)
+NS_IMPL_ISUPPORTS2(nsPluginCacheListener, nsIStreamListener, nsISupportsWeakReference)
 ////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP
 nsPluginCacheListener::OnStartRequest(nsIRequest *request, nsISupports* ctxt)
@@ -2604,8 +2604,8 @@ nsPluginHostImpl::nsPluginHostImpl()
   nsCOMPtr<nsIObserverService> obsService = do_GetService("@mozilla.org/observer-service;1");
   if (obsService)
   {
-    obsService->AddObserver(this, "quit-application", PR_FALSE);
-    obsService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
+    obsService->AddObserver(this, "quit-application", PR_TRUE);
+    obsService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
   }
 
 #ifdef PLUGIN_LOGGING
