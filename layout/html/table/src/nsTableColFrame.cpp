@@ -49,15 +49,13 @@
 
 #define COL_TYPE_BITS                 0xF0000000 // uses bits 29-32 from mState
 #define COL_TYPE_OFFSET               28
-#define COL_ANONYMOUS_BIT             0x08000000 // uses bit  28
-#define COL_ANONYMOUS_OFFSET          27
+
 #define COL_CONSTRAINT_BITS           0x07000000 // uses bits 25-27
 #define COL_CONSTRAINT_OFFSET         24
 
 nsTableColFrame::nsTableColFrame()
   : nsFrame()
 {
-  SetIsAnonymous(PR_FALSE);
   SetColType(eColContent);
   ResetSizingInfo();
 }
@@ -90,19 +88,6 @@ nsTableColFrame::SetConstraint(nsColConstraint aConstraint)
 { 
   PRUint32 con = aConstraint - eNoConstraint;
   mState |= (con << COL_CONSTRAINT_OFFSET);
-}
-
-PRBool 
-nsTableColFrame::IsAnonymous()
-{   
-  return ((mState & COL_ANONYMOUS_BIT) > 0);
-}
-
-void 
-nsTableColFrame::SetIsAnonymous(PRBool aIsAnonymous)
-{
-  PRUint32 anon = (aIsAnonymous) ? 1 : 0;
-  mState |= (anon << COL_ANONYMOUS_OFFSET);
 }
 
 // XXX what about other style besides width
@@ -241,6 +226,7 @@ nscoord nsTableColFrame::GetPctWidth()
   return PR_MAX(mWidths[PCT], mWidths[PCT_ADJ]);
 }
 
+#ifdef DEBUG
 void nsTableColFrame::Dump(PRInt32 aIndent)
 {
   char* indent = new char[aIndent + 1];
@@ -250,16 +236,31 @@ void nsTableColFrame::Dump(PRInt32 aIndent)
   }
   indent[aIndent] = 0;
 
-  printf("%s**START COL DUMP** colIndex=%d isAnonymous=%d constraint=%d",
-    indent, mColIndex, IsAnonymous(), GetConstraint());
+  printf("%s**START COL DUMP**\n%s colIndex=%d constraint=%d coltype=",
+    indent, indent, mColIndex, GetConstraint());
+  nsTableColType colType = GetColType();
+  switch (colType) {
+  case eColContent:
+    printf(" content ");
+    break;
+  case eColAnonymousCol: 
+    printf(" anonymous-column ");
+    break;
+  case eColAnonymousColGroup:
+    printf(" anonymous-colgroup ");
+    break;
+  case eColAnonymousCell: 
+    printf(" anonymous-cell ");
+    break;
+  }
   printf("\n%s widths=", indent);
   for (PRInt32 widthX = 0; widthX < NUM_WIDTHS; widthX++) {
     printf("%d ", mWidths[widthX]);
   }
-  printf(" **END COL DUMP** ");
+  printf("\n%s**END COL DUMP** ", indent);
   delete [] indent;
 }
-
+#endif
 /* ----- global methods ----- */
 
 nsresult 

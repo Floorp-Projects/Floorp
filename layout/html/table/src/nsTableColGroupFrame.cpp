@@ -624,4 +624,31 @@ nsTableColGroupFrame::GetFrameName(nsAString& aResult) const
 {
   return MakeFrameName(NS_LITERAL_STRING("TableColGroup"), aResult);
 }
+
+void nsTableColGroupFrame::Dump(PRInt32 aIndent)
+{
+  char* indent = new char[aIndent + 1];
+  if (!indent) return;
+  for (PRInt32 i = 0; i < aIndent + 1; i++) {
+    indent[i] = ' ';
+  }
+  indent[aIndent] = 0;
+
+  printf("%s**START COLGROUP DUMP**\n%s startcolIndex=%d  colcount=%d span=%d coltype=",
+    indent, indent, GetStartColumnIndex(),  GetColCount(), GetSpan());
+  nsTableColGroupType colType = GetColType();
+  switch (colType) {
+  case eColGroupContent:
+    printf(" content ");
+    break;
+  case eColGroupAnonymousCol: 
+    printf(" anonymous-column  ");
+    break;
+  case eColGroupAnonymousCell: 
+    printf(" anonymous-cell ");
+    break;
+  }
+  printf("\n%s**END COLGROUP DUMP** ", indent);
+  delete [] indent;
+}
 #endif

@@ -202,6 +202,7 @@ public:
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
+  void Dump(PRInt32 aIndent);
 #endif
 
   /** returns the number of columns represented by this group.

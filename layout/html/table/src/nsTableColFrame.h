@@ -161,12 +161,6 @@ public:
   /** convenience method, calls into cellmap */
   PRInt32 Count() const;
 
-  /** Return true if this col was constructed implicitly due to cells needing a col.
-    * Return false if this col was constructed due to content having display type of table-col
-    */
-  PRBool IsAnonymous();
-  void   SetIsAnonymous(PRBool aValue);
-
   void ResetSizingInfo();
 
   nscoord GetLeftBorderWidth(float* aPixelsToTwips = nsnull);
@@ -190,8 +184,9 @@ public:
    */
   void SetContinuousBCBorderWidth(PRUint8     aForSide,
                                   BCPixelSize aPixelValue);
-
+#ifdef DEBUG
   void Dump(PRInt32 aIndent);
+#endif
 
 protected:
 
