@@ -131,8 +131,6 @@ nsresult
 SendOperationListener::OnStopSending(const char *aMsgID, nsresult aStatus, const PRUnichar *aMsg, 
                                      nsIFileSpec *returnFileSpec)
 {
-  nsresult                    rv = NS_OK;
-
   if (NS_SUCCEEDED(aStatus))
   {
     printf("Send Mail Operation Completed Successfully!\n");
@@ -279,7 +277,7 @@ main(int argc, char *argv[])
 
 
   NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv);
-  if (NS_FAILED(rv)) 
+  if (NS_FAILED(rv) || !mailSession) 
   {
     printf("Failure on Mail Session Init!\n");
     return rv;
