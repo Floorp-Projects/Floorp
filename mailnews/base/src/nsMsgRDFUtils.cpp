@@ -44,6 +44,8 @@ nsresult createNode(const PRUnichar *str, nsIRDFNode **node, nsIRDFService *rdfS
 {
   nsresult rv;
   nsCOMPtr<nsIRDFLiteral> value;
+  NS_ASSERTION(rdfService, "rdfService is null");
+  if (!rdfService) return NS_OK;
 
   if (str) {
     rv = rdfService->GetLiteral(str, getter_AddRefs(value));
