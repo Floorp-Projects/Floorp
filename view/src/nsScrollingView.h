@@ -67,10 +67,8 @@ public:
   NS_IMETHOD  ScrollByLines(PRInt32 aNumLines);
   NS_IMETHOD  ScrollByPages(PRInt32 aNumPages);
 
-  //private
-  virtual void HandleScrollEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags);
-  virtual void AdjustChildWidgets(nsScrollingView *aScrolling, nsIView *aView, nscoord aDx, nscoord aDy, float aScale);
-  virtual void UpdateScrollControls(PRBool aPaint);
+  //locals
+  void HandleScrollEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags);
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
@@ -81,6 +79,11 @@ protected:
 
   // nsITimerCallback Interface
   virtual void Notify(nsITimer *timer);
+
+  //private
+  void AdjustChildWidgets(nsScrollingView *aScrolling, nsIView *aView, nscoord aDx, nscoord aDy, float aScale);
+  void UpdateScrollControls(PRBool aPaint);
+  void Scroll(nsIView *aScrolledView, PRInt32 aDx, PRInt32 aDy, float scale, PRUint32 aUpdateFlags);
 
 
 protected:

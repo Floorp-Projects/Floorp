@@ -639,36 +639,7 @@ void nsScrollingView :: HandleScrollEvent(nsGUIEvent *aEvent, PRUint32 aEventFla
   GetScrolledView(scrolledView);
   scrolledView->SetPosition(-mOffsetX, -mOffsetY);
   
-  // If we actually scrolled by at least one pixel then scroll the contents
-  // of the scrolled view
-  if ((dx != 0) || (dy != 0))
-  {
-    nsIWidget *clipWidget;
-    PRBool    trans;
-    float     opacity;
-
-    mClipView->GetWidget(clipWidget);
-
-    HasTransparency(trans);
-    GetOpacity(opacity);
-
-    if ((nsnull == clipWidget) ||
-        ((trans || opacity) && !(mScrollProperties & NS_SCROLL_PROPERTY_ALWAYS_BLIT)) ||
-        (mScrollProperties & NS_SCROLL_PROPERTY_NEVER_BLIT))
-    {
-      // XXX Repainting is really slow. The widget's Scroll() member function
-      // needs an argument that specifies whether child widgets are scrolled,
-      // and we need to be able to specify the rect to be scrolled...
-      mViewManager->UpdateView(mClipView, nsnull, 0);
-      AdjustChildWidgets(this, scrolledView, 0, 0, t2p);
-    }
-    else
-    {
-      // Scroll the contents of the widget by the specfied amount, and scroll
-      // the child widgets
-      clipWidget->Scroll(dx, dy, nsnull);
-    }
-  }
+  Scroll(scrolledView, dx, dy, t2p, 0);
 }
 
 void nsScrollingView :: Notify(nsITimer * aTimer)
@@ -720,8 +691,6 @@ void nsScrollingView :: Notify(nsITimer * aTimer)
 NS_IMETHODIMP nsScrollingView :: HandleEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags,
                                              nsEventStatus &aStatus)
 {
-  nsIWidget *win;
-
   switch (aEvent->message)
   {
     case NS_KEY_DOWN:
@@ -1296,81 +1265,119 @@ NS_IMETHODIMP nsScrollingView :: GetScrollPreference(nsScrollPreference &aScroll
   return NS_OK;
 }
 
-// XXX This doesn't do X scrolling yet
-
-// XXX This doesn't let the scrolling code slide the bits on the
-// screen and damage only the appropriate area
-
 // XXX doesn't smooth scroll
 
-NS_IMETHODIMP
-nsScrollingView :: ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdateFlags)
+NS_IMETHODIMP nsScrollingView :: ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdateFlags)
 {
-  nsIDeviceContext  *dx;
+  nsIDeviceContext  *dev;
   float             t2p;
   float             p2t;
+  nsSize            clipSize;
+  nsIWidget         *win;
+  PRInt32           dx = 0, dy = 0;
+  nsIView           *scrolledView;
 
-  mViewManager->GetDeviceContext(dx);
-  dx->GetAppUnitsToDevUnits(t2p);
-  dx->GetDevUnitsToAppUnits(p2t);
+  mViewManager->GetDeviceContext(dev);
+  dev->GetAppUnitsToDevUnits(t2p);
+  dev->GetDevUnitsToAppUnits(p2t);
 
-  NS_RELEASE(dx);
+  NS_RELEASE(dev);
 
-  nsIWidget*      win;
+  mClipView->GetDimensions(&clipSize.width, &clipSize.height);
+
   mVScrollBarView->GetWidget(win);
+
   if (nsnull != win)
   {
     nsIScrollbar* scrollv;
+
     if (NS_OK == win->QueryInterface(kIScrollbarIID, (void **)&scrollv))
     {
       // Clamp aY
-      nsSize  clipSize;
-      mClipView->GetDimensions(&clipSize.width, &clipSize.height);
-      if (aY + clipSize.height > mSizeY) {
+
+      if ((aY + clipSize.height) > mSizeY)
         aY = mSizeY - clipSize.height;
-        if (aY < 0) {
-          aY = 0;
-        }
-      }
+
+      if (aY < 0)
+        aY = 0;
 
       // Move the scrollbar's thumb
 
       PRUint32  oldpos = mOffsetY;
-      nscoord dy;
+      PRUint32  newpos = NSIntPixelsToTwips(NSTwipsToIntPixels(aY, t2p), p2t);
 
-      PRUint32 newpos =
-        NSIntPixelsToTwips(NSTwipsToIntPixels(aY, t2p), p2t);
       scrollv->SetPosition(newpos);
 
-      dy = oldpos - newpos;
-
-      // Update the scrolled view's position
-      nsIView* scrolledView;
-      GetScrolledView(scrolledView);
-      if (nsnull != scrolledView)
-      {
-        scrolledView->SetPosition(-aX, -aY);
-        mOffsetX = aX;
-        mOffsetY = aY;
-      }
-
-      AdjustChildWidgets(this, scrolledView, 0, 0, t2p);
-
-      // Damage the updated area
-      nsRect  r;
-
-      r.x = 0;
-      r.y = aY;
-      mClipView->GetDimensions(&r.width, &r.height);
-      if (nsnull != scrolledView)
-      {
-        mViewManager->UpdateView(scrolledView, r, aUpdateFlags);
-      }
+      dy = NSTwipsToIntPixels((oldpos - newpos), t2p);
 
       NS_RELEASE(scrollv);
     }
+
     NS_RELEASE(win);
   }
+
+  mHScrollBarView->GetWidget(win);
+
+  if (nsnull != win)
+  {
+    nsIScrollbar* scrollh;
+
+    if (NS_OK == win->QueryInterface(kIScrollbarIID, (void **)&scrollh))
+    {
+      // Clamp aX
+
+      if ((aX + clipSize.width) > mSizeX)
+        aX = mSizeX - clipSize.width;
+
+      if (aX < 0)
+        aX = 0;
+
+      // Move the scrollbar's thumb
+
+      PRUint32  oldpos = mOffsetX;
+      PRUint32  newpos = NSIntPixelsToTwips(NSTwipsToIntPixels(aX, t2p), p2t);
+
+      scrollh->SetPosition(newpos);
+
+      dx = NSTwipsToIntPixels((oldpos - newpos), t2p);
+
+      NS_RELEASE(scrollh);
+    }
+
+    NS_RELEASE(win);
+  }
+
+  // Update the scrolled view's position
+
+  GetScrolledView(scrolledView);
+
+  if (nsnull != scrolledView)
+  {
+    scrolledView->SetPosition(-aX, -aY);
+
+    mOffsetX = aX;
+    mOffsetY = aY;
+  }
+
+  Scroll(scrolledView, dx, dy, t2p, 0);
+
+#if 0
+  if (dx || dy)
+    AdjustChildWidgets(this, scrolledView, 0, 0, t2p);
+
+  // Damage the updated area
+  nsRect  r;
+
+  r.x = 0;
+  r.y = aY;
+
+  mClipView->GetDimensions(&r.width, &r.height);
+
+  if (nsnull != scrolledView)
+    mViewManager->UpdateView(scrolledView, r, aUpdateFlags);
+  }
+#endif
+
   return NS_OK;
 }
 
@@ -1441,9 +1448,7 @@ void nsScrollingView :: AdjustChildWidgets(nsScrollingView *aScrolling, nsIView 
     // Don't recurse if the view has a widget, because we adjusted the view's
     // widget position, and its child widgets are relative to its positon
     if (nsnull == win)
-    {
       AdjustChildWidgets(aScrolling, kid, aDx, aDy, scale);
-    }
 
     if (nsnull != win)
     {
@@ -1583,10 +1588,11 @@ NS_IMETHODIMP nsScrollingView :: ScrollByLines(PRInt32 aNumLines)
 
     newPos = oldPos + lineInc * aNumLines;
 
+    if (newPos > (mSizeY - clipSize.height))
+      newPos = mSizeY - clipSize.height;
+
     if (newPos < 0)
       newPos = 0;
-    else if (newPos > (mSizeY - clipSize.height))
-      newPos = mSizeY - clipSize.height;
 
     ScrollTo(0, newPos, 0);
   }
@@ -1612,13 +1618,46 @@ NS_IMETHODIMP nsScrollingView :: ScrollByPages(PRInt32 aNumPages)
 
     newPos = oldPos + clipSize.height * aNumPages;
 
+    if (newPos > (mSizeY - clipSize.height))
+      newPos = mSizeY - clipSize.height;
+
     if (newPos < 0)
       newPos = 0;
-    else if (newPos > (mSizeY - clipSize.height))
-      newPos = mSizeY - clipSize.height;
 
     ScrollTo(0, newPos, 0);
   }
 
   return NS_OK;
+}
+
+void nsScrollingView :: Scroll(nsIView *aScrolledView, PRInt32 aDx, PRInt32 aDy, float scale, PRUint32 aUpdateFlags)
+{
+  if ((aDx != 0) || (aDy != 0))
+  {
+    nsIWidget *clipWidget;
+    PRBool    trans;
+    float     opacity;
+
+    mClipView->GetWidget(clipWidget);
+
+    HasTransparency(trans);
+    GetOpacity(opacity);
+
+    if ((nsnull == clipWidget) ||
+        ((trans || opacity) && !(mScrollProperties & NS_SCROLL_PROPERTY_ALWAYS_BLIT)) ||
+        (mScrollProperties & NS_SCROLL_PROPERTY_NEVER_BLIT))
+    {
+      // XXX Repainting is really slow. The widget's Scroll() member function
+      // needs an argument that specifies whether child widgets are scrolled,
+      // and we need to be able to specify the rect to be scrolled...
+      mViewManager->UpdateView(mClipView, nsnull, 0);
+      AdjustChildWidgets(this, aScrolledView, 0, 0, scale);
+    }
+    else
+    {
+      // Scroll the contents of the widget by the specfied amount, and scroll
+      // the child widgets
+      clipWidget->Scroll(aDx, aDy, nsnull);
+    }
+  }
 }
