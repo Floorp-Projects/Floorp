@@ -508,7 +508,7 @@ nsHTMLTableRowElement::DeleteCell(PRInt32 aValue)
 
 NS_IMPL_STRING_ATTR(nsHTMLTableRowElement, Align, align)
 NS_IMPL_STRING_ATTR(nsHTMLTableRowElement, BgColor, bgcolor)
-NS_IMPL_STRING_ATTR(nsHTMLTableRowElement, Ch, ch)
+NS_IMPL_STRING_ATTR(nsHTMLTableRowElement, Ch, _char)
 NS_IMPL_STRING_ATTR(nsHTMLTableRowElement, ChOff, charoff)
 NS_IMPL_STRING_ATTR(nsHTMLTableRowElement, VAlign, valign)
 
