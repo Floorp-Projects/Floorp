@@ -85,8 +85,8 @@ interface nsIAccessibleText : nsISupports
   void getCharacterExtents (in long offset,
                             out long x,
                             out long y,
-                            out long length,
                             out long width,
+                            out long height,
                             in nsAccessibleCoordType coordType);
 
   long getOffsetAtPoint (in long x, in long y,
