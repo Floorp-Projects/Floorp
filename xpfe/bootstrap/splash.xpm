@@ -1,5 +1,5 @@
 /* XPM */
-static char * final_splash_xpm[] = {
+static char * splash_xpm[] = {
 "392 263 40 1",
 " 	c None",
 ".	c #000000",
