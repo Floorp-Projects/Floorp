@@ -106,9 +106,6 @@ public void setPref(String prefName, String prefValue)
     if (null == prefName) {
         return;
     }
-    if (null == prefValue) {
-        return;
-    }
     // determine the type of pref value: String, boolean, integer
     try {
         Integer intVal = Integer.valueOf(prefValue);
@@ -116,7 +113,8 @@ public void setPref(String prefName, String prefValue)
     }
     catch (NumberFormatException e) {
         // it's not an integer
-        if (prefValue.equals("true") || prefValue.equals("false")) {
+        if (null != prefValue &&
+            (prefValue.equals("true") || prefValue.equals("false"))) {
             Boolean boolVal = Boolean.valueOf(prefValue);
             nativeSetBoolPref(getWrapperFactory().getNativeContext(), prefName, 
                               boolVal.booleanValue());

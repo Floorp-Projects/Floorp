@@ -111,21 +111,27 @@ Java_org_mozilla_webclient_impl_wrapper_1native_PreferencesImpl_nativeSetUnichar
     
     const char	*	prefNameChars = (char *)::util_GetStringUTFChars(env, 
                                                                      prefName);
-    const jchar	*	prefValueChars = (jchar *)::util_GetStringChars(env, 
-                                                                    prefValue);
-    if (nsnull == prefNameChars) {
-        ::util_ThrowExceptionToJava(env, "nativeSetUnicharPref: unable to extract Java string for pref name");
-        rv = NS_ERROR_NULL_POINTER;
-        goto OMWIWNPINSUP_CLEANUP;
+    const jchar	*	prefValueChars = nsnull;
+    if (nsnull != prefValue) {
+        prefValueChars = 
+            (jchar *)::util_GetStringChars(env, prefValue);
+        if (nsnull == prefNameChars) {
+            ::util_ThrowExceptionToJava(env, "nativeSetUnicharPref: unable to extract Java string for pref name");
+            rv = NS_ERROR_NULL_POINTER;
+            goto OMWIWNPINSUP_CLEANUP;
+        }
+        if (nsnull == prefValueChars) {
+            ::util_ThrowExceptionToJava(env, "nativeSetUnicharPref: unable to extract Java string for pref value");
+            rv = NS_ERROR_NULL_POINTER;
+            goto OMWIWNPINSUP_CLEANUP;
+        }
+        
+        rv = prefs->SetUnicharPref(prefNameChars, 
+                                   (const PRUnichar *) prefValueChars);
     }
-    if (nsnull == prefValueChars) {
-        ::util_ThrowExceptionToJava(env, "nativeSetUnicharPref: unable to extract Java string for pref value");
-        rv = NS_ERROR_NULL_POINTER;
-        goto OMWIWNPINSUP_CLEANUP;
+    else {
+        rv = prefs->ClearUserPref(prefNameChars);
     }
-
-    rv = prefs->SetUnicharPref(prefNameChars, 
-                               (const PRUnichar *) prefValueChars);
 
  OMWIWNPINSUP_CLEANUP:
     
