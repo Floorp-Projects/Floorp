@@ -61,6 +61,7 @@ public:
     virtual PRBool    OnPaint();
     virtual PRBool    OnScroll(UINT scrollCode, int cPos);
     virtual PRBool    OnResize(nsRect &aWindowRect);
+    virtual void      GetBounds(nsRect &aRect);
 
 protected:
 

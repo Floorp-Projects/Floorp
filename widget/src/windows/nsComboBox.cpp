@@ -260,3 +260,15 @@ PRInt32 nsComboBox::GetHeight(PRInt32 aProposedHeight)
 }
 
 
+//-------------------------------------------------------------------------
+//
+// get position/dimensions
+//
+//-------------------------------------------------------------------------
+
+void nsComboBox::GetBounds(nsRect &aRect)
+{
+    nsWindow::GetNonClientBounds(aRect);
+}
+
+

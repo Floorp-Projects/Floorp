@@ -50,6 +50,7 @@ public:
   virtual PRUint32 GetSelectedTab();
   virtual PRBool OnPaint();
   virtual PRBool OnResize(nsRect &aWindowRect);
+  virtual void GetBounds(nsRect &aRect);
 
 protected:
   virtual LPCTSTR WindowClass();

@@ -159,6 +159,8 @@ protected:
     void AddTooltip(HWND hwndOwner, nsRect* aRect, int aId);
     void RelayMouseEvent(UINT aMsg, WPARAM wParam, LPARAM lParam);
 
+    void GetNonClientBounds(nsRect &aRect);
+
 protected:
     static      nsWindow* gCurrentWindow;
     nsPoint     mLastPoint;
@@ -311,10 +313,6 @@ protected:
     void SetFocus(void) \
     { \
         nsWindow::SetFocus(); \
-    } \
-    void GetBounds(nsRect &aRect) \
-    { \
-        nsWindow::GetBounds(aRect); \
     } \
     nscolor GetForegroundColor(void) \
     { \

@@ -308,3 +308,15 @@ PRBool nsListBox::AutoErase()
 }
 
 
+//-------------------------------------------------------------------------
+//
+// get position/dimensions
+//
+//-------------------------------------------------------------------------
+
+void nsListBox::GetBounds(nsRect &aRect)
+{
+    nsWindow::GetNonClientBounds(aRect);
+}
+
+

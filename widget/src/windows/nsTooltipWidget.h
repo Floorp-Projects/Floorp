@@ -48,6 +48,7 @@ public:
   virtual PRBool OnPaint();
   virtual PRBool OnResize(nsRect &aWindowRect);
   virtual PRBool AutoErase();
+  virtual void GetBounds(nsRect &aRect);
 
 protected:
   virtual LPCTSTR WindowClass();

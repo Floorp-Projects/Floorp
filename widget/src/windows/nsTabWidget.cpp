@@ -141,3 +141,15 @@ DWORD nsTabWidget::WindowExStyle()
   return 0;
 }
 
+
+//-------------------------------------------------------------------------
+//
+// get position/dimensions
+//
+//-------------------------------------------------------------------------
+
+void nsTabWidget::GetBounds(nsRect &aRect)
+{
+    nsWindow::GetBounds(aRect);
+}
+

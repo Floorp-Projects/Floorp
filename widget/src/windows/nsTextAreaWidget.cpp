@@ -176,4 +176,16 @@ DWORD nsTextAreaWidget::WindowExStyle()
 }
 
 
+//-------------------------------------------------------------------------
+//
+// get position/dimensions
+//
+//-------------------------------------------------------------------------
+
+void nsTextAreaWidget::GetBounds(nsRect &aRect)
+{
+    nsWindow::GetNonClientBounds(aRect);
+}
+
+
 

@@ -141,4 +141,16 @@ PRBool nsTooltipWidget::AutoErase()
 }
 
 
+//-------------------------------------------------------------------------
+//
+// get position/dimensions
+//
+//-------------------------------------------------------------------------
+
+void nsTooltipWidget::GetBounds(nsRect &aRect)
+{
+    nsWindow::GetBounds(aRect);
+}
+
+
 
