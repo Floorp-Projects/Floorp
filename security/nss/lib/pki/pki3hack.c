@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.10 $ $Date: 2001/12/11 23:47:16 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.11 $ $Date: 2001/12/12 00:07:25 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -392,9 +392,12 @@ nssTrust_GetCERTCertTrustForCert(NSSCertificate *c, CERTCertificate *cc)
     NSSToken *tok;
     NSSTrust *tokenTrust;
     NSSTrust *t = NULL;
-    for (tok  = (NSSToken *)nssListIterator_Start(td->tokens);
+    nssListIterator *tokens;
+    tokens = nssList_CreateIterator(td->tokenList);
+    if (!tokens) return NULL;
+    for (tok  = (NSSToken *)nssListIterator_Start(tokens);
          tok != (NSSToken *)NULL;
-         tok  = (NSSToken *)nssListIterator_Next(td->tokens))
+         tok  = (NSSToken *)nssListIterator_Next(tokens))
     {
 	tokenTrust = nssToken_FindTrustForCert(tok, NULL, c, 
 	                                       nssTokenSearchType_AllObjects);
@@ -419,7 +422,8 @@ nssTrust_GetCERTCertTrustForCert(NSSCertificate *c, CERTCertificate *cc)
 	    }
 	}
     }
-    nssListIterator_Finish(td->tokens);
+    nssListIterator_Finish(tokens);
+    nssListIterator_Destroy(tokens);
     if (!t) {
 	return NULL;
     }
@@ -600,6 +604,7 @@ STAN_ChangeCertTrust(CERTCertificate *cc, CERTCertTrust *trust)
     NSSToken *tok;
     NSSTrustDomain *td;
     NSSTrust nssTrust;
+    nssListIterator *tokens;
     PRBool moving_object;
     /* Set the CERTCertificate's trust */
     cc->trust = trust;
@@ -617,13 +622,16 @@ STAN_ChangeCertTrust(CERTCertificate *cc, CERTCertTrust *trust)
     nssTrust.codeSigning = get_stan_trust(trust->objectSigningFlags, PR_FALSE);
     td = STAN_GetDefaultTrustDomain();
     if (PK11_IsReadOnly(cc->slot)) {
-	for (tok  = (NSSToken *)nssListIterator_Start(td->tokens);
+	tokens = nssList_CreateIterator(td->tokenList);
+	if (!tokens) return PR_FAILURE;
+	for (tok  = (NSSToken *)nssListIterator_Start(tokens);
 	     tok != (NSSToken *)NULL;
-	     tok  = (NSSToken *)nssListIterator_Next(td->tokens))
+	     tok  = (NSSToken *)nssListIterator_Next(tokens))
 	{
 	    if (!PK11_IsReadOnly(tok->pk11slot)) break;
 	}
-	nssListIterator_Finish(td->tokens);
+	nssListIterator_Finish(tokens);
+	nssListIterator_Destroy(tokens);
 	moving_object = PR_TRUE;
     } else {
 	/* by default, store trust on same token as cert if writeable */
