@@ -520,6 +520,7 @@ protected:
     PRPackedBool  mIMEIsStatusChanged;
     PRPackedBool  mIsInMouseCapture;
     PRPackedBool  mIsInMouseWheelProcessing;
+    PRPackedBool  mUnicodeWidget;
 
     char        mLeadByte;
 
