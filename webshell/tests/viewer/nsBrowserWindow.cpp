@@ -445,6 +445,7 @@ DispatchPurifyEvent(PRInt32 aID)
 {
   if (!PurifyIsRunning()) {
       printf("!!! Re-run viewer under Purify to use this menu item.\n");
+      fflush(stdout);
       return;
   }
 
