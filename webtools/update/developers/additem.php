@@ -590,6 +590,7 @@ $sql = "SELECT `AppName`, `int_version`, `major`, `minor`, `release`, `SubVer`, 
  $sql2 = "SELECT `AppName`,`AppID` FROM `applications` GROUP BY `AppName` ORDER BY `AppName` ASC";
  $sql_result2 = mysql_query($sql2, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   while ($row2 = mysql_fetch_array($sql_result2)) {
+   unset($minappver_int,$maxappver_int);
    $appname = $row2["AppName"];
    $appid = $row2["AppID"];
    $minappver = $_POST["$appname-minappver"];
