@@ -639,21 +639,16 @@ CSSParserImpl::ParseStyleAttribute(const nsAString& aAttributeValue,
 {
   NS_ASSERTION(nsnull != aBaseURL, "need base URL");
 
-  // XXXldb XXXperf nsIUnicharInputStream is horrible!  It makes us make
-  // a copy.
-  nsString* str = new nsAutoString(aAttributeValue);
-  if (nsnull == str) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  nsIUnicharInputStream* input = nsnull;
-  nsresult rv = NS_NewStringUnicharInputStream(&input, str);
-  if (NS_OK != rv) {
-    delete str;
+  nsCOMPtr<nsIUnicharInputStream> input;
+  // Style attribute parsing can't make the stream outlive this
+  // function call, so having it not own the string is OK.
+  nsresult rv = NS_NewStringUnicharInputStream(getter_AddRefs(input),
+                                               &aAttributeValue, PR_FALSE);
+  if (NS_FAILED(rv)) {
     return rv;
   }
 
   rv = InitScanner(input, aDocURL, 0, aBaseURL); // XXX line number
-  NS_RELEASE(input);
   if (! NS_SUCCEEDED(rv)) {
     return rv;
   }
@@ -707,19 +702,16 @@ CSSParserImpl::ParseAndAppendDeclaration(const nsAString&  aBuffer,
 //  NS_ASSERTION(nsnull != aBaseURL, "need base URL");
   *aChanged = PR_FALSE;
 
-  nsString* str = new nsString(aBuffer);
-  if (nsnull == str) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  nsIUnicharInputStream* input = nsnull;
-  nsresult rv = NS_NewStringUnicharInputStream(&input, str);
-  if (NS_OK != rv) {
-    delete str;
+  nsCOMPtr<nsIUnicharInputStream> input;
+  // Parsing a single declaration block can't make the stream outlive this
+  // function call, so having it not own the string is OK.
+  nsresult rv = NS_NewStringUnicharInputStream(getter_AddRefs(input),
+                                               &aBuffer, PR_FALSE);
+  if (NS_FAILED(rv)) {
     return rv;
   }
 
   rv = InitScanner(input, aSheetURL, 0, aBaseURL);
-  NS_RELEASE(input);
   if (! NS_SUCCEEDED(rv)) {
     return rv;
   }
@@ -766,14 +758,12 @@ CSSParserImpl::ParseRule(const nsAString& aRule,
   NS_ASSERTION(nsnull != aBaseURL, "need base URL");
   NS_ENSURE_ARG_POINTER(aResult);
 
-  nsString* str = new nsString(aRule);
-  if (nsnull == str) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  nsCOMPtr<nsIUnicharInputStream> input = nsnull;
-  nsresult rv = NS_NewStringUnicharInputStream(getter_AddRefs(input), str);
+  nsCOMPtr<nsIUnicharInputStream> input;
+  // Parsing a single rule can't make the stream outlive this
+  // function call, so having it not own the string is OK.
+  nsresult rv = NS_NewStringUnicharInputStream(getter_AddRefs(input),
+                                               &aRule, PR_FALSE);
   if (NS_FAILED(rv)) {
-    delete str;
     return rv;
   }
 
@@ -824,15 +814,12 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
   NS_ASSERTION(nsnull != aDeclaration, "Need declaration to parse into!");
   *aChanged = PR_FALSE;
 
-  nsString* str = new nsAutoString(aPropValue);
-  if (!str) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
   nsCOMPtr<nsIUnicharInputStream> input;
-  nsresult rv = NS_NewStringUnicharInputStream(getter_AddRefs(input), str);
+  // Parsing a single property value can't make the stream outlive this
+  // function call, so having it not own the string is OK.
+  nsresult rv = NS_NewStringUnicharInputStream(getter_AddRefs(input),
+                                               &aPropValue, PR_FALSE);
   if (NS_FAILED(rv)) {
-    delete str;
     return rv;
   }
 

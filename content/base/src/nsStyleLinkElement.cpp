@@ -294,8 +294,7 @@ nsStyleLinkElement::UpdateStyleSheet(nsIDocument *aOldDocument,
   if (isInline) {
     PRUint32 count = thisContent->GetChildCount();
 
-    nsString *content = new nsString();
-    NS_ENSURE_TRUE(content, NS_ERROR_OUT_OF_MEMORY);
+    nsAutoString content;
 
     PRUint32 i;
     for (i = 0; i < count; ++i) {
@@ -312,13 +311,15 @@ nsStyleLinkElement::UpdateStyleSheet(nsIDocument *aOldDocument,
 
       nsAutoString tcString;
       tc->GetData(tcString);
-      content->Append(tcString);
+      content.Append(tcString);
     }
 
+    // Use of the stream will be done before parsing returns.  So it will go
+    // out of scope before |content| does.
     nsCOMPtr<nsIUnicharInputStream> uin;
-    rv = NS_NewStringUnicharInputStream(getter_AddRefs(uin), content);
+    rv = NS_NewStringUnicharInputStream(getter_AddRefs(uin), &content,
+                                        PR_FALSE);
     if (NS_FAILED(rv)) {
-      delete content;
       return rv;
     }
 
