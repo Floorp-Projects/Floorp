@@ -308,7 +308,6 @@ protected:
     static nsIAtom* kParentAtom;
     static nsIAtom* kPersistAtom;
     static nsIAtom* kPropertyAtom;
-    static nsIAtom* kRefAtom;
     static nsIAtom* kResourceAtom;
     static nsIAtom* kRuleAtom;
     static nsIAtom* kTemplateAtom;
@@ -354,7 +353,6 @@ nsIAtom* RDFGenericBuilderImpl::kOpenAtom;
 nsIAtom* RDFGenericBuilderImpl::kParentAtom;
 nsIAtom* RDFGenericBuilderImpl::kPersistAtom;
 nsIAtom* RDFGenericBuilderImpl::kPropertyAtom;
-nsIAtom* RDFGenericBuilderImpl::kRefAtom;
 nsIAtom* RDFGenericBuilderImpl::kResourceAtom;
 nsIAtom* RDFGenericBuilderImpl::kRuleAtom;
 nsIAtom* RDFGenericBuilderImpl::kTemplateAtom;
@@ -445,7 +443,6 @@ RDFGenericBuilderImpl::~RDFGenericBuilderImpl(void)
         NS_IF_RELEASE(kParentAtom);
         NS_IF_RELEASE(kPersistAtom);
         NS_IF_RELEASE(kPropertyAtom);
-        NS_IF_RELEASE(kRefAtom);
         NS_IF_RELEASE(kResourceAtom);
         NS_IF_RELEASE(kRuleAtom);
         NS_IF_RELEASE(kTemplateAtom);
@@ -510,7 +507,6 @@ RDFGenericBuilderImpl::Init()
         kParentAtom                     = NS_NewAtom("parent");
         kPersistAtom                    = NS_NewAtom("persist");
         kPropertyAtom                   = NS_NewAtom("property");
-        kRefAtom                        = NS_NewAtom("ref");
         kResourceAtom                   = NS_NewAtom("resource");
         kRuleAtom                       = NS_NewAtom("rule");
         kTemplateAtom                   = NS_NewAtom("template");

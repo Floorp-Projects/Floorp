@@ -374,11 +374,6 @@ public:
 #endif
 
     // nsIXULDocument interface
-    NS_IMETHOD SetRootResource(nsIRDFResource* resource);
-    NS_IMETHOD SplitProperty(nsIRDFResource* aResource,
-                             PRInt32* aNameSpaceID,
-                             nsIAtom** aTag);
-
     NS_IMETHOD AddElementForID(const nsString& aID, nsIContent* aElement);
     NS_IMETHOD RemoveElementForID(const nsString& aID, nsIContent* aElement);
     NS_IMETHOD GetElementsForID(const nsString& aID, nsISupportsArray* aElements);
@@ -437,7 +432,6 @@ public:
     // nsIXULChildDocument Interface
     NS_IMETHOD    SetContentSink(nsIXULContentSink* aContentSink);
     NS_IMETHOD    GetContentSink(nsIXULContentSink** aContentSink);
-    NS_IMETHOD    LayoutPopupDocument();
 
     // nsIDOMNode interface
     NS_IMETHOD    GetNodeName(nsString& aNodeName);
@@ -589,7 +583,6 @@ protected:
     nsCOMPtr<nsIURI>           mDocumentURL;        // [OWNER] ??? compare with loader
     nsWeakPtr                  mDocumentLoadGroup;  // [WEAK] leads to loader
     nsCOMPtr<nsIPrincipal>     mDocumentPrincipal;  // [OWNER]
-    nsCOMPtr<nsIRDFResource>   mRootResource;       // [OWNER]
     nsCOMPtr<nsIContent>       mRootContent;        // [OWNER] 
     nsIDocument*               mParentDocument;     // [WEAK]
     nsIScriptContextOwner*     mScriptContextOwner; // [WEAK] it owns me! (indirectly)
@@ -2273,105 +2266,6 @@ XULDocumentImpl::SetTransformMediator(nsITransformMediator* aMediator)
 // nsIXULDocument interface
 
 NS_IMETHODIMP
-XULDocumentImpl::SetRootResource(nsIRDFResource* aResource)
-{
-    mRootResource = dont_QueryInterface(aResource);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-XULDocumentImpl::SplitProperty(nsIRDFResource* aProperty,
-                               PRInt32* aNameSpaceID,
-                               nsIAtom** aTag)
-{
-    NS_PRECONDITION(aProperty != nsnull, "null ptr");
-    if (! aProperty)
-        return NS_ERROR_NULL_POINTER;
-
-    // XXX okay, this is a total hack. for this to work right, we need
-    // to either:
-    //
-    // 1) Remember what the namespace and the tag were when the
-    //    property was created, or
-    //
-    // 2) Iterate the entire set of namespace prefixes to see if the
-    //    specified property's URI has any of them as a substring.
-    //
-    nsresult rv;
-
-    const char* p;
-    rv = aProperty->GetValueConst(&p);
-    if (NS_FAILED(rv)) return rv;
-
-    if (! p)
-        return NS_ERROR_UNEXPECTED;
-
-    PRUnichar buf[256];
-    nsAutoString uri(CBufDescriptor(buf, PR_TRUE, sizeof(buf) / sizeof(PRUnichar), 0));
-    uri = p;
-
-    // First try to split the namespace using the rightmost '#' or '/'
-    // character.
-    PRInt32 i;
-    if ((i = uri.RFindChar('#')) < 0) {
-        if ((i = uri.RFindChar('/')) < 0) {
-            *aNameSpaceID = kNameSpaceID_None;
-            *aTag = NS_NewAtom(uri);
-            return NS_OK;
-        }
-    }
-
-    // Using the above info, split the property's URI into a namespace
-    // prefix (that includes the trailing '#' or '/' character) and a
-    // tag.
-    nsAutoString tag;
-    PRInt32 count = uri.Length() - (i + 1);
-    uri.Right(tag, count);
-    uri.Cut(i + 1, count);
-
-    // XXX XUL atoms seem to all be in lower case. HTML atoms are in
-    // upper case. This sucks.
-    //tag.ToUpperCase();  // All XML is case sensitive even HTML in XML
-    PRInt32 nameSpaceID;
-    rv = mNameSpaceManager->GetNameSpaceID(uri, nameSpaceID);
-
-    // Did we find one?
-    if (NS_SUCCEEDED(rv) && nameSpaceID != kNameSpaceID_Unknown) {
-        *aNameSpaceID = nameSpaceID;
-
-        *aTag = NS_NewAtom(tag);
-        return NS_OK;
-    }
-
-    // Nope: so we'll need to be a bit more creative. Let's see
-    // what happens if we remove the rightmost '#' and then try...
-    if (uri.Last() == '#') {
-        uri.Truncate(uri.Length() - 1);
-        rv = mNameSpaceManager->GetNameSpaceID(uri, nameSpaceID);
-
-        if (NS_SUCCEEDED(rv) && nameSpaceID != kNameSpaceID_Unknown) {
-            *aNameSpaceID = nameSpaceID;
-
-            *aTag = NS_NewAtom(tag);
-            return NS_OK;
-        }
-    }
-
-    // allright, if we at least have a tag, then we can return the
-    // thing with kNameSpaceID_None for now.
-    if (tag.Length()) {
-        *aNameSpaceID = kNameSpaceID_None;
-        *aTag = NS_NewAtom(tag);
-        return NS_OK;
-    }
-
-    // Okay, somebody make this code even more convoluted.
-    NS_ERROR("unable to convert URI to namespace/tag pair");
-    return NS_ERROR_FAILURE; // XXX?
-}
-
-
-NS_IMETHODIMP
 XULDocumentImpl::AddElementForID(const nsString& aID, nsIContent* aElement)
 {
     NS_PRECONDITION(aElement != nsnull, "null ptr");
@@ -3199,96 +3093,6 @@ XULDocumentImpl::GetCommand(nsString& aCommand)
     aCommand = mCommand;
     return NS_OK;
 }
-
-NS_IMETHODIMP
-XULDocumentImpl::LayoutPopupDocument()
-{
-    StartLayout();
-    return NS_OK;
-}
-
-#if 0
-NS_IMETHODIMP
-XULDocumentImpl::CreatePopupDocument(nsIContent* aPopupElement, nsIDocument** aResult)
-{
-    nsresult rv;
-
-    // Create and addref
-    XULDocumentImpl* popupDoc = new XULDocumentImpl();
-    if (popupDoc == nsnull)
-      return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(popupDoc);
-
-    // Init our new document
-    if (NS_FAILED(rv = popupDoc->Init())) {
-      NS_RELEASE(popupDoc);
-      return rv;
-    }
-
-    // Indicate that we are a popup document
-    popupDoc->SetIsPopup(PR_TRUE);
-
-    // Our URL is exactly the same as the parent doc.
-    popupDoc->SetDocumentURLAndGroup(mDocumentURL);
-
-    // Set our character set.
-    popupDoc->SetDocumentCharacterSet(mCharSetID);
-
-    // Try to share the style sheets (this is evil, but it might just work)
-    // First do a prepare to pick up a new inline and attr style sheet
-    if (NS_FAILED(rv = popupDoc->PrepareStyleSheets(mDocumentURL))) {
-      NS_ERROR("problem initializing style sheets.");
-      return rv;
-    }
-    // Now we need to copy all of the style sheets from the parent document
-    PRInt32 count = mStyleSheets.Count();
-    for (PRInt32 i = 1; i < count-1; i++) {
-      // Don't bother addrefing. We don't live as long as our parent document
-        nsIStyleSheet* sheet = (nsIStyleSheet*) mStyleSheets.ElementAt(i);
-        nsCOMPtr<nsICSSStyleSheet> cssSheet = do_QueryInterface(sheet);
-        if (cssSheet) {
-          nsCOMPtr<nsICSSStyleSheet> clonedSheet;
-          if (NS_SUCCEEDED(cssSheet->Clone(*getter_AddRefs(clonedSheet)))) {
-            popupDoc->AddStyleSheet(clonedSheet);
-          }
-        }
-    }
-
-    // We share the same namespace manager
-    popupDoc->mNameSpaceManager = mNameSpaceManager;
-
-    // We share the mPopup
-    popupDoc->mPopupNode = mPopupNode;
-
-    // Suck all of the root's content into our document.
-    // We need to make the XUL builder instantiate this node.
-    // Retrieve the resource that corresponds to this node.
-    nsAutoString idValue;
-    nsCOMPtr<nsIDOMElement> domRoot = do_QueryInterface(aPopupElement);
-    domRoot->GetAttribute("id", idValue);
-
-    // Use the absolute URL to retrieve a resource from the RDF
-    // service that corresponds to the root content.
-    nsCOMPtr<nsIRDFResource> rootResource;
-    rv = gXULUtils->MakeElementResource(this, idValue, getter_AddRefs(rootResource));
-    if (NS_FAILED(rv)) return rv;
-
-    // Tell the builder to create its root from this resrouce.
-    // XXXwaterson whee!
-    //popupDoc->mXULBuilder->CreateRootContent(rootResource);
-
-    // Now the popup will happily use its own XUL builder to churn out nodal
-    // clones of the popup content.  They will get their own event handlers
-    // (properly scoped to the new global popup window context), and will
-    // belong to the popup document instead.  If this works, it will be
-    // more righteous than Star Wars Episode I.
-
-    // Return the doc
-    *aResult = popupDoc;
-
-    return NS_OK;
-}
-#endif
 
 ////////////////////////////////////////////////////////////////////////
 // nsIXULChildDocument interface

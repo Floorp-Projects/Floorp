@@ -33,9 +33,6 @@ public:
 
     NS_IMETHOD SetContentSink(nsIXULContentSink* aContentSink) = 0;
     NS_IMETHOD GetContentSink(nsIXULContentSink** aContentSink) = 0;
-
-    // Used for popup child documents
-    NS_IMETHOD LayoutPopupDocument() = 0;
 };
 
 #endif // nsIXULChildDocument_h__
