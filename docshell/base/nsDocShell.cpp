@@ -1643,7 +1643,7 @@ nsDocShell::FireStartDocumentLoad(nsIDocumentLoader* aLoader,
   NS_ENSURE_ARG_POINTER(aCommand);
 
   nsCOMPtr<nsIDocumentViewer> docViewer;
-  if (mScriptGlobal && (aLoader == mDocLoader)) 
+  if (mScriptGlobal && (aLoader == mDocLoader.get())) 
   {
     docViewer = do_QueryInterface(mContentViewer);
     if (docViewer)
@@ -1666,7 +1666,7 @@ nsDocShell::FireStartDocumentLoad(nsIDocumentLoader* aLoader,
     }
   }
 
-  if (aLoader == mDocLoader) 
+  if (aLoader == mDocLoader.get()) 
   {
     nsCOMPtr<nsIDocumentLoaderObserver> dlObserver;
 
@@ -1724,7 +1724,7 @@ nsDocShell::FireEndDocumentLoad(nsIDocumentLoader* aLoader,
   nsCOMPtr<nsIURI> aURL;
   NS_ENSURE_SUCCESS(aChannel->GetURI(getter_AddRefs(aURL)), NS_ERROR_FAILURE);
 
-  if (aLoader == mDocLoader)
+  if (aLoader == mDocLoader.get())
   {
     if (mScriptGlobal && mContentViewer)
     {
