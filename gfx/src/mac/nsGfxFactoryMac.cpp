@@ -25,6 +25,7 @@
 #include "nsISupports.h"
 #include "nsIFontList.h"
 #include "nsGfxCIID.h"
+#include "nsFontList.h"
 #include "nsFontMetricsMac.h"
 #include "nsRenderingContextMac.h"
 #include "nsImageMac.h"
