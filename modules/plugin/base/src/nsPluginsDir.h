@@ -65,6 +65,7 @@ struct nsPluginInfo {
  * details.
  */
 class nsPluginFile : public nsFileSpec {
+  PRLibrary* pLibrary;
 public:
 	/**
 	 * If spec corresponds to a valid plugin file, constructs a reference
