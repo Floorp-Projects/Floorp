@@ -46,6 +46,7 @@ Rights Reserved.
     <box id="contentarea" flex="1">
       <iframe flex="1" name="wizardContents" scrolling="auto" id="wizardContents"/>
     </box>
+	<!-- if you change "wizardButtons", make sure to change AccountWizardOverlay.xul, too -->
     <box id="wizardButtons"/>
   </box>
 

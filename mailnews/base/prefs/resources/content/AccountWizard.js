@@ -399,6 +399,10 @@ function finishAccount(account, accountData) {
       if (accountData.smtpUsePreferredServer && destIdentity)
           destIdentity.smtpServerKey = smtpServer.key;
      }
+
+     if (this.FinishAccountHook != undefined) {
+         FinishAccountHook(accountData.domain);
+     }
 }
 
 
