@@ -679,9 +679,9 @@
 
               // we want to use the default item index for the first session which gave us a valid
               // default item index...
-
+              var results;
               for (var name in this.mLastResults) {
-               var results = this.mLastResults[name];
+               results = this.mLastResults[name];
                if (results && results.items.Count() > 0 && results.defaultItemIndex != -1)
                {
                  defaultSession = name;
@@ -690,7 +690,7 @@
               }
 
               if (defaultSession) {
-                var results = this.mLastResults[defaultSession];
+                results = this.mLastResults[defaultSession];
                 if (results && !this.noMatch)
                   if (results.defaultItemIndex != -1)
                   this.value = this.getSessionValueAt(defaultSession, results.defaultItemIndex);
