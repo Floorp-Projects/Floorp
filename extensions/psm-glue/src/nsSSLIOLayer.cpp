@@ -132,6 +132,7 @@ nsSSLIOLayerConnect(PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime timeou
     
     if (!proxyName)
     {
+        CMBool handshake = forceHandshake ? CM_TRUE : CM_FALSE;
         // Direct connection
         status = CMT_OpenSSLConnection(control,
                                        cmsock,
@@ -139,7 +140,7 @@ nsSSLIOLayerConnect(PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime timeou
                                        PR_ntohs(addr->inet.port),
                                        ipBuffer,
                                        (hostName ? hostName : ipBuffer),
-                                       (CMBool)forceHandshake,
+                                       handshake,
                                        nsnull);
     }
     else
