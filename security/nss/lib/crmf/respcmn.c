@@ -79,23 +79,34 @@ CMMF_DestroyCertResponse(CMMFCertResponse *inCertResp)
 SECStatus
 CMMF_DestroyCertRepContent(CMMFCertRepContent *inCertRepContent)
 {
-    CMMFCertifiedKeyPair *certKeyPair;
-    int i;
-
     PORT_Assert(inCertRepContent != NULL);
-    if (inCertRepContent != NULL && inCertRepContent->poolp != NULL) {
-        if (inCertRepContent->response != NULL) {
-            for (i=0; inCertRepContent->response[i] != NULL; i++) {
-                certKeyPair = inCertRepContent->response[i]->certifiedKeyPair;
+    if (inCertRepContent != NULL) {
+        CMMFCertResponse   **pResponse = inCertRepContent->response;
+        if (pResponse != NULL) {
+            for (; *pResponse != NULL; pResponse++) {
+	        CMMFCertifiedKeyPair *certKeyPair = (*pResponse)->certifiedKeyPair;
+		/* XXX Why not call CMMF_DestroyCertifiedKeyPair or
+		** XXX cmmf_DestroyCertOrEncCert ?  
+		*/
                 if (certKeyPair != NULL                    &&
                     certKeyPair->certOrEncCert.choice == cmmfCertificate &&
                     certKeyPair->certOrEncCert.cert.certificate != NULL) {
                     CERT_DestroyCertificate
                                  (certKeyPair->certOrEncCert.cert.certificate);
+		    certKeyPair->certOrEncCert.cert.certificate = NULL;
                 }
             }
         }
-        PORT_FreeArena(inCertRepContent->poolp, PR_TRUE);
+	if (inCertRepContent->caPubs) {
+	    CERTCertificate     **caPubs = inCertRepContent->caPubs;
+	    for (; *caPubs; ++caPubs) {
+		CERT_DestroyCertificate(*caPubs);
+		*caPubs = NULL;
+	    }
+	}
+	if (inCertRepContent->poolp != NULL) {
+	    PORT_FreeArena(inCertRepContent->poolp, PR_TRUE);
+	}
     }
     return SECSuccess;
 }
@@ -216,6 +227,7 @@ cmmf_DestroyCertOrEncCert(CMMFCertOrEncCert *certOrEncCert, PRBool freeit)
     switch (certOrEncCert->choice) {
     case cmmfCertificate:
         CERT_DestroyCertificate(certOrEncCert->cert.certificate);
+	certOrEncCert->cert.certificate = NULL;
 	break;
     case cmmfEncryptedCert:
         crmf_destroy_encrypted_value(certOrEncCert->cert.encryptedCert,
