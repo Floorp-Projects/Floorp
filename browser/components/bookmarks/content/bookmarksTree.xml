@@ -676,7 +676,7 @@
             target = this.mOuter.getTreeTarget(rItem, rParent, orientation);
           }
           //var firstVisibleRow = this.mOuter.treeBoxObject.getFirstVisibleRow()
-          //this.mOuter.treeBoxObject.selection.selectEventsSuppressed = true;
+          this.mOuter.treeBoxObject.selection.selectEventsSuppressed = true;
           // Notify the datasource that we're about to begin a batch operation
           //var observer = this.mOuter.tree.builder.QueryInterface(Components.interfaces.nsIRDFObserver);
           //observer.beginUpdateBatch(this.db);
@@ -694,10 +694,10 @@
           // temporary hack: for an unknown reason, rebuilding cause a scroll to the bottom
           // if the first visible row is not 0
           //this.mOuter.treeBoxObject.scrollToRow(firstVisibleRow);
-          //this.mOuter.updateTreeSelection();
+          this.mOuter.updateTreeSelection();
           // use of a timer to speedup
-          //var This = this.mOuter;
-          //setTimeout( function (){This.treeBoxObject.selection.selectEventsSuppressed = false}, 100)
+          var This = this.mOuter;
+          setTimeout( function (){This.treeBoxObject.selection.selectEventsSuppressed = false}, 100)
           //dump("6:"+(Date.now()-date)+"\n")
         },
 
