@@ -77,7 +77,7 @@ NS_IMPL_RELEASE(nsDOMSerializer)
 static nsresult SetUpEncoder(nsIDOMNode *aRoot, const char* aCharset, nsIDocumentEncoder **aEncoder)
 {
   *aEncoder = nsnull;
-  
+   
   nsresult rv;
   nsCOMPtr<nsIDocumentEncoder> encoder(do_CreateInstance(NS_DOC_ENCODER_CONTRACTID_BASE "text/xml",&rv));
   if (NS_FAILED(rv))
@@ -160,8 +160,9 @@ nsDOMSerializer::SerializeToStream(nsIDOMNode *root,
 {
   NS_ENSURE_ARG_POINTER(root);
   NS_ENSURE_ARG_POINTER(stream);
-  NS_ENSURE_ARG_POINTER(charset);
-
+  // The charset arg can be null, in which case we get the document's
+  // charset and use that when serializing.
+  
   nsCOMPtr<nsIDocumentEncoder> encoder;
   nsresult rv = SetUpEncoder(root,charset,getter_AddRefs(encoder));
   if (NS_FAILED(rv))
