@@ -73,8 +73,6 @@ class nsBrowserAppCore : public nsBaseAppCore,
     NS_IMETHOD    SetToolbarWindow(nsIDOMWindow* aWin);
     NS_IMETHOD    SetContentWindow(nsIDOMWindow* aWin);
     NS_IMETHOD    SetWebShellWindow(nsIDOMWindow* aWin);
-    NS_IMETHOD    SetDisableCallback(const nsString& aScript);
-    NS_IMETHOD    SetEnableCallback(const nsString& aScript);
     NS_IMETHOD    NewWindow();
     NS_IMETHOD    OpenWindow();
     NS_IMETHOD    PrintPreview();
@@ -127,9 +125,6 @@ class nsBrowserAppCore : public nsBaseAppCore,
     NS_IMETHOD DoDialog();
     NS_IMETHOD ExecuteScript(nsIScriptContext * aContext, const nsString& aScript);
     void SetButtonImage(nsIDOMNode * aParentNode, PRInt32 aBtnNum, const nsString &aResName);
-
-    nsString            mEnableScript;     
-    nsString            mDisableScript;     
 
     nsIScriptContext   *mToolbarScriptContext;
     nsIScriptContext   *mContentScriptContext;
