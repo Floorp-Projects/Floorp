@@ -50,6 +50,8 @@
 #include "nsIStreamConverterService.h"
 #include "nsIPref.h"
 
+#include "nsMimeTypes.h"
+
 static NS_DEFINE_CID(kStreamConvServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_IID(kIURLIID, NS_IURL_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
@@ -268,8 +270,8 @@ ImageConsumer::DoContent(const char * aContentType,
 
   nsAutoString contentType; contentType.AssignWithConversion(aContentType);
 
-  if (contentType.EqualsWithConversion("multipart/x-mixed-replace")
-      || contentType.EqualsWithConversion("multipart/mixed")) {
+  if (contentType.EqualsWithConversion(MULTIPART_MIXED_REPLACE)
+      || contentType.EqualsWithConversion(MULTIPART_MIXED)) {
     // if we're getting multipart data, we have to convert it.
     // so wedge the converter inbetween us and the consumer.
     mIsMulti= PR_TRUE;
