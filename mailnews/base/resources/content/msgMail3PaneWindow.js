@@ -370,6 +370,8 @@ function OnLoadFolderPane(folderTree)
 function OnLoadThreadPane(threadTree)
 {
     gThreadTree = threadTree;
+	//Sort by date by default
+	MsgSortByDate();
 	// add folderSource to thread pane
 	folderDataSource = folderDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
 	threadTree.database.AddDataSource(folderDataSource);
