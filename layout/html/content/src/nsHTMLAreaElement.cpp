@@ -347,22 +347,26 @@ NS_IMETHODIMP
 nsHTMLAreaElement::GetPathname(nsString& aPathname)
 {
   nsAutoString href;
-  nsIURI *url;
+  nsCOMPtr<nsIURI> uri;
   nsresult result = NS_OK;
-  
+
+  aPathname.Truncate();
+ 
   result = GetHref(href);
-  if (NS_OK == result) {
-    result = NS_NewURI(&url, href);
-    if (NS_OK == result) {
-      char* file;
-      result = url->GetPath(&file);
-      if (result == NS_OK) {
-        aPathname.AssignWithConversion(file);
-        nsCRT::free(file);
-      }
-      NS_IF_RELEASE(url);
-    }
-  }
+  NS_ENSURE_SUCCESS(result, result);
+
+  result = NS_NewURI(getter_AddRefs(uri), href);
+  NS_ENSURE_SUCCESS(result, result);
+
+  nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
+  NS_ENSURE_TRUE(url, NS_OK);
+
+  char* file;
+  result = url->GetFilePath(&file);
+  NS_ENSURE_SUCCESS(result, result);
+
+  aPathname.AssignWithConversion(file);
+  nsCRT::free(file);
 
   return result;
 }
@@ -430,7 +434,7 @@ nsHTMLAreaElement::GetHash(nsString& aHash)
   nsAutoString href;
   nsIURI *uri;
   nsresult result = NS_OK;
-  
+
   result = GetHref(href);
   if (NS_OK == result) {
     result = NS_NewURI(&uri, href);
