@@ -166,7 +166,8 @@ interface nsILocalFile : nsIFile
      *  undefined.  DO NOT TRY TO INTERPRET IT AS HUMAN READABLE TEXT!
      *
      *   @param fromFile
-     *       the file from which the descriptor is relative
+     *       the file from which the descriptor is relative.
+     *       There is no defined result if this param is null.
      */
     ACString getRelativeDescriptor(in nsILocalFile fromFile);
 
@@ -180,7 +181,7 @@ interface nsILocalFile : nsIFile
      *       the file to which the descriptor is relative
      *   @param relative
      *       the relative descriptor obtained from getRelativeDescriptor
-*/
+     */
     void setRelativeDescriptor(in nsILocalFile fromFile, in ACString relativeDesc);    
 };
 
