@@ -262,13 +262,15 @@ private:
   void RenderViews(nsView *aRootView, nsIRenderingContext& aRC, const nsRect& aRect,
                    PRBool &aResult);
 
-  void RenderView(nsView *aView, nsIRenderingContext &aRC,
-                 const nsRect &aDamageRect, nsRect &aGlobalRect, PRBool &aResult);
-
   void RenderDisplayListElement(DisplayListElement2* element, nsIRenderingContext &aRC);
 
   void PaintView(nsView *aView, nsIRenderingContext &aRC, nscoord x, nscoord y,
                 const nsRect &aDamageRect);
+
+  void InvalidateRectDifference(nsView *aView, const nsRect& aRect, const nsRect& aCutOut, PRUint32 aUpdateFlags);
+
+  void InvalidateHorizontalBandDifference(nsView *aView, const nsRect& aRect, const nsRect& aCutOut,
+                                          PRUint32 aUpdateFlags, nscoord aY1, nscoord aY2, PRBool aInCutOut);
     
   nsresult CreateBlendingBuffers(nsIRenderingContext &aRC);
           
