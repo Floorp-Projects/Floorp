@@ -128,7 +128,8 @@ public:
     NS_ADDREF(mChannel);
     NS_IF_RELEASE(mUserContext);
     mUserContext = context;
-    NS_ADDREF(mUserContext);
+    if (mUserContext)
+        NS_ADDREF(mUserContext);
   }
 #else
   NS_IMETHOD GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo);
