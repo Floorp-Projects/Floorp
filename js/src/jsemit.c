@@ -660,7 +660,7 @@ LookupArgOrVar(JSContext *cx, JSTreeContext *tc, JSParseNode *pn, JSOp *opp)
 
     /*
      * We can't optimize if we're in an eval called inside a with statement,
-     * or we're compiling code inside a with statement, or we're in a catch
+     * or we're compiling a with statement and its body, or we're in a catch
      * block whose exception variable has the same name as pn.
      */
     atom = pn->pn_atom;
@@ -1436,10 +1436,9 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             if (pn3->pn_type != TOK_LB) {
                 if (js_Emit1(cx, cg, JSOP_POP2) < 0)
                     return JS_FALSE;
-            }
-            else {
+            } else {
                 /*
-                 * For 'for(x[i]...)' there's only the object on the stack,
+                 * With 'for(x[i]...)', there's only the object on the stack,
                  * so we need to hide the pop.
                  */
                 if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0)
@@ -1539,7 +1538,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         }
 
         /*
-         * About SETSP:
+         * About JSOP_SETSP:
          * An exception can be thrown while the stack is in an unbalanced
          * state, and this causes problems with things like function invocation
          * later on.
@@ -1547,12 +1546,12 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * To fix this, we compute the `balanced' stack depth upon try entry,
          * and then restore the stack to this depth when we hit the first catch
          * or finally block.  We can't just zero the stack, because things like
-         * for/in and with that are active upon entry to the block keep things
-         * on the stack.
+         * for/in and with that are active upon entry to the block keep state
+         * variables on the stack.
          */
         depth = cg->stackDepth;
 
-        /* mark try location for decompilation, then emit try block */
+        /* Mark try location for decompilation, then emit try block. */
         if (js_NewSrcNote2(cx, cg, SRC_TRYFIN, 0) < 0 ||
             js_Emit1(cx, cg, JSOP_NOP) < 0)
             return JS_FALSE;
@@ -1560,7 +1559,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         if(!js_EmitTree(cx, cg, pn->pn_kid1))
             return JS_FALSE;
 
-        /* emit (hidden) jump over catch and/or finally */
+        /* Emit (hidden) jump over catch and/or finally. */
         if (pn->pn_kid3) {
             if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0)
                 return JS_FALSE;
@@ -1611,7 +1610,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     return JS_FALSE;
 
                 if (catchjmp != -1) {
-                    /* fix up and clean up previous catch block */
+                    /* Fix up and clean up previous catch block. */
                     CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, catchjmp);
                     if ((uintN)++cg->stackDepth > cg->maxStackDepth)
                         cg->maxStackDepth = cg->stackDepth;
@@ -1619,11 +1618,11 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                         js_Emit1(cx, cg, JSOP_LEAVEWITH) < 0)
                         return JS_FALSE;
                 } else {
-                    /* set stack to original depth (see SETSP comment above) */
+                    /* Set stack to original depth (see SETSP comment above). */
                     EMIT_ATOM_INDEX_OP(JSOP_SETSP, (jsatomid)depth);
                 }
 
-                /* non-zero guardnote is length of catchguard */
+                /* Non-zero guardnote is length of catchguard. */
                 guardnote = js_NewSrcNote2(cx, cg, SRC_CATCH, 0);
                 if (guardnote < 0 || js_Emit1(cx, cg, JSOP_NOP) < 0)
                     return JS_FALSE;
@@ -1691,7 +1690,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 if (pn->pn_kid3)
                     EMIT_FINALLY_GOSUB(cx, cg);
 
-                /* this will get fixed up to jump to after catch/finally */
+                /* This will get fixed up to jump to after catch/finally. */
                 if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0 ||
                     js_Emit3(cx, cg, JSOP_GOTO, 0, 0) < 0) {
                     return JS_FALSE;
