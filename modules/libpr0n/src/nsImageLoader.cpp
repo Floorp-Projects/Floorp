@@ -46,8 +46,8 @@
 #include "nsAutoLock.h"
 #endif
 
-static NS_DEFINE_CID(kImageRequestCID, NS_IMAGEREQUEST_CID);
-static NS_DEFINE_CID(kImageRequestProxyCID, NS_IMAGEREQUESTPROXY_CID);
+static NS_DEFINE_CID(kImageRequestCID, NS_IMGREQUEST_CID);
+static NS_DEFINE_CID(kImageRequestProxyCID, NS_IMGREQUESTPROXY_CID);
 
 #ifdef LOADER_THREADSAFE
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsImageLoader, nsIImageLoader)
@@ -77,10 +77,10 @@ NS_IMETHODIMP nsImageLoader::LoadImage(nsIURI *aURI, nsIImageDecoderObserver *aO
 {
   NS_ASSERTION(aURI, "nsImageLoader::LoadImage -- NULL URI pointer");
 
-  imgRequest *imgRequest = nsnull;
+  imgRequest *request = nsnull;
 
-  ImageCache::Get(aURI, &imgRequest); // addrefs
-  if (!imgRequest) {
+  ImageCache::Get(aURI, &request); // addrefs
+  if (!request) {
 #ifdef LOADER_THREADSAFE
     nsAutoLock lock(mLock); // lock when we are adding things to the cache
 #endif
@@ -95,21 +95,21 @@ NS_IMETHODIMP nsImageLoader::LoadImage(nsIURI *aURI, nsIImageDecoderObserver *aO
     newChannel->SetOwner(this); // the channel is now holding a strong ref to 'this'
 
     nsCOMPtr<imgIRequest> req(do_CreateInstance(kImageRequestCID));
-    imgRequest = NS_REINTERPRET_CAST(imgRequest*, req.get());
-    NS_ADDREF(imgRequest);
+    request = NS_REINTERPRET_CAST(imgRequest*, req.get());
+    NS_ADDREF(request);
 
-    imgRequest->Init(newChannel);
+    request->Init(newChannel);
 
-    ImageCache::Put(aURI, imgRequest);
+    ImageCache::Put(aURI, request);
 
-    newChannel->AsyncRead(NS_STATIC_CAST(nsIStreamListener *, imgRequest), cx);  // XXX are we calling this too early?
+    newChannel->AsyncRead(NS_STATIC_CAST(nsIStreamListener *, request), cx);  // XXX are we calling this too early?
   }
 
   nsCOMPtr<imgIRequest> proxyRequest(do_CreateInstance(kImageRequestProxyCID));
   // init adds itself to imgRequest's list of observers
-  NS_REINTERPRET_CAST(imgRequestProxy*, proxyRequest.get())->Init(imgRequest, aObserver, cx);
+  NS_REINTERPRET_CAST(imgRequestProxy*, proxyRequest.get())->Init(request, aObserver, cx);
 
-  NS_RELEASE(imgRequest);
+  NS_RELEASE(request);
 
   *_retval = proxyRequest;
   NS_ADDREF(*_retval);
@@ -122,13 +122,13 @@ NS_IMETHODIMP nsImageLoader::LoadImageWithChannel(nsIChannel *channel, nsIImageD
 {
   NS_ASSERTION(channel, "nsImageLoader::LoadImageWithChannel -- NULL channel pointer");
 
-  imgRequest *imgRequest = nsnull;
+  imgRequest *request = nsnull;
 
   nsCOMPtr<nsIURI> uri;
   channel->GetURI(getter_AddRefs(uri));
 
-  ImageCache::Get(uri, &imgRequest);
-  if (imgRequest) {
+  ImageCache::Get(uri, &request);
+  if (request) {
     // we have this in our cache already.. cancel the current (document) load
 
     // XXX
@@ -144,23 +144,23 @@ NS_IMETHODIMP nsImageLoader::LoadImageWithChannel(nsIChannel *channel, nsIImageD
 
     nsCOMPtr<imgIRequest> req(do_CreateInstance(kImageRequestCID));
 
-    imgRequest = NS_REINTERPRET_CAST(imgRequest*, req.get());
-    NS_ADDREF(imgRequest);
+    request = NS_REINTERPRET_CAST(imgRequest*, req.get());
+    NS_ADDREF(request);
 
-    imgRequest->Init(channel);
+    request->Init(channel);
 
-    ImageCache::Put(uri, imgRequest);
+    ImageCache::Put(uri, request);
 
-    *listener = NS_STATIC_CAST(nsIStreamListener*, imgRequest);
+    *listener = NS_STATIC_CAST(nsIStreamListener*, request);
     NS_IF_ADDREF(*listener);
   }
 
   nsCOMPtr<imgIRequest> proxyRequest(do_CreateInstance(kImageRequestProxyCID));
 
   // init adds itself to imgRequest's list of observers
-  NS_REINTERPRET_CAST(imgRequestProxy*, proxyRequest.get())->Init(imgRequest, aObserver, cx);
+  NS_REINTERPRET_CAST(imgRequestProxy*, proxyRequest.get())->Init(request, aObserver, cx);
 
-  NS_RELEASE(imgRequest);
+  NS_RELEASE(request);
 
   *_retval = proxyRequest;
   NS_ADDREF(*_retval);
