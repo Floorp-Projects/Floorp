@@ -131,7 +131,7 @@ private:
 };
 
 
-class NS_EXPORT nsProxyObjectCallInfo
+class nsProxyObjectCallInfo
 {
 public:
     
