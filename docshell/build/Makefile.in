@@ -31,7 +31,25 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= docshell
 EXPORT_LIBRARY = 1
-REQUIRES	= xpcom string dom shistory necko gfx layout uriloader timer webshell widget pref view intl htmlparser chardet appcomps find
+REQUIRES	= xpcom \
+		  string \
+		  dom \
+		  shistory \
+		  necko \
+		  gfx \
+		  layout \
+		  uriloader \
+		  timer \
+		  webshell \
+		  widget \
+		  pref \
+		  view \
+		  intl \
+		  htmlparser \
+		  chardet \
+		  appcomps \
+		  find \
+		  $(NULL)
 
 CPPSRCS		= \
 		nsDocShellModule.cpp		\

@@ -26,7 +26,10 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-REQUIRES	= xpcom string gfx
+REQUIRES	= xpcom \
+		  string \
+		  gfx \
+		  $(NULL)
 
 CPPSRCS		= \
 		DumpColors.cpp \

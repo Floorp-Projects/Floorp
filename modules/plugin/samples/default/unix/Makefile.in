@@ -28,7 +28,8 @@ include $(DEPTH)/config/autoconf.mk
 
 #MODULE		= plugin
 LIBRARY_NAME	= nullplugin
-REQUIRES	= java
+REQUIRES	= java \
+		  $(NULL)
 
 CSRCS		= \
 		npshell.c\

@@ -28,7 +28,38 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= dom
 LIBRARY_NAME	= jsdombase_s
-REQUIRES	= xpcom string webbrwsr js widget gfx layout content caps docshell xpconnect pref oji necko java locale uriloader sidebar xuldoc timer webshell view uconv shistory plugin windowwatcher htmlparser chardet transformiix xmlextras xsl_doc
+REQUIRES	= xpcom \
+		  string \
+		  webbrwsr \
+		  js \
+		  widget \
+		  gfx \
+		  layout \
+		  content \
+		  caps \
+		  docshell \
+		  xpconnect \
+		  pref \
+		  oji \
+		  necko \
+		  java \
+		  locale \
+		  uriloader \
+		  sidebar \
+		  xuldoc \
+		  timer \
+		  webshell \
+		  view \
+		  uconv \
+		  shistory \
+		  plugin \
+		  windowwatcher \
+		  htmlparser \
+		  chardet \
+		  transformiix \
+		  xmlextras \
+		  xsl_doc \
+		  $(NULL)
 
 CPPSRCS =			\
 	nsBarProps.cpp          \

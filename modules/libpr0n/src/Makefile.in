@@ -32,7 +32,15 @@ EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsImageLib2Module
 
-REQUIRES	= xpcom string necko nkcache gfx timer gfx2 mimetype
+REQUIRES	= xpcom \
+		  string \
+		  necko \
+		  nkcache \
+		  gfx \
+		  timer \
+		  gfx2 \
+		  mimetype \
+		  $(NULL)
 
 CPPSRCS		= \
 			ImageFactory.cpp \

@@ -32,7 +32,11 @@ EXPORT_LIBRARY = 1
 SHORT_LIBNAME	= ucharuti
 IS_COMPONENT	= 1
 MODULE_NAME	= UcharUtil
-REQUIRES	= xpcom string uconv necko
+REQUIRES	= xpcom \
+		  string \
+		  uconv \
+		  necko \
+		  $(NULL)
 
 CPPSRCS		= \
 		nsCaseConversionImp2.cpp \

@@ -31,7 +31,8 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= string
 LIBRARY_NAME	= string_s
 
-REQUIRES	= xpcom
+REQUIRES	= xpcom \
+		  $(NULL)
 
 CPPSRCS		=				\
 		nsAFlatString.cpp		\

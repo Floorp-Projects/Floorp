@@ -32,7 +32,14 @@ EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsJPEGDecoderModule
 
-REQUIRES	= xpcom string necko gfx gfx2 imglib2 $(JPEG_REQUIRES)
+REQUIRES	= xpcom \
+		  string \
+		  necko \
+		  gfx \
+		  gfx2 \
+		  imglib2 \
+		  $(JPEG_REQUIRES) \
+		  $(NULL)
 
 CPPSRCS		= nsJPEGDecoder.cpp nsJPEGFactory.cpp
 

@@ -28,7 +28,10 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= timer
 LIBRARY_NAME	= timer_$(TIMER_SUFFIX)
-REQUIRES	= xpcom string widget
+REQUIRES	= xpcom \
+		  string \
+		  widget \
+		  $(NULL)
 
 CPPSRCS		= nsTimerXlib.cpp
 

@@ -28,7 +28,36 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout
 LIBRARY_NAME	= gkhtmlbase_s
-REQUIRES	= xpcom string dom content gfx widget locale view necko js caps pref htmlparser webshell plugin timer docshell mimetype webbrwsr oji util unicharutil lwbrk gfx2 imglib2 accessibility xpconnect java exthandler
+REQUIRES	= xpcom \
+		  string \
+		  dom \
+		  content \
+		  gfx \
+		  widget \
+		  locale \
+		  view \
+		  necko \
+		  js \
+		  caps \
+		  pref \
+		  htmlparser \
+		  webshell \
+		  plugin \
+		  timer \
+		  docshell \
+		  mimetype \
+		  webbrwsr \
+		  oji \
+		  util \
+		  unicharutil \
+		  lwbrk \
+		  gfx2 \
+		  imglib2 \
+		  accessibility \
+		  xpconnect \
+		  java \
+		  exthandler \
+		  $(NULL)
 
 CPPSRCS		= \
 		nsSelectsAreaFrame.cpp \

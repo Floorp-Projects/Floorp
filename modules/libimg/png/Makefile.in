@@ -30,7 +30,8 @@ MODULE		= png
 LIBRARY_NAME	= mozpng
 EXPORT_LIBRARY = 1
 
-REQUIRES	= $(ZLIB_REQUIRES)
+REQUIRES	= $(ZLIB_REQUIRES) \
+		  $(NULL)
 
 CSRCS		= \
 		png.c \

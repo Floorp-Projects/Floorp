@@ -28,7 +28,19 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= content
 LIBRARY_NAME	= gkconshared_s
-REQUIRES	= xpcom string gfx layout widget locale dom webshell pref necko htmlparser unicharutil
+REQUIRES	= xpcom \
+		  string \
+		  gfx \
+		  layout \
+		  widget \
+		  locale \
+		  dom \
+		  webshell \
+		  pref \
+		  necko \
+		  htmlparser \
+		  unicharutil \
+		  $(NULL)
 
 CPPSRCS		= \
 		nsCSSAtoms.cpp \

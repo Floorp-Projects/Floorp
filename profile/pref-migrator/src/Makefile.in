@@ -31,7 +31,20 @@ LIBRARY_NAME	= nsprefm
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsPrefMigrationModule
-REQUIRES	= xpcom string pref appshell intl docshell dom necko rdf widget webbrwsr uconv windowwatcher
+REQUIRES	= xpcom \
+		  string \
+		  pref \
+		  appshell \
+		  intl \
+		  docshell \
+		  dom \
+		  necko \
+		  rdf \
+		  widget \
+		  webbrwsr \
+		  uconv \
+		  windowwatcher \
+		  $(NULL)
 
 CPPSRCS		= \
 		nsPrefMigration.cpp \

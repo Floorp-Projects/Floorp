@@ -28,7 +28,20 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= content
 LIBRARY_NAME	= gkconxmlcon_s
-REQUIRES	= xpcom string js dom gfx layout widget necko caps webshell docshell htmlparser xpconnect
+REQUIRES	= xpcom \
+		  string \
+		  js \
+		  dom \
+		  gfx \
+		  layout \
+		  widget \
+		  necko \
+		  caps \
+		  webshell \
+		  docshell \
+		  htmlparser \
+		  xpconnect \
+		  $(NULL)
 
 CPPSRCS		= \
 		nsXMLElement.cpp \

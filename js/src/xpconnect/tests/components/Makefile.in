@@ -44,7 +44,12 @@ LIBRARY_NAME	= xpctest
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= xpconnect_test
-REQUIRES	= xpconnect xpcom string js xpconnect_tests
+REQUIRES	= xpconnect \
+		  xpcom \
+		  string \
+		  js \
+		  xpconnect_tests \
+		  $(NULL)
 
 CPPSRCS		= \
 		xpctest_array.cpp \

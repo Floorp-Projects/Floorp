@@ -29,7 +29,9 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 PROGRAM		= mozilla-installer-bin
-REQUIRES	= xpcom jar
+REQUIRES	= xpcom \
+		  jar \
+		  $(NULL)
 
 CPPSRCS		= \
         nsINIParser.cpp \

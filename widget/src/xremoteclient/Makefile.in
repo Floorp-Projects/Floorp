@@ -30,7 +30,9 @@ LIBRARY_NAME	= xremote_client
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= XRemoteClientModule
-REQUIRES	= xpcom string
+REQUIRES	= xpcom \
+		  string \
+		  $(NULL)
 
 CPPSRCS		= \
 		XRemoteClient.cpp \

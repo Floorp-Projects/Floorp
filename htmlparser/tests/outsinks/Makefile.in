@@ -27,7 +27,14 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 PROGRAM		= TestOutput$(BIN_SUFFIX)
-REQUIRES	= xpcom string htmlparser necko layout content dom
+REQUIRES	= xpcom \
+		  string \
+		  htmlparser \
+		  necko \
+		  layout \
+		  content \
+		  dom \
+		  $(NULL)
 
 CPPSRCS		= \
 		Convert.cpp \

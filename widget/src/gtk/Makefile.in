@@ -27,7 +27,20 @@ LIBRARY_NAME	= widget_gtk
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsWidgetGTKModule
-REQUIRES	= xpcom string appshell gfx pref dom timer uconv necko intl xremoteservice view util
+REQUIRES	= xpcom \
+		  string \
+		  appshell \
+		  gfx \
+		  pref \
+		  dom \
+		  timer \
+		  uconv \
+		  necko \
+		  intl \
+		  xremoteservice \
+		  view \
+		  util \
+		  $(NULL)
 
 CSRCS		= \
 		keysym2ucs.c

@@ -35,7 +35,28 @@ SHORT_LIBNAME	= gkcontnt
 IS_COMPONENT	= 1
 MODULE_NAME	= nsContentModule
 EXTRA_DSO_LIBS	= gkgfx
-REQUIRES	= xpcom string gfx layout widget necko rdf docshell dom htmlparser uriloader webshell locale unicharutil lwbrk js pref xul xuldoc xultmpl timer
+REQUIRES	= xpcom \
+		  string \
+		  gfx \
+		  layout \
+		  widget \
+		  necko \
+		  rdf \
+		  docshell \
+		  dom \
+		  htmlparser \
+		  uriloader \
+		  webshell \
+		  locale \
+		  unicharutil \
+		  lwbrk \
+		  js \
+		  pref \
+		  xul \
+		  xuldoc \
+		  xultmpl \
+		  timer \
+		  $(NULL)
 
 CPPSRCS		= \
 		nsContentDLF.cpp \

@@ -32,7 +32,12 @@ EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsPPMDecoderModule
 
-REQUIRES	= xpcom gfx necko gfx2 imglib2
+REQUIRES	= xpcom \
+		  gfx \
+		  necko \
+		  gfx2 \
+		  imglib2 \
+		  $(NULL)
 
 CPPSRCS		= nsPPMDecoder.cpp nsPPMFactory.cpp
 

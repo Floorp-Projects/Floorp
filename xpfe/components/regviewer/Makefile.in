@@ -32,7 +32,10 @@ EXPORT_LIBRARY = 1
 SHORT_LIBNAME	= regviewr
 IS_COMPONENT	= 1
 MODULE_NAME	= nsRegistryViewerModule
-REQUIRES	= xpcom string rdf
+REQUIRES	= xpcom \
+		  string \
+		  rdf \
+		  $(NULL)
 
 XPIDLSRCS	= nsIRegistryDataSource.idl
 

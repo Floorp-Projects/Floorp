@@ -32,7 +32,11 @@ EXPORT_LIBRARY	= 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsUniversalCharDetModule
 SHORT_LIBNAME	= ucdet
-REQUIRES	= xpcom string uconv chardet
+REQUIRES	= xpcom \
+		  string \
+		  uconv \
+		  chardet \
+		  $(NULL)
 
 CPPSRCS = \
 		CharDistribution.cpp \

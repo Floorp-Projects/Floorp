@@ -28,7 +28,24 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout
 LIBRARY_NAME	= gkhtmlstyle_s
-REQUIRES	= xpcom string dom content gfx widget timer locale view necko webshell pref docshell plugin xuldoc imglib2 gfx2
+REQUIRES	= xpcom \
+		  string \
+		  dom \
+		  content \
+		  gfx \
+		  widget \
+		  timer \
+		  locale \
+		  view \
+		  necko \
+		  webshell \
+		  pref \
+		  docshell \
+		  plugin \
+		  xuldoc \
+		  imglib2 \
+		  gfx2 \
+		  $(NULL)
 
 CPPSRCS		= \
 		nsCSSFrameConstructor.cpp \

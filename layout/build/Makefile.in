@@ -33,7 +33,14 @@ SHORT_LIBNAME	= gkhtml
 IS_COMPONENT	= 1
 MODULE_NAME	= nsLayoutModule
 EXTRA_DSO_LIBS	= gkgfx
-REQUIRES	= xpcom string content gfx widget locale timer
+REQUIRES	= xpcom \
+		  string \
+		  content \
+		  gfx \
+		  widget \
+		  locale \
+		  timer \
+		  $(NULL)
 
 CPPSRCS		= \
 		nsLayoutModule.cpp \

@@ -28,7 +28,16 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= locale
 LIBRARY_NAME	= nslocale_s
-REQUIRES	= xpcom string uconv unicharutil necko dom windowwatcher uriloader intl
+REQUIRES	= xpcom \
+		  string \
+		  uconv \
+		  unicharutil \
+		  necko \
+		  dom \
+		  windowwatcher \
+		  uriloader \
+		  intl \
+		  $(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 DIRS		= os2

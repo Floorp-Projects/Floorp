@@ -28,7 +28,23 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= content
 LIBRARY_NAME	= gkconevents_s
-REQUIRES	= xpcom string dom js locale gfx layout widget timer caps xpconnect docshell webshell pref htmlparser view
+REQUIRES	= xpcom \
+		  string \
+		  dom \
+		  js \
+		  locale \
+		  gfx \
+		  layout \
+		  widget \
+		  timer \
+		  caps \
+		  xpconnect \
+		  docshell \
+		  webshell \
+		  pref \
+		  htmlparser \
+		  view \
+		  $(NULL)
 
 CPPSRCS		= \
 		nsEventListenerManager.cpp \

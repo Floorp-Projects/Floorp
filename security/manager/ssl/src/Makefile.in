@@ -74,7 +74,27 @@ CPPSRCS = 				\
         nsKeygenThread.cpp              \
 	$(NULL)
 
-REQUIRES = nspr xpcom string necko uriloader pref caps dom intl locale profile windowwatcher js docshell widget layout content pippki xpconnect jar
+REQUIRES	= nspr \
+		  xpcom \
+		  string \
+		  necko \
+		  uriloader \
+		  pref \
+		  caps \
+		  dom \
+		  intl \
+		  locale \
+		  profile \
+		  windowwatcher \
+		  js \
+		  docshell \
+		  widget \
+		  layout \
+		  content \
+		  pippki \
+		  xpconnect \
+		  jar \
+		  $(NULL)
 
 EXTRA_LIBS = $(NSS_LIBS)
 

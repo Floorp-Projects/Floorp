@@ -28,7 +28,14 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= necko
 LIBRARY_NAME = nkhttp_s
-REQUIRES	= xpcom string pref nkcache mimetype intl exthandler
+REQUIRES	= xpcom \
+		  string \
+		  pref \
+		  nkcache \
+		  mimetype \
+		  intl \
+		  exthandler \
+		  $(NULL)
 
 CPPSRCS		= \
 		nsHttp.cpp \

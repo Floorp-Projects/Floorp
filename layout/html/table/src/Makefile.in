@@ -28,7 +28,17 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout
 LIBRARY_NAME	= gkhtmltable_s
-REQUIRES	= xpcom string dom content gfx widget locale webshell view accessibility
+REQUIRES	= xpcom \
+		  string \
+		  dom \
+		  content \
+		  gfx \
+		  widget \
+		  locale \
+		  webshell \
+		  view \
+		  accessibility \
+		  $(NULL)
 
 CPPSRCS		= \
 		BasicTableLayoutStrategy.cpp \

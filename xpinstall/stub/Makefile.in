@@ -36,7 +36,11 @@ BUILD_SHARED_LIBS=1
 
 MODULE		= xpistub
 LIBRARY_NAME	= xpistub
-REQUIRES	= xpcom string xpinstall dom
+REQUIRES	= xpcom \
+		  string \
+		  xpinstall \
+		  dom \
+		  $(NULL)
 
 CPPSRCS		= \
 		nsStubNotifier.cpp \

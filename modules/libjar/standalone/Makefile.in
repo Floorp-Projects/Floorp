@@ -30,7 +30,11 @@ include $(srcdir)/../objs.mk
 
 MODULE		= jar
 LIBRARY_NAME	= jar$(VERSION_NUMBER)_s
-REQUIRES	= xpcom string caps $(ZLIB_REQUIRES)
+REQUIRES	= xpcom \
+		  string \
+		  caps \
+		  $(ZLIB_REQUIRES) \
+		  $(NULL)
 
 #DEP_XPIDLSRCS	= $(MODULES_LIBJAR_XPIDLSRCS)
 #EXPORTS		= $(MODULES_LIBJAR_LEXPORTS)

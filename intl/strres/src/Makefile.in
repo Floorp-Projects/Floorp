@@ -31,7 +31,11 @@ LIBRARY_NAME	= strres
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsStringBundleModule
-REQUIRES	= xpcom string necko locale
+REQUIRES	= xpcom \
+		  string \
+		  necko \
+		  locale \
+		  $(NULL)
 
 CPPSRCS		= nsStringBundle.cpp nsAcceptLang.cpp
 

@@ -31,7 +31,10 @@ LIBRARY_NAME	= necko2
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= necko_secondary_protocols
-REQUIRES	= xpcom string nkcache
+REQUIRES	= xpcom \
+		  string \
+		  nkcache \
+		  $(NULL)
 
 CPPSRCS		= nsNetModule2.cpp
 

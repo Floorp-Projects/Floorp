@@ -28,7 +28,16 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= rdfbase
 LIBRARY_NAME	= rdfbase_s
-REQUIRES	= xpcom string rdf rdfutil necko layout content htmlparser js
+REQUIRES	= xpcom \
+		  string \
+		  rdf \
+		  rdfutil \
+		  necko \
+		  layout \
+		  content \
+		  htmlparser \
+		  js \
+		  $(NULL)
 
 CPPSRCS		= \
 		nsCompositeDataSource.cpp \

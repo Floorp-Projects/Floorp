@@ -33,7 +33,9 @@ EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsGfx2Module
 
-REQUIRES	= xpcom gfx
+REQUIRES	= xpcom \
+		  gfx \
+		  $(NULL)
 
 CPPSRCS		= \
 		gfxImageFrame.cpp \

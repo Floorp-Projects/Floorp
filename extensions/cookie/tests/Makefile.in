@@ -26,7 +26,12 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-REQUIRES	= xpcom string cookie necko intl
+REQUIRES	= xpcom \
+		  string \
+		  cookie \
+		  necko \
+		  intl \
+		  $(NULL)
 
 PROGRAM		= TestCookie$(BIN_SUFFIX)
 CPPSRCS		= TestCookie.cpp

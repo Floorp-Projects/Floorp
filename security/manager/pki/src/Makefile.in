@@ -58,7 +58,18 @@ CPPSRCS = \
         nsASN1Outliner.cpp \
 	$(NULL)
 
-REQUIRES = nspr xpcom string dom pref intl locale windowwatcher necko pipnss layout
+REQUIRES	= nspr \
+		  xpcom \
+		  string \
+		  dom \
+		  pref \
+		  intl \
+		  locale \
+		  windowwatcher \
+		  necko \
+		  pipnss \
+		  layout \
+		  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

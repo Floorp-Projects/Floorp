@@ -32,7 +32,12 @@ EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsRDFModule
 EXTRA_DSO_LIBS	= 
-REQUIRES	= xpcom string content htmlparser necko
+REQUIRES	= xpcom \
+		  string \
+		  content \
+		  htmlparser \
+		  necko \
+		  $(NULL)
 
 CPPSRCS		= \
 		nsRDFModule.cpp \

@@ -29,7 +29,14 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = nkcache
 LIBRARY_NAME = nkfilecache_s
-REQUIRES	= xpcom string necko dbm pref exthandler mimetype
+REQUIRES	= xpcom \
+		  string \
+		  necko \
+		  dbm \
+		  pref \
+		  exthandler \
+		  mimetype \
+		  $(NULL)
                                                
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libmozdbm_s.$(LIB_SUFFIX)
 

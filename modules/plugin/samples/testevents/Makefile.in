@@ -31,7 +31,9 @@ MODULE		= npevents
 LIBRARY_NAME	= npevents
 IS_COMPONENT	= 1
 MODULE_NAME	= EventsPlugin
-REQUIRES	= xpcom plugin
+REQUIRES	= xpcom \
+		  plugin \
+		  $(NULL)
 
 XPIDLSRCS	= nsIEventsPluginInstance.idl
 

@@ -28,7 +28,10 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= necko
 LIBRARY_NAME	= nkkwd_s
-REQUIRES	= xpcom string pref
+REQUIRES	= xpcom \
+		  string \
+		  pref \
+		  $(NULL)
 
 CPPSRCS		= \
 		nsKeywordProtocolHandler.cpp \

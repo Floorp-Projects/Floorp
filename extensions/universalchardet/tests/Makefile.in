@@ -27,7 +27,9 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= universalchardet
-REQUIRES	= xpcom chardet
+REQUIRES	= xpcom \
+		  chardet \
+		  $(NULL)
 
 CPPSRCS		= \
 		UniversalChardetTest.cpp \

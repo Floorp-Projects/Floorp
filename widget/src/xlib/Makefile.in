@@ -31,7 +31,24 @@ LIBRARY_NAME	= widget_xlib
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsWidgetXLIBModule
-REQUIRES	= xpcom string appshell gfx layout content dom js xlibrgb timer uconv pref webshell htmlparser view necko gfx2
+REQUIRES	= xpcom \
+		  string \
+		  appshell \
+		  gfx \
+		  layout \
+		  content \
+		  dom \
+		  js \
+		  xlibrgb \
+		  timer \
+		  uconv \
+		  pref \
+		  webshell \
+		  htmlparser \
+		  view \
+		  necko \
+		  gfx2 \
+		  $(NULL)
 
 DIRS		= window_service
 

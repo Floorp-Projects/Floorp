@@ -36,7 +36,19 @@ MODULE = accessproxy
 XPIDL_MODULE = accessproxy
 LIBRARY_NAME = accessproxy
 SHORT_LIBNAME = accproxy
-REQUIRES = xpcom string docshell dom widget gfx layout content uriloader locale mozcomps pref
+REQUIRES	= xpcom \
+		  string \
+		  docshell \
+		  dom \
+		  widget \
+		  gfx \
+		  layout \
+		  content \
+		  uriloader \
+		  locale \
+		  mozcomps \
+		  pref \
+		  $(NULL)
 EXPORT_LIBRARY = 1
 IS_COMPONENT = 1
 MODULE_NAME	= nsAccessProxy

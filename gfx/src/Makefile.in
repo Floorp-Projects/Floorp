@@ -30,7 +30,19 @@ MODULE		= gfx
 EXPORTS         = nsFontList.h
 LIBRARY_NAME	= gkgfx
 EXPORT_LIBRARY = 1
-REQUIRES	= xpcom string layout content widget locale view necko pref gfx2 imglib2 intl
+REQUIRES	= xpcom \
+		  string \
+		  layout \
+		  content \
+		  widget \
+		  locale \
+		  view \
+		  necko \
+		  pref \
+		  gfx2 \
+		  imglib2 \
+		  intl \
+		  $(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 DIRS		=
