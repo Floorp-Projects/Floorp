@@ -40,7 +40,6 @@
 #include "nsMenu.h"
 #include "nsMenuItem.h"
 #include "nsPopUpMenu.h"
-// #include "nsTabWidget.h"
 // #include "nsFontRetrieverService.h"
 
 // Drag & Drop, Clipboard
@@ -65,8 +64,6 @@ static NS_DEFINE_IID(kCHorzScrollbar, NS_HORZSCROLLBAR_CID);
 static NS_DEFINE_IID(kCVertScrollbar, NS_VERTSCROLLBAR_CID);
 static NS_DEFINE_IID(kCTextArea,      NS_TEXTAREA_CID);
 static NS_DEFINE_IID(kCTextField,     NS_TEXTFIELD_CID);
-// static NS_DEFINE_IID(kCTabWidget,     NS_TABWIDGET_CID);
-static NS_DEFINE_IID(kCTooltipWidget, NS_TOOLTIPWIDGET_CID);
 static NS_DEFINE_IID(kCAppShell,      NS_APPSHELL_CID);
 static NS_DEFINE_IID(kCToolkit,       NS_TOOLKIT_CID);
 static NS_DEFINE_IID(kCLookAndFeel,   NS_LOOKANDFEEL_CID);
@@ -200,13 +197,6 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     }
     else if (mClassID.Equals(kCTextField)) {
         inst = (nsISupports*)(nsIWidget *)new nsTextWidget();
-    }
-//     else if (mClassID.Equals(kCTabWidget)) {
-//         inst = (nsISupports*)(nsIWidget *)new nsTabWidget();
-//     }
-    else if (mClassID.Equals(kCTooltipWidget)) {
-      //      no tooltips??
-      //      inst = (nsISupports*)(nsIWidget *)new nsTooltipWidget();
     }
     else if (mClassID.Equals(kCAppShell)) {
         inst = (nsISupports*)new nsAppShell();
