@@ -43,7 +43,6 @@
 #include "nsIFileSpec.h"
 #include "nsIGenericFactory.h"
 
-extern void xptc_dummy();
 
 void XXXNeverCalled()
 {
@@ -79,6 +78,7 @@ void XXXNeverCalled()
     XPTC_InvokeByIndex(NULL, 0, 0, NULL);
     NS_NewFileSpec(NULL);
     xptc_dummy();
+    xptc_dummy2();
     XPTI_GetInterfaceInfoManager();
     NS_NewGenericFactory(NULL, NULL, NULL);
 }
