@@ -137,7 +137,7 @@ treechildren::-moz-tree-image(flaggedCol, flagged) {
 /* ..... junkStatus column ..... */
 
 treecol.junkStatusHeader {
-  list-style-image: url("chrome://messenger/skin/icons/folder-junk.gif");
+  list-style-image: url("chrome://messenger/skin/icons/folder-junk.png");
   padding: 0px 4px 0px 0px;
 }
 
@@ -149,7 +149,7 @@ treechildren::-moz-tree-image(junkStatusCol) {
 }
 
 treechildren::-moz-tree-image(junkStatusCol, junk) {
-  list-style-image: url("chrome://messenger/skin/icons/folder-junk.gif");
+  list-style-image: url("chrome://messenger/skin/icons/folder-junk.png");
   margin-right: -1px;
 }
 
