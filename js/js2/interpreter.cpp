@@ -657,12 +657,14 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                                 thisClass = thisClass->getSuperClass();
                                 while (thisClass) {
                                     ctor = thisClass->getConstructor();
-                                    mLinkage = new Linkage(mLinkage, mPC,
-                                                           mActivation, voidRegister);
-                                    mActivation = new Activation(ctor, args);
-                                    registers = &mActivation->mRegisters;
-                                    mPC = ctor->its_iCode->begin();
-                                    endPC = ctor->its_iCode->end();
+                                    if (ctor) {
+                                        mLinkage = new Linkage(mLinkage, mPC,
+                                                               mActivation, voidRegister);
+                                        mActivation = new Activation(ctor, args);
+                                        registers = &mActivation->mRegisters;
+                                        mPC = ctor->its_iCode->begin();
+                                        endPC = ctor->its_iCode->end();
+                                    }
                                     thisClass = thisClass->getSuperClass();
                                 }
                                 continue;
