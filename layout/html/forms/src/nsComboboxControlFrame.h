@@ -45,13 +45,13 @@
 #include "nsIRollupListener.h"
 #include "nsIPresState.h"
 #include "nsCSSFrameConstructor.h"
+#include "nsITextContent.h"
 
 class nsFormFrame;
 class nsIView;
 class nsStyleContext;
 class nsIHTMLContent;
 class nsIListControlFrame;
-class nsITextContent;
 
 /**
  * Child list name indices
