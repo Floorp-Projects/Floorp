@@ -336,6 +336,14 @@ if (%missing) {
 }
 }
 
+
+# If we're running on Windows, reset the input line terminator so that 
+# console input works properly - loading CGI tends to mess it up
+
+if ($^O =~ /MSWin/i) {
+    $/ = "\015\012";
+}
+
 ###########################################################################
 # Global definitions
 ###########################################################################
