@@ -539,3 +539,46 @@ PRInt32 nsCRT::atoi( const PRUnichar *string )
   return atoi(string);
 }
 
+/**
+ *  Determine if given char in valid alpha range
+ *  
+ *  @update  rickg 03.10.2000
+ *  @param   aChar is character to be tested
+ *  @return  TRUE if in alpha range
+ */
+PRBool nsCRT::IsAsciiAlpha(PRUnichar aChar) {
+  // XXX i18n
+  if (((aChar >= 'A') && (aChar <= 'Z')) || ((aChar >= 'a') && (aChar <= 'z'))) {
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+/**
+ *  Determine if given char is a valid space character
+ *  
+ *  @update  rickg 03.10.2000
+ *  @param   aChar is character to be tested
+ *  @return  TRUE if is valid space char
+ */
+PRBool nsCRT::IsAsciiSpace(PRUnichar aChar) {
+  // XXX i18n
+  if ((aChar == ' ') || (aChar == '\r') || (aChar == '\n') || (aChar == '\t')) {
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+
+
+/**
+ *  Determine if given char is valid digit
+ *  
+ *  @update  rickg 03.10.2000
+ *  @param   aChar is character to be tested
+ *  @return  TRUE if char is a valid digit
+ */
+PRBool nsCRT::IsAsciiDigit(PRUnichar aChar) {
+  // XXX i18n
+  return PRBool((aChar >= '0') && (aChar <= '9'));
+}

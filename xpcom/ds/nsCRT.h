@@ -246,6 +246,12 @@ public:
   static PRBool IsUpper(PRUnichar aChar);
 
   static PRBool IsLower(PRUnichar aChar);
+
+  static PRBool IsAsciiAlpha(PRUnichar aChar);
+  static PRBool IsAsciiDigit(PRUnichar aChar);
+  static PRBool IsAsciiSpace(PRUnichar aChar);
 };
 
 #endif /* nsCRT_h___ */
+
+
