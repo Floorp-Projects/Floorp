@@ -81,6 +81,13 @@ nsMenu::nsMenu() : nsIMenu()
   mMenu          = nsnull;
   mMenuParent    = nsnull;
   mMenuBarParent = nsnull;
+  mListener      = nsnull;
+  mConstructCalled = PR_FALSE;
+
+  mDOMNode       = nsnull;  
+  mWebShell      = nsnull;
+  mDOMElement    = nsnull;
+  mAccessKey     = "_";
 }
 
 //-------------------------------------------------------------------------
@@ -90,14 +97,16 @@ nsMenu::nsMenu() : nsIMenu()
 //-------------------------------------------------------------------------
 nsMenu::~nsMenu()
 {
-  NS_IF_RELEASE(mMenuBarParent);
-  NS_IF_RELEASE(mMenuParent);
+  NS_IF_RELEASE(mListener);
+  // Free our menu items
+  RemoveAll();
+//  gtk_widget_destroy(mMenu);
+//  mMenu = nsnull;
 }
 
 //-------------------------------------------------------------------------
 Widget nsMenu::GetNativeParent()
 {
-
   void * voidData; 
   if (nsnull != mMenuParent) {
     mMenuParent->GetNativeData(&voidData);
@@ -107,7 +116,6 @@ Widget nsMenu::GetNativeParent()
     return NULL;
   }
   return (Widget)voidData;
-
 }
 
 //-------------------------------------------------------------------------
@@ -199,11 +207,36 @@ NS_METHOD nsMenu::SetAccessKey(const nsString &aText)
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD nsMenu::AddItem(nsISupports* aItem)
+NS_METHOD nsMenu::AddItem(nsISupports * aItem)
 {
+  printf("nsMenu::AddItem called\n");
+  if(aItem)
+  {
+    nsIMenuItem * menuitem = nsnull;
+    aItem->QueryInterface(nsIMenuItem::GetIID(),
+                          (void**)&menuitem);
+    if(menuitem)
+    {
+      AddMenuItem(menuitem); // nsMenu now owns this
+      NS_RELEASE(menuitem);
+    }      
+    else
+    { 
+      nsIMenu * menu = nsnull;
+      aItem->QueryInterface(nsIMenu::GetIID(),
+                            (void**)&menu);
+      if(menu)
+      {
+        AddMenu(menu); // nsMenu now owns this
+        NS_RELEASE(menu);
+      }
+    }
+  }
+
   return NS_OK;
 }
 
+// local method used by nsMenu::AddItem
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::AddMenuItem(nsIMenuItem * aMenuItem)
 {
@@ -221,6 +254,7 @@ NS_METHOD nsMenu::AddMenu(nsIMenu * aMenu)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::AddSeparator() 
 {
+  printf("nsMenu::AddSeparator() called\n");
   XtVaCreateManagedWidget("__sep", xmSeparatorGadgetClass, mMenu, NULL);
   return NS_OK;
 }
@@ -263,32 +297,45 @@ NS_METHOD nsMenu::GetNativeData(void ** aData)
 
 NS_METHOD nsMenu::AddMenuListener(nsIMenuListener * aMenuListener)
 {
-  //XXX:Implement this.
+  mListener = aMenuListener;
+  NS_ADDREF(mListener);
   return NS_OK;
 }
 
 NS_METHOD nsMenu::RemoveMenuListener(nsIMenuListener * aMenuListener)
 {
-  //XXX:Implement this.
+  if (aMenuListener == mListener) {
+    NS_IF_RELEASE(mListener);
+  }
   return NS_OK;
 }
 
 NS_METHOD nsMenu::SetDOMNode(nsIDOMNode * aMenuNode)
 {
-  //XXX:Implement this.
+  mDOMNode = aMenuNode;
   return NS_OK;
 }
 
 NS_METHOD nsMenu::SetDOMElement(nsIDOMElement * aMenuElement)
 { 
-  //XXX:Implement this.
+  mDOMElement = aMenuElement;
   return NS_OK;
 }
 
 NS_METHOD nsMenu::SetWebShell(nsIWebShell * aWebShell)
 {
-  //XXX:Implement this.
+  mWebShell = aWebShell;
   return NS_OK;
+}
+
+void nsMenu::LoadMenuItem(nsIMenu *       pParentMenu,
+                          nsIDOMElement * menuitemElement,
+                          nsIDOMNode *    menuitemNode,
+                          unsigned short  menuitemIndex,
+                          nsIWebShell *   aWebShell)
+{
+  //XXX:Implement this.
+  return;
 }
 
 nsEventStatus nsMenu::MenuItemSelected(const nsMenuEvent & aMenuEvent)
@@ -303,18 +350,75 @@ nsEventStatus nsMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
 
 nsEventStatus nsMenu::MenuDeselected(const nsMenuEvent & aMenuEvent)
 {
-  //XXX:Implement this.
+  if (nsnull != mListener) {
+    mListener->MenuDeselected(aMenuEvent);
+  }
   return nsEventStatus_eIgnore;
 }
 
-nsEventStatus nsMenu::MenuConstruct(const struct nsMenuEvent & aMenuEvent, nsIWidget * aParentWindow, void * menubarNode, void * aWebShell)
+nsEventStatus nsMenu::MenuConstruct(const nsMenuEvent & aMenuEvent,
+                                    nsIWidget         * aParentWindow,
+                                    void              * menuNode,
+                                    void              * aWebShell)
 {
-  //XXX:Implement this.
+  printf("nsMenu::MenuConstruct called\n");
+  if(menuNode){
+    SetDOMNode((nsIDOMNode*)menuNode);
+  }
+
+  if(!aWebShell){
+    aWebShell = mWebShell;
+  }
+                                    
+  // First open the menu.
+  nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mDOMNode);
+  if (domElement)
+    domElement->SetAttribute("open", "true");
+
+   // Begin menuitem inner loop
+    nsCOMPtr<nsIDOMNode> menuitemNode;
+    ((nsIDOMNode*)mDOMNode)->GetFirstChild(getter_AddRefs(menuitemNode));
+   
+    unsigned short menuIndex = 0;   
+  
+    while (menuitemNode) {
+      nsCOMPtr<nsIDOMElement> menuitemElement(do_QueryInterface(menuitemNode));
+      if (menuitemElement) {
+        nsString menuitemNodeType;
+        nsString menuitemName; 
+        menuitemElement->GetNodeName(menuitemNodeType);
+        if (menuitemNodeType.Equals("menuitem")) {
+          // LoadMenuItem
+          LoadMenuItem(this,
+                       menuitemElement,
+                       menuitemNode,
+                       menuIndex,
+                       (nsIWebShell*)aWebShell);
+        } else if (menuitemNodeType.Equals("separator")) {
+          AddSeparator();
+        } else if (menuitemNodeType.Equals("menu")) {  
+          // Load a submenu
+          LoadSubMenu(this, menuitemElement, menuitemNode);
+        }
+      }
+                       
+      ++menuIndex;
+                       
+      nsCOMPtr<nsIDOMNode> oldmenuitemNode(menuitemNode); 
+      oldmenuitemNode->GetNextSibling(getter_AddRefs(menuitemNode));
+    } // end menu item innner loop
   return nsEventStatus_eIgnore;
 }
 
 nsEventStatus nsMenu::MenuDestruct(const nsMenuEvent & aMenuEvent)
 {
-  //XXX:Implement this.
+  printf("nsMenu::MenuDestruct called\n");
+  // Close the node.   
+  nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mDOMNode);
+  if (domElement)
+    domElement->RemoveAttribute("open");
+  
+  mConstructCalled = PR_FALSE;
+  RemoveAll();
   return nsEventStatus_eIgnore;
 }

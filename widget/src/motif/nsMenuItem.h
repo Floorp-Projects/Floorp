@@ -25,8 +25,10 @@
 #include "nsString.h"
 #include "nsIMenuListener.h"
 
+class nsIDOMElement;
 class nsIMenu;
 class nsIPopUpMenu;
+class nsIWebShell;
 class nsIWidget;
 
 /**
@@ -43,68 +45,63 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD Create(nsIMenu        *aParent, 
-                    const nsString &aLabel,  
-                    PRUint32        aCommand);
-
-  NS_IMETHOD Create(nsIPopUpMenu   *aParent, 
-                    const nsString &aLabel, 
-                    PRUint32        aCommand) ;
-
-  // nsIMenuBar Methods
-  NS_IMETHOD GetLabel(nsString &aText);
-  NS_IMETHOD SetLabel(nsString &aText);
-  NS_IMETHOD SetShortcutChar(const nsString &aText);
-  NS_IMETHOD GetShortcutChar(nsString &aText);
-
-  NS_IMETHOD GetCommand(PRUint32 & aCommand);
-  NS_IMETHOD GetTarget(nsIWidget *& aTarget);
-  NS_IMETHOD GetNativeData(void*& aData);
-
-  // nsIMenuListener interface
-  nsEventStatus MenuItemSelected(const nsMenuEvent & aMenuEvent);
-  nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent);
-  nsEventStatus MenuDeselected(const nsMenuEvent & aMenuEvent);
-  nsEventStatus MenuConstruct(
-    const nsMenuEvent & aMenuEvent,
-    nsIWidget         * aParentWindow,
-    void              * menubarNode,
-    void              * aWebShell);
-  nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent);
-
-  // nsIMenuItem interface (put here by ZuperDee)
+  // nsIMenuItem Methods
   NS_IMETHOD Create(nsISupports    * aParent,
                     const nsString & aLabel,
                     PRBool           isSeparator);
+  NS_IMETHOD GetLabel(nsString &aText);
+  NS_IMETHOD SetLabel(nsString &aText);
   NS_IMETHOD SetEnabled(PRBool aIsEnabled);
   NS_IMETHOD GetEnabled(PRBool *aIsEnabled);
   NS_IMETHOD SetChecked(PRBool aIsEnabled);
   NS_IMETHOD GetChecked(PRBool *aIsEnabled);
+  NS_IMETHOD GetCommand(PRUint32 & aCommand);
+  NS_IMETHOD GetTarget(nsIWidget *& aTarget);
+  NS_IMETHOD GetNativeData(void*& aData);
   NS_IMETHOD AddMenuListener(nsIMenuListener * aMenuListener);
   NS_IMETHOD RemoveMenuListener(nsIMenuListener * aMenuListener);
   NS_IMETHOD IsSeparator(PRBool & aIsSep);
+
   NS_IMETHOD SetCommand(const nsString & aStrCmd);
   NS_IMETHOD DoCommand();
   NS_IMETHOD SetDOMElement(nsIDOMElement * aDOMElement);
   NS_IMETHOD GetDOMElement(nsIDOMElement ** aDOMElement);
   NS_IMETHOD SetWebShell(nsIWebShell * aWebShell);
+
+  NS_IMETHOD SetShortcutChar(const nsString &aText);
+  NS_IMETHOD GetShortcutChar(nsString &aText);
   NS_IMETHOD SetModifiers(PRUint8 aModifiers);
   NS_IMETHOD GetModifiers(PRUint8 * aModifiers);
 
-protected:
-  void Create(nsIWidget * aMBParent, Widget aParent,
-              const nsString &aLabel, PRUint32 aCommand);
-  nsIWidget * GetMenuBarParent(nsISupports * aParentSupports);
-  Widget GetNativeParent();
+  // nsIMenuListener interface
+  nsEventStatus MenuItemSelected(const nsMenuEvent & aMenuEvent);
+  nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent);
+  nsEventStatus MenuDeselected(const nsMenuEvent & aMenuEvent);
+  nsEventStatus MenuConstruct(const nsMenuEvent & aMenuEvent,
+                              nsIWidget         * aParentWindow,
+                              void              * menubarNode,
+                              void              * aWebShell);
+  nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent);
 
+protected:
+  nsIWidget     *GetMenuBarParent(nsISupports * aParentSupports);
+  Widget        GetNativeParent();
+
+  nsIMenuListener       *mXULCommandListener;
   nsString      mLabel;
+  nsString      mKeyEquivalent;
+  PRUint8       mModifiers;
   PRUint32      mCommand;
   nsIMenu      *mMenuParent;
   nsIPopUpMenu *mPopUpParent;
   nsIWidget    *mTarget;
 
-  Widget mMenu; // native cascade widget
+  Widget        mMenuItem; // native cascade widget
+  PRBool        mIsSeparator;
+  PRBool        mIsSubMenu;
 
+  nsIWebShell   * mWebShell;
+  nsIDOMElement * mDOMElement;
 };
 
 #endif // nsMenuItem_h__

@@ -22,10 +22,14 @@
 #include "nsIMenu.h"
 #include "nsIMenuListener.h"
 #include "nsVoidArray.h"
+
 #include "Xm/Xm.h"
 #include "nsXtManageWidget.h"
 
+class nsIDOMElement;
+class nsIDOMNode;
 class nsIMenuBar;
+class nsIWebShell;
 
 /**
  * Native Motif Menu wrapper
@@ -75,15 +79,28 @@ public:
   NS_IMETHOD SetWebShell(nsIWebShell * aWebShell);
 
 protected:
+  void LoadMenuItem(
+    nsIMenu       * pParentMenu,
+    nsIDOMElement * menuitemElement,
+    nsIDOMNode    * menuitemNode,
+    unsigned short  menuitemIndex,
+    nsIWebShell   * aWebShell);
+
   Widget     GetNativeParent();
 
   nsString   mLabel;
+  nsString   mAccessKey;
   PRUint32   mNumMenuItems;
   Widget     mMenu;
 
   nsIMenu    *mMenuParent;
   nsIMenuBar *mMenuBarParent;
+  nsIMenuListener * mListener;
 
+  PRBool mConstructCalled;
+  nsIDOMNode    * mDOMNode;
+  nsIWebShell   * mWebShell;
+  nsIDOMElement * mDOMElement;
 };
 
 #endif // nsMenu_h__
