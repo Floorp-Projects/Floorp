@@ -4587,6 +4587,10 @@ dnl ========================================================
 dnl = Enable mozStorage
 dnl = XXX need to implement --with-system-sqlite3 (see bug 263381)
 dnl ========================================================
+dnl Implicitly enabled by default if building calendar
+if test -n "$MOZ_CALENDAR"; then
+    MOZ_STORAGE=1
+fi
 MOZ_ARG_ENABLE_BOOL(storage,
 [  --enable-storage        Enable mozStorage module and related components],
     MOZ_STORAGE=1,

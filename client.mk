@@ -159,8 +159,9 @@ MODULES_composer :=                             \
 
 MODULES_calendar :=                             \
   $(MODULES_toolkit)                            \
+  mozilla/storage                               \
+  mozilla/db/sqlite3                            \
   mozilla/calendar                              \
-  mozilla/other-licenses/libical                \
   $(NULL)
 
 BOOTSTRAP_calendar := mozilla/calendar/sunbird/config/mozconfig
