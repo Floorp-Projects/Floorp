@@ -201,8 +201,8 @@ nsRDFDataModelItem::Open(void)
     RDF_Cursor cursor;
     if (mDataModel.GetArcType() == eRDFArcType_Outbound) {
         // Arcs are outbound, that is, from a parent to it's
-        // child. Find all arcs whose source is "me".
-        cursor = RDF_GetSources(mDataModel.GetDB(),
+        // child. Find all targets whose source is "me".
+        cursor = RDF_GetTargets(mDataModel.GetDB(),
                                 GetResource(),
                                 mDataModel.GetArcProperty(),
                                 RDF_RESOURCE_TYPE,
@@ -210,8 +210,8 @@ nsRDFDataModelItem::Open(void)
     }
     else {
         // Arcs are inbound, that is, from a child to it's
-        // parent. Find all arcs whose target is "me".
-        cursor = RDF_GetTargets(mDataModel.GetDB(),
+        // parent. Find all sources whose target is "me".
+        cursor = RDF_GetSources(mDataModel.GetDB(),
                                 GetResource(),
                                 mDataModel.GetArcProperty(),
                                 RDF_RESOURCE_TYPE,
@@ -219,14 +219,15 @@ nsRDFDataModelItem::Open(void)
     }
 
     if (cursor) {
-        PRUint32 index = 0;
         RDF_Resource r;
         while ((r = static_cast<RDF_Resource>(RDF_NextValue(cursor))) != NULL) {
             nsRDFDataModelItem* child;
             if (NS_FAILED(mDataModel.CreateItem(r, child)))
                 continue;
 
-            mChildren[index++] = child;
+            // CreateItem() will have done an AddRef(), like a good
+            // COM citizen...
+            mChildren.Add(child);
             child->mParent = this;
         }
         RDF_DisposeCursor(cursor);
