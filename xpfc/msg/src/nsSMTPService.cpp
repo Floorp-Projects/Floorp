@@ -93,6 +93,9 @@ nsresult nsSMTPService::SendMail(nsString& aServer,
   return NS_OK;
 }
 
+// XXX: Need to return proper XPCOM error results (nsresult)
+//      converted from the msg-sdk results
+
 nsresult nsSMTPService::SendMail(nsString& aServer, 
                                  nsString& aFrom, 
                                  nsString& aTo, 
@@ -125,240 +128,130 @@ nsresult nsSMTPService::SendMail(nsString& aServer,
   aServer.Left(strserver, offset);
   char * server   = strserver.ToNewCString();
 
-  int l_nReturn;
+  /*
+   * Setup the sink and buffer...
+   */
+
+  PRInt32 res;
   nsmail_inputstream_t * l_inputStream;
   smtpClient_t * pClient = NULL;
   smtpSink_t * pSink = NULL;
 
   buf_inputStream_create (message, nsCRT::strlen(message), &l_inputStream);
 
-  /*Initialize the response sink.*/
-  l_nReturn = smtpSink_initialize( &pSink );
+  res = smtpSink_initialize( &pSink );
 
-  if ( l_nReturn != NSMAIL_OK )
-  {
-      return l_nReturn;
-  }
+  if (NSMAIL_OK != res)
+    return res;
 
   setSink(pSink, aObserver);
   
+  /*
+   * Now send the message ....
+   */
 
-  /*Initialize the client passing in the response sink.*/
-  l_nReturn = smtp_initialize( &pClient, pSink );
+  res = smtp_initialize( &pClient, pSink );
+  if (NSMAIL_OK != res)
+    return res;
 
-  if ( l_nReturn != NSMAIL_OK )
-  {
-      return l_nReturn;
-  }
+  res = smtp_setChunkSize( pClient, 1048576 );
+  if (NSMAIL_OK != res)
+    return res;
 
-  /*Set the internal buffer chunk size.*/
-  l_nReturn = smtp_setChunkSize( pClient, 1048576 );
+  res = smtp_connect( pClient, server, 25 );
+  if (NSMAIL_OK != res)
+    return res;
 
-  if ( l_nReturn != NSMAIL_OK )
-  {
-      return l_nReturn;
-  }
+  res = smtp_processResponses( pClient );
+  if (NSMAIL_OK != res)
+    return res;
 
-  /*Connect to the SMTP server.*/
-  l_nReturn = smtp_connect( pClient, server, 25 );
+  res = smtp_ehlo( pClient, domain );
+  if (NSMAIL_OK != res)
+    return res;
 
-  if ( l_nReturn != NSMAIL_OK )
-  {
-      return l_nReturn;
-  }
+  res = smtp_processResponses( pClient );
+  if (NSMAIL_OK != res)
+    return res;
 
-  l_nReturn = smtp_processResponses( pClient );
+  res = smtp_mailFrom( pClient, from, NULL );
+  if (NSMAIL_OK != res)
+    return res;
 
-  if ( l_nReturn != NSMAIL_OK )
-  {
-      return l_nReturn;
-  }
+  res = smtp_processResponses( pClient );
+  if (NSMAIL_OK != res)
+    return res;
 
-  /*Send the EHLO command passing in the domain name.*/
-  l_nReturn = smtp_ehlo( pClient, domain );
+  res = smtp_rcptTo( pClient, to, NULL );
+  if (NSMAIL_OK != res)
+    return res;
 
-  if ( l_nReturn != NSMAIL_OK )
-  {
-      return l_nReturn;
-  }
+  res = smtp_processResponses( pClient );
+  if (NSMAIL_OK != res)
+    return res;
 
-  l_nReturn = smtp_processResponses( pClient );
+  res = smtp_data( pClient );
+  if (NSMAIL_OK != res)
+    return res;
 
-  if ( l_nReturn != NSMAIL_OK )
-  {
-      return l_nReturn;
-  }
+  res = smtp_processResponses( pClient );
+  if (NSMAIL_OK != res)
+    return res;
 
-  /*Send the MAIL FROM command.*/
-  l_nReturn = smtp_mailFrom( pClient, from, NULL );
+  res = smtp_sendStream( pClient, l_inputStream );
+  if (NSMAIL_OK != res)
+    return res;
 
-  if ( l_nReturn != NSMAIL_OK )
-  {
-      return l_nReturn;
-  }
+  res = smtp_processResponses( pClient );
+  if (NSMAIL_OK != res)
+    return res;
 
-  l_nReturn = smtp_processResponses( pClient );
+  res = smtp_expand( pClient, from );
+  if (NSMAIL_OK != res)
+    return res;
 
-  if ( l_nReturn != NSMAIL_OK )
-  {
-      return l_nReturn;
-  }
+  res = smtp_processResponses( pClient );
+  if (NSMAIL_OK != res)
+    return res;
 
-  /*Send the RCPT TO command.*/
-  l_nReturn = smtp_rcptTo( pClient, to, NULL );
+  res = smtp_noop( pClient );
+  if (NSMAIL_OK != res)
+    return res;
 
-  if ( l_nReturn != NSMAIL_OK )
-  {
-      return l_nReturn;
-  }
+  res = smtp_processResponses( pClient );
+  if (NSMAIL_OK != res)
+    return res;
 
-  l_nReturn = smtp_processResponses( pClient );
+  res = smtp_reset( pClient );
+  if (NSMAIL_OK != res)
+    return res;
 
-  if ( l_nReturn != NSMAIL_OK )
-  {
-      return l_nReturn;
-  }
+  res = smtp_processResponses( pClient );
+  if (NSMAIL_OK != res)
+    return res;
 
-  /*Send the DATA command.*/
+  res = smtp_verify( pClient, from );
+  if (NSMAIL_OK != res)
+    return res;
 
-  l_nReturn = smtp_data( pClient );
+  res = smtp_processResponses( pClient );
+  if (NSMAIL_OK != res)
+    return res;
 
-  if ( l_nReturn != NSMAIL_OK )
-  {
-      return l_nReturn;
-  }
+  res = smtp_quit( pClient );
+  if (NSMAIL_OK != res)
+    return res;
 
-  l_nReturn = smtp_processResponses( pClient );
+  res = smtp_processResponses( pClient );
+  if (NSMAIL_OK != res)
+    return res;
 
-  if ( l_nReturn != NSMAIL_OK )
-  {
-      return l_nReturn;
-  }
-
-  /* Send the message.*/
-  l_nReturn = smtp_sendStream( pClient, l_inputStream );
-
-  if ( l_nReturn != NSMAIL_OK )
-  {
-      return l_nReturn;
-  }
-
-  l_nReturn = smtp_processResponses( pClient );
-
-  if ( l_nReturn != NSMAIL_OK )
-  {
-      return l_nReturn;
-  }
-
-  /*Send the EXPN command.*/
-  l_nReturn = smtp_expand( pClient, from );
-
-  if ( l_nReturn != NSMAIL_OK )
-  {
-      return l_nReturn;
-  }
-
-  l_nReturn = smtp_processResponses( pClient );
-
-  if ( l_nReturn != NSMAIL_OK )
-  {
-      return l_nReturn;
-  }
-
-  /*Send the HELP command.*/
-  l_nReturn = smtp_help( pClient, from );
-
-  if ( l_nReturn != NSMAIL_OK )
-  {
-      return l_nReturn;
-  }
-
-  l_nReturn = smtp_processResponses( pClient );
-
-  if ( l_nReturn != NSMAIL_OK )
-  {
-      return l_nReturn;
-  }
-
-  /*Send the NOOP command.*/
-  l_nReturn = smtp_noop( pClient );
-
-  if ( l_nReturn != NSMAIL_OK )
-  {
-      return l_nReturn;
-  }
-
-  l_nReturn = smtp_processResponses( pClient );
-
-  if ( l_nReturn != NSMAIL_OK )
-  {
-      return l_nReturn;
-  }
-
-  /*Send the RSET command.*/
-  l_nReturn = smtp_reset( pClient );
-
-  if ( l_nReturn != NSMAIL_OK )
-  {
-      return l_nReturn;
-  }
-
-  l_nReturn = smtp_processResponses( pClient );
-
-  if ( l_nReturn != NSMAIL_OK )
-  {
-      return l_nReturn;
-  }
-
-  /*Send the VRFY command.*/
-  l_nReturn = smtp_verify( pClient, from );
-
-  if ( l_nReturn != NSMAIL_OK )
-  {
-      return l_nReturn;
-  }
-
-  l_nReturn = smtp_processResponses( pClient );
-
-  if ( l_nReturn != NSMAIL_OK )
-  {
-      return l_nReturn;
-  }
-
-  /*Send a generic command to the server.*/
-  l_nReturn = smtp_sendCommand( pClient, "HELP help" );
-
-  if ( l_nReturn != NSMAIL_OK )
-  {
-      return l_nReturn;
-  }
-
-  l_nReturn = smtp_processResponses( pClient );
-
-  if ( l_nReturn != NSMAIL_OK )
-  {
-      return l_nReturn;
-  }
-
-  l_nReturn = smtp_quit( pClient );
-
-  if ( l_nReturn != NSMAIL_OK )
-  {
-      return l_nReturn;
-  }
-
-  l_nReturn = smtp_processResponses( pClient );
-
-  if ( l_nReturn != NSMAIL_OK )
-  {
-      return l_nReturn;
-  }
+  /*
+   * Cleanup 
+   */
 
   nsStream_free (l_inputStream);
-
-  /*Free the client structure.*/
   smtp_free( &pClient );
-  /*Free the sink structure.*/
   smtpSink_free( &pSink );
 
   delete server;

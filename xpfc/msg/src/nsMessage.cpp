@@ -54,7 +54,7 @@ nsresult nsMessage::SetSender(nsString& aSender)
 
 nsresult nsMessage::AddRecipient(nsString& aRecipient)
 {
-  if (mRecipients != "")
+  if (mRecipients.Length() > 0)
     mRecipients += ",";
   mRecipients += aRecipient;
 
