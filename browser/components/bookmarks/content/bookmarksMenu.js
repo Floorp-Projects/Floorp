@@ -399,6 +399,9 @@ var BookmarksMenuController = {
       BookmarksMenu.expandBTFolder();
       break;
     default:
+      // XXXBlake HACK for bug 210910 -- To be removed after 0.7
+      BookmarksMenuDNDObserver.mCurrentDragOverTarget = null;
+      BookmarksMenuDNDObserver.onDragCloseTarget();
       BookmarksController.doCommand(aCommand, selection, target);
     }
   },
