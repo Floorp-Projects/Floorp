@@ -2575,9 +2575,9 @@ RDFXULBuilderImpl::CreateXULElement(nsINameSpace* aContainingNameSpace,
         return rv;
     }
 
-    // There are some tags that we need to pay extra-special attention to...
-    if (aTagName == kTreeAtom || aTagName == kMenuAtom || aTagName == kMenuBarAtom || 
-        aTagName == kToolbarAtom) {
+    // Check for a 'datasources' tag, in which case we'll create a
+    // template builder.
+    {
         nsAutoString dataSources;
         if (NS_CONTENT_ATTR_HAS_VALUE ==
             element->GetAttribute(kNameSpaceID_None,
