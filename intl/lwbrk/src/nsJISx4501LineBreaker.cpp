@@ -222,9 +222,18 @@ PRInt8 nsJISx4501LineBreaker::GetClass(PRUnichar u)
            break;
        };
        // Halfwidth Katakana variants
-     } else {
+     } else if( l < 0x00e0) {
        c = 8; // Halfwidth Hangul variants 
-     }
+     } else if( l < 0x00f0) {
+		 static PRUnichar NarrowFFEx[16] = 
+		 { 
+			 0x00A2, 0x00A3, 0x00AC, 0x00AF, 0x00A6, 0x00A5, 0x20A9, 0x0000,
+		     0x2502, 0x2190, 0x2191, 0x2192, 0x2193, 0x25A0, 0x25CB, 0x0000
+		 };
+		 c = GetClass(NarrowFFEx[l - 0x00e0]);
+	 } else {
+		 c = 8;
+	 };
    } else {
      c = 8; // others 
    }
