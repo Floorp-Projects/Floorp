@@ -50,6 +50,7 @@
 #include "nsITreeContentView.h"
 #include "nsITreeSelection.h"
 
+nsresult NS_NewTreeContentView(nsITreeContentView** aResult);
 
 class nsTreeContentView : public nsITreeView,
                           public nsITreeContentView,
