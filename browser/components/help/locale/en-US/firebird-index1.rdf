@@ -474,6 +474,7 @@
         <nc:subheadings>
             <rdf:Seq>
                 <rdf:li><rdf:Description ID="tabbed-browsing" nc:name="Tabbed Browsing" nc:link="using_firebird.xhtml#tabbed_browsing"/></rdf:li>
+                <rdf:li><rdf:Description ID="text-size-changing" nc:name="Text Size, Changing" nc:link="menu_reference.xhtml#text_size"/></rdf:li>
                 <rdf:li><rdf:Description ID="themes" nc:name="Themes" nc:link="customization.xhtml#themes"/></rdf:li>
                 <rdf:li><rdf:Description ID="toolbar-customization" nc:name="Toolbar Customization" nc:link="customization.xhtml"/></rdf:li>
             </rdf:Seq>
