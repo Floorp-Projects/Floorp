@@ -123,12 +123,12 @@ PRInt32 nsWinRegItem::Complete()
 	return aReturn;
 }
   
-#define kCRK  "Create Registry Key "
-#define kDRK  "Delete Registry Key "
-#define kDRV  "Delete Registry Value "
-#define kSRVS "Store Registry Value String "
-#define kSRVN "Store Registry Value Number "
-#define kSRV  "Store Registry Value "
+#define kCRK  "Create Registry Key: "
+#define kDRK  "Delete Registry Key: "
+#define kDRV  "Delete Registry Value: "
+#define kSRVS "Store Registry Value String: "
+#define kSRVN "Store Registry Value Number: "
+#define kSRV  "Store Registry Value: "
 #define kUNK  "Unknown "
 
 char* nsWinRegItem::toString()

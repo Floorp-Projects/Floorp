@@ -54,8 +54,6 @@ HRESULT           WinSpawn(LPSTR szClientName, LPSTR szParameters, LPSTR szCurre
 HRESULT           ParseConfigIni(LPSTR lpszCmdLine);
 HRESULT           DecryptString(LPSTR szOutputStr, LPSTR szInputStr);
 HRESULT           DecryptVariable(LPSTR szVariable, DWORD dwVariableSize);
-void              GetWinReg(HKEY hkRootKey, LPSTR szKey, LPSTR szName, LPSTR szReturnValue, DWORD dwSize);
-void              SetWinReg(HKEY hkRootKey, LPSTR szKey, LPSTR szName, DWORD dwType, LPSTR szData, DWORD dwSize);
 HRESULT           InitSetupGeneral(void);
 HRESULT           InitDlgWelcome(diW *diDialog);
 HRESULT           InitDlgLicense(diL *diDialog);
@@ -113,7 +111,6 @@ HRESULT           GetConfigIni(void);
 void              CleanTempFiles(void);
 void              OutputSetupTitle(HDC hDC);
 HRESULT           SdArchives(LPSTR szFileIdi, LPSTR szDownloadDir);
-DWORD             NumberOfArchivesToDownload(void);
 long              RetrieveArchives(void);
 long              RetrieveRedirectFile(void);
 /* HRESULT           SmartUpdateJars(void); */
@@ -167,6 +164,14 @@ void              SsiSiteSelectorNodeDelete(ssi *ssiTemp);
 ssi*              SsiGetNode(LPSTR szDescription);
 void              UpdateSiteSelector(void);
 DWORD             GetAdditionalComponentsCount(void);
+DWORD             GetTotalArchivesToDownload();
+void              RemoveQuotes(LPSTR lpszSrc, LPSTR lpszDest, int iDestSize);
+LPSTR             GetFirstNonSpace(LPSTR lpszString);
+int               GetArgC(LPSTR lpszCommandLine);
+LPSTR             GetArgV(LPSTR lpszCommandLine, int iIndex, LPSTR lpszDest, int iDestSize);
+void              ParseCommandLine(LPSTR lpszCmdLine);
+void              SetSetupRunMode(LPSTR szMode);
+void              Delay(DWORD dwSeconds);
 
 BOOL              bSDInit;
 

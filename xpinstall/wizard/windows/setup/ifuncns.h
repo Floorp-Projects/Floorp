@@ -40,6 +40,7 @@ HRESULT     ProcessDeleteFile(DWORD dwTiming);
 HRESULT     DirectoryRemove(LPSTR szDestination, BOOL bRemoveSubdirs);
 HRESULT     ProcessRemoveDirectory(DWORD dwTiming);
 HRESULT     ProcessRunApp(DWORD dwTiming);
+HRESULT     ProcessWinReg(DWORD dwTiming);
 HRESULT     CreateALink(LPSTR lpszPathObj,
                         LPSTR lpszPathLink,
                         LPSTR lpszDesc,
@@ -51,5 +52,11 @@ HRESULT     ProcessProgramFolder(DWORD dwTiming);
 HRESULT     ProcessProgramFolderShowCmd(void);
 HRESULT     CreateDirectoriesAll(char* szPath);
 void        ProcessFileOps(DWORD dwTiming);
+void        GetWinReg(HKEY hkRootKey, LPSTR szKey, LPSTR szName, LPSTR szReturnValue, DWORD dwSize);
+void        SetWinReg(HKEY hkRootKey, LPSTR szKey, BOOL bOverwriteKey, LPSTR szName, BOOL bOverwriteName, DWORD dwType, LPSTR szData, DWORD dwSize);
+HKEY        ParseRootKey(LPSTR szRootKey);
+DWORD       ParseRegType(LPSTR szType);
+BOOL        WinRegKeyExists(HKEY hkRootKey, LPSTR szKey);
+BOOL        WinRegNameExists(HKEY hkRootKey, LPSTR szKey, LPSTR szName);
 
 #endif

@@ -1,3 +1,152 @@
+function createShortcuts() 
+{
+  var subkey;
+  var valname;
+  var szStartMenuPrograms;
+  var szStartMenu;
+  var szFolderDesktop;
+  var szFolderQuickLaunch;
+  var szFolderSendTo;
+  var winreg;
+  var fWindows;
+  var fTemp;
+  var fCommunicator;
+  var fileExe;
+  var scExeDesc;
+  var scProfileDesc;
+  var scProfileDescParam;
+  var scFolderName;
+  var fFolderPath;
+  var fFolderPathStr;
+  var is_winnt;
+  var szCurrentVersion;
+
+  winreg               = getWinRegistry();
+  fWindows             = getFolder("Windows");
+  fCommunicator        = getFolder("Communicator");
+  fTemp                = fCommunicator + "\\mozilla.exe";
+  fileExe              = getFolder("file:///", fTemp);
+  scExeDesc            = "Mozilla Seamonkey";
+  scProfileDesc        = "Profile Manager";
+  scProfileDescParam   = "-ProfileManager";
+  scFolderName         = "Mozilla Seamonkey";
+  if(winreg != null) 
+  {
+    winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
+    subkey              = "SOFTWARE\\Mozilla\\Mozilla Seamonkey\\$UserAgent$\\Main";
+    valname             = "Program Folder Path";
+    fFolderPathStr      = winreg.getValueString(subkey, valname);
+    if((fFolderPathStr == "") || (fFolderPathStr == null))
+    {
+      /* determine if the script is running under NT or not */
+      winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
+      subkey              = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
+      valname             = "CurrentVersion";
+      szCurrentVersion    = winreg.getValueString(subkey, valname);
+      logComment("szCurrentVersion: " + szCurrentVersion);
+      if((szCurrentVersion == "") || (szCurrentVersion == null))
+      {
+        is_winnt = false;
+      }
+      else
+      {
+        is_winnt = true;
+      }
+
+      if(is_winnt == false)
+      {
+        logComment("is_winnt is false: " + is_winnt);
+
+        winreg.setRootKey(winreg.HKEY_CURRENT_USER);
+        subkey              = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders";
+        valname             = "Programs";
+        szStartMenuPrograms = winreg.getValueString(subkey, valname);
+        valname             = "Start Menu";
+        szStartMenu         = winreg.getValueString(subkey, valname);
+        valname             = "Desktop";
+        szFolderDesktop     = winreg.getValueString(subkey, valname);
+      }
+      else
+      {
+        logComment("is_winnt is true: " + is_winnt);
+
+        winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
+        subkey              = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders";
+        valname             = "Common Programs";
+        szStartMenuPrograms = winreg.getValueString(subkey, valname);
+        valname             = "Common Start Menu";
+        szStartMenu         = winreg.getValueString(subkey, valname);
+        valname             = "Common Desktop";
+        szFolderDesktop     = winreg.getValueString(subkey, valname);
+      }
+
+      winreg.setRootKey(winreg.HKEY_CURRENT_USER);
+      subkey              = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders";
+      valname             = "SendTo";
+      szFolderSendTo      = winreg.getValueString(subkey, valname);
+
+      subkey              = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\GrpConv\\MapGroups";
+      valname             = "Quick Launch";
+      szFolderQuickLaunch = winreg.getValueString(subkey, valname);
+
+      fTemp        = szStartMenuPrograms + "\\" + scFolderName;
+      fFolderPath  = getFolder("file:///", fTemp);
+
+      logComment("Folder StartMenuPrograms: " + szStartMenuPrograms);
+      logComment("Folder StartMenu: "         + szStartMenu);
+      logComment("Folder FolderDesktop: "     + szFolderDesktop);
+      logComment("Folder FolderSendTo: "      + szFolderSendTo);
+      logComment("Folder FolderQuickLaunch: " + szFolderQuickLaunch);
+    }
+    else
+    {
+      /* convert the path string to a path folder object */
+      fFolderPath = getFolder("file:///", fFolderPathStr);
+    }
+
+    logComment("fileExe: "                  + fileExe);
+    logComment("fFolderPath: "              + fFolderPath);
+    logComment("scExeDesc: "                + scExeDesc);
+    logComment("fCommunicator : "           + fCommunicator);
+
+    /* explicitly create the fFolderPath even though the windowsShortcut function creates the folder.
+     * This is so that the folder creation gets logged for uninstall to remove it. */
+    File.dirCreate(fFolderPath);
+
+    /* create the shortcuts */
+    File.windowsShortcut(fileExe, fFolderPath, scExeDesc,     fCommunicator,  "",                 fileExe, 0);
+    File.windowsShortcut(fileExe, fFolderPath, scProfileDesc, fCommunicator,  scProfileDescParam, fileExe, 0);
+
+    /* set the Program Folder Path in the Mozilla key in the Windows Registry */
+    winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
+    subkey  = "SOFTWARE\\Mozilla";
+    winreg.createKey(subkey,"");
+
+    valname = "CurrentVersion";
+    subkey  = "SOFTWARE\\Mozilla\\Mozilla Seamonkey";
+    winreg.createKey(subkey,"");
+
+    valname = "CurrentVersion";
+    value   = "$UserAgent$";
+    err     = winreg.setValueString(subkey, valname, value);
+
+    subkey  = "SOFTWARE\\Mozilla\\Mozilla Seamonkey\\$UserAgent$";
+    winreg.createKey(subkey,"");
+
+    subkey  = "SOFTWARE\\Mozilla\\Mozilla Seamonkey\\$UserAgent$\\Main";
+    winreg.createKey(subkey,"");
+
+    valname = "Program Folder Path";
+    value   = fFolderPath;
+    err     = winreg.setValueString(subkey, valname, value);
+
+  }
+  else
+  {
+    logComment("winreg is null");
+  }
+}
+
 function updateWinReg()
 {
   //Notes:
@@ -11,27 +160,35 @@ function updateWinReg()
   if(winreg != null) 
   {
     winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
-    subkey  = "SOFTWARE\\Netscape\\Netscape Seamonkey";
+    subkey  = "SOFTWARE\\Mozilla";
     winreg.createKey(subkey,"");
+
+    subkey  = "SOFTWARE\\Mozilla\\Mozilla Seamonkey";
+    winreg.createKey(subkey,"");
+
     valname = "CurrentVersion";
     value   = "$UserAgent$";
     err     = winreg.setValueString(subkey, valname, value);
 
-    subkey  = "SOFTWARE\\Netscape\\Netscape Seamonkey\\$UserAgent$\\Main";
+    subkey  = "SOFTWARE\\Mozilla\\Mozilla Seamonkey\\$UserAgent$";
     winreg.createKey(subkey,"");
+
+    subkey  = "SOFTWARE\\Mozilla\\Mozilla Seamonkey\\$UserAgent$\\Main";
+    winreg.createKey(subkey,"");
+
     valname = "Install Directory";
-    value   = communicatorFolder;
+    value   = fCommunicator;
     err     = winreg.setValueString(subkey, valname, value);
 
     // set the App Paths key here
     subkey  = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\mozilla.exe";
     winreg.createKey(subkey,"");
     valname = "";
-    value   = communicatorFolder + "\\mozilla.exe";
+    value   = fCommunicator + "\\mozilla.exe";
     err     = winreg.setValueString(subkey, valname, value);
 
     valname = "Path";
-    value   = communicatorFolder;
+    value   = fCommunicator;
     err     = winreg.setValueString(subkey, valname, value);
   }
 }
@@ -39,7 +196,7 @@ function updateWinReg()
 // main
 var srDest;
 var err;
-var communicatorFolder;
+var fCommunicator;
 var fWindowsSystem;
 var fileComponentRegStr;
 var fileComponentReg;
@@ -48,30 +205,31 @@ srDest = $SpaceRequired$:bin;
 err    = startInstall("Mozilla Seamonkey", "Browser", "$Version$"); 
 logComment("startInstall: " + err);
 
-communicatorFolder = getFolder("Communicator");
-fWindowsSystem     = getFolder("Win System");
-logComment("communicatorFolder: " + communicatorFolder);
+fCommunicator   = getFolder("Communicator");
+fWindowsSystem  = getFolder("Win System");
+logComment("fCommunicator: " + fCommunicator);
 
-if(verifyDiskSpace(communicatorFolder, srDest) == true)
+if(verifyDiskSpace(fCommunicator, srDest) == true)
 {
-  setPackageFolder(communicatorFolder);
+  setPackageFolder(fCommunicator);
   err = addDirectory("",
                      "$Version$",
                      "bin",              // dir name in jar to extract 
-                     communicatorFolder, // Where to put this file (Returned from GetFolder) 
-                     "",                 // subdir name to create relative to communicatorFolder
+                     fCommunicator,      // Where to put this file (Returned from GetFolder) 
+                     "",                 // subdir name to create relative to fCommunicator
                      true);              // Force Flag 
   logComment("addDirectory() of Program returned: " + err);
 
   // check return value
   if(!checkError(err))
   {
-    fileComponentRegStr = communicatorFolder + "\\component.reg";
+    fileComponentRegStr = fCommunicator + "\\component.reg";
     fileComponentReg    = getFolder("file:///", fileComponentRegStr);
     err                 = fileDelete(fileComponentReg);
     logComment("fileDelete() returned: " + err);
 
     updateWinReg();
+    createShortcuts();
 
     err = finalizeInstall(); 
     logComment("finalizeInstall() returned: " + err);

@@ -50,7 +50,7 @@ $inXpiUrl             = "ftp://not.needed.com/because/the/xpi/files/will/be/loca
 
 $seiFileNameGeneric   = "nsinstall.exe";
 $seiFileNameSpecific  = "mozilla-win32-installer.exe";
-$userAgent            = "5.0b1 (en)";
+$userAgent            = "5.0b2 (en)";
 
 # Check for existance of staging path
 if(!(-e "$inStagePath"))
@@ -104,7 +104,7 @@ exit(0);
 sub MakeConfigFile
 {
   # Make config.ini file
-  if(system("perl makecfgini.pl config.it $inDefaultVersion $inStagePath $inDistPath\\xpi $inRedirIniUrl $inXpiUrl") != 0)
+  if(system("perl makecfgini.pl config.it $inDefaultVersion \"$userAgent\" $inStagePath $inDistPath\\xpi $inRedirIniUrl $inXpiUrl") != 0)
   {
     exit(1);
   }

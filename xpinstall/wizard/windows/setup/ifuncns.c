@@ -95,6 +95,7 @@ void ProcessFileOps(DWORD dwTiming)
   ProcessDeleteFile(dwTiming);
   ProcessRemoveDirectory(dwTiming);
   ProcessRunApp(dwTiming);
+  ProcessWinReg(dwTiming);
   ProcessProgramFolder(dwTiming);
 }
 
@@ -655,7 +656,7 @@ HRESULT ProcessRunApp(DWORD dwTiming)
       {
         lstrcat(szTarget, " ");
         lstrcat(szTarget, szParameters);
-        SetWinReg(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce", "Netscape", REG_SZ, szTarget, lstrlen(szTarget));
+        SetWinReg(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce", TRUE, "Netscape", TRUE, REG_SZ, szTarget, lstrlen(szTarget));
       }
       else
         WinSpawn(szTarget, szParameters, szWorkingDir, SW_SHOWNORMAL, bWait);
@@ -666,6 +667,231 @@ HRESULT ProcessRunApp(DWORD dwTiming)
     lstrcpy(szSection, "RunApp");
     lstrcat(szSection, szIndex);
     GetPrivateProfileString(szSection, "Target", "", szBuf, MAX_BUF, szFileIniConfig);
+  }
+  return(FO_SUCCESS);
+}
+
+HKEY ParseRootKey(LPSTR szRootKey)
+{
+  HKEY hkRootKey;
+
+  if(lstrcmpi(szRootKey, "HKEY_CURRENT_CONFIG") == 0)
+    hkRootKey = HKEY_CURRENT_CONFIG;
+  else if(lstrcmpi(szRootKey, "HKEY_CURRENT_USER") == 0)
+    hkRootKey = HKEY_CURRENT_USER;
+  else if(lstrcmpi(szRootKey, "HKEY_LOCAL_MACHINE") == 0)
+    hkRootKey = HKEY_LOCAL_MACHINE;
+  else if(lstrcmpi(szRootKey, "HKEY_USERS") == 0)
+    hkRootKey = HKEY_USERS;
+  else if(lstrcmpi(szRootKey, "HKEY_PERFORMANCE_DATA") == 0)
+    hkRootKey = HKEY_PERFORMANCE_DATA;
+  else if(lstrcmpi(szRootKey, "HKEY_DYN_DATA") == 0)
+    hkRootKey = HKEY_DYN_DATA;
+  else /* HKEY_CLASSES_ROOT */
+    hkRootKey = HKEY_CLASSES_ROOT;
+
+  return(hkRootKey);
+}
+
+DWORD ParseRegType(LPSTR szType)
+{
+  DWORD dwType;
+
+  if(lstrcmpi(szType, "REG_SZ") == 0)
+    /* Unicode NULL terminated string */
+    dwType = REG_SZ;
+  else if(lstrcmpi(szType, "REG_EXPAND_SZ") == 0)
+    /* Unicode NULL terminated string
+     * (with environment variable references) */
+    dwType = REG_EXPAND_SZ;
+  else if(lstrcmpi(szType, "REG_BINARY") == 0)
+    /* Free form binary */
+    dwType = REG_BINARY;
+  else if(lstrcmpi(szType, "REG_DWORD") == 0)
+    /* 32bit number */
+    dwType = REG_DWORD;
+  else if(lstrcmpi(szType, "REG_DWORD_LITTLE_ENDIAN") == 0)
+    /* 32bit number
+     * (same as REG_DWORD) */
+    dwType = REG_DWORD_LITTLE_ENDIAN;
+  else if(lstrcmpi(szType, "REG_DWORD_BIG_ENDIAN") == 0)
+    /* 32bit number */
+    dwType = REG_DWORD_BIG_ENDIAN;
+  else if(lstrcmpi(szType, "REG_LINK") == 0)
+    /* Symbolic link (unicode) */
+    dwType = REG_LINK;
+  else if(lstrcmpi(szType, "REG_MULTI_SZ") == 0)
+    /* Multiple Unicode strings */
+    dwType = REG_MULTI_SZ;
+  else /* Default is REG_NONE */
+    /* no value type */
+    dwType = REG_NONE;
+
+  return(dwType);
+}
+
+BOOL WinRegKeyExists(HKEY hkRootKey, LPSTR szKey)
+{
+  HKEY  hkResult;
+  DWORD dwErr;
+  BOOL  bKeyExists = FALSE;
+
+  if((dwErr = RegOpenKeyEx(hkRootKey, szKey, 0, KEY_READ, &hkResult)) == ERROR_SUCCESS)
+  {
+    bKeyExists = TRUE;
+    RegCloseKey(hkResult);
+  }
+
+  return(bKeyExists);
+}
+
+BOOL WinRegNameExists(HKEY hkRootKey, LPSTR szKey, LPSTR szName)
+{
+  HKEY  hkResult;
+  DWORD dwErr;
+  DWORD dwSize;
+  char  szBuf[MAX_BUF];
+  BOOL  bNameExists = FALSE;
+
+  ZeroMemory(szBuf, sizeof(szBuf));
+  if((dwErr = RegOpenKeyEx(hkRootKey, szKey, 0, KEY_READ, &hkResult)) == ERROR_SUCCESS)
+  {
+    dwSize = sizeof(szBuf);
+    dwErr  = RegQueryValueEx(hkResult, szName, 0, NULL, szBuf, &dwSize);
+
+    if((*szBuf != '\0') && (dwErr == ERROR_SUCCESS))
+      bNameExists = TRUE;
+
+    RegCloseKey(hkResult);
+  }
+
+  return(bNameExists);
+}
+
+void GetWinReg(HKEY hkRootKey, LPSTR szKey, LPSTR szName, LPSTR szReturnValue, DWORD dwReturnValueSize)
+{
+  HKEY  hkResult;
+  DWORD dwErr;
+  DWORD dwSize;
+  char  szBuf[MAX_BUF];
+
+  ZeroMemory(szBuf, sizeof(szBuf));
+  ZeroMemory(szReturnValue, dwReturnValueSize);
+
+  if((dwErr = RegOpenKeyEx(hkRootKey, szKey, 0, KEY_READ, &hkResult)) == ERROR_SUCCESS)
+  {
+    dwSize = sizeof(szBuf);
+    dwErr  = RegQueryValueEx(hkResult, szName, 0, NULL, szBuf, &dwSize);
+
+    if((*szBuf != '\0') && (dwErr == ERROR_SUCCESS))
+      ExpandEnvironmentStrings(szBuf, szReturnValue, dwReturnValueSize);
+    else
+      *szReturnValue = '\0';
+
+    RegCloseKey(hkResult);
+  }
+}
+
+void SetWinReg(HKEY hkRootKey, LPSTR szKey, BOOL bOverwriteKey, LPSTR szName, BOOL bOverwriteName, DWORD dwType, LPSTR szData, DWORD dwSize)
+{
+  HKEY    hkResult;
+  DWORD   dwErr;
+  DWORD   dwDisp;
+  BOOL    bKeyExists;
+  BOOL    bNameExists;
+
+  bKeyExists  = WinRegKeyExists(hkRootKey, szKey);
+  bNameExists = WinRegNameExists(hkRootKey, szKey, szName);
+  dwErr       = RegOpenKeyEx(hkRootKey, szKey, 0, KEY_WRITE, &hkResult);
+
+  if(dwErr != ERROR_SUCCESS)
+    dwErr = RegCreateKeyEx(hkRootKey, szKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hkResult, &dwDisp);
+
+  if(dwErr == ERROR_SUCCESS)
+  {
+    if((bNameExists == FALSE) ||
+      ((bNameExists == TRUE) && (bOverwriteName == TRUE)))
+      dwErr = RegSetValueEx(hkResult, szName, 0, dwType, szData, dwSize);
+
+    RegCloseKey(hkResult);
+  }
+}
+
+HRESULT ProcessWinReg(DWORD dwTiming)
+{
+  char  szIndex[MAX_BUF];
+  char  szBuf[MAX_BUF];
+  char  szKey[MAX_BUF];
+  char  szName[MAX_BUF];
+  char  szValue[MAX_BUF];
+  char  szDecrypt[MAX_BUF];
+  char  szOverwriteKey[MAX_BUF];
+  char  szOverwriteName[MAX_BUF];
+  char  szSection[MAX_BUF];
+  HKEY  hRootKey;
+  BOOL  bOverwriteKey;
+  BOOL  bOverwriteName;
+  DWORD dwIndex;
+  DWORD dwType;
+
+  dwIndex = 0;
+  itoa(dwIndex, szIndex, 10);
+  lstrcpy(szSection, "Windows Registry");
+  lstrcat(szSection, szIndex);
+  GetPrivateProfileString(szSection, "Root Key", "", szBuf, MAX_BUF, szFileIniConfig);
+  while(*szBuf != '\0')
+  {
+    if(TimingCheck(dwTiming, szSection, szFileIniConfig))
+    {
+      hRootKey = ParseRootKey(szBuf);
+
+      GetPrivateProfileString(szSection, "Key",                 "", szBuf,           MAX_BUF, szFileIniConfig);
+      GetPrivateProfileString(szSection, "Decrypt Key",         "", szDecrypt,       MAX_BUF, szFileIniConfig);
+      GetPrivateProfileString(szSection, "Overwrite Key",       "", szOverwriteKey,  MAX_BUF, szFileIniConfig);
+
+      if(lstrcmpi(szDecrypt, "TRUE") == 0)
+        DecryptString(szKey, szBuf);
+      else
+        lstrcpy(szKey, szBuf);
+
+      if(lstrcmpi(szOverwriteKey, "FALSE") == 0)
+        bOverwriteKey = FALSE;
+      else
+        bOverwriteKey = TRUE;
+
+      GetPrivateProfileString(szSection, "Name",                "", szBuf,           MAX_BUF, szFileIniConfig);
+      GetPrivateProfileString(szSection, "Decrypt Name",        "", szDecrypt,       MAX_BUF, szFileIniConfig);
+      GetPrivateProfileString(szSection, "Overwrite Name",      "", szOverwriteName, MAX_BUF, szFileIniConfig);
+
+      if(lstrcmpi(szDecrypt, "TRUE") == 0)
+        DecryptString(szName, szBuf);
+      else
+        lstrcpy(szName, szBuf);
+
+      if(lstrcmpi(szOverwriteName, "FALSE") == 0)
+        bOverwriteName = FALSE;
+      else
+        bOverwriteName = TRUE;
+
+      GetPrivateProfileString(szSection, "Name Value",          "", szBuf,           MAX_BUF, szFileIniConfig);
+      GetPrivateProfileString(szSection, "Decrypt Name Value",  "", szDecrypt,       MAX_BUF, szFileIniConfig);
+      if(lstrcmpi(szDecrypt, "TRUE") == 0)
+        DecryptString(szValue, szBuf);
+      else
+        lstrcpy(szValue, szBuf);
+
+      GetPrivateProfileString(szSection, "Type",                "", szBuf,           MAX_BUF, szFileIniConfig);
+      dwType = ParseRegType(szBuf);
+
+      /* create/set windows registry key here! */
+      SetWinReg(hRootKey, szKey, bOverwriteKey, szName, bOverwriteName, dwType, szValue, lstrlen(szValue));
+    }
+
+    ++dwIndex;
+    itoa(dwIndex, szIndex, 10);
+    lstrcpy(szSection, "Windows Registry");
+    lstrcat(szSection, szIndex);
+    GetPrivateProfileString(szSection, "Root Key", "", szBuf, MAX_BUF, szFileIniConfig);
   }
   return(FO_SUCCESS);
 }
@@ -784,7 +1010,8 @@ HRESULT ProcessProgramFolderShowCmd()
       iShowFolder = SW_SHOWNORMAL;
 
     if(iShowFolder != SW_HIDE)
-      WinSpawn(szProgramFolder, NULL, NULL, iShowFolder, TRUE);
+      if(sgProduct.dwMode != SILENT)
+        WinSpawn(szProgramFolder, NULL, NULL, iShowFolder, TRUE);
 
     ++dwIndex0;
     itoa(dwIndex0, szIndex0, 10);
