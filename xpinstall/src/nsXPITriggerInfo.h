@@ -47,6 +47,7 @@ typedef struct XPITriggerEvent {
     JSContext*  cx;
     jsval       global;
     jsval       cbval;
+    nsCOMPtr<nsISupports> ref;
 } XPITriggerEvent;
 
 

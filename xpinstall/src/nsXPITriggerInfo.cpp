@@ -133,6 +133,7 @@ void nsXPITriggerInfo::SaveCallback( JSContext *aCx, jsval aVal )
 
 static void  destroyTriggerEvent(XPITriggerEvent* event)
 {
+    JS_RemoveRoot( event->cx, &event->cbval );
     delete event;
 }
 
@@ -194,6 +195,12 @@ void nsXPITriggerInfo::SendStatus(const PRUnichar* URL, PRInt32 status)
                     event->global   = OBJECT_TO_JSVAL(obj);
 
                     event->cbval    = mCbval;
+                    JS_AddNamedRoot( event->cx, &event->cbval,
+                                     "XPITriggerEvent::cbval" );
+
+                    // Hold a strong reference to keep the underlying
+                    // JSContext from dying before we handle this event.
+                    event->ref      = mGlobalWrapper;
 
                     eq->PostEvent(&event->e);
                 }
