@@ -29,6 +29,11 @@ void nsAppShell::Create()
 {
 }
 
+void nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener) 
+{
+  mDispatchListener = aDispatchListener;
+}
+
 //-------------------------------------------------------------------------
 //
 // Enter a message handler loop
@@ -42,6 +47,8 @@ nsresult nsAppShell::Run()
   while (GetMessage(&msg, NULL, 0, 0)) {
       TranslateMessage(&msg);
       DispatchMessage(&msg);
+      if (mDispatchListener)
+        mDispatchListener->AfterDispatch();
   }
   return msg.wParam;
 }
@@ -64,6 +71,7 @@ void nsAppShell::Exit()
 //-------------------------------------------------------------------------
 nsAppShell::nsAppShell(nsISupports *aOuter) : nsObject(aOuter)  
 { 
+  mDispatchListener = 0;
 }
 
 //-------------------------------------------------------------------------

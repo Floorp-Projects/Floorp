@@ -858,7 +858,7 @@ void nsWindow::GetBounds(nsRect &aRect)
 {
     if (mWnd) {
         RECT r;
-        VERIFY(::GetWindowRect(mWnd, &r));
+        VERIFY(::GetClientRect(mWnd, &r));
 
         // assign size
         aRect.width = r.right - r.left;
@@ -1163,29 +1163,6 @@ void nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
   ::UpdateWindow(mWnd);
 }
 
-//-------------------------------------------------------------------------
-//
-// Relay mouse events to the tooltip control
-//
-//-------------------------------------------------------------------------
-
-void nsWindow::RelayMouseEvent(UINT aMsg, WPARAM wParam, LPARAM lParam)
-{
-  printf("relaying event\n");
-#if 0
-  MSG msg;
-  msg.hwnd = mWnd;	 
-  msg.message = aMsg; 
-  msg.wParam = wParam;
-  msg.lParam = lParam;
-  msg.time = ::GetMessageTime();
-  DWORD pos = ::GetMessagePos();
-  POINT pt;
-  msg.pt.x = LOWORD(pos);
-  msg.pt.y = HIWORD(pos);  
-  ::SendMessage(mTooltip, TTM_RELAYEVENT, 0, (LPARAM)(LPMSG) &msg);  
-#endif
-}
 
 //-------------------------------------------------------------------------
 //
@@ -1266,6 +1243,17 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
     *aRetValue = 0;
 
     switch (msg) {
+
+        case WM_COMMAND: {
+          WORD wNotifyCode = HIWORD(wParam); // notification code 
+          if (wNotifyCode == 0) { // Menu selection
+            nsMenuEvent event;
+            event.menuItem = LOWORD(wParam);
+            InitEvent(event, NS_MENU_SELECTED);
+            result = DispatchEvent(&event);
+          }
+        }
+        break;
 
         
         case WM_NOTIFY:
@@ -1370,12 +1358,10 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             break;
 
         case WM_MBUTTONDOWN:
-            //RelayMouseEvent(msg,wParam, lParam); 
             result = DispatchMouseEvent(NS_MOUSE_MIDDLE_BUTTON_DOWN);
             break;
 
         case WM_MBUTTONUP:
-            //RelayMouseEvent(msg,wParam, lParam); 
             result = DispatchMouseEvent(NS_MOUSE_MIDDLE_BUTTON_UP);
             break;
 
@@ -1384,12 +1370,10 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             break;
 
         case WM_RBUTTONDOWN:
-            //RelayMouseEvent(msg,wParam, lParam); 
             result = DispatchMouseEvent(NS_MOUSE_RIGHT_BUTTON_DOWN);            
             break;
 
         case WM_RBUTTONUP:
-            //RelayMouseEvent(msg,wParam, lParam); 
             result = DispatchMouseEvent(NS_MOUSE_RIGHT_BUTTON_UP);
             break;
 
@@ -1442,7 +1426,11 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         case WM_WINDOWPOSCHANGED: 
         {
             WINDOWPOS *wp = (LPWINDOWPOS)lParam;
-            nsRect rect(wp->x, wp->y, wp->cx, wp->cy);
+            RECT r;
+            ::GetClientRect(mWnd, &r);
+            nsRect rect(wp->x, wp->y, PRInt32(r.right - r.left), PRInt32(r.bottom - r.top));
+            ///nsRect rect(wp->x, wp->y, wp->cx, wp->cy);
+            //nsRect rect(wp->x, wp->y, r->width, r->height);
             result = OnResize(rect);
             break;
         }
@@ -1605,7 +1593,6 @@ void nsWindow::OnDestroy()
         NS_RELEASE(mToolkit);
         mToolkit = NULL;
     }
-
     DispatchStandardEvent(NS_DESTROY);
 }
 

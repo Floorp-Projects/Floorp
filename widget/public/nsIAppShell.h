@@ -24,6 +24,19 @@
 #define NS_IAPPSHELL_IID \
 { 0xa0757c31, 0xeeac, 0x11d1, { 0x9e, 0xc1, 0x0, 0xaa, 0x0, 0x2f, 0xb8, 0x21 } };
 
+
+/**
+ * During the nsIAppShell Run method notify this listener 
+ * after each message dispatch.
+ * @see SetDispatchListener member function of nsIAppShell 
+ */
+
+class nsDispatchListener {
+  public:
+    virtual void AfterDispatch() = 0;
+};
+
+
 /**
  * Application shell used for Test applications
  */
@@ -45,6 +58,12 @@ public:
   */
   
   virtual nsresult Run() = 0;
+
+ /**
+  * After event dispatch execute app specific code
+  */
+  
+  virtual void SetDispatchListener(nsDispatchListener* aDispatchListener) = 0;
 
   /**
    * Exit the handle event loop
