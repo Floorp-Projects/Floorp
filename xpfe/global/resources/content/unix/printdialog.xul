@@ -85,6 +85,7 @@ Contributor(s): Masaki Katakai <katakai@japan.sun.com>
           <radio group = "paperGroup" id = "legalRadio" label = "&legalRadio.label;"/>
           <radio group = "paperGroup" id = "exectiveRadio" label = "&exectiveRadio.label;"/>
           <radio group = "paperGroup" id = "a4Radio" label = "&a4Radio.label;" />
+          <radio group = "paperGroup" id = "a3Radio" label = "&a3Radio.label;" />
         </radiogroup>
       </row>
       <row>
