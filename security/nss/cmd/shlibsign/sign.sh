@@ -1,5 +1,6 @@
 #!/bin/sh
-if [ ${3} = "YES" ]; then
+case "${3}" in
+WIN*)
     if echo "${PATH}" | grep -c \; >/dev/null; then
         PATH=${PATH}\;${1}/bin\;${1}/lib
     else
@@ -12,7 +13,28 @@ if [ ${3} = "YES" ]; then
         PATH=${PATH}:${ARG1}/bin:${ARG1}/lib
     fi
     export PATH
-else
+    echo ${2}/shlibsign -v -i ${4}
+    ${2}/shlibsign -v -i ${4}
+    ;;
+OpenVMS)
+    temp="tmp$$.tmp"
+    temp2="tmp$$.tmp2"
+    cd ${1}/lib
+    vmsdir=`dcl show default`
+    ls *.so > $temp
+    sed -e "s/\([^\.]*\)\.so/\$ define\/job \1 ${vmsdir}\1.so/" $temp > $temp2
+    echo '$ define/job getipnodebyname xxx' >> $temp2
+    echo '$ define/job vms_null_dl_name sys$share:decc$shr' >> $temp2
+    dcl @$temp2
+    echo ${2}/shlibsign -v -i ${4}
+    ${2}/shlibsign -v -i ${4}
+    sed -e "s/\([^\.]*\)\.so/\$ deass\/job \1/" $temp > $temp2
+    echo '$ deass/job getipnodebyname' >> $temp2
+    echo '$ deass/job vms_null_dl_name' >> $temp2
+    dcl @$temp2
+    rm $temp $temp2
+    ;;
+*)
     LIBPATH=`(cd ${1}/lib; pwd)`
     export LIBPATH
     SHLIB_PATH=${1}/lib
@@ -23,6 +45,7 @@ else
     export DYLD_LIBRARY_PATH
     LIBRARY_PATH=${1}/lib:$LIBRARY_PATH
     export LIBRARY_PATH
-fi
-echo ${2}/shlibsign -v -i ${4}
-${2}/shlibsign -v -i ${4}
+    echo ${2}/shlibsign -v -i ${4}
+    ${2}/shlibsign -v -i ${4}
+    ;;
+esac

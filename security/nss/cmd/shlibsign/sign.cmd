@@ -1,5 +1,5 @@
 /* Equivalent to sign.sh for OS/2 */
-PARSE ARG dist objdir iswindows therest
+PARSE ARG dist objdir os_target therest
 dist=forwardtoback(dist);
 objdir=forwardtoback(objdir);
 'echo 'dist

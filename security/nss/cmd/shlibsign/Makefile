@@ -54,12 +54,6 @@ include $(CORE_DEPTH)/coreconf/config.mk
 
 include ../platlibs.mk
 
-ifeq (,$(filter-out WIN%,$(OS_TARGET)))
-    IS_WINDOWS="YES"
-else
-    IS_WINDOWS="NO"
-endif
-
 #
 # we really should have this driven from a list file made during the normal
 # NSS build prodecure.
@@ -107,9 +101,9 @@ include ../platrules.mk
 
 %.chk: %.$(DLL_SUFFIX) 
 ifeq ($(OS_TARGET), OS2)
-	-exec sign.cmd $(DIST) $(OBJDIR) $(IS_WINDOWS) $<
+	-exec sign.cmd $(DIST) $(OBJDIR) $(OS_TARGET) $<
 else
-	@sh ./sign.sh $(DIST) $(OBJDIR) $(IS_WINDOWS) $<
+	@sh ./sign.sh $(DIST) $(OBJDIR) $(OS_TARGET) $<
 endif
 
 libs install :: $(CHECKLOC)
