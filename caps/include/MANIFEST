@@ -1,0 +1,13 @@
+nsZig.h
+nsPrincipal.h
+nsPrivilege.h
+nsPrivilegeManager.h
+nsPrivilegeTable.h
+nsSystemPrivilegeTable.h
+nsTarget.h
+nsUserTarget.h
+jpermission.h
+nsUserDialogHelper.h
+nsZip.h
+nsLoadZig.h
+admin.h

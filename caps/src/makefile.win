@@ -1,0 +1,120 @@
+#!nmake
+#
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
+
+IGNORE_MANIFEST=1
+#//------------------------------------------------------------------------
+#//
+#// Makefile to build 
+#//
+#//------------------------------------------------------------------------
+
+
+#//------------------------------------------------------------------------
+#//
+#// Specify the depth of the current directory relative to the
+#// root of MOZILLA
+#//
+#//------------------------------------------------------------------------
+DEPTH= ..\..
+
+!ifndef MAKE_OBJ_TYPE
+MAKE_OBJ_TYPE=DLL
+!endif
+
+#//------------------------------------------------------------------------
+#//
+#// Define any Public Make Variables here: (ie. PDFFILE, MAPFILE, ...)
+#//
+#//------------------------------------------------------------------------
+LIBNAME=libcaps
+PDBFILE=$(LIBNAME).pdb
+
+#//------------------------------------------------------------------------
+#// 
+#// Define the files necessary to build the target (ie. OBJS)
+#//
+#//------------------------------------------------------------------------
+
+OBJS=                                       \
+    .\$(OBJDIR)\nsZip.obj                   \
+    .\$(OBJDIR)\nsUserDialogHelper.obj      \
+    .\$(OBJDIR)\nsZig.obj                   \
+    .\$(OBJDIR)\nsLoadZig.obj               \
+    .\$(OBJDIR)\nsPrincipal.obj             \
+    .\$(OBJDIR)\nsPrivilege.obj             \
+    .\$(OBJDIR)\nsPrivilegeManager.obj      \
+    .\$(OBJDIR)\nsPrivilegeTable.obj        \
+    .\$(OBJDIR)\nsSystemPrivilegeTable.obj  \
+    .\$(OBJDIR)\nsTarget.obj                \
+    .\$(OBJDIR)\jpermission.obj             \
+    .\$(OBJDIR)\nsUserTarget.obj            \
+    .\$(OBJDIR)\admin.obj                   \
+    $(NULL)
+
+
+#//------------------------------------------------------------------------
+#//
+#// Define any Public Targets here (ie. PROGRAM, LIBRARY, DLL, ...)
+#// (these must be defined before the common makefiles are included)
+#//
+#//------------------------------------------------------------------------
+
+LIBRARY= .\$(OBJDIR)\$(LIBNAME).lib
+
+#//------------------------------------------------------------------------
+#//
+#// Define any local options for the make tools 
+#//     (ie. LCFLAGS, LLFLAGS, LLIBS, LINCS)
+#//
+#//------------------------------------------------------------------------
+LINCS= $(LINCS) \
+#
+# For Win16 the following include directories are copied into 
+# ns/dist/public/win16
+#
+!if "$(MOZ_BITS)" == "32"
+		-I$(PUBLIC)/js           \
+		-I$(PUBLIC)\nspr \
+		-I$(PUBLIC)\xpcom \
+		-I$(PUBLIC)\security \
+		-I$(PUBLIC)\libimg   \
+!endif
+		-I$(PUBLIC)\jar \
+		-I$(PUBLIC)\zlib \
+		-I$(PUBLIC)\pref \
+		-I$(DEPTH)\lib\layout \
+		-I$(DEPTH)\lib\libstyle \
+		-I$(PUBLIC)\rdf \
+		-I$(PUBLIC)\caps \
+		$(NULL)
+
+#//------------------------------------------------------------------------
+#//
+#// Include the common makefile rules
+#//
+#//------------------------------------------------------------------------
+include <$(DEPTH)/config/rules.mak>
+
+libs::$(LIBRARY) 
+    $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+
+export::
+
+install:: export libs
+
+clobber::
+
