@@ -193,10 +193,6 @@ nsDownloadManager::Init()
   rv = CallGetService("@mozilla.org/observer-service;1", &gObserverService);
   if (NS_FAILED(rv)) return rv;
   
-  gObserverService->AddObserver(this, "quit-application", PR_FALSE);
-  gObserverService->AddObserver(this, "quit-application-requested", PR_FALSE);
-  gObserverService->AddObserver(this, "offline-requested", PR_FALSE);
-
   rv = CallGetService(kRDFServiceCID, &gRDFService);
   if (NS_FAILED(rv)) return rv;                                                 
 
@@ -222,7 +218,20 @@ nsDownloadManager::Init()
   nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(kStringBundleServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
   
-  return bundleService->CreateBundle(DOWNLOAD_MANAGER_BUNDLE, getter_AddRefs(mBundle));
+  rv = bundleService->CreateBundle(DOWNLOAD_MANAGER_BUNDLE, getter_AddRefs(mBundle));
+  if (NS_FAILED(rv))
+    return rv;
+
+  // The following three AddObserver calls must be the last lines in this function,
+  // because otherwise, this function may fail (and thus, this object would be not
+  // completely initialized), but the observerservice would still keep a reference
+  // to us and notify us about shutdown, which may cause crashes.
+  // failure to add an observer is not critical
+  gObserverService->AddObserver(this, "quit-application", PR_FALSE);
+  gObserverService->AddObserver(this, "quit-application-requested", PR_FALSE);
+  gObserverService->AddObserver(this, "offline-requested", PR_FALSE);
+
+  return NS_OK;
 }
 
 PRInt32 
