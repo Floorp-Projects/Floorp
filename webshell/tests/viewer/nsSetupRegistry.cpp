@@ -100,7 +100,7 @@ static NS_DEFINE_IID(kCToolkitCID, NS_TOOLKIT_CID);
 static NS_DEFINE_IID(kClipboardCID,            NS_CLIPBOARD_CID);
 static NS_DEFINE_CID(kCTransferableCID,        NS_TRANSFERABLE_CID);
 static NS_DEFINE_IID(kDataFlavorCID,           NS_DATAFLAVOR_CID);
-static NS_DEFINE_IID(kCXIFFormatConverterCID,  NS_XIFFORMATCONVERTER_CID);
+static NS_DEFINE_IID(kCHTMLFormatConverterCID, NS_HTMLFORMATCONVERTER_CID);
 static NS_DEFINE_IID(kCDragServiceCID,         NS_DRAGSERVICE_CID);
 static NS_DEFINE_IID(kCFontRetrieverServiceCID,  NS_FONTRETRIEVERSERVICE_CID);
 static NS_DEFINE_IID(kCTimerCID,            NS_TIMER_CID);
@@ -183,7 +183,7 @@ NS_SetupRegistry()
   nsComponentManager::RegisterComponentLib(kClipboardCID,            "Clipboard", "@mozilla.org/widget/clipboard;1", WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCTransferableCID,        "Transferable", "@mozilla.org/widget/transferable;1", WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kDataFlavorCID,           NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCXIFFormatConverterCID,  NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kCHTMLFormatConverterCID,  NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCDragServiceCID,          "Drag Service", "@mozilla.org/widget/dragservice;1", WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCFontRetrieverServiceCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kSoundCID,   "Sound Services", "@mozilla.org/sound;1", WIDGET_DLL, PR_FALSE, PR_FALSE);
