@@ -284,6 +284,8 @@ struct LineData {
     mState = LINE_IS_DIRTY | flags;
     mFloaters = nsnull;
     mNext = nsnull;
+    mInnerBottomMargin = 0;
+    mOuterBottomMargin = 0;
   }
 
   ~LineData();
@@ -360,6 +362,8 @@ struct LineData {
   PRUint16 mChildCount;
   PRUint16 mState;
   nsRect mBounds;
+  nscoord mInnerBottomMargin;
+  nscoord mOuterBottomMargin;
   nsVoidArray* mFloaters;
   LineData* mNext;
 };
@@ -395,9 +399,10 @@ LineData::List(FILE* out, PRInt32 aIndent) const
 {
   PRInt32 i;
   for (i = aIndent; --i >= 0; ) fputs("  ", out);
-  fprintf(out, "line %p: count=%d state=%x {%d,%d,%d,%d} <\n",
+  fprintf(out, "line %p: count=%d state=%x {%d,%d,%d,%d} ibm=%d obm=%d <\n",
           this, mChildCount, GetState(),
-          mBounds.x, mBounds.y, mBounds.width, mBounds.height);
+          mBounds.x, mBounds.y, mBounds.width, mBounds.height,
+          mInnerBottomMargin, mOuterBottomMargin);
 
   nsIFrame* frame = mFirstChild;
   PRInt32 n = mChildCount;
@@ -640,6 +645,7 @@ nsCSSBlockReflowState::nsCSSBlockReflowState(nsIPresContext* aPresContext,
                                              nsCSSBlockFrame* aBlock,
                                              nsIStyleContext* aBlockSC,
                                              const nsReflowState& aReflowState,
+                                             nsReflowMetrics& aMetrics,
                                              PRBool aComputeMaxElementSize)
   : nsReflowState(aReflowState),
     mLineLayout(aPresContext, aSpaceManager),
@@ -652,8 +658,8 @@ nsCSSBlockReflowState::nsCSSBlockReflowState(nsIPresContext* aPresContext,
   mBlock = aBlock;
   mBlockIsPseudo = aBlock->IsPseudoFrame();
   aBlock->GetNextInFlow((nsIFrame*&)mNextInFlow);
-  mPrevPosBottomMargin = 0;
-  mPrevNegBottomMargin = 0;
+  mPrevBottomMargin = 0;
+  mOuterTopMargin = aMetrics.posTopMargin;
   mKidXMost = 0;
 
   mX = 0;
@@ -1197,7 +1203,7 @@ nsCSSBlockFrame::Reflow(nsIPresContext*      aPresContext,
   // more extensive version.
   nsCSSBlockReflowState state(aPresContext, aSpaceManager,
                               this, mStyleContext,
-                              aReflowState,
+                              aReflowState, aMetrics,
                               PRBool(nsnull != aMetrics.maxElementSize));
 
   nsresult rv = NS_OK;
@@ -1387,25 +1393,13 @@ nsCSSBlockFrame::ComputeFinalSize(nsCSSBlockReflowState& aState,
         aDesiredRect.width = aState.maxSize.width;
       }
     }
-    aState.mY += aState.mBorderPadding.bottom;
-    nscoord lastBottomMargin = aState.mPrevPosBottomMargin -
-      aState.mPrevNegBottomMargin;
-    if (!aState.mUnconstrainedHeight && (lastBottomMargin > 0)) {
-      // It's possible that we don't have room for the last bottom
-      // margin (the last bottom margin is the margin following a block
-      // element that we contain; it isn't applied immediately because
-      // of the margin collapsing logic). This can happen when we are
-      // reflowed in a limited amount of space because we don't know in
-      // advance what the last bottom margin will be.
-      nscoord maxY = aState.maxSize.height;
-      if (aState.mY + lastBottomMargin > maxY) {
-        lastBottomMargin = maxY - aState.mY;
-        if (lastBottomMargin < 0) {
-          lastBottomMargin = 0;
-        }
-      }
+    if (0 != aState.mBorderPadding.bottom) {
+      aState.mY += aState.mBorderPadding.bottom;
+      aMetrics.posBottomMargin = 0;
     }
-    aState.mY += lastBottomMargin;
+    else {
+      aMetrics.posBottomMargin = aState.mPrevBottomMargin;
+    }
     aDesiredRect.height = aState.mY;
 
     if (!aState.mBlockIsPseudo) {
@@ -1490,6 +1484,7 @@ nsCSSBlockFrame::FrameAppendedReflow(nsCSSBlockReflowState& aState)
   // the maximum xmost of each line.
   LineData* firstDirtyLine = mLines;
   LineData* lastCleanLine = nsnull;
+  LineData* lastYLine = nsnull;
   while (nsnull != firstDirtyLine) {
     if (firstDirtyLine->IsDirty()) {
       break;
@@ -1499,36 +1494,37 @@ NS_ASSERTION(xmost < 1000000, "bad line width");
     if (xmost > aState.mKidXMost) {
       aState.mKidXMost = xmost;
     }
+    if (firstDirtyLine->mBounds.height > 0) {
+      lastYLine = firstDirtyLine;
+    }
     lastCleanLine = firstDirtyLine;
     firstDirtyLine = firstDirtyLine->mNext;
   }
 
+// XXX add in code in ReflowBlockFrame to make zero height blocks
+// disappear (no margins)
+
+  // Recover the starting Y coordinate and the previous bottom margin
+  // value.
   if (nsnull != lastCleanLine) {
-    // Start Y off just past the bottom of the line before the last line
+    // If the lastCleanLine is not a block but instead is a zero
+    // height inline line then we need to backup to either a non-zero
+    // height line.
+    aState.mPrevBottomMargin = 0;
+    if (nsnull != lastYLine) {
+      aState.mPrevBottomMargin = lastYLine->mInnerBottomMargin +
+        lastYLine->mOuterBottomMargin;
+    }
+
+    // Start the Y coordinate after the last clean line.
     aState.mY = lastCleanLine->mBounds.YMost();
 
-    // Recover previous bottom margin values
-    if (lastCleanLine->IsBlock()) {
-      nsIFrame* frame = lastCleanLine->mFirstChild;
-      const nsStyleSpacing* spacing;
-      frame->GetStyleData(eStyleStruct_Spacing,
-                          (const nsStyleStruct*&) spacing);
-      nsMargin margin;
-      spacing->CalcMarginFor(frame, margin);
-      if (margin.bottom < 0) {
-        aState.mPrevPosBottomMargin = 0;
-        aState.mPrevNegBottomMargin = -margin.bottom;
-      }
-      else {
-        aState.mPrevPosBottomMargin = margin.bottom;
-        aState.mPrevNegBottomMargin = 0;
-      }
-    }
-    else {
-      aState.mPrevPosBottomMargin = 0;
-      aState.mPrevNegBottomMargin = 0;
-    }
+    // Add in the outer margin to the Y coordinate (the inner margin
+    // will be present in the lastCleanLine's YMost so don't add it
+    // in again)
+    aState.mY += lastCleanLine->mOuterBottomMargin;
   }
+
   aState.GetAvailableSpace();
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
      ("nsCSSBlockReflowState::FrameAppendedReflow: y=%d firstDirtyLine=%p",
@@ -1998,40 +1994,52 @@ nsCSSBlockFrame::ReflowBlockFrame(nsCSSBlockReflowState& aState,
      ("nsCSSBlockFrame::ReflowBlockFrame: line=%p frame=%p y=%d",
       aLine, aFrame, aState.mY));
 
-  // Get the block's margins
-  nsMargin blockMargin;
-  const nsStyleSpacing* blockSpacing;
+  // Get the child margins
+  nsMargin childMargin;
+  const nsStyleSpacing* childSpacing;
   aFrame->GetStyleData(eStyleStruct_Spacing,
-                       (const nsStyleStruct*&)blockSpacing);
-  blockSpacing->CalcMarginFor(aFrame, blockMargin);
+                       (const nsStyleStruct*&)childSpacing);
+  childSpacing->CalcMarginFor(aFrame, childMargin);
 
-  // XXX ebina margins...
-  nscoord posTopMargin, negTopMargin;
-  if (blockMargin.top < 0) {
-    negTopMargin = -blockMargin.top;
-    posTopMargin = 0;
+  // XXX Negative margins are set to zero; we could do better SOMEDAY
+  // Compute the top margin to apply to the child block
+  nscoord totalTopMargin = 0;
+  nscoord topMargin = 0;
+  nscoord childTopMargin = childMargin.top;
+  if (childTopMargin < 0) childTopMargin = 0;
+  nscoord childBottomMargin = childMargin.bottom;
+  if (childBottomMargin < 0) childBottomMargin = 0;
+  if (aState.mY == aState.mBorderPadding.top) {
+    // Since this is our first child we need to collapse its top
+    // margin with our top margin.
+    if (0 != aState.mBorderPadding.top) {
+      // Since we have a border/padding value the childs top margin
+      // does not collapse with our top margin.
+      topMargin = childTopMargin;
+    }
+    else {
+      nscoord outerTopMargin = aState.mOuterTopMargin;
+      if (childTopMargin > outerTopMargin) {
+        topMargin = childTopMargin - outerTopMargin;
+        totalTopMargin = childTopMargin;
+      }
+      else {
+        totalTopMargin = outerTopMargin;
+      }
+    }
   }
   else {
-    negTopMargin = 0;
-    posTopMargin = blockMargin.top;
-  }
-  nscoord prevPos = aState.mPrevPosBottomMargin;
-  nscoord prevNeg = aState.mPrevNegBottomMargin;
-  nscoord maxPos = PR_MAX(prevPos, posTopMargin);
-  nscoord maxNeg = PR_MAX(prevNeg, negTopMargin);
-  nscoord topMargin = maxPos - maxNeg;
-
-  // Remember bottom margin for next time
-  if (blockMargin.bottom < 0) {
-    aState.mPrevNegBottomMargin = -blockMargin.bottom;
-    aState.mPrevPosBottomMargin = 0;
-  }
-  else {
-    aState.mPrevNegBottomMargin = 0;
-    aState.mPrevPosBottomMargin = blockMargin.bottom;
+    // For other children we collapse the margins between them.
+    if (childTopMargin > aState.mPrevBottomMargin) {
+      topMargin = childTopMargin - aState.mPrevBottomMargin;
+      totalTopMargin = childTopMargin;
+    }
+    else {
+      totalTopMargin = aState.mPrevBottomMargin;
+    }
   }
 
-  nscoord x = aState.mX + blockMargin.left;
+  nscoord x = aState.mX + childMargin.left;
   nscoord y = aState.mY + topMargin;
   aFrame->WillReflow(*aState.mPresContext);
   aFrame->MoveTo(x, y);
@@ -2048,12 +2056,12 @@ nsCSSBlockFrame::ReflowBlockFrame(nsCSSBlockReflowState& aState,
 NS_ASSERTION(rsp->maxSize.width < 1000000, "whoops: bad parent");
           aState.mBlockMaxWidth = rsp->maxSize.width;
           const nsStyleSpacing* spacing = nsnull;
-          rsp->frame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
-          if (nsnull!=spacing)
-          {
+          rsp->frame->GetStyleData(eStyleStruct_Spacing,
+                                   (const nsStyleStruct *&)spacing);
+          if (nsnull!=spacing) {
             nsMargin borderPadding;
             spacing->CalcBorderPaddingFor(rsp->frame, borderPadding);
-            aState.mBlockMaxWidth -= (borderPadding.right + borderPadding.left);
+            aState.mBlockMaxWidth -= borderPadding.right + borderPadding.left;
           }
           break;
         }
@@ -2066,9 +2074,9 @@ NS_ASSERTION(rsp->maxSize.width < 1000000, "whoops: bad parent");
   }
   else {
     availSize.width = aState.mInnerSize.width -
-      (blockMargin.left + blockMargin.right);
+      (childMargin.left + childMargin.right);
   }
-  availSize.height = aState.mBottomEdge - y;
+  availSize.height = aState.mBottomEdge - (y + childBottomMargin);
   NS_FRAME_TRACE(NS_FRAME_TRACE_CHILD_REFLOW,
      ("nsCSSBlockFrame::ReflowBlockFrame: availSize={%d,%d}",
       availSize.width, availSize.height));
@@ -2093,6 +2101,7 @@ NS_ASSERTION(rsp->maxSize.width < 1000000, "whoops: bad parent");
   nsReflowMetrics metrics(aState.mComputeMaxElementSize
                           ? &kidMaxElementSize
                           : nsnull);
+  metrics.posTopMargin = totalTopMargin;
   nsReflowStatus reflowStatus;
   nsIRunaround* runAround;
   if ((nsnull != aState.mSpaceManager) &&
@@ -2141,8 +2150,13 @@ NS_ASSERTION(rsp->maxSize.width < 1000000, "whoops: bad parent");
     aReflowResult = NS_FRAME_NOT_COMPLETE;
   }
 
+  // Collapse the childs bottom margin with the grandchilds bottom
+  // margin.
+  childBottomMargin -= metrics.posBottomMargin;
+  if (childBottomMargin < 0) childBottomMargin = 0;
+
   // See if it fit
-  nscoord newY = y + metrics.height;
+  nscoord newY = y + metrics.height + childBottomMargin;
   NS_FRAME_TRACE(NS_FRAME_TRACE_CHILD_REFLOW,
      ("nsCSSBlockFrame::ReflowBlockFrame: metrics={%d,%d} newY=%d maxY=%d",
       metrics.width, metrics.height, newY, aState.mBottomEdge));
@@ -2152,6 +2166,9 @@ NS_ASSERTION(rsp->maxSize.width < 1000000, "whoops: bad parent");
     aReflowResult = NS_INLINE_LINE_BREAK_BEFORE(reflowStatus);
     return PR_FALSE;
   }
+  aState.mPrevBottomMargin = metrics.posBottomMargin + childBottomMargin;
+  aLine->mInnerBottomMargin = metrics.posBottomMargin;
+  aLine->mOuterBottomMargin = childBottomMargin;
 
   // Update max-element-size
   if (aState.mComputeMaxElementSize) {
@@ -2474,6 +2491,10 @@ nsCSSBlockFrame::PlaceLine(nsCSSBlockReflowState& aState,
     // follows to our next-in-flow
     PushLines(aState);
     return PR_FALSE;
+  }
+
+  if (aLine->mBounds.height > 0) {
+    aState.mPrevBottomMargin = 0;
   }
 
   // Update max-element-size
