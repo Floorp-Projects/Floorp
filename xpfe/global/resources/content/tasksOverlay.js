@@ -25,7 +25,7 @@ function toNewsgroups()
 function toIRC() 
 {
 
-        window.open ("resource:///irc/tests/index.html");
+        window.open ("resource:///irc/tests/test3.xul", "test3", "resizable=1");
 
 }
 
