@@ -1668,6 +1668,7 @@ function cmdGotoURL(e)
         return;
     }
 
+    window.focus();
     if (e.command.name == "goto-url-newtab")
     {
         window.openNewTabWith(e.url, false, false);
@@ -1679,6 +1680,7 @@ function cmdGotoURL(e)
     {
         // don't replace chatzilla running in a tab
         openTopWin(e.url);
+        return;
     }
 
     location.href = e.url;
