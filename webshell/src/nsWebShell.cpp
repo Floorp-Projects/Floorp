@@ -554,11 +554,11 @@ nsWebShell::~nsWebShell()
   // Cancel any timers that were set for this loader.
   CancelRefreshURLTimers();
 
+  ++mRefCnt; // following releases can cause this destructor to be called
+             // recursively if the refcount is allowed to remain 0
+
   NS_IF_RELEASE(mWindow);
   NS_IF_RELEASE(mThreadEventQueue);
-
-  ++mRefCnt; // hack will come back to this (pinkerton, scc)
-  
   NS_IF_RELEASE(mContentViewer);
   NS_IF_RELEASE(mDeviceContext);
   NS_IF_RELEASE(mPrefs);
