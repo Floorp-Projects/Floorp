@@ -541,44 +541,36 @@ nsresult nsPop3Protocol::GetPassword(char ** aPassword, PRBool *okayValue)
 		// first, figure out the correct prompt text to use...
         nsXPIDLCString hostName;
         nsXPIDLCString userName;
-        PRUnichar * passwordPromptString = nsnull;
+        PRUnichar *passwordPromptString =nsnull;
         
         server->GetHostName(getter_Copies(hostName));
         server->GetUsername(getter_Copies(userName));
-
+        nsXPIDLString passwordTemplate;
         // if the last prompt got us a bad password then show a special dialog
         if (TestFlag(POP3_PASSWORD_FAILED))
         { 
             rv = server->ForgetPassword();
             if (NS_FAILED(rv)) return rv;
-
-            PRUnichar *passwordTemplate = nsnull;
-            mStringService->GetStringByID(POP3_PREVIOUSLY_ENTERED_PASSWORD_IS_INVALID_ETC, &passwordTemplate);
-
-            passwordPromptString = nsTextFormatter::smprintf(passwordTemplate, (const char *) userName, (const char *) hostName);
-            nsCRT::free(passwordTemplate); 
+            mStringService->GetStringByID(POP3_PREVIOUSLY_ENTERED_PASSWORD_IS_INVALID_ETC, getter_Copies(passwordTemplate));
         } // otherwise this is the first time we've asked about the server's password so show a first time prompt
         else
-        {
-            PRUnichar * passwordTemplate = nsnull; 
-            mStringService->GetStringByID(POP3_ENTER_PASSWORD_PROMPT, &passwordTemplate);
-            passwordPromptString = nsTextFormatter::smprintf(passwordTemplate, (const char *) userName, (const char *) hostName);
-            nsCRT::free(passwordTemplate);
-        }
-
+            mStringService->GetStringByID(POP3_ENTER_PASSWORD_PROMPT, getter_Copies(passwordTemplate));
+          
+        passwordPromptString = nsTextFormatter::smprintf(passwordTemplate, (const char *) userName, (const char *) hostName);
         // now go get the password!!!!
         nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_url, &rv);
         if (NS_FAILED(rv)) return rv;
         nsCOMPtr<nsIMsgWindow> aMsgWindow;
         rv = mailnewsUrl->GetMsgWindow(getter_AddRefs(aMsgWindow));
         if (NS_FAILED(rv)) return rv;
-        PRUnichar * passwordTitle = nsnull;
-        mStringService->GetStringByID(POP3_ENTER_PASSWORD_PROMPT_TITLE, &passwordTitle);
-
-        rv =  server->GetPasswordWithUI(passwordPromptString, passwordTitle,
+        nsXPIDLString passwordTitle;
+        mStringService->GetStringByID(POP3_ENTER_PASSWORD_PROMPT_TITLE, getter_Copies(passwordTitle));
+        if (passwordPromptString)
+        {
+          rv =  server->GetPasswordWithUI(passwordPromptString, passwordTitle.get(),
                                         aMsgWindow, okayValue, aPassword);
-        nsCRT::free(passwordTitle);
-        nsTextFormatter::smprintf_free(passwordPromptString);
+          nsTextFormatter::smprintf_free(passwordPromptString);
+        }
 
         ClearFlag(POP3_PASSWORD_FAILED);
         if (NS_FAILED(rv))
@@ -2241,7 +2233,7 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
 			// now read in the next line
 			PR_FREEIF(line);
 		    line = m_lineStreamBuffer->ReadNextLine(inputStream, buffer_size,
-                                                    pauseForMoreData);            
+                                                    pauseForMoreData);
 			status += (buffer_size+2); // including CRLF
 		} while (/* !pauseForMoreData && */ line);
     }
