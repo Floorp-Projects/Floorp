@@ -87,9 +87,9 @@ function nsOutlinerController_copy()
   var min = new Object();
   var max = new Object();
 
-  for (var i = 0; i < rangeCount; ++i) {
+  for (var i = rangeCount - 1; i >= 0; --i) {
     this.getOutlinerSelection().getRangeAt(i, min, max);
-    for (var k = min.value; k <= max.value; ++k) {
+    for (var k = max.value; k >= min.value; --k) {
       // If one of the selected items is
       // a container, ignore it.
       if (isContainer(this.getOutliner(), k))
@@ -154,7 +154,7 @@ function nsOutlinerController_delete()
   var max = new Object();
   var dirty = false;
 
-  for (var i = 0; i < rangeCount; ++i) {
+  for (var i = rangeCount - 1; i >= 0; --i) {
     this.getOutlinerSelection().getRangeAt(i, min, max);
     for (var k = max.value; k >= min.value; --k) {
       var url = this.getOutlinerView().getCellText(k, "URL");
