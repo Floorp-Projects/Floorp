@@ -1573,8 +1573,12 @@ function GenericSendMessage( msgType )
       if (msgType == nsIMsgCompDeliverMode.Now || msgType == nsIMsgCompDeliverMode.Later)
       {
         //Do we need to check the spelling?
-        if (sPrefs.getBoolPref("mail.SpellCheckBeforeSend"))
+        if (sPrefs.getBoolPref("mail.SpellCheckBeforeSend")){
+        //We disable spellcheck for the following -subject line, attachment pane, identity and addressing widget
+        //therefore we need to explicitly focus on the mail body when we have to do a spellcheck.
+          editorShell.contentWindow.focus();
           goDoCommand('cmd_spelling');
+        }
 
         //Check if we have a subject, else ask user for confirmation
         if (subject == "")
