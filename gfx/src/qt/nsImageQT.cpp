@@ -557,3 +557,4 @@ NS_IMETHODIMP nsImageQT::DrawToImage(nsIImage *aDstImage,
  
   return NS_OK;
 }
+
