@@ -852,7 +852,7 @@ nsWindowMediator::Release()
 	// We need a special implementation of Release() because our mInner
 	// holds a Circular References back to us.
 	NS_PRECONDITION(PRInt32(mRefCnt) > 0, "duplicate release");
-	--gRefCnt;
+	--mRefCnt;
 	NS_LOG_RELEASE(this, mRefCnt, "nsWindowMediator");
 
 	if (mInner && mRefCnt == 1)
