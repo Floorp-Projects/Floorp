@@ -838,7 +838,7 @@ DeleteChild(Widget child)
 		cp->right_view = NULL;
 	}
 	
-	return True;
+	return !_XfeBeingDestroyed(w);
 }
 /*----------------------------------------------------------------------*/
 static void
