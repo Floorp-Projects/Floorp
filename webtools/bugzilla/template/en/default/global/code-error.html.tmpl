@@ -40,6 +40,10 @@
     to any [% parameters %] which you may have set before calling
     ThrowCodeError.
 
+  [% ELSIF error == "attachment_already_obsolete" %]
+    Attachment #[% attachid FILTER html %] ([% description FILTER html %]) 
+    is already obsolete.
+    
   [% ELSIF error == "field_type_mismatch" %]
     Cannot seem to handle <code>[% field %]</code>
     and <code>[% type %]</code> together.
@@ -47,6 +51,13 @@
   [% ELSIF error == "group_bit_invalid" %]
     One of the group bits submitted was invalid.
 
+  [% ELSIF error == "illegal_content_type_method" %]
+    Your form submission got corrupted somehow.  The <em>content
+    method</em> field, which specifies how the content type gets determined,
+    should have been either <em>autodetect</em>, <em>list</em>, 
+    or <em>manual</em>, but was instead 
+    <em>[% contenttypemethod FILTER html %]</em>.
+        
   [% ELSIF error == "illegal_field" %]
     A legal [% field FILTER html %] was not set.
     
@@ -54,6 +65,16 @@
     Attempted to add bug to an inactive group, identified by the bit 
     '[% bit FILTER html %]'.
     
+  [% ELSIF error == "invalid_attach_id_to_obsolete" %]
+     The attachment number of one of the attachments you wanted to obsolete,
+     [% attach_id FILTER html %], is invalid.
+          
+  [% ELSIF error == "mismatched_bug_ids_on_obsolete" %]
+    Attachment [% attach_id FILTER html %] ([% description FILTER html %]) 
+    is attached to bug [% attach_bug_id FILTER html %], but you tried to 
+    flag it as obsolete while creating a new attachment to bug 
+    [% my_bug_id FILTER html %].
+        
   [% ELSIF error == "no_bug_data" %]
     No data when fetching bug [% bug_id %].
     

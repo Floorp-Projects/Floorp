@@ -114,7 +114,7 @@ elsif ($action eq "update")
 }
 else 
 { 
-  DisplayError("I could not figure out what you wanted to do.")
+  ThrowCodeError("unknown_action");
 }
 
 exit;
@@ -128,15 +128,15 @@ sub validateID
     # Validate the value of the "id" form field, which must contain an
     # integer that is the ID of an existing attachment.
 
-    detaint_natural($::FORM{'id'})
-      || DisplayError("You did not enter a valid attachment number.") 
-      && exit;
+    $vars->{'attach_id'} = $::FORM{'id'};
+    
+    detaint_natural($::FORM{'id'}) 
+     || ThrowUserError("invalid_attach_id");
   
     # Make sure the attachment exists in the database.
     SendSQL("SELECT bug_id, isprivate FROM attachments WHERE attach_id = $::FORM{'id'}");
     MoreSQLData()
-      || DisplayError("Attachment #$::FORM{'id'} does not exist.") 
-      && exit;
+      || ThrowUserError("invalid_attach_id");
 
     # Make sure the user is authorized to access this attachment's bug.
     my ($bugid, $isprivate) = FetchSQLData();
@@ -164,15 +164,13 @@ sub validateCanEdit
             "attach_id = $attach_id AND submitter_id = $::userid");
 
     FetchSQLData()
-      || DisplayError("You are not authorised to edit attachment #$attach_id")
-      && exit;
+      || ThrowUserError("illegal_attachment_edit");
 }
 
 sub validateDescription
 {
   $::FORM{'description'}
-    || DisplayError("You must enter a description for the attachment.")
-      && exit;
+    || ThrowUserError("missing_attachment_description");
 }
 
 sub validateIsPatch
@@ -190,10 +188,7 @@ sub validateContentType
 {
   if (!$::FORM{'contenttypemethod'})
   {
-    DisplayError("You must choose a method for determining the content type,
-      either <em>auto-detect</em>, <em>select from list</em>, or <em>enter 
-      manually</em>.");
-    exit;
+    ThrowUserError("missing_content_type_method");
   }
   elsif ($::FORM{'contenttypemethod'} eq 'autodetect')
   {
@@ -201,10 +196,7 @@ sub validateContentType
     # specified in the HTTP request headers.
     if ( !$::FILE{'data'}->{'contenttype'} )
     {
-      DisplayError("You asked Bugzilla to auto-detect the content type, but
-        your browser did not specify a content type when uploading the file, 
-        so you must enter a content type manually.");
-      exit;
+      ThrowUserError("missing_content_type");
     }
     $::FORM{'contenttype'} = $::FILE{'data'}->{'contenttype'};
   }
@@ -220,22 +212,14 @@ sub validateContentType
   }
   else
   {
-    my $htmlcontenttypemethod = html_quote($::FORM{'contenttypemethod'});
-    DisplayError("Your form submission got corrupted somehow.  The <em>content
-      method</em> field, which specifies how the content type gets determined,
-      should have been either <em>autodetect</em>, <em>list</em>, 
-      or <em>manual</em>, but was instead <em>$htmlcontenttypemethod</em>.");
-    exit;
+    $vars->{'contenttypemethod'} = $::FORM{'contenttypemethod'};
+    ThrowCodeError("illegal_content_type_method");
   }
 
   if ( $::FORM{'contenttype'} !~ /^(application|audio|image|message|model|multipart|text|video)\/.+$/ )
   {
-    my $htmlcontenttype = html_quote($::FORM{'contenttype'});
-    DisplayError("The content type <em>$htmlcontenttype</em> is invalid.
-      Valid types must be of the form <em>foo/bar</em> where <em>foo</em> 
-      is either <em>application, audio, image, message, model, multipart, 
-      text,</em> or <em>video</em>.");
-    exit;
+    $vars->{'contenttype'} = $::FORM{'contenttype'};
+    ThrowUserError("invalid_content_type");
   }
 }
 
@@ -271,9 +255,8 @@ sub validateStatuses
   foreach my $status (@{$::MFORM{'status'}})
   {
     grep($_ == $status, @statusdefs)
-      || DisplayError("One of the statuses you entered is not a valid status
-                       for this attachment.")
-        && exit;
+      || ThrowUserError("invalid_attach_status");
+      
     # We have tested that the status is valid, so it can be detainted
     detaint_natural($status);
   }
@@ -282,8 +265,7 @@ sub validateStatuses
 sub validateData
 {
   $::FORM{'data'}
-    || DisplayError("The file you are trying to attach is empty!")
-      && exit;
+    || ThrowUserError("zero_length_file");
 
   my $len = length($::FORM{'data'});
 
@@ -294,27 +276,18 @@ sub validateData
   # the "maxattachmentsize" parameter.
   if ( $::FORM{'ispatch'} && $maxpatchsize && $len > $maxpatchsize*1024 )
   {
-    my $lenkb = sprintf("%.0f", $len/1024);
-    DisplayError("The file you are trying to attach is ${lenkb} kilobytes (KB) in size.  
-                  Patches cannot be more than ${maxpatchsize}KB in size.
-                  Try breaking your patch into several pieces.");
-    exit;
+    $vars->{'filesize'} = sprintf("%.0f", $len/1024);
+    ThrowUserError("patch_too_large");
   } elsif ( !$::FORM{'ispatch'} && $maxattachmentsize && $len > $maxattachmentsize*1024 ) {
-    my $lenkb = sprintf("%.0f", $len/1024);
-    DisplayError("The file you are trying to attach is ${lenkb} kilobytes (KB) in size.  
-                  Non-patch attachments cannot be more than ${maxattachmentsize}KB.
-                  If your attachment is an image, try converting it to a compressable
-                  format like JPG or PNG, or put it elsewhere on the web and
-                  link to it from the bug's URL field or in a comment on the bug.");
-    exit;
+    $vars->{'filesize'} = sprintf("%.0f", $len/1024);
+    ThrowUserError("file_too_large");
   }
 }
 
 sub validateFilename
 {
   defined $::FILE{'data'}
-    || DisplayError("You did not specify a file to attach.")
-      && exit;
+    || ThrowUserError("file_not_specified");
 }
 
 sub validateObsolete
@@ -322,35 +295,32 @@ sub validateObsolete
   # Make sure the attachment id is valid and the user has permissions to view
   # the bug to which it is attached.
   foreach my $attachid (@{$::MFORM{'obsolete'}}) {
+    $vars->{'attach_id'} = $attachid;
+    
     detaint_natural($attachid)
-      || DisplayError("The attachment number of one of the attachments 
-           you wanted to obsolete is invalid.") 
-        && exit;
+      || ThrowCodeError("invalid_attach_id_to_obsolete");
   
     SendSQL("SELECT bug_id, isobsolete, description 
              FROM attachments WHERE attach_id = $attachid");
 
     # Make sure the attachment exists in the database.
     MoreSQLData()
-      || DisplayError("Attachment #$attachid does not exist.") 
-        && exit;
+      || ThrowUserError("invalid_attach_id");
 
     my ($bugid, $isobsolete, $description) = FetchSQLData();
 
+    $vars->{'description'} = $description;
+    
     if ($bugid != $::FORM{'bugid'})
     {
-      $description = html_quote($description);
-      DisplayError("Attachment #$attachid ($description) is attached 
-        to bug #$bugid, but you tried to flag it as obsolete while
-        creating a new attachment to bug #$::FORM{'bugid'}.");
-      exit;
+      $vars->{'my_bug_id'} = $::FORM{'bugid'};
+      $vars->{'attach_bug_id'} = $bugid;
+      ThrowCodeError("mismatched_bug_ids_on_obsolete");
     }
 
     if ( $isobsolete )
     {
-      $description = html_quote($description);
-      DisplayError("Attachment #$attachid ($description) is already obsolete.");
-      exit;
+      ThrowCodeError("attachment_already_obsolete");
     }
 
     # Check that the user can modify this attachment
@@ -632,10 +602,13 @@ sub update
 
   # Get the bug ID for the bug to which this attachment is attached.
   SendSQL("SELECT bug_id FROM attachments WHERE attach_id = $::FORM{'id'}");
-  my $bugid = FetchSQLData() 
-    || DisplayError("Cannot figure out bug number.")
-    && exit;
-
+  my $bugid = FetchSQLData();
+  unless ($bugid) 
+  {
+    $vars->{'bug_id'} = $bugid;
+    ThrowUserError("invalid_bug_id");
+  }
+  
   # Lock database tables in preparation for updating the attachment.
   SendSQL("LOCK TABLES attachments WRITE , attachstatuses WRITE , 
            attachstatusdefs READ , fielddefs READ , bugs_activity WRITE");

@@ -116,11 +116,28 @@
     really make sense to mark a bug as a duplicate of itself, 
     does it?  
     
+  [% ELSIF error == "file_not_specified" %]
+    [% title = "No File Specified" %]
+    You did not specify a file to attach.
+    
+  [% ELSIF error == "file_too_large" %]
+    [% title = "File Too Large" %]
+    The file you are trying to attach is [% filesize %] kilobytes (KB) in size.
+    Non-patch attachments cannot be more than [% Param('maxattachmentsize') %]
+    KB.
+    If your attachment is an image, try converting it to a compressable
+    format like JPG or PNG, or put it elsewhere on the web and
+    link to it from the bug's URL field or in a comment on the bug.
+      
   [% ELSIF error == "illegal_at_least_x_votes" %]
     [% title = "Your Query Makes No Sense" %]
     The <em>At least ___ votes</em> field must be a simple number. 
     You entered <tt>[% value FILTER html %]</tt>, which isn't.
     
+  [% ELSIF error == "illegal_attachment_edit" %]
+    [% title = "Unauthorised Action" %]
+     You are not authorised to edit attachment [% attach_id %].
+         
   [% ELSIF error == "illegal_attachment_is_patch" %]
     [% title = "Your Query Makes No Sense" %]
      The only legal values for the <em>Attachment is patch</em> field are
@@ -155,6 +172,21 @@
      The only legal values for the <em>Attachment is obsolete</em> field are
      0 and 1.
          
+  [% ELSIF error == "invalid_attach_id" %]
+    [% title = "Invalid Attachment ID" %]
+    The attachment id [% attach_id FILTER html %] is invalid.
+
+  [% ELSIF error == "invalid_attach_status" %]
+    [% title = "Invalid Attachment Status" %]
+    One of the statuses you entered is not a valid status for this attachment.
+    
+  [% ELSIF error == "invalid_content_type" %]
+    [% title = "Invalid Content-Type" %]
+    The content type <em>[% contenttype FILTER html %]</em> is invalid.
+    Valid types must be of the form <em>foo/bar</em> where <em>foo</em> 
+    is either <em>application, audio, image, message, model, multipart, 
+    text,</em> or <em>video</em>.
+    
   [% ELSIF error == "invalid_bug_id" %]
     [% title = "Invalid Bug ID" %]
     The bug id [% bug_id FILTER html %] is invalid.
@@ -175,6 +207,22 @@
     if you are going to accept it.  Part of accepting 
     a bug is giving an estimate of when it will be fixed.
 
+  [% ELSIF error == "missing_attachment_description" %]
+    [% title = "Missing Attachment Description" %]
+    You must enter a description for the attachment.
+    
+  [% ELSIF error == "missing_content_type" %]
+    [% title = "Missing Content-Type" %]
+     You asked Bugzilla to auto-detect the content type, but
+     your browser did not specify a content type when uploading the file, 
+     so you must enter a content type manually.
+                
+  [% ELSIF error == "missing_content_type_method" %]
+    [% title = "Missing Content-Type Determination Method" %]
+    You must choose a method for determining the content type,
+    either <em>auto-detect</em>, <em>select from list</em>, or <em>enter 
+    manually</em>.
+        
   [% ELSIF error == "missing_email_type" %]
     [% title = "Your Query Makes No Sense" %]
     You must specify one or more fields in which to search for
@@ -221,6 +269,12 @@
     [% title = "No Page Specified" %]
     You did not specify the id of a page to display.
 
+  [% ELSIF error == "patch_too_large" %]
+    [% title = "File Too Large" %]
+    The file you are trying to attach is [% filesize %] kilobytes (KB) in size.
+    Patches cannot be more than [% Param('maxpatchsize') %] KB in size.
+    Try breaking your patch into several pieces.  
+
   [% ELSIF error == "reassign_to_empty" %]
     [% title = "Illegal Reassignment" %]
     You cannot reassign to a bug to nobody. Unless you
@@ -235,6 +289,10 @@
   [% ELSIF error == "unknown_tab" %]
     [% title = "Unknown Tab" %]
     <code>[% current_tab_name FILTER html %]</code> is not a legal tab name.    
+    
+  [% ELSIF error == "zero_length_file" %]
+    [% title = "File Is Empty" %]
+    The file you are trying to attach is empty!    
     
   [% ELSE %]
     [%# Cope with legacy calling convention, where "error" was the string
