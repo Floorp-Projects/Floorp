@@ -1433,8 +1433,10 @@ NS_IMETHODIMP nsAccessible::GetXULAccName(nsAWritableString& _retval)
   }  // END of CASE #1
 
   label.CompressWhitespace();
-  if (label.IsEmpty())
-    return nsAccessible::GetAccName(_retval);
+  if (label.IsEmpty()) {
+    nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+    return nsAccessible::AppendFlatStringFromSubtree(content, &_retval);
+  }
   
   _retval.Assign(label);
   return NS_OK;
