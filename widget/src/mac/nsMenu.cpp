@@ -1484,7 +1484,7 @@ nsMenu::GetNextVisibleMenu(nsIMenu** outNextVisibleMenu)
 
 NS_IMETHODIMP
 nsMenu::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom *aAttribute,
-                               PRInt32 aHint)
+                         PRInt32 aHint)
 {
   if(gConstructingMenu)
     return NS_OK;
