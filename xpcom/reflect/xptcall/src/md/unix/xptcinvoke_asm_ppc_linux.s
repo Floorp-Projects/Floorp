@@ -20,6 +20,20 @@
 #
 # Contributor(s):
 #
+.set r0,0; .set sp,1; .set RTOC,2; .set r3,3; .set r4,4
+.set r5,5; .set r6,6; .set r7,7; .set r8,8; .set r9,9
+.set r10,10; .set r11,11; .set r12,12; .set r13,13; .set r14,14
+.set r15,15; .set r16,16; .set r17,17; .set r18,18; .set r19,19
+.set r20,20; .set r21,21; .set r22,22; .set r23,23; .set r24,24
+.set r25,25; .set r26,26; .set r27,27; .set r28,28; .set r29,29
+.set r30,30; .set r31,31
+.set f0,0; .set f1,1; .set f2,2; .set f3,3; .set f4,4
+.set f5,5; .set f6,6; .set f7,7; .set f8,8; .set f9,9
+.set f10,10; .set f11,11; .set f12,12; .set f13,13; .set f14,14
+.set f15,15; .set f16,16; .set f17,17; .set f18,18; .set f19,19
+.set f20,20; .set f21,21; .set f22,22; .set f23,23; .set f24,24
+.set f25,25; .set f26,26; .set f27,27; .set f28,28; .set f29,29
+.set f30,30; .set f31,31
 		      
         .section ".text"
 	.align 2
@@ -32,62 +46,62 @@
 #
 
 XPTC_InvokeByIndex:
-	stwu 1,-32(1)
-	mflr 0
-	stw 3,8(1)        # that
-	stw 4,12(1)       # methodIndex
-	stw 30,16(1)
-	stw 31,20(1)
+	stwu    sp,-32(sp)
+	mflr    r0
+	stw     r3,8(sp)        # that
+	stw     r4,12(sp)       # methodIndex
+	stw     r30,16(sp)
+	stw     r31,20(sp)
 
-	stw 0,36(1)
-	mr 31,1
+	stw     r0,36(sp)
+	mr      r31,sp
 
-	slwi 10,5,3       # reserve stack for ParamCount *2 *4
-	addi 0,10,128     # reserve stack for GPR and FPR
-	lwz 9,0(1)
-	neg 0,0
-	stwux 9,1,0
-	addi 3,1,8        # args
-	mr 4,5            # paramCount
-	mr 5,6            # params
-	add 6,3,10        # gpregs
-	mr 30,6
-	addi 7,6,32       # fpregs
+	slwi    r10,r5,3        # reserve stack for ParamCount *2 *4
+	addi    r0,r10,128      # reserve stack for GPR and FPR
+	lwz     r9,0(sp)
+	neg     r0,r0
+	stwux   r9,sp,r0
+	addi    r3,sp,8         # args
+	mr      r4,r5           # paramCount
+	mr      r5,r6           # params
+	add     r6,r3,r10       # gpregs
+	mr      r30,r6
+	addi    r7,r6,32        # fpregs
 
-	bl invoke_copy_to_stack # (args, paramCount, params, gpregs, fpregs)
+	bl      invoke_copy_to_stack # (args, paramCount, params, gpregs, fpregs)
 
-	lfd 1,32(30)      # load FP registers
-	lfd 2,40(30)   
-	lfd 3,48(30)  
-	lfd 4,56(30)  
-	lfd 5,64(30)  
-	lfd 6,72(30)  
-	lfd 7,80(30)  
-	lfd 8,88(30)
+	lfd     f1,32(r30)      # load FP registers
+	lfd     f2,40(r30)   
+	lfd     f3,48(r30)  
+	lfd     f4,56(r30)  
+	lfd     f5,64(r30)  
+	lfd     f6,72(r30)  
+	lfd     f7,80(r30)  
+	lfd     f8,88(r30)
 
-	lwz 3,8(31)       # that
-	lwz 4,12(31)      # methodIndex
+	lwz     r3,8(r31)       # that
+	lwz     r4,12(r31)      # methodIndex
 
-	lwz 5,0(3)        # vtable
-	slwi 4,4,2        # temp = methodIndex * 4
-	addi 4,4,8        # temp += 8
-	lwzx 0,4,5        # dest = vtable+temp
+	lwz     r5,0(r3)        # vtable
+	slwi    r4,r4,2         # temp = methodIndex * 4
+	addi    r4,r4,8         # temp += 8
+	lwzx    r0,r4,r5        # dest = vtable+temp
 
-        lwz 4,0(30)       # load GP regs
-	lwz 5,4(30)   
-	lwz 6,8(30)  
-	lwz 7,12(30)  
-	lwz 8,16(30)  
-	lwz 9,20(30)  
-	lwz 10,24(30)
+        lwz     r4,0(r30)       # load GP regs
+	lwz     r5,4(r30)   
+	lwz     r6,8(r30)  
+	lwz     r7,12(r30)  
+	lwz     r8,16(r30)  
+	lwz     r9,20(r30)  
+	lwz     r10,24(r30)
 
-	mtlr 0         
-	blrl              # call
+	mtlr    0         
+	blrl                    # call
 	
-	lwz 30,16(31)     # clean up stack
-	lwz 31,20(31)
-	lwz 11,0(1)
-	lwz 0,4(11)
-	mtlr 0
-	mr 1,11
+	lwz     r30,16(r31)     # clean up stack
+	lwz     r31,20(r31)
+	lwz     r11,0(sp)
+	lwz     r0,4(r11)
+	mtlr    r0
+	mr      sp,r11
 	blr

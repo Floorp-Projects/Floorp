@@ -89,8 +89,8 @@ invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount, nsXPTCVariant* s,
         case nsXPTType::T_I64:
 	  if ((gpr + 1) > MAX_GP_REG)
 	    {
-	      if (((PRUint32) d) & 4 != 0) d++;
-	      *(((PRInt64*) d)++)      = s->val.i64;
+	      if (PRUint32(d) & 4) d++;
+	      *(((PRInt64*&) d)++)      = s->val.i64;
 	    }
 	  else
 	    {
@@ -99,7 +99,7 @@ invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount, nsXPTCVariant* s,
 		  gpr++;
 		  gpregs++;
 		}
-	      *(((PRInt64*) gpregs)++) = s->val.i64;
+	      *(((PRInt64*&) gpregs)++) = s->val.i64;
 	      gpr += 2;
 	    }
 	  break;
@@ -133,8 +133,8 @@ invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount, nsXPTCVariant* s,
         case nsXPTType::T_U64:
 	  if ((gpr + 1) > MAX_GP_REG)
 	    {
-	      if (((PRUint32) d) & 4 != 0) d++;
-	      *(((PRUint64*) d)++)      = s->val.u64;
+	      if (PRUint32(d) & 4) d++;
+	      *(((PRUint64*&) d)++)      = s->val.u64;
 	    }
 	  else
 	    {
@@ -143,7 +143,7 @@ invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount, nsXPTCVariant* s,
 		  gpr++;
 		  gpregs++;
 		}
-	      *(((PRUint64*) gpregs)++) = s->val.u64;
+	      *(((PRUint64*&) gpregs)++) = s->val.u64;
 	      gpr    += 2;
 	    }
 	  break;
@@ -159,8 +159,8 @@ invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount, nsXPTCVariant* s,
         case nsXPTType::T_DOUBLE:
 	  if (fpr > MAX_FP_REG)
 	    {
-	      if (((PRUint32) d) & 4 != 0) d++;
-	      *(((double*) d)++) = s->val.d;
+	      if (PRUint32(d) & 4) d++;
+	      *(((double*&) d)++) = s->val.d;
 	    }
 	  else
 	    {
