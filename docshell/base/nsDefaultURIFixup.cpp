@@ -73,8 +73,11 @@ NS_IMETHODIMP nsDefaultURIFixup::CreateFixupURI(const PRUnichar *aStringURI, nsI
         return NS_OK;
 
 #ifdef XP_PC
-    // Not a file URL, so translate '\' to '/' except for JS
-    if (!uriString.EqualsIgnoreCase("javascript:", 11))
+    // Not a file URL, so translate '\' to '/' for convenience in the common protocols
+    if (uriString.FindChar(':') == -1 ||
+	uriString.EqualsIgnoreCase("http:", 5) ||
+        uriString.EqualsIgnoreCase("https:", 6) ||
+        uriString.EqualsIgnoreCase("ftp:", 4))
     {
         uriString.ReplaceChar(PRUnichar('\\'), PRUnichar('/'));
     }
