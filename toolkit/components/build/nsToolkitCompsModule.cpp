@@ -39,12 +39,12 @@
 #include "nsAppStartup.h"
 #include "nsUserInfo.h"
 #include "nsXPFEComponentsCID.h"
-
-#if defined(MOZ_PHOENIX) || defined(MOZ_SUNBIRD)
+#include "nsToolkitCompsCID.h"
 #ifdef XP_WIN
 #include "nsAlertsService.h"
 #endif
-#include "nsToolkitCompsCID.h"
+
+#if defined(MOZ_PHOENIX) || defined(MOZ_SUNBIRD)
 #include "nsDocShellCID.h"
 #include "nsAutoCompleteController.h"
 #include "nsAutoCompleteMdbResult.h"
@@ -63,15 +63,16 @@
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsAppStartup, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUserInfo)
 
-#if defined(MOZ_PHOENIX) || defined(MOZ_SUNBIRD)
 #ifdef XP_WIN
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAlertsService)
 #endif
+
+#if defined(MOZ_PHOENIX) || defined(MOZ_SUNBIRD)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteController)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteMdbResult)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTypeAheadFind)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDownloadProxy)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDownloadManager, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDownloadManager, Init) 
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsFormHistory, nsFormHistory::GetInstance)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFormFillController)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGlobalHistory, Init)
@@ -103,14 +104,13 @@ static const nsModuleComponentInfo components[] =
     NS_USERINFO_CID,
     NS_USERINFO_CONTRACTID,
     nsUserInfoConstructor },
-
-#if defined(MOZ_PHOENIX) || defined(MOZ_SUNBIRD)
 #ifdef XP_WIN
   { "Alerts Service",
     NS_ALERTSSERVICE_CID, 
     NS_ALERTSERVICE_CONTRACTID,
     nsAlertsServiceConstructor },
 #endif
+#if defined(MOZ_PHOENIX) || defined(MOZ_SUNBIRD)
   { "AutoComplete Controller",
     NS_AUTOCOMPLETECONTROLLER_CID, 
     NS_AUTOCOMPLETECONTROLLER_CONTRACTID,
@@ -120,7 +120,7 @@ static const nsModuleComponentInfo components[] =
     NS_AUTOCOMPLETEMDBRESULT_CID, 
     NS_AUTOCOMPLETEMDBRESULT_CONTRACTID,
     nsAutoCompleteMdbResultConstructor },
-
+  
   { "Download Manager",
     NS_DOWNLOADMANAGER_CID,
     NS_DOWNLOADMANAGER_CONTRACTID,
