@@ -73,6 +73,7 @@
 //#define NEW_CLIPBOARD_SUPPORT
 
 #ifdef NEW_CLIPBOARD_SUPPORT
+
 // Drag & Drop, Clipboard
 #include "nsWidgetsCID.h"
 #include "nsIClipboard.h"
@@ -847,20 +848,30 @@ NS_IMETHODIMP nsEditor::Paste()
   nsString stuffToPaste;
 
 #ifdef NEW_CLIPBOARD_SUPPORT
-  nsIClipboard* clipboard;
+  nsIClipboard* clipboard = 0;
   nsresult rv = nsServiceManager::GetService(kCClipboardCID,
                                              kIClipboardIID,
                                              (nsISupports **)&clipboard);
   nsITransferable * trans;
+  
   rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, kITransferableIID, (void**) &trans);
   if (nsnull != trans) {
     //trans->AddDataFlavor("text/xif", "XIF Format");
     trans->AddDataFlavor(kTextMime, "Text Format");
+  } else {
+    printf("nsEditor::Paste(), trans is null.\n");
   }
 
-  clipboard->SetTransferable(trans, nsnull);
-  clipboard->GetClipboard();
-  trans->GetTransferString(stuffToPaste);
+  if(clipboard) {
+    clipboard->SetTransferable(trans, nsnull);
+    clipboard->GetClipboard();
+  } else {
+    printf("nsEditor::Paste(), clipboard instance is null.\n");
+  }
+
+  if(trans) {
+    trans->GetTransferString(stuffToPaste);
+  }
 
   NS_IF_RELEASE(clipboard);
   NS_IF_RELEASE(trans);
