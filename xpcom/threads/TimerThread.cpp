@@ -46,7 +46,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(TimerThread, nsIRunnable)
 TimerThread::TimerThread() :
   mLock(nsnull),
   mCondVar(nsnull),
-  mProcessing(PR_FALSE),
+  mShutdown(PR_FALSE),
   mWaiting(PR_FALSE),
   mDelayLineCounter(0),
   mMinTimerPeriod(0),
@@ -108,7 +108,7 @@ nsresult TimerThread::Shutdown()
   {   // lock scope
     nsAutoLock lock(mLock);
 
-    mProcessing = PR_FALSE;
+    mShutdown = PR_TRUE;
 
     // notify the cond var so that Run() can return
     if (mCondVar && mWaiting)
@@ -184,9 +184,8 @@ void TimerThread::UpdateFilter(PRUint32 aDelay, PRIntervalTime aTimeout,
 NS_IMETHODIMP TimerThread::Run()
 {
   nsAutoLock lock(mLock);
-  mProcessing = PR_TRUE;
 
-  while (mProcessing) {
+  while (!mShutdown) {
     PRIntervalTime now = PR_IntervalNow();
     nsTimerImpl *timer = nsnull;
 
@@ -225,7 +224,7 @@ NS_IMETHODIMP TimerThread::Run()
         timer = nsnull;
 
         lock.lock();
-        if (!mProcessing)
+        if (mShutdown)
           break;
 
         // Update now, as PostTimerEvent plus the locking may have taken a tick or two,
