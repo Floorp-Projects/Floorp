@@ -117,7 +117,7 @@ static void GetProfileDirectory(nsFileSpec& outSpec)
     {
         // First time, initialize gProfileDir
         nsIProfile *profileService = nsnull;
-        gProfileDir = new nsFileSpec;
+        gProfileDir = new nsFileSpec("Default");
         if (!gProfileDir)
             return;
         nsresult rv = nsServiceManager::GetService(
@@ -128,6 +128,7 @@ static void GetProfileDirectory(nsFileSpec& outSpec)
         {
             char* currProfileName = nsnull;
             nsFileSpec currProfileDirSpec;
+	        CreateDefaultProfileDirectorySpec(currProfileDirSpec);
             
             profileService->Startup(nsnull);
             int numProfiles = 0;
@@ -135,7 +136,6 @@ static void GetProfileDirectory(nsFileSpec& outSpec)
             if (numProfiles == 0)
             {    
 		        // no profiles exist: create "default" profile
-		        CreateDefaultProfileDirectorySpec(currProfileDirSpec);
 	            profileService->SetProfileDir("default", currProfileDirSpec);
 	            currProfileName = PL_strdup("default");
 	        }
@@ -236,31 +236,31 @@ void nsSpecialFileSpec::operator = (Type aType)
         
         case App_ComponentsDirectory:
             {
-                nsSpecialSystemDirectory dir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+                *this = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
 #ifdef XP_MAC
-                dir += "Components";
+                *this += "Components";
 #else
-                dir += "components";
+                *this += "components";
 #endif
             }
             break;
 		case App_ChromeDirectory:
             {
-                nsSpecialSystemDirectory dir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+                *this = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
 #ifdef XP_MAC
-                dir += "Chrome";
+                *this += "Chrome";
 #else
-                dir += "chrome";
+                *this += "chrome";
 #endif
             }
             break;
 		case App_PluginsDirectory:
             {
-                nsSpecialSystemDirectory dir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+                *this = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
 #ifdef XP_MAC
-                dir += "Chrome";
+                *this += "Plugins";
 #else
-                dir += "plugins";
+                *this += "plugins";
 #endif
             }
             break;
