@@ -115,6 +115,13 @@ OS_CFLAGS=$(OPTIMIZER) $(RTL_FLAGS) -W3 -nologo -D_X86_ -D_WINDOWS  -DWIN32 \
 
 OS_CFLAGS=$(OS_CFLAGS) -DMSVC4 
 
+!ifdef MOZ_DEBUG
+# Enable browse info in VC++
+!ifdef MOZ_BROWSE_INFO
+OS_CFLAGS=$(OS_CFLAGS) /FR
+!endif
+!endif
+
 ## Removed MOZ_LITE/MOZ_MEDIUM stuff from OS_CFLAGS
 
 OS_LFLAGS=$(OS_LFLAGS)
