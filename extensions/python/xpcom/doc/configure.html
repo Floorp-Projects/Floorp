@@ -40,7 +40,7 @@ process, or the <i>configure; gmake</i> process used by Linux.</p>
 <h3>Building</h3>
 <ul>
   <li>From the top-level Mozilla directory, execute <i>./configure
-    --enable-extensions=extensions/pyxpcom</i>. As per the Mozilla build
+    --enable-extensions=python/xpcom</i>. As per the Mozilla build
     instructions, you may add this option to your <i>.mozconfig</i> file.&nbsp;
     If you wish to enable debugging, just enable it as you would normally for
     Mozilla; PyXPCOM will pick up the same settings.<br>
@@ -50,25 +50,6 @@ process, or the <i>configure; gmake</i> process used by Linux.</p>
   <li>Build the Mozilla tree as normal; PyXPCOM will automatically be
     built.&nbsp; Alternatively, change to the top-level PyXPCOM directory and
     execute <i>gmake</i> in that directory.</li>
-</ul>
-<h2>Windows makefile.win Instructions</h2>
-<p>Windows builds still support the Windows makefile.win build process.&nbsp; You can
-build them by performing the following steps</p>
-<h3>Preparing for the build</h3>
-<ul>
-  <li>Ensure your machine is setup to build Mozilla and XPCOM itself.</li>
-  <li>Set PYTHON_SRC to point to your Python source root directory.&nbsp; This
-    can either be the root of a &quot;binary&quot; install (with headers and
-    libraries) or a Python source tree.</li>
-</ul>
-<h3>Building</h3>
-<ul>
-  <li>Change to the <i>mozilla/extensions/python/xpcom</i> directory.</li>
-  <li>Run <i>nmake -f makefile.win</i>.&nbsp; This should build the extensions
-    and install them into the <i>{mozilla-dist-directory}/bin/Python</i>
-    directory.</li>
-  <li>Change to the xpcom/test directory, and run python <i>regrtest.py</i> (or <i>python_d
-    regrtest.py</i> for debug builds)</li>
 </ul>
 <h2>PyXPCOM outside Mozilla</h2>
 <p>When you are using PyXPCOM from inside mozilla, no additional configuration
