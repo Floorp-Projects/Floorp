@@ -16,7 +16,7 @@
  * Reserved.
  */
 #include "nsITimer.h"
-#include "nsTimerCIID.h"
+#include "nsUnixTimerCIID.h"
 #include "nsIComponentManager.h"
 #include "nsCRT.h"
 #include "prenv.h"
