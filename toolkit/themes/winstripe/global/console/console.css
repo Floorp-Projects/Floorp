@@ -78,12 +78,12 @@
 }
 
 .console-dots {
-  background: url("chrome://global/skin/console/error-dash.gif") repeat-x top;
+  background: url("chrome://global/skin/console/console-error-dash.gif") repeat-x top;
 }
 
 .console-caret {
   width: 7px;
-  background: url("chrome://global/skin/console/error-caret.gif") no-repeat top;
+  background: url("chrome://global/skin/console/console-error-caret.gif") no-repeat top;
 }
 
 /* ..... message rows ..... */
