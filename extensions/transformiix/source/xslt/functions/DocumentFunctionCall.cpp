@@ -43,9 +43,12 @@
 /*
  * Creates a new DocumentFunctionCall.
  */
-DocumentFunctionCall::DocumentFunctionCall(ProcessorState* aPs) : FunctionCall(DOCUMENT_FN)
+DocumentFunctionCall::DocumentFunctionCall(ProcessorState* aPs,
+                                           Node* aDefResolveNode)
+                                           : FunctionCall(DOCUMENT_FN)
 {
     mProcessorState = aPs;
+    mDefResolveNode = aDefResolveNode;
 }
 
 /*
@@ -118,8 +121,8 @@ ExprResult* DocumentFunctionCall::evaluate(Node* context, ContextState* cs)
             String uriStr;
             exprResult1->stringValue(uriStr);
             if (!baseURISet) {
-                Node* xsltElement = mProcessorState->peekAction();
-                nodeSet->add(mProcessorState->retrieveDocument(uriStr, xsltElement->getBaseURI()));
+                nodeSet->add(mProcessorState->retrieveDocument(uriStr,
+                    mDefResolveNode->getBaseURI()));
             }
             else {
                 nodeSet->add(mProcessorState->retrieveDocument(uriStr, baseURI));

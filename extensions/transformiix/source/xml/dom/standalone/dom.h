@@ -437,6 +437,7 @@ class Element : public NodeDefinition
     MBool getLocalName(txAtom** aLocalName);
     PRInt32 getNamespaceID();
     MBool getAttr(txAtom* aLocalName, PRInt32 aNSID, String& aValue);
+    MBool hasAttr(txAtom* aLocalName, PRInt32 aNSID);
 
   private:
     AttrMap mAttributes;

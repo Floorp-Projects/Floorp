@@ -186,6 +186,21 @@ MBool Element::getAttr(txAtom* aLocalName, PRInt32 aNSID,
     return MB_FALSE;
 }
 
+/*
+ * Call nsIContent::GetAttr for the localname and nsID.
+ */
+MBool Element::hasAttr(txAtom* aLocalName, PRInt32 aNSID)
+{
+    nsCOMPtr<nsIContent> cont(do_QueryInterface(nsObject));
+    NS_ASSERTION(cont, "Element doesn't implement nsIContent");
+    if (!cont)
+        return MB_FALSE;
+    nsresult rv;
+    nsAutoString tmp;
+    rv = cont->GetAttr(aNSID, aLocalName, tmp);
+    NS_ENSURE_SUCCESS(rv, MB_FALSE);
+    return rv != NS_CONTENT_ATTR_NOT_THERE;
+}
 
 /*
  * Call nsIDOMElement::SetAttributeNode passing it the nsIDOMAttr object wrapped

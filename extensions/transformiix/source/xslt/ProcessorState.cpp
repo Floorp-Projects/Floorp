@@ -61,11 +61,12 @@ const String ProcessorState::wrapperNS        = "http://www.mitre.org/TransforMi
 /**
  * Creates a new ProcessorState
 **/
-ProcessorState::ProcessorState() {
-    this->mSourceDocument = NULL;
-    this->xslDocument = NULL;
-    this->resultDocument = NULL;
-    currentAction = 0;
+ProcessorState::ProcessorState()
+{
+    mSourceDocument = 0;
+    xslDocument = 0;
+    resultDocument = 0;
+    mXPathParseContext = 0;
     initialize();
 } //-- ProcessorState
 
@@ -73,11 +74,14 @@ ProcessorState::ProcessorState() {
  * Creates a new ProcessorState for the given XSL document
  * and resultDocument
 **/
-ProcessorState::ProcessorState(Document& sourceDocument, Document& xslDocument, Document& resultDocument) {
-    this->mSourceDocument = &sourceDocument;
-    this->xslDocument = &xslDocument;
-    this->resultDocument = &resultDocument;
-    currentAction = 0;
+ProcessorState::ProcessorState(Document* aSourceDocument,
+                               Document* aXslDocument,
+                               Document* aResultDocument)
+{
+    mSourceDocument = aSourceDocument;
+    xslDocument = aXslDocument;
+    resultDocument = aResultDocument;
+    mXPathParseContext = 0;
     initialize();
 } //-- ProcessorState
 
@@ -90,15 +94,6 @@ ProcessorState::~ProcessorState() {
 
   while ( ! variableSets.empty() ) {
       delete (NamedMap*) variableSets.pop();
-  }
-
-  //-- clean up XSLT actions stack
-  while (currentAction) {
-      XSLTAction* item = currentAction;
-      item->node = 0;
-      currentAction = item->prev;
-      item->prev = 0;
-      delete item;
   }
 
   // Delete all ImportFrames
@@ -211,7 +206,10 @@ void ProcessorState::addTemplate(Element* aXslTemplate,
             return;
         }
         templ->mTemplate = aXslTemplate;
-        templ->mMatch = exprParser.createPatternExpr(match);
+        Element* oldContext = mXPathParseContext;
+        mXPathParseContext = aXslTemplate;
+        templ->mMatch = exprParser.createPattern(match);
+        mXPathParseContext = oldContext;
         if (templ->mMatch)
             templates->add(templ);
         else
@@ -251,7 +249,7 @@ void ProcessorState::addLREStylesheet(Document* aStylesheet,
 
     templ->mTemplate = aStylesheet;
     String match("/");
-    templ->mMatch = exprParser.createPatternExpr(match);
+    templ->mMatch = exprParser.createPattern(match);
     if (templ->mMatch)
         templates->add(templ);
     else
@@ -389,16 +387,7 @@ Node* ProcessorState::retrieveDocument(const String& uri, const String& baseUri)
         String errMsg;
         XMLParser xmlParser;
 
-        NS_ASSERTION(currentAction && currentAction->node,
-                     "missing currentAction->node");
-
-        Document* loaderDoc;
-        if (currentAction->node->getNodeType() == Node::DOCUMENT_NODE)
-            loaderDoc = (Document*)currentAction->node;
-        else
-            loaderDoc = currentAction->node->getOwnerDocument();
-
-        xmlDoc = xmlParser.getDocumentFromURI(docUrl, loaderDoc, errMsg);
+        xmlDoc = xmlParser.getDocumentFromURI(docUrl, xslDocument, errMsg);
 
         if (!xmlDoc) {
             String err("Couldn't load document '");
@@ -529,22 +518,82 @@ Stack* ProcessorState::getDefaultNSURIStack() {
     return &defaultNameSpaceURIStack;
 } //-- getDefaultNSURIStack
 
-Expr* ProcessorState::getExpr(const String& pattern) {
-//    NS_IMPL_LOG(XPATH)
-//    PRINTF("Resolving XPath Expr %s",pattern.toCharArray());
-//    FLUSH();
-    Expr* expr = (Expr*)exprHash.get(pattern);
-    if ( !expr ) {
-        expr = exprParser.createExpr(pattern);
-        if ( !expr ) {
-            String err = "Error in parsing XPath expression: ";
-            err.append(pattern);
-            expr = new ErrorFunctionCall(err);
+Expr* ProcessorState::getExpr(Element* aElem, ExprAttr aAttr)
+{
+    NS_ASSERTION(aElem, "missing element while getting expression");
+
+    // This is how we'll have to do it for now
+    mXPathParseContext = aElem;
+
+    Expr* expr = (Expr*)mExprHashes[aAttr].get(aElem);
+    if (!expr) {
+        String attr;
+        switch (aAttr) {
+            case SelectAttr:
+                attr = aElem->getAttribute(SELECT_ATTR);
+                break;
+            case TestAttr:
+                attr = aElem->getAttribute(TEST_ATTR);
+                break;
+            case ValueAttr:
+                attr = aElem->getAttribute(VALUE_ATTR);
+                break;
         }
-        exprHash.put(pattern, expr);
+
+        // This is how we should do it once we namespaceresolve during parsing
+        //Element* oldContext = mXPathParseContext;
+        //mXPathParseContext = aElem;
+        expr = exprParser.createExpr(attr);
+        //mXPathParseContext = oldContext;
+
+        if (!expr) {
+            String err = "Error in parsing XPath expression: ";
+            err.append(attr);
+            recieveError(err);
+        }
+        else {
+            mExprHashes[aAttr].put(aElem, expr);
+        }
     }
     return expr;
-} //-- getExpr
+}
+
+PatternExpr* ProcessorState::getPattern(Element* aElem, PatternAttr aAttr)
+{
+    NS_ASSERTION(aElem, "missing element while getting pattern");
+
+    // This is how we'll have to do it for now
+    mXPathParseContext = aElem;
+
+    Pattern* pattern = (Pattern*)mExprHashes[aAttr].get(aElem);
+    if (!pattern) {
+        String attr;
+        switch (aAttr) {
+            case CountAttr:
+                attr = aElem->getAttribute(COUNT_ATTR);
+                break;
+            case FromAttr:
+                attr = aElem->getAttribute(FROM_ATTR);
+                break;
+        }
+
+        // This is how we should do it once we namespaceresolve during parsing
+        //Element* oldContext = mXPathParseContext;
+        //mXPathParseContext = aElem;
+        pattern = exprParser.createPattern(attr);
+        //mXPathParseContext = oldContext;
+
+        if (!pattern) {
+            String err = "Error in parsing pattern: ";
+            err.append(attr);
+            recieveError(err);
+        }
+        else {
+            mPatternHashes[aAttr].put(aElem, pattern);
+        }
+    }
+    return pattern;
+}
 
 /*
  * Returns the template associated with the given name, or
@@ -580,18 +629,8 @@ void ProcessorState::getNameSpaceURI(const String& name, String& nameSpaceURI) {
  * (ie. the stylesheet)
 **/
 void ProcessorState::getNameSpaceURIFromPrefix(const String& prefix, String& nameSpaceURI) {
-
-    XSLTAction* action = currentAction;
-
-    while (action) {
-        Node* node = action->node;
-        if (( node ) && (node->getNodeType() == Node::ELEMENT_NODE)) {
-            if (XMLDOMUtils::getNameSpace(prefix, (Element*) node, nameSpaceURI))
-                break;
-        }
-        action = action->prev;
-    }
-
+    if (mXPathParseContext)
+        XMLDOMUtils::getNameSpace(prefix, mXPathParseContext, nameSpaceURI);
 } //-- getNameSpaceURI
 
 /**
@@ -613,15 +652,6 @@ NodeStack* ProcessorState::getNodeStack() {
 OutputFormat* ProcessorState::getOutputFormat() {
     return &format;
 } //-- getOutputFormat
-
-PatternExpr* ProcessorState::getPatternExpr(const String& pattern) {
-    PatternExpr* pExpr = (PatternExpr*)patternExprHash.get(pattern);
-    if ( !pExpr ) {
-        pExpr = exprParser.createPatternExpr(pattern);
-        patternExprHash.put(pattern, pExpr);
-    }
-    return pExpr;
-} //-- getPatternExpr
 
 Document* ProcessorState::getResultDocument() {
     return resultDocument;
@@ -667,33 +697,6 @@ MBool ProcessorState::isXSLStripSpaceAllowed(Node* node) {
 } //--isXSLStripSpaceAllowed
 
 /**
- * Returns the current XSLT action from the top of the stack.
- * @returns the XSLT action from the top of the stack
-**/
-Node* ProcessorState::peekAction() {
-    NS_ASSERTION(currentAction, "currentAction is NULL, this is very bad");
-    if (currentAction)
-        return currentAction->node;
-    return NULL;
-}
-
-/**
- * Removes the current XSLT action from the top of the stack.
- * @returns the XSLT action after removing from the top of the stack
-**/
-Node* ProcessorState::popAction() {
-    Node* xsltAction = 0;
-    if (currentAction) {
-        xsltAction = currentAction->node;
-        XSLTAction* item = currentAction;
-        currentAction = currentAction->prev;
-        item->node = 0;
-        delete item;
-    }
-    return xsltAction;
-} //-- popAction
-
-/**
  * Removes and returns the current source node being processed, from the stack
  * @return the current source node
 **/
@@ -723,22 +726,6 @@ void ProcessorState::processAttrValueTemplate(const String& aAttValue,
     exprResult->stringValue(aResult);
     delete exprResult;
 }
-
-/**
- * Adds the given XSLT action to the top of the action stack
-**/
-void ProcessorState::pushAction(Node* xsltAction) {
-   if (currentAction) {
-       XSLTAction* newAction = new XSLTAction;
-       newAction->prev = currentAction;
-       currentAction = newAction;
-   }
-   else {
-       currentAction = new XSLTAction;
-       currentAction->prev = 0;
-   }
-   currentAction->node = xsltAction;
-} //-- pushAction
 
 /**
  * Sets the source node currently being processed
@@ -816,8 +803,8 @@ void ProcessorState::shouldStripSpace(String& aNames,
 /**
  * Adds the supplied xsl:key to the set of keys
 **/
-MBool ProcessorState::addKey(Element* keyElem) {
-    String keyName = keyElem->getAttribute(NAME_ATTR);
+MBool ProcessorState::addKey(Element* aKeyElem) {
+    String keyName = aKeyElem->getAttribute(NAME_ATTR);
     if(!XMLUtils::isValidQName(keyName))
         return MB_FALSE;
     txXSLKey* xslKey = (txXSLKey*)xslKeys.get(keyName);
@@ -827,8 +814,18 @@ MBool ProcessorState::addKey(Element* keyElem) {
             return MB_FALSE;
         xslKeys.put(keyName, xslKey);
     }
-
-    return xslKey->addKey(keyElem->getAttribute(MATCH_ATTR), keyElem->getAttribute(USE_ATTR));
+    Element* oldContext = mXPathParseContext;
+    mXPathParseContext = aKeyElem;
+    Pattern* match;
+    match = exprParser.createPattern(aKeyElem->getAttribute(MATCH_ATTR));
+    Expr* use = exprParser.createExpr(aKeyElem->getAttribute(USE_ATTR));
+    mXPathParseContext = oldContext;
+    if (!match || !use || !xslKey->addKey(match, use)) {
+        delete match;
+        delete use;
+        return MB_FALSE;
+    }
+    return MB_TRUE;
 }
 
 /**
@@ -1061,7 +1058,7 @@ FunctionCall* ProcessorState::resolveFunctionCall(const String& name) {
    String err;
 
    if (DOCUMENT_FN.isEqual(name)) {
-       return new DocumentFunctionCall(this);
+       return new DocumentFunctionCall(this, mXPathParseContext);
    }
    else if (KEY_FN.isEqual(name)) {
        return new txKeyFunctionCall(this);
@@ -1189,8 +1186,11 @@ void ProcessorState::initialize() {
     variableSets.push(globalVars);
 
     /* turn object deletion on for some of the Maps (NamedMap) */
-    exprHash.setObjectDeletion(MB_TRUE);
-    patternExprHash.setObjectDeletion(MB_TRUE);
+    mExprHashes[SelectAttr].setOwnership(Map::eOwnsItems);
+    mExprHashes[TestAttr].setOwnership(Map::eOwnsItems);
+    mExprHashes[ValueAttr].setOwnership(Map::eOwnsItems);
+    mPatternHashes[CountAttr].setOwnership(Map::eOwnsItems);
+    mPatternHashes[FromAttr].setOwnership(Map::eOwnsItems);
     nameSpaceMap.setObjectDeletion(MB_TRUE);
 
     //-- create NodeStack
@@ -1209,8 +1209,6 @@ void ProcessorState::initialize() {
         loadedDocuments.put(xslDocument->getBaseURI(), xslDocument);
     }
     if ( element ) {
-
-        pushAction(element);
 
 	    //-- process namespace nodes
 	    NamedNodeMap* atts = element->getAttributes();

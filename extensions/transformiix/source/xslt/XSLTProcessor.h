@@ -236,6 +236,11 @@ private:
      * Named Map for quick reference to XSL Types
     **/
     NamedMap xslTypes;
+    
+    /*
+     * Used as default expression for some elements
+     */
+    Expr* mNodeExpr;
 
     /**
      * Binds the given Variable
@@ -412,8 +417,7 @@ public:
         VARIABLE,
         WHEN,
         WITH_PARAM,
-        MESSAGE,
-        EXPR_DEBUG  // temporary, used for debugging
+        MESSAGE
     };
 
     XSLType(const XSLType& xslType);

@@ -31,11 +31,11 @@
 #include "Numbering.h"
 #include "Names.h"
 
-void Numbering::doNumbering
-    (Element* xslNumber, String& dest, Node* context, ProcessorState* ps)
+void Numbering::doNumbering(Element* xslNumber, String& dest, Node* context,
+                            ProcessorState* ps)
 {
-
-    if ( !xslNumber ) return;
+    if (!xslNumber)
+        return;
 
     int* counts = 0;
     int nbrOfCounts = 0;
@@ -43,7 +43,9 @@ void Numbering::doNumbering
     String valueAttr = xslNumber->getAttribute(VALUE_ATTR);
     //-- check for expr
     if (!valueAttr.isEmpty()) {
-        Expr* expr = ps->getExpr(valueAttr);
+        Expr* expr = ps->getExpr(xslNumber, ProcessorState::ValueAttr);
+        if (!expr)
+            return;
         nbrOfCounts = 1;
         counts = new int[1];
         ExprResult* result = expr->evaluate(context, ps);
@@ -57,11 +59,16 @@ void Numbering::doNumbering
 
         String countAttr = xslNumber->getAttribute(COUNT_ATTR);
 
-        PatternExpr* countExpr = 0;
+        Pattern* countPattern;
+        MBool ownsPattern;
+        
         if (!countAttr.isEmpty()) {
-            countExpr = ps->getPatternExpr(countAttr);
+            countPattern = ps->getPattern(xslNumber,
+                                          ProcessorState::CountAttr);
+            ownsPattern = MB_FALSE;
         }
         else {
+            // Actually, this code should probobly use NodeTests instead
             switch(context->getNodeType()) {
                 case Node::ATTRIBUTE_NODE:
                     countAttr.append('@');
@@ -84,8 +91,15 @@ void Numbering::doNumbering
                     countAttr.append("node()[false()]"); //-- for now
                     break;
             }
-            countExpr = ps->getPatternExpr(countAttr);
+            ExprParser parser;
+            countPattern = parser.createPattern(countAttr);
+            ownsPattern = MB_TRUE;
         }
+        if (!countPattern) {
+            delete counts;
+            return;
+        }
+
         NodeSet* nodes = 0;
         int cnum = 0;
 
@@ -94,20 +108,30 @@ void Numbering::doNumbering
         PatternExpr* from = 0;
 
         if (MULTIPLE_VALUE.isEqual(level))
-            nodes = getAncestorsOrSelf(countExpr, from, context, ps, MB_FALSE);
+            nodes = getAncestorsOrSelf(countPattern,
+                                       from,
+                                       context,
+                                       ps,
+                                       MB_FALSE);
         //else if (ANY_VALUE.isEqual(level))
         //    nodes = getAnyPreviousNodes(countExpr, context, ps);
         else
-            nodes = getAncestorsOrSelf(countExpr, from, context, ps, MB_TRUE);
+            nodes = getAncestorsOrSelf(countPattern,
+                                       from,
+                                       context,
+                                       ps,
+                                       MB_TRUE);
 
         nbrOfCounts = nodes->size();
         counts = new int[nbrOfCounts];
         cnum = 0;
         for (int i = nodes->size()-1; i >= 0; i--) {
             counts[cnum++] =
-                countPreceedingSiblings(countExpr, nodes->get(i), ps);
+                countPreceedingSiblings(countPattern, nodes->get(i), ps);
         }
         delete nodes;
+        if (ownsPattern)
+            delete countPattern;
     }
     //-- format counts
     for ( int i = 0; i < nbrOfCounts; i++) {

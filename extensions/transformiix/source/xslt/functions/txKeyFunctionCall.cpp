@@ -104,9 +104,11 @@ txXSLKey::txXSLKey(ProcessorState* aPs)
 txXSLKey::~txXSLKey()
 {
     ListIterator iter(&mKeys);
-    while (iter.hasNext()) {
-        iter.next();
-        delete (Key*)iter.remove();
+    Key* key;
+    while ((key = (Key*)iter.next())) {
+        delete key->matchPattern;
+        delete key->useExpr;
+        delete key;
     }
 } // ~txXSLKey
 
@@ -139,23 +141,21 @@ const NodeSet* txXSLKey::getNodes(String& aKeyValue, Document* aDoc)
 /*
  * Adds a match/use pair. Returns MB_FALSE if matchString or useString
  * can't be parsed.
- * @param aMatchString String to be parsed as match-pattern
- * @param aUseString   String to be parsed as use-expression
- * @return MB_FALSE if matchString or useString can't be parsed
- *         MB_TRUE otherwise
+ * @param aMatch  match-pattern
+ * @param aUse    use-expression
+ * @return MB_FALSE if an error occured, MB_TRUE otherwise
  */
-MBool txXSLKey::addKey(const String& aMatchString, const String& aUseString)
+MBool txXSLKey::addKey(Pattern* aMatch, Expr* aUse)
 {
+    if (!aMatch || !aUse)
+        return MB_FALSE;
+
     Key* key = new Key;
     if (!key)
         return MB_FALSE;
 
-    key->matchPattern = mProcessorState->getPatternExpr(aMatchString);
-    key->useExpr = mProcessorState->getExpr(aUseString);
-    if (!key->matchPattern || !key->useExpr) {
-        delete key;
-        return MB_FALSE;
-    }
+    key->matchPattern = aMatch;
+    key->useExpr = aUse;
     mKeys.add(key);
     return MB_TRUE;
 } // addKey

@@ -37,6 +37,7 @@
 #include "Expr.h"
 #include "StringList.h"
 #include "OutputFormat.h"
+#include "Map.h"
 
 class txXSLKey;
 class txDecimalFormat;
@@ -61,7 +62,9 @@ public:
      * Creates a new ProcessorState for the given XSL document
      * And result Document
     **/
-    ProcessorState(Document& sourceDocument, Document& xslDocument, Document& resultDocument);
+    ProcessorState(Document* aSourceDocument,
+                   Document* aXslDocument,
+                   Document* aResultDocument);
 
     /**
      * Destroys this ProcessorState
@@ -180,8 +183,19 @@ public:
     
     Stack*     getVariableSetStack();
 
-    Expr*        getExpr(const String& pattern);
-    PatternExpr* getPatternExpr(const String& pattern);
+    enum ExprAttr {
+        SelectAttr = 0,
+        TestAttr,
+        ValueAttr
+    };
+
+    enum PatternAttr {
+        CountAttr = 0,
+        FromAttr
+    };
+
+    Expr* getExpr(Element* aElem, ExprAttr aAttr);
+    Pattern* getPattern(Element* aElem, PatternAttr aAttr);
 
     /**
      * Returns a pointer to the result document
@@ -238,21 +252,9 @@ public:
     MBool isXSLStripSpaceAllowed(Node* node);
 
     /**
-     * Returns the current XSLT action from the top of the stack.
-     * @returns the XSLT action from the top of the stack
-    **/
-    Node* peekAction();
-
-    /**
      * Adds the set of names to the Whitespace preserving element set
     **/
     void preserveSpace(String& names);
-
-    /**
-     * Removes the current XSLT action from the top of the stack.
-     * @returns the XSLT action after removing from the top of the stack
-    **/
-    Node* popAction();
 
     /**
      * Removes and returns the current node being processed from the stack
@@ -263,11 +265,6 @@ public:
     void processAttrValueTemplate(const String& aAttValue,
                                   Node* aContext,
                                   String& aResult);
-
-    /**
-     * Adds the given XSLT action to the top of the action stack
-    **/
-    void pushAction(Node* xsltAction);
 
     /**
      * Sets the given source node as the "current node" being processed
@@ -299,7 +296,7 @@ public:
     /**
      * Adds the supplied xsl:key to the set of keys
     **/
-    MBool addKey(Element* xslKey);
+    MBool addKey(Element* aKeyElem);
 
     /**
      * Returns the key with the supplied name
@@ -389,11 +386,6 @@ private:
 
     enum XMLSpaceMode {STRIP = 0, DEFAULT, PRESERVE};
 
-    struct XSLTAction {
-        Node* node;
-        XSLTAction* prev;
-    };
-    
     struct MatchableTemplate {
         Node* mTemplate;
         Pattern* mMatch;
@@ -414,12 +406,7 @@ private:
     /**
      * List of import containers. Sorted by ascending import precedence
     **/
-    List           importFrames;
-
-    /**
-     * A map for named attribute sets
-    **/
-    List           mImportFrames;
+    txList         mImportFrames;
 
     /**
      * Current stack of nodes, where we are in the result document tree
@@ -459,14 +446,23 @@ private:
      */
     MBool          defaultDecimalFormatSet;
 
+    /*
+     * List of hashes with parsed expression. Every listitem holds the
+     * expressions for an attribute name
+     */
+    Map            mExprHashes[3];
 
-    XSLTAction*    currentAction;
+    /*
+     * List of hashes with parsed patterns. Every listitem holds the
+     * patterns for an attribute name
+     */
+    Map            mPatternHashes[2];
+
+    Element*       mXPathParseContext;
     Stack          nodeSetStack;
     Document*      mSourceDocument;
     Document*      xslDocument;
     Document*      resultDocument;
-    NamedMap       exprHash;
-    NamedMap       patternExprHash;
     Stack          variableSets;
     ExprParser     exprParser;
     String         xsltNameSpace;

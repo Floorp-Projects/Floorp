@@ -433,6 +433,7 @@ class Element : public Node
         // txXPathNode functions
         MBool getLocalName(txAtom** aLocalName);
         MBool getAttr(txAtom* aLocalName, PRInt32 aNSID, String& aValue);
+        MBool hasAttr(txAtom* aLocalName, PRInt32 aNSID);
 };
 
 /*
