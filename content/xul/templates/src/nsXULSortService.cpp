@@ -940,7 +940,52 @@ XULSortServiceImpl::GetNodeValue(nsIContent *node1, nsIRDFResource *sortProperty
 	else if (sortInfo->naturalOrderSort == PR_TRUE)
 	{
 		nsAutoString		cellPosVal1;
-		rv = node1->GetAttribute(kNameSpaceID_None, sortInfo->kNaturalOrderPosAtom, cellPosVal1);
+
+		// check to see if this is a RDF_Seq
+		// Note: this code doesn't handle the aggregated Seq case especially well
+		if ((res1) && (sortInfo->db))
+		{
+			nsCOMPtr<nsISimpleEnumerator>	arcs;
+			if (NS_SUCCEEDED(rv = sortInfo->db->ArcLabelsIn(res1, getter_AddRefs(arcs))))
+			{
+				PRBool		hasMore = PR_TRUE;
+				while(hasMore)
+				{
+					if (NS_FAILED(rv = arcs->HasMoreElements(&hasMore)))	break;
+					if (hasMore == PR_FALSE)	break;
+
+					nsCOMPtr<nsISupports>	isupports;
+					if (NS_FAILED(rv = arcs->GetNext(getter_AddRefs(isupports))))	break;
+					nsCOMPtr<nsIRDFResource> property = do_QueryInterface(isupports);
+					if (!property)			continue;
+
+					// hack: it it looks like a RDF_Seq and smells like a RDF_Seq...
+					static const char kRDFNameSpace_Seq_Prefix[] = "http://www.w3.org/1999/02/22-rdf-syntax-ns#_";
+					const char	*uri = nsnull;
+					if (NS_FAILED(rv = property->GetValueConst(&uri)))	continue;
+					if (!uri)	continue;
+					if (nsCRT::strncasecmp(uri, kRDFNameSpace_Seq_Prefix, sizeof(kRDFNameSpace_Seq_Prefix)-1))
+						continue;
+
+					cellPosVal1 = uri;
+					cellPosVal1.Cut(0, sizeof(kRDFNameSpace_Seq_Prefix)-1);
+
+					// hack: assume that its a number, so pad out a bit
+			                nsAutoString	zero("000000");
+			                if (cellPosVal1.Length() < zero.Length())
+			                {
+						cellPosVal1.Insert(zero, 0, zero.Length() - cellPosVal1.Length());
+			                }
+
+					hasMore = FALSE;
+					break;
+				}
+			}
+		}
+		if (cellPosVal1.Length() == 0)
+		{
+			rv = node1->GetAttribute(kNameSpaceID_None, sortInfo->kNaturalOrderPosAtom, cellPosVal1);
+		}
 		if (NS_SUCCEEDED(rv) && (rv != NS_RDF_NO_VALUE))
 		{
 			nsIRDFLiteral	*nodePosLiteral;
@@ -1256,7 +1301,7 @@ XULSortServiceImpl::InsertContainerNode(nsIContent *container, nsIContent *node)
 	sortInfo.kTreeCellAtom = kTreeCellAtom;
 	sortInfo.kNameSpaceID_XUL = kNameSpaceID_XUL;
 
-	PRBool			childAdded = PR_FALSE;
+	sortInfo.sortProperty = nsnull;
 	if (NS_SUCCEEDED(rv = GetSortColumnInfo(treeNode, sortResource, sortDirection)))
 	{
 		char *uri = sortResource.ToNewCString();
@@ -1266,104 +1311,103 @@ XULSortServiceImpl::InsertContainerNode(nsIContent *container, nsIContent *node)
 			delete [] uri;
 			if (NS_FAILED(rv))	return(rv);
 		}
-		if (sortDirection.EqualsIgnoreCase("natural"))
-		{
-			sortInfo.naturalOrderSort = PR_TRUE;
-			sortInfo.descendingSort = PR_FALSE;
-			// no need to sort for natural order
-			container->AppendChildTo(node, PR_TRUE);
-		}
-		else
-		{
-			sortInfo.naturalOrderSort = PR_FALSE;
-			if (sortDirection.EqualsIgnoreCase("descending"))
-				sortInfo.descendingSort = PR_TRUE;
-			else
-				sortInfo.descendingSort = PR_FALSE;
+	}
+
+	// set up sort order info
+	sortInfo.naturalOrderSort = PR_FALSE;
+	sortInfo.descendingSort = PR_FALSE;
+	if (sortDirection.EqualsIgnoreCase("descending"))
+	{
+		sortInfo.descendingSort = PR_TRUE;
+	}
+	else if (!sortDirection.EqualsIgnoreCase("asscending"))
+	{
+		sortInfo.naturalOrderSort = PR_TRUE;
+	}
+
+	PRBool			childAdded = PR_FALSE;
 
 #ifdef	XUL_BINARY_INSERTION_SORT
-			// figure out where to insert the node when a sort order is being imposed
-			// using a smart binary comparison
-			PRInt32			numChildren = 0;
-			if (NS_FAILED(rv = container->ChildCount(numChildren)))	return(rv);
-			if (numChildren > 0)
+	// figure out where to insert the node when a sort order is being imposed
+	// using a smart binary comparison
+	PRInt32			numChildren = 0;
+	if (NS_FAILED(rv = container->ChildCount(numChildren)))	return(rv);
+	if (numChildren > 0)
+	{
+	        nsCOMPtr<nsIContent>	child;
+		PRInt32			last = -1, current, direction = 0, delta = numChildren;
+		while(PR_TRUE)
+		{
+			delta = delta / 2;
+
+			if (last == -1)
 			{
-			        nsCOMPtr<nsIContent>	child;
-				PRInt32			last = -1, current, direction = 0, delta = numChildren;
-				while(PR_TRUE)
-				{
-					delta = delta / 2;
-
-					if (last == -1)
-					{
-						current = delta;
-					}
-					else if (direction > 0)
-					{
-						if (delta == 0)	delta = 1;
-						current = last + delta;
-					}
-					else
-					{
-						if (delta == 0)	delta = 1;
-						current = last - delta;
-					}
-
-					if (current != last)
-					{
-						container->ChildAt(current, *getter_AddRefs(child));
-						nsIContent	*theChild = child.get();
-						direction = inplaceSortCallback(&node, &theChild, &sortInfo);
-					}
-					if ( (direction == 0) ||
-						((current == last + 1) && (direction < 0)) ||
-						((current == last - 1) && (direction > 0)) ||
-						((current == 0) && (direction < 0)) ||
-						((current >= numChildren - 1) && (direction > 0)) )
-					{
-						if (current >= numChildren)
-						{
-							container->AppendChildTo(node, PR_TRUE);
-						}
-						else
-						{
-							container->InsertChildAt(node,
-								((direction > 0) ? current + 1: (current >= 0) ? current : 0),
-								PR_TRUE);
-						}
-						childAdded = PR_TRUE;
-						break;
-					}
-					last = current;
-				}
+				current = delta;
 			}
-#else
-			// figure out where to insert the node when a sort order is being imposed
-			// using a simple linear brute-force comparison
-			PRInt32			childIndex = 0, numChildren = 0, nameSpaceID;
-		        nsCOMPtr<nsIContent>	child;
-
-			if (NS_FAILED(rv = container->ChildCount(numChildren)))	return(rv);
-			for (childIndex=0; childIndex<numChildren; childIndex++)
+			else if (direction > 0)
 			{
-				if (NS_FAILED(rv = container->ChildAt(childIndex, *getter_AddRefs(child))))	return(rv);
-				if (NS_FAILED(rv = child->GetNameSpaceID(nameSpaceID)))	return(rv);
-				if (nameSpaceID == kNameSpaceID_XUL)
-				{
-					nsIContent	*theChild = child.get();
-					PRInt32 sortVal = inplaceSortCallback(&node, &theChild, &sortInfo);
-					if (sortVal <= 0)
-					{
-						container->InsertChildAt(node, childIndex, PR_TRUE);
-						childAdded = PR_TRUE;
-						break;
-					}
-				}
+				if (delta == 0)	delta = 1;
+				current = last + delta;
 			}
-#endif
+			else
+			{
+				if (delta == 0)	delta = 1;
+				current = last - delta;
+			}
 
+			if (current != last)
+			{
+				container->ChildAt(current, *getter_AddRefs(child));
+				nsIContent	*theChild = child.get();
+				direction = inplaceSortCallback(&node, &theChild, &sortInfo);
+			}
+			if ( (direction == 0) ||
+				((current == last + 1) && (direction < 0)) ||
+				((current == last - 1) && (direction > 0)) ||
+				((current == 0) && (direction < 0)) ||
+				((current >= numChildren - 1) && (direction > 0)) )
+			{
+				if (current >= numChildren)
+				{
+					container->AppendChildTo(node, PR_TRUE);
+				}
+				else
+				{
+					container->InsertChildAt(node,
+						((direction > 0) ? current + 1: (current >= 0) ? current : 0),
+						PR_TRUE);
+				}
+				childAdded = PR_TRUE;
+				break;
+			}
+			last = current;
 		}
 	}
+#else
+	// figure out where to insert the node when a sort order is being imposed
+	// using a simple linear brute-force comparison
+	PRInt32			childIndex = 0, numChildren = 0, nameSpaceID;
+        nsCOMPtr<nsIContent>	child;
+
+	if (NS_FAILED(rv = container->ChildCount(numChildren)))	return(rv);
+	for (childIndex=0; childIndex<numChildren; childIndex++)
+	{
+		if (NS_FAILED(rv = container->ChildAt(childIndex, *getter_AddRefs(child))))	return(rv);
+		if (NS_FAILED(rv = child->GetNameSpaceID(nameSpaceID)))	return(rv);
+		if (nameSpaceID == kNameSpaceID_XUL)
+		{
+			nsIContent	*theChild = child.get();
+			PRInt32 sortVal = inplaceSortCallback(&node, &theChild, &sortInfo);
+			if (sortVal <= 0)
+			{
+				container->InsertChildAt(node, childIndex, PR_TRUE);
+				childAdded = PR_TRUE;
+				break;
+			}
+		}
+	}
+#endif
+
 	if (childAdded == PR_FALSE)
 	{
 		container->AppendChildTo(node, PR_TRUE);
