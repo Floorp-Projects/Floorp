@@ -285,10 +285,6 @@ static PRThread* _PR_CreateThread(
     PR_ASSERT(0 == rv);
 #endif /* !defined(_PR_DCETHREADS) */
 
-#if defined(IRIX)
-    if ((32 * 1024) > stackSize) stackSize = (32 * 1024);  /* IRIX minimum */
-    else
-#endif
     if (0 == stackSize) stackSize = (64 * 1024);  /* default == 64K */
     /*
      * Linux doesn't have pthread_attr_setstacksize.
