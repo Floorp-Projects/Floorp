@@ -47,21 +47,27 @@ import java.io.IOException;
 
 import java.util.Hashtable;
 
-public class Optimizer {
+class Optimizer {
 
-    public Optimizer()
+    void optimize(Node tree, int optLevel)
     {
+        itsOptLevel = optLevel;
+        //  run on one function at a time for now
+        PreorderNodeIterator iter = new PreorderNodeIterator();
+        for (iter.start(tree); !iter.done(); iter.next()) {
+            // should be able to do this more cheaply ?
+            // - run through initial block children ?
+            Node node = iter.getCurrent();
+            if (node.getType() == TokenStream.FUNCTION) {
+                OptFunctionNode theFunction = (OptFunctionNode)
+                    node.getProp(Node.FUNCTION_PROP);
+                if (theFunction != null)
+                    optimizeFunction(theFunction);
+            }
+        }
     }
 
-    private static final boolean DEBUG_OPTIMIZER = false;
-    private static final boolean DO_CONSTANT_FOLDING = true;
-
-    static int blockCount = 0;
-
-    boolean inDirectCallFunction;
-    boolean parameterUsedInNumberContext;
-
-    void optimizeFunction(OptFunctionNode theFunction)
+    private void optimizeFunction(OptFunctionNode theFunction)
     {
         if (theFunction.requiresActivation()) return;
 
@@ -72,11 +78,11 @@ public class Optimizer {
         PrintWriter pw = null;
         try {
             if (DEBUG_OPTIMIZER) {
+                String fileName = "blocks"+debug_blockCount+".txt";
+                ++debug_blockCount;
                 pw = new PrintWriter(
                             new DataOutputStream(
-                                new FileOutputStream(
-                                    new File("blocks"
-                                                + blockCount++ + ".txt"))));
+                                new FileOutputStream(new File(fileName))));
                 pw.println(Block.toString(theBlocks, theStatementNodes));
             }
 
@@ -133,25 +139,8 @@ public class Optimizer {
         }
     }
 
-    public void optimize(Node tree, int optLevel)
-    {
-        itsOptLevel = optLevel;
-        //  run on one function at a time for now
-        PreorderNodeIterator iter = new PreorderNodeIterator();
-        for (iter.start(tree); !iter.done(); iter.next()) {
-            // should be able to do this more cheaply ?
-            // - run through initial block children ?
-            Node node = iter.getCurrent();
-            if (node.getType() == TokenStream.FUNCTION) {
-                OptFunctionNode theFunction = (OptFunctionNode)
-                    node.getProp(Node.FUNCTION_PROP);
-                if (theFunction != null)
-                    optimizeFunction(theFunction);
-            }
-        }
-    }
-
-    void findSinglyTypedVars(VariableTable theVariables, Block theBlocks[])
+    private static void
+    findSinglyTypedVars(VariableTable theVariables, Block theBlocks[])
     {
 /*
     discover the type events for each non-volatile variable (not live
@@ -180,9 +169,9 @@ public class Optimizer {
         }
     }
 
-    void doBlockLocalCSE(Block theBlocks[], Block b,
-                    Hashtable theCSETable, boolean beenThere[],
-                    OptFunctionNode theFunction)
+    private static void
+    doBlockLocalCSE(Block theBlocks[], Block b, Hashtable theCSETable,
+                    boolean beenThere[], OptFunctionNode theFunction)
     {
         if (!beenThere[b.getBlockID()]) {
             beenThere[b.getBlockID()] = true;
@@ -201,7 +190,8 @@ public class Optimizer {
         }
     }
 
-    void localCSE(Block theBlocks[], OptFunctionNode theFunction)
+    private static void
+    localCSE(Block theBlocks[], OptFunctionNode theFunction)
     {
         boolean beenThere[] = new boolean[theBlocks.length];
         doBlockLocalCSE(theBlocks, theBlocks[0], null, beenThere, theFunction);
@@ -210,7 +200,8 @@ public class Optimizer {
         }
     }
 
-    void typeFlow(VariableTable theVariables, Block theBlocks[])
+    private static void
+    typeFlow(VariableTable theVariables, Block theBlocks[])
     {
         boolean visit[] = new boolean[theBlocks.length];
         boolean doneOnce[] = new boolean[theBlocks.length];
@@ -245,7 +236,8 @@ public class Optimizer {
         }
     }
 
-    void reachingDefDataFlow(VariableTable theVariables, Block theBlocks[])
+    private static void
+    reachingDefDataFlow(VariableTable theVariables, Block theBlocks[])
     {
 /*
     initialize the liveOnEntry and liveOnExit sets, then discover the variables
@@ -339,7 +331,7 @@ public class Optimizer {
         was a double value). If the node is a parameter in a directCall
         function, mark it as being referenced in this context.
 */
-    void markDCPNumberContext(Node n)
+    private void markDCPNumberContext(Node n)
     {
         if (inDirectCallFunction && (n.getType() == TokenStream.GETVAR))
         {
@@ -351,7 +343,7 @@ public class Optimizer {
         }
     }
 
-    boolean convertParameter(Node n)
+    private boolean convertParameter(Node n)
     {
         if (inDirectCallFunction && (n.getType() == TokenStream.GETVAR))
         {
@@ -365,7 +357,7 @@ public class Optimizer {
         return false;
     }
 
-    int rewriteForNumberVariables(Node n)
+    private int rewriteForNumberVariables(Node n)
     {
         switch (n.getType()) {
             case TokenStream.POP : {
@@ -737,7 +729,7 @@ public class Optimizer {
         Do constant folding, for integers, bools and strings
         as well as for if() statements.
     */
-    void foldConstants(Node n, Node parent){
+    private static void foldConstants(Node n, Node parent){
         Node lChild, rChild=null;           // children
 
         lChild = n.getFirstChild();
@@ -964,11 +956,7 @@ public class Optimizer {
         if (replace != null) {
             parent.replaceChild(n, replace);
         }
-
     }
-
-    private static final int ALWAYS_TRUE_BOOLEAN = 1;
-    private static final int ALWAYS_FALSE_BOOLEAN = -1;
 
     // Check if Node always mean true or false in boolean context
     private static int isAlwaysDefinedBoolean(Node node) {
@@ -1000,32 +988,27 @@ public class Optimizer {
         return result;
     }
 
-    void replaceVariableAccess(Node n, VariableTable theVariables)
+    private static void
+    replaceVariableAccess(Node n, VariableTable theVariables)
     {
         Node child = n.getFirstChild();
         while (child != null) {
             replaceVariableAccess(child, theVariables);
             child = child.getNext();
         }
-        switch (n.getType()) {
-            case TokenStream.SETVAR : {
-                    String name = n.getFirstChild().getString();
-                    OptLocalVariable theVar = OptLocalVariable.
-                                                  get(theVariables, name);
-                    if (theVar != null)
-                        n.putProp(Node.VARIABLE_PROP, theVar);
-                }
-                break;
-            case TokenStream.GETVAR : {
-                    String name = n.getString();
-                    OptLocalVariable theVar = OptLocalVariable.
-                                                  get(theVariables, name);
-                    if (theVar != null)
-                        n.putProp(Node.VARIABLE_PROP, theVar);
-                }
-                break;
-            default :
-                break;
+        int type = n.getType();
+        if (type == TokenStream.SETVAR) {
+            String name = n.getFirstChild().getString();
+            OptLocalVariable theVar = OptLocalVariable.get(theVariables, name);
+            if (theVar != null) {
+                n.putProp(Node.VARIABLE_PROP, theVar);
+            }
+        } else if (type == TokenStream.GETVAR) {
+            String name = n.getString();
+            OptLocalVariable theVar = OptLocalVariable.get(theVariables, name);
+            if (theVar != null) {
+                n.putProp(Node.VARIABLE_PROP, theVar);
+            }
         }
     }
 
@@ -1053,5 +1036,15 @@ public class Optimizer {
         return result;
     }
 
-    int itsOptLevel;
+    private static final boolean DEBUG_OPTIMIZER = false;
+    private static int debug_blockCount;
+
+    private static final boolean DO_CONSTANT_FOLDING = true;
+
+    private static final int ALWAYS_TRUE_BOOLEAN = 1;
+    private static final int ALWAYS_FALSE_BOOLEAN = -1;
+
+    private int itsOptLevel;
+    private boolean inDirectCallFunction;
+    private boolean parameterUsedInNumberContext;
 }
