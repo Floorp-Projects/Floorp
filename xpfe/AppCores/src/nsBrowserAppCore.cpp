@@ -59,6 +59,11 @@ static NS_DEFINE_IID(kIWalletServiceIID, NS_IWALLETSERVICE_IID);
 static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 #endif
 
+// For history
+#include "nsRDFCID.h"
+#include "nsIHistoryDataSource.h"
+#include "nsIRDFService.h"
+static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 
 #include "nsICmdLineService.h"
@@ -98,6 +103,7 @@ nsBrowserAppCore::nsBrowserAppCore()
   mWebShellWin          = nsnull;
   mWebShell             = nsnull;
   mContentAreaWebShell  = nsnull;
+  mHistory              = nsnull;
 
   IncInstanceCount();
   NS_INIT_REFCNT();
@@ -113,6 +119,7 @@ nsBrowserAppCore::~nsBrowserAppCore()
   NS_IF_RELEASE(mWebShellWin);
   NS_IF_RELEASE(mWebShell);
   NS_IF_RELEASE(mContentAreaWebShell);
+  NS_IF_RELEASE(mHistory);
   DecInstanceCount();  
 }
 
@@ -179,6 +186,21 @@ nsBrowserAppCore::Init(const nsString& aId)
 {
    
   nsBaseAppCore::Init(aId);
+
+  // Grab the history data source and hold on to it so we can track
+  // document loads
+  nsIRDFService* rdf;
+  if (NS_SUCCEEDED(nsServiceManager::GetService(kRDFServiceCID,
+                                                nsIRDFService::GetIID(),
+                                                (nsISupports**) &rdf))) {
+    nsCOMPtr<nsIRDFDataSource> ds;
+    static const char* kHistoryDataSourceURI = "rdf:history";
+    if (NS_SUCCEEDED(rdf->GetDataSource(kHistoryDataSourceURI,
+                                        getter_AddRefs(ds)))) {
+      ds->QueryInterface(nsIHistoryDataSource::GetIID(), (void**) &mHistory);
+    }
+    nsServiceManager::ReleaseService(kRDFServiceCID, rdf);
+  }
 
   // XXX This is lame and needs to be changed
 	nsAppCoresManager* sdm = new nsAppCoresManager();
@@ -577,8 +599,8 @@ static nsresult setAttribute( nsIWebShell *shell,
 NS_IMETHODIMP 
 nsBrowserAppCore::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
 {
-  setAttribute( mWebShell, "Browser:Throbber", "busy", "true" );
-  return NS_OK;
+    setAttribute( mWebShell, "Browser:Throbber", "busy", "true" );
+    return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -592,8 +614,35 @@ NS_IMETHODIMP
 nsBrowserAppCore::EndLoadURL(nsIWebShell* aWebShell, const PRUnichar* aURL,
                              PRInt32 aStatus)
 {
-  setAttribute( mWebShell, "Browser:Throbber", "busy", "false" );
-  return NS_OK;
+    // Update global history.
+    NS_ASSERTION(mHistory != nsnull, "history not initialized");
+    if (mHistory) {
+        nsresult rv;
+
+        nsAutoString url(aURL);
+        char* urlSpec = url.ToNewCString();
+        do {
+            if (NS_FAILED(rv = mHistory->AddPage(urlSpec, /* XXX referrer? */ nsnull, PR_Now()))) {
+                NS_ERROR("unable to add page to history");
+                break;
+            }
+
+            const PRUnichar* title;
+            if (NS_FAILED(rv = aWebShell->GetTitle(&title))) {
+                NS_ERROR("unable to get doc title");
+                break;
+            }
+
+            if (NS_FAILED(rv = mHistory->SetPageTitle(urlSpec, title))) {
+                NS_ERROR("unable to set doc title");
+                break;
+            }
+        } while (0);
+        delete[] urlSpec;
+    }
+
+    setAttribute( mWebShell, "Browser:Throbber", "busy", "false" );
+    return NS_OK;
 }
 
 NS_IMETHODIMP    
