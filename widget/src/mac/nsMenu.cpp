@@ -585,10 +585,11 @@ nsEventStatus nsMenu::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 	      	return nsEventStatus_eConsumeNoDefault;
 	  	}
 	    
-	    // "releaseName" is the current node id for the About Mozilla/Netscape
-	    // menu node.
+	    // "aboutName" is the element id for the "About &shortBrandName;"
+	    // <menuitem/>. This is the glue code which causes any script code
+	    // in the <menuitem/> to be executed.
 	    nsCOMPtr<nsIDOMElement> domElement;
-	    xulDoc->GetElementById(NS_LITERAL_STRING("releaseName"), getter_AddRefs(domElement));
+	    xulDoc->GetElementById(NS_LITERAL_STRING("aboutName"), getter_AddRefs(domElement));
 	    if (!domElement) {
 	      	NS_ERROR("GetElementById failed.");
 	      	return nsEventStatus_eConsumeNoDefault;

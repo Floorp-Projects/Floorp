@@ -23,6 +23,7 @@
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
+#include "nsINameSpaceManager.h"
 #include "nsIMenu.h"
 #include "nsIMenuItem.h"
 #include "nsIContent.h"
@@ -34,7 +35,6 @@
 #include "nsIWidget.h"
 #include "nsString.h"
 #include "nsStringUtil.h"
-#include "nsIStringBundle.h"
 #include "nsIDocument.h"
 #include "nsIDocShell.h"
 #include "nsIDocumentViewer.h"
@@ -49,11 +49,6 @@
 #include <Resources.h>
 #include <Appearance.h>
 #include "nsMacResources.h"
-
-
-static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
-static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-
 
 #pragma options align=mac68k
 typedef struct {
@@ -396,12 +391,12 @@ nsMenuBar::MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWind
     {
       nsAutoString menuNodeType;
       nsAutoString menuName;
-			nsAutoString menuAccessKey; menuAccessKey.AssignWithConversion(" ");
-			
+      nsAutoString menuAccessKey(NS_LITERAL_STRING(" "));
+
       menuElement->GetNodeName(menuNodeType);
       if (menuNodeType == NS_LITERAL_STRING("menu")) {
         menuElement->GetAttribute(NS_LITERAL_STRING("value"), menuName);
-			  menuElement->GetAttribute(NS_LITERAL_STRING("accesskey"), menuAccessKey);
+        menuElement->GetAttribute(NS_LITERAL_STRING("accesskey"), menuAccessKey);
 			  
         // Don't create the whole menu yet, just add in the top level names
               
@@ -492,36 +487,31 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
 #ifdef APPLE_MENU_HACK
   if (mNumMenus == 0)
   {
-  	Str32 menuStr = { 1, 0x14 };
-  	MenuHandle appleMenu = ::NewMenu(kAppleMenuID, menuStr);
+    Str32 menuStr = { 1, 0x14 };
+    MenuHandle appleMenu = ::NewMenu(kAppleMenuID, menuStr);
 
-	if (appleMenu)
-	{
-	  nsresult ret;
-	    nsCOMPtr<nsIStringBundleService> pStringService = do_GetService(kStringBundleServiceCID, &ret);
-      if (NS_FAILED(ret)) {
-        NS_WARNING("cannot get string service\n");
-        return ret;
+    if (appleMenu)
+    {
+      // this code reads the "value" attribute from the <menuitem/> with
+      // id="aboutName" and puts its value in the Apple Menu
+      nsAutoString label;
+      nsCOMPtr<nsIDOMNode> domNode;
+      aMenu->GetDOMNode(getter_AddRefs(domNode));
+      if (domNode) {
+        nsCOMPtr<nsIDOMDocument> domDoc;
+        domNode->GetOwnerDocument(getter_AddRefs(domDoc));
+        if (domDoc) {
+          nsCOMPtr<nsIDOMElement> aboutMenuItem;
+          domDoc->GetElementById(NS_LITERAL_STRING("aboutName"), getter_AddRefs(aboutMenuItem));
+          if (aboutMenuItem)
+            aboutMenuItem->GetAttribute(NS_LITERAL_STRING("value"), label);
+        }
       }
-      
-      //XXX "chrome://global/locale/brand.properties" should be less hardcoded
-      nsCOMPtr<nsIStringBundle> bundle;
-      ret = pStringService->CreateBundle("chrome://global/locale/brand.properties", nsnull, getter_AddRefs(bundle));
-      if (NS_FAILED(ret)) {
-        NS_WARNING("cannot create instance\n");
-        return ret;
-      }      
-      
-      //XXX "aboutStrName" should be less hardcoded
-      PRUnichar *ptrv = nsnull;
-      bundle->GetStringFromName(NS_LITERAL_STRING("aboutStrName").get(), &ptrv);
-      nsAutoString label(ptrv);
-		  nsCRT::free(ptrv);
 
       ::AppendMenu(appleMenu, "\pa");
       MenuHelpers::SetMenuItemText(appleMenu, 1, label, mUnicodeTextRunConverter);
       ::AppendMenu(appleMenu, "\p-");
-	    ::AppendResMenu(appleMenu, 'DRVR');
+      ::AppendResMenu(appleMenu, 'DRVR');
       ::InsertMenu(appleMenu, 0);
     }
   }
