@@ -188,7 +188,7 @@ function AccountDataToPageData(accountData, pageData)
         }
         
         else {
-            setPageData(pageData, "accounttype", "mailaccount", true);
+	    setPageData(pageData, "accounttype", "mailaccount", true);
             setPageData(pageData, "server", "servertype", server.type);
             setPageData(pageData, "server", "hostname", server.hostName);
         }
@@ -537,7 +537,7 @@ function checkForInvalidAccounts()
         dump("Invalid account: Got " + accountData + "\n");
         
         // account -> accountData -> pageData
-        AccountToAccountData(firstInvalidAccount, accountData);
+        accountData = AccountToAccountData(firstInvalidAccount, accountData);
         AccountDataToPageData(accountData, pageData);
 
         gCurrentAccountData = accountData;
