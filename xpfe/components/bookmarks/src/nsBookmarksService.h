@@ -35,6 +35,11 @@
 #include "nsString.h"
 #include "nsIFileSpec.h"
 
+#ifdef	DEBUG
+#ifdef	XP_MAC
+#include <Timer.h>
+#endif
+#endif
 
 class nsBookmarksService : public nsIBookmarksService,
 			   public nsIRDFDataSource,

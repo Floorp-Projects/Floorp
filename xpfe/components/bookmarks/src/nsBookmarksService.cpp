@@ -91,12 +91,6 @@
 #include "nsIDocShell.h"
 #include "nsIXULWindow.h"
 
-#ifdef	DEBUG
-#ifdef	XP_MAC
-#include <Timer.h>
-#endif
-#endif
-
 #define	BOOKMARK_TIMEOUT		15000		// fire every 15 seconds
 // #define	DEBUG_BOOKMARK_PING_OUTPUT	1
 
