@@ -72,11 +72,13 @@ function GetArgs()
 		if (aChar == quoteChar)
 		{
 			quoteChar = "";
+			data += aChar;
 		}
 		else if (aCharCode == 39 || aCharCode == 34) //quote or double quote
 		{
 			if (quoteChar == "")
 				quoteChar = aChar;
+			data += aChar;
 		}
 		else if (aChar == ",")
 		{
