@@ -649,7 +649,7 @@ nsMenuFrame::ActivateMenu(PRBool aActivateFlag)
 
         nsCOMPtr<nsIScrollableFrame> scrollframe(do_QueryInterface(child));
         if (scrollframe) {
-          scrollframe->ScrollTo(mPresContext, 0, 0);
+          scrollframe->ScrollTo(nsPoint(0,0));
         }
       }
 
@@ -2006,20 +2006,17 @@ nsMenuFrame::SetActiveChild(nsIDOMElement* aChild)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsMenuFrame::GetScrollableView(nsPresContext* aPresContext, nsIScrollableView** aView)
+nsIScrollableView* nsMenuFrame::GetScrollableView()
 {
-  *aView = nsnull;
   if (!mPopupFrames.FirstChild())
-    return NS_OK;
+    return nsnull;
 
   nsMenuPopupFrame* popup = (nsMenuPopupFrame*) mPopupFrames.FirstChild();
   nsIFrame* childFrame = popup->GetFirstChild(nsnull);
   if (childFrame) {
-    *aView = popup->GetScrollableView(childFrame);
+    return popup->GetScrollableView(childFrame);
   }
-
-  return NS_OK;
+  return nsnull;
 }
 
 /* Need to figure out what this does.

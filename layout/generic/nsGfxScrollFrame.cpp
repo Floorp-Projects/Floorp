@@ -103,32 +103,28 @@ nsHTMLScrollFrame::nsHTMLScrollFrame(nsIPresShell* aShell, PRBool aIsRoot)
 * Get the view that we are scrolling within the scrolling view. 
 * @result child view
 */
-NS_IMETHODIMP
-nsHTMLScrollFrame::GetScrolledFrame(nsPresContext* aPresContext, nsIFrame *&aScrolledFrame) const
+nsIFrame* nsHTMLScrollFrame::GetScrolledFrame() const
 {
-  aScrolledFrame = mInner.GetScrolledFrame();
-  return NS_OK;
+  return mInner.GetScrolledFrame();
 }
 
-NS_IMETHODIMP
-nsHTMLScrollFrame::GetScrollableView(nsPresContext* aContext, nsIScrollableView** aResult)
+nsIScrollableView* nsHTMLScrollFrame::GetScrollableView()
 {
-  *aResult = mInner.GetScrollableView();
-  return NS_OK;
+  return mInner.GetScrollableView();
 }
 
-NS_IMETHODIMP
-nsHTMLScrollFrame::GetScrollPosition(nsPresContext* aContext, nscoord &aX, nscoord& aY) const
+nsPoint nsHTMLScrollFrame::GetScrollPosition() const
 {
    nsIScrollableView* s = mInner.GetScrollableView();
-   return s->GetScrollPosition(aX, aY);
+   nsPoint scrollPosition;
+   s->GetScrollPosition(scrollPosition.x, scrollPosition.y);
+   return scrollPosition;
 }
 
-NS_IMETHODIMP
-nsHTMLScrollFrame::ScrollTo(nsPresContext* aContext, nscoord aX, nscoord aY, PRUint32 aFlags)
+void nsHTMLScrollFrame::ScrollTo(nsPoint aScrollPosition, PRUint32 aFlags)
 {
    nsIScrollableView* s = mInner.GetScrollableView();
-   return s->ScrollTo(aX, aY, aFlags);
+   s->ScrollTo(aScrollPosition.x, aScrollPosition.y, aFlags);
 }
 
 nsGfxScrollFrameInner::ScrollbarStyles
@@ -171,21 +167,15 @@ nsMargin nsHTMLScrollFrame::GetDesiredScrollbarSizes(nsBoxLayoutState* aState) {
   return result;
 }
 
-NS_IMETHODIMP
-nsHTMLScrollFrame::SetScrollbarVisibility(nsPresContext* aPresContext,
-                                    PRBool aVerticalVisible,
-                                    PRBool aHorizontalVisible)
+void nsHTMLScrollFrame::SetScrollbarVisibility(PRBool aVerticalVisible, PRBool aHorizontalVisible)
 {
   mInner.mNeverHasVerticalScrollbar = !aVerticalVisible;
   mInner.mNeverHasHorizontalScrollbar = !aHorizontalVisible;
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLScrollFrame::GetScrollbarBox(PRBool aVertical, nsIBox** aResult)
+nsIBox* nsHTMLScrollFrame::GetScrollbarBox(PRBool aVertical)
 {
-  *aResult = aVertical ? mInner.mVScrollbarBox : mInner.mHScrollbarBox;
-  return NS_OK;
+  return aVertical ? mInner.mVScrollbarBox : mInner.mHScrollbarBox;
 }
 
 NS_IMETHODIMP
@@ -582,12 +572,11 @@ NS_IMETHODIMP nsHTMLScrollFrame::GetAccessible(nsIAccessible** aAccessible)
 }
 #endif
 
-NS_IMETHODIMP
-nsHTMLScrollFrame::CurPosAttributeChanged(nsPresContext* aPresContext,
-                                          nsIContent* aChild,
+void
+nsHTMLScrollFrame::CurPosAttributeChanged(nsIContent* aChild,
                                           PRInt32 aModType)
 {
-  return mInner.CurPosAttributeChanged(aPresContext, aChild, aModType);
+  mInner.CurPosAttributeChanged(aChild, aModType);
 }
 
 NS_IMETHODIMP
@@ -647,32 +636,28 @@ nsXULScrollFrame::nsXULScrollFrame(nsIPresShell* aShell, PRBool aIsRoot)
 * Get the view that we are scrolling within the scrolling view. 
 * @result child view
 */
-NS_IMETHODIMP
-nsXULScrollFrame::GetScrolledFrame(nsPresContext* aPresContext, nsIFrame *&aScrolledFrame) const
+nsIFrame* nsXULScrollFrame::GetScrolledFrame() const
 {
-  aScrolledFrame = mInner.GetScrolledFrame();
-  return NS_OK;
+  return mInner.GetScrolledFrame();
 }
 
-NS_IMETHODIMP
-nsXULScrollFrame::GetScrollableView(nsPresContext* aContext, nsIScrollableView** aResult)
+nsIScrollableView* nsXULScrollFrame::GetScrollableView()
 {
-  *aResult = mInner.GetScrollableView();
-  return NS_OK;
+  return mInner.GetScrollableView();
 }
 
-NS_IMETHODIMP
-nsXULScrollFrame::GetScrollPosition(nsPresContext* aContext, nscoord &aX, nscoord& aY) const
+nsPoint nsXULScrollFrame::GetScrollPosition() const
 {
-   nsIScrollableView* s = mInner.GetScrollableView();
-   return s->GetScrollPosition(aX, aY);
+  nsIScrollableView* s = mInner.GetScrollableView();
+  nsPoint scrollPosition;
+  s->GetScrollPosition(scrollPosition.x, scrollPosition.y);
+  return scrollPosition;
 }
 
-NS_IMETHODIMP
-nsXULScrollFrame::ScrollTo(nsPresContext* aContext, nscoord aX, nscoord aY, PRUint32 aFlags)
+void nsXULScrollFrame::ScrollTo(nsPoint aScrollPosition, PRUint32 aFlags)
 {
-   nsIScrollableView* s = mInner.GetScrollableView();
-   return s->ScrollTo(aX, aY, aFlags);
+  nsIScrollableView* s = mInner.GetScrollableView();
+  s->ScrollTo(aScrollPosition.x, aScrollPosition.y, aFlags);
 }
 
 nsGfxScrollFrameInner::ScrollbarStyles
@@ -715,21 +700,15 @@ nsMargin nsXULScrollFrame::GetDesiredScrollbarSizes(nsBoxLayoutState* aState) {
   return result;
 }
 
-NS_IMETHODIMP
-nsXULScrollFrame::SetScrollbarVisibility(nsPresContext* aPresContext,
-                                    PRBool aVerticalVisible,
-                                    PRBool aHorizontalVisible)
+void nsXULScrollFrame::SetScrollbarVisibility(PRBool aVerticalVisible, PRBool aHorizontalVisible)
 {
   mInner.mNeverHasVerticalScrollbar = !aVerticalVisible;
   mInner.mNeverHasHorizontalScrollbar = !aHorizontalVisible;
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXULScrollFrame::GetScrollbarBox(PRBool aVertical, nsIBox** aResult)
+nsIBox* nsXULScrollFrame::GetScrollbarBox(PRBool aVertical)
 {
-  *aResult = aVertical ? mInner.mVScrollbarBox : mInner.mHScrollbarBox;
-  return NS_OK;
+  return aVertical ? mInner.mVScrollbarBox : mInner.mHScrollbarBox;
 }
 
 NS_IMETHODIMP
@@ -1108,12 +1087,9 @@ nsXULScrollFrame::GetFrameName(nsAString& aResult) const
 }
 #endif
 
-NS_IMETHODIMP
-nsXULScrollFrame::CurPosAttributeChanged(nsPresContext* aPresContext,
-                                         nsIContent* aChild,
-                                         PRInt32 aModType)
+void nsXULScrollFrame::CurPosAttributeChanged(nsIContent* aChild, PRInt32 aModType)
 {
-  return mInner.CurPosAttributeChanged(aPresContext, aChild, aModType);
+  mInner.CurPosAttributeChanged(aChild, aModType);
 }
 
 NS_IMETHODIMP
@@ -1395,10 +1371,7 @@ nsGfxScrollFrameInner::ScrollPositionDidChange(nsIScrollableView* aScrollable, n
   return NS_OK;
 }
 
-nsresult
-nsGfxScrollFrameInner::CurPosAttributeChanged(nsPresContext* aPresContext,
-                                              nsIContent*     aContent,
-                                              PRInt32         aModType)
+void nsGfxScrollFrameInner::CurPosAttributeChanged(nsIContent* aContent, PRInt32 aModType)
 {
   NS_ASSERTION(aContent, "aContent must not be null");
 
@@ -1424,88 +1397,86 @@ nsGfxScrollFrameInner::CurPosAttributeChanged(nsPresContext* aPresContext,
   // new vertical position and the old horizontal position! Even worse
   // things could happen when smooth scrolling got involved ... crashes
   // and other terrors.
-  if (mViewInitiatedScroll || mFrameInitiatedScroll) return NS_OK;
+  if (mViewInitiatedScroll || mFrameInitiatedScroll) return;
 
-     nsIFrame* hframe = nsnull;
-     if (mHScrollbarBox)
-       mHScrollbarBox->GetFrame(&hframe);
+  nsIFrame* hframe = nsnull;
+  if (mHScrollbarBox)
+    mHScrollbarBox->GetFrame(&hframe);
 
-     nsIFrame* vframe = nsnull;
-     if (mVScrollbarBox)
-       mVScrollbarBox->GetFrame(&vframe);
+  nsIFrame* vframe = nsnull;
+  if (mVScrollbarBox)
+    mVScrollbarBox->GetFrame(&vframe);
 
-     nsIContent* vcontent = vframe ? vframe->GetContent() : nsnull;
-     nsIContent* hcontent = hframe ? hframe->GetContent() : nsnull;
+  nsIContent* vcontent = vframe ? vframe->GetContent() : nsnull;
+  nsIContent* hcontent = hframe ? hframe->GetContent() : nsnull;
 
-     if (hcontent == aContent || vcontent == aContent)
-     {
-        nscoord x = 0;
-        nscoord y = 0;
+  if (hcontent == aContent || vcontent == aContent)
+  {
+    nscoord x = 0;
+    nscoord y = 0;
 
-        nsAutoString value;
-        if (hcontent && NS_CONTENT_ATTR_HAS_VALUE == hcontent->GetAttr(kNameSpaceID_None, nsXULAtoms::curpos, value))
-        {
-           PRInt32 error;
+    nsAutoString value;
+    if (hcontent && NS_CONTENT_ATTR_HAS_VALUE == hcontent->GetAttr(kNameSpaceID_None, nsXULAtoms::curpos, value))
+    {
+      PRInt32 error;
 
-           // convert it to an integer
-           x = value.ToInteger(&error);
-        }
+      // convert it to an integer
+      x = value.ToInteger(&error);
+    }
 
-        if (vcontent && NS_CONTENT_ATTR_HAS_VALUE == vcontent->GetAttr(kNameSpaceID_None, nsXULAtoms::curpos, value))
-        {
-           PRInt32 error;
+    if (vcontent && NS_CONTENT_ATTR_HAS_VALUE == vcontent->GetAttr(kNameSpaceID_None, nsXULAtoms::curpos, value))
+    {
+      PRInt32 error;
 
-           // convert it to an integer
-           y = value.ToInteger(&error);
-        }
+      // convert it to an integer
+      y = value.ToInteger(&error);
+    }
 
-        // Make sure the scrollbars indeed moved before firing the event.
-        // I think it is OK to prevent the call to ScrollbarChanged()
-        // if we didn't actually move. The following check is the first
-        // thing ScrollbarChanged() does anyway, before deciding to move 
-        // the scrollbars. 
-        nscoord curPosX=0, curPosY=0;
-        nsIScrollableView* s = GetScrollableView();
-        if (s) {
-          s->GetScrollPosition(curPosX, curPosY);
-          if ((x*mOnePixel) == curPosX && (y*mOnePixel) == curPosY)
-            return NS_OK;
-          
-          PRBool isSmooth = aContent->HasAttr(kNameSpaceID_None, nsXULAtoms::smooth);
+    // Make sure the scrollbars indeed moved before firing the event.
+    // I think it is OK to prevent the call to ScrollbarChanged()
+    // if we didn't actually move. The following check is the first
+    // thing ScrollbarChanged() does anyway, before deciding to move 
+    // the scrollbars. 
+    nscoord curPosX=0, curPosY=0;
+    nsIScrollableView* s = GetScrollableView();
+    if (s) {
+      s->GetScrollPosition(curPosX, curPosY);
+      if ((x*mOnePixel) == curPosX && (y*mOnePixel) == curPosY)
+        return;
+
+      PRBool isSmooth = aContent->HasAttr(kNameSpaceID_None, nsXULAtoms::smooth);
         
-          if (isSmooth) {
-            // Make sure an attribute-setting callback occurs even if the view didn't actually move yet
-            // We need to make sure other listeners see that the scroll position is not (yet)
-            // what they thought it was.
-            s->GetScrollPosition(curPosX, curPosY);
+      if (isSmooth) {
+        // Make sure an attribute-setting callback occurs even if the view didn't actually move yet
+        // We need to make sure other listeners see that the scroll position is not (yet)
+        // what they thought it was.
+        s->GetScrollPosition(curPosX, curPosY);
 
-            NS_ASSERTION(!mFrameInitiatedScroll, "Unexpected reentry");
-            // Make sure we don't do anything in when the view calls us back for this
-            // scroll operation.
-            mFrameInitiatedScroll = PR_TRUE;
-            InternalScrollPositionDidChange(curPosX, curPosY);
-            mFrameInitiatedScroll = PR_FALSE;
-          }
-          ScrollbarChanged(mOuter->GetPresContext(), x*mOnePixel, y*mOnePixel, isSmooth ? NS_VMREFRESH_SMOOTHSCROLL : 0);
+        NS_ASSERTION(!mFrameInitiatedScroll, "Unexpected reentry");
+        // Make sure we don't do anything in when the view calls us back for this
+        // scroll operation.
+        mFrameInitiatedScroll = PR_TRUE;
+        InternalScrollPositionDidChange(curPosX, curPosY);
+        mFrameInitiatedScroll = PR_FALSE;
+      }
+      ScrollbarChanged(mOuter->GetPresContext(), x*mOnePixel, y*mOnePixel, isSmooth ? NS_VMREFRESH_SMOOTHSCROLL : 0);
 
-          // Fire the onScroll event now that we have scrolled
-          nsIPresShell *presShell = mOuter->GetPresContext()->GetPresShell();
-          if (presShell) {
-            nsScrollbarEvent event(NS_SCROLL_EVENT);
-            nsEventStatus status = nsEventStatus_eIgnore;
-            // note if hcontent is non-null then hframe must be non-null.
-            // likewise for vcontent and vframe. Thus targetFrame will always
-            // be non-null in here.
-            nsIFrame* targetFrame =
-              hcontent == aContent ? hframe : vframe;
-            presShell->HandleEventWithTarget(&event, targetFrame,
-                                             aContent,
-                                             NS_EVENT_FLAG_INIT, &status);
-          }
-        }
-     }
-
-   return NS_OK;
+      // Fire the onScroll event now that we have scrolled
+      nsIPresShell *presShell = mOuter->GetPresContext()->GetPresShell();
+      if (presShell) {
+        nsScrollbarEvent event(NS_SCROLL_EVENT);
+        nsEventStatus status = nsEventStatus_eIgnore;
+        // note if hcontent is non-null then hframe must be non-null.
+        // likewise for vcontent and vframe. Thus targetFrame will always
+        // be non-null in here.
+        nsIFrame* targetFrame =
+          hcontent == aContent ? hframe : vframe;
+        presShell->HandleEventWithTarget(&event, targetFrame,
+                                         aContent,
+                                         NS_EVENT_FLAG_INIT, &status);
+      }
+    }
+  }
 }
 
 nsIScrollableView*

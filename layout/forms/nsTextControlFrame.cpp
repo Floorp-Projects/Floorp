@@ -3002,7 +3002,7 @@ nsTextControlFrame::SetInitialChildList(nsPresContext* aPresContext,
     if (first)
       first->QueryInterface(NS_GET_IID(nsIScrollableFrame), (void **) &scrollableFrame);
     if (scrollableFrame)
-      scrollableFrame->SetScrollbarVisibility(aPresContext,PR_FALSE,PR_FALSE);
+      scrollableFrame->SetScrollbarVisibility(PR_FALSE, PR_FALSE);
   }
 
   //register keylistener
@@ -3064,12 +3064,9 @@ nsTextControlFrame::GetWidthInCharacters() const
   return DEFAULT_COLUMN_WIDTH;
 }
 
-NS_IMETHODIMP
-nsTextControlFrame::GetScrollableView(nsPresContext* aPresContext,
-                                      nsIScrollableView** aView)
+nsIScrollableView* nsTextControlFrame::GetScrollableView()
 {
-  *aView = mScrollableView;
-  return NS_OK;
+  return mScrollableView;
 }
 
 PRBool

@@ -998,7 +998,7 @@ nsGenericHTMLElement::GetScrollInfo(nsIScrollableView **aScrollableView,
     nsIScrollableViewProvider *scrollProvider = nsnull;
     CallQueryInterface(frame, &scrollProvider);
     if (scrollProvider) {
-      scrollProvider->GetScrollableView(presContext, aScrollableView);
+      *aScrollableView = scrollProvider->GetScrollableView();
       if (*aScrollableView) {
         return;
       }
@@ -1031,7 +1031,7 @@ nsGenericHTMLElement::GetScrollInfo(nsIScrollableView **aScrollableView,
   }
 
   // Get the scrollable view
-  scrollFrame->GetScrollableView(presContext, aScrollableView);
+  *aScrollableView = scrollFrame->GetScrollableView();
 
   return;
 }

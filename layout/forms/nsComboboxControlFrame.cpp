@@ -2338,21 +2338,17 @@ nsComboboxControlFrame::Paint(nsPresContext*     aPresContext,
 //----------------------------------------------------------------------
   //nsIScrollableViewProvider
 //----------------------------------------------------------------------
-NS_METHOD
-nsComboboxControlFrame::GetScrollableView(nsPresContext* aPresContext,
-                                          nsIScrollableView** aView)
+nsIScrollableView* nsComboboxControlFrame::GetScrollableView()
 {
-  *aView = nsnull;
-
   if (!mDropdownFrame)
-    return NS_ERROR_FAILURE;
+    return nsnull;
 
   nsIScrollableFrame* scrollable = nsnull;
   nsresult rv = CallQueryInterface(mDropdownFrame, &scrollable);
   if (NS_FAILED(rv))
-    return rv;
+    return nsnull;
 
-  return scrollable->GetScrollableView(aPresContext, aView);
+  return scrollable->GetScrollableView();
 }
 
 //---------------------------------------------------------

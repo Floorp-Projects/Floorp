@@ -289,8 +289,7 @@ nsGrid::FindRowsAndColumns(nsIBox** aRows, nsIBox** aColumns)
     nsresult rv = NS_OK;
     nsCOMPtr<nsIScrollableFrame> scrollFrame = do_QueryInterface(child, &rv);
     if (scrollFrame) {
-       nsIFrame* scrolledFrame = nsnull;
-       scrollFrame->GetScrolledFrame(nsnull, scrolledFrame);
+       nsIFrame* scrolledFrame = scrollFrame->GetScrolledFrame();
        NS_ASSERTION(scrolledFrame,"Error no scroll frame!!");
        if (NS_FAILED(CallQueryInterface(scrolledFrame, &child)))
          child = nsnull;
@@ -1459,8 +1458,7 @@ nsGrid::GetScrolledBox(nsIBox* aChild)
   // first see if it is a scrollframe. If so walk down into it and get the scrolled child
       nsCOMPtr<nsIScrollableFrame> scrollFrame = do_QueryInterface(aChild);
       if (scrollFrame) {
-         nsIFrame* scrolledFrame = nsnull;
-         scrollFrame->GetScrolledFrame(nsnull, scrolledFrame);
+         nsIFrame* scrolledFrame = scrollFrame->GetScrolledFrame();
          NS_ASSERTION(scrolledFrame,"Error no scroll frame!!");
          nsIBox *box = nsnull;
          CallQueryInterface(scrolledFrame, &box);

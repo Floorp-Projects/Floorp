@@ -3427,7 +3427,7 @@ PresShell::GetPageSequenceFrame(nsIPageSequenceFrame** aResult) const
                                           (void **)&scrollable);
       if (NS_SUCCEEDED(rv) && (nsnull != scrollable)) {
           // if it is then get the scrolled frame
-          scrollable->GetScrolledFrame(nsnull, child);
+          child = scrollable->GetScrolledFrame();
       } else {
         if (mPresContext->Type() == nsPresContext::eContext_PrintPreview) {
           child = child->GetFirstChild(nsnull);
@@ -3671,7 +3671,7 @@ PresShell::GetViewToScroll()
     if (startFrame) {
       nsCOMPtr<nsIScrollableViewProvider> svp = do_QueryInterface(startFrame);
       if (svp) {
-        svp->GetScrollableView(mPresContext, &scrollView);
+        scrollView = svp->GetScrollableView();
       } else {
         nsIView* startView = startFrame->GetClosestView();
         if (startView)

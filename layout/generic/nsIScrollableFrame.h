@@ -50,8 +50,8 @@ class nsBoxLayoutState;
 
 // IID for the nsIScrollableFrame interface
 #define NS_ISCROLLABLE_FRAME_IID    \
-{ 0xc95f1831, 0xc372, 0x11d1, \
-{ 0xb7, 0x21, 0x0, 0x64, 0x9, 0x92, 0xd8, 0xc9 } }
+{ 0xf285c180, 0x8492, 0x48d5, \
+{ 0xb1, 0xb5, 0x03, 0x28, 0x21, 0xc9, 0x72, 0x02 } }
 
 class nsIScrollableFrame : public nsIScrollableViewProvider {
 public:
@@ -62,8 +62,7 @@ public:
    * Get the frame that we are scrolling within the scrollable frame.
    * @result child frame
    */
-  NS_IMETHOD GetScrolledFrame(nsPresContext* aPresContext,
-                              nsIFrame *&aScrolledFrame) const = 0;
+  virtual nsIFrame* GetScrolledFrame() const = 0;
 
   typedef nsPresContext::ScrollbarStyles ScrollbarStyles;
 
@@ -84,7 +83,7 @@ public:
   /**
    * Get the position of the scrolled view.
    */
-  NS_IMETHOD  GetScrollPosition(nsPresContext* aContext, nscoord &aX, nscoord& aY) const=0;
+  virtual nsPoint GetScrollPosition() const = 0;
 
   /**
    * Scroll the view to the given x,y, update's the scrollbar's thumb
@@ -95,24 +94,19 @@ public:
    * @param aUpdateFlags passed onto nsIViewManager->UpdateView()
    * @return error status
    */
-  NS_IMETHOD ScrollTo(nsPresContext* aContext, nscoord aX, nscoord aY, PRUint32 aFlags = NS_VMREFRESH_NO_SYNC)=0;
+  virtual void ScrollTo(nsPoint aScrollPosition, PRUint32 aFlags = NS_VMREFRESH_NO_SYNC)=0;
 
-  NS_IMETHOD GetScrollableView(nsPresContext* aContext, nsIScrollableView** aResult)=0;
-
+  virtual nsIScrollableView* GetScrollableView() = 0;
 
   /**
    * Set information about whether the vertical and horizontal scrollbars
    * are currently visible
    */
-  NS_IMETHOD SetScrollbarVisibility(nsPresContext* aPresContext,
-                                    PRBool aVerticalVisible,
-                                    PRBool aHorizontalVisible) = 0;
+  virtual void SetScrollbarVisibility(PRBool aVerticalVisible, PRBool aHorizontalVisible) = 0;
 
-  NS_IMETHOD GetScrollbarBox(PRBool aVertical, nsIBox** aResult) = 0;
+  virtual nsIBox* GetScrollbarBox(PRBool aVertical) = 0;
 
-  NS_IMETHOD CurPosAttributeChanged(nsPresContext* aPresContext,
-                                    nsIContent* aChild,
-                                    PRInt32 aModType) = 0;
+  virtual void CurPosAttributeChanged(nsIContent* aChild, PRInt32 aModType) = 0;
 
   /**
    * This tells the scroll frame to try scrolling to the scroll
