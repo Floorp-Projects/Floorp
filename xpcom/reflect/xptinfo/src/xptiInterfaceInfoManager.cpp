@@ -89,6 +89,7 @@ xptiInterfaceInfoManager::xptiInterfaceInfoManager()
 {
     NS_INIT_ISUPPORTS();
 
+#ifndef XPCOM_STANDALONE
     nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_PROGID);
     if(prefs)
     {
@@ -130,6 +131,7 @@ xptiInterfaceInfoManager::xptiInterfaceInfoManager()
             nsCRT::free(autoRegFilename);
         }
     }
+#endif /* XPCOM_STANDALONE */
 }
 
 xptiInterfaceInfoManager::~xptiInterfaceInfoManager()
