@@ -1083,8 +1083,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetNewMessages()
     NS_WITH_SERVICE(nsIPop3Service, pop3Service, kCPop3ServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-	nsCOMPtr<nsIMsgIncomingServer> server;
-	rv = GetServer(getter_AddRefs(server));
+    nsCOMPtr<nsIMsgIncomingServer> server;
+    rv = GetServer(getter_AddRefs(server));
 
     nsCOMPtr<nsIPop3IncomingServer> popServer;
     rv = server->QueryInterface(nsIPop3IncomingServer::GetIID(),

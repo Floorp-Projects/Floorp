@@ -54,6 +54,9 @@ extern nsresult
 nsGetNewsRoot(const char* hostname, nsFileSpec &result);
 
 extern nsresult
+nsGetNewsHostName(const char *rootURI, const char *uriStr, char **hostName);
+
+extern nsresult
 nsNewsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult);
 
 extern nsresult

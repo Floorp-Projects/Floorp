@@ -1013,7 +1013,19 @@ NS_IMETHODIMP nsMsgNewsFolder::GetUsersName(char** userName)
 
 NS_IMETHODIMP nsMsgNewsFolder::GetHostName(char** hostName)
 {
-  return NS_OK;
+  nsresult rv;
+	char *host = nsnull;
+	rv = nsGetNewsHostName(kNewsRootURI, mURI, &host);
+	//I'm recopying it because otherwise we'll have a free mismatched memory.
+	//We should really be using allocators to do all of this.
+	if(NS_SUCCEEDED(rv) && host)
+	{
+    *hostName = PL_strdup(host);
+		delete[] host;
+		if(!*hostName)
+			return NS_ERROR_OUT_OF_MEMORY;
+	}
+	return rv;
 }
 
 NS_IMETHODIMP nsMsgNewsFolder::UserNeedsToAuthenticateForFolder(PRBool displayOnly, PRBool *authenticate)
@@ -1090,16 +1102,13 @@ NS_IMETHODIMP nsMsgNewsFolder::GetNewMessages()
 		printf("sorry, can't get news for entire news server yet.  try it on a newsgroup by newsgroup level\n");
 		return NS_OK;
   }
-  
-  NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-  
+
   NS_WITH_SERVICE(nsINntpService, nntpService, kNntpServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
   
   //Are we assured this is the server for this folder?
   nsCOMPtr<nsIMsgIncomingServer> server;
-  rv = mailSession->GetCurrentServer(getter_AddRefs(server));
+  rv = GetServer(getter_AddRefs(server));
   if (NS_FAILED(rv)) return rv;
   
   nsCOMPtr<nsINntpIncomingServer> nntpServer;
@@ -1111,8 +1120,8 @@ NS_IMETHODIMP nsMsgNewsFolder::GetNewMessages()
 #endif
     rv = nntpService->GetNewNews(nsnull,nntpServer,nsnull,mURI);
   }
- 
-	return rv;
+  return rv;
+
 }
 
 NS_IMETHODIMP nsMsgNewsFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr, nsIMessage **message)

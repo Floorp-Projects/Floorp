@@ -75,6 +75,44 @@ nsGetNewsRoot(const char *hostname, nsFileSpec &result)
   return rv;
 }
 
+// copy-and-paste from nsGetMailboxHostName()
+// we could probably combine them in a common place to save
+// space.
+nsresult nsGetNewsHostName(const char *rootURI, const char *uriStr, char **hostName)
+{
+  if(!hostName)
+	  return NS_ERROR_NULL_POINTER;
+
+  nsAutoString uri = uriStr;
+  if (uri.Find(rootURI) != 0)     // if doesn't start with rootURI
+    return NS_ERROR_FAILURE;
+
+  // start parsing the uriStr
+  const char* curPos = uriStr;
+  
+  // skip past schema 
+  while (*curPos != ':') curPos++;
+  curPos++;
+  while (*curPos == '/') curPos++;
+
+  char *slashPos = PL_strchr(curPos, '/');
+  int length;
+
+  // if there are no more /'s then we just copy the rest of the string
+  if (slashPos)
+    length = (slashPos - curPos) + 1;
+  else
+    length = PL_strlen(curPos) + 1;
+
+  *hostName = new char[length];
+  if(!*hostName)
+	  return NS_ERROR_OUT_OF_MEMORY;
+
+  PL_strncpyz(*hostName, curPos, length);
+
+  return NS_OK;
+}
+
 nsresult
 nsNewsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
 {
