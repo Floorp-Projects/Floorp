@@ -81,6 +81,7 @@
 #include "jsscript.h"
 #include "jsstr.h"
 #include "jsutil.h" /* Added by JSIFY */
+#include <string.h>
 
 /* NSPR dependencies */
 #include "prio.h"
@@ -419,7 +420,7 @@ js_absolutePath(JSContext *cx, const char * path)
 
 /* Side effect: will remove spaces in the beginning/end of the filename */
 static char *
-js_canonicalPath(JSContext *cx, const char *oldpath)
+js_canonicalPath(JSContext *cx, char *oldpath)
 {
     char *tmp;
     char *path = oldpath;
@@ -437,8 +438,7 @@ js_canonicalPath(JSContext *cx, const char *oldpath)
 	strncpy(tmp, &path[i], j-i+1);
     tmp[j-i+1] = '\0';
 
-	strcpy(path, tmp);
-    JS_free(cx, tmp);
+    path = tmp;
 
     /* pipe support */
     if(js_filenameHasAPipe(path))
@@ -1319,7 +1319,7 @@ file_close(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             JS_ReportWarning(cx, "Unable to close a native file, proceeding", file->path);
             goto out;
         }else{
-            if(PR_Close(file->handle)){
+            if(file->handle && PR_Close(file->handle)){
                 JS_ReportErrorNumber(cx, JSFile_GetErrorMessage, NULL,
                     JSFILEMSG_OP_FAILED, "close", file->path);
 
@@ -1519,7 +1519,8 @@ file_write(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSFile      *file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
     JSString    *str;
-    int32       count, i;
+    int32       count;
+    uintN       i;
 
     SECURITY_CHECK(cx, NULL, "write", file);
     JSFILE_CHECK_WRITE;
@@ -1804,7 +1805,6 @@ file_list(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     SECURITY_CHECK(cx, NULL, "list", file);
     JSFILE_CHECK_NATIVE("list");
-    JSFILE_CHECK_READ;
 
     if (argc==1) {
         if (JSVAL_IS_REGEXP(cx, argv[0])) {
@@ -1945,12 +1945,18 @@ file_toURL(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSFile *file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
     char url[MAX_PATH_LENGTH];
+    jschar *urlChars;
 
 	JSFILE_CHECK_NATIVE("toURL");
 
     sprintf(url, "file://%s", file->path);
     /* TODO: js_escape in jsstr.h may go away at some point */
-    *rval = STRING_TO_JSVAL(JS_NewStringCopyZ(cx, js_escape(cx, obj, url)));
+
+    urlChars = js_InflateString(cx, url, strlen(url));
+    if (urlChars == NULL) return JS_FALSE;
+    *rval = STRING_TO_JSVAL(js_NewString(cx, urlChars, strlen(url), 0));
+    if (!str_escape(cx, obj, 0, rval, rval)) return JS_FALSE;
+
     return JS_TRUE;
 out:
     *rval = JSVAL_VOID;
