@@ -965,6 +965,7 @@ int CIntlWin::DrawTextEx(int16 wincsid, HDC hdc, LPSTR lpchText, int cchText,LPR
   XP_ASSERT(0);
   return 0;
 #else
+
 	wincsid = INTL_DocToWinCharSetID(wincsid) & ~ CS_AUTO;
 
 	int iRetval;
@@ -1089,6 +1090,7 @@ extern "C" INTLCharSetID FE_GetCharSetID(INTL_CharSetID_Selector selector)
  case INTL_FileNameCsidSel: 
  case INTL_DefaultTextWidgetCsidSel: 
  case INTL_OldBookmarkCsidSel: 
+ case INTL_MenuCsidSel: 
   charsetID = (INTLCharSetID) CIntlWin::GetSystemLocaleCsid(); 
   break; 
  default: 
