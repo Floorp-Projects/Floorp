@@ -32,6 +32,7 @@
 #include "nsIZipReader.h"
 #include "nsIFileChannel.h"
 #include "nsILoadGroup.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsCOMPtr.h"
 
 class nsIFileChannel;
