@@ -705,6 +705,14 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
             statusText->SetText(str);
             break;
 
+        case NS_MOUSE_LEFT_DOUBLECLICK:
+            statusText->SetText("Left button double click");
+            break;
+
+        case NS_MOUSE_RIGHT_DOUBLECLICK:
+            statusText->SetText("Right button double click");
+            break;
+
         case NS_MOUSE_ENTER:
             if (DEBUG_MOUSE) printf("NS_MOUSE_ENTER 0x%X\n", aEvent->widget);
             break;
