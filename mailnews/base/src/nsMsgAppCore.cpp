@@ -41,6 +41,7 @@
 #include "nsIMailboxService.h"
 #include "nsFileSpec.h"
 
+#include "nsIMessage.h"
 #include "nsIPop3Service.h"
 
 #include "nsNNTPProtocol.h" // mscott - hopefully this dependency should only be temporary...
@@ -90,6 +91,7 @@ public:
   NS_IMETHOD SetWindow(nsIDOMWindow* aWin);
   NS_IMETHOD OpenURL(const char * url);
   NS_IMETHOD DeleteMessage(nsIDOMXULTreeElement *tree, nsIDOMNodeList *nodeList);
+  NS_IMETHOD GetMessageHeader(nsIDOMXULTreeElement *tree, nsIDOMNodeList *nodeList, nsISupports **aSupport);
 
 private:
   
@@ -533,6 +535,38 @@ nsMsgAppCore::DeleteMessage(nsIDOMXULTreeElement *tree, nsIDOMNodeList *nodeList
 	NS_RELEASE(resourceArray);
 	return rv;
 }
+
+NS_IMETHODIMP
+nsMsgAppCore::GetMessageHeader(nsIDOMXULTreeElement *tree, nsIDOMNodeList *nodeList, nsISupports **aSupport)
+{
+      nsresult rv;
+      nsISupportsArray *resourceArray;
+    nsIBidirectionalEnumerator *aEnumerator = nsnull;
+    *aSupport = nsnull;
+    nsISupports *aItem = nsnull;
+
+      if(NS_FAILED(rv =ConvertDOMListToResourceArray(nodeList, &resourceArray)))
+              return rv;
+
+    rv = NS_NewISupportsArrayEnumerator(resourceArray, &aEnumerator);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = aEnumerator->First();
+    while (rv == NS_OK)
+    {
+        rv = aEnumerator->CurrentItem(&aItem);
+        if (rv != NS_OK) break;
+        rv = aItem->QueryInterface(nsIMessage::GetIID(), (void**)aSupport);
+        aItem->Release();
+        if (rv == NS_OK && *aSupport) break;
+        rv = aEnumerator->Next();
+    }
+
+    aEnumerator->Release();
+      NS_RELEASE(resourceArray);
+      return rv;
+}
+
 
 //  to load the webshell!
 //  mWebShell->LoadURL(nsAutoString("http://www.netscape.com"), 

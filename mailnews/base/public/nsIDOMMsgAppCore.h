@@ -45,7 +45,10 @@ class nsIDOMMsgAppCore : public nsIDOMBaseAppCore {
   /* void DeleteMessage (in string str); */
   NS_IMETHOD DeleteMessage(nsIDOMXULTreeElement *tree, nsIDOMNodeList *nodeList) = 0;
 
-#ifdef XPIDL_JS_STUBS
+  /* void GetMessageHeader (in string str); */
+  NS_IMETHOD GetMessageHeader(nsIDOMXULTreeElement *tree, nsIDOMNodeList *nodeList, nsISupports **_retval) = 0;
+
+ #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
   static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIDOMMsgAppCore *priv);
 #endif

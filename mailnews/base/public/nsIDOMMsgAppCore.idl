@@ -50,6 +50,7 @@ interface nsIDOMMsgAppCore : nsIDOMBaseAppCore {
     void SetWindow(in nsIDOMWindow ptr);
     void OpenURL(in string str);
     void DeleteMessage(in nsIDOMXULTreeElement tree, in nsIDOMNodeList node);
+    nsISupports GetMessageHeader(in nsIDOMXULTreeElement tree, in nsIDOMNodeList node);
 };
 
 /* hack to make MsgAppCore visible from AppCore */

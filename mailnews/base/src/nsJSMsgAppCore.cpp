@@ -326,6 +326,59 @@ MsgAppCoreDeleteMessage(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 
   return JS_TRUE;
 }
+
+
+//
+// Native method GetMessageHeader
+//
+PR_STATIC_CALLBACK(JSBool)
+MsgAppCoreGetMessageHeader(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMMsgAppCore *nativeThis = (nsIDOMMsgAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+      nsIDOMNodeList *nodeList;
+      nsIDOMXULTreeElement *tree;
+  nsISupports *nativeRet;
+      const nsString typeName;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 2) {
+              rBool = nsJSUtils::nsConvertJSValToObject((nsISupports**)&tree,
+                                                                                                                                                      nsIDOMXULTreeElement::GetIID(),
+                                  typeName,
+                                  cx,
+                                  argv[0]);
+
+              rBool = rBool && nsJSUtils::nsConvertJSValToObject((nsISupports**)&nodeList,
+                                                                                                                                                      nsIDOMNodeList::GetIID(),
+                                  typeName,
+                                  cx,
+                                  argv[1]);
+
+              
+    if (!rBool || NS_OK != nativeThis->GetMessageHeader(tree, nodeList, &nativeRet)) {
+      return JS_FALSE;
+    }
+
+              NS_RELEASE(nodeList);
+              NS_RELEASE(tree);
+    *rval = (jsval) nativeRet;
+  }
+  else {
+    JS_ReportError(cx, "Function ReplyMessage requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
 /***********************************************************************/
 //
 // class for MsgAppCore
@@ -363,6 +416,7 @@ static JSFunctionSpec MsgAppCoreMethods[] =
   {"SetWindow",          MsgAppCoreSetWindow,     1},
   {"OpenURL",          MsgAppCoreOpenURL,     1},
   {"DeleteMessage",          MsgAppCoreDeleteMessage,     2},
+  {"GetMessageHeader",          MsgAppCoreGetMessageHeader,     2},
   {0}
 };
 
