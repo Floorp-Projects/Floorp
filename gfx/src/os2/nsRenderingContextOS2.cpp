@@ -321,7 +321,8 @@ nsresult nsRenderingContextOS2::CommonInit()
     ::GpiSelectPalette(mSurface->mPS, (HPAL)palInfo.palette);
     ::WinRealizePalette((HWND)mDCOwner->GetNativeData(NS_NATIVE_WINDOW),mSurface->mPS, &cclr);
   } else if (!palInfo.isPaletteDevice && palInfo.palette) {
-    GpiCreateLogColorTable( mSurface->mPS, LCOL_RESET | LCOL_PURECOLOR,
+//    GpiCreateLogColorTable( mSurface->mPS, LCOL_RESET | LCOL_PURECOLOR,
+    GpiCreateLogColorTable( mSurface->mPS, LCOL_RESET,
                             LCOLF_CONSECRGB, 0,
                             palInfo.sizePalette, (PLONG) palInfo.palette);
     free(palInfo.palette);
@@ -329,7 +330,8 @@ nsresult nsRenderingContextOS2::CommonInit()
   }
   else
   {
-    GpiCreateLogColorTable( mSurface->mPS, LCOL_PURECOLOR,
+//    GpiCreateLogColorTable( mSurface->mPS, LCOL_PURECOLOR,
+    GpiCreateLogColorTable( mSurface->mPS, 0,
                             LCOLF_RGB, 0, 0, 0);
   }
   return NS_OK;
@@ -888,8 +890,10 @@ void nsRenderingContextOS2::SetupDrawingColor( BOOL bForce)
          areaBundle.lBackColor = 0x00FFFFFF;   //OS2TODO
          lineBundle.lBackColor = 0x00FFFFFF;
 
-         areaBundle.usMixMode     = FM_LEAVEALONE;
-         areaBundle.usBackMixMode = BM_LEAVEALONE;
+//         areaBundle.usMixMode     = FM_LEAVEALONE;
+//         areaBundle.usBackMixMode = BM_LEAVEALONE;
+         areaBundle.usMixMode     = FM_OVERPAINT;
+         areaBundle.usBackMixMode = BM_OVERPAINT;
 
 
          lLineFlags = lLineFlags | LBB_BACK_COLOR ;
@@ -1226,8 +1230,11 @@ void nsRenderingContextOS2::PMDrawArc( nsRect &rect, PRBool bFilled,
 
 NS_IMETHODIMP nsRenderingContextOS2::GetHints(PRUint32& aResult)
 {
-   aResult = gModuleData.renderingHints;
-   return NS_OK;
+  PRUint32 result = 0;
+
+  aResult = result;
+
+  return NS_OK;
 }
 
 nsresult nsRenderingContextOS2::DrawString( const char *aString,
@@ -1259,15 +1266,16 @@ nsresult nsRenderingContextOS2::DrawString( const char *aString,
 
    GpiMove( mSurface->mPS, &ptl);
 
+   PRUint32 lLength = aLength;
    // GpiCharString has a max length of 512 chars at a time...
-   while( aLength)
+   while( lLength)
    {
-      ULONG thislen = min( aLength, 512);
+      ULONG thislen = min( lLength, 512);
       GpiCharStringPos( mSurface->mPS, nsnull,
                         aSpacing == nsnull ? 0 : CHS_VECTOR,
                         thislen, (PCH)aString,
                         aSpacing == nsnull ? nsnull : (PLONG) dx0);
-      aLength -= thislen;
+      lLength -= thislen;
       aString += thislen;
       dx0 += thislen;
    }
@@ -1280,9 +1288,11 @@ nsresult nsRenderingContextOS2::DrawString( const PRUnichar *aString, PRUint32 a
                                             PRInt32 aFontID,
                                             const nscoord* aSpacing)
 {
-   // XXX unicode hack XXX
-   return DrawString( gModuleData.ConvertFromUcs( aString, aLength),
-                      aLength, aX, aY, aSpacing);
+  char buf[1024];
+
+  int newLength = WideCharToMultiByte( ((nsFontMetricsOS2*)mFontMetrics)->mCodePage, aString, aLength, buf, sizeof(buf));
+
+  return DrawString( buf, newLength, aX, aY, aSpacing);
 }
 
 nsresult nsRenderingContextOS2::DrawString( const nsString& aString,
@@ -1341,17 +1351,18 @@ NS_IMETHODIMP nsRenderingContextOS2::GetWidth( const char* aString,
                                                nscoord &aWidth)
 {
    PRUint32 sum = 0;
+   PRUint32 lLength = aLength;
 
    SetupFontAndColor(); // select font
 
    POINTL ptls[ 4];
 
-   while( aLength) // max data to gpi function is 512 chars.
+   while( lLength) // max data to gpi function is 512 chars.
    {
-      ULONG thislen = min( aLength, 512);
+      ULONG thislen = min( lLength, 512);
       GpiQueryTextBox( mSurface->mPS, thislen, (PCH) aString, 4, ptls);
       sum += ptls[ TXTBOX_TOPRIGHT].x;
-      aLength -= thislen;
+      lLength -= thislen;
       aString += thislen;
    }
 
@@ -1365,9 +1376,12 @@ NS_IMETHODIMP nsRenderingContextOS2::GetWidth( const PRUnichar *aString,
                                                nscoord &aWidth,
                                                PRInt32 *aFontID)
 {
-   // XXX unicode hack XXX
-   return GetWidth( gModuleData.ConvertFromUcs( aString, aLength),
-                    aLength, aWidth);
+  nsresult temp;
+  char buf[1024];
+
+  int newLength = WideCharToMultiByte( ((nsFontMetricsOS2*)mFontMetrics)->mCodePage, aString, aLength, buf, sizeof(buf));
+  temp = GetWidth( buf, newLength, aWidth);
+  return temp;
 }
 
 // Image drawing: just proxy on to the image object, so no worries yet.

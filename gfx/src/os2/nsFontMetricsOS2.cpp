@@ -23,12 +23,20 @@
 //       Revision by someone who *really* understands OS/2 fonts.
 
 #include "nsGfxDefs.h"
-#include "nsDeviceContextOS2.h"
+#include "nsIPref.h"
+#include "nsIServiceManager.h"
+#include "nsICharsetConverterManager.h"
+#include "nsICharsetConverterManager2.h"
+#include "nsICharRepresentable.h"
 #include "nsFontMetricsOS2.h"
-#include "nsString.h"
-#include "nsFont.h"
 #include "nsQuickSort.h"
+#include "nsTextFormatter.h"
 #include "prmem.h"
+#include "plhash.h"
+#include "prprf.h"
+
+#undef USER_DEFINED
+#define USER_DEFINED "x-user-def"
 
 enum nsCharSet
 {
@@ -59,11 +67,37 @@ struct nsCharSetInfo
   PRUint32* mMap;
 };
 
-static PRUint32 gUserDefinedMap[2048];
+static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
+static NS_DEFINE_IID(kIFontMetricsIID, NS_IFONT_METRICS_IID);
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 nsGlobalFont* nsFontMetricsOS2::gGlobalFonts = nsnull;
 static int gGlobalFontsAlloc = 0;
 int nsFontMetricsOS2::gGlobalFontsCount = 0;
+
+PLHashTable* nsFontMetricsOS2::gFontMaps = nsnull;
+
+PLHashTable* nsFontMetricsOS2::gFamilyNames = nsnull;
+
+//-- Font weight
+PLHashTable* nsFontMetricsOS2::gFontWeights = nsnull;
+
+#define NS_MAX_FONT_WEIGHT 900
+#define NS_MIN_FONT_WEIGHT 100
+
+#undef CHAR_BUFFER_SIZE
+#define CHAR_BUFFER_SIZE 1024
+
+static nsICharsetConverterManager2* gCharSetManager = nsnull;
+static nsIPref* gPref = nsnull;
+static nsIUnicodeEncoder* gUserDefinedConverter = nsnull;
+
+static nsIAtom* gUserDefined = nsnull;
+
+static int gFontMetricsOS2Count = 0;
+static int gInitialized = 0;
+
+static PRUint32 gUserDefinedMap[2048];
 
 static nsCharSetInfo gCharSetInfo[eCharSet_COUNT] =
 {
@@ -71,14 +105,15 @@ static nsCharSetInfo gCharSetInfo[eCharSet_COUNT] =
   { "ANSI",        FM_DEFN_LATIN1,   1252, "x-western" },
   { "EASTEUROPE",  FM_DEFN_LATIN2,   1250, "x-central-euro" },
   { "RUSSIAN",     FM_DEFN_CYRILLIC, 1251, "x-cyrillic" },
-  { "GREEK",       FM_DEFN_GREEK,    1253, "el" },
+  { "GREEK",       FM_DEFN_GREEK,    813, "el" },
   { "TURKISH",     0,                1254, "tr" },
   { "HEBREW",      FM_DEFN_HEBREW,   1255, "he" },
   { "ARABIC",      FM_DEFN_ARABIC,   1256, "ar" },
   { "BALTIC",      0,                1257, "x-baltic" },
   { "THAI",        FM_DEFN_THAI,     874,  "th" },
   { "SHIFTJIS",    FM_DEFN_KANA,     932,  "ja" },
-  { "GB2312",      FM_DEFN_KANA,     936,  "zh-CN" },
+//  { "GB2312",      FM_DEFN_KANA,     936,  "zh-CN" },
+  { "GB2312",      FM_DEFN_KANA,     1386,  "zh-CN" },
   { "HANGEUL",     FM_DEFN_KANA,     949,  "ko" },
   { "CHINESEBIG5", FM_DEFN_KANA,     950,  "zh-TW" },
   { "JOHAB",       FM_DEFN_KANA,     1361, "ko-XXX", }
@@ -100,10 +135,52 @@ void nsFontHandleOS2::SelectIntoPS( HPS hps, long lcid)
       PMERROR("GpiSetCharSet");
 }
 
+static void
+FreeGlobals(void)
+{
+  // XXX complete this
+
+  gInitialized = 0;
+
+  NS_IF_RELEASE(gCharSetManager);
+  NS_IF_RELEASE(gPref);
+  NS_IF_RELEASE(gUserDefined);
+  NS_IF_RELEASE(gUserDefinedConverter);
+}
+
+static nsresult
+InitGlobals(void)
+{
+  nsServiceManager::GetService(kCharsetConverterManagerCID,
+    NS_GET_IID(nsICharsetConverterManager2), (nsISupports**) &gCharSetManager);
+  if (!gCharSetManager) {
+    FreeGlobals();
+    return NS_ERROR_FAILURE;
+  }
+  nsServiceManager::GetService(kPrefCID, NS_GET_IID(nsIPref),
+    (nsISupports**) &gPref);
+  if (!gPref) {
+    FreeGlobals();
+    return NS_ERROR_FAILURE;
+  }
+
+  gUserDefined = NS_NewAtom(USER_DEFINED);
+  if (!gUserDefined) {
+    FreeGlobals();
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  gInitialized = 1;
+
+  return NS_OK;
+}
+
 nsFontMetricsOS2::nsFontMetricsOS2()
 {
-   // members are zeroed by new operator (hmm)
    NS_INIT_REFCNT();
+  ++gFontMetricsOS2Count;
+   // members are zeroed by new operator (hmm) - yeah right
+   mTriedAllGenerics = 0;
 }
   
 nsFontMetricsOS2::~nsFontMetricsOS2()
@@ -112,16 +189,26 @@ nsFontMetricsOS2::~nsFontMetricsOS2()
 
    delete mFont;
    delete mFontHandle;
+  if (0 == --gFontMetricsOS2Count) {
+    FreeGlobals();
+  }
 }
 
 NS_IMPL_ISUPPORTS( nsFontMetricsOS2, nsIFontMetrics::GetIID())
 
 nsresult nsFontMetricsOS2::Init( const nsFont &aFont,  nsIAtom* aLangGroup, nsIDeviceContext *aContext)
 {
+  nsresult res;
+  if (!gInitialized) {
+    res = InitGlobals();
+    if (NS_FAILED(res)) {
+      return res;
+    }
+  }
    mFont = new nsFont( aFont);
    mLangGroup = aLangGroup;
    //   mIndexOfSubstituteFont = -1;
-   mContext = (nsDeviceContextOS2 *) aContext;
+   mDeviceContext = (nsDeviceContextOS2 *) aContext;
    nsresult rv = RealizeFont();
    return rv;
 }
@@ -131,73 +218,287 @@ nsresult nsFontMetricsOS2::Destroy()
    return NS_OK;
 }
 
-// Map CSS font names to something we can understand locally.
-// Some conversions are a bit dodgy (fantasy) but there's little option, I
-// guess.
-// Surely this should be in XP code somewhere?
-static void MapGenericFamilyToFont( const nsString &aGenericFamily, 
-                                    nsIDeviceContext *aDC,
-                                    nsString &aFontFace)
+static PLHashNumber PR_CALLBACK
+HashKey(const void* aString)
 {
-   // the CSS generic names (conversions from Nav for now)
-   // XXX this  need to check availability with the dc
-   PRBool aliased;
-   nsAutoString  timesRoman;         timesRoman.AssignWithConversion("Tms Rmn");
-   nsAutoString  helv;               helv.AssignWithConversion("Helv");
-   nsAutoString  script;             script.AssignWithConversion("Script");
-   nsAutoString  arial;              arial.AssignWithConversion("Arial");
-   nsAutoString  courier;            courier.AssignWithConversion("Courier");
-
-   if( aGenericFamily.EqualsIgnoreCase( "serif"))
-      aDC->GetLocalFontName( timesRoman, aFontFace, aliased);
-   else if( aGenericFamily.EqualsIgnoreCase( "sans-serif"))
-      aDC->GetLocalFontName( helv, aFontFace, aliased);
-   else if( aGenericFamily.EqualsIgnoreCase( "Helv")) // !!
-      aDC->GetLocalFontName( script, aFontFace, aliased);
-   else if( aGenericFamily.EqualsIgnoreCase( "fantasy")) // !!
-      aDC->GetLocalFontName( arial, aFontFace, aliased);
-   else if( aGenericFamily.EqualsIgnoreCase( "monospace"))
-      aDC->GetLocalFontName( courier, aFontFace, aliased);
-   else
-      aFontFace.Truncate();
+  const nsString* str = (const nsString*)aString;
+  return (PLHashNumber)
+    nsCRT::HashCode(str->GetUnicode());
 }
 
-struct FontEnumData
+static PRIntn PR_CALLBACK
+CompareKeys(const void* aStr1, const void* aStr2)
 {
-   FontEnumData( nsIDeviceContext* aContext, char* aFaceName)
-    : mContext( aContext), mFaceName( aFaceName)
-   {}
+  return nsCRT::strcmp(((const nsString*) aStr1)->GetUnicode(),
+    ((const nsString*) aStr2)->GetUnicode()) == 0;
+}
+nsFontOS2*
+nsFontMetricsOS2::LoadFont(HPS aPS, nsString* aName)
+{ 
+  nsFontOS2* font = nsnull;
+  char fontName[FACESIZE];
+  WideCharToMultiByte(0, aName->GetUnicode(), aName->Length() + 1,
+    fontName, sizeof(fontName));
+  long lWant = 0;
+  long lFonts = GpiQueryFonts( aPS, QF_PUBLIC | QF_PRIVATE,
+                               fontName, &lWant, 0, 0);
+  if (lFonts > 0) {
+    font = new nsFontOS2();
+    aName->ToCString(font->mName, sizeof(font->mName));
+  }
+  return font;
+}
 
-   nsIDeviceContext *mContext;
-   char             *mFaceName;
+
+nsFontOS2*
+nsFontMetricsOS2::FindUserDefinedFont(HPS aPS, PRUnichar aChar)
+{
+  if (mIsUserDefined) {
+    nsFontOS2* font = LoadFont(aPS, &mUserDefined);
+#ifdef XP_OS2
+    if (font) {
+#else
+    if (font && FONT_HAS_GLYPH(font->mMap, aChar)) {
+#endif
+      return font;
+    }
+  }
+
+  return nsnull;
+}
+
+typedef struct nsFontFamilyName
+{
+  char* mName;
+  char* mWinName;
+} nsFontFamilyName;
+
+static nsFontFamilyName gFamilyNameTable[] =
+{
+#ifdef MOZ_MATHML
+  { "-moz-math-text",   "Times New Roman" },
+  { "-moz-math-symbol", "Symbol" },
+#endif
+  { "times",           "Times New Roman" },
+  { "times roman",     "Times New Roman" },
+  { "times new roman", "Times New Roman" },
+  { "arial",           "Arial" },
+  { "helvetica",       "Helv" },
+  { "courier",         "Courier" },
+  { "courier new",     "Courier New" },
+
+  { nsnull, nsnull }
 };
 
-// callback for each of the faces in the nsFont (use the first we can match)
-static PRBool FontEnumCallback( const nsString& aFamily, PRBool aGeneric, void *aData)
+PLHashTable*
+nsFontMetricsOS2::InitializeFamilyNames(void)
 {
-   FontEnumData *data = (FontEnumData*)aData;
-   PRBool        rc = PR_TRUE;
-
-   if( aGeneric)
-   {
-      nsAutoString realFace;
-      MapGenericFamilyToFont( aFamily, data->mContext, realFace);
-      realFace.ToCString( data->mFaceName, FACESIZE);
-      rc = PR_FALSE;  // stop
-   }
-   else
-   {
-      nsAutoString realFace;
-      PRBool       aliased;
-      data->mContext->GetLocalFontName( aFamily, realFace, aliased);
-      if( aliased || (NS_OK == data->mContext->CheckFontExistence( realFace)))
-      {
-         realFace.ToCString(data->mFaceName, FACESIZE);
-         rc = PR_FALSE;  // stop
+  static int gInitializedFamilyNames = 0;
+  if (!gInitializedFamilyNames) {
+    gInitializedFamilyNames = 1;
+    gFamilyNames = PL_NewHashTable(0, HashKey, CompareKeys, nsnull, nsnull,
+      nsnull);
+    if (!gFamilyNames) {
+      return nsnull;
+    }
+    nsFontFamilyName* f = gFamilyNameTable;
+    while (f->mName) {
+      nsString* name = new nsString;
+      nsString* winName = new nsString;
+      if (name && winName) {
+        name->AssignWithConversion(f->mName);
+        winName->AssignWithConversion(f->mWinName);
+        PL_HashTableAdd(gFamilyNames, name, (void*) winName);
       }
-   }
+      f++;
+    }
+  }
 
-   return PR_TRUE;
+  return gFamilyNames;
+}
+
+nsFontOS2*
+nsFontMetricsOS2::FindLocalFont(HPS aPS, PRUnichar aChar)
+{
+  if (!gFamilyNames) {
+    if (!InitializeFamilyNames()) {
+      return nsnull;
+    }
+  }
+  while (mFontsIndex < mFonts.Count()) {
+    if (mFontIsGeneric[mFontsIndex]) {
+      return nsnull;
+    }
+    nsString* name = mFonts.StringAt(mFontsIndex++);
+    nsAutoString low(*name);
+    low.ToLowerCase();
+    nsString* winName = (nsString*) PL_HashTableLookup(gFamilyNames, &low);
+    if (!winName) {
+      winName = name;
+    }
+    nsFontOS2* font = LoadFont(aPS, winName);
+#ifdef XP_OS2
+    if (font) {
+#else
+    if (font && FONT_HAS_GLYPH(font->mMap, aChar)) {
+#endif
+      return font;
+    }
+  }
+
+  return nsnull;
+}
+
+nsFontOS2*
+nsFontMetricsOS2::LoadGenericFont(HPS aPS, PRUnichar aChar, char** aName)
+{
+  if (*aName) {
+    int found = 0;
+    int i;
+#ifndef XP_OS2
+    for (i = 0; i < mLoadedFontsCount; i++) {
+      nsFontOS2* font = mLoadedFonts[i];
+      if (!strcmp(font->mName, *aName)) {
+        found = 1;
+        break;
+      }
+    }
+    if (found) {
+      nsMemory::Free(*aName);
+      *aName = nsnull;
+      return nsnull;
+    }
+#endif
+    PRUnichar name[FACESIZE] = { 0 };
+    PRUnichar format[] = { '%', 's', 0 };
+    PRUint32 n = nsTextFormatter::snprintf(name, FACESIZE, format, *aName);
+    nsMemory::Free(*aName);
+    *aName = nsnull;
+    if (n && (n != (PRUint32) -1)) {
+      nsAutoString  fontName(name);
+
+      nsFontOS2* font = LoadFont(aPS, &fontName);
+#ifdef XP_OS2
+      if (font) {
+#else
+      if (font && FONT_HAS_GLYPH(font->mMap, aChar)) {
+#endif
+        return font;
+      }
+    }
+  }
+
+  return nsnull;
+}
+
+typedef struct PrefEnumInfo
+{
+  PRUnichar         mChar;
+  HPS               mPS;
+  nsFontOS2*        mFont;
+  nsFontMetricsOS2* mMetrics;
+} PrefEnumInfo;
+
+void
+PrefEnumCallback(const char* aName, void* aClosure)
+{
+  PrefEnumInfo* info = (PrefEnumInfo*) aClosure;
+  if (info->mFont) {
+    return;
+  }
+  PRUnichar ch = info->mChar;
+  HPS ps = info->mPS;
+  nsFontMetricsOS2* metrics = info->mMetrics;
+  char* value = nsnull;
+  gPref->CopyCharPref(aName, &value);
+  nsFontOS2* font = metrics->LoadGenericFont(ps, ch, &value);
+  if (font) {
+    info->mFont = font;
+  }
+  else {
+    gPref->CopyDefaultCharPref(aName, &value);
+    font = metrics->LoadGenericFont(ps, ch, &value);
+    if (font) {
+      info->mFont = font;
+    }
+  }
+}
+
+nsFontOS2*
+nsFontMetricsOS2::FindGenericFont(HDC aPS, PRUnichar aChar)
+{
+  if (mTriedAllGenerics) {
+    return nsnull;
+  }
+  nsAutoString prefix;
+  prefix.AssignWithConversion("font.name.");
+  prefix.Append(*mGeneric);
+  char name[128];
+  if (mLangGroup) {
+    nsAutoString pref = prefix;
+    pref.AppendWithConversion('.');
+    const PRUnichar* langGroup = nsnull;
+    mLangGroup->GetUnicode(&langGroup);
+    pref.Append(langGroup);
+    pref.ToCString(name, sizeof(name));
+    char* value = nsnull;
+    gPref->CopyCharPref(name, &value);
+    nsFontOS2* font = LoadGenericFont(aPS, aChar, &value);
+    if (font) {
+      return font;
+    }
+    gPref->CopyDefaultCharPref(name, &value);
+    font = LoadGenericFont(aPS, aChar, &value);
+    if (font) {
+      return font;
+    }
+  }
+  prefix.ToCString(name, sizeof(name));
+  PrefEnumInfo info = { aChar, aPS, nsnull, this };
+  gPref->EnumerateChildren(name, PrefEnumCallback, &info);
+  if (info.mFont) {
+    return info.mFont;
+  }
+  mTriedAllGenerics = 1;
+
+  return nsnull;
+}
+
+nsFontOS2*
+nsFontMetricsOS2::FindFont(HPS aPS, PRUnichar aChar)
+{
+  nsFontOS2* font = FindUserDefinedFont(aPS, aChar);
+  if (!font) {
+    font = FindLocalFont(aPS, aChar);
+    if (!font) {
+      font = FindGenericFont(aPS, aChar);
+#ifndef XP_OS2
+      if (!font) {
+        font = FindGlobalFont(aPS, aChar);
+        if (!font) {
+          font = FindSubstituteFont(aPS, aChar);
+        }
+      }
+#endif
+    }
+  }
+
+  return font;
+}
+
+
+static PRBool
+FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
+{
+  nsFontMetricsOS2* metrics = (nsFontMetricsOS2*) aData;
+  metrics->mFonts.AppendString(aFamily);
+  metrics->mFontIsGeneric.AppendElement((void*) aGeneric);
+  if (aGeneric) {
+    metrics->mGeneric = metrics->mFonts.StringAt(metrics->mFonts.Count() - 1);
+    return PR_FALSE; // stop
+  }
+
+  return PR_TRUE; // don't stop
 }
 
 // Current strategy wrt. image/outline fonts:
@@ -231,26 +532,99 @@ static PFONTMETRICS getMetrics( long &lFonts, PCSZ facename, HPS hps)
 
 nsresult nsFontMetricsOS2::RealizeFont()
 {
+nsresult res;
+HWND  win = NULL;
+HDC   ps = NULL;
+  
+  if (NULL != mDeviceContext->mDC){
+    ps = mDeviceContext->mPS;
+  } else {
+    win = (HWND)mDeviceContext->mWidget;
+    ps = ::WinGetPS(win);
+  }
+
+  mFont->EnumerateFamilies(FontEnumCallback, this); 
+  PRUnichar* value = nsnull;
+  if (!mGeneric) {
+    gPref->CopyUnicharPref("font.default", &value);
+    if (value) {
+      mDefaultFont = value;
+      nsMemory::Free(value);
+      value = nsnull;
+    }
+    else {
+      mDefaultFont.AssignWithConversion("serif");
+    }
+    mGeneric = &mDefaultFont;
+  }
+
+#ifndef XP_OS2
+  if (mLangGroup.get() == gUserDefined) {
+    if (!gUserDefinedConverter) {
+      nsCOMPtr<nsIAtom> charset;
+      res = gCharSetManager->GetCharsetAtom2("x-user-defined",
+        getter_AddRefs(charset));
+      if (NS_SUCCEEDED(res)) {
+        res = gCharSetManager->GetUnicodeEncoder(charset,
+                                                 &gUserDefinedConverter);
+        if (NS_SUCCEEDED(res)) {
+          res = gUserDefinedConverter->SetOutputErrorBehavior(
+            gUserDefinedConverter->kOnError_Replace, nsnull, '?');
+          nsCOMPtr<nsICharRepresentable> mapper =
+            do_QueryInterface(gUserDefinedConverter);
+          if (mapper) {
+            res = mapper->FillInfo(gUserDefinedMap);
+          }
+        }
+        else {
+          return res;
+        }
+      }
+      else {
+        return res;
+      }
+    }
+
+    nsCAutoString name("font.name.");
+    name.AppendWithConversion(*mGeneric);
+    name.Append('.');
+    name.Append(USER_DEFINED);
+    gPref->CopyUnicharPref(name.GetBuffer(), &value);
+    if (value) {
+      mUserDefined = value;
+      nsMemory::Free(value);
+      value = nsnull;
+      mIsUserDefined = 1;
+    }
+  }
+#endif
+
+  nsFontOS2* font = FindFont(ps, 'a');
+  if (!font) {
+    return NS_ERROR_FAILURE;
+  }
+
+  char szFamily[FACESIZE] = "";
+
+  strcpy(szFamily, font->mName);
+
+  delete font;
+
+  if (!strcmp(szFamily, "Verdana")) {
+    return NS_ERROR_FAILURE;
+  } /* endif */
+
    nsFontHandleOS2 *fh = new nsFontHandleOS2;
    if (!fh)
      return NS_ERROR_OUT_OF_MEMORY;
 
-   // 1) Find family name
-   char szFamily[ FACESIZE] = "";
-   FontEnumData data( mContext, szFamily);
-   mFont->EnumerateFamilies( FontEnumCallback, &data); 
-
-   // sanity check - no way of telling whether we want a fixed or prop font..
-   if( !szFamily[0])
-      strcpy( szFamily, "System Proportional");
-
    // 2) Get a representative PS for doing font queries into
    HPS hps;
 
-   if (NULL != mContext->mDC){
-     hps = mContext->mPS;
+   if (NULL != mDeviceContext->mDC){
+     hps = mDeviceContext->mPS;
    } else {
-     hps = WinGetPS((HWND)mContext->mWidget);
+     hps = WinGetPS((HWND)mDeviceContext->mWidget);
    }
 
    // 3) Work out what our options are wrt. image/outline, prefer image.
@@ -293,19 +667,32 @@ nsresult nsFontMetricsOS2::RealizeFont()
    // 6) Encoding
    // There doesn't seem to be any encoding stuff yet, so guess.
    // (XXX unicode hack; use same codepage as converter!)
-   fh->fattrs.usCodePage = gModuleData.ulCodepage;
+     char name[128];
+    const PRUnichar* langGroup = nsnull;
+    mLangGroup->GetUnicode(&langGroup);
+    nsAutoString langName = langGroup;
+    langName.ToCString(name, sizeof(name));
+     for (int j=0; j < eCharSet_COUNT; j++ ) {
+        if (name[0] == gCharSetInfo[j].mLangGroup[0]) {
+          if (!strcmp(name, gCharSetInfo[j].mLangGroup)) {
+            fh->fattrs.usCodePage = gCharSetInfo[j].mCodePage;
+            mCodePage = gCharSetInfo[j].mCodePage;
+          } /* endif */
+       } /* endif */
+    } /* endfor */
+//   fh->fattrs.usCodePage = gModuleData.ulCodepage;
            
    // 7) Find the point size for the font, and set up the charbox too
    float app2dev, app2twip, twip2dev;
-   mContext->GetAppUnitsToDevUnits( app2dev);
-   mContext->GetDevUnitsToTwips( app2twip);
-   mContext->GetTwipsToDevUnits( twip2dev);
+   mDeviceContext->GetAppUnitsToDevUnits( app2dev);
+   mDeviceContext->GetDevUnitsToTwips( app2twip);
+   mDeviceContext->GetTwipsToDevUnits( twip2dev);
 
    // !! Windows wants to mply up here.  I don't think I do.  If fonts
    // !! ever begin to look `squished', try enabling the following code
 #if 0
    float scale;
-   mContext->GetCanonicalPixelScale(scale);
+   mDeviceContext->GetCanonicalPixelScale(scale);
    app2twip *= app2dev * scale;
 #else
    app2twip *= app2dev;
@@ -378,7 +765,7 @@ nsresult nsFontMetricsOS2::RealizeFont()
    GpiQueryFontMetrics( hps, sizeof fm, &fm);
 
    float dev2app;
-   mContext->GetDevUnitsToAppUnits( dev2app);
+   mDeviceContext->GetDevUnitsToAppUnits( dev2app);
 
    // PM includes the internal leading in the max ascender.  So the max
    // ascender we tell raptor about should be lMaxAscent - lInternalLeading.
@@ -416,7 +803,7 @@ nsresult nsFontMetricsOS2::RealizeFont()
    GpiSetCharSet( hps, LCID_DEFAULT);
    if( !GpiDeleteSetId( hps, 1))
       PMERROR( "GpiDeleteSetID (FM)");
-   if (NULL == mContext->mDC)
+   if (NULL == mDeviceContext->mDC)
       WinReleasePS(hps);
 
    return NS_OK;
@@ -618,7 +1005,8 @@ nsFontMetricsOS2::InitializeGlobalFonts(HPS aPS)
         }
       }
 
-      nsGlobalFont* font = &nsFontMetricsOS2::gGlobalFonts[nsFontMetricsOS2::gGlobalFontsCount++];
+      nsGlobalFont* font = &nsFontMetricsOS2::gGlobalFonts[nsFontMetricsOS2::gGlobalFontsCount];
+      nsFontMetricsOS2::gGlobalFontsCount++;
 
 //      PRUnichar name[FACESIZE*2];
 //      name[0] = 0;
@@ -627,6 +1015,7 @@ nsFontMetricsOS2::InitializeGlobalFonts(HPS aPS)
       font->name->AssignWithConversion(pFontMetrics[i].szFamilyname);
       if (!font->name) {
         nsFontMetricsOS2::gGlobalFontsCount--;
+        continue;
       }
       font->map = nsnull;
       font->fontMetrics = pFontMetrics[i];
@@ -635,6 +1024,7 @@ nsFontMetricsOS2::InitializeGlobalFonts(HPS aPS)
       nsFontMetricsOS2::gGlobalFonts[i].signature  = pFontMetrics[i].fsDefn;
     } /* endwhile */
     gInitializedGlobalFonts = 1;
+    nsMemory::Free(pFontMetrics);
   }
 
   return gGlobalFonts;
@@ -683,6 +1073,32 @@ CompareFontNames(const void* aArg1, const void* aArg2, void* aClosure)
 NS_IMETHODIMP
 nsFontEnumeratorOS2::EnumerateAllFonts(PRUint32* aCount, PRUnichar*** aResult)
 {
+#ifndef XP_OS2
+  *aCount = 18;
+  PRUnichar** newarray = (PRUnichar**)
+    nsMemory::Alloc(18 * sizeof(PRUnichar*));
+  newarray[0] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
+  newarray[1] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
+  newarray[2] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
+  newarray[3] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
+  newarray[4] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
+  newarray[5] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
+  newarray[6] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
+  newarray[7] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
+  newarray[8] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
+  newarray[9] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
+  newarray[10] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
+  newarray[11] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
+  newarray[12] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
+  newarray[13] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
+  newarray[14] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
+  newarray[15] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
+  newarray[16] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
+  newarray[17] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
+  *aResult = newarray;
+  return NS_OK;
+#endif
+
   if (aCount) {
     *aCount = 0;
   }
@@ -816,6 +1232,33 @@ NS_IMETHODIMP
 nsFontEnumeratorOS2::EnumerateFonts(const char* aLangGroup,
   const char* aGeneric, PRUint32* aCount, PRUnichar*** aResult)
 {
+#ifndef XP_OS2
+  *aCount = 18;
+  PRUnichar** newarray = (PRUnichar**)
+    nsMemory::Alloc(18 * sizeof(PRUnichar*));
+  newarray[0] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
+  newarray[1] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
+  newarray[2] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
+  newarray[3] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
+  newarray[4] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
+  newarray[5] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
+  newarray[6] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
+  newarray[7] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
+  newarray[8] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
+  newarray[9] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
+  newarray[10] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
+  newarray[11] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
+  newarray[12] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
+  newarray[13] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
+  newarray[14] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
+  newarray[15] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
+  newarray[16] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
+  newarray[17] = nsString(NS_ConvertASCIItoUCS2("Tms Rmn")).ToNewUnicode();
+  *aResult = newarray;
+  return NS_OK;
+#endif
+
+
   if ((!aLangGroup) || (!aGeneric)) {
     return NS_ERROR_NULL_POINTER;
   }

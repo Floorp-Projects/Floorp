@@ -304,150 +304,63 @@ void nsGfxModuleData::Init()
    hpsScreen = WinGetScreenPS( HWND_DESKTOP);
    HDC hdc = GpiQueryDevice( hpsScreen);
    DevQueryCaps( hdc, CAPS_COLOR_BITCOUNT, 1, &lDisplayDepth);
-
-   // XXX XXX temp hack XXX XXX XXX
-   converter = 0;
-   supplantConverter = FALSE;
-   if( !getenv( "MOZ_DONT_DRAW_UNICODE"))
-   {
-      ULONG ulDummy = 0;
-      renderingHints = 0;
-      DosQueryCp( 4, &ulCodepage, &ulDummy);
-   }
-   else
-   {
-      renderingHints = NS_RENDERING_HINT_FAST_8BIT_TEXT;
-      ulCodepage = 1004;
-   }
-   // XXX XXX end temp hack XXX XXX XXX
 }
 
 nsGfxModuleData::~nsGfxModuleData()
 {
-   // XXX XXX temp hack XXX XXX XXX
-   if( converter)
-      UniFreeUconvObject( converter);
-   // XXX XXX end temp hack XXX XXX XXX
+  /* Free any converters that were created */
+  for (int i=0; i < 15 /* eCharSet_COUNT from nsFontMetricsOS2.cpp */ ; i++ ) {
+    if (gUconvInfo[i].mConverter) {
+      UniFreeUconvObject(gUconvInfo[i].mConverter);
+    } /* endif */
+  } /* endfor */
 
-   PrnTerminate();
-   if( hModResources)
-      DosFreeModule( hModResources);
-   WinReleasePS( hpsScreen);
+  PrnTerminate();
+  if( hModResources)
+     DosFreeModule( hModResources);
+  WinReleasePS( hpsScreen);
 }
 
 nsGfxModuleData gModuleData;
 
-// XXX XXX XXX XXX Temp hack until font-switching comes on-line XXX XXX XXX XXX
 
-// Conversion from unicode to appropriate codepage
-char *nsGfxModuleData::ConvertFromUcs( const PRUnichar *pText, ULONG ulLength,
-                                       char *szBuffer, ULONG ulSize)
+int WideCharToMultiByte( int CodePage, const PRUnichar *pText, ULONG ulLength, char* szBuffer, ULONG ulSize )
 {
-   if( supplantConverter)
-   {
-      // We couldn't create a converter for some reason, so do this 'by hand'.
-      // Note this algorithm is fine for most of most western charsets, but
-      // fails dismally for various glyphs, baltic, points east...
-      ULONG ulCount = 0;
-      char *szSave = szBuffer;
-      while( *pText && ulCount < ulSize - 1) // (one for terminator)
-      {
-         *szBuffer = (char) *pText;
-         szBuffer++;
-         pText++;
-         ulCount++;
-      }
+  UconvObject* pConverter = 0;
+  /* Free any converters that were created */
+  for (int i=0; i < 15 /* eCharSet_COUNT from nsFontMetricsOS2.cpp */ ; i++ ) {
+    if (gUconvInfo[i].mCodePage == CodePage) {
+      if (!gUconvInfo[i].mConverter) {
+        UniChar codepage[20];
+        int unirc = UniMapCpToUcsCp( CodePage, codepage, 20);
+        UniCreateUconvObject( codepage, &gUconvInfo[i].mConverter);
+        break;
+      } /* endif */
+      pConverter = &gUconvInfo[i].mConverter;
+    } /* endif */
+  } /* endfor */
+  if (!pConverter) {
+      pConverter = &gUconvInfo[0].mConverter;
+  } /* endif */
 
-      // terminate string
-      *szBuffer = '\0';
+  UniChar *ucsString = (UniChar*) pText;
+  size_t   ucsLen = ulLength;
+  size_t   cplen = ulSize;
+  size_t   cSubs = 0;
 
-      return szSave;
-   }
+  char *tmp = szBuffer; // function alters the out pointer
 
-   if( !converter)
-   {
-      // Create a converter from unicode to a codepage which PM can display.
-      UniChar codepage[20];
-      int unirc = UniMapCpToUcsCp( 0, codepage, 20);
-      if( unirc == ULS_SUCCESS)
-      {
-         unirc = UniCreateUconvObject( codepage, &converter);
-         // XXX do we need to set substitution options here?
-      }
-      if( unirc != ULS_SUCCESS)
-      {
-         supplantConverter = TRUE;
-         renderingHints = NS_RENDERING_HINT_FAST_8BIT_TEXT;
-         ulCodepage = 1004;
-         printf( "Couldn't create gfx unicode converter.\n");
-         return ConvertFromUcs( nsString(pText), szBuffer, ulSize);
-      }
-   }
-
-   // Have converter, now get it to work...
-
-   UniChar *ucsString = (UniChar*) pText;
-   size_t   ucsLen = ulLength;
-   size_t   cplen = ulSize;
-   size_t   cSubs = 0;
-
-   char *tmp = szBuffer; // function alters the out pointer
-
-   int unirc = UniUconvFromUcs( converter, &ucsString, &ucsLen,
+   int unirc = UniUconvFromUcs( *pConverter, &ucsString, &ucsLen,
                                 (void**) &tmp, &cplen, &cSubs);
 
-   if( unirc == UCONV_E2BIG) // k3w1
-   {
-      // terminate output string (truncating)
-      *(szBuffer + ulSize - 1) = '\0';
-   }
-   else if( unirc != ULS_SUCCESS)
-   {
-      printf( "UniUconvFromUcs failed, rc %X\n", unirc);
-      supplantConverter = TRUE;
-      szBuffer = ConvertFromUcs( nsString(pText), szBuffer, ulSize);
-      supplantConverter = FALSE;
-   }
-
-   return szBuffer;
+  if( unirc == UCONV_E2BIG) // k3w1
+  {
+    // terminate output string (truncating)
+    *(szBuffer + ulSize - 1) = '\0';
+  }
+  else if( unirc != ULS_SUCCESS)
+  {
+     printf("very bad");
+  }
+  return ulSize - cplen;
 }
-
-char *nsGfxModuleData::ConvertFromUcs( const nsString &aString,
-                                       char *szBuffer, ULONG ulSize)
-{
-   char *szRet = 0;
-   const PRUnichar *pUnicode = aString.GetUnicode();
-
-   if( pUnicode)
-      szRet = ConvertFromUcs( pUnicode, aString.Length() + 1, szBuffer, ulSize);
-   else
-      szRet = aString.ToCString( szBuffer, ulSize);
-
-   return szRet;
-}
-
-const char *nsGfxModuleData::ConvertFromUcs( const PRUnichar *pText, ULONG ulLength)
-{
-   // This is probably okay; longer strings will be truncated but istr there's
-   // a PM limit on things like windowtext
-   // (which these routines are usually used for)
-
-   static char buffer[1024]; // XXX (multithread)
-   *buffer = '\0';
-   return ConvertFromUcs( pText, ulLength, buffer, 1024);
-}
-
-const char *nsGfxModuleData::ConvertFromUcs( const nsString &aString)
-{
-   const char *szRet = 0;
-   const PRUnichar *pUnicode = aString.GetUnicode();
-
-   if( pUnicode)
-      szRet = ConvertFromUcs( pUnicode, aString.Length() + 1);
-   else
-      szRet = aString.GetBuffer(); // hrm.
-
-   return szRet;
-}
-
-// XXX XXX XXX XXX End Temp hack until font-switching comes on-line XXX XXX XXX

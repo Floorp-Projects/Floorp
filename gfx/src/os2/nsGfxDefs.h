@@ -39,6 +39,33 @@ void PMERROR(const char *str);
 class nsString;
 class nsIDeviceContext;
 
+struct nsUconvInfo
+{
+  char*    mCharset;
+  PRUint16 mCodePage;
+  UconvObject  mConverter;
+};
+
+static nsUconvInfo gUconvInfo[15  /* eCharSet_COUNT from nsFontMetricsOS2.cpp */ ] = 
+{
+  { "DEFAULT",     0,    NULL },
+  { "ANSI",        1252, NULL },
+  { "EASTEUROPE",  1250, NULL },
+  { "RUSSIAN",     1251, NULL },
+  { "GREEK",       1253, NULL },
+  { "TURKISH",     1254, NULL },
+  { "HEBREW",      1255, NULL },
+  { "ARABIC",      1256, NULL },
+  { "BALTIC",      1257, NULL },
+  { "THAI",        874,  NULL },
+  { "SHIFTJIS",    932,  NULL },
+  { "GB2312",      936,  NULL },
+  { "HANGEUL",     949,  NULL },
+  { "CHINESEBIG5", 950,  NULL },
+  { "JOHAB",       1361, NULL }
+};
+
+
 // Module data
 struct nsGfxModuleData
 {
@@ -49,24 +76,10 @@ struct nsGfxModuleData
    nsGfxModuleData();
   ~nsGfxModuleData();
 
-   // XXX XXX XXX this is a hack copied from the widget library (where it's
-   //             not a hack but perfectly valid) until font-switching comes
-   //             on-line.
-   // Unicode->local cp. conversions
-   char *ConvertFromUcs( const PRUnichar *pText, ULONG ulLength, char *szBuffer, ULONG ulSize);
-   char *ConvertFromUcs( const nsString &aStr, char *szBuffer, ULONG ulSize);
-   // these methods use a single static buffer
-   const char *ConvertFromUcs( const PRUnichar *pText, ULONG ulLength);
-   const char *ConvertFromUcs( const nsString &aStr);
-
-   UconvObject  converter;
-   BOOL         supplantConverter;
-   PRUint32     renderingHints;
-   ULONG        ulCodepage;
-   // XXX XXX XXX end hack
-
    void Init();
 };
+
+int WideCharToMultiByte( int CodePage, const PRUnichar *pText, ULONG ulLength, char* szBuffer, ULONG ulSize );
 
 extern nsGfxModuleData gModuleData;
 
