@@ -108,7 +108,7 @@
 #sidebar-panels {
     min-width: 1px;
     min-height: 10px;
-    margin-top: 1px;
+    margin: 0px 1px 1px 1px;
 }
 
 .text-panel-loading {
@@ -164,22 +164,30 @@ sidebarheader[type="splitter"] {
     display: none;
 }
 
-.texttab-sidebar {
-    background-color: #CCCCCC;
-    padding: 0px;
-    margin: 0px;
-}
-.texttab-sidebar[top-panel="true"],
-.texttab-sidebar[first-panel-after-selected="true"] {
-    background-color: white;
-}
-.texttab-sidebar > .remain-space {
-    width: 30px;
-    min-width: 1px;
-}
-.texttab-sidebar[last-panel="true"] > .remain-space {
-  border-bottom: none;
-}
-.texttab-sidebar[last-panel="true"][selected="true"] > .remain-space {
-  border-bottom: 1px solid black;
-}
+/**
+ * texttab folder lookalike e.g. for sidebar panel headers
+ */
+  .box-texttab
+    {
+      behavior            : url("chrome://global/content/globalBindings.xml#texttab");
+      background-color    : #99CCCC;
+      color               : #003366;
+      padding             : 2px 5px 2px 5px;
+      margin-top          : 1px;
+      border              : 1px solid #99CCCC;
+      border-bottom       : none;
+    }
+
+  .box-texttab[selected="true"]
+    {
+      border-top          : 1px solid #003366;
+      border-left         : 1px solid #003366;
+      border-right        : 1px solid #003366;
+    }
+  
+  .iframe-panel
+    {
+      border-left         : 1px solid #003366;
+      border-right        : 1px solid #003366;
+      border-bottom       : 1px solid #003366;
+    }
