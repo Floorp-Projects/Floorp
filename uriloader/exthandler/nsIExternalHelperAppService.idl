@@ -60,6 +60,11 @@ interface nsIExternalHelperAppService : nsISupports
   //                       prior to saving or passing off to helper apps,
   //                       false otherwise
   boolean applyDecodingForType (in string aMimeContentType);
+
+  // applyDecodingForExtension: returns false if files with this extension
+  //                            are not to be decoded prior to saving or
+  //                            passing off to helper apps, false otherwise
+  boolean applyDecodingForExtension(in string aExtension);
 };
 
 // this is a private interface shared between external app handlers and the platform specific
