@@ -349,7 +349,7 @@ nsVoidArray::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
   }
 }
 
-inline void* nsVoidArray::ElementAt(PRInt32 aIndex) const
+void* nsVoidArray::ElementAt(PRInt32 aIndex) const
 {
   if (aIndex < 0 || aIndex >= Count())
   {
