@@ -432,8 +432,7 @@ nsHTMLFrameInnerFrame::~nsHTMLFrameInnerFrame()
 {
   //printf("nsHTMLFrameInnerFrame destructor %X \n", this);
   if (nsnull != mWebShell) {
-//XXX Let mWebShell's parent destroy it because now may not be a good time
-//    mWebShell->Destroy();
+    mWebShell->Destroy();    
     NS_RELEASE(mWebShell);
   }
   NS_RELEASE(mTempObserver);
