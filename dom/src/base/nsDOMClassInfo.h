@@ -115,7 +115,6 @@ protected:
   static JSString *s_content_id;
   static JSString *sContent_id;
   static JSString *sSidebar_id;
-  static JSString *sPrompter_id;
   static JSString *sMenubar_id;
   static JSString *sToolbar_id;
   static JSString *sLocationbar_id;

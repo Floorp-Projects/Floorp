@@ -62,7 +62,7 @@ interface nsIDOMWindowInternal : nsIDOMWindow
   readonly attribute nsISidebar                  sidebar;
 
   /* [replaceable] prompter */
-  readonly attribute nsIPrompt                   prompter;
+  [noscript] readonly attribute nsIPrompt        prompter;
 
   /* [replaceable] menubar */
   readonly attribute nsIDOMBarProp               menubar;
