@@ -345,10 +345,9 @@ public class Codegen extends Interpreter {
 
                 emitDirectConstructor();
 
-                startNewMethod("callDirect",
-                               fnCurrent.getDirectCallParameterSignature() +
-                                "Ljava/lang/Object;",
-                               1, false, true);
+                startCodeBodyMethod("callDirect",
+                                    fnCurrent.getDirectCallParameterSignature()
+                                    +"Ljava/lang/Object;");
                 assignParameterJRegs(fnCurrent);
                 if (!fnCurrent.getParameterNumberContext()) {
                     // make sure that all parameters are objects
@@ -372,28 +371,26 @@ public class Codegen extends Interpreter {
                 }
                 generatePrologue(cx, scriptOrFn.getParamCount());
             } else {
-                startNewMethod("call",
-                               "(Lorg/mozilla/javascript/Context;" +
-                                "Lorg/mozilla/javascript/Scriptable;" +
-                                "Lorg/mozilla/javascript/Scriptable;" +
-                               "[Ljava/lang/Object;)Ljava/lang/Object;",
-                               1, false, true);
+                startCodeBodyMethod("call",
+                                    "(Lorg/mozilla/javascript/Context;"
+                                    +"Lorg/mozilla/javascript/Scriptable;"
+                                    +"Lorg/mozilla/javascript/Scriptable;"
+                                    +"[Ljava/lang/Object;)Ljava/lang/Object;");
                 generatePrologue(cx, -1);
             }
             codegenBase = scriptOrFn.getLastChild();
         } else {
             // script
             classFile.addInterface("org/mozilla/javascript/Script");
+            generateInit(cx, superClassName);
             generateScriptCtor(cx, superClassName);
             generateMain(cx);
-            generateInit(cx, superClassName);
             generateExecute(cx);
-            startNewMethod("call",
-                           "(Lorg/mozilla/javascript/Context;" +
-                            "Lorg/mozilla/javascript/Scriptable;" +
-                            "Lorg/mozilla/javascript/Scriptable;" +
-                            "[Ljava/lang/Object;)Ljava/lang/Object;",
-                           1, false, true);
+            startCodeBodyMethod("call",
+                                "(Lorg/mozilla/javascript/Context;"
+                                +"Lorg/mozilla/javascript/Scriptable;"
+                                +"Lorg/mozilla/javascript/Scriptable;"
+                                +"[Ljava/lang/Object;)Ljava/lang/Object;");
             generatePrologue(cx, -1);
             int linenum = scriptOrFn.getEndLineno();
             if (linenum != -1)
@@ -503,9 +500,11 @@ public class Codegen extends Interpreter {
         }
     }
 
-    private void generateMain(Context cx) {
-        startNewMethod("main", "([Ljava/lang/String;)V", 1, true, true);
-
+    private void generateMain(Context cx)
+    {
+        classFile.startMethod("main", "([Ljava/lang/String;)V",
+                              (short)(ClassFileWriter.ACC_PUBLIC
+                                      | ClassFileWriter.ACC_STATIC));
         push(generatedClassName);  // load the name of this class
         classFile.add(ByteCode.INVOKESTATIC,
                       "java/lang/Class",
@@ -517,31 +516,37 @@ public class Codegen extends Interpreter {
                               "(Ljava/lang/Class;[Ljava/lang/String;)",
                               "V");
         addByteCode(ByteCode.RETURN);
-        finishMethod(cx, null);
+        // 3 = String[] args
+        classFile.stopMethod((short)1, null);
     }
 
-    private void generateExecute(Context cx) {
-        String signature = "(Lorg/mozilla/javascript/Context;" +
-                            "Lorg/mozilla/javascript/Scriptable;)" +
-                           "Ljava/lang/Object;";
-        startNewMethod("exec", signature, 2, false, true);
+    private void generateExecute(Context cx)
+    {
+        classFile.startMethod("exec",
+                              "(Lorg/mozilla/javascript/Context;"
+                              +"Lorg/mozilla/javascript/Scriptable;"
+                              +")Ljava/lang/Object;",
+                              (short)(ClassFileWriter.ACC_PUBLIC
+                                      | ClassFileWriter.ACC_FINAL));
+
+        final byte ALOAD_CONTEXT = ByteCode.ALOAD_1;
+        final byte ALOAD_SCOPE = ByteCode.ALOAD_2;
+
         String slashName = generatedClassName.replace('.', '/');
 
-        if (!trivialInit) {
-            // to begin a script, call the initScript method
-            addByteCode(ByteCode.ALOAD_0); // load 'this'
-            addByteCode(ByteCode.ALOAD_2); // load 'scope'
-            addByteCode(ByteCode.ALOAD_1); // load 'cx'
-            addVirtualInvoke(slashName,
-                          "initScript",
-                          "(Lorg/mozilla/javascript/Scriptable;" +
-                          "Lorg/mozilla/javascript/Context;)",
-                          "V");
-        }
+        // to begin a script, call the initScript method
+        addByteCode(ByteCode.ALOAD_0); // load 'this'
+        addByteCode(ALOAD_SCOPE);
+        addByteCode(ALOAD_CONTEXT);
+        addVirtualInvoke(slashName,
+                      "initScript",
+                      "(Lorg/mozilla/javascript/Scriptable;" +
+                      "Lorg/mozilla/javascript/Context;)",
+                      "V");
 
         addByteCode(ByteCode.ALOAD_0); // load 'this'
-        addByteCode(ByteCode.ALOAD_1); // load 'cx'
-        addByteCode(ByteCode.ALOAD_2); // load 'scope'
+        addByteCode(ALOAD_CONTEXT);
+        addByteCode(ALOAD_SCOPE);
         addByteCode(ByteCode.DUP);
         addByteCode(ByteCode.ACONST_NULL);
         addVirtualInvoke(slashName,
@@ -553,52 +558,37 @@ public class Codegen extends Interpreter {
                          "Ljava/lang/Object;");
 
         addByteCode(ByteCode.ARETURN);
-        finishMethod(cx, null);
+        // 3 = this + context + scope
+        classFile.stopMethod((short)3, null);
     }
 
-    private void generateScriptCtor(Context cx, String superClassName) {
-        startNewMethod("<init>", "()V", 1, false, false);
+    private void generateScriptCtor(Context cx, String superClassName)
+    {
+        classFile.startMethod("<init>", "()V", ClassFileWriter.ACC_PUBLIC);
         addByteCode(ByteCode.ALOAD_0);
         addSpecialInvoke(superClassName, "<init>", "()", "V");
         addByteCode(ByteCode.RETURN);
-        finishMethod(cx, null);
-    }
-
-    /**
-     * Indicate that the init is non-trivial.
-     *
-     * For trivial inits we can omit creating the init method
-     * altogether. (Only applies to scripts, since function
-     * inits are constructors, which are required.) For trivial
-     * inits we also omit the call to initScript from exec().
-     */
-    private void setNonTrivialInit(String methodName) {
-        if (!trivialInit)
-            return;     // already set
-        trivialInit = false;
-        startNewMethod(methodName, "(Lorg/mozilla/javascript/Scriptable;"
-                                    + "Lorg/mozilla/javascript/Context;)V",
-                       1, false, false);
-        reserveWordLocal(0);  // reserve 0 for 'this'
-        variableObjectLocal = reserveWordLocal(1);  // reserve 1 for 'scope'
-        contextLocal = reserveWordLocal(2);  // reserve 2 for 'context'
+        // 1 parameter = this
+        classFile.stopMethod((short)1, null);
     }
 
     private void generateInit(Context cx, String superClassName)
     {
-        trivialInit = true;
-        String methodName;
+        String methodName = (inFunction) ? "<init>" :  "initScript";
+        classFile.startMethod(methodName,
+                              "(Lorg/mozilla/javascript/Scriptable;"
+                              +"Lorg/mozilla/javascript/Context;)V",
+                              ClassFileWriter.ACC_PUBLIC);
 
-        if (!inFunction) {
-            methodName = "initScript";
-        } else {
-            methodName = "<init>";
-            setNonTrivialInit(methodName);
+        final byte ALOAD_SCOPE = ByteCode.ALOAD_1;
+        final byte ALOAD_CONTEXT = ByteCode.ALOAD_2;
+
+        if (inFunction) {
             addByteCode(ByteCode.ALOAD_0);
             addSpecialInvoke(superClassName, "<init>", "()", "V");
 
             addByteCode(ByteCode.ALOAD_0);
-            addByteCode(ByteCode.ALOAD_1);
+            addByteCode(ALOAD_SCOPE);
             classFile.add(ByteCode.PUTFIELD,
                           "org/mozilla/javascript/ScriptableObject",
                           "parent", "Lorg/mozilla/javascript/Scriptable;");
@@ -624,7 +614,6 @@ public class Codegen extends Interpreter {
          */
         int N = scriptOrFn.getParamAndVarCount();
         if (N != 0) {
-            setNonTrivialInit(methodName);
             push(N);
             addByteCode(ByteCode.ANEWARRAY, "java/lang/String");
             for (int i = 0; i != N; i++) {
@@ -642,7 +631,7 @@ public class Codegen extends Interpreter {
 
         int parmCount = scriptOrFn.getParamCount();
         if (parmCount != 0) {
-            if (!inFunction || trivialInit) Context.codeBug();
+            if (!inFunction) Context.codeBug();
             addByteCode(ByteCode.ALOAD_0);
             push(parmCount);
             classFile.add(ByteCode.PUTFIELD,
@@ -652,7 +641,6 @@ public class Codegen extends Interpreter {
 
         // Initialize NativeFunction.version with Context's version.
         if (cx.getLanguageVersion() != 0) {
-            setNonTrivialInit(methodName);
             addByteCode(ByteCode.ALOAD_0);
             push(cx.getLanguageVersion());
             classFile.add(ByteCode.PUTFIELD,
@@ -663,7 +651,6 @@ public class Codegen extends Interpreter {
         // precompile all regexp literals
         int regexpCount = scriptOrFn.getRegexpCount();
         if (regexpCount != 0) {
-            setNonTrivialInit(methodName);
             for (int i = 0; i != regexpCount; ++i) {
                 String fieldName = getRegexpFieldName(i);
                 short flags = ClassFileWriter.ACC_PRIVATE;
@@ -678,8 +665,8 @@ public class Codegen extends Interpreter {
                             "org/mozilla/javascript/regexp/NativeRegExp");
                 addByteCode(ByteCode.DUP);
 
-                aload(contextLocal);    // load 'context'
-                aload(variableObjectLocal);    // load 'scope'
+                addByteCode(ALOAD_CONTEXT);
+                addByteCode(ALOAD_SCOPE);
                 push(scriptOrFn.getRegexpString(i));
                 String regexpFlags = scriptOrFn.getRegexpFlags(i);
                 if (regexpFlags == null) {
@@ -703,7 +690,6 @@ public class Codegen extends Interpreter {
 
         if (inFunction) {
             if (fnCurrent.isTargetOfDirectCall()) {
-                if (trivialInit) Context.codeBug();
                 String className = fnCurrent.getClassName();
                 String fieldName = className.replace('.', '_');
                 String fieldType = 'L'+classFile.fullyQualifiedForm(className)
@@ -717,10 +703,9 @@ public class Codegen extends Interpreter {
             }
         }
 
-        if (!trivialInit) {
-            addByteCode(ByteCode.RETURN);
-            finishMethod(cx, null);
-        }
+        addByteCode(ByteCode.RETURN);
+        // 3 = this + scope + context
+        classFile.stopMethod((short)3, null);
 
         // Add static method to return encoded source tree for decompilation
         // which will be called from OptFunction/OptScrript.getSourcesTree
@@ -771,6 +756,7 @@ public class Codegen extends Interpreter {
                     }
                 }
                 addByteCode(ByteCode.ARETURN);
+                // 0: no this and no argument
                 classFile.stopMethod((short)0, null);
             }
         }
@@ -787,11 +773,6 @@ public class Codegen extends Interpreter {
      */
     private void generatePrologue(Context cx, int directParameterCount)
     {
-        funObjLocal = reserveWordLocal(0);
-        contextLocal = reserveWordLocal(1);
-        variableObjectLocal = reserveWordLocal(2);
-        thisObjLocal = reserveWordLocal(3);
-
         if (inFunction && !itsUseDynamicScope &&
             directParameterCount == -1)
         {
@@ -3463,34 +3444,31 @@ public class Codegen extends Interpreter {
         return N;
     }
 
-    private void startNewMethod(String methodName, String methodDesc,
-                                int parmCount, boolean isStatic,
-                                boolean isFinal)
+    private void startCodeBodyMethod(String methodName, String methodDesc)
     {
+        classFile.startMethod(methodName, methodDesc,
+                              (short)(ClassFileWriter.ACC_PUBLIC
+                                      | ClassFileWriter.ACC_FINAL));
+
         locals = new boolean[MAX_LOCALS];
-        localsMax = (short) (parmCount+1);  // number of parms + "this"
-        firstFreeLocal = 0;
-        contextLocal = -1;
-        variableObjectLocal = -1;
+
+        funObjLocal = 0;
+        contextLocal = 1;
+        variableObjectLocal = 2;
+        thisObjLocal = 3;
+        localsMax = (short) 4;  // number of parms + "this"
+        firstFreeLocal = 4;
+
         scriptResultLocal = -1;
         argsLocal = -1;
-        thisObjLocal = -1;
-        funObjLocal = -1;
         itsZeroArgArray = -1;
         itsOneArgArray = -1;
-        short flags = ClassFileWriter.ACC_PUBLIC;
-        if (isStatic)
-            flags |= ClassFileWriter.ACC_STATIC;
-        if (isFinal)
-            flags |= ClassFileWriter.ACC_FINAL;
         epilogueLabel = -1;
-        classFile.startMethod(methodName, methodDesc, (short) flags);
     }
 
     private void finishMethod(Context cx, OptLocalVariable[] array)
     {
         classFile.stopMethod((short)(localsMax + 1), array);
-        contextLocal = -1;
     }
 
     private void addByteCode(byte theOpcode)
@@ -3843,7 +3821,7 @@ public class Codegen extends Interpreter {
     private int itsConstantListSize;
 
     // special known locals. If you add a new local here, be sure
-    // to initialize it to -1 in startNewMethod
+    // to initialize it to -1 in startCodeBodyMethod
     private short variableObjectLocal;
     private short scriptResultLocal;
     private short contextLocal;
@@ -3858,7 +3836,6 @@ public class Codegen extends Interpreter {
     private boolean itsUseDynamicScope;
     private boolean hasVarsInRegs;
     private boolean itsForcedObjectParameters;
-    private boolean trivialInit;
     private short itsLocalAllocationBase;
     private OptLocalVariable[] debugVars;
     private int epilogueLabel;
