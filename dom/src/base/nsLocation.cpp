@@ -28,6 +28,7 @@ static NS_DEFINE_IID(kIDOMLocationIID, NS_IDOMLOCATION_IID);
 
 LocationImpl::LocationImpl(nsIWebShell *aWebShell)
 {
+  NS_INIT_REFCNT();
   mScriptObject = nsnull;
   mWebShell = aWebShell;
 }
