@@ -266,8 +266,13 @@ nsFieldSetFrame::Reflow(nsIPresContext& aPresContext,
   nscoord horTaken = borderPadding.left + borderPadding.right + (2 * minTopBorder) + 
                      legendMargin.left + legendMargin.right;
   nscoord verTaken = padding.top + borderPadding.bottom + legendMargin.top + legendMargin.bottom;
-  if (NS_UNCONSTRAINEDSIZE != availSize.width)
-    availSize.width -= horTaken;
+  if (aReflowState.HaveConstrainedWidth()) {
+    availSize.width = aReflowState.minWidth;
+  }
+  else {
+    if (NS_UNCONSTRAINEDSIZE != availSize.width)
+      availSize.width -= horTaken;
+  }
   if (NS_UNCONSTRAINEDSIZE != availSize.height) {
     // XXX this assumes that the legend is taller than the top border width
     availSize.height -= verTaken;
