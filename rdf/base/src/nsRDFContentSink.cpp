@@ -572,7 +572,7 @@ RDFContentSinkImpl::HandleProcessingInstruction(const PRUnichar *aTarget,
 NS_IMETHODIMP 
 RDFContentSinkImpl::HandleXMLDeclaration(const PRUnichar *aVersion,
                                          const PRUnichar *aEncoding,
-                                         const PRInt32 aStandalone)
+                                         PRInt32 aStandalone)
 {
     return NS_OK;
 }
