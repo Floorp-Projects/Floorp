@@ -5949,6 +5949,13 @@ void nsImapProtocol::DeleteMailbox(const char *mailboxName)
 void nsImapProtocol::RenameMailbox(const char *existingName, 
                                    const char *newName)
 {
+    // just like DeleteMailbox; Some UW servers don't like it.
+    if (GetServerStateParser().GetIMAPstate() ==
+      nsImapServerResponseParser::kFolderSelected && GetServerStateParser().GetSelectedMailboxName() && 
+      PL_strcmp(GetServerStateParser().GetSelectedMailboxName(),
+                    existingName) == 0)
+      Close();
+
     ProgressEventFunctionUsingIdWithString (IMAP_STATUS_RENAMING_MAILBOX, existingName);
     
   IncrementCommandTagNumber();

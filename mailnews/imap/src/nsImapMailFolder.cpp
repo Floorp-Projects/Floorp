@@ -1151,8 +1151,8 @@ NS_IMETHODIMP nsImapMailFolder::Rename (const PRUnichar *newName, nsIMsgWindow *
 NS_IMETHODIMP nsImapMailFolder::RecursiveCloseActiveConnections(nsIImapIncomingServer *incomingImapServer)
 {
   NS_ENSURE_ARG(incomingImapServer);
-  incomingImapServer->CloseConnectionForFolder(this);
   PRUint32 cnt = 0, i;
+  nsresult rv;
   if (mSubFolders)
   {
       nsCOMPtr<nsISupports> aSupport;
@@ -1166,6 +1166,9 @@ NS_IMETHODIMP nsImapMailFolder::RecursiveCloseActiveConnections(nsIImapIncomingS
               folder = do_QueryInterface(aSupport);
               if (folder)
                   folder->RecursiveCloseActiveConnections(incomingImapServer);
+              nsCOMPtr<nsIMsgFolder> msgFolder = do_QueryInterface(folder, &rv);
+              if (NS_SUCCEEDED(rv) && msgFolder)
+                incomingImapServer->CloseConnectionForFolder(msgFolder);
           }
       }
   }
