@@ -1134,6 +1134,12 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
   }
   content->SetContentID(mSink->mContentIDCounter++);
 
+  nsresult srv;
+  nsCOMPtr<nsISelectElement> select = do_QueryInterface(content, &srv);
+  if (NS_SUCCEEDED(srv)) {
+    srv = select->DoneAddingContent(PR_FALSE);
+  }
+
   mStack[mStackPos].mType = nodeType;
   mStack[mStackPos].mContent = content;
   mStack[mStackPos].mFlags = 0;
@@ -1285,7 +1291,7 @@ SinkContext::CloseContainer(const nsIParserNode& aNode)
       nsCOMPtr<nsISelectElement> select = do_QueryInterface(content, &result);
 
       if (NS_SUCCEEDED(result)) {
-        result = select->DoneAddingContent();
+        result = select->DoneAddingContent(PR_TRUE);
       }
     }
     break;
