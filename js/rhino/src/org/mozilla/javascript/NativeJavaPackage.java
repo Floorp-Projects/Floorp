@@ -128,13 +128,19 @@ public class NativeJavaPackage extends ScriptableObject {
     }
 
     public synchronized Object get(String id, Scriptable start) {
-        Object cached = super.get(id, start);
+        return getPkgProperty(id, start, true);
+    }
+
+    synchronized Object getPkgProperty(String name, Scriptable start,
+                                       boolean createPkg) 
+    {
+        Object cached = super.get(name, start);
         if (cached != NOT_FOUND)
             return cached;
-
+        
         String newPackage = packageName.length() == 0
-                            ? id 
-                            : packageName + "." + id;
+                            ? name 
+                            : packageName + "." + name;
         Context cx = Context.getContext();
         SecuritySupport ss = cx.getSecuritySupport();
         Scriptable newValue;
@@ -146,18 +152,24 @@ public class NativeJavaPackage extends ScriptableObject {
             newValue.setParentScope(this);
             newValue.setPrototype(this.prototype);
         } catch (ClassNotFoundException ex) {
-            newValue = new NativeJavaPackage(newPackage);
-            newValue.setParentScope(this);
-            newValue.setPrototype(this.prototype);
+            if (createPkg) {
+                NativeJavaPackage pkg = new NativeJavaPackage(newPackage);
+                pkg.setParentScope(this);
+                pkg.setPrototype(this.prototype);
+                newValue = pkg;
+            } else {
+                newValue = null;
+            }
         }
-
-        // Make it available for fast lookup and sharing of lazily-reflected
-        // constructors and static members.
-        super.put(id, start, newValue);
+        if (newValue != null) {
+            // Make it available for fast lookup and sharing of 
+            // lazily-reflected constructors and static members.
+            super.put(name, start, newValue);
+        }
         return newValue;
     }
 
-    public synchronized Object get(int index, Scriptable start) {
+    public Object get(int index, Scriptable start) {
         return NOT_FOUND;
     }
 
