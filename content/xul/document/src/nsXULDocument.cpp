@@ -528,7 +528,8 @@ nsXULDocument::~nsXULDocument()
             // case the document did not make it past StartLayout in 
             // ResumeWalk. The FastLoad table must be clear of entries so 
             // that the FastLoad file footer can be properly written.
-            gXULCache->RemoveFromFastLoadSet(mDocumentURL);
+            if (mDocumentURL)
+                gXULCache->RemoveFromFastLoadSet(mDocumentURL);
 
             nsServiceManager::ReleaseService(kXULPrototypeCacheCID, gXULCache);
             gXULCache = nsnull;
