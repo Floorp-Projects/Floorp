@@ -2207,13 +2207,13 @@ nsBlockFrame::GetTopBlockChild()
       rv = content->QueryInterface(kITextContentIID, (void**) &tc);
       NS_RELEASE(content);
       if (NS_FAILED(rv) || (nsnull == tc)) {
-        return PR_FALSE;
+        return nsnull;
       }
       PRBool isws = PR_FALSE;
       tc->IsOnlyWhitespace(&isws);
       NS_RELEASE(tc);
       if (!isws) {
-        return PR_FALSE;
+        return nsnull;
       }
       firstChild->GetNextSibling(&firstChild);
     }
