@@ -138,6 +138,7 @@ var bookmarksDNDObserver = {
     
     var rdfNode = gBookmarksShell.findRDFNode(aEvent.target, true);
     var rdfParent = rdfNode.parentNode.parentNode;
+    var isContainer = false;
     if (rdfParent && rdfParent.getAttribute("container") == "true") {
       var rDragOverContainer = this.RDF.GetResource(NODE_ID(rdfParent));
 
@@ -145,14 +146,15 @@ var bookmarksDNDObserver = {
       const kRDFCUtilsContractID = "@mozilla.org/rdf/container-utils;1";
       const kRDFCUtilsIID = Components.interfaces.nsIRDFContainerUtils;
       const kRDFCUtils = Components.classes[kRDFCUtilsContractID].getService(kRDFCUtilsIID);
-      var isContainer = kRDFCUtils.IsContainer(kBMDS, rDragOverContainer);
-      if (!isContainer) {
-        // This ain't a container. Don't allow drops, and bail before doing anything
-        // else.
-        aDragSession.canDrop = false;
-        return;
-      }
-    }      
+      isContainer = kRDFCUtils.IsContainer(kBMDS, rDragOverContainer);
+    }     
+    
+    if (!isContainer || rowGroup.id == "headRow") {
+      // Not a container, or dropping onto something that isn't designed to take drops 
+      // (e.g. the tree header) 
+      aDragSession.canDrop = false;
+      return;
+    }        
     
     // Springloaded folders.
     /* XXX - not yet. 
@@ -206,7 +208,8 @@ var bookmarksDNDObserver = {
     if (NODE_ID(dropItem) == "NC:NavCenter")
       dropItem = document.getElementById("treechildren-bookmarks").firstChild;
     
-    if (!dropItem) return;
+    // Don't allow drops on the header row & prevent catastrophe
+    if (dropItem.id == "headRow" || !dropItem) return;
       
     // XXX we could probably compute this ourselves, but let the tree do this 
     //     automagically for now.
