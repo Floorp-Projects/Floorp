@@ -3706,6 +3706,11 @@ nsBlockReflowState::PlaceFloater(nsPlaceholderFrame* aPlaceholder,
   else {
     aIsLeftFloater = PR_FALSE;
     region.x = mCurrentBand.availSpace.XMost() - region.width;
+
+    // In case the floater is too big, don't go past the left edge
+    if (region.x < mCurrentBand.availSpace.x) {
+      region.x = mCurrentBand.availSpace.x;
+    }
   }
   region.y = mY - mBorderPadding.top;
   if (region.y < 0) {
