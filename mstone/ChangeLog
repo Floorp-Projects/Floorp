@@ -1,4 +1,10 @@
-2000-04-27  Dan Christian  <robodan@wankel>
+2000-04-28  Dan Christian  <dac@x.cx>
+
+	* http and wmap now use common routines from http-util
+
+	* http is now separated from the pish command structure.
+
+2000-04-27  Dan Christian  <dac@x.cx>
 
 	* bin/genplot.pl: Support gnuplot generating images other than gif
 
