@@ -89,7 +89,7 @@ HRESULT CIEHtmlNode::GetDOMElement(nsIDOMElement **pIDOMElement)
 	}
 
 	*pIDOMElement = nsnull;
-	m_pIDOMNode->QueryInterface(kIDOMElementIID, (void **) pIDOMElement);
+	m_pIDOMNode->QueryInterface(NS_GET_IID(nsIDOMElement), (void **) pIDOMElement);
 	return (*pIDOMElement) ? S_OK : E_NOINTERFACE;
 }
 
