@@ -280,8 +280,7 @@ nsBrowserWindow::Destroy()
 {
   RemoveBrowser(this);
   if (nsnull != mWebShell) {
-    mWebShell->SetContainer(nsnull);
-    mWebShell->SetObserver(nsnull);
+    mWebShell->Destroy();
     NS_RELEASE(mWebShell);
   }
 }
