@@ -160,6 +160,7 @@ NS_IMETHODIMP nsUTF8ToUnicode::GetMaxLength(const char * aSrc,
 	
 	  		 //unexpected octet, put in a replacement char, 
 			 //flush and refill the buffer, reset state
+                         in--;
 			 res = NS_ERROR_UNEXPECTED;
 			 break;
 
