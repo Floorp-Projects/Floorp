@@ -933,12 +933,12 @@ SheetLoadData::OnStreamComplete(nsIUnicharStreamLoader* aLoader,
                                 nsresult aStatus,
                                 nsIUnicharInputStream* aDataStream)
 {
-  NS_TIMELINE_OUTDENT();
-  NS_TIMELINE_MARK_LOADER("SheetLoadData::OnStreamComplete(%s)", aLoader);
   nsCOMPtr<nsIChannel> channel;
   nsresult result = aLoader->GetChannel(getter_AddRefs(channel));
   if (NS_FAILED(result))
     channel = nsnull;
+  NS_TIMELINE_OUTDENT();
+  NS_TIMELINE_MARK_CHANNEL("SheetLoadData::OnStreamComplete(%s)", channel);
 
   // If it's an HTTP channel, we want to make sure this is not an
   // error document we got.
