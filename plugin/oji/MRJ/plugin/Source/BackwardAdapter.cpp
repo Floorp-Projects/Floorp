@@ -2022,7 +2022,7 @@ CPluginManager::GetService(const nsCID& aClass, const nsIID& aIID,
 			mLiveconnect = new nsLiveconnect;
 			NS_IF_ADDREF(mLiveconnect);
 		}
-		return mLiveconnect->QueryInterface(aIID, result);
+		return mLiveconnect->QueryInterface(aIID, (void**)result);
 	}
 	return NS_ERROR_SERVICE_NOT_FOUND;
 }

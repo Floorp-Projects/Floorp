@@ -193,13 +193,6 @@ void CThrobber::DrawSelf()
 }
 
 
-void CThrobber::AdjustCursorSelf(Point				/* inPortPt */,
-	                              const EventRecord&	/* inMacEvent */)
-{
-   // Overridden to do nothing - Cursor handling is done by HandleThrobberEvent
-}
-
-
 void CThrobber::ResizeFrameBy(SInt16		inWidthDelta,
                 					SInt16		inHeightDelta,
                 					Boolean	   inRefresh)
