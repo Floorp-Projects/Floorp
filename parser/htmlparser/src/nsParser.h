@@ -64,6 +64,7 @@
 #include "nsITokenizer.h"
 #include "nsHTMLTags.h"
 #include "nsDTDUtils.h"
+#include "stopwatch.h"
 
 class IContentSink;
 class nsIDTD;
@@ -380,6 +381,9 @@ protected:
     nsCharsetSource     mCharsetSource;
     nsresult            mInternalState;
     CObserverService    mObserverService;
+#ifdef RAPTOR_PERF_METRICS
+    Stopwatch           mTotalTime;
+#endif
 };
 
 
