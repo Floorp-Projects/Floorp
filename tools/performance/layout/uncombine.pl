@@ -87,8 +87,8 @@ while(<COMBINEFILE>){
 				#print( " - WebShellID: $shellID\n");
 				@urlParts = split(/\//, $url);
 				if($fileURL > 0){
-					$urlName = $urlParts[8];	### SENSITIVE to installation path
-                                    ### eg. 'file:///S|/Mozilla/Tools/PerfTools/WebSites/amazon/index.html'
+					$urlName = $urlParts[9];	### SENSITIVE to installation path
+                                    ### eg. 'file:///S|/Mozilla/Tools/performance/layout/WebSites/amazon/index.html'
 				} else {
 					$urlName = $urlParts[2];	### http://all.of.this.is.the.url.name/index.html
 				}

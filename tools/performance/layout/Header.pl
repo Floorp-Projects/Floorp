@@ -38,6 +38,7 @@ sub debug_print {
 $buildIDFile = $ARGV[0];
 $buildIDFile = '< '.$buildIDFile.'\bin\chrome\navigator\locale\en-US\navigator.dtd';
 $pullDate = $ARGV[1];
+$useClockTime = $ARGV[2];
 
 open (XUL_FILE, $buildIDFile) or die "Unable to open BuildID file $buildIDFile (header.pl)";
 $BuildNo = "";
@@ -88,7 +89,11 @@ print (TABLE_FILE "<BR>");
 print (TABLE_FILE "<B><CENTER><font size=-1>\n");
 print (TABLE_FILE "$machineStats\n"); 
 print (TABLE_FILE "<BR>");
-print (TABLE_FILE "Time is reported in Seconds of CPU time");
+if($useClockTime){
+  print (TABLE_FILE "Time is reported in Seconds of Clock time");
+} else {
+  print (TABLE_FILE "Time is reported in Seconds of CPU time");
+}
 print (TABLE_FILE "</font></CENTER></B>\n");
 print (TABLE_FILE "<BR>\n\n");
 

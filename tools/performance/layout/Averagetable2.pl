@@ -24,7 +24,7 @@
 #------------------------------------------------------------------------------
 sub debug_print {
   foreach $str (@_){
-#    print( $str );
+    print( $str );
   }
 }
 #------------------------------------------------------------------------------
@@ -36,8 +36,9 @@ $logFile = $ARGV[1];
 $NumOfSites = $ARGV[2];
 $buildIDFile = $ARGV[3];
 $LinkURL = $ARGV[4];
+$useClockTime = $ARGV[5];
 $buildIDFile = '< '.$buildIDFile.'\bin\chrome\navigator\locale\en-US\navigator.dtd';
-debug_print( "Arguments:[ $UrlName | $logFile | $NumOfSites | $buildIDFile | $LinkURL ]\n");
+debug_print( "Arguments:[ $UrlName | $logFile | $NumOfSites | $buildIDFile | $LinkURL | $useClockTime]\n");
 
 #------------------------------------------------------------------------------
 # Open the ID file and get the build ID
@@ -256,7 +257,12 @@ while (<LOG_FILE>)
   if (/Content/){
     if ($IsValidURL == 1){
       @List = split (/ /, $ThisLine);
-      $Content_Time = $List[9];
+      if($useClockTime){
+        @clockTimeList = split(/:/, $List[6]);
+        $Content_Time = $clockTimeList[2];
+      } else {
+        $Content_Time = $List[9];
+      }
       $Content_Flag = 1;
       debug_print( "Content Time: $Content_Time\n" );
     }
@@ -264,7 +270,12 @@ while (<LOG_FILE>)
   if (/Reflow/){
     if ($IsValidURL == 1){
       @List = split (/ /, $ThisLine);
-      $Reflow_Time = $List[8];
+      if($useClockTime){
+        @clockTimeList = split(/:/, $List[5]);
+        $Reflow_Time = $clockTimeList[2];
+      } else {
+        $Reflow_Time = $List[8];
+      }
       $Reflow_Flag = 1;
       debug_print( "Reflow Time: $Reflow_Time\n" );
     }
@@ -272,14 +283,24 @@ while (<LOG_FILE>)
   if (/Frame construction plus/){
     if ($IsValidURL == 1){
       @List = split (/ /, $ThisLine);
-      $FrameAndStyle_Time = $List[12];
+      if($useClockTime){
+        @clockTimeList = split(/:/, $List[9]);
+        $FrameAndStyle_Time = $clockTimeList[2];
+      } else {
+        $FrameAndStyle_Time = $List[12];
+      }
       debug_print( "Frame and Style Time: $FrameAndStyle_Time\n" );
     }
   }
   if (/Style/){
     if ($IsValidURL == 1){
       @List = split (/ /, $ThisLine);
-      $Style_Time = $List[9];
+      if($useClockTime){
+        @clockTimeList = split(/:/, $List[6]);
+        $Style_Time = $clockTimeList[2];
+      } else {
+        $Style_Time = $List[9];
+      }
       $Style_Flag = 1;
       debug_print( "Style Time: $Style_Time\n" );
     }
@@ -287,7 +308,12 @@ while (<LOG_FILE>)
   if (/Parse/){
     if ($IsValidURL == 1){
       @List = split (/ /, $ThisLine);
-      $Parse_Time = $List[8];
+      if($useClockTime){
+        @clockTimeList = split(/:/, $List[5]);
+        $Parse_Time = $clockTimeList[2];
+      } else {
+        $Parse_Time = $List[8];
+      }
       $Parse_Flag = 1;
       debug_print( "Parse Time: $Parse_Time\n" );
     }
@@ -316,6 +342,10 @@ while (<LOG_FILE>)
 # Calculate the significant time values
 #------------------------------------------------------------------------------
 $Frame_Time = $FrameAndStyle_Time - $Style_Time;
+if($Frame_Time < 0.0){
+  print( "\n***** ERROR: negative FrameTime *****\n");
+  $Frame_Time = 0;
+}
 $TotalLayout_Time = $Content_Time + $Reflow_Time + $Frame_Time + $Style_Time + $Parse_Time;
 $Avg_Time = $Avg_Time + $TotalLayoutTime + $TotalPageLoad_Time;
 

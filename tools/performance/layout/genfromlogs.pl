@@ -26,14 +26,17 @@ $milestone = $ARGV[0];
 print ($milestone);
 
 $bldRoot = $ARGV[1];
-print("BuildRoot: $bldRoot\n");
+print(" BuildRoot: $bldRoot\n");
 $cnt = 0;
 
 # Backup the history file
 system( ("copy", "history.txt", "history.bak" ) );
 
+# Delete the average.txt file so we don;t get old values in the averages
+system( ("del", "average.txt") );
+
 # Run the Header script
-system( ("perl", "header.pl", "$bldRoot", "$milestone" ) );
+system( ("perl", "header.pl", "$bldRoot", "$milestone", "$ARGV[2]" ) );
 
 #
 # now run the average2 script for each file in the logs directory
@@ -46,7 +49,7 @@ while( <Logs\\*.txt> ){
     @nameParts = split( /-/, $line );
     @nameNoDir = split( /\\/, $nameParts[0] );
     print( "Name: $nameNoDir[1]\n" );
-    system( ("perl", "Averagetable2.pl", "$nameNoDir[1]", "$line", "$cnt", "$bldRoot", "$nameNoDir[1]" ) );
+    system( ("perl", "Averagetable2.pl", "$nameNoDir[1]", "$line", "$cnt", "$bldRoot", "$nameNoDir[1]", "$ARGV[2]" ) );
   }
 }
 
