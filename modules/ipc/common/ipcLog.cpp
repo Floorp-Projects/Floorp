@@ -39,29 +39,50 @@
 
 #ifdef IPC_LOGGING
 
-#ifdef XP_UNIX
-#include <sys/types.h>
-#include <unistd.h>
-#define GETPID() ((PRUint32) getpid())
-#endif
-
-#ifdef XP_WIN
-#include <windows.h>
-#define GETPID() ((PRUint32) GetCurrentProcessId())
-#endif
-
-#ifndef GETPID
-#define GETPID 0
-#endif
-
 #include <string.h>
 
 #include "prenv.h"
 #include "prprf.h"
 #include "plstr.h"
 
-PRBool ipcLogEnabled;
-char ipcLogPrefix[10];
+PRBool ipcLogEnabled = PR_FALSE;
+char ipcLogPrefix[10] = {0};
+
+//-----------------------------------------------------------------------------
+// UNIX
+//-----------------------------------------------------------------------------
+#ifdef XP_UNIX
+#include <sys/types.h>
+#include <unistd.h>
+
+static inline PRUint32
+WritePrefix(char *buf, PRUint32 bufLen)
+{
+    return PR_snprintf(buf, bufLen, "[%u] %s ",
+                       (unsigned) getpid(),
+                       ipcLogPrefix);
+}
+#endif
+
+//-----------------------------------------------------------------------------
+// WIN32
+//-----------------------------------------------------------------------------
+#ifdef XP_WIN
+#include <windows.h>
+
+static inline PRUint32
+WritePrefix(char *buf, PRUint32 bufLen)
+{
+    return PR_snprintf(buf, bufLen, "[%u:%u] %s ",
+                       GetCurrentProcessId(),
+                       GetCurrentThreadId(),
+                       ipcLogPrefix);
+}
+#endif
+
+//-----------------------------------------------------------------------------
+// logging API impl
+//-----------------------------------------------------------------------------
 
 void
 IPC_InitLog(const char *prefix)
@@ -81,7 +102,7 @@ IPC_Log(const char *fmt, ... )
     char buf[512];
 
     if (ipcLogPrefix[0])
-        nb = PR_snprintf(buf, sizeof(buf), "[%u] %s ", GETPID(), ipcLogPrefix);
+        nb = WritePrefix(buf, sizeof(buf));
 
     PR_vsnprintf(buf + nb, sizeof(buf) - nb, fmt, ap);
     buf[sizeof(buf) - 1] = '\0';

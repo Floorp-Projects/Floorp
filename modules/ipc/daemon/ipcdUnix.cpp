@@ -182,8 +182,8 @@ static void ShutdownDaemonDir()
 //
 // declared in ipcdPrivate.h
 //
-ipcClient *ipcClients;
-int        ipcClientCount;
+ipcClient *ipcClients = NULL;
+int        ipcClientCount = 0;
 
 //
 // the first element of this array is always zero; this is done so that the
@@ -252,6 +252,7 @@ static int RemoveClient(int clientIndex)
 static void PollLoop(PRFileDesc *listenFD)
 {
     // the first element of ipcClientArray is unused.
+    memset(ipcClientArray, 0, sizeof(ipcClientArray));
     ipcClients = ipcClientArray + 1;
     ipcClientCount = 0;
 
