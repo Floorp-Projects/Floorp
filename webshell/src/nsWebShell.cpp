@@ -4504,6 +4504,12 @@ NS_IMETHODIMP nsWebShell::AddChild(nsIDocShell *aChild)
         NS_ENSURE_SUCCESS(childmuDV->SetForceCharacterSet(forceCharset), NS_ERROR_FAILURE);
       }
     }
+    if (defaultCharset) {
+      Recycle(defaultCharset);
+    }
+    if (forceCharset) {
+      Recycle(forceCharset);
+    }
   }
 
   return NS_OK;
