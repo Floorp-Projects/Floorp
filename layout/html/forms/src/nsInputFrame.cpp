@@ -504,6 +504,20 @@ nsInputFrame::CalculateSize (nsIPresContext* aPresContext, nsInputFrame* aFrame,
   aWidthExplicit      = PR_FALSE;
   aHeightExplicit     = PR_FALSE;
 
+  /* XXX For some reason on Win95 Paint doesn't initially get called */
+  /* for elements that are out of the view, so we weren't calling    */
+  /* PostCreateWidget. I'm calling it here as a work-around          */
+  nsIView* view = nsnull;
+  aFrame->GetView(view);
+  if (nsnull != view) {
+    if (PR_FALSE == aFrame->mDidInit) {
+	  ((nsInput*)aFrame->mContent)->GetFormManager()->Init(PR_FALSE);
+      aFrame->PostCreateWidget(aPresContext, view);
+	  aFrame->mDidInit = PR_TRUE;
+	}
+    NS_RELEASE(view);
+  }
+
   aBounds.width  = CSS_NOTSET;
   aBounds.height = CSS_NOTSET;
   nsSize textSize(0,0);
