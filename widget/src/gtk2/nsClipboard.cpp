@@ -49,6 +49,7 @@
 #include <gtk/gtkinvisible.h>
 
 // For manipulation of the X event queue
+#include <gdk/gdk.h>
 #include <X11/Xlib.h>
 #include <gdk/gdkx.h>
 #include <gtk/gtkmain.h>
