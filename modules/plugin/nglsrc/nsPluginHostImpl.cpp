@@ -3824,18 +3824,12 @@ static PRBool isUnwantedPlugin(nsPluginTag * tag)
 
     if(nsnull == PL_strcasecmp(tag->mMimeTypeArray[i],"application/x-director"))
       return PR_FALSE;
-
-    // these are Quicktime-only types so that wav and midi will register indirectly
-    if(nsnull == PL_strcasecmp(tag->mMimeTypeArray[i],"image/x-quicktime"))
-      return PR_FALSE;
-
-    if(nsnull == PL_strcasecmp(tag->mMimeTypeArray[i],"image/x-macpaint"))
-      return PR_FALSE;
-
-    if(nsnull == PL_strcasecmp(tag->mMimeTypeArray[i],"video/quicktime"))
-      return PR_FALSE;
-
   }
+
+  // On Windows, we also want to include the Quicktime plugin from the 4.x directory
+  // But because it spans several DLL's, the best check for now is by filename
+  if (nsnull != PL_strcasestr(tag->mFileName,"npqtplugin"))
+    return PR_FALSE;
 
   return PR_TRUE;
 }
