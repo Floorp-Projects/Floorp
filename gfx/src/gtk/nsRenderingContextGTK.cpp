@@ -499,14 +499,14 @@ void nsRenderingContextGTK::UpdateGC()
   valuesMask = GDK_GC_FOREGROUND;
 
   if (mCurrentFont) {
-    valuesMask |= GDK_GC_FONT;
+    valuesMask = GdkGCValuesMask(valuesMask | GDK_GC_FONT);
     values.font = mCurrentFont;
   }
 
-  valuesMask |= GDK_GC_LINE_STYLE;
+  valuesMask = GdkGCValuesMask(valuesMask | GDK_GC_LINE_STYLE);
   values.line_style = mLineStyle;
 
-  valuesMask |= GDK_GC_FUNCTION;
+  valuesMask = GdkGCValuesMask(valuesMask | GDK_GC_FUNCTION);
   values.function = mFunction;
 
   GdkRegion *rgn;
