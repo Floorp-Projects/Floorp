@@ -81,7 +81,7 @@
 <!ENTITY pref.weekstarts.friday    "Petek">
 <!ENTITY pref.weekstarts.saturday  "Sobota">
 
-<!ENTITY pref.daysoff.label     "Day(s) Off Each Week:" >
+<!ENTITY pref.daysoff.label     "Prosti dnevi vsak teden:" >
 
 <!ENTITY pref.numberofweeks.label     "Privzeto skupno število tednov:">
 <!ENTITY pref.numberofweeks.0      "noben">

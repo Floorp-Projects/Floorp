@@ -251,20 +251,20 @@
 <!ENTITY calendar.delete.button.label           "Törlés" >
 <!ENTITY calendar.edit.button.label             "Szerkesztés" >
 
-<!ENTITY calendar.choosedate.button.label       "Válasszon dátumot" >
+<!ENTITY calendar.choosedate.button.label       "Dátumválasztás" >
 
 <!ENTITY calendar.dayview.button.label          "Napi nézet" >
 <!ENTITY calendar.weekview.button.label         "Heti nézet" >
 <!ENTITY calendar.monthview.button.label        "Havi nézet" >
 <!ENTITY calendar.multiweekview.button.label        "Többheti nézet" >
-<!ENTITY calendar.onlyworkday.checkbox.label    "Csak hétfő-péntek" >
+<!ENTITY calendar.onlyworkday.checkbox.label    "Csak munkanap" >
 <!ENTITY calendar.onlyworkday.checkbox.accesskey  "C" >
 <!ENTITY calendar.displaytodos.checkbox.label   "Tennivalók a nézetben" >
 <!ENTITY calendar.displaytodos.checkbox.accesskey "z" >
 
 <!ENTITY calendar.menu.options.modify           "Szerkesztés" >
 <!ENTITY calendar.menu.options.remove           "Törlés" >
-<!ENTITY calendar.menu.options.close            "Ablak bezárás" >
+<!ENTITY calendar.menu.options.close            "Ablak bezárása" >
 <!ENTITY calendar.menu.options.close.accesskey  "B" >
 
 <!ENTITY calendar.main.tab.label        "Események" >
@@ -309,11 +309,11 @@
 <!ENTITY calendar.context.deleteevent.accesskey       "l">
 <!ENTITY calendar.context.deletetask.label            "Tennivaló törlése">
 <!ENTITY calendar.context.deletetask.accesskey        "s">
-<!ENTITY calendar.context.cutevent.label              "Kivág">
+<!ENTITY calendar.context.cutevent.label              "Kivágás">
 <!ENTITY calendar.context.cutevent.accesskey          "K">
-<!ENTITY calendar.context.copyevent.label             "Másol">
+<!ENTITY calendar.context.copyevent.label             "Másolás">
 <!ENTITY calendar.context.copyevent.accesskey         "M">
-<!ENTITY calendar.context.pasteevent.label            "Beszúr">
+<!ENTITY calendar.context.pasteevent.label            "Beszúrás">
 <!ENTITY calendar.context.pasteevent.accesskey        "B">
 <!ENTITY calendar.context.selectall.label             "Mindent kiválaszt">
 <!ENTITY calendar.context.selectall.accesskey         "i">
@@ -411,8 +411,8 @@
 <!-- Calendar Wizard Dialog -->
 <!ENTITY calendar.wizard.import.label              "Importálás: Események importálása egy helyi fájlból már létező naptárba">
 <!ENTITY calendar.wizard.export.label              "Exportálás: Események exportálása egy létező naptárból egy helyi fájlba">
-<!ENTITY calendar.wizard.subscribe.label           "Feliratkozás: Feliratkozás távoli gépen (például: Interneten) levő naptár fájlhoz">
-<!ENTITY calendar.wizard.publish.label             "Közzététel: Események közzététele egy távoli gépen (például: Interneten), hogy mások feliratkozhassanak rá">
+<!ENTITY calendar.wizard.subscribe.label           "Feliratkozás: Feliratkozás távoli gépen (például: interneten) levő naptár fájlhoz">
+<!ENTITY calendar.wizard.publish.label             "Közzététel: Események közzététele egy távoli gépen (például: interneten), hogy mások feliratkozhassanak rá">
 
 <!-- Calendar Import Outlook CSV Dialog -->
 <!-- TRANSLATORS: all outlook*.label -fields should be translated word to word (or if possible

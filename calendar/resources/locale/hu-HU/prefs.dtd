@@ -40,7 +40,7 @@
 
 <!ENTITY calendar.label             "Naptár" >
 <!ENTITY calendarPanel.label        "Naptár" >
-<!ENTITY calendar.accesskey         "c" >
+<!ENTITY calendar.accesskey         "n" >
 <!ENTITY calendar.publish.label     "Közzététel">
 <!ENTITY calendar.general.label     "Általános">
 <!ENTITY calendar.alarms.label      "Értesítések">
@@ -70,7 +70,7 @@
 <!ENTITY pref.dateformat.label      "Dátumszöveg formátuma" >
 <!ENTITY pref.dateformat.long       "Hosszú" >
 <!ENTITY pref.dateformat.short      "Rövid"  >
-<!ENTITY pref.dateformat.storeingmt "Store dates in Universal Time" >
+<!ENTITY pref.dateformat.storeingmt "Időpont tárolása UTC-ben" >
 <!ENTITY pref.defaultlength.label   "Alapértelmezett eseményhossz" >
 <!ENTITY pref.defaultsnoozelength.label   "Alapértelmezett szundihossz" >
 
@@ -83,7 +83,7 @@
 <!ENTITY pref.weekstarts.friday    "Péntek" >
 <!ENTITY pref.weekstarts.saturday  "Szombat" >
 
-<!ENTITY pref.daysoff.label     "Day(s) Off Each Week:" >
+<!ENTITY pref.daysoff.label     "A hét szabadnapjai:" >
 
 <!ENTITY pref.numberofweeks.label     "Alapértelmezett összes hetek száma" >
 <!ENTITY pref.numberofweeks.0      "Nincs" >
@@ -334,17 +334,17 @@
 <!ENTITY pref.timezone.Asia.Aqtau "Ázsia/Aqtau" >
 <!ENTITY pref.timezone.Asia.Aqtobe "Ázsia/Aqtobe" >
 <!ENTITY pref.timezone.Asia.Ashgabat "Ázsia/Ashgabat" >
-<!ENTITY pref.timezone.Asia.Baghdad "Ázsia/Baghdad" >
+<!ENTITY pref.timezone.Asia.Baghdad "Ázsia/Bagdad" >
 <!ENTITY pref.timezone.Asia.Bahrain "Ázsia/Bahrain" >
 <!ENTITY pref.timezone.Asia.Baku "Ázsia/Baku" >
 <!ENTITY pref.timezone.Asia.Bangkok "Ázsia/Bangkok" >
-<!ENTITY pref.timezone.Asia.Beirut "Ázsia/Beirut" >
+<!ENTITY pref.timezone.Asia.Beirut "Ázsia/Bejrút" >
 <!ENTITY pref.timezone.Asia.Bishkek "Ázsia/Bishkek" >
 <!ENTITY pref.timezone.Asia.Brunei "Ázsia/Brunei" >
 <!ENTITY pref.timezone.Asia.Calcutta "Ázsia/Calcutta" >
 <!ENTITY pref.timezone.Asia.Chungking "Ázsia/Chungking" >
 <!ENTITY pref.timezone.Asia.Colombo "Ázsia/Colombo" >
-<!ENTITY pref.timezone.Asia.Damascus "Ázsia/Damascus" >
+<!ENTITY pref.timezone.Asia.Damascus "Ázsia/Damaszkusz" >
 <!ENTITY pref.timezone.Asia.Dhaka "Ázsia/Dhaka" >
 <!ENTITY pref.timezone.Asia.Dili "Ázsia/Dili" >
 <!ENTITY pref.timezone.Asia.Dubai "Ázsia/Dubai" >
@@ -353,17 +353,17 @@
 <!ENTITY pref.timezone.Asia.Harbin "Ázsia/Harbin" >
 <!ENTITY pref.timezone.Asia.Hong_Kong "Ázsia/Hong Kong" >
 <!ENTITY pref.timezone.Asia.Hovd "Ázsia/Hovd" >
-<!ENTITY pref.timezone.Asia.Irkutsk "Ázsia/Irkutsk" >
-<!ENTITY pref.timezone.Asia.Istanbul "Ázsia/Istanbul" >
+<!ENTITY pref.timezone.Asia.Irkutsk "Ázsia/Irkutszk" >
+<!ENTITY pref.timezone.Asia.Istanbul "Ázsia/Isztanbul" >
 <!ENTITY pref.timezone.Asia.Jakarta "Ázsia/Jakarta" >
 <!ENTITY pref.timezone.Asia.Jayapura "Ázsia/Jayapura" >
-<!ENTITY pref.timezone.Asia.Jerusalem "Ázsia/Jerusalem" >
+<!ENTITY pref.timezone.Asia.Jerusalem "Ázsia/Jeruzsálem" >
 <!ENTITY pref.timezone.Asia.Kabul "Ázsia/Kabul" >
-<!ENTITY pref.timezone.Asia.Kamchatka "Ázsia/Kamchatka" >
+<!ENTITY pref.timezone.Asia.Kamchatka "Ázsia/Kamcsatka" >
 <!ENTITY pref.timezone.Asia.Karachi "Ázsia/Karachi" >
 <!ENTITY pref.timezone.Asia.Kashgar "Ázsia/Kashgar" >
 <!ENTITY pref.timezone.Asia.Katmandu "Ázsia/Katmandu" >
-<!ENTITY pref.timezone.Asia.Krasnoyarsk "Ázsia/Krasnoyarsk" >
+<!ENTITY pref.timezone.Asia.Krasnoyarsk "Ázsia/Krasznojarszk" >
 <!ENTITY pref.timezone.Asia.Kuala_Lumpur "Ázsia/Kuala Lumpur" >
 <!ENTITY pref.timezone.Asia.Kuching "Ázsia/Kuching" >
 <!ENTITY pref.timezone.Asia.Kuwait "Ázsia/Kuwait" >
@@ -372,8 +372,8 @@
 <!ENTITY pref.timezone.Asia.Manila "Ázsia/Manila" >
 <!ENTITY pref.timezone.Asia.Muscat "Ázsia/Muscat" >
 <!ENTITY pref.timezone.Asia.Nicosia "Ázsia/Nicosia" >
-<!ENTITY pref.timezone.Asia.Novosibirsk "Ázsia/Novosibirsk" >
-<!ENTITY pref.timezone.Asia.Omsk "Ázsia/Omsk" >
+<!ENTITY pref.timezone.Asia.Novosibirsk "Ázsia/Novoszibirszk" >
+<!ENTITY pref.timezone.Asia.Omsk "Ázsia/Omszk" >
 <!ENTITY pref.timezone.Asia.Phnom_Penh "Ázsia/Phnom Penh" >
 <!ENTITY pref.timezone.Asia.Pontianak "Ázsia/Pontianak" >
 <!ENTITY pref.timezone.Asia.Pyongyang "Ázsia/Pyongyang" >
@@ -381,27 +381,27 @@
 <!ENTITY pref.timezone.Asia.Rangoon "Ázsia/Rangoon" >
 <!ENTITY pref.timezone.Asia.Riyadh "Ázsia/Riyadh" >
 <!ENTITY pref.timezone.Asia.Saigon "Ázsia/Saigon" >
-<!ENTITY pref.timezone.Asia.Samarkand "Ázsia/Samarkand" >
-<!ENTITY pref.timezone.Asia.Seoul "Ázsia/Seoul" >
+<!ENTITY pref.timezone.Asia.Samarkand "Ázsia/Szamarkand" >
+<!ENTITY pref.timezone.Asia.Seoul "Ázsia/Szöul" >
 <!ENTITY pref.timezone.Asia.Shanghai "Ázsia/Shanghai" >
 <!ENTITY pref.timezone.Asia.Singapore "Ázsia/Singapore" >
 <!ENTITY pref.timezone.Asia.Taipei "Ázsia/Taipei" >
-<!ENTITY pref.timezone.Asia.Tashkent "Ázsia/Tashkent" >
-<!ENTITY pref.timezone.Asia.Tbilisi "Ázsia/Tbilisi" >
+<!ENTITY pref.timezone.Asia.Tashkent "Ázsia/Taskent" >
+<!ENTITY pref.timezone.Asia.Tbilisi "Ázsia/Tbiliszi" >
 <!ENTITY pref.timezone.Asia.Tehran "Ázsia/Tehran" >
 <!ENTITY pref.timezone.Asia.Thimphu "Ázsia/Thimphu" >
-<!ENTITY pref.timezone.Asia.Tokyo "Ázsia/Tokyo" >
+<!ENTITY pref.timezone.Asia.Tokyo "Ázsia/Tokió" >
 <!ENTITY pref.timezone.Asia.Ujung_Pandang "Ázsia/Ujung Pandang" >
-<!ENTITY pref.timezone.Asia.Ulaanbaatar "Ázsia/Ulaanbaatar" >
+<!ENTITY pref.timezone.Asia.Ulaanbaatar "Ázsia/Ulánbátor" >
 <!ENTITY pref.timezone.Asia.Urumqi "Ázsia/Urumqi" >
 <!ENTITY pref.timezone.Asia.Vientiane "Ázsia/Vientiane" >
-<!ENTITY pref.timezone.Asia.Vladivostok "Ázsia/Vladivostok" >
-<!ENTITY pref.timezone.Asia.Yakutsk "Ázsia/Yakutsk" >
-<!ENTITY pref.timezone.Asia.Yekaterinburg "Ázsia/Yekaterinburg" >
-<!ENTITY pref.timezone.Asia.Yerevan "Ázsia/Yerevan" >
-<!ENTITY pref.timezone.Atlantic.Azores "Atlanti/Azores" >
+<!ENTITY pref.timezone.Asia.Vladivostok "Ázsia/Vlagyivosztok" >
+<!ENTITY pref.timezone.Asia.Yakutsk "Ázsia/Jakutszk" >
+<!ENTITY pref.timezone.Asia.Yekaterinburg "Ázsia/Jekatyerinburg" >
+<!ENTITY pref.timezone.Asia.Yerevan "Ázsia/Jereván" >
+<!ENTITY pref.timezone.Atlantic.Azores "Atlanti/Azori-szigetek" >
 <!ENTITY pref.timezone.Atlantic.Bermuda "Atlanti/Bermuda" >
-<!ENTITY pref.timezone.Atlantic.Canary "Atlanti/Canary" >
+<!ENTITY pref.timezone.Atlantic.Canary "Atlanti/Kanári-szigetek" >
 <!ENTITY pref.timezone.Atlantic.Cape_Verde "Atlanti/Cape Verde" >
 <!ENTITY pref.timezone.Atlantic.Faeroe "Atlanti/Faeroe" >
 <!ENTITY pref.timezone.Atlantic.Jan_Mayen "Atlanti/Jan Mayen" >
@@ -436,7 +436,7 @@
 <!ENTITY pref.timezone.Europe.Helsinki "Európa/Helsinki" >
 <!ENTITY pref.timezone.Europe.Istanbul "Európa/Isztambul" >
 <!ENTITY pref.timezone.Europe.Kaliningrad "Európa/Kalinyingrád" >
-<!ENTITY pref.timezone.Europe.Kiev "Európa/Kiev" >
+<!ENTITY pref.timezone.Europe.Kiev "Európa/Kijev" >
 <!ENTITY pref.timezone.Europe.Copenhagen "Európa/Koppenhága" >
 <!ENTITY pref.timezone.Europe.Lisbon "Európa/Liszabon" >
 <!ENTITY pref.timezone.Europe.Ljubljana "Európa/Ljubljana" >
@@ -458,7 +458,7 @@
 <!ENTITY pref.timezone.Europe.San_Marino "Európa/San Marino" >
 <!ENTITY pref.timezone.Europe.Sarajevo "Európa/Szarajevó" >
 <!ENTITY pref.timezone.Europe.Simferopol "Európa/Szimferopol" >
-<!ENTITY pref.timezone.Europe.Skopje "Európa/Skopje" >
+<!ENTITY pref.timezone.Europe.Skopje "Európa/Szkopje" >
 <!ENTITY pref.timezone.Europe.Sofia "Európa/Szófia" >
 <!ENTITY pref.timezone.Europe.Stockholm "Európa/Stockholm" >
 <!ENTITY pref.timezone.Europe.Tallinn "Európa/Tallinn" >
@@ -469,7 +469,7 @@
 <!ENTITY pref.timezone.Europe.Vilnius "Európa/Vilnius" >
 <!ENTITY pref.timezone.Europe.Warsaw "Európa/Varsó" >
 <!ENTITY pref.timezone.Europe.Zagreb "Európa/Zágráb" >
-<!ENTITY pref.timezone.Europe.Zaporozhye "Európa/Zaporozhye" >
+<!ENTITY pref.timezone.Europe.Zaporozhye "Európa/Zaporozsje" >
 <!ENTITY pref.timezone.Europe.Zurich "Európa/Zürich" >
 <!ENTITY pref.timezone.Indian.Antananarivo "Indiai/Antananarivo" >
 <!ENTITY pref.timezone.Indian.Chagos "Indiai/Chagos" >
