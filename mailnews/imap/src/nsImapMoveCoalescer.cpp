@@ -52,16 +52,16 @@ nsresult nsImapMoveCoalescer::AddMove(nsIMsgFolder *folder, nsMsgKey key)
         NS_NewISupportsArray(getter_AddRefs(m_destFolders));
 	if (m_destFolders)
 	{
-		PRInt32 folderIndex = m_destFolders->IndexOf(folder);
-		nsMsgKeyArray *keysToAdd=nsnull;
-		if (folderIndex >= 0)
+		nsCOMPtr <nsISupports> supports = do_QueryInterface(folder);
+		if (supports)
 		{
-			keysToAdd = (nsMsgKeyArray *) m_sourceKeyArrays.ElementAt(folderIndex);
-		}
-		else
-		{
-			nsCOMPtr <nsISupports> supports = do_QueryInterface(folder);
-			if (supports)
+			PRInt32 folderIndex = m_destFolders->IndexOf(supports);
+			nsMsgKeyArray *keysToAdd=nsnull;
+			if (folderIndex >= 0)
+			{
+				keysToAdd = (nsMsgKeyArray *) m_sourceKeyArrays.ElementAt(folderIndex);
+			}
+			else
 			{
 				m_destFolders->AppendElement(supports);
 				keysToAdd = new nsMsgKeyArray;
@@ -70,10 +70,12 @@ nsresult nsImapMoveCoalescer::AddMove(nsIMsgFolder *folder, nsMsgKey key)
 
 				m_sourceKeyArrays.AppendElement(keysToAdd);
 			}
+			if (keysToAdd)
+				keysToAdd->Add(key);
+			return NS_OK;
 		}
-		if (keysToAdd)
-			keysToAdd->Add(key);
-		return NS_OK;
+		else
+			return NS_ERROR_NULL_POINTER;
 	}
 	else
 		return NS_ERROR_OUT_OF_MEMORY;
@@ -111,7 +113,7 @@ nsresult nsImapMoveCoalescer::PlaybackMoves(nsIEventQueue *eventQueue)
 
 				nsCOMPtr<nsISupportsArray> messages;
 				NS_NewISupportsArray(getter_AddRefs(messages));
-				for (PRUint32 keyIndex = 0; i < keysToAdd->GetSize(); i++)
+				for (PRUint32 keyIndex = 0; keyIndex < keysToAdd->GetSize(); keyIndex++)
 				{
 					nsCOMPtr<nsIMessage> message;
 					nsCOMPtr<nsIMsgDBHdr> mailHdr = nsnull;
