@@ -611,7 +611,8 @@ PRInt32 nsTableFrame::GetEffectiveColSpan (PRInt32 aColIndex, nsTableCellFrame *
   {
     result = colSpan;
     // check for case where all cells in a column have a colspan
-    PRInt32 initialColIndex = aCell->GetColIndex();
+    PRInt32 initialColIndex;
+    aCell->GetColIndex(initialColIndex);
     PRInt32 minColSpanForCol = cellMap->GetMinColSpan(initialColIndex);
     result -= (minColSpanForCol - 1); // minColSpanForCol is always at least 1
                                       // and we want to treat default as 0 (no effect)
@@ -621,7 +622,9 @@ PRInt32 nsTableFrame::GetEffectiveColSpan (PRInt32 aColIndex, nsTableCellFrame *
   {
     printf("ERROR!\n");
     DumpCellMap();
-    printf("aColIndex=%d, cell->colIndex=%d\n", aColIndex, aCell->GetColIndex());
+    PRInt32 initialColIndex;
+    aCell->GetColIndex(initialColIndex);
+    printf("aColIndex=%d, cell->colIndex=%d\n", aColIndex, initialColIndex);
     printf("aCell->colSpan=%d\n", aCell->GetColSpan());
     printf("colCount=%d\n", mCellMap->GetColCount());
   }
@@ -972,7 +975,8 @@ void nsTableFrame::DumpCellMap ()
             nsTableRowFrame *row;
             cell->GetParent((nsIFrame **)&row);
             int rr = row->GetRowIndex ();
-            int cc = cell->GetColIndex ();
+            int cc;
+            cell->GetColIndex(cc);
             printf("S%d,%d ", rr, cc);
             if (cd->mOverlap != nsnull)
             {
@@ -980,7 +984,7 @@ void nsTableFrame::DumpCellMap ()
               nsTableRowFrame* row2;
               cell->GetParent((nsIFrame **)&row2);
               rr = row2->GetRowIndex ();
-              cc = cell->GetColIndex ();
+              cell->GetColIndex (cc);
               printf("O%d,%c ", rr, cc);
             }
             else
@@ -1422,7 +1426,8 @@ void nsTableFrame::ComputeRightBorderForEdgeAt(nsIPresContext& aPresContext,
 			  { // the cell at (aRowIndex, colIndex) is the result of a span
 				  nsTableCellFrame *cell = cd->mRealCell->mCell;
 				  NS_ASSERTION(nsnull!=cell, "bad cell map state, missing real cell");
-				  const PRInt32 realRowIndex = cell->GetRowIndex ();
+				  PRInt32 realRowIndex;
+          cell->GetRowIndex (realRowIndex);
 				  if (realRowIndex!=aRowIndex)
 				  { // the span is caused by a rowspan
 					  rightNeighborFrame = cd->mRealCell->mCell;
@@ -1640,7 +1645,8 @@ void nsTableFrame::ComputeBottomBorderForEdgeAt(nsIPresContext& aPresContext,
 			  { // the cell at (rowIndex, aColIndex) is the result of a span
 				  nsTableCellFrame *cell = cd->mRealCell->mCell;
 				  NS_ASSERTION(nsnull!=cell, "bad cell map state, missing real cell");
-				  const PRInt32 realColIndex = cell->GetColIndex ();
+				  PRInt32 realColIndex;
+          cell->GetColIndex (realColIndex);
 				  if (realColIndex!=aColIndex)
 				  { // the span is caused by a colspan
 					  bottomNeighborFrame = cd->mRealCell->mCell;
@@ -3830,16 +3836,18 @@ nsTableFrame::SetColumnStyleFromCell(nsIPresContext &  aPresContext,
     if ((eStyleUnit_Coord == cellPosition->mWidth.GetUnit()) ||
          (eStyleUnit_Percent==cellPosition->mWidth.GetUnit())) {
       // compute the width per column spanned
-      PRInt32 colSpan = GetEffectiveColSpan(aCellFrame->GetColIndex(), aCellFrame);
+      PRInt32 baseColIndex;
+      aCellFrame->GetColIndex(baseColIndex);
+      PRInt32 colSpan = GetEffectiveColSpan(baseColIndex, aCellFrame);
       if (PR_TRUE==gsDebug)
-        printf("TIF SetCSFromCell: for col %d with colspan %d\n",aCellFrame->GetColIndex(), colSpan);
+        printf("TIF SetCSFromCell: for col %d with colspan %d\n",baseColIndex, colSpan);
       for (PRInt32 i=0; i<colSpan; i++)
       {
         // get the appropriate column frame
         nsTableColFrame *colFrame;
-        GetColumnFrame(i+aCellFrame->GetColIndex(), colFrame);
+        GetColumnFrame(i+baseColIndex, colFrame);
         if (PR_TRUE==gsDebug)
-          printf("TIF SetCSFromCell: for col %d (%p)\n",i+aCellFrame->GetColIndex(), colFrame);
+          printf("TIF SetCSFromCell: for col %d (%p)\n",i+baseColIndex, colFrame);
         // if the colspan is 1 and we already have a cell that set this column's width
         // then ignore this width attribute
         if ((1==colSpan) && (nsTableColFrame::eWIDTH_SOURCE_CELL == colFrame->GetWidthSource()))
@@ -4686,7 +4694,8 @@ nscoord nsTableFrame::GetTableContainerWidth(const nsHTMLReflowState& aReflowSta
           if ((NS_OK==rv) && (nsnull!=tableParent) && (nsnull!=tableParent->mColumnWidths))
           {
             parentWidth=0;
-            PRInt32 colIndex = lastCellFrame->GetColIndex();
+            PRInt32 colIndex;
+            lastCellFrame->GetColIndex(colIndex);
             PRInt32 colSpan = tableParent->GetEffectiveColSpan(colIndex, lastCellFrame);
             for (PRInt32 i=0; i<colSpan; i++)
               parentWidth += tableParent->GetColumnWidth(colIndex);
@@ -4738,7 +4747,8 @@ nscoord nsTableFrame::GetTableContainerWidth(const nsHTMLReflowState& aReflowSta
               if (nsnull != ((nsTableFrame*)(rs->frame))->mColumnWidths)
               {
                 parentWidth=0;
-                PRInt32 colIndex = lastCellFrame->GetColIndex();
+                PRInt32 colIndex;
+                lastCellFrame->GetColIndex(colIndex);
                 PRInt32 colSpan = ((nsTableFrame*)(rs->frame))->GetEffectiveColSpan(colIndex, lastCellFrame);
                 for (PRInt32 i = 0; i<colSpan; i++)
                   parentWidth += ((nsTableFrame*)(rs->frame))->GetColumnWidth(i+colIndex);
@@ -4762,7 +4772,8 @@ nscoord nsTableFrame::GetTableContainerWidth(const nsHTMLReflowState& aReflowSta
               if (PR_TRUE==((nsTableFrame*)(rs->frame))->IsColumnWidthsSet())
               {
                 parentWidth=0;
-                PRInt32 colIndex = lastCellFrame->GetColIndex();
+                PRInt32 colIndex;
+                lastCellFrame->GetColIndex(colIndex);
                 PRInt32 colSpan = ((nsTableFrame*)(rs->frame))->GetEffectiveColSpan(colIndex, lastCellFrame);
                 for (PRInt32 i = 0; i<colSpan; i++)
                   parentWidth += ((nsTableFrame*)(rs->frame))->GetColumnWidth(i+colIndex);

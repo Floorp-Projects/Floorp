@@ -257,7 +257,8 @@ PRBool nsCellMap::RowIsSpannedInto(PRInt32 aRowIndex)
 			{ // the cell at (aRowIndex, colIndex) is the result of a span
 				nsTableCellFrame *cell = cd->mRealCell->mCell;
 				NS_ASSERTION(nsnull!=cell, "bad cell map state, missing real cell");
-				const PRInt32 realRowIndex = cell->GetRowIndex ();
+				PRInt32 realRowIndex;
+        cell->GetRowIndex (realRowIndex);
 				if (realRowIndex!=aRowIndex)
 				{ // the span is caused by a rowspan
 					result = PR_TRUE;
@@ -300,7 +301,8 @@ PRBool nsCellMap::RowHasSpanningCells(PRInt32 aRowIndex)
         { // the cell at (nextRowIndex, colIndex) is the result of a span
           nsTableCellFrame *cell = cd->mRealCell->mCell;
           NS_ASSERTION(nsnull!=cell, "bad cell map state, missing real cell");
-          const PRInt32 realRowIndex = cell->GetRowIndex ();
+          PRInt32 realRowIndex;
+          cell->GetRowIndex (realRowIndex);
           if (realRowIndex!=nextRowIndex)
           { // the span is caused by a rowspan
             CellData *spanningCell = GetCellAt(aRowIndex, colIndex);
@@ -349,7 +351,8 @@ PRBool nsCellMap::ColIsSpannedInto(PRInt32 aColIndex)
       { // the cell at (rowIndex, aColIndex) is the result of a span
         nsTableCellFrame *cell = cd->mRealCell->mCell;
         NS_ASSERTION(nsnull!=cell, "bad cell map state, missing real cell");
-        const PRInt32 realColIndex = cell->GetColIndex ();
+        PRInt32 realColIndex;
+        cell->GetColIndex (realColIndex);
         if (realColIndex!=aColIndex)
         { // the span is caused by a colspan
           result = PR_TRUE;
@@ -389,7 +392,8 @@ PRBool nsCellMap::ColHasSpanningCells(PRInt32 aColIndex)
         { // the cell at (rowIndex, nextColIndex) is the result of a span
           nsTableCellFrame *cell = cd->mRealCell->mCell;
           NS_ASSERTION(nsnull!=cell, "bad cell map state, missing real cell");
-          const PRInt32 realColIndex = cell->GetColIndex ();
+          PRInt32 realColIndex;
+          cell->GetColIndex (realColIndex);
           if (realColIndex!=nextColIndex)
           { // the span is caused by a colspan
             CellData *spanningCell =GetCellAt(rowIndex, aColIndex);

@@ -50,6 +50,11 @@ static const PRBool gsDebugNT = PR_FALSE;
 #endif
 
 
+
+NS_IMPL_ADDREF(nsTableCellFrame)
+NS_IMPL_RELEASE(nsTableCellFrame)
+
+
 void nsTableCellFrame::InitCellFrame(PRInt32 aColIndex)
 {
   NS_PRECONDITION(0<=aColIndex, "bad col index arg");
@@ -90,7 +95,9 @@ void nsTableCellFrame::SetBorderEdgeLength(PRUint8 aSide,
 {
   if ((NS_SIDE_LEFT==aSide) || (NS_SIDE_RIGHT==aSide))
   {
-    PRInt32 rowIndex = aIndex-GetRowIndex();
+    PRInt32 baseRowIndex;
+    GetRowIndex(baseRowIndex);
+    PRInt32 rowIndex = aIndex-baseRowIndex;
     nsBorderEdge *border = (nsBorderEdge *)(mBorderEdges.mEdges[aSide].ElementAt(rowIndex));
     border->mLength = aLength;
   }
@@ -147,7 +154,6 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
           }
           else
           {
-			      //printf("-- Paint cell (%d %d)\n", GetRowIndex(), GetColIndex());
             nsCSSRendering::PaintBorderEdges(aPresContext, aRenderingContext, this,
                                              aDirtyRect, rect, &mBorderEdges, mStyleContext, skipSides);
           }
@@ -190,7 +196,9 @@ void nsTableCellFrame::SetBorderEdge(PRUint8       aSide,
   {
     case NS_SIDE_TOP:
     {
-      PRInt32 colIndex = aColIndex-GetColIndex();
+      PRInt32 baseColIndex;
+      GetColIndex(baseColIndex);
+      PRInt32 colIndex = aColIndex-baseColIndex;
       border = (nsBorderEdge *)(mBorderEdges.mEdges[aSide].ElementAt(colIndex));
       mBorderEdges.mMaxBorderWidth.top = PR_MAX(aBorder->mWidth+aOddAmountToAdd, mBorderEdges.mMaxBorderWidth.top);
       break;
@@ -198,7 +206,9 @@ void nsTableCellFrame::SetBorderEdge(PRUint8       aSide,
 
     case NS_SIDE_BOTTOM:
     {
-      PRInt32 colIndex = aColIndex-GetColIndex();
+      PRInt32 baseColIndex;
+      GetColIndex(baseColIndex);
+      PRInt32 colIndex = aColIndex-baseColIndex;
       border = (nsBorderEdge *)(mBorderEdges.mEdges[aSide].ElementAt(colIndex));
       mBorderEdges.mMaxBorderWidth.bottom = PR_MAX(aBorder->mWidth+aOddAmountToAdd, mBorderEdges.mMaxBorderWidth.bottom);
       break;
@@ -206,7 +216,9 @@ void nsTableCellFrame::SetBorderEdge(PRUint8       aSide,
   
     case NS_SIDE_LEFT:
     {
-      PRInt32 rowIndex = aRowIndex-GetRowIndex();
+      PRInt32 baseRowIndex;
+      GetRowIndex(baseRowIndex);
+      PRInt32 rowIndex = aRowIndex-baseRowIndex;
       border = (nsBorderEdge *)(mBorderEdges.mEdges[aSide].ElementAt(rowIndex));
       mBorderEdges.mMaxBorderWidth.left = PR_MAX(aBorder->mWidth+aOddAmountToAdd, mBorderEdges.mMaxBorderWidth.left);
       break;
@@ -214,7 +226,9 @@ void nsTableCellFrame::SetBorderEdge(PRUint8       aSide,
       
     case NS_SIDE_RIGHT:  
     {
-      PRInt32 rowIndex = aRowIndex-GetRowIndex();
+      PRInt32 baseRowIndex;
+      GetRowIndex(baseRowIndex);
+      PRInt32 rowIndex = aRowIndex-baseRowIndex;
       border = (nsBorderEdge *)(mBorderEdges.mEdges[aSide].ElementAt(rowIndex));
       mBorderEdges.mMaxBorderWidth.right = PR_MAX(aBorder->mWidth+aOddAmountToAdd, mBorderEdges.mMaxBorderWidth.right);
       break;
@@ -568,7 +582,9 @@ nsTableCellFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
   }
   cf->Init(aPresContext, mContent, aParent, aStyleContext);
   cf->AppendToFlow(this);
-  cf->InitCellFrame(GetColIndex());
+  PRInt32 baseColIndex;
+  GetColIndex(baseColIndex);
+  cf->InitCellFrame(baseColIndex);
   aContinuingFrame = cf;
 
   // Create a continuing body frame
@@ -764,7 +780,9 @@ void nsTableCellFrame::MapVAlignAttribute(nsIPresContext* aPresContext, nsTableF
 
   // check if valign is set on the cell's COL (or COLGROUP by inheritance)
   nsTableColFrame *colFrame;
-  aTableFrame->GetColumnFrame(GetColIndex(), colFrame);
+  PRInt32 colIndex;
+  GetColIndex(colIndex);
+  aTableFrame->GetColumnFrame(colIndex, colFrame);
   const nsStyleText* colTextStyle;
   colFrame->GetStyleData(eStyleStruct_Text,(const nsStyleStruct *&)colTextStyle);
   if (colTextStyle->mVerticalAlign.GetUnit() == eStyleUnit_Enumerated)
@@ -809,7 +827,9 @@ void nsTableCellFrame::MapHAlignAttribute(nsIPresContext* aPresContext, nsTableF
 
   // check if halign is set on the cell's COL (or COLGROUP by inheritance)
   nsTableColFrame *colFrame;
-  aTableFrame->GetColumnFrame(GetColIndex(), colFrame);
+  PRInt32 colIndex;
+  GetColIndex(colIndex);
+  aTableFrame->GetColumnFrame(colIndex, colFrame);
   const nsStyleText* colTextStyle;
   colFrame->GetStyleData(eStyleStruct_Text,(const nsStyleStruct *&)colTextStyle);
   if (colTextStyle->mTextAlign.GetUnit() == eStyleUnit_Enumerated)
@@ -850,6 +870,10 @@ nsTableCellFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   NS_PRECONDITION(0 != aInstancePtr, "null ptr");
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
+  }
+  if (aIID.Equals(nsITableCellLayout::IID())) {
+    *aInstancePtr = (void*)(nsISupports*)(nsITableCellLayout*)this;
+    return NS_OK;
   }
   return nsContainerFrame::QueryInterface(aIID, aInstancePtr);
 }

@@ -321,7 +321,9 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
       }
       if (-1==firstRowIndex)
         firstRowIndex = rowIndex;
-      if (rowIndex!=cellFrame->GetRowIndex()) {
+      PRInt32 cellRowIndex;
+      cellFrame->GetRowIndex(cellRowIndex);
+      if (rowIndex!=cellRowIndex) {
         // For cells that span rows, we only figure it in once
         NS_ASSERTION(1 != cellFrame->GetRowSpan(), "row index does not match row span");  // sanity check
         continue;
@@ -329,7 +331,9 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
       PRInt32 colSpan = mTableFrame->GetEffectiveColSpan(colIndex, cellFrame);
       if (colSpan>maxColSpan)
         maxColSpan = colSpan;
-      if (colIndex!=cellFrame->GetColIndex()) {
+      PRInt32 cellColIndex;
+      cellFrame->GetColIndex(cellColIndex);
+      if (colIndex!=cellColIndex) {
         // For cells that span cols, we figure in the row using previously-built SpanInfo 
         NS_ASSERTION(1 != cellFrame->GetColSpan(), "col index does not match col span");  // sanity check
         continue;
@@ -736,7 +740,9 @@ void BasicTableLayoutStrategy::SetMinAndMaxTableWidths()
         if (gsDebug) printf("    col %d skipped because there is no cell\n", colIndex);
         continue;
       }
-      if (colIndex!=cellFrame->GetColIndex()) {
+      PRInt32 cellColIndex;
+      cellFrame->GetColIndex(cellColIndex);
+      if (colIndex!=cellColIndex) {
         // For cells that span cols, we figured in the cell the first time we saw it
         if (gsDebug) printf("    col %d skipped because it has colspan so we've already added it in\n", colIndex);
         continue;
@@ -1093,12 +1099,16 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(const nsHTMLReflowState
         }
         if (-1==firstRowIndex)
           firstRowIndex = rowIndex;
-        if (rowIndex!=cellFrame->GetRowIndex()) {
+        PRInt32 cellRowIndex;
+        cellFrame->GetRowIndex(cellRowIndex);
+        if (rowIndex!=cellRowIndex) {
           // For cells that span rows, we only figure it in once
           NS_ASSERTION(1 != cellFrame->GetRowSpan(), "row index does not match row span");  // sanity check
           continue;
         }
-        if (colIndex!=cellFrame->GetColIndex()) {
+        PRInt32 cellColIndex;
+        cellFrame->GetColIndex(cellColIndex);
+        if (colIndex!=cellColIndex) {
           // For cells that span cols, we figure in the row using previously-built SpanInfo 
           NS_ASSERTION(1 != cellFrame->GetColSpan(), "col index does not match row span");  // sanity check
           continue;
@@ -1177,7 +1187,9 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(const nsHTMLReflowState
           // otherwise it's already been factored in.
           // now, if this column holds the cell, create a spanInfo struct for the cell
           // so subsequent columns can take a proportion of this cell's space into account
-          if (cellFrame->GetColIndex()==colIndex)
+          PRInt32 cellColIndex;
+          cellFrame->GetColIndex(cellColIndex);
+          if (cellColIndex==colIndex)
           { // add this cell to span list iff we are currently processing the column the cell starts in
             SpanInfo *spanInfo = new SpanInfo(colIndex, colSpan-1, cellMinSize.width, cellDesiredSize.width);
             spanInfo->effectiveMaxWidthOfSpannedCols = effectiveMaxWidthOfSpannedCols;
@@ -1823,12 +1835,16 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( const nsHTMLReflowSt
         { // there is no cell in this row that corresponds to this column
           continue;
         }
-        if (rowIndex!=cellFrame->GetRowIndex()) {
+        PRInt32 cellRowIndex;
+        cellFrame->GetRowIndex(cellRowIndex);
+        if (rowIndex!=cellRowIndex) {
           // For cells that span rows, we only figure it in once
           NS_ASSERTION(1 != cellFrame->GetRowSpan(), "row index does not match row span");  // sanity check
           continue;
         }
-        if (colIndex!=cellFrame->GetColIndex()) {
+        PRInt32 cellColIndex;
+        cellFrame->GetColIndex(cellColIndex);
+        if (colIndex!=cellColIndex) {
           // For cells that span cols, we figure in the row using previously-built SpanInfo 
           NS_ASSERTION(1 != cellFrame->GetColSpan(), "col index does not match row span");  // sanity check
           continue;
@@ -1902,7 +1918,9 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( const nsHTMLReflowSt
           // otherwise it's already been factored in.
           // now, if this column holds the cell, create a spanInfo struct for the cell
           // so subsequent columns can take a proportion of this cell's space into account
-          if (cellFrame->GetColIndex()==colIndex)
+          PRInt32 cellColIndex;
+          cellFrame->GetColIndex(cellColIndex);
+          if (cellColIndex==colIndex)
           { // add this cell to span list iff we are currently processing the column the cell starts in
             SpanInfo *spanInfo = new SpanInfo(colIndex, colSpan-1, cellMinSize.width, cellDesiredSize.width);
             spanInfo->effectiveMaxWidthOfSpannedCols = effectiveMaxWidthOfSpannedCols;

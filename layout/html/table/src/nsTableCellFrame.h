@@ -18,6 +18,7 @@
 #ifndef nsTableCellFrame_h__
 #define nsTableCellFrame_h__
 
+#include "nsITableCellLayout.h"
 #include "nscore.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsTableRowFrame.h"  // need to actually include this here to inline GetRowIndex
@@ -31,11 +32,19 @@ class nsHTMLValue;
  * nsTableCellFrame
  * data structure to maintain information about a single table cell's frame
  *
+ * NOTE:  frames are not ref counted.  We expose addref and release here
+ * so we can change that decsion in the future.  Users of nsITableCellLayout
+ * should refcount correctly as if this object is being ref counted, though
+ * no actual support is under the hood.
+ *
  * @author  sclark
  */
-class nsTableCellFrame : public nsHTMLContainerFrame
+class nsTableCellFrame : public nsHTMLContainerFrame, nsITableCellLayout
 {
 public:
+
+  // nsISupports
+  NS_DECL_ISUPPORTS
 
   // default constructor supplied by the compiler
 
@@ -59,9 +68,6 @@ public:
     */
   friend nsresult 
   NS_NewTableCellFrame(nsIFrame*& aResult);
-
-  // nsISupports
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
@@ -91,13 +97,13 @@ public:
   // there is no set row index because row index depends on the cell's parent row only
 
   /** return the mapped cell's row index (starting at 0 for the first row) */
-  virtual PRInt32 GetRowIndex();
+  virtual nsresult GetRowIndex(PRInt32 &aRowIndex);
 
   /** return the mapped cell's col span.  Always >= 1. */
   virtual PRInt32 GetColSpan();
   
   /** return the mapped cell's column index (starting at 0 for the first column) */
-  virtual PRInt32 GetColIndex();
+  virtual nsresult GetColIndex(PRInt32 &aColIndex);
 
   /** return the available width given to this frame during its last reflow */
   virtual nscoord GetPriorAvailWidth();
@@ -211,18 +217,29 @@ public:
 
 };
 
-inline PRInt32 nsTableCellFrame::GetRowIndex()
+inline nsresult nsTableCellFrame::GetRowIndex(PRInt32 &aRowIndex)
 {
+  nsresult result;
   nsTableRowFrame * row;
   GetParent((nsIFrame **)&row);
   if (nsnull!=row)
-    return row->GetRowIndex();
+  {
+    aRowIndex = row->GetRowIndex();
+    result = NS_OK;
+  }
   else
-    return 0;
+  {
+    aRowIndex = 0;
+    result = NS_ERROR_NOT_INITIALIZED;
+  }
+  return result;
 }
 
-inline PRInt32 nsTableCellFrame::GetColIndex()
-{  return mColIndex;}
+inline nsresult nsTableCellFrame::GetColIndex(PRInt32 &aColIndex)
+{  
+  aColIndex = mColIndex;
+  return  NS_OK;
+}
 
 inline nscoord nsTableCellFrame::GetPriorAvailWidth()
 { return mPriorAvailWidth;}

@@ -527,7 +527,8 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
  
       // Compute the x-origin for the child, taking into account straddlers (cells from prior
       // rows with rowspans > 1)
-      PRInt32 cellColIndex = ((nsTableCellFrame *)kidFrame)->GetColIndex();
+      PRInt32 cellColIndex;
+      ((nsTableCellFrame *)kidFrame)->GetColIndex(cellColIndex);
       if (prevColIndex != (cellColIndex-1))
       { // if this cell is not immediately adjacent to the previous cell, factor in missing col info
         for (PRInt32 colIndex=prevColIndex+1; colIndex<cellColIndex; colIndex++)
@@ -544,8 +545,10 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
 
       // at this point, we know the column widths.  
       // so we get the avail width from the known column widths
-      cellColSpan = aReflowState.tableFrame->GetEffectiveColSpan(((nsTableCellFrame *)kidFrame)->GetColIndex(),
-                                                                   ((nsTableCellFrame *)kidFrame));
+      PRInt32 baseColIndex;
+      ((nsTableCellFrame *)kidFrame)->GetColIndex(baseColIndex);
+      cellColSpan = aReflowState.tableFrame->GetEffectiveColSpan(baseColIndex,
+                                                                 ((nsTableCellFrame *)kidFrame));
       nscoord availWidth = 0;
       for (PRInt32 numColSpan=0; numColSpan<cellColSpan; numColSpan++)
       {
@@ -781,7 +784,8 @@ nsTableRowFrame::InitialReflow(nsIPresContext&      aPresContext,
       }
       else
       {
-        PRInt32 colIndex = ((nsTableCellFrame *)kidFrame)->GetColIndex();
+        PRInt32 colIndex;
+        ((nsTableCellFrame *)kidFrame)->GetColIndex(colIndex);
         kidAvailSize.SizeTo(table->GetColumnWidth(colIndex), NS_UNCONSTRAINEDSIZE); 
       }
 
@@ -1240,9 +1244,10 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext&      aPresContext,
 
     // At this point, we know the column widths. Get the available width
     // from the known column widths
-    PRInt32 cellColIndex = ((nsTableCellFrame *)aNextFrame)->GetColIndex();
-    PRInt32 cellColSpan = aReflowState.tableFrame->GetEffectiveColSpan(((nsTableCellFrame *)aNextFrame)->GetColIndex(),
-                                                                   ((nsTableCellFrame *)aNextFrame));
+    PRInt32 cellColIndex;
+    ((nsTableCellFrame *)aNextFrame)->GetColIndex(cellColIndex);
+    PRInt32 cellColSpan = aReflowState.tableFrame->GetEffectiveColSpan(cellColIndex,
+                                                                       ((nsTableCellFrame *)aNextFrame));
     nscoord availWidth = 0;
     for (PRInt32 numColSpan = 0; numColSpan < cellColSpan; numColSpan++)
     {
