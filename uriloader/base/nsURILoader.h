@@ -58,7 +58,7 @@ protected:
                              const char * aWindowTarget,
                              char ** aContentTypeToUse);
 
-  NS_IMETHOD GetTarget(const char *aWindowName, 
+  NS_IMETHOD GetTarget(nsIChannel * aChannel, nsCString &aWindowTarget, 
                        nsISupports * aWindowContext,
                        nsISupports ** aRetargetedWindowContext);
 };
