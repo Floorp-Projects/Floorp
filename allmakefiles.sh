@@ -801,7 +801,6 @@ extensions/inspector/resources/Makefile
 MAKEFILES_transformiix="
 extensions/transformiix/source/base/Makefile
 extensions/transformiix/source/main/Makefile
-extensions/transformiix/source/net/Makefile
 extensions/transformiix/source/xml/dom/standalone/Makefile
 extensions/transformiix/source/xml/dom/Makefile
 extensions/transformiix/source/xml/dom/mozImpl/Makefile
