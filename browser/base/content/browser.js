@@ -1806,6 +1806,11 @@ function deleteHistoryItems(aParent)
     }
 }
 
+function toDownloads()
+{
+  toOpenWindowByType("Download:Manager", "chrome://mozapps/content/downloads/downloads.xul");
+}
+
 function toJavaScriptConsole()
 {
   toOpenWindowByType("global:console", "chrome://global/content/console.xul");

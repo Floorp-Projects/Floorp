@@ -124,12 +124,12 @@ pref("accessibility.typeaheadfind.enabletimeout", true);
 pref("accessibility.typeaheadfind.soundURL", "default");
 pref("accessibility.typeaheadfind.enablesound", true);
 
-pref("browser.download.progressDnldDialog.keepAlive", true); // keep the dnload progress dialog up after dnload is complete
-pref("browser.download.progressDnldDialog.enable_launch_reveal_buttons", true);
-pref("browser.download.useProgressDialogs", true);
 pref("browser.download.openSidebar", false);
 pref("browser.download.useDownloadDir", true);
 pref("browser.download.folderList", 0);
+pref("browser.download.retention", 2);
+pref("browser.download.showWhenStarting", true);
+pref("browser.download.closeWhenDone", true);
 
 // pointer to the default engine name
 pref("browser.search.defaultenginename", "chrome://browser-region/locale/region.properties");

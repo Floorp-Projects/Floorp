@@ -6,7 +6,12 @@ function goQuitApplication()
   {
     try
     {
-      ObserverService.notifyObservers(null, "quit-application-requested", null);
+      var cancelQuit = Components.classes["@mozilla.org/supports-PRBool;1"].createInstance(Components.interfaces.nsISupportsPRBool);
+      ObserverService.notifyObservers(cancelQuit, "quit-application-requested", null);
+      
+      // Something aborted the quit process. 
+      if (cancelQuit.data)
+        return;
     }
     catch (ex)
     {

@@ -55,8 +55,14 @@ DIRS = 		\
 	satchel \
 	viewconfig \
 	viewsource \
-	build \
 	$(NULL)
+
+ifeq ($(OS_ARCH),WINNT)
+DIRS += alerts
+endif
+
+DIRS += downloads build
+
 endif
 
 

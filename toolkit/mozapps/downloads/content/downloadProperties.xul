@@ -1,0 +1,56 @@
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://mozapps/skin/downloads/downloads.css"?>
+
+<!DOCTYPE window [
+<!ENTITY % downloadPropertiesDTD SYSTEM "chrome://mozapps/locale/downloads/downloadProperties.dtd">
+%downloadPropertiesDTD;
+]>
+
+<dialog xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        xmlns:nc="http://home.netscape.com/NC-rdf#"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&window.title;"
+        onload="Startup();"
+        style="width: 30em;"
+        buttons="accept" acceptbuttontext="&acceptButton.label;">
+
+  <script type="application/x-javascript" src="chrome://mozapps/content/downloads/downloadProperties.js"/>
+
+  <grid flex="1">
+    <columns>
+      <column/>
+      <column flex="1"/>
+    </columns>
+    <rows>
+      <row align="center">
+        <hbox pack="end">
+          <label value="&downloadedFrom.label;" class="bold"/>
+        </hbox>
+        <textbox id="source" readonly="true"/>
+      </row>
+      <separator class="thin"/>
+      <row align="center">
+        <hbox pack="end">
+          <label value="&path.label;" class="bold"/>
+        </hbox>
+        <textbox id="path" readonly="true"/>
+      </row>
+      <separator class="thin"/>
+      <row align="center">
+        <hbox pack="end">
+          <label value="&dateStarted.label;" class="bold"/>          
+        </hbox>        
+        <label id="dateStarted"/>
+      </row>
+      <separator class="thin" id="dateEndedSeparator"/>
+      <row align="center" id="dateEndedRow">
+        <hbox pack="end">
+          <label value="&dateEnded.label;" class="bold"/>
+        </hbox>
+        <label id="dateEnded"/>
+      </row>
+    </rows>
+  </grid>
+  <separator/>
+</dialog>
+    

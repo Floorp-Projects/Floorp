@@ -63,16 +63,15 @@
     </radiogroup>
   </groupbox>
 
-#if 0
-  <groupbox>
+  <groupbox align="start">
     <caption label="&downloadManagerWindow.label;"/>
     
     <checkbox id="showWhenStarting" label="&showWhenStarting.label;" 
-              prefstring="browser.download.showWhenStarting"/>
+              prefstring="browser.download.showWhenStarting"
+              oncommand="toggleDMPrefUI(event.target);"/>
     <checkbox id="closeWhenDone" label="&closeWhenDone.label;" class="indent"
               prefstring="browser.download.closeWhenDone"/>
   </groupbox>
-#endif
   
   <groupbox flex="1">
     <caption label="&fileTypes.label;"/>
@@ -85,68 +84,70 @@
              throwing "can't do open ended queries like that!" assertions for
              no discernible reason -->
     <vbox class="indent" flex="1">
-      <tree id="fileHandlersList" flex="1" hidecolumnpicker="true"
-            datasources="rdf:null"
-            onselect="fileHandlerListSelectionChanged();"
-            ondblclick="editFileHandler();">
+      <vbox flex="1" id="fileHandlersListContainer">
+        <tree id="fileHandlersList" flex="1" hidecolumnpicker="true"
+              datasources="rdf:null"
+              onselect="fileHandlerListSelectionChanged();"
+              ondblclick="editFileHandler();">
 
-        <template>
-          <rule>
-            <conditions>
-              <content uri="?uri"/>
-              <triple subject="?uri" 
-                      predicate="http://home.netscape.com/NC-rdf#MIME-types"
-                      object="?MIME-types"/>
-              <member container="?MIME-types" child="?type"/>
-              <triple subject="?type" 
-                      predicate="http://home.netscape.com/NC-rdf#FileType"
-                      object="?file-type"/>
-              <triple subject="?type" 
-                      predicate="http://home.netscape.com/NC-rdf#FileHandler"
-                      object="?file-handler"/>
-              <triple subject="?type" 
-                      predicate="http://home.netscape.com/NC-rdf#FileIcon"
-                      object="?file-icon"/>
-              <triple subject="?type" 
-                      predicate="http://home.netscape.com/NC-rdf#FileHandleAuto"
-                      object="true"/>
-            </conditions>
-            <bindings>
-              <binding subject="?type"
-                       predicate="http://home.netscape.com/NC-rdf#FileExtension"
-                       object="?file-extension"/>
-            </bindings>
-            <action>
-              <treechildren class="extensionChildren">
-                <treeitem uri="?type">
-                  <treerow>
-                    <treecell label="?file-extension" src="?file-icon"/>
-                    <treecell label="?file-type"/>
-                    <treecell label="?file-handler"/>
-                  </treerow>
-                </treeitem>
-              </treechildren>
-            </action>
-          </rule>
-        </template>
+          <template>
+            <rule>
+              <conditions>
+                <content uri="?uri"/>
+                <triple subject="?uri" 
+                        predicate="http://home.netscape.com/NC-rdf#MIME-types"
+                        object="?MIME-types"/>
+                <member container="?MIME-types" child="?type"/>
+                <triple subject="?type" 
+                        predicate="http://home.netscape.com/NC-rdf#FileType"
+                        object="?file-type"/>
+                <triple subject="?type" 
+                        predicate="http://home.netscape.com/NC-rdf#FileHandler"
+                        object="?file-handler"/>
+                <triple subject="?type" 
+                        predicate="http://home.netscape.com/NC-rdf#FileIcon"
+                        object="?file-icon"/>
+                <triple subject="?type" 
+                        predicate="http://home.netscape.com/NC-rdf#FileHandleAuto"
+                        object="true"/>
+              </conditions>
+              <bindings>
+                <binding subject="?type"
+                        predicate="http://home.netscape.com/NC-rdf#FileExtension"
+                        object="?file-extension"/>
+              </bindings>
+              <action>
+                <treechildren class="extensionChildren">
+                  <treeitem uri="?type">
+                    <treerow>
+                      <treecell label="?file-extension" src="?file-icon"/>
+                      <treecell label="?file-type"/>
+                      <treecell label="?file-handler"/>
+                    </treerow>
+                  </treeitem>
+                </treechildren>
+              </action>
+            </rule>
+          </template>
 
-        <treecols>
-          <treecol id="fileExtension"
-                  class="sortDirectionIndicator" persist="width"
-                  sort="rdf:http://home.netscape.com/NC-rdf#FileExtension"
-                  sortActive="true" sortDirection="none" hideheader="true"/>
-          <treecol id="fileType" flex="1"
-                  class="sortDirectionIndicator" persist="width"
-                  sort="rdf:http://home.netscape.com/NC-rdf#FileType"
-                  sortActive="false" sortDirection="none" hideheader="true"/>
-          <splitter class="tree-splitter" />
-          <treecol id="fileHandler" flex="1"
-                  class="sortDirectionIndicator" persist="width"
-                  sort="rdf:http://home.netscape.com/NC-rdf#FileHandler"
-                  sortActive="false" sortDirection="none" hideheader="true"/>
-        </treecols> <!-- label="&fileHandlerColName.label;" label="&fileTypeColName.label;"  -->
-      </tree>
-
+          <treecols>
+            <treecol id="fileExtension"
+                    class="sortDirectionIndicator" persist="width"
+                    sort="rdf:http://home.netscape.com/NC-rdf#FileExtension"
+                    sortActive="true" sortDirection="none" hideheader="true"/>
+            <treecol id="fileType" flex="1"
+                    class="sortDirectionIndicator" persist="width"
+                    sort="rdf:http://home.netscape.com/NC-rdf#FileType"
+                    sortActive="false" sortDirection="none" hideheader="true"/>
+            <splitter class="tree-splitter" />
+            <treecol id="fileHandler" flex="1"
+                    class="sortDirectionIndicator" persist="width"
+                    sort="rdf:http://home.netscape.com/NC-rdf#FileHandler"
+                    sortActive="false" sortDirection="none" hideheader="true"/>
+          </treecols> <!-- label="&fileHandlerColName.label;" label="&fileTypeColName.label;"  -->
+        </tree>
+      </vbox>
+      
       <separator class="thin"/>
       <hbox>
         <button label="&editFileHandler.label;" accesskey="&editFileHandler.accesskey;"

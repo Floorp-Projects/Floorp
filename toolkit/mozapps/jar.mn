@@ -6,6 +6,13 @@ toolkit.jar:
 * content/mozapps/downloads/overrideHandler.js              (downloads/content/overrideHandler.js)
 * content/mozapps/downloads/editAction.xul                  (downloads/content/editAction.xul)
 * content/mozapps/downloads/editAction.js                   (downloads/content/editAction.js)
+* content/mozapps/downloads/downloads.xul                   (downloads/content/downloads.xul)
+* content/mozapps/downloads/downloads.js                    (downloads/content/downloads.js)
+* content/mozapps/downloads/DownloadProgressListener.js     (downloads/content/DownloadProgressListener.js)
+  content/mozapps/downloads/downloads.css                   (downloads/content/downloads.css)
+* content/mozapps/downloads/download.xml                    (downloads/content/download.xml)
+* content/mozapps/downloads/downloadProperties.xul          (downloads/content/downloadProperties.xul)
+* content/mozapps/downloads/downloadProperties.js           (downloads/content/downloadProperties.js)
   content/mozapps/contents.rdf                              (contents-content.rdf)
 
 en-US.jar:
@@ -13,6 +20,9 @@ en-US.jar:
 * locale/en-US/mozapps/downloads/unknownContentType.dtd     (downloads/locale/unknownContentType.dtd)
   locale/en-US/mozapps/downloads/pref-downloads.dtd         (downloads/locale/pref-downloads.dtd)
   locale/en-US/mozapps/downloads/editAction.dtd             (downloads/locale/editAction.dtd)
+  locale/en-US/mozapps/downloads/downloads.dtd              (downloads/locale/downloads.dtd)
+  locale/en-US/mozapps/downloads/downloads.properties       (downloads/locale/downloads.properties)
+  locale/en-US/mozapps/downloads/downloadProperties.dtd     (downloads/locale/downloadProperties.dtd)
   locale/en-US/mozapps/contents.rdf                         (contents-locale.rdf)
 
 classic.jar:

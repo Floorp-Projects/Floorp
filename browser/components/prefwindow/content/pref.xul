@@ -9,7 +9,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&prefWindow.title;" 
         style="&prefWindow.size;"
-        buttons="accept,cancel"
+        buttons="accept,cancel" windowtype="Browser:Options"
         onload="Startup();" onunload="Shutdown();"
         ondialogaccept="return hPrefWindow.onOK(event);"
         ondialogcancel="return hPrefWindow.onCancel(event);"
@@ -20,10 +20,13 @@
   <![CDATA[
 
   var hPrefWindow = null;
+  
+  // If we're starting the Options dialog with a specific panel, we should do certain things
+  // like not remember the last panel the user visited. 
+  var gUsingSpecifiedPage = false;
 
-  /** General startup routine for preferences dialog. 
-   *  Place all necessary modifications to pref tree here. 
-   **/
+  // General startup routine for preferences dialog. 
+  //  Place all necessary modifications to pref tree here. 
   function Startup()
   {
     hPrefWindow = new nsPrefWindow("panelFrame");  
@@ -32,28 +35,42 @@
       throw "failed to create prefwindow";
 
     hPrefWindow.init();
+    
+    if ("arguments" in window && window.arguments[0]) {
+      switchPage(window.arguments[0]);
+      gUsingSpecifiedPage = true;
+    
+      document.getElementById("prefsCategories").removeAttribute("persist");
+    }
   }
     
   function Shutdown ()
   {
-    var prefsCategories = document.getElementById("prefsCategories");
-    for (var i = 0; i < prefsCategories.childNodes.length; ++i) {
-      if (prefsCategories.childNodes[i].checked) {
-        var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                            .getService(Components.interfaces.nsIPrefBranch);
-        pref.setIntPref("browser.preferences.lastpanel", i);
-        break;
+    if (!gUsingSpecifiedPage) {
+      var prefsCategories = document.getElementById("prefsCategories");
+      for (var i = 0; i < prefsCategories.childNodes.length; ++i) {
+        if (prefsCategories.childNodes[i].checked) {
+          var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                              .getService(Components.interfaces.nsIPrefBranch);
+          pref.setIntPref("browser.preferences.lastpanel", i);
+          break;
+        }
       }
+      
+      document.persist("prefsDialog", "screenX screenY");
     }
-    
-    document.persist("prefsDialog", "screenX screenY");
   } 
    
-  function switchPage(aEvent)
+  function switchPage(aButtonID)
   {
-    var newURL = aEvent.target.getAttribute("url");
-    if (hPrefWindow)
-      hPrefWindow.switchPage(newURL, "");
+    var button = document.getElementById(aButtonID);
+    if (button) {
+      var newURL = button.getAttribute("url");
+      if (hPrefWindow)
+        hPrefWindow.switchPage(newURL, "");
+
+      button.checked = true;        
+    }
   }    
 
   ]]>
@@ -65,7 +82,7 @@
   <script type="application/x-javascript" src="chrome://browser/content/pref/nsPrefWindow.js"/>
 
   <hbox flex="1">
-    <vbox id="prefsCategories" class="listBox buttonBox" oncommand="switchPage(event);" orient="vertical" lastpanel="1" persist="lastpanel">
+    <vbox id="prefsCategories" class="listBox buttonBox" oncommand="switchPage(event.target.id);" orient="vertical">
       <button id="catGeneralButton"   orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&general.label;"   
               url="chrome://browser/content/pref/pref-navigator.xul"/>
       <button id="catPrivacyButton"   orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&privacy.label;"   
