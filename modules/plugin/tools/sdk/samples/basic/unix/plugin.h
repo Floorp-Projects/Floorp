@@ -49,12 +49,13 @@ class nsPluginInstance : public nsPluginInstanceBase
 {
 public:
   nsPluginInstance(NPP aInstance);
-  ~nsPluginInstance();
+  virtual ~nsPluginInstance();
 
   NPBool init(NPWindow* aWindow);
   void shut();
   NPBool isInitialized() {return mInitialized;}
   NPError GetValue(NPPVariable variable, void *value);
+  NPError SetWindow(NPWindow* aWindow);
 
   // locals
   const char * getVersion();
@@ -66,6 +67,7 @@ private:
 
   Window mWindow;
   Display *mDisplay;
+  Widget mXtwidget;
   int mX, mY;
   int mWidth, mHeight;
   Visual* mVisual;

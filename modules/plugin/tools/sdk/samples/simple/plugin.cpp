@@ -49,11 +49,11 @@ nsIServiceManager * gServiceManager = NULL;
 #ifdef XP_UNIX
 #define MIME_TYPES_HANDLED  "application/simple-plugin"
 #define PLUGIN_NAME         "Simple Plugin Example for Mozilla"
-#define PLUGIN_DESCRIPTION  "Simple Plugin Example for Mozilla"
+#define PLUGIN_DESCRIPTION  MIME_TYPES_HANDLED"::"PLUGIN_NAME
 
 char* NPP_GetMIMEDescription(void)
 {
-    return(MIME_TYPES_HANDLED);
+    return(PLUGIN_DESCRIPTION);
 }
 #endif //XP_UNIX
 
