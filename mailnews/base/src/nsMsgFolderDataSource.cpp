@@ -34,9 +34,10 @@
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
 
+#include "nsIMsgMailSession.h"
 
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
-
+static NS_DEFINE_CID(kMsgMailSessionCID,					NS_MSGMAILSESSION_CID);
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
 // that multiply inherits from nsISupports
@@ -58,8 +59,6 @@ nsIRDFResource* nsMsgFolderDataSource::kNC_GetNewMessages;
 
 
 nsMsgFolderDataSource::nsMsgFolderDataSource():
-  mURI(nsnull),
-  mObservers(nsnull),
   mInitialized(PR_FALSE),
   mRDFService(nsnull)
 {
@@ -70,15 +69,24 @@ nsMsgFolderDataSource::nsMsgFolderDataSource():
                                              (nsISupports**) &mRDFService); // XXX probably need shutdown listener here
 
   PR_ASSERT(NS_SUCCEEDED(rv));
+
+  NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
+	if(NS_SUCCEEDED(rv))
+		mailSession->AddFolderListener(this);
+
 }
 
 nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
 {
+	nsresult rv;
   mRDFService->UnregisterDataSource(this);
+
+  NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
+	if(NS_SUCCEEDED(rv))
+		mailSession->RemoveFolderListener(this);
 
   PL_strfree(mURI);
 
-  delete mObservers; // we only hold a weak ref to each observer
 
   nsrefcnt refcnt;
   NS_RELEASE2(kNC_Child, refcnt);
@@ -107,21 +115,15 @@ nsMsgFolderDataSource::QueryInterface(REFNSIID iid, void** result)
   if (! result)
     return NS_ERROR_NULL_POINTER;
 
-  *result = nsnull;
-  if (iid.Equals(nsIRDFDataSource::GetIID()) ||
-      iid.Equals(kISupportsIID))
-  {
-    *result = NS_STATIC_CAST(nsIRDFDataSource*, this);
-    NS_ADDREF(this);
-    return NS_OK;
-  }
-	else if(iid.Equals(nsIFolderListener::GetIID()))
+	*result = nsnull;
+	if(iid.Equals(nsIFolderListener::GetIID()))
 	{
-    *result = NS_STATIC_CAST(nsIFolderListener*, this);
-    NS_ADDREF(this);
-    return NS_OK;
+		*result = NS_STATIC_CAST(nsIFolderListener*, this);
+		NS_ADDREF(this);
+		return NS_OK;
 	}
-  return NS_NOINTERFACE;
+	else
+		return nsMsgRDFDataSource::QueryInterface(iid, result);
 }
 
  // nsIRDFDataSource methods
@@ -298,63 +300,6 @@ NS_IMETHODIMP nsMsgFolderDataSource::HasAssertion(nsIRDFResource* source,
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFolderDataSource::AddObserver(nsIRDFObserver* n)
-{
-  if (! mObservers) {
-    if ((mObservers = new nsVoidArray()) == nsnull)
-      return NS_ERROR_OUT_OF_MEMORY;
-  }
-  mObservers->AppendElement(n);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsMsgFolderDataSource::RemoveObserver(nsIRDFObserver* n)
-{
-  if (! mObservers)
-    return NS_OK;
-  mObservers->RemoveElement(n);
-  return NS_OK;
-}
-
-PRBool
-nsMsgFolderDataSource::assertEnumFunc(void *aElement, void *aData)
-{
-  nsMsgRDFNotification *note = (nsMsgRDFNotification *)aData;
-  nsIRDFObserver* observer = (nsIRDFObserver *)aElement;
-  
-  observer->OnAssert(note->subject,
-                     note->property,
-                     note->object);
-  return PR_TRUE;
-}
-
-PRBool
-nsMsgFolderDataSource::unassertEnumFunc(void *aElement, void *aData)
-{
-  nsMsgRDFNotification* note = (nsMsgRDFNotification *)aData;
-  nsIRDFObserver* observer = (nsIRDFObserver *)aElement;
-
-  observer->OnUnassert(note->subject,
-                     note->property,
-                     note->object);
-  return PR_TRUE;
-}
-
-nsresult nsMsgFolderDataSource::NotifyObservers(nsIRDFResource *subject,
-                                                nsIRDFResource *property,
-                                                nsIRDFNode *object,
-                                                PRBool assert)
-{
-	if(mObservers)
-	{
-    nsMsgRDFNotification note = { subject, property, object };
-    if (assert)
-      mObservers->EnumerateForwards(assertEnumFunc, &note);
-    else
-      mObservers->EnumerateForwards(unassertEnumFunc, &note);
-  }
-	return NS_OK;
-}
 
 NS_IMETHODIMP nsMsgFolderDataSource::ArcLabelsIn(nsIRDFNode* node,
                                                  nsISimpleEnumerator** labels)
@@ -604,6 +549,13 @@ NS_IMETHODIMP nsMsgFolderDataSource::OnItemPropertyChanged(nsISupports *item, co
 	}
 
 	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgFolderDataSource::OnItemPropertyFlagChanged(nsISupports *item, const char *property,
+									   PRUint32 oldFlag, PRUint32 newFlag)
+{
+	return NS_OK;
+
 }
 
 nsresult nsMsgFolderDataSource::NotifyPropertyChanged(nsIRDFResource *resource,

@@ -20,19 +20,17 @@
 #include "nsIRDFService.h"
 
 #include "nsIFolderListener.h"
-
+#include "nsMsgRDFDataSource.h"
 
 
 
 /**
  * The mail data source.
  */
-class nsMsgFolderDataSource : public nsIRDFDataSource,
+class nsMsgFolderDataSource : public nsMsgRDFDataSource,
                               public nsIFolderListener
 {
 private:
-  char*         mURI;
-  nsVoidArray*  mObservers;
 	PRBool				mInitialized;
 
   // The cached service managers
@@ -87,10 +85,6 @@ public:
                           PRBool tv,
                           PRBool* hasAssertion);
 
-  NS_IMETHOD AddObserver(nsIRDFObserver* n);
-
-  NS_IMETHOD RemoveObserver(nsIRDFObserver* n);
-
   NS_IMETHOD ArcLabelsIn(nsIRDFNode* node,
                          nsISimpleEnumerator** labels);
 
@@ -120,14 +114,15 @@ public:
   NS_IMETHOD OnItemPropertyChanged(nsISupports *item, const char *property,
 									const char *oldValue, const char *newValue);
 
+  NS_IMETHOD OnItemPropertyFlagChanged(nsISupports *item, const char *property,
+									   PRUint32 oldFlag, PRUint32 newFlag);
+
   // caching frequently used resources
 protected:
 
 	nsresult NotifyPropertyChanged(nsIRDFResource *resource, nsIRDFResource *propertyResource,
 									const char *oldValue, const char *newValue);
 
-	nsresult  NotifyObservers(nsIRDFResource *subject, nsIRDFResource *property,
-														nsIRDFNode *object, PRBool assert);
 	nsresult  GetSenderName(nsAutoString& sender, nsAutoString *senderUserName);
 
 	nsresult createFolderNode(nsIMsgFolder *folder, nsIRDFResource* property,
@@ -154,8 +149,6 @@ protected:
   nsresult DoFolderHasAssertion(nsIMsgFolder *folder, nsIRDFResource *property, nsIRDFNode *target,
 													 PRBool tv, PRBool *hasAssertion);
 
-  static PRBool assertEnumFunc(void *aElement, void *aData);
-  static PRBool unassertEnumFunc(void *aElement, void *aData);
 
   static nsIRDFResource* kNC_Child;
   static nsIRDFResource* kNC_MessageChild;
