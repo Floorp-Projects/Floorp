@@ -436,27 +436,27 @@ FactoryData g_FactoryData[] =
     "Unicode"
   },
   {
-    &kUCS2BEToUnicodeCID,
+    &kUTF16BEToUnicodeCID,
     //nsUCS2BEToUnicode::CreateInstance,
     NEW_UTF16BEToUnicode,
     "UTF-16BE",
     "Unicode"
   },
   {
-    &kUCS2LEToUnicodeCID,
+    &kUTF32LEToUnicodeCID,
     //nsUCS2LEToUnicode::CreateInstance,
     NEW_UTF16LEToUnicode,
     "UTF-16LE",
     "Unicode"
   },
   {
-    &kUCS4BEToUnicodeCID,
+    &kUTF32BEToUnicodeCID,
     nsUCS4BEToUnicode::CreateInstance,
     "UTF-32BE",
     "Unicode"
   },
   {
-    &kUCS4LEToUnicodeCID,
+    &kUTF32LEToUnicodeCID,
     nsUCS4LEToUnicode::CreateInstance,
     "UTF-32LE",
     "Unicode"
@@ -744,25 +744,25 @@ FactoryData g_FactoryData[] =
     "x-imap4-modified-utf7"
   },
   {
-    &kUnicodeToUCS2BECID,
+    &kUnicodeToUTF16BECID,
     nsUnicodeToUCS2BE::CreateInstance,
     "Unicode",
     "UTF-16BE"
   },
   {
-    &kUnicodeToUCS2LECID,
+    &kUnicodeToUTF16CID,
     nsUnicodeToUCS2LE::CreateInstance,
     "Unicode",
     "UTF-16LE"
   },
   {
-    &kUnicodeToUCS4BECID,
+    &kUnicodeToUTF32BECID,
     nsUnicodeToUCS4BE::CreateInstance,
     "Unicode",
     "UTF-32BE"
   },
   {
-    &kUnicodeToUCS4LECID,
+    &kUnicodeToUTF32LECID,
     nsUnicodeToUCS4LE::CreateInstance,
     "Unicode",
     "UTF-32LE"
