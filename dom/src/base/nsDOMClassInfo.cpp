@@ -2081,7 +2081,7 @@ nsArraySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   int32 n = -1;
 
   if ((JSVAL_IS_NUMBER(id) || JSVAL_IS_STRING(id)) &&
-      ::JS_ValueToInt32(cx, id, &n)) {
+      ::JS_ValueToECMAInt32(cx, id, &n)) {
     if (n < 0) {
       return NS_ERROR_DOM_INDEX_SIZE_ERR;
     }
@@ -2436,7 +2436,7 @@ nsHTMLFormElementSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
   int32 n = -1;
 
   if ((JSVAL_IS_NUMBER(id) || JSVAL_IS_STRING(id)) &&
-      ::JS_ValueToInt32(cx, id, &n) && n >= 0) {
+      ::JS_ValueToECMAInt32(cx, id, &n) && n >= 0) {
     nsCOMPtr<nsIFormControl> control;
     form->GetElementAt(n, getter_AddRefs(control));
 
@@ -2460,7 +2460,7 @@ nsHTMLSelectElementSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
   int32 n = -1;
 
   if ((JSVAL_IS_NUMBER(id) || JSVAL_IS_STRING(id)) &&
-      ::JS_ValueToInt32(cx, id, &n) && n >= 0) {
+      ::JS_ValueToECMAInt32(cx, id, &n) && n >= 0) {
     nsCOMPtr<nsISupports> native;
 
     wrapper->GetNative(getter_AddRefs(native));
@@ -2529,7 +2529,7 @@ nsHTMLSelectElementSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
   int32 n = -1;
 
   if ((!JSVAL_IS_NUMBER(id) && !JSVAL_IS_STRING(id)) ||
-      !::JS_ValueToInt32(cx, id, &n) || n < 0) {
+      !::JS_ValueToECMAInt32(cx, id, &n) || n < 0) {
     return NS_OK;
   }
 
@@ -2957,7 +2957,7 @@ nsHTMLOptionCollectionSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
   int32 n = -1;
 
   if ((!JSVAL_IS_NUMBER(id) && !JSVAL_IS_STRING(id)) ||
-      !::JS_ValueToInt32(cx, id, &n) || n < 0) {
+      !::JS_ValueToECMAInt32(cx, id, &n) || n < 0) {
     return NS_OK;
   }
 
