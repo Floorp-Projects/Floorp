@@ -27,8 +27,6 @@ include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
 
 FILES = \
-	history.css			\
-	history.xul			\
 	document.gif			\
 	dom-test-1.css			\
 	dom-test-1.xul			\

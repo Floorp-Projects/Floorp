@@ -21,8 +21,6 @@ MODULE=rdf
 include <$(DEPTH)\config\rules.mak>
 
 FILES=\
-	history.css                     \
-	history.xul                     \
         document.gif                    \
         dom-test-1.css                  \
         dom-test-1.xul                  \
