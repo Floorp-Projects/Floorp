@@ -20,6 +20,7 @@
    foreach $input(<FILE_LIST>) {
      $input =~s/\n//g;
      @output=split(/\./,$input);
+     print "\n$input\n";
      system("$drive\mozilla/dist/WIN32_D.obj/bin/TestParser.exe $input $output[0].b");
    }
  }
@@ -27,13 +28,14 @@
    foreach $input(<FILE_LIST>) {
      $input =~s/\n//g;
      @output=split(/\./,$input);
+     print "\n$input\n";
      system("$drive\mozilla/dist/WIN32_D.obj/bin/TestParser.exe $input $output[0].v");
-	 system("fc $output[0].b $output[0].v");
+     system("fc $output[0].b $output[0].v");
    }
  }
  else {
    print "\n\"$ARGV[0]\" unknown....\n";
-   print "\nUsage: perl TestParser.pl [-b|-v|-c] <filelist>\n\n";
+   print "\nUsage: perl TestParser.pl [-b|-v] <filelist>\n\n";
  }
  
  close(FILE_LIST);
