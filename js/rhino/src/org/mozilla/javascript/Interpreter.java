@@ -368,7 +368,7 @@ public class Interpreter
             case Token.SWITCH : {
                 iCodeTop = updateLineNumber(node, iCodeTop);
                 iCodeTop = generateICode(child, iCodeTop);
-                int theLocalSlot = itsData.itsMaxLocals++;
+                int theLocalSlot = allocateLocal();
                 iCodeTop = addToken(Token.NEWTEMP, iCodeTop);
                 iCodeTop = addByte(theLocalSlot, iCodeTop);
                 iCodeTop = addToken(Token.POP, iCodeTop);
@@ -466,14 +466,10 @@ public class Interpreter
             }
 
             case Token.USELOCAL : {
-                if (node.getProp(Node.TARGET_PROP) != null) {
-                    iCodeTop = addIcode(Icode_RETSUB, iCodeTop);
-                } else {
-                    iCodeTop = addToken(Token.USETEMP, iCodeTop);
-                    itsStackDepth++;
-                    if (itsStackDepth > itsData.itsMaxStack)
-                        itsData.itsMaxStack = itsStackDepth;
-                }
+                iCodeTop = addToken(Token.USETEMP, iCodeTop);
+                itsStackDepth++;
+                if (itsStackDepth > itsData.itsMaxStack)
+                    itsData.itsMaxStack = itsStackDepth;
                 Node temp = (Node) node.getProp(Node.LOCAL_PROP);
                 iCodeTop = addLocalRef(temp, iCodeTop);
                 break;
@@ -503,6 +499,22 @@ public class Interpreter
             case Token.JSR : {
                 Node target = (Node)(node.getProp(Node.TARGET_PROP));
                 iCodeTop = addGoto(target, Icode_GOSUB, iCodeTop);
+                break;
+            }
+
+            case Token.FINALLY : {
+                int finallyRegister = allocateLocal();
+                iCodeTop = addToken(Token.NEWTEMP, iCodeTop);
+                iCodeTop = addByte(finallyRegister, iCodeTop);
+                iCodeTop = addToken(Token.POP, iCodeTop);
+                itsStackDepth--;
+                while (child != null) {
+                    iCodeTop = generateICode(child, iCodeTop);
+                    child = child.getNext();
+                }
+                iCodeTop = addIcode(Icode_RETSUB, iCodeTop);
+                iCodeTop = addByte(finallyRegister, iCodeTop);
+                releaseLocal(finallyRegister);
                 break;
             }
 
@@ -986,13 +998,20 @@ public class Interpreter
     {
         int theLocalSlot = node.getIntProp(Node.LOCAL_PROP, -1);
         if (theLocalSlot == -1) {
-            theLocalSlot = itsData.itsMaxLocals++;
+            theLocalSlot = allocateLocal();
             node.putIntProp(Node.LOCAL_PROP, theLocalSlot);
         }
         iCodeTop = addByte(theLocalSlot, iCodeTop);
-        if (theLocalSlot >= itsData.itsMaxLocals)
-            itsData.itsMaxLocals = theLocalSlot + 1;
         return iCodeTop;
+    }
+
+    private int allocateLocal()
+    {
+         return itsData.itsMaxLocals++;
+    }
+
+    private void releaseLocal(int local)
+    {
     }
 
     private int getTargetLabel(Node target) {

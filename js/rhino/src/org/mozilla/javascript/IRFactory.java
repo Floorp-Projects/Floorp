@@ -530,15 +530,7 @@ public class IRFactory {
 
         if (hasFinally) {
             pn.addChildToBack(finallyTarget);
-            Node returnTemp = createNewLocal(new Node(Token.EMPTY));
-            Node popAndMake = new Node(Token.POP, returnTemp);
-            pn.addChildToBack(popAndMake);
-            pn.addChildToBack(finallyNode);
-            Node ret = createUseLocal(returnTemp);
-
-            // add the magic prop that makes it output a RET
-            ret.putProp(Node.TARGET_PROP, Boolean.TRUE);
-            pn.addChildToBack(ret);
+            pn.addChildToBack(new Node(Token.FINALLY, finallyNode));
         }
         pn.addChildToBack(endTarget);
         return pn;

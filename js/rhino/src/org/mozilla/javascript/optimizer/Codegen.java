@@ -1575,6 +1575,10 @@ class BodyCodegen
                 visitGOTO(node, type, child);
                 break;
 
+              case Token.FINALLY:
+                visitFinally(node, child);
+                break;
+
               case Token.NOT: {
                 int trueTarget = cfw.acquireLabel();
                 int falseTarget = cfw.acquireLabel();
@@ -2044,6 +2048,19 @@ class BodyCodegen
                 cfw.add(ByteCode.GOTO, targetLabel);
         }
         cfw.markLabel(fallThruLabel);
+    }
+
+    private void visitFinally(Node node, Node child)
+    {
+        //Save return address in a new local where
+        int finallyRegister = getNewWordLocal();
+        cfw.addAStore(finallyRegister);
+        while (child != null) {
+            generateCodeFromNode(child, node);
+            child = child.getNext();
+        }
+        cfw.add(ByteCode.RET, finallyRegister);
+        releaseWordLocal((short)finallyRegister);
     }
 
     private void visitEnumInit(Node node, Node child)
@@ -3766,13 +3783,7 @@ class BodyCodegen
         }
         Node temp = (Node) node.getProp(Node.LOCAL_PROP);
         short local = getLocalFromNode(temp);
-
-        // if the temp node has a magic TARGET property,
-        // treat it as a RET to that temp.
-        if (node.getProp(Node.TARGET_PROP) != null)
-            cfw.add(ByteCode.RET, local);
-        else
-            cfw.addALoad(local);
+        cfw.addALoad(local);
     }
 
     private void addScriptRuntimeInvoke(String methodName,
