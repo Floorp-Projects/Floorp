@@ -212,7 +212,7 @@ extern void vr_findGlobalRegName()
 
 	if (!err)
 	{
-		err = FSMakeFSSpec(foundVRefNum, foundDirID, "\pNetscape Registry", &regSpec);
+		err = FSMakeFSSpec(foundVRefNum, foundDirID, "\pMozilla Registry", &regSpec);
 
 		if (err == -43) /* if file doesn't exist */
 		{
