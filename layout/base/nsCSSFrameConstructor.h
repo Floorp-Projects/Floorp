@@ -676,28 +676,13 @@ private:
                            nsIFrame*                aContentParentFrame,
                            nsIAtom*                 aScrolledPseudo,
                            PRBool                   aIsRoot,
-                           nsIFrame*&               aNewFrame, 
-                           nsIFrame*&               aScrollableFrame);
+                           nsIFrame*&               aNewFrame);
 
   // Completes the building of the scrollframe:
   // Creates a view for the scrolledframe and makes it the child of the scrollframe.
   void
   FinishBuildingScrollFrame(nsIFrame* aScrollFrame,
                             nsIFrame* aScrolledFrame);
-
-  // Creates a new GfxScrollFrame, Initializes it, and creates a scroll port for it
-  //
-  nsresult
-  InitGfxScrollFrame(nsFrameConstructorState& aState,
-                     nsIContent*              aContent,
-                     nsIDocument*             aDocument,
-                     nsIFrame*                aParentFrame,
-                     nsIFrame*                aContentParentFrame,
-                     nsStyleContext*          aStyleContext,
-                     PRBool                   aIsRoot,
-                     nsIFrame*&               aNewFrame,
-                     nsFrameItems&            aAnonymousFrames);
-
 
   // InitializeSelectFrame puts scrollFrame in aFrameItems if aBuildCombobox is false
   nsresult

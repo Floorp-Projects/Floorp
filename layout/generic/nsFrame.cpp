@@ -2022,7 +2022,7 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsPresContext* aCX,
       nsIView *closestView = closestFrame->GetClosestView();
 
       if (closestView && view != closestView)
-        newPoint -= closestView->GetPosition();
+        newPoint -= closestView->GetOffsetTo(view);
 
       // printf("      0x%.8x   0x%.8x  %4d  %4d\n",
       //        closestFrame, closestView, closestXDistance, closestYDistance);

@@ -706,11 +706,16 @@ public:
                     nsFramePaintLayer    aWhichLayer,
                     PRUint32             aFlags = 0) = 0;
 
-  /* 
+  /**
    * Does the frame paint its background? If not, then all or part of it will be
    * painted by ancestors.
    */
   virtual PRBool CanPaintBackground() { return PR_TRUE; }
+
+  /**
+   * Does this frame type always need a view?
+   */
+  virtual PRBool NeedsView() { return PR_FALSE; }
 
   /**
    * Event handling of GUI events.
