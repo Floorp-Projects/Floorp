@@ -1486,8 +1486,6 @@ nsDirectoryViewerFactory::CreateInstance(const char *aCommand,
 
   if (NS_FAILED(rv)) return rv;
 
-  NS_ADDREF(*aDocListenerResult);
-
   // ... and set the original channel's content type up
   (void)aChannel->SetContentType(NS_LITERAL_CSTRING("text/html"));
 
