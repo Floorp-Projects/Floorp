@@ -361,12 +361,10 @@ protected:
   // used to cache the atoms created for each color to be displayed
   static nsIAtom* mLabelPrefColorAtoms[PREF_LABELS_MAX];
 
-  // comparing against this value, the classifier
-  // callback function, OnMessageClassified(), can know
-  // when the classified message is the last one in the
-  // batch/series of batches (in which case the
-  // appropriate action is taken for all the messages)
-  nsXPIDLCString mLastJunkURIInBatch;
+  // used to determine when to start and end
+  // junk plugin batches
+  PRUint32 mNumMessagesRemainingInBatch;
+
   // these are the indices of the messages in the current
   // batch/series of batches of messages manually marked
   // as junk

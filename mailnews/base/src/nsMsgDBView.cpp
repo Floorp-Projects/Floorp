@@ -144,6 +144,7 @@ nsMsgDBView::nsMsgDBView()
   m_deletingRows = PR_FALSE;
   mJunkIndices = nsnull;
   mNumJunkIndices = 0;
+  mNumMessagesRemainingInBatch = 0;
   mShowSizeInLines = PR_FALSE;
 
   /* mCommandsNeedDisablingBecauseOffline - A boolean that tell us if we needed to disable commands because we're offline w/o a downloaded msg select */
@@ -2301,7 +2302,7 @@ nsMsgDBView::ApplyCommandToIndices(nsMsgViewCommandTypeValue command, nsMsgViewI
   PRBool thisIsImapFolder = (imapFolder != nsnull);
   nsCOMPtr<nsIJunkMailPlugin> junkPlugin;
 
-  // if this is a junk command, start a batch. 
+  // if this is a junk command, start a batch or add to an existing one. 
   //  
   if (    command == nsMsgViewCommandType::junk
        || command == nsMsgViewCommandType::unjunk ) 
@@ -2333,16 +2334,6 @@ nsMsgDBView::ApplyCommandToIndices(nsMsgViewCommandTypeValue command, nsMsgViewI
       mNumJunkIndices += numIndices;
       mJunkIndices = (nsMsgViewIndex *)nsMemory::Realloc(mJunkIndices, mNumJunkIndices * sizeof(nsMsgViewIndex));
       memcpy(mJunkIndices + (mNumJunkIndices - numIndices), indices, numIndices * sizeof(nsMsgViewIndex));
-
-      // save the last URI, so that OnMessageClassified()
-      // will know when the classification it runs after
-      // is the last one; if the classification of previously-marked
-      // messages has not been completed, we replace here the
-      // previous 'last URI' with a new 'last URI',
-      // causing the batches to be coalesced
-      //
-      rv = GetURIForViewIndex(indices[numIndices-1], getter_Copies(mLastJunkURIInBatch));
-      NS_ENSURE_SUCCESS(rv, rv);
     }
    
     nsCOMPtr<nsIMsgFilterPlugin> filterPlugin;
@@ -2352,8 +2343,16 @@ nsMsgDBView::ApplyCommandToIndices(nsMsgViewCommandTypeValue command, nsMsgViewI
     junkPlugin = do_QueryInterface(filterPlugin, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = junkPlugin->StartBatch();
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (mNumMessagesRemainingInBatch == 0)
+    {
+      rv = junkPlugin->StartBatch();
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    // note that if we aren't starting a batch w.r.t.
+    // the junk plugin we are actually coalescing the
+    // batch of messages this function was called for
+    // into the junk plugin's current batch
+    mNumMessagesRemainingInBatch += numIndices;
   }
          
   m_folder->EnableNotifications(nsIMsgFolder::allMessageCountNotifications, PR_FALSE, PR_TRUE /*dbBatching*/);
@@ -2789,22 +2788,17 @@ nsMsgDBView::OnMessageClassified(const char *aMsgURI,
   // perform the action on all of the junk messages
   //
 
-  // this check is necessary because it is theoretically 
-  // possible for a message to be flagged as non-junk,
-  // and before the classifier can finish with it, for it
-  // to be again classified as junk, and thus to have
-  // mLastJunkURIInBatch set with its URI - and it should
-  // not be considered the last junk messages during
-  // the first call of this function
-  if (aClassification == nsIJunkMailPlugin::GOOD)
-    return NS_OK;
-
-  NS_ASSERTION(mJunkIndices != nsnull, "the classification of a manually-marked junk message has been classified as junk, yet there seem to be no such outstanding messages");
+  NS_ASSERTION( (aClassification == nsIJunkMailPlugin::GOOD) || (mJunkIndices != nsnull), "the classification of a manually-marked junk message has been classified as junk, yet there seem to be no such outstanding messages");
   
-  if ( mLastJunkURIInBatch.Equals(aMsgURI) )
+  // is this the last message in the batch?
+  
+  if (--mNumMessagesRemainingInBatch == 0)
   {
     nsCOMPtr<nsIMsgFolder> folder;
-    nsresult rv = GetFolderForViewIndex(mJunkIndices[0], getter_AddRefs(folder));
+    // since we assume everything's in the same folder, this:
+    //nsresult rv = GetFolderForViewIndex(mJunkIndices[0], getter_AddRefs(folder));
+    // is no better than this (which works even for no junkIndices):
+    nsresult rv = GetFolderFromMsgURI(aMsgURI, getter_AddRefs(folder));
     NS_ENSURE_SUCCESS(rv, rv);
 
     // it seems EndBatch must be called here, rather
@@ -2840,7 +2834,6 @@ nsMsgDBView::OnMessageClassified(const char *aMsgURI,
       nsMemory::Free(mJunkIndices);
       mJunkIndices = nsnull;
       mNumJunkIndices = 0;
-      mLastJunkURIInBatch.Truncate();
     }
     
   }
