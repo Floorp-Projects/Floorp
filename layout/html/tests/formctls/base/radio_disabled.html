@@ -1,0 +1,38 @@
+<HTML>
+<HEAD>
+<TITLE>Radio Button Test 2 (Disabled)</TITLE>
+<SCRIPT SRC="radio.js"></SCRIPT>
+</HEAD>
+<BODY>
+<FORM NAME=mainform>
+<INPUT TYPE=reset>
+<FIELDSET>
+<LEGEND>1, 3, 4, 7 Disabled</LEGEND>
+<INPUT TYPE=radio DISABLED NAME=a VALUE=1>
+<INPUT TYPE=radio NAME=a VALUE=2>
+<INPUT TYPE=radio DISABLED NAME=a VALUE=3>
+<INPUT TYPE=radio DISABLED NAME=a VALUE=4>
+<INPUT TYPE=radio NAME=a VALUE=5>
+<INPUT TYPE=radio NAME=a VALUE=6>
+<INPUT TYPE=radio DISABLED NAME=a VALUE=7>
+<BR>
+<INPUT TYPE=button VALUE="Show all checked" onClick="alert(getRadioVal(document.mainform.a))">
+<INPUT TYPE=button VALUE="Set .checked on #3" onClick="document.mainform.a[2].checked = true">
+<INPUT TYPE=button VALUE="Set all .checked" onClick="setAllChecked(document.mainform.a, true)">
+</FIELDSET>
+<FIELDSET>
+<LEGEND>All Disabled</LEGEND>
+<INPUT TYPE=radio DISABLED NAME=b VALUE=1>
+<INPUT TYPE=radio DISABLED NAME=b VALUE=2>
+<INPUT TYPE=radio DISABLED NAME=b VALUE=3>
+<INPUT TYPE=radio DISABLED NAME=b VALUE=4>
+<INPUT TYPE=radio DISABLED NAME=b VALUE=5>
+<INPUT TYPE=radio DISABLED NAME=b VALUE=6>
+<INPUT TYPE=radio DISABLED NAME=b VALUE=7>
+<BR>
+<INPUT TYPE=button VALUE="Show all checked" onClick="alert(getRadioVal(document.mainform.b))">
+<INPUT TYPE=button VALUE="Set .checked on #3" onClick="document.mainform.b[2].checked = true">
+<INPUT TYPE=button VALUE="Set all .checked" onClick="setAllChecked(document.mainform.b, true)">
+</FIELDSET>
+</BODY>
+</HTML>

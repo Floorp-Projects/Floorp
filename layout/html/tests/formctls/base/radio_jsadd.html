@@ -1,0 +1,26 @@
+<html>
+<head>
+<title>Radio Button Test 3 (onChange)</title>
+<script SRC="radio.js"></SCRIPT>
+</head>
+<body>
+<form NAME=mainform>
+<input TYPE=reset> <input TYPE=submit>
+<fieldset>
+<legend>onChange test</legend>
+R1 <input TYPE=radio ID=R1 NAME=a VALUE=1">
+R2 <input TYPE=radio ID=R2 NAME=a VALUE=2">
+R3 <input TYPE=radio ID=R3 NAME=a VALUE=3">
+<br ID=addbeforeme>
+<input TYPE=button VALUE="Change type of R2 to checkbox" onClick="document.getElementById('R2').type = 'checkbox'">
+<input TYPE=button VALUE="Change type of R2 back to radio" onClick="document.getElementById('R2').type = 'radio'"><BR>
+<input TYPE=button VALUE="Change name of R2 to b" onClick="document.getElementById('R2').name = 'b'">
+<input TYPE=button VALUE="Change name of R2 back to a" onClick="document.getElementById('R2').name = 'a'"><BR>
+<input TYPE=button VALUE="Remove second radio in group a" onClick="document.mainform.a[1].parentNode.removeChild(document.mainform.a[1])"><BR>
+Add new radio buttons as checked: <input TYPE=checkbox NAME=addchecked><BR>
+Add new radio buttons with name: <input type=text NAME=addname VALUE="a"><BR>
+<input TYPE=button VALUE="Add New Radio" onClick="addNewRadio()"><BR>
+</fieldset>
+</form>
+</body>
+</html>

@@ -1,0 +1,352 @@
+<HTML>
+<HEAD>
+<TITLE>Select Tests: JavaScript Add/Remove</TITLE>
+<SCRIPT>
+var selNum = 0;
+
+function make_new(sel) {
+	var retval = document.createElement("OPTION");
+	if(document.mainform.addSelected.checked) {
+		retval.setAttribute("SELECTED", true);
+	}
+	retval.text = "new" + selNum;
+	retval.value = "new" + selNum;
+	selNum++;
+	return retval;
+}
+function addOptGroup(sel) {
+	var optgroup = document.createElement("OPTGROUP");
+	optgroup.label = "aGroup";
+	optgroup.appendChild(make_new(sel));
+	optgroup.appendChild(make_new(sel));
+	sel.insertBefore(optgroup, sel.options[1]);
+}
+function addOptGroup2(sel) {
+	var optgroup = document.createElement("OPTGROUP");
+	optgroup.label = "aGroup";
+	sel.insertBefore(optgroup, sel.options[1]);
+	optgroup.appendChild(make_new(sel));
+	optgroup.appendChild(make_new(sel));
+}
+function add1(sel) {
+	var elem = make_new(sel);
+	if(sel.length > 0) {
+		sel.add(elem, sel.options[0]);
+	} else {
+		sel.add(elem, null);
+	}
+}
+function add2(sel) {
+	var elem = make_new(sel);
+	if(sel.length > 1) {
+		sel.add(elem, sel.options[1]);
+	} else {
+		sel.add(elem, null);
+	}
+}
+function add3(sel) {
+	var elem = make_new(sel);
+	sel.add(elem, null);
+}
+function add4(sel) {
+	var elem = make_new(sel);
+	if(sel.length > 0) {
+		sel.insertBefore(elem, sel.options[0]);
+	} else {
+		sel.appendChild(elem);
+	}
+}
+function add5(sel) {
+	var elem = make_new(sel);
+	if(sel.length > 1) {
+		sel.replaceChild(elem, sel.options[1]);
+	}
+}
+function add6(sel) {
+	var elem = make_new(sel);
+	sel.appendChild(elem);
+}
+
+function remove1(sel) {
+	if(sel.length > 0) {
+		sel.remove(0);
+	}
+}
+function remove2(sel) {
+	if(sel.length > 1) {
+		sel.remove(1);
+	}
+}
+function remove3(sel) {
+	if(sel.length > 0) {
+		sel.remove(sel.length - 1);
+	}
+}
+function remove4(sel) {
+	if(sel.length > 0) {
+		sel.removeChild(sel.options[0]);
+	}
+}
+function setInner(sel) {
+	var newOne = "new" + selNum;
+	selNum++;
+	var newTwo = "new" + selNum;
+	selNum++;
+	sel.innerHTML = "<OPTION VALUE='" + newOne + "'>" + newOne + "</OPTION>"
+	+ "<OPTION VALUE='" + newTwo + "'>" + newTwo + "</OPTION>";
+}
+function showValues(sel) {
+	var myStr = "";
+	var firstTime = true;
+	for(var i=0;i<sel.length;i++) {
+		if(!sel.options[i].selected) {
+			continue;
+		}
+		if(firstTime) {
+			firstTime = false;
+		} else {
+			myStr += ", ";
+		}
+		myStr += sel.options[i].value;
+	}
+	alert(sel.name + ": " + myStr);
+}
+function showSelectedIndex(sel) {
+	alert(sel.selectedIndex);
+}
+
+</SCRIPT>
+</HEAD>
+<BODY>
+
+<H2>Select Tests: JavaScript Add/Remove</H2>
+<TABLE BORDER=1>
+<TR>
+<TH>Ignore Me</TH>
+<TD>
+<B>Steps:</B> Test instructions not here yet.<BR>
+<B>Verify:</B> Use your imagination.
+</TD>
+</TR>
+</TABLE>
+
+<BR>
+
+<FORM NAME=mainform>
+
+<INPUT TYPE=checkbox NAME=addSelected SELECTED> Add options as selected<BR>
+<INPUT TYPE=reset><BR><BR>
+
+<H2>Add/Remove</H2>
+<TABLE BORDER=1
+<TR>
+<TH></TH><TH>Nothing To Start</TH><TH>Nonselected To Start</TH><TH>Selected To Start</TH>
+</TR>
+<TR>
+<TH>Multiple</TH>
+<TD>
+<INPUT TYPE=button onClick="add1(document.mainform.blah)" VALUE="add(beginning)">
+<INPUT TYPE=button onClick="add2(document.mainform.blah)" VALUE="add(second)">
+<INPUT TYPE=button onClick="add3(document.mainform.blah)" VALUE="add(end)"><BR>
+<INPUT TYPE=button onClick="add4(document.mainform.blah)" VALUE="insertBefore(beginning)">
+<INPUT TYPE=button onClick="add5(document.mainform.blah)" VALUE="replaceChild(second)">
+<INPUT TYPE=button onClick="add6(document.mainform.blah)" VALUE="appendChild()"><BR>
+<INPUT TYPE=button onClick="remove1(document.mainform.blah)" VALUE="remove(beginning)">
+<INPUT TYPE=button onClick="remove2(document.mainform.blah)" VALUE="remove(second)">
+<INPUT TYPE=button onClick="remove3(document.mainform.blah)" VALUE="remove(end)"><BR>
+<INPUT TYPE=button onClick="remove4(document.mainform.blah)" VALUE="removeChild(beginning)">
+<INPUT TYPE=button onClick="setInner(document.mainform.blah)" VALUE="innerHTML = "><BR>
+<INPUT TYPE=button onClick="addOptGroup(document.mainform.blah)" VALUE="add(optgroup)">
+<INPUT TYPE=button onClick="addOptGroup2(document.mainform.blah)" VALUE="add(optgroup) 2"><BR>
+<INPUT TYPE=button onClick="showValues(document.mainform.blah)" VALUE="Show Values">
+<INPUT TYPE=button onClick="showSelectedIndex(document.mainform.blah)" VALUE="Show Selected Index"><BR><BR>
+
+<SELECT NAME=blah MULTIPLE SIZE=10>
+</SELECT>
+</TD>
+<TD>
+<INPUT TYPE=button onClick="add1(document.mainform.blah2)" VALUE="add(beginning)">
+<INPUT TYPE=button onClick="add2(document.mainform.blah2)" VALUE="add(second)">
+<INPUT TYPE=button onClick="add3(document.mainform.blah2)" VALUE="add(end)"><BR>
+<INPUT TYPE=button onClick="add4(document.mainform.blah2)" VALUE="insertBefore(beginning)">
+<INPUT TYPE=button onClick="add5(document.mainform.blah2)" VALUE="replaceChild(second)">
+<INPUT TYPE=button onClick="add6(document.mainform.blah2)" VALUE="appendChild()"><BR>
+<INPUT TYPE=button onClick="remove1(document.mainform.blah2)" VALUE="remove(beginning)">
+<INPUT TYPE=button onClick="remove2(document.mainform.blah2)" VALUE="remove(second)">
+<INPUT TYPE=button onClick="remove3(document.mainform.blah2)" VALUE="remove(end)"><BR>
+<INPUT TYPE=button onClick="remove4(document.mainform.blah2)" VALUE="removeChild(beginning)">
+<INPUT TYPE=button onClick="setInner(document.mainform.blah2)" VALUE="innerHTML = "><BR>
+<INPUT TYPE=button onClick="addOptGroup(document.mainform.blah2)" VALUE="add(optgroup)">
+<INPUT TYPE=button onClick="addOptGroup2(document.mainform.blah2)" VALUE="add(optgroup) 2"><BR>
+<INPUT TYPE=button onClick="showValues(document.mainform.blah2)" VALUE="Show Values">
+<INPUT TYPE=button onClick="showSelectedIndex(document.mainform.blah2)" VALUE="Show Selected Index"><BR><BR>
+
+<SELECT NAME=blah2 MULTIPLE SIZE=10>
+<OPTION VALUE=1>1
+<OPTION VALUE=2>2
+</SELECT>
+</TD>
+<TD>
+<INPUT TYPE=button onClick="add1(document.mainform.blah3)" VALUE="add(beginning)">
+<INPUT TYPE=button onClick="add2(document.mainform.blah3)" VALUE="add(second)">
+<INPUT TYPE=button onClick="add3(document.mainform.blah3)" VALUE="add(end)"><BR>
+<INPUT TYPE=button onClick="add4(document.mainform.blah3)" VALUE="insertBefore(beginning)">
+<INPUT TYPE=button onClick="add5(document.mainform.blah3)" VALUE="replaceChild(second)">
+<INPUT TYPE=button onClick="add6(document.mainform.blah3)" VALUE="appendChild()"><BR>
+<INPUT TYPE=button onClick="remove1(document.mainform.blah3)" VALUE="remove(beginning)">
+<INPUT TYPE=button onClick="remove2(document.mainform.blah3)" VALUE="remove(second)">
+<INPUT TYPE=button onClick="remove3(document.mainform.blah3)" VALUE="remove(end)"><BR>
+<INPUT TYPE=button onClick="remove4(document.mainform.blah3)" VALUE="removeChild(beginning)">
+<INPUT TYPE=button onClick="setInner(document.mainform.blah3)" VALUE="innerHTML = "><BR>
+<INPUT TYPE=button onClick="addOptGroup(document.mainform.blah3)" VALUE="add(optgroup)">
+<INPUT TYPE=button onClick="addOptGroup2(document.mainform.blah3)" VALUE="add(optgroup) 2"><BR>
+<INPUT TYPE=button onClick="showValues(document.mainform.blah3)" VALUE="Show Values">
+<INPUT TYPE=button onClick="showSelectedIndex(document.mainform.blah3)" VALUE="Show Selected Index"><BR><BR>
+
+<SELECT NAME=blah3 MULTIPLE SIZE=10>
+<OPTION VALUE=1>1
+<OPTION VALUE=2 SELECTED>2
+</SELECT>
+</TD>
+</TR>
+
+<TR>
+<TH>Single+Size</TH>
+<TD>
+<INPUT TYPE=button onClick="add1(document.mainform.blah4)" VALUE="add(beginning)">
+<INPUT TYPE=button onClick="add2(document.mainform.blah4)" VALUE="add(second)">
+<INPUT TYPE=button onClick="add3(document.mainform.blah4)" VALUE="add(end)"><BR>
+<INPUT TYPE=button onClick="add4(document.mainform.blah4)" VALUE="insertBefore(beginning)">
+<INPUT TYPE=button onClick="add5(document.mainform.blah4)" VALUE="replaceChild(second)">
+<INPUT TYPE=button onClick="add6(document.mainform.blah4)" VALUE="appendChild()"><BR>
+<INPUT TYPE=button onClick="remove1(document.mainform.blah4)" VALUE="remove(beginning)">
+<INPUT TYPE=button onClick="remove2(document.mainform.blah4)" VALUE="remove(second)">
+<INPUT TYPE=button onClick="remove3(document.mainform.blah4)" VALUE="remove(end)"><BR>
+<INPUT TYPE=button onClick="remove4(document.mainform.blah4)" VALUE="removeChild(beginning)">
+<INPUT TYPE=button onClick="setInner(document.mainform.blah4)" VALUE="innerHTML = "><BR>
+<INPUT TYPE=button onClick="addOptGroup(document.mainform.blah4)" VALUE="add(optgroup)">
+<INPUT TYPE=button onClick="addOptGroup2(document.mainform.blah4)" VALUE="add(optgroup) 2"><BR>
+<INPUT TYPE=button onClick="showValues(document.mainform.blah4)" VALUE="Show Values">
+<INPUT TYPE=button onClick="showSelectedIndex(document.mainform.blah4)" VALUE="Show Selected Index"><BR><BR>
+
+<SELECT NAME=blah4 SIZE=10>
+</SELECT>
+</TD>
+<TD>
+<INPUT TYPE=button onClick="add1(document.mainform.blah5)" VALUE="add(beginning)">
+<INPUT TYPE=button onClick="add2(document.mainform.blah5)" VALUE="add(second)">
+<INPUT TYPE=button onClick="add3(document.mainform.blah5)" VALUE="add(end)"><BR>
+<INPUT TYPE=button onClick="add4(document.mainform.blah5)" VALUE="insertBefore(beginning)">
+<INPUT TYPE=button onClick="add5(document.mainform.blah5)" VALUE="replaceChild(second)">
+<INPUT TYPE=button onClick="add6(document.mainform.blah5)" VALUE="appendChild()"><BR>
+<INPUT TYPE=button onClick="remove1(document.mainform.blah5)" VALUE="remove(beginning)">
+<INPUT TYPE=button onClick="remove2(document.mainform.blah5)" VALUE="remove(second)">
+<INPUT TYPE=button onClick="remove3(document.mainform.blah5)" VALUE="remove(end)"><BR>
+<INPUT TYPE=button onClick="remove4(document.mainform.blah5)" VALUE="removeChild(beginning)">
+<INPUT TYPE=button onClick="setInner(document.mainform.blah5)" VALUE="innerHTML = "><BR>
+<INPUT TYPE=button onClick="addOptGroup(document.mainform.blah5)" VALUE="add(optgroup)">
+<INPUT TYPE=button onClick="addOptGroup2(document.mainform.blah5)" VALUE="add(optgroup) 2"><BR>
+<INPUT TYPE=button onClick="showValues(document.mainform.blah5)" VALUE="Show Values">
+<INPUT TYPE=button onClick="showSelectedIndex(document.mainform.blah5)" VALUE="Show Selected Index"><BR><BR>
+
+<SELECT NAME=blah5 SIZE=10>
+<OPTION VALUE=1>1
+<OPTION VALUE=2>2
+</SELECT>
+</TD>
+<TD>
+<INPUT TYPE=button onClick="add1(document.mainform.blah6)" VALUE="add(beginning)">
+<INPUT TYPE=button onClick="add2(document.mainform.blah6)" VALUE="add(second)">
+<INPUT TYPE=button onClick="add3(document.mainform.blah6)" VALUE="add(end)"><BR>
+<INPUT TYPE=button onClick="add4(document.mainform.blah6)" VALUE="insertBefore(beginning)">
+<INPUT TYPE=button onClick="add5(document.mainform.blah6)" VALUE="replaceChild(second)">
+<INPUT TYPE=button onClick="add6(document.mainform.blah6)" VALUE="appendChild()"><BR>
+<INPUT TYPE=button onClick="remove1(document.mainform.blah6)" VALUE="remove(beginning)">
+<INPUT TYPE=button onClick="remove2(document.mainform.blah6)" VALUE="remove(second)">
+<INPUT TYPE=button onClick="remove3(document.mainform.blah6)" VALUE="remove(end)"><BR>
+<INPUT TYPE=button onClick="remove4(document.mainform.blah6)" VALUE="removeChild(beginning)">
+<INPUT TYPE=button onClick="setInner(document.mainform.blah6)" VALUE="innerHTML = "><BR>
+<INPUT TYPE=button onClick="addOptGroup(document.mainform.blah6)" VALUE="add(optgroup)">
+<INPUT TYPE=button onClick="addOptGroup2(document.mainform.blah6)" VALUE="add(optgroup) 2"><BR>
+<INPUT TYPE=button onClick="showValues(document.mainform.blah6)" VALUE="Show Values">
+<INPUT TYPE=button onClick="showSelectedIndex(document.mainform.blah6)" VALUE="Show Selected Index"><BR><BR>
+
+<SELECT NAME=blah6 SIZE=10>
+<OPTION VALUE=1>1
+<OPTION VALUE=2 SELECTED>2
+</SELECT>
+</TD>
+</TR>
+
+<TR>
+<TH>Dropdown</TH>
+<TD>
+<INPUT TYPE=button onClick="add1(document.mainform.blah7)" VALUE="add(beginning)">
+<INPUT TYPE=button onClick="add2(document.mainform.blah7)" VALUE="add(second)">
+<INPUT TYPE=button onClick="add3(document.mainform.blah7)" VALUE="add(end)"><BR>
+<INPUT TYPE=button onClick="add4(document.mainform.blah7)" VALUE="insertBefore(beginning)">
+<INPUT TYPE=button onClick="add5(document.mainform.blah7)" VALUE="replaceChild(second)">
+<INPUT TYPE=button onClick="add6(document.mainform.blah7)" VALUE="appendChild()"><BR>
+<INPUT TYPE=button onClick="remove1(document.mainform.blah7)" VALUE="remove(beginning)">
+<INPUT TYPE=button onClick="remove2(document.mainform.blah7)" VALUE="remove(second)">
+<INPUT TYPE=button onClick="remove3(document.mainform.blah7)" VALUE="remove(end)"><BR>
+<INPUT TYPE=button onClick="remove4(document.mainform.blah7)" VALUE="removeChild(beginning)">
+<INPUT TYPE=button onClick="setInner(document.mainform.blah7)" VALUE="innerHTML = "><BR>
+<INPUT TYPE=button onClick="addOptGroup(document.mainform.blah7)" VALUE="add(optgroup)">
+<INPUT TYPE=button onClick="addOptGroup2(document.mainform.blah7)" VALUE="add(optgroup) 2"><BR>
+<INPUT TYPE=button onClick="showValues(document.mainform.blah7)" VALUE="Show Values">
+<INPUT TYPE=button onClick="showSelectedIndex(document.mainform.blah7)" VALUE="Show Selected Index"><BR><BR>
+
+<SELECT NAME=blah7>
+</SELECT>
+</TD>
+<TD>
+<INPUT TYPE=button onClick="add1(document.mainform.blah8)" VALUE="add(beginning)">
+<INPUT TYPE=button onClick="add2(document.mainform.blah8)" VALUE="add(second)">
+<INPUT TYPE=button onClick="add3(document.mainform.blah8)" VALUE="add(end)"><BR>
+<INPUT TYPE=button onClick="add4(document.mainform.blah8)" VALUE="insertBefore(beginning)">
+<INPUT TYPE=button onClick="add5(document.mainform.blah8)" VALUE="replaceChild(second)">
+<INPUT TYPE=button onClick="add6(document.mainform.blah8)" VALUE="appendChild()"><BR>
+<INPUT TYPE=button onClick="remove1(document.mainform.blah8)" VALUE="remove(beginning)">
+<INPUT TYPE=button onClick="remove2(document.mainform.blah8)" VALUE="remove(second)">
+<INPUT TYPE=button onClick="remove3(document.mainform.blah8)" VALUE="remove(end)"><BR>
+<INPUT TYPE=button onClick="remove4(document.mainform.blah8)" VALUE="removeChild(beginning)">
+<INPUT TYPE=button onClick="setInner(document.mainform.blah8)" VALUE="innerHTML = "><BR>
+<INPUT TYPE=button onClick="addOptGroup(document.mainform.blah8)" VALUE="add(optgroup)">
+<INPUT TYPE=button onClick="addOptGroup2(document.mainform.blah8)" VALUE="add(optgroup) 2"><BR>
+<INPUT TYPE=button onClick="showValues(document.mainform.blah8)" VALUE="Show Values">
+<INPUT TYPE=button onClick="showSelectedIndex(document.mainform.blah8)" VALUE="Show Selected Index"><BR><BR>
+
+<SELECT NAME=blah8>
+<OPTION VALUE=1>1
+<OPTION VALUE=2>2
+</SELECT>
+</TD>
+<TD>
+<INPUT TYPE=button onClick="add1(document.mainform.blah9)" VALUE="add(beginning)">
+<INPUT TYPE=button onClick="add2(document.mainform.blah9)" VALUE="add(second)">
+<INPUT TYPE=button onClick="add3(document.mainform.blah9)" VALUE="add(end)"><BR>
+<INPUT TYPE=button onClick="add4(document.mainform.blah9)" VALUE="insertBefore(beginning)">
+<INPUT TYPE=button onClick="add5(document.mainform.blah9)" VALUE="replaceChild(second)">
+<INPUT TYPE=button onClick="add6(document.mainform.blah9)" VALUE="appendChild()"><BR>
+<INPUT TYPE=button onClick="remove1(document.mainform.blah9)" VALUE="remove(beginning)">
+<INPUT TYPE=button onClick="remove2(document.mainform.blah9)" VALUE="remove(second)">
+<INPUT TYPE=button onClick="remove3(document.mainform.blah9)" VALUE="remove(end)"><BR>
+<INPUT TYPE=button onClick="remove4(document.mainform.blah9)" VALUE="removeChild(beginning)">
+<INPUT TYPE=button onClick="setInner(document.mainform.blah9)" VALUE="innerHTML = "><BR>
+<INPUT TYPE=button onClick="addOptGroup(document.mainform.blah9)" VALUE="add(optgroup)">
+<INPUT TYPE=button onClick="addOptGroup2(document.mainform.blah9)" VALUE="add(optgroup) 2"><BR>
+<INPUT TYPE=button onClick="showValues(document.mainform.blah9)" VALUE="Show Values">
+<INPUT TYPE=button onClick="showSelectedIndex(document.mainform.blah9)" VALUE="Show Selected Index"><BR><BR>
+
+<SELECT NAME=blah9>
+<OPTION VALUE=1>1
+<OPTION VALUE=2 SELECTED>2
+</SELECT>
+</TD>
+</TR>
+</TABLE>
+
+</FORM>
+</BODY>
+</HTML>

@@ -8,3 +8,13 @@ file:///s|/mozilla/layout/html/tests/formctls/base/selectsize3_js.html
 file:///s|/mozilla/layout/html/tests/formctls/base/testarea_wrap.html
 file:///s|/mozilla/layout/html/tests/formctls/base/textarea_sizes.html
 file:///s|/mozilla/layout/html/tests/formctls/base/textarea_tests.html
+file:///s|/mozilla/layout/html/tests/formctls/base/select_disabled.html
+file:///s|/mozilla/layout/html/tests/formctls/base/select_init.html
+file:///s|/mozilla/layout/html/tests/formctls/base/select1_js.html
+file:///s|/mozilla/layout/html/tests/formctls/base/select_jsadd.html
+file:///s|/mozilla/layout/html/tests/formctls/base/select_onchange.html
+file:///s|/mozilla/layout/html/tests/formctls/base/radio_disabled.html
+file:///s|/mozilla/layout/html/tests/formctls/base/radio_jsadd.html
+file:///s|/mozilla/layout/html/tests/formctls/base/radio_onchange.html
+file:///s|/mozilla/layout/html/tests/formctls/base/radio_init.html
+
