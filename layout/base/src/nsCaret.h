@@ -25,10 +25,12 @@
 #include "nsCoord.h"
 #include "nsIDOMSelectionListener.h"
 #include "nsICaret.h"
+#include "nsWeakPtr.h"
 
 class nsITimer;
 class nsIView;
 class nsIRenderingContext;
+class nsISelectionController;
 
 // {E14B66F6-BFC5-11d2-B57E-00105AA83B2F}
 #define NS_CARET_CID \
@@ -83,8 +85,9 @@ class nsCaret : public nsICaret,
 		void					DrawCaret();
 		void					ToggleDrawnStatus()	{ 	mDrawn = !mDrawn; }
 
-	  nsIPresShell  *mPresShell;				// we rely on the nsEditor to refCount this
-		nsITimer*			mBlinkTimer;
+	  nsCOMPtr<nsIWeakReference> mPresShell;
+
+    nsITimer*			mBlinkTimer;
 
 		PRUint32			mBlinkRate;					// time for one cyle (off then on), in milliseconds
 		nscoord				mCaretWidth;				// caret width in twips

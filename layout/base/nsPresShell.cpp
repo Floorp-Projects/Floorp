@@ -19,7 +19,7 @@
  *
  * Contributor(s): 
  */ 
- 
+  
 #define PL_ARENA_CONST_ALIGN_MASK 3
 #include "nsIPresShell.h"
 #include "nsISpaceManager.h"
@@ -551,6 +551,7 @@ public:
   NS_IMETHOD GetActiveAlternateStyleSheet(nsString& aSheetTitle);
   NS_IMETHOD SelectAlternateStyleSheet(const nsString& aSheetTitle);
   NS_IMETHOD ListAlternateStyleSheets(nsStringArray& aTitleList);
+
   NS_IMETHOD GetSelection(SelectionType aType, nsIDOMSelection** aSelection);
   NS_IMETHOD ScrollSelectionIntoView(SelectionType aType, SelectionRegion aRegion);
   NS_IMETHOD RepaintSelection(SelectionType aType);
@@ -1378,7 +1379,7 @@ PresShell::EndObservingDocument()
   if (mSelection){
     nsCOMPtr<nsIDOMSelection> domselection;
     nsresult result;
-    result = mSelection->GetSelection(SELECTION_NORMAL, getter_AddRefs(domselection));
+    result = mSelection->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domselection));
     if (NS_FAILED(result))
       return result;
     if (!domselection)
@@ -2471,7 +2472,7 @@ PresShell::DoCopy()
     nsresult rv;
 
     nsIDOMSelection* sel;
-    GetSelection(SELECTION_NORMAL, &sel);
+    GetSelection(nsISelectionController::SELECTION_NORMAL, &sel);
       
     if (sel != nsnull)
       doc->CreateXIF(buffer,sel);
@@ -4251,10 +4252,14 @@ PresShellViewEventListener::HideCaret()
 
   if (mPresShell && 0 == mCallCount)
   {
-    result = mPresShell->GetCaretEnabled(&mWasVisible);
+    nsCOMPtr<nsISelectionController> selCon = do_QueryInterface(mPresShell);
+    if (selCon)
+    {
+      result = selCon->GetCaretEnabled(&mWasVisible);
 
-    if (NS_SUCCEEDED(result) && mWasVisible)
-      result = mPresShell->SetCaretEnabled(PR_FALSE);
+      if (NS_SUCCEEDED(result) && mWasVisible)
+        result = selCon->SetCaretEnabled(PR_FALSE);
+    }
   }
 
   ++mCallCount;
@@ -4270,7 +4275,11 @@ PresShellViewEventListener::RestoreCaretVisibility()
   --mCallCount;
 
   if (mPresShell && 0 == mCallCount && mWasVisible)
-    result = mPresShell->SetCaretEnabled(PR_TRUE);
+  {
+    nsCOMPtr<nsISelectionController> selCon = do_QueryInterface(mPresShell);
+    if (selCon)
+      result = selCon->SetCaretEnabled(PR_TRUE);
+  }
 
   return result;
 }

@@ -817,7 +817,7 @@ nsEditor::~nsEditor()
 
 NS_IMPL_ADDREF(nsEditor)
 NS_IMPL_RELEASE(nsEditor)
-NS_IMPL_QUERY_INTERFACE2(nsEditor, nsIEditor, nsIEditorIMESupport)
+NS_IMPL_QUERY_INTERFACE3(nsEditor, nsIEditor, nsIEditorIMESupport, nsISupportsWeakReference)
 
 #ifdef XP_MAC
 #pragma mark -
@@ -928,8 +928,25 @@ nsEditor::GetPresShell(nsIPresShell **aPS)
   if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
   if (!ps) return NS_ERROR_NOT_INITIALIZED;
-  return ps->QueryInterface(NS_GET_IID(nsIPresShell), (void **)aPS);
+  NS_ADDREF(*aPS = ps);
+  return NS_OK;
 }
+
+
+NS_IMETHODIMP
+nsEditor::GetSelectionController(nsISelectionController **aSel)
+{
+  if (!aSel)
+    return NS_ERROR_NULL_POINTER;
+  *aSel = nsnull; // init out param
+  NS_PRECONDITION(mPresShellWeak, "bad state, null mPresShellWeak");
+  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mPresShellWeak);
+  if (!selCon) return NS_ERROR_NOT_INITIALIZED;
+  NS_ADDREF(*aSel = selCon);
+  return NS_OK;
+}
+
 
 
 NS_IMETHODIMP
@@ -939,9 +956,9 @@ nsEditor::GetSelection(nsIDOMSelection **aSelection)
     return NS_ERROR_NULL_POINTER;
   *aSelection = nsnull;
   if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
-  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
-  if (!ps) return NS_ERROR_NOT_INITIALIZED;
-  nsresult result = ps->GetSelection(SELECTION_NORMAL, aSelection);  // does an addref
+  nsCOMPtr<nsISelectionController> selcon = do_QueryReferent(mPresShellWeak);
+  if (!selcon) return NS_ERROR_NOT_INITIALIZED;
+  nsresult result = selcon->GetSelection(nsISelectionController::SELECTION_NORMAL, aSelection);  // does an addref
   return result;
 }
 
@@ -1257,9 +1274,9 @@ NS_IMETHODIMP nsEditor::SelectAll()
 
   nsCOMPtr<nsIDOMSelection> selection;
   if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
-  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
-  if (!ps) return NS_ERROR_NOT_INITIALIZED;
-  nsresult result = ps->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
+  nsCOMPtr<nsISelectionController> selcon = do_QueryReferent(mPresShellWeak);
+  if (!selcon) return NS_ERROR_NOT_INITIALIZED;
+  nsresult result = selcon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
   if (NS_SUCCEEDED(result) && selection)
   {
     result = SelectEntireDocument(selection);
@@ -1273,9 +1290,9 @@ NS_IMETHODIMP nsEditor::BeginningOfDocument()
 
   nsCOMPtr<nsIDOMSelection> selection;
   if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
-  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
-  if (!ps) return NS_ERROR_NOT_INITIALIZED;
-  nsresult result = ps->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
+  nsCOMPtr<nsISelectionController> selcon = do_QueryReferent(mPresShellWeak);
+  if (!selcon) return NS_ERROR_NOT_INITIALIZED;
+  nsresult result = selcon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
   if (NS_SUCCEEDED(result) && selection)
   {
     nsCOMPtr<nsIDOMNodeList> nodeList;
@@ -1332,9 +1349,9 @@ NS_IMETHODIMP nsEditor::EndOfDocument()
 
   nsCOMPtr<nsIDOMSelection> selection;
   if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
-  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
-  if (!ps) return NS_ERROR_NOT_INITIALIZED;
-  nsresult result = ps->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
+  nsCOMPtr<nsISelectionController> selcon = do_QueryReferent(mPresShellWeak);
+  if (!selcon) return NS_ERROR_NOT_INITIALIZED;
+  nsresult result = selcon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
   if (NS_SUCCEEDED(result) && selection)
   {
     nsCOMPtr<nsIDOMNodeList> nodeList;
@@ -4886,12 +4903,12 @@ nsresult nsEditor::EndUpdateViewBatch()
 {
   NS_PRECONDITION(mUpdateCount>0, "bad state");
   
-  nsCOMPtr<nsIPresShell>    presShell;
-  nsresult  rv = GetPresShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsISelectionController>    selCon;
+  nsresult  rv = GetSelectionController(getter_AddRefs(selCon));
   if (NS_FAILED(rv))
     return rv;
     
-  StCaretHider caretHider(presShell);
+  StCaretHider caretHider(selCon);
         
   nsCOMPtr<nsIDOMSelection>selection;
   nsresult selectionResult = GetSelection(getter_AddRefs(selection));
@@ -4910,7 +4927,10 @@ nsresult nsEditor::EndUpdateViewBatch()
 #else
       mViewManager->EndUpdateViewBatch(NS_VMREFRESH_IMMEDIATE);
 #endif
-      presShell->EndReflowBatching(PR_TRUE);
+      nsCOMPtr<nsIPresShell>    presShell;
+      nsresult  rv = GetPresShell(getter_AddRefs(presShell));
+      if (NS_SUCCEEDED(rv) && presShell)
+        presShell->EndReflowBatching(PR_TRUE);
     }
   }  
 
@@ -5147,7 +5167,7 @@ NS_IMETHODIMP nsEditor::CreateTxnForDeleteElement(nsIDOMNode * aElement,
     if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
     nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
     if (!ps) return NS_ERROR_NOT_INITIALIZED;
-    result = ps->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
+    result = ps->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
     if (NS_SUCCEEDED(result) && selection)
     {
       PRBool collapsed;
@@ -5230,9 +5250,9 @@ nsEditor::CreateTxnForDeleteSelection(nsIEditor::EDirection aAction,
   nsresult result;
   nsCOMPtr<nsIDOMSelection> selection;
   if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
-  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
-  if (!ps) return NS_ERROR_NOT_INITIALIZED;
-  result = ps->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
+  nsCOMPtr<nsISelectionController> selcon = do_QueryReferent(mPresShellWeak);
+  if (!selcon) return NS_ERROR_NOT_INITIALIZED;
+  result = selcon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
   if ((NS_SUCCEEDED(result)) && selection)
   {
     // Check whether the selection is collapsed and we should do nothing:

@@ -248,9 +248,9 @@ nsTextServicesDocument::InitWithDocument(nsIDOMDocument *aDOMDocument, nsIPresSh
   if (!aDOMDocument || !aPresShell)
     return NS_ERROR_NULL_POINTER;
 
-  NS_ASSERTION(!mPresShell, "mPresShell already initialized!");
+  NS_ASSERTION(!mSelCon, "mSelCon already initialized!");
 
-  if (mPresShell)
+  if (mSelCon)
     return NS_ERROR_FAILURE;
 
   NS_ASSERTION(!mDOMDocument, "mDOMDocument already initialized!");
@@ -260,7 +260,7 @@ nsTextServicesDocument::InitWithDocument(nsIDOMDocument *aDOMDocument, nsIPresSh
 
   LOCK_DOC(this);
 
-  mPresShell   = do_QueryInterface(aPresShell);
+  mSelCon   = do_QueryInterface(aPresShell);
   mDOMDocument = do_QueryInterface(aDOMDocument);
 
   result = CreateDocumentContentIterator(getter_AddRefs(mIterator));
@@ -284,7 +284,7 @@ NS_IMETHODIMP
 nsTextServicesDocument::InitWithEditor(nsIEditor *aEditor)
 {
   nsresult result = NS_OK;
-  nsCOMPtr<nsIPresShell> presShell;
+  nsCOMPtr<nsISelectionController> selCon;
   nsCOMPtr<nsIDOMDocument> doc;
 
   if (!aEditor)
@@ -292,10 +292,10 @@ nsTextServicesDocument::InitWithEditor(nsIEditor *aEditor)
 
   LOCK_DOC(this);
 
-  // Check to see if we already have an mPresShell. If we do, it
+  // Check to see if we already have an mSelCon. If we do, it
   // better be the same one the editor uses!
 
-  result = aEditor->GetPresShell(getter_AddRefs(presShell));
+  result = aEditor->GetSelectionController(getter_AddRefs(selCon));
 
   if (NS_FAILED(result))
   {
@@ -303,14 +303,14 @@ nsTextServicesDocument::InitWithEditor(nsIEditor *aEditor)
     return result;
   }
 
-  if (!presShell || (mPresShell && presShell != mPresShell))
+  if (!selCon || (mSelCon && selCon != mSelCon))
   {
     UNLOCK_DOC(this);
     return NS_ERROR_FAILURE;
   }
 
-  if (!mPresShell)
-    mPresShell = presShell;
+  if (!mSelCon)
+    mSelCon = selCon;
 
   // Check to see if we already have an mDOMDocument. If we do, it
   // better be the same one the editor uses!
@@ -575,7 +575,7 @@ nsTextServicesDocument::FirstSelectedBlock(TSDBlockSelectionStatus *aSelStatus, 
   *aSelStatus = nsITextServicesDocument::eBlockNotFound;
   *aSelOffset = *aSelLength = -1;
 
-  if (!mPresShell || !mIterator)
+  if (!mSelCon || !mIterator)
   {
     UNLOCK_DOC(this);
     return NS_ERROR_FAILURE;
@@ -584,7 +584,7 @@ nsTextServicesDocument::FirstSelectedBlock(TSDBlockSelectionStatus *aSelStatus, 
   nsCOMPtr<nsIDOMSelection> selection;
   PRBool isCollapsed = PR_FALSE;
 
-  result = mPresShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
+  result = mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
 
   if (NS_FAILED(result))
   {
@@ -1066,7 +1066,7 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus, P
   *aSelStatus = nsITextServicesDocument::eBlockNotFound;
   *aSelOffset = *aSelLength = -1;
 
-  if (!mPresShell || !mIterator)
+  if (!mSelCon || !mIterator)
   {
     UNLOCK_DOC(this);
     return NS_ERROR_FAILURE;
@@ -1075,7 +1075,7 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus, P
   nsCOMPtr<nsIDOMSelection> selection;
   PRBool isCollapsed = PR_FALSE;
 
-  result = mPresShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
+  result = mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
 
   if (NS_FAILED(result))
   {
@@ -1714,7 +1714,7 @@ nsTextServicesDocument::SetSelection(PRInt32 aOffset, PRInt32 aLength)
 {
   nsresult result;
 
-  if (!mPresShell || aOffset < 0 || aLength < 0)
+  if (!mSelCon || aOffset < 0 || aLength < 0)
     return NS_ERROR_FAILURE;
 
   LOCK_DOC(this);
@@ -1735,12 +1735,12 @@ nsTextServicesDocument::ScrollSelectionIntoView()
 {
   nsresult result;
 
-  if (!mPresShell)
+  if (!mSelCon)
     return NS_ERROR_FAILURE;
 
   LOCK_DOC(this);
 
-  result = mPresShell->ScrollSelectionIntoView(SELECTION_NORMAL, SELECTION_FOCUS_REGION);
+  result = mSelCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL, nsISelectionController::SELECTION_FOCUS_REGION);
 
   UNLOCK_DOC(this);
 
@@ -2125,7 +2125,7 @@ nsTextServicesDocument::InsertText(const nsString *aText)
 
       mSelStartIndex = mSelEndIndex = i;
           
-      result = mPresShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
+      result = mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
 
       if (NS_FAILED(result))
       {
@@ -2963,7 +2963,7 @@ nsTextServicesDocument::SetSelectionInternal(PRInt32 aOffset, PRInt32 aLength, P
 {
   nsresult result = NS_OK;
 
-  if (!mPresShell || aOffset < 0 || aLength < 0)
+  if (!mSelCon || aOffset < 0 || aLength < 0)
     return NS_ERROR_FAILURE;
 
   nsIDOMNode *sNode = 0, *eNode = 0;
@@ -3013,7 +3013,7 @@ nsTextServicesDocument::SetSelectionInternal(PRInt32 aOffset, PRInt32 aLength, P
 
   if (aDoUpdate)
   {
-    result = mPresShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
+    result = mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
 
     if (NS_FAILED(result))
       return result;
@@ -3100,7 +3100,7 @@ nsTextServicesDocument::GetSelection(nsITextServicesDocument::TSDBlockSelectionS
   *aSelOffset = -1;
   *aSelLength = -1;
 
-  if (!mDOMDocument || !mPresShell)
+  if (!mDOMDocument || !mSelCon)
     return NS_ERROR_FAILURE;
 
   if (mIteratorStatus == nsTextServicesDocument::eIsDone)
@@ -3109,7 +3109,7 @@ nsTextServicesDocument::GetSelection(nsITextServicesDocument::TSDBlockSelectionS
   nsCOMPtr<nsIDOMSelection> selection;
   PRBool isCollapsed;
 
-  result = mPresShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
+  result = mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
 
   if (NS_FAILED(result))
     return result;
@@ -3143,7 +3143,7 @@ nsTextServicesDocument::GetCollapsedSelection(nsITextServicesDocument::TSDBlockS
   nsresult result;
   nsCOMPtr<nsIDOMSelection> selection;
 
-  result = mPresShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
+  result = mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
 
   if (NS_FAILED(result))
     return result;
@@ -3474,7 +3474,7 @@ nsTextServicesDocument::GetUncollapsedSelection(nsITextServicesDocument::TSDBloc
   nsCOMPtr<nsIDOMRange> range;
   OffsetEntry *entry;
 
-  result = mPresShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
+  result = mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
 
   if (NS_FAILED(result))
     return result;

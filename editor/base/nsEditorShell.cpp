@@ -685,15 +685,12 @@ nsEditorShell::ScrollSelectionIntoView()
 {
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
   if (!editor) return NS_ERROR_NOT_INITIALIZED;
-  nsCOMPtr<nsIPresShell> presShell;
-  nsresult result = editor->GetPresShell(getter_AddRefs(presShell));
-  if (NS_FAILED(result))
-    return result;
-  if (!presShell)
-    return NS_ERROR_NULL_POINTER;
-
-  return presShell->ScrollSelectionIntoView(SELECTION_NORMAL,
-                                            SELECTION_FOCUS_REGION);
+  nsCOMPtr<nsISelectionController> selCon;
+  editor->GetSelectionController(getter_AddRefs(selCon));
+  if (!selCon)
+    return NS_ERROR_UNEXPECTED;
+  return selCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL,
+                                            nsISelectionController::SELECTION_FOCUS_REGION);
 }
 
 NS_IMETHODIMP
@@ -2839,12 +2836,11 @@ nsEditorShell::GetSelectionController(nsISelectionController** aSelectionControl
   if (!editor)
     return NS_ERROR_NOT_INITIALIZED;
 
-  nsCOMPtr<nsIPresShell> presShell;
-  nsresult rv = editor->GetPresShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsISelectionController> selCont;
+  nsresult rv = editor->GetSelectionController(getter_AddRefs(selCont));
   if (NS_FAILED(rv))
     return rv;
 
-  nsCOMPtr<nsISelectionController> selCont (do_QueryInterface(presShell));
   if (!selCont)
     return NS_ERROR_NO_INTERFACE;
   *aSelectionController = selCont;

@@ -36,6 +36,7 @@
 #include "nsFileSpec.h"
 #include "nsILocalFile.h"
 #include "nsIContentViewerFile.h"
+#include "nsISelectionController.h"
 
 static NS_DEFINE_CID(kWindowCID, NS_WINDOW_CID);
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
@@ -439,8 +440,13 @@ LRESULT CMozillaBrowser::OnCut(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& b
 		return NS_ERROR_NOT_INITIALIZED;
 	}
 
-	nsCOMPtr<nsIDOMSelection> selection;						//Get a pointer to the DOM selection
-	res = pIPresShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
+  nsCOMPtr<nsISelectionController> pISelectionController;
+  pISelectionController = do_QueryInterface(pIPresShell);
+	if ( NS_FAILED(res) || !pISelectionController) 
+    return res?res:NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMSelection> selection;						//Get a pointer to the DOM selection
+  res = pISelectionController->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
 	if ( NS_FAILED(res) ) return res;
 	
 	res = pIPresShell->DoCopy();									//Copy the selection to the clipboard

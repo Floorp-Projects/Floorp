@@ -45,7 +45,7 @@ class nsIOutputStream;
 class nsIEditActionListener;
 class nsIDocumentStateListener;
 class nsFileSpec;
-
+class nsISelectionController;
 class nsIEditor  : public nsISupports
 {
 public:
@@ -98,7 +98,15 @@ public:
    *
    * @param aPS [OUT] the pres shell, refcounted
    */
-  NS_IMETHOD GetPresShell(nsIPresShell **aPS)=0;
+  //NS_IMETHOD GetPresShell(nsIPresShell **aPS)=0;
+
+  /**
+   * return the selection controller for the current presentation
+   *
+   * @param aSelCon [OUT] the selection controller, refcounted
+   */
+  NS_IMETHOD GetSelectionController(nsISelectionController **aSel)=0;
+
 
   /** 
    * return the DOM Selection for the presentation shell that has focus

@@ -100,10 +100,10 @@ NS_IMETHODIMP PlaceholderTxn::Undo(void)
   if (NS_FAILED(res)) return res;
   
   // now restore selection
-  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
-  if (!ps) return NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mPresShellWeak);
+  if (!selCon) return NS_ERROR_NOT_INITIALIZED;
   nsCOMPtr<nsIDOMSelection> selection;
-  res = ps->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
+  res = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
   if (!selection) return NS_ERROR_NULL_POINTER;
   if (!mStartSel) return NS_ERROR_NULL_POINTER;
@@ -119,10 +119,10 @@ NS_IMETHODIMP PlaceholderTxn::Redo(void)
   if (NS_FAILED(res)) return res;
   
   // now restore selection
-  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
-  if (!ps) return NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mPresShellWeak);
+  if (!selCon) return NS_ERROR_NOT_INITIALIZED;
   nsCOMPtr<nsIDOMSelection> selection;
-  res = ps->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
+  res = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
   if (!selection) return NS_ERROR_NULL_POINTER;
   res = mEndSel.RestoreSelection(selection);
@@ -272,10 +272,10 @@ NS_IMETHODIMP PlaceholderTxn::Commit()
 
 NS_IMETHODIMP PlaceholderTxn::RememberEndingSelection()
 {
-  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
-  if (!ps) return NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mPresShellWeak);
+  if (!selCon) return NS_ERROR_NOT_INITIALIZED;
   nsCOMPtr<nsIDOMSelection> selection;
-  nsresult res = ps->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
+  nsresult res = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
   if (!selection) return NS_ERROR_NULL_POINTER;
   res = mEndSel.SaveSelection(selection);

@@ -781,7 +781,7 @@ inline nscolor EnsureDifferentColors(nscolor colorA, nscolor colorB)
 class DrawSelectionIterator
 {
   enum {DISABLED_COLOR = NS_RGB(176,176,176)};
-  enum {SELECTION_TYPES_WE_CARE_ABOUT=SELECTION_NONE+SELECTION_NORMAL};
+  enum {SELECTION_TYPES_WE_CARE_ABOUT=nsISelectionController::SELECTION_NONE+nsISelectionController::SELECTION_NORMAL};
 public:
   DrawSelectionIterator(const SelectionDetails *aSelDetails, PRUnichar *aText,
                         PRUint32 aTextLength, nsTextFrame::TextStyle &aTextStyle,
@@ -1002,7 +1002,7 @@ DrawSelectionIterator::CurrentForeGroundColor()
    			colorSet = PR_TRUE;
    		}
   }
-  else if (mTypes[mCurrentIdx] | SELECTION_NORMAL)//Find color based on mTypes[mCurrentIdx];
+  else if (mTypes[mCurrentIdx] | nsISelectionController::SELECTION_NORMAL)//Find color based on mTypes[mCurrentIdx];
   {
     foreColor = mOldStyle.mSelectionTextColor;
    	colorSet = PR_TRUE;
@@ -1026,7 +1026,7 @@ DrawSelectionIterator::CurrentBackGroundColor(nscolor &aColor)
         return PR_TRUE;
       }
   }
-  else if (mTypes[mCurrentIdx] | SELECTION_NORMAL)
+  else if (mTypes[mCurrentIdx] | nsISelectionController::SELECTION_NORMAL)
   {
     aColor = (mSelectionStatus==nsIDocument::SELECTION_ON)?mOldStyle.mSelectionBGColor:mDisabledColor;
     return PR_TRUE;
@@ -1591,7 +1591,7 @@ nsTextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
           }
           switch (aDetails->mType)
           {
-          case SELECTION_NORMAL:
+          case nsISelectionController::SELECTION_NORMAL:
 #if 0
             {
             //using new selectionpainting now
@@ -1612,12 +1612,12 @@ nsTextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
             }
 #endif //0
                                 break;
-           case SELECTION_SPELLCHECK:{
+           case nsISelectionController::SELECTION_SPELLCHECK:{
               aTextStyle.mNormalFont->GetUnderline(offset, size);
               aRenderingContext.SetColor(NS_RGB(255,0,0));
               aRenderingContext.FillRect(aX + startOffset, aY + baseline - offset, textWidth, size);
                                 }break;
-          case SELECTION_IME_SELECTEDRAWTEXT:{
+          case nsISelectionController::SELECTION_IME_SELECTEDRAWTEXT:{
 #ifdef USE_INVERT_FOR_SELECTION
               aRenderingContext.SetColor(NS_RGB(255,255,255));
               aRenderingContext.InvertRect(aX + startOffset, aY, textWidth, rect.height);
@@ -1629,12 +1629,12 @@ nsTextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
               aRenderingContext.SetColor(IME_RAW_COLOR);
               aRenderingContext.FillRect(aX + startOffset+size, aY + baseline - offset, textWidth-2*size, size);
                                 }break;
-          case SELECTION_IME_RAWINPUT:{
+          case nsISelectionController::SELECTION_IME_RAWINPUT:{
               aTextStyle.mNormalFont->GetUnderline(offset, size);
               aRenderingContext.SetColor(IME_RAW_COLOR);
               aRenderingContext.FillRect(aX + startOffset+size, aY + baseline - offset, textWidth-2*size, size);
                                 }break;
-          case SELECTION_IME_SELECTEDCONVERTEDTEXT:{
+          case nsISelectionController::SELECTION_IME_SELECTEDCONVERTEDTEXT:{
 #ifdef USE_INVERT_FOR_SELECTION
               aRenderingContext.SetColor(NS_RGB(255,255,255));
               aRenderingContext.InvertRect(aX + startOffset, aY, textWidth, rect.height);
@@ -1646,7 +1646,7 @@ nsTextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
               aRenderingContext.SetColor(IME_CONVERTED_COLOR);
               aRenderingContext.FillRect(aX + startOffset+size, aY + baseline - offset, textWidth-2*size, size);
                                 }break;
-          case SELECTION_IME_CONVERTEDTEXT:{
+          case nsISelectionController::SELECTION_IME_CONVERTEDTEXT:{
               aTextStyle.mNormalFont->GetUnderline(offset, size);
               aRenderingContext.SetColor(IME_CONVERTED_COLOR);
               aRenderingContext.FillRect(aX + startOffset+size, aY + baseline - offset, textWidth-2*size, size);
@@ -3345,9 +3345,10 @@ nsTextFrame::HandleMultiplePress(nsIPresContext* aPresContext,
   
   nsMouseEvent *me = (nsMouseEvent *)aEvent;
   nsCOMPtr<nsIPresShell> shell;
-
   nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
-
+  nsCOMPtr<nsISelectionController> selCon = do_QueryInterface(shell);
+  if (NS_FAILED(rv) || !shell || !selCon)
+    return rv ?rv:NS_ERROR_FAILURE;
   if (me->clickCount > 2)//triple clicking
   {
     nsCOMPtr<nsIPref>     mPrefs;
@@ -3414,7 +3415,7 @@ nsTextFrame::HandleMultiplePress(nsIPresContext* aPresContext,
       return rv;
 
     nsCOMPtr<nsIDOMSelection> selection;
-    if (NS_SUCCEEDED(shell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection)))){
+    if (NS_SUCCEEDED(selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection)))){
       rv = selection->Collapse(startNode, startOffset);
       if (NS_FAILED(rv))
         return rv;
@@ -3474,7 +3475,7 @@ nsTextFrame::HandleMultiplePress(nsIPresContext* aPresContext,
           return rv;
 
         nsCOMPtr<nsIDOMSelection> selection;
-        if (NS_SUCCEEDED(shell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection)))){
+        if (NS_SUCCEEDED(selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection)))){
           rv = selection->Collapse(startNode,startpos.mContentOffset);
           if (NS_FAILED(rv))
             return rv;

@@ -1497,9 +1497,12 @@ nsWebShell::SelectAll(void)
   nsCOMPtr<nsIPresShell> presShell;
   rv = docViewer->GetPresShell(*getter_AddRefs(presShell));
   if (NS_FAILED(rv) || !presShell) return rv;
+  
+  nsCOMPtr<nsISelectionController> selCon = do_QueryInterface(presShell);
+  if (NS_FAILED(rv) || !selCon) return rv;
 
   nsCOMPtr<nsIDOMSelection> selection;
-  rv = presShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
+  rv = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
   if (NS_FAILED(rv) || !selection) return rv;
 
   // Get the document object

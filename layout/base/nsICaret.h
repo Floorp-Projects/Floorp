@@ -80,29 +80,29 @@ extern nsresult NS_NewCaret(nsICaret** aInstancePtrResult);
 class StCaretHider
 {
 public:
-               StCaretHider(nsIPresShell* aPresShell)
-               : mWasVisible(PR_FALSE), mPresShell(nsnull)
+               StCaretHider(nsISelectionController* aSelCon)
+               : mWasVisible(PR_FALSE), mSelCon(nsnull)
                {
-                 mPresShell = aPresShell;		// addrefs
-                 if (mPresShell)
+                 mSelCon = aSelCon;		// addrefs
+                 if (mSelCon)
                  {
-                   mPresShell->GetCaretEnabled(&mWasVisible);
+                   mSelCon->GetCaretEnabled(&mWasVisible);
                    if (mWasVisible)
-                     mPresShell->SetCaretEnabled(PR_FALSE);
+                     mSelCon->SetCaretEnabled(PR_FALSE);
                  }
                }
                
                ~StCaretHider()
                {
-                 if (mPresShell && mWasVisible)
-                   mPresShell->SetCaretEnabled(PR_TRUE);
+                 if (mSelCon && mWasVisible)
+                   mSelCon->SetCaretEnabled(PR_TRUE);
                  // nsCOMPtr releases mPresShell
                }
 
 protected:
 
     PRBool                  mWasVisible;
-    nsCOMPtr<nsIPresShell>  mPresShell;
+    nsCOMPtr<nsISelectionController>  mSelCon;
 
 };
 

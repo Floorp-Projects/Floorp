@@ -81,6 +81,7 @@
 //focus
 #include "nsIDOMEventReceiver.h" 
 #include "nsIDOMFocusListener.h"
+#include "nsISelectionController.h"
 
 
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
@@ -1023,8 +1024,11 @@ nsresult DocumentViewerImpl::GetDocumentSelection(nsIDOMSelection **aSelection)
 {
   if (!aSelection) return NS_ERROR_NULL_POINTER;
   if (!mPresShell) return NS_ERROR_NOT_INITIALIZED;
-  
-  return mPresShell->GetSelection(SELECTION_NORMAL, aSelection);  
+  nsCOMPtr<nsISelectionController> selcon;
+  selcon = do_QueryInterface(mPresShell);
+  if (selcon) 
+    return selcon->GetSelection(nsISelectionController::SELECTION_NORMAL, aSelection);  
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -1811,10 +1815,14 @@ nsDocViewerFocusListener::Focus(nsIDOMEvent* aEvent)
 
     nsCOMPtr<nsIPresShell> ps;
     result = mDocViewer->GetPresShell(*getter_AddRefs(ps));
-
     if(NS_FAILED(result) || !ps)
       return result?result:NS_ERROR_FAILURE;
-    ps->RepaintSelection(SELECTION_NORMAL);
+
+    nsCOMPtr<nsISelectionController> selcon;
+    selcon = do_QueryInterface(ps,&result);
+    if(NS_FAILED(result) || !selcon)
+      return result?result:NS_ERROR_FAILURE;
+    selcon->RepaintSelection(nsISelectionController::SELECTION_NORMAL);
   }
   return result;
 }
@@ -1841,10 +1849,14 @@ nsDocViewerFocusListener::Blur(nsIDOMEvent* aEvent)
 
     nsCOMPtr<nsIPresShell> ps;
     result = mDocViewer->GetPresShell(*getter_AddRefs(ps));//deref once cause it take a ptr ref
-
     if(NS_FAILED(result) || !ps)
       return result?result:NS_ERROR_FAILURE;
-    ps->RepaintSelection(SELECTION_NORMAL);
+
+    nsCOMPtr<nsISelectionController> selcon;
+    selcon = do_QueryInterface(ps,&result);
+    if(NS_FAILED(result) || !selcon)
+      return result?result:NS_ERROR_FAILURE;
+    selcon->RepaintSelection(nsISelectionController::SELECTION_NORMAL);
   }
   return result;
 }

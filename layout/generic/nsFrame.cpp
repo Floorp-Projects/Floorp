@@ -981,9 +981,9 @@ nsFrame::HandleMultiplePress(nsIPresContext* aPresContext,
     return NS_OK;
   nsCOMPtr<nsIPresShell> shell;
   nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
-   
+  nsCOMPtr<nsISelectionController> selcon = do_QueryInterface(shell); 
 
-  if (NS_SUCCEEDED(rv) && shell) {
+  if (NS_SUCCEEDED(rv) && shell && selcon) {
     nsCOMPtr<nsIRenderingContext> acx;      
     nsCOMPtr<nsIFocusTracker> tracker;
     tracker = do_QueryInterface(shell, &rv);
@@ -1038,7 +1038,7 @@ nsFrame::HandleMultiplePress(nsIPresContext* aPresContext,
           return rv;
 
         nsCOMPtr<nsIDOMSelection> selection;
-        if (NS_SUCCEEDED(shell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection)))){
+        if (NS_SUCCEEDED(selcon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection)))){
           rv = selection->Collapse(startNode,startpos.mContentOffset);
           if (NS_FAILED(rv))
             return rv;

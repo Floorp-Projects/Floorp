@@ -1191,34 +1191,38 @@ nsGfxTextControlFrame::AttributeChanged(nsIPresContext* aPresContext,
   } 
   else if (mEditor && nsHTMLAtoms::readonly == aAttribute) 
   {
-    nsCOMPtr<nsIPresShell> presShell;
-    aPresContext->GetShell(getter_AddRefs(presShell));     
+    nsCOMPtr<nsISelectionController> selCon;
+    mEditor->GetSelectionController(getter_AddRefs(selCon));
+    
     nsresult rv = DoesAttributeExist(nsHTMLAtoms::readonly);
     PRUint32 flags;
     mEditor->GetFlags(&flags);
     if (NS_CONTENT_ATTR_NOT_THERE != rv) 
     { // set readonly
       flags |= nsIHTMLEditor::eEditorReadonlyMask;
-      presShell->SetCaretEnabled(PR_FALSE);
+      selCon->SetCaretEnabled(PR_FALSE);
     }
     else 
     { // unset readonly
       flags &= ~(nsIHTMLEditor::eEditorReadonlyMask);
-      presShell->SetCaretEnabled(PR_TRUE);
+      selCon->SetCaretEnabled(PR_TRUE);
     }    
     mEditor->SetFlags(flags);
   }
   else if (mEditor && nsHTMLAtoms::disabled == aAttribute) 
   {
+    nsCOMPtr<nsISelectionController> selCon;
+    mEditor->GetSelectionController(getter_AddRefs(selCon));
     nsCOMPtr<nsIPresShell> presShell;
-    aPresContext->GetShell(getter_AddRefs(presShell));     
+    presShell = do_QueryInterface(selCon);
+
     nsresult rv = DoesAttributeExist(nsHTMLAtoms::disabled);
     PRUint32 flags;
     mEditor->GetFlags(&flags);
     if (NS_CONTENT_ATTR_NOT_THERE != rv) 
     { // set readonly
       flags |= nsIHTMLEditor::eEditorDisabledMask;
-      presShell->SetCaretEnabled(PR_FALSE);
+      selCon->SetCaretEnabled(PR_FALSE);
       nsCOMPtr<nsIDocument> doc; 
       presShell->GetDocument(getter_AddRefs(doc));
       NS_ASSERTION(doc, "null document");
@@ -1228,7 +1232,7 @@ nsGfxTextControlFrame::AttributeChanged(nsIPresContext* aPresContext,
     else 
     { // unset readonly
       flags &= ~(nsIHTMLEditor::eEditorDisabledMask);
-      presShell->SetCaretEnabled(PR_TRUE);
+      selCon->SetCaretEnabled(PR_TRUE);
       nsCOMPtr<nsIDocument> doc; 
       presShell->GetDocument(getter_AddRefs(doc));
       NS_ASSERTION(doc, "null document");
@@ -3206,6 +3210,9 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
 
   nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
   if (!htmlEditor)  { return NS_ERROR_NO_INTERFACE; }
+  
+  nsCOMPtr<nsISelectionController> selCon;
+  selCon = do_QueryInterface(aPresShell);
 
   nsCOMPtr<nsIPresContext>presContext;
   aPresShell->GetPresContext(getter_AddRefs(presContext));
@@ -3409,13 +3416,15 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
       result = content->GetAttribute(nameSpaceID, nsHTMLAtoms::readonly, resultValue);
       if (NS_CONTENT_ATTR_NOT_THERE != result) {
         flags |= nsIHTMLEditor::eEditorReadonlyMask;
-        aPresShell->SetCaretEnabled(PR_FALSE);
+        if (selCon)
+          selCon->SetCaretEnabled(PR_FALSE);
       }
       result = content->GetAttribute(nameSpaceID, nsHTMLAtoms::disabled, resultValue);
       if (NS_CONTENT_ATTR_NOT_THERE != result) 
       {
         flags |= nsIHTMLEditor::eEditorDisabledMask;
-        aPresShell->SetCaretEnabled(PR_FALSE);
+        if (selCon)
+          selCon->SetCaretEnabled(PR_FALSE);
         nsCOMPtr<nsIDocument>doc = do_QueryInterface(aDoc);
         if (doc) {
           doc->SetDisplaySelection(nsIDocument::SELECTION_OFF);
