@@ -47,7 +47,8 @@
 #include "nsIDocument.h"
 #include "nsIBoxObject.h"
 #include "nsIDOMElement.h"
-#include "nsITreeColumns.h"
+#include "nsITreeBoxObject.h"
+#include "nsIDOMXULTreeElement.h"
 
 //
 // NS_NewTreeColFrame
@@ -108,26 +109,17 @@ nsTreeColFrame::Init(nsIPresContext*  aPresContext,
                      nsIFrame*        aPrevInFlow)
 {
   nsresult rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
-  EnsureTree();
-  if (mTree) {
-    nsCOMPtr<nsITreeColumns> cols;
-    mTree->GetColumns(getter_AddRefs(cols));
-    if (cols)
-      cols->InvalidateColumns();
-  }
+  EnsureColumns();
+  if (mColumns)
+    mColumns->InvalidateColumns();
   return rv;
 }
 
 NS_IMETHODIMP                                                                   
 nsTreeColFrame::Destroy(nsIPresContext* aPresContext)                          
 {
-  EnsureTree();
-  if (mTree) {
-    nsCOMPtr<nsITreeColumns> cols;
-    mTree->GetColumns(getter_AddRefs(cols));
-    if (cols)
-      cols->InvalidateColumns();
-  }
+  if (mColumns)
+    mColumns->InvalidateColumns();
   return nsBoxFrame::Destroy(aPresContext);
 }
 
@@ -137,10 +129,8 @@ nsTreeColFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                                      nsFramePaintLayer aWhichLayer,
                                      nsIFrame**     aFrame)
 {
-  if (! ( mRect.Contains(aPoint) || ( mState & NS_FRAME_OUTSIDE_CHILDREN)) )
-  {
+  if (!(mRect.Contains(aPoint) || (mState & NS_FRAME_OUTSIDE_CHILDREN)))
     return NS_ERROR_FAILURE;
-  }
 
   // If we are in either the first 2 pixels or the last 2 pixels, we're going to
   // do something really strange.  Check for an adjacent splitter.
@@ -201,39 +191,36 @@ nsTreeColFrame::AttributeChanged(nsIPresContext* aPresContext,
                                              aModType);
 
   if (aAttribute == nsHTMLAtoms::width || aAttribute == nsHTMLAtoms::hidden) {
-    // Invalidate the tree.
-    EnsureTree();
-    if (mTree)
-      mTree->Invalidate();
+    EnsureColumns();
+    if (mColumns) {
+      nsCOMPtr<nsITreeBoxObject> tree;
+      mColumns->GetTree(getter_AddRefs(tree));
+      if (tree)
+        tree->Invalidate();
+    }
   }
   else if (aAttribute == nsXULAtoms::ordinal || aAttribute == nsXULAtoms::primary) {
-    EnsureTree();
-    if (mTree) {
-      nsCOMPtr<nsITreeColumns> cols;
-      mTree->GetColumns(getter_AddRefs(cols));
-      if (cols)
-        cols->InvalidateColumns();
-    }
+    EnsureColumns();
+    if (mColumns)
+      mColumns->InvalidateColumns();
   }
 
   return rv;
 }
 
 void
-nsTreeColFrame::EnsureTree()
+nsTreeColFrame::EnsureColumns()
 {
-  if (!mTree && mContent) {
+  if (!mColumns) {
     // Get our parent node.
     nsIContent* parent = mContent->GetParent();
     if (parent) {
       nsIContent* grandParent = parent->GetParent();
-      nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(mContent->GetDocument()));
-      nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(grandParent));
-
-      nsCOMPtr<nsIBoxObject> boxObject;
-      nsDoc->GetBoxObjectFor(elt, getter_AddRefs(boxObject));
-
-      mTree = do_QueryInterface(boxObject);
+      if (grandParent) {
+        nsCOMPtr<nsIDOMXULTreeElement> treeElement = do_QueryInterface(grandParent);
+        if (treeElement)
+          treeElement->GetColumns(getter_AddRefs(mColumns));
+      }
     }
   }
 }
