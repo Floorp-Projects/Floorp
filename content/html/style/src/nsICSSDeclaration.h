@@ -229,10 +229,10 @@ struct nsCSSText : public nsCSSStruct  {
   nsCSSValue mWordSpacing;
   nsCSSValue mLetterSpacing;
   nsCSSValue mDecoration;
-  nsCSSValue mVertAlign;
-  nsCSSValue mTransform;
+  nsCSSValue mVerticalAlign;
+  nsCSSValue mTextTransform;
   nsCSSValue mTextAlign;
-  nsCSSValue mIndent;
+  nsCSSValue mTextIndent;
   nsCSSValue mLineHeight;
   nsCSSValue mWhiteSpace;
 };
