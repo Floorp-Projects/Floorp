@@ -33,6 +33,7 @@ PREFS_EXPORTS = 1
 OBJS=					\
 	.\$(OBJDIR)\globals.obj		\
 	.\$(OBJDIR)\comp.obj		\
+	.\$(OBJDIR)\encoding.obj		\
 	$(NULL)
 
 LINCS=  $(LINCS) \
@@ -75,6 +76,7 @@ include <$(DEPTH)\cck\InitDist.win>
 export:: 
 	$(MAKE_INSTALL) globals.h ..\include
 	$(MAKE_INSTALL) comp.h ..\include
+	$(MAKE_INSTALL) encoding.h ..\include
 
 libs:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib ..\lib
