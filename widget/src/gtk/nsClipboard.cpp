@@ -295,7 +295,7 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
   // Create string data-flavor.
   nsDataFlavor *dataFlavor = new nsDataFlavor();
   // For some reason the XIF data flavor uses text/txt instead of text/plain:
-  dataFlavor->Init("text/txt", "text/txt");
+  dataFlavor->Init(kTextMime, kTextMime);
 
   // Get data out of transferable.
   rv = clipboard->mTransferable->GetTransferData(dataFlavor, 
