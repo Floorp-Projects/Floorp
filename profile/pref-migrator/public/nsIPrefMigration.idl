@@ -22,8 +22,6 @@
 
 #include "nsISupports.idl"
 
-interface nsIWebShellWindow;
-
 %{C++
 
 #define NS_PROFILEMIGRATION_PROGID "component://netscape/profile/migration"
