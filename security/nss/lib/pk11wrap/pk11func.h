@@ -46,6 +46,7 @@
 #include "secmodt.h"
 #include "seccomon.h"
 #include "pkcs7t.h"
+#include "cmsreclist.h"
 
 SEC_BEGIN_PROTOS
 
@@ -353,6 +354,8 @@ CERTCertificate * PK11_FindCertByIssuerAndSN(PK11SlotInfo **slot,
 CERTCertificate * PK11_FindCertAndKeyByRecipientList(PK11SlotInfo **slot,
 	SEC_PKCS7RecipientInfo **array, SEC_PKCS7RecipientInfo **rip,
 				SECKEYPrivateKey**privKey, void *wincx);
+int PK11_FindCertAndKeyByRecipientListNew(NSSCMSRecipient **recipientlist,
+				void *wincx);
 CK_BBOOL PK11_HasAttributeSet( PK11SlotInfo *slot,
 			       CK_OBJECT_HANDLE id,
 			       CK_ATTRIBUTE_TYPE type );

@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: secvfy.c,v 1.2 2000/06/12 23:43:39 chrisk%netscape.com Exp $
+ * $Id: secvfy.c,v 1.3 2000/06/13 21:56:22 chrisk%netscape.com Exp $
  */
 
 #include <stdio.h>

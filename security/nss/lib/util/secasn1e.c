@@ -35,7 +35,7 @@
  * Support for ENcoding ASN.1 data based on BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1e.c,v 1.1 2000/03/31 19:38:58 relyea%netscape.com Exp $
+ * $Id: secasn1e.c,v 1.2 2000/06/13 21:56:37 chrisk%netscape.com Exp $
  */
 
 #include "secasn1.h"
@@ -476,7 +476,7 @@ sec_asn1e_contents_length (const SEC_ASN1Template *theTemplate, void *src,
 			   PRBool *noheaderp)
 {
     unsigned long encode_kind, underlying_kind;
-    PRBool explicit, optional, universal;
+    PRBool explicit, optional, universal, may_stream;
     unsigned long len;
 
     encode_kind = theTemplate->kind;
@@ -492,7 +492,7 @@ sec_asn1e_contents_length (const SEC_ASN1Template *theTemplate, void *src,
 
     PORT_Assert (!(explicit && universal));	/* bad templates */
 
-    /* We have already decided we are not streaming. */
+    may_stream = (encode_kind & SEC_ASN1_MAY_STREAM) ? PR_TRUE : PR_FALSE;
     encode_kind &= ~SEC_ASN1_MAY_STREAM;
 
     /* Just clear this to get it out of the way; we do not need it here */
@@ -548,14 +548,12 @@ sec_asn1e_contents_length (const SEC_ASN1Template *theTemplate, void *src,
 	    if (len == 0 && optional) {
 		*noheaderp = PR_TRUE;
 	    } else if (*noheaderp) {
-		/*
-		 * Okay, *we* do not want to add in a header, but our
-		 * caller still does.
-		 */
+		/* Okay, *we* do not want to add in a header, but our caller still does. */
 		*noheaderp = PR_FALSE;
 	    } else {
-		/*
-		 * XXX The 1 below is the presumed length of the identifier;
+		/* if the inner content exists, our length is
+		 * len(identifier) + len(length) + len(innercontent)
+		 * XXX we currently assume len(identifier) == 1;
 		 * to support a high-tag-number this would need to be smarter.
 		 */
 		len += 1 + SEC_ASN1LengthLength (len);
@@ -661,6 +659,8 @@ sec_asn1e_contents_length (const SEC_ASN1Template *theTemplate, void *src,
 
       default:
 	len = ((SECItem *)src)->len;
+	if (may_stream && len == 0)
+	    len = 1;	/* if we're streaming, we may have a secitem w/len 0 as placeholder */
 	break;
     }
 
@@ -678,6 +678,7 @@ sec_asn1e_write_header (sec_asn1e_state *state)
 {
     unsigned long contents_length;
     unsigned char tag_number, tag_modifiers;
+    PRBool noheader;
 
     PORT_Assert (state->place == beforeHeader);
 
@@ -713,6 +714,29 @@ sec_asn1e_write_header (sec_asn1e_state *state)
       return;
     }
 
+    /*
+     * We are doing a definite-length encoding.  First we have to
+     * walk the data structure to calculate the entire contents length.
+     */
+    contents_length = sec_asn1e_contents_length (state->theTemplate,
+						 state->src, &noheader);
+    /*
+     * We might be told explicitly not to put out a header.
+     * But it can also be the case, via a pushed subtemplate, that
+     * sec_asn1e_contents_length could not know that this field is
+     * really optional.  So check for that explicitly, too.
+     */
+    if (noheader || (contents_length == 0 && state->optional)) {
+	state->place = afterContents;
+	if (state->top->streaming && state->may_stream && state->top->from_buf)
+	    /* we did not find an optional indefinite string, so we don't encode it.
+	     * However, if TakeFromBuf is on, we stop here anyway to give our caller
+	     * a chance to intercept at the same point where we would stop if the
+	     * field were present. */
+	    state->top->status = needBytes;
+	return;
+    }
+
     if (state->top->streaming && state->may_stream
 			      && (state->top->from_buf || !state->is_string)) {
 	/*
@@ -730,26 +754,7 @@ sec_asn1e_write_header (sec_asn1e_state *state)
 		     || state->is_string);
 	tag_modifiers |= SEC_ASN1_CONSTRUCTED;
 	contents_length = 0;
-    } else {
-	PRBool noheader;
-
-	/*
-	 * We are doing a definite-length encoding.  First we have to
-	 * walk the data structure to calculate the entire contents length.
-	 */
-	contents_length = sec_asn1e_contents_length (state->theTemplate,
-						     state->src, &noheader);
-	/*
-	 * We might be told explicitly not to put out a header.
-	 * But it can also be the case, via a pushed subtemplate, that
-	 * sec_asn1e_contents_length could not know that this field is
-	 * really optional.  So check for that explicitly, too.
-	 */
-	if (noheader || (contents_length == 0 && state->optional)) {
-	    state->place = afterContents;
-	    return;
-	}
-    }	
+    }
 
     sec_asn1e_write_identifier_bytes (state, tag_number | tag_modifiers);
     sec_asn1e_write_length_bytes (state, contents_length, state->indefinite);

@@ -1,4 +1,4 @@
-# 
+#
 # The contents of this file are subject to the Mozilla Public
 # License Version 1.1 (the "License"); you may not use this file
 # except in compliance with the License. You may obtain a copy of
@@ -30,15 +30,8 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-CORE_DEPTH = ../..
-DEPTH      = ../..
+# $Id: rules.mk,v 1.2 2000/06/13 21:56:15 chrisk%netscape.com Exp $
+#
 
-DIRS = pkcs7 ssl nss crmf jar \
-    certhigh pk11wrap cryptohi \
-    softoken certdb crypto \
-    util freebl pkcs12 fortcrypt \
-    smime
-#
-# these dirs are not built at the moment
-#
-#NOBUILD_DIRS = jar
+install::
+	$(INSTALL) -m 755 $(SCRIPTS) $(SOURCE_BIN_DIR)

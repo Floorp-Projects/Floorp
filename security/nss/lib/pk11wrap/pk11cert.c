@@ -46,6 +46,7 @@
 #include "hasht.h"
 #include "secoid.h"
 #include "pkcs7t.h"
+#include "cmsreclist.h"
 
 #include "certdb.h"
 #include "secerr.h"
@@ -1478,6 +1479,105 @@ pk11_FindCertObjectByTemplate(PK11SlotInfo **slotPtr,
 /*
  * We're looking for a cert which we have the private key for that's on the
  * list of recipients. This searches one slot.
+ * this is the new version for NSS SMIME code
+ * this stuff should REALLY be in the SMIME code, but some things in here are not public
+ * (they should be!)
+ */
+static CK_OBJECT_HANDLE
+pk11_FindCertObjectByRecipientNew(PK11SlotInfo *slot, NSSCMSRecipient **recipientlist, int *rlIndex)
+{
+    CK_OBJECT_HANDLE certHandle;
+    CK_OBJECT_CLASS certClass = CKO_CERTIFICATE;
+    CK_OBJECT_CLASS peerClass ;
+    CK_ATTRIBUTE searchTemplate[] = {
+	{ CKA_CLASS, NULL, 0 },
+	{ CKA_ISSUER, NULL, 0 },
+	{ CKA_SERIAL_NUMBER, NULL, 0}
+    };
+    int count = sizeof(searchTemplate)/sizeof(CK_ATTRIBUTE);
+    NSSCMSRecipient *ri = NULL;
+    CK_ATTRIBUTE *attrs;
+    int i;
+
+    peerClass = CKO_PRIVATE_KEY;
+    if (!PK11_IsLoggedIn(slot,NULL) && PK11_NeedLogin(slot)) {
+	peerClass = CKO_PUBLIC_KEY;
+    }
+
+    for (i=0; (ri = recipientlist[i]) != NULL; i++) {
+	/* XXXXX fixme - not yet implemented! */
+	if (ri->kind == RLSubjKeyID)
+	    continue;
+
+    	attrs = searchTemplate;
+
+	PK11_SETATTRS(attrs, CKA_CLASS, &certClass,sizeof(certClass)); attrs++;
+	PK11_SETATTRS(attrs, CKA_ISSUER, ri->id.issuerAndSN->derIssuer.data, 
+				ri->id.issuerAndSN->derIssuer.len); attrs++;
+	PK11_SETATTRS(attrs, CKA_SERIAL_NUMBER, 
+	  ri->id.issuerAndSN->serialNumber.data,ri->id.issuerAndSN->serialNumber.len);
+
+	certHandle = pk11_FindObjectByTemplate(slot,searchTemplate,count);
+	if (certHandle != CK_INVALID_KEY) {
+	    CERTCertificate *cert = pk11_fastCert(slot,certHandle,NULL,NULL);
+	    if (PK11_IsUserCert(slot,cert,certHandle)) {
+		/* we've found a cert handle, now let's see if there is a key
+	         * associated with it... */
+		ri->slot = PK11_ReferenceSlot(slot);
+		*rlIndex = i;
+	
+		CERT_DestroyCertificate(cert);       
+		return certHandle;
+	    }
+	    CERT_DestroyCertificate(cert);       
+	}
+    }
+    *rlIndex = -1;
+    return CK_INVALID_KEY;
+}
+
+/*
+ * This function is the same as above, but it searches all the slots.
+ * this is the new version for NSS SMIME code
+ * this stuff should REALLY be in the SMIME code, but some things in here are not public
+ * (they should be!)
+ */
+static CK_OBJECT_HANDLE
+pk11_AllFindCertObjectByRecipientNew(NSSCMSRecipient **recipientlist, void *wincx, int *rlIndex)
+{
+    PK11SlotList *list;
+    PK11SlotListElement *le;
+    CK_OBJECT_HANDLE certHandle = CK_INVALID_KEY;
+    PK11SlotInfo *slot = NULL;
+    SECStatus rv;
+
+    /* get them all! */
+    list = PK11_GetAllTokens(CKM_INVALID_MECHANISM,PR_FALSE,PR_TRUE,wincx);
+    if (list == NULL) {
+	if (list) PK11_FreeSlotList(list);
+    	return CK_INVALID_KEY;
+    }
+
+    /* Look for the slot that holds the Key */
+    for (le = list->head ; le; le = le->next) {
+	if ( !PK11_IsFriendly(le->slot)) {
+	    rv = PK11_Authenticate(le->slot, PR_TRUE, wincx);
+	    if (rv != SECSuccess) continue;
+	}
+
+	certHandle = pk11_FindCertObjectByRecipientNew(le->slot, recipientlist, rlIndex);
+	if (certHandle != CK_INVALID_KEY)
+	    break;
+    }
+
+    PK11_FreeSlotList(list);
+
+    return (le == NULL) ? CK_INVALID_KEY : certHandle;
+}
+
+/*
+ * We're looking for a cert which we have the private key for that's on the
+ * list of recipients. This searches one slot.
  */
 static CK_OBJECT_HANDLE
 pk11_FindCertObjectByRecipient(PK11SlotInfo *slot, 
@@ -1630,6 +1730,63 @@ PK11_FindCertAndKeyByRecipientList(PK11SlotInfo **slotPtr,
 	return NULL;
     }
     return cert;
+}
+
+/*
+ * This is the new version of the above function for NSS SMIME code
+ * this stuff should REALLY be in the SMIME code, but some things in here are not public
+ * (they should be!)
+ */
+int
+PK11_FindCertAndKeyByRecipientListNew(NSSCMSRecipient **recipientlist, void *wincx)
+{
+    CK_OBJECT_HANDLE certHandle = CK_INVALID_KEY;
+    CK_OBJECT_HANDLE keyHandle = CK_INVALID_KEY;
+    SECStatus rv;
+    NSSCMSRecipient *rl;
+    int rlIndex;
+
+    certHandle = pk11_AllFindCertObjectByRecipientNew(recipientlist, wincx, &rlIndex);
+    if (certHandle == CK_INVALID_KEY) {
+	return NULL;
+    }
+
+    rl = recipientlist[rlIndex];
+
+    /* at this point, rl->slot is set */
+
+    /* authenticate to the token */
+    if (PK11_Authenticate(rl->slot, PR_TRUE, wincx) != SECSuccess) {
+	PK11_FreeSlot(rl->slot);
+	rl->slot = NULL;
+	return -1;
+    }
+
+    /* try to get a private key handle for the cert we found */
+    keyHandle = PK11_MatchItem(rl->slot, certHandle, CKO_PRIVATE_KEY);
+    if (keyHandle == CK_INVALID_KEY) { 
+	PK11_FreeSlot(rl->slot);
+	rl->slot = NULL;
+	return -1;
+    }
+
+    /* make a private key out of the handle */
+    rl->privkey = PK11_MakePrivKey(rl->slot, nullKey, PR_TRUE, keyHandle, wincx);
+    if (rl->privkey == NULL) {
+	PK11_FreeSlot(rl->slot);
+	rl->slot = NULL;
+	return -1;
+    }
+    /* make a cert from the cert handle */
+    rl->cert = PK11_MakeCertFromHandle(rl->slot, certHandle, NULL);
+    if (rl->cert == NULL) {
+	PK11_FreeSlot(rl->slot);
+	SECKEY_DestroyPrivateKey(rl->privkey);
+	rl->slot = NULL;
+	rl->privkey = NULL;
+	return NULL;
+    }
+    return rlIndex;
 }
 
 CERTCertificate *
