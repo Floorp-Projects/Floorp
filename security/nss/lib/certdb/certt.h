@@ -33,7 +33,7 @@
 /*
  * certt.h - public data structures for the certificate library
  *
- * $Id: certt.h,v 1.15 2002/03/14 04:12:11 wtc%netscape.com Exp $
+ * $Id: certt.h,v 1.16 2002/03/15 20:21:45 wtc%netscape.com Exp $
  */
 #ifndef _CERTT_H_
 #define _CERTT_H_
@@ -397,14 +397,15 @@ struct CERTCrlKeyStr {
 struct CERTSignedCrlStr {
     PRArenaPool *arena;
     CERTCrl crl;
-    SECItem *derCrl;
-    PRBool reserved;
+    void *reserved1;
+    PRBool reserved2;
     PRBool isperm;
     PRBool istemp;
     int referenceCount;
     CERTCertDBHandle *dbhandle;
     CERTSignedData signatureWrap;	/* XXX */
     char *url;
+    SECItem *derCrl;
     PK11SlotInfo *slot;
     CK_OBJECT_HANDLE pkcs11ID;
 };
