@@ -35,15 +35,13 @@
 #include "nsISecurityContext.h"
 #include "xpgetstr.h"
 #include "lcglue.h"
-#include "nsIServiceManager.h"
-extern nsIServiceManager  *g_pNSIServiceManager;
+
 extern "C" int XP_PROGRESS_STARTING_JAVA;
 extern "C" int XP_PROGRESS_STARTING_JAVA_DONE;
 extern "C" int XP_JAVA_NO_CLASSES;
 extern "C" int XP_JAVA_GENERAL_FAILURE;
 extern "C" int XP_JAVA_STARTUP_FAILED;
 extern "C" int XP_JAVA_DEBUGGER_FAILED;
-
 
 /**
  * Template based Thread Local Storage.
@@ -307,7 +305,7 @@ get_JSPrincipals_from_java_caller_impl(JNIEnv *pJNIEnv, JSContext *pJSContext, v
     }
 
 #endif
-    PR_ASSERT(PR_FALSE);
+    // PR_ASSERT(PR_FALSE);
     return NULL;
 }
 static jobject PR_CALLBACK
