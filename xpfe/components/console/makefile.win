@@ -34,10 +34,10 @@ EXPORTS = \
              $(NULL)
 
 XPIDLSRCS = \
-	nsIConsoleService.idl	\
-	nsIConsoleMessage.idl	\
-	nsIConsoleListener.idl    \
-	nsIScriptError.idl \
+	.\nsIConsoleService.idl	\
+	.\nsIConsoleMessage.idl	\
+	.\nsIConsoleListener.idl    \
+	.\nsIScriptError.idl \
 	$(NULL)
 
 
@@ -51,9 +51,9 @@ LLIBS = \
 
 
 OBJS = \
-	nsConsoleMessage.obj \
-	nsConsoleService.obj \
-	nsConsoleServiceModule.cpp \
+	.\$(OBJDIR)\nsConsoleMessage.obj \
+	.\$(OBJDIR)\nsConsoleService.obj \
+	.\$(OBJDIR)\nsConsoleServiceModule.obj \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
