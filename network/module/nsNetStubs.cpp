@@ -21,14 +21,15 @@
 #include "nspr.h"
 #include "xp_hash.h"
 #include "xp_file.h"
-#include "jsapi.h"
 #include "libi18n.h"
 #include "libevent.h"
 #include "mkgeturl.h"
 #include "net.h"
 
 extern "C" {
+#ifndef XP_PC
 #include "pwcacapi.h"
+#endif
 #include "xp_reg.h"
 #include "secnav.h"
 #include "preenc.h"
@@ -180,7 +181,46 @@ INTL_DestroyCharCodeConverter(CCCDataObject obj)
     MOZ_FUNCTION_STUB;
 }
 
+/*
+ *---------------------------------------------------------------------------
+ * From ns/lib/libi18n/csnamefn.c
+ *---------------------------------------------------------------------------
+ */
+int16
+INTL_CharSetNameToID(char	*charset)
+{
+    MOZ_FUNCTION_STUB;
+    return 0;
+}
 
+
+/*
+ *---------------------------------------------------------------------------
+ * From ns/lib/libi18n/ucs2.c
+ *---------------------------------------------------------------------------
+ */
+uint32    INTL_TextToUnicode(
+    INTL_Encoding_ID encoding,
+    unsigned char*   src,
+    uint32           srclen,
+    INTL_Unicode*    ustr,
+    uint32           ubuflen
+)
+{
+    MOZ_FUNCTION_STUB;
+    return 0;
+}
+
+
+uint32    INTL_TextToUnicodeLen(
+    INTL_Encoding_ID encoding,
+    unsigned char*   src,
+    uint32           srclen
+)
+{
+    MOZ_FUNCTION_STUB;
+    return 0;
+}
 
 /*
  *---------------------------------------------------------------------------
@@ -216,151 +256,6 @@ PUBLIC void INTL_CCCReportMetaCharsetTag(MWContext *context, char *charset_tag)
 {
     MOZ_FUNCTION_STUB;
 }
-
-
-
-/*
- *---------------------------------------------------------------------------
- * From ns/lib/libi18n/intl_csi.c
- *---------------------------------------------------------------------------
- */
-/* ----------- Mime CSID ----------- */
-char *
-INTL_GetCSIMimeCharset (INTL_CharSetInfo c)
-{
-    MOZ_FUNCTION_STUB;
-    return NULL;
-}
-
-/*
- *---------------------------------------------------------------------------
- * From ns/lib/libparse/pa_parse.c
- *---------------------------------------------------------------------------
- */
-
-/*************************************
- * Function: PA_BeginParseMDL
- *
- * Description: The outside world's main access to the parser.
- *      call this when you are going to start parsing
- *      a new document to set up the parsing stream.
- *      This function cannot be called successfully
- *      until PA_ParserInit() has been called.
- *
- * Params: Takes lots of document information that is all
- *     ignored right now, just used the window_id to create
- *     a unique document id.
- *
- * Returns: a pointer to a new NET_StreamClass structure, set up to
- *      give the caller a parsing stream into the parser.
- *      Returns NULL on error.
- *************************************/
-NET_StreamClass *
-PA_BeginParseMDL(FO_Present_Types format_out,
-                 void *init_data, URL_Struct *anchor, MWContext *window_id)
-{
-    MOZ_FUNCTION_STUB;
-    return NULL;
-}
-
-
-
-/*
- *---------------------------------------------------------------------------
- * From ns/security/lib/cert/pcertdb.c
- *---------------------------------------------------------------------------
- */
-
-/*
- * Decode a certificate and enter it into the temporary certificate database.
- * Deal with nicknames correctly
- *
- * nickname is only used if isperm == PR_TRUE
- */
-CERTCertificate *
-CERT_NewTempCertificate(CERTCertDBHandle *handle, SECItem *derCert,
-                        char *nickname, PRBool isperm, PRBool copyDER)
-{
-    MOZ_FUNCTION_STUB;
-    return NULL;
-}
-
-
-/*
- *---------------------------------------------------------------------------
- * From ns/security/lib/cert/certhtml.c
- *---------------------------------------------------------------------------
- */
-char *
-CERT_HTMLCertInfo(CERTCertificate *cert, PRBool showImages, PRBool showIssuer)
-{
-    MOZ_FUNCTION_STUB;
-    return NULL;
-}
-
-
-/*
- *---------------------------------------------------------------------------
- * From ns/security/lib/hash/algmd5.c
- *---------------------------------------------------------------------------
- */
-SECStatus
-MD5_HashBuf(unsigned char *dest, const unsigned char *src, uint32 src_length)
-{
-    MOZ_FUNCTION_STUB;
-    return (SECFailure);
-}
-
-
-void
-SECNAV_HandleInternalSecURL(URL_Struct *url, MWContext *cx)
-{
-    MOZ_FUNCTION_STUB;
-}
-
-
-char *
-SECNAV_MakeCertButtonString(CERTCertificate *cert)
-{
-    MOZ_FUNCTION_STUB;
-    return NULL;
-}
-
-
-
-/*
- *---------------------------------------------------------------------------
- * From ns/modules/security/nav/securl.c
- *---------------------------------------------------------------------------
- */
-
- /*
- * send the data for the given about:security url to the given stream
- */
-int
-SECNAV_SecURLData(char *which, NET_StreamClass *stream, MWContext *cx)
-{
-    MOZ_FUNCTION_STUB;
-    return SECFailure;
-}
-
-
-char *
-SECNAV_SecURLContentType(char *which)
-{
-    MOZ_FUNCTION_STUB;
-    return NULL;
-}
-
-
-int
-SECNAV_SecHandleSecurityAdvisorURL(MWContext *cx, const char *which)
-{
-    MOZ_FUNCTION_STUB;
-    return -1;
-}
-
-
 
 /*
  *---------------------------------------------------------------------------
@@ -521,23 +416,6 @@ void FE_RunNetcaster(MWContext *context)
 {
     MOZ_FUNCTION_STUB;
 }
-
-
-
-
-/*
- *---------------------------------------------------------------------------
- * From ns/lib/libdbm/db.c
- *---------------------------------------------------------------------------
- */
-DB *
-dbopen(const char *fname, int flags,int mode, DBTYPE type, const void *openinfo)
-{
-    MOZ_FUNCTION_STUB;
-    return NULL;
-}
-
-
 
 /*
  *---------------------------------------------------------------------------
@@ -707,52 +585,6 @@ LO_DocumentInfo(MWContext *context, NET_StreamClass *stream)
     return -1;
 }
 
-
-/*
- *---------------------------------------------------------------------------
- * From ns/lib/layout/layobj.c
- *---------------------------------------------------------------------------
- */
-
-/*
- * Create a new stream handler for dealing with a stream of
- * object data.  We don't really want to do anything with
- * the data, we just need to check the type to see if this
- * is some kind of object we can handle.  If it is, we can
- * format the right kind of object, clear the layout blockage,
- * and connect this stream up to its rightful owner.
- * NOTE: Plug-ins are the only object type supported here now.
- */
-NET_StreamClass*
-LO_NewObjectStream(FO_Present_Types format_out, void* type,
-                   URL_Struct* urls, MWContext* context)
-{
-    MOZ_FUNCTION_STUB;
-    return NULL;
-}
-
-
-/*
- *---------------------------------------------------------------------------
- * From ns/lib/layout/editor.cpp
- *---------------------------------------------------------------------------
- */
-
-//
-// Hooked into the GetURL state machine.  We do intermitent processing to
-//  let the layout engine to the initial processing and fetch all the nested
-//  images.
-//
-// Returns: 1 - Done ok, continuing.
-//    0 - Done ok, stopping.
-//   -1 - not done, error.
-//
-intn EDT_ProcessTag(void *data_object, PA_Tag *tag, intn status)
-{
-    MOZ_FUNCTION_STUB;
-    return -1;
-}
-
 #if 1
 
 /*
@@ -770,17 +602,6 @@ IL_Type(const char *buf, int32 len)
     MOZ_FUNCTION_STUB;
     return 0; /* IL_NOTFOUND */
 }
-
-NET_StreamClass *
-IL_NewStream (FO_Present_Types format_out,
-              void *type,
-              URL_Struct *urls,
-              OPAQUE_CONTEXT *cx)
-{
-    MOZ_FUNCTION_STUB;
-    return NULL;
-}
-
 
 /*
  *---------------------------------------------------------------------------
@@ -1002,6 +823,7 @@ SHIST_GetCurrent(History * hist)
     return NULL;
 }
 
+#if 0
 /*
  *---------------------------------------------------------------------------
  * From ns/lib/libpwcac/pwcacapi.c
@@ -1123,6 +945,8 @@ PC_RegisterDataInterpretFunc(char *module, PCDataInterpretFunc *func)
     MOZ_FUNCTION_STUB;
     return -1;
 }
+
+#endif
 
 /*
  *---------------------------------------------------------------------------
@@ -1557,56 +1381,6 @@ ET_PostMessageBox(MWContext* context, char* szMessage, JSBool bConfirm)
     return JS_FALSE;
 }
 
-
-
-/*
- *---------------------------------------------------------------------------
- * From ns/lib/libmocha/et_mocha.c
- *---------------------------------------------------------------------------
- */
-/*
- * A mocha stream from netlib has compeleted, eveluate the contents
- *   and pass them up our stream.  We will take ownership of the 
- *   buf argument and are responsible for freeing it
- */
-void
-ET_MochaStreamComplete(MWContext * pContext, void * buf, int len, 
-                       char *content_type, Bool isUnicode)
-{
-    MOZ_FUNCTION_STUB;
-}
-
-
-/*
- * A mocha stream from netlib has aborted
- */
-void
-ET_MochaStreamAbort(MWContext * context, int status)
-{
-    MOZ_FUNCTION_STUB;
-}
-
-
-/*
- * Evaluate the given script.  I'm sure this is going to need a
- *   callback or compeletion routine
- */
-void
-ET_EvaluateScript(MWContext * pContext, char * buffer, ETEvalStuff * stuff,
-                  ETEvalAckFunc fn)
-{
-    MOZ_FUNCTION_STUB;
-}
-
-
-void
-ET_SetDecoderStream(MWContext * pContext, NET_StreamClass *stream,
-                    URL_Struct *url_struct, JSBool free_stream_on_close)
-{
-    MOZ_FUNCTION_STUB;
-}
-
-
 /*
  * Tell the backend about a new load event.
  */
@@ -1616,58 +1390,6 @@ ET_SendLoadEvent(MWContext * pContext, int32 type, ETVoidPtrFunc fnClosure,
 {
     MOZ_FUNCTION_STUB;
 }
-
-
-/*
- *---------------------------------------------------------------------------
- * From ns/lib/libmocha/lm_init.c
- *---------------------------------------------------------------------------
- */
-
-void
-LM_PutMochaDecoder(MochaDecoder *decoder)
-{
-    MOZ_FUNCTION_STUB;
-}
-
-
-MochaDecoder *
-LM_GetMochaDecoder(MWContext *context)
-{
-    MOZ_FUNCTION_STUB;
-    return NULL;
-}
-
-
-/*
- * Release the JSLock
- */
-void PR_CALLBACK
-LM_UnlockJS()
-{
-    MOZ_FUNCTION_STUB;
-}
-
-
-/*
- * Try to get the JSLock but just return JS_FALSE if we can't
- *   get it, don't wait since we could deadlock
- */
-JSBool PR_CALLBACK
-LM_AttemptLockJS(JSLockReleaseFunc fn, void * data)
-{
-    MOZ_FUNCTION_STUB;
-    return JS_FALSE;
-}
-
-
-JSBool PR_CALLBACK
-LM_ClearAttemptLockJS(JSLockReleaseFunc fn, void * data)
-{
-    MOZ_FUNCTION_STUB;
-    return JS_FALSE;
-}
-
 
 /*
  *---------------------------------------------------------------------------
@@ -1697,370 +1419,6 @@ LM_SendOnHelp(MWContext *context)
 {
     MOZ_FUNCTION_STUB;
 }
-
-
-/*
- *---------------------------------------------------------------------------
- * From ns/lib/libmocha/lm_taint.c
- *---------------------------------------------------------------------------
- */
-char lm_unknown_origin_str[] = "[unknown origin]";
-
-JSPrincipals *
-LM_NewJSPrincipals(URL_Struct *archive, char *id, const char *codebase)
-{
-    MOZ_FUNCTION_STUB;
-    return NULL;
-}
-
-
-/*
- *---------------------------------------------------------------------------
- * From ns/security/lib/util/algrand.c
- *---------------------------------------------------------------------------
- */
-SECStatus
-RNG_GenerateGlobalRandomBytes(void *data, size_t bytes)
-{
-    MOZ_FUNCTION_STUB;
-    return SECFailure;
-}
-
-
-/*
- *---------------------------------------------------------------------------
- * From ns/security/lib/cert/pcertdb.c
- *---------------------------------------------------------------------------
- */
-
-void
-CERT_DestroyCertificate(CERTCertificate *cert)
-{
-    MOZ_FUNCTION_STUB;
-}
-
-
-CERTCertificate *
-CERT_DupCertificate(CERTCertificate *c)
-{
-    MOZ_FUNCTION_STUB;
-    return NULL;
-}
-
-
-
-/*
- *---------------------------------------------------------------------------
- * From ns/security/lib/cert/certdb.c
- *---------------------------------------------------------------------------
- */
-
-CERTCertDBHandle *
-CERT_GetDefaultCertDB(void)
-{
-    MOZ_FUNCTION_STUB;
-    return NULL;
-}
-
-
-
-PRBool
-SECNAV_SecurityDialog(MWContext *context, int state)
-{
-    MOZ_FUNCTION_STUB;
-	return (state == SD_INSECURE_POST_FROM_INSECURE_DOC);
-}
-
-
-/*
- *---------------------------------------------------------------------------
- * From ???
- *---------------------------------------------------------------------------
- */
-
-SECStatus
-SECNAV_ComputeFortezzaProxyChallengeResponse(MWContext *context,
-					     char *asciiChallenge,
-					     char **signature_out,
-					     char **clientRan_out,
-					     char **certChain_out)
-{
-    return(SECFailure);
-}
-
-
-
-unsigned char *
-SECNAV_CopySSLSocketStatus(unsigned char *status)
-{
-    MOZ_FUNCTION_STUB;
-    return(NULL);
-}
-
-unsigned char *
-SECNAV_SSLSocketStatus(PRFileDesc *fd, int *return_security_level)
-{
-    return(NULL);
-}
-
-unsigned int
-SECNAV_SSLSocketStatusLength(unsigned char *status)
-{
-    MOZ_FUNCTION_STUB;
-    return 0;
-}
- 
-char *
-SECNAV_PrettySecurityStatus(int level, unsigned char *status)
-{
-    MOZ_FUNCTION_STUB;
-    return(NULL);
-}
-
-char *
-SECNAV_SSLSocketCertString(unsigned char *status)
-{
-    MOZ_FUNCTION_STUB;
-    return NULL;
-}
-
-PRBool
-SECNAV_CompareCertsForRedirection(unsigned char *status1,
-				  unsigned char *status2)
-{
-    MOZ_FUNCTION_STUB;
-    return(PR_FALSE);
-}
-
-PRBool
-SECNAV_IsPreEncrypted(unsigned char * buf)
-{
-    MOZ_FUNCTION_STUB;
-    return(PR_FALSE);
-}
-
-void
-SECNAV_SetPreencryptedSocket(void *data, PRFileDesc *fd)
-{
-    MOZ_FUNCTION_STUB;
-}
-
-int SECNAV_SetupSecureSocket(PRFileDesc *fd, char *url, MWContext *cx)
-{
-    MOZ_FUNCTION_STUB;
-    return 0;
-}
-
-#if defined(USE_JS_STUBS)
-/*
- *---------------------------------------------------------------------------
- * From ns/js/src/jsapi.c
- *---------------------------------------------------------------------------
- */
-PR_IMPLEMENT(JSBool)
-JS_PropertyStub(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
-{
-    MOZ_FUNCTION_STUB;
-    return JS_TRUE;
-}
-
-
-PR_IMPLEMENT(JSBool)
-JS_EnumerateStub(JSContext *cx, JSObject *obj)
-{
-    MOZ_FUNCTION_STUB;
-    return JS_TRUE;
-}
-
-
-PR_IMPLEMENT(JSBool)
-JS_ResolveStub(JSContext *cx, JSObject *obj, jsval id)
-{
-    MOZ_FUNCTION_STUB;
-    return JS_TRUE;
-}
-
-
-PR_IMPLEMENT(JSBool)
-JS_ConvertStub(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
-{
-    MOZ_FUNCTION_STUB;
-    return JS_FALSE;
-}
-
-
-PR_IMPLEMENT(void)
-JS_FinalizeStub(JSContext *cx, JSObject *obj)
-{
-    MOZ_FUNCTION_STUB;
-}
-
-
-PR_IMPLEMENT(JSBool)
-JS_CallFunctionName(JSContext *cx, JSObject *obj, const char *name, uintN argc,
-                    jsval *argv, jsval *rval)
-{
-    MOZ_FUNCTION_STUB;
-    return FALSE;
-}
-
-
-PR_IMPLEMENT(JSBool)
-JS_EvaluateScript(JSContext *cx, JSObject *obj,
-                  const char *bytes, uintN length,
-                  const char *filename, uintN lineno,
-                  jsval *rval)
-{
-    MOZ_FUNCTION_STUB;
-    return JS_FALSE;
-}
-
-
-PR_IMPLEMENT(JSObject *)
-JS_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
-{
-    MOZ_FUNCTION_STUB;
-    return NULL;
-}
-
-
-PR_IMPLEMENT(JSObject *)
-JS_DefineObject(JSContext *cx, JSObject *obj, const char *name, JSClass *clasp,
-                JSObject *proto, uintN flags)
-{
-    MOZ_FUNCTION_STUB;
-    return NULL;
-}
-
-
-PR_IMPLEMENT(JSBool)
-JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
-{
-    MOZ_FUNCTION_STUB;
-    return JS_FALSE;
-}
-
-
-PR_IMPLEMENT(JSBool)
-JS_DefineProperties(JSContext *cx, JSObject *obj, JSPropertySpec *ps)
-{
-    MOZ_FUNCTION_STUB;
-    return JS_FALSE;
-}
-
-
-PR_IMPLEMENT(JSBool)
-JS_AddRoot(JSContext *cx, void *rp)
-{
-    MOZ_FUNCTION_STUB;
-    return JS_FALSE;
-}
-
-
-PR_IMPLEMENT(JSBool)
-JS_RemoveRoot(JSContext *cx, void *rp)
-{
-    MOZ_FUNCTION_STUB;
-    return JS_FALSE;
-}
-
-
-PR_IMPLEMENT(char *)
-JS_GetStringBytes(JSString *str)
-{
-    MOZ_FUNCTION_STUB;
-    return "";
-}
-
-
-PR_IMPLEMENT(JSString *)
-JS_NewString(JSContext *cx, char *bytes, size_t length)
-{
-    MOZ_FUNCTION_STUB;
-    return NULL;
-}
-
-
-PR_IMPLEMENT(JSString *)
-JS_NewStringCopyZ(JSContext *cx, const char *s)
-{
-    MOZ_FUNCTION_STUB;
-    return NULL;
-}
-
-
-PR_IMPLEMENT(void *)
-JS_GetPrivate(JSContext *cx, JSObject *obj)
-{
-    MOZ_FUNCTION_STUB;
-    return NULL;
-}
-
-
-PR_IMPLEMENT(JSBool)
-JS_SetPrivate(JSContext *cx, JSObject *obj, void *data)
-{
-    MOZ_FUNCTION_STUB;
-    return FALSE;
-}
-
-
-PR_IMPLEMENT(void *)
-JS_GetInstancePrivate(JSContext *cx, JSObject *obj, JSClass *clasp,
-                      jsval *argv)
-{
-    MOZ_FUNCTION_STUB;
-    return NULL;
-}
-
-
-PR_IMPLEMENT(JSBool)
-JS_ValueToBoolean(JSContext *cx, jsval v, JSBool *bp)
-{
-    MOZ_FUNCTION_STUB;
-    return FALSE;
-}
-
-
-PR_IMPLEMENT(JSBool)
-JS_ValueToInt32(JSContext *cx, jsval v, int32 *ip)
-{
-    MOZ_FUNCTION_STUB;
-    return FALSE;
-}
-
-
-PR_IMPLEMENT(JSString *)
-JS_ValueToString(JSContext *cx, jsval v)
-{
-    MOZ_FUNCTION_STUB;
-    return NULL;
-}
-
-
-PR_IMPLEMENT(JSErrorReporter)
-JS_SetErrorReporter(JSContext *cx, JSErrorReporter er)
-{
-    MOZ_FUNCTION_STUB;
-    return NULL;
-}
-
-
-PR_IMPLEMENT(JSBool)
-JS_InitStandardClasses(JSContext *cx, JSObject *obj)
-{
-    MOZ_FUNCTION_STUB;
-    return FALSE;
-}
-
-
-PR_IMPLEMENT(void)
-JS_GC(JSContext *cx)
-{
-    MOZ_FUNCTION_STUB;
-}
-
-#endif /* !USE_JS_STUBS */
 
 /*
  *---------------------------------------------------------------------------
@@ -2212,7 +1570,6 @@ void LO_SetBaseURL( MWContext *context, char *pURL )
     MOZ_FUNCTION_STUB;
 }
 
-
 /*
  *---------------------------------------------------------------------------
  * From ns/lib/layout/laysel.c
@@ -2226,78 +1583,6 @@ LO_getNextTabableElement( MWContext *context, LO_TabFocusData *pCurrentFocus, in
 {
     MOZ_FUNCTION_STUB;
     return FALSE;
-}
-
-#if 0
-/*
- *---------------------------------------------------------------------------
- * From ns/lib/layout/laygrid.c
- *---------------------------------------------------------------------------
- */
-lo_GridCellRec *
-lo_ContextToCell(MWContext *context, Bool reconnect, lo_GridRec **grid_ptr)
-{
-    MOZ_FUNCTION_STUB;
-    return NULL;
-}
-
-#endif 
-
-/*
- *---------------------------------------------------------------------------
- * From ns/modules/libfont/src/wfStream.cpp
- *---------------------------------------------------------------------------
- */
-
-char *
-/*ARGSUSED*/
-NF_AboutFonts(MWContext *context, const char *which)
-{
-    MOZ_FUNCTION_STUB;
-
-    return NULL;
-}
-
-
-/*
- *---------------------------------------------------------------------------
- * From ns/lib/libi18n/csnamefn.c
- *---------------------------------------------------------------------------
- */
-int16
-INTL_CharSetNameToID(char	*charset)
-{
-    MOZ_FUNCTION_STUB;
-    return 0;
-}
-
-
-/*
- *---------------------------------------------------------------------------
- * From ns/lib/libi18n/ucs2.c
- *---------------------------------------------------------------------------
- */
-uint32    INTL_TextToUnicode(
-    INTL_Encoding_ID encoding,
-    unsigned char*   src,
-    uint32           srclen,
-    INTL_Unicode*    ustr,
-    uint32           ubuflen
-)
-{
-    MOZ_FUNCTION_STUB;
-    return 0;
-}
-
-
-uint32    INTL_TextToUnicodeLen(
-    INTL_Encoding_ID encoding,
-    unsigned char*   src,
-    uint32           srclen
-)
-{
-    MOZ_FUNCTION_STUB;
-    return 0;
 }
 
 /*
@@ -2333,100 +1618,9 @@ NET_ParseNetHelpURL(URL_Struct *URL_s)
 	return -207;
 }
 
-
-/* Enable or disable the prefetching, called from NET_SetupPrefs in mkgeturl.c */
-PUBLIC void
-PRE_Enable(XP_Bool enabled)
-{
-	MOZ_FUNCTION_STUB;
-}
-
-
-
-CERTCertificate *
-SSL_PeerCertificate(PRFileDesc *fd)
-{
-	MOZ_FUNCTION_STUB;
-    return(NULL);
-}
-
-
-int
-SSL_SetSockPeerID(PRFileDesc *fd, char *peerID)
-{
-	MOZ_FUNCTION_STUB;
-    return(0);
-}
-
-
-int
-SSL_SecurityStatus(PRFileDesc *fd, int *on, char **cipher,
-		   int *keySize, int *secretKeySize,
-		   char **issuer, char **subject)
-{
-	MOZ_FUNCTION_STUB;
-    return(0);
-}
-
-SECStatus SSL_ConfigSockd(PRFileDesc *fd, unsigned long addr,
-				 short port)
-{
-	MOZ_FUNCTION_STUB;
-    return (SECFailure);
-}
-
-SECStatus SSL_Enable(PRFileDesc *fd, int which, PRBool on)
-{
-	MOZ_FUNCTION_STUB;
-    return (SECFailure);
-}
-
-int SSL_ForceHandshake(PRFileDesc *fd)
-{
-	MOZ_FUNCTION_STUB;
-    return (0);
-}
-
-PRFileDesc *SSL_ImportFD(PRFileDesc *model, PRFileDesc *fd)
-{
-	MOZ_FUNCTION_STUB;
-    return (NULL);
-}
-
-SECStatus SSL_ResetHandshake(PRFileDesc *fd, PRBool asServer)
-{
-	MOZ_FUNCTION_STUB;
-    return (SECFailure);
-}
-
-/* convert an existing file header to one suitable for streaming out */
-PEHeader *SSL_PreencryptedFileToStream(PRFileDesc *fd, PEHeader *header,
-                                       int *headerSize)
-{
- 	MOZ_FUNCTION_STUB;
-    return (NULL);
-}
-
-void
-SECNAV_HTTPHead(PRFileDesc *fd)
-{
-	MOZ_FUNCTION_STUB;
-}
-
-
-void
-SECNAV_Posting(PRFileDesc *fd)
-{
-	MOZ_FUNCTION_STUB;
-}
-
-
-PRBool
-CERT_CompareCertsForRedirection(CERTCertificate *c1, CERTCertificate *c2)
-{
-	MOZ_FUNCTION_STUB;
-    return(PR_FALSE);
-}
+/*
+ * From xp_str.c
+ */
 
 /*	Allocate a new copy of a block of binary data, and returns it
  */
