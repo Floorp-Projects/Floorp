@@ -19,7 +19,7 @@ DEPTH	= ..\..\..
 ## Include support for MOZ_LITE/MOZ_MEDIUM
 include <$(DEPTH)/config/liteness.mak>
 
-DIRS    = prefuuid nsdlg nsprefui brpref \
+DIRS    = prefuuid nsdlg nsprefui brpref winpref \
 !ifdef EDITOR
     edpref \
 !endif

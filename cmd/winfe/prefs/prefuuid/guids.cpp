@@ -34,6 +34,7 @@
 
 #include "prefuiid.h"
 #include "brprefid.h"
+#include "wprefid.h"
 #ifdef MOZ_LOC_INDEP
 #include "liprefid.h"
 #endif
