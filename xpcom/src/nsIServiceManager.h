@@ -123,7 +123,7 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 // Interface to Global Services
 
-class NS_COM NSServiceManager {
+class NS_COM nsServiceManager {
 public:
     static nsresult GetService(const nsCID& aClass, const nsIID& aIID,
                                nsISupports* *result,
