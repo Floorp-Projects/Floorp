@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.90 2005/02/11 18:52:24 travis%sedsystems.ca Exp $ -->
+<!-- $Id: installation.xml,v 1.91 2005/02/17 15:10:53 mkanat%kerio.com Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -1319,7 +1319,7 @@ c:\perl\bin\perl.exe -xc:\bugzilla -wT "%s" %s
       </para>
       <para>
         <screen>AddType application/vnd.mozilla.xul+xml .xul
-AddType text/xml .rdf</screen>
+AddType application/rdf+xml .rdf</screen>
       </para>
     </section>    
   </section>
