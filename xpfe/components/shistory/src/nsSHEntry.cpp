@@ -258,20 +258,34 @@ NS_IMETHODIMP nsSHEntry::SetExpirationStatus(PRBool  aFlag)
    return NS_OK;
 }
 
+NS_IMETHODIMP nsSHEntry::GetContentType(nsACString& aContentType)
+{
+  aContentType = mContentType;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsSHEntry::SetContentType(const nsACString& aContentType)
+{
+  mContentType = aContentType;
+  return NS_OK;
+}
+
 NS_IMETHODIMP
-nsSHEntry::Create(nsIURI * aURI, const PRUnichar * aTitle, nsIDOMDocument * aDOMDocument,
-			         nsIInputStream * aInputStream, nsILayoutHistoryState * aHistoryLayoutState,
-               nsISupports * aCacheKey)
+nsSHEntry::Create(nsIURI * aURI, const PRUnichar * aTitle,
+                  nsIDOMDocument * aDOMDocument, nsIInputStream * aInputStream,
+                  nsILayoutHistoryState * aHistoryLayoutState,
+                  nsISupports * aCacheKey, const nsACString& aContentType)
 {
   SetURI(aURI);
-	SetTitle(aTitle);
-	SetDocument(aDOMDocument);
-	SetPostData(aInputStream);
-	SetLayoutHistoryState(aHistoryLayoutState);
-	SetCacheKey(aCacheKey);
-
+  SetTitle(aTitle);
+  SetDocument(aDOMDocument);
+  SetPostData(aInputStream);
+  SetLayoutHistoryState(aHistoryLayoutState);
+  SetCacheKey(aCacheKey);
+  SetContentType(aContentType);
+    
   // Set the LoadType by default to loadHistory during creation
-	SetLoadType((PRInt32)nsIDocShellLoadInfo::loadHistory);
+  SetLoadType((PRInt32)nsIDocShellLoadInfo::loadHistory);
 
   // By default all entries are set false for subframe flag. 
   // nsDocShell::CloneAndReplace() which creates entries for

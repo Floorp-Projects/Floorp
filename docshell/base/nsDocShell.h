@@ -231,6 +231,7 @@ protected:
     virtual nsresult DoURILoad(nsIURI * aURI,
                                nsIURI * aReferrer,
                                nsISupports * aOwner,
+                               const char * aTypeHint,
                                nsIInputStream * aPostData,
                                nsIInputStream * aHeadersData,
                                PRBool firstParty,

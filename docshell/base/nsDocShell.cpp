@@ -27,6 +27,7 @@
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMNSDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDocumentViewer.h"
 #include "nsIDocumentLoaderFactory.h"
@@ -724,6 +725,7 @@ nsDocShell::LoadURI(nsIURI * aURI,
                           owner,
                           inheritOwner,
                           target.get(),
+                          nsnull,         // No type hint
                           postStream,
                           headersStream,
                           loadType,
@@ -2744,16 +2746,30 @@ nsDocShell::Reload(PRUint32 aReloadFlags)
       return NS_OK;
     
     /* If you change this part of code, make sure bug 45297 does not re-occur */
-    if (mOSHE)
+    if (mOSHE) {
         rv = LoadHistoryEntry(mOSHE, type);
-    else if (mLSHE)              // In case a reload happened before the current load is done
+    }
+    else if (mLSHE) { // In case a reload happened before the current load is done
         rv = LoadHistoryEntry(mLSHE, type);
-    else
+    }
+    else {
+        nsAutoString contentTypeHint;
+        nsCOMPtr<nsIDOMWindow> window(do_GetInterface((nsIDocShell*)this));
+        if (window) {
+            nsCOMPtr<nsIDOMDocument> document;
+            window->GetDocument(getter_AddRefs(document));
+            nsCOMPtr<nsIDOMNSDocument> doc(do_QueryInterface(document));
+            if (doc) {
+                doc->GetContentType(contentTypeHint);
+            }
+        }
+
         rv = InternalLoad(mCurrentURI,
                           mReferrerURI,
                           nsnull,         // No owner
                           PR_TRUE,        // Inherit owner from document
                           nsnull,         // No window target
+                          NS_LossyConvertUCS2toASCII(contentTypeHint).get(),
                           nsnull,         // No post data
                           nsnull,         // No headers data
                           type,           // Load type
@@ -2761,6 +2777,8 @@ nsDocShell::Reload(PRUint32 aReloadFlags)
                           PR_TRUE,
                           nsnull,         // No nsIDocShell
                           nsnull);        // No nsIRequest
+    }
+    
     return rv;
 }
 
@@ -4877,6 +4895,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                          nsISupports * aOwner,
                          PRBool aInheritOwner,
                          const PRUnichar *aWindowTarget,
+                         const char* aTypeHint,
                          nsIInputStream * aPostData,
                          nsIInputStream * aHeadersData,
                          PRUint32 aLoadType,
@@ -5043,6 +5062,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                                               owner,
                                               aInheritOwner,
                                               nsnull,         // No window target
+                                              aTypeHint,
                                               aPostData,
                                               aHeadersData,
                                               aLoadType,
@@ -5218,8 +5238,8 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     // been called. 
     mLSHE = aSHEntry;
 
-    rv = DoURILoad(aURI, aReferrer, owner, aPostData, aHeadersData, firstParty,
-                   aDocShell, aRequest);
+    rv = DoURILoad(aURI, aReferrer, owner, aTypeHint, aPostData, aHeadersData,
+                   firstParty, aDocShell, aRequest);
 
     if (NS_FAILED(rv)) {
         DisplayLoadError(rv, aURI, nsnull);
@@ -5272,6 +5292,7 @@ nsresult
 nsDocShell::DoURILoad(nsIURI * aURI,
                       nsIURI * aReferrerURI,
                       nsISupports * aOwner,
+                      const char * aTypeHint,
                       nsIInputStream * aPostData,
                       nsIInputStream * aHeadersData,
                       PRBool firstParty,
@@ -5324,7 +5345,10 @@ nsDocShell::DoURILoad(nsIURI * aURI,
     }
 
     channel->SetOriginalURI(aURI);
-
+    if (aTypeHint && *aTypeHint) {
+        channel->SetContentType(nsDependentCString(aTypeHint));
+    }
+    
     //hack
     nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
     nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal(do_QueryInterface(channel));
@@ -6088,6 +6112,7 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI,
     nsCOMPtr<nsISupports> cacheToken;
     PRBool expired = PR_FALSE;
     PRBool discardLayoutState = PR_FALSE;
+    nsCAutoString contentType;
     if (aChannel) {
         nsCOMPtr<nsICachingChannel>
             cacheChannel(do_QueryInterface(aChannel));
@@ -6113,6 +6138,7 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI,
 
             discardLayoutState = ShouldDiscardLayoutState(httpChannel);
         }
+        aChannel->GetContentType(contentType);
     }
 
     //Title is set in nsDocShell::SetTitle()
@@ -6121,7 +6147,8 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI,
                   nsnull,       // DOMDocument
                   inputStream,  // Post data stream
                   nsnull,       // LayoutHistory state
-                  cacheKey);    // CacheKey
+                  cacheKey,     // CacheKey
+                  contentType); // Content-type
     entry->SetReferrerURI(referrerURI);
     /* If cache got a 'no-store', ask SH not to store
      * HistoryLayoutState. By default, SH will set this
@@ -6193,6 +6220,7 @@ nsDocShell::LoadHistoryEntry(nsISHEntry * aEntry, PRUint32 aLoadType)
     nsCOMPtr<nsIURI> uri;
     nsCOMPtr<nsIInputStream> postData;
     nsCOMPtr<nsIURI> referrerURI;
+    nsCAutoString contentType;
 
     NS_ENSURE_TRUE(aEntry, NS_ERROR_FAILURE);
     nsCOMPtr<nsIHistoryEntry> hEntry(do_QueryInterface(aEntry));
@@ -6203,6 +6231,7 @@ nsDocShell::LoadHistoryEntry(nsISHEntry * aEntry, PRUint32 aLoadType)
                       NS_ERROR_FAILURE);
     NS_ENSURE_SUCCESS(aEntry->GetPostData(getter_AddRefs(postData)),
                       NS_ERROR_FAILURE);
+    NS_ENSURE_SUCCESS(aEntry->GetContentType(contentType), NS_ERROR_FAILURE);
 
     /* If there is a valid postdata *and* the user pressed
      * reload or shift-reload, take user's permission before we  
@@ -6234,16 +6263,17 @@ nsDocShell::LoadHistoryEntry(nsISHEntry * aEntry, PRUint32 aLoadType)
 
     rv = InternalLoad(uri,
                       referrerURI,
-                      nsnull,       // No owner
-                      PR_FALSE,     // Do not inherit owner from document (security-critical!)
-                      nsnull,       // No window target
-                      postData,     // Post data stream
-                      nsnull,       // No headers stream
-                      aLoadType,    // Load type
-                      aEntry,       // SHEntry
+                      nsnull,            // No owner
+                      PR_FALSE,          // Do not inherit owner from document (security-critical!)
+                      nsnull,            // No window target
+                      contentType.get(), // Type hint
+                      postData,          // Post data stream
+                      nsnull,            // No headers stream
+                      aLoadType,         // Load type
+                      aEntry,            // SHEntry
                       PR_TRUE,
-                      nsnull,       // No nsIDocShell
-                      nsnull);      // No nsIRequest
+                      nsnull,            // No nsIDocShell
+                      nsnull);           // No nsIRequest
     return rv;
 }
 
