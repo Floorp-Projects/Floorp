@@ -95,7 +95,7 @@ NS_IMETHODIMP
   NS_ENSURE_ARG_POINTER(_retval);
   nsStringKey nameKey(aName);
   *_retval = NS_STATIC_CAST(nsIVariant *, mProperties->Get(&nameKey));
-  return NS_OK;
+  return *_retval ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP

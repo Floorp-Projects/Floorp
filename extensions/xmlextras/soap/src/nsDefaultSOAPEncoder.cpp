@@ -46,6 +46,7 @@
 #include "nsPrintfCString.h"
 #include "nsISOAPPropertyBagMutator.h"
 #include "nsIPropertyBag.h"
+#include "nsSupportsArray.h"
 
 NS_NAMED_LITERAL_STRING(kEmpty, "");
 
@@ -490,8 +491,139 @@ NS_IMETHODIMP
   return NS_ERROR_FAILURE;
 }
 
-//  Implement complex types with property bags here.
-//  Look at the types as we do it later.
+static nsresult EncodeStructParticle(nsISOAPEncoding* aEncoding, nsIPropertyBag* aPropertyBag, 
+                               nsISchemaParticle* aParticle, 
+                               nsISOAPAttachments * aAttachments, nsIDOMElement* aDestination)
+{
+  nsresult rc;
+  if (aParticle) {
+    PRUint32 minOccurs;
+    rc = aParticle->GetMinOccurs(&minOccurs);
+    if (NS_FAILED(rc))
+      return rc;
+    PRUint32 maxOccurs;
+    rc = aParticle->GetMaxOccurs(&maxOccurs);
+    if (NS_FAILED(rc))
+      return rc;
+    PRUint16 particleType;
+    rc = aParticle->GetParticleType(&particleType);
+    if (NS_FAILED(rc))
+      return rc;
+    switch(particleType) {
+      case nsISchemaParticle::PARTICLE_TYPE_ELEMENT: {
+        if (maxOccurs > 1) {  //  Todo: Try to make this thing work as an array?
+          return NS_ERROR_NOT_AVAILABLE; //  For now, we just try something else if we can (recoverable)
+        }
+        nsCOMPtr<nsISchemaElement> element = do_QueryInterface(aParticle);
+	nsAutoString name;
+	rc = element->GetTargetNamespace(name);
+        if (NS_FAILED(rc))
+          return rc;
+	if (!name.IsEmpty()) {
+          rc = NS_ERROR_NOT_AVAILABLE; //  No known way to use namespace qualification in struct
+	}
+	else {
+	  rc = element->GetName(name);
+          if (NS_FAILED(rc))
+            return rc;
+	  rc = element->GetName(name);
+          if (NS_FAILED(rc))
+            return rc;
+          nsCOMPtr<nsISchemaType> type;
+          rc = element->GetType(getter_AddRefs(type));
+          if (NS_FAILED(rc))
+            return rc;
+	  nsCOMPtr<nsIVariant> value;
+	  rc = aPropertyBag->GetProperty(name, getter_AddRefs(value));
+	  if (!NS_FAILED(rc)) {
+	    nsCOMPtr<nsIDOMElement> dummy;
+	    rc = aEncoding->Encode(value, kEmpty, name, type, aAttachments, aDestination, getter_AddRefs(dummy));
+            if (NS_FAILED(rc))
+              return rc;
+	  }
+	}
+        if (minOccurs == 0
+          && rc == NS_ERROR_NOT_AVAILABLE)  //  If we succeeded or failed recoverably, but we were permitted to, then return success
+          rc = NS_OK;
+	return rc;
+      }
+      case nsISchemaParticle::PARTICLE_TYPE_MODEL_GROUP: 
+      {
+        if (maxOccurs > 1) {  //  Todo: Try to make this thing work as an array?
+          return NS_ERROR_NOT_AVAILABLE; //  For now, we just try something else if we can (recoverable)
+        }
+        nsCOMPtr<nsISchemaModelGroup> modelGroup = do_QueryInterface(aParticle);
+        PRUint16 compositor;
+        rc = modelGroup->GetCompositor(&compositor);
+        if (NS_FAILED(rc))
+          return rc;
+        PRUint32 particleCount;
+        rc = modelGroup->GetParticleCount(&particleCount);
+        if (NS_FAILED(rc))
+          return rc;
+        for (PRUint32 i = 0; i < particleCount; i++) {
+          nsCOMPtr<nsISchemaParticle> child;
+          rc = modelGroup->GetParticle(i, getter_AddRefs(child));
+          if (NS_FAILED(rc))
+            return rc;
+          rc = EncodeStructParticle(aEncoding, aPropertyBag, child, aAttachments, aDestination);
+	  if (compositor == nsISchemaModelGroup::COMPOSITOR_CHOICE) {
+            if (!NS_FAILED(rc)) {
+              return NS_OK;
+	    }
+	    if (rc == NS_ERROR_NOT_AVAILABLE) {  //  In a choice, recoverable model failures are OK.
+              rc = NS_OK;
+	    }
+	  }
+	  else if (i > 0 && rc == NS_ERROR_NOT_AVAILABLE) {  //  This detects ambiguous model (non-deterministic choice which fails after succeeding on first)
+            rc = NS_ERROR_ILLEGAL_VALUE;                  //  Error is not considered recoverable due to partially-created output.
+	  }
+          if (NS_FAILED(rc))
+            break;
+        }
+	if (compositor == nsISchemaModelGroup::COMPOSITOR_CHOICE)  //  If choice selected nothing, this is recoverable failure
+          rc = NS_ERROR_NOT_AVAILABLE;
+        if (minOccurs == 0
+          && rc == NS_ERROR_NOT_AVAILABLE)  //  If we succeeded or failed recoverably, but we were permitted to, then return success
+          rc = NS_OK;
+	return rc;                    //  Return status
+      }
+      case nsISchemaParticle::PARTICLE_TYPE_ANY:
+//  No model available here (we may wish to handle strict versus lazy, but what does that mean with only local accessor names)
+      default:
+        break;
+    }
+  }
+
+  nsCOMPtr<nsISimpleEnumerator> e;
+  aPropertyBag->GetEnumerator(getter_AddRefs(e));
+  PRBool more;
+  rc = e->HasMoreElements(&more);
+  if (NS_FAILED(rc))
+    return rc;
+  while (more) {
+    nsCOMPtr<nsIProperty> p;
+    rc = e->GetNext(getter_AddRefs(p));
+    if (NS_FAILED(rc))
+      return rc;
+    nsAutoString name;
+    rc = p->GetName(name);
+    if (NS_FAILED(rc))
+      return rc;
+    nsCOMPtr<nsIVariant>value;
+    rc = p->GetValue(getter_AddRefs(value));
+    if (NS_FAILED(rc))
+      return rc;
+    nsCOMPtr<nsIDOMElement>result;
+    rc = aEncoding->Encode(value,kEmpty,name,nsnull,aAttachments,aDestination,getter_AddRefs(result));
+    if (NS_FAILED(rc))
+      return rc;
+    rc = e->HasMoreElements(&more);
+    if (NS_FAILED(rc))
+      return rc;
+  }
+  return NS_OK;
+}
 
 NS_IMETHODIMP
     nsStructEncoder::Encode(nsISOAPEncoding * aEncoding,
@@ -510,6 +642,15 @@ NS_IMETHODIMP
     return rc;
   nsCOMPtr<nsIPropertyBag>pbptr = do_QueryInterface(ptr);
   if (pbptr) {  //  Do any object that can QI to a property bag.
+    nsCOMPtr<nsISchemaModelGroup>modelGroup;
+    if (aSchemaType) {
+      nsCOMPtr<nsISchemaComplexType>ctype = do_QueryInterface(aSchemaType);
+      if (ctype) {
+        rc = ctype->GetModelGroup(getter_AddRefs(modelGroup));
+        if (NS_FAILED(rc))
+          return rc;
+      }
+    }
     if (aName.IsEmpty()) {
       rc = EncodeSimpleValue(kEmpty,
                              *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
@@ -523,34 +664,7 @@ NS_IMETHODIMP
     }
     if (NS_FAILED(rc))
       return rc;
-    nsCOMPtr<nsISimpleEnumerator> e;
-    pbptr->GetEnumerator(getter_AddRefs(e));
-    PRBool more;
-    rc = e->HasMoreElements(&more);
-    if (NS_FAILED(rc))
-      return rc;
-    while (more) {
-      nsCOMPtr<nsIProperty> p;
-      rc = e->GetNext(getter_AddRefs(p));
-      if (NS_FAILED(rc))
-        return rc;
-      nsAutoString name;
-      rc = p->GetName(name);
-      if (NS_FAILED(rc))
-        return rc;
-      nsCOMPtr<nsIVariant>value;
-      rc = p->GetValue(getter_AddRefs(value));
-      if (NS_FAILED(rc))
-        return rc;
-      nsCOMPtr<nsIDOMElement>result;
-      rc = aEncoding->Encode(value,kEmpty,name,nsnull,aAttachments,*aReturnValue,getter_AddRefs(result));
-      if (NS_FAILED(rc))
-        return rc;
-      rc = e->HasMoreElements(&more);
-      if (NS_FAILED(rc))
-        return rc;
-    }
-    return NS_OK;
+    return EncodeStructParticle(aEncoding, pbptr, modelGroup, aAttachments, *aReturnValue);
   }
   return NS_ERROR_FAILURE;
 }
@@ -1315,22 +1429,199 @@ NS_IMETHODIMP
   return NS_ERROR_FAILURE;
 }
 
-//  Here we have a complex value, so produce a property bag.  Implement type-driven
-//  decoding later.
-
-NS_IMETHODIMP
-    nsStructEncoder::Decode(nsISOAPEncoding * aEncoding,
-                             nsIDOMElement * aSource,
-                             nsISchemaType * aSchemaType,
-                             nsISOAPAttachments * aAttachments,
-                             nsIVariant ** _retval)
+static nsresult DecodeStructParticle(nsISOAPEncoding* aEncoding, nsIDOMElement* aElement, 
+                               nsISchemaParticle* aParticle, 
+                               nsISOAPAttachments * aAttachments, nsISOAPPropertyBagMutator* aDestination,
+			       nsIDOMElement** _retElement)
 {
   nsresult rc;
-  nsCOMPtr<nsISOAPPropertyBagMutator> c = do_CreateInstance(NS_SOAPPROPERTYBAGMUTATOR_CONTRACTID, &rc);
-  if (NS_FAILED(rc))
-    return rc;
-  nsCOMPtr<nsIDOMElement> child;
-  nsSOAPUtils::GetFirstChildElement(aSource, getter_AddRefs(child));
+  *_retElement = nsnull;
+  if (aParticle) {
+    PRUint32 minOccurs;
+    rc = aParticle->GetMinOccurs(&minOccurs);
+    if (NS_FAILED(rc))
+      return rc;
+    PRUint32 maxOccurs;
+    rc = aParticle->GetMaxOccurs(&maxOccurs);
+    if (NS_FAILED(rc))
+      return rc;
+    PRUint16 particleType;
+    rc = aParticle->GetParticleType(&particleType);
+    if (NS_FAILED(rc))
+      return rc;
+    switch(particleType) {
+      case nsISchemaParticle::PARTICLE_TYPE_ELEMENT: {
+        if (maxOccurs > 1) {  //  Todo: Try to make this thing work as an array?
+          return NS_ERROR_NOT_AVAILABLE; //  For now, we just try something else if we can (recoverable)
+        }
+        nsCOMPtr<nsISchemaElement> element = do_QueryInterface(aParticle);
+	nsAutoString name;
+	rc = element->GetTargetNamespace(name);
+        if (NS_FAILED(rc))
+          return rc;
+	if (!name.IsEmpty()) {
+          rc = NS_ERROR_NOT_AVAILABLE; //  No known way to use namespace qualification in struct
+	}
+	else {
+	  rc = element->GetName(name);
+          if (NS_FAILED(rc))
+            return rc;
+	  rc = element->GetName(name);
+          if (NS_FAILED(rc))
+            return rc;
+          nsAutoString ename;
+	  if (aElement) {                //  Permits aElement to be null and fail recoverably
+            aElement->GetNamespaceURI(ename);
+            if (NS_FAILED(rc))
+              return rc;
+	    if (ename.IsEmpty()) {
+	      ename.SetLength(0);          //  No name.
+	    } else {
+	      aElement->GetLocalName(ename);
+              if (NS_FAILED(rc))
+                return rc;
+	    }
+	  }
+	  if (!ename.Equals(name))
+            rc = NS_ERROR_NOT_AVAILABLE; //  The element must be a declaration of the next element
+	}
+	if (!NS_FAILED(rc)) {
+          nsCOMPtr<nsISchemaType> type;
+          rc = element->GetType(getter_AddRefs(type));
+          if (NS_FAILED(rc))
+            return rc;
+	  nsCOMPtr<nsIVariant> value;
+	  rc = aEncoding->Decode(aElement, type, aAttachments, getter_AddRefs(value));
+          if (NS_FAILED(rc))
+            return rc;
+	  rc = aDestination->AddProperty(name, value);
+          if (NS_FAILED(rc))
+            return rc;
+	  nsSOAPUtils::GetNextSiblingElement(aElement, _retElement);
+	}
+        if (minOccurs == 0
+          && rc == NS_ERROR_NOT_AVAILABLE)  //  If we failed recoverably, but we were permitted to, then return success
+          *_retElement = aElement;
+	  NS_IF_ADDREF(*_retElement);
+          rc = NS_OK;
+	return rc;
+      }
+      case nsISchemaParticle::PARTICLE_TYPE_MODEL_GROUP: 
+      {
+        if (maxOccurs > 1) {  //  Todo: Try to make this thing work as an array?
+          return NS_ERROR_NOT_AVAILABLE; //  For now, we just try something else if we can (recoverable)
+        }
+        nsCOMPtr<nsISchemaModelGroup> modelGroup = do_QueryInterface(aParticle);
+        PRUint16 compositor;
+        rc = modelGroup->GetCompositor(&compositor);
+        if (NS_FAILED(rc))
+          return rc;
+        PRUint32 particleCount;
+        rc = modelGroup->GetParticleCount(&particleCount);
+        if (NS_FAILED(rc))
+          return rc;
+	if (compositor == nsISchemaModelGroup::COMPOSITOR_ALL) {  //  This handles out-of-order appearances.
+          nsCOMPtr<nsISupportsArray> all = new nsSupportsArray(); //  Create something we can mutate
+	  all->SizeTo(particleCount);
+          nsCOMPtr<nsISchemaParticle> child;
+	  PRBool mangled = PR_FALSE;
+	  for (PRUint32 i = 0; i < particleCount; i++) {
+            rc = modelGroup->GetParticle(i, getter_AddRefs(child));
+            if (NS_FAILED(rc))
+              return rc;
+	    rc = all->AppendElement(child);
+            if (NS_FAILED(rc))
+              return rc;
+	  }
+	  nsCOMPtr<nsIDOMElement> next = aElement;
+	  while (particleCount > 0) {
+            for (PRUint32 i = 0; i < particleCount; i++) {
+	      child = dont_AddRef(NS_STATIC_CAST
+		    (nsISchemaParticle*, all->ElementAt(i)));
+	      nsCOMPtr<nsIDOMElement> after;
+              rc = DecodeStructParticle(aEncoding, aElement, child, aAttachments, aDestination, getter_AddRefs(after));
+	      if (!NS_FAILED(rc)) {
+                next = after;
+		mangled = PR_TRUE;
+		rc = all->RemoveElementAt(i);
+		particleCount--;
+                if (NS_FAILED(rc))
+                  return rc;
+	      }
+	      if (rc != NS_ERROR_NOT_AVAILABLE) {
+		break;
+	      }
+	    }
+	    if (mangled && rc == NS_ERROR_NOT_AVAILABLE) {  //  This detects ambiguous model (non-deterministic choice which fails after succeeding on first)
+              rc = NS_ERROR_ILLEGAL_VALUE;                  //  Error is not considered recoverable due to partially-created output.
+	    }
+            if (NS_FAILED(rc))
+              break;
+          }
+	  if (!NS_FAILED(rc)) {
+	    *_retElement = next;
+	    NS_IF_ADDREF(*_retElement);
+	  }
+          if (minOccurs == 0
+            && rc == NS_ERROR_NOT_AVAILABLE) {  //  If we succeeded or failed recoverably, but we were permitted to, then return success
+            *_retElement = aElement;
+            NS_IF_ADDREF(*_retElement);
+            rc = NS_OK;
+	  }
+	}
+	else {  //  This handles sequences and choices.
+	  nsCOMPtr<nsIDOMElement> next = aElement;
+          for (PRUint32 i = 0; i < particleCount; i++) {
+            nsCOMPtr<nsISchemaParticle> child;
+            rc = modelGroup->GetParticle(i, getter_AddRefs(child));
+            if (NS_FAILED(rc))
+              return rc;
+	    nsCOMPtr<nsIDOMElement> after;
+            rc = DecodeStructParticle(aEncoding, aElement, child, aAttachments, aDestination, getter_AddRefs(after));
+	    if (!NS_FAILED(rc)) {
+               next = after;
+	    }
+	    if (compositor == nsISchemaModelGroup::COMPOSITOR_CHOICE) {
+	      if (rc == NS_ERROR_NOT_AVAILABLE) {
+                rc = NS_OK;
+	      }
+	      else {
+	        if (!NS_FAILED(rc)) {
+		  *_retElement = next;
+		  NS_IF_ADDREF(*_retElement);
+	        }
+                return rc;
+	      }
+	    }
+	    else if (i > 0 && rc == NS_ERROR_NOT_AVAILABLE) {  //  This detects ambiguous model (non-deterministic choice which fails after succeeding on first)
+              rc = NS_ERROR_ILLEGAL_VALUE;                  //  Error is not considered recoverable due to partially-created output.
+	    }
+            if (NS_FAILED(rc))
+              break;
+          }
+	  if (compositor == nsISchemaModelGroup::COMPOSITOR_CHOICE)
+            rc = NS_ERROR_NOT_AVAILABLE;
+	  if (!NS_FAILED(rc)) {
+	    *_retElement = next;
+	    NS_IF_ADDREF(*_retElement);
+	  }
+          if (minOccurs == 0
+            && rc == NS_ERROR_NOT_AVAILABLE) {  //  If we succeeded or failed recoverably, but we were permitted to, then return success
+            *_retElement = aElement;
+            NS_IF_ADDREF(*_retElement);
+            rc = NS_OK;
+	  }
+	}
+	return rc;                    //  Return status
+      }
+      case nsISchemaParticle::PARTICLE_TYPE_ANY:
+//  No model available here (we may wish to handle strict versus lazy, but what does that mean with only local accessor names)
+      default:
+        break;
+    }
+  }
+
+  nsCOMPtr<nsIDOMElement> child = aElement;
   while (child != nsnull) {
     nsAutoString name;
     nsAutoString namespaceURI;
@@ -1347,7 +1638,7 @@ NS_IMETHODIMP
     rc = aEncoding->Decode(child, nsnull, aAttachments, getter_AddRefs(value));
     if (NS_FAILED(rc))
       return rc;
-    rc = c->AddProperty(name, value);
+    rc = aDestination->AddProperty(name, value);
     if (NS_FAILED(rc))
       return rc;
 
@@ -1355,15 +1646,50 @@ NS_IMETHODIMP
     nsSOAPUtils::GetNextSiblingElement(child, getter_AddRefs(nextchild));
     child = nextchild;
   }
-  nsCOMPtr<nsIPropertyBag> pb;
-  c->GetPropertyBag(getter_AddRefs(pb));
+  *_retElement = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+    nsStructEncoder::Decode(nsISOAPEncoding * aEncoding,
+                             nsIDOMElement * aSource,
+                             nsISchemaType * aSchemaType,
+                             nsISOAPAttachments * aAttachments,
+                             nsIVariant ** _retval)
+{
+  nsresult rc;
+  nsCOMPtr<nsISOAPPropertyBagMutator> mutator = do_CreateInstance(NS_SOAPPROPERTYBAGMUTATOR_CONTRACTID, &rc);
   if (NS_FAILED(rc))
     return rc;
-  nsCOMPtr<nsIWritableVariant > p =
+  nsCOMPtr<nsISchemaModelGroup>modelGroup;
+  if (aSchemaType) {
+    nsCOMPtr<nsISchemaComplexType>ctype = do_QueryInterface(aSchemaType);
+    if (ctype) {
+      rc = ctype->GetModelGroup(getter_AddRefs(modelGroup));
+      if (NS_FAILED(rc))
+        return rc;
+    }
+  }
+  nsCOMPtr<nsIDOMElement> child;
+  nsSOAPUtils::GetFirstChildElement(aSource, getter_AddRefs(child));
+  nsCOMPtr<nsIDOMElement> result;
+  rc =  DecodeStructParticle(aEncoding, child, modelGroup, aAttachments, mutator, getter_AddRefs(result));
+  if (!NS_FAILED(rc)  //  If there were elements left over, then we failed to decode everything.
+      && result)
+    rc = NS_ERROR_FAILURE;
+  if (NS_FAILED(rc))
+    return rc;
+  nsCOMPtr < nsIPropertyBag > bag;
+  rc = mutator->GetPropertyBag(getter_AddRefs(bag));
+  if (NS_FAILED(rc))
+    return rc;
+  nsCOMPtr < nsIWritableVariant > p =
       do_CreateInstance(NS_VARIANT_CONTRACTID, &rc);
   if (NS_FAILED(rc))
     return rc;
-  p->SetAsInterface(NS_GET_IID(nsIPropertyBag), pb);
+  p->SetAsInterface(NS_GET_IID(nsIPropertyBag), bag);
+  if (NS_FAILED(rc))
+    return rc;
   *_retval = p;
   NS_ADDREF(*_retval);
   return NS_OK;
