@@ -67,7 +67,7 @@ typedef nsresult (*nsUnregisterProc)(const char *path);
  */
 
 class FactoryEntry;
-class DllStore;
+class nsDllStore;
 
 /*
  * nsRepository class
@@ -80,9 +80,9 @@ private:
 
   static nsresult checkInitialized(void);
   static nsresult loadFactory(FactoryEntry *aEntry, nsIFactory **aFactory);
-  
+
 public:
-  static DllStore *dllStore;
+  static nsDllStore *dllStore;
 
   static nsresult Initialize(void);
   // Finds a factory for a specific class ID
@@ -123,6 +123,7 @@ public:
 
   // Unload dynamically loaded factories that are not in use
   static nsresult FreeLibraries(void);
+
 };
 
 #endif

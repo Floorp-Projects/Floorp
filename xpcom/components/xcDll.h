@@ -27,32 +27,31 @@
 #include "prio.h"
 #include "prlink.h"
 
-typedef enum DllStatus
+typedef enum nsDllStatus
 {
 	DLL_OK = 0,
 	DLL_NO_MEM = 1,
 	DLL_STAT_ERROR = 2,
 	DLL_NOT_FILE = 3,
 	DLL_INVALID_PARAM = 4
-} DllStatus;
+} nsDllStatus;
 
-class Dll
+class nsDll
 {
 private:
 	char *m_fullpath;		// system format full filename of dll
 	PRTime m_lastModTime;	// last modified time
 	PRUint64 m_size;		// size of the dynamic library
 	PRLibrary *m_instance;	// Load instance
-	DllStatus m_status;		// holds current status
+	nsDllStatus m_status;		// holds current status
 
 public:
  
-	Dll(const char *libFullPath);
-	//DllEntry(const char *library, PRTime modTime, PR_Uint32 size);
-	~Dll(void);
+	nsDll(const char *libFullPath);
+	~nsDll(void);
 
-	// Status checking on oprations
-	DllStatus GetStatus(void) { return (m_status); }
+	// Status checking on operations completed
+	nsDllStatus GetStatus(void) { return (m_status); }
 
 	// Dll Loading
 	PRBool Load(void);
@@ -63,6 +62,7 @@ public:
 	}
 	void *FindSymbol(const char *symbol);
 	
+	const char *GetFullPath(void) { return (m_fullpath); }
 	PRTime GetLastModifiedTime(void) { return(m_lastModTime); }
 	PRUint64 GetSize(void) { return(m_size); }
 	PRLibrary *GetInstance(void) { return (m_instance); }

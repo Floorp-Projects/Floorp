@@ -17,7 +17,7 @@
  */
 
  
-/* DllStore
+/* nsDllStore
  *
  * Stores dll and their accociated info in a hash keyed on the system format
  * full dll path name e.g C:\Program Files\Netscape\Program\raptor.dll
@@ -28,22 +28,22 @@
 #include "plhash.h"
 #include "xcDll.h"
 
-class DllStore
+class nsDllStore
 {
 private:
 	PLHashTable *m_dllHashTable;
 
 public:
 	// Constructor
-	DllStore(void);
-	~DllStore(void);
+	nsDllStore(void);
+	~nsDllStore(void);
 
-	// Caller is not expected to delete Dll returned
-	// The Dll returned in NOT removed from the hash
-	Dll* Get(const char *filename);
-	PRBool Put(const char *filename, Dll *dllInfo);
+	// Caller is not expected to delete nsDll returned
+	// The nsDll returned in NOT removed from the hash
+	nsDll* Get(const char *filename);
+	PRBool Put(const char *filename, nsDll *dllInfo);
 
-	// The Dll returned is removed from the hash
-	// Caller is expected to delete the returned Dll
-	Dll* Remove(const char *filename);
+	// The nsDll returned is removed from the hash
+	// Caller is expected to delete the returned nsDll
+	nsDll* Remove(const char *filename);
 };

@@ -17,7 +17,7 @@
  */
 
  
-/* DllStore
+/* nsDllStore
  *
  * Stores dll and their accociated info in a hash keyed on the system format
  * full dll path name e.g C:\Program Files\Netscape\Program\raptor.dll
@@ -29,11 +29,11 @@
 
 static PR_CALLBACK PRIntn _deleteDllInfo(PLHashEntry *he, PRIntn i, void *arg)
 {
-	delete (Dll *)he->value;
+	delete (nsDll *)he->value;
 	return (HT_ENUMERATE_NEXT);
 }
 
-DllStore::DllStore(void) : m_dllHashTable(NULL)
+nsDllStore::nsDllStore(void) : m_dllHashTable(NULL)
 {
 	PRUint32 initSize = 128;
 
@@ -42,11 +42,11 @@ DllStore::DllStore(void) : m_dllHashTable(NULL)
 }
 
 
-DllStore::~DllStore(void)
+nsDllStore::~nsDllStore(void)
 {
 	if (m_dllHashTable)
 	{
-		// Delete each of the Dll stored before deleting the Hash Table
+		// Delete each of the nsDll stored before deleting the Hash Table
 		PL_HashTableEnumerateEntries(m_dllHashTable, _deleteDllInfo, NULL);
 		PL_HashTableDestroy(m_dllHashTable);
 	}
@@ -54,29 +54,29 @@ DllStore::~DllStore(void)
 }
 
 
-Dll* DllStore::Get(const char *dll)
+nsDll* nsDllStore::Get(const char *dll)
 {
-	Dll *dllInfo = NULL;
+	nsDll *dllInfo = NULL;
 	if (m_dllHashTable)
 	{
-		dllInfo = (Dll *)PL_HashTableLookup(m_dllHashTable, dll);
+		dllInfo = (nsDll *)PL_HashTableLookup(m_dllHashTable, dll);
 	}
 	return (dllInfo);
 }
 
 
-Dll* DllStore::Remove(const char *dll)
+nsDll* nsDllStore::Remove(const char *dll)
 {
 	if (m_dllHashTable == NULL)
 	{
 		return (NULL);
 	}
-	Dll *dllInfo = Get(dll);
+	nsDll *dllInfo = Get(dll);
 	PL_HashTableRemove(m_dllHashTable, dll);
 	return (dllInfo);
 }
 
-PRBool DllStore::Put(const char *dll, Dll *dllInfo)
+PRBool nsDllStore::Put(const char *dll, nsDll *dllInfo)
 {
 	if (m_dllHashTable == NULL)
 		return(PR_FALSE);
