@@ -37,26 +37,13 @@
   <script type="application/x-javascript">
   <![CDATA[
     var panel = "chrome://communicator/content/pref/pref-appearance.xul";
-    var _elementIDs = ["generalStartupBrowser", "showHideTooltips", "useSiteIcons"];
+    var _elementIDs = ["useSiteIcons"];
   ]]>
   </script>
           
-  <groupbox id="generalStartupPreferences" align="start">
-    <caption label="&onStartLegend.label;"/>
-    <!-- XXX remove when navigator overlays.rdf works -->
-    <checkbox id="generalStartupBrowser"
-              label="&navCheck.label;" accesskey="&navCheck.accesskey;"
-              prefstring="general.startup.browser"/>
-    <!-- XXX -->
-  </groupbox>
-  
   <vbox class="box-padded" align="start">
     <separator class="thin" />
 
-    <checkbox id="showHideTooltips" label="&showHideTooltips.label;"
-              accesskey="&showHideTooltips.accesskey;"
-              prefstring="browser.chrome.toolbar_tips"/>
-    
     <checkbox id="useSiteIcons" label="&useSiteIcons.label;"
               accesskey="&useSiteIcons.accesskey;"
               prefstring="browser.chrome.site_icons"/>

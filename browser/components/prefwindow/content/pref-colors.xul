@@ -23,9 +23,9 @@
   -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xul-overlay href="chrome://communicator/content/pref/platformPrefOverlay.xul"?>
+<?xul-overlay href="chrome://browser/content/pref/platformPrefOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-colors.dtd" >
+<!DOCTYPE window SYSTEM "chrome://browser/locale/pref/pref-colors.dtd" >
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://communicator/content/pref/pref-colors.xul');"
@@ -33,11 +33,11 @@
 
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["foregroundText", "background", "browserUseSystemColors", "unvisitedLinks", "visitedLinks", "browserUnderlineAnchors", "browserUseDocumentColors", "syntaxHighlight"];
+    var _elementIDs = ["foregroundText", "background", "browserUseSystemColors", "unvisitedLinks", "visitedLinks", "browserUnderlineAnchors", "browserUseDocumentColors"];
   ]]>
   </script>
   
-  <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-colors.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/pref/pref-colors.js"/>
 
   <hbox>
     <groupbox flex="1" id="pageColours">
@@ -92,13 +92,5 @@
       <radio value="false" label="&useMyColors.label;" accesskey="&useMyColors.accesskey;"/>        
     </radiogroup>
     
-  </groupbox>
-
-  <groupbox>
-      <caption label="&viewsource;"/>
-      <hbox align="center">
-        <checkbox id="syntaxHighlight" label="&syntaxHighlight.label;" accesskey="&syntaxHighlight.accesskey;"
-                  prefstring="view_source.syntax_highlight"/>
-      </hbox>
   </groupbox>
 </page>
