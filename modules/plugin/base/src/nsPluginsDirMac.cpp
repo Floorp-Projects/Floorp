@@ -259,6 +259,15 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
       info.fFileName = p2cstrdup(spec.name);
       info.fFullPath = PL_strdup(this->GetCString());
       
+#if TARGET_CARBON
+      CFBundleRef bundle = getPluginBundle(spec);
+      if (bundle) {
+        info.fBundle = PR_TRUE;
+        CFRelease(bundle);
+        } else
+        info.fBundle = PR_FALSE;
+#endif
+
       short mimeIndex = 1, descriptionIndex = 1;
       for (int i = 0; i < variantCount; i++) {
         info.fMimeTypeArray[i] = GetPluginString(128, mimeIndex++);
