@@ -1341,13 +1341,21 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsIParserNode
      * </P> is encountered by itself (<P>) is continuously produced.
      *
      **************************************************************************************/
- 
-  if(MAX_REFLOW_DEPTH<mBodyContext->GetCount()) {
-    if(nsHTMLElement::IsContainer(aTag)) {
-      if(!gHTMLElements[aTag].HasSpecialProperty(kHandleStrayTag)) {
-        return kHierarchyTooDeep; //drop the container on the floor.
-      }        
-    }
+  
+  PRInt32 stackDepth = mBodyContext->GetCount();
+  if (stackDepth > MAX_REFLOW_DEPTH) {
+    if (nsHTMLElement::IsContainer(aTag) &&
+        !gHTMLElements[aTag].HasSpecialProperty(kHandleStrayTag)) {
+      // Ref. bug 98261,49678,55095,55980
+      // Instead of throwing away the current tag close it's parent
+      // such that the stack level does not go beyond the max_reflow_depth.
+      // This would allow leaf tags, that follow the current tag, to find
+      // the correct node. 
+      while (stackDepth != MAX_REFLOW_DEPTH && NS_SUCCEEDED(result)) {
+        result = CloseContainersTo(mBodyContext->Last(),PR_FALSE);
+        --stackDepth;
+      }
+    }        
   }
 
   STOP_TIMER()
