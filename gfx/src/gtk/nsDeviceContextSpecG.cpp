@@ -17,6 +17,7 @@
  */
 
 #include "nsDeviceContextSpecG.h"
+#include "prenv.h" /* for PR_GetEnv */
 
 //#include "prmem.h"
 //#include "plstr.h"
