@@ -79,8 +79,8 @@ public:
   virtual nsresult GetPresShell(nsIPresShell** aShell);
   virtual void GetMaxElementSize(nsSize** aMaxElementSize);
 
-  virtual void GetOverFlowSize(nsSize& aSize);
-  virtual void SetOverFlowSize(const nsSize& aSize);
+  virtual void GetScrolledBlockSizeConstraint(nsSize& aSize);
+  virtual void SetScrolledBlockSizeConstraint(const nsSize& aSize);
   virtual void GetIncludeOverFlow(PRBool& aOverFlow);
   virtual void SetIncludeOverFlow(const PRBool& aOverFlow);
   virtual void GetLayoutFlags(PRUint32& aFlags);
@@ -111,7 +111,7 @@ private:
   const nsHTMLReflowState* mReflowState;
   eBoxLayoutReason mType;
   nsSize* mMaxElementSize;
-  nsSize mOverFlowSize;
+  nsSize mScrolledBlockSizeConstraint;
   PRBool mIncludeOverFlow;
   PRUint32 mLayoutFlags;
   PRBool mDisablePainting;

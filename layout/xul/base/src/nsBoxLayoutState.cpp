@@ -56,7 +56,7 @@ nsBoxLayoutState::nsBoxLayoutState(nsIPresContext* aPresContext):mPresContext(aP
                                                                  mReflowState(nsnull), 
                                                                  mType(Dirty),
                                                                  mMaxElementSize(nsnull),
-                                                                 mOverFlowSize(0,0),
+                                                                 mScrolledBlockSizeConstraint(-1,-1),
                                                                  mIncludeOverFlow(PR_TRUE),
                                                                  mLayoutFlags(0),
                                                                  mDisablePainting(PR_FALSE)
@@ -69,7 +69,7 @@ nsBoxLayoutState::nsBoxLayoutState(const nsBoxLayoutState& aState)
   mType        = aState.mType;
   mReflowState = aState.mReflowState;
   mMaxElementSize = aState.mMaxElementSize;
-  mOverFlowSize = aState.mOverFlowSize;
+  mScrolledBlockSizeConstraint = aState.mScrolledBlockSizeConstraint;
   mLayoutFlags = aState.mLayoutFlags;
   mDisablePainting = aState.mDisablePainting;
 }
@@ -77,7 +77,7 @@ nsBoxLayoutState::nsBoxLayoutState(const nsBoxLayoutState& aState)
 nsBoxLayoutState::nsBoxLayoutState(nsIPresShell* aShell):mReflowState(nsnull), 
                                                          mType(Dirty),
                                                          mMaxElementSize(nsnull),
-                                                         mOverFlowSize(0,0),
+                                                         mScrolledBlockSizeConstraint(-1,-1),
                                                          mIncludeOverFlow(PR_TRUE),
                                                          mLayoutFlags(0),
                                                          mDisablePainting(PR_FALSE)
@@ -90,7 +90,7 @@ nsBoxLayoutState::nsBoxLayoutState(nsIPresContext* aPresContext,
                                    nsHTMLReflowMetrics& aDesiredSize):mPresContext(aPresContext),
                                                                       mReflowState(&aReflowState),                                                                    
                                                                       mType(Dirty),
-                                                                      mOverFlowSize(0,0),
+                                                                      mScrolledBlockSizeConstraint(-1,-1),
                                                                       mIncludeOverFlow(PR_TRUE),
                                                                       mLayoutFlags(0),
                                                                       mDisablePainting(PR_FALSE)
@@ -110,15 +110,15 @@ nsBoxLayoutState::GetMaxElementSize(nsSize** aMaxElementSize)
 }
 
 void 
-nsBoxLayoutState::GetOverFlowSize(nsSize& aSize)
+nsBoxLayoutState::GetScrolledBlockSizeConstraint(nsSize& aSize)
 {
-  aSize = mOverFlowSize;
+  aSize = mScrolledBlockSizeConstraint;
 }
 
 void 
-nsBoxLayoutState::SetOverFlowSize(const nsSize& aSize)
+nsBoxLayoutState::SetScrolledBlockSizeConstraint(const nsSize& aSize)
 {
-  mOverFlowSize = aSize;
+  mScrolledBlockSizeConstraint = aSize;
 }
 
 void 
