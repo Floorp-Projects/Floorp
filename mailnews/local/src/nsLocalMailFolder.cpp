@@ -136,9 +136,6 @@ nsMsgLocalMailFolder::Init(const char* aURI)
   rv = nsRDFResource::Init(aURI);
   if (NS_FAILED(rv)) return rv;
 
-#ifdef DEBUG_alecf
-  fprintf(stderr, "nsMsgLocalMailFolder::Init(%s)\n", aURI);
-#endif
 
 #if 0
   // find the server from the account manager
@@ -164,9 +161,6 @@ nsMsgLocalMailFolder::CreateSubFolders(nsFileSpec &path)
 	nsAutoString currentFolderNameStr;
 	nsCOMPtr<nsIMsgFolder> child;
 	char *folderName;
-#ifdef DEBUG_alecf
-      printf("CreateSubFolders(%s)\n", (const char*)path);
-#endif
 	for (nsDirectoryIterator dir(path); dir.Exists(); dir++) {
 		nsFileSpec currentFolderPath = (nsFileSpec&)dir;
 
@@ -266,10 +260,6 @@ nsresult
 nsMsgLocalMailFolder::AddDirectorySeparator(nsFileSpec &path)
 {
   
-#ifdef DEBUG_alecf
-  printf("AddDirectorySep(%s) -> ", (const char*)path);
-#endif
-  
     nsAutoString sep;
     nsresult rv = nsGetMailFolderSeparator(sep);
     if (NS_FAILED(rv)) return rv;
@@ -282,9 +272,6 @@ nsMsgLocalMailFolder::AddDirectorySeparator(nsFileSpec &path)
     str += sep;
     path = nsFilePath(str);
 
-#ifdef DEBUG_alecf
-  printf("%s\n", (const char*)path);
-#endif
 	return rv;
 }
 
@@ -296,19 +283,11 @@ nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
     nsresult rv = GetPath(path);
     if (NS_FAILED(rv)) return rv;
 	
-#ifdef DEBUG_alecf
-    printf("1) checking if %s is a directory..it is%s\n",
-           (const char*)path, path.IsDirectory() ? "":"n't");
-#endif
     if (!path.IsDirectory())
       AddDirectorySeparator(path);
   
 	if(NS_FAILED(rv)) return rv;
 
-#ifdef DEBUG_alecf
-      printf("2) checking if %s is a directory..it is%s\n",
-             (const char*)path, path.IsDirectory() ? "":"n't");
-#endif
     // we have to treat the root folder specially, because it's name
     // doesn't end with .sbd
     PRInt32 newFlags = MSG_FOLDER_FLAG_MAIL;
