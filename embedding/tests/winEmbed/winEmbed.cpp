@@ -23,8 +23,6 @@
  */
 
 
-#include "WindowCreator.h" // won't compile if placed after stdafx.h (!?)
-
 #include <stdio.h>
 #include "stdafx.h"
 
@@ -44,6 +42,7 @@
 // Local header files
 #include "winEmbed.h"
 #include "WebBrowserChrome.h"
+#include "WindowCreator.h"
 #include "resource.h"
 
 #define MAX_LOADSTRING 100
