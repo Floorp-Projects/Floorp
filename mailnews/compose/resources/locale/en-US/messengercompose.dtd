@@ -185,6 +185,3 @@
 <!ENTITY formatToolbar.boldChar "B">
 <!ENTITY formatToolbar.italicChar "I">
 <!ENTITY formatToolbar.underlineChar "U">
-
-<!-- Status bar -->
-<!ENTITY defaultStatusText.label "Document: Done">

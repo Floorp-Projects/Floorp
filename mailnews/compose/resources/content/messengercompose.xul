@@ -464,7 +464,7 @@
 
   <statusbar id="status-bar">
     <hbox id="component-bar"/>
-    <statusbarpanel id="statusText" flex="1" label="&defaultStatusText.label;"/>
+    <statusbarpanel id="statusText" flex="1"/>
 
     <progressmeter id="compose-progressmeter" class="progressmeter-statusbar" 
                    mode="normal" value="0" statusbar="true"/>
