@@ -49,6 +49,8 @@ function nsBrowserStatusHandler()
 
 nsBrowserStatusHandler.prototype =
 {
+  userTyped : false,
+
   useRealProgressFlag : false,
   totalRequests : 0,
   finishedRequests : 0,
@@ -251,6 +253,9 @@ nsBrowserStatusHandler.prototype =
 
   onLocationChange : function(aWebProgress, aRequest, aLocation)
   {
+    if (this.userTyped)
+      return;
+
     var location = aLocation.spec;
     domWindow = aWebProgress.DOMWindow;
 
@@ -291,6 +296,10 @@ nsBrowserStatusHandler.prototype =
 
   startDocumentLoad : function(aRequest)
   {
+    // Reset so we can see if the user typed after the document load
+    // starting and the location changing.
+    this.userTyped = false;
+
     const nsIChannel = Components.interfaces.nsIChannel;
     var urlStr = aRequest.QueryInterface(nsIChannel).URI.spec;
     var observerService = Components.classes["@mozilla.org/observer-service;1"]
