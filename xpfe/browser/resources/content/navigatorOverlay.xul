@@ -531,6 +531,7 @@ Contributor(s): ______________________________________. -->
       </menu>
 
      <menuitem value="&domviewer.label;" oncommand="window.content.location.href='resource:/res/samples/rdf/DOMDataSourceViewer.xul'"/>
+     <menuitem value="&browserbuster.label;" oncommand="window.content.location.href='http://komodo.mozilla.org/buster'"/>
 
      </menupopup>
   </menu>
