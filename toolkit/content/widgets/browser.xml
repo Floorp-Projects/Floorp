@@ -698,6 +698,9 @@
     <handlers>
       <handler event="keypress" keycode="VK_F7">
         <![CDATA[
+          if (!event.isTrusted)
+            return;
+
           // Toggle browse with caret mode
           var browseWithCaretOn = false;
           var warn = true;
