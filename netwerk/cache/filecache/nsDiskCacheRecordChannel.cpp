@@ -59,6 +59,7 @@ class WriteStreamWrapper : public nsIOutputStream
   private:
   nsDiskCacheRecordChannel*         mChannel;
   nsCOMPtr<nsIOutputStream>         mBaseStream;
+  PRUint32                          mTotalSize;
 };
 
 // implement nsISupports
@@ -66,7 +67,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS(WriteStreamWrapper, NS_GET_IID(nsIOutputStream))
 
 WriteStreamWrapper::WriteStreamWrapper(nsDiskCacheRecordChannel* aChannel, 
                                        nsIOutputStream *aBaseStream) 
-  : mChannel(aChannel), mBaseStream(aBaseStream)
+  : mChannel(aChannel), mBaseStream(aBaseStream), mTotalSize(0)
 { 
   NS_INIT_REFCNT(); 
   NS_ADDREF(mChannel);
@@ -93,6 +94,7 @@ WriteStreamWrapper::Write(const char *aBuffer, PRUint32 aCount, PRUint32 *aNumWr
   *aNumWritten = 0;
   nsresult rv = mBaseStream->Write(aBuffer, aCount, aNumWritten);
   mChannel->NotifyStorageInUse(*aNumWritten);
+  mTotalSize += *aNumWritten;
   return rv;
 }
     
@@ -146,8 +148,17 @@ WriteStreamWrapper::Flush()
 
 NS_IMETHODIMP
 WriteStreamWrapper::Close() 
-{ 
-  return mBaseStream->Close(); 
+{
+  nsresult rv = mBaseStream->Close(); 
+
+  // Tell the record we finished write to the file
+  mChannel->mRecord->WriteComplete();
+
+  // Truncate the file if we have to. It should have been already but that
+  // would be too easy wouldn't it!!!
+  mChannel->mRecord->SetStoredContentLength(mTotalSize);
+
+  return rv;
 }
 
 nsDiskCacheRecordChannel::nsDiskCacheRecordChannel(nsDiskCacheRecord *aRecord, 

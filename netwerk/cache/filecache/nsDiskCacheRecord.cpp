@@ -208,10 +208,24 @@ nsDiskCacheRecord::SetMetaData(PRUint32 length, const char* data)
 NS_IMETHODIMP
 nsDiskCacheRecord::GetStoredContentLength(PRUint32 *aStoredContentLength)
 {
-  PRInt64 fileSize; 
-  nsresult rv = mFile->GetFileSize( &fileSize) ;
+  PRInt64 fileSize;
+  nsresult rv = mFile->GetFileSize( &fileSize);
   if (NS_SUCCEEDED(rv))
-    LL_L2UI( *aStoredContentLength, fileSize );	 
+    LL_L2UI( *aStoredContentLength, fileSize );
+#ifdef DEBUG_dp
+  // Assert if our mFile is out of sync with the disk file
+  if (NS_SUCCEEDED(rv))
+  {
+    nsCOMPtr<nsIFile> spec;
+    PRInt64 realFileSize;
+    nsresult res = mFile->Clone(getter_AddRefs(spec));
+    if (NS_SUCCEEDED(res))
+    {
+      spec->GetFileSize(&realFileSize);
+      NS_ASSERTION(LL_EQ(fileSize, realFileSize), "Cache record file size doesn't match disk file size.");
+    }
+  }
+#endif /* DEBUG_dp */
   return rv;
 }
 
@@ -231,16 +245,21 @@ nsDiskCacheRecord::SetStoredContentLength(PRUint32 aStoredContentLength)
     NS_ERROR("Error: can not set filesize to something bigger than itself.\n") ;
     return NS_ERROR_FAILURE ;
   }
-  else {
+
+  if(len > aStoredContentLength)
+  {
     PRInt64 size;
     LL_UI2L( size, aStoredContentLength ); 
     rv = mFile->SetFileSize( size ) ;
     if(NS_FAILED(rv))
       return rv ;
     
+    // We just changed the file. Update our fileinfo.
+    UpdateFileInfo();
+
     mDiskCache->mStorageInUse -= (len - aStoredContentLength) ;
-    return NS_OK ;
   }
+  return NS_OK ;
 }
 
 NS_IMETHODIMP
@@ -279,6 +298,15 @@ nsDiskCacheRecord::Delete(void)
     return NS_ERROR_FAILURE ;
   else
     return NS_OK ;
+}
+
+
+NS_IMETHODIMP
+nsDiskCacheRecord::WriteComplete() 
+{
+  // Need to update the mFile we hold as the mFile might hold
+  // a stat cache that may be invalid now.
+  return UpdateFileInfo();
 }
 
 NS_IMETHODIMP
@@ -498,3 +526,22 @@ nsDiskCacheRecord::RetrieveInfo(void* aInfo, PRUint32 aInfoLength)
   return NS_OK ;
 }
 
+NS_IMETHODIMP
+nsDiskCacheRecord::UpdateFileInfo()
+{
+  // The mFile we store might be out of date. Atlease
+  // we know that our implementation of nsIFile stores
+  // stat data in a cache. We need to invalidate that cache
+  // at critical points or atleast when we know we changed
+  // file info.
+
+  // nsIFile::Sync(); -dp- need to get this into the api
+  // We fake it now with Clone. All email dougt@netscape.com
+  // to fix it. Please....
+
+  nsCOMPtr<nsIFile> spec;
+  nsresult rv = mFile->Clone(getter_AddRefs(spec));
+  if (NS_SUCCEEDED(rv))
+    mFile = spec;
+  return rv;
+}
