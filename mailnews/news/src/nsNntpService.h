@@ -25,19 +25,23 @@
 #include "nsINntpIncomingServer.h"
 #include "nsIFileSpec.h"
 #include "MailNewsTypes.h"
+#include "nsIMsgProtocolInfo.h"
 
 class nsIURI;
 class nsIUrlListener;
 
-class nsNntpService : public nsINntpService, public nsIMsgMessageService, public nsIProtocolHandler
+class nsNntpService : public nsINntpService,
+                      public nsIMsgMessageService,
+                      public nsIProtocolHandler,
+                      public nsIMsgProtocolInfo
 {
 public:
 
+  NS_DECL_ISUPPORTS
   NS_DECL_NSINNTPSERVICE
   NS_DECL_NSIMSGMESSAGESERVICE
-
   NS_DECL_NSIPROTOCOLHANDLER
-  NS_DECL_ISUPPORTS  
+  NS_DECL_NSIMSGPROTOCOLINFO
   
   // nsNntpService
   nsNntpService();

@@ -34,6 +34,7 @@
 #include "nsIMessage.h"
 #include "nsINetSupportDialogService.h"
 #include "nsIPref.h"
+#include "nsIProfile.h"
 #include "nsCRT.h"  // for nsCRT::strtok
 #include "nsNntpService.h"
 #include "nsIChannel.h"
@@ -966,3 +967,27 @@ NS_IMETHODIMP nsNntpService::NewChannel(const char *verb, nsIURI *aURI, nsILoadG
 	return rv;
 }
 
+NS_IMETHODIMP
+nsNntpService::GetDefaultLocalPath(nsIFileSpec ** aResult)
+{
+    nsresult rv;
+    NS_WITH_SERVICE(nsIPref, prefs, kCPrefServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = prefs->GetFilePref("mail.root.nntp", aResult);
+    if (NS_SUCCEEDED(rv)) return rv;
+
+    NS_WITH_SERVICE(nsIProfile, profile, NS_PROFILE_PROGID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsFileSpec dir;
+    rv = profile->GetCurrentProfileDir(&dir);
+    if (NS_FAILED(rv)) return rv;
+    
+    dir += "News";
+
+    rv = NS_NewFileSpecWithSpec(dir, aResult);
+
+    return rv;
+}
+    
