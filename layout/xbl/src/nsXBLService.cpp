@@ -218,18 +218,28 @@ nsXBLService::LoadBindings(nsIContent* aContent, const nsString& aURL)
   if (!bindableContent)
     return NS_ERROR_FAILURE;
 
-  nsCAutoString url = aURL;
   nsCOMPtr<nsIXBLBinding> binding;
+  bindableContent->GetBinding(getter_AddRefs(binding));
+  if (binding)
+    return NS_OK; // The bindings are already loaded. 
+                  // XXX Think about how to flush them when styles cause a dynamic change
+
+  nsCAutoString url = aURL;
   if (NS_FAILED(rv = GetBinding(url, getter_AddRefs(binding)))) {
     NS_ERROR("Failed loading an XBL document for content node.");
     return rv;
   }
 
   // Install the binding on the content node.
-  // When installed, the bound content will clone the
-  // anonymous content and place it into the binding.
   bindableContent->SetBinding(binding);
 
+  // Tell the binding to build the anonymous content.
+  binding->GenerateAnonymousContent(aContent);
+
+  // Tell the binding to install event handlers
+  binding->InstallEventHandlers(aContent);
+
+  // XXX Methods and properties. How?
   return NS_OK; 
 }
 
