@@ -178,17 +178,10 @@ NS_IMETHODIMP nsWebBrowser::GoForward()
 
 NS_IMETHODIMP nsWebBrowser::LoadURI(const PRUnichar* uri)
 {
-   //XXX First Check
-	/*
-	Loads a given URI.  This will give priority to loading the requested URI
-	in the object implementing	this interface.  If it can't be loaded here
-	however, the URL dispatcher will go through its normal process of content
-	loading.
+   //NS_ENSURE_ARG(uri);  // Done in LoadURIVia for us.
 
-	@param uri - The URI to load.
-	*/
-   return NS_ERROR_FAILURE;
-}
+   return LoadURIVia(uri, 0); // Can blindly return because we know this 
+}                             // method to return the same errors.
 
 NS_IMETHODIMP nsWebBrowser::LoadURIVia(const PRUnichar* uri, 
    PRUint32 adapterBinding)
@@ -695,25 +688,36 @@ NS_IMETHODIMP nsWebBrowser::GetMainWidget(nsIWidget** mainWidget)
 
 NS_IMETHODIMP nsWebBrowser::SetFocus()
 {
-   //XXX First Check
-	/**
-	* Give the window focus.
-	*/
-   return NS_ERROR_FAILURE;
+   NS_ENSURE_STATE(mDocShell);
+
+   nsCOMPtr<nsIGenericWindow> docShellWindow(do_QueryInterface(mDocShell));
+   
+   NS_ENSURE_SUCCESS(docShellWindow->SetFocus(), NS_ERROR_FAILURE);
+
+   return NS_OK;
 }
 
-NS_IMETHODIMP nsWebBrowser::GetTitle(PRUnichar** title)
+NS_IMETHODIMP nsWebBrowser::GetTitle(PRUnichar** aTitle)
 {
-   NS_ENSURE_ARG_POINTER(title);
+   NS_ENSURE_ARG_POINTER(aTitle);
+   NS_ENSURE_STATE(mDocShell);
 
-   //XXX First Check
-   return NS_ERROR_FAILURE;
+   nsCOMPtr<nsIGenericWindow> docShellWindow(do_QueryInterface(mDocShell));
+
+   NS_ENSURE_SUCCESS(docShellWindow->GetTitle(aTitle), NS_ERROR_FAILURE);
+
+   return NS_OK;
 }
 
-NS_IMETHODIMP nsWebBrowser::SetTitle(const PRUnichar* title)
+NS_IMETHODIMP nsWebBrowser::SetTitle(const PRUnichar* aTitle)
 {
-   //XXX First Check
-   return NS_ERROR_FAILURE;
+   NS_ENSURE_STATE(mDocShell);
+
+   nsCOMPtr<nsIGenericWindow> docShellWindow(do_QueryInterface(mDocShell));
+
+   NS_ENSURE_SUCCESS(docShellWindow->SetTitle(aTitle), NS_ERROR_FAILURE);
+
+   return NS_OK;
 }
 
 //*****************************************************************************
