@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include "nsRepository.h" 
-#include "nsMsgCID.h"
+#include "nsMsgBaseCID.h"
 #include "nsIMsgRFC822Parser.h"
 
 static NS_DEFINE_IID(kIMsgRFC822ParserIID, NS_IMSGRFC822PARSER_IID); 
