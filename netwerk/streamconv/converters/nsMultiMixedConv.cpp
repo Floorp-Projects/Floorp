@@ -414,7 +414,7 @@ nsMultiMixedConv::SendData(const char *aBuffer, nsIChannel *aChannel, nsISupport
 
     nsresult rv;
     nsCOMPtr<nsISupports> inStreamSup;
-    rv = NS_NewStringInputStream(getter_AddRefs(inStreamSup), aBuffer);
+    rv = NS_NewCStringInputStream(getter_AddRefs(inStreamSup), aBuffer);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIInputStream> inStream = do_QueryInterface(inStreamSup, &rv);
@@ -440,7 +440,7 @@ nsMultiMixedConv::BuildURI(nsIChannel *aChannel, nsIURI **_retval) {
 
     nsCAutoString dummyURIStr(uriSpec);
     dummyURIStr.Append("##");
-    dummyURIStr.Append((PRInt32) mPartCount, 10 /* radix */);
+    dummyURIStr.AppendWithConversion((PRInt32) mPartCount, 10 /* radix */);
 
     NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
