@@ -309,7 +309,12 @@ foreach $revision (@revision_map)
 
         $revision_width = max($revision_width,length($revision));
 
-        $output .= "<A HREF=\"cvsblame.cgi?file=$filename&rev=$revision&root=$root\"";
+#        $output .= "<A HREF=\"cvsblame.cgi?file=$filename&rev=$revision&root=$root\"";
+	if (defined $prev_revision{$revision}) {
+	  $output .= "<A HREF=\"cvsview2.cgi?diff_mode=context&whitespace_mode=show&root=$root&subdir=$rcs_path&command=DIFF_FRAMESET&file=$file_tail&rev2=$revision&rev1=$prev_revision{$revision}\"";
+	} else {
+	  $output .= "<A HREF=\"cvsview2.cgi?root=$root&subdir=$rcs_path&command=DIRECTORY&files=$file_tail\"";
+	}
 	$output .= " onmouseover='return log(event,\"$prev_revision{$revision}\",\"$revision\");'" if $useLayers;
         $output .= ">";
 	$author = $revision_author{$revision};
