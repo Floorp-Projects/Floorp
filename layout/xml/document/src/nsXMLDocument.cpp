@@ -487,6 +487,7 @@ nsXMLDocument::GetCSSLoader(nsICSSLoader*& aLoader)
     result = NS_NewCSSLoader(this, &mCSSLoader);
     if (mCSSLoader) {
       mCSSLoader->SetCaseSensitive(PR_TRUE);
+      mCSSLoader->SetQuirkMode(PR_FALSE); // No quirks in XML
     }
   }
   aLoader = mCSSLoader;
