@@ -33,9 +33,11 @@ Contributor(s): Pete Collins, Doug Turner, Brendan Eich, Warren Harris
 *       3. read(path);
 *       4. write(contents, permissions);
 *       5. append(dirPath, fileName);
-*       6. mkdir(path, permissions);
+*       6. mkdir(path, permissions); //permissions optional
 *       7. rmdir(path);
 *       8. rm(path);
+*       9. copy(source, dest);
+*       10.leaf(path);
 *
 *       Instructions:
 *
@@ -112,16 +114,12 @@ exists : function (path) {
 
     try{ 
 
-    if(!this.fileInst)
-        this.fileInst           = new FilePath(path);
-
-        fileExists              = this.fileInst.exists();
+        var file           			= new FilePath(path);
+        var fileExists          = file.exists();
 
     }
 
     catch(error) { dump("**** ERROR:"+error+"\n\n"); }
-
-    //dump("File \""+path+"\" exists = "+fileExists+"\n\n");
 
     return fileExists;
 },
@@ -427,18 +425,18 @@ rm : function (path) {
     }
 
     if(!this.exists(path))
-		return;
+    return;
 
     try{ 
     this.fileInst            = new FilePath(path);
-		if(this.fileInst.isDirectory()){
-		dump("Sorry file is a directory. Try rmdir() instead . . .\n");
-		return;
-		}
+    if(this.fileInst.isDirectory()){
+    dump("Sorry file is a directory. Try rmdir() instead . . .\n");
+    return;
+    }
 
-		this.fileInst['delete'](false);
+    this.fileInst['delete'](false);
 
-		}
+    }
 
     catch (error){ dump("**** ERROR:"+error+"\n\n"); }
     this.close();
@@ -459,12 +457,12 @@ rmdir : function (path) {
     }
 
     if(!this.exists(path))
-		return;
+    return;
 
     try{ 
     this.fileInst            = new FilePath(path);
-		this.fileInst['delete'](true);
-		}
+    this.fileInst['delete'](true);
+    }
 
     catch (error){ dump("**** ERROR:"+error+"\n\n"); }
     this.close();
@@ -473,6 +471,76 @@ rmdir : function (path) {
 
 /********************* RMDIR ****************************/
 
+/********************* COPY *****************************/
+
+copy  : function (source, dest) {
+
+  if(!source || !dest){
+  dump('not enough args . . . \n\n');
+  return;
+  }
+
+  if(!this.exists(source)){
+  dump("Sorry, source file "+source+" doesn't exist\n\n");
+  return;
+  }
+
+  var fileInst      = new FilePath(source);
+  var dir           = new FilePath(dest);
+
+  var copyName      = fileInst.leafName;
+
+  if(!this.exists(dest) || !dir.isDirectory()){
+  copyName          = dir.leafName;
+  dump(dir.path.replace(copyName,'')+'\n\n');
+  var dir           = new FilePath(dir.path.replace(copyName,''));
+    if(!this.exists(dir.path)){
+    dump("Sorry, dest directory "+dir.path+" doesn't exist\n\n");
+    return;
+    }
+      if(!dir.isDirectory()){
+      dump("Sorry, destination dir "+dir.path+" is not a valid dir path\n\n");
+      return;
+      }
+  }
+
+  if(this.exists(this.append(dir.path, copyName))){
+  dump('Sorry destination file '+this.append(dir.path, copyName)+' already exists . . .\n\n');
+  return;
+  }
+
+  dump("copyName = "+copyName+"\n\n");
+  dump("dir is directory = "+dir.isDirectory()+"\n\n");
+
+  try{ 
+  fileInst.copyTo(dir, copyName);
+  dump('copy successful!\n\n');
+  }
+
+  catch (error){ dump("**** ERROR:"+error+"\n\n"); }
+  this.close();
+
+
+},
+
+/********************* COPY *****************************/
+
+/********************* LEAF *****************************/
+
+leaf  : function (path) {
+
+  if(!path){
+  dump('Please enter a file path as arg\n');
+  return null;
+  }
+
+  fileInst = new FilePath(path);
+
+  return fileInst.leafName;
+
+},
+
+/********************* LEAF *****************************/
 
 /********************* APPEND ***************************/
 
