@@ -1411,7 +1411,7 @@ nsWSRunObject::PrepareToDeleteRangePriv(nsWSRunObject* aEndObject)
     res = DeleteChars(beforeRun->mStartNode, beforeRun->mStartOffset, mNode, mOffset);
     NS_ENSURE_SUCCESS(res, res);
   }
-  else if (beforeRun && (beforeRun->mType == eNormalWS) && mPRE)
+  else if (beforeRun && (beforeRun->mType == eNormalWS) && !mPRE)
   {
     if ( (afterRun && (afterRun->mType == eTrailingWS)) ||
          (afterRun && (afterRun->mType == eNormalWS))   ||
