@@ -92,6 +92,8 @@
 <!ENTITY helpMenu.accesskey        "H">
 <!ENTITY releaseCmd.label          "Release Notes">
 <!ENTITY releaseCmd.accesskey      "R">
-<!ENTITY aboutCmd.label         "About &brandShortName;">
-<!ENTITY aboutCmd.accesskey       "A">
+<!ENTITY aboutCmd.label            "About &brandShortName;">
+<!ENTITY aboutCmd.accesskey        "A">
 
+<!-- selectBookmark.xul -->
+<!ENTITY selectBookmark.title      "Select a bookmark...">

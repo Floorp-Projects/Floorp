@@ -26,6 +26,8 @@ browser.jar:
   content/browser/bookmarks/addBookmark.js                   (content/addBookmark.js)
   content/browser/bookmarks/findBookmark.xul                 (content/findBookmark.xul)
   content/browser/bookmarks/findBookmark.js                  (content/findBookmark.js)
+  content/browser/bookmarks/selectBookmark.xul               (content/selectBookmark.xul)
+  content/browser/bookmarks/selectBookmark.js                (content/selectBookmark.js)
   content/browser/bookmarks/bookmarksProperties.xul          (content/bookmarksProperties.xul)
   content/browser/bookmarks/bookmarksProperties.js           (content/bookmarksProperties.js)
   content/browser/bookmarks/bookmarksManager.xul             (content/bookmarksManager.xul)
