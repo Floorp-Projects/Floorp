@@ -33,17 +33,13 @@
 #// root of NS
 #//
 #//------------------------------------------------------------------------
+MODULE=java
 DEPTH= ..\..\..
 
-#//------------------------------------------------------------------------
-#//
-#// Define any local options for the make tools 
-#//     (ie. LCFLAGS, LLFLAGS, LLIBS, LINCS)
-#//
-#//------------------------------------------------------------------------
-
-INSTALL_DIR=$(XPDIST)\include\java
-
+EXPORTS = \
+	java_lang_String.h \
+	jdk_java_lang_String.h \
+	$(NULL)
 
 #//------------------------------------------------------------------------
 #//
@@ -52,12 +48,3 @@ INSTALL_DIR=$(XPDIST)\include\java
 #//------------------------------------------------------------------------
 
 include <$(DEPTH)/config/rules.mak>
-
-export:: 
-    $(MAKE_INSTALL) java_lang_String.h  $(INSTALL_DIR)
-    $(MAKE_INSTALL) jdk_java_lang_String.h  $(INSTALL_DIR)
-
-install::
-
-clobber::
-
