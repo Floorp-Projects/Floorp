@@ -265,15 +265,52 @@ SECStatus PR_CALLBACK AuthCertificateCallback(void* client_data, PRFileDesc* fd,
   // first the default action
   SECStatus rv = SSL_AuthCertificate(CERT_GetDefaultCertDB(), fd, checksig, isServer);
 
+  // We want to remember the CA certs in the temp db, so that the application can find the
+  // complete chain at any time it might need it.
+  // But we keep only those CA certs in the temp db, that we didn't already know.
+  
   if (SECSuccess == rv) {
-    nsNSSSocketInfo* infoObject = (nsNSSSocketInfo*) fd->higher->secret;
-    if (infoObject) {
-      CERTCertificate *serverCert = SSL_PeerCertificate(fd);
-      if (serverCert) {
-        CERTCertList *certList = CERT_GetCertChainFromCert(serverCert, PR_Now(), certUsageSSLCA);
-        infoObject->RememberCAChain(certList);
-        CERT_DestroyCertificate(serverCert);
+    CERTCertificate *serverCert = SSL_PeerCertificate(fd);
+    if (serverCert) {
+      CERTCertList *certList = CERT_GetCertChainFromCert(serverCert, PR_Now(), certUsageSSLCA);
+
+      nsCOMPtr<nsINSSComponent> nssComponent;
+      
+      for (CERTCertListNode *node = CERT_LIST_HEAD(certList);
+           !CERT_LIST_END(node, certList);
+           node = CERT_LIST_NEXT(node)) {
+
+        if (node->cert->slot) {
+          // This cert was found on a token, no need to remember it in the temp db.
+          continue;
+        }
+
+        if (node->cert->isperm) {
+          // We don't need to remember certs already stored in perm db.
+          continue;
+        }
+        
+        if (node->cert == serverCert) {
+          // We don't want to remember the server cert, 
+          // the code that cares for displaying page info does this already.
+          continue;
+        }
+        
+        // We have found a signer cert that we want to remember.
+
+        if (!nssComponent) {
+          // delay getting the service until we really need it
+          nsresult rv;
+          nssComponent = do_GetService(kNSSComponentCID, &rv);
+        }
+        
+        if (nssComponent) {
+          nssComponent->RememberCert(node->cert);
+        }
       }
+
+      CERT_DestroyCertList(certList);
+      CERT_DestroyCertificate(serverCert);
     }
   }
 
