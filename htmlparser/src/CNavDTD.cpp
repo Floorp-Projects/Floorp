@@ -396,10 +396,15 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
     case eHTMLTag_link:
       break;    //singletons can't contain anything...
 
-      // XXX hey rickg: listing is like xmp or plaintext and has
-      // NOTHING to do with html lists.
+    case eHTMLTag_listitem:
+      if (eHTMLTag_listitem == aChild) {
+        return PR_FALSE;
+      }
+      result = PR_TRUE;
+      break;
+
     case eHTMLTag_listing:
-      result=PRBool(eHTMLTag_listitem==aChild); break;
+      result = PR_TRUE; break;
 
     case eHTMLTag_map:
       result=PRBool(eHTMLTag_area==aChild); break;
@@ -412,6 +417,14 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
 
     case eHTMLTag_meta:
       break;  //singletons can't contain other tags
+
+    case eHTMLTag_menu:
+    case eHTMLTag_dir:
+    case eHTMLTag_ol:
+    case eHTMLTag_ul:
+      // XXX kipp was here
+      result = PR_TRUE;
+      break;
 
     case eHTMLTag_noframes:
       if(eHTMLTag_body==aChild)
@@ -427,23 +440,8 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
     case eHTMLTag_object:
       result=PRBool(0!=strchr(gTagSet2,aChild)); break;
 
-    case eHTMLTag_menu:
-    case eHTMLTag_dir:
-    case eHTMLTag_ol:
-    case eHTMLTag_ul:
-      // XXX kipp was here
-      result = PR_TRUE;
-      break;
-
-    case eHTMLTag_listitem:
-      if (eHTMLTag_listitem == aChild) {
-        return PR_FALSE;
-      }
-      result = PR_TRUE;
-      break;
-
     case eHTMLTag_option:
-      break;  //singletons can't contain other tags
+      result=PR_TRUE; break; //for now, allow select to contain anything...
 
     case eHTMLTag_paragraph:
       if(eHTMLTag_paragraph==aChild)
@@ -669,10 +667,11 @@ PRBool CNavDTD::CanOmitEndTag(PRInt32 aParent,PRInt32 aChild) const {
       }
       break;
 
+    case eHTMLTag_select:       case eHTMLTag_option:
     case eHTMLTag_button:       case eHTMLTag_fieldset:
     case eHTMLTag_input:        case eHTMLTag_isindex:
     case eHTMLTag_label:        case eHTMLTag_legend:
-    case eHTMLTag_select:       case eHTMLTag_textarea:
+    case eHTMLTag_textarea:
       if(PR_FALSE==mParser->HasOpenForm())
         result=PR_TRUE; 
       break;
@@ -721,7 +720,8 @@ PRBool CNavDTD::IsContainer(PRInt32 aTag) const {
     case eHTMLTag_input:      case eHTMLTag_isindex:
     case eHTMLTag_link:
     case eHTMLTag_math:       case eHTMLTag_meta:
-    case eHTMLTag_option:     case eHTMLTag_param:
+//    case eHTMLTag_option:     
+    case eHTMLTag_param:
     case eHTMLTag_style:      case eHTMLTag_spacer:
     case eHTMLTag_wbr:
     case eHTMLTag_form:
