@@ -248,7 +248,7 @@ StyleRulesViewer.prototype =
     var propval = style.getPropertyValue(propname);
 
     var priority = style.getPropertyPriority(propname);
-    priority = priority == "!important" ? "!blah" : "!important";
+    priority = priority == "important" ? "" : "important";
 
     style.removeProperty(propname);
     style.setProperty(propname, propval, priority);
@@ -396,7 +396,7 @@ function(aRow, aColId, aProperties)
 {
   if (aColId == "olcPropPriority") {
     var prop = this.mDec.item(aRow);
-    if (this.mDec.getPropertyPriority(prop) == "!important") {
+    if (this.mDec.getPropertyPriority(prop) == "important") {
       aProperties.AppendElement(this.createAtom("important"));
     }
   }
