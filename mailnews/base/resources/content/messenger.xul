@@ -92,7 +92,7 @@ Rights Reserved.
      <!-- The main mail three pane frame -->
     <box align="horizontal" style="height:100px" flex="1">
       <box id="sidebarbox" />
-      <splitter id="sidebarsplitter" collapse="before" persist="hidden"/>
+      <splitter id="sidebarsplitter" collapse="before" persist="state"/>
       <box align="vertical"  flex="1"  style="border-left:solid black 1px">
        <toolbox>
      <menubar>
