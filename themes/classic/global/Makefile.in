@@ -125,8 +125,8 @@ EXPORT_RESOURCE_SAMPLES = \
 	taskbar-composer-hover.gif \
 	taskbar-mail.gif \
 	taskbar-mail-hover.gif \
-    taskbar-gotmail.gif \
-    taskbar-gotmail-hover.gif \
+	taskbar-gotmail.gif \
+	taskbar-gotmail-hover.gif \
 	taskbar-navigator.gif \
 	taskbar-navigator-hover.gif \
 	taskbar-popup-arrow.gif \
