@@ -3475,6 +3475,15 @@ ULONGLONG GetDiskSpaceAvailable(LPSTR szPath)
   {
     LocateExistingPath(szPath, szExistingPath, sizeof(szExistingPath));
     AppendBackSlash(szExistingPath, sizeof(szExistingPath));
+
+    /* Appearently under Win9x, the path still needs to be in 8.3 format
+     * or GetDiskFreeSpaceEx() will fail. */
+    if(gSystemInfo.dwOSType & OS_WIN9x)
+    {
+      lstrcpy(szBuf, szExistingPath);
+      GetShortPathName(szBuf, szExistingPath, sizeof(szExistingPath));
+    }
+
     if(NS_GetDiskFreeSpaceEx(szExistingPath,
                              &uliFreeBytesAvailableToCaller,
                              &uliTotalNumberOfBytesToCaller,
