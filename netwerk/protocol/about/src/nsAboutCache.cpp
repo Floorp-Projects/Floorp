@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  *   Henrik Gemal <gemal@gemal.dk>
+ *   Darin Fisher <darin@netscape.com>
  */
 
 #include "nsAboutCache.h"
@@ -33,11 +34,19 @@
 #include "nsNetUtil.h"
 #include "prtime.h"
 
+#ifdef MOZ_NEW_CACHE
+#include "nsICacheService.h"
+#else
 #include "nsICachedNetData.h"
 #include "nsINetDataCacheRecord.h"
+#endif
 
 
+#ifdef MOZ_NEW_CACHE
+NS_IMPL_ISUPPORTS2(nsAboutCache, nsIAboutModule, nsICacheVisitor)
+#else
 NS_IMPL_ISUPPORTS1(nsAboutCache, nsIAboutModule)
+#endif
 
 NS_IMETHODIMP
 nsAboutCache::NewChannel(nsIURI *aURI, nsIChannel **result)
@@ -68,8 +77,13 @@ nsAboutCache::NewChannel(nsIURI *aURI, nsIChannel **result)
     }
 */
     // Get the cache manager service
+#ifdef MOZ_NEW_CACHE
+    NS_WITH_SERVICE(nsICacheService, cacheService,
+                    NS_CACHESERVICE_CONTRACTID, &rv);
+#else
     NS_WITH_SERVICE(nsINetDataCacheManager, cacheManager,
                     NS_NETWORK_CACHE_MANAGER_CONTRACTID, &rv);
+#endif
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIStorageStream> storageStream;
@@ -87,6 +101,9 @@ nsAboutCache::NewChannel(nsIURI *aURI, nsIChannel **result)
     outputStream->Write(mBuffer, mBuffer.Length(), &bytesWritten);
 
 
+#ifdef MOZ_NEW_CACHE
+    mStream = outputStream;
+#else
     nsCOMPtr<nsISimpleEnumerator> moduleIterator;
     nsCOMPtr<nsISimpleEnumerator> entryIterator;
 
@@ -157,6 +174,7 @@ nsAboutCache::NewChannel(nsIURI *aURI, nsIChannel **result)
       outputStream->Write(buffer, buffer.Length(), &bytesWritten);
 */
     } while(1);
+#endif
 
     mBuffer.Assign("</body>\n</html>\n");
     outputStream->Write(mBuffer, mBuffer.Length(), &bytesWritten);
@@ -178,6 +196,202 @@ nsAboutCache::NewChannel(nsIURI *aURI, nsIChannel **result)
     return rv;
 }
 
+#ifdef MOZ_NEW_CACHE
+
+NS_IMETHODIMP
+nsAboutCache::VisitDevice(const char *deviceID,
+                          nsICacheDeviceInfo *deviceInfo,
+                          PRBool *visitEntries)
+{
+    PRUint32 bytesWritten, value;
+    nsXPIDLCString str;
+
+    // Write out the Cache Name
+    deviceInfo->GetDescription(getter_Copies(str));
+
+    mBuffer.Assign("<h2>");
+    mBuffer.Append(str);
+    mBuffer.Append("</h2>\n");
+
+    // Write out cache info
+    
+    mBuffer.Append("<table>\n<tr><td><b>Usage report:</b></td>\n");
+    deviceInfo->GetUsageReport(getter_Copies(str));
+    mBuffer.Assign("<td>");
+    mBuffer.Append(str);
+    mBuffer.Append("</td>\n</tr>\n");
+
+    mBuffer.Append("\n<tr><td><b>Number of entries:</b></td>\n");
+    value = 0;
+    deviceInfo->GetEntryCount(&value);
+    mBuffer.Append("<td>");
+    mBuffer.AppendInt(value);
+    mBuffer.Append("</td>\n</tr>\n");
+
+    mBuffer.Append("\n<tr><td><b>Maximum storage size:</b></td>\n");
+    value = 0;
+    deviceInfo->GetMaximumSize(&value);
+    mBuffer.Append("<td>");
+    mBuffer.AppendInt(value);
+    mBuffer.Append("</td>\n</tr>\n");
+
+    mBuffer.Append("\n<tr><td><b>Storage in use:</b></td>\n");
+    mBuffer.Append("<td>");
+    value = 0;
+    deviceInfo->GetTotalSize(&value);
+    mBuffer.AppendInt(value);
+    mBuffer.Append(" KB</td>\n</tr>\n");
+
+    mBuffer.Append("</table>\n<hr>\n");
+
+    mStream->Write(mBuffer, mBuffer.Length(), &bytesWritten);
+
+    *visitEntries = PR_TRUE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAboutCache::VisitEntry(const char *deviceID,
+                         const char *clientID,
+                         nsICacheEntryInfo *entryInfo,
+                         PRBool *visitNext)
+{
+    PRUint32 bytesWritten;
+    nsXPIDLCString str;
+
+    // Entry start...
+    mBuffer.Assign("<p>\n");
+
+    // URI
+    mBuffer.Append("<tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+                     "&nbsp;&nbsp;&nbsp;&nbsp;URL: </tt>");
+    entryInfo->GetKey(getter_Copies(str));
+    mBuffer.Append("<a href=\"");
+    mBuffer.Append(str);
+    mBuffer.Append("\">");
+    mBuffer.Append(str);
+    mBuffer.Append("</a><br>\n");
+
+    // Client
+    mBuffer.Append("<tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+                     "&nbsp;Client: </tt>");
+    entryInfo->GetClientID(getter_Copies(str));
+    mBuffer.Append(str);
+    mBuffer.Append("<br>\n");
+
+    // Content length
+    PRUint32 length = 0;
+    entryInfo->GetDataSize(&length);
+
+    mBuffer.Append("<tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Data size: </tt>");
+    mBuffer.AppendInt(length);
+    mBuffer.Append("<br>\n");
+
+    // Number of accesses
+    PRInt32 fetchCount = 0;
+    entryInfo->GetFetchCount(&fetchCount);
+
+    mBuffer.Append("<tt>&nbsp;&nbsp;&nbsp;Fetch count: </tt>");
+    mBuffer.AppendInt(fetchCount);
+    mBuffer.Append("<br>\n");
+
+    // Last modified time
+    char buf[255];
+    PRExplodedTime et;
+    PRTime t;
+
+    mBuffer.Append("<tt>&nbsp;&nbsp;Last Fetched: </tt>");
+    entryInfo->GetLastFetched(&t);
+    if (LL_NE(t, LL_ZERO)) {
+        PR_ExplodeTime(t, PR_LocalTimeParameters, &et);
+        PR_FormatTime(buf, sizeof(buf), "%c", &et);
+        mBuffer.Append(buf);
+    } else
+        mBuffer.Append("No last fetched time");
+    mBuffer.Append("<br>");
+
+    mBuffer.Append("<tt>&nbsp;Last Modified: </tt>");
+    entryInfo->GetLastModified(&t);
+    if (LL_NE(t, LL_ZERO)) {
+        PR_ExplodeTime(t, PR_LocalTimeParameters, &et);
+        PR_FormatTime(buf, sizeof(buf), "%c", &et);
+        mBuffer.Append(buf);
+    } else
+        mBuffer.Append("No last modified time");
+    mBuffer.Append("<br>");
+
+    mBuffer.Append("<tt>Last Validated: </tt>");
+    entryInfo->GetLastFetched(&t);
+    if (LL_NE(t, LL_ZERO)) {
+        PR_ExplodeTime(t, PR_LocalTimeParameters, &et);
+        PR_FormatTime(buf, sizeof(buf), "%c", &et);
+        mBuffer.Append(buf);
+    } else
+        mBuffer.Append("No last validated time");
+    mBuffer.Append("<br>");
+
+    // Expires time
+    mBuffer.Append("<tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+                 "Expires: </tt>");
+    entryInfo->GetExpirationTime(&t);
+    if (LL_NE(t, LL_ZERO)) {
+        PR_ExplodeTime(t, PR_LocalTimeParameters, &et);
+        PR_FormatTime(buf, sizeof(buf), "%c", &et);
+        mBuffer.Append(buf);
+    } else {
+        mBuffer.Append("No expiration time");
+    }
+    mBuffer.Append("<br>");
+
+    // Stream based
+    mBuffer.Append("<tt>&nbsp;&nbsp;Stream based: </tt>");
+    PRBool b = PR_TRUE;
+    entryInfo->GetStreamBased(&b);
+    mBuffer.Append(b ? "TRUE" : "FALSE");
+    mBuffer.Append("<br>\n");
+
+    /*
+    // Flags
+    PRBool flag = PR_FALSE, foundFlag = PR_FALSE;
+    mBuffer.Append("<tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+                 "Flags: </tt><b>");
+
+    flag = PR_FALSE;
+    entry->GetPartialFlag(&flag);
+    if (flag) {
+        mBuffer.Append("PARTIAL ");
+        foundFlag = PR_TRUE;
+    }
+    flag = PR_FALSE;
+    entry->GetUpdateInProgress(&flag);
+    if (flag) {
+        mBuffer.Append("UPDATE_IN_PROGRESS ");
+        foundFlag = PR_TRUE;
+    }
+    flag = PR_FALSE;
+    entry->GetInUse(&flag);
+    if (flag) {
+        mBuffer.Append("IN_USE");
+        foundFlag = PR_TRUE;
+    }
+
+    if (!foundFlag) {
+        mBuffer.Append("</b>none<br>\n");
+    } else {
+        mBuffer.Append("</b><br>\n");
+    }
+    */
+
+    // Entry is done...
+    mBuffer.Append("</p>\n");
+
+    mStream->Write(mBuffer, mBuffer.Length(), &bytesWritten);
+
+    *visitNext = PR_TRUE;
+    return NS_OK;
+}
+
+#else
 
 void nsAboutCache::DumpCacheInfo(nsIOutputStream *aStream, nsINetDataCache *aCache)
 {
@@ -379,6 +593,8 @@ nsresult nsAboutCache::DumpCacheEntries(nsIOutputStream *aStream,
 
   return NS_OK;
 }
+
+#endif /* MOZ_NEW_CACHE */
 
 
 NS_METHOD
