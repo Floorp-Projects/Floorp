@@ -125,7 +125,7 @@ var progressListener = {
 
 function getString( stringId ) {
    // Check if we've fetched this string already.
-   if ( !dialog.strings[ stringId ] ) {
+   if (!(stringId in dialog.strings)) {
       // Try to get it.
       var elem = document.getElementById( "dialog.strings."+stringId );
       try {
@@ -196,7 +196,7 @@ function onLoad() {
     moveToAlertPosition();
 
     //We need to delay the set title else dom will overwrite it
-    return window.setTimeout(SetTitle, 0, subject);
+    window.setTimeout(SetTitle, 0, subject);
 }
 
 function onUnload() 
