@@ -117,7 +117,7 @@ function dumpObjectTree (o, recurse, compress, level)
         switch (t)
         {
             case "function":
-                var sfunc = o[i].toString().split("\n");
+                var sfunc = String(o[i]).split("\n");
                 if (sfunc[2] == "    [native code]")
                     var sfunc = "[native code]";
                 else
