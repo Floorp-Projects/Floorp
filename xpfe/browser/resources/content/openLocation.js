@@ -86,7 +86,21 @@ function open() {
 
 	if ( dialog.topWindow.checked ) {
 		/* Load url in opener. */
-		browser.loadUrl( url );
+		try {
+		    browser.loadUrl( url );
+        } catch ( exception1 ) {
+            // Rats.  Probably was a local path, try loading that.
+            try {
+                // Construct file spec from local path.
+                var fileSpec = createInstance( "component://netscape/filespecwithui", "nsIFileSpecWithUI" );
+                fileSpec.nativePath = url;
+                browser.loadUrl( fileSpec.URLString );
+            } catch( exception2 ) {
+                // Give up.
+                // XXX Need to show alert!
+                return false;
+            }
+        }
 
 	} else if ( dialog.newWindow.checked ) {
 		/* User wants new window. */
