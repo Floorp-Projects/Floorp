@@ -224,9 +224,9 @@ typedef PRUint32 nsFrameState;
 //----------------------------------------------------------------------
 
 enum nsFramePaintLayer {
-  eFramePaintLayer_Underlay = 0,
-  eFramePaintLayer_Content = 1,
-  eFramePaintLayer_Overlay = 2
+  eFramePaintLayer_Underlay = 1,
+  eFramePaintLayer_Content = 2,
+  eFramePaintLayer_Overlay = 4
 };
 
 enum nsSelectionAmount {
@@ -263,6 +263,10 @@ enum nsSpread {
 #define NS_FRAME_PAINT_LAYER_FLOATS   eFramePaintLayer_Content
 #define NS_FRAME_PAINT_LAYER_FOREGROUND eFramePaintLayer_Overlay
 #define NS_FRAME_PAINT_LAYER_DEBUG      eFramePaintLayer_Overlay
+#define NS_FRAME_PAINT_LAYER_ALL                       \
+  (nsFramePaintLayer(NS_FRAME_PAINT_LAYER_BACKGROUND | \
+                     NS_FRAME_PAINT_LAYER_FLOATS     | \
+                     NS_FRAME_PAINT_LAYER_FOREGROUND))
 
 /**
  * Reflow status returned by the reflow methods.

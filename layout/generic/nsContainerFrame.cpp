@@ -354,7 +354,21 @@ nsContainerFrame::GetFrameForPointUsing(nsPresContext* aPresContext,
     tmp += originOffset;
 
   while (kid) {
-    rv = kid->GetFrameForPoint(aPresContext, tmp, aWhichLayer, &hit);
+    if (aWhichLayer == NS_FRAME_PAINT_LAYER_ALL) {
+      // Check all layers on this kid before moving on to the next one
+      rv = kid->GetFrameForPoint(aPresContext, tmp,
+                                 NS_FRAME_PAINT_LAYER_FOREGROUND, &hit);
+      if (NS_FAILED(rv) || !hit) {
+        rv = kid->GetFrameForPoint(aPresContext, tmp,
+                                   NS_FRAME_PAINT_LAYER_FLOATS, &hit);
+        if (NS_FAILED(rv) || !hit) {
+          rv = kid->GetFrameForPoint(aPresContext, tmp,
+                                     NS_FRAME_PAINT_LAYER_BACKGROUND, &hit);
+        }
+      }
+    } else {
+      rv = kid->GetFrameForPoint(aPresContext, tmp, aWhichLayer, &hit);
+    }
 
     if (NS_SUCCEEDED(rv) && hit) {
       *aFrame = hit;
