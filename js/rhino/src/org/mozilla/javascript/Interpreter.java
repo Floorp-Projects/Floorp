@@ -41,10 +41,12 @@
 
 package org.mozilla.javascript;
 
-import java.io.*;
+import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.io.Serializable;
 
-import org.mozilla.javascript.debug.*;
 import org.mozilla.javascript.continuations.Continuation;
+import org.mozilla.javascript.debug.DebugFrame;
 
 public class Interpreter
 {
@@ -2073,9 +2075,64 @@ public class Interpreter
         return presentLines.getKeys();
     }
 
+    static void captureInterpreterStackInfo(RhinoException ex)
+    {
+        Context cx = Context.getCurrentContext();
+        if (cx == null || cx.lastInterpreterFrame == null) {
+            // No interpreter invocations
+            ex.interpreterStackInfo = null;
+            ex.interpreterLineData = null;
+            return;
+        }
+        // has interpreter frame on the stack
+        CallFrame[] array;
+        if (cx.previousInterpreterInvocations == null
+            || cx.previousInterpreterInvocations.size() == 0)
+        {
+            array = new CallFrame[1];
+        } else {
+            int previousCount = cx.previousInterpreterInvocations.size();
+            if (cx.previousInterpreterInvocations.peek()
+                == cx.lastInterpreterFrame)
+            {
+                // It can happen if exception was generated after
+                // frame was pushed to cx.previousInterpreterInvocations
+                // but before assignment to cx.lastInterpreterFrame.
+                // In this case frames has to be ignored.
+                --previousCount;
+            }
+            array = new CallFrame[previousCount + 1];
+            cx.previousInterpreterInvocations.toArray(array);
+        }
+        array[array.length - 1]  = (CallFrame)cx.lastInterpreterFrame;
+
+        int interpreterFrameCount = 0;
+        for (int i = 0; i != array.length; ++i) {
+            interpreterFrameCount += 1 + array[i].frameIndex;
+        }
+
+        int[] linePC = new int[interpreterFrameCount];
+        // Fill linePC with pc positions from all interpreter frames.
+        // Start from the most nested frame
+        int linePCIndex = interpreterFrameCount;
+        for (int i = array.length; i != 0;) {
+            --i;
+            CallFrame frame = array[i];
+            while (frame != null) {
+                --linePCIndex;
+                linePC[linePCIndex] = frame.pcSourceLineStart;
+                frame = frame.parentFrame;
+            }
+        }
+        if (linePCIndex != 0) Kit.codeBug();
+
+        ex.interpreterStackInfo = array;
+        ex.interpreterLineData = linePC;
+    }
+
     static String getSourcePositionFromStack(Context cx, int[] linep)
     {
-        CallFrame frame = (CallFrame)cx.interpreterLineCounting;
+        CallFrame frame = (CallFrame)cx.lastInterpreterFrame;
         InterpreterData idata = frame.idata;
         if (frame.pcSourceLineStart >= 0) {
             linep[0] = getIndex(idata.itsICode, frame.pcSourceLineStart);
@@ -2083,6 +2140,61 @@ public class Interpreter
             linep[0] = 0;
         }
         return idata.itsSourceFile;
+    }
+
+    static String getPatchedStack(RhinoException ex,
+                                  String nativeStackTrace)
+    {
+        String tag = "org.mozilla.javascript.Interpreter.interpretLoop";
+        StringBuffer sb = new StringBuffer(nativeStackTrace.length() + 1000);
+        String lineSeparator = System.getProperty("line.separator");
+
+        CallFrame[] array = (CallFrame[])ex.interpreterStackInfo;
+        int[] linePC = ex.interpreterLineData;
+        int arrayIndex = array.length;
+        int linePCIndex = linePC.length;
+        int offset = 0;
+        while (arrayIndex != 0) {
+            --arrayIndex;
+            int pos = nativeStackTrace.indexOf(tag, offset);
+            if (pos < 0) {
+                break;
+            }
+
+            // Skip tag length
+            pos += tag.length();
+            // Skip until the end of line
+            for (; pos != nativeStackTrace.length(); ++pos) {
+                char c = nativeStackTrace.charAt(pos);
+                if (c == '\n' || c == '\r') {
+                    break;
+                }
+            }
+            sb.append(nativeStackTrace.substring(offset, pos));
+            offset = pos;
+
+            CallFrame frame = array[arrayIndex];
+            while (frame != null) {
+                if (linePCIndex == 0) Kit.codeBug();
+                --linePCIndex;
+                InterpreterData idata = frame.idata;
+                sb.append(lineSeparator);
+                sb.append("\tat script");
+                if (idata.itsName != null && idata.itsName.length() != 0) {
+                    sb.append('.');
+                    sb.append(idata.itsName);
+                }
+                sb.append('(');
+                sb.append(idata.itsSourceFile);
+                sb.append(':');
+                sb.append(getIndex(idata.itsICode, linePC[linePCIndex]));
+                sb.append(')');
+                frame = frame.parentFrame;
+            }
+        }
+        sb.append(nativeStackTrace.substring(offset));
+
+        return sb.toString();
     }
 
     static String getEncodedSource(InterpreterData idata)
@@ -2107,9 +2219,8 @@ public class Interpreter
                             Context cx, Scriptable scope,
                             Scriptable thisObj, Object[] args)
     {
-        if (!ScriptRuntime.hasTopCall(cx)) {
-            return ScriptRuntime.doTopCall(ifun, cx, scope, thisObj, args);
-        }
+        if (!ScriptRuntime.hasTopCall(cx)) Kit.codeBug();
+
         if (cx.interpreterSecurityDomain != ifun.securityDomain) {
             Object savedDomain = cx.interpreterSecurityDomain;
             cx.interpreterSecurityDomain = ifun.securityDomain;
@@ -2125,15 +2236,7 @@ public class Interpreter
         initFrame(cx, scope, thisObj, args, null, 0, args.length,
                   ifun, null, frame);
 
-        Object result;
-        try {
-            result = interpret(cx, frame, null);
-        } finally {
-            // Always clenup interpreterLineCounting to avoid memory leaks
-            // throgh stored in Context frame
-            cx.interpreterLineCounting = null;
-        }
-        return result;
+        return interpretLoop(cx, frame, null);
     }
 
     public static Object restartContinuation(Continuation c, Context cx,
@@ -2159,11 +2262,11 @@ public class Interpreter
         ContinuationJump cjump = new ContinuationJump(c, null);
 
         cjump.result = arg;
-        return interpret(cx, null, cjump);
+        return interpretLoop(cx, null, cjump);
     }
 
-    private static Object interpret(Context cx, CallFrame frame,
-                                    Object throwable)
+    private static Object interpretLoop(Context cx, CallFrame frame,
+                                        Object throwable)
     {
         // throwable holds exception object to rethrow or catch
         // It is also used for continuation restart in which case
@@ -2182,6 +2285,15 @@ public class Interpreter
         String stringReg = null;
         int indexReg = -1;
 
+        if (cx.lastInterpreterFrame != null) {
+            // save the top frame from the previous interpreterLoop
+            // invocation on the stack
+            if (cx.previousInterpreterInvocations == null) {
+                cx.previousInterpreterInvocations = new ObjArray();
+            }
+            cx.previousInterpreterInvocations.push(cx.lastInterpreterFrame);
+        }
+
         // When restarting continuation throwable is not null and to jump
         // to the code that rewind continuation state indexReg should be set
         // to -1.
@@ -2196,6 +2308,9 @@ public class Interpreter
                 Kit.codeBug();
             }
         }
+
+        Object interpreterResult = null;
+        double interpreterResultDbl = 0.0;
 
         StateLoop: for (;;) {
             withoutExceptions: try {
@@ -2289,6 +2404,10 @@ public class Interpreter
                         setCallResult(frame, cjump.result, cjump.resultDbl);
                         // restart the execution
                     }
+
+                    // Should be already cleared
+                    if (throwable != null) Kit.codeBug();
+
                 } else {
                     if (frame.frozen) Kit.codeBug();
                 }
@@ -2308,8 +2427,8 @@ public class Interpreter
                 // function calls and normal returns.
                 int stackTop = frame.savedStackTop;
 
-                // Point line counting to the new frame
-                cx.interpreterLineCounting = frame;
+                // Store new frame in cx which is used for error reporting etc.
+                cx.lastInterpreterFrame = frame;
 
                 Loop: for (;;) {
 
@@ -3402,19 +3521,19 @@ switch (op) {
                 } // end of Loop: for
 
                 exitFrame(cx, frame, null);
-                Object callResult = frame.result;
-                double callResultDbl = frame.resultDbl;
+                interpreterResult = frame.result;
+                interpreterResultDbl = frame.resultDbl;
                 if (frame.parentFrame != null) {
                     frame = frame.parentFrame;
                     if (frame.frozen) {
                         frame = frame.cloneFrozen();
                     }
-                    setCallResult(frame, callResult, callResultDbl);
+                    setCallResult(
+                        frame, interpreterResult, interpreterResultDbl);
+                    interpreterResult = null; // Help GC
                     continue StateLoop;
                 }
-
-                return (callResult != DBL_MRK)
-                    ? callResult : ScriptRuntime.wrapNumber(callResultDbl);
+                break StateLoop;
 
             }  // end of interpreter withoutExceptions: try
             catch (Throwable ex) {
@@ -3524,17 +3643,40 @@ switch (op) {
                     continue StateLoop;
                 }
                 // Return continuation result to the caller
-                return (cjump.result != DBL_MRK)
-                    ? cjump.result : ScriptRuntime.wrapNumber(cjump.resultDbl);
+                interpreterResult = cjump.result;
+                interpreterResultDbl = cjump.resultDbl;
+                throwable = null;
             }
+            break StateLoop;
+
+        } // end of StateLoop: for(;;)
+
+        // Do cleanups/restorations before the final return or throw
+
+        if (cx.previousInterpreterInvocations != null
+            && cx.previousInterpreterInvocations.size() != 0)
+        {
+            cx.lastInterpreterFrame
+                = cx.previousInterpreterInvocations.pop();
+        } else {
+            // It was the last interpreter frame on the stack
+            cx.lastInterpreterFrame = null;
+            // Force GC of the value cx.previousInterpreterInvocations
+            cx.previousInterpreterInvocations = null;
+        }
+
+        if (throwable != null) {
             if (throwable instanceof RuntimeException) {
                 throw (RuntimeException)throwable;
             } else {
                 // Must be instance of Error or code bug
                 throw (Error)throwable;
             }
+        }
 
-        } // end of StateLoop: for(;;)
+        return (interpreterResult != DBL_MRK)
+               ? interpreterResult
+               : ScriptRuntime.wrapNumber(interpreterResultDbl);
     }
 
     private static void initFrame(Context cx, Scriptable callerScope,
@@ -3710,7 +3852,7 @@ switch (op) {
         if (frame.debuggerFrame != null) {
             try {
                 if (throwable instanceof Throwable) {
-                    frame.debuggerFrame.onExit(cx, true, (Throwable)throwable);
+                    frame.debuggerFrame.onExit(cx, true, throwable);
                 } else {
                     Object result;
                     ContinuationJump cjump = (ContinuationJump)throwable;

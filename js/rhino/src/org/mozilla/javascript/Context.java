@@ -2271,7 +2271,7 @@ public class Context
         Context cx = getCurrentContext();
         if (cx == null)
             return null;
-        if (cx.interpreterLineCounting != null) {
+        if (cx.lastInterpreterFrame != null) {
             return Interpreter.getSourcePositionFromStack(cx, linep);
         }
         /**
@@ -2434,8 +2434,12 @@ public class Context
      */
     Hashtable activationNames;
 
-    // For the interpreter to indicate line/source for error reports.
-    Object interpreterLineCounting;
+    // For the interpreter to store the last frame for error reports etc.
+    Object lastInterpreterFrame;
+
+    // For the interpreter to store information about previous invocations
+    // interpreter invocations
+    ObjArray previousInterpreterInvocations;
 
     // For instruction counting (interpreter only)
     int instructionCount;

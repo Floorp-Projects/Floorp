@@ -141,6 +141,9 @@ final class InterpretedFunction extends NativeFunction implements Script
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,
                        Object[] args)
     {
+        if (!ScriptRuntime.hasTopCall(cx)) {
+            return ScriptRuntime.doTopCall(this, cx, scope, thisObj, args);
+        }
         return Interpreter.interpret(this, cx, scope, thisObj, args);
     }
 
@@ -150,7 +153,13 @@ final class InterpretedFunction extends NativeFunction implements Script
             // Can only be applied to scripts
             throw new IllegalStateException();
         }
-        return call(cx, scope, scope, ScriptRuntime.emptyArgs);
+        if (!ScriptRuntime.hasTopCall(cx)) {
+            // It will go through "call" path. but they are equivalent
+            return ScriptRuntime.doTopCall(
+                this, cx, scope, scope, ScriptRuntime.emptyArgs);
+        }
+        return Interpreter.interpret(
+            this, cx, scope, scope, ScriptRuntime.emptyArgs);
     }
 
     public String getEncodedSource()

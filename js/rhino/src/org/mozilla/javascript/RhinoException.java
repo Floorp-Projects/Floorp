@@ -37,6 +37,10 @@
 
 package org.mozilla.javascript;
 
+import java.io.CharArrayWriter;
+import java.io.PrintStream;
+import java.io.PrintWriter;
+
 /**
  * The class of exceptions thrown by the JavaScript engine.
  */
@@ -44,11 +48,13 @@ public abstract class RhinoException extends RuntimeException
 {
     RhinoException()
     {
+        Interpreter.captureInterpreterStackInfo(this);
     }
 
     RhinoException(String details)
     {
         super(details);
+        Interpreter.captureInterpreterStackInfo(this);
     }
 
     public final String getMessage()
@@ -191,8 +197,38 @@ public abstract class RhinoException extends RuntimeException
         }
     }
 
+    private String generateStackTrace()
+    {
+        // Get stable reference to work properly with concurrent access
+        CharArrayWriter writer = new CharArrayWriter();
+        super.printStackTrace(new PrintWriter(writer));
+        String origStackTrace = writer.toString();
+        return Interpreter.getPatchedStack(this, origStackTrace);
+    }
+
+    public void printStackTrace(PrintWriter s)
+    {
+        if (interpreterStackInfo == null) {
+            super.printStackTrace(s);
+        } else {
+            s.print(generateStackTrace());
+        }
+    }
+
+    public void printStackTrace(PrintStream s)
+    {
+        if (interpreterStackInfo == null) {
+            super.printStackTrace(s);
+        } else {
+            s.print(generateStackTrace());
+        }
+    }
+
     private String sourceName;
     private int lineNumber;
     private String lineSource;
     private int columnNumber;
+
+    Object interpreterStackInfo;
+    int[] interpreterLineData;
 }

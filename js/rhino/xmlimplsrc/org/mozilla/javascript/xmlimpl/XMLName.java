@@ -66,7 +66,7 @@ class XMLName extends Ref
     {
         return new XMLName(uri, localName);
     }
-    
+
     void initXMLObject(XMLObjectImpl xmlObject)
     {
         if (xmlObject == null) throw new IllegalArgumentException();
