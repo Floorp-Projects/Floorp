@@ -132,7 +132,7 @@ nsClipboard :: SetNativeClipboardData()
     nsCOMPtr<nsISupportsString> currentFlavor ( do_QueryInterface(genericFlavor) );
     if ( currentFlavor ) {
       char* flavorStr;
-      currentFlavor->toString(&flavorStr);
+      currentFlavor->ToString(&flavorStr);
       
       // find MacOS flavor
       ResType macOSFlavor = theMapper.MapMimeTypeToMacOSType(flavorStr);
@@ -212,7 +212,7 @@ nsClipboard :: GetNativeClipboardData(nsITransferable * aTransferable)
     nsCOMPtr<nsISupportsString> currentFlavor ( do_QueryInterface(genericFlavor) );
     if ( currentFlavor ) {
       char* flavorStr;
-      currentFlavor->toString ( &flavorStr );
+      currentFlavor->ToString ( &flavorStr );
       
       // find MacOS flavor
       ResType macOSFlavor = theMapper.MapMimeTypeToMacOSType(flavorStr);

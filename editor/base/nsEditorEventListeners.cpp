@@ -1386,7 +1386,7 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
               if ( textDataObj )
               {
                 char* text = nsnull;
-                textDataObj->toString(&text);
+                textDataObj->ToString(&text);
                 nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
                 if ( htmlEditor && text )
                   htmlEditor->InsertText(text);

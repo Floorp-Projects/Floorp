@@ -291,7 +291,7 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData()
     nsCOMPtr<nsISupportsString> currentFlavor ( do_QueryInterface(genericFlavor) );
     if ( currentFlavor ) {
       char* flavorStr;
-      currentFlavor->toString(&flavorStr);
+      currentFlavor->ToString(&flavorStr);
       gint format = GetFormat(flavorStr);
 
       // add these types as selection targets
@@ -563,7 +563,7 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable)
     nsCOMPtr<nsISupportsString> currentFlavor ( do_QueryInterface(genericFlavor) );
     if ( currentFlavor ) {
       char* flavorStr;
-      currentFlavor->toString ( &flavorStr );
+      currentFlavor->ToString ( &flavorStr );
       gint format = GetFormat(flavorStr);
 
       if (DoConvert(format)) {

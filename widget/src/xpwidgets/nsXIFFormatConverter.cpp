@@ -220,7 +220,7 @@ nsXIFFormatConverter::Convert(const char *aFromDataFlavor, nsISupports *aFromDat
     nsCOMPtr<nsISupportsWString> dataWrapper ( do_QueryInterface(aFromData) );
     if ( dataWrapper ) {
       PRUnichar* data = nsnull;
-      dataWrapper->toString ( &data );
+      dataWrapper->ToString ( &data );
       if ( data ) {
         nsAutoString dataStr ( data );
         nsAutoString outStr;

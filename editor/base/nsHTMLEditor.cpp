@@ -2804,7 +2804,7 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsPlaintextQuotation()
       nsCOMPtr<nsISupportsWString> dataObj ( do_QueryInterface(genericDataObj) );
       if ( dataObj ) {
         PRUnichar* textData = nsnull;
-        dataObj->toString ( &textData );
+        dataObj->ToString ( &textData );
         nsAutoString text ( textData );
         rv = InsertAsPlaintextQuotation(text);
       }
@@ -3035,7 +3035,7 @@ NS_IMETHODIMP nsHTMLEditor::Paste()
             if (textDataObj && len > 0)
             {
               PRUnichar* text = nsnull;
-              textDataObj->toString ( &text );
+              textDataObj->ToString ( &text );
               nsAutoString stuffToPaste;
               stuffToPaste.SetString ( text, len / 2 );
               rv = InsertHTML(stuffToPaste);
@@ -3047,7 +3047,7 @@ NS_IMETHODIMP nsHTMLEditor::Paste()
             if (textDataObj && len > 0)
             {
               char* text = nsnull;
-              textDataObj->toString ( &text );
+              textDataObj->ToString ( &text );
               nsAutoString stuffToPaste;
               stuffToPaste.SetString ( text, len );
               rv = InsertText(stuffToPaste);
