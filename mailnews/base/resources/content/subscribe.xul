@@ -104,10 +104,10 @@ Rights Reserved.
 		</box>
 		<box orient="vertical" flex="20%">
 			<spring flex="100%"/>
-			<titledbutton id="subscribe" class="push" value="&subscribeButton.label;" onclick="SetSubscribeState(true)"/>
-			<titledbutton id="unsubscribe" class="push" value="&unsubscribeButton.label;" onclick="SetSubscribeState(false)"/>
-			<titledbutton id="refresh" class="push" value="&refreshButton.label;" onclick="RefreshList()"/>
-			<titledbutton id="stop" class="push" value="&stopButton.label;" onclick="Stop()"/>
+			<button id="subscribe" class="push" value="&subscribeButton.label;" onclick="SetSubscribeState(true)"/>
+			<button id="unsubscribe" class="push" value="&unsubscribeButton.label;" onclick="SetSubscribeState(false)"/>
+			<button id="refresh" class="push" value="&refreshButton.label;" onclick="RefreshList()"/>
+			<button id="stop" class="push" value="&stopButton.label;" onclick="Stop()"/>
 			<spring flex="100%"/>
 		</box>
 	</box>
