@@ -433,8 +433,7 @@ function initFileInfo(aFI, aURL, aDocument, aContentType)
     // if saveURL(...) was the original caller (hence both aContentType and
     // aDocument are blank). If they were saving a link to a website then make
     // the extension .htm .
-    if (!aFI.fileExt && !aDocument && !aContentType && (aURL.length > 7) &&
-      aURL.substring(0,7).toUpperCase() == "HTTP://") {
+    if (!aFI.fileExt && !aDocument && !aContentType && (/^http(s?):\/\//i.test(aURL))) {
       aFI.fileExt = "htm";
       aFI.fileBaseName = aFI.fileName;
     } else {
