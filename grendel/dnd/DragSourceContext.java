@@ -170,7 +170,8 @@ public class DragSourceContext {
         findTopContainer(fComponent).getComponentAt(pt);
 
       if (mouseOver != null && mouseOver instanceof DropTargetComponent) {
-        DropTarget target = ((DropTargetComponent) mouseOver).getDropTarget();
+        DropTarget target = 
+          ((DropTargetComponent) mouseOver).getGrendelDropTarget();
         if (target != null) {
 
         }
