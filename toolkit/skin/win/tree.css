@@ -259,3 +259,42 @@ treechildren.gridlines:-moz-tree-cell {
 treechildren.gridlines:-moz-tree-row {
   border: none;
 }
+
+treechildren:-moz-tree-image(Name) {
+  padding-right: 2px;
+}
+
+treechildren:-moz-tree-image(Name) {
+  margin: 0px 2px;
+  list-style-image: url("chrome://browser/skin/bookmarks.png") !important;
+  -moz-image-region: rect(0px 16px 16px 0px);
+}
+
+treechildren:-moz-tree-image(Name) {
+  -moz-image-region: rect(0px 32px 16px 16px);
+}
+
+treechildren:-moz-tree-image(Name) {
+  -moz-image-region: rect(0px 48px 16px 32px);
+}
+
+treechildren:-moz-tree-image(Name, container) {
+  list-style-image: url("chrome://browser/skin/bookmarks.png") !important;
+  -moz-image-region: rect(16px 16px 32px 0px);
+}
+
+treechildren:-moz-tree-image(Name, container) {
+  -moz-image-region: rect(16px 32px 32px 16px);
+}
+
+treechildren:-moz-tree-image(Name, open) {
+  -moz-image-region: rect(16px 48px 32px 32px);
+}
+
+treechildren:-moz-tree-twisty(group, hidetwisty) {
+  list-style-image: none;
+}
+
+treechildren:-moz-tree-image(Name, container, group) {
+  list-style-image: url("chrome://browser/skin/bookmarks/bookmark-group.gif");
+}

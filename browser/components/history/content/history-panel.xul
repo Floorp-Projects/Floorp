@@ -21,17 +21,32 @@
   Contributor(s): 
 -->
 
-<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/sidebar/sidebarListView.css" type="text/css"?>
 
-<?xul-overlay href="chrome://communicator/content/history/historyTreeOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/history/history.dtd" >
+<!DOCTYPE window [
+<!ENTITY % historyTreeDTD SYSTEM "chrome://communicator/locale/history/historyTreeOverlay.dtd" >
+%historyTreeDTD;
+<!ENTITY % contentAreaCommandsDTD SYSTEM "chrome://communicator/locale/contentAreaCommands.dtd" >
+%contentAreaCommandsDTD;
+<!ENTITY % historyDTD SYSTEM "chrome://browser/locale/history/history.dtd" >
+%historyDTD;
+]>
 
 <page id="history-panel" orient="vertical"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="HistoryCommonInit();" elementtofocus="historyTree">
+
+  <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsTreeController.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsTreeSorting.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/history/history.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarks.js"/>
+
   <commandset id="selectEditMenuItems">
     <command id="cmd_delete"/>
     <command id="cmd_copy"/>
@@ -40,23 +55,61 @@
     <key id="key_delete"/>
     <key id="key_copy"/>
   </keyset>
-  <popupset id="historyContextMenu"/>
-  <!-- use deep merging to hide certain columns by default -->
-  <tree id="historyTree">
+  
+  <popupset id="historyContextMenu">
+    <command id="cmd_selectAll"/>
+    <command id="cmd_cut"/>
+    <command id="cmd_copy"/>
+    <command id="cmd_delete"/>
+    <command id="cmd_selectAll"/>
+    <popup id="historyMenu" onpopupshowing="return updateItems();">
+      <menuitem id="miCollapseExpand" accesskey="&collapseExpand.accesskey;" oncommand="collapseExpand();"/>
+      <menuitem id="miOpen" label="&openLinkInWindowCmd.label;" accesskey="&openLinkInWindowCmd.accesskey;" default="true"
+                oncommand="OpenURL(false);"/>
+      <menuitem id="miOpenInNewWindow" label="&openLinkCmd.label;" accesskey="&openLinkCmd.accesskey;"
+                oncommand="OpenURL(true);"/>
+      <menuseparator id="pre-bookmarks-separator"/>
+      <menuitem id="miAddBookmark" label="&bookmarkLinkCmd.label;" accesskey="&bookmarkLinkCmd.accesskey;" oncommand="historyAddBookmarks();"/>
+      <menuitem id="miCopyLinkLocation" label="&copyLinkCmd.label;" accesskey="&copyLinkCmd.accesskey;"
+                command="cmd_copy"/>
+      <menuseparator id="post-bookmarks-separator"/>
+      <menuitem id="miDelete" label="&deleteCmd.label;" accesskey="&deleteCmd.accesskey;"
+                command="cmd_delete"/>
+      <menuitem id="miSelectAll" label="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;"
+                command="cmd_selectAll"/>
+    </popup>
+    <data id="multipleBookmarks" label="&addToBookmarksCmd.label;" accesskey="&addToBookmarksCmd.accesskey;"/>
+    <data id="oneBookmark" label="&bookmarkLinkCmd.label;" accesskey="&bookmarkLinkCmd.accesskey;"/>
+  </popupset>
+  <hbox align="center">
+    <label value="&find.label;" accesskey="&find.accesskey;" control="search-box"/>
+    <textbox id="search-box" flex="1"
+             type="timed" timeout="500"
+             callback="searchHistory(gSearchBox.value);"/>
+  </hbox>
+  <tree id="historyTree" flex="1" class="plain"
+            context="historyMenu"
+            datasources="rdf:history" ref="NC:HistoryByDate" flags="dont-build-content"
+            onkeypress="if (event.keyCode == 13) OpenURL(event.ctrlKey || event.metaKey);" 
+            onselect="this.treeBoxObject.view.selectionChanged();
+                      historyOnSelect();"
+            onclick="historyOnClick(event);" hidecolumnpicker="true"
+            ondraggesture="if (event.originalTarget.localName == 'treechildren') nsDragAndDrop.startDrag(event, historyDNDObserver);"
+            ondblclick="if (validClickConditions(event)) OpenURL(event.ctrlKey || event.metaKey);">
+    <template>
+      <rule>
+        <treechildren>
+          <treeitem uri="rdf:*" rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
+            <treerow>
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+            </treerow>
+          </treeitem>
+        </treechildren>
+      </rule>
+    </template>
     <treecols id="historyTreeCols">
-      <treecol id="Name"/>
-      <splitter id="pre-URL-splitter"/>
-      <treecol id="URL" hidden="true"/>
-      <splitter id="pre-Date-splitter"/>
-      <treecol id="Date" hidden="true"/>
-      <splitter id="pre-FirstVisitDate-splitter"/>
-      <treecol id="FirstVisitDate" hidden="true"/>
-      <splitter id="pre-Hostname-splitter"/>
-      <treecol id="Hostname" hidden="true"/>
-      <splitter id="pre-Referrer-splitter"/>
-      <treecol id="Referrer" hidden="true"/>
-      <splitter id="pre-VisitCount-splitter"/>
-      <treecol id="VisitCount" hidden="true"/>
+      <treecol flex="1" id="Name" persist="hidden width ordinal" 
+               hideheader="true" primary="true"/>
     </treecols>
   </tree>
 </page>
