@@ -126,7 +126,7 @@ static void initConsole(StringPtr consoleName, const char* startupMessage, int &
 #endif /* XP_MAC */
 
 
-// Interactively read a line from inFile and put it into s.
+// Interactively read a line from the input stream in and put it into s.
 static bool promptLine(istream &in, string &s, const char *prompt)
 {
     std::cout << prompt;
@@ -134,7 +134,14 @@ static bool promptLine(istream &in, string &s, const char *prompt)
     /* Print a CR after the prompt because MPW grabs the entire line when entering an interactive command */
     std::cout << std::endl;
 #endif
-	return getline(in, s);
+#ifndef _WIN32
+	return std::getline(in, s) != 0;
+#else
+	char buffer[256];
+	bool result = fgets(buffer, sizeof(buffer), stdin) != 0;
+	s = buffer;
+	return result;
+#endif
 }
 
 
@@ -166,7 +173,7 @@ static void readEvalPrint(istream &in, World &world)
 				showString(std::cout, e.fullMessage());
 			}
 			std::cout << std::endl;
-			buffer.clear();
+			clear(buffer);
 		}
 	}
     std::cout << std::endl;

@@ -313,7 +313,7 @@ namespace JavaScript {
 
 
 	class Lexer {
-		static const int tokenBufferSize = 3;	// Token lookahead buffer size
+		enum {tokenBufferSize = 3};	// Token lookahead buffer size
 	  public:
 		Reader &reader;
 		World &world;

@@ -47,6 +47,9 @@ namespace JavaScript {
 	}
 
 
+	const HashNumber goldenRatio = 0x9E3779B9U;
+
+
 //
 // Private
 //
@@ -66,6 +69,7 @@ namespace JavaScript {
 
 
 	// private
+	class GenericHashTableIterator;
 	class GenericHashTable {
 	  protected:
 	    GenericHashEntry **buckets;		// Vector of hash buckets
@@ -89,21 +93,25 @@ namespace JavaScript {
 		void maybeGrow() {if (nEntries > maxNEntries) rehash();}
 		void maybeShrink() {if (nEntries < minNEntries) rehash();}
 		
-		class Iterator {
-		  protected:
-			GenericHashTable &ht;			// Hash table being iterated
-			GenericHashEntry *entry;		// Current entry; nil if done
-			GenericHashEntry **backpointer;	// Pointer to pointer to current entry
-			GenericHashEntry **nextBucket;	// Next bucket; pointer past end of vector of hash buckets if done
-		  public:
-			explicit Iterator(GenericHashTable &ht);
-			~Iterator() {ht.maybeShrink(); DEBUG_ONLY(--ht.nReferences);}
+		friend class GenericHashTableIterator;
 
-			operator bool() const {return entry;}	// Return true if there are entries left.
-			Iterator &operator++();
-		};
+		typedef GenericHashTableIterator Iterator;
+	};
 
-		friend class Iterator;
+	// This ought to be GenericHashTable::Iterator, but this doesn't work due to a
+	// Microsoft VC6 bug.
+	class GenericHashTableIterator {
+	  protected:
+		GenericHashTable &ht;			// Hash table being iterated
+		GenericHashEntry *entry;		// Current entry; nil if done
+		GenericHashEntry **backpointer;	// Pointer to pointer to current entry
+		GenericHashEntry **nextBucket;	// Next bucket; pointer past end of vector of hash buckets if done
+	  public:
+		explicit GenericHashTableIterator(GenericHashTable &ht);
+		~GenericHashTableIterator() {ht.maybeShrink(); DEBUG_ONLY(--ht.nReferences);}
+
+		operator bool() const {return entry != 0;}	// Return true if there are entries left.
+		GenericHashTableIterator &operator++();
 	};
 
 
@@ -125,6 +133,9 @@ namespace JavaScript {
 
 	  public:
 		class Reference {
+#ifdef _WIN32 // Microsoft VC6 bug: friend declarations to inner classes don't work
+		  public:
+#endif
 			Entry *entry;						// Current entry; nil if done
 			GenericHashEntry **backpointer;		// Pointer to pointer to current entry
 			const HashNumber keyHash;			// This entry's key's hash value
@@ -133,7 +144,25 @@ namespace JavaScript {
 		  #endif
 
 		  public:
+#ifndef _WIN32
 			Reference(HashTable &ht, Key key);	// Search for an entry with the given key.
+#else // Microsoft VC6 bug: VC6 doesn't allow this to be defined outside the class
+			Reference(HashTable &ht, Key key): keyHash(ht.hasher(key)) {
+			#ifdef DEBUG
+				Reference::ht = &ht;
+				++ht.nReferences;
+			#endif
+				HashNumber kh = keyHash;
+				HashNumber h = kh*goldenRatio >> ht.shift;
+				GenericHashEntry **bp = ht.buckets + h;
+				Entry *e;
+
+				while ((e = static_cast<Entry *>(*bp)) != 0 && !(e->keyHash == kh && e->data == key))
+					bp = &e->next;
+				entry = e;
+				backpointer = bp;
+			}
+#endif
 		  private:
 		    Reference(const Reference&);		// No copy constructor
 		    void operator=(const Reference&);	// No assignment operator
@@ -142,22 +171,22 @@ namespace JavaScript {
 			~Reference() {if (ht) --ht->nReferences;}
 		  #endif
 			
-			operator bool() const {return entry;}	// Return true if an entry was found.
+			operator bool() const {return entry != 0;}	// Return true if an entry was found.
 			Data &operator*() const {ASSERT(entry); return entry->data;}	// Return the data of the entry that was found.
 			
 			friend class HashTable;
 		};
 
-		class Iterator: public GenericHashTable::Iterator {
+		class Iterator: public GenericHashTableIterator {
 		  public:
-			explicit Iterator(HashTable &ht): GenericHashTable::Iterator(ht) {}
+			explicit Iterator(HashTable &ht): GenericHashTableIterator(ht) {}
 		  private:
 		    Iterator(const Iterator&);			// No copy constructor
 		    void operator=(const Iterator&);	// No assignment operator
 		  public:
 
 			// Go to next entry.
-			Iterator &operator++() {return *static_cast<Iterator*>(&GenericHashTable::Iterator::operator++());}
+			Iterator &operator++() {return *static_cast<Iterator*>(&GenericHashTableIterator::operator++());}
 			Data &operator*() const {ASSERT(entry); return static_cast<Entry *>(entry)->data;}	// Return current entry's data.
 			void erase();
 		};
@@ -167,7 +196,6 @@ namespace JavaScript {
 
 		template<class Value> Data &insert(Reference &r, Key key, Value value);
 		Data &insert(Reference &r, Key key);
-		template<class Value> Data &insert(Key key, Value value);
 		Data &insert(Key key);
 		void erase(Reference &r);
 		void erase(Key key);
@@ -175,6 +203,18 @@ namespace JavaScript {
 		
 		friend class Reference;
 		friend class Iterator;
+
+#ifndef _WIN32
+		template<class Value> Data &insert(Key key, Value value);
+#else // Microsoft VC6 bug: VC6 doesn't allow this to be defined outside the class
+		template<class Value> Data &insert(Key key, Value value) {
+			Reference r(*this, key);
+			if (r)
+				return *r = value;
+			else
+				return insert(r, key, value);
+		}
+#endif
 	};
 
 
@@ -197,8 +237,7 @@ namespace JavaScript {
 	}
 
 
-	const HashNumber goldenRatio = 0x9E3779B9U;
-
+#ifndef _WIN32
 	template<class Data, class Key, class H>
 	HashTable<Data, Key, H>::Reference::Reference(HashTable &ht, Key key):
 		keyHash(ht.hasher(key))
@@ -237,6 +276,7 @@ namespace JavaScript {
 	#endif
 		return e->data;
 	}
+#endif
 
 	// Same as above but without a Value argument.
 	template<class Data, class Key, class H>
@@ -259,6 +299,7 @@ namespace JavaScript {
 	// Insert the given key/value pair into the hash table.  If an entry with a
 	// matching key already exists, replace that entry's value.
 	// Return a reference to the new entry's value.
+#ifndef _WIN32 // Microsoft VC6 bug: VC6 doesn't allow this to be defined outside the class
 	template<class Data, class Key, class H> template<class Value>
 	Data &HashTable<Data, Key, H>::insert(Key key, Value value)
 	{
@@ -268,6 +309,7 @@ namespace JavaScript {
 		else
 			return insert(r, key, value);
 	}
+#endif
 
 	// Same as above but without a Value argument.
 	template<class Data, class Key, class H>

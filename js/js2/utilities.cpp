@@ -161,11 +161,33 @@ uint JS::floorLog2(uint32 n)
 //
 
 
+#ifdef _WIN32 // Microsoft VC6 bug: String constructor and append limited to char16 iterators
+// Return a String containing the characters of the null-terminated C string cstr
+// (without the trailing null).
+JS::String JS::widenCString(const char *cstr)
+{
+	size_t len = strlen(cstr);
+	String s(len, uni::null);
+	std::transform(cstr, cstr+len, s.begin(), widen);
+	return s;
+}
+
+
+// Widen and append length characters starting at chars to the end of str.
+void JS::appendChars(String &str, const char *chars, size_t length)
+{
+	String::size_type strLen = str.size();
+	str.append(length, uni::null);
+	std::transform(chars, chars+length, str.begin()+strLen, widen);
+}
+#endif
+
+
 // Widen and append the null-terminated string cstr to the end of str.
 // Return str.
 JS::String &JS::operator+=(String &str, const char *cstr)
 {
-	appendChars(str, cstr, std::strlen(cstr));
+	appendChars(str, cstr, strlen(cstr));
 	return str;
 }
 
@@ -1581,6 +1603,7 @@ JS::String JS::Exception::fullMessage() const
 //
 
 
+#ifndef _WIN32
 static void jsNewHandler()
 {
     std::bad_alloc outOfMemory;
@@ -1592,4 +1615,18 @@ struct InitUtilities
 {
 	InitUtilities() {std::set_new_handler(&jsNewHandler);}
 };
+#else
+#include <new.h>
+static int jsNewHandler(size_t)
+{
+    std::bad_alloc outOfMemory;
+    throw outOfMemory;
+}
+
+
+struct InitUtilities
+{
+	InitUtilities() {_set_new_handler(&jsNewHandler);}
+};
+#endif
 InitUtilities initUtilities;

@@ -151,7 +151,7 @@ JS::String JS::StringReader::sourceFile() const
 //
 
 
-static const char *const JS::Token::kindNames[] = {
+const char *const JS::Token::kindNames[] = {
   // Special
 	"[End]",			// Token::End
 	"[Identifier]",		// Token::Id
@@ -676,7 +676,7 @@ void JS::Lexer::lexRegExp()
 			syntaxError("Unterminated regular expression literal");
 		if (prevCh == '\\') {
 			reader.recordChar(char16orEOFToChar16(ch));
-			prevCh = 0;	// Ignore slashes and backslashes immediately after a \
+			prevCh = 0;	// Ignore slashes and backslashes immediately after a backslash
 		} else if (ch != '/') {
 			reader.recordChar(char16orEOFToChar16(ch));
 			prevCh = ch;
