@@ -42,6 +42,8 @@
 #include "nsIMenuFrame.h"
 #include "nsIFrame.h"
 #include "nsGUIEvent.h"
+#include "nsIDOMNSUIEvent.h"
+#include "nsMenuBarListener.h"
 
 class nsMenuBoxObject : public nsIMenuBoxObject, public nsBoxObject
 {
@@ -133,6 +135,19 @@ NS_IMETHODIMP nsMenuBoxObject::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent, PRBool*
   *aHandledFlag = PR_FALSE;
   NS_ENSURE_ARG(aKeyEvent);
 
+  // if event has already been handled, bail
+  nsCOMPtr<nsIDOMNSUIEvent> uiEvent(do_QueryInterface(aKeyEvent));
+  if (!uiEvent)
+    return NS_OK;
+
+  PRBool eventHandled = PR_FALSE;
+  uiEvent->GetPreventDefault(&eventHandled);
+  if (eventHandled)
+    return NS_OK;
+
+  if (nsMenuBarListener::IsAccessKeyPressed(aKeyEvent))
+    return NS_OK;
+
   nsIFrame* frame = GetFrame();
   if (!frame)
     return NS_OK;
@@ -149,10 +164,6 @@ NS_IMETHODIMP nsMenuBoxObject::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent, PRBool*
     case NS_VK_DOWN:
     case NS_VK_HOME:
     case NS_VK_END:
-      PRBool altKey;
-      aKeyEvent->GetAltKey(&altKey);
-      if (altKey)
-        return NS_OK;
       return menuFrame->KeyboardNavigation(keyCode, *aHandledFlag);
     default:
       return menuFrame->ShortcutNavigation(aKeyEvent, *aHandledFlag);
