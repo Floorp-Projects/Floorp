@@ -421,9 +421,6 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
                                            nscoord containingBlockWidth,
                                            nscoord containingBlockHeight)
 {
-  // XXX Correctly handle absolutely positioned elements by using the
-  // correct edge (computed width/height is the content edge)...
-
   // If any of the offsets are 'auto', then get the placeholder frame
   // and compute its origin relative to the containing block
   nsPoint placeholderOffset(0, 0);
