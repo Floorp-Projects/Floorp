@@ -2922,14 +2922,18 @@ $(OUTDIR)\mozilla.tlb : $(PRECOMPILED_TLB)
 
 
 #nuke all the output directories
-MOZ_NUKEOUT=\
-	$(MOZ_OUT)\x86Dbg \
-	$(MOZ_OUT)\x86Rel \
-	$(MOZ_OUT)\NavDbg \
-	$(MOZ_OUT)\NavRel
+!if "$(WINOS)" == "WIN95"
+MOZ_NUKECMD=deltree /y
+!else
+MOZ_NUKECMD=rd /s /q
+!endif
 
 clobber_all:
-    $(RM_R) $(MOZ_NUKEOUT) _gen
+	-$(MOZ_NUKECMD) $(MOZ_OUT)\x86Dbg
+	-$(MOZ_NUKECMD) $(MOZ_OUT)\x86Rel
+	-$(MOZ_NUKECMD) $(MOZ_OUT)\NavDbg
+	-$(MOZ_NUKECMD) $(MOZ_OUT)\NavRel
+	-$(MOZ_NUKECMD) _gen
 
 dist:
     @set SAVE_SRC=%%MOZ_SRC%%
