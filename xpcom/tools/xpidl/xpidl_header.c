@@ -68,6 +68,17 @@ xpcom_type(TreeState *state)
 	  }
 	  break;
       }
+      case IDLN_TYPE_CHAR:
+	fputs("char", state->file);
+	break;
+      case IDLN_TYPE_WIDE_CHAR:
+	fputs("PRUint16", state->file);	/* wchar_t? */
+	break;
+      case IDLN_TYPE_WIDE_STRING:
+	/*
+	 * XXX should these be different types?
+	 * XXX maybe char * for STRING and nsString * for WIDE_STRING?
+	 */
       case IDLN_TYPE_STRING:
 	fputs("nsString *", state->file);
 	break;
@@ -100,7 +111,7 @@ type_integer(TreeState *state)
 	printf("long");
 	break;
       case IDL_INTEGER_TYPE_LONGLONG:
-	printf("longlong");
+	printf("long long");
 	break;
     }
     return TRUE;
@@ -119,6 +130,15 @@ type(TreeState *state)
 	return type_integer(state);
       case IDLN_TYPE_STRING:
 	fputs("string", state->file);
+	return TRUE;
+      case IDLN_TYPE_WIDE_STRING:
+	fputs("wstring", state->file);
+	return TRUE;
+      case IDLN_TYPE_CHAR:
+	fputs("char", state->file);
+	return TRUE;
+      case IDLN_TYPE_WIDE_CHAR:
+	fputs("wchar", state->file);
 	return TRUE;
       case IDLN_TYPE_BOOLEAN:
 	fputs("boolean", state->file);
@@ -182,7 +202,7 @@ attr_accessor(TreeState *state, gboolean getter)
 {
     char *attrname = ATTR_IDENT(state->tree).str;
     if (getter && (ATTR_TYPE(state->tree) == IDLN_TYPE_BOOLEAN)) {
-	fprintf(state->file, "  NS_IMETHOD Is%c%s(PRBool &aIs%c%s);\n",
+	fprintf(state->file, "  NS_IMETHOD Is%c%s(PRBool *aIs%c%s);\n",
 		toupper(attrname[0]), attrname + 1,
 		toupper(attrname[0]), attrname + 1);
     } else {
@@ -194,8 +214,11 @@ attr_accessor(TreeState *state, gboolean getter)
 	if (!xpcom_type(state))
 	    return FALSE;
 	state->tree = orig;
-	fprintf(state->file, " %sa%c%s);\n",
-		getter ? "&" : "",
+	fprintf(state->file, "%s%sa%c%s);\n",
+		(ATTR_TYPE(orig) == IDLN_TYPE_STRING ||
+		 ATTR_TYPE(orig) == IDLN_IDENT ||
+		 ATTR_TYPE(orig) == IDLN_WIDE_STRING) ? "" : " ",
+		getter ? "*" : "",
 		toupper(attrname[0]), attrname + 1);
     }
     return TRUE;
@@ -235,8 +258,11 @@ xpcom_param(TreeState *state)
     state->tree = IDL_PARAM_DCL(param).param_type_spec;
     if (!xpcom_type(state))
 	return FALSE;
-    fprintf(state->file, " %s",
-	    IDL_PARAM_DCL(param).attr == IDL_PARAM_IN ? "" : "&");
+    fprintf(state->file, "%s%s",
+	    (IDL_NODE_TYPE(state->tree) == IDLN_TYPE_STRING ||
+	     IDL_NODE_TYPE(state->tree) == IDLN_TYPE_WIDE_STRING ||
+	     IDL_NODE_TYPE(state->tree) == IDLN_IDENT) ? "" : " ",
+	    IDL_PARAM_DCL(param).attr == IDL_PARAM_IN ? "" : "*");
     fprintf(state->file, "%s",
 	    IDL_IDENT(IDL_PARAM_DCL(param).simple_declarator).str);
     return TRUE;
@@ -272,7 +298,7 @@ op_dcl(TreeState *state)
 	if (IDL_LIST(iter).next)
 	    fputs(", ", state->file);
     }
-    fputs(");\n", state->file);
+    fputs(") = 0;\n", state->file);
     return TRUE;
 }
 
