@@ -37,15 +37,15 @@ $pull{netlib} = 0;
 $pull{nglayout} = 0;
 $pull{mac} = 0;
 
-$build{all} = 0;
+$build{all} = 1;				# turn off to do individual builds
 $build{dist} = 0;
 $build{stubs} = 0;
 $build{common} = 0;
-$build{nglayout} = 1;
-$build{resources} = 1;
-$build{editor} = 1;
-$build{viewer} = 1;
-$build{xpapp} = 1;
+$build{nglayout} = 0;
+$build{resources} = 0;
+$build{editor} = 0;
+$build{viewer} = 0;
+$build{xpapp} = 0;
 
 if ($pull{all})
 {
