@@ -31,6 +31,7 @@
 
 #include "nsIAppShell.h"
 #include "nsIWidget.h"
+#include "nsIDOMWindow.h"
 #include "nsIBrowserWindow.h"
 #include "nsIWebShellWindow.h"
 #include "nsWebShellWindow.h"
@@ -470,30 +471,36 @@ nsAppShellService::Run(void)
 NS_IMETHODIMP
 nsAppShellService::Shutdown(void)
 {
-
-#if 1
+#if 0
   // Shutdown all components.
   EnumerateComponents( &nsAppShellService::ShutdownComponent );
-
+  mAppShell->Exit(); // this is rude, and gtk complains
 #else
-  while (mWindowList->Count() > 0) {
-    nsISupports * winSupports = mWindowList->ElementAt(0);
-    nsCOMPtr<nsIWidget> window(do_QueryInterface(winSupports));
-    if (window) {
-      mWindowList->RemoveElementAt(0);
-      CloseTopLevelWindow(window);
-    } else {
-      nsCOMPtr<nsIWebShellWindow> webShellWin(do_QueryInterface(winSupports));
-      if (webShellWin) {
-        nsIWidget * win;
-        webShellWin->GetWidget(win);
-        CloseTopLevelWindow(win);
+  nsresult rv;
+
+  // Shutdown all components.
+  EnumerateComponents(&nsAppShellService::ShutdownComponent);
+
+  // now step through all opened registered windows and close them.
+  NS_WITH_SERVICE(nsIWindowMediator, windowMediator, kWindowMediatorCID, &rv);
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
+
+    if (NS_SUCCEEDED(windowMediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator)))) {
+      PRBool more;
+
+      // get the (main) webshell for each window in the enumerator
+      windowEnumerator->HasMoreElements(&more);
+      while (more) {
+        nsCOMPtr<nsISupports> protoWindow;
+        rv = windowEnumerator->GetNext(getter_AddRefs(protoWindow));
+        if (NS_SUCCEEDED(rv) && protoWindow) {
+          nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(protoWindow));
+          if (window)
+            window->Close();
+        }
+        windowEnumerator->HasMoreElements(&more);
       }
-      //nsCOMPtr<nsIWebShellContainer> wsc(do_QueryInterface(winSupports));
-      //if (wsc) {
-      //
-      //}
-      break;
     }
   }
 #endif
