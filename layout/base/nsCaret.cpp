@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -742,7 +743,12 @@ void nsCaret::DrawCaret()
     //printf("Content offset %ld, frame offset %ld\n", focusOffset, framePos.x);
     if(mCaretTwipsWidth < 0)
     {// need to re-compute the pixel width
-      mCaretTwipsWidth  = 15 * mCaretPixelsWidth;//uhhhh...
+      float tDevUnitsToTwips = 15;
+      nsCOMPtr<nsIDeviceContext> dx;
+      presContext->GetDeviceContext(getter_AddRefs(dx));
+      if (dx)
+        dx->GetDevUnitsToTwips(tDevUnitsToTwips);
+      mCaretTwipsWidth  = tDevUnitsToTwips * mCaretPixelsWidth;
     }
     caretRect.width = mCaretTwipsWidth;
 
