@@ -50,6 +50,9 @@ private:
   PRBool mScriptsEnabled;
   PRUint32 mBranchCallbackCount;
   void *mRootedScriptObject; // special case for the window script object
+  PRUint32 mDefaultJSOptions;
+
+  static int PR_CALLBACK JSOptionChangedCallback(const char *pref, void *data);
 
   static JSBool PR_CALLBACK DOMBranchCallback(JSContext *cx, JSScript *script);
   
