@@ -32,7 +32,6 @@
 
 static const int kMaxRows = 6;
 static const int kFrameMargin = 1;
-static const int kEscapeKeyCode = 53;
 
 @interface AutoCompleteWindow : NSWindow
 - (BOOL)isKeyWindow;
@@ -48,10 +47,10 @@ static const int kEscapeKeyCode = 53;
 class AutoCompleteListener : public nsIAutoCompleteListener
 {  
 public:
-  AutoCompleteListener(CHAutoCompleteTextView* aTextView)
+  AutoCompleteListener(CHAutoCompleteTextField* aTextField)
   {
     NS_INIT_REFCNT();
-    mTextView = aTextView;
+    mTextField = aTextField;
   }
   
   NS_DECL_ISUPPORTS
@@ -62,30 +61,22 @@ public:
 
   NS_IMETHODIMP OnAutoComplete(nsIAutoCompleteResults *aResults, AutoCompleteStatus aStatus)
   {
-    [mTextView dataReady:aResults status:aStatus];
+    [mTextField dataReady:aResults status:aStatus];
     return NS_OK;
   }
 
 private:
-  CHAutoCompleteTextView *mTextView;
+  CHAutoCompleteTextField *mTextField;
 };
 
 NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 
 ////////////////////////////////////////////////////////////////////////
 
-@implementation CHAutoCompleteTextView
+@implementation CHAutoCompleteTextField
 
 - (void) awakeFromNib
 {
-  [self setAllowsUndo:YES];
-  [self setFieldEditor:YES];
-  [self setFont:[NSFont controlContentFontOfSize:0]];
-  [self setUsesFontPanel:NO];
-  [self setRichText:NO];
-  [self setVerticallyResizable:NO];
-  [self setBackgroundColor:[NSColor colorWithCalibratedWhite: 0.98 alpha: 1.0]];
-  
   NSTableColumn *column;
   NSScrollView *scrollView;
   NSCell *dataCell;
@@ -165,27 +156,6 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 	mCompleteWhileTyping = [[NSUserDefaults standardUserDefaults] boolForKey:USER_DEFAULTS_AUTOCOMPLETE_WHILE_TYPING];
 }
 
-
-//
-// we need -initWithCoder & -encodeWithCoder for the toolbar customization palette.
-// in OS X 10.1.5, cocoa doesn't help us out very much in encoding/decoding NSTextViews.
-// Max Horn says 10.2 does more than 10.1.5, so this may not be necessay in the future.
-//
-
--(id) initWithCoder:(NSCoder *)coder
-{
-  if ((self = [super initWithFrame:NSMakeRect(0,0,0,0)]))
-    [self replaceCharactersInRange:NSMakeRange(0,[[self string] length]) withRTFD:[coder decodeObject]];
-
-  return self;
-}
-
--(void) encodeWithCoder:(NSCoder *)coder
-{
-  [coder encodeObject:[self RTFDFromRange:NSMakeRange(0,[[self string] length])]];
-  return;
-}
-
 - (void) dealloc
 {
   [[NSNotificationCenter defaultCenter] removeObserver:self];
@@ -231,10 +201,19 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   return minRows < kMaxRows ? minRows : kMaxRows;
 }
 
+- (void) setPageProxyIcon:(NSImage *)aImage
+{
+  [mProxyIcon setImage:aImage];
+}
+
+-(id) fieldEditor
+{
+  return [[self window] fieldEditor:NO forObject:self];
+}
 // searching ////////////////////////////
 
 - (void) startSearch:(NSString*)aString complete:(BOOL)aComplete
-{  
+{
   if (mSearchString)
     [mSearchString release];
   mSearchString = [aString retain];
@@ -305,8 +284,11 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 - (void) clearResults
 {
   // clear out search data
+  if (mSearchString)
+    [mSearchString release];
   mSearchString = nil;
-  mResults = nil;
+  NS_IF_RELEASE(mResults);
+  mResults = nsnull;
 
   [mDataSource setResults:nil];
 
@@ -336,8 +318,9 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   }
 
   // get the origin of the location bar in coordinates of the root view
-  locationFrame = [[[[self superview] superview] superview] frame];
-  locationOrigin = [[[[[self superview] superview] superview] superview] convertPoint:locationFrame.origin toView:[[[self window] contentView] superview]];
+  locationFrame = [[self superview] frame];
+  locationOrigin = [[[self superview] superview] convertPoint:locationFrame.origin
+                                                       toView:[[[self window] contentView] superview]];
 
   // get the height of the table view
   winFrame = [[self window] frame];
@@ -385,28 +368,29 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 
 - (void) completeResult:(int)aRow
 {
-  NSRange matchRange;
-  NSString *result1;
-
   if (aRow < 0 && mSearchString) {
-    [self setString:mSearchString];
-  } else {
+    // reset to the original search string with the insertion point at the end. Note
+    // we have to make our range before we call setStringUndoably: because it calls
+    // clearResults() which destroys |mSearchString|.
+    NSRange selectAtEnd = NSMakeRange([mSearchString length],0);
+    [self setStringUndoably:mSearchString fromLocation:0];
+    [[self fieldEditor] setSelectedRange:selectAtEnd];
+  }
+  else {
     if ([mDataSource rowCount] <= 0)
       return;
-  
-    result1 = [mDataSource resultString:aRow column:@"col1"];
-    matchRange = [result1 rangeOfString:mSearchString];
-    if (matchRange.length > 0) {
-      // cut off everything in the result string before the search string
-      result1 = [result1 substringWithRange:NSMakeRange(matchRange.location, [result1 length]-matchRange.location)];
-      
-#if 1
-      // fill in the textfield with the matching string
-      [self setString:result1];
-      
-      // select the text after the search string
-      [self setSelectedRange:NSMakeRange([mSearchString length], [result1 length]-[mSearchString length])];
-#endif
+
+    // Fill in the suggestion from the list, but change only the text 
+    // after what is typed and select just that part. This allows the
+    // user to see what they have typed and what change the autocomplete
+    // makes while allowing them to continue typing w/out having to
+    // reset the insertion point. 
+    NSString *result = [mDataSource resultString:aRow column:@"col1"];
+    NSRange matchRange = [result rangeOfString:mSearchString];
+    if (matchRange.length > 0 && matchRange.location != NSNotFound) {
+      unsigned int location = matchRange.location + matchRange.length;
+      result = [result substringWithRange:NSMakeRange(location, [result length]-location)];
+      [self setStringUndoably:result fromLocation:[mSearchString length]];
     }
   }
 }
@@ -414,8 +398,7 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 - (void) enterResult:(int)aRow
 {
   if (aRow >= 0 && [mDataSource rowCount] > 0) {
-    [self setString: [mDataSource resultString:[mTableView selectedRow] column:@"col1"]];
-    [self selectAll:self];
+    [self setStringUndoably:[mDataSource resultString:[mTableView selectedRow] column:@"col1"] fromLocation:0];
     [self closePopup];
   } else if (mOpenTimer) {
     // if there was a search timer going when we hit enter, cancel it
@@ -431,10 +414,29 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   NSString *url = [[controller getBrowserWrapper] getCurrentURLSpec];
   if (url) {
     [self clearResults];
-    [[self undoManager] removeAllActions];
-    [self setString:url];
-    [self selectAll:self];
+    NSTextView *fieldEditor = [self fieldEditor];
+    [[fieldEditor undoManager] removeAllActions];
+    [fieldEditor setString:url];
+    [fieldEditor selectAll:self];
   }
+}
+
+- (void) setStringUndoably:(NSString *)aString fromLocation:(unsigned int)aLocation
+{
+  NSTextView *fieldEditor = [self fieldEditor];
+  NSRange aRange = NSMakeRange(aLocation,[[fieldEditor string] length] - aLocation);
+  if ([fieldEditor shouldChangeTextInRange:aRange replacementString:aString]) {
+    [[fieldEditor textStorage] replaceCharactersInRange:aRange withString:aString];
+    // Whenever we send [self didChangeText], we trigger the
+    // textDidChange method, which will begin a new search with
+    // a new search string (which we just inserted) if the selection
+    // is at the end of the string.  So, we "select" the first character
+    // to prevent that badness from happening.
+    [fieldEditor setSelectedRange:NSMakeRange(0,0)];    
+    [fieldEditor didChangeText];
+  }
+  aRange = NSMakeRange(aLocation,[[fieldEditor string] length] - aLocation);
+  [fieldEditor setSelectedRange:aRange];
 }
 
 // selecting rows /////////////////////////////////////////
@@ -483,47 +485,52 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 
 // event handlers ////////////////////////////////////////////
 
-- (void) onRowClicked:(id)sender
+- (void) onRowClicked:(NSNotification *)aNote
 {
   [self enterResult:[mTableView clickedRow]];
   [[[self window] windowController] goToLocationFromToolbarURLField:self];
 }
 
-- (void) onBlur:(id)sender
+- (void) onBlur:(NSNotification *)aNote
 {
   [self closePopup];
 }
 
-- (void) onResize:(id)sender
+- (void) onResize:(NSNotification *)aNote
 {
   [self resizePopup];
 }
 
 // NSTextField delegate //////////////////////////////////
-
-- (void)textDidChange:(NSNotification *)aNotification
+- (void)controlTextDidChange:(NSNotification *)aNote
 {
-  NSRange range = [self selectedRange];
-  
+  NSTextView *fieldEditor = [[aNote userInfo] objectForKey:@"NSFieldEditor"];
+  NSRange range = [fieldEditor selectedRange];
   // make sure we're typing at the end of the string
-  if (range.location == [[self string] length])
-    [self startSearch:[self string] complete:!mBackspaced];
-  else
+  if (range.location == [[fieldEditor string] length]) {
+    // when we ask for a NSTextView string, Cocoa returns
+    // a pointer to the view's backing store.  So, the value
+    // of the string continually changes as we edit the text view.
+    // Since we'll edit the text view as we add in autocomplete results,
+    // we've got to make a copy of the string as it currently stands
+    // to know what we were searching for in the first place.
+    NSString *searchString = [[fieldEditor string] copyWithZone:nil];
+    [self startSearch:searchString complete:!mBackspaced];
+    [searchString release];
+  }
+  else if (([mTableView selectedRow] == -1) || mBackspaced)
     [self clearResults];
   
   mBackspaced = NO;
 }
 
-- (void)textDidEndEditing:(NSNotification *)aNotification
+- (void)controlTextDidEndEditing:(NSNotification *)aNote
 {
   [self closePopup];
-  [self setSelectedRange:NSMakeRange(0,0)];
-  [[self undoManager] removeAllActions];
-  if ([[[aNotification userInfo] objectForKey:@"NSTextMovement"] intValue] == NSReturnTextMovement)
-    [[[self window] windowController] goToLocationFromToolbarURLField:self];
+  [[[[aNote userInfo] objectForKey:@"NSFieldEditor"] undoManager] removeAllActions];
 }
-
-- (BOOL)textView:(NSTextView *)textView doCommandBySelector:(SEL)command
+  
+- (BOOL)control:(NSControl *)control textView:(NSTextView *)textView doCommandBySelector:(SEL)command
 {
   if (command == @selector(insertNewline:)) {
     [self enterResult:[mTableView selectedRow]];
@@ -557,24 +564,11 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
              command == @selector(deleteForward:)) {
     // if the user deletes characters, we need to know so that
     // we can prevent autocompletion later when search results come in
-    if ([[self string] length] > 1)
-      mBackspaced = YES;
+    if ([[textView string] length] > 1)
+      mBackspaced = YES;    
   }
   
   return NO;
-}
-
-- (void)keyDown:(NSEvent *)theEvent
-{
-  if ([theEvent keyCode] == kEscapeKeyCode)
-    [self revertText];
-  else 
-    [super keyDown:theEvent];  
-}
-
-- (void) setPageProxyIcon:(NSImage *)aImage
-{
-  [mProxyIcon setImage:aImage];
 }
 
 @end

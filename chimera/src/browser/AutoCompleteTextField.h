@@ -19,6 +19,7 @@
 *
 * Contributor(s):
 *   Joe Hewitt <hewitt@netscape.com> (Original Author)
+*   David Haas <haasd@cae.wisc.edu>
 */
 
 #import <AppKit/AppKit.h>
@@ -29,7 +30,7 @@
 
 @class CHAutoCompleteDataSource, CHPageProxyIcon;
 
-@interface CHAutoCompleteTextView : NSTextView
+@interface CHAutoCompleteTextField : NSTextField
 {
   IBOutlet CHPageProxyIcon *mProxyIcon;
   NSWindow *mPopupWin;
@@ -81,8 +82,11 @@
 - (void) resizePopup;
 - (BOOL) isOpen;
 
-- (void) onRowClicked:(id)sender;
-- (void) onBlur:(id)sender;
-- (void) onResize:(id)sender;
+- (void) onRowClicked:(NSNotification *)aNote;
+- (void) onBlur:(NSNotification *)aNote;
+- (void) onResize:(NSNotification *)aNote;
+
+- (void) setStringUndoably:(NSString*)aString fromLocation:(unsigned int)aLocation;
+- (id) fieldEditor;
 
 @end
