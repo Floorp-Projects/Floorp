@@ -36,9 +36,6 @@ CHROME_CONTENT	= \
 		customize-panel.xul \
 		customize.js \
 		customize.xul \
-		panel-add-confirm.js \
-		panel-add-confirm.xul \
-		panel-exists.xul \
 		preview.css \
 		preview.js \
 		preview.xul \
@@ -64,8 +61,6 @@ CHROME_SKIN	= \
 CHROME_L10N	= \
 		./locale/en-US/customize-panel.dtd \
 		./locale/en-US/customize.dtd \
-		./locale/en-UN/panel-add-confirm.dtd \
-		./locale/en-UN/panel-exists.dtd \
 		./locale/en-US/preview.dtd \
 		./locale/en-US/sidebar-registry-rdf.dtd \
 		./locale/en-US/sidebar-rdf.dtd \
