@@ -30,10 +30,13 @@
 #include "nsIOutputStream.h"
 #include "nsMimeTypes.h"
 #include "netCore.h"
+#include "nsXPIDLString.h"
+#include "nsIPref.h"
 
 #define MAX_BUFFER_SIZE 1024
 
 static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
+static NS_DEFINE_IID(kPrefServiceCID, NS_PREF_CID);
 
 
 nsUnknownDecoder::nsUnknownDecoder()
@@ -42,6 +45,14 @@ nsUnknownDecoder::nsUnknownDecoder()
 
   mBuffer = nsnull;
   mBufferLen = 0;
+  mRequireHTMLsuffix = PR_FALSE;
+
+  nsresult rv;
+  nsCOMPtr<nsIPref> pPrefService = do_GetService(kPrefServiceCID, &rv);
+  if (NS_SUCCEEDED(rv)) {
+    rv = pPrefService->GetBoolPref("security.requireHTMLsuffix", &mRequireHTMLsuffix);
+  }
+
 
 }
 
@@ -150,7 +161,7 @@ nsUnknownDecoder::OnDataAvailable(nsIChannel *aChannel,
       //
       aSourceOffset += mBufferLen;
 
-      DetermineContentType();
+      DetermineContentType(aChannel);
 
       NS_ASSERTION(!mContentType.IsEmpty(), 
                    "Content type should be known by now.");
@@ -208,7 +219,7 @@ nsUnknownDecoder::OnStopRequest(nsIChannel *aChannel, nsISupports *aCtxt,
   // Analyze the buffer now...
   //
   if (mContentType.IsEmpty()) {
-    DetermineContentType();
+    DetermineContentType(aChannel);
 
     NS_ASSERTION(!mContentType.IsEmpty(), 
                  "Content type should be known by now.");
@@ -226,7 +237,7 @@ nsUnknownDecoder::OnStopRequest(nsIChannel *aChannel, nsISupports *aCtxt,
 }
 
 
-void nsUnknownDecoder::DetermineContentType()
+void nsUnknownDecoder::DetermineContentType(nsIChannel *aChannel)
 {
   PRUint32 i;
 
@@ -258,24 +269,47 @@ void nsUnknownDecoder::DetermineContentType()
   // If the buffer contains "common" HTML tags then lets call it HTML :-)
   //
   else {
-    PRInt32 offset;
 
-    offset = str.Find("<HTML", PR_TRUE);
-    if (offset < 0) {
-      offset = str.Find("<TITLE", PR_TRUE);
-      if (offset < 0) {
-        offset = str.Find("<FRAMESET", PR_TRUE);
-        if (offset < 0) {
-          offset = str.Find("<SCRIPT", PR_TRUE);
-          if (offset < 0) {
-            offset = str.Find("<BODY", PR_TRUE);
+    /*
+     * To prevent a possible attack, we will not consider this to be html 
+     * content if it comes from the local file system
+     */
+
+    PRBool isLocalFile = PR_FALSE;
+    if (aChannel) {
+      nsCOMPtr<nsIURI> pURL;
+      nsresult rv = aChannel->GetURI(getter_AddRefs(pURL));
+      if (NS_SUCCEEDED(rv)) {
+        nsXPIDLCString protocol;
+        rv = pURL->GetScheme(getter_Copies(protocol));
+        if (NS_SUCCEEDED(rv)) {
+          if (!PL_strcasecmp(protocol, "file")) {
+            isLocalFile = PR_TRUE;
           }
         }
       }
     }
 
-    if (offset >= 0) {
-      mContentType = TEXT_HTML;
+    if (!mRequireHTMLsuffix || !isLocalFile) {
+      PRInt32 offset;
+
+      offset = str.Find("<HTML", PR_TRUE);
+      if (offset < 0) {
+        offset = str.Find("<TITLE", PR_TRUE);
+        if (offset < 0) {
+          offset = str.Find("<FRAMESET", PR_TRUE);
+          if (offset < 0) {
+            offset = str.Find("<SCRIPT", PR_TRUE);
+            if (offset < 0) {
+              offset = str.Find("<BODY", PR_TRUE);
+            }
+          }
+        }
+      }
+
+      if (offset >= 0) {
+        mContentType = TEXT_HTML;
+      }
     }
   }
 
