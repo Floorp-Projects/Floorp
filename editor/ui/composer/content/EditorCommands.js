@@ -247,13 +247,13 @@ function FindAndSelectEditorWindowWithURL(urlToMatch)
   if ( !windowManagerInterface )
     return false;
 
-  var enumerator = windowManagerInterface.GetEnumerator( "composer:html" );
+  var enumerator = windowManagerInterface.getEnumerator( "composer:html" );
   if ( !enumerator )
     return false;
 
   while ( enumerator.HasMoreElements() )
   {
-    var window = windowManagerInterface.ConvertISupportsToDOMWindow( enumerator.GetNext() );
+    var window = windowManagerInterface.convertISupportsToDOMWindow( enumerator.GetNext() );
     if ( window )
     {
       var didFindWindow = editorShell.checkOpenWindowForURLMatch(urlToMatch, window)
