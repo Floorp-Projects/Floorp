@@ -1,884 +1,1098 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
 <head>
-   
+               
   <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
   <title>Soap Scripts in Mozilla</title>
 </head>
   <body>
- 
-<div align="Center"> 
+       
+<div align="Center">    
 <h1>SOAP Scripts in Mozilla</h1>
- <font color="#999999">February 16, 2002</font><br>
- 
+    <font color="#999999">February 16, 2002</font><br>
+       
 <h3><font color="#999999">Ray Whitmer</font></h3>
- 
+       
 <h2><font color="#666666">Abstract</font></h2>
- 
-<div align="Left"><font color="#000000">Microsoft and others have advocated 
-SOAP as a way to encode and exchange public data structures between agents 
-on the web.&nbsp; The browser client is the most universal web agent in existence, 
-and Javascript is the standard, interoperable way of scripting browsers.&nbsp; 
-Scriptable SOAP in browsers gives clients and servers more to say to each 
-other through existing http-xml services, providing scripts with persistence, 
-database, and access to other web services not tied to the request and response 
-cycles of the HTML-based user interface.&nbsp; Web data structures, exchanged 
-in a platform-neutral way, should become as fundamental to web agents as web
-content is today.&nbsp; The key to this is a tight binding to the natural 
-data of Javascript so that the script can simply use the data instead of tediously
-encoding and extracting the data from the XML.</font><br>
- 
+       
+<div align="Left"><font color="#000000">Microsoft and others have advocated
+  SOAP as a way to encode and exchange public data structures between agents
+  on the web.&nbsp; The browser client is the most universal web agent in
+existence,  and Javascript is the standard, interoperable way of scripting
+browsers.&nbsp;  Scriptable SOAP in browsers gives clients and servers more
+to say to each  other through existing http-xml services, providing scripts
+with persistence,  database, and access to other web services not tied to
+the request and response  cycles of the HTML-based user interface.&nbsp;
+Web data structures, exchanged  in a platform-neutral way, should become
+as fundamental to web agents as web content is today.&nbsp; The key to this
+is a tight binding to the natural  data of Javascript so that the script
+can simply use the data instead of tediously encoding and extracting the
+data from the XML.</font><br>
+       
 <h2>SOAP Services</h2>
-  There are a number of sources for services available on the web being set
- up, such as XMethods. Apache supports modules for SOAP that this author
-has  used to author services for purposes of testing and entertainment.&nbsp; 
-Once it is set up, it is as simple as writing a function in Javascript, Java,
- or any other of a number of supported languages and then writing a simple
- service description in XML or submitting a form to deploy the service.&nbsp; 
-There are toolkits available from Microsoft and other webserver providers 
-for authoring such services as well.<br>
- 
+     There are a number of sources for services available on the web being
+ set  up, such as XMethods. Apache supports modules for SOAP that this author 
+ has  used to author services for purposes of testing and entertainment.&nbsp;
+  Once it is set up, it is as simple as writing a function in Javascript,
+Java,  or any other of a number of supported languages and then writing a
+simple  service description in XML or submitting a form to deploy the service.&nbsp;
+  There are toolkits available from Microsoft and other webserver providers
+  for authoring such services as well.<br>
+       
 <h2>SOAP Blocks</h2>
- 
+       
 <h3>Parameters<br>
- </h3>
- SOAP-based services exchange message envelopes which contain blocks of XML 
-data roughly corresponding to the parameters of a service call.&nbsp; When 
-an rpc-style message is exchanged, blocks representing the regular parameter 
-blocks are placed inside an element which identifies the object and method 
-being invoked, which is placed inside the body. &nbsp;In a non-RPC message, 
-the blocks are placed directly inside the body instead of under the method 
-element.&nbsp; <br>
- 
+    </h3>
+    SOAP-based services exchange message envelopes which contain blocks of
+ XML  data roughly corresponding to the parameters of a service call.&nbsp;
+ When  an rpc-style message is exchanged, blocks representing the regular
+parameter  blocks are placed inside an element which identifies the object
+and method  being invoked, which is placed inside the body. &nbsp;In a non-RPC
+message,  the blocks are placed directly inside the body instead of under
+the method  element.&nbsp; <br>
+       
 <h3>Header Blocks<br>
- </h3>
-If there are blocks which are optional or independently added or processed,
-these are carried in the header with an assigned role and marked if the recipient 
-is required to understand them.<br>
- 
+    </h3>
+   If there are blocks which are optional or independently added or processed, 
+ these are carried in the header with an assigned role and marked if the recipient
+ is required to understand them.<br>
+       
 <h3>Encodings<br>
- </h3>
- Interpretation of each block depends upon the encoding that was used, which 
-is clearly specified in the message.&nbsp; If the standard SOAP encoding is
-used, then XML Schema types control the interpretation the data within each
-block.<br>
- 
+    </h3>
+    Interpretation of each block depends upon the encoding that was used, 
+which  is clearly specified in the message.&nbsp; If the standard SOAP encoding
+ is used, then XML Schema types control the interpretation the data within
+ each block.<br>
+       
 <h2>Using the Low-Level SOAP API</h2>
- To use the low-level API, the user creates a SOAPCall object, encodes the
- function call with a list of headers and regular parameters, and invokes
-the call, which returns a response which contains the results of the service
-call including a fault generated by the service which processed the message,
-output parameters, and/or header blocks.&nbsp; If the call is invoked asynchronously,
- then a function is given which receives the response when it arrives from
- the remote service.<br>
- <br>
- Besides Javascript, the below-described operations should also generally 
-work for other xpconnect-supported languages in Mozilla such as C++/XPCOM 
-and Python, because language-independent cross-platform interfaces were used.<br>
+    To use the low-level API, the user creates a SOAPCall object, encodes 
+the   function call with a list of headers and regular parameters, and invokes 
+ the call, which returns a response which contains the results of the service 
+ call including a fault generated by the service which processed the message, 
+ output parameters, and/or header blocks.&nbsp; If the call is invoked asynchronously, 
+  then a function is given which receives the response when it arrives from 
+  the remote service.<br>
+    <br>
+    Besides Javascript, the below-described operations should also generally
+  work for other xpconnect-supported languages in Mozilla such as C++/XPCOM
+  and Python, because language-independent cross-platform interfaces were
+used.<br>
+     
 <h3>Conventions<br>
-</h3>
-Names or short description in angle brackets represent values or objects
-of the named type which may be literal, constructed via "new", or a variable.
-&nbsp;Occasionally the same syntax with a longer description represents script
-performing an operation. &nbsp;Quoted angle brackets indicate a string of
-the described form.<br>
-<br>
-So the following example:<br>
+   </h3>
+   Names or short description in angle brackets represent values or objects 
+ of the named type which may be literal, constructed via "new", or a variable. 
+ &nbsp;Occasionally the same syntax with a longer description represents script
+ performing an operation. &nbsp;Quoted angle brackets indicate a string of
+ the described form.<br>
+   <br>
+   So the following operation:<br>
+     
 <ul>
-  <li>&lt;Foo&gt; = new Foo(&lt;FooFact&gt;);</li>
-  <li>&lt;Foo&gt;.bar = &lt;any value or object&gt;;</li>
-  <li>&lt;Baz&gt; = &lt;Foo&gt;.find("&lt;name&gt;");</li>
-  <li>&lt;find out what you have&gt;</li>
+     <li><font color="#993300"><i>&lt;Foo&gt;</i></font> = new Foo(<font color="#993300"><i>
+&lt;FooFact&gt;</i></font> );</li>
+     <li><font color="#993300"><i>&lt;Foo&gt;</i></font>.bar = <font color="#993300"><i>
+&lt;any value or object&gt;</i></font>;</li>
+     <li><font color="#993300"><i>&lt;Baz&gt;</i></font> = <font color="#993300"><i>
+&lt;Foo&gt;</i></font>.find("<font color="#993300"><i>&lt;name&gt;</i></font>
+ ");</li>
+     <li><font color="#993300"><i>&lt;find out what you have&gt;</i></font></li>
+     
 </ul>
-might be replaced in a real Javascript program with<br>
-<br>
-<code>var myFoo = new Foo(new FooFact("always","Great","Baz"));<br>
-myFoo.bar = 3.14159265;<br>
-var myGreatBaz = myFoo.find("Great");<br>
-if (checkBaz(&lt;myGreatBaz&gt;)) {<br>
-&nbsp; alert(myGreatBaz.description);<br>
-}<br>
-</code><br>
-where "myFoo" is a variable holding an object of type Foo and myGreatBaz
-is a variable holding an object of type Baz.<br>
- 
+   might be replaced in a real Javascript program with<br>
+   <br>
+   <code>var myFoo = new Foo(new FooFact("always","Great","Baz"));<br>
+   myFoo.bar = 3.14159265;<br>
+   var myGreatBaz = myFoo.find("Great");<br>
+   if (checkBaz(myGreatBaz)) {<br>
+   &nbsp; alert(myGreatBaz.description);<br>
+   }<br>
+   </code><br>
+   where "myFoo" is a variable holding an object of type Foo and myGreatBaz 
+ is a variable holding an object of type Baz.<br>
+       
 <h3>Basic Operations<br>
- </h3>
- For simple cases, basic SOAP operations is all the user needs to do.<br>
- <br>
- 
+    </h3>
+    For basic SOAP operations is all most users need to do.<br>
+    <br>
+       
 <table cellpadding="2" cellspacing="2" border="1" width="100%">
-   <tbody>
-     <tr>
-       <td valign="Top">Basic Operation<br>
-       </td>
-       <td valign="Top">How to Do It<br>
-       </td>
-     </tr>
-     <tr>
-       <td valign="Top">Create a parameter block, setting the Javascript
-value and name for rpc-style call<br>
-       </td>
-       <td valign="Top">
+      <tbody>
+        <tr>
+          <td valign="Top">Basic Operation<br>
+          </td>
+          <td valign="Top">How to Do It<br>
+          </td>
+        </tr>
+        <tr>
+          <td valign="Top">Create a parameter block, setting the Javascript 
+ value and name for rpc-style call<br>
+          </td>
+          <td valign="Top">                     
       <ul>
-        <li>&lt;SOAPParameter&gt; = new SOAPParameter(&lt;any value or object&gt;, 
-"&lt;name&gt;");</li>
-        <li> &nbsp;// or </li>
-        <li>&lt;SOAPParameter&gt; = new SOAPParameter();</li>
-        <li>&lt;SOAPParameter&gt;.value = &lt;any value or object&gt;;</li>
-        <li> &lt;SOAPParameter&gt;.name = "&lt;name&gt;";</li>
+           <li><font color="#993300"><i>&lt;SOAPParameter&gt;</i></font>
+= new SOAPParameter(<font color="#993300"><i>&lt;any value or object&gt;</i></font>
+,  "<font color="#993300"><i>&lt;name&gt;</i></font>");</li>
+           <li> &nbsp;// or </li>
+           <li><font color="#993300"><i>&lt;SOAPParameter&gt;</i></font>
+= new SOAPParameter();</li>
+           <li><font color="#993300"><i>&lt;SOAPParameter&gt;</i></font>.value
+= <font color="#993300"><i>&lt;any value or object&gt;</i></font> ;</li>
+           <li> <font color="#993300"><i>&lt;SOAPParameter&gt;</i></font>
+.name = "<font color="#993300"><i>&lt;name&gt;</i></font>";</li>
+                       
       </ul>
-       </td>
-     </tr>
-     <tr>
-       <td valign="Top">Set parameters in a Javascript array<br>
-       </td>
-       <td valign="Top">
+          </td>
+        </tr>
+        <tr>
+          <td valign="Top">Set parameters in a Javascript array<br>
+          </td>
+          <td valign="Top">                     
       <ul>
-        <li>&lt;SOAPParameter array&gt; = new Array(&lt;SOAPPerameter&gt;[,...]);</li>
-        <li> // or</li>
-        <li>&lt;SOAPParameter array&gt; = new Array();</li>
-        <li>&lt;SOAPParameter array&gt;[0] = &lt;SOAPParameter&gt;;</li>
-        <li>[...]</li>
+           <li><font color="#993300"><i>&lt;SOAPParameter array&gt;</i></font>
+ = new Array(<font color="#993300"><i>&lt;SOAPPerameter&gt;</i></font> [,...]);</li>
+           <li> // or</li>
+           <li><font color="#993300"><i>&lt;SOAPParameter array&gt;</i></font>
+ = new Array();</li>
+           <li><font color="#993300"><i>&lt;SOAPParameter array&gt;</i></font>
+[0] = <font color="#993300"><i>&lt;SOAPParameter&gt;</i></font> ;</li>
+           <li>[...]</li>
+                       
       </ul>
-       </td>
-     </tr>
-     <tr>
-       <td valign="Top">Create and encode the parameters in a basic SOAP
-1.1 rpc-style message<br>
-       </td>
-       <td valign="Top">
+          </td>
+        </tr>
+        <tr>
+          <td valign="Top">Create and encode the parameters in a basic SOAP 
+ 1.1 rpc-style message<br>
+          </td>
+          <td valign="Top">                     
       <ul>
-        <li>&lt;SOAPCall&gt; = new SOAPCall();</li>
-        <li>&lt;SOAPCall&gt;.transportURI = "&lt;http-based service URI&gt;"</li>
-        <li>&lt;SOAPCall&gt;.encode(0, "&lt;method name&gt;", "&lt;service
-namespace&gt;", 0, null, &lt;SOAPParameter array&gt;.length, &lt;SOAPParameter
-array&gt;);</li>
+           <li><font color="#993300"><i>&lt;SOAPCall&gt;</i></font> = new
+SOAPCall();</li>
+           <li><font color="#993300"><i>&lt;SOAPCall&gt;</i></font>.transportURI
+= "<font color="#993300"><i>&lt;http-based service URI&gt;</i></font>"</li>
+           <li><font color="#993300"><i>&lt;SOAPCall&gt;</i></font>.encode(0,
+"<font color="#993300"><i>&lt;method name&gt;</i></font> ", "<font color="#993300"><i>
+&lt;service  namespace&gt;</i></font>", 0, null, <font color="#993300"><i>
+&lt;SOAPParameter array&gt;</i></font> .length, <font color="#993300"><i>
+&lt;SOAPParameter  array&gt;</i></font>);</li>
+                       
       </ul>
-       </td>
-     </tr>
-     <tr>
-       <td valign="Top">Invoke &nbsp;call (send call message and receive
-response message)<br>
-       </td>
-       <td valign="Top">
+          </td>
+        </tr>
+        <tr>
+          <td valign="Top">Invoke &nbsp;call (send call message and receive 
+ response message)<br>
+          </td>
+          <td valign="Top">                     
       <ul>
-        <li>&lt;SOAPResponse&gt; = &lt;SOAPCall&gt;.invoke();</li>
-        <li>&lt;process the response -- see below&gt;</li>
-        <li> // or</li>
-        <li> &lt;SOAPCall&gt;.asyncInvoke(&lt;SOAPResponseListener&gt;);</li>
+           <li><font color="#993300"><i>&lt;SOAPResponse&gt;</i></font> =
+          <font color="#993300"><i>&lt;SOAPCall&gt;</i></font>.invoke();</li>
+           <li><font color="#993300"><i>&lt;process the response -- see below&gt;</i></font></li>
+           <li> // or</li>
+           <li> <font color="#993300"><i>&lt;SOAPCall&gt;</i></font>.asyncInvoke(<font color="#993300"><i>
+&lt;SOAPResponseListener&gt;</i></font> );</li>
+                       
       </ul>
-       </td>
-     </tr>
-     <tr>
-      <td valign="Top">Handle completion of async SOAP call.<br>
-      </td>
-      <td valign="Top">
+          </td>
+        </tr>
+        <tr>
+         <td valign="Top">Handle completion of async SOAP call.<br>
+         </td>
+         <td valign="Top">                     
       <ul>
-        <li>function &lt;SOAPResponseListener&gt;(&lt;SOAPResponse&gt;, &lt;SOAPCall&gt;,
-&lt;error&gt;)</li>
-        <li>{</li>
-        <li>&nbsp; if (error != 0) {</li>
-        <li>&nbsp; &nbsp; &nbsp;&lt;action to be taken on failure to transport
-message&gt;</li>
-        <li>&nbsp; }</li>
-        <li>&nbsp; &lt;process the response -- see below&gt;</li>
-        <li>}</li>
+           <li>function <font color="#993300"><i>&lt;SOAPResponseListener
+name&gt;</i></font>(<font color="#993300"><i>&lt;SOAPResponse&gt;</i></font>
+ , <font color="#993300"><i>&lt;SOAPCall&gt;</i></font>, <font color="#993300"><i>
+&lt;error&gt;</i></font>)</li>
+           <li>{</li>
+           <li>&nbsp; if (error != 0) {</li>
+           <li>&nbsp; &nbsp; &nbsp;<font color="#993300"><i>&lt;action to
+be taken on failure to transport  message&gt;</i></font></li>
+           <li>&nbsp; }</li>
+           <li>&nbsp; <font color="#993300"><i>&lt;process the response --
+see below&gt;</i></font></li>
+           <li>}</li>
+                       
       </ul>
-      </td>
-    </tr>
-    <tr>
-       <td valign="Top">Get service's failure, if any.<br>
-       </td>
-       <td valign="Top">
+         </td>
+       </tr>
+       <tr>
+          <td valign="Top">Get service's failure, if any.<br>
+          </td>
+          <td valign="Top">                     
       <ul>
-        <li>&lt;SOAPFault&gt; = &lt;SOAPResponse&gt;.fault;</li>
-        <li>if (&lt;SOAPFault&gt; != null) {</li>
-        <li>&nbsp; &lt;namespace URI string&gt; = &lt;SOAPFault&gt;.faultNamespace;</li>
-        <li>&nbsp; &lt;name string&gt; = &lt;SOAPFault&gt;.faultCode;</li>
-        <li>&nbsp; &lt;summary string&gt; = &lt;SOAPFault&gt;.faultString;</li>
-        <li>&nbsp; &lt;actor URI string&gt; = &lt;SOAPFault&gt;.actorURI;</li>
-        <li>&nbsp; &lt;action to be taken in case of fault&gt;</li>
-        <li>}</li>
+           <li><font color="#993300"><i>&lt;SOAPFault&gt;</i></font> = <font color="#993300"><i>
+&lt;SOAPResponse&gt;</i></font>.fault;</li>
+           <li>if (<font color="#993300"><i>&lt;SOAPFault&gt;</i></font>
+!= null) {</li>
+           <li>&nbsp; <font color="#993300"><i>&lt;namespace URI string&gt;</i></font>
+ = <font color="#993300"><i>&lt;SOAPFault&gt;</i></font> .faultNamespace;</li>
+           <li>&nbsp; <font color="#993300"><i>&lt;name string&gt;</i></font>
+ = <font color="#993300"><i>&lt;SOAPFault&gt;</i></font> .faultCode;</li>
+           <li>&nbsp; <font color="#993300"><i>&lt;summary string&gt;</i></font>
+ = <font color="#993300"><i>&lt;SOAPFault&gt;</i></font> .faultString;</li>
+           <li>&nbsp; <font color="#993300"><i>&lt;actor URI string&gt;</i></font>
+ = <font color="#993300"><i>&lt;SOAPFault&gt;</i></font> .actorURI;</li>
+           <li>&nbsp; <font color="#993300"><i>&lt;action to be taken in
+case of fault&gt;</i></font></li>
+           <li>}</li>
+                       
       </ul>
-       </td>
-     </tr>
-     <tr>
-       <td valign="Top">Get returned parameters from rpc-style response<br>
-       </td>
-       <td valign="Top">
+          </td>
+        </tr>
+        <tr>
+          <td valign="Top">Get returned parameters from rpc-style response<br>
+          </td>
+          <td valign="Top">                     
       <ul>
-        <li>&lt;SOAPParameter array&gt; = &lt;SOAPResponse&gt;.getParameters(true,
-{});</li>
+           <li><font color="#993300"><i>&lt;SOAPParameter array&gt;</i></font>
+ = <font color="#993300"><i>&lt;SOAPResponse&gt;</i></font> .getParameters(true,
+ {});</li>
+                       
       </ul>
-       </td>
-     </tr>
-     <tr>
-       <td valign="Top">Process Javascript values, etc. of returned parameters<br>
-       </td>
-       <td valign="Top">
+          </td>
+        </tr>
+        <tr>
+          <td valign="Top">Process Javascript values, etc. of returned parameters<br>
+          </td>
+          <td valign="Top">                     
       <ul>
-        <li>for (i = 0; i != &lt;SOAPParameter array&gt;.length; i++)</li>
-        <li>{</li>
-        <li>&nbsp; &lt;SOAPParameter&gt; = &lt;SOAPParameter array&gt;[i];</li>
-        <li>&nbsp; &lt;value or object&gt; = &lt;SOAPParameter&gt;.value;</li>
-        <li>&nbsp; &lt;name string&gt; = &lt;SOAPParameter&gt;.name;</li>
-        <li>&nbsp; &lt;checking and processing of result&gt;</li>
-        <li>}</li>
+           <li>for (i = 0; i != <font color="#993300"><i>&lt;SOAPParameter
+array&gt;</i></font>.length; i++)</li>
+           <li>{</li>
+           <li>&nbsp; <font color="#993300"><i>&lt;SOAPParameter&gt;</i></font>
+ = <font color="#993300"><i>&lt;SOAPParameter array&gt;</i></font>[i];</li>
+           <li>&nbsp; <font color="#993300"><i>&lt;value or object&gt;</i></font>
+ = <font color="#993300"><i>&lt;SOAPParameter&gt;</i></font> .value;</li>
+           <li>&nbsp; <font color="#993300"><i>&lt;name string&gt;</i></font>
+ = <font color="#993300"><i>&lt;SOAPParameter&gt;</i></font> .name;</li>
+           <li>&nbsp; <font color="#993300"><i>&lt;checking and processing
+of result&gt;</i></font></li>
+           <li>}</li>
+                       
       </ul>
-       </td>
-     </tr>
-   
-  </tbody> 
+          </td>
+        </tr>
+               
+  </tbody>    
 </table>
- 
+       
 <h3></h3>
- 
+       The above operations are what every user of the lowlevel SOAP toolkit
+needs to invoke service requests and interpret the responses, as is easily
+seen by looking at some of the samples. &nbsp;The bulk of the operations
+that follow will generally be used much less frequently, but they need to
+be there for &nbsp;cases where they are needed. &nbsp;The casual reader may
+skip the remaining tables of operations in this section, or scan for features
+of interest.<br>
 <h3>Header Operations</h3>
-For additional information, the user can send or receive headers.<br>
-<br>
+   For additional information, the user can send or receive header blockss.
+&nbsp;Sending and receiving header blocks is not very different from sending
+and receiving parameters as described above.<br>
+   <br>
+     
 <table cellpadding="2" cellspacing="2" border="1" width="100%">
-  <tbody>
-    <tr>
-      <td valign="Top">Header Operation<br>
-      </td>
-      <td valign="Top">How to Do It<br>
-      </td>
-    </tr>
-    <tr>
-      <td valign="Top">Create a Header Block<br>
-      </td>
-      <td valign="Top">
+     <tbody>
+       <tr>
+         <td valign="Top">Header Operation<br>
+         </td>
+         <td valign="Top">How to Do It<br>
+         </td>
+       </tr>
+       <tr>
+         <td valign="Top">Create a Header Block<br>
+         </td>
+         <td valign="Top">                     
       <ul>
-        <li>&lt;SOAPHeaderBlock&gt; = new SOAPHeaderBlock(&lt;any value or
-object&gt;, "&lt;name&gt;", "&lt;namespaceURI&gt;");</li>
-        <li>  &nbsp;// or </li>
-        <li> &lt;SOAPHeaderBlock&gt; = new SOAPHeaderBlock();</li>
-        <li> &lt;SOAPHeaderBlock&gt;.value = &lt;any value or object&gt;;</li>
-        <li>  &lt;SOAPHeaderBlock&gt;.name = "&lt;name&gt;";</li>
-        <li>  &lt;SOAPHeaderBlock&gt;.namespaceURI = "&lt;namespaceURI&gt;";</li>
+           <li><font color="#993300"><i>&lt;SOAPHeaderBlock&gt;</i></font>
+ = new SOAPHeaderBlock(<font color="#993300"><i>&lt;any value or object&gt;</i></font>
+, "<font color="#993300"><i>&lt;name&gt;</i></font>", "<font color="#993300"><i>
+&lt;namespaceURI&gt;</i></font> ");</li>
+           <li>  &nbsp;// or </li>
+           <li> <font color="#993300"><i>&lt;SOAPHeaderBlock&gt;</i></font>
+ = new SOAPHeaderBlock();</li>
+           <li> <font color="#993300"><i>&lt;SOAPHeaderBlock&gt;</i></font>
+.value = <font color="#993300"><i>&lt;any value or object&gt;</i></font>;</li>
+           <li>  <font color="#993300"><i>&lt;SOAPHeaderBlock&gt;</i></font>
+.name = "<font color="#993300"><i>&lt;name&gt;</i></font> ";</li>
+           <li>  <font color="#993300"><i>&lt;SOAPHeaderBlock&gt;</i></font>
+.namespaceURI = "<font color="#993300"><i>&lt;namespaceURI&gt;</i></font>
+ ";</li>
+                       
       </ul>
-      </td>
-    </tr>
-    <tr>
-      <td valign="Top">Establish non-default role of a header block<br>
-      </td>
-      <td valign="Top">
+         </td>
+       </tr>
+       <tr>
+         <td valign="Top">Establish non-default role of a header block<br>
+         </td>
+         <td valign="Top">                     
       <ul>
-        <li>&lt;SOAPHeaderBlock&gt;.actorURI = "&lt;actorURI&gt;";</li>
-        <li>&lt;SOAPHeaderBlock&gt;.mustUnderstand = &lt;true or false&gt;;</li>
+           <li><font color="#993300"><i>&lt;SOAPHeaderBlock&gt;</i></font>
+.actorURI = "<font color="#993300"><i>&lt;actorURI&gt;</i></font> ";</li>
+           <li><font color="#993300"><i>&lt;SOAPHeaderBlock&gt;</i></font>
+.mustUnderstand = <font color="#993300"><i>&lt;true or false&gt;</i></font>
+;</li>
+                       
       </ul>
-      </td>
-    </tr>
-    <tr>
-      <td valign="Top">Set header blocks in a Javascript array<br>
-      </td>
-      <td valign="Top">
+         </td>
+       </tr>
+       <tr>
+         <td valign="Top">Set header blocks in a Javascript array<br>
+         </td>
+         <td valign="Top">                     
       <ul>
-        <li>&lt;SOAPHeaderBlock array&gt; = new Array(&lt;SOAPHeaderBlock&gt;[,...]);</li>
-        <li>  // or</li>
-        <li> &lt;SOAPHeaderBlock array&gt; = new Array();</li>
-        <li> &lt;SOAPHeaderBlock array&gt;[0] = &lt;SOAPHeaderBlock&gt;;</li>
-        <li> [...]</li>
+           <li><font color="#993300"><i>&lt;SOAPHeaderBlock array&gt;</i></font>
+ = new Array(<font color="#993300"><i>&lt;SOAPHeaderBlock&gt;</i></font> [,...]);</li>
+           <li>  // or</li>
+           <li> <font color="#993300"><i>&lt;SOAPHeaderBlock array&gt;</i></font>
+ = new Array();</li>
+           <li> <font color="#993300"><i>&lt;SOAPHeaderBlock array&gt;</i></font>
+[0] = <font color="#993300"><i>&lt;SOAPHeaderBlock&gt;</i></font> ;</li>
+           <li> [...]</li>
+                       
       </ul>
-      </td>
-    </tr>
-    <tr>
-      <td valign="Top">Encode the headers in a SOAP 1.1 rpc-style message<br>
-      </td>
-      <td valign="Top">
+         </td>
+       </tr>
+       <tr>
+         <td valign="Top">Encode the headers in a SOAP 1.1 rpc-style message<br>
+         </td>
+         <td valign="Top">                     
       <ul>
-        <li>&lt;SOAPCall&gt;.encode(0, "&lt;method name&gt;", "&lt;service
-namespace&gt;", &lt;SOAPHeaderBlock array&gt;.length, &lt;SOAPHeaderBlock
-array&gt;, &lt;SOAPParameter array&gt;.length, &lt;SOAPParameter array&gt;);</li>
+           <li><font color="#993300"><i>&lt;SOAPCall&gt;</i></font>.encode(0,
+"<font color="#993300"><i>&lt;method name&gt;</i></font> ", "<font color="#993300"><i>
+&lt;service  namespace&gt;</i></font>", <font color="#993300"><i>&lt;SOAPHeaderBlock
+array&gt;</i></font> .length, <font color="#993300"><i>&lt;SOAPHeaderBlock
+ array&gt;</i></font>, <font color="#993300"><i>&lt;SOAPParameter array&gt;</i></font>
+ .length, <font color="#993300"><i>&lt;SOAPParameter array&gt;</i></font>
+);</li>
+                       
       </ul>
-      </td>
-    </tr>
-    <tr>
-      <td valign="Top">Get returned headers<br>
-      </td>
-      <td valign="Top">
+         </td>
+       </tr>
+       <tr>
+         <td valign="Top">Get returned headers<br>
+         </td>
+         <td valign="Top">                     
       <ul>
-        <li>&lt;SOAPHeaderBlock array&gt; = &lt;SOAPResponse&gt;.getHeaderBlocks(true,
-{});</li>
+           <li><font color="#993300"><i>&lt;SOAPHeaderBlock array&gt;</i></font>
+ = <font color="#993300"><i>&lt;SOAPResponse&gt;</i></font> .getHeaderBlocks(true,
+ {});</li>
+                       
       </ul>
-      </td>
-    </tr>
-    <tr>
-      <td valign="Top">Process Javascript values, etc. of returned headers<br>
-      </td>
-      <td valign="Top">
+         </td>
+       </tr>
+       <tr>
+         <td valign="Top">Process Javascript values, etc. of returned headers<br>
+         </td>
+         <td valign="Top">                     
       <ul>
-        <li>for (i = 0; i != &lt;SOAPHeaderBlock array&gt;.length; i++)</li>
-        <li>{</li>
-        <li>&nbsp; &lt;SOAPHeaderBlock&gt; = &lt;SOAPHeaderBlock array&gt;[i];</li>
-        <li>&nbsp; &lt;value or object&gt; = &lt;SOAPHeaderBlock&gt;.value;</li>
-        <li>&nbsp; &lt;name string&gt; = &lt;SOAPHeaderBlock&gt;.name;</li>
-        <li>&nbsp; &lt;namespace URI string&gt; = &lt;SOAPHeaderBlock&gt;.namespaceURI;</li>
-        <li>&nbsp; &lt;actor URI string&gt; = &lt;SOAPHeaderBlock&gt;.actorURI;</li>
-        <li>&nbsp; &lt;must understand boolean&gt; = &lt;SOAPHeaderBlock&gt;.mustUnderstand;<br>
-        </li>
-        <li>&nbsp; &lt;checking and processing of result&gt;</li>
-        <li>}</li>
+           <li>for (i = 0; i != <font color="#993300"><i>&lt;SOAPHeaderBlock
+array&gt;</i></font>.length; i++)</li>
+           <li>{</li>
+           <li>&nbsp; <font color="#993300"><i>&lt;SOAPHeaderBlock&gt;</i></font>
+ = <font color="#993300"><i>&lt;SOAPHeaderBlock array&gt;</i></font>[i];</li>
+           <li>&nbsp; <font color="#993300"><i>&lt;value or object&gt;</i></font>
+ = <font color="#993300"><i>&lt;SOAPHeaderBlock&gt;</i></font> .value;</li>
+           <li>&nbsp; <font color="#993300"><i>&lt;name string&gt;</i></font>
+ = <font color="#993300"><i>&lt;SOAPHeaderBlock&gt;</i></font> .name;</li>
+           <li>&nbsp; <font color="#993300"><i>&lt;namespace URI string&gt;</i></font>
+ = <font color="#993300"><i>&lt;SOAPHeaderBlock&gt;</i></font> .namespaceURI;</li>
+           <li>&nbsp; <font color="#993300"><i>&lt;actor URI string&gt;</i></font>
+ = <font color="#993300"><i>&lt;SOAPHeaderBlock&gt;</i></font> .actorURI;</li>
+           <li>&nbsp; <font color="#993300"><i>&lt;must understand boolean&gt;</i></font>
+ = <font color="#993300"><i>&lt;SOAPHeaderBlock&gt;</i></font> .mustUnderstand;<br>
+           </li>
+           <li>&nbsp; <font color="#993300"><i>&lt;checking and processing
+of result&gt;</i></font></li>
+           <li>}</li>
+                       
       </ul>
-      </td>
-    </tr>
-  </tbody>
+         </td>
+       </tr>
+           
+  </tbody>   
 </table>
+     
 <h3>Non-RPC Operations</h3>
-For messages that are not intended to model RPC calls, there is no method
-name or target object URI, and the parameters generally have namespaceURIs.<br>
-<br>
+   For messages that are not intended to model RPC calls, there is no method 
+ name or target object URI, and the parameters generally have namespaceURIs.
+ &nbsp;Otherwise, the basic operations are the same.<br>
+   <br>
+     
 <table cellpadding="2" cellspacing="2" border="1" width="100%">
-  <tbody>
-    <tr>
-      <td valign="Top">Non-RPC Operation<br>
-      </td>
-      <td valign="Top">How to Do It<br>
-      </td>
-    </tr>
-    <tr>
-      <td valign="Top">Setting the namespaceURI of a non-RPC parameter<br>
-      </td>
-      <td valign="Top">
+     <tbody>
+       <tr>
+         <td valign="Top">Non-RPC Operation<br>
+         </td>
+         <td valign="Top">How to Do It<br>
+         </td>
+       </tr>
+       <tr>
+         <td valign="Top">Setting the namespaceURI of a non-RPC parameter<br>
+         </td>
+         <td valign="Top">                     
       <ul>
-        <li>&lt;SOAPParameter&gt; = new SOAPHeaderBlock(&lt;any value or
-object&gt;, "&lt;name&gt;", "&lt;namespaceURI&gt;");</li>
-        <li>  &nbsp;// or </li>
-        <li>&lt;SOAPParameter&gt;.namespaceURI = "&lt;namespaceURI&gt;";</li>
+           <li><font color="#993300"><i>&lt;SOAPParameter&gt;</i></font>
+= new SOAPHeaderBlock(<font color="#993300"><i>&lt;any value or  object&gt;</i></font>
+, "<font color="#993300"><i>&lt;name&gt;</i></font>", "<font color="#993300"><i>
+&lt;namespaceURI&gt;</i></font> ");</li>
+           <li>  &nbsp;// or </li>
+           <li><font color="#993300"><i>&lt;SOAPParameter&gt;</i></font>.namespaceURI
+= "<font color="#993300"><i>&lt;namespaceURI&gt;</i></font> ";</li>
+                       
       </ul>
-      </td>
-    </tr>
-    <tr>
-      <td valign="Top">Encode a SOAP 1.1 non-rpc-style message<br>
-      </td>
-      <td valign="Top">
+         </td>
+       </tr>
+       <tr>
+         <td valign="Top">Encode a SOAP 1.1 non-rpc-style message<br>
+         </td>
+         <td valign="Top">                     
       <ul>
-        <li>&lt;SOAPCall&gt;.encode(0, "", "", &lt;header block array&gt;.length,
-&lt;header block array&gt;, &lt;parameter array&gt;.length, &lt;parameter
-array&gt;)</li>
+           <li><font color="#993300"><i>&lt;SOAPCall&gt;</i></font>.encode(0,
+"", "", <font color="#993300"><i>&lt;header block array&gt;</i></font>.length,
+ <font color="#993300"><i>&lt;header block array&gt;</i></font>, <font color="#993300"><i>
+&lt;parameter array&gt;</i></font>.length, <font color="#993300"><i>&lt;parameter
+ array&gt;</i></font>)</li>
+                       
       </ul>
-      </td>
-    </tr>
-    <tr>
-      <td valign="Top">Get returned parameters from non-rpc-style response<br>
-      </td>
-      <td valign="Top">
+         </td>
+       </tr>
+       <tr>
+         <td valign="Top">Get returned parameters from non-rpc-style response<br>
+         </td>
+         <td valign="Top">                     
       <ul>
-        <li>&lt;SOAPParameter array&gt; = &lt;SOAPResponse&gt;.getParameters(false,
-{});</li>
+           <li><font color="#993300"><i>&lt;SOAPParameter array&gt;</i></font>
+ = <font color="#993300"><i>&lt;SOAPResponse&gt;</i></font> .getParameters(false,
+ {});</li>
+                       
       </ul>
-      </td>
-    </tr>
-  </tbody>
+         </td>
+       </tr>
+           
+  </tbody>   
 </table>
+     
 <h3>SOAP Supertypes</h3>
-Now that the different operations on SOAPHeaderBlock and SOAPParameter objects
-have been explained, it is important to realize that they are fairly similar.
-&nbsp;In the following sections, all types of soap blocks, both headers and
-parameters, will be referred to together as the SOAPBlock type.<br>
-<br>
-Also, SOAPCall and SOAPResponse objects are fairly similar since they are
-both messages. &nbsp;In the following sections, all types of messages, both
-calls and responses, will be referred to together as the SOAPMessage type.<br>
+Header blocks and rpc-style and non-rpc-style parameters are similar.  &nbsp;In
+the following sections, these will usually be referred to collectively as
+SOAPBlock objects..<br>
+   <br>
+SOAPCall and SOAPResponse objects are also fairly similar as messages consisting
+of blocks. &nbsp;In the following sections, calls and responses will usually
+be referred to collectively as SOAPMessage objects.<br>
+     
 <h3>More Operations</h3>
-The following table contains additional operations on the SOAP message.<br>
-<br>
+   The following table contains less-common operations.<br>
+   <br>
+     
 <table cellpadding="2" cellspacing="2" border="1" width="100%">
-  <tbody>
-    <tr>
-      <td valign="Top">Operation<br>
-      </td>
-      <td valign="Top">How to Do It<br>
-      </td>
-    </tr>
-    <tr>
-      <td valign="Top">Attach a verifySource header which the service must
-understand and allow untrusted script to operate under a less-strict security
-model by posing less risk of exploiting behind-the-firewall services of unsuspecting
-users.<br>
-      </td>
-      <td valign="Top">
+     <tbody>
+       <tr>
+         <td valign="Top">Operation<br>
+         </td>
+         <td valign="Top">How to Do It<br>
+         </td>
+       </tr>
+              <tr>
+         <td valign="Top">Set or get an actionURI carried for the message 
+in  the HTTP header<br>
+         </td>
+         <td valign="Top">                     
       <ul>
-        <li>&lt;SOAPCall&gt;.verifySourceHeader = true;<br>
-        </li>
+           <li><font color="#993300"><i>&lt;SOAPMessage&gt;</i></font>.actionURI
+= "<font color="#993300"><i>&lt;action URI&gt;</i></font> ";</li>
+           <li>// or<br>
+           </li>
+           <li><font color="#993300"><i>&lt;action URI string&gt;</i></font>
+ = <font color="#993300"><i>&lt;SOAPMessage&gt;</i></font> .actionURI;<br>
+           </li>
+                       
       </ul>
-      <br>
-      </td>
-    </tr>
-    <tr>
-      <td valign="Top">Set or get an actionURI carried for the message in
-the HTTP header<br>
-      </td>
-      <td valign="Top">
+         </td>
+       </tr>
+       <tr>
+         <td valign="Top">Directly set the DOM element to represent the block's 
+ encoded content, bypassing encoding of the value on the block<br>
+         </td>
+         <td valign="Top">                     
       <ul>
-        <li>&lt;SOAPMessage&gt;.actionURI = "&lt;action URI&gt;";</li>
-        <li>// or<br>
-        </li>
-        <li>&lt;action URI string&gt; = &lt;SOAPMessage&gt;.actionURI;<br>
-        </li>
+           <li><font color="#993300"><i>&lt;SOAPBlock&gt;</i></font>.element
+= <font color="#993300"><i>&lt;DOM Element&gt;</i></font> ;<br>
+           </li>
+                       
       </ul>
-      </td>
-    </tr>
-    <tr>
-      <td valign="Top">Directly set the DOM element to represent the block's
-encoded content, bypassing encoding of the value on the block<br>
-      </td>
-      <td valign="Top">
+         <br>
+         </td>
+       </tr>
+       <tr>
+         <td valign="Top">Directly get the DOM element that represents the
+ block's encoded content, bypassing decoding of the value on the block<br>
+         </td>
+         <td valign="Top">                     
       <ul>
-        <li>&lt;SOAPBlock&gt;.element = &lt;DOM Element&gt;;<br>
-        </li>
+           <li><font color="#993300"><i>&lt;DOM Element&gt;</i></font> =
+          <font color="#993300"><i>&lt;SOAPBlock&gt;</i></font>.element;<br>
+           </li>
+                       
       </ul>
-      <br>
-      </td>
-    </tr>
-    <tr>
-      <td valign="Top">Directly get the DOM element that represents the block's
-encoded content, bypassing decoding of the value on the block<br>
-      </td>
-      <td valign="Top">
+         </td>
+       </tr>
+       <tr>
+         <td valign="Top">Directly get the DOM element containing the SOAP
+ envelope , header, or body of an encoded message<br>
+         </td>
+         <td valign="Top">                     
       <ul>
-        <li>&lt;DOM Element&gt; = &lt;SOAPBlock&gt;.element;<br>
-        </li>
+           <li><font color="#993300"><i>&lt;DOM Element&gt;</i></font> =
+          <font color="#993300"><i>&lt;SOAPMessage&gt;</i></font>.envelope;</li>
+           <li>// OR</li>
+           <li><font color="#993300"><i>&lt;DOM Element&gt;</i></font> =
+          <font color="#993300"><i>&lt;SOAPMessage&gt;</i></font>.header;</li>
+           <li>// or</li>
+           <li><font color="#993300"><i>&lt;DOM Element&gt;</i></font> =
+          <font color="#993300"><i>&lt;SOAPMessage&gt;</i></font>.body;<br>
+           </li>
+                       
       </ul>
-      </td>
-    </tr>
-    <tr>
-      <td valign="Top">Directly get the DOM element containing the SOAP envelope
-, header, or body of an encoded message<br>
-      </td>
-      <td valign="Top">
+         </td>
+       </tr>
+       <tr>
+         <td valign="Top">Directly set the DOM document to represent the
+message's  entire encoded content, bypassing encoding.<br>
+         </td>
+         <td valign="Top">                     
       <ul>
-        <li>&lt;DOM Element&gt; = &lt;SOAPMessage&gt;.envelope;</li>
-        <li>// OR</li>
-        <li>&lt;DOM Element&gt; = &lt;SOAPMessage&gt;.header;</li>
-        <li>// or</li>
-        <li>&lt;DOM Element&gt; = &lt;SOAPMessage&gt;.body;<br>
-        </li>
+           <li><font color="#993300"><i>&lt;SOAPMessage&gt;</i></font>.message
+= <font color="#993300"><i>&lt;DOM Document&gt;</i></font> ;<br>
+           </li>
+                       
       </ul>
-      </td>
-    </tr>
-    <tr>
-      <td valign="Top">Directly set the DOM document to represent the message's
-entire encoded content, bypassing encoding.<br>
-      </td>
-      <td valign="Top">
+         <br>
+         </td>
+       </tr>
+       <tr>
+         <td valign="Top">Directly get the DOM document of an encoded message, 
+ bypassing encoding.<br>
+         </td>
+         <td valign="Top">                     
       <ul>
-        <li>&lt;SOAPMessage&gt;.message = &lt;DOM Document&gt;;<br>
-        </li>
+           <li><font color="#993300"><i>&lt;DOM Document&gt;</i></font> =
+          <font color="#993300"><i>&lt;SOAPMessage&gt;</i></font>.message;<br>
+           </li>
+                       
       </ul>
-      <br>
-      </td>
-    </tr>
-    <tr>
-      <td valign="Top">Directly get the DOM document of an encoded message,
-bypassing encoding.<br>
-      </td>
-      <td valign="Top">
+         <br>
+         </td>
+       </tr>
+       <tr>
+         <td valign="Top">Get the method name and object URI, if any, of
+the  message.<br>
+         </td>
+         <td valign="Top"><font color="#993300"><i>&lt;method name string&gt;</i></font>
+ = <font color="#993300"><i>&lt;SOAPMessage&gt;</i></font> .method;<br>
+         </td>
+       </tr>
+       <tr>
+         <td valign="Top">Get the actual SOAP version of an encoded message 
+ -- 0 for SOAP 1.1 and 1 for SOAP 1.2.<br>
+         </td>
+         <td valign="Top">                     
       <ul>
-        <li>&lt;DOM Document&gt; = &lt;SOAPMessage&gt;.message;<br>
-        </li>
+           <li><font color="#993300"><i>&lt;version integer&gt;</i></font>
+ = <font color="#993300"><i>&lt;SOAPMessage&gt;</i></font> .version;</li>
+                       
       </ul>
-      <br>
-      </td>
-    </tr>
-    <tr>
-      <td valign="Top">Get the method name and object URI, if any, of the
-message.<br>
-      </td>
-      <td valign="Top">&lt;method name string&gt; = &lt;SOAPMessage&gt;.method<br>
-      </td>
-    </tr>
-    <tr>
-      <td valign="Top">Get the actual SOAP version of an encoded message
--- 0 for SOAP 1.1 and 1 for SOAP 1.2.<br>
-      </td>
-      <td valign="Top">
+         </td>
+       </tr>
+       <tr>
+         <td valign="Top">Encode a SOAP 1.2 message.<br>
+         </td>
+         <td valign="Top">                     
       <ul>
-        <li>&lt;version integer&gt; = &lt;SOAPMessage&gt;.version;</li>
+           <li><font color="#993300"><i>&lt;SOAPCall&gt;</i></font>.encode(1,
+"<font color="#993300"><i>&lt;method name&gt;</i></font> ", "<font color="#993300"><i>
+&lt;service  namespace&gt;</i></font>", <font color="#993300"><i>&lt;SOAPHeaderBlock
+array&gt;</i></font> .length, <font color="#993300"><i>&lt;SOAPHeaderBlock
+ array&gt;</i></font>, <font color="#993300"><i>&lt;SOAPParameter array&gt;</i></font>
+ .length, <font color="#993300"><i>&lt;SOAPParameter array&gt;</i></font>
+);</li>
+                       
       </ul>
-      </td>
-    </tr>
-    <tr>
-      <td valign="Top">Encode a SOAP 1.2 message.<br>
-      </td>
-      <td valign="Top">
+         </td>
+       </tr>
+       <tr>
+         <td valign="Top">Abort an in-progress async call -- this does not
+ necessarily cause the message not to be processed, but the API stops listening
+ for it to complete.<br>
+         </td>
+         <td valign="Top">                     
       <ul>
-        <li>&lt;SOAPCall&gt;.encode(1, "&lt;method name&gt;", "&lt;service
-namespace&gt;", &lt;SOAPHeaderBlock array&gt;.length, &lt;SOAPHeaderBlock
-array&gt;, &lt;SOAPParameter array&gt;.length, &lt;SOAPParameter array&gt;);</li>
+           <li><font color="#993300"><i>&lt;SOAPCallCompletion&gt;</i></font>
+ = <font color="#993300"><i>&lt;SOAPCall&gt;</i></font> .asyncInvoke(<font color="#993300"><i>
+&lt;SOAPResponseListener&gt;</i></font>);</li>
+           <li>[...]</li>
+           <li><font color="#993300"><i>&lt;SOAPCallCompletion&gt;</i></font>
+.abort();<br>
+           </li>
+                       
       </ul>
-      </td>
-    </tr>
-    <tr>
-      <td valign="Top">Abort an in-progress async call -- this does not necessarily
-cause the message not to be processed, but the API stops listening for it
-to complete.<br>
-      </td>
-      <td valign="Top">
+         </td>
+       </tr>
+       <tr>
+         <td valign="Top">Get the encoding (style) used to encode or decode 
+ message. &nbsp;Not available on an unencoded call unless explicitly set --
+ use following operation instead.<br>
+         </td>
+         <td valign="Top">                     
       <ul>
-        <li>&lt;SOAPCallCompletion&gt; = &lt;SOAPCall&gt;.asyncInvoke(&lt;SOAPResponseListener&gt;);</li>
-        <li>[...]</li>
-        <li>&lt;SOAPCallCompletion&gt;.abort();<br>
-        </li>
+           <li><font color="#993300"><i>&lt;SOAPEncoding&gt;</i></font> =
+          <font color="#993300"><i>&lt;SOAPMessage&gt;</i></font>.encoding;</li>
+                       
       </ul>
-      </td>
-    </tr>
-    <tr>
-      <td valign="Top">Get the encoding (style) used to encode or decode
-message. &nbsp;Not available on an unencoded call unless explicitly set --
-use following operation instead.<br>
-      </td>
-      <td valign="Top">
+         </td>
+       </tr>
+       <tr>
+         <td valign="Top">Set the encoding style (and associated styles)
+used  to encode a message.<br>
+         </td>
+         <td valign="Top">                     
       <ul>
-        <li>&lt;SOAPEncoding&gt; = &lt;SOAPMessage&gt;.encoding;</li>
+           <li><font color="#993300"><i>&lt;SOAPEncoding&gt;</i></font> =
+new SOAPEncoding();</li>
+           <li><font color="#993300"><i>&lt;SOAPEncoding&gt;</i></font> =
+          <font color="#993300"><i>&lt;SOAPEncoding&gt;</i></font>.getAssociatedEncoding("<font color="#993300"><i>
+ &lt;style  URI&gt;</i></font>",<font color="#993300"><i>&lt;true to create&gt;</i></font>
+);</li>
+           <li>[...]<font color="#993300"><i>&lt;customize encodings&gt;</i></font><br>
+           </li>
+           <li><font color="#993300"><i>&lt;SOAPMessage&gt;</i></font>.encoding
+= <font color="#993300"><i>&lt;SOAPEncoding&gt;</i></font> ;</li>
+                       
       </ul>
-      </td>
-    </tr>
-    <tr>
-      <td valign="Top">Set the encoding style (and associated styles) used
-to encode a message.<br>
-      </td>
-      <td valign="Top">
+         </td>
+       </tr>
+       <tr>
+         <td valign="Top">Specify the specific style used to encode or decode 
+ specific blocks<br>
+         </td>
+         <td valign="Top">                     
       <ul>
-        <li>&lt;SOAPEncoding&gt; = new SOAPEncoding();</li>
-        <li>&lt;SOAPEncoding&gt; = &lt;SOAPEncoding&gt;.getAssociatedEncoding("&lt;style
-URI&gt;",&lt;true to create&gt;);</li>
-        <li>[...]&lt;customize encodings&gt;<br>
-        </li>
-        <li>&lt;SOAPMessage&gt;.encoding = &lt;SOAPEncoding&gt;;</li>
+           <li><font color="#993300"><i>&lt;SOAPEncoding&gt;</i></font> =
+          <font color="#993300"><i>&lt;SOAPEncoding&gt;</i></font>.getAssociatedEncoding("<font color="#993300"><i>
+ &lt;style  URI&gt;</i></font>",<font color="#993300"><i>&lt;true to create&gt;</i></font>
+);</li>
+           <li><font color="#993300"><i>&lt;SOAPBlock&gt;</i></font>.encoding
+= <font color="#993300"><i>&lt;SOAPEncoding&gt;</i></font> ;</li>
+                       
       </ul>
-      </td>
-    </tr>
-    <tr>
-      <td valign="Top">Specify the specific style used to encode or decode
-specific blocks<br>
-      </td>
-      <td valign="Top">
-      <ul>
-        <li>&lt;SOAPEncoding&gt; = &lt;SOAPEncoding&gt;.getAssociatedEncoding("&lt;style
-URI&gt;",&lt;true to create&gt;);</li>
-        <li>&lt;SOAPBlock&gt;.encoding = &lt;SOAPEncoding&gt;;</li>
-      </ul>
-      </td>
-    </tr>
-  </tbody>
+         </td>
+       </tr>
+           
+  </tbody>   
 </table>
+     
 <h3></h3>
+     
 <h3>Using Schema Types</h3>
- The default SOAP encodings implement most XML built-in types, as well as
-the basic SOAP types. &nbsp;In the absence of a specified type, native values
-and objects will typically be correctly identified and mapped to a corresponding
-schema type. &nbsp;Many types do not match, and so they will be mapped to
-a close type. &nbsp;Providing specific schema types can help the encoding
-produce the desired results. &nbsp;For example, multidimensional arrays must
-be decoded as nested arrays because Javascript only supports single-dimensional 
-arrays. &nbsp;f no schema type is given that identifies the array as multidimensional,
-then a multidimensional array will be encoded as a nested array. &nbsp;An
-accurate schema type can also help when encoding or decoding of other complex
-objects such as SOAP structs.<br>
-<br>
-Schema types may be attached to blocks before encoding or before accessing
-the value of a returned object to better control the encoding and decoding.
-&nbsp;All schema types which are used to control the encoding and decoding
-should come from the schema collection available through any associated encoding.<br>
-<br>
+    The default SOAP encodings implement most XML built-in types, as well 
+as  the basic SOAP types. &nbsp;In the absence of a specified type, native 
+values  and objects will typically be correctly identified and mapped to a
+corresponding  schema type. &nbsp;Many types do not match, and so they will
+be mapped to  a close type. &nbsp;Providing specific schema types can help
+the encoding  produce the desired results. &nbsp;For example, multidimensional 
+arrays must  be decoded as nested arrays because Javascript only supports 
+single-dimensional  arrays. &nbsp;f no schema type is given that identifies 
+the array as multidimensional,  then a multidimensional array will be encoded 
+as a nested array. &nbsp;An  accurate schema type can also help when encoding 
+or decoding of other complex  objects such as SOAP structs.<br>
+   <br>
+   Schema types may be attached to blocks before encoding or before accessing 
+ the value of a returned object to better control the encoding and decoding. 
+ &nbsp;All schema types which are used to control the encoding and decoding 
+ should come from the schema collection available through any associated encoding.<br>
+   <br>
+     
 <table cellpadding="2" cellspacing="2" border="1" width="100%">
-  <tbody>
-    <tr>
-      <td valign="Top">Schema Operation<br>
-      </td>
-      <td valign="Top">How to Do It<br>
-      </td>
-    </tr>
-    <tr>
-      <td valign="Top">Get the schema collection of all associated encodings.<br>
-      </td>
-      <td valign="Top">
+     <tbody>
+       <tr>
+         <td valign="Top">Schema Operation<br>
+         </td>
+         <td valign="Top">How to Do It<br>
+         </td>
+       </tr>
+       <tr>
+         <td valign="Top">Get the schema collection of all associated encodings.<br>
+         </td>
+         <td valign="Top">                     
       <ul>
-        <li>&lt;SchemaCollection&gt; = &lt;SOAPEncoding&gt;.schemaCollection;</li>
+           <li><font color="#993300"><i>&lt;SchemaCollection&gt;</i></font>
+ = <font color="#993300"><i>&lt;SOAPEncoding&gt;</i></font> .schemaCollection;</li>
+                       
       </ul>
-      </td>
-    </tr>
-    <tr>
-      <td valign="Top">Load additional schema types from XML Schema files
-into the schema collection.<br>
-      <br>
-      </td>
-      <td valign="Top">
+         </td>
+       </tr>
+       <tr>
+         <td valign="Top">Load additional schema types from XML Schema files 
+ into the schema collection.<br>
+         <br>
+         </td>
+         <td valign="Top">                     
       <ul>
-        <li>&lt;SchemaLoader&gt; = &lt;SchemaCollection&gt;;</li>
-        <li>// and then<br>
-        </li>
-        <li>&lt;SchemaLoader&gt;.load("&lt;schema file URI&gt;");</li>
-        <li>// &nbsp;or<br>
-        </li>
-        <li>&lt;SchemaLoader&gt;.loadAsync("&lt;schemaURI&gt;", &lt;load
-completion function&gt;);</li>
+           <li><font color="#993300"><i>&lt;SchemaLoader&gt;</i></font> =
+          <font color="#993300"><i>&lt;SchemaCollection&gt;</i></font> ;</li>
+           <li>// and then<br>
+           </li>
+           <li><font color="#993300"><i>&lt;SchemaLoader&gt;</i></font>.load("<font color="#993300"><i>
+&lt;schema file URI&gt;</i></font> ");</li>
+           <li>// &nbsp;or<br>
+           </li>
+           <li><font color="#993300"><i>&lt;SchemaLoader&gt;</i></font>.loadAsync("<font color="#993300"><i>
+&lt;schemaURI&gt;</i></font> ", <font color="#993300"><i>&lt;load  completion
+function&gt;</i></font>);</li>
+                       
       </ul>
-      </td>
-    </tr>
-    <tr>
-      <td valign="Top">Specify the XML Schema type to be used when encoding
-or decoding a block -- decoding a block occurs when you get its value if
+         </td>
+       </tr>
+       <tr>
+         <td valign="Top">Specify the XML Schema type to be used when encoding 
+ or decoding a block -- decoding a block occurs when you get its value if 
 it came from an encoded message such as a SOAPResponse.</td>
-      <td valign="Top">
+         <td valign="Top">                     
       <ul>
-        <li>&lt;SchemaType&gt; = &lt;SchemaCollection&gt;.getType("&lt;name&gt;", 
-"&lt;namespaceURI&gt;");</li>
-        <li>if (&lt;schemaType != null) {<br>
-        </li>
-        <li>&nbsp; &lt;SOAPBlock&gt;.schemaType = &lt;SchemaType&gt;;</li>
-        <li>}</li>
+           <li><font color="#993300"><i>&lt;SchemaType&gt;</i></font> = <font color="#993300"><i>
+&lt;SchemaCollection&gt;</i></font> .getType("<font color="#993300"><i>&lt;name&gt;</i></font>
+",  "<font color="#993300"><i>&lt;namespaceURI&gt;</i></font>");</li>
+           <li>if (<font color="#993300"><i>&lt;schemaType != null) {<br>
+           </i></font></li>
+  <font color="#993300"><i>         <li>&nbsp; <font color="#993300"><i>&lt;SOAPBlock&gt;</i></font>
+.schemaType = <font color="#993300"><i>&lt;SchemaType&gt;</i></font> ;</li>
+           <li>}</li>
+                </i></font>       
       </ul>
-      </td>
-    </tr>
-  </tbody>
+  <font color="#993300"><i>       </i></font></td>
+       </tr>
+           
+  </tbody>   
 </table>
+     
 <h3></h3>
+     
 <h3></h3>
+     
 <h3>Customization of Encodings</h3>
-A specific encoding must have encoders and decoders to function. &nbsp;Encoding
-or decoding of data always begins with a default encoder or decoder, which
-then may lookup additional encoders or decoders by a string key as required.
-&nbsp;For either the 1.1 or 1.2 version of the default SOAP encoding, the
-default encoder and decoder use the schema type's namespaceURI and name,
-seperated by "#" to look up additional decoders for specific schema types.
-&nbsp;Additional encoders and decoders registered within the default encodings
-will automatically be invoked as an object identified as the corresponding
-type is processed. &nbsp;Other encodings can use any scheme for looking up
-additional encoders and decoders, or none at all if all the work is done
-by the default encoder and decoder for that encoding style. &nbsp;Encodings
-which are registered with the system, such as the default SOAP 1.1 or 1.2
-encodings, automatically come with encoders and decoders built-in, whereas
-new encodings have none. &nbsp;Custom encodings may also reuse existing encoders,
-and decoders, but there is no guarantee which are present, since the mapping
-may vary when handling an infinite set of types with a finite set of encoders
-and decoders.<br>
-<br>
-Also, there has been a proliferation of variant schema types with different
-URIs, which may be improperly intermixed in usage, but expected to function
-properly. &nbsp;Most notably, the SOAP 1.1 specification used unofficial
-XML Schema URIs and SOAP encoding schema URIs not compatible with those which
-are in the W3C XML Schema and drafts for SOAP 1.2 specifications. &nbsp;It
-is not uncommon to send and receive messages using the URIs specified in
-the SOAP 1.1 specification, but described by WSDL using XML Schema that uses
-the official, correct URIs. &nbsp;To solve these problems, the encoding permits
-schema URIs to be aliased, both on input and on output, so that only the
-SOAP 1.2 and official XMLSchema types are used internally, while supporting
-the other URIs. &nbsp;Mappings of this type may be automatically built-in
-for encodings which are registered with the system, such as the default encodings
-of SOAP 1.1 and 1.2. &nbsp;The default URI mappings in the default encoding
-of SOAP 1.1 may be manipulated, for example, to output the official XML Schema
-URIs, without having to rewrite any encoders or decoders.<br>
-<br>
+   A specific encoding must have encoders and decoders to function. &nbsp;Encoding 
+ or decoding of data always begins with a default encoder or decoder, which 
+ then may lookup additional encoders or decoders by a string key as required. 
+ &nbsp;For either the 1.1 or 1.2 version of the default SOAP encoding, the 
+ default encoder and decoder use the schema type's namespaceURI and name, 
+seperated by "#" to look up additional decoders for specific schema types. 
+&nbsp;Additional encoders and decoders registered within the default encodings 
+will automatically be invoked as an object identified as the corresponding 
+type is processed. &nbsp;Other encodings can use any scheme for looking up 
+additional encoders and decoders, or none at all if all the work is done by
+the default encoder and decoder for that encoding style. &nbsp;Encodings which
+are registered with the system, such as the default SOAP 1.1 or 1.2 encodings,
+automatically come with encoders and decoders built-in, whereas new encodings
+have none. &nbsp;Custom encodings may also reuse existing encoders, and decoders,
+but there is no guarantee which are present, since the mapping may vary when
+handling an infinite set of types with a finite set of encoders and decoders.<br>
+   <br>
+   Also, there has been a proliferation of variant schema types with different 
+ URIs, which may be improperly intermixed in usage, but expected to function 
+ properly. &nbsp;Most notably, the SOAP 1.1 specification used unofficial 
+XML Schema URIs and SOAP encoding schema URIs not compatible with those which 
+ are in the W3C XML Schema and drafts for SOAP 1.2 specifications. &nbsp;It 
+ is not uncommon to send and receive messages using the URIs specified in 
+the SOAP 1.1 specification, but described by WSDL using XML Schema that uses 
+the official, correct URIs. &nbsp;To solve these problems, the encoding permits 
+ schema URIs to be aliased, both on input and on output, so that only the 
+SOAP 1.2 and official XMLSchema types are used internally, while supporting 
+the other URIs. &nbsp;Mappings of this type may be automatically built-in 
+for encodings which are registered with the system, such as the default encodings 
+ of SOAP 1.1 and 1.2. &nbsp;The default URI mappings in the default encoding 
+ of SOAP 1.1 may be manipulated, for example, to output the official XML Schema
+ URIs, without having to rewrite any encoders or decoders.<br>
+   <br>
+     
 <table cellpadding="2" cellspacing="2" border="1" width="100%">
-  <tbody>
-    <tr>
-      <td valign="Top">Encoding Customization Operation<br>
-      </td>
-      <td valign="Top">How to Do It<br>
-      </td>
-    </tr>
-    <tr>
-      <td valign="Top">Create a custom encoder.</td>
-      <td valign="Top">
+     <tbody>
+       <tr>
+         <td valign="Top">Encoding Customization Operation<br>
+         </td>
+         <td valign="Top">How to Do It<br>
+         </td>
+       </tr>
+       <tr>
+         <td valign="Top">Create a custom encoder.</td>
+         <td valign="Top">                     
       <ul>
-        <li>function &lt;New DOM Element&gt; = &lt;SOAPEncoder name&gt;(&lt;SOAPEncoding&gt;,
-&lt;value&gt;, &lt;namespaceURI&gt;, &lt;name&gt;, &lt;SchemaType&gt;, &lt;SOAPAttachments&gt;,
-&lt;Parent DOM  Element&gt; )</li>
-        <li>{</li>
-        <li>[...]</li>
-        <li>&lt;DOM Element&gt; = &lt;Parent DOM Element&gt;.ownerDocument.createElementNS(namespaceURI,name);<br>
-        </li>
-        <li>[...]</li>
-        <li>&nbsp; &lt;Parent DOM Element&gt;.appendChild(&lt;DOM Element&gt;);<br>
-        </li>
-        <li>&nbsp; return &lt;DOM Element&gt;;<br>
-        </li>
-        <li>}</li>
-        <li>// and</li>
-        <li>&lt;SOAPEncoding&gt;.defaultEncoder = &lt;SOAPEncoder&gt;;</li>
-        <li>// or</li>
-        <li> &lt;SOAPEncoding&gt;.setEncoder("&lt;namespaceURI&gt;#&lt;name&gt;",&lt;SOAPEncoder&gt;);</li>
+           <li>function <font color="#993300"><i>&lt;New DOM Element&gt;</i></font>
+ = <font color="#993300"><i>&lt;SOAPEncoder name&gt;</i></font>(<font color="#993300"><i>
+&lt;SOAPEncoding&gt;</i></font>,  <font color="#993300"><i>&lt;value&gt;</i></font>
+, <font color="#993300"><i>&lt;namespaceURI&gt;</i></font> , <font color="#993300"><i>
+&lt;name&gt;</i></font>, <font color="#993300"><i>&lt;SchemaType&gt;</i></font>
+, <font color="#993300"><i>&lt;SOAPAttachments&gt;</i></font> ,  <font color="#993300"><i>
+&lt;Parent DOM  Element&gt;</i></font> )</li>
+           <li>{</li>
+           <li>[...]</li>
+           <li><font color="#993300"><i>&lt;DOM Element&gt;</i></font> =
+          <font color="#993300"><i>&lt;Parent DOM Element&gt;</i></font> .ownerDocument.createElementNS(namespaceURI,name);<br>
+           </li>
+           <li>[...]</li>
+           <li>&nbsp; <font color="#993300"><i>&lt;Parent DOM Element&gt;</i></font>
+.appendChild(<font color="#993300"><i>&lt;DOM Element&gt;</i></font>);<br>
+           </li>
+           <li>&nbsp; return <font color="#993300"><i>&lt;DOM Element&gt;</i></font>
+;<br>
+           </li>
+           <li>}</li>
+           <li>// and</li>
+           <li><font color="#993300"><i>&lt;SOAPEncoding&gt;</i></font>.defaultEncoder
+= <font color="#993300"><i>&lt;SOAPEncoder&gt;</i></font> ;</li>
+           <li>// or</li>
+           <li> <font color="#993300"><i>&lt;SOAPEncoding&gt;</i></font>.setEncoder("<font color="#993300"><i>
+&lt;namespaceURI&gt;</i></font> #<font color="#993300"><i>&lt;name&gt;</i></font>
+",<font color="#993300"><i>&lt;SOAPEncoder&gt;</i></font>);</li>
+                       
       </ul>
-      <br>
-      </td>
-    </tr>
-    <tr>
-      <td valign="Top">Create a custom decoder.<br>
-      </td>
-      <td valign="Top">
+         <br>
+         </td>
+       </tr>
+       <tr>
+         <td valign="Top">Create a custom decoder.<br>
+         </td>
+         <td valign="Top">                     
       <ul>
-        <li>function &lt;New DOM Element&gt; = &lt;SOAPDecoder name&gt;(&lt;SOAPEncoding&gt;,
-&lt;DOM Element&gt;, &lt;SchemaType&gt;, &lt;SOAPAttachments&gt;)</li>
-        <li>{</li>
-        <li>[...]</li>
-        <li>&nbsp; return &lt;value or object&gt;;<br>
-        </li>
-        <li>}</li>
-        <li>// and</li>
-        <li>&lt;SOAPEncoding&gt;.defaultDecoder = &lt;SOAPDecoder&gt;;</li>
-        <li>// or</li>
-        <li> &lt;SOAPEncoding&gt;.setDecoder("&lt;namespaceURI&gt;#&lt;name&gt;",&lt;SOAPDecoder&gt;);</li>
+           <li>function <font color="#993300"><i>&lt;New DOM Element&gt;</i></font>
+ = <font color="#993300"><i>&lt;SOAPDecoder name&gt;</i></font>(<font color="#993300"><i>
+&lt;SOAPEncoding&gt;</i></font>,  <font color="#993300"><i>&lt;DOM Element&gt;</i></font>
+, <font color="#993300"><i> &lt;SchemaType&gt;</i></font>, <font color="#993300"><i>
+&lt;SOAPAttachments&gt;</i></font>)</li>
+           <li>{</li>
+           <li>[...]</li>
+           <li>&nbsp; return <font color="#993300"><i>&lt;value or object&gt;</i></font>
+;<br>
+           </li>
+           <li>}</li>
+           <li>// and</li>
+           <li><font color="#993300"><i>&lt;SOAPEncoding&gt;</i></font>.defaultDecoder
+= <font color="#993300"><i>&lt;SOAPDecoder&gt;</i></font> ;</li>
+           <li>// or</li>
+           <li> <font color="#993300"><i>&lt;SOAPEncoding&gt;</i></font>.setDecoder("<font color="#993300"><i>
+&lt;namespaceURI&gt;</i></font> #<font color="#993300"><i>&lt;name&gt;</i></font>
+",<font color="#993300"><i>&lt;SOAPDecoder&gt;</i></font>);</li>
+                       
       </ul>
-      <br>
-      </td>
-    </tr>
-    <tr>
-      <td valign="Top">Map or unmap schema&nbsp; URI aliases<br>
-      </td>
-      <td valign="Top">
+         <br>
+         </td>
+       </tr>
+       <tr>
+         <td valign="Top">Map or unmap schema&nbsp; URI aliases<br>
+         </td>
+         <td valign="Top">                     
       <ul>
-        <li>&lt;SOAPEncoding&gt;.mapSchemaURI("&lt;external URI&gt;", "&lt;internal
-URI&gt;", &lt;true to alias output&gt;);</li>
-        <li> // or</li>
-        <li> &lt;SOAPEncoding&gt;.unmapSchemaURI("&lt;external URI&gt;");</li>
+           <li><font color="#993300"><i>&lt;SOAPEncoding&gt;</i></font>.mapSchemaURI("<font color="#993300"><i>
+&lt;external URI&gt;</i></font> ", "<font color="#993300"><i>&lt;internal
+ URI&gt;</i></font>", <font color="#993300"><i>&lt;true to alias output&gt;</i></font>
+);</li>
+           <li> // or</li>
+           <li> <font color="#993300"><i>&lt;SOAPEncoding&gt;</i></font>.unmapSchemaURI("<font color="#993300"><i>
+&lt;external URI&gt;</i></font>");</li>
+                       
       </ul>
-      </td>
-    </tr>
-    <tr>
-      <td valign="Top">Register modified or alternative encodings, making 
-them automatically available to all SOAP scripts in the system<br>
-      </td>
-      <td valign="Top">Install an appropriate registerable encoding in <code>
-components/&lt;new encoding&gt;.js</code><br>
-      </td>
-    </tr>
-  </tbody>
+         </td>
+       </tr>
+       <tr>
+         <td valign="Top">Register modified or alternative encodings, making
+  them automatically available to all SOAP scripts in the system<br>
+         </td>
+         <td valign="Top">Install an appropriate registerable encoding in 
+      <code>  components/<font color="#993300"><i>&lt;new encoding&gt;</i></font>
+.js</code><br>
+         </td>
+       </tr>
+           
+  </tbody>   
 </table>
+     
 <h3>Security Operations</h3>
-In browsers, the risk of allowing an externally-loaded untrusted script to
-request information within a firewall and send it elsewhere has lead to very
-tight sandbox restrictions, only permitting external browser scripts to request
-xml data and services on the same domain from which the script was loaded.
-&nbsp;This same restriction applies by default to SOAP requests executed
-within the browser. &nbsp;This means that an externally-loaded script cannot,
-for example, call other external services unless they are in the same domain
-from which the page was loaded. &nbsp;Even if the page was loaded from the
-user's own hard disk, the script must ask for permission to make SOAP calls.
-&nbsp;A browser enhancement is planned to permit more-precise control of
-trust between scripts and specific available services.<br>
-<br>
-Since SOAP permits headers to be added to messages that require interpretation
-by the recipient, this API can request a header warning the recipient that
-it was sent by an untrusted script executed by the client loaded from a specific
-sourceURI, and no good SOAP service will unintentionally disregard the warning.
-&nbsp;If the envelope is verified and the header is added, then the browser
-can allow the script less=-restricted access to services outside of its source
-domain. &nbsp;Accepting this header permits SOAP services that really do
-want to be universally-available without forcing the user to risk breach
-of the firewall protections or requiring user intervention at all.<br>
-<br>
-  
+   In browsers, the risk of allowing an externally-loaded untrusted script
+ to request information within a firewall and send it elsewhere has lead
+to  very tight sandbox restrictions, only permitting external browser scripts
+ to request xml data and services on the same domain from which the script
+ was loaded. &nbsp;This same restriction applies by default to SOAP requests
+ executed within the browser. &nbsp;This means that an externally-loaded
+script  cannot, for example, call other external services unless they are
+in the same domain from which the page was loaded. &nbsp;Even if the page
+was loaded from the user's own hard disk, the script must ask for permission
+to make SOAP calls. &nbsp;A browser enhancement is planned to permit more-precise
+control of trust between scripts and specific available services.<br>
+   <br>
+   Since SOAP permits headers to be added to messages that require interpretation 
+ by the recipient, this API can request a header to warn the recipient that 
+ it was sent by an untrusted script loaded from a specific  sourceURI, and
+no good SOAP service will unintentionally disregard the warning.  &nbsp;If
+the envelope is verified and the header is added, then the browser  can allow
+the script less=-restricted access to services outside of its source  domain.
+&nbsp;Accepting this header permits SOAP services that really do want to
+be universally available to allow access without forcing the user to risk
+breach of the firewall protections or requiring user intervention at all.<br>
+   <br>
+        
 <table cellpadding="2" cellspacing="2" border="1" width="100%">
-   <tbody>
-     <tr>
-      <td valign="Top">Security Operation<br>
+      <tbody>
+        <tr>
+         <td valign="Top">Security Operation<br>
+         </td>
+         <td valign="Top">How to Do It<br>
+         </td>
+       </tr>
+       <tr>
+         <td valign="Top">Mark the call with a verifySourceHeader, if the 
+server  permits it, so the browser can make the call with less privilege
+and risk.<br>
+          </td>
+          <td valign="Top">                     
+      <ul>
+           <li><font color="#993300"><i>&lt;SOAPCall&gt;</i></font>.verifySourceHeader
+= true;</li>
+                       
+      </ul>
+          </td>
+        </tr>
+        <tr>
+          <td valign="Top">Request risky privileges within a local or signed
+  script to make an unverified SOAP calls to other domains.<br>
+          </td>
+          <td valign="Top">                     
+      <ul>
+           <li>netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead")</li>
+                       
+      </ul>
+          </td>
+        </tr>
+        <tr>
+          <td valign="Top">Modify the security settings in the preferences
+ file,  allowing scripts from some domain to make risky SOAP calls to any
+other domain, which is disabled by default.</td>
+          <td valign="Top">Add the setting in <code>default/pref/all.js</code>
+   :<br>
+                       
+      <ul>
+           <li>pref("<font color="#993300"><i>&lt;some domain prefix&gt;</i></font>
+.SOAPCall.invoke","allAccess");</li>
+                       
+      </ul>
+          </td>
+        </tr>
+        <tr>
+      <td valign="Top">Modify the security settings in the preferences  file
+to disallow calls made with the verifySource header, which is generally enabled
+by default.<br>
       </td>
-      <td valign="Top">How to Do It<br>
+      <td valign="Top">Change the setting in <code>default/pref/all.js</code>
+   :<br>
+      <ul>
+        <li>pref("capability.policy.default.SOAPCall.invokeVerifySourceHeader","none");</li>
+      </ul>
       </td>
     </tr>
     <tr>
-      <td valign="Top">Mark the call with a verifySourceHeader, if the server 
-permits it, so the browser needs less risky privilege and trust for the script<br>
-       </td>
-       <td valign="Top">
-      <ul>
-        <li>&lt;SOAPCall&gt;.verifySourceHeader = true</li>
-      </ul>
-       </td>
-     </tr>
-     <tr>
-       <td valign="Top">Request risky privileges within a local or signed 
-script to make an unverified SOAP calls to other domains<br>
-       </td>
-       <td valign="Top">
-      <ul>
-        <li>netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead")</li>
-      </ul>
-       </td>
-     </tr>
-     <tr>
-       <td valign="Top">Modify the security settings in the preferences file, 
-allowing scripts from some domain to make risky SOAP calls to any other domain.</td>
-       <td valign="Top">Add the setting to <code>default/pref/all.js</code>
-:<br>
-      <ul>
-        <li>pref("&lt;some domain&gt;.SOAPCall.invoke","allAccess");</li>
-      </ul>
-       </td>
-     </tr>
-     <tr>
-       <td valign="Top">Register alternative transport mechanisms, providing 
-alternative transports  to all SOAP scripts in the system and perhaps supplying
-alternative security models<br>
-       </td>
-       <td valign="Top">&lt;new transport&gt;.js<br>
-       </td>
-     </tr>
-   
-  </tbody> 
+          <td valign="Top">Register alternative transport mechanisms, making
+available alternative transports  to all scripts and perhaps creating  alternative
+security models for protocols besides http(s).<br>
+          </td>
+          <td valign="Top">Install an appropriate registerable encoding in
+      <code>components/<font color="#993300"><i>&lt;new transport&gt;</i></font>
+.js</code>.<br>
+          </td>
+        </tr>
+               
+  </tbody>    
 </table>
- 
+       
 <h3></h3>
+     
 <h2>Future Features</h2>
- 
-<h3>High-Level Access to SOAP</h3>
- Although a SOAP call can generally be accomplished using this API in a few 
-dozen lines, rather than having to manually attach all the type information 
-to the call and set and retrieve the parameters from arrays of blocks, WSDL 
-is a standard that describes how all of this should occur with no manual type
-and argument setup required. &nbsp;An implementation is underway that instantiates
-web service proxies complete with appropriate xpconnect interfaces by simply
-loading and using information out of a WSDL file. &nbsp;The proxy's interface
-has dynamically-generated methods named appropriately to match the services
-described in the WSDL file which accept arguments of the appropriate data
-types and call the appropriate low-level SOAP functions with the appropriate 
-type information, making it even simpler not only to invoke services from 
-Javascript code, but to associate appropriate schema types loaded from the 
-WSDL file with the arguments. &nbsp;This is not available in the first release.<br>
- 
+       
+<h3>Access to SOAP as Proxies</h3>
+    Although a SOAP call can generally be accomplished using this low-level
+API in a  few  dozen lines, WSDL   is a standard that describes how all of
+this could occur with no manual  type and argument setup required. &nbsp;An
+implementation is under development that  instantiates web service proxies
+complete with appropriate xpconnect interfaces  by simply loading and using
+information out of a WSDL file. &nbsp;The proxy's  interface has dynamically-generated
+methods named appropriately to match the services described in the WSDL file
+which accept arguments of the appropriate  data types and calls the appropriate
+low-level SOAP functions with the appropriate   type information, making
+it even simpler not only to invoke services from   Javascript code, but to
+associate appropriate schema types loaded from the   WSDL file with the arguments.
+&nbsp;This higher level is not available in the first release. &nbsp;When
+it is available, invoking WSDL-described features gets even easier and more
+reliable.<br>
+       
 <h3> </h3>
- 
+       
 <h3>Arbitrary Graphs of Data</h3>
- The SOAP specification allows objects to be passed as arguments which may 
-have originally referenced other objects that are not owned in a pure hierarchy. 
-&nbsp;This is represented by using an href attribute. &nbsp;Due to the problems 
-with leaking reference counts in COM objects with cyclic references, this 
-has not been implemented yet. &nbsp;Also, the output of a cyclicly-referencing 
-set of objects has not been implemented. &nbsp;Incoming objects that do not 
-reference cyclicly currently create separate copies for each reference to 
-an object, and with cycles will probably never complete. &nbsp;On input, hrefs
-are currently ignored. &nbsp;In the future it may be possible to solve this
-and transmit and receive arbitrarily-referencing objects, but the solution 
-is more complex than just using weak references.<br>
- 
+    The SOAP specification allows objects to be passed as arguments which 
+may  have originally referenced other objects that are not owned in a pure 
+hierarchy.  &nbsp;This is represented by using an href attribute. &nbsp;Due 
+to the problems  with leaking reference counts in COM objects with cyclic 
+references, this  has not been implemented yet. &nbsp;Also, the output of 
+a cyclicly-referencing  set of objects has not been implemented. &nbsp;Incoming 
+objects that do not  reference cyclicly currently create separate copies for
+each reference to  an object, and with cycles will probably never complete. 
+&nbsp;On input, hrefs are currently ignored. &nbsp;In the future it may be 
+possible to solve this and transmit and receive arbitrarily-referencing objects, 
+but the solution  is more complex than just using weak references.<br>
+       
 <h3>SOAP With Attachments</h3>
- Many clients and servers now support automatically transmitting large Mime 
-with a SOAP message by encapsulating it in MIME, DIME, or other enveloping 
-formats. &nbsp;This has been anticipated in the APIs, but the SOAPAttachments 
-API is currently a placeholder for this future feature which is not yet implemented.<br>
+    Many clients and servers now support automatically transmitting large 
+Mime  with a SOAP message by encapsulating it in MIME, DIME, or other enveloping
+  formats. &nbsp;This has been anticipated in the APIs, but the SOAPAttachments
+  API is currently a placeholder for this future feature which is not yet
+implemented.<br>
+     
 <h3>New Transports and Local Services</h3>
-Obvious new transports that would be e-mail -- permitting a SOAP exchange
-to occur as an email exchange --, instant messenger for peer to peer, and
-a browser-controlled cookie-like storage manager but without size limitations,
-so that using SOAP arbitrary Javascript application data can be safely stored
-by the client. &nbsp;This means a framework, already partially planned, for
-permitting the browser to host client services as well as being a client.
-&nbsp;There are obviously security issues to be solved to make these successful.<br>
- 
+   Obvious new transports that would be useful include e-mail -- permitting
+a SOAP exchange  to occur as an email exchange --, instant messenger for
+peer to peer, and  a local manager with a controlled security model but without
+the size limitations, enabling SOAP to save and restore arbitrary Javascript
+application data on the client. &nbsp;These services require a framework,
+already being planned, for  permitting the browser to host services as well
+as being a good client.  &nbsp;There are obviously security issues to be
+solved to make these successful.<br>
+<h3>Standards</h3>
+The interfaces to the objects of this API were designed to be as simple and
+universal as possible. &nbsp;We believe that we should sponser a W3C proposal
+to standardize an API for invoking this type of service from web clients.
+&nbsp;We recognize that in such an effort, changes would be inevitable and
+welcomed. &nbsp;Certain parts of the API are incomplete, especially the SOAPAttachments
+object, which will serve to allow encoders and decoders to control uniqueness
+and referencing both for resolving arbitrary graphs of data (when that is
+implemented) as well as references to attached objects carried with the message
+in an external encapsulation such as MIME or DIME (when that is implemented).<br>
+       
 <h2>Samples and Tests</h2>
- Tests are available which can be used as samples...<br>
- <br>
- If the samples are inadequate, look at the IDL files at...<br>
- <br>
- A test server exists at .... where I will put up relevant tests anyone submits...<br>
- <br>
- Bugs can be reported at...<br>
- <br>
- </div>
- </div>
- 
+Some samples or tests have been created, but these commonly only test the
+basic operations. &nbsp;Most work but a few still predate the current SOAP
+interfaces, and are located within the mozilla/extensions/xmlextras/tests
+directory of the mozilla build. &nbsp;We welcome the contribution of tests
+by other parties.<br>
+<br>
+A test server has been set up outside the firewall at ray.dsl.xmission.com
+where services may be deployed to help test and demo the features for scripting
+SOAP in Mozilla. &nbsp;This is a Tomcat server running the Apache SOAP code.<br>
+<br>
+Bugs should be reported as usual for the mozilla or derived product you are
+using.<br>
+<h2>Object Interfaces</h2>
+<br>
+<h2>        </h2>
+</div>
+</div>
+       
 </body>
 </html>
