@@ -177,7 +177,7 @@ NS_NewHTMLImageElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsHTMLImageElement* it = new nsHTMLImageElement(aNodeInfo);
+  nsHTMLImageElement* it = new nsHTMLImageElement(nodeInfo);
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
