@@ -78,7 +78,7 @@ use Utils;
 use HTMLPopUp;
 use TinderDB::BasicTxtDB;
 
-$VERSION = ( qw $Revision: 1.14 $ )[1];
+$VERSION = ( qw $Revision: 1.15 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -248,6 +248,18 @@ sub render_notice {
     
     my ($pretty_time) = HTMLPopUp::timeHTML($time);
 
+    # If the user requests for us to lie about the time, we should
+    # also tell when the note was really posted.
+
+    my $localpostedtime;
+    if ($notice->{'time'} != $notice->{'posttime'}) {
+       $localpostedtime = (
+                           "(Actually posted at: ". 
+                           $notice->{'localpostedtime'}.
+                           ")".
+                           "");
+    }
+
     my ($rendered_notice) = (
                              "\t\t<p>\n".
                              "\t\t\t[<b>".
@@ -261,7 +273,9 @@ sub render_notice {
                                            "linktxt"=>$pretty_time,
                                            "href"=>"\#$time",
                                            ).
-                           "</b>]\n".
+                           "</b>]".
+                           $localpostedtime.
+                           "\n".
                            "<!-- posted from remote host: $remote_host -->\n".
                            "\t\t</p>\n".
                            "\t\t<p>\n".

@@ -6,8 +6,8 @@
 #		 on the tinderbox status page.
 
 
-# $Revision: 1.15 $ 
-# $Date: 2002/04/27 01:57:05 $ 
+# $Revision: 1.16 $ 
+# $Date: 2002/04/27 02:31:08 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/addnote.cgi,v $ 
 # $Name:  $ 
@@ -54,46 +54,52 @@ use HTMLPopUp;
 use Utils;
 
 
+
+# turn a time string of the form "04/26 15:48" into a time().
+
 sub timestring2time {
     my ($string) = @_;
+    my $time;
 
-    $string =~ m!\s*(\d+)/(\d+)\s+(\d+):(\d+)\s*!;
+    if ($string =~ m!\s*(\d+)/(\d+)\s+(\d+):(\d+)\s*!) {
 
-    my ($mon, $mday, $hours, $min,) = ($1, $2, $3, $4);
+        my ($mon, $mday, $hours, $min,) = ($1, $2, $3, $4);
+        
+        # we are only interested in history in our recent
+        # past, within the last year.
+        
+        # The perl conventions for these variables is 0 origin while the
+        # "display" convention for these variables is 1 origin.  
+        $mon--;
+        
+        # This calculation may use the wrong year.
+        my @time = localtime(time());
+        my $year = $time[5] + 1900;
+        
+        my $sec = 0;
+        
+        $time = timelocal($sec,$min,$hours,$mday,$mon,$year);    
 
-    # we are only interested in history in our recent
-    # past, within the last year.
-    
-    # The perl conventions for these variables is 0 origin while the
-    # "display" convention for these variables is 1 origin.  
-    $mon--;
-  
-    # This calculation may use the wrong year.
-    my @time = localtime(time());
-    my $year = $time[5] + 1900;
+        # This fix is needed every year on Jan 1. On that day $time is
+        # nearly a year in the future so is much bigger then $main::TIME.
+        
+        if ( ($time - $main::TIME) > $main::SECONDS_PER_MONTH) {
+            $time = timelocal($sec,$min,$hours,$mday,$mon,$year - 1);    
+        }
+        
+        # check that the result is reasonable.
+        
+        if ( (($main::TIME - $main::SECONDS_PER_YEAR) > $time) || 
+             (($main::TIME + $main::SECONDS_PER_MONTH) < $time) ) {
+             $time = time();
+        }
 
-    my $sec = 0;
-    
-    my ($time) = timelocal($sec,$min,$hours,$mday,$mon,$year);    
-
-    # This fix is needed every year on Jan 1. On that day $time is
-    # nearly a year in the future so is much bigger then $main::TIME.
-    
-    if ( ($time - $main::TIME) > $main::SECONDS_PER_MONTH) {
-        $time = timegm($sec,$min,$hours,$mday,$mon,$year - 1);    
-    }
-
-    # check that the result is reasonable.
-    
-    if ( (($main::TIME - $main::SECONDS_PER_YEAR) > $time) || 
-         (($main::TIME + $main::SECONDS_PER_MONTH) < $time) ) {
-        die("Notice reported time: $time ".scalar(gmtime($time)).
-            " which is more then a year away from now or in the future.\n");
     }
 
     return $time;
 }
 
+# turn a time() into a string time of the form "04/26 15:48".
 
 sub time2timestring {
     my ($time) = @_;
@@ -253,6 +259,8 @@ sub save_note {
                   'note' => $NOTE,
                   'time' => $EFFECTIVE_TIME,
                   'localtime' => $localtime,
+                  'posttime' => $TIME,
+                  'localposttime' => $LOCALTIME,
                   'remote_host' => $REMOTE_HOST,
                  };
 
