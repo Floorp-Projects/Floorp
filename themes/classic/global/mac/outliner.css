@@ -1,0 +1,151 @@
+
+/******** Outliner widget **********/
+
+/** basic outliner ****************************************************
+ *  basic outliner widget for use in main windows where no decoration
+ *  is required.
+ **/
+
+outliner {
+  border-spacing: 0px;
+  border-top: 1px solid ThreeDShadow;
+  border-right: 1px solid ThreeDHighlight;
+  border-bottom: 1px solid ThreeDHighlight;
+  border-left: 1px solid ThreeDShadow;
+  background-color: -moz-field;
+  color: WindowText;
+}
+
+outlinerbody {
+  background-color: white;
+  color: black;
+  -moz-user-select: none;
+}
+
+outlinerbody:-moz-outliner-row
+{
+  height: 17px;
+  border: 1px solid transparent;
+}
+
+outlinerbody:-moz-outliner-row(current)
+{
+  border: 1px dotted #F5DB95;
+}
+
+outlinerbody:-moz-outliner-row(selected)
+{
+  background-color: Highlight;
+  color: HighlightText;
+}
+
+outliner > outlinerbody:-moz-outliner-row(selected)
+{
+  background-color: ThreeDFace;
+  color: ButtonText;
+}
+
+outliner:focus > outlinerbody:-moz-outliner-row(selected)
+{
+  background-color: Highlight;
+  color: HighlightText;
+}
+
+outlinerbody:-moz-outliner-cell
+{
+  padding: 0px 0px 1px 2px;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+outlinerbody:-moz-outliner-cell(selected)
+{
+}
+
+outlinerbody:-moz-outliner-cell-text
+{
+  color: inherit;
+  padding-left: 2px;
+  padding-right: 2px;
+}
+
+outlinerbody:-moz-outliner-cell-text(selected)
+{
+  color: white;  
+}
+
+outlinerbody:-moz-outliner-line
+{
+  border: 1px dotted grey;
+}
+
+outlinerbody:-moz-outliner-line(selected)
+{
+  border: 1px dotted black;
+}
+
+outlinercol
+{ 
+  border-left: 1px solid ThreeDHighlight;
+  border-top: 1px solid ThreeDHighlight;
+  border-right: 1px solid ThreeDDarkShadow;
+  border-bottom : 1px solid ThreeDDarkShadow;
+  padding: 0px;
+  background-color: ThreeDFace;
+  color: ButtonText;
+}
+
+.outlinercol-box,
+.outlinercol-image-box {
+  border-left: 1px solid ThreeDLightShadow;
+  border-top: 1px solid ThreeDLightShadow;
+  border-right: 1px solid ThreeDShadow;
+  border-bottom: 1px solid ThreeDShadow;
+}  
+
+.outlinercol-box {
+  padding: 0px 4px 0px 4px;
+}
+
+.outlinercol-image-box {
+  padding: 0px 1px 0px 1px;
+}
+  
+outlinercol:hover:active
+{
+  border: 1px solid ThreeDShadow !important;
+}
+
+outlinercol:hover:active > .outlinercol-box,
+outlinercol:hover:active > .outlinercol-image-box
+{
+  border-top: 1px solid transparent;
+  border-right: none;
+  border-bottom: none;
+  border-left: 1px solid transparent;
+}
+  
+outlinercol:hover:active > .outlinercol-box,
+outlinercol:hover:active > .outlinercol-image-box
+{
+  padding: 1px 4px 0px 5px;
+}
+
+/* outliner header with sort direction indicators */
+
+.outlinercol-sortdirection {
+  list-style-image: none;
+}
+
+.sortDirectionIndicator[sortDirection="ascending"] > .outlinercol-box > .outlinercol-sortdirection {
+  list-style-image: url("chrome://global/skin/sortAscending.gif");
+}
+
+.sortDirectionIndicator[sortDirection="descending"] > .outlinercol-box > .outlinercol-sortdirection {
+  list-style-image: url("chrome://global/skin/sortDescending.gif");
+}
+
+.outliner-colpicker-icon
+{
+  list-style-image: url("chrome://global/skin/columnselect.gif");
+}
