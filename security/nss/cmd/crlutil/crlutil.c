@@ -44,6 +44,7 @@
 #include "secutil.h"
 #include "cert.h"
 #include "certdb.h"
+#include "nss.h"
 
 #define SEC_CERT_DB_EXISTS 0
 #define SEC_CREATE_CERT_DB 1

@@ -32,6 +32,7 @@
  */
 
 #include "secutil.h"
+#include "nss.h"
 #include <errno.h>
 
 #if defined(XP_WIN) || (defined(__sun) && !defined(SVR4))
@@ -110,7 +111,7 @@ int main(int argc, char **argv)
     if (!inFile) inFile = PR_STDIN;
     if (!outFile) outFile = stdout;
 
-     NSS_NoDB_Init();
+    NSS_NoDB_Init(NULL);	/* XXX */
 
 	rv = SECU_ReadDERFromFile(&der, inFile, PR_FALSE);
     if (rv == SECSuccess) {

@@ -36,6 +36,7 @@
 #include <plstr.h>
 #include "secrng.h"
 #include "certdb.h" /* for CERT_DB_FILE_VERSION */
+#include "nss.h"
 
 static void install_error(char *message);
 static char* PR_fgets(char *buf, int size, PRFileDesc *file);
