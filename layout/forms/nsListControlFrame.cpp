@@ -38,8 +38,10 @@
 
 // Constants
 const nscoord kMaxDropDownRows =  20; // This matches the setting for 4.x browsers
+const PRInt32 kDefaultMultiselectHeight = 4; // This is compatible with 4.x browsers
 const PRInt32 kNothingSelected = -1;
 const PRInt32 kMaxZ= 0x7fffffff; //XXX: Shouldn't there be a define somewhere for MaxInt for PRInt32
+const PRInt32 kNoSizeSpecified = -1;
 
 //XXX: This is temporary. It simulates psuedo states by using a attribute selector on 
 // -moz-option-selected in the ua.css style sheet. This will not be needed when
@@ -75,8 +77,6 @@ nsListControlFrame::nsListControlFrame()
 {
   mHitFrame         = nsnull;
   mSelectedIndex    = kNothingSelected;
-  mNumRows          = 0;
-  mNumSelections  = 0;
   mComboboxFrame  = nsnull;
   mFormFrame      = nsnull;
   mDisplayed      = PR_FALSE;
@@ -268,7 +268,7 @@ nsListControlFrame::Reflow(nsIPresContext&   aPresContext,
   //longest element in the list
   nsHTMLReflowState secondPassState(aReflowState);
   nsHTMLReflowState firstPassState(aReflowState);
- 
+
    // Get the size of option elements inside the listbox
    // Compute the width based on the longest line in the listbox.
   
@@ -276,14 +276,12 @@ nsListControlFrame::Reflow(nsIPresContext&   aPresContext,
   firstPassState.mComputedHeight = NS_UNCONSTRAINEDSIZE;
   firstPassState.availableWidth = NS_UNCONSTRAINEDSIZE;
   firstPassState.availableHeight = NS_UNCONSTRAINEDSIZE;
-
-  
+ 
   nsSize scrolledAreaSize(0,0);
   nsHTMLReflowMetrics  scrolledAreaDesiredSize(&scrolledAreaSize);
 
 
   if (eReflowReason_Incremental == firstPassState.reason) {
-     // When incremental, Reflow everything
     nsIFrame* targetFrame;
     firstPassState.reflowCommand->GetTarget(targetFrame);
     if (this == targetFrame) {
@@ -370,20 +368,28 @@ nsListControlFrame::Reflow(nsIPresContext&   aPresContext,
 
   nscoord visibleHeight = 0;
   if (IsInDropDownMode() == PR_TRUE) {
-      // Compute the visible height of the drop-down list
-      // The dropdown list height is the smaller of it's height setting or the height
-      // of the smallest box that can drawn around it's contents.
-      visibleHeight = scrolledAreaHeight;
+    // Compute the visible height of the drop-down list
+    // The dropdown list height is the smaller of it's height setting or the height
+    // of the smallest box that can drawn around it's contents.
+    visibleHeight = scrolledAreaHeight;
 
-      if (visibleHeight > (kMaxDropDownRows * heightOfARow))
-         visibleHeight = (kMaxDropDownRows * heightOfARow);
+    if (visibleHeight > (kMaxDropDownRows * heightOfARow)) {
+       visibleHeight = (kMaxDropDownRows * heightOfARow);
+    }
    
   } else {
       // Calculate the visible height of the listbox
     if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedHeight) {
       visibleHeight = aReflowState.mComputedHeight;
     } else {
-      visibleHeight = mNumRows * heightOfARow;
+      PRInt32 numRows = 1;
+      GetSizeAttribute(&numRows);
+      if (numRows == kNoSizeSpecified) {
+        visibleHeight = aReflowState.mComputedHeight;
+      }
+      else {
+        visibleHeight = numRows * heightOfARow;
+      }
     }
   }
 
@@ -548,8 +554,8 @@ nsListControlFrame::GetSelectedIndex(nsIFrame *aHitFrame)
 
     // Search the list of option elements looking for a match
  
-    PRUint32 length;
-    length = GetNumberOfOptions();
+    PRInt32 length = 0;
+    GetNumberOfOptions(&length);
     nsIDOMHTMLCollection* options = GetOptions(mContent);
     if (nsnull != options) {
       PRUint32 numOptions;
@@ -575,8 +581,9 @@ nsListControlFrame::GetSelectedIndex(nsIFrame *aHitFrame)
 void 
 nsListControlFrame::ClearSelection()
 {
-  PRUint32 length = GetNumberOfOptions();
-  for (PRInt32 i = 0; i < (PRInt32)length; i++) {
+  PRInt32 length = 0;
+  GetNumberOfOptions(&length);
+  for (PRInt32 i = 0; i < length; i++) {
     if (i != mSelectedIndex) {
       SetFrameSelected(i, PR_FALSE);
      } 
@@ -600,7 +607,8 @@ nsListControlFrame::ExtendedSelection(PRInt32 aStartIndex, PRInt32 aEndIndex, PR
   PRInt32 i = 0;
   PRBool startInverting = PR_FALSE;
 
-  PRInt32 length = GetNumberOfOptions();
+  PRInt32 length = 0;
+  GetNumberOfOptions(&length);
   for (i = 0; i < length; i++) {
     if (i == startInx) {
       startInverting = PR_TRUE;
@@ -703,7 +711,9 @@ nsListControlFrame::HandleListSelection(nsIPresContext& aPresContext,
                                         nsGUIEvent*     aEvent,
                                         nsEventStatus&  aEventStatus)
 {
-  if (mMultipleSelections) {
+  PRBool multipleSelections = PR_FALSE;
+  GetMultiple(&multipleSelections);
+  if (multipleSelections) {
     MultipleSelection(((nsMouseEvent *)aEvent)->isShift, ((nsMouseEvent *)aEvent)->isControl);
   } else {
     SingleSelection();
@@ -738,19 +748,23 @@ nsListControlFrame::HandleLikeListEvent(nsIPresContext& aPresContext,
                                                nsGUIEvent*     aEvent,
                                                nsEventStatus&  aEventStatus)
 {
-  if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
-    HandleListSelection(aPresContext, aEvent, aEventStatus);
-    mButtonDown = PR_TRUE;
-    CaptureMouseEvents(PR_TRUE);
-    mLastFrame = mHitFrame;
-  } else if (aEvent->message == NS_MOUSE_MOVE) {
-    if ((PR_TRUE == mButtonDown) && (! HasSameContent(mLastFrame, mHitFrame))) {
+  if (nsnull != mHitFrame) {
+
+    if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
       HandleListSelection(aPresContext, aEvent, aEventStatus);
+      mButtonDown = PR_TRUE;
+      CaptureMouseEvents(PR_TRUE);
       mLastFrame = mHitFrame;
+    } else if (aEvent->message == NS_MOUSE_MOVE) {
+      if ((PR_TRUE == mButtonDown) && (! HasSameContent(mLastFrame, mHitFrame))) {
+        HandleListSelection(aPresContext, aEvent, aEventStatus);
+        mLastFrame = mHitFrame;
+      }
+    } else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
+      mButtonDown = PR_FALSE;
+      CaptureMouseEvents(PR_FALSE);
     }
-  } else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
-    mButtonDown = PR_FALSE;
-    CaptureMouseEvents(PR_FALSE);
+
   }
 
   aEventStatus = nsEventStatus_eConsumeNoDefault;
@@ -951,6 +965,18 @@ nsListControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
   return nsScrollFrame::SetInitialChildList(aPresContext, aListName, aChildList);
 }
 
+nsresult
+nsListControlFrame::GetSizeAttribute(PRInt32 *aSize) {
+  nsresult rv = NS_OK;
+  nsIDOMHTMLSelectElement* select;
+  rv = mContent->QueryInterface(kIDOMHTMLSelectElementIID, (void**) &select);
+  if (mContent && (NS_SUCCEEDED(rv))) {
+    rv = select->GetSize(aSize);
+    NS_RELEASE(select);
+  }
+  return rv;
+}
+
 
 NS_IMETHODIMP  
 nsListControlFrame::Init(nsIPresContext&  aPresContext,
@@ -961,14 +987,6 @@ nsListControlFrame::Init(nsIPresContext&  aPresContext,
 {
   nsresult result = nsScrollFrame::Init(aPresContext, aContent, aParent, aContext,
                                         aPrevInFlow);
-  if (NS_OK == result) {
-    nsIDOMHTMLSelectElement* select;
-    if (mContent && (NS_OK == mContent->QueryInterface(kIDOMHTMLSelectElementIID, (void**) &select))) {
-      select->GetMultiple(&mMultipleSelections);
-      select->GetSize(&mNumRows);
-      NS_RELEASE(select);
-    }
-  }
 
    // Initialize the current selected and not selected state's for
    // the listbox items from the content. This is done here because
@@ -1108,11 +1126,12 @@ nsListControlFrame::SetFrameSelected(PRUint32 aIndex, PRBool aSelected)
 void 
 nsListControlFrame::InitializeFromContent()
 {
-  PRUint32 length = GetNumberOfOptions();
+  PRInt32 length = 0;
+  GetNumberOfOptions(&length);
   nsIDOMHTMLCollection* options = GetOptions(mContent);
   nsresult result = NS_OK;
   if (nsnull != options) {
-    for (PRUint32 i = 0; i < length; i++) {
+    for (PRInt32 i = 0; i < length; i++) {
       nsIDOMHTMLOptionElement* optionElement = nsnull;
       optionElement = GetOption(*options, i);
       if (nsnull != optionElement) {
@@ -1190,11 +1209,11 @@ nsresult
 nsListControlFrame::Deselect() 
 {
   PRInt32 i;
-  PRInt32 max = GetNumberOfOptions();
+  PRInt32 max = 0;
+  GetNumberOfOptions(&max);
   for (i=0;i<max;i++) {
     SetFrameSelected(i, PR_FALSE);
   }
-  mNumSelections = 0;
   mSelectedIndex = kNothingSelected;
   
   return NS_OK;
@@ -1233,6 +1252,7 @@ void
 nsListControlFrame::MouseClicked(nsIPresContext* aPresContext) 
 {
 }
+
 
 PRInt32 
 nsListControlFrame::GetMaxNumValues()
@@ -1300,12 +1320,26 @@ nsListControlFrame::GetName(nsString* aResult)
 }
  
 
+PRInt32 
+nsListControlFrame::GetNumberOfSelections()
+{
+  PRInt32 count = 0;
+  PRInt32 length = 0;
+  GetNumberOfOptions(&length);
+  PRInt32 i = 0;
+  for (i = 0; i < length; i++) {
+    if (IsFrameSelected(i)) {
+      count++;
+    }
+  }
+  return(count);
+}
+
+
 PRBool
 nsListControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
                                      nsString* aValues, nsString* aNames)
 {
-  PRBool status = PR_FALSE;
-
   aNumValues = 0;
   nsAutoString name;
   nsresult result = GetName(&name);
@@ -1318,28 +1352,34 @@ nsListControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
     return PR_FALSE;
   }
 
-  NS_ASSERTION(aMaxNumValues >= mNumSelections, "invalid max num values");
-  if (mNumSelections >= 0) {
-    PRInt32* selections = new PRInt32[mNumSelections];
-    PRInt32 i = 0;
-    PRInt32 inx;
-    for (inx=0;i<mNumSelections;i++) {
-      if (IsFrameSelected(inx)) {
-        selections[i++] = inx;
+  PRBool status = PR_FALSE;
+  PRBool multiple;
+  GetMultiple(&multiple);
+  if (!multiple) {
+    if (mSelectedIndex >= 0) {
+      nsAutoString value;
+      GetOptionValue(*options, mSelectedIndex, value);
+      aNumValues = 1;
+      aNames[0]  = name;
+      aValues[0] = value;
+      status = PR_TRUE;
+    }
+  } 
+  else {
+    aNumValues = 0;
+    PRInt32 length = 0;
+    GetNumberOfOptions(&length);
+    for (int i = 0; i < length; i++) {
+      if (PR_TRUE == IsFrameSelected(i)) {
+        nsAutoString value;
+        GetOptionValue(*options, i, value);
+        aNames[aNumValues]  = name;
+        aValues[aNumValues] = value;
+        aNumValues++;
       }
     }
-    aNumValues = 0;
-    for (i = 0; i < mNumSelections; i++) {
-      nsAutoString value;
-      GetOptionValue(*options, selections[i], value);
-      aNames[i]  = name;
-      aValues[i] = value;
-      aNumValues++;
-    }
-    delete[] selections;
     status = PR_TRUE;
-  }
-
+  } 
   NS_RELEASE(options);
 
   return status;
@@ -1398,16 +1438,20 @@ nsresult nsListControlFrame::RequiresWidget(PRBool& aRequiresWidget)
   return NS_OK;
 }
 
-PRInt32 nsListControlFrame::GetNumberOfOptions() 
+NS_IMETHODIMP 
+nsListControlFrame::GetNumberOfOptions(PRInt32* aNumOptions) 
 {
   nsIDOMHTMLCollection* options = GetOptions(mContent);
-  if (!options) {
-    return 0;
+  if (nsnull == options) {
+    *aNumOptions = 0;
+  } else {
+    PRUint32 length = 0;
+    options->GetLength(&length);
+    *aNumOptions = (PRInt32)length;
+    NS_RELEASE(options);
   }
-  PRUint32 numOptions;
-  options->GetLength(&numOptions);
-  NS_RELEASE(options);
-  return(numOptions);
+
+  return NS_OK;
 }
 
 // Select the specified item in the listbox using control logic.

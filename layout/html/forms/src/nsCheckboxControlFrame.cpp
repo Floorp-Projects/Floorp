@@ -275,29 +275,35 @@ nsCheckboxControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValue
   }
 
   PRBool result = PR_TRUE;
+  PRBool state = PR_FALSE;
 
   nsAutoString value;
   nsresult valueResult = GetValue(&value);
 
   nsICheckButton* checkBox = nsnull;
-  if ((nsnull != mWidget) && 
-      (NS_OK == mWidget->QueryInterface(kICheckButtonIID,(void**)&checkBox))) {
-    PRBool state = PR_FALSE;
-    checkBox->GetState(state);
-    if (PR_TRUE != state) {
-      result = PR_FALSE;
-    } else {
-      if (NS_CONTENT_ATTR_HAS_VALUE != valueResult) {
-        aValues[0] = "on";
-      } else {
-        aValues[0] = value;
+  if (nsnull != mWidget) {
+     // native-widget
+      if (NS_SUCCEEDED(mWidget->QueryInterface(kICheckButtonIID,(void**)&checkBox))) {
+        checkBox->GetState(state);
+       NS_RELEASE(checkBox);
       }
-      aNames[0] = name;
-      aNumValues = 1;
-    }
-    NS_RELEASE(checkBox);
+  } else {
+    // gfx-rendered
+    state = mChecked;
   }
-
+   
+   if (PR_TRUE != state) {
+      result = PR_FALSE;
+   } else {
+     if (NS_CONTENT_ATTR_HAS_VALUE != valueResult) {
+       aValues[0] = "on";
+     } else {
+       aValues[0] = value;
+     }
+     aNames[0] = name;
+     aNumValues = 1;
+  }
+ 
   return result;
 }
 

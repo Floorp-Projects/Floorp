@@ -381,7 +381,7 @@ nsButtonControlFrame::Reflow(nsIPresContext&          aPresContext,
   nsWidgetRendering mode;
   aPresContext.GetWidgetRenderingMode(&mode);
 
-  if (eWidgetRendering_Gfx == mode || NS_FORM_INPUT_IMAGE == type) {
+  if (eWidgetRendering_Gfx == mode || eWidgetRendering_PartialGfx == mode || NS_FORM_INPUT_IMAGE == type) {
     // add ourself as an nsIFormControlFrame
     if (!mFormFrame && (eReflowReason_Initial == aReflowState.reason)) {
       nsFormFrame::AddFormControlFrame(aPresContext, *this);

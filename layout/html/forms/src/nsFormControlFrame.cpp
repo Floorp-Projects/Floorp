@@ -249,7 +249,7 @@ nsFormControlFrame::Reflow(nsIPresContext&          aPresContext,
 
   nsWidgetRendering mode;
   aPresContext.GetWidgetRenderingMode(&mode);
-  if (eWidgetRendering_Gfx == mode) {
+  if ((eWidgetRendering_Gfx == mode) || (eWidgetRendering_PartialGfx == mode)) {
       // Check with the frame to see if requires a widget to render
     if (PR_TRUE == requiresWidget) {
       RequiresWidget(requiresWidget);   

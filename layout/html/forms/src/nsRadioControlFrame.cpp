@@ -169,7 +169,7 @@ nsRadioControlFrame::GetDesiredSize(nsIPresContext*        aPresContext,
 
   nsWidgetRendering mode;
   aPresContext->GetWidgetRenderingMode(&mode);
-  if (eWidgetRendering_Gfx == mode) {
+  if ((eWidgetRendering_Gfx == mode) || (eWidgetRendering_PartialGfx == mode)) {
     nsFormControlFrame::GetDesiredSize(aPresContext,aReflowState,aDesiredLayoutSize,
                                     aDesiredWidgetSize);
   } else {
@@ -306,11 +306,16 @@ nsRadioControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
 
   PRBool state = PR_FALSE;
 
-  nsIRadioButton* radio = nsnull;
- 	if (mWidget && (NS_OK == mWidget->QueryInterface(kIRadioIID,(void**)&radio))) {
-  	radio->GetState(state);
-	  NS_RELEASE(radio);
+  if (nsnull == mWidget) {
+    state = mChecked;
+  } else {
+    nsIRadioButton* radio = nsnull;
+ 	  if (mWidget && (NS_OK == mWidget->QueryInterface(kIRadioIID,(void**)&radio))) {
+  	  radio->GetState(state);
+	    NS_RELEASE(radio);
+    }
   }
+
   if(PR_TRUE != state) {
     return PR_FALSE;
   }

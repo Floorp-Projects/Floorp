@@ -69,7 +69,8 @@ nsPresContext::nsPresContext()
   nsLayoutAtoms::AddRefAtoms();
   mCompatibilityMode = eCompatibility_Standard;
   mCompatibilityLocked = PR_FALSE;
-  mWidgetRenderingMode = eWidgetRendering_Native;  // to be changed to _Gfx soon!
+  mWidgetRenderingMode = eWidgetRendering_Native; // Soon to be set to PartialGfx
+ 
 
 #ifdef _WIN32
   // XXX This needs to be elsewhere, e.g., part of nsIDeviceContext

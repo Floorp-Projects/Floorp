@@ -103,6 +103,7 @@ public:
   NS_IMETHOD CaptureMouseEvents(PRBool aGrabMouseEvents);
   NS_IMETHOD GetMaximumSize(nsSize &aSize);
   NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);
+  NS_IMETHOD GetNumberOfOptions(PRInt32* aNumOptions);  
 
     // Static Methods
   static nsIDOMHTMLSelectElement* GetSelect(nsIContent * aContent);
@@ -124,6 +125,8 @@ protected:
   PRInt32  GetNumberOfOptions();
 
     // Utility methods
+  nsresult GetSizeAttribute(PRInt32 *aSize);
+  PRInt32  GetNumberOfSelections();
   nsIContent* GetOptionContent(PRUint32 aIndex);
   PRBool   IsContentSelected(nsIContent* aContent);
   PRBool   IsFrameSelected(PRUint32 aIndex);
@@ -168,9 +171,6 @@ protected:
   // Data Members
   nscoord      mBorderOffsetY;
   nsFormFrame* mFormFrame;
-  PRInt32      mNumRows;
-  PRInt32      mNumSelections;
-  PRBool       mMultipleSelections;
   PRInt32      mSelectedIndex;
   PRInt32      mStartExtendedIndex;
   PRInt32      mEndExtendedIndex;

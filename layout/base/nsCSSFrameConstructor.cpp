@@ -2410,8 +2410,11 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresContext*          aPresContex
     PRInt32 size = 1;
     nsresult result = aContent->QueryInterface(kIDOMHTMLSelectElementIID, (void**)&select);
     if (NS_SUCCEEDED(result)) {
-      result = select->GetSize(&size); 
-      if ((1 == size) || (kNoSizeSpecified  == size)) {
+      select->GetSize(&size); 
+      PRBool multipleSelect = PR_FALSE;
+      select->GetMultiple(&multipleSelect);
+       // Construct a combobox if size=1 or no size is specified and its multiple select
+      if (((1 == size) || (kNoSizeSpecified  == size)) && (PR_FALSE == multipleSelect)) {
           // Construct a frame-based combo box.
           // The frame-based combo box is built out of tree parts. A display area, a button and
           // a dropdown list. The display area and button are created through anonymous content.
@@ -2519,6 +2522,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresContext*          aPresContex
 
   return rv;
 }
+
 
 
 nsresult

@@ -69,6 +69,12 @@ public:
 
   NS_IMETHOD GetMaximumSize(nsSize &aSize) = 0;
 
+  /**
+   * Returns the number of options in the listbox
+   */
+
+  NS_IMETHOD GetNumberOfOptions(PRInt32* aNumOptions) = 0; 
+
 
 };
 

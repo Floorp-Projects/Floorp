@@ -305,7 +305,7 @@ nsFormControlHelper::CalculateSize (nsIPresContext*       aPresContext,
   PRInt32 type;
   aFrame->GetType(&type);
 
-  if (PR_TRUE == requiresWidget || eWidgetRendering_Gfx != mode ||
+  if (PR_TRUE == requiresWidget || eWidgetRendering_Native == mode ||
       type==NS_FORM_INPUT_TEXT || type==NS_FORM_TEXTAREA || type==NS_FORM_INPUT_PASSWORD) 
   {
     if (!aWidthExplicit) {

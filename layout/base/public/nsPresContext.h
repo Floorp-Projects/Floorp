@@ -53,7 +53,8 @@ enum nsCompatibility {
 
 enum nsWidgetRendering {
   eWidgetRendering_Native   = 1,
-  eWidgetRendering_Gfx      = 2
+  eWidgetRendering_Gfx      = 2,
+  eWidgetRendering_PartialGfx = 3
 };
 
 // An interface for presentation contexts. Presentation contexts are
