@@ -12,13 +12,16 @@
 <!ENTITY  maintainTableStructure.tooltip        "Preserves table's rectangular shape by automatically adding cells after inserting or deleting cells">
 <!ENTITY  maintainStructure.accesskey           "m">
 
-<!ENTITY  savingFiles.title           "When Saving Files">
+<!ENTITY  savingFiles.title           "When Saving or Publishing Pages">
 <!ENTITY  preserveExistingFormatting  "Retain original source formatting">
 <!ENTITY  preserveExistingFormatting.accesskey  "o">
 <!ENTITY  preserveExistingFormatting.tooltip    "Preserves line breaks and page's original formatting">
 <!ENTITY  reformat.label              "Reformat HTML source">
 <!ENTITY  reformat.accesskey          "r">
 <!ENTITY  reformat.tooltip            "Reformat HTML tags using line breaks and indentation">
+
+<!ENTITY  saveAssociatedFiles.label "Save images and other associated files when saving pages">
+<!ENTITY  showPublishDialog.label   "Always show Publish dialog when publishing pages">
 
 <!ENTITY  saving                    "Saving">
 <!ENTITY  AutoSaveCheck             "Automatically save every">
