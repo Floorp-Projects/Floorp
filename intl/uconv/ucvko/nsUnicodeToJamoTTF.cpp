@@ -873,7 +873,7 @@ PRInt16 JamoSrchReplace (const JamoNormMap* aClusters,
 
 /* static */
 nsresult ScanDecomposeSyllable(PRUnichar* aIn, PRInt32 *aLength, 
-                               PRInt32 maxLength)
+                               const PRInt32 maxLength)
 {
   nsresult rv = NS_OK;
 
