@@ -73,7 +73,8 @@ public:
                     // PostEvent failed, we must be shutting down.  better to
                     // leak than crash!
                     NS_NOTREACHED("leaking stream event");
-                    NS_ADDREF(event);
+                    nsISupports *sup = event;
+                    NS_ADDREF(sup);
                 }
             }
         }
@@ -149,8 +150,16 @@ public:
             nsCOMPtr<nsIOutputStreamNotify> event;
             NS_NewOutputStreamReadyEvent(getter_AddRefs(event), mNotify, mEventQ);
             mNotify = 0;
-            if (event)
-                event->OnOutputStreamReady(nsnull);
+            if (event) {
+                nsresult rv = event->OnOutputStreamReady(nsnull);
+                if (NS_FAILED(rv)) {
+                    // PostEvent failed, we must be shutting down.  better to
+                    // leak than crash!
+                    NS_NOTREACHED("leaking stream event");
+                    nsISupports *sup = event;
+                    NS_ADDREF(sup);
+                }
+            }
         }
     }
 
@@ -188,7 +197,8 @@ private:
     static void *PR_CALLBACK EventHandler(PLEvent *plevent)
     {
         nsOutputStreamReadyEvent *ev = (nsOutputStreamReadyEvent *) plevent;
-        ev->mNotify->OnOutputStreamReady(ev->mStream);
+        if (ev->mNotify)
+            ev->mNotify->OnOutputStreamReady(ev->mStream);
         ev->mNotify = 0;
         return NULL;
     }
