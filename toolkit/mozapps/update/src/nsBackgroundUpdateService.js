@@ -43,21 +43,30 @@ const PREF_UPDATE_APP_UPDATESAVAILABLE      = "update.app.updatesAvailable";
 const PREF_UPDATE_APP_UPDATEVERSION         = "update.app.updateVersion";
 const PREF_UPDATE_APP_UPDATEDESCRIPTION     = "update.app.updateDescription";
 const PREF_UPDATE_APP_UPDATEURL             = "update.app.updateURL";
+const PREF_UPDATE_APP_INTERVAL              = "update.app.interval";
+const PREF_UPDATE_APP_LASTUPDATEDATE        = "update.app.lastUpdateDate";
 const PREF_UPDATE_SHOW_SLIDING_NOTIFICATION = "update.showSlidingNotification";
 
 const PREF_UPDATE_EXTENSIONS_ENABLED        = "update.extensions.enabled";
 const PREF_UPDATE_EXTENSIONS_AUTOUPDATE     = "update.extensions.autoUpdate";
 const PREF_UPDATE_EXTENSIONS_COUNT          = "update.extensions.count";
+const PREF_UPDATE_EXTENSIONS_INTERVAL       = "update.extensions.interval";
+const PREF_UPDATE_EXTENSIONS_LASTUPDATEDATE = "update.extensions.lastUpdateDate";
+const PREF_UPDATE_EXTENSIONS_SEVERITY_THRESHOLD = "update.extensions.severity.threshold";
 
 const PREF_UPDATE_INTERVAL                  = "update.interval";
-const PREF_UPDATE_LASTUPDATEDATE            = "update.lastUpdateDate";
 const PREF_UPDATE_SEVERITY                  = "update.severity";
 
-const nsIUpdateService  = Components.interfaces.nsIUpdateService;
-const nsIUpdateItem     = Components.interfaces.nsIUpdateItem;
+const nsIExtensionManager = Components.interfaces.nsIExtensionManager;
+const nsIUpdateService    = Components.interfaces.nsIUpdateService;
+const nsIUpdateItem       = Components.interfaces.nsIUpdateItem;
 
 const UPDATED_EXTENSIONS  = 0x01;
 const UPDATED_APP         = 0x02;
+
+const SEVERITY_HIGH       = 2;
+const SEVERITY_MEDIUM     = 1;
+const SEVERITY_LOW        = 0;
 
 function nsUpdateService()
 {
@@ -69,6 +78,8 @@ function nsUpdateService()
   pbi.addObserver(PREF_UPDATE_APP_ENABLED, this, false);
   pbi.addObserver(PREF_UPDATE_EXTENSIONS_ENABLED, this, false);
   pbi.addObserver(PREF_UPDATE_INTERVAL, this, false);
+  pbi.addObserver(PREF_UPDATE_APP_INTERVAL, this, false);
+  pbi.addObserver(PREF_UPDATE_EXTENSIONS_INTERVAL, this, false);
 
   // Observe xpcom-shutdown to unhook pref branch observers above to avoid 
   // shutdown leaks.
@@ -78,7 +89,6 @@ function nsUpdateService()
 }
 
 nsUpdateService.prototype = {
-  _timer: null,
   _pref: null,
   _updateObserver: null,
   _appUpdatesEnabled: true,
@@ -95,16 +105,8 @@ nsUpdateService.prototype = {
     this._extUpdatesEnabled = this._pref.getBoolPref(PREF_UPDATE_EXTENSIONS_ENABLED);
     if (!this._appUpdatesEnabled && !this._extUpdatesEnabled)
       return;
-      
-    var interval = this._pref.getIntPref(PREF_UPDATE_INTERVAL);
-    var lastUpdateTime = this._pref.getIntPref(PREF_UPDATE_LASTUPDATEDATE);
-    var timeSinceLastCheck = lastUpdateTime ? this._nowInMilliseconds - lastUpdateTime : 0;
-    if (timeSinceLastCheck > interval) {
-      this.checkForUpdatesInternal([], 0, nsIUpdateItem.TYPE_ANY, 
-                                   nsIUpdateService.SOURCE_EVENT_BACKGROUND);
-    }
-    else
-      this._makeTimer(interval - timeSinceLastCheck);
+
+    this._makeTimer(this._pref.getIntPref(PREF_UPDATE_INTERVAL));
   },
   
   checkForUpdates: function nsUpdateService_checkForUpdates (aItems, aItemCount, aUpdateTypes, aSourceEvent, aParentWindow)
@@ -127,10 +129,15 @@ nsUpdateService.prototype = {
       for (var i = 0; i < aItems.length; ++i)
         ary.AppendElement(aItems[i]);
 
+      var features = "chrome,centerscreen";
+      if (aSourceEvent == nsIUpdateService.SOURCE_EVENT_MISMATCH) {
+        features += ",modal"; // Must block in mismatch mode since there's 
+                              // no main evt loop yet. 
+      }
       // This *must* be modal so as not to break startup! This code is invoked before
       // the main event loop is initiated (via checkForMismatches).
       ww.openWindow(aParentWindow, "chrome://mozapps/content/update/update.xul", 
-                    "", "chrome,modal,centerscreen", ary);
+                    "", features, ary);
       break;
     case nsIUpdateService.SOURCE_EVENT_BACKGROUND:
       // Rather than show a UI, call the checkForUpdates function directly here. 
@@ -173,6 +180,7 @@ nsUpdateService.prototype = {
 
         var dsURI = this._pref.getComplexValue(PREF_UPDATE_APP_URI, 
                                               Components.interfaces.nsIPrefLocalizedString).data;
+
         var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
                             .getService(Components.interfaces.nsIRDFService);
         var ds = rdf.GetDataSource(dsURI);
@@ -187,21 +195,29 @@ nsUpdateService.prototype = {
     }
     if (!(aUpdateTypes & nsIUpdateItem.TYPE_APP)) { // TYPE_EXTENSION, TYPE_ANY, etc.
       if (this._canUpdate(this._extUpdatesEnabled, aSourceEvent)) {
+        os.addObserver(this._updateObserver, "Update:Extension:Started", false);
         os.addObserver(this._updateObserver, "Update:Extension:Item-Ended", false);
         os.addObserver(this._updateObserver, "Update:Extension:Ended", false);
 
         var em = Components.classes["@mozilla.org/extensions/manager;1"]
                            .getService(Components.interfaces.nsIExtensionManager);
-        em.update(aItems, aItems.length);      
+        // We have to explicitly perform the Version update here in background
+        // mode because there is no update UI to kick it off.
+        if (aSourceEvent == nsIUpdateService.SOURCE_EVENT_BACKGROUND) {
+          em.update(aItems, aItems.length, 
+                    nsIExtensionManager.UPDATE_MODE_VERSION, true);
+        }
+        em.update(aItems, aItems.length, 
+                  nsIExtensionManager.UPDATE_MODE_NORMAL, false);
       }
     }
     
     if (aSourceEvent == nsIUpdateService.SOURCE_EVENT_BACKGROUND && 
         (this._appUpdatesEnabled || this._extUpdatesEnabled)) {
-      this._pref.setIntPref(PREF_UPDATE_LASTUPDATEDATE, this._nowInMilliseconds);
-
-      // If this was a background update, reset timer. 
-      this._makeTimer(this._pref.getIntPref(PREF_UPDATE_INTERVAL));
+      if (aUpdateTypes & nsIUpdateItem.TYPE_ADDON)
+        this._pref.setIntPref(PREF_UPDATE_EXTENSIONS_LASTUPDATEDATE, this._nowInMilliseconds / 1000);
+      if (aUpdateTypes & nsIUpdateItem.TYPE_APP)
+        this._pref.setIntPref(PREF_UPDATE_APP_LASTUPDATEDATE, this._nowInMilliseconds / 1000);
     }
   },
   
@@ -266,8 +282,18 @@ nsUpdateService.prototype = {
                            Components.interfaces.nsISupportsString, 
                            descStr);
     }
-    else
+    else {
       this._clearAppUpdatePrefs();
+
+      // Lower the severity to reflect the fact that there are now only Extension/
+      // Theme updates available
+      var newCount = this._pref.getIntPref(PREF_UPDATE_EXTENSIONS_COUNT);
+      var threshold = this._pref.getIntPref(PREF_UPDATE_EXTENSIONS_SEVERITY_THRESHOLD);
+      if (newCount >= threshold)
+        this._pref.setIntPref(PREF_UPDATE_SEVERITY, SEVERITY_MEDIUM);
+      else
+        this._pref.setIntPref(PREF_UPDATE_SEVERITY, SEVERITY_LOW);
+    }
     
     // The Update Wizard uses this notification to determine that the application
     // update process is now complete. 
@@ -347,12 +373,29 @@ nsUpdateService.prototype = {
   
   /////////////////////////////////////////////////////////////////////////////
   // nsITimerCallback
-  notify: function nsUpdateService_notify (aTimer)
+  _shouldUpdate: function nsUpdateService__shouldUpdate (aIntervalPref, aLastCheckPref)
   {
-    this.checkForUpdatesInternal([], 0, nsIUpdateItem.TYPE_ANY, 
-                                 nsIUpdateService.SOURCE_EVENT_BACKGROUND);
+    var interval = this._pref.getIntPref(aIntervalPref);
+    var lastUpdateTime = this._pref.getIntPref(aLastCheckPref);
+    return ((Math.round(this._nowInMilliseconds/1000) - lastUpdateTime) > interval);
   },
   
+  notify: function nsUpdateService_notify (aTimer)
+  {
+    var types = 0;
+    if (this._shouldUpdate(PREF_UPDATE_EXTENSIONS_INTERVAL, 
+                           PREF_UPDATE_EXTENSIONS_LASTUPDATEDATE)) {
+      types |= nsIUpdateItem.TYPE_ADDON;         
+    }
+    if (this._shouldUpdate(PREF_UPDATE_APP_INTERVAL,
+                           PREF_UPDATE_APP_LASTUPDATEDATE)) {
+      types |= nsIUpdateItem.TYPE_APP;         
+    }
+    if (types) 
+      this.checkForUpdatesInternal([], 0, types, 
+                                   nsIUpdateService.SOURCE_EVENT_BACKGROUND);
+  },
+
   /////////////////////////////////////////////////////////////////////////////
   // nsIObserver
   observe: function nsUpdateService_observe (aSubject, aTopic, aData)
@@ -390,6 +433,8 @@ nsUpdateService.prototype = {
         }
         break;
       case PREF_UPDATE_INTERVAL:
+      case PREF_UPDATE_APP_INTERVAL:
+      case PREF_UPDATE_EXTENSIONS_INTERVAL:
         this._makeTimer(this._pref.getIntPref(PREF_UPDATE_INTERVAL));
         break;
       }
@@ -407,6 +452,7 @@ nsUpdateService.prototype = {
       pbi.removeObserver(PREF_UPDATE_APP_ENABLED, this);
       pbi.removeObserver(PREF_UPDATE_EXTENSIONS_ENABLED, this);
       pbi.removeObserver(PREF_UPDATE_INTERVAL, this);
+      pbi.removeObserver(PREF_UPDATE_EXTENSIONS_INTERVAL, this);
     
       var os = Components.classes["@mozilla.org/observer-service;1"]
                         .getService(Components.interfaces.nsIObserverService);
@@ -417,15 +463,15 @@ nsUpdateService.prototype = {
 
   /////////////////////////////////////////////////////////////////////////////
   // nsUpdateService
+  _timer: null,
   _makeTimer: function nsUpdateService__makeTimer (aDelay)
   {
-    if (this._timer) 
-      this._timer.cancel();
-      
-    this._timer = Components.classes["@mozilla.org/timer;1"]
-                            .createInstance(Components.interfaces.nsITimer);
+    if (!this._timer) 
+      this._timer = Components.classes["@mozilla.org/timer;1"]
+                              .createInstance(Components.interfaces.nsITimer);
+    this._timer.cancel();
     this._timer.initWithCallback(this, aDelay, 
-                                 Components.interfaces.nsITimer.TYPE_ONE_SHOT);
+                                 Components.interfaces.nsITimer.TYPE_REPEATING_SLACK);
   },
   
   get _nowInMilliseconds ()
@@ -510,8 +556,15 @@ nsUpdateObserver.prototype = {
       this._pref.setIntPref(PREF_UPDATE_EXTENSIONS_COUNT, 0);
       break;
     case "Update:Extension:Item-Ended":
-      this._pref.setIntPref(PREF_UPDATE_EXTENSIONS_COUNT, 
-                            this._pref.getIntPref(PREF_UPDATE_EXTENSIONS_COUNT) + 1);
+      var newCount = this._pref.getIntPref(PREF_UPDATE_EXTENSIONS_COUNT) + 1;
+      this._pref.setIntPref(PREF_UPDATE_EXTENSIONS_COUNT, newCount);
+      var threshold = this._pref.getIntPref(PREF_UPDATE_EXTENSIONS_SEVERITY_THRESHOLD);
+      if (this._service.updateSeverity < SEVERITY_HIGH) {
+        if (newCount > threshold)
+          this._pref.setIntPref(PREF_UPDATE_SEVERITY, SEVERITY_MEDIUM);
+        else
+          this._pref.setIntPref(PREF_UPDATE_SEVERITY, SEVERITY_LOW);
+      }
       break;
     case "Update:Extension:Ended":
       this._updateState |= UPDATED_EXTENSIONS;
@@ -578,6 +631,7 @@ nsUpdateObserver.prototype = {
     var os = Components.classes["@mozilla.org/observer-service;1"]
                         .getService(Components.interfaces.nsIObserverService);
 
+    try { os.removeObserver(this, "Update:Extension:Started");    } catch (e) { }
     try { os.removeObserver(this, "Update:Extension:Item-Ended"); } catch (e) { }
     try { os.removeObserver(this, "Update:Extension:Ended");      } catch (e) { }
     try { os.removeObserver(this, "Update:App:Ended");            } catch (e) { }
@@ -652,7 +706,17 @@ function UpdateItem ()
 }
 
 UpdateItem.prototype = {
-  init: function UpdateItem_init (aID, aVersion, aMinAppVersion, aMaxAppVersion, aName, aRow, aUpdateURL, aIconURL, aUpdateRDF, aType)
+  init: function UpdateItem_init (aID, 
+                                  aVersion, 
+                                  aMinAppVersion, 
+                                  aMaxAppVersion, 
+                                  aName, 
+                                  aRow, 
+                                  aXPIURL, 
+                                  aIconURL, 
+                                  aUpdateRDF, 
+                                  aUpdateService,
+                                  aType)
   {
     this._id            = aID;
     this._version       = aVersion;
@@ -660,9 +724,10 @@ UpdateItem.prototype = {
     this._maxAppVersion = aMaxAppVersion;
     this._name          = aName;
     this._row           = aRow;
-    this._updateURL     = aUpdateURL;
+    this._xpiURL        = aXPIURL;
     this._iconURL       = aIconURL;
     this._updateRDF     = aUpdateRDF;
+    this._updateService = aUpdateService;
     this._type          = aType;
   },
   
@@ -672,9 +737,10 @@ UpdateItem.prototype = {
   get maxAppVersion() { return this._maxAppVersion; },
   get name()          { return this._name;          },
   get row()           { return this._row;           },
-  get updateURL()     { return this._updateURL;     },
+  get xpiURL()        { return this._xpiURL;        },
   get iconURL()       { return this._iconURL        },
   get updateRDF()     { return this._updateRDF;     },
+  get updateService() { return this._updateService; },
   get type()          { return this._type;          },
 
   get objectSource()
@@ -685,8 +751,10 @@ UpdateItem.prototype = {
              maxAppVersion  : this._maxAppVersion,
              name           : this._name, 
              row            : this._row, 
-             updateURL      : this._updateURL, 
+             xpiURL         : this._xpiURL, 
              iconURL        : this._iconURL, 
+             updateRDF      : this._updateRDF,
+             updateService  : this._updateService,
              type           : this._type 
            }.toSource();
   },
@@ -701,6 +769,36 @@ UpdateItem.prototype = {
     return this;
   }
 };
+
+function Version(aMajor, aMinor, aRelease, aBuild, aPlus) 
+{ 
+  this.major    = aMajor    || 0;
+  this.minor    = aMinor    || 0;
+  this.release  = aRelease  || 0;
+  this.build    = aBuild    || 0;
+  this.plus     = aPlus     || 0;
+}
+
+Version.prototype = {
+  toString: function Version_toString() 
+  {
+    return this.major + "." + this.minor + "." + this.subminor + "." + this.release + (this.plus ? "+" : "");
+  },
+  
+  compare: function (aVersion)
+  {
+    var fields = ["major", "minor", "release", "build", "plus"];
+    
+    for (var i = 0; i < fields.length; ++i) {
+      var field = fields[i];
+      if (aVersion[field] > this[field])
+        return -1;
+      else if (aVersion[field] < this[field])
+        return 1;
+    }
+    return 0;
+  }
+}
 
 function nsVersionChecker()
 {
@@ -717,28 +815,25 @@ nsVersionChecker.prototype = {
   {
     var a = this._decomposeVersion(aVersionA);
     var b = this._decomposeVersion(aVersionB);
-    return a - b;
+    
+    return a.compare(b);
   },
   
-  // Version strings get translated into a "score" that indicates how new
-  // the product is. 
-  // 
-  // a.b.c+ -> a*1000 + b*100 + c*10 + 1*[+]
-  // i.e 0.6.1+ = 6 * 100 + 1 * 10 = 611. 
   _decomposeVersion: function nsVersionChecker__decomposeVersion (aVersion)
   {
-    var result = 0;
+    var plus = 0;
     if (aVersion.charAt(aVersion.length-1) == "+") {
       aVersion = aVersion.substr(0, aVersion.length-1);
-      result += 1;
+      plus = 1;
     }
-    
+
     var parts = aVersion.split(".");
-    result += this._getValidInt(parts[0]) * 1000;
-    result += this._getValidInt(parts[1]) * 100;
-    result += this._getValidInt(parts[2]) * 10;
     
-    return result;
+    return new Version(this._getValidInt(parts[0]),
+                       this._getValidInt(parts[1]),
+                       this._getValidInt(parts[2]),
+                       this._getValidInt(parts[3]),
+                       plus);
   },
   
   _getValidInt: function nsVersionChecker__getValidInt (aPartString)

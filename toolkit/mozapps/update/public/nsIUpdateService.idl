@@ -50,9 +50,10 @@ interface nsIUpdateItem : nsISupports
   readonly attribute string   maxAppVersion;
   readonly attribute wstring  name;
   readonly attribute long     row;
-  readonly attribute wstring  updateURL;
+  readonly attribute wstring  xpiURL;
   readonly attribute wstring  iconURL;
   readonly attribute wstring  updateRDF;
+  readonly attribute wstring  updateService;
 
   const unsigned short TYPE_ANY         = 0x01;
   const unsigned short TYPE_APP         = 0x02;
@@ -67,7 +68,8 @@ interface nsIUpdateItem : nsISupports
   void init(in string aID, in string aVersion, in string aMinAppVersion, 
             in string aMaxAppVersion, in wstring aName, 
             in long aRow, in wstring aUpdateURL, in wstring aIconURL, 
-            in wstring aUpdateRDF, in long aType);
+            in wstring aUpdateRDF, in wstring aUpdateService,
+            in long aType);
 
   readonly attribute wstring objectSource;
 };

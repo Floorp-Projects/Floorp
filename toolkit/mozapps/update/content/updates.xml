@@ -24,6 +24,8 @@
         var os = Components.classes["@mozilla.org/observer-service;1"]
                            .getService(Components.interfaces.nsIObserverService);
         os.removeObserver(this, "Update:Ended");       
+        os.removeObserver(this, "Update:Extension:Item-Ended");       
+        os.removeObserver(this, "Update:App:Ended");       
       ]]>  
       </destructor>
       
@@ -33,6 +35,8 @@
           var os = Components.classes["@mozilla.org/observer-service;1"]
                              .getService(Components.interfaces.nsIObserverService);
           os.addObserver(this, "Update:Ended", false);
+          os.addObserver(this, "Update:Extension:Item-Ended", false);
+          os.addObserver(this, "Update:App:Ended", false);
           
           this.refreshData();
         ]]>
@@ -45,8 +49,12 @@
         <parameter name="aData"/>
         <body>
         <![CDATA[
-          if (aTopic == "Update:Ended")
+          switch (aTopic) {
+          case "Update:Extension:Item-Ended":
+          case "Update:App:Ended":
+          case "Update:Ended":
             this.refreshData();
+          }
         ]]>
         </body>
       </method>
