@@ -4,6 +4,7 @@ netwerk/base/public/Makefile
 netwerk/base/src/Makefile
 netwerk/build/Makefile
 netwerk/dns/Makefile
+netwerk/dns/daemon/Makefile
 netwerk/dns/public/Makefile
 netwerk/dns/src/Makefile
 netwerk/protocol/Makefile
