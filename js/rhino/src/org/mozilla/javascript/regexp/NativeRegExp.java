@@ -1418,7 +1418,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
         num = grState.state.parenCount;
         kidMatch = matchRENodes(grState.state, grState.kid, grState.next, index);
         if (kidMatch == -1) {
-            match = matchRENodes(grState.state, grState.next, null, index);
+            match = matchRENodes(grState.state, grState.next, grState.stop, index);
             if (match != -1) {
                 grState.state.parenCount = num;
                 if (previousKid != -1)
@@ -1437,10 +1437,10 @@ public class NativeRegExp extends ScriptableObject implements Function {
             if ((grState.maxKid == 0) || (++grState.kidCount < grState.maxKid)) {
                 match = greedyRecurse(grState, kidMatch, index);
                 if (match != -1) return match;
-                --grState.kidCount;
+                if (grState.maxKid != 0) --grState.kidCount;
             }
             grState.state.parenCount = num;
-            match = matchRENodes(grState.state, grState.next, null, kidMatch);
+            match = matchRENodes(grState.state, grState.next, grState.stop, kidMatch);
             if (match != -1) {
                 matchRENodes(grState.state, grState.kid, grState.next, index);
                 return kidMatch;
@@ -1456,9 +1456,17 @@ public class NativeRegExp extends ScriptableObject implements Function {
         grState.state = state;
         grState.kid = (RENode)ren.kid;
         grState.next = ren.next;
-        grState.stop = stop;
-        grState.kidCount = kidCount;
         grState.maxKid = (ren.op == REOP_QUANT) ? ren.max : 0;
+        /*
+         * We try to match the sub-tree to completion first, and if that
+         * doesn't work, match only up to the given end of the sub-tree.
+         */
+        grState.stop = null;
+        grState.kidCount = kidCount;
+        int match = greedyRecurse(grState, index, previousKid);
+        if (match != -1 || stop == null) return match;
+        grState.kidCount = kidCount;
+        grState.stop = stop;
         return greedyRecurse(grState, index, previousKid);
     }
 
@@ -1471,12 +1479,9 @@ public class NativeRegExp extends ScriptableObject implements Function {
         match = matchRENodes(state, ren.next, null, index);
         if (match != -1) return index;
         kidMatch = matchRENodes(state, (RENode)ren.kid, ren.next, index);
-        if (kidMatch == -1)
-            return -1;
-        else {
-            if (kidMatch == index) return kidMatch;    /* no point pursuing an empty match forever */
-            return matchNonGreedyKid(state, ren, kidCount, maxKid, kidMatch);
-        }
+        if (kidMatch == -1) return -1;
+        if (kidMatch == index) return kidMatch;    /* no point pursuing an empty match forever */
+        return matchNonGreedyKid(state, ren, kidCount, maxKid, kidMatch);
     }
 
     int matchRENodes(MatchState state, RENode ren, RENode stop, int index) {
@@ -1521,14 +1526,17 @@ public class NativeRegExp extends ScriptableObject implements Function {
                     if ((ren.flags & RENode.MINIMAL) == 0) {
                         int kidMatch = matchGreedyKid(state, ren, stop, num,
                                                       index, lastKid);
-                        if (kidMatch != -1)
+                        if (kidMatch == -1)
+                            index = matchRENodes(state, (RENode)ren.kid,
+                                                 ren.next, index);
+                        else 
                             index = kidMatch;
                     }        
                     else {
                         index = matchNonGreedyKid(state, ren, num,
                                                   ren.max, index);
-                        if (index == -1) return -1;
                     }				
+                    if (index == -1) return -1;
                 }
                     break;
                 case REOP_PLUS: {
@@ -1537,9 +1545,12 @@ public class NativeRegExp extends ScriptableObject implements Function {
                     if (kidMatch == -1)
                         return -1;
                     if ((ren.flags & RENode.MINIMAL) == 0) {
-                        index = matchGreedyKid(state, ren, stop, 1, 
-                                               kidMatch, index);
-                        if (index == -1)
+                        kidMatch = matchGreedyKid(state, ren, stop, 1, 
+                                                  kidMatch, index);
+                        if (kidMatch == -1)
+                            index = matchRENodes(state,(RENode)ren.kid,
+                                                 ren.next, index);
+                        else
                             index = kidMatch;
                     }
                     else
