@@ -428,8 +428,14 @@ nsBaseIBFrame::DeleteFrame(nsIPresContext& aPresContext)
 NS_IMETHODIMP
 nsBaseIBFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
+  NS_PRECONDITION(nsnull != aInstancePtr, "null ptr");
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
+  }
+  if (aIID.Equals(kBlockFrameCID)) {
+    nsBaseIBFrame* ib = this;
+    *aInstancePtr = (void*) ib;
+    return NS_OK;
   }
   return nsBaseIBFrameSuper::QueryInterface(aIID, aInstancePtr);
 }
@@ -574,6 +580,9 @@ nsBaseIBFrame::FirstChild(nsIAtom* aListName, nsIFrame*& aFirstChild) const
 }
 
 //////////////////////////////////////////////////////////////////////
+// Frame structure methods
+
+//////////////////////////////////////////////////////////////////////
 // Reflow methods
 
 #if 0
@@ -704,14 +713,8 @@ nsBaseIBFrame::Reflow(nsIPresContext&          aPresContext,
     }
   }
   nsBlockReflowState state(aPresContext, aReflowState, aMetrics, lineLayout);
-  if (NS_BODY_THE_BODY & mFlags) {
-    // Because we use padding to provide some empty space around the
-    // outside of the html body, we need to disable margin application
-    // at the top and bottom.
-
-    // XXX revisit this when the HTML element is no longer the root of
-    // the frame tree
-    state.mIsMarginRoot = PR_FALSE;
+  if (NS_BLOCK_MARGIN_ROOT & mFlags) {
+    state.mIsMarginRoot = PR_TRUE;
   }
   if (lineLayout == &ll) {
     lineLayout->Init(&state);
@@ -830,7 +833,7 @@ nsBaseIBFrame::ComputeFinalSize(nsBlockReflowState& aState,
     // There are two options here. We either shrink wrap around our
     // contents or we fluff out to the maximum available width. Note:
     // We always shrink wrap when given an unconstrained width.
-    if ((0 == (NS_BODY_SHRINK_WRAP & mFlags)) &&
+    if ((0 == (NS_BLOCK_SHRINK_WRAP & mFlags)) &&
         !aState.mUnconstrainedWidth &&
         !compact) {
       // Fluff out to the max width if we aren't already that wide
@@ -3668,7 +3671,7 @@ nsBlockReflowState::AddFloater(nsPlaceholderFrame* aPlaceholder,
   nsHTMLReflowState reflowState(mPresContext, floater, *this, kidAvailSize);
   reflowState.lineLayout = nsnull;
   if ((nsnull == reflowCommand) || (floater != mNextRCFrame)) {
-    // Stub out reflowCommand and repair reasin in the reflowState
+    // Stub out reflowCommand and repair reason in the reflowState
     // when incremental reflow doesn't apply to the floater.
     reflowState.reflowCommand = nsnull;
     reflowState.reason = ((reason == eReflowReason_Initial) || aInitialReflow)

@@ -1157,7 +1157,7 @@ HTMLStyleSheetImpl::ConstructTableFrame(nsIPresContext*  aPresContext,
       case NS_STYLE_DISPLAY_TABLE_CAPTION:
         // Have we already created a caption? If so, ignore this caption
         if (nsnull == captionFrame) {
-          NS_NewAreaFrame(captionFrame, NS_BODY_NO_AUTO_MARGINS);
+          NS_NewAreaFrame(captionFrame, 0);
           captionFrame->Init(*aPresContext, childContent, aNewFrame,
                              aNewFrame, childStyleContext);
           // Process the caption's child content and set the initial child list
@@ -1324,7 +1324,7 @@ HTMLStyleSheetImpl::ConstructTableCellFrame(nsIPresContext*  aPresContext,
     // Create an area frame that will format the cell's content
     nsIFrame*   cellBodyFrame;
 
-    rv = NS_NewAreaFrame(cellBodyFrame, NS_BODY_NO_AUTO_MARGINS);
+    rv = NS_NewAreaFrame(cellBodyFrame, 0);
     if (NS_FAILED(rv)) {
       aNewFrame->DeleteFrame(*aPresContext);
       aNewFrame = nsnull;
@@ -1475,7 +1475,7 @@ HTMLStyleSheetImpl::ConstructDocElementFrame(nsIPresContext*  aPresContext,
 
     // XXX Until we clean up how painting damage is handled, we need to use the
     // flag that says that this is the body...
-    NS_NewAreaFrame(areaFrame, NS_BODY_THE_BODY);
+    NS_NewAreaFrame(areaFrame, NS_BLOCK_DOCUMENT_ROOT|NS_BLOCK_MARGIN_ROOT);
     nsIFrame* parentFrame = scrollFrame ? scrollFrame : aRootFrame;
     areaFrame->Init(*aPresContext, aDocElement, parentFrame, parentFrame,
                     styleContext);
@@ -1794,7 +1794,7 @@ HTMLStyleSheetImpl::ConstructFrameByDisplayType(nsIPresContext*       aPresConte
 
     // Create an area container for the frame
     nsIFrame* scrolledFrame;
-    NS_NewAreaFrame(scrolledFrame, NS_BODY_SHRINK_WRAP);
+    NS_NewAreaFrame(scrolledFrame, NS_BLOCK_SHRINK_WRAP);
 
     // Initialize the frame and force it to have a view
     scrolledFrame->Init(*aPresContext, aContent, scrollFrame, scrollFrame,
@@ -1839,7 +1839,7 @@ HTMLStyleSheetImpl::ConstructFrameByDisplayType(nsIPresContext*       aPresConte
     isAbsolutelyPositioned = PR_TRUE;
 
     // Create an area frame
-    NS_NewAreaFrame(aNewFrame, NS_BODY_SHRINK_WRAP);
+    NS_NewAreaFrame(aNewFrame, NS_BLOCK_SHRINK_WRAP);
     aNewFrame->Init(*aPresContext, aContent, aAbsoluteItems.containingBlock,
                     aParentFrame, aStyleContext);
 
@@ -1867,7 +1867,7 @@ HTMLStyleSheetImpl::ConstructFrameByDisplayType(nsIPresContext*       aPresConte
               (NS_STYLE_DISPLAY_LIST_ITEM == aDisplay->mDisplay))) {
 
     // Create an area frame
-    NS_NewAreaFrame(aNewFrame, NS_BODY_SHRINK_WRAP);
+    NS_NewAreaFrame(aNewFrame, NS_BLOCK_SHRINK_WRAP);
 
     // Initialize the frame
     aNewFrame->Init(*aPresContext, aContent, aParentFrame, aParentFrame,
@@ -1980,7 +1980,7 @@ HTMLStyleSheetImpl::ConstructFrameByDisplayType(nsIPresContext*       aPresConte
   
     case NS_STYLE_DISPLAY_TABLE_CAPTION:
       // XXX We should check for being inside of a table row frame...
-      rv = NS_NewAreaFrame(aNewFrame, NS_BODY_NO_AUTO_MARGINS);
+      rv = NS_NewAreaFrame(aNewFrame, 0);
       processChildren = PR_TRUE;
       break;
   
