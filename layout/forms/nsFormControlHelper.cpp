@@ -920,7 +920,9 @@ nsFormControlHelper::PaintCircularBackground(nsIPresContext& aPresContext,
   aRenderingContext.FillArc(outside, 180, 360);
 }
 
-
+//XXX: TODO Remove this. It is no longer needed since circular borders
+//are painted by the standard border code by setting a border radius
+//to 1/2 the width of the border
 void
 nsFormControlHelper::PaintCircularBorder(nsIPresContext& aPresContext,
                          nsIRenderingContext& aRenderingContext,
@@ -998,7 +1000,6 @@ nsFormControlHelper::PaintCircularBorder(nsIPresContext& aPresContext,
     outside.Deflate(onePixel, onePixel);
     outside.Deflate(onePixel, onePixel);
   } else {
-    nsRect outside;
     nsFormControlHelper::GetCircularRect(aWidth, aHeight, outside);
     
     aRenderingContext.SetColor(NS_RGB(128,128,128));
