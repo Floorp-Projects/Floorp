@@ -44,13 +44,13 @@
  * this release on NSS. To determine the version numbers of the builtin
  * module you are using, use the appropriate PKCS #11 calls.
  *
- * These version number details changes to the PKCS #11 interface. They map
+ * These version numbers detail changes to the PKCS #11 interface. They map
  * to the PKCS #11 spec versions.
  */
 #define NSS_BUILTINS_CRYPTOKI_VERSION_MAJOR 2
 #define NSS_BUILTINS_CRYPTOKI_VERSION_MINOR 1
 
-/* These are the  correct verion numbers that details the changes 
+/* These version numbers detail the changes 
  * to the list of trusted certificates.
  *
  * The NSS_BUILTINS_LIBRARY_VERSION_MINOR macro needs to be bumped
@@ -73,15 +73,15 @@
  * whether we may use its full range (0-255) or only 0-99 because
  * of the comment in the CK_VERSION type definition.
  */
-#define NSS_BUILTINS_LIBRARY_VERSION "1.50"
 #define NSS_BUILTINS_LIBRARY_VERSION_MAJOR 1
-#define NSS_BUILTINS_LIBRARY_VERSION_MINOR 50
+#define NSS_BUILTINS_LIBRARY_VERSION_MINOR 51
+#define NSS_BUILTINS_LIBRARY_VERSION "1.51"
 
-/* These verion numbers that details the semantic changes to the ckfw engine. */
+/* These version numbers detail the semantic changes to the ckfw engine. */
 #define NSS_BUILTINS_HARDWARE_VERSION_MAJOR 1
 #define NSS_BUILTINS_HARDWARE_VERSION_MINOR 0
 
-/* These verion numbers that details the semantic changes to ckbi itself 
+/* These version numbers detail the semantic changes to ckbi itself 
  * (new PKCS #11 objects), etc. */
 #define NSS_BUILTINS_FIRMWARE_VERSION_MAJOR 1
 #define NSS_BUILTINS_FIRMWARE_VERSION_MINOR 0

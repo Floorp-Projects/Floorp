@@ -10,8 +10,7 @@ You need to use the addbuiltin command-line tool to add a root CA certificate
 to the nssckbi module. In the procedure described below, we assume that the
 new root CA certificate is distributed in DER format in the file newroot.der.
 
-1. Build addbuiltin by doing gmake in mozilla/security/nss/cmd/addbuiltin.
-(addbuiltin is not built by default.)
+1. (deleted, addbuiltin is now built as part of NSS).
 
 2. Add the directory where the addbuiltin executable resides to your PATH
 environment variable. Then, add the directory where the NSPR and NSS shared
