@@ -228,3 +228,8 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
   {
     list-style-image      : url("chrome://global/skin/print-hover-active.gif");
   }
+
+#navigator-throbber
+  {
+    -moz-user-focus       : ignore !important;
+  }
