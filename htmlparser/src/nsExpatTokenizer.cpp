@@ -205,7 +205,7 @@ void nsExpatTokenizer::SetErrorContextInfo(nsParserError* aError, PRUint32 aByte
     
     /* At this point, the substring starting at (startIndex + 1) and ending at (endIndex - 1),
        is the line on which the error occurred. Copy that substring into the error structure. */
-    aError->sourceLine.Append((const PRUnichar* )&aSourceBuffer[startIndex + (1 * sizeof(XML_Char))], (endIndex - 1) - startIndex);
+    aError->sourceLine.Append((const PRUnichar* )&aSourceBuffer[(startIndex + 1) * sizeof(XML_Char)], (endIndex - 1) - startIndex);
   }
 }
 
