@@ -252,7 +252,7 @@ protected:
    nsString                   mName;
    nsString                   mTitle;
    nsVoidArray                mChildren;
-   nsVoidArray                mRefreshURIList;
+   nsCOMPtr<nsISupportsArray> mRefreshURIList;
    nsDSURIContentListener*    mContentListener;
    nsDSWebProgressListener*   mWebProgressListener;
    nsDocShellInitInfo*        mInitInfo;
