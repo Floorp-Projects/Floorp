@@ -142,7 +142,7 @@
 <!ENTITY newtodo.startdate.label "Data de In&#xED;cio">
 <!ENTITY newtodo.priority.label "Prioridade">
 <!ENTITY newtodo.percentcomplete.label "&#37; completo">
-<!ENTITY newtodo.categories.label "Categorias">
+<!ENTITY newtodo.categories.label "Categoria">
 <!ENTITY newtodo.starttime.warning "Sua data de in&#xED;cio ocorre ap&#xF4;s a sua data prevista para t&#xE9;rmino.">
 <!ENTITY newtodo.cancelled.label "Cancelado">
 <!ENTITY newtodo.status.label "Status">
