@@ -220,6 +220,7 @@ nsWebShellWindow::nsWebShellWindow()
   mContentShells = nsnull;
   mChromeMask = NS_CHROME_ALL_CHROME;
   mIntrinsicallySized = PR_FALSE;
+  mCreatedVisible = PR_TRUE;
 }
 
 
@@ -310,6 +311,7 @@ nsWebShellWindow::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 nsresult nsWebShellWindow::Initialize(nsIWebShellWindow* aParent,
                                       nsIAppShell* aShell, nsIURI* aUrl, 
+                                      PRBool aCreatedVisible,
                                       nsIStreamObserver* anObserver,
                                       nsIXULWindowCallbacks *aCallbacks,
                                       PRInt32 aInitialWidth, PRInt32 aInitialHeight,
@@ -318,9 +320,11 @@ nsresult nsWebShellWindow::Initialize(nsIWebShellWindow* aParent,
   nsresult rv;
 
   nsIWidget *parentWidget;
+
+  mCreatedVisible = aCreatedVisible;
   
   // XXX: need to get the default window size from prefs...
-	// Doesn't come from prefs... will come from CSS/XUL/RDF
+  // Doesn't come from prefs... will come from CSS/XUL/RDF
   nsRect r(0, 0, aInitialWidth, aInitialHeight);
   
   // Create top level window
@@ -1247,9 +1251,9 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
 
   window->SetIntrinsicallySized(PR_TRUE);
   rv = window->Initialize((nsIWebShellWindow *) nsnull, nsnull, nsnull,
-                          nsnull, nsnull,
+                          PR_TRUE, nsnull, nsnull,
                           1, 1, widgetInitData);
-  
+
   if (NS_FAILED(rv)) 
     return rv;
 
@@ -1816,9 +1820,9 @@ nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
   ShowAppropriateChrome();
   LoadContentAreas();
   
-  // Always show the window at this point.
-  mWindow->Show(PR_TRUE);
-  mWebShell->Show();
+  // Here's where we service the "show" request initially given in Initialize()
+  if (mCreatedVisible)
+    Show(PR_TRUE);
 
   return NS_OK;
 }
@@ -2538,7 +2542,7 @@ NS_IMETHODIMP nsWebShellWindow::Init(nsIAppShell* aAppShell,
    nsWidgetInitData widgetInitData;
    widgetInitData.mBorderStyle = eBorderStyle_window;
 
-   rv = Initialize(nsnull, aAppShell, urlObj,
+   rv = Initialize(nsnull, aAppShell, urlObj, PR_TRUE,
        nsnull, nsnull, aBounds.width, aBounds.height, widgetInitData);
    mChromeMask = aChromeMask;
    if (NS_SUCCEEDED(rv))
@@ -2631,7 +2635,7 @@ NS_IMETHODIMP nsWebShellWindow::SetTitle(const PRUnichar* aTitle)
   if (webshellElement )
   {
   	webshellElement->GetAttribute("titlemodifier", windowTitleModifier );
-  	webshellElement->GetAttribute("titleseperator", windowSeparator );
+  	webshellElement->GetAttribute("titleseparator", windowSeparator );
   }
    nsString title( aTitle );
    
