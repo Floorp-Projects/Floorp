@@ -853,6 +853,8 @@ void nsViewManager :: AddRectToDirtyRegion(nsRect &aRect)
 
     if (NS_OK != rv)
       return;
+    else
+      mDirtyRegion->Init();
   }
 
   nsRect  trect = aRect;
