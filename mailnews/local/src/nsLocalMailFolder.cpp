@@ -1036,7 +1036,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetPath(nsIFileSpec ** aPathName)
   	if (! mPath)
   		return NS_ERROR_OUT_OF_MEMORY;
   
-    nsresult rv = nsLocalURI2Path(kMailboxRootURI, mURI, *mPath);
+    rv = nsLocalURI2Path(kMailboxRootURI, mURI, *mPath);
     if (NS_FAILED(rv)) return rv;
   }
   rv = NS_NewFileSpecWithSpec(*mPath, aPathName);
