@@ -35,7 +35,6 @@
 #include "nsListBox.h"
 #include "nsComboBox.h"
 #include "nsLookAndFeel.h"
-#include "nsDialog.h"
 #include "nsLabel.h"
 #include "nsMenuBar.h"
 #include "nsMenu.h"
@@ -71,7 +70,6 @@ static NS_DEFINE_IID(kCTooltipWidget, NS_TOOLTIPWIDGET_CID);
 static NS_DEFINE_IID(kCAppShell,      NS_APPSHELL_CID);
 static NS_DEFINE_IID(kCToolkit,       NS_TOOLKIT_CID);
 static NS_DEFINE_IID(kCLookAndFeel,   NS_LOOKANDFEEL_CID);
-static NS_DEFINE_IID(kCDialog,        NS_DIALOG_CID);
 static NS_DEFINE_IID(kCLabel,         NS_LABEL_CID);
 static NS_DEFINE_IID(kCMenuBar,       NS_MENUBAR_CID);
 static NS_DEFINE_IID(kCMenu,          NS_MENU_CID);
@@ -218,9 +216,6 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     }
     else if (mClassID.Equals(kCLookAndFeel)) {
         inst = (nsISupports*)(nsIWidget *)new nsLookAndFeel();
-    }
-    else if (mClassID.Equals(kCDialog)) {
-        inst = (nsISupports*)(nsIWidget *)new nsDialog();
     }
     else if (mClassID.Equals(kCLabel)) {
         inst = (nsISupports*)(nsIWidget *)new nsLabel();
