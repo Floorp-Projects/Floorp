@@ -30,7 +30,6 @@ JSCOMPONENTS = \
     .\nsHelperAppDlg.js \
     $(NULL)
 
-
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(JSCOMPONENTS)
