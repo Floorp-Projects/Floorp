@@ -34,6 +34,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIDOMLocationIID, NS_IDOMLOCATION_IID);
+static NS_DEFINE_IID(kIDOMNSLocationIID, NS_IDOMNSLOCATION_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 
 LocationImpl::LocationImpl(nsIWebShell *aWebShell)
@@ -65,6 +66,11 @@ LocationImpl::QueryInterface(const nsIID& aIID,
   }
   if (aIID.Equals(kIDOMLocationIID)) {
     *aInstancePtrResult = (void*) ((nsIDOMLocation*)this);
+    AddRef();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIDOMNSLocationIID)) {
+    *aInstancePtrResult = (void*) ((nsIDOMNSLocation*)this);
     AddRef();
     return NS_OK;
   }
