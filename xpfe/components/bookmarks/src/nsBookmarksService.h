@@ -49,13 +49,15 @@
 #include "nsIRDFNode.h"
 #include "nsIBookmarksService.h"
 #include "nsString.h"
-#include "nsIFileSpec.h"
+#include "nsIFile.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
+#include "nsCOMArray.h"
 #include "nsIIOService.h"
 #include "nsICacheService.h"
 #include "nsICacheSession.h"
-#include "nsILocalFile.h"
+
+class nsIOutputStream;
 
 #ifdef DEBUG
 #ifdef XP_MAC
@@ -113,16 +115,16 @@ protected:
 
     nsresult GetBookmarkToPing(nsIRDFResource **theBookmark);
 
-    nsresult GetBookmarksFile(nsFileSpec* aResult);
+    nsresult GetBookmarksFile(nsIFile* *aResult);
 
-    nsresult WriteBookmarks(nsFileSpec *bookmarksFile, nsIRDFDataSource *ds,
+    nsresult WriteBookmarks(nsIFile* bookmarksFile, nsIRDFDataSource *ds,
                             nsIRDFResource *root);
 
     nsresult WriteBookmarksContainer(nsIRDFDataSource *ds,
-                                     nsOutputFileStream& strm,
+                                     nsIOutputStream* strm,
                                      nsIRDFResource *container,
                                      PRInt32 level,
-                                     nsISupportsArray *parentArray);
+                                     nsCOMArray<nsIRDFResource>& parentArray);
 
     nsresult SerializeBookmarks(nsIURI* aURI);
 
@@ -133,7 +135,7 @@ protected:
     nsresult UpdateBookmarkLastModifiedDate(nsIRDFResource *aSource);
 
     nsresult WriteBookmarkProperties(nsIRDFDataSource *ds,
-                                     nsOutputFileStream& strm,
+                                     nsIOutputStream* strm,
                                      nsIRDFResource *node,
                                      nsIRDFResource *property,
                                      const char *htmlAttrib,
