@@ -50,7 +50,7 @@ public:
   }
 
   // nsISupports
-  NS_DECL_ISUPPORTS;
+  NS_DECL_ISUPPORTS
 
   // nsIDocumentObserver
   NS_IMETHOD SetTitle(const nsString& aTitle);
