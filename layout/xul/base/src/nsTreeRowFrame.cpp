@@ -59,7 +59,7 @@ NS_NewTreeRowFrame (nsIFrame** aNewFrame)
 
 // Constructor
 nsTreeRowFrame::nsTreeRowFrame()
-:nsTableRowFrame(), mIsHeader(PR_FALSE)
+:nsTableRowFrame(), mIsHeader(PR_FALSE),mGeneration(0)
 { }
 
 // Destructor
@@ -122,7 +122,16 @@ nsTreeRowFrame::Init(nsIPresContext&  aPresContext,
         GetView(&view);
         view->SetContentTransparency(PR_TRUE);
 			}
-			else mIsHeader = PR_FALSE;
+			else 
+      {
+        mIsHeader = PR_FALSE;
+        
+        // Determine the row's generation.
+        nsTableFrame* tableFrame;
+        nsTableFrame::GetTableFrame(aParent, tableFrame);
+        nsTreeFrame* treeFrame = (nsTreeFrame*)tableFrame;
+        mGeneration = treeFrame->GetCurrentGeneration();
+      }
 		}
   }
 
@@ -173,4 +182,34 @@ nsTreeRowFrame::DraggingHeader()
   }
 
   return PR_FALSE;
+}
+
+NS_IMETHODIMP
+nsTreeRowFrame::Reflow(nsIPresContext&          aPresContext,
+							         nsHTMLReflowMetrics&     aDesiredSize,
+							         const nsHTMLReflowState& aReflowState,
+							         nsReflowStatus&          aStatus)
+{
+
+  if (aReflowState.reason != eReflowReason_Incremental) {
+    // Determine the row's generation.
+    nsTableFrame* tableFrame;
+    nsTableFrame::GetTableFrame(this, tableFrame);
+    nsTreeFrame* treeFrame = (nsTreeFrame*)tableFrame;
+    PRInt32 currGeneration = treeFrame->GetCurrentGeneration();
+    if (currGeneration > mGeneration) {
+      nsRect rect;
+      GetRect(rect);
+      aDesiredSize.width = rect.width;
+      aDesiredSize.height = rect.height;
+      aStatus = NS_FRAME_COMPLETE;
+      return NS_OK;
+    }
+  }
+
+ /* static int i = 0;
+  i++;
+  printf("Full row reflow! Number %d\n", i);
+*/
+  return nsTableRowFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 }

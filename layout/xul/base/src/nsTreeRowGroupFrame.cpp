@@ -19,6 +19,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsXULAtoms.h"
+#include "nsHTMLAtoms.h"
 #include "nsINameSpaceManager.h"
 #include "nsIFrameReflow.h"
 #include "nsTreeFrame.h"
@@ -107,7 +108,7 @@ nsTreeRowGroupFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   return nsTableRowGroupFrame::QueryInterface(aIID, aInstancePtr);   
 }
 
-void nsTreeRowGroupFrame::DestroyRows(nsIPresContext& aPresContext, PRInt32& rowsToLose) 
+void nsTreeRowGroupFrame::DestroyRows(nsTableFrame* aTableFrame, nsIPresContext& aPresContext, PRInt32& rowsToLose) 
 {
   // We need to destroy frames until our row count has been properly
   // reduced.  A reflow will then pick up and create the new frames.
@@ -122,7 +123,7 @@ void nsTreeRowGroupFrame::DestroyRows(nsIPresContext& aPresContext, PRInt32& row
       if ((rowGroupCount - rowsToLose) > 0) {
         // The row group will destroy as many rows as it can, and it will
         // modify rowsToLose.
-        ((nsTreeRowGroupFrame*)childFrame)->DestroyRows(aPresContext, rowsToLose);
+        ((nsTreeRowGroupFrame*)childFrame)->DestroyRows(aTableFrame, aPresContext, rowsToLose);
         return;
       }
       else rowsToLose -= rowGroupCount;
@@ -131,6 +132,10 @@ void nsTreeRowGroupFrame::DestroyRows(nsIPresContext& aPresContext, PRInt32& row
     {
       // Lost a row.
       rowsToLose--;
+
+      // Remove this row from our cell map.
+      nsTableRowFrame* rowFrame = (nsTableRowFrame*)childFrame;
+      aTableFrame->RemoveRowFromMap(rowFrame, rowFrame->GetRowIndex());
     }
     
     nsIFrame* nextFrame;
@@ -141,7 +146,7 @@ void nsTreeRowGroupFrame::DestroyRows(nsIPresContext& aPresContext, PRInt32& row
   }
 }
 
-void nsTreeRowGroupFrame::ReverseDestroyRows(nsIPresContext& aPresContext, PRInt32& rowsToLose) 
+void nsTreeRowGroupFrame::ReverseDestroyRows(nsTableFrame* aTableFrame, nsIPresContext& aPresContext, PRInt32& rowsToLose) 
 {
   // We need to destroy frames until our row count has been properly
   // reduced.  A reflow will then pick up and create the new frames.
@@ -156,7 +161,7 @@ void nsTreeRowGroupFrame::ReverseDestroyRows(nsIPresContext& aPresContext, PRInt
       if ((rowGroupCount - rowsToLose) > 0) {
         // The row group will destroy as many rows as it can, and it will
         // modify rowsToLose.
-        ((nsTreeRowGroupFrame*)childFrame)->ReverseDestroyRows(aPresContext, rowsToLose);
+        ((nsTreeRowGroupFrame*)childFrame)->ReverseDestroyRows(aTableFrame, aPresContext, rowsToLose);
         return;
       }
       else rowsToLose -= rowGroupCount;
@@ -165,6 +170,9 @@ void nsTreeRowGroupFrame::ReverseDestroyRows(nsIPresContext& aPresContext, PRInt
     {
       // Lost a row.
       rowsToLose--;
+      // Remove this row from our cell map.
+      nsTableRowFrame* rowFrame = (nsTableRowFrame*)childFrame;
+      aTableFrame->RemoveRowFromMap(rowFrame, rowFrame->GetRowIndex());
     }
     
     nsIFrame* prevFrame;
@@ -357,8 +365,14 @@ nsTreeRowGroupFrame::FindPreviousRowContent(PRInt32& aDelta, nsIContent* aUpward
     }
   }
 
-  // We didn't find it here. We need to go up to our parent, using ourselves as a hint.
-  FindPreviousRowContent(aDelta, parentContent, nsnull, aResult);
+  nsCOMPtr<nsIAtom> tag;
+  parentContent->GetTag(*getter_AddRefs(tag));
+  if (tag && tag.get() == nsXULAtoms::tree) {
+    // Hopeless. It ain't in there.
+    return;
+  }
+  else // We didn't find it here. We need to go up to our parent, using ourselves as a hint.
+    FindPreviousRowContent(aDelta, parentContent, nsnull, aResult);
 
   // Bail. There's nothing else we can do.
 }
@@ -429,7 +443,7 @@ nsTreeRowGroupFrame::PositionChanged(nsIPresContext& aPresContext, PRInt32 aOldI
     PRInt32 loseRows = delta;
     if (aNewIndex > aOldIndex) {
       // Figure out how many rows we have to lose off the top.
-      DestroyRows(aPresContext, loseRows);
+      DestroyRows(tableFrame, aPresContext, loseRows);
     }
     else {
       // Get our first row content.
@@ -437,7 +451,7 @@ nsTreeRowGroupFrame::PositionChanged(nsIPresContext& aPresContext, PRInt32 aOldI
       GetFirstRowContent(getter_AddRefs(rowContent));
 
       // Figure out how many rows we have to lose off the bottom.
-      ReverseDestroyRows(aPresContext, loseRows);
+      ReverseDestroyRows(tableFrame, aPresContext, loseRows);
     
       // Now that we've lost some rows, we need to create a
       // content chain that provides a hint for moving forward.
@@ -452,16 +466,13 @@ nsTreeRowGroupFrame::PositionChanged(nsIPresContext& aPresContext, PRInt32 aOldI
     // Remove the scrollbar first.
     mFrameConstructor->RemoveMappingsForFrameSubtree(&aPresContext, this);
     mFrames.DestroyFrames(aPresContext);
+    tableFrame->InvalidateCellMap();
     nsCOMPtr<nsIContent> topRowContent;
     FindRowContentAtIndex(aNewIndex, mContent, getter_AddRefs(topRowContent));
     if (topRowContent)
       ConstructContentChain(topRowContent);
   }
-
-  // Invalidate the cell map and column cache.
-  tableFrame->InvalidateCellMap();
-  tableFrame->InvalidateColumnCache();
-    
+  
   mTopFrame = mBottomFrame = nsnull; // Make sure everything is cleared out.
 
   // Force a reflow.
@@ -876,6 +887,9 @@ nsTreeRowGroupFrame::GetFirstFrameForReflow(nsIPresContext& aPresContext)
   }
 
   if (startContent) {
+    nsTableFrame* tableFrame;
+    nsTableFrame::GetTableFrame(this, tableFrame);
+     
     PRBool isAppend = (mLinkupFrame == nsnull);
 
     mFrameConstructor->CreateTreeWidgetContent(&aPresContext, this, nsnull, startContent,
@@ -884,17 +898,46 @@ nsTreeRowGroupFrame::GetFirstFrameForReflow(nsIPresContext& aPresContext)
     // XXX Can be optimized if we detect that we're appending a row.
     // Also the act of appending or inserting a row group is harmless.
 
-    nsTableFrame* tableFrame;
-    nsTableFrame::GetTableFrame(this, tableFrame);
-    nsTreeFrame* treeFrame = (nsTreeFrame*)tableFrame;
-    treeFrame->WillNeedDirtyReflow();
-
     //printf("Created a frame\n");
     mBottomFrame = mTopFrame;
     const nsStyleDisplay *rowDisplay;
     mTopFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)rowDisplay);
     if (NS_STYLE_DISPLAY_TABLE_ROW == rowDisplay->mDisplay) {
-      DidAppendRow((nsTableRowFrame*)mTopFrame);
+      nsCOMPtr<nsIContent> rowContent;
+      mTopFrame->GetContent(getter_AddRefs(rowContent));
+      /*nsCOMPtr<nsIContent> cellContent;
+      rowContent->ChildAt(0, *getter_AddRefs(cellContent));
+      nsString value;
+      cellContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value);
+      char namebuf[150];
+      namebuf[0] = 0;
+      value.ToCString(namebuf, sizeof(namebuf));
+      printf("Created a first row: %s\n", namebuf);
+*/
+      nsCOMPtr<nsIContent> topRowContent;
+      PRInt32 delta = 1;
+      FindPreviousRowContent(delta, rowContent, nsnull, getter_AddRefs(topRowContent));
+      if (!topRowContent) {
+        DidAppendRow((nsTableRowFrame*)mTopFrame);
+      }
+      else {
+        // Retrieve the primary frame.
+        nsCOMPtr<nsIPresShell> shell;
+        aPresContext.GetShell(getter_AddRefs(shell));
+
+        nsIFrame* result = nsnull;
+        shell->GetPrimaryFrameFor(topRowContent, &result);
+        if (!result) {
+          DidAppendRow((nsTableRowFrame*)mTopFrame);
+        }
+        else {
+          // We have a primary frame. Get its row index. We're equal to that + 1.
+          nsTableRowFrame* rowFrame = (nsTableRowFrame*)result;
+          PRInt32 rowIndex = rowFrame->GetRowIndex();
+          rowIndex++;
+          tableFrame->InsertRowIntoMap((nsTableRowFrame*)mTopFrame, rowIndex);
+        }
+      }
     }
     else if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP==rowDisplay->mDisplay && mContentChain) {
       // We have just instantiated a row group, and we have a content chain. This
@@ -904,7 +947,7 @@ nsTreeRowGroupFrame::GetFirstFrameForReflow(nsIPresContext& aPresContext)
     }
 
     SetContentChain(nsnull);
-    //return mTopFrame;
+    return mTopFrame;
   }
   
   return nsnull;
@@ -946,6 +989,9 @@ nsTreeRowGroupFrame::GetNextFrameForReflow(nsIPresContext& aPresContext, nsIFram
       mContent->IndexOf(prevContent, i);
       mContent->ChildCount(childCount);
       if (i+1 < childCount) {
+        nsTableFrame* tableFrame;
+        nsTableFrame::GetTableFrame(this, tableFrame);
+
         // There is a content node that wants a frame.
         nsCOMPtr<nsIContent> nextContent;
         mContent->ChildAt(i+1, *getter_AddRefs(nextContent));
@@ -961,17 +1007,35 @@ nsTreeRowGroupFrame::GetNextFrameForReflow(nsIPresContext& aPresContext, nsIFram
 
         // XXX Can be optimized if we detect that we're appending a row to the end of the tree.
         // Also the act of appending or inserting a row group is harmless.
-
         const nsStyleDisplay *rowDisplay;
         (*aResult)->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)rowDisplay);
         if (NS_STYLE_DISPLAY_TABLE_ROW == rowDisplay->mDisplay) {
-          DidAppendRow((nsTableRowFrame*)(*aResult));
+          
+          nsCOMPtr<nsIContent> topRowContent;
+          PRInt32 delta = 1;
+          FindPreviousRowContent(delta, nextContent, nsnull, getter_AddRefs(topRowContent));
+          if (!topRowContent) {
+            DidAppendRow((nsTableRowFrame*)(*aResult));
+          }
+          else {
+            // Retrieve the primary frame.
+            nsCOMPtr<nsIPresShell> shell;
+            aPresContext.GetShell(getter_AddRefs(shell));
+
+            nsIFrame* result = nsnull;
+            shell->GetPrimaryFrameFor(topRowContent, &result);
+            if (!result) {
+              DidAppendRow((nsTableRowFrame*)(*aResult));
+            }
+            else {
+              // We have a primary frame. Get its row index. We're equal to that + 1.
+              nsTableRowFrame* rowFrame = (nsTableRowFrame*)result;
+              PRInt32 rowIndex = rowFrame->GetRowIndex();
+              rowIndex++;
+              tableFrame->InsertRowIntoMap((nsTableRowFrame*)(*aResult), rowIndex);
+            }
+          }
         }
-        nsTableFrame* tableFrame;
-        nsTableFrame::GetTableFrame(this, tableFrame);
-        nsTreeFrame* treeFrame = (nsTreeFrame*)tableFrame;
-        treeFrame->WillNeedDirtyReflow();
-        *aResult = nsnull;
       }
     }
 
@@ -1021,6 +1085,7 @@ PRBool nsTreeRowGroupFrame::ContinueReflow(nsIPresContext& aPresContext, nscoord
         mFrameConstructor->RemoveMappingsForFrameSubtree(&aPresContext, currFrame);
         mFrames.DestroyFrame(aPresContext, currFrame);
         currFrame = nextFrame;
+        //printf("Nuked one off the end.\n");
       }
     }
     return PR_FALSE;

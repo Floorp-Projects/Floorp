@@ -66,7 +66,8 @@ public:
                         nsDidReflowStatus aStatus);
 
   void WillNeedDirtyReflow() { mNeedsDirtyReflow = PR_TRUE; };
-
+  PRInt32 GetCurrentGeneration() { return mGeneration; };
+  
 protected:
   nsTreeFrame();
   virtual ~nsTreeFrame();
@@ -75,5 +76,7 @@ protected: // Data Members
   PRBool mSlatedForReflow; // If set, don't waste time scheduling excess reflows.
   nsTreeTwistyListener* mTwistyListener;
   PRBool mNeedsDirtyReflow;
+  PRInt32 mGeneration;
+  PRInt32 mMaxGeneration;
 
 }; // class nsTreeFrame
