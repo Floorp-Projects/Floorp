@@ -133,9 +133,21 @@ extern "C" NS_GFX_(PRBool) NS_ColorNameToRGB(const char* aColorName, nscolor* aR
 #define INTENSITY_FACTOR      25
 #define LIGHT_FACTOR          0
 #define LUMINOSITY_FACTOR     75
+
 #define MAX_COLOR             255
 #define COLOR_DARK_THRESHOLD  51
 #define COLOR_LIGHT_THRESHOLD 204
+
+#define COLOR_LITE_BS_FACTOR 45
+#define COLOR_LITE_TS_FACTOR 70
+
+#define COLOR_DARK_BS_FACTOR 30
+#define COLOR_DARK_TS_FACTOR 50
+
+#define LIGHT_GRAY NS_RGB(192, 192, 192)
+#define DARK_GRAY  NS_RGB(128, 128, 128)
+#define WHITE      NS_RGB(255, 255, 255)
+#define BLACK      NS_RGB(0, 0, 0)
  
 extern "C" NS_GFX_(void) NS_Get3DColors(nscolor aResult[2], nscolor aColor)
 {
@@ -151,19 +163,28 @@ extern "C" NS_GFX_(void) NS_Get3DColors(nscolor aResult[2], nscolor aColor)
                     (luminosity * LUMINOSITY_FACTOR)) / 100;
   int f0, f1;
   if (brightness < COLOR_DARK_THRESHOLD) {
-    f0 = 30;
-    f1 = 50;
+    f0 = COLOR_DARK_BS_FACTOR;
+    f1 = COLOR_DARK_TS_FACTOR;
   } else if (brightness > COLOR_LIGHT_THRESHOLD) {
-    f0 = 45;
-    f1 = 50;
+    f0 = COLOR_LITE_BS_FACTOR;
+    f1 = COLOR_LITE_TS_FACTOR;
   } else {
-    f0 = 30 + (brightness * (45 - 30) / MAX_COLOR);
-    f1 = f0;
+    f0 = COLOR_DARK_BS_FACTOR +
+      (brightness *
+       (COLOR_LITE_BS_FACTOR - COLOR_DARK_BS_FACTOR) / MAX_COLOR);
+    f1 = COLOR_DARK_TS_FACTOR +
+      (brightness *
+       (COLOR_LITE_TS_FACTOR - COLOR_DARK_TS_FACTOR) / MAX_COLOR);
   }
+
   int r = rb - (f0 * rb / 100);
   int g = gb - (f0 * gb / 100);
   int b = bb - (f0 * bb / 100);
   aResult[0] = NS_RGB(r, g, b);
+  if ((r == rb) && (g == gb) && (b == bb)) {
+    aResult[0] = (aColor == LIGHT_GRAY) ? WHITE : LIGHT_GRAY;
+  }
+
   r = rb + (f1 * (MAX_COLOR - rb) / 100);
   if (r > 255) r = 255;
   g = gb + (f1 * (MAX_COLOR - gb) / 100);
@@ -171,6 +192,9 @@ extern "C" NS_GFX_(void) NS_Get3DColors(nscolor aResult[2], nscolor aColor)
   b = bb + (f1 * (MAX_COLOR - bb) / 100);
   if (b > 255) b = 255;
   aResult[1] = NS_RGB(r, g, b);
+  if ((r == rb) && (g == gb) && (b == bb)) {
+    aResult[1] = (aColor == DARK_GRAY) ? BLACK : DARK_GRAY;
+  }
 }
 
 extern "C" NS_GFX_(nscolor) NS_BrightenColor(nscolor inColor)
