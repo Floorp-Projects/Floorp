@@ -22,8 +22,8 @@
 DEPTH=..\..\..\..
 include <$(DEPTH)/config/config.mak>
 
-MODULE		= locale
-LIBRARY_NAME	= locale
+MODULE		= nslocale
+LIBRARY_NAME	= nslocale
 MODULE_NAME	= nsLocaleModule
 
 DEFINES=-DWIN32_LEAN_AND_MEAN
@@ -34,20 +34,6 @@ OBJS =						\
 	.\$(OBJDIR)\nsLocaleDLL.obj		\
 	.\$(OBJDIR)\nsIWin32LocaleImpl.obj	\
 	$(NULL)
-
-LINCS= \
-		-I..\
-        -I$(PUBLIC)\locale		\
-        -I$(PUBLIC)\xpcom		\
-        -I$(PUBLIC)\unicharutil		\
-        -I$(PUBLIC)\uconv		\
-        -I$(PUBLIC)\raptor		\
-        $(NULL)
-
-LCFLAGS = \
-        $(LCFLAGS) \
-	$(DEFINES) \
-        $(NULL)
 
 SUB_LIBRARIES	=  $(DIST)\lib\nslocale_s.lib
 
