@@ -341,7 +341,7 @@ nsInstallFile::RegisterInVersionRegistry()
     }
 
     if (vr_name != nsnull)
-        delete vr_name;
+        delete [] vr_name;
         
     if (tempCString != nsnull)
         delete [] tempCString;

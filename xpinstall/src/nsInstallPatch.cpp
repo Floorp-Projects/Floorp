@@ -53,7 +53,7 @@ nsInstallPatch::nsInstallPatch( nsInstall* inInstall,
      
     nsInstallPatch( inInstall, inVRName, inVInfo, inJarLocation, nsString(tempTargetFile), "null", error);
     
-    delete tempTargetFile;
+    delete [] tempTargetFile;
 }
 
 
@@ -344,7 +344,6 @@ nsInstallPatch::HashFilePath(const nsFilePath& aPath)
             // FYI: rv = rv*37 + ch
             rv = ((rv << 5) + (rv << 2) + rv) + ch;
         }
-
         PR_Free(filePath);
     }
     return (void*)rv;
