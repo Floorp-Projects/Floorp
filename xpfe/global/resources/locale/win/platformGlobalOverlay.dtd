@@ -1,13 +1,19 @@
 <!-- win -->
 
 <!ENTITY closeCmd.label						"Close">  
+<!-- LOCALIZATION NOTE closeCmd.key: DONT_TRANSLATE -->  
 <!ENTITY closeCmd.key						"W">  
+<!-- LOCALIZATION NOTE closeCmd.accesskey: DONT_TRANSLATE -->
 <!ENTITY closeCmd.accesskey					"c">
 
 <!ENTITY quitApplicationCmd.label			"Quit"> 
+<!-- LOCALIZATION NOTE quitApplicationCmd.key: DONT_TRANSLATE --> 
 <!ENTITY quitApplicationCmd.key				"Q"> 
+<!-- LOCALIZATION NOTE quitApplicationCmd.accesskey: DONT_TRANSLATE -->
 <!ENTITY quitApplicationCmd.accesskey		"q">
 
 <!ENTITY redoCmd.label						"Redo">  
+<!-- LOCALIZATION NOTE redoCmd.key: DONT_TRANSLATE -->  
 <!ENTITY redoCmd.key						"Y">  
+<!-- LOCALIZATION NOTE redoCmd.accesskey: DONT_TRANSLATE -->
 <!ENTITY redoCmd.accesskey					"r">

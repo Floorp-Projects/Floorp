@@ -1,61 +1,90 @@
 <!-- extracted from globalOverlay.xul -->
 
-<!-- LOCALIZATION NOTE  fileMenu.label: Localize all the menu labels with accesskeys but not commandkeys. e.g.  "File" -> "XXXX(F)" in Japanese -->
 
 <!ENTITY fileMenu.label					"File"> 
+<!-- LOCALIZATION NOTE fileMenu.accesskey: DONT_TRANSLATE -->
 <!ENTITY fileMenu.accesskey				"f">
 <!ENTITY newMenu.label						"New">
+<!-- LOCALIZATION NOTE newMenu.accesskey: DONT_TRANSLATE -->
 <!ENTITY newMenu.accesskey					"e">
 <!ENTITY newBlankPageCmd.label "Edit Blank Page">
+<!-- LOCALIZATION NOTE newBlankPageCmd.accesskey: DONT_TRANSLATE -->
 <!ENTITY newBlankPageCmd.accesskey "b" >
+<!-- LOCALIZATION NOTE newBlankPageCmd.key: DONT_TRANSLATE -->
 <!ENTITY newBlankPageCmd.key "n" >
 <!ENTITY newPageFromTemplateCmd.label "Page Using Template">
+<!-- LOCALIZATION NOTE newPageFromTemplateCmd.accesskey: DONT_TRANSLATE -->
 <!ENTITY newPageFromTemplateCmd.accesskey "t">
 <!ENTITY newPageFromDraftCmd.label "Page Using Draft">
+<!-- LOCALIZATION NOTE newPageFromDraftCmd.accesskey: DONT_TRANSLATE -->
 <!ENTITY newPageFromDraftCmd.accesskey "d">
 <!ENTITY newNavigatorCmd.label				"Navigator Window">
+<!-- LOCALIZATION NOTE newNavigatorCmd.key: DONT_TRANSLATE -->
 <!ENTITY newNavigatorCmd.key				"N">
+<!-- LOCALIZATION NOTE newNavigatorCmd.accesskey: DONT_TRANSLATE -->
 <!ENTITY newNavigatorCmd.accesskey			"n">
 <!ENTITY newMessageCmd.label				"Message">
+<!-- LOCALIZATION NOTE newMessageCmd.key: DONT_TRANSLATE -->
 <!ENTITY newMessageCmd.key					"M">
+<!-- LOCALIZATION NOTE newMessageCmd.accesskey: DONT_TRANSLATE -->
 <!ENTITY newMessageCmd.accesskey			"m">
 <!ENTITY newCardCmd.label					"Address Book Card">
+<!-- LOCALIZATION NOTE newCardCmd.accesskey: DONT_TRANSLATE -->
 <!ENTITY newCardCmd.accesskey				"a">
 
 <!ENTITY pageSetupCmd.label					".Page Setup...">  
 
 <!ENTITY editMenu.label					"Edit"> 
+<!-- LOCALIZATION NOTE editMenu.accesskey: DONT_TRANSLATE --> 
 <!ENTITY editMenu.accesskey				"e"> 
 <!ENTITY undoCmd.label						"Undo">  
+<!-- LOCALIZATION NOTE undoCmd.key: DONT_TRANSLATE -->  
 <!ENTITY undoCmd.key						"Z">  
+<!-- LOCALIZATION NOTE undoCmd.accesskey: DONT_TRANSLATE --> 
 <!ENTITY undoCmd.accesskey					"u"> 
 <!ENTITY cutCmd.label						"Cut">  
+<!-- LOCALIZATION NOTE cutCmd.key: DONT_TRANSLATE -->  
 <!ENTITY cutCmd.key							"X">  
+<!-- LOCALIZATION NOTE cutCmd.accesskey: DONT_TRANSLATE --> 
 <!ENTITY cutCmd.accesskey					"t"> 
 <!ENTITY copyCmd.label						"Copy">  
+<!-- LOCALIZATION NOTE copyCmd.key: DONT_TRANSLATE -->  
 <!ENTITY copyCmd.key						"C">  
+<!-- LOCALIZATION NOTE copyCmd.accesskey: DONT_TRANSLATE --> 
 <!ENTITY copyCmd.accesskey					"c"> 
 <!ENTITY pasteCmd.label						"Paste">  
+<!-- LOCALIZATION NOTE pasteCmd.key: DONT_TRANSLATE -->  
 <!ENTITY pasteCmd.key						"V">  
+<!-- LOCALIZATION NOTE pasteCmd.accesskey: DONT_TRANSLATE --> 
 <!ENTITY pasteCmd.accesskey					"p"> 
 <!ENTITY deleteCmd.label					"Delete">  
+<!-- LOCALIZATION NOTE deleteCmd.key: DONT_TRANSLATE -->  
 <!ENTITY deleteCmd.key						"D">  
+<!-- LOCALIZATION NOTE deleteCmd.accesskey: DONT_TRANSLATE --> 
 <!ENTITY deleteCmd.accesskey				"d"> 
 <!ENTITY selectAllCmd.label					"Select All">  
+<!-- LOCALIZATION NOTE selectAllCmd.key: DONT_TRANSLATE -->  
 <!ENTITY selectAllCmd.key					"A">  
+<!-- LOCALIZATION NOTE selectAllCmd.accesskey: DONT_TRANSLATE --> 
 <!ENTITY selectAllCmd.accesskey				"a"> 
 <!ENTITY preferencesCmd.label				"Preferences...">
+<!-- LOCALIZATION NOTE preferencesCmd.key: DONT_TRANSLATE -->  
 <!ENTITY preferencesCmd.key					"E">  
+<!-- LOCALIZATION NOTE preferencesCmd.accesskey: DONT_TRANSLATE --> 
 <!ENTITY preferencesCmd.accesskey			"f"> 
 
 <!ENTITY viewMenu.label					"View"> 
+<!-- LOCALIZATION NOTE viewMenu.accesskey: DONT_TRANSLATE --> 
 <!ENTITY viewMenu.accesskey				"v"> 
 <!ENTITY viewToolbarsMenu.label				"Toolbars"> 
+<!-- LOCALIZATION NOTE viewToolbarsMenu.accesskey: DONT_TRANSLATE --> 
 <!ENTITY viewToolbarsMenu.accesskey			"t"> 
 <!ENTITY showTaskbarCmd.label					"Show Taskbar">  
+<!-- LOCALIZATION NOTE showTaskbarCmd.accesskey: DONT_TRANSLATE --> 
 <!ENTITY showTaskbarCmd.accesskey				"t"> 
 
 <!ENTITY helpMenu.label					"Help"> 
+<!-- LOCALIZATION NOTE helpMenu.accesskey: DONT_TRANSLATE --> 
 <!ENTITY helpMenu.accesskey				"h"> 
 <!ENTITY helpContentCmd.label				"Help Contents">  
 <!ENTITY referenceLibraryCmd.label			".Reference Library">  
