@@ -37,12 +37,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// XXX We really want to be using little2_encoding_ns.type but we don't
-//     yet define XML_NS in Mozilla.
+/* XXX We really want to be using little2_encoding_ns.type but we don't
+       yet define XML_NS in Mozilla. */
 static
 int MOZ_byte_type(unsigned char p)
 {
-  // little2_encoding.type and big2_encoding.type are equal.
+  /* little2_encoding.type and big2_encoding.type are equal. */
   return p == ':' ? BT_COLON : little2_encoding.type[p];
 }
 
