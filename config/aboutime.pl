@@ -26,4 +26,5 @@ $id = $_;
 close INFILE;
 close OUTFILE;
 
+unlink $ARGV[0];
 rename "$ARGV[0].old", "$ARGV[0]";
