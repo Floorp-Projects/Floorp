@@ -57,13 +57,10 @@ $ENV{QUERY_STRING}="tree=$tree&static=1";
 system './showbuilds.cgi';
 
 # Generate build warnings (only for a successful shrike clobber build)
-if ($tbx{build} =~ /shrike.*\b(Clobber|Clbr)\b/ and
-    $tbx{status} eq 'success') {
-  system "ls -l $tree/$logfile > testOut";
-  sleep 3;
-  system "ls -l $tree/$logfile >> testOut";
-  system './warnings.pl';
-}
+#if ($tbx{build} =~ /shrike.*\b(Clobber|Clbr)\b/ and
+#    $tbx{status} eq 'success') {
+#  system './warnings.pl';
+#}
 
 # end of main
 ######################################################################
