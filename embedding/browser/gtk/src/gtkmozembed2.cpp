@@ -987,7 +987,7 @@ gtk_moz_embed_render_data(GtkMozEmbed *embed, const char *data,
   embedPrivate = (EmbedPrivate *)embed->data;
 
   embedPrivate->OpenStream(base_uri, mime_type);
-  embedPrivate->AppendToStream(data, len);
+  embedPrivate->AppendToStream((const PRUint8*)data, len);
   embedPrivate->CloseStream();
 }
 
@@ -1016,7 +1016,7 @@ void gtk_moz_embed_append_data(GtkMozEmbed *embed, const char *data,
   g_return_if_fail (GTK_WIDGET_REALIZED(GTK_WIDGET(embed)));
 
   embedPrivate = (EmbedPrivate *)embed->data;
-  embedPrivate->AppendToStream(data, len);
+  embedPrivate->AppendToStream((const PRUint8*)data, len);
 }
 
 void

@@ -39,6 +39,8 @@
 #include <nsIWebProgress.h>
 #include "nsIWidget.h"
 #include "nsCRT.h"
+#include "nsNetUtil.h"
+#include "nsIWebBrowserStream.h"
 
 // for NS_APPSHELL_CID
 #include <nsWidgetsCID.h>
@@ -81,7 +83,6 @@
 #include "EmbedContentListener.h"
 #include "EmbedEventListener.h"
 #include "EmbedWindowCreator.h"
-#include "EmbedStream.h"
 #ifdef MOZ_WIDGET_GTK2
 #include "GtkPromptService.h"
 #else
@@ -149,7 +150,6 @@ EmbedPrivate::EmbedPrivate(void)
   mProgress         = nsnull;
   mContentListener  = nsnull;
   mEventListener    = nsnull;
-  mStream           = nsnull;
   mChromeMask       = nsIWebBrowserChrome::CHROME_ALL;
   mIsChrome         = PR_FALSE;
   mChromeLoaded     = PR_FALSE;
@@ -602,48 +602,47 @@ EmbedPrivate::SetDirectoryServiceProvider(nsIDirectoryServiceProvider * appFileL
 nsresult
 EmbedPrivate::OpenStream(const char *aBaseURI, const char *aContentType)
 {
-  nsresult rv;
+  nsCOMPtr<nsIWebBrowser> webBrowser;
+  mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
 
-  if (!mStream) {
-    mStream = new EmbedStream();
-    mStreamGuard = do_QueryInterface(mStream);
-    mStream->InitOwner(this);
-    rv = mStream->Init();
-    if (NS_FAILED(rv))
-      return rv;
-  }
+  nsCOMPtr<nsIWebBrowserStream> wbStream = do_QueryInterface(webBrowser);
+  if (!wbStream) return NS_ERROR_FAILURE;
 
-  rv = mStream->OpenStream(aBaseURI, aContentType);
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aBaseURI);
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = wbStream->OpenStream(uri, nsDependentCString(aContentType));
   return rv;
 }
 
 nsresult
-EmbedPrivate::AppendToStream(const char *aData, PRInt32 aLen)
+EmbedPrivate::AppendToStream(const PRUint8 *aData, PRUint32 aLen)
 {
-  if (!mStream)
-    return NS_ERROR_FAILURE;
-
   // Attach listeners to this document since in some cases we don't
   // get updates for content added this way.
   ContentStateChange();
 
-  return mStream->AppendToStream(aData, aLen);
+  nsCOMPtr<nsIWebBrowser> webBrowser;
+  mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
+
+  nsCOMPtr<nsIWebBrowserStream> wbStream = do_QueryInterface(webBrowser); 
+  if (!wbStream) return NS_ERROR_FAILURE;
+
+  return wbStream->AppendToStream(aData, aLen);
 }
 
 nsresult
 EmbedPrivate::CloseStream(void)
 {
-  nsresult rv;
+  nsCOMPtr<nsIWebBrowser> webBrowser;
+  mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
 
-  if (!mStream)
-    return NS_ERROR_FAILURE;
-  rv = mStream->CloseStream();
+  nsCOMPtr<nsIWebBrowserStream> wbStream = do_QueryInterface(webBrowser); 
+  if (!wbStream) return NS_ERROR_FAILURE;
 
-  // release
-  mStream = 0;
-  mStreamGuard = 0;
-
-  return rv;
+  return wbStream->CloseStream();
 }
 
 /* static */
