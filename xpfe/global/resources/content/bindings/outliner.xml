@@ -567,7 +567,7 @@
   <binding id="outlinercols" extends="chrome://global/content/bindings/outliner.xml#outliner-base">
     <content>
       <children includes="outlinercol|splitter"/>
-      <xul:outlinercol class="outliner-columnpicker outlinercol-image" fixed="true" ordinal="2147483647"/>
+      <xul:outlinercolpicker class="outlinercol-image" fixed="true" ordinal="2147483647"/>
     </content>
   </binding>
 
@@ -668,7 +668,8 @@
             clicked, UNLESS it was a right-click.  We have to do this
             in click rather than mousedown so that you can drag a
             selected group of items */
-
+          
+           if (!col.value) return;
            var column = document.getElementById(col.value);
            var cycler = column.hasAttribute('cycler');
 
@@ -890,7 +891,7 @@
     </handlers>
   </binding>
 
-  <binding id="columnpicker"
+  <binding id="columnpicker" display="xul:button"
            extends="chrome://global/content/bindings/outliner.xml#outliner-base">
     <content>
       <xul:image class="outliner-columnpicker-icon"/>

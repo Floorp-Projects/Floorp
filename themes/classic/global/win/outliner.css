@@ -93,7 +93,8 @@ outlinerbody:-moz-outliner-separator {
 
 /* ::::: outliner columns ::::: */
 
-outlinercol { 
+outlinercol,
+outlinercolpicker { 
   -moz-box-align: center;
   -moz-box-pack: center;
   border: 2px solid;
@@ -116,7 +117,8 @@ outlinercol {
 
 /* ..... internal box ..... */
 
-outlinercol:hover:active {
+outlinercol:hover:active,
+outlinercolpicker:hover:active {
   border-top: 2px solid;
   border-right: 1px solid;
   border-bottom: 1px solid;
@@ -179,7 +181,7 @@ outlinerbody:-moz-outliner-column(insertafter) {
   list-style-image: url("chrome://global/skin/tree/columnpicker.gif");
 }
 
-/* ::::: column picker :::::  */
+/* ::::: twisty :::::  */
 
 outlinerbody:-moz-outliner-twisty {
   padding-right: 2px;
