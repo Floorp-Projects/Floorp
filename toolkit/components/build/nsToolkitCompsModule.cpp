@@ -43,6 +43,8 @@
 #include "nsFormHistory.h"
 #include "nsFormFillController.h"
 #include "nsGlobalHistory.h"
+#include "nsPasswordManager.h"
+#include "nsSingleSignonPrompt.h"
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -51,6 +53,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteMdbResult)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsFormHistory, nsFormHistory::GetInstance);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFormFillController)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGlobalHistory, Init)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsPasswordManager, nsPasswordManager::GetInstance)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSingleSignonPrompt)
 
 /////////////////////////////////////////////////////////////////////////////
 //// Module Destructor
@@ -58,6 +62,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGlobalHistory, Init)
 static void PR_CALLBACK nsToolkitCompModuleDtor(nsIModule* self)
 {
   nsFormHistory::ReleaseInstance();
+  nsPasswordManager::Shutdown();
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -103,6 +108,18 @@ static const nsModuleComponentInfo components[] =
     NS_GLOBALHISTORY_CID,
     NS_GLOBALHISTORY_AUTOCOMPLETE_CONTRACTID,
     nsGlobalHistoryConstructor },
+
+  { "Password Manager",
+    NS_PASSWORDMANAGER_CID,
+    NS_PASSWORDMANAGER_CONTRACTID,
+    nsPasswordManagerConstructor,
+    nsPasswordManager::Register,
+    nsPasswordManager::Unregister },
+
+  { "Single Signon Prompt",
+    NS_SINGLE_SIGNON_PROMPT_CID,
+    "@mozilla.org/wallet/single-sign-on-prompt;1",
+    nsSingleSignonPromptConstructor },
 };
 
 NS_IMPL_NSGETMODULE_WITH_DTOR(nsToolkitCompsModule, components, nsToolkitCompModuleDtor)
