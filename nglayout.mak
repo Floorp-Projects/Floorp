@@ -126,9 +126,9 @@ DIST_DIRS =			\
 # related libraries.
 
 RAPTOR_DIRS =			\
-  editor 			\
   expat 			\
   htmlparser			\
+  editor 			\
   gfx				\
   dom				\
   view				\
