@@ -223,18 +223,18 @@ Contributor(s): ______________________________________. -->
   
     <toolbar id="nav-bar" class="toolbar-primary chromeclass-toolbar" persist="collapsed">
       <box id="nav-bar-inner" autostretch="never" flex="1">
+	  <!--
         <button class="button-toolbar-1 top" id="back-button" crop="right" observes="canGoBack"/>  
     	  <button class="button-toolbar-1 top" id="forward-button" crop="right" observes="canGoForward"/>
-    <!--
-          <menubutton class="large-toolbar left" id="back-button" crop="right" orient="vertical" observes="canGoBack" oncommand="gotoHistoryIndex(event);">  
+       -->
+          <menubutton class="menubutton-dual" id="back-button" crop="right" orient="vertical" observes="canGoBack" oncommand="gotoHistoryIndex(event);">  
     	  <menupopup oncreate="BrowserBackMenu(event);">
     	  </menupopup>
     	  </menubutton>
-          <menubutton class="large-toolbar left" id="forward-button" crop="right" orient="vertical" observes="canGoForward" oncommand="gotoHistoryIndex(event);">
+          <menubutton class="menubutton-dual" id="forward-button" crop="right" orient="vertical" observes="canGoForward" oncommand="gotoHistoryIndex(event);">
     	  <menupopup oncreate="BrowserForwardMenu(event);">
     	  </menupopup>
     	  </menubutton>
-    -->	  
         <button class="button-toolbar-1 top" id="reload-button" crop="right" observes="canReload" />
         <button class="button-toolbar-1 top" id="stop-button" crop="right" observes="canStop" onclick="BrowserStop()"/>
     
@@ -256,6 +256,7 @@ Contributor(s): ______________________________________. -->
           <box autostretch="never" valign="middle" flex="1">
       			<image id="page-proxy-button" ondraggesture="DragProxyIcon(event);"/> 
             <textfield class="plain chromeclass-location" id="urlbar" onkeypress="if( event.which == 13 ) { AddToUrlbarHistory(); BrowserLoadURL(); }" flex="1"/>
+			<!--<autocomplete class="plain chromeclass-location" searchSessionType="urlbar" id="urlbar" onkeypress="if( event.which == 13 ) { AddToUrlbarHistory(); BrowserLoadURL(); }" flex="1"/> -->
             <button class="button-toolbar-3" id="search-button" value="&searchButton.label;" oncommand="OpenSearch('internet',false, document.getElementById('urlbar').value);" /> 
             <button class="button-toolbar-3" id="go-button" value="&goButton.label;" oncommand="BrowserLoadURL();" /> 
           </box>
