@@ -142,7 +142,7 @@ nsScrollFrame::RemoveFrame(nsIPresContext& aPresContext,
                            nsIAtom*        aListName,
                            nsIFrame*       aOldFrame)
 {
-  // Scroll frames doesn't support incremental changes
+  // Scroll frame doesn't support incremental changes
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

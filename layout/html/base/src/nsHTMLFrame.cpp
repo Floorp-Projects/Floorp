@@ -39,6 +39,7 @@
 #include "nsIScrollableView.h"
 #include "nsIAreaFrame.h"
 #include "nsLayoutAtoms.h"
+#include "nsIPresShell.h"
 
 // Interface IDs
 static NS_DEFINE_IID(kAreaFrameIID, NS_IAREAFRAME_IID);
@@ -54,6 +55,20 @@ static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
  */
 class RootFrame : public nsHTMLContainerFrame {
 public:
+  NS_IMETHOD AppendFrames(nsIPresContext& aPresContext,
+                          nsIPresShell&   aPresShell,
+                          nsIAtom*        aListName,
+                          nsIFrame*       aFrameList);
+  NS_IMETHOD InsertFrames(nsIPresContext& aPresContext,
+                          nsIPresShell&   aPresShell,
+                          nsIAtom*        aListName,
+                          nsIFrame*       aPrevFrame,
+                          nsIFrame*       aFrameList);
+  NS_IMETHOD RemoveFrame(nsIPresContext& aPresContext,
+                         nsIPresShell&   aPresShell,
+                         nsIAtom*        aListName,
+                         nsIFrame*       aOldFrame);
+
   NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
@@ -133,6 +148,102 @@ RootFrame::SetRect(const nsRect& aRect)
 }
 
 NS_IMETHODIMP
+RootFrame::AppendFrames(nsIPresContext& aPresContext,
+                        nsIPresShell&   aPresShell,
+                        nsIAtom*        aListName,
+                        nsIFrame*       aFrameList)
+{
+  nsresult  rv;
+
+  NS_ASSERTION(!aListName, "unexpected child list name");
+  NS_PRECONDITION(mFrames.IsEmpty(), "already have a child frame");
+  if (aListName) {
+    // We only support unnamed principal child list
+    rv = NS_ERROR_INVALID_ARG;
+
+  } else if (!mFrames.IsEmpty()) {
+    // We only allow a single child frame
+    rv = NS_ERROR_FAILURE;
+
+  } else {
+    // Insert the new frames
+#ifdef NS_DEBUG
+    nsFrame::VerifyDirtyBitSet(aFrameList);
+#endif
+    mFrames.AppendFrame(nsnull, aFrameList);
+
+    // Generate a reflow command to reflow the newly inserted frame
+    nsIReflowCommand* reflowCmd;
+    rv = NS_NewHTMLReflowCommand(&reflowCmd, this, nsIReflowCommand::ReflowDirty);
+    if (NS_SUCCEEDED(rv)) {
+      aPresShell.AppendReflowCommand(reflowCmd);
+      NS_RELEASE(reflowCmd);
+    }
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+RootFrame::InsertFrames(nsIPresContext& aPresContext,
+                        nsIPresShell&   aPresShell,
+                        nsIAtom*        aListName,
+                        nsIFrame*       aPrevFrame,
+                        nsIFrame*       aFrameList)
+{
+  nsresult  rv;
+
+  // Because we only support a single child frame inserting is the same
+  // as appending
+  NS_PRECONDITION(!aPrevFrame, "unexpected previous sibling frame");
+  if (aPrevFrame) {
+    rv = NS_ERROR_UNEXPECTED;
+  } else {
+    rv = AppendFrames(aPresContext, aPresShell, aListName, aFrameList);
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+RootFrame::RemoveFrame(nsIPresContext& aPresContext,
+                       nsIPresShell&   aPresShell,
+                       nsIAtom*        aListName,
+                       nsIFrame*       aOldFrame)
+{
+  nsresult  rv;
+
+  NS_ASSERTION(!aListName, "unexpected child list name");
+  if (aListName) {
+    // We only support the unnamed principal child list
+    rv = NS_ERROR_INVALID_ARG;
+  
+  } else if (aOldFrame == mFrames.FirstChild()) {
+    // It's our one and only child frame
+    // Damage the area occupied by the deleted frame
+    nsRect  damageRect;
+    aOldFrame->GetRect(damageRect);
+    Invalidate(damageRect, PR_FALSE);
+
+    // Remove the frame and destroy it
+    mFrames.DestroyFrame(aPresContext, aOldFrame);
+
+    // Generate a reflow command so we get reflowed
+    nsIReflowCommand* reflowCmd;
+    rv = NS_NewHTMLReflowCommand(&reflowCmd, this, nsIReflowCommand::ReflowDirty);
+    if (NS_SUCCEEDED(rv)) {
+      aPresShell.AppendReflowCommand(reflowCmd);
+      NS_RELEASE(reflowCmd);
+    }
+
+  } else {
+    rv = NS_ERROR_FAILURE;
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
 RootFrame::Reflow(nsIPresContext&          aPresContext,
                   nsHTMLReflowMetrics&     aDesiredSize,
                   const nsHTMLReflowState& aReflowState,
@@ -144,50 +255,22 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
   // Initialize OUT parameter
   aStatus = NS_FRAME_COMPLETE;
 
-  PRBool  isChildInitialReflow = PR_FALSE;
   PRBool  isStyleChange = PR_FALSE;
+  PRBool  isDirtyChildReflow = PR_FALSE;
 
   // Check for an incremental reflow
-  // XXX This needs to use the new reflow command handling instead...
   if (eReflowReason_Incremental == aReflowState.reason) {
     // See if we're the target frame
     nsIFrame* targetFrame;
     aReflowState.reflowCommand->GetTarget(targetFrame);
     if (this == targetFrame) {
-      nsIReflowCommand::ReflowType  reflowType;
-      nsIFrame*                     childFrame;
-      nsIFrame*                     deletedFrame;
-
       // Get the reflow type
+      nsIReflowCommand::ReflowType  reflowType;
       aReflowState.reflowCommand->GetType(reflowType);
 
       switch (reflowType) {
-      case nsIReflowCommand::FrameAppended:
-      case nsIReflowCommand::FrameInserted:
-        NS_ASSERTION(mFrames.IsEmpty(), "only one child frame allowed");
-
-        // Insert the frame into the child list
-        aReflowState.reflowCommand->GetChildFrame(childFrame);
-        mFrames.SetFrames(childFrame);
-
-        // It's the child frame's initial reflow
-        isChildInitialReflow = PR_TRUE;
-        break;
-
-      case nsIReflowCommand::FrameRemoved:
-        // Get the child frame we should delete
-        aReflowState.reflowCommand->GetChildFrame(deletedFrame);
-        NS_ASSERTION(deletedFrame == mFrames.FirstChild(), "not a child frame");
-
-        // Remove it from the child list
-        if (deletedFrame == mFrames.FirstChild()) {
-          // Damage the area occupied by the deleted frame
-          nsRect  damageRect;
-          deletedFrame->GetRect(damageRect);
-          Invalidate(damageRect, PR_FALSE);
-
-          mFrames.DestroyFrame(aPresContext, deletedFrame);
-        }
+      case nsIReflowCommand::ReflowDirty:
+        isDirtyChildReflow = PR_TRUE;
         break;
 
       case nsIReflowCommand::StyleChanged:
@@ -210,7 +293,7 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
   // Reflow our one and only child frame
   nsHTMLReflowMetrics kidDesiredSize(nsnull);
   if (mFrames.IsEmpty()) {
-    // Return our desired size
+    // We have no child frame, so return an empty size
     aDesiredSize.width = aDesiredSize.height = 0;
     aDesiredSize.ascent = aDesiredSize.descent = 0;
 
@@ -222,7 +305,9 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
     nsHTMLReflowState kidReflowState(aPresContext, aReflowState, kidFrame,
                                      nsSize(aReflowState.availableWidth,
                                             NS_UNCONSTRAINEDSIZE));
-    if (isChildInitialReflow) {
+    if (isDirtyChildReflow) {
+      // Note: the only reason the frame would be dirty would be if it had
+      // just been inserted or appended
       kidReflowState.reason = eReflowReason_Initial;
       kidReflowState.reflowCommand = nsnull;
     } else if (isStyleChange) {
@@ -297,6 +382,13 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
       nsRect  rect(kidReflowState.mComputedMargin.left, kidReflowState.mComputedMargin.top,
                    kidDesiredSize.width, kidDesiredSize.height);
       kidFrame->SetRect(rect);
+
+      // If the child frame was just inserted, then we're responsible for making sure
+      // it repaints
+      if (isDirtyChildReflow) {
+        // Damage the area occupied by the deleted frame
+        Invalidate(rect, PR_FALSE);
+      }
     }
 
     // Return our desired size
