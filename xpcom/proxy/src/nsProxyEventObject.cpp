@@ -25,76 +25,6 @@
 
 #include "nsIInterfaceInfoManager.h"
 #include "xptcall.h"
-static NS_DEFINE_IID(kProxyObject_Identity_Class_IID, NS_PROXYEVENT_IDENTITY_CLASS_IID);
-
-
-#ifdef DEBUG_dougt
-static PRMonitor* mon = nsnull;
-static PRUint32 totalProxyObjects = 0;
-static PRUint32 outstandingProxyObjects = 0;
-
-void
-nsProxyEventObject::DebugDump(const char * message, PRUint32 hashKey)
-{
-
-    if (mon == nsnull)
-    {
-        mon = PR_NewMonitor();
-    }
-
-    PR_EnterMonitor(mon);
-
-    if (message)
-    {
-        printf("\n-=-=-=-=-=-=-=-=-=-=-=-=-\n");
-        printf("%s\n", message);
-
-        if(strcmp(message, "Create") == 0)
-        {
-            totalProxyObjects++;
-            outstandingProxyObjects++;
-        }
-        else if(strcmp(message, "Delete") == 0)
-        {
-            outstandingProxyObjects--;
-        }
-    }
-    printf("nsProxyEventObject @ %x with mRefCnt = %d\n", this, mRefCnt);
-
-    PRBool isRoot = mRoot == nsnull;
-    printf("%s wrapper around  @ %x\n", isRoot ? "ROOT":"non-root\n", GetRealObject());
-    
-    if (mHashKey.HashValue()!=0)
-        printf("Hashkey: %d\n", mHashKey.HashValue());
-        
-    char* name;
-    GetClass()->GetInterfaceInfo()->GetName(&name);
-    printf("interface name is %s\n", name);
-    if(name)
-        nsAllocator::Free(name);
-    char * iid = GetClass()->GetProxiedIID().ToString();
-    printf("IID number is %s\n", iid);
-    delete iid;
-    printf("nsProxyEventClass @ %x\n", mClass);
-    
-    if(mNext)
-    {
-        if(isRoot)
-        {
-            printf("Additional wrappers for this object...\n");
-        }
-        mNext->DebugDump(nsnull, 0);
-    }
-
-    printf("[proxyobjects] %d total used in system, %d outstading\n", totalProxyObjects, outstandingProxyObjects);
-
-    if (message)
-        printf("-=-=-=-=-=-=-=-=-=-=-=-=-\n");
-
-    PR_ExitMonitor(mon);
-}
-#endif
-
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -102,101 +32,89 @@ nsProxyEventObject::DebugDump(const char * message, PRUint32 hashKey)
 //  nsProxyEventObject
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
 nsProxyEventObject* 
 nsProxyEventObject::GetNewOrUsedProxy(nsIEventQueue *destQueue,
                                       PRInt32 proxyType, 
                                       nsISupports *aObj,
                                       REFNSIID aIID)
 {
+    nsProxyEventObject* proxy = NULL;
+    nsProxyEventObject* root = NULL;
     
-    nsCOMPtr<nsProxyEventObject> proxy = 0;
-    nsCOMPtr<nsProxyEventObject> root  = 0;
-    nsProxyEventObject* peo;
 
-    // Get a class for this IID.
-    nsCOMPtr<nsProxyEventClass> clazz = getter_AddRefs( nsProxyEventClass::GetNewOrUsedClass(aIID) );
-    if(!clazz) return nsnull;
+    nsProxyEventClass* clazz = nsProxyEventClass::GetNewOrUsedClass(aIID);
+    if(!clazz)
+        return NULL;
+
+     nsISupports* rootObject;
+    // always find the native root
+    if(NS_FAILED(aObj->QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), (void**)&rootObject)))
+        return NULL;
+
+
+    /* find in our hash table */
     
-    // make sure that the object pass in is not a proxy.
-    nsCOMPtr<nsProxyEventObject> aIdentificationObject;
-    if (NS_SUCCEEDED(aObj->QueryInterface(kProxyObject_Identity_Class_IID, getter_AddRefs(aIdentificationObject))))
+    nsProxyObjectManager *manager = nsProxyObjectManager::GetInstance();
+    nsHashtable *realToProxyMap = manager->GetRealObjectToProxyObjectMap();
+
+    if (realToProxyMap == nsnull)
     {
-        // someone is asking us to create a proxy for a proxy.  Lets get
-        // the real object and build aproxy for that!
-        aObj = aIdentificationObject->GetRealObject();
-        aIdentificationObject = 0;
-        if (aObj == nsnull) return nsnull;
+        if(clazz)
+        NS_RELEASE(clazz);
+        return nsnull;
     }
 
-    // always find the native root if the |real| object.  
-    nsCOMPtr<nsISupports> rootObject;
-    if(NS_FAILED(aObj->QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), getter_AddRefs(rootObject))))
-        return nsnull;
-
-    // this will be our key in the hash table.  
-    nsVoidKey rootkey( (void*) GetProxyHashKey(rootObject.get(), destQueue, proxyType) );
-    
-    /* get our hash table */    
-    nsProxyObjectManager *manager = nsProxyObjectManager::GetInstance();
-    if (manager == nsnull) return nsnull;
-    
-    nsHashtable *realToProxyMap = manager->GetRealObjectToProxyObjectMap();
-    if (realToProxyMap == nsnull) return nsnull;
-
-    // we need to do make sure that we addref the passed in object as well as ensure
-    // that it is of the requested IID;
-    nsCOMPtr<nsISupports> requestedInterface;
-    if(NS_FAILED(aObj->QueryInterface(aIID, getter_AddRefs(requestedInterface))))
-        return nsnull;
-
-   /* find in our hash table */    
+    nsVoidKey rootkey(rootObject);
     if(realToProxyMap->Exists(&rootkey))
     {
-        root  = (nsProxyEventObject*) realToProxyMap->Get(&rootkey);
+        root = (nsProxyEventObject*) realToProxyMap->Get(&rootkey);
         proxy = root->Find(aIID);
-        
+
         if(proxy)
-            goto return_proxy;
+        {
+            NS_ADDREF(proxy);
+            goto return_wrapper;
+        }
     }
     else
     {
         // build the root proxy
-        if (aObj == rootObject.get())
+        if (aObj == rootObject)
         {
             // the root will do double duty as the interface wrapper
-            peo = new nsProxyEventObject(destQueue, 
-                                         proxyType, 
-                                         requestedInterface, 
-                                         clazz, 
-                                         nsnull, 
-                                         rootkey.HashValue());
-        
-            proxy = do_QueryInterface(peo);
-            
-            if(proxy)
-                realToProxyMap->Put(&rootkey, peo);
-            
-            goto return_proxy;
+            proxy = root = new nsProxyEventObject(destQueue, proxyType, aObj, clazz, nsnull);
+            if(root)
+            {
+            	nsVoidKey aKey(root);	
+                realToProxyMap->Put(&aKey, root);
+                
+                NS_ADDREF(proxy);  // since we are double duty, we need to make sure that our refCnt 
+                                   // reflects this.
+            }
+            goto return_wrapper;
         }
         else
         {
             // just a root proxy
-            nsCOMPtr<nsProxyEventClass> rootClazz = getter_AddRefs ( nsProxyEventClass::GetNewOrUsedClass(
-                                                                      nsCOMTypeInfo<nsISupports>::GetIID()) );
+            nsProxyEventClass* rootClazz = nsProxyEventClass::GetNewOrUsedClass(nsCOMTypeInfo<nsISupports>::GetIID());
+            if(!rootClazz)
+            {
+                goto return_wrapper;
+            }
+
+            root = new nsProxyEventObject(destQueue, proxyType, rootObject, rootClazz, nsnull);
+            NS_RELEASE(rootClazz);
+
+            if(!root)
+            {
+                goto return_wrapper;
+            }
             
-            peo = new nsProxyEventObject(destQueue, 
-                                         proxyType, 
-                                         rootObject, 
-                                         rootClazz, 
-                                         nsnull, 
-                                         rootkey.HashValue());
-
-            if(!peo || !rootClazz)
-                return nsnull;
-
-            root = do_QueryInterface(peo);
-
-            realToProxyMap->Put(&rootkey, peo);
+            nsVoidKey aKey(root);
+            realToProxyMap->Put(&aKey, root);
         }
     }
     // at this point we have a root and may need to build the specific proxy
@@ -205,94 +123,90 @@ nsProxyEventObject::GetNewOrUsedProxy(nsIEventQueue *destQueue,
 
     if(!proxy)
     {
-        peo = new nsProxyEventObject(destQueue, 
-                                     proxyType, 
-                                     requestedInterface, 
-                                     clazz, 
-                                     root, 
-                                     0);
-
-        proxy = do_QueryInterface(peo);
-        
+        proxy = new nsProxyEventObject(destQueue, proxyType, aObj, clazz, root);
         if(!proxy)
-            return nsnull;
+        {
+            goto return_wrapper;
+        }
     }
-
     proxy->mNext = root->mNext;
     root->mNext = proxy;
 
-return_proxy:
+return_wrapper:
 
-    if(proxy)  
-    {
-        peo = proxy;
-        NS_ADDREF(peo);
-        return peo;  
-    }
+    if(clazz)
+        NS_RELEASE(clazz);
+    
+    
+    // Since we do not want to extra references, we will release the rootObject.
+    // 
+    // There are one or more references to aObj which is passed in.  When we create
+    // a new proxy object via nsProxyEventObject(), that will addRef the aObj.  Because
+    // we QI addref to insure that we have a nsISupports ptr, its refcount goes up by one.
+    // here we will decrement that.
+    //
+    if (rootObject)
+        NS_RELEASE(rootObject);
+    return proxy;
+}
 
-    return nsnull;
-}
-nsProxyEventObject::nsProxyEventObject()
-: mNext(nsnull),
-  mHashKey((void*)0)
-{
-}
+
+
+
 
 nsProxyEventObject::nsProxyEventObject(nsIEventQueue *destQueue,
                                        PRInt32 proxyType,
                                        nsISupports* aObj,
                                        nsProxyEventClass* aClass,
-                                       nsProxyEventObject* root,
-                                       PRUint32 hashValue)
-    : mNext(nsnull),
-      mHashKey((void*)hashValue)
+                                       nsProxyEventObject* root)
+    : mClass(aClass),
+      mNext(NULL)
 {
     NS_INIT_REFCNT();
-
-    mRoot        = root;
-    mClass       = aClass;
+    NS_ADDREF_THIS();
     
-    mProxyObject = new nsProxyObject(destQueue, proxyType, aObj);
-            
-#ifdef DEBUG_dougt
-DebugDump("Create", 0);
-#endif
+    mProxyObject    = new nsProxyObject(destQueue, proxyType, aObj);
+
+    mRoot = (root ? root : this);
+
+    // if we have a root, lets addref it.
+    if (root)
+        NS_ADDREF(mRoot);
+    
+    NS_ADDREF(aClass);
 }
 
 nsProxyEventObject::~nsProxyEventObject()
 {
-#ifdef DEBUG_dougt
-DebugDump("Delete", 0);
-#endif
-    if (mRoot != nsnull)
+    NS_IF_RELEASE(mProxyObject);
+    NS_IF_RELEASE(mClass);
+    
+    if (mRoot)
     {
-        nsProxyEventObject* cur = mRoot;
-        while(1)
+        if (mRoot != this)
         {
-            if(cur->mNext == this)
-            {
-                cur->mNext = mNext;
-                break;
-            }
-            cur = cur->mNext;
-            NS_ASSERTION(cur, "failed to find wrapper in its own chain");
+            mRoot->RootRemoval();
         }
-    }
-    else
-    {
-        nsProxyObjectManager *manager = nsProxyObjectManager::GetInstance();
-        nsHashtable *realToProxyMap = manager->GetRealObjectToProxyObjectMap();
-
-        if (realToProxyMap != nsnull && mHashKey.HashValue() != 0)
+        else
         {
-            realToProxyMap->Remove(&mHashKey);
+            nsProxyObjectManager *manager = nsProxyObjectManager::GetInstance();
+            nsHashtable *realToProxyMap = manager->GetRealObjectToProxyObjectMap();
+
+            if (realToProxyMap != nsnull)
+            {
+        	    nsVoidKey key(this);
+                realToProxyMap->Remove(&key);
+            }
         }
     }   
-    // I am worried about ordering.
-    // do not remove assignments.
-    mProxyObject = 0;
-    mClass       = 0;
-    mRoot        = 0;
+}
+
+nsresult
+nsProxyEventObject::RootRemoval()
+{
+    if (--mRefCnt <= 1)
+        NS_DELETEXPCOM(this); 
+    return NS_OK;
 }
 
 NS_IMPL_ADDREF(nsProxyEventObject);
@@ -301,44 +215,22 @@ NS_IMPL_RELEASE(nsProxyEventObject);
 NS_IMETHODIMP
 nsProxyEventObject::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-    if( aIID.Equals(GetIID()) )
-    {
-        *aInstancePtr = (void*) ( (nsISupports*)this );  //todo should use standard cast.
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-        
-    return mClass->DelegatedQueryInterface(this, aIID, aInstancePtr);
-}
+    // TODO:  we need to wrap the object if it is not a proxy.
 
-PRUint32 
-nsProxyEventObject::GetProxyHashKey(nsISupports *rootProxy, nsIEventQueue *destQueue, PRInt32 proxyType)
-{ // FIX I need to worry about nsCOMPtr for rootProxy, and destQueue!
-    
-    nsISupports* destQRoot;
-    if(NS_FAILED(destQueue->QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), (void**)&destQRoot)))
-        return 0;
-    PRInt32 value = (PRUint32)rootProxy + (PRUint32)destQRoot + proxyType;
-    NS_RELEASE(destQRoot);
-    return value;
+    return mClass->DelegatedQueryInterface(this, aIID, aInstancePtr);
 }
 
 nsProxyEventObject*
 nsProxyEventObject::Find(REFNSIID aIID)
 {
-    nsProxyEventObject* cur = (mRoot ? mRoot.get() : this);
-
     if(aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
-    {
-        return cur;
-    }
+        return mRoot;
 
+    nsProxyEventObject* cur = mRoot;
     do
     {
-        if(aIID.Equals(GetClass()->GetProxiedIID()))
-        {
+        if(aIID.Equals(GetIID()))
             return cur;
-        }
 
     } while(NULL != (cur = cur->mNext));
 
@@ -349,13 +241,11 @@ nsProxyEventObject::Find(REFNSIID aIID)
 NS_IMETHODIMP
 nsProxyEventObject::GetInterfaceInfo(nsIInterfaceInfo** info)
 {
-    NS_ENSURE_ARG_POINTER(info);
     NS_ASSERTION(GetClass(), "proxy without class");
     NS_ASSERTION(GetClass()->GetInterfaceInfo(), "proxy class without interface");
 
     if(!(*info = GetClass()->GetInterfaceInfo()))
         return NS_ERROR_UNEXPECTED;
-
     NS_ADDREF(*info);
     return NS_OK;
 }
@@ -365,11 +255,11 @@ nsProxyEventObject::CallMethod(PRUint16 methodIndex,
                            const nsXPTMethodInfo* info,
                            nsXPTCMiniVariant * params)
 {
-    if (mProxyObject)
-        return mProxyObject->Post(methodIndex, (nsXPTMethodInfo*)info, params, GetClass()->GetInterfaceInfo());
-
-    return NS_ERROR_NULL_POINTER;
+    return mProxyObject->Post(methodIndex, (nsXPTMethodInfo*)info, params, GetClass()->GetInterfaceInfo());
 }
+
+
+
 
 
 
