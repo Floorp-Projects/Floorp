@@ -43,14 +43,7 @@
 #include "nsMenuItem.h"
 #include <imm.h>
 
-//#define NEW_DRAG_AND_DROP
-#ifdef NEW_DRAG_AND_DROP
 #include "nsNativeDragTarget.h"
-//#include "nsDropTarget.h"
-//#include "DragDrop.h"
-//#include "DropTar.h"
-//#include "DropSrc.h"
-#endif
 
 //~~~ for windowless plugin support
 #include "nsplugindefs.h"
@@ -126,10 +119,7 @@ nsWindow::nsWindow() : nsBaseWidget()
 	mDBCSLeadByte = '\0';
 #endif
 
-#ifdef NEW_DRAG_AND_DROP
-    mNativeDragTarget = nsnull;
-#endif
-
+  mNativeDragTarget = nsnull;
 }
 
 
@@ -610,7 +600,7 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
      }
      gOLEInited = TRUE;
    }
-#ifdef NEW_DRAG_AND_DROP
+
    mNativeDragTarget = new nsNativeDragTarget(this);
    if (NULL != mNativeDragTarget) {
      mNativeDragTarget->AddRef();
@@ -619,7 +609,7 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
        }
      }
    }
-#endif
+
 
     // call the event callback to notify about creation
 
@@ -688,13 +678,11 @@ NS_METHOD nsWindow::Destroy()
     nsBaseWidget::Destroy();
   }
 
-#ifdef NEW_DRAG_AND_DROP
   if (NULL != mNativeDragTarget) {
     if (S_OK == ::CoLockObjectExternal((LPUNKNOWN)mNativeDragTarget, FALSE, TRUE)) {
     }
     NS_RELEASE(mNativeDragTarget);
   }
-#endif
 
   // destroy the HWND
   if (mWnd) {
@@ -1793,7 +1781,6 @@ nsresult nsWindow::MenuHasBeenSelected(
 NS_METHOD nsWindow::EnableFileDrop(PRBool aEnable)
 {
   //::DragAcceptFiles(mWnd, (aEnable?TRUE:FALSE));
-#ifdef NEW_DRAG_AND_DROP
    mNativeDragTarget = new nsNativeDragTarget(this);
    if (NULL != mNativeDragTarget) {
      mNativeDragTarget->AddRef();
@@ -1802,7 +1789,7 @@ NS_METHOD nsWindow::EnableFileDrop(PRBool aEnable)
        }
      }
    }
-#endif
+
   return NS_OK;
 }
 

@@ -34,9 +34,7 @@
 
 #include "nsVoidArray.h"
 
-#ifdef NEW_DRAG_AND_DROP
 class nsNativeDragTarget;
-#endif
 
 #define NSRGB_2_COLOREF(color) \
             RGB(NS_GET_R(color),NS_GET_G(color),NS_GET_B(color))
@@ -242,10 +240,8 @@ protected:
 #endif
 
     // Drag & Drop
-
-#ifdef NEW_DRAG_AND_DROP
     nsNativeDragTarget * mNativeDragTarget;
-#endif
+
     // Enumeration of the methods which are accessable on the "main GUI thread"
     // via the CallMethod(...) mechanism...
     // see nsSwitchToUIThread
