@@ -41,22 +41,22 @@ RESFILE = MozillaControl.res
 DEFFILE = mozctl.def
 
 OBJS =                                 \
-	.\$(OBJDIR)\StdAfx.obj             \
-	.\$(OBJDIR)\ControlSite.obj        \
-	.\$(OBJDIR)\ControlSiteIPFrame.obj \
-	.\$(OBJDIR)\ItemContainer.obj      \
-	.\$(OBJDIR)\PropertyBag.obj        \
-	.\$(OBJDIR)\MozillaControl.obj     \
-	.\$(OBJDIR)\MozillaBrowser.obj     \
-	.\$(OBJDIR)\WebBrowserContainer.obj  \
-	.\$(OBJDIR)\IEHtmlNode.obj         \
-	.\$(OBJDIR)\IEHtmlElementCollection.obj \
-	.\$(OBJDIR)\IEHtmlElement.obj      \
-	.\$(OBJDIR)\IEHtmlDocument.obj     \
-	.\$(OBJDIR)\DropTarget.obj         \
-  .\$(OBJDIR)\PropertyDlg.obj        \
-	.\$(OBJDIR)\guids.obj              \
-	$(NULL)
+    .\$(OBJDIR)\StdAfx.obj             \
+    .\$(OBJDIR)\ControlSite.obj        \
+    .\$(OBJDIR)\ControlSiteIPFrame.obj \
+    .\$(OBJDIR)\ItemContainer.obj      \
+    .\$(OBJDIR)\PropertyBag.obj        \
+    .\$(OBJDIR)\MozillaControl.obj     \
+    .\$(OBJDIR)\MozillaBrowser.obj     \
+    .\$(OBJDIR)\WebBrowserContainer.obj  \
+    .\$(OBJDIR)\IEHtmlNode.obj         \
+    .\$(OBJDIR)\IEHtmlElementCollection.obj \
+    .\$(OBJDIR)\IEHtmlElement.obj      \
+    .\$(OBJDIR)\IEHtmlDocument.obj     \
+    .\$(OBJDIR)\DropTarget.obj         \
+    .\$(OBJDIR)\PropertyDlg.obj        \
+    .\$(OBJDIR)\guids.obj              \
+    $(NULL)
 
 # most of these have to be here for nsSetupRegistry.cpp...
 
@@ -94,20 +94,25 @@ LCFLAGS = $(LCFLAGS) -DMOZ_ACTIVEX_CONTROL_SUPPORT
 PATH=$(DIST)\bin;$(PATH)
 
 install:: $(DLL)
-	$(MAKE_INSTALL) $(DLL) $(DIST)\bin
-	$(MAKE_INSTALL) MozillaControl.html $(DIST)\bin\res
-	regsvr32 /s /c $(DIST)\bin\$(DLLNAME).dll
+!if "$(WINOS)" == "WIN95"
+    $(MAKE_INSTALL) $(DLL) $(DIST)\bin
+    $(MAKE_INSTALL) MozillaControl.html $(DIST)\bin\res
+!else
+    $(MAKE_INSTALL) $(DLL) $(DIST)\bin
+    $(MAKE_INSTALL) MozillaControl.html $(DIST)\bin\res
+    regsvr32 /s /c $(DIST)\bin\$(DLLNAME).dll
+!endif
 
 clobber::
-	-regsvr32 /s /c /u $(DIST)\bin\$(DLLNAME).dll
-	-del $(DEFFILE)
+    -regsvr32 /s /c /u $(DIST)\bin\$(DLLNAME).dll
+    -del $(DEFFILE)
 
 $(DEFFILE) : mkctldef.bat
-	mkctldef.bat $(DEFFILE)
+    mkctldef.bat $(DEFFILE)
 
 MozillaControl_i.c \
 MozillaControl.h: MozillaControl.idl
-	midl /Oicf /h MozillaControl.h /iid MozillaControl_i.c MozillaControl.idl
+    midl /Oicf /h MozillaControl.h /iid MozillaControl_i.c MozillaControl.idl
 
 PropertyDlg.cpp : StdAfx.h resource.h
 

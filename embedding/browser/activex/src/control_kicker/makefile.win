@@ -29,9 +29,9 @@ DLL=.\$(OBJDIR)\$(DLLNAME).dll
 DEFFILE = mozctlx.def
 
 OBJS =                                 \
-	.\$(OBJDIR)\StdAfx.obj             \
-	.\$(OBJDIR)\control_kicker.obj        \
-	$(NULL)
+    .\$(OBJDIR)\StdAfx.obj             \
+    .\$(OBJDIR)\control_kicker.obj        \
+    $(NULL)
 
 LLIBS=                          \
  $(NULL)
@@ -58,11 +58,15 @@ CFLAGS = /D "WIN32" /GX /GF /MT /O1
 PATH=$(DIST)\bin;$(PATH)
 
 install:: $(DLL)
-	$(MAKE_INSTALL) $(DLL) $(DIST)\bin
-	regsvr32 /s /c $(DIST)\bin\$(DLLNAME).dll
+!if "$(WINOS)" == "WIN95"
+    $(MAKE_INSTALL) $(DLL) $(DIST)\bin
+!else
+    $(MAKE_INSTALL) $(DLL) $(DIST)\bin
+    regsvr32 /s /c $(DIST)\bin\$(DLLNAME).dll
+!endif
 
 clobber::
-	-regsvr32 /s /c /u $(DIST)\bin\$(DLLNAME).dll
+    -regsvr32 /s /c /u $(DIST)\bin\$(DLLNAME).dll
 
 control_kicker.cpp \
 StdAfx.cpp: StdAfx.h
