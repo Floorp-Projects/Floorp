@@ -35,14 +35,16 @@
 #include "nsIFormControl.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsCSSRendering.h"
+#include "nsILookAndFeel.h"
+#include "nsRepository.h"
 
 
-#define NS_DESIRED_CHECKBOX_SIZE 12
-#define NS_ABSOLUTE_CHECKBOX_SIZE 12
-
+#define NS_DEFAULT_CHECKBOX_SIZE 12
 
 static NS_DEFINE_IID(kICheckButtonIID, NS_ICHECKBUTTON_IID);
 static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
+static NS_DEFINE_IID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
+static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 
 class nsCheckboxControlFrame : public nsFormControlFrame {
 public:
@@ -105,6 +107,7 @@ public:
   //End of GFX-rendering methods
   
 protected:
+  virtual nscoord GetCheckboxSize(float aPixToTwip) const;
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredLayoutSize,
@@ -147,6 +150,20 @@ nsCheckboxControlFrame::GetCID()
   return kCheckboxCID;
 }
 
+nscoord 
+nsCheckboxControlFrame::GetCheckboxSize(float aPixToTwip) const
+{
+  nsILookAndFeel * lookAndFeel;
+  PRInt32 checkboxSize = 0;
+  if (NS_OK == nsRepository::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+   lookAndFeel->GetMetric(nsILookAndFeel::eMetric_CheckboxSize,  checkboxSize);
+   NS_RELEASE(lookAndFeel);
+  }
+ if (checkboxSize == 0)
+   checkboxSize = NS_DEFAULT_CHECKBOX_SIZE;
+  return NSIntPixelsToTwips(checkboxSize, aPixToTwip);
+}
+
 void
 nsCheckboxControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                             const nsHTMLReflowState& aReflowState,
@@ -156,10 +173,8 @@ nsCheckboxControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
   float p2t;
   aPresContext->GetScaledPixelsToTwips(p2t);
 #ifndef NS_GFX_RENDER_FORM_ELEMENTS
-#ifdef XP_PC 
-   aDesiredWidgetSize.width  = NSIntPixelsToTwips(NS_DESIRED_CHECKBOX_SIZE, p2t);
-   aDesiredWidgetSize.height = NSIntPixelsToTwips(NS_DESIRED_CHECKBOX_SIZE, p2t);
-#endif
+   aDesiredWidgetSize.width  = GetCheckboxSize(p2t);
+   aDesiredWidgetSize.height = aDesiredWidgetSize.width;
 #endif
 
 
