@@ -344,8 +344,8 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit, PRBool aApplyTopMargin,
       mFrame->GetStyleData(eStyleStruct_Position,
                            (const nsStyleStruct*&)stylePos);
       if (NS_STYLE_POSITION_RELATIVE == stylePos->mPosition) {
-        x += aComputedOffsets.left - aComputedOffsets.right;
-        y += aComputedOffsets.top - aComputedOffsets.bottom;
+        x += aComputedOffsets.left;
+        y += aComputedOffsets.top;
       }
 
       // Compute combined-rect in callers coordinate system. The value
