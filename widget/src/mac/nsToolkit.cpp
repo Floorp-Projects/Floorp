@@ -49,12 +49,40 @@
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
 #include "nsGfxCIID.h"
+#include "nsIPref.h"
 
 // Class IDs...
 static NS_DEFINE_CID(kEventQueueCID,  NS_EVENTQUEUE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID,  NS_EVENTQUEUESERVICE_CID);
 
 static nsMacNSPREventQueueHandler*  gEventQueueHandler = nsnull;
+
+
+static CFBundleRef getBundle(CFStringRef frameworkPath)
+{
+  CFBundleRef bundle = NULL;
+ 
+  //	Make a CFURLRef from the CFString representation of the bundle's path.
+  //	See the Core Foundation URL Services chapter for details.
+  CFURLRef bundleURL = CFURLCreateWithFileSystemPath(NULL, frameworkPath, kCFURLPOSIXPathStyle, true);
+  if (bundleURL != NULL) {
+    bundle = CFBundleCreate(NULL, bundleURL);
+    if (bundle != NULL)
+      CFBundleLoadExecutable(bundle);
+    CFRelease(bundleURL);
+  }
+
+  return bundle;
+}
+
+static void* getQDFunction(CFStringRef functionName)
+{
+  static CFBundleRef systemBundle = getBundle(CFSTR("/System/Library/Frameworks/ApplicationServices.framework"));
+  if (systemBundle)
+    return CFBundleGetFunctionPointerForName(systemBundle, functionName);
+  return NULL;
+}
+
 
 //
 // Static thread local storage index of the Toolkit 
@@ -205,6 +233,39 @@ NS_IMETHODIMP nsToolkit::Init(PRThread */*aThread*/)
   nsWidgetAtoms::AddRefAtoms();
 
   mInited = true;
+  
+#if TARGET_CARBON
+  // from Apple's technote, yet un-numbered.
+#if UNIVERSAL_INTERFACES_VERSION <= 0x0400
+  enum {
+    kQDDontChangeFlags = 0xFFFFFFFF,         // don't change anything
+    kQDUseDefaultTextRendering = 0,          // bit 0
+    kQDUseTrueTypeScalerGlyphs = (1 << 0),   // bit 1
+    kQDUseCGTextRendering = (1 << 1),        // bit 2
+    kQDUseCGTextMetrics = (1 << 2)
+  };
+#endif
+  
+  // turn on quartz rendering if we find the symbol in the app framework. Just turn
+  // on the bits that we need, don't turn off what someone else might have wanted. If
+  // the pref isn't found, assume we want it on. That way, we have to explicitly put
+  // in a pref to disable it, rather than force everyone who wants it to carry around
+  // an extra pref.
+  typedef UInt32 (*qd_procptr)(UInt32);  
+  qd_procptr SwapQDTextFlags = (qd_procptr) getQDFunction(CFSTR("SwapQDTextFlags"));
+  if ( SwapQDTextFlags ) {
+    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
+    if (!prefs)
+      return NS_OK;
+    PRBool enableQuartz = PR_TRUE;
+    nsresult rv = prefs->GetBoolPref("browser.quartz.enable", &enableQuartz);
+    if ( NS_FAILED(rv) || enableQuartz ) {
+      UInt32 oldFlags = SwapQDTextFlags(kQDDontChangeFlags);
+      SwapQDTextFlags(oldFlags | kQDUseTrueTypeScalerGlyphs | kQDUseCGTextRendering);
+    }
+  }
+#endif
+
   return NS_OK;
 }
 
@@ -488,4 +549,6 @@ Boolean nsMacMemoryCushion::EnsureMemoryCushion()
     
     return true;
 }
+
+
 
