@@ -20,7 +20,7 @@
 #
 
 DEPTH		= ../..
-THEME_ROOT_DEPTH = .
+THEME_ROOT_DEPTH = @srcdir@
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
