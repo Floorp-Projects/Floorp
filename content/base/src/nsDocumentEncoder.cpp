@@ -25,7 +25,7 @@
 #include "nscore.h"
 #include "nsIFactory.h"
 #include "nsISupports.h"
-#include "nsIComponentManager.h"
+#include "nsIComponentManager.h" 
 #include "nsIServiceManager.h"
 #include "nsIDocument.h"
 #include "nsIDOMSelection.h"
