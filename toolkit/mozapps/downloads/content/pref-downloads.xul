@@ -68,10 +68,10 @@
     <caption label="&downloadManagerWindow.label;"/>
     
     <checkbox id="showWhenStarting" label="&showWhenStarting.label;" 
-              prefstring="browser.download.showWhenStarting"
+              prefstring="browser.download.manager.showWhenStarting"
               oncommand="toggleDMPrefUI(event.target);"/>
     <checkbox id="closeWhenDone" label="&closeWhenDone.label;" class="indent"
-              prefstring="browser.download.closeWhenDone"/>
+              prefstring="browser.download.manager.closeWhenDone"/>
   </groupbox>
 #endif
   
