@@ -118,12 +118,18 @@ function reportResults() {
 	//"&ua="         + ua;
     //window.open(reportURL, "test-results");
     var avgOpenTime = 0;
+    var minOpenTime = 99999;
     // ignore first open
     for (i = 1; i < MAX_INDEX; i++) {
         avgOpenTime += openingTimes[i];
+        if ( minOpenTime > openingTimes[i] ) {
+            minOpenTime = openingTimes[i];
+        }
     }
     avgOpenTime = Math.round(avgOpenTime / (MAX_INDEX - 1));
-    dump("__xulWinOpenTime:" + avgOpenTime + "\n");
+    dump("openingTimes="+openingTimes.slice(1)+"\n");
+    dump("avgOpenTime:" + avgOpenTime + "\n" );
+    dump("__xulWinOpenTime:" + minOpenTime + "\n");
     window.close();
 }
 
