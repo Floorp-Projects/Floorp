@@ -105,24 +105,6 @@ NS_METHOD nsFileWidget::SetFilterList(PRUint32 aNumberOfFilters,
   return NS_OK;
 }
 
-//-------------------------------------------------------------------------
-//
-// Get the file + path
-//
-//-------------------------------------------------------------------------
-
-NS_METHOD  nsFileWidget::GetFile(nsString& aFile)
-{
-  aFile.Truncate();
-  if (mWidget) {
-    gchar *fn = gtk_file_selection_get_filename(GTK_FILE_SELECTION(mWidget));
-    aFile.Append(fn);
-//  g_free(fn);
-  }
-  return NS_OK;
-}
-
-
 NS_METHOD  nsFileWidget::GetFile(nsFileSpec& aFile)
 {
   if (mWidget) {
@@ -138,7 +120,7 @@ NS_METHOD  nsFileWidget::GetFile(nsFileSpec& aFile)
 // Get the file + path
 //
 //-------------------------------------------------------------------------
-NS_METHOD  nsFileWidget::SetDefaultString(nsString& aString)
+NS_METHOD  nsFileWidget::SetDefaultString(const nsString& aString)
 {
   if (mWidget) {
     char *fn = aString.ToNewCString();
@@ -155,7 +137,7 @@ NS_METHOD  nsFileWidget::SetDefaultString(nsString& aString)
 // Set the display directory
 //
 //-------------------------------------------------------------------------
-NS_METHOD  nsFileWidget::SetDisplayDirectory(nsString& aDirectory)
+NS_METHOD  nsFileWidget::SetDisplayDirectory(const nsFileSpec& aDirectory)
 {
   mDisplayDirectory = aDirectory;
   return NS_OK;
@@ -166,7 +148,7 @@ NS_METHOD  nsFileWidget::SetDisplayDirectory(nsString& aDirectory)
 // Get the display directory
 //
 //-------------------------------------------------------------------------
-NS_METHOD  nsFileWidget::GetDisplayDirectory(nsString& aDirectory)
+NS_METHOD  nsFileWidget::GetDisplayDirectory(nsFileSpec& aDirectory)
 {
   aDirectory = mDisplayDirectory;
   return NS_OK;
@@ -175,7 +157,7 @@ NS_METHOD  nsFileWidget::GetDisplayDirectory(nsString& aDirectory)
 
 //-------------------------------------------------------------------------
 NS_METHOD nsFileWidget::Create(nsIWidget *aParent,
-                               nsString& aTitle,
+                               const nsString& aTitle,
                                nsFileDlgMode aMode,
                                nsIDeviceContext *aContext,
                                nsIAppShell *aAppShell,
@@ -220,7 +202,7 @@ nsFileWidget::OnDestroySignal(GtkWidget* aGtkWidget)
 }
 
 nsFileDlgResults nsFileWidget::GetFile(nsIWidget *aParent,
-                                       nsString &promptString,
+                                       const nsString &promptString,
                                        nsFileSpec &theFileSpec)
 {
 	Create(aParent, promptString, eMode_load, nsnull, nsnull);
@@ -234,7 +216,7 @@ nsFileDlgResults nsFileWidget::GetFile(nsIWidget *aParent,
 }
 
 nsFileDlgResults nsFileWidget::GetFolder(nsIWidget *aParent,
-                                         nsString &promptString,
+                                         const nsString &promptString,
                                          nsFileSpec &theFileSpec)
 {
 	Create(aParent, promptString, eMode_getfolder, nsnull, nsnull);
@@ -248,7 +230,7 @@ nsFileDlgResults nsFileWidget::GetFolder(nsIWidget *aParent,
 }
 
 nsFileDlgResults nsFileWidget::PutFile(nsIWidget *aParent,
-                                       nsString &promptString,
+                                       const nsString &promptString,
                                        nsFileSpec &theFileSpec)
 { 
 	Create(aParent, promptString, eMode_save, nsnull, nsnull);

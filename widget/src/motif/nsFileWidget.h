@@ -59,7 +59,7 @@ class nsFileWidget : public nsWindow, public nsIFileWidget
     // nsIWidget interface
   
     NS_IMETHOD            Create( nsIWidget *aParent,
-                                    nsString& aTitle,
+                                    const nsString& aTitle,
                                     nsFileDlgMode aMode,
                                     nsIDeviceContext *aContext = nsnull,
                                     nsIAppShell *aAppShell = nsnull,
@@ -68,8 +68,8 @@ class nsFileWidget : public nsWindow, public nsIFileWidget
 
     // nsIFileWidget part
     virtual PRBool        Show();
-    NS_IMETHOD            GetFile(nsString& aFile);
-    NS_IMETHOD            SetDefaultString(nsString& aString);
+    NS_IMETHOD            GetFile(nsFileSpec& aFile);
+    NS_IMETHOD            SetDefaultString(const nsString& aString);
     NS_IMETHOD            SetFilterList(PRUint32 aNumberOfFilters,
                                         const nsString aTitles[],
                                         const nsString aFilters[]);
