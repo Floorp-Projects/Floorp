@@ -214,7 +214,13 @@ function LoadMessage(messageNode)
     var resource = RDF.GetResource(uri);
     var message = resource.QueryInterface(Components.interfaces.nsIMessage); 
     if (message)
-      setTitleFromFolder(message.GetMsgFolder(), message.subject);
+    {
+      /* RICHIE: After we can get decoded unicode for the subject,
+              just uncomment the next line:
+         setTitleFromFolder(message.GetMsgFolder(), message.subject);
+      */
+      setTitleFromFolder(message.GetMsgFolder(), null);
+    }
 
 	  gCurrentDisplayedMessage = uri;
 	  OpenURL(uri);
