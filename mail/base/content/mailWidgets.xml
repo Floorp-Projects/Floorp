@@ -1,0 +1,915 @@
+<?xml version="1.0"?>
+
+<bindings   id="mailBindings"
+            xmlns="http://www.mozilla.org/xbl"
+            xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+            xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <!-- dummy widget to force this file to load -->
+  <binding id="dummy" extends="xul:box"/>
+ 
+  <!-- Message Pane Widgets -->
+
+  <!-- mail-toggle-headerfield: non email addrss headers which have a toggle associated with them (i.e. the subject). 
+       use label to set the header name.
+       use headerValue to set the header value. -->
+  <binding id="mail-toggle-headerfield">
+    <content>
+      <xul:hbox class="headerNameBox" align="start">
+          <xul:image class="expandHeaderViewButton" xbl:inherits="onclick=ontwistyclick"/>
+          <xul:spacer flex="1"/>
+        <xul:label class="headerName" xbl:inherits="value=label"/>  
+      </xul:hbox>
+      <xul:label class="headerValue" anonid="headerValue" flex="1">*</xul:label>
+    </content>
+
+    <implementation>      
+      <property name="headerValue" onset="return document.getAnonymousElementByAttribute(this, 'anonid', 'headerValue').firstChild.nodeValue = val;"/>
+    </implementation>
+  </binding>
+
+  <!-- mail-headerfield: presents standard text header name & value pairs. Don't use this for email addresses. 
+       use label to set the header name.
+       use headerValue to set the header value. -->
+  <binding id="mail-headerfield">
+    <content>
+      <xul:hbox class="headerNameBox" align="start">
+        <xul:label class="headerName" xbl:inherits="value=label" flex="1"/>
+      </xul:hbox>
+      <xul:label class="headerValue" anonid="headerValue" flex="1">*</xul:label>
+    </content>
+
+    <implementation>      
+      <property name="headerValue" onset="return document.getAnonymousElementByAttribute(this, 'anonid', 'headerValue').firstChild.nodeValue = val;" />                             
+    </implementation>
+  </binding>
+
+  <binding id="mail-emailheaderfield">
+    <content>
+      <xul:hbox class="headerNameBox" align="start">
+        <xul:label class="headerName" xbl:inherits="value=label" flex="1"/>
+        </xul:hbox>
+        <xul:mail-emailaddress anonid="emailAddressNode"/>
+    </content>
+
+    <implementation>
+      <property name="emailAddressNode" onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'emailAddressNode');"
+        readonly="true"/>
+    </implementation>
+  </binding>
+  
+  <!-- multi-emailHeaderField: presents multiple emailheaderfields with a toggle -->
+  <binding id="mail-multi-emailHeaderField">
+    <content>
+      <xul:hbox class="headerNameBox" align="start" pack="end">
+        <xul:image class="addresstwisty" anonid="toggleIcon"
+                   onclick="toggleAddressView();"/>
+        <xul:label class="headerName" xbl:inherits="value=label"/>
+        </xul:hbox>
+
+        <xul:label class="headerValue" anonid="emailAddresses" flex="1"/>
+        <xul:label class="headerValue" anonid="longEmailAddresses" flex="1" collapsed="true"/>
+    </content>
+
+    <implementation>
+      <constructor>
+        <![CDATA[
+          this.mLongViewCreated = false;
+          this.mAddresses = new Array;
+        ]]>
+      </constructor>
+
+      <field name="mLongViewCreated"/>
+      <field name="mAddresses"/>
+      <!-- as a perf optimization we are going to keep a cache of email address nodes which we've
+           created around for the lifetime of the widget. mSizeOfAddressCache controls how many of these
+           elements we keep around -->
+      <field name="mSizeOfAddressCache">3</field>
+      
+      <!-- addAddressView: a public method used to add an address to this widget. 
+           aAddresses is an object with 3 properties: displayName, emailAddress and fullAddress
+      -->
+      <method name="addAddressView">
+        <parameter name="aAddress"/>
+        <body>
+          <![CDATA[
+            this.mAddresses.push(aAddress);
+          ]]>
+        </body>
+      </method>
+      
+      <!-- updateEmailAddressNode: private method used to set properties on an address node -->
+      <method name="updateEmailAddressNode">
+        <parameter name="aEmailNode"/>
+        <parameter name="aAddress"/>
+        <body>
+          <![CDATA[
+            aEmailNode.setAttribute("label", aAddress.fullAddress);    
+            aEmailNode.setTextAttribute("emailAddress", aAddress.emailAddress);
+            aEmailNode.setTextAttribute("fullAddress", aAddress.fullAddress);  
+            aEmailNode.setTextAttribute("displayName", aAddress.displayName);
+
+            try
+            {
+              if ("AddExtraAddressProcessing" in top)
+                AddExtraAddressProcessing(aAddress.emailAddress, aEmailNode);
+            }
+            catch(ex)
+            {
+              dump("AddExtraAddressProcessing failed: " + ex);
+            }
+          ]]>
+        </body>
+      </method>
+
+      <!-- fillCachedAddresses: private method used to fill up any cached pre-existing
+           emailAddress fields without creating new email address fields. Returns a remainder
+           for the # of addresses which require new addresses being created.
+           Invariants: 1) aNumAddressesToShow >= 0 && it is <= mAddresses.length -->
+      <method name="fillCachedAddresses">
+        <parameter name="aAddressesNode"/>
+        <parameter name="aNumAddressesToShow"/>
+        <body>
+          <![CDATA[
+            var numExistingCachedAddresses = aAddressesNode.childNodes.length;
+            if (!numExistingCachedAddresses) 
+              return this.mAddresses.length; // we couldn't pre fill anything
+            else if (numExistingCachedAddresses > 1)
+              numExistingCachedAddresses = (numExistingCachedAddresses + 1)/ 2;
+            
+            var index = 0; 
+            var numAddressesAdded = 0;
+            var emailAddressNode;
+            var commaNode;
+            while (numAddressesAdded < numExistingCachedAddresses && numAddressesAdded < aNumAddressesToShow)
+            {
+              if (index && numExistingCachedAddresses > 1)
+              {
+                commaNode = aAddressesNode.childNodes[index++];
+                if (commaNode)
+                  commaNode.removeAttribute('collapsed');
+              }
+
+              // get the node pointed to by index
+              emailAddressNode = aAddressesNode.childNodes[index++];
+              this.updateEmailAddressNode(emailAddressNode, this.mAddresses[numAddressesAdded]);
+              emailAddressNode.removeAttribute('collapsed');
+              numAddressesAdded++;
+            }
+
+            // if we have added all of our elements but we still have more cached items in this address node
+            // then make sure the extra cached copies are collapsed...
+            numExistingCachedAddresses = aAddressesNode.childNodes.length;  // reset
+            while (index < numExistingCachedAddresses)
+            {
+              aAddressesNode.childNodes[index++].setAttribute('collapsed', true);
+            }
+
+            return this.mAddresses.length - numAddressesAdded;
+          ]]>
+        </body>
+      </method>
+
+      <!-- fillAddressesNode: private method used to create email address nodes for either our short
+           or long view. aAddressesNode: the div we want to add addresses too. 
+          aNumAddressesToShow: number of addresses to put into the list -->
+      <method name="fillAddressesNode">
+        <parameter name="aAddressesNode"/>
+        <parameter name="aNumAddressesToShow"/>
+        <body>
+          <![CDATA[
+            var numAddresses = this.mAddresses.length;
+            if (aNumAddressesToShow <= 0 || aNumAddressesToShow > numAddresses)  // then show all
+              aNumAddressesToShow = numAddresses;
+
+            // before we try to create email address nodes, try to leverage any cached nodes...
+            var remainder = this.fillCachedAddresses(aAddressesNode, aNumAddressesToShow);
+            var index = numAddresses - remainder; 
+            while (index < numAddresses && index < aNumAddressesToShow)
+            {
+              var newAddressNode = document.createElement("mail-emailaddress");
+              if (index)
+              {
+                var textNode = document.createElement("text");
+                textNode.setAttribute("value", ", ");
+                textNode.setAttribute("class", "emailSeparator");
+                aAddressesNode.appendChild(textNode);
+              }              
+              
+              var itemInDocument = aAddressesNode.appendChild(newAddressNode);
+              this.updateEmailAddressNode(itemInDocument, this.mAddresses[index]);
+              index++;
+            }
+          ]]>
+        </body>
+      </method>
+
+      <property name="emailAddresses" onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'emailAddresses');"
+        readonly="true"/>
+      <property name="longEmailAddresses" onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'longEmailAddresses');"
+        readonly="true"/> 
+      <property name="toggleIcon" onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'toggleIcon');"
+        readonly="true"/>
+
+      <!-- buildView: public method used by callers when they are done adding all the email addresses to the widget
+           aNumAddressesToShow: total # of addresses to show in the short view -->
+      <method name="buildViews">
+        <parameter name="aNumAddressesToShow"/>
+        <body>
+          <![CDATA[
+            // always build the short view...its cheap...
+            this.fillAddressesNode(this.emailAddresses, aNumAddressesToShow);
+            // if we are currently toggled to show all the email addresses, build the long one too...
+            if (this.emailAddresses.collapsed)
+              this.buildLongView();
+
+            // make sure the icon is always visible if we have more than the # of addresses to show     
+            this.toggleIcon.collapsed = this.mAddresses.length <= aNumAddressesToShow;
+          ]]> 
+        </body>
+      </method>
+            
+      <!-- buildLongView: private method used for delayed construction of the long view -->
+      <method name="buildLongView">
+        <body>
+          <![CDATA[
+            if (!this.mLongViewCreated)
+            {
+              this.fillAddressesNode(this.longEmailAddresses, -1);
+              this.mLongViewCreated = true;
+            }
+          ]]> 
+        </body>
+      </method>
+
+      <method name="toggleAddressView">
+        <body>
+          <![CDATA[
+          var shortNode = this.emailAddresses;
+          var longNode = this.longEmailAddresses;
+          var imageNode = this.toggleIcon;
+          // test to see which if short is already collapsed...
+          if (shortNode.collapsed)
+          {
+            longNode.collapsed = true;
+            shortNode.collapsed = false;
+            imageNode.removeAttribute("open");
+          }
+          else
+          {
+            this.buildLongView();
+            shortNode.collapsed = true;
+            longNode.collapsed = false;
+            imageNode.setAttribute("open", "true");
+
+            if (!this.mLongViewCreated)
+            {
+              // Need to call UpdateMessageHeaders() because this is the first
+              // time the long view is being built.  This is required in order
+              // to update the addresses of the long view that might contain
+              // extra image info.
+              // It should also only be called from toggleAddressView(), not
+              // from buildView().
+              UpdateMessageHeaders();
+            }
+          }
+          ]]>  
+        </body>
+      </method>
+      
+      <!-- internal method used to clear both our divs -->
+      <method name="clearChildNodes">
+        <parameter name="aParentNode"/>
+        <body>
+          <![CDATA[
+            // we want to keep around the first mSizeOfAddressCache email address nodes
+            // don't forget that we have comma text nodes in there too so really we want to keep
+            // around cache size * 2 - 1.
+            var numItemsToPreserve = this.mSizeOfAddressCache * 2 - 1;
+            var numItemsInNode = aParentNode.childNodes.length;
+
+            while (numItemsInNode && (numItemsInNode > numItemsToPreserve))
+            { 
+              aParentNode.removeChild(aParentNode.childNodes[numItemsInNode-1]);
+              numItemsInNode = numItemsInNode - 1;
+            }
+          ]]>       
+        </body>
+      </method>
+
+      <method name="clearEmailAddresses">
+        <body>
+          <![CDATA[
+            // clear out our local state
+            this.mAddresses = new Array; 
+            this.mLongViewCreated = false;
+
+            // remove anything inside of each of our labels....
+            var parentLabel = this.emailAddresses;
+            if (parentLabel)
+              this.clearChildNodes(parentLabel);
+            parentLabel = this.longEmailAddresses;
+            if (parentLabel)
+              this.clearChildNodes(parentLabel);             
+          ]]>
+        </body>
+      </method>       
+    </implementation>
+  </binding>
+
+  <binding id="mail-emailaddress">
+    <content popup="emailAddressPopup" context="emailAddressPopup">
+      <xul:label anonid="emailValue" class="emailDisplayButton plain"                 
+                 xbl:inherits="value=label,crop"/>
+      <xul:image class="emailDisplayImage" anonid="emailImage"
+                 context="emailAddressPopup" xbl:inherits="src=image"/>
+    </content>
+    
+    <implementation>  
+      <property name="label"      onset="this.getPart('emailValue').setAttribute('label',val); return val;"
+                                  onget="return this.getPart('emailValue').getAttribute('label');"/>
+      <property name="crop"       onset="this.getPart('emailValue').setAttribute('crop',val); return val;"
+                                  onget="return this.getPart('emailValue').getAttribute('crop');"/>
+      <property name="disabled"   onset="this.getPart('emailValue').setAttribute('disabled',val); return val;"
+                                  onget="return this.getPart('emailValue').getAttribute('disabled');"/>
+      <property name="src"        onset="this.getPart('emailImage').setAttribute('src',val); return val;"
+                                  onget="return this.getPart('emailImage').getAttribute('src');"/>
+      <property name="imgalign"   onset="this.getPart('emailImage').setAttribute('imgalign',val); return val;"
+                                  onget="return this.getPart('emailImage').getAttribute('imgalign');"/>
+
+      <method name="getPart">
+        <parameter name="aPartId"/>
+        <body><![CDATA[
+          return document.getAnonymousElementByAttribute(this, "anonid", aPartId);
+        ]]></body>
+      </method>
+
+      <method name="setTextAttribute">
+        <parameter name="attributeName"/>
+        <parameter name="attributeValue"/>
+        <body><![CDATA[
+          this.setAttribute(attributeName, attributeValue);
+          this.getPart("emailImage").setAttribute(attributeName, attributeValue);          
+          this.getPart("emailValue").setAttribute(attributeName, attributeValue);          
+        ]]></body>
+      </method>
+
+      <method name="getTextAttribute">
+        <parameter name="attributeName"/>
+        <body><![CDATA[   
+          return this.getPart("emailValue").getAttribute(attributeName);
+        ]]></body>
+      </method>
+
+      <method name="GetIconNode">
+        <body><![CDATA[
+          return this.getPart("emailImage");
+        ]]></body>
+      </method>
+    </implementation>
+  </binding>
+
+  <binding id="search-menulist-abstract" name="searchMenulistAbstract" extends="xul:box">
+    <content>
+      <xul:menulist class="search-menulist" xbl:inherits="flex" oncommand="this.parentNode.onSelect(event)">
+        <xul:menupopup class="search-menulist-popup"/>
+      </xul:menulist>
+    </content>
+
+    <implementation>
+      <field name="internalScope">null</field>
+      <field readonly="true" name="validityManager">
+        <![CDATA[
+           Components.classes['@mozilla.org/mail/search/validityManager;1'].getService(Components.interfaces.nsIMsgSearchValidityManager);
+        ]]>
+      </field>
+      <property name="searchScope" onget="return this.internalScope;">
+        <!-- scope ID - retrieve the table -->
+        <setter>
+          <![CDATA[
+            // if scope isn't changing this is a noop
+            if (this.internalScope == val) return val;
+
+            this.internalScope = val;
+            this.refreshList();
+            var targets = this.targets;
+            if (targets) {
+              for (var i=0; i< targets.length; i++) {
+                targets[i].searchScope = val;
+              }
+            }
+            return val;
+          ]]>
+        </setter>
+      </property>
+
+      <property name="validityTable" readonly="true" onget="return this.validityManager.getTable(this.searchScope)"/>
+
+      <property name="valueStrings" readonly="true">
+        <getter>
+          <![CDATA[
+            var strings = new Array;
+            var ids = this.valueIds;
+            var pref = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+            var hdrs;
+            try
+            {
+              hdrs = pref.getCharPref("mailnews.customHeaders");
+            }
+            catch(ex)
+            {
+              hdrs=null;
+            }
+            var hdrsArray = new Array;
+            if (hdrs)
+              hdrsArray = hdrs.split(": ");
+            var bundle = this.stringBundle;
+            var j=0;
+            for (var i=0; i<ids.length; i++)
+            {
+              if(ids[i] > Components.interfaces.nsMsgSearchAttrib.OtherHeader && hdrs)
+                strings[i] = hdrsArray[j++];
+              else
+                strings[i] = this.stringBundle.GetStringFromID(ids[i]);
+            }
+            return strings;
+          ]]>
+        </getter>
+      </property>
+      <property name="targets" readonly="true">
+        <getter>
+          <![CDATA[
+            var forAttrs =  this.getAttribute("for");
+            if (!forAttrs) return null;
+            var targetIds = forAttrs.split(",");
+            if (targetIds.length == 0) return null;
+
+            var targets = new Array;
+            var j=0;
+            for (var i=0; i<targetIds.length;i++) {
+              var target = document.getElementById(targetIds[i]);
+              if (target) targets[j++] = target;
+            }
+            return targets;
+          ]]>
+        </getter>
+      </property>
+
+      <!-- value forwards to the internal menulist's "value" attribute -->
+      <property name="value" onget="return document.getAnonymousNodes(this)[0].selectedItem.getAttribute('value');">
+        <setter>
+          <![CDATA[
+            var menulist = document.getAnonymousNodes(this)[0];
+            var dataItems = menulist.getElementsByAttribute("value", val);
+            if (dataItems.length > 0)
+                menulist.selectedItem = dataItems[0];
+
+            // now notify targets of new parent's value
+            var targets = this.targets;
+            if (targets) {
+              for (var i=0; i< targets.length; i++) {
+                targets[i].parentValue = val;
+              }
+            } else {
+                //dump("Doh! No targets!\n");
+            }
+            return val;
+          ]]>
+        </setter>
+      </property>
+      <!-- label forwards to the internal menulist's "label" attribute -->
+      <property name="label" onget="return document.getAnonymousNodes(this)[0].selectedItem.getAttribute('label');">
+      </property>        
+      <method name="refreshList">
+        <body>
+          <![CDATA[
+            var menuItemIds = this.valueIds;
+            var menuItemStrings = this.valueStrings;
+
+            var menulist = document.getAnonymousNodes(this)[0];
+            var popup = menulist.firstChild;
+
+            // save our old "value" so we can restore it later
+            var oldData = menulist.value;
+
+            // remove the old popup children
+            while (popup.hasChildNodes())
+              popup.removeChild(popup.lastChild);
+
+            var newSelection;
+            var customizePos=-1;
+            for (var i=0; i<menuItemIds.length; i++) 
+            {
+              // create the menuitem
+              if (Components.interfaces.nsMsgSearchAttrib.OtherHeader == menuItemIds[i].toString())
+                customizePos = i;
+              else
+              {
+                var menuitem = document.createElement("menuitem");
+                menuitem.setAttribute("label", menuItemStrings[i]);
+                menuitem.setAttribute("value", menuItemIds[i]);
+                popup.appendChild(menuitem);
+                // try to restore the selection
+                if (!newSelection || oldData == menuItemIds[i].toString())
+                  newSelection = menuitem;
+              }
+            }
+            if (customizePos != -1)
+            {
+              var separator = document.createElement("menuseparator");
+              popup.appendChild(separator);
+              menuitem = document.createElement("menuitem");
+              menuitem.setAttribute("label", menuItemStrings[customizePos]);
+              menuitem.setAttribute("value", menuItemIds[customizePos]);
+              popup.appendChild(menuitem);
+            }
+            // now restore the selection
+            menulist.selectedItem = newSelection;
+             
+          ]]>
+        </body>
+      </method>
+      <method name="onSelect">
+        <parameter name="event"/>
+        <body>
+          <![CDATA[
+            var menulist = document.getAnonymousNodes(this)[0];
+            // notify targets
+            var targets = this.targets;
+            if (targets) {
+              for (var i=0; i< targets.length; i++) {
+                targets[i].parentValue = menulist.value;
+              }
+            }
+          ]]>
+        </body>
+      </method>
+    </implementation>
+  </binding>
+
+  <!-- searchattribute - Subject, Sender, To, CC, etc. -->
+  <binding id="searchattribute" name="searchAttribute"
+           extends="chrome://messenger/content/mailWidgets.xml#search-menulist-abstract">
+    <implementation>
+      <field name="stringBundle">
+          <![CDATA[
+           srGetStrBundle("chrome://messenger/locale/search-attributes.properties");
+          ]]>
+      </field>
+      <property name="valueIds" readonly="true">
+        <getter>
+          <![CDATA[
+            var length = new Object;
+            return this.validityTable.getAvailableAttributes(length);
+          ]]>
+        </getter>
+      </property>
+      <constructor>
+      <![CDATA[
+        initializeTermFromId(this.id);
+      ]]>
+      </constructor>
+    </implementation>
+  </binding>
+
+  <!-- searchoperator - Contains, Is Less than, etc -->
+  <binding id="searchoperator" name="searchOperator"
+           extends="chrome://messenger/content/mailWidgets.xml#search-menulist-abstract">
+    <implementation>
+      <field name="searchAttribute">Components.interfaces.nsMsgSearchAttrib.Default</field>
+      <field name="stringBundle">
+          <![CDATA[
+            srGetStrBundle("chrome://messenger/locale/search-operators.properties");
+          ]]>
+      </field>
+      <property name="valueIds" readonly="true">
+        <getter>
+          <![CDATA[
+            var length = new Object;
+            return this.validityTable.getAvailableOperators(this.searchAttribute,length);
+          ]]>
+        </getter>
+      </property>
+      <property name="parentValue">
+        <setter>
+          <![CDATA[
+            if (this.searchAttribute == val && val != Components.interfaces.nsMsgSearchAttrib.OtherHeader) return val;
+            this.searchAttribute = val;
+            this.refreshList();
+            if (val == Components.interfaces.nsMsgSearchAttrib.OtherHeader)
+            {
+              window.openDialog('chrome://messenger/content/CustomHeaders.xul', "", 'modal,titlebar,chrome', null);
+              UpdateAfterCustomHeaderChange();
+            }
+            return val;
+          ]]>
+        </setter>
+        <getter>
+          <![CDATA[
+            return this.searchAttribute;
+          ]]>
+        </getter>
+      </property>
+    </implementation>
+  </binding>
+
+  <!-- searchvalue - a widget which dynamically changes it's user interface
+       depending on what type of data it's supposed to be showing
+       currently handles arbitrary text entry, and menulists for priority and
+       status
+  -->
+  <binding id="searchvalue" name="searchValue">
+    <content>
+      <xul:textbox flex="1" class="search-value-textbox"/>
+      <xul:menulist flex="1" class="search-value-menulist">
+        <xul:menupopup class="search-value-popup">
+          <xul:menuitem value="2" stringTag="priorityLowest" class="search-value-menuitem"/>
+          <xul:menuitem value="3" stringTag="priorityLow" class="search-value-menuitem"/>
+          <xul:menuitem value="4" stringTag="priorityNormal" class="search-value-menuitem"/>
+          <xul:menuitem value="5" stringTag="priorityHigh" class="search-value-menuitem"/>
+          <xul:menuitem value="6" stringTag="priorityHighest" class="search-value-menuitem"/>
+        </xul:menupopup>
+      </xul:menulist>
+      <xul:menulist flex="1" class="search-value-menulist">
+        <xul:menupopup class="search-value-popup">
+          <xul:menuitem value="2" stringTag="replied" class="search-value-menuitem"/>
+          <xul:menuitem value="1" stringTag="read" class="search-value-menuitem"/>
+          <xul:menuitem value="1048576" stringTag="new" class="search-value-menuitem"/>
+          <xul:menuitem value="65536" stringTag="forwarded" class="search-value-menuitem"/>
+        </xul:menupopup>
+      </xul:menulist>
+      <xul:textbox flex="1" class="search-value-textbox"/>
+    </content>
+    <implementation>
+      <field name="internalAttribute">null</field>
+      <field name="internalValue">null</field>
+      <!-- parentValue forwards to the attribute -->
+      <property name="parentValue" onset="return this.searchAttribute=val;"
+                                   onget="return this.searchAttribute;"/>
+      <property name="searchAttribute" onget="return this.internalAttribute;">
+        <setter>
+          <![CDATA[
+            // noop if we're not changing it
+            if (this.internalAttribute == val) return val;
+            this.internalAttribute = val;
+            // we inherit from a deck, so just use it's index attribute
+            // to hide/show widgets
+            if (val == Components.interfaces.nsMsgSearchAttrib.Priority)
+              this.setAttribute("selectedIndex", "1");
+            else if (val == Components.interfaces.nsMsgSearchAttrib.MsgStatus)
+              this.setAttribute("selectedIndex", "2");
+            else if (val == Components.interfaces.nsMsgSearchAttrib.Date)
+              this.setAttribute("selectedIndex", "3");
+            else
+              this.setAttribute("selectedIndex", "0");
+            return val;
+          ]]>
+        </setter>
+      </property>
+      <property name="value" onget="return this.internalValue;">
+        <setter>
+          <![CDATA[
+          // val is a nsIMsgSearchValue object
+          this.internalValue = val;
+          var attrib = val.attrib;
+          var nsMsgSearchAttrib = Components.interfaces.nsMsgSearchAttrib;
+          var children = document.getAnonymousNodes(this);
+          this.searchAttribute = attrib;
+          if (attrib == nsMsgSearchAttrib.Priority) {
+            var matchingPriority =
+              children[1].getElementsByAttribute("value", val.priority);
+            if (matchingPriority.length > 0)
+              children[1].selectedItem = matchingPriority[0];
+          }
+          else if (attrib == nsMsgSearchAttrib.MsgStatus) {
+            var matchingStatus =
+              children[2].getElementsByAttribute("value", val.status);
+            if (matchingStatus.length > 0) 
+              children[2].selectedItem = matchingStatus[0];
+          }
+          else if (attrib == nsMsgSearchAttrib.AgeInDays)
+            children[0].value = val.age;
+          else if (attrib == nsMsgSearchAttrib.Date)
+            children[3].value = convertPRTimeToString(val.date);
+          else
+            children[0].value = val.str;
+          return val;
+          ]]>
+        </setter>
+      </property>
+      <method name="save">
+        <body>
+          <![CDATA[
+            var searchValue = this.value;
+            var searchAttribute = this.searchAttribute;
+            var nsMsgSearchAttrib = Components.interfaces.nsMsgSearchAttrib;
+            var children = document.getAnonymousNodes(this);
+
+            searchValue.attrib = searchAttribute;
+            if (searchAttribute == nsMsgSearchAttrib.Priority) {
+               searchValue.priority = children[1].selectedItem.value;
+            }
+            else if (searchAttribute == nsMsgSearchAttrib.MsgStatus)
+               searchValue.status = children[2].selectedItem.value;
+            else if (searchAttribute == nsMsgSearchAttrib.AgeInDays)
+               searchValue.age = children[0].value;
+            else if (searchAttribute == nsMsgSearchAttrib.Date)
+               searchValue.date = convertStringToPRTime(children[3].value);
+            else
+               searchValue.str = children[0].value;
+          ]]>
+        </body>
+      </method>
+      <method name="saveTo">
+        <parameter name="searchValue"/>
+        <body>
+          <![CDATA[
+            this.internalValue = searchValue;
+            this.save();
+          ]]>
+        </body>
+      </method>
+      <method name="fillStringsForChildren">
+        <parameter name="parentNode"/>
+        <parameter name="bundle"/>
+        <body>
+          <![CDATA[
+            var children = parentNode.childNodes;
+            var len=children.length;
+            for (var i=0; i<len; i++) {
+              var node = children[i];
+              var stringTag = node.getAttribute("stringTag");
+              if (stringTag) {
+                var attr = (node.tagName == "label") ? "value" : "label";
+                node.setAttribute(attr, bundle.GetStringFromName(stringTag));
+              }
+            }
+          ]]>
+        </body>
+      </method>
+      <method name="initialize">
+        <parameter name="menulist"/>
+        <parameter name="bundle"/>
+        <body>
+          <![CDATA[
+            this.fillStringsForChildren(menulist.firstChild, bundle);
+
+            // to work around bug #78429, set and reset the selectedItem
+            var item = menulist.selectedItem;
+            menulist.selectedItem = null;
+            menulist.selectedItem = item;
+          ]]>
+        </body>
+      </method>
+      <constructor>
+      <![CDATA[
+        // initialize strings
+        var bundle = srGetStrBundle("chrome://messenger/locale/messenger.properties");
+
+        // intialize the priority picker
+        this.initialize(document.getAnonymousNodes(this)[1], bundle);
+
+        // initialize the status picker
+        this.initialize(document.getAnonymousNodes(this)[2], bundle);
+
+        var datePicker = document.getAnonymousNodes(this)[3];
+        var searchAttribute = this.searchAttribute;
+        var nsMsgSearchAttrib = Components.interfaces.nsMsgSearchAttrib;
+        var time;
+        if (searchAttribute == nsMsgSearchAttrib.Date)
+         time = datePicker.value;
+        else
+         time = new Date();
+        datePicker.setAttribute("value",convertDateToString(time));
+      ]]>
+      </constructor>
+    </implementation>
+    <handlers>
+	<handler event="keypress"><![CDATA[
+	  if (event.keyCode == 13) {
+	    onEnterInSearchTerm(); 
+          }
+        ]]></handler>
+    </handlers>
+  </binding>
+  <binding id="searchterm" name="searchTerm" extends="xul:box">
+    <implementation>
+      <field name="internalSearchTerm">null</field>
+      <field name="internalBooleanAnd">null</field>
+      <!-- the actual nsIMsgSearchTerm object -->
+      <property name="searchTerm" onget="return this.internalSearchTerm">
+        <setter>
+          <![CDATA[
+            this.internalSearchTerm = val;
+
+            var term = val;
+            // val is a nsIMsgSearchTerm
+            var searchAttribute=this.searchattribute;
+            var searchOperator=this.searchoperator;
+            var searchValue=this.searchvalue;
+
+            // now reflect all attributes of the searchterm into the widgets
+            if (searchAttribute) searchAttribute.value = term.attrib;
+            if (searchOperator) searchOperator.value = val.op;
+            if (searchValue) searchValue.value = term.value;
+
+            this.booleanAnd = val.booleanAnd;
+          ]]>
+        </setter>
+      </property>
+ 
+      <property name="searchScope">
+        <getter>
+          <![CDATA[
+             var searchAttribute = this.searchattribute;
+             if (searchAttribute)
+               return searchAttribute.searchScope;
+             return undefined;
+           ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+            var searchAttribute = this.searchattribute;
+            if (searchAttribute) searchAttribute.searchScope=val;
+           ]]>
+        </setter>
+      </property>
+      <!-- the three tags that make up a term - to use, set the
+           attribute in the XUL to the ID of the term.
+        -->
+      <property name="searchattribute" 
+                onget="return document.getElementById(this.getAttribute('searchattribute'));"
+                onset="this.setAttribute('searchattribute',val.id)"/>
+
+      <property name="searchoperator" 
+                onget="return document.getElementById(this.getAttribute('searchoperator'));"
+                onset="this.setAttribute('searchoperator',val.id)"/>
+
+      <property name="searchvalue" 
+                onget="return document.getElementById(this.getAttribute('searchvalue'));"
+                onset="this.setAttribute('searchvalue',val.id)"/>
+      <field name="booleanNodes">
+        <![CDATA[
+          null;
+        ]]>
+      </field>
+      <field name="stringBundle">
+          <![CDATA[
+             srGetStrBundle("chrome://messenger/locale/search.properties");
+          ]]>
+      </field>
+      <property name="booleanAnd" onget="return this.internalBooleanAnd">
+        <setter>
+          <![CDATA[
+            // whenever you set this, all nodes in booleanNodes
+            // are updated to reflect the string
+
+            if (this.internalBooleanAnd == val) return;
+            this.internalBooleanAnd = val;
+
+            var booleanNodes = this.booleanNodes;
+            if (!booleanNodes) return;
+
+            var stringBundle = this.stringBundle;
+            var andString = val ? "And" : "Or";
+            for (var i=0; i<booleanNodes.length; i++) {
+              try {              
+                var staticString =
+                    stringBundle.GetStringFromName("search" + andString + i);
+                if (staticString && staticString.length>0)
+                    booleanNodes[i].setAttribute("value", staticString);
+              } catch (ex) { /* no error, means string not found */}
+            }
+          ]]>
+        </setter>
+      </property>
+      <method name="save">
+        <body>
+          <![CDATA[
+            var searchTerm = this.searchTerm;
+            searchTerm.attrib = this.searchattribute.value;
+            if (this.searchAttribute > nsMsgSearchAttrib.OtherHeader && this.searchAttribute < nsMsgSearchAttrib.kNumMsgSearchAttributes) 
+              searchTerm.arbitraryHeader = this.searchattribute.label;
+            searchTerm.op = this.searchoperator.value;
+            if (this.searchvalue.value)
+              this.searchvalue.save();
+            else
+              this.searchvalue.saveTo(searchTerm.value);
+            searchTerm.value = this.searchvalue.value;
+            searchTerm.booleanAnd = this.booleanAnd;
+          ]]>
+        </body>
+      </method>
+      <!-- if you have a search term element with no search term -->
+      <method name="saveTo">
+        <parameter name="searchTerm"/>
+        <body>
+          <![CDATA[
+            this.internalSearchTerm = searchTerm;
+            this.save();
+          ]]>
+        </body>
+      </method>
+    </implementation>
+  </binding>
+</bindings>

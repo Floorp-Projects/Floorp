@@ -1,0 +1,113 @@
+<?xml version="1.0"?> <!-- -*- Mode: SGML; indent-tabs-mode: nil; -*- -->
+<!--
+
+  The contents of this file are subject to the Netscape Public
+  License Version 1.1 (the "License"); you may not use this file
+  except in compliance with the License. You may obtain a copy of
+  the License at http://www.mozilla.org/NPL/
+ 
+  Software distributed under the License is distributed on an "AS
+  IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  implied. See the License for the specific language governing
+  rights and limitations under the License.
+ 
+  The Original Code is mozilla.org code.
+ 
+  The Initial Developer of the Original Code is Netscape
+  Communications Corporation.  Portions created by Netscape are
+  Copyright (C) 2000 Netscape Communications Corporation. All
+  Rights Reserved.
+ 
+   - Contributor(s): David Bienvenu          <bienvenu@netscape.com>
+                     Doron Rosenberg         <doronr@naboonline.com> 
+-->
+
+<?xml-stylesheet href="chrome://messenger/skin/dialogs.css" type="text/css"?>
+
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/folderProps.dtd">
+
+<window
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  title="&folderProps.windowtitle.label;"
+  onload="folderPropsOnLoad()" style="width: 36em;"
+  class="dialog">
+ 
+  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"></script>
+  <script type="application/x-javascript" src="chrome://messenger/content/folderProps.js"></script>
+  <script type="application/x-javascript">
+  <![CDATA[
+    var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+    observerService.notifyObservers(null, "charsetmenu-selected", "other");
+  ]]>
+  </script>
+
+<keyset id="dialogKeys"/>  
+
+<tabbox>
+  <tabs>
+    <tab id="GeneralTab" label="&generalInfo.label;"/>
+    <tab hidefor="pop3,none" hidable="true" id="OfflineTab" label="&folderOfflineTab.label;"/>
+    <tab hidefor="pop3,none,nntp" hidable="true" id="SharingTab" label="&folderSharingTab.label;"/>
+  </tabs>
+  <tabpanels id="folderPropTabPanel">
+    <vbox>
+      <hbox id="nameBox" align="center">
+        <label value="&folderProps.name.label;" for="name"/>
+        <textbox id="name" readonly="true" flex="1"/>
+      </hbox>
+      
+      <vbox>
+        <hbox align="center" valign="middle">
+          <label value="&folderCharsetTab.label;" control="folderCharSetList"/>
+          <menulist id="folderCharsetList" ref="NC:DecodersRoot" datasources="rdf:charset-menu"> 
+            <template>
+              <menupopup>
+                <menuitem label="rdf:http://home.netscape.com/NC-rdf#Name" value="..." uri="..."/>
+              </menupopup>
+            </template>
+          </menulist>
+        </hbox> 
+        <checkbox class="indent" id="folderCharsetOverride" label="&folderCharsetOverride.label;" />
+        <checkbox hidable="true" hidefor="pop3,none,nntp"
+                  class="indent" id="folderCheckForNewMessages"
+                  label="&folderCheckForNewMessages.label;" />
+      </vbox>
+    </vbox>
+ 
+    <vbox hidable="true" hidefor="pop3,none" valign="top" align="start">
+      <vbox>
+        <checkbox iscontrolcontainer="true" hidable="true"  
+                  wsm_persist="true" id="offline.selectForOfflineFolder"  
+                  hidefor="nntp" label="&offlineFolder.check.label;" />
+        <checkbox iscontrolcontainer="true" hidable="true" 
+                  wsm_persist="true" id="offline.selectForOfflineNewsgroup" 
+                  hidefor="imap" label="&selectofflineNewsgroup.check.label;" />
+      </vbox>
+      <button iscontrolcontainer="true" hidable="true" label="&offlineFolder.button.label;" 
+              oncommand="onOfflineFolderDownload();" 
+              id="offline.offlineFolderDownloadButton" hidefor="nntp" orient="right"/>
+      <button iscontrolcontainer="true" hidable="true" label="&offlineNewsgroup.button.label;" 
+              oncommand="onOfflineFolderDownload();" 
+              id="offline.offlineNewsgroupDownloadButton" hidefor="imap" orient="right"/>
+    </vbox>
+    <vbox hidable="true" hidefor="pop3,none,nntp" valign="top" align="start">
+      <hbox>
+      <label value="&folderType.label;" id="folderTypeLabel"/>
+      <label value="" id="folderType.text"/>
+      </hbox>
+      <label value="" id="folderDescription.text"/>
+      <label value=" " />
+      <label value="&permissionsDesc.label;" id="permissionsDescLabel"/>
+      <label value="" id="folderPermissions.text"/>
+      <spacer flex="100%"/>
+      <button iscontrolcontainer="true" hidable="true" label="&privileges.button.label;" 
+              oncommand="onFolderPrivileges();" 
+              id="imap.FolderPrivileges" hidefor="pop3,none,nntp" orient="right"/>
+    </vbox>
+  </tabpanels>
+</tabbox>
+
+<hbox align="right" id="okCancelButtonsRight"/>
+</window>

@@ -1,0 +1,185 @@
+<?xml version="1.0"?> 
+<!--
+The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Original Code is Mozilla Communicator client code, released
+March 31, 1998.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+ Copyright (C) 1998-1999 Netscape Communications Corporation. All
+Rights Reserved.
+--> 
+
+<?xml-stylesheet href="chrome://messenger/skin/subscribe.css" type="text/css"?>
+
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/subscribe.dtd">
+
+<dialog xmlns:NC="http://home.netscape.com/NC-rdf#" 
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&subscribeDialog.title;"
+        width="500"
+        height="400"
+        persist="width height screenX screenY"
+        buttons="accept,cancel,help"
+        onload="SubscribeOnLoad()"
+        onunload="SubscribeOnUnload()"
+        ondialogaccept="return subscribeOK();"
+        ondialogcancel="return subscribeCancel();"
+        ondialoghelp="return doHelpButton();">   
+     
+<stringbundle id="bundle_subscribe" src="chrome://messenger/locale/subscribe.properties"/>
+<script type="application/x-javascript" src="chrome://messenger/content/mailWindow.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/subscribe.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
+<script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
+
+  <grid flex="1" style="width: 40em; height: 25em;">
+    <columns>
+      <column flex="1"/>
+      <column/>
+    </columns>
+  
+    <rows>
+      <row>
+        <grid flex="1">
+          <columns>
+            <column/>
+            <column flex="1"/>
+          </columns>
+          
+          <rows>
+            <row>
+              <hbox pack="end" align="center">
+                <label value="&server.label;" accesskey="&server.accesskey;" control="serverMenu"/>
+              </hbox>
+              <menulist oncommand="onServerClick(event);" id="serverMenu"
+                        datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
+                        containment="http://home.netscape.com/NC-rdf#child"
+                        ref="msgaccounts:/" flex="1">
+                <template>
+                  <rule NC:CanSubscribe="true">
+                    <menupopup>
+                      <menuitem class="subscribeMenuItem menuitem-iconic" uri="..." label="rdf:http://home.netscape.com/NC-rdf#Name" ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType" IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"/>
+                    </menupopup>
+                  </rule>
+                </template>
+              </menulist>
+            </row>
+            <row align="center">
+              <label value="&namefield.label;" accesskey="&namefield.accesskey;" 
+                     id="namefieldlabel" control="namefield"/>
+              <textbox id="namefield" flex="1" oninput="Search();"/>
+            </row>
+          </rows>
+        </grid>
+        <spacer/>
+      </row>
+      <row>
+        <separator class="thin"/>
+        <spacer/>
+      </row>
+      <row flex="1">
+      <deck id="subscribedeck" selectedIndex="0">
+      <hbox id="normalview">
+        <tree id="subscribeTree"
+              flex="1"
+              seltype="multiple"
+              datasources="rdf:null"
+              flags="dont-build-content"
+              disableKeyNavigation="true"
+              onkeypress="onSubscribeTreeKeyPress(event);"
+              onclick="SubscribeOnClick(event);"> 
+          <template>
+            <rule>
+              <conditions>
+                <treeitem uri="?container"/>
+                <member container="?container" child="?member"/>
+              </conditions>
+              
+              <bindings>
+                <binding subject="?member"
+                        predicate="http://home.netscape.com/NC-rdf#LeafName"
+                        object="?LeafName"/>
+                <binding subject="?member"
+                        predicate="http://home.netscape.com/NC-rdf#ServerType"
+                        object="?ServerType"/>
+                <binding subject="?member"
+                        predicate="http://home.netscape.com/NC-rdf#Subscribed"
+                        object="?Subscribed"/>
+                <binding subject="?member"
+                        predicate="http://home.netscape.com/NC-rdf#TotalMessages"
+                        object="?TotalMessages"/>
+              </bindings>
+
+              <action>
+                <treechildren>
+                  <treeitem uri="?member">
+                    <treerow>
+                      <treecell label="?LeafName" properties="ServerType-?ServerType"/>
+                      <treecell properties="Subscribed-?Subscribed"/>
+                      <treecell label="?TotalMessages"/>
+                    </treerow>
+                  </treeitem>
+                </treechildren>
+              </action>
+            </rule>
+          </template>
+    
+          <treecols id="theSubscribeColumns">
+            <treecol id="nameColumn" persist="hidden" flex="1" primary="true" label="..."
+                     sort="?LeafName"/>
+            <treecol id="subscribedColumn" persist="hidden" label="&subscribedHeader.label;"
+                     sort="?Subscribed"/>
+            <treecol id="messagesColumn" persist="hidden" label="&messagesHeader.label;"
+                     sort="?TotalMessages"/>
+          </treecols>
+        </tree>
+     </hbox>
+     <hbox id="searchview">
+       <tree id="searchTree" flex="1" 
+              disableKeyNavigation="true"
+              onkeypress="onSearchTreeKeyPress(event);"
+              onclick="SearchOnClick(event);"> 
+         <treecols>
+           <treecol id="nameColumn2" persist="hidden" flex="1" primary="true" label="..." />
+           <treecol id="subscribedColumn2" persist="hidden" label="&subscribedHeader.label;" />
+           <treecol id="messagesColumn2" persist="hidden" label="&messagesHeader.label;" />
+         </treecols>
+         <treechildren id="searchTreeBody"/>
+       </tree>
+     </hbox>
+     </deck>
+        <vbox>
+          <button id="subscribe" label="&subscribeButton.label;" accesskey="&subscribeButton.accesskey;" 
+                  oncommand="SetSubscribeState(true)"/>
+          <button id="unsubscribe" label="&unsubscribeButton.label;" accesskey="&unsubscribeButton.accesskey;" 
+                  oncommand="SetSubscribeState(false)"/>
+          <button id="refresh" label="&refreshButton.label;" accesskey="&refreshButton.accesskey;" 
+                  oncommand="Refresh()"/>
+          <button id="stop" label="&stopButton.label;" accesskey="&stopButton.accesskey;" 
+                  oncommand="Stop()"/>
+          <spacer flex="1"/>
+        </vbox>
+      </row>
+      <row>
+        <hbox id="statusContainerBox" >
+           <statusbarpanel id="statusText" crop="right" flex="1"/> 
+           <statusbarpanel class="statusbarpanel-progress">
+             <progressmeter class="progressmeter-statusbar" id="statusbar-icon" mode="normal" value="0"/>
+           </statusbarpanel>
+         </hbox>
+         <hbox/>
+      </row>
+    </rows>
+  </grid>
+  <separator  class="thin"/>
+</dialog>

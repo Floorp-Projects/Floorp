@@ -1,0 +1,87 @@
+<?xml version="1.0"?>
+<RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:chrome="http://www.mozilla.org/rdf/chrome#">
+
+  <!-- list all the packages being supplied by this jar -->
+  <RDF:Seq about="urn:mozilla:package:root">
+    <RDF:li resource="urn:mozilla:package:messenger"/>
+  </RDF:Seq>
+
+  <!-- package information -->
+  <RDF:Description about="urn:mozilla:package:messenger"
+        chrome:displayName="Messenger"
+        chrome:author="mozilla.org"
+        chrome:name="messenger">
+  </RDF:Description>
+
+  <!-- overlay information -->
+  <RDF:Seq about="urn:mozilla:overlays">
+    <RDF:li resource="chrome://communicator/content/pref/preftree.xul"/>
+    <RDF:li resource="chrome://communicator/content/pref/pref-appearance.xul"/>
+    <RDF:li resource="chrome://communicator/content/pref/pref-advanced.xul"/>
+    <RDF:li resource="chrome://communicator/content/tasksOverlay.xul"/>
+    <RDF:li resource="chrome://navigator/content/navigatorOverlay.xul"/>
+    <RDF:li resource="chrome://messenger/content/messenger.xul"/>
+    <RDF:li resource="chrome://messenger/content/mail3PaneWindowVertLayout.xul"/>
+    <RDF:li resource="chrome://messenger/content/messengercompose/messengercompose.xul"/>
+    <RDF:li resource="chrome://messenger/content/addressbook/addressbook.xul"/>
+    <RDF:li resource="chrome://messenger/content/addressbook/abSelectAddressesDialog.xul"/>
+    <RDF:li resource="chrome://editor/content/editor.xul"/>
+  </RDF:Seq>
+
+
+  <!-- messenger preferences branches -->
+  <RDF:Seq about="chrome://communicator/content/pref/preftree.xul">
+    <RDF:li>chrome://messenger/content/mailPrefsOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <!-- messenger startup pref -->
+  <RDF:Seq about="chrome://communicator/content/pref/pref-appearance.xul">
+    <RDF:li>chrome://messenger/content/mailPrefsOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <!-- messenger js toggle pref -->
+  <RDF:Seq about="chrome://communicator/content/pref/pref-advanced.xul">
+    <RDF:li>chrome://messenger/content/mailPrefsOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <!-- messenger taskbar/tasks menu items -->
+  <RDF:Seq about="chrome://communicator/content/tasksOverlay.xul">
+    <RDF:li>chrome://messenger/content/mailTasksOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <!-- messenger items for Navigator -->
+  <RDF:Seq about="chrome://navigator/content/navigatorOverlay.xul">
+    <RDF:li>chrome://messenger/content/mailNavigatorOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <!-- messenger items for Messenger -->
+  <RDF:Seq about="chrome://messenger/content/messenger.xul">
+    <RDF:li>chrome://messenger/content/mailMessengerOverlay.xul</RDF:li>
+  </RDF:Seq>
+  <RDF:Seq about="chrome://messenger/content/mail3PaneWindowVertLayout.xul">
+    <RDF:li>chrome://messenger/content/mailMessengerOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <!-- messenger items for Mail Compose -->
+  <RDF:Seq about="chrome://messenger/content/messengercompose/messengercompose.xul">
+    <RDF:li>chrome://messenger/content/mailMessengerComposeOverlay.xul</RDF:li>
+  </RDF:Seq>
+  
+  <!-- messenger items for Addressbook -->
+  <RDF:Seq about="chrome://messenger/content/addressbook/addressbook.xul">
+    <RDF:li>chrome://messenger/content/mailABOverlay.xul</RDF:li>
+  </RDF:Seq>
+  
+  <!-- messenger items for Select Addresses dialog -->
+  <RDF:Seq about="chrome://messenger/content/addressbook/abSelectAddressesDialog.xul">
+    <RDF:li>chrome://messenger/content/mailOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+
+  <!-- messenger items for Composer -->
+  <RDF:Seq about="chrome://editor/content/editor.xul">
+    <RDF:li>chrome://messenger/content/mailEditorOverlay.xul</RDF:li>
+  </RDF:Seq>
+  
+</RDF:RDF>

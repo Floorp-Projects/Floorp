@@ -1,0 +1,158 @@
+<?xml version="1.0"?>
+
+<!-- retrieve generic commands -->
+<?xul-overlay href="chrome://messenger/content/mailOverlay.xul"?>
+
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/mailNavigatorOverlay.dtd" >
+
+<overlay id="mailNavigatorOverlay"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/x-javascript">
+  <![CDATA[
+    function getCurrentIdentityKey()
+    {
+      try 
+      {
+        var cwindowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
+        var iwindowManager = Components.interfaces.nsIWindowMediator;
+        var windowManager  = cwindowManager.QueryInterface(iwindowManager);
+        var mailWindow = windowManager.getMostRecentWindow('mail:3pane');
+        var folder = mailWindow.GetFirstSelectedMsgFolder();
+        var server = folder.server;
+        if (server.type == "nntp")//if the account is a news account use default identity
+          return null;
+        else {
+          var identity = mailWindow.getIdentityForServer(server);
+          return identity;
+        }
+      }
+      catch(ex) {
+        return null;
+      }
+    }
+
+    // attachment: 0 - link
+    //             1 - page
+    //             2 - image
+    function openComposeWindow(url, title, attachment)
+    {                                                                          
+      var params = Components.classes["@mozilla.org/messengercompose/composeparams;1"].createInstance(Components.interfaces.nsIMsgComposeParams);
+      if (params)
+      {
+        params.composeFields = Components.classes['@mozilla.org/messengercompose/composefields;1'].createInstance(Components.interfaces.nsIMsgCompFields);
+        if (params.composeFields)
+        {
+          if (attachment == 0 || attachment == 1)
+          {
+            params.composeFields.body = url;
+            params.composeFields.subject = title;
+            params.bodyIsLink = true;
+          }
+          if (attachment == 1 || attachment == 2)
+          {
+            var attachmentData = Components.classes["@mozilla.org/messengercompose/attachment;1"].createInstance(Components.interfaces.nsIMsgAttachment);
+            if (attachmentData)
+            {
+              attachmentData.url = url;
+              params.composeFields.addAttachment(attachmentData);
+            }
+          }
+          params.identity = getCurrentIdentityKey();
+          var composeService = Components.classes["@mozilla.org/messengercompose;1"].getService(Components.interfaces.nsIMsgComposeService);
+          if (composeService)
+            composeService.OpenComposeWindowWithParams(null, params);
+        }                                                                         
+      }                                                                         
+    }   
+  
+    function sendLink(pageUrl, pageTitle)
+    {
+      try {
+        openComposeWindow(pageUrl, pageTitle, 0);
+      } catch(ex) { dump("Cannot Send Link: " + ex + "\n"); }
+    }
+
+    function sendImage(imageURL)
+    {
+      try {
+        openComposeWindow(imageURL, null, 2);
+      } catch(ex) { dump("Cannot Send Image: " + ex + "\n"); }
+    }
+
+    function sendPage(aDocument)
+    {
+      if (!aDocument)
+        aDocument = window._content.document;
+        
+      var pageUrl = aDocument.URL;
+      var pageTitle = aDocument.title;
+
+      try {
+        openComposeWindow(pageUrl, pageTitle, 1);
+      } catch(ex) { dump("Cannot Send Page: " + ex + "\n"); }
+    }
+
+    function initMailContextMenuItems(aEvent)
+    {
+      var shouldShowSendPage = !(gContextMenu.onTextInput || gContextMenu.isTextSelected) && !(gContextMenu.onLink && gContextMenu.onImage);
+      gContextMenu.showItem("context-sendpage", shouldShowSendPage);
+   
+      gContextMenu.showItem("context-sep-apps", gContextMenu.shouldShowSeparator("context-sep-apps"));
+    }
+      
+    var gAddedMailContextMenuPopupListener = false;
+    function initMailContextMenuPopupListener(aEvent)
+    {
+      // This is really lame, but we can't seem to add a bubbling listener to the DOMWindow (!)
+      if (gAddedMailContextMenuPopupListener)
+        return;
+      var popup = document.getElementById("contentAreaContextMenu");
+      popup.addEventListener("popupshowing", initMailContextMenuItems, false);
+      gAddedMailContextMenuPopupListener = true;
+    }
+
+    addEventListener("load", initMailContextMenuPopupListener, true);
+  ]]>
+  </script>         
+
+  <!-- navigator specific commands -->
+  <commandset id="tasksCommands">
+    <command id="cmd_sendPage" oncommand="sendPage();"/>
+    <command id="Browser:SendLink" oncommand="sendLink(window._content.location.href, window._content.document.title);"/>
+  </commandset>
+         
+  <!-- navigator specific UI items -->
+  <menupopup id="menu_NewPopup">
+    <menuitem id="menu_newCard" insertafter="navBeginGlobalNewItems"/>
+    <menuitem id="menu_newMessage" insertafter="navBeginGlobalNewItems"/>
+  </menupopup>
+
+  <menupopup id="menu_FilePopup">
+    <menuitem id="menu_sendPage" label="&sendPage.label;" accesskey="&sendPage.accesskey;" command="cmd_sendPage" position="9"/>
+    <menuitem id="menu_sendLink" label="&sendLinkCmd.label;" accesskey="&sendLinkCmd.accesskey;" command="Browser:SendLink" position="10"/>
+  </menupopup>
+
+  <popup id="contentAreaContextMenu">
+    <menuitem id="context-sendpage"
+              label="&contextSendPage.label;"
+              accesskey="&contextSendPage.accesskey;"
+              oncommand="sendPage();"
+              insertafter="context-savepage"/>
+    <menuitem id="context-sendimage"
+              label="&contextSendImage.label;"
+              accesskey="&contextSendImage.accesskey;"
+              oncommand="sendImage(gContextMenu.imageURL);"
+              insertafter="context-saveimage"/>
+    <menu id="frame">
+    <menupopup id="frame_popup">
+      <menuitem insertafter="saveframeas"
+                label="&contextSendFrame.label;"
+                accesskey="&contextSendFrame.accesskey;"
+                oncommand="sendPage(gContextMenu.target.ownerDocument);"/>
+    </menupopup>
+    </menu>
+  </popup> 
+  
+</overlay>
+

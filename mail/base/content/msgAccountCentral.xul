@@ -1,0 +1,148 @@
+<?xml version="1.0"?> 
+<!--
+The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Original Code is Mozilla Communicator client code, released
+March 31, 1998.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+Copyright (C) 1998-1999 Netscape Communications Corporation. All
+Rights Reserved.
+
+-->
+
+<?xml-stylesheet href="chrome://messenger/skin/accountCentral.css" type="text/css"?>
+
+<!DOCTYPE window [
+ <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">
+ %brandDTD;
+ <!ENTITY % acctCentralDTD SYSTEM "chrome://messenger/locale/msgAccountCentral.dtd">
+ %acctCentralDTD;
+]>
+
+
+<page
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  onload="OnInit();">
+
+  <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
+  <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
+  <stringbundle id="bundle_prefs" src="chrome://messenger/locale/prefs.properties"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/AccountManager.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/accountUtils.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/commandglue.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/mailWindowOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/mailWindow.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/msgMail3PaneWindow.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/msgAccountCentral.js"/>
+
+  <grid flex="1" id="acctCentralGrid"> 
+    <columns>
+      <column flex="40" id="acctCentralActionsColumn"/>
+      <column flex="60" id="acctCentralHelpDataColumn"/>
+    </columns>
+
+    <rows>
+      <row id="acctCentralHeaderRow">
+        <label id="AccountCentralTitle"/>
+      </row>
+      <separator/>
+
+      <row id="EmailHeader" class="acctCentralTitleRow">
+        <hbox class="acctCentralRowTitleBox">
+          <description>&emailSectionHdr.label;</description> 
+        </hbox>
+      </row>
+      <separator id="EmailHeader.separator" class="thin"/>
+      <row id="ReadMessages" class="acctCentralRow">
+        <hbox> 
+          <label class="acctCentralText acctCentralLinkText" value="&readMsgsLink.label;" onclick="ReadMessages();"/> 
+        </hbox>
+      </row>
+      <separator id="ReadMessages.separator" class="thin"/>
+      <row id="ComposeMessage" class="acctCentralRow">
+        <hbox> 
+          <label class="acctCentralText acctCentralLinkText" value="&composeMsgLink.label;" onclick="ComposeAMessage();"/> 
+        </hbox> 
+      </row>
+      <separator id="ComposeMessage.separator" class="thin"/>
+
+      <row id="NewsHeader" class="acctCentralTitleRow">
+        <hbox class="acctCentralRowTitleBox">
+          <description>&newsSectionHdr.label;</description> 
+        </hbox>
+      </row>
+      <separator id="NewsHeader.separator" class="thin"/>
+      <row id="SubscribeNewsgroups" class="acctCentralRow">
+        <hbox> 
+          <label class="acctCentralText acctCentralLinkText" value="&subscribeNewsLink.label;" onclick="SubscribeNewsgroups();"/> 
+        </hbox> 
+      </row>
+      <separator id="SubscribeNewsgroups.separator" class="thin"/>
+
+      <separator id="MessagesSection.separator1"/>
+      <separator id="MessagesSection.separator2"/>
+      <separator id="MessagesSection.separator3"/>
+
+      <row id="AccountsHeader" class="acctCentralTitleRow">
+        <hbox class="acctCentralRowTitleBox">
+          <description>&accountsSectionHdr.label;</description> 
+        </hbox>
+      </row>
+      <separator id="AccountsHeader.separator" class="thin"/>
+      <row id="AccountSettings" class="acctCentralRow">
+        <hbox> 
+          <label class="acctCentralText acctCentralLinkText" value="&settingsLink.label;" onclick="ViewSettings(null);"/> 
+        </hbox> 
+      </row>
+      <separator id="AccountSettings.separator" class="thin"/>
+      <row id="CreateAccount" class="acctCentralRow">
+        <hbox> 
+          <label class="acctCentralText acctCentralLinkText" value="&newAcctLink.label;" onclick="CreateNewAccount();"/> 
+        </hbox> 
+      </row>
+      <separator id="CreateAccount.separator" class="thin"/>
+
+      <separator id="AccountsSection.separator1"/>
+      <separator id="AccountsSection.separator2"/>
+      <separator id="AccountsSection.separator3"/>
+
+      <row id="AdvancedFeaturesHeader" class="acctCentralTitleRow">
+        <hbox class="acctCentralRowTitleBox">
+          <description>&advFeaturesSectionHdr.label;</description> 
+        </hbox> 
+      </row>
+      <separator id="AdvancedFeaturesHeader.separator" class="thin"/>
+      <row id="SearchMessages" class="acctCentralRow">
+        <hbox> 
+          <label class="acctCentralText acctCentralLinkText" value="&searchMsgsLink.label;" onclick="SearchMessages();"/> 
+        </hbox> 
+      </row>
+      <separator id="SearchMessages.separator" class="thin"/>
+      <row id="CreateFilters" class="acctCentralRow">
+        <hbox> 
+          <label class="acctCentralText acctCentralLinkText" value="&filtersLink.label;" onclick="CreateMsgFilters();"/> 
+        </hbox> 
+      </row>
+      <separator id="CreateFilters.separator" class="thin"/>
+      <row id="OfflineSettings" class="acctCentralRow">
+        <hbox> 
+          <label class="acctCentralText acctCentralLinkText" value="&offlineLink.label;" onclick="ViewSettings('am-offline.xul');"/> 
+        </hbox> 
+      </row>
+      <separator id="OfflineSettings.separator" class="thin"/>
+
+    </rows>
+  </grid>
+</page>
