@@ -71,6 +71,10 @@ EXPORTS		= \
 		nsIDragSessionMac.h \
 		$(NULL)
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
+EXPORTS       += nsWidgetAtoms.h nsWidgetAtomList.h
+endif
+
 XPIDLSRCS	= \
 		nsIAppShell.idl \
 		nsIFilePicker.idl \
