@@ -185,7 +185,7 @@ sub BuildDist()
 	InstallFromManifest(":mozilla:intl:locale:public:MANIFEST",						"$distdirectory:locale:");
 
 	#STRRES
-	# InstallFromManifest(":mozilla:intl:strres:public:MANIFEST",						"$distdirectory:strres:");
+	InstallFromManifest(":mozilla:intl:strres:public:MANIFEST",						"$distdirectory:strres:");
 
 	#JPEG
     InstallFromManifest(":mozilla:jpeg:MANIFEST",									"$distdirectory:jpeg:");
@@ -468,7 +468,7 @@ sub BuildCommonProjects()
 	BuildOneProject(":mozilla:intl:locale:macbuild:locale.mcp",					"nslocale$D.shlb", "nslocale.toc", 1, $main::ALIAS_SYM_FILES);
 	
 
-# BuildOneProject(":mozilla:intl:strres:macbuild:strres.mcp",					"strres$D.shlb", "strres.toc", 1, $main::ALIAS_SYM_FILES);
+    BuildOneProject(":mozilla:intl:strres:macbuild:strres.mcp",					"strres$D.shlb", "strres.toc", 1, $main::ALIAS_SYM_FILES);
 
 
 
