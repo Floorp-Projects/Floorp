@@ -653,11 +653,11 @@ static void InitTraceLog(void)
                                     PL_CompareValues,
                                     NULL, NULL);
 
-    if (NS_WARN_IF_FALSE(gTypesToLog, "out of memory")) {
+    if (NS_WARN_IF_FALSE(gObjectsToLog, "out of memory")) {
       fprintf(stdout, "### XPCOM_MEM_LOG_OBJECTS defined -- unable to log specific objects\n");
     }
-    else if (!gRefcntsLog) {
-      fprintf(stdout, "### XPCOM_MEM_LOG_OBJECTS defined -- but XPCOM_MEM_REFCNT_LOG is not defined\n");
+    else if (! (gRefcntsLog || gAllocLog)) {
+      fprintf(stdout, "### XPCOM_MEM_LOG_OBJECTS defined -- but neither XPCOM_MEM_REFCNT_LOG nor XPCOM_MEM_ALLOC_LOG is defined\n");
     }
     else {
       fprintf(stdout, "### XPCOM_MEM_LOG_OBJECTS defined -- only logging these objects: ");
@@ -1178,15 +1178,15 @@ nsTraceRefcnt::LogAddRef(void* aPtr,
       serialno = GetSerialNumber(aPtr, aRefCnt == 1);
     }
 
-    if (aRefCnt == 1 && gAllocLog && loggingThisType) {
+    PRBool loggingThisObject = (!gObjectsToLog || LogThisObj(serialno));
+    if (aRefCnt == 1 && gAllocLog && loggingThisType && loggingThisObject) {
       fprintf(gAllocLog, "\n<%s> 0x%08X %d Create\n",
-              aClazz, serialno, PRInt32(aPtr));
+              aClazz, PRInt32(aPtr), serialno);
       WalkTheStack(gAllocLog);
     }
 
     // (If we're on a losing architecture, don't do this because we'll be
     // using LogAddRefCall instead to get file and line numbers.)
-    PRBool loggingThisObject = (!gObjectsToLog || LogThisObj(serialno));
     if (gRefcntsLog && loggingThisType && loggingThisObject) {
       if (gLogToLeaky) {
         (*leakyLogAddRef)(aPtr, aRefCnt - 1, aRefCnt);
@@ -1253,7 +1253,7 @@ nsTraceRefcnt::LogRelease(void* aPtr,
 
     // (If we're on a losing architecture, don't do this because we'll be
     // using LogDeleteXPCOM instead to get file and line numbers.)
-    if (aRefCnt == 0 && gAllocLog && loggingThisType) {
+    if (aRefCnt == 0 && gAllocLog && loggingThisType && loggingThisObject) {
       fprintf(gAllocLog,
               "\n<%s> 0x%08X %d Destroy\n",
               aClazz, PRInt32(aPtr), serialno);
@@ -1387,11 +1387,18 @@ nsTraceRefcnt::LogCtor(void* aPtr,
     }
 
 #ifndef NS_LOSING_ARCHITECTURE
+    PRBool loggingThisType = (!gTypesToLog || LogThisType(aType));
+    PRInt32 serialno = 0;
+    if (gSerialNumbers && loggingThisType) {
+      serialno = GetSerialNumber(aPtr, PR_TRUE);
+    }
+
     // (If we're on a losing architecture, don't do this because we'll be
     // using LogNewXPCOM instead to get file and line numbers.)
-    if (gAllocLog && (!gTypesToLog || LogThisType(aType))) {
-      fprintf(gAllocLog, "\n<%s> 0x%08X Ctor (%d)\n",
-             aType, PRInt32(aPtr), aInstanceSize);
+    PRBool loggingThisObject = (!gObjectsToLog || LogThisObj(serialno));
+    if (gAllocLog && loggingThisType && loggingThisObject) {
+      fprintf(gAllocLog, "\n<%s> 0x%08X %d Ctor (%d)\n",
+             aType, PRInt32(aPtr), serialno, aInstanceSize);
       WalkTheStack(gAllocLog);
     }
 #endif
@@ -1420,11 +1427,20 @@ nsTraceRefcnt::LogDtor(void* aPtr, const char* aType,
     }
 
 #ifndef NS_LOSING_ARCHITECTURE
+    PRBool loggingThisType = (!gTypesToLog || LogThisType(aType));
+    PRInt32 serialno = 0;
+    if (gSerialNumbers && loggingThisType) {
+      serialno = GetSerialNumber(aPtr, PR_FALSE);
+      RecycleSerialNumberPtr(aPtr);
+    }
+
+    PRBool loggingThisObject = (!gObjectsToLog || LogThisObj(serialno));
+
     // (If we're on a losing architecture, don't do this because we'll be
     // using LogDeleteXPCOM instead to get file and line numbers.)
-    if (gAllocLog && (!gTypesToLog || LogThisType(aType))) {
-      fprintf(gAllocLog, "\n<%s> 0x%08X Dtor (%d)\n",
-             aType, PRInt32(aPtr), aInstanceSize);
+    if (gAllocLog && loggingThisType && loggingThisObject) {
+      fprintf(gAllocLog, "\n<%s> 0x%08X %d Dtor (%d)\n",
+             aType, PRInt32(aPtr), serialno, aInstanceSize);
       WalkTheStack(gAllocLog);
     }
 #endif
