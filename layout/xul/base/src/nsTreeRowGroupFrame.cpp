@@ -476,7 +476,7 @@ nsTreeRowGroupFrame::FindRowContentAtIndex(PRInt32& aIndex,
 
       // If it's open, descend into its treechildren.
       nsCOMPtr<nsIAtom> openAtom = dont_AddRef(NS_NewAtom("open"));
-      nsString isOpen;
+      nsAutoString isOpen;
       childContent->GetAttribute(kNameSpaceID_None, openAtom, isOpen);
       if (isOpen == "true") {
         // Find the <treechildren> node.
@@ -532,7 +532,7 @@ nsTreeRowGroupFrame::FindPreviousRowContent(PRInt32& aDelta, nsIContent* aUpward
   /* Let me see inside the damn nsCOMptrs
   nsIAtom* aAtom;
   parentContent->GetTag(aAtom);
-  nsString result;
+  nsAutoString result;
   aAtom->ToString(result);
   */
 
@@ -552,7 +552,7 @@ nsTreeRowGroupFrame::FindPreviousRowContent(PRInt32& aDelta, nsIContent* aUpward
     else if (tag.get() == nsXULAtoms::treeitem) {
       // If it's open, descend into its treechildren node first.
       nsCOMPtr<nsIAtom> openAtom = dont_AddRef(NS_NewAtom("open"));
-      nsString isOpen;
+      nsAutoString isOpen;
       childContent->GetAttribute(kNameSpaceID_None, openAtom, isOpen);
       if (isOpen == "true") {
         // Find the <treechildren> node.
@@ -618,7 +618,7 @@ nsTreeRowGroupFrame::ComputeTotalRowCount(PRInt32& aCount, nsIContent* aParent)
     else if (tag.get() == nsXULAtoms::treechildren) {
       // If it's open, descend into its treechildren.
       nsCOMPtr<nsIAtom> openAtom = dont_AddRef(NS_NewAtom("open"));
-      nsString isOpen;
+      nsAutoString isOpen;
       nsCOMPtr<nsIContent> parent;
       childContent->GetParent(*getter_AddRefs(parent));
       parent->GetAttribute(kNameSpaceID_None, openAtom, isOpen);
@@ -733,7 +733,7 @@ nsTreeRowGroupFrame::PagedUpDown()
 #ifdef DEBUG_tree
     printf("PagedUpDown, setting increment to %d\n", rowGroupCount);
 #endif
-    scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::pageincrement, nsString(ch), PR_FALSE);
+    scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::pageincrement, nsAutoString(ch), PR_FALSE);
   }
 
   return NS_OK;
@@ -960,7 +960,7 @@ nsTreeRowGroupFrame::ReflowAfterRowLayout(nsIPresContext&       aPresContext,
     if (rowCount < 0)
       rowCount = 0;
 
-    nsString maxpos;
+    nsAutoString maxpos;
     if (!mIsFull) {
       // We are not full. This means that we are not allowed to scroll any further. We are
       // at the max position right now.
@@ -1444,11 +1444,6 @@ nsTreeRowGroupFrame::IndexOfRow(nsIPresContext& aPresContext,
 PRBool
 nsTreeRowGroupFrame::IsValidRow(PRInt32 aRowIndex)
 {
-  // adjust for zero-based mRowCount
-  nsTableRowFrame* firstRow=nsnull;
-  GetFirstRow(&firstRow);
-  aRowIndex -= firstRow->GetRowIndex();
-  
   if (aRowIndex >= 0 && aRowIndex < mRowCount)
     return PR_TRUE;
   return PR_FALSE;
@@ -1459,11 +1454,6 @@ nsTreeRowGroupFrame::EnsureRowIsVisible(PRInt32 aRowIndex)
 {
   // if no scrollbar, then it must be visible
   if (!mScrollbar) return;
-
-  // adjust row index for zero-based scrollbar
-  nsTableRowFrame* firstRow=nsnull;
-  GetFirstRow(&firstRow);
-  aRowIndex -= firstRow->GetRowIndex();
 
   PRInt32 rows;
   GetRowCount(rows);
@@ -1501,7 +1491,7 @@ nsTreeRowGroupFrame::EnsureRowIsVisible(PRInt32 aRowIndex)
     
   }
 
-  nsString value;
+  nsAutoString value;
   
 #ifdef DEBUG_tree
   // dump state
@@ -1572,6 +1562,31 @@ void nsTreeRowGroupFrame::PostAppendRow(nsIFrame* aRowFrame, nsIPresContext& aPr
 
     MarkTreeAsDirty(aPresContext, (nsTreeFrame*) tableFrame);
   }
+}
+
+void nsTreeRowGroupFrame::ScrollByLines(nsIPresContext& aPresContext,
+                                                 PRInt32 lines)
+{
+  if (nsnull == mScrollbar)  // nothing to scroll
+    return;
+
+  PRInt32 scrollTo = mCurrentIndex + lines;
+  PRInt32 visRows, totalRows;
+  totalRows = GetVisibleRowCount();
+  GetRowCount(visRows);
+
+  if (scrollTo < 0)
+    scrollTo = 0;
+  if (!IsValidRow(scrollTo + visRows - 1))  // don't go down too far
+    scrollTo = totalRows - visRows + 1;
+  nsAutoString value;
+  value.Append(scrollTo);
+
+  nsCOMPtr<nsIContent> scrollbarContent;
+  mScrollbar->GetContent(getter_AddRefs(scrollbarContent));
+  if (scrollbarContent)
+    scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::curpos,
+                                   value, PR_TRUE);
 }
 
 
@@ -1686,7 +1701,7 @@ nsTreeRowGroupFrame::GetInsertionIndex(nsIFrame *aFrame, PRInt32 aCurrentIndex, 
 }
 
 void
-nsTreeRowGroupFrame::GetFirstRow(nsTableRowFrame **aRowFrame)
+nsTreeRowGroupFrame::GetFirstRowFrame(nsTableRowFrame **aRowFrame)
 {
   nsIFrame* child = mFrames.FirstChild();
 
@@ -1697,7 +1712,7 @@ nsTreeRowGroupFrame::GetFirstRow(nsTableRowFrame **aRowFrame)
     }
     
     if (IsTableRowGroupFrame(child)) {
-      ((nsTreeRowGroupFrame*)child)->GetFirstRow(aRowFrame);
+      ((nsTreeRowGroupFrame*)child)->GetFirstRowFrame(aRowFrame);
       if (*aRowFrame) return;
     }      
       

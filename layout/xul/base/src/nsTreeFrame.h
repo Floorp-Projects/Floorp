@@ -22,15 +22,18 @@
 
 #include "nsTableFrame.h"
 #include "nsVoidArray.h"
+#include "nsISelfScrollingFrame.h"
 
 class nsTreeCellFrame;
 class nsTreeRowGroupFrame;
 class nsTreeTwistyListener;
 
-class nsTreeFrame : public nsTableFrame
+class nsTreeFrame : public nsTableFrame, public nsISelfScrollingFrame
 {
 public:
   friend nsresult NS_NewTreeFrame(nsIFrame** aNewFrame);
+
+  NS_DECL_ISUPPORTS_INHERITED
 
   void SetSelection(nsIPresContext& presContext, nsTreeCellFrame* pFrame);
   void ToggleSelection(nsIPresContext& presContext, nsTreeCellFrame* pFrame);
@@ -82,6 +85,9 @@ public:
   void UnsuppressReflow() { mSuppressReflow = PR_FALSE; };
 
   PRInt32 GetInsertionIndex(nsIFrame *aFrame);
+
+  // nsISelfScrollingFrame interface
+  NS_IMETHOD ScrollByLines(nsIPresContext& aPresContext, PRInt32 lines);
 
 protected:
   nsTreeFrame();
