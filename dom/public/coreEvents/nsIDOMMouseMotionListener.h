@@ -41,14 +41,14 @@ public:
   * @param aMouseEvent @see nsIDOMEvent.h 
   * @returns whether the event was consumed or ignored. @see nsresult
   */
-  virtual nsresult MouseMove(const nsIDOMEvent* aMouseEvent) = 0;
+  virtual nsresult MouseMove(nsIDOMEvent* aMouseEvent) = 0;
 
   /**
    * Processes a drag move event
    * @param aMouseEvent @see nsIDOMEvent.h 
    * @returns whether the event was consumed or ignored. @see nsresult
    */
-  virtual nsresult DragMove(const nsIDOMEvent* aMouseEvent) = 0;
+  virtual nsresult DragMove(nsIDOMEvent* aMouseEvent) = 0;
 
 };
 

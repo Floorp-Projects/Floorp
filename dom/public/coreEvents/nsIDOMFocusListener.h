@@ -41,14 +41,14 @@ public:
   * @param aMouseEvent @see nsIDOMEvent.h 
   * @returns whether the event was consumed or ignored. @see nsresult
   */
-  virtual nsresult Focus(const nsIDOMEvent* aEvent) = 0;
+  virtual nsresult Focus(nsIDOMEvent* aEvent) = 0;
 
   /**
    * Processes a blur event
    * @param aMouseEvent @see nsIDOMEvent.h 
    * @returns whether the event was consumed or ignored. @see nsresult
    */
-  virtual nsresult Blur(const nsIDOMEvent* aEvent) = 0;
+  virtual nsresult Blur(nsIDOMEvent* aEvent) = 0;
 
 };
 
