@@ -95,6 +95,7 @@ nsRegistry_GetFactory
 # nsServiceManager static method exports.
 ReleaseService__16nsServiceManagerFRC4nsIDP11nsISupportsP19nsIShutdownListener
 GetService__16nsServiceManagerFRC4nsIDRC4nsIDPP11nsISupportsP19nsIShutdownListener
+AutoRegister__18nsComponentManagerFQ219nsIComponentManager16RegistrationTimePCc		# nsComponentManager::AutoRegister(nsIComponentManager::RegistrationTime,const char*)
 
 # nsTraceRefcnt
 Destroy__13nsTraceRefcntFPvPCci
