@@ -443,23 +443,24 @@ sub do_diff_frameset {
 # Create links to document created by DIFF command.
 sub do_diff_links {
 
-    print "<HEAD>\n";
-    print "<SCRIPT LANGUAGE='JavaScript'>\n";
-    print "var anchor = -1;\n\n";
-    print "function nextAnchor() {\n",
-          "    if (anchor < parent.frames[0].document.anchors.length)\n",
-          "        parent.frames[0].location.hash = ++anchor;\n",
-          "}\n\n";
-    print "function prevAnchor() {\n",
-          "    if (anchor > 0)\n",
-          "        parent.frames[0].location.hash = --anchor;\n",
-          "}\n";
-    print "</SCRIPT>\n";
-    print "<TITLE>$opt_file: $opt_rev1 vs. $opt_rev2</TITLE>\n";
-    print "</HEAD>";
-    print "<BODY BGCOLOR=\"#FFFFFF\" TEXT=\"#000000\"";
-    print " LINK=\"#0000EE\" VLINK=\"#551A8B\" ALINK=\"#FF0000\">\n";
-
+    print qq{
+        <HEAD>
+        <SCRIPT LANGUAGE='JavaScript'>
+        var anchor = -1;
+        function nextAnchor() {
+            if (anchor < parent.frames[0].document.anchors.length)
+                parent.frames[0].location.hash = ++anchor;
+        };
+        function prevAnchor() {
+            if (anchor > 0)
+                parent.frames[0].location.hash = --anchor;
+        };
+        </SCRIPT>
+        <TITLE>$opt_file: $opt_rev1 vs. $opt_rev2</TITLE>
+        </HEAD>
+        <BODY BGCOLOR="#FFFFFF" TEXT="#000000"
+            LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">
+    };
     CheckHidden("$dir/$opt_file");
 
     chdir($dir);
@@ -669,10 +670,10 @@ sub do_directory {
 
         print "<TR><TD NOWRAP><B>";
         print "<A HREF=\"$lxr_link\">$file</A><BR>";
-        print "<A HREF=\"cvslog.cgi?file=$opt_subdir/$file\">Change Log";
+        print "<A HREF=\"cvslog.cgi?file=$opt_subdir/$file";
         print "&rev=$opt_branch" if $opt_branch;
         print "&root=$opt_root" if defined($opt_root);
-        print "p</A></B></TD>\n";
+        print "\">Change Log</A></B></TD>\n";
         
         if ($opt_branch) {
             $first_rev = &map_tag_to_revision($opt_branch);
