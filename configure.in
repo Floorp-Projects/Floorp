@@ -1288,29 +1288,24 @@ case "$target" in
 
     # EMX/GCC build
     if test -n "$GNU_CC"; then
-#        AC_DEFINE(USE_OS2_TOOLKIT_HEADERS)
         AC_DEFINE(OS2)
         AC_DEFINE(XP_OS2_EMX)
         AC_DEFINE(OS2EMX_PLAIN_CHAR)
+        AC_DEFINE(TCPV40HDRS)
         AR=emxomfar
-        AR_FLAGS='-p256 r $@'
-        CFLAGS="$CFLAGS -Zmtd -Zomf"
-        CXXFLAGS="$CXXFLAGS -Zmtd -Zomf"
+        AR_FLAGS='r $@'
+        CFLAGS="$CFLAGS -Zomf"
+        CXXFLAGS="$CXXFLAGS -Zomf"
         DSO_LDOPTS='-Zdll'
-        BIN_FLAGS='-Zlinker /ST:0x30000'
+        BIN_FLAGS='-Zlinker /ST:0x64000'
         IMPLIB='emximp -o'
         FILTER='emxexp -o'
         MOZ_DEBUG_FLAGS="-g -fno-inline"
-        MOZ_OPTIMIZE_FLAGS="-O -s"
+        MOZ_OPTIMIZE_FLAGS="-O2 -s"
         MOZ_OPTIMIZE_LDFLAGS="-Zlinker /EXEPACK:2 -Zlinker /PACKCODE -Zlinker /PACKDATA"
         MOZ_WIDGET_TOOLKIT_LDFLAGS='-lwdgt$(MOZ_WIDGET_TOOLKIT)'
         MOZ_GFX_TOOLKIT_LDFLAGS='-lgfx_$(MOZ_WIDGET_TOOLKIT)'
         MOZ_XPCOM_OBSOLETE_LIBS='-L$(DIST)/lib $(DIST)/lib/xpcomct.lib'
-
-        if test -z "$EMXOMFLD_LINKER"; then
-          # using LINK386.EXE
-          DSO_LDOPTS="$DSO_LDOPTS -Zlinker /NOO"
-        fi
 
         # GCC for OS/2 currently predefines these, but we don't want them
         _DEFINES_CFLAGS="$_DEFINES_CFLAGS -Uunix -U__unix -U__unix__"
@@ -1836,11 +1831,7 @@ AC_LANG_C
 dnl Checks for header files.
 dnl ========================================================
 AC_HEADER_DIRENT
-dnl -ldir is a noop for OS/2
 case "$target_os" in
-os2*)
-    LIBS=
-    ;;
 freebsd*)
 # for stuff like -lXshm
     CPPFLAGS="${CPPFLAGS} ${X_CFLAGS}"
@@ -5223,17 +5214,6 @@ if test "$USING_HCC"; then
    AC_SUBST(CC)
    AC_SUBST(CXX)
 fi
-
-dnl Need to specify location of the weak symbols file whenever compiling
-dnl  C++ files.  The only way to do this is to export the environment
-dnl  variable on the same line that we call g++.
-if test "$OS_ARCH" = "OS2" -a -n "$GNU_CC"; then
-   _OLDCXX=$CXX
-   CXX='export GCC_WEAKSYMS=$(DEPTH)/build/weaksyms.omf;'
-   CXX="$CXX $_OLDCXX"
-   AC_SUBST(CXX)
-fi
-
 
 dnl Check for missing components
 if test "$no_x" != "yes"; then
