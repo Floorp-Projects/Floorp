@@ -374,11 +374,12 @@ sub print_ci {
 
     my $log = &html_log($ci->[$::CI_LOG]);
     my $rev = $ci->[$::CI_REV];
+    my $url_who = url_quote($ci->[$::CI_WHO]);
 
     print "<tr>\n";
     print "<TD width=2%>${sm_font_tag}$t</font>";
-    print "<TD width=2%><a href='$registryurl/who.cgi?email=$ci->[$::CI_WHO]'"
-          . " onClick=\"return js_who_menu('$ci->[$::CI_WHO]','',event);\" >"
+    print "<TD width=2%><a href='$registryurl/who.cgi?email=$url_who'"
+          . " onClick=\"return js_who_menu('$url_who','',event);\" >"
           . "$ci->[$::CI_WHO]</a>\n";
     print "<TD width=45%><a href='cvsview2.cgi?subdir=$ci->[$::CI_DIR]&files=$ci->[$::CI_FILE]\&command=DIRECTORY&branch=$::query_branch&root=$::CVS_ROOT'\n"
           . " onclick=\"return js_file_menu('$::CVS_ROOT', '$ci->[$::CI_DIR]','$ci->[$::CI_FILE]','$ci->[$::CI_REV]','$::query_branch',event)\">\n";
