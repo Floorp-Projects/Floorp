@@ -25,6 +25,7 @@
 // bits in nsLineBox.mFlags
 #define LINE_IS_DIRTY                 0x1
 #define LINE_IS_BLOCK                 0x2
+#define LINE_WAS_DIRTY                0x4
 #define LINE_NEED_DID_REFLOW          0x8
 #define LINE_TOP_MARGIN_IS_AUTO       0x10
 #define LINE_BOTTOM_MARGIN_IS_AUTO    0x20
@@ -125,6 +126,22 @@ public:
     mState &= ~LINE_IS_DIRTY;
   }
 
+  PRBool IsDirty() const {
+    return 0 != (LINE_IS_DIRTY & mState);
+  }
+
+  void ClearWasDirty() {
+    mState &= ~LINE_WAS_DIRTY;
+  }
+
+  void MarkWasDirty() {
+    mState |= LINE_WAS_DIRTY;
+  }
+
+  PRBool WasDirty() const {
+    return 0 != (LINE_WAS_DIRTY & mState);
+  }
+
   void SetNeedDidReflow() {
     mState |= LINE_NEED_DID_REFLOW;
   }
@@ -135,10 +152,6 @@ public:
 
   PRBool NeedsDidReflow() {
     return 0 != (LINE_NEED_DID_REFLOW & mState);
-  }
-
-  PRBool IsDirty() const {
-    return 0 != (LINE_IS_DIRTY & mState);
   }
 
 #ifdef XXX_need_line_outside_children
