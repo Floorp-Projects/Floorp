@@ -36,22 +36,22 @@ public:
 	char *GetGroupURL() { return m_groupURL; }
 	static nsresult	Open(const char * groupURL, MSG_Master *master,
 						 nsNewsDatabase** pMessageDB);
-	virtual nsresult		Close(PRBool forceCommit = PR_TRUE);
-	virtual nsresult		ForceClosed();
-	virtual nsresult		Commit(PRBool compress = PR_FALSE);
+	NS_IMETHOD				Close(PRBool forceCommit);
+	NS_IMETHOD				ForceClosed();
+	NS_IMETHOD				Commit(nsMsgDBCommitType commitType);
 
-	virtual int		GetCurVersion();
+	virtual PRUint32				GetCurVersion();
 
 // methods to get and set docsets for ids.
-	virtual nsresult		MarkHdrRead(nsMsgHdr *msgHdr, PRBool bRead,
+	NS_IMETHOD				MarkHdrRead(nsIMessage *msgHdr, PRBool bRead,
 								nsIDBChangeListener *instigator = NULL);
-	virtual nsresult		IsRead(nsMsgKey key, PRBool *pRead);
-	virtual PRBool		IsArticleOffline(nsMsgKey key);
-	virtual nsresult		MarkAllRead(MWContext *context, nsMsgKeyArray *thoseMarked = NULL);
+	NS_IMETHOD				IsRead(nsMsgKey key, PRBool *pRead);
+	virtual PRBool			IsArticleOffline(nsMsgKey key);
+	NS_IMETHOD				MarkAllRead(nsMsgKeyArray *thoseMarked = NULL);
 	virtual nsresult		AddHdrFromXOver(const char * line,  nsMsgKey *msgId);
-	virtual nsresult		AddHdrToDB(nsMsgHdr *newHdr, PRBool *newThread, PRBool notify = PR_FALSE);
+	NS_IMETHOD				AddHdrToDB(nsMsgHdr *newHdr, PRBool *newThread, PRBool notify = PR_FALSE);
 
-	virtual nsresult		ListNextUnread(ListContext **pContext, nsMsgHdr **pResult);
+	NS_IMETHOD				ListNextUnread(ListContext **pContext, nsMsgHdr **pResult);
 	// return highest article number we've seen.
 	virtual nsMsgKey		GetHighwaterArticleNum(); 
 	virtual nsMsgKey		GetLowWaterArticleNum();
@@ -59,12 +59,11 @@ public:
 	virtual nsresult		ExpireUpTo(nsMsgKey expireKey);
 	virtual nsresult		ExpireRange(nsMsgKey startRange, nsMsgKey endRange);
 
-	nsNewsSet			*GetNewsArtSet() {return m_set;}
+	nsNewsSet				*GetNewsArtSet() ;
 	virtual nsNewsDatabase	*GetNewsDB() ;
 
 	virtual PRBool			PurgeNeeded(MSG_PurgeInfo *hdrPurgeInfo, MSG_PurgeInfo *artPurgeInfo);
 	PRBool					IsCategory();
-//	NewsFolderInfo			*GetNewsFolderInfo() {return (NewsFolderInfo *) m_FolderInfo;}
 	nsresult				SetOfflineRetrievalInfo(MSG_RetrieveArtInfo *);
 	nsresult				SetPurgeHeaderInfo(MSG_PurgeInfo *purgeInfo);
 	nsresult				SetPurgeArticleInfo(MSG_PurgeInfo *purgeInfo);
@@ -72,7 +71,6 @@ public:
 	nsresult				GetPurgeHeaderInfo(MSG_PurgeInfo *purgeInfo);
 	nsresult				GetPurgeArticleInfo(MSG_PurgeInfo *purgeInfo);
 
-//	MSG_FolderInfoNews		*GetFolderInfoNews() {return m_info;}
 	// used to handle filters editing on open news groups.
 //	static void				NotifyOpenDBsOfFilterChange(MSG_FolderInfo *folder);
 	void					ClearFilterList();	// filter was changed by user.
@@ -87,11 +85,7 @@ protected:
 
 	PRUint32				m_headerIndex;		// index of unthreaded headers
 												// at a specified entry.
-	MSG_Master		*m_master;
-
 	nsNewsSet *m_set;
-
-//	MSG_FolderInfoNews* m_info;
 };
 
 #endif
