@@ -651,17 +651,17 @@ else
 #endif
 
 #ifndef	REPEATING_TIMERS
-	if (mTimer)
+	if (search->mTimer)
 	{
-		mTimer->Cancel();
-		mTimer = nsnull;
+		search->mTimer->Cancel();
+		search->mTimer = nsnull;
 	}
 
 	nsresult rv;
 
-	mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-	if (NS_FAILED(rv) || (!mTimer)) return;
-	mTimer->Init(InternetSearchDataSource::FireTimer, search,
+	search->mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
+	if (NS_FAILED(rv) || (!search->mTimer)) return;
+	search->mTimer->Init(InternetSearchDataSource::FireTimer, search,
 		SEARCH_UPDATE_TIMEOUT, NS_PRIORITY_LOWEST, NS_TYPE_REPEATING_SLACK);
 	// Note: don't addref "this" as we'll cancel the timer in the InternetSearchDataSource destructor
 #endif
