@@ -60,18 +60,14 @@ static NS_DEFINE_IID(kBrowserAppCoreCID,         NS_BROWSERAPPCORE_CID);
 
 /* Define Interface IDs */
 static NS_DEFINE_IID(kIAppShellServiceIID,       NS_IAPPSHELL_SERVICE_IID);
-
 static NS_DEFINE_IID(kISupportsIID,              NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIBrowserAppCoreIID,        NS_IDOMBROWSERAPPCORE_IID);
-
 static NS_DEFINE_IID(kIDOMDocumentIID,           nsIDOMDocument::GetIID());
 static NS_DEFINE_IID(kIDocumentIID,              nsIDocument::GetIID());
-
-
 static NS_DEFINE_IID(kINetSupportIID,            NS_INETSUPPORT_IID);
 static NS_DEFINE_IID(kIStreamObserverIID,        NS_ISTREAMOBSERVER_IID);
-
 static NS_DEFINE_IID(kIWebShellWindowIID,        NS_IWEBSHELL_WINDOW_IID);
+static NS_DEFINE_IID(kIURLListenerIID,           NS_IURL_LISTENER_IID);
 
 #define APP_DEBUG 0
 
@@ -90,6 +86,7 @@ nsBrowserAppCore::nsBrowserAppCore()
   mContentScriptContext = nsnull;
   mWebShellWin          = nsnull;
   mWebShell             = nsnull;
+  mContentAreaWebShell  = nsnull;
 
   IncInstanceCount();
   NS_INIT_REFCNT();
@@ -103,6 +100,7 @@ nsBrowserAppCore::~nsBrowserAppCore()
   NS_IF_RELEASE(mContentScriptContext);
   NS_IF_RELEASE(mWebShellWin);
   NS_IF_RELEASE(mWebShell);
+  NS_IF_RELEASE(mContentAreaWebShell);
   DecInstanceCount();  
 }
 
@@ -133,6 +131,11 @@ nsBrowserAppCore::QueryInterface(REFNSIID aIID,void** aInstancePtr)
   }
   if (aIID.Equals(kIStreamObserverIID)) {
     *aInstancePtr = (void*) ((nsIStreamObserver*)this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIURLListenerIID)) {
+    *aInstancePtr = (void*) ((nsIURLListener*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -227,6 +230,17 @@ nsBrowserAppCore::SetEnableCallback(const nsString& aScript)
 NS_IMETHODIMP    
 nsBrowserAppCore::LoadUrl(const nsString& aUrl)
 {
+  char * urlstr = nsnull;
+  urlstr = aUrl.ToNewCString();
+
+  if (!urlstr)
+    return NS_OK;
+
+  printf("URL to load in nsBrowserAppCore is %s\n", urlstr);
+
+  /* Ask nsWebShell to load the URl */
+  mContentAreaWebShell->LoadURL(nsString(urlstr), nsnull, nsnull);
+
   return NS_OK;
 }
 
@@ -254,13 +268,19 @@ nsBrowserAppCore::SetContentWindow(nsIDOMWindow* aWin)
   nsIWebShell * webShell;
   globalObj->GetWebShell(&webShell);
   if (nsnull != webShell) {
+    mContentAreaWebShell = webShell;
+    NS_ADDREF(webShell);
     webShell->SetObserver(this);
     const PRUnichar * name;
     webShell->GetName( &name);
     nsAutoString str(name);
 
-    if (APP_DEBUG) printf("Attaching to Content WebShell [%s]\n", str.ToNewCString()); // this leaks
-    NS_RELEASE(webShell);
+    if (APP_DEBUG) {
+        char *name = str.ToNewCString();
+        printf("Attaching to Content WebShell [%s]\n", name);
+        delete [] name;
+    }
+    mContentAreaWebShell->SetURLListener(this);
   }
 
   return NS_OK;
@@ -298,6 +318,89 @@ nsBrowserAppCore::SetWebShellWindow(nsIDOMWindow* aWin)
     }
     NS_RELEASE(webShell);
   }
+  return NS_OK;
+}
+
+// nsIURLListener methods
+
+NS_IMETHODIMP 
+nsBrowserAppCore::WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL,
+                              nsLoadType aReason)
+{
+
+  // Notify the AppCore
+    return NS_OK;
+}
+
+static nsresult setAttribute( nsIWebShell *shell,
+                              const char *id,
+                              const char *name,
+                              const nsString &value ) {
+    nsresult rv = NS_OK;
+  
+    nsCOMPtr<nsIContentViewer> cv;
+    rv = shell->GetContentViewer(getter_AddRefs(cv));
+    if ( cv ) {
+        // Up-cast.
+        nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
+        if ( docv ) {
+            // Get the document from the doc viewer.
+            nsCOMPtr<nsIDocument> doc;
+            rv = docv->GetDocument(*getter_AddRefs(doc));
+            if ( doc ) {
+                // Up-cast.
+                nsCOMPtr<nsIDOMXULDocument> xulDoc( do_QueryInterface(doc) );
+                if ( xulDoc ) {
+                    // Find specified element.
+                    nsCOMPtr<nsIDOMElement> elem;
+                    rv = xulDoc->GetElementById( id, getter_AddRefs(elem) );
+                    if ( elem ) {
+                        // Set the text attribute.
+                        rv = elem->SetAttribute( name, value );
+                        if ( APP_DEBUG ) {
+                            char *p = value.ToNewCString();
+                            delete [] p;
+                        }
+                        if ( rv != NS_OK ) {
+                            if (APP_DEBUG) printf("SetAttribute failed, rv=0x%X\n",(int)rv);
+                        }
+                    } else {
+                        if (APP_DEBUG) printf("GetElementByID failed, rv=0x%X\n",(int)rv);
+                    }
+                } else {
+                    if (APP_DEBUG) printf("Upcast to nsIDOMXULDocument failed\n");
+                }
+            } else {
+                if (APP_DEBUG) printf("GetDocument failed, rv=0x%X\n",(int)rv);
+            }
+        } else {
+            if (APP_DEBUG) printf("Upcast to nsIDocumentViewer failed\n");
+        }
+    } else {
+        if (APP_DEBUG) printf("GetContentViewer failed, rv=0x%X\n",(int)rv);
+    }
+    return rv;
+}
+
+NS_IMETHODIMP 
+nsBrowserAppCore::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
+{
+  setAttribute( mWebShell, "Browser:Throbber", "busy", "true" );
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsBrowserAppCore::ProgressLoadURL(nsIWebShell* aShell, const PRUnichar* aURL,
+                                  PRInt32 aProgress, PRInt32 aProgressMax)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsBrowserAppCore::EndLoadURL(nsIWebShell* aWebShell, const PRUnichar* aURL,
+                             PRInt32 aStatus)
+{
+  setAttribute( mWebShell, "Browser:Throbber", "busy", "false" );
   return NS_OK;
 }
 
@@ -555,57 +658,6 @@ done:
     nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
   }
   return NS_OK;
-}
-
-static nsresult setAttribute( nsIWebShell *shell,
-                              const char *id,
-                              const char *name,
-                              const nsString &value ) {
-    nsresult rv = NS_OK;
-  
-    nsCOMPtr<nsIContentViewer> cv;
-    rv = shell->GetContentViewer(getter_AddRefs(cv));
-    if ( cv ) {
-        // Up-cast.
-        nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
-        if ( docv ) {
-            // Get the document from the doc viewer.
-            nsCOMPtr<nsIDocument> doc;
-            rv = docv->GetDocument(*getter_AddRefs(doc));
-            if ( doc ) {
-                // Up-cast.
-                nsCOMPtr<nsIDOMXULDocument> xulDoc( do_QueryInterface(doc) );
-                if ( xulDoc ) {
-                    // Find specified element.
-                    nsCOMPtr<nsIDOMElement> elem;
-                    rv = xulDoc->GetElementById( id, getter_AddRefs(elem) );
-                    if ( elem ) {
-                        // Set the text attribute.
-                        rv = elem->SetAttribute( name, value );
-                        if ( APP_DEBUG ) {
-                            char *p = value.ToNewCString();
-                            //printf( "Set %s %s=\"%s\", rv=0x%08X\n", id, name, p, (int)rv );
-                            delete [] p;
-                        }
-                        if ( rv != NS_OK ) {
-                            if (APP_DEBUG) printf("SetAttribute failed, rv=0x%X\n",(int)rv);
-                        }
-                    } else {
-                        if (APP_DEBUG) printf("GetElementByID failed, rv=0x%X\n",(int)rv);
-                    }
-                } else {
-                    if (APP_DEBUG) printf("Upcast to nsIDOMXULDocument failed\n");
-                }
-            } else {
-                if (APP_DEBUG) printf("GetDocument failed, rv=0x%X\n",(int)rv);
-            }
-        } else {
-            if (APP_DEBUG) printf("Upcast to nsIDocumentViewer failed\n");
-        }
-    } else {
-        if (APP_DEBUG) printf("GetContentViewer failed, rv=0x%X\n",(int)rv);
-    }
-    return rv;
 }
 
 NS_IMETHODIMP
