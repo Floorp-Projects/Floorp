@@ -912,7 +912,6 @@ nsTreeContentView::ContentInserted(nsIDocument *aDocument,
 
   // If we have a legal tag, go up to the tree/select and make sure
   // that it's ours.
-  nsCOMPtr<nsIContent> element = aContainer;
   nsCOMPtr<nsIAtom> parentTag;
   
   for (nsIContent* element = aContainer; element; element = element->GetParent()) {
