@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -16,20 +16,12 @@
  * Reserved.
  */
 
-#include "nsrootidl.idl"
+#include "nsISupports.idl"
 
-%{C++
-#include "nsDebug.h"
-#include "nsTraceRefcnt.h"
-#include "nsIID.h"
-#include "nsError.h"
-#include "nsISupportsUtils.h"
-%}
-
-[scriptable, uuid(00000000-0000-0000-c000-000000000046)]
-interface nsISupports {
-  void QueryInterface(in nsIIDRef uuid, 
-                      [iid_is(uuid),retval] out nsQIResult result);
-  [noscript, notxpcom] nsrefcnt AddRef();
-  [noscript, notxpcom] nsrefcnt Release();
+[scriptable, uuid(D1899240-F9D2-11D2-BDD6-000064657374)]
+interface nsISimpleEnumerator : nsISupports {
+        boolean HasMoreElements();
+        nsISupports GetNext();
 };
+
+
