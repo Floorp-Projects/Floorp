@@ -37,7 +37,8 @@
     }
 
 /* internal frame */
-  .textfield-internal-box 
+  .textfield-internal-box,
+  .textarea-internal-box
     {
       margin              : 0px;
       border              : 1px inset #B4C3D4;
@@ -50,11 +51,6 @@
   textfield[disabled="true"] > .textfield-internal-box
     {
       background-color    : #B4C3D4;
-    }
-  
-  .textarea-internal-box
-    {
-      padding             : 0px 0px 0px 2px;
     }
   
 /* internal text widget */
@@ -98,7 +94,7 @@
       margin              : 0px !important;
       padding             : 0px !important;
     }
-    
+        
 /* autocomplete text field */
   .textfield-popup > menuitem
   {
