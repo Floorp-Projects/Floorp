@@ -189,7 +189,7 @@ nsEventStateManager::nsEventStateManager()
   mLeftClickOnly = PR_TRUE;
   mNormalLMouseEventInProcess = PR_FALSE;
 
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
 #ifdef CLICK_HOLD_CONTEXT_MENUS
   mEventDownWidget = nsnull;
@@ -1103,7 +1103,8 @@ nsEventStateManager :: CreateClickHoldTimer ( nsIPresContext* inPresContext, nsG
 
   mClickHoldTimer = do_CreateInstance("@mozilla.org/timer;1");
   if ( mClickHoldTimer )
-    mClickHoldTimer->Init(sClickHoldCallback, this, kClickHoldDelay, PR_TRUE);
+    mClickHoldTimer->InitWithFuncCallback(sClickHoldCallback, this, kClickHoldDelay, 
+                                          nsITimer::TYPE_ONE_SHOT);
 
   mEventPoint = inMouseDownEvent->point;
   mEventRefPoint = inMouseDownEvent->refPoint;
