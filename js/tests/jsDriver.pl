@@ -550,9 +550,9 @@ sub get_engine_command {
     } elsif ($opt_engine_type =~ /^sm(opt|debug)$/) {
         &dd ("getting spidermonkey engine command.");
         $retval = &get_sm_engine_command;
-    }  elsif ($opt_engine_type =~ /^dd(opt|debug)$/) {
-        &dd ("getting dikdik engine command.");
-        $retval = &get_dd_engine_command;
+    }  elsif ($opt_engine_type =~ /^ep(opt|debug)$/) {
+        &dd ("getting epimetheus engine command.");
+        $retval = &get_ep_engine_command;
     } else {
         die ("Unknown engine type selected, '$opt_engine_type'.\n");
     }
@@ -714,9 +714,9 @@ sub get_sm_engine_command {
 }
 
 #
-# get the shell command used to run dikdik
+# get the shell command used to run epimetheus
 #
-sub get_dd_engine_command {
+sub get_ep_engine_command {
     my $retval;
 
     if ($opt_shell_path) {
@@ -730,7 +730,7 @@ sub get_dd_engine_command {
         my $opt;
         my $exe;
 
-        $dir = $opt_suite_path . "../cpp/";
+        $dir = $opt_suite_path . "../../js2/src/";
 
         if ($os_type eq "MAC") {
             #
@@ -741,19 +741,19 @@ sub get_dd_engine_command {
             $opt = "";
             $exe = "JS2";
         } elsif ($os_type eq "WIN") {
-            $os = "winbuild/";
+            $os = "winbuild/Epimetheus/";
             $debug = "Debug/";
             $opt = "Release/";
-            $exe = "DikDik_shell.exe";
+            $exe = "Epimetheus.exe";
         } else {
             $os = "";
             $debug = "";
             $opt = "";    # <<<----- XXX THIS IS NOT RIGHT! CHANGE IT!
-            $exe = "dikdik";
+            $exe = "epimetheus";
         }
 
 
-        if ($opt_engine_type eq "dddebug") {
+        if ($opt_engine_type eq "epdebug") {
             $retval = $dir . $os . $debug . $exe;
         } else {
             $retval = $dir . $os . $opt . $exe;
