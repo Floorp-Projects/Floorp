@@ -117,7 +117,7 @@ nsJAR::Open()
   if (NS_FAILED(rv)) return rv;
 
   PRInt32 err = mZip.OpenArchiveWithFileDesc(fd);
-  PR_Close(fd);
+  
   return ziperr2nsresult(err);
 }
 
@@ -136,7 +136,7 @@ nsJAR::Extract(const char *zipEntry, nsIFile* outFile)
   if (NS_FAILED(rv)) return rv;
 
   PRFileDesc* fd;
-  rv = localFile->OpenNSPRFileDesc(PR_RDWR, 0664, &fd);
+  rv = localFile->OpenNSPRFileDesc(PR_RDWR | PR_CREATE_FILE, 0664, &fd);
   if (NS_FAILED(rv)) return rv;
 
   PRUint16 mode;
