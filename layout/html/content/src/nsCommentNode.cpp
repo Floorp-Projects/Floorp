@@ -1,126 +1,184 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
+ * Version 1.0 (the "License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
  * http://www.mozilla.org/NPL/
  *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
- * for the specific language governing rights and limitations under the
- * NPL.
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.  See
+ * the License for the specific language governing rights and limitations
+ * under the License.
  *
- * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved.
+ * The Original Code is Mozilla Communicator client code.
+ *
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corporation.  Portions created by Netscape are Copyright (C) 1998
+ * Netscape Communications Corporation.  All Rights Reserved.
  */
-#include "nsHTMLParts.h"
-#include "nsHTMLContainer.h"
+#include "nsIDOMComment.h"
+#include "nsGenericDomDataNode.h"
+#include "nsIScriptObjectOwner.h"
+#include "nsIDOMEventReceiver.h"
+#include "nsIHTMLContent.h"
 #include "nsFrame.h"
-#include "nsHTMLIIDs.h"
-#include "nsGenericHTMLElement.h"
 
-// XXX rework this
-
-#define nsCommentNodeSuper nsHTMLTagContent
-
-class nsCommentNode : public nsCommentNodeSuper {
+class nsCommentNode : public nsIDOMComment,
+                      public nsIScriptObjectOwner,
+                      public nsIDOMEventReceiver,
+                      public nsIHTMLContent
+{
 public:
-  nsCommentNode(nsIAtom* aTag, const nsString& aComment);
+  nsCommentNode();
+  ~nsCommentNode();
+  // nsISupports
+  NS_DECL_ISUPPORTS
 
-  NS_IMETHOD CreateFrame(nsIPresContext*  aPresContext,
-                         nsIFrame*        aParentFrame,
-                         nsIStyleContext* aStyleContext,
-                         nsIFrame*&       aResult);
+  // nsIDOMNode
+  NS_IMPL_IDOMNODE_USING_GENERIC_DOM_DATA(mInner)
 
-  NS_IMETHOD GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const;
+  // nsIDOMData
+  NS_IMPL_IDOMDATA_USING_GENERIC_DOM_DATA(mInner)
 
-  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
+  // nsIDOMComment
+
+  // nsIScriptObjectOwner
+  NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC_DOM_DATA(mInner)
+
+  // nsIDOMEventReceiver
+  NS_IMPL_IDOMEVENTRECEIVER_USING_GENERIC_DOM_DATA(mInner)
+
+  // nsIContent
+  NS_IMPL_ICONTENT_USING_GENERIC_DOM_DATA(mInner)
+
+  // nsIHTMLContent
+  NS_IMPL_IHTMLCONTENT_USING_GENERIC_DOM_DATA(mInner)
 
 protected:
-  virtual ~nsCommentNode();
-  nsString mComment;
+  nsGenericDomDataNode mInner;
 };
 
-nsCommentNode::nsCommentNode(nsIAtom* aTag, const nsString& aComment)
-  : nsCommentNodeSuper(aTag),
-    mComment(aComment)
+nsresult
+NS_NewCommentNode(nsIHTMLContent** aInstancePtrResult)
 {
+  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
+  if (nsnull == aInstancePtrResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  nsIHTMLContent* it = new nsCommentNode();
+  if (nsnull == it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return it->QueryInterface(kIHTMLContentIID, (void **) aInstancePtrResult);
+}
+
+nsCommentNode::nsCommentNode()
+{
+  NS_INIT_REFCNT();
+  mInner.Init(this);
 }
 
 nsCommentNode::~nsCommentNode()
 {
 }
 
-NS_IMETHODIMP
-nsCommentNode::CreateFrame(nsIPresContext*  aPresContext,
-                           nsIFrame*        aParentFrame,
-                           nsIStyleContext* aStyleContext,
-                           nsIFrame*&       aResult)
+NS_IMPL_ADDREF(nsCommentNode)
+
+NS_IMPL_RELEASE(nsCommentNode)
+
+nsresult
+nsCommentNode::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-  nsIFrame* frame;
-  nsFrame::NewFrame(&frame, this, aParentFrame);
-  if (nsnull == frame) {
+  NS_IMPL_DOM_DATA_QUERY_INTERFACE(aIID, aInstancePtr, this)
+  return NS_NOINTERFACE;
+}
+
+NS_IMETHODIMP
+nsCommentNode::GetNodeType(PRInt32* aNodeType)
+{
+  *aNodeType = (PRInt32)nsIDOMNode::TEXT;
+  return NS_OK;
+}
+
+nsresult
+nsCommentNode::Equals(nsIDOMNode* aNode, PRBool aDeep, PRBool* aReturn)
+{
+  // XXX not yet implemented
+  *aReturn = PR_FALSE;
+  return NS_OK;
+}
+
+nsresult
+nsCommentNode::CloneNode(nsIDOMNode** aReturn)
+{
+  nsCommentNode* it = new nsCommentNode();
+  if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  frame->SetStyleContext(aPresContext, aStyleContext);
-  aResult = frame;
-  return NS_OK;
+//XXX  mInner.CopyInnerTo(this, &it->mInner);
+  return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
 NS_IMETHODIMP
 nsCommentNode::List(FILE* out, PRInt32 aIndent) const
 {
-  NS_PRECONDITION(nsnull != mDocument, "bad content");
+  NS_PRECONDITION(nsnull != mInner.mDocument, "bad content");
 
   PRInt32 index;
   for (index = aIndent; --index >= 0; ) fputs("  ", out);
 
-  nsIAtom* tag;
-  GetTag(tag);
-  if (tag != nsnull) {
-    nsAutoString buf;
-    tag->ToString(buf);
-    fputs(buf, out);
-    NS_RELEASE(tag);
-  }
+  fprintf(out, " refcount=%d<", mRefCnt);
 
-  ListAttributes(out);
+  nsAutoString tmp;
+  mInner.ToCString(tmp, 0, mInner.mTextLength);
+  fputs(tmp, out);
 
-  fprintf(out, " RefCount=%d<", mRefCnt);
-  fputs(mComment, out);
   fputs(">\n", out);
   return NS_OK;
 }
 
-static void
-MapAttributesInto(nsIHTMLAttributes* aAttributes,
-                  nsIStyleContext* aContext,
-                  nsIPresContext* aPresContext)
+nsresult
+nsCommentNode::ToHTML(FILE* out) const
 {
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
-}
-
-NS_IMETHODIMP
-nsCommentNode::GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const
-{
-  aMapFunc = &MapAttributesInto;
+  nsAutoString tmp;
+  tmp.Append("<!--");
+  tmp.Append(mInner.mText, mInner.mTextLength);
+  tmp.Append(">");
+  fputs(tmp, out);
   return NS_OK;
 }
 
+nsresult
+nsCommentNode::ToHTMLString(nsString& aBuf) const
+{
+  aBuf.Truncate(0);
+  aBuf.Append("<!--");
+  aBuf.Append(mInner.mText, mInner.mTextLength);
+  aBuf.Append(">");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCommentNode::HandleDOMEvent(nsIPresContext& aPresContext,
+                              nsEvent* aEvent,
+                              nsIDOMEvent** aDOMEvent,
+                              PRUint32 aFlags,
+                              nsEventStatus& aEventStatus)
+{
+  return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
+                               aFlags, aEventStatus);
+}
 
 nsresult
-NS_NewCommentNode(nsIHTMLContent** aInstancePtrResult,
-                  nsIAtom* aTag, const nsString& aComment)
+NS_NewCommentFrame(nsIContent* aContent,
+                   nsIFrame* aParentFrame,
+                   nsIFrame*& aResult)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIHTMLContent* it = new nsCommentNode(aTag, aComment);
-  if (nsnull == it) {
+  nsIFrame* frame;
+  nsFrame::NewFrame(&frame, aContent, aParentFrame);
+  if (nsnull == frame) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kIHTMLContentIID, (void **) aInstancePtrResult);
+  aResult = frame;
+  return NS_OK;
 }
