@@ -40,7 +40,7 @@ my $cgi = Bugzilla->cgi;
 print $cgi->header();
 
 if (!UserInGroup("tweakparams")) {
-    print "<H1>Sorry, you aren't a member of the 'tweakparams' group.</H1>\n";
+    print "<h1>Sorry, you aren't a member of the 'tweakparams' group.</h1>\n";
     print "And so, you aren't allowed to edit the parameters.\n";
     PutFooter();
     exit;
@@ -95,7 +95,7 @@ foreach my $i (GetParamList()) {
                 exit;
             }
         }
-        print "Changed " . html_quote($name) . "<br>\n";
+        print "Changed " . html_quote($name) . ".<br>\n";
         SetParam($name, $value);
     }
 }
@@ -106,7 +106,7 @@ WriteParams();
 unlink "data/versioncache";
 
 print "OK, done.<p>\n";
-print "<a href=editparams.cgi>Edit the params some more.</a><p>\n";
-print "<a href=query.cgi>Go back to the query page.</a>\n";
+print "<a href=\"editparams.cgi\">Edit the params some more.</a><p>\n";
+print "<a href=\"query.cgi\">Go back to the query page.</a>\n";
     
 PutFooter();
