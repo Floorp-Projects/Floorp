@@ -1414,7 +1414,6 @@ nsTableRowFrame::Reflow(nsIPresContext*          aPresContext,
   switch (aReflowState.reason) {
   case eReflowReason_Initial:
     rv = ReflowChildren(aPresContext, aDesiredSize, aReflowState, *tableFrame, aStatus, PR_FALSE);
-    aStatus = NS_FRAME_COMPLETE;
     break;
 
   case eReflowReason_Resize:

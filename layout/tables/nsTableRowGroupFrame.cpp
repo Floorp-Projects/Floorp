@@ -1170,7 +1170,7 @@ nsTableRowGroupFrame::Reflow(nsIPresContext*          aPresContext,
     }
 
     // See if all the frames fit
-    if (aDesiredSize.height > aReflowState.availableHeight) {
+    if ((NS_FRAME_NOT_COMPLETE == aStatus) || (aDesiredSize.height > aReflowState.availableHeight)) {
       // Nope, find a place to split the row group 
       PRBool specialReflow = (PRBool)aReflowState.mFlags.mSpecialHeightReflow;
       ((nsHTMLReflowState::ReflowStateFlags&)aReflowState.mFlags).mSpecialHeightReflow = PR_FALSE;
@@ -1178,7 +1178,7 @@ nsTableRowGroupFrame::Reflow(nsIPresContext*          aPresContext,
       SplitRowGroup(aPresContext, aDesiredSize, aReflowState, tableFrame, aStatus);
 
       ((nsHTMLReflowState::ReflowStateFlags&)aReflowState.mFlags).mSpecialHeightReflow = specialReflow;
-   }
+    }
   }
   SetHasStyleHeight((NS_UNCONSTRAINEDSIZE != aReflowState.mComputedHeight) &&
                     (aReflowState.mComputedHeight > 0)); 
