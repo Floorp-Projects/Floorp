@@ -1096,7 +1096,7 @@ static nsresult InstallGlobalLocale(nsICmdLineService *cmdLineArgs)
     nsresult rv = NS_OK;
 
     // check the pref first
-    nsCOMPtr<nsIPref> prefService(do_GetService("@mozilla.org/preferences;1"));
+    nsCOMPtr<nsIPref> prefService(do_GetService(NS_PREF_CONTRACTID));
     PRBool matchOS = PR_FALSE;
     if (prefService)
       prefService->GetBoolPref(kMatchOSLocalePref, &matchOS);

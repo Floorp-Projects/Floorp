@@ -114,7 +114,7 @@ nsCodebasePrincipal::CanEnableCapability(const char *capability,
     {
         static char pref[] = "signed.applets.codebase_principal_support";
         nsresult rv;
-	    nsCOMPtr<nsIPref> prefs(do_GetService("@mozilla.org/preferences;1", &rv));
+	    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
 	    if (NS_FAILED(rv))
 		    return NS_ERROR_FAILURE;
 	    PRBool enabled;

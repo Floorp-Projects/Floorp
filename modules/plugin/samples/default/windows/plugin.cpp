@@ -230,7 +230,7 @@ BOOL CPlugin::init(HWND hWndParent)
   
   if (gServiceManager) {
     // get service using its contract id and use it to allocate the memory
-    gServiceManager->GetServiceByContractID("@mozilla.org/preferences;1", NS_GET_IID(nsIPref), (void **)&nsPrefService);
+    gServiceManager->GetServiceByContractID(NS_PREF_CONTRACTID, NS_GET_IID(nsIPref), (void **)&nsPrefService);
     if(nsPrefService) {      
       nsPrefService->GetBoolPref("application.use_ns_plugin_finder", &bSendUrls);
       NS_RELEASE(nsPrefService);

@@ -4792,7 +4792,7 @@ nsBookmarksService::LoadBookmarks()
   printf("Start reading in bookmarks.html\n");
 #endif
   
-  nsCOMPtr<nsIPrefService> prefSvc(do_GetService("@mozilla.org/preferences;1"));
+  nsCOMPtr<nsIPrefService> prefSvc(do_GetService(NS_PREF_CONTRACTID));
   nsCOMPtr<nsIPrefBranch> bookmarksPrefs;
   if (prefSvc)
     prefSvc->GetBranch("browser.bookmarks.", getter_AddRefs(bookmarksPrefs));
