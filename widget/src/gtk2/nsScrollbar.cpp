@@ -119,7 +119,7 @@ nsScrollbar::IsVisible(PRBool & aState)
 }
 
 NS_IMETHODIMP
-nsScrollbar::ConstrainPosition(PRInt32 *aX, PRInt32 *aY)
+nsScrollbar::ConstrainPosition(PRBool aAllowSlop, PRInt32 *aX, PRInt32 *aY)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -352,6 +352,10 @@ class nsIWidget : public nsISupports {
      * Perform platform-dependent sanity check on a potential window position.
      * This is guaranteed to work only for top-level windows.
      *
+     * @param aAllowSlop: if true, allow the window to slop offscreen;
+     *                    the window should be partially visible. if false,
+     *                    force the entire window onscreen (or at least
+     *                    the upper-left corner, if it's too large).
      * @param aX in: an x position expressed in screen coordinates.
      *           out: the x position constrained to fit on the screen(s).
      * @param aY in: an y position expressed in screen coordinates.
@@ -359,7 +363,9 @@ class nsIWidget : public nsISupports {
      * @return vapid success indication. but see also the parameters.
      *
      **/
-    NS_IMETHOD ConstrainPosition(PRInt32 *aX, PRInt32 *aY) = 0;
+    NS_IMETHOD ConstrainPosition(PRBool aAllowSlop,
+                                 PRInt32 *aX,
+                                 PRInt32 *aY) = 0;
 
     /**
      * Move this widget.

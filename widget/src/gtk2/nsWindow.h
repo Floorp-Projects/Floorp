@@ -63,7 +63,8 @@ class nsWindow : public nsCommonWidget {
   NS_IMETHOD         Destroy(void);
   NS_IMETHOD         SetModal(PRBool aModal);
   NS_IMETHOD         IsVisible(PRBool & aState);
-  NS_IMETHOD         ConstrainPosition(PRInt32 *aX,
+  NS_IMETHOD         ConstrainPosition(PRBool aAllowSlop,
+                                       PRInt32 *aX,
 				       PRInt32 *aY);
   NS_IMETHOD         Move(PRInt32 aX,
 			   PRInt32 aY);

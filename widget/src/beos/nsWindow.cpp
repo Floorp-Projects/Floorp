@@ -981,7 +981,7 @@ NS_METHOD nsWindow::IsVisible(PRBool & bState)
 // Sanity check potential move coordinates
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsWindow::ConstrainPosition(PRInt32 *aX, PRInt32 *aY)
+NS_METHOD nsWindow::ConstrainPosition(PRBool aAllowSlop, PRInt32 *aX, PRInt32 *aY)
 {
 	NS_WARNING("nsWindow::ConstrainPosition - not implemented");
 	return NS_OK;

@@ -458,7 +458,8 @@ PRBool nsWindow::OnScroll(nsScrollbarEvent &aEvent, PRUint32 cPos)
   return PR_FALSE;
 }
 
-NS_METHOD nsWindow::ConstrainPosition(PRInt32 *aX, PRInt32 *aY)
+NS_METHOD nsWindow::ConstrainPosition(PRBool aAllowSlop,
+                                      PRInt32 *aX, PRInt32 *aY)
 {
   return NS_OK;
 }

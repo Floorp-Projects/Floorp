@@ -194,7 +194,7 @@ nsWindow::IsVisible(PRBool & aState)
 }
 
 NS_IMETHODIMP
-nsWindow::ConstrainPosition(PRInt32 *aX, PRInt32 *aY)
+nsWindow::ConstrainPosition(PRBool aAllowSlop, PRInt32 *aX, PRInt32 *aY)
 {
   return NS_ERROR_NOT_IMPLEMENTED; 
 }
