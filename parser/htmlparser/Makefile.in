@@ -22,10 +22,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-# Don't try to build robot just yet
-# DIRS = src robot
-
-DIRS = src
+DIRS = src robot
 
 include $(topsrcdir)/config/config.mk
 
