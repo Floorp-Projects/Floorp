@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+
+<bindings id="mailComposeBindings"
+          xmlns="http://www.mozilla.org/xbl"
+
+xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<binding id="fromMenuitem"
+extends="chrome://global/content/xulBindings.xml#menuitem">
+    <content autostretch="never" excludes="template,observes,menupopup">
+      <xul:text class="composemenu-text" inherits="value,accesskey,crop"
+crop="right"/>
+      <xul:text class="composemenu-text-2" inherits="accountname:value"
+crop="right"/>
+    </content>
+  </binding>
+
+</bindings>

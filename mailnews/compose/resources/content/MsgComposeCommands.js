@@ -1151,8 +1151,21 @@ function fillIdentityListPopup(popup)
 
 		//dump(i + " = " + identity.identityName + "," +identity.key + "\n");
 
+		//Get server prettyName for each identity
+
+		var serverSupports = accountManager.GetServersForIdentity(identity);
+
+		//dump(i + " = " + identity.identityName + "," +identity.key + "\n");
+		
+		if(serverSupports.GetElementAt(0))
+			var	result = serverSupports.GetElementAt(0).QueryInterface(Components.interfaces.nsIMsgIncomingServer);
+		//dump ("The account name is = "+result.prettyName+ "\n");
+		var accountName = " - < "+result.prettyName+">";
+
         var item=document.createElement('menuitem');
         item.setAttribute('value', identity.identityName);
+        item.setAttribute('class', 'identity-popup-item');
+        item.setAttribute('accountname', accountName);
         item.setAttribute('id', identity.key);
         popup.appendChild(item);
     }

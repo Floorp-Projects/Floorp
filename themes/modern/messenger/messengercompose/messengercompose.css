@@ -124,3 +124,14 @@ tree#attachmentBucket {
 #msgIdentity {
   user-focus: normal;
 }
+
+.identity-popup-item
+{
+  behavior: url(chrome://messenger/content/messengercompose/mailComposeBindings.xml#fromMenuitem);
+}
+
+.composemenu-text-2
+{
+  color: gray;
+  font-style: italic;
+}

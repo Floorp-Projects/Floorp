@@ -31,6 +31,7 @@ CHROME_CONTENT = \
 	.\addressingWidgetOverlay.xul \
 	.\askSendFormat.js \
 	.\askSendFormat.xul \
+	.\mailComposeBindings.xml \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
