@@ -29,6 +29,10 @@
 #include "nsCRT.h"
 //#include "nsIPref.h"
 
+#include "nsIXPBaseWindow.h"
+#include "nsPrintSetupDialog.h"
+#include "nsFindDialog.h"
+
 class nsILabel;
 class nsICheckButton;
 class nsIRadioButton;
@@ -144,6 +148,7 @@ public:
 
   void ShowPrintPreview(PRInt32 aID);
   void DoPrint(void);
+  void DoPrintSetup(void);
 
 #ifdef NS_DEBUG
   void DumpContent(FILE *out = stdout);
@@ -209,6 +214,9 @@ public:
   nsIRadioButton * mUpRadioBtn;
   nsIRadioButton * mDwnRadioBtn;
   nsILabel       * mLabel;
+
+  nsIXPBaseWindow * mXPDialog;
+  PrintSetupInfo    mPrintSetupInfo;
 
   //for creating more instances
   nsIAppShell* mAppShell;

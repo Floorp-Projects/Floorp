@@ -20,6 +20,8 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
+DIRS=public
+
 include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
@@ -57,7 +59,11 @@ endif
 endif
 
 CPPSRCS = \
-	$(TOOLKIT_CPPSRCS) \
+	$(TOOLKIT_CPPSRCS)      \
+	nsBaseDialog.cpp        \
+	nsFindDialog.cpp        \
+	nsXPBaseWindow.cpp      \
+	nsPrintSetupDialog.cpp  \
 	nsBrowserWindow.cpp     \
 	nsEditorMode.cpp        \
 	nsEditorInterfaces.cpp  \
@@ -160,6 +166,8 @@ export::
 
 install:: $(TARGETS)
 	$(INSTALL) $(PROGS) $(DIST)/bin
+	$(INSTALL) $(srcdir)/resources/find.html $(DIST)/bin/res/samples
+	$(INSTALL) $(srcdir)/resources/printsetup.html $(DIST)/bin/res/samples
 	$(INSTALL) $(srcdir)/samples/test0.html $(DIST)/bin/res/samples
 	$(INSTALL) $(srcdir)/samples/test1.html $(DIST)/bin/res/samples
 	$(INSTALL) $(srcdir)/samples/test2.html $(DIST)/bin/res/samples
@@ -198,6 +206,8 @@ install:: $(TARGETS)
 
 clobber::
 	rm -f $(DIST)/bin/viewer.exe
+	rm -f $(DIST)/bin/res/samples/find.html
+	rm -f $(DIST)/bin/res/samples/printsetup.html
 	rm -f $(DIST)/bin/res/samples/test0.html
 	rm -f $(DIST)/bin/res/samples/test1.html
 	rm -f $(DIST)/bin/res/samples/test2.html
