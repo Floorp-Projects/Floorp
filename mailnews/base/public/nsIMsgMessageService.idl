@@ -64,18 +64,21 @@ interface nsIMsgMessageService : nsISupports {
 	[noscript] void CopyMessages(in nsMsgKeyArrayPtr keys, in nsIMsgFolder srcFolder, in nsIStreamListener aCopyListener, in boolean aMoveMessage,
 						   in nsIUrlListener aUrlListener, out nsIURI aURL);
 
-     /////////////////////////////////////////////////////////////////////
-     //  DisplayMessage: When you want a message displayed....
-     //  aMessageURI is a uri representing the message to display.
-     //  aDisplayConsumer is (for now) a nsIWebshell which we'll use to load 
-     // the message into. 
-     // It would be nice if we can figure this out for ourselves in the 
-     // protocol but we can't do that right now. 
-     ///////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////
+    //  DisplayMessage: When you want a message displayed....
+    //  aMessageURI	  is a uri representing the message to display.
+    //  aDisplayConsumer is (for now) a nsIWebshell which we'll use to load 
+    //					  the message into. 
+	//	aCharsetOverride  (optional) character set over ride to force the message to
+	//					  use
+	//
+    ///////////////////////////////////////////////////////////////////
 
-	void DisplayMessage(in string aMessageURI, in nsISupports aDisplayConsumer, 
+	void DisplayMessage(in string aMessageURI, 
+						in nsISupports aDisplayConsumer, 
 						in nsIMsgWindow aMsgWindow,
 						in nsIUrlListener aUrlListener, 
+						in wstring aCharsetOverride, 
 						out nsIURI aURL);
 
      /////////////////////////////////////////////////////////////////////
