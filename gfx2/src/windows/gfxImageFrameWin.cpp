@@ -298,8 +298,15 @@ NS_IMETHODIMP gfxImageFrameWin::SetImageData(const PRUint8 *aData, PRUint32 aLen
   PRInt32 row_stride = mImageRowSpan;
   PRUint8 *imgData = (PRUint8*)mImage.mDIBBits;
   PRInt32 imgLen = mImageRowSpan * mSize.height;
+  
+  PRInt32 newOffset;
+#ifdef XP_PC
+  newOffset = ((mSize.height - 1) * row_stride) - aOffset;
+#else
+  newOffset = aOffset;
+#endif
 
-  if (((aOffset + (PRInt32)aLength) > imgLen) || !imgData) {
+  if (((newOffset + (PRInt32)aLength) > imgLen) || !imgData) {
     return NS_ERROR_FAILURE;
   }
 
@@ -307,13 +314,6 @@ NS_IMETHODIMP gfxImageFrameWin::SetImageData(const PRUint8 *aData, PRUint32 aLen
   if (gOSVerInfo.dwPlatformId == VER_PLATFORM_WIN32_NT) {
     ::GdiFlush();
   }
-
-  PRInt32 newOffset;
-#ifdef XP_PC
-  newOffset = ((mSize.height - 1) * row_stride) - aOffset;
-#else
-  newOffset = aOffset;
-#endif
 
   memcpy(imgData + newOffset, aData, aLength);
 
@@ -391,7 +391,14 @@ NS_IMETHODIMP gfxImageFrameWin::SetAlphaData(const PRUint8 *aData, PRUint32 aLen
   PRUint8 *imgData = (PRUint8*)mAlphaImage.mDIBBits;
   PRInt32 imgLen = mAlphaRowSpan * mSize.height;
 
-  if (((aOffset + (PRInt32)aLength) > imgLen) || !imgData) {
+  PRInt32 newOffset;
+#ifdef XP_PC
+  newOffset = ((mSize.height - 1) * row_stride) - aOffset;
+#else
+  newOffset = aOffset;
+#endif
+
+  if (((newOffset + (PRInt32)aLength) > imgLen) || !imgData) {
     return NS_ERROR_FAILURE;
   }
 
@@ -399,13 +406,6 @@ NS_IMETHODIMP gfxImageFrameWin::SetAlphaData(const PRUint8 *aData, PRUint32 aLen
   if (gOSVerInfo.dwPlatformId == VER_PLATFORM_WIN32_NT) {
     ::GdiFlush();
   }
-
-  PRInt32 newOffset;
-#ifdef XP_PC
-  newOffset = ((mSize.height - 1) * row_stride) - aOffset;
-#else
-  newOffset = aOffset;
-#endif
 
   memcpy(imgData + newOffset, aData, aLength);
 
