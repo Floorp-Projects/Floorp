@@ -143,6 +143,11 @@ public:
   PRBool GetContentEmpty();
   void SetContentEmpty(PRBool aContentEmpty);
 
+  // The collapse offset is (0,0) except for cells originating in a row/col which is collapsed
+  void    SetCollapseOffsetX(nscoord aXOffset);
+  void    SetCollapseOffsetY(nscoord aYOffset);
+  nsPoint GetCollapseOffset();
+
 protected:
   /** implement abstract method on nsHTMLContainerFrame */
   virtual PRIntn GetSkipSides() const;
@@ -211,6 +216,9 @@ protected:
   PRBool       mIsContentEmpty;  // PR_TRUE if the cell's contents take up no space
   //XXX: mIsContentEmpty should get yanked in favor of using free a bit on the frame base class
   //     the FrameState slot (mState; GetFrameState/SetFrameState)
+
+  nsPoint      mCollapseOffset;
+
 public:
   nsBorderEdges mBorderEdges;       // one list of border segments for each side of the table frame
                                     // used only for the collapsing border model

@@ -560,6 +560,12 @@ protected:
                                        InnerTableReflowState& aReflowState,
                                        nsIFrame*              aKidFrame,
                                        nscoord                aDeltaY);
+
+  NS_METHOD AdjustForCollapsingRows(nsIPresContext& aPresContext, 
+                                    nscoord&        aHeight);
+
+  NS_METHOD AdjustForCollapsingCols(nsIPresContext& aPresContext, 
+                                    nscoord&        aWidth);
 // end incremental reflow methods
 
   /** return the desired width of this table accounting for the current

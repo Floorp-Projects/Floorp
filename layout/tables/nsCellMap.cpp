@@ -30,11 +30,15 @@ static const PRBool gsDebug = PR_FALSE;
 nsCellMap::nsCellMap(int aRowCount, int aColCount)
   : mRowCount(0),
     mColCount(0),
-    mTotalRowCount(0)
+    mTotalRowCount(0),
+    mNumCollapsedRows(0),
+    mNumCollapsedCols(0)
 {
   mRows = nsnull;
   mColFrames = nsnull;
   mMinColSpans = nsnull;
+  mIsCollapsedRows = nsnull;
+  mIsCollapsedCols = nsnull;
   Reset(aRowCount, aColCount);
 }
 
@@ -62,6 +66,16 @@ nsCellMap::~nsCellMap()
   // mMinColSpans may be null, it is only set for tables that need it
   if (nsnull != mMinColSpans)
     delete [] mMinColSpans;
+  if (nsnull != mIsCollapsedRows) {
+    delete [] mIsCollapsedRows;
+    mIsCollapsedRows = nsnull;
+    mNumCollapsedRows = 0;
+  }
+  if (nsnull != mIsCollapsedCols) {
+    delete [] mIsCollapsedCols;
+    mIsCollapsedCols = nsnull;
+    mNumCollapsedCols = 0;
+  }
   mRows = nsnull;
   mColFrames = nsnull;
   mMinColSpans = nsnull;
@@ -97,19 +111,20 @@ void nsCellMap::Reset(int aRowCount, int aColCount)
 
   // if the number of rows has increased, add the extra rows
   PRInt32 newRows = aRowCount-mTotalRowCount; // (new row count) - (total row allocation)
-  for ( ; newRows>0; newRows--)
-  {
+  for ( ; newRows > 0; newRows--) {
     nsVoidArray *row;
-    if (0!=aColCount)
+    if (0 != aColCount) {
       row = new nsVoidArray(aColCount);
-    else
+    } else {
       row = new nsVoidArray();
+    }
     mRows->AppendElement(row);
   }
 
   mRowCount = aRowCount;
   mTotalRowCount = PR_MAX(mTotalRowCount, mRowCount);
   mColCount = aColCount;
+
   if (gsDebug) printf("leaving Reset with mRC=%d, mCC=%d, mTRC=%d\n",
                       mRowCount, mColCount, mTotalRowCount);
 }
@@ -413,5 +428,73 @@ PRBool nsCellMap::ColHasSpanningCells(PRInt32 aColIndex)
   return result;
 }
 
+PRInt32 nsCellMap::GetNumCollapsedRows()
+{
+  return mNumCollapsedRows;
+}
 
+PRBool nsCellMap::IsRowCollapsedAt(PRInt32 aRow)
+{
+  if ((aRow >= 0) && (aRow < mTotalRowCount)) {
+    if (mIsCollapsedRows) {
+      return mIsCollapsedRows[aRow];
+    }
+  }
+  return PR_FALSE;
+}
+
+void nsCellMap::SetRowCollapsedAt(PRInt32 aRow, PRBool aValue)
+{
+  if ((aRow >= 0) && (aRow < mRowCount)) {
+    if (nsnull == mIsCollapsedRows) {
+      mIsCollapsedRows = new PRBool[mRowCount];
+      for (PRInt32 i = 0; i < mRowCount; i++) {
+        mIsCollapsedRows[i] = PR_FALSE;
+      }
+    }
+    if (mIsCollapsedRows[aRow] != aValue) {
+      if (PR_TRUE == aValue) {
+        mNumCollapsedRows++;
+      } else {
+        mNumCollapsedRows--;
+      }
+      mIsCollapsedRows[aRow] = aValue; 
+    }
+  }
+}
+
+PRInt32 nsCellMap::GetNumCollapsedCols()
+{
+  return mNumCollapsedCols;
+}
+
+PRBool nsCellMap::IsColCollapsedAt(PRInt32 aCol)
+{
+  if ((aCol >= 0) && (aCol < mColCount)) {
+    if (mIsCollapsedCols) {
+      return mIsCollapsedCols[aCol];
+    }
+  }
+  return PR_FALSE;
+}
+
+void nsCellMap::SetColCollapsedAt(PRInt32 aCol, PRBool aValue)
+{
+  if ((aCol >= 0) && (aCol < mColCount)) {
+    if (nsnull == mIsCollapsedCols) {
+      mIsCollapsedCols = new PRBool[mColCount];
+      for (PRInt32 i = 0; i < mColCount; i++) {
+        mIsCollapsedCols[i] = PR_FALSE;
+      }
+    }
+    if (mIsCollapsedCols[aCol] != aValue) {
+      if (PR_TRUE == aValue) {
+        mNumCollapsedCols++;
+      } else {
+        mNumCollapsedCols--;
+      }
+      mIsCollapsedCols[aCol] = aValue; 
+    }
+  }
+}
 

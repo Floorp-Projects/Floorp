@@ -53,6 +53,14 @@ protected:
   /** a cache of the column frames, by col index */
   nsVoidArray * mColFrames;
 
+  // an array of booleans where the ith element indicates if the ith row is collapsed
+  PRBool* mIsCollapsedRows;
+  PRInt32 mNumCollapsedRows;
+
+  // an array of booleans where the ith element indicates if the ith col is collapsed
+  PRBool* mIsCollapsedCols;
+  PRInt32 mNumCollapsedCols;
+
   /** the number of rows.  mRows[0] - mRows[mRowCount-1] are non-null. */
   PRInt32 mRowCount;
 
@@ -85,6 +93,14 @@ public:
 
   /** assign aCellData to the cell at (aRow,aColumn) */
   void SetCellAt(CellData *aCellData, PRInt32 aRow, PRInt32 aColumn);
+
+  PRInt32 GetNumCollapsedRows();
+  PRBool IsRowCollapsedAt(PRInt32 aRow);
+  void SetRowCollapsedAt(PRInt32 aRow, PRBool aValue);
+
+  PRInt32 GetNumCollapsedCols();
+  PRBool IsColCollapsedAt(PRInt32 aCol);
+  void SetColCollapsedAt(PRInt32 aCol, PRBool aValue);
 
   /** expand the CellMap to have aRowCount rows.  The number of columns remains the same */
   void GrowToRow(PRInt32 aRowCount);
