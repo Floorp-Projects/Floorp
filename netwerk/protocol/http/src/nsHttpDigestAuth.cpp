@@ -128,6 +128,12 @@ nsHttpDigestAuth::GetMethodAndPath(nsIHttpChannel *httpChannel,
         rv |= uri->GetPath(path);
         if (NS_SUCCEEDED(rv)) {
           //
+          // strip any fragment identifier from the URL path.
+          //
+          PRInt32 ref = path.RFindChar('#');
+          if (ref != kNotFound)
+            path.Truncate(ref);
+          //
           // make sure we escape any UTF-8 characters in the URI path.  the
           // digest auth uri attribute needs to match the request-URI.
           //
