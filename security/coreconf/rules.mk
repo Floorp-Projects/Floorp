@@ -303,20 +303,8 @@ ifneq ($(POLICY),)
 	-$(PLCYPATCH) $(PLCYPATCH_ARGS) $@
 endif
 
-#
-# XXX temporary workaround for Bugzilla bug #64261.
-# We can't put certread.o in libnss3.so because certread.o
-# depends on some PKCS7 symbols in libsmime3.so, which
-# would create a circular dependency between libnss3.so and
-# libsmime3.so.
-#
-# The original get_objs rule is:
-#
-#get_objs:
-#	@echo $(OBJS)
-#
 get_objs:
-	@echo $(filter-out $(OBJDIR)/certread$(OBJ_SUFFIX),$(OBJS))
+	@echo $(OBJS)
 
 $(LIBRARY): $(OBJS)
 	@$(MAKE_OBJDIR)

@@ -45,7 +45,6 @@ MODULE = security
 
 CSRCS = \
 	certhtml.c \
-	certread.c \
 	certreq.c \
 	crlv2.c \
 	ocsp.c \
