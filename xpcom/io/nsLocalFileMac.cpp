@@ -1053,7 +1053,7 @@ nsLocalFile::OpenNSPRFileDesc(PRInt32 flags, PRInt32 mode, PRFileDesc **_retval)
 	
 	if (flags & PR_CREATE_FILE)
 	{
-	    SetOSTypeFromExtension();
+	    SetOSTypeAndCreatorFromExtension();
 		err = ::FSpCreate(&spec, mCreator, mType, 0);
     }
 	   
@@ -1163,7 +1163,7 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
 	switch (type)
 	{
 		case NORMAL_FILE_TYPE:
-		    SetOSTypeFromExtension();
+		    SetOSTypeAndCreatorFromExtension();
 			err = ::FSpCreate(&mResolvedSpec, mCreator, mType, smCurrentScript);
 			return (MacErrorMapper(err));
 			break;
@@ -2774,7 +2774,7 @@ NS_IMETHODIMP nsLocalFile::SetFileTypeAndCreator(OSType type, OSType creator)
 NS_IMETHODIMP nsLocalFile::SetFileTypeFromSuffix(const char *suffix)
 {
     NS_ENSURE_ARG(suffix);
-    return SetOSTypeFromExtension(suffix);
+    return SetOSTypeAndCreatorFromExtension(suffix);
 }
 
 NS_IMETHODIMP nsLocalFile::SetFileTypeFromMIMEType(const char *mimetype)
@@ -2907,12 +2907,12 @@ nsLocalFile::OpenDocWithApp(nsILocalFile* aAppToOpenWith, PRBool aLaunchInBackgr
 	return rv;
 }
 
-nsresult nsLocalFile::SetOSTypeFromExtension(const char* extension)
+nsresult nsLocalFile::SetOSTypeAndCreatorFromExtension(const char* extension)
 {
     nsresult rv;
     
     nsXPIDLCString localExtBuf;
-    char *extPtr;
+    const char *extPtr;
     
     if (!extension)
     {
@@ -2924,7 +2924,7 @@ nsresult nsLocalFile::SetOSTypeFromExtension(const char* extension)
     }
     else
     {
-        extPtr = const_cast<char *>(extension); // really, we won't touch it
+        extPtr = extension;
         if (*extPtr == '.')
             ++extPtr;
     }
@@ -2940,10 +2940,32 @@ nsresult nsLocalFile::SetOSTypeFromExtension(const char* extension)
             rv = mimeInfo->GetMacType(&osType);
             if (NS_SUCCEEDED(rv))
                 mType = osType;
+            PRBool skip;
+            rv = ExtensionIsOnExceptionList(extPtr, &skip);
+            if (NS_SUCCEEDED(rv) && !skip)
+            {
+                rv = mimeInfo->GetMacCreator(&osType);
+                if (NS_SUCCEEDED(rv))
+                    mCreator = osType;
+            }
         }
     }
     return rv;
 }
+
+nsresult nsLocalFile::ExtensionIsOnExceptionList(const char *extension, PRBool *onList)
+{
+    // Probably want to make a global list somewhere in the future
+    // for now, just check for "html" and "htm"
+    
+    *onList = PR_FALSE;
+    
+    if (!nsCRT::strcasecmp(extension, "html") ||
+        !nsCRT::strcasecmp(extension, "htm"))
+        *onList = PR_TRUE;
+    return NS_OK;
+}
+
 
 nsresult nsLocalFile::DetermineCurrentProcessCreator()
 {
