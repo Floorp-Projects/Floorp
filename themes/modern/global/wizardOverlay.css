@@ -43,14 +43,14 @@
 }
 
 #wiz-back-button {
-  list-style-image: url("chrome://global/skin/arrow/arrow-left.gif");
+  list-style-image: url("chrome://global/skin/arrow/arrow-lft.gif");
 }
 #wiz-back-button[disabled] {
-  list-style-image: url("chrome://global/skin/arrow/arrow-left-disabled.gif");
+  list-style-image: url("chrome://global/skin/arrow/arrow-lft-dis.gif");
 }
 #wiz-next-button {
-  list-style-image: url("chrome://global/skin/arrow/arrow-right.gif");
+  list-style-image: url("chrome://global/skin/arrow/arrow-rit.gif");
 }
 #wiz-next-button[disabled] {
-  list-style-image: url("chrome://global/skin/arrow/arrow-right-disabled.gif");
+  list-style-image: url("chrome://global/skin/arrow/arrow-rit-dis.gif");
 }
