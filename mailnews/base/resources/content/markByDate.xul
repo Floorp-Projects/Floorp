@@ -53,22 +53,17 @@
   <script type="application/x-javascript" src="chrome://messenger/content/markByDate.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/dateFormat.js"/>
 
-  <description>&markByDateDesc.label;</description>
-  <grid flex="1">
-    <columns>
-      <column/>
-      <column flex="1"/>
-    </columns>
-    <rows>
-      <row align="center">
-        <label control="lowerDate" value="&markByDateLower.label;"/>
-        <textbox wsm_persist="true" id="lowerDate"/>
-      </row>
-      <row align="center">
-        <label control="upperDate" value="&markByDateUpper.label;"/>
-        <textbox wsm_persist="true" id="upperDate"/>
-      </row>
-    </rows>
-  </grid>
+  <hbox align="center" pack="end">
+    <label control="lowerDate"
+           value="&markByDateLower.label;"
+           accesskey="&markByDateLower.accesskey;"/>
+    <textbox size="11" id="lowerDate"/>
+  </hbox>
+  <hbox align="center" pack="end">
+    <label control="upperDate"
+           value="&markByDateUpper.label;"
+           accesskey="&markByDateUpper.accesskey;"/>
+    <textbox size="11" id="upperDate"/>
+  </hbox>
 
 </dialog>

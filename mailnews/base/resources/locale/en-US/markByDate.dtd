@@ -36,6 +36,7 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <!ENTITY messageMarkByDate.label "Mark Messages as Read by Date">
-<!ENTITY markByDateDesc.label "Mark messages as read:">
-<!ENTITY markByDateLower.label "From:">
+<!ENTITY markByDateLower.label "Mark messages as read from:">
+<!ENTITY markByDateLower.accesskey "F">
+<!ENTITY markByDateUpper.accesskey "T">
 <!ENTITY markByDateUpper.label "To:">
