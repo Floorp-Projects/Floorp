@@ -33,8 +33,7 @@ EXPORTS =                               \
         nsIContentViewer.h              \
         nsIContentViewerContainer.h     \
         nsIDocStreamLoaderFactory.h     \
-        nsIDocumentLoader.h             \
-        nsIDocumentLoaderObserver.h     \
+        nsIDocumentLoaderFactory.h      \
         nsILinkHandler.h                \
         nsIUrlDispatcher.h    \
         nsIWebShell.h                   \

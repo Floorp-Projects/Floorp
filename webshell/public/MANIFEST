@@ -7,8 +7,7 @@ nsIClipboardCommands.h
 nsIContentViewer.h
 nsIContentViewerContainer.h
 nsIDocStreamLoaderFactory.h
-nsIDocumentLoader.h
-nsIDocumentLoaderObserver.h
+nsIDocumentLoaderFactory.h
 nsILinkHandler.h
 nsIRefreshURI.h
 nsIUrlDispatcher.h
