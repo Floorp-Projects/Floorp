@@ -107,11 +107,11 @@ Rights Reserved.
           </template>
     
           <treecolgroup id="theSubscribeColumns">
-            <treecol persist="hidden width" width="0" flex="1" id="NameColumn" resource="http://home.netscape.com/NC-rdf#Name"/>
+            <treecol persist="hidden width" width="0" flex="5" id="NameColumn" resource="http://home.netscape.com/NC-rdf#Name"/>
             <splitter class="tree-splitter"/>
             <treecol persist="hidden" fixed="true" id="SubscribedColumn" resource="http://home.netscape.com/NC-rdf#Subscribed"/>
             <splitter class="tree-splitter"/>
-            <treecol persist="hidden" fixed="true" id="TotalMessagesColumn" resource="http://home.netscape.com/NC-rdf#TotalMessages"/>
+            <treecol persist="hidden width" width="0" flex="1" id="TotalMessagesColumn" resource="http://home.netscape.com/NC-rdf#TotalMessages"/>
           </treecolgroup>
     
           <treehead>	
