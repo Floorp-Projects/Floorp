@@ -621,6 +621,13 @@ nsHandleSSLError(nsNSSSocketInfo *socketInfo, PRInt32 err)
                                              params, 1,
                                              getter_Copies(formattedString));
     break;
+  
+  case PR_DIRECTORY_LOOKUP_ERROR:
+    params[0] = hostNameU.get();
+    nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("OCSPDirLookup").get(), 
+                                             params, 1,
+                                             getter_Copies(formattedString));
+    break;
 
   case SEC_ERROR_REVOKED_CERTIFICATE:
     params[0] = hostNameU.get();
