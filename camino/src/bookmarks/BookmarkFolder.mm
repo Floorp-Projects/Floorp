@@ -426,11 +426,11 @@ NSString* BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
 // Adding arrays
 //
 // used primarily for parsing of html bookmark files.
--(BookmarkFolder *)addBookmarkFolder //adds to end
+-(BookmarkFolder *)addBookmarkFolder // adds to end
 {
   BookmarkFolder *theFolder = [[BookmarkFolder alloc] init];
   [self insertChild:theFolder];
-  [theFolder release]; //retained on insert
+  [theFolder release]; // retained on insert
   return theFolder;
 }
 
@@ -453,12 +453,11 @@ NSString* BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
 // normal add while programming running
 -(BookmarkFolder *)addBookmarkFolder:(NSString *)aName inPosition:(unsigned)aPosition isGroup:(BOOL)aFlag
 {
-  BookmarkFolder *theFolder = [[BookmarkFolder alloc] init];
-  [self insertChild:theFolder atIndex:aPosition isMove:NO];
-  [theFolder release];
+  BookmarkFolder *theFolder = [[[BookmarkFolder alloc] init] autorelease];
   [theFolder setTitle:aName];
   if (aFlag)
     [theFolder setIsGroup:aFlag];
+  [self insertChild:theFolder atIndex:aPosition isMove:NO];
   return theFolder;
 }
 
