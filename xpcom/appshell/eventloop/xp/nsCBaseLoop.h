@@ -48,16 +48,17 @@ protected:
 	// Internal Helpers
 	void* GetPlatformEventData(nsIEvent* event);
 	void* GetPlatformFilterData(nsIEventFilter* filter);
-
-	// Virtuals Specific Base Loop must override.
-	virtual nsresult RunWithNoListener(nsIEvent* event, nsIEventFilter* filter)=0;
-	virtual nsresult RunWithTranslateListener(nsIEvent* event, 
-		nsIEventFilter* filter, nsITranslateListener* translateListener)=0;
-	virtual nsresult RunWithDispatchListener(nsIEvent* event, 
-		nsIEventFilter* filter, nsIDispatchListener* dispatchListener)=0;
-	virtual nsresult RunWithTranslateAndDispatchListener(nsIEvent* event,
+	nsresult RunWithNoListener(nsIEvent* event, nsIEventFilter* filter);
+	nsresult RunWithTranslateListener(nsIEvent* event, 
+		nsIEventFilter* filter, nsITranslateListener* translateListener);
+	nsresult RunWithDispatchListener(nsIEvent* event, 
+		nsIEventFilter* filter, nsIDispatchListener* dispatchListener);
+	nsresult RunWithTranslateAndDispatchListener(nsIEvent* event,
 		nsIEventFilter* filter,	nsITranslateListener* translateListener, 
-		nsIDispatchListener* dispatchListener)=0;
+		nsIDispatchListener* dispatchListener);
+
+	nsresult RetrieveNextEvent(void* platformFilterData, 
+		void* platformEventData);
 
 	// Virtuals Platform Loop must override
 		// Internal Platform Implementations of nsIEventLoop 
@@ -76,6 +77,8 @@ protected:
 	virtual nsNativeEventDataType PlatformGetEventType()=0;
 	virtual nsNativeFilterDataType PlatformGetFilterType()=0;
 	virtual PRInt32 PlatformGetReturnCode(void* platformEventData)=0; 
+	virtual nsresult PlatformRetrieveNextEvent(void* platformFilterData,
+		void* platformEventData)=0;
 
 protected:
 	nsAutoString	m_LoopName;

@@ -78,4 +78,6 @@ interface nsIEvent : nsISupports
 	*/
 	[noscript] void SetNativeData(in nsNativeEventDataType dataType,
 		in voidStar data);
+
+	readonly attribute boolean isExitEvent;
 };

@@ -32,15 +32,6 @@ public:
 protected:
 	nsCBaseAppLoop();
 	virtual ~nsCBaseAppLoop();
-
-	nsresult	RunWithNoListener(nsIEvent* event, nsIEventFilter* filter);
-	nsresult RunWithTranslateListener(nsIEvent* event, nsIEventFilter* filter, 
-		nsITranslateListener* translateListener);
-	nsresult RunWithDispatchListener(nsIEvent* event, nsIEventFilter* filter, 
-		nsIDispatchListener* dispatchListener);
-	nsresult RunWithTranslateAndDispatchListener(nsIEvent* event,
-		nsIEventFilter* filter,	nsITranslateListener* translateListener, 
-		nsIDispatchListener* dispatchListener);
 };
 
 #endif /* nsCBaseAppLoop_h__ */

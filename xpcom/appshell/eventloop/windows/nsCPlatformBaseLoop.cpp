@@ -119,3 +119,14 @@ PRInt32 nsCPlatformBaseLoop::PlatformGetReturnCode(void* platformEventData)
 	MSG* pMsg=(MSG*)platformEventData;
 	return pMsg->wParam;
 }
+
+nsresult nsCPlatformBaseLoop::PlatformRetrieveNextEvent(void* platformFilterData,
+	void* platformEventData)
+{
+	nsCWinFilter* filter=(nsCWinFilter*)platformFilterData;
+	MSG* pMsg=(MSG*)platformEventData;
+	if(::GetMessage(pMsg, filter->hWnd, filter->wMsgFilterMin, 
+		filter->wMsgFilterMax))
+		return NS_OK;
+	return  NS_COMFALSE; 
+}

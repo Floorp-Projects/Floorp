@@ -48,6 +48,8 @@ protected:
 	nsNativeEventDataType PlatformGetEventType();
 	nsNativeFilterDataType PlatformGetFilterType();
 	PRInt32 PlatformGetReturnCode(void* platformEventData);
+	nsresult PlatformRetrieveNextEvent(void* platformFilterData, 
+		void* platformEventData);
 	
 protected:
 	DWORD m_WinThreadId;  

@@ -270,3 +270,126 @@ void* nsCBaseLoop::GetPlatformFilterData(nsIEventFilter* filter)
 
 	return platformFilterData;
 }
+
+nsresult nsCBaseLoop::RunWithNoListener(nsIEvent* event,
+	nsIEventFilter* filter)
+{
+	nsresult rv;
+
+	void* platformEventData = GetPlatformEventData(event);
+	void* platformFilterData = GetPlatformFilterData(filter);
+	NS_ENSURE(platformEventData, NS_ERROR_FAILURE);
+								
+	while(NS_OK == (rv = RetrieveNextEvent(platformFilterData, platformEventData)))
+		{
+		if(NS_FAILED(rv = PlatformTranslateEvent(platformEventData)))
+			break;
+
+		if(NS_FAILED(rv = PlatformDispatchEvent(platformEventData)))
+			break;
+		}
+			
+	return rv;
+}
+
+nsresult nsCBaseLoop::RunWithTranslateListener(nsIEvent* event,
+	nsIEventFilter* filter, nsITranslateListener* translateListener)
+{
+	nsresult rv;
+
+	void* platformEventData = GetPlatformEventData(event);
+	void* platformFilterData = GetPlatformFilterData(filter);
+	NS_ENSURE(platformEventData, NS_ERROR_FAILURE);
+								
+	while(NS_OK == (rv = RetrieveNextEvent(platformFilterData, platformEventData)))
+		{
+		if(NS_FAILED(rv = translateListener->PreTranslate(event)))
+			break;
+		if(NS_OK == rv)
+			{
+			if(NS_FAILED(rv = PlatformTranslateEvent(platformEventData)))
+				break;
+			if(NS_FAILED(rv = translateListener->PostTranslate(event,
+				NS_OK == rv ? PR_TRUE : PR_FALSE)))
+				break;
+			}
+
+		if(NS_FAILED(rv = PlatformDispatchEvent(platformEventData)))
+			break;
+		}
+			
+	return rv;
+}
+
+nsresult nsCBaseLoop::RunWithDispatchListener(nsIEvent* event,
+	nsIEventFilter* filter, nsIDispatchListener* dispatchListener)
+{
+	nsresult rv;
+
+	void* platformEventData = GetPlatformEventData(event);
+	void* platformFilterData = GetPlatformFilterData(filter);
+	NS_ENSURE(platformEventData, NS_ERROR_FAILURE);
+								
+	while(NS_OK == (rv = RetrieveNextEvent(platformFilterData, platformEventData)))
+		{
+		if(NS_FAILED(rv = PlatformTranslateEvent(platformEventData)))
+			break;
+
+		if(NS_FAILED(rv = dispatchListener->PreDispatch(event)))
+			break;
+		if(NS_OK == rv)
+			{
+			if(NS_FAILED(rv = PlatformDispatchEvent(platformEventData)))
+				break;
+			if(NS_FAILED(rv = dispatchListener->PostDispatch(event,
+				NS_OK == rv ? PR_TRUE : PR_FALSE)))
+				break;
+			}
+		}
+			
+	return rv;
+}
+
+nsresult nsCBaseLoop::RunWithTranslateAndDispatchListener(nsIEvent* event,
+	nsIEventFilter* filter,	nsITranslateListener* translateListener, 
+	nsIDispatchListener* dispatchListener)
+{
+	nsresult rv;
+
+	void* platformEventData = GetPlatformEventData(event);
+	void* platformFilterData = GetPlatformFilterData(filter);
+	NS_ENSURE(platformEventData, NS_ERROR_FAILURE);
+								
+	while(NS_OK == (rv = RetrieveNextEvent(platformFilterData, platformEventData)))
+		{
+		if(NS_FAILED(rv = translateListener->PreTranslate(event)))
+			break;
+		if(NS_OK == rv)
+			{
+			if(NS_FAILED(rv = PlatformTranslateEvent(platformEventData)))
+				break;
+			if(NS_FAILED(rv = translateListener->PostTranslate(event,
+				NS_OK == rv ? PR_TRUE : PR_FALSE)))
+				break;
+			}
+
+		if(NS_FAILED(rv = dispatchListener->PreDispatch(event)))
+			break;
+		if(NS_OK == rv)
+			{
+			if(NS_FAILED(rv = PlatformDispatchEvent(platformEventData)))
+				break;
+			if(NS_FAILED(rv = dispatchListener->PostDispatch(event,
+				NS_OK == rv ? PR_TRUE : PR_FALSE)))
+				break;
+			}
+		}
+			
+	return rv;
+}
+
+nsresult nsCBaseLoop::RetrieveNextEvent(void* platformFilterData, 
+	void* platformEventData)
+{
+	return PlatformRetrieveNextEvent(platformFilterData, platformEventData);
+}
