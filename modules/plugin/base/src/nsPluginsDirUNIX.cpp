@@ -168,7 +168,7 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
     int i,num;
 
     UNIX_Plugin_GetMIMEDescription procedure = nsnull;
-    mimedescr="";
+    mimedescr=(char *)"";
 
     if(procedure = (UNIX_Plugin_GetMIMEDescription)PR_FindSymbol(pLibrary,"NP_GetMIMEDescription")) {
         mimedescr = procedure();
@@ -226,18 +226,18 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 #endif
 
         if(i==0) {
-            info.fMimeType = mtype ? mtype : "";
-            info.fMimeDescription = descr ? descr : "";
-            info.fExtensions = exten ? exten : "";
+            info.fMimeType = mtype ? mtype : (char *)"";
+            info.fMimeDescription = descr ? descr : (char *)"";
+            info.fExtensions = exten ? exten : (char *)"";
         }
 
         if(!*mtype && !descr && !exten) {
             i--;
             info.fVariantCount--;
         } else {
-            info.fMimeTypeArray[i] = mtype ? mtype : "";
-            info.fMimeDescriptionArray[i] = descr ? descr : "";
-            info.fExtensionArray[i] = exten ? exten : "";
+            info.fMimeTypeArray[i] = mtype ? mtype : (char *)"";
+            info.fMimeDescriptionArray[i] = descr ? descr : (char *)"";
+            info.fExtensionArray[i] = exten ? exten : (char *)"";
         }
         start=nexttoc;
     }
