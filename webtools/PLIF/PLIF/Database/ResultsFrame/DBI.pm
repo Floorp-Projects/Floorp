@@ -49,6 +49,11 @@ sub lastError {
     return $self->handle->err;
 }
 
+sub rowsAffected {
+    my $self = shift;
+    return $self->handle->rows;
+}
+
 sub row {
     my $self = shift;
     $self->assert($self->executed, 1, 'Tried to fetch data from an unexecuted statement');
