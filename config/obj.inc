@@ -17,11 +17,6 @@
 .SILENT:
 !endif
 
-## Include support for MOZ_LITE/MOZ_MEDIUM
-#include <$(DEPTH)/config/liteness.mak>
-
-RCFLAGS=$(RCFLAGS) $(MOZ_LITENESS_FLAGS)
-
 #//------------------------------------------------------------------------
 #//
 #// This makefile contains all of the rules necessary to build 16 and 32 bit
