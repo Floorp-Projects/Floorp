@@ -278,6 +278,15 @@ var bookmarksDNDObserver = {
           rContainer == rSource || !isContainer)
         continue;
 
+      // Prevent dropping node into one of its own subfolders
+      do {
+        var targetAncestor = NODE_ID(dropItem);
+        dropItem = dropItem.parentNode;
+      } while (targetAncestor != "NC:BookmarksRoot" && targetAncestor != sourceID);
+      if (targetAncestor == sourceID) {
+        continue;
+      }
+
       // XXX if any of the following fails, the nodes are gone for good!
       const kDSIID = Components.interfaces.nsIDragService;
       const kCopyAction = kDSIID.DRAGDROP_ACTION_COPY + kDSIID.DRAGDROP_ACTION_LINK;
