@@ -4,8 +4,8 @@
 # Output is written to the directory $TinderConfig::TINDERBOX_HTML_DIR/popup
 
 
-# $Revision: 1.3 $ 
-# $Date: 2003/01/19 17:17:02 $ 
+# $Revision: 1.4 $ 
+# $Date: 2003/02/03 13:46:07 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/popup.tst,v $ 
 # $Name:  $ 
@@ -61,6 +61,8 @@ runtime: 45.22 (minutes)<br>
 buildstatus: success<br>
 buildname: Linux comet Depend<br>
 tree: SeaMonkey<br>
+<br>
+<a href=http://mozilla.com>test</a><br>
 
 EOF
     ;
