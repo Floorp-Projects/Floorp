@@ -33,6 +33,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIPresContext.h"
 #include "nsIContent.h"
+#include "nsITextContent.h"
 #include "nsIDOMUIEvent.h"
 #include "nsHTMLValue.h"
 
@@ -50,7 +51,9 @@ class nsGfxTextControlFrame;
 
 
 /*******************************************************************************
- * EnderTempObserver XXX temporary until doc manager/loader is in place
+ * EnderTempObserver 
+ * This class is responsible for notifying mFrame when the document
+ * has finished loading.
  ******************************************************************************/
 class EnderTempObserver : public nsIDocumentLoaderObserver
 {
@@ -70,7 +73,7 @@ public:
   NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader,
                                nsIChannel* channel,
                                nsresult aStatus,
-							   nsIDocumentLoaderObserver * aObserver);
+							                 nsIDocumentLoaderObserver * aObserver);
   NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader,
                             nsIChannel* channel, 
                             nsIContentViewer* aViewer);
@@ -96,7 +99,7 @@ protected:
 
 /*******************************************************************************
  * nsEnderDocumentObserver
- * This class responds to document changes
+ * This class is responsible for notifying mFrame about document content changes.
  ******************************************************************************/
 class nsEnderDocumentObserver : public nsIDocumentObserver
 {
@@ -168,9 +171,10 @@ protected:
   nsGfxTextControlFrame *mFrame; // not ref counted
 };
 
- /******************************************************************************
-  * nsIEnderEventListener
-  ******************************************************************************/
+/******************************************************************************
+ * nsIEnderEventListener
+ * Standard interface for event listeners that are attached to nsGfxTextControls
+ ******************************************************************************/
  
 class nsIEnderEventListener : public nsISupports
 {
@@ -192,6 +196,9 @@ public:
 
 /******************************************************************************
  * nsEnderEventListener
+ * This class is responsible for propogating events from the embedded webshell
+ * of nsGfxTextControlFrame to the parent environment.  This enables DOM
+ * event listeners on text controls.
  ******************************************************************************/
 
 class nsEnderEventListener; // forward declaration for factory
@@ -281,9 +288,42 @@ protected:
 };
 
 
+/******************************************************************************
+ * nsEnderFocusListenerForContent
+ * used to watch for focus notifications on the text control frame's content
+ ******************************************************************************/
+
+class nsEnderFocusListenerForContent : public nsIDOMFocusListener
+{
+public:
+
+  /** the default destructor */
+  virtual ~nsEnderFocusListenerForContent();
+
+  /*interfaces for addref and release and queryinterface*/
+  NS_DECL_ISUPPORTS
+
+  /* nsIDOMFocusListener interfaces */
+  virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
+  virtual nsresult Focus(nsIDOMEvent* aEvent);
+  virtual nsresult Blur (nsIDOMEvent* aEvent);
+  /* END interfaces from nsIDOMFocusListener*/
+
+  NS_IMETHOD SetFrame(nsGfxTextControlFrame *aFrame);
+
+  nsEnderFocusListenerForContent();
+
+protected:
+  nsGfxTextControlFrame    *mFrame;   // not ref counted
+};
 
 /******************************************************************************
  * nsGfxTextControlFrame
+ * frame that represents an HTML text input element
+ * handles both <input type=text> and <textarea>
+ * For performance, nsGfxTextControl displays text with a simple block frame
+ * until it first recieves focus.  At that point, it builds a subdocument (mWebShell)
+ * and attaches an editor to the subdocument.
  ******************************************************************************/
 
 class nsGfxTextControlFrame : public nsTextControlFrame
@@ -292,7 +332,10 @@ private:
 	typedef nsFormControlFrame Inherited;
 
 public:
+  /** constructor */
   nsGfxTextControlFrame();
+
+  /** destructor */
   virtual ~nsGfxTextControlFrame();
 
   /** nsIFrame override of Init.
@@ -303,27 +346,39 @@ public:
                    nsIFrame*        aParent,
                    nsIStyleContext* aContext,
                    nsIFrame*        aPrevInFlow);
+
+  /** debug method to dump frames 
+    * @see nsIFrame
+    */
   NS_IMETHOD  List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const;
 
-  NS_IMETHOD InitTextControl();
+  /** create all the objects required for editing. */
+  NS_IMETHOD CreateEditor();
 
-       // nsIFormControlFrame
+  // nsIFormControlFrame
   NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue);
   NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
   virtual void SetFocus(PRBool aOn = PR_TRUE, PRBool aRepaint = PR_FALSE);
-
   virtual nsWidgetInitData* GetWidgetInitData(nsIPresContext& aPresContext);
+  virtual void PostCreateWidget(nsIPresContext* aPresContext,
+                                nscoord& aWidth,
+                                nscoord& aHeight) {};
 
+  /** handler for attribute changes to mContent */
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
                               nsIContent*     aChild,
                               PRInt32         aNameSpaceID,
                               nsIAtom*        aAttribute,
                               PRInt32         aHint);
 
-  virtual void PostCreateWidget(nsIPresContext* aPresContext,
-                                nscoord& aWidth,
-                                nscoord& aHeight);
 
+  /** fire up the webshell and editor 
+    * @param aSizeOfSubdocContainer  if null, the size of this frame is used (normally null)
+    *                                if not null, the size from which the subdoc size is calculated.
+    */
+  virtual nsresult CreateSubDoc(nsRect *aSizeOfSubdocContainer);
+
+  /** @see nsTextControlFrame::GetText */
   NS_IMETHOD GetText(nsString* aValue, PRBool aInitialValue);
 
   /** 
@@ -361,17 +416,6 @@ public:
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
-
-  virtual void PaintTextControlBackground(nsIPresContext& aPresContext,
-                                          nsIRenderingContext& aRenderingContext,
-                                          const nsRect& aDirtyRect,
-                                          nsFramePaintLayer aWhichLayer);
-
-  virtual void PaintTextControl(nsIPresContext& aPresContext,
-                                nsIRenderingContext& aRenderingContext,
-                                const nsRect& aDirtyRect, nsString& aText,
-                                nsIStyleContext* aStyleContext,
-                                nsRect& aRect);
  
   // Utility methods to get and set current widget state
   void GetTextControlFrameState(nsString& aValue);
@@ -393,6 +437,10 @@ public:
     { return &mWeakReferent; }
 
 protected:
+
+  /** calculate the inner region of the text control (size - border and padding) in pixels */
+  virtual void CalcSizeOfSubDocInTwips(const nsMargin &aBorderPadding, const nsSize &aFrameSize, nsRect &aSubBounds);
+
   PRInt32 CalculateSizeNavQuirks (nsIPresContext*       aPresContext, 
                                   nsIRenderingContext*  aRendContext,
                                   nsIFormControlFrame*  aFrame,
@@ -440,15 +488,33 @@ protected:
 
   NS_IMETHOD SelectAllTextContent(nsIDOMNode *aBodyNode, nsIDOMSelection *aSelection);
 
-  PRBool IsSingleLineTextControl() const;
+  virtual PRBool IsSingleLineTextControl() const;
 
-  PRBool IsPlainTextControl() const;
+  virtual PRBool IsPlainTextControl() const;
 
-  PRBool IsPasswordTextControl() const;
+  virtual PRBool IsPasswordTextControl() const;
 
-  PRBool IsInitialized() const;
+  virtual PRBool IsInitialized() const;
 
-  PRInt32 GetWidthInCharacters() const;
+  virtual PRInt32 GetWidthInCharacters() const;
+
+
+  virtual void PaintTextControlBackground(nsIPresContext& aPresContext,
+                                          nsIRenderingContext& aRenderingContext,
+                                          const nsRect& aDirtyRect,
+                                          nsFramePaintLayer aWhichLayer);
+
+  virtual void PaintTextControl(nsIPresContext& aPresContext,
+                                nsIRenderingContext& aRenderingContext,
+                                const nsRect& aDirtyRect, nsString& aText,
+                                nsIStyleContext* aStyleContext,
+                                nsRect& aRect);
+
+  virtual void PaintChild(nsIPresContext&      aPresContext,
+                          nsIRenderingContext& aRenderingContext,
+                          const nsRect&        aDirtyRect,
+                          nsIFrame*            aFrame,
+                          nsFramePaintLayer    aWhichLayer);
 
 
 protected:
@@ -467,7 +533,11 @@ protected:
 
   // listeners
   nsCOMPtr<nsIEnderEventListener> mEventListener;  // ref counted
+  nsEnderFocusListenerForContent *mFocusListenerForContent; // ref counted
 
+  nsIFrame *mDisplayFrame;
+  nsCOMPtr<nsITextContent> mDisplayContent;
+ 
   // editing state
   nsCOMPtr<nsIEditor>       mEditor;  // ref counted
   nsCOMPtr<nsIDOMDocument>  mDoc;     // ref counted

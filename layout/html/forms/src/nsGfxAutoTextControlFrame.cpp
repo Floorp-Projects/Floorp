@@ -50,7 +50,7 @@ nsresult NS_NewGfxAutoTextControlFrame(nsIFrame** aNewFrame)
 	if (nsnull == aNewFrame)
 		return NS_ERROR_OUT_OF_MEMORY;
 
-	nsresult result = ((nsGfxAutoTextControlFrame*)(*aNewFrame))->InitTextControl();
+	nsresult result = ((nsGfxAutoTextControlFrame*)(*aNewFrame))->CreateEditor();
 	if (NS_FAILED(result))
 	{ // can't properly initialized ender, probably it isn't installed
 		delete *aNewFrame;
