@@ -33,7 +33,7 @@ LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
       -I$(PUBLIC)\libxpt -I$(PUBLIC)\xptinfo
 
 LLIBS=					\
- $(DIST)\lib\xpcom32.lib		\
+ $(DIST)\lib\xpcom.lib		\
  $(DIST)\lib\libxpt32.lib		\
  $(DIST)\lib\xptinfo32.lib		\
  $(LIBNSPR)				\

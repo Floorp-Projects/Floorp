@@ -23,7 +23,9 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS	= public src
 
-DIRS    += tests
+ifdef ENABLE_TESTS
+DIRS	+= tests
+endif
 
 DIRS	+= tools
 
