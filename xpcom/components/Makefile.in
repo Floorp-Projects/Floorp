@@ -36,6 +36,7 @@ CPPSRCS		= \
 		nsRegistry.cpp \
 		nsRepository.cpp \
 		nsServiceManager.cpp \
+        nsCategoryManager.cpp \
 		xcDll.cpp \
 		$(NULL)
 
@@ -69,7 +70,3 @@ override NO_STATIC_LIB=
 include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -DUSE_NSREG -D_IMPL_NS_COM -D_IMPL_NS_BASE
-
-# XXX need common install rule!
-install:: $(TARGETS)
-	$(INSTALL) $(srcdir)/nsCategoryManager.js $(DIST)/bin/components
