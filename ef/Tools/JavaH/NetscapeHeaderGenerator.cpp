@@ -125,11 +125,26 @@ bool NetscapeHeaderGenerator::genHeaderFile(ClassFileSummary &summ,
   /* Generate a declaration for the array type corresponding to this class */
   PR_fprintf(fp, "ARRAY_OF(Java_%s);\n", mangledClassName);
 
-  /* Now go through each native method and generate a declaration for it */
   const Method **methods = summ.getMethods();
   uint32 methodCount = summ.getMethodCount();
+
+  /* Now go through each method and see if it is overloaded.  */
+  TemporaryBuffer overbuf(methodCount*sizeof(bool));
+  bool *overloadedMethods = (bool *) (char *) overbuf;
+
+  for (i = 0; i < methodCount; i++) {
+    const char *methodName = methods[i]->getName();
+
+    overloadedMethods[i] = false;
+    for (int j = 0; j < methodCount; ++j)
+      if (i != j && strcmp(methodName, methods[j]->getName()) == 0)
+        overloadedMethods[i] = true;
+  }
   
-  NetscapeShortMangler mangler;
+  /* Now go through each native method and generate a declaration for it */
+
+  NetscapeShortMangler smangler;
+  NetscapeLongMangler lmangler;
   
   /* extern "C" the generated method headers */
   PR_fprintf(fp, "extern \"C\" {\n");
@@ -153,9 +168,16 @@ bool NetscapeHeaderGenerator::genHeaderFile(ClassFileSummary &summ,
       TemporaryBuffer copy(len);
       char *mangledMethodName = copy;
       
-      if (!mangler.mangle(className, methodName, signature, 
-			  mangledMethodName, len)) 
-	continue;
+      if (overloadedMethods[i]) {
+        if (!lmangler.mangle(className, methodName, signature, 
+			     mangledMethodName, len)) 
+	  continue;
+      }
+      else {
+        if (!smangler.mangle(className, methodName, signature, 
+			     mangledMethodName, len)) 
+	  continue;
+      }
 
       PR_fprintf(fp, "\n/*\n");
       PR_fprintf(fp, " * Class : %s\n", className);

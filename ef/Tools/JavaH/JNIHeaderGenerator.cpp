@@ -42,11 +42,26 @@ bool JNIHeaderGenerator::genHeaderFile(ClassFileSummary &summ,
 
   PR_fprintf(fp, "#include <jni.h>\n\n");
 
-  /* Go through each native method and generate a declaration for it */
   const Method **methods = summ.getMethods();
   Uint32 methodCount = summ.getMethodCount();
   
-  JNIShortMangler mangler;
+  /* Now go through each method and see if it is overloaded.  */
+  TemporaryBuffer overbuf(methodCount*sizeof(bool));
+  bool *overloadedMethods = (bool *) (char *) overbuf;
+ 
+  for (Uint32 i = 0; i < methodCount; i++) {
+    const char *methodName = methods[i]->getName();
+
+    overloadedMethods[i] = false;
+    for (Uint32 j = 0; j < methodCount; ++j)
+      if (i != j && strcmp(methodName, methods[j]->getName()) == 0)
+        overloadedMethods[i] = true;
+  }
+
+  /* Go through each native method and generate a declaration for it */
+
+  JNILongMangler lmangler;
+  JNIShortMangler smangler;
   
   /* extern "C" the generated method headers */
   PR_fprintf(fp, "#ifdef __cplusplus\n");
@@ -72,9 +87,16 @@ bool JNIHeaderGenerator::genHeaderFile(ClassFileSummary &summ,
       TemporaryBuffer copy(len);
       char *mangledMethodName = copy;
       
-      if (!mangler.mangle(className, methodName, signature, 
-			  mangledMethodName, len)) 
-	continue;
+      if (overloadedMethods[i]) {
+        if (!lmangler.mangle(className, methodName, signature, 
+			     mangledMethodName, len)) 
+	  continue;
+      }
+      else {
+        if (!smangler.mangle(className, methodName, signature, 
+			     mangledMethodName, len)) 
+	  continue;
+      }
 
       PR_fprintf(fp, "\n/*\n");
       PR_fprintf(fp, " * Class : %s\n", className);
