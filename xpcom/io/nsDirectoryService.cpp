@@ -637,7 +637,7 @@ NS_IMETHODIMP
 nsDirectoryService::GetFile(const char *prop, PRBool *persistant, nsIFile **_retval)
 {
 	nsCOMPtr<nsILocalFile> localFile;
-	nsresult rv;
+	nsresult rv = NS_ERROR_FAILURE;
 
 	*_retval = nsnull;
 	*persistant = PR_TRUE;
