@@ -3133,7 +3133,7 @@ js_Mark(JSContext *cx, JSObject *obj, void *arg)
         for (sym = sprop->symbols; sym; sym = sym->next) {
             if (JSVAL_IS_INT(sym_id(sym)))
                 continue;
-            js_MarkAtom(cx, sym_atom(sym), arg);
+            GC_MARK_ATOM(cx, sym_atom(sym), arg);
         }
 #if JS_HAS_GETTER_SETTER
         if (sprop->attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
