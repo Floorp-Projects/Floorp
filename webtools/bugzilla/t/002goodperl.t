@@ -18,6 +18,7 @@
 # Rights Reserved.
 # 
 # Contributor(s): Zach Lipton <zach@zachlipton.com>
+#                 Jacob Steenhagen <jake@acutex.net>
 # 
 # Alternatively, the contents of this file may be used under the
 # terms of the GNU General Public License Version 2 or later (the
@@ -48,16 +49,18 @@ my @testitems = @Support::Files::testitems; # get the files to test.
 foreach my $file (@testitems) {
         $file =~ s/\s.*$//; # nuke everything after the first space (#comment)
         next if (!$file); # skip null entries
-        my $filecontent = `cat $file`;
-        if ($filecontent !~ /\/usr\/bonsaitools\/bin\/perl/) {
+        open (FILE, $file);
+        my @file = <FILE>;
+        close (FILE);
+        if ($file[0] !~ /\/usr\/bonsaitools\/bin\/perl/) {
                 ok(1,"$file does not have a shebang");	
                 next;
         } else {
-                if ($filecontent =~ m#/usr/bonsaitools/bin/perl -w#) {
+                if ($file[0] =~ m#/usr/bonsaitools/bin/perl -w#) {
                         ok(1,"$file uses -w");
                         next;
                 } else {
-                        ok(0,"$file is MISSING -w");
+                        ok(0,"$file is MISSING -w --WARNING");
                         next;
                 }
         }
@@ -65,11 +68,13 @@ foreach my $file (@testitems) {
 foreach my $file (@testitems) {
         $file =~ s/\s.*$//; # nuke everything after the first space (#comment)
         next if (!$file); # skip null entries
-        my $filecontent = `cat $file`;
-        if ($filecontent !~ /use strict/) {
-                ok(0,"$file DOES NOT use strict");
-        } else {
+        open (FILE, $file);
+        my @file = <FILE>;
+        close (FILE);
+        if (grep /^\s*use strict/, @file) {
                 ok(1,"$file uses strict");
+        } else {
+                ok(0,"$file DOES NOT use strict --WARNING");
         }
 }
 
