@@ -22,7 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
-$::UtilsVersion = '$Revision: 1.214 $ ';
+$::UtilsVersion = '$Revision: 1.215 $ ';
 
 package TinderUtils;
 
@@ -813,24 +813,17 @@ sub BuildIt {
             # Build up initial make command.
             my $make = "$Settings::Make -f client.mk $Settings::MakeOverrides CONFIGURE_ENV_ARGS='$Settings::ConfigureEnvArgs'";
 
+            # Build up target string.
+            my $targets;
+            $targets = "$TreeSpecific::clobber_target" unless $Settings::BuildDepend;
+            $targets .= " $TreeSpecific::build_target";
+
             # Make sure we have an ObjDir if we need one.
             mkdir $Settings::ObjDir, 0777 if ($Settings::ObjDir && ! -e $Settings::ObjDir);
-            # Run the clobber make command.
-            if (!$Settings::BuildDepend && $build_status ne 'busted') {
-                $status = run_shell_command "$make $TreeSpecific::clobber_target";
-                if ($status != 0) {
-                    $build_status = 'busted';
-                } elsif (not BinaryExists($full_binary_name)) {
-                    print_log "Error: binary not found: $binary_basename\n";
-                    $build_status = 'busted';
-                } else {
-                    $build_status = 'success';
-                }
-            }
 
-            # Run the build make command.
+            # Run the make command.
             if ($build_status ne 'busted') {
-                $status = run_shell_command "$make $TreeSpecific::build_target";
+                $status = run_shell_command "$make $targets";
                 if ($status != 0) {
                     $build_status = 'busted';
                 } elsif (not BinaryExists($full_binary_name)) {
