@@ -151,10 +151,7 @@ nsHTMLTextAreaElement::nsHTMLTextAreaElement(nsINodeInfo *aNodeInfo)
 nsHTMLTextAreaElement::~nsHTMLTextAreaElement()
 {
   // Null out form's pointer to us - no ref counting here!
-  if (mForm) {
-    mForm->RemoveElement(this);
-    mForm = nsnull;
-  }
+  SetForm(nsnull);
 }
 
 NS_IMPL_ADDREF(nsHTMLTextAreaElement)
@@ -555,8 +552,19 @@ nsHTMLTextAreaElement::SetForm(nsIDOMHTMLFormElement* aForm)
   nsresult result = QueryInterface(kIFormControlIID, getter_AddRefs(formControl));
   if (NS_FAILED(result)) formControl = nsnull;
 
-  if (mForm && formControl)
+  nsAutoString nameVal, idVal;
+  mInner.GetAttribute(kNameSpaceID_None, nsHTMLAtoms::name, nameVal);
+  mInner.GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, idVal);
+
+  if (mForm && formControl) {
     mForm->RemoveElement(formControl);
+
+    if (nameVal.Length())
+      mForm->RemoveElementFromTable(this, nameVal);
+
+    if (idVal.Length())
+      mForm->RemoveElementFromTable(this, idVal);
+  }
 
   if (aForm) {
     nsCOMPtr<nsIForm> theForm = do_QueryInterface(aForm, &result);
@@ -564,6 +572,12 @@ nsHTMLTextAreaElement::SetForm(nsIDOMHTMLFormElement* aForm)
     if ((NS_OK == result) && theForm) {
       if (formControl) {
         theForm->AddElement(formControl);
+
+        if (nameVal.Length())
+          theForm->AddElementToTable(this, nameVal);
+
+        if (idVal.Length())
+          theForm->AddElementToTable(this, idVal);
       }
     }
   } else {

@@ -3607,8 +3607,14 @@ nsGenericHTMLLeafFormElement::SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
   // Add the control to the hash table
   nsCOMPtr<nsIFormControl> control;  
   control = do_QueryInterface(mContent);
-  if (mForm && (nsHTMLAtoms::name == aName || nsHTMLAtoms::id == aName))  
+  if (mForm && (nsHTMLAtoms::name == aName || nsHTMLAtoms::id == aName)) {
+    nsAutoString tmp;
+    nsresult rv = GetAttribute(kNameSpaceID_None, aName, tmp);
+    if (rv == NS_CONTENT_ATTR_HAS_VALUE)
+      mForm->RemoveElementFromTable(control, tmp);
+
     mForm->AddElementToTable(control, aValue);
+  }
 
   return nsGenericHTMLElement::SetAttribute(aNameSpaceID, aName, aValue, aNotify);
 }
