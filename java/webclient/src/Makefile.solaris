@@ -55,6 +55,11 @@ BrowserControlMozillaShimStub.o: motif/BrowserControlMozillaShimStub.cpp
 BrowserControlMozillaShim.o: BrowserControlMozillaShim.cpp
 	g++ ${DEFINES} ${INCLUDE} -c BrowserControlMozillaShim.cpp
 
+motif/nsSetupRegistry.cpp:
+	cd motif
+	${LN} ${MOZILLA_TOP}/../webshell/tests/viewer/nsSetupRegistry.cpp motif/nsSetupRegistry.cpp
+	cd ..
+
 #PENDING(mark): I think we should use this for the Win32 version as well...
 nsSetupRegistry.o: motif/nsSetupRegistry.cpp
 	g++ ${DEFINES} ${INCLUDE} -c motif/nsSetupRegistry.cpp
@@ -63,4 +68,4 @@ nsActions.o: nsActions.cpp
 	g++ ${DEFINES} ${INCLUDE} -c nsActions.cpp
 
 clean:
-	rm -f component.reg components *.o *.so *~ motif/*~
+	rm -f component.reg components *.o *.so *~ motif/*~ motif/nsSetupRegistry.cpp
