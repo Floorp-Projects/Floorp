@@ -38,3 +38,4 @@ nsStyleStruct.h
 nsIFrameTraversal.h
 nsIObjectFrame.h
 nsIImageFrame.h
+nsITextFrame.h
