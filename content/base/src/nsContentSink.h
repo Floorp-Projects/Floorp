@@ -44,7 +44,7 @@
 #include "nsIScriptLoaderObserver.h"
 #include "nsWeakReference.h"
 #include "nsCOMPtr.h"
-#include "nsISupportsArray.h"
+#include "nsCOMArray.h"
 #include "nsString.h"
 
 class nsIDocument;
@@ -101,15 +101,15 @@ protected:
   virtual void PreEvaluateScript()  {return;}
   virtual void PostEvaluateScript() {return;}
 
-  nsIDocument*                  mDocument;
-  nsIURI*                       mDocumentURL;
-  nsIURI*                       mDocumentBaseURL;
+  nsCOMPtr<nsIDocument>         mDocument;
+  nsCOMPtr<nsIParser>           mParser;
+  nsCOMPtr<nsIURI>              mDocumentURL;
+  nsCOMPtr<nsIURI>              mDocumentBaseURL;
   nsCOMPtr<nsIDocShell>         mDocShell;
-  nsIParser*                    mParser;
   nsCOMPtr<nsICSSLoader>        mCSSLoader;
   nsCOMPtr<nsINodeInfoManager>  mNodeInfoManager;
 
-  nsCOMPtr<nsISupportsArray>    mScriptElements;
+  nsCOMArray<nsIDOMHTMLScriptElement> mScriptElements;
 
   nsCString mRef; // ScrollTo #ref
   PRBool mNeedToBlockParser;
