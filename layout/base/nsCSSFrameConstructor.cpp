@@ -8223,7 +8223,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresContext* aPresContext,
   aFrame->GetStyleContext(&styleContext);
 
   if (nsLayoutAtoms::textFrame == frameType) {
-    rv = NS_NewTextFrame(&newFrame);
+    rv = NS_NewContinuingTextFrame(&newFrame);
     if (NS_SUCCEEDED(rv)) {
       newFrame->Init(*aPresContext, content, aParentFrame, styleContext, aFrame);
       nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
