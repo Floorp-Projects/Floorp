@@ -71,14 +71,6 @@
 <!ENTITY pref.defaultsnoozelength.label   "Duración predeterminada del aviso:" >
 
 <!ENTITY pref.weekstarts.label     "Primer día de la semana:" >
-<!ENTITY pref.weekstarts.sunday    "Lunes" >
-<!ENTITY pref.weekstarts.monday    "Lunes" >
-<!ENTITY pref.weekstarts.tuesday   "Martes" >
-<!ENTITY pref.weekstarts.wednesday "Miércoles" >
-<!ENTITY pref.weekstarts.thursday  "Jueves" >
-<!ENTITY pref.weekstarts.friday    "Viernes" >
-<!ENTITY pref.weekstarts.saturday  "Sábado" >
-
 <!ENTITY pref.daysoff.label     "Day(s) Off Each Week:" >
 
 <!ENTITY pref.numberofweeks.label     "Número predeterminado total de semanas:" >

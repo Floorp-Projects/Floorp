@@ -73,14 +73,6 @@
 <!ENTITY pref.defaultsnoozelength.label   "Privzeti čas do opomnika:">
 
 <!ENTITY pref.weekstarts.label     "Prvi dan v tednu:">
-<!ENTITY pref.weekstarts.sunday    "Nedelja">
-<!ENTITY pref.weekstarts.monday    "Ponedeljek">
-<!ENTITY pref.weekstarts.tuesday   "Torek">
-<!ENTITY pref.weekstarts.wednesday "Sreda">
-<!ENTITY pref.weekstarts.thursday  "Četrtek">
-<!ENTITY pref.weekstarts.friday    "Petek">
-<!ENTITY pref.weekstarts.saturday  "Sobota">
-
 <!ENTITY pref.daysoff.label     "Prosti dnevi vsak teden:" >
 
 <!ENTITY pref.numberofweeks.label     "Privzeto skupno število tednov:">

@@ -73,14 +73,6 @@
 <!ENTITY pref.defaultsnoozelength.label   "Default Snooze Length:" >
 
 <!ENTITY pref.weekstarts.label     "First Day Of The Week:" >
-<!ENTITY pref.weekstarts.sunday    "Sunday" >
-<!ENTITY pref.weekstarts.monday    "Monday" >
-<!ENTITY pref.weekstarts.tuesday   "Tuesday" >
-<!ENTITY pref.weekstarts.wednesday "Wednesday" >
-<!ENTITY pref.weekstarts.thursday  "Thursday" >
-<!ENTITY pref.weekstarts.friday    "Friday" >
-<!ENTITY pref.weekstarts.saturday  "Saturday" >
-
 <!ENTITY pref.daysoff.label     "Day(s) Off Each Week:" >
 
 <!ENTITY pref.numberofweeks.label     "Default total number of Weeks:" >

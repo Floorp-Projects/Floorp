@@ -73,14 +73,6 @@
 <!ENTITY pref.defaultsnoozelength.label   "Hyd Cwsg Rhagsodedig:" >
 
 <!ENTITY pref.weekstarts.label     "Diwrnod Cynta'r Wythnos:" >
-<!ENTITY pref.weekstarts.sunday    "Dydd Sul" >
-<!ENTITY pref.weekstarts.monday    "Dydd Llun" >
-<!ENTITY pref.weekstarts.tuesday   "Dydd Mawrth" >
-<!ENTITY pref.weekstarts.wednesday "Dydd Mercher" >
-<!ENTITY pref.weekstarts.thursday  "Dydd Iau" >
-<!ENTITY pref.weekstarts.friday    "Dydd Gwener" >
-<!ENTITY pref.weekstarts.saturday  "Dydd Sadwrn" >
-
 <!ENTITY pref.daysoff.label     "Day(s) Off Each Week:" >
 
 <!ENTITY pref.numberofweeks.label     "Cyfanswm nifer rhagosodedig o Wythnosau:" >

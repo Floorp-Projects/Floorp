@@ -73,14 +73,6 @@
 <!ENTITY pref.defaultsnoozelength.label   "Numatytoji įvykio atidėjimo trukmė:" >
 
 <!ENTITY pref.weekstarts.label     "Pirmoji savaitės diena:" >
-<!ENTITY pref.weekstarts.sunday    "Sekmadienis" >
-<!ENTITY pref.weekstarts.monday    "Pirmadienis" >
-<!ENTITY pref.weekstarts.tuesday   "Antradienis" >
-<!ENTITY pref.weekstarts.wednesday "Trečiadienis" >
-<!ENTITY pref.weekstarts.thursday  "Ketvirtadienis" >
-<!ENTITY pref.weekstarts.friday    "Penktadienis" >
-<!ENTITY pref.weekstarts.saturday  "Šeštadienis" >
-
 <!ENTITY pref.daysoff.label     "Day(s) Off Each Week:" >
 
 <!ENTITY pref.numberofweeks.label     "Numatytasis savaičių skaičius:" >

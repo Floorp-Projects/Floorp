@@ -72,14 +72,6 @@
 <!ENTITY pref.defaultsnoozelength.label   "Standard-Zeit bis Erinnerung:" >
 
 <!ENTITY pref.weekstarts.label     "Erster Tag der Woche:" >
-<!ENTITY pref.weekstarts.sunday    "Sonntag" >
-<!ENTITY pref.weekstarts.monday    "Montag" >
-<!ENTITY pref.weekstarts.tuesday   "Dienstag" >
-<!ENTITY pref.weekstarts.wednesday "Mittwoch" >
-<!ENTITY pref.weekstarts.thursday  "Donnerstag" >
-<!ENTITY pref.weekstarts.friday    "Freitag" >
-<!ENTITY pref.weekstarts.saturday  "Samstag" >
-
 <!ENTITY pref.daysoff.label     "Day(s) Off Each Week:" >
 
 <!ENTITY pref.numberofweeks.label     "Standard-Gesamtanzahl der Wochen:" >

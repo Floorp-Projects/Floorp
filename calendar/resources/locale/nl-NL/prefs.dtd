@@ -73,14 +73,6 @@
 <!ENTITY pref.defaultsnoozelength.label   "Standaard snooze-duur:" >
 
 <!ENTITY pref.weekstarts.label     "Eerste dag van de week:" >
-<!ENTITY pref.weekstarts.sunday    "Zondag" >
-<!ENTITY pref.weekstarts.monday    "Maandag" >
-<!ENTITY pref.weekstarts.tuesday   " Dinsdag" >
-<!ENTITY pref.weekstarts.wednesday "Woensdag" >
-<!ENTITY pref.weekstarts.thursday  "Donderdag" >
-<!ENTITY pref.weekstarts.friday    "Vrijdag" >
-<!ENTITY pref.weekstarts.saturday  "Zaterdag" >
-
 <!ENTITY pref.daysoff.label     "Vrije dag(en) elke week:" >
 
 <!ENTITY pref.numberofweeks.label     "Standaard aantal weken:" >

@@ -76,14 +76,6 @@
 <!ENTITY pref.defaultsnoozelength.label   "スヌーズ間隔(デフォルト):" >
 
 <!ENTITY pref.weekstarts.label     "週の開始日:" >
-<!ENTITY pref.weekstarts.sunday    "日曜" >
-<!ENTITY pref.weekstarts.monday    "月曜" >
-<!ENTITY pref.weekstarts.tuesday   "火曜" >
-<!ENTITY pref.weekstarts.wednesday "水曜" >
-<!ENTITY pref.weekstarts.thursday  "木曜" >
-<!ENTITY pref.weekstarts.friday    "金曜" >
-<!ENTITY pref.weekstarts.saturday  "土曜" >
-
 <!ENTITY pref.daysoff.label     "休日扱い日:" >
 
 <!ENTITY pref.numberofweeks.label     "週の総数(デフォルト):" >

@@ -73,14 +73,6 @@
 <!ENTITY pref.defaultsnoozelength.label   "Standardna dołhosć drěmka:" >
 
 <!ENTITY pref.weekstarts.label     "Prěni dźen tydźenja:" >
-<!ENTITY pref.weekstarts.sunday    "Njedźela" >
-<!ENTITY pref.weekstarts.monday    "Póndźela" >
-<!ENTITY pref.weekstarts.tuesday   "Wutora" >
-<!ENTITY pref.weekstarts.wednesday "Srjeda" >
-<!ENTITY pref.weekstarts.thursday  "Štwórtk" >
-<!ENTITY pref.weekstarts.friday    "Pjatk" >
-<!ENTITY pref.weekstarts.saturday  "Sobota" >
-
 <!ENTITY pref.daysoff.label     "Day(s) Off Each Week:" >
 
 <!ENTITY pref.numberofweeks.label     "Standardna cyłkowna ličba njedźelow:" >

@@ -74,14 +74,6 @@
 <!ENTITY pref.defaultsnoozelength.label   "Standard Snooze Längd:" >
 
 <!ENTITY pref.weekstarts.label     "Veckan Börjar Med:" >
-<!ENTITY pref.weekstarts.sunday    "Söndag" >
-<!ENTITY pref.weekstarts.monday    "Måndag" >
-<!ENTITY pref.weekstarts.tuesday   "Tisdag" >
-<!ENTITY pref.weekstarts.wednesday "Onsdag" >
-<!ENTITY pref.weekstarts.thursday  "Torsdag" >
-<!ENTITY pref.weekstarts.friday    "Fredag" >
-<!ENTITY pref.weekstarts.saturday  "Lördag" >
-
 <!ENTITY pref.daysoff.label     "Day(s) Off Each Week:" >
 
 <!ENTITY pref.numberofweeks.label     "Antal visade veckor som standard:" >

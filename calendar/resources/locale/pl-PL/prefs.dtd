@@ -71,14 +71,6 @@
 <!ENTITY pref.defaultsnoozelength.label   "Domyślna długość odstępu powiadamiania:" >
 
 <!ENTITY pref.weekstarts.label     "Pierwszy dzień tygodnia:" >
-<!ENTITY pref.weekstarts.sunday    "Niedziela" >
-<!ENTITY pref.weekstarts.monday    "Poniedziałek" >
-<!ENTITY pref.weekstarts.tuesday   "Wtorek" >
-<!ENTITY pref.weekstarts.wednesday "Środa" >
-<!ENTITY pref.weekstarts.thursday  "Czwartek" >
-<!ENTITY pref.weekstarts.friday    "Piątek" >
-<!ENTITY pref.weekstarts.saturday  "Sobota" >
-
 <!ENTITY pref.daysoff.label     "Day(s) Off Each Week:" >
 
 <!ENTITY pref.numberofweeks.label     "Domyślna liczba tygodni:" >

@@ -73,14 +73,6 @@
 <!ENTITY pref.defaultsnoozelength.label   "Východzia dĺžka periódy:" >
 
 <!ENTITY pref.weekstarts.label     "Prvý deň týždňa:" >
-<!ENTITY pref.weekstarts.sunday    "Nedeľa" >
-<!ENTITY pref.weekstarts.monday    "Pondelok" >
-<!ENTITY pref.weekstarts.tuesday   "Utorok" >
-<!ENTITY pref.weekstarts.wednesday "Streda" >
-<!ENTITY pref.weekstarts.thursday  "Štvrtok" >
-<!ENTITY pref.weekstarts.friday    "Piatok" >
-<!ENTITY pref.weekstarts.saturday  "Sobota" >
-
 <!ENTITY pref.daysoff.label     "Day(s) Off Each Week:" >
 
 <!ENTITY pref.numberofweeks.label     "Východzí počet týždňov:" >

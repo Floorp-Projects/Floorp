@@ -75,14 +75,6 @@
 <!ENTITY pref.defaultsnoozelength.label   "Alapértelmezett szundihossz" >
 
 <!ENTITY pref.weekstarts.label     "A hét első napja" >
-<!ENTITY pref.weekstarts.sunday    "Vasárnap" >
-<!ENTITY pref.weekstarts.monday    "Hétfő" >
-<!ENTITY pref.weekstarts.tuesday   "Kedd" >
-<!ENTITY pref.weekstarts.wednesday "Szerda" >
-<!ENTITY pref.weekstarts.thursday  "Csütörtök" >
-<!ENTITY pref.weekstarts.friday    "Péntek" >
-<!ENTITY pref.weekstarts.saturday  "Szombat" >
-
 <!ENTITY pref.daysoff.label     "A hét szabadnapjai:" >
 
 <!ENTITY pref.numberofweeks.label     "Alapértelmezett összes hetek száma" >
