@@ -390,7 +390,12 @@ nsresult nsTableRowFrame::ResizeReflow(nsIPresContext*  aPresContext,
     // just reflow the cell, and have the cell decide whether it could use the
     // cached value rather than having the row make that determination?
     nsReflowMetrics desiredSize(pKidMaxElementSize);
-    if (availWidth != ((nsTableCellFrame *)kidFrame)->GetPriorAvailWidth())
+
+    // XXX kipp added the check for a non-null pKidMaxElementSize; if
+    // we need the max-element-size we must reflow the child to get
+    // it, right?
+    if ((nsnull != pKidMaxElementSize) ||
+        (availWidth != ((nsTableCellFrame *)kidFrame)->GetPriorAvailWidth()))
     {
       // Always let the cell be as high as it wants. We ignore the height that's
       // passed in and always place the entire row. Let the row group decide
