@@ -1,145 +1,42 @@
 /* XUL ELEMENTS */
 
 /* values = margin, padding. Padding doesn't work yet */
-checkbox { margin: 5px 3px }
+window{
 
-tristatecheckbox {
- /* DOESN'T WORK! */
-  margin-top: 3px;
-  margin-bottom:3px;
-  margin-left: 2px;
-  margin-right: 2px;
-  border-style: inset;
-  background-color: #ffffff;
-  valign: center;
-  align: center;
+  	background-color:	#CCCCDD;
+  	display: 		block;
+  	overflow: 		hidden;
+  	font: 			3mm tahoma,arial,helvetica,sans-serif;
+	padding: 		0px;
+
 }
 
-select.combobox {
-  font-family: Sans-Serif;
-  font-size: 8pt;
-  border-top: 2px;
-  border-left: 4px;
-  border-right: 2px;
-  border-style: outset;
+titledbutton {
+
+	width:			auto;
+	height:			auto;
+  	display: 		inline;
+  	color:			black;
+  	border: 		1px outset white;
+  	padding: 		2px;
+  	margin: 		2px;
+  	text-align: 		center;
+  	font: 			inherit; 
+  	background-color:	inherit;
+  	background-image: 	inherit;
 }
 
-select.SpellCheckList, select.SpellCheckLanguage, input.SpellCheckWord {
-  width: 20em;
-  border-style: inset;
-	background-color: #CCCCCC; /* not working on Macintosh */ 
-}
 
-.checkboxtext {
-  margin-top: -9px;
-  margin-left: 3px;
-  margin-right: 5px;
-  margin-bottom: 2px;
-}
+titledbutton:active {
+   
+  	text-decoration:	none;
+  	border: 		1px inset;
+  	padding-left: 		3px;
+  	padding-right: 		1px;
+  	padding-top: 		3px;
+  	padding-bottom: 	1px;
 
-radio { margin: 5px 3px }
-
-tree  {
-	display: table;
-	background-color: #000000;
-	border: none;
-	border-spacing: 0px;
-	border-collapse: collapse;
-	width: 100%;
-}
-
-/* HTML ELEMENTS */
-table { cell-spacing: 5px; }
-td, table { border: 0px;}
-
-/* Force all rows to line up cell contents at the top */
-tr { vertical-align: top }
-
-/* Use this to override the default vertical centering */
-.vcenter { vertical-align: middle }
-
-tr[show=0] { display: none }
-tr[show=1] { display: table-row }
-
-
-p, br {
-  margin-top: 4px;
-  margin-bottom: 4px
-}
-
-fieldset {
-  /* override XUL.css margin */
-  margin: 0px;
-	border: 2px groove white;
-  padding: 5px;
-/* BUG: If this is set, border is chopped off at the right */
-/*  margin: 5px; */
-  text-align: left;
-}
-
-legend {
-  border: none:
-  margin-left: 3px;
-  margin-right: 3px;
-  text-align: left;
-}
-
-label[class="enabled"] {
-  color: black;
-  margin-bottom: 2px
-}
-
-label[class="disabled"] {
-  color: gray;
-  margin-bottom: 2px
-}
-
-/* CLASSES */
-/* Use these primarily with TD to create 3D "panels" */
-.GrooveBorder { border: 2px groove; padding: 5px }
-
-.RidgeBorder { border: 2px ridge; padding: 5px  }
-
-.OutsetBorder { border: 1px outset; padding: 5px  }
-
-.InsetBorder { border: 1px inset; padding: 5px  }
-
-.spaced { 
-/* BUG - Setting size doesn't work?
-  width: 80px;
-  height: 20px;
-*/
-  margin: 5px;
-}
-
-button.ChooseFile {
-  margin-left: 5px;
-  margin-bottom: 3px;
-  margin-right: 5px;
-}
-
-.tableCenterAlign {
-  vertical-align: middle;
-}
-
-.genericbutton {
-  width: 80px;
-  height: 20px;
-  margin-top: 5px;
-  margin-bottom: 5px;
-}
-
-.spacedtext {
-  margin-top: 0px;
-  margin-left: 3px;
-  margin-right: 5px;
-  margin-bottom: 2px;
-}
-
-input[type="file"] {
-  font-family: Sans-Serif;
-  font-size: 8pt;
-}
+}  
 
 /* Don't mess with top and bottom margin! */
 titledbutton[class=~spaced] { 
@@ -196,6 +93,248 @@ titledbutton.CloseButton {
 titledbutton.MsgButton {
   min-width: 6em;
   margin: 5px;
+}
+
+
+menupopup {
+  	font: 			inherit;
+  	visibility: 		hidden;
+  	background-color: 	#CCCCDD;
+  	color: 			inherit;
+  	border: 		1px white outset;
+}
+
+tristatecheckbox {
+ /* DOESN'T WORK! */
+  margin-top: 3px;
+  margin-bottom:3px;
+  margin-left: 2px;
+  margin-right: 2px;
+  border-style: inset;
+  background-color: #ffffff;
+  valign: center;
+  align: center
+}
+
+
+select.combobox {
+  font-family: Sans-Serif;
+  font-size: 8pt;
+  border-top: 2px;
+  border-left: 4px;
+  border-right: 2px;
+  border-style: outset;
+}
+
+select.SpellCheckList, select.SpellCheckLanguage, input.SpellCheckWord {
+  width: 20em;
+  border-style: inset;
+	background-color: #CCCCCC; /* not working on Macintosh */ 
+}
+
+.checkboxtext {
+  margin-top: -9px;
+  margin-left: 3px;
+  margin-right: 5px;
+  margin-bottom: 2px;
+}
+
+radio { margin: 5px 3px }
+
+tree  {
+	display: table;
+	background-color: #000000;
+	border: none;
+	border-spacing: 0px;
+	border-collapse: collapse;
+	width: 100%;
+}
+
+/* HTML ELEMENTS */
+table { cell-spacing: 5px; }
+td, table { border: 0px;}
+
+/* Force all rows to line up cell contents at the top */
+tr { vertical-align: top }
+
+/* Use this to override the default vertical centering */
+.vcenter { vertical-align: middle }
+
+tr[show=0] { display: none }
+tr[show=1] { display: table-row }
+
+
+p, br {
+  margin-top: 4px;
+  margin-bottom: 4px
+}
+
+button {
+
+  	display: 		inline;
+  	background-color: 	inherit;
+  	background-image: 	inherit;
+  	width: 			70px;
+  	max-width: 		80px;
+  	height: 		15px;
+  	border: 		1px outset white;
+  	padding: 		2px;
+  	margin: 		2px;
+  	text-align: 		center;
+  	font: 			inherit;
+  	color:			black;
+  	text-decoration: 	none;
+  	border-style: 		3D;
+
+}
+
+button:active {
+
+  	text-decoration:	none;
+  	border: 		1px inset;
+  	padding-left: 		3px;
+  	padding-right: 		1px;
+  	padding-top: 		3px;
+  	padding-bottom: 	1px;
+
+}
+
+
+button[class="disabled"] {
+
+        background-color:       cccccc;
+        background-image:       inherit;
+        border:                 1px solid #999999;
+        color:                  #999999;
+        text-decoration:        none;
+        padding:                2px;
+        border-style:           solid;
+        padding:                2px;
+        outline:                none;
+        -moz-outline:           none;
+        focus:                  none;
+        active:                 none;
+
+
+}
+ 
+button:active[class="disabled"] {
+
+        background-color:       inherit;
+        background-image:       inherit;
+        border:                 1px solid #999999;
+        color:                  #999999;
+        text-decoration:        none;
+        border-style:           solid;
+        padding:                2px;
+        outline:               	none;
+
+}
+
+
+fieldset {
+        margin-bottom: 		6px;
+        margin-top: 		5px;
+        margin-left: 		6px;
+        margin-right: 		5px;
+        padding: 		5px;
+        border: 		2px groove white;
+        /* WAS */
+        /* override XUL.css margin */
+/*
+  margin: 0px;
+	border: 2px groove white;
+  padding: 5px;
+  text-align: left;
+*/
+/* BUG: If this is set, border is chopped off at the right */
+/*  margin: 5px; */
+        
+}
+
+legend {
+
+        border: 		none;
+        margin-bottom: 		5px;
+        margin-top: 		0px;
+        margin-left:		4px;
+        margin-right: 		3px;
+        padding: 		2px;
+        /* WAS */
+/*
+  margin-left: 3px;
+  text-align: left;
+*/        
+}
+
+label {
+  	display: 		inline;
+  	padding-bottom: 	4px;
+  	background-color: 	inherit;
+  	background-color:	#CCCCDD;
+  	background-image: 	inherit;
+}      
+
+
+label[class="enabled"] {
+  color: black;
+  margin-bottom: 2px
+}
+
+label[class="disabled"] {
+  color: gray;
+  margin-bottom: 2px
+}
+
+/* CLASSES */
+/* Use these primarily with TD to create 3D "panels" */
+.GrooveBorder { border: 2px groove; padding: 5px }
+
+.RidgeBorder { border: 2px ridge; padding: 5px  }
+
+.OutsetBorder { border: 1px outset; padding: 5px  }
+
+.InsetBorder { border: 1px inset; padding: 5px  }
+
+
+button.spaced { 
+/* BUG - Setting size doesn't work?
+  width: 80px;
+  height: 20px;
+*/
+  margin: 5px;
+}
+
+button.ChooseFile {
+  margin-left: 5px;
+  margin-bottom: 3px;
+  margin-right: 5px;
+  width: 5px;
+  height 5px;
+  background-color: #cccccc;
+}
+
+.tableCenterAlign {
+  vertical-align: middle;
+}
+
+.genericbutton {
+  width: 80px;
+  height: 20px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+.spacedtext {
+  margin-top: 0px;
+  margin-left: 3px;
+  margin-right: 5px;
+  margin-bottom: 2px;
+}
+
+input[type="file"] {
+  font-family: Sans-Serif;
+  font-size: 8pt;
 }
 
 hr {
