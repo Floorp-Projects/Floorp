@@ -3364,6 +3364,8 @@ HTMLContentSink::ProcessAREATag(const nsIParserNode& aNode)
       return rv;
     }        
 
+    AddBaseTagInfo(area); // basehref or basetarget. Fix. Bug: 30617
+
     // Add AREA object to the current map
     mCurrentMap->AppendChildTo(area, PR_FALSE);
     NS_RELEASE(area);
