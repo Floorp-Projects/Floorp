@@ -93,7 +93,7 @@ Contributor(s): ______________________________________. -->
 
 	<broadcaster id="cmd_close" oncommand="BrowserClose()"/>
 
-	<broadcaster id="Browser:SendPage"  value="&sendPageCmd.label;" disabled ="true" oncommand="BrowserReload();"/>
+	<broadcaster id="Browser:SendPage"  value="&sendPageCmd.label;"                  oncommand="BrowserSendPage(window.content.location.href, window.content.document.title);"/>
 	<broadcaster id="Browser:EditPage"  value="&editPageCmd.label;"      			 oncommand="BrowserEditPage(window.content.location.href);"/>
  	
 	<broadcaster id="Browser:GoOffline"  value="&offlineGoOfflineCmd.label;"       disabled="true" 		 oncommand="BrowserReload();"/>

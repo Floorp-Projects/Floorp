@@ -172,7 +172,7 @@ function AbNewMessage()
 	msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService); 
 
 	msgComposeService.OpenComposeWindowWithValues(null, 0, GetSelectedAddresses(), null, null,
-												  null, null, null); 
+												  null, null, null, null); 
 }  
 
 function GetSelectedAddresses()

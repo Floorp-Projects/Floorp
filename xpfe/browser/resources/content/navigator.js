@@ -942,12 +942,12 @@ function OpenSearch(tabName, searchStr)
 	window.open("chrome://addressbook/content/", "_blank", "chrome,menubar,toolbar,resizable");
   }
 
-  function MsgNewMessage()
+  function BrowserSendPage(pageUrl, pageTitle)
   {
-    // Open message compose window.
-    window.openDialog( "chrome://messengercompose/content/", "_blank", "chrome,all,dialog=no", "" );
+    window.openDialog( "chrome://messengercompose/content/", "_blank", "chrome,all,dialog=no",
+    	"attachment=" + pageUrl + ",body=" + pageUrl + ",subject='" + pageTitle + "'");
   }
-  
+
   function BrowserViewSource()
   {
 	dump("BrowserViewSource(); \n ");

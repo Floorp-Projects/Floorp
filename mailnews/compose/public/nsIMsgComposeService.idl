@@ -37,7 +37,7 @@ interface nsIMsgComposeService : nsISupports {
 	/* ... */
 	void OpenComposeWindowWithValues(in wstring msgComposeWindowURL, in MSG_ComposeFormat format,
 							in wstring to, in wstring cc, in wstring bcc, in wstring newsgroups,
-							in wstring subject, in wstring body);
+							in wstring subject, in wstring body, in wstring attachment);
 
 	/* ... */
 	void OpenComposeWindowWithCompFields(in wstring msgComposeWindowURL, in MSG_ComposeFormat format, in nsIMsgCompFields compFields);

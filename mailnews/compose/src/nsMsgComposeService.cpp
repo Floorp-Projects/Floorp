@@ -152,7 +152,8 @@ nsresult nsMsgComposeService::OpenComposeWindowWithValues(const PRUnichar *msgCo
 														  const PRUnichar *bcc,
 														  const PRUnichar *newsgroups,
 														  const PRUnichar *subject,
-														  const PRUnichar *body)
+														  const PRUnichar *body,
+														  const PRUnichar *attachment)
 {
 	nsAutoString args = "";
 	nsresult rv;
@@ -165,7 +166,8 @@ nsresult nsMsgComposeService::OpenComposeWindowWithValues(const PRUnichar *msgCo
 	if (bcc)		{args.Append(",bcc="); args.Append(bcc);}
 	if (newsgroups)	{args.Append(",newsgroups="); args.Append(newsgroups);}
 	if (subject)	{args.Append(",subject="); args.Append(subject);}
-	if (body)		{args.Append(",body="); args.Append(body);}
+	if (attachment)	{args.Append(",attachment="); args.Append(attachment);}
+	if (body)		{args.Append(",body="); args.Append(body);} //Body need to be the last one!
 
 	if (msgComposeWindowURL && *msgComposeWindowURL)
         rv = openWindow( msgComposeWindowURL, args.GetUnicode() );

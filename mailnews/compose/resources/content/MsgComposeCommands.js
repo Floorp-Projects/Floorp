@@ -217,6 +217,8 @@ function ComposeStartup()
 	    			msgCompFields.SetNewsgroups(args.newsgroups);
 	    		if (args.subject)
 	    			msgCompFields.SetSubject(args.subject);
+	    		if (args.attachment)
+	    			msgCompFields.SetAttachments(args.attachment);
 			
 				var subjectValue = msgCompFields.GetSubject();
 				if (subjectValue != "") {
