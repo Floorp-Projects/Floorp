@@ -181,9 +181,9 @@ il_png_init_transparency(png_structp png_ptr, il_container *ic, int index)
            transparency color of the destination image. */
         img_trans_pixel = ic->image->header.transparent_pixel;
 
-        src_trans_pixel->red = png_ptr->trans_values.red;
-        src_trans_pixel->green = png_ptr->trans_values.green;
-        src_trans_pixel->blue = png_ptr->trans_values.blue;
+        src_trans_pixel->red = (uint8) png_ptr->trans_values.red;
+        src_trans_pixel->green = (uint8) png_ptr->trans_values.green;
+        src_trans_pixel->blue = (uint8) png_ptr->trans_values.blue;
   
         
     /* Set the source image's transparent pixel index.  Do this even if the source
@@ -215,18 +215,14 @@ il_png_destroy_transparency(il_container *ic)
 void
 png_delay_time_callback(void *closure)
 {
-	ipng_struct *ipng_ptr = (ipng_struct *)closure;
+    ipng_struct *ipng_ptr = (ipng_struct *)closure;
 
     PR_ASSERT(ipng_ptr->state == PNG_DELAY);
 
-    ipng_ptr->delay_time = NULL;
-
     if (ipng_ptr->ic->state == IC_ABORT_PENDING)
         return;                                        
-
-    ipng_ptr->delay_time = 0;         /* Reset for next image */
-
     
+    ipng_ptr->delay_time = 0;         /* Reset for next image */
 }
 
 void 
