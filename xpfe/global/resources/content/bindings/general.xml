@@ -223,7 +223,7 @@
     <content>
       <children/>
       <xul:statusbarpanel class="statusbar-resizerpanel">
-        <xul:resizer dir="bottomright" style="-moz-appearance: resizer; cursor: se-resize"/>
+        <xul:resizer dir="bottomright"/>
       </xul:statusbarpanel>
     </content>
 
