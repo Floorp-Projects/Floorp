@@ -711,6 +711,8 @@ nsIArena* nsDocument::GetArena()
 nsresult
 nsDocument::Reset(nsIURL *aURL)
 {
+  nsresult rv = NS_OK;
+
   if (nsnull != mDocumentTitle) {
     delete mDocumentTitle;
     mDocumentTitle = nsnull;
@@ -760,7 +762,19 @@ nsDocument::Reset(nsIURL *aURL)
   NS_IF_RELEASE(mDOMStyleSheets);
 
   NS_IF_RELEASE(mNameSpaceManager);
-  return NS_NewNameSpaceManager(&mNameSpaceManager);
+
+  mDocumentURL = aURL;
+  if (nsnull != aURL) {
+    NS_ADDREF(aURL);
+
+    rv = aURL->GetURLGroup(&mDocumentURLGroup);
+  }
+
+  if (NS_OK == rv) {
+    rv = NS_NewNameSpaceManager(&mNameSpaceManager);
+  }
+
+  return rv;
 }
 
 nsresult
@@ -769,15 +783,7 @@ nsDocument::StartDocumentLoad(nsIURL *aURL,
                               nsIStreamListener **aDocListener,
                               const char* aCommand)
 {
-  nsresult result = Reset(aURL);
-  if (NS_FAILED(result)) {
-    return result;
-  }
-
-  mDocumentURL = aURL;
-  NS_ADDREF(aURL);
-
-  return aURL->GetURLGroup(&mDocumentURLGroup);
+  return Reset(aURL);
 }
 
 const nsString* nsDocument::GetDocumentTitle() const
