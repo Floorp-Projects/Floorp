@@ -48,12 +48,11 @@ nsEditorParserObserver::~nsEditorParserObserver()
 
 NS_IMETHODIMP_(const char*) nsEditorParserObserver::GetTagNameAt(PRUint32 aTagIndex)
 {
-  if (aTagIndex < gParserObserver_TagCount)
-  {
-    return gParserObserver_Tags[aTagIndex];
-  } else {
+  nsCString* theString = mWatchTags[aTagIndex];
+  if (theString)
+    return theString->GetBuffer();
+  else
     return nsnull;
-  }
 }
 
 NS_IMETHODIMP nsEditorParserObserver::Notify(
@@ -122,3 +121,14 @@ NS_IMETHODIMP nsEditorParserObserver::GetBadTagFound(PRBool *aFound)
   *aFound = mBadTagFound;
   return NS_OK; 
 }
+
+
+NS_IMETHODIMP nsEditorParserObserver::RegisterTagToWatch(const char* tagName)
+{
+  nsCString theTagString(tagName);
+  mWatchTags.AppendCString(theTagString);
+  return NS_OK;
+}
+
+
+
