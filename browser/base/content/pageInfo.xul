@@ -142,7 +142,7 @@
 
       <!-- Form information -->
       <vbox>
-        <tree id="formtree" class="fixedsize" onselect="onFormSelect();">
+        <tree id="formtree" class="fixedsize" persist="height" onselect="onFormSelect();">
           <treecols>
             <splitter class="tree-splitter"/>
             <treecol sortSeparators="true" persist="hidden width" flex="1" 
@@ -220,7 +220,7 @@
 
       <!-- Media information -->
       <vbox>
-        <tree id="imagetree" class="fixedsize" onselect="onImageSelect();" ondraggesture="onBeginLinkDrag(event,'image-address','image-alt')">
+        <tree id="imagetree" class="fixedsize" persist="height" onselect="onImageSelect();" ondraggesture="onBeginLinkDrag(event,'image-address','image-alt')">
           <treecols>
             <treecol sortSeparators="true" persist="hidden width" flex="10" 
                          width="10" id="image-address" label="&mediaAddress;"/>
