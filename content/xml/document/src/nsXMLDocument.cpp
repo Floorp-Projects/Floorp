@@ -153,8 +153,16 @@ NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
   *aInstancePtrResult = nsnull;
 
   nsXMLDocument* doc = new nsXMLDocument();
-  if (doc == nsnull)
+  if (!doc)
     return NS_ERROR_OUT_OF_MEMORY;
+
+  rv = doc->Init();
+
+  if (NS_FAILED(rv)) {
+    delete doc;
+
+    return rv;
+  }
 
   nsCOMPtr<nsIDOMDocument> kungFuDeathGrip(doc);
 
@@ -193,9 +201,20 @@ NS_EXPORT nsresult
 NS_NewXMLDocument(nsIDocument** aInstancePtrResult)
 {
   nsXMLDocument* doc = new nsXMLDocument();
-  if (doc == nsnull)
-    return NS_ERROR_OUT_OF_MEMORY;
-  return doc->QueryInterface(NS_GET_IID(nsIDocument), (void**) aInstancePtrResult);
+  NS_ENSURE_TRUE(doc, NS_ERROR_OUT_OF_MEMORY);
+
+  nsresult rv = doc->Init();
+
+  if (NS_FAILED(rv)) {
+    delete doc;
+
+    return rv;
+  }
+
+  *aInstancePtrResult = doc;
+  NS_ADDREF(*aInstancePtrResult);
+
+  return NS_OK;
 }
 
 nsXMLDocument::nsXMLDocument() 

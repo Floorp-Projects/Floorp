@@ -474,8 +474,6 @@ nsDocument::nsDocument() : mIsGoingAway(PR_FALSE),
   nsCOMPtr<nsIDocumentObserver> observer(do_QueryInterface(mBindingManager));
   if (observer) // We must always be the first observer of the document.
     mObservers.InsertElementAt(observer, 0);
-
-  Init();/* XXX */
 }
 
 nsDocument::~nsDocument()
