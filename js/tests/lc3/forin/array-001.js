@@ -106,10 +106,10 @@
         this.pCount = 0;
         for ( var p in o ) {
             this.pCount++;
-            if ( typeof p == "number" ) {
+            if ( !isNaN(p) ) {
                 eval( "this["+p+"] = o["+p+"]" );
             } else {
-                eval( "this." + p + " = o["+ p+"]" );
+               eval( "this." + p + " = o["+ p+"]" );
             }
         }
     }
