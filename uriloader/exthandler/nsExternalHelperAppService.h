@@ -26,7 +26,8 @@
 #include "nsIExternalHelperAppService.h"
 #include "nsIStreamListener.h"
 #include "nsIFile.h"
-#include "nsIBufferOutputStream.h"
+#include "nsIFileStreams.h"
+#include "nsIOutputStream.h"
 #include "nsCOMPtr.h"
 
 class nsExternalAppHandler;
@@ -52,6 +53,10 @@ protected:
 // it launches the application using the temp file it has stored the data into.
 // we create a handler every time we have to process data using a helper app.
 
+// we need to read the data out of the incoming stream into a buffer which we can then use
+// to write the data into the output stream representing the temp file...
+#define DATA_BUFFER_SIZE (4096*2) 
+
 class nsExternalAppHandler : public nsIStreamListener
 {
 public:
@@ -69,8 +74,9 @@ public:
 protected:
   nsCOMPtr<nsIFile> mTempFile;
   nsCOMPtr<nsIFile> mExternalApplication;
-  nsCOMPtr<nsIBufferOutputStream> mbufferOutStream; // output stream to the temp file...
+  nsCOMPtr<nsIOutputStream> mOutStream; // output stream to the temp file...
 
+  char * mDataBuffer;
 };
 
 #endif // nsExternalHelperAppService_h__
