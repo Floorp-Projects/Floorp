@@ -21,6 +21,7 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/keysym.h>
+#include <X11/keysymdef.h>
 
 #include "nsGUIEvent.h" // For NS_VK
 
@@ -158,7 +159,7 @@ struct nsKeyConverter nsKeycodes[] = {
 };
 #endif
 
-int
+PRInt32
 nsKeyCode::ConvertKeySymToVirtualKey(KeySym keysym)
 {
 #if 0
@@ -173,6 +174,7 @@ nsKeyCode::ConvertKeySymToVirtualKey(KeySym keysym)
   // mozilla does not, convert gdk's to mozilla's
   if (keysym >= XK_a && keysym <= XK_z)
     return keysym - XK_a + NS_VK_A;
+
   if (keysym >= XK_A && keysym <= XK_Z)
     return keysym - XK_A + NS_VK_A;
 
@@ -185,9 +187,10 @@ nsKeyCode::ConvertKeySymToVirtualKey(KeySym keysym)
     return keysym - XK_KP_0 + NS_VK_NUMPAD0;
 
   // misc other things
-  for (i = 0; i < length; i++) {
+  for (i = 0; i < length; i++) 
+  {
     if (nsKeycodes[i].keysym == keysym)
-      return(nsKeycodes[i].vkCode);
+      return nsKeycodes[i].vkCode;
   }
 
   // function keys
@@ -211,3 +214,36 @@ nsKeyCode::ConvertKeySymToVirtualKey(KeySym keysym)
   return((int)keysym);
 #endif
 }
+
+//////////////////////////////////////////////////////////////////////////
+/* static */ PRBool
+nsKeyCode::KeyCodeIsModifier(KeyCode aKeyCode)
+{
+  if (aKeyCode == XK_Shift_L ||
+	  aKeyCode == XK_Shift_R ||
+	  aKeyCode == XK_Control_L ||
+	  aKeyCode == XK_Control_R ||
+	  aKeyCode == XK_Caps_Lock ||
+	  aKeyCode == XK_Shift_Lock ||
+	  aKeyCode == XK_Meta_L ||
+	  aKeyCode == XK_Meta_R ||
+	  aKeyCode == XK_Alt_L ||
+	  aKeyCode == XK_Alt_R)
+  {
+	return PR_TRUE;
+  }
+
+  return PR_FALSE;
+}
+//////////////////////////////////////////////////////////////////////////
+/* static */ KeySym
+nsKeyCode::ConvertKeyCodeToKeySym(Display * aDisplay,
+								  KeyCode   aKeyCode)
+{
+  KeySym keysym = 0;
+
+  keysym = XKeycodeToKeysym(aDisplay, aKeyCode, 0);
+
+  return keysym;
+}
+//////////////////////////////////////////////////////////////////////////
