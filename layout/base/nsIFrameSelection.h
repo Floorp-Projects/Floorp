@@ -142,9 +142,10 @@ public:
    *         cannot coexist with aContinueSelection
    *  @param aHint will tell the selection which direction geometrically to actually show the caret on. 
    *         1 = end of this line 0 = beggining of this line
+   *  @param aIsCell will tell us if this range describes a Cell.
    */
   NS_IMETHOD HandleClick(nsIContent *aNewFocus, PRUint32 aContentOffset, PRUint32 aContentEndOffset , 
-                       PRBool aContinueSelection, PRBool aMultipleSelection, PRBool aHint) = 0;
+                       PRBool aContinueSelection, PRBool aMultipleSelection, PRBool aHint, PRBool aIsCell) = 0;
 
   /** HandleDrag extends the selection to contain the frame closest to aPoint.
    *  @param aPresContext is the context to use when figuring out what frame contains the point.

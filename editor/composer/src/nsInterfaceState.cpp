@@ -116,6 +116,13 @@ nsInterfaceState::NotifyDocumentCreated()
 }
 
 NS_IMETHODIMP
+nsInterfaceState::TableCellNotification(nsIDOMNode* aNode, PRInt32 aOffset)
+{
+  //stub
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsInterfaceState::NotifyDocumentWillBeDestroyed()
 {
   return NS_OK;

@@ -858,13 +858,27 @@ nsCSSFrameConstructor::CreateGeneratedContentFrame(nsIPresShell*        aPresShe
         // the 'display' property
         nsIFrame*     containerFrame;
         nsFrameItems  childFrames;
-  
+
+        nsCOMPtr<nsIDOMElement>containerElement;
+        nsCOMPtr<nsIContent>   containerContent;
+        nsCOMPtr<nsIDocument>  document;
+
+        aContent->GetDocument(*getter_AddRefs(document));
+
+        nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(document));
+        nsresult  result;
+        result = domdoc->CreateElement("SPAN",getter_AddRefs(containerElement));//is the literal the correct way?
+        if (NS_SUCCEEDED(result) && containerElement)
+        {
+          containerContent = do_QueryInterface(containerElement);
+        }
+
         if (NS_STYLE_DISPLAY_BLOCK == displayValue) {
           NS_NewBlockFrame(aPresShell, &containerFrame);
         } else {
           NS_NewInlineFrame(aPresShell, &containerFrame);
         }        
-        InitAndRestoreFrame(aPresContext, aState, aContent, 
+        InitAndRestoreFrame(aPresContext, aState, containerContent?containerContent:aContent, 
                             aFrame, pseudoStyleContext, nsnull, containerFrame);
 
         // Mark the frame as being associated with generated content
@@ -882,8 +896,6 @@ nsCSSFrameConstructor::CreateGeneratedContentFrame(nsIPresShell*        aPresShe
 
         // Now create content objects (and child frames) for each value of the
         // 'content' property
-        nsCOMPtr<nsIDocument> document;
-        aContent->GetDocument(*getter_AddRefs(document));
 
         for (PRUint32 contentIndex = 0; contentIndex < contentCount; contentIndex++) {
           nsIFrame* frame;

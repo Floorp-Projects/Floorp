@@ -401,7 +401,8 @@ protected:
   //given a frame five me the first/last leaf available
   static void GetLastLeaf(nsIPresContext* aPresContext, nsIFrame **aFrame);
   static void GetFirstLeaf(nsIPresContext* aPresContext, nsIFrame **aFrame);
-
+  //grab this as the closest cell or go up the chain till nothing or a cell
+  NS_IMETHOD GrabContainingCell(nsIFrame **aCellFrame);
   static void XMLQuote(nsString& aString);
 
   virtual PRBool ParentDisablesSelection() const;

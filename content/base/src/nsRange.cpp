@@ -58,6 +58,7 @@ nsVoidArray* nsRange::mStartAncestorOffsets = nsnull;
 nsVoidArray* nsRange::mEndAncestorOffsets = nsnull;  
 
 nsresult NS_NewContentIterator(nsIContentIterator** aInstancePtrResult);
+nsresult NS_NewGeneratedContentIterator(nsIContentIterator** aInstancePtrResult);
 
 
 /******************************************************
@@ -1972,6 +1973,44 @@ nsRange::IsValidFragment(const nsString& aFragment, PRBool* aReturn)
   }
 
   return result;
+}
+
+NS_IMETHODIMP
+nsRange::GetHasGeneratedBefore(PRBool *aBool)
+{
+  NS_ENSURE_ARG_POINTER(aBool);
+  *aBool = mBeforeGenContent;
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsRange::GetHasGeneratedAfter(PRBool *aBool)
+{
+  NS_ENSURE_ARG_POINTER(aBool);
+  *aBool = mAfterGenContent;
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsRange::SetHasGeneratedBefore(PRBool aBool)
+{
+  mBeforeGenContent = aBool;
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsRange::SetHasGeneratedAfter(PRBool aBool)
+{
+  mAfterGenContent = aBool;
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsRange::SetBeforeAndAfter(PRBool aBefore, PRBool aAfter)
+{
+  mBeforeGenContent = aBefore;
+  mBeforeGenContent = aAfter;
+  return NS_OK;
 }
 
 // BEGIN nsIScriptObjectOwner interface implementations

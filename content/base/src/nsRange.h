@@ -94,11 +94,17 @@ public:
   NS_IMETHOD    CreateContextualFragment(const nsString& aFragment, 
                                          nsIDOMDocumentFragment** aReturn);
   NS_IMETHOD    IsValidFragment(const nsString& aFragment, PRBool* aReturn);
+  NS_IMETHOD    GetHasGeneratedBefore(PRBool *aBool);
+  NS_IMETHOD    GetHasGeneratedAfter(PRBool *aBool);
+  NS_IMETHOD    SetHasGeneratedBefore(PRBool aBool);
+  NS_IMETHOD    SetHasGeneratedAfter(PRBool aBool);
+  NS_IMETHOD    SetBeforeAndAfter(PRBool aBefore, PRBool aAfter);
 
 /*BEGIN nsIScriptObjectOwner interface implementations*/
   NS_IMETHOD 		GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
   NS_IMETHOD 		SetScriptObject(void *aScriptObject);
 /*END nsIScriptObjectOwner interface implementations*/
+
 
   // nsRange interface extensions
   
@@ -169,6 +175,8 @@ public:
   
   protected:
   	void*				mScriptObject;
+	PRBool mBeforeGenContent;
+	PRBool mAfterGenContent;
   	
 };
 

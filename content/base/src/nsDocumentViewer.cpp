@@ -1609,3 +1609,10 @@ NS_IMETHODIMP DocumentViewerImpl::NotifySelectionChanged(void)
   // to the right nsIDOMXULCommandDispatcher yet.
   return NS_OK;
 }
+
+NS_IMETHODIMP DocumentViewerImpl::TableCellNotification(nsIDOMNode* aNode, PRInt32 aOffset)
+{
+  //stub
+  return NS_OK;
+}
+
