@@ -238,11 +238,16 @@ sub display_build_table {
 sub display_build_table_body {
     my($t);
 
+    # Set by display_build_table_row() for display_continue_row()
+    %last_color = ();
+
     $t = 1;
     while( $t <= $time_count ){
+        last if $build_time_times->[$t] < $mindate;
         display_build_table_row( $t );    
         $t++; 
     }
+    display_continue_row($t) if $t <= $time_count;
 }
 
 sub display_build_table_row {
@@ -274,7 +279,6 @@ sub display_build_table_row {
     # 
     print "<tr align=center>\n";
     print "<td align=right $hour_color>${qr}\n${tt}${er}</td>\n";
-
 
     if( $tree2 ne "" ){
         print "<td align=center bgcolor=beige>\n";
@@ -312,7 +316,10 @@ sub display_build_table_row {
                 $hasnote = $br->{hasnote};
                 $noteid = $hasnote ? $br->{noteid} : 0;
                 $rowspan = $br->{rowspan};
+                $rowspan = $mindate_time_count - $t + 1
+                  if $t + $rowspan - 1 > $mindate_time_count;
                 $color = $colormap->{$br->{buildstatus}};
+                $last_color{$bn} = $color;
                 $status = $br->{buildstatus};
                 print "<td rowspan=$rowspan bgcolor=${color}>\n";
 
@@ -366,7 +373,6 @@ sub display_build_table_row {
                 }
                 print "</tt>\n";
 		print "</td>";
-
             }
         }
         else  {
@@ -378,6 +384,27 @@ sub display_build_table_row {
     print "</tr>\n";
 }
 
+sub display_continue_row {
+  local($t) = @_;
+
+  print '<tr><td align=center colspan=2>';
+  my $nextdate = $maxdate - $hours*60*60;
+  print "<a href='showbuilds.cgi"
+    ."?tree=$tree&hours=$hours&maxdate=$nextdate&nocrap=1'>"
+    ."Show next $hours hours</a>";
+  print '</td>';
+
+  $bn = 1;
+  while ($bn <= $name_count) {
+    if (defined($br = $build_table->[$t][$bn]) and $br != -1) {
+      print '<td></td>';
+    } else {
+      print '<td bgcolor="'.$last_color{$bn}
+            .'" background="cont.gif">&nbsp</td>';
+    }
+    $bn++;
+  }
+}
 
 sub display_build_table_header {
     my($i,$nspan);
@@ -442,10 +469,6 @@ sub display_build_table_header {
 
 sub display_build_table_footer {
     print "</table>\n";
-    my $nextdate = $maxdate - $hours*60*60;
-    print "<a href='showbuilds.cgi?tree=$tree&hours=$hours&maxdate=$nextdate&nocrap=1'>";
-    print "Show next $hours hours</a><br><br>\n";
-
     if (open(FOOTER, "<$data_dir/footer.html")) {
         while (<FOOTER>) {
             print $_;

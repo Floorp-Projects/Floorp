@@ -36,6 +36,7 @@ $name_count = 0;
 $build_time_index = {};
 $build_time_times = [];
 $time_count = 0;
+$mindate_time_count = 0;  # time_count that corresponds to the mindate
 
 $build_table = [];
 $who_list = [];
@@ -216,8 +217,8 @@ sub load_buildlog {
 	    # Ignore stuff in the future.
 	    next if $buildtime > $maxdate;
 
-	    # Ignore stuff in the past
-            if ($buildtime < $mindate) {
+	    # Ignore stuff in the past (but get a 2 hours of extra data)
+            if ($buildtime < $mindate - 2*60*60) {
                 # Occasionally, a build might show up with a bogus time.  So,
                 # we won't judge ourselves as having hit the end until we
                 # hit a full 20 lines in a row that are too early.
@@ -325,6 +326,7 @@ sub get_build_time_index {
     $i = 1;
     for $n (sort {$b <=> $a} keys (%{$build_time_index})) {
         $build_time_times->[$i] = $n;
+        $mindate_time_count = $i if $n >= $mindate;
         $i++;
     }
 
