@@ -874,7 +874,7 @@ PRBool CSSParserImpl::ParseSelector(PRInt32* aErrorCode,
   }
   if (eCSSToken_ID == tk->mType) {
     // #id
-    if ((1 < tk->mIdent.Length()) && (nsString::IsAlpha(tk->mIdent.CharAt(1)))) { // verify is legal ID
+    if ((0 < tk->mIdent.Length()) && (nsString::IsAlpha(tk->mIdent.CharAt(0)))) { // verify is legal ID
       mask |= SELECTOR_ID;
       aSelectorResult->mID.Append(tk->mIdent);
       if (!GetToken(aErrorCode, PR_FALSE)) {
