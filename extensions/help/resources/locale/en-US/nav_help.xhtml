@@ -244,8 +244,8 @@ search, and save web pages.</p>
     <em>[subdomain]</em></q>. For example, use this command if you want to
     delete all pages from <q>bugzilla.mozilla.org</q> but not
     <q>mozilla.org</q>.</li>
-  <li>To delete a single page, select a page in the history list and press
-    Delete.</li>
+  <li>To delete a single page or folder, select it in the history list and
+    press Delete.</li>
 </ul>
 
 <p><strong>Tip</strong>: To sort the history list, click one of the categories
@@ -595,11 +595,6 @@ search, and save web pages.</p>
     instance, type <q>san francisco restaurants</q>.</li>
 </ul>
 
-<p><strong>Hint:</strong> The most commonly used Internet Keywords are listed
-  in the pull-down list to the left of the Location Bar. Click the triangle and
-  choose from the list. To see a longer list of keywords, choose List of
-  Keywords.</p>
-
 <p><strong>Important:</strong> To use Internet Keywords, you must press
   <kbd class="mac">Return</kbd><kbd class="noMac">Enter</kbd>
   on your keyboard instead of clicking the Search button.
@@ -680,9 +675,9 @@ search, and save web pages.</p>
       
       <p>If you repeat the same character, it will start to cycle through all
         the links that begin with that character. However, if it can find a
-	match with the exact string you&apos;ve typed, such as
-	<q><tt>oo</tt></q> in <q><tt>woods</tt></q>, it will go there
-	first.</p>
+        match with the exact string you&apos;ve typed, such as
+        <q><tt>oo</tt></q> in <q><tt>woods</tt></q>, it will go there
+        first.</p>
 
   </li>
   <li>To search for all text (normal text and linked text), type <kbd>/</kbd>
@@ -719,8 +714,22 @@ search, and save web pages.</p>
     Bookmarks window.</li>
   <li>In the Bookmarks window, open the Tools menu and choose Search Bookmarks.
     You see the Find Bookmarks dialog box.</li>
-  <li>Use the drop-down lists to <a href="#search_options">select options</a>
-    to define your search.</li>
+  <li>Use the drop-down lists to select options to define your search. Choose
+    from the following search options:
+    <ul>
+      <li>Choose <q>name</q>, <q>description</q>, or <q>keyword</q> to
+        choose where you would like to search.</li>
+      <li>Choose <q>contains</q>, <q>starts with</q>, or <q>ends
+        with</q> if you know only part of the word or phrase for which
+        you&apos;re searching.</li>
+      <li>Choose <q>is</q> if you know exactly what you&apos;re searching
+        for.</li>
+      <li>Choose <q>is not</q> or <q>doesn&apos;t contain</q> to
+        exclude pages.</li>
+      <li>Click in the field and type all or part of word or URL (web address)
+        for the bookmarks that you want to find or exclude.</li>
+    </ul>
+  </li>
   <li>Type a search word.</li>
   <li>Click Find. Bookmarks that match your search criteria are displayed in
     the Search Results-Bookmarks window.</li>
@@ -735,14 +744,11 @@ search, and save web pages.</p>
   <li>Open the Go menu and choose History. You see the history list.</li>
   <li>In the History list, open the Tools menu and choose Search History. You
     see the Find in History dialog box.</li>
-  <li>Use the drop-down lists to <a href="#search_options">select options</a>
-    to define your search.</li>
-  <li id="search_options">Choose from the following search options:
+  <li>Use the drop-down lists to select options to define your search. Choose
+    from the following search options:
     <ul>
       <li>Choose <q>title</q> or <q>location</q> to choose where you
-        would like to search. (The bookmarks window allows searching
-        <q>name</q>, <q>description</q>, and
-	<q>keyword</q>.)</li>
+        would like to search.</li>
       <li>Choose <q>contains</q>, <q>starts with</q>, or <q>ends
         with</q> if you know only part of the word or phrase for which
         you&apos;re searching.</li>
@@ -752,7 +758,7 @@ search, and save web pages.</p>
         exclude pages.</li>
       <li>Click in the field and type all or part of word or URL (web address)
         for the bookmarks or history listings that you want to find or
-	exclude.</li>
+        exclude.</li>
     </ul>
   </li>
   <li>Click Find. History listings that match your search criteria are
@@ -863,7 +869,7 @@ search, and save web pages.</p>
 </ol>
 
 <p>To save a page without displaying it (which is useful for retrieving a
-  nonformatted page, like a data file, that&apos;s not intended for
+  non-formatted page, like a data file, that&apos;s not intended for
   viewing):</p>
 
 <ol>
@@ -924,12 +930,12 @@ search, and save web pages.</p>
   to print:</p>
 
 <ul>
-  <li><strong>View a preview of each page</strong>: Click the Next
-    <img src="chrome://navigator/skin/btn1/next.gif" alt="next button"/>,
+  <li><strong>View a preview of each page</strong>: Click the First
+    <img src="chrome://navigator/skin/btn1/first.gif" alt="first button"/>,
     Previous <img src="chrome://navigator/skin/btn1/previous.gif"
-    alt="previous button"/>, First
-    <img src="chrome://navigator/skin/btn1/first.gif" alt="first button"/>, or
-    Last
+    alt="previous button"/>, Next
+    <img src="chrome://navigator/skin/btn1/next.gif" alt="next button"/>,
+    or Last
     <img src="chrome://navigator/skin/btn1/last.gif" alt="last button"/> button
     to move between pages.</li>
   <li><strong>Change the scale (size) of pages</strong>: In the Scale field,
@@ -962,11 +968,7 @@ search, and save web pages.</p>
   unavailable on Mac OS, Linux or Unix.</p>
 
 <p>To customize how pages are printed in &brandShortName;, you can use Page
-  Setup:</p>
-
-<ul>
-  <li>From Navigator, open the File menu and choose Page Setup.</li>
-</ul>
+  Setup. From Navigator, open the File menu and choose Page Setup.</p>
 
 <p>In Page Setup, you can change the following settings for pages you want to
   print:</p>
@@ -978,28 +980,28 @@ search, and save web pages.</p>
       <li><strong>Orientation</strong>: 
         <ul>
           <li><strong>Portrait</strong>: Choose this
-	    <img src="chrome://communicator/skin/icons/pg-portrait-small.gif"
-	    alt="portrait button"/> to position the page normally, with the
-	    shorter side facing up.</li>
+	          <img src="chrome://communicator/skin/icons/pg-portrait-small.gif"
+	          alt="portrait button"/> to position the page normally, with the
+	          shorter side facing up.</li>
           <li><strong>Landscape</strong>: Choose this
-	    <img src="chrome://communicator/skin/icons/pg-landscape-small.gif"
-	    alt="landscape button"/> to position the page sideways, with the
-	    longer side facing up.</li>
+	          <img src="chrome://communicator/skin/icons/pg-landscape-small.gif"
+	          alt="landscape button"/> to position the page sideways, with the
+	          longer side facing up.</li>
         </ul>
       </li>
       <li><strong>Scale</strong>: Type in a percentage of the original size.
-        For example, type <q>50</q> and to make each page half the size of
-	the original page.
+        For example, type <kbd>50</kbd> and to make each page half the size of
+        the original page.
         <ul>
           <li><strong>Shrink To Fit Page Width</strong>: Select this to
-	    automatically resize the page to the width of the paper.</li>
+	        automatically resize the page to the width of the paper.</li>
         </ul>
       </li>
       <li><strong>Options</strong>: 
         <ul>
           <li><strong>Print Background (colors and images)</strong>: Select
-	    this to print background images and colors. If unselected, only
-	    images and color in the foreground (in front) are printed.</li>
+            this to print background images and colors. If unselected, only
+            images and color in the foreground (in front) are printed.</li>
         </ul>
       </li>
     </ul>
@@ -1010,31 +1012,31 @@ search, and save web pages.</p>
       <li><strong>Margins:</strong> 
         <ul>
           <li><strong>Top, Bottom, Left, Right</strong>: Type a margin in
-	    inches for the top, bottom, left, and right margin.</li>
+            inches for the top, bottom, left, and right margin.</li>
         </ul>
       </li>
       <li><strong>Headers &amp; Footers</strong>: Each drop-down list
         represents either a header or a footer area. The top row of drop-down
-	lists are for the left, center, and right header areas. The bottom row
-	are for the left, center, and right footer areas. In each drop-dop
-	list, choose one of the following options:
+        lists are for the left, center, and right header areas. The bottom row
+        are for the left, center, and right footer areas. In each drop-dop
+        list, choose one of the following options:
         <ul>
           <li><strong>--blank--</strong>: Show nothing in this area.</li>
           <li><strong>Title</strong>: Show the web page title.</li>
           <li><strong>URL</strong>: Show the web page URL (URL&apos;s usually
-	    start with <q>http://</q>).</li>
+            start with <q>http://</q>).</li>
           <li><strong>Date/Time</strong>: Show the date and time when the web
-	    page is printed.</li>
+            page is printed.</li>
           <li><strong>Page #</strong>: Show the page number of each page. For
             example,</li>
           <li><strong>Page # of #</strong>: Show the page number along with the
-	    total number of pages. For example, if you print a five page web
-	    page, <q>3 of 5</q> would be shown on the third page.</li>
+            total number of pages. For example, if you print a five page web
+            page, <q>3 of 5</q> would be shown on the third page.</li>
           <li><strong>Custom</strong>: Type your own text. You can include any
-	    of the following codes to print specific information: 
+            of the following codes to print specific information: 
             <ul>
               <li><strong>&amp;PT</strong>: Page Number with Total (Example:
-	        <q>3 of 5</q>)</li>
+                <q>3 of 5</q>)</li>
               <li><strong>&amp;P</strong>: Page Number</li>
               <li><strong>&amp;D</strong>: Date</li>
               <li><strong>&amp;U</strong>: URL</li>
@@ -1283,17 +1285,20 @@ search, and save web pages.</p>
   Flash, and RealNetworks RealPlayer allow &brandShortName; to show multimedia
   files and run small applications, such as movies, animations, and games.</p>
 
-<p>When you installed &brandShortName;, you had the option of adding some of
-  these most popular plug-ins. You don&apos;t have to install them separately.
-  However, you can also install plug-ins after you install &brandShortName;.
-  To see the plug-ins for &brandShortName; that are currently installed, see
-  the online web page,
-  <a href="http://home.netscape.com/plugins/manager.html">Netscape
-  Plug-in Manager</a>.</p>
+<p>&brandShortName; comes with no additional plug-ins installed, so you have
+  to add them separately.</p>
 
 <p>To see a full list of &brandShortName; plug-ins you can install, see the
-  <a href="http://home.netscape.com/plugins/index.html">Browser Plug-ins</a>
-  page at Netscape.</p>
+  <a href="http://plugindoc.mozdev.org">PluginDoc</a> page on MozDev.org.</p>
+
+<p>To see what plug-ins you currently have installed, do any of the following:
+
+  <ul>
+    <li>Open the Help menu and choose About Plug-ins.</li>
+    <li>Click in the Location Bar, type <kbd>about:plugins</kbd> and
+      press <kbd>Enter</kbd>.</li>
+  </ul>
+</p>
 
 <h3 id="helper_applications">Helper Applications</h3>
 
@@ -1746,7 +1751,7 @@ search, and save web pages.</p>
 
 <p>[<a href="#proxies">Return to beginning of section</a>]</p>
 
-<p>Copyright &copy; 2003-2004 The Mozilla Foundation.</p>
+<p>Copyright &copy; 2003-2005 The Mozilla Foundation.</p>
 
 </body>
 </html>
