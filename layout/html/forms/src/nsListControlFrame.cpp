@@ -3092,10 +3092,12 @@ nsListControlFrame::ScrollToFrame(nsIContent* aOptElement)
         }
         fRect.y += optRect.y;
 
-        // see if the selected frame is inside the scrolled area
-        if (!rect.Contains(fRect)) {
+        // See if the selected frame (fRect) is inside the scrolled
+        // area (rect). Check only the vertical dimension. Don't
+        // scroll just because there's horizontal overflow.
+        if (!(rect.y <= fRect.y && fRect.YMost() <= rect.YMost())) {
           // figure out which direction we are going
-          if (fRect.y+fRect.height >= rect.y+rect.height) {
+          if (fRect.YMost() > rect.YMost()) {
             y = fRect.y-(rect.height-fRect.height);
           } else {
             y = fRect.y;
