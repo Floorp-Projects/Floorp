@@ -2203,8 +2203,7 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
         isRightToLeftOnBidiPlatform = PR_TRUE;
       }
       else if (eCharType_RightToLeftArabic == charType) {
-        isRightToLeftOnBidiPlatform =
-	  (hints & NS_RENDERING_HINT_ARABIC_SHAPING);
+        isRightToLeftOnBidiPlatform = (hints & NS_RENDERING_HINT_ARABIC_SHAPING);
       }
       if (isRightToLeftOnBidiPlatform) {
         // indicate that the platform should use its native
@@ -2215,7 +2214,8 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
       nsBidiPresUtils* bidiUtils;
       aPresContext->GetBidiUtils(&bidiUtils);
       if (bidiUtils) {
-        bidiUtils->FormatUnicodeText(aPresContext, text, textLength, charType, level & 1, isRightToLeftOnBidiPlatform);
+        bidiUtils->FormatUnicodeText(aPresContext, text, textLength,
+                                     charType, level & 1, isBidiSystem);
       }
     }
     if (0 != textLength) { // textLength might change due to the bidi formattimg
@@ -2869,12 +2869,15 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
       if (bidiUtils) {
         nsCharType charType;
         PRUint8           level;
-        GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel, (void**) &level,sizeof(level));
-        GetBidiProperty(aPresContext, nsLayoutAtoms::charType, (void**) &charType,sizeof(charType));
+        GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel,
+                        (void**) &level,sizeof(level));
+        GetBidiProperty(aPresContext, nsLayoutAtoms::charType, 
+                        (void**) &charType,sizeof(charType));
         if (CHARTYPE_IS_RTL(charType))
           isRightToLeft = PR_TRUE;
         // Since we paint char by char, handle the text like on non-bidi platform
-        bidiUtils->FormatUnicodeText(aPresContext, text, textLength, charType, level & 1, PR_FALSE);
+        bidiUtils->FormatUnicodeText(aPresContext, text, textLength, charType,
+                                     level & 1, PR_FALSE);
       }
     }
     if (0 != textLength) { // textLength might change due to the bidi formattimg

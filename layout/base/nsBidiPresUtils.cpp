@@ -860,15 +860,15 @@ nsBidiPresUtils::FormatUnicodeText(nsIPresContext*  aPresContext,
                                    PRBool           aIsOddLevel,
                                    PRBool           aIsBidiSystem)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
   if (!mUnicodeUtils) {
     mUnicodeUtils = do_GetService("@mozilla.org/intl/unicharbidiutil;1");
     if (!mUnicodeUtils) {
       return NS_ERROR_FAILURE;
     }
   }
-// ahmed 
-      //adjusted for correct numeral shaping  
+  // ahmed 
+  //adjusted for correct numeral shaping  
   PRUint32 bidiOptions;
   aPresContext->GetBidi(&bidiOptions);
   switch (GET_BIDI_OPTION_NUMERAL(bidiOptions)) {
@@ -909,55 +909,44 @@ nsBidiPresUtils::FormatUnicodeText(nsIPresContext*  aPresContext,
       break;
   }
 
-  PRInt32 newLen;
-  PRUnichar* buffer = (PRUnichar*) mBuffer.get();
-// buffer can't be shorter than aText, since it was created from entire block
-
   PRBool doReverse = PR_FALSE;
+  PRBool doShape = PR_FALSE;
 
   if (aIsBidiSystem) {
-    if (CHARTYPE_IS_RTL(aCharType) ^ aIsOddLevel) {
+    if ( (CHARTYPE_IS_RTL(aCharType)) ^ (aIsOddLevel) )
       doReverse = PR_TRUE;
-    }
   }
-  else if (aIsOddLevel) {
-    doReverse = PR_TRUE;
+  else {
+    if (aIsOddLevel)
+      doReverse = PR_TRUE;
+    if (eCharType_RightToLeftArabic == aCharType) 
+      doShape = PR_TRUE;
   }
-  PRBool isVisual;
-  aPresContext->IsVisualMode(isVisual);
-  if (aIsBidiSystem && isVisual && (eCharType_RightToLeftArabic == aCharType)) {
-    doReverse = (!doReverse);
-  }
-  newLen = aTextLength;
-  if (doReverse) {
-    newLen = mBuffer.Length();
 
-    if ( (eCharType_RightToLeftArabic == aCharType) && !aIsBidiSystem) {
-      if (newLen < aTextLength << 1) {
-        newLen = aTextLength << 1;
-        mBuffer.SetLength(newLen);
-        buffer = (PRUnichar*) mBuffer.get();
-      }
-//ahmed
-      PRUnichar aRevBuf [8192];
-      PRInt32 aRevBufLen,j;
-      mBidiEngine->WriteReverse(aText,aTextLength, aRevBuf, NSBIDI_KEEP_BASE_COMBINING|NSBIDI_DO_MIRRORING, &aRevBufLen);
-      for(j=0;j<aRevBufLen;j++){
-        aText[j] = aRevBuf[j];
-      }
-      mUnicodeUtils->ArabicShaping(aText, aTextLength, buffer,
-                                   (PRUint32 *)&newLen);
-    } // eCharType_RightToLeftArabic
-    else {
+  if (doReverse || doShape) {
+    PRInt32    newLen;
+
+    if (mBuffer.Length() < aTextLength) {
+      mBuffer.SetLength(aTextLength);
+    }
+    PRUnichar* buffer = (PRUnichar*)mBuffer.get();
+
+    if (doReverse) {
       rv = mBidiEngine->WriteReverse(aText, aTextLength, buffer,
-                                     NSBIDI_REMOVE_BIDI_CONTROLS | NSBIDI_DO_MIRRORING,
-                                     &newLen);
+                    NSBIDI_REMOVE_BIDI_CONTROLS | NSBIDI_DO_MIRRORING, &newLen);
+      if (NS_SUCCEEDED(rv) ) {
+        aTextLength = newLen;
+        nsCRT::memcpy(aText, buffer, aTextLength * sizeof(PRUnichar) );
+      }
     }
-    if (NS_SUCCEEDED(rv) && buffer) {
-      aTextLength = newLen;
-      nsCRT::memcpy(aText, buffer, aTextLength * sizeof(PRUnichar) );
+    if (doShape) {
+      rv = mUnicodeUtils->ArabicShaping(aText, aTextLength, buffer, (PRUint32 *)&newLen);
+      if (NS_SUCCEEDED(rv) ) {
+        aTextLength = newLen;
+        nsCRT::memcpy(aText, buffer, aTextLength * sizeof(PRUnichar) );
+      }
     }
-  } // doReverse
+  }
   else {
     StripBidiControlCharacters(aText, aTextLength);
   }
@@ -996,6 +985,7 @@ nsBidiPresUtils::CalculateCharType(PRInt32& aOffset,
 
 {
   PRBool     strongTypeFound = PR_FALSE;
+  PRBool     inFERange = PR_FALSE;
   PRInt32    offset;
   nsCharType charType;
 
@@ -1004,12 +994,17 @@ nsBidiPresUtils::CalculateCharType(PRInt32& aOffset,
   for (offset = aOffset; offset < aCharTypeLimit; offset++) {
     // Make sure we give RTL chartype to all that stuff that would be classified
     // as Right-To-Left by a bidi platform.
-    // (May differ from the UnicodeData, eg we set RTL chartype to some NSM's.)
+    // (May differ from the UnicodeData, eg we set RTL chartype to some NSM's,
+    // and set LTR chartype to FE-ranged Arabic.)
     if (IS_HEBREW_CHAR(mBuffer[offset]) ) {
       charType = eCharType_RightToLeft;
     }
-    else if (IS_ARABIC_ALPHABETIC(mBuffer[offset]) || IS_FE_CHAR(mBuffer[offset]) ) {
+    else if (IS_ARABIC_ALPHABETIC(mBuffer[offset]) ) {
       charType = eCharType_RightToLeftArabic;
+    }
+    else if (IS_FE_CHAR(mBuffer[offset]) ) {
+      charType = eCharType_LeftToRight;
+      inFERange = PR_TRUE;
     }
     else {
       // IBMBIDI - Egypt - Start
@@ -1027,9 +1022,9 @@ nsBidiPresUtils::CalculateCharType(PRInt32& aOffset,
         // Also, don't mix Arabic and Hebrew content (since platform may
         // provide BIDI support to one of them only).
         aRunLength = offset - aOffset;
-        aOffset = aRunLimit = offset;
+        aRunLimit = offset;
         ++aRunCount;
-        return;
+        break;
       }
 
       if ( (eCharType_RightToLeftArabic == aPrevCharType
@@ -1042,13 +1037,14 @@ nsBidiPresUtils::CalculateCharType(PRInt32& aOffset,
       // (for correct numeric shaping)
       aPrevCharType = charType;
 
-      if (!strongTypeFound) {
-        strongTypeFound = PR_TRUE;
-        aCharType = charType;
-      }
+      strongTypeFound = PR_TRUE;
+      aCharType = charType;
     }
   }
-  aOffset = aCharTypeLimit;
+  if (inFERange) {
+    aPrevCharType = eCharType_RightToLeftArabic;
+  }
+  aOffset = offset;
 }
 
 void
