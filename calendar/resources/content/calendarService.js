@@ -22,7 +22,7 @@
  */
 
 /*
- * This file contains the following chatzilla related components:
+ * This file contains the following calendar related components:
  * 1. Command line handler service, for responding to the -webcal command line
  *    option. (CLineHandler)
  * 2. Content handler for responding to content of type text/calendar
@@ -73,12 +73,12 @@ function CLineService()
 {}
 
 CLineService.prototype.commandLineArgument = "-webcal";
-CLineService.prototype.prefNameForStartup = "general.startup.webal";
-CLineService.prototype.chromeUrlForTask="chrome://calendar/content";
+CLineService.prototype.prefNameForStartup = "general.startup.webcal";
+CLineService.prototype.chromeUrlForTask = "chrome://calendar/content";
 CLineService.prototype.helpText = "Start with a Calendar client";
-CLineService.prototype.handlesArgs=false;
-CLineService.prototype.defaultArgs ="";
-CLineService.prototype.openWindowWithArgs=false;
+CLineService.prototype.handlesArgs = false;
+CLineService.prototype.defaultArgs = "";
+CLineService.prototype.openWindowWithArgs = false;
 
 /* factory for command line handler service (CLineService) */
 var CLineFactory = new Object();
@@ -287,9 +287,9 @@ function ()
     throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
 }
 
-var ChatzillaModule = new Object();
+var CalendarModule = new Object();
 
-ChatzillaModule.registerSelf =
+CalendarModule.registerSelf =
 function (compMgr, fileSpec, location, type)
 {
     dump("*** Registering -webcal handler.\n");
@@ -303,9 +303,9 @@ function (compMgr, fileSpec, location, type)
                                     location,
                                     type);
 
-	catman = Components.classes["@mozilla.org/categorymanager;1"]
-        .getService(nsICategoryManager);
-	catman.addCategoryEntry("command-line-argument-handlers",
+    catman = Components.classes["@mozilla.org/categorymanager;1"]
+                       .getService(nsICategoryManager);
+    catman.addCategoryEntry("command-line-argument-handlers",
                             "calendar command line handler",
                             CLINE_SERVICE_CONTRACTID, true, true);
 
@@ -326,21 +326,20 @@ function (compMgr, fileSpec, location, type)
                                     type);
 }
 
-ChatzillaModule.unregisterSelf =
+CalendarModule.unregisterSelf =
 function(compMgr, fileSpec, location)
 {
-
     compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
 
     compMgr.unregisterFactoryLocation(CLINE_SERVICE_CID,
                                       fileSpec);
-	catman = Components.classes["@mozilla.org/categorymanager;1"]
-        .getService(nsICategoryManager);
-	catman.deleteCategoryEntry("command-line-argument-handlers",
+    catman = Components.classes["@mozilla.org/categorymanager;1"]
+                       .getService(nsICategoryManager);
+    catman.deleteCategoryEntry("command-line-argument-handlers",
                                CLINE_SERVICE_CONTRACTID, true);
 }
 
-ChatzillaModule.getClassObject =
+CalendarModule.getClassObject =
 function (compMgr, cid, iid) {
     if (cid.equals(CLINE_SERVICE_CID))
         return CLineFactory;
@@ -358,7 +357,7 @@ function (compMgr, cid, iid) {
 
 }
 
-ChatzillaModule.canUnload =
+CalendarModule.canUnload =
 function(compMgr)
 {
     return true;
@@ -366,5 +365,5 @@ function(compMgr)
 
 /* entrypoint */
 function NSGetModule(compMgr, fileSpec) {
-    return ChatzillaModule;
+    return CalendarModule;
 }
