@@ -1355,53 +1355,6 @@ BOOL nsWindow::CallMethod(MethodInfo *info)
 }
 
 //-------------------------------------------------------------------------
-//
-// OnKey
-//
-//-------------------------------------------------------------------------
-
-PRBool nsWindow::OnKey(PRUint32 aEventType, PRBool aCalcCharCode, TCHAR aCharCode, UINT nChar, UINT nRepCnt, UINT nFlags)
-{
-  if (nChar == NS_VK_CAPS_LOCK ||
-      nChar == NS_VK_ALT ||
-      nChar == NS_VK_SHIFT ||
-      nChar == NS_VK_CONTROL) {
-    return FALSE;
-  }
-
-  nsKeyEvent event;
-  nsPoint point;
-
-  point.x = 0;
-  point.y = 0;
-
-  InitEvent(event, aEventType, &point);
-
-  if (aCalcCharCode) {
-    // Now let windows do the conversion to the ascii code
-    WORD asciiChar = 0;
-    BYTE kbstate[256];
-    ::GetKeyboardState(kbstate);
-    ToAscii(nChar, nFlags & 0xff, kbstate, &asciiChar, 0);
-    event.charCode = (char)asciiChar;
-  } else {
-    event.charCode = aCharCode;
-  }
-
-  event.keyCode = nChar;
-  //printf("charCode %d  keyCode %d\n",  event.charCode, event.keyCode);
-
-  event.isShift   = mIsShiftDown;
-  event.isControl = mIsControlDown;
-  event.isAlt     = mIsAltDown;
-  event.eventStructType = NS_KEY_EVENT;
-
-  PRBool result = DispatchWindowEvent(&event);
-  NS_RELEASE(event.widget);
-  return result;
-}
-
-//-------------------------------------------------------------------------
 void nsWindow::SetUpForPaint(HDC aHDC) 
 {
   ::SetBkColor (aHDC, NSRGB_2_COLOREF(mBackground));
@@ -1821,6 +1774,309 @@ NS_METHOD nsWindow::EnableFileDrop(PRBool aEnable)
   return NS_OK;
 }
 
+
+//-------------------------------------------------------------------------
+//
+// OnKey
+//
+//-------------------------------------------------------------------------
+PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode, UINT aVirtualCharCode)
+{
+  nsKeyEvent event;
+  nsPoint point;
+
+  point.x = 0;
+  point.y = 0;
+
+  InitEvent(event, aEventType, &point); // this add ref's event.widget
+
+  event.charCode = aCharCode;
+  event.keyCode  = aVirtualCharCode;
+
+  //printf("Type: %s charCode %d  keyCode %d ",  (aEventType == NS_KEY_UP?"Up":"Down"), event.charCode, event.keyCode);
+  //printf("Shift: %s Control %s Alt: %s \n",  (mIsShiftDown?"D":"U"), (mIsControlDown?"D":"U"), (mIsAltDown?"D":"U"));
+
+  event.isShift   = mIsShiftDown;
+  event.isControl = mIsControlDown;
+  event.isAlt     = mIsAltDown;
+  event.eventStructType = NS_KEY_EVENT;
+
+  PRBool result = DispatchWindowEvent(&event);
+  NS_RELEASE(event.widget);
+
+  return result;
+}
+
+//-----------------------------------------------------
+static BOOL IsKeypadKey(UINT vCode, long isExtended)
+{
+    switch (vCode) {
+        case VK_HOME:  
+        case VK_END:   
+        case VK_PRIOR: 
+        case VK_NEXT:  
+        case VK_UP:    
+        case VK_DOWN:  
+        case VK_LEFT:  
+        case VK_RIGHT: 
+        case VK_CLEAR:
+        case VK_INSERT:
+            // extended are not keypad keys
+            if (isExtended) 
+                break;
+        case VK_NUMPAD0:
+        case VK_NUMPAD1:
+        case VK_NUMPAD2:
+        case VK_NUMPAD3:
+        case VK_NUMPAD4:
+        case VK_NUMPAD5:
+        case VK_NUMPAD6:
+        case VK_NUMPAD7:
+        case VK_NUMPAD8:
+        case VK_NUMPAD9:
+            return TRUE;
+    }
+
+    return FALSE;
+}
+
+//-------------------------------------------------------------------------
+//
+// return 
+//   EXTENDED_KEY     for extended keys supported by java
+//   SPECIAL_KEY      for extended keys 
+//   DONT_PROCESS_KEY for extended keys of no interest (never exposed to java)
+//   STANDARD_KEY     for standard keys
+//
+//-------------------------------------------------------------------------
+#define STANDARD_KEY     1
+#define EXTENDED_KEY     2
+#define SPECIAL_KEY      3
+#define DONT_PROCESS_KEY 4
+
+//-------------------------------------------------------------------------
+ULONG nsWindow::IsSpecialChar(UINT aVirtualKeyCode, WORD *aAsciiKey)
+{
+  ULONG keyType = EXTENDED_KEY;
+
+  *aAsciiKey   = 0;
+
+  // Process non-standard Control Keys
+  if (mIsControlDown && !mIsShiftDown && !mIsAltDown &&
+      ((aVirtualKeyCode >= 0x30 && aVirtualKeyCode <= 0x39) ||  // 0-9
+       (aVirtualKeyCode >= 0xBA && aVirtualKeyCode <= 0xC0) ||  // ;=,-./` (semi-colon,equals,comma,dash,period,slash,back tick)
+       (aVirtualKeyCode == 0xDE))) {                            // ' (tick)
+    *aAsciiKey = aVirtualKeyCode;
+    return SPECIAL_KEY;
+  }
+
+  //printf("*********************** 0x%x\n", aVirtualKeyCode);
+  switch (aVirtualKeyCode) {
+    case VK_TAB:
+    case VK_HOME:
+    case VK_END:
+    case VK_PRIOR:
+    case VK_NEXT:
+    case VK_UP:
+    case VK_DOWN:
+    case VK_LEFT:
+    case VK_RIGHT:
+    case VK_F1: 
+    case VK_F2:  
+    case VK_F3:  
+    case VK_F4:  
+    case VK_F5:   
+    case VK_F6:   
+    case VK_F7:   
+    case VK_F8:   
+    case VK_F9:    
+    case VK_F10:   
+    case VK_F11:   
+    case VK_F12:  
+      *aAsciiKey = aVirtualKeyCode;
+      break;
+
+    case VK_DELETE:
+      *aAsciiKey = '\177'; 
+      keyType = SPECIAL_KEY;   
+      break;
+
+    case VK_RETURN:*aAsciiKey = '\n';   
+      keyType = SPECIAL_KEY;   
+      break;
+
+    case VK_MENU:
+      keyType = DONT_PROCESS_KEY;
+      break;
+
+    default:        
+      keyType = STANDARD_KEY;
+      break;
+  }
+
+  return keyType;
+}
+
+//-------------------------------------------------------------------------
+//
+// change the virtual key coming from windows into an ascii code
+//
+//-------------------------------------------------------------------------
+BOOL TranslateToAscii(BYTE *aKeyState, 
+                      UINT  aVirtualKeyCode, 
+                      UINT  aScanCode, 
+                      WORD *aAsciiKey)
+{
+  WORD asciiBuf;
+  BOOL bIsExtended;
+
+  bIsExtended = TRUE;
+  *aAsciiKey   = 0;
+  switch (aVirtualKeyCode) {
+    case VK_TAB:
+    case VK_HOME:
+    case VK_END:
+    case VK_PRIOR:
+    case VK_NEXT:
+    case VK_UP:
+    case VK_DOWN:
+    case VK_LEFT:
+    case VK_RIGHT:
+    case VK_F1: 
+    case VK_F2:  
+    case VK_F3:  
+    case VK_F4:  
+    case VK_F5:   
+    case VK_F6:   
+    case VK_F7:   
+    case VK_F8:   
+    case VK_F9:    
+    case VK_F10:   
+    case VK_F11:   
+    case VK_F12:  
+      *aAsciiKey = aVirtualKeyCode;
+      break;
+
+
+    case VK_DELETE:
+      *aAsciiKey = '\177'; 
+      bIsExtended = FALSE;   
+      break;
+
+    case VK_RETURN:
+      *aAsciiKey = '\n';   
+      bIsExtended = FALSE;   
+      break;
+
+    default:        
+      bIsExtended = FALSE;
+
+      if (::ToAscii(aVirtualKeyCode, aScanCode, aKeyState, &asciiBuf, FALSE) == 1) {
+        *aAsciiKey = (char)asciiBuf;
+      }
+
+      break;
+  }
+  return bIsExtended;
+}
+
+
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+BOOL nsWindow::OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode)
+{
+  WORD asciiKey;
+
+  asciiKey = 0;
+
+  switch (IsSpecialChar(aVirtualKeyCode, &asciiKey)) {
+    case EXTENDED_KEY:
+      break;
+
+    // special keys don't generate an action but don't even go 
+    // through WM_CHAR
+    case SPECIAL_KEY:
+      break;
+
+    // standard keys are processed through WM_CHAR
+    case STANDARD_KEY:
+      asciiKey = 0; // just to be paranoid
+      break;
+  }
+
+  //printf("In OnKeyDown ascii %d  virt: %d  scan: %d\n", asciiKey, aVirtualKeyCode, aScanCode);
+
+  // if we enter this if statement we expect not to get a WM_CHAR
+  if (asciiKey) {
+    //printf("Dispatching Key Down [%d]\n", asciiKey);
+    DispatchKeyEvent(NS_KEY_DOWN, asciiKey, aVirtualKeyCode);
+    return TRUE;
+  }
+
+  // always let the def proc process a WM_KEYDOWN
+  return FALSE;
+}
+
+
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+BOOL nsWindow::OnKeyUp( UINT aVirtualKeyCode, UINT aScanCode)
+{
+  WORD asciiKey;
+
+  asciiKey = 0;
+
+  switch (IsSpecialChar(aVirtualKeyCode, &asciiKey)) {
+    case EXTENDED_KEY:
+      break;
+
+    case STANDARD_KEY: {
+      BYTE keyState[256];
+      ::GetKeyboardState(keyState);
+      ::ToAscii(aVirtualKeyCode, aScanCode, keyState, &asciiKey, FALSE);
+      } break;
+
+    case SPECIAL_KEY:
+      break;
+
+  } // switch
+
+  if (asciiKey) {
+    //printf("Dispatching Key Up [%d]\n", asciiKey);
+    DispatchKeyEvent(NS_KEY_UP, asciiKey, aVirtualKeyCode);
+    return TRUE;
+  }
+
+  // always let the def proc process a WM_KEYUP
+  return FALSE;
+}
+
+
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+BOOL nsWindow::OnChar( UINT aVirtualKeyCode )
+{
+
+  // if we get a '\n', ignore it because we already processed it in OnKeyDown.
+  // This is the safest assumption since not always pressing enter produce a WM_CHAR
+  //if (IsDBCSLeadByte(aVirtualKeyCode) || aVirtualKeyCode == 0xD /*'\n'*/ ) {
+	//	return FALSE;
+	//}
+  //printf("OnChar (KeyDown) %d\n", aVirtualKeyCode);
+
+  DispatchKeyEvent(NS_KEY_DOWN, aVirtualKeyCode, aVirtualKeyCode);
+
+  return TRUE;
+}
+
+
+
 //-------------------------------------------------------------------------
 //
 // Process all nsWindows messages
@@ -1925,48 +2181,46 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             result = OnPaint();
             break;
 
+        case WM_SYSCHAR:
         case WM_CHAR:
-          printf("Doing WM_CHAR\n");
             mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
             mIsControlDown = IS_VK_DOWN(NS_VK_CONTROL);
             mIsAltDown     = IS_VK_DOWN(NS_VK_ALT);
-            
+
 			      if (!mIMEIsComposing)
-				      result = OnKey(NS_KEY_DOWN, FALSE, wParam, vkKeyCached, LOWORD(lParam), HIWORD(lParam));
+              result = OnChar(wParam);
 			      else
 				      result = PR_FALSE;
+             
           break;
 
+        // Let ths fall through if it isn't a key pad
+        case WM_SYSKEYUP:
+            // if it's a keypad key don't process a WM_CHAR will come or...oh well...
+            if (IsKeypadKey(wParam, lParam & 0x01000000)) {
+				      result = PR_TRUE;
+              break;
+            }
         case WM_KEYUP: 
             mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
             mIsControlDown = IS_VK_DOWN(NS_VK_CONTROL);
             mIsAltDown     = IS_VK_DOWN(NS_VK_ALT);
-            
+
 			      if (!mIMEIsComposing)
-				      result = OnKey(NS_KEY_UP, TRUE, 0, wParam, LOWORD(lParam), HIWORD(lParam));
+              result = OnKeyUp(wParam, (HIWORD(lParam) & 0xFF));
 			      else
 				      result = PR_FALSE;
             break;
 
-        case WM_KEYDOWN: 
-            {
-            // Cache the key code when it is regular chars
-            vkKeyCached = (UINT)wParam;
+        case WM_KEYDOWN: {
+            mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
+            mIsControlDown = IS_VK_DOWN(NS_VK_CONTROL);
+            mIsAltDown     = IS_VK_DOWN(NS_VK_ALT);
 
-            // Tab and return keys do not generate WM_CHAR events
-            if (vkKeyCached == 9 || 
-                vkKeyCached == 13) {
-              mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
-              mIsControlDown = IS_VK_DOWN(NS_VK_CONTROL);
-              mIsAltDown     = IS_VK_DOWN(NS_VK_ALT);
-			        if (!mIMEIsComposing)
-				        result = OnKey(NS_KEY_DOWN, TRUE, 0, wParam, LOWORD(lParam), HIWORD(lParam));
-			        else
-				        result = PR_FALSE;
-            } else {
-               //these are handled by WM_CHAR
-  				    result = PR_FALSE;
-            }
+			      if (!mIMEIsComposing)
+			        result = OnKeyDown(wParam, (HIWORD(lParam) & 0xFF));
+			      else
+				      result = PR_FALSE;
             }
             break;
 
@@ -2330,7 +2584,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
                                                    kIClipboardIID,
                                                    (nsISupports **)&clipboard);
         clipboard->EmptyClipboard();
-        NS_RELEASE(clipboard);
+        nsServiceManager::ReleaseService(kCClipboardCID, clipboard);
       } break;
 
     }
