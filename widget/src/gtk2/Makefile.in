@@ -36,6 +36,7 @@ REQUIRES	= xpcom \
 		  pref \
 		  dom \
 		  necko \
+		  uconv \
 		  xremoteservice
 
 CSRCS		= \

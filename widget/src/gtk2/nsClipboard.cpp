@@ -42,6 +42,8 @@
 #include "nsReadableUtils.h"
 #include "nsXPIDLString.h"
 #include "nsPrimitiveHelpers.h"
+#include "nsICharsetConverterManager.h"
+#include "nsIServiceManager.h"
 
 #include <gtk/gtkclipboard.h>
 #include <gtk/gtkinvisible.h>
@@ -58,6 +60,15 @@ gboolean
 selection_clear_event_cb   (GtkWidget          *aWidget,
                             GdkEventSelection  *aEvent,
                             nsClipboard        *aClipboard);
+
+static void
+ConvertHTMLtoUCS2          (guchar             *data,
+                            PRInt32             dataLength,
+                            PRUnichar         **unicodeData,
+                            PRInt32            &outUnicodeLen);
+
+static void
+GetHTMLCharset             (guchar * data, PRInt32 dataLength, nsAString& str);
 
 nsClipboard::nsClipboard()
 {
@@ -231,10 +242,23 @@ nsClipboard::GetData(nsITransferable *aTransferable, PRInt32 aWhichClipboard)
                                                             atom);
             if (selectionData) {
                 length = selectionData->length * selectionData->format / 8;
-                data = (guchar *)nsMemory::Alloc(length);
-                if (!data)
-                    break;
-                memcpy(data, selectionData->data, length);
+                // Special case text/html since we can convert into UCS2
+                if (!strcmp(flavorStr, kHTMLMime)) {
+                    PRUnichar* htmlBody= nsnull;
+                    PRInt32 htmlBodyLen = 0;
+                    // Convert text/html into our unicode format
+                    ConvertHTMLtoUCS2((guchar *)selectionData->data, length,
+                                      &htmlBody, htmlBodyLen);
+                    if (!htmlBodyLen)
+                        break;
+                    data = (guchar *)htmlBody;
+                    length = htmlBodyLen * 2;
+                } else {
+                    data = (guchar *)nsMemory::Alloc(length);
+                    if (!data)
+                        break;
+                    memcpy(data, selectionData->data, length);
+                }
                 foundData = PR_TRUE;
                 foundFlavor = flavorStr;
                 break;
@@ -472,6 +496,27 @@ nsClipboard::SelectionGetEvent (GtkWidget        *aWidget,
                                                 &primitive_data, len);
 
     if (primitive_data) {
+        // Check to see if the selection data is text/html
+        if (aSelectionData->target == gdk_atom_intern (kHTMLMime, FALSE)) {
+            /*
+             * "text/html" can be encoded UCS2. It is recommended that
+             * documents transmitted as UCS2 always begin with a ZERO-WIDTH
+             * NON-BREAKING SPACE character (hexadecimal FEFF, also called
+             * Byte Order Mark (BOM)). Adding BOM can help other app to
+             * detect mozilla use UCS2 encoding when copy-paste.
+             */
+            guchar *buffer = (guchar *)
+                    nsMemory::Alloc((len * sizeof(guchar)) + sizeof(PRUnichar));
+            if (!buffer)
+                return;
+            PRUnichar prefix = 0xFEFF;
+            memcpy(buffer, &prefix, sizeof(prefix));
+            memcpy(buffer + sizeof(prefix), primitive_data, len);
+            nsMemory::Free((guchar *)primitive_data);
+            primitive_data = (guchar *)buffer;
+            len += sizeof(prefix);
+        }
+  
         gtk_selection_data_set(aSelectionData, aSelectionData->target,
                                8, /* 8 bits in a unit */
                                (const guchar *)primitive_data, len);
@@ -517,3 +562,141 @@ selection_clear_event_cb   (GtkWidget          *aWidget,
     aClipboard->SelectionClearEvent(aWidget, aEvent);
     return TRUE;
 }
+
+/*
+ * when copy-paste, mozilla wants data encoded using UCS2,
+ * other app such as StarOffice use "text/html"(RFC2854).
+ * This function convert data(got from GTK clipboard)
+ * to data mozilla wanted.
+ *
+ * data from GTK clipboard can be 3 forms:
+ *  1. From current mozilla
+ *     "text/html", charset = utf-16
+ *  2. From old version mozilla or mozilla-based app
+ *     content("body" only), charset = utf-16
+ *  3. From other app who use "text/html" when copy-paste
+ *     "text/html", has "charset" info
+ *
+ * data      : got from GTK clipboard
+ * dataLength: got from GTK clipboard
+ * body      : pass to Mozilla
+ * bodyLength: pass to Mozilla
+ */
+void ConvertHTMLtoUCS2(guchar * data, PRInt32 dataLength,
+                       PRUnichar** unicodeData, PRInt32& outUnicodeLen)
+{
+    nsAutoString charset;
+    GetHTMLCharset(data, dataLength, charset);// get charset of HTML
+    if (charset.Equals(NS_LITERAL_STRING("UTF-16"))) {//current mozilla
+        outUnicodeLen = (dataLength / 2) - 1;
+        *unicodeData = NS_REINTERPRET_CAST(PRUnichar*,
+                       nsMemory::Alloc((outUnicodeLen + sizeof('\0')) *
+                       sizeof(PRUnichar)));
+        if (unicodeData) {
+            memcpy(*unicodeData, data + sizeof(PRUnichar),
+                   outUnicodeLen * sizeof(PRUnichar));
+            (*unicodeData)[outUnicodeLen] = '\0';
+        }
+    } else if (charset.Equals(NS_LITERAL_STRING("UNKNOWN"))) {
+        outUnicodeLen = 0;
+        return;
+    } else {
+        // app which use "text/html" to copy&paste
+        nsCOMPtr<nsIUnicodeDecoder> decoder;
+        nsresult rv;
+        // get the decoder
+        nsCOMPtr<nsICharsetConverterManager> ccm =
+            do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
+        if (NS_FAILED(rv)) {
+#ifdef DEBUG_CLIPBOARD
+            g_print("        can't get CHARSET CONVERTER MANAGER service\n");
+#endif
+            outUnicodeLen = 0;
+            return;
+        }
+        rv = ccm->GetUnicodeDecoder(&charset, getter_AddRefs(decoder));
+        if (NS_FAILED(rv)) {
+#ifdef DEBUG_CLIPBOARD
+            g_print("        get unicode decoder error\n");
+#endif
+            outUnicodeLen = 0;
+            return;
+        }
+        // converting
+        decoder->GetMaxLength((const char *)data, dataLength, &outUnicodeLen);
+        // |outUnicodeLen| is number of chars
+        if (outUnicodeLen) {
+            *unicodeData = NS_REINTERPRET_CAST(PRUnichar*,
+                           nsMemory::Alloc((outUnicodeLen + sizeof('\0')) *
+                           sizeof(PRUnichar)));
+            if (unicodeData) {
+                PRInt32 numberTmp = dataLength;
+                decoder->Convert((const char *)data, &numberTmp,
+                                 *unicodeData, &outUnicodeLen);
+#ifdef DEBUG_CLIPBOARD
+                if (numberTmp != dataLength)
+                    printf("didn't consume all the bytes\n");
+#endif
+                // null terminate. Convert() doesn't do it for us
+                (*unicodeData)[outUnicodeLen] = '\0';
+            }
+        } // if valid length
+    }
+}
+
+/*
+ * get "charset" information from clipboard data
+ * return value can be:
+ *  1. "UTF-16":      mozilla or "text/html" with "charset=utf-16"
+ *  2. "UNKNOWN":     mozilla can't detect what encode it use
+ *  3. other:         "text/html" with other charset than utf-16
+ */
+void GetHTMLCharset(guchar * data, PRInt32 dataLength, nsAString& str)
+{
+    // if detect "FFFE" or "FEFF", assume UTF-16
+    PRUnichar* beginChar =  (PRUnichar*)data;
+    if ((beginChar[0] == 0xFFFE) || (beginChar[0] == 0xFEFF)) {
+        str.Assign(NS_LITERAL_STRING("UTF-16"));
+        return;
+    }
+    // no "FFFE" and "FEFF", assume ASCII first to find "charset" info
+    nsDependentCString htmlStr =
+        nsDependentCString((const char *)data, dataLength);
+    nsACString::const_iterator start, end;
+    htmlStr.BeginReading(start);
+    htmlStr.EndReading(end);
+    nsACString::const_iterator valueStart(start), valueEnd(start);
+
+    if (CaseInsensitiveFindInReadable(
+        NS_LITERAL_CSTRING("CONTENT=\"text/html;"),
+        start, end)) {
+        start = end;
+        htmlStr.EndReading(end);
+
+        if (CaseInsensitiveFindInReadable(
+            NS_LITERAL_CSTRING("charset="),
+            start, end)) {
+            valueStart = end;
+            start = end;
+            htmlStr.EndReading(end);
+          
+            if (FindCharInReadable('"', start, end))
+                valueEnd = start;
+        }
+    }
+    // find "charset" in HTML
+    if (valueStart != valueEnd) {
+        const nsACString & charsetStr = Substring(valueStart, valueEnd);
+        if (!charsetStr.IsEmpty()) {
+            nsCString charsetUpperStr;
+            ToUpperCase(charsetStr, charsetUpperStr);
+#ifdef DEBUG_CLIPBOARD
+            printf("Charset of HTML = %s\n", charsetUpperStr.get());
+#endif
+            str.Assign(NS_ConvertUTF8toUCS2(charsetUpperStr));
+            return;
+        }
+    }
+    str.Assign(NS_LITERAL_STRING("UNKNOWN"));
+}
+
