@@ -283,6 +283,7 @@ private:
   /* Column properties */
   nsresult GetColumnCount(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
   nsresult GetColumnWidth(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
+  nsresult GetColumnGap(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
 
   nsROCSSPrimitiveValue* GetROCSSPrimitiveValue();
   nsDOMCSSValueList* GetROCSSValueList(PRBool aCommaDelimited);

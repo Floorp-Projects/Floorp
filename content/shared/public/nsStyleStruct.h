@@ -1106,7 +1106,8 @@ struct nsStyleColumn : public nsStyleStruct {
   nsChangeHint CalcDifference(const nsStyleColumn& aOther) const;
 
   PRUint32     mColumnCount; // [reset] see nsStyleConsts.h
-  nsStyleCoord mColumnWidth; // [reset] see nsStyleConsts.h
+  nsStyleCoord mColumnWidth; // [reset]
+  nsStyleCoord mColumnGap;   // [reset]
 };
 
 #ifdef MOZ_SVG

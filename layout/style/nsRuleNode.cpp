@@ -4263,6 +4263,11 @@ nsRuleNode::ComputeColumnData(nsStyleStruct* aStartStruct,
            column->mColumnWidth, parent->mColumnWidth, SETCOORD_LAH,
            aContext, mPresContext, inherited);
 
+  // column-gap: length, percentage, inherit
+  SetCoord(columnData.mColumnGap,
+           column->mColumnGap, parent->mColumnGap, SETCOORD_LPH,
+           aContext, mPresContext, inherited);
+
   // column-count: auto, integer, inherit
   if (eCSSUnit_Auto == columnData.mColumnCount.GetUnit()) {
     column->mColumnCount = NS_STYLE_COLUMN_COUNT_AUTO;

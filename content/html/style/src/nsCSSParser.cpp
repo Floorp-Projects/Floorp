@@ -4122,6 +4122,8 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
     return ParsePositiveVariant(aErrorCode, aValue, VARIANT_AHI, nsnull);
   case eCSSProperty__moz_column_width:
     return ParseVariant(aErrorCode, aValue, VARIANT_AHL, nsnull);
+  case eCSSProperty__moz_column_gap:
+    return ParseVariant(aErrorCode, aValue, VARIANT_HLP, nsnull);
 #ifdef ENABLE_OUTLINE
   case eCSSProperty__moz_outline_radius_topLeft:
   case eCSSProperty__moz_outline_radius_topRight:
