@@ -217,7 +217,7 @@ public interface Scriptable {
      * @see org.mozilla.javascript.Scriptable#has
      * @see org.mozilla.javascript.Scriptable#get
      * @see org.mozilla.javascript.Scriptable#put(String,Scriptable,Object)
-     * @see org.mozilla.javascript.ScriptaleObject#putProperty
+     * @see org.mozilla.javascript.ScriptableObject#putProperty
      */
     public void put(int index, Scriptable start, Object value);
 
