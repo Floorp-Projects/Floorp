@@ -21,7 +21,7 @@
  * Original Author: David W. Hyatt (hyatt@netscape.com)
  *
  * Contributor(s): 
- *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Mark Hammond <MarkH@ActiveState.com>
  */
 
 /*
@@ -187,7 +187,9 @@ nsXULControllers::AppendController(nsIController *controller)
 NS_IMETHODIMP
 nsXULControllers::RemoveController(nsIController *controller)
 {
-  // first find it
+  // first get the identity pointer
+  nsCOMPtr<nsISupports> controllerSup(do_QueryInterface(controller));
+  // then find it
   PRUint32 count = mControllers.Count();
   for (PRUint32 i = 0; i < count; i++)
   {
@@ -196,7 +198,8 @@ nsXULControllers::RemoveController(nsIController *controller)
     {
       nsCOMPtr<nsIController> thisController;
       controllerData->GetController(getter_AddRefs(thisController));
-      if (thisController.get() == controller)
+      nsCOMPtr<nsISupports> thisControllerSup(do_QueryInterface(thisController)); // get identity
+      if (thisControllerSup == controllerSup)
       {
         mControllers.RemoveElementAt(i);
         delete controllerData;
