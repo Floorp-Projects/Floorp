@@ -103,7 +103,6 @@ public:
   void                 HandleGDKEvent(GdkEvent *event);
 
   void                 InstallToplevelDragBeginSignal (void);
-  void                 InstallToplevelDragLeaveSignal (void);
   void                 InstallToplevelDragMotionSignal(void);
   void                 InstallToplevelDragDropSignal  (void);
   void                 InstallToplevelDragDataReceivedSignal(void);

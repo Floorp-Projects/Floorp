@@ -1156,16 +1156,6 @@ nsWindow::ToplevelDragBeginSignal(GtkWidget *aWidget,
   return PR_FALSE;
 }
 
-void
-nsWindow::InstallToplevelDragLeaveSignal(void)
-{
-  NS_ASSERTION( nsnull != mShell, "mShell is null");
-  
-  InstallSignal(mShell,
-                (gchar *)"drag_leave",
-                GTK_SIGNAL_FUNC(nsWindow::ToplevelDragLeaveSignal));
-}
-
 /* static */
 gint
 nsWindow::ToplevelDragLeaveSignal(GtkWidget *      aWidget,
@@ -1704,7 +1694,6 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
   if (mShell) {
     // install the drag and drop signals for the toplevel window.
     InstallToplevelDragBeginSignal();
-    InstallToplevelDragLeaveSignal();
     InstallToplevelDragMotionSignal();
     InstallToplevelDragDropSignal();
     InstallToplevelDragDataReceivedSignal();
