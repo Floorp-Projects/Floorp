@@ -736,6 +736,7 @@ nsPresContext::StartLoadImage(const nsString& aURL,
                     aTargetFrame, aCallBack, aClosure);
   if (NS_OK != rv) {
     mImageLoaders.RemoveElement(loader);
+    loader->StopImageLoad();
     NS_RELEASE(loader);
 
     // Undo premature store of reslut
@@ -780,6 +781,7 @@ nsPresContext::StopLoadImage(nsIFrame* aTargetFrame,
       PRBool safe;
       loader->SafeToDestroy(&safe);
       if (safe) {
+        loader->StopImageLoad();
         NS_RELEASE(loader);
         mImageLoaders.RemoveElementAt(i);
         n--;
@@ -804,6 +806,7 @@ nsPresContext::StopAllLoadImagesFor(nsIFrame* aTargetFrame)
       loader->RemoveFrame(aTargetFrame);
       loader->SafeToDestroy(&safe);
       if (safe) {
+        loader->StopImageLoad();
         NS_RELEASE(loader);
         mImageLoaders.RemoveElementAt(i);
         n--;
