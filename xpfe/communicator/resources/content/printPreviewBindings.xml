@@ -21,6 +21,7 @@
    -
    - Contributor(s):
    -  Samir Gehani <sgehani@netscape.com> (Original Author)
+   -  Rod Spears <rods@netscape.com> 
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -328,6 +329,8 @@
               settings.shrinkToFit = true;
               print.printPreview(settings);
               this.mScaleCombobox.setAttribute('lastValidInx', this.mScaleCombobox.selectedIndex);
+              // update total number of pages since this could have changed
+              this.mTotalPages.value = print.printPreviewNumPages;
               return;
             } else {
               return;
@@ -351,6 +354,8 @@
           settings.shrinkToFit = false;
           settings.scaling = aValue;
           print.printPreview(settings);
+          // update total number of pages since this could have changed
+          this.mTotalPages.value = print.printPreviewNumPages;
         ]]>
         </body>
       </method>
