@@ -419,7 +419,7 @@ nsComboboxControlFrame::ScrollIntoView(nsIPresContext* aPresContext)
 
     if (ShouldScrollFrameIntoView(presShell, mPresContext, this)) {
       presShell->ScrollFrameIntoView(this,
-                     NS_PRESSHELL_SCROLL_ANYWHERE,NS_PRESSHELL_SCROLL_ANYWHERE);
+                     NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE,NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE);
     }
 
   }
