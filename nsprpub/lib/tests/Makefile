@@ -30,8 +30,8 @@ OS_CFLAGS = $(OS_EXE_CFLAGS)
 endif
 
 CSRCS = \
-	event.c  \
 	string.c \
+	event.c \
 	base64t.c
 
 ifeq ($(OS_ARCH), WINNT)
@@ -65,8 +65,6 @@ LIBPLC= $(DIST)/lib/libplc$(MOD_VERSION).$(LIB_SUFFIX)
 LIBPLDS= $(DIST)/lib/libplds$(MOD_VERSION).$(LIB_SUFFIX)
 endif
 endif
-
-LIBPR += $(LIBPLDS)
 
 ifneq ($(OS_ARCH), WINNT)
 PWD = $(shell pwd)
@@ -185,10 +183,10 @@ ifeq ($(OS_TARGET),WIN16)
 	echo winsock.lib     >>w16link
 	wlink @w16link.
 else
-	link $(LDOPTS) $< $(LIBPR) $(LIBPLC) wsock32.lib -out:$@
+	link $(LDOPTS) $< $(LIBPLC) $(LIBPLDS) $(LIBPR) wsock32.lib -out:$@
 endif
 else
-	$(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPR) $(LIBPLC) $(EXTRA_LIBS) -o $@
+	$(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBPLDS) $(LIBPR) $(EXTRA_LIBS) -o $@
 endif
 
 endif
