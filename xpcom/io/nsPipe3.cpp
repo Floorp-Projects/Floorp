@@ -272,6 +272,12 @@ protected:
 //
 // (shaded region contains data)
 //
+// NOTE: on some systems (notably OS/2), the heap allocator uses an arena for
+// small allocations (e.g., 64 byte allocations).  this means that buffers may
+// be allocated back-to-back.  in the diagram above, for example, mReadLimit
+// would actually be pointing at the beginning of the next segment.  when
+// making changes to this file, please keep this fact in mind.
+//
 
 //-----------------------------------------------------------------------------
 // nsPipe methods:
@@ -461,6 +467,14 @@ nsPipe::GetWriteSegment(char *&segment, PRUint32 &segmentLen)
     if (mReadCursor == nsnull) {
         NS_ASSERTION(mWriteSegment == 0, "unexpected null read cursor");
         mReadCursor = mReadLimit = mWriteCursor;
+    }
+
+    // check to see if we can roll-back our read and write cursors to the 
+    // beginning of the current/first segment.  this is purely an optimization.
+    if (mReadCursor == mWriteCursor && mWriteSegment == 0) {
+        char *head = mBuffer.GetSegment(0);
+        LOG(("OOO rolling back write cursor %u bytes\n", mWriteCursor - head));
+        mWriteCursor = mReadCursor = mReadLimit = head;
     }
 
     segment    = mWriteCursor;
