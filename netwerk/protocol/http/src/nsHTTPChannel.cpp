@@ -1431,12 +1431,15 @@ nsresult nsHTTPChannel::ReportProgress(PRUint32 aProgress,
 
 
 nsresult nsHTTPChannel::Redirect(const char *aNewLocation, 
-                                 nsIChannel **aResult)
+                                 nsIChannel **aResult, PRInt32 aStatusCode)
 {
   nsresult rv;
   nsCOMPtr<nsIURI> newURI;
   nsCOMPtr<nsIChannel> channel;
   PRBool  checkSecurity = PR_TRUE;
+
+  nsXPIDLCString proxyHost;
+  PRInt32 proxyPort;
 
   *aResult = nsnull;
 
@@ -1446,22 +1449,42 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
   //
   NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
-    
-  rv = serv->NewURI(aNewLocation, mURI, getter_AddRefs(newURI));
-  if (NS_FAILED(rv)) return rv;
-
-  PRBool eq = PR_FALSE;
-  rv = mURI->Equals(newURI, &eq);
-
-  if (eq)
+   
+  if (aStatusCode == 305)   // Use-Proxy
   {
-    // loop detected
-    // ruslan/24884
-    rv = serv->NewURI(LOOPING_REDIRECT_ERROR_URI, mURI, getter_AddRefs(newURI));
-    if (NS_FAILED(rv)) return rv;
-    
-    checkSecurity = PR_FALSE;
+      newURI = mURI;
+
+      nsCOMPtr<nsIURI> tmpURI;
+      rv = serv->NewURI(aNewLocation, mURI, getter_AddRefs(tmpURI));
+      
+      if (NS_FAILED(rv))
+          return rv;
+
+      tmpURI -> GetHost (getter_Copies (proxyHost));
+      tmpURI -> GetPort (&proxyPort);
+      
+      if (proxyPort == -1)
+          proxyPort = 80;
   }
+  else
+  {
+    rv = serv->NewURI(aNewLocation, mURI, getter_AddRefs(newURI));
+    if (NS_FAILED(rv)) return rv;
+
+    PRBool eq = PR_FALSE;
+    rv = mURI->Equals(newURI, &eq);
+
+    if (eq)
+    {
+        // loop detected
+        // ruslan/24884
+        rv = serv->NewURI(LOOPING_REDIRECT_ERROR_URI, mURI, getter_AddRefs(newURI));
+        if (NS_FAILED(rv)) return rv;
+    
+        checkSecurity = PR_FALSE;
+    }
+  }
+
 
   //
   // Move the Reference of the old location to the new one 
@@ -1525,11 +1548,20 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
   // Convey the referrer if one was used for this channel to the next one-
   nsXPIDLCString referrer;
   GetRequestHeader(nsHTTPAtoms::Referer, getter_Copies(referrer));
+  
   if (referrer && *referrer)
   {
       nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(channel);
       if (httpChannel)
           httpChannel->SetRequestHeader(nsHTTPAtoms::Referer, referrer);
+  }
+
+  if (aStatusCode == 305)   // Use Proxy
+  {
+      nsCOMPtr<nsIProxy> httpProxy = do_QueryInterface(channel);
+
+      httpProxy -> SetProxyHost (proxyHost);
+      httpProxy -> SetProxyPort (proxyPort);
   }
 
   // Start the redirect...
@@ -2125,11 +2157,11 @@ nsHTTPChannel::ProcessRedirection(PRInt32 aStatusCode)
 
   mResponse->GetHeader(nsHTTPAtoms::Location, getter_Copies(location));
 
-  if (((301 == aStatusCode) || (302 == aStatusCode)) && (location))
+  if (((301 == aStatusCode) || (302 == aStatusCode) || (aStatusCode == 305)) && (location))
   {
       nsCOMPtr<nsIChannel> channel;
 
-      rv = Redirect(location, getter_AddRefs(channel));
+      rv = Redirect(location, getter_AddRefs(channel), aStatusCode);
       if (NS_FAILED(rv)) return rv;
       
       // Abort the current response...  This will disconnect the consumer from
