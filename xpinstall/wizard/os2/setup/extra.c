@@ -4647,8 +4647,7 @@ HRESULT CheckInstances()
 
     /* Process Name= key did not exist, so look for other keys */
     dwRv0 = GetPrivateProfileString(szSection, "Class Name",  "", szClassName,  sizeof(szClassName), szFileIniConfig);
-    if((dwRv0 == 0L) &&
-       (dwRv1 == 0L))
+    if (dwRv0 == 0L)
     {
       bContinue = FALSE;
     }

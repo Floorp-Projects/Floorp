@@ -98,21 +98,21 @@ HRESULT InitializeXPIStub()
     PrintError(szBuf, ERROR_CODE_SHOW);
     return(1);
   }
-  if(DosQueryProcAddr(hXPIStubInst, 0, "XPI_Init", &pfnXpiInit) != NO_ERROR)
+  if(DosQueryProcAddr(hXPIStubInst, 0, "_XPI_Init", &pfnXpiInit) != NO_ERROR)
   {
-    sprintf(szBuf, szEDosQueryProcAddr, "XPI_Init");
+    sprintf(szBuf, szEDosQueryProcAddr, "_XPI_Init");
     PrintError(szBuf, ERROR_CODE_SHOW);
     return(1);
   }
-  if(DosQueryProcAddr(hXPIStubInst, 0, "XPI_Install", &pfnXpiInstall) != NO_ERROR)
+  if(DosQueryProcAddr(hXPIStubInst, 0, "_XPI_Install", &pfnXpiInstall) != NO_ERROR)
   {
-    sprintf(szBuf, szEDosQueryProcAddr, "XPI_Install");
+    sprintf(szBuf, szEDosQueryProcAddr, "_XPI_Install");
     PrintError(szBuf, ERROR_CODE_SHOW);
     return(1);
   }
-  if(DosQueryProcAddr(hXPIStubInst, 0, "XPI_Exit", &pfnXpiExit) != NO_ERROR)
+  if(DosQueryProcAddr(hXPIStubInst, 0, "_XPI_Exit", &pfnXpiExit) != NO_ERROR)
   {
-    sprintf(szBuf, szEDosQueryProcAddr, "XPI_Exit");
+    sprintf(szBuf, szEDosQueryProcAddr, "_XPI_Exit");
     PrintError(szBuf, ERROR_CODE_SHOW);
     return(1);
   }
