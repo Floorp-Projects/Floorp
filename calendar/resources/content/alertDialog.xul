@@ -50,12 +50,13 @@
 [
     <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/global.dtd" > %dtd1;
     <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd2;
+    <!ENTITY % dtd3 SYSTEM "chrome://global/locale/brand.dtd" > %dtd3;
 ]>
 
 
 <window
    id="calendar-new-eventwindow"
-   title="Internet Appliance Dialog - Calendar Alarm"
+   title="&brandShortName; - Calendar Alarm"
    orient="vertical"
    onload="onLoad()"
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"> 
