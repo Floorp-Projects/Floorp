@@ -752,14 +752,12 @@ protected:
     class CachedChromeLoader : public nsIStreamObserver
     {
     protected:
-        CachedChromeLoader(nsXULDocument* aDocument);
-        virtual ~CachedChromeLoader();
-
         nsXULDocument* mDocument;
         PRBool mLoading;
 
     public:
-        static nsresult Create(nsXULDocument* aDocument, nsIStreamObserver** aResult);
+        CachedChromeLoader(nsXULDocument* aDocument);
+        virtual ~CachedChromeLoader();
 
         // nsISupports interface
         NS_DECL_ISUPPORTS
