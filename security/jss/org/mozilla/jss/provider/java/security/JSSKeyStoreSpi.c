@@ -830,12 +830,6 @@ Java_org_mozilla_jss_provider_java_security_JSSKeyStoreSpi_engineSetKeyEntryNati
         goto finish;
     }
 
-#if 1
-    JSS_throwMsg(env, KEYSTORE_EXCEPTION,
-        "Operation is not supported. " 
-        "http://bugzilla.mozilla.org/show_bug.cgi?id=128172");
-    goto finish;
-#else
     if( (*env)->IsInstanceOf(env, keyObj, privkClass) ) {
         SECKEYPrivateKey *privk;
 
@@ -845,9 +839,9 @@ Java_org_mozilla_jss_provider_java_security_JSSKeyStoreSpi_engineSetKeyEntryNati
             goto finish;
         }
 
-        tokenPrivk = PK11_ConvertSessionPrivKeyToTokenPrivKey(privk);
+        tokenPrivk = PK11_ConvertSessionPrivKeyToTokenPrivKey(privk, NULL);
         if( tokenPrivk == NULL ) {
-            JSS_throwMsg(env, KEYSTORE_EXCEPTION,
+            JSS_throwMsgPrErr(env, KEYSTORE_EXCEPTION,
                 "Failed to copy private key to permanent token object");
             goto finish;
         }
@@ -870,9 +864,9 @@ Java_org_mozilla_jss_provider_java_security_JSSKeyStoreSpi_engineSetKeyEntryNati
                 "Failed to set alias of symmetric key");
             goto finish;
         }
-        tokenSymk = PK11_ConvertSessionSymKeyToTokenSymKey(symk);
+        tokenSymk = PK11_ConvertSessionSymKeyToTokenSymKey(symk, NULL);
         if( tokenSymk == NULL ) {
-            JSS_throwMsg(env, KEYSTORE_EXCEPTION,
+            JSS_throwMsgPrErr(env, KEYSTORE_EXCEPTION,
                 "Failed to copy symmetric key to permanent token object");
             goto finish;
         }
@@ -882,7 +876,6 @@ Java_org_mozilla_jss_provider_java_security_JSSKeyStoreSpi_engineSetKeyEntryNati
             " JSS symmetric key (PK11SymKey)");
         goto finish;
     }
-#endif
 
 finish:
     if( nickname != NULL ) {
