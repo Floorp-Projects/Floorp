@@ -22,6 +22,7 @@
  */
 
 #include "jni_util_export.h"
+#include "jni_util.h"
 
 #include "bal_util.h"
 
@@ -36,6 +37,8 @@ static nsHashtable *gClassMappingTable = nsnull;
 fpEventOccurredType externalEventOccurred = nsnull; // jni_util_export.h
 
 fpInstanceOfType externalInstanceOf = nsnull; // jni_util_export.h
+
+fpInitializeEventMaskType externalInitializeEventMask = nsnull; // jni_util_export.h
 
 JNIEXPORT const char * JNICALL util_GetStringUTFChars(JNIEnv *env, 
                                                       jstring inString)
@@ -124,6 +127,7 @@ JNIEXPORT jstring JNICALL util_NewString(JNIEnv *env, const jchar *inString,
 {
     jstring result = nsnull;
 #ifdef BAL_INTERFACE
+    bal_jstring_newFromJcharArray(&result, inString, len);
 #else
     result = env->NewString(inString, len);
 #endif
@@ -184,3 +188,56 @@ JNIEXPORT void JNICALL util_SetInstanceOfFunction(fpInstanceOfType fp)
     externalInstanceOf = fp;
 }
 
+JNIEXPORT void JNICALL util_SetInitializeEventMaskFunction(fpInitializeEventMaskType fp)
+{
+    externalInitializeEventMask = fp;
+}
+
+JNIEXPORT void JNICALL 
+util_InitializeEventMaskValuesFromClass(const char *className,
+                                        char *maskNames[], 
+                                        jlong maskValues[])
+{
+    int i = 0;
+    JNIEnv *env = nsnull;
+    if (nsnull == className) {
+        return;
+    }
+
+    if (nsnull != gVm) {
+        env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION_1_2);
+    }
+
+    jclass clazz = ::util_FindClass(env, className);
+    
+    if (nsnull == clazz) {
+        return;
+    }
+
+#ifdef BAL_INTERFACE
+    if (nsnull != externalInitializeEventMask) {
+        externalInitializeEventMask(env, clazz,
+                                    (const char **) maskNames, maskValues);
+    }
+#else
+    if (nsnull == env) {
+        return;
+    }
+    
+    jfieldID fieldID;
+    
+    while (nsnull != maskNames[i]) {
+        fieldID = ::util_GetStaticFieldID(env, clazz, 
+                                          maskNames[i], "J");
+        
+        if (nsnull == fieldID) {
+            return;
+        }
+        
+        maskValues[i] = ::util_GetStaticLongField(env, clazz, 
+                                                  fieldID);
+        i++;
+    }
+    
+#endif
+}

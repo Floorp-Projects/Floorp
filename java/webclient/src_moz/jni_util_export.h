@@ -67,7 +67,7 @@ JNIEXPORT  void JNICALL util_DeleteString(JNIEnv *env, jstring toDelete);
 
 /*
 
- * The following methods are used by non Java JNI clients, such a
+ * The following methods are used by non Java JNI clients, such as
  * StarOfficeDesktop.
 
  */
@@ -115,17 +115,41 @@ typedef JNIEXPORT jboolean (JNICALL *fpInstanceOfType) (JNIEnv *env,
  * for the event, passed in by the user as the second argument to
  * NativeEventThreadImpl_nativeAddListener().  The third arcument is the
  * listener object, passed in as the last argument to
- * NativeEventThreadImpl_nativeAddListener().  The last argument is a
+ * NativeEventThreadImpl_nativeAddListener().  The fourth argument is a
  * listener specific type field, to indicate what kind of sub-event
- * within the listener has occurred.
+ * within the listener has occurred.  The last argument is a listener
+ * sub-event specific argument.  For example, when the event class is
+ * DocumentLoadListener, and the sub-event is "STATUS_URL_LOAD", the
+ * last argument is a string with a status message, ie "Contacting host
+ * blah...", etc.
 
  */
 
 typedef JNIEXPORT void (JNICALL * fpEventOccurredType) (JNIEnv *env, 
                                                         jobject nativeEventThread,
                                                         jobject webclientEventListener,
-                                                        jlong eventType);
+                                                        jlong eventType,
+                                                        jobject eventData);
 
+/**
+
+ * Called at app initialization to external user to provide a function
+ * that will fill in the event mask values for the given listener class.
+
+ * @param nullTermMaskNameArray a NULL terminated const char * array for
+ * the mask names.
+
+ * @param maskValueArray a parallel array for the values that match the
+ * corresponding elements in nullTermMaskNameArray
+
+ */
+
+typedef JNIEXPORT void (JNICALL * fpInitializeEventMaskType) 
+    (JNIEnv *env, 
+     jclass listenerClass,
+     const char **nullTermMaskNameArray,
+     jlong *maskValueArray);
+    
 /**
 
  * This function must be called at app initialization.
@@ -148,6 +172,17 @@ JNIEXPORT void JNICALL util_SetEventOccurredFunction(fpEventOccurredType fp);
 
 /**
 
+ * This function must be called at app initialization.
+
+ * @see fpInitializeEventMaskType
+
+ */
+
+JNIEXPORT void JNICALL util_SetInitializeEventMaskFunction(fpInitializeEventMaskType fp);
+
+
+/**
+
  * defined in jni_util_export.cpp
 
  * The function pointer set with util_SetEventOccurredFunction.
@@ -165,6 +200,28 @@ extern fpEventOccurredType externalEventOccurred;
  */
 
 extern fpInstanceOfType externalInstanceOf;
+
+/**
+
+ * defined in jni_util_export.cpp
+
+ * The function pointer set with util_SetInitializeEventMaskFunction
+
+ */
+
+extern fpInitializeEventMaskType externalInitializeEventMask;
+
+/**
+
+ * Called by the mozilla event listener implementation class at
+ * construction time.
+
+ */
+
+JNIEXPORT void JNICALL 
+util_InitializeEventMaskValuesFromClass(const char *className,
+                                        char *maskNames[], 
+                                        jlong maskValues[]);
 
 #ifdef __cplusplus
 } /* extern "C" */

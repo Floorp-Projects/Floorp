@@ -42,6 +42,9 @@ extern "C" {
 
 void JNICALL bal_jstring_newFromAscii(jstring *newStr, const char *value);
 
+void JNICALL bal_jstring_newFromJcharArray(jstring *newStr, const jchar *value,
+                                           jsize len);
+
 jint JNICALL bal_str_getLength(const char *str);
 
 jint JNICALL bal_jstring_getLength(const jstring str);

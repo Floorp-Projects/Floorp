@@ -82,48 +82,12 @@ DocumentLoaderObserverImpl::DocumentLoaderObserverImpl(JNIEnv *env,
     }
 
     if (-1 == maskValues[0]) {
-      InitializeMaskValues();
+        util_InitializeEventMaskValuesFromClass("org/mozilla/webclient/DocumentLoadEvent",
+                                                maskNames, maskValues);
     }
     mRefCnt = 1; // PENDING(edburns): not sure about how right this is to do.
 }
 
-void DocumentLoaderObserverImpl::InitializeMaskValues()
-{
-    // if we don't have a VM, do nothing
-    if (nsnull == gVm) {
-      return;
-    }
-
-    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION_1_2);
-
-    if (nsnull == env) {
-      return;
-    }
-
-    jclass documentLoadEventClass = ::util_FindClass(env, 
-                                                     "org/mozilla/webclient/DocumentLoadEvent");
-
-    if (nsnull == documentLoadEventClass) {
-      return;
-    }
-
-    int i = 0;
-    jfieldID fieldID;
-
-    while (nsnull != maskNames[i]) {
-      fieldID = ::util_GetStaticFieldID(env, documentLoadEventClass, 
-                                        maskNames[i], "J");
-
-      if (nsnull == fieldID) {
-	return;
-      }
-
-      maskValues[i] = ::util_GetStaticLongField(env, documentLoadEventClass, 
-                                                fieldID);
-      i++;
-    }
-}
- 
 NS_IMETHODIMP DocumentLoaderObserverImpl::QueryInterface(REFNSIID aIID, void** aInstance)
 {
   if (nsnull == aInstance)
@@ -155,7 +119,7 @@ NS_IMETHODIMP DocumentLoaderObserverImpl::OnStartDocumentLoad(nsIDocumentLoader*
 #endif
     util_SendEventToJava(mInitContext->env, 
                          mInitContext->nativeEventThread, mTarget, 
-			 maskValues[START_DOCUMENT_LOAD_EVENT_MASK]);
+			 maskValues[START_DOCUMENT_LOAD_EVENT_MASK], nsnull);
     
     return NS_OK;
 }
@@ -173,7 +137,7 @@ NS_IMETHODIMP DocumentLoaderObserverImpl::OnEndDocumentLoad(nsIDocumentLoader* l
 
     util_SendEventToJava(mInitContext->env, 
                          mInitContext->nativeEventThread, mTarget, 
-                         maskValues[END_DOCUMENT_LOAD_EVENT_MASK]);
+                         maskValues[END_DOCUMENT_LOAD_EVENT_MASK], nsnull);
     return NS_OK;
 }
 
@@ -187,7 +151,7 @@ NS_IMETHODIMP DocumentLoaderObserverImpl::OnStartURLLoad(nsIDocumentLoader* load
     }
 #endif
     util_SendEventToJava(mInitContext->env, mInitContext->nativeEventThread, mTarget, 
-			 maskValues[START_URL_LOAD_EVENT_MASK]);
+			 maskValues[START_URL_LOAD_EVENT_MASK], nsnull);
     
     return NS_OK;
 }  
@@ -204,7 +168,7 @@ NS_IMETHODIMP DocumentLoaderObserverImpl::OnProgressURLLoad(nsIDocumentLoader* l
     }
 #endif
     util_SendEventToJava(mInitContext->env, mInitContext->nativeEventThread, mTarget, 
-			 maskValues[PROGRESS_URL_LOAD_EVENT_MASK]);
+			 maskValues[PROGRESS_URL_LOAD_EVENT_MASK], nsnull);
 
 
     return NS_OK;
@@ -217,12 +181,26 @@ NS_IMETHODIMP DocumentLoaderObserverImpl::OnStatusURLLoad(nsIDocumentLoader* loa
 #if DEBUG_RAPTOR_CANVAS
     if (prLogModuleInfo) {
         PR_LOG(prLogModuleInfo, 3, 
-               ("!DocumentLoaderObserverImpl: OnStatusURLLoad\n"));
+               ("!DocumentLoaderObserverImpl: OnStatusURLLoad: %S\n",
+                aMsg.GetUnicode()));
     }
 #endif
+    int length = aMsg.Length();
+    jstring statusMessage = ::util_NewString(mInitContext->env,
+                                             aMsg.GetUnicode(), length);
+    
     util_SendEventToJava(mInitContext->env, mInitContext->nativeEventThread, mTarget, 
-			 maskValues[STATUS_URL_LOAD_EVENT_MASK]);
+			 maskValues[STATUS_URL_LOAD_EVENT_MASK], (jobject) statusMessage);
 
+#ifdef BAL_INTERFACE
+    // This violates my goal of confining all #ifdef BAL_INTERFACE to
+    // jni_util files, but this is the only part of the code that knows
+    // that eventData is a jstring.  In java, this will get garbage
+    // collected, but in non-java contexts, it will not.  Thus, we have
+    // to manually de-allocate it.
+    ::util_DeleteString(mInitContext->env, statusMessage);
+
+#endif
 
     return NS_OK;
 }
@@ -238,7 +216,7 @@ NS_IMETHODIMP DocumentLoaderObserverImpl::OnEndURLLoad(nsIDocumentLoader* loader
     }
 #endif
     util_SendEventToJava(mInitContext->env, mInitContext->nativeEventThread, mTarget, 
-			 maskValues[END_URL_LOAD_EVENT_MASK]);
+			 maskValues[END_URL_LOAD_EVENT_MASK], nsnull);
 
     return NS_OK;
 }
@@ -255,7 +233,7 @@ NS_IMETHODIMP DocumentLoaderObserverImpl::HandleUnknownContentType(nsIDocumentLo
     }
 #endif
     util_SendEventToJava(mInitContext->env, mInitContext->nativeEventThread, mTarget, 
-			 maskValues[UNKNOWN_CONTENT_EVENT_MASK]);
+			 maskValues[UNKNOWN_CONTENT_EVENT_MASK], nsnull);
     
     return NS_OK;
 }

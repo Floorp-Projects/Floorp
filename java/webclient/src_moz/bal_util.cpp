@@ -59,6 +59,27 @@ void JNICALL bal_jstring_newFromAscii(jstring *newStr, const char *value)
 	*p = 0;
 }
 
+void JNICALL bal_jstring_newFromJcharArray(jstring *newStr, const jchar *value,
+                                           jsize len)
+{
+	jint i;
+	jstring p;
+
+    *newStr = (jstring)bal_allocateMemory(sizeof(jchar) + 
+                                          (len * sizeof(jchar)));
+
+	if (!(*newStr)) return;
+
+	p = *newStr;
+	for (i = 0; i < len; i++) {
+        /* Check ASCII range */
+        // OSL_ENSHURE( (*value & 0x80) == 0, "Found ASCII char > 127");
+        
+        *(p++) = (jchar)*(value++);
+    }
+	*p = 0;
+}
+
 void JNICALL bal_str_newFromJstring(char **newStr, const jstring inValue)
 {
 	jint length;

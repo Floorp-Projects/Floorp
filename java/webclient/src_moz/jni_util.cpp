@@ -89,12 +89,12 @@ void *util_PostSynchronousEvent(WebShellInitContext * initContext, PLEvent * eve
 
 void util_SendEventToJava(JNIEnv *yourEnv, jobject nativeEventThread,
                           jobject webclientEventListener, 
-                          jlong eventType)
+                          jlong eventType, jobject eventData)
 {
 #ifdef BAL_INTERFACE
     if (nsnull != externalEventOccurred) {
         externalEventOccurred(yourEnv, nativeEventThread,
-                              webclientEventListener, eventType);
+                              webclientEventListener, eventType, eventData);
     }
 #else
     if (nsnull == gVm) {
@@ -115,10 +115,10 @@ void util_SendEventToJava(JNIEnv *yourEnv, jobject nativeEventThread,
 
     jclass clazz = env->GetObjectClass(nativeEventThread);
     jmethodID mid = env->GetMethodID(clazz, "nativeEventOccurred", 
-                                     "(Lorg/mozilla/webclient/WebclientEventListener;J)V");
+                                     "(Lorg/mozilla/webclient/WebclientEventListener;JLjava/lang/Object;)V");
     if ( mid != nsnull) {
         env->CallVoidMethod(nativeEventThread, mid, webclientEventListener,
-                            eventType);
+                            eventType, eventData);
     } else {
         if (prLogModuleInfo) {
             PR_LOG(prLogModuleInfo, 3, 

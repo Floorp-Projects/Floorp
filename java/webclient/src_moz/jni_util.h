@@ -144,7 +144,8 @@ void *  util_PostSynchronousEvent (WebShellInitContext * initContext, PLEvent * 
 
 void    util_SendEventToJava(JNIEnv *env, jobject eventRegistrationImpl,
                              jobject webclientEventListener, 
-                             jlong eventType);
+                             jlong eventType,
+                             jobject eventData);
 
 char *util_GetCurrentThreadName(JNIEnv *env);
 

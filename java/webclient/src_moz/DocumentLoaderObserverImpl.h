@@ -109,8 +109,6 @@ static char *maskNames [];
 
 protected:
 
-  static void InitializeMaskValues(void);
-
   JNIEnv *mJNIEnv;
   WebShellInitContext *mInitContext;
   jobject mTarget;
