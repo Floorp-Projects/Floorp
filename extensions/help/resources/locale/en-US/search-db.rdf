@@ -55,6 +55,16 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="broken_lock_icon"
+         nc:name="broken lock icon"
+	 nc:link="chrome://help/locale/using_certs_help.html#broken_lock_iconSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
        <rdf:Description ID="buttons"
          nc:name="buttons"
 	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#buttonsSDX"/>
@@ -85,6 +95,26 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="checking_security_before_sending_message"
+         nc:name="checking security before sending message"
+	 nc:link="chrome://help/locale/mail_sec_help.html#checking_security_before_sending_messageSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="checking_security_for_received_messages"
+         nc:name="checking security for received messages"
+	 nc:link="chrome://help/locale/mail_sec_help.html#checking_security_for_received_messagesSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
        <rdf:Description ID="cipher"
          nc:name="cipher"
 	 nc:link="chrome://help/locale/ssl_help.html#cipherSDX"/>
@@ -98,6 +128,16 @@
        <rdf:Description ID="creating_bookmarks"
          nc:name="creating bookmarks"
 	 nc:link="chrome://help/locale/customize_help.html#creating_bookmarksSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="digital_ID"
+         nc:name="digital ID"
+	 nc:link="chrome://help/locale/using_certs_help.html#digital_IDSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -155,6 +195,26 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="encrypting_email_messages"
+         nc:name="encrypting email messages"
+	 nc:link="chrome://help/locale/mail_sec_help.html#encrypting_email_messagesSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="encryption_status_of_web_page"
+         nc:name="encryption status of web page"
+	 nc:link="chrome://help/locale/using_certs_help.html#encryption_status_of_web_pageSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
        <rdf:Description ID="folder"
          nc:name="folder"
 	 nc:link="chrome://help/locale/customize_help.html#folderSDX"/>
@@ -168,6 +228,36 @@
        <rdf:Description ID="home_page"
          nc:name="home page"
 	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#home_pageSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="ID_card"
+         nc:name="ID card"
+	 nc:link="chrome://help/locale/using_certs_help.html#ID_cardSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="identification"
+         nc:name="identification"
+	 nc:link="chrome://help/locale/using_certs_help.html#identificationSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="identity"
+         nc:name="identity"
+	 nc:link="chrome://help/locale/using_certs_help.html#identitySDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -225,6 +315,26 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="lock_icon"
+         nc:name="lock icon"
+	 nc:link="chrome://help/locale/using_certs_help.html#lock_iconSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="logging_on_ICQ"
+         nc:name="logging on ICQ"
+	 nc:link="chrome://help/locale/icq_help.html#logging_on_ICQSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
        <rdf:Description ID="mail_security_settings"
          nc:name="mail security settings"
 	 nc:link="chrome://help/locale/mail_help.html#mail_security_settingsSDX"/>
@@ -255,9 +365,39 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="open_lock_icon"
+         nc:name="open lock icon"
+	 nc:link="chrome://help/locale/using_certs_help.html#open_lock_iconSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="opening_existing_ICQ_accounts_in_AIM"
+         nc:name="opening existing ICQ accounts in AIM"
+	 nc:link="chrome://help/locale/icq_help.html#opening_existing_ICQ_accounts_in_AIMSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
        <rdf:Description ID="opening_files"
          nc:name="opening files"
 	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#opening_filesSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="opening_new_ICQ_accounts"
+         nc:name="opening new ICQ accounts"
+	 nc:link="chrome://help/locale/icq_help.html#opening_new_ICQ_accountsSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -285,9 +425,29 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="protecting_your_IP_address"
+         nc:name="protecting your IP address"
+	 nc:link="chrome://help/locale/privacy_help.html#protecting_your_IP_addressSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="protecting_your_privacy"
+         nc:name="protecting your privacy"
+	 nc:link="chrome://help/locale/using_priv_help.html#protecting_your_privacySDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
        <rdf:Description ID="Quick_Launch"
          nc:name="Quick Launch"
-	 nc:link="chrome://help/locale/nav_help.html#Quick_LaunchSDX"/>
+	 nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#Quick_LaunchSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -297,7 +457,27 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="QuickLaunch"
          nc:name="QuickLaunch"
-	 nc:link="chrome://help/locale/nav_help.html#QuickLaunchSDX"/>
+	 nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#QuickLaunchSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="receiving_ICQ_messages"
+         nc:name="receiving ICQ messages"
+	 nc:link="chrome://help/locale/icq_help.html#receiving_ICQ_messagesSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="saving_passwords"
+         nc:name="saving passwords"
+	 nc:link="chrome://help/locale/using_priv_help.html#saving_passwordsSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -335,6 +515,36 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="sending_ICQ_messages"
+         nc:name="sending ICQ messages"
+	 nc:link="chrome://help/locale/icq_help.html#sending_ICQ_messagesSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="setting_ICQ_preferences"
+         nc:name="setting ICQ preferences"
+	 nc:link="chrome://help/locale/icq_help.html#setting_ICQ_preferencesSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="signing_email_messages"
+         nc:name="signing email messages"
+	 nc:link="chrome://help/locale/mail_sec_help.html#signing_email_messagesSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
        <rdf:Description ID="tab"
          nc:name="tab"
 	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#tabSDX"/>
@@ -348,6 +558,16 @@
        <rdf:Description ID="tabbed_browsing"
          nc:name="tabbed browsing"
 	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#tabbed_browsingSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="tokens"
+         nc:name="tokens"
+	 nc:link="chrome://help/locale/using_certs_help.html#tokensSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
