@@ -58,6 +58,8 @@
 #include "nsIInputStream.h"
 #include "nsCRT.h"
 #include "nsIChannel.h"
+#include "nsIResumableChannel.h"
+#include "nsIResumableEntityID.h"
 #include "nsIURL.h"
 #include "nsIHttpChannel.h"
 #include "nsIHttpEventSink.h" 
@@ -77,6 +79,8 @@ static int gKeepRunning = 0;
 static PRBool gVerbose = PR_FALSE;
 static nsIEventQueue* gEventQ = nsnull;
 static PRBool gAskUserForInput = PR_FALSE;
+static PRBool gResume = PR_FALSE;
+static PRUint32 gStartAt = 0;
 
 //-----------------------------------------------------------------------------
 // HeaderVisitor
@@ -251,6 +255,34 @@ InputTestConsumer::OnStartRequest(nsIRequest *request, nsISupports* context)
 
     NS_RELEASE(visitor);
   }
+  
+  nsCOMPtr<nsIResumableChannel> resChannel = do_QueryInterface(request);
+  if (resChannel) {
+      printf("Resumable entity identification:\n");
+      nsCOMPtr<nsIResumableEntityID> entityID;
+      nsresult rv = resChannel->GetEntityID(getter_AddRefs(entityID));
+      if (NS_SUCCEEDED(rv) && entityID) {
+          PRUint32 size;
+          if (NS_SUCCEEDED(entityID->GetSize(&size)) &&
+              size != PRUint32(-1))
+              printf("\tSize: %d\n", size);
+          else
+              printf("\tSize: Unknown\n");
+          PRTime lastModified;
+          if (NS_SUCCEEDED(entityID->GetLastModified(&lastModified)) &&
+              lastModified != -1) {
+              PRExplodedTime exploded;
+              PR_ExplodeTime(lastModified, PR_LocalTimeParameters, &exploded);
+
+              char buf[100];
+              PR_FormatTime(buf, 100, "%c", &exploded);
+
+              printf("\tLast Modified: %s\n", buf);
+          } else
+              printf("\tLast Modified: Unknown\n");
+      }
+  }
+
   return NS_OK;
 }
 
@@ -453,9 +485,21 @@ nsresult StartLoadingURL(const char* aUrlString)
             NS_ERROR("Failed to create a load info!");
             return NS_ERROR_OUT_OF_MEMORY;
         }
-        
-        rv = pChannel->AsyncOpen(listener,  // IStreamListener consumer
-                                 info);
+
+        if (gResume) {
+            nsCOMPtr<nsIResumableChannel> res = do_QueryInterface(pChannel);
+            if (!res) {
+                NS_ERROR("Channel is not resumable!");
+                return NS_ERROR_UNEXPECTED;
+            }
+            rv = res->AsyncOpenAt(listener,
+                                  info,
+                                  gStartAt,
+                                  nsnull);
+        } else {            
+            rv = pChannel->AsyncOpen(listener,  // IStreamListener consumer
+                                     info);
+        }
 
         if (NS_SUCCEEDED(rv)) {
             gKeepRunning += 1;
@@ -572,6 +616,12 @@ main(int argc, char* argv[])
             gAskUserForInput = PR_TRUE;
             continue;
         } 
+
+        if (PL_strcasecmp(argv[i], "-resume") == 0) {
+            gResume = PR_TRUE;
+            gStartAt = atoi(argv[++i]);
+            continue;
+        }
            
         printf("\t%s\n", argv[i]);
         rv = StartLoadingURL(argv[i]);

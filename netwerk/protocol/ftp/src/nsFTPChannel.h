@@ -60,6 +60,8 @@
 #include "nsIFTPChannel.h"
 #include "nsIUploadChannel.h"
 #include "nsIProxyInfo.h"
+#include "nsIResumableChannel.h"
+#include "nsIResumableEntityID.h"
 
 #include "nsICacheService.h"
 #include "nsICacheEntryDescriptor.h"
@@ -79,7 +81,8 @@ class nsFTPChannel : public nsIFTPChannel,
                      public nsIInterfaceRequestor,
                      public nsIProgressEventSink,
                      public nsIStreamListener, 
-                     public nsICacheListener
+                     public nsICacheListener,
+                     public nsIResumableChannel
 {
 public:
     NS_DECL_ISUPPORTS
@@ -92,6 +95,7 @@ public:
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSICACHELISTENER
+    NS_DECL_NSIRESUMABLECHANNEL
     
     // nsFTPChannel methods:
     nsFTPChannel();
@@ -106,7 +110,7 @@ public:
                   nsIProxyInfo* proxyInfo,
                   nsICacheSession* session);
 
-    nsresult SetupState();
+    nsresult SetupState(PRUint32 startPos, nsIResumableEntityID* entityID);
     nsresult GenerateCacheKey(nsACString &cacheKey);
     
 
@@ -148,6 +152,7 @@ protected:
     nsCOMPtr<nsICacheSession>         mCacheSession;
     nsCOMPtr<nsICacheEntryDescriptor> mCacheEntry;
     nsCOMPtr<nsIProxyInfo>            mProxyInfo;
+    nsCOMPtr<nsIResumableEntityID>    mEntityID;
 };
 
 #endif /* nsFTPChannel_h___ */

@@ -19,7 +19,7 @@
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s): Bradley Baetz <bbaetz@cs.mcgill.ca>
+ * Contributor(s): Bradley Baetz <bbaetz@student.usyd.edu.au>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -48,6 +48,7 @@
 #include "nsReadableUtils.h"
 #include "prprf.h"
 #include "prlog.h"
+#include "prtime.h"
 #include "prnetdb.h"
 #include "netCore.h"
 #include "ftpCore.h"
@@ -69,6 +70,9 @@
 #include "nsICacheEntryDescriptor.h"
 #include "nsICacheListener.h"
 
+#include "nsIResumableChannel.h"
+#include "nsIResumableEntityID.h"
+
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kStreamConverterServiceCID,    NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_CID(kStreamListenerTeeCID, NS_STREAMLISTENERTEE_CID);
@@ -82,7 +86,8 @@ extern PRLogModuleInfo* gFTPLog;
 class DataRequestForwarder : public nsIFTPChannel, 
                              public nsIStreamListener,
                              public nsIInterfaceRequestor,
-                             public nsIProgressEventSink
+                             public nsIProgressEventSink,
+                             public nsIResumableChannel
 {
 public:
     DataRequestForwarder();
@@ -91,12 +96,14 @@ public:
 
     nsresult SetStreamListener(nsIStreamListener *listener);
     nsresult SetCacheEntry(nsICacheEntryDescriptor *entry, PRBool writing);
+    nsresult SetEntityID(nsIResumableEntityID *entity);
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSIINTERFACEREQUESTOR
     NS_DECL_NSIPROGRESSEVENTSINK
+    NS_DECL_NSIRESUMABLECHANNEL
 
     NS_FORWARD_NSIREQUEST(mRequest->)
     NS_FORWARD_NSICHANNEL(mFTPChannel->)
@@ -113,6 +120,7 @@ protected:
     nsCOMPtr<nsIStreamListener>       mListener;
     nsCOMPtr<nsIProgressEventSink>    mEventSink;
     nsCOMPtr<nsICacheEntryDescriptor> mCacheEntry;
+    nsCOMPtr<nsIResumableEntityID>    mEntityID;
 
     PRUint32 mBytesTransfered;
     PRPackedBool   mDelayedOnStartFired;
@@ -127,10 +135,11 @@ protected:
 // the socket transport so that clients only see
 // the same nsIChannel/nsIRequest that they started.
 
-NS_IMPL_THREADSAFE_ISUPPORTS7(DataRequestForwarder, 
+NS_IMPL_THREADSAFE_ISUPPORTS8(DataRequestForwarder, 
                               nsIStreamListener, 
                               nsIRequestObserver, 
                               nsIFTPChannel,
+                              nsIResumableChannel,
                               nsIChannel,
                               nsIRequest,
                               nsIInterfaceRequestor,
@@ -231,6 +240,33 @@ DataRequestForwarder::SetStreamListener(nsIStreamListener *listener)
         return NS_ERROR_FAILURE;
 
     return NS_OK;
+}
+
+nsresult
+DataRequestForwarder::SetEntityID(nsIResumableEntityID *aEntityID)
+{
+    mEntityID = aEntityID;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+DataRequestForwarder::GetEntityID(nsIResumableEntityID* *aEntityID)
+{
+    *aEntityID = mEntityID;
+    NS_IF_ADDREF(*aEntityID);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+DataRequestForwarder::AsyncOpenAt(nsIStreamListener *,
+                                  nsISupports *,
+                                  unsigned int, 
+                                  nsIResumableEntityID *)
+{
+    // We shouldn't get here. This class only exists in the middle of a
+    // request
+    NS_NOTREACHED("DataRequestForwarder::AsyncOpenAt");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult 
@@ -348,7 +384,7 @@ DataRequestForwarder::OnProgress(nsIRequest *request, nsISupports* aContext,
 
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsFtpState, 
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsFtpState,
                               nsIStreamListener, 
                               nsIRequestObserver, 
                               nsIRequest);
@@ -378,6 +414,8 @@ nsFtpState::nsFtpState() {
     
     mControlConnection = nsnull;
     mDRequestForwarder = nsnull;
+    mFileSize          = PRUint32(-1);
+    mModTime           = -1;
 
     mGenerateRawContent = PR_FALSE;
     nsresult rv;
@@ -395,6 +433,13 @@ nsFtpState::~nsFtpState()
     NS_IF_RELEASE(mDRequestForwarder);
 }
 
+nsresult
+nsFtpState::GetEntityID(nsIResumableEntityID** aEntityID)
+{
+    *aEntityID = mEntityID;
+    NS_IF_ADDREF(*aEntityID);
+    return NS_OK;
+}
 
 // nsIStreamListener implementation
 NS_IMETHODIMP
@@ -825,6 +870,22 @@ nsFtpState::Process()
           case FTP_R_REST:
             mState = R_rest();
             
+            if (FTP_ERROR == mState)
+                mInternalError = NS_ERROR_FAILURE;
+            
+            break;
+
+// MDTM
+          case FTP_S_MDTM:
+            rv = S_mdtm();
+            if (NS_FAILED(rv))
+                mInternalError = rv;
+            MoveToNextState(FTP_R_MDTM);
+            break;
+
+          case FTP_R_MDTM:
+            mState = R_mdtm();
+
             if (FTP_ERROR == mState)
                 mInternalError = NS_ERROR_FAILURE;
             
@@ -1266,14 +1327,76 @@ nsFtpState::R_size() {
         if (NS_FAILED(mChannel->SetContentLength(length))) return FTP_ERROR;
     }
 
-    if (mResponseCode == 550) // File unavailable (e.g., file not found, no access).
-        return FTP_S_RETR;  // Even if the file reports zero size, lets try retr (91292)
+    if (mResponseCode == 213)
+        mFileSize = atoi(mResponseMsg.get());
+
+    // We may want to be able to resume this
+    return FTP_S_MDTM;
+}
+
+nsresult
+nsFtpState::S_mdtm() {
+    nsCAutoString mdtmBuf(mPath);
+    if (mdtmBuf.IsEmpty() || mdtmBuf.First() != '/')
+        mdtmBuf.Insert(mPwd,0);
+    mdtmBuf.Insert("MDTM ",0);
+    mdtmBuf.Append(CRLF);
+
+    return SendFTPCommand(mdtmBuf);
+}
+
+FTP_STATE
+nsFtpState::R_mdtm() {
+    if (mResponseCode == 213) {
+        mResponseMsg.Trim(" \t\r\n");
+        // yyyymmddhhmmss
+        if (mResponseMsg.Length() != 14) {
+            NS_ASSERTION(mResponseMsg.Length() == 14, "Unknown MDTM response");
+        } else {
+            const char* date = mResponseMsg.get();
+            PRExplodedTime exp;
+            exp.tm_year = (date[0]-'0')*1000 + (date[1]-'0')*100 +
+                (date[2]-'0')*10 + (date[3]-'0');
+            exp.tm_month = (date[4]-'0')*10 + (date[5]-'0');
+            exp.tm_mday = (date[6]-'0')*10 + (date[7]-'0');
+            exp.tm_hour = (date[8]-'0')*10 + (date[9]-'0');
+            exp.tm_min = (date[10]-'0')*10 + (date[11]-'0');
+            exp.tm_sec = (date[12]-'0')*10 + (date[13]-'0');
+            exp.tm_usec = 0;
+            exp.tm_wday = 0;
+            exp.tm_yday = 0;
+            exp.tm_params.tp_gmt_offset = 0;
+            exp.tm_params.tp_dst_offset = 0;
+            mModTime = PR_ImplodeTime(&exp);
+        }
+    }
+
+    nsresult rv = NS_NewResumableEntityID(getter_AddRefs(mEntityID),
+                                          mFileSize, mModTime);
+    if (NS_FAILED(rv)) return FTP_ERROR;
+    mDRequestForwarder->SetEntityID(mEntityID);
 
     // if we tried downloading this, lets try restarting it...
-    if (mDRequestForwarder && mDRequestForwarder->GetBytesTransfered() > 0)
+    if (mDRequestForwarder && mDRequestForwarder->GetBytesTransfered() > 0) {
+        mStartPos = mDRequestForwarder->GetBytesTransfered();
         return FTP_S_REST;
+    }
     
-    return FTP_S_RETR;
+    // We weren't asked to resume
+    if (mStartPos == PRUint32(-1))
+        return FTP_S_RETR;
+
+    //if (our entityID == supplied one (if any))
+    PRBool entEqual = PR_FALSE;
+    if (!mSuppliedEntityID ||
+        (NS_SUCCEEDED(mEntityID->Equals(mSuppliedEntityID, &entEqual)) &&
+         entEqual)) {
+        return FTP_S_REST;
+    } else {
+        mInternalError = NS_ERROR_NOT_RESUMABLE;
+        mResponseMsg.Truncate();
+        return FTP_ERROR;
+    }
 }
 
 nsresult 
@@ -1325,6 +1448,17 @@ nsFtpState::S_list() {
     // to the stream converter.
     mDRequestForwarder->SetStreamListener(converter);
     mDRequestForwarder->SetCacheEntry(mCacheEntry, PR_TRUE);
+    // dir listings aren't resumable
+    NS_ASSERTION(!mSuppliedEntityID,
+                 "Entity ID given to directory request");
+    NS_ASSERTION(mStartPos == PRUint32(-1) || mStartPos == 0,
+                 "Non-intial start position given to directory request");
+    if (mSuppliedEntityID || (mStartPos != PRUint32(-1) && mStartPos != 0)) {
+        // If we reach this code, then the caller is in error
+        return NS_ERROR_NOT_RESUMABLE;
+    }
+
+    mDRequestForwarder->SetEntityID(nsnull);
 
     nsCAutoString listString("LIST" CRLF);
 
@@ -1408,7 +1542,7 @@ nsresult
 nsFtpState::S_rest() {
     
     nsCAutoString restString("REST ");
-    restString.AppendInt(mDRequestForwarder->GetBytesTransfered(), 10);
+    restString.AppendInt(mStartPos, 10);
     restString.Append(CRLF);
 
     return SendFTPCommand(restString);
@@ -1416,9 +1550,15 @@ nsFtpState::S_rest() {
 
 FTP_STATE
 nsFtpState::R_rest() {
-    // only if something terrible happens do we want to error out in this state.
-    if (mResponseCode/100 == 4)
+    if (mResponseCode/100 == 4) {
+        // If REST fails, then we can't resume
+        mEntityID = nsnull;
+
+        mInternalError = NS_ERROR_NOT_RESUMABLE;
+        mResponseMsg.Truncate();
+
         return FTP_ERROR;
+    }
    
     return FTP_S_RETR; 
 }
@@ -1874,7 +2014,9 @@ nsFtpState::Init(nsIFTPChannel* aChannel,
                  nsIAuthPrompt* aAuthPrompter,
                  nsIFTPEventSink* sink,
                  nsICacheEntryDescriptor* cacheEntry,
-                 nsIProxyInfo* proxyInfo) 
+                 nsIProxyInfo* proxyInfo,
+                 PRUint32 startPos,
+                 nsIResumableEntityID* entity) 
 {
     nsresult rv = NS_OK;
 
@@ -1894,6 +2036,8 @@ nsFtpState::Init(nsIFTPChannel* aChannel,
     mAuthPrompter = aAuthPrompter;
     mCacheEntry = cacheEntry;
     mProxyInfo = proxyInfo;
+    mStartPos = startPos;
+    mSuppliedEntityID = entity;
     
     // parameter validation
     NS_ASSERTION(aChannel, "FTP: needs a channel");
@@ -1927,9 +2071,10 @@ nsFtpState::Init(nsIFTPChannel* aChannel,
             nsCOMPtr<nsIStreamListener> converter;
             rv = BuildStreamConverter(getter_AddRefs(converter));
             if (NS_FAILED(rv)) return rv;
-                
+            
             mDRequestForwarder->SetStreamListener(converter);
             mDRequestForwarder->SetCacheEntry(mCacheEntry, PR_FALSE);
+            mDRequestForwarder->SetEntityID(nsnull);
 
             // Get a transport to the cached data...
             nsCOMPtr<nsITransport> transport;
