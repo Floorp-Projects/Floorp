@@ -110,8 +110,10 @@ nsDragService :: InvokeDragSession (nsISupportsArray * aTransferableArray, nsISc
 
   // start the drag. Be careful, mDragRef will be invalid AFTER this call (it is
   // reset by the dragTrackingHandler).
+  StartDragSession();
   ::TrackDrag ( theDragRef, &theEvent, theDragRgn );
-
+  EndDragSession();
+  
   // clean up after ourselves 
   ::DisposeRgn ( theDragRgn );
   result = ::DisposeDrag ( theDragRef );
