@@ -24,7 +24,57 @@
 
 #include <Xm/List.h>
 
-#define DBG 0
+NS_IMPL_ADDREF(nsListBox)
+NS_IMPL_RELEASE(nsListBox)
+
+//-------------------------------------------------------------------------
+//
+// nsListBox constructor
+//
+//-------------------------------------------------------------------------
+nsListBox::nsListBox() : nsWindow(), nsIListWidget(), nsIListBox()
+{
+  NS_INIT_REFCNT();
+  mMultiSelect = PR_FALSE;
+  mBackground  = NS_RGB(124, 124, 124);
+}
+
+//-------------------------------------------------------------------------
+//
+// nsListBox:: destructor
+//
+//-------------------------------------------------------------------------
+nsListBox::~nsListBox()
+{
+}
+
+//-------------------------------------------------------------------------
+//
+// Query interface implementation
+//
+//-------------------------------------------------------------------------
+nsresult nsListBox::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+    nsresult result = nsWindow::QueryInterface(aIID, aInstancePtr);
+
+    static NS_DEFINE_IID(kInsListBoxIID, NS_ILISTBOX_IID);
+    static NS_DEFINE_IID(kInsListWidgetIID, NS_ILISTWIDGET_IID);
+    if (result == NS_NOINTERFACE) {
+      if (aIID.Equals(kInsListBoxIID)) {
+        *aInstancePtr = (void*) ((nsIListBox*)this);
+        AddRef();
+        result = NS_OK;
+      }
+      else if (aIID.Equals(kInsListWidgetIID)) {
+        *aInstancePtr = (void*) ((nsIListWidget*)this);
+        AddRef();
+        result = NS_OK;
+      }
+    }
+
+    return result;
+}
+
 
 //-------------------------------------------------------------------------
 //
@@ -245,54 +295,6 @@ void nsListBox::Deselect()
   XtVaSetValues(mWidget, XmNselectedItemCount, 0, NULL);
 }
 
-
-//-------------------------------------------------------------------------
-//
-// nsListBox constructor
-//
-//-------------------------------------------------------------------------
-nsListBox::nsListBox(nsISupports *aOuter) : nsWindow(aOuter)
-{
-  mMultiSelect = PR_FALSE;
-  mBackground  = NS_RGB(124, 124, 124);
-}
-
-//-------------------------------------------------------------------------
-//
-// nsListBox:: destructor
-//
-//-------------------------------------------------------------------------
-nsListBox::~nsListBox()
-{
-}
-
-//-------------------------------------------------------------------------
-//
-// Query interface implementation
-//
-//-------------------------------------------------------------------------
-nsresult nsListBox::QueryObject(const nsIID& aIID, void** aInstancePtr)
-{
-    nsresult result = nsWindow::QueryObject(aIID, aInstancePtr);
-
-    static NS_DEFINE_IID(kInsListBoxIID, NS_ILISTBOX_IID);
-    static NS_DEFINE_IID(kInsListWidgetIID, NS_ILISTWIDGET_IID);
-    if (result == NS_NOINTERFACE) {
-      if (aIID.Equals(kInsListBoxIID)) {
-        *aInstancePtr = (void*) ((nsIListBox*)&mAggWidget);
-        AddRef();
-        result = NS_OK;
-      }
-      else if (aIID.Equals(kInsListWidgetIID)) {
-        *aInstancePtr = (void*) ((nsIListWidget*)&mAggWidget);
-        AddRef();
-        result = NS_OK;
-      }
-    }
-
-    return result;
-}
-
 //-------------------------------------------------------------------------
 //
 // nsListBox Creator
@@ -309,8 +311,6 @@ void nsListBox::Create(nsIWidget *aParent,
   aParent->AddChild(this);
   Widget parentWidget = nsnull;
 
-  if (DBG) fprintf(stderr, "aParent 0x%x\n", aParent);
-
   if (aParent) {
     parentWidget = (Widget) aParent->GetNativeData(NS_NATIVE_WIDGET);
   } else {
@@ -319,8 +319,6 @@ void nsListBox::Create(nsIWidget *aParent,
 
   InitToolkit(aToolkit, aParent);
   InitDeviceContext(aContext, parentWidget);
-
-  if (DBG) fprintf(stderr, "Parent 0x%x\n", parentWidget);
 
   unsigned char selectionPolicy;
   
@@ -358,7 +356,6 @@ void nsListBox::Create(nsIWidget *aParent,
                                     XmNscrolledWindowMarginWidth, 0,
                                     XmNscrolledWindowMarginHeight, 0,
                                     nsnull);
-  if (DBG) fprintf(stderr, "Button 0x%x  this 0x%x\n", mWidget, this);
 
   // save the event callback function
   mEventCallback = aHandleEventFunction;
@@ -406,151 +403,5 @@ PRBool nsListBox::OnResize(nsSizeEvent &aEvent)
 {
     return PR_FALSE;
 }
-
-
-//-------------------------------------------------------------------------
-//-------------------------------------------------------------------------
-//-------------------------------------------------------------------------
-//-------------------------------------------------------------------------
-#define GET_OUTER() ((nsListBox*) ((char*)this - nsListBox::GetOuterOffset()))
-
-
-//-------------------------------------------------------------------------
-//
-//  SetMultipleSelection
-//
-//-------------------------------------------------------------------------
-
-void nsListBox::AggListBox::SetMultipleSelection(PRBool aMultipleSelections)
-{
-  GET_OUTER()->SetMultipleSelection(aMultipleSelections);
-}
-
-
-//-------------------------------------------------------------------------
-//
-//  AddItemAt
-//
-//-------------------------------------------------------------------------
-
-void nsListBox::AggListBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
-{
-  GET_OUTER()->AddItemAt(aItem, aPosition);
-}
-
-//-------------------------------------------------------------------------
-//
-//  Finds an item at a postion
-//
-//-------------------------------------------------------------------------
-PRInt32  nsListBox::AggListBox::FindItem(nsString &aItem, PRInt32 aStartPos)
-{
-  return  GET_OUTER()->FindItem(aItem, aStartPos);
-}
-
-//-------------------------------------------------------------------------
-//
-//  CountItems - Get Item Count
-//
-//-------------------------------------------------------------------------
-PRInt32  nsListBox::AggListBox::GetItemCount()
-{
-  return GET_OUTER()->GetItemCount();
-}
-
-//-------------------------------------------------------------------------
-//
-//  Removes an Item at a specified location
-//
-//-------------------------------------------------------------------------
-PRBool  nsListBox::AggListBox::RemoveItemAt(PRInt32 aPosition)
-{
-  return GET_OUTER()->RemoveItemAt(aPosition);
-}
-
-//-------------------------------------------------------------------------
-//
-//  Removes an Item at a specified location
-//
-//-------------------------------------------------------------------------
-PRBool nsListBox::AggListBox::GetItemAt(nsString& anItem, PRInt32 aPosition)
-{
-  return  GET_OUTER()->GetItemAt(anItem, aPosition);
-}
-
-//-------------------------------------------------------------------------
-//
-//  Gets the selected of selected item
-//
-//-------------------------------------------------------------------------
-void nsListBox::AggListBox::GetSelectedItem(nsString& aItem)
-{
-  GET_OUTER()->GetSelectedItem(aItem);
-}
-
-//-------------------------------------------------------------------------
-//
-//  Gets the list of selected otems
-//
-//-------------------------------------------------------------------------
-PRInt32 nsListBox::AggListBox::GetSelectedIndex()
-{  
-  return GET_OUTER()->GetSelectedIndex();
-}
-
-//-------------------------------------------------------------------------
-//
-//  SelectItem
-//
-//-------------------------------------------------------------------------
-void nsListBox::AggListBox::SelectItem(PRInt32 aPosition)
-{
-  GET_OUTER()->SelectItem(aPosition);
-}
-
-//-------------------------------------------------------------------------
-//
-//  GetSelectedCount
-//
-//-------------------------------------------------------------------------
-PRInt32 nsListBox::AggListBox::GetSelectedCount()
-{
-  return  GET_OUTER()->GetSelectedCount();
-}
-
-//-------------------------------------------------------------------------
-//
-//  GetSelectedIndices
-//
-//-------------------------------------------------------------------------
-void nsListBox::AggListBox::GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
-{
-  GET_OUTER()->GetSelectedIndices(aIndices, aSize);
-}
-
-//-------------------------------------------------------------------------
-//
-//  GetSelectedIndices
-//
-//-------------------------------------------------------------------------
-void nsListBox::AggListBox::SetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
-{
-  GET_OUTER()->SetSelectedIndices(aIndices, aSize);
-}
-
-//-------------------------------------------------------------------------
-//
-//  Deselect
-//
-//-------------------------------------------------------------------------
-void nsListBox::AggListBox::Deselect()
-{
-  GET_OUTER()->Deselect();
-}
-
-
-//----------------------------------------------------------------------
-
-BASE_IWIDGET_IMPL(nsListBox, AggListBox);
 
 
