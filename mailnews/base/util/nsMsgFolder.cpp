@@ -61,7 +61,6 @@ nsIAtom * nsMsgFolder::kNameAtom	= nsnull;
 nsMsgFolder::nsMsgFolder(void)
   : nsRDFResource(),
     mFlags(0),
-    mParent(nsnull),
     mNumUnreadMessages(-1),
     mNumTotalMessages(-1),
     mPrefFlags(0),
@@ -86,9 +85,6 @@ nsMsgFolder::nsMsgFolder(void)
 
 	mListeners = new nsVoidArray();
 	
-	mPath = null_nsCOMPtr();
-	m_server = nsnull;
-
   if (gInstanceCount == 0) {
     kBiffStateAtom           = NS_NewAtom("BiffState");
     kNumNewBiffMessagesAtom  = NS_NewAtom("NumNewBiffMessages");
@@ -332,21 +328,21 @@ NS_IMETHODIMP nsMsgFolder::RemoveFolderListener(nsIFolderListener * listener)
 
 }
 
-NS_IMETHODIMP nsMsgFolder::SetParent(nsIFolder *parent)
+NS_IMETHODIMP nsMsgFolder::SetParent(nsIFolder *aParent)
 {
-	//Don't addref due to ownership issues.
-	mParent = parent;
+	mParent = NS_GetWeakReference(aParent);
 	return NS_OK;
 }
 
 
-NS_IMETHODIMP nsMsgFolder::GetParent(nsIFolder **parent)
+NS_IMETHODIMP nsMsgFolder::GetParent(nsIFolder **aParent)
 {
-	if(!parent)
-		return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(aParent);
 
-	*parent = mParent;
-	NS_IF_ADDREF(*parent);
+  nsCOMPtr<nsIFolder> parent = do_QueryReferent(mParent);
+  
+	*aParent = parent;
+	NS_IF_ADDREF(*aParent);
 	return NS_OK;
 }
 
@@ -426,18 +422,14 @@ NS_IMETHODIMP nsMsgFolder::GetServer(nsIMsgIncomingServer ** aServer)
   nsresult rv;
 
   // short circut the server if we have it.
-  if (m_server) {
-    *aServer = m_server;
-    NS_ADDREF(*aServer);
-    return NS_OK;
+  nsCOMPtr<nsIMsgIncomingServer> server = do_QueryReferent(mServer, &rv);
+  if (NS_FAILED(rv) || !server) {
+    // try again after parsing the URI
+    rv = parseURI(PR_TRUE);
+    server = do_QueryReferent(mServer);
   }
 
-  // ok, we lost. Time to look it up
-  rv = parseURI(PR_TRUE);
-  
-  // done getting m_server
-  // just returns null if no server!
-  *aServer = m_server;
+  *aServer = server;
   NS_IF_ADDREF(*aServer);
   
 	return NS_OK;
@@ -489,9 +481,9 @@ nsMsgFolder::parseURI(PRBool needServer)
   // in the account manager...
   // But avoid this extra work by first asking the parent, if any
 
-  if (!m_server) {
+  nsCOMPtr<nsIMsgIncomingServer> server = do_QueryReferent(mServer, &rv);
+  if (NS_FAILED(rv) || !server) {
     
-    nsCOMPtr<nsIMsgIncomingServer> server;
     // first try asking the parent instead of the URI
     nsCOMPtr<nsIFolder> parent;
     rv = GetParent(getter_AddRefs(parent));
@@ -539,13 +531,12 @@ nsMsgFolder::parseURI(PRBool needServer)
       
     }
 
-    // keep weak ref to server - do not addref!
-    m_server = server;
+    mServer = NS_GetWeakReference(server);
 
-  } /* !m_server */
+  } /* !mServer */
     
   // now try to find the local path for this folder
-  if (m_server) {
+  if (server) {
     
     nsXPIDLCString urlPath;
     url->GetFilePath(getter_Copies(urlPath));
@@ -587,7 +578,7 @@ nsMsgFolder::parseURI(PRBool needServer)
 
     // now append munged path onto server path
     nsCOMPtr<nsIFileSpec> serverPath;
-    rv = m_server->GetLocalPath(getter_AddRefs(serverPath));
+    rv = server->GetLocalPath(getter_AddRefs(serverPath));
     if (NS_FAILED(rv)) return rv;
 
     if (serverPath) {

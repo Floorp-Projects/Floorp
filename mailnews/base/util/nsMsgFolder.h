@@ -237,7 +237,7 @@ protected:
   
 protected:
   PRUint32 mFlags;
-  nsIFolder *mParent;     //This won't be refcounted for ownership reasons.
+  nsWeakPtr mParent;     //This won't be refcounted for ownership reasons.
   PRInt32 mNumUnreadMessages;        /* count of unread messages (-1 means
                                          unknown; -2 means unknown but we already
                                          tried to find out.) */
@@ -250,7 +250,7 @@ protected:
   nsISupports *mSemaphoreHolder; // set when the folder is being written to
 								//Due to ownership issues, this won't be AddRef'd.
 
-  nsIMsgIncomingServer* m_server; //this won't be addrefed....ownership issue here
+  nsWeakPtr mServer;
 
 #ifdef HAVE_DB
   nsMsgKey	m_lastMessageLoaded;
