@@ -21,6 +21,9 @@ IGNORE_MANIFEST=1
 MAKE_OBJ_TYPE   = EXE
 PROGRAM = .\$(OBJDIR)\viewer.exe
 RESFILE = viewer.res
+!ifdef MOZ_DEBUG
+RCFLAGS=/d_DEBUG
+!endif
 
 MISCDEP=                        \
  $(DIST)\lib\DebugRobot.lib     \
