@@ -64,8 +64,8 @@
   buttonlabelaccept="&select.label;"
   buttonlabelextra2="&manage.label;"
   buttonaccesskeyextra2="&manage.accesskey;"
-  ondialogaccept="onStart();"
-  ondialogcancel="onExit();"
+  ondialogaccept="return onStart();"
+  ondialogcancel="return onExit();"
   ondialogextra2="SwitchProfileManagerMode();"
   onload="StartUp();"> 
       
