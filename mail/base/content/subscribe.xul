@@ -95,6 +95,7 @@
               datasources="rdf:null"
               flags="dont-build-content"
               disableKeyNavigation="true"
+              statedatasource="rdf:null"
               onkeypress="onSubscribeTreeKeyPress(event);"
               onclick="SubscribeOnClick(event);"> 
           <template>
