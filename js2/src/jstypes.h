@@ -360,6 +360,7 @@ namespace JSTypes {
     class JSString : public std::basic_string<char16, JSCharTraits, JSStringAllocator>, public gc_base {
     public:
         JSString() {}
+        explicit JSString(const JSString& str) : basic_string(str) {}
         explicit JSString(const String& str);
         explicit JSString(const String* str);
         explicit JSString(const char* str);
