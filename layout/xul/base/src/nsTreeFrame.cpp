@@ -123,6 +123,7 @@ PRBool nsTreeFrame::IsAutoLayout(const nsHTMLReflowState* aReflowState)
 
 void nsTreeFrame::SetSelection(nsIPresContext* aPresContext, nsTreeCellFrame* aFrame)
 {
+  /*
   nsCOMPtr<nsIContent> cellContent;
   aFrame->GetContent(getter_AddRefs(cellContent));
 
@@ -143,10 +144,12 @@ void nsTreeFrame::SetSelection(nsIPresContext* aPresContext, nsTreeCellFrame* aF
   treeElement->SelectItem(itemElement);
   mContent->UnsetAttribute(kNameSpaceID_None, kSuppressSelectChange, PR_FALSE);
   treeElement->SelectCell(cellElement);
+  */
 }
 
 void nsTreeFrame::ToggleSelection(nsIPresContext* aPresContext, nsTreeCellFrame* aFrame)
 {
+  /*
 	nsCOMPtr<nsIContent> cellContent;
   aFrame->GetContent(getter_AddRefs(cellContent));
 
@@ -165,10 +168,12 @@ void nsTreeFrame::ToggleSelection(nsIPresContext* aPresContext, nsTreeCellFrame*
   treeElement->ToggleItemSelection(itemElement);
   mContent->UnsetAttribute(kNameSpaceID_None, kSuppressSelectChange, PR_FALSE);
   treeElement->ToggleCellSelection(cellElement);
+  */
 }
 
 void nsTreeFrame::RangedSelection(nsIPresContext* aPresContext, nsTreeCellFrame* aEndFrame)
 {
+  /*
 	nsCOMPtr<nsIContent> endCellContent;
 	aEndFrame->GetContent(getter_AddRefs(endCellContent));
 	if (!endCellContent)
@@ -188,6 +193,7 @@ void nsTreeFrame::RangedSelection(nsIPresContext* aPresContext, nsTreeCellFrame*
   nsCOMPtr<nsIDOMXULElement> endElement = do_QueryInterface(endItemContent);
 
   treeElement->SelectItemRange(nsnull, endElement);
+  */
 }
 
 void

@@ -29,15 +29,17 @@
 
 
 #include "nsBoxFrame.h"
+#include "nsIScrollbarFrame.h"
 
 class nsISupportsArray;
+class nsIScrollbarMediator;
 
 nsresult NS_NewScrollbarFrame(nsIPresShell* aPresShell, nsIFrame** aResult) ;
 
-class nsScrollbarFrame : public nsBoxFrame
+class nsScrollbarFrame : public nsBoxFrame, public nsIScrollbarFrame
 {
 public:
-    nsScrollbarFrame(nsIPresShell* aShell):nsBoxFrame(aShell) {}
+    nsScrollbarFrame(nsIPresShell* aShell):nsBoxFrame(aShell), mScrollbarMediator(nsnull) {}
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const {
@@ -79,6 +81,12 @@ public:
               nsIFrame*        aPrevInFlow);
 
 
+  // nsIScrollbarFrame
+  NS_IMETHOD SetScrollbarMediator(nsIScrollbarMediator* aMediator) { mScrollbarMediator = aMediator; return NS_OK; };
+  NS_IMETHOD GetScrollbarMediator(nsIScrollbarMediator** aResult) { *aResult = mScrollbarMediator; return NS_OK; };
+
+private:
+  nsIScrollbarMediator* mScrollbarMediator;
 }; // class nsScrollbarFrame
 
 #endif

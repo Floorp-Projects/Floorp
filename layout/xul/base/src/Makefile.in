@@ -30,6 +30,10 @@ MODULE		= layout
 LIBRARY_NAME	= raptorxulbase_s
 
 CPPSRCS		= \
+       nsTreeLayout.cpp \
+       nsXULTreeSliceFrame.cpp \
+       nsXULTreeGroupFrame.cpp \
+       nsXULTreeOuterGroupFrame.cpp \
        nsBrowserBoxObject.cpp \
        nsIFrameBoxObject.cpp \
        nsEditorBoxObject.cpp \

@@ -163,7 +163,7 @@ nsTempleLayout::BuildBoxSizeList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSi
 
       if (count == 0)
         aFirst = first;
-      else 
+      else  if (aLast)
         (aLast)->next = first;
       aLast = last;
     }
@@ -192,8 +192,11 @@ nsTempleLayout::BuildBoxSizeList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSi
   PRBool isHorizontal = PR_FALSE;
   aBox->GetOrientation(isHorizontal);
 
-  aFirst->Add(leftMargin,isHorizontal);
-  aLast->Add(rightMargin,isHorizontal);
+  if (aFirst)
+    aFirst->Add(leftMargin,isHorizontal);
+  
+  if (aLast)
+    aLast->Add(rightMargin,isHorizontal);
 
   return NS_OK;
 }

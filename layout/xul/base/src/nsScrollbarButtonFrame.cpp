@@ -39,6 +39,8 @@
 #include "nsXULAtoms.h"
 #include "nsIReflowCommand.h"
 #include "nsSliderFrame.h"
+#include "nsIScrollbarFrame.h"
+#include "nsIScrollbarMediator.h"
 #include "nsRepeatService.h"
 
 //
@@ -145,6 +147,7 @@ nsScrollbarButtonFrame::MouseClicked()
 
    // get the current pos
    PRInt32 curpos = nsSliderFrame::GetCurrentPosition(content);
+   PRInt32 oldpos = curpos;
 
    // get the max pos
    PRInt32 maxpos = nsSliderFrame::GetMaxPosition(content);
@@ -167,6 +170,16 @@ nsScrollbarButtonFrame::MouseClicked()
        curpos = 0;
     else if (curpos > maxpos)
        curpos = maxpos;
+
+    nsCOMPtr<nsIScrollbarFrame> sb(do_QueryInterface(scrollbar));
+    if (sb) {
+      nsCOMPtr<nsIScrollbarMediator> m;
+      sb->GetScrollbarMediator(getter_AddRefs(m));
+      if (m) {
+        m->ScrollbarButtonPressed(oldpos, curpos);
+        return;
+      }
+    }
 
     // set the current position of the slider.
     char v[100];
