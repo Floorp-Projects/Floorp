@@ -66,6 +66,7 @@
 #include "nsIDocumentLoader.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeNode.h"
+#include "nsIWebNavigation.h"
 #include "nsIBaseWindow.h"
 #include "nsXPIDLString.h"
 
@@ -752,15 +753,15 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
 void
 nsBrowserWindow::Back()
 {
-  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
-  webShell->Back();
+  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
+  webNav->GoBack();
 }
 
 void
 nsBrowserWindow::Forward()
 {
-  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
-  webShell->Forward();
+  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
+  webNav->GoForward();
 }
 
 void
