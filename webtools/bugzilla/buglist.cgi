@@ -1356,7 +1356,7 @@ if ($order) {
     }
 
     # If we are sorting by votes, sort in descending order.
-    if ($db_order =~ /bugs.votes\s+(asc|desc){0}/i) {
+    if ($db_order =~ /bugs.votes\s*(asc|desc){0}/i) {
         $db_order =~ s/bugs.votes/bugs.votes desc/i;
     }
 
