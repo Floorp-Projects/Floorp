@@ -114,8 +114,7 @@ nsWidgetStateManager.prototype =
 
     if ("GetFields" in gCurrentWindow) {
       // save page data based on user supplied function in content area
-      var dataObject = this.dataManager.getPageData(aPageTag);
-      dataObject = this.contentArea.GetFields(dataObject);
+      var dataObject = gCurrentWindow.GetFields();
       if (dataObject)
         this.dataManager.setPageData(aPageTag, dataObject);
     }
