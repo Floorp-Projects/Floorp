@@ -18,6 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Mike Shaver <shaver@zeroknowledge.com>
+ *   Christopher Blizzard <blizzard@mozilla.org>
  */
 
 #include "nsBasicAuth.h"
@@ -43,7 +45,7 @@ nsBasicAuth::Authenticate(nsIURI* i_URI, const char *protocol,
                           char **oResult)
 {
     // we only know how to deal with Basic auth for http.
-    PRBool isBasicAuth = !strncmp(iChallenge, "Basic ", 6);
+    PRBool isBasicAuth = !PL_strncasecmp(iChallenge, "basic ", 6);
     NS_ASSERTION(isBasicAuth, "nsBasicAuth called for non-Basic auth");
     if (!isBasicAuth)
         return NS_ERROR_INVALID_ARG;
@@ -61,8 +63,10 @@ nsBasicAuth::Authenticate(nsIURI* i_URI, const char *protocol,
     if (iPass) {
         cPass.AssignWithConversion(iPass);
     }
-    PRUint32 length = cUser.Length() + (iPass ? (cPass.Length() + 2) : 1);
-    char* tempBuff = (char *)nsMemory::Alloc(length);
+    PRUint32 nbytes = cUser.Length() + 1;
+    if (iPass)
+        nbytes += cPass.Length() + 1;
+    char* tempBuff = (char *)nsMemory::Alloc(nbytes);
     if (!tempBuff)
         return NS_ERROR_OUT_OF_MEMORY;
     strcpy(tempBuff, cUser.GetBuffer());
@@ -71,7 +75,9 @@ nsBasicAuth::Authenticate(nsIURI* i_URI, const char *protocol,
         strcat(tempBuff, cPass.GetBuffer());
     }
 
-    char *base64Buff = PL_Base64Encode(tempBuff, length, nsnull); 
+    // <shaver> we use nbytes - 1 here to avoid encoding the trailing
+    // NUL
+    char *base64Buff = PL_Base64Encode(tempBuff, nbytes - 1, nsnull);
     if (!base64Buff) {
         nsMemory::Free(tempBuff);
         return NS_ERROR_FAILURE; // ??
