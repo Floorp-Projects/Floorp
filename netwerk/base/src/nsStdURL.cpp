@@ -743,26 +743,6 @@ nsStdURL::Resolve(const char *relativePath, char **result)
         case '/':
             finalSpec += (char*)start;
             break;
-        case ';': 
-            rv = AppendString(finalSpec,mDirectory,ESCAPED,
-                              nsIIOService::url_Directory);
-            rv = AppendFileName(finalSpec,mFileBaseName,mFileExtension,
-                                ESCAPED);
-            finalSpec += (char*)start;
-            break;
-        case '?': 
-            rv = AppendString(finalSpec,mDirectory,ESCAPED,
-                              nsIIOService::url_Directory);
-            rv = AppendFileName(finalSpec,mFileBaseName,mFileExtension,
-                                ESCAPED);
-            if (mParam)
-            {
-                finalSpec += ';';
-                rv = AppendString(finalSpec,mParam,ESCAPED,
-                                  nsIIOService::url_Param);
-            }
-            finalSpec += (char*)start;
-            break;
         case '#':
             rv = AppendString(finalSpec,mDirectory,ESCAPED,
                               nsIIOService::url_Directory);
