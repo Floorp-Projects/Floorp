@@ -25,7 +25,7 @@ CC				= gcc
 CXX				= g++
 AS				= gcc -c
 RANLIB			= ranlib
-MKSHLIB			= $(LD) $(DSO_LDOPTS) -soname $(@:$(OBJDIR)/%.so=%.so)
+MKSHLIB			= $(CC) $(DSO_LDOPTS) -Wl,-soname,$(@:$(OBJDIR)/%.so=%.so)
 MKMODULE		= ld -Ur -o $@
 
 WARNING_CFLAG	= -Wall
@@ -49,3 +49,5 @@ DSO_LDFLAGS		= -Wl,export-dynamic
 DSO_LDOPTS		= -shared
 
 PERL			= perl
+
+NSPR_THREAD_LIBS	= -lpthread
