@@ -139,7 +139,7 @@ EmbedStream::OpenStream(const char *aBaseURI, const char *aContentType)
   docLoaderContractID += aContentType;
 
   nsCOMPtr<nsIDocumentLoaderFactory> docLoaderFactory;  
-  docLoaderFactory = do_CreateInstance(docLoaderContractID, &rv);
+  docLoaderFactory = do_CreateInstance(docLoaderContractID.get(), &rv);
   if (NS_FAILED(rv))
     return rv;
 
