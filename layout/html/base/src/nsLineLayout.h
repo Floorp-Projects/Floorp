@@ -445,8 +445,8 @@ protected:
 
   void PushFrame(nsIFrame* aFrame);
 
-  void ApplyLeftMargin(PerFrameData* pfd,
-                       nsHTMLReflowState& aReflowState);
+  void ApplyStartMargin(PerFrameData* pfd,
+                        nsHTMLReflowState& aReflowState);
 
   PRBool CanPlaceFrame(PerFrameData* pfd,
                        const nsHTMLReflowState& aReflowState,

@@ -1016,9 +1016,9 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   // when breaking.
   PRBool notSafeToBreak = CanPlaceFloaterNow() || InWord();
 
-  // Apply left margins (as appropriate) to the frame computing the
+  // Apply start margins (as appropriate) to the frame computing the
   // new starting x,y coordinates for the frame.
-  ApplyLeftMargin(pfd, reflowState);
+  ApplyStartMargin(pfd, reflowState);
 
   // Let frame know that are reflowing it. Note that we don't bother
   // positioning the frame yet, because we're probably going to end up
@@ -1408,39 +1408,37 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
 }
 
 void
-nsLineLayout::ApplyLeftMargin(PerFrameData* pfd,
-                              nsHTMLReflowState& aReflowState)
+nsLineLayout::ApplyStartMargin(PerFrameData* pfd,
+                               nsHTMLReflowState& aReflowState)
 {
-  // Adjust available width to account for the margins
-  if (NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth) {
-    aReflowState.availableWidth -= pfd->mMargin.left + pfd->mMargin.right;
-  }
+  NS_ASSERTION(aReflowState.mStyleDisplay->mFloats == NS_STYLE_FLOAT_NONE,
+               "How'd we get a floated inline frame? "
+               "The frame ctor should've dealt with this.");
 
-  // Compute left margin
-  nsIFrame* prevInFlow;
-  switch (aReflowState.mStyleDisplay->mFloats) {
-  default:
-    NS_NOTYETIMPLEMENTED("Unsupported floater type");
-    // FALL THROUGH
+  // XXXwaterson probably not the right way to get this; e.g., embeddings, etc.
+  PRBool ltr = (NS_STYLE_DIRECTION_LTR == aReflowState.mStyleVisibility->mDirection);
 
-  case NS_STYLE_FLOAT_LEFT:
-  case NS_STYLE_FLOAT_RIGHT:
-    // When something is floated, its margins are applied there
-    // not here.
-    break;
-
-  case NS_STYLE_FLOAT_NONE:
-    // Only apply left-margin on the first-in flow for inline frames
-    pfd->mFrame->GetPrevInFlow(&prevInFlow);
-    if (nsnull != prevInFlow) {
-      // Zero this out so that when we compute the max-element-size
-      // of the frame we will properly avoid adding in the left
-      // margin.
+  // Only apply start-margin on the first-in flow for inline frames
+  nsIFrame *prevInFlow;
+  pfd->mFrame->GetPrevInFlow(&prevInFlow);
+  if (prevInFlow) {
+    // Zero this out so that when we compute the max-element-size of
+    // the frame we will properly avoid adding in the starting margin.
+    if (ltr)
       pfd->mMargin.left = 0;
-    }
-    pfd->mBounds.x += pfd->mMargin.left;
-    break;
+    else
+      pfd->mMargin.right = 0;
   }
+
+  if (NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth) {
+    // Adjust available width to account for the left margin. The
+    // right margin will be accounted for when we finish flowing the
+    // frame.
+    aReflowState.availableWidth -= ltr ? pfd->mMargin.left : pfd->mMargin.right;
+  }
+
+  if (ltr)
+    pfd->mBounds.x += pfd->mMargin.left;
 }
 
 /**
@@ -1462,32 +1460,28 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
 {
   NS_PRECONDITION(pfd && pfd->mFrame, "bad args, null pointers for frame data");
   // Compute right margin to use
-  nscoord rightMargin = 0;
   if (0 != pfd->mBounds.width) {
-    switch (aReflowState.mStyleDisplay->mFloats) {
-      default:
-        NS_NOTYETIMPLEMENTED("Unsupported floater type");
-        // FALL THROUGH
+    NS_ASSERTION(aReflowState.mStyleDisplay->mFloats == NS_STYLE_FLOAT_NONE,
+                 "How'd we get a floated inline frame? "
+                 "The frame ctor should've dealt with this.");
 
-      case NS_STYLE_FLOAT_LEFT:
-      case NS_STYLE_FLOAT_RIGHT:
-        // When something is floated, its margins are applied there
-        // not here.
-        break;
+    // XXXwaterson this is probably not exactly right; e.g., embeddings, etc.
+    PRBool ltr = (NS_STYLE_DIRECTION_LTR == aReflowState.mStyleVisibility->mDirection);
 
-      case NS_STYLE_FLOAT_NONE:
-        // Only apply right margin for the last-in-flow
-        if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
-          // Zero this out so that when we compute the
-          // max-element-size of the frame we will properly avoid
-          // adding in the right margin.
-          pfd->mMargin.right = 0;
-        }
-        rightMargin = pfd->mMargin.right;
-        break;
+    if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
+      // Only apply end margin for the last-in-flow. Zero this out so
+      // that when we compute the max-element-size of the frame we
+      // will properly avoid adding in the end margin.
+      if (ltr)
+        pfd->mMargin.right = 0;
+      else
+        pfd->mMargin.left = 0;
     }
   }
-  pfd->mMargin.right = rightMargin;
+  else {
+    // Don't apply margin to empty frames.
+    pfd->mMargin.left = pfd->mMargin.right = 0;
+  }
 
   PerSpanData* psd = mCurrentSpan;
   if (psd->mNoWrap) {
@@ -1509,7 +1503,7 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
 
   // Set outside to PR_TRUE if the result of the reflow leads to the
   // frame sticking outside of our available area.
-  PRBool outside = pfd->mBounds.XMost() + rightMargin > psd->mRightEdge;
+  PRBool outside = pfd->mBounds.XMost() + pfd->mMargin.right > psd->mRightEdge;
   if (!outside) {
     // If it fits, it fits
 #ifdef NOISY_CAN_PLACE_FRAME
@@ -1520,7 +1514,7 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
 
   // When it doesn't fit, check for a few special conditions where we
   // allow it to fit anyway.
-  if (0 == pfd->mMargin.left + pfd->mBounds.width + rightMargin) {
+  if (0 == pfd->mMargin.left + pfd->mBounds.width + pfd->mMargin.right) {
     // Empty frames always fit right where they are
 #ifdef NOISY_CAN_PLACE_FRAME
     printf("   ==> empty frame fits\n");
@@ -3165,7 +3159,7 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds,
         pfd->mBounds.x += dx;
 #ifdef IBMBIDI
         if (visualRTL) {
-          maxX = pfd->mBounds.x = maxX - pfd->mBounds.width;
+          maxX = pfd->mBounds.x = maxX - (pfd->mMargin.left + pfd->mBounds.width + pfd->mMargin.right);
         }
 #endif // IBMBIDI
         pfd->mFrame->SetRect(mPresContext, pfd->mBounds);
@@ -3189,7 +3183,7 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds,
       PerFrameData* pfd = psd->mFirstFrame;
       PRUint32 maxX = psd->mRightEdge;
       while (nsnull != pfd) {
-        pfd->mBounds.x = maxX - pfd->mBounds.width;
+        pfd->mBounds.x = maxX - (pfd->mMargin.left + pfd->mBounds.width + pfd->mMargin.right);
         pfd->mFrame->SetRect(mPresContext, pfd->mBounds);
         maxX = pfd->mBounds.x;
         pfd = pfd->mNext;
