@@ -229,6 +229,8 @@ void              ReplacePrivateProfileStrCR(LPSTR aInputOutputStr);
 void              UpdateGREAppInstallerProgress(int percent);
 BOOL              IsPathWithinWindir();
 void              CleanupOnUpgrade();
+BOOL              IsInstallerProductGRE(void);
+HRESULT           CleanupOrphanedGREs(void);
 
 #endif /* _EXTRA_H_ */
 

@@ -71,6 +71,11 @@ char *ExcludeRemoveList[] = {"plugins",
                              "install_status.log",
                              ""};
 
+// Path and filename to the GRE's uninstaller.  This is used to cleanup
+// old versions of GRE that have been orphaned when upgrading mozilla.
+#define GRE_UNINSTALLER_FILE "[WINDIR]\\GREUninstall.exe"
+
+#define GRE_REG_KEY "Software\\mozilla.org\\GRE"
 #define SETUP_STATE_REG_KEY "Software\\%s\\%s\\%s\\Setup"
 #define APP_PATHS_KEY "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\%s"
 
@@ -2240,7 +2245,7 @@ HRESULT GetInfoFromInstalledGreConfigIni(greInfo *aGre)
 }
 
 /* Function: GetInfoFromGreInstaller()
- *       in: char    *aGreInstallerFile: full path to the gre installer.
+ *       in: char    *aGreInstallerFile: full path to the GRE installer.
  *           greInfo *aGre: gre class to fill the homePath for.
  *      out: returns homePath in aGre.
  *  purpose: To retrieve the GRE home path from the GRE installer.
@@ -2264,7 +2269,7 @@ void GetInfoFromGreInstaller(char *aGreInstallerFile, greInfo *aGre)
 
   *aGre->homePath = '\0';
 
-  /* uncompress gre installer's config.ini file in order to parse for:
+  /* uncompress GRE installer's config.ini file in order to parse for:
    *   [General]
    *   Path=
    *   User Agent=
@@ -2278,6 +2283,193 @@ void GetInfoFromGreInstaller(char *aGreInstallerFile, greInfo *aGre)
   DecryptString(aGre->homePath, szBuf);
   GetPrivateProfileString("General", "User Agent", "", aGre->userAgent, sizeof(aGre->userAgent), extractedConfigFile);
   DeleteFile(extractedConfigFile);
+}
+
+/* Function: CleanupOrphanedGREs()
+ *       in: none.
+ *      out: none.
+ *  purpose: To clean up GREs that were left on the system by previous
+ *           installations of this product only (not by any other product).
+ */
+HRESULT CleanupOrphanedGREs()
+{
+  HKEY      greIDKeyHandle;
+  HKEY      greAppListKeyHandle;
+  DWORD     totalGreIDSubKeys;
+  DWORD     totalGREAppListSubKeys;
+  char      **greIDListToClean = NULL;
+  char      **greAppListToClean = NULL;
+  char      greKeyID[MAX_BUF_MEDIUM];
+  char      greRegKey[MAX_BUF];
+  char      greKeyAppList[MAX_BUF_MEDIUM];
+  char      greAppListKeyPath[MAX_BUF];
+  char      greUninstaller[MAX_BUF];
+  DWORD     idKeySize;
+  DWORD     appListKeySize;
+  DWORD     indexOfGREID;
+  DWORD     indexOfGREAppList;
+  int       rv = WIZ_OK;
+
+  DecryptString(greUninstaller, GRE_UNINSTALLER_FILE);
+  // If greCleanupOrphans is false (set either in config.ini or passed in
+  // thru the cmdline) or GRE's uninstaller file does not exist, then
+  // simply do nothing and return.
+  if(!sgProduct.greCleanupOrphans || !FileExists(greUninstaller))
+    return(WIZ_OK);
+
+  // If GRE is installed locally, then use the private GRE key, else
+  // use the default global GRE key in the windows registry.
+  if(sgProduct.greType == GRE_LOCAL)
+    DecryptString(greRegKey, sgProduct.grePrivateKey);
+  else
+    MozCopyStr(GRE_REG_KEY, greRegKey, sizeof(greRegKey));
+
+  if(RegOpenKeyEx(HKEY_LOCAL_MACHINE, greRegKey, 0, KEY_READ, &greIDKeyHandle) != ERROR_SUCCESS)
+    return(WIZ_ERROR_UNDEFINED);
+
+  // Build the list of GRE's given greRegKey.  For example, if greRegKey is:
+  //
+  //   HKLM\Software\mozilla.org\GRE
+  //
+  // then build a list of the GRE IDs inside this key.
+  totalGreIDSubKeys = 0;
+  if(RegQueryInfoKey(greIDKeyHandle, NULL, NULL, NULL, &totalGreIDSubKeys, NULL, NULL, NULL, NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
+    rv = WIZ_ERROR_UNDEFINED;
+
+  if((rv == WIZ_OK) && (greIDListToClean = NS_GlobalAlloc(sizeof(char *) * totalGreIDSubKeys)) == NULL)
+  {
+    RegCloseKey(greIDKeyHandle);
+    return(WIZ_OUT_OF_MEMORY);
+  }
+
+  // Show message that orphaned GREs are being cleaned up
+  if(*sgProduct.greCleanupOrphansMessage != '\0');
+    ShowMessage(sgProduct.greCleanupOrphansMessage, TRUE);
+
+  if(rv == WIZ_OK)
+  {
+    // Initialize the array of pointers (of GRE ID keys) to NULL
+    for(indexOfGREID = 0; indexOfGREID < totalGreIDSubKeys; indexOfGREID++)
+      greIDListToClean[indexOfGREID] = NULL;
+
+    // Enumerate the GRE ID list and save the GRE ID to each of its array element
+    for(indexOfGREID = 0; indexOfGREID < totalGreIDSubKeys; indexOfGREID++)
+    {
+      idKeySize = sizeof(greKeyID);
+      if(RegEnumKeyEx(greIDKeyHandle, indexOfGREID, greKeyID, &idKeySize, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
+      {
+        if((greIDListToClean[indexOfGREID] = NS_GlobalAlloc(sizeof(char) * (idKeySize + 1))) == NULL)
+        {
+          RegCloseKey(greIDKeyHandle);
+          rv = WIZ_OUT_OF_MEMORY;
+          break;
+        }
+        MozCopyStr(greKeyID, greIDListToClean[indexOfGREID], idKeySize + 1);
+      }
+    }
+    RegCloseKey(greIDKeyHandle);
+
+    if(rv == WIZ_OK)
+    {
+      // Enumerate the GRE ID list built from above to get to each of it's AppList key.
+      // The list that we need to build now is from the following key:
+      //
+      //   HKLM\Software\mozilla.org\GRE\[GRE ID]\AppList
+      for(indexOfGREID = 0; indexOfGREID < totalGreIDSubKeys; indexOfGREID++)
+      {
+        // If we find the same GRE version as what we're trying to install,
+        // then we don't want to process it because if we do, it will
+        // uninstall it.  Which means that it'll reinstall it again.  We don't
+        // want to have reinstall when we don't need to.
+        //
+        // szUserAgent is the GRE unique id if this instance of the installer is
+        // installing GRE.
+        if(strcmpi(sgProduct.szUserAgent, greIDListToClean[indexOfGREID]) == 0)
+          continue;
+
+        _snprintf(greAppListKeyPath, sizeof(greAppListKeyPath), "%s\\%s\\AppList",
+            GRE_REG_KEY, greIDListToClean[indexOfGREID]);
+        greAppListKeyPath[sizeof(greAppListKeyPath) - 1] = '\0';
+        if(RegOpenKeyEx(HKEY_LOCAL_MACHINE, greAppListKeyPath, 0, KEY_READ, &greAppListKeyHandle) != ERROR_SUCCESS)
+        {
+          rv = WIZ_ERROR_UNDEFINED;
+          break;
+        }
+
+        totalGREAppListSubKeys = 0;
+        if(RegQueryInfoKey(greAppListKeyHandle, NULL, NULL, NULL, &totalGREAppListSubKeys, NULL, NULL, NULL, NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
+          rv = WIZ_ERROR_UNDEFINED;
+    
+        if((rv == WIZ_OK) && (greAppListToClean = NS_GlobalAlloc(sizeof(char *) * totalGREAppListSubKeys)) == NULL)
+        {
+          RegCloseKey(greAppListKeyHandle);
+          rv = WIZ_OUT_OF_MEMORY;
+          break;
+        }
+
+        // Initialize the GREAppList elements to NULL.
+        for(indexOfGREAppList = 0; indexOfGREAppList < totalGREAppListSubKeys; indexOfGREAppList++)
+          greAppListToClean[indexOfGREAppList] = NULL;
+
+        // enumerate the GRE AppList key and build a list.
+        for(indexOfGREAppList = 0; indexOfGREAppList < totalGREAppListSubKeys; indexOfGREAppList++)
+        {
+          appListKeySize = sizeof(greKeyAppList);
+          if(RegEnumKeyEx(greAppListKeyHandle, indexOfGREAppList, greKeyAppList, &appListKeySize, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
+          {
+            if((greAppListToClean[indexOfGREAppList] = NS_GlobalAlloc(sizeof(char) * (appListKeySize + 1))) == NULL)
+            {
+              RegCloseKey(greAppListKeyHandle);
+              rv = WIZ_OUT_OF_MEMORY;
+              break;
+            }
+            MozCopyStr(greKeyAppList, greAppListToClean[indexOfGREAppList], appListKeySize + 1);
+          }
+        }
+        RegCloseKey(greAppListKeyHandle);
+
+        if(rv != WIZ_OK)
+          break;
+
+        // Enumerate the saved GREAppList and start calling GREUninstall.exe
+        // to remove them if appropriate.
+        // GREUninstall.exe will take care of determining if the particular
+        // GRE should be fully removed or not.
+        // We need to enumerate the list again instead of doing this in the
+        // save loop as above because deleting keys while at the same time
+        // enumerating thru its parent key is a Bad Thing(TM).
+        for(indexOfGREAppList = 0; indexOfGREAppList < totalGREAppListSubKeys; indexOfGREAppList++)
+        {
+          char programNamePath[MAX_BUF];
+          char greUninstallParam[MAX_BUF];
+
+          DecryptString(programNamePath, sgProduct.szAppPath);
+          _snprintf(greUninstallParam, sizeof(greUninstallParam), "-mmi -ms -ua \"%s\" -app \"%s\" -app_path \"%s\"",
+              greIDListToClean[indexOfGREID], greAppListToClean[indexOfGREAppList], programNamePath);
+          greUninstallParam[sizeof(greUninstallParam) - 1] = '\0';
+          WinSpawn(greUninstaller, greUninstallParam, szTempDir, SW_SHOWNORMAL, WS_WAIT);
+        }
+
+        // Cleanup allocated memory
+        for(indexOfGREAppList = 0; indexOfGREAppList < totalGREAppListSubKeys; indexOfGREAppList++)
+          FreeMemory(&greAppListToClean[indexOfGREAppList]);
+        if(greAppListToClean)
+          GlobalFree(greAppListToClean);
+      }
+    }
+  }
+
+  // Cleanup allocated memory
+  for(indexOfGREID = 0; indexOfGREID < totalGreIDSubKeys; indexOfGREID++)
+    FreeMemory(&greIDListToClean[indexOfGREID]);
+  if(greIDListToClean)
+    GlobalFree(greIDListToClean);
+
+  // Hide message that orphaned GREs are being cleaned up
+  if(*sgProduct.greCleanupOrphansMessage != '\0');
+    ShowMessage(sgProduct.greCleanupOrphansMessage, FALSE);
+
+  return(rv);
 }
 
 void LaunchOneComponent(siC *siCObject, greInfo *aGre)
@@ -2556,7 +2748,7 @@ void CleanupOnUpgrade()
 
 /* Function: ProcessGre()
  *       in: none.
- *      out: path to where gre is installed at.
+ *      out: path to where GRE is installed at.
  *  purpose: To install GRE on the system, so this installer can use it's
  *           xpinstall engine.  It uses gre->homePath to see if GRE is already
  *           installed on the system.  If GRE is already present on the system,
@@ -2667,7 +2859,7 @@ HRESULT ProcessXpinstallEngine()
    * GRE's installer that's already on the system.  This will setup
    * GRE so it can be used as the xpinstall engine (if it's needed).
    */
-  if(lstrcmpi(sgProduct.szProductNameInternal, "GRE") != 0)
+  if(!IsInstallerProductGRE())
     rv = ProcessGre(&gGre);
 
   if(*siCFXpcomFile.szMessage != '\0')
@@ -3236,6 +3428,8 @@ HRESULT InitSetupGeneral()
   if((sgProduct.szRegPath                     = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
 
+  sgProduct.greCleanupOrphans = FALSE;
+  *sgProduct.greCleanupOrphansMessage = '\0';
   *sgProduct.greID         = '\0';
   *sgProduct.grePrivateKey = '\0';
   return(0);
@@ -4670,7 +4864,7 @@ HRESULT InitComponentDiskSpaceInfo(dsN **dsnComponentDSRequirement)
       if(*(siCObject->szDestinationPath) == '\0')
         lstrcpy(szBuf, sgProduct.szPath);
       else if((lstrcmpi(siCObject->szReferenceName, "Component GRE") == 0) &&
-              (lstrcmpi(sgProduct.szProductName, "GRE") != 0))
+              !IsInstallerProductGRE())
         /* We found 'Component GRE' and this product is not 'GRE'.  The GRE
          * product happens to also have a 'Component GRE', but we don't
          * care about that one. */
@@ -5759,6 +5953,7 @@ void PrintUsage(void)
 
     ReplacePrivateProfileStrCR(szBuf);
     _snprintf(szUsageMsg, sizeof(szUsageMsg), szBuf, szProcessFilename);
+    szUsageMsg[sizeof(szUsageMsg) - 1] = '\0';
     GetPrivateProfileString("Messages", "DLG_USAGE_TITLE", "", strUsage, sizeof(strUsage), szFileIniInstall);
     MessageBox(hWndMain, szUsageMsg, strUsage, MB_ICONEXCLAMATION);
   }
@@ -5920,6 +6115,10 @@ DWORD ParseCommandLine(LPSTR aMessageToClose, LPSTR lpszCmdLine)
       sgProduct.checkCleanupOnUpgrade = TRUE;
     else if(!lstrcmpi(szArgVBuf, "-noCleanupOnUpgrade") || !lstrcmpi(szArgVBuf, "/noCleanupOnUpgrade"))
       sgProduct.checkCleanupOnUpgrade = FALSE;
+    else if(!lstrcmpi(szArgVBuf, "-greCleanupOrphans") || !lstrcmpi(szArgVBuf, "/greCleanupOrphans"))
+      sgProduct.greCleanupOrphans = TRUE;
+    else if(!lstrcmpi(szArgVBuf, "-greNoCleanupOrphans") || !lstrcmpi(szArgVBuf, "/greNoCleanupOrphans"))
+      sgProduct.greCleanupOrphans = FALSE;
 
 #ifdef XXX_DEBUG
     itoa(i, szBuf, 10);
@@ -6707,6 +6906,11 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
       sgProduct.greType = GRE_SHARED;
   }
 
+  GetPrivateProfileString("General", "GRE Cleanup Orphans", "", szBuf, sizeof(szBuf), szFileIniConfig);
+  if(lstrcmpi(szBuf, "TRUE") == 0)
+    sgProduct.greCleanupOrphans = TRUE;
+
+  GetPrivateProfileString("General", "GRE Cleanup Orphans Message", "", sgProduct.greCleanupOrphansMessage, sizeof(sgProduct.greCleanupOrphansMessage), szFileIniConfig);
   GetPrivateProfileString("General", "GRE ID", "", sgProduct.greID, sizeof(sgProduct.greID), szFileIniConfig);
   GetPrivateProfileString("General", "GRE Private Key", "", szBuf, sizeof(szBuf), szFileIniConfig);
   if(*szBuf != '\0')
@@ -8089,6 +8293,18 @@ BOOL NeedReboot()
     return(diReboot.dwShowDialog);
 }
 
+/* Function: IsInstallerProductGRE()
+ *       in: none.
+ *      out: Boolean value on whether or not the installer will be installing
+ *           the GRE.
+ *  purpose: The check to see if the product the installer will be installing
+ *           is GRE or not.
+ */
+BOOL IsInstallerProductGRE()
+{
+  return(lstrcmpi(sgProduct.szProductNameInternal, "GRE") == 0 ? TRUE : FALSE);
+}
+
 /* Function: GreInstallerNeedsReboot()
  *       in: none.
  *      out: Boolean value on whether or not GRE installer needed a
@@ -8102,7 +8318,7 @@ BOOL GreInstallerNeedsReboot()
 
   /* if this setup is not installing GRE *and* the GRE Setup has been run, then
    * check for GRE setup's exit value, if one exists */
-  if((lstrcmpi(sgProduct.szProductNameInternal, "GRE") != 0) && gGreInstallerHasRun)
+  if(!IsInstallerProductGRE() && gGreInstallerHasRun)
   {
     char status[MAX_BUF];
 
@@ -8527,6 +8743,7 @@ void SaveInstallerFiles()
      * .exe file will automatically look for the .xpi files in a xpi subdir
      * off of the current working dir. */
     _snprintf(destInstallXpiDir, sizeof(destInstallXpiDir), "%sxpi\\", destInstallDir);
+    destInstallXpiDir[sizeof(destInstallXpiDir) - 1] = '\0';
     CreateDirectoriesAll(destInstallXpiDir, ADD_TO_UNINSTALL_LOG);
   }
   else

@@ -3067,6 +3067,17 @@ void CommitInstall(void)
 
   if(RetrieveResults == WIZ_OK)
   {
+    // Clean up old versions of GRE previously installed.
+    // These GREs should only be fully uninstalled if they were only
+    // being used by the mozilla that we're installing over/ontop of
+    // (upgrade scenario).
+    // We should only do this type of cleanup if we're about to install'
+    // GRE in shared mode.
+    //
+    // This should only be called when the installer is installing GRE!
+    if(IsInstallerProductGRE())
+      CleanupOrphanedGREs();
+
     if(sgProduct.bInstallFiles)
     {
       /* Check to see if Turbo is required.  If so, set the
