@@ -486,13 +486,6 @@ MimeMultipartRelated_output_child_p(MimeObject *obj, MimeObject* child)
       char *absolute;
       char *base_url = MimeHeaders_get(child->headers, HEADER_CONTENT_BASE,
                        PR_FALSE, PR_FALSE);
-      /* rhp: need this for supporting Content-Location */
-      if (!base_url)
-      {
-        base_url = MimeHeaders_get(child->headers, HEADER_CONTENT_LOCATION, PR_FALSE, PR_FALSE);
-      }
-      /* rhp: need this for supporting Content-Location */
-
       absolute = MakeAbsoluteURL(base_url ? base_url : relobj->base_url, location);
 
       PR_FREEIF(base_url);
