@@ -43,6 +43,7 @@ Rights Reserved.
 	<broadcaster id="cmd_newEditor"/>
 	<broadcaster id="cmd_close" oncommand="CloseMailWindow()"/>
  	<broadcaster id="cmd_quit"/>
+  <broadcaster id="cmd_pageSetup"/>
 	<!-- Edit Menu -->
 	<broadcaster id="cmd_undo"
 	             valueDeleteMsg="&undoDeleteMsgCmd.label;"
@@ -368,7 +369,7 @@ Rights Reserved.
 			<menuseparator/>
 			<menuitem value="&importCmd.label;" disabled="true" oncommand="MsgImport();"/>
 			<menuseparator/>
-			<menuitem id="menu_pageSetup"/>
+			<menuitem observes="cmd_pageSetup"/>
 			<menuitem value="&printPreviewCmd.label;" disabled="true" oncommand="PrintPreview();"/>
 			<menuitem value="&printCmd.label;" oncommand="PrintEnginePrint();"/>
 			<menuseparator/>
@@ -805,9 +806,16 @@ END of Deprecated -->
 			</menu>
 			<button class="button-toolbar-2 top" id="button-next" value="&nextButton.label;"  tooltip="aTooltip" tooltiptext="&nextButton.tooltip;" onclick="MsgNextUnreadMessage()"/>
 			<button class="button-toolbar-2 top" id="button-delete" value="&deleteButton.label;"  tooltip="aTooltip" tooltiptext="&deleteButton.tooltip;" observes="button_delete" onclick="goDoCommand('button_delete')"/>
-			<button class="button-toolbar-2 top" id="button-print" value="&printButton.label;" tooltip="aTooltip" tooltiptext="&printButton.tooltip;" onclick="PrintEnginePrint()"/>
+      <menubutton class="menubutton-dual toolbar" id="button-print" value="&printButton.label;" 
+                  crop="right" buttonaction="PrintEnginePrint();" tooltip="aTooltip" buttontooltiptext="&printButton.tooltip;">  
+     	  <menupopup id="printMenu">
+    			<menuitem value="&printCmd.label;" oncommand="PrintEnginePrint();" default="true"/>
+    			<menuitem observes="cmd_pageSetup" />
+		    	<menuitem value="&printPreviewCmd.label;" disabled="true" oncommand="PrintPreview();"/>
+        </menupopup>
+  	  </menubutton>
 			<button class="button-toolbar-2 top" id="button-stop" value="&stopButton.label;"  tooltip="aTooltip" tooltiptext="&stopButton.tooltip;" onclick="MsgStop();"/>
-			<spring flex="100%"/>
+			<spring flex="1"/>
 		</box>
     <button class="plain" id="navigator-throbber" oncommand='goClickThrobber("messenger.throbber.url")'/>
 	</toolbar>
