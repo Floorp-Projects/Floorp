@@ -398,15 +398,15 @@ function DropOnTree ( event )
 	// we may need to synthesize a name (just use the URL)
 	var srcArc = RDF.GetResource(sourceID, true);
 	var propArc = RDF.GetResource(NC_NS + "Name", true);
-	if (srcArc && propArc && treeDatabase)
+	if (srcArc && propArc && Bookmarks)
 	{
-		var targetArc = treeDatabase.GetTarget(srcArc, propArc, true);
+		var targetArc = Bookmarks.GetTarget(srcArc, propArc, true);
 		if (!targetArc)
 		{
 			var defaultNameArc = RDF.GetLiteral(sourceID);
 			if (defaultNameArc)
 			{
-				treeDatabase.Assert(srcArc, propArc, defaultNameArc, true); 
+				Bookmarks.Assert(srcArc, propArc, defaultNameArc, true); 
 			}
 		}
 	}
