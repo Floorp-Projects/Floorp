@@ -64,15 +64,24 @@
 
         if ( !explicitURL ) {
             var pref = Components.classes['component://netscape/preferences'];
+	    dump("Components = " + Components + "\n");
+	    dump("Components.classes = " + Components.classes + "\n");
+	    dump("Components.classes[component://netscape/preferences] = " + pref + "\n");
     
             // if all else fails, use trusty "about:blank" as the start page
             var startpage = "about:blank";  
             if (pref) {
               pref = pref.getService();
             }
+	    else {
+		dump("failed to get component://netscape/preferences\n");
+	    }
             if (pref) {
               pref = pref.QueryInterface(Components.interfaces.nsIPref);
             }
+	    else {
+		dump("failed to get pref service\n");
+	    }
             if (pref) {
               // from mozilla/modules/libpref/src/init/all.js
               // 0 = blank 
@@ -103,6 +112,9 @@
                 		startpage = "about:blank";
     	  }
             }
+            else {
+		dump("failed to QI pref service\n");
+	    }
 	    dump("startpage = " + startpage + "\n");
             document.getElementById("args").setAttribute("value", startpage);
         }
