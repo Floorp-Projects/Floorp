@@ -2616,7 +2616,7 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         if ((attrs & JSPROP_READONLY) || SCOPE_IS_SEALED(scope)) {
             /* XXXbe ECMA violation: readonly proto-property stops set cold. */
             OBJ_DROP_PROPERTY(cx, pobj, (JSProperty *)sprop);
-            goto readonly;
+            goto read_only;
         }
 
         if (pobj != obj) {
@@ -2651,7 +2651,7 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 
     if (!sprop) {
         if (SCOPE_IS_SEALED(OBJ_SCOPE(obj))) {
-readonly:
+read_only:
             if (!JSVERSION_IS_ECMA(cx->version)) {
                 JSString *str = js_DecompileValueGenerator(cx,
                                                            JSDVG_IGNORE_STACK,
