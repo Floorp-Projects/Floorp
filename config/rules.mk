@@ -141,11 +141,8 @@ ifdef LIBRARY
 ifneq (,$(BUILD_SHARED_LIBS)$(FORCE_SHARED_LIB))
 ifdef MKSHLIB
 
-# Unix only
-ifeq (,$(filter-out BeOS OS2 WINNT, $(OS_ARCH)))
 ifdef LIB_IS_C_ONLY
 MKSHLIB			= $(MKCSHLIB)
-endif
 endif
 
 SHARED_LIBRARY		:= $(DLL_PREFIX)$(LIBRARY_NAME)$(DLL_SUFFIX)
