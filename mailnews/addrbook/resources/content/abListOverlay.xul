@@ -37,21 +37,21 @@ Rights Reserved.
 	<vbox style="width:100%">
 		<hbox>
 			<spacer flex="1"/>
-			<text for="ListName" value="&ListName.label;" class="CardEditLabel"/>
+			<label control="ListName" value="&ListName.label;" accesskey="&ListName.accesskey;" class="CardEditLabel"/>
 			<hbox class="CardEditWidth">
 				<textbox id="ListName" flex="1"/>
 			</hbox>
 		</hbox>
 		<hbox>
 			<spacer flex="1"/>
-			<text for="ListNickName" value="&ListNickName.label;" class="CardEditLabel"/>
+			<label control="ListNickName" value="&ListNickName.label;" accesskey="&ListNickName.accesskey;" class="CardEditLabel"/>
 			<hbox class="CardEditWidth">
 				<textbox id="ListNickName" flex="1"/>
 			</hbox>
 		</hbox>
 		<hbox>
 			<spacer flex="1"/>
-			<text for="ListDescription" value="&ListDescription.label;" class="CardEditLabel"/>
+			<label control="ListDescription" value="&ListDescription.label;" accesskey="&ListDescription.accesskey;" class="CardEditLabel"/>
 			<hbox class="CardEditWidth">
 				<textbox id="ListDescription" flex="1"/>
 			</hbox>
@@ -60,7 +60,7 @@ Rights Reserved.
 
 	<spacer style="height:1em"/>
 		
-	<text value="&AddressTitle.label;"/>
+	<label value="&AddressTitle.label;"/>
 	<spacer style="height:0.1em"/>
 	<hbox  flex="100%">
 		<vbox flex="80%">

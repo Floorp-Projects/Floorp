@@ -41,7 +41,7 @@ Rights Reserved.
   <keyset id="dialogKeys"/>
 
   <hbox autostretch="never" valign="center">
-    <text for="abPopup" value="&addToAddressBook.label;"/>
+    <label control="abPopup" value="&addToAddressBook.label;" accesskey="&addToAddressBook.accesskey;"/>
     <menulist id="abPopup">
       <menupopup id="abPopup-menupopup" ref="moz-abdirectory://" datasources="rdf:addressdirectory">
         <template> 
