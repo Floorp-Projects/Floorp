@@ -20,12 +20,12 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsNetService.h"
-#include "nsTransportService.h"
+#include "nsFileTransportService.h"
 #include "nscore.h"
 
 static NS_DEFINE_CID(kComponentManagerCID,      NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kNetServiceCID,            NS_NETSERVICE_CID);
-static NS_DEFINE_CID(kTransportServiceCID,      NS_TRANSPORTSERVICE_CID);
+static NS_DEFINE_CID(kFileTransportServiceCID,  NS_FILETRANSPORTSERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -91,8 +91,8 @@ nsNetFactory::CreateInstance(nsISupports *aOuter,
         }
         inst = net;
     }
-    else if (mClassID.Equals(kTransportServiceCID)) {
-        nsTransportService* trans = new nsTransportService();
+    else if (mClassID.Equals(kFileTransportServiceCID)) {
+        nsFileTransportService* trans = new nsFileTransportService();
         if (trans == nsnull)
             return NS_ERROR_OUT_OF_MEMORY;
         rv = trans->Init();
@@ -153,9 +153,9 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
                                     aPath, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) return rv;;
 
-    rv = compMgr->RegisterComponent(kTransportServiceCID, 
-                                    "Transport Service",
-                                    "component://netscape/network/transport-service",
+    rv = compMgr->RegisterComponent(kFileTransportServiceCID, 
+                                    "File Transport Service",
+                                    "component://netscape/network/file-transport-service",
                                     aPath, PR_TRUE, PR_TRUE);
     return rv;
 }
@@ -171,7 +171,7 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
     rv = compMgr->UnregisterComponent(kNetServiceCID, aPath);
     if (NS_FAILED(rv)) return rv;
 
-    rv = compMgr->UnregisterComponent(kTransportServiceCID, aPath);
+    rv = compMgr->UnregisterComponent(kFileTransportServiceCID, aPath);
     return rv;
 }
 

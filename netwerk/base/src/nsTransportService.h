@@ -27,14 +27,18 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsITransportService methods:
-    NS_IMETHOD GetFileTransport(PLEventQueue* appEventQueue, nsISupports* eventSink,
+    NS_IMETHOD GetFileTransport(PLEventQueue* appEventQueue,
+                                nsIStreamListener* listener,
                                 const char* path, 
                                 nsITransport* *result);
-    NS_IMETHOD GetSocketTransport(PLEventQueue* appEventQueue, nsISupports* eventSink,
+    NS_IMETHOD GetSocketTransport(PLEventQueue* appEventQueue,
+                                  nsIStreamListener* listener,
                                   const char* host, PRInt32 port,
                                   nsITransport* *result);
-    NS_IMETHOD GetJarTransport(PLEventQueue* appEventQueue, nsISupports* eventSink,
-                               const char* jarFilePath, const char* jarEntryPath,
+    NS_IMETHOD GetJarTransport(PLEventQueue* appEventQueue,
+                               nsIStreamListener* listener,
+                               const char* jarFilePath,
+                               const char* jarEntryPath,
                                nsITransport* *result);
     NS_IMETHOD HasActiveTransports();
 

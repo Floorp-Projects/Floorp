@@ -19,16 +19,16 @@ MODULE = netwerk
 
 DEPTH = ..\..\..
 
-EXPORTS =                       \
-        nsICancelable.h         \
-        nsIConnectionGroup.h    \
-        nsINetService.h         \
-        nsIProtocolConnection.h \
-        nsIProtocolHandler.h    \
-        nsIStreamListener.h     \
-        nsITransport.h          \
-        nsITransportService.h   \
-        nsIUrl.h                \
+EXPORTS =                         \
+        nsICancelable.h           \
+        nsIConnectionGroup.h      \
+        nsIFileTransportService.h \
+        nsINetService.h           \
+        nsIProtocolConnection.h   \
+        nsIProtocolHandler.h      \
+        nsIStreamListener.h       \
+        nsITransport.h            \
+        nsIUrl.h                  \
         $(NULL)
 
 include <$(DEPTH)/config/rules.mak>

@@ -38,9 +38,6 @@ class nsITransport : public nsICancelable
 public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITRANSPORT_IID);
 
-    NS_IMETHOD AsyncRead(nsIStreamListener* listener) = 0;
-
-    NS_IMETHOD AsyncWrite(nsIStreamObserver* observer) = 0;
 };
 
-#endif /* nsIITransport_h___ */
+#endif /* nsITransport_h___ */

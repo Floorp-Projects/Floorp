@@ -41,6 +41,10 @@ public:
 
     NS_IMETHOD Open(nsIUrl* url, nsISupports* eventSink) = 0;
 
+    // can be called after Open
+    // freed by caller with delete[]
+    NS_IMETHOD GetContentType(char* *contentType);
+
     // blocking:
     NS_IMETHOD GetInputStream(nsIInputStream* *result) = 0;
 

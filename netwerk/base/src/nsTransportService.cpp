@@ -17,6 +17,7 @@
  */
 
 #include "nsTransportService.h"
+#include "nsFileTransport.h"
 
 NS_IMPL_ISUPPORTS(nsTransportService, nsITransportService::GetIID());
 
@@ -42,15 +43,18 @@ nsTransportService::Init()
 // nsITransportService methods:
 
 NS_IMETHODIMP
-nsTransportService::GetFileTransport(PLEventQueue* appEventQueue, nsISupports* eventSink,
+nsTransportService::GetFileTransport(PLEventQueue* appEventQueue,
+                                     nsIStreamListener* listener,
                                      const char* path, 
                                      nsITransport* *result)
 {
+    
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsTransportService::GetSocketTransport(PLEventQueue* appEventQueue, nsISupports* eventSink,
+nsTransportService::GetSocketTransport(PLEventQueue* appEventQueue,
+                                       nsIStreamListener* listener,
                                        const char* host, PRInt32 port,
                                        nsITransport* *result)
 {
@@ -58,8 +62,10 @@ nsTransportService::GetSocketTransport(PLEventQueue* appEventQueue, nsISupports*
 }
 
 NS_IMETHODIMP
-nsTransportService::GetJarTransport(PLEventQueue* appEventQueue, nsISupports* eventSink,
-                                    const char* jarFilePath, const char* jarEntryPath,
+nsTransportService::GetJarTransport(PLEventQueue* appEventQueue,
+                                    nsIStreamListener* listener,
+                                    const char* jarFilePath,
+                                    const char* jarEntryPath,
                                     nsITransport* *result)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -72,4 +78,3 @@ nsTransportService::HasActiveTransports()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-

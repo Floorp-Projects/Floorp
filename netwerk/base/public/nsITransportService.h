@@ -23,6 +23,7 @@
 #include "plevent.h"
 
 class nsITransport;
+class nsIStreamListener;
 
 // XXX regenerate:
 #define NS_ITRANSPORTSERVICE_IID                     \
@@ -47,16 +48,20 @@ class nsITransportService : public nsISupports
 public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITRANSPORTSERVICE_IID);
 
-    NS_IMETHOD GetFileTransport(PLEventQueue* appEventQueue, nsISupports* eventSink,
+    NS_IMETHOD GetFileTransport(PLEventQueue* appEventQueue,
+                                nsIStreamListener* listener,
                                 const char* path, 
                                 nsITransport* *result) = 0;
 
-    NS_IMETHOD GetSocketTransport(PLEventQueue* appEventQueue, nsISupports* eventSink,
+    NS_IMETHOD GetSocketTransport(PLEventQueue* appEventQueue,
+                                  nsIStreamListener* listener,
                                   const char* host, PRInt32 port,
                                   nsITransport* *result) = 0;
 
-    NS_IMETHOD GetJarTransport(PLEventQueue* appEventQueue, nsISupports* eventSink,
-                               const char* jarFilePath, const char* jarEntryPath,
+    NS_IMETHOD GetJarTransport(PLEventQueue* appEventQueue,
+                               nsIStreamListener* listener,
+                               const char* jarFilePath,
+                               const char* jarEntryPath,
                                nsITransport* *result) = 0;
 
     /**
