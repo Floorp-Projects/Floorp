@@ -61,8 +61,6 @@
 
 #define MSGFEEDBACK_TIMER_INTERVAL 500
 
-nsIAtom * nsMsgStatusFeedback::kMsgLoadedAtom = nsnull;
-
 nsMsgStatusFeedback::nsMsgStatusFeedback() :
   m_lastPercent(0)
 {
@@ -76,13 +74,12 @@ nsMsgStatusFeedback::nsMsgStatusFeedback() :
         bundleService->CreateBundle("chrome://messenger/locale/messenger.properties",
                                     getter_AddRefs(mBundle));
 
-    kMsgLoadedAtom = NS_NewAtom("msgLoaded");
+    m_msgLoadedAtom = do_GetAtom("msgLoaded");
 }
 
 nsMsgStatusFeedback::~nsMsgStatusFeedback()
 {
   mBundle = nsnull;
-  NS_RELEASE(kMsgLoadedAtom);
 }
 
 NS_IMPL_THREADSAFE_ADDREF(nsMsgStatusFeedback)
@@ -190,7 +187,7 @@ nsMsgStatusFeedback::OnStateChange(nsIWebProgress* aWebProgress,
               // not sending this notification is not a fatal error...
               (void) msgUrl->GetMessageHeader(getter_AddRefs(msgHdr));
               if (msgFolder && msgHdr)
-                msgFolder->NotifyPropertyFlagChanged(msgHdr, kMsgLoadedAtom, 0, 1);
+                msgFolder->NotifyPropertyFlagChanged(msgHdr, m_msgLoadedAtom, 0, 1);
             }
           }
         }

@@ -78,7 +78,7 @@ protected:
   nsCOMPtr<nsIMsgStatusFeedback> mStatusFeedback;
 
   nsCOMPtr<nsIStringBundle> mBundle;
-  static nsIAtom* kMsgLoadedAtom;
+  nsCOMPtr <nsIAtom> m_msgLoadedAtom;
 };
 
 #endif // _nsMsgStatusFeedback_h
