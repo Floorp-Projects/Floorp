@@ -467,43 +467,21 @@ tbx_dirs()
     fi
     if [ -z "${RESULTDIR}" ] ; then # needs to be different for tinderbox
         Debug "Setting RESULTDIR for tinderbox"
-        RESULTDIR="${NSS_VER_DIR}/tinderbox/tests_results/security/${HOST}-`date +%Y%m%d-%H.%M`"
-        #RESULTDIR=${UX_MASTERDIR}/mozilla/tests_results/security
+        TXB_NOBITS=""
+        (echo $NSS_VER_DIR | grep 64  && TXB_NOBITS=64) >/dev/null
+        TRD="${HOST}{$TXB_NOBITS}-`date +%Y%m%d-%H.%M`"
+        RESULTDIR="${NSS_VER_DIR}/tinderbox/tests_results/security/${TRD}"
     fi
     TBX_DAILY_BUILD=`cd ../../../../..;pwd`
     NSS_VER_DIR="${TBX_DAILY_BUILD}/../.." 
-    #if [ "$O_WIN" = "ON" ] ; then
-        #TBX_LOGFILE_DIR="${NSS_VER_DIR}/logs/tbx/stalker_NT"
-    #else
-        #Debug "Testing for TBX_LOGDIR ${TBX_LOGDIR}"
-        #if [ -n "${TBX_LOGDIR}" ] ; then
-            #Debug "found TBX_LOGDIR ${TBX_LOGDIR}"
-            #TBX_LOGFILE_DIR="${TBX_LOGDIR}"
-        #elif [ -d "${NSS_VER_DIR}/logs/tinderbox/Solaris8" ] ; then
-            #TBX_LOGFILE_DIR="${NSS_VER_DIR}/logs/tinderbox/Solaris8"
-        #elif [ -d "${NSS_VER_DIR}/logs/tinderbox/Solaris8_64" ] ; then
-            #TBX_LOGFILE_DIR="${NSS_VER_DIR}/logs/tinderbox/Solaris8_64"
-        #elif [ -d "${NSS_VER_DIR}/logs/tinderbox/HP-UX-11.00" ] ; then
-            #TBX_LOGFILE_DIR="${NSS_VER_DIR}/logs/tinderbox/HP-UX-11.00"
-        #elif [ -d "${NSS_VER_DIR}/logs/tinderbox/HP-UX-11.00-64" ] ; then
-            #TBX_LOGFILE_DIR="${NSS_VER_DIR}/logs/tinderbox/HP-UX-11.00-64"
-        #elif [ -d "${NSS_VER_DIR}/logs/tinderbox/Solaris2.6" ] ; then
-            #TBX_LOGFILE_DIR="${NSS_VER_DIR}/logs/tinderbox/Solaris2.6"
-#/export/nss_tbx_aix64/logs/tinderbox/AIX64
-        #else
-            TBX_LOGFILE_DIR=`ls ${NSS_VER_DIR}/logs/tinderbox |
-                     sed -e 's/ .*//g'`
-            if [ -z "$TBX_LOGFILE_DIR" ] ; then
-                TBX_LOGFILE_DIR=`ls ${NSS_VER_DIR}/logs/tbx |
-                     sed -e 's/ .*//g'`
-                TBX_LOGFILE_DIR="${NSS_VER_DIR}/logs/tbx/${TBX_LOGFILE_DIR}"
-            else
-                TBX_LOGFILE_DIR="${NSS_VER_DIR}/logs/tinderbox/${TBX_LOGFILE_DIR}"
-            fi
-            #TBX_LOGFILE_DIR="${NSS_VER_DIR}/logs"
-        #fi
-        Debug "Set TBX_LOGFILE_DIR ${TBX_LOGFILE_DIR}"
-    #fi
+    TBX_LOGFILE_DIR=`ls ${NSS_VER_DIR}/logs/tinderbox | sed -e 's/ .*//g'`
+    if [ -z "$TBX_LOGFILE_DIR" ] ; then
+        TBX_LOGFILE_DIR=`ls ${NSS_VER_DIR}/logs/tbx | sed -e 's/ .*//g'`
+        TBX_LOGFILE_DIR="${NSS_VER_DIR}/logs/tbx/${TBX_LOGFILE_DIR}"
+    else
+        TBX_LOGFILE_DIR="${NSS_VER_DIR}/logs/tinderbox/${TBX_LOGFILE_DIR}"
+    fi
+    Debug "Set TBX_LOGFILE_DIR ${TBX_LOGFILE_DIR}"
     
     set_daily_build_dirs
     UX_MASTERDIR=`cd ../../../..;pwd`
