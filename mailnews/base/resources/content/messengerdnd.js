@@ -271,13 +271,15 @@ function DropOnFolderTree(event)
         else
         {
 			//temperary for single mail window, not working when supporting multiple mail windows
-			messageTree = GetThreadTree();
-			var nextMessage = GetNextMessageAfterDelete(messageTree.selectedItems);
-			if(nextMessage)
-				gNextMessageAfterDelete = nextMessage.getAttribute('id');
-			else
-				gNextMessageAfterDelete = null;
-
+			if (!ctrlKeydown)
+			{
+				messageTree = GetThreadTree();
+				var nextMessage = GetNextMessageAfterDelete(messageTree.selectedItems);
+				if(nextMessage)
+					gNextMessageAfterDelete = nextMessage.getAttribute('id');
+				else
+					gNextMessageAfterDelete = null;
+			}
 			messenger.CopyMessages(treeDatabase,
 									   sourceRescource,
 									   targetNode, messageList, !ctrlKeydown);
@@ -285,13 +287,15 @@ function DropOnFolderTree(event)
 	}
 	else
 	{
-
-		messageTree = GetThreadTree();
-		var nextMessage = GetNextMessageAfterDelete(messageTree.selectedItems);
-		if(nextMessage)
-			gNextMessageAfterDelete = nextMessage.getAttribute('id');
-		else
-			gNextMessageAfterDelete = null;
+		if (!ctrlKeydown)
+		{
+			messageTree = GetThreadTree();
+			var nextMessage = GetNextMessageAfterDelete(messageTree.selectedItems);
+			if(nextMessage)
+				gNextMessageAfterDelete = nextMessage.getAttribute('id');
+			else
+				gNextMessageAfterDelete = null;
+		}
 		messenger.CopyMessages(treeDatabase,
 							   sourceRescource,
 							   targetNode, messageList, !ctrlKeydown);
