@@ -11,3 +11,4 @@ config-defs.h
 a.out
 unallmakefiles
 nss
+mozilla-config.h
