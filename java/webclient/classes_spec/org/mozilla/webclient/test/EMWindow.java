@@ -59,7 +59,7 @@ import java.io.FileInputStream;
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EMWindow.java,v 1.42 2003/05/13 15:21:54 edburns%acm.org Exp $
+ * @version $Id: EMWindow.java,v 1.43 2003/05/13 20:22:07 edburns%acm.org Exp $
  *
  * @see org.mozilla.webclient.BrowserControlFactory
 
@@ -196,10 +196,25 @@ public EMWindow (String title, String binDir, String url, int winnum, EmbeddedMo
         navigation = (Navigation2)
             browserControl.queryInterface(BrowserControl.NAVIGATION_NAME);
         navigation.setPrompt(this);
+    }
+    catch (Exception e) {
+        System.out.println(e.toString());
+    }
+    try {
         currentPage = (CurrentPage2)
             browserControl.queryInterface(BrowserControl.CURRENT_PAGE_NAME);
+    }
+    catch (Exception e) {
+        System.out.println(e.toString());
+    }
+    try {
         history = (History)
             browserControl.queryInterface(BrowserControl.HISTORY_NAME);
+    }
+    catch (Exception e) {
+        System.out.println(e.toString());
+    }
+    try {
         prefs = (Preferences)
             browserControl.queryInterface(BrowserControl.PREFERENCES_NAME);
         prefs.registerPrefChangedCallback(this,
@@ -216,9 +231,6 @@ public EMWindow (String title, String binDir, String url, int winnum, EmbeddedMo
             System.setProperty("http.proxyHost", proxyHost);
             System.setProperty("http.proxyPort", proxyPort);
         }
-
-        //prefsProps = prefs.getPrefs();
-        //prefsProps.list(System.out);  // This works, try it!
     }
     catch (Exception e) {
         System.out.println(e.toString());
@@ -723,12 +735,13 @@ public void eventDispatched(WebclientEvent event)
             populateHistoryMenu();
             statusLabel.setText("Done.");
             urlStatusLabel.setText("");
-            currentDocument = currentPage.getDOM();
-            // add the new document to the domViewer
-            if (null != currentDocument && null != domViewer) {
-                domViewer.setDocument(currentDocument);
+            if (null != currentPage) {
+                currentDocument = currentPage.getDOM();
+                // add the new document to the domViewer
+                if (null != currentDocument && null != domViewer) {
+                    domViewer.setDocument(currentDocument);
+                }
             }
-
             break;
         case ((int) DocumentLoadEvent.PROGRESS_URL_LOAD_EVENT_MASK):
             status = "Status: " + (String) event.getEventData();

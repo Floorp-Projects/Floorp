@@ -32,9 +32,11 @@
 const char *gImplementedInterfaces[] = {
         "webclient.WindowControl",
         "webclient.Navigation",
-        "webclient.CurrentPage",
+//      "webclient.CurrentPage",
         "webclient.History",
         "webclient.EventRegistration",
+        "webclient.Bookmarks",
+//      "webclient.Preferences",
         0
         };
 

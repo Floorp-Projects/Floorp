@@ -304,6 +304,12 @@ ${myenv.MOZ_JDKHOME}/bin/java ${debug.options} org.mozilla.webclient.test.Embedd
 
     <delete dir="${build.home}/org/mozilla/webclient"/>
 
+    <delete >
+      <fileset dir="${basedir}/src_ie">
+        <include name="*.ilk"/>
+      </fileset>
+    </delete>
+
   </target>
 
   <target name="run.test" depends="main" description="Run unit tests">

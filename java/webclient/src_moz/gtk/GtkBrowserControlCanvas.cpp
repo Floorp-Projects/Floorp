@@ -42,6 +42,7 @@
 
 #include <dlfcn.h>
 
+typedef jboolean (JNICALL *PJAWT_GETAWT)(JNIEnv*, JAWT*);
 
 #include "../ns_util.h" //for throwing Exceptions to Java
 
@@ -186,19 +187,42 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_gtk_GtkBrowser
  * Signature: ()I
  */
 JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_gtk_GtkBrowserControlCanvas_getHandleToPeer
-(JNIEnv * env, jobject canvas) {
+  (JNIEnv *env, jobject canvas) {
     JAWT awt;
     JAWT_DrawingSurface* ds;
     JAWT_DrawingSurfaceInfo* dsi;
     JAWT_X11DrawingSurfaceInfo* dsi_x11;
     Drawable handle_x11;
+    void *_hAWT;     // JAWT module handle
     jint lock;
 
+    PJAWT_GETAWT pJAWT_GetAWT;  // JAWT_GetAWT function pointer
+
     //Get the AWT
+    _hAWT = dlopen("libjawt.so", RTLD_NOW | RTLD_GLOBAL);
+    if (!_hAWT) {
+	 printf(" +++ No libjawt.so... Trying libawt.so +++ \n");
+	 _hAWT = dlopen("libawt.so",RTLD_NOW | RTLD_GLOBAL);   // IBM Java 1.3.x packages JAWT_GetAWT in awt.dll
+    }
+    if (!_hAWT) {
+        printf(" +++ JAWT DLL Not Found +++ \n");
+	::util_ThrowExceptionToJava(env, "Exception: JAWT DLL Not Found");
+	return 0;
+    }
+
+    pJAWT_GetAWT = (PJAWT_GETAWT)dlsym(_hAWT, "JAWT_GetAWT");
+    if (!pJAWT_GetAWT) {
+        printf(" +++ JAWT_GetAWT Entry Not Found +++ \n");
+	::util_ThrowExceptionToJava(env, "Exception: JAWT_GetAWT Entry Not Found");
+	dlclose(_hAWT);
+	return 0;
+    }
+
     awt.version = JAWT_VERSION_1_3;
-    if (JAWT_GetAWT(env, &awt) == JNI_FALSE) {
+    if (pJAWT_GetAWT(env, &awt) == JNI_FALSE) {
         printf(" +++ AWT Not Found +++ \n");
         ::util_ThrowExceptionToJava(env, "Exception: AWT Not Found");
+	dlclose(_hAWT);
         return 0;
     }
     
@@ -207,6 +231,7 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_gtk_GtkBrowser
     if (ds == NULL) {
         printf(" +++ NULL Drawing Surface +++ \n");
         ::util_ThrowExceptionToJava(env, "Exception: Null Drawing Surface");
+	dlclose(_hAWT);
         return 0;
     }
 
@@ -216,6 +241,7 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_gtk_GtkBrowser
         printf(" +++ Error Locking Surface +++ \n");
         ::util_ThrowExceptionToJava(env, "Exception: Error Locking Surface");
         awt.FreeDrawingSurface(ds);
+	dlclose(_hAWT);
         return 0;
     }
 
@@ -226,6 +252,7 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_gtk_GtkBrowser
         ::util_ThrowExceptionToJava(env, "Exception: Error Getting Surface Info");
         ds->Unlock(ds);
         awt.FreeDrawingSurface(ds);
+	dlclose(_hAWT);
         return 0;
     }
     
@@ -239,6 +266,7 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_gtk_GtkBrowser
     ds->FreeDrawingSurfaceInfo(dsi);
     ds->Unlock(ds);
     awt.FreeDrawingSurface(ds);
+    dlclose(_hAWT);
 
     //return the native peer handle
     return (jint) handle_x11;

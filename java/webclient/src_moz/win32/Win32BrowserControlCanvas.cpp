@@ -33,7 +33,7 @@
 typedef jboolean (JNICALL *PJAWT_GETAWT)(JNIEnv*, JAWT*);
 
 #include "Win32BrowserControlCanvas.h"
-#include "ns_util.h" //for throwing Exceptions to Java
+#include "jni_util.h" //for throwing Exceptions to Java
 
 
 /*
@@ -66,7 +66,6 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_win32_Win32Bro
     }
 
     pJAWT_GetAWT = (PJAWT_GETAWT)GetProcAddress(_hAWT, "_JAWT_GetAWT@8");
-    printf ("Debug (RBC): pJAWT_GetAWT: %08x\n", pJAWT_GetAWT);
     if (!pJAWT_GetAWT) {
         printf(" +++ JAWT_GetAWT Entry Not Found +++ \n");
 	::util_ThrowExceptionToJava(env, "Exception: JAWT_GetAWT Entry Not Found");

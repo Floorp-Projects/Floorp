@@ -25,8 +25,6 @@ VPATH		= $(topsrcdir)/java/webclient/src_ie
 
 include $(DEPTH)/config/autoconf.mk
 
-#DIST = $(topsrcdir)/dist
-
 
 ifneq ($(BAL_INTERFACE),)
 LIBRARY_NAME	= webclient_bal
@@ -34,9 +32,6 @@ else
 LIBRARY_NAME	= webclient
 endif
 
-DLLNAME = webclient.dll
-
-PDBFILE = webclient.pdb
 
 CPPSRCS = \
 	ie_util.cpp \
@@ -56,31 +51,19 @@ CPPSRCS += \
 	../src_moz/win32/Win32BrowserControlCanvas.cpp \
 	$(NULL)
 
-_OBJS = $(CPPSRCS:.cpp=.obj)
-OBJS = $(strip $(_OBJS))
-
 EXTRA_LIBS = $(DIST)/lib/wc_share.lib
 
+# Do not copy modules to mozilla/dist
+NO_DIST_INSTALL = 1
 
-# include $(topsrcdir)/config/rules.mk
+include $(topsrcdir)/config/rules.mk
 
-INCLUDES := -I$(MOZ_JDKHOME)/include -I$(MOZ_JDKHOME)/include/win32 \
-       $(INCLUDES) \
-       -I../src_share -I.
+# Overrides eliminate dependencies on Mozilla
 
-CPP_FLAGS = /nologo /MDd /Zi /W3 /TP /Gy /c $(INCLUDES) /Fd$(PDBFILE)
-
-#MKSHLIB = link /NOLOGO /DLL /OUT:$@ /PDB:$(PDBFILE) /SUBSYSTEM:WINDOWS
-LDFLAGS  = /DEBUG /DEBUGTYPE:CV 
-
-%.obj:  %.cpp
-	cl /Fo$@ $(CPP_FLAGS) $<
-
-all: webclient.dll
-
-$(DLLNAME): $(OBJS) Makefile Makefile.in
-	rm -f $@
-	$(MKSHLIB) $(OBJS) $(LDFLAGS) $(OS_LIBS) $(EXTRA_LIBS) 
+INCLUDES = -I$(MOZ_JDKHOME)/include -I$(MOZ_JDKHOME)/include/win32 \
+		-I../src_share -I.
+DEFINES =
+OS_COMPILE_CXXFLAGS =
 
 
 clobber_all:: clobber
