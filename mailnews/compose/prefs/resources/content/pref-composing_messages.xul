@@ -46,9 +46,9 @@
         spellChecker = null;
       }
 
-      if (spellChecker) {
+      if (!spellChecker) {
         var spellCheckerCheckbox = document.getElementById("spellCheckBeforeSend");
-        spellCheckerCheckbox.removeAttribute("disabled");
+        spellCheckerCheckbox.setAttribute("disabled","true");
       }
     }
   ]]>
@@ -94,7 +94,7 @@
         
     <checkbox id="spellCheckBeforeSend" label="&spellCheck.label;"
               pref="true" preftype="bool" prefstring="mail.SpellCheckBeforeSend"
-              prefattribute="checked" disabled="true"/>
+              prefattribute="checked"/>
   
   <checkbox id="strictlyMime" label="&useMIME.label;"
                 pref="true" preftype="bool" prefstring="mail.strictly_mime"
