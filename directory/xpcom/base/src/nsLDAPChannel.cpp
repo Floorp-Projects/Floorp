@@ -875,7 +875,7 @@ nsLDAPChannel::OnLDAPSearchEntry(nsILDAPMessage *aMessage)
     NS_ENSURE_SUCCESS(rv, rv);
 
     entry.SetCapacity(256);
-    entry = NS_LITERAL_STRING("dn: ") + nsLiteralString(dn) 
+    entry = NS_LITERAL_STRING("dn: ") + nsDependentString(dn) 
         + NS_LITERAL_STRING("\n");
 
     char **attrs;
