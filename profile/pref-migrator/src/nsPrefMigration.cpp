@@ -26,7 +26,6 @@
 #include "pratom.h"
 #include "nsRepository.h"
 #include "nsIAppShellComponentImpl.h"
-#include "nsIBrowserWindow.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsINetSupportDialogService.h"
@@ -55,6 +54,7 @@
 #include "nsVoidArray.h"
 
 #include "nsIWebShellWindow.h"
+#include "nsIWebBrowserChrome.h"
 
 #ifdef DEBUG_seth
 #define DEBUG_UTF8_CONVERSION 1
@@ -327,7 +327,7 @@ nsPrefMigration::ProcessPrefs(PRBool showProgressAsModalWindow)
   if (NS_FAILED(rv)) return rv;
 
   rv = PMProgressAppShell->CreateTopLevelWindow(nsnull, pmprogressURL,
-                                          PR_TRUE, PR_TRUE, NS_CHROME_ALL_CHROME,
+                                          PR_TRUE, PR_TRUE, nsIWebBrowserChrome::allChrome,
                                           NS_SIZETOCONTENT, NS_SIZETOCONTENT,
                                           getter_AddRefs(mPMProgressWindow));
   if (NS_FAILED(rv)) return rv;
