@@ -3480,9 +3480,11 @@ nsArraySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     nsresult rv = GetItemAt(native, n, getter_AddRefs(array_item));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = WrapNative(cx, ::JS_GetGlobalObject(cx), array_item,
-                    NS_GET_IID(nsISupports), vp);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (array_item) {
+      rv = WrapNative(cx, ::JS_GetGlobalObject(cx), array_item,
+                      NS_GET_IID(nsISupports), vp);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
 
   return NS_OK;
