@@ -62,7 +62,7 @@ nsAccessibleHyperText::nsAccessibleHyperText(nsIDOMNode* aDomNode, nsIWeakRefere
   if (content) {
     nsCOMPtr<nsIContent> parentContent = content->GetParent();
     if (parentContent)
-      parentContent->IndexOf(content, mIndex);
+      mIndex = parentContent->IndexOf(content);
   }
 
   nsCOMPtr<nsIPresShell> shell(do_QueryReferent(aShell));
