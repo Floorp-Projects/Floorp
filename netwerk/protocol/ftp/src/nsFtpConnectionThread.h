@@ -23,6 +23,7 @@
 #include "nsIRunnable.h"
 #include "nsIRequest.h"
 #include "nsISocketTransportService.h"
+#include "nsIEventSinkGetter.h"
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
 #include "nsIOutputStream.h"
@@ -124,17 +125,16 @@ public:
     nsFtpConnectionThread();
     virtual ~nsFtpConnectionThread();
 
-    nsresult Init(nsIEventQueue* aFTPEventQ,
-                  nsIURI* aUrl,
+    nsresult Init(nsIURI* aUrl,
                   nsIEventQueue* aEventQ,
                   nsIProtocolHandler* aHandler,
                   nsIChannel* channel,
-                  nsISupports* ctxt);
+                  nsISupports* ctxt,
+                  nsIEventSinkGetter* aEventSink);
     nsresult Process();
 
     // user level setup
     nsresult SetAction(FTP_ACTION aAction);
-
 private:
 
     ///////////////////////////////////
@@ -187,6 +187,7 @@ private:
     // Private members
 
     nsCOMPtr<nsIEventQueue> mFTPEventQueue;     // the eventq for this thread.
+    nsCOMPtr<nsIEventQueue> mOutsideEventQueue; // the eventq for the using thread.
     nsCOMPtr<nsIURI>    mURL;
 
     FTP_STATE           mState;             // the current state
@@ -223,7 +224,6 @@ private:
     nsCAutoString       mCacheKey;         // the key into the cache hash.
 
     PRBool              mConnected;
-    PRBool              mUseDefaultPath;    // use PWD to figure out path
     PRBool              mUsePasv;           // use a passive data connection.
     PRBool              mDirectory;         // this url is a directory
     PRBool              mBin;               // transfer mode (ascii or binary)
@@ -248,6 +248,7 @@ private:
 
     nsString2           mContentType;       // the content type of the data we're dealing w/.
     nsXPIDLCString      mURLSpec;
+    nsCOMPtr<nsIEventSinkGetter>    mEventSinkGetter;
 };
 
 #define NS_FTP_BUFFER_READ_SIZE             (8*1024)

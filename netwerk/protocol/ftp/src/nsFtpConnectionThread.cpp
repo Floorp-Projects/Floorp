@@ -39,6 +39,7 @@
 #include "nsProxiedService.h"
 #include "nsINetSupportDialogService.h"
 #include "nsFtpProtocolHandler.h"
+#include "nsIFTPChannel.h"
 
 static NS_DEFINE_CID(kIOServiceCID,                 NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kStreamConverterServiceCID,    NS_STREAMCONVERTERSERVICE_CID);
@@ -104,8 +105,28 @@ NS_IMPL_ISUPPORTS(nsFTPContext, kIFTPContextIID);
 
 
 // BEGIN: nsFtpConnectionThread implementation
-
-NS_IMPL_ISUPPORTS2(nsFtpConnectionThread, nsIRunnable, nsIRequest);
+NS_IMETHODIMP_(nsrefcnt) nsFtpConnectionThread::AddRef(void)
+{                                                            
+  NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");  
+  ++mRefCnt;                                                 
+  NS_LOG_ADDREF(this, mRefCnt, "nsFtpConnectionThread", sizeof(*this));      
+  return mRefCnt;                                            
+}
+                          
+NS_IMETHODIMP_(nsrefcnt) nsFtpConnectionThread::Release(void)               
+{                                                            
+  NS_PRECONDITION(0 != mRefCnt, "dup release");              
+  --mRefCnt;                                                 
+  NS_LOG_RELEASE(this, mRefCnt, "nsFtpConnectionThread");                    
+  if (mRefCnt == 0) {                                        
+    mRefCnt = 1; /* stabilize */                             
+    NS_DELETEXPCOM(this);                                    
+    return 0;                                                
+  }                                                          
+  return mRefCnt;                                            
+}
+NS_IMPL_QUERY_INTERFACE2(nsFtpConnectionThread, nsIRunnable, nsIRequest);
+//NS_IMPL_ISUPPORTS2(nsFtpConnectionThread, nsIRunnable, nsIRequest);
 
 nsFtpConnectionThread::nsFtpConnectionThread() {
     NS_INIT_REFCNT();
@@ -119,7 +140,6 @@ nsFtpConnectionThread::nsFtpConnectionThread() {
     mResetMode = PR_FALSE;
     mList      = PR_FALSE;
     mKeepRunning = PR_TRUE;
-    mUseDefaultPath = PR_FALSE;
     mContinueRead = PR_FALSE;
     mAnonymous = PR_TRUE;
     mRetryPass = PR_FALSE;
@@ -253,7 +273,6 @@ nsFtpConnectionThread::Process() {
                 PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - COMPLETE\n", mURL.get()));
                 // push through all of the pertinent state into the cache entry;
                 mConn->mCwd = mCwd;
-                mConn->mUseDefaultPath = mUseDefaultPath;
                 rv = mConnCache->InsertConn(mCacheKey.GetBuffer(), mConn);
                 if (NS_FAILED(rv)) return rv;
 
@@ -866,12 +885,11 @@ nsFtpConnectionThread::R_syst() {
 
         SetSystInternals(); // must be called first to setup member vars.
  
-        if (!mUseDefaultPath)
-            state = FindActionState();
-
         // setup next state based on server type.
         if (mServerType == FTP_PETER_LEWIS_TYPE || mServerType == FTP_WEBSTAR_TYPE)
             state = FTP_S_MACB;
+        else
+            state = FindActionState();
     }
 
     return state;
@@ -932,7 +950,6 @@ nsFtpConnectionThread::S_pwd() {
 
 FTP_STATE
 nsFtpConnectionThread::R_pwd() {
-    nsresult rv;
     FTP_STATE state = FTP_ERROR;
     nsCAutoString lNewMsg(mResponseMsg);
     // fun response interpretation begins :)
@@ -968,53 +985,6 @@ nsFtpConnectionThread::R_pwd() {
             // path names ending with ']' imply vms
             mServerType = FTP_VMS_TYPE;
             mList = PR_TRUE;
-        }
-    }
-
-    // we only want to use the parent working directory (pwd) when
-    // the url supplied provides ambiguous path info (such as /./, or
-    // no slash at all.
-
-    if (mUseDefaultPath && mServerType != FTP_VMS_TYPE) {
-        mUseDefaultPath = PR_FALSE;
-        // we want to use the default path specified by the PWD command.
-        nsCAutoString ptr;
-
-        if (lNewMsg.First() != '/') {
-            PRInt32 start = lNewMsg.FindChar('/');
-            if (start > -1) {
-                lNewMsg.Right(ptr, start); // use everything after the first slash (inclusive)
-            } else {
-                // if we couldn't find a slash, check for back slashes and switch them out.
-                start = lNewMsg.FindChar('\\');
-                if (start > -1) {
-                    lNewMsg.ReplaceChar("\\", '/');
-                }
-                ptr = lNewMsg;
-            }
-        } else {
-            ptr = lNewMsg;
-        }
-
-        // construct the new url by appending
-        // the initial path to the new path.
-        if (ptr.Length()) {
-
-            nsXPIDLCString initialPath;
-            rv = mURL->GetPath(getter_Copies(initialPath));
-            if (NS_FAILED(rv)) return FTP_ERROR;
-
-            if (ptr.Last() == '/') {
-                PRUint32 insertionOffset = ptr.Length() - 1;
-                ptr.Cut(insertionOffset, 1);
-                ptr.Insert(initialPath, insertionOffset);
-            } else {
-                ptr.Append(initialPath);
-            }
-
-            const char *p = ptr.GetBuffer();
-            rv = mURL->SetPath(p);
-            if (NS_FAILED(rv)) return FTP_ERROR;
         }
     }
 
@@ -1280,7 +1250,8 @@ nsFtpConnectionThread::R_list() {
 
     rv = StreamConvService->AsyncConvertData(fromStr.GetUnicode(),
                                              toStr.GetUnicode(),
-                                             mSyncListener, mURL, getter_AddRefs(converterListener));
+                                             mSyncListener,
+                                             mURL, getter_AddRefs(converterListener));
     if (NS_FAILED(rv)) {
         return FTP_ERROR;
     }
@@ -1511,7 +1482,9 @@ nsFtpConnectionThread::R_pasv() {
     nsAllocator::Free(response);
 
     // now we know where to connect our data channel
-    rv = mSTS->CreateTransport(host.GetBuffer(), port, nsnull, getter_AddRefs(mDPipe)); // the data channel
+    rv = mSTS->CreateTransport(host.GetBuffer(), port,
+                               nsnull, /* don't push the event sink getter through for the data channel */
+                               getter_AddRefs(mDPipe)); // the data channel
     if (NS_FAILED(rv)) return FTP_ERROR;
 
     if (mAction == GET) {
@@ -1635,7 +1608,33 @@ nsFtpConnectionThread::R_mkdir() {
 NS_IMETHODIMP
 nsFtpConnectionThread::Run() {
     nsresult rv;
+
+    NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = eventQService->CreateThreadEventQueue();
+    if (NS_FAILED(rv)) return rv;
+
+    rv = eventQService->GetThreadEventQueue(PR_GetCurrentThread(), getter_AddRefs(mFTPEventQueue));
+    if (NS_FAILED(rv)) return rv;
+
+    // we've got to send the event queue for this sucker over to the 
+    // channel's thread so he can post event back to us.
+    NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, kProxyObjectManagerCID, &rv);
+    if(NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIFTPChannel> ftpChannel;
+    rv = pIProxyObjectManager->GetProxyObject(mOutsideEventQueue, 
+                                              NS_GET_IID(nsIFTPChannel), 
+                                              mChannel,
+                                              PROXY_SYNC | PROXY_ALWAYS,
+                                              getter_AddRefs(ftpChannel));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = ftpChannel->SetConnectionQueue(mFTPEventQueue);
+    if (NS_FAILED(rv)) return rv;
     
+
     rv = nsServiceManager::GetService(kSocketTransportServiceCID,
                                       NS_GET_IID(nsISocketTransportService), 
                                       (nsISupports **)&mSTS);
@@ -1666,10 +1665,9 @@ nsFtpConnectionThread::Run() {
         mServerType = mConn->mServerType;
         mCwd        = mConn->mCwd;
         mList       = mConn->mList;
-        mUseDefaultPath = mConn->mUseDefaultPath;
     } else {
         // build our own
-        rv = mSTS->CreateTransport(host, port, nsnull, getter_AddRefs(mCPipe)); // the command channel
+        rv = mSTS->CreateTransport(host, port, mEventSinkGetter, getter_AddRefs(mCPipe)); // the command channel
         if (NS_FAILED(rv)) return rv;
 
         // get the output stream so we can write to the server
@@ -1753,6 +1751,10 @@ nsFtpConnectionThread::Run() {
     mConnected = PR_TRUE;
 
     rv = Process();
+    mListener = 0;
+    mSyncListener = 0;
+    mChannel = 0;
+    mConnCache = 0;
 
     return rv;
 }
@@ -1822,41 +1824,50 @@ nsFtpConnectionThread::Resume(void)
 }
 
 nsresult
-nsFtpConnectionThread::Init(nsIEventQueue* aFTPEventQ,
-                            nsIURI* aUrl,
+nsFtpConnectionThread::Init(nsIURI* aUrl,
                             nsIEventQueue* aEventQ,
                             nsIProtocolHandler* aHandler,
                             nsIChannel* aChannel,
-                            nsISupports* aContext) {
+                            nsISupports* aContext,
+                            nsIEventSinkGetter* aEventSinkGetter) {
     nsresult rv;
 
-    NS_ASSERTION(aFTPEventQ, "FTP: thread needs an event queue to process");
-    mFTPEventQueue = aFTPEventQ;
-
     NS_ASSERTION(aChannel, "FTP: thread needs a channel");
+
+    mOutsideEventQueue = aEventQ;
+    mEventSinkGetter   = aEventSinkGetter;
 
     NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, kProxyObjectManagerCID, &rv);
     if(NS_FAILED(rv)) return rv;
 
-    rv = pIProxyObjectManager->GetProxyObject(aEventQ, 
+    rv = pIProxyObjectManager->GetProxyObject(mOutsideEventQueue, 
                                               NS_GET_IID(nsIStreamListener), 
                                               aChannel,
                                               PROXY_ASYNC | PROXY_ALWAYS,
                                               getter_AddRefs(mListener));
     if (NS_FAILED(rv)) return rv;
 
-    rv = pIProxyObjectManager->GetProxyObject(aEventQ, 
+    rv = pIProxyObjectManager->GetProxyObject(mOutsideEventQueue, 
                                               NS_GET_IID(nsIStreamListener), 
                                               aChannel,
                                               PROXY_SYNC | PROXY_ALWAYS,
                                               getter_AddRefs(mSyncListener));
     if (NS_FAILED(rv)) return rv;
 
-    rv = pIProxyObjectManager->GetProxyObject(aEventQ, 
+    rv = pIProxyObjectManager->GetProxyObject(mOutsideEventQueue, 
                                               NS_GET_IID(nsIChannel), 
                                               aChannel,
                                               PROXY_SYNC | PROXY_ALWAYS,
                                               getter_AddRefs(mChannel));
+    if (NS_FAILED(rv)) return rv;
+
+    // get a proxied ptr to the FTP protocol handler service so we can control
+    // the connection cache from here.
+    rv = pIProxyObjectManager->GetProxyObject(nsnull, 
+                                              NS_GET_IID(nsIConnectionCache), 
+                                              aHandler,
+                                              PROXY_SYNC | PROXY_ALWAYS,
+                                              getter_AddRefs(mConnCache));
     if (NS_FAILED(rv)) return rv;
 
     mContext = aContext;
@@ -1903,24 +1914,6 @@ nsFtpConnectionThread::Init(nsIEventQueue* aFTPEventQ,
                                               PROXY_SYNC | PROXY_ALWAYS,
                                               getter_AddRefs(mConnCache));
     if (NS_FAILED(rv)) return rv;
-
-    // XXX this entire check can probably go away.
-    // figure out whether or not we want to use the default path supplied by the server.
-    // we want to do this when there's some ambiguity in our path.
-    nsXPIDLCString path;
-    rv = mURL->GetPath(getter_Copies(path));
-    if (NS_FAILED(rv)) return rv;
-
-    if (!path || !*path || !PL_strncmp(path, "/.", 2) ) {
-        // scoot past the '/.'
-        char *newPath = nsCRT::strdup((const char*)path+2);
-        if (!newPath) return NS_ERROR_OUT_OF_MEMORY;
-
-        rv = mURL->SetPath(newPath);
-        if (NS_FAILED(rv)) return rv;
-
-        mUseDefaultPath = PR_TRUE;
-    }
 
     return NS_OK;
 }

@@ -18,21 +18,12 @@
 
 #include "nsIChannel.idl"
 
-interface nsIStreamListener;
+interface nsIEventQueue;
 
 [scriptable, uuid(64718e40-18c2-11d3-9337-00104ba0fd40)]
 interface nsIFTPChannel : nsIChannel
 {
-    // PRE connect
-
-    // POST connect
-
-    // Initiate connect
-    void Get();
-
-    void Put();
-
-    void SetStreamListener(in nsIStreamListener aListener);
+    void SetConnectionQueue(in nsIEventQueue aEventQ);
 };
 
 
