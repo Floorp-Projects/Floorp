@@ -1405,7 +1405,467 @@ void
 nsGenericElement::Finalize(JSContext *aContext, JSObject *aObj)
 {
 }
+
+// Generic DOMNode implementations
+
+/*
+ * This helper function checks if aChild is the same as aNode or if
+ * aChild is one of aNode's ancestors. -- jst@citec.fi
+ */
+
+static PRBool isSelfOrAncestor(nsIContent *aNode, nsIContent *aChild)
+{
+  if (aNode == aChild)
+    return PR_TRUE;
+
+  nsCOMPtr<nsIContent> parent, tmpNode;
+  PRInt32 childCount = 0;
+
+  /*
+   * If aChild doesn't have children it can't be our ancestor
+   */
+  aChild->ChildCount(childCount);
+
+  if (childCount <= 0) {
+    return PR_FALSE;
+  }
+
+  aNode->GetParent(*getter_AddRefs(parent));
+
+  while (parent) {
+    if (parent.get() == aChild) {
+      /*
+       * We found aChild as one of our ancestors
+       */
+      return PR_TRUE;
+    }
+
+    parent->GetParent(*getter_AddRefs(tmpNode));
+
+    parent = tmpNode;
+  }
+
+  return PR_FALSE;
+}
+
+
+nsresult
+nsGenericElement::doInsertBefore(nsIDOMNode* aNewChild,
+                                 nsIDOMNode* aRefChild,
+                                 nsIDOMNode** aReturn)
+{
+  if (!aReturn) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  *aReturn = nsnull;
+
+  if (!aNewChild) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  nsCOMPtr<nsIContent> refContent;
+  nsresult res = NS_OK;
+  PRInt32 refPos = 0;
+
+  if (aRefChild) {
+    refContent = do_QueryInterface(aRefChild, &res);
+
+    if (NS_FAILED(res)) {
+      /*
+       * If aRefChild doesn't support the nsIContent interface it can't be
+       * an existing child of this node.
+       */
+      return NS_ERROR_DOM_NOT_FOUND_ERR;
+    }
+
+    mContent->IndexOf(refContent, refPos);
+
+    if (refPos < 0) {
+      return NS_ERROR_DOM_NOT_FOUND_ERR;
+    }
+  } else {
+    mContent->ChildCount(refPos);
+  }
+
+  PRUint16 nodeType = 0;
+
+  res = aNewChild->GetNodeType(&nodeType);
+
+  if (NS_FAILED(res)) {
+    return res;
+  }
+
+  switch (nodeType) {
+  case nsIDOMNode::ELEMENT_NODE :
+  case nsIDOMNode::TEXT_NODE :
+  case nsIDOMNode::CDATA_SECTION_NODE :
+  case nsIDOMNode::ENTITY_REFERENCE_NODE :
+  case nsIDOMNode::PROCESSING_INSTRUCTION_NODE :
+  case nsIDOMNode::COMMENT_NODE :
+    break;
+  case nsIDOMNode::DOCUMENT_FRAGMENT_NODE :
+    break;
+  default:
+    /*
+     * aNewChild is of invalid type.
+     */
+    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+  }
+
+  nsCOMPtr<nsIContent> newContent(do_QueryInterface(aNewChild, &res));
+
+  if (NS_FAILED(res)) {
+    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+  }
+
+  /*
+   * Make sure the new child is not "this" node or one of this nodes
+   * ancestors. Doing this check here should be safe even if newContent
+   * is a document fragment.
+   */
+  if (isSelfOrAncestor(mContent, newContent)) {
+    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+  }
+
+  /*
+   * Check if this is a document fragment. If it is, we need
+   * to remove the children of the document fragment and add them
+   * individually (i.e. we don't add the actual document fragment).
+   */
+  if (nodeType == nsIDOMNode::DOCUMENT_FRAGMENT_NODE) {
+    nsCOMPtr<nsIContent> childContent;
+    PRInt32 count, i;
+
+    newContent->ChildCount(count);
+
+    /*
+     * Iterate through the fragments children, removing each from
+     * the fragment and inserting it into the child list of its
+     * new parent.
+     */
+    for (i = 0; i < count; i++) {
+      // Always get and remove the first child, since the child indexes
+      // change as we go along.
+      res = newContent->ChildAt(0, *getter_AddRefs(childContent));
+      if (NS_FAILED(res)) {
+        return res;
+      }
+
+      res = newContent->RemoveChildAt(0, PR_FALSE);
+
+      if (NS_FAILED(res)) {
+        return res;
+      }
+
+      childContent->SetDocument(mDocument, PR_TRUE);
+
+      // Insert the child and increment the insertion position
+      res = mContent->InsertChildAt(childContent, refPos++, PR_TRUE);
+
+      if (NS_FAILED(res)) {
+        return res;
+      }
+    }
+  } else {
+    nsCOMPtr<nsIDOMNode> oldParent;
+    res = aNewChild->GetParentNode(getter_AddRefs(oldParent));
+
+    if (NS_FAILED(res)) {
+      return res;
+    }
+
+    /*
+     * Remove the element from the old parent if one exists, since oldParent
+     * is a nsIDOMNode this will do the right thing even if the parent of
+     * aNewChild is a document. This code also handles the case where the
+     * new child is alleady a child of this node-- jst@citec.fi
+     */
+    if (oldParent) {
+      nsCOMPtr<nsIDOMNode> tmpNode;
+
+      PRInt32 origChildCount, newChildCount;
+
+      mContent->ChildCount(origChildCount);
+
+      /*
+       * We don't care here if the return fails or not.
+       */
+      oldParent->RemoveChild(aNewChild, getter_AddRefs(tmpNode));
+
+      mContent->ChildCount(newChildCount);
+
+      /*
+       * Check if our child count changed during the RemoveChild call, if
+       * it did then oldParent is most likely this node. In this case we
+       * must check if refPos is still correct (unless it's zero).
+       */
+      if (refPos && origChildCount != newChildCount) {
+        if (refContent) {
+          /*
+           * If we did get aRefChild we check if that is now at refPos - 1,
+           * this will happend if the new child was one of aRefChilds'
+           * previous siblings.
+           */
+          nsCOMPtr<nsIContent> tmpContent;
+
+          mContent->ChildAt(refPos - 1, *getter_AddRefs(tmpContent));
+
+          if (refContent == tmpContent) {
+            refPos--;
+          }
+        } else {
+          /*
+           * If we didn't get aRefChild we simply decrement refPos.
+           */
+          refPos--;
+        }
+      }
+    }
+
+    newContent->SetDocument(mDocument, PR_TRUE);
+
+    res = mContent->InsertChildAt(newContent, refPos, PR_TRUE);
+
+    if (NS_FAILED(res)) {
+      return res;
+    }
+  }
+
+  *aReturn = aNewChild;
+  NS_ADDREF(*aReturn);
+
+  return res;
+}
+
  
+nsresult
+nsGenericElement::doReplaceChild(nsIDOMNode* aNewChild,
+                                 nsIDOMNode* aOldChild,
+                                 nsIDOMNode** aReturn)
+{
+  if (!aReturn) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  *aReturn = nsnull;
+
+  if (!aNewChild || !aOldChild) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  nsresult res = NS_OK;
+  PRInt32 oldPos = 0;
+
+  nsCOMPtr<nsIContent> oldContent(do_QueryInterface(aOldChild, &res));
+
+  if (NS_FAILED(res)) {
+    /*
+     * If aOldChild doesn't support the nsIContent interface it can't be
+     * an existing child of this node.
+     */
+    return NS_ERROR_DOM_NOT_FOUND_ERR;
+  }
+
+  mContent->IndexOf(oldContent, oldPos);
+
+  if (oldPos < 0) {
+    return NS_ERROR_DOM_NOT_FOUND_ERR;
+  }
+
+  nsCOMPtr<nsIContent> replacedChild;
+
+  mContent->ChildAt(oldPos, *getter_AddRefs(replacedChild));
+
+  PRUint16 nodeType = 0;
+
+  res = aNewChild->GetNodeType(&nodeType);
+
+  if (NS_FAILED(res)) {
+    return res;
+  }
+
+  switch (nodeType) {
+  case nsIDOMNode::ELEMENT_NODE :
+  case nsIDOMNode::TEXT_NODE :
+  case nsIDOMNode::CDATA_SECTION_NODE :
+  case nsIDOMNode::ENTITY_REFERENCE_NODE :
+  case nsIDOMNode::PROCESSING_INSTRUCTION_NODE :
+  case nsIDOMNode::COMMENT_NODE :
+  case nsIDOMNode::DOCUMENT_FRAGMENT_NODE :
+    break;
+  default:
+    /*
+     * aNewChild is of invalid type.
+     */
+
+    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+  }
+
+  nsCOMPtr<nsIContent> newContent(do_QueryInterface(aNewChild, &res));
+
+  if (NS_FAILED(res)) {
+    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+  }
+
+  nsCOMPtr<nsIDocument> document;
+
+  mContent->GetDocument(*getter_AddRefs(document));
+
+  /*
+   * Make sure the new child is not "this" node or one of this nodes
+   * ancestors. Doing this check here should be safe even if newContent
+   * is a document fragment.
+   */
+  if (isSelfOrAncestor(mContent, newContent)) {
+    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+  }
+
+  /*
+   * Check if this is a document fragment. If it is, we need
+   * to remove the children of the document fragment and add them
+   * individually (i.e. we don't add the actual document fragment).
+   */
+  if (nodeType == nsIDOMNode::DOCUMENT_FRAGMENT_NODE) {
+    nsCOMPtr<nsIContent> childContent;
+    PRInt32 count, i;
+
+    newContent->ChildCount(count);
+
+    /*
+     * Iterate through the fragments children, removing each from
+     * the fragment and inserting it into the child list of its
+     * new parent.
+     */
+    for (i =0; i < count; i++) {
+      // Always get and remove the first child, since the child indexes
+      // change as we go along.
+      res = newContent->ChildAt(0, *getter_AddRefs(childContent));
+      if (NS_FAILED(res)) {
+        return res;
+      }
+
+      res = newContent->RemoveChildAt(0, PR_FALSE);
+
+      if (NS_FAILED(res)) {
+        return res;
+      }
+
+      childContent->SetDocument(document, PR_TRUE);
+
+      // Insert the child and increment the insertion position
+      if (i) {
+        res = mContent->InsertChildAt(childContent, oldPos++, PR_TRUE);
+      } else {
+        res = mContent->ReplaceChildAt(childContent, oldPos++, PR_TRUE);
+      }
+
+      if (NS_FAILED(res)) {
+        return res;
+      }
+    }
+  } else {
+    nsCOMPtr<nsIDOMNode> oldParent;
+    res = aNewChild->GetParentNode(getter_AddRefs(oldParent));
+
+    if (NS_FAILED(res)) {
+      return res;
+    }
+
+    /*
+     * Remove the element from the old parent if one exists, since oldParent
+     * is a nsIDOMNode this will do the right thing even if the parent of
+     * aNewChild is a document. This code also handles the case where the
+     * new child is alleady a child of this node-- jst@citec.fi
+     */
+    if (oldParent) {
+      nsCOMPtr<nsIDOMNode> tmpNode;
+
+      PRInt32 origChildCount, newChildCount;
+
+      mContent->ChildCount(origChildCount);
+
+      /*
+       * We don't care here if the return fails or not.
+       */
+      oldParent->RemoveChild(aNewChild, getter_AddRefs(tmpNode));
+
+      mContent->ChildCount(newChildCount);
+
+      /*
+       * Check if our child count changed during the RemoveChild call, if
+       * it did then oldParent is most likely this node. In this case we
+       * must check if oldPos is still correct (unless it's zero).
+       */
+      if (oldPos && origChildCount != newChildCount) {
+        /*
+         * Check if aOldChild is now at oldPos - 1, this will happend if
+         * the new child was one of aOldChilds' previous siblings.
+         */
+        nsCOMPtr<nsIContent> tmpContent;
+
+        mContent->ChildAt(oldPos - 1, *getter_AddRefs(tmpContent));
+
+        if (oldContent == tmpContent) {
+          oldPos--;
+        }
+      }
+    }
+
+    newContent->SetDocument(document, PR_TRUE);
+
+    res = mContent->ReplaceChildAt(newContent, oldPos, PR_TRUE);
+
+    if (NS_FAILED(res)) {
+      return res;
+    }
+  }
+
+  return replacedChild->QueryInterface(NS_GET_IID(nsIDOMNode),
+                                       (void **)aReturn);
+}
+
+
+nsresult
+nsGenericElement::doRemoveChild(nsIDOMNode* aOldChild, 
+                                nsIDOMNode** aReturn)
+{
+  *aReturn = nsnull;
+
+  if (!aOldChild) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  nsresult res;
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aOldChild, &res));
+
+  if (NS_FAILED(res)) {
+    /*
+     * If we're asked to remove something that doesn't support nsIContent
+     * it can not be one of our children, i.e. we return NOT_FOUND_ERR.
+     */
+    return NS_ERROR_DOM_NOT_FOUND_ERR;
+  }
+
+  PRInt32 pos;
+  mContent->IndexOf(content, pos);
+
+  if (pos < 0) {
+    /*
+     * aOldChild isn't one of our children.
+     */
+    return NS_ERROR_DOM_NOT_FOUND_ERR;
+  }
+
+  res = mContent->RemoveChildAt(pos, PR_TRUE);
+
+  *aReturn = aOldChild;
+  NS_ADDREF(aOldChild);
+
+  return res;
+}
+
 //----------------------------------------------------------------------
 
 // nsISupports implementation
@@ -1716,302 +2176,6 @@ nsGenericContainerElement::GetLastChild(nsIDOMNode** aNode)
   *aNode = nsnull;
   return NS_OK;
 }
-
-
-nsresult
-nsGenericContainerElement::InsertBefore(nsIDOMNode* aNewChild,
-                                        nsIDOMNode* aRefChild,
-                                        nsIDOMNode** aReturn)
-{
-  nsresult res;
-
-  *aReturn = nsnull;
-  if (nsnull == aNewChild) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  // Check if this is a document fragment. If it is, we need
-  // to remove the children of the document fragment and add them
-  // individually (i.e. we don't add the actual document fragment).
-  nsIDOMDocumentFragment* docFrag = nsnull;
-  if (NS_OK == aNewChild->QueryInterface(kIDOMDocumentFragmentIID,
-                                         (void **)&docFrag)) {
-    
-    nsIContent* docFragContent;
-    res = aNewChild->QueryInterface(kIContentIID, (void **)&docFragContent);
-
-    if (NS_OK == res) {
-      nsIContent* refContent = nsnull;
-      nsIContent* childContent = nsnull;
-      PRInt32 refPos = 0;
-      PRInt32 i, count;
-
-      if (nsnull != aRefChild) {
-        res = aRefChild->QueryInterface(kIContentIID, (void **)&refContent);
-        NS_ASSERTION(NS_OK == res, "Ref child must be an nsIContent");
-        IndexOf(refContent, refPos);
-      }
-
-      docFragContent->ChildCount(count);
-      // Iterate through the fragments children, removing each from
-      // the fragment and inserting it into the child list of its
-      // new parent.
-      for (i = 0; i < count; i++) {
-        // Always get and remove the first child, since the child indexes
-        // change as we go along.
-        res = docFragContent->ChildAt(0, childContent);
-        if (NS_OK == res) {
-          res = docFragContent->RemoveChildAt(0, PR_FALSE);
-          if (NS_OK == res) {
-            SetDocumentInChildrenOf(childContent, mDocument);
-            if (nsnull == refContent) {
-              // Append the new child to the end
-              res = AppendChildTo(childContent, PR_TRUE);
-            }
-            else {
-              // Insert the child and increment the insertion position
-              res = InsertChildAt(childContent, refPos++, PR_TRUE);
-            }
-            if (NS_OK != res) {
-              // Stop inserting and indicate failure
-              break;
-            }
-          }
-          else {
-            // Stop inserting and indicate failure
-            break;
-          }
-        }
-        else {
-          // Stop inserting and indicate failure
-          break;
-        }
-      }
-      NS_RELEASE(docFragContent);
-      
-      // XXX Should really batch notification till the end
-      // rather than doing it for each element added
-      if (NS_OK == res) {
-        *aReturn = aNewChild;
-        NS_ADDREF(aNewChild);
-      }
-      NS_IF_RELEASE(refContent);
-    }
-    else {
-      res = NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
-    }
-    NS_RELEASE(docFrag);
-  }
-  else {
-    // Get the nsIContent interface for the new content
-    nsIContent* newContent = nsnull;
-    res = aNewChild->QueryInterface(kIContentIID, (void**)&newContent);
-    NS_ASSERTION(NS_OK == res, "New child must be an nsIContent");
-    if (NS_OK == res) {
-      nsIContent* oldParent;
-      res = newContent->GetParent(oldParent);
-      if (NS_OK == res) {
-        // Remove the element from the old parent if one exists
-        if (nsnull != oldParent) {
-          PRInt32 index;
-          oldParent->IndexOf(newContent, index);
-          if (-1 != index) {
-            oldParent->RemoveChildAt(index, PR_TRUE);
-          }
-          NS_RELEASE(oldParent);
-        }
-
-        if (nsnull == aRefChild) {
-          // Append the new child to the end
-          SetDocumentInChildrenOf(newContent, mDocument);
-          res = AppendChildTo(newContent, PR_TRUE);
-        }
-        else {
-          // Get the index of where to insert the new child
-          nsIContent* refContent = nsnull;
-          res = aRefChild->QueryInterface(kIContentIID, (void**)&refContent);
-          NS_ASSERTION(NS_OK == res, "Ref child must be an nsIContent");
-          if (NS_OK == res) {
-            PRInt32 pos;
-            IndexOf(refContent, pos);
-            if (pos >= 0) {
-              SetDocumentInChildrenOf(newContent, mDocument);
-              res = InsertChildAt(newContent, pos, PR_TRUE);
-            }
-            else {
-              res = NS_ERROR_DOM_NOT_FOUND_ERR;
-            }
-            NS_RELEASE(refContent);
-          }
-          else {
-            res = NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
-          }
-        }
-      }
-      NS_RELEASE(newContent);
-
-      *aReturn = aNewChild;
-      NS_ADDREF(aNewChild);
-    }
-    else {
-      res = NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
-    }
-  }
-
-  return res;
-}
-
-nsresult
-nsGenericContainerElement::ReplaceChild(nsIDOMNode* aNewChild,
-                                        nsIDOMNode* aOldChild,
-                                        nsIDOMNode** aReturn)
-{
-  *aReturn = nsnull;
-  if (nsnull == aOldChild) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (nsnull == aNewChild) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIContent* content = nsnull;
-  nsresult res = aOldChild->QueryInterface(kIContentIID, (void**)&content);
-  NS_ASSERTION(NS_SUCCEEDED(res), "Must be an nsIContent");
-  if (NS_SUCCEEDED(res)) {
-    PRInt32 pos;
-    IndexOf(content, pos);
-    if (pos >= 0) {
-      nsIContent* newContent = nsnull;
-      res = aNewChild->QueryInterface(kIContentIID, (void**)&newContent);
-      NS_ASSERTION(NS_SUCCEEDED(res), "Must be an nsIContent");
-      if (NS_SUCCEEDED(res)) {
-        // Check if this is a document fragment. If it is, we need
-        // to remove the children of the document fragment and add them
-        // individually (i.e. we don't add the actual document fragment).
-        nsIDOMDocumentFragment* docFrag = nsnull;
-        if (NS_OK == aNewChild->QueryInterface(kIDOMDocumentFragmentIID,
-                                               (void **)&docFrag)) {
-    
-          nsIContent* docFragContent;
-          res = aNewChild->QueryInterface(kIContentIID, (void **)&docFragContent);
-          if (NS_SUCCEEDED(res)) {
-            PRInt32 count;
-
-            docFragContent->ChildCount(count);
-            // If there are children of the document
-            if (count > 0) {
-              nsIContent* childContent;
-              // Remove the last child of the document fragment
-              // and do a replace with it
-              res = docFragContent->ChildAt(count-1, childContent);
-              if (NS_SUCCEEDED(res)) {
-                res = docFragContent->RemoveChildAt(count-1, PR_FALSE);
-                if (NS_SUCCEEDED(res)) {
-                  SetDocumentInChildrenOf(childContent, mDocument);
-                  res = ReplaceChildAt(childContent, pos, PR_TRUE);
-                  // If there are more children, then insert them before
-                  // the newly replaced child
-                  if ((NS_OK == res) && (count > 1)) {
-                    nsIDOMNode* childNode = nsnull;
-
-                    res = childContent->QueryInterface(kIDOMNodeIID,
-                                                       (void **)&childNode);
-                    if (NS_SUCCEEDED(res)) {
-                      nsIDOMNode* rv;
-
-                      res = InsertBefore(aNewChild, childNode, &rv);
-                      if (NS_SUCCEEDED(res)) {
-                        NS_IF_RELEASE(rv);
-                      }
-                      NS_RELEASE(childNode);
-                    }
-                  }
-                }
-                NS_RELEASE(childContent);
-              }
-            }
-            NS_RELEASE(docFragContent);
-          }
-          else {
-            res = NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
-          }
-          NS_RELEASE(docFrag);
-        }
-        else {
-          nsIContent* oldParent;
-          res = newContent->GetParent(oldParent);
-          if (NS_OK == res) {
-            // Remove the element from the old parent if one exists
-            if (nsnull != oldParent) {
-              PRInt32 index;
-              oldParent->IndexOf(newContent, index);
-              if (-1 != index) {
-                oldParent->RemoveChildAt(index, PR_TRUE);
-              }
-              NS_RELEASE(oldParent);
-            }
-           
-            SetDocumentInChildrenOf(newContent, mDocument);
-            res = ReplaceChildAt(newContent, pos, PR_TRUE);
-          }
-        }
-        NS_RELEASE(newContent);
-      }
-      else {
-        res = NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
-      }
-      *aReturn = aOldChild;
-      NS_ADDREF(aOldChild);
-    }
-    else {
-      res = NS_ERROR_DOM_NOT_FOUND_ERR;
-    }
-    NS_RELEASE(content);
-  }
-  else {
-    res = NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
-  }
-
-  return res;
-}
-
-nsresult
-nsGenericContainerElement::RemoveChild(nsIDOMNode* aOldChild, 
-                                       nsIDOMNode** aReturn)
-{
-  nsIContent* content = nsnull;
-  *aReturn = nsnull;
-
-  if (nsnull == aOldChild) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsresult res = aOldChild->QueryInterface(kIContentIID, (void**)&content);
-  NS_ASSERTION(NS_OK == res, "Must be an nsIContent");
-  if (NS_OK == res) {
-    PRInt32 pos;
-    IndexOf(content, pos);
-    if (pos >= 0) {
-      res = RemoveChildAt(pos, PR_TRUE);
-      *aReturn = aOldChild;
-      NS_ADDREF(aOldChild);
-    }
-    else {
-      res = NS_ERROR_DOM_NOT_FOUND_ERR;
-    }
-    NS_RELEASE(content);
-  }
-  else {
-    res = NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
-  }
-
-  return res;
-}
-
-nsresult
-nsGenericContainerElement::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
-{
-  return InsertBefore(aNewChild, nsnull, aReturn);
-}
-
 
 nsresult 
 nsGenericContainerElement::SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 

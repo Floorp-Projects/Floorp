@@ -412,11 +412,23 @@ public:
   nsresult    GetLastChild(nsIDOMNode** aLastChild);
   
   nsresult    InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
-                           nsIDOMNode** aReturn);
+                           nsIDOMNode** aReturn)
+  {
+    return nsGenericElement::doInsertBefore(aNewChild, aRefChild, aReturn);
+  }
   nsresult    ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
-                           nsIDOMNode** aReturn);
-  nsresult    RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn);
-  nsresult    AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn);
+                           nsIDOMNode** aReturn)
+  {
+    return nsGenericElement::doReplaceChild(aNewChild, aOldChild, aReturn);
+  }
+  nsresult    RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
+  {
+    return nsGenericElement::doRemoveChild(aOldChild, aReturn);
+  }
+  nsresult    AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
+  {
+    return nsGenericElement::doInsertBefore(aNewChild, nsnull, aReturn);
+  }
 
   // Remainder of nsIHTMLContent (and nsIContent)
   nsresult BeginConvertToXIF(nsXIFConverter& aConverter) const;
