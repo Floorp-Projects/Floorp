@@ -682,10 +682,13 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
   viewManager->MoveViewTo(view, xpos, ypos); 
   viewManager->ResizeView(view, mRect.width, mRect.height);
   
-  nsAutoString shouldDisplay;
-  mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::menutobedisplayed, shouldDisplay);
-  if ( shouldDisplay.Equals("true") )
-    mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, "true", PR_TRUE);
+  nsAutoString shouldDisplay, menuActive;
+  mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, menuActive);
+  if ( !menuActive.Equals("true") ) {
+    mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::menutobedisplayed, shouldDisplay);
+    if ( shouldDisplay.Equals("true") )
+      mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, "true", PR_TRUE);
+  }
 
   return NS_OK;
 }

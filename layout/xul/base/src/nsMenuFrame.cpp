@@ -743,7 +743,23 @@ nsMenuFrame::Reflow(nsIPresContext*   aPresContext,
       nsresult rv = child->GetNextSibling(&child);
       NS_ASSERTION(rv == NS_OK,"failed to get next child");
     }   
-  } 
+  } else if (aReflowState.reason == eReflowReason_Dirty) {
+    // sometimes incrementals are converted to dirty. This is done in the case just above this. So lets check
+    // to see if this was converted. If it was it will still have a reflow state.
+    if (aReflowState.reflowCommand) {
+        // it was converted so lets see if the next child is this one. If it is then convert it back and
+        // pass it down.
+        nsIFrame* incrementalChild = nsnull;
+        aReflowState.reflowCommand->GetNext(incrementalChild, PR_FALSE);
+        if (incrementalChild == popupChild) 
+        {
+            nsHTMLReflowState state(aReflowState);
+            state.reason = eReflowReason_Incremental;
+            return Reflow(aPresContext, aDesiredSize, state, aStatus);
+            
+        } 
+    }
+  }
 
   // If we're a menulist AND if we're intrinsically sized, then
   // we need to flow our popup and use its width as our own width.
