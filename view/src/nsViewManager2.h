@@ -157,7 +157,7 @@ private:
 	                       nsIView *aRealView, const nsRect *aDamageRect = nsnull,
 	                       nsIView *aTopView = nsnull, nscoord aX = 0, nscoord aY = 0);
 	PRBool AddToDisplayList(PRInt32 *aIndex, nsIView *aView, nsRect &aRect, PRUint32 aFlags);
-	nsresult PartitionDisplayList(void);	                       
+	nsresult OptimizeDisplayList(const nsRect& aDamageRect);
 	void ShowDisplayList(PRInt32 flatlen);
 	void ComputeViewOffset(nsIView *aView, nsPoint *aOrigin, PRInt32 aFlag);
 
@@ -197,7 +197,7 @@ private:
   PRInt32           mUpdateBatchCnt;
   nsVoidArray       *mDisplayList;
   PRInt32			mDisplayListCount;
-  nsVoidArray		*mFrontToBackList;
+  PRInt32			mOpaqueViewCount;
   nsIScrollableView *mRootScrollable;
 
   //from here to public should be static and locked... MMP
