@@ -53,6 +53,7 @@
 #include "nsIMIMEInfo.h"
 #include "nsIStringEnumerator.h"
 #include "nsIDOMHTMLDocument.h"
+#include "nsIMIMEHeaderParam.h"
 #include "nsIDownload.h"
 
 const char* const persistContractID = "@mozilla.org/embedding/browser/nsWebBrowserPersist;1";
@@ -200,13 +201,19 @@ nsresult nsHeaderSniffer::PerformSave(nsIURI* inOriginalURI)
     nsAutoString defaultFileName;
     if (!mContentDisposition.IsEmpty()) {
         // (1) Use the HTTP header suggestion.
-        PRInt32 index = mContentDisposition.Find("filename=");
-        if (index >= 0) {
-            // Take the substring following the prefix.
-            index += 9;
-            nsCAutoString filename;
-            mContentDisposition.Right(filename, mContentDisposition.Length() - index);
-            defaultFileName = NS_ConvertUTF8toUCS2(filename);
+        nsCAutoString fallbackCharset;
+        nsCOMPtr<nsIMIMEHeaderParam> mimehdrpar = 
+            do_GetService("@mozilla.org/network/mime-hdrparam;1");
+        if (mimehdrpar) {
+            if (mURL)
+                mURL->GetOriginCharset(fallbackCharset);
+            rv = mimehdrpar->GetParameter(mContentDisposition, "filename",
+                                          fallbackCharset, PR_TRUE, nsnull,
+                                          defaultFileName);
+            if (NS_FAILED(rv) || defaultFileName.IsEmpty())
+               rv = mimehdrpar->GetParameter(mContentDisposition, "name",
+                                             fallbackCharset, PR_TRUE, nsnull,
+                                             defaultFileName);
         }
     }
     
@@ -238,7 +245,7 @@ nsresult nsHeaderSniffer::PerformSave(nsIURI* inOriginalURI)
         {
             nsCAutoString urlFileName;
             url->GetFileName(urlFileName); // (2) For file URLs, use the file name.
-            defaultFileName = NS_ConvertUTF8toUCS2(urlFileName);
+            CopyUTF8toUTF16(urlFileName, defaultFileName);
         }
     }
     
@@ -259,7 +266,7 @@ nsresult nsHeaderSniffer::PerformSave(nsIURI* inOriginalURI)
         // (5) Use the host.
         nsCAutoString hostName;
         origURI->GetHost(hostName);
-        defaultFileName = NS_ConvertUTF8toUCS2(hostName);
+        CopyUTF8toUTF16(hostName, defaultFileName);
     }
     
     // One last case to handle about:blank and other fruity untitled pages.
@@ -276,7 +283,7 @@ nsresult nsHeaderSniffer::PerformSave(nsIURI* inOriginalURI)
     nsCOMPtr<nsIURL> fileURL(do_QueryInterface(fileURI, &rv));
     if (!fileURL)
         return rv;
-    fileURL->SetFilePath(NS_ConvertUCS2toUTF8(defaultFileName));
+    fileURL->SetFilePath(NS_ConvertUTF16toUTF8(defaultFileName));
     
     nsCAutoString fileExtension;
     fileURL->GetFileExtension(fileExtension);
@@ -307,7 +314,7 @@ nsresult nsHeaderSniffer::PerformSave(nsIURI* inOriginalURI)
                 nsCAutoString ext;
                 extensions->GetNext(ext);
                 defaultFileName += PRUnichar('.');
-                defaultFileName.Append(NS_ConvertUTF8toUCS2(ext));
+                AppendUTF8toUTF16(ext, defaultFileName);
             }
         }
     }
