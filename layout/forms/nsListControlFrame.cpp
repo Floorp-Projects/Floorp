@@ -1311,10 +1311,6 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
     }
   }
 
-  if (NS_UNCONSTRAINEDSIZE == aReflowState.mComputedWidth) {
-    visibleWidth += aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;
-  }
-
   // When in dropdown mode make sure we obey min/max-width and min/max-height
   if (!isInDropDownMode) {
     nscoord fullWidth = visibleWidth + aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;
@@ -1377,7 +1373,8 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
   secondPassState.mComputedHeight = visibleHeight;
   secondPassState.reason = eReflowReason_Resize;
 
-  if (mPassId == 0 || mPassId == 2) {
+  if (mPassId == 0 || mPassId == 2 || visibleHeight != scrolledAreaHeight ||
+      visibleWidth != scrolledAreaWidth) {
     nsGfxScrollFrame::Reflow(aPresContext, aDesiredSize, secondPassState, aStatus);
     if (aReflowState.mComputedHeight == 0) {
       aDesiredSize.ascent  = 0;
