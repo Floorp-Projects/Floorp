@@ -61,18 +61,29 @@ nsHistoryLoadListener::Init()
 {
     nsresult rv;
 
-    printf("Creating history load listener..\n");
-    mHistory = do_GetService(NS_GLOBALHISTORY_CONTRACTID, &rv);
+    // the global docloader
+    nsCOMPtr<nsIDocumentLoader> docLoaderService =
+        do_GetService(kDocLoaderServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    printf("Have global history\n");
+    printf("Have docloader\n");
+    
+    nsCOMPtr<nsIWebProgress> progress =
+        do_QueryInterface(docLoaderService, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    printf("have web progress\n");
+
+    NS_ADDREF_THIS();
+    rv = progress->AddProgressListener(NS_STATIC_CAST(nsIWebProgressListener*,
+                                                      this));
+    printf("\tSuccess: %8.8X\n", rv);
     
     return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS3(nsHistoryLoadListener,
+NS_IMPL_ISUPPORTS2(nsHistoryLoadListener,
                    nsIWebProgressListener,
-                   nsIObserver,
                    nsISupportsWeakReference)
 
 /* void onStateChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aStateFlags, in unsigned long aStatus); */
@@ -165,76 +176,5 @@ NS_IMETHODIMP nsHistoryLoadListener::OnSecurityChange(nsIWebProgress *aWebProgre
 {
     printf("nsHistoryLoadListener::OnSecurityChange(w,r, %d)\n", state);
     return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsHistoryLoadListener::Observe(nsISupports *,
-                               const char *aTopic,
-                               const PRUnichar *)
-{
-    if (nsCRT::strcmp("app-startup",aTopic) != 0)
-        return NS_OK;
-
-    nsresult rv;
-    
-    // the global docloader
-    nsCOMPtr<nsIDocumentLoader> docLoaderService =
-        do_GetService(kDocLoaderServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    printf("Have docloader\n");
-    
-    nsCOMPtr<nsIWebProgress> progress =
-        do_QueryInterface(docLoaderService, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    printf("have web progress\n");
-
-    NS_ADDREF_THIS();
-    rv = progress->AddProgressListener(NS_STATIC_CAST(nsIWebProgressListener*,
-                                                      this));
-    printf("\tSuccess: %8.8X\n", rv);
-    return NS_OK;
-}
-
-nsresult
-nsHistoryLoadListener::registerSelf(nsIComponentManager*, nsIFile*,
-                                    const char *, const char *,
-                                    const nsModuleComponentInfo* info)
-{
-    nsresult rv;
-
-    printf("registering nsHistoryLoadListener\n");
-    nsCOMPtr<nsICategoryManager> catman =
-        do_GetService("@mozilla.org/categorymanager;1", &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    nsCAutoString contractId("service,");
-    contractId.Append(info->mContractID);
-    
-    nsXPIDLCString prevEntry;
-    rv = catman->AddCategoryEntry("app-startup",
-                                  info->mDescription,
-                                  contractId.get(),
-                                  PR_TRUE, PR_TRUE, getter_Copies(prevEntry));
-    
-    return rv;
-}
-
-nsresult
-nsHistoryLoadListener::unregisterSelf(nsIComponentManager*, nsIFile*,
-                                      const char*,
-                                      const nsModuleComponentInfo* info)
-{
-    nsresult rv;
-    
-    nsCOMPtr<nsICategoryManager> catman =
-        do_GetService("@mozilla.org/categorymanager;1", &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = catman->DeleteCategoryEntry("app-startup",
-                                     info->mDescription, PR_TRUE);
-    
-    return rv;
 }
 

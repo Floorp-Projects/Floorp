@@ -27,13 +27,11 @@
 #include "nsIWebProgressListener.h"
 #include "nsIBrowserHistory.h"
 #include "nsCOMPtr.h"
-#include "nsIObserver.h"
 #include "nsIComponentManager.h"
 #include "nsWeakReference.h"
 #include "nsIGenericFactory.h"
 
 class nsHistoryLoadListener : public nsIWebProgressListener,
-                              public nsIObserver,
                               public nsSupportsWeakReference
 {
  public:
@@ -44,14 +42,7 @@ class nsHistoryLoadListener : public nsIWebProgressListener,
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIWEBPROGRESSLISTENER
-    NS_DECL_NSIOBSERVER
         
-    static nsresult registerSelf(nsIComponentManager*, nsIFile*,
-                                 const char *, const char *,
-                                 const nsModuleComponentInfo* info);
-    static nsresult unregisterSelf(nsIComponentManager*, nsIFile*,
-                                   const char*,
-                                   const nsModuleComponentInfo* info);
  protected:
     nsCOMPtr<nsIBrowserHistory> mHistory;
 
