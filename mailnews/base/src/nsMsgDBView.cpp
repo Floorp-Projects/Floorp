@@ -76,11 +76,10 @@ nsresult nsMsgDBView::ReverseSort()
 
     // go up half the array swapping values
     for (PRUint32 i = 0; i < (num / 2); i++) {
-
         // swap flags
         PRUint32 end = num - i - 1;
         PRUint32 tempFlags = m_flags.GetAt(i);
-        m_flags.SetAt(i, m_flags.GetAt(i));
+        m_flags.SetAt(i, m_flags.GetAt(end));
         m_flags.SetAt(end, tempFlags);
 
         // swap keys
