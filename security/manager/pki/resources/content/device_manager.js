@@ -60,7 +60,10 @@ function LoadModules()
         // prefer lookup by token name.  However, the token may not be
         // present, so maybe slot names should be listed, while token names
         // are "remembered" for lookup?
-        slotnames[slotnames.length] = slot.name;
+        if (slot.tokenName)
+          slotnames[slotnames.length] = slot.tokenName;
+        else
+          slotnames[slotnames.length] = slot.name;
         try {
           slots.next();
         } catch (e) { slots_done = true; }
@@ -122,13 +125,15 @@ function AddModule(module, slots)
 }
 
 var selected_slot;
+var selected_module;
 
 /* get the slot selected by the user (can only be one-at-a-time) */
-function getSelectedSlot()
+function getSelectedItem()
 {
   var tree = document.getElementById('device_tree');
   var items = tree.selectedItems;
   selected_slot = null;
+  selected_module = null;
   if (items.length > 0) {
     var kind = items[0].getAttribute("pk11kind");
     if (kind == "slot") {
@@ -140,61 +145,60 @@ function getSelectedSlot()
       cell = items[0].firstChild.firstChild;
       var slot_name = cell.getAttribute("label");
       selected_slot = module.findSlotByName(slot_name);
+    } else { // (kind == "module")
+      // get the cell for the selected row (the module to display)
+      cell = items[0].firstChild.firstChild;
+      var module_name = cell.getAttribute("label");
+      selected_module = secmoddb.findModuleByName(module_name);
     }
-    /* else (kind == "module") */ /* nothing for now */
   }
 }
 
 function enableButtons()
 {
-  var toggle = "true";
   var login_toggle = "true";
   var logout_toggle = "true";
   var pw_toggle = "true";
-  getSelectedSlot();
-  if (!selected_slot) {
-    ClearInfoList();
-    return;
-  }
-  // here's the workaround - login functions are all with token,
-  // so grab the token type
-  var selected_token = selected_slot.getToken();
-  if (selected_token != null) {
-    toggle="false";
-    if (selected_token.needsLogin()) {
-      pw_toggle = "false";
-      if (selected_token.isLoggedIn()) {
-        login_toggle = "true";
-        logout_toggle = "false";
-      } else {
-        login_toggle = "false";
-        logout_toggle = "true";
+  var unload_toggle = "true";
+  getSelectedItem();
+  if (selected_module) {
+    var unload_toggle = "false";
+    showModuleInfo();
+  } else if (selected_slot) {
+    // here's the workaround - login functions are all with token,
+    // so grab the token type
+    var selected_token = selected_slot.getToken();
+    if (selected_token != null) {
+      if (selected_token.needsLogin()) {
+        pw_toggle = "false";
+        if (selected_token.isLoggedIn()) {
+          logout_toggle = "false";
+        } else {
+          login_toggle = "false";
+        }
       }
     }
+    showSlotInfo();
   }
-  var thebutton = document.getElementById('change_slotname_button');
-  // not implemented
-  //thebutton.setAttribute("disabled", toggle);
-  thebutton.setAttribute("disabled", "true");
-  thebutton = document.getElementById('login_button');
+  var thebutton = document.getElementById('login_button');
   thebutton.setAttribute("disabled", login_toggle);
   thebutton = document.getElementById('logout_button');
   thebutton.setAttribute("disabled", logout_toggle);
   thebutton = document.getElementById('change_pw_button');
+  thebutton.setAttribute("disabled", pw_toggle);
+  thebutton = document.getElementById('unload_button');
+  thebutton.setAttribute("disabled", unload_toggle);
   // not implemented
-  //thebutton.setAttribute("disabled", pw_toggle);
-  thebutton.setAttribute("disabled", "true");
-  showSlotInfo();
+  //thebutton = document.getElementById('change_slotname_button');
+  //thebutton.setAttribute("disabled", toggle);
 }
 
 // clear the display of information for the slot
 function ClearInfoList()
 {
   var info_list = document.getElementById("info_list");
-  var nodes = info_list.childNodes;
-  for (var i=0; i<nodes.length; i++) {
-    info_list.removeChild(nodes[i])
-  }
+  while (info_list.firstChild)
+      info_list.removeChild(info_list.firstChild);
 }
 
 // show a list of info about a slot
@@ -212,7 +216,7 @@ function showSlotInfo()
                 bundle.GetStringFromName("devinfo_stat_notpresent"), 
                 "tok_status");
      break;
-   case nsIPKCS11Slot.SLOT_UNITIALIZED:
+   case nsIPKCS11Slot.SLOT_UNINITIALIZED:
      AddInfoRow(bundle.GetStringFromName("devinfo_status"), 
                 bundle.GetStringFromName("devinfo_stat_uninitialized"), 
                 "tok_status");
@@ -243,6 +247,15 @@ function showSlotInfo()
              selected_slot.FWVersion, "slot_fwv");
 }
 
+function showModuleInfo()
+{
+  ClearInfoList();
+  AddInfoRow(bundle.GetStringFromName("devinfo_modname"),
+             selected_module.name, "module_name");
+  AddInfoRow(bundle.GetStringFromName("devinfo_modpath"),
+             selected_module.libName, "module_path");
+}
+
 // add a row to the info list, as [col1 col2] (ex.: ["status" "logged in"])
 function AddInfoRow(col1, col2, cell_id)
 {
@@ -265,7 +278,7 @@ function AddInfoRow(col1, col2, cell_id)
 // log in to a slot
 function doLogin()
 {
-  getSelectedSlot();
+  getSelectedItem();
   // here's the workaround - login functions are with token
   var selected_token = selected_slot.getToken();
   try {
@@ -287,7 +300,7 @@ function doLogin()
 // log out of a slot
 function doLogout()
 {
-  getSelectedSlot();
+  getSelectedItem();
   // here's the workaround - login functions are with token
   var selected_token = selected_slot.getToken();
   try {
@@ -309,17 +322,42 @@ function doLogout()
 function doLoad()
 {
   window.open("load_device.xul", "loaddevice", 
-              "chrome,width=300,height=200,resizable=0,dialog=1");
+              "chrome,width=300,height=200,resizable=0,dialog=1,modal=1");
+  var device_list = document.getElementById("device_list");
+  while (device_list.firstChild)
+    device_list.removeChild(device_list.firstChild);
+  LoadModules();
 }
 
 function doUnload()
 {
-  // to be implemented by pkcs11 object
+  getSelectedItem();
+  if (selected_module) {
+    pkcs11.deletemodule(selected_module.name);
+    var device_list = document.getElementById("device_list");
+    while (device_list.firstChild)
+      device_list.removeChild(device_list.firstChild);
+    LoadModules();
+  }
 }
 
 function changePassword()
 {
-  //window.open("changepassword.xul","pwchange", "chrome,width=300,height=350,resizable=0,modal=1,dialog=1");
+  getSelectedItem();
+  token = selected_slot.getToken();
+  try {
+    // this seems to be neccessary, otherwise it fails in the PKCS#11 layer.
+    // but it doesn't feel right...
+    if (!token.isLoggedIn()) {
+      token.login(true);
+    }
+    window.open("changepassword.xul",
+                selected_slot.tokenName, 
+                "chrome,width=300,height=350,resizable=0,modal=1,dialog=1");
+    showSlotInfo();
+    enableButtons();
+  } catch (e) {
+  }
 }
 
 // browse fs for PKCS#11 device
@@ -339,12 +377,9 @@ function doBrowseFiles()
 
 function doLoadDevice()
 {
-  var tokdb = Components.classes[nsPK11TokenDB].getService(nsIPK11TokenDB);
   var name_box = document.getElementById("device_name");
-  var device_name = name_box.getAttribute("value");
   var path_box = document.getElementById("device_path");
-  var device_path = path_box.getAttribute("value");
-  // to be implemented by pkcs11 object
+  pkcs11.addmodule(name_box.value, path_box.value, 0,0);
   window.close();
 }
 

@@ -323,6 +323,26 @@ nsPKCS11ModuleDB::FindModuleByName(const PRUnichar *aName,
   return NS_OK;
 }
 
+/* This is essentially the same as nsIPK11Token::findTokenByName, except
+ * that it returns an nsIPKCS11Slot, which may be desired.
+ */
+/* nsIPKCS11Module findSlotByName(in wstring name); */
+NS_IMETHODIMP 
+nsPKCS11ModuleDB::FindSlotByName(const PRUnichar *aName,
+                                 nsIPKCS11Slot **_retval)
+{
+  PK11SlotInfo *slotinfo =
+   PK11_FindSlotByName(NS_CONST_CAST(char*, NS_ConvertUCS2toUTF8(aName).get()));
+  if (!slotinfo)
+    return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIPKCS11Slot> slot = new nsPKCS11Slot(slotinfo);
+  if (!slot)
+    return NS_ERROR_OUT_OF_MEMORY;
+  *_retval = slot;
+  NS_ADDREF(*_retval);
+  return NS_OK;
+}
+
 /* nsIEnumerator listModules (); */
 NS_IMETHODIMP 
 nsPKCS11ModuleDB::ListModules(nsIEnumerator **_retval)
