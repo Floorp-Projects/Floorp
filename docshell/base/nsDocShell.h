@@ -326,6 +326,59 @@ protected:
                                  nsIChannel * aChannel,
                                  nsresult aResult);
 protected:
+    PRPackedBool               mAllowSubframes;
+    PRPackedBool               mAllowPlugins;
+    PRPackedBool               mAllowJavascript;
+    PRPackedBool               mAllowMetaRedirects;
+    PRPackedBool               mAllowImages;
+    PRPackedBool               mFocusDocFirst;
+    PRPackedBool               mHasFocus;
+    PRPackedBool               mCreatingDocument; // (should be) debugging only
+    PRPackedBool               mUseErrorPages;
+    PRPackedBool               mAllowAuth;
+
+    PRPackedBool               mFiredUnloadEvent;
+
+    // this flag is for bug #21358. a docshell may load many urls
+    // which don't result in new documents being created (i.e. a new
+    // content viewer) we want to make sure we don't call a on load
+    // event more than once for a given content viewer.
+    PRPackedBool               mEODForCurrentDocument; 
+    PRPackedBool               mURIResultedInDocument;
+
+    PRPackedBool               mIsBeingDestroyed;
+
+    // used to keep track of whether user click links should be handle
+    // by us or immediately kicked out to an external
+    // application. mscott: eventually i'm going to try to fold this
+    // up into the uriloader where it belongs but i haven't figured
+    // out how to do that yet.
+    PRPackedBool               mUseExternalProtocolHandler;
+
+    // Disallow popping up new windows with target=
+    PRPackedBool               mDisallowPopupWindows;
+
+    // Validate window targets to prevent frameset spoofing
+    PRPackedBool               mValidateOrigin;
+
+    PRPackedBool               mIsExecutingOnLoadHandler;
+
+    // Indicates that a DocShell in this "docshell tree" is printing
+    PRPackedBool               mIsPrintingOrPP;
+
+    PRUint32                   mAppType;
+
+    // Offset in the parent's child list.
+    PRInt32                    mChildOffset;
+
+    PRUint32                   mBusyFlags;
+
+    PRInt32                    mMarginWidth;
+    PRInt32                    mMarginHeight;
+    PRInt32                    mItemType;
+
+    PRUint32                   mLoadType;
+
     nsString                   mName;
     nsString                   mTitle;
     nsVoidArray                mChildren;
@@ -345,64 +398,15 @@ protected:
     nsCOMPtr<nsISHistory>      mSessionHistory;
     nsCOMPtr<nsIGlobalHistory2> mGlobalHistory;
     nsCOMPtr<nsISupports>      mLoadCookie; // the load cookie associated with the window context.
-    nsCOMPtr<nsIURIFixup>      mURIFixup;
     nsCOMPtr<nsIWebBrowserFind> mFind;
-    PRInt32                    mMarginWidth;
-    PRInt32                    mMarginHeight;
-    PRInt32                    mItemType;
     nsPoint                    mCurrentScrollbarPref; // this document only
     nsPoint                    mDefaultScrollbarPref; // persistent across doc loads
-    PRUint32                   mLoadType;
-
-    PRBool                     mAllowSubframes;
-    PRPackedBool               mAllowPlugins;
-    PRPackedBool               mAllowJavascript;
-    PRPackedBool               mAllowMetaRedirects;
-    PRPackedBool               mAllowImages;
-    PRPackedBool               mFocusDocFirst;
-    PRPackedBool               mHasFocus;
-    PRPackedBool               mCreatingDocument; // (should be) debugging only
-    PRPackedBool               mUseErrorPages;
-    PRPackedBool               mAllowAuth;
-
-    PRUint32                   mAppType;
-    PRInt32                    mChildOffset;  // Offset in the parent's child list.
-    PRUint32                   mBusyFlags;
-
     // Reference to the SHEntry for this docshell until the page is destroyed.
     // Somebody give me better name
     nsCOMPtr<nsISHEntry>       mOSHE; 
     // Reference to the SHEntry for this docshell until the page is loaded
     // Somebody give me better name
     nsCOMPtr<nsISHEntry>       mLSHE;
-
-    PRPackedBool               mFiredUnloadEvent;
-
-    // this flag is for bug #21358. a docshell may load many urls
-    // which don't result in new documents being created (i.e. a new content viewer)
-    // we want to make sure we don't call a on load event more than once for a given
-    // content viewer. 
-    PRPackedBool               mEODForCurrentDocument; 
-    PRPackedBool               mURIResultedInDocument;
-
-    PRPackedBool               mIsBeingDestroyed;
-
-    // used to keep track of whether user click links should be handle by us
-    // or immediately kicked out to an external application. mscott: eventually
-    // i'm going to try to fold this up into the uriloader where it belongs but i haven't
-    // figured out how to do that yet.
-    PRPackedBool               mUseExternalProtocolHandler;
-
-    // Disallow popping up new windows with target=
-    PRPackedBool               mDisallowPopupWindows;
-
-    // Validate window targets to prevent frameset spoofing
-    PRPackedBool               mValidateOrigin;
-
-    PRPackedBool               mIsExecutingOnLoadHandler;
-
-    // Indicates that a DocShell in this "docshell tree" is printing
-    PRPackedBool               mIsPrintingOrPP;
 
     // Editor stuff
     nsDocShellEditorData*      mEditorData;          // editor data, if any
@@ -417,6 +421,8 @@ protected:
     nsIDocShellTreeItem *      mParent;  // Weak Reference
     nsIDocShellTreeOwner *     mTreeOwner; // Weak Reference
     nsIChromeEventHandler *    mChromeEventHandler; //Weak Reference
+
+    static nsIURIFixup *sURIFixup;
 
 
 public:

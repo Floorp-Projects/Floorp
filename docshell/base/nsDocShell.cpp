@@ -173,6 +173,12 @@ static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
 // Number of documents currently loading
 static PRInt32 gNumberOfDocumentsLoading = 0;
 
+// Global count of existing docshells.
+static PRInt32 gDocShellCount = 0;
+
+// Global reference to the URI fixup service.
+nsIURIFixup *nsDocShell::sURIFixup = 0;
+
 // Hint for native dispatch of plevents on how long to delay after 
 // all documents have loaded in milliseconds before favoring normal
 // native event dispatch priorites over performance
@@ -233,12 +239,6 @@ nsDocShellFocusController nsDocShellFocusController::mDocShellFocusControllerSin
 //*****************************************************************************
 
 nsDocShell::nsDocShell():
-    mContentListener(nsnull),
-    mMarginWidth(0),
-    mMarginHeight(0),
-    mItemType(typeContent),
-    mCurrentScrollbarPref(-1, -1),
-    mDefaultScrollbarPref(-1, -1),
     mAllowSubframes(PR_TRUE),
     mAllowPlugins(PR_TRUE),
     mAllowJavascript(PR_TRUE),
@@ -249,8 +249,6 @@ nsDocShell::nsDocShell():
     mCreatingDocument(PR_FALSE),
     mUseErrorPages(PR_FALSE),
     mAllowAuth(PR_TRUE),
-    mAppType(nsIDocShell::APP_TYPE_UNKNOWN),
-    mBusyFlags(BUSY_FLAGS_NONE),
     mFiredUnloadEvent(PR_FALSE),
     mEODForCurrentDocument(PR_FALSE),
     mURIResultedInDocument(PR_FALSE),
@@ -260,11 +258,27 @@ nsDocShell::nsDocShell():
     mValidateOrigin(PR_FALSE),
     mIsExecutingOnLoadHandler(PR_FALSE),
     mIsPrintingOrPP(PR_FALSE),
+    mAppType(nsIDocShell::APP_TYPE_UNKNOWN),
+    mChildOffset(0),
+    mBusyFlags(BUSY_FLAGS_NONE),
+    mMarginWidth(0),
+    mMarginHeight(0),
+    mItemType(typeContent),
+    mContentListener(nsnull),
+    mCurrentScrollbarPref(-1, -1),
+    mDefaultScrollbarPref(-1, -1),
     mEditorData(nsnull),
     mParent(nsnull),
     mTreeOwner(nsnull),
     mChromeEventHandler(nsnull)
 {
+    if (gDocShellCount++ == 0) {
+        NS_ASSERTION(sURIFixup == nsnull,
+                     "Huh, sURIFixup not null in first nsDocShell ctor!");
+
+        CallGetService(NS_URIFIXUP_CONTRACTID, &sURIFixup);
+    }
+
 #ifdef PR_LOGGING
     if (! gDocShellLog)
         gDocShellLog = PR_NewLogModule("nsDocShell");
@@ -278,6 +292,10 @@ nsDocShell::~nsDocShell()
       dsfc->ClosingDown(this);
     }
     Destroy();
+
+    if (--gDocShellCount == 0) {
+        NS_IF_RELEASE(sURIFixup);
+    }
 }
 
 NS_IMETHODIMP
@@ -2469,23 +2487,19 @@ nsDocShell::LoadURI(const PRUnichar * aURI,
     nsCOMPtr<nsIURI> uri;
     nsresult rv = NS_OK;
     // Create the fixup object if necessary
-    if (!mURIFixup) {
-        mURIFixup = do_GetService(NS_URIFIXUP_CONTRACTID);
-        if (!mURIFixup) {
-            // No fixup service so try and create a URI and see what happens
-            nsAutoString uriString(aURI);
-            // Cleanup the empty spaces that might be on each end.
-            uriString.Trim(" ");
-            // Eliminate embedded newlines, which single-line text fields now allow:
-            uriString.StripChars("\r\n");
-            NS_ENSURE_TRUE(!uriString.IsEmpty(), NS_ERROR_FAILURE);
+    if (!sURIFixup) {
+        // No fixup service so try and create a URI and see what happens
+        nsAutoString uriString(aURI);
+        // Cleanup the empty spaces that might be on each end.
+        uriString.Trim(" ");
+        // Eliminate embedded newlines, which single-line text fields now allow:
+        uriString.StripChars("\r\n");
+        NS_ENSURE_TRUE(!uriString.IsEmpty(), NS_ERROR_FAILURE);
 
-            rv = NS_NewURI(getter_AddRefs(uri), uriString);
-        }
-    }
-    if (mURIFixup) {
+        rv = NS_NewURI(getter_AddRefs(uri), uriString);
+    } else {
         // Call the fixup object
-        rv = mURIFixup->CreateFixupURI(NS_ConvertUCS2toUTF8(aURI),
+        rv = sURIFixup->CreateFixupURI(NS_ConvertUCS2toUTF8(aURI),
                                        nsIURIFixup::FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP,
                                        getter_AddRefs(uri));
     }
@@ -7048,19 +7062,16 @@ nsDocShell::InterfaceRequestorProxy::GetInterface(const nsIID & aIID, void **aSi
 nsresult
 nsDocShell::SetBaseUrlForWyciwyg(nsIContentViewer * aContentViewer)
 {
-    nsCOMPtr<nsIURI> baseURI;
-    nsCOMPtr<nsIDocument> document;
-    nsresult rv = NS_OK;
-
     if (!aContentViewer)
         return NS_ERROR_FAILURE;
 
-    // Create the fixup object if necessary
-    if (!mURIFixup)
-        mURIFixup = do_GetService(NS_URIFIXUP_CONTRACTID, &rv);        
+    nsCOMPtr<nsIURI> baseURI;
+    nsCOMPtr<nsIDocument> document;
+    nsresult rv = NS_ERROR_NOT_AVAILABLE;
 
-    if (mURIFixup)
-        rv = mURIFixup->CreateExposableURI(mCurrentURI, getter_AddRefs(baseURI));
+    if (sURIFixup)
+        rv = sURIFixup->CreateExposableURI(mCurrentURI,
+                                           getter_AddRefs(baseURI));
 
     // Get the current document and set the base uri
     if (baseURI) {
