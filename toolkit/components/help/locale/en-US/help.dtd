@@ -35,11 +35,15 @@
 <!ENTITY cmd_CustomizeToolbars.label    "Customize" >
 
 <!ENTITY searchtab.label    	  	"Search">
+<!ENTITY searchtab.accesskey            "S">
 <!ENTITY searchbtn.label    	  	"Find">
 <!ENTITY toctab.label       	  	"Contents">
+<!ENTITY toctab.accesskey               "C">
 <!ENTITY indextab.label     	  	"Index">
+<!ENTITY indextab.accesskey             "I">
 <!ENTITY ixname.label       	  	"Name">
 <!ENTITY glossarytab.label  	  	"Glossary">
+<!ENTITY glossarytab.accesskey          "G">
 <!ENTITY glossname.label    	  	"Name">
 <!ENTITY gobtn.label        	  	"Search">
 <!ENTITY name.label	    	  	"Item">
