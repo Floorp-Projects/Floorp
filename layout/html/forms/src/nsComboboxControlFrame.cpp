@@ -2197,7 +2197,7 @@ nsComboboxControlFrame::CreateDisplayFrame(nsIPresContext* aPresContext)
   if (!frameManager) { return NS_ERROR_NULL_POINTER; }
   frameManager->SetPrimaryFrameFor(content, mTextFrame);
 
-  rv = mDisplayFrame->Init(aPresContext, content, this, styleContext, nsnull);
+  rv = mDisplayFrame->Init(aPresContext, mContent, this, styleContext, nsnull);
   if (NS_FAILED(rv)) { return rv; }
 
   mDisplayFrame->SetInitialChildList(aPresContext, nsnull, mTextFrame);
@@ -2332,7 +2332,7 @@ nsComboboxControlFrame::CreateFrameFor(nsIPresContext*   aPresContext,
     frameManager->SetPrimaryFrameFor(content, mTextFrame);
     */
 
-    rv = mDisplayFrame->Init(aPresContext, content, this, styleContext, nsnull);
+    rv = mDisplayFrame->Init(aPresContext, mContent, this, styleContext, nsnull);
     if (NS_FAILED(rv)) { return rv; }
 
     mDisplayFrame->SetInitialChildList(aPresContext, nsnull, mTextFrame);

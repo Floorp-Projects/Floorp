@@ -58,7 +58,6 @@
 #include "nsIFontMetrics.h"
 #include "nsHTMLParts.h"
 #include "nsHTMLAtoms.h"
-#include "nsCSSPseudoElements.h"
 #include "nsHTMLValue.h"
 #include "nsIDOMEvent.h"
 #include "nsIHTMLContent.h"
@@ -2818,7 +2817,8 @@ nsBlockFrame::PullFrameFrom(nsBlockReflowState& aState,
       }
       if (aFromLine.next() != end_lines())
         aFromLine.next()->MarkPreviousMarginDirty();
-      Invalidate(aState.mPresContext, combinedArea);
+      if (!combinedArea.IsEmpty())
+        Invalidate(aState.mPresContext, combinedArea);
       aFromContainer.erase(aFromLine);
       aState.FreeLineBox(fromLine);
     }
@@ -6263,24 +6263,6 @@ nsBlockFrame::Init(nsIPresContext*  aPresContext,
   nsresult rv = nsBlockFrameSuper::Init(aPresContext, aContent, aParent,
                                         aContext, aPrevInFlow);
   return rv;
-}
-
-already_AddRefed<nsStyleContext>
-nsBlockFrame::GetFirstLetterStyle(nsIPresContext* aPresContext)
-{
-  // This check is here because nsComboboxControlFrame creates
-  // nsBlockFrame objects that have an |mContent| pointing to a text
-  // node.  This check ensures we don't try to do selector matching on
-  // that text node.
-  //
-  // XXX This check should go away once we fix nsComboboxControlFrame.
-  //
-  if (!mContent->IsContentOfType(nsIContent::eELEMENT))
-    return nsnull;
-
-  return aPresContext->ProbePseudoStyleContextFor(mContent,
-                                                  nsCSSPseudoElements::firstLetter,
-                                                  mStyleContext);
 }
 
 NS_IMETHODIMP
