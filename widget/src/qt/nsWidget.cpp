@@ -361,12 +361,19 @@ PRBool nsWidget::OnMove(PRInt32 aX, PRInt32 aY)
 //-------------------------------------------------------------------------
 // Enable/disable this component
 //-------------------------------------------------------------------------
-NS_METHOD nsWidget::Enable(PRBool bState)
+NS_METHOD nsWidget::Enable(PRBool aState)
 {
   if (mWidget) {
-    mWidget->Enable(bState);
+    mWidget->Enable(aState);
   }
   return NS_OK;
+}
+
+NS_METHOD nsWidget::IsEnabled(PRBool *aState)
+{
+  NS_ENSURE_ARG_POINTER(aState);
+  *aState = PR_TRUE;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //-------------------------------------------------------------------------

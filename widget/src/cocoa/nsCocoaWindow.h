@@ -114,7 +114,8 @@ public:
 
     NS_IMETHOD              Show(PRBool aState);
     
-    NS_IMETHOD              Enable(PRBool aState) { return NS_OK; }
+    NS_IMETHOD              Enable(PRBool aState);
+    NS_IMETHOD              IsEnabled(PRBool *aState);
     NS_IMETHOD              SetModal(PRBool aState) { return NS_OK; }
     NS_IMETHOD              IsVisible(PRBool & aState);
     NS_IMETHOD              SetFocus(PRBool aState=PR_FALSE) { return NS_OK; }

@@ -115,7 +115,8 @@ class nsWindow : public nsBaseWidget,
                       PRInt32 aHeight,
                       PRBool   aRepaint);
    NS_IMETHOD GetClientBounds( nsRect &aRect);
-   NS_IMETHOD Enable( PRBool bState);
+   NS_IMETHOD Enable( PRBool aState);
+   NS_IMETHOD IsEnabled(PRBool *aState);
    NS_IMETHOD SetFocus(PRBool aRaise);
    NS_IMETHOD IsVisible( PRBool &aState);
    NS_IMETHOD PlaceBehind(nsIWidget *aWidget, PRBool aActivate);
