@@ -47,14 +47,24 @@
 
   ]]>
   </script>         
-         
+
+  <keyset id="keyset">
+    <key id="key_mail" xulkey="true" key="&messengerCmd.commandkey;" observes="Tasks:Mail"/>
+  </keyset>
+
+
+  <broadcasterset id="broadcasterset">
+    <broadcaster id="Tasks:Mail" value="&messengerCmd.label;" oncommand="toMessengerWindow();"/>
+  </broadcasterset>
+  
+
   <box id="taskButtons">
     <button class="button-toolbar-4 taskbutton" id="mini-mail" onclick="toMessengerWindow()" 
             position="2" tooltip="aTooltip" tooltiptext="&taskMessenger.tooltip;"/>
   </box>
   
   <menupopup id="taskPopup">
-    <menuitem position="2" value="&messengerCmd.label;" accesskey="&messengerCmd.accesskey;" oncommand="toMessengerWindow()"/>
+    <menuitem position="2" value="&messengerCmd.label;" accesskey="&messengerCmd.accesskey;" key="key_mail" observes="Tasks:Mail"/>
   </menupopup>
   
 </overlay>         
