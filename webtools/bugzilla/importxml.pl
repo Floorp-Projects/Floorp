@@ -27,13 +27,6 @@
 
 use diagnostics;
 use strict;
-use XML::Parser;
-use Data::Dumper;
-$Data::Dumper::Useqq = 1;
-
-require "CGI.pl";
-require "globals.pl";
-$::lockcount = 0;
 
 # figure out which path this script lives in. Set the current path to
 # this and add it to @INC so this will work when run as part of mail
@@ -42,6 +35,14 @@ my $path = $0;
 $path =~ s#(.*)/[^/]+#$1#;
 chdir $path;
 use lib ($path);
+
+use XML::Parser;
+use Data::Dumper;
+$Data::Dumper::Useqq = 1;
+
+require "CGI.pl";
+require "globals.pl";
+$::lockcount = 0;
 
 GetVersionTable();
 ConnectToDatabase();
@@ -563,7 +564,6 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
   }
 }
 
-$log .= "\n\n
 my $subject = "$bugqty bug(s) successfully moved from $urlbase to " 
                . Param("urlbase") ;
 my @to = ($exporter);
