@@ -30,7 +30,7 @@ class nsINNTPArticleList : public nsISupports {
   }
 
   /*  <IDL>  */
-  NS_IMETHOD Init(const char *newsHost, const nsINNTPNewsgroup *newsgroup) = 0;
+  NS_IMETHOD Init(const nsINNTPHost *newsHost, const nsINNTPNewsgroup *newsgroup) = 0;
 
   /*  <IDL>  */
   NS_IMETHOD AddArticleKey(PRInt32 key) = 0;
