@@ -388,7 +388,6 @@ protected:
 
   nsIWebShellContainer* mContainer;
   nsIDeviceContext* mDeviceContext;
-  nsIPref* mPrefs;
   nsIWidget* mWindow;
   nsIDocumentLoader* mDocLoader;
 
@@ -627,7 +626,6 @@ nsWebShell::~nsWebShell()
   NS_IF_RELEASE(mThreadEventQueue);
   mContentViewer=nsnull;
   NS_IF_RELEASE(mDeviceContext);
-  NS_IF_RELEASE(mPrefs);
   NS_IF_RELEASE(mContainer);
 
   if (mScriptGlobal) {
@@ -1051,9 +1049,7 @@ nsWebShell::HandleEvent(nsGUIEvent *aEvent)
 NS_IMETHODIMP
 nsWebShell::GetPrefs(nsIPref*& aPrefs)
 {
-  aPrefs = mPrefs;
-  NS_IF_ADDREF(aPrefs);
-  return NS_OK;
+   return nsDocShell::GetPrefs(&aPrefs);
 }
 
 NS_IMETHODIMP
@@ -3782,19 +3778,12 @@ NS_IMETHODIMP nsWebShell::SetLoadCookie(nsISupports * aLoadCookie)
 
 NS_IMETHODIMP nsWebShell::GetPrefs(nsIPref** aPrefs)
 {
-   NS_ENSURE_ARG_POINTER(aPrefs);
-
-  *aPrefs = mPrefs;
-  NS_IF_ADDREF(*aPrefs);
-  return NS_OK;
+   return nsDocShell::GetPrefs(aPrefs);
 }
 
 NS_IMETHODIMP nsWebShell::SetPrefs(nsIPref* aPrefs)
 {
-  NS_IF_RELEASE(mPrefs);
-  mPrefs = aPrefs;
-  NS_IF_ADDREF(mPrefs);
-  return NS_OK;
+   return nsDocShell::SetPrefs(aPrefs);
 }
 
 NS_IMETHODIMP nsWebShell::GetZoom(float* aZoom)
