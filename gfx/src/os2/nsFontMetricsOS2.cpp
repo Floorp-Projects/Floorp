@@ -256,8 +256,11 @@ prefChanged(const char *aPref, void *aClosure)
   {
     PRInt32 dpi;
     rv = gPref->GetIntPref( aPref, &dpi );
-    if( NS_SUCCEEDED(rv) )
-       nsFontMetricsOS2::gDPI = dpi;
+    if( NS_SUCCEEDED(rv) && dpi != 0) {
+      nsFontMetricsOS2::gDPI = dpi;
+    else
+      nsFontMetricsOS2::gDPI = nsFontMetricsOS2::gSystemRes;
+    }
   }
 
   return 0;
@@ -414,10 +417,9 @@ InitGlobals(void)
 
   gPref->RegisterCallback( "browser.display.screen_resolution", prefChanged, NULL );
 
-  if( prefVal == 0 )
+  if (prefVal == 0)
   {
     prefVal = nsFontMetricsOS2::gSystemRes;
-    gPref->SetIntPref( "browser.display.screen_resolution", prefVal );
   }
 
   nsFontMetricsOS2::gDPI = prefVal;
@@ -562,18 +564,10 @@ nsFontMetricsOS2::SetFontHandle( HPS aPS, nsFontOS2* aFont )
       long lFonts = 0;
       FONTMETRICS* pMetrics = getMetrics( lFonts, fattrs->szFacename, aPS);
 
-      nscoord tempDPI;
-      /* No vector substitute and we still have odd DPI - fix it */
-      if (gDPI <= 96 ) {
-         tempDPI = 96;
-      } else {
-         tempDPI = 120;
-      }
-
       int curPoints = 0;
       for( int i = 0; i < lFonts; i++)
       {
-        if( pMetrics[i].sYDeviceRes == tempDPI )
+        if( pMetrics[i].sYDeviceRes == gSystemRes )
         {
           if (pMetrics[i].sNominalPointSize / 10 == points)
           {
