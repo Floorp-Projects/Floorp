@@ -261,6 +261,7 @@ protected:
 
   // key event helpers
   NS_IMETHOD TabInTable(PRBool inIsShift, PRBool *outHandled);
+  NS_IMETHOD CreateBR(nsIDOMNode *aNode, PRInt32 aOffset, nsCOMPtr<nsIDOMNode> *outBRNode);
   NS_IMETHOD InsertBR(nsCOMPtr<nsIDOMNode> *outBRNode);
 
 // Table Editing (implemented in EditTable.cpp)

@@ -759,6 +759,55 @@ NS_IMETHODIMP nsHTMLEditor::TabInTable(PRBool inIsShift, PRBool *outHandled)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsHTMLEditor::CreateBR(nsIDOMNode *aNode, PRInt32 aOffset, nsCOMPtr<nsIDOMNode> *outBRNode)
+{
+  if (!aNode || !outBRNode) return NS_ERROR_NULL_POINTER;
+  *outBRNode = nsnull;
+  nsresult res;
+  
+  // we need to insert a br.  unfortunately, we may have to split a text node to do it.
+  nsCOMPtr<nsIDOMCharacterData> nodeAsText = do_QueryInterface(aNode);
+  nsAutoString brType("br");
+  nsCOMPtr<nsIDOMNode> brNode;
+  if (nodeAsText)  
+  {
+    nsCOMPtr<nsIDOMNode> tmp;
+    PRInt32 offset;
+    PRUint32 len;
+    nodeAsText->GetLength(&len);
+    GetNodeLocation(aNode, &tmp, &offset);
+    if (!tmp) return NS_ERROR_FAILURE;
+    if (!aOffset)
+    {
+      // we are already set to go
+    }
+    else if (aOffset == (PRInt32)len)
+    {
+      // update offset to point AFTER the text node
+      offset++;
+    }
+    else
+    {
+      // split the text node
+      res = SplitNode(aNode, aOffset, getter_AddRefs(tmp));
+      if (NS_FAILED(res)) return res;
+      res = GetNodeLocation(aNode, &tmp, &offset);
+      if (NS_FAILED(res)) return res;
+    }
+    // create br
+    res = CreateNode(brType, tmp, offset, getter_AddRefs(brNode));
+    if (NS_FAILED(res)) return res;
+  }
+  else
+  {
+    res = CreateNode(brType, aNode, aOffset, getter_AddRefs(brNode));
+    if (NS_FAILED(res)) return res;
+  }
+
+  *outBRNode = brNode;
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsHTMLEditor::InsertBR(nsCOMPtr<nsIDOMNode> *outBRNode)
 {
   PRBool bCollapsed;
@@ -780,33 +829,12 @@ NS_IMETHODIMP nsHTMLEditor::InsertBR(nsCOMPtr<nsIDOMNode> *outBRNode)
   res = GetStartNodeAndOffset(selection, &selNode, &selOffset);
   if (NS_FAILED(res)) return res;
   
-  // now we need to insert a br.  unfortunately, we may have to split a text node to do it.
-  nsCOMPtr<nsIDOMCharacterData> nodeAsText = do_QueryInterface(selNode);
-  nsAutoString brType("br");
-  nsCOMPtr<nsIDOMNode> brNode;
-  if (nodeAsText)  
-  {
-    // split the text node
-    nsCOMPtr<nsIDOMNode> tmp;
-    PRInt32 offset;
-    res = SplitNode(selNode, selOffset, getter_AddRefs(tmp));
-    if (NS_FAILED(res)) return res;
-    res = GetNodeLocation(selNode, &tmp, &offset);
-    if (NS_FAILED(res)) return res;
-    // create br
-    res = CreateNode(brType, tmp, offset, getter_AddRefs(brNode));
-    if (NS_FAILED(res)) return res;
-    // position selection in righthand text node
-    res = selection->Collapse(selNode, 0);
-    if (NS_FAILED(res)) return res;
-  }
-  else
-  {
-    res = CreateNode(brType, selNode, selOffset, getter_AddRefs(brNode));
-    if (NS_FAILED(res)) return res;
-  }
+  res = CreateBR(selNode, selOffset, outBRNode);
+  if (NS_FAILED(res)) return res;
+    
+  // position selection in righthand text node
+// moose
 
-  *outBRNode = brNode;
   return NS_OK;
 }
 
@@ -2165,18 +2193,20 @@ nsHTMLEditor::InsertBasicBlock(const nsString& aBlockType)
       if (NS_FAILED(res)) return res;
     
       // xxx
-    
+// i'm def'ing this out to see if auto br insertion is working for this case
+#if 0    
       // put a space in it so layout will draw it
       res = selection->Collapse(newBlock,0);
       if (NS_FAILED(res)) return res;
       nsAutoString theText(nbsp);
       res = InsertText(theText);
       if (NS_FAILED(res)) return res;
+#endif
       // reposition selection to before the space character
       res = GetStartNodeAndOffset(selection, &node, &offset);
       if (NS_FAILED(res)) return res;
       res = selection->Collapse(node,0);
-      if (NS_FAILED(res)) return res;
+      if (NS_FAILED(res)) return res;  
     }
   }
 
@@ -2642,6 +2672,8 @@ nsHTMLEditor::CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement*
   {
     newElement->SetAttribute("valign","top");
 
+// I'm def'ing this out to see if auto br insertion is working here
+#if 0
     // Insert the default space in a cell so border displays
     nsCOMPtr<nsIDOMNode> newCellNode = do_QueryInterface(newElement);
     if (newCellNode)
@@ -2660,6 +2692,7 @@ nsHTMLEditor::CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement*
       nsCOMPtr<nsIDOMNode>resultNode;
       result = newCellNode->AppendChild(newTextNode, getter_AddRefs(resultNode));
     }
+#endif
   }
   // ADD OTHER DEFAULT ATTRIBUTES HERE
 

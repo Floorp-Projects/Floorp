@@ -420,6 +420,7 @@
     <menu id="paragraphMenu" value="&paragraphMenu.label;" accesskey="&formatparagraphmenu.accesskey;">
     <menupopup>
       <menuitem value="&paragraphNormalCmd.label;"      accesskey="&paragraphnormal.accesskey;"     oncommand="EditorSetParagraphFormat('normal')"/>
+      <menuitem value="&paragraphParagraphCmd.label;"   accesskey="&paragraphparagraph.accesskey;"  oncommand="EditorSetParagraphFormat('p')"/>
       <menuitem value="&paragraphBlockquoteCmd.label;"  accesskey="&paragraphblockquote.accesskey;" oncommand="EditorSetParagraphFormat('blockquote')"/>
       <menuitem value="&paragraphAddressCmd.label;"     accesskey="&paragraphaddress.accesskey;"    oncommand="EditorSetParagraphFormat('address')"/>
       <menuitem value="&paragraphPreformatCmd.label;"   accesskey="&paragraphpreformat.accesskey;"  oncommand="EditorSetParagraphFormat('pre')"/>
@@ -544,6 +545,7 @@
     <html:select class="toolbar" id="ParagraphSelect" size="1" onchange="EditorSelectParagraphFormat()">
       <observes element="Editor:Paragraph:Format" attribute="format" onbroadcast="onParagraphFormatChange()"/>
       <html:option>&headingNormalCmd.label;</html:option>
+      <html:option>&paragraphParagraphCmd.label;</html:option>
       <html:option>&heading1Cmd.label;</html:option>
       <html:option>&heading2Cmd.label;</html:option>
       <html:option>&heading3Cmd.label;</html:option>
