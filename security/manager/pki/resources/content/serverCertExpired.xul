@@ -21,7 +21,7 @@
 <!DOCTYPE window SYSTEM "chrome://pippki/locale/pippki.dtd">
 
 <window
-  id="serverCertExpired"
+  id="serverCertExpired" title="&serverCertExpired.title;"
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
   debug="false"
