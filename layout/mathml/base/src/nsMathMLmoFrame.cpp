@@ -207,7 +207,7 @@ nsMathMLmoFrame::ProcessTextData(nsIPresContext* aPresContext)
   mContent->ChildCount(numKids);
   for (PRInt32 kid=0; kid<numKids; kid++) {
     nsCOMPtr<nsIContent> kidContent;
-    mContent->ChildAt(kid, *getter_AddRefs(kidContent));
+    mContent->ChildAt(kid, getter_AddRefs(kidContent));
     if (kidContent.get()) {
       nsCOMPtr<nsIDOMText> kidText(do_QueryInterface(kidContent));
       if (kidText.get()) {

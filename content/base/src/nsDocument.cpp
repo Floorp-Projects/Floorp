@@ -430,7 +430,7 @@ nsDocumentChildNodes::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 
   if (mDocument) {
     nsCOMPtr<nsIContent> content;
-    mDocument->ChildAt(aIndex, *getter_AddRefs(content));
+    mDocument->ChildAt(aIndex, getter_AddRefs(content));
     if (content) {
       return CallQueryInterface(content, aReturn);
     }
@@ -534,7 +534,7 @@ nsDocument::~nsDocument()
   if (mRootContent) {
     nsCOMPtr<nsIDocument> doc;
 
-    mRootContent->GetDocument(*getter_AddRefs(doc));
+    mRootContent->GetDocument(getter_AddRefs(doc));
 
     if (doc) {
       // The root content still has a pointer back to the document,
@@ -904,15 +904,15 @@ nsDocument::GetDocumentLoadGroup(nsILoadGroup **aGroup) const
 }
 
 NS_IMETHODIMP
-nsDocument::GetBaseURL(nsIURI*& aURL) const
+nsDocument::GetBaseURL(nsIURI** aURL) const
 {
-  aURL = mDocumentBaseURL;
+  *aURL = mDocumentBaseURL;
 
-  if (!aURL) {
-    aURL = mDocumentURL;
+  if (!*aURL) {
+    *aURL = mDocumentURL;
   }
 
-  NS_IF_ADDREF(aURL);
+  NS_IF_ADDREF(*aURL);
 
   return NS_OK;
 }
@@ -1409,13 +1409,13 @@ nsDocument::SetRootContent(nsIContent* aRoot)
 }
 
 NS_IMETHODIMP
-nsDocument::ChildAt(PRInt32 aIndex, nsIContent*& aResult) const
+nsDocument::ChildAt(PRInt32 aIndex, nsIContent** aResult) const
 {
   NS_PRECONDITION(aIndex >= 0, "Negative indices are bad");
   if (aIndex < 0 || aIndex >= mChildren.Count()) {
-    aResult = nsnull;
+    *aResult = nsnull;
   } else {
-    NS_IF_ADDREF(aResult = mChildren[aIndex]);
+    NS_IF_ADDREF(*aResult = mChildren[aIndex]);
   }
   return NS_OK;
 }
@@ -2416,7 +2416,7 @@ nsDocument::CreateAttribute(const nsAString& aName,
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
   nsresult rv = mNodeInfoManager->GetNodeInfo(aName, nsnull, kNameSpaceID_None,
-                                              *getter_AddRefs(nodeInfo));
+                                              getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
   attribute = new nsDOMAttribute(nsnull, nodeInfo, value);
@@ -2435,7 +2435,7 @@ nsDocument::CreateAttributeNS(const nsAString & aNamespaceURI,
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
   nsresult rv = mNodeInfoManager->GetNodeInfo(aQualifiedName, aNamespaceURI,
-                                              *getter_AddRefs(nodeInfo));
+                                              getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoString value;
@@ -2479,7 +2479,7 @@ nsDocument::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
 
   if (!aNamespaceURI.Equals(NS_LITERAL_STRING("*"))) {
     nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceID(aNamespaceURI,
-                                                          nameSpaceId);
+                                                          &nameSpaceId);
 
     if (nameSpaceId == kNameSpaceID_Unknown) {
       // Unknown namespace means no matches, we create an empty list...
@@ -2670,7 +2670,7 @@ GetElementByAttribute(nsIContent* aContent, nsIAtom* aAttrName,
 
   for (PRInt32 i = 0; i < childCount; ++i) {
     nsCOMPtr<nsIContent> current;
-    aContent->ChildAt(i, *getter_AddRefs(current));
+    aContent->ChildAt(i, getter_AddRefs(current));
 
     GetElementByAttribute(current, aAttrName, aAttrValue, aUniversalMatch,
                           aResult);
@@ -3459,7 +3459,7 @@ nsDocument::CompareDocumentPosition(nsIDOMNode* aOther, PRUint16* aReturn)
   }
 
   nsCOMPtr<nsIDocument> otherDoc;
-  otherContent->GetDocument(*getter_AddRefs(otherDoc));
+  otherContent->GetDocument(getter_AddRefs(otherDoc));
   if (this == otherDoc) {
     // If the node being compared is contained by our node,
     // then it follows it.
@@ -3864,12 +3864,11 @@ nsDocument::GetBindingManager(nsIBindingManager** aResult)
 
 
 NS_IMETHODIMP
-nsDocument::GetNodeInfoManager(nsINodeInfoManager*& aNodeInfoManager)
+nsDocument::GetNodeInfoManager(nsINodeInfoManager** aNodeInfoManager)
 {
   NS_ENSURE_TRUE(mNodeInfoManager, NS_ERROR_NOT_INITIALIZED);
 
-  aNodeInfoManager = mNodeInfoManager;
-  NS_ADDREF(aNodeInfoManager);
+  NS_ADDREF(*aNodeInfoManager = mNodeInfoManager);
 
   return NS_OK;
 }

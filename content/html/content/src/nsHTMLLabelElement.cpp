@@ -339,12 +339,14 @@ EventTargetIn(nsIPresContext *aPresContext, nsEvent *aEvent,
     if (c == aChild) {
       return PR_TRUE;
     }
+
     if (c == aStop) {
       break;
     }
-    nsIContent *parent;
-    c->GetParent(parent);
-    c = dont_AddRef(parent);
+
+    nsCOMPtr<nsIContent> parent;
+    c->GetParent(getter_AddRefs(parent));
+    c.swap(parent);
   }
   return PR_FALSE;
 }
@@ -512,7 +514,7 @@ nsHTMLLabelElement::GetFirstFormControl(nsIContent *current)
   if (NS_SUCCEEDED(rv)) {
     for (PRInt32 i = 0; i < numNodes; i++) {
       nsIContent *child;
-      current->ChildAt(i, child);
+      current->ChildAt(i, &child);
       if (child) {
         if (child->IsContentOfType(nsIContent::eHTML_FORM_CONTROL)) {
           return child;

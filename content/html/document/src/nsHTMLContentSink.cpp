@@ -922,7 +922,7 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
     ToLowerCase(tmp);
 
     rv = mNodeInfoManager->GetNodeInfo(tmp, nsnull, kNameSpaceID_None,
-                                       *getter_AddRefs(nodeInfo));
+                                       getter_AddRefs(nodeInfo));
   } else {
     nsCOMPtr<nsIDTD> dtd;
     rv = mParser->GetDTD(getter_AddRefs(dtd));
@@ -930,7 +930,7 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
       nsDependentString tag(dtd->IntTagToStringTag(aNodeType));
 
       rv = mNodeInfoManager->GetNodeInfo(tag, nsnull, kNameSpaceID_None,
-                                         *getter_AddRefs(nodeInfo));
+                                         getter_AddRefs(nodeInfo));
     }
   }
 
@@ -1001,9 +1001,7 @@ NS_CreateHTMLElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo,
   if (!parserService)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  nsCOMPtr<nsIAtom> name;
-  rv = aNodeInfo->GetNameAtom(*getter_AddRefs(name));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIAtom> name = aNodeInfo->GetNameAtom();
 
   // Find tag in tag table
   PRInt32 id;
@@ -1032,7 +1030,7 @@ NS_CreateHTMLElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo,
       if (!name->Equals(nsDependentString(tag))) {
         nsCOMPtr<nsIAtom> atom = do_GetAtom(tag);
 
-        rv = aNodeInfo->NameChanged(atom, *getter_AddRefs(kungFuDeathGrip));
+        rv = aNodeInfo->NameChanged(atom, getter_AddRefs(kungFuDeathGrip));
         NS_ENSURE_SUCCESS(rv, rv);
 
         nodeInfo = kungFuDeathGrip;
@@ -1719,7 +1717,7 @@ SinkContext::CloseContainer(const nsHTMLTag aTag)
 #ifdef NS_DEBUG
       // Tracing code
       nsCOMPtr<nsIAtom> tag;
-      mStack[mStackPos].mContent->GetTag(*getter_AddRefs(tag));
+      mStack[mStackPos].mContent->GetTag(getter_AddRefs(tag));
       const char *tagStr;
       tag->GetUTF8String(&tagStr);
 
@@ -2135,7 +2133,7 @@ SinkContext::FlushTags(PRBool aNotify)
 #ifdef NS_DEBUG
         // Tracing code
         nsCOMPtr<nsIAtom> tag;
-        mStack[stackPos].mContent->GetTag(*getter_AddRefs(tag));
+        mStack[stackPos].mContent->GetTag(getter_AddRefs(tag));
         const char* tagStr;
         tag->GetUTF8String(&tagStr);
 
@@ -2455,7 +2453,7 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   aDoc->AddObserver(this);
   CallQueryInterface(aDoc, &mHTMLDocument);
 
-  rv = mDocument->GetNodeInfoManager(*getter_AddRefs(mNodeInfoManager));
+  rv = mDocument->GetNodeInfoManager(getter_AddRefs(mNodeInfoManager));
   NS_ENSURE_SUCCESS(rv, rv);
 
   mDocumentURI = aURL;
@@ -2574,7 +2572,7 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   nsCOMPtr<nsINodeInfo> nodeInfo;
   rv = mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::html, nsnull,
                                      kNameSpaceID_None,
-                                     *getter_AddRefs(nodeInfo));
+                                     getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Make root part
@@ -2601,7 +2599,7 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   // Make head part
   rv = mNodeInfoManager->GetNodeInfo(NS_LITERAL_STRING("head"),
                                      nsnull, kNameSpaceID_None,
-                                     *getter_AddRefs(nodeInfo));
+                                     getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = NS_NewHTMLHeadElement(&mHead, nodeInfo);
@@ -3310,7 +3308,7 @@ HTMLContentSink::OpenForm(const nsIParserNode& aNode)
     nsCOMPtr<nsINodeInfo> nodeInfo;
     result = mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::form, nsnull,
                                            kNameSpaceID_None,
-                                           *getter_AddRefs(nodeInfo));
+                                           getter_AddRefs(nodeInfo));
     NS_ENSURE_SUCCESS(result, result);
 
     nsCOMPtr<nsIHTMLContent> content;
@@ -3642,7 +3640,7 @@ HTMLContentSink::SetDocumentTitle(const nsAString& aTitle)
   nsCOMPtr<nsINodeInfo> nodeInfo;
   nsresult rv = mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::title, nsnull,
                                               kNameSpaceID_None,
-                                              *getter_AddRefs(nodeInfo));
+                                              getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIHTMLContent> it;
@@ -4447,7 +4445,7 @@ HTMLContentSink::ProcessBaseHref(const nsAString& aBaseHref)
 
     if (NS_SUCCEEDED(rv)) {
       NS_RELEASE(mDocumentBaseURL);
-      mDocument->GetBaseURL(mDocumentBaseURL);
+      mDocument->GetBaseURL(&mDocumentBaseURL);
     }
   } else {
     // NAV compatibility quirk
@@ -4565,7 +4563,7 @@ HTMLContentSink::ProcessBASETag(const nsIParserNode& aNode)
     nsCOMPtr<nsINodeInfo> nodeInfo;
     mNodeInfoManager->GetNodeInfo(NS_LITERAL_STRING("base"), nsnull,
                                   kNameSpaceID_None,
-                                  *getter_AddRefs(nodeInfo));
+                                  getter_AddRefs(nodeInfo));
 
     result = NS_CreateHTMLElement(getter_AddRefs(element), nodeInfo, PR_FALSE);
     NS_ENSURE_SUCCESS(result, result);
@@ -4967,7 +4965,7 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
     nsCOMPtr<nsIHTMLContent> element;
     nsCOMPtr<nsINodeInfo> nodeInfo;
     mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::link, nsnull, kNameSpaceID_None,
-                                  *getter_AddRefs(nodeInfo));
+                                  getter_AddRefs(nodeInfo));
 
     result = NS_CreateHTMLElement(getter_AddRefs(element), nodeInfo, PR_FALSE);
     NS_ENSURE_SUCCESS(result, result);
@@ -5065,7 +5063,7 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
   nsCOMPtr<nsINodeInfo> nodeInfo;
   rv = mNodeInfoManager->GetNodeInfo(NS_LITERAL_STRING("meta"), nsnull,
                                      kNameSpaceID_None,
-                                     *getter_AddRefs(nodeInfo));
+                                     getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIHTMLContent> it;
@@ -5606,7 +5604,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
   nsCOMPtr<nsIHTMLContent> element;
   nsCOMPtr<nsINodeInfo> nodeInfo;
   mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::script, nsnull, kNameSpaceID_None,
-                                *getter_AddRefs(nodeInfo));
+                                getter_AddRefs(nodeInfo));
 
   rv = NS_CreateHTMLElement(getter_AddRefs(element), nodeInfo, PR_FALSE);
   if (NS_FAILED(rv)) {
@@ -5737,7 +5735,7 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
   // Create content object
   nsCOMPtr<nsINodeInfo> nodeInfo;
   mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::style, nsnull, kNameSpaceID_None,
-                                *getter_AddRefs(nodeInfo));
+                                getter_AddRefs(nodeInfo));
 
   nsCOMPtr<nsIHTMLContent> element;
   rv = NS_CreateHTMLElement(getter_AddRefs(element), nodeInfo, PR_FALSE);

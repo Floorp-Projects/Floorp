@@ -508,7 +508,7 @@ nsHTMLTableAccessibleWrap::GetTableLayout(nsITableLayout **aLayoutObject)
   NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDocument> document;
-  rv = content->GetDocument(*getter_AddRefs(document));
+  rv = content->GetDocument(getter_AddRefs(document));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIPresShell> presShell;

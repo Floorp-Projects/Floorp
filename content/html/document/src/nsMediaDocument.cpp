@@ -175,7 +175,7 @@ nsMediaDocument::CreateSyntheticDocument()
   nsCOMPtr<nsINodeInfo> nodeInfo;
   rv = mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::html, nsnull,
                                      kNameSpaceID_None,
-                                     *getter_AddRefs(nodeInfo));
+                                     getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIHTMLContent> root;
@@ -188,7 +188,7 @@ nsMediaDocument::CreateSyntheticDocument()
 
   rv = mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::body, nsnull,
                                      kNameSpaceID_None,
-                                     *getter_AddRefs(nodeInfo));
+                                     getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIHTMLContent> body;

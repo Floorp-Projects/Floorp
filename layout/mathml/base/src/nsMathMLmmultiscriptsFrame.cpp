@@ -85,7 +85,7 @@ nsMathMLmmultiscriptsFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
     nsCOMPtr<nsIContent> childContent;
     nsCOMPtr<nsIAtom> childTag;
     childFrame->GetContent(getter_AddRefs(childContent));
-    childContent->GetTag(*getter_AddRefs(childTag));
+    childContent->GetTag(getter_AddRefs(childTag));
     if (childTag.get() == nsMathMLAtoms::mprescripts_) {
       // mprescripts frame
     }
@@ -263,7 +263,7 @@ nsMathMLmmultiscriptsFrame::Place(nsIPresContext*      aPresContext,
     nsCOMPtr<nsIContent> childContent;
     nsCOMPtr<nsIAtom> childTag;
     childFrame->GetContent(getter_AddRefs(childContent));
-    childContent->GetTag(*getter_AddRefs(childTag));
+    childContent->GetTag(getter_AddRefs(childTag));
 
     if (childTag.get() == nsMathMLAtoms::mprescripts_) {
       if (mprescriptsFrame) {

@@ -416,7 +416,7 @@ nsPopupSetFrame::HidePopup(nsIFrame* aPopup)
     // If we are a context menu, and if we are attached to a menupopup, then hiding us
     // should also hide the parent menu popup.
     nsCOMPtr<nsIAtom> tag;
-    entry->mElementContent->GetTag(*getter_AddRefs(tag));
+    entry->mElementContent->GetTag(getter_AddRefs(tag));
     if (tag && tag.get() == nsXULAtoms::menupopup) {
       nsIFrame* popupFrame = nsnull;
       nsCOMPtr<nsIPresShell> presShell;
@@ -449,7 +449,7 @@ nsPopupSetFrame::DestroyPopup(nsIFrame* aPopup, PRBool aDestroyEntireChain)
       // If we are a context menu, and if we are attached to a menupopup, then destroying us
       // should also dismiss the parent menu popup.
       nsCOMPtr<nsIAtom> tag;
-      entry->mElementContent->GetTag(*getter_AddRefs(tag));
+      entry->mElementContent->GetTag(getter_AddRefs(tag));
       if (tag && tag.get() == nsXULAtoms::menupopup) {
         nsIFrame* popupFrame = nsnull;
         nsCOMPtr<nsIPresShell> presShell;
@@ -560,7 +560,7 @@ nsPopupSetFrame::ActivatePopup(nsPopupFrameList* aEntry, PRBool aActivateFlag)
       // processes the reflows before we get to call DestroyChain(). Processing the
       // reflow will cause the popup to show itself again. (bug 71219)
       nsCOMPtr<nsIDocument> doc;
-      aEntry->mPopupContent->GetDocument(*getter_AddRefs(doc));
+      aEntry->mPopupContent->GetDocument(getter_AddRefs(doc));
       if (doc)
         doc->FlushPendingNotifications();
          
@@ -616,16 +616,16 @@ nsPopupSetFrame::OnCreate(PRInt32 aX, PRInt32 aY, nsIContent* aPopupContent)
     // potentially be updated.
  
     nsCOMPtr<nsIDocument> doc;
-    aPopupContent->GetDocument(*getter_AddRefs(doc));
+    aPopupContent->GetDocument(getter_AddRefs(doc));
     nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(doc));
 
     PRInt32 count;
     aPopupContent->ChildCount(count);
     for (PRInt32 i = 0; i < count; i++) {
       nsCOMPtr<nsIContent> grandChild;
-      aPopupContent->ChildAt(i, *getter_AddRefs(grandChild));
+      aPopupContent->ChildAt(i, getter_AddRefs(grandChild));
       nsCOMPtr<nsIAtom> tag;
-      grandChild->GetTag(*getter_AddRefs(tag));
+      grandChild->GetTag(getter_AddRefs(tag));
       if (tag.get() == nsXULAtoms::menuitem) {
         // See if we have a command attribute.
         nsAutoString command;

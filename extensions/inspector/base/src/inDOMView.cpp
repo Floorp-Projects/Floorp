@@ -741,14 +741,19 @@ inDOMView::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent, PRInt3
 }
 
 NS_IMETHODIMP
-inDOMView::ContentAppended(nsIDocument *aDocument, nsIContent* aContainer, PRInt32 aNewIndexInContainer)
+inDOMView::ContentAppended(nsIDocument *aDocument,
+                           nsIContent* aContainer,
+                           PRInt32 aNewIndexInContainer)
 {
-  if (!mTree)
+  if (!mTree) {
     return NS_ERROR_FAILURE;
+  }
 
   nsCOMPtr<nsIContent> child;
-  aContainer->ChildAt(aNewIndexInContainer, *getter_AddRefs(child));
-  return ContentInserted(aDocument, aContainer, child, aNewIndexInContainer);
+  aContainer->ChildAt(aNewIndexInContainer, getter_AddRefs(child));
+
+  return ContentInserted(aDocument, aContainer, child,
+                         aNewIndexInContainer);
 }
 
 NS_IMETHODIMP

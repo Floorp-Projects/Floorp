@@ -518,7 +518,7 @@ nsHTMLFrameSetElement::ParseRowColSpec(nsString&       aSpec,
         htmlDocument = do_QueryInterface(mDocument);
       } else {
         nsCOMPtr<nsIDocument> doc;
-        mNodeInfo->GetDocument(*getter_AddRefs(doc));
+        mNodeInfo->GetDocument(getter_AddRefs(doc));
         htmlDocument = do_QueryInterface(doc);
       }
       if (htmlDocument) {

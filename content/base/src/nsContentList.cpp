@@ -176,7 +176,7 @@ static PRBool BelongsInForm(nsIDOMHTMLFormElement *aForm,
 
   nsCOMPtr<nsIContent> content;
 
-  aContent->GetParent(*getter_AddRefs(content));
+  aContent->GetParent(getter_AddRefs(content));
 
   while (content) {
     if (content == form) {
@@ -187,7 +187,7 @@ static PRBool BelongsInForm(nsIDOMHTMLFormElement *aForm,
 
     nsCOMPtr<nsIAtom> tag;
 
-    content->GetTag(*getter_AddRefs(tag));
+    content->GetTag(getter_AddRefs(tag));
 
     if (tag.get() == nsHTMLAtoms::form) {
       // The child is contained within a form, but not the right form
@@ -198,7 +198,7 @@ static PRBool BelongsInForm(nsIDOMHTMLFormElement *aForm,
 
     nsIContent *tmp = content;
 
-    tmp->GetParent(*getter_AddRefs(content));
+    tmp->GetParent(getter_AddRefs(content));
   }
 
   PRInt32 count = 0;
@@ -670,7 +670,7 @@ nsContentList::ContentAppended(nsIDocument *aDocument, nsIContent* aContainer,
       if (ourLastDOM3Node) {
         nsCOMPtr<nsIContent> firstAppendedContent;
         aContainer->ChildAt(aNewIndexInContainer,
-                            *getter_AddRefs(firstAppendedContent));
+                            getter_AddRefs(firstAppendedContent));
         nsCOMPtr<nsIDOMNode> newNode(do_QueryInterface(firstAppendedContent));
         NS_ASSERTION(newNode, "Content being inserted is not a node.... why?");
         PRUint16 comparisonFlags;
@@ -690,7 +690,7 @@ nsContentList::ContentAppended(nsIDocument *aDocument, nsIContent* aContainer,
       // whether we need to invalidate
       nsCOMPtr<nsIContent> content;
       for (i = aNewIndexInContainer; i <= count-1; ++i) {
-        aContainer->ChildAt(i, *getter_AddRefs(content));
+        aContainer->ChildAt(i, getter_AddRefs(content));
         if (MatchSelf(content)) {
           // Uh-oh.  We're gonna have to add elements into the middle
           // of our list. That's not worth the effort.
@@ -717,7 +717,7 @@ nsContentList::ContentAppended(nsIDocument *aDocument, nsIContent* aContainer,
      */
     nsCOMPtr<nsIContent> content;
     for (i = aNewIndexInContainer; i <= count-1; ++i) {
-      aContainer->ChildAt(i, *getter_AddRefs(content));
+      aContainer->ChildAt(i, getter_AddRefs(content));
       PRUint32 limit = PRUint32(-1);
       PopulateWith(content, PR_TRUE, limit);
     }
@@ -804,7 +804,7 @@ nsContentList::Match(nsIContent *aContent)
 
   if (mMatchAtom) {
     nsCOMPtr<nsINodeInfo> ni;
-    aContent->GetNodeInfo(*getter_AddRefs(ni));
+    aContent->GetNodeInfo(getter_AddRefs(ni));
 
     if (!ni)
       return PR_FALSE;
@@ -839,7 +839,7 @@ nsContentList::CheckDocumentExistence()
 {
   nsresult result = NS_OK;
   if (!mDocument && mRootContent) {
-    result = mRootContent->GetDocument(mDocument);
+    result = mRootContent->GetDocument(&mDocument);
     if (mDocument) {
       mDocument->AddObserver(this);
       mState = LIST_DIRTY;
@@ -862,7 +862,7 @@ nsContentList::MatchSelf(nsIContent *aContent)
   aContent->ChildCount(count);
   nsCOMPtr<nsIContent> child;
   for (i = 0; i < count; i++) {
-    aContent->ChildAt(i, *getter_AddRefs(child));
+    aContent->ChildAt(i, getter_AddRefs(child));
     if (MatchSelf(child)) {
       return PR_TRUE;
     }
@@ -888,7 +888,7 @@ nsContentList::PopulateWith(nsIContent *aContent, PRBool aIncludeRoot,
   aContent->ChildCount(count);
   nsCOMPtr<nsIContent> child;
   for (i = 0; i < count; i++) {
-    aContent->ChildAt(i, *getter_AddRefs(child));
+    aContent->ChildAt(i, getter_AddRefs(child));
     PopulateWith(child, PR_TRUE, aElementsToAppend);
     if (aElementsToAppend == 0)
       return;
@@ -914,7 +914,7 @@ nsContentList::PopulateWithStartingAfter(nsIContent *aStartRoot,
   aStartRoot->ChildCount(childCount);
   nsCOMPtr<nsIContent> child;
   for ( ; i < childCount; ++i) {
-    aStartRoot->ChildAt(i, *getter_AddRefs(child));
+    aStartRoot->ChildAt(i, getter_AddRefs(child));
     PopulateWith(child, PR_TRUE, aElementsToAppend);
     NS_ASSERTION(aElementsToAppend + mElements.Count() == invariant,
                  "Something is awry in PopulateWith!");
@@ -928,7 +928,7 @@ nsContentList::PopulateWithStartingAfter(nsIContent *aStartRoot,
     return;
   
   nsCOMPtr<nsIContent> parent;
-  aStartRoot->GetParent(*getter_AddRefs(parent));
+  aStartRoot->GetParent(getter_AddRefs(parent));
   
   if (parent)
     PopulateWithStartingAfter(parent, aStartRoot, aElementsToAppend);
@@ -996,7 +996,7 @@ nsContentList::IsDescendantOfRoot(nsIContent* aContainer)
     // check.
     if (aContainer) { 
       nsCOMPtr<nsIDocument> doc;
-      aContainer->GetDocument(*getter_AddRefs(doc));
+      aContainer->GetDocument(getter_AddRefs(doc));
       NS_ASSERTION(doc == mDocument, "We should not get in here if aContainer is in some _other_ document!");
     }
 #endif

@@ -143,7 +143,7 @@ public:
    * Return the base URL for relative URLs in the document. May return
    * null (or the document URL).
    */
-  NS_IMETHOD GetBaseURL(nsIURI*& aURL) const = 0;
+  NS_IMETHOD GetBaseURL(nsIURI** aURL) const = 0;
   NS_IMETHOD SetBaseURL(nsIURI* aURL) = 0;
 
   /**
@@ -271,7 +271,7 @@ public:
    * Get the direct children of the document - content in
    * the prolog, the root content and content in the epilog.
    */
-  NS_IMETHOD ChildAt(PRInt32 aIndex, nsIContent*& aResult) const = 0;
+  NS_IMETHOD ChildAt(PRInt32 aIndex, nsIContent** aResult) const = 0;
   NS_IMETHOD IndexOf(nsIContent* aPossibleChild, PRInt32& aIndex) const = 0;
   NS_IMETHOD GetChildCount(PRInt32& aCount) = 0;
 
@@ -437,7 +437,7 @@ public:
 
   NS_IMETHOD GetBindingManager(nsIBindingManager** aResult) = 0;
 
-  NS_IMETHOD GetNodeInfoManager(nsINodeInfoManager*& aNodeInfoManager) = 0;
+  NS_IMETHOD GetNodeInfoManager(nsINodeInfoManager** aNodeInfoManager) = 0;
 
   NS_IMETHOD Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup) = 0;
   NS_IMETHOD ResetToURI(nsIURI *aURI, nsILoadGroup* aLoadGroup) = 0;

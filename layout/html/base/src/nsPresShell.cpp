@@ -4055,7 +4055,7 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
         content = do_QueryInterface(node);
         if (content) {
           nsCOMPtr<nsIAtom> tag;
-          content->GetTag(*getter_AddRefs(tag));
+          content->GetTag(getter_AddRefs(tag));
           if (tag == nsHTMLAtoms::a) {
             break;
           }
@@ -4351,7 +4351,7 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
   aFrame->GetContent(getter_AddRefs(content));
   if(content) {
     nsCOMPtr<nsIDocument> document;
-    content->GetDocument(*getter_AddRefs(document));
+    content->GetDocument(getter_AddRefs(document));
     if(document){
       nsCOMPtr<nsIFocusController> focusController;
       nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
@@ -5455,7 +5455,7 @@ BuildFramechangeList(nsIFrame *aFrame, void *aClosure)
     nsCOMPtr<nsIContent> content;
     aFrame->GetContent(getter_AddRefs(content));
     nsCOMPtr<nsIDocument> doc;
-    content->GetDocument(*getter_AddRefs(doc));
+    content->GetDocument(getter_AddRefs(doc));
     if (doc) {
       nsCOMPtr<nsIBindingManager> bm;
       doc->GetBindingManager(getter_AddRefs(bm));
@@ -5942,7 +5942,7 @@ PresShell::GetCurrentEventFrame()
     // frame shouldn't get an event, nor should we even assume its
     // safe to try and find the frame.
     nsCOMPtr<nsIDocument> doc;
-    nsresult result = mCurrentEventContent->GetDocument(*getter_AddRefs(doc));
+    nsresult result = mCurrentEventContent->GetDocument(getter_AddRefs(doc));
     if (NS_SUCCEEDED(result) && doc) {
       GetPrimaryFrameFor(mCurrentEventContent, &mCurrentEventFrame);
     }
@@ -6009,7 +6009,7 @@ PRBool PresShell::InZombieDocument(nsIContent *aContent)
   // It might actually be in a node not attached to any document,
   // in which case there is not parent presshell to retarget it to.
   nsCOMPtr<nsIDocument> doc;
-  mCurrentEventContent->GetDocument(*getter_AddRefs(doc));
+  mCurrentEventContent->GetDocument(getter_AddRefs(doc));
   return !doc;
 }
 
@@ -6264,7 +6264,7 @@ PresShell::HandleEvent(nsIView         *aView,
           while (targetElement &&
                  !targetElement->IsContentOfType(nsIContent::eELEMENT)) {
             nsIContent* temp = targetElement;
-            temp->GetParent(*getter_AddRefs(targetElement));
+            temp->GetParent(getter_AddRefs(targetElement));
           }
 
           // If we found an element, target it.  Otherwise, target *nothing*.

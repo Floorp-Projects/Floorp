@@ -936,7 +936,7 @@ nsHTMLEditor::GetBlockSectionsForRange(nsIDOMRange *aRange,
       if (currentNode)
       {
         nsCOMPtr<nsIAtom> currentContentTag;
-        currentContent->GetTag(*getter_AddRefs(currentContentTag));
+        currentContent->GetTag(getter_AddRefs(currentContentTag));
         // <BR> divides block content ranges.  We can achieve this by nulling out lastRange
         if (nsEditProperty::br==currentContentTag)
         {
@@ -1683,7 +1683,7 @@ nsHTMLEditor::GetDOMEventReceiver(nsIDOMEventReceiver **aEventReceiver)
   if (content) 
   { 
     nsCOMPtr<nsIContent> parent; 
-    if (NS_SUCCEEDED(content->GetParent(*getter_AddRefs(parent))) && parent) 
+    if (NS_SUCCEEDED(content->GetParent(getter_AddRefs(parent))) && parent)
     { 
       PRInt32 index; 
       if (NS_FAILED(parent->IndexOf(content, index)) || index < 0 ) 
@@ -4665,7 +4665,7 @@ nsHTMLEditor::SetCaretInTableCell(nsIDOMElement* aElement)
     if (content)
     {
       nsCOMPtr<nsIAtom> atom;
-      content->GetTag(*getter_AddRefs(atom));
+      content->GetTag(getter_AddRefs(atom));
       if (atom.get() == nsEditProperty::table ||
           atom.get() == nsEditProperty::tbody ||
           atom.get() == nsEditProperty::thead ||
@@ -6007,7 +6007,7 @@ nsHTMLEditor::ParseStyleAttrIntoCSSRule(const nsAString& aString,
   if (!doc)
     return NS_ERROR_UNEXPECTED;
   nsCOMPtr <nsIURI> docURL;
-  doc->GetBaseURL(*getter_AddRefs(docURL));
+  doc->GetBaseURL(getter_AddRefs(docURL));
   nsCOMPtr<nsICSSParser> css;
   nsCOMPtr<nsIStyleRule> mRule;
   nsComponentManager::CreateInstance(kCSSParserCID,

@@ -1256,7 +1256,7 @@ nsHTMLAttributes::SetAttributeFor(nsINodeInfo* aAttrName,
 #ifdef DEBUG
   {
     PRInt32 namespaceID;
-    aAttrName->GetNamespaceID(namespaceID);
+    aAttrName->GetNamespaceID(&namespaceID);
     NS_ASSERTION(namespaceID != kNameSpaceID_None, "namespace is null in SetAttributeFor");
   }
 #endif
@@ -1265,10 +1265,9 @@ nsHTMLAttributes::SetAttributeFor(nsINodeInfo* aAttrName,
   rv = SetAttributeName(aAttrName, haveAttr);
   NS_ENSURE_SUCCESS(rv, rv);
   if (haveAttr) {
-    PRInt32 namespaceID;
-    nsCOMPtr<nsIAtom> localName;
-    aAttrName->GetNamespaceID(namespaceID);
-    aAttrName->GetNameAtom(*getter_AddRefs(localName));
+    PRInt32 namespaceID = aAttrName->GetNamespaceID();
+    nsCOMPtr<nsIAtom> localName = aAttrName->GetNameAtom();
+
     HTMLAttribute* attr = HTMLAttribute::FindHTMLAttribute(localName,
                                                            namespaceID,
                                                            mFirstUnmapped);
@@ -1289,7 +1288,7 @@ nsHTMLAttributes::SetAttributeFor(nsINodeInfo* aAttrName,
 
 NS_IMETHODIMP
 nsHTMLAttributes::GetAttribute(nsIAtom* aAttrName, PRInt32 aNamespaceID,
-                               nsIAtom*& aPrefix,
+                               nsIAtom** aPrefix,
                                const nsHTMLValue** aValue) const
 {
   NS_ASSERTION(aNamespaceID != kNameSpaceID_None, "namespace is null in UnsetAttributeFor");
@@ -1303,7 +1302,10 @@ nsHTMLAttributes::GetAttribute(nsIAtom* aAttrName, PRInt32 aNamespaceID,
   }
 
   *aValue = &attr->mValue;
-  attr->mAttribute.GetNodeInfo()->GetPrefixAtom(aPrefix);
+
+  // AddRefs
+  *aPrefix = attr->mAttribute.GetNodeInfo()->GetPrefixAtom().get();
+
   return attr->mValue.GetUnit() == eHTMLUnit_Null ? 
          NS_CONTENT_ATTR_NO_VALUE : 
          NS_CONTENT_ATTR_HAS_VALUE;
@@ -1312,24 +1314,27 @@ nsHTMLAttributes::GetAttribute(nsIAtom* aAttrName, PRInt32 aNamespaceID,
 
 NS_IMETHODIMP
 nsHTMLAttributes::GetAttributeNameAt(PRInt32 aIndex,
-                                     PRInt32& aNamespaceID,
-                                     nsIAtom*& aName,
-                                     nsIAtom*& aPrefix) const
+                                     PRInt32* aNamespaceID,
+                                     nsIAtom** aName,
+                                     nsIAtom** aPrefix) const
 {
   nsresult result = NS_ERROR_ILLEGAL_VALUE;
 
   if ((0 <= aIndex) && (aIndex < mAttrCount)) {
     if (mAttrNames[aIndex].IsAtom()) {
-        aNamespaceID = kNameSpaceID_None;
-        aName = mAttrNames[aIndex].mAtom;
-        NS_ADDREF(aName);
-        aPrefix = nsnull;
+        *aNamespaceID = kNameSpaceID_None;
+        *aName = mAttrNames[aIndex].mAtom;
+        NS_ADDREF(*aName);
+        *aPrefix = nsnull;
     }
     else {
         nsINodeInfo* ni = mAttrNames[aIndex].GetNodeInfo();
-        ni->GetNamespaceID(aNamespaceID);
-        ni->GetNameAtom(aName);
-        ni->GetPrefixAtom(aPrefix);
+        *aNamespaceID = ni->GetNamespaceID();
+
+        // AddRefs
+        *aName = ni->GetNameAtom().get();
+        // AddRefs
+        *aPrefix = ni->GetPrefixAtom().get();
     }
     result = NS_OK;
   }
@@ -1344,10 +1349,10 @@ nsHTMLAttributes::GetAttributeCount(PRInt32& aCount) const
 }
 
 NS_IMETHODIMP
-nsHTMLAttributes::GetID(nsIAtom*& aResult) const
+nsHTMLAttributes::GetID(nsIAtom** aResult) const
 {
-  aResult = mID;
-  NS_IF_ADDREF(aResult);
+  *aResult = mID;
+  NS_IF_ADDREF(*aResult);
   return NS_OK;
 }
 
@@ -1499,10 +1504,10 @@ nsHTMLAttributes::List(FILE* out, PRInt32 aIndent) const
       nsINodeInfo* ni = mAttrNames[index].GetNodeInfo();
       PRInt32 namespaceID;
       nsCOMPtr<nsIAtom> localName, prefix;
-      ni->GetNameAtom(*getter_AddRefs(localName));
-      ni->GetNamespaceID(namespaceID);
+      ni->GetNameAtom(getter_AddRefs(localName));
+      ni->GetNamespaceID(&namespaceID);
       const nsHTMLValue *tmp;
-      GetAttribute(localName, namespaceID, *getter_AddRefs(prefix), &tmp);
+      GetAttribute(localName, namespaceID, getter_AddRefs(prefix), &tmp);
       value = *tmp;
       ni->GetQualifiedName(buffer);
     }

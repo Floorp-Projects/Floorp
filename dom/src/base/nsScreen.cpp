@@ -309,7 +309,7 @@ nsIDeviceContext* ScreenImpl::GetDeviceContext()
     return nsnull;
 
   nsCOMPtr<nsIPresContext> presContext;
-  docViewer->GetPresContext(*getter_AddRefs(presContext));
+  docViewer->GetPresContext(getter_AddRefs(presContext));
 
   nsIDeviceContext* context = nsnull;
   if(presContext)

@@ -278,7 +278,7 @@ XULSortServiceImpl::FindDatabaseElement(nsIContent *aElement, nsIContent **aData
     }
     
     nsCOMPtr<nsIContent> parent;
-    content->GetParent(*getter_AddRefs(parent));
+    content->GetParent(getter_AddRefs(parent));
     content = parent;
   }
 
@@ -291,7 +291,7 @@ XULSortServiceImpl::FindSortableContainer(nsIContent *aRoot, nsIContent **aConta
   nsresult rv;
 
   nsCOMPtr<nsIAtom> tag;
-  if (NS_FAILED(rv = aRoot->GetTag(*getter_AddRefs(tag))))  return rv;
+  if (NS_FAILED(rv = aRoot->GetTag(getter_AddRefs(tag))))  return rv;
 
   if (tag == nsXULAtoms::templateAtom) // ignore content within templates
     return NS_OK;    
@@ -308,8 +308,8 @@ XULSortServiceImpl::FindSortableContainer(nsIContent *aRoot, nsIContent **aConta
 
   if (NS_FAILED(rv = aRoot->ChildCount(numChildren))) return rv;
   for (childIndex = 0; childIndex < numChildren; childIndex++) {
-    if (NS_FAILED(rv = aRoot->ChildAt(childIndex, *getter_AddRefs(child)))) return rv;
-    if (NS_FAILED(rv = child->GetNameSpaceID(nameSpaceID)))  return rv;
+    if (NS_FAILED(rv = aRoot->ChildAt(childIndex, getter_AddRefs(child)))) return rv;
+    if (NS_FAILED(rv = child->GetNameSpaceID(&nameSpaceID)))  return rv;
     if (nameSpaceID == kNameSpaceID_XUL) {
       rv = FindSortableContainer(child, aContainer);
       if (*aContainer)
@@ -363,12 +363,12 @@ XULSortServiceImpl::SetSortColumnHints(nsIContent *content, const nsAString &sor
   if (NS_FAILED(rv = content->ChildCount(numChildren))) return rv;
   
   for (childIndex = 0; childIndex < numChildren; ++childIndex) {
-    if (NS_FAILED(rv = content->ChildAt(childIndex, *getter_AddRefs(child)))) return rv;
-    if (NS_FAILED(rv = child->GetNameSpaceID(nameSpaceID))) return rv;
+    if (NS_FAILED(rv = content->ChildAt(childIndex, getter_AddRefs(child)))) return rv;
+    if (NS_FAILED(rv = child->GetNameSpaceID(&nameSpaceID))) return rv;
     
     if (nameSpaceID == kNameSpaceID_XUL) {
       nsCOMPtr<nsIAtom> tag;
-      if (NS_FAILED(rv = child->GetTag(*getter_AddRefs(tag)))) return rv;
+      if (NS_FAILED(rv = child->GetTag(getter_AddRefs(tag)))) return rv;
         
       if (tag == nsXULAtoms::treecols || tag == nsXULAtoms::listcols || tag == nsXULAtoms::listhead) {
         rv = SetSortColumnHints(child, sortResource, sortDirection);
@@ -1091,7 +1091,7 @@ XULSortServiceImpl::SortContainer(nsIContent *container, sortPtr sortInfo, PRBoo
   if (numChildren < 1) return NS_OK;
 
   nsCOMPtr<nsIDocument> doc;
-  container->GetDocument(*getter_AddRefs(doc));
+  container->GetDocument(getter_AddRefs(doc));
   if (!doc) return NS_ERROR_UNEXPECTED;
 
   // Note: This is a straight allocation (not a COMPtr) so we
@@ -1107,10 +1107,10 @@ XULSortServiceImpl::SortContainer(nsIContent *container, sortPtr sortInfo, PRBoo
   nsCOMPtr<nsIAtom> tag;
   currentElement = numChildren;
   for (childIndex = numChildren-1; childIndex >= 0; --childIndex) {
-    if (NS_FAILED(rv = container->ChildAt(childIndex, *getter_AddRefs(child)))) continue;
-    if (NS_FAILED(rv = child->GetNameSpaceID(nameSpaceID))) continue;
+    if (NS_FAILED(rv = container->ChildAt(childIndex, getter_AddRefs(child)))) continue;
+    if (NS_FAILED(rv = child->GetNameSpaceID(&nameSpaceID))) continue;
     if (nameSpaceID == kNameSpaceID_XUL) {
-      if (NS_FAILED(rv = child->GetTag(*getter_AddRefs(tag)))) continue;
+      if (NS_FAILED(rv = child->GetTag(getter_AddRefs(tag)))) continue;
       if (tag == nsXULAtoms::listitem || tag == nsXULAtoms::treeitem
           || tag == nsXULAtoms::menu || tag == nsXULAtoms::menuitem) {
         --currentElement;
@@ -1166,10 +1166,10 @@ XULSortServiceImpl::SortContainer(nsIContent *container, sortPtr sortInfo, PRBoo
 
     for (childIndex=numChildren-1; childIndex >= 0; childIndex--)
     {
-      if (NS_FAILED(rv = container->ChildAt(childIndex, *getter_AddRefs(child)))) continue;
-      if (NS_FAILED(rv = child->GetNameSpaceID(nameSpaceID))) continue;
+      if (NS_FAILED(rv = container->ChildAt(childIndex, getter_AddRefs(child)))) continue;
+      if (NS_FAILED(rv = child->GetNameSpaceID(&nameSpaceID))) continue;
       if (nameSpaceID == kNameSpaceID_XUL) {
-        if (NS_FAILED(rv = child->GetTag(*getter_AddRefs(tag)))) continue;
+        if (NS_FAILED(rv = child->GetTag(getter_AddRefs(tag)))) continue;
         if (tag == nsXULAtoms::listitem || tag == nsXULAtoms::treeitem
             || tag == nsXULAtoms::menu || tag == nsXULAtoms::menuitem) {
           // immediately remove the child node, and ignore any errors
@@ -1200,12 +1200,12 @@ XULSortServiceImpl::SortContainer(nsIContent *container, sortPtr sortInfo, PRBoo
       if (NS_FAILED(rv = parentNode->ChildCount(numChildren))) continue;
 
       for (childIndex=0; childIndex<numChildren; childIndex++) {
-        if (NS_FAILED(rv = parentNode->ChildAt(childIndex, *getter_AddRefs(child))))
+        if (NS_FAILED(rv = parentNode->ChildAt(childIndex, getter_AddRefs(child))))
           continue;
-        if (NS_FAILED(rv = child->GetNameSpaceID(nameSpaceID))) continue;
+        if (NS_FAILED(rv = child->GetNameSpaceID(&nameSpaceID))) continue;
         if (nameSpaceID != kNameSpaceID_XUL) continue;
 
-        if (NS_FAILED(rv = child->GetTag(*getter_AddRefs(tag)))) continue;
+        if (NS_FAILED(rv = child->GetTag(getter_AddRefs(tag)))) continue;
         if (tag != nsXULAtoms::treechildren && tag != nsXULAtoms::menupopup) continue;
 
         sortInfo->parentContainer = parentNode;
@@ -1370,7 +1370,7 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
 
     nsCOMPtr<nsIDocument> doc;
     if (NS_SUCCEEDED(rv) && parent) {
-      rv = parent->GetDocument(*getter_AddRefs(doc));
+      rv = parent->GetDocument(getter_AddRefs(doc));
       if (!doc)
         parent = nsnull;
     }
@@ -1379,7 +1379,7 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
       nsAutoString id;
       nsCOMPtr<nsIAtom> tag;
 
-      if (NS_FAILED(rv = trueParent->GetTag(*getter_AddRefs(tag))))
+      if (NS_FAILED(rv = trueParent->GetTag(getter_AddRefs(tag))))
         return rv;
 
       rv = trueParent->GetAttr(kNameSpaceID_None, nsXULAtoms::ref, id);
@@ -1423,7 +1423,7 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
       // compute the "static" XUL element count
       nsAutoString  valueStr;
       for (PRInt32 childLoop = 0; childLoop < numChildren; ++childLoop) {
-        container->ChildAt(childLoop, *getter_AddRefs(child));
+        container->ChildAt(childLoop, getter_AddRefs(child));
         if (!child) break;
 
         if (NS_SUCCEEDED(rv = child->GetAttr(kNameSpaceID_None, nsXULAtoms::templateAtom, valueStr))
@@ -1463,7 +1463,7 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
       // binary search insertion sort... with interpolation at either end-point.
 
       if (sortState->lastWasFirst) {
-        container->ChildAt(staticCount, *getter_AddRefs(child));
+        container->ChildAt(staticCount, getter_AddRefs(child));
         temp = child.get();
         direction = inplaceSortCallback(&node, &temp, &sortInfo);
         if (direction < 0) {
@@ -1472,7 +1472,7 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
         } else
           sortState->lastWasFirst = PR_FALSE;
       } else if (sortState->lastWasLast) {
-        container->ChildAt(realNumChildren-1, *getter_AddRefs(child));
+        container->ChildAt(realNumChildren-1, getter_AddRefs(child));
         temp = child.get();
         direction = inplaceSortCallback(&node, &temp, &sortInfo);
         if (direction > 0) {
@@ -1485,7 +1485,7 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
       PRInt32  left = staticCount+1, right = realNumChildren, x;
       while (!childAdded && right >= left) {
         x = (left + right) / 2;
-        container->ChildAt(x-1, *getter_AddRefs(child));
+        container->ChildAt(x-1, getter_AddRefs(child));
         temp = child.get();
 
         // rjc says: since cacheFirstHint is PR_TRUE, the first node passed
@@ -1630,14 +1630,14 @@ XULSortServiceImpl::Sort(nsIDOMNode* node, const nsAString& sortResource, const 
 
   // start sorting the content depending on the tag
   nsCOMPtr<nsIAtom> dbNodeTag;
-  dbNode->GetTag(*getter_AddRefs(dbNodeTag));
+  dbNode->GetTag(getter_AddRefs(dbNodeTag));
   nsCOMPtr<nsIContent> container;
   if (NS_FAILED(rv = FindSortableContainer(dbNode, getter_AddRefs(container)))) return rv;
   SortContainer(container, &sortInfo, invertTreeFlag);
   
   // Now remove the db node and re-insert it to force the frames to be rebuilt.
   nsCOMPtr<nsIContent> containerParent;
-  if (NS_FAILED(rv = container->GetParent(*getter_AddRefs(containerParent))))  return rv;
+  if (NS_FAILED(rv = container->GetParent(getter_AddRefs(containerParent))))  return rv;
   PRInt32 containerIndex;
   if (NS_FAILED(rv = containerParent->IndexOf(container, containerIndex)))  return rv;
   PRInt32 childCount;

@@ -144,7 +144,7 @@ nsTreeColFrame::GetFrameForPoint(nsIPresContext* aPresContext,
     nsCOMPtr<nsIContent> content;
     if (child) {
       child->GetContent(getter_AddRefs(content));
-      content->GetTag(*getter_AddRefs(tag));
+      content->GetTag(getter_AddRefs(tag));
       if (tag.get() == nsXULAtoms::splitter) {
         *aFrame = child;
         return NS_OK;
@@ -202,12 +202,12 @@ nsTreeColFrame::EnsureTree()
   if (!mTree && mContent) {
     // Get our parent node.
     nsCOMPtr<nsIContent> parent;
-    mContent->GetParent(*getter_AddRefs(parent));
+    mContent->GetParent(getter_AddRefs(parent));
     if (parent) {
       nsCOMPtr<nsIContent> grandParent;
-      parent->GetParent(*getter_AddRefs(grandParent));
+      parent->GetParent(getter_AddRefs(grandParent));
       nsCOMPtr<nsIDocument> doc;
-      mContent->GetDocument(*getter_AddRefs(doc));
+      mContent->GetDocument(getter_AddRefs(doc));
       nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(doc));
       nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(grandParent));
 

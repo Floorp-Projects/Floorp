@@ -62,7 +62,7 @@ public:
   NS_FORWARD_NSIDOMTEXT(nsGenericDOMDataNode::)
 
   // nsIContent
-  NS_IMETHOD GetTag(nsIAtom*& aResult) const;
+  NS_IMETHOD GetTag(nsIAtom** aResult) const;
   NS_IMETHOD_(PRBool) IsContentOfType(PRUint32 aFlags);
 #ifdef DEBUG
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
@@ -106,10 +106,10 @@ NS_INTERFACE_MAP_BEGIN(nsTextNode)
 NS_INTERFACE_MAP_END_INHERITING(nsGenericDOMDataNode)
 
 NS_IMETHODIMP
-nsTextNode::GetTag(nsIAtom*& aResult) const
+nsTextNode::GetTag(nsIAtom** aResult) const
 {
-  aResult = nsLayoutAtoms::textTagName;
-  NS_ADDREF(aResult);
+  NS_ADDREF(*aResult = nsLayoutAtoms::textTagName);
+
   return NS_OK;
 }
 

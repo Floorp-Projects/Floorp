@@ -224,10 +224,10 @@ nsMenuPopupFrame::Init(nsIPresContext*  aPresContext,
   widgetData.clipSiblings = PR_TRUE;
 
   nsCOMPtr<nsIContent> parentContent;
-  aContent->GetParent(*getter_AddRefs(parentContent));
+  aContent->GetParent(getter_AddRefs(parentContent));
   nsCOMPtr<nsIAtom> tag;
   if (parentContent)
-    parentContent->GetTag(*getter_AddRefs(tag));
+    parentContent->GetTag(getter_AddRefs(tag));
   widgetData.mDropShadow = !(tag && tag == nsXULAtoms::menulist);
   
   // XXX make sure we are hidden (shouldn't this be done automatically?)
@@ -622,7 +622,7 @@ nsMenuPopupFrame::AdjustClientXYForNestedDocuments ( nsIDOMXULDocument* inPopupD
   // nsXULPopupListener).
 
   nsCOMPtr<nsIAtom> tag;
-  mContent->GetTag(*getter_AddRefs(tag));
+  mContent->GetTag(getter_AddRefs(tag));
   nsCOMPtr<nsIDOMNode> targetNode;
   if (tag == nsXULAtoms::tooltip)
     inPopupDoc->GetTooltipNode(getter_AddRefs(targetNode));
@@ -634,7 +634,7 @@ nsMenuPopupFrame::AdjustClientXYForNestedDocuments ( nsIDOMXULDocument* inPopupD
   nsCOMPtr<nsIWidget> targetDocumentWidget;
   if ( targetAsContent ) {
     nsCOMPtr<nsIDocument> targetDocument;
-    targetAsContent->GetDocument(*getter_AddRefs(targetDocument));
+    targetAsContent->GetDocument(getter_AddRefs(targetDocument));
     if (targetDocument) {
       nsCOMPtr<nsIPresShell> shell;
       targetDocument->GetShellAt(0, getter_AddRefs(shell));
@@ -981,7 +981,7 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
   nsCOMPtr<nsIContent> parentContent;
   aFrame->GetContent(getter_AddRefs(parentContent));
   nsCOMPtr<nsIAtom> tag;
-  mContent->GetTag(*getter_AddRefs(tag));
+  mContent->GetTag(getter_AddRefs(tag));
   PRBool sizedToPopup = (tag != nsXULAtoms::tooltip)
                         && (nsMenuFrame::IsSizedToPopup(parentContent, PR_FALSE));
   
@@ -1459,11 +1459,11 @@ NS_IMETHODIMP nsMenuPopupFrame::ConsumeOutsideClicks(PRBool& aConsumeOutsideClic
   aConsumeOutsideClicks = PR_TRUE;
 
   nsCOMPtr<nsIContent> parentContent;
-  mContent->GetParent(*getter_AddRefs(parentContent));
+  mContent->GetParent(getter_AddRefs(parentContent));
 
   if (parentContent) {
     nsCOMPtr<nsIAtom> parentTag;
-    parentContent->GetTag(*getter_AddRefs(parentTag));
+    parentContent->GetTag(getter_AddRefs(parentTag));
     if (parentTag == nsXULAtoms::menulist)
       return NS_OK;  // Consume outside clicks for combo boxes on all platforms
     if (parentTag == nsXULAtoms::menu || parentTag == nsXULAtoms::popupset) {
@@ -1705,10 +1705,10 @@ nsMenuPopupFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, PRBool& doActi
   nsIMenuFrame* frameShortcut = nsnull;
 
   nsCOMPtr<nsIContent> parentContent;
-  mContent->GetParent(*getter_AddRefs(parentContent));
+  mContent->GetParent(getter_AddRefs(parentContent));
   if (parentContent) {
     nsCOMPtr<nsIAtom> tag;
-    parentContent->GetTag(*getter_AddRefs(tag));
+    parentContent->GetTag(getter_AddRefs(tag));
     if (tag != nsXULAtoms::menulist)
       isMenu = PR_TRUE;
   }
@@ -2092,7 +2092,7 @@ nsMenuPopupFrame::InstallKeyboardNavigator()
     return NS_OK;
 
   nsCOMPtr<nsIDocument> doc;
-  mContent->GetDocument(*getter_AddRefs(doc));
+  mContent->GetDocument(getter_AddRefs(doc));
   nsCOMPtr<nsIDOMEventReceiver> target = do_QueryInterface(doc);
   
   mTarget = target;
@@ -2127,7 +2127,7 @@ PRBool
 nsMenuPopupFrame::IsValidItem(nsIContent* aContent)
 {
   nsCOMPtr<nsIAtom> tag;
-  aContent->GetTag(*getter_AddRefs(tag));
+  aContent->GetTag(getter_AddRefs(tag));
   if (tag && (tag.get() == nsXULAtoms::menu ||
               tag.get() == nsXULAtoms::menuitem ||
               tag.get() == nsHTMLAtoms::option))

@@ -429,7 +429,7 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
     nsCOMPtr<nsIDocument> document;
     nsCOMPtr<nsIContent> content(do_QueryInterface(mTarget));
     if (content)
-      content->GetDocument(*getter_AddRefs(document));
+      content->GetDocument(getter_AddRefs(document));
     else document = do_QueryInterface(mTarget);
     if (document)
       document->GetScriptGlobalObject(getter_AddRefs(global));
@@ -2664,13 +2664,13 @@ nsEventListenerManager::DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval)
   }
   
   nsCOMPtr<nsIDocument> document;
-  targetContent->GetDocument(*getter_AddRefs(document));
+  targetContent->GetDocument(getter_AddRefs(document));
 
   if (!document) {
     nsCOMPtr<nsINodeInfo> nodeInfo;
-    targetContent->GetNodeInfo(*getter_AddRefs(nodeInfo));
+    targetContent->GetNodeInfo(getter_AddRefs(nodeInfo));
     if (nodeInfo) {
-      nodeInfo->GetDocument(*getter_AddRefs(document));
+      nodeInfo->GetDocument(getter_AddRefs(document));
     }
   }
 

@@ -78,20 +78,20 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD GetNameSpaceID(PRInt32& aID) const;
+  NS_IMETHOD GetNameSpaceID(PRInt32* aID) const;
   NS_IMETHOD GetNameSpaceURI(nsAString& aURI) const;
-  NS_IMETHOD GetNameSpacePrefix(nsIAtom*& aPrefix) const;
+  NS_IMETHOD GetNameSpacePrefix(nsIAtom** aPrefix) const;
 
-  NS_IMETHOD GetParentNameSpace(nsINameSpace*& aParent) const;
+  NS_IMETHOD GetParentNameSpace(nsINameSpace** aParent) const;
 
-  NS_IMETHOD FindNameSpace(nsIAtom* aPrefix, nsINameSpace*& aNameSpace) const;
-  NS_IMETHOD FindNameSpaceID(nsIAtom* aPrefix, PRInt32& aNameSpaceID) const;
-  NS_IMETHOD FindNameSpacePrefix(PRInt32 aNameSpaceID, nsIAtom*& aPrefix) const;
+  NS_IMETHOD FindNameSpace(nsIAtom* aPrefix, nsINameSpace** aNameSpace) const;
+  NS_IMETHOD FindNameSpaceID(nsIAtom* aPrefix, PRInt32* aNameSpaceID) const;
+  NS_IMETHOD FindNameSpacePrefix(PRInt32 aNameSpaceID, nsIAtom** aPrefix) const;
 
   NS_IMETHOD CreateChildNameSpace(nsIAtom* aPrefix, const nsAString& aURI,
-                                  nsINameSpace*& aChildNameSpace);
+                                  nsINameSpace** aChildNameSpace);
   NS_IMETHOD CreateChildNameSpace(nsIAtom* aPrefix, PRInt32 aNameSpaceID,
-                                  nsINameSpace*& aChildNameSpace);
+                                  nsINameSpace** aChildNameSpace);
 
 private:
   // These are not supported and are not implemented!
@@ -131,9 +131,9 @@ NameSpaceImpl::~NameSpaceImpl()
 NS_IMPL_ISUPPORTS1(NameSpaceImpl, nsINameSpace)
 
 NS_IMETHODIMP
-NameSpaceImpl::GetNameSpaceID(PRInt32& aID) const
+NameSpaceImpl::GetNameSpaceID(PRInt32* aID) const
 {
-  aID = mID;
+  *aID = mID;
 
   return NS_OK;
 }
@@ -145,51 +145,49 @@ NameSpaceImpl::GetNameSpaceURI(nsAString& aURI) const
 }
 
 NS_IMETHODIMP
-NameSpaceImpl::GetNameSpacePrefix(nsIAtom*& aPrefix) const
+NameSpaceImpl::GetNameSpacePrefix(nsIAtom** aPrefix) const
 {
-  aPrefix = mPrefix;
-  NS_IF_ADDREF(aPrefix);
+  NS_IF_ADDREF(*aPrefix = mPrefix);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-NameSpaceImpl::GetParentNameSpace(nsINameSpace*& aParent) const
+NameSpaceImpl::GetParentNameSpace(nsINameSpace** aParent) const
 {
-  aParent = mParent;
-  NS_IF_ADDREF(aParent);
+  NS_IF_ADDREF(*aParent = mParent);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-NameSpaceImpl::FindNameSpace(nsIAtom* aPrefix, nsINameSpace*& aNameSpace) const
+NameSpaceImpl::FindNameSpace(nsIAtom* aPrefix, nsINameSpace** aNameSpace) const
 {
   const NameSpaceImpl* nameSpace = this;
 
   do {
     if (aPrefix == nameSpace->mPrefix) {
-      aNameSpace = (nsINameSpace*)nameSpace;
-      NS_ADDREF(aNameSpace);
+      *aNameSpace = (nsINameSpace*)nameSpace;
+      NS_ADDREF(*aNameSpace);
 
       return NS_OK;
     }
     nameSpace = nameSpace->mParent;
   } while (nameSpace);
 
-  aNameSpace = nsnull;
+  *aNameSpace = nsnull;
 
   return NS_ERROR_ILLEGAL_VALUE;
 }
 
 NS_IMETHODIMP
-NameSpaceImpl::FindNameSpaceID(nsIAtom* aPrefix, PRInt32& aNameSpaceID) const
+NameSpaceImpl::FindNameSpaceID(nsIAtom* aPrefix, PRInt32* aNameSpaceID) const
 {
   const NameSpaceImpl* nameSpace = this;
 
   do {
     if (aPrefix == nameSpace->mPrefix) {
-      aNameSpaceID = nameSpace->mID;
+      *aNameSpaceID = nameSpace->mID;
 
       return NS_OK;
     }
@@ -197,51 +195,51 @@ NameSpaceImpl::FindNameSpaceID(nsIAtom* aPrefix, PRInt32& aNameSpaceID) const
   } while (nameSpace);
 
   if (!aPrefix) {
-    aNameSpaceID = kNameSpaceID_None;
+    *aNameSpaceID = kNameSpaceID_None;
   }
   else {
-    aNameSpaceID = kNameSpaceID_Unknown;
+    *aNameSpaceID = kNameSpaceID_Unknown;
   }
 
   return NS_ERROR_ILLEGAL_VALUE;
 }
 
 NS_IMETHODIMP
-NameSpaceImpl::FindNameSpacePrefix(PRInt32 aNameSpaceID, nsIAtom*& aPrefix) const 
+NameSpaceImpl::FindNameSpacePrefix(PRInt32 aNameSpaceID,
+                                   nsIAtom** aPrefix) const
 {
   const NameSpaceImpl* nameSpace = this;
 
   do {
     if (aNameSpaceID == nameSpace->mID) {
-      aPrefix = nameSpace->mPrefix;
-      NS_IF_ADDREF(aPrefix);
+      NS_IF_ADDREF(*aPrefix = nameSpace->mPrefix);
 
       return NS_OK;
     }
     nameSpace = nameSpace->mParent;
   } while (nameSpace);
 
-  aPrefix = nsnull;
+  *aPrefix = nsnull;
 
   return NS_ERROR_ILLEGAL_VALUE;
 }
 
 NS_IMETHODIMP
 NameSpaceImpl::CreateChildNameSpace(nsIAtom* aPrefix, const nsAString& aURI,
-                                    nsINameSpace*& aChildNameSpace)
+                                    nsINameSpace** aChildNameSpace)
 {
   NameSpaceImpl* child = new NameSpaceImpl(this, aPrefix, aURI);
   NS_ENSURE_TRUE(child, NS_ERROR_OUT_OF_MEMORY);
 
-  aChildNameSpace = NS_STATIC_CAST(nsINameSpace*, child);
-  NS_ADDREF(aChildNameSpace);
+  *aChildNameSpace = NS_STATIC_CAST(nsINameSpace*, child);
+  NS_ADDREF(*aChildNameSpace);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
 NameSpaceImpl::CreateChildNameSpace(nsIAtom* aPrefix, PRInt32 aNameSpaceID,
-                                    nsINameSpace*& aChildNameSpace)
+                                    nsINameSpace** aChildNameSpace)
 {
   PRBool hasNSURI;
   gNameSpaceManager->HasNameSpaceURI(aNameSpaceID, &hasNSURI);
@@ -249,12 +247,12 @@ NameSpaceImpl::CreateChildNameSpace(nsIAtom* aPrefix, PRInt32 aNameSpaceID,
     NameSpaceImpl* child = new NameSpaceImpl(this, aPrefix, aNameSpaceID);
     NS_ENSURE_TRUE(child, NS_ERROR_OUT_OF_MEMORY);
 
-    aChildNameSpace = NS_STATIC_CAST(nsINameSpace*, child);
-    NS_ADDREF(aChildNameSpace);
+    *aChildNameSpace = NS_STATIC_CAST(nsINameSpace*, child);
+    NS_ADDREF(*aChildNameSpace);
 
     return NS_OK;
   }
-  aChildNameSpace = nsnull;
+  *aChildNameSpace = nsnull;
 
   return NS_ERROR_ILLEGAL_VALUE;
 }
@@ -315,14 +313,14 @@ public:
 
   nsresult Init();
 
-  NS_IMETHOD CreateRootNameSpace(nsINameSpace*& aRootNameSpace);
+  NS_IMETHOD CreateRootNameSpace(nsINameSpace** aRootNameSpace);
 
   NS_IMETHOD RegisterNameSpace(const nsAString& aURI, 
 			                         PRInt32& aNameSpaceID);
 
   NS_IMETHOD GetNameSpaceURI(PRInt32 aNameSpaceID, nsAString& aURI);
   NS_IMETHOD GetNameSpaceID(const nsAString& aURI,
-                            PRInt32& aNameSpaceID);
+                            PRInt32* aNameSpaceID);
   NS_IMETHOD GetElementFactory(PRInt32 aNameSpaceID,
                                nsIElementFactory **aElementFactory);
   NS_IMETHOD HasRegisteredFactory(PRInt32 aNameSpaceID,
@@ -374,10 +372,10 @@ nsresult NameSpaceManagerImpl::Init()
 }
 
 NS_IMETHODIMP
-NameSpaceManagerImpl::CreateRootNameSpace(nsINameSpace*& aRootNameSpace)
+NameSpaceManagerImpl::CreateRootNameSpace(nsINameSpace** aRootNameSpace)
 {
   nsresult  rv = NS_ERROR_OUT_OF_MEMORY;
-  aRootNameSpace = nsnull;
+  *aRootNameSpace = nsnull;
 
   NameSpaceImpl* xmlns = new NameSpaceImpl(nsnull,
                                            nsLayoutAtoms::xmlnsNameSpace,
@@ -387,7 +385,7 @@ NameSpaceManagerImpl::CreateRootNameSpace(nsINameSpace*& aRootNameSpace)
                                            nsLayoutAtoms::xmlNameSpace,
                                            kNameSpaceID_XML);
     if (xml) {
-      rv = CallQueryInterface(xml, &aRootNameSpace);
+      rv = CallQueryInterface(xml, aRootNameSpace);
     }
     else {
       delete xmlns;
@@ -440,17 +438,17 @@ NameSpaceManagerImpl::GetNameSpaceURI(PRInt32 aNameSpaceID, nsAString& aURI)
 }
 
 NS_IMETHODIMP
-NameSpaceManagerImpl::GetNameSpaceID(const nsAString& aURI, PRInt32& aNameSpaceID)
+NameSpaceManagerImpl::GetNameSpaceID(const nsAString& aURI, PRInt32* aNameSpaceID)
 {
   if (aURI.IsEmpty()) {
-    aNameSpaceID = kNameSpaceID_None; // xmlns="", see bug 75700 for details
+    *aNameSpaceID = kNameSpaceID_None; // xmlns="", see bug 75700 for details
 
     return NS_OK;
   }
 
   nsNameSpaceEntry* entry = mURIToIDTable.GetEntry(aURI);
 
-  aNameSpaceID = entry ? entry->mNameSpaceID : kNameSpaceID_Unknown;
+  *aNameSpaceID = entry ? entry->mNameSpaceID : kNameSpaceID_Unknown;
 
   return NS_OK;
 }

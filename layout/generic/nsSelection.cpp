@@ -764,7 +764,7 @@ IsValidSelectionPoint(nsSelection *aFrameSel, nsIContent *aContent)
     if (tLimiter && tLimiter != aContent)
     {
       nsCOMPtr<nsIContent> parent;
-      result = aContent->GetParent(*getter_AddRefs(parent));
+      result = aContent->GetParent(getter_AddRefs(parent));
       if (NS_FAILED(result))
         return PR_FALSE;
       if (tLimiter != parent) //if newfocus == the limiter. thats ok. but if not there and not parent bad
@@ -1115,7 +1115,7 @@ nsSelection::GetRootForContentSubtree(nsIContent *aContent, nsIContent **aParent
 
   while (child)
   {
-    result = child->GetParent(*getter_AddRefs(parent));
+    result = child->GetParent(getter_AddRefs(parent));
 
     if (NS_FAILED(result))
       return result;
@@ -1383,7 +1383,7 @@ nsCOMPtr<nsIAtom> GetTag(nsIDOMNode *aNode)
   
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
   if (content)
-    content->GetTag(*getter_AddRefs(atom));
+    content->GetTag(getter_AddRefs(atom));
 
   return atom;
 }
@@ -1398,7 +1398,7 @@ ParentOffset(nsIDOMNode *aNode, nsIDOMNode **aParent, PRInt32 *aChildOffset)
   if (NS_SUCCEEDED(result) && content)
   {
     nsCOMPtr<nsIContent> parent;
-    result = content->GetParent(*getter_AddRefs(parent));
+    result = content->GetParent(getter_AddRefs(parent));
     if (NS_SUCCEEDED(result) && parent)
     {
       result = parent->IndexOf(content, *aChildOffset);
@@ -2743,7 +2743,7 @@ nsSelection::TakeFocus(nsIContent *aNewFocus, PRUint32 aContentOffset,
   nsCOMPtr<nsIDOMNode> domNode;
   nsCOMPtr<nsIContent> parent;
   nsCOMPtr<nsIContent> parent2;
-  if (NS_FAILED(aNewFocus->GetParent(*getter_AddRefs(parent))) || !parent)
+  if (NS_FAILED(aNewFocus->GetParent(getter_AddRefs(parent))) || !parent)
     return NS_ERROR_FAILURE;
   //END HACKHACKHACK /checking for root frames/content
 
@@ -3006,7 +3006,7 @@ nsSelection::GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, HINT aHin
     
     nsCOMPtr<nsIContent> childNode;
 
-    result = theNode->ChildAt(childIndex, *getter_AddRefs(childNode));
+    result = theNode->ChildAt(childIndex, getter_AddRefs(childNode));
 
     if (NS_FAILED(result))
       return result;
@@ -3338,7 +3338,7 @@ nsSelection::FrameOrParentHasSpecialSelectionStyle(nsIFrame* aFrame, PRUint8 aSe
 static PRBool IsCell(nsIContent *aContent)
 {
   nsCOMPtr<nsIAtom> tag;
-  aContent->GetTag(*getter_AddRefs(tag));
+  aContent->GetTag(getter_AddRefs(tag));
   return (tag == nsHTMLAtoms::td);
 }
 
@@ -3398,7 +3398,10 @@ nsSelection::HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOf
   if (!parentNode)  return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIContent> childContent;
-  nsresult result = aParentContent->ChildAt(aContentOffset, *getter_AddRefs(childContent));
+  nsresult result =
+      aParentContent->ChildAt(aContentOffset,
+                              getter_AddRefs(childContent));
+
   if (NS_FAILED(result)) return result;
   if (!childContent)  return NS_ERROR_FAILURE;
 
@@ -3663,7 +3666,7 @@ printf("HandleTableSelection: Unselecting mUnselectCellOnMouseUp; rangeCount=%d\
           // Be sure previous selection is a table cell
           nsCOMPtr<nsIContent> parentContent = do_QueryInterface(parent);
           nsCOMPtr<nsIContent> child;
-          result = parentContent->ChildAt(offset, *getter_AddRefs(child));
+          result = parentContent->ChildAt(offset, getter_AddRefs(child));
           if (NS_FAILED(result)) return result;
           if (child && IsCell(child))
             previousCellParent = parent;
@@ -3904,9 +3907,12 @@ nsSelection::SelectRowOrColumn(nsIContent *aCellContent, PRUint32 aTarget)
 //  but doesn't allow dragging OFF of an existing selection to unselect!
   do {
     // Loop through all cells in column or row
-    result = tableLayout->GetCellDataAt(rowIndex, colIndex, *getter_AddRefs(cellElement),
-                                        curRowIndex, curColIndex, rowSpan, colSpan, 
-                                        actualRowSpan, actualColSpan, isSelected);
+    result = tableLayout->GetCellDataAt(rowIndex, colIndex,
+                                        getter_AddRefs(cellElement),
+                                        curRowIndex, curColIndex,
+                                        rowSpan, colSpan,
+                                        actualRowSpan, actualColSpan,
+                                        isSelected);
     if (NS_FAILED(result)) return result;
     // We're done when cell is not found
     if (!cellElement) break;
@@ -3952,7 +3958,7 @@ nsSelection::GetFirstCellNodeInRange(nsIDOMRange *aRange, nsIDOMNode **aCellNode
 
   nsCOMPtr<nsIContent> parentContent = do_QueryInterface(startParent);
   nsCOMPtr<nsIContent> childContent;
-  result = parentContent->ChildAt(offset, *getter_AddRefs(childContent));
+  result = parentContent->ChildAt(offset, getter_AddRefs(childContent));
   if (NS_FAILED(result)) return result;
   if (!childContent) return NS_ERROR_NULL_POINTER;
   // Don't return node if not a cell
@@ -4097,27 +4103,29 @@ nsSelection::IsInSameTable(nsIContent *aContent1, nsIContent *aContent2, nsICont
 nsresult
 nsSelection::GetParentTable(nsIContent *aCell, nsIContent **aTable)
 {
-  if (!aCell || !aTable)
+  if (!aCell || !aTable) {
     return NS_ERROR_NULL_POINTER;
+  }
 
   nsCOMPtr<nsIContent> parent;
-  nsresult result = aCell->GetParent(*getter_AddRefs(parent));
+  aCell->GetParent(getter_AddRefs(parent));
 
-  while (NS_SUCCEEDED(result) && parent)
-  {  
-    nsIAtom *tag;
-    parent->GetTag(tag);
-    if (tag == nsHTMLAtoms::table)
-    {
+  nsCOMPtr<nsIAtom> tag;
+  while (parent) {
+    parent->GetTag(getter_AddRefs(tag));
+    if (tag == nsHTMLAtoms::table) {
       *aTable = parent;
       NS_ADDREF(*aTable);
+
       return NS_OK;
     }
+
     nsCOMPtr<nsIContent> temp;
-    result = parent->GetParent(*getter_AddRefs(temp));
+    parent->GetParent(getter_AddRefs(temp));
     parent = temp;
   }
-  return result;
+
+  return NS_OK;
 }
 
 nsresult
@@ -4174,7 +4182,7 @@ nsTypedSelection::getTableCellLocationFromRange(nsIDOMRange *aRange, PRInt32 *aS
   if (NS_FAILED(result)) return result;
 
   nsCOMPtr<nsIContent> child;
-  result = content->ChildAt(startOffset, *getter_AddRefs(child));
+  result = content->ChildAt(startOffset, getter_AddRefs(child));
   if (NS_FAILED(result)) return result;
   if (!child) return NS_ERROR_FAILURE;
 
@@ -4305,7 +4313,7 @@ nsTypedSelection::GetTableSelectionType(nsIDOMRange* aRange, PRInt32* aTableSele
     return NS_OK;
 
   nsCOMPtr<nsIAtom> atom;
-  content->GetTag(*getter_AddRefs(atom));
+  content->GetTag(getter_AddRefs(atom));
   if (!atom) return NS_ERROR_FAILURE;
 
   if (atom == nsHTMLAtoms::tr)
@@ -4315,11 +4323,11 @@ nsTypedSelection::GetTableSelectionType(nsIDOMRange* aRange, PRInt32* aTableSele
   else //check to see if we are selecting a table or row (column and all cells not done yet)
   {
     nsCOMPtr<nsIContent> child;
-    result = content->ChildAt(startOffset, *getter_AddRefs(child));
+    result = content->ChildAt(startOffset, getter_AddRefs(child));
     if (NS_FAILED(result)) return result;
     if (!child) return NS_ERROR_FAILURE;
 
-    child->GetTag(*getter_AddRefs(atom));
+    child->GetTag(getter_AddRefs(atom));
     if (!atom) return NS_ERROR_FAILURE;
 
     if (atom == nsHTMLAtoms::table)
@@ -4371,7 +4379,7 @@ nsSelection::AdjustOffsetsFromStyle(nsIFrame *aFrame, PRBool *changeSelection,
   if (selectAllContent)
   {
     nsCOMPtr<nsIContent>  parentContent;
-    rv = selectAllContent->GetParent(*getter_AddRefs(parentContent));
+    rv = selectAllContent->GetParent(getter_AddRefs(parentContent));
     if (parentContent)
     {
       PRInt32 startOffset;
@@ -4382,7 +4390,7 @@ nsSelection::AdjustOffsetsFromStyle(nsIFrame *aFrame, PRBool *changeSelection,
         // hrmm, this is probably anonymous content. Let's go up another level
         // do we need to do this if we get the right frameSelection to start with?
         nsCOMPtr<nsIContent> superParent;
-        parentContent->GetParent(*getter_AddRefs(superParent));
+        parentContent->GetParent(getter_AddRefs(superParent));
         if (superParent)
         {
           PRInt32 superStartOffset;
@@ -4952,7 +4960,7 @@ nsTypedSelection::GetPrimaryFrameForRangeEndpoint(nsIDOMNode *aNode, PRInt32 aOf
     if (aOffset >= 0)
     {
       nsCOMPtr<nsIContent> child;
-      result = content->ChildAt(aOffset, *getter_AddRefs(child));
+      result = content->ChildAt(aOffset, getter_AddRefs(child));
       if (NS_FAILED(result))
         return result;
       if (!child) //out of bounds?
@@ -6080,7 +6088,7 @@ nsTypedSelection::Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset)
     if (!content)
       return NS_ERROR_FAILURE;
     nsCOMPtr<nsIAtom> tag;
-    content->GetTag(*getter_AddRefs(tag));
+    content->GetTag(getter_AddRefs(tag));
     if (tag)
     {
       nsAutoString tagString;
@@ -6870,7 +6878,7 @@ nsTypedSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
     nsCOMPtr<nsIContent>content;
     content = do_QueryInterface(aParentNode);
     nsCOMPtr<nsIAtom> tag;
-    content->GetTag(*getter_AddRefs(tag));
+    content->GetTag(getter_AddRefs(tag));
     if (tag)
     {
       nsAutoString tagString;

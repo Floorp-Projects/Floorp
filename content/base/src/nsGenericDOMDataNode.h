@@ -168,16 +168,16 @@ public:
                        const nsAString& aArg);
 
   // Implementation for nsIContent
-  NS_IMETHOD GetDocument(nsIDocument*& aResult) const;
+  NS_IMETHOD GetDocument(nsIDocument** aResult) const;
   NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
                          PRBool aCompileEventHandlers);
-  NS_IMETHOD GetParent(nsIContent*& aResult) const;
+  NS_IMETHOD GetParent(nsIContent** aResult) const;
   NS_IMETHOD SetParent(nsIContent* aParent);
   NS_IMETHOD_(PRBool) IsNativeAnonymous() const;
   NS_IMETHOD_(void) SetNativeAnonymous(PRBool aAnonymous);
-  NS_IMETHOD GetNameSpaceID(PRInt32& aID) const;
+  NS_IMETHOD GetNameSpaceID(PRInt32* aID) const;
   NS_IMETHOD NormalizeAttrString(const nsAString& aStr,
-                                 nsINodeInfo*& aNodeInfo);
+                                 nsINodeInfo** aNodeInfo);
   NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                      const nsAString& aValue, PRBool aNotify);
   NS_IMETHOD SetAttr(nsINodeInfo *aNodeInfo,
@@ -187,10 +187,10 @@ public:
   NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
                      nsAString& aResult) const;
   NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
-                     nsIAtom*& aPrefix, nsAString& aResult) const;
+                     nsIAtom** aPrefix, nsAString& aResult) const;
   NS_IMETHOD_(PRBool) HasAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute) const;
-  NS_IMETHOD GetAttrNameAt(PRInt32 aIndex, PRInt32& aNameSpaceID, 
-                           nsIAtom*& aName, nsIAtom*& aPrefix) const;
+  NS_IMETHOD GetAttrNameAt(PRInt32 aIndex, PRInt32* aNameSpaceID,
+                           nsIAtom** aName, nsIAtom** aPrefix) const;
   NS_IMETHOD GetAttrCount(PRInt32& aResult) const;
 #ifdef DEBUG
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
@@ -203,7 +203,7 @@ public:
   NS_IMETHOD SetContentID(PRUint32 aID);
   NS_IMETHOD RangeAdd(nsIDOMRange* aRange);
   NS_IMETHOD RangeRemove(nsIDOMRange* aRange);
-  NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const;
+  NS_IMETHOD GetRangeList(nsVoidArray** aResult) const;
   NS_IMETHOD SetFocus(nsIPresContext *aPresContext);
   NS_IMETHOD RemoveFocus(nsIPresContext *aPresContext);
 
@@ -214,10 +214,10 @@ public:
   NS_IMETHOD GetListenerManager(nsIEventListenerManager** aInstancePtrResult);
   NS_IMETHOD DoneCreatingElement();
 
-  NS_IMETHOD GetNodeInfo(nsINodeInfo*& aResult) const;
+  NS_IMETHOD GetNodeInfo(nsINodeInfo** aResult) const;
   NS_IMETHOD CanContainChildren(PRBool& aResult) const;
   NS_IMETHOD ChildCount(PRInt32& aResult) const;
-  NS_IMETHOD ChildAt(PRInt32 aIndex, nsIContent*& aResult) const;
+  NS_IMETHOD ChildAt(PRInt32 aIndex, nsIContent** aResult) const;
   NS_IMETHOD IndexOf(nsIContent* aPossibleChild, PRInt32& aResult) const;
   NS_IMETHOD InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify,
                            PRBool aDeepSetDocument);

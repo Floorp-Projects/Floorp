@@ -839,7 +839,7 @@ nsSVGSVGElement::GetCTM(nsIDOMSVGMatrix **_retval)
 
     if (!next) {
       // no anonymous parent, so use explicit one
-      parent->GetParent(*getter_AddRefs(next));
+      parent->GetParent(getter_AddRefs(next));
     }
 
     parent = next;
@@ -919,7 +919,7 @@ nsSVGSVGElement::GetScreenCTM(nsIDOMSVGMatrix **_retval)
 
     if (!next) {
       // no anonymous parent, so use explicit one
-      parent->GetParent(*getter_AddRefs(next));
+      parent->GetParent(getter_AddRefs(next));
     }
 
     parent = next;

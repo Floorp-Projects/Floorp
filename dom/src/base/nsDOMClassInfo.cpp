@@ -4302,7 +4302,7 @@ nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
   nsCOMPtr<nsIDocument> doc;
 
   if (content) {
-    content->GetDocument(*getter_AddRefs(doc));
+    content->GetDocument(getter_AddRefs(doc));
   }
 
   if (!doc) {
@@ -4357,7 +4357,7 @@ nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
     if (!native_parent) {
       nsCOMPtr<nsIContent> parentContent;
 
-      content->GetParent(*getter_AddRefs(parentContent));
+      content->GetParent(getter_AddRefs(parentContent));
       native_parent = parentContent;
 
       if (!native_parent) {
@@ -4596,7 +4596,7 @@ nsElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   nsCOMPtr<nsIDocument> doc;
 
-  content->GetDocument(*getter_AddRefs(doc));
+  content->GetDocument(getter_AddRefs(doc));
 
   if (!doc) {
     // There's no baseclass that cares about this call so we just
@@ -5331,7 +5331,7 @@ nsHTMLFormElementSH::FindNamedItem(nsIForm *aForm, JSString *str,
     nsCOMPtr<nsIDOMHTMLFormElement> form_element(do_QueryInterface(aForm));
 
     nsCOMPtr<nsIDocument> doc;
-    content->GetDocument(*getter_AddRefs(doc));
+    content->GetDocument(getter_AddRefs(doc));
 
     nsCOMPtr<nsIHTMLDocument> html_doc(do_QueryInterface(doc));
 
@@ -5623,7 +5623,7 @@ nsHTMLExternalObjSH::GetPluginInstance(nsIXPConnectWrappedNative *wrapper,
 
   nsCOMPtr<nsIDocument> doc;
 
-  content->GetDocument(*getter_AddRefs(doc));
+  content->GetDocument(getter_AddRefs(doc));
 
   if (!doc) {
     // No document, no plugin.

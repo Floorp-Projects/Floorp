@@ -209,14 +209,14 @@ nsXMLElement::GetXMLBaseURI(nsIURI **aURI)
       }
     } // if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
     nsCOMPtr<nsIContent> parent;
-    rv = content->GetParent(*getter_AddRefs(parent));
+    rv = content->GetParent(getter_AddRefs(parent));
     content = parent;
   } // while
 
   if (NS_SUCCEEDED(rv)) {
     if (!*aURI && mDocument) {
       nsCOMPtr<nsIURI> docBase;
-      mDocument->GetBaseURL(*getter_AddRefs(docBase));
+      mDocument->GetBaseURL(getter_AddRefs(docBase));
       if (!docBase) {
         mDocument->GetDocumentURL(getter_AddRefs(docBase));
       }
@@ -243,20 +243,20 @@ nsXMLElement::GetXMLBaseURI(nsIURI **aURI)
 
           if (content) { // content is the last content we tried above
             nsCOMPtr<nsIContent> parent;
-            content->GetParent(*getter_AddRefs(parent));
+            content->GetParent(getter_AddRefs(parent));
             content = parent;
             while (content) {
               nsCOMPtr<nsIXMLContent> xml(do_QueryInterface(content));
               if (xml) {
                 return xml->GetXMLBaseURI(aURI);
               }
-              content->GetParent(*getter_AddRefs(parent));
+              content->GetParent(getter_AddRefs(parent));
               content = parent;
             }
           }
           
           nsCOMPtr<nsIURI> docBase;
-          mDocument->GetBaseURL(*getter_AddRefs(docBase));
+          mDocument->GetBaseURL(getter_AddRefs(docBase));
           if (!docBase) {
             mDocument->GetDocumentURL(getter_AddRefs(docBase));
           }

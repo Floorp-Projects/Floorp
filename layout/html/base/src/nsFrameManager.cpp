@@ -628,7 +628,7 @@ FrameManager::GetPrimaryFrameFor(nsIContent* aContent, nsIFrame** aResult)
       // we're just trying to enhance performance here, not test for correctness
       nsFindFrameHint hint;
       nsCOMPtr<nsIContent> prevSibling, parent;
-      rv = aContent->GetParent(*getter_AddRefs(parent));
+      rv = aContent->GetParent(getter_AddRefs(parent));
       if (NS_SUCCEEDED(rv) && parent)
       {
         PRInt32 index;
@@ -637,8 +637,8 @@ FrameManager::GetPrimaryFrameFor(nsIContent* aContent, nsIFrame** aResult)
         {
           nsCOMPtr<nsIAtom> tag;
           do {
-            parent->ChildAt(--index, *getter_AddRefs(prevSibling));
-            prevSibling->GetTag(*getter_AddRefs(tag));
+            parent->ChildAt(--index, getter_AddRefs(prevSibling));
+            prevSibling->GetTag(getter_AddRefs(tag));
           } while (index &&
                    (tag == nsLayoutAtoms::textTagName ||
                     tag == nsLayoutAtoms::commentTagName ||
@@ -823,7 +823,7 @@ FrameManager::GetUndisplayedContent(nsIContent* aContent)
     return nsnull;
 
   nsCOMPtr<nsIContent> parent;
-  aContent->GetParent(*getter_AddRefs(parent));
+  aContent->GetParent(getter_AddRefs(parent));
   if (!parent)
     return nsnull;
 
@@ -852,12 +852,11 @@ FrameManager::SetUndisplayedContent(nsIContent* aContent,
     mUndisplayedMap = new UndisplayedMap;
   }
   if (mUndisplayedMap) {
-    nsIContent* parent = nsnull;
-    aContent->GetParent(parent);
+    nsCOMPtr<nsIContent> parent;
+    aContent->GetParent(getter_AddRefs(parent));
     NS_ASSERTION(parent, "undisplayed content must have a parent");
     if (parent) {
       mUndisplayedMap->AddNodeFor(parent, aContent, aStyleContext);
-      NS_RELEASE(parent);
     }
   }
 }

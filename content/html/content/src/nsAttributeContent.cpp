@@ -83,32 +83,36 @@ public:
   NS_DECL_ISUPPORTS
 
   // Implementation for nsIContent
-  NS_IMETHOD GetDocument(nsIDocument*& aResult) const;
+  NS_IMETHOD GetDocument(nsIDocument** aResult) const;
   NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers);
-  NS_IMETHOD GetParent(nsIContent*& aResult) const;
+  NS_IMETHOD GetParent(nsIContent** aResult) const;
   NS_IMETHOD SetParent(nsIContent* aParent);
   NS_IMETHOD_(PRBool) IsNativeAnonymous() const { return PR_TRUE; }
   NS_IMETHOD_(void) SetNativeAnonymous(PRBool aAnonymous) { }
 
-  NS_IMETHOD GetNameSpaceID(PRInt32& aID) const {
-    aID = kNameSpaceID_None;
+  NS_IMETHOD GetNameSpaceID(PRInt32* aID) const
+  {
+    *aID = kNameSpaceID_None;
     return NS_OK;
   }
 
-  NS_IMETHOD GetTag(nsIAtom*& aResult) const {
-    aResult = nsnull;
+  NS_IMETHOD GetTag(nsIAtom** aResult) const
+  {
+    *aResult = nsnull;
     return NS_OK;
   }
 
-  NS_IMETHOD GetNodeInfo(nsINodeInfo*& aResult) const {
-    aResult = nsnull;
+  NS_IMETHOD GetNodeInfo(nsINodeInfo** aResult) const
+  {
+    *aResult = nsnull;
     return NS_OK;
   }
 
 
   NS_IMETHOD NormalizeAttrString(const nsAString& aStr, 
-                                 nsINodeInfo*& aNodeInfo) { 
-    aNodeInfo = nsnull;
+                                 nsINodeInfo** aNodeInfo)
+  {
+    *aNodeInfo = nsnull;
     return NS_OK; 
   }
 
@@ -141,11 +145,11 @@ public:
                      PRBool aNotify) {  return NS_OK; }
   NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRBool aNotify) { return NS_OK; }
   NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute, nsAString& aResult) const {return NS_CONTENT_ATTR_NOT_THERE; }
-  NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute, nsIAtom*& aPrefix, nsAString& aResult) const {return NS_CONTENT_ATTR_NOT_THERE; }
+  NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute, nsIAtom** aPrefix, nsAString& aResult) const {return NS_CONTENT_ATTR_NOT_THERE; }
   NS_IMETHOD_(PRBool) HasAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute) const {
     return PR_FALSE;
   }
-  NS_IMETHOD GetAttrNameAt(PRInt32 aIndex, PRInt32& aNameSpaceID, nsIAtom*& aName, nsIAtom*& aPrefix) const {
+  NS_IMETHOD GetAttrNameAt(PRInt32 aIndex, PRInt32* aNameSpaceID, nsIAtom** aName, nsIAtom** aPrefix) const {
     aName = nsnull;
     aPrefix = nsnull;
     return NS_ERROR_ILLEGAL_VALUE;
@@ -174,13 +178,13 @@ public:
 
   NS_IMETHOD RangeAdd(nsIDOMRange* aRange);
   NS_IMETHOD RangeRemove(nsIDOMRange* aRange);
-  NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const;
+  NS_IMETHOD GetRangeList(nsVoidArray** aResult) const;
 
   // Implementation for nsIContent
   NS_IMETHOD CanContainChildren(PRBool& aResult) const { aResult = PR_FALSE; return NS_OK; }
 
   NS_IMETHOD ChildCount(PRInt32& aResult) const { aResult = 0; return NS_OK;  }
-  NS_IMETHOD ChildAt(PRInt32 aIndex, nsIContent*& aResult) const { aResult = nsnull; return NS_OK;  }
+  NS_IMETHOD ChildAt(PRInt32 aIndex, nsIContent** aResult) const { aResult = nsnull; return NS_OK;  }
   NS_IMETHOD IndexOf(nsIContent* aPossibleChild, PRInt32& aResult) const { aResult = -1; return NS_OK;  }
   NS_IMETHOD InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify,
                            PRBool aDeepSetDocument) { return NS_OK;  }
@@ -306,9 +310,9 @@ nsAttributeContent::ToCString(nsAString& aBuf, PRInt32 aOffset,
 }
 
 nsresult
-nsAttributeContent::GetDocument(nsIDocument*& aResult) const
+nsAttributeContent::GetDocument(nsIDocument** aResult) const
 {
-  aResult = mDocument;
+  *aResult = mDocument;
   NS_IF_ADDREF(mDocument);
   return NS_OK;
 }
@@ -323,10 +327,10 @@ nsAttributeContent::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCo
 }
 
 nsresult
-nsAttributeContent::GetParent(nsIContent*& aResult) const
+nsAttributeContent::GetParent(nsIContent** aResult) const
 {
   NS_IF_ADDREF(mParent);
-  aResult = mParent;
+  *aResult = mParent;
   return NS_OK;;
 }
 
@@ -364,7 +368,7 @@ nsAttributeContent::RangeRemove(nsIDOMRange* aRange)
 
 
 nsresult 
-nsAttributeContent::GetRangeList(nsVoidArray*& aResult) const
+nsAttributeContent::GetRangeList(nsVoidArray** aResult) const
 {
   return NS_ERROR_FAILURE;
 }

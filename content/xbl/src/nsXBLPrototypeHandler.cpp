@@ -265,7 +265,7 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
         nsCOMPtr<nsIContent> elt(do_QueryInterface(aReceiver));
         nsCOMPtr<nsIDocument> doc;
         if (elt)
-          elt->GetDocument(*getter_AddRefs(doc));
+          elt->GetDocument(getter_AddRefs(doc));
 
         if (!doc)
           doc = do_QueryInterface(aReceiver);
@@ -378,7 +378,7 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
       nsCOMPtr<nsIContent> content(do_QueryInterface(aReceiver));
       if (!content)
         return NS_OK;
-      content->GetDocument(*getter_AddRefs(boundDocument));
+      content->GetDocument(getter_AddRefs(boundDocument));
       if (!boundDocument)
         return NS_OK;
     }
@@ -977,7 +977,7 @@ nsXBLPrototypeHandler::GetTextData(nsIContent *aParent, nsString& aResult)
   nsAutoString answer;
   for (PRInt32 j = 0; j < textCount; j++) {
     // Get the child.
-    aParent->ChildAt(j, *getter_AddRefs(textChild));
+    aParent->ChildAt(j, getter_AddRefs(textChild));
     nsCOMPtr<nsIDOMText> text(do_QueryInterface(textChild));
     if (text) {
       nsAutoString data;

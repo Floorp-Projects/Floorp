@@ -249,7 +249,7 @@ nsContextMenuInfo::GetBackgroundImageRequest(nsIDOMNode * aDOMNode, imgIRequest 
 
   // Get Document
   nsCOMPtr<nsIDocument> document;
-  content->GetDocument(*getter_AddRefs(document));
+  content->GetDocument(getter_AddRefs(document));
   NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
   
   // Get shell
@@ -330,7 +330,7 @@ nsContextMenuInfo::GetBackgroundImageRequest(nsIDOMNode * aDOMNode, imgIRequest 
 // Perhaps there is a better, pubically supported way to get the same thing done?
 ////////
 
-// nethod GetFrameForBackgroundUpdate
+// method GetFrameForBackgroundUpdate
 //
 // If the frame (aFrame) is the HTML or BODY frame then find the canvas frame and set the
 // aBGFrame param to that. This is used when we need a frame to invalidate after an asynch
@@ -353,7 +353,7 @@ nsresult nsContextMenuInfo::GetFrameForBackgroundUpdate(nsIPresContext *aPresCon
     if (pContent) {
        // make sure that this is the HTML or BODY element
       nsCOMPtr<nsIAtom> tag;
-      pContent->GetTag(*(getter_AddRefs(tag)));
+      pContent->GetTag(getter_AddRefs(tag));
       nsCOMPtr<nsIAtom> mTag_html = getter_AddRefs(NS_NewAtom("html"));
       nsCOMPtr<nsIAtom> mTag_body = getter_AddRefs(NS_NewAtom("body"));
       if (tag && 

@@ -227,7 +227,7 @@ nsScrollbarButtonFrame::GetChildWithTag(nsIPresContext* aPresContext,
     if (child) {
       // see if it is the child
        nsCOMPtr<nsIAtom> tag;
-       child->GetTag(*getter_AddRefs(tag));
+       child->GetTag(getter_AddRefs(tag));
        if (atom == tag.get())
        {
          result = childFrame;
@@ -261,7 +261,7 @@ nsScrollbarButtonFrame::GetParentWithTag(nsIAtom* toFind, nsIFrame* start, nsIFr
         start->GetContent(getter_AddRefs(child));
 
         nsCOMPtr<nsIAtom> atom;
-        if (child && child->GetTag(*getter_AddRefs(atom)) == NS_OK && atom.get() == toFind) {
+        if (child && child->GetTag(getter_AddRefs(atom)) == NS_OK && atom.get() == toFind) {
            result = start;
            return NS_OK;
         }

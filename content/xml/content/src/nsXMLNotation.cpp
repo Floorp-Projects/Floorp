@@ -70,7 +70,7 @@ public:
 #endif
 
   // nsIContent
-  NS_IMETHOD GetTag(nsIAtom*& aResult) const;
+  NS_IMETHOD GetTag(nsIAtom** aResult) const;
 
 protected:
   nsAutoString mName;
@@ -133,12 +133,12 @@ nsXMLNotation::GetSystemId(nsAString& aSystemId)
 }
 
 NS_IMETHODIMP 
-nsXMLNotation::GetTag(nsIAtom*& aResult) const
+nsXMLNotation::GetTag(nsIAtom** aResult) const
 {
-//  aResult = nsLayoutAtoms::NotationTagName;
-//  NS_ADDREF(aResult);
+//  *aResult = nsLayoutAtoms::NotationTagName;
+//  NS_ADDREF(*aResult);
 
-  aResult = nsnull;
+  *aResult = nsnull;
 
   return NS_OK;
 }

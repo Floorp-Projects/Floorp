@@ -72,7 +72,7 @@ public:
   NS_DECL_NSIDOMDOCUMENTTYPE
 
   // nsIContent
-  NS_IMETHOD GetTag(nsIAtom*& aResult) const;
+  NS_IMETHOD GetTag(nsIAtom** aResult) const;
 
 protected:
   nsString mName;

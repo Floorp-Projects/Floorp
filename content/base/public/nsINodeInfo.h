@@ -113,12 +113,10 @@ public:
    * For the HTML element "<body>" this will return the "body" atom and for
    * the XML element "<html:body>" this will return the "body" atom.
    */
-  nsresult GetNameAtom(nsIAtom*& aAtom) const
+  already_AddRefed<nsIAtom> GetNameAtom() const
   {
-    aAtom = mInner.mName;
-    NS_ADDREF(aAtom);
-
-    return NS_OK;
+    NS_ADDREF(mInner.mName);
+    return mInner.mName;
   }
 
   /*
@@ -164,12 +162,11 @@ public:
    * For the HTML element "<body>" this will return a null atom and for
    * the XML element "<html:body>" this will return the "html" atom.
    */
-  nsresult GetPrefixAtom(nsIAtom*& aAtom) const
+  already_AddRefed<nsIAtom> GetPrefixAtom() const
   {
-    aAtom = mInner.mPrefix;
-    NS_IF_ADDREF(aAtom);
+    NS_IF_ADDREF(mInner.mPrefix);
 
-    return NS_OK;
+    return mInner.mPrefix;
   }
 
   /*
@@ -193,11 +190,9 @@ public:
    * xmlns:html='http://www.w3.org/1999/xhtml' attribute) this will return
    * the namespace ID for "http://www.w3.org/1999/xhtml".
    */
-  nsresult GetNamespaceID(PRInt32& aNameSpaceID) const
+  PRInt32 GetNamespaceID() const
   {
-    aNameSpaceID = mInner.mNamespaceID;
-
-    return NS_OK;
+    return mInner.mNamespaceID;
   }
 
   /*
@@ -212,7 +207,7 @@ public:
   /*
    * Get the owning node info manager, this will never return null.
    */
-  NS_IMETHOD GetNodeInfoManager(nsINodeInfoManager*& aNodeInfoManager) const = 0;
+  NS_IMETHOD GetNodeInfoManager(nsINodeInfoManager** aNodeInfoManager) const = 0;
 
   /*
    * Utility functions that can be used to check if a nodeinfo holds a specific
@@ -276,18 +271,18 @@ public:
    * This is a convinience method that creates a new nsINodeInfo that differs
    * only by name from the one this is called on.
    */
-  NS_IMETHOD NameChanged(nsIAtom *aName, nsINodeInfo*& aResult) = 0;
+  NS_IMETHOD NameChanged(nsIAtom *aName, nsINodeInfo** aResult) = 0;
 
   /*
    * This is a convinience method that creates a new nsINodeInfo that differs
    * only by prefix from the one this is called on.
    */
-  NS_IMETHOD PrefixChanged(nsIAtom *aPrefix, nsINodeInfo*& aResult) = 0;
+  NS_IMETHOD PrefixChanged(nsIAtom *aPrefix, nsINodeInfo** aResult) = 0;
 
   /*
    * Retrieve a pointer to the document that owns this node info.
    */
-  NS_IMETHOD GetDocument(nsIDocument*& aDocument) const = 0;
+  NS_IMETHOD GetDocument(nsIDocument** aDocument) const = 0;
 
   /*
    * Retrieve a pointer to the principal for the document of this node info.
@@ -349,23 +344,23 @@ public:
    * Methods for creating nodeinfo's from atoms and/or strings.
    */
   NS_IMETHOD GetNodeInfo(nsIAtom *aName, nsIAtom *aPrefix,
-                         PRInt32 aNamespaceID, nsINodeInfo*& aNodeInfo) = 0;
+                         PRInt32 aNamespaceID, nsINodeInfo** aNodeInfo) = 0;
   NS_IMETHOD GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
-                         PRInt32 aNamespaceID, nsINodeInfo*& aNodeInfo) = 0;
+                         PRInt32 aNamespaceID, nsINodeInfo** aNodeInfo) = 0;
   NS_IMETHOD GetNodeInfo(const nsAString& aName, const nsAString& aPrefix,
-                         PRInt32 aNamespaceID, nsINodeInfo*& aNodeInfo) = 0;
+                         PRInt32 aNamespaceID, nsINodeInfo** aNodeInfo) = 0;
   NS_IMETHOD GetNodeInfo(const nsAString& aName, const nsAString& aPrefix,
                          const nsAString& aNamespaceURI,
-                         nsINodeInfo*& aNodeInfo) = 0;
+                         nsINodeInfo** aNodeInfo) = 0;
   NS_IMETHOD GetNodeInfo(const nsAString& aQualifiedName,
                          const nsAString& aNamespaceURI,
-                         nsINodeInfo*& aNodeInfo) = 0;
+                         nsINodeInfo** aNodeInfo) = 0;
 
   /*
    * Retrieve a pointer to the document that owns this node info
    * manager.
    */
-  NS_IMETHOD GetDocument(nsIDocument*& aDocument) = 0;
+  NS_IMETHOD GetDocument(nsIDocument** aDocument) = 0;
 
   /**
    * Gets the principal of the document associated with this.

@@ -93,7 +93,7 @@ public:
   NS_IMETHOD DropReference();
   NS_IMETHOD SetContent(nsIContent* aContent);
   NS_IMETHOD GetContent(nsIContent** aContent);
-  NS_IMETHOD GetNodeInfo(nsINodeInfo*& aNodeInfo);
+  NS_IMETHOD GetNodeInfo(nsINodeInfo** aNodeInfo);
 
 private:
   nsIContent* mContent;

@@ -140,7 +140,7 @@ nsXBLEventHandler::GetTextData(nsIContent *aParent, nsAString& aResult)
 
   for (PRInt32 j = 0; j < textCount; j++) {
     // Get the child.
-    aParent->ChildAt(j, *getter_AddRefs(textChild));
+    aParent->ChildAt(j, getter_AddRefs(textChild));
     nsCOMPtr<nsIDOMText> text(do_QueryInterface(textChild));
     if (text) {
       nsAutoString data;

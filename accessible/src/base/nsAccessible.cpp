@@ -495,7 +495,7 @@ NS_IMETHODIMP nsAccessible::GetFocusedNode(nsIDOMNode **aFocusedNode)
   nsCOMPtr<nsIDocument> document;
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   if (content)
-    content->GetDocument(*getter_AddRefs(document));
+    content->GetDocument(getter_AddRefs(document));
 
   if (!document)
     document = do_QueryInterface(mDOMNode);
@@ -1015,7 +1015,7 @@ NS_IMETHODIMP nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent
       }
 
       nsCOMPtr<nsIContent> parentContent;
-      aContent->GetParent(*getter_AddRefs(parentContent));
+      aContent->GetParent(getter_AddRefs(parentContent));
       if (parentContent) {
         nsresult rv = shell->GetPrimaryFrameFor(parentContent, &frame);
         if (NS_SUCCEEDED(rv)) {
@@ -1070,7 +1070,7 @@ NS_IMETHODIMP nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent
       // We don't want that text.
 
       nsCOMPtr<nsIDocument> doc;
-      aContent->GetDocument(*getter_AddRefs(doc));
+      aContent->GetDocument(getter_AddRefs(doc));
       nsCOMPtr<nsIImageDocument> imageDoc(do_QueryInterface(doc));
       if (imageDoc)  // We don't want this faux error text
         textEquivalent.Truncate();
@@ -1125,11 +1125,11 @@ nsresult nsAccessible::AppendFlatStringFromSubtreeRecurse(nsIContent *aContent, 
     AppendFlatStringFromContentNode(aContent, aFlatString);
     return NS_OK;
   }
-    
-  nsIContent *contentWalker;
+
+  nsCOMPtr<nsIContent> contentWalker;
   PRInt32 index;
   for (index = 0; index < numChildren; index++) {
-    aContent->ChildAt(index, contentWalker);
+    aContent->ChildAt(index, getter_AddRefs(contentWalker));
     AppendFlatStringFromSubtree(contentWalker, aFlatString);
   }
   return NS_OK;
@@ -1179,10 +1179,10 @@ NS_IMETHODIMP nsAccessible::AppendLabelFor(nsIContent *aLookNode, const nsAStrin
   }
 
   aLookNode->ChildCount(numChildren);
-  nsIContent *contentWalker;
+  nsCOMPtr<nsIContent> contentWalker;
   PRInt32 index;
   for (index = 0; index < numChildren; index++) {
-    aLookNode->ChildAt(index, contentWalker);
+    aLookNode->ChildAt(index, getter_AddRefs(contentWalker));
     if (contentWalker)
       AppendLabelFor(contentWalker, aId, aLabel);
   }
@@ -1215,7 +1215,7 @@ NS_IMETHODIMP nsAccessible::GetHTMLAccName(nsAString& _retval)
       break;
     }
     nsCOMPtr<nsIContent> nextParent;
-    walkUpContent->GetParent(*getter_AddRefs(nextParent));
+    walkUpContent->GetParent(getter_AddRefs(nextParent));
     if (!nextParent) {
       break;
     }
@@ -1294,7 +1294,7 @@ NS_IMETHODIMP nsAccessible::GetXULAccName(nsAString& _retval)
       //
       //      nsCOMPtr<nsIDocument> doc;
       //      nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-      //      content->GetDocument(*getter_AddRefs(doc));
+      //      content->GetDocument(getter_AddRefs(doc));
       //      nsCOMPtr<nsIDOMXULDocument> xulDoc(do_QueryInterface(doc));
       //      if (xulDoc) {
       //        nsCOMPtr<nsIDOMNodeList>labelList;
@@ -1459,7 +1459,7 @@ nsresult nsAccessible::GetParentBlockNode(nsIDOMNode *aCurrentNode, nsIDOMNode *
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDocument> doc;
-  content->GetDocument(*getter_AddRefs(doc));
+  content->GetDocument(getter_AddRefs(doc));
   if (!doc)
     return NS_ERROR_FAILURE;
 

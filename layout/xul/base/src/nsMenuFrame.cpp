@@ -948,7 +948,7 @@ nsMenuFrame::GetMenuChildrenElement(nsIContent** aResult)
 
   for (PRInt32 i = 0; i < count; i++) {
     nsCOMPtr<nsIContent> child;
-    mContent->ChildAt(i, *getter_AddRefs(child));
+    mContent->ChildAt(i, getter_AddRefs(child));
     nsCOMPtr<nsIAtom> tag;
     xblService->ResolveTag(child, &dummy, getter_AddRefs(tag));
     if (tag && tag.get() == nsXULAtoms::menupopup) {
@@ -963,7 +963,7 @@ PRBool
 nsMenuFrame::IsSizedToPopup(nsIContent* aContent, PRBool aRequireAlways)
 {
   nsCOMPtr<nsIAtom> tag;
-  aContent->GetTag(*getter_AddRefs(tag));
+  aContent->GetTag(getter_AddRefs(tag));
   PRBool sizeToPopup;
   if (tag == nsHTMLAtoms::select)
     sizeToPopup = PR_TRUE;
@@ -1518,7 +1518,7 @@ nsMenuFrame::BuildAcceleratorText()
     return;
 
   nsCOMPtr<nsIDocument> document;
-  mContent->GetDocument(*getter_AddRefs(document));
+  mContent->GetDocument(getter_AddRefs(document));
 
   // Turn the document into a DOM document so we can use getElementById
   nsCOMPtr<nsIDOMDocument> domDocument(do_QueryInterface(document));
@@ -1716,7 +1716,7 @@ nsMenuFrame::Execute(nsGUIEvent *aEvent)
   // XXX HACK. Just gracefully exit if the node has been removed, e.g., window.close()
   // was executed.
   nsCOMPtr<nsIDocument> doc;
-  content->GetDocument(*getter_AddRefs(doc));
+  content->GetDocument(getter_AddRefs(doc));
 
   nsIFrame* primary = nsnull;
   if (shell) shell->GetPrimaryFrameFor(content, &primary);
@@ -1770,16 +1770,16 @@ nsMenuFrame::OnCreate()
   // potentially be updated.
   if (child) {
     nsCOMPtr<nsIDocument> doc;
-    child->GetDocument(*getter_AddRefs(doc));
+    child->GetDocument(getter_AddRefs(doc));
     nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(doc));
 
     PRInt32 count;
     child->ChildCount(count);
     for (PRInt32 i = 0; i < count; i++) {
       nsCOMPtr<nsIContent> grandChild;
-      child->ChildAt(i, *getter_AddRefs(grandChild));
+      child->ChildAt(i, getter_AddRefs(grandChild));
       nsCOMPtr<nsIAtom> tag;
-      grandChild->GetTag(*getter_AddRefs(tag));
+      grandChild->GetTag(getter_AddRefs(tag));
       if (tag.get() == nsXULAtoms::menuitem) {
         // See if we have a command attribute.
         nsAutoString command;

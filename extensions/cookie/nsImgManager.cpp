@@ -158,16 +158,16 @@ NS_IMETHODIMP nsImgManager::ShouldLoad(PRInt32 aContentType,
     nsCOMPtr<nsIContent> content = do_QueryInterface(aContext);
     NS_ASSERTION(content, "no content available");
     if (content) {
-      rv = content->GetDocument(*getter_AddRefs(doc));
+      rv = content->GetDocument(getter_AddRefs(doc));
       if (NS_FAILED(rv) || !doc) {
-        rv = content->GetNodeInfo(*getter_AddRefs(nodeinfo));
+        rv = content->GetNodeInfo(getter_AddRefs(nodeinfo));
         if (NS_FAILED(rv) || !nodeinfo) return rv;
 
-        rv = nodeinfo->GetDocument(*getter_AddRefs(doc));
+        rv = nodeinfo->GetDocument(getter_AddRefs(doc));
         if (NS_FAILED(rv) || !doc) return rv;
       }
 
-      rv = doc->GetBaseURL(*getter_AddRefs(baseURI));
+      rv = doc->GetBaseURL(getter_AddRefs(baseURI));
       if (NS_FAILED(rv) || !baseURI) return rv;
 
       nsCOMPtr<nsIDocShell> docshell;

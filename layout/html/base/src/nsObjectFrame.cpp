@@ -481,7 +481,7 @@ PRBool nsObjectFrame::IsSupportedImage(nsIContent* aContent)
   if (!haveType) 
   {
     nsCOMPtr<nsIAtom> tag;
-    aContent->GetTag(*getter_AddRefs(tag));
+    aContent->GetTag(getter_AddRefs(tag));
     nsAutoString data;
 
     // If this is an OBJECT tag, we should look for a DATA attribute.
@@ -624,7 +624,7 @@ nsObjectFrame::Init(nsIPresContext*  aPresContext,
     }
 
     nsCOMPtr<nsIAtom> tag;
-    aContent->GetTag(*getter_AddRefs(tag));
+    aContent->GetTag(getter_AddRefs(tag));
     nsAutoString data;
     
     // If this is an OBJECT tag, we should look for a DATA attribute.
@@ -660,7 +660,7 @@ nsObjectFrame::Init(nsIPresContext*  aPresContext,
   
   // only do the following for the object tag
   nsCOMPtr<nsIAtom> tag;
-  aContent->GetTag(*getter_AddRefs(tag));
+  aContent->GetTag(getter_AddRefs(tag));
   if (tag.get() != nsHTMLAtoms::object) return rv;
 
   // for now, we should try to do the same for "document" types and create
@@ -917,7 +917,7 @@ nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
 
   // for EMBED and APPLET, default to 240x200 for compatibility
   nsCOMPtr<nsIAtom> atom;
-  mContent->GetTag(*getter_AddRefs(atom));
+  mContent->GetTag(getter_AddRefs(atom));
   if (atom == nsHTMLAtoms::applet || atom == nsHTMLAtoms::embed) {
     float p2t;
     aPresContext->GetScaledPixelsToTwips(&p2t);
@@ -1114,7 +1114,7 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
       mInstanceOwner->SetPluginHost(pluginHost);
 
       nsCOMPtr<nsIAtom> tag;
-      mContent->GetTag(*getter_AddRefs(tag));
+      mContent->GetTag(getter_AddRefs(tag));
       if (tag.get() == nsHTMLAtoms::applet) {
         if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::code, src)) {
           // Create an absolute URL
@@ -1409,15 +1409,15 @@ nsObjectFrame::GetBaseURL(nsIURI* &aURL)
   nsIHTMLContent* htmlContent;
   if (NS_SUCCEEDED(mContent->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**)&htmlContent))) 
   {
-    htmlContent->GetBaseURL(aURL);
+    htmlContent->GetBaseURL(&aURL);
     NS_RELEASE(htmlContent);
   }
   else 
   {
     nsCOMPtr<nsIDocument> doc;
-    mContent->GetDocument(*getter_AddRefs(doc));
+    mContent->GetDocument(getter_AddRefs(doc));
     if (doc)
-      doc->GetBaseURL(aURL);
+      doc->GetBaseURL(&aURL);
     else
       return NS_ERROR_FAILURE;
   }
@@ -1434,7 +1434,7 @@ nsObjectFrame::IsHidden(PRBool aCheckVisibilityStyle) const
   }
 
   nsCOMPtr<nsIAtom> tag;
-  mContent->GetTag(*getter_AddRefs(tag));
+  mContent->GetTag(getter_AddRefs(tag));
 
   // only <embed> tags support the HIDDEN attribute
   if (tag.get() == nsHTMLAtoms::embed) {
@@ -1624,7 +1624,7 @@ nsObjectFrame::Paint(nsIPresContext*      aPresContext,
 
     // first, we need to get the document
     nsCOMPtr<nsIDocument> doc;
-    mContent->GetDocument(*getter_AddRefs(doc));
+    mContent->GetDocument(getter_AddRefs(doc));
     NS_ENSURE_TRUE(doc, NS_ERROR_NULL_POINTER);
 
     // now we need to get the shell for the screen
@@ -1949,7 +1949,7 @@ nsObjectFrame::NotifyContentObjectWrapper()
 {
   nsCOMPtr<nsIDocument> doc;
 
-  mContent->GetDocument(*getter_AddRefs(doc));
+  mContent->GetDocument(getter_AddRefs(doc));
   NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<nsIScriptGlobalObject> sgo;
@@ -2326,7 +2326,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarge
   nsCOMPtr<nsIDocument> doc;
   rv = GetDocument(getter_AddRefs(doc));
   if (NS_SUCCEEDED(rv) && doc) {
-    rv = doc->GetBaseURL(*getter_AddRefs(baseURL));  // gets the document's url
+    rv = doc->GetBaseURL(getter_AddRefs(baseURL));  // gets the document's url
   } else {
     mOwner->GetFullURL(*getter_AddRefs(baseURL)); // gets the plugin's content url
   }
@@ -2539,11 +2539,10 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetTagType(nsPluginTagType *result)
 
     if (nsnull != cont)
     {
-      nsIAtom     *atom;
+      nsCOMPtr<nsIAtom> atom;
+      cont->GetTag(getter_AddRefs(atom));
 
-      cont->GetTag(atom);
-
-      if (nsnull != atom)
+      if (atom)
       {
         if (atom == nsHTMLAtoms::applet)
           *result = nsPluginTagType_Applet;
@@ -2553,7 +2552,6 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetTagType(nsPluginTagType *result)
           *result = nsPluginTagType_Object;
 
         rv = NS_OK;
-        NS_RELEASE(atom);
       }
 
       NS_RELEASE(cont);
@@ -2660,7 +2658,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetDocumentBase(const char* *result)
     shell->GetDocument(getter_AddRefs(doc));
 
     nsCOMPtr<nsIURI> docURL;
-    doc->GetBaseURL(*getter_AddRefs(docURL));  // should return base + doc url
+    doc->GetBaseURL(getter_AddRefs(docURL));  // should return base + doc url
 
     rv = docURL->GetSpec(mDocumentBase);
   }
@@ -2984,7 +2982,7 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
   nsCOMPtr<nsIDOMNodeList> allParams; 
 
   nsCOMPtr<nsINodeInfo> ni;
-  content->GetNodeInfo(*getter_AddRefs(ni));
+  content->GetNodeInfo(getter_AddRefs(ni));
 
   if (ni->NamespaceEquals(kNameSpaceID_XHTML)) {
     // For XHTML elements we need to take the namespace URI into
@@ -3067,7 +3065,7 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
   PRInt16 numRealAttrs = mNumCachedAttrs;
   nsAutoString data;
   nsCOMPtr<nsIAtom> tag;
-  content->GetTag(*getter_AddRefs(tag));
+  content->GetTag(getter_AddRefs(tag));
   if (nsHTMLAtoms::object == tag.get() 
     && !content->HasAttr(kNameSpaceID_None, nsHTMLAtoms::src)
     && NS_CONTENT_ATTR_NOT_THERE != content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, data)) {
@@ -3086,9 +3084,9 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
     PRInt32 nameSpaceID;
     nsCOMPtr<nsIAtom> atom;
     nsCOMPtr<nsIAtom> prefix;
-    content->GetAttrNameAt(index, nameSpaceID,
-                           *getter_AddRefs(atom),
-                           *getter_AddRefs(prefix));
+    content->GetAttrNameAt(index, &nameSpaceID,
+                           getter_AddRefs(atom),
+                           getter_AddRefs(prefix));
     nsAutoString value;
     if (NS_CONTENT_ATTR_NOT_THERE != content->GetAttr(nameSpaceID, atom, value)) {
       nsAutoString name;

@@ -170,11 +170,9 @@ nsNodeInfo::SetIDAttributeAtom(nsIAtom* aID)
 
 
 NS_IMETHODIMP
-nsNodeInfo::GetNodeInfoManager(nsINodeInfoManager*& aNodeInfoManager) const
+nsNodeInfo::GetNodeInfoManager(nsINodeInfoManager** aNodeInfoManager) const
 {
-  aNodeInfoManager = mOwnerManager;
-
-  NS_ADDREF(aNodeInfoManager);
+  NS_ADDREF(*aNodeInfoManager = mOwnerManager);
 
   return NS_OK;
 }
@@ -227,7 +225,7 @@ NS_IMETHODIMP_(PRBool)
 nsNodeInfo::NamespaceEquals(const nsAString& aNamespaceURI) const
 {
   PRInt32 nsid;
-  nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceID(aNamespaceURI, nsid);
+  nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceID(aNamespaceURI, &nsid);
 
   return nsINodeInfo::NamespaceEquals(nsid);
 }
@@ -276,7 +274,7 @@ nsNodeInfo::QualifiedNameEquals(const nsACString& aQualifiedName) const
 }
 
 NS_IMETHODIMP
-nsNodeInfo::NameChanged(nsIAtom *aName, nsINodeInfo*& aResult)
+nsNodeInfo::NameChanged(nsIAtom *aName, nsINodeInfo** aResult)
 {
   return mOwnerManager->GetNodeInfo(aName, mInner.mPrefix, mInner.mNamespaceID,
                                     aResult);
@@ -284,14 +282,14 @@ nsNodeInfo::NameChanged(nsIAtom *aName, nsINodeInfo*& aResult)
 
 
 NS_IMETHODIMP
-nsNodeInfo::PrefixChanged(nsIAtom *aPrefix, nsINodeInfo*& aResult)
+nsNodeInfo::PrefixChanged(nsIAtom *aPrefix, nsINodeInfo** aResult)
 {
   return mOwnerManager->GetNodeInfo(mInner.mName, aPrefix, mInner.mNamespaceID,
                                     aResult);
 }
 
 NS_IMETHODIMP
-nsNodeInfo::GetDocument(nsIDocument*& aDocument) const
+nsNodeInfo::GetDocument(nsIDocument** aDocument) const
 {
   return mOwnerManager->GetDocument(aDocument);
 }

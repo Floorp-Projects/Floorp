@@ -300,7 +300,7 @@ public:
   /**
    * Return the base URL for relative URLs in the document. May return null (or the document URL).
    */
-  NS_IMETHOD GetBaseURL(nsIURI*& aURL) const;
+  NS_IMETHOD GetBaseURL(nsIURI** aURL) const;
   NS_IMETHOD SetBaseURL(nsIURI* aURL);
 
   /**
@@ -391,7 +391,7 @@ public:
    * Get the direct children of the document - content in
    * the prolog, the root content and content in the epilog.
    */
-  NS_IMETHOD ChildAt(PRInt32 aIndex, nsIContent*& aResult) const;
+  NS_IMETHOD ChildAt(PRInt32 aIndex, nsIContent** aResult) const;
   NS_IMETHOD IndexOf(nsIContent* aPossibleChild, PRInt32& aIndex) const;
   NS_IMETHOD GetChildCount(PRInt32& aCount);
 
@@ -487,7 +487,7 @@ public:
                                        PRBool aUpdateViews = PR_FALSE);
   NS_IMETHOD GetAndIncrementContentID(PRInt32* aID);
   NS_IMETHOD GetBindingManager(nsIBindingManager** aResult);
-  NS_IMETHOD GetNodeInfoManager(nsINodeInfoManager*& aNodeInfoManager);
+  NS_IMETHOD GetNodeInfoManager(nsINodeInfoManager** aNodeInfoManager);
   NS_IMETHOD AddReference(void *aKey, nsISupports *aReference);
   NS_IMETHOD RemoveReference(void *aKey, nsISupports **aOldReference);
   NS_IMETHOD SetContainer(nsISupports *aContainer);

@@ -248,17 +248,17 @@ nsHTMLTableCellElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
   // XXX can we safely presume structure or do we need to QI on the way up?
   nsCOMPtr<nsIContent> row;
 
-  GetParent(*getter_AddRefs(row));
+  GetParent(getter_AddRefs(row));
 
   if (row) {
     nsCOMPtr<nsIContent> section;
 
-    row->GetParent(*getter_AddRefs(section));
+    row->GetParent(getter_AddRefs(section));
 
     if (section) {
       nsCOMPtr<nsIContent> table;
 
-      section->GetParent(*getter_AddRefs(table));
+      section->GetParent(getter_AddRefs(table));
 
       if (table) {
         nsCOMPtr<nsIStyledContent> styledTable(do_QueryInterface(table));

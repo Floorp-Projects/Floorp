@@ -1059,7 +1059,7 @@ CSSLoaderImpl::CreateSheet(nsIURI* aURI,
       // Inline style.  Use the document's base URL so that @import in
       // the inline sheet picks up the right base.
       NS_ASSERTION(mDocument, "How did we get in here without a document?");
-      mDocument->GetBaseURL(*getter_AddRefs(sheetURI));
+      mDocument->GetBaseURL(getter_AddRefs(sheetURI));
     }
 
     rv = NS_NewCSSStyleSheet(aSheet, sheetURI);

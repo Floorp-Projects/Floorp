@@ -722,7 +722,7 @@ NS_IMETHODIMP nsWebShellWindow::LoadMenuItem(
     // Try to find the key node.
     nsCOMPtr<nsIDocument> document;
     nsCOMPtr<nsIContent> content = do_QueryInterface(domElement);
-    if (NS_FAILED(rv = content->GetDocument(*getter_AddRefs(document)))) {
+    if (NS_FAILED(rv = content->GetDocument(getter_AddRefs(document)))) {
       NS_ERROR("Unable to retrieve the document.");
       return rv;
     }
@@ -957,7 +957,7 @@ void nsWebShellWindow::DynamicLoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aP
       }
 
       nsCOMPtr<nsIPresContext> presContext;
-      if (NS_FAILED(rv = docViewer->GetPresContext(*getter_AddRefs(presContext)))) {
+      if (NS_FAILED(rv = docViewer->GetPresContext(getter_AddRefs(presContext)))) {
           NS_ERROR("Unable to retrieve the doc viewer's presentation context.");
           return;
       }
@@ -1256,7 +1256,7 @@ nsWebShellWindow::OnStateChange(nsIWebProgress *aProgress,
       return NS_OK;
 
     nsCOMPtr<nsIDocument> doc;
-    docv->GetDocument(*getter_AddRefs(doc));
+    docv->GetDocument(getter_AddRefs(doc));
     if (!doc)
       return NS_OK;
 
@@ -1383,7 +1383,7 @@ nsCOMPtr<nsIDOMDocument> nsWebShellWindow::GetNamedDOMDoc(const nsAString & aWeb
     return domDoc;
 
   nsCOMPtr<nsIDocument> doc;
-  docv->GetDocument(*getter_AddRefs(doc));
+  docv->GetDocument(getter_AddRefs(doc));
   if (doc)
     return nsCOMPtr<nsIDOMDocument>(do_QueryInterface(doc));
 
@@ -1407,7 +1407,7 @@ void nsWebShellWindow::LoadContentAreas() {
     nsCOMPtr<nsIDocumentViewer> docViewer = do_QueryInterface(contentViewer);
     if (docViewer) {
       nsCOMPtr<nsIDocument> doc;
-      docViewer->GetDocument(*getter_AddRefs(doc));
+      docViewer->GetDocument(getter_AddRefs(doc));
       nsCOMPtr<nsIURI> mainURL;
       doc->GetDocumentURL(getter_AddRefs(mainURL));
       if (mainURL) {
@@ -1491,7 +1491,7 @@ PRBool nsWebShellWindow::ExecuteCloseHandler()
         nsCOMPtr<nsIDocumentViewer> docViewer;
         nsCOMPtr<nsIPresContext> presContext;
         docViewer = do_QueryInterface(contentViewer);
-        if (docViewer && NS_SUCCEEDED(docViewer->GetPresContext(*getter_AddRefs(presContext)))) {
+        if (docViewer && NS_SUCCEEDED(docViewer->GetPresContext(getter_AddRefs(presContext)))) {
           nsEventStatus status = nsEventStatus_eIgnore;
           nsMouseEvent event;
           event.eventStructType = NS_EVENT;
@@ -1641,7 +1641,7 @@ NS_IMETHODIMP nsWebShellWindow::Destroy()
    if(docv)
       {
       nsCOMPtr<nsIDocument> doc;
-      docv->GetDocument(*getter_AddRefs(doc));
+      docv->GetDocument(getter_AddRefs(doc));
       if(doc)
          doc->RemoveObserver(NS_STATIC_CAST(nsIDocumentObserver*, this));
       }

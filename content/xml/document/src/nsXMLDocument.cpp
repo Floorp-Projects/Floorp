@@ -878,7 +878,7 @@ nsXMLDocument::CreateElement(const nsAString& aTagName,
   nsresult rv;
 
   rv = mNodeInfoManager->GetNodeInfo(aTagName, nsnull, kNameSpaceID_None,
-                                     *getter_AddRefs(nodeInfo));
+                                     getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return CreateElement(nodeInfo, aReturn);
@@ -971,7 +971,7 @@ nsXMLDocument::CreateAttributeNS(const nsAString& aNamespaceURI,
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
   nsresult rv = mNodeInfoManager->GetNodeInfo(aQualifiedName, aNamespaceURI,
-                                              *getter_AddRefs(nodeInfo));
+                                              getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoString value;
@@ -993,7 +993,7 @@ nsXMLDocument::CreateElementNS(const nsAString& aNamespaceURI,
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
   rv = mNodeInfoManager->GetNodeInfo(aQualifiedName, aNamespaceURI,
-                                     *getter_AddRefs(nodeInfo));
+                                     getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return CreateElement(nodeInfo, aReturn);
@@ -1019,7 +1019,7 @@ MatchElementId(nsIContent *aContent, const nsAString& aId)
 
     if (xmlContent) {
       nsCOMPtr<nsIAtom> value;
-      if (NS_SUCCEEDED(xmlContent->GetID(*getter_AddRefs(value))) &&
+      if (NS_SUCCEEDED(xmlContent->GetID(getter_AddRefs(value))) &&
           value && value->Equals(aId)) {
         return aContent;
       }
@@ -1030,11 +1030,10 @@ MatchElementId(nsIContent *aContent, const nsAString& aId)
   PRInt32 i, count;
 
   aContent->ChildCount(count);
+  nsCOMPtr<nsIContent> child;
   for (i = 0; i < count && result == nsnull; i++) {
-    nsIContent *child;
-    aContent->ChildAt(i, child);
+    aContent->ChildAt(i, getter_AddRefs(child));
     result = MatchElementId(child, aId);
-    NS_RELEASE(child);
   }  
 
   return result;
@@ -1132,8 +1131,7 @@ nsXMLDocument::CreateElement(nsINodeInfo *aNodeInfo, nsIDOMElement** aResult)
   
   nsCOMPtr<nsIContent> content;
 
-  PRInt32 namespaceID;
-  aNodeInfo->GetNamespaceID(namespaceID);
+  PRInt32 namespaceID = aNodeInfo->GetNamespaceID();
 
   nsCOMPtr<nsIElementFactory> elementFactory;
   nsContentUtils::GetNSManagerWeakRef()->GetElementFactory(namespaceID,

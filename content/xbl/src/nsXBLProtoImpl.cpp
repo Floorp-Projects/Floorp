@@ -57,7 +57,7 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aBinding, nsIConten
     return NS_OK; // Nothing to do, so let's not waste time.
 
   nsCOMPtr<nsIDocument> document;
-  aBoundElement->GetDocument(*getter_AddRefs(document));
+  aBoundElement->GetDocument(getter_AddRefs(document));
   if (!document) return NS_OK;
 
   nsCOMPtr<nsIScriptGlobalObject> global;
@@ -126,7 +126,7 @@ nsXBLProtoImpl::InitTargetObjects(nsXBLPrototypeBinding* aBinding,
 
   // Root ourselves in the document.
   nsCOMPtr<nsIDocument> doc;
-  aBoundElement->GetDocument(*getter_AddRefs(doc));
+  aBoundElement->GetDocument(getter_AddRefs(doc));
   if (doc) {
     nsCOMPtr<nsIXPConnectWrappedNative> nativeWrapper(do_QueryInterface(wrapper));
     if (nativeWrapper)

@@ -105,7 +105,7 @@ public:
       CallQueryInterface(node, &result);
     }
     else 
-      mContent->ChildAt(PRInt32(mIndex), result);
+      mContent->ChildAt(PRInt32(mIndex), &result);
 
     return result;
   }

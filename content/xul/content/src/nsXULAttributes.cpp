@@ -304,7 +304,7 @@ nsXULAttribute::SetPrefix(const nsAString& aPrefix)
 {
     // XXX: Validate the prefix string!
 
-    nsINodeInfo *newNodeInfo = nsnull;
+    nsCOMPtr<nsINodeInfo> newNodeInfo;
     nsCOMPtr<nsIAtom> prefix;
 
     if (!aPrefix.IsEmpty()) {
@@ -312,11 +312,13 @@ nsXULAttribute::SetPrefix(const nsAString& aPrefix)
         NS_ENSURE_TRUE(prefix, NS_ERROR_OUT_OF_MEMORY);
     }
 
-    nsresult rv = mNodeInfo->PrefixChanged(prefix, newNodeInfo);
+    nsresult rv = mNodeInfo->PrefixChanged(prefix,
+                                           getter_AddRefs(newNodeInfo));
     NS_ENSURE_SUCCESS(rv, rv);
 
     NS_RELEASE(mNodeInfo);
     mNodeInfo = newNodeInfo;
+    NS_ADDREF(mNodeInfo);
 
     return NS_OK;
 }
@@ -646,7 +648,7 @@ nsXULAttributes::GetNamedItem(const nsAString& aName,
     // PRInt32 nameSpaceID;
     nsCOMPtr<nsINodeInfo> inpNodeInfo;
 
-    if (NS_FAILED(rv = mContent->NormalizeAttrString(aName, *getter_AddRefs(inpNodeInfo))))
+    if (NS_FAILED(rv = mContent->NormalizeAttrString(aName, getter_AddRefs(inpNodeInfo))))
         return rv;
 
     // if (kNameSpaceID_Unknown == nameSpaceID) {

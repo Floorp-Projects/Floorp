@@ -367,7 +367,7 @@ NS_IMETHODIMP nsXULWindow::Destroy()
    if(docv)
       {
       nsCOMPtr<nsIDocument> doc;
-      docv->GetDocument(*getter_AddRefs(doc));
+      docv->GetDocument(getter_AddRefs(doc));
 /*      if(doc)
          doc->RemoveObserver(NS_STATIC_CAST(nsIDocumentObserver*, this));  */
       }
@@ -1402,7 +1402,7 @@ NS_IMETHODIMP nsXULWindow::GetWindowDOMElement(nsIDOMElement** aDOMElement)
       return NS_ERROR_FAILURE;
 
    nsCOMPtr<nsIDocument> doc;
-   docv->GetDocument(*getter_AddRefs(doc));
+   docv->GetDocument(getter_AddRefs(doc));
    nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(doc));
    if(!domdoc) 
       return NS_ERROR_FAILURE;
@@ -1432,7 +1432,7 @@ NS_IMETHODIMP nsXULWindow::GetDOMElementById(char* aID, nsIDOMElement** aDOMElem
       return NS_ERROR_FAILURE;
 
    nsCOMPtr<nsIDocument> doc;
-   docv->GetDocument(*getter_AddRefs(doc));
+   docv->GetDocument(getter_AddRefs(doc));
    nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(doc));
    if(!domdoc) 
       return NS_ERROR_FAILURE;

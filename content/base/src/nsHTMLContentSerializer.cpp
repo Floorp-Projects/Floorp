@@ -574,9 +574,9 @@ nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
   
   for (index = 0; index < count; index++) {
     aContent->GetAttrNameAt(index, 
-                            namespaceID,
-                            *getter_AddRefs(attrName),
-                            *getter_AddRefs(attrPrefix));
+                            &namespaceID,
+                            getter_AddRefs(attrName),
+                            getter_AddRefs(attrPrefix));
 
     // Filter out any attribute starting with [-|_]moz
     const char* sharedName;
@@ -621,10 +621,10 @@ nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
         // search the tag list for CODEBASE as well.
         // For now, just leave them relative.
         nsCOMPtr<nsIDocument> document;
-        aContent->GetDocument(*getter_AddRefs(document));
+        aContent->GetDocument(getter_AddRefs(document));
         if (document) {
           nsCOMPtr<nsIURI> uri;
-          document->GetBaseURL(*getter_AddRefs(uri));
+          document->GetBaseURL(getter_AddRefs(uri));
           if (!uri)
             document->GetDocumentURL(getter_AddRefs(uri));
           if (uri) {
@@ -681,7 +681,7 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
   PRBool hasDirtyAttr = HasDirtyAttr(content);
 
   nsCOMPtr<nsIAtom> name;
-  content->GetTag(*getter_AddRefs(name));
+  content->GetTag(getter_AddRefs(name));
 
   if (name.get() == nsHTMLAtoms::br && mPreLevel > 0
       && (mFlags & nsIDocumentEncoder::OutputNoFormattingInPre)) {
@@ -795,7 +795,7 @@ nsHTMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
   PRBool hasDirtyAttr = HasDirtyAttr(content);
 
   nsCOMPtr<nsIAtom> name;
-  content->GetTag(*getter_AddRefs(name));
+  content->GetTag(getter_AddRefs(name));
 
   if ((name.get() == nsHTMLAtoms::pre) ||
       (name.get() == nsHTMLAtoms::script) ||

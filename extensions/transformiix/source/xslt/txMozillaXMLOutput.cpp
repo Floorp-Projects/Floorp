@@ -213,7 +213,7 @@ void txMozillaXMLOutput::endDocument()
             nsCOMPtr<nsIRefreshURI> refURI = do_QueryInterface(docShell);
             if (refURI) {
                 nsCOMPtr<nsIURI> baseURI;
-                doc->GetBaseURL(*getter_AddRefs(baseURI));
+                doc->GetBaseURL(getter_AddRefs(baseURI));
                 refURI->SetupRefreshURIFromHeader(baseURI, mRefreshString);
             }
         }
@@ -431,7 +431,7 @@ void txMozillaXMLOutput::closePrevious(PRInt8 aAction)
             PRInt32 childCount, i;
             document->GetChildCount(childCount);
             for (i = 0; i < childCount; ++i) {
-                document->ChildAt(0, *getter_AddRefs(childContent));
+                document->ChildAt(0, getter_AddRefs(childContent));
                 if (childContent == mRootContent) {
                     document->SetRootContent(nsnull);
                 }
@@ -494,7 +494,7 @@ void txMozillaXMLOutput::startHTMLElement(nsIDOMElement* aElement)
 {
     nsCOMPtr<nsIAtom> atom;
     nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
-    content->GetTag(*getter_AddRefs(atom));
+    content->GetTag(getter_AddRefs(atom));
 
     mDontAddCurrent = (atom == txHTMLAtoms::script);
 
@@ -538,7 +538,7 @@ void txMozillaXMLOutput::endHTMLElement(nsIDOMElement* aElement,
     NS_ASSERTION(content, "Can't QI to nsIContent");
 
     nsCOMPtr<nsIAtom> atom;
-    content->GetTag(*getter_AddRefs(atom));
+    content->GetTag(getter_AddRefs(atom));
 
     // add <tbody> to tables if there is none (not in xhtml)
     if (atom == txHTMLAtoms::table && !aXHTML) {
@@ -549,7 +549,7 @@ void txMozillaXMLOutput::endHTMLElement(nsIDOMElement* aElement,
 
         content->ChildCount(count);
         while (!section && (i < count)) {
-            rv = content->ChildAt(i, *getter_AddRefs(childContent));
+            rv = content->ChildAt(i, getter_AddRefs(childContent));
             NS_ASSERTION(NS_SUCCEEDED(rv), "Something went wrong while getting a child");
             section = do_QueryInterface(childContent);
             ++i;
@@ -736,7 +736,7 @@ txMozillaXMLOutput::createResultDocument(const nsAString& aName, PRInt32 aNsID,
     }
     doc->Reset(channel, loadGroup);
     nsCOMPtr<nsIURI> baseURL;
-    sourceDoc->GetBaseURL(*getter_AddRefs(baseURL));
+    sourceDoc->GetBaseURL(getter_AddRefs(baseURL));
     doc->SetBaseURL(baseURL);
 
     // Set the mime-type

@@ -181,7 +181,7 @@ PRBool IsRowNode(nsIDOMNode *aNode)
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
   if (content)
   {
-    content->GetTag(*getter_AddRefs(atom));
+    content->GetTag(getter_AddRefs(atom));
     if (atom && atom.get() == nsEditProperty::tr)
       return PR_TRUE;
   }
@@ -282,7 +282,7 @@ nsHTMLEditor::GetFirstRow(nsIDOMElement* aTableElement, nsIDOMNode** aRowNode)
     if (content)
     {
       nsCOMPtr<nsIAtom> atom;
-      content->GetTag(*getter_AddRefs(atom));
+      content->GetTag(getter_AddRefs(atom));
       if (atom.get() == nsEditProperty::tr)
       {
         // Found a row directly under <table>

@@ -449,19 +449,19 @@ nsXULTreeBuilder::Sort(nsIDOMElement* aElement)
 
     // Unset sort attribute(s) on the other columns
     nsCOMPtr<nsIContent> parentContent;
-    header->GetParent(*getter_AddRefs(parentContent));
+    header->GetParent(getter_AddRefs(parentContent));
     if (parentContent) {
         nsCOMPtr<nsIAtom> parentTag;
-        parentContent->GetTag(*getter_AddRefs(parentTag));
+        parentContent->GetTag(getter_AddRefs(parentTag));
         if (parentTag == nsXULAtoms::treecols) {
             PRInt32 numChildren;
             parentContent->ChildCount(numChildren);
             for (int i = 0; i < numChildren; ++i) {
                 nsCOMPtr<nsIContent> childContent;
                 nsCOMPtr<nsIAtom> childTag;
-                parentContent->ChildAt(i, *getter_AddRefs(childContent));
+                parentContent->ChildAt(i, getter_AddRefs(childContent));
                 if (childContent) {
-                    childContent->GetTag(*getter_AddRefs(childTag));
+                    childContent->GetTag(getter_AddRefs(childTag));
                     if (childTag == nsXULAtoms::treecol && childContent != header) {
                         childContent->UnsetAttr(kNameSpaceID_None,
                                                 nsXULAtoms::sortDirection, PR_TRUE);
@@ -801,7 +801,7 @@ nsXULTreeBuilder::SetTree(nsITreeBoxObject* tree)
     mBoxObject = tree;
 
     nsCOMPtr<nsIDocument> doc;
-    mRoot->GetDocument(*getter_AddRefs(doc));
+    mRoot->GetDocument(getter_AddRefs(doc));
     NS_ASSERTION(doc, "element has no document");
     if (!doc)
         return NS_ERROR_UNEXPECTED;
@@ -1257,9 +1257,9 @@ nsXULTreeBuilder::EnsureSortVariables()
     treecols->ChildCount(count);
     for (PRInt32 i = 0; i < count; i++) {
         nsCOMPtr<nsIContent> child;
-        treecols->ChildAt(i, *getter_AddRefs(child));
+        treecols->ChildAt(i, getter_AddRefs(child));
         nsCOMPtr<nsIAtom> tag;
-        child->GetTag(*getter_AddRefs(tag));
+        child->GetTag(getter_AddRefs(tag));
         if (tag == nsXULAtoms::treecol) {
             nsAutoString sortActive;
             child->GetAttr(kNameSpaceID_None, nsXULAtoms::sortActive, sortActive);
@@ -1335,7 +1335,7 @@ nsXULTreeBuilder::RebuildAll()
         return NS_ERROR_NOT_INITIALIZED;
 
     nsCOMPtr<nsIDocument> doc;
-    nsresult rv = mRoot->GetDocument(*getter_AddRefs(doc));
+    nsresult rv = mRoot->GetDocument(getter_AddRefs(doc));
     if (NS_FAILED(rv)) return rv;
 
     // Bail out early if we are being torn down.
@@ -1492,9 +1492,9 @@ nsXULTreeBuilder::GetTemplateActionCellFor(PRInt32 aRow,
         PRInt32 j = 0;
         for (PRInt32 i = 0; i < count; ++i) {
             nsCOMPtr<nsIContent> child;
-            row->ChildAt(i, *getter_AddRefs(child));
+            row->ChildAt(i, getter_AddRefs(child));
             nsCOMPtr<nsIAtom> tag;
-            child->GetTag(*getter_AddRefs(tag));
+            child->GetTag(getter_AddRefs(tag));
             if (tag == nsXULAtoms::treecell) {
                 nsAutoString ref;
                 child->GetAttr(kNameSpaceID_None, nsXULAtoms::ref, ref);

@@ -291,7 +291,7 @@ nsXMLContentSink::Init(nsIDocument* aDoc,
 
   ProcessHTTPHeaders(aChannel);
 
-  return aDoc->GetNodeInfoManager(*getter_AddRefs(mNodeInfoManager));
+  return aDoc->GetNodeInfoManager(getter_AddRefs(mNodeInfoManager));
 }
 
 NS_IMPL_THREADSAFE_ADDREF(nsXMLContentSink)
@@ -615,8 +615,7 @@ nsXMLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
   *aAppendContent = PR_TRUE;
   nsresult rv = NS_OK;
 
-  PRInt32 nameSpaceID;
-  aNodeInfo->GetNamespaceID(nameSpaceID);
+  PRInt32 nameSpaceID = aNodeInfo->GetNamespaceID();
 
   // XHTML needs some special attention
   if (nameSpaceID != kNameSpaceID_XHTML) {
@@ -651,9 +650,7 @@ nsXMLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
   rv = CallQueryInterface(htmlContent, aResult);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIAtom> tagAtom;
-  aNodeInfo->GetNameAtom(*getter_AddRefs(tagAtom));
-
+  nsCOMPtr<nsIAtom> tagAtom = aNodeInfo->GetNameAtom();
   if (tagAtom == nsHTMLAtoms::script) {
     // Don't append the content to the tree until we're all
     // done collecting its contents
@@ -707,7 +704,7 @@ nsXMLContentSink::CloseElement(nsIContent* aContent, PRBool* aAppendContent)
   }
   
   nsCOMPtr<nsIAtom> tagAtom;
-  aContent->GetTag(*getter_AddRefs(tagAtom));
+  aContent->GetTag(getter_AddRefs(tagAtom));
 
   nsresult rv = NS_OK;
 
@@ -889,7 +886,7 @@ nsXMLContentSink::ProcessBASETag(nsIContent* aContent)
         rv = mDocument->SetBaseURL(baseURI); // The document checks if it is legal to set this base
         if (NS_SUCCEEDED(rv)) {
           NS_IF_RELEASE(mDocumentBaseURL);
-          mDocument->GetBaseURL(mDocumentBaseURL);
+          mDocument->GetBaseURL(&mDocumentBaseURL);
         }
       }
     }
@@ -1287,7 +1284,7 @@ nsXMLContentSink::GetNameSpaceId(nsIAtom* aPrefix)
   if (mNameSpaceStack && mNameSpaceStack->Count() > 0) {
     PRInt32 index = mNameSpaceStack->Count() - 1;
     nsINameSpace* nameSpace = (nsINameSpace*)mNameSpaceStack->ElementAt(index);
-    nameSpace->FindNameSpaceID(aPrefix, id);
+    nameSpace->FindNameSpaceID(aPrefix, &id);
   }
 
   return id;
@@ -1639,7 +1636,7 @@ MathMLElementFactoryImpl::CreateInstanceByTag(nsINodeInfo* aNodeInfo,
 
   // this bit of code is to load mathml.css on demand
   nsCOMPtr<nsIDocument> doc;
-  aNodeInfo->GetDocument(*getter_AddRefs(doc));
+  aNodeInfo->GetDocument(getter_AddRefs(doc));
   if (doc) {
     nsCOMPtr<nsIHTMLContentContainer> htmlContainer(do_QueryInterface(doc));
     if (htmlContainer) {
@@ -1733,7 +1730,7 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
   nsCOMPtr<nsINodeInfo> nodeInfo;
 
   mNodeInfoManager->GetNodeInfo(tagAtom, nameSpacePrefix, nameSpaceID,
-                                *getter_AddRefs(nodeInfo));
+                                getter_AddRefs(nodeInfo));
 
   result = CreateElement(aAtts, aAttsCount, nodeInfo, aLineNumber,
                          getter_AddRefs(content), &appendContent);
@@ -2091,7 +2088,8 @@ nsXMLContentSink::PushNameSpacesFrom(const PRUnichar** aAtts)
     nameSpace =
       (nsINameSpace*)mNameSpaceStack->ElementAt(mNameSpaceStack->Count() - 1);
   } else {
-    rv = nsContentUtils::GetNSManagerWeakRef()->CreateRootNameSpace(*getter_AddRefs(nameSpace));
+    rv = nsContentUtils::GetNSManagerWeakRef()->
+        CreateRootNameSpace(getter_AddRefs(nameSpace));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -2133,7 +2131,7 @@ nsXMLContentSink::PushNameSpacesFrom(const PRUnichar** aAtts)
 
       nsCOMPtr<nsINameSpace> child;
       rv = nameSpace->CreateChildNameSpace(prefixAtom, nsDependentString(aAtts[1]),
-                                           *getter_AddRefs(child));
+                                           getter_AddRefs(child));
       NS_ENSURE_SUCCESS(rv, rv);
 
       nameSpace = child;
@@ -2189,7 +2187,7 @@ nsXMLContentSink::AddAttributes(const PRUnichar** aAtts,
 
     nsCOMPtr<nsINodeInfo> ni;
     mNodeInfoManager->GetNodeInfo(nameAtom, nameSpacePrefix, nameSpaceID,
-                                  *getter_AddRefs(ni));
+                                  getter_AddRefs(ni));
     NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
 
     // Add attribute to content

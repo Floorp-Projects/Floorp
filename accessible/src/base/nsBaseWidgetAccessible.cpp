@@ -308,7 +308,7 @@ PRBool nsLinkableAccessible::IsALink()
           mIsLinkVisited = PR_TRUE;
         return PR_TRUE;
       }
-      walkUpContent->GetParent(*getter_AddRefs(tempContent));
+      walkUpContent->GetParent(getter_AddRefs(tempContent));
       walkUpContent = tempContent;
     }
   }

@@ -918,7 +918,7 @@ NS_IMETHODIMP DefaultTooltipTextProvider::GetNodeText(nsIDOMNode *aNode, PRUnich
       nsCOMPtr<nsIContent> content(do_QueryInterface(currElement));
       if (content) {
         nsCOMPtr<nsIAtom> tagAtom;
-        content->GetTag(*getter_AddRefs(tagAtom));
+        content->GetTag(getter_AddRefs(tagAtom));
         if (tagAtom != mTag_dialog &&
             tagAtom != mTag_dialogheader &&
             tagAtom != mTag_window) {

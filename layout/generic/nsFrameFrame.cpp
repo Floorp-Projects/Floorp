@@ -619,7 +619,7 @@ nsHTMLFrameOuterFrame::AttributeChanged(nsIPresContext* aPresContext,
                                         PRInt32 aHint)
 {
   nsCOMPtr<nsIAtom> type;
-  aChild->GetTag(*getter_AddRefs(type));
+  aChild->GetTag(getter_AddRefs(type));
 
   if ((type != nsHTMLAtoms::object && aAttribute == nsHTMLAtoms::src) ||
       (type == nsHTMLAtoms::object && aAttribute == nsHTMLAtoms::data)) {
@@ -633,10 +633,10 @@ nsHTMLFrameOuterFrame::AttributeChanged(nsIPresContext* aPresContext,
   // If the noResize attribute changes, dis/allow frame to be resized
   else if (aAttribute == nsHTMLAtoms::noresize) {
     nsCOMPtr<nsIContent> parentContent;
-    mContent->GetParent(*getter_AddRefs(parentContent));
+    mContent->GetParent(getter_AddRefs(parentContent));
 
     nsCOMPtr<nsIAtom> parentTag;
-    parentContent->GetTag(*getter_AddRefs(parentTag));
+    parentContent->GetTag(getter_AddRefs(parentTag));
 
     if (parentTag == nsHTMLAtoms::frameset) {
       nsIFrame* parentFrame = nsnull;
@@ -768,7 +768,7 @@ PRBool nsHTMLFrameInnerFrame::GetURL(nsIContent* aContent, nsString& aResult)
 {
   aResult.SetLength(0);
   nsCOMPtr<nsIAtom> type;
-  aContent->GetTag(*getter_AddRefs(type));
+  aContent->GetTag(getter_AddRefs(type));
 
   if (type.get() == nsHTMLAtoms::object) {
     if (NS_CONTENT_ATTR_HAS_VALUE == (aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, aResult)))

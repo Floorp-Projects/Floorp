@@ -67,7 +67,7 @@ nsComposeTxtSrvFilter::Skip(nsIDOMNode* aNode, PRBool *_retval)
   nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
   if (content) {
     nsCOMPtr<nsIAtom> tag;
-    content->GetTag(*getter_AddRefs(tag));
+    content->GetTag(getter_AddRefs(tag));
     if (tag) {
       if (tag == mBlockQuoteAtom) {
         if (mIsForMail) {

@@ -209,12 +209,11 @@ nsScriptLoader::InNonScriptingContainer(nsIDOMHTMLScriptElement* aScriptElement)
     }
     
     nsCOMPtr<nsINodeInfo> nodeInfo;
-    content->GetNodeInfo(*getter_AddRefs(nodeInfo));
+    content->GetNodeInfo(getter_AddRefs(nodeInfo));
     NS_ASSERTION(nodeInfo, "element without node info");
 
     if (nodeInfo) {
-      nsCOMPtr<nsIAtom> localName;
-      nodeInfo->GetNameAtom(*getter_AddRefs(localName));
+      nsCOMPtr<nsIAtom> localName = nodeInfo->GetNameAtom();
       
       // XXX noframes and noembed are currently unconditionally not
       // displayed and processed. This might change if we support either
@@ -402,7 +401,7 @@ nsScriptLoader::ProcessScriptElement(nsIDOMHTMLScriptElement *aElement,
     nsCOMPtr<nsIURI> baseURI, scriptURI;
     
     // Use the SRC attribute value to load the URL
-    mDocument->GetBaseURL(*getter_AddRefs(baseURI));
+    mDocument->GetBaseURL(getter_AddRefs(baseURI));
     rv = NS_NewURI(getter_AddRefs(scriptURI), src, nsnull, baseURI);
     if (NS_FAILED(rv)) {
       return FireErrorNotification(rv, aElement, aObserver);

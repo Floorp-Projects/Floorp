@@ -856,7 +856,7 @@ NewControl(const char *pluginType,
                         if (doc)
                         {
                             nsCOMPtr<nsIURI> baseURI;
-                            doc->GetBaseURL(*getter_AddRefs(baseURI));
+                            doc->GetBaseURL(getter_AddRefs(baseURI));
                             if (baseURI)
                             {
                                 nsCAutoString newURL;

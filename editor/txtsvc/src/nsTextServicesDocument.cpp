@@ -3208,7 +3208,7 @@ nsTextServicesDocument::IsBlockNode(nsIContent *aContent)
 {
   nsCOMPtr<nsIAtom> atom;
 
-  aContent->GetTag(*getter_AddRefs(atom));
+  aContent->GetTag(getter_AddRefs(atom));
 
   if (!atom)
     return PR_TRUE;
@@ -3251,12 +3251,12 @@ nsTextServicesDocument::HasSameBlockNodeParent(nsIContent *aContent1, nsIContent
   nsCOMPtr<nsIContent> p2;
   nsresult result;
 
-  result = aContent1->GetParent(*getter_AddRefs(p1));
+  result = aContent1->GetParent(getter_AddRefs(p1));
 
   if (NS_FAILED(result))
     return PR_FALSE;
 
-  result = aContent2->GetParent(*getter_AddRefs(p2));
+  result = aContent2->GetParent(getter_AddRefs(p2));
 
   if (NS_FAILED(result))
     return PR_FALSE;
@@ -3272,7 +3272,7 @@ nsTextServicesDocument::HasSameBlockNodeParent(nsIContent *aContent1, nsIContent
 
   while (p1 && !IsBlockNode(p1))
   {
-    result = p1->GetParent(*getter_AddRefs(tmp));
+    result = p1->GetParent(getter_AddRefs(tmp));
 
     if (NS_FAILED(result))
       return PR_FALSE;
@@ -3282,7 +3282,7 @@ nsTextServicesDocument::HasSameBlockNodeParent(nsIContent *aContent1, nsIContent
 
   while (p2 && !IsBlockNode(p2))
   {
-    result = p2->GetParent(*getter_AddRefs(tmp));
+    result = p2->GetParent(getter_AddRefs(tmp));
 
     if (NS_FAILED(result))
       return PR_FALSE;
@@ -5042,7 +5042,7 @@ nsTextServicesDocument::PrintContentNode(nsIContent *aContent)
   nsCOMPtr<nsIAtom> atom;
   nsresult result;
 
-  aContent->GetTag(*getter_AddRefs(atom));
+  aContent->GetTag(getter_AddRefs(atom));
   atom->ToString(tmpStr);
   printf("%s", NS_LossyConvertUCS2toASCII(tmpStr).get());
 

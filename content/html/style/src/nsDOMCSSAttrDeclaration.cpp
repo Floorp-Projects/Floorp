@@ -181,18 +181,18 @@ nsDOMCSSAttributeDeclaration::GetCSSParsingEnvironment(nsIContent* aContent,
   *aCSSParser = nsnull;
   
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  nsresult result = aContent->GetNodeInfo(*getter_AddRefs(nodeInfo));
+  nsresult result = aContent->GetNodeInfo(getter_AddRefs(nodeInfo));
   if (NS_FAILED(result)) {
     return result;
   }
   nsCOMPtr<nsIDocument> doc;
-  result = nodeInfo->GetDocument(*getter_AddRefs(doc));
+  result = nodeInfo->GetDocument(getter_AddRefs(doc));
   if (NS_FAILED(result)) {
     return result;
   }
   
   if (doc) {
-    doc->GetBaseURL(*aBaseURI);
+    doc->GetBaseURL(aBaseURI);
     nsCOMPtr<nsIHTMLContentContainer> htmlContainer(do_QueryInterface(doc));
     if (htmlContainer) {
       htmlContainer->GetCSSLoader(*aCSSLoader);

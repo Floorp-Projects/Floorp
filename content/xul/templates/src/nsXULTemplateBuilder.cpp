@@ -708,7 +708,7 @@ nsXULTemplateBuilder::LoadDataSources()
 		mDB->SetAllowNegativeAssertions(PR_FALSE);
 
     nsCOMPtr<nsIDocument> doc;
-    mRoot->GetDocument(*getter_AddRefs(doc));
+    mRoot->GetDocument(getter_AddRefs(doc));
     NS_ASSERTION(doc, "element has no document");
     if (! doc)
         return NS_ERROR_UNEXPECTED;
@@ -851,7 +851,7 @@ nsXULTemplateBuilder::InitHTMLTemplateRoot()
     nsresult rv;
 
     nsCOMPtr<nsIDocument> doc;
-    mRoot->GetDocument(*getter_AddRefs(doc));
+    mRoot->GetDocument(getter_AddRefs(doc));
     NS_ASSERTION(doc != nsnull, "no document");
     if (! doc)
         return NS_ERROR_UNEXPECTED;
@@ -1382,11 +1382,11 @@ PRBool
 nsXULTemplateBuilder::IsTemplateElement(nsIContent* aContent)
 {
     PRInt32 nameSpaceID;
-    aContent->GetNameSpaceID(nameSpaceID);
+    aContent->GetNameSpaceID(&nameSpaceID);
 
     if (nameSpaceID == kNameSpaceID_XUL) {
         nsCOMPtr<nsIAtom> tag;
-        aContent->GetTag(*getter_AddRefs(tag));
+        aContent->GetTag(getter_AddRefs(tag));
 
         if (tag.get() == nsXULAtoms::Template)
             return PR_TRUE;
@@ -1443,7 +1443,7 @@ nsXULTemplateBuilder::GetTemplateRoot(nsIContent** aResult)
 
     if (!templateID.IsEmpty()) {
         nsCOMPtr<nsIDocument> doc;
-        mRoot->GetDocument(*getter_AddRefs(doc));
+        mRoot->GetDocument(getter_AddRefs(doc));
         NS_ASSERTION(doc != nsnull, "root element has no document");
         if (! doc)
             return NS_ERROR_FAILURE;
@@ -1469,7 +1469,7 @@ nsXULTemplateBuilder::GetTemplateRoot(nsIContent** aResult)
 
         for (PRInt32 i = 0; i < count; ++i) {
             nsCOMPtr<nsIContent> child;
-            mRoot->ChildAt(i, *getter_AddRefs(child));
+            mRoot->ChildAt(i, getter_AddRefs(child));
 
             if (IsTemplateElement(child)) {
                 NS_ADDREF(*aResult = child.get());
@@ -1482,7 +1482,7 @@ nsXULTemplateBuilder::GetTemplateRoot(nsIContent** aResult)
     // If we couldn't find a real child, look through the anonymous
     // kids, too.
     nsCOMPtr<nsIDocument> doc;
-    mRoot->GetDocument(*getter_AddRefs(doc));
+    mRoot->GetDocument(getter_AddRefs(doc));
     NS_ASSERTION(doc != nsnull, "root element has no document");
     if (! doc)
         return NS_ERROR_FAILURE;
@@ -1558,18 +1558,18 @@ nsXULTemplateBuilder::CompileRules()
 
     for (PRInt32 i = 0; i < count; i++) {
         nsCOMPtr<nsIContent> rule;
-        tmpl->ChildAt(i, *getter_AddRefs(rule));
+        tmpl->ChildAt(i, getter_AddRefs(rule));
         if (! rule)
             break;
 
         PRInt32 nameSpaceID = kNameSpaceID_Unknown;
-        rule->GetNameSpaceID(nameSpaceID);
+        rule->GetNameSpaceID(&nameSpaceID);
 
         if (nameSpaceID != kNameSpaceID_XUL)
             continue;
 
         nsCOMPtr<nsIAtom> tag;
-        rule->GetTag(*getter_AddRefs(tag));
+        rule->GetTag(getter_AddRefs(tag));
 
         if (tag.get() == nsXULAtoms::rule) {
             ++nrules;
@@ -1681,7 +1681,7 @@ nsXULTemplateBuilder::CompileExtendedRule(nsIContent* aRuleElement,
 
             for (PRInt32 i = 0; i < count; ++i) {
                 nsCOMPtr<nsIContent> child;
-                next->ChildAt(i, *getter_AddRefs(child));
+                next->ChildAt(i, getter_AddRefs(child));
 
                 unvisited.AppendElement(child.get());
             }
@@ -1758,10 +1758,10 @@ nsXULTemplateBuilder::CompileConditions(nsTemplateRule* aRule,
 
     for (PRInt32 i = 0; i < count; ++i) {
         nsCOMPtr<nsIContent> condition;
-        aConditions->ChildAt(i, *getter_AddRefs(condition));
+        aConditions->ChildAt(i, getter_AddRefs(condition));
 
         nsCOMPtr<nsIAtom> tag;
-        condition->GetTag(*getter_AddRefs(tag));
+        condition->GetTag(getter_AddRefs(tag));
 
         TestNode* testnode = nsnull;
         rv = CompileCondition(tag, aRule, condition, aParentNode, &testnode);
@@ -1967,10 +1967,10 @@ nsXULTemplateBuilder::CompileBindings(nsTemplateRule* aRule, nsIContent* aBindin
 
     for (PRInt32 i = 0; i < count; ++i) {
         nsCOMPtr<nsIContent> binding;
-        aBindings->ChildAt(i, *getter_AddRefs(binding));
+        aBindings->ChildAt(i, getter_AddRefs(binding));
 
         nsCOMPtr<nsIAtom> tag;
-        binding->GetTag(*getter_AddRefs(tag));
+        binding->GetTag(getter_AddRefs(tag));
 
         if (tag.get() == nsXULAtoms::binding) {
             rv = CompileBinding(aRule, binding);
@@ -2095,9 +2095,9 @@ nsXULTemplateBuilder::CompileSimpleRule(nsIContent* aRuleElement,
     for (PRInt32 i = 0; i < count; ++i) {
         PRInt32 attrNameSpaceID;
         nsCOMPtr<nsIAtom> attr, prefix;
-        rv = aRuleElement->GetAttrNameAt(i, attrNameSpaceID,
-                                         *getter_AddRefs(attr),
-                                         *getter_AddRefs(prefix));
+        rv = aRuleElement->GetAttrNameAt(i, &attrNameSpaceID,
+                                         getter_AddRefs(attr),
+                                         getter_AddRefs(prefix));
         if (NS_FAILED(rv)) return rv;
 
         // Note: some attributes must be skipped on XUL template rule subtree
@@ -2281,8 +2281,8 @@ nsXULTemplateBuilder::AddSimpleRuleBindings(nsTemplateRule* aRule, nsIContent* a
             PRInt32 nameSpaceID;
             nsCOMPtr<nsIAtom> attr, prefix;
 
-            element->GetAttrNameAt(i, nameSpaceID, *getter_AddRefs(attr),
-                                   *getter_AddRefs(prefix));
+            element->GetAttrNameAt(i, &nameSpaceID, getter_AddRefs(attr),
+                                   getter_AddRefs(prefix));
 
             nsAutoString value;
             element->GetAttr(nameSpaceID, attr, value);
@@ -2297,7 +2297,7 @@ nsXULTemplateBuilder::AddSimpleRuleBindings(nsTemplateRule* aRule, nsIContent* a
 
         while (--count >= 0) {
             nsCOMPtr<nsIContent> child;
-            element->ChildAt(count, *getter_AddRefs(child));
+            element->ChildAt(count, getter_AddRefs(child));
             elements.AppendElement(child);
         }
     }

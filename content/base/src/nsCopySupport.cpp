@@ -358,7 +358,7 @@ nsresult nsCopySupport::IsPlainTextContext(nsISelection *aSel, nsIDocument *aDoc
   {
     // checking for selection inside a plaintext form widget
     nsCOMPtr<nsIAtom> atom;
-    selContent->GetTag(*getter_AddRefs(atom));
+    selContent->GetTag(getter_AddRefs(atom));
 
     if (atom.get() == nsHTMLAtoms::input ||
         atom.get() == nsHTMLAtoms::textarea)
@@ -381,7 +381,7 @@ nsresult nsCopySupport::IsPlainTextContext(nsISelection *aSel, nsIDocument *aDoc
         break;
       }
     }
-    selContent->GetParent(*getter_AddRefs(tmp));
+    selContent->GetParent(getter_AddRefs(tmp));
     selContent = tmp;
   }
   

@@ -183,7 +183,7 @@ void txMozillaTextOutput::createResultDocument(nsIDOMDocument* aSourceDocument,
     }
     doc->Reset(channel, loadGroup);
     nsCOMPtr<nsIURI> baseURL;
-    sourceDoc->GetBaseURL(*getter_AddRefs(baseURL));
+    sourceDoc->GetBaseURL(getter_AddRefs(baseURL));
     doc->SetBaseURL(baseURL);
 
     // Notify the contentsink that the document is created

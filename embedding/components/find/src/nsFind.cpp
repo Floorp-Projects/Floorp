@@ -432,7 +432,7 @@ nsFind::NextNode(nsIDOMRange* aSearchRange,
 PRBool nsFind::IsBlockNode(nsIContent* aContent)
 {
   nsCOMPtr<nsIAtom> atom;
-  aContent->GetTag(*getter_AddRefs(atom));
+  aContent->GetTag(getter_AddRefs(atom));
 
   if (atom.get() == sImgAtom || atom.get() == sHRAtom
       || atom.get() == sThAtom || atom.get() == sTdAtom)
@@ -459,7 +459,7 @@ PRBool nsFind::IsTextNode(nsIDOMNode* aNode)
   nsCOMPtr<nsIContent> content (do_QueryInterface(aNode));
   if (!content) return PR_FALSE;
   nsCOMPtr<nsIAtom> atom;
-  content->GetTag(*getter_AddRefs(atom));
+  content->GetTag(getter_AddRefs(atom));
   if (atom.get() == sTextAtom)
     return PR_TRUE;
   return PR_FALSE;
@@ -472,7 +472,7 @@ PRBool nsFind::IsVisibleNode(nsIDOMNode *aDOMNode)
     return PR_FALSE;
 
   nsCOMPtr<nsIDocument> doc;
-  content->GetDocument(*getter_AddRefs(doc));
+  content->GetDocument(getter_AddRefs(doc));
   if (!doc)
     return PR_FALSE;
 
@@ -496,7 +496,7 @@ PRBool nsFind::SkipNode(nsIContent* aContent)
   nsCOMPtr<nsIAtom> atom;
 
 #ifdef HAVE_BIDI_ITERATOR
-  aContent->GetTag(*getter_AddRefs(atom));
+  aContent->GetTag(getter_AddRefs(atom));
   if (!atom)
     return PR_TRUE;
   nsIAtom *atomPtr = atom.get();
@@ -518,7 +518,7 @@ PRBool nsFind::SkipNode(nsIContent* aContent)
   {
     nsCOMPtr<nsIContent> content (do_QueryInterface(node));
     if (!content) return PR_FALSE;
-    content->GetTag(*getter_AddRefs(atom));
+    content->GetTag(getter_AddRefs(atom));
     if (!atom)
       return PR_FALSE;
     nsAutoString atomName;

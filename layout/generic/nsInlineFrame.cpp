@@ -913,7 +913,7 @@ NS_IMETHODIMP nsInlineFrame::GetAccessible(nsIAccessible** aAccessible)
   // replaces the image or image control frame with an inline frame
   *aAccessible = nsnull;
   nsCOMPtr<nsIAtom> tagAtom;
-  mContent->GetTag(*getter_AddRefs(tagAtom));
+  mContent->GetTag(getter_AddRefs(tagAtom));
   if (tagAtom == nsHTMLAtoms::img || tagAtom == nsHTMLAtoms::input || 
      tagAtom == nsHTMLAtoms::label || tagAtom == nsHTMLAtoms::hr) {
     // Only get accessibility service if we're going to use it

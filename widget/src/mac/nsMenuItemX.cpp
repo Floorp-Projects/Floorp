@@ -307,7 +307,7 @@ nsMenuItemX :: UncheckRadioSiblings(nsIContent* inCheckedContent)
     return;
   
   nsCOMPtr<nsIContent> parent;
-  inCheckedContent->GetParent(*getter_AddRefs(parent));
+  inCheckedContent->GetParent(getter_AddRefs(parent));
   if ( !parent )
     return;
 

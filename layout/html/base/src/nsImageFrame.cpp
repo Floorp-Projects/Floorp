@@ -494,7 +494,7 @@ nsImageFrame::HandleLoadError(nsresult aStatus, nsIPresShell* aPresShell)
       // We are in quirks mode, so we can just check the tag name; no need to
       // check the namespace.
       nsCOMPtr<nsINodeInfo> nodeInfo;
-      mContent->GetNodeInfo(*getter_AddRefs(nodeInfo));
+      mContent->GetNodeInfo(getter_AddRefs(nodeInfo));
       
       if (!mContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::alt) &&
           nodeInfo &&
@@ -1218,7 +1218,7 @@ nsImageFrame::DisplayAltFeedback(nsIPresContext*      aPresContext,
 
     GetContent(getter_AddRefs(content));
     if (content) {
-      content->GetTag(*getter_AddRefs(tag));
+      content->GetTag(getter_AddRefs(tag));
       if (tag) {
         nsCSSFrameConstructor::GetAlternateTextFor(content, tag, altText);
         DisplayAltText(aPresContext, aRenderingContext, altText, inner);
@@ -1434,7 +1434,7 @@ nsImageFrame::Paint(nsIPresContext*      aPresContext,
         if (rangeCount == 1) //if not one then let code drop to nsFrame::Paint
         {
           nsCOMPtr<nsIContent> parentContent;
-          mContent->GetParent(*getter_AddRefs(parentContent));
+          mContent->GetParent(getter_AddRefs(parentContent));
           if (parentContent)
           {
             PRInt32 thisOffset;
@@ -1479,7 +1479,7 @@ nsImageFrame::GetImageMap(nsIPresContext* aPresContext)
 {
   if (!mImageMap) {
     nsCOMPtr<nsIDocument> doc;
-    mContent->GetDocument(*getter_AddRefs(doc));
+    mContent->GetDocument(getter_AddRefs(doc));
     if (!doc) {
       return nsnull;
     }
@@ -1605,7 +1605,7 @@ nsImageFrame::GetAnchorHREFAndTarget(nsString& aHref, nsString& aTarget)
 
   // Walk up the content tree, looking for an nsIDOMAnchorElement
   nsCOMPtr<nsIContent> content;
-  mContent->GetParent(*getter_AddRefs(content));
+  mContent->GetParent(getter_AddRefs(content));
   while (content) {
     nsCOMPtr<nsIDOMHTMLAnchorElement> anchor(do_QueryInterface(content));
     if (anchor) {
@@ -1617,7 +1617,7 @@ nsImageFrame::GetAnchorHREFAndTarget(nsString& aHref, nsString& aTarget)
       break;
     }
     nsCOMPtr<nsIContent> parent;
-    content->GetParent(*getter_AddRefs(parent));
+    content->GetParent(getter_AddRefs(parent));
     content = parent;
   }
   return status;
@@ -1704,10 +1704,10 @@ nsImageFrame::HandleEvent(nsIPresContext* aPresContext,
             nsAutoString src;
             if (GetAnchorHREFAndTarget(src, target)) {
               nsCOMPtr<nsINodeInfo> nodeInfo;
-              mContent->GetNodeInfo(*getter_AddRefs(nodeInfo));
+              mContent->GetNodeInfo(getter_AddRefs(nodeInfo));
               NS_ASSERTION(nodeInfo, "Image content without a nodeinfo?");
               nsCOMPtr<nsIDocument> doc;
-              nodeInfo->GetDocument(*getter_AddRefs(doc));
+              nodeInfo->GetDocument(getter_AddRefs(doc));
               nsAutoString charset;
               if (doc) {
                 doc->GetDocumentCharacterSet(charset);
@@ -1901,7 +1901,7 @@ nsImageFrame::GetDocumentCharacterSet(nsAString& aCharset) const
   nsCOMPtr<nsIHTMLContent> htmlContent(do_QueryInterface(mContent, &rv));
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIDocument> doc;
-    rv = htmlContent->GetDocument(*getter_AddRefs(doc));
+    rv = htmlContent->GetDocument(getter_AddRefs(doc));
     if (NS_SUCCEEDED(rv))
       (void) doc->GetDocumentCharacterSet(aCharset);
   }
@@ -1929,14 +1929,14 @@ nsImageFrame::GetBaseURI(nsIURI **aURI)
   nsCOMPtr<nsIURI> baseURI;
   nsCOMPtr<nsIHTMLContent> htmlContent(do_QueryInterface(mContent, &rv));
   if (NS_SUCCEEDED(rv)) {
-    htmlContent->GetBaseURL(*getter_AddRefs(baseURI));
+    htmlContent->GetBaseURL(getter_AddRefs(baseURI));
   }
   else {
     nsCOMPtr<nsIDocument> doc;
     if (mContent) {
-      rv = mContent->GetDocument(*getter_AddRefs(doc));
+      rv = mContent->GetDocument(getter_AddRefs(doc));
       if (doc) {
-        doc->GetBaseURL(*getter_AddRefs(baseURI));
+        doc->GetBaseURL(getter_AddRefs(baseURI));
       }
     }
   }

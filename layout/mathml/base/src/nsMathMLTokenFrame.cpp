@@ -75,7 +75,7 @@ CompressWhitespace(nsIContent* aContent)
   aContent->ChildCount(numKids);
   for (PRInt32 kid = 0; kid < numKids; kid++) {
     nsCOMPtr<nsIContent> kidContent;
-    aContent->ChildAt(kid, *getter_AddRefs(kidContent));
+    aContent->ChildAt(kid, getter_AddRefs(kidContent));
     if (kidContent) {       
       nsCOMPtr<nsIDOMText> kidText(do_QueryInterface(kidContent));
       if (kidText) {
@@ -290,7 +290,7 @@ void
 nsMathMLTokenFrame::SetTextStyle(nsIPresContext* aPresContext)
 {
   nsCOMPtr<nsIAtom> tag;
-  mContent->GetTag(*getter_AddRefs(tag));
+  mContent->GetTag(getter_AddRefs(tag));
   if (tag != nsMathMLAtoms::mi_)
     return;
 
@@ -305,7 +305,7 @@ nsMathMLTokenFrame::SetTextStyle(nsIPresContext* aPresContext)
   mContent->ChildCount(numKids);
   for (PRInt32 kid = 0; kid < numKids; kid++) {
     nsCOMPtr<nsIContent> kidContent;
-    mContent->ChildAt(kid, *getter_AddRefs(kidContent));
+    mContent->ChildAt(kid, getter_AddRefs(kidContent));
     if (kidContent) {
       nsCOMPtr<nsIDOMText> kidText(do_QueryInterface(kidContent));
       if (kidText) {
@@ -418,7 +418,7 @@ void
 nsMathMLTokenFrame::SetQuotes(nsIPresContext* aPresContext)
 {
   nsCOMPtr<nsIAtom> tag;
-  mContent->GetTag(*getter_AddRefs(tag));
+  mContent->GetTag(getter_AddRefs(tag));
   if (tag != nsMathMLAtoms::ms_)
     return;
 

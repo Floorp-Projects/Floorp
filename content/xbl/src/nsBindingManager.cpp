@@ -628,8 +628,8 @@ nsBindingManager::ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID, nsIAto
     }
   }
 
-  aContent->GetNameSpaceID(*aNameSpaceID);
-  return aContent->GetTag(*aResult);
+  aContent->GetNameSpaceID(aNameSpaceID);
+  return aContent->GetTag(aResult);
 }
 
 NS_IMETHODIMP
@@ -1176,7 +1176,7 @@ nsBindingManager::GetBindingImplementation(nsIContent* aContent, REFNSIID aIID,
       // Create an XPC wrapper for the script object and hand it back.
 
       nsCOMPtr<nsIDocument> doc;
-      aContent->GetDocument(*getter_AddRefs(doc));
+      aContent->GetDocument(getter_AddRefs(doc));
       if (!doc)
         return NS_NOINTERFACE;
 
@@ -1242,7 +1242,7 @@ nsBindingManager::InheritsStyle(nsIContent* aContent, PRBool* aResult)
   if (parent) {
     // See if the parent is our parent.
     nsCOMPtr<nsIContent> ourParent;
-    aContent->GetParent(*getter_AddRefs(ourParent));
+    aContent->GetParent(getter_AddRefs(ourParent));
     if (ourParent == parent) {
       // Yes. Check the binding and see if it wants to allow us
       // to inherit styles.
@@ -1340,7 +1340,7 @@ nsBindingManager::WalkRules(nsIStyleSet* aStyleSet,
     // We cut ourselves off, but we still need to walk the document's attribute sheet
     // so that inline style continues to work on anonymous content.
     nsCOMPtr<nsIDocument> document;
-    content->GetDocument(*getter_AddRefs(document));
+    content->GetDocument(getter_AddRefs(document));
     nsCOMPtr<nsIHTMLContentContainer> container(do_QueryInterface(document));
     if (container) {
       nsCOMPtr<nsIHTMLCSSStyleSheet> inlineSheet;
@@ -1434,7 +1434,7 @@ nsBindingManager::ContentAppended(nsIDocument* aDocument,
   PRInt32 childCount;
   nsCOMPtr<nsIContent> child;
   aContainer->ChildCount(childCount);
-  aContainer->ChildAt(aNewIndexInContainer, *getter_AddRefs(child));
+  aContainer->ChildAt(aNewIndexInContainer, getter_AddRefs(child));
   
   nsCOMPtr<nsIContent> ins;
   GetNestedInsertionPoint(aContainer, child, getter_AddRefs(ins));
@@ -1458,7 +1458,7 @@ nsBindingManager::ContentAppended(nsIDocument* aDocument,
           // We're real. Jam all the kids in.
           // XXX Check the filters to find the correct points.
           for (PRInt32 j = aNewIndexInContainer; j < childCount; j++) {
-            aContainer->ChildAt(j, *getter_AddRefs(child));
+            aContainer->ChildAt(j, getter_AddRefs(child));
             point->AddChild(child);
             SetInsertionParent(child, ins);
           }

@@ -146,7 +146,7 @@ nsFrameLoader::LoadFrame()
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDocument> doc;
-  mOwnerContent->GetDocument(*getter_AddRefs(doc));
+  mOwnerContent->GetDocument(getter_AddRefs(doc));
   if (!doc) {
     return NS_OK;
   }
@@ -162,7 +162,7 @@ nsFrameLoader::LoadFrame()
 
   // Make an absolute URI
   nsCOMPtr<nsIURI> base_uri;
-  doc->GetBaseURL(*getter_AddRefs(base_uri));
+  doc->GetBaseURL(getter_AddRefs(base_uri));
 
   nsAutoString doc_charset;
   doc->GetDocumentCharacterSet(doc_charset);
@@ -254,7 +254,7 @@ nsFrameLoader::Destroy()
   if (mOwnerContent) {
     nsCOMPtr<nsIDocument> doc;
 
-    mOwnerContent->GetDocument(*getter_AddRefs(doc));
+    mOwnerContent->GetDocument(getter_AddRefs(doc));
 
     if (doc) {
       doc->SetSubDocumentFor(mOwnerContent, nsnull);
@@ -302,7 +302,7 @@ nsFrameLoader::GetPresContext(nsIPresContext **aPresContext)
   *aPresContext = nsnull;
 
   nsCOMPtr<nsIDocument> doc;
-  mOwnerContent->GetDocument(*getter_AddRefs(doc));
+  mOwnerContent->GetDocument(getter_AddRefs(doc));
 
   while (doc) {
     nsCOMPtr<nsIPresShell> presShell;
@@ -511,7 +511,7 @@ nsFrameLoader::GetURL(nsAString& aURI)
   aURI.Truncate();
 
   nsCOMPtr<nsIAtom> type;
-  mOwnerContent->GetTag(*getter_AddRefs(type));
+  mOwnerContent->GetTag(getter_AddRefs(type));
 
   if (type == nsHTMLAtoms::object) {
     mOwnerContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, aURI);

@@ -163,7 +163,7 @@ public:
 
   PRInt32 Count() const;
   NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
-                     nsIAtom*& aPrefix,
+                     nsIAtom** aPrefix,
                      nsAString& aResult);
   NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo,
                      const nsAString& aValue,
@@ -173,11 +173,11 @@ public:
   NS_IMETHOD_(PRBool) HasAttr(PRInt32 aNameSpaceID,
                               nsIAtom* aName) const;
   NS_IMETHOD NormalizeAttrString(const nsAString& aStr,
-                                 nsINodeInfo*& aNodeInfo);
+                                 nsINodeInfo** aNodeInfo);
   NS_IMETHOD GetAttrNameAt(PRInt32 aIndex,
-                           PRInt32& aNameSpaceID, 
-                           nsIAtom*& aName,
-                           nsIAtom*& aPrefix);
+                           PRInt32* aNameSpaceID,
+                           nsIAtom** aName,
+                           nsIAtom** aPrefix);
 
   NS_IMETHOD AddMappedSVGValue(nsIAtom* name, nsISupports* value);
 

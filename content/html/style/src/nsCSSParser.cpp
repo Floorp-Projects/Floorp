@@ -1841,13 +1841,12 @@ void CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&  aDataMask,
     else {  // was universal element selector
       aSelector.SetNameSpace(kNameSpaceID_Unknown); // wildcard
       if (mNameSpace) { // look for default namespace
-        nsINameSpace* defaultNameSpace = nsnull;
-        mNameSpace->FindNameSpace(nsnull, defaultNameSpace);
+        nsCOMPtr<nsINameSpace> defaultNameSpace;
+        mNameSpace->FindNameSpace(nsnull, getter_AddRefs(defaultNameSpace));
         if (defaultNameSpace) {
           PRInt32 defaultID;
-          defaultNameSpace->GetNameSpaceID(defaultID);
+          defaultNameSpace->GetNameSpaceID(&defaultID);
           aSelector.SetNameSpace(defaultID);
-          NS_RELEASE(defaultNameSpace);
         }
       }
       aDataMask |= SEL_MASK_ELEM;
@@ -1867,7 +1866,7 @@ void CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&  aDataMask,
       if (mNameSpace) {
         ToLowerCase(buffer); // always case insensitive, since stays within CSS
         nsCOMPtr<nsIAtom> prefix = do_GetAtom(buffer);
-        mNameSpace->FindNameSpaceID(prefix, nameSpaceID);
+        mNameSpace->FindNameSpaceID(prefix, &nameSpaceID);
       } // else, no declared namespaces
       if (kNameSpaceID_Unknown == nameSpaceID) {  // unknown prefix, dump it
         REPORT_UNEXPECTED(NS_LITERAL_STRING("Unknown namespace prefix '") +
@@ -1907,13 +1906,12 @@ void CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&  aDataMask,
     else {  // was element name
       aSelector.SetNameSpace(kNameSpaceID_Unknown); // wildcard
       if (mNameSpace) { // look for default namespace
-        nsINameSpace* defaultNameSpace = nsnull;
-        mNameSpace->FindNameSpace(nsnull, defaultNameSpace);
+        nsCOMPtr<nsINameSpace> defaultNameSpace;
+        mNameSpace->FindNameSpace(nsnull, getter_AddRefs(defaultNameSpace));
         if (defaultNameSpace) {
           PRInt32 defaultID;
-          defaultNameSpace->GetNameSpaceID(defaultID);
+          defaultNameSpace->GetNameSpaceID(&defaultID);
           aSelector.SetNameSpace(defaultID);
-          NS_RELEASE(defaultNameSpace);
         }
       }
       if (mCaseSensitive) {
@@ -1971,13 +1969,12 @@ void CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&  aDataMask,
     // set namespace to unknown since it is not specified
     aSelector.SetNameSpace(kNameSpaceID_Unknown); // wildcard
     if (mNameSpace) { // look for default namespace
-      nsINameSpace* defaultNameSpace = nsnull;
-      mNameSpace->FindNameSpace(nsnull, defaultNameSpace);
+      nsCOMPtr<nsINameSpace> defaultNameSpace;
+      mNameSpace->FindNameSpace(nsnull, getter_AddRefs(defaultNameSpace));
       if (defaultNameSpace) {
         PRInt32 defaultID;
-        defaultNameSpace->GetNameSpaceID(defaultID);
+        defaultNameSpace->GetNameSpaceID(&defaultID);
         aSelector.SetNameSpace(defaultID);
-        NS_RELEASE(defaultNameSpace);
       }
     }
   }
@@ -2054,7 +2051,7 @@ void CSSParserImpl::ParseAttributeSelector(PRInt32&  aDataMask,
       if (mNameSpace) {
         ToLowerCase(attr); // always case insensitive, since stays within CSS
         nsCOMPtr<nsIAtom> prefix = do_GetAtom(attr);
-        mNameSpace->FindNameSpaceID(prefix, nameSpaceID);
+        mNameSpace->FindNameSpaceID(prefix, &nameSpaceID);
       } // else, no declared namespaces
       if (kNameSpaceID_Unknown == nameSpaceID) {  // unknown prefix, dump it
         REPORT_UNEXPECTED(NS_LITERAL_STRING("Unknown namespace prefix '") +
@@ -3536,7 +3533,7 @@ PRBool CSSParserImpl::ParseAttr(PRInt32& aErrorCode, nsCSSValue& aValue)
           if (mNameSpace) {
             ToLowerCase(holdIdent); // always case insensitive, since stays within CSS
             nsCOMPtr<nsIAtom> prefix = do_GetAtom(holdIdent);
-            mNameSpace->FindNameSpaceID(prefix, nameSpaceID);
+            mNameSpace->FindNameSpaceID(prefix, &nameSpaceID);
           } // else, no declared namespaces
           if (kNameSpaceID_Unknown == nameSpaceID) {  // unknown prefix, dump it
             return PR_FALSE;

@@ -88,15 +88,15 @@ class nsINameSpaceManager : public nsISupports
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_INAMESPACEMANAGER_IID)
 
-  NS_IMETHOD CreateRootNameSpace(nsINameSpace*& aRootNameSpace) = 0;
+  NS_IMETHOD CreateRootNameSpace(nsINameSpace** aRootNameSpace) = 0;
 
   NS_IMETHOD RegisterNameSpace(const nsAString& aURI, 
-			                         PRInt32& aNameSpaceID) = 0;
+                               PRInt32& aNameSpaceID) = 0;
 
   NS_IMETHOD GetNameSpaceURI(PRInt32 aNameSpaceID,
                              nsAString& aURI) = 0;
   NS_IMETHOD GetNameSpaceID(const nsAString& aURI,
-                            PRInt32& aNameSpaceID) = 0;
+                            PRInt32* aNameSpaceID) = 0;
 
   NS_IMETHOD GetElementFactory(PRInt32 aNameSpaceID,
                                nsIElementFactory **aElementFactory) = 0;

@@ -176,9 +176,9 @@ public:
   // Implementation for nsIContent
   NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
                          PRBool aCompileEventHandlers);
-  NS_IMETHOD GetNameSpaceID(PRInt32& aID) const;
+  NS_IMETHOD GetNameSpaceID(PRInt32* aID) const;
   NS_IMETHOD NormalizeAttrString(const nsAString& aStr,
-                                 nsINodeInfo*& aNodeInfo);
+                                 nsINodeInfo** aNodeInfo);
   NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                      const nsAString& aValue,
                           PRBool aNotify);
@@ -188,14 +188,14 @@ public:
   NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                      nsAString& aResult) const;
   NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                     nsIAtom*& aPrefix, nsAString& aResult) const;
+                     nsIAtom** aPrefix, nsAString& aResult) const;
   NS_IMETHOD_(PRBool) HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const;
   NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                        PRBool aNotify);
   NS_IMETHOD GetAttrNameAt(PRInt32 aIndex,
-                           PRInt32& aNameSpaceID, 
-                           nsIAtom*& aName,
-                           nsIAtom*& aPrefix) const;
+                           PRInt32* aNameSpaceID,
+                           nsIAtom** aName,
+                           nsIAtom** aPrefix) const;
   NS_IMETHOD GetAttrCount(PRInt32& aResult) const;
 #ifdef DEBUG
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
@@ -218,12 +218,12 @@ public:
   NS_IMETHOD SetHTMLAttribute(nsIAtom* aAttribute, const nsHTMLValue& aValue,
                               PRBool aNotify);
   NS_IMETHOD GetHTMLAttribute(nsIAtom* aAttribute, nsHTMLValue& aValue) const;
-  NS_IMETHOD GetID(nsIAtom*& aResult) const;
+  NS_IMETHOD GetID(nsIAtom** aResult) const;
   NS_IMETHOD GetClasses(nsVoidArray& aArray) const;
   NS_IMETHOD_(PRBool) HasClass(nsIAtom* aClass, PRBool aCaseSensitive) const;
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
   NS_IMETHOD GetInlineStyleRule(nsIStyleRule** aStyleRule);
-  NS_IMETHOD GetBaseURL(nsIURI*& aBaseURL) const;
+  NS_IMETHOD GetBaseURL(nsIURI** aBaseURL) const;
   NS_IMETHOD GetBaseTarget(nsAString& aBaseTarget) const;
 
   //----------------------------------------
@@ -814,7 +814,7 @@ public:
     aResult = 0;
     return NS_OK;
   }
-  NS_IMETHOD ChildAt(PRInt32 aIndex, nsIContent*& aResult) const {
+  NS_IMETHOD ChildAt(PRInt32 aIndex, nsIContent** aResult) const {
     aResult = nsnull;
     return NS_OK;
   }
@@ -883,7 +883,7 @@ public:
   NS_IMETHOD Compact();
   NS_IMETHOD CanContainChildren(PRBool& aResult) const;
   NS_IMETHOD ChildCount(PRInt32& aResult) const;
-  NS_IMETHOD ChildAt(PRInt32 aIndex, nsIContent*& aResult) const;
+  NS_IMETHOD ChildAt(PRInt32 aIndex, nsIContent** aResult) const;
   NS_IMETHOD IndexOf(nsIContent* aPossibleChild, PRInt32& aResult) const;
   NS_IMETHOD InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify,
                            PRBool aDeepSetDocument);

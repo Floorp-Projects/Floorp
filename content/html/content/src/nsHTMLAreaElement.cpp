@@ -365,7 +365,7 @@ nsHTMLAreaElement::GetProtocol(nsAString& aProtocol)
     return rv;
 
   nsCOMPtr<nsIDocument> doc;
-  mNodeInfo->GetDocument(*getter_AddRefs(doc));
+  mNodeInfo->GetDocument(getter_AddRefs(doc));
 
   return GetProtocolFromHrefString(href, aProtocol, doc);
 }
@@ -583,7 +583,7 @@ nsHTMLAreaElement::GetHrefCString(char* &aBuf)
 
     // Get base URL.
     nsCOMPtr<nsIURI> baseURL;
-    GetBaseURL(*getter_AddRefs(baseURL));
+    GetBaseURL(getter_AddRefs(baseURL));
 
     if (baseURL) {
       // Get absolute URL.

@@ -239,7 +239,7 @@ XULPopupListenerImpl::PreLaunchPopup(nsIDOMEvent* aMouseEvent)
   if (popupType == eXULPopupType_popup) {
     nsCOMPtr<nsIContent> targetContent = do_QueryInterface(target);
     nsCOMPtr<nsIAtom> tag;
-    targetContent->GetTag(*getter_AddRefs(tag));
+    targetContent->GetTag(getter_AddRefs(tag));
     if (tag && (tag.get() == nsXULAtoms::menu || tag.get() == nsXULAtoms::menuitem))
       return NS_OK;
   }
@@ -248,7 +248,7 @@ XULPopupListenerImpl::PreLaunchPopup(nsIDOMEvent* aMouseEvent)
   nsCOMPtr<nsIDocument> document;
   nsCOMPtr<nsIContent> content = do_QueryInterface(mElement);
   nsresult rv;
-  if (NS_FAILED(rv = content->GetDocument(*getter_AddRefs(document)))) {
+  if (NS_FAILED(rv = content->GetDocument(getter_AddRefs(document)))) {
     NS_ERROR("Unable to retrieve the document.");
     return rv;
   }
@@ -412,9 +412,9 @@ GetImmediateChild(nsIContent* aContent, nsIAtom *aTag, nsIContent** aResult)
   aContent->ChildCount(childCount);
   for (PRInt32 i = 0; i < childCount; i++) {
     nsCOMPtr<nsIContent> child;
-    aContent->ChildAt(i, *getter_AddRefs(child));
+    aContent->ChildAt(i, getter_AddRefs(child));
     nsCOMPtr<nsIAtom> tag;
-    child->GetTag(*getter_AddRefs(tag));
+    child->GetTag(getter_AddRefs(tag));
     if (aTag == tag.get()) {
       *aResult = child;
       NS_ADDREF(*aResult);
@@ -514,7 +514,7 @@ XULPopupListenerImpl::LaunchPopup(PRInt32 aClientX, PRInt32 aClientY)
   // Try to find the popup content and the document.
   nsCOMPtr<nsIDocument> document;
   nsCOMPtr<nsIContent> content = do_QueryInterface(mElement);
-  if (NS_FAILED(rv = content->GetDocument(*getter_AddRefs(document)))) {
+  if (NS_FAILED(rv = content->GetDocument(getter_AddRefs(document)))) {
     NS_ERROR("Unable to retrieve the document.");
     return rv;
   }
@@ -549,7 +549,7 @@ XULPopupListenerImpl::LaunchPopup(PRInt32 aClientX, PRInt32 aClientY)
           list->Item(ctr, getter_AddRefs(node));
           nsCOMPtr<nsIContent> childContent(do_QueryInterface(node));
           nsCOMPtr<nsIAtom> childTag;
-          childContent->GetTag(*getter_AddRefs(childTag));
+          childContent->GetTag(getter_AddRefs(childTag));
           if (childTag.get() == tag) {
             popupContent = do_QueryInterface(childContent);
             break;

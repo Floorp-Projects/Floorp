@@ -756,7 +756,7 @@ nsHTMLSelectElement::InsertOptionsIntoListRecurse(nsIContent* aOptions,
   }
 
   nsCOMPtr<nsIAtom> tag;
-  aOptions->GetTag(*getter_AddRefs(tag));
+  aOptions->GetTag(getter_AddRefs(tag));
   if (tag == nsHTMLAtoms::optgroup) {
     mOptGroupCount++;
     DispatchDOMEvent(NS_LITERAL_STRING("selectHasGroups"));
@@ -772,8 +772,8 @@ nsHTMLSelectElement::InsertOptionsIntoListRecurse(nsIContent* aOptions,
   PRInt32 numChildren;
   aOptions->ChildCount(numChildren);
   nsCOMPtr<nsIContent> child;
-  for (PRInt32 i=0;i<numChildren;i++) {
-    aOptions->ChildAt(i,*getter_AddRefs(child));
+  for (PRInt32 i = 0; i < numChildren; ++i) {
+    aOptions->ChildAt(i, getter_AddRefs(child));
     nsresult rv = InsertOptionsIntoListRecurse(child, aInsertIndex, aDepth+1);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -809,7 +809,7 @@ nsHTMLSelectElement::RemoveOptionsFromListRecurse(nsIContent* aOptions,
 
   if (mOptGroupCount) {
     nsCOMPtr<nsIAtom> tag;
-    aOptions->GetTag(*getter_AddRefs(tag));
+    aOptions->GetTag(getter_AddRefs(tag));
     if (tag == nsHTMLAtoms::optgroup) {
       mOptGroupCount--;
       DispatchDOMEvent(NS_LITERAL_STRING("selectHasNoGroups"));
@@ -826,9 +826,11 @@ nsHTMLSelectElement::RemoveOptionsFromListRecurse(nsIContent* aOptions,
   PRInt32 numChildren;
   aOptions->ChildCount(numChildren);
   nsCOMPtr<nsIContent> child;
-  for (PRInt32 i=0;i<numChildren;i++) {
-    aOptions->ChildAt(i,*getter_AddRefs(child));
-    nsresult rv = RemoveOptionsFromListRecurse(child, aRemoveIndex, aNumRemoved, aDepth+1);
+  for (PRInt32 i = 0; i < numChildren; ++i) {
+    aOptions->ChildAt(i, getter_AddRefs(child));
+    nsresult rv = RemoveOptionsFromListRecurse(child, aRemoveIndex,
+                                               aNumRemoved,
+                                               aDepth + 1);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -869,7 +871,7 @@ nsHTMLSelectElement::WillAddOptions(nsIContent* aOptions,
       // we want to get the option currently at the index and insert in front of
       // that.
       nsCOMPtr<nsIContent> currentKid;
-      aParent->ChildAt(aContentIndex, *getter_AddRefs(currentKid));
+      aParent->ChildAt(aContentIndex, getter_AddRefs(currentKid));
       NS_ASSERTION(currentKid, "Child not found!");
       if (currentKid) {
         ind = GetOptionIndexAt(currentKid);
@@ -895,7 +897,7 @@ nsHTMLSelectElement::WillRemoveOptions(nsIContent* aParent,
 
   // Get the index where the options will be removed
   nsCOMPtr<nsIContent> currentKid;
-  aParent->ChildAt(aContentIndex, *getter_AddRefs(currentKid));
+  aParent->ChildAt(aContentIndex, getter_AddRefs(currentKid));
   if (currentKid) {
     PRInt32 ind;
     if (!mNonOptionChildren) { 
@@ -924,7 +926,7 @@ nsHTMLSelectElement::GetContentDepth(nsIContent* aContent)
   while (content != this) {
     retval++;
     prevContent = content;
-    prevContent->GetParent(*getter_AddRefs(content));
+    prevContent->GetParent(getter_AddRefs(content));
     if (!content) {
       retval = -1;
       break;
@@ -963,7 +965,7 @@ nsHTMLSelectElement::GetOptionIndexAfter(nsIContent* aOptions)
   PRInt32 retval = -1;
 
   nsCOMPtr<nsIContent> parent;
-  aOptions->GetParent(*getter_AddRefs(parent));
+  aOptions->GetParent(getter_AddRefs(parent));
 
   if (parent) {
     PRInt32 index;
@@ -1007,8 +1009,8 @@ nsHTMLSelectElement::GetFirstChildOptionIndex(nsIContent* aOptions,
 {
   PRInt32 retval = -1;
   nsCOMPtr<nsIContent> child;
-  for (PRInt32 i=aStartIndex;i<aEndIndex;i++) {
-    aOptions->ChildAt(i,*getter_AddRefs(child));
+  for (PRInt32 i = aStartIndex; i < aEndIndex; ++i) {
+    aOptions->ChildAt(i, getter_AddRefs(child));
     retval = GetFirstOptionIndex(child);
     if (retval != -1) {
       break;
@@ -1137,7 +1139,7 @@ nsHTMLSelectElement::SetLength(PRUint32 aLength)
     nsCOMPtr<nsIHTMLContent> element;
     nsCOMPtr<nsINodeInfo> nodeInfo;
 
-    mNodeInfo->NameChanged(nsHTMLAtoms::option, *getter_AddRefs(nodeInfo));
+    mNodeInfo->NameChanged(nsHTMLAtoms::option, getter_AddRefs(nodeInfo));
 
     rv = NS_NewHTMLOptionElement(getter_AddRefs(element), nodeInfo);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1733,7 +1735,7 @@ nsHTMLSelectElement::RemoveFocus(nsIPresContext* aPresContext)
   if (esm) {
     nsCOMPtr<nsIDocument> doc;
 
-    GetDocument(*getter_AddRefs(doc));
+    GetDocument(getter_AddRefs(doc));
 
     if (!doc) {
       return NS_ERROR_NULL_POINTER;
@@ -2191,7 +2193,7 @@ void
 nsHTMLSelectElement::DispatchDOMEvent(const nsAString& aName)
 {
   nsCOMPtr<nsIDocument> document;
-  GetDocument(*getter_AddRefs(document));
+  GetDocument(getter_AddRefs(document));
   nsCOMPtr<nsIDOMDocumentEvent> domDoc = do_QueryInterface(document);
   if (domDoc) {
     nsCOMPtr<nsIDOMEvent> selectEvent;

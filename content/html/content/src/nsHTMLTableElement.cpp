@@ -465,7 +465,7 @@ nsHTMLTableElement::GetTHead(nsIDOMHTMLTableSectionElement** aValue)
       nsCOMPtr<nsIAtom> tag;
       nsCOMPtr<nsIContent> content = do_QueryInterface(section);
 
-      content->GetTag(*getter_AddRefs(tag));
+      content->GetTag(getter_AddRefs(tag));
       if (tag.get() == nsHTMLAtoms::thead) {
         *aValue = section;
         NS_ADDREF(*aValue);
@@ -517,7 +517,7 @@ nsHTMLTableElement::GetTFoot(nsIDOMHTMLTableSectionElement** aValue)
       nsCOMPtr<nsIAtom> tag;
       nsCOMPtr<nsIContent> content = do_QueryInterface(section);
 
-      content->GetTag(*getter_AddRefs(tag));
+      content->GetTag(getter_AddRefs(tag));
 
       if (tag.get() == nsHTMLAtoms::tfoot) {
         *aValue = section;
@@ -599,7 +599,7 @@ nsHTMLTableElement::CreateTHead(nsIDOMHTMLElement** aValue)
     nsCOMPtr<nsIHTMLContent> newHead;
     nsCOMPtr<nsINodeInfo> nodeInfo;
 
-    mNodeInfo->NameChanged(nsHTMLAtoms::thead, *getter_AddRefs(nodeInfo));
+    mNodeInfo->NameChanged(nsHTMLAtoms::thead, getter_AddRefs(nodeInfo));
 
     rv = NS_NewHTMLTableSectionElement(getter_AddRefs(newHead),nodeInfo);
 
@@ -656,7 +656,7 @@ nsHTMLTableElement::CreateTFoot(nsIDOMHTMLElement** aValue)
     nsCOMPtr<nsIHTMLContent> newFoot;
 
     nsCOMPtr<nsINodeInfo> nodeInfo;
-    mNodeInfo->NameChanged(nsHTMLAtoms::tfoot, *getter_AddRefs(nodeInfo));
+    mNodeInfo->NameChanged(nsHTMLAtoms::tfoot, getter_AddRefs(nodeInfo));
 
     rv = NS_NewHTMLTableSectionElement(getter_AddRefs(newFoot),nodeInfo);
 
@@ -703,7 +703,7 @@ nsHTMLTableElement::CreateCaption(nsIDOMHTMLElement** aValue)
     nsCOMPtr<nsIHTMLContent> newCaption;
 
     nsCOMPtr<nsINodeInfo> nodeInfo;
-    mNodeInfo->NameChanged(nsHTMLAtoms::caption, *getter_AddRefs(nodeInfo));
+    mNodeInfo->NameChanged(nsHTMLAtoms::caption, getter_AddRefs(nodeInfo));
 
     rv = NS_NewHTMLTableCaptionElement(getter_AddRefs(newCaption),nodeInfo);
 
@@ -781,7 +781,7 @@ nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
     nsCOMPtr<nsIHTMLContent> newRow;
 
     nsCOMPtr<nsINodeInfo> nodeInfo;
-    mNodeInfo->NameChanged(nsHTMLAtoms::tr, *getter_AddRefs(nodeInfo));
+    mNodeInfo->NameChanged(nsHTMLAtoms::tr, getter_AddRefs(nodeInfo));
 
     rv = NS_NewHTMLTableRowElement(getter_AddRefs(newRow), nodeInfo);
 
@@ -848,7 +848,7 @@ nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
       nsCOMPtr<nsIHTMLContent> newRowGroup;
 
       nsCOMPtr<nsINodeInfo> nodeInfo;
-      mNodeInfo->NameChanged(nsHTMLAtoms::tbody, *getter_AddRefs(nodeInfo));
+      mNodeInfo->NameChanged(nsHTMLAtoms::tbody, getter_AddRefs(nodeInfo));
 
       rv = NS_NewHTMLTableSectionElement(getter_AddRefs(newRowGroup),
                                          nodeInfo);
@@ -864,7 +864,7 @@ nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
       nsCOMPtr<nsIHTMLContent> newRow;
 
       nsCOMPtr<nsINodeInfo> nodeInfo;
-      mNodeInfo->NameChanged(nsHTMLAtoms::tr, *getter_AddRefs(nodeInfo));
+      mNodeInfo->NameChanged(nsHTMLAtoms::tr, getter_AddRefs(nodeInfo));
 
       rv = NS_NewHTMLTableRowElement(getter_AddRefs(newRow), nodeInfo);
       nsCOMPtr<nsIContent> rowGroupContent(do_QueryInterface(rowGroup));

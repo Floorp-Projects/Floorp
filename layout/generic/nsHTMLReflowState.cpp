@@ -1335,22 +1335,20 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext* aPresContext,
 static PRBool
 IsInitialContainingBlock(nsIFrame* aFrame)
 {
-  nsIContent* content;
+  nsCOMPtr<nsIContent> content;
   PRBool      result = PR_FALSE;
 
-  aFrame->GetContent(&content);
+  aFrame->GetContent(getter_AddRefs(content));
   if (content) {
-    nsIContent* parentContent;
+    nsCOMPtr<nsIContent> parentContent;
 
-    content->GetParent(parentContent);
+    content->GetParent(getter_AddRefs(parentContent));
     if (!parentContent) {
       // The containing block corresponds to the document element so it's
       // the initial containing block
       result = PR_TRUE;
     }
-    NS_IF_RELEASE(parentContent);
   }
-  NS_IF_RELEASE(content);
   return result;
 }
 
@@ -1464,14 +1462,14 @@ CalcQuirkContainingBlockHeight(const nsHTMLReflowState& aReflowState,
       if(firstBlockRS) {
         firstBlockRS->frame->GetContent(getter_AddRefs(frameContent));
         if (frameContent) {
-          frameContent->GetTag(*getter_AddRefs(contentTag));
+          frameContent->GetTag(getter_AddRefs(contentTag));
           NS_ASSERTION(contentTag.get() == nsHTMLAtoms::body, "block is not BODY");
         }
       }
       if(firstAreaRS) {
         firstAreaRS->frame->GetContent(getter_AddRefs(frameContent));
         if (frameContent) {
-          frameContent->GetTag(*getter_AddRefs(contentTag));
+          frameContent->GetTag(getter_AddRefs(contentTag));
           NS_ASSERTION(contentTag.get() == nsHTMLAtoms::html, "Area frame is not HTML element");
         }
       }
@@ -2804,7 +2802,7 @@ nsHTMLReflowState::IsBidiFormControl(nsIPresContext* aPresContext)
       if  (content->IsContentOfType(nsIContent::eHTML_FORM_CONTROL)) {
         return PR_TRUE;
       }
-      content->GetParent(*getter_AddRefs(parent));
+      content->GetParent(getter_AddRefs(parent));
       content = parent;
     }
   } else {

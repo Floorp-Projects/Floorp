@@ -99,7 +99,7 @@ public:
 
         for (PRInt32 i = 0; i < count; ++i) {
             nsCOMPtr<nsIContent> child;
-            aContent->ChildAt(i, *getter_AddRefs(child));
+            aContent->ChildAt(i, getter_AddRefs(child));
 
             Remove(child);
         } }

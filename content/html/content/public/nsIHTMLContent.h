@@ -141,7 +141,7 @@ public:
    *
    * @param aBaseURL the base URL [OUT]
    */
-  NS_IMETHOD GetBaseURL(nsIURI*& aBaseURL) const = 0;
+  NS_IMETHOD GetBaseURL(nsIURI** aBaseURL) const = 0;
 
   /**
    * Get the base target for any links within this piece

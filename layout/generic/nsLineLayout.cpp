@@ -2548,7 +2548,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
       nsresult result = mRootSpan->mFrame->mFrame->GetContent(getter_AddRefs(blockContent));
       if ( NS_SUCCEEDED(result) && blockContent) {
         nsCOMPtr<nsIAtom> blockTagAtom;
-        result = blockContent->GetTag(*(getter_AddRefs(blockTagAtom)));
+        result = blockContent->GetTag(getter_AddRefs(blockTagAtom));
         if ( NS_SUCCEEDED(result) && blockTagAtom) {
           // (2) above, if the first line of LI
           if (isFirstLine && blockTagAtom.get() == nsHTMLAtoms::li) {
@@ -2954,7 +2954,7 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds,
         psd->mFirstFrame->mFrame->GetContent(getter_AddRefs(content));
         if (content) {
           nsCOMPtr<nsIAtom> tag;
-          content->GetTag(*getter_AddRefs(tag));
+          content->GetTag(getter_AddRefs(tag));
           if (tag == nsHTMLAtoms::hr) {
             // get the alignment from the HR frame
 

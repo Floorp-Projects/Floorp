@@ -65,24 +65,24 @@ public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_INAMESPACE_IID)
 
   // Get data of this name space
-  NS_IMETHOD GetNameSpaceID(PRInt32& aID) const = 0;
+  NS_IMETHOD GetNameSpaceID(PRInt32* aID) const = 0;
   NS_IMETHOD GetNameSpaceURI(nsAString& aURI) const = 0;
-  NS_IMETHOD GetNameSpacePrefix(nsIAtom*& aPrefix) const = 0;
+  NS_IMETHOD GetNameSpacePrefix(nsIAtom** aPrefix) const = 0;
 
-  NS_IMETHOD GetParentNameSpace(nsINameSpace*& aParent) const = 0;
+  NS_IMETHOD GetParentNameSpace(nsINameSpace** aParent) const = 0;
 
   // find name space within self and parents (not children)
-  NS_IMETHOD FindNameSpace(nsIAtom* aPrefix, nsINameSpace*& aNameSpace) const = 0;
-  NS_IMETHOD FindNameSpaceID(nsIAtom* aPrefix, PRInt32& aNameSpaceID) const = 0;
-  NS_IMETHOD FindNameSpacePrefix(PRInt32 aNameSpaceID, nsIAtom*& aPrefix) const = 0;
+  NS_IMETHOD FindNameSpace(nsIAtom* aPrefix, nsINameSpace** aNameSpace) const = 0;
+  NS_IMETHOD FindNameSpaceID(nsIAtom* aPrefix, PRInt32* aNameSpaceID) const = 0;
+  NS_IMETHOD FindNameSpacePrefix(PRInt32 aNameSpaceID, nsIAtom** aPrefix) const = 0;
 
   // create new child name space
   NS_IMETHOD CreateChildNameSpace(nsIAtom* aPrefix, 
                                   const nsAString& aURI,
-                                  nsINameSpace*& aChildNameSpace) = 0;
+                                  nsINameSpace** aChildNameSpace) = 0;
 
   NS_IMETHOD CreateChildNameSpace(nsIAtom* aPrefix, PRInt32 aNameSpaceID,
-                                  nsINameSpace*& aChildNameSpace) = 0;
+                                  nsINameSpace** aChildNameSpace) = 0;
 };
 
 #endif // nsINameSpace_h___

@@ -202,7 +202,7 @@ nsElementMap::Add(const nsAString& aID, nsIContent* aContent)
                     nsresult rv;
 
                     nsCOMPtr<nsIAtom> tag;
-                    rv = aContent->GetTag(*getter_AddRefs(tag));
+                    rv = aContent->GetTag(getter_AddRefs(tag));
                     if (NS_FAILED(rv)) return rv;
 
                     nsAutoString tagname;
@@ -239,7 +239,7 @@ nsElementMap::Add(const nsAString& aID, nsIContent* aContent)
         nsresult rv;
 
         nsCOMPtr<nsIAtom> tag;
-        rv = aContent->GetTag(*getter_AddRefs(tag));
+        rv = aContent->GetTag(getter_AddRefs(tag));
         if (NS_FAILED(rv)) return rv;
 
         nsAutoString tagname;
@@ -277,7 +277,7 @@ nsElementMap::Remove(const nsAString& aID, nsIContent* aContent)
         nsresult rv;
 
         nsCOMPtr<nsIAtom> tag;
-        rv = aContent->GetTag(*getter_AddRefs(tag));
+        rv = aContent->GetTag(getter_AddRefs(tag));
         if (NS_FAILED(rv)) return rv;
 
         nsAutoString tagname;

@@ -1549,7 +1549,7 @@ CreateNameSpace(nsISupports* aRule, void* aNameSpacePtr)
     nsAutoString  urlSpec;
     nameSpaceRule->GetPrefix(prefix);
     nameSpaceRule->GetURLSpec(urlSpec);
-    lastNameSpace->CreateChildNameSpace(prefix, urlSpec, newNameSpace);
+    lastNameSpace->CreateChildNameSpace(prefix, urlSpec, &newNameSpace);
     NS_IF_RELEASE(prefix);
     if (newNameSpace) {
       NS_RELEASE(lastNameSpace);
@@ -1566,11 +1566,12 @@ CreateNameSpace(nsISupports* aRule, void* aNameSpacePtr)
 void 
 CSSStyleSheetInner::RebuildNameSpaces(void)
 {
-  nsContentUtils::GetNSManagerWeakRef()->CreateRootNameSpace(*getter_AddRefs(mNameSpace));
+  nsContentUtils::GetNSManagerWeakRef()->
+      CreateRootNameSpace(getter_AddRefs(mNameSpace));
   if (kNameSpaceID_Unknown != mDefaultNameSpaceID) {
     nsCOMPtr<nsINameSpace> defaultNameSpace;
     mNameSpace->CreateChildNameSpace(nsnull, mDefaultNameSpaceID,
-                                     *getter_AddRefs(defaultNameSpace));
+                                     getter_AddRefs(defaultNameSpace));
     if (defaultNameSpace) {
       mNameSpace = defaultNameSpace;
     }
@@ -2115,7 +2116,8 @@ CSSStyleSheetImpl::AppendStyleRule(nsICSSRule* aRule)
       aRule->GetType(type);
       if (nsICSSRule::NAMESPACE_RULE == type) {
         if (! mInner->mNameSpace) {
-          nsContentUtils::GetNSManagerWeakRef()->CreateRootNameSpace(*getter_AddRefs(mInner->mNameSpace));
+          nsContentUtils::GetNSManagerWeakRef()->
+              CreateRootNameSpace(getter_AddRefs(mInner->mNameSpace));
         }
 
         if (mInner->mNameSpace) {
@@ -2126,8 +2128,9 @@ CSSStyleSheetImpl::AppendStyleRule(nsICSSRule* aRule)
           nsAutoString  urlSpec;
           nameSpaceRule->GetPrefix(*getter_AddRefs(prefix));
           nameSpaceRule->GetURLSpec(urlSpec);
-          mInner->mNameSpace->CreateChildNameSpace(prefix, urlSpec,
-                                                   *getter_AddRefs(newNameSpace));
+          mInner->mNameSpace->
+              CreateChildNameSpace(prefix, urlSpec,
+                                   getter_AddRefs(newNameSpace));
           if (newNameSpace) {
             mInner->mNameSpace = newNameSpace;
           }
@@ -2720,7 +2723,8 @@ CSSStyleSheetImpl::InsertRule(const nsAString& aRule,
     cssRule->GetType(type);
     if (type == nsICSSRule::NAMESPACE_RULE) {
       if (! mInner->mNameSpace) {
-        nsContentUtils::GetNSManagerWeakRef()->CreateRootNameSpace(*getter_AddRefs(mInner->mNameSpace));
+        nsContentUtils::GetNSManagerWeakRef()->
+            CreateRootNameSpace(getter_AddRefs(mInner->mNameSpace));
       }
 
       NS_ENSURE_TRUE(mInner->mNameSpace, NS_ERROR_FAILURE);
@@ -2733,7 +2737,7 @@ CSSStyleSheetImpl::InsertRule(const nsAString& aRule,
       nameSpaceRule->GetPrefix(*getter_AddRefs(prefix));
       nameSpaceRule->GetURLSpec(urlSpec);
       mInner->mNameSpace->CreateChildNameSpace(prefix, urlSpec,
-                                               *getter_AddRefs(newNameSpace));
+                                               getter_AddRefs(newNameSpace));
       if (newNameSpace) {
         mInner->mNameSpace = newNameSpace;
       }
@@ -3151,11 +3155,11 @@ RuleProcessorData::RuleProcessorData(nsIPresContext* aPresContext,
     mContent = aContent;
 
     // get the namespace
-    aContent->GetNameSpaceID(mNameSpaceID);
+    aContent->GetNameSpaceID(&mNameSpaceID);
 
     // get the tag and parent
-    aContent->GetTag(mContentTag);
-    aContent->GetParent(mParentContent);
+    aContent->GetTag(&mContentTag);
+    aContent->GetParent(&mParentContent);
 
     // get the event state
     nsIEventStateManager* eventStateManager = nsnull;
@@ -3168,7 +3172,7 @@ RuleProcessorData::RuleProcessorData(nsIPresContext* aPresContext,
     // get the styledcontent interface and the ID
     if (NS_SUCCEEDED(aContent->QueryInterface(NS_GET_IID(nsIStyledContent), (void**)&mStyledContent))) {
       NS_ASSERTION(mStyledContent, "Succeeded but returned null");
-      mStyledContent->GetID(mContentID);
+      mStyledContent->GetID(&mContentID);
     }
 
     // see if there are attributes for the content
@@ -3255,9 +3259,10 @@ const nsString* RuleProcessorData::GetLang(void)
           break;
         }
       }
-      nsIContent *parent;
-      content->GetParent(parent);
-      content = dont_AddRef(parent);
+
+      nsCOMPtr<nsIContent> parent;
+      content->GetParent(getter_AddRefs(parent));
+      content = parent;
     }
   }
   return mLanguage;
@@ -3339,14 +3344,14 @@ inline PRBool IsQuirkEventSensitive(nsIAtom *aContentTag)
 
 static PRBool IsSignificantChild(nsIContent* aChild, PRBool aAcceptNonWhitespaceText)
 {
-  nsIAtom* tag;
-  aChild->GetTag(tag); // skip text & comments
+  nsCOMPtr<nsIAtom> tag;
+  aChild->GetTag(getter_AddRefs(tag)); // skip text & comments
   if ((tag != nsLayoutAtoms::textTagName) && 
       (tag != nsLayoutAtoms::commentTagName) &&
       (tag != nsLayoutAtoms::processingInstructionTagName)) {
-    NS_IF_RELEASE(tag);
     return PR_TRUE;
   }
+
   if (aAcceptNonWhitespaceText) {
     if (tag == nsLayoutAtoms::textTagName) {  // skip only whitespace text
       nsITextContent* text = nsnull;
@@ -3355,13 +3360,12 @@ static PRBool IsSignificantChild(nsIContent* aChild, PRBool aAcceptNonWhitespace
         text->IsOnlyWhitespace(&isWhite);
         NS_RELEASE(text);
         if (! isWhite) {
-          NS_RELEASE(tag);
           return PR_TRUE;
         }
       }
     }
   }
-  NS_IF_RELEASE(tag);
+
   return PR_FALSE;
 }
 
@@ -3446,17 +3450,16 @@ static PRBool SelectorMatches(RuleProcessorData &data,
     while (result && (nsnull != pseudoClass)) {
       if ((nsCSSPseudoClasses::firstChild == pseudoClass->mAtom) ||
           (nsCSSPseudoClasses::firstNode == pseudoClass->mAtom) ) {
-        nsIContent* firstChild = nsnull;
-        nsIContent* parent = data.mParentContent;
+        nsCOMPtr<nsIContent> firstChild;
+        nsCOMPtr<nsIContent> parent = data.mParentContent;
         if (parent) {
           PRInt32 index = -1;
           do {
-            parent->ChildAt(++index, firstChild);
+            parent->ChildAt(++index, getter_AddRefs(firstChild));
             if (firstChild) { // stop at first non-comment and non-whitespace node (and non-text node for firstChild)
               if (IsSignificantChild(firstChild, (nsCSSPseudoClasses::firstNode == pseudoClass->mAtom))) {
                 break;
               }
-              NS_RELEASE(firstChild);
             }
             else {
               break;
@@ -3464,22 +3467,20 @@ static PRBool SelectorMatches(RuleProcessorData &data,
           } while (1 == 1);
         }
         result = PRBool(localTrue == (data.mContent == firstChild));
-        NS_IF_RELEASE(firstChild);
       }
       else if ((nsCSSPseudoClasses::lastChild == pseudoClass->mAtom) ||
                (nsCSSPseudoClasses::lastNode == pseudoClass->mAtom)) {
-        nsIContent* lastChild = nsnull;
-        nsIContent* parent = data.mParentContent;
+        nsCOMPtr<nsIContent> lastChild;
+        nsCOMPtr<nsIContent> parent = data.mParentContent;
         if (parent) {
           PRInt32 index;
           parent->ChildCount(index);
           do {
-            parent->ChildAt(--index, lastChild);
+            parent->ChildAt(--index, getter_AddRefs(lastChild));
             if (lastChild) { // stop at first non-comment and non-whitespace node (and non-text node for lastChild)
               if (IsSignificantChild(lastChild, (nsCSSPseudoClasses::lastNode == pseudoClass->mAtom))) {
                 break;
               }
-              NS_RELEASE(lastChild);
             }
             else {
               break;
@@ -3487,26 +3488,23 @@ static PRBool SelectorMatches(RuleProcessorData &data,
           } while (1 == 1);
         }
         result = PRBool(localTrue == (data.mContent == lastChild));
-        NS_IF_RELEASE(lastChild);
       }
       else if (nsCSSPseudoClasses::empty == pseudoClass->mAtom) {
-        nsIContent* child = nsnull;
-        nsIContent* element = data.mContent;
+        nsCOMPtr<nsIContent> child;
+        nsCOMPtr<nsIContent> element = data.mContent;
         PRInt32 index = -1;
         do {
-          element->ChildAt(++index, child);
+          element->ChildAt(++index, getter_AddRefs(child));
           if (child) { // stop at first non-comment and non-whitespace node
             if (IsSignificantChild(child, PR_TRUE)) {
               break;
             }
-            NS_RELEASE(child);
           }
           else {
             break;
           }
         } while (1 == 1);
         result = PRBool(localTrue == (child == nsnull));
-        NS_IF_RELEASE(child);
       }
       else if (nsCSSPseudoClasses::root == pseudoClass->mAtom) {
         if (data.mParentContent) {
@@ -3535,7 +3533,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
           }
           else {
             nsCOMPtr<nsIDocument> doc;
-            data.mContent->GetDocument(*getter_AddRefs(doc));
+            data.mContent->GetDocument(getter_AddRefs(doc));
             if (doc) {
               // Try to get the language from the HTTP header or if this
               // is missing as well from the preferences.
@@ -3798,18 +3796,17 @@ static PRBool SelectorMatchesTree(RuleProcessorData &data,
       if (PRUnichar('+') == selector->mOperator) {
         newdata = curdata->mPreviousSiblingData;
         if (!newdata) {
-          nsIContent* parent;
+          nsCOMPtr<nsIContent> parent;
           PRInt32 index;
-          lastContent->GetParent(parent);
+          lastContent->GetParent(getter_AddRefs(parent));
           if (parent) {
             parent->IndexOf(lastContent, index);
             while (0 <= --index) {  // skip text & comment nodes
-              parent->ChildAt(index, content);
-              nsIAtom* tag;
-              content->GetTag(tag);
+              parent->ChildAt(index, &content);
+              nsCOMPtr<nsIAtom> tag;
+              content->GetTag(getter_AddRefs(tag));
               if ((tag != nsLayoutAtoms::textTagName) && 
                   (tag != nsLayoutAtoms::commentTagName)) {
-                NS_IF_RELEASE(tag);
                 newdata =
                     new (curdata->mPresContext) RuleProcessorData(curdata->mPresContext, content,
                                                                     curdata->mRuleWalker, &compat);
@@ -3817,9 +3814,7 @@ static PRBool SelectorMatchesTree(RuleProcessorData &data,
                 break;
               }
               NS_RELEASE(content);
-              NS_IF_RELEASE(tag);
             }
-            NS_RELEASE(parent);
           }
         } else {
           content = newdata->mContent;
@@ -3831,7 +3826,7 @@ static PRBool SelectorMatchesTree(RuleProcessorData &data,
       else {
         newdata = curdata->mParentData;
         if (!newdata) {
-          lastContent->GetParent(content);
+          lastContent->GetParent(&content);
           if (content) {
             newdata = new (curdata->mPresContext) RuleProcessorData(curdata->mPresContext, content,
                                                                       curdata->mRuleWalker, &compat);

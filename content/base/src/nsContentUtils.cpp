@@ -454,10 +454,10 @@ nsContentUtils::GetDocumentAndPrincipal(nsIDOMNode* aNode,
       // manager
       nsCOMPtr<nsINodeInfo> ni;
       if (content) {
-        content->GetNodeInfo(*getter_AddRefs(ni));
+        content->GetNodeInfo(getter_AddRefs(ni));
       }
       else {
-        attr->GetNodeInfo(*getter_AddRefs(ni));
+        attr->GetNodeInfo(getter_AddRefs(ni));
       }
 
       if (!ni) {
@@ -531,7 +531,7 @@ nsContentUtils::CheckSameOrigin(nsIDOMNode *aTrustedNode,
       NS_ENSURE_TRUE(cont, NS_ERROR_UNEXPECTED);
       
       nsCOMPtr<nsINodeInfo> ni;
-      cont->GetNodeInfo(*getter_AddRefs(ni));
+      cont->GetNodeInfo(getter_AddRefs(ni));
       NS_ENSURE_TRUE(ni, NS_ERROR_UNEXPECTED);
       
       ni->GetDocumentPrincipal(getter_AddRefs(trustedPrincipal));
@@ -670,7 +670,7 @@ nsContentUtils::InProlog(nsIDOMNode *aNode)
   while (pos > 0) {
     --pos;
     nsCOMPtr<nsIContent> sibl;
-    doc->ChildAt(pos, *getter_AddRefs(sibl));
+    doc->ChildAt(pos, getter_AddRefs(sibl));
     if (sibl->IsContentOfType(nsIContent::eELEMENT)) {
       return PR_FALSE;
     }
@@ -725,7 +725,7 @@ nsContentUtils::doReparentContentWrapper(nsIContent *aChild,
   aChild->ChildCount(count);
 
   for (i = 0; i < count; i++) {
-    aChild->ChildAt(i, *getter_AddRefs(child));
+    aChild->ChildAt(i, getter_AddRefs(child));
     NS_ENSURE_TRUE(child, NS_ERROR_UNEXPECTED);
 
     rv = doReparentContentWrapper(child, aNewDocument, aOldDocument, cx, old);
@@ -779,10 +779,10 @@ nsContentUtils::ReparentContentWrapper(nsIContent *aContent,
   if (!old_doc) {
     nsCOMPtr<nsINodeInfo> ni;
 
-    aContent->GetNodeInfo(*getter_AddRefs(ni));
+    aContent->GetNodeInfo(getter_AddRefs(ni));
 
     if (ni) {
-      ni->GetDocument(*getter_AddRefs(old_doc));
+      ni->GetDocument(getter_AddRefs(old_doc));
     }
 
     if (!old_doc) {
@@ -927,8 +927,8 @@ nsContentUtils::InSameDoc(nsIDOMNode* aNode, nsIDOMNode* aOther)
   if (content && other) {
     nsCOMPtr<nsIDocument> contentDoc;
     nsCOMPtr<nsIDocument> otherDoc;
-    content->GetDocument(*getter_AddRefs(contentDoc));
-    other->GetDocument(*getter_AddRefs(otherDoc));
+    content->GetDocument(getter_AddRefs(contentDoc));
+    other->GetDocument(getter_AddRefs(otherDoc));
     // XXXcaa Don't bother to check that either node is in a
     // document.  Editor relies on us returning true if neither
     // node is in a document.  See bug 154401.
@@ -952,7 +952,7 @@ nsContentUtils::ContentIsDescendantOf(nsIContent* aPossibleDescendant,
   do {
     if (aPossibleDescendant == aPossibleAncestor)
       return PR_TRUE;
-    aPossibleDescendant->GetParent(*getter_AddRefs(parent));
+    aPossibleDescendant->GetParent(getter_AddRefs(parent));
     aPossibleDescendant = parent;
   } while (aPossibleDescendant);
 
@@ -1011,13 +1011,13 @@ nsContentUtils::GetAncestorsAndOffsets(nsIDOMNode* aNode,
   aAncestorOffsets->AppendElement(NS_INT32_TO_PTR(aOffset));
 
   // insert all the ancestors
-  content->GetParent(*getter_AddRefs(ancestor));
+  content->GetParent(getter_AddRefs(ancestor));
   while (ancestor) {
     ancestor->IndexOf(content, offset);
     aAncestorNodes->AppendElement(ancestor.get());
     aAncestorOffsets->AppendElement(NS_INT32_TO_PTR(offset));
     content = ancestor;
-    content->GetParent(*getter_AddRefs(ancestor));
+    content->GetParent(getter_AddRefs(ancestor));
   }
 
   return NS_OK;
@@ -1410,7 +1410,7 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
   }
 
   nsCOMPtr<nsIDocument> doc;
-  aContent->GetDocument(*getter_AddRefs(doc));
+  aContent->GetDocument(getter_AddRefs(doc));
   nsCOMPtr<nsIHTMLDocument> htmlDocument(do_QueryInterface(doc));
 
   PRBool generatedUniqueKey = PR_FALSE;
@@ -1542,7 +1542,7 @@ nsCxPusher::Push(nsISupports *aCurrentTarget)
   nsCOMPtr<nsIDocument> document;
 
   if (content) {
-    content->GetDocument(*getter_AddRefs(document));
+    content->GetDocument(getter_AddRefs(document));
   }
 
   if (!document) {

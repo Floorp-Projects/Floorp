@@ -57,7 +57,7 @@ public:
   NS_IMETHOD GetNamespaceURI(nsAString& aNameSpaceURI) const;
   NS_IMETHOD GetIDAttributeAtom(nsIAtom** aResult) const;
   NS_IMETHOD SetIDAttributeAtom(nsIAtom* aResult);
-  NS_IMETHOD GetNodeInfoManager(nsINodeInfoManager*& aNodeInfoManager) const;
+  NS_IMETHOD GetNodeInfoManager(nsINodeInfoManager** aNodeInfoManager) const;
   NS_IMETHOD_(PRBool) Equals(const nsAString& aName) const;
   NS_IMETHOD_(PRBool) Equals(const nsAString& aName,
                              const nsAString& aPrefix) const;
@@ -68,9 +68,9 @@ public:
   NS_IMETHOD_(PRBool) NamespaceEquals(const nsAString& aNamespaceURI) const;
   NS_IMETHOD_(PRBool) QualifiedNameEquals(const nsACString& aQualifiedName) const;
 
-  NS_IMETHOD NameChanged(nsIAtom *aName, nsINodeInfo*& aResult);
-  NS_IMETHOD PrefixChanged(nsIAtom *aPrefix, nsINodeInfo*& aResult);
-  NS_IMETHOD GetDocument(nsIDocument*& aDocument) const;
+  NS_IMETHOD NameChanged(nsIAtom *aName, nsINodeInfo** aResult);
+  NS_IMETHOD PrefixChanged(nsIAtom *aPrefix, nsINodeInfo** aResult);
+  NS_IMETHOD GetDocument(nsIDocument** aDocument) const;
   NS_IMETHOD GetDocumentPrincipal(nsIPrincipal** aPrincipal) const;
 
   // nsNodeInfo

@@ -108,10 +108,9 @@ nsDOMAttribute::GetContent(nsIContent** aContent)
 }
 
 NS_IMETHODIMP
-nsDOMAttribute::GetNodeInfo(nsINodeInfo*& aNodeInfo)
+nsDOMAttribute::GetNodeInfo(nsINodeInfo** aNodeInfo)
 {
-  aNodeInfo = mNodeInfo;
-  NS_IF_ADDREF(aNodeInfo);
+  NS_IF_ADDREF(*aNodeInfo = mNodeInfo);
 
   return NS_OK;
 }
@@ -129,23 +128,21 @@ nsDOMAttribute::GetValue(nsAString& aValue)
 {
   NS_ENSURE_TRUE(mNodeInfo, NS_ERROR_FAILURE);
 
-  nsresult result = NS_OK;
   if (mContent) {
-    nsresult attrResult;
-    PRInt32 nameSpaceID;
-    nsCOMPtr<nsIAtom> name;
-
-    mNodeInfo->GetNameAtom(*getter_AddRefs(name));
-    mNodeInfo->GetNamespaceID(nameSpaceID);
+    nsCOMPtr<nsIAtom> name = mNodeInfo->GetNameAtom();
+    PRInt32 nameSpaceID = mNodeInfo->GetNamespaceID();
 
     nsAutoString tmpValue;
-    attrResult = mContent->GetAttr(nameSpaceID, name, tmpValue);
+    nsresult attrResult = mContent->GetAttr(nameSpaceID, name,
+                                            tmpValue);
     if (NS_CONTENT_ATTR_NOT_THERE != attrResult) {
       mValue = tmpValue;
     }
   }
-  aValue=mValue;
-  return result;
+
+  aValue = mValue;
+
+  return NS_OK;
 }
 
 nsresult
@@ -168,28 +165,17 @@ nsDOMAttribute::GetSpecified(PRBool* aSpecified)
   NS_ENSURE_TRUE(mNodeInfo, NS_ERROR_FAILURE);
   NS_ENSURE_ARG_POINTER(aSpecified);
 
-  nsresult result = NS_OK;
-  if (nsnull == mContent) {
+  if (!mContent) {
     *aSpecified = PR_FALSE;
-  } else {
-    nsAutoString value;
-    nsresult attrResult;
-    PRInt32 nameSpaceID;
-    nsCOMPtr<nsIAtom> name;
-
-    mNodeInfo->GetNameAtom(*getter_AddRefs(name));
-    mNodeInfo->GetNamespaceID(nameSpaceID);
-
-    attrResult = mContent->GetAttr(nameSpaceID, name, value);
-    if (NS_CONTENT_ATTR_HAS_VALUE == attrResult) {
-      *aSpecified = PR_TRUE;
-    }
-    else {
-      *aSpecified = PR_FALSE;
-    }
+    return NS_OK;
   }
 
-  return result;
+  nsCOMPtr<nsIAtom> name = mNodeInfo->GetNameAtom();
+  PRInt32 nameSpaceID = mNodeInfo->GetNamespaceID();
+
+  *aSpecified = mContent->HasAttr(nameSpaceID, name);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -376,13 +362,10 @@ nsDOMAttribute::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   nsDOMAttribute* newAttr;
 
   if (mContent) {
-    nsAutoString value;
-    PRInt32 nameSpaceID;
-    nsCOMPtr<nsIAtom> name;
-
-    mNodeInfo->GetNameAtom(*getter_AddRefs(name));
-    mNodeInfo->GetNamespaceID(nameSpaceID);
+    nsCOMPtr<nsIAtom> name = mNodeInfo->GetNameAtom();
+    PRInt32 nameSpaceID = mNodeInfo->GetNamespaceID();
   
+    nsAutoString value;
     mContent->GetAttr(nameSpaceID, name, value);
     newAttr = new nsDOMAttribute(nsnull, mNodeInfo, value); 
   }
@@ -436,22 +419,19 @@ nsDOMAttribute::SetPrefix(const nsAString& aPrefix)
   NS_ENSURE_TRUE(mNodeInfo, NS_ERROR_FAILURE);
   nsCOMPtr<nsINodeInfo> newNodeInfo;
   nsCOMPtr<nsIAtom> prefix;
-  nsresult rv = NS_OK;
 
-  if (!aPrefix.IsEmpty() && !DOMStringIsNull(aPrefix))
+  if (!aPrefix.IsEmpty() && !DOMStringIsNull(aPrefix)) {
     prefix = do_GetAtom(aPrefix);
+  }
 
-  rv = mNodeInfo->PrefixChanged(prefix, *getter_AddRefs(newNodeInfo));
+  nsresult rv = mNodeInfo->PrefixChanged(prefix, getter_AddRefs(newNodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mContent) {
-    nsCOMPtr<nsIAtom> name;
-    PRInt32 nameSpaceID;
+    nsCOMPtr<nsIAtom> name = mNodeInfo->GetNameAtom();
+    PRInt32 nameSpaceID = mNodeInfo->GetNamespaceID();
+
     nsAutoString tmpValue;
-
-    mNodeInfo->GetNameAtom(*getter_AddRefs(name));
-    mNodeInfo->GetNamespaceID(nameSpaceID);
-
     rv = mContent->GetAttr(nameSpaceID, name, tmpValue);
     if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
       mContent->UnsetAttr(nameSpaceID, name, PR_TRUE);
@@ -643,7 +623,7 @@ nsDOMAttribute::IsSameNode(nsIDOMNode* aOther,
       // Check to see if we're in HTML.
       if (content->IsContentOfType(nsIContent::eHTML)) {
         nsCOMPtr<nsINodeInfo> ni;
-        content->GetNodeInfo(*getter_AddRefs(ni));
+        content->GetNodeInfo(getter_AddRefs(ni));
         if (ni) {
           // If there is no namespace, we're in HTML (as opposed to XHTML)
           // and we'll need to compare node names case insensitively.

@@ -55,7 +55,7 @@ Attr::Attr(nsIDOMAttr* aAttr, Document* aOwner) : Node(aAttr, aOwner)
     if (!ns.IsEmpty()) {
         NS_ASSERTION(gTxNameSpaceManager,"No namespace manager");
         if (gTxNameSpaceManager) {
-            gTxNameSpaceManager->GetNameSpaceID(ns, mNamespaceID);
+            gTxNameSpaceManager->GetNameSpaceID(ns, &mNamespaceID);
         }
     }
     mNSId = mNamespaceID;

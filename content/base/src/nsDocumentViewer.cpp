@@ -339,11 +339,11 @@ public:
 
   // nsIDocumentViewer interface...
   NS_IMETHOD SetUAStyleSheet(nsIStyleSheet* aUAStyleSheet);
-  NS_IMETHOD GetDocument(nsIDocument*& aResult);
-  NS_IMETHOD GetPresShell(nsIPresShell*& aResult);
-  NS_IMETHOD GetPresContext(nsIPresContext*& aResult);
+  NS_IMETHOD GetDocument(nsIDocument** aResult);
+  NS_IMETHOD GetPresShell(nsIPresShell** aResult);
+  NS_IMETHOD GetPresContext(nsIPresContext** aResult);
   NS_IMETHOD CreateDocumentViewerUsing(nsIPresContext* aPresContext,
-                                       nsIDocumentViewer*& aResult);
+                                       nsIDocumentViewer** aResult);
 
   // nsIContentViewerEdit
   NS_DECL_NSICONTENTVIEWEREDIT
@@ -1252,26 +1252,26 @@ DocumentViewerImpl::SetUAStyleSheet(nsIStyleSheet* aUAStyleSheet)
 }
 
 NS_IMETHODIMP
-DocumentViewerImpl::GetDocument(nsIDocument*& aResult)
+DocumentViewerImpl::GetDocument(nsIDocument** aResult)
 {
-  aResult = mDocument;
-  NS_IF_ADDREF(aResult);
+  NS_IF_ADDREF(*aResult = mDocument);
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
-DocumentViewerImpl::GetPresShell(nsIPresShell*& aResult)
+DocumentViewerImpl::GetPresShell(nsIPresShell** aResult)
 {
-  aResult = mPresShell;
-  NS_IF_ADDREF(aResult);
+  NS_IF_ADDREF(*aResult = mPresShell);
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
-DocumentViewerImpl::GetPresContext(nsIPresContext*& aResult)
+DocumentViewerImpl::GetPresContext(nsIPresContext** aResult)
 {
-  aResult = mPresContext;
-  NS_IF_ADDREF(aResult);
+  NS_IF_ADDREF(*aResult = mPresContext);
+
   return NS_OK;
 }
 
@@ -1729,7 +1729,7 @@ DocumentViewerImpl::FindFrameSetWithIID(nsIContent * aParentContent,
   PRInt32 inx;
   for (inx = 0; inx < numChildren; ++inx) {
     nsCOMPtr<nsIContent> child;
-    if (NS_SUCCEEDED(aParentContent->ChildAt(inx, *getter_AddRefs(child))) && child) {
+    if (NS_SUCCEEDED(aParentContent->ChildAt(inx, getter_AddRefs(child))) && child) {
       nsCOMPtr<nsISupports> temp;
       if (NS_SUCCEEDED(child->QueryInterface(aIID, (void**)getter_AddRefs(temp)))) {
         return NS_OK;
@@ -1915,7 +1915,7 @@ nsresult DocumentViewerImpl::GetDocumentSelection(nsISelection **aSelection,
 
 NS_IMETHODIMP
 DocumentViewerImpl::CreateDocumentViewerUsing(nsIPresContext* aPresContext,
-                                              nsIDocumentViewer*& aResult)
+                                              nsIDocumentViewer** aResult)
 {
   if (!mDocument) {
     // XXX better error
@@ -1939,7 +1939,7 @@ DocumentViewerImpl::CreateDocumentViewerUsing(nsIPresContext* aPresContext,
   // Bind the new viewer to the old document
   nsresult rv = viewer->LoadStart(mDocument);
 
-  aResult = viewer;
+  *aResult = viewer;
 
   return rv;
 }
@@ -2207,7 +2207,7 @@ NS_IMETHODIMP DocumentViewerImpl::ScrollToNode(nsIDOMNode* aNode)
    NS_ENSURE_ARG(aNode);
    NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);
    nsCOMPtr<nsIPresShell> presShell;
-   NS_ENSURE_SUCCESS(GetPresShell(*(getter_AddRefs(presShell))), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(GetPresShell(getter_AddRefs(presShell)), NS_ERROR_FAILURE);
 
    // Get the nsIContent interface, because that's what we need to
    // get the primary frame
@@ -2673,14 +2673,14 @@ NS_IMETHODIMP DocumentViewerImpl::SizeToContent()
    NS_ENSURE_TRUE(!docShellParent, NS_ERROR_FAILURE);
 
    nsCOMPtr<nsIPresShell> presShell;
-   GetPresShell(*getter_AddRefs(presShell));
+   GetPresShell(getter_AddRefs(presShell));
    NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
    NS_ENSURE_SUCCESS(presShell->ResizeReflow(NS_UNCONSTRAINEDSIZE,
       NS_UNCONSTRAINEDSIZE), NS_ERROR_FAILURE);
 
    nsCOMPtr<nsIPresContext> presContext;
-   GetPresContext(*getter_AddRefs(presContext));
+   GetPresContext(getter_AddRefs(presContext));
    NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
 
    nsRect  shellArea;
@@ -2744,7 +2744,7 @@ DocumentViewerImpl::GetPopupNode(nsIDOMNode** aNode)
 
   // get the document
   nsCOMPtr<nsIDocument> document;
-  rv = GetDocument(*getter_AddRefs(document));
+  rv = GetDocument(getter_AddRefs(document));
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
 
@@ -2939,7 +2939,7 @@ NS_IMETHODIMP nsDocViewerSelectionListener::NotifySelectionChanged(nsIDOMDocumen
   if (!mGotSelectionState || mSelectionWasCollapsed != selectionCollapsed)
   {
     nsCOMPtr<nsIDocument> theDoc;
-    mDocViewer->GetDocument(*getter_AddRefs(theDoc));
+    mDocViewer->GetDocument(getter_AddRefs(theDoc));
     if (!theDoc) return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject;
@@ -2979,7 +2979,7 @@ nsDocViewerFocusListener::Focus(nsIDOMEvent* aEvent)
   if(!mDocViewer)
     return NS_ERROR_FAILURE;
 
-  nsresult result = mDocViewer->GetPresShell(*getter_AddRefs(shell));//deref once cause it take a ptr ref
+  nsresult result = mDocViewer->GetPresShell(getter_AddRefs(shell));
   if(NS_FAILED(result) || !shell)
     return result?result:NS_ERROR_FAILURE;
   nsCOMPtr<nsISelectionController> selCon;
@@ -3005,7 +3005,7 @@ nsDocViewerFocusListener::Blur(nsIDOMEvent* aEvent)
   if(!mDocViewer)
     return NS_ERROR_FAILURE;
 
-  nsresult result = mDocViewer->GetPresShell(*getter_AddRefs(shell));//deref once cause it take a ptr ref
+  nsresult result = mDocViewer->GetPresShell(getter_AddRefs(shell));
   if(NS_FAILED(result) || !shell)
     return result?result:NS_ERROR_FAILURE;
   nsCOMPtr<nsISelectionController> selCon;

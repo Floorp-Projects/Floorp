@@ -57,18 +57,18 @@ public:
   NS_IMETHOD Init(nsIDocument *aDocument);
   NS_IMETHOD DropDocumentReference();
   NS_IMETHOD GetNodeInfo(nsIAtom *aName, nsIAtom *aPrefix,
-                         PRInt32 aNamespaceID, nsINodeInfo*& aNodeInfo);
+                         PRInt32 aNamespaceID, nsINodeInfo** aNodeInfo);
   NS_IMETHOD GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
-                         PRInt32 aNamespaceID, nsINodeInfo*& aNodeInfo);
+                         PRInt32 aNamespaceID, nsINodeInfo** aNodeInfo);
   NS_IMETHOD GetNodeInfo(const nsAString& aName, const nsAString& aPrefix,
-                         PRInt32 aNamespaceID, nsINodeInfo*& aNodeInfo);
+                         PRInt32 aNamespaceID, nsINodeInfo** aNodeInfo);
   NS_IMETHOD GetNodeInfo(const nsAString& aName, const nsAString& aPrefix,
                          const nsAString& aNamespaceURI,
-                         nsINodeInfo*& aNodeInfo);
+                         nsINodeInfo** aNodeInfo);
   NS_IMETHOD GetNodeInfo(const nsAString& aQualifiedName,
                          const nsAString& aNamespaceURI,
-                         nsINodeInfo*& aNodeInfo); 
-  NS_IMETHOD GetDocument(nsIDocument*& aDocument);
+                         nsINodeInfo** aNodeInfo);
+  NS_IMETHOD GetDocument(nsIDocument** aDocument);
   NS_IMETHOD GetDocumentPrincipal(nsIPrincipal** aPrincipal);
   NS_IMETHOD SetDocumentPrincipal(nsIPrincipal* aPrincipal);
   NS_IMETHOD GetNodeInfoArray(nsISupportsArray** aArray);
@@ -79,7 +79,7 @@ public:
 
   void RemoveNodeInfo(nsNodeInfo *aNodeInfo);
 
-  static nsresult GetAnonymousManager(nsINodeInfoManager*& aNodeInfoManager);
+  static nsresult GetAnonymousManager(nsINodeInfoManager** aNodeInfoManager);
 
 private:
   static PRIntn PR_CALLBACK NodeInfoInnerKeyCompare(const void *key1,

@@ -3927,7 +3927,7 @@ nsEditor::GetTag(nsIDOMNode *aNode)
   
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
   if (content)
-    content->GetTag(*getter_AddRefs(atom));
+    content->GetTag(getter_AddRefs(atom));
 
   return atom;
 }
@@ -4061,7 +4061,7 @@ nsEditor::GetChildAt(nsIDOMNode *aParent, PRInt32 aOffset)
   nsCOMPtr<nsIContent> cChild;
   NS_PRECONDITION(content, "null content in nsEditor::GetChildAt");
   
-  if (NS_FAILED(content->ChildAt(aOffset, *getter_AddRefs(cChild))))
+  if (NS_FAILED(content->ChildAt(aOffset, getter_AddRefs(cChild))))
     return resultNode;
   
   resultNode = do_QueryInterface(cChild);
@@ -5244,14 +5244,15 @@ nsEditor::CreateHTMLContent(const nsAString& aTag, nsIContent** aContent)
   doc = do_QueryInterface(tempDoc);
 
   nsCOMPtr<nsINodeInfoManager> nodeInfoManager;
-  rv = doc->GetNodeInfoManager(*getter_AddRefs(nodeInfoManager));
+  rv = doc->GetNodeInfoManager(getter_AddRefs(nodeInfoManager));
   if (NS_FAILED(rv))
     return rv;
 
   NS_ENSURE_TRUE(nodeInfoManager, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  rv = nodeInfoManager->GetNodeInfo(aTag, nsnull, kNameSpaceID_None,*getter_AddRefs(nodeInfo));
+  rv = nodeInfoManager->GetNodeInfo(aTag, nsnull, kNameSpaceID_None,
+                                    getter_AddRefs(nodeInfo));
 
   if (NS_FAILED(rv))
     return rv;

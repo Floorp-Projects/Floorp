@@ -119,7 +119,7 @@ static void FindBodyElement(nsIContent* aParent, nsIContent** aResult)
   for (ChildIterator::Init(aParent, &iter, &last); iter != last; ++iter) {
     nsCOMPtr<nsIContent> content = *iter;
     nsCOMPtr<nsIAtom> tag;
-    content->GetTag(*getter_AddRefs(tag));
+    content->GetTag(getter_AddRefs(tag));
     if (tag.get() == nsXULAtoms::treechildren) {
       *aResult = content;
       NS_ADDREF(*aResult);

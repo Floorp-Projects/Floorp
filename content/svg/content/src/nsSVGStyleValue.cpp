@@ -154,7 +154,7 @@ nsSVGStyleValue::UpdateStyleRule(nsIDocument* baseDoc)
 
   NS_ASSERTION(baseDoc,"need base document");
   nsCOMPtr <nsIURI> docURL;
-  baseDoc->GetBaseURL(*getter_AddRefs(docURL));
+  baseDoc->GetBaseURL(getter_AddRefs(docURL));
   
   nsCOMPtr<nsICSSParser> css;
   nsComponentManager::CreateInstance(kCSSParserCID,

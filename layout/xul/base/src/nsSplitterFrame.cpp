@@ -830,7 +830,7 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
       PRInt32 dummy;
       xblService->ResolveTag(content, &dummy, getter_AddRefs(atom));
     } else
-      content->GetTag(*getter_AddRefs(atom));
+      content->GetTag(getter_AddRefs(atom));
 
     // skip over any splitters
     if (atom.get() != nsXULAtoms::splitter) { 

@@ -67,14 +67,14 @@ GenericElementCollection::GetLength(PRUint32* aLength)
   if (mParent) {
     nsCOMPtr<nsIContent> child;
     PRUint32 childIndex = 0;
-    mParent->ChildAt(childIndex, *getter_AddRefs(child));
+    mParent->ChildAt(childIndex, getter_AddRefs(child));
     while (child) {
       nsCOMPtr<nsIAtom> childTag;
-      child->GetTag(*getter_AddRefs(childTag));
+      child->GetTag(getter_AddRefs(childTag));
       if (mTag == childTag) {
         ++(*aLength);
       }
-      mParent->ChildAt(++childIndex, *getter_AddRefs(child));
+      mParent->ChildAt(++childIndex, getter_AddRefs(child));
     }
   }
 
@@ -91,12 +91,12 @@ GenericElementCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
   if (mParent) {
     nsCOMPtr<nsIContent> child;
     PRUint32 childIndex = 0;
-    mParent->ChildAt(childIndex, *getter_AddRefs(child));
+    mParent->ChildAt(childIndex, getter_AddRefs(child));
 
     PRUint32 theIndex = 0;
     while (child) {
       nsCOMPtr<nsIAtom> childTag;
-      child->GetTag(*getter_AddRefs(childTag));
+      child->GetTag(getter_AddRefs(childTag));
       if (mTag == childTag) {
         if (aIndex == theIndex) {
           CallQueryInterface(child, aReturn);
@@ -106,7 +106,7 @@ GenericElementCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
         }
         ++theIndex;
       }
-      mParent->ChildAt(++childIndex, *getter_AddRefs(child));
+      mParent->ChildAt(++childIndex, getter_AddRefs(child));
     }
   }
 

@@ -334,7 +334,7 @@ nsContentDLF::CreateBlankDocument(nsILoadGroup *aLoadGroup, nsIDocument **aDocum
     rv = NS_ERROR_FAILURE;
 
     nsCOMPtr<nsINodeInfoManager> nim;
-    blankDoc->GetNodeInfoManager(*getter_AddRefs(nim));
+    blankDoc->GetNodeInfoManager(getter_AddRefs(nim));
 
     if (nim) {
       nsCOMPtr<nsINodeInfo> htmlNodeInfo;
@@ -342,19 +342,19 @@ nsContentDLF::CreateBlankDocument(nsILoadGroup *aLoadGroup, nsIDocument **aDocum
       // generate an html html element
       nsCOMPtr<nsIHTMLContent> htmlElement;
       nim->GetNodeInfo(nsHTMLAtoms::html, 0, kNameSpaceID_None,
-                      *getter_AddRefs(htmlNodeInfo));
+                      getter_AddRefs(htmlNodeInfo));
       NS_NewHTMLHtmlElement(getter_AddRefs(htmlElement), htmlNodeInfo);
 
       // generate an html head element
       nsCOMPtr<nsIHTMLContent> headElement;
       nim->GetNodeInfo(nsHTMLAtoms::head, 0, kNameSpaceID_None,
-                      *getter_AddRefs(htmlNodeInfo));
+                      getter_AddRefs(htmlNodeInfo));
       NS_NewHTMLHeadElement(getter_AddRefs(headElement), htmlNodeInfo);
 
       // generate an html body element
       nsCOMPtr<nsIHTMLContent> bodyElement;
       nim->GetNodeInfo(nsHTMLAtoms::body, 0, kNameSpaceID_None,
-                      *getter_AddRefs(htmlNodeInfo));
+                      getter_AddRefs(htmlNodeInfo));
       NS_NewHTMLBodyElement(getter_AddRefs(bodyElement), htmlNodeInfo);
 
       // blat in the structure

@@ -1555,8 +1555,8 @@ PRBool GetBGColorForHTMLElement( nsIPresContext *aPresContext,
       nsIContent *pContent;
       if (NS_SUCCEEDED(doc->GetRootContent(&pContent)) && pContent) {
         // make sure that this is the HTML element
-        nsIAtom *tag = nsnull;
-        pContent->GetTag(tag);
+        nsCOMPtr<nsIAtom> tag;
+        pContent->GetTag(getter_AddRefs(tag));
         NS_ASSERTION(tag, "Tag could not be retrieved from root content element");
         if (tag) {
           if (tag == nsHTMLAtoms::html ||
@@ -1580,7 +1580,6 @@ PRBool GetBGColorForHTMLElement( nsIPresContext *aPresContext,
             printf( "Root Content is not HTML or BODY: cannot get bgColor of HTML or BODY\n");
           }
 #endif
-          NS_RELEASE(tag);
         }// if tag
         NS_RELEASE(pContent);
       }// if content
@@ -1615,7 +1614,7 @@ nsresult GetFrameForBackgroundUpdate(nsIPresContext *aPresContext,nsIFrame *aFra
     if (pContent) {
       // make sure that this is the HTML or BODY element
       nsCOMPtr<nsIAtom> tag;
-      pContent->GetTag(*(getter_AddRefs(tag)));
+      pContent->GetTag(getter_AddRefs(tag));
       if (tag) {
         if (tag.get() == nsHTMLAtoms::html ||
             tag.get() == nsHTMLAtoms::body) {
@@ -2759,7 +2758,7 @@ FindElementBackground(nsIPresContext* aPresContext,
     return PR_TRUE; // no parent to look at
   
   nsCOMPtr<nsIAtom> tag;
-  content->GetTag(*getter_AddRefs(tag));
+  content->GetTag(getter_AddRefs(tag));
   if (tag != nsHTMLAtoms::body)
     return PR_TRUE; // not frame for <BODY> element
 
@@ -2822,7 +2821,7 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
       aForFrame->GetContent(getter_AddRefs(content));
       if (content) {
         nsCOMPtr<nsIContent> parent;
-        content->GetParent(*getter_AddRefs(parent));
+        content->GetParent(getter_AddRefs(parent));
         if (parent)
           return;
         else

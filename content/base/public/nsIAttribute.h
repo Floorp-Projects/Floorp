@@ -59,7 +59,7 @@ public:
   NS_IMETHOD SetContent(nsIContent* aContent) = 0;
   NS_IMETHOD GetContent(nsIContent** aContent) = 0;
 
-  NS_IMETHOD GetNodeInfo(nsINodeInfo*& aNodeInfo) = 0;
+  NS_IMETHOD GetNodeInfo(nsINodeInfo** aNodeInfo) = 0;
 };
 
 #endif /* nsIAttribute_h___ */

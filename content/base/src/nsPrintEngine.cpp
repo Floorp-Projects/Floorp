@@ -1966,7 +1966,7 @@ nsPrintEngine::MapContentForPO(nsPrintObject*   aRootObject,
   NS_ASSERTION(aContent, "Pointer is null!");
 
   nsCOMPtr<nsIDocument> doc;
-  aContent->GetDocument(*getter_AddRefs(doc));
+  aContent->GetDocument(getter_AddRefs(doc));
 
   if (!doc) {
     NS_ERROR("No document!");
@@ -2025,9 +2025,9 @@ nsPrintEngine::MapContentForPO(nsPrintObject*   aRootObject,
   // walk children content
   PRInt32 count;
   aContent->ChildCount(count);
-  for (PRInt32 i=0;i<count;i++) {
-    nsIContent* child;
-    aContent->ChildAt(i, child);
+  nsCOMPtr<nsIContent> child;
+  for (PRInt32 i = 0; i < count; ++i) {
+    aContent->ChildAt(i, getter_AddRefs(child));
     MapContentForPO(aRootObject, aPresShell, child);
   }
 }
@@ -2757,7 +2757,8 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO, PRBool aDoCalcShrink)
   // get the old history
   nsCOMPtr<nsIPresShell> presShell;
   nsCOMPtr<nsILayoutHistoryState>  layoutState;
-  NS_ENSURE_SUCCESS(mDocViewer->GetPresShell(*(getter_AddRefs(presShell))), NS_ERROR_FAILURE);
+  rv = mDocViewer->GetPresShell(getter_AddRefs(presShell));
+  NS_ENSURE_SUCCESS(rv, rv);
   presShell->CaptureHistoryState(getter_AddRefs(layoutState), PR_TRUE);
 
   // set it on the new pres shell
@@ -3707,7 +3708,7 @@ nsPrintEngine::FindFrameByType(nsIPresContext* aPresContext,
     child->GetContent(getter_AddRefs(content));
     if (content) {
       nsCOMPtr<nsIAtom> type;
-      content->GetTag(*getter_AddRefs(type));
+      content->GetTag(getter_AddRefs(type));
       if (type.get() == aType) {
         nsRect r;
         child->GetRect(r);
@@ -4000,7 +4001,7 @@ nsPrintEngine::FindFocusedDOMWindowInternal()
   nsCOMPtr<nsIFocusController>    focusController;
   nsIDOMWindowInternal *          domWin = nsnull;
 
-  mDocViewer->GetDocument(*getter_AddRefs(theDoc));
+  mDocViewer->GetDocument(getter_AddRefs(theDoc));
   if(theDoc){
     theDoc->GetScriptGlobalObject(getter_AddRefs(theSGO));
     if(theSGO){

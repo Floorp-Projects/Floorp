@@ -263,7 +263,7 @@ nsTextInputListener::NotifySelectionChanged(nsIDOMDocument* aDoc, nsISelection* 
     if (content) 
     {
       nsCOMPtr<nsIDocument> doc;
-      if (NS_SUCCEEDED(content->GetDocument(*getter_AddRefs(doc)))) 
+      if (NS_SUCCEEDED(content->GetDocument(getter_AddRefs(doc))))
       {
         if (doc) 
         {
@@ -386,7 +386,7 @@ nsTextInputListener::UpdateTextInputCommands(const nsAString& commandsToUpdate)
   NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
   
   nsCOMPtr<nsIDocument> doc;
-  rv = content->GetDocument(*getter_AddRefs(doc));
+  rv = content->GetDocument(getter_AddRefs(doc));
   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject;
@@ -780,11 +780,11 @@ nsTextInputSelectionImpl::CompleteMove(PRBool aForward, PRBool aExtend)
     if (offset > 0)
     {
       nsCOMPtr<nsIContent> child;
-      result = parentDIV->ChildAt(offset - 1, *getter_AddRefs(child));
+      result = parentDIV->ChildAt(offset - 1, getter_AddRefs(child));
       if (NS_SUCCEEDED(result) && child)
       {
         nsCOMPtr<nsIAtom> tagName;
-        result = child->GetTag(*getter_AddRefs(tagName));
+        result = child->GetTag(getter_AddRefs(tagName));
         if (NS_SUCCEEDED(result) && tagName.get() == nsHTMLAtoms::br)
         {
           --offset;
@@ -1322,7 +1322,7 @@ PRBool nsTextControlFrame::IsTextArea() const
     return PR_FALSE;
 
   nsCOMPtr<nsIAtom> tag;
-  mContent->GetTag(*getter_AddRefs(tag));
+  mContent->GetTag(getter_AddRefs(tag));
 
   if (nsHTMLAtoms::textarea == tag)
     return PR_TRUE;
@@ -1655,7 +1655,7 @@ nsTextControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsINodeInfoManager> nodeInfoManager;
-  rv = doc->GetNodeInfoManager(*getter_AddRefs(nodeInfoManager));
+  rv = doc->GetNodeInfoManager(getter_AddRefs(nodeInfoManager));
 
   if (NS_FAILED(rv))
     return rv;
@@ -1665,7 +1665,7 @@ nsTextControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   nsCOMPtr<nsINodeInfo> nodeInfo;
   rv = nodeInfoManager->GetNodeInfo(nsHTMLAtoms::div, nsnull,
                                     kNameSpaceID_XHTML,
-                                    *getter_AddRefs(nodeInfo));
+                                    getter_AddRefs(nodeInfo));
 
   if (NS_FAILED(rv))
     return rv;
@@ -2295,10 +2295,10 @@ nsTextControlFrame::SelectAllContents()
     // We never want to place the selection after the last
     // br under the root node!
     nsCOMPtr<nsIContent> child;
-    rv = rootContent->ChildAt(numChildren - 1, *getter_AddRefs(child));
+    rv = rootContent->ChildAt(numChildren - 1, getter_AddRefs(child));
     if (NS_SUCCEEDED(rv) && child) {
       nsCOMPtr<nsIAtom> tagName;
-      rv = child->GetTag(*getter_AddRefs(tagName));
+      rv = child->GetTag(getter_AddRefs(tagName));
       if (NS_SUCCEEDED(rv) && tagName == nsHTMLAtoms::br)
         --numChildren;
     }

@@ -834,7 +834,7 @@ nsPlaintextEditor::GetDOMEventReceiver(nsIDOMEventReceiver **aEventReceiver)
   if (content) 
   { 
     nsCOMPtr<nsIContent> parent; 
-    if (NS_SUCCEEDED(content->GetParent(*getter_AddRefs(parent))) && parent) 
+    if (NS_SUCCEEDED(content->GetParent(getter_AddRefs(parent))) && parent)
     { 
       PRInt32 index; 
       if (NS_FAILED(parent->IndexOf(content, index)) || index < 0 ) 

@@ -137,7 +137,7 @@ public:
   void DocumentLoaded(nsIDocument* aBindingDoc)
   {
     nsCOMPtr<nsIDocument> doc;
-    mBoundElement->GetDocument(*getter_AddRefs(doc));
+    mBoundElement->GetDocument(getter_AddRefs(doc));
     if (!doc)
       return;
 
@@ -151,7 +151,7 @@ public:
     // XXX Deal with layered bindings.
     // Now do a ContentInserted notification to cause the frames to get installed finally,
     nsCOMPtr<nsIContent> parent;
-    mBoundElement->GetParent(*getter_AddRefs(parent));
+    mBoundElement->GetParent(getter_AddRefs(parent));
     PRInt32 index = 0;
     if (parent)
       parent->IndexOf(mBoundElement, index);
@@ -387,7 +387,7 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
     if (count > 0) {
       nsXBLBindingRequest* req = (nsXBLBindingRequest*)mBindingRequests.ElementAt(0);
       nsCOMPtr<nsIDocument> document;
-      req->mBoundElement->GetDocument(*getter_AddRefs(document));
+      req->mBoundElement->GetDocument(getter_AddRefs(document));
       if (document)
         document->FlushPendingNotifications();
     }
@@ -448,7 +448,7 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
     if (count > 0) {
       nsXBLBindingRequest* req = (nsXBLBindingRequest*)mBindingRequests.ElementAt(0);
       nsCOMPtr<nsIDocument> document;
-      req->mBoundElement->GetDocument(*getter_AddRefs(document));
+      req->mBoundElement->GetDocument(getter_AddRefs(document));
       if (document)
         document->FlushPendingNotifications();
     }
@@ -545,7 +545,7 @@ nsXBLService::LoadBindings(nsIContent* aContent, const nsAString& aURL, PRBool a
   nsresult rv;
 
   nsCOMPtr<nsIDocument> document;
-  aContent->GetDocument(*getter_AddRefs(document));
+  aContent->GetDocument(getter_AddRefs(document));
 
   // XXX document may be null if we're in the midst of paint suppression
   if (!document)
@@ -668,7 +668,7 @@ nsresult
 nsXBLService::FlushStyleBindings(nsIContent* aContent)
 {
   nsCOMPtr<nsIDocument> document;
-  aContent->GetDocument(*getter_AddRefs(document));
+  aContent->GetDocument(getter_AddRefs(document));
 
   // XXX doc will be null if we're in the midst of paint suppression.
   if (! document)
@@ -687,7 +687,7 @@ nsXBLService::FlushStyleBindings(nsIContent* aContent)
     if (styleBinding) {
       // Clear out the script references.
       nsCOMPtr<nsIDocument> document;
-      aContent->GetDocument(*getter_AddRefs(document));
+      aContent->GetDocument(getter_AddRefs(document));
       styleBinding->UnhookEventHandlers();
       styleBinding->ChangeDocument(document, nsnull);
     }
@@ -703,7 +703,7 @@ NS_IMETHODIMP
 nsXBLService::ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID, nsIAtom** aResult)
 {
   nsCOMPtr<nsIDocument> document;
-  aContent->GetDocument(*getter_AddRefs(document));
+  aContent->GetDocument(getter_AddRefs(document));
   if (document) {
     nsCOMPtr<nsIBindingManager> bindingManager;
     document->GetBindingManager(getter_AddRefs(bindingManager));
@@ -712,8 +712,8 @@ nsXBLService::ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID, nsIAtom** 
       return bindingManager->ResolveTag(aContent, aNameSpaceID, aResult);
   }
 
-  aContent->GetNameSpaceID(*aNameSpaceID);
-  aContent->GetTag(*aResult); // Addref happens here.
+  aContent->GetNameSpaceID(aNameSpaceID);
+  aContent->GetTag(aResult); // Addref happens here.
   return NS_OK;
 }
 
@@ -736,7 +736,7 @@ nsXBLService::GetXBLDocumentInfo(const nsCString& aURLStr, nsIContent* aBoundEle
   if (!*aResult) {
     // The second line of defense is the binding manager's document table.
     nsCOMPtr<nsIDocument> boundDocument;
-    aBoundElement->GetDocument(*getter_AddRefs(boundDocument));
+    aBoundElement->GetDocument(getter_AddRefs(boundDocument));
     if (boundDocument) {
       nsCOMPtr<nsIBindingManager> bindingManager;
       boundDocument->GetBindingManager(getter_AddRefs(bindingManager));
@@ -763,7 +763,7 @@ nsXBLService::AttachGlobalKeyHandler(nsIDOMEventReceiver* aReceiver)
   nsCOMPtr<nsIContent> contentNode(do_QueryInterface(aReceiver));
   if (contentNode) {
     nsCOMPtr<nsIDocument> doc;
-    contentNode->GetDocument(*getter_AddRefs(doc));  
+    contentNode->GetDocument(getter_AddRefs(doc));
     if (doc)
       rec = do_QueryInterface(doc); // We're a XUL keyset. Attach to our document.
   }
@@ -901,7 +901,7 @@ NS_IMETHODIMP nsXBLService::GetBindingInternal(nsIContent* aBoundElement,
   uri.Truncate(indx);
 
   nsCOMPtr<nsIDocument> boundDocument;
-  aBoundElement->GetDocument(*getter_AddRefs(boundDocument));
+  aBoundElement->GetDocument(getter_AddRefs(boundDocument));
 
   nsCOMPtr<nsIXBLDocumentInfo> docInfo;
   LoadBindingDocumentInfo(aBoundElement, boundDocument, uri, ref, PR_FALSE, getter_AddRefs(docInfo));
@@ -995,7 +995,7 @@ NS_IMETHODIMP nsXBLService::GetBindingInternal(nsIContent* aBoundElement,
             PRInt32 nameSpaceID;
 
             nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceID(nameSpace,
-                                                                  nameSpaceID);
+                                                                  &nameSpaceID);
 
             nsCOMPtr<nsIAtom> tagName = do_GetAtom(display);
             protoBinding->SetBaseTag(nameSpaceID, tagName);
@@ -1069,7 +1069,7 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement, nsIDocument* aB
 
     nsCOMPtr<nsIAtom> tagName;
     if (aBoundElement)
-      aBoundElement->GetTag(*getter_AddRefs(tagName));
+      aBoundElement->GetTag(getter_AddRefs(tagName));
     if (!info && bindingManager &&
         (tagName != nsXULAtoms::scrollbar) &&
         (tagName != nsXULAtoms::thumb) &&
@@ -1167,7 +1167,7 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
 
   nsCOMPtr<nsIAtom> tagName;
   if (aBoundElement)
-    aBoundElement->GetTag(*getter_AddRefs(tagName)); 
+    aBoundElement->GetTag(getter_AddRefs(tagName));
 
   if (tagName == nsXULAtoms::scrollbar ||
       tagName == nsXULAtoms::thumb || 

@@ -90,7 +90,7 @@ nsTreeUtils::GetImmediateChild(nsIContent* aContainer, nsIAtom* aTag, nsIContent
   for (ChildIterator::Init(aContainer, &iter, &last); iter != last; ++iter) {
     nsCOMPtr<nsIContent> child = *iter;
     nsCOMPtr<nsIAtom> tag;
-    child->GetTag(*getter_AddRefs(tag));
+    child->GetTag(getter_AddRefs(tag));
     if (tag == aTag) {
       NS_ADDREF(*aResult = child);
       return NS_OK;

@@ -789,7 +789,7 @@ nsHTMLFormElement::DoSubmitOrReset(nsIPresContext* aPresContext,
 
   // Make sure the presentation is up-to-date
   nsCOMPtr<nsIDocument> doc;
-  GetDocument(*getter_AddRefs(doc));
+  GetDocument(getter_AddRefs(doc));
   if (doc) {
     doc->FlushPendingNotifications();
   }
@@ -1306,7 +1306,7 @@ nsHTMLFormElement::GetActionURL(nsIURI** aActionURL)
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
     nsCOMPtr<nsIURI> baseURL;
-    GetBaseURL(*getter_AddRefs(baseURL));
+    GetBaseURL(getter_AddRefs(baseURL));
     NS_ASSERTION(baseURL, "No Base URL found in Form Submit!\n");
     if (!baseURL) {
       return NS_OK; // No base URL -> exit early, see Bug 30721
