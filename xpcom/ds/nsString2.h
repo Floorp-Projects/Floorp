@@ -18,6 +18,24 @@
 
 
 /***********************************************************************
+  GENERAL STRING ISSUES:
+
+    1. nsStrings and nsAutoString are always null terminated. 
+    2. If you try to set a null char (via SetChar()) a new length is set
+    3. nsCStrings can be upsampled into nsString without data loss
+    4. Char searching is faster than string searching. Use char interfaces
+       if your needs will allow it.
+    5. It's easy to use the stack for nsAutostring buffer storage (fast too!).
+       See the CBufDescriptor class in nsStr.h
+    6. It's ONLY ok to provide non-null-terminated buffers to Append() and Insert()
+       provided you specify a 0<n value for the optional count argument.
+    7. Downsampling from nsString to nsCString is lossy -- don't do it!
+
+ ***********************************************************************/
+
+
+
+/***********************************************************************
   MODULE NOTES:
 
   This version of the nsString class offers many improvements over the
@@ -230,11 +248,6 @@ nsSubsumeStr operator+(PRUnichar aChar);
   Lexomorphic transforms...
  *********************************************************************/
 
-/**
- * Converts all chars in given string to UCS2
- * which ensure that the lower 256 chars are correct.
- */
-void ToUCS2(PRUint32 aStartOffset);
 
 /**
  * Converts chars in this to lowercase
@@ -447,7 +460,6 @@ nsString& Append(const nsString& aString) {return Append(aString,aString.mLength
  *  
  *  @param   aString is the source to be appended to this
  *  @param   aCount -- number of chars to copy; -1 tells us to compute the strlen for you
- *           WARNING: If you provide a count>0, we don't double check the actual string length!
  *  @return  number of chars copied
  */
 nsString& Append(const nsStr& aString,PRInt32 aCount);
@@ -720,6 +732,14 @@ PRBool  EqualsIgnoreCase(const char* aString,PRInt32 aCount=-1) const;
 PRBool  EqualsIgnoreCase(const nsIAtom *aAtom) const;
 PRBool  EqualsIgnoreCase(const PRUnichar* s1, const PRUnichar* s2) const;
 
+/**
+ *  Determine if given buffer is plain ascii
+ *  
+ *  @param   aBuffer -- if null, then we test *this, otherwise we test given buffer
+ *  @return  TRUE if is all ascii chars or if strlen==0
+ */
+PRBool IsASCII(const PRUnichar* aBuffer=0);
+
 
 /**
  *  Determine if given char is a valid space character
@@ -771,7 +791,7 @@ public:
     nsAutoString(const char* aCString,eCharSize aCharSize=kDefaultCharSize,PRInt32 aLength=-1);
     nsAutoString(const PRUnichar* aString,eCharSize aCharSize=kDefaultCharSize,PRInt32 aLength=-1);
 
-    nsAutoString(CSharedStrBuffer& aBuffer);    
+    nsAutoString(CBufDescriptor& aBuffer);    
     nsAutoString(const nsStr& aString,eCharSize aCharSize=kDefaultCharSize);
     nsAutoString(const nsAutoString& aString,eCharSize aCharSize=kDefaultCharSize);
 #ifdef AIX
@@ -783,11 +803,11 @@ public:
     virtual ~nsAutoString();
 
     nsAutoString& operator=(const nsStr& aString) {nsString::Assign(aString); return *this;}
-    nsAutoString& operator=(const nsAutoString& aString) {nsString::operator=(aString); return *this;}
-    nsAutoString& operator=(const char* aCString) {nsString::operator=(aCString); return *this;}
-    nsAutoString& operator=(char aChar) {nsString::operator=(aChar); return *this;}
-    nsAutoString& operator=(const PRUnichar* aBuffer) {nsString::operator=(aBuffer); return *this;}
-    nsAutoString& operator=(PRUnichar aChar) {nsString::operator=(aChar); return *this;}
+    nsAutoString& operator=(const nsAutoString& aString) {nsString::Assign(aString); return *this;}
+    nsAutoString& operator=(const char* aCString) {nsString::Assign(aCString); return *this;}
+    nsAutoString& operator=(char aChar) {nsString::Assign(aChar); return *this;}
+    nsAutoString& operator=(const PRUnichar* aBuffer) {nsString::Assign(aBuffer); return *this;}
+    nsAutoString& operator=(PRUnichar aChar) {nsString::Assign(aChar); return *this;}
 
     /**
      * Retrieve the size of this string
@@ -797,6 +817,7 @@ public:
     
     char mBuffer[32];
 };
+
 
 
 /***************************************************************
