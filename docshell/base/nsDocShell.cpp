@@ -3306,8 +3306,35 @@ NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI, nsIURI* aReferrerURI,
    // open a channel for the url
    nsCOMPtr<nsIChannel> channel;
    nsresult rv;
+
+   nsCOMPtr<nsIInterfaceRequestor> ifreq;
+
+   // This is a workaround to get javascript: URL's with a target
+   // attribute execute in the correct window, this only works if the
+   // target window exists when the link is clicked.
+   if (aWindowTarget && *aWindowTarget) {
+     nsXPIDLCString urlScheme;
+     aURI->GetScheme(getter_Copies(urlScheme));
+     // do it only for javascript urls!
+     if (urlScheme && !nsCRT::strcasecmp(jsSchemeName, urlScheme)) {
+       nsAutoString targetName; targetName.AssignWithConversion(aWindowTarget);
+
+       nsCOMPtr<nsIDocShellTreeItem> targetDocShell;
+
+       FindItemWithName(targetName.GetUnicode(),
+                        NS_STATIC_CAST(nsIInterfaceRequestor*, this),
+                        getter_AddRefs(targetDocShell));
+
+       ifreq = do_QueryInterface(targetDocShell);
+     }
+   }
+   // End of workaround.
+
+   if (!ifreq)
+     ifreq = NS_STATIC_CAST(nsIInterfaceRequestor*, this);
+
    rv = NS_OpenURI(getter_AddRefs(channel), aURI, nsnull, loadGroup, 
-                     NS_STATIC_CAST(nsIInterfaceRequestor*, this));
+                   ifreq);
    if(NS_FAILED(rv))
       {
       if(NS_ERROR_DOM_RETVAL_UNDEFINED == rv) // if causing the channel changed the
