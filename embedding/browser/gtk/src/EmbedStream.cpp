@@ -37,8 +37,6 @@
 
 NS_IMPL_ISUPPORTS1(EmbedStream, nsIInputStream)
 
-static NS_DEFINE_CID(kSimpleURICID,            NS_SIMPLEURI_CID);
-
 EmbedStream::EmbedStream()
 {
   NS_INIT_REFCNT();
@@ -108,7 +106,7 @@ EmbedStream::OpenStream(const char *aBaseURI, const char *aContentType)
 
   // create a new uri object
   nsCOMPtr<nsIURI> uri;
-  uri = do_CreateInstance(kSimpleURICID, &rv);
+  uri = do_CreateInstance(NS_STANDARDURL_CONTRACTID, &rv);
   if (NS_FAILED(rv))
     return rv;
 
