@@ -32,13 +32,20 @@
 #ifdef EXPORT_XPTI_API
 #define XPTI_PUBLIC_API(t)    PR_IMPLEMENT(t)
 #define XPTI_PUBLIC_DATA(t)   PR_IMPLEMENT_DATA(t)
+#ifdef _WIN32
+#    define XPTI_EXPORT           _declspec(dllexport)
+#else
+#    define XPTI_EXPORT
+#endif
 #else
 #ifdef _WIN32
 #    define XPTI_PUBLIC_API(t)    _declspec(dllimport) t
 #    define XPTI_PUBLIC_DATA(t)   _declspec(dllimport) t
+#    define XPTI_EXPORT           _declspec(dllimport)
 #else
 #    define XPTI_PUBLIC_API(t)    PR_IMPLEMENT(t)
 #    define XPTI_PUBLIC_DATA(t)   t
+#    define XPTI_EXPORT
 #endif
 #endif
 #define XPTI_FRIEND_API(t)    XPTI_PUBLIC_API(t)
