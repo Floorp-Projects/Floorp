@@ -103,4 +103,3 @@ nsFTPAsyncWriteEvent::HandleEvent()
     if (NS_FAILED(rv)) return rv;
     return mChannel->AsyncWrite(mInStream, mObserver, mContext);
 }
-

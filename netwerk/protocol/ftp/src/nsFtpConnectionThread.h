@@ -201,7 +201,6 @@ private:
     PRBool                 mConnected;  // are we connected.
     PRBool                 mSentStart;  // have we sent an OnStartRequest() notification
     PRUint8                mSuspendCount;// number of times we've been suspended.
-    nsCOMPtr<nsIChannel>   mFTPChannel;// used to synchronize w/ our owning channel.
     PRUint32               mBufferSegmentSize;
     PRUint32               mBufferMaxSize;
     PRLock                 *mLock;
