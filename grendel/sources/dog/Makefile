@@ -26,3 +26,7 @@ SUBDIRS=		\
 	$(NULL)
 
 include ../../rules.mk
+
+resources::
+
+

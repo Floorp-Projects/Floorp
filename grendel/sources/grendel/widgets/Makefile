@@ -57,3 +57,8 @@ SRCS=					\
 	$(NULL)
 
 include ../../../rules.mk
+
+resources::
+	cp -r images $(DISTDIR)/grendel/widgets
+	cp -r toolbar $(DISTDIR)/grendel/widgets
+

@@ -33,3 +33,9 @@ SRCS=				\
 	$(NULL)
 
 include ../../../rules.mk
+
+resources::
+	cp *.properties $(DISTDIR)/grendel/addressbook
+	cp *.xml $(DISTDIR)/grendel/addressbook
+	cp *.gif $(DISTDIR)/grendel/addressbook
+

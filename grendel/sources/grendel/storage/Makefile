@@ -78,3 +78,6 @@ SRCS=						\
 
 
 include ../../../rules.mk
+
+resources::
+

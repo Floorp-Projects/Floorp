@@ -28,3 +28,7 @@ SRCS=               \
 	$(NULL)
 
 include ../../../../rules.mk
+
+resources::
+	cp -r images $(DISTDIR)/grendel/prefs/ui
+

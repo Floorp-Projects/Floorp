@@ -34,3 +34,7 @@ SRCS=					\
 	$(NULL)
 
 include ../../../../rules.mk
+
+resources::
+
+

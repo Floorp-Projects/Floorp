@@ -28,3 +28,8 @@ SUBDIRS=		\
 
 
 include ../../../rules.mk
+
+resources::
+	cp *.xml $(DISTDIR)/grendel/prefs
+	cp *.properties $(DISTDIR)/grendel/prefs
+

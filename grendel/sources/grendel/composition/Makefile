@@ -19,7 +19,7 @@
 #
 # Contributor(s): Giao Nguyen <grail@cafebabe.org>
 
-TOPDIR=../../.. 
+TOPDIR=../../..
 SRCS=					\
 	AddressBar.java			\
 	AddressDialog.java		\
@@ -38,3 +38,10 @@ SRCS=					\
 	$(NULL)
 
 include ../../../rules.mk
+
+resources::
+	cp *.properties $(DISTDIR)/grendel/composition
+	cp *.xml $(DISTDIR)/grendel/composition
+	cp -r images $(DISTDIR)/grendel/composition
+	cp contenthandlers $(DISTDIR)/grendel/composition
+

@@ -31,3 +31,8 @@ SRCS=				\
 	$(NULL)
 
 include ../../../rules.mk
+
+resources::
+	cp *.xml $(DISTDIR)/grendel/integrator
+	cp *.properties $(DISTDIR)/grendel/integrator
+
