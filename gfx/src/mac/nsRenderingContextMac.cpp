@@ -497,10 +497,11 @@ nscolor nsRenderingContextMac :: GetColor() const
 
 void nsRenderingContextMac :: SetFont(const nsFont& aFont)
 {
-/*
   NS_IF_RELEASE(mFontMetrics);
-  mFontMetrics = mFontCache->GetMetricsFor(aFont);
+  if (mFontCache)
+	mFontCache->GetMetricsFor(aFont, mFontMetrics);
 
+/*
   if (mFontMetrics)
   {  
 //    mCurrFontHandle = ::XLoadFont(mRenderingSurface->display, (char *)mFontMetrics->GetFontHandle());
@@ -517,7 +518,7 @@ void nsRenderingContextMac :: SetFont(const nsFont& aFont)
 	//NS_IF_RELEASE(mFontMetrics);
 	//mFontCache->GetMetricsFor(aFont, mFontMetrics);
 
-	//if (mFontMetrics)
+	if (mFontMetrics)
 	{
 		nsString nstr(aFont.name);
 		nstr.Truncate(254);
@@ -526,6 +527,44 @@ void nsRenderingContextMac :: SetFont(const nsFont& aFont)
 		nstr.ToCString((char*)&aStr[1], 254);
 		short fnum;
 		::GetFNum(aStr, &fnum);
+
+		if (fnum == 0)
+		{
+			StringPtr macfont = "\phelvetica";
+			if (nstr.EqualsIgnoreCase("Times Roman")) {
+				macfont = "\ptimes";
+			}
+			if (nstr.EqualsIgnoreCase("Times New Roman")) {
+				macfont = "\ptimes";
+			}
+			if (nstr.EqualsIgnoreCase("Unicode")) {
+				macfont = "\ptimes";	// "Bitstream Cyberbit";
+			}
+			if (nstr.EqualsIgnoreCase("Courier New")) {
+				macfont = "\pcourier";
+			}
+			if (nstr.EqualsIgnoreCase("Arial")) {
+				macfont = "\phelvetica";
+			}
+
+			  // the CSS generic names
+			if (nstr.EqualsIgnoreCase("serif")) {
+				macfont = "\ptimes";
+			}
+			if (nstr.EqualsIgnoreCase("sans-serif")) {
+				macfont = "\phelvetica";
+			}
+			if (nstr.EqualsIgnoreCase("cursive")) {
+			//    return "XXX";
+			}
+			if (nstr.EqualsIgnoreCase("fantasy")) {
+			//    return "XXX";
+			}
+			if (nstr.EqualsIgnoreCase("monospace")) {
+				macfont = "\pcourier";
+			}
+    		::GetFNum(macfont, &fnum);
+		}
 		::TextFont(fnum);
 	}
 }
@@ -535,7 +574,7 @@ void nsRenderingContextMac :: SetFont(const nsFont& aFont)
 const nsFont& nsRenderingContextMac :: GetFont()
 {
   const nsFont* font = nsnull;
-  //mFontMetrics->GetFont(font);
+  mFontMetrics->GetFont(font);
   return *font;
 }
 
