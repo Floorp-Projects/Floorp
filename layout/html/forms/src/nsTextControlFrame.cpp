@@ -585,16 +585,6 @@ nsTextInputSelectionImpl::SetCaretEnabled(PRBool enabled)
 
   nsCOMPtr<nsIPresShell> shell = do_QueryReferent(mPresShellWeak);
   if (!shell) return NS_ERROR_FAILURE;
-  
-  // first, tell the caret which selection to use
-  nsCOMPtr<nsISelection> domSel;
-  GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSel));
-  if (!domSel) return NS_ERROR_FAILURE;
-  
-  nsCOMPtr<nsICaret> caret;
-  shell->GetCaret(getter_AddRefs(caret));
-  if (!caret) return NS_OK;
-  caret->SetCaretDOMSelection(domSel);
 
   // tell the pres shell to enable the caret, rather than settings its visibility directly.
   // this way the presShell's idea of caret visibility is maintained.
@@ -2086,7 +2076,39 @@ nsTextControlFrame::GetFormControlType() const
   return nsFormControlHelper::GetType(mContent);
 }
 
-void    nsTextControlFrame::SetFocus(PRBool aOn , PRBool aRepaint){}
+void    nsTextControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
+{
+  if (!aOn || !mSelCon)
+    return;
+    
+  // tell the caret to use our selection
+
+  nsCOMPtr<nsISelection> ourSel;
+  mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL, 
+    getter_AddRefs(ourSel));
+  if (!ourSel) return;
+
+  nsIPresShell* presShell = GetPresContext()->GetPresShell();
+  nsCOMPtr<nsICaret> caret;
+  presShell->GetCaret(getter_AddRefs(caret));
+  if (!caret) return;
+  caret->SetCaretDOMSelection(ourSel);
+
+  // mutual-exclusion: the selection is either controlled by the
+  // document or by the text input/area. Clear any selection in the
+  // document since the focus is now on our independent selection.
+
+  nsCOMPtr<nsISelectionController> selCon(do_QueryInterface(presShell));
+  nsCOMPtr<nsISelection> docSel;
+  selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
+    getter_AddRefs(docSel));
+  if (!docSel) return;
+
+  PRBool isCollapsed = PR_FALSE;
+  docSel->GetIsCollapsed(&isCollapsed);
+  if (!isCollapsed)
+    docSel->RemoveAllRanges();
+}
 
 void    nsTextControlFrame::ScrollIntoView(nsIPresContext* aPresContext)
 {
