@@ -989,11 +989,13 @@ nsresult nsMsgDBView::UpdateDisplayMessage(nsMsgViewIndex viewPosition)
       rv = msgHdr->GetStringProperty("keywords", getter_Copies(keywords));
       NS_ENSURE_SUCCESS(rv,rv);
 
-      mCommandUpdater->DisplayMessageChanged(m_viewFolder, subject, keywords);
+      nsCOMPtr<nsIMsgFolder> folder = m_viewFolder ? m_viewFolder : m_folder;
 
-      if (m_viewFolder) 
+      mCommandUpdater->DisplayMessageChanged(folder, subject, keywords);
+
+      if (folder) 
       {
-        rv = m_viewFolder->SetLastMessageLoaded(m_keys[viewPosition]);
+        rv = folder->SetLastMessageLoaded(m_keys[viewPosition]);
         NS_ENSURE_SUCCESS(rv,rv);
       }
     } // if view position is valid
