@@ -355,6 +355,7 @@ DayView.prototype.createEventBox = function dayview_createEventBox( calendarEven
    }
 
    var eventHTMLElement = document.createElement( "label" );
+   eventHTMLElement.setAttribute( "class", "day-view-event-label-class" );
    eventHTMLElement.setAttribute( "value", calendarEventDisplay.event.title );
    eventHTMLElement.setAttribute( "flex", "1" );
    eventHTMLElement.setAttribute( "crop", "end" );

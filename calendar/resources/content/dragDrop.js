@@ -42,11 +42,22 @@ function calendarViewClick ( aEvent ) {
    if(aEvent.target.className == "day-view-hour-box-class")
       dayViewHourClick( aEvent );
 
-   if(aEvent.target.className == "day-view-event-class")
-      dayEventItemClick( aEvent.target, aEvent );
+   if(aEvent.target.parentNode.className == "day-view-event-class")
+      gCalendarWindow.EventSelection.replaceSelection( aEvent.target.parentNode.calendarEventDisplay.event );
 
-   if (gCalendarWindow.currentView == gCalendarWindow.weekView)
-      ;//weekViewHourClick( aEvent );
+
+   if(aEvent.target.className == "day-view-event-class")
+      gCalendarWindow.EventSelection.replaceSelection( aEvent.target.calendarEventDisplay.event );
+     //dayEventItemClick( aEvent.target, aEvent );
+
+   if(aEvent.target.className == "week-view-event-class")
+      gCalendarWindow.EventSelection.replaceSelection( aEvent.target.calendarEventDisplay.event );
+
+   if(aEvent.target.className == "week-view-event-label-class")
+      gCalendarWindow.EventSelection.replaceSelection( aEvent.target.parentNode.calendarEventDisplay.event );
+
+   //if (gCalendarWindow.currentView == gCalendarWindow.weekView)
+     //weekViewHourClick( aEvent );
 }
 
 //var startDateIndex;
@@ -72,8 +83,25 @@ var calendarViewDNDObserver = {
       if( aEvent.target.localName == "splitter" || aEvent.target.localName == "menu")
          throw Components.results.NS_OK; // not a draggable item
 
-      if(aEvent.target.className == "day-view-event-class" ||
-         aEvent.target.className == "week-view-event-label-class")
+      switch (aEvent.target.className) {
+      case "day-view-event-label-class" :
+      case "day-view-event-class" :
+	var eventIsDragged = true ;
+	this.startDragDayIndex = 0 ;
+	break;
+      case "week-view-event-class" :
+	var eventIsDragged = true ;
+	this.startDragDayIndex = aEvent.target.getAttribute( "dayindex" );
+	break;
+      case "week-view-event-label-class" :
+	var eventIsDragged = true ;
+	this.startDragDayIndex = aEvent.target.parentNode.getAttribute( "dayindex" );
+	break;
+      default :
+	var eventIsDragged = false ;
+      }
+
+      if(eventIsDragged == true)
       {
          // We are going to drag an event
          var dragEvents = gCalendarWindow.EventSelection.selectedEvents;
@@ -164,7 +192,21 @@ var calendarViewDNDObserver = {
          // calculate new start/end time for droplocation
          // use the minutes from the event, and change the hour to the hour dropped in
          var gDropzoneStartTime = new Date( dropEvent.start.getTime() );
+	 
+ 	 if(aEvent.target.getAttribute( "hour" ))
+	   {
          gDropzoneStartTime.setHours( aEvent.target.getAttribute( "hour" ) );
+	   }
+	 else
+	   {
+	     gDropzoneStartTime.setHours( aEvent.target.parentNode.calendarEventDisplay.event.start.hour );
+	   }
+	 if(aEvent.target.getAttribute( "day" )) 
+	   { //We are is the week view, so we check the drop day
+	     var theNewDate = gDropzoneStartTime.getDate() - this.startDragDayIndex + parseInt(aEvent.target.getAttribute( "day" ));
+	     gDropzoneStartTime.setDate(theNewDate);
+	   }
+
          var draggedTime = gDropzoneStartTime - dropEvent.start ;
          var eventDuration = dropEvent.end.getTime() - dropEvent.start.getTime();
 
@@ -325,4 +367,3 @@ var calendarViewDNDObserver = {
 
 
 };
-
