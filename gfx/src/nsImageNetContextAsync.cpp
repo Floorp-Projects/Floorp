@@ -749,7 +749,7 @@ NS_NewImageNetContext(ilINetContext **aInstancePtrResult,
     return NS_ERROR_NULL_POINTER;
   }
   
-  ilINetContext *cx = new ImageNetContextImpl(TV_IMG_NTWK_SERVER,
+  ilINetContext *cx = new ImageNetContextImpl(IMG_NTWK_SERVER,
                                               aLoadContext,
                                               aReconnectCallback,
                                               aReconnectArg);
