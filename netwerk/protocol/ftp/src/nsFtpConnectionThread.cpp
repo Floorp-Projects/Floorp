@@ -82,10 +82,10 @@ nsFtpConnectionThread::Run() {
 
     // Create the command channel transport
     const char *host;
-    const PRInt32 port = 0;
+    PRInt32 port = 0;
     rv = mUrl->GetHost(&host);
     if (NS_FAILED(rv)) return rv;
-    rv = mUrl->GetPort(port);
+    rv = mUrl->GetPort(&port);
 	if (NS_FAILED(rv)) return rv;
 
     rv = sts->CreateTransport(host, port, &lCPipe); // the command channel
@@ -320,7 +320,7 @@ nsFtpConnectionThread::Run() {
 		    case FTP_R_PWD:
 			    {
 			    // fun response interpretation begins :)
-			    PRInt32 start = mResponseMsg.Find('"', FALSE, 5);
+			    PRInt32 start = mResponseMsg.Find('"', PR_FALSE, 5);
 			    nsString2 lNewMsg;
 			    if (start > -1) {
 				    mResponseMsg.Left(lNewMsg, start);
@@ -341,17 +341,17 @@ nsFtpConnectionThread::Run() {
 				    if (lNewMsg.CharAt(1) == '/') {
 					    // path names ending with '/' imply unix
 					    mServerType = FTP_UNIX_TYPE;
-					    mList = TRUE;
+					    mList = PR_TRUE;
 				    } else if (lNewMsg.Last() == ']') {
 					    // path names ending with ']' imply vms
 					    mServerType = FTP_VMS_TYPE;
-					    mList = TRUE;
+					    mList = PR_TRUE;
 				    }
 			    }
 
 			    if (mUseDefaultPath && mServerType != FTP_VMS_TYPE) {
 				    // we want to use the default path specified by the PWD command.
-				    PRInt32 start = lNewMsg.Find('"', FALSE, 1);
+				    PRInt32 start = lNewMsg.Find('"', PR_FALSE, 1);
 				    nsString2 path, ptr;
 				    lNewMsg.Right(path, start);
 
@@ -681,19 +681,19 @@ void
 nsFtpConnectionThread::SetSystInternals(void) {
     if (mResponseMsg.Equals("UNIX Type: L8 MAC-OS MachTen", 28)) {
 		mServerType = FTP_MACHTEN_TYPE;
-		mList = TRUE;
+		mList = PR_TRUE;
 	}
 	else if (mResponseMsg.Find("UNIX") > -1) {
 		mServerType = FTP_UNIX_TYPE;
-		mList = TRUE;
+		mList = PR_TRUE;
 	}
 	else if (mResponseMsg.Find("Windows_NT") > -1) {
 		mServerType = FTP_NT_TYPE;
-		mList = TRUE;
+		mList = PR_TRUE;
 	}
 	else if (mResponseMsg.Equals("VMS", 3)) {
 		mServerType = FTP_VMS_TYPE;
-		mList = TRUE;
+		mList = PR_TRUE;
 	}
 	else if (mResponseMsg.Equals("VMS/CMS", 6) || mResponseMsg.Equals("VM ", 3)) {
 		mServerType = FTP_CMS_TYPE;
@@ -703,15 +703,15 @@ nsFtpConnectionThread::SetSystInternals(void) {
 	}
 	else if (mResponseMsg.Find("MAC-OS TCP/Connect II") > -1) {
 		mServerType = FTP_TCPC_TYPE;
-		mList = TRUE;
+		mList = PR_TRUE;
 	}
 	else if (mResponseMsg.Equals("MACOS Peter's Server", 20)) {
 		mServerType = FTP_PETER_LEWIS_TYPE;
-		mList = TRUE;
+		mList = PR_TRUE;
 	}
 	else if (mResponseMsg.Equals("MACOS WebSTAR FTP", 17)) {
 		mServerType = FTP_WEBSTAR_TYPE;
-		mList = TRUE;
+		mList = PR_TRUE;
 	}
 }
 
