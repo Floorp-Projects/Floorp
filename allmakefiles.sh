@@ -480,8 +480,6 @@ rdf/datasource/Makefile
 rdf/datasource/public/Makefile
 rdf/datasource/src/Makefile
 rdf/tests/Makefile
-rdf/tests/localfile/Makefile
-rdf/tests/rdfsink/Makefile
 rdf/tests/rdfcat/Makefile
 rdf/tests/rdfpoll/Makefile
 "
