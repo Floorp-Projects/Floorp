@@ -115,6 +115,8 @@ public:
   NS_IMETHOD GetSortOrder(PRInt32 *order);
   NS_IMETHOD SetSortOrder(PRInt32 order);
 
+  NS_IMETHOD GetPersistElided(PRBool *aPersistElided);
+
 	// for nsMsgLineBuffer
 	virtual PRInt32 HandleLine(char *line, PRUint32 line_size);
 

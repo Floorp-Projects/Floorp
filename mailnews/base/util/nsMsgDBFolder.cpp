@@ -942,6 +942,16 @@ NS_IMETHODIMP nsMsgDBFolder::ReadFromFolderCacheElem(nsIMsgFolderCacheElement *e
 	char *charset;
 
 	element->GetInt32Property("flags", (PRInt32 *) &mFlags);
+
+  PRBool persistElided = PR_TRUE;
+  rv = GetPersistElided(&persistElided);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  // we aren't persisting elided, set the folder as closed
+  if (!persistElided) {
+    mFlags |= MSG_FOLDER_FLAG_ELIDED;
+  }
+
 	element->GetInt32Property("totalMsgs", &mNumTotalMessages);
 	element->GetInt32Property("totalUnreadMsgs", &mNumUnreadMessages);
   element->GetInt32Property("pendingUnreadMsgs", &mNumPendingUnreadMessages);
@@ -1593,4 +1603,3 @@ nsMsgDBFolder::MatchOrChangeFilterDestination(nsIMsgFolder *newFolder, PRBool ca
 
   return rv;
 }
-

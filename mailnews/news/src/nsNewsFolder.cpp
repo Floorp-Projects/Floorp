@@ -249,9 +249,7 @@ nsMsgNewsFolder::AddNewsgroup(const char *name, const char *setStr, nsIMsgFolder
   NS_ENSURE_SUCCESS(rv,rv);
   
   rv = folder->SetFlag(MSG_FOLDER_FLAG_NEWSGROUP);
-  if (NS_FAILED(rv)) return rv;        
-  
-  if (NS_FAILED(rv)) return rv;        
+  if (NS_FAILED(rv)) return rv;          
   
   PRUint32 numExistingGroups;
   rv = Count(&numExistingGroups);
@@ -352,7 +350,7 @@ nsMsgNewsFolder::GetSubFolders(nsIEnumerator* *result)
     rv = CreateSubFolders(path);
     if (NS_FAILED(rv)) return rv;
 
-	// force ourselves to get initialized from cache
+    // force ourselves to get initialized from cache
     // Don't care if it fails.  this will fail the first time after 
     // migration, but we continue on.  see #66018
     (void)UpdateSummaryTotals(PR_FALSE);
@@ -1759,4 +1757,27 @@ NS_IMETHODIMP nsMsgNewsFolder::GetSortOrder(PRInt32 *order)
   NS_ENSURE_ARG_POINTER(order);
   *order = mSortOrder;
   return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgNewsFolder::GetPersistElided(PRBool *aPersistElided)
+{
+  nsresult rv;
+
+  PRBool isNewsServer = PR_FALSE;
+  rv = GetIsServer(&isNewsServer);
+  NS_ENSURE_SUCCESS(rv,rv);
+ 
+  // persist the open / closed state, if not a server
+  // this doesn't matter right now, but it will if we ever add categories
+  if (!isNewsServer) {
+    *aPersistElided = PR_TRUE;
+    return NS_OK;
+  }
+
+  nsCOMPtr <nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = prefs->GetBoolPref("news.persist_server_open_state_in_folderpane", aPersistElided);
+  NS_ENSURE_SUCCESS(rv,rv);
+  return rv;
 }

@@ -323,3 +323,10 @@ pref("mail.server.default.retainBy", 1);
 // 1 -> 2 is for the folder pane outliner landing, to hide the
 // unread and total columns, see msgMail3PaneWindow.js
 pref("mail.ui.folderpane.version", 1);
+
+// true makes it so we persist the open state of news server when starting up the 3 pane
+// this is costly, as it might result in network activity.
+// false makes it so we act like 4.x
+// see bug #103010 for details
+pref("news.persist_server_open_state_in_folderpane",false);
+

@@ -196,6 +196,7 @@ public:
   NS_IMETHOD AlertFilterChanged(nsIMsgWindow *msgWindow);
   NS_IMETHOD ThrowAlertMsg(const char* msgName, nsIMsgWindow *msgWindow);
   NS_IMETHOD GetStringWithFolderNameFromBundle(const char* msgName, PRUnichar **aResult);
+  NS_IMETHOD GetPersistElided(PRBool *aPersistElided);
 
   // end NS_DECL_NSIMSGFOLDER
   

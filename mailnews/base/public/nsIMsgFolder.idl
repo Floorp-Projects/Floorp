@@ -396,4 +396,9 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
    * used for order in the folder pane, folder pickers, etc.
    */
   attribute long sortOrder;
+
+  /** 
+   * used to determine if we persist the close / open state of this folder or not
+   */
+  [noscript]readonly attribute boolean persistElided;
 };

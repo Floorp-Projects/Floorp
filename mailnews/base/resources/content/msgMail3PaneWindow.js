@@ -589,6 +589,10 @@ function loadStartFolder(initialUri)
 
         // because the "open" state persists, we'll call
         // PerformExpand() for all servers that are open at startup.
+        // note, because of the "news.persist_server_open_state_in_folderpane" pref
+        // we don't persist the "open" state of news servers across sessions, 
+        // but we do within a session, so if you open another 3 pane
+        // and a news server is "open", we'll update the unread counts.
         PerformExpandForAllOpenServers();
     }
     catch(ex)

@@ -2813,3 +2813,9 @@ NS_IMETHODIMP nsMsgFolder::GetSortOrder(PRInt32 *order)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgFolder::GetPersistElided(PRBool *aPersistElided)
+{
+  // by default, we should always persist the open / closed state of folders & servers
+  *aPersistElided = PR_TRUE;
+  return NS_OK;
+}
