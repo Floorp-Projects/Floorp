@@ -575,13 +575,13 @@ mozXMLTermMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
     return NS_OK;
   }
 
-  PRUint16 buttonCode = 0;
+  PRUint16 buttonCode = (PRUint16)-1;
   mouseEvent->GetButton(&buttonCode);
 
   XMLT_LOG(mozXMLTermMouseListener::MouseDown,50,("buttonCode=%d\n",
                                                   buttonCode));
 
-  if (buttonCode == 2) {
+  if (buttonCode == 1) {
     // Middle-mouse button pressed; initiate paste
     mXMLTerminal->Paste();
   }
@@ -612,7 +612,7 @@ mozXMLTermMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
     return NS_OK;
   }
 
-  PRUint16 buttonCode = 0;
+  PRUint16 buttonCode = (PRUint16)-1;
   mouseEvent->GetButton(&buttonCode);
 
   PRInt32 screenX, screenY;

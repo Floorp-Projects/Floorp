@@ -698,7 +698,8 @@ NS_METHOD nsDOMEvent::GetKeyCode(PRUint32* aKeyCode)
 NS_METHOD nsDOMEvent::GetButton(PRUint16* aButton)
 {
   if (!mEvent || mEvent->eventStructType != NS_MOUSE_EVENT) {
-    *aButton = 0;
+    NS_WARNING("Tried to get mouse button for null or non-mouse event!");
+    *aButton = (PRUint16)-1;
     return NS_OK;
   }
 
@@ -707,19 +708,19 @@ NS_METHOD nsDOMEvent::GetButton(PRUint16* aButton)
   case NS_MOUSE_LEFT_BUTTON_DOWN:
   case NS_MOUSE_LEFT_CLICK:
   case NS_MOUSE_LEFT_DOUBLECLICK:
-    *aButton = 1;
+    *aButton = 0;
     break;
   case NS_MOUSE_MIDDLE_BUTTON_UP:
   case NS_MOUSE_MIDDLE_BUTTON_DOWN:
   case NS_MOUSE_MIDDLE_CLICK:
   case NS_MOUSE_MIDDLE_DOUBLECLICK:
-    *aButton = 2;
+    *aButton = 1;
     break;
   case NS_MOUSE_RIGHT_BUTTON_UP:
   case NS_MOUSE_RIGHT_BUTTON_DOWN:
   case NS_MOUSE_RIGHT_CLICK:
   case NS_MOUSE_RIGHT_DOUBLECLICK:
-    *aButton = 3;
+    *aButton = 2;
     break;
   default:
     break;
@@ -860,7 +861,7 @@ NS_METHOD nsDOMEvent::GetWhich(PRUint32* aWhich)
     {
     PRUint16 button;
     (void) GetButton(&button);
-    *aWhich = button;
+    *aWhich = button + 1;
     break;
     }
   default:

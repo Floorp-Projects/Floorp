@@ -515,7 +515,7 @@ function moveMouse(event){
 
 function downMouse(event){
   dump(event.target.parentNode.id+"\n");
-  if (event.button == 1){
+  if (event.button == 0){
     if (currentTool != "poly"){
       startX = event.clientX+window.frames[0].pageXOffset;
       startY = event.clientY+window.frames[0].pageYOffset;
@@ -630,7 +630,7 @@ function downMouse(event){
 }
 
 function clickMouse(event){
-  if (event.button == 1){
+  if (event.button == 0){
     dump("body clicked\n");
     //alert(frameDoc.+'\n');
     startX = event.clientX+window.frames[0].pageXOffset;
