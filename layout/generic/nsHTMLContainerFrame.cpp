@@ -148,7 +148,7 @@ NS_METHOD nsHTMLContainerFrame::GetCursorAndContentAt(nsIPresContext& aPresConte
     mContent->GetTag(tag);
     if (nsHTMLAtoms::a == tag) {
       // Anchor tags override their child cursors in some cases.
-      if ((NS_STYLE_CURSOR_IBEAM == aCursor) &&
+      if ((NS_STYLE_CURSOR_TEXT == aCursor) &&
           (NS_STYLE_CURSOR_INHERIT != myCursor)) {
         aCursor = myCursor;
       }

@@ -886,7 +886,7 @@ ImageFrame::GetCursorAndContentAt(nsIPresContext& aPresContext,
     PRInt32 x = NSTwipsToIntPixels((aPoint.x - inner.x), t2p);
     PRInt32 y = NSTwipsToIntPixels((aPoint.y - inner.y), t2p);
     if (NS_OK == map->IsInside(x, y)) {
-      aCursor = NS_STYLE_CURSOR_HAND;
+      aCursor = NS_STYLE_CURSOR_POINTER;
     }
     NS_RELEASE(map);
   }
