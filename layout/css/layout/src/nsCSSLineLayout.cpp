@@ -36,12 +36,12 @@ nsCSSTextRun::List(FILE* out, PRInt32 aIndent)
   PRInt32 i;
   for (i = aIndent; --i >= 0; ) fputs("  ", out);
   PRInt32 n = mArray.Count();
-  fprintf(out, "%p: count=%d <\n", this, n);
+  fprintf(out, "%p: count=%d <", this, n);
   for (i = 0; i < n; i++) {
     nsIFrame* text = (nsIFrame*) mArray.ElementAt(i);
-    text->List(out, aIndent + 1);
+    text->ListTag(out);
+    printf(" ");
   }
-  for (i = aIndent; --i >= 0; ) fputs("  ", out);
   fputs(">\n", out);
 }
 
