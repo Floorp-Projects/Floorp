@@ -889,8 +889,8 @@ RDFXULBuilderImpl::OnAssert(nsIRDFResource* aSource,
             // Okay, it's a "live" element, so go ahead and insert the
             // new element under the parent node according to the
             // ordinal.
-            PRInt32 index;
-            rv = gRDFContainerUtils->OrdinalResourceToIndex(aProperty, &index);
+            PRInt32 indx;
+            rv = gRDFContainerUtils->OrdinalResourceToIndex(aProperty, &indx);
             if (NS_FAILED(rv)) return rv;
 
             nsCOMPtr<nsINameSpace> containingNameSpace;
@@ -901,9 +901,9 @@ RDFXULBuilderImpl::OnAssert(nsIRDFResource* aSource,
             rv = element->ChildCount(count);
             if (NS_FAILED(rv)) return rv;
 
-            if (index < count) {
-                // "index - 1" because RDF containers are 1-indexed.
-                rv = InsertChildAt(containingNameSpace, element, aTarget, index - 1);
+            if (indx < count) {
+                // "indx - 1" because RDF containers are 1-indexed.
+                rv = InsertChildAt(containingNameSpace, element, aTarget, indx - 1);
             }
             else {
                 rv = AppendChild(containingNameSpace, element, aTarget);
@@ -1142,8 +1142,8 @@ RDFXULBuilderImpl::OnChange(nsIRDFResource* aSource,
             // Okay, it's a "live" element, so go ahead and insert the
             // new element under the parent node according to the
             // ordinal.
-            PRInt32 index;
-            rv = gRDFContainerUtils->OrdinalResourceToIndex(aProperty, &index);
+            PRInt32 indx;
+            rv = gRDFContainerUtils->OrdinalResourceToIndex(aProperty, &indx);
             if (NS_FAILED(rv)) return rv;
 
             nsCOMPtr<nsINameSpace> containingNameSpace;
@@ -1154,8 +1154,8 @@ RDFXULBuilderImpl::OnChange(nsIRDFResource* aSource,
             rv = element->ChildCount(count);
             if (NS_FAILED(rv)) return rv;
 
-            // "index - 1" because RDF containers are 1-indexed.
-            rv = ReplaceChildAt(containingNameSpace, element, aNewTarget, index - 1);
+            // "indx - 1" because RDF containers are 1-indexed.
+            rv = ReplaceChildAt(containingNameSpace, element, aNewTarget, indx - 1);
             NS_ASSERTION(NS_SUCCEEDED(rv), "problem inserting new child into content model");
             if (NS_FAILED(rv)) return rv;
         }
