@@ -34,6 +34,7 @@
 #include "nsITextWidget.h"
 #include "nsITextAreaWidget.h"
 #include "nspr.h"
+#include "jsapi.h"
 
 #define TCP_MESG_SIZE                     1024
 #define TCP_SERVER_PORT                   666
@@ -91,6 +92,10 @@ private:
   PRMonitor *   mClientMon;
   PRNetAddr     mClientAddr;
   nsString      mCommand;
+  JSRuntime *	  mJSRuntime ;
+  JSContext *		mJSContext;
+  JSObject *    mJSGlobal;
+  JSObject *		mJSZuluObject;
 
 };
 

@@ -64,6 +64,100 @@ extern Widget topLevel;
 static void PR_CALLBACK TrexTestClientThread(void *arg);
 
 
+#include "jsapi.h"
+void PR_CALLBACK ZuluErrorReporter(JSContext *cx, const char *message, JSErrorReport *report);
+PR_STATIC_CALLBACK(JSBool) Zulu(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
+
+enum Zulu_slots {
+  ZULU_ZULU = -1,
+  ZULU_ALIVE = -2
+};
+
+
+PR_STATIC_CALLBACK(JSBool) GetZuluProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  nsTrexTestShell * a = (nsTrexTestShell*)JS_GetPrivate(cx, obj);
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == a) {
+    return JS_TRUE;
+  }
+
+  if (JSVAL_IS_INT(id)) {
+    switch(JSVAL_TO_INT(id)) {
+      case ZULU_ZULU:
+      {
+        *vp = PRIVATE_TO_JSVAL(a);
+        break;
+      }
+      case ZULU_ALIVE:
+      {
+        *vp = BOOLEAN_TO_JSVAL(PR_TRUE);
+        break;
+      }
+
+    }
+  }
+
+  return PR_TRUE;
+
+}
+
+PR_STATIC_CALLBACK(JSBool) SetZuluProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  return PR_TRUE;
+}
+
+PR_STATIC_CALLBACK(void) FinalizeZulu(JSContext *cx, JSObject *obj)
+{
+}
+
+PR_STATIC_CALLBACK(JSBool) EnumerateZulu(JSContext *cx, JSObject *obj)
+{
+  return JS_TRUE;
+}
+
+PR_STATIC_CALLBACK(JSBool) ResolveZulu(JSContext *cx, JSObject *obj, jsval id)
+{
+  return JS_TRUE;
+}
+
+
+PR_STATIC_CALLBACK(JSBool) ZuluCommand(JSContext *cx, 
+                                       JSObject *obj, 
+                                       uintN argc, 
+                                       jsval *argv, 
+                                       jsval *rval);
+
+
+JSClass ZuluClass = 
+{
+  "Zulu", 
+  JSCLASS_HAS_PRIVATE,
+  JS_PropertyStub,
+  JS_PropertyStub,
+  GetZuluProperty,
+  SetZuluProperty,
+  EnumerateZulu,
+  ResolveZulu,
+  JS_ConvertStub,
+  FinalizeZulu
+};
+
+static JSPropertySpec ZuluProperties[] =
+{
+  {"zulu",  ZULU_ZULU,  JSPROP_ENUMERATE},
+  {"alive", ZULU_ALIVE, JSPROP_ENUMERATE | JSPROP_READONLY},
+  {0}
+};
+
+
+static JSFunctionSpec ZuluMethods[] = 
+{
+  {"zulucommand", ZuluCommand, 1},
+  {0}
+};
+
 
 // All Application Must implement this function
 nsresult NS_RegisterApplicationShellFactory()
@@ -99,10 +193,22 @@ nsTrexTestShell::nsTrexTestShell()
 
   mCommand = "JUNK";
 
+  mJSRuntime = nsnull;
+  mJSContext = nsnull;
+  mJSGlobal = nsnull;
+  mJSZuluObject = nsnull;
+
+  Zulu(nsnull,nsnull,0,nsnull,nsnull);
 }
 
 nsTrexTestShell::~nsTrexTestShell()
 {
+	if (mJSContext) JS_DestroyContext(mJSContext);
+	if (mJSRuntime) JS_Finish(mJSRuntime);                      
+
+	mJSContext = NULL;
+	mJSRuntime = NULL;
+
   NS_IF_RELEASE(mInput);
   NS_IF_RELEASE(mDisplay);
 }
@@ -279,6 +385,34 @@ nsresult nsTrexTestShell::Init()
 
   PR_Close(sockfd);
 
+  // Kick off JS - Later on, we need to look at the DOM
+	mJSRuntime = JS_Init((uint32) 0xffffffffL);
+
+  if (nsnull != mJSRuntime) 
+	  mJSContext = JS_NewContext(mJSRuntime, 8192);
+
+  mJSGlobal = JS_NewObject(mJSContext, &ZuluClass, nsnull, nsnull);
+
+  if (nsnull != mJSGlobal) 
+  {
+    JS_SetPrivate(mJSContext, mJSGlobal, this);
+
+    JS_DefineProperties(mJSContext, mJSGlobal, ZuluProperties);
+    JS_DefineFunctions(mJSContext, mJSGlobal,  ZuluMethods);
+
+    //JS_AddNamedRoot(mJSContext, aSlot, "zulu_object");
+
+    JS_InitStandardClasses(mJSContext, mJSGlobal);
+    JS_SetGlobalObject(mJSContext, mJSGlobal);
+
+    // Init our Zulu object here!
+    //JS_DefineProperties(mJSContext, mJSGlobal, ZuluProperties);
+    //JS_DefineFunctions(mJSContext, mJSGlobal, ZuluMethods);
+
+    JS_SetErrorReporter(mJSContext, ZuluErrorReporter); 
+
+  }
+
   return res ;
 }
 
@@ -360,6 +494,10 @@ nsresult nsTrexTestShell::SendCommand(nsString& aCommand)
   nsString string("COMMAND: ");
   PRUint32 length;
   mDisplay->InsertText(string,0x7fffffff,0x7fffffff,length);
+  mCommand.Truncate(0);
+  aCommand.Copy(mCommand);
+
+#if 0
 
 
   /*
@@ -371,9 +509,6 @@ nsresult nsTrexTestShell::SendCommand(nsString& aCommand)
 
   mExitCounter = &mNumThreads;
 
-  mCommand.Truncate(0);
-
-  aCommand.Copy(mCommand);
 
   t = PR_CreateThread(PR_USER_THREAD,
                       TrexTestClientThread, 
@@ -395,6 +530,20 @@ nsresult nsTrexTestShell::SendCommand(nsString& aCommand)
   NS_RELEASE(dw);
 
   return (ReceiveCommand(mCommand,mCommand));
+#else
+  jsval rval;
+
+  JS_EvaluateUCScriptForPrincipals(mJSContext, 
+                                   JS_GetGlobalObject(mJSContext),
+                                   nsnull,
+                                   (jschar*)mCommand.GetUnicode(), 
+                                   mCommand.Length(),
+                                   "", 
+                                   0,
+                                   &rval);
+
+  return NS_OK;
+#endif
 }
 
 nsresult nsTrexTestShell::ReceiveCommand(nsString& aCommand, nsString& aReply)
@@ -581,3 +730,31 @@ nsresult nsTrexTestShell::StartCommandServer()
 {
   return NS_OK;
 }
+
+
+PR_STATIC_CALLBACK(JSBool) Zulu(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  return JS_FALSE;
+}
+
+
+
+
+void PR_CALLBACK ZuluErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
+{
+  return ;
+}
+
+
+PR_STATIC_CALLBACK(JSBool) ZuluCommand(JSContext *cx, 
+                                       JSObject *obj, 
+                                       uintN argc, 
+                                       jsval *argv, 
+                                       jsval *rval)
+{
+  return JS_TRUE;
+}
+
+
+
+
