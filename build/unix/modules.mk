@@ -22,6 +22,9 @@ BUILD_MODULE_CVS = config build include
 # client.mk does not have topsrcdir set
 ifndef topsrcdir
 topsrcdir=$(TOPSRCDIR)
+ifdef MOZ_TOOLS
+topsrcdir := $(shell cygpath -w $(TOPSRCDIR) | sed -e 's|\\|/|g')
+endif
 endif
 
 ifndef MOZ_NATIVE_NSPR
