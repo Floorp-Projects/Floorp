@@ -36,6 +36,25 @@ function MailMultiplexHandler(event)
   }
 }
 
+function ComposerMultiplexHandler(event)
+{
+  var node = event.target;
+  var name = node.getAttribute('name');
+  var charset;
+
+  if (name == 'detectorGroup') {
+    SelectDetector(event, true);
+  } else if (name == 'charsetGroup') {
+    charset = node.getAttribute('id');
+    charset = charset.substring('charset.'.length, charset.length)
+    EditorSetDocumentCharacterSet(charset);
+  } else if (name == 'charsetCustomize') {
+    //do nothing - please remove this else statement, once the charset prefs moves to the pref window
+  } else {
+    EditorSetDocumentCharacterSet(node.getAttribute('id'));
+  }
+}
+
 function SetDefaultCharacterSet(charset)
 {
 	dump("Charset Overlay menu item pressed: " + charset + "\n");

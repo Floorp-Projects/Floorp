@@ -62,6 +62,7 @@ static const char * kURINC_BrowserMore5CharsetMenuRoot = "NC:BrowserMore5Charset
 static const char * kURINC_BrowserMore6CharsetMenuRoot = "NC:BrowserMore6CharsetMenuRoot";
 static const char * kURINC_MaileditCharsetMenuRoot = "NC:MaileditCharsetMenuRoot";
 static const char * kURINC_MailviewCharsetMenuRoot = "NC:MailviewCharsetMenuRoot";
+static const char * kURINC_ComposerCharsetMenuRoot = "NC:ComposerCharsetMenuRoot";
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Name);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Checked);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, BookmarkSeparator);
@@ -114,6 +115,7 @@ private:
   static nsIRDFResource * kNC_BrowserMore6CharsetMenuRoot;
   static nsIRDFResource * kNC_MaileditCharsetMenuRoot;
   static nsIRDFResource * kNC_MailviewCharsetMenuRoot;
+  static nsIRDFResource * kNC_ComposerCharsetMenuRoot;
   static nsIRDFResource * kNC_Name;
   static nsIRDFResource * kNC_Checked;
   static nsIRDFResource * kNC_CharsetDetector;
@@ -124,6 +126,7 @@ private:
 
   nsVoidArray   mBrowserMenu;
   nsVoidArray   mMailviewMenu;
+  nsVoidArray   mComposerMenu;
 
   nsresult Init();
   nsresult Done();
@@ -136,6 +139,8 @@ private:
   nsresult InitMaileditMenu();
 
   nsresult InitMailviewMenu();
+
+  nsresult InitComposerMenu();
 
   nsresult InitStaticMenu(nsIRDFService * aRDFServ, 
     nsICharsetConverterManager2 * aCCMan, nsISupportsArray * aDecs, 
@@ -305,6 +310,7 @@ nsIRDFResource * nsCharsetMenu::kNC_BrowserMore5CharsetMenuRoot = NULL;
 nsIRDFResource * nsCharsetMenu::kNC_BrowserMore6CharsetMenuRoot = NULL;
 nsIRDFResource * nsCharsetMenu::kNC_MaileditCharsetMenuRoot = NULL;
 nsIRDFResource * nsCharsetMenu::kNC_MailviewCharsetMenuRoot = NULL;
+nsIRDFResource * nsCharsetMenu::kNC_ComposerCharsetMenuRoot = NULL;
 nsIRDFResource * nsCharsetMenu::kNC_Name = NULL;
 nsIRDFResource * nsCharsetMenu::kNC_Checked = NULL;
 nsIRDFResource * nsCharsetMenu::kNC_CharsetDetector = NULL;
@@ -322,6 +328,7 @@ nsCharsetMenu::nsCharsetMenu()
   InitBrowserMenu();
   InitMaileditMenu();
   InitMailviewMenu();
+  InitComposerMenu();
 }
 
 nsCharsetMenu::~nsCharsetMenu() 
@@ -330,6 +337,7 @@ nsCharsetMenu::~nsCharsetMenu()
 
   FreeMenuItemArray(&mBrowserMenu);
   FreeMenuItemArray(&mMailviewMenu);
+  FreeMenuItemArray(&mComposerMenu);
 
   PR_AtomicDecrement(&g_InstanceCount);
 }
@@ -354,6 +362,7 @@ nsresult nsCharsetMenu::Init()
   rdfServ->GetResource(kURINC_BrowserMore6CharsetMenuRoot, &kNC_BrowserMore6CharsetMenuRoot);
   rdfServ->GetResource(kURINC_MaileditCharsetMenuRoot, &kNC_MaileditCharsetMenuRoot);
   rdfServ->GetResource(kURINC_MailviewCharsetMenuRoot, &kNC_MailviewCharsetMenuRoot);
+  rdfServ->GetResource(kURINC_ComposerCharsetMenuRoot, &kNC_ComposerCharsetMenuRoot);
   rdfServ->GetResource(kURINC_Name, &kNC_Name);
   rdfServ->GetResource(kURINC_Checked, &kNC_Checked);
   rdfServ->GetResource(kURINC_CharsetDetector, &kNC_CharsetDetector);
@@ -387,6 +396,8 @@ nsresult nsCharsetMenu::Init()
   res = rdfUtil->MakeSeq(mInner, kNC_MaileditCharsetMenuRoot, NULL);
   if (NS_FAILED(res)) goto done;
   res = rdfUtil->MakeSeq(mInner, kNC_MailviewCharsetMenuRoot, NULL);
+  if (NS_FAILED(res)) goto done;
+  res = rdfUtil->MakeSeq(mInner, kNC_ComposerCharsetMenuRoot, NULL);
   if (NS_FAILED(res)) goto done;
 
   res = rdfServ->RegisterDataSource(this, PR_FALSE);
@@ -424,6 +435,7 @@ done:
   NS_IF_RELEASE(kNC_BrowserMore6CharsetMenuRoot);
   NS_IF_RELEASE(kNC_MaileditCharsetMenuRoot);
   NS_IF_RELEASE(kNC_MailviewCharsetMenuRoot);
+  NS_IF_RELEASE(kNC_ComposerCharsetMenuRoot);
   NS_IF_RELEASE(kNC_Name);
   NS_IF_RELEASE(kNC_Checked);
   NS_IF_RELEASE(kNC_CharsetDetector);
@@ -595,6 +607,29 @@ nsresult nsCharsetMenu::InitMailviewMenu()
   res = InitStaticMenu(rdfServ, ccMan, decs, kNC_MailviewCharsetMenuRoot, 
       prefKey, &mMailviewMenu);
   NS_ASSERTION(NS_SUCCEEDED(res), "error initializing mailview static charset menu");
+
+  return res;
+}
+
+nsresult nsCharsetMenu::InitComposerMenu() 
+{
+  nsresult res = NS_OK;
+
+  NS_WITH_SERVICE(nsIRDFService, rdfServ, kRDFServiceCID, &res);
+  if (NS_FAILED(res)) return res;
+
+  NS_WITH_SERVICE(nsICharsetConverterManager2, ccMan, kCharsetConverterManagerCID, &res);
+  if (NS_FAILED(res)) return res;
+
+  nsCOMPtr<nsISupportsArray> decs;
+  res = ccMan->GetDecoderList(getter_AddRefs(decs));
+  if (NS_FAILED(res)) return res;
+
+  // even if we fail, the show must go on
+  char * prefKey = "intl.charsetmenu.browser.static";
+  res = InitStaticMenu(rdfServ, ccMan, decs, kNC_ComposerCharsetMenuRoot, 
+      prefKey, &mComposerMenu);
+  NS_ASSERTION(NS_SUCCEEDED(res), "error initializing composer static charset menu");
 
   return res;
 }
