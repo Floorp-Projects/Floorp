@@ -498,7 +498,7 @@ nsJSChannel::GetURI(nsIURI * *aURI)
 }
 
 NS_IMETHODIMP
-nsJSChannel::Open(nsIInputStream **result)
+nsJSChannel::Open(nsIInputStream **aResult)
 {
     nsresult rv;
 
@@ -510,7 +510,10 @@ nsJSChannel::Open(nsIInputStream **result)
     rv = mIOThunk->EvaluateScript();
 
     if (NS_SUCCEEDED(rv)) {
-        rv = mStreamChannel->Open(result);
+        rv = mStreamChannel->Open(aResult);
+    } else {
+        // Propagate the failure down to the underlying channel...
+        (void) mStreamChannel->Cancel(rv);
     }
     mIsActive = PR_FALSE;
     return rv;
@@ -539,6 +542,9 @@ nsJSChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext)
 
     if (NS_SUCCEEDED(rv)) {
         rv = mStreamChannel->AsyncOpen(aListener, aContext);
+    } else {
+        // Propagate the failure down to the underlying channel...
+        (void) mStreamChannel->Cancel(rv);
     }
 
     // Remove the javascript channel from its loadgroup...
