@@ -51,7 +51,8 @@ extern XP_File NET_I_XP_FileOpen(const char *name, XP_FileType type, const XP_Fi
 extern int NET_I_XP_FileRead(char *outBuf, int outBufLen, XP_File fp);
 #define NET_XP_FileRead(dest, count, file) NET_I_XP_FileRead(dest, count, file)
 
-#define NET_XP_FileReadLine(destBuf, bufSize, file) XP_FileReadLine(destBuf, bufSize, file)
+extern char *NET_I_XP_FileReadLine(char *outBuf, int outBufLen, XP_File fp);
+#define NET_XP_FileReadLine(destBuf, bufSize, file) NET_I_XP_FileReadLine(destBuf, bufSize, file)
 
 extern int NET_I_XP_FileWrite(char *buf, int bufLen, XP_File fp);
 #define NET_XP_FileWrite(source, count, file) NET_I_XP_FileWrite(source, count, file)
