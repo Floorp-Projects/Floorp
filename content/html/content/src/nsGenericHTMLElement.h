@@ -348,6 +348,8 @@ public:
   nsIHTMLAttributes* mAttributes;
 
 protected:
+  nsresult SetElementFocus(PRBool aDoFocus);
+
   nsresult GetPluginInstance(nsIPluginInstance** aPluginInstance);
 
   nsresult GetPluginScriptObject(nsIScriptContext* aContext,

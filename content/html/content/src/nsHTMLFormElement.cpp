@@ -326,76 +326,35 @@ NS_IMPL_STRING_ATTR(nsHTMLFormElement, Target, target)
 NS_IMETHODIMP
 nsHTMLFormElement::Submit()
 {
-  // XXX Need to do something special with mailto: or news: URLs
-  nsCOMPtr<nsIDocument> doc;
-  nsresult res = GetDocument(*getter_AddRefs(doc));
-
-  if (NS_SUCCEEDED(res) && doc) {
-    // Make sure the presentation is up-to-date
-    doc->FlushPendingNotifications();
-
-    nsCOMPtr<nsIPresShell> shell = dont_AddRef(doc->GetShellAt(0));
-
-    if (shell) {
-      nsIFrame* frame;
-      shell->GetPrimaryFrameFor(this, &frame);
-      if (frame) {
-        nsIFormManager* formMan = nsnull; // weak reference, not refcounted
-        res = frame->QueryInterface(NS_GET_IID(nsIFormManager),
-                                    (void**)&formMan);
-
-        if (NS_SUCCEEDED(res) && formMan) {
-          nsCOMPtr<nsIPresContext> context;
-          shell->GetPresContext(getter_AddRefs(context));
-          if (context) {
-            // XXX We're currently passing in null for the frame.
-            // It works for now, but might not always
-            // be correct. In the future, we might not need the 
-            // frame to be passed to the link handler.
-            res = formMan->OnSubmit(context, nsnull);
-          }
-        }
-      }
-    }
+  // Generate submit event
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIPresContext> presContext;
+  GetPresContext(this, getter_AddRefs(presContext));
+  if (presContext) {
+    nsEventStatus status  = nsEventStatus_eIgnore;
+    nsEvent event;
+    event.eventStructType = NS_EVENT;
+    event.message         = NS_FORM_SUBMIT;
+    rv = HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
   }
-
-  return res;
+  return rv;
 }
 
 NS_IMETHODIMP
 nsHTMLFormElement::Reset()
 {
-  nsCOMPtr<nsIDocument> doc;
-
-  nsresult res = GetDocument(*getter_AddRefs(doc));
-
-  if (NS_SUCCEEDED(res) && doc) {
-    PRInt32 numShells = doc->GetNumberOfShells();
-    nsCOMPtr<nsIPresContext> context;
-    for (PRInt32 i=0; i<numShells; i++) {
-      nsCOMPtr<nsIPresShell> shell = dont_AddRef(doc->GetShellAt(i));
-      if (shell) {
-        res = shell->GetPresContext(getter_AddRefs(context));
-        if (NS_SUCCEEDED(res) && context) {
-          nsEventStatus status = nsEventStatus_eIgnore;
-          nsMouseEvent event;
-          event.eventStructType = NS_GUI_EVENT;
-          event.message = NS_FORM_RESET;
-          event.isShift = PR_FALSE;
-          event.isControl = PR_FALSE;
-          event.isAlt = PR_FALSE;
-          event.isMeta = PR_FALSE;
-          event.clickCount = 0;
-          event.widget = nsnull;
-
-          res = HandleDOMEvent(context, &event, nsnull, NS_EVENT_FLAG_INIT,
-                               &status);
-        }
-      }
-    }
+  // Generate reset event
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIPresContext> presContext;
+  GetPresContext(this, getter_AddRefs(presContext));
+  if (presContext) {
+    nsEventStatus status  = nsEventStatus_eIgnore;
+    nsEvent event;
+    event.eventStructType = NS_EVENT;
+    event.message = NS_FORM_RESET;
+    rv = HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
   }
-
-  return res;
+  return rv;
 }
 
 static nsGenericHTMLElement::EnumTable kFormMethodTable[] = {
@@ -468,30 +427,34 @@ nsHTMLFormElement::HandleDOMEvent(nsIPresContext* aPresContext,
 
     switch (aEvent->message) {
       case NS_FORM_RESET:
+      case NS_FORM_SUBMIT:
       {
-       // XXX Need to do something special with mailto: or news: URLs
-       nsIDocument* doc = nsnull; // Strong
-       nsresult res = GetDocument(doc);
-       if (NS_SUCCEEDED(res) && doc) {
-         // Make sure the presentation is up-to-date
-         doc->FlushPendingNotifications();
-         NS_RELEASE(doc);
-       }
+        // Make sure the presentation is up-to-date
+        nsCOMPtr<nsIDocument> doc;
+        GetDocument(*getter_AddRefs(doc));
+        if (doc) {
+          doc->FlushPendingNotifications();
+        }
 
-       nsCOMPtr<nsIPresShell> shell;
-       aPresContext->GetShell(getter_AddRefs(shell));
-       if (shell) {
-         nsIFrame* frame;
-         shell->GetPrimaryFrameFor(this, &frame);
-         if (frame) {
-           nsIFormManager* formMan = nsnull;
-           ret = frame->QueryInterface(NS_GET_IID(nsIFormManager),
-                                       (void**)&formMan);
-           if (NS_SUCCEEDED(ret) && formMan) {
-             ret = formMan->OnReset(aPresContext);
-           }
-         }
-       }
+        nsCOMPtr<nsIPresShell> shell;
+        aPresContext->GetShell(getter_AddRefs(shell));
+        if (shell) {
+          nsIFrame* frame;
+          shell->GetPrimaryFrameFor(this, &frame);
+          if (frame) {
+            nsIFormManager* formMan = nsnull;
+            ret = frame->QueryInterface(NS_GET_IID(nsIFormManager),
+                                        (void**)&formMan);
+            if (formMan) {
+              if (NS_FORM_RESET == aEvent->message) {
+                ret = formMan->OnReset(aPresContext);
+              }
+              else {
+                ret = formMan->OnSubmit(aPresContext, nsnull);
+              }
+            }
+          }
+        }
       }
       break;
     }

@@ -201,6 +201,7 @@ nsHTMLAreaElement::HandleDOMEvent(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsHTMLAreaElement::SetFocus(nsIPresContext* aPresContext)
 {
+  NS_ENSURE_ARG_POINTER(aPresContext);
   nsIEventStateManager* esm;
   if (NS_OK == aPresContext->GetEventStateManager(&esm)) {
     esm->SetContentState(this, NS_EVENT_STATE_FOCUS);
@@ -212,6 +213,7 @@ nsHTMLAreaElement::SetFocus(nsIPresContext* aPresContext)
 NS_IMETHODIMP
 nsHTMLAreaElement::RemoveFocus(nsIPresContext* aPresContext)
 {
+  NS_ENSURE_ARG_POINTER(aPresContext);
   nsIEventStateManager* esm;
   if (NS_OK == aPresContext->GetEventStateManager(&esm)) {
     esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);

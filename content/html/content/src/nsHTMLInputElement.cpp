@@ -205,13 +205,6 @@ protected:
 
   nsresult GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelectionEnd);
   nsresult MouseClickForAltText(nsIPresContext* aPresContext);
-  // If the PresShell is null then the PresContext will get its own and use it
-  nsresult DoManualSubmitOrReset(nsIPresContext* aPresContext,
-                                 nsIPresShell*   aPresShell,
-                                 nsIFrame*       aFormFrame,
-                                 nsIFrame*       aFormControlFrame,
-                                 PRBool          aDoSubmit,     // Submit = TRUE, Reset = FALSE
-                                 PRBool          aDoDOMEvent);
 
   void SelectAll(nsIPresContext* aPresContext);
   PRBool IsImage() const
@@ -663,22 +656,19 @@ nsHTMLInputElement::SetChecked(PRBool aValue)
 NS_IMETHODIMP
 nsHTMLInputElement::Blur()
 {
-  nsCOMPtr<nsIPresContext> presContext;
-  GetPresContext(this, getter_AddRefs(presContext));
-  return RemoveFocus(presContext);
+  return SetElementFocus(PR_FALSE);
 }
 
 NS_IMETHODIMP
 nsHTMLInputElement::Focus()
 {
-  nsCOMPtr<nsIPresContext> presContext;
-  GetPresContext(this, getter_AddRefs(presContext));
-  return SetFocus(presContext);
+  return SetElementFocus(PR_TRUE);
 }
 
 NS_IMETHODIMP
 nsHTMLInputElement::SetFocus(nsIPresContext* aPresContext)
 {
+  NS_ENSURE_ARG_POINTER(aPresContext);
   // first see if we are disabled or not. If disabled then do nothing.
   nsAutoString disabled;
   if (NS_CONTENT_ATTR_HAS_VALUE ==
@@ -713,6 +703,7 @@ nsHTMLInputElement::SetFocus(nsIPresContext* aPresContext)
 NS_IMETHODIMP
 nsHTMLInputElement::RemoveFocus(nsIPresContext* aPresContext)
 {
+  NS_ENSURE_ARG_POINTER(aPresContext);
   // If we are disabled, we probably shouldn't have focus in the
   // first place, so allow it to be removed.
   nsresult rv = NS_OK;
@@ -877,104 +868,30 @@ nsHTMLInputElement::Click()
   return NS_OK;
 }
 
-//////////////////////////////////////////////////////////////
-// XXX - NOTE: This code is also in nsFormControlHelper and these two
-// sections of code need to be in one place, but now that content and
-// layout are in two different DLLs we need to think a little harder 
-// about how to do it
-//
-// manual submission helper method
-// aPresShell        - If the PresShell is null then the PresContext will 
-//                     get its own and use itstatic nsresult
-// aFormFrame        - The HTML Form's frame
-// aFormControlFrame - The form controls frame that is calling this
-//                     it can be null
-// aDoSubmit         - Submit = TRUE, Reset = FALSE
-// Indicates whether to do DOM Processing of the event or to do regular frame processing
-nsresult
-nsHTMLInputElement::DoManualSubmitOrReset(nsIPresContext* aPresContext,
-                                            nsIPresShell*   aPresShell,
-                                            nsIFrame*       aFormFrame, 
-                                            nsIFrame*       aFormControlFrame,
-                                            PRBool          aDoSubmit,
-                                            PRBool          aDoDOMEvent) 
-{
-  NS_ENSURE_ARG_POINTER(aPresContext);
-  NS_ENSURE_ARG_POINTER(aFormFrame);
-
-  nsresult result = NS_OK;
-
-  nsCOMPtr<nsIContent> formContent;
-  aFormFrame->GetContent(getter_AddRefs(formContent));
-
-  nsEventStatus status = nsEventStatus_eIgnore;
-  if (formContent) {
-    //Either use the PresShell passed in or go get it from the PresContext
-    nsCOMPtr<nsIPresShell> shell; // this will do our clean up
-    if (aPresShell == nsnull) {
-      result = aPresContext->GetShell(getter_AddRefs(shell));
-      aPresShell = shell.get(); // not AddRefing because shell will clean up
-    }
-
-    // With a valid PreShell handle the event
-    if (NS_SUCCEEDED(result) && nsnull != aPresShell) {
-      nsEvent event;
-      event.eventStructType = NS_EVENT;
-      event.message         = aDoSubmit?NS_FORM_SUBMIT:NS_FORM_RESET;
-      if (aDoDOMEvent) {
-        aPresShell->HandleDOMEventWithTarget(formContent, &event, &status);
-      } else {
-        aPresShell->HandleEventWithTarget(&event, nsnull, formContent, NS_EVENT_FLAG_INIT, &status);
-      }
-    }
-  }
-
-  // Check status after handling event to make sure we should continue
-  if (nsEventStatus_eConsumeNoDefault != status) {
-    // get the form manager interface
-    nsIFormManager* formMan = nsnull; // weak reference, not refcounted
-    result = aFormFrame->QueryInterface(NS_GET_IID(nsIFormManager), (void**)&formMan);
-    if (NS_SUCCEEDED(result) && formMan) {
-      // now do the Submit or Reset
-      if (aDoSubmit) {
-        formMan->OnSubmit(aPresContext, aFormControlFrame);
-      } else {
-        formMan->OnReset(aPresContext);
-      }
-    }
-  }
-  return result;
-}
-
 nsresult
 nsHTMLInputElement::MouseClickForAltText(nsIPresContext* aPresContext)
 {
+  NS_ENSURE_ARG_POINTER(aPresContext);
   PRBool disabled;
   nsresult rv = GetDisabled(&disabled);
   if (NS_FAILED(rv) || disabled) {
     return rv;
   }
 
-  // find form content & frame
-  nsIFrame* formFrame = nsnull;
-  nsCOMPtr<nsIContent> formContent(getter_AddRefs(nsGenericHTMLElement::FindFormParentContent(this)));
+  // Generate a submit event targetted at the form content
+  nsCOMPtr<nsIDOMHTMLFormElement> form;
+  GetForm(getter_AddRefs(form));
+  nsCOMPtr<nsIContent> formContent(do_QueryInterface(form));
   if (formContent) {
-    nsCOMPtr<nsIDocument> doc;
-    nsresult res = GetDocument(*getter_AddRefs(doc));
-    if (NS_SUCCEEDED(res) && doc) {
-      // Make sure the presentation is up-to-date
-      doc->FlushPendingNotifications();
-      nsCOMPtr<nsIPresShell> shell = dont_AddRef(doc->GetShellAt(0));
-      if (shell) {
-        shell->GetPrimaryFrameFor(formContent, &formFrame);
-      }
+    nsCOMPtr<nsIPresShell> shell;
+    aPresContext->GetShell(getter_AddRefs(shell));
+    if (shell) {
+      nsEventStatus status = nsEventStatus_eIgnore;
+      nsEvent event;
+      event.eventStructType = NS_EVENT;
+      event.message = NS_FORM_SUBMIT;
+      shell->HandleDOMEventWithTarget(formContent, &event, &status);
     }
-
-    if (nsnull != formFrame) {
-      // NOTE: it is ok that the aFormControlFrame arg is NULL
-      // Do Submit & DOM Processing
-      DoManualSubmitOrReset(aPresContext, nsnull, formFrame, nsnull, PR_TRUE, PR_TRUE); 
-    } 
   }
   return rv;
 }

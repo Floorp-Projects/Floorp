@@ -192,26 +192,19 @@ nsHTMLTextAreaElement::GetForm(nsIDOMHTMLFormElement** aForm)
 NS_IMETHODIMP
 nsHTMLTextAreaElement::Blur()
 {
-  nsCOMPtr<nsIPresContext> presContext;
-
-  GetPresContext(this, getter_AddRefs(presContext));
-
-  return RemoveFocus(presContext);
+  return SetElementFocus(PR_FALSE);
 }
 
 NS_IMETHODIMP
 nsHTMLTextAreaElement::Focus() 
 {
-  nsCOMPtr<nsIPresContext> presContext;
-
-  GetPresContext(this, getter_AddRefs(presContext));
-
-  return SetFocus(presContext);
+  return SetElementFocus(PR_TRUE);
 }
 
 NS_IMETHODIMP
 nsHTMLTextAreaElement::SetFocus(nsIPresContext* aPresContext)
 {
+  NS_ENSURE_ARG_POINTER(aPresContext);
   // first see if we are disabled or not. If disabled then do nothing.
   nsAutoString disabled;
 
@@ -243,6 +236,7 @@ nsHTMLTextAreaElement::SetFocus(nsIPresContext* aPresContext)
 NS_IMETHODIMP
 nsHTMLTextAreaElement::RemoveFocus(nsIPresContext* aPresContext)
 {
+  NS_ENSURE_ARG_POINTER(aPresContext);
   // If we are disabled, we probably shouldn't have focus in the
   // first place, so allow it to be removed.
   nsresult rv = NS_OK;
