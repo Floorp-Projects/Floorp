@@ -108,7 +108,7 @@ unix/jsbuffer.h: Makefile $(CONFIG_FILES)
 	@if test ! -d unix; then rm -f unix && mkdir -p unix; fi
 	@(echo "/* This is an automatically generated file */" > $@; \
 	 echo >> $@; \
-	 echo "static char* pref_init_buffer = " >> $@; \
-	 cat $(CONFIG_FILES) | sed 's/\\/\\\\/g' | sed 's/\\r/\\n/' | sed 's/\"/\\\"/g' | sed 's/^M//g' | sed 's/^/"/' | sed 's/$$/\\n"/' >> $@; \
-	echo \; >> $@; \
+	 echo "static char* pref_init_buffer[] = {" >> $@; \
+	 cat $(CONFIG_FILES) | sed 's/\\/\\\\/g' | sed 's/\\r/\\n/' | sed 's/\"/\\\"/g' | sed 's/^M//g' | sed 's/^/"/' | sed 's/$$/\\n",/' >> $@; \
+	echo "0 };" >> $@; \
 	)

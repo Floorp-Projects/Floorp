@@ -45,10 +45,15 @@ JSBool
 pref_InitInitialObjects(void)
 {
     JSBool status;
+    int i;
 
     PR_ASSERT(pref_init_buffer);
 
-    status = PREF_EvaluateJSBuffer(pref_init_buffer, strlen(pref_init_buffer));
+    /* loop over all the strings in the init buffer */
+    for (i=0; i < (sizeof pref_init_buffer / sizeof *pref_init_buffer) && pref_init_buffer[i] != 0; ++i)
+    {
+      status = PREF_EvaluateJSBuffer(pref_init_buffer[i], strlen(pref_init_buffer[i]));
+    }
 
     /* these strings never get freed, but that's probably the way it should be */
     PREF_SetDefaultCharPref("browser.cache.directory", 
