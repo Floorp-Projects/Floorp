@@ -89,8 +89,8 @@ int main( int argc, char *argv[] ) {
     // Open it against the input file name.
     rv = reg->Open( argv[1] );
     
-    if ( rv == NS_OK ) {
-//        NS_ADDREF(reg);
+    if ( rv == NS_OK ) 
+    {
         printf( "Registry %s opened OK.\n", argv[1] ? argv[1] : "<default>" );
             
         // Recurse over all 3 branches.
@@ -99,7 +99,8 @@ int main( int argc, char *argv[] ) {
     }
     NS_RELEASE(reg);
 
-    if (argc == 1) {
+    if (argc == 1) 
+    {
         // Called with no arguments. Print both the default registry and 
         // the components registry. We already printed the default regsitry.
         // So just do the component registry.
@@ -115,16 +116,15 @@ int main( int argc, char *argv[] ) {
         }
         rv = reg->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
         if ( rv == NS_OK ) {
-//            NS_ADDREF(reg);
+
             printf( "\n\n\nRegistry %s opened OK.\n", "<Application Component Registry>\n" );
             
             // Recurse over all 3 branches.
             display( reg, nsIRegistry::Common, "nsRegistry::Common" );
             display( reg, nsIRegistry::Users, "nsRegistry::Users" );
         }
+        NS_RELEASE(reg);
     }
-
-    NS_RELEASE(reg);
 
     return rv;
 }
