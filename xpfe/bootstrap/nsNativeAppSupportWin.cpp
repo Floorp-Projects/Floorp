@@ -641,7 +641,9 @@ nsNativeAppSupportWin::CheckConsole() {
               // Make sure the filename in the quicklaunch command matches us
               char fileName[_MAX_PATH];
               int rv = ::GetModuleFileName( NULL, fileName, sizeof fileName );
-              if (rv && !PL_strncasecmp(fileName, (const char *)regvalue, PR_MIN(len, strlen(fileName)))) {
+              nsCAutoString regvalueholder;
+              regvalueholder.Assign((char *) regvalue);
+              if ((regvalueholder.Find(fileName, PR_TRUE) != kNotFound) && (regvalueholder.Find("-turbo", PR_TRUE) != kNotFound) ) {
                   mServerMode = PR_TRUE;
                   mShouldShowUI = PR_TRUE;
               }
