@@ -78,6 +78,9 @@
 #include "nsIServiceManager.h"
 #include "nsGUIEvent.h"
 
+PRBool nsSliderFrame::gMiddlePref = PR_FALSE;
+PRInt32 nsSliderFrame::gSnapMultiplier = 6;
+
 // Turn this on if you want to debug slider frames.
 #undef DEBUG_SLIDER
 
@@ -127,12 +130,14 @@ nsSliderFrame::Init(nsIPresContext*  aPresContext,
 {
   nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
-  mMiddlePref = PR_FALSE;
-  mSnapMultiplier = 6;
-  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  if (prefBranch) {
-    prefBranch->GetBoolPref("middlemouse.scrollbarPosition", &mMiddlePref);
-    prefBranch->GetIntPref("slider.snapMultiplier", &mSnapMultiplier);
+  static PRBool gotPrefs = PR_FALSE;
+  if (!gotPrefs) {
+    gotPrefs = PR_TRUE;
+    nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    if (prefBranch) {
+      prefBranch->GetBoolPref("middlemouse.scrollbarPosition", &gMiddlePref);
+      prefBranch->GetIntPref("slider.snapMultiplier", &gSnapMultiplier);
+    }
   }
 
   CreateViewForFrame(aPresContext,this,aContext,PR_TRUE);
@@ -570,18 +575,18 @@ nsSliderFrame::HandleEvent(nsIPresContext* aPresContext,
        // take our current position and substract the start location
        pos -= start;
        PRBool isMouseOutsideThumb = PR_FALSE;
-       if (mSnapMultiplier) {
+       if (gSnapMultiplier) {
          nsSize thumbSize = thumbFrame->GetSize();
          if (isHorizontal) {
            // horizontal scrollbar - check if mouse is above or below thumb
-           if (aEvent->point.y < (-mSnapMultiplier * thumbSize.height) || 
-               aEvent->point.y > thumbSize.height + (mSnapMultiplier * thumbSize.height))
+           if (aEvent->point.y < (-gSnapMultiplier * thumbSize.height) || 
+               aEvent->point.y > thumbSize.height + (gSnapMultiplier * thumbSize.height))
              isMouseOutsideThumb = PR_TRUE;
          }
          else {
            // vertical scrollbar - check if mouse is left or right of thumb
-           if (aEvent->point.x < (-mSnapMultiplier * thumbSize.width) || 
-               aEvent->point.x > thumbSize.width + (mSnapMultiplier * thumbSize.width))
+           if (aEvent->point.x < (-gSnapMultiplier * thumbSize.width) || 
+               aEvent->point.x > thumbSize.width + (gSnapMultiplier * thumbSize.width))
              isMouseOutsideThumb = PR_TRUE;
          }
        }
@@ -606,7 +611,7 @@ nsSliderFrame::HandleEvent(nsIPresContext* aPresContext,
     break;
 
     case NS_MOUSE_MIDDLE_BUTTON_UP:
-    if(!mMiddlePref)
+    if(!gMiddlePref)
         break;
 
     case NS_MOUSE_LEFT_BUTTON_UP:
@@ -626,7 +631,7 @@ nsSliderFrame::HandleEvent(nsIPresContext* aPresContext,
     return NS_OK;
   }
   else if ((aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN && ((nsMouseEvent *)aEvent)->isShift)
-      || (mMiddlePref && aEvent->message == NS_MOUSE_MIDDLE_BUTTON_DOWN)) {
+      || (gMiddlePref && aEvent->message == NS_MOUSE_MIDDLE_BUTTON_DOWN)) {
     // convert coord from twips to pixels
     nscoord pos = isHorizontal ? aEvent->point.x : aEvent->point.y;
     float p2t;
@@ -680,6 +685,12 @@ nsSliderFrame::HandleEvent(nsIPresContext* aPresContext,
       mThumbStart = thumbFrame->GetPosition().y;
 
     mDragStartPx =pos/onePixel;
+  }
+  else if (mChange != 0 && aEvent->message == NS_MOUSE_MOVE) {
+    // We're in the process of moving the thumb to the mouse,
+    // but the mouse just moved.  Make sure to update our
+    // destination point.
+    mDestinationPoint = aEvent->point;
   }
 
   // XXX hack until handle release is actually called in nsframe.
@@ -926,7 +937,7 @@ nsSliderFrame::MouseDown(nsIDOMEvent* aMouseEvent)
   mouseEvent->GetShiftKey(&scrollToClick);
   mouseEvent->GetButton(&button);
   if (button != 0) {
-    if (button != 1 || !mMiddlePref)
+    if (button != 1 || !gMiddlePref)
       return NS_OK;
     scrollToClick = PR_TRUE;
   }
@@ -1109,7 +1120,7 @@ nsSliderFrame::HandlePress(nsIPresContext* aPresContext,
     change = -1;
 
   mChange = change;
-  mClickPoint = aEvent->point;
+  mDestinationPoint = aEvent->point;
   PageUpDown(thumbFrame, change);
   
   nsRepeatService::GetInstance()->Start(mMediator);
@@ -1123,6 +1134,8 @@ nsSliderFrame::HandleRelease(nsIPresContext* aPresContext,
                                  nsEventStatus*  aEventStatus)
 {
   nsRepeatService::GetInstance()->Stop();
+
+  mChange = 0;
 
   return NS_OK;
 }
@@ -1203,22 +1216,22 @@ NS_IMETHODIMP_(void) nsSliderFrame::Notify(nsITimer *timer)
 
     PRBool isHorizontal = IsHorizontal();
 
-    // see if the thumb has moved passed our original click point.
+    // See if the thumb has moved past our destination point.
     // if it has we want to stop.
     if (isHorizontal) {
         if (mChange < 0) {
-            if (thumbRect.x < mClickPoint.x)
+            if (thumbRect.x < mDestinationPoint.x)
                 stop = PR_TRUE;
         } else {
-            if (thumbRect.x + thumbRect.width > mClickPoint.x)
+            if (thumbRect.x + thumbRect.width > mDestinationPoint.x)
                 stop = PR_TRUE;
         }
     } else {
          if (mChange < 0) {
-            if (thumbRect.y < mClickPoint.y)
+            if (thumbRect.y < mDestinationPoint.y)
                 stop = PR_TRUE;
         } else {
-            if (thumbRect.y + thumbRect.height > mClickPoint.y)
+            if (thumbRect.y + thumbRect.height > mDestinationPoint.y)
                 stop = PR_TRUE;
         }
     }
