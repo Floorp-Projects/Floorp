@@ -60,6 +60,7 @@ CPPSRCS = \
 		nsSBCharSetProber.cpp \
 		nsSJISProber.cpp \
 		nsUTF8Prober.cpp \
+		nsLatin1Prober.cpp \
 		nsUniversalCharDetModule.cpp \
 		nsUniversalDetector.cpp \
 		$(NULL)
