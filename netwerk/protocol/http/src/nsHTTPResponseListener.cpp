@@ -190,6 +190,7 @@ nsHTTPCacheListener::OnDataAvailable(nsIChannel *aChannel,
                        aSourceOffset, aCount);
         if (NS_FAILED(rv)) return rv;
     }
+    return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -996,3 +997,124 @@ nsHTTPServerListener::FinishedResponseHeaders ()
 
     return rv;
 }
+
+// -----------------------------------------------------------------------------
+// nsHTTPFinalListener
+
+////////////////////////////////////////////////////////////////////////////////
+// nsISupports methods:
+
+NS_IMPL_THREADSAFE_ADDREF (nsHTTPFinalListener)
+NS_IMPL_THREADSAFE_RELEASE(nsHTTPFinalListener)
+
+NS_IMPL_QUERY_INTERFACE2  (nsHTTPFinalListener, 
+                           nsIStreamListener, 
+                           nsIStreamObserver);
+
+nsHTTPFinalListener::nsHTTPFinalListener(
+        nsHTTPChannel* aChannel, nsIStreamListener* aListener, nsISupports *aContext)
+    :
+    mOnStartFired (PR_FALSE),
+    mOnStopFired  (PR_FALSE)
+       
+{
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
+            ("Creating nsHTTPFinalListener [this=%x].\n", this));
+
+    NS_INIT_REFCNT();
+
+    mChannel  =  aChannel;
+    aContext  =  aContext;
+    mListener = aListener;
+
+}
+
+nsHTTPFinalListener::~nsHTTPFinalListener()
+{
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
+            ("Deleting nsHTTPFinalListener [this=%x].\n", this));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsIStreamObserver methods:
+
+NS_IMETHODIMP
+nsHTTPFinalListener::OnStartRequest(nsIChannel *aChannel,
+                                    nsISupports *aContext)
+{
+    PR_LOG (gHTTPLog, PR_LOG_DEBUG,
+            ("nsHTTPFinalListener::OnStartRequest [this=%x]"
+            ", mOnStartFired=%u\n", this, mOnStartFired));
+
+    if (mOnStartFired)
+        return NS_OK;
+
+    mOnStartFired = PR_TRUE;
+    return mListener -> OnStartRequest (aChannel, aContext);
+}
+
+NS_IMETHODIMP
+nsHTTPFinalListener::OnStopRequest(nsIChannel *aChannel,
+                                   nsISupports *aContext,
+                                   nsresult aStatus,
+                                   const PRUnichar *aErrorMsg)
+{
+    PR_LOG (gHTTPLog, PR_LOG_DEBUG,
+            ("nsHTTPFinalListener::OnStopRequest [this=%x]"
+            ", mOnStopFired=%u\n", this, mOnStopFired));
+
+    if (mOnStopFired)
+        return NS_OK;
+
+    PRUint32 status;
+    mChannel -> GetStatus (&status);
+
+    if (NS_FAILED (status) && NS_SUCCEEDED (aStatus))
+        aStatus = status;
+
+    if (!mOnStartFired)
+    {
+//        mOnStartFired = PR_TRUE;
+//        mListener -> OnStartRequest (aChannel, aContext);
+    }
+
+    mOnStopFired = PR_TRUE;
+    return mListener -> OnStopRequest (aChannel, aContext, aStatus, aErrorMsg);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsIStreamListener methods:
+
+NS_IMETHODIMP
+nsHTTPFinalListener::OnDataAvailable(nsIChannel *aChannel,
+                                     nsISupports *aContext,
+                                     nsIInputStream *aStream,
+                                     PRUint32 aSourceOffset,
+                                     PRUint32 aCount)
+{
+    PR_LOG (gHTTPLog, PR_LOG_DEBUG,
+            ("nsHTTPFinalListener::OnDataAvailable [this=%x]\n",
+            this));
+
+    PRUint32 status;
+    mChannel -> GetStatus (&status);
+
+    if (NS_SUCCEEDED (status))
+        return mListener -> OnDataAvailable (aChannel, aContext, 
+                    aStream, aSourceOffset, aCount);
+
+    return NS_OK;
+}
+
+void
+nsHTTPFinalListener::FireNotifications ()
+{
+    PR_LOG (gHTTPLog, PR_LOG_DEBUG,
+            ("nsHTTPFinalListener::FireNotifications [this=%x]\n",
+            this));
+
+//    OnStartRequest (mChannel, mContext);
+    OnStopRequest  (mChannel, mContext, NS_OK, nsnull);
+}
+
+// -----------------------------------------------------------------------------

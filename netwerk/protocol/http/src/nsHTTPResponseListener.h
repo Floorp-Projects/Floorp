@@ -149,5 +149,36 @@ public:
   virtual nsresult Abort();
 };
 
+/*
+ * This is a final listener which enforces OnStart/OnStop/etc. policies
+ */
+class nsHTTPFinalListener : public nsIStreamListener
+{
+public:
+    nsHTTPFinalListener (nsHTTPChannel* aChannel, 
+                nsIStreamListener *aListener, nsISupports* aContext);
+
+    virtual ~nsHTTPFinalListener();
+
+    // nsISupport methods...
+    NS_DECL_ISUPPORTS
+
+    // nsIStreamObserver methods...
+    NS_DECL_NSISTREAMOBSERVER
+
+    // nsIStreamListener methods...
+    NS_DECL_NSISTREAMLISTENER
+
+    void FireNotifications ();
+
+private:
+    nsHTTPChannel*              mChannel;
+    nsCOMPtr<nsISupports>       mContext;
+    nsCOMPtr<nsIStreamListener> mListener;
+
+    PRBool  mOnStartFired;
+    PRBool  mOnStopFired;
+};
+
 
 #endif /* _nsHTTPResponseListener_h_ */
