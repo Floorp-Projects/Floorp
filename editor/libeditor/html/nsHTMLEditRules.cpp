@@ -2398,30 +2398,7 @@ nsHTMLEditRules::WillRemoveList(nsISelection *aSelection,
     }
     else if (nsHTMLEditUtils::IsList(curNode)) // node is a list, move list items out
     {
-      nsCOMPtr<nsIDOMNode> child;
-      curNode->GetLastChild(getter_AddRefs(child));
-
-      while (child)
-      {
-        if (nsHTMLEditUtils::IsListItem(child))
-        {
-          PRBool bOutOfList;
-          do
-          {
-            res = PopListItem(child, &bOutOfList);
-            if (NS_FAILED(res)) return res;
-          } while (!bOutOfList);   // keep popping it out until it's not in a list anymore
-        }
-        else
-        {
-          // delete any non- list items for now
-          res = mHTMLEditor->DeleteNode(child);
-          if (NS_FAILED(res)) return res;
-        }
-        curNode->GetLastChild(getter_AddRefs(child));
-      }
-      // delete the now-empty list
-      res = mHTMLEditor->DeleteNode(curNode);
+      res = RemoveListStructure(curNode);
       if (NS_FAILED(res)) return res;
     }
   }
@@ -2736,6 +2713,16 @@ nsHTMLEditRules::WillOutdent(nsISelection *aSelection, PRBool *aCancel, PRBool *
           res = PopListItem(child, &bOutOfList);
           if (NS_FAILED(res)) return res;
         }
+        else if (nsHTMLEditUtils::IsList(child))
+        {
+          // We have an embedded list, so move it out from under the
+          // parent list. Be sure to put it after the parent list
+          // because this loop iterates backwards through the parent's
+          // list of children.
+
+          res = mHTMLEditor->MoveNode(child, curParent, offset + 1);
+          if (NS_FAILED(res)) return res;
+        }
         else
         {
           // delete any non- list items for now
@@ -2798,7 +2785,7 @@ nsHTMLEditRules::ConvertListType(nsIDOMNode *aList,
     }
     else if (nsHTMLEditUtils::IsList(child) && !mHTMLEditor->NodeIsType(child, aListType))
     {
-      res = mHTMLEditor->ReplaceContainer(child, address_of(temp), aListType);
+      res = ConvertListType(child, address_of(temp), aListType, aItemType);
       if (NS_FAILED(res)) return res;
       child = temp;
     }
@@ -5763,6 +5750,47 @@ nsHTMLEditRules::PopListItem(nsIDOMNode *aListItem, PRBool *aOutOfList)
     if (NS_FAILED(res)) return res;
     *aOutOfList = PR_TRUE;
   }
+  return res;
+}
+
+nsresult
+nsHTMLEditRules::RemoveListStructure(nsIDOMNode *aList)
+{
+  NS_ENSURE_ARG_POINTER(aList);
+
+  nsresult res;
+
+  nsCOMPtr<nsIDOMNode> child;
+  aList->GetFirstChild(getter_AddRefs(child));
+
+  while (child)
+  {
+    if (nsHTMLEditUtils::IsListItem(child))
+    {
+      PRBool bOutOfList;
+      do
+      {
+        res = PopListItem(child, &bOutOfList);
+        if (NS_FAILED(res)) return res;
+      } while (!bOutOfList);   // keep popping it out until it's not in a list anymore
+    }
+    else if (nsHTMLEditUtils::IsList(child))
+    {
+      res = RemoveListStructure(child);
+      if (NS_FAILED(res)) return res;
+    }
+    else
+    {
+      // delete any non- list items for now
+      res = mHTMLEditor->DeleteNode(child);
+      if (NS_FAILED(res)) return res;
+    }
+    aList->GetFirstChild(getter_AddRefs(child));
+  }
+  // delete the now-empty list
+  res = mHTMLEditor->DeleteNode(aList);
+  if (NS_FAILED(res)) return res;
+
   return res;
 }
 

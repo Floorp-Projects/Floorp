@@ -171,6 +171,7 @@ protected:
                            PRInt32 *aOutMergeOffset);
   nsresult GetTopEnclosingMailCite(nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutCiteNode, PRBool aPlaintext);
   nsresult PopListItem(nsIDOMNode *aListItem, PRBool *aOutOfList);
+  nsresult RemoveListStructure(nsIDOMNode *aList);
   nsresult AdjustSpecialBreaks(PRBool aSafeToAskFrames = PR_FALSE);
   nsresult AdjustWhitespace(nsISelection *aSelection);
   nsresult AdjustSelection(nsISelection *aSelection, nsIEditor::EDirection aAction);
