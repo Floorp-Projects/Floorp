@@ -17,9 +17,6 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
- *   Pierre Phaneuf <pp@ludusdesign.com>
- *
  * This Original Code has been modified by IBM Corporation.
  * Modifications made by IBM described herein are
  * Copyright (c) International Business Machines
@@ -769,14 +766,14 @@ nsComponentManagerImpl::PlatformFind(const nsCID &aCID, nsFactoryEntry* *result)
     const char* componentType = componentTypeStr.get();
     int type = -1;
 
-    if (NS_FAILED(rv))
+    if (NS_FAILED(rv)) {
         if (rv == NS_ERROR_REG_NOT_FOUND) {
             /* missing componentType, we assume application/x-moz-native */
             type = NS_COMPONENT_TYPE_NATIVE;
         }
-    else 
-        return rv;              // XXX translate error code?
-
+        else 
+            return rv;              // XXX translate error code?
+    }
     if (type < 0) {
         // Find the right loader type index
         type = GetLoaderType(componentType);
@@ -892,8 +889,12 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
                                            getter_Copies(componentType))))
             continue;
 
+        int loadertype = GetLoaderType(componentType);
+        if (loadertype < 0) {
+            loadertype = AddLoaderType(componentType);
+        }
         nsFactoryEntry* entry = 
-            new nsFactoryEntry(aClass, library, GetLoaderType(componentType));
+            new nsFactoryEntry(aClass, library, loadertype);
 
         if (!entry)
             continue;
