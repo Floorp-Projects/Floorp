@@ -163,6 +163,7 @@ pref("javascript.allow.mailnews",           true);
 pref("javascript.allow.signing",            true);
 pref("javascript.reflect_preferences",      false);     // for PE
 
+pref("network.dnsAttempt",              0);
 pref("network.tcptimeout",                  0);         // use default
 pref("network.tcpbufsize",                  0);         //
 pref("network.use_async_dns",               true);

@@ -55,6 +55,32 @@ extern int XP_DOCUMENT_INFO ;
 extern int XP_THE_WINDOW_IS_NOW_INACTIVE ;
 extern int MK_MALFORMED_URL_ERROR;
 
+/* The bit flags for the about colon access int */
+#define ABOUT_CURRENT       1
+#define ABOUT_PICS          2
+#define ABOUT_CACHE         4
+#define ABOUT_CACHE_MEM     8
+#define ABOUT_CACHE_IMAGE   16
+#define ABOUT_STREAMS       32
+#define ABOUT_DOCUMENT      64
+#define ABOUT_GLOBAL        128
+#define ABOUT_FECONTEXT     256
+#define ABOUT_AUTHORS       512
+#define ABOUT_CONFIG        1024
+#define ABOUT_MINIBUFFER    2048
+#define ABOUT_FONTS         4096
+#define ABOUT_COOKIES       8192
+#define ABOUT_SIGNONS       16384
+#define ABOUT_LOGOUT        32768
+PRIVATE int32 aboutAccess = 0;
+
+/* This is a hidden/obscured pref with a misleading name. */
+MODULE_PRIVATE int PR_CALLBACK NET_AboutColonAccessPrefChanged(const char *pref, void *data) {
+    aboutAccess = 0;
+    if (PREF_OK != PREF_GetIntPref("network.dnsAttempt", &aboutAccess) )
+        aboutAccess = 0;
+    return TRUE;
+}
 
 PRIVATE void
 net_OutputURLDocInfo(MWContext *ctxt, char *which, char **data, int32 *length)
@@ -337,7 +363,7 @@ PRIVATE int net_output_about_url(ActiveEntry * cur_entry)
 		/* placeholder to make ifdef's easier */
 	  }
 #ifdef MOZILLA_CLIENT
-	else if(NET_URL_Type(which))
+	else if(NET_URL_Type(which) && !(aboutAccess & ABOUT_CURRENT))
 	  {
 	    /* this url is asking for document info about this
 		 * URL.
@@ -346,7 +372,7 @@ PRIVATE int net_output_about_url(ActiveEntry * cur_entry)
 		net_OutputURLDocInfo(cur_entry->window_id, which, &data, &length);
 		StrAllocCopy(content_type, TEXT_HTML);
 	  }
-	else if(!PL_strncasecmp(which, "pics", 4))
+	else if(!PL_strncasecmp(which, "pics", 4) && !(aboutAccess & ABOUT_PICS))
 	  {
 		data = net_gen_pics_document(cur_entry);
    		if (data) {
@@ -356,36 +382,36 @@ PRIVATE int net_output_about_url(ActiveEntry * cur_entry)
         } 
 	  }
 #if defined(CookieManagement)
-	else if(!PL_strcasecmp(which, "cookies"))
+	else if(!PL_strcasecmp(which, "cookies") && !(aboutAccess & ABOUT_COOKIES))
 	{
 		NET_DisplayCookieInfoAsHTML(cur_entry->window_id);
 		return(-1);
 	}
 #endif
 #if defined(SingleSignon)
-        else if(!PL_strcasecmp(which, "signons"))
+        else if(!PL_strcasecmp(which, "signons") && !(aboutAccess & ABOUT_SIGNONS))
 	{
 		SI_DisplaySignonInfoAsHTML(cur_entry->window_id);
 		return(-1);
 	}
 #endif
-	else if(!PL_strncasecmp(which, "cache", 5))
+	else if(!PL_strncasecmp(which, "cache", 5)  && !(aboutAccess & ABOUT_CACHE))
 	  {
 		NET_DisplayCacheInfoAsHTML(cur_entry);
 		return(-1);
 	  }
-	else if(!PL_strcasecmp(which, "memory-cache"))
+	else if(!PL_strcasecmp(which, "memory-cache") && !(aboutAccess & ABOUT_CACHE_MEM))
 	  {
 		NET_DisplayMemCacheInfoAsHTML(cur_entry);
 		return(-1);
 	  }
-	else if(!PL_strcasecmp(which, "logout"))
+	else if(!PL_strcasecmp(which, "logout") && !(aboutAccess & ABOUT_LOGOUT) )
 	  {
 		NET_RemoveAllAuthorizations();
 		return(-1);
 	  }
 #ifndef MODULAR_NETLIB
-	else if(!PL_strcasecmp(which, "image-cache"))
+	else if(!PL_strcasecmp(which, "image-cache") && !(aboutAccess & ABOUT_CACHE_IMAGE))
 	  {
 	IL_DisplayMemCacheInfoAsHTML(cur_entry->format_out, cur_entry->URL_s,
 				     cur_entry->window_id);
@@ -393,13 +419,13 @@ PRIVATE int net_output_about_url(ActiveEntry * cur_entry)
 	  }
 #endif
 #ifdef DEBUG
-    else if(!PL_strcasecmp(which, "streams"))
+    else if(!PL_strcasecmp(which, "streams") && !(aboutAccess & ABOUT_STREAMS))
       {
 	NET_DisplayStreamInfoAsHTML(cur_entry);
 	return(-1);
       }
 #endif /* DEBUG */
-	else if(!PL_strcasecmp(which, "document"))
+	else if(!PL_strcasecmp(which, "document") && !(aboutAccess & ABOUT_DOCUMENT))
 	  {
 		char buf[64];
 		History_entry *his;
@@ -509,7 +535,7 @@ PRIVATE int net_output_about_url(ActiveEntry * cur_entry)
 		length = PL_strlen(data);
 		StrAllocCopy(content_type, TEXT_HTML);
 	  }
-	else if(!PL_strncasecmp(which, "Global", 6))
+	else if(!PL_strncasecmp(which, "Global", 6)  && !(aboutAccess & ABOUT_GLOBAL))
 	  {
 		cur_entry->status = NET_DisplayGlobalHistoryInfoAsHTML(
 													cur_entry->window_id,
@@ -519,7 +545,7 @@ PRIVATE int net_output_about_url(ActiveEntry * cur_entry)
 		return(-1);
 
 	  }
-	else if(!PL_strncmp(which, "FeCoNtExT=", 10))
+	else if(!PL_strncmp(which, "FeCoNtExT=", 10) && !(aboutAccess & ABOUT_FECONTEXT))
 	  {
 		MWContext *old_ctxt;
 		
@@ -546,7 +572,7 @@ PRIVATE int net_output_about_url(ActiveEntry * cur_entry)
 
       }
 #endif /* MOZILLA_CLIENT */
-	else if(!PL_strncasecmp(which, "authors", 7))
+	else if(!PL_strncasecmp(which, "authors", 7) && !(aboutAccess & ABOUT_AUTHORS))
 	  {
 		static const char *d =
 		  ("<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html\" "
@@ -561,7 +587,7 @@ PRIVATE int net_output_about_url(ActiveEntry * cur_entry)
 	    uses_fe_data = FALSE;
 	  }
 	/* Admin Kit/xp prefs diagnostic support */
-	else if (!PL_strncasecmp(which, "config", 6))
+	else if (!PL_strncasecmp(which, "config", 6) && !(aboutAccess & ABOUT_CONFIG))
 	{
 		data = PREF_AboutConfig();
 		if (data) {
@@ -570,7 +596,7 @@ PRIVATE int net_output_about_url(ActiveEntry * cur_entry)
 		}
 	}
 #if defined(XP_UNIX) && !defined(MODULAR_NETLIB)
-	else if (!PL_strncasecmp(which, "minibuffer", 10))
+	else if (!PL_strncasecmp(which, "minibuffer", 10) && !(aboutAccess & ABOUT_MINIBUFFER))
 	{
 		extern void FE_ShowMinibuffer(MWContext *);
 
@@ -578,7 +604,7 @@ PRIVATE int net_output_about_url(ActiveEntry * cur_entry)
 	}
 #endif
 #ifdef WEBFONTS
-	else if (!PL_strncasecmp(which, "fonts", 5))
+	else if (!PL_strncasecmp(which, "fonts", 5) && !(aboutAccess & ABOUT_FONTS))
 	{
 		NF_AboutFonts(cur_entry->window_id, which);
 		return (-1);
