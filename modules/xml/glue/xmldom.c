@@ -73,11 +73,8 @@ copyCharStarList (char** list)
 char *
 makeAbsoluteURL (char* p1, char* p2)
 {
-#ifdef XP_MAC
-  return p2;
-#else 
   return NET_MakeAbsoluteURL(p1, p2);
-#endif
+
 }
 
 
