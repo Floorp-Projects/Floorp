@@ -1667,6 +1667,11 @@ PresShell::~PresShell()
     Destroy();
   }
 
+  NS_ASSERTION(mCurrentEventContentStack.Count() == 0,
+               "Huh, event content left on the stack in pres shell dtor!");
+
+  NS_IF_RELEASE(mCurrentEventContent);
+
   // if we allocated any stack memory free it.
   FreeDynamicStack();
 }
@@ -1845,14 +1850,21 @@ PresShell::Destroy()
   // Clobber weak leaks in case of re-entrancy during tear down
   mHistoryState = nsnull;
 
-  // release current event content and any content on event stack
-  NS_IF_RELEASE(mCurrentEventContent);
+  // We can't release all the event content in
+  // mCurrentEventContentStack here since there might be code on the
+  // stack that will release the event content too. Double release
+  // bad!
 
-  PRInt32 i, count = mCurrentEventContentStack.Count();
-  nsIContent* currentEventContent;
+  // The frames will be torn down, so remove them from the current
+  // event frame stack (since they'd be dangling references if we'd
+  // leave them in) and null out the mCurrentEventFrame pointer as
+  // well.
+
+  mCurrentEventFrame = nsnull;
+
+  PRInt32 i, count = mCurrentEventFrameStack.Count();
   for (i = 0; i < count; i++) {
-    currentEventContent = (nsIContent*)mCurrentEventContentStack.ElementAt(i);
-    NS_IF_RELEASE(currentEventContent);
+    mCurrentEventFrameStack.ReplaceElementAt(nsnull, i);
   }
 
   if (mViewManager) {
