@@ -373,7 +373,7 @@ main(int argc, char** argv)
   DoRFC822toHTMLConversion(argv[1]);
 
   // Cleanup stuff necessary...
-  NS_RELEASE(ccMan);
+  NS_IF_RELEASE(ccMan);
   return NS_OK;
 }
 
@@ -404,7 +404,8 @@ DoRFC822toHTMLConversion(char *filename)
   }
   
   // Create the consumer output stream.. this will receive all the HTML from libmime
-  nsCOMPtr<nsIOutputStream> out = do_QueryInterface(new ConsoleOutputStreamImpl());
+  ConsoleOutputStreamImpl   *ptr = new ConsoleOutputStreamImpl();
+  nsCOMPtr<nsIOutputStream> out = do_QueryInterface(ptr);
   if (!out)
   {
     printf("Failed to create nsIOutputStream\n");
@@ -412,7 +413,8 @@ DoRFC822toHTMLConversion(char *filename)
   }
  
   // This is the producer stream that will deliver data from the disk file...
-  nsCOMPtr<FileInputStreamImpl> in = do_QueryInterface(new FileInputStreamImpl());
+  FileInputStreamImpl   *ptr2 = new FileInputStreamImpl();
+  nsCOMPtr<FileInputStreamImpl> in = do_QueryInterface(ptr2);
   if (!in )
   {
     printf("Failed to create nsIInputStream\n");

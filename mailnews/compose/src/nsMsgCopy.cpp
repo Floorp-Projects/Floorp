@@ -202,7 +202,11 @@ nsMsgCopy::DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
 	NS_WITH_SERVICE(nsIMsgCopyService, copyService, kMsgCopyServiceCID, &rv); 
 	if(NS_SUCCEEDED(rv))
 	{
-    mCopyListener = do_QueryInterface(new CopyListener());
+    CopyListener    *tPtr = new CopyListener();
+    if (!tPtr)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    mCopyListener = do_QueryInterface(tPtr);
     if (!mCopyListener)
       return NS_ERROR_OUT_OF_MEMORY;
 
@@ -284,7 +288,10 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
   {
     // Now that we have the server...we need to get the named message folder
     nsCOMPtr<nsIMsgIncomingServer> inServer; 
-    inServer = do_QueryInterface(retval->ElementAt(i));
+    nsISupports                    *ptr = retval->ElementAt(i);
+
+    inServer = do_QueryInterface(ptr);
+    NS_IF_RELEASE(ptr);
     if(NS_FAILED(rv) || (!inServer))
     {
       if (*savePref)

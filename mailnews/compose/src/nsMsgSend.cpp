@@ -1078,8 +1078,12 @@ nsMsgComposeAndSend::InitCompositionFields(nsMsgCompFields *fields)
 {
   nsresult        rv = NS_OK;
 	const char      *pStr = nsnull;
+  nsMsgCompFields *tPtr = new nsMsgCompFields();
 
-	mCompFields = do_QueryInterface( new nsMsgCompFields());
+  if (!tPtr)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+	mCompFields = do_QueryInterface( tPtr );
 	if (!mCompFields)
 		return NS_ERROR_OUT_OF_MEMORY;
 
@@ -2686,7 +2690,7 @@ nsresult
 nsMsgComposeAndSend::StartMessageCopyOperation(nsIFileSpec        *aFileSpec, 
                                                nsMsgDeliverMode   mode)
 {
-  mCopyObj = new nsMsgCopy(); // SHERRY do_QueryInterface(new nsMsgCopy());
+  mCopyObj = new nsMsgCopy();
   if (!mCopyObj)
     return NS_ERROR_OUT_OF_MEMORY;
 
