@@ -96,7 +96,7 @@ nsMemoryCacheDevice::BindEntry(nsCacheEntry * entry)
         return rv;
 
     //** add size of entry to memory totals
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_OK;
 }
 
 
