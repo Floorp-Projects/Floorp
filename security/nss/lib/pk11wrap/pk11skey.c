@@ -107,18 +107,22 @@ pk11_CloseSession(PK11SlotInfo *slot,CK_SESSION_HANDLE session,PRBool owner)
 
 
 SECStatus
-PK11_CreateNewObject(PK11SlotInfo *slot,CK_ATTRIBUTE *theTemplate, int count, 
-					PRBool token, CK_OBJECT_HANDLE *objectID)
+PK11_CreateNewObject(PK11SlotInfo *slot, CK_SESSION_HANDLE session,
+				CK_ATTRIBUTE *theTemplate, int count, 
+				PRBool token, CK_OBJECT_HANDLE *objectID)
 {
 	CK_SESSION_HANDLE rwsession;
 	CK_RV crv;
 	SECStatus rv = SECSuccess;
 
-	if (token) {
-	    rwsession =  PK11_GetRWSession(slot);
-	} else { 
-	    rwsession =  slot->session;
-	    PK11_EnterSlotMonitor(slot);
+	rwsession = session;
+	if (rwsession == CK_INVALID_SESSION) {
+	    if (token) {
+		rwsession =  PK11_GetRWSession(slot);
+	    } else { 
+		rwsession =  slot->session;
+		PK11_EnterSlotMonitor(slot);
+	    }
 	}
 	crv = PK11_GETTAB(slot)->C_CreateObject(rwsession, theTemplate,
 							count,objectID);
@@ -126,11 +130,13 @@ PK11_CreateNewObject(PK11SlotInfo *slot,CK_ATTRIBUTE *theTemplate, int count,
 	    PORT_SetError( PK11_MapError(crv) );
 	    rv = SECFailure;
 	}
-	if (token) {
-	    PK11_RestoreROSession(slot, rwsession);
-	} else {
-	    PK11_ExitSlotMonitor(slot);
-	}
+	if (session == CK_INVALID_SESSION) {
+	    if (token) {
+		PK11_RestoreROSession(slot, rwsession);
+	    } else {
+		PK11_ExitSlotMonitor(slot);
+	    }
+        }
 	return rv;
 }
 
@@ -327,8 +333,8 @@ pk11_ImportSymKeyWithTempl(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
     symKey->origin = origin;
 
     /* import the keys */
-    crv = PK11_CreateNewObject(slot, keyTemplate, templateCount, PR_FALSE,
-			       &symKey->objectID);
+    crv = PK11_CreateNewObject(slot, symKey->session, keyTemplate,
+		 	templateCount, PR_FALSE, &symKey->objectID);
     if ( crv != CKR_OK) {
 	PK11_FreeSymKey(symKey);
 	PORT_SetError( PK11_MapError(crv));
@@ -471,8 +477,8 @@ PK11_ImportPublicKey(PK11SlotInfo *slot, SECKEYPublicKey *pubKey,
 	for (attrs=signedattr; signedcount; attrs++, signedcount--) {
 		pk11_SignedToUnsigned(attrs);
 	} 
-        crv = PK11_CreateNewObject(slot, theTemplate, templateCount, isToken,
-						&objectID);
+        crv = PK11_CreateNewObject(slot, CK_INVALID_SESSION, theTemplate,
+				 	templateCount, isToken, &objectID);
 	if ( crv != CKR_OK) {
 	    PORT_SetError (PK11_MapError(crv));
 	    return CK_INVALID_KEY;
@@ -902,7 +908,79 @@ PK11_GetKeyStrength(PK11SymKey *key, SECAlgorithmID *algid)
     return PK11_GetKeyLength(key) * 8;
 }
 
+/* Make a Key type to an appropriate signing/verification mechanism */
+static CK_MECHANISM_TYPE
+pk11_mapSignKeyType(KeyType keyType)
+{
+    switch (keyType) {
+    case rsaKey:
+	return CKM_RSA_PKCS;
+    case fortezzaKey:
+    case dsaKey:
+	return CKM_DSA;
+    case dhKey:
+    default:
+	break;
+    }
+    return CKM_INVALID_MECHANISM;
+}
 
+static CK_MECHANISM_TYPE
+pk11_mapWrapKeyType(KeyType keyType)
+{
+    switch (keyType) {
+    case rsaKey:
+	return CKM_RSA_PKCS;
+    /* Add fortezza?? */
+    default:
+	break;
+    }
+    return CKM_INVALID_MECHANISM;
+}
+
+/*
+ * Some non-compliant PKCS #11 vendors do not give us the modulus, so actually
+ * set up a signature to get the signaure length.
+ */
+static int
+pk11_backupGetSignLength(SECKEYPrivateKey *key)
+{
+    PK11SlotInfo *slot = key->pkcs11Slot;
+    CK_MECHANISM mech = {0, NULL, 0 };
+    PRBool owner = PR_TRUE;
+    CK_SESSION_HANDLE session;
+    CK_ULONG len;
+    CK_RV crv;
+    unsigned char h_data[20]  = { 0 };
+    unsigned char buf[20]; /* obviously to small */
+    CK_ULONG smallLen = sizeof(buf);
+
+    mech.mechanism = pk11_mapSignKeyType(key->keyType);
+
+    session = pk11_GetNewSession(slot,&owner);
+    if (!owner || !(slot->isThreadSafe)) PK11_EnterSlotMonitor(slot);
+    crv = PK11_GETTAB(slot)->C_SignInit(session,&mech,key->pkcs11ID);
+    if (crv != CKR_OK) {
+	if (!owner || !(slot->isThreadSafe)) PK11_ExitSlotMonitor(slot);
+	pk11_CloseSession(slot,session,owner);
+	PORT_SetError( PK11_MapError(crv) );
+	return -1;
+    }
+    len = 0;
+    crv = PK11_GETTAB(slot)->C_Sign(session,h_data,sizeof(h_data),
+					NULL, &len);
+    /* now call C_Sign with too small a buffer to clear the session state */
+    (void) PK11_GETTAB(slot)->
+			C_Sign(session,h_data,sizeof(h_data),buf,&smallLen);
+	
+    if (!owner || !(slot->isThreadSafe)) PK11_ExitSlotMonitor(slot);
+    pk11_CloseSession(slot,session,owner);
+    if (crv != CKR_OK) {
+	PORT_SetError( PK11_MapError(crv) );
+	return -1;
+    }
+    return len;
+}
 /*
  * get the length of a signature object based on the key
  */
@@ -975,37 +1053,6 @@ PK11_GetPrivateModulusLen(SECKEYPrivateKey *key)
 	PORT_Free(theTemplate.pValue);
     PORT_SetError( SEC_ERROR_INVALID_KEY );
     return -1;
-}
-
-
-/* Make a Key type to an appropriate signing/verification mechanism */
-static CK_MECHANISM_TYPE
-pk11_mapSignKeyType(KeyType keyType)
-{
-    switch (keyType) {
-    case rsaKey:
-	return CKM_RSA_PKCS;
-    case fortezzaKey:
-    case dsaKey:
-	return CKM_DSA;
-    case dhKey:
-    default:
-	break;
-    }
-    return CKM_INVALID_MECHANISM;
-}
-
-static CK_MECHANISM_TYPE
-pk11_mapWrapKeyType(KeyType keyType)
-{
-    switch (keyType) {
-    case rsaKey:
-	return CKM_RSA_PKCS;
-    /* Add fortezza?? */
-    default:
-	break;
-    }
-    return CKM_INVALID_MECHANISM;
 }
 
 /*
@@ -1528,7 +1575,8 @@ pk11_loadPrivKey(PK11SlotInfo *slot,SECKEYPrivateKey *privKey,
      }
 
      /* now Store the puppies */
-     rv = PK11_CreateNewObject(slot,privTemplate, count, token, &objectID);
+     rv = PK11_CreateNewObject(slot, CK_INVALID_SESSION, privTemplate, 
+						count, token, &objectID);
      PORT_FreeArena(arena, PR_TRUE);
      if (rv != SECSuccess) {
 	return NULL;
@@ -2479,6 +2527,9 @@ pk11_HandUnwrap(PK11SlotInfo *slot, CK_OBJECT_HANDLE wrappingKey,
     SECItem outKey;
     PK11SymKey *symKey;
     CK_RV crv;
+    PRBool owner = PR_TRUE;
+    PRBool bool = PR_TRUE;
+    CK_SESSION_HANDLE session;
 
     /* keys are almost always aligned, but if we get this far,
      * we've gone above and beyond anyway... */
@@ -2489,26 +2540,28 @@ pk11_HandUnwrap(PK11SlotInfo *slot, CK_OBJECT_HANDLE wrappingKey,
     }
     len = inKey->len;
 
-
     /* use NULL IV's for wrapping */
-    PK11_EnterSlotMonitor(slot);
-    crv = PK11_GETTAB(slot)->C_DecryptInit(slot->session,mech,wrappingKey);
+    session = pk11_GetNewSession(slot,&owner);
+    if (!owner || !(slot->isThreadSafe)) PK11_EnterSlotMonitor(slot);
+    crv = PK11_GETTAB(slot)->C_DecryptInit(session,mech,wrappingKey);
     if (crv != CKR_OK) {
-        PK11_ExitSlotMonitor(slot);
+	if (!owner || !(slot->isThreadSafe)) PK11_ExitSlotMonitor(slot);
+	pk11_CloseSession(slot,session,owner);
+	PORT_Free(outKey.data);
+	PORT_SetError( PK11_MapError(crv) );
+	return NULL;
+    }
+    crv = PK11_GETTAB(slot)->C_Decrypt(session,inKey->data,inKey->len,
+							   outKey.data, &len);
+    if (!owner || !(slot->isThreadSafe)) PK11_ExitSlotMonitor(slot);
+    pk11_CloseSession(slot,session,owner);
+    if (crv != CKR_OK) {
 	PORT_Free(outKey.data);
 	PORT_SetError( PK11_MapError(crv) );
 	return NULL;
     }
 
-    crv = PK11_GETTAB(slot)->C_Decrypt(slot->session,inKey->data,inKey->len,
-							   outKey.data, &len);
-    PK11_ExitSlotMonitor(slot);
-    outKey.len = (key_size == 0) ? len : key_size;
-    if (crv != CKR_OK) {
-	PORT_Free(outKey.data);
-	PORT_SetError( PK11_MapError(crv) );
-	return NULL;
-    }
+    outKey.len == (key_size = 0) ? len : key_size;
 
     if (PK11_DoesMechanism(slot,target)) {
 	symKey = pk11_ImportSymKeyWithTempl(slot, target, PK11_OriginUnwrap, 
@@ -2620,12 +2673,13 @@ pk11_AnyUnwrapKey(PK11SlotInfo *slot, CK_OBJECT_HANDLE wrappingKey,
 	mechanism.ulParameterLen = 0;
     }
 
-    if ((mechanism_info.flags & CKF_UNWRAP) == 0) {
+    if ((mechanism_info.flags & CKF_DECRYPT)  
+				&& !PK11_DoesMechanism(slot,target)) {
 	symKey = pk11_HandUnwrap(slot, wrappingKey, &mechanism, wrappedKey, 
 	                         target, keyTemplate, templateCount, keySize, 
 				 wincx);
 	if (symKey) return symKey;
-	/* fall through, maybe they incorrectly set CKF_UNWRAP */
+	/* fall through, maybe they incorrectly set CKF_DECRYPT */
     }
 
     /* get our key Structure */
@@ -2986,11 +3040,14 @@ PK11_DestroyContext(PK11Context *context, PRBool freeit)
 /*
  * save the current context. Allocate Space if necessary.
  */
-void *
-pk11_saveContext(PK11Context *context,void *space, unsigned long *savedLength)
+static void *
+pk11_saveContextHelper(PK11Context *context, void *space, 
+	unsigned long *savedLength, PRBool staticBuffer, PRBool recurse)
 {
     CK_ULONG length;
     CK_RV crv;
+
+    if (staticBuffer) PORT_Assert(space != NULL);
 
     if (space == NULL) {
 	crv =PK11_GETTAB(context->slot)->C_GetOperationState(context->session,
@@ -3005,11 +3062,24 @@ pk11_saveContext(PK11Context *context,void *space, unsigned long *savedLength)
     }
     crv = PK11_GETTAB(context->slot)->C_GetOperationState(context->session,
 					(CK_BYTE_PTR)space,savedLength);
+    if (!staticBuffer && !recurse && (crv == CKR_BUFFER_TOO_SMALL)) {
+	if (!staticBuffer) PORT_Free(space);
+	return pk11_saveContextHelper(context, NULL, 
+					savedLength, PR_FALSE, PR_TRUE);
+    }
     if (crv != CKR_OK) {
+	if (!staticBuffer) PORT_Free(space);
 	PORT_SetError( PK11_MapError(crv) );
 	return NULL;
     }
     return space;
+}
+
+void *
+pk11_saveContext(PK11Context *context, void *space, unsigned long *savedLength)
+{
+	return pk11_saveContextHelper(context, space, 
+					savedLength, PR_FALSE, PR_FALSE);
 }
 
 /*
@@ -3328,15 +3398,16 @@ PK11Context * PK11_CloneContext(PK11Context *old)
 SECStatus
 PK11_SaveContext(PK11Context *cx,unsigned char *save,int *len, int saveLength)
 {
-    unsigned char * data;
+    unsigned char * data = NULL;
     CK_ULONG length = saveLength;
 
     if (cx->ownSession) {
         PK11_EnterContextMonitor(cx);
-	data = (unsigned char*)pk11_saveContext(cx,save,&length);
+	data = (unsigned char*)pk11_saveContextHelper(cx,save,&length,
+							PR_FALSE,PR_FALSE);
         PK11_ExitContextMonitor(cx);
 	if (data) *len = length;
-    } else {
+    } else if (saveLength >= cx->savedLength) {
 	data = (unsigned char*)cx->savedData;
 	if (cx->savedData) {
 	    PORT_Memcpy(save,cx->savedData,cx->savedLength);
@@ -4238,7 +4309,8 @@ PK11_ImportPrivateKeyInfo(PK11SlotInfo *slot, SECKEYPrivateKeyInfo *pki,
 	pk11_SignedToUnsigned(ap);
     }
 
-    rv = PK11_CreateNewObject(slot,theTemplate,templateCount, isPerm, &objectID);
+    rv = PK11_CreateNewObject(slot, CK_INVALID_SESSION,
+			theTemplate, templateCount, isPerm, &objectID);
 
     if (ck_id) {
 	SECITEM_ZfreeItem(ck_id, PR_TRUE);
