@@ -153,7 +153,8 @@ elif [ "$os_name" = "Windows_95" -o \
     "$os_name" = "Windows_98" ]
 then
     #FIXME net use, mount the neccessary pnetwork drives and partitiones first
-    PATH=`echo $SHELL | sed -e "s/.ksh.exe//g"  -e "s/.sh.exe//g"`
+    PATH=`echo $SHELL | sed -e "s/.[kK][sS][Hh].[Ee][Xx][Ee]//g"  \
+				-e "s/.[sS][Hh].[Ee][Xx][Ee]//g"`
     MOZTOOLS_IN_PATH=NO
     if [ -n "$MOZ_TOOLS" -a -d  "$MOZ_TOOLS" ] ; then
         MOZ_TOOLS=`ls -d "$MOZ_TOOLS" | sed -e 's/\\\/\//g'`
