@@ -1,4 +1,4 @@
-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 #ifndef XPRINTUTIL_H
 #define XPRINTUTIL_H 1
 /* 
@@ -72,7 +72,6 @@ const char *XpuGetXpServerList( void );
 int XpuGetPrinter( const char *printername, Display **pdpyptr, XPContext *pcontextptr );
 void XpuSetOneAttribute( Display *pdpy, XPContext pcontext, 
                          XPAttributes type, const char *attribute_name, const char *value, XPAttrReplacement replacement_rule );
-char *XpuEmumerateXpAttributeValue( char *value, void **context );
 int XpuCheckSupported( Display *pdpy, XPContext pcontext, XPAttributes type, const char *attribute_name, const char *query );
 int XpuSetJobTitle( Display *pdpy, XPContext pcontext, const char *title );
 int XpuSetContentOrientation( Display *pdpy, XPContext pcontext, XPAttributes type, const char *orientation );
@@ -82,6 +81,14 @@ void XpuSetContext( Display *pdpy, XPContext pcontext );
 void XpuWaitForPrintNotify( Display *pdpy, int detail );
 Bool XpuSetResolution( Display *pdpy, XPContext pcontext, long dpi );
 Bool XpuGetResolution( Display *pdpy, XPContext pcontext, long *dpi );
+const char *XpuEmumerateXpAttributeValue( const char *value, void **vcptr );
+void XpuDisposeEmumerateXpAttributeValue( void **vc );
+Bool XpuParseMediumSourceSize( const char *value, 
+                               const char **media_name, Bool *mbool, 
+                               float *ma1, float *ma2, float *ma3, float *ma4 );
+XPPrinterList XpuGetPrinterList( const char *printer, int *res_list_count );
+void XpuFreePrinterList( XPPrinterList list );
+
 
 #define XpuGetJobAttributes( pdpy, pcontext )     XpGetAttributes( (pdpy), (pcontext), XPJobAttr )
 #define XpuGetDocAttributes( pdpy, pcontext )     XpGetAttributes( (pdpy), (pcontext), XPDocAttr )
