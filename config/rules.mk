@@ -892,7 +892,7 @@ SUB_LOBJS	= $(shell for lib in $(SHARED_LIBRARY_LIBS); do $(AR_LIST) $${lib} $(C
 endif
 endif
 
-$(LIBRARY): $(OBJS) $(LOBJS) $(SHARED_LIBRARY_LIBS) Makefile Makefile.in
+$(LIBRARY): $(OBJS) $(LOBJS) $(SHARED_LIBRARY_LIBS) $(EXTRA_DEPS) Makefile Makefile.in
 	rm -f $@
 ifneq ($(OS_ARCH),WINNT)
 ifdef SHARED_LIBRARY_LIBS
@@ -937,7 +937,7 @@ $(IMPORT_LIBRARY): $(OBJS) $(DEF_FILE)
 	$(IMPLIB) $@ $(DEF_FILE)
 	$(RANLIB) $@
 
-$(LIBRARY): $(OBJS) $(LOBJS) $(SHARED_LIBRARY_LIBS) Makefile Makefile.in
+$(LIBRARY): $(OBJS) $(LOBJS) $(SHARED_LIBRARY_LIBS) $(EXTRA_DEPS) Makefile Makefile.in
 	rm -f $@
 	$(AR) $(AR_FLAGS) $(OBJS) $(LOBJS) $(SUB_LOBJS)
 	$(RANLIB) $@
@@ -1042,7 +1042,7 @@ endif # !COMPILER_DEPEND
 endif # MOZ_AUTO_DEPS
 
 # Rules for building native targets must come first because of the host_ prefix
-host_%.o: %.c Makefile.in
+host_%.o: %.c Makefile Makefile.in
 	$(REPORT_BUILD)
 ifdef _NO_AUTO_VARS
 	$(ELOG) $(HOST_CC) $(OUTOPTION)$@ -c $(HOST_CFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(srcdir)/$*.c
@@ -1050,7 +1050,7 @@ else
 	$(ELOG) $(HOST_CC) $(OUTOPTION)$@ -c $(HOST_CFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
 endif
 
-%: %.c Makefile.in
+%: %.c Makefile Makefile.in
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO)
 ifdef _NO_AUTO_VARS
@@ -1059,7 +1059,7 @@ else
 	$(ELOG) $(CC) $(CFLAGS) $(LDFLAGS) $(OUTOPTION)$@ $(_VPATH_SRCS)
 endif
 
-%.$(OBJ_SUFFIX): %.c Makefile.in
+%.$(OBJ_SUFFIX): %.c Makefile Makefile.in
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO)
 ifdef _NO_AUTO_VARS
@@ -1068,22 +1068,22 @@ else
 	$(ELOG) $(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $(_VPATH_SRCS)
 endif
 
-moc_%.cpp: %.h Makefile.in
+moc_%.cpp: %.h Makefile Makefile.in
 	$(MOC) $< $(OUTOPTION)$@ 
 
 # The AS_DASH_C_FLAG is needed cause not all assemblers (Solaris) accept
 # a '-c' flag.
-%.$(OBJ_SUFFIX): %.$(ASM_SUFFIX) Makefile.in
+%.$(OBJ_SUFFIX): %.$(ASM_SUFFIX) Makefile Makefile.in
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
 	$(AS) -Fdo:./$(OBJDIR) -Feo:.$(OBJ_SUFFIX) $(ASFLAGS) $(AS_DASH_C_FLAG) $<
 else
 	$(AS) -o $@ $(ASFLAGS) $(AS_DASH_C_FLAG) $(_VPATH_SRCS)
 endif
 
-%.$(OBJ_SUFFIX): %.S Makefile.in
+%.$(OBJ_SUFFIX): %.S Makefile Makefile.in
 	$(AS) -o $@ $(ASFLAGS) -c $<
 
-%: %.cpp Makefile.in
+%: %.cpp Makefile Makefile.in
 	@$(MAKE_DEPS_AUTO)
 ifdef _NO_AUTO_VARS
 	$(CCC) $(OUTOPTION)$@ $(CXXFLAGS) $(srcdir)/$*.cpp $(LDFLAGS)
@@ -1094,7 +1094,7 @@ endif
 #
 # Please keep the next two rules in sync.
 #
-%.$(OBJ_SUFFIX): %.cc Makefile.in
+%.$(OBJ_SUFFIX): %.cc Makefile Makefile.in
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO)
 ifdef _NO_AUTO_VARS
@@ -1103,7 +1103,7 @@ else
 	$(ELOG) $(CCC) $(OUTOPTION)$@ -c $(COMPILE_CXXFLAGS) $(_VPATH_SRCS)
 endif
 
-%.$(OBJ_SUFFIX): %.cpp Makefile.in
+%.$(OBJ_SUFFIX): %.cpp Makefile Makefile.in
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO)
 ifdef STRICT_CPLUSPLUS_SUFFIX
@@ -1118,7 +1118,7 @@ else
 endif
 endif #STRICT_CPLUSPLUS_SUFFIX
 
-$(OBJ_PREFIX)%.$(OBJ_SUFFIX): %.mm Makefile.in
+$(OBJ_PREFIX)%.$(OBJ_SUFFIX): %.mm Makefile Makefile.in
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO)
 	$(ELOG) $(CCC) -o $@ -c $(COMPILE_CXXFLAGS) $<
