@@ -637,7 +637,8 @@ openViewFile(App *app)
 			robot->viewFile, strerror(errno));
 		exit(0);
 	}
-	fprintf(app->view.out, "<html><head><title>View</title></head><body><tt>");
+	fprintf(app->view.out,
+		"<html><head><title>View</title></head><body><pre>");
 }
 
 static void
@@ -646,7 +647,7 @@ closeViewFile(App *app)
 	Robot	*robot;
 
 	robot = app->data;
-	fprintf(app->view.out, "</tt></body></html>");
+	fprintf(app->view.out, "</pre></body></html>");
 	fclose(app->view.out);
 	if (!robot->viewFileAdded)
 	{
