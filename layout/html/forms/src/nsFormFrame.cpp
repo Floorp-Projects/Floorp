@@ -315,7 +315,7 @@ void nsFormFrame::AddFormControlFrame(nsIFormControlFrame& aFrame)
   aFrame.GetType(&type);
 
   // a solo text control can be a submitter (if return is hit)
-  if (NS_FORM_INPUT_TEXT == type) {
+  if ((NS_FORM_INPUT_TEXT == type) || (NS_FORM_INPUT_PASSWORD == type)) {
     mTextSubmitter = (nsnull == mTextSubmitter) ? &aFrame : nsnull;
   }
 
