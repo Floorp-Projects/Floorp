@@ -407,17 +407,15 @@ int main(int argc, char* argv[])
         withArgs = "chrome://editor/content/EditorInitPage.html";
       }
     }
-    // Check for -editor -- this may eventually go away
+    // Check for -editor -- this will eventually go away
     if (nsnull == urlstr)
     {
       rv = cmdLineArgs->GetCmdLineValue("-editor", &cmdResult);
       if (NS_SUCCEEDED(rv))
       {
-        printf("WARNING -- -editor is going away, use -edit instead!\n");
         if (cmdResult && (strcmp("1",cmdResult)==0)) {
-          urlstr = "chrome://editor/content/";
-          useArgs = PR_TRUE;
-          withArgs = "chrome://editor/content/EditorInitPage.html";
+          printf(" -editor no longer supported, use -edit instead!\n");
+          goto done;			// don't use goto in C++!
         }
       }
     }
