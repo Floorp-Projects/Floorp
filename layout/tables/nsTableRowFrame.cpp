@@ -163,18 +163,22 @@ void nsTableRowFrame::PaintChildren(nsIPresContext&      aPresContext,
     if (nsnull == pView) {
       nsRect kidRect;
       kid->GetRect(kidRect);
-      nsRect damageArea(aDirtyRect);
-      // Translate damage area into kid's coordinate system
-      nsRect kidDamageArea(damageArea.x - kidRect.x, damageArea.y - kidRect.y,
-                           damageArea.width, damageArea.height);
-      aRenderingContext.PushState();
-      aRenderingContext.Translate(kidRect.x, kidRect.y);
-      kid->Paint(aPresContext, aRenderingContext, kidDamageArea);
-      if (nsIFrame::GetShowFrameBorders()) {
-        aRenderingContext.SetColor(NS_RGB(255,0,0));
-        aRenderingContext.DrawRect(0, 0, kidRect.width, kidRect.height);
+      nsRect damageArea;
+      PRBool overlap = damageArea.IntersectRect(aDirtyRect, kidRect);
+      if (overlap) {
+        // Translate damage area into kid's coordinate system
+        nsRect kidDamageArea(damageArea.x - kidRect.x,
+                             damageArea.y - kidRect.y,
+                             damageArea.width, damageArea.height);
+        aRenderingContext.PushState();
+        aRenderingContext.Translate(kidRect.x, kidRect.y);
+        kid->Paint(aPresContext, aRenderingContext, kidDamageArea);
+        if (nsIFrame::GetShowFrameBorders()) {
+          aRenderingContext.SetColor(NS_RGB(255,0,0));
+          aRenderingContext.DrawRect(0, 0, kidRect.width, kidRect.height);
+        }
+        aRenderingContext.PopState();
       }
-      aRenderingContext.PopState();
     } else {
       NS_RELEASE(pView);
     }
