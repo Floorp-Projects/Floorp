@@ -676,7 +676,7 @@ nsresult nsPop3URL::GetHostPort(PRUint32 *result) const
 
 nsresult nsPop3URL::SetHostPort(PRUint32 aNewPort)
 {
-    NS_ASSERTION(m_URL_s == nsnull, "URL has already been opened");
+    // NS_ASSERTION(m_URL_s == nsnull, "URL has already been opened");
     NS_LOCK_INSTANCE();
     m_port = aNewPort;
     ReconstructSpec();
