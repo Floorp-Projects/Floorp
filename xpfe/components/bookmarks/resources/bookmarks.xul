@@ -117,12 +117,12 @@
   </template>
 
   <treecol persist="width" id="NameColumn" sortSeparators="true" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
-  <treecol persist="width" id="URLColumn" sortSeparators="true" rdf:resource="http://home.netscape.com/NC-rdf#URL"/>
-  <treecol persist="width" id="ShortcutURLColumn" sortSeparators="true" rdf:resource="http://home.netscape.com/NC-rdf#ShortcutURL"/>
-  <treecol persist="width" id="DescriptionColumn" sortSeparators="true" rdf:resource="http://home.netscape.com/NC-rdf#Description"/>
-  <treecol persist="width" id="LastVisitColumn" sortSeparators="true" rdf:resource="http://home.netscape.com/WEB-rdf#LastVisitDate"/>
-  <treecol persist="width" id="AddedOnColumn" sortSeparators="true" rdf:resource="http://home.netscape.com/NC-rdf#BookmarkAddDate"/>
-  <treecol persist="width" id="LastModColumn" sortSeparators="true" rdf:resource="http://home.netscape.com/WEB-rdf#LastModifiedDate"/>
+  <treecol persist="width" id="URLColumn" sortSeparators="true" rdf:resource="http://home.netscape.com/NC-rdf#URL" rdf:resource2="http://home.netscape.com/NC-rdf#Name"/>
+  <treecol persist="width" id="ShortcutURLColumn" sortSeparators="true" rdf:resource="http://home.netscape.com/NC-rdf#ShortcutURL" rdf:resource2="http://home.netscape.com/NC-rdf#Name"/>
+  <treecol persist="width" id="DescriptionColumn" sortSeparators="true" rdf:resource="http://home.netscape.com/NC-rdf#Description" rdf:resource2="http://home.netscape.com/NC-rdf#Name"/>
+  <treecol persist="width" id="LastVisitColumn" sortSeparators="true" rdf:resource="http://home.netscape.com/WEB-rdf#LastVisitDate" rdf:resource2="http://home.netscape.com/NC-rdf#Name"/>
+  <treecol persist="width" id="AddedOnColumn" sortSeparators="true" rdf:resource="http://home.netscape.com/NC-rdf#BookmarkAddDate" rdf:resource2="http://home.netscape.com/NC-rdf#Name"/>
+  <treecol persist="width" id="LastModColumn" sortSeparators="true" rdf:resource="http://home.netscape.com/WEB-rdf#LastModifiedDate" rdf:resource2="http://home.netscape.com/NC-rdf#Name"/>
 
   <treehead>
     <treerow>
