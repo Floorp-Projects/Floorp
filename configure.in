@@ -739,6 +739,23 @@ dnl Do the platform specific pthread hackery
 dnl
 if test "$USE_PTHREADS"x != x
 then
+	dnl
+	dnl See if -pthread is supported.
+	dnl
+	rm -f conftest*
+	ac_cv_have_dash_pthread=no
+	AC_MSG_CHECKING(whether ${CC-cc} accepts -pthread)
+	echo 'int main() { return 0; }' | cat > conftest.c
+	${CC-cc} -pthread -o conftest conftest.c > conftest.out 2>&1
+	if test $? -eq 0; then
+		if test -z "`egrep -i '(unrecognize|unknown)' conftest.out | grep pthread`"; then
+			ac_cv_have_dash_pthread=yes
+			CFLAGS="$CFLAGS -pthread"
+			CXXFLAGS="$CXXFLAGS -pthread"
+		fi
+	fi
+	rm -f conftest*
+
 	case "$target" in
 	    *-*-solaris*) 
     			AC_DEFINE(_REENTRANT) 
@@ -750,21 +767,26 @@ then
 
 	    alpha*-*-osf*)
 			AC_DEFINE(_REENTRANT)
-			if test ! "$GNU_CC"; then
-				CFLAGS="$CFLAGS -pthread" 
-				CXXFLAGS="$CXXFLAGS -pthread" 
-			fi
+dnl			if test ! "$GNU_CC"; then
+dnl				CFLAGS="$CFLAGS -pthread" 
+dnl				CXXFLAGS="$CXXFLAGS -pthread" 
+dnl			fi
 			;;
 
 	    *-*-freebsd*)
 			AC_DEFINE(_REENTRANT)
 			AC_DEFINE(_THREAD_SAFE)
-			CFLAGS="$CFLAGS -pthread"
-			CXXFLAGS="$CXXFLAGS -pthread"
+dnl			CFLAGS="$CFLAGS -pthread"
+dnl			CXXFLAGS="$CXXFLAGS -pthread"
 			dnl -pthread links in -lc_r, so don't specify it explicitly.
-			PTHREAD_LDFLAGS=""
+			if test "$ac_cv_have_dash_pthread" = "yes"; then
+				PTHREAD_LDFLAGS=""
+			else
+				PTHREAD_LDFLAGS="-lc_r"
+			fi
 			;;
 	esac
+	AC_MSG_RESULT($ac_cv_have_dash_pthread)
 fi
 
 dnl
