@@ -147,8 +147,8 @@ function onChangeHTMLAttribute()
 
   // First try to update existing attribute
   // If not found, add new attribute
-  if ( !UpdateExistingAttribute( name, value, "HTMLAList" ) && value)
-    AddTreeItem ( name, value, "HTMLAList", HTMLAttrs );
+  if (!UpdateExistingAttribute( name, value, "HTMLAList" ) && value)
+    AddTreeItem (name, value, "HTMLAList", HTMLAttrs);
 }
 
 function ClearHTMLInputWidgets()
@@ -279,6 +279,10 @@ function onInputHTMLAttributeValue()
   if (!gUpdateTreeValue)
     return;
 
+  var name = TrimString(gDialog.AddHTMLAttributeNameInput.value);
+  if (!name)
+    return;
+
   // Trim spaces only from left since we must allow spaces within the string
   //  (we always reset the input field's value below)
   var value = TrimStringLeft(gDialog.AddHTMLAttributeValueInput.value);
@@ -330,8 +334,10 @@ function onInputHTMLAttributeValue()
     }
   }
 
-  // Always update value in the tree list
-  UpdateExistingAttribute(gDialog.AddHTMLAttributeNameInput.value, value, "HTMLAList");
+  // Update value in the tree list
+  // If not found, add new attribute
+  if ( !UpdateExistingAttribute(name, value, "HTMLAList" ) && value)
+    AddTreeItem(name, value, "HTMLAList", HTMLAttrs);
 }
 
 function editHTMLAttributeValue(targetCell)
