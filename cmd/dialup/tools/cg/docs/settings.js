@@ -182,7 +182,7 @@ function GetNameValuePair(inFileName, sectionName, flagName)
 	var data = top.globals.document.setupPlugin.GetNameValuePair(fileName, sectionName, flagName);
 	
 	
-	debug("\tGetNameValuePair: (" + inFileName + ") [" +sectionName+ "] " +flagName+ "=" + data);
+	//debug("\tGetNameValuePair: (" + inFileName + ") [" +sectionName+ "] " +flagName+ "=" + data);
 	return data;
 }
 
@@ -194,7 +194,7 @@ function SetNameValuePair(inFileName, section, variable, data)
 	var fileName = completeConfigFilePath(inFileName);
 
 	top.globals.document.setupPlugin.SetNameValuePair(fileName, section, variable, data);
-	debug("\tSetNameValuePair: (" + fileName + ")[" +section+ "] " +variable+ "=" + data);
+	//debug("\tSetNameValuePair: (" + fileName + ")[" +section+ "] " +variable+ "=" + data);
 }
 
 function getFileListFromConfigFolder(fileSuffix)
