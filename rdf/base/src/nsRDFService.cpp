@@ -125,6 +125,7 @@ public:
     // Implementation methods
     nsresult RegisterLiteral(nsIRDFLiteral* aLiteral, PRBool aReplace = PR_FALSE);
     nsresult UnregisterLiteral(nsIRDFLiteral* aLiteral);
+    nsresult GetDataSource(const char *aURI, PRBool aBlock, nsIRDFDataSource **aDataSource );
 };
 
 static RDFServiceImpl* gRDFService; // The one-and-only RDF service
@@ -1154,6 +1155,22 @@ RDFServiceImpl::UnregisterDataSource(nsIRDFDataSource* aDataSource)
 NS_IMETHODIMP
 RDFServiceImpl::GetDataSource(const char* aURI, nsIRDFDataSource** aDataSource)
 {
+    // Use the other GetDataSource and ask for a non-blocking Refresh.
+    // If you wanted it loaded synchronously, then you should've tried to do it
+    // yourself, or used GetDataSourceBlocking.
+    return GetDataSource( aURI, PR_FALSE, aDataSource );
+}
+
+NS_IMETHODIMP
+RDFServiceImpl::GetDataSourceBlocking(const char* aURI, nsIRDFDataSource** aDataSource)
+{
+    // Use GetDataSource and ask for a blocking Refresh.
+    return GetDataSource( aURI, PR_TRUE, aDataSource );
+}
+
+nsresult
+RDFServiceImpl::GetDataSource(const char* aURI, PRBool aBlock, nsIRDFDataSource** aDataSource)
+{
     NS_PRECONDITION(aURI != nsnull, "null ptr");
     if (! aURI)
         return NS_ERROR_NULL_POINTER;
@@ -1213,9 +1230,6 @@ RDFServiceImpl::GetDataSource(const char* aURI, nsIRDFDataSource** aDataSource)
         ds = do_CreateInstance(kRDFXMLDataSourceCID, &rv);
         if (NS_FAILED(rv)) return rv;
 
-        // Start the datasource load asynchronously. If you wanted it
-        // loaded synchronously, then you should've tried to do it
-        // yourself.
         nsCOMPtr<nsIRDFRemoteDataSource> remote(do_QueryInterface(ds));
         NS_ASSERTION(remote, "not a remote RDF/XML data source!");
         if (! remote) return NS_ERROR_UNEXPECTED;
@@ -1223,7 +1237,7 @@ RDFServiceImpl::GetDataSource(const char* aURI, nsIRDFDataSource** aDataSource)
         rv = remote->Init(aURI);
         if (NS_FAILED(rv)) return rv;
 
-        rv = remote->Refresh(PR_FALSE);
+        rv = remote->Refresh(aBlock);
         if (NS_FAILED(rv)) return rv;
     }
 
