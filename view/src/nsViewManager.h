@@ -231,6 +231,10 @@ public:
 
   NS_IMETHOD Display(nsIView *aView, nscoord aX, nscoord aY, const nsRect& aClipRect);
 
+  NS_IMETHOD RenderOffscreen(nsIView* aView, nsRect aRect, PRBool aUntrusted,
+                             nscolor aBackgroundColor,
+                             nsIRenderingContext** aRenderedContext);
+
   NS_IMETHOD AddCompositeListener(nsICompositeListener *aListener);
   NS_IMETHOD RemoveCompositeListener(nsICompositeListener *aListener);
 
@@ -286,7 +290,8 @@ private:
    */
   void DefaultRefresh(nsView* aView, const nsRect* aRect);
   PRBool BuildRenderingDisplayList(nsIView* aRootView,
-    const nsRegion& aRegion, nsVoidArray* aDisplayList, PLArenaPool &aPool);
+    const nsRegion& aRegion, nsVoidArray* aDisplayList, PLArenaPool &aPool,
+    PRBool aIgnoreCoveringWidgets, PRBool aIgnoreOutsideClipping);
   void RenderViews(nsView *aRootView, nsIRenderingContext& aRC,
                    const nsRegion& aRegion, nsIDrawingSurface* aRCSurface,
                    const nsVoidArray& aDisplayList);
@@ -320,7 +325,8 @@ private:
   PRBool AddToDisplayList(nsView *aView,
                           DisplayZTreeNode* &aParent, nsRect &aClipRect,
                           nsRect& aDirtyRect, PRUint32 aFlags, nscoord aAbsX, nscoord aAbsY,
-                          PRBool aAssumeIntersection, PLArenaPool &aPool);
+                          PRBool aAssumeIntersection, PLArenaPool &aPool,
+                          nsIView* aStopClippingAtView);
   void OptimizeDisplayList(const nsVoidArray* aDisplayList, const nsRegion& aDirtyRegion,
                            nsRect& aFinalTransparentRect, nsRegion& aOpaqueRgn,
                            PRBool aTreatUniformAsOpaque);

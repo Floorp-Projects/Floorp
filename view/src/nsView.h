@@ -226,8 +226,10 @@ public:
   /**
    * @return the view's dimensions after clipping by ancestors is applied
    * (the rect is relative to the view's origin)
+   * @param aStopAtView do not consider clipping imposed by views above this view
+   * on the ancestor chain
    */
-  nsRect GetClippedRect();
+  nsRect GetClippedRect(nsIView* aStopAtView = nsnull);
 
   // Helper function to get the view that's associated with a widget
   static nsView*  GetViewFor(nsIWidget* aWidget);

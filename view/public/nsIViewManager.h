@@ -450,6 +450,27 @@ public:
   NS_IMETHOD Display(nsIView *aView, nscoord aX, nscoord aY, const nsRect& aClipRect) = 0;
 
   /**
+   * Dump the specified view into a new offscreen rendering context.
+   * The view is treated as the display root and is not clipped by
+   * ancestor views, nor is ancestor or sibling content displayed even
+   * if it overlaps the view.
+   * @param aRect is the region to capture into the offscreen buffer, in the view's
+   * coordinate system
+   * @param aUntrusted set to PR_TRUE if the contents may be passed to malicious
+   * agents. E.g. we might choose not to paint the contents of sensitive widgets
+   * such as the file name in a file upload widget, and we might choose not
+   * to paint themes.
+   * @param aBackgroundColor a background color to render onto
+   * @param aRenderedContext gets set to a rendering context whose offscreen
+   * buffer can be locked to get the data. The buffer's size will be aRect's size.
+   * In all cases the caller must clean it up by calling
+   * cx->DestroyDrawingSurface(cx->GetDrawingSurface()).
+   */
+  NS_IMETHOD RenderOffscreen(nsIView* aView, nsRect aRect, PRBool aUntrusted,
+                             nscolor aBackgroundColor,
+                             nsIRenderingContext** aRenderedContext) = 0;
+
+  /**
    * Add a listener to the view manager's composite listener list.
    * @param aListener - new listener
    * @result error status
