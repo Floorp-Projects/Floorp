@@ -37,7 +37,8 @@ REQUIRES	= xpcom \
 		  string \
 		  gfx \
 		  dom \
-		  accessibility
+		  accessibility \
+		  xremoteservice
 
 CSRCS		= \
 		mozcontainer.c \
@@ -55,6 +56,7 @@ CPPSRCS		= \
 		nsCommonWidget.cpp \
 		nsLookAndFeel.cpp \
 		nsGtkKeyUtils.cpp \
+		nsGtkMozRemoteHelper.cpp \
 		$(NULL)
 
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libxpwidgets_s.a

@@ -43,6 +43,7 @@
 #include "nsLookAndFeel.h"
 #include "nsWindow.h"
 #include "nsScrollbar.h"
+#include "nsGtkMozRemoteHelper.h"
 #ifdef IBMBIDI
 #include "nsBidiKeyboard.h"
 #endif
@@ -52,6 +53,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsChildWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShell)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsGtkXRemoteWidgetHelper)
 
 static
 nsresult nsHorizScrollbarConstructor (nsISupports *aOuter,
@@ -137,6 +139,10 @@ static const nsModuleComponentInfo components[] =
       NS_VERTSCROLLBAR_CID,
       "@mozilla.org/widgets/vertscroll/gtk;1",
       nsVertScrollbarConstructor },
+  { NS_IXREMOTEWIDGETHELPER_CLASSNAME,
+    NS_GTKXREMOTEWIDGETHELPER_CID,
+    NS_IXREMOTEWIDGETHELPER_CONTRACTID,
+    nsGtkXRemoteWidgetHelperConstructor },
 #ifdef IBMBIDI
     { "Gtk2 Bidi Keyboard",
       NS_BIDIKEYBOARD_CID,

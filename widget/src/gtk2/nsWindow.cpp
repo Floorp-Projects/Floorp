@@ -45,6 +45,7 @@
 
 #include "nsGtkKeyUtils.h"
 #include "nsGtkCursors.h"
+#include "nsGtkMozRemoteHelper.h"
 
 #include <gtk/gtkwindow.h>
 #include <gdk/gdkx.h>
@@ -95,6 +96,8 @@ static gboolean visibility_notify_event_cb(GtkWidget *widget,
                                            GdkEventVisibility *event);
 static gboolean window_state_event_cb     (GtkWidget *widget,
                                            GdkEventWindowState *event);
+static gboolean property_notify_event_cb  (GtkWidget *widget,
+                                           GdkEventProperty *event);
 
 static PRBool                 gJustGotActivate = PR_FALSE;
 nsCOMPtr  <nsIRollupListener> gRollupListener;
@@ -1432,9 +1435,11 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
         // we need to add this to the shell since versions of gtk
         // before 2.0.3 forgot to set property_notify events on the
         // shell window
-        gtk_widget_add_events(mShell, GDK_PROPERTY_NOTIFY);
+        gtk_widget_add_events(mShell, GDK_PROPERTY_CHANGE_MASK);
         g_signal_connect(G_OBJECT(mShell), "window_state_event",
                          G_CALLBACK(window_state_event_cb), NULL);
+        g_signal_connect(G_OBJECT(mShell), "property_notify_event",
+                         G_CALLBACK(property_notify_event_cb), NULL);
     }
 
     if (mContainer) {
@@ -2211,6 +2216,19 @@ window_state_event_cb (GtkWidget *widget, GdkEventWindowState *event)
         return FALSE;
 
     window->OnWindowStateEvent(widget, event);
+
+    return FALSE;
+}
+
+/* static */
+gboolean
+property_notify_event_cb  (GtkWidget *widget, GdkEventProperty *event)
+{
+    nsIWidget *nswidget = (nsIWidget *)get_window_for_gtk_widget(widget);
+    if (!nswidget)
+        return FALSE;
+
+    nsGtkMozRemoteHelper::HandlePropertyChange(widget, event, nswidget);
 
     return FALSE;
 }
