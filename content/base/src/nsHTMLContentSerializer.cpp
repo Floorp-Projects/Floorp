@@ -427,6 +427,13 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
   nsCOMPtr<nsIAtom> name;
   content->GetTag(*getter_AddRefs(name));
 
+  if (name.get() == nsHTMLAtoms::br && mPreLevel > 0
+      && (mFlags & nsIDocumentEncoder::OutputNoFormattingInPre)) {
+    AppendToString(mLineBreak, aStr);
+    mColPos = 0;
+    return NS_OK;
+  }
+
   if (name.get() == nsHTMLAtoms::body) {
     mInBody = PR_TRUE;
   }

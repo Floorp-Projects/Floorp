@@ -1384,7 +1384,7 @@ nsMsgComposeAndSend::GetBodyFromEditor()
   // Query the editor, get the body of HTML!
   //
   nsString  format; format.AssignWithConversion(TEXT_HTML);
-  PRUint32  flags = nsIDocumentEncoder::OutputFormatted;
+  PRUint32  flags = nsIDocumentEncoder::OutputFormatted  | nsIDocumentEncoder::OutputNoFormattingInPre;
   PRUnichar *bodyText = nsnull;
   nsresult rv;
   PRUnichar *origHTMLBody = nsnull;
