@@ -293,9 +293,6 @@ NS_NewTempleLayout ( nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayou
 nsresult
 NS_NewTreeLayout ( nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout );
 
-nsresult
-NS_NewBulletinBoardLayout ( nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout );
-
 // end grid
 
 nsresult
@@ -416,7 +413,6 @@ IsInlineFrame(nsIFrame* aFrame)
     case NS_STYLE_DISPLAY_INLINE_STACK:
     case NS_STYLE_DISPLAY_DECK:
     case NS_STYLE_DISPLAY_POPUP:
-    case NS_STYLE_DISPLAY_BULLETINBOARD:
     case NS_STYLE_DISPLAY_GROUPBOX:
       return PR_TRUE;
     default:
@@ -5360,7 +5356,6 @@ PRBool IsXULDisplayType(const nsStyleDisplay* aDisplay)
           aDisplay->mDisplay == NS_STYLE_DISPLAY_GRID_GROUP ||
           aDisplay->mDisplay == NS_STYLE_DISPLAY_GRID_LINE ||
           aDisplay->mDisplay == NS_STYLE_DISPLAY_DECK ||
-          aDisplay->mDisplay == NS_STYLE_DISPLAY_BULLETINBOARD ||
           aDisplay->mDisplay == NS_STYLE_DISPLAY_POPUP ||
           aDisplay->mDisplay == NS_STYLE_DISPLAY_GROUPBOX
           );
@@ -5810,13 +5805,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
 
         } 
       } //------- End Grid ------
-      // STACK CONSTRUCTION
-      else if (display->mDisplay == NS_STYLE_DISPLAY_STACK ||
-               display->mDisplay == NS_STYLE_DISPLAY_INLINE_STACK) {
-        processChildren = PR_TRUE;
-        isReplaced = PR_TRUE;
-        rv = NS_NewStackFrame(aPresShell, &newFrame);
-      }
       // End of STACK CONSTRUCTION logic
        // DECK CONSTRUCTION
       else if (display->mDisplay == NS_STYLE_DISPLAY_DECK) {
@@ -5847,16 +5835,13 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
           frameHasBeenInitialized = PR_TRUE;
         }
       } 
-      // BULLETINBOARD CONSTRUCTION
-      else if (display->mDisplay == NS_STYLE_DISPLAY_BULLETINBOARD) {
+      // STACK CONSTRUCTION
+      else if (display->mDisplay == NS_STYLE_DISPLAY_STACK ||
+               display->mDisplay == NS_STYLE_DISPLAY_INLINE_STACK) {
         processChildren = PR_TRUE;
         isReplaced = PR_TRUE;
 
-
-        nsCOMPtr<nsIBoxLayout> layout;
-        NS_NewBulletinBoardLayout(aPresShell, layout);
-
-        rv = NS_NewBoxFrame(aPresShell, &newFrame, PR_FALSE, layout);
+        rv = NS_NewStackFrame(aPresShell, &newFrame);
 
          if (IsScrollable(aPresContext, display)) {
 
