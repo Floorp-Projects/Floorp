@@ -90,10 +90,6 @@ insert into components (value, program, initialowner) values ("Platform: Rhapsod
 insert into components (value, program, initialowner) values ("Platform: MFC/Win32 on Windows", "Mozilla", "blythe@netscape.com");
 
 
-insert into components (value, program, initialowner) values ("UI", "Bugzilla", "terry@mozilla.org");
-insert into components (value, program, initialowner) values ("Database", "Bugzilla", "terry@mozilla.org");
-
-
 insert into components (value, program, initialowner) values ("ActiveX Wrapper", "NGLayout", "locka@iol.ie");
 insert into components (value, program, initialowner) values ("Content Model", "NGLayout", "kipp@netscape.com");
 insert into components (value, program, initialowner) values ("Cookies", "NGLayout", "scullin@netscape.com");

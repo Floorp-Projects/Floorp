@@ -33,7 +33,6 @@ description mediumtext
 );
 
 
-insert into products (product, description) values ("Bugzilla", "Please don't use this!  This product is going away very very soon. Please use 'Webtools' instead.");
 insert into products (product, description) values ("Mozilla", "For bugs about the Mozilla web browser");
 insert into products (product, description) values ("NGLayout", 'For bugs about the <a href="http://www.mozilla.org/newlayout/">New Layout</a> project');
 insert into products (product, description) values ("Webtools", 'For bugs about the web-based tools that mozilla.org uses.  This include Bugzilla (problems you are having with this bug system itself), <a href="http://www.mozilla.org/bonsai.html">Bonsai</a>, and <a href="http://www.mozilla.org/tinderbox.html">Tinderbox</a>.');
