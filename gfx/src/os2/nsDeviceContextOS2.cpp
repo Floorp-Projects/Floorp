@@ -347,84 +347,58 @@ nscolor GetSysColorInfo(int iSysColor)
   return NS_RGB( pRGB2->bRed, pRGB2->bGreen, pRGB2->bBlue);
 }
 
+/* Helper function to query font from INI file */
+
+void QueryFontFromINI(char* fontType, char* fontName, ULONG ulLength)
+{
+  ULONG ulMaxNameL = ulLength;
+
+  /* We had to switch to using PrfQueryProfileData because */
+  /* some users have binary font data in their INI files */
+  BOOL rc = PrfQueryProfileData(HINI_USER, "PM_SystemFonts", fontType,
+                                fontName, &ulMaxNameL);
+  /* If there was no entry in the INI, default to something */
+  if (rc == FALSE) {
+    /* Different values for DBCS vs. SBCS */
+    if (!IsDBCS()) {
+      /* WarpSans is only available on Warp 4 and above */
+      if (gIsWarp4)
+        strcpy(fontName, "9.WarpSans");
+      else
+        strcpy(fontName, "8.Helv");
+    } else {
+      /* WarpSans is only available on Warp 4 and above */
+      if (gIsWarp4)
+        strcpy(fontName, "9.WarpSans Combined");
+      else
+        strcpy(fontName, "10.Helv Combined");
+    }
+  }
+}
+
+
 nsresult GetSysFontInfo(nsSystemFontID aID, nsFont* aFont) 
 {
   char szFontNameSize[MAXNAMEL];
 
   switch (aID)
   {
-    case eSystemFont_Caption: 
-      if (!IsDBCS()) {
-        PrfQueryProfileString(HINI_USER, "PM_SystemFonts", "WindowText",
-                              gIsWarp4 ? "9.WarpSans" : "8.Helv",
-                              szFontNameSize, MAXNAMEL);
-      } else {
-        PrfQueryProfileString(HINI_USER, "PM_SystemFonts", "WindowText",
-                              gIsWarp4 ? "9.WarpSans Combined" : "8.Helv Combined",
-                              szFontNameSize, MAXNAMEL);
-      } /* endif */
-      break;
-
     case eSystemFont_Icon: 
-      if (!IsDBCS()) {
-        PrfQueryProfileString(HINI_USER, "PM_SystemFonts", "IconText",
-                              gIsWarp4 ? "9.WarpSans" : "8.Helv",
-                              szFontNameSize, MAXNAMEL);
-      } else {
-        PrfQueryProfileString(HINI_USER, "PM_SystemFonts", "IconText",
-                              gIsWarp4 ? "9.WarpSans Combined" : "8.Helv Combined",
-                              szFontNameSize, MAXNAMEL);
-      } /* endif */
+      QueryFontFromINI("IconText", szFontNameSize, MAXNAMEL);
       break;
 
     case eSystemFont_Menu: 
-      if (!IsDBCS()) {
-        PrfQueryProfileString(HINI_USER, "PM_SystemFonts", "Menus",
-                              gIsWarp4 ? "9.WarpSans Bold" : "10.Helv",
-                              szFontNameSize, MAXNAMEL);
-      } else {
-        PrfQueryProfileString(HINI_USER, "PM_SystemFonts", "Menus", 
-                              gIsWarp4 ? "9.WarpSans Combined" : "10.Helv Combined",
-                              szFontNameSize, MAXNAMEL);
-      } /* endif */
+      QueryFontFromINI("Menus", szFontNameSize, MAXNAMEL);
       break;
+
+    case eSystemFont_Caption: 
 
     case eSystemFont_MessageBox: 
-      if (!IsDBCS()) {
-        PrfQueryProfileString(HINI_USER, "PM_SystemFonts", "WindowText",
-                              gIsWarp4 ? "9.WarpSans" : "8.Helv",
-                              szFontNameSize, MAXNAMEL);
-      } else {
-        PrfQueryProfileString(HINI_USER, "PM_SystemFonts", "WindowText",
-                              gIsWarp4 ? "9.WarpSans Combined" : "8.Helv Combined",
-                              szFontNameSize, MAXNAMEL);
-      } /* endif */
-      break;
 
     case eSystemFont_SmallCaption: 
-      if (!IsDBCS()) {
-        PrfQueryProfileString(HINI_USER, "PM_SystemFonts", "WindowText",
-                              gIsWarp4 ? "9.WarpSans" : "8.Helv",
-                              szFontNameSize, MAXNAMEL);
-      } else {
-        PrfQueryProfileString(HINI_USER, "PM_SystemFonts", "WindowText", 
-                              gIsWarp4 ? "9.WarpSans Combined" : "8.Helv Combined",
-                              szFontNameSize, MAXNAMEL);
-      } /* endif */
-      break;
 
     case eSystemFont_StatusBar: 
     case eSystemFont_Tooltips: 
-      if (!IsDBCS()) {
-        PrfQueryProfileString(HINI_USER, "PM_SystemFonts", "WindowText",
-                              gIsWarp4 ? "9.WarpSans" : "8.Helv",
-                              szFontNameSize, MAXNAMEL);
-      } else {
-        PrfQueryProfileString(HINI_USER, "PM_SystemFonts", "WindowText",
-                              gIsWarp4 ? "9.WarpSans Combined" : "8.Helv Combined",
-                              szFontNameSize, MAXNAMEL);
-      } /* endif */
-      break;
 
     case eSystemFont_Widget:
 
@@ -438,15 +412,7 @@ nsresult GetSysFontInfo(nsSystemFontID aID, nsFont* aFont)
     case eSystemFont_PullDownMenu:
     case eSystemFont_List:
     case eSystemFont_Field:
-      if (!IsDBCS()) {
-        PrfQueryProfileString(HINI_USER, "PM_SystemFonts", "WindowText",
-                              gIsWarp4 ? "9.WarpSans" : "8.Helv",
-                              szFontNameSize, MAXNAMEL);
-      } else {
-        PrfQueryProfileString(HINI_USER, "PM_SystemFonts", "WindowText",
-                              gIsWarp4 ? "9.WarpSans Combined" : "8.Helv Combined",
-                              szFontNameSize, MAXNAMEL);
-      } /* endif */
+      QueryFontFromINI("WindowText", szFontNameSize, MAXNAMEL);
       break;
   } // switch 
 
