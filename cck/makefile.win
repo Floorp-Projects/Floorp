@@ -24,3 +24,5 @@ DEPTH=..
 DIRS=globals driver ib
 
 include <$(DEPTH)\config\rules.mak>
+
+include "InitDist.win"
