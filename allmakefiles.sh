@@ -314,6 +314,8 @@ profile/Makefile
 profile/src/Makefile
 profile/public/Makefile
 profile/resources/Makefile
+profile/resources/locale/Makefile
+profile/resources/locale/en-US/Makefile
 profile/pref-migrator/Makefile
 profile/pref-migrator/public/Makefile
 profile/pref-migrator/src/Makefile
