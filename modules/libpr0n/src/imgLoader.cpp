@@ -44,6 +44,36 @@
 
 #include "nsMimeTypes.h"
 
+#ifdef DEBUG_pavlov
+#include "nsIEnumerator.h"
+#include "nsISupportsPrimitives.h"
+#include "nsXPIDLString.h"
+#include "nsComponentManagerUtils.h"
+
+static void PrintImageDecoders()
+{
+  nsCOMPtr<nsIEnumerator> enumer;
+  nsComponentManager::EnumerateContractIDs(getter_AddRefs(enumer));
+
+  nsCString str;
+  nsCOMPtr<nsISupports> s;
+  do {
+    enumer->CurrentItem(getter_AddRefs(s));
+    if (s) {
+      nsCOMPtr<nsISupportsString> ss(do_QueryInterface(s));
+
+      nsXPIDLCString xcs;
+      ss->GetData(getter_Copies(xcs));
+
+      NS_NAMED_LITERAL_CSTRING(decoderContract, "@mozilla.org/image/decoder;2?type=");
+
+      if (Substring(xcs, 0, decoderContract.Length()).Equals(decoderContract)) {
+        printf("Have decoder for mime type: %s\n", xcs.get()+decoderContract.Length());
+      }
+    }
+  } while(NS_SUCCEEDED(enumer->Next()));
+}
+#endif
 
 NS_IMPL_ISUPPORTS1(imgLoader, imgILoader)
 
@@ -51,6 +81,9 @@ imgLoader::imgLoader()
 {
   NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
+#ifdef DEBUG_pavlov
+  PrintImageDecoders();
+#endif
 }
 
 imgLoader::~imgLoader()
