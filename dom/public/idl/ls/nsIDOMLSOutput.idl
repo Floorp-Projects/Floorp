@@ -39,22 +39,15 @@
 
 #include "domstubs.idl"
 
-interface nsIDOMLSParser;
-interface nsIDOMLSSerializer;
-interface nsIDOMLSInput;
-interface nsIDOMLSOutput;
+interface nsIOutputStream;
 
-[scriptable, uuid(e2c8b03c-a49a-4923-81b0-ba9a86da0e21)]
-interface nsIDOMDOMImplementationLS : nsISupports
+[scriptable, uuid(757e9971-8890-478d-a53a-07f9f6f6e0d3)]
+interface nsIDOMLSOutput : nsISupports
 {
-  // DOMImplementationLSMode
-  const unsigned short     MODE_SYNCHRONOUS               = 1;
-  const unsigned short     MODE_ASYNCHRONOUS              = 2;
-
-  nsIDOMLSParser           createLSParser(in unsigned short mode, 
-					  in DOMString schemaType)
-                                              raises(DOMException);
-  nsIDOMLSSerializer       createLSSerializer();
-  nsIDOMLSInput            createLSInput();
-  nsIDOMLSOutput           createLSOutput();
+  // Depending on the language binding in use,
+  // this attribute may not be available.
+           attribute nsISupports     characterStream;
+           attribute nsIOutputStream byteStream;
+           attribute DOMString       systemId;
+           attribute DOMString       encoding;
 };

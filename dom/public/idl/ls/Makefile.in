@@ -47,16 +47,17 @@ MODULE		= dom
 XPIDL_MODULE	= dom_loadsave
 
 XPIDLSRCS =                                     \
-	nsIDOMDOMImplementationLS.idl           \
-	nsIDOMDocumentLS.idl			\
-	nsIDOMDOMInputSource.idl		\
-	nsIDOMLSLoadEvent.idl			\
-	nsIDOMLSProgressEvent.idl		\
-	nsIDOMDOMEntityResolver.idl		\
-	nsIDOMDOMBuilderFilter.idl		\
-	nsIDOMDOMBuilder.idl                    \
-	nsIDOMDOMWriterFilter.idl		\
-	nsIDOMDOMWriter.idl			\
-	$(NULL)
+		nsIDOMDOMImplementationLS.idl   \
+		nsIDOMLSException.idl           \
+		nsIDOMLSInput.idl               \
+		nsIDOMLSLoadEvent.idl           \
+		nsIDOMLSOutput.idl              \
+		nsIDOMLSParser.idl              \
+		nsIDOMLSParserFilter.idl        \
+		nsIDOMLSProgressEvent.idl       \
+		nsIDOMLSResourceResolver.idl    \
+		nsIDOMLSSerializer.idl          \
+		nsIDOMLSSerializerFilter.idl    \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
