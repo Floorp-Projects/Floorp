@@ -17,7 +17,7 @@
 * Portions created by the Initial Developer are Copyright (C) 2002
 * the Initial Developer. All Rights Reserved.
 *
-* Contributor(s): george@vanous.com, pschwartau@netscape.com
+* Contributor(s): george@vanous.com, igor@icesoft.no, pschwartau@netscape.com
 *
 * Alternatively, the contents of this file may be used under the terms of
 * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -96,6 +96,22 @@ addThis();
 
 status = inSection(8);
 x = eval('this');
+actual = [].concat(x).toString();
+expect = x.toString();
+addThis();
+
+/*
+ * The next two sections are by igor@icesoft.no; see
+ * http://bugzilla.mozilla.org/show_bug.cgi?id=169795#c3
+ */
+status = inSection(9);
+x={length:0};
+actual = [].concat(x).toString();
+expect = x.toString();
+addThis();
+
+status = inSection(10);
+x={length:2, 0:0, 1:1};
 actual = [].concat(x).toString();
 expect = x.toString();
 addThis();
