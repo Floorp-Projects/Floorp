@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+#include <jni.h>
 #include "nscore.h" 
 #include "nsIFactory.h" 
 #include "nsIComponentManager.h" 
@@ -40,6 +41,10 @@ jclass classXPCMethod = NULL;
 
 #define USE_PARAM_TEMPLATE
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Class:     XPCMethod
  * Method:    init
@@ -51,7 +56,7 @@ JNIEXPORT jint JNICALL
     int offset;
     const nsXPTMethodInfo *mi;
     nsID *iidPtr = ID_GetNative(env, iid);
-    const jbyte *tmpstr;
+    const char *tmpstr;
     nsresult res;
 
     // Get method info
@@ -153,7 +158,7 @@ JNIEXPORT void JNICALL
  * Class:     XPCMethod
  * Method:    getParameterType
  * Signature: (I)I
-XS */
+ */
 JNIEXPORT jint JNICALL Java_org_mozilla_xpcom_XPCMethod_getParameterType
     (JNIEnv *env, jobject self, jint index) {
 
@@ -250,4 +255,8 @@ JNIEXPORT void JNICALL Java_org_mozilla_xpcom_XPCMethod_invoke
     }
 
 }
+
+#ifdef __cplusplus
+}
+#endif
 

@@ -30,16 +30,21 @@ Currently only UNIX/Linux builds are supported (mainly because it's my
 platform of choice).  Windows builds should not be too much more
 difficult, and 
 
-1. Make sure MOZILLA_FIVE_HOME is set correctly
+1. Make sure MOZILLA_FIVE_HOME is set correctly, and that JDKHOME indicates 
+   a valid JDK 1.2 installation.
 
 2. Insure that the following are in your LD_LIBRARY_PATH:
 
-	$MOZILLA_FIVE_HOME/../lib
+	$MOZILLA_FIVE_HOME
 	$MOZILLA_FIVE_HOME/../lib
 	mozilla/java/xpcom/test (or "." if you run in that directory)
 	mozilla/java/xpcom/src (or "../src" if you run in "test")
 
 3. In mozilla/java/xpcom, execute 
+
+	../../build/autoconf/update-makefile.sh
+
+   if necessary, to generate a Makefile, and then
 
 	gmake JAVAC="javac -g -d $MOZILLA_FIVE_HOME/../classes"
 

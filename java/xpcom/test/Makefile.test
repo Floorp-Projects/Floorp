@@ -9,8 +9,9 @@ CFLAGS=-Wall -g -fno-rtti -fno-handle-exceptions -pipe
 SHLIB_FLAGS=-fpic
 SHLIB_LDFLAGS=-shared
 DEFINES=-DXP_UNIX
-INCLUDE=-I$(MOZILLA)/dist/include -I$(MOZILLA)/xpcom/public -I../src
-LIBS=-L$(MOZILLA)/dist/lib -lxptinfo -lxptcmd -lxptcall -lxpt -lxpcom -lxp -lreg -lplds3 -lplc3 -lnspr3 -lstdc++
+INCLUDE=-I$(MOZILLA)/dist/include -I$(MOZILLA)/xpcom/public -I../src -I$(JDKHOME)/include -I$(JDKHOME)/include/solaris -I$(JDKHOME)/include/linux
+#LIBS=-L$(MOZILLA)/dist/lib -lxptinfo -lxptcmd -lxptcall -lxpt -lxpcom -lxp -lreg -lplds3 -lplc3 -lnspr3 -lstdc++
+LIBS=-L$(MOZILLA)/dist/lib -lxptinfo -lxptcmd -lxptcall -lxpt -lxpcom -lxp -lplds3 -lplc3 -lnspr3 -lstdc++
 XPTDIR=$(MOZILLA)/dist/bin/components
 
 XPIDL=$(MOZILLA)/dist/bin/xpidl

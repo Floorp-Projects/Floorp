@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+#include <jni.h>
 #include "nscore.h" 
 #include "nsID.h" 
 #include "nsIFactory.h" 
@@ -31,6 +32,9 @@
 
 /* ---------- CLASS METHODS ------------ */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 JNIEXPORT jboolean JNICALL 
     Java_org_mozilla_xpcom_XPComUtilities_initialize(JNIEnv *env, jclass cls)
@@ -214,5 +218,6 @@ JNIEXPORT void JNICALL
     }
 }
 
-
-
+#ifdef __cplusplus
+}
+#endif

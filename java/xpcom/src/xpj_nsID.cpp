@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+#include <jni.h>
 #include "nscore.h" 
 #include "nsID.h" 
 #include "nsIAllocator.h"
@@ -84,6 +85,10 @@ jboolean ID_IsEqual(JNIEnv *env, jobject self, jobject other) {
     return result;
 }
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Class:     ID
  * Method:    NewIDPtr
@@ -121,7 +126,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_xpcom_nsID_NewIDPtr__Ljava_lang_String_2
     nsID *idptr = (nsID *)nsAllocator::Alloc(sizeof(nsID));
 
     jboolean isCopy;
-    const jbyte *utf = env->GetStringUTFChars(string, &isCopy);
+    const char *utf = env->GetStringUTFChars(string, &isCopy);
     char *aIDStr;
 
     if (isCopy) {
@@ -200,4 +205,8 @@ JNIEXPORT jint JNICALL Java_org_mozilla_xpcom_nsID_hashCode(JNIEnv *env, jobject
 
     return result;
 }
+
+#ifdef __cplusplus
+}
+#endif
 

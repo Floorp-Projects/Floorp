@@ -520,7 +520,7 @@ jboolean JObjectToVariant(JNIEnv *env,
         if (env->IsInstanceOf(elem, classString)) {
             jstring string = (jstring)elem;
             jsize jstrlen = env->GetStringUTFLength(string);
-            const jbyte *utf = env->GetStringUTFChars(string, NULL);
+            const char *utf = env->GetStringUTFChars(string, NULL);
 
             // PENDING: copying every time is wasteful, but
             // we need to release `utf' before invocation loses it.
