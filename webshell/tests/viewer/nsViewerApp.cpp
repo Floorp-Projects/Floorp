@@ -87,8 +87,8 @@ nsViewerApp::~nsViewerApp()
   }
 }
 
-NS_IMPL_ADDREF(nsViewerApp)
-NS_IMPL_RELEASE(nsViewerApp)
+NS_IMPL_THREADSAFE_ADDREF(nsViewerApp)
+NS_IMPL_THREADSAFE_RELEASE(nsViewerApp)
 
 nsresult
 nsViewerApp::QueryInterface(REFNSIID aIID, void** aInstancePtrResult) 
@@ -107,6 +107,16 @@ nsViewerApp::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
     NS_ADDREF_THIS();
     return NS_OK;
   }
+#if defined(NS_DEBUG) 
+  /*
+   * Check for the debug-only interface indicating thread-safety
+   */
+  static NS_DEFINE_IID(kIsThreadsafeIID, NS_ISTHREADSAFE_IID);
+  if (aIID.Equals(kIsThreadsafeIID)) {
+    return NS_OK;
+  }
+#endif /* NS_DEBUG */
+
   return NS_NOINTERFACE;
 }
 
@@ -490,6 +500,7 @@ nsViewerApp::OpenWindow(PRUint32 aNewChromeMask, nsIBrowserWindow*& aNewWindow)
 //----------------------------------------
 
 // nsINetContainerApplication implementation
+// XXX:  These methods are called by the netlib thread...
 
 NS_IMETHODIMP    
 nsViewerApp::GetAppCodeName(nsString& aAppCodeName)
