@@ -30,10 +30,10 @@ public:
    *
    * @see #GetAbsoluteFrame()
    */
-  static nsresult NewFrame(nsIFrame**  aInstancePtrResult,
-                           nsIContent* aContent,
-                           nsIFrame*   aParent,
-                           nsIFrame*   aAbsoluteFrame = nsnull);
+  friend nsresult NS_NewAbsoluteFrame(nsIFrame**  aInstancePtrResult,
+                                      nsIContent* aContent,
+                                      nsIFrame*   aParent,
+                                      nsIFrame*   aAbsoluteFrame = nsnull);
 
   // Returns the associated anchored item
   nsIFrame*   GetAbsoluteFrame() const {return mFrame;}

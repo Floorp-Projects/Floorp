@@ -171,7 +171,8 @@ nsHTMLContainerFrame::CreatePlaceholderFrame(nsIPresContext& aPresContext,
   aFloatedFrame->GetContent(content);
 
   nsPlaceholderFrame* placeholder;
-  nsPlaceholderFrame::NewFrame((nsIFrame**)&placeholder, content, this, aFloatedFrame);
+  NS_NewPlaceholderFrame((nsIFrame**)&placeholder, content, this,
+                         aFloatedFrame);
   NS_IF_RELEASE(content);
 
   // Let the placeholder share the same style context as the floated element
@@ -191,7 +192,7 @@ nsHTMLContainerFrame::CreateAbsolutePlaceholderFrame(nsIPresContext& aPresContex
   aAbsoluteFrame->GetContent(content);
 
   nsAbsoluteFrame* placeholder;
-  nsAbsoluteFrame::NewFrame((nsIFrame**)&placeholder, content, this, aAbsoluteFrame);
+  NS_NewAbsoluteFrame((nsIFrame**)&placeholder, content, this, aAbsoluteFrame);
   NS_IF_RELEASE(content);
 
   // Let the placeholder share the same style context as the floated element

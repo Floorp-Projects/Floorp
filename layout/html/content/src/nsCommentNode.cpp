@@ -176,7 +176,7 @@ NS_NewCommentFrame(nsIContent* aContent,
                    nsIFrame*& aResult)
 {
   nsIFrame* frame;
-  nsFrame::NewFrame(&frame, aContent, aParentFrame);
+  NS_NewEmptyFrame(&frame, aContent, aParentFrame);
   if (nsnull == frame) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
