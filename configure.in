@@ -2971,6 +2971,7 @@ case "$target" in
     *-openvms*)   MOZ_MONOLITHIC_TOOLKIT= ;;
     *-freebsd*)   MOZ_MONOLITHIC_TOOLKIT= ;;
     *-netbsd*)    MOZ_MONOLITHIC_TOOLKIT= ;;
+    *-openbsd*)   MOZ_MONOLITHIC_TOOLKIT= ;;
     *-*-aix*)     MOZ_MONOLITHIC_TOOLKIT= ;;
     *-*-osf*)     MOZ_MONOLITHIC_TOOLKIT= ;;
     *-hpux*)      MOZ_MONOLITHIC_TOOLKIT= ;;
