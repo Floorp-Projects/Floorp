@@ -1405,7 +1405,7 @@ PRInt32 CEntityToken::TranslateToUnicodeStr(nsString& aString) {
 void CEntityToken::DebugDumpSource(ostream& out) {
   char* cp=mTextValue.ToNewCString();
   out << "&" << *cp;
-  delete cp;
+  delete[] cp;
 }
 
 /*

@@ -811,7 +811,7 @@ nsBrowserWindow::DoFileOpen()
 
     // Ask the Web widget to load the file URL
     mWebShell->LoadURL(nsString(lpszFileURL));
-    delete lpszFileURL;
+    delete[] lpszFileURL;
   }
 }
 
@@ -2429,7 +2429,7 @@ nsBrowserWindow::OnProgress(nsIURL* aURL,
       PRUnichar* str;
       aURL->ToString(&str);
       url = str;
-      delete str;
+      delete[] str;
     }
     url.Append(": progress ");
     url.Append(aProgress, 10);
@@ -2461,7 +2461,7 @@ nsBrowserWindow::OnStartBinding(nsIURL* aURL, const char *aContentType)
       PRUnichar* str;
       aURL->ToString(&str);
       url = str;
-      delete str;
+      delete[] str;
     }
     url.Append(": start");
     SetStatus(url);
@@ -2480,7 +2480,7 @@ nsBrowserWindow::OnStopBinding(nsIURL* aURL,
     PRUnichar* str;
     aURL->ToString(&str);
     url = str;
-    delete str;
+    delete[] str;
   }
   url.Append(": stop");
   SetStatus(url);
@@ -2496,7 +2496,7 @@ nsBrowserWindow::Alert(const nsString &aText)
 
   str = aText.ToNewCString();
   printf("Browser Window Alert: %c%s\n", '\007', str);
-  PR_Free(str);
+  delete[] str;
 }
 
 //----------------------------------------
@@ -2507,7 +2507,7 @@ nsBrowserWindow::Confirm(const nsString &aText)
 
   str = aText.ToNewCString();
   printf("%cBrowser Window Confirm: %s (y/n)? ", '\007', str);
-  PR_Free(str);
+  delete[] str;
   char c;
   for (;;) {
     c = getchar();
@@ -2531,7 +2531,7 @@ nsBrowserWindow::Prompt(const nsString &aText,
 
   str = aText.ToNewCString();
   printf("Browser Window: %s\n", str);
-  PR_Free(str);
+  delete[] str;
 
   str = aDefault.ToNewCString();
   printf("%cPrompt (default=%s): ", '\007', str);
@@ -2541,7 +2541,7 @@ nsBrowserWindow::Prompt(const nsString &aText,
   } else {
     aResult = aDefault;
   }
-  PR_Free(str);
+  delete[] str;
   
   return (aResult.Length() > 0);
 }
@@ -2557,7 +2557,7 @@ nsBrowserWindow::PromptUserAndPassword(const nsString &aText,
 
   str = aText.ToNewCString();
   printf("Browser Window: %s\n", str);
-  PR_Free(str);
+  delete[] str;
 
   str = aUser.ToNewCString();
   printf("%cUser (default=%s): ", '\007', str);
@@ -2565,7 +2565,7 @@ nsBrowserWindow::PromptUserAndPassword(const nsString &aText,
   if (strlen(buf)) {
     aUser = buf;
   }
-  PR_Free(str);
+  delete[] str;
 
   str = aPassword.ToNewCString();
   printf("%cPassword (default=%s): ", '\007', str);
@@ -2573,7 +2573,7 @@ nsBrowserWindow::PromptUserAndPassword(const nsString &aText,
   if (strlen(buf)) {
     aPassword = buf;
   }
-  PR_Free(str);
+  delete[] str;
   
   return (aUser.Length() > 0);
 }
@@ -2588,7 +2588,7 @@ nsBrowserWindow::PromptPassword(const nsString &aText,
   
   str = aText.ToNewCString();
   printf("Browser Window: %s\n", str);
-  PR_Free(str);
+  delete[] str;
 
   printf("%cPassword: ", '\007');
   gets(buf);
