@@ -144,6 +144,7 @@ struct FontCharTable  fontchar_tbl[] =
 	CS_ARMSCII8, "ArmNet Helvetica",	12, "ArmNet Courier", 10, 160, 160,
 	CS_CP_1253, "Times New Roman", 		12, "Courier New",  10, 161,161,  
 	CS_8859_9, "Times New Roman", 		12, "Courier New",  10, 162,162,  
+	CS_TIS620, 	"AngsanaUPC", 	16, "CordiaUPC", 14, THAI_CHARSET, THAI_CHARSET,
 	CS_UTF8, 	DEF_PROPORTIONAL_FONT, 	12, DEF_FIXED_FONT, 10, DEFAULT_CHARSET, DEFAULT_CHARSET,
 	CS_USER_DEFINED_ENCODING, 	DEF_PROPORTIONAL_FONT, 	12, DEF_FIXED_FONT, 10, ANSI_CHARSET, ANSI_CHARSET,
 	0,			"", 					0, 	"", 			0,   0, 0
@@ -160,15 +161,16 @@ unsigned int lang_table[] =
 	IDS_LANGUAGE_LATIN2, CS_CP_1250, CS_CP_1250, CS_LATIN2, 0,
 	IDS_LANGUAGE_JAPANESE, CS_SJIS, CS_AUTO | CS_SJIS, CS_SJIS, CS_JIS, CS_EUCJP, 0,
 	IDS_LANGUAGE_TAIWANESE, CS_BIG5, CS_BIG5, CS_CNS_8BIT, 
-                                CS_X_BIG5, CS_CNS11643_1110, CS_CNS11643_1, CS_CNS11643_2, 0,
+                                CS_X_BIG5, 0,
 	IDS_LANGUAGE_CHINESE, CS_GB_8BIT, CS_GB_8BIT, 
                               CS_GB2312, CS_GB2312_11, CS_HZ, 0,
 	IDS_LANGUAGE_KOREAN, CS_KSC_8BIT, CS_KSC_8BIT | CS_AUTO, CS_KSC_8BIT, CS_2022_KR, 
-                             CS_KSC5601, CS_KSC5601_11, 0,
+                             CS_KSC5601, 0,
 	IDS_LANGUAGE_WIN1251, CS_CP_1251, CS_CP_1251, CS_8859_5, CS_KOI8_R, 0,
 	IDS_LANGUAGE_ARMENIAN, CS_ARMSCII8, CS_ARMSCII8, 0,
 	IDS_LANGUAGE_GREEK, CS_CP_1253, CS_CP_1253, CS_8859_7, 0,
 	IDS_LANGUAGE_TURKISH, CS_8859_9, CS_8859_9, 0,
+	IDS_LANGUAGE_THAI, CS_TIS620, CS_TIS620, 0,
 	IDS_LANGUAGE_UTF8, CS_UTF8, CS_UTF8, CS_UTF7, CS_UCS2, CS_UCS2_SWAP, 0,
 	IDS_LANGUAGE_USERDEFINED, CS_USER_DEFINED_ENCODING, CS_USER_DEFINED_ENCODING, 0,
 	UINT_MAX
@@ -644,7 +646,9 @@ LPWSTR CIntlWin::m_wConvBuf = NULL;
 
 BOOL CIntlWin::FontSelectIgnorePitch(int16 wincsid)
 {
-	return ( (wincsid & MULTIBYTE)	
+	return ( (wincsid & MULTIBYTE)	||
+                 (CS_TIS620 == wincsid ) ||
+                 (CS_ARMSCII8 == wincsid )
 		);
 }
 BOOL CIntlWin::FontSelectIgnoreCharset(int16 wincsid)
@@ -744,6 +748,9 @@ int16 CIntlWin::CodePageToCsid(UINT cp)
 	case 950:
 		return CS_BIG5;
 
+	case 874:
+		return CS_TIS620;
+
 	default:
 		return CS_UNKNOWN;
 	}
@@ -803,6 +810,9 @@ static BOOL intlUnicodeFlag(int16 wincsid)
 	}
 	else	// Other SingleByte csid
 	{
+		if(CS_TIS620 == wincsid)
+			return FALSE;
+
 		if(sysInfo.m_bWinNT)
 			return TRUE;
 		else

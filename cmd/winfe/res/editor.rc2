@@ -140,6 +140,8 @@ BEGIN
             MENUITEM SEPARATOR
             MENUITEM "Armenian (ArmSCII-8)",	ID_OPTIONS_ENCODING_21
             MENUITEM SEPARATOR
+            MENUITEM "Thai (TIS-620)",	ID_OPTIONS_ENCODING_22
+            MENUITEM SEPARATOR
 	    MENUITEM "Greek (Windows-1253)",              ID_OPTIONS_ENCODING_16
             MENUITEM "Greek (ISO-8859-7)",            ID_OPTIONS_ENCODING_15
             MENUITEM SEPARATOR
@@ -411,6 +413,8 @@ BEGIN
 	        MENUITEM "Cyrillic (Windows-1251)",           ID_OPTIONS_ENCODING_12
             MENUITEM SEPARATOR
             MENUITEM "Armenian (ArmSCII-8)",	ID_OPTIONS_ENCODING_21
+            MENUITEM SEPARATOR
+            MENUITEM "Thai (TIS-620)",	ID_OPTIONS_ENCODING_22
 	        MENUITEM SEPARATOR
 	        MENUITEM "Greek (Windows-1253)",              ID_OPTIONS_ENCODING_16
 	        MENUITEM "Greek (ISO-8859-7)",            ID_OPTIONS_ENCODING_15

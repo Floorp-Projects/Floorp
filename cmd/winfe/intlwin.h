@@ -21,7 +21,7 @@
 
 #define DEFAULT_WINCSID 0
 
-#define MAXLANGNUM 11
+#define MAXLANGNUM 13
 
 class	CyaFont;
 
@@ -36,7 +36,7 @@ typedef struct EncodingInfo
 	int  iFixSize;					// Fix font size 
 	int  iFixCharset;				// Fix font's charset-id defined by MS
 	int  nCodeset;
-	int  csid[5];					// Supported charset list per language
+	int  csid[8];					// Supported charset list per language
 }  EncodingInfo;
 
 

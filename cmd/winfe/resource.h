@@ -3468,7 +3468,7 @@
 #define IDS_OLE_CANTUSE_VIEWER          62095
 #define IDS_OLE_CANTUSE_HANDLER         62096
 #define IDS_OLE_CANTUSE_VIEWER2         62110
-#define IDS_LANGUAGE_USRDEF2            62120
+#define IDS_LANGUAGE_THAI	        62120
 #define IDS_LANGUAGE_USRDEF3            62121
 #define IDS_LANGUAGE_USRDEF4            62122
 #define IDS_LANGUAGE_USRDEF5            62123

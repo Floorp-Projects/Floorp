@@ -3113,7 +3113,7 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_LANGUAGE_USRDEF2    "User Defined 2"
+    IDS_LANGUAGE_THAI       "Thai"
     IDS_LANGUAGE_USRDEF3    "User Defined 3"
     IDS_LANGUAGE_USRDEF4    "User Defined 4"
     IDS_LANGUAGE_USRDEF5    "User Defined 5"
