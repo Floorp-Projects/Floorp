@@ -51,6 +51,18 @@ thunderbird\defaults\pref\inspector.js
 thunderbird\res\inspector\viewer-registry.rdf
 thunderbird\res\inspector\search-registry.rdf
 
+; Optional Talkback
+[talkback]
+thunderbird\components\qfaservices.dll
+thunderbird\components\qfaservices.xpt
+thunderbird\components\BrandRes.dll
+thunderbird\components\fullsoft.dll
+thunderbird\components\master.ini
+thunderbird\components\talkback-l10n.ini
+thunderbird\components\talkback.cnt
+thunderbird\components\talkback.exe
+thunderbird\components\talkback.hlp
+
 [mail]
 
 thunderbird\xpicleanup.exe

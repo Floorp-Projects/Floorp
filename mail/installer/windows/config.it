@@ -237,7 +237,7 @@ C4=Component En US lang pack
 C5=Component US region pack
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
-; C6=Component QFA
+C6=Component QFA
 
 [Setup Type1]
 ;*** LOCALIZE ME BABY ***
@@ -258,7 +258,7 @@ C6=Component Offline
 C7=Component ADT
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
-; C8=Component QFA
+C8=Component QFA
 
 [Dialog Select Components]
 Show Dialog=TRUE
@@ -727,17 +727,17 @@ Attributes=SELECTED|INVISIBLE|FORCE_UPGRADE
 Force Upgrade File0=[SETUP PATH]\chrome\US.jar
 FileCount=$FileCount$
 
-;[Component QFA]
-;Description Short=Quality Feedback Agent
+[Component QFA]
+Description Short=Quality Feedback Agent
 ;*** LOCALIZE ME BABY ***
-;Description Long=for reporting $ProductName$ crash information
-;Archive=talkback.xpi
-;Install Size=870
-;Install Size System=1
-;Install Size Archive=248
-;Attributes=SELECTED|FORCE_UPGRADE
-;Force Upgrade File0=[SETUP PATH]\components\fullsoft.dll
-;FileCount=$FileCount$
+Description Long=for reporting $ProductName$ crash information
+Archive=talkback.xpi
+$InstallSize$:talkback
+$InstallSizeSystem$
+$InstallSizeArchive$:talkbck.xpi
+Attributes=SELECTED|FORCE_UPGRADE
+Force Upgrade File0=[SETUP PATH]\components\fullsoft.dll
+FileCount=$FileCount$
 
 ; This is to randomly set the default checkbox for this component.
 ; This particular value will set the checkbox checked [number]% of the time.
