@@ -98,14 +98,14 @@ static PRInt32 PR_CALLBACK FileWrite(PRFileDesc *fd, const void *buf, PRInt32 am
     	return rv;
 
     count = 0;
-#if !defined(XP_UNIX)  /* BugZilla: 4090 */
+#if !defined(_PR_HAVE_O_APPEND)  /* Bugzilla: 4090, 276330 */
     if ( PR_TRUE == fd->secret->appendMode ) {
         rv = PR_Seek(fd, 0, PR_SEEK_END );
         if ( -1 == rv )  {
             return rv;
         }
     } /* if (fd->secret->appendMode...) */
-#endif /* XP_UNIX */
+#endif /* _PR_HAVE_O_APPEND */
     while (amount > 0) {
 		temp = _PR_MD_WRITE(fd, buf, amount);
 		if (temp < 0) {
@@ -361,7 +361,7 @@ PR_IMPLEMENT(PRFileDesc*) PR_Open(const char *name, PRIntn flags, PRIntn mode)
 {
     PRInt32 osfd;
     PRFileDesc *fd = 0;
-#if !defined(XP_UNIX) /* BugZilla: 4090 */
+#if !defined(_PR_HAVE_O_APPEND)
     PRBool  appendMode = ( PR_APPEND & flags )? PR_TRUE : PR_FALSE;
 #endif
 
@@ -375,7 +375,7 @@ PR_IMPLEMENT(PRFileDesc*) PR_Open(const char *name, PRIntn flags, PRIntn mode)
         if (!fd) {
             (void) _PR_MD_CLOSE_FILE(osfd);
         } else {
-#if !defined(XP_UNIX) /* BugZilla: 4090 */
+#if !defined(_PR_HAVE_O_APPEND)
             fd->secret->appendMode = appendMode;
 #endif
             _PR_MD_INIT_FD_INHERITABLE(fd, PR_FALSE);
@@ -389,7 +389,7 @@ PR_IMPLEMENT(PRFileDesc*) PR_OpenFile(
 {
     PRInt32 osfd;
     PRFileDesc *fd = 0;
-#if !defined(XP_UNIX) /* BugZilla: 4090 */
+#if !defined(_PR_HAVE_O_APPEND)
     PRBool  appendMode = ( PR_APPEND & flags )? PR_TRUE : PR_FALSE;
 #endif
 
@@ -403,7 +403,7 @@ PR_IMPLEMENT(PRFileDesc*) PR_OpenFile(
         if (!fd) {
             (void) _PR_MD_CLOSE_FILE(osfd);
         } else {
-#if !defined(XP_UNIX) /* BugZilla: 4090 */
+#if !defined(_PR_HAVE_O_APPEND)
             fd->secret->appendMode = appendMode;
 #endif
             _PR_MD_INIT_FD_INHERITABLE(fd, PR_FALSE);
@@ -804,7 +804,7 @@ PR_IMPLEMENT(PRFileDesc*) PR_OpenFileUTF16(
 { 
     PRInt32 osfd;
     PRFileDesc *fd = 0;
-#if !defined(XP_UNIX) /* BugZilla: 4090 */
+#if !defined(_PR_HAVE_O_APPEND)
     PRBool  appendMode = ( PR_APPEND & flags )? PR_TRUE : PR_FALSE;
 #endif
    
@@ -817,7 +817,7 @@ PR_IMPLEMENT(PRFileDesc*) PR_OpenFileUTF16(
         if (!fd) {
             (void) _PR_MD_CLOSE_FILE(osfd);
         } else {
-#if !defined(XP_UNIX) /* BugZilla: 4090 */
+#if !defined(_PR_HAVE_O_APPEND)
             fd->secret->appendMode = appendMode;
 #endif
             _PR_MD_INIT_FD_INHERITABLE(fd, PR_FALSE);
