@@ -441,7 +441,7 @@ input[type="submit"][pseudoclass~="hover"]:-moz-outline {
    border : 1px solid black;
 }
 
-input[type="submit"][pseudoclass~="disabled"] {
+input[type="submit"][disabled] {
    border-style: solid;
 }
 
@@ -488,7 +488,7 @@ input[type="reset"][pseudoclass~="hover"]:-moz-outline {
    border : 1px solid black;
 }
 
-input[type="reset"][pseudoclass~="disabled"] {
+input[type="reset"][disabled] {
    border-style: solid;
 }
 
@@ -525,8 +525,6 @@ input[type="button"][pseudoclass~="active"] {
   padding-right: 0px;
   padding-top: 2px;
   padding-bottom: 0px;
-
-  background-color: rgb(220, 207, 206);
 }
 
 input[type="button"][pseudoclass~="active"]:-moz-outline {
@@ -537,7 +535,7 @@ input[type="button"][pseudoclass~="hover"]:-moz-outline {
    border : 1px solid black;
 }
 
-input[type="button"][pseudoclass~="disabled"] {
+input[type="button"][disabled] {
    border-style: solid;
 }
 
@@ -592,7 +590,7 @@ button[pseudoclass~="hover"]:-moz-outline {
    border : 1px solid black;
 }
 
-button[pseudoclass~="disabled"] {
+button[disabled] {
    border-style: solid;
 }
 
