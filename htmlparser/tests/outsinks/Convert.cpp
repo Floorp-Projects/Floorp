@@ -74,7 +74,12 @@ Compare(nsString& str, nsString& aFileName)
   if (str == inString)
     return 0;
   else
+  {
+    char* cstr = str.ToNewCString();
+    printf("Comparison failed:\n-----\n%s\n-----\n", cstr);
+    Recycle(cstr);
     return 1;
+  }
 }
 
 //----------------------------------------------------------------------
