@@ -936,55 +936,30 @@ nsWindow::SetIcon(const nsAString& aIconSpec)
     if (!mShell)
         return NS_OK;
 
-    // Start at the app chrome directory.
-    nsCOMPtr<nsIFile> chromeDir;
-    nsresult rv = NS_GetSpecialDirectory(NS_APP_CHROME_DIR,
-                                         getter_AddRefs(chromeDir));
-    if (NS_FAILED(rv))
-        return rv;
-
-    // Get the native file name of that directory.
-    nsAutoString iconPath;
-    chromeDir->GetPath(iconPath);
-
-    // Now take input path...
-    nsAutoString iconSpec(aIconSpec);
-    // ...append ".xpm" to it
-    iconSpec.AppendLiteral(".xpm");
-
-    // ...and figure out where /chrome/... is within that
-    // (and skip the "resource:///chrome" part).
-    nsAutoString key(NS_LITERAL_STRING("/chrome/"));
-    PRInt32 n = iconSpec.Find(key) + key.Length();
-
-    // Append that to icon resource path.
-    iconPath.Append(iconSpec.get() + n - 1);
-
-    nsCOMPtr<nsILocalFile> pathConverter;
-    rv = NS_NewLocalFile(iconPath, PR_TRUE,
-                         getter_AddRefs(pathConverter));
-    if (NS_FAILED(rv))
-        return rv;
-
+    nsCOMPtr<nsILocalFile> iconFile;
     nsCAutoString path;
-    pathConverter->GetNativePath(path);
-
     nsCStringArray iconList;
-    iconList.AppendCString(path);
+
+    // Assume the given string is a local identifier for an icon file.
+
+    ResolveIconName(aIconSpec, NS_LITERAL_STRING(".xpm"),
+                    getter_AddRefs(iconFile));
+    if (iconFile) {
+        iconFile->GetNativePath(path);
+        iconList.AppendCString(path);
+    } 
 
     // Get the 16px icon path as well
-    iconSpec = aIconSpec + NS_LITERAL_STRING("16.xpm");
+    ResolveIconName(aIconSpec, NS_LITERAL_STRING("16.xpm"),
+                    getter_AddRefs(iconFile));
+    if (iconFile) {
+        iconFile->GetNativePath(path);
+        iconList.AppendCString(path);
+    }
 
-    chromeDir->GetPath(iconPath);
-    iconPath.Append(iconSpec.get() + n - 1);
-
-    rv = NS_NewLocalFile(iconPath, PR_TRUE,
-                         getter_AddRefs(pathConverter));
-    if (NS_FAILED(rv))
-        return rv;
-
-    pathConverter->GetNativePath(path);
-    iconList.AppendCString(path);
+    // leave the default icon intact if no matching icons were found
+    if (iconList.Count() == 0)
+        return NS_OK;
 
     return SetWindowIconList(iconList);
 }
@@ -2872,26 +2847,17 @@ void
 nsWindow::SetDefaultIcon(void)
 {
     // Set up the default window icon
-    nsresult rv;
-    nsCOMPtr<nsIFile> chromeDir;
-    rv = NS_GetSpecialDirectory(NS_APP_CHROME_DIR,
-                                getter_AddRefs(chromeDir));
-    if (NS_FAILED(rv))
+    nsCOMPtr<nsILocalFile> iconFile;
+    ResolveIconName(NS_LITERAL_STRING("default"),
+                    NS_LITERAL_STRING(".xpm"),
+                    getter_AddRefs(iconFile));
+    if (!iconFile) {
+        NS_WARNING("default.xpm not found");
         return;
-
-    nsAutoString defaultPath;
-    chromeDir->GetPath(defaultPath);
-            
-    defaultPath.AppendLiteral("/icons/default/default.xpm");
-
-    nsCOMPtr<nsILocalFile> defaultPathConverter;
-    rv = NS_NewLocalFile(defaultPath, PR_TRUE,
-                         getter_AddRefs(defaultPathConverter));
-    if (NS_FAILED(rv))
-        return;
+    }
 
     nsCAutoString path;
-    defaultPathConverter->GetNativePath(path);
+    iconFile->GetNativePath(path);
 
     nsCStringArray iconList;
     iconList.AppendCString(path);

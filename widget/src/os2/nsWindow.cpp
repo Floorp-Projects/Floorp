@@ -3343,47 +3343,26 @@ NS_METHOD nsWindow::SetTitle(const nsAString& aTitle)
 
 NS_METHOD nsWindow::SetIcon(const nsAString& anIconSpec) 
 {
-  // Start at app chrome directory.
-  nsCOMPtr<nsIFile> chromeDir;
-  if ( NS_FAILED( NS_GetSpecialDirectory( NS_APP_CHROME_DIR,
-                                          getter_AddRefs( chromeDir ) ) ) ) {
-      return NS_ERROR_FAILURE;
+  // Assume the given string is a local identifier for an icon file.
+
+  nsCOMPtr<nsILocalFile> iconFile;
+  ResolveIconName(aIconSpec, NS_LITERAL_STRING(".ico"),
+                  getter_AddRefs(iconFile));
+  if (!iconFile)
+    return NS_OK; // not an error if icon is not found
+
+  // Now try the char* path.
+  nsCAutoString path;
+  iconFile->GetNativePath( path );
+
+  if (mFrameIcon) {
+    WinFreeFileIcon(mFrameIcon);
+    mFrameIcon = NULLHANDLE;
   }
-  // Get native file name of that directory.
-  nsAutoString iconPath;
-  chromeDir->GetPath( iconPath );
+  mFrameIcon = WinLoadFileIcon(path.get(), FALSE);
+  if (mFrameIcon)
+    WinSendMsg(mFrameWnd, WM_SETICON, (MPARAM)mFrameIcon, (MPARAM)0);
 
-  // Now take input path...
-  nsAutoString iconSpec( anIconSpec );
-  // ...append ".ico" to that.
-  iconSpec.Append( NS_LITERAL_STRING(".ico") );
-  // ...and figure out where /chrome/... is within that
-  // (and skip the "resource:///chrome" part).
-  nsAutoString key(NS_LITERAL_STRING("/chrome/"));
-  PRInt32 n = iconSpec.Find( key ) + key.Length();
-  // Convert / to \.
-  nsAutoString slash(NS_LITERAL_STRING("/"));
-  nsAutoString bslash(NS_LITERAL_STRING("\\"));
-  iconSpec.ReplaceChar( *(slash.get()), *(bslash.get()) );
-
-  // Append that to icon resource path.
-  iconPath.Append( iconSpec.get() + n - 1 );
-
-  nsCOMPtr<nsILocalFile> pathConverter;
-  if ( NS_SUCCEEDED( NS_NewLocalFile( iconPath,
-                                      PR_FALSE,
-                                      getter_AddRefs( pathConverter ) ) ) ) {
-    // Now try the char* path.
-    nsCAutoString aPath;
-    pathConverter->GetNativePath( aPath );
-    if (mFrameIcon) {
-      WinFreeFileIcon(mFrameIcon);
-      mFrameIcon = NULLHANDLE;
-    }
-    mFrameIcon = WinLoadFileIcon(aPath.get(), FALSE);
-    if (mFrameIcon)
-      WinSendMsg(mFrameWnd, WM_SETICON, (MPARAM)mFrameIcon, (MPARAM)0);
-  }
   return NS_OK;
 }
 

@@ -44,6 +44,7 @@
 #include "nsIMenuListener.h"
 #include "nsIToolkit.h"
 #include "nsIAppShell.h"
+#include "nsILocalFile.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
 #include "nsCOMPtr.h"
@@ -133,6 +134,9 @@ public:
 
 protected:
 
+  virtual void            ResolveIconName(const nsAString &aIconName,
+                                          const nsAString &aIconSuffix,
+                                          nsILocalFile **aResult);
   virtual void            DrawScaledRect(nsIRenderingContext& aRenderingContext,
                                          const nsRect & aRect,
                                          float aScale,

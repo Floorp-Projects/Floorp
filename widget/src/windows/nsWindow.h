@@ -62,6 +62,7 @@ class nsNativeDragTarget;
 class nsIRollupListener;
 
 class nsIMenuBar;
+class nsIFile;
 
 #ifdef ACCESSIBILITY
 #include "OLEACC.H"

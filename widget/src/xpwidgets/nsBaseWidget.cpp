@@ -46,6 +46,7 @@
 #include "nsIFullScreen.h"
 #include "nsIServiceManagerUtils.h"
 #include "nsIScreenManager.h"
+#include "nsAppDirectoryServiceDefs.h"
 
 #ifdef DEBUG
 #include "nsIServiceManager.h"
@@ -931,6 +932,76 @@ NS_IMETHODIMP
 nsBaseWidget::SetIcon(const nsAString&)
 {
   return NS_OK;
+}
+
+/**
+ * Modifies aFile to point at an icon file with the given name and suffix.  The
+ * suffix may correspond to a file extension with leading '.' if appropriate.
+ * Returns true if the icon file exists and can be read.
+ */
+static PRBool
+ResolveIconNameHelper(nsILocalFile *aFile,
+                      const nsAString &aIconName,
+                      const nsAString &aIconSuffix)
+{
+  aFile->Append(NS_LITERAL_STRING("icons"));
+  aFile->Append(NS_LITERAL_STRING("default"));
+  aFile->Append(aIconName + aIconSuffix);
+
+  PRBool readable;
+  return NS_SUCCEEDED(aFile->IsReadable(&readable)) && readable;
+}
+
+/**
+ * Resolve the given icon name into a local file object.  This method is
+ * intended to be called by subclasses of nsBaseWidget.  aIconSuffix is a
+ * platform specific icon file suffix (e.g., ".ico" under Win32).
+ *
+ * If no file is found matching the given parameters, then null is returned.
+ */
+void
+nsBaseWidget::ResolveIconName(const nsAString &aIconName,
+                              const nsAString &aIconSuffix,
+                              nsILocalFile **aResult)
+{ 
+  *aResult = nsnull;
+
+  nsCOMPtr<nsIProperties> dirSvc = do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID);
+  if (!dirSvc)
+    return;
+
+  // first check auxilary chrome directories
+
+  nsCOMPtr<nsISimpleEnumerator> dirs;
+  dirSvc->Get(NS_APP_CHROME_DIR_LIST, NS_GET_IID(nsISimpleEnumerator),
+              getter_AddRefs(dirs));
+  if (!dirs)
+    return;
+
+  PRBool hasMore;
+  while (NS_SUCCEEDED(dirs->HasMoreElements(&hasMore)) && hasMore) {
+    nsCOMPtr<nsISupports> element;
+    dirs->GetNext(getter_AddRefs(element));
+    if (!element)
+      continue;
+    nsCOMPtr<nsILocalFile> file = do_QueryInterface(element);
+    if (!file)
+      continue;
+    if (ResolveIconNameHelper(file, aIconName, aIconSuffix)) {
+      NS_ADDREF(*aResult = file);
+      return;
+    }
+  }
+
+  // then check the main app chrome directory
+
+  nsCOMPtr<nsILocalFile> file;
+  dirSvc->Get(NS_APP_CHROME_DIR, NS_GET_IID(nsILocalFile),
+              getter_AddRefs(file));
+  if (!file)
+    return;
+  if (ResolveIconNameHelper(file, aIconName, aIconSuffix))
+    NS_ADDREF(*aResult = file);
 }
 
 #ifdef DEBUG

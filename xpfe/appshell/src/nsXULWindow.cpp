@@ -1425,9 +1425,6 @@ NS_IMETHODIMP nsXULWindow::LoadIconFromXUL()
     cssDecl->GetPropertyValue(windowIcon, icon);
 #endif
 
-    nsAutoString icon;
-    icon.AssignLiteral("resource:///chrome/icons/default/");
-
     nsAutoString id;
     windowElement->GetAttribute(NS_LITERAL_STRING("id"), id);
 
@@ -1435,9 +1432,7 @@ NS_IMETHODIMP nsXULWindow::LoadIconFromXUL()
         id.AssignLiteral("default");
     }
 
-    icon.Append(id);
-
-    mWindow->SetIcon(icon);
+    mWindow->SetIcon(id);
     return NS_OK;
 }
 
