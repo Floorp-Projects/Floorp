@@ -197,7 +197,7 @@
          var n = this.getPreviousItem(this.selectedItems[0], 1);
          if (n) {
            this.ensureIndexIsVisible(this.getIndexOfItem(this.selectedItems[0])-1);
-           this.selectItem(n);
+           this.timedSelect(n);
          }
         ]]>
       </handler>
@@ -208,7 +208,7 @@
          var n = this.getNextItem(this.selectedItems[0], 1);
          if (n) {
            this.ensureIndexIsVisible(this.getIndexOfItem(this.selectedItems[0])+1);
-           this.selectItem(n);
+           this.timedSelect(n);
          }
         ]]>
       </handler>
