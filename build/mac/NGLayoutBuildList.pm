@@ -1621,6 +1621,10 @@ sub BuildAppRunner()
 	my($cmd_file_path) = ":mozilla:xpfe:bootstrap:";
 	my($cmd_file) = "";
 
+	$cmd_file = "Mozilla Profile Wizard";
+	_copy( $cmd_file_path . "Mozilla_Profile_Wizard", $dist_dir . $cmd_file );
+	MacPerl::SetFileInfo("MOZZ", "CMDL", $dist_dir . $cmd_file);
+
 	$cmd_file = "Mozilla Profile Manager";
 	_copy( $cmd_file_path . "Mozilla_Profile_Manager", $dist_dir . $cmd_file );
 	MacPerl::SetFileInfo("MOZZ", "CMDL", $dist_dir . $cmd_file);
