@@ -64,8 +64,9 @@ spew(char *funcName, int rv)
 void
 usage(char *prog)
 {
-    fprintf(stderr, "usage: %s <URL> [ProxyServer ", prog);
-    fprintf(stderr, "ProxyPort [ProxyUserName ProxyPassword]\n");
+    fprintf(stderr, "usage: %s <URL>\n\t\t[<ProxyServer> ", prog);
+    fprintf(stderr, "<ProxyPort> [<ProxyUserName> <ProxyPassword>]]\n");
+    fprintf(stderr, "\t\t[-r<ResumePos> or -rg]\n");
     
 #ifdef macintosh
     int fin = getchar();
@@ -77,10 +78,11 @@ main(int argc, char **argv)
 {
     char *proxyUser = 0, *proxyPswd = 0;
     char proxyURL[kProxySrvrLen];
-    int rv = 0;
+    int rv = 0, resPos = 0;
     time_t startTime, endTime;
     double dlTime = 0;  /* download time */
     float dlRate = 0;   /* download rate */
+    int bResumeOrGet = 0;
     
 #ifdef macintosh
     argc = ccommand(&argv);
@@ -90,6 +92,25 @@ main(int argc, char **argv)
     {
         usage(argv[0]);
         exit(1);
+    }
+
+    /* get resume pos if -r arg passed in */
+    for (int i = 1; i < argc; ++i)
+    {
+        /* resume or get */
+        if (strncmp(argv[i], "-rg", 3) == 0)
+        {
+            bResumeOrGet = 1;
+        }
+
+        /* resume from pos */
+        else if (strncmp(argv[i], "-r", 2) == 0)
+        {
+            resPos = atoi(argv[i] + 2);
+            printf("resPos = %d\n", resPos);
+
+            break;
+        }        
     }
 
     /* has a proxy server been specified? */
@@ -117,7 +138,14 @@ main(int argc, char **argv)
         spew("nsHTTPConn::Open", rv);
 
         startTime = time(NULL);
-        rv = conn->Get(ProgressCB, NULL); // use leaf from URL
+        if (bResumeOrGet)
+        {
+            rv = conn->ResumeOrGet(ProgressCB, NULL); // use leaf from URL
+        }
+        else
+        {
+            rv = conn->Get(ProgressCB, NULL, resPos); // use leaf from URL
+        }
         endTime = time(NULL);
         printf("\n"); // newline after progress completes
         spew("nsHTTPConn::Get", rv);
@@ -136,7 +164,14 @@ main(int argc, char **argv)
             spew("nsHTTPConn::Open", rv);
 
             startTime = time(NULL);
-            rv = conn->Get(ProgressCB, NULL);
+            if (bResumeOrGet)
+            {
+                rv = conn->ResumeOrGet(ProgressCB, NULL);
+            }
+            else
+            {
+                rv = conn->Get(ProgressCB, NULL, resPos);
+            }
             endTime = time(NULL);
             printf("\n"); // newline after progress completes
             spew("nsHTTPConn::Get", rv);
@@ -162,7 +197,16 @@ main(int argc, char **argv)
             if (strrchr(path, '/') != (path + strlen(path)))
                 file = strrchr(path, '/') + 1; // set to leaf name
             startTime = time(NULL);
-            rv = conn->Get(path, file, nsFTPConn::BINARY, 1, ProgressCB);
+            if (bResumeOrGet)
+            {
+                rv = conn->ResumeOrGet(path, file, nsFTPConn::BINARY, 1, 
+                     ProgressCB);
+            }
+            else
+            {
+                rv = conn->Get(path, file, nsFTPConn::BINARY, resPos, 1, 
+                     ProgressCB);
+            }
             endTime = time(NULL);
             printf("\n"); // newline after progress completes
             spew("nsFTPConn::Get", rv);

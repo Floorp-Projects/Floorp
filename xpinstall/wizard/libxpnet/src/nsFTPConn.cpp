@@ -121,8 +121,36 @@ nsFTPConn::Open(char *aHost)
 }
 
 int
-nsFTPConn::Get(char *aSrvPath, char *aLoclPath, int aType, int aOvWrite,
-               FTPGetCB aCBFunc)
+nsFTPConn::ResumeOrGet(char *aSrvPath, char *aLoclPath, int aType, 
+                       int aOvWrite, FTPGetCB aCBFunc)
+{
+    struct stat stbuf;
+    int err = OK;
+    int resPos = 0;
+
+    if (!aLoclPath)
+        return E_PARAM;
+
+    /* stat local file */
+    err = stat(aLoclPath, &stbuf);
+    if (err == 0)
+        resPos = stbuf.st_size;
+
+    return Get(aSrvPath, aLoclPath, aType, resPos, aOvWrite, aCBFunc);
+}
+
+int
+nsFTPConn::Get(char *aSrvPath, char *aLoclPath, int aType,
+               int aOvWrite, FTPGetCB aCBFunc)
+{
+    // deprecated API; wrapper for backwards compatibility
+
+    return ResumeOrGet(aSrvPath, aLoclPath, aType, aOvWrite, aCBFunc);
+}
+
+int
+nsFTPConn::Get(char *aSrvPath, char *aLoclPath, int aType, int aResumePos,
+               int aOvWrite, FTPGetCB aCBFunc)
 {
     struct stat dummy;
     int err = OK, wrote = 0, totBytesRd = 0;
@@ -155,6 +183,13 @@ nsFTPConn::Get(char *aSrvPath, char *aLoclPath, int aType, int aOvWrite,
     if (err == OK && (resp[0] == '2'))
         fileSize = atoi(&resp[4]);
 
+    if (aResumePos > 0)
+    {
+        /* issue restart command */
+        sprintf(cmd, "REST %d\r\n", aResumePos);
+        ERR_CHECK(IssueCmd(cmd, resp, kRespBufSize, mCntlSock));
+    }
+
     /* issue RETR command on control connection */
     sprintf(cmd, "RETR %s\r\n", aSrvPath);
     ERR_CHECK(IssueCmd(cmd, resp, kRespBufSize, mCntlSock));
@@ -164,11 +199,22 @@ nsFTPConn::Get(char *aSrvPath, char *aLoclPath, int aType, int aOvWrite,
         ERR_CHECK(mDataSock->SrvAccept());
 
     /* initialize locl file */
-    if (!(loclfd = fopen(aLoclPath, aType==BINARY ? "wb" : "w")) ||
-        (fseek(loclfd, 0, SEEK_SET) != 0))
+    if (aResumePos <= 0)
     {
-        err = E_LOCL_INIT;
-        goto BAIL;
+        if (!(loclfd = fopen(aLoclPath, aType==BINARY ? "w+b" : "w+")))
+        {
+            err = E_LOCL_INIT;
+            goto BAIL;
+        }
+    }
+    else
+    {
+        if (!(loclfd = fopen(aLoclPath, aType==BINARY ? "r+b" : "r+")) ||
+            (fseek(loclfd, aResumePos, SEEK_SET) != 0)) 
+        {
+            err = E_LOCL_INIT;
+            goto BAIL;
+        }
     }
 
     totBytesRd = 0;
@@ -285,6 +331,27 @@ nsFTPConn::IssueCmd(char *aCmd, char *aResp, int aRespSize, nsSocket *aSock)
                 break;
             case '3':
                 err = E_CMD_ERR;
+                break;
+            case '4':
+            case '5':
+                err = E_CMD_FAIL;
+                break;
+            default:
+                err = E_CMD_UNEXPECTED;
+                break;
+        }
+    }
+
+    /* restart command case */
+    else if (strncmp(aCmd, "REST", 4) == 0)
+    {
+        switch (*aResp)
+        {
+            case '1':
+            case '2':
+                err = E_CMD_ERR;
+                break;
+            case '3':
                 break;
             case '4':
             case '5':

@@ -32,7 +32,9 @@ DIRS			= src
 
 # solaris tbox doesn't like this!
 ifneq (,$(filter Linux,$(OS_ARCH)))
+ifdef ENABLE_TESTS
 DIRS			+= test
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk

@@ -52,8 +52,12 @@ public:
 
     int     Open();
     int     Open(char *aHost);
-    int     Get(char *aSrvPath, char *aLoclPath, int aType, int aOvWrite,
-                FTPGetCB aCBFunc);
+    int     ResumeOrGet(char *aSrvPath, char *aLoclPath, int aType, 
+                int aOvWrite, FTPGetCB aCBFunc);
+    int     Get(char *aSrvPath, char *aLoclPath, int aType, 
+                int aOvWrite, FTPGetCB aCBFunc);
+    int     Get(char *aSrvPath, char *aLoclPath, int aType, int aResumePos,
+                int aOvWrite, FTPGetCB aCBFunc);
     int     Close();
 
 /*--------------------------------------------------------------------* 
