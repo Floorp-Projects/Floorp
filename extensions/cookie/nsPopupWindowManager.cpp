@@ -65,14 +65,14 @@ class nsPopupEnumerator : public nsISimpleEnumerator
 
         NS_DECL_ISUPPORTS
 
-        nsPopupEnumerator() : mHostCurrent(0), mTypeCurrent(0)
+        nsPopupEnumerator() : mHostCurrent(0), mTypeCurrent(0), mHostsFound(0)
         {
           mHostCount = PERMISSION_HostCountForType(WINDOWPERMISSION);
         }
 
         NS_IMETHOD HasMoreElements(PRBool *result) 
         {
-          *result = mHostCount > mHostCurrent;
+          *result = mHostCount > mHostsFound;
           return NS_OK;
         }
 
@@ -93,6 +93,7 @@ class nsPopupEnumerator : public nsISimpleEnumerator
               nsIPermission *permission = new nsPermission(host, type, capability);
               *result = permission;
               NS_ADDREF(*result);
+              mHostsFound++;
               break;
             }
           }
@@ -107,6 +108,7 @@ class nsPopupEnumerator : public nsISimpleEnumerator
         PRInt32 mHostCurrent;
         PRInt32 mTypeCurrent;
         PRInt32 mHostCount;
+        PRInt32 mHostsFound;
 };
 
 NS_IMPL_ISUPPORTS1(nsPopupEnumerator, nsISimpleEnumerator);
