@@ -22,6 +22,7 @@ OS_LIBS += $(GUI_LIBS)
 LD_LIBS += \
 	raptorbase \
 	raptorhtmlpars \
+	png \
 	abouturl \
 	fileurl \
 	ftpurl \
@@ -34,7 +35,6 @@ LD_LIBS += \
 	jsdom \
 	mimetype \
 	netlib \
-	smtpurl \
 	remoturl \
 	netcache \
 	netcnvts \
