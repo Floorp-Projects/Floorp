@@ -90,6 +90,8 @@ if (defined $::FORM{'id'}) {
 # Make sure there are bugs to process.
 scalar(@idlist) || ThrowUserError("no_bugs_chosen");
 
+$::FORM{'dontchange'} = '' unless exists $::FORM{'dontchange'};
+
 # Validate all timetracking fields
 foreach my $field ("estimated_time", "work_time", "remaining_time") {
     if (defined $::FORM{$field}) {
@@ -145,8 +147,6 @@ if (defined $::FORM{'id'}) {
     Bugzilla::Flag::validate(\%::FORM, $::FORM{'id'});
     Bugzilla::FlagType::validate(\%::FORM, $::FORM{'id'});
 }
-
-$::FORM{'dontchange'} = '' unless exists $::FORM{'dontchange'};
 
 ######################################################################
 # End Data/Security Validation
