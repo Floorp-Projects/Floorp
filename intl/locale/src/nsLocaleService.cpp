@@ -317,9 +317,9 @@ nsLocaleService::nsLocaleService(void)
 				        if (resultLocale==NULL) { os2Converter->Release(); return; }
                 for(i=0;i<LocaleListLength;i++) {
                     char* lc_temp = setlocale(os2_locale_category[i],"");
-                    category = LocaleList[i];
+                    category.AssignWithConversion(LocaleList[i]);
                     if (lc_temp==nsnull) xpLocale.AssignWithConversion("en-US");
-                    else xpLocale = lc_temp;
+                    else xpLocale.AssignWithConversion(lc_temp);
                     PRUnichar* loc = xpLocale.ToNewUnicode();
                     PRUnichar* cat = category.ToNewUnicode();
                     resultLocale->AddCategory(cat, loc);
