@@ -62,7 +62,6 @@ $gzip = '/usr/local/bin/gzip';
 $data_dir='data';
 
 1;
-sub timeless_debug{ print @_; }
 sub lock{
 }
 
@@ -122,7 +121,7 @@ sub value_encode {
 
 sub tb_load_data {
   $tree = $form{'tree'};
-&timeless_debug($tree);
+print "$tree\n";
   return undef unless $tree;
   
   tb_load_treedata($tree);
@@ -152,8 +151,8 @@ sub tb_load_data {
 }
 
 sub tb_loadquickparseinfo {
-&timeless_debug('sub tb_loadquickparseinfo<br>');
-&timeless_debug(@_);
+print "sub tb_loadquickparseinfo\n";
+print "@_\n";
   my ($tree, $build, $times, $includeStatusOfBuilding) = (@_);
   local $_;
 
@@ -167,7 +166,7 @@ sub tb_loadquickparseinfo {
   while( $_ = $bw->readline ) {
     chop;
     my ($buildtime, $buildname, $buildstatus) = (split /\|/)[1,2,4];
-&timeless_debug($buildtime, $buildname, $buildstatus);
+print "bt: $buildtime \t bn: $buildname \t bs: $buildstatus \t iSoB: $includeStatusOfBuilding\n";
     if ($includeStatusOfBuilding or
         $buildstatus =~ /^success|busted|testfailed$/) {
 
@@ -198,11 +197,11 @@ sub tb_loadquickparseinfo {
 
 sub tb_last_status {
   my ($build_index) = @_;
-&timeless_debug('sub tb_last_status<br>');
+print 'sub tb_last_status'."\n";
   for (my $tt=0; $tt < $time_count; $tt++) {
     my $br = $build_table->[$tt][$build_index];
     next unless defined $br and $br->{buildstatus};
-&timeless_debug($tt.' '.$br->{buildstatus}.'<br>');
+print "$tt $br->{buildstatus}\n";
     next unless $br->{buildstatus} =~ /^(success|busted|testfailed)$/;
     return $br->{buildstatus};
   }
@@ -307,6 +306,7 @@ sub get_build_time_index {
 }
 
 &do_quickparse;
+print "\n----------------------\n";
 &do_tinderbox;
 sub do_tinderbox{
   my $tinderbox_data = &tb_load_data;
@@ -318,13 +318,12 @@ print $tinderbox_data;
 #=====================================================================
 
 sub print_table_header {
-  print "<table><tr><th>box name</th><th>last status</th></tr>\n";
+  print "box name|last status\n";
   for (my $ii=0; $ii < $name_count; $ii++) {
     my $bn = $build_names->[$ii];
     my $last_status = tb_last_status($ii);
-    print "<tr><td>$bn</td><td>$last_status</td></tr>\n";
+    print "$bn|$last_status\n";
   }
-  print "</table>\n";
 }
 
   # Check bonsai tree for open/close state
