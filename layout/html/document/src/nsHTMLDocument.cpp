@@ -78,6 +78,7 @@
 #include "nsIHTTPChannel.h"
 #include "nsIFileChannel.h"
 #include "nsIEventListenerManager.h"
+#include "nsISelectElement.h"
 
 #include "nsICharsetDetector.h"
 #include "nsICharsetDetectionAdaptor.h"
@@ -1082,6 +1083,12 @@ nsHTMLDocument::CreateElement(const nsString& aTagName,
   nsresult rv = NS_CreateHTMLElement(getter_AddRefs(content), aTagName);
   if (NS_SUCCEEDED(rv)) {
     rv = content->QueryInterface(kIDOMElementIID, (void**)aReturn);
+  }
+
+  nsresult result;
+  nsCOMPtr<nsISelectElement> select = do_QueryInterface(content, &result);
+  if (NS_SUCCEEDED(result)) {
+    result = select->DoneAddingContent();
   }
   return rv;
 }
