@@ -65,6 +65,9 @@ EXTRA_LIBS += \
 	$(CRYPTOLIB) \
 	$(DIST)/lib/swfci.lib \
 	$(DIST)/lib/secutil.lib \
+	$(DIST)/lib/nsspki.lib \
+	$(DIST)/lib/nssdev.lib \
+	$(DIST)/lib/nssb.lib \
 	$(DIST)/lib/dbm.lib \
 	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plc4.lib \
 	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plds4.lib \
@@ -101,9 +104,13 @@ EXTRA_LIBS += \
 	$(DIST)/lib/libpk11wrap.$(LIB_SUFFIX) \
 	$(DIST)/lib/libcryptohi.$(LIB_SUFFIX) \
 	$(DIST)/lib/libcerthi.$(LIB_SUFFIX) \
+	$(DIST)/lib/libnsspki.$(LIB_SUFFIX) \
 	$(DIST)/lib/libpk11wrap.$(LIB_SUFFIX) \
 	$(DIST)/lib/libsoftoken.$(LIB_SUFFIX) \
 	$(DIST)/lib/libcertdb.$(LIB_SUFFIX) \
+	$(DIST)/lib/libnsspki.$(LIB_SUFFIX) \
+	$(DIST)/lib/libnssdev.$(LIB_SUFFIX) \
+	$(DIST)/lib/libnssb.$(LIB_SUFFIX) \
 	$(DIST)/lib/libswfci.$(LIB_SUFFIX) \
 	$(CRYPTOLIB) \
 	$(DIST)/lib/libsecutil.$(LIB_SUFFIX) \
