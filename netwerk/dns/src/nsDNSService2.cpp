@@ -279,7 +279,7 @@ nsDNSService::Init()
 
     // prefs
     PRUint32 maxCacheEntries  = 20;
-    PRUint32 maxCacheLifetime = 5; // minutes
+    PRUint32 maxCacheLifetime = 1; // minutes
     PRBool   enableIDN        = PR_TRUE;
 
     // read prefs
