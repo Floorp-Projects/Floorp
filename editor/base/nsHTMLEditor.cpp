@@ -734,7 +734,7 @@ NS_IMETHODIMP nsHTMLEditor::TabInTable(PRBool inIsShift, PRBool *outHandled)
         *outHandled = PR_TRUE;
         return NS_OK;
       }
-    } while (iter->IsDone() == NS_COMFALSE);
+    } while (iter->IsDone() == NS_ENUMERATOR_FALSE);
   }
   return NS_OK;
 }
@@ -982,7 +982,7 @@ NS_IMETHODIMP nsHTMLEditor::GetInlineProperty(nsIAtom *aProperty,
     iter->Init(range);
     nsCOMPtr<nsIContent> content;
     result = iter->CurrentNode(getter_AddRefs(content));
-    while (NS_COMFALSE == iter->IsDone())
+    while (NS_ENUMERATOR_FALSE == iter->IsDone())
     {
       //if (gNoisy) { printf("  checking node %p\n", content.get()); }
       nsCOMPtr<nsIDOMCharacterData>text;
@@ -2485,7 +2485,7 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
           iter->Init(range);
           // loop through the content iterator for each content node
           nsCOMPtr<nsIContent> content;
-          while (NS_COMFALSE == iter->IsDone())
+          while (NS_ENUMERATOR_FALSE == iter->IsDone())
           {
             res = iter->CurrentNode(getter_AddRefs(content));
             // Note likely!
@@ -3351,7 +3351,7 @@ nsHTMLEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
     iter->Init(rootContent);
 
     // loop through the content iterator for each content node
-    while (NS_COMFALSE == iter->IsDone())
+    while (NS_ENUMERATOR_FALSE == iter->IsDone())
     {
       nsCOMPtr<nsIContent> content;
       res = iter->CurrentNode(getter_AddRefs(content));
@@ -4115,7 +4115,7 @@ nsresult nsHTMLEditor::GetAbsoluteOffsetsForPoints(nsIDOMNode *aInStartNode,
   // loop through the content iterator for each content node
   nsCOMPtr<nsIContent> content;
   result = iter->CurrentNode(getter_AddRefs(content));
-  while (NS_COMFALSE == iter->IsDone())
+  while (NS_ENUMERATOR_FALSE == iter->IsDone())
   {
     textNode = do_QueryInterface(content);
     if (textNode)
@@ -4202,7 +4202,7 @@ nsHTMLEditor::GetTextSelectionOffsetsForRange(nsIDOMSelection *aSelection,
   // loop through the content iterator for each content node
   nsCOMPtr<nsIContent> content;
   result = iter->CurrentNode(getter_AddRefs(content));
-  while (NS_COMFALSE == iter->IsDone())
+  while (NS_ENUMERATOR_FALSE == iter->IsDone())
   {
     textNode = do_QueryInterface(content);
     if (textNode)
@@ -4251,7 +4251,7 @@ void nsHTMLEditor::ResetTextSelectionForRange(nsIDOMNode *aParent,
   // loop through the content iterator for each content node
   nsCOMPtr<nsIContent> content;
   result = iter->CurrentNode(getter_AddRefs(content));
-  while (NS_COMFALSE == iter->IsDone())
+  while (NS_ENUMERATOR_FALSE == iter->IsDone())
   {
     textNode = do_QueryInterface(content);
     if (textNode)
@@ -5775,7 +5775,7 @@ nsHTMLEditor::SetTextPropertiesForNodeWithDifferentParents(nsIDOMRange *aRange,
   iter->CurrentNode(getter_AddRefs(content));
   nsAutoString tag;
   aPropName->ToString(tag);
-  while (NS_COMFALSE == iter->IsDone())
+  while (NS_ENUMERATOR_FALSE == iter->IsDone())
   {
     if ((content.get() != startContent.get()) &&
         (content.get() != endContent.get()))
@@ -6311,7 +6311,7 @@ nsHTMLEditor::RemoveTextPropertiesForNodeWithDifferentParents(nsIDOMNode  *aStar
       iter->CurrentNode(getter_AddRefs(content));
       nsAutoString propName;  // the property we are removing
       aPropName->ToString(propName);
-      while (NS_COMFALSE == iter->IsDone())
+      while (NS_ENUMERATOR_FALSE == iter->IsDone())
       {
         if ((content.get() != startContent.get()) &&
             (content.get() != endContent.get()))
@@ -6476,7 +6476,7 @@ nsHTMLEditor::CollapseAdjacentTextNodes(nsIDOMSelection *aInSelection)
   if (NS_FAILED(result)) return result;
   if (!currentItem) return NS_OK; // there are no ranges in the selection, so nothing to do
 
-  while ((NS_COMFALSE == enumerator->IsDone()))
+  while ((NS_ENUMERATOR_FALSE == enumerator->IsDone()))
   {
     nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
     nsCOMPtr<nsIContentIterator> iter;
@@ -6489,7 +6489,7 @@ nsHTMLEditor::CollapseAdjacentTextNodes(nsIDOMSelection *aInSelection)
     iter->Init(range);
     nsCOMPtr<nsIContent> content;
     result = iter->CurrentNode(getter_AddRefs(content));
-    while (NS_COMFALSE == iter->IsDone())
+    while (NS_ENUMERATOR_FALSE == iter->IsDone())
     {
       nsCOMPtr<nsIDOMCharacterData> text = do_QueryInterface(content);
       if (text && anchorText.get() != text.get() && focusText.get() != text.get())
