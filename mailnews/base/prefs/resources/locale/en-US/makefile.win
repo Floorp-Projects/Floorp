@@ -35,7 +35,6 @@ install::
 	$(MAKE_INSTALL) aw-accounttype.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) aw-done.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) aw-email.dtd $(DISTBROWSER)
-	$(MAKE_INSTALL) aw-fullname.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) aw-identity.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) aw-login.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) aw-mailtype.dtd $(DISTBROWSER)
@@ -60,7 +59,6 @@ clobber::
 	rm -f $(DIST)\bin\chrome\messenger\locale\en-US\aw-accounttype.dtd
 	rm -f $(DIST)\bin\chrome\messenger\locale\en-US\aw-done.dtd
 	rm -f $(DIST)\bin\chrome\messenger\locale\en-US\aw-email.dtd
-	rm -f $(DIST)\bin\chrome\messenger\locale\en-US\aw-fullname.dtd
 	rm -f $(DIST)\bin\chrome\messenger\locale\en-US\aw-identity.dtd
 	rm -f $(DIST)\bin\chrome\messenger\locale\en-US\aw-login.dtd
 	rm -f $(DIST)\bin\chrome\messenger\locale\en-US\aw-mailtype.dtd

@@ -38,7 +38,6 @@ EXPORT_RESOURCE_SAMPLES = \
 		aw-accounttype.dtd \
 		aw-done.dtd \
 		aw-email.dtd \
-		aw-fullname.dtd \
 		aw-identity.dtd \
 		aw-login.dtd \
 		aw-mailtype.dtd \
