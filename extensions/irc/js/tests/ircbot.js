@@ -17,15 +17,8 @@
  * Copyright (C) 1999 New Dimenstions Consulting, Inc. All
  * Rights Reserved.
  *
- * Contributor(s): 
- *
- *
  * Contributor(s):
  *  Robert Ginda, rginda@ndcico.com, original author
- *
- * requires utils.js, events.js, irc.js, http.js
- * see also irctest.js, which takes care of loading everything up
- * and kicking this off.
  *
  * depends on utils.js, events.js, connection.js, http.js, and irc.js
  *
@@ -37,6 +30,9 @@ var LIB_PATH = "../lib/";
 bot = new Object();
 bot.prefix = "!js ";
 
+if (typeof print == "function")
+    print ("Type 'go();' to start the bot.");
+
 function loadDeps()
 {
 
@@ -46,27 +42,28 @@ function loadDeps()
     load (LIB_PATH + "http.js");
     load (LIB_PATH + "dcc.js");
     load (LIB_PATH + "irc.js");
-
-	if (!connection_init(LIB_PATH))
-	  return false;
+    load (LIB_PATH + "irc-debug.js");
     
-	return true;
-
+    if (!connection_init(LIB_PATH))
+        return false;
+    
+    return true;
+    
 }
 
 function initStatic()
 {
     
-  CIRCNetwork.prototype.INITIAL_NICK = "jsbot";
-  CIRCNetwork.prototype.INITIAL_NAME = "XPJSBot";
-  CIRCNetwork.prototype.INITIAL_DESC = "XPCOM Javascript bot";
-  CIRCNetwork.prototype.INITIAL_CHANNEL = "#jsbot";
+    CIRCNetwork.prototype.INITIAL_NICK = "jsbot";
+    CIRCNetwork.prototype.INITIAL_NAME = "XPJSBot";
+    CIRCNetwork.prototype.INITIAL_DESC = "XPCOM Javascript bot";
+    CIRCNetwork.prototype.INITIAL_CHANNEL = "#jsbot";
 
-  CIRCNetwork.prototype.stayingPower = true; 
+    CIRCNetwork.prototype.stayingPower = true; 
 
-  CIRCChannel.prototype.onPrivmsg = my_chan_privmsg;
-  CIRCUser.prototype.onDCCChat = my_user_dccchat;
-  CDCCChat.prototype.onRawData = my_dccchat_rawdata;
+    CIRCChannel.prototype.onPrivmsg = my_chan_privmsg;
+    CIRCUser.prototype.onDCCChat = my_user_dccchat;
+    CDCCChat.prototype.onRawData = my_dccchat_rawdata;
     
 }
 
@@ -76,21 +73,23 @@ function initStatic()
 function init(obj)
 {
     
-  obj.networks = new Object();
-  obj.eventPump = new CEventPump (100);
+    obj.networks = new Object();
+    obj.eventPump = new CEventPump (100);
 
-  obj.networks["hybridnet"] =
+    obj.networks["hybridnet"] =
 	new CIRCNetwork ("hybridnet", [{name: "irc.ssc.net", port: 6667}],
-					 obj.eventPump);
-  obj.networks["linuxnet"] =
-	new CIRCNetwork ("linuxnet", [{name: "irc.mozilla.org", port: 6667}],
-					 obj.eventPump);
-  obj.networks["efnet"] =
-	new CIRCNetwork ("efnet", [{name: "irc.primenet.com", port: 6667},
-							   {name: "irc.cs.cmu.edu",   port: 6667}],
-					 obj.eventPump);
+                         obj.eventPump);
 
-  obj.primNet = obj.networks["efnet"];
+    obj.networks["moznet"] =
+	new CIRCNetwork ("moznet", [{name: "irc.mozilla.org", port: 6667}],
+                         obj.eventPump);
+
+    obj.networks["efnet"] =
+	new CIRCNetwork ("efnet", [{name: "irc.primenet.com", port: 6667},
+                         {name: "irc.cs.cmu.edu",   port: 6667}],
+                         obj.eventPump);
+
+    obj.primNet = obj.networks["moznet"];
 
 }
 
@@ -101,19 +100,20 @@ function go()
 {
 
     if (!loadDeps())
-	  return false;
-	initStatic();
+        return false;
+    initStatic();
     init(bot);
     if (DEBUG)
         /* hook all events EXCEPT server.poll and *.event-end types
          * (the 4th param inverts the match) */
         bot.eventPump.addHook ([{type: "poll", set: /^(server|dcc-chat)$/},
-                               {type: "event-end"}], event_tracer,
+                                {type: "event-end"}], event_tracer,
                                "event-tracer", true /* negate */);
-	bot.primNet.connect();
+
+    bot.primNet.connect();
     rego();
     
-	return true;
+    return true;
 
 }
 
@@ -131,19 +131,19 @@ function rego()
         bot.eventPump.stepEvents();
         gc();
     }
-	dd ("No events to process.");
+    dd ("No events to process.");
 
-	return true;
+    return true;
 
 }
 
 function loadHooks (max, obj)
 {
 
-  if (typeof obj == "undefined")
+    if (typeof obj == "undefined")
 	obj = {type:"phoney-type", set:"phoney-set"};
-
-  for (i = 0; i < max; i++)
+    
+    for (i = 0; i < max; i++)
 	bot.eventPump.addEvent (obj, (void 0), "load-hook");
 
 }
@@ -165,12 +165,12 @@ function my_chan_privmsg (e)
     {
         try
         {
-		  var v = eval(e.meat.substring (bot.prefix.length, e.meat.length));
+            var v = eval(e.meat.substring (bot.prefix.length, e.meat.length));
         }
         catch (ex)
         {
-		  this.say (e.user.nick + ": " + String(ex));
-		  return false;
+            this.say (e.user.nick + ": " + String(ex));
+            return false;
         }
         
         if (typeof (v) != "undefined")
@@ -198,21 +198,21 @@ function my_chan_privmsg (e)
  */
 function my_user_dccchat (e)
 {
-
+    
     if (!e.user.canDCC)
-	{
-	  e.user.notice ("\01DCC REJECT CHAT chat\01");
-	  return false;
-	}
-
+    {
+        e.user.notice ("\01DCC REJECT CHAT chat\01");
+        return false;
+    }
+    
     var c = new CDCCChat (bot.eventPump);
-
+    
     if (!c.connect (e.user.host, e.port))
-	{
-	  e.user.notice ("\01DCC REJECT CHAT chat\01");
-	  return false;
-	}
-
+    {
+        e.user.notice ("\01DCC REJECT CHAT chat\01");
+        return false;
+    }
+    
     return true;
     
 }
@@ -222,92 +222,27 @@ function my_user_dccchat (e)
  */
 function my_dccchat_rawdata (e)
 {
-
+    
     try
     {
-	  var v = eval(e.data);
+        var v = eval(e.data);
     }
     catch (ex)
     {
-	  this.say (String(ex));
-	  return false;
-    }
-        
-    if (typeof (v) != "undefined")
-    {						
-	  if (v != null)          
-		v = String(v);
-	  else
-		v = "null";
-                        
-	  this.say (v);
+        this.say (String(ex));
+        return false;
     }
     
-}
-
-/*
- * Hook used to trace events.
- */
-function event_tracer (e)
-{
-    var name="", data="";
-
-    switch (e.set)
-    {
-        case "server":
-            name = e.destObject.connection.host;
-            if (e.type == "rawdata")
-                data = "'" + e.data + "'";
-            break;
-
-        case "channel":
-            name = e.destObject.name;
-            break;
-            
-        case "user":
-            name = e.destObject.nick;
-            break;
-
-        case "httpdoc":
-            name = e.destObject.server + e.destObject.path;
-            if (e.destObject.state != "complete")
-                data = "state: '" + e.destObject.state + "', recieved " +
-                    e.destObject.data.length;
-            else
-                dd ("document done:\n" + dumpObjectTree (this));
-            break;
-
-        case "dcc-chat":
-            name = e.destObject.host + ":" + e.destObject.port;
-            if (e.type == "rawdata")
-                data = "'" + e.data + "'";
-            break;
-
-        case "client":
-            if (e.type == "do-connect")
-                data = "attempt: " + e.attempt + "/" +
-                    e.destObject.MAX_CONNECT_ATTEMPTS;
-            break;
-
-        default:
-            break;
+    if (typeof (v) != "undefined")
+    {						
+        if (v != null)          
+            v = String(v);
+        else
+            v = "null";
+        
+        this.say (v);
     }
-
-	if (name)
-	  name = "[" + name + "]";
-
-	if (e.level == 1)
-		dd ("");
-
-    str = "Level " + e.level + ": '" + e.type + "', " +
-        e.set + name + "." + e.destMethod;
-	if (data)
-	  str += "\ndata   : " + data;
-
-    dd (str);
-
-    return true;
-
+    
 }
 
 /*

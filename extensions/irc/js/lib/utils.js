@@ -238,7 +238,7 @@ function renameProperty (obj, oldname, newname)
 function newObject(progID, iface)
 {
     if (!jsenv.HAS_XPCOM)
-        return;
+        return null;
 
     var obj = Components.classes[progID].createInstance();
     var rv;
@@ -374,7 +374,7 @@ function getStackTrace ()
 function getInterfaces (cls)
 {
     if (!jsenv.HAS_XPCOM)
-        return;
+        return null;
 
     var rv = new Object();
     var e;

@@ -116,7 +116,7 @@ function ep_gethook(name)
         if (this.hooks[h].name.toLowerCase() == name.toLowerCase())
             return this.hooks[h];
 
-    return;
+    return null;
 
 }
 
