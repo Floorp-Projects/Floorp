@@ -502,7 +502,7 @@ for d in $X11_SEARCH_PATH
 do
 	for l in $X11_DYNAMIC_SEARCH_PATH
 	do
-		if [ -x $d/lib/$l ]
+		if [ -r $d/lib/$l ]
 		then
 			X11_DYNAMIC_DIR=$d/lib
 
