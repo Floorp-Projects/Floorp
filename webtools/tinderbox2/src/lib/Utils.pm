@@ -3,8 +3,8 @@
 # Utils.pm - General purpose utility functions.  Every project needs a
 # kludge bucket for common access.
 
-# $Revision: 1.28 $ 
-# $Date: 2002/04/24 04:00:40 $ 
+# $Revision: 1.29 $ 
+# $Date: 2002/05/01 04:12:29 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Utils.pm,v $ 
 # $Name:  $ 
@@ -512,6 +512,21 @@ sub uniq {
 
   return @out;
 }
+
+# given a hash return a string suitable for printing.
+
+sub hash2string {
+    my (%hash) = @_;
+    my (@keys) = sort keys %hash;
+    my $str;
+
+    foreach $key (@keys) {
+        $str .= "\t$key=$hash{$key}\n";
+    }
+
+    return $str
+}
+
 
 # load a list of modules
 

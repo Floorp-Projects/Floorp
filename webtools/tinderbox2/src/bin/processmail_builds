@@ -12,8 +12,8 @@
 # server.  No locks are used by the mail processes, data is passed to
 # the tinderbox server in a maildir like format.
 
-# $Revision: 1.21 $ 
-# $Date: 2002/05/01 01:53:50 $ 
+# $Revision: 1.22 $ 
+# $Date: 2002/05/01 04:12:31 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/processmail_builds,v $ 
 # $Name:  $ 
@@ -1156,7 +1156,7 @@ sub assemble_files {
   $SIG{'__DIE__'} = \&MailProcess::fatal_mailprocessing_error;
 
   %MAIL_HEADER =  MailProcess::parse_mail_header();
-  %TINDERBOX = MailProcess::parse_tinderbox_vars();
+  %TINDERBOX = MailProcess::parse_tinderbox_vars( main::hash2string(%MAIL_HEADER) );
   @DATE_FIELDS = qw(builddate starttime timenow);
 
   fix_tinderboxvar_time_format();

@@ -4,8 +4,8 @@
 # mailprocessing program.
 
 
-# $Revision: 1.10 $ 
-# $Date: 2001/10/10 15:08:24 $ 
+# $Revision: 1.11 $ 
+# $Date: 2002/05/01 04:12:29 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/MailProcess.pm,v $ 
 # $Name:  $ 
@@ -170,6 +170,7 @@ sub parse_mail_header {
 
 
 sub parse_tinderbox_vars {
+    my $error_context = @_;
 
 # Ignore all lines in the mail till we find the tinderbox lines, so
 # the lines we want should be at the top of the mail.  We ignore the
@@ -227,7 +228,8 @@ sub parse_tinderbox_vars {
 
   # bounce the mail message
 
-  die("No Tinderbox variables found in message.\n");
+  die("No Tinderbox variables found in message.\n".
+      "$error_context\n");
 }
 
 
