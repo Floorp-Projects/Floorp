@@ -910,7 +910,7 @@ function attachmentListClick(event)
   if (event.detail == 2) // double click
   {
     var target = event.target;
-    if (target.localName == "mail-attachment")
+    if (target.localName == "descriptionitem")
     {
 	    dofunc("openAttachment", target.attachment);
     }
@@ -1144,7 +1144,6 @@ function ClearAttachmentList()
 { 
   // clear selection
   var list = document.getElementById('attachmentList');
-  // list.clearSelection();
 
   while (list.childNodes.length) 
     list.removeChild(list.firstChild);
