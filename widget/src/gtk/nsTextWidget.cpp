@@ -62,36 +62,43 @@ NS_METHOD nsTextWidget::Create(nsIWidget *aParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
-#if 0
   aParent->AddChild(this);
-  Widget parentWidget = nsnull;
+  GtkWidget *parentWidget = nsnull;
 
   if (DBG) fprintf(stderr, "aParent 0x%x\n", aParent);
 
   if (aParent) {
-    parentWidget = (Widget) aParent->GetNativeData(NS_NATIVE_WIDGET);
+    parentWidget = GTK_WIDGET(aParent->GetNativeData(NS_NATIVE_WIDGET));
   } else {
-    parentWidget = (Widget) aAppShell->GetNativeData(NS_NATIVE_SHELL);
+    parentWidget = GTK_WIDGET(aAppShell->GetNativeData(NS_NATIVE_SHELL));
   }
 
   InitToolkit(aToolkit, aParent);
   InitDeviceContext(aContext, parentWidget);
 
+  mWidget = gtk_entry_new();
+  gtk_entry_set_editable(GTK_ENTRY(mWidget), mMakeReadOnly?PR_FALSE:PR_TRUE);
+  
+  gtk_layout_put(GTK_LAYOUT(parentWidget), mWidget, aRect.x, aRect.y);
+  gtk_widget_set_usize(mWidget, aRect.width, aRect.height);
+
+  gtk_widget_show(mWidget);
+/*
   mWidget = ::XtVaCreateManagedWidget("button",
                                     xmTextWidgetClass,
                                     parentWidget,
                                     XmNwidth, aRect.width,
                                     XmNheight, aRect.height,
-                                    XmNrecomputeSize, False,
-                                    XmNhighlightOnEnter, False,
-                                    XmNeditable, mMakeReadOnly?False:True,
+                                    XmNrecomputeSize, PR_FALSE,
+                                    XmNhighlightOnEnter, PR_FALSE,
+                                    XmNeditable, mMakeReadOnly?PR_FALSE:PR_TRUE,
 		                    XmNx, aRect.x,
 		                    XmNy, aRect.y,
                                     nsnull);
-
+*/
   // save the event callback function
   mEventCallback = aHandleEventFunction;
-
+/*
   InitCallbacks("nsTextWidget");
 
   XtAddCallback(mWidget,
@@ -103,18 +110,20 @@ NS_METHOD nsTextWidget::Create(nsIWidget *aParent,
                 XmNlosingFocusCallback,
                 nsXtWidget_Focus_Callback,
                 this);
-
+*/
   if (mMakeReadOnly) {
     PRUint32 oldReadOnly;
     SetReadOnly(PR_TRUE, oldReadOnly);
   }
   if (mMakePassword) {
     SetPassword(PR_TRUE);
+    /*
     PasswordData * data = new PasswordData();
     data->mPassword = "";
     XtVaSetValues(mWidget, XmNuserData, data, NULL);
+    */
   }
-#endif
+
   return NS_OK;
 }
 
@@ -175,6 +184,7 @@ NS_METHOD nsTextWidget::SetPassword(PRBool aIsPassword)
     mMakePassword = PR_TRUE;
     return NS_OK;
   }
+  gtk_entry_set_visibility(GTK_ENTRY(mWidget), aIsPassword);
 #if 0
   if (aIsPassword) {
     if (!mIsPasswordCallBacksInstalled) {

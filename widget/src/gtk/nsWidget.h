@@ -23,6 +23,7 @@
 #include "nsToolkit.h"
 #include "nsIAppShell.h"
 #include <gtk/gtk.h>
+#include "gtklayout.h"
 
 /**
  * Base of all GTK native widgets.
