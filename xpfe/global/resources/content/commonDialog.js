@@ -44,8 +44,6 @@ function commonDialogOnLoad()
 {
   doSetOKCancel(commonDialogOnOK, commonDialogOnCancel, commonDialogOnButton2, commonDialogOnButton3);
   gCommonDialogParam = window.arguments[0].QueryInterface(Components.interfaces.nsIDialogParamBlock);
-  focus();
-  GetAttention();
 
   // display the main text
   var messageText = gCommonDialogParam.GetString(0);
