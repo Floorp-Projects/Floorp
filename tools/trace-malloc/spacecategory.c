@@ -202,7 +202,6 @@ int AddCategoryNode(STCategoryNode* node, STGlobals* g)
 */
 STCategoryNode* NewCategoryNode(const char* catName, STCategoryNode* parent, STGlobals* g)
 {
-    int i;
     STCategoryNode* node;
 
     node = (STCategoryNode *) calloc(1, sizeof(STCategoryNode));
@@ -309,7 +308,7 @@ int initCategories(STGlobals* g)
 {
     FILE *fp;
     char buf[1024], *in;
-    int n, i;
+    int n;
     PRBool inrule, leaf;
     STCategoryRule rule;
 
@@ -571,9 +570,9 @@ int categorizeAllocation(STAllocation* aAllocation, STGlobals* g)
     return 0;
 }
 
-typedef PRBool STCategoryNodeProcessor(void* clientData, STCategoryNode* node);
+typedef PRBool STCategoryNodeProcessor(STRequest* inRequest, void* clientData, STCategoryNode* node);
 
-PRBool freeNodeRunProcessor(void* clientData, STCategoryNode* node)
+PRBool freeNodeRunProcessor(STRequest* inRequest, void* clientData, STCategoryNode* node)
 {
     if (node->run)
     {
@@ -637,7 +636,7 @@ int compareNode(const void* aNode1, const void* aNode2, void* aContext)
     return retval;
 }
 
-PRBool sortNodeProcessor(void* clientData, STCategoryNode* node)
+PRBool sortNodeProcessor(STRequest* inRequest, void* clientData, STCategoryNode* node)
 {
     if (node->nchildren)
         NS_QuickSort(node->children, node->nchildren, sizeof(STCategoryNode *), compareNode, NULL);
@@ -655,7 +654,7 @@ PRBool sortNodeProcessor(void* clientData, STCategoryNode* node)
 */
 #define MODINC(n, mod) ((n+1) % mod)
 
-void walkTree(STCategoryNode* root, STCategoryNodeProcessor func, void *clientData, int maxdepth)
+void walkTree(STCategoryNode* root, STCategoryNodeProcessor func, STRequest* inRequest, void *clientData, int maxdepth)
 {
     STCategoryNode* nodes[1024], *node;
     PRUint32 begin, end, i;
@@ -668,7 +667,7 @@ void walkTree(STCategoryNode* root, STCategoryNodeProcessor func, void *clientDa
     while (begin != end)
     {
         node = nodes[begin];
-        ret = (*func)(clientData, node);
+        ret = (*func)(inRequest, clientData, node);
         if (ret == PR_FALSE)
         {
             /* Abort */
@@ -715,7 +714,7 @@ int freeRule(STCategoryRule* rule)
 
 void freeNodeRun(STCategoryNode* root)
 {
-   walkTree(root, freeNodeRunProcessor, NULL, 0);
+   walkTree(root, freeNodeRunProcessor, NULL, NULL, 0);
 }
 
 void freeNodeMap(STGlobals* g)
@@ -775,7 +774,7 @@ int categorizeRun(const STRun* aRun, STGlobals* g)
     /*
     ** First, cleanup our tree
     */
-    walkTree(&g->mCategoryRoot, freeNodeRunProcessor, NULL, 0);
+    walkTree(&g->mCategoryRoot, freeNodeRunProcessor, NULL, NULL, 0);
 
     if (g->mNCategoryMap > 0)
     {
@@ -802,10 +801,10 @@ int categorizeRun(const STRun* aRun, STGlobals* g)
     /*
     ** sort the tree based on our sort criterion
     */
-    walkTree(&g->mCategoryRoot, sortNodeProcessor, NULL, 0);
+    walkTree(&g->mCategoryRoot, sortNodeProcessor, NULL, NULL, 0);
 
 #if defined(DEBUG_dp)
-    walkTree(&g->mCategoryRoot, printNodeProcessor, &g->mCategoryRoot, 0);
+    walkTree(&g->mCategoryRoot, printNodeProcessor, NULL, &g->mCategoryRoot, 0);
 #endif
 
     return 0;
@@ -818,7 +817,7 @@ int categorizeRun(const STRun* aRun, STGlobals* g)
 ** Generate the category report - a list of all categories and details about each
 ** depth parameter controls how deep we traverse the category tree.
 */
-PRBool displayCategoryNodeProcessor(void* clientData, STCategoryNode* node)
+PRBool displayCategoryNodeProcessor(STRequest* inRequest, void* clientData, STCategoryNode* node)
 {
     STCategoryNode* root = (STCategoryNode *) clientData;
     PRUint32 byteSize = 0, heapCost = 0, count = 0;
@@ -851,13 +850,13 @@ PRBool displayCategoryNodeProcessor(void* clientData, STCategoryNode* node)
         }
     }
 
-    PR_fprintf(globals.mRequest.mFD,
+    PR_fprintf(inRequest->mFD,
                " <tr>\n"
                "  <td>");
     /* a link to topcallsites report with focus on category */
     PR_snprintf(buf, sizeof(buf), "top_callsites.html?mCategory=%s", node->categoryName);
-    htmlAnchor(buf, node->categoryName, NULL);
-    PR_fprintf(globals.mRequest.mFD,
+    htmlAnchor(inRequest, buf, node->categoryName, NULL);
+    PR_fprintf(inRequest->mFD,
                "</td>\n"
                "  <td align=right>%u</td>\n"
                "  <td align=right>%4.1f%%</td>\n"
@@ -871,9 +870,9 @@ PRBool displayCategoryNodeProcessor(void* clientData, STCategoryNode* node)
 }
 
 
-int displayCategoryReport(STCategoryNode *root, int depth)
+int displayCategoryReport(STRequest* inRequest, STCategoryNode *root, int depth)
 {
-    PR_fprintf(globals.mRequest.mFD,
+    PR_fprintf(inRequest->mFD,
                "<table border=1>\n"
                " <tr>\n"
                "  <th>Category</th>\n"
@@ -884,9 +883,9 @@ int displayCategoryReport(STCategoryNode *root, int depth)
                " </tr>\n"
                );
 
-    walkTree(root, displayCategoryNodeProcessor, root, depth);
+    walkTree(root, displayCategoryNodeProcessor, inRequest, root, depth);
 
-    PR_fprintf(globals.mRequest.mFD, "</table>\n");
+    PR_fprintf(inRequest->mFD, "</table>\n");
 
     return 0;
 }

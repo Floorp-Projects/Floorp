@@ -81,12 +81,6 @@
 #endif
 
 /*
-** Turn on to add the ability to quit the server from the client.
-** A dubious feature at best.
-*/
-#define WANT_QUIT 0
-
-/*
 ** the globals variables.  happy joy.
 */
 STGlobals globals;
@@ -2670,7 +2664,7 @@ void tmEventHandler(tmreader* aReader, tmevent* aEvent)
 **
 ** Output an HTML anchor, or just the text depending on the mode.
 */
-void htmlAnchor(const char* aHref, const char* aText, const char* aTarget)
+void htmlAnchor(STRequest* inRequest, const char* aHref, const char* aText, const char* aTarget)
 {
     if(NULL == aTarget || '\0' == aTarget[0])
     {
@@ -2710,9 +2704,9 @@ void htmlAnchor(const char* aHref, const char* aText, const char* aTarget)
         /*
         ** In any mode, don't make an href to the current page.
         */
-        if(0 != anchorLive && NULL != globals.mRequest.mFileName)
+        if(0 != anchorLive && NULL != inRequest->mFileName)
         {
-            if(0 == strcmp(aHref, globals.mRequest.mFileName))
+            if(0 == strcmp(aHref, inRequest->mFileName))
             {
                 anchorLive = 0;
             }
@@ -2723,11 +2717,11 @@ void htmlAnchor(const char* aHref, const char* aText, const char* aTarget)
         */
         if(0 != anchorLive)
         {
-            PR_fprintf(globals.mRequest.mFD, "<a target=\"%s\" href=\"./%s\">%s</a>\n", aTarget, aHref, aText);
+            PR_fprintf(inRequest->mFD, "<a target=\"%s\" href=\"./%s\">%s</a>\n", aTarget, aHref, aText);
         }
         else
         {
-            PR_fprintf(globals.mRequest.mFD, "%s\n", aText);
+            PR_fprintf(inRequest->mFD, "%s\n", aText);
         }
     }
     else
@@ -2741,7 +2735,7 @@ void htmlAnchor(const char* aHref, const char* aText, const char* aTarget)
 **
 ** Output an html achor that will resolve to the allocation in question.
 */
-void htmlAllocationAnchor(STAllocation* aAllocation, const char* aText)
+void htmlAllocationAnchor(STRequest* inRequest, STAllocation* aAllocation, const char* aText)
 {
     if(NULL != aAllocation && NULL != aText && '\0' != *aText)
     {
@@ -2754,7 +2748,7 @@ void htmlAllocationAnchor(STAllocation* aAllocation, const char* aText)
         */
         PR_snprintf(buffer, sizeof(buffer), "allocation_%u.html", aAllocation->mRunIndex);
 
-        htmlAnchor(buffer, aText, NULL);
+        htmlAnchor(inRequest, buffer, aText, NULL);
     }
     else
     {
@@ -2804,7 +2798,7 @@ const char* resolveSourceFile(tmmethodnode* aMethod)
 ** RealName determines wether or not we crawl our parents until the point
 **  we no longer match stats.
 */
-void htmlCallsiteAnchor(tmcallsite* aCallsite, const char* aText, int aRealName)
+void htmlCallsiteAnchor(STRequest* inRequest, tmcallsite* aCallsite, const char* aText, int aRealName)
 {
     if(NULL != aCallsite)
     {
@@ -2886,7 +2880,7 @@ void htmlCallsiteAnchor(tmcallsite* aCallsite, const char* aText, int aRealName)
 
         PR_snprintf(hrefBuf, sizeof(hrefBuf), "callsite_%u.html", (PRUint32)aCallsite->entry.key);
 
-        htmlAnchor(hrefBuf, aText, NULL);
+        htmlAnchor(inRequest, hrefBuf, aText, NULL);
     }
     else
     {
@@ -2899,9 +2893,9 @@ void htmlCallsiteAnchor(tmcallsite* aCallsite, const char* aText, int aRealName)
 **
 ** Output a standard header in the report files.
 */
-void htmlHeader(const char* aTitle)
+void htmlHeader(STRequest* inRequest, const char* aTitle)
 {
-    PR_fprintf(globals.mRequest.mFD,
+    PR_fprintf(inRequest->mFD,
 "<html>\n"
 "<head>\n"
 "<title>%s</title>\n"
@@ -2912,24 +2906,17 @@ void htmlHeader(const char* aTitle)
                , aTitle,
                globals.mOptions.mCategoryName);
 
-    PR_fprintf(globals.mRequest.mFD,"<td>");
-    htmlAnchor("index.html", "[Index]", NULL);
-    PR_fprintf(globals.mRequest.mFD,"</td>\n");
+    PR_fprintf(inRequest->mFD,"<td>");
+    htmlAnchor(inRequest, "index.html", "[Index]", NULL);
+    PR_fprintf(inRequest->mFD,"</td>\n");
 
-    PR_fprintf(globals.mRequest.mFD,"<td>");
-    htmlAnchor("options.html", "[Options]", NULL);
-    PR_fprintf(globals.mRequest.mFD,"</td>\n");
+    PR_fprintf(inRequest->mFD,"<td>");
+    htmlAnchor(inRequest, "options.html", "[Options]", NULL);
+    PR_fprintf(inRequest->mFD,"</td>\n");
 
-    PR_fprintf(globals.mRequest.mFD,"</tr></table>\n");
+    PR_fprintf(inRequest->mFD,"</tr></table>\n");
 
-    /*
-    ** This is a dubious feature at best.
-    */
-#if WANT_QUIT
-    htmlAnchor("quit.html", "[Quit]", NULL);
-#endif
-
-    PR_fprintf(globals.mRequest.mFD, "</div>\n<hr>\n");
+    PR_fprintf(inRequest->mFD, "</div>\n<hr>\n");
 }
 
 /*
@@ -2937,9 +2924,9 @@ void htmlHeader(const char* aTitle)
 **
 ** Output a standard footer in the report file.
 */
-void htmlFooter(void)
+void htmlFooter(STRequest* inRequest)
 {
-    PR_fprintf(globals.mRequest.mFD,
+    PR_fprintf(inRequest->mFD,
 "<hr>\n"
 "<div align=right>\n"
 "<i>SpaceTrace</i>\n"
@@ -2954,11 +2941,11 @@ void htmlFooter(void)
 **
 ** Not found message.
 */
-void htmlNotFound(void)
+void htmlNotFound(STRequest* inRequest)
 {
-    htmlHeader("File Not Found");
-    PR_fprintf(globals.mRequest.mFD, "File Not Found\n");
-    htmlFooter();
+    htmlHeader(inRequest, "File Not Found");
+    PR_fprintf(inRequest->mFD, "File Not Found\n");
+    htmlFooter(inRequest);
 }
 
 /*
@@ -3344,7 +3331,7 @@ int getDataString(const char* aGetData, const char* aCheckFor, char** aStoreResu
 **
 ** Returns !0 on failure.
 */
-int displayTopAllocations(STRun* aRun, int aWantCallsite)
+int displayTopAllocations(STRequest* inRequest, STRun* aRun, int aWantCallsite)
 {
     int retval = 0;
 
@@ -3355,19 +3342,19 @@ int displayTopAllocations(STRun* aRun, int aWantCallsite)
             PRUint32 loop = 0;
             STAllocation* current = NULL;
 
-            PR_fprintf(globals.mRequest.mFD, "<table border=1>\n");
-            PR_fprintf(globals.mRequest.mFD, "<tr>\n");
-            PR_fprintf(globals.mRequest.mFD, "<td><b>Rank</b></td>\n");
-            PR_fprintf(globals.mRequest.mFD, "<td><b>Index</b></td>\n");
-            PR_fprintf(globals.mRequest.mFD, "<td><b>Byte Size</b></td>\n");
-            PR_fprintf(globals.mRequest.mFD, "<td><b>Lifespan Seconds</b></td>\n");
-            PR_fprintf(globals.mRequest.mFD, "<td><b>Weight</b></td>\n");
-            PR_fprintf(globals.mRequest.mFD, "<td><b>Heap Operation Seconds</b></td>\n");
+            PR_fprintf(inRequest->mFD, "<table border=1>\n");
+            PR_fprintf(inRequest->mFD, "<tr>\n");
+            PR_fprintf(inRequest->mFD, "<td><b>Rank</b></td>\n");
+            PR_fprintf(inRequest->mFD, "<td><b>Index</b></td>\n");
+            PR_fprintf(inRequest->mFD, "<td><b>Byte Size</b></td>\n");
+            PR_fprintf(inRequest->mFD, "<td><b>Lifespan Seconds</b></td>\n");
+            PR_fprintf(inRequest->mFD, "<td><b>Weight</b></td>\n");
+            PR_fprintf(inRequest->mFD, "<td><b>Heap Operation Seconds</b></td>\n");
             if(0 != aWantCallsite)
             {
-                PR_fprintf(globals.mRequest.mFD, "<td><b>Origin Callsite</b></td>\n");
+                PR_fprintf(inRequest->mFD, "<td><b>Origin Callsite</b></td>\n");
             }
-            PR_fprintf(globals.mRequest.mFD, "</tr>\n");
+            PR_fprintf(inRequest->mFD, "</tr>\n");
 
             /*
             ** Loop over the items, up to some limit or until the end.
@@ -3389,56 +3376,56 @@ int displayTopAllocations(STRun* aRun, int aWantCallsite)
                     LL_UI2L(lifespan64, lifespan);
                     LL_MUL(weight64, size64, lifespan64);
 
-                    PR_fprintf(globals.mRequest.mFD, "<tr>\n");
+                    PR_fprintf(inRequest->mFD, "<tr>\n");
 
                     /*
                     ** Rank.
                     */
-                    PR_fprintf(globals.mRequest.mFD, "<td align=right>%u</td>\n", loop + 1);
+                    PR_fprintf(inRequest->mFD, "<td align=right>%u</td>\n", loop + 1);
 
                     /*
                     ** Index.
                     */
                     PR_snprintf(buffer, sizeof(buffer), "%u", current->mRunIndex);
-                    PR_fprintf(globals.mRequest.mFD, "<td align=right>\n");
-                    htmlAllocationAnchor(current, buffer);
-                    PR_fprintf(globals.mRequest.mFD, "</td>\n");
+                    PR_fprintf(inRequest->mFD, "<td align=right>\n");
+                    htmlAllocationAnchor(inRequest, current, buffer);
+                    PR_fprintf(inRequest->mFD, "</td>\n");
 
                     /*
                     ** Byte Size.
                     */
-                    PR_fprintf(globals.mRequest.mFD, "<td align=right>%u</td>\n", size);
+                    PR_fprintf(inRequest->mFD, "<td align=right>%u</td>\n", size);
 
                     /*
                     ** Lifespan.
                     */
-                    PR_fprintf(globals.mRequest.mFD, "<td align=right>" ST_TIMEVAL_FORMAT "</td>\n", ST_TIMEVAL_PRINTABLE(lifespan));
+                    PR_fprintf(inRequest->mFD, "<td align=right>" ST_TIMEVAL_FORMAT "</td>\n", ST_TIMEVAL_PRINTABLE(lifespan));
 
                     /*
                     ** Weight.
                     */
-                    PR_fprintf(globals.mRequest.mFD, "<td align=right>%llu</td>\n", weight64);
+                    PR_fprintf(inRequest->mFD, "<td align=right>%llu</td>\n", weight64);
 
                     /*
                     ** Heap operation cost.
                     */
-                    PR_fprintf(globals.mRequest.mFD, "<td align=right>" ST_MICROVAL_FORMAT "</td>\n", ST_MICROVAL_PRINTABLE(heapCost));
+                    PR_fprintf(inRequest->mFD, "<td align=right>" ST_MICROVAL_FORMAT "</td>\n", ST_MICROVAL_PRINTABLE(heapCost));
 
                     if(0 != aWantCallsite)
                     {
                         /*
                         ** Callsite.
                         */
-                        PR_fprintf(globals.mRequest.mFD, "<td>");
-                        htmlCallsiteAnchor(current->mEvents[0].mCallsite, NULL, 0);
-                        PR_fprintf(globals.mRequest.mFD, "</td>\n");
+                        PR_fprintf(inRequest->mFD, "<td>");
+                        htmlCallsiteAnchor(inRequest, current->mEvents[0].mCallsite, NULL, 0);
+                        PR_fprintf(inRequest->mFD, "</td>\n");
                     }
 
-                    PR_fprintf(globals.mRequest.mFD, "</tr>\n");
+                    PR_fprintf(inRequest->mFD, "</tr>\n");
                 }
             }
 
-            PR_fprintf(globals.mRequest.mFD, "</table>\n");
+            PR_fprintf(inRequest->mFD, "</table>\n");
         }
     }
     else
@@ -3458,7 +3445,7 @@ int displayTopAllocations(STRun* aRun, int aWantCallsite)
 **
 ** Returns !0 on failure.
 */
-int displayMemoryLeaks(STRun* aRun)
+int displayMemoryLeaks(STRequest* inRequest, STRun* aRun)
 {
     int retval = 0;
 
@@ -3468,16 +3455,16 @@ int displayMemoryLeaks(STRun* aRun)
         PRUint32 displayed = 0;
         STAllocation* current = NULL;
 
-        PR_fprintf(globals.mRequest.mFD, "<table border=1>\n");
-        PR_fprintf(globals.mRequest.mFD, "<tr>\n");
-        PR_fprintf(globals.mRequest.mFD, "<td><b>Rank</b></td>\n");
-        PR_fprintf(globals.mRequest.mFD, "<td><b>Index</b></td>\n");
-        PR_fprintf(globals.mRequest.mFD, "<td><b>Byte Size</b></td>\n");
-        PR_fprintf(globals.mRequest.mFD, "<td><b>Lifespan Seconds</b></td>\n");
-        PR_fprintf(globals.mRequest.mFD, "<td><b>Weight</b></td>\n");
-        PR_fprintf(globals.mRequest.mFD, "<td><b>Heap Operation Seconds</b></td>\n");
-        PR_fprintf(globals.mRequest.mFD, "<td><b>Origin Callsite</b></td>\n");
-        PR_fprintf(globals.mRequest.mFD, "</tr>\n");
+        PR_fprintf(inRequest->mFD, "<table border=1>\n");
+        PR_fprintf(inRequest->mFD, "<tr>\n");
+        PR_fprintf(inRequest->mFD, "<td><b>Rank</b></td>\n");
+        PR_fprintf(inRequest->mFD, "<td><b>Index</b></td>\n");
+        PR_fprintf(inRequest->mFD, "<td><b>Byte Size</b></td>\n");
+        PR_fprintf(inRequest->mFD, "<td><b>Lifespan Seconds</b></td>\n");
+        PR_fprintf(inRequest->mFD, "<td><b>Weight</b></td>\n");
+        PR_fprintf(inRequest->mFD, "<td><b>Heap Operation Seconds</b></td>\n");
+        PR_fprintf(inRequest->mFD, "<td><b>Origin Callsite</b></td>\n");
+        PR_fprintf(inRequest->mFD, "</tr>\n");
 
         /*
         ** Loop over all of the items, or until we've displayed enough.
@@ -3512,54 +3499,54 @@ int displayMemoryLeaks(STRun* aRun)
                     */
                     displayed++;
                     
-                    PR_fprintf(globals.mRequest.mFD, "<tr>\n");
+                    PR_fprintf(inRequest->mFD, "<tr>\n");
                     
                     /*
                     ** Rank.
                     */
-                    PR_fprintf(globals.mRequest.mFD, "<td align=right>%u</td>\n", displayed);
+                    PR_fprintf(inRequest->mFD, "<td align=right>%u</td>\n", displayed);
 
                     /*
                     ** Index.
                     */
                     PR_snprintf(buffer, sizeof(buffer), "%u", current->mRunIndex);
-                    PR_fprintf(globals.mRequest.mFD, "<td align=right>\n");
-                    htmlAllocationAnchor(current, buffer);
-                    PR_fprintf(globals.mRequest.mFD, "</td>\n");
+                    PR_fprintf(inRequest->mFD, "<td align=right>\n");
+                    htmlAllocationAnchor(inRequest, current, buffer);
+                    PR_fprintf(inRequest->mFD, "</td>\n");
                     
                     /*
                     ** Byte Size.
                     */
-                    PR_fprintf(globals.mRequest.mFD, "<td align=right>%u</td>\n", size);
+                    PR_fprintf(inRequest->mFD, "<td align=right>%u</td>\n", size);
                     
                     /*
                     ** Lifespan.
                     */
-                    PR_fprintf(globals.mRequest.mFD, "<td align=right>" ST_TIMEVAL_FORMAT "</td>\n", ST_TIMEVAL_PRINTABLE(lifespan));
+                    PR_fprintf(inRequest->mFD, "<td align=right>" ST_TIMEVAL_FORMAT "</td>\n", ST_TIMEVAL_PRINTABLE(lifespan));
                     
                     /*
                     ** Weight.
                     */
-                    PR_fprintf(globals.mRequest.mFD, "<td align=right>%llu</td>\n", weight64);
+                    PR_fprintf(inRequest->mFD, "<td align=right>%llu</td>\n", weight64);
                     
                     /*
                     ** Heap Operation Seconds.
                     */
-                    PR_fprintf(globals.mRequest.mFD, "<td align=right>" ST_MICROVAL_FORMAT "</td>\n", ST_MICROVAL_PRINTABLE(heapCost));
+                    PR_fprintf(inRequest->mFD, "<td align=right>" ST_MICROVAL_FORMAT "</td>\n", ST_MICROVAL_PRINTABLE(heapCost));
 
                     /*
                     ** Callsite.
                     */
-                    PR_fprintf(globals.mRequest.mFD, "<td>");
-                    htmlCallsiteAnchor(current->mEvents[0].mCallsite, NULL, 0);
-                    PR_fprintf(globals.mRequest.mFD, "</td>\n");
+                    PR_fprintf(inRequest->mFD, "<td>");
+                    htmlCallsiteAnchor(inRequest, current->mEvents[0].mCallsite, NULL, 0);
+                    PR_fprintf(inRequest->mFD, "</td>\n");
                     
-                    PR_fprintf(globals.mRequest.mFD, "</tr>\n");
+                    PR_fprintf(inRequest->mFD, "</tr>\n");
                 }
             }
         }
 
-        PR_fprintf(globals.mRequest.mFD, "</table>\n");
+        PR_fprintf(inRequest->mFD, "</table>\n");
     }
     else
     {
@@ -3578,7 +3565,7 @@ int displayMemoryLeaks(STRun* aRun)
 ** If the stamp is zero, then must match the global sorted run stamp.
 ** Return !0 on error.
 */
-int displayCallsites(tmcallsite* aCallsite, int aFollow, PRUint32 aStamp, int aRealNames)
+int displayCallsites(STRequest* inRequest, tmcallsite* aCallsite, int aFollow, PRUint32 aStamp, int aRealNames)
 {
     int retval = 0;
 
@@ -3614,55 +3601,55 @@ int displayCallsites(tmcallsite* aCallsite, int aFollow, PRUint32 aStamp, int aR
                     {
                         headerDisplayed = __LINE__;
 
-                        PR_fprintf(globals.mRequest.mFD, "<table border=1>\n");
-                        PR_fprintf(globals.mRequest.mFD, "<tr>\n");
-                        PR_fprintf(globals.mRequest.mFD, "<td><b>Callsite</b></td>\n");
-                        PR_fprintf(globals.mRequest.mFD, "<td><b>Composite Byte Size</b></td>\n");
-                        PR_fprintf(globals.mRequest.mFD, "<td><b>Composite Seconds</b></td>\n");
-                        PR_fprintf(globals.mRequest.mFD, "<td><b>Composite Weight</b></td>\n");
-                        PR_fprintf(globals.mRequest.mFD, "<td><b>Heap Object Count</b></td>\n");
-                        PR_fprintf(globals.mRequest.mFD, "<td><b>Composite Heap Operation Seconds</b></td>\n");
-                        PR_fprintf(globals.mRequest.mFD, "</tr>\n");
+                        PR_fprintf(inRequest->mFD, "<table border=1>\n");
+                        PR_fprintf(inRequest->mFD, "<tr>\n");
+                        PR_fprintf(inRequest->mFD, "<td><b>Callsite</b></td>\n");
+                        PR_fprintf(inRequest->mFD, "<td><b>Composite Byte Size</b></td>\n");
+                        PR_fprintf(inRequest->mFD, "<td><b>Composite Seconds</b></td>\n");
+                        PR_fprintf(inRequest->mFD, "<td><b>Composite Weight</b></td>\n");
+                        PR_fprintf(inRequest->mFD, "<td><b>Heap Object Count</b></td>\n");
+                        PR_fprintf(inRequest->mFD, "<td><b>Composite Heap Operation Seconds</b></td>\n");
+                        PR_fprintf(inRequest->mFD, "</tr>\n");
                     }
 
                     /*
                     ** Output the information.
                     */
-                    PR_fprintf(globals.mRequest.mFD, "<tr>\n");
+                    PR_fprintf(inRequest->mFD, "<tr>\n");
 
                     /*
                     ** Method name.
                     */
-                    PR_fprintf(globals.mRequest.mFD, "<td>");
-                    htmlCallsiteAnchor(aCallsite, NULL, aRealNames);
-                    PR_fprintf(globals.mRequest.mFD, "</td>");
+                    PR_fprintf(inRequest->mFD, "<td>");
+                    htmlCallsiteAnchor(inRequest, aCallsite, NULL, aRealNames);
+                    PR_fprintf(inRequest->mFD, "</td>");
 
                     /*
                     ** Byte Size.
                     */
-                    PR_fprintf(globals.mRequest.mFD, "<td valign=top align=right>%u</td>\n", run->mStats.mSize);
+                    PR_fprintf(inRequest->mFD, "<td valign=top align=right>%u</td>\n", run->mStats.mSize);
 
                     /*
                     ** Seconds.
                     */
-                    PR_fprintf(globals.mRequest.mFD, "<td valign=top align=right>" ST_TIMEVAL_FORMAT "</td>\n", ST_TIMEVAL_PRINTABLE64(run->mStats.mTimeval64));
+                    PR_fprintf(inRequest->mFD, "<td valign=top align=right>" ST_TIMEVAL_FORMAT "</td>\n", ST_TIMEVAL_PRINTABLE64(run->mStats.mTimeval64));
 
                     /*
                     ** Weight.
                     */
-                    PR_fprintf(globals.mRequest.mFD, "<td valign=top align=right>%llu</td>\n", run->mStats.mWeight64);
+                    PR_fprintf(inRequest->mFD, "<td valign=top align=right>%llu</td>\n", run->mStats.mWeight64);
                     
                     /*
                     ** Allocation object count.
                     */
-                    PR_fprintf(globals.mRequest.mFD, "<td valign=top align=right>%u</td>\n", run->mStats.mCompositeCount);
+                    PR_fprintf(inRequest->mFD, "<td valign=top align=right>%u</td>\n", run->mStats.mCompositeCount);
 
                     /*
                     ** Heap Operation Seconds.
                     */
-                    PR_fprintf(globals.mRequest.mFD, "<td valign=top align=right>" ST_MICROVAL_FORMAT "</td>\n", ST_MICROVAL_PRINTABLE(run->mStats.mHeapRuntimeCost));
+                    PR_fprintf(inRequest->mFD, "<td valign=top align=right>" ST_MICROVAL_FORMAT "</td>\n", ST_MICROVAL_PRINTABLE(run->mStats.mHeapRuntimeCost));
 
-                    PR_fprintf(globals.mRequest.mFD, "</tr>\n");
+                    PR_fprintf(inRequest->mFD, "</tr>\n");
                 }
             }
             else
@@ -3696,7 +3683,7 @@ int displayCallsites(tmcallsite* aCallsite, int aFollow, PRUint32 aStamp, int aR
         */
         if(0 != headerDisplayed)
         {
-            PR_fprintf(globals.mRequest.mFD, "</table>\n");
+            PR_fprintf(inRequest->mFD, "</table>\n");
         }
     }
     else
@@ -3715,7 +3702,7 @@ int displayCallsites(tmcallsite* aCallsite, int aFollow, PRUint32 aStamp, int aR
 **
 ** Returns !0 on error.
 */
-int displayAllocationDetails(STAllocation* aAllocation)
+int displayAllocationDetails(STRequest* inRequest, STAllocation* aAllocation)
 {
     int retval = 0;
 
@@ -3735,93 +3722,93 @@ int displayAllocationDetails(STAllocation* aAllocation)
         LL_UI2L(timeval64, timeval);
         LL_MUL(weight64, bytesize64, timeval64);
 
-        PR_fprintf(globals.mRequest.mFD, "Allocation %u Details:<p>\n", aAllocation->mRunIndex);
+        PR_fprintf(inRequest->mFD, "Allocation %u Details:<p>\n", aAllocation->mRunIndex);
 
-        PR_fprintf(globals.mRequest.mFD, "<table>\n");
-        PR_fprintf(globals.mRequest.mFD, "<tr><td align=left>Final Size:</td><td align=right>%u</td></tr>\n", bytesize);
-        PR_fprintf(globals.mRequest.mFD, "<tr><td align=left>Lifespan Seconds:</td><td align=right>" ST_TIMEVAL_FORMAT "</td></tr>\n", ST_TIMEVAL_PRINTABLE(timeval));
-        PR_fprintf(globals.mRequest.mFD, "<tr><td align=left>Weight:</td><td align=right>%llu</td></tr>\n", weight64);
-        PR_fprintf(globals.mRequest.mFD, "<tr><td align=left>Heap Operation Seconds:</td><td align=right>" ST_MICROVAL_FORMAT "</td></tr>\n", ST_MICROVAL_PRINTABLE(heapCost));
-        PR_fprintf(globals.mRequest.mFD, "</table><p>\n");
+        PR_fprintf(inRequest->mFD, "<table>\n");
+        PR_fprintf(inRequest->mFD, "<tr><td align=left>Final Size:</td><td align=right>%u</td></tr>\n", bytesize);
+        PR_fprintf(inRequest->mFD, "<tr><td align=left>Lifespan Seconds:</td><td align=right>" ST_TIMEVAL_FORMAT "</td></tr>\n", ST_TIMEVAL_PRINTABLE(timeval));
+        PR_fprintf(inRequest->mFD, "<tr><td align=left>Weight:</td><td align=right>%llu</td></tr>\n", weight64);
+        PR_fprintf(inRequest->mFD, "<tr><td align=left>Heap Operation Seconds:</td><td align=right>" ST_MICROVAL_FORMAT "</td></tr>\n", ST_MICROVAL_PRINTABLE(heapCost));
+        PR_fprintf(inRequest->mFD, "</table><p>\n");
 
         /*
         ** The events.
         */
-        PR_fprintf(globals.mRequest.mFD, "%u Life Event(s):<br>\n", aAllocation->mEventCount);
-        PR_fprintf(globals.mRequest.mFD, "<table border=1>\n");
-        PR_fprintf(globals.mRequest.mFD, "<tr>\n");
-        PR_fprintf(globals.mRequest.mFD, "<td></td>\n");
-        PR_fprintf(globals.mRequest.mFD, "<td><b>Operation</b></td>\n");
-        PR_fprintf(globals.mRequest.mFD, "<td><b>Size</b></td>\n");
-        PR_fprintf(globals.mRequest.mFD, "<td><b>Seconds</b></td>\n");
-        PR_fprintf(globals.mRequest.mFD, "<td></td>\n");
-        PR_fprintf(globals.mRequest.mFD, "</tr>\n");
+        PR_fprintf(inRequest->mFD, "%u Life Event(s):<br>\n", aAllocation->mEventCount);
+        PR_fprintf(inRequest->mFD, "<table border=1>\n");
+        PR_fprintf(inRequest->mFD, "<tr>\n");
+        PR_fprintf(inRequest->mFD, "<td></td>\n");
+        PR_fprintf(inRequest->mFD, "<td><b>Operation</b></td>\n");
+        PR_fprintf(inRequest->mFD, "<td><b>Size</b></td>\n");
+        PR_fprintf(inRequest->mFD, "<td><b>Seconds</b></td>\n");
+        PR_fprintf(inRequest->mFD, "<td></td>\n");
+        PR_fprintf(inRequest->mFD, "</tr>\n");
 
         for(traverse = 0; traverse < aAllocation->mEventCount && traverse < globals.mOptions.mListItemMax; traverse++)
         {
-            PR_fprintf(globals.mRequest.mFD, "<tr>\n");
+            PR_fprintf(inRequest->mFD, "<tr>\n");
 
             /*
             ** count.
             */
-            PR_fprintf(globals.mRequest.mFD, "<td valign=top align=right>%u.</td>\n", traverse + 1);
+            PR_fprintf(inRequest->mFD, "<td valign=top align=right>%u.</td>\n", traverse + 1);
 
             /*
             ** Operation.
             */
-            PR_fprintf(globals.mRequest.mFD, "<td valign=top>");
+            PR_fprintf(inRequest->mFD, "<td valign=top>");
             switch(aAllocation->mEvents[traverse].mEventType)
             {
                 case TM_EVENT_CALLOC:
-                    PR_fprintf(globals.mRequest.mFD, "calloc");
+                    PR_fprintf(inRequest->mFD, "calloc");
                     break;
                 case TM_EVENT_FREE:
-                    PR_fprintf(globals.mRequest.mFD, "free");
+                    PR_fprintf(inRequest->mFD, "free");
                     break;
                 case TM_EVENT_MALLOC:
-                    PR_fprintf(globals.mRequest.mFD, "malloc");
+                    PR_fprintf(inRequest->mFD, "malloc");
                     break;
                 case TM_EVENT_REALLOC:
-                    PR_fprintf(globals.mRequest.mFD, "realloc");
+                    PR_fprintf(inRequest->mFD, "realloc");
                     break;
                 default:
                     retval = __LINE__;
                     REPORT_ERROR(__LINE__, displayAllocationDetails);
                     break;
             }
-            PR_fprintf(globals.mRequest.mFD, "</td>");
+            PR_fprintf(inRequest->mFD, "</td>");
 
             /*
             ** Size.
             */
-            PR_fprintf(globals.mRequest.mFD, "<td valign=top align=right>%u</td>\n", aAllocation->mEvents[traverse].mHeapSize);
+            PR_fprintf(inRequest->mFD, "<td valign=top align=right>%u</td>\n", aAllocation->mEvents[traverse].mHeapSize);
 
             /*
             ** Timeval.
             */
             cacheval = aAllocation->mEvents[traverse].mTimeval - globals.mMinTimeval;
-            PR_fprintf(globals.mRequest.mFD, "<td valign=top align=right>" ST_TIMEVAL_FORMAT "</td>\n", ST_TIMEVAL_PRINTABLE(cacheval));
+            PR_fprintf(inRequest->mFD, "<td valign=top align=right>" ST_TIMEVAL_FORMAT "</td>\n", ST_TIMEVAL_PRINTABLE(cacheval));
 
             /*
             ** Callsite backtrace.
             ** Only relevant backtrace is for event 0 for now until
             **  trace-malloc outputs proper callsites for all others.
             */
-            PR_fprintf(globals.mRequest.mFD, "<td valign=top>\n");
+            PR_fprintf(inRequest->mFD, "<td valign=top>\n");
             if(0 == traverse)
             {
-                displayRes = displayCallsites(aAllocation->mEvents[traverse].mCallsite, ST_FOLLOW_PARENTS, 0, __LINE__);
+                displayRes = displayCallsites(inRequest, aAllocation->mEvents[traverse].mCallsite, ST_FOLLOW_PARENTS, 0, __LINE__);
                 if(0 != displayRes)
                 {
                     retval = __LINE__;
                     REPORT_ERROR(__LINE__, displayCallsite);
                 }
             }
-            PR_fprintf(globals.mRequest.mFD, "</td>\n");
+            PR_fprintf(inRequest->mFD, "</td>\n");
 
-            PR_fprintf(globals.mRequest.mFD, "</tr>\n");
+            PR_fprintf(inRequest->mFD, "</tr>\n");
         }
-        PR_fprintf(globals.mRequest.mFD, "</table><p>\n");
+        PR_fprintf(inRequest->mFD, "</table><p>\n");
     }
     else
     {
@@ -3986,7 +3973,7 @@ int compareCallsites(const void* aSite1, const void* aSite2, void* aContext)
 **
 ** Returns !0 on error.
 */
-int displayTopCallsites(tmcallsite** aCallsites, PRUint32 aCallsiteCount, PRUint32 aStamp, int aRealName)
+int displayTopCallsites(STRequest* inRequest, tmcallsite** aCallsites, PRUint32 aCallsiteCount, PRUint32 aStamp, int aRealName)
 {
     int retval = 0;
 
@@ -4031,61 +4018,61 @@ int displayTopCallsites(tmcallsite** aCallsites, PRUint32 aCallsiteCount, PRUint
                 {
                     headerDisplayed = __LINE__;
 
-                    PR_fprintf(globals.mRequest.mFD, "<table border=1>\n");
+                    PR_fprintf(inRequest->mFD, "<table border=1>\n");
 
-                    PR_fprintf(globals.mRequest.mFD, "<tr>\n");
-                    PR_fprintf(globals.mRequest.mFD, "<td><b>Rank</b></td>\n");
-                    PR_fprintf(globals.mRequest.mFD, "<td><b>Callsite</b></td>\n");
-                    PR_fprintf(globals.mRequest.mFD, "<td><b>Composite Size</b></td>\n");
-                    PR_fprintf(globals.mRequest.mFD, "<td><b>Composite Seconds</b></td>\n");
-                    PR_fprintf(globals.mRequest.mFD, "<td><b>Composite Weight</b></td>\n");
-                    PR_fprintf(globals.mRequest.mFD, "<td><b>Heap Object Count</b></td>\n");
-                    PR_fprintf(globals.mRequest.mFD, "<td><b>Heap Operation Seconds</b></td>\n");
-                    PR_fprintf(globals.mRequest.mFD, "</tr>\n");
+                    PR_fprintf(inRequest->mFD, "<tr>\n");
+                    PR_fprintf(inRequest->mFD, "<td><b>Rank</b></td>\n");
+                    PR_fprintf(inRequest->mFD, "<td><b>Callsite</b></td>\n");
+                    PR_fprintf(inRequest->mFD, "<td><b>Composite Size</b></td>\n");
+                    PR_fprintf(inRequest->mFD, "<td><b>Composite Seconds</b></td>\n");
+                    PR_fprintf(inRequest->mFD, "<td><b>Composite Weight</b></td>\n");
+                    PR_fprintf(inRequest->mFD, "<td><b>Heap Object Count</b></td>\n");
+                    PR_fprintf(inRequest->mFD, "<td><b>Heap Operation Seconds</b></td>\n");
+                    PR_fprintf(inRequest->mFD, "</tr>\n");
                 }
 
                 displayed++;
 
-                PR_fprintf(globals.mRequest.mFD, "<tr>\n");
+                PR_fprintf(inRequest->mFD, "<tr>\n");
 
                 /*
                 ** Rank.
                 */
-                PR_fprintf(globals.mRequest.mFD, "<td align=right valign=top>%u</td>\n", displayed);
+                PR_fprintf(inRequest->mFD, "<td align=right valign=top>%u</td>\n", displayed);
 
                 /*
                 ** Method.
                 */
-                PR_fprintf(globals.mRequest.mFD, "<td>");
-                htmlCallsiteAnchor(site, NULL, aRealName);
-                PR_fprintf(globals.mRequest.mFD, "</td>\n");
+                PR_fprintf(inRequest->mFD, "<td>");
+                htmlCallsiteAnchor(inRequest, site, NULL, aRealName);
+                PR_fprintf(inRequest->mFD, "</td>\n");
 
                 /*
                 ** Size.
                 */
-                PR_fprintf(globals.mRequest.mFD, "<td align=right valign=top>%u</td>\n", run->mStats.mSize);
+                PR_fprintf(inRequest->mFD, "<td align=right valign=top>%u</td>\n", run->mStats.mSize);
 
                 /*
                 ** Timeval.
                 */
-                PR_fprintf(globals.mRequest.mFD, "<td align=right valign=top>" ST_TIMEVAL_FORMAT "</td>\n", ST_TIMEVAL_PRINTABLE64(run->mStats.mTimeval64));
+                PR_fprintf(inRequest->mFD, "<td align=right valign=top>" ST_TIMEVAL_FORMAT "</td>\n", ST_TIMEVAL_PRINTABLE64(run->mStats.mTimeval64));
 
                 /*
                 ** Weight.
                 */
-                PR_fprintf(globals.mRequest.mFD, "<td align=right valign=top>%llu</td>\n", run->mStats.mWeight64);
+                PR_fprintf(inRequest->mFD, "<td align=right valign=top>%llu</td>\n", run->mStats.mWeight64);
 
                 /*
                 ** Allocation object count.
                 */
-                PR_fprintf(globals.mRequest.mFD, "<td align=right valign=top>%u</td>\n", run->mStats.mCompositeCount);
+                PR_fprintf(inRequest->mFD, "<td align=right valign=top>%u</td>\n", run->mStats.mCompositeCount);
 
                 /*
                 ** Heap operation seconds.
                 */
-                PR_fprintf(globals.mRequest.mFD, "<td align=right valign=top>" ST_MICROVAL_FORMAT "</td>\n", ST_MICROVAL_PRINTABLE(run->mStats.mHeapRuntimeCost));
+                PR_fprintf(inRequest->mFD, "<td align=right valign=top>" ST_MICROVAL_FORMAT "</td>\n", ST_MICROVAL_PRINTABLE(run->mStats.mHeapRuntimeCost));
 
-                PR_fprintf(globals.mRequest.mFD, "</tr>\n");
+                PR_fprintf(inRequest->mFD, "</tr>\n");
 
 
                 if(globals.mOptions.mListItemMax > displayed)
@@ -4106,7 +4093,7 @@ int displayTopCallsites(tmcallsite** aCallsites, PRUint32 aCallsiteCount, PRUint
         */
         if(0 != headerDisplayed)
         {
-            PR_fprintf(globals.mRequest.mFD, "</table>\n");
+            PR_fprintf(inRequest->mFD, "</table>\n");
         }
     }
     else
@@ -4127,7 +4114,7 @@ int displayTopCallsites(tmcallsite** aCallsites, PRUint32 aCallsiteCount, PRUint
 **
 ** Returns !0 on error.
 */
-int displayCallsiteDetails(tmcallsite* aCallsite)
+int displayCallsiteDetails(STRequest* inRequest, tmcallsite* aCallsite)
 {
     int retval = 0;
 
@@ -4140,22 +4127,22 @@ int displayCallsiteDetails(tmcallsite* aCallsite)
         sourceFile = resolveSourceFile(aCallsite->method);
         if(NULL != sourceFile)
         {
-            PR_fprintf(globals.mRequest.mFD, "<b>%s</b>", tmmethodnode_name(aCallsite->method));
-            PR_fprintf(globals.mRequest.mFD, "<a href=\"http://lxr.mozilla.org/mozilla/source/%s#%u\" target=\"_st_lxr\">(%s:%u)</a>", aCallsite->method->sourcefile, aCallsite->method->linenumber, sourceFile, aCallsite->method->linenumber);
-            PR_fprintf(globals.mRequest.mFD, " Callsite Details:<p>\n");
+            PR_fprintf(inRequest->mFD, "<b>%s</b>", tmmethodnode_name(aCallsite->method));
+            PR_fprintf(inRequest->mFD, "<a href=\"http://lxr.mozilla.org/mozilla/source/%s#%u\" target=\"_st_lxr\">(%s:%u)</a>", aCallsite->method->sourcefile, aCallsite->method->linenumber, sourceFile, aCallsite->method->linenumber);
+            PR_fprintf(inRequest->mFD, " Callsite Details:<p>\n");
         }
         else
         {
-            PR_fprintf(globals.mRequest.mFD, "<b>%s</b>+%u(%u) Callsite Details:<p>\n", tmmethodnode_name(aCallsite->method), aCallsite->offset, (PRUint32)aCallsite->entry.key);
+            PR_fprintf(inRequest->mFD, "<b>%s</b>+%u(%u) Callsite Details:<p>\n", tmmethodnode_name(aCallsite->method), aCallsite->offset, (PRUint32)aCallsite->entry.key);
         }
 
-        PR_fprintf(globals.mRequest.mFD, "<table border=0>\n");
-        PR_fprintf(globals.mRequest.mFD, "<tr><td>Composite Byte Size:</td><td align=right>%u</td></tr>\n", thisRun->mStats.mSize);
-        PR_fprintf(globals.mRequest.mFD, "<tr><td>Composite Seconds:</td><td align=right>" ST_TIMEVAL_FORMAT "</td></tr>\n", ST_TIMEVAL_PRINTABLE64(thisRun->mStats.mTimeval64));
-        PR_fprintf(globals.mRequest.mFD, "<tr><td>Composite Weight:</td><td align=right>%llu</td></tr>\n", thisRun->mStats.mWeight64);
-        PR_fprintf(globals.mRequest.mFD, "<tr><td>Heap Object Count:</td><td align=right>%u</td></tr>\n", thisRun->mStats.mCompositeCount);
-        PR_fprintf(globals.mRequest.mFD, "<tr><td>Heap Operation Seconds:</td><td align=right>" ST_MICROVAL_FORMAT "</td></tr>\n", ST_MICROVAL_PRINTABLE(thisRun->mStats.mHeapRuntimeCost));
-        PR_fprintf(globals.mRequest.mFD, "</table>\n<p>\n");
+        PR_fprintf(inRequest->mFD, "<table border=0>\n");
+        PR_fprintf(inRequest->mFD, "<tr><td>Composite Byte Size:</td><td align=right>%u</td></tr>\n", thisRun->mStats.mSize);
+        PR_fprintf(inRequest->mFD, "<tr><td>Composite Seconds:</td><td align=right>" ST_TIMEVAL_FORMAT "</td></tr>\n", ST_TIMEVAL_PRINTABLE64(thisRun->mStats.mTimeval64));
+        PR_fprintf(inRequest->mFD, "<tr><td>Composite Weight:</td><td align=right>%llu</td></tr>\n", thisRun->mStats.mWeight64);
+        PR_fprintf(inRequest->mFD, "<tr><td>Heap Object Count:</td><td align=right>%u</td></tr>\n", thisRun->mStats.mCompositeCount);
+        PR_fprintf(inRequest->mFD, "<tr><td>Heap Operation Seconds:</td><td align=right>" ST_MICROVAL_FORMAT "</td></tr>\n", ST_MICROVAL_PRINTABLE(thisRun->mStats.mHeapRuntimeCost));
+        PR_fprintf(inRequest->mFD, "</table>\n<p>\n");
 
         /*
         ** Kids (callsites we call):
@@ -4176,15 +4163,15 @@ int displayCallsiteDetails(tmcallsite* aCallsite)
                 /*
                 ** Got something to show.
                 */
-                PR_fprintf(globals.mRequest.mFD, "Children Callsites:<br>\n");
+                PR_fprintf(inRequest->mFD, "Children Callsites:<br>\n");
 
-                displayRes = displayTopCallsites(sites, siteCount, 0, __LINE__);
+                displayRes = displayTopCallsites(inRequest, sites, siteCount, 0, __LINE__);
                 if(0 != displayRes)
                 {
                     retval = __LINE__;
                     REPORT_ERROR(__LINE__, displayTopCallsites);
                 }
-                PR_fprintf(globals.mRequest.mFD, "<p>\n");
+                PR_fprintf(inRequest->mFD, "<p>\n");
 
                 /*
                 ** Done with array.
@@ -4201,14 +4188,14 @@ int displayCallsiteDetails(tmcallsite* aCallsite)
         {
             int displayRes = 0;
 
-            PR_fprintf(globals.mRequest.mFD, "Parent Callsites:<br>\n");
-            displayRes = displayCallsites(aCallsite->parent, ST_FOLLOW_PARENTS, 0, __LINE__);
+            PR_fprintf(inRequest->mFD, "Parent Callsites:<br>\n");
+            displayRes = displayCallsites(inRequest, aCallsite->parent, ST_FOLLOW_PARENTS, 0, __LINE__);
             if(0 != displayRes)
             {
                 retval = __LINE__;
                 REPORT_ERROR(__LINE__, displayCallsites);
             }
-            PR_fprintf(globals.mRequest.mFD, "<p>\n");
+            PR_fprintf(inRequest->mFD, "<p>\n");
         }
 
         /*
@@ -4232,14 +4219,14 @@ int displayCallsiteDetails(tmcallsite* aCallsite)
                     {
                         int displayRes = 0;
 
-                        PR_fprintf(globals.mRequest.mFD, "Allocations:<br>\n");
-                        displayRes = displayTopAllocations(sortedRun, 0);
+                        PR_fprintf(inRequest->mFD, "Allocations:<br>\n");
+                        displayRes = displayTopAllocations(inRequest, sortedRun, 0);
                         if(0 != displayRes)
                         {
                             retval = __LINE__;
                             REPORT_ERROR(__LINE__, displayTopAllocations);
                         }
-                        PR_fprintf(globals.mRequest.mFD, "<p>\n");
+                        PR_fprintf(inRequest->mFD, "<p>\n");
                     }
                     else
                     {
@@ -4286,7 +4273,7 @@ int displayCallsiteDetails(tmcallsite* aCallsite)
 **
 ** Returns !0 on failure.
 */
-int graphFootprint(STRun* aRun)
+int graphFootprint(STRequest* inRequest, STRun* aRun)
 {
     int retval = 0;
 
@@ -4446,7 +4433,7 @@ int graphFootprint(STRun* aRun)
                 }
 
 
-                theSink.context = globals.mRequest.mFD;
+                theSink.context = inRequest->mFD;
                 theSink.sink = pngSink;
                 gdImagePngToSink(graph, &theSink);
                 
@@ -4480,7 +4467,7 @@ int graphFootprint(STRun* aRun)
 **
 ** Returns !0 on failure.
 */
-int graphTimeval(STRun* aRun)
+int graphTimeval(STRequest* inRequest, STRun* aRun)
 {
     int retval = 0;
 
@@ -4644,7 +4631,7 @@ int graphTimeval(STRun* aRun)
                 }
 
 
-                theSink.context = globals.mRequest.mFD;
+                theSink.context = inRequest->mFD;
                 theSink.sink = pngSink;
                 gdImagePngToSink(graph, &theSink);
                 
@@ -4678,7 +4665,7 @@ int graphTimeval(STRun* aRun)
 **
 ** Returns !0 on failure.
 */
-int graphLifespan(STRun* aRun)
+int graphLifespan(STRequest* inRequest, STRun* aRun)
 {
     int retval = 0;
 
@@ -4845,7 +4832,7 @@ int graphLifespan(STRun* aRun)
                 }
 
 
-                theSink.context = globals.mRequest.mFD;
+                theSink.context = inRequest->mFD;
                 theSink.sink = pngSink;
                 gdImagePngToSink(graph, &theSink);
                 
@@ -4879,7 +4866,7 @@ int graphLifespan(STRun* aRun)
 **
 ** Returns !0 on failure.
 */
-int graphWeight(STRun* aRun)
+int graphWeight(STRequest* inRequest, STRun* aRun)
 {
     int retval = 0;
 
@@ -5059,7 +5046,7 @@ int graphWeight(STRun* aRun)
                 }
 
 
-                theSink.context = globals.mRequest.mFD;
+                theSink.context = inRequest->mFD;
                 theSink.sink = pngSink;
                 gdImagePngToSink(graph, &theSink);
                 
@@ -5088,7 +5075,7 @@ int graphWeight(STRun* aRun)
 ** Apply settings and update global options.
 ** Returns 0 on success. Nonzero on failure.
 */
-int applySettings(void)
+int applySettings(STRequest* inRequest)
 {
     int getRes = 0;
     int changedSet = 0;
@@ -5103,36 +5090,36 @@ int applySettings(void)
     ** If we've got get data, we need to attempt to enact the changes.
     ** That way, when we show the page, it will have the new changes.
     */
-    if(NULL == globals.mRequest.mGetData || '\0' == *globals.mRequest.mGetData)
+    if(NULL == inRequest->mGetData || '\0' == *inRequest->mGetData)
         return 0;
 
 
-    getRes += getDataPRUint32(globals.mRequest.mGetData, "mListItemMax", &globals.mOptions.mListItemMax, &changedDontCare, 1);
-    getRes += getDataPRUint32(globals.mRequest.mGetData, "mTimevalMin", &globals.mOptions.mTimevalMin, &changedSet, ST_TIMEVAL_RESOLUTION);
-    getRes += getDataPRUint32(globals.mRequest.mGetData, "mTimevalMax", &globals.mOptions.mTimevalMax, &changedSet, ST_TIMEVAL_RESOLUTION);
-    getRes += getDataPRUint32(globals.mRequest.mGetData, "mAllocationTimevalMin", &globals.mOptions.mAllocationTimevalMin, &changedSet, ST_TIMEVAL_RESOLUTION);
+    getRes += getDataPRUint32(inRequest->mGetData, "mListItemMax", &globals.mOptions.mListItemMax, &changedDontCare, 1);
+    getRes += getDataPRUint32(inRequest->mGetData, "mTimevalMin", &globals.mOptions.mTimevalMin, &changedSet, ST_TIMEVAL_RESOLUTION);
+    getRes += getDataPRUint32(inRequest->mGetData, "mTimevalMax", &globals.mOptions.mTimevalMax, &changedSet, ST_TIMEVAL_RESOLUTION);
+    getRes += getDataPRUint32(inRequest->mGetData, "mAllocationTimevalMin", &globals.mOptions.mAllocationTimevalMin, &changedSet, ST_TIMEVAL_RESOLUTION);
     
-    getRes += getDataPRUint32(globals.mRequest.mGetData, "mAllocationTimevalMax", &globals.mOptions.mAllocationTimevalMax, &changedSet, ST_TIMEVAL_RESOLUTION);
+    getRes += getDataPRUint32(inRequest->mGetData, "mAllocationTimevalMax", &globals.mOptions.mAllocationTimevalMax, &changedSet, ST_TIMEVAL_RESOLUTION);
 
 #if WANT_GRAPHS
-    getRes += getDataPRUint32(globals.mRequest.mGetData, "mGraphTimevalMin", &globals.mOptions.mGraphTimevalMin, &changedGraph, ST_TIMEVAL_RESOLUTION);
-    getRes += getDataPRUint32(globals.mRequest.mGetData, "mGraphTimevalMax", &globals.mOptions.mGraphTimevalMax, &changedGraph, ST_TIMEVAL_RESOLUTION);
+    getRes += getDataPRUint32(inRequest->mGetData, "mGraphTimevalMin", &globals.mOptions.mGraphTimevalMin, &changedGraph, ST_TIMEVAL_RESOLUTION);
+    getRes += getDataPRUint32(inRequest->mGetData, "mGraphTimevalMax", &globals.mOptions.mGraphTimevalMax, &changedGraph, ST_TIMEVAL_RESOLUTION);
 #endif /* WANT_GRAPHS */
-    getRes += getDataPRUint32(globals.mRequest.mGetData, "mSizeMin", &globals.mOptions.mSizeMin, &changedSet, 1);
-    getRes += getDataPRUint32(globals.mRequest.mGetData, "mSizeMax", &globals.mOptions.mSizeMax, &changedSet, 1);
-    getRes += getDataPRUint32(globals.mRequest.mGetData, "mAlignBy", &globals.mOptions.mAlignBy, &changedSet, 1);
-    getRes += getDataPRUint32(globals.mRequest.mGetData, "mOverhead", &globals.mOptions.mOverhead, &changedSet, 1);
-    getRes += getDataPRUint32(globals.mRequest.mGetData, "mOrderBy", &globals.mOptions.mOrderBy, &changedOrder, 1);
-    getRes += getDataPRUint32(globals.mRequest.mGetData, "mLifetimeMin", &globals.mOptions.mLifetimeMin, &changedSet, ST_TIMEVAL_RESOLUTION);
-    getRes += getDataPRUint32(globals.mRequest.mGetData, "mLifetimeMax", &globals.mOptions.mLifetimeMax, &changedSet, ST_TIMEVAL_RESOLUTION);
-    getRes += getDataPRUint64(globals.mRequest.mGetData, "mWeightMin", &globals.mOptions.mWeightMin64, &changedSet);
-    getRes += getDataPRUint64(globals.mRequest.mGetData, "mWeightMax", &globals.mOptions.mWeightMax64, &changedSet);
+    getRes += getDataPRUint32(inRequest->mGetData, "mSizeMin", &globals.mOptions.mSizeMin, &changedSet, 1);
+    getRes += getDataPRUint32(inRequest->mGetData, "mSizeMax", &globals.mOptions.mSizeMax, &changedSet, 1);
+    getRes += getDataPRUint32(inRequest->mGetData, "mAlignBy", &globals.mOptions.mAlignBy, &changedSet, 1);
+    getRes += getDataPRUint32(inRequest->mGetData, "mOverhead", &globals.mOptions.mOverhead, &changedSet, 1);
+    getRes += getDataPRUint32(inRequest->mGetData, "mOrderBy", &globals.mOptions.mOrderBy, &changedOrder, 1);
+    getRes += getDataPRUint32(inRequest->mGetData, "mLifetimeMin", &globals.mOptions.mLifetimeMin, &changedSet, ST_TIMEVAL_RESOLUTION);
+    getRes += getDataPRUint32(inRequest->mGetData, "mLifetimeMax", &globals.mOptions.mLifetimeMax, &changedSet, ST_TIMEVAL_RESOLUTION);
+    getRes += getDataPRUint64(inRequest->mGetData, "mWeightMin", &globals.mOptions.mWeightMin64, &changedSet);
+    getRes += getDataPRUint64(inRequest->mGetData, "mWeightMax", &globals.mOptions.mWeightMax64, &changedSet);
     for(looper = 0; ST_SUBSTRING_MATCH_MAX > looper; looper++)
     {
         PR_snprintf(looper_buf, sizeof(looper_buf), "mRestrictText%d", looper);
-        getRes += getDataString(globals.mRequest.mGetData, looper_buf, &globals.mOptions.mRestrictText[looper], &changedSet);
+        getRes += getDataString(inRequest->mGetData, looper_buf, &globals.mOptions.mRestrictText[looper], &changedSet);
     }
-    getRes += getDataString(globals.mRequest.mGetData, "mCategoryName", &globals.mOptions.mCategoryName, &changedCategory);
+    getRes += getDataString(inRequest->mGetData, "mCategoryName", &globals.mOptions.mCategoryName, &changedCategory);
     
     /*
     ** Sanity check options
@@ -5216,20 +5203,20 @@ int applySettings(void)
 **
 ** Changes are effected via the get data.
 */
-int displaySettings(void)
+int displaySettings(STRequest* inRequest)
 {
     int retval = 0;
     PRUint32 cached = 0;
     PRIntn looper = 0;
     int getRes;
 
-    getRes = applySettings();
+    getRes = applySettings(inRequest);
 
     /*
     ** Display header for settings page. Do this after applying settings.
     ** 
     */
-    htmlHeader("SpaceTrace Settings");
+    htmlHeader(inRequest, "SpaceTrace Settings");
 
     /*
     ** Report on the operation.
@@ -5238,123 +5225,123 @@ int displaySettings(void)
     {
         REPORT_ERROR(getRes, applySettings);
         
-        PR_fprintf(globals.mRequest.mFD, "<blink><b>%u: There was a problem.  Some changes may have been applied.</b></blink><br><hr>\n", PR_IntervalNow());
+        PR_fprintf(inRequest->mFD, "<blink><b>%u: There was a problem.  Some changes may have been applied.</b></blink><br><hr>\n", PR_IntervalNow());
     }
     else
     {
-        PR_fprintf(globals.mRequest.mFD, "<b>%u: Your changes have been applied.</b><br><hr>\n", PR_IntervalNow());
+        PR_fprintf(inRequest->mFD, "<b>%u: Your changes have been applied.</b><br><hr>\n", PR_IntervalNow());
     }
 
 
     /*
     ** A small blurb regarding the options.
     */
-    PR_fprintf(globals.mRequest.mFD, "NOTES:<p>\n");
+    PR_fprintf(inRequest->mFD, "NOTES:<p>\n");
     cached = globals.mMaxTimeval - globals.mMinTimeval;
-    PR_fprintf(globals.mRequest.mFD, "The total seconds in this run is: 0 to " ST_TIMEVAL_FORMAT "<br>\n", ST_TIMEVAL_PRINTABLE(cached));
+    PR_fprintf(inRequest->mFD, "The total seconds in this run is: 0 to " ST_TIMEVAL_FORMAT "<br>\n", ST_TIMEVAL_PRINTABLE(cached));
 
-    PR_fprintf(globals.mRequest.mFD, "All options should have command line equivalents to support batch mode.<br>\n");
-    PR_fprintf(globals.mRequest.mFD, "Changes to the options take effect immediately.<br>\n");
-    PR_fprintf(globals.mRequest.mFD, "<hr>\n");
+    PR_fprintf(inRequest->mFD, "All options should have command line equivalents to support batch mode.<br>\n");
+    PR_fprintf(inRequest->mFD, "Changes to the options take effect immediately.<br>\n");
+    PR_fprintf(inRequest->mFD, "<hr>\n");
 
     /*
     ** We've got a form to create.
     */
-    PR_fprintf(globals.mRequest.mFD, "<form method=get action=\"./options.html\">\n");
+    PR_fprintf(inRequest->mFD, "<form method=get action=\"./options.html\">\n");
 
-    PR_fprintf(globals.mRequest.mFD, "Maximum number of items to display in a list?<br>\n");
-    PR_fprintf(globals.mRequest.mFD, "This option exists to control how much information you are willing to accept.<p>\n");
-    PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mListItemMax\" value=\"%u\"><br>\n", globals.mOptions.mListItemMax);
-    PR_fprintf(globals.mRequest.mFD, "<hr>\n");
+    PR_fprintf(inRequest->mFD, "Maximum number of items to display in a list?<br>\n");
+    PR_fprintf(inRequest->mFD, "This option exists to control how much information you are willing to accept.<p>\n");
+    PR_fprintf(inRequest->mFD, "<input type=text name=\"mListItemMax\" value=\"%u\"><br>\n", globals.mOptions.mListItemMax);
+    PR_fprintf(inRequest->mFD, "<hr>\n");
 
-    PR_fprintf(globals.mRequest.mFD, "This option controls the sort order of the lists presented.<br>\n");
-    PR_fprintf(globals.mRequest.mFD, "There are several choices:<br>\n");
-    PR_fprintf(globals.mRequest.mFD, "<ul><li>0 is by weight (byte size * seconds).<li>1 is by byte size.<li>2 is by seconds (lifetime).<li>3 is by allocation object count.<li>4 is by heap operation runtime cost.</ul><p>\n");
-    PR_fprintf(globals.mRequest.mFD, "Desired sort order?<br>\n");
-    PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mOrderBy\" value=\"%u\"><br>\n", globals.mOptions.mOrderBy);
-    PR_fprintf(globals.mRequest.mFD, "<hr>\n");
+    PR_fprintf(inRequest->mFD, "This option controls the sort order of the lists presented.<br>\n");
+    PR_fprintf(inRequest->mFD, "There are several choices:<br>\n");
+    PR_fprintf(inRequest->mFD, "<ul><li>0 is by weight (byte size * seconds).<li>1 is by byte size.<li>2 is by seconds (lifetime).<li>3 is by allocation object count.<li>4 is by heap operation runtime cost.</ul><p>\n");
+    PR_fprintf(inRequest->mFD, "Desired sort order?<br>\n");
+    PR_fprintf(inRequest->mFD, "<input type=text name=\"mOrderBy\" value=\"%u\"><br>\n", globals.mOptions.mOrderBy);
+    PR_fprintf(inRequest->mFD, "<hr>\n");
 
 #if WANT_GRAPHS
-    PR_fprintf(globals.mRequest.mFD, "Modify the seconds for which the graphs cover;<br>\n");
-    PR_fprintf(globals.mRequest.mFD, "meaning that a narrower range will produce a more detailed graph for that timespan.<p>\n");
-    PR_fprintf(globals.mRequest.mFD, "Minimum graph second?<br>\n");
-    PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mGraphTimevalMin\" value=\"%u\"><br>\n", globals.mOptions.mGraphTimevalMin / ST_TIMEVAL_RESOLUTION);
-    PR_fprintf(globals.mRequest.mFD, "Maximum graph second?<br>\n");
-    PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mGraphTimevalMax\" value=\"%u\"><br>\n", globals.mOptions.mGraphTimevalMax / ST_TIMEVAL_RESOLUTION);
-    PR_fprintf(globals.mRequest.mFD, "<hr>\n");
+    PR_fprintf(inRequest->mFD, "Modify the seconds for which the graphs cover;<br>\n");
+    PR_fprintf(inRequest->mFD, "meaning that a narrower range will produce a more detailed graph for that timespan.<p>\n");
+    PR_fprintf(inRequest->mFD, "Minimum graph second?<br>\n");
+    PR_fprintf(inRequest->mFD, "<input type=text name=\"mGraphTimevalMin\" value=\"%u\"><br>\n", globals.mOptions.mGraphTimevalMin / ST_TIMEVAL_RESOLUTION);
+    PR_fprintf(inRequest->mFD, "Maximum graph second?<br>\n");
+    PR_fprintf(inRequest->mFD, "<input type=text name=\"mGraphTimevalMax\" value=\"%u\"><br>\n", globals.mOptions.mGraphTimevalMax / ST_TIMEVAL_RESOLUTION);
+    PR_fprintf(inRequest->mFD, "<hr>\n");
 #endif /* WANT_GRAPHS */
 
-    PR_fprintf(globals.mRequest.mFD, "Modify the secondss to target allocations created during a particular timespan;<br>\n");
-    PR_fprintf(globals.mRequest.mFD, "meaning that the allocations created only within the timespan are of interest.<p>\n");
-    PR_fprintf(globals.mRequest.mFD, "Minimum allocation second?<br>\n");
-    PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mAllocationTimevalMin\" value=\"%u\"><br>\n", globals.mOptions.mAllocationTimevalMin / ST_TIMEVAL_RESOLUTION);
-    PR_fprintf(globals.mRequest.mFD, "Maximum allocation second?<br>\n");
-    PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mAllocationTimevalMax\" value=\"%u\"><br>\n", globals.mOptions.mAllocationTimevalMax / ST_TIMEVAL_RESOLUTION);
-    PR_fprintf(globals.mRequest.mFD, "<hr>\n");
+    PR_fprintf(inRequest->mFD, "Modify the secondss to target allocations created during a particular timespan;<br>\n");
+    PR_fprintf(inRequest->mFD, "meaning that the allocations created only within the timespan are of interest.<p>\n");
+    PR_fprintf(inRequest->mFD, "Minimum allocation second?<br>\n");
+    PR_fprintf(inRequest->mFD, "<input type=text name=\"mAllocationTimevalMin\" value=\"%u\"><br>\n", globals.mOptions.mAllocationTimevalMin / ST_TIMEVAL_RESOLUTION);
+    PR_fprintf(inRequest->mFD, "Maximum allocation second?<br>\n");
+    PR_fprintf(inRequest->mFD, "<input type=text name=\"mAllocationTimevalMax\" value=\"%u\"><br>\n", globals.mOptions.mAllocationTimevalMax / ST_TIMEVAL_RESOLUTION);
+    PR_fprintf(inRequest->mFD, "<hr>\n");
 
-    PR_fprintf(globals.mRequest.mFD, "Modify the byte sizes to target allocations of a particular byte size.<p>\n");
-    PR_fprintf(globals.mRequest.mFD, "Minimum byte size?<br>\n");
-    PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mSizeMin\" value=\"%u\"><br>\n", globals.mOptions.mSizeMin);
-    PR_fprintf(globals.mRequest.mFD, "Maximum byte size?<br>\n");
-    PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mSizeMax\" value=\"%u\"><br>\n", globals.mOptions.mSizeMax);
-    PR_fprintf(globals.mRequest.mFD, "<hr>\n");
+    PR_fprintf(inRequest->mFD, "Modify the byte sizes to target allocations of a particular byte size.<p>\n");
+    PR_fprintf(inRequest->mFD, "Minimum byte size?<br>\n");
+    PR_fprintf(inRequest->mFD, "<input type=text name=\"mSizeMin\" value=\"%u\"><br>\n", globals.mOptions.mSizeMin);
+    PR_fprintf(inRequest->mFD, "Maximum byte size?<br>\n");
+    PR_fprintf(inRequest->mFD, "<input type=text name=\"mSizeMax\" value=\"%u\"><br>\n", globals.mOptions.mSizeMax);
+    PR_fprintf(inRequest->mFD, "<hr>\n");
 
-    PR_fprintf(globals.mRequest.mFD, "Modify the alignment boundry and heap overhead of allocations to see the actual impact an allocation has on a heap;<br>\n");
-    PR_fprintf(globals.mRequest.mFD, "meaning that normally an allocation of 1 bytes actually costs more bytes depending on your heap implementation.<br>\n");
-    PR_fprintf(globals.mRequest.mFD, "Overhead is taken into account after allocation alignment.<br>\n");
-    PR_fprintf(globals.mRequest.mFD, "i.e. the msvcrt malloc has an alignment of 16 with an overhead of 8 (1 byte allocation costs 24 heap bytes), the win32 HeapAlloc has an alignment of 8 with an overhead of 8 (1 byte allocation costs 16 heap bytes).<p>\n");
-    PR_fprintf(globals.mRequest.mFD, "Align by?<br>\n");
-    PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mAlignBy\" value=\"%u\"><br>\n", globals.mOptions.mAlignBy);
-    PR_fprintf(globals.mRequest.mFD, "Overhead?<br>\n");
-    PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mOverhead\" value=\"%u\"><br>\n", globals.mOptions.mOverhead);
-    PR_fprintf(globals.mRequest.mFD, "<hr>\n");
+    PR_fprintf(inRequest->mFD, "Modify the alignment boundry and heap overhead of allocations to see the actual impact an allocation has on a heap;<br>\n");
+    PR_fprintf(inRequest->mFD, "meaning that normally an allocation of 1 bytes actually costs more bytes depending on your heap implementation.<br>\n");
+    PR_fprintf(inRequest->mFD, "Overhead is taken into account after allocation alignment.<br>\n");
+    PR_fprintf(inRequest->mFD, "i.e. the msvcrt malloc has an alignment of 16 with an overhead of 8 (1 byte allocation costs 24 heap bytes), the win32 HeapAlloc has an alignment of 8 with an overhead of 8 (1 byte allocation costs 16 heap bytes).<p>\n");
+    PR_fprintf(inRequest->mFD, "Align by?<br>\n");
+    PR_fprintf(inRequest->mFD, "<input type=text name=\"mAlignBy\" value=\"%u\"><br>\n", globals.mOptions.mAlignBy);
+    PR_fprintf(inRequest->mFD, "Overhead?<br>\n");
+    PR_fprintf(inRequest->mFD, "<input type=text name=\"mOverhead\" value=\"%u\"><br>\n", globals.mOptions.mOverhead);
+    PR_fprintf(inRequest->mFD, "<hr>\n");
 
-    PR_fprintf(globals.mRequest.mFD, "Modify the seconds to target allocations of a particular lifespan/duration;<br>\n");
-    PR_fprintf(globals.mRequest.mFD, "meaning that the allocations existed at least or at most the specified span of time.<p>\n");
-    PR_fprintf(globals.mRequest.mFD, "Minimum lifetime?<br>\n");
-    PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mLifetimeMin\" value=\"%u\"><br>\n", globals.mOptions.mLifetimeMin / ST_TIMEVAL_RESOLUTION);
-    PR_fprintf(globals.mRequest.mFD, "Maximum lifetime?<br>\n");
-    PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mLifetimeMax\" value=\"%u\"><br>\n", globals.mOptions.mLifetimeMax / ST_TIMEVAL_RESOLUTION);
-    PR_fprintf(globals.mRequest.mFD, "<hr>\n");
+    PR_fprintf(inRequest->mFD, "Modify the seconds to target allocations of a particular lifespan/duration;<br>\n");
+    PR_fprintf(inRequest->mFD, "meaning that the allocations existed at least or at most the specified span of time.<p>\n");
+    PR_fprintf(inRequest->mFD, "Minimum lifetime?<br>\n");
+    PR_fprintf(inRequest->mFD, "<input type=text name=\"mLifetimeMin\" value=\"%u\"><br>\n", globals.mOptions.mLifetimeMin / ST_TIMEVAL_RESOLUTION);
+    PR_fprintf(inRequest->mFD, "Maximum lifetime?<br>\n");
+    PR_fprintf(inRequest->mFD, "<input type=text name=\"mLifetimeMax\" value=\"%u\"><br>\n", globals.mOptions.mLifetimeMax / ST_TIMEVAL_RESOLUTION);
+    PR_fprintf(inRequest->mFD, "<hr>\n");
 
-    PR_fprintf(globals.mRequest.mFD, "Modify the numbers to target allocations of particular weights;<br>\n");
-    PR_fprintf(globals.mRequest.mFD, "the weight of an allocation is the byte size multiplied by the lifespan.<p>\n");
-    PR_fprintf(globals.mRequest.mFD, "Minimum weight?<br>\n");
-    PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mWeightMin\" value=\"%llu\"><br>\n", globals.mOptions.mWeightMin64);
-    PR_fprintf(globals.mRequest.mFD, "Maximum weight?<br>\n");
-    PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mWeightMax\" value=\"%llu\"><br>\n", globals.mOptions.mWeightMax64);
-    PR_fprintf(globals.mRequest.mFD, "<hr>\n");
+    PR_fprintf(inRequest->mFD, "Modify the numbers to target allocations of particular weights;<br>\n");
+    PR_fprintf(inRequest->mFD, "the weight of an allocation is the byte size multiplied by the lifespan.<p>\n");
+    PR_fprintf(inRequest->mFD, "Minimum weight?<br>\n");
+    PR_fprintf(inRequest->mFD, "<input type=text name=\"mWeightMin\" value=\"%llu\"><br>\n", globals.mOptions.mWeightMin64);
+    PR_fprintf(inRequest->mFD, "Maximum weight?<br>\n");
+    PR_fprintf(inRequest->mFD, "<input type=text name=\"mWeightMax\" value=\"%llu\"><br>\n", globals.mOptions.mWeightMax64);
+    PR_fprintf(inRequest->mFD, "<hr>\n");
 
-    PR_fprintf(globals.mRequest.mFD, "By manipulating the time range, you narrow or widen the set of live allocations evaluated.  Allocations existing solely before the minimum or solely after the maximum will not be considered.<p>\n");
-    PR_fprintf(globals.mRequest.mFD, "Minimum second?<br>\n");
-    PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mTimevalMin\" value=\"%u\"><br>\n", globals.mOptions.mTimevalMin / ST_TIMEVAL_RESOLUTION);
-    PR_fprintf(globals.mRequest.mFD, "Maximum timeval?<br>\n");
-    PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mTimevalMax\" value=\"%u\"><br>\n", globals.mOptions.mTimevalMax / ST_TIMEVAL_RESOLUTION);
-    PR_fprintf(globals.mRequest.mFD, "<hr>\n");
+    PR_fprintf(inRequest->mFD, "By manipulating the time range, you narrow or widen the set of live allocations evaluated.  Allocations existing solely before the minimum or solely after the maximum will not be considered.<p>\n");
+    PR_fprintf(inRequest->mFD, "Minimum second?<br>\n");
+    PR_fprintf(inRequest->mFD, "<input type=text name=\"mTimevalMin\" value=\"%u\"><br>\n", globals.mOptions.mTimevalMin / ST_TIMEVAL_RESOLUTION);
+    PR_fprintf(inRequest->mFD, "Maximum timeval?<br>\n");
+    PR_fprintf(inRequest->mFD, "<input type=text name=\"mTimevalMax\" value=\"%u\"><br>\n", globals.mOptions.mTimevalMax / ST_TIMEVAL_RESOLUTION);
+    PR_fprintf(inRequest->mFD, "<hr>\n");
 
-    PR_fprintf(globals.mRequest.mFD, "Restrict callsite backtraces to thost only containing the specified text.\n");
-    PR_fprintf(globals.mRequest.mFD, "This allows targeting of specific creation functions.\n");
-    PR_fprintf(globals.mRequest.mFD, "Keep all the strings together near the top of this list, as the code will stop trying to match on the first empty string.<br>\n");
+    PR_fprintf(inRequest->mFD, "Restrict callsite backtraces to thost only containing the specified text.\n");
+    PR_fprintf(inRequest->mFD, "This allows targeting of specific creation functions.\n");
+    PR_fprintf(inRequest->mFD, "Keep all the strings together near the top of this list, as the code will stop trying to match on the first empty string.<br>\n");
     for(looper = 0; ST_SUBSTRING_MATCH_MAX > looper; looper++)
     {
-        PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mRestrictText%d\" value=\"%s\"><br>\n", looper, NULL == globals.mOptions.mRestrictText[looper] ? "" : globals.mOptions.mRestrictText[looper]);
+        PR_fprintf(inRequest->mFD, "<input type=text name=\"mRestrictText%d\" value=\"%s\"><br>\n", looper, NULL == globals.mOptions.mRestrictText[looper] ? "" : globals.mOptions.mRestrictText[looper]);
     }
-    PR_fprintf(globals.mRequest.mFD, "<hr>\n");
+    PR_fprintf(inRequest->mFD, "<hr>\n");
 
     /*
     ** category selection
     */
-    PR_fprintf(globals.mRequest.mFD, "By giving a category name, you can focus on allocations belonging to that particular category only like css, js, xpcom. Until we have a flashy new ui to browse categories, use a category name in <a href=http://lxr.mozilla.org/mozilla/source/tools/trace-malloc/rules.txt>rules.txt</a><p>\n");
-    PR_fprintf(globals.mRequest.mFD, "Category to Focus on?<br>\n");
-    PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mCategoryName\" value=\"%s\"><br>\n", globals.mOptions.mCategoryName);
-    PR_fprintf(globals.mRequest.mFD, "<hr>\n");
+    PR_fprintf(inRequest->mFD, "By giving a category name, you can focus on allocations belonging to that particular category only like css, js, xpcom. Until we have a flashy new ui to browse categories, use a category name in <a href=http://lxr.mozilla.org/mozilla/source/tools/trace-malloc/rules.txt>rules.txt</a><p>\n");
+    PR_fprintf(inRequest->mFD, "Category to Focus on?<br>\n");
+    PR_fprintf(inRequest->mFD, "<input type=text name=\"mCategoryName\" value=\"%s\"><br>\n", globals.mOptions.mCategoryName);
+    PR_fprintf(inRequest->mFD, "<hr>\n");
 
     /*
     ** And last but not least, the submission button.
     */
-    PR_fprintf(globals.mRequest.mFD, "<input type=submit value=\"Submit Changes\"><input type=reset value=\"Obligatory Reset Button\"><br>\n");
+    PR_fprintf(inRequest->mFD, "<input type=submit value=\"Submit Changes\"><input type=reset value=\"Obligatory Reset Button\"><br>\n");
 
-    PR_fprintf(globals.mRequest.mFD, "</form>\n");
+    PR_fprintf(inRequest->mFD, "</form>\n");
 
     return retval;
 }
@@ -5365,51 +5352,51 @@ int displaySettings(void)
 ** Present a list of the reports you can drill down into.
 ** Returns !0 on failure.
 */
-int displayIndex(void)
+int displayIndex(STRequest* inRequest)
 {
     int retval = 0;
 
     /*
     ** Present reports in a list format.
     */
-    PR_fprintf(globals.mRequest.mFD, "<ul>");
+    PR_fprintf(inRequest->mFD, "<ul>");
     
-    PR_fprintf(globals.mRequest.mFD, "\n<li>");
-    htmlAnchor("root_callsites.html", "Root Callsites", NULL);
+    PR_fprintf(inRequest->mFD, "\n<li>");
+    htmlAnchor(inRequest, "root_callsites.html", "Root Callsites", NULL);
     
-    PR_fprintf(globals.mRequest.mFD, "\n<li>");
-    htmlAnchor("categories_summary.html", "Categories Report", NULL);
+    PR_fprintf(inRequest->mFD, "\n<li>");
+    htmlAnchor(inRequest, "categories_summary.html", "Categories Report", NULL);
 
-    PR_fprintf(globals.mRequest.mFD, "\n<li>");
-    htmlAnchor("top_callsites.html", "Top Callsites Report", NULL);
+    PR_fprintf(inRequest->mFD, "\n<li>");
+    htmlAnchor(inRequest, "top_callsites.html", "Top Callsites Report", NULL);
     
-    PR_fprintf(globals.mRequest.mFD, "\n<li>");
-    htmlAnchor("top_allocations.html", "Top Allocations Report", NULL);
+    PR_fprintf(inRequest->mFD, "\n<li>");
+    htmlAnchor(inRequest, "top_allocations.html", "Top Allocations Report", NULL);
     
-    PR_fprintf(globals.mRequest.mFD, "\n<li>");
-    htmlAnchor("memory_leaks.html", "Memory Leak Report", NULL);
+    PR_fprintf(inRequest->mFD, "\n<li>");
+    htmlAnchor(inRequest, "memory_leaks.html", "Memory Leak Report", NULL);
 
 #if WANT_GRAPHS    
-    PR_fprintf(globals.mRequest.mFD, "\n<li>Graphs");
+    PR_fprintf(inRequest->mFD, "\n<li>Graphs");
     
-    PR_fprintf(globals.mRequest.mFD, "<ul>");
+    PR_fprintf(inRequest->mFD, "<ul>");
     
-    PR_fprintf(globals.mRequest.mFD, "\n<li>");
-    htmlAnchor("footprint_graph.html", "Footprint", NULL);
+    PR_fprintf(inRequest->mFD, "\n<li>");
+    htmlAnchor(inRequest, "footprint_graph.html", "Footprint", NULL);
     
-    PR_fprintf(globals.mRequest.mFD, "\n<li>");
-    htmlAnchor("lifespan_graph.html", "Allocation Lifespans", NULL);
+    PR_fprintf(inRequest->mFD, "\n<li>");
+    htmlAnchor(inRequest, "lifespan_graph.html", "Allocation Lifespans", NULL);
     
-    PR_fprintf(globals.mRequest.mFD, "\n<li>");
-    htmlAnchor("times_graph.html", "Allocation Times", NULL);
+    PR_fprintf(inRequest->mFD, "\n<li>");
+    htmlAnchor(inRequest, "times_graph.html", "Allocation Times", NULL);
     
-    PR_fprintf(globals.mRequest.mFD, "\n<li>");
-    htmlAnchor("weight_graph.html", "Allocation Weights", NULL);
+    PR_fprintf(inRequest->mFD, "\n<li>");
+    htmlAnchor(inRequest, "weight_graph.html", "Allocation Weights", NULL);
     
-    PR_fprintf(globals.mRequest.mFD, "\n</ul>\n");
+    PR_fprintf(inRequest->mFD, "\n</ul>\n");
 #endif /* WANT_GRAPHS */
     
-    PR_fprintf(globals.mRequest.mFD, "\n</ul>\n");
+    PR_fprintf(inRequest->mFD, "\n</ul>\n");
     
     return retval;
 }
@@ -5428,13 +5415,16 @@ int handleRequest(tmreader* aTMR, PRFileDesc* aFD, const char* aFileName, const 
 
     if(NULL != aTMR && NULL != aFD && NULL != aFileName && '\0' != *aFileName)
     {
+        STRequest request;
+
         /*
-        ** Init the global request.
+        ** Init the request.
         */
-        globals.mRequest.mFD = aFD;
-        globals.mRequest.mTMR = aTMR;
-        globals.mRequest.mFileName = aFileName;
-        globals.mRequest.mGetData = aGetData;
+        memset(&request, 0, sizeof(request));
+
+        request.mFD = aFD;
+        request.mFileName = aFileName;
+        request.mGetData = aGetData;
 
         /*
         ** Attempt to find the file of interest.
@@ -5443,44 +5433,44 @@ int handleRequest(tmreader* aTMR, PRFileDesc* aFD, const char* aFileName, const 
         {
             int displayRes = 0;
 
-            htmlHeader("SpaceTrace Index");
+            htmlHeader(&request, "SpaceTrace Index");
 
-            displayRes = displayIndex();
+            displayRes = displayIndex(&request);
             if(0 != displayRes)
             {
                 retval = __LINE__;
                 REPORT_ERROR(__LINE__, displayIndex);
             }
 
-            htmlFooter();
+            htmlFooter(&request);
         }
         else if(0 == strcmp("settings.html", aFileName) || 0 == strcmp("options.html", aFileName))
         {
             int settingsRes = 0;
 
-            settingsRes = displaySettings();
+            settingsRes = displaySettings(&request);
             if(0 != settingsRes)
             {
                 retval = __LINE__;
                 REPORT_ERROR(__LINE__, displaySettings);
             }
 
-            htmlFooter();
+            htmlFooter(&request);
         }
         else if(0 == strcmp("top_allocations.html", aFileName))
         {
             int displayRes = 0;
 
-            htmlHeader("SpaceTrace Top Allocations Report");
+            htmlHeader(&request, "SpaceTrace Top Allocations Report");
 
-            displayRes = displayTopAllocations(globals.mCache.mSortedRun, 1);
+            displayRes = displayTopAllocations(&request, globals.mCache.mSortedRun, 1);
             if(0 != displayRes)
             {
                 retval = __LINE__;
                 REPORT_ERROR(__LINE__, displayTopAllocations);
             }
 
-            htmlFooter();
+            htmlFooter(&request);
         }
         else if(0 == strcmp("top_callsites.html", aFileName))
         {
@@ -5492,10 +5482,10 @@ int handleRequest(tmreader* aTMR, PRFileDesc* aFD, const char* aFileName, const 
             ** We can get an argument to focus on a category. Take care of it.
             */
 
-            if(globals.mRequest.mGetData && *globals.mRequest.mGetData)
+            if(request.mGetData && *request.mGetData)
             {
                 char* categoryName = NULL;
-                int getRes = getDataString(globals.mRequest.mGetData, "mCategory", &categoryName, NULL);
+                int getRes = getDataString(request.mGetData, "mCategory", &categoryName, NULL);
                 STCategoryNode* node;
                 if (categoryName && *categoryName &&
                     strcmp(categoryName, globals.mOptions.mCategoryName) &&
@@ -5517,7 +5507,7 @@ int handleRequest(tmreader* aTMR, PRFileDesc* aFD, const char* aFileName, const 
             ** Display header after we figure out if we are going to focus
             ** on a category.
             */
-            htmlHeader("SpaceTrace Top Callsites Report");
+            htmlHeader(&request, "SpaceTrace Top Callsites Report");
 
             if(0 < globals.mCache.mSortedRun->mAllocationCount)
             {
@@ -5525,7 +5515,7 @@ int handleRequest(tmreader* aTMR, PRFileDesc* aFD, const char* aFileName, const 
 
                 if(0 != arrayCount && NULL != array)
                 {
-                    displayRes = displayTopCallsites(array, arrayCount, 0, 0);
+                    displayRes = displayTopCallsites(&request, array, arrayCount, 0, 0);
                     if(0 != displayRes)
                     {
                         retval = __LINE__;
@@ -5545,22 +5535,22 @@ int handleRequest(tmreader* aTMR, PRFileDesc* aFD, const char* aFileName, const 
                 REPORT_ERROR(__LINE__, handleRequest);
             }
 
-            htmlFooter();
+            htmlFooter(&request);
         }
         else if(0 == strcmp("memory_leaks.html", aFileName))
         {
             int displayRes = 0;
 
-            htmlHeader("SpaceTrace Memory Leaks Report");
+            htmlHeader(&request, "SpaceTrace Memory Leaks Report");
 
-            displayRes = displayMemoryLeaks(globals.mCache.mSortedRun);
+            displayRes = displayMemoryLeaks(&request, globals.mCache.mSortedRun);
             if(0 != displayRes)
             {
                 retval = __LINE__;
                 REPORT_ERROR(__LINE__, displayMemoryLeaks);
             }
 
-            htmlFooter();
+            htmlFooter(&request);
         }
         else if(0 == strncmp("allocation_", aFileName, 11))
         {
@@ -5581,20 +5571,20 @@ int handleRequest(tmreader* aTMR, PRFileDesc* aFD, const char* aFileName, const 
                 int displayRes = 0;
 
                 PR_snprintf(buffer, sizeof(buffer), "SpaceTrace Allocation %u Details Report", allocationIndex);
-                htmlHeader(buffer);
+                htmlHeader(&request, buffer);
 
-                displayRes = displayAllocationDetails(allocation);
+                displayRes = displayAllocationDetails(&request, allocation);
                 if(0 != displayRes)
                 {
                     retval = __LINE__;
                     REPORT_ERROR(__LINE__, displayAllocationDetails);
                 }
 
-                htmlFooter();
+                htmlFooter(&request);
             }
             else
             {
-                htmlNotFound();
+                htmlNotFound(&request);
             }
         }
         else if(0 == strncmp("callsite_", aFileName, 9))
@@ -5616,49 +5606,49 @@ int handleRequest(tmreader* aTMR, PRFileDesc* aFD, const char* aFileName, const 
                 int displayRes = 0;
 
                 PR_snprintf(buffer, sizeof(buffer), "SpaceTrace Callsite %u Details Report", callsiteSerial);
-                htmlHeader(buffer);
+                htmlHeader(&request, buffer);
 
-                displayRes = displayCallsiteDetails(resolved);
+                displayRes = displayCallsiteDetails(&request, resolved);
                 if(0 != displayRes)
                 {
                     retval = __LINE__;
                     REPORT_ERROR(__LINE__, displayAllocationDetails);
                 }
 
-                htmlFooter();
+                htmlFooter(&request);
             }
             else
             {
-                htmlNotFound();
+                htmlNotFound(&request);
             }
         }
         else if(0 == strcmp("root_callsites.html", aFileName))
         {
             int displayRes = 0;
 
-            htmlHeader("SpaceTrace Root Callsites");
+            htmlHeader(&request, "SpaceTrace Root Callsites");
             
-            displayRes = displayCallsites(aTMR->calltree_root.kids, ST_FOLLOW_SIBLINGS, 0, __LINE__);
+            displayRes = displayCallsites(&request, aTMR->calltree_root.kids, ST_FOLLOW_SIBLINGS, 0, __LINE__);
             if(0 != displayRes)
             {
                 retval = __LINE__;
                 REPORT_ERROR(__LINE__, displayCallsites);
             }
 
-            htmlFooter();
+            htmlFooter(&request);
         }
 #if WANT_GRAPHS
         else if(0 == strcmp("footprint_graph.html", aFileName))
         {
             int displayRes = 0;
 
-            htmlHeader("SpaceTrace Memory Footprint Report");
+            htmlHeader(&request, "SpaceTrace Memory Footprint Report");
             
-            PR_fprintf(globals.mRequest.mFD, "<div align=center>\n");
-            PR_fprintf(globals.mRequest.mFD, "<img src=\"./footprint.png\">\n");
-            PR_fprintf(globals.mRequest.mFD, "</div>\n");
+            PR_fprintf(request.mFD, "<div align=center>\n");
+            PR_fprintf(request.mFD, "<img src=\"./footprint.png\">\n");
+            PR_fprintf(request.mFD, "</div>\n");
 
-            htmlFooter();
+            htmlFooter(&request);
         }
 #endif /* WANT_GRAPHS */
 #if WANT_GRAPHS
@@ -5666,13 +5656,13 @@ int handleRequest(tmreader* aTMR, PRFileDesc* aFD, const char* aFileName, const 
         {
             int displayRes = 0;
 
-            htmlHeader("SpaceTrace Allocation Times Report");
+            htmlHeader(&request, "SpaceTrace Allocation Times Report");
             
-            PR_fprintf(globals.mRequest.mFD, "<div align=center>\n");
-            PR_fprintf(globals.mRequest.mFD, "<img src=\"./times.png\">\n");
-            PR_fprintf(globals.mRequest.mFD, "</div>\n");
+            PR_fprintf(request.mFD, "<div align=center>\n");
+            PR_fprintf(request.mFD, "<img src=\"./times.png\">\n");
+            PR_fprintf(request.mFD, "</div>\n");
 
-            htmlFooter();
+            htmlFooter(&request);
         }
 #endif /* WANT_GRAPHS */
 #if WANT_GRAPHS
@@ -5680,13 +5670,13 @@ int handleRequest(tmreader* aTMR, PRFileDesc* aFD, const char* aFileName, const 
         {
             int displayRes = 0;
 
-            htmlHeader("SpaceTrace Allocation Lifespans Report");
+            htmlHeader(&request, "SpaceTrace Allocation Lifespans Report");
             
-            PR_fprintf(globals.mRequest.mFD, "<div align=center>\n");
-            PR_fprintf(globals.mRequest.mFD, "<img src=\"./lifespan.png\">\n");
-            PR_fprintf(globals.mRequest.mFD, "</div>\n");
+            PR_fprintf(request.mFD, "<div align=center>\n");
+            PR_fprintf(request.mFD, "<img src=\"./lifespan.png\">\n");
+            PR_fprintf(request.mFD, "</div>\n");
 
-            htmlFooter();
+            htmlFooter(&request);
         }
 #endif /* WANT_GRAPHS */
 #if WANT_GRAPHS
@@ -5694,13 +5684,13 @@ int handleRequest(tmreader* aTMR, PRFileDesc* aFD, const char* aFileName, const 
         {
             int displayRes = 0;
 
-            htmlHeader("SpaceTrace Allocation Weights Report");
+            htmlHeader(&request, "SpaceTrace Allocation Weights Report");
             
-            PR_fprintf(globals.mRequest.mFD, "<div align=center>\n");
-            PR_fprintf(globals.mRequest.mFD, "<img src=\"./weight.png\">\n");
-            PR_fprintf(globals.mRequest.mFD, "</div>\n");
+            PR_fprintf(request.mFD, "<div align=center>\n");
+            PR_fprintf(request.mFD, "<img src=\"./weight.png\">\n");
+            PR_fprintf(request.mFD, "</div>\n");
 
-            htmlFooter();
+            htmlFooter(&request);
         }
 #endif /* WANT_GRAPHS */
 #if WANT_GRAPHS
@@ -5708,7 +5698,7 @@ int handleRequest(tmreader* aTMR, PRFileDesc* aFD, const char* aFileName, const 
         {
             int graphRes = 0;
 
-            graphRes = graphFootprint(globals.mCache.mSortedRun);
+            graphRes = graphFootprint(&request, globals.mCache.mSortedRun);
             if(0 != graphRes)
             {
                 retval = __LINE__;
@@ -5721,7 +5711,7 @@ int handleRequest(tmreader* aTMR, PRFileDesc* aFD, const char* aFileName, const 
         {
             int graphRes = 0;
 
-            graphRes = graphTimeval(globals.mCache.mSortedRun);
+            graphRes = graphTimeval(&request, globals.mCache.mSortedRun);
             if(0 != graphRes)
             {
                 retval = __LINE__;
@@ -5734,7 +5724,7 @@ int handleRequest(tmreader* aTMR, PRFileDesc* aFD, const char* aFileName, const 
         {
             int graphRes = 0;
 
-            graphRes = graphLifespan(globals.mCache.mSortedRun);
+            graphRes = graphLifespan(&request, globals.mCache.mSortedRun);
             if(0 != graphRes)
             {
                 retval = __LINE__;
@@ -5747,7 +5737,7 @@ int handleRequest(tmreader* aTMR, PRFileDesc* aFD, const char* aFileName, const 
         {
             int graphRes = 0;
 
-            graphRes = graphWeight(globals.mCache.mSortedRun);
+            graphRes = graphWeight(&request, globals.mCache.mSortedRun);
             if(0 != graphRes)
             {
                 retval = __LINE__;
@@ -5755,43 +5745,25 @@ int handleRequest(tmreader* aTMR, PRFileDesc* aFD, const char* aFileName, const 
             }
         }
 #endif /* WANT_GRAPHS */
-#if WANT_QUIT
-        else if(0 == strcmp("quit.html", aFileName) || 0 == strcmp("exit.html", aFileName))
-        {
-            /*
-            ** Request to quit the server.
-            */
-            globals.mStopHttpd = __LINE__;
-
-            htmlHeader("SpaceTrace Goodbye");
-            PR_fprintf(globals.mRequest.mFD, "The server is exiting.\n");
-            htmlFooter();
-        }
-#endif /* WANT_QUIT */
         else if(0 == strcmp("categories_summary.html", aFileName))
         {
             int displayRes = 0;
 
-            htmlHeader("Category Report");
+            htmlHeader(&request, "Category Report");
 
-            displayRes = displayCategoryReport(&globals.mCategoryRoot, 1);
+            displayRes = displayCategoryReport(&request, &globals.mCategoryRoot, 1);
             if(0 != displayRes)
             {
                 retval = __LINE__;
                 REPORT_ERROR(__LINE__, displayMemoryLeaks);
             }
 
-            htmlFooter();
+            htmlFooter(&request);
         }
         else
         {
-            htmlNotFound();
+            htmlNotFound(&request);
         }
-
-        /*
-        ** Clear out global request.
-        */
-        memset(&globals.mRequest, 0, sizeof(globals.mRequest));
     }
     else
     {
@@ -6031,7 +6003,7 @@ int serverMode(void)
                 **      itself and PR_Cleanup will wait on them all to exit as
                 **      user threads so our shared data is valid.
                 */
-                while(0 == globals.mStopHttpd && 0 == retval)
+                while(0 == retval)
                 {
                     connection = PR_Accept(socket, NULL, PR_INTERVAL_NO_TIMEOUT);
                     if(NULL != connection)
@@ -6317,10 +6289,9 @@ int main(int aArgCount, char** aArgArray)
     int looper = 0;
 
     /*
-    ** Set the minimum timeval really high so other code
-    **  that checks the timeval will get it right.
+    ** NSPR init.
     */
-    globals.mMinTimeval = ST_TIMEVAL_MAX;
+    PR_Init(PR_USER_THREAD, PR_PRIORITY_NORMAL, 0);
 
     /*
     ** Initialize globals
@@ -6328,9 +6299,10 @@ int main(int aArgCount, char** aArgArray)
     memset(&globals, 0, sizeof(globals));
 
     /*
-    ** NSPR init.
+    ** Set the minimum timeval really high so other code
+    **  that checks the timeval will get it right.
     */
-    PR_Init(PR_USER_THREAD, PR_PRIORITY_NORMAL, 0);
+    globals.mMinTimeval = ST_TIMEVAL_MAX;
 
     /*
     ** Handle initializing options.

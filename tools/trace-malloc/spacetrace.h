@@ -495,6 +495,19 @@ typedef struct __struct_STOptions
 } STOptions;
 
 /*
+**  STRequestOptions
+**
+**  These options are likely to change on a per request/client basis.
+**  Careful on adding too many options here, this struct also hashes
+**      our content cache and more options means fewer cache hits.
+*/
+typedef struct __struct_STRequestOptions
+{
+    int nothing;
+}
+STRequestOptions;
+
+/*
 ** STRequest
 **
 ** Things specific to a request.
@@ -507,11 +520,6 @@ typedef struct __struct_STRequest
         PRFileDesc* mFD;
 
         /*
-        ** The tmreader, should we need some data from it.
-        */
-        tmreader* mTMR;
-
-        /*
         ** The filename requested.
         */
         const char* mFileName;
@@ -520,6 +528,11 @@ typedef struct __struct_STRequest
         ** The GET form data, if any.
         */
         const char* mGetData;
+
+        /*
+        **  Options specific to this request.
+        */
+        STRequestOptions mOptions;
 } STRequest;
 
 /*
@@ -584,11 +597,6 @@ typedef struct __struct_STGlobals
         STCache mCache;
 
         /*
-        ** What the current request is.
-        */
-        STRequest mRequest;
-
-        /*
         ** Various counters for different types of events.
         */
         PRUint32 mMallocCount;
@@ -613,12 +621,6 @@ typedef struct __struct_STGlobals
         */
         PRUint32 mMinTimeval;
         PRUint32 mMaxTimeval;
-
-        /*
-        ** Set to non-zero when the httpd server should stop accepting
-        **  connections.
-        */
-        int mStopHttpd;
 
         /*
         ** Calculates peak allocation overall for all allocations.
@@ -661,12 +663,12 @@ extern int initCategories(STGlobals* g);
 extern int categorizeRun(const STRun* aRun, STGlobals* g);
 extern STCategoryNode* findCategoryNode(const char *catName, STGlobals *g);
 extern int freeCategories(STGlobals* g);
-extern int displayCategoryReport(STCategoryNode *root, int depth);
+extern int displayCategoryReport(STRequest* inRequest, STCategoryNode *root, int depth);
 
 extern int recalculateAllocationCost(STRun* aRun, STAllocation* aAllocation, PRBool updateParent);
-extern void htmlHeader(const char* aTitle);
-extern void htmlFooter(void);
-extern void htmlAnchor(const char* aHref, const char* aText, const char* aTarget);
+extern void htmlHeader(STRequest* inRequest, const char* aTitle);
+extern void htmlFooter(STRequest* inRequest);
+extern void htmlAnchor(STRequest* inRequest, const char* aHref, const char* aText, const char* aTarget);
 extern char *FormatNumber(PRInt32 num);
 
 /*
