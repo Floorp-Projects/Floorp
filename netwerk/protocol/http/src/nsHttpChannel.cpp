@@ -753,6 +753,8 @@ nsHttpChannel::GetCallback(const nsIID &aIID, void **aResult)
 {
     nsresult rv;
     NS_ASSERTION(aResult, "Invalid argument in GetCallback!");
+    *aResult = nsnull;
+    NS_ENSURE_TRUE(mCallbacks, NS_ERROR_NOT_INITIALIZED);
     rv = mCallbacks->GetInterface(aIID, aResult);
     if (NS_FAILED(rv)) {
         if (mLoadGroup) {
@@ -762,6 +764,10 @@ nsHttpChannel::GetCallback(const nsIID &aIID, void **aResult)
                 rv = cbs->GetInterface(aIID, aResult);
         }
     }
+
+    // defend against bad nsIInterfaceRequestor implementations.
+    if (NS_SUCCEEDED(rv) && !*aResult)
+        return NS_ERROR_NO_INTERFACE;
 
     return rv;
 }
@@ -786,11 +792,9 @@ nsHttpChannel::PromptTempRedirect()
         nsCOMPtr<nsIPrompt> prompt;
         rv = GetCallback(NS_GET_IID(nsIPrompt), getter_AddRefs(prompt));
         if (NS_FAILED(rv)) return rv;
-        if (prompt) {
-            prompt->Confirm(nsnull, messageString, &repost);
-            if (!repost)
-                return NS_ERROR_FAILURE;
-        }
+        prompt->Confirm(nsnull, messageString, &repost);
+        if (!repost)
+            return NS_ERROR_FAILURE;
     }
 
     return rv;
