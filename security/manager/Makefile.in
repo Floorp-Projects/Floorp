@@ -75,6 +75,7 @@ endif
 	cd $(MOZ_BUILD_ROOT)/security/nss; gmake $(DEFAULT_GMAKE_FLAGS) moz_import
 	cd $(MOZ_BUILD_ROOT)/security/nss/lib; gmake $(DEFAULT_GMAKE_FLAGS)
 	$(INSTALL) -m 755 $(CORECONF_INSTALL)/lib/$(LOADABLE_ROOT_MODULE) $(DIST)/bin
+	$(INSTALL) -m 644 $(CORECONF_INSTALL)/public $(DIST)
 
 clean clobber clobber_all realclean distclean::
 ifeq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))

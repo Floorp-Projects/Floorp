@@ -37,26 +37,7 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-CORE_DEPTH=$(topsrcdir)/security
-
-include $(CORE_DEPTH)/coreconf/arch.mk
-ifeq (,$(filter-out NetBSD,$(OS_TARGET)))
-include $(CORE_DEPTH)/coreconf/$(OS_TARGET).mk
-else
-include $(CORE_DEPTH)/coreconf/$(OS_CONFIG).mk
-endif
-include $(CORE_DEPTH)/coreconf/prefix.mk
-CPU_TAG = _$(CPU_ARCH)
-CORECONF_OBJDIR=$(OBJDIR_NAME)
-
-
 include $(DEPTH)/config/autoconf.mk
-
-ifndef MOZ_DEBUG
-OBJDIR_TAG=_OPT
-endif
-
-CORECONF_DIST=$(DIST)/$(CORECONF_OBJDIR)
 
 MODULE		= pipnss
 LIBRARY_NAME	= pipnss
@@ -81,7 +62,7 @@ REQUIRES = nspr security
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES	+=	\
-		-I$(CORECONF_DIST)/public/security \
+		-I$(DIST)/public/security \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
@@ -89,21 +70,21 @@ EXTRA_DSO_LDOPTS = \
 		$(NULL)
 
 EXTRA_LIBS	+= \
-        $(CORECONF_DIST)/lib/libssl.$(LIB_SUFFIX) \
-        $(CORECONF_DIST)/lib/libnss.$(LIB_SUFFIX) \
-        $(CORECONF_DIST)/lib/libssl.$(LIB_SUFFIX) \
-        $(CORECONF_DIST)/lib/libpkcs7.$(LIB_SUFFIX) \
-        $(CORECONF_DIST)/lib/libcerthi.$(LIB_SUFFIX) \
-        $(CORECONF_DIST)/lib/libpk11wrap.$(LIB_SUFFIX) \
-        $(CORECONF_DIST)/lib/libcryptohi.$(LIB_SUFFIX) \
-        $(CORECONF_DIST)/lib/libcerthi.$(LIB_SUFFIX) \
-        $(CORECONF_DIST)/lib/libpk11wrap.$(LIB_SUFFIX) \
-        $(CORECONF_DIST)/lib/libsoftoken.$(LIB_SUFFIX) \
-        $(CORECONF_DIST)/lib/libcertdb.$(LIB_SUFFIX) \
-        $(CORECONF_DIST)/lib/libswfci.$(LIB_SUFFIX) \
-        $(CORECONF_DIST)/lib/libfreebl.$(LIB_SUFFIX) \
-        $(CORECONF_DIST)/lib/libsecutil.$(LIB_SUFFIX) \
-        $(CORECONF_DIST)/lib/libdbm.$(LIB_SUFFIX) \
+        $(DIST)/lib/libssl.$(LIB_SUFFIX) \
+        $(DIST)/lib/libnss.$(LIB_SUFFIX) \
+        $(DIST)/lib/libssl.$(LIB_SUFFIX) \
+        $(DIST)/lib/libpkcs7.$(LIB_SUFFIX) \
+        $(DIST)/lib/libcerthi.$(LIB_SUFFIX) \
+        $(DIST)/lib/libpk11wrap.$(LIB_SUFFIX) \
+        $(DIST)/lib/libcryptohi.$(LIB_SUFFIX) \
+        $(DIST)/lib/libcerthi.$(LIB_SUFFIX) \
+        $(DIST)/lib/libpk11wrap.$(LIB_SUFFIX) \
+        $(DIST)/lib/libsoftoken.$(LIB_SUFFIX) \
+        $(DIST)/lib/libcertdb.$(LIB_SUFFIX) \
+        $(DIST)/lib/libswfci.$(LIB_SUFFIX) \
+        $(DIST)/lib/libfreebl.$(LIB_SUFFIX) \
+        $(DIST)/lib/libsecutil.$(LIB_SUFFIX) \
+        $(DIST)/lib/libdbm.$(LIB_SUFFIX) \
         $(NULL)
 
 OUR_CC = $(shell which $(CCC))
