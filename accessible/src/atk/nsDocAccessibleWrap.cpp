@@ -398,6 +398,20 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
         rv = NS_OK;
         break;
 
+    case nsIAccessibleEvent::EVENT_ATK_WINDOW_ACTIVATE:
+        MAI_LOG_DEBUG(("\n\nReceived: EVENT_ATK_WINDOW_ACTIVATED\n"));
+        g_signal_emit(accWrap->GetAtkObject(),
+                      g_signal_lookup ("activate", MAI_TYPE_ATK_OBJECT), 0);
+        rv = NS_OK;
+        break;
+
+    case nsIAccessibleEvent::EVENT_ATK_WINDOW_DEACTIVATE:
+        MAI_LOG_DEBUG(("\n\nReceived: EVENT_ATK_WINDOW_DEACTIVATED\n"));
+        g_signal_emit(accWrap->GetAtkObject(),
+                      g_signal_lookup ("deactivate", MAI_TYPE_ATK_OBJECT), 0);
+        rv = NS_OK;
+        break;
+
     default:
         // Don't transfer others
         MAI_LOG_DEBUG(("\n\nReceived an unknown event=0x%u\n", aEvent));

@@ -417,6 +417,8 @@ interface nsIAccessible : nsISupports
   enum { ROLE_SPLITBUTTON = 42U }; // ATK_ROLE_PUSH_BUTTON
   enum { ROLE_IPADDRESS = 66U };   // ATK_ROLE_UNKNOWN
   enum { ROLE_NOTHING = 0U };      // ATK_ROLE_INVALID
+  // Represent top level window
+  enum { ROLE_FRAME = 22U };               // ATK_ROLE_FRAME
 
 #else
 // MSAA Roles - only one per nsIAccessible or IAccessible
