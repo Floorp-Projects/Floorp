@@ -42,14 +42,15 @@
 #include "nsCOMPtr.h"
 #include "nspr.h"
 
-// #if defined(DEBUG_rginda_l)
-// #   define DEBUG_verbose
-// #endif
+#if defined(DEBUG_rginda_l)
+#   define DEBUG_verbose
+#endif
 
 struct LiveEphemeral {
     /* link in a chain of live values list */
-    PRCList        links;
-    jsdIEphemeral *value;
+    PRCList                  links;
+    jsdIEphemeral           *value;
+    void                    *key;
 };
 
 struct PCMapEntry {
@@ -183,6 +184,34 @@ class jsdScript : public jsdIScript
 
 PRUint32 jsdScript::LastTag = 0;
 
+class jsdContext : public jsdIContext
+{
+  public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_JSDICONTEXT
+    NS_DECL_JSDIEPHEMERAL
+
+    jsdContext (JSDContext *aJSDCx, JSContext *aJSCx, nsISupports *aISCx);
+    virtual ~jsdContext();
+
+    static void InvalidateAll();
+    static jsdIContext *FromPtr (JSDContext *aJSDCx, JSContext *aJSCx);
+  private:
+    static PRUint32 LastTag;
+
+    jsdContext (); /* no implementation */
+    jsdContext (const jsdContext&); /* no implementation */
+
+    PRBool                 mValid;
+    LiveEphemeral          mLiveListEntry;
+    PRUint32               mTag;
+    JSDContext            *mJSDCx;
+    JSContext             *mJSCx;
+    nsCOMPtr<nsISupports>  mISCx;
+};
+
+PRUint32 jsdContext::LastTag = 0;
+
 class jsdStackFrame : public jsdIStackFrame
 {
   public:
@@ -239,18 +268,8 @@ class jsdValue : public jsdIValue
     /* you'll normally use use FromPtr() instead of directly constructing one */
     jsdValue (JSDContext *aCx, JSDValue *aValue);
     virtual ~jsdValue();
-    
-    static jsdIValue *FromPtr (JSDContext *aCx, JSDValue *aValue)
-    {
-        if (!aValue)
-            return nsnull;
 
-        jsdIValue *rv;
-        rv = new jsdValue (aCx, aValue);
-        NS_IF_ADDREF(rv);
-        return rv;
-    }
-
+    static jsdIValue *FromPtr (JSDContext *aCx, JSDValue *aValue);    
     static void InvalidateAll();
     
   private:

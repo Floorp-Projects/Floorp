@@ -54,6 +54,7 @@
 /* XXX this stuff is used by NestEventLoop, a temporary hack to be refactored
  * later */
 #include "nsWidgetsCID.h"
+#include "nsIScriptContext.h"
 #include "nsIAppShell.h"
 #include "nsIJSContextStack.h"
 
@@ -74,11 +75,8 @@
 #   define DEBUG_DESTROY(name, count)
 #endif
 
-#define ASSERT_VALID_CONTEXT  { if (!mCx) return NS_ERROR_NOT_AVAILABLE; }
-#define ASSERT_VALID_FRAME    { if (!mValid) return NS_ERROR_NOT_AVAILABLE; }
-#define ASSERT_VALID_PROPERTY { if (!mValid) return NS_ERROR_NOT_AVAILABLE; }
-#define ASSERT_VALID_SCRIPT   { if (!mValid) return NS_ERROR_NOT_AVAILABLE; }
-#define ASSERT_VALID_VALUE    { if (!mValid) return NS_ERROR_NOT_AVAILABLE; }
+#define ASSERT_VALID_CONTEXT   { if (!mCx) return NS_ERROR_NOT_AVAILABLE; }
+#define ASSERT_VALID_EPHEMERAL { if (!mValid) return NS_ERROR_NOT_AVAILABLE; }
 
 #define JSDSERVICE_CID                               \
 { /* f1299dc2-1dd1-11b2-a347-ee6b7660e048 */         \
@@ -120,6 +118,7 @@ const char jsdASObserverCtrID[] = "@mozilla.org/js/jsd/app-start-observer;2";
 PRUint32 gScriptCount   = 0;
 PRUint32 gValueCount    = 0;
 PRUint32 gPropertyCount = 0;
+PRUint32 gContextCount  = 0;
 #endif
 
 static jsdService   *gJsds       = 0;
@@ -151,11 +150,36 @@ static struct FilterRecord {
     PRUint32     endLine;
 } *gFilters = nsnull;
 
-static struct LiveEphemeral *gLiveValues = nsnull, *gLiveProperties = nsnull;
+static struct LiveEphemeral *gLiveValues     = nsnull;
+static struct LiveEphemeral *gLiveProperties = nsnull;
+static struct LiveEphemeral *gLiveContexts   = nsnull;
 
 /*******************************************************************************
  * utility functions for ephemeral lists
  *******************************************************************************/
+already_AddRefed<jsdIEphemeral>
+jsds_FindEphemeral (LiveEphemeral **listHead, void *key)
+{
+    if (!*listHead)
+        return nsnull;
+    
+    LiveEphemeral *lv_record = 
+        NS_REINTERPRET_CAST (LiveEphemeral *,
+                             PR_NEXT_LINK(&(*listHead)->links));
+    do
+    {
+        if (lv_record->key == key)
+        {
+            NS_IF_ADDREF(lv_record->value);
+            return lv_record->value;
+        }
+        lv_record = NS_REINTERPRET_CAST (LiveEphemeral *,
+                                         PR_NEXT_LINK(&lv_record->links));
+    }
+    while (lv_record != *listHead);
+
+    return nsnull;
+}
 
 void
 jsds_InvalidateAllEphemerals (LiveEphemeral **listHead)
@@ -189,9 +213,8 @@ jsds_InsertEphemeral (LiveEphemeral **listHead, LiveEphemeral *item)
 void
 jsds_RemoveEphemeral (LiveEphemeral **listHead, LiveEphemeral *item)
 {
-    LiveEphemeral *next = 
-        NS_REINTERPRET_CAST (LiveEphemeral *,
-                             PR_NEXT_LINK(&item->links));
+    LiveEphemeral *next = NS_REINTERPRET_CAST (LiveEphemeral *,
+                                               PR_NEXT_LINK(&item->links));
 
     if (next == item)
     {
@@ -770,6 +793,8 @@ NS_IMETHODIMP
 jsdObject::GetCreatorURL(char **_rval)
 {
     *_rval = ToNewCString(nsDependentCString(JSD_GetObjectNewURL(mCx, mObject)));
+    if (!*_rval)
+        return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
 }
 
@@ -784,6 +809,8 @@ NS_IMETHODIMP
 jsdObject::GetConstructorURL(char **_rval)
 {
     *_rval = ToNewCString(nsDependentCString(JSD_GetObjectConstructorURL(mCx, mObject)));
+    if (!*_rval)
+        return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
 }
 
@@ -826,7 +853,7 @@ jsdProperty::~jsdProperty ()
 NS_IMETHODIMP
 jsdProperty::Invalidate()
 {
-    ASSERT_VALID_VALUE;
+    ASSERT_VALID_EPHEMERAL;
     mValid = PR_FALSE;
     jsds_RemoveEphemeral (&gLiveProperties, &mLiveListEntry);
     JSD_DropProperty (mCx, mProperty);
@@ -1062,7 +1089,7 @@ jsdScript::PPLineToPc (PRUint32 aLine)
 NS_IMETHODIMP
 jsdScript::GetJSDContext(JSDContext **_rval)
 {
-    ASSERT_VALID_SCRIPT;
+    ASSERT_VALID_EPHEMERAL;
     *_rval = mCx;
     return NS_OK;
 }
@@ -1070,7 +1097,7 @@ jsdScript::GetJSDContext(JSDContext **_rval)
 NS_IMETHODIMP
 jsdScript::GetJSDScript(JSDScript **_rval)
 {
-    ASSERT_VALID_SCRIPT;
+    ASSERT_VALID_EPHEMERAL;
     *_rval = mScript;
     return NS_OK;
 }
@@ -1088,7 +1115,7 @@ jsdScript::GetTag(PRUint32 *_rval)
 NS_IMETHODIMP
 jsdScript::Invalidate()
 {
-    ASSERT_VALID_SCRIPT;
+    ASSERT_VALID_EPHEMERAL;
     mValid = PR_FALSE;
     
     /* release the addref we do in FromPtr */
@@ -1129,6 +1156,8 @@ NS_IMETHODIMP
 jsdScript::GetFileName(char **_rval)
 {
     *_rval = ToNewCString(*mFileName);
+    if (!*_rval)
+        return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
 }
 
@@ -1136,13 +1165,15 @@ NS_IMETHODIMP
 jsdScript::GetFunctionName(char **_rval)
 {
     *_rval = ToNewCString(*mFunctionName);
+    if (!*_rval)
+        return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
 }
 
 NS_IMETHODIMP
 jsdScript::GetFunctionSource(nsAString & aFunctionSource)
 {
-    ASSERT_VALID_SCRIPT;
+    ASSERT_VALID_EPHEMERAL;
     JSContext *cx = JSD_GetDefaultJSContext (mCx);
     if (!cx) {
         NS_WARNING("No default context !?");
@@ -1182,7 +1213,7 @@ jsdScript::GetLineExtent(PRUint32 *_rval)
 NS_IMETHODIMP
 jsdScript::PcToLine(PRUint32 aPC, PRUint32 aPcmap, PRUint32 *_rval)
 {
-    ASSERT_VALID_SCRIPT;
+    ASSERT_VALID_EPHEMERAL;
     if (aPcmap == PCMAP_SOURCETEXT) {
         *_rval = JSD_GetClosestLine (mCx, mScript, mFirstPC + aPC);
     } else if (aPcmap == PCMAP_PRETTYPRINT) {
@@ -1197,7 +1228,7 @@ jsdScript::PcToLine(PRUint32 aPC, PRUint32 aPcmap, PRUint32 *_rval)
 NS_IMETHODIMP
 jsdScript::LineToPc(PRUint32 aLine, PRUint32 aPcmap, PRUint32 *_rval)
 {
-    ASSERT_VALID_SCRIPT;
+    ASSERT_VALID_EPHEMERAL;
     if (aPcmap == PCMAP_SOURCETEXT) {
         jsuword pc = JSD_GetClosestPC (mCx, mScript, aLine);
         *_rval = pc - mFirstPC;
@@ -1213,7 +1244,7 @@ jsdScript::LineToPc(PRUint32 aLine, PRUint32 aPcmap, PRUint32 *_rval)
 NS_IMETHODIMP
 jsdScript::IsLineExecutable(PRUint32 aLine, PRUint32 aPcmap, PRBool *_rval)
 {
-    ASSERT_VALID_SCRIPT;
+    ASSERT_VALID_EPHEMERAL;
     if (aPcmap == PCMAP_SOURCETEXT) {    
         jsuword pc = JSD_GetClosestPC (mCx, mScript, aLine);
         *_rval = (aLine == JSD_GetClosestLine (mCx, mScript, pc));
@@ -1237,7 +1268,7 @@ jsdScript::IsLineExecutable(PRUint32 aLine, PRUint32 aPcmap, PRBool *_rval)
 NS_IMETHODIMP
 jsdScript::SetBreakpoint(PRUint32 aPC)
 {
-    ASSERT_VALID_SCRIPT;
+    ASSERT_VALID_EPHEMERAL;
     jsuword pc = mFirstPC + aPC;
     JSD_SetExecutionHook (mCx, mScript, pc, jsds_ExecutionHookProc,
                           NS_REINTERPRET_CAST(void *, PRIVATE_TO_JSVAL(NULL)));
@@ -1247,7 +1278,7 @@ jsdScript::SetBreakpoint(PRUint32 aPC)
 NS_IMETHODIMP
 jsdScript::ClearBreakpoint(PRUint32 aPC)
 {
-    ASSERT_VALID_SCRIPT;    
+    ASSERT_VALID_EPHEMERAL;    
     jsuword pc = mFirstPC + aPC;
     JSD_ClearExecutionHook (mCx, mScript, pc);
     return NS_OK;
@@ -1256,11 +1287,171 @@ jsdScript::ClearBreakpoint(PRUint32 aPC)
 NS_IMETHODIMP
 jsdScript::ClearAllBreakpoints()
 {
-    ASSERT_VALID_SCRIPT;
+    ASSERT_VALID_EPHEMERAL;
     JSD_LockScriptSubsystem(mCx);
     JSD_ClearAllExecutionHooksForScript (mCx, mScript);
     JSD_UnlockScriptSubsystem(mCx);
     return NS_OK;
+}
+
+/* Contexts */
+NS_IMPL_THREADSAFE_ISUPPORTS2(jsdContext, jsdIContext, jsdIEphemeral);
+
+jsdIContext *
+jsdContext::FromPtr (JSDContext *aJSDCx, JSContext *aJSCx)
+{
+    if (!aJSDCx || !aJSCx ||
+        !(JS_GetOptions(aJSCx) & JSOPTION_PRIVATE_IS_NSISUPPORTS))
+    {
+        return nsnull;
+    }
+    
+    nsCOMPtr<jsdIContext> jsdicx;
+    nsCOMPtr<jsdIEphemeral> eph = 
+        jsds_FindEphemeral (&gLiveContexts, NS_STATIC_CAST(void *, aJSCx));
+    if (eph)
+    {
+        jsdicx = do_QueryInterface(eph);
+    }
+    else
+    {
+        nsCOMPtr<nsISupports> iscx = 
+            NS_STATIC_CAST(nsISupports *, JS_GetContextPrivate(aJSCx));
+        if (!iscx)
+            return nsnull;
+        
+        jsdicx = new jsdContext (aJSDCx, aJSCx, iscx);
+    }
+
+    jsdIContext *rv = jsdicx;
+    NS_IF_ADDREF(rv);
+    return rv;
+}
+
+jsdContext::jsdContext (JSDContext *aJSDCx, JSContext *aJSCx,
+                        nsISupports *aISCx) : mValid(PR_TRUE), mTag(0),
+                                              mJSDCx(aJSDCx),
+                                              mJSCx(aJSCx), mISCx(aISCx)
+{
+    DEBUG_CREATE ("jsdContext", gContextCount);
+    NS_INIT_ISUPPORTS();
+    mLiveListEntry.value = this;
+    mLiveListEntry.key   = NS_STATIC_CAST (void *, aJSCx);
+    jsds_InsertEphemeral (&gLiveContexts, &mLiveListEntry);
+}
+
+jsdContext::~jsdContext() 
+{
+    DEBUG_DESTROY ("jsdContext", gContextCount);
+    if (mValid)
+    {
+        /* call Invalidate() to take ourselves out of the live list */
+        Invalidate();
+    }
+}
+
+NS_IMETHODIMP
+jsdContext::GetIsValid(PRBool *_rval)
+{
+    *_rval = mValid;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdContext::Invalidate()
+{
+    ASSERT_VALID_EPHEMERAL;
+    mValid = PR_FALSE;
+    jsds_RemoveEphemeral (&gLiveContexts, &mLiveListEntry);
+    return NS_OK;
+}
+
+void
+jsdContext::InvalidateAll()
+{
+    if (gLiveContexts)
+        jsds_InvalidateAllEphemerals (&gLiveContexts);
+}
+
+NS_IMETHODIMP
+jsdContext::GetJSContext(JSContext **_rval)
+{
+    ASSERT_VALID_EPHEMERAL;
+    *_rval = mJSCx;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdContext::GetWrappedContext(nsISupports **_rval)
+{
+    ASSERT_VALID_EPHEMERAL;
+    *_rval = mISCx;
+    NS_IF_ADDREF(*_rval);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdContext::GetTag(PRUint32 *_rval)
+{
+    ASSERT_VALID_EPHEMERAL;
+    if (!mTag)
+        mTag = ++jsdContext::LastTag;
+    
+    *_rval = mTag;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdContext::GetVersion (PRInt32 *_rval)
+{
+    ASSERT_VALID_EPHEMERAL;
+    *_rval = NS_STATIC_CAST (PRInt32, JS_GetVersion(mJSCx));
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdContext::SetVersion (PRInt32 id)
+{
+    ASSERT_VALID_EPHEMERAL;
+    JSVersion ver = NS_STATIC_CAST (JSVersion, id);
+    JS_SetVersion(mJSCx, ver);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdContext::GetGlobalObject (jsdIValue **_rval)
+{
+    ASSERT_VALID_EPHEMERAL;
+    JSObject *glob = JS_GetGlobalObject(mJSCx);
+    JSDValue *jsdv = JSD_NewValue (mJSDCx, OBJECT_TO_JSVAL(glob));
+    if (!jsdv)
+        return NS_ERROR_FAILURE;
+    *_rval = jsdValue::FromPtr (mJSDCx, jsdv);
+    if (!*_rval)
+        return NS_ERROR_FAILURE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdContext::GetScriptsEnabled (PRBool *_rval)
+{
+    ASSERT_VALID_EPHEMERAL;
+    nsCOMPtr<nsIScriptContext> context = do_QueryInterface(mISCx);
+    if (!context)
+        return NS_ERROR_NO_INTERFACE;
+
+    return context->GetScriptsEnabled(_rval);
+}
+
+NS_IMETHODIMP
+jsdContext::SetScriptsEnabled (PRBool _rval)
+{
+    ASSERT_VALID_EPHEMERAL;
+    nsCOMPtr<nsIScriptContext> context = do_QueryInterface(mISCx);
+    if (!context)
+        return NS_ERROR_NO_INTERFACE;
+
+    return context->SetScriptsEnabled(_rval);
 }
 
 /* Stack Frames */
@@ -1269,7 +1460,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(jsdStackFrame, jsdIStackFrame, jsdIEphemeral);
 NS_IMETHODIMP
 jsdStackFrame::GetJSDContext(JSDContext **_rval)
 {
-    ASSERT_VALID_FRAME;
+    ASSERT_VALID_EPHEMERAL;
     *_rval = mCx;
     return NS_OK;
 }
@@ -1277,7 +1468,7 @@ jsdStackFrame::GetJSDContext(JSDContext **_rval)
 NS_IMETHODIMP
 jsdStackFrame::GetJSDThreadState(JSDThreadState **_rval)
 {
-    ASSERT_VALID_FRAME;
+    ASSERT_VALID_EPHEMERAL;
     *_rval = mThreadState;
     return NS_OK;
 }
@@ -1285,7 +1476,7 @@ jsdStackFrame::GetJSDThreadState(JSDThreadState **_rval)
 NS_IMETHODIMP
 jsdStackFrame::GetJSDStackFrameInfo(JSDStackFrameInfo **_rval)
 {
-    ASSERT_VALID_FRAME;
+    ASSERT_VALID_EPHEMERAL;
     *_rval = mStackFrameInfo;
     return NS_OK;
 }
@@ -1300,7 +1491,7 @@ jsdStackFrame::GetIsValid(PRBool *_rval)
 NS_IMETHODIMP
 jsdStackFrame::Invalidate()
 {
-    ASSERT_VALID_FRAME;
+    ASSERT_VALID_EPHEMERAL;
     mValid = PR_FALSE;
     return NS_OK;
 }
@@ -1308,7 +1499,7 @@ jsdStackFrame::Invalidate()
 NS_IMETHODIMP
 jsdStackFrame::GetCallingFrame(jsdIStackFrame **_rval)
 {
-    ASSERT_VALID_FRAME;
+    ASSERT_VALID_EPHEMERAL;
     JSDStackFrameInfo *sfi = JSD_GetCallingStackFrame (mCx, mThreadState,
                                                        mStackFrameInfo);
     *_rval = jsdStackFrame::FromPtr (mCx, mThreadState, sfi);
@@ -1316,9 +1507,18 @@ jsdStackFrame::GetCallingFrame(jsdIStackFrame **_rval)
 }
 
 NS_IMETHODIMP
+jsdStackFrame::GetExecutionContext(jsdIContext **_rval)
+{
+    ASSERT_VALID_EPHEMERAL;
+    JSContext *cx = JSD_GetJSContext (mCx, mThreadState);
+    *_rval = jsdContext::FromPtr (mCx, cx);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 jsdStackFrame::GetScript(jsdIScript **_rval)
 {
-    ASSERT_VALID_FRAME;
+    ASSERT_VALID_EPHEMERAL;
     JSDScript *script = JSD_GetScriptForStackFrame (mCx, mThreadState,
                                                     mStackFrameInfo);
     *_rval = jsdScript::FromPtr (mCx, script);
@@ -1328,7 +1528,7 @@ jsdStackFrame::GetScript(jsdIScript **_rval)
 NS_IMETHODIMP
 jsdStackFrame::GetPc(PRUint32 *_rval)
 {
-    ASSERT_VALID_FRAME;
+    ASSERT_VALID_EPHEMERAL;
     JSDScript *script = JSD_GetScriptForStackFrame (mCx, mThreadState,
                                                     mStackFrameInfo);
     jsuword pcbase = JSD_GetClosestPC(mCx, script, 0);
@@ -1343,7 +1543,7 @@ jsdStackFrame::GetPc(PRUint32 *_rval)
 NS_IMETHODIMP
 jsdStackFrame::GetLine(PRUint32 *_rval)
 {
-    ASSERT_VALID_FRAME;
+    ASSERT_VALID_EPHEMERAL;
     JSDScript *script = JSD_GetScriptForStackFrame (mCx, mThreadState,
                                                     mStackFrameInfo);
     jsuword pc = JSD_GetPCForStackFrame (mCx, mThreadState, mStackFrameInfo);
@@ -1354,7 +1554,7 @@ jsdStackFrame::GetLine(PRUint32 *_rval)
 NS_IMETHODIMP
 jsdStackFrame::GetCallee(jsdIValue **_rval)
 {
-    ASSERT_VALID_FRAME;
+    ASSERT_VALID_EPHEMERAL;
     JSDValue *jsdv = JSD_GetCallObjectForStackFrame (mCx, mThreadState,
                                                      mStackFrameInfo);
     
@@ -1365,7 +1565,7 @@ jsdStackFrame::GetCallee(jsdIValue **_rval)
 NS_IMETHODIMP
 jsdStackFrame::GetScope(jsdIValue **_rval)
 {
-    ASSERT_VALID_FRAME;
+    ASSERT_VALID_EPHEMERAL;
     JSDValue *jsdv = JSD_GetScopeChainForStackFrame (mCx, mThreadState,
                                                      mStackFrameInfo);
     
@@ -1376,7 +1576,7 @@ jsdStackFrame::GetScope(jsdIValue **_rval)
 NS_IMETHODIMP
 jsdStackFrame::GetThisValue(jsdIValue **_rval)
 {
-    ASSERT_VALID_FRAME;
+    ASSERT_VALID_EPHEMERAL;
     JSDValue *jsdv = JSD_GetThisForStackFrame (mCx, mThreadState,
                                                mStackFrameInfo);
     
@@ -1389,7 +1589,7 @@ NS_IMETHODIMP
 jsdStackFrame::Eval (const nsAReadableString &bytes, const char *fileName,
                      PRUint32 line, jsdIValue **result, PRBool *_rval)
 {
-    ASSERT_VALID_FRAME;
+    ASSERT_VALID_EPHEMERAL;
     const nsSharedBufferHandle<PRUnichar> *h = bytes.GetSharedBufferHandle();
     const jschar *char_bytes = NS_REINTERPRET_CAST(const jschar *,
                                                    h->DataStart());
@@ -1428,6 +1628,29 @@ jsdStackFrame::Eval (const nsAReadableString &bytes, const char *fileName,
 
 /* Values */
 NS_IMPL_THREADSAFE_ISUPPORTS2(jsdValue, jsdIValue, jsdIEphemeral);
+jsdIValue *
+jsdValue::FromPtr (JSDContext *aCx, JSDValue *aValue)
+{
+    if (!aValue)
+        return nsnull;
+
+    nsCOMPtr<jsdIValue> jsdiv;
+    jsval jv = JSD_GetValueWrappedJSVal (aCx, aValue);
+    nsCOMPtr<jsdIEphemeral> eph =
+        jsds_FindEphemeral (&gLiveValues, NS_REINTERPRET_CAST(void *, jv));
+    if (eph)
+    {
+        jsdiv = do_QueryInterface(eph);
+    }
+    else
+    {
+        jsdiv = new jsdValue (aCx, aValue);
+    }
+    
+    jsdIValue *rv = jsdiv;
+    NS_IF_ADDREF(rv);
+    return rv;
+}
 
 jsdValue::jsdValue (JSDContext *aCx, JSDValue *aValue) : mValid(PR_TRUE),
                                                          mCx(aCx), 
@@ -1436,6 +1659,8 @@ jsdValue::jsdValue (JSDContext *aCx, JSDValue *aValue) : mValid(PR_TRUE),
     DEBUG_CREATE ("jsdValue", gValueCount);
     NS_INIT_ISUPPORTS();
     mLiveListEntry.value = this;
+    mLiveListEntry.key = NS_REINTERPRET_CAST(void *,
+                                        JSD_GetValueWrappedJSVal (aCx, aValue));
     jsds_InsertEphemeral (&gLiveValues, &mLiveListEntry);
 }
 
@@ -1457,7 +1682,7 @@ jsdValue::GetIsValid(PRBool *_rval)
 NS_IMETHODIMP
 jsdValue::Invalidate()
 {
-    ASSERT_VALID_VALUE;
+    ASSERT_VALID_EPHEMERAL;
     mValid = PR_FALSE;
     jsds_RemoveEphemeral (&gLiveValues, &mLiveListEntry);
     JSD_DropValue (mCx, mValue);
@@ -1474,7 +1699,7 @@ jsdValue::InvalidateAll()
 NS_IMETHODIMP
 jsdValue::GetJSDContext(JSDContext **_rval)
 {
-    ASSERT_VALID_VALUE;
+    ASSERT_VALID_EPHEMERAL;
     *_rval = mCx;
     return NS_OK;
 }
@@ -1482,7 +1707,7 @@ jsdValue::GetJSDContext(JSDContext **_rval)
 NS_IMETHODIMP
 jsdValue::GetJSDValue (JSDValue **_rval)
 {
-    ASSERT_VALID_VALUE;
+    ASSERT_VALID_EPHEMERAL;
     *_rval = mValue;
     return NS_OK;
 }
@@ -1490,7 +1715,7 @@ jsdValue::GetJSDValue (JSDValue **_rval)
 NS_IMETHODIMP
 jsdValue::GetIsNative (PRBool *_rval)
 {
-    ASSERT_VALID_VALUE;
+    ASSERT_VALID_EPHEMERAL;
     *_rval = JSD_IsValueNative (mCx, mValue);
     return NS_OK;
 }
@@ -1498,7 +1723,7 @@ jsdValue::GetIsNative (PRBool *_rval)
 NS_IMETHODIMP
 jsdValue::GetIsNumber (PRBool *_rval)
 {
-    ASSERT_VALID_VALUE;
+    ASSERT_VALID_EPHEMERAL;
     *_rval = JSD_IsValueNumber (mCx, mValue);
     return NS_OK;
 }
@@ -1506,7 +1731,7 @@ jsdValue::GetIsNumber (PRBool *_rval)
 NS_IMETHODIMP
 jsdValue::GetIsPrimitive (PRBool *_rval)
 {
-    ASSERT_VALID_VALUE;
+    ASSERT_VALID_EPHEMERAL;
     *_rval = JSD_IsValuePrimitive (mCx, mValue);
     return NS_OK;
 }
@@ -1514,7 +1739,7 @@ jsdValue::GetIsPrimitive (PRBool *_rval)
 NS_IMETHODIMP
 jsdValue::GetJsType (PRUint32 *_rval)
 {
-    ASSERT_VALID_VALUE;
+    ASSERT_VALID_EPHEMERAL;
     jsval val;
 
     val = JSD_GetValueWrappedJSVal (mCx, mValue);
@@ -1544,7 +1769,7 @@ jsdValue::GetJsType (PRUint32 *_rval)
 NS_IMETHODIMP
 jsdValue::GetJsPrototype (jsdIValue **_rval)
 {
-    ASSERT_VALID_VALUE;
+    ASSERT_VALID_EPHEMERAL;
     JSDValue *jsdv = JSD_GetValuePrototype (mCx, mValue);
     *_rval = jsdValue::FromPtr (mCx, jsdv);
     return NS_OK;
@@ -1553,7 +1778,7 @@ jsdValue::GetJsPrototype (jsdIValue **_rval)
 NS_IMETHODIMP
 jsdValue::GetJsParent (jsdIValue **_rval)
 {
-    ASSERT_VALID_VALUE;
+    ASSERT_VALID_EPHEMERAL;
     JSDValue *jsdv = JSD_GetValueParent (mCx, mValue);
     *_rval = jsdValue::FromPtr (mCx, jsdv);
     return NS_OK;
@@ -1562,15 +1787,17 @@ jsdValue::GetJsParent (jsdIValue **_rval)
 NS_IMETHODIMP
 jsdValue::GetJsClassName(char **_rval)
 {
-    ASSERT_VALID_VALUE;
+    ASSERT_VALID_EPHEMERAL;
     *_rval = ToNewCString(nsDependentCString(JSD_GetValueClassName(mCx, mValue)));
+    if (!*_rval)
+        return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
 }
 
 NS_IMETHODIMP
 jsdValue::GetJsConstructor (jsdIValue **_rval)
 {
-    ASSERT_VALID_VALUE;
+    ASSERT_VALID_EPHEMERAL;
     JSDValue *jsdv = JSD_GetValueConstructor (mCx, mValue);
     *_rval = jsdValue::FromPtr (mCx, jsdv);
     return NS_OK;
@@ -1579,16 +1806,18 @@ jsdValue::GetJsConstructor (jsdIValue **_rval)
 NS_IMETHODIMP
 jsdValue::GetJsFunctionName(char **_rval)
 {
-    ASSERT_VALID_VALUE;
+    ASSERT_VALID_EPHEMERAL;
     *_rval =
         ToNewCString(nsDependentCString(JSD_GetValueFunctionName(mCx, mValue)));
+    if (!*_rval)
+        return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
 }
 
 NS_IMETHODIMP
 jsdValue::GetBooleanValue(PRBool *_rval)
 {
-    ASSERT_VALID_VALUE;
+    ASSERT_VALID_EPHEMERAL;
     *_rval = JSD_GetValueBoolean (mCx, mValue);
     return NS_OK;
 }
@@ -1596,19 +1825,18 @@ jsdValue::GetBooleanValue(PRBool *_rval)
 NS_IMETHODIMP
 jsdValue::GetDoubleValue(double *_rval)
 {
-    ASSERT_VALID_VALUE;
+    ASSERT_VALID_EPHEMERAL;
     double *dp = JSD_GetValueDouble (mCx, mValue);
-    if (dp)
-        *_rval = *dp;
-    else
-        *_rval = 0;
+    if (!dp)
+        return NS_ERROR_FAILURE;
+    *_rval = *dp;
     return NS_OK;
 }
 
 NS_IMETHODIMP
 jsdValue::GetIntValue(PRInt32 *_rval)
 {
-    ASSERT_VALID_VALUE;
+    ASSERT_VALID_EPHEMERAL;
     *_rval = JSD_GetValueInt (mCx, mValue);
     return NS_OK;
 }
@@ -1616,26 +1844,30 @@ jsdValue::GetIntValue(PRInt32 *_rval)
 NS_IMETHODIMP
 jsdValue::GetObjectValue(jsdIObject **_rval)
 {
-    ASSERT_VALID_VALUE;
+    ASSERT_VALID_EPHEMERAL;
     JSDObject *obj;
     obj = JSD_GetObjectForValue (mCx, mValue);
     *_rval = jsdObject::FromPtr (mCx, obj);
+    if (!*_rval)
+        return NS_ERROR_FAILURE;
     return NS_OK;
 }
     
 NS_IMETHODIMP
 jsdValue::GetStringValue(char **_rval)
 {
-    ASSERT_VALID_VALUE;
+    ASSERT_VALID_EPHEMERAL;
     JSString *jstr_val = JSD_GetValueString(mCx, mValue);
     *_rval = ToNewCString(nsDependentCString(JS_GetStringBytes(jstr_val)));
+    if (!*_rval)
+        return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
 }
 
 NS_IMETHODIMP
 jsdValue::GetPropertyCount (PRInt32 *_rval)
 {
-    ASSERT_VALID_VALUE;
+    ASSERT_VALID_EPHEMERAL;
     if (JSD_IsValueObject(mCx, mValue))
         *_rval = JSD_GetCountOfProperties (mCx, mValue);
     else
@@ -1646,7 +1878,7 @@ jsdValue::GetPropertyCount (PRInt32 *_rval)
 NS_IMETHODIMP
 jsdValue::GetProperties (jsdIProperty ***propArray, PRUint32 *length)
 {
-    ASSERT_VALID_VALUE;
+    ASSERT_VALID_EPHEMERAL;
     if (!JSD_IsValueObject(mCx, mValue)) {
         *length = 0;
         *propArray = 0;
@@ -1681,7 +1913,7 @@ jsdValue::GetProperties (jsdIProperty ***propArray, PRUint32 *length)
 NS_IMETHODIMP
 jsdValue::GetProperty (const char *name, jsdIProperty **_rval)
 {
-    ASSERT_VALID_VALUE;
+    ASSERT_VALID_EPHEMERAL;
     JSContext *cx = JSD_GetDefaultJSContext (mCx);
     /* not rooting this */
     JSString *jstr_name = JS_NewStringCopyZ (cx, name);
@@ -1695,7 +1927,7 @@ jsdValue::GetProperty (const char *name, jsdIProperty **_rval)
 NS_IMETHODIMP
 jsdValue::Refresh()
 {
-    ASSERT_VALID_VALUE;
+    ASSERT_VALID_EPHEMERAL;
     JSD_RefreshValue (mCx, mValue);
     return NS_OK;
 }
@@ -1896,7 +2128,7 @@ jsdService::OnForRuntime (JSRuntime *rt)
     mOn = PR_TRUE;
 
 #ifdef DEBUG
-    printf ("+++ JavaScript debuging hooks installed.\n");
+    printf ("+++ JavaScript debugging hooks installed.\n");
 #endif
     return NS_OK;
 }
@@ -1925,6 +2157,7 @@ jsdService::Off (void)
         JS_SetGCCallbackRT (mRuntime, gLastGCProc);
     */
 
+    jsdContext::InvalidateAll();
     jsdScript::InvalidateAll();
     jsdValue::InvalidateAll();
     jsdProperty::InvalidateAll();
@@ -2004,6 +2237,31 @@ jsdService::UnPause(PRUint32 *_rval)
 }
 
 NS_IMETHODIMP
+jsdService::EnumerateContexts (jsdIContextEnumerator *enumerator)
+{
+    ASSERT_VALID_CONTEXT;
+    
+    if (!enumerator)
+        return NS_OK;
+    
+    JSContext *iter = NULL;
+    JSContext *cx;
+
+    while ((cx = JS_ContextIterator (mRuntime, &iter)))
+    {
+        nsCOMPtr<jsdIContext> jsdicx = 
+            getter_AddRefs(jsdContext::FromPtr(mCx, cx));
+        if (jsdicx)
+        {
+            if (NS_FAILED(enumerator->EnumerateContext(jsdicx)))
+                break;
+        }
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 jsdService::EnumerateScripts (jsdIScriptEnumerator *enumerator)
 {
     ASSERT_VALID_CONTEXT;
@@ -2013,7 +2271,7 @@ jsdService::EnumerateScripts (jsdIScriptEnumerator *enumerator)
     nsresult rv = NS_OK;
     
     JSD_LockScriptSubsystem(mCx);
-    while((script = JSD_IterateScripts(mCx, &iter)) != NULL) {
+    while((script = JSD_IterateScripts(mCx, &iter))) {
         nsCOMPtr<jsdIScript> jsdis =
             getter_AddRefs(jsdScript::FromPtr(mCx, script));
         rv = enumerator->EnumerateScript (jsdis);

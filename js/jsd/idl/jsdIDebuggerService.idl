@@ -48,14 +48,14 @@
 [ptr] native JSDThreadState(JSDThreadState);
 [ptr] native JSDValue(JSDValue);
 [ptr] native JSRuntime(JSRuntime);
-
-native jsuword(jsuword);
+[ptr] native JSContext(JSContext);
 
 /* interfaces we declare in this file */
 interface jsdIDebuggerService;
 interface jsdIFilter;
 interface jsdINestCallback;
 interface jsdIFilterEnumerator;
+interface jsdIContextEnumerator;
 interface jsdIScriptEnumerator;
 interface jsdIScriptHook;
 interface jsdIErrorHook;
@@ -63,6 +63,7 @@ interface jsdIExecutionHook;
 interface jsdICallHook;
 interface jsdIEphemeral;
 interface jsdIPC;
+interface jsdIContext;
 interface jsdIStackFrame;
 interface jsdIScript;
 interface jsdIValue;
@@ -231,6 +232,11 @@ interface jsdIDebuggerService : nsISupports
     void clearFilters();
 
     /**
+     * Enumerate all known contexts.
+     */
+    void enumerateContexts (in jsdIContextEnumerator enumerator);
+    
+    /**
      * Enumerate all scripts the debugger knows about.  Any scripts created
      * before you turned the debugger on, or after turning the debugger off
      * will not be available unless the autostart perf is set.
@@ -376,6 +382,19 @@ interface jsdIScriptEnumerator : nsISupports
 };
 
 /**
+ * Pass an instance of one of these to jsdIDebuggerService::enumerateContexts.
+ */
+[scriptable, uuid(912e342a-1dd2-11b2-b09f-cf3af38c15f0)]
+interface jsdIContextEnumerator : nsISupports
+{
+    /**
+     * The enumerateContext method will be called once for every context
+     * currently in use.
+     */
+    void enumerateContext (in jsdIContext executionContext);
+};
+
+/**
  * Set jsdIDebuggerService::scriptHook to an instance of one of these.
  */
 [scriptable, uuid(ae89a7e2-1dd1-11b2-8c2f-af82086291a5)]
@@ -517,6 +536,58 @@ interface jsdIEphemeral : nsISupports
 /* handle objects */
 
 /**
+ * Context object.  Only context's which are also nsISupports objects can be
+ * reflected by this interface.
+ */
+[scriptable, uuid(a2dd25a4-1dd1-11b2-bda6-ed525acd4c35)]
+interface jsdIContext : jsdIEphemeral
+{
+    /* Internal use only. */
+    [noscript] readonly attribute JSContext   JSContext;
+
+    /**
+     * Possible values for |version|.
+     */
+    const long VERSION_1_0     = 100;
+    const long VERSION_1_1     = 110;
+    const long VERSION_1_2     = 120;
+    const long VERSION_1_3     = 130;
+    const long VERSION_1_4     = 140;
+    const long VERSION_1_5     = 150;
+    const long VERSION_DEFAULT = 0;
+    const long VERSION_UNKNOWN = -1;
+    
+    /**
+     * Last version set on this context.
+     * Scripts typically select this with the "language" attribute.
+     */
+    attribute long                   version;
+
+    /**
+     * Unique tag among all valid jsdIContext objects, useful as a hash key.
+     */
+    readonly attribute unsigned long tag;    
+
+    /**
+     * Retrieve the underlying context wrapped by this jsdIContext.
+     */
+    readonly attribute nsISupports   wrappedContext;
+
+    /**
+     * Top of the scope chain for this context.
+     */
+    readonly attribute jsdIValue     globalObject;
+
+    /**
+     * |true| if this context should be allowed to run scripts, |false|
+     * otherwise.  This attribute is only valid for contexts which implement
+     * nsIScriptContext.  Setting or getting this attribute on any other
+     * context will throw a NS_ERROR_NO_INTERFACE exception.
+     */
+    attribute boolean                scriptsEnabled;
+};
+
+/**
  * Stack frame objects.  These are only valid inside the jsdIExecutionHook which
  * gave it to you.  After you return from that handler the bottom frame, and any
  * frame you found attached through it, are invalidated via the jsdIEphemeral
@@ -537,6 +608,10 @@ interface jsdIStackFrame : jsdIEphemeral
      * Link to the caller's stack frame.
      */
     readonly attribute jsdIStackFrame callingFrame;
+    /**
+     * Executon context.
+     */
+    readonly attribute jsdIContext    executionContext;
     /**
      * Script running in this stack frame.
      */
@@ -869,12 +944,6 @@ interface jsdIProperty : jsdIEphemeral
 };
 
 /*
-[scriptable, uuid(a2dd25a4-1dd1-11b2-bda6-ed525acd4c35)]
-interface jsdIContext : nsISupports
-{
-    [noscript] readonly attribute JSDContext JSDContext;
-};
-
 [scriptable, uuid(a47adad2-1dd1-11b2-b9e9-8e67a47beca5)]
 interface jsdISourceText : nsISupports
 {};
