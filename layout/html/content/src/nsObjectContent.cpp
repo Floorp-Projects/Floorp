@@ -40,7 +40,7 @@ nsObjectContent::CreateFrame(nsIPresContext*  aPresContext,
                              nsIFrame*&       aResult)
 {
   nsIFrame* frame;
-  nsresult rv = NS_NewObjectFrame(frame, this, aParentFrame);
+  nsresult rv = NS_NewObjectFrame(this, aParentFrame, frame);
   if (NS_OK != rv) {
     return rv;
   }
