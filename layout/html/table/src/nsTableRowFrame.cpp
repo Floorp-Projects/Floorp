@@ -61,10 +61,9 @@ struct RowReflowState {
   // Running x-offset
   nscoord x;
 
-  // Height of tallest cell (excluding cells with rowspan>1)
-  nscoord maxCellHeight;
-  nscoord maxCellVertSpace; // the maximum MAX(cellheight+top+bottom)
-  nscoord maxCellHorzSpace; // the maximum MAX(cellheight+top+bottom)
+  // Height of tallest cell (excluding cells with rowspan > 1)
+  nscoord maxCellHeight;    // just the height of the cell frame
+  nscoord maxCellVertSpace; // the maximum MAX(cellheight + topMargin + bottomMargin)
   
   nsTableFrame *tableFrame;
    
@@ -78,9 +77,8 @@ struct RowReflowState {
     x=0;
     unconstrainedWidth = PRBool(reflowState.maxSize.width == NS_UNCONSTRAINEDSIZE);
     unconstrainedHeight = PRBool(reflowState.maxSize.height == NS_UNCONSTRAINEDSIZE);
-    maxCellHeight=0;
-    maxCellVertSpace=0;
-    maxCellHorzSpace=0;
+    maxCellHeight = 0;
+    maxCellVertSpace = 0;
     tableFrame = nsnull;
   }
 
@@ -280,13 +278,15 @@ void nsTableRowFrame::PlaceChild(nsIPresContext*    aPresContext,
       aMaxElementSize->height = aKidMaxElementSize.height;
     }
   }
-  if ((mMinRowSpan==rowSpan) && (aState.maxCellHeight<aKidRect.height))
+
+  if (mMinRowSpan == rowSpan)
   {
-    aState.maxCellHeight = aKidRect.height;
-  }
-  if ((mMinRowSpan==rowSpan))
-  {
-    nsMargin margin(0,0,0,0);
+    // Update maxCellHeight
+    if (aKidRect.height > aState.maxCellHeight)
+      aState.maxCellHeight = aKidRect.height;
+
+    // Update maxCellVertSpace
+    nsMargin margin;
 
     if (aState.tableFrame->GetCellMarginData((nsTableCellFrame *)aKidFrame, margin) == NS_OK)
     {
@@ -1034,15 +1034,39 @@ nsTableRowFrame::ReflowUnmappedChildren( nsIPresContext*      aPresContext,
   return result;
 }
 
-#if 0
 // Recover the reflow state to what it should be if aKidFrame is about
 // to be reflowed
 nsresult nsTableRowFrame::RecoverState(RowReflowState& aState,
                                        nsIFrame*       aKidFrame)
 {
-  // Get aKidFrame's previous sibling
+  // Walk the list of children looking for aKidFrame
   nsIFrame* prevKidFrame = nsnull;
   for (nsIFrame* frame = mFirstChild; frame != aKidFrame;) {
+    PRInt32 rowSpan = ((nsTableCellFrame*)frame)->GetRowSpan();
+    if (mMinRowSpan == rowSpan) {
+      nsRect  rect;
+      frame->GetRect(rect);
+
+      // Update maxCellHeight
+      if (rect.height > aState.maxCellHeight) {
+        aState.maxCellHeight = rect.height;
+      }
+
+      // Update maxCellVertHeight
+      nsMargin margin;
+  
+      if (aState.tableFrame->GetCellMarginData((nsTableCellFrame *)frame, margin) == NS_OK)
+      {
+        nscoord height = rect.height + margin.top + margin.bottom;
+        if (height > aState.maxCellVertSpace) {
+          aState.maxCellVertSpace = height;
+        }
+      }
+    }
+
+    // XXX We also need to recover the max element size...
+
+    // Remember the frame that precedes aKidFrame
     prevKidFrame = frame;
     frame->GetNextSibling(frame);
   }
@@ -1058,24 +1082,10 @@ nsresult nsTableRowFrame::RecoverState(RowReflowState& aState,
     if (PR_FALSE == aState.unconstrainedWidth) {
       aState.availSize.width -= aState.x;
     }
-
-    // Get the previous frame's bottom margin
-    const nsStyleSpacing* kidSpacing;
-    prevKidFrame->GetStyleData(eStyleStruct_Spacing, (nsStyleStruct *&)kidSpacing);
-    nsMargin margin;
-    kidSpacing->CalcMarginFor(prevKidFrame, margin);
   }
-
-  // Set the inner table max size
-  nsSize  innerTableSize(0,0);
-
-  mInnerTableFrame->GetSize(innerTableSize);
-  aState.innerTableMaxSize.width = innerTableSize.width;
-  aState.innerTableMaxSize.height = aState.reflowState.maxSize.height;
 
   return NS_OK;
 }
-#endif
 
 /** Layout the entire row.
   * This method stacks rows horizontally according to HTML 4.0 rules.
@@ -1110,7 +1120,7 @@ nsTableRowFrame::Reflow(nsIPresContext*      aPresContext,
     aReflowState.reflowCommand->GetNext(kidFrame);
 
     // Recover our reflow state
-    // RecoverState(state, kidFrame);
+    RecoverState(state, kidFrame);
 
     // Pass along the reflow command. Reflow the child with an unconstrained
     // width and get its maxElementSize

@@ -139,7 +139,7 @@ protected:
 
   void FixMinCellHeight();
 
-
+  nsresult RecoverState(RowReflowState& aState, nsIFrame* aKidFrame);
 
   //overrides 
 
