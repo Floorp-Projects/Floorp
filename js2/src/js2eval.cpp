@@ -347,6 +347,7 @@ namespace MetaData {
                     if (engine->parameterFrame)
                         engine->parameterFrame->argSlots = engine->parameterSlots;
                     this->bCon = oldbcon;
+                    runtimeFrame->releaseArgs();
                     throw x;
                 }
                 engine->pc = savePC;
@@ -356,6 +357,7 @@ namespace MetaData {
                 if (engine->parameterFrame)
                     engine->parameterFrame->argSlots = engine->parameterSlots;
                 this->bCon = oldbcon;
+                runtimeFrame->releaseArgs();
             }
         }
         return result;

@@ -1350,7 +1350,8 @@ public:
                 isInstance(false),
                 callsSuperConstructor(false),
                 superConstructorCalled(true),
-                argSlots(NULL)
+                argSlots(NULL),
+                argSlotsOwner(false)
                     { }
 /*
     ParameterFrame(ParameterFrame *pluralFrame) 
@@ -1384,6 +1385,7 @@ public:
     js2val *argSlots;               // if the corresponding function uses 'arguments', this pointer is borrowed
                                     // from the arguments instance.
     uint32 argCount;                // may be more than frameSlots->size() if more arguments are passed
+    bool argSlotsOwner;
 
 
 
@@ -1393,6 +1395,7 @@ public:
 
     virtual void instantiate(Environment *env);
     void assignArguments(JS2Metadata *meta, JS2Object *fnObj, js2val *argBase, uint32 argCount);
+    void releaseArgs();
     virtual void markChildren();
     virtual ~ParameterFrame();
 };

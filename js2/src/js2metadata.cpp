@@ -5265,7 +5265,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     // Assume that instantiate has been called, the plural frame will contain
     // the cloned Variables assigned into this (singular) frame. Use the 
     // incoming values to initialize the positionals.
-    // Pad out to 'length' args with undefined values if argc is insufficient
+    // Pad out with undefined values if argc is insufficient
     void ParameterFrame::assignArguments(JS2Metadata *meta, JS2Object *fnObj, js2val *argv, uint32 argc)
     {
         uint32 i;
@@ -5273,20 +5273,22 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         ArgumentsInstance *argsObj = NULL;
         DEFINE_ROOTKEEPER(meta, rk2, argsObj);
 
-		// slotCount is the number of slots required by the parameter frame
-        uint32 slotCount = (frameSlots) ? frameSlots->size() : 0;
+		// argCount is the number of slots acquired by the frame, it will
+        // be the larger of the number of paramters defined or the number
+        // of arguments passed.
+        argCount = (frameSlots) ? frameSlots->size() : 0;
+		if (argc > argCount)
+			argCount = argc;
 
         if (buildArguments) {
             // If we're building an arguments object, the slots for the parameter frame are located
             // there so that the arguments object itself can survive beyond the life of the function.
             argsObj = new (meta) ArgumentsInstance(meta, meta->objectClass->prototype, meta->argumentsClass);
-			if (argc > slotCount)
-				slotCount = argc;
-            if (slotCount) {
-                argsObj->mSlots = new js2val[slotCount];
-                argsObj->count = slotCount;
-                argsObj->mSplit = new bool[slotCount];
-                for (i = 0; (i < slotCount); i++)
+            if (argCount) {
+                argsObj->mSlots = new js2val[argCount];
+                argsObj->count = argCount;
+                argsObj->mSplit = new bool[argCount];
+                for (i = 0; (i < argCount); i++)
                     argsObj->mSplit[i] = false;
             }
             argSlots = argsObj->mSlots;
@@ -5308,23 +5310,29 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             }
         }
         else {
-			if (argc > slotCount)
-				slotCount = argc;
-            if (argSlots)
+            if (argSlots && argSlotsOwner)
                 delete [] argSlots;
-            if (slotCount)
-                argSlots = new js2val[slotCount];
+            if (argCount) {
+                if (argCount <= argc) {
+                    argSlots = argv;
+                    argSlotsOwner = false;
+                    return;
+                }
+                else {
+                    argSlots = new js2val[argCount];
+                    argSlotsOwner = true;
+                }
+            }
             else
                 argSlots = NULL;
         }
-        argCount = slotCount;
 
         for (i = 0; (i < argc); i++) {
-            if (i < slotCount) {
+            if (i < argCount) {
                 argSlots[i] = argv[i];
             }
         }
-        for ( ; (i < slotCount); i++) {
+        for ( ; (i < argCount); i++) {
 			argSlots[i] = JS2VAL_UNDEFINED;
         }
         if (buildArguments) {
@@ -5345,14 +5353,17 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         }
     }
 
+    void ParameterFrame::releaseArgs()
+    {
+        if (!buildArguments && argSlots && argSlotsOwner)
+            delete [] argSlots;
+        argSlots = NULL;
+    }
+
+
     ParameterFrame::~ParameterFrame()
     {
-        if (buildArguments) {
-            argSlots = NULL;      // the slots are in the arguments object, let it do the delete
-        }
-        else
-            if (argSlots)
-                delete [] argSlots;
+        releaseArgs();
     }
 
  /************************************************************************************
