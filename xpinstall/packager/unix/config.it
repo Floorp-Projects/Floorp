@@ -2,6 +2,8 @@
 [General]
 ;-------------------------------------------------------------------------
 Default Location=/usr/local/mozilla
+; *** LOCALIZE ME BABY ***
+Title=Mozilla Installer
 
 
 ;-------------------------------------------------------------------------
@@ -25,10 +27,13 @@ License File=MPL-1.1.txt
 ;-------------------------------------------------------------------------
 Show Dialog=TRUE
 Title=Mozilla Installer
+; *** LOCALIZE ME BABY ***
 Message0=Please select the setup type you wish to install.
 
 [Setup Type0]
+; *** LOCALIZE ME BABY ***
 Description Short=Typical
+; *** LOCALIZE ME BABY ***
 Description Long=Navigator and Mail & News
 C0=Component0
 C1=Component1
@@ -38,7 +43,9 @@ C4=Component5
 C5=Component6
 
 [Setup Type1]
+; *** LOCALIZE ME BABY ***
 Description Short=Complete
+; *** LOCALIZE ME BABY ***
 Description Long=Navigator, Mail & News, and Chatzilla
 C0=Component0
 C1=Component1
@@ -49,7 +56,9 @@ C5=Component5
 C6=Component6
 
 [Setup Type2]
+; *** LOCALIZE ME BABY ***
 Description Short=Navigator
+; *** LOCALIZE ME BABY ***
 Description Long=Navigator only
 C0=Component0
 C1=Component1 
@@ -58,7 +67,9 @@ C3=COmponent5
 C4=Component6
 
 [Setup Type3]
+; *** LOCALIZE ME BABY ***
 Description Short=Custom
+; *** LOCALIZE ME BABY ***
 Description Long=Choose components you wish to install
 C0=Component0
 C1=Component1
@@ -74,10 +85,12 @@ C6=Component6
 ;-------------------------------------------------------------------------
 Show Dialog=TRUE
 Title=Mozilla Installer
+; *** LOCALIZE ME BABY ***
 Message0=Please select the components you wish to install.
 
 [Component0]
 Description Short=XPInstall Engine
+; *** LOCALIZE ME BABY ***
 Description Long=Installer technology
 Archive=xpcom.xpi
 $InstallSize$:xpcom
@@ -86,6 +99,7 @@ URL0=$URLPath$
 
 [Component1]
 Description Short=Navigator
+; *** LOCALIZE ME BABY ***
 Description Long=Web browser software
 Archive=browser.xpi
 $InstallSize$:browser
@@ -94,6 +108,7 @@ URL0=$URLPath$
 
 [Component2]
 Description Short=Mail & News
+; *** LOCALIZE ME BABY ***
 Description Long=Email and Newsgroup software
 Archive=mail.xpi
 $InstallSize$:mail
@@ -102,6 +117,7 @@ URL0=$URLPath$
 
 [Component3]
 Description Short=Chatzilla
+; *** LOCALIZE ME BABY ***
 Description Long=Chatzilla IRC client
 Archive=chatzilla.xpi
 $InstallSize$:chatzilla
@@ -110,6 +126,7 @@ URL0=$URLPath$
 
 [Component4]
 Description Short=Quality Feedback Agent
+; *** LOCALIZE ME BABY ***
 Description Long=Tool for reporting software crashes to Netscape
 Archive=talkback.xpi
 $InstallSize$:talkback
@@ -117,8 +134,9 @@ Attributes=SELECTED
 URL0=$URLPath$
 
 [Component5]
-Description Short=English US Language Pack
-Description Long=English US Language Pack
+Description Short=English US Profile Defaults
+; *** LOCALIZE ME BABY ***
+Description Long=English US Profile Defaults
 Archive=deflenus.xpi
 $InstallSize$:deflenus
 Attributes=SELECTED|INVISIBLE
@@ -126,6 +144,7 @@ URL0=$URLPath$
 
 [Component6]
 Description Short=English US Language Pack
+; *** LOCALIZE ME BABY ***
 Description Long=English US Language Pack
 Archive=langenus.xpi
 $InstallSize$:langenus
@@ -134,6 +153,7 @@ URL0=$URLPath$
 
 [Component7]
 Description Short=English German Language Pack
+; *** LOCALIZE ME BABY ***
 Description Long=English German Language Pack
 Archive=langende.xpi
 $InstallSize$:langende
@@ -146,6 +166,7 @@ URL0=$URLPath$
 ;-------------------------------------------------------------------------
 Show Dialog=TRUE
 Title=Mozilla Installer
+; *** LOCALIZE ME BABY ***
 Message0=Click the Install button to proceed with this installation.
 XPInstall Engine=xpcom.xpi
 
@@ -154,4 +175,5 @@ XPInstall Engine=xpcom.xpi
 [LegacyCheck0]
 ;-------------------------------------------------------------------------
 Filename=mozilla-bin
+; *** LOCALIZE ME BABY ***
 Message=An older installation of Mozilla was detected.  Please choose to delete the directory contents of your current Mozilla installation by hitting the 'Delete' button.  Alternatively, please hit the 'Cancel' button and choose a different destination directory.  
