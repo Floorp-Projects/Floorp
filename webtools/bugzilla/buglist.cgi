@@ -1124,7 +1124,7 @@ CMD: for ($::FORM{'cmdtype'}) {
         
         # Don't add it to the list if they are reusing an existing query name.
         foreach my $query (@{$vars->{'user'}{'queries'}}) {
-            if ($query->{'name'} eq $name) {
+            if ($query->{'name'} eq $name && $query->{'linkinfooter'} == 1) {
                 $new_in_footer = 0;
             }
         }        
@@ -1132,7 +1132,10 @@ CMD: for ($::FORM{'cmdtype'}) {
         print "Content-Type: text/html\n\n";
         # Generate and return the UI (HTML page) from the appropriate template.        
         if ($new_in_footer) {
-            push(@{$vars->{'user'}{'queries'}}, {name => $name});
+            my %query = (name => $name,
+                         query => $::buffer, 
+                         linkinfooter => $tofooter);
+            push(@{$vars->{'user'}{'queries'}}, \%query);
         }
         
         $vars->{'title'} = "OK, query saved.";
