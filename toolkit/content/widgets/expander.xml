@@ -36,7 +36,7 @@
             if (val)
               this.setAttribute("open", "true");
             else
-              this.removeAttribute("open");
+              this.setAttribute("open", "false");
             return val;
           ]]>
         </setter>
@@ -52,7 +52,10 @@
           switch (button) {
           case "disclosure":
           case "label":
-            this.open = !this.open;
+            if (this.open == "true")
+              this.open = false;
+            else
+              this.open = true;
             break;
           case "clear-button":
             var event = document.createEvent("Events");
