@@ -286,9 +286,9 @@ nsresult nsClipboard::GetNativeDataOffClipboard(nsIWidget * aWindow, UINT /*aInd
   return result;
 }
 
-#if 1
 static void DisplayErrCode(HRESULT hres) 
 {
+#if defined(DEBUG_rods) || defined(DEBUG_pinkerton)
   if (hres == E_INVALIDARG) {
     printf("E_INVALIDARG\n");
   } else
@@ -324,8 +324,9 @@ static void DisplayErrCode(HRESULT hres)
   } else {
     printf("****** DisplayErrCode 0x%X\n", hres);
   }
-}
 #endif
+}
+
 //-------------------------------------------------------------------------
 static HRESULT FillSTGMedium(IDataObject * aDataObject, UINT aFormat, LPFORMATETC pFE, LPSTGMEDIUM pSTM, DWORD aTymed)
 {
