@@ -48,6 +48,9 @@
 
 #include "nsDSURIContentListener.h"
 
+// Latest includes
+#include "nsIWebNavigation.h"
+
 
 class nsDocShellInitInfo
 {
@@ -57,12 +60,12 @@ public:
    PRInt32        y;
    PRInt32        cx;
    PRInt32        cy;
-   PRBool         visible;
 };
 
 class nsDocShell : public nsIDocShell,
                    public nsIDocShellTreeItem, 
                    public nsIDocShellTreeNode,
+                   public nsIWebNavigation,
                    public nsIBaseWindow, 
                    public nsIScrollable, 
                    public nsITextScroll, 
@@ -78,6 +81,7 @@ public:
    NS_DECL_NSIDOCSHELL
    NS_DECL_NSIDOCSHELLTREEITEM
    NS_DECL_NSIDOCSHELLTREENODE
+   NS_DECL_NSIWEBNAVIGATION
    NS_DECL_NSIBASEWINDOW
    NS_DECL_NSISCROLLABLE
    NS_DECL_NSITEXTSCROLL
@@ -112,10 +116,13 @@ protected:
    NS_IMETHOD CreateTargetLocation(const PRUnichar* aName, nsIDocShellTreeItem** aShell);
 
    void SetCurrentURI(nsIURI* aUri);
+   NS_IMETHOD EnsureContentViewer();
+   NS_IMETHOD CreateAboutBlankContentViewer();
    NS_IMETHOD CreateContentViewer(const char* aContentType, nsURILoadCommand aCommand,
       nsIChannel* aOpenedChannel, nsIStreamListener** aContentHandler);
    NS_IMETHOD NewContentViewerObj(const char* aContentType, nsURILoadCommand aCommand,
       nsIChannel* aOpenedChannel, nsIStreamListener** aContentHandler);
+   NS_IMETHOD SetupNewViewer(nsIContentViewer* aNewViewer);
 
    NS_IMETHOD FireStartDocumentLoad(nsIDocumentLoader* aLoader,
                                     nsIURI* aURL,
@@ -131,7 +138,6 @@ protected:
    NS_IMETHOD GetPrimaryFrameFor(nsIContent* content, nsIFrame** frame);
 
 protected:
-   PRBool                     mCreated;
    nsString                   mName;
    nsString                   mTitle;
    nsVoidArray                mChildren;

@@ -61,7 +61,6 @@
 //*****************************************************************************
 
 nsDocShell::nsDocShell() : 
-  mCreated(PR_FALSE),
   mContentListener(nsnull),
   mInitInfo(nsnull), 
   mMarginWidth(0), 
@@ -76,17 +75,7 @@ nsDocShell::nsDocShell() :
 
 nsDocShell::~nsDocShell()
 {
-   if(mInitInfo)
-      {
-      delete mInitInfo;
-      mInitInfo = nsnull;
-      }
-
-   if(mContentListener)
-      {
-      mContentListener->DocShell(nsnull);
-      NS_RELEASE(mContentListener);
-      }
+   Destroy();
 }
 
 NS_IMETHODIMP nsDocShell::Create(nsISupports* aOuter, const nsIID& aIID, 
@@ -116,6 +105,7 @@ NS_INTERFACE_MAP_BEGIN(nsDocShell)
    NS_INTERFACE_MAP_ENTRY(nsIDocShell)
    NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeItem)
    NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeNode)
+   NS_INTERFACE_MAP_ENTRY(nsIWebNavigation)
    NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
    NS_INTERFACE_MAP_ENTRY(nsIScrollable)
    NS_INTERFACE_MAP_ENTRY(nsITextScroll)
@@ -190,24 +180,6 @@ NS_IMETHODIMP nsDocShell::LoadURIVia(nsIURI* aUri,
       NS_STATIC_CAST(nsIDocShell*, this), aAdapterBinding), NS_ERROR_FAILURE);
 
    return NS_OK;
-}
-
-NS_IMETHODIMP nsDocShell::GetDocument(nsIDOMDocument** aDocument)
-{
-  NS_ENSURE_ARG_POINTER(aDocument);
-  NS_ENSURE_STATE(mContentViewer);
-
-  nsCOMPtr<nsIPresShell> presShell;
-  NS_ENSURE_SUCCESS(GetPresShell(getter_AddRefs(presShell)), NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIDocument>doc;
-  NS_ENSURE_SUCCESS(presShell->GetDocument(getter_AddRefs(doc)), NS_ERROR_FAILURE);
-  NS_ENSURE_TRUE(doc, NS_ERROR_NULL_POINTER);
-
-  // the result's addref comes from this QueryInterface call
-  NS_ENSURE_SUCCESS(CallQueryInterface(doc.get(), aDocument), NS_ERROR_FAILURE);
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShell::GetCurrentURI(nsIURI** aURI)
@@ -331,13 +303,10 @@ nsDocShell::SetDocument(nsIDOMDocument *aDOMDoc, nsIDOMElement *aRootNode)
 NS_IMETHODIMP nsDocShell::GetPresContext(nsIPresContext** aPresContext)
 {
    NS_ENSURE_ARG_POINTER(aPresContext);
+   *aPresContext = nsnull;
 
-   if(!mContentViewer)
-      {
-      *aPresContext = nsnull;
-      return NS_OK;
-      }
-
+   NS_ENSURE_TRUE(mContentViewer, NS_ERROR_FAILURE);
+   
    nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(mContentViewer));
    NS_ENSURE_TRUE(docv, NS_ERROR_FAILURE);
 
@@ -840,6 +809,106 @@ NS_IMETHODIMP nsDocShell::FindChildWithName(const PRUnichar *aName,
 }
 
 //*****************************************************************************
+// nsDocShell::nsIWebNavigation
+//*****************************************************************************   
+
+NS_IMETHODIMP nsDocShell::GetCanGoBack(PRBool* aCanGoBack)
+{
+   //XXX First Checkin
+   NS_ERROR("Not Yet Implemented");
+   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsDocShell::GetCanGoForward(PRBool* aCanGoForward)
+{
+   //XXX First Checkin
+   NS_ERROR("Not Yet Implemented");
+   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsDocShell::GoBack()
+{
+   //XXX First Checkin
+   NS_ERROR("Not Yet Implemented");
+   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsDocShell::GoForward()
+{
+   //XXX First Checkin
+   NS_ERROR("Not Yet Implemented");
+   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsDocShell::LoadURI(const PRUnichar* aURI)
+{
+   //XXX First Checkin
+   NS_ERROR("Not Yet Implemented");
+   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsDocShell::Reload()
+{
+   //XXX First Checkin
+   NS_ERROR("Not Yet Implemented");
+   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsDocShell::Stop()
+{
+   //XXX First Checkin
+   NS_ERROR("Not Yet Implemented");
+   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsDocShell::SetDocument(nsIDOMDocument* aDocument,
+   const PRUnichar* aContentType)
+{
+   //XXX First Checkin
+   NS_ERROR("Not Yet Implemented");
+   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsDocShell::GetDocument(nsIDOMDocument** aDocument)
+{
+  NS_ENSURE_ARG_POINTER(aDocument);
+  NS_ENSURE_STATE(mContentViewer);
+
+  nsCOMPtr<nsIPresShell> presShell;
+  NS_ENSURE_SUCCESS(GetPresShell(getter_AddRefs(presShell)), NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDocument>doc;
+  NS_ENSURE_SUCCESS(presShell->GetDocument(getter_AddRefs(doc)), NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(doc, NS_ERROR_NULL_POINTER);
+
+  // the result's addref comes from this QueryInterface call
+  NS_ENSURE_SUCCESS(CallQueryInterface(doc.get(), aDocument), NS_ERROR_FAILURE);
+
+  return NS_OK;
+}
+	
+NS_IMETHODIMP nsDocShell::GetCurrentURI(PRUnichar** aCurrentURI)
+{
+   //XXX First Checkin
+   NS_ERROR("Not Yet Implemented");
+   return NS_ERROR_FAILURE;
+}
+	
+NS_IMETHODIMP nsDocShell::SetSessionHistory(nsISHistory* aSessionHistory)
+{
+   //XXX First Checkin
+   NS_ERROR("Not Yet Implemented");
+   return NS_ERROR_FAILURE;
+}
+	
+NS_IMETHODIMP nsDocShell::GetSessionHistory(nsISHistory** aSessionHistory)
+{
+   //XXX First Checkin
+   NS_ERROR("Not Yet Implemented");
+   return NS_ERROR_FAILURE;
+}
+
+//*****************************************************************************
 // nsDocShell::nsIBaseWindow
 //*****************************************************************************   
 
@@ -847,37 +916,35 @@ NS_IMETHODIMP nsDocShell::InitWindow(nativeWindow parentNativeWindow,
    nsIWidget* parentWidget, PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy)   
 {
    NS_ENSURE_ARG(parentWidget);  // DocShells must get a widget for a parent
-   NS_ENSURE_STATE(!mCreated && InitInfo());
 
-   mParentWidget = parentWidget;
-   mInitInfo->x = x;
-   mInitInfo->y = y;
-   mInitInfo->cx = cx;
-   mInitInfo->cy = cy;
+   SetParentWidget(parentWidget);
+   SetPositionAndSize(x, y, cx, cy, PR_FALSE);
 
    return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShell::Create()
 {
-   NS_ENSURE_STATE(!mCreated);
+   NS_ENSURE_STATE(!mContentViewer);
 
-   // Use mBaseInitInfo to do create
-   // Then delete mBaseInitInfo
-   //XXX First Check
-  /*
-  Tells the window that intialization and setup is complete.  When this is
-  called the window can actually create itself based on the setup
-  information handed to it.
-  */
-   return NS_ERROR_FAILURE;
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShell::Destroy()
 {
-   // We don't support the dynamic destroy and recreate on the object.  Just
-   // create a new object!
-   return NS_ERROR_NOT_IMPLEMENTED;
+   if(mInitInfo)
+      {
+      delete mInitInfo;
+      mInitInfo = nsnull;
+      }
+
+   if(mContentListener)
+      {
+      mContentListener->DocShell(nsnull);
+      NS_RELEASE(mContentListener);
+      }
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShell::SetPosition(PRInt32 x, PRInt32 y)
@@ -1030,11 +1097,11 @@ NS_IMETHODIMP nsDocShell::GetParentWidget(nsIWidget** parentWidget)
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShell::SetParentWidget(nsIWidget* parentWidget)
+NS_IMETHODIMP nsDocShell::SetParentWidget(nsIWidget* aParentWidget)
 {
-   NS_ENSURE_STATE(!mCreated);
+   NS_ENSURE_STATE(!mContentViewer);
 
-   mParentWidget = parentWidget;
+   mParentWidget = aParentWidget;
 
    return NS_OK;
 }
@@ -1058,52 +1125,47 @@ NS_IMETHODIMP nsDocShell::SetParentNativeWindow(nativeWindow parentNativeWindow)
 
 NS_IMETHODIMP nsDocShell::GetVisibility(PRBool* aVisibility)
 {
-  NS_ENSURE_ARG_POINTER(aVisibility);
-
-  if(!mCreated) {
-    *aVisibility = mInitInfo->visible;
-  }
-  else
-  {
-    // get the pres shell
-    nsCOMPtr<nsIPresShell> presShell;
-    NS_ENSURE_SUCCESS(GetPresShell(getter_AddRefs(presShell)), NS_ERROR_FAILURE);
-    NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
-
-    // get the view manager
-    nsCOMPtr<nsIViewManager> vm;
-    NS_ENSURE_SUCCESS(presShell->GetViewManager(getter_AddRefs(vm)), NS_ERROR_FAILURE);
-    NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
-
-    // get the root view
-    nsIView *rootView=nsnull; // views are not ref counted
-    NS_ENSURE_SUCCESS(vm->GetRootView(rootView), NS_ERROR_FAILURE);
-    NS_ENSURE_TRUE(rootView, NS_ERROR_FAILURE);
-
-    // convert the view's visibility attribute to a bool
-    nsViewVisibility vis;
-    NS_ENSURE_TRUE(rootView->GetVisibility(vis), NS_ERROR_FAILURE); 
-    if (nsViewVisibility_kHide==vis) {
+   NS_ENSURE_ARG_POINTER(aVisibility);
+   if(!mContentViewer)
+      {
       *aVisibility = PR_FALSE;
-    }
-    else {
-      *aVisibility = PR_TRUE;
-    }
-  }
+      return NS_OK;
+      }
 
-  return NS_OK;
+   // get the pres shell
+   nsCOMPtr<nsIPresShell> presShell;
+   NS_ENSURE_SUCCESS(GetPresShell(getter_AddRefs(presShell)), NS_ERROR_FAILURE);
+   NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
+
+   // get the view manager
+   nsCOMPtr<nsIViewManager> vm;
+   NS_ENSURE_SUCCESS(presShell->GetViewManager(getter_AddRefs(vm)), NS_ERROR_FAILURE);
+   NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
+
+   // get the root view
+   nsIView *rootView=nsnull; // views are not ref counted
+   NS_ENSURE_SUCCESS(vm->GetRootView(rootView), NS_ERROR_FAILURE);
+   NS_ENSURE_TRUE(rootView, NS_ERROR_FAILURE);
+
+   // convert the view's visibility attribute to a bool
+   nsViewVisibility vis;
+   NS_ENSURE_TRUE(rootView->GetVisibility(vis), NS_ERROR_FAILURE);
+   *aVisibility = nsViewVisibility_kHide==vis ? PR_FALSE : PR_TRUE;
+
+   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShell::SetVisibility(PRBool visibility)
+NS_IMETHODIMP nsDocShell::SetVisibility(PRBool aVisibility)
 {
-   if(!mCreated)
-      mInitInfo->visible = visibility;
-   else
+   if(!mContentViewer)
+      return NS_OK;
+   if(aVisibility)
       {
-
-     // NS_ENSURE_SUCCESS(mContentViewer->
-      // XXX Set underlying control visibility
+      NS_ENSURE_SUCCESS(EnsureContentViewer(), NS_ERROR_FAILURE);
+      mContentViewer->Show();
       }
+   else if(mContentViewer)
+      mContentViewer->Hide();
 
    return NS_OK;
 }
@@ -1449,8 +1511,8 @@ NS_IMETHODIMP nsDocShell::GetScriptGlobalObject(nsIScriptGlobalObject** aGlobal)
    NS_ENSURE_ARG_POINTER(aGlobal);
    NS_ENSURE_SUCCESS(EnsureScriptEnvironment(), NS_ERROR_FAILURE);
 
-   *aGlobal = mScriptContext->GetGlobalObject(); // this returns an addrefed object..
-   // NS_IF_ADDREF(*aGlobal);
+   *aGlobal = mScriptGlobal;
+   NS_IF_ADDREF(*aGlobal);
    return NS_OK;
 }
 
@@ -1508,72 +1570,7 @@ NS_IMETHODIMP nsDocShell::Embed(nsIContentViewer* aContentViewer,
                                     const char      * aCommand,
                                     nsISupports     * aExtraInfo)
 {
-  NS_ENSURE_ARG_POINTER(aContentViewer);
-  // null aCommand is ok
-  // null aExtraInfo is ok
-
-  WEB_TRACE(WEB_TRACE_CALLS,
-      ("nsWebShell::Embed: this=%p aDocViewer=%p aCommand=%s aExtraInfo=%p",
-       this, aContentViewer, aCommand ? aCommand : "", aExtraInfo));
-
-  // (1) reset state, clean up any left-over data from previous embedding
-  mContentViewer = nsnull;
-  if (nsnull != mScriptContext) {
-    mScriptContext->GC();
-  }
-  
-  // (2) set the new content viewer
-  mContentViewer = aContentViewer;
-
-  // XXX: comment from webshell code --
-  // check to see if we have a window to embed into --dwc0001
-  /* Note we also need to check for the presence of a native widget. If the
-     webshell is hidden before it's embedded, which can happen in an onload
-     handler, the native widget is destroyed before this code is run.  This
-     appears to be mostly harmless except on Windows, where the subsequent
-     attempt to create a child window without a parent is met with disdain
-     by the OS. It's handy, then, that GetNativeData on Windows returns
-     null in this case. */
-  /* XXX native window
-  nsRect bounds;
-  if(mWindow && mWindow->GetNativeData(NS_NATIVE_WIDGET)) 
-  {
-    mWindow->GetClientBounds(bounds);
-    bounds.x = bounds.y = 0;
-    rv = mContentViewer->Init(mWindow->GetNativeData(NS_NATIVE_WIDGET),
-                              mDeviceContext,
-                              mPrefs,
-                              bounds,
-                              mScrollPref);
-
-    // If the history state has been set by session history,
-    // set it on the pres shell now that we have a content
-    // viewer.
-
-    //XXX: history, should be removed
-    if (mContentViewer && mHistoryState) {
-      nsCOMPtr<nsIDocumentViewer> docv = do_QueryInterface(mContentViewer);
-      if (nsnull != docv) {
-        nsCOMPtr<nsIPresShell> shell;
-        rv = docv->GetPresShell(*getter_AddRefs(shell));
-        if (NS_SUCCEEDED(rv)) {
-          rv = shell->SetHistoryState((nsILayoutHistoryState*) mHistoryState);
-        }
-      }
-    }
-
-    if (NS_SUCCEEDED(rv)) {
-      mContentViewer->Show();
-    }
-  } else {
-    mContentViewer = nsnull;
-  }
-  */
-
-  // Now that we have switched documents, forget all of our children
-  DestroyChildren();
-
-  return NS_OK;
+   return SetupNewViewer(aContentViewer);
 }
 
 NS_IMETHODIMP nsDocShell::HandleUnknownContentType(nsIDocumentLoader* aLoader,
@@ -1661,17 +1658,15 @@ NS_IMETHODIMP nsDocShell::EnsureScriptEnvironment()
    if(mScriptContext)
       return NS_OK;
 
-   nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject;
-
-   NS_ENSURE_SUCCESS(NS_NewScriptGlobalObject(getter_AddRefs(scriptGlobalObject)), 
-      NS_ERROR_FAILURE);
+   NS_NewScriptGlobalObject(getter_AddRefs(mScriptGlobal));
+   NS_ENSURE_TRUE(mScriptGlobal, NS_ERROR_FAILURE);
 
    mScriptGlobal->SetDocShell(NS_STATIC_CAST(nsIDocShell*, this));
    mScriptGlobal->SetGlobalObjectOwner(
       NS_STATIC_CAST(nsIScriptGlobalObjectOwner*, this));
 
-   NS_ENSURE_SUCCESS(NS_CreateScriptContext(scriptGlobalObject, 
-      getter_AddRefs(mScriptContext)), NS_ERROR_FAILURE);
+   NS_CreateScriptContext(mScriptGlobal, getter_AddRefs(mScriptContext));
+   NS_ENSURE_TRUE(mScriptContext, NS_ERROR_FAILURE);
 
    return NS_OK;
 }
@@ -1733,12 +1728,25 @@ void nsDocShell::SetCurrentURI(nsIURI* aUri)
    mCurrentURI = aUri; //This assignment addrefs
 }
 
-nsresult nsDocShell::CreateContentViewer(const char* aContentType, 
+NS_IMETHODIMP nsDocShell::EnsureContentViewer()
+{
+   if(mContentViewer)
+      return NS_OK;
+
+   return CreateAboutBlankContentViewer();
+}
+
+NS_IMETHODIMP nsDocShell::CreateAboutBlankContentViewer()
+{
+   // XXX
+   NS_ERROR("Not Implemented yet");
+   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsDocShell::CreateContentViewer(const char* aContentType, 
    nsURILoadCommand aCommand, nsIChannel* aOpenedChannel, 
    nsIStreamListener** aContentHandler)
 {
-   NS_ENSURE_STATE(mCreated);
-
    //XXX We should return NS_ERROR_FAILURE if we can't create a new 
    // one and then leave our window in tact....
    //XXXQ Can we check the content type of the current content viewer
@@ -1784,6 +1792,128 @@ nsresult nsDocShell::NewContentViewerObj(const char* aContentType,
       aContentHandler, getter_AddRefs(mContentViewer)), NS_ERROR_FAILURE);
 
    return rv;
+}
+
+NS_IMETHODIMP nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer)
+{
+   //
+   // Copy content viewer state from previous or parent content viewer.
+   //
+   // The following logic is mirrored in nsHTMLDocument::StartDocumentLoad!
+   //
+   // Do NOT to maintain a reference to the old content viewer outside
+   // of this "copying" block, or it will not be destroyed until the end of
+   // this routine and all <SCRIPT>s and event handlers fail! (bug 20315)
+   //
+   // In this block of code, if we get an error result, we return it
+   // but if we get a null pointer, that's perfectly legal for parent
+   // and parentContentViewer.
+   //
+
+   PRInt32 x = 0;
+   PRInt32 y = 0;
+   PRInt32 cx = 0;
+   PRInt32 cy = 0;
+
+   // This will get the size from the current content viewer or from the
+   // Init settings
+   GetPositionAndSize(&x, &y, &cx, &cy);
+
+   nsCOMPtr<nsIDocShellTreeItem> parentAsItem;
+   NS_ENSURE_SUCCESS(GetSameTypeParent(getter_AddRefs(parentAsItem)), 
+      NS_ERROR_FAILURE);
+   nsCOMPtr<nsIDocShell> parent(do_QueryInterface(parentAsItem));
+
+   if(mContentViewer || parent)
+      {  
+      nsCOMPtr<nsIMarkupDocumentViewer> oldMUDV;
+      if(mContentViewer)
+         { 
+         // Get any interesting state from old content viewer
+         // XXX: it would be far better to just reuse the document viewer ,
+         //      since we know we're just displaying the same document as before
+         oldMUDV = do_QueryInterface(mContentViewer);
+         }
+      else
+         { 
+         // No old content viewer, so get state from parent's content viewer
+         nsCOMPtr<nsIContentViewer> parentContentViewer;
+         parent->GetContentViewer(getter_AddRefs(parentContentViewer));
+         oldMUDV = do_QueryInterface(parentContentViewer);
+         }
+
+      nsXPIDLString defaultCharset;
+      nsXPIDLString forceCharset;
+      nsXPIDLString hintCharset;
+      PRInt32 hintCharsetSource;
+
+      nsCOMPtr<nsIMarkupDocumentViewer> newMUDV(do_QueryInterface(aNewViewer));
+      if(oldMUDV && newMUDV)
+         {
+         NS_ENSURE_SUCCESS(oldMUDV->GetDefaultCharacterSet(getter_Copies(defaultCharset)),
+            NS_ERROR_FAILURE);
+         NS_ENSURE_SUCCESS(oldMUDV->GetForceCharacterSet(getter_Copies(forceCharset)),
+            NS_ERROR_FAILURE);
+         NS_ENSURE_SUCCESS(oldMUDV->GetHintCharacterSet(getter_Copies(hintCharset)),
+            NS_ERROR_FAILURE);
+         NS_ENSURE_SUCCESS(oldMUDV->GetHintCharacterSetSource(&hintCharsetSource),
+            NS_ERROR_FAILURE);
+
+         // set the old state onto the new content viewer
+         NS_ENSURE_SUCCESS(newMUDV->SetDefaultCharacterSet(defaultCharset),
+            NS_ERROR_FAILURE);
+         NS_ENSURE_SUCCESS(newMUDV->SetForceCharacterSet(forceCharset), 
+            NS_ERROR_FAILURE);
+         NS_ENSURE_SUCCESS(newMUDV->SetHintCharacterSet(hintCharset),
+            NS_ERROR_FAILURE);
+         NS_ENSURE_SUCCESS(newMUDV->SetHintCharacterSetSource(hintCharsetSource),
+            NS_ERROR_FAILURE);
+         }
+      }
+   mContentViewer = nsnull;
+   // End copying block (Don't hold content/document viewer ref beyond here!!)
+
+   if(mScriptContext)
+      mScriptContext->GC();
+
+   mContentViewer = aNewViewer;
+
+   nsCOMPtr<nsIWidget> widget;
+   NS_ENSURE_SUCCESS(GetMainWidget(getter_AddRefs(widget)), NS_ERROR_FAILURE);
+
+   nsRect bounds(x, y, cx, cy);
+/*   if(NS_FAILED(mContentViewer->Init(widget->GetNativeData(NS_NATIVE_WIDGET),
+      mDeviceContext, mPrefs, bounds, nsScrollPreference_kAuto)))
+      {
+      mContentViewer = nsnull;
+      NS_ERROR("ContentViewer Initialization failed");
+      return NS_ERROR_FAILURE;
+      }   
+
+   /*
+    XXXTAB Don't think we need this in new world
+    // If the history state has been set by session history,
+    // set it on the pres shell now that we have a content
+    // viewer.
+   if(mContentViewer && mHistoryState)
+      {
+      nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(mContentViewer));
+      if(docv)
+         {
+         nsCOMPtr<nsIPresShell> shell;
+         docv->GetPresShell(*getter_AddRefs(shell));
+         if(shell)
+            shell->SetHistoryState(mHistoryState);
+         }
+      }
+   */
+   NS_ERROR("Uncomment above");
+   mContentViewer->Show();
+
+   // Now that we have switched documents, forget all of our children
+   DestroyChildren();
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP
