@@ -163,6 +163,7 @@ nsRenderingContextXlib::Init(nsIDeviceContext* aContext)
   }
   NS_ASSERTION(nsnull != mContext, "Device context is null.");
 
+  mXlibRgbHandle = mPrintContext->GetXlibRgbHandle();
   mDisplay = mPrintContext->GetDisplay();
   mScreen  = mPrintContext->GetScreen();
   mVisual  = mPrintContext->GetVisual();
@@ -191,6 +192,7 @@ nsRenderingContextXlib::Init(nsIDeviceContext* aContext, nsIWidget *aWindow)
   mContext = do_QueryInterface(aContext);
   NS_ASSERTION(nsnull != mContext, "Device context is null.");
   
+  mXlibRgbHandle = mContext->GetXlibRgbHandle();
   mDisplay = mContext->GetDisplay();
   mScreen  = mContext->GetScreen();
   mVisual  = mContext->GetVisual();
@@ -202,10 +204,7 @@ nsRenderingContextXlib::Init(nsIDeviceContext* aContext, nsIWidget *aWindow)
     Drawable  win = (Drawable)aWindow->GetNativeData(NS_NATIVE_WINDOW);
     xGC      *gc  = (xGC*)aWindow->GetNativeData(NS_NATIVE_GRAPHIC);
 
-    mRenderingSurface->Init(mDisplay, 
-                            mScreen, 
-                            mVisual,
-                            mDepth,
+    mRenderingSurface->Init(mXlibRgbHandle, 
                             (PRUint32)win, 
                             gc);
 
@@ -226,6 +225,7 @@ nsRenderingContextXlib::Init(nsIDeviceContext* aContext, nsDrawingSurface aSurfa
   mContext = do_QueryInterface(aContext);
   NS_ASSERTION(nsnull != mContext, "Device context is null.");
   
+  mXlibRgbHandle = mContext->GetXlibRgbHandle();
   mDisplay = mContext->GetDisplay();
   mScreen  = mContext->GetScreen();
   mVisual  = mContext->GetVisual();
@@ -480,9 +480,10 @@ void nsRenderingContextXlib::UpdateGC()
    memset(&values, 0, sizeof(XGCValues));
  
    unsigned long color;
-   color = xlib_rgb_xpixel_from_rgb (NS_RGB(NS_GET_B(mCurrentColor),
-                                            NS_GET_G(mCurrentColor),
-                                            NS_GET_R(mCurrentColor)));
+   color = xxlib_rgb_xpixel_from_rgb (mXlibRgbHandle,
+                                      NS_RGB(NS_GET_B(mCurrentColor),
+                                             NS_GET_G(mCurrentColor),
+                                             NS_GET_R(mCurrentColor)));
    values.foreground = color;
    valuesMask = GCForeground;
 
@@ -762,10 +763,7 @@ nsRenderingContextXlib::CreateDrawingSurface(nsRect *aBounds, PRUint32 aSurfFlag
     NS_ADDREF(surf);
     if (!mGC)
       UpdateGC();
-    surf->Init(mDisplay, 
-               mScreen, 
-               mVisual,
-               mDepth,
+    surf->Init(mXlibRgbHandle,
                mGC,
                aBounds->width, 
                aBounds->height, 

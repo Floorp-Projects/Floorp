@@ -44,10 +44,7 @@
 #include "nsRenderingContextXlib.h"
 #include "nsString.h"
 #include "nsUnitConversion.h"
-
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/Xos.h>
+#include "xlibrgb.h"
 
 // Remove this eventually after I remove all usage from implementation file. TonyT
 #define FONT_SWITCHING
@@ -211,7 +208,11 @@ public:
 protected:
   void RealizeFont();
 
-  nsIDeviceContext    *mDeviceContext;
+#ifdef _IMPL_NS_XPRINT
+  nsDeviceContextXp   *mDeviceContext;
+#else
+  nsDeviceContextXlib *mDeviceContext;
+#endif /* _IMPL_NS_XPRINT */ 
   nsFont              *mFont;
   XFontStruct         *mFontHandle;
   XFontStruct         *mFontStruct;

@@ -26,14 +26,13 @@
  *   Tony Tsui <tony@igelaus.com.au>
  *   L. David Baron <dbaron@fas.harvard.edu>
  *   Tim Copperfield <timecop@network.email.ne.jp>
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  */
 
 #undef DEBUG_CURSORCACHE
 
 #include "nsWidget.h"
-
 #include "nsIServiceManager.h"
-
 #include "nsAppShell.h"
 
 #include <X11/cursorfont.h>
@@ -123,9 +122,12 @@ nsWidget::nsWidget() // : nsBaseWidget()
   mBaseWindow = 0;
   mBackground = NS_RGB(192, 192, 192);
   mBorderRGB = NS_RGB(192, 192, 192);
-  mBackgroundPixel = xlib_rgb_xpixel_from_rgb(mBackground);
+  /* |xxlib_find_handle(XXLIBRGB_DEFAULT_HANDLE)| would be the official 
+   * way - but |nsAppShell::GetXlibRgbHandle()| one is little bit faster...*/
+  mXlibRgbHandle = nsAppShell::GetXlibRgbHandle();
+  mBackgroundPixel = xxlib_rgb_xpixel_from_rgb(mXlibRgbHandle, mBackground);
   mBackground = NS_RGB(192, 192, 192);
-  mBorderPixel = xlib_rgb_xpixel_from_rgb(mBorderRGB);
+  mBorderPixel = xxlib_rgb_xpixel_from_rgb(mXlibRgbHandle, mBorderRGB);
   mParentWidget = nsnull;
   mName.AssignWithConversion("unnamed");
   mIsShown = PR_FALSE;
@@ -258,10 +260,10 @@ nsWidget::StandardWidgetCreate(nsIWidget *aParent,
   NS_ASSERTION(!mBaseWindow, "already initialized");
   if (mBaseWindow) return NS_ERROR_ALREADY_INITIALIZED;
 
-  mDisplay = xlib_rgb_get_display();
-  mScreen = xlib_rgb_get_screen();
-  mVisual = xlib_rgb_get_visual();
-  mDepth = xlib_rgb_get_depth();
+  mDisplay = xxlib_rgb_get_display(mXlibRgbHandle);
+  mScreen = xxlib_rgb_get_screen(mXlibRgbHandle);
+  mVisual = xxlib_rgb_get_visual(mXlibRgbHandle);
+  mDepth = xxlib_rgb_get_depth(mXlibRgbHandle);
 
   mParentWidget = aParent;
 
@@ -283,7 +285,7 @@ nsWidget::StandardWidgetCreate(nsIWidget *aParent,
   } else if (aParent) {
     parent = (Window)aParent->GetNativeData(NS_NATIVE_WINDOW);
   } else {
-    parent = RootWindowOfScreen(mScreen);
+    parent = XRootWindowOfScreen(mScreen);
   }
 
   if (nsnull != aInitData) {
@@ -294,7 +296,7 @@ nsWidget::StandardWidgetCreate(nsIWidget *aParent,
 
   attr.bit_gravity = NorthWestGravity;
   attr.event_mask = GetEventMask();
-  attr.colormap = xlib_rgb_get_cmap();
+  attr.colormap = xxlib_rgb_get_cmap(mXlibRgbHandle);
 
   attr_mask = CWBitGravity | CWEventMask;
 
@@ -304,7 +306,7 @@ nsWidget::StandardWidgetCreate(nsIWidget *aParent,
   switch (mWindowType) {
   case eWindowType_dialog:
     mIsToplevel = PR_TRUE;
-    parent = RootWindowOfScreen(mScreen);
+    parent = XRootWindowOfScreen(mScreen);
     mBaseWindow = XCreateWindow(mDisplay, parent, mBounds.x, mBounds.y,
                                 mBounds.width, mBounds.height, 0,
                                 mDepth, InputOutput, mVisual,
@@ -318,7 +320,7 @@ nsWidget::StandardWidgetCreate(nsIWidget *aParent,
     attr_mask |= CWOverrideRedirect | CWSaveUnder;
     attr.save_under = True;
     attr.override_redirect = True;
-    parent = RootWindowOfScreen(mScreen);
+    parent = XRootWindowOfScreen(mScreen);
     mBaseWindow = XCreateWindow(mDisplay, parent,
                                 mBounds.x, mBounds.y,
                                 mBounds.width, mBounds.height, 0,
@@ -330,7 +332,7 @@ nsWidget::StandardWidgetCreate(nsIWidget *aParent,
 
   case eWindowType_toplevel:
     mIsToplevel = PR_TRUE;
-    parent = RootWindowOfScreen(mScreen);
+    parent = XRootWindowOfScreen(mScreen);
     mBaseWindow = XCreateWindow(mDisplay, parent, mBounds.x, mBounds.y,
                                 mBounds.width, mBounds.height, 0,
                                 mDepth, InputOutput, mVisual,
@@ -418,7 +420,7 @@ NS_IMETHODIMP nsWidget::Move(PRInt32 aX, PRInt32 aY)
     } else if (mParentWindow) {
       Window child;
       XTranslateCoordinates(mDisplay, mParentWindow,
-                            RootWindowOfScreen(mScreen),
+                            XRootWindowOfScreen(mScreen),
                             aX, aY, &transRect.x, &transRect.y,
                             &child);
     }
@@ -672,7 +674,7 @@ NS_IMETHODIMP nsWidget::SetBackgroundColor(const nscolor &aColor)
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsWidget::SetBackgroundColor()\n"));
 
   nsBaseWidget::SetBackgroundColor(aColor);
-  mBackgroundPixel = xlib_rgb_xpixel_from_rgb(mBackground);
+  mBackgroundPixel = xxlib_rgb_xpixel_from_rgb(mXlibRgbHandle, mBackground);
   // set the window attrib
   XSetWindowBackground(mDisplay, mBaseWindow, mBackgroundPixel);
   return NS_OK;
@@ -691,7 +693,7 @@ NS_IMETHODIMP nsWidget::WidgetToScreen(const nsRect& aOldRect,
   Window child;
   XTranslateCoordinates(mDisplay,
                         mBaseWindow,
-                        RootWindowOfScreen(mScreen),
+                        XRootWindowOfScreen(mScreen),
                         aOldRect.x, aOldRect.y,
                         &aNewRect.x, &aNewRect.y,
                         &child);
@@ -755,7 +757,7 @@ void nsWidget::CreateNative(Window aParent, nsRect aRect)
 
   attr.bit_gravity = NorthWestGravity;
   attr.event_mask = GetEventMask();
-  attr.colormap = xlib_rgb_get_cmap();
+  attr.colormap = xxlib_rgb_get_cmap(mXlibRgbHandle);
 
   attr_mask = CWBitGravity | CWEventMask;
 
@@ -856,7 +858,7 @@ nsWidget::DeleteWindowCallback(Window aWindow)
 #endif
     for (int i = 0; i < eCursor_count_up_down; i++)
       if (gsXlibCursorCache[i])
-        XFreeCursor(xlib_rgb_get_display(), gsXlibCursorCache[i]);
+        XFreeCursor(nsAppShell::mDisplay, gsXlibCursorCache[i]);
   }
 
   if (gsWindowDestroyCallback) 
@@ -954,7 +956,7 @@ PRBool nsWidget::IsMouseInWindow(Window window, PRInt32 inMouseX, PRInt32 inMous
 	int root_inMouse_y;
 	Window returnedChild;
 	Window rootWindow;
-	rootWindow = RootWindow(mDisplay, DefaultScreen(mDisplay));
+	rootWindow = XRootWindow(mDisplay, DefaultScreen(mDisplay));
 	if (!XTranslateCoordinates(mDisplay, mBaseWindow, rootWindow,
 		inMouseX, inMouseY,
 		&root_inMouse_x, &root_inMouse_y, &returnedChild)){

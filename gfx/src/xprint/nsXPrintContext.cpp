@@ -18,7 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- * Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  *
  */
 
@@ -38,7 +38,6 @@
 #include "prenv.h" /* for PR_GetEnv */
 
 /* misc defines */
-//#define HACK_PRINTONSCREEN 1
 #define XPRINT_MAKE_24BIT_VISUAL_AVAILABLE_FOR_TESTING 1
 
 #ifdef XPRINT_NOT_YET /* ToDo: make this dynamically */
@@ -71,7 +70,8 @@ int xerror_handler( Display *display, XErrorEvent *ev )
 nsXPrintContext::nsXPrintContext()
 {
   PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::nsXPrintContext()\n"));
-   
+  
+  mXlibRgbHandle = (XlibRgbHandle *)nsnull;
   mPDisplay    = (Display *)nsnull;
   mPContext    = (XPContext)None;
   mScreen      = (Screen *)nsnull;
@@ -80,6 +80,10 @@ nsXPrintContext::nsXPrintContext()
   mDepth       = 0;
   mIsGrayscale = PR_FALSE; /* default is color output */
   mIsAPrinter  = PR_TRUE;  /* default destination is printer */
+  mPrintFile   = nsnull;
+  mXpuPrintToFileHandle = nsnull;
+  mPrintResolution = 0L;
+  mContext     = nsnull;
 }
 
 /** ---------------------------------------------------
@@ -95,7 +99,8 @@ nsXPrintContext::~nsXPrintContext()
     XPU_TRACE(XpDestroyContext(mPDisplay, mPContext));
 
     // Cleanup things allocated along the way
-    XPU_TRACE(xlib_rgb_detach());
+    xxlib_rgb_destroy_handle(mXlibRgbHandle);
+    mXlibRgbHandle = nsnull;
     
     XPU_TRACE(XCloseDisplay(mPDisplay));
     
@@ -115,8 +120,6 @@ nsXPrintContext::Init(nsDeviceContextXp *dc, nsIDeviceContextSpecXp *aSpec)
                          * I wish current Xprt would have a 1bit/8bit StaticGray 
                          * visual for the PS DDX... ;-( 
                          */
-  char *buf;
-
 /* I can't get any other visual than the 8bit peudocolor one working... BAD...
  * This env var allows others to test this without hacking their own binaries...
  */
@@ -126,44 +129,24 @@ nsXPrintContext::Init(nsDeviceContextXp *dc, nsIDeviceContextSpecXp *aSpec)
     prefDepth = 24;
   }
 #endif /* XPRINT_MAKE_24BIT_VISUAL_AVAILABLE_FOR_TESTING */  
+  
+  unsigned short width, height;
+  XRectangle rect;
 
-/* print on screen(="normal" Xserver) is "DEBUG" for now... 
- * maybe usefull for preview, too... 
- */
-#ifdef HACK_PRINTONSCREEN
-  // debug: "print" on display server for quick debugging
-  // see sleep() in nsXPrintContext::EndDocument()
-  if( !strcmp("xprint_preview",(aSpec->GetCommand(&buf),buf)) )
-  {
-    mPDisplay  = (Display *)XOpenDisplay(nsnull);
-    mScreen = XDefaultScreenOfDisplay(mPDisplay);
-    mScreenNumber = XScreenNumberOfScreen(mScreen);
-    xlib_rgb_init_with_depth(mPDisplay, mScreen, prefDepth);
-    xlib_disallow_image_tiling(TRUE);
+  if( NS_FAILED( XPU_TRACE(SetupPrintContext(aSpec)) ) )
+    return NS_ERROR_FAILURE;
+  
+  mScreen = XpGetScreenOfContext(mPDisplay, mPContext);
+  mScreenNumber = XScreenNumberOfScreen(mScreen);
+  mXlibRgbHandle = xxlib_rgb_create_handle_with_depth("xprint", mPDisplay, mScreen, prefDepth);
+  if (!mXlibRgbHandle)
+    return NS_ERROR_FAILURE;
+  xxlib_disallow_image_tiling(mXlibRgbHandle, TRUE);
 
-    SetupWindow(0, 0, 1200, 1200);
-    mPrintResolution = 91 /* or 301 - intentionally forcing scaling */;
-    XMapWindow(mPDisplay, mDrawable);
-  }
-  else
-#endif /* HACK_PRINTONSCREEN */  
-  {
-    unsigned short width, height;
-    XRectangle rect;
+  XpGetPageDimensions(mPDisplay, mPContext, &width, &height, &rect);
+  SetupWindow(rect.x, rect.y, rect.width, rect.height);
 
-    if( NS_FAILED( XPU_TRACE(SetupPrintContext(aSpec)) ) )
-      return NS_ERROR_FAILURE;
-    
-    mScreen = XpGetScreenOfContext(mPDisplay, mPContext);
-    mScreenNumber = XScreenNumberOfScreen(mScreen);
-    xlib_rgb_init_with_depth(mPDisplay, mScreen, prefDepth);
-    xlib_disallow_image_tiling(TRUE);
-
-    XpGetPageDimensions(mPDisplay, mPContext, &width, &height, &rect);
-    SetupWindow(rect.x, rect.y, rect.width, rect.height);
-
-    XMapWindow(mPDisplay, mDrawable);
-  }
+  XMapWindow(mPDisplay, mDrawable); 
   
   mContext = dc;
     
@@ -171,7 +154,12 @@ nsXPrintContext::Init(nsDeviceContextXp *dc, nsIDeviceContextSpecXp *aSpec)
    * ToDo: unset handler after all is done - what about handler "stacking" ?
    */
   (void)XSetErrorHandler(xerror_handler);
-  XSynchronize(mPDisplay, True);
+
+  /* only run unbuffered X11 connection on demand (for debugging/testing) */
+  if( PR_GetEnv("MOZILLA_XPRINT_EXPERIMENTAL_SYNCHRONIZE") != nsnull )
+  {
+    XSynchronize(mPDisplay, True);
+  }  
   
   return NS_OK;
 }
@@ -193,9 +181,9 @@ nsXPrintContext::SetupWindow(int x, int y, int width, int height)
   mWidth  = width;
   mHeight = height;
 
-  visual_info = xlib_rgb_get_visual_info();
-  mVisual     = xlib_rgb_get_visual();
-  mDepth      = xlib_rgb_get_depth();
+  visual_info = xxlib_rgb_get_visual_info(mXlibRgbHandle);
+  mVisual     = xxlib_rgb_get_visual(mXlibRgbHandle);
+  mDepth      = xxlib_rgb_get_depth(mXlibRgbHandle);
 
   background = XWhitePixel(mPDisplay, mScreenNumber);
   foreground = XBlackPixel(mPDisplay, mScreenNumber);  
@@ -203,7 +191,7 @@ nsXPrintContext::SetupWindow(int x, int y, int width, int height)
                                              
   xattributes.background_pixel = background;
   xattributes.border_pixel     = foreground;
-  xattributes.colormap         = xlib_rgb_get_cmap();
+  xattributes.colormap         = xxlib_rgb_get_cmap(mXlibRgbHandle);
   xattributes_mask             = CWBorderPixel | CWBackPixel;
   if( xattributes.colormap )
     xattributes_mask |= CWColormap;
@@ -264,6 +252,12 @@ nsXPrintContext::SetupPrintContext(nsIDeviceContextSpecXp *aSpec)
     if( (mPrintFile == nsnull) || (strlen(mPrintFile) == 0) )
       return NS_ERROR_FAILURE;
   }
+
+  /* workaround for crash in XCloseDisplay() on Solaris 2.7 Xserver - when 
+   * shared memory transport is used XCloseDisplay() tries to free() the 
+   * shared memory segment - causing heap corruption and/or SEGV.
+   */
+  putenv("XSUNTRANSPORT=xxx");
      
   /* get printer, either by "name" (foobar) or "name@display" (foobar@gaja:5)
    * ToDo: report error to user (dialog)
@@ -383,18 +377,6 @@ nsXPrintContext::EndPage()
 {
   XPU_TRACE(XpEndPage(mPDisplay));
   XPU_TRACE(XpuWaitForPrintNotify(mPDisplay, XPEndPageNotify));
-
-#ifdef HACK_PRINTONSCREEN        
-  /* HACK: sleep 15secs if we're displaying to a "display" server
-   * see nsXPrintContext::Init and XprintOnScreen macro above - this is only used if 
-   * we are printing to a normal Xserver and not to a Xprint server (e.g. in rare 
-   * rare cases...)
-   */
-  if( XpuCheckExtension(mPDisplay) != 1 )
-  {
-    sleep(15);
-  }
-#endif /* HACK_PRINTONSCREEN */
   
   return NS_OK;
 }
@@ -415,18 +397,6 @@ nsXPrintContext::EndDocument()
       PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("XpuWaitForPrintFileChild returned success.\n"));
     }
   }
-    
-#ifdef HACK_PRINTONSCREEN        
-  /* HACK: sleep 15secs if we're displaying to a "display" server
-   * see nsXPrintContext::Init and XprintOnScreen macro above - this is only used if 
-   * we are printing to a normal Xserver and not to a Xprint server (e.g. in rare 
-   * rare cases...)
-   */
-  if( XpuCheckExtension(mPDisplay) != 1 )
-  {
-    sleep(15);
-  }
-#endif /* HACK_PRINTONSCREEN */
     
   return NS_OK;
 }
@@ -697,11 +667,12 @@ nsXPrintContext::DrawImageBitsScaled(xGC *xgc, nsIImage *aImage,
   else
   {
     /* shortcut */
-    xlib_draw_rgb_image(mDrawable,
-                        *xgc,
-                        aDX, aDY, aDWidth, aDHeight,
-                        NS_XPRINT_RGB_DITHER,
-                        (unsigned char *)dstImg->data, dstImg->bytes_per_line);
+    xxlib_draw_rgb_image(mXlibRgbHandle,
+                         mDrawable,
+                         *xgc,
+                         aDX, aDY, aDWidth, aDHeight,
+                         NS_XPRINT_RGB_DITHER,
+                         (unsigned char *)dstImg->data, dstImg->bytes_per_line);
     rv = NS_OK;                        
   }
 
@@ -865,19 +836,21 @@ nsXPrintContext::DrawImageBits(xGC *xgc,
 
   if( mIsGrayscale )
   {
-    xlib_draw_gray_image(mDrawable,
-                         image_gc,
-                         aX, aY, aWidth, aHeight,
-                         NS_XPRINT_RGB_DITHER,
-                         image_bits, row_bytes);  
+    xxlib_draw_gray_image(mXlibRgbHandle,
+                          mDrawable,
+                          image_gc,
+                          aX, aY, aWidth, aHeight,
+                          NS_XPRINT_RGB_DITHER,
+                          image_bits, row_bytes);  
   }
   else
   {
-    xlib_draw_rgb_image(mDrawable,
-                        image_gc,
-                        aX, aY, aWidth, aHeight,
-                        NS_XPRINT_RGB_DITHER,
-                        image_bits, row_bytes);
+    xxlib_draw_rgb_image(mXlibRgbHandle,
+                         mDrawable,
+                         image_gc,
+                         aX, aY, aWidth, aHeight,
+                         NS_XPRINT_RGB_DITHER,
+                         image_bits, row_bytes);
   }
   
   if( alpha_pixmap != None ) 

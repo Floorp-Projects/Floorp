@@ -25,8 +25,7 @@
 #include "prlog.h"
 #include "nsGCCache.h"
 
-#include "xlibrgb.h"      // for xlib_rgb_get_visual_info
-#include <X11/Xutil.h>    // for XVisualInfo.
+#include "xlibrgb.h"      // for xxlib_rgb_get_visual_info
 
 #ifdef PR_LOGGING 
 static PRLogModuleInfo *DrawingSurfaceXlibLM = PR_NewLogModule("DrawingSurfaceXlib");
@@ -39,6 +38,7 @@ nsDrawingSurfaceXlib::nsDrawingSurfaceXlib()
   mDrawable = 0;
   mDestroyDrawable = PR_FALSE;
   mImage = nsnull;
+  mXlibRgbHandle = nsnull;
   mDisplay = nsnull;
   mScreen = nsnull;
   mVisual = nsnull;
@@ -55,29 +55,6 @@ nsDrawingSurfaceXlib::nsDrawingSurfaceXlib()
   mWidth = 0;
   mHeight = 0;
   mIsOffscreen = PR_FALSE;
-
-  // set up the masks for the pix formats
-  XVisualInfo * x_visual_info = xlib_rgb_get_visual_info();
-
-  NS_ASSERTION(nsnull != x_visual_info,"Visual info from xlibrgb is null.");
-
-  if (nsnull != x_visual_info)
-  {
-    mPixFormat.mRedMask = x_visual_info->red_mask;
-    mPixFormat.mGreenMask = x_visual_info->green_mask;;
-    mPixFormat.mBlueMask = x_visual_info->blue_mask;;
-    mPixFormat.mAlphaMask = 0;
-
-    mPixFormat.mRedCount = ConvertMaskToCount(x_visual_info->red_mask);
-    mPixFormat.mGreenCount = ConvertMaskToCount(x_visual_info->green_mask);
-    mPixFormat.mBlueCount = ConvertMaskToCount(x_visual_info->blue_mask);;
-    mPixFormat.mAlphaCount = 0;
-
-    mPixFormat.mRedShift = GetShiftForMask(x_visual_info->red_mask);
-    mPixFormat.mGreenShift = GetShiftForMask(x_visual_info->green_mask);
-    mPixFormat.mBlueShift = GetShiftForMask(x_visual_info->blue_mask);
-    mPixFormat.mAlphaShift = 0;
-  }
 }
 
 nsDrawingSurfaceXlib::~nsDrawingSurfaceXlib()
@@ -101,61 +78,83 @@ nsDrawingSurfaceXlib::~nsDrawingSurfaceXlib()
 NS_IMPL_ISUPPORTS1(nsDrawingSurfaceXlib, nsIDrawingSurface)
 
 NS_IMETHODIMP
-nsDrawingSurfaceXlib::Init(Display * aDisplay,
-                           Screen *  aScreen,
-                           Visual *  aVisual,
-                           int       aDepth,
+nsDrawingSurfaceXlib::Init(XlibRgbHandle *aXlibRgbHandle,
                            Drawable  aDrawable, 
                            xGC        *aGC) 
 {
   PR_LOG(DrawingSurfaceXlibLM, PR_LOG_DEBUG, ("nsDrawingSurfaceXlib::Init()\n"));
 
-  mDisplay = aDisplay;
-  mScreen = aScreen;
-  mVisual = aVisual;
-  mDepth = aDepth;
-  mDrawable = aDrawable;
+  mXlibRgbHandle = aXlibRgbHandle;
+  mDrawable      = aDrawable;
 
+  CommonInit();
+  
   if (mGC)
     mGC->Release();
   mGC = aGC;
   mGC->AddRef();
-
+  
   mIsOffscreen = PR_FALSE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDrawingSurfaceXlib::Init (Display * aDisplay,
-                            Screen *  aScreen,
-                            Visual *  aVisual,
-                            int       aDepth,
+nsDrawingSurfaceXlib::Init (XlibRgbHandle *aXlibRgbHandle,
                             xGC     * aGC,
                             PRUint32  aWidth, 
                             PRUint32  aHeight, 
                             PRUint32  aFlags) 
 {
-  mDisplay = aDisplay;
-  mScreen = aScreen;
-  mVisual = aVisual;
-  mDepth = aDepth;
+  mXlibRgbHandle = aXlibRgbHandle;
   mWidth = aWidth;
   mHeight = aHeight;
   mLockFlags = aFlags;
 
-  if(mGC)
+  CommonInit();
+  
+  if (mGC)
     mGC->Release();
   mGC = aGC;
   mGC->AddRef();
-
+  
   mIsOffscreen = PR_TRUE;
 
   mDrawable = XCreatePixmap(mDisplay, 
-                            RootWindow(mDisplay, GetScreenNumber()),
+                            XRootWindow(mDisplay, GetScreenNumber()),
                             mWidth, 
                             mHeight, 
                             mDepth);
   return NS_OK;
+}
+
+void 
+nsDrawingSurfaceXlib::CommonInit()
+{
+  mDisplay  = xxlib_rgb_get_display(mXlibRgbHandle);
+  mScreen   = xxlib_rgb_get_screen(mXlibRgbHandle);
+  mVisual   = xxlib_rgb_get_visual(mXlibRgbHandle);
+  mDepth    = xxlib_rgb_get_depth(mXlibRgbHandle);
+
+  XVisualInfo *x_visual_info = xxlib_rgb_get_visual_info(mXlibRgbHandle);
+  NS_ASSERTION(nsnull != x_visual_info, "Visual info from xlibrgb is null.");
+
+  if (x_visual_info)
+  {
+    mPixFormat.mRedMask = x_visual_info->red_mask;
+    mPixFormat.mGreenMask = x_visual_info->green_mask;;
+    mPixFormat.mBlueMask = x_visual_info->blue_mask;;
+    mPixFormat.mAlphaMask = 0;
+
+    mPixFormat.mRedCount = ConvertMaskToCount(x_visual_info->red_mask);
+    mPixFormat.mGreenCount = ConvertMaskToCount(x_visual_info->green_mask);
+    mPixFormat.mBlueCount = ConvertMaskToCount(x_visual_info->blue_mask);;
+    mPixFormat.mAlphaCount = 0;
+
+    mPixFormat.mRedShift = GetShiftForMask(x_visual_info->red_mask);
+    mPixFormat.mGreenShift = GetShiftForMask(x_visual_info->green_mask);
+    mPixFormat.mBlueShift = GetShiftForMask(x_visual_info->blue_mask);
+    mPixFormat.mAlphaShift = 0;
+  }
 }
 
 NS_IMETHODIMP

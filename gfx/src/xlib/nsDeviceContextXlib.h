@@ -27,8 +27,7 @@
 
 #include "nsDeviceContext.h"
 #include "nsIRenderingContext.h"
-
-#include <X11/Xlib.h>
+#include "xlibrgb.h"
 
 class nsDeviceContextXlib : public DeviceContextImpl
 {
@@ -67,6 +66,7 @@ public:
 
   NS_IMETHOD CreateFontCache();
 
+  XlibRgbHandle *GetXlibRgbHandle() { return mXlibRgbHandle; }  
   Display   *GetDisplay() { return mDisplay; }
   Screen    *GetScreen() { return mScreen; }
   Visual    *GetVisual() { return mVisual; }
@@ -82,6 +82,7 @@ private:
   PRBool               mWriteable;
   PRUint32             mNumCells;
   nsDrawingSurface     mSurface;
+  XlibRgbHandle       *mXlibRgbHandle;
   Display *            mDisplay;
   Screen *             mScreen;
   Visual *             mVisual;

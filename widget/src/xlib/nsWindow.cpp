@@ -23,10 +23,10 @@
  *   Ken Faulkner <faulkner@igelaus.com.au>
  *   B.J. Rossiter <bj@igelaus.com.au>
  *   Tony Tsui <tony@igelaus.com.au>
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  */
 
 #include "nsWindow.h"
-
 #include "xlibrgb.h"
 
 /* for window title unicode->locale conversion */
@@ -36,7 +36,7 @@
 
 #include "nsFileSpec.h" // for nsAutoCString
 
-#define ABS(i) ( i<0 ? 0-i : i )
+#define ABS(i) ( (i)<0 ? 0-(i) : (i) )
 
 // Variables for grabbing
 PRBool   nsWindow::sIsGrabbing = PR_FALSE;
@@ -195,9 +195,9 @@ nsWindow::nsWindow() : nsWidget()
   NS_INIT_REFCNT();
   mName.AssignWithConversion("nsWindow");
   mBackground = NS_RGB(255, 255, 255);
-  mBackgroundPixel = xlib_rgb_xpixel_from_rgb(mBackground);
+  mBackgroundPixel = xxlib_rgb_xpixel_from_rgb(mXlibRgbHandle, mBackground);
   mBorderRGB = NS_RGB(255,255,255);
-  mBorderPixel = xlib_rgb_xpixel_from_rgb(mBorderRGB);
+  mBorderPixel = xxlib_rgb_xpixel_from_rgb(mXlibRgbHandle, mBorderRGB);
 
   // FIXME KenF
   mIsUpdating = PR_FALSE;

@@ -71,6 +71,7 @@ protected:
 private:
   static nsWidget *sWidget;
   static Window sWindow;
+  static XlibRgbHandle *sXlibRgbHandle;
   static Display *sDisplay;
   static PRBool mDragging;
   PRBool mCanDrop;

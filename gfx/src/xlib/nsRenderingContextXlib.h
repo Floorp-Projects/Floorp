@@ -237,6 +237,7 @@ private:
   nsCOMPtr<nsIRegion>      mClipRegion;
   float                    mP2T;
   nscolor                  mCurrentColor;
+  XlibRgbHandle           *mXlibRgbHandle; 
   Display *                mDisplay;
   Screen *                 mScreen;
   Visual *                 mVisual;

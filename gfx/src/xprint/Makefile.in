@@ -17,7 +17,7 @@
 # Rights Reserved.
 #
 # Contributor(s): 
-# Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
+#   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
 #
 
 DEPTH		= ../../..
@@ -34,10 +34,9 @@ IS_COMPONENT	= 1
 MODULE_NAME	= nsGfxXprintModule
 
 EXTRA_DSO_LIBS	= gkgfx
-REQUIRES	= xpcom string widget view img util pref locale uconv unicharutil gfx2 imglib2 intl
+REQUIRES	= xpcom string xlibrgb widget view img util pref locale uconv unicharutil gfx2 imglib2 intl
 
 CSRCS		= \
-		../xlibrgb/xlibrgb.c \
 		xprintutil.c \
 		xprintutil_printtofile.c \
 		$(NULL)
@@ -77,13 +76,8 @@ endif
 CFLAGS		+= $(TK_CFLAGS)
 CXXFLAGS	+= $(TK_CFLAGS)
 
-# gisburn: linking against xlibrgb.so does not work due global variables
-# in that library which must not be shared between main toolkit and
-# Xprint module classes. 
-# This will be fixed by bug 85527 ("Turn xlibrgb into a shared library" - 
-# this RFE will introduce a new API for xlibrgb where these variables are 
-# stored in a "handle" instead of using global variables...).
 EXTRA_DSO_LDOPTS += \
+		-lxlibrgb \
 		-L$(DIST)/bin \
 		-L$(DIST)/lib \
 		$(EXTRA_DSO_LIBS) \

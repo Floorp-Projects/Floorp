@@ -21,14 +21,11 @@
  *   Ken Faulkner <faulkner@igelaus.com.au>
  *   Quy Tonthat <quy@igelaus.com.au>
  *   B.J. Rossiter <bj@igelaus.com.au>
+ *   Roland.Mainz <roland.mainz@informatik.med.uni-giessen.de>
  */
 
 #ifndef nsWidget_h__
 #define nsWidget_h__
-
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/Xos.h>
 
 #include "nsBaseWidget.h"
 #include "nsWeakReference.h"
@@ -37,6 +34,7 @@
 #include "nsIRegion.h"
 #include "nsIXlibWindowService.h"
 #include "nsIRollupListener.h"
+#include "xlibrgb.h"
 
 #ifdef DEBUG_blizzard
 #define XLIB_WIDGET_NOISY
@@ -210,6 +208,7 @@ protected:
   Window         mParentWindow;
 
   // All widgets have at least these items.
+  XlibRgbHandle *mXlibRgbHandle;
   Display *      mDisplay;
   Screen *       mScreen;
   Window         mBaseWindow;
