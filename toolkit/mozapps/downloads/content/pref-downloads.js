@@ -164,7 +164,7 @@ function Startup()
   toggleDMPrefUI(document.getElementById("showWhenStarting"));
 #endif
   
-  setTimeout("postStart()", 0);
+  setTimeout(postStart, 0);
 }
 
 function postStart()

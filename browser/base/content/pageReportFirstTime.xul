@@ -32,7 +32,7 @@
 <dialog id="pageReportFirstTime"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&caption.label;"
-        onload="setTimeout('window.sizeToContent();', 100);"
+        onload="setTimeout(function() { window.sizeToContent(); }, 100);"
         style="width: 40em;"
         buttons="accept"
         persist="screenX screenY"

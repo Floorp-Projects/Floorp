@@ -56,7 +56,7 @@ function init()
   
   var x = document.documentElement.getAttribute("screenX");
   if (x == "")
-    setTimeout("centerOverParent()", 0);  
+    setTimeout(centerOverParent, 0);  
 }
 
 // This should actually go into some sort of pref fe utilities file. 

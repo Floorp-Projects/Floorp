@@ -114,7 +114,7 @@ function init()
   
   var x = document.documentElement.getAttribute("screenX");
   if (x == "")
-    setTimeout("centerOverParent()", 0);
+    setTimeout(centerOverParent, 0);
 }
 
 function setLiteralValue(aResource, aProperty, aValue)

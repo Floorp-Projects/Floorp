@@ -166,7 +166,7 @@ var PrintUtils = {
     observe: function(aSubject, aTopic, aData)
     {
       // delay the print preview to show the content of the progress dialog
-      setTimeout("PrintUtils.enterPrintPreview();", 0);
+      setTimeout(function () { PrintUtils.enterPrintPreview(); }, 0);
     },
 
     QueryInterface : function(iid)

@@ -865,7 +865,7 @@ function constructGoMenuItem(goMenu, beforeItem, url, title)
 
 function onGoMenuHidden()
 {
-  setTimeout("destroyGoMenuItems(document.getElementById('goPopup'));", 0);
+  setTimeout(destroyGoMenuItems, 0, document.getElementById('goPopup'));
 }
 
 function destroyGoMenuItems(goMenu) {
@@ -1024,7 +1024,7 @@ function BrowserOpenTab()
 {
   gBrowser.selectedTab = gBrowser.addTab('about:blank');
   if (gURLBar)
-    setTimeout("gURLBar.focus();", 0); 
+    setTimeout(function() { gURLBar.focus(); }, 0);
 }
 
 /* Called from the openLocation dialog. This allows that dialog to instruct
@@ -1033,7 +1033,12 @@ function BrowserOpenTab()
    though oddly only on Linux. */
 function delayedOpenWindow(chrome,flags,url)
 {
-  setTimeout("openDialog('"+chrome+"','_blank','"+flags+"','"+url+"')", 10);
+  // The other way to use setTimeout,
+  // setTimeout(openDialog, 10, chrome, "_blank", flags, url),
+  // doesn't work here.  The extra "magic" extra argument setTimeout adds to
+  // the callback function would confuse prepareForStartup() by making
+  // window.arguments[1] be an integer instead of null.
+  setTimeout(function() { openDialog(chrome, "_blank", flags, url); }, 10);
 }
 
 /* Required because the tab needs time to set up its content viewers and get the load of
@@ -2441,8 +2446,11 @@ nsBrowserStatusHandler.prototype =
         }
 
         // Turn the progress meter and throbber off.
-        gProgressCollapseTimer = window.setTimeout("gProgressMeterPanel.collapsed = true; gProgressCollapseTimer = null;",
-                                                   100);
+        gProgressCollapseTimer = window.setTimeout(
+          function() { 
+            gProgressMeterPanel.collapsed = true; 
+            gProgressCollapseTimer = null;
+          }, 100);
 
         if (this.throbberElement)
           this.throbberElement.removeAttribute("busy");
@@ -2489,7 +2497,7 @@ nsBrowserStatusHandler.prototype =
     }
     UpdateBackForwardButtons();
     
-    setTimeout("updatePageTheme();", 0);
+    setTimeout(updatePageTheme, 0);
   },
 
   onStatusChange : function(aWebProgress, aRequest, aStatus, aMessage)
@@ -4116,9 +4124,9 @@ function UpdateMenus(event)
     // when onmenucomplete is ready then use it instead of oncreate
     // see bug 78290 for the detail
     UpdateCurrentCharset();
-    setTimeout("UpdateCurrentCharset()", 0);
+    setTimeout(UpdateCurrentCharset, 0);
     UpdateCharsetDetector();
-    setTimeout("UpdateCharsetDetector()", 0);
+    setTimeout(UpdateCharsetDetector, 0);
 }
 
 function CreateMenu(node)

@@ -512,10 +512,10 @@ function ModifyPref(entry)
     return false;
   switch (entry.typeCol) {
     case nsIPrefBranch.PREF_BOOL:
-      gPrefBranch.setBoolPref(entry.prefCol, eval(result.value));
+      gPrefBranch.setBoolPref(entry.prefCol, result.value == "true" || !!parseInt(result.value, 10));
       break;
     case nsIPrefBranch.PREF_INT:
-      gPrefBranch.setIntPref(entry.prefCol, eval(result.value));
+      gPrefBranch.setIntPref(entry.prefCol, parseInt(result.value, 10));
       break;
     default:
     case nsIPrefBranch.PREF_STRING:
