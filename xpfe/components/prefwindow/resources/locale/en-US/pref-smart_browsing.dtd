@@ -8,7 +8,7 @@
 <!ENTITY  lHeader                               "What's Related">
 
 <!--LOCALIZATION NOTE (enableRelatedRadio.label): Translate "What's Related" according to Netscape glossary -->
-<!ENTITY  whatsRelatedDescription.label         "What's Related is a My Sidebar tab that lists sites similar to the one you are visiting.">
+<!ENTITY  whatsRelatedDescription.label         "What's Related is a My Sidebar panel that lists sites similar to the one you are visiting.">
 <!ENTITY  whatsRelatedEnabled.label             "Enable What's Related">
 <!ENTITY  whatsRelatedEnabled.accesskey         "e">
 <!--LOCALIZATION NOTE (autoDecp.label): Translate "What's Related" according to Netscape glossary -->
