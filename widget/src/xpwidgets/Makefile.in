@@ -36,6 +36,7 @@ CPPSRCS= \
 	nsBaseClipboard.cpp      \
 	nsFileListTransferable.cpp \
 	nsFileChooser.cpp \
+	nsFileSpecWithUIImpl.cpp \
 	$(NULL)
 
 LOCAL_INCLUDES := \
