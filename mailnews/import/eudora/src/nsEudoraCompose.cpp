@@ -649,9 +649,11 @@ nsresult nsEudoraCompose::SendTheMessage( nsIFileSpec *pMsg)
 		m_pMsgFields->SetReplyTo( headerVal);
 
 	// what about all of the other headers?!?!?!?!?!?!
-	char *pMimeType = nsnull;
+  char *pMimeType; 
 	if (!bodyType.IsEmpty())
 		pMimeType = ToNewCString(bodyType);
+  else
+    pMimeType = ToNewCString(m_bodyType);
 	
 	// IMPORT_LOG0( "Outlook compose calling CreateAndSendMessage\n");
 	nsMsgAttachedFile *pAttach = GetLocalAttachments();

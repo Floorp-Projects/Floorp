@@ -132,7 +132,7 @@ public:
 
 	nsresult	SendTheMessage( nsIFileSpec *pMsg);
 
-	void		SetBody( const char *pBody, PRInt32 len) { m_pBody = pBody; m_bodyLen = len;}
+  void		SetBody( const char *pBody, PRInt32 len, nsCString &bodyType) { m_pBody = pBody; m_bodyLen = len; m_bodyType = bodyType;}
 	void		SetHeaders( const char *pHeaders, PRInt32 len) { m_pHeaders = pHeaders; m_headerLen = len;}
 	void		SetAttachments( nsVoidArray *pAttachments) { m_pAttachments = pAttachments;}
   void		SetDefaultDate( nsCString date) { m_defaultDate = date;}
@@ -178,6 +178,7 @@ private:
 	const char *			m_pHeaders;
 	PRInt32					m_bodyLen;
 	const char *			m_pBody;
+  nsCString				m_bodyType;
 	nsString				m_defCharset;
 	SimpleBufferTonyRCopiedOnce			m_readHeaders;
 	nsCOMPtr<nsIImportService>	m_pImportService;

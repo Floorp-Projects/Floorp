@@ -64,13 +64,14 @@ public:
 		// get the toc file corresponding to this mailbox
 	virtual nsresult	FindTOCFile( nsIFileSpec *pMailFile, nsIFileSpec **pTOCFile, PRBool *pDeleteToc) { return( NS_ERROR_FAILURE);}
 		// interpret the attachment line and return the attached file
-	virtual nsresult	GetAttachmentInfo( const char *pFileName, nsIFileSpec *pSpec, nsCString& mimeType) { return( NS_ERROR_FAILURE);}
+	virtual nsresult	GetAttachmentInfo( const char *pFileName, nsIFileSpec *pSpec, nsCString& mimeType, nsCString& aAttachment) { return( NS_ERROR_FAILURE);}
 		
 	// Non-platform specific common stuff
 		// import a mailbox
 	nsresult ImportMailbox( PRUint32 *pBytes, PRBool *pAbort, const PRUnichar *pName, nsIFileSpec *pSrc, nsIFileSpec *pDst, PRInt32 *pMsgCount);
 
 	static PRInt32		IsEudoraFromSeparator( const char *pData, PRInt32 maxLen, nsCString& defaultDate);
+	static PRBool		IsEudoraTag( const char *pChar, PRInt32 maxLen, PRBool &insideEudoraTags, nsCString &bodyType);
 
 protected:
 	nsresult	CreateTempFile( nsIFileSpec **ppSpec);
@@ -79,7 +80,7 @@ protected:
 
 private:
 	nsresult	CompactMailbox( PRUint32 *pBytes, PRBool *pAbort, nsIFileSpec *pMail, nsIFileSpec *pToc, nsIFileSpec *pDst);
-	nsresult	ReadNextMessage( ReadFileState *pState, SimpleBufferTonyRCopiedOnce& copy, SimpleBufferTonyRCopiedOnce& header, SimpleBufferTonyRCopiedOnce& body, nsCString& defaultDate);
+	nsresult	ReadNextMessage( ReadFileState *pState, SimpleBufferTonyRCopiedOnce& copy, SimpleBufferTonyRCopiedOnce& header, SimpleBufferTonyRCopiedOnce& body, nsCString& defaultDate, nsCString &defBodyType);
 	PRInt32		FindStartLine( SimpleBufferTonyRCopiedOnce& data);
 	PRInt32		FindNextEndLine( SimpleBufferTonyRCopiedOnce& data);
 	PRInt32		IsEndHeaders( SimpleBufferTonyRCopiedOnce& data);

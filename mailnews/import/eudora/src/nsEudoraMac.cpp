@@ -956,7 +956,7 @@ void nsEudoraMac::SetSmtpServer( nsIMsgAccountManager *pMgr, nsIMsgAccount *pAcc
 }
 
 
-nsresult nsEudoraMac::GetAttachmentInfo( const char *pFileName, nsIFileSpec *pSpec, nsCString& mimeType)
+nsresult nsEudoraMac::GetAttachmentInfo( const char *pFileName, nsIFileSpec *pSpec, nsCString& mimeType, nsCString& aAttachment)
 {
 	mimeType.Truncate();
 
@@ -1038,6 +1038,10 @@ nsresult nsEudoraMac::GetAttachmentInfo( const char *pFileName, nsIFileSpec *pSp
             IMPORT_LOG0("\tfailed to get file spec\n");
             return rv;
           }
+
+          char *pLeaf = nsnull;
+		      pSpec->GetLeafName( &pLeaf);
+          aAttachment.Adopt(pLeaf);
 
           nsCOMPtr<nsILocalFileMac> macFile;
           rv = NS_FileSpecToILocalFileMac(&tempFileSpec, getter_AddRefs(macFile));

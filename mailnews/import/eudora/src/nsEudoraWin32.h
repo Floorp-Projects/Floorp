@@ -65,7 +65,7 @@ public:
 		// get a TOC file from a mailbox file
 	virtual nsresult	FindTOCFile( nsIFileSpec *pMailFile, nsIFileSpec **pTOCFile, PRBool *pDeleteToc);
 
-	virtual nsresult	GetAttachmentInfo( const char *pFileName, nsIFileSpec *pSpec, nsCString& mimeType);
+	virtual nsresult	GetAttachmentInfo( const char *pFileName, nsIFileSpec *pSpec, nsCString& mimeType, nsCString& aAttachment);
 
 	// Things that must be overridden because they are platform specific.
 		// retrieve the address book folder

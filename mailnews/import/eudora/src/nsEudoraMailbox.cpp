@@ -276,6 +276,7 @@ nsresult nsEudoraMailbox::ImportMailbox( PRUint32 *pBytes, PRBool *pAbort, const
 	if (NS_SUCCEEDED( rv = NS_NewFileSpec( getter_AddRefs( compositionFile)))) {
 		nsEudoraCompose		compose;
     nsCString defaultDate;
+    nsCAutoString bodyType;
 		
 		/*
 		IMPORT_LOG0( "Calling compose.SendMessage\n");
@@ -290,13 +291,13 @@ nsresult nsEudoraMailbox::ImportMailbox( PRUint32 *pBytes, PRBool *pAbort, const
 
 		IMPORT_LOG0( "Reading first message\n");
 
-		while (!*pAbort && NS_SUCCEEDED( rv = ReadNextMessage( &state, readBuffer, headers, body, defaultDate))) {
+    while (!*pAbort && NS_SUCCEEDED( rv = ReadNextMessage( &state, readBuffer, headers, body, defaultDate, bodyType))) {
 			
 			if (pBytes) {
 				*pBytes += (((body.m_writeOffset - 1 + headers.m_writeOffset - 1) / div) * mul);
 			}
 
-			compose.SetBody( body.m_pBuffer, body.m_writeOffset - 1);
+      compose.SetBody( body.m_pBuffer, body.m_writeOffset - 1, bodyType);
 			compose.SetHeaders( headers.m_pBuffer, headers.m_writeOffset - 1);
 			compose.SetAttachments( &m_attachments);
       compose.SetDefaultDate(defaultDate);
@@ -448,9 +449,7 @@ nsresult nsEudoraMailbox::CompactMailbox( PRUint32 *pBytes, PRBool *pAbort, nsIF
 
 
 
-
-
-nsresult nsEudoraMailbox::ReadNextMessage( ReadFileState *pState, SimpleBufferTonyRCopiedOnce& copy, SimpleBufferTonyRCopiedOnce& header, SimpleBufferTonyRCopiedOnce& body, nsCString& defaultDate)
+nsresult nsEudoraMailbox::ReadNextMessage( ReadFileState *pState, SimpleBufferTonyRCopiedOnce& copy, SimpleBufferTonyRCopiedOnce& header, SimpleBufferTonyRCopiedOnce& body, nsCString& defaultDate, nsCString& bodyType)
 {
 	header.m_writeOffset = 0;
 	body.m_writeOffset = 0;
@@ -556,7 +555,44 @@ nsresult nsEudoraMailbox::ReadNextMessage( ReadFileState *pState, SimpleBufferTo
 	// Get the body!
 	// Read one line at a time here and look for the next separator
   nsCString tmp;
+  PRBool insideEudoraTags = PR_FALSE;
+  // by default we consider the body text to be plain text
+  bodyType = "text/plain";
+
 	while ((lineLen = IsEudoraFromSeparator( copy.m_pBuffer + copy.m_writeOffset, copy.m_bytesInBuf - copy.m_writeOffset, tmp)) == -1) {
+
+		if (IsEudoraTag ( copy.m_pBuffer + copy.m_writeOffset, copy.m_bytesInBuf - copy.m_writeOffset, insideEudoraTags, bodyType)) {
+			// We don't want to keep eudora tags so we remove this line
+			
+			// let's write the previous text
+			if (!body.Write( copy.m_pBuffer, copy.m_writeOffset)) {
+				IMPORT_LOG0( "*** Error writing to message body\n");
+				return( NS_ERROR_FAILURE);
+			}
+
+			lineLen = -1;
+			while (copy.m_bytesInBuf && lineLen == -1) {
+				lineLen = FindStartLine( copy);
+				if (lineLen == -1) 
+					copy.m_writeOffset = copy.m_bytesInBuf;
+				else
+					copy.m_writeOffset += lineLen;
+
+				if (NS_FAILED( rv = FillMailBuffer( pState, copy))) {
+					IMPORT_LOG0( "*** Error reading message body\n");
+					return( rv);
+				}
+			}
+			
+			if (!copy.m_bytesInBuf)
+				break;
+					
+			continue;
+		}
+
+		// Eudora Attachment lines are always outside Eudora Tags
+		// so we shouldn't try to find one here
+		if (!insideEudoraTags) {
 		// Debatable is whether or not to exclude these lines from the
 		// text of the message, I prefer not to in case the original
 		// attachment is actually missing.
@@ -565,6 +601,8 @@ nsresult nsEudoraMailbox::ReadNextMessage( ReadFileState *pState, SimpleBufferTo
 			IMPORT_LOG0( "*** Error examining attachment line\n");
 			return( rv);
 		}
+		}
+			
 					
 		while (((lineLen = FindStartLine( copy)) == -1) && copy.m_bytesInBuf) {
 			copy.m_writeOffset = copy.m_bytesInBuf;
@@ -680,6 +718,56 @@ PRInt32 nsEudoraMailbox::IsEndHeaders( SimpleBufferTonyRCopiedOnce& data)
 		return( 4);
 
 	return( -1);
+}
+
+
+
+
+static char *eudoraTag[] = {
+  "<x-html>",
+  "</x-html>",
+  "<x-rich>",
+  "</x-rich>",
+  "<x-flowed>",
+  "</x-flowed>"
+};
+
+static PRInt32 eudoraTagLen[] = {
+	8,
+	8,
+	8,
+	8,
+	9,
+	9,
+	0
+};
+
+
+static const char *TagContentType[] = {
+	"text/html",
+	"text/html",
+	"text/html",
+	"text/html",
+	"text/plain",
+	"text/plain",
+};
+
+
+	// Determine if this line contains an eudora special tag
+PRBool	nsEudoraMailbox::IsEudoraTag( const char *pChar, PRInt32 maxLen, PRBool &insideEudoraTags, nsCString &bodyType)
+{
+	PRInt32	cnt;
+	PRInt32	idx = 0;
+	while ((cnt = eudoraTagLen[idx]) != 0) {
+		if (maxLen >= cnt && !nsCRT::strncmp( eudoraTag[idx], pChar, cnt)) {
+			insideEudoraTags = (pChar[1] != '/');
+			bodyType = TagContentType[idx];
+			return PR_TRUE;
+		}
+		idx++;
+	}
+
+	return PR_FALSE;
 }
 
 	// Determine if this line meets Eudora standards for a separator line
@@ -1052,14 +1140,15 @@ PRBool nsEudoraMailbox::AddAttachment( nsCString& fileName)
 		return( PR_FALSE);
 
 	nsCString	mimeType;
-	if (NS_FAILED( GetAttachmentInfo( fileName.get(), pSpec, mimeType))) {
+  nsCString attachmentName;
+	if (NS_FAILED( GetAttachmentInfo( fileName.get(), pSpec, mimeType, attachmentName))) {
 		NS_RELEASE( pSpec);
 		return( PR_FALSE);
 	}
 
 	ImportAttachment *a = new ImportAttachment;
 	a->mimeType = ToNewCString(mimeType);
-	a->description = nsCRT::strdup( "Attached File");
+  a->description = !attachmentName.IsEmpty() ? ToNewCString(attachmentName) : nsCRT::strdup( "Attached File");
 	a->pAttachment = pSpec;
 
 	m_attachments.AppendElement( a);
