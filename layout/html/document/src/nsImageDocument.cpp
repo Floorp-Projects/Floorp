@@ -290,7 +290,7 @@ nsImageDocument::CreateSyntheticDocument()
   PRUnichar* src;
   mDocumentURL->ToString(&src);
   nsHTMLValue val(src);
-  delete src;
+  delete[] src;
   image->SetHTMLAttribute(nsHTMLAtoms::src, val, PR_FALSE);
   image->SetHTMLAttribute(nsHTMLAtoms::alt, val, PR_FALSE);
 
