@@ -234,14 +234,11 @@ Rights Reserved.
 <!ENTITY forwardButton.label "Forward">  
 <!ENTITY deleteButton.img "chrome://messenger/skin/trash.gif">
 <!ENTITY deleteButton.label "Delete">  
-<!ENTITY throbber.img "chrome://navigator/skin/animthrob_single.gif">
 <!ENTITY throbber.url "http://www.mozilla.org/"> 
 
 ]> 
 
                          
-      
-
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 		title="&messengerWindow.title;"
@@ -256,6 +253,8 @@ Rights Reserved.
 <html:script src="chrome://messenger/content/widgetglue.js"/>
 <html:script src="chrome://messenger/content/commandglue.js"/>
 <html:script src="chrome://messenger/content/shareglue.js"/>
+
+  <broadcaster id="Messenger:Throbber" busy="false"/>
 
   <toolbox>
      <menubar>
@@ -574,7 +573,10 @@ Rights Reserved.
 	  <titledbutton src="&forwardButton.img;" align="top" value="&forwardButton.label;" onclick="MsgForwardMessage()"/>
 	  <titledbutton src="&deleteButton.img;" align="top" value="&deleteButton.label;" onclick="MsgDeleteMessage(true)"/>
       <spring flex="100%"/>
-	  <titledbutton src="&throbber.img;" align="right" onclick="MsgHome('&throbber.url;')"/>
+      <titledbutton id="Throbber" onclick="window.content.location.href='&throbber.url;'">
+         <observes element="Messenger:Throbber" attribute="busy"/>
+      </titledbutton>
+
       </toolbar>
     </toolbox>
 
@@ -587,8 +589,10 @@ Rights Reserved.
       <titledbutton value="[Notification Component]" onclick="doTests()"/>
 	<box align="vertical" style="width:100px">
 		<spring flex="100%"/>
-		<progressmeter mode="normal" value="0">
-		</progressmeter>
+			<progressmeter id="statusbar-icon" mode="normal" value="0" onclick="dumpProgress()">
+				<observes element="Messenger:LoadingProgress" attribute="mode"/>
+				<observes element="Messenger:Throbber" attribute="busy" onchange="onProgress()"/>
+			</progressmeter>
 		<spring flex="100%"/>
 	</box>
 

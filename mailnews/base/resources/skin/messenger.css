@@ -42,3 +42,14 @@ iframe {
  width: 100px;
  height: 100px;
 }
+
+
+titledbutton#Throbber
+{
+	list-style-image:url(chrome://navigator/skin/animthrob_single.gif);
+}
+
+titledbutton#Throbber[busy="true"] {
+	list-style-image:url(chrome://navigator/skin/animthrob.gif);
+}
+

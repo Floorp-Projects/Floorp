@@ -35,6 +35,8 @@
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 #include "nsIDocumentViewer.h"
+#include "nsIDOMXULDocument.h"
+#include "nsIDocumentLoaderObserver.h"
 
 #include "nsIMsgMailSession.h"
 #include "nsIMsgIncomingServer.h"
@@ -140,6 +142,7 @@ private:
   nsIDOMWindow       *mWindow;
   nsIWebShell        *mWebShell;
 
+  nsCOMPtr <nsIDocumentLoaderObserver> m_docLoaderObserver;
   // mscott: temporary variable used to support running urls through the 'Demo' menu....
   nsFileSpec m_folderPath; 
   void InitializeFolderRoot();
@@ -321,6 +324,215 @@ NS_NewMessenger(const nsIID &aIID, void **aResult)
 }
 
 
+class nsMsgDocLoaderListener : public nsIDocumentLoaderObserver
+{
+public:
+	nsMsgDocLoaderListener();
+	virtual ~nsMsgDocLoaderListener();
+
+	NS_DECL_ISUPPORTS
+  
+    NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL, const char* aCommand);
+    NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel* channel, PRInt32 aStatus, nsIDocumentLoaderObserver* aObserver);
+    NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsIContentViewer* aViewer);
+    NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, PRUint32 aProgress, PRUint32 aProgressMax);
+    NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsString& aMsg);
+    NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, PRInt32 aStatus);
+    NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* loader, nsIChannel* channel, const char *aContentType,const char *aCommand );		
+
+	void SetWebShell(nsIWebShell *shell,  nsIDOMWindow  *mWindow);
+
+	nsresult setAttribute( nsIWebShell *shell,
+                              const char *id,
+                              const char *name,
+                              const nsString &value );
+protected:
+	nsCOMPtr <nsIWebShell>  mWebShell;
+	nsCOMPtr <nsIDOMWindow> mWindow;
+	PRBool					m_meteorsSpinning;
+};
+
+nsMsgDocLoaderListener::nsMsgDocLoaderListener()
+{
+	NS_INIT_REFCNT();
+	m_meteorsSpinning = PR_FALSE;
+}
+
+nsMsgDocLoaderListener::~nsMsgDocLoaderListener()
+{
+}
+
+//
+// nsISupports
+//
+NS_IMPL_ISUPPORTS(nsMsgDocLoaderListener, nsCOMTypeInfo<nsIDocumentLoaderObserver>::GetIID())
+
+// nsIDocumentLoaderObserver
+
+
+// nsIDocumentLoaderObserver methods
+
+NS_IMETHODIMP
+nsMsgDocLoaderListener::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL, const char* aCommand)
+{
+	NS_PRECONDITION(aLoader != nsnull, "null ptr");
+	if (! aLoader)
+	    return NS_ERROR_NULL_POINTER;
+
+	NS_PRECONDITION(aURL != nsnull, "null ptr");
+	if (! aURL)
+	    return NS_ERROR_NULL_POINTER;
+
+	nsresult rv = NS_OK;
+
+	if (mWindow)
+	{
+		nsCOMPtr<nsIScriptGlobalObject>
+			globalScript(do_QueryInterface(mWindow));
+		nsCOMPtr<nsIWebShell> webshell, rootWebshell;
+		if (globalScript)
+			globalScript->GetWebShell(getter_AddRefs(webshell));
+		if (webshell)
+			webshell->GetRootWebShell(*getter_AddRefs(rootWebshell));
+		if (rootWebshell) 
+		{
+		  // Kick start the throbber
+		  if (!m_meteorsSpinning)
+			  setAttribute( rootWebshell, "Messenger:Throbber", "busy", "true" );
+		  else	// because of a bug, we're not stopping the meteors, so lets just stop them here.
+			  setAttribute( rootWebshell, "Messenger:Throbber", "busy", "false" );
+		  m_meteorsSpinning = PR_TRUE;
+
+		  // Enable the Stop buton
+//		  setAttribute( rootWebshell, "canStop", "disabled", "" );
+		}
+	}
+	return rv;
+}
+
+
+NS_IMETHODIMP
+nsMsgDocLoaderListener::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* channel, PRInt32 aStatus,
+									nsIDocumentLoaderObserver * aObserver)
+{
+  NS_PRECONDITION(aLoader != nsnull, "null ptr");
+  if (! aLoader)
+    return NS_ERROR_NULL_POINTER;
+
+  NS_PRECONDITION(channel != nsnull, "null ptr");
+  if (! channel)
+    return NS_ERROR_NULL_POINTER;
+
+  nsresult rv = NS_OK;
+
+	if (mWindow)
+	{
+		nsCOMPtr<nsIScriptGlobalObject>
+			globalScript(do_QueryInterface(mWindow));
+		nsCOMPtr<nsIWebShell> webshell, rootWebshell;
+		if (globalScript)
+			globalScript->GetWebShell(getter_AddRefs(webshell));
+		if (webshell)
+			webshell->GetRootWebShell(*getter_AddRefs(rootWebshell));
+		if (rootWebshell) 
+		{
+		  // stop the throbber
+			setAttribute( rootWebshell, "Messenger:Throbber", "busy", "false" );
+			m_meteorsSpinning = PR_FALSE;
+		  // Disable the Stop buton
+//		  setAttribute( rootWebshell, "canStop", "disabled", "true" );
+		}
+	}
+  return rv;
+}
+
+NS_IMETHODIMP nsMsgDocLoaderListener::OnStartURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsIContentViewer* aViewer)
+{
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgDocLoaderListener::OnProgressURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, PRUint32 aProgress, PRUint32 aProgressMax)
+{
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgDocLoaderListener::OnStatusURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsString& aMsg)
+{
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgDocLoaderListener::OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, PRInt32 aStatus)
+{
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgDocLoaderListener::HandleUnknownContentType(nsIDocumentLoader* loader, nsIChannel* channel, const char *aContentType,const char *aCommand )
+{
+	return NS_OK;
+}
+
+
+void nsMsgDocLoaderListener::SetWebShell(nsIWebShell *shell, nsIDOMWindow *aWindow)
+{
+	mWebShell = shell;
+	mWindow = aWindow;
+}
+
+static int debugSetAttr = 0;
+nsresult nsMsgDocLoaderListener::setAttribute( nsIWebShell *shell,
+                              const char *id,
+                              const char *name,
+                              const nsString &value ) {
+    nsresult rv = NS_OK;
+
+    nsCOMPtr<nsIContentViewer> cv;
+    rv = shell ? shell->GetContentViewer(getter_AddRefs(cv))
+               : NS_ERROR_NULL_POINTER;
+    if ( cv ) {
+        // Up-cast.
+        nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
+        if ( docv ) {
+            // Get the document from the doc viewer.
+            nsCOMPtr<nsIDocument> doc;
+            rv = docv->GetDocument(*getter_AddRefs(doc));
+            if ( doc ) {
+                // Up-cast.
+                nsCOMPtr<nsIDOMXULDocument> xulDoc( do_QueryInterface(doc) );
+                if ( xulDoc ) 
+				{
+                    // Find specified element.
+                    nsCOMPtr<nsIDOMElement> elem;
+                    rv = xulDoc->GetElementById( id, getter_AddRefs(elem) );
+                    if ( elem ) {
+                        // Set the text attribute.
+                        rv = elem->SetAttribute( name, value );
+                        if ( debugSetAttr ) {
+                            char *p = value.ToNewCString();
+							printf("setting busy to %s\n", p);
+                            delete [] p;
+                        }
+                        if ( rv != NS_OK ) {
+                             if (debugSetAttr) printf("SetAttribute failed, rv=0x%X\n",(int)rv);
+                        }
+                    } else {
+                        if (debugSetAttr) printf("GetElementByID failed, rv=0x%X\n",(int)rv);
+                    }
+                } else {
+                  if (debugSetAttr)   printf("Upcast to nsIDOMHTMLDocument failed\n");
+                }
+            } else {
+                if (debugSetAttr) printf("GetDocument failed, rv=0x%X\n",(int)rv);
+            }
+        } else {
+             if (debugSetAttr) printf("Upcast to nsIDocumentViewer failed\n");
+        }
+    } else {
+        if (debugSetAttr) printf("GetContentViewer failed, rv=0x%X\n",(int)rv);
+    }
+    return rv;
+}
+
+
 NS_IMETHODIMP    
 nsMessenger::SetWindow(nsIDOMWindow* aWin)
 {
@@ -360,6 +572,16 @@ nsMessenger::SetWindow(nsIDOMWindow* aWin)
     else
         printf("nsMessenger::SetWindow(): Failed to find webshell %s.\n", (const char *) nsAutoCString(webShellName));
 #endif
+	if (mWebShell)
+	{
+		nsMsgDocLoaderListener *docLoaderListener = new nsMsgDocLoaderListener;
+		if (docLoaderListener)
+		{
+			m_docLoaderObserver = docLoaderListener;
+			docLoaderListener->SetWebShell(mWebShell, mWindow);
+			mWebShell->SetDocLoaderObserver(m_docLoaderObserver);
+		}
+	}
     NS_RELEASE(rootWebShell);
   }
 
@@ -431,6 +653,12 @@ nsMessenger::OpenURL(const char * url)
 		}
 
 	}
+	/*	here's how we'd turn off the throbber
+  setAttribute( rootWebshell, "Messenger:Throbber", "busy", "false" );
+  PRBool result=PR_TRUE;
+    //Disable the Stop button
+  setAttribute( rootWebshell, "canStop", "disabled", "true" );
+	*/
 	return NS_OK;
 }
 
