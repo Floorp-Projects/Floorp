@@ -1719,9 +1719,10 @@ nsGlobalHistory::SetDirty()
   if (mSyncTimer)
     mSyncTimer->Cancel();
 
-  if (!mSyncTimer)
+  if (!mSyncTimer) {
     mSyncTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-  if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) return rv;
+  }
   
   mDirty = PR_TRUE;
   mSyncTimer->InitWithFuncCallback(fireSyncTimer, this, HISTORY_SYNC_TIMEOUT,
