@@ -38,7 +38,7 @@
  * 
  * NOTE - These are not public interfaces
  *
- * $Id: secport.c,v 1.16 2003/11/20 02:06:16 nelsonb%netscape.com Exp $
+ * $Id: secport.c,v 1.17 2004/01/15 06:23:14 jgmyers%speakeasy.net Exp $
  */
 
 #include "seccomon.h"
@@ -539,6 +539,15 @@ PORT_UCS2_UTF8Conversion(PRBool toUnicode, unsigned char *inBuf,
 
     return (*ucs2Utf8ConvertFunc)(toUnicode, inBuf, inBufLen, outBuf, 
 				  maxOutBufLen, outBufLen);
+}
+
+PRBool 
+PORT_ISO88591_UTF8Conversion(const unsigned char *inBuf,
+			 unsigned int inBufLen, unsigned char *outBuf,
+			 unsigned int maxOutBufLen, unsigned int *outBufLen)
+{
+    return sec_port_iso88591_utf8_conversion_function(inBuf, inBufLen,
+      outBuf, maxOutBufLen, outBufLen);
 }
 
 PRBool 
