@@ -39,6 +39,16 @@
 #include <fstream.h>
 
 
+typedef enum {
+   kCharsetUninitialized = 0,
+   kCharsetFromUserDefault ,
+   kCharsetFromDocTypeDefault,
+   kCharsetFromParentFrame,
+   kCharsetFromAutoDetection,
+   kCharsetFromMetaTag,
+   kCharsetFromHTTPHeader
+} nsCharsetSource;
+
 class nsScanner {
   public:
 
@@ -47,30 +57,36 @@ class nsScanner {
        *  a single string you hand in during construction.
        *  This short cut was added for Javascript.
        *
-       *  @update  gess 5/12/98
+       *  @update  ftang 3/02/99
+       *  @param   aCharset charset
+       *  @param   aCharsetSource - where the charset info came from 
        *  @param   aMode represents the parser mode (nav, other)
        *  @return  
        */
-      nsScanner(nsString& anHTMLString);
+      nsScanner(nsString& anHTMLString, const nsString& aCharset, nsCharsetSource aSource);
 
       /**
        *  Use this constructor if you want i/o to be based on 
        *  a file (therefore a stream) or just data you provide via Append().
        *
-       *  @update  gess 5/12/98
+       *  @update  ftang 3/02/99
+       *  @param   aCharset charset
+       *  @param   aCharsetSource - where the charset info came from 
        *  @param   aMode represents the parser mode (nav, other)
        *  @return  
        */
-      nsScanner(nsString& aFilename,PRBool aCreateStream);
+      nsScanner(nsString& aFilename,PRBool aCreateStream, const nsString& aCharset, nsCharsetSource aSource);
 
       /**
        *  Use this constructor if you want i/o to be stream based.
        *
-       *  @update  gess 5/12/98
+       *  @update  ftang 3/02/99
+       *  @param   aCharset charset
+       *  @param   aCharsetSource - where the charset info came from 
        *  @param   aMode represents the parser mode (nav, other)
        *  @return  
        */
-      nsScanner(nsString& aFilename,fstream& aStream,PRBool assumeOwnership=PR_TRUE);
+      nsScanner(nsString& aFilename,fstream& aStream, const nsString& aCharset, nsCharsetSource aSource,PRBool assumeOwnership=PR_TRUE);
 
 
       ~nsScanner();
@@ -269,11 +285,12 @@ class nsScanner {
       /**
        *  Use this setter to change the scanner's unicode decoder
        *
-       *  @update  ftang 2/12/99
+       *  @update  ftang 3/02/99
        *  @param   aCharset a normalized (alias resolved) charset name
+       *  @param   aCharsetSource- where the charset info came from
        *  @return  
        */
-      nsresult SetDocumentCharset(const nsString& aCharset);
+      nsresult SetDocumentCharset(const nsString& aCharset, nsCharsetSource aSource);
 
   protected:
 
@@ -295,6 +312,7 @@ class nsScanner {
       PRUint32        mTotalRead;
       PRBool          mOwnsStream;
       PRBool          mIncremental;
+      nsCharsetSource mCharsetSource;
       nsString        mCharset;
       nsIUnicodeDecoder *mUnicodeDecoder;
 };

@@ -23,6 +23,7 @@
 #include "nsDebug.h"
 #include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"
+#include "nsICharsetAlias.h"
 
 
 const char* kBadHTMLText="<H3>Oops...</H3>You just tried to read a non-existent document: <BR>";
@@ -34,8 +35,6 @@ const int   kBufsize=1;
 const int   kBufsize=64;
 #endif
 
-// #define DEFAULTCHARSET "Shift_JIS"
-#define DEFAULTCHARSET "ISO-8859-1"
 
 /**
  *  Use this constructor if you want i/o to be based on 
@@ -46,8 +45,8 @@ const int   kBufsize=64;
  *  @param   aMode represents the parser mode (nav, other)
  *  @return  
  */
-nsScanner::nsScanner(nsString& anHTMLString) : 
-  mBuffer(anHTMLString), mFilename("") , mCharset("")
+nsScanner::nsScanner(nsString& anHTMLString, const nsString& aCharset, nsCharsetSource aSource) : 
+  mBuffer(anHTMLString), mFilename("")
 {
   mTotalRead=mBuffer.Length();
   mIncremental=PR_TRUE;
@@ -55,9 +54,10 @@ nsScanner::nsScanner(nsString& anHTMLString) :
   mOffset=0;
   mMarkPos=-1;
   mFileStream=0;
-  nsAutoString defaultCharset(DEFAULTCHARSET);
   mUnicodeDecoder = 0;
-  SetDocumentCharset(defaultCharset);
+  mCharset = "";
+  mCharsetSource = kCharsetUninitialized;
+  SetDocumentCharset(aCharset, aSource);
 }
 
 /**
@@ -69,8 +69,8 @@ nsScanner::nsScanner(nsString& anHTMLString) :
  *  @param   aFilename --
  *  @return  
  */
-nsScanner::nsScanner(nsString& aFilename,PRBool aCreateStream) : 
-    mBuffer(""), mFilename(aFilename) , mCharset("")
+nsScanner::nsScanner(nsString& aFilename,PRBool aCreateStream, const nsString& aCharset, nsCharsetSource aSource) : 
+    mBuffer(""), mFilename(aFilename)
 {
   mIncremental=PR_TRUE;
   mOffset=0;
@@ -91,8 +91,9 @@ nsScanner::nsScanner(nsString& aFilename,PRBool aCreateStream) :
     #endif
   } //if
   mUnicodeDecoder = 0;
-  nsAutoString defaultCharset(DEFAULTCHARSET);
-  SetDocumentCharset(defaultCharset);
+  mCharset = "";
+  mCharsetSource = kCharsetUninitialized;
+  SetDocumentCharset(aCharset, aSource);
 
 }
 
@@ -105,8 +106,8 @@ nsScanner::nsScanner(nsString& aFilename,PRBool aCreateStream) :
  *  @param   aFilename --
  *  @return  
  */
-nsScanner::nsScanner(nsString& aFilename,fstream& aStream,PRBool assumeOwnership) :
-    mBuffer(""), mFilename(aFilename) , mCharset("")
+nsScanner::nsScanner(nsString& aFilename,fstream& aStream,const nsString& aCharset, nsCharsetSource aSource, PRBool assumeOwnership) :
+    mBuffer(""), mFilename(aFilename) 
 {    
   mIncremental=PR_TRUE;
   mOffset=0;
@@ -115,15 +116,46 @@ nsScanner::nsScanner(nsString& aFilename,fstream& aStream,PRBool assumeOwnership
   mOwnsStream=assumeOwnership;
   mFileStream=&aStream;
   mUnicodeDecoder = 0;
-  nsAutoString defaultCharset(DEFAULTCHARSET);
-  SetDocumentCharset(defaultCharset);
+  mCharset = "";
+  mCharsetSource = kCharsetUninitialized;
+  SetDocumentCharset(aCharset, aSource);
 }
 
-nsresult nsScanner::SetDocumentCharset(const nsString& aCharset )
+nsresult nsScanner::SetDocumentCharset(const nsString& aCharset , nsCharsetSource aSource)
 {
+
   nsresult res = NS_OK;
-  if(! mCharset.EqualsIgnoreCase(aCharset)) // see do we need to change a converter.
+
+  if( aSource < mCharsetSource) // priority is lower the the current one , just
+    return res;
+
+  nsICharsetAlias* calias = nsnull;
+  res = nsServiceManager::GetService(kCharsetAliasCID,
+                                       kICharsetAliasIID,
+                                       (nsISupports**)&calias);
+
+  NS_ASSERTION( nsnull != calias, "cannot find charet alias");
+  nsAutoString charsetName = aCharset;
+  if( NS_SUCCEEDED(res) && (nsnull != calias))
   {
+    PRBool same = PR_FALSE;
+    res = calias->Equals(aCharset, mCharset, &same);
+    if(NS_SUCCEEDED(res) && same)
+    {
+      return NS_OK; // no difference, don't change it
+    }
+    // different, need to change it
+    res = calias->GetPreferred(aCharset, charsetName);
+    nsServiceManager::ReleaseService(kCharsetAliasCID, calias);
+
+    if(NS_FAILED(res) && (kCharsetUninitialized == mCharsetSource) )
+    {
+       // failed - unknown alias , fallback to ISO-8859-1
+      charsetName = "ISO-8859-1";
+    }
+    mCharset = charsetName;
+    mCharsetSource = aSource;
+
     nsICharsetConverterManager * ccm = nsnull;
     res = nsServiceManager::GetService(kCharsetConverterManagerCID, 
                                        kICharsetConverterManagerIID, 
@@ -131,13 +163,12 @@ nsresult nsScanner::SetDocumentCharset(const nsString& aCharset )
     if(NS_SUCCEEDED(res) && (nsnull != ccm))
     {
       nsIUnicodeDecoder * decoder = nsnull;
-      res = ccm->GetUnicodeDecoder(&aCharset, &decoder);
+      res = ccm->GetUnicodeDecoder(&mCharset, &decoder);
       if(NS_SUCCEEDED(res) && (nsnull != decoder))
       {
          NS_IF_RELEASE(mUnicodeDecoder);
 
          mUnicodeDecoder = decoder;
-         mCharset = aCharset;
       }    
       nsServiceManager::ReleaseService(kCharsetConverterManagerCID, ccm);
     }
