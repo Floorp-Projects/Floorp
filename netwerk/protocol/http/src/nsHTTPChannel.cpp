@@ -771,11 +771,26 @@ nsHTTPChannel::CheckCache()
         return NS_OK;
     }
 
+    // If the must-revalidate directive is present in the cached response, data
+    // must always be revalidated with the server, even if the user has
+    // configured validation to be turned off.
+    PRBool mustRevalidate = PR_FALSE;
+    nsXPIDLCString header;
+    mCachedResponse->GetHeader(nsHTTPAtoms::Cache_Control, getter_Copies(header));
+    if (header) {
+        PRInt32 offset;
+
+        nsCAutoString cacheControlHeader = (const char*)header;
+        offset = cacheControlHeader.Find("must-revalidate", PR_TRUE);
+        if (offset != kNotFound)
+            mustRevalidate = PR_TRUE;
+    }
+
     // If the FORCE_VALIDATION flag is set, any cached data won't be used until
     // it's revalidated with the server, so there's no point in checking if it's
     // expired.
     PRBool doIfModifiedSince;
-    if (mLoadAttributes & nsIChannel::FORCE_VALIDATION) {
+    if ((mLoadAttributes & nsIChannel::FORCE_VALIDATION) || mustRevalidate) {
         doIfModifiedSince = PR_TRUE;
     } else {
 
@@ -807,10 +822,17 @@ nsHTTPChannel::CheckCache()
     }
 
     if (doIfModifiedSince) {
+        // Add If-Modified-Since header
         nsXPIDLCString lastModified;
         mCachedResponse->GetHeader(nsHTTPAtoms::Last_Modified, getter_Copies(lastModified));
         if (lastModified)
             SetRequestHeader(nsHTTPAtoms::If_Modified_Since, lastModified);
+
+        // Add If-Match header
+        nsXPIDLCString etag;
+        mCachedResponse->GetHeader(nsHTTPAtoms::ETag, getter_Copies(etag));
+        if (etag)
+            SetRequestHeader(nsHTTPAtoms::If_None_Match, etag);
     }
 
     mCachedContentIsValid = !doIfModifiedSince;
@@ -1025,11 +1047,11 @@ nsHTTPChannel::CacheReceivedResponse(nsIStreamListener *aListener, nsIStreamList
         PRTime date;
         PRBool dateHeaderIsPresent;
         rv = mResponse->ParseDateHeader(nsHTTPAtoms::Date, &date, &dateHeaderIsPresent);
-        if (NS_FAILED(rv) || !dateHeaderIsPresent || !!LL_IS_ZERO(date))
+        if (NS_FAILED(rv))
             return NS_ERROR_FAILURE;
         
         // Before proceeding, ensure that we don't have a bizarre last-modified time
-        if (lastModifiedHeaderIsPresent && LL_UCMP(date, >, lastModified)) {
+        if (dateHeaderIsPresent && lastModifiedHeaderIsPresent && LL_UCMP(date, >, lastModified)) {
 
             // The heuristic stale time is (Date + (Date - Last-Modified)/2)
             PRTime heuristicStaleTime;
