@@ -214,6 +214,10 @@ public:
   NS_IMETHOD TrimTrailingWhiteSpace(nsIPresContext& aPresContext,
                                     nsIRenderingContext& aRC,
                                     nscoord& aDeltaWidth);
+
+  NS_IMETHOD MoveInSpaceManager(nsIPresContext& aPresContext,
+                                nsISpaceManager* aSpaceManager,
+                                nscoord aDeltaX, nscoord aDeltaY);
   //@}
 
   // Selection Methods

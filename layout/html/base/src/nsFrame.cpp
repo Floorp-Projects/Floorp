@@ -1204,6 +1204,14 @@ nsFrame::TrimTrailingWhiteSpace(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
+nsFrame::MoveInSpaceManager(nsIPresContext& aPresContext,
+                            nsISpaceManager* aSpaceManager,
+                            nscoord aDeltaX, nscoord aDeltaY)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsFrame::ContentChanged(nsIPresContext* aPresContext,
                         nsIContent*     aChild,
                         nsISupports*    aSubContent)
