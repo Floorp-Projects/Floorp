@@ -142,7 +142,7 @@ public:
                               const nsStylePadding& aPadding,
                               nscoord aDX,
                               nscoord aDY,
-                              PRBool aUsePrintSettings=PR_FALSE);
+                              PRBool aUsePrintSettings);
 
   /**
    * Same as |PaintBackground|, except using the provided style context

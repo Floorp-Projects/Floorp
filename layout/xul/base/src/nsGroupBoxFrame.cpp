@@ -164,7 +164,7 @@ nsGroupBoxFrame::Paint(nsIPresContext*      aPresContext,
 
         nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
                                         aDirtyRect, rect, *borderStyleData,
-                                        *paddingStyleData, 0, 0);
+                                        *paddingStyleData, 0, 0, PR_FALSE);
 
         if (groupBox) {
 

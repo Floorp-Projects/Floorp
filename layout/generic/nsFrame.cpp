@@ -974,7 +974,7 @@ nsFrame::PaintSelf(nsIPresContext*      aPresContext,
   nsRect rect(0, 0, mRect.width, mRect.height);
   nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
                                   aDirtyRect, rect, *border, *padding,
-                                  0, 0);
+                                  0, 0, PR_TRUE);
   nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                               aDirtyRect, rect, *border, mStyleContext,
                               aSkipSides);
