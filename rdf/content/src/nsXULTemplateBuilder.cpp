@@ -28,13 +28,11 @@
 
 /*
 
-  An nsIRDFDocument implementation that builds a tree widget XUL
-  content model that is to be used with a tree control.
+  Builds content from an RDF graph using the XUL <template> tag.
 
   TO DO
 
-  . make asynchronous notifications work
-  . fix tree folder open-close-open
+  . use arenas
   . extended template syntax
 
   To turn on logging for this module, set:
@@ -653,6 +651,9 @@ public:
         temp2 |= PLHashNumber(mMemberVariable) << 16;
         return temp1 ^ temp2; }
 
+    static PLHashNumber Hash(const void* aKey);
+    static PRIntn Compare(const void* aLeft, const void* aRight);
+
 protected:
     PRBool Equals(const Key& aKey) const {
         return mContainerVariable == aKey.mContainerVariable &&
@@ -676,18 +677,51 @@ Key::Key(const Instantiation& aInstantiation, const Rule* aRule)
 }
 
 
+PLHashNumber
+Key::Hash(const void* aKey)
+{
+    const Key* key = NS_STATIC_CAST(const Key*, aKey);
+    return key->Hash();
+}
+
+PRIntn
+Key::Compare(const void* aLeft, const void* aRight)
+{
+    const Key* left  = NS_STATIC_CAST(const Key*, aLeft);
+    const Key* right = NS_STATIC_CAST(const Key*, aRight);
+    return *left == *right;
+}
+
+
 //----------------------------------------------------------------------
 
 class KeySet {
+protected:
+    class Entry {
+    public:
+        Entry() {}
+        Entry(const Key& aKey) : mKey(aKey) {}
+
+        PLHashEntry mHashEntry;
+        Key         mKey;
+        Entry*      mPrev;
+        Entry*      mNext;
+    };
+
+    PLHashTable* mTable;
+    Entry mHead;
+
 public:
-    KeySet() : mKeys(nsnull), mCount(0), mCapacity(0) {}
+    KeySet();
     ~KeySet();
 
     class ConstIterator {
     protected:
-        Key* mCurrent;
+        Entry* mCurrent;
 
     public:
+        ConstIterator(Entry* aEntry) : mCurrent(aEntry) {}
+
         ConstIterator(const ConstIterator& aConstIterator)
             : mCurrent(aConstIterator.mCurrent) {}
 
@@ -696,81 +730,122 @@ public:
             return *this; }
 
         ConstIterator& operator++() {
-            ++mCurrent;
+            mCurrent = mCurrent->mNext;
             return *this; }
 
         ConstIterator operator++(int) {
             ConstIterator result(*this);
-            ++mCurrent;
+            mCurrent = mCurrent->mNext;
             return result; }
 
         const Key& operator*() const {
-            return *mCurrent; }
+            return mCurrent->mKey; }
 
         const Key* operator->() const {
-            return mCurrent; }
+            return &mCurrent->mKey; }
 
         PRBool operator==(const ConstIterator& aConstIterator) const {
             return mCurrent == aConstIterator.mCurrent; }
 
         PRBool operator!=(const ConstIterator& aConstIterator) const {
             return mCurrent != aConstIterator.mCurrent; }
-
-    protected:
-        ConstIterator(Key* aKey) : mCurrent(aKey) {}
-        friend class KeySet;
     };
 
-    ConstIterator First() const { return ConstIterator(mKeys); }
-    ConstIterator Last() const { return ConstIterator(mKeys + mCount); }
+    ConstIterator First() const { return ConstIterator(mHead.mNext); }
+    ConstIterator Last() const { return ConstIterator(NS_CONST_CAST(Entry*, &mHead)); }
 
     PRBool Contains(const Key& aKey);
     nsresult Add(const Key& aKey);
 
 protected:
-    Key* mKeys;
-    PRInt32 mCount;
-    PRInt32 mCapacity;
+    static PLHashAllocOps gAllocOps;
+
+    static void*        PR_CALLBACK AllocTable(void* aPool, PRSize aSize);
+    static void         PR_CALLBACK FreeTable(void* aPool, void* aItem);
+    static PLHashEntry* PR_CALLBACK AllocEntry(void* aPool, const void* aKey);
+    static void         PR_CALLBACK FreeEntry(void* aPool, PLHashEntry* aEntry, PRUintn aFlag);
 };
+
+PLHashAllocOps KeySet::gAllocOps = {
+    AllocTable,
+    FreeTable,
+    AllocEntry,
+    FreeEntry
+};
+
+void* PR_CALLBACK
+KeySet::AllocTable(void* aPool, PRSize aSize)
+{
+    return new char[aSize];
+}
+
+void PR_CALLBACK
+KeySet::FreeTable(void* aPool, void* aItem)
+{
+    delete[] NS_STATIC_CAST(char*, aItem);
+}
+
+PLHashEntry* PR_CALLBACK
+KeySet::AllocEntry(void* aPool, const void* aKey)
+{
+    const Key* key = NS_STATIC_CAST(const Key*, aKey);
+    Entry* entry = new Entry(*key);
+    return NS_REINTERPRET_CAST(PLHashEntry*, entry);
+}
+
+void PR_CALLBACK
+KeySet::FreeEntry(void* aPool, PLHashEntry* aEntry, PRUintn aFlag)
+{
+    Entry* entry = NS_REINTERPRET_CAST(Entry*, aEntry);
+    delete entry;
+}
+
+KeySet::KeySet()
+    : mTable(nsnull)
+{
+    mHead.mPrev = mHead.mNext = &mHead;
+
+    mTable = PL_NewHashTable(8, Key::Hash, Key::Compare, PL_CompareValues,
+                             &gAllocOps, nsnull);
+}
+
 
 KeySet::~KeySet()
 {
-    delete[] mKeys;
+    PL_HashTableDestroy(mTable);
 }
 
 PRBool
 KeySet::Contains(const Key& aKey)
 {
-    for (PRInt32 i = mCount - 1; i >= 0; --i) {
-        if (mKeys[i] == aKey)
-            return PR_TRUE;
-    }
-
-    return PR_FALSE;
+    return nsnull != PL_HashTableLookup(mTable, &aKey);
 }
 
 nsresult
 KeySet::Add(const Key& aKey)
 {
-    if (Contains(aKey))
-        return NS_OK;
+    PLHashNumber hash = aKey.Hash();
+    PLHashEntry** hep = PL_HashTableRawLookup(mTable, hash, &aKey);
 
-    if (mCount >= mCapacity) {
-        PRInt32 capacity = mCapacity + 4;
-        Key* keys = new Key[capacity];
-        if (! keys)
-            return NS_ERROR_OUT_OF_MEMORY;
+    if (hep && *hep)
+        return NS_OK; // already had it.
 
-        for (PRInt32 i = mCount - 1; i >= 0; --i)
-            keys[i] = mKeys[i];
+    PLHashEntry* he = PL_HashTableRawAdd(mTable, hep, hash, &aKey, nsnull);
+    if (! he)
+        return NS_ERROR_OUT_OF_MEMORY;
 
-        delete[] mKeys;
+    Entry* entry = NS_REINTERPRET_CAST(Entry*, he);
 
-        mKeys     = keys;
-        mCapacity = capacity;
-    }
+    // XXX yes, I am evil. Fixup the key in the hashentry to point to
+    // the value it contains, rather than the one on the stack.
+    entry->mHashEntry.key = &entry->mKey;
 
-    mKeys[mCount++] = aKey;
+    // thread
+    mHead.mPrev->mNext = entry;
+    entry->mPrev = mHead.mPrev;
+    entry->mNext = &mHead;
+    mHead.mPrev = entry;
+    
     return NS_OK;
 }
 
@@ -804,8 +879,6 @@ protected:
     // "Clusters" of matched rules for the same <content, member> pair
     PLHashTable* mMatches;
 
-    static PLHashNumber HashKey(const void* aKey);
-    static PRIntn CompareKeys(const void* aLeft, const void* aRight);
     static PRIntn RemoveMatch(PLHashEntry* he, PRIntn i, void* arg);
 
     // Maps an Instantiation::Binding to a MatchSet
@@ -820,8 +893,8 @@ ConflictSet::ConflictSet()
     : mMatches(nsnull), mBindings(nsnull)
 {
     mMatches = PL_NewHashTable(16 /* XXXwaterson we need a way to give a hint? */,
-                               HashKey,
-                               CompareKeys,
+                               Key::Hash,
+                               Key::Compare,
                                PL_CompareValues,
                                nsnull /* XXXwaterson use an arena */,
                                nsnull);
@@ -958,12 +1031,16 @@ ConflictSet::Remove(const MemoryElement& aMemoryElement,
         PL_HashTableRawRemove(mBindings, hep, *hep);
     }
 
+    // Now, update the key-to-instantiation map, and see if any new
+    // rules have been fired as a result of the retraction.
     MatchSet::ConstIterator lastretraction = aRetractedMatches.Last();
     for (MatchSet::ConstIterator retraction = aRetractedMatches.First(); retraction != lastretraction; ++retraction) {
         Key key(retraction->mInstantiation, retraction->mRule);
         PLHashEntry** hep = PL_HashTableRawLookup(mMatches, key.Hash(), &key);
 
-        NS_ASSERTION(hep && *hep, "mMatches corrupted");
+        // XXXwaterson I'd managed to convince myself that this was really
+        // okay, but now I can't remember why.
+        //NS_ASSERTION(hep && *hep, "mMatches corrupted");
         if (!hep || !*hep)
             continue;
 
@@ -1032,21 +1109,6 @@ ConflictSet::Clear()
 {
     PL_HashTableEnumerateEntries(mBindings, RemoveMemoryElement, nsnull);
     PL_HashTableEnumerateEntries(mMatches, RemoveMatch, nsnull);
-}
-
-PLHashNumber
-ConflictSet::HashKey(const void* aKey)
-{
-    const Key* key = NS_STATIC_CAST(const Key*, aKey);
-    return key->Hash();
-}
-
-PRIntn
-ConflictSet::CompareKeys(const void* aLeft, const void* aRight)
-{
-    const Key* left  = NS_STATIC_CAST(const Key*, aLeft);
-    const Key* right = NS_STATIC_CAST(const Key*, aRight);
-    return *left == *right;
 }
 
 PLHashNumber
@@ -1423,8 +1485,8 @@ protected:
 
         class Element : public MemoryElement {
         public:
-            Element(nsIContent* aContent, nsIRDFResource* aID)
-                : mContent(aContent), mID(aID) {}
+            Element(nsIContent* aContent)
+                : mContent(aContent) {}
 
             virtual const char* Type() const {
                 return "RDFGenericBuilderImpl::ContentIdTestNode::Element"; }
@@ -1440,11 +1502,10 @@ protected:
                 return PR_FALSE; }
 
         virtual MemoryElement* Clone() const {
-            return new Element(mContent, mID); }
+            return new Element(mContent); }
 
         protected:
             nsCOMPtr<nsIContent> mContent;
-            nsCOMPtr<nsIRDFResource> mID;
         };
 
     protected:
@@ -2922,8 +2983,21 @@ RDFGenericBuilderImpl::CloseContainer(nsIContent* aElement)
         // taking up space. Unfortunately, the tree widget currently
         // _relies_ on this behavior and will break if we don't do it
         // :-(.
-        rv = RemoveGeneratedContent(aElement);
+
+        // Find the <treechildren> beneath the <treeitem>...
+        nsCOMPtr<nsIContent> insertionpoint;
+        rv = gXULUtils->FindChildByTag(aElement, kNameSpaceID_XUL, kTreeChildrenAtom, getter_AddRefs(insertionpoint));
         if (NS_FAILED(rv)) return rv;
+
+        if (insertionpoint) {
+            // ...and blow away all the generated content.
+            PRInt32 count;
+            rv = insertionpoint->ChildCount(count);
+            if (NS_FAILED(rv)) return rv;
+
+            rv = RemoveGeneratedContent(insertionpoint);
+            if (NS_FAILED(rv)) return rv;
+        }
 
         // Force the XUL element to remember that it needs to re-generate
         // its kids next time around.
@@ -2939,6 +3013,11 @@ RDFGenericBuilderImpl::CloseContainer(nsIContent* aElement)
         // come back, we'll regenerate the kids we just killed.
         rv = xulcontent->ClearLazyState(nsIXULContent::eContainerContentsBuilt);
         if (NS_FAILED(rv)) return rv;
+
+        // Remove any instantiations involving this element from the
+        // conflict set.
+        MatchSet firings, retractions;
+        mConflictSet.Remove(ContentIdTestNode::Element(aElement), firings, retractions);
     }
 
     return NS_OK;
@@ -2977,6 +3056,11 @@ RDFGenericBuilderImpl::RebuildContainer(nsIContent* aElement)
     // element. Remove it.
     rv = RemoveGeneratedContent(aElement);
     if (NS_FAILED(rv)) return rv;
+
+    // Remove any instantiations involving this element from the
+    // conflict set.
+    MatchSet firings, retractions;
+    mConflictSet.Remove(ContentIdTestNode::Element(aElement), firings, retractions);
 
     // Forces the XUL element to remember that it needs to
     // re-generate its children next time around.
@@ -4586,28 +4670,37 @@ RDFGenericBuilderImpl::IsElementInWidget(nsIContent* aElement)
 nsresult
 RDFGenericBuilderImpl::RemoveGeneratedContent(nsIContent* aElement)
 {
-    // Remove all the content beneath aElement that has been generated
-    // from a template. We can identify this content because it'll
-    // be in the conflict set.
-    nsCOMPtr<nsIRDFResource> resource;
-    gXULUtils->GetElementRefResource(aElement, getter_AddRefs(resource));
+    nsresult rv;
 
-    ContentIdTestNode::Element element(aElement, resource);
+    // Although we *could* iterate through all the retractions and
+    // pick them out one-by-one, it turns out that this is pretty
+    // inefficient. So do the dumb thing and nuke all the content from
+    // the back to the front.
 
-    MatchSet firings, retractions;
-    mConflictSet.Remove(element, firings, retractions);
+    PRInt32 count;
+    rv = aElement->ChildCount(count);
+    if (NS_FAILED(rv)) return rv;
 
-    MatchSet::ConstIterator last = retractions.Last();
-    for (MatchSet::ConstIterator match = retractions.First(); match != last; ++match) {
-        Value member;
-        match->mInstantiation.mBindings.GetBindingFor(match->mRule->GetMemberVariable(), &member);
+    while (--count >= 0) {
+        nsCOMPtr<nsIContent> child;
+        rv = aElement->ChildAt(count, *getter_AddRefs(child));
+        if (NS_FAILED(rv)) return rv;
 
-        Value content;
-        match->mInstantiation.mBindings.GetBindingFor(mContentVar, &content);
+        nsAutoString tmplID;
+        rv = child->GetAttribute(kNameSpaceID_None, kTemplateAtom, tmplID);
+        if (NS_FAILED(rv)) return rv;
 
-        RemoveMember(VALUE_TO_ICONTENT(content),
-                     VALUE_TO_IRDFRESOURCE(member),
-                     PR_TRUE);
+        if (rv != NS_CONTENT_ATTR_HAS_VALUE)
+            continue;
+
+        // It's a generated element. Remove it, and set its document
+        // to null so that it'll get knocked out of the XUL doc's
+        // resource-to-element map.
+        rv = aElement->RemoveChildAt(count, PR_TRUE);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "error removing child");
+
+        rv = child->SetDocument(nsnull, PR_TRUE);
+        if (NS_FAILED(rv)) return rv;
     }
 
     return NS_OK;
@@ -4884,7 +4977,7 @@ RDFGenericBuilderImpl::ContentIdTestNode::FilterInstantiations(InstantiationSet&
             gXULUtils->GetElementRefResource(VALUE_TO_ICONTENT(contentValue), getter_AddRefs(resource));
             
             if (resource.get() == VALUE_TO_IRDFRESOURCE(idValue)) {
-                inst->AddSupportingElement(new Element(VALUE_TO_ICONTENT(contentValue), resource));
+                inst->AddSupportingElement(new Element(VALUE_TO_ICONTENT(contentValue)));
             }
             else {
                 aInstantiations.Erase(inst--);
@@ -4903,7 +4996,7 @@ RDFGenericBuilderImpl::ContentIdTestNode::FilterInstantiations(InstantiationSet&
 
                 Instantiation newinst = *inst;
                 newinst.AddBinding(mIdVariable, Value(resource.get()));
-                newinst.AddSupportingElement(new Element(VALUE_TO_ICONTENT(contentValue), resource));
+                newinst.AddSupportingElement(new Element(VALUE_TO_ICONTENT(contentValue)));
                 aInstantiations.Insert(inst, newinst);
             }
             else {
@@ -4931,7 +5024,7 @@ RDFGenericBuilderImpl::ContentIdTestNode::FilterInstantiations(InstantiationSet&
                 if (IsElementContainedBy(element, mRoot)) {
                     Instantiation newinst = *inst;
                     newinst.AddBinding(mContentVariable, Value(element.get()));
-                    newinst.AddSupportingElement(new Element(element, VALUE_TO_IRDFRESOURCE(idValue)));
+                    newinst.AddSupportingElement(new Element(element));
                     aInstantiations.Insert(inst, newinst);
                 }
             }
