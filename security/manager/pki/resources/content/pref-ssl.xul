@@ -44,7 +44,7 @@
         "warnEnteringSecure", "warnEnteringWeak", 
         "warnInsecurePost", "warnInsecurePostFromSecure",
         "warnSecureRedirect", "warnSecureRedirectToInsecure",
-        "warnViewMixed", "certSelection" ];
+        "warnViewMixed" ];
   ]]>
   </script>
             
@@ -98,17 +98,6 @@
     <checkbox id="warnViewMixed" label="&warn.viewmixed;"
               pref="true" preftype="bool" prefstring="security.warn_viewing_mixed"
               prefattribute="checked" checked="true"/>
-  </titledbox>
-
-  <titledbox orient="vertical" autostretch="never" >
-    <label value="&SSLClientAuthMethod;"/>
-    <html> &certselect.description; </html>
-    <!-- Prefs -->
-    <radiogroup id="certSelection" pref="true" preftype="string" 
-	prefstring="security.default_personal_cert" prefattribute="value">
-    <radio group="certSelection" label="&certselect.auto;" value="Select Automatically"/>
-    <radio group="certSelection" label="&certselect.ask;" value="Ask Every Time"/>
-    </radiogroup>
   </titledbox>
 
 </window>

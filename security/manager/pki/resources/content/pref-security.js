@@ -33,28 +33,10 @@
  * GPL.
  */
 
-function onLoad()
-{
-  parent.initPanel('chrome://pippki/content/pref-security.xul');
-  var gBundleBrand = srGetStrBundle("chrome://global/locale/brand.properties");
-  var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
-
-  var brandName = gBundleBrand.GetStringFromName("brandShortName");
-  var resetPrefs = bundle.formatStringFromName("resetPreferences",
-                                               [ brandName ],
-                                               1);
-  setText("resetsettings.text", resetPrefs);
-}
-
 function openCertManager()
 {
-//  var windowReference = document.getElementById("certmanager");
-//  if (windowReference != null) {
-//    windowReference.focus();
-//  } else {
     window.open('chrome://pippki/content/certManager.xul',  "",
                 'chrome,width=500,height=400,resizable=1');
-//  }
 }
 
 function openDeviceManager()

@@ -17,11 +17,8 @@
    - Rights Reserved.
    - 
    - Contributor(s):
-   -   Bob Lord <lord@netscape.com>
-   -   Terry Hayes <thayes@netscape.com>
-  -->
+   -  Terry Hayes <thayes@netscape.com>
+   -->
 
-<!ENTITY  security.label               "Privacy and Security">
-<!ENTITY  ssl.label                    "SSL">
-<!ENTITY  certs.label                  "Certificates">
-<!ENTITY  validation.label             "Validation">
+<!--LOCALIZATION NOTE : FILE 'Privacy and Security' prefs settings -->
+<!ENTITY lHeader                      "Privacy and Security">
