@@ -443,6 +443,102 @@ CWebShellContainer::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCo
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsIStreamObserver implementation
+#ifdef NECKO
+NS_IMETHODIMP
+CWebShellContainer::OnStartRequest(nsISupports* aContext)
+{
+	USES_CONVERSION;
+	NG_TRACE(_T("CWebShellContainer::OnStartRequest(...)\n"));
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+CWebShellContainer::OnStopRequest(nsISupports* aContext, nsresult aStatus, const PRUnichar* aMsg)
+{
+	USES_CONVERSION;
+	NG_TRACE(_T("CWebShellContainer::OnStopRequest(..., %d, \"%s\")\n"), (int) aStatus, W2T((PRUnichar *) aMsg));
+
+	// Fire a DownloadComplete event
+	m_pEvents1->Fire_DownloadComplete();
+	m_pEvents2->Fire_DownloadComplete();
+
+	return NS_OK;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// nsIDocumentLoaderObserver implementation 
+
+
+
+NS_IMETHODIMP
+CWebShellContainer::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURI, const char* aCommand)
+{ 
+	return NS_OK; 
+} 
+
+// we need this to fire the document complete 
+NS_IMETHODIMP
+CWebShellContainer::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel *aChannel, PRInt32 aStatus, nsIDocumentLoaderObserver * aObserver)
+{
+	char* aString = nsnull;    
+    nsIURI* uri = nsnull;
+
+    aChannel->GetURI(&uri);
+    if (uri) {
+      uri->GetSpec(&aString);
+    }
+	if (aString == NULL)
+	{
+		return NS_ERROR_NULL_POINTER;
+	}
+
+	USES_CONVERSION; 
+	BSTR bstrURL = SysAllocString(A2OLE((CHAR *) aString)); 
+		
+	delete [] aString; // clean up. 
+
+	// Fire a DocumentComplete event
+	CComVariant vURL(bstrURL);
+	m_pEvents2->Fire_DocumentComplete(m_pOwner, &vURL);
+	SysFreeString(bstrURL);
+
+	return NS_OK; 
+} 
+
+NS_IMETHODIMP
+CWebShellContainer::OnStartURLLoad(nsIDocumentLoader* loader, nsIChannel* aChannel, const char* aContentType, nsIContentViewer* aViewer)
+{ 
+	return NS_OK; 
+} 
+
+NS_IMETHODIMP
+CWebShellContainer::OnProgressURLLoad(nsIDocumentLoader* loader, nsIChannel* aChannel, PRUint32 aProgress, PRUint32 aProgressMax)
+{ 
+	return NS_OK; 
+} 
+
+// we don't care about these. 
+NS_IMETHODIMP
+CWebShellContainer::OnStatusURLLoad(nsIDocumentLoader* loader, nsIChannel* aChannel, nsString& aMsg)
+{ 
+	return NS_OK; 
+} 
+
+
+NS_IMETHODIMP
+CWebShellContainer::OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* aChannel, PRInt32 aStatus)
+{
+	return NS_OK; 
+} 
+
+
+NS_IMETHODIMP 
+CWebShellContainer::HandleUnknownContentType(nsIDocumentLoader* loader, nsIChannel *aChannel, const char *aContentType, const char *aCommand ) 
+{ 
+	return NS_OK; 
+} 
+
+#else // !NECKO
 
 NS_IMETHODIMP
 CWebShellContainer::OnStartRequest(nsIURI* aURL, const char *aContentType)
@@ -489,7 +585,6 @@ CWebShellContainer::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnicha
 
 	return NS_OK;
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsIDocumentLoaderObserver implementation 
@@ -559,3 +654,5 @@ CWebShellContainer::HandleUnknownContentType(nsIDocumentLoader* loader, nsIURI *
 { 
 	return NS_OK; 
 } 
+#endif // ! NECKO
+

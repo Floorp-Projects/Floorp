@@ -91,6 +91,10 @@ typedef long int32;
 #include "nsViewsCID.h"
 #include "nsString.h"
 
+#ifdef NECKO
+#include "nsIHTTPChannel.h"
+#endif
+
 #include "nsIURL.h"
 #include "nsIWebShell.h"
 #include "nsIBrowserWindow.h"
