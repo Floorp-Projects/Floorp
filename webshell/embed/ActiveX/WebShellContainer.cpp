@@ -183,6 +183,13 @@ CWebShellContainer::GetChrome(PRUint32& aChromeMaskResult)
 NS_IMETHODIMP
 CWebShellContainer::SetTitle(const PRUnichar* aTitle)
 {
+	//Fire a title change event
+	USES_CONVERSION;
+	LPOLESTR pszConvertedLocationName = W2OLE(const_cast<PRUnichar *>(aTitle));
+	BSTR __RPC_FAR LocationName = SysAllocString(pszConvertedLocationName);
+	m_pEvents1->Fire_TitleChange(LocationName);
+	m_pEvents2->Fire_TitleChange(LocationName);
+
 	return NS_OK;
 }
 
@@ -199,8 +206,10 @@ CWebShellContainer::GetTitle(const PRUnichar** aResult)
 NS_IMETHODIMP
 CWebShellContainer::SetStatus(const PRUnichar* aStatus)
 {
+
 	NG_TRACE_METHOD(CWebShellContainer::SetStatus);
 	
+	//Gets fired on mouse over link events.
 	BSTR bstrStatus = SysAllocString(W2OLE((PRUnichar *) aStatus));
 	m_pEvents1->Fire_StatusTextChange(bstrStatus);
 	m_pEvents2->Fire_StatusTextChange(bstrStatus);
@@ -237,6 +246,7 @@ NS_IMETHODIMP
 CWebShellContainer::SetProgress(PRInt32 aProgress, PRInt32 aProgressMax)
 {
 	NG_TRACE_METHOD(CWebShellContainer::SetProgress);
+
 	return NS_OK;
 }
 
@@ -285,10 +295,6 @@ CWebShellContainer::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
 	USES_CONVERSION;
 	NG_TRACE(_T("CWebShellContainer::BeginLoadURL(..., \"%s\")\n"), W2T(aURL));
 
-	// Fire a DownloadBegin
-	m_pEvents1->Fire_DownloadBegin();
-	m_pEvents2->Fire_DownloadBegin();
-
 	// Fire a BeforeNavigate event
 	OLECHAR *pszURL = W2OLE((WCHAR *)aURL);
 	BSTR bstrURL = SysAllocString(pszURL);
@@ -320,6 +326,20 @@ CWebShellContainer::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
 	{
 		m_pOwner->m_bBusy = TRUE;
 	}
+
+	//NOTE:	The IE control fires a DownloadBegin after the first BeforeNavigate.  It then fires a 
+	//		DownloadComplete after then engine has made it's initial connection to the server.  It
+	//		then fires a second DownloadBegin/DownloadComplete pair around the loading of everything
+	//		on the page.  These events get fired out of CWebShellContainer::StartDocumentLoad() and
+	//		CWebShellContainer::EndDocumentLoad().
+	//		We don't appear to distinguish between the initial connection to the server and the
+	//		actual transfer of data.  Firing these events here simulates, appeasing applications
+	//		that are expecting that initial pair.
+	m_pEvents1->Fire_DownloadBegin();
+	m_pEvents2->Fire_DownloadBegin();
+	m_pEvents1->Fire_DownloadComplete();
+	m_pEvents2->Fire_DownloadComplete();
+
 	return NS_OK;
 }
 
@@ -376,13 +396,12 @@ CWebShellContainer::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsres
 	CComVariant vURL(bstrURL);
 	m_pEvents2->Fire_NavigateComplete2(m_pOwner, &vURL);
 
-		// Fire the new NavigateForward state
+	// Fire the new NavigateForward state
 	VARIANT_BOOL bEnableForward = VARIANT_FALSE;
 	if ( m_pOwner->m_pIWebShell->CanForward() == NS_OK )
 	{
 		bEnableForward = VARIANT_TRUE;
 	}
-	
 	m_pEvents2->Fire_CommandStateChange(CSC_NAVIGATEFORWARD, bEnableForward);
 
 	// Fire the new NavigateBack state
@@ -391,7 +410,6 @@ CWebShellContainer::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsres
 	{
 		bEnableBack = VARIANT_TRUE;
 	}
-	
 	m_pEvents2->Fire_CommandStateChange(CSC_NAVIGATEBACK, bEnableBack);
 
 	m_pOwner->m_bBusy = FALSE;
@@ -469,7 +487,7 @@ CWebShellContainer::OnStartRequest(nsIChannel* aChannel, nsISupports* aContext)
 {
 	USES_CONVERSION;
 	NG_TRACE(_T("CWebShellContainer::OnStartRequest(...)\n"));
-	
+
 	return NS_OK;
 }
 
@@ -493,7 +511,16 @@ CWebShellContainer::OnStopRequest(nsIChannel* aChannel, nsISupports* aContext, n
 
 NS_IMETHODIMP
 CWebShellContainer::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL, const char* aCommand)
-{ 
+{
+	char* wString = nsnull;    
+	aURL->GetPath(&wString);
+	USES_CONVERSION;
+	NG_TRACE(_T("CWebShellContainer::OnStartDocumentLoad(..., %s, \"%s\")\n"),A2CT(wString), A2CT(aCommand));
+
+	//Fire a DownloadBegin
+	m_pEvents1->Fire_DownloadBegin();
+	m_pEvents2->Fire_DownloadBegin();
+
 	return NS_OK; 
 } 
 
@@ -501,6 +528,12 @@ CWebShellContainer::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL,
 NS_IMETHODIMP
 CWebShellContainer::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel *aChannel, nsresult aStatus, nsIDocumentLoaderObserver * aObserver)
 {
+	NG_TRACE(_T("CWebShellContainer::OnEndDocumentLoad(...,  \"\")\n"));
+
+	//Fire a DownloadComplete
+	m_pEvents1->Fire_DownloadComplete();
+	m_pEvents2->Fire_DownloadComplete();
+
 	char* aString = nsnull;    
     nsIURI* uri = nsnull;
 
@@ -513,7 +546,7 @@ CWebShellContainer::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel *aCh
 		return NS_ERROR_NULL_POINTER;
 	}
 
-	USES_CONVERSION; 
+	USES_CONVERSION;
 	BSTR bstrURL = SysAllocString(A2OLE((CHAR *) aString)); 
 		
 	delete [] aString; // clean up. 
@@ -523,12 +556,21 @@ CWebShellContainer::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel *aCh
 	m_pEvents2->Fire_DocumentComplete(m_pOwner, &vURL);
 	SysFreeString(bstrURL);
 
+	//Fire a StatusTextChange event
+	BSTR bstrStatus = SysAllocString(A2OLE((CHAR *) "Done"));
+	m_pEvents1->Fire_StatusTextChange(bstrStatus);
+	m_pEvents2->Fire_StatusTextChange(bstrStatus);
+
 	return NS_OK; 
 } 
 
 NS_IMETHODIMP
 CWebShellContainer::OnStartURLLoad(nsIDocumentLoader* loader, nsIChannel* aChannel, nsIContentViewer* aViewer)
 { 
+	NG_TRACE(_T("CWebShellContainer::OnStartURLLoad(...,  \"\")\n"));
+
+	//NOTE: This appears to get fired once for each individual item on a page.
+
 	return NS_OK; 
 } 
 
@@ -541,10 +583,16 @@ CWebShellContainer::OnProgressURLLoad(nsIDocumentLoader* loader, nsIChannel* aCh
 	return NS_OK;
 } 
 
-// we don't care about these. 
 NS_IMETHODIMP
 CWebShellContainer::OnStatusURLLoad(nsIDocumentLoader* loader, nsIChannel* aChannel, nsString& aMsg)
 { 
+	NG_TRACE(_T("CWebShellContainer::OnStatusURLLoad(...,  \"\")\n"));
+	
+	//NOTE: This appears to get fired for each individual item on a page, indicating the status of that item.
+	BSTR bstrStatus = SysAllocString(W2OLE((PRUnichar *) aMsg.GetUnicode()));
+	m_pEvents1->Fire_StatusTextChange(bstrStatus);
+	m_pEvents2->Fire_StatusTextChange(bstrStatus);
+	
 	return NS_OK; 
 } 
 
@@ -552,6 +600,10 @@ CWebShellContainer::OnStatusURLLoad(nsIDocumentLoader* loader, nsIChannel* aChan
 NS_IMETHODIMP
 CWebShellContainer::OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus)
 {
+	NG_TRACE(_T("CWebShellContainer::OnEndURLLoad(...,  \"\")\n"));
+
+	//NOTE: This appears to get fired once for each individual item on a page.
+
 	return NS_OK; 
 } 
 
@@ -560,5 +612,4 @@ NS_IMETHODIMP
 CWebShellContainer::HandleUnknownContentType(nsIDocumentLoader* loader, nsIChannel *aChannel, const char *aContentType, const char *aCommand ) 
 { 
 	return NS_OK; 
-} 
-
+}
