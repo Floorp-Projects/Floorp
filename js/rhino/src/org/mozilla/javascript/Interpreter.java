@@ -592,7 +592,9 @@ public class Interpreter extends LabelTable {
             case TokenStream.TYPEOF : {
                     String name = node.getString();
                     int index = -1;
-                    if (itsInFunctionFlag)
+                    // use typeofname if an activation frame exists
+                    // since the vars all exist there instead of in jregs
+                    if (itsInFunctionFlag && !itsData.itsNeedsActivation)
                         index = itsData.itsVariableTable.getOrdinal(name);
                     if (index == -1) {                    
                         iCodeTop = addByte((byte) TokenStream.TYPEOFNAME, iCodeTop);
