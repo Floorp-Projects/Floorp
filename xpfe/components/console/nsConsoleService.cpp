@@ -186,6 +186,9 @@ NS_IMETHODIMP
 nsConsoleService::UnregisterListener(nsIConsoleListener *listener) {
     // ignore rv for now, as a comment says it returns prbool instead of
     // nsresult.
-    mListeners->RemoveElement(listener);
+
+    // Solaris needs the nsISupports cast to avoid confusion with
+    // another nsSupportsArray::RemoveElement overloading.
+    mListeners->RemoveElement((const nsISupports *)listener);
     return NS_OK;
 }
