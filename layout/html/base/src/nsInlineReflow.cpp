@@ -653,11 +653,7 @@ nsInlineReflow::PlaceFrame(nsHTMLReflowMetrics& aMetrics)
   // applies if the frame ends up with a non-zero height.
   if (!emptyFrame) {
     // Inform line layout that we have placed a non-empty frame
-#ifdef NS_DEBUG
     mLineLayout.AddPlacedFrame(mFrameData->mFrame);
-#else
-    mLineLayout.AddPlacedFrame();
-#endif
 
     // Update max-element-size
     if (mComputeMaxElementSize) {
