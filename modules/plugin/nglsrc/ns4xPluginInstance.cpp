@@ -699,7 +699,7 @@ NS_IMETHODIMP ns4xPluginInstance::HandleEvent(nsPluginEvent* event, PRBool* hand
                                     (void*) event->event);
 #endif
 
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(XP_OS2)
       NPEvent npEvent;
       npEvent.event = event->event;
       npEvent.wParam = event->wParam;
