@@ -54,7 +54,7 @@
 #include <sys/utsname.h>
 #endif /* XP_UNIX */
 
-#ifdef XP_PC
+#if defined(XP_PC) && !defined(XP_OS2)
 #include <windows.h>
 #endif
 
@@ -675,7 +675,9 @@ nsHTTPHandler::InitUserAgentComponents()
         mAppLanguage = (const char*)UAPrefVal;
 
     // Gather platform.
-#if defined(XP_PC)
+#if defined(XP_OS2)
+    mAppPlatform = "OS/2";
+#elif defined(XP_PC)
     mAppPlatform = "Windows";
 #elif defined(RHAPSODY)
     mAppPlatform = "Macintosh";
@@ -686,7 +688,20 @@ nsHTTPHandler::InitUserAgentComponents()
 #endif
 
     // Gather OS/CPU.
-#ifdef XP_PC
+#if defined(XP_OS2)
+    ULONG os2ver = 0;
+    DosQuerySysInfo(QSV_VERSION_MINOR, QSV_VERSION_MINOR,
+                    &os2ver, sizeof(os2ver));
+    if (os2ver == 11)
+        mAppOSCPU = "2.11";
+    else if (os2ver == 30)
+        mAppOSCPU = "Warp 3";
+    else if (os2ver == 40)
+        mAppOSCPU = "Warp 4";
+    else if (os2ver == 45)
+        mAppOSCPU = "Warp 4.5";
+
+#elif defined(XP_PC)
     OSVERSIONINFO info = { sizeof OSVERSIONINFO };
     if (GetVersionEx(&info)) {
         if ( info.dwPlatformId == VER_PLATFORM_WIN32_NT ) {
