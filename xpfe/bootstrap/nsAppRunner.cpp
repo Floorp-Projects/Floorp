@@ -728,51 +728,56 @@ static PRBool IsStartupCommand(const char *arg)
 
 
 // This should be done by app shell enumeration someday
-nsresult DoCommandLines(nsICmdLineService* cmdLineArgs, PRBool *windowOpened)
+nsresult DoCommandLines(nsICmdLineService* cmdLineArgs, PRBool heedGeneralStartupPrefs, PRBool *windowOpened)
 {
   NS_ENSURE_ARG(windowOpened);
   *windowOpened = PR_FALSE;
 
   nsresult rv;
 
-  PRInt32 height = nsIAppShellService::SIZE_TO_CONTENT;
-  PRInt32 width  = nsIAppShellService::SIZE_TO_CONTENT;
-  nsXPIDLCString tempString;
+	PRInt32 height = nsIAppShellService::SIZE_TO_CONTENT;
+	PRInt32 width  = nsIAppShellService::SIZE_TO_CONTENT;
+	nsXPIDLCString tempString;
 
-  // Get the value of -width option
-  rv = cmdLineArgs->GetCmdLineValue("-width", getter_Copies(tempString));
-  if (NS_SUCCEEDED(rv) && !tempString.IsEmpty())
+	// Get the value of -width option
+	rv = cmdLineArgs->GetCmdLineValue("-width", getter_Copies(tempString));
+	if (NS_SUCCEEDED(rv) && !tempString.IsEmpty())
     PR_sscanf(tempString.get(), "%d", &width);
 
-  // Get the value of -height option
-  rv = cmdLineArgs->GetCmdLineValue("-height", getter_Copies(tempString));
-  if (NS_SUCCEEDED(rv) && !tempString.IsEmpty())
+	// Get the value of -height option
+	rv = cmdLineArgs->GetCmdLineValue("-height", getter_Copies(tempString));
+	if (NS_SUCCEEDED(rv) && !tempString.IsEmpty())
     PR_sscanf(tempString.get(), "%d", &height);
   
-  //first apply command line options 
-  PRInt32 argc = 0;
-  rv = cmdLineArgs->GetArgc(&argc);
-  if (NS_FAILED(rv)) 
-    return rv;
+  if (heedGeneralStartupPrefs) {
+    nsCOMPtr<nsIAppStartup> appStartup(do_GetService(NS_APPSTARTUP_CONTRACTID, &rv));
+    if (NS_FAILED(rv)) return rv;
+    rv = appStartup->CreateStartupState(width, height, windowOpened);
+    if (NS_FAILED(rv)) return rv;
+  }
+  else {
+    PRInt32 argc = 0;
+    rv = cmdLineArgs->GetArgc(&argc);
+    if (NS_FAILED(rv)) return rv;
 
-  char **argv = nsnull;
-  rv = cmdLineArgs->GetArgv(&argv);
-  if (NS_FAILED(rv)) 
-    return rv;
+    char **argv = nsnull;
+    rv = cmdLineArgs->GetArgv(&argv);
+    if (NS_FAILED(rv)) return rv;
 
-  PRInt32 i = 0;
-  for (i=1;i<argc;i++) {
+    PRInt32 i = 0;
+    for (i=1;i<argc;i++) {
 #ifdef DEBUG_CMD_LINE
-     printf("XXX argv[%d] = %s\n",i,argv[i]);
+      printf("XXX argv[%d] = %s\n",i,argv[i]);
 #endif /* DEBUG_CMD_LINE */
-     if (IsStartupCommand(argv[i])) {
-       // skip over the - (or / on windows)
-       char *command = argv[i] + 1;
+      if (IsStartupCommand(argv[i])) {
+
+        // skip over the - (or / on windows)
+        char *command = argv[i] + 1;
 #ifdef XP_UNIX
-       // unix allows -mail and --mail
-       if ((argv[i][0] == '-') && (argv[i][1] == '-')) {
+        // unix allows -mail and --mail
+        if ((argv[i][0] == '-') && (argv[i][1] == '-')) {
           command = argv[i] + 2;
-       }
+        }
 #endif /* XP_UNIX */
 
         // this can fail, as someone could do -foo, where -foo is not handled
@@ -781,19 +786,9 @@ nsresult DoCommandLines(nsICmdLineService* cmdLineArgs, PRBool *windowOpened)
                                        height, width, windowOpened);
         if (rv == NS_ERROR_NOT_AVAILABLE || rv == NS_ERROR_ABORT)
           return rv;
-     }
+      }
+    }
   }
-
-  // second if no window opened then apply the startup preferences
-  if (!*windowOpened) {
-    nsCOMPtr<nsIAppStartup> appStartup(do_GetService(NS_APPSTARTUP_CONTRACTID, &rv));
-    if (NS_FAILED(rv)) 
-      return rv;
-    rv = appStartup->CreateStartupState(width, height, windowOpened);
-    if (NS_FAILED(rv)) 
-      return rv;
-  }
-   
   return NS_OK;
 }
 
@@ -1245,8 +1240,36 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   appStartup->CreateHiddenWindow();
   NS_TIMELINE_LEAVE("appStartup->CreateHiddenWindow");
 
+  // This will go away once Components are handling there own commandlines
+  // if we have no command line arguments, we need to heed the
+  // "general.startup.*" prefs
+  // if we had no command line arguments, argc == 1.
+
   PRBool windowOpened = PR_FALSE;
-  rv = DoCommandLines(cmdLineArgs, &windowOpened);
+  PRBool defaultStartup;
+#if defined(XP_MAC) || defined(XP_MACOSX)
+  // On Mac, nsCommandLineServiceMac may have added synthetic
+  // args. Check this adjusted value instead of the raw value.
+  PRInt32 processedArgc;
+  cmdLineArgs->GetArgc(&processedArgc);
+  defaultStartup = (processedArgc == 1);
+#if defined(XP_MACOSX)
+  // On OSX, we get passed two args if double-clicked from the Finder.
+  // The second is our PSN. Check for this and consider it to be default.
+  if (argc == 2 && processedArgc == 2) {
+    ProcessSerialNumber ourPSN;
+    if (::MacGetCurrentProcess(&ourPSN) == noErr) {
+      char argBuf[64];
+      sprintf(argBuf, "-psn_%ld_%ld", ourPSN.highLongOfPSN, ourPSN.lowLongOfPSN);
+      if (!strcmp(argBuf, argv[1]))
+        defaultStartup = PR_TRUE;
+    }
+  }
+#endif /* XP_MACOSX */
+#else
+  defaultStartup = (argc == 1);
+#endif
+  rv = DoCommandLines(cmdLineArgs, defaultStartup, &windowOpened);
   if (NS_FAILED(rv))
   {
     NS_WARNING("failed to process command line");
