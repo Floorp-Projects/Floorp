@@ -273,6 +273,8 @@ PRUint32 nsCRT::HashCode(const char* str, PRUint32* resultingStrLen)
   PRUint32 h = 0;
   const char* s = str;
 
+  if (!str) return h;
+
   unsigned char c;
   while ( (c = *s++) )
     h = (h>>28) ^ (h<<4) ^ c;
@@ -286,6 +288,8 @@ PRUint32 nsCRT::HashCode(const PRUnichar* str, PRUint32* resultingStrLen)
 {
   PRUint32 h = 0;
   const PRUnichar* s = str;
+
+  if (!str) return h;
 
   {
     PRUint16 W1 = 0;      // the first UTF-16 word in a two word tuple
