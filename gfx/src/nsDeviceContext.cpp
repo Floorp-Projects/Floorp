@@ -67,11 +67,17 @@ DeviceContextImpl :: ~DeviceContextImpl()
     mGammaTable = nsnull;
   }
 
-  IL_DestroyGroupContext(mIconImageGroup);
-
   for (PRInt32 i = 0; i < NS_NUMBER_OF_ICONS; i++) {
     NS_IF_RELEASE(mIcons[i]);
   }
+
+  /*
+   * Destroy the GroupContext after releasing the ImageRequests
+   * since IL_DestroyGroupContext(...) will destroy any IL_ImageReq
+   * for the context.  These are the same IL_ImgReq being referenced
+   * by mIcons[...]
+   */
+  IL_DestroyGroupContext(mIconImageGroup);
 
   if (nsnull != mFontAliasTable) {
     mFontAliasTable->Enumerate(DeleteValue);
