@@ -139,23 +139,26 @@ protected:
   COLORREF          mColor;
   nsIWidget         *mDCOwner;
 //  int               mOldMapMode;
+  nsIDeviceContext  *mContext;
   float             mP2T;
   HDC               mMainDC;
-  GraphicsState     *mStates;
-  nsVoidArray       *mStateCache;
-  nsIDeviceContext  *mContext;
+  //default objects
   HBRUSH            mOrigSolidBrush;
   HBRUSH            mBlackBrush;
   HFONT             mOrigFont;
   HFONT             mDefFont;
   HPEN              mOrigSolidPen;
   HPEN              mBlackPen;
+  //state management
+  GraphicsState     *mStates;
+  nsVoidArray       *mStateCache;
   nscolor           mCurrBrushColor;
   HBRUSH            mCurrBrush;
   nsIFontMetrics    *mCurrFontMetrics;
   HFONT             mCurrFont;
   nscolor           mCurrPenColor;
   HPEN              mCurrPen;
+  HPEN              mNullPen;
 
 #ifdef NS_DEBUG
   PRBool          mInitialized;
