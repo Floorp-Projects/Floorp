@@ -234,6 +234,7 @@ public:
   nsString mPreferredStyle;
   PRInt32 mStyleSheetCount;
   nsICSSLoader* mCSSLoader;
+  PRUint32 mContentIDCounter;
 
   void StartLayout();
 
@@ -523,11 +524,11 @@ void SetForm(nsIHTMLContent* aContent, nsIDOMHTMLFormElement* aForm)
 // XXX compare switch statement against nsHTMLTags.h's list
 static nsresult
 MakeContentObject(nsHTMLTag aNodeType,
-                  nsIAtom* aAtom,
-                  nsIDOMHTMLFormElement* aForm,
-                  nsIWebShell* aWebShell,
-                  nsIHTMLContent** aResult,
-                  const nsString* aContent = nsnull)
+                             nsIAtom* aAtom,
+                             nsIDOMHTMLFormElement* aForm,
+                             nsIWebShell* aWebShell,
+                             nsIHTMLContent** aResult,
+                             const nsString* aContent = nsnull)
 {
   nsresult rv = NS_OK;
   switch (aNodeType) {
@@ -742,6 +743,7 @@ MakeContentObject(nsHTMLTag aNodeType,
     rv = NS_NewHTMLWBRElement(aResult, aAtom);
     break;
   }
+
   return rv;
 }
 
@@ -783,7 +785,7 @@ static nsresult
 CreateContentObject(const nsIParserNode& aNode,
                     nsHTMLTag aNodeType,
                     nsIDOMHTMLFormElement* aForm,
-                    nsIWebShell* aWebShell,
+                    nsIWebShell* aWebShell,                    
                     nsIHTMLContent** aResult)
 {
   // Find/create atom for the tag name
@@ -1011,11 +1013,13 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
   if (NS_OK != rv) {
     return rv;
   }
+  content->SetContentID(mSink->mContentIDCounter++);
+
   mStack[mStackPos].mType = nodeType;
   mStack[mStackPos].mContent = content;
   mStack[mStackPos].mFlags = 0;
   content->SetDocument(mSink->mDocument, PR_FALSE);
-
+  
   nsIScriptContextOwner* sco = mSink->mDocument->GetScriptContextOwner();
   rv = AddAttributes(aNode, content, sco);
   NS_IF_RELEASE(sco);
@@ -1224,6 +1228,7 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
       if (NS_OK != rv) {
         return rv;
       }
+      content->SetContentID(mSink->mContentIDCounter++);
 
       // Set the content's document
       content->SetDocument(mSink->mDocument, PR_FALSE);
@@ -1538,6 +1543,7 @@ HTMLContentSink::HTMLContentSink()
   mFrameset        = nsnull;
   mStyleSheetCount = 0;
   mCSSLoader       = nsnull;
+  mContentIDCounter = NS_CONTENT_ID_COUNTER_BASE;
 }
 
 HTMLContentSink::~HTMLContentSink()
@@ -2377,16 +2383,17 @@ HTMLContentSink::ProcessAREATag(const nsIParserNode& aNode)
     if (NS_FAILED(rv)) {
       return rv;
     }
+    area->SetContentID(mContentIDCounter++);
 
     // Set the content's document and attributes
-    area->SetDocument(mDocument, PR_FALSE);
+    area->SetDocument(mDocument, PR_FALSE);    
     nsIScriptContextOwner* sco = mDocument->GetScriptContextOwner();
     rv = AddAttributes(aNode, area, sco);
     NS_IF_RELEASE(sco);
     if (NS_FAILED(rv)) {
       NS_RELEASE(area);
       return rv;
-    }
+    }        
 
     // Add AREA object to the current map
     mCurrentMap->AppendChildTo(area, PR_FALSE);
@@ -2448,6 +2455,8 @@ HTMLContentSink::ProcessBASETag(const nsIParserNode& aNode)
   nsIHTMLContent* element = nsnull;
   result = NS_CreateHTMLElement(&element, tag);
   if (NS_SUCCEEDED(result)) {
+    element->SetContentID(mContentIDCounter++);
+
     // Add in the attributes and add the style content object to the
     // head container.
     element->SetDocument(mDocument, PR_FALSE);
@@ -2781,8 +2790,10 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
   nsIHTMLContent* element = nsnull;
   result = NS_CreateHTMLElement(&element, tag);
   if (NS_SUCCEEDED(result)) {
+    element->SetContentID(mContentIDCounter++);
+
     // Add in the attributes and add the style content object to the
-    // head container.
+    // head container.    
     element->SetDocument(mDocument, PR_FALSE);
     result = AddAttributes(aNode, element, sco);
     if (NS_FAILED(result)) {
@@ -3201,6 +3212,8 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
   nsIHTMLContent* element = nsnull;
   rv = NS_CreateHTMLElement(&element, tag);
   if (NS_SUCCEEDED(rv)) {
+    element->SetContentID(mContentIDCounter++);
+
     // Add in the attributes and add the style content object to the
     // head container.
     element->SetDocument(mDocument, PR_FALSE);
@@ -3343,6 +3356,8 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
   nsIHTMLContent* element = nsnull;
   rv = NS_CreateHTMLElement(&element, tag);
   if (NS_SUCCEEDED(rv)) {
+    element->SetContentID(mContentIDCounter++);
+
     // Add in the attributes and add the style content object to the
     // head container.
     element->SetDocument(mDocument, PR_FALSE);
