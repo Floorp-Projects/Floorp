@@ -205,6 +205,24 @@ treechildren::-moz-tree-cell-text(folderNameCol, noSelect-true) {
 
 /* ::::: thread decoration ::::: */
 
+treechildren::-moz-tree-row(dummy)  {
+  background-color:  #F0F0F0;
+  margin-bottom: 1px;
+  padding-left: 2px;
+}
+
+treechildren::-moz-tree-row(dummy, selected) {
+  background-color: -moz-Dialog;
+}
+
+treechildren::-moz-tree-row(dummy, selected, focus)  {
+  background-color: Highlight;
+}
+
+treechildren::-moz-tree-cell-text(dummy) {
+  font-weight: bold;
+}
+
 treechildren::-moz-tree-cell-text(read) {
   font-weight: normal;
 }
@@ -265,6 +283,10 @@ treechildren::-moz-tree-image(unreadButtonColHeader) {
   list-style-image: url("chrome://messenger/skin/icons/readmail.png");
 }
 
+treechildren::-moz-tree-image(unreadButtonColHeader, dummy) { 
+  list-style-image: none;
+}
+
 treechildren::-moz-tree-image(unreadButtonColHeader, unread) {
   list-style-image: url("chrome://messenger/skin/icons/unreadmail.png");
 }
@@ -315,6 +337,10 @@ treechildren::-moz-tree-image(flaggedCol) {
   list-style-image: url("chrome://messenger/skin/icons/readmail.png");
 }
 
+treechildren::-moz-tree-image(flaggedCol, dummy) { 
+  list-style-image: none; 
+}
+
 treechildren::-moz-tree-image(flaggedCol, flagged) {
   list-style-image: url("chrome://messenger/skin/icons/flaggedmail.png");
 }
@@ -331,6 +357,10 @@ treecol.junkStatusHeader {
 /* "unknown" now looks like "not junk".  see bug #182386 */
 treechildren::-moz-tree-image(junkStatusCol) {
   list-style-image: url("chrome://messenger/skin/icons/readmail.png");
+}
+
+treechildren::-moz-tree-image(junkStatusCol, dummy) {
+  list-style-image: none;
 }
 
 treechildren::-moz-tree-image(junkStatusCol, junk) {
@@ -350,6 +380,10 @@ treechildren::-moz-tree-image(subjectCol) {
   list-style-image: url("chrome://messenger/skin/icons/symbol-null.png");
   margin: 0;
   padding: 0;
+}
+
+treechildren::-moz-tree-image(subjectCol, dummy) { 
+  list-style-image: none;
 }
 
 treechildren::-moz-tree-image(subjectCol, imapdeleted) {
@@ -977,6 +1011,7 @@ splitter {
   padding: 0px;
   list-style-image: url("chrome://messenger/skin/icons/Search-bar.png");
 }
+
 
 .quick-search-button-dropmarker {
   padding: 6px 0px 5px 17px;
