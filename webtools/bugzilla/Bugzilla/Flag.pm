@@ -248,14 +248,14 @@ sub process {
             ON (flags.type_id = i.type_id 
             AND (bugs.product_id = i.product_id OR i.product_id IS NULL)
             AND (bugs.component_id = i.component_id OR i.component_id IS NULL))
-        WHERE flags.type_id = $target->{'bug'}->{'id'} 
+        WHERE bugs.bug_id = $target->{'bug'}->{'id'} 
         AND i.type_id IS NULL
     ");
     clear(&::FetchOneColumn()) while &::MoreSQLData();
     &::SendSQL("
         SELECT flags.id 
         FROM flags, bugs, flagexclusions e
-        WHERE flags.type_id = $target->{'bug'}->{'id'}
+        WHERE bugs.bug_id = $target->{'bug'}->{'id'}
         AND flags.bug_id = bugs.bug_id
         AND flags.type_id = e.type_id 
         AND (bugs.product_id = e.product_id OR e.product_id IS NULL)
