@@ -362,16 +362,20 @@ NS_IMETHODIMP nsImapUrl::CreateListOfMessageIdsString(char ** aResult)
   
 NS_IMETHODIMP nsImapUrl::GetImapPartToFetch(char **result) 
 {
-	//  here's the old code:
-	char *wherepart = NULL;
-	if (m_listOfMessageIds && (wherepart = PL_strstr(m_listOfMessageIds, "/;section=")) != NULL)
-	{
-		wherepart += 10; // nsCRT::strlen("/;section=")
+	//  here's the old code....
+
+  // unforunately an imap part can have the form: /;section= OR
+  // it can have the form ?section=. We need to look for both.
+  if (m_listOfMessageIds)
+  {
+    char *wherepart = PL_strstr(m_listOfMessageIds, ";section=");
+    if (!wherepart) // look for ?section too....
+      wherepart = PL_strstr(m_listOfMessageIds, "?section=");
 		if (wherepart)
 		{
+      wherepart += 9;  // nsCRT::strlen("/;section=")
 			char *wherelibmimepart = PL_strstr(wherepart, "&part=");
-                int numCharsToCopy = (wherelibmimepart) ?
-                   wherelibmimepart - wherepart :
+      int numCharsToCopy = (wherelibmimepart) ? wherelibmimepart - wherepart :
                    PL_strlen(m_listOfMessageIds) - (wherepart - m_listOfMessageIds);
 			if (numCharsToCopy)
 			{
@@ -382,8 +386,8 @@ NS_IMETHODIMP nsImapUrl::GetImapPartToFetch(char **result)
           (*result)[numCharsToCopy] = '\0';
 				}
 			}
-		}
-	}
+    } // if we got a wherepart
+  } // if we got a m_listOfMessageIds
   return NS_OK;
 }
 
