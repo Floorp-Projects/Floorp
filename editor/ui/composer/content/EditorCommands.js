@@ -726,9 +726,27 @@ function EditorDeleteTableCell()
 
 function EditorInsertList(listType)
 {
-  dump("Inserting list\n");
-  editorShell.InsertList(listType);
-  contentWindow.focus();
+  // check the observer node,
+  // which is the appropriate button
+  var theButton = document.getElementById(listType + "Button");
+  dump("Toggling list " + listType + "\n");
+  if (theButton)
+  {
+    var isOn = theButton.getAttribute("toggled");
+    if (isOn == 1)
+    {
+      dump("Removing list \n");
+      editorShell.RemoveList(listType);
+    }
+    else
+      editorShell.InsertList(listType);
+
+    contentWindow.focus();
+  }
+  else
+  {
+    dump("No button found for the " + listType + " style\n");
+  }
 }
 
 function EditorAlign(align)

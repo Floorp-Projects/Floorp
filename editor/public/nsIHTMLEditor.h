@@ -48,7 +48,8 @@ public:
     eEditorPasswordBit,                   // text is not entered into content, only a representative character
     eEditorReadonlyBit,                   // editing events are disabled.  Editor may still accept focus.
     eEditorDisabledBit,                   // all events are disabled (like scrolling).  Editor will not accept focus.
-    eEditorFilterInputBit                 // text input is limited to certain character types, use mFilter
+    eEditorFilterInputBit,                // text input is limited to certain character types, use mFilter
+    eEditorMailBit                        // use mail-compose editting rules
     
     // max 32 bits
   };
@@ -59,7 +60,8 @@ public:
     eEditorPasswordMask       = (1 << eEditorPasswordBit),
     eEditorReadonlyMask       = (1 << eEditorReadonlyBit),
     eEditorDisabledMask       = (1 << eEditorDisabledBit),
-    eEditorFilterInputMask    = (1 << eEditorFilterInputBit)
+    eEditorFilterInputMask    = (1 << eEditorFilterInputBit),
+    eEditorMailMask           = (1 << eEditorMailBit)
   };
   
   
@@ -243,6 +245,12 @@ public:
    * 
    */
   NS_IMETHOD InsertList(const nsString& aListType)=0;
+
+  /**
+   * Document me!
+   * 
+   */
+  NS_IMETHOD RemoveList(const nsString& aListType)=0;
 
   /**
    * Document me!

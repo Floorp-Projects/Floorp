@@ -142,6 +142,7 @@ interface nsIEditorShell : nsISupports
   void InsertBreak();
   
   void InsertList(in wstring listType);
+  void RemoveList(in wstring listType);
   void Indent(in wstring indent);
   void Align(in wstring align);
   
