@@ -415,99 +415,93 @@ NS_IMETHODIMP nsHTMLEditor::Init(nsIDOMDocument *aDoc,
 }
 
 NS_IMETHODIMP 
-nsHTMLEditor::SetDocumentCharacterSet(const PRUnichar* characterSet)
-{
-  nsresult result;
+nsHTMLEditor::SetDocumentCharacterSet(const PRUnichar* characterSet) 
+{ 
+  nsresult result; 
 
-  result = nsEditor::SetDocumentCharacterSet(characterSet);
+  result = nsEditor::SetDocumentCharacterSet(characterSet); 
 
-  // update META charset tag
-  if (NS_SUCCEEDED(result)) {
-    nsCOMPtr<nsIDOMDocument>domdoc;
-    result = GetDocument(getter_AddRefs(domdoc));
-    if (NS_SUCCEEDED(result) && nsnull != domdoc) {
-      nsAutoString newMetaString;
-      nsCOMPtr<nsIDOMNodeList>metaList;
-      nsCOMPtr<nsIDOMNode>metaNode;
-      nsCOMPtr<nsIDOMElement>metaElement;
-      PRBool newMetaCharset = PR_TRUE;
+  // update META charset tag 
+  if (NS_SUCCEEDED(result)) { 
+    nsCOMPtr<nsIDOMDocument>domdoc; 
+    result = GetDocument(getter_AddRefs(domdoc)); 
+    if (NS_SUCCEEDED(result) && domdoc) { 
+      nsAutoString newMetaString; 
+      nsCOMPtr<nsIDOMNodeList>metaList; 
+      nsCOMPtr<nsIDOMNode>metaNode; 
+      nsCOMPtr<nsIDOMElement>metaElement; 
+      PRBool newMetaCharset = PR_TRUE; 
 
-      // get a list of META tags
-      result = domdoc->GetElementsByTagName("meta", getter_AddRefs(metaList));
-      if (NS_SUCCEEDED(result) && nsnull != metaList) {
-        PRUint32 listLength = 0;
-        (void) metaList->GetLength(&listLength);
+      // get a list of META tags 
+      result = domdoc->GetElementsByTagName("meta", getter_AddRefs(metaList)); 
+      if (NS_SUCCEEDED(result) && metaList) { 
+        PRUint32 listLength = 0; 
+        (void) metaList->GetLength(&listLength); 
 
-        for (PRUint32 i = 0; i < listLength; i++) {
-          metaList->Item(i, getter_AddRefs(metaNode));
-          if (nsnull == metaNode) continue;
-          metaElement = do_QueryInterface(metaNode);
-          if (nsnull == metaElement) continue;
+        for (PRUint32 i = 0; i < listLength; i++) { 
+          metaList->Item(i, getter_AddRefs(metaNode)); 
+          if (!metaNode) continue; 
+          metaElement = do_QueryInterface(metaNode); 
+          if (!metaElement) continue; 
 
-          const nsString content("charset=");
-          nsString currentValue;
+          const nsString content("charset="); 
+          nsString currentValue; 
 
-          if (NS_FAILED(metaElement->GetAttribute("http-equiv", currentValue))) continue;
+          if (NS_FAILED(metaElement->GetAttribute("http-equiv", currentValue))) continue; 
 
-          if (kNotFound != currentValue.Find("content-type", PR_TRUE)) {
-            if (NS_FAILED(metaElement->GetAttribute("content", currentValue))) continue;
+          if (kNotFound != currentValue.Find("content-type", PR_TRUE)) { 
+            if (NS_FAILED(metaElement->GetAttribute("content", currentValue))) continue; 
 
-            PRInt32 offset = currentValue.Find(content.GetUnicode(), PR_TRUE);
-            if (kNotFound != offset) {
-              newMetaString.SetString(currentValue, offset); // copy current value before "charset=" (e.g. text/html)
-              newMetaString.Append(content);
-              newMetaString.Append(characterSet);
-              result = metaElement->SetAttribute("content", newMetaString);
-              if (NS_SUCCEEDED(result))
-                newMetaCharset = PR_FALSE;
-              break;
-            }
-          }
-        }
-      }
+            PRInt32 offset = currentValue.Find(content.GetUnicode(), PR_TRUE); 
+            if (kNotFound != offset) { 
+              newMetaString.SetString(currentValue, offset); // copy current value before "charset=" (e.g. text/html) 
+              newMetaString.Append(content); 
+              newMetaString.Append(characterSet); 
+              result = nsEditor::SetAttribute(metaElement, "content", newMetaString); 
+              if (NS_SUCCEEDED(result)) 
+                newMetaCharset = PR_FALSE; 
+              break; 
+            } 
+          } 
+        } 
+      } 
 
-      if (newMetaCharset) {
-        nsCOMPtr<nsIDOMNodeList>headList;
+      if (newMetaCharset) { 
+        nsCOMPtr<nsIDOMNodeList>headList; 
         nsCOMPtr<nsIDOMNode>headNode; 
-        nsCOMPtr<nsIDOMNode>resultNode;
+        nsCOMPtr<nsIDOMNode>resultNode; 
 
-        result = domdoc->GetElementsByTagName("head",getter_AddRefs(headList));
-        if (NS_SUCCEEDED(result) && nsnull != headList) {
-          headList->Item(0, getter_AddRefs(headNode));
-          if (nsnull != headNode) {
-            // Create a new meta charset tag
-            result = domdoc->CreateElement("meta",getter_AddRefs(metaElement));
-            if (NS_SUCCEEDED(result) && nsnull != metaElement) {
-              metaNode = do_QueryInterface(metaElement);
-              if (NS_FAILED(result))
-                return NS_ERROR_FAILURE;
-            }
-            result = headNode->AppendChild(metaNode, getter_AddRefs(resultNode));
-            if (NS_FAILED(result))
-              return NS_ERROR_FAILURE;
+        result = domdoc->GetElementsByTagName("head",getter_AddRefs(headList)); 
+        if (NS_SUCCEEDED(result) && headList) { 
+          headList->Item(0, getter_AddRefs(headNode)); 
+          if (headNode) { 
+            // Create a new meta charset tag 
+            result = CreateNode("meta", headNode, 0, getter_AddRefs(resultNode)); 
+            if (NS_FAILED(result)) 
+              return NS_ERROR_FAILURE; 
 
-            // Set attributes to the created element
-            if (nsnull != metaNode && nsCRT::strlen(characterSet) > 0) {
-              newMetaString.SetString("Content-Type");
-              result = metaElement->SetAttribute("http-equiv", newMetaString);
-              if (NS_SUCCEEDED(result)) {
-                newMetaString.SetString("text/html;charset=");
-                newMetaString.Append(characterSet);
-                result = metaElement->SetAttribute("content", newMetaString);
-              }
-              if (NS_FAILED(result)) {
-                // remove the node
-                metaNode->RemoveChild(resultNode, getter_AddRefs(resultNode));
-              }
-            }
-          }
-        }
-      }
-    }
-  }
+            // Set attributes to the created element 
+            if (resultNode && nsCRT::strlen(characterSet) > 0) { 
+              metaElement = do_QueryInterface(resultNode); 
+              if (metaElement) { 
+                // not undoable, undo should undo CreateNode 
+                result = metaElement->SetAttribute("http-equiv", "Content-Type"); 
+                if (NS_SUCCEEDED(result)) { 
+                  newMetaString.SetString("text/html;charset="); 
+                  newMetaString.Append(characterSet); 
+                  // not undoable, undo should undo CreateNode 
+                  result = metaElement->SetAttribute("content", newMetaString); 
+                } 
+              } 
+            } 
+          } 
+        } 
+      } 
+    } 
+  } 
 
-  return result;
-}
+  return result; 
+} 
 
 NS_IMETHODIMP 
 nsHTMLEditor::PostCreate()
