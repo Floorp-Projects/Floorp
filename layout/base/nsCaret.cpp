@@ -925,7 +925,7 @@ void nsCaret::DrawCaret()
   if (frameRect.height == 0)
   {
       const nsStyleFont* fontStyle;
-      mLastCaretFrame->GetStyleData(eStyleStruct_Font, (const nsStyleFont*&)fontStyle);
+      mLastCaretFrame->GetStyleData(eStyleStruct_Font, (const nsStyleStruct*&)fontStyle);
       mRendContext->SetFont(fontStyle->mFont);
       nsCOMPtr<nsIFontMetrics> fm;
       mRendContext->GetFontMetrics(*getter_AddRefs(fm));
