@@ -576,6 +576,57 @@ DWORD   rop;
   return NS_OK;
 }
 
+/** ---------------------------------------------------
+ *  See documentation in nsIRenderingContext.h
+ *	@update 3/16/00 dwc
+ */
+PRBool nsImageWin :: DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
+				                        nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,
+                                nscoord aWidth, nscoord aHeight)
+{
+HDC     TheHDC;
+HBRUSH  hBrush,oldBrush;
+BOOL    success;
+DWORD   rop;
+HBITMAP thebits;
+
+  if (nsnull == mHBitmap) {
+    CreateDDB(aSurface);
+  }
+  
+  ((nsDrawingSurfaceWin *)aSurface)->GetDC(&TheHDC);
+  if (NULL == TheHDC){
+    return (PR_FALSE);
+  }
+
+
+  // default copy mode
+  rop = PATCOPY;
+  // if there is an alpha layer, lay down the mask first
+  if( 1==mAlphaDepth){
+    ((nsDrawingSurfaceWin *)aSurface)->GetDC(&TheHDC);
+    thebits = ::CreateBitmap(mAlphaWidth,mAlphaHeight,1,1,NULL);
+    MONOBITMAPINFO  bmi(mAlphaWidth, mAlphaHeight);
+    SetDIBits(TheHDC,thebits,0,mAlphaHeight,mAlphaBits,(LPBITMAPINFO)&bmi,DIB_RGB_COLORS);
+    hBrush = CreatePatternBrush(thebits);
+    oldBrush = (HBRUSH)SelectObject(TheHDC,hBrush);
+    success = PatBlt( TheHDC, aX0,aY0,aX1-aX0,aY1-aY0,0xA000C9);
+    SelectObject(TheHDC,oldBrush);
+    DeleteObject(hBrush);
+    DeleteObject(thebits);
+    rop = 0xFA0089;
+  }
+
+  // do a pattern blit
+  hBrush = CreatePatternBrush(mHBitmap);
+  oldBrush = (HBRUSH)SelectObject(TheHDC,hBrush);
+  success = PatBlt( TheHDC, aX0,aY0,aX1-aX0,aY1-aY0,rop);
+  SelectObject(TheHDC,oldBrush);
+  DeleteObject(hBrush);
+
+  return (PR_TRUE);
+}
+
 /** ----------------------------------------------------------------
  * Create an optimezed bitmap, -- this routine may need to be deleted, not really used now
  * @update dc - 11/20/98
@@ -720,8 +771,6 @@ HDC                 memPrDC;
   return NS_OK;
 
 }
-
-
 
 /** ----------------------------------------------------------------
  * Build A DIB header and allocate memory 
