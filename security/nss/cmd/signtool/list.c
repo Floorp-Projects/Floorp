@@ -46,6 +46,7 @@ static SECStatus cert_trav_callback(CERTCertificate *cert, SECItem *k,
 int
 ListCerts(char *key, int list_certs)
 {
+	int failed = 0;
 	SECStatus rv;
 	char *ugly_list;
 	CERTCertDBHandle *db;
@@ -85,8 +86,18 @@ ListCerts(char *key, int list_certs)
 	rv = PK11_TraverseSlotCerts(cert_trav_callback, (void*)&list_certs,
 		NULL /*wincx*/);
 
+	if (rv) {
+		PR_fprintf(outputFD, "**Traverse of non-internal DBs failed**\n");
+		return -1;
+	}
+
 	/* Traverse Internal DB */
 	rv = SEC_TraversePermCerts(db, cert_trav_callback, (void*)&list_certs);
+
+	if (rv) {
+		PR_fprintf(outputFD, "**Traverse of internal DB failed**\n");
+		return -1;
+	}
 
 	if (num_trav_certs == 0) {
 		PR_fprintf(outputFD,
@@ -97,10 +108,6 @@ ListCerts(char *key, int list_certs)
 		PR_fprintf(outputFD, "- ------------\n");
 	} else {
 		PR_fprintf(outputFD, "---------------------------------------\n");
-	}
-
-	if (rv) {
-		return -1;
 	}
 
 	if (list_certs == 1) {
@@ -141,6 +148,7 @@ ListCerts(char *key, int list_certs)
 			certUsageObjectSigner, PR_Now(), NULL, &errlog);
 
 			if (rv != SECSuccess) {
+				failed = 1;
 				if(errlog.count > 0) {
 					PR_fprintf(outputFD,
 						"**Certificate validation failed for the "
@@ -155,6 +163,7 @@ ListCerts(char *key, int list_certs)
 
 
 		} else {
+			failed = 1;
 			PR_fprintf(outputFD,
 				"The certificate with nickname \"%s\" was NOT FOUND\n",
 			 key);
@@ -165,7 +174,7 @@ ListCerts(char *key, int list_certs)
 		PORT_FreeArena(errlog.arena, PR_FALSE);
 	}
 
-	if (rv != SECSuccess) {
+	if (failed) {
 		return -1;
 	}
 	return 0;

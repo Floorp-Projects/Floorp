@@ -74,6 +74,7 @@ VerifyJar(char *filename)
 
   if (status < 0 || jar->valid < 0)
     {
+    failed = 1;
     PR_fprintf(outputFD, "\nNOTE -- \"%s\" archive DID NOT PASS crypto verification.\n", filename);
     if (status < 0)
       {
@@ -93,7 +94,7 @@ VerifyJar(char *filename)
       /* corrupt files should not have their contents listed */ 
 
       if (status == JAR_ERR_CORRUPT)
-        return status;
+        return -1;
       }
     PR_fprintf(outputFD,
 		"entries shown below will have their digests checked only.\n"); 
@@ -140,6 +141,7 @@ VerifyJar(char *filename)
 
   if (status < 0 || jar->valid < 0)
     {
+    failed = 1;
     PR_fprintf(outputFD,
 		"\nNOTE -- \"%s\" archive DID NOT PASS crypto verification.\n", filename);
     give_help (status);
@@ -147,10 +149,8 @@ VerifyJar(char *filename)
 
   JAR_destroy (jar);
 
-  if (status < 0)
-    return status;
-  if (jar->valid < 0 || failed)
-    return ERRX;
+  if (failed)
+    return -1;
   return 0;
 }
 
@@ -355,7 +355,10 @@ JarWho(char *filename)
         PR_fprintf(outputFD, "issuer name: %s\n", cert->issuerName);
       }
     else
+      {
       PR_fprintf(outputFD, "no certificate could be found\n");
+      retval = -1;
+      }
 
     prev = cert;
     }

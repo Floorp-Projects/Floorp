@@ -168,6 +168,8 @@ sign_all_arc_fn(char *relpath, char *basedir, char *reldir, char *filename,
 		 (PL_strcasestr(relpath, ".arc") == relpath + strlen(relpath) - 4) ) {
 
 		if(!infop) {
+			PR_fprintf(errorFD, "%s: Internal failure\n", PROGRAM_NAME);
+			errorCount++;
 			retval = -1;
 			goto finish;
 		}
