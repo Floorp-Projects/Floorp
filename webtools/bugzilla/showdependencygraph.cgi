@@ -65,6 +65,7 @@ node [URL="${urlbase}show_bug.cgi?id=\\N", style=filled, color=lightgrey]
             $baselist{$i} = 1;
         }
     }
+    my @basearray = keys(%baselist);
 
     if ($::FORM{'doall'}) {
         SendSQL("select blocked, dependson from dependencies");
@@ -74,7 +75,7 @@ node [URL="${urlbase}show_bug.cgi?id=\\N", style=filled, color=lightgrey]
             AddLink($blocked, $dependson);
         }
     } else {
-        my @stack = keys(%baselist);
+        my @stack = @basearray;
         while (@stack) {
             my $id = shift @stack;
             SendSQL("select blocked, dependson from dependencies where blocked = $id or dependson = $id");
@@ -91,6 +92,9 @@ node [URL="${urlbase}show_bug.cgi?id=\\N", style=filled, color=lightgrey]
         }
     }
 
+    foreach my $k (@basearray) {
+        $seen{$k} = 1;
+    }
     foreach my $k (keys(%seen)) {
         my $summary = "";
         my $stat;
