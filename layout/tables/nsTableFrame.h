@@ -27,6 +27,7 @@ class nsCellLayoutData;
 class nsVoidArray;
 class nsTableCellFrame;
 class nsTableColFrame;
+class nsTableRowGroupFrame;
 class nsTableRowFrame;
 class CellData;
 class nsITableLayoutStrategy;
@@ -385,7 +386,7 @@ protected:
 
   /** returns the index of the first child after aStartIndex that is a row group 
     */
-  virtual PRInt32 NextRowGroup (PRInt32 aStartIndex);
+  virtual nsTableRowGroupFrame* NextRowGroupFrame (nsTableRowGroupFrame*);
 
   /** returns the number of rows in this table.
     * if mCellMap has been created, it is asked for the number of rows.<br>
