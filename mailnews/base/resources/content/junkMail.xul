@@ -67,7 +67,8 @@
     <label value="&account.label;" accesskey="&account.accesskey;"/>
     <menulist oncommand="onServerClick(event);" id="server">
       <menupopup datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
-                   containment="http://home.netscape.com/NC-rdf#child" ref="msgaccounts:/">
+                 sortResource="http://home.netscape.com/NC-rdf#FolderTreeName"
+                 sortDirection="ascending" ref="msgaccounts:/">
         <template>
           <rule nc:CanGetIncomingMessages="true">
             <menuitem uri="..." value="..."
