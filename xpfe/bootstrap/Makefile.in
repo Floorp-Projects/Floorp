@@ -26,6 +26,16 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+# This code removes the console from release builds
+# (unless you've set MOZ_WINCONSOLE=1).
+ifndef MOZ_WINCONSOLE
+ifdef MOZ_DEBUG
+MOZ_WINCONSOLE=1
+else
+MOZ_WINCONSOLE=0
+endif
+endif
+
 include $(topsrcdir)/config/config.mk
 
 MODULE		= apprunner
@@ -254,16 +264,6 @@ ifdef BUILD_STATIC_LIBS
 LDFLAGS	+= -framework QuickTime $(TK_LIBS)
 endif
 
-endif
-
-# This code removes the console from release builds
-# (unless you've set MOZ_WINCONSOLE=1).
-ifndef MOZ_WINCONSOLE
-ifdef MOZ_DEBUG
-MOZ_WINCONSOLE=1
-else
-MOZ_WINCONSOLE=0
-endif
 endif
 
 ifeq ($(OS_ARCH),WINNT)
