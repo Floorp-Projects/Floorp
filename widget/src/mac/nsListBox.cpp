@@ -19,6 +19,9 @@
 #include "nsListBox.h"
 #include <StringCompare.h>
 #include <Resources.h>
+#if TARGET_CARBON
+#include <ControlDefinitions.h>
+#endif
 
 NS_IMPL_ADDREF(nsListBox);
 NS_IMPL_RELEASE(nsListBox);
