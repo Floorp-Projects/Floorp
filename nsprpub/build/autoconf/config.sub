@@ -531,6 +531,10 @@ case $basic_machine in
 		basic_machine=i386-unknown
 		os=-mingw32
 		;;
+	i386-msvc | msvc)
+		basic_machine=i386-unknown
+		os=-msvc
+		;;
 	i[34567]86-pw32 | pw32)
 		basic_machine=i586-unknown
 		os=-pw32
@@ -1009,6 +1013,7 @@ case $os in
 	      | -cygwin* | -pe* | -psos* | -moss* | -proelf* | -rtems* \
 	      | -mingw32* | -linux-gnu* | -uxpv* | -beos* | -mpeix* | -udk* \
 	      | -interix* | -uwin* | -rhapsody* | -darwin* | -opened* \
+              | -msvc* \
 	      | -openstep* | -oskit* | -conix* | -pw32* | -nonstopux* | -storm-chaos*)
 	# Remember, each alternative MUST END IN *, to match a version number.
 		;;

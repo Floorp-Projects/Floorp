@@ -32,7 +32,7 @@
 # 
 
 
-ifeq (WINNT,$(MOZ_TARGET))
+ifeq (WINNT,$(MOZ_WIN32_TARGET))
 CSRCS = ntmisc.c \
 	ntsec.c \
 	ntsem.c \
@@ -47,7 +47,7 @@ CSRCS = ntmisc.c \
 	w32rng.c \
 	w32shm.c
 else
-ifeq (WIN95,$(MOZ_TARGET))
+ifeq (WIN95,$(MOZ_WIN32_TARGET))
 CSRCS =	ntmisc.c \
 	ntsec.c \
 	ntsem.c \
@@ -64,7 +64,7 @@ CSRCS =	ntmisc.c \
 	w32shm.c \
 	w95dllmain.c
 else
-ifeq (WIN16,$(MOZ_TARGET))
+ifeq (WIN16,$(MOZ_WIN32_TARGET))
 CSRCS =	w16null.c \
 	w16thred.c \
 	w16proc.c \
