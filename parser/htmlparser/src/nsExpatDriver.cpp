@@ -441,7 +441,7 @@ IsLoadableDTD(nsCOMPtr<nsIURI>* aDTD)
       res = dtdURL->GetFileName(getter_Copies(fileName));
       if (NS_SUCCEEDED(res) && fileName) {
         nsSpecialSystemDirectory dtdPath(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-        dtdPath += NS_ConvertASCIItoUCS2(nsDependentCString(kDTDDirectory) + fileName);
+        dtdPath += PromiseFlatCString(nsDependentCString(kDTDDirectory) + fileName).get();
         if (dtdPath.Exists()) {
           // The DTD was found in the local DTD directory.
           // Set aDTD to a file: url pointing to the local DTD

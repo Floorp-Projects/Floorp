@@ -336,7 +336,6 @@ class NS_COM nsFileSpec
 
                                 // These two operands take *native* file paths.
         void                    operator = (const char* inNativePath);
-        void                    operator = (const nsString& inNativePath);
 
         void                    operator = (const nsFilePath& inPath);
         void                    operator = (const nsFileURL& inURL);
@@ -419,7 +418,6 @@ class NS_COM nsFileSpec
                                 // inLeafName can be a relative path, so this allows
                                 // one kind of concatenation of "paths".
         void                    SetLeafName(const char* inLeafName);
-        void                    SetLeafName(const nsString& inLeafName);
 
                                 // Return the filespec of the parent directory. Used
                                 // in conjunction with GetLeafName(), this lets you
@@ -455,7 +453,6 @@ class NS_COM nsFileSpec
         PRInt64                 GetDiskSpaceAvailable() const;
         
         nsFileSpec              operator + (const char* inRelativeUnixPath) const;
-        nsFileSpec              operator + (const nsString& inRelativeUnixPath) const;
 
                                 // Concatenate the relative path to this directory.
                                 // Used for constructing the filespec of a descendant.
@@ -467,11 +464,9 @@ class NS_COM nsFileSpec
                                 // "below" this.
         void                    operator += (const char* inRelativeUnixPath);
 
-        void                    operator += (const nsString& inRelativeUnixPath);
 
         void                    MakeUnique();
         void                    MakeUnique(const char* inSuggestedLeafName);
-        void                    MakeUnique(const nsString& inSuggestedLeafName);
     
                                
         PRBool                  IsDirectory() const;          // More stringent than Exists()                               
@@ -498,11 +493,9 @@ class NS_COM nsFileSpec
         void                    RecursiveCopy(nsFileSpec newDir) const;
         
         nsresult                Rename(const char* inNewName); // not const: gets updated
-        nsresult                Rename(const nsString& inNewName);
         nsresult                CopyToDir(const nsFileSpec& inNewParentDirectory) const;
         nsresult                MoveToDir(const nsFileSpec& inNewParentDirectory);
         nsresult                Execute(const char* args) const;
-        nsresult                Execute(const nsString& args) const;
 
     protected:
 
