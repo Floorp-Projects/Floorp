@@ -5,7 +5,7 @@
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <binding id="colorpicker">
+  <binding id="colorpicker" extends="chrome://global/content/bindings/general.xml#basecontrol">
     <resources>
       <stylesheet src="chrome://global/skin/colorpicker.css"/>
     </resources>
@@ -438,11 +438,6 @@
       </property>
     
       <property name="open" onget="return this.mOpen"/>
-
-      <property name="disabled" onset="if (val) this.setAttribute('disabled',true);
-                                       else this.removeAttribute('disabled');
-                                       return val;"
-                                onget="return this.hasAttribute('disabled');"/>
 
       <property name="color">
         <getter><![CDATA[

@@ -6,7 +6,7 @@
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <binding id="menulist-base">
+  <binding id="menulist-base" extends="chrome://global/content/bindings/general.xml#basecontrol">
     <resources>
       <stylesheet src="chrome://global/skin/menulist.css"/>
     </resources>
@@ -94,10 +94,6 @@
       <property name="label" readonly="true" onget="return this.getAttribute('label');"/>
       <property name="description" onset="this.setAttribute('description',val); return val;"
                              onget="return this.getAttribute('description');"/>
-      <property name="disabled" onset="if (val) this.setAttribute('disabled',true); 
-                                       else this.removeAttribute('disabled');
-                                       return val;"
-                                onget="return this.hasAttribute('disabled');"/>
 
       <property name="open" onset="this.menuBoxObject.openMenu(val);
                                    return val;"
@@ -278,7 +274,7 @@
     <content sizetopopup="pref">
       <xul:hbox class="menulist-editable-box textbox-input-box" xbl:inherits="context" flex="1">
         <html:input class="menulist-editable-input" flex="1" anonid="input" allowevents="true"
-                    xbl:inherits="value=label,disabled"/>
+                    xbl:inherits="value=label,disabled,tabindex"/>
       </xul:hbox>
       <xul:dropmarker class="menulist-dropmarker" type="menu"/>
       <children includes="menupopup"/>

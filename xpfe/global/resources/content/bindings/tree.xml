@@ -7,7 +7,7 @@
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:xbl="http://www.mozilla.org/xbl">
   
-  <binding id="tree-base">
+  <binding id="tree-base" extends="chrome://global/content/bindings/general.xml#basecontrol">
     <resources>
       <stylesheet src="chrome://global/skin/tree.css"/>
     </resources>
@@ -39,13 +39,6 @@
                 onget="return this.hasAttribute('editable');"
                 onset="if (val) this.setAttribute('editable', 'true');
                        else this.removeAttribute('editable'); return val;"/>
-
-      <!-- ///////////////// nsIDOMXULControlElement ///////////////// -->
-
-      <property name="disabled"
-                onget="return this.hasAttribute('disabled');"
-                onset="if (val) this.setAttribute('disabled', 'true');
-                       else this.removeAttribute('disabled'); return val;"/>
 
       <!-- ///////////////// nsIDOMXULSelectControlElement ///////////////// -->
 

@@ -53,6 +53,10 @@
                                          if (val) this.setAttribute('disabled', 'true');
                                          else this.removeAttribute('disabled'); return val;"
                                   onget="return this.inputField.disabled;"/>
+      <property name="tabIndex"   onget="return parseInt(this.getAttribute('tabindex'));"
+                                  onset="this.inputField.tabIndex = val;
+                                         if (val) this.setAttribute('tabindex', val);
+                                         else this.removeAttribute('tabindex'); return val;"/>
       <property name="size"       onset="this.inputField.size = val; return val;"
                                   onget="return this.inputField.size;"/>
       <property name="readonly"   onset="this.inputField.readonly = val;
@@ -161,7 +165,7 @@
     <content>
       <xul:hbox class="textbox-input-box" flex="1" xbl:inherits="context">
         <html:textarea class="textbox-textarea" flex="1" anonid="input"
-                       xbl:inherits="onfocus,onblur,xbl:text=value,disabled,rows,cols,readonly,wrap"><children/></html:textarea>
+                       xbl:inherits="onfocus,onblur,xbl:text=value,disabled,tabindex,rows,cols,readonly,wrap"><children/></html:textarea>
       </xul:hbox>
     </content>
   </binding>
