@@ -47,38 +47,43 @@
   <grid>
     <columns><column/><column/><column/></columns>
     <rows>
-      <row vertical-align="baseline" text-align="right" autostretch="never">
+      <row valign="baseline" text-align="right" autostretch="never">
         <text class="label align-right" text-align="right" value="&numRowsEditField.label;"/>
         <textfield class="narrow" id="rowsInput" onkeyup="forceInteger(this.id)" />
         <spring/>
       </row>
-      <row vertical-align="baseline" text-align="right" autostretch="never">
+      <row valign="baseline" text-align="right" autostretch="never">
         <text class="label align-right" value="&numColumnsEditField.label;"/>
         <textfield class="narrow" id="columnsInput" onkeyup="forceInteger(this.id)" />
         <spring/>
       </row>
-      <row vertical-align="baseline" text-align="right" autostretch="never">
+      <row valign="baseline" text-align="right" autostretch="never">
         <text class="label align-right" value="&widthEditField.label;"/>
         <textfield class="narrow" id="widthInput" onkeyup="forceInteger(this.id)" />
         <menulist id="widthPixelOrPercentMenulist"><menupopup/></menulist>
           <!-- child elements are appended by JS -->
       </row>
-      <row vertical-align="baseline" text-align="right" autostretch="never">
+      <row valign="baseline" text-align="right" autostretch="never">
         <text class="label align-right" value="&heightEditField.label;"/>
         <textfield class="narrow" id="heightInput" onkeyup="forceInteger(this.id)" />
         <menulist id="heightPixelOrPercentMenulist"><menupopup/></menulist>
           <!-- child elements are appended by JS -->
       </row>
-      <row vertical-align="baseline" autostretch="never">
+      <row valign="baseline" autostretch="never">
         <text class="label align-right" text-align="right" value="&borderEditField.label;"/>
         <textfield class="narrow" id="borderInput" onkeyup="forceInteger(this.id)" />
-        <text value="&pixels.label;"/>  
+        <text class="label" value="&pixels.label;"/>  
+      </row>
+      <spring class="spacer"/>
+      <row valign="baseline" autostretch="never">
+        <spring/>
+        <spring/>
+        <!-- from EdDialogOverlay -->
+        <button class="dialog" id="AdvancedEditButton"/>
       </row>
     </rows>
   </grid>
-  <spring class="spacer"/>
-  <!-- from EdDialogOverlay -->
-  <box id="AdvancedEdit"/>
+  <separator class="groove"/>
   <!-- from global dialogOverlay -->
 	<box id="okCancelButtons"/> 
 </window>

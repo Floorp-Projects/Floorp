@@ -37,6 +37,8 @@
 <!ENTITY fileopenremote.keybinding "l">
 <!ENTITY recentFilesMenu.label "Recent Files">
 <!ENTITY recentFilesMenu.accesskey "r">
+<!ENTITY fileRevert.label "Revert">
+<!ENTITY filerevert.accesskey "v">
 <!ENTITY saveCmd.label "Save">
 <!ENTITY filesave.accesskey "s">
 <!ENTITY filesave.keybinding "s">
@@ -482,9 +484,12 @@ Menu item text for "[Page|Table|Cell] Background color" is filled from
 <!ENTITY tableDeleteMenu.label "Delete">
 <!ENTITY tabledeletemenu.accesskey "d">
 
-<!ENTITY tableFixup.label "Fixup table layout">
-<!ENTITY tablefixup.accesskey "f">
-<!ENTITY tableJoinCells.label "Join Cells">
+<!ENTITY tableFixup.label "Normalize table layout">
+<!ENTITY tablefixup.accesskey "n">
+<!-- text for "Join Cells" is in editor.properties 
+     ("JoinSelectedCells" and "JoinCellToRight")
+     the access key must exist in both of those strings
+-->
 <!ENTITY tablejoin.accesskey "j">
 <!ENTITY tableProperties.label "Table Properties...">
 <!-- These may be shared in other menus -->
@@ -541,9 +546,12 @@ Menu item text for "[Page|Table|Cell] Background color" is filled from
 <!-- Used with color pickers in Format toolbar and Format Menu -->
 <!ENTITY colorPicker.default.label "Reader's default color">
 <!ENTITY colorPicker.default.accesskey "r">
+<!ENTITY colorLabel.label "Color:">
+<!ENTITY ok.label "OK">
+<!ENTITY lastPickedColor.label "Last-picked color">
 
 <!-- Display Mode Toolbar -->
 <!ENTITY normalMode.label "Normal">
 <!ENTITY previewMode.label "Edit Preview">
 <!ENTITY showAllTags.label "Show All Tags">
-<!ENTITY treeModeButton.label "Tag Tree">
+<!ENTITY sourceMode.label "HTML Source">

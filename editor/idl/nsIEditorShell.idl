@@ -60,9 +60,10 @@ interface nsIEditorShell : nsISupports
   };
 
   enum {
-    eDisplayModeWYSIWYG,
+    eDisplayModePreview,
     eDisplayModeNormal,
-    eDisplayModeAllTags
+    eDisplayModeAllTags,
+    eDisplayModeSource
   };
 %}
   readonly attribute boolean              documentModified;
@@ -451,8 +452,8 @@ interface nsIEditorShell : nsISupports
     *           (from override styles in EditorAllTags.css) 
     *           to show icon for every HTML tag
     */
-  void  SetDisplayMode(in PRInt32 displayMode);
-    
+  void SetDisplayMode(in PRInt32 displayMode);
+
   /** Add/remove an overridestyle sheet to show paragraph marks
     *
     */

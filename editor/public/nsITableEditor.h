@@ -272,6 +272,7 @@ public:
     * @param aCell     Selected cell or null if ranges don't contain cell selections
     * @param aRange    Optional: if not null, return the selection range 
     *                     associated with the cell
+    * Returns NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found (passes NS_SUCCEEDED macro)
     */
   NS_IMETHOD GetFirstSelectedCell(nsIDOMElement **aCell, nsIDOMRange **aRange)=0;
   

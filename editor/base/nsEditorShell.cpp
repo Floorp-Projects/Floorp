@@ -227,7 +227,10 @@ nsEditorShell::nsEditorShell()
 ,  mWrapColumn(0)
 ,  mSuggestedWordIndex(0)
 ,  mDictionaryIndex(0)
+,  mDisplayMode(eDisplayModeNormal)
+,  mMailCompose(0)
 {
+  //TODO:Save last-used display mode in prefs so new window inherits?
   NS_INIT_REFCNT();
 }
 
@@ -424,7 +427,7 @@ nsEditorShell::PrepareDocumentForEditing(nsIDocumentLoader* aLoader, nsIURI *aUr
     aUrl->GetSpec(&pageURLString);
 
 #if DEBUG
-    printf("Editor is editing %s\n", pageURLString ? pageURLString : "");
+    printf("PrepareDocumentForEditing: Editor is editing %s\n", pageURLString ? pageURLString : "");
 #endif
 
      // only save the file spec if this is a local file, and is not              
@@ -432,6 +435,8 @@ nsEditorShell::PrepareDocumentForEditing(nsIDocumentLoader* aLoader, nsIURI *aUr
      if (nsCRT::strncmp(pageScheme, "file", 4) == 0 &&                           
          nsCRT::strncmp(pageURLString,"about:blank", 11) != 0)                   
     {
+      // Clutzy method of converting URL to local file format
+      // nsIFileSpec is going away -- is nsFileSpec???
       nsFileURL    pageURL(pageURLString);
       nsFileSpec   pageSpec(pageURL);
 
@@ -460,11 +465,12 @@ nsEditorShell::PrepareDocumentForEditing(nsIDocumentLoader* aLoader, nsIURI *aUr
   // Load style sheet with settings that should never
   //  change, even in "Browser" mode
   // We won't unload this, so we don't need to be returned the style sheet pointer
-  styleSheets->ApplyOverrideStyleSheet(NS_ConvertASCIItoUCS2("chrome://editor/content/EditorOverride.css"), nsnull);
+  
+  
+  styleSheets->ApplyOverrideStyleSheet(NS_ConvertASCIItoUCS2("chrome://editor/content/EditorOverride.css"),
+                                       getter_AddRefs(mBaseStyleSheet));
 
-  // Load the edit mode override style sheet
-  // This will be remove for "Browser" mode
-  SetDisplayMode(eDisplayModeNormal);
+  SetDisplayMode(mDisplayMode);
 
 #ifdef DEBUG
   // Activate the debug menu only in debug builds
@@ -475,8 +481,15 @@ nsEditorShell::PrepareDocumentForEditing(nsIDocumentLoader* aLoader, nsIURI *aUr
     elem->RemoveAttribute(NS_ConvertASCIItoUCS2("hidden"));
 #endif
 
-  // Force initial focus to the content window -- HOW?
-//  mWebShellWin->SetFocus();
+  // Force initial focus to the content window except if in mail compose
+  if (!mMailCompose)
+  {
+    mContentWindow->Focus();
+    // turn on caret
+    nsCOMPtr<nsISelectionController> selCon;
+    editor->GetSelectionController(getter_AddRefs(selCon));
+    if (selCon) selCon->SetCaretEnabled(PR_TRUE);
+  }
   return NS_OK;
 }
 
@@ -607,9 +620,17 @@ nsEditorShell::SetEditorType(const PRUnichar *editorType)
     
   nsAutoString  theType = editorType;
   theType.ToLowerCase();
-  if (theType.EqualsWithConversion("text") || theType.EqualsWithConversion("html") || theType.IsEmpty() || theType.EqualsWithConversion("htmlmail"))
+
+  PRBool textMail = theType.EqualsWithConversion("textmail");
+  mMailCompose = theType.EqualsWithConversion("htmlmail") || textMail;
+
+  if (mMailCompose ||theType.EqualsWithConversion("text") || theType.EqualsWithConversion("html") || theType.IsEmpty())
   {
-    mEditorTypeString = theType;
+    // We don't store a separate type for textmail
+    if (textMail)
+      mEditorTypeString = NS_ConvertASCIItoUCS2("text");
+    else
+      mEditorTypeString = theType;
     return NS_OK;
   }
   else
@@ -1003,10 +1024,18 @@ nsEditorShell::SetDisplayMode(PRInt32 aDisplayMode)
 {
   nsresult  res = NS_OK;
 
+  if (aDisplayMode == eDisplayModeSource && mDisplayMode == eDisplayModeSource)
+      return NS_OK;
+
+  nsAutoString indexVal = NS_ConvertASCIItoUCS2((aDisplayMode == eDisplayModeSource) ? "1" : "0");
+  SetChromeAttribute( mDocShell, "ContentWindowDeck", "index", indexVal );
+
   nsCOMPtr<nsIEditorStyleSheets> styleSheets = do_QueryInterface(mEditor);
   if (!styleSheets) return NS_NOINTERFACE;
 
-  if (aDisplayMode == eDisplayModeWYSIWYG)
+  mDisplayMode = aDisplayMode;
+
+  if (aDisplayMode == eDisplayModePreview)
   {
     // Remove all extra "edit mode" style sheets 
     if (mEditModeStyleSheet)
@@ -1033,14 +1062,8 @@ nsEditorShell::SetDisplayMode(PRInt32 aDisplayMode)
     if (mEditModeStyleSheet) return NS_OK;
     
     //Load the editmode style sheet
-    nsCOMPtr<nsICSSStyleSheet> styleSheet;
-    res = styleSheets->ApplyOverrideStyleSheet(NS_ConvertASCIItoUCS2("chrome://editor/content/EditorContent.css"),
-                                                getter_AddRefs(styleSheet));
-    
-    // Save the returned style sheet so we can remove it later
-    if (NS_SUCCEEDED(res))
-      mEditModeStyleSheet = styleSheet;
-    return res;
+    return styleSheets->ApplyOverrideStyleSheet(NS_ConvertASCIItoUCS2("chrome://editor/content/EditorContent.css"),
+                                                getter_AddRefs(mEditModeStyleSheet));
   }
   else if (aDisplayMode == eDisplayModeAllTags)
   {
@@ -1052,26 +1075,13 @@ nsEditorShell::SetDisplayMode(PRInt32 aDisplayMode)
     {
       // Note: using "@import url(chrome://editor/content/EditorContent.css);"
       //   in EditorAllTags.css doesn't seem to work!?
-      nsCOMPtr<nsICSSStyleSheet> styleSheet;
-      res = styleSheets->ApplyOverrideStyleSheet(NS_ConvertASCIItoUCS2("chrome://editor/content/EditorContent.css"),
-                                                  getter_AddRefs(styleSheet));
-    
-      // Save the returned style sheet so we can remove it later
-      if (NS_SUCCEEDED(res))
-        mEditModeStyleSheet = styleSheet;
+      styleSheets->ApplyOverrideStyleSheet(NS_ConvertASCIItoUCS2("chrome://editor/content/EditorContent.css"),
+                                           getter_AddRefs(mEditModeStyleSheet));
     }
 
-    //Load the editmode style sheet
-    nsCOMPtr<nsICSSStyleSheet> styleSheet;
-    res = styleSheets->ApplyOverrideStyleSheet(NS_ConvertASCIItoUCS2("chrome://editor/content/EditorAllTags.css"),
-                                                getter_AddRefs(styleSheet));
-    
-    // Save the returned style sheet so we can remove it later
-    if (NS_SUCCEEDED(res))
-      mAllTagsModeStyleSheet = styleSheet;
-    return res;
+    return styleSheets->ApplyOverrideStyleSheet(NS_ConvertASCIItoUCS2("chrome://editor/content/EditorAllTags.css"),
+                                                getter_AddRefs(mAllTagsModeStyleSheet));
   }
-
   return NS_OK;
 }
 
@@ -1091,11 +1101,7 @@ nsEditorShell::DisplayParagraphMarks(PRBool aShowMarks)
     //Load the style sheet
     nsCOMPtr<nsICSSStyleSheet> styleSheet;
     res = styleSheets->ApplyOverrideStyleSheet(NS_ConvertASCIItoUCS2("chrome://editor/content/EditorParagraphMarks.css"),
-                                                getter_AddRefs(styleSheet));
-    
-    // Save the returned style sheet so we can remove it later
-    if (NS_SUCCEEDED(res))
-      mParagraphMarksStyleSheet = styleSheet;
+                                                getter_AddRefs(mParagraphMarksStyleSheet));
   }
   else if (mParagraphMarksStyleSheet)
   {
@@ -1130,13 +1136,39 @@ nsEditorShell::SetBodyAttribute(const PRUnichar *attr, const PRUnichar *value)
 NS_IMETHODIMP    
 nsEditorShell::LoadUrl(const PRUnichar *url)
 {
-   if(!mContentAreaDocShell)
-      return NS_ERROR_NOT_INITIALIZED;
+  if(!mContentAreaDocShell || !mEditor)
+    return NS_ERROR_NOT_INITIALIZED;
 
-   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mContentAreaDocShell));
-   NS_ENSURE_SUCCESS(webNav->LoadURI(url), NS_ERROR_FAILURE);
+  // Always unload all the override style sheets before loading
+  //  a url in case we're replacing an existing document that used them
+  nsCOMPtr<nsIEditorStyleSheets> styleSheets = do_QueryInterface(mEditor);
+  if (!styleSheets) return NS_NOINTERFACE;
 
-   return NS_OK;
+  if (mBaseStyleSheet)
+  {
+    styleSheets->RemoveOverrideStyleSheet(mBaseStyleSheet);
+    mBaseStyleSheet = nsnull;
+  }
+  if (mEditModeStyleSheet)
+  {
+    styleSheets->RemoveOverrideStyleSheet(mEditModeStyleSheet);
+    mEditModeStyleSheet = nsnull;
+  }
+  if (mAllTagsModeStyleSheet)
+  {
+    styleSheets->RemoveOverrideStyleSheet(mAllTagsModeStyleSheet);
+    mAllTagsModeStyleSheet = nsnull;
+  }
+  if (mParagraphMarksStyleSheet)
+  {
+    styleSheets->RemoveOverrideStyleSheet(mParagraphMarksStyleSheet);
+    mParagraphMarksStyleSheet = nsnull;  
+  }
+
+  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mContentAreaDocShell));
+  NS_ENSURE_SUCCESS(webNav->LoadURI(url), NS_ERROR_FAILURE);
+
+  return NS_OK;
 }
 
 
@@ -3105,6 +3137,9 @@ nsEditorShell::GetSelectedElement(const PRUnichar *aInTagName, nsIDOMElement **a
   {
     case eHTMLTextEditorType:
       result = mEditor->GetSelectedElement(tagName, aOutElement);
+      // Don't return NS_EDITOR_ELEMENT_NOT_FOUND (passes NS_SUCCEEDED macro)
+      //  to JavaScript
+      if(NS_SUCCEEDED(result)) return NS_OK;
       break;
 
     case ePlainTextEditorType:
@@ -3129,7 +3164,13 @@ nsEditorShell::GetFirstSelectedCell(nsIDOMElement **aOutElement)
     {
       nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
       if (tableEditor)
+      {
         result = tableEditor->GetFirstSelectedCell(aOutElement, nsnull);
+        // Don't return NS_EDITOR_ELEMENT_NOT_FOUND (passes NS_SUCCEEDED macro)
+        //  to JavaScript
+        if(NS_SUCCEEDED(result)) return NS_OK;
+      }
+      
       break;
     }
 
@@ -3182,6 +3223,9 @@ nsEditorShell::GetElementOrParentByTagName(const PRUnichar *aInTagName, nsIDOMNo
   {
     case eHTMLTextEditorType:
       result = mEditor->GetElementOrParentByTagName(tagName, node, aOutElement);
+      // Don't return NS_EDITOR_ELEMENT_NOT_FOUND (passes NS_SUCCEEDED macro)
+      //  to JavaScript
+      if(NS_SUCCEEDED(result)) return NS_OK;
       break;
 
     case ePlainTextEditorType:
@@ -3765,7 +3809,12 @@ nsEditorShell::GetCellAt(nsIDOMElement *tableElement, PRInt32 rowIndex, PRInt32 
       {
         nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
         if (tableEditor)
+        {
           result = tableEditor->GetCellAt(tableElement, rowIndex, colIndex, *_retval);
+          // Don't return NS_EDITOR_ELEMENT_NOT_FOUND (passes NS_SUCCEEDED macro)
+          //  to JavaScript
+          if(NS_SUCCEEDED(result)) return NS_OK;
+        }
       }
       break;
     default:

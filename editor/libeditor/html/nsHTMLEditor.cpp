@@ -848,20 +848,23 @@ NS_IMETHODIMP nsHTMLEditor::TabInTable(PRBool inIsShift, PRBool *outHandled)
     if (NS_FAILED(res)) return res;
     *outHandled = PR_TRUE;
     // put selection in right place
+    // Use table code to get selection and index to new row...
     nsCOMPtr<nsIDOMSelection>selection;
-    res = GetSelection(getter_AddRefs(selection));
-    if (NS_FAILED(res)) return res;
     nsCOMPtr<nsIDOMElement> tbl;
     nsCOMPtr<nsIDOMElement> cell;
-    nsCOMPtr<nsIDOMNode> cellParent;
-    PRInt32 cellOffset, row, column;
-    // leveraging charlie's table code: find where row is....
-    res = GetCellContext(selection, tbl, cell, cellParent, cellOffset, row, column);
+    PRInt32 row;
+    res = GetCellContext(getter_AddRefs(selection), 
+                         getter_AddRefs(tbl),
+                         getter_AddRefs(cell), 
+                         nsnull, nsnull,
+                         &row, nsnull);
     if (NS_FAILED(res)) return res;
-    // so that we can ask for first cell in that row...
+    // ...so that we can ask for first cell in that row...
     res = GetCellAt(tbl, row, 0, *(getter_AddRefs(cell)));
     if (NS_FAILED(res)) return res;
-    // and then set selection there.
+    // ...and then set selection there.
+    // (Note that normally you should use CollapseSelectionToDeepestNonTableFirstChild(),
+    //  but we know cell is an empty new cell, so this works fine)
     node = do_QueryInterface(cell);
     if (node) selection->Collapse(node,0);
     return NS_OK;
@@ -4939,7 +4942,7 @@ NS_IMETHODIMP nsHTMLEditor::OutputToStream(nsIOutputStream* aOutputStream,
   return encoder->EncodeToStream(aOutputStream);
 }
 
-static SetSelectionAroundHeadChildren(nsCOMPtr<nsIDOMSelection> aSelection, nsWeakPtr aDocWeak)
+static nsresult SetSelectionAroundHeadChildren(nsCOMPtr<nsIDOMSelection> aSelection, nsWeakPtr aDocWeak)
 {
   nsresult res = NS_OK;
   // Set selection around <head> node

@@ -103,7 +103,7 @@ function Startup()
   doSetOKCancel(onOK, null);
 
   // Initialize default colors from browser prefs
-  prefs = GetPrefs();
+  var prefs = GetPrefs();
   if (prefs)
   {
     dump("Getting browser prefs...\n");
