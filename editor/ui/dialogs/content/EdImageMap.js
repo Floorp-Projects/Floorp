@@ -22,14 +22,12 @@
  *   Brian King
  */
 
-
 var tHide = false;
 var highCont = false;
 var imageElement = null;
 var mapName = '';
 var imageMap = null;
-var oldMap = null;
-var noImg = false;
+var imageEl;
 
 function Startup(){
   if (!InitEditorShell())
@@ -39,21 +37,21 @@ function Startup(){
 }
 
 function initDialog(){
-  //Check to make sure selected element is an image
-  imageElement = editorShell.GetSelectedElement("img");
+  //Get image element from parent
+  imageElement = window.arguments[0];
   if (!imageElement) //If not an image close window
-  {
-    imageElementName = window.opener.document.getElementById('srcInput');
-    imageElementName = imageElementName.value;
-    if ( IsValidImage(imageElementName )) {
-      noImg = true;
-    }
-    else {
-      // Need error message here
-      window.close();
-      return;
-    } 
-  }
+    window.close();
+
+  //Get image map from parent
+  imageMap = window.arguments[1];
+  if (!imageMap) //If no image map close window
+    window.close();
+
+  //find parent inputs
+  srcInput = window.opener.document.getElementById("srcInput");
+  widthInput = window.opener.document.getElementById("widthInput");
+  heightInput = window.opener.document.getElementById("heightInput");
+  borderInput = window.opener.document.getElementById("border");
 
   //Set iframe pointer
   frameDoc = window.frames[0].document;
@@ -78,24 +76,31 @@ function initDialog(){
 
   //Place Image
   var newImg = frameDoc.createElement("img");
-  if ( newImg && noImg == false) {
-    newImg.setAttribute("src", imageElement.getAttribute("src"));
-    newImg.setAttribute("width", imageElement.offsetWidth);
-    newImg.setAttribute("height", imageElement.offsetHeight);
+  if ( newImg ) {
+    newImg.setAttribute("src", srcInput.value);
+    if (parseInt(widthInput.value) > 0)
+      newImg.setAttribute("width", widthInput.value);
+    if (parseInt(heightInput.value) > 0)
+      newImg.setAttribute("height", heightInput.value);
     newImg.setAttribute("id", "mainImg");
-    frameDoc.getElementById("bgDiv").appendChild(newImg);
-    frameDoc.getElementById("bgDiv").style.width = imageElement.offsetWidth;
-  }
-  else if (newImg) {
-    newImg.setAttribute("src", imageElementName);
-    frameDoc.getElementById("bgDiv").appendChild(newImg);
+    imageEl = frameDoc.getElementById("bgDiv").appendChild(newImg);
   }
 
+  //Resize background DIV to fit image
+  fixBgDiv();
+
   //Recreate Image Map if it exists
-  if ( (noImg == false) && (imageElement.getAttribute("usemap")) ) {
-    //alert('test');
     recreateMap();
+}
+
+function fixBgDiv(){
+  imageEl = frameDoc.getElementById("mainImg");
+  if (imageEl.offsetWidth != 0){
+    frameDoc.getElementById("bgDiv").style.width = imageEl.offsetWidth;
+    frameDoc.getElementById("bgDiv").style.height = imageEl.offsetHeight;
   }
+  else
+    setTimeout("fixBgDiv()", 100);
 }
 
 function hideToolbar(){
@@ -117,33 +122,28 @@ function hideToolbar(){
 }
 
 function highContrast(){
-  var imgEl = frameDoc.getElementById("mainImg");
   if (highCont){
-    imgEl.style.opacity = "100%";
+    frameDoc.getElementById("bgDiv").style.background = "url('chrome://editor/skin/images/Map_checker.gif')";
+    frameDoc.getElementById("bgDiv").style.backgroundColor = "white";
+    imageEl.style.opacity = "1.0";
+    document.getElementById("Map:Contrast").setAttribute("checked", "false");
+    document.getElementById("Map:Contrast").setAttribute("toggled", "false");
     highCont = false;
   }
   else{
-    imgEl.style.opacity = "10%";
+    frameDoc.getElementById("bgDiv").style.background = "url('')";
+    frameDoc.getElementById("bgDiv").style.backgroundColor = "#D2D2D2";
+    imageEl.style.opacity = ".3";
+    document.getElementById("Map:Contrast").setAttribute("checked", "true");
+    document.getElementById("Map:Contrast").setAttribute("toggled", "true");
     highCont = true;
   }
 }
 
 function recreateMap(){
-  var map = imageElement.getAttribute("usemap");
-  map = map.substring(1, map.length);
-  mapName = map;
-  var mapCollection = editorShell.editorDocument.getElementsByName(map);
-  oldMap = mapCollection[0];
-  //alert(map);
-  try{
-    alert(oldMap.childNodes.length);
-  }
-  catch (ex){
-    alert(ex);
-  }
-    areaCollection = mapCollection[0].childNodes;
-    var len = areaCollection.length;
-    for(j=0; j<len; j++){
+  areaCollection = imageMap.childNodes;
+  areaColLen = areaCollection.length;
+  for(j=0; j<areaColLen; j++){
       area = areaCollection[j];
       shape = area.getAttribute("shape");
       shape = shape.toLowerCase();
@@ -161,12 +161,17 @@ function recreateMap(){
 }
 
 function finishMap(){
-  var spots = frameDoc.getElementsByName("hotspot");
+  if (!setMapName())
+    return false;
+  if (!deleteAreas())
+    return false;
+
+  spots = frameDoc.getElementsByName("hotspot");
   var len = spots.length;
-  createMap();
   if (len >= 1){
     for(i=0; i<len; i++){
-      var curSpot = spots[i];
+      dump(i+"\n");
+      curSpot = spots[i];
       if (curSpot.getAttribute("class") == "rect")
         createRect(curSpot);
       else if (curSpot.getAttribute("class") == "cir")
@@ -174,26 +179,34 @@ function finishMap(){
       else
         createPoly(curSpot);
     }
-    imageElement.setAttribute("usemap", ("#"+mapName));
-    editorShell.editorDocument.body.appendChild(imageMap);
-    //editorShell.InsertElementAtSelection(imageMap, false);
+    //editorShell.editorDocument.body.appendChild(imageMap);
+    //returnValue = "test";
+    //window.arguments[0] = "test"; //editorShell.editorDocument.body.appendChild(imageMap); //editorShell.InsertElementAtSelection(imageMap, false);
+    //dump(window.arguments[0]+"\n");
+    dump("imageMap.childNodes.length = "+imageMap.childNodes.length+"\n");
   }
   return true;
 }
 
-function createMap(){
+function setMapName(){
   //imageMap = editorShell.CreateElementWithDefaults("map");
-  imageMap = frameDoc.createElement("map");
-  if (mapName == ''){
-  mapName = imageElement.getAttribute("src");
+  //dump(imageMap+"\n");
+  //imageMap = frameDoc.createElement("map");
+
+  mapName = imageMap.getAttribute("name");
+  if (mapName == ""){
+    mapName = String(frameDoc.getElementById("mainImg").getAttribute("src"));
   mapName = mapName.substring(mapName.lastIndexOf("/"), mapName.length);
   mapName = mapName.substring(mapName.lastIndexOf("\\"), mapName.length);
-  mapName = mapName.substring(1, mapName.indexOf("."));
-  }
-  else {
-    editorShell.editorDocument.body.removeChild(oldMap);
+    mapName = mapName.substring(1, mapName.lastIndexOf("."));
+    if (mapName == ""){
+      // BUG causes substring to return nothing when
+      // parameters are 1 & 13 (i.e. string.substring(1, 13);)
+      mapName = "hack";
   }
   imageMap.setAttribute("name", mapName);
+}
+  return true;
 }
 
 function createRect(which){
@@ -208,10 +221,10 @@ function createRect(which){
   else{
     newRect.setAttribute("nohref", "");
   }
-  if (which.getAttribute("target") != ""){
+  if (which.getAttribute("hsTarget") != ""){
   newRect.setAttribute("target", which.getAttribute("hsTarget"));
   }
-  if (which.getAttribute("alt") != ""){
+  if (which.getAttribute("hsAlt") != ""){
   newRect.setAttribute("alt", which.getAttribute("hsAlt"));
   }
   //newRect.removeAttribute("id");
@@ -233,11 +246,12 @@ function createCir(which){
   else{
     newCir.setAttribute("nohref", "");
   }
-
-  if ( which.getAttribute("hsTarget") )
+  if (which.getAttribute("hsTarget") != ""){
     newCir.setAttribute("target", which.getAttribute("hsTarget"));
-  if ( which.getAttribute("hsAlt") )
+  }
+  if (which.getAttribute("hsAlt") != ""){
     newCir.setAttribute("alt", which.getAttribute("hsAlt"));
+  }
   //newCir.removeAttribute("id");
   imageMap.appendChild(newCir);
 }
@@ -261,10 +275,12 @@ function createPoly(which){
   else{
     newPoly.setAttribute("nohref", "");
   }
-  if ( which.getAttribute("hsTarget") )
+  if (which.getAttribute("hsTarget") != ""){
     newPoly.setAttribute("target", which.getAttribute("hsTarget"));
-  if ( which.getAttribute("hsAlt") )
+  }
+  if (which.getAttribute("hsAlt") != ""){
     newPoly.setAttribute("alt", which.getAttribute("hsAlt"));
+  }
   //newPoly.removeAttribute("id");
   imageMap.appendChild(newPoly);
 }
@@ -274,14 +290,16 @@ function hotSpotProps(which){
   var currentCir = null;
   if (which == null)
     return;
-  var hotSpotWin = window.openDialog("chrome://editor/content/EdImageMapHotSpot.xul", "_blank", "chrome,close,titlebar,modal", which);
+  hotSpotWin = window.openDialog("chrome://editor/content/EdImageMapHotSpot.xul", "_blank", "chrome,close,titlebar,modal", which);
 }
 
 function deleteAreas(){
-  if (oldMap){
+  dump("deleteAreas called\n");
+  area = imageMap.firstChild;
+  while (area != null){
+    dump(area+"\n");
+    imageMap.removeChild(area);
     area = imageMap.firstChild;
-    while (area){
-      area = imageMap.removeChild(area).nextSibling;
-    }    
   }
+  return true;
 }

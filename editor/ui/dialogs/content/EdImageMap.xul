@@ -25,34 +25,26 @@
 
 <?xml-stylesheet href="chrome://editor/skin/EdImageMap.css" type="text/css"?> 
 
-<?xml-stylesheet href="chrome://editor/skin/editor.css" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://editor/skin/" type="text/css"?>
 
-<!-- 
-<?xul-overlay href="chrome://global/content/taskbarOverlay.xul"?>
-<?xul-overlay href="chrome://editor/content/EdDialogOverlay.xul"?> 
--->
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-<?xul-overlay href="chrome://editor/content/editorOverlay.xul"?>
-<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
-<?xul-overlay href="chrome://global/content/tasksOverlay.xul"?>
-<!--
-<?xul-overlay href="chrome://communicator/content/sidebar/sidebarOverlay.xul"?>
--->
+<?xul-overlay href="chrome://editor/content/EdDialogOverlay.xul"?> 
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorImageMap.dtd">
 
 
 <!-- dialog containing a control requiring initial setup -->
-<!-- was class="imap-window" -->
 <window class="dialog" title="&windowTitle.label;"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns:html="http://www.w3.org/TR/REC-html40"
     onload = "Startup()"
     onunload="//finishMap();"
     orient="vertical"
+    width="640" height="480"
    >
 <!--
-    width="640" height="480"
 	screenX="10" screenY="10"
 	persist="screenX screenY width height"
 -->
@@ -69,7 +61,11 @@
 
   <keyset id="defaultKeySet">
 
-    <key id="deletespot"   keycode="VK_DELETE" onkeypress="deleteElement(currentElement)" />
+    <key id="deletespot"   keycode="VK_DELETE"   onkeypress="deleteElement(currentElement)" />
+    <key id="nudgeup"      keycode="VK_UP"       onkeypress="nudge(event, 'up')" />
+    <key id="nudgeleft"    keycode="VK_LEFT"     onkeypress="nudge(event, 'left')" />
+    <key id="nudgedown"    keycode="VK_DOWN"     onkeypress="nudge(event, 'down')" />
+    <key id="nudgeright"   keycode="VK_RIGHT"    onkeypress="nudge(event, 'right')" />
     <key id="mapclearkb"   xulkey="true" key="d" observes="Map:Clear" />
     <key id="mapselectkb"  xulkey="true" key="a" observes="Map:SelectAll" />
     <key id="mapclosekb"   xulkey="true" key="l" observes="Map:Close" />
@@ -91,7 +87,7 @@
   <broadcaster id="Map:Apercent" value="&apercentCmd.label;" checked="true" oncommand="zoom('', 1)"/>
   <broadcaster id="Map:Bpercent" value="&bpercentCmd.label;" oncommand="zoom('', 2)"/>
   <broadcaster id="Map:Cpercent" value="&cpercentCmd.label;" oncommand="zoom('', 4)"/>
-  <broadcaster id="Map:Contrast" value="&contrastCmd.label;" onaction=""/>
+  <broadcaster id="Map:Contrast" value="&contrastCmd.label;" oncommand="highContrast()" toggled="0" checked="false"/>
   <broadcaster id="Map:About" value="&aboutCmd.label;" onaction=""/>
   <broadcaster id="Map:ZoomIn" value="&zoominCmd.label;" oncommand="zoom('in')"/>
   <broadcaster id="Map:ZoomOut" value="&zoomoutCmd.label;" disabled="true" oncommand="zoom('out')"/>
@@ -148,31 +144,29 @@
 </menubar>
 
 
-<toolbar id="toolbar" class="standard" persist="collapsed" orient="vertical">
+<toolbar id="toolbar" class="standard" persist="collapsed">
   <titledbutton id="cutButton" class="button28" observes="Map:Cut"/>
   <titledbutton id="copyButton" class="button28" observes="Map:Copy"/>
   <titledbutton id="pasteButton" class="button28" observes="Map:Paste"/>
   <titledbutton id="zoomInButton" class="button28" observes="Map:ZoomIn"/>
   <titledbutton id="zoomOutButton" class="button28" observes="Map:ZoomOut"/>
-  <titledbutton id="contrastButton" class="button28" toggled="0" oncommand="highContrast()"/>
- 
+  <titledbutton id="contrastButton" class="button28" observes="Map:Contrast"/>
   <spring flex="100%"/>
 </toolbar> 
 
-<box align="horizontal" flex="100">
 
-  <toolbar id="toolbox">
-  <box orient="vertical" flex="100">
-    <titledbutton id="pointerButton" class="tool" toggled="1" oncommand="changeTool(event, 'pointer')"/>
-    <titledbutton id="rectButton" class="tool" oncommand="changeTool(event, 'rect')"/>
-    <titledbutton id="cirButton" class="tool" oncommand="changeTool(event, 'cir')"/>
-    <titledbutton id="polyButton" class="tool" oncommand="changeTool(event, 'poly')"/>
+<box orient="horizontal" flex="1">
+
+  <toolbar id="toolbox" orient="vertical">
+    <titledbutton id="pointerButton" class="tool" toggled="1" onclick="changeTool(event, 'pointer')"/>
+    <titledbutton id="rectButton" class="tool" onclick="changeTool(event, 'rect')"/>
+    <titledbutton id="cirButton" class="tool" onclick="changeTool(event, 'cir')"/>
+    <titledbutton id="polyButton" class="tool" onclick="changeTool(event, 'poly')"/>
     <spring flex="100%"/>
-  </box>
   </toolbar>
 
   <!-- Content Area -->
-  <iframe id="content" src="EdImageMapPage.html" flex="100%"/>
+  <html:iframe id="content" src="EdImageMapPage.html" flex="1"/>
 
 </box>
 
@@ -180,13 +174,14 @@
   <!-- not sure if this is needed, but put it in just in case 
   <box id="AdvancedEditButton"/> -->
 
-  <box align="horizontal">
+  <box orient="horizontal">
 
-    <!-- Cheap hack until I get key events hooked up; was class="key-toolbar left" -->
-    <button orient="vertical" id = "DelButton"
-    class   = "dialog"
+    <!-- Cheap hack until I get key events hooked up
+    <button 
+    class   = "push dialog"
+    id	    = "DelButton"
     value="&delSpotCmd.label;" 
-    oncommand="deleteElement(currentElement)"/>
+    onclick="deleteElement(currentElement)"/> -->
     
     <spring flex="100%"/>
 
