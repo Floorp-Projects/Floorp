@@ -24,6 +24,7 @@ include $(DEPTH)/config/autoconf.mk
 
 EXPORTS=	\
 		nsIAppShellComponent.h	\
+		nsIAppShellComponentImpl.h	\
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk
