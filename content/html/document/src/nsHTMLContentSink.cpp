@@ -4129,7 +4129,7 @@ HTMLContentSink::DidProcessAToken(void)
           // Set the performance hint to prevent event starvation when
           // dispatching PLEvents. This improves application responsiveness 
           // during page loads.
-          PL_FavorPerformanceHint(FALSE, 0);
+          PL_FavorPerformanceHint(PR_FALSE, 0);
         }
 
       } else {
@@ -4139,7 +4139,7 @@ HTMLContentSink::DidProcessAToken(void)
           // to favor overall page load speed over responsiveness.
           mFlags &= ~NS_SINK_FLAG_DYNAMIC_LOWER_VALUE;
           // Reset the hint that to favoring performance for PLEvent dispatch.
-          PL_FavorPerformanceHint(TRUE, 0);
+          PL_FavorPerformanceHint(PR_TRUE, 0);
         }
 
       }
