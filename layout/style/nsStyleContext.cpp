@@ -512,14 +512,20 @@ void StyleDisplayImpl::ResetFrom(const nsStyleDisplay* aParent, nsIPresContext* 
 nsStyleTable::nsStyleTable(void) { }
 
 struct StyleTableImpl: public nsStyleTable {
-  StyleTableImpl(void) { }
+  StyleTableImpl(void);
 
   void ResetFrom(const nsStyleTable* aParent, nsIPresContext* aPresContext);
 };
 
+StyleTableImpl::StyleTableImpl()
+{ 
+  ResetFrom(nsnull, nsnull);
+}
+
 void StyleTableImpl::ResetFrom(const nsStyleTable* aParent, nsIPresContext* aPresContext)
 {
   // values not inherited
+  mCols  = NS_STYLE_TABLE_COLS_NONE;
   mFrame = NS_STYLE_TABLE_FRAME_NONE;
   mRules = NS_STYLE_TABLE_RULES_NONE;
   mCellPadding.Reset();

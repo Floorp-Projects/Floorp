@@ -1168,7 +1168,7 @@ void nsTablePart::MapAttributesInto(nsIStyleContext* aContext,
   GetAttribute(nsHTMLAtoms::cellpadding, value);
   if (value.GetUnit() != eHTMLUnit_Null) {
     tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
-    tableStyle->mCellPadding.SetCoordValue(p2t*(float)(value.GetPixelValue()));
+    tableStyle->mCellPadding.SetCoordValue((nscoord)(p2t*(float)(value.GetPixelValue())));
   }
 
   // cellspacing  (reuses tableStyle if already resolved)
@@ -1176,7 +1176,18 @@ void nsTablePart::MapAttributesInto(nsIStyleContext* aContext,
   if (value.GetUnit() != eHTMLUnit_Null) {
     if (nsnull==tableStyle)
       tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
-    tableStyle->mCellSpacing.SetCoordValue(p2t*(float)(value.GetPixelValue()));
+    tableStyle->mCellSpacing.SetCoordValue((nscoord)(p2t*(float)(value.GetPixelValue())));
+  }
+
+  // cols
+  GetAttribute(nsHTMLAtoms::cols, value);
+  if (value.GetUnit() != eHTMLUnit_Null) {
+    if (nsnull==tableStyle)
+      tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
+    if (value.GetUnit() == eHTMLUnit_Integer)
+      tableStyle->mCols = value.GetIntValue();
+    else // COLS had no value, so it refers to all columns
+      tableStyle->mCols = NS_STYLE_TABLE_COLS_ALL;
   }
 
 }

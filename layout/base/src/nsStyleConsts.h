@@ -231,5 +231,7 @@
 #define NS_STYLE_TABLE_RULES_COLS               3
 #define NS_STYLE_TABLE_RULES_ALL                4
 
+#define NS_STYLE_TABLE_COLS_NONE                (-1)
+#define NS_STYLE_TABLE_COLS_ALL                 PRInt32(1 << 30)
 
 #endif /* nsStyleConsts_h___ */

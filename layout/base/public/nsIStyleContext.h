@@ -157,6 +157,7 @@ struct nsStyleTable: public nsStyleStruct {
   PRUint8       mRules;         // [reset] see nsStyleConsts.h NS_STYLE_TABLE_RULES_*
   nsStyleCoord  mCellPadding;   // [reset] 
   nsStyleCoord  mCellSpacing;   // [reset] 
+  PRInt32       mCols;          // an integer if set, or see nsStyleConsts.h NS_STYLE_TABLE_COLS_*
 
 protected:
   nsStyleTable(void);

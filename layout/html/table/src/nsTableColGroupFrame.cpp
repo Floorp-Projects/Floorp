@@ -22,7 +22,6 @@
 #include "nsIPresContext.h"
 #include "nsIPtr.h"
 #include "nsIContentDelegate.h"
-#include "nsTablePart.h"
 #include "nsTableContent.h"
 #include "nsHTMLAtoms.h"
 
@@ -124,31 +123,27 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext*      aPresContext,
 // Subclass hook for style post processing
 NS_METHOD nsTableColGroupFrame::SetStyleContextForFirstPass(nsIPresContext* aPresContext)
 {
-  nsTablePart* table = ((nsTableContent*)mContent)->GetTable();
-  NS_ASSERTION(table,"Table Must not be null");
-  if (!table)
-    return NS_OK;  // TODO:  error!
-
-  // check for the COLS attribute
-  nsContentAttr result;
-  nsHTMLValue value;
-  result = table->GetAttribute(nsHTMLAtoms::cols, value);
+  // get the table frame
+  nsIFrame* tableFrame=nsnull;
+  GetGeometricParent(tableFrame);
+  tableFrame->GetGeometricParent(tableFrame); // get the outer frame
   
-  // if COLS is set, then map it into the COL frames
-  if (eContentAttr_NotThere != result)
-  {
-    PRInt32 numCols=0;
-    if (eContentAttr_NoValue == result)
-      ChildCount(numCols);
-    else if (eContentAttr_HasValue == result)
-    {
-      nsHTMLUnit unit = value.GetUnit();
-      if (eHTMLUnit_Empty==unit)
-        ChildCount(numCols);
-      else
-        numCols = value.GetIntValue();
-    }
+  // get the style for the table frame
+  nsIStyleContextPtr tableSC;
+  tableFrame->GetStyleContext(aPresContext, tableSC.AssignRef());
+  nsStyleTable *tableStyle = (nsStyleTable*)tableSC->GetStyleData(eStyleStruct_Table);
 
+  // if COLS is set, then map it into the COL frames
+  if (NS_STYLE_TABLE_COLS_NONE != tableStyle->mCols)
+  {
+    // set numCols to the number of columns effected by the COLS attribute
+    PRInt32 numCols=0;
+    if (NS_STYLE_TABLE_COLS_ALL == tableStyle->mCols)
+      ChildCount(numCols);
+    else 
+      numCols = tableStyle->mCols;
+
+    // for every column effected, set its width style
     PRInt32 colIndex=0;
     nsIFrame *colFrame=nsnull;
     nsIStyleContextPtr colStyleContext;
