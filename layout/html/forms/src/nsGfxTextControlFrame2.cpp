@@ -1387,9 +1387,9 @@ nsGfxTextControlFrame2::CalculateSizeStandard (nsIPresContext*       aPresContex
   if (NS_CONTENT_ATTR_HAS_VALUE == colStatus) {  // col attr will provide width
     PRInt32 col = ((colAttr.GetUnit() == eHTMLUnit_Pixel) ? colAttr.GetPixelValue() : colAttr.GetIntValue());
     col = (col <= 0) ? 1 : col; // XXX why a default of 1 char, why hide it
-    aDesiredSize.width = (col+1) * charWidth;
+    aDesiredSize.width = col * charWidth;
   } else {
-    aDesiredSize.width = (aSpec.mColDefaultSize+1) * charWidth;
+    aDesiredSize.width = aSpec.mColDefaultSize * charWidth;
   }
 
   aRowHeight      = aDesiredSize.height;
