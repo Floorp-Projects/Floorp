@@ -203,7 +203,7 @@ void nsFilePicker::HandleShowPopupMenuSelect(NavCBRecPtr callBackParms)
     { // Special case Nav Services prior to 2.0
       // Make sure the menu item selected was one of ours
       if ((menuItemSpec.menuType != menuItemSpec.menuCreator) ||
-          (menuItemSpec.menuType < mTypeOffset) ||
+          ((PRInt32)menuItemSpec.menuType < mTypeOffset) ||
           (menuItemSpec.menuType > numMenuItems))
       { // Doesn't appear to be one of our items selected so force it to be
         NavMenuItemSpec  menuItem;

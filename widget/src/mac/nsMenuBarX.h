@@ -140,7 +140,6 @@ protected:
 
     nsHashtable             mObserverTable;     // stores observers for content change notification
     nsHashtable             mCommandMapTable;   // maps CommandIDs to content nodes for CarbonEvent item selection
-    PRUint32                mCurrentCommandID;  // unique command id (per menu-bar) to give to next item that asks
 
     PRUint32                mNumMenus;
     nsSupportsArray         mMenusArray;        // holds refs
@@ -149,8 +148,9 @@ protected:
                                                 // been removed from the menubar
     nsCOMPtr<nsIContent>    mQuitItemContent;   // as above, but for quit
     nsIWidget*              mParent;            // weak ref
-
     PRBool                  mIsMenuBarAdded;
+    PRUint32                mCurrentCommandID;  // unique command id (per menu-bar) to give to next item that asks
+
 
     nsWeakPtr               mWebShellWeakRef;   // weak ref to webshell
     nsIDocument*            mDocument;          // pointer to document

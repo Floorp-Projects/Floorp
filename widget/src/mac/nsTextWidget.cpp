@@ -398,12 +398,14 @@ PRBool nsTextWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 					StartDraw();
 					ActivateControl(mControl);
 					OSErr err = SetKeyboardFocus(mWindowPtr, mControl, kControlFocusNextPart);
+					if (err == noErr ) {
 						nsRect rect = mBounds;
 						rect.x = rect.y = 0;
 						Rect macRect;
 						nsRectToMacRect(rect, macRect);
 						::InsetRect(&macRect, 2, 2);
 						::DrawThemeFocusRect(&macRect, true);
+					}
 					EndDraw();
 					StartIdling();
 					break;
@@ -414,12 +416,14 @@ PRBool nsTextWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 					StopIdling();
 					StartDraw();
 					OSErr err = SetKeyboardFocus(mWindowPtr, mControl, kControlFocusNoPart);
+					if ( err == noErr ) {
 						nsRect rect = mBounds;
 						rect.x = rect.y = 0;
 						Rect macRect;
 						nsRectToMacRect(rect, macRect);
 						::InsetRect(&macRect, 2, 2);
 						::DrawThemeFocusRect(&macRect, false);
+					}
 					DeactivateControl(mControl);
 					EndDraw();
 					break;
@@ -606,7 +610,7 @@ NS_METHOD  nsTextWidget::InsertText(const nsString &aText, PRUint32 aStartPos, P
 	if (retVal != NS_OK)
 		return retVal;
 
-	if ((aStartPos == -1L) && (aEndPos == -1L))
+	if (((PRInt32)aStartPos == -1L) && ((PRInt32)aEndPos == -1L))
 	{
 	  textStr.Append(aText);
 	}

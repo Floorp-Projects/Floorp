@@ -62,7 +62,6 @@
 #include <Menus.h>
 #include <TextUtils.h>
 #include <Balloons.h>
-#include <Traps.h>
 #include <Resources.h>
 #include <Appearance.h>
 #include <Gestalt.h>
@@ -89,7 +88,7 @@ EventHandlerUPP nsMenuBarX::sCommandEventHandler = nsnull;
 // nsMenuBarX constructor
 //
 nsMenuBarX::nsMenuBarX()
-  : mNumMenus(0), mParent(nsnull), mIsMenuBarAdded(PR_FALSE), mDocument(nsnull), mCurrentCommandID(1)
+  : mNumMenus(0), mParent(nsnull), mIsMenuBarAdded(PR_FALSE), mCurrentCommandID(1), mDocument(nsnull)
 {
   OSStatus status = ::CreateNewMenu(0, 0, &mRootMenu);
   NS_ASSERTION(status == noErr, "nsMenuBarX::nsMenuBarX:  creation of root menu failed.");
@@ -575,6 +574,7 @@ NS_METHOD nsMenuBarX::AddMenu(nsIMenu * aMenu)
       mNumMenus = 1;
       ::InsertMenuItem(mRootMenu, "\pA", mNumMenus);
       OSStatus status = ::SetMenuItemHierarchicalMenu(mRootMenu, 1, sAppleMenu);
+			NS_ASSERTION(status == noErr, "OS problem with SetMenuItemHierarchicalMenu");
     }
   }
 

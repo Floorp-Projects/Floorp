@@ -156,40 +156,6 @@ extern nsIWidget         * gRollupWidget;
 #endif //DEBUG
 
 
-//======================================================================================
-
-static Boolean KeyDown(const UInt8 theKey)
-{
-  KeyMap map;
-  GetKeys(map);
-  return ((*((UInt8 *)map + (theKey >> 3)) >> (theKey & 7)) & 1) != 0;
-}
-
-//=================================================================
-
-static long ConvertOSMenuResultToPPMenuResult(long menuResult)
-{
-  // Convert MacOS menu item to PowerPlant menu item because
-  // in our sample app, we use Constructor for resource editing
-  long menuID = HiWord(menuResult);
-  long menuItem = LoWord(menuResult);
-  SInt16**  theMcmdH = (SInt16**) ::GetResource('Mcmd', menuID);
-  if (theMcmdH != nil)
-  {
-    if (::GetHandleSize((Handle)theMcmdH) > 0)
-    {
-      SInt16 numCommands = (*theMcmdH)[0];
-      if (numCommands >= menuItem)
-      {
-        SInt32* theCommandNums = (SInt32*)(&(*theMcmdH)[1]);
-        menuItem = theCommandNums[menuItem-1];
-      }
-    }
-    ::ReleaseResource((Handle) theMcmdH);
-  }
-  menuResult = (menuID << 16) + menuItem;
-  return (menuResult);
-}
 
 #pragma mark -
 #if TARGET_CARBON && !XP_MACOSX
@@ -858,20 +824,8 @@ void  nsMacMessagePump::DoMouseMove(EventRecord &anEvent)
 //-------------------------------------------------------------------------
 void  nsMacMessagePump::DoKey(EventRecord &anEvent)
 {
-  char theChar = (char)(anEvent.message & charCodeMask);
-  //if ((anEvent.what == keyDown) && ((anEvent.modifiers & cmdKey) != 0))
-  //{
-    // do a menu key command
-  //  long menuResult = ::MenuKey(theChar);
-  //  if (HiWord(menuResult) != 0)
-  //  {
-  //    menuResult = ConvertOSMenuResultToPPMenuResult(menuResult);
-  //    DoMenu(anEvent, menuResult);
-  //  }
-  //}
-  //else
   {
-    PRBool handled = DispatchOSEventToRaptor(anEvent, GetFrontApplicationWindow());
+    DispatchOSEventToRaptor(anEvent, GetFrontApplicationWindow());
 #if USE_MENUSELECT
     /* we want to call this if cmdKey is pressed and no other modifier keys are pressed */
     if((!handled) && (anEvent.what == keyDown) && (anEvent.modifiers == cmdKey) )
