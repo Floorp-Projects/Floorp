@@ -188,7 +188,7 @@ endif
 ####################################
 # CVS defines for PSM
 #
-PSM_CO_MODULE= mozilla/security/psm mozilla/security/Makefile.in
+PSM_CO_MODULE= mozilla/security/psm mozilla/security/manager mozilla/security/Makefile.in
 PSM_CO_FLAGS := -P -A
 ifdef PSM_CO_TAG
   PSM_CO_FLAGS := $(PSM_CO_FLAGS) -r $(PSM_CO_TAG)
@@ -242,7 +242,7 @@ endif
 ifeq (,$(filter $(NSPRPUB_DIR), $(BUILD_MODULE_CVS)))
   CVSCO_NSPR :=
 endif
-ifeq (,$(filter security, $(BUILD_MODULE_CVS)))
+ifeq (,$(filter security security/manager, $(BUILD_MODULE_CVS)))
   CVSCO_PSM :=
   CVSCO_NSS :=
 endif
