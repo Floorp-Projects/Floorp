@@ -163,11 +163,16 @@ public class Main {
         return debugGui.isVisible();
     }
 
+    public void enableForAllNewContexts()
+    {
+        dim.enableForAllNewContexts();
+    }
+
     public static void main(String[] args)
         throws Exception
     {
         Main main = new Main("Rhino JavaScript Debugger");
-        main.dim.breakFlag = true;
+        main.doBreak();
         main.setExitAction(new Runnable() {
                 public void run() {
                     System.exit(0);
@@ -176,16 +181,16 @@ public class Main {
         System.setIn(main.getIn());
         System.setOut(main.getOut());
         System.setErr(main.getErr());
-        main.dim.enableForAllNewContexts();
+        main.enableForAllNewContexts();
         main.setScopeProvider(new ScopeProvider() {
                 public Scriptable getScope() {
                     return org.mozilla.javascript.tools.shell.Main.getScope();
                 }
             });
 
-        main.debugGui.pack();
-        main.debugGui.setSize(600, 460);
-        main.debugGui.setVisible(true);
+        main.pack();
+        main.setSize(600, 460);
+        main.setVisible(true);
 
         org.mozilla.javascript.tools.shell.Main.exec(args);
     }
@@ -197,23 +202,23 @@ public class Main {
             title = "Rhino JavaScript Debugger (embedded usage)";
         }
         Main main = new Main(title);
-        main.dim.breakFlag = true;
+        main.doBreak();
         main.setExitAction(new Runnable() {
                 public void run() {
                     System.exit(0);
                 }
             });
 
-        main.dim.enableForAllNewContexts();
+        main.enableForAllNewContexts();
         main.setScopeProvider(new ScopeProvider() {
                 public Scriptable getScope() {
                     return org.mozilla.javascript.tools.shell.Main.getScope();
                 }
             });
 
-        main.debugGui.pack();
-        main.debugGui.setSize(600, 460);
-        main.debugGui.setVisible(true);
+        main.pack();
+        main.setSize(600, 460);
+        main.setVisible(true);
     }
 }
 
