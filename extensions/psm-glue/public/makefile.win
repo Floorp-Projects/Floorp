@@ -41,10 +41,7 @@ XPIDL_INCLUDES=-I$(DEPTH)\..\mozilla\dist\idl
 XPIDLSRCS= \
     .\nsIPSMComponent.idl \
     .\nsIPSMUIHandler.idl \
-    .\nsISecureBrowserUI.idl \
-    .\nsISSLSocketProvider.idl \
     .\nsIPSMSocketInfo.idl \
-    .\nsISecretDecoderRing.idl \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
