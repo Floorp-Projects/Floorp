@@ -53,6 +53,17 @@ var FolderPaneController =
 		switch ( command )
 		{
 			case "cmd_selectAll":
+                                // the folder pane (currently)
+                                // only handles single selection
+                                // so we forward select all to the thread pane
+                                // if there is no DBView
+                                // don't bother sending to the thread pane
+                                // this can happen when we've selected a server
+                                // and account central is displayed
+                                if (!gDBView) 
+                                  return false;
+				else
+                                  return true;  
 			case "cmd_cut":
 			case "cmd_copy":
 			case "cmd_paste":
@@ -111,6 +122,12 @@ var FolderPaneController =
 			case "button_delete":
 				MsgDeleteFolder();
 				break;
+			case "cmd_selectAll":
+                                // the folder pane (currently)
+                                // only handles single selection
+                                // so we forward select all to the thread pane
+                                SendCommandToThreadPane(command);
+                                break;
 		}
 	},
 	
@@ -1103,4 +1120,12 @@ function IsFakeAccount() {
   return false;
 }
 
+function SendCommandToThreadPane(command)
+{
+  ThreadPaneController.doCommand(command);
+
+  // if we are sending the command so the thread pane
+  // we should focus the thread pane
+  SetFocusThreadPane();
+}
 
