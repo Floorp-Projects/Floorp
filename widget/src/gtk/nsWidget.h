@@ -154,6 +154,9 @@ class nsWidget : public nsBaseWidget
   // Return the Gdk window whose background should change
   virtual GdkWindow * GetWindowForSetBackground();
 
+  // Sets font for widgets
+  virtual void SetFontNative(GdkFont *aFont);
+
   //////////////////////////////////////////////////////////////////
   //
   // GTK signal installers
