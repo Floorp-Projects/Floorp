@@ -454,7 +454,8 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
 
   if ((name.get() == nsHTMLAtoms::script) ||
       (name.get() == nsHTMLAtoms::style) ||
-      (name.get() == nsHTMLAtoms::noscript)) {
+      (name.get() == nsHTMLAtoms::noscript) ||
+      (name.get() == nsHTMLAtoms::noframes)) {
     mInCDATA = PR_TRUE;
   }
 
