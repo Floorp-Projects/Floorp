@@ -151,7 +151,7 @@
 <!ENTITY newtodo.status.longlabel "Stav úkolu">
 <!ENTITY newtodo.duetime.warning    "Zvolený počáteční čas je po konečném čase.">
 <!ENTITY newtodo.duedate.warning    "Zvolené počáteční datum je po konečném datu.">
-<!ENTITY newtodo.repeatstart.warning "Start date required for recurrence.">
+<!ENTITY newtodo.repeatstart.warning "Pro opakování je vyžadováno počáteční datum.">
 
 <!ENTITY calendar.confirm.deleteallevents  "Are you sure you want to delete all the selected events?" >
 <!ENTITY calendar.confirm.deleteevent "Skutečně chcete vymazat událost pojmenovanou: " >
@@ -221,10 +221,10 @@
 <!ENTITY calendar.events.filter.month.label "Události následujícího měsíce">
 <!ENTITY calendar.events.filter.future.label "Všechny budoucí události">
 <!ENTITY calendar.events.filter.current.label "Právě vybraný den">
-<!ENTITY calendar.events.filter.next7Days.label "Events in the Next 7 Days">
-<!ENTITY calendar.events.filter.next14Days.label "Events in the Next 14 Days">
-<!ENTITY calendar.events.filter.next31Days.label "Events in the Next 31 Days">
-<!ENTITY calendar.events.filter.thisCalendarMonth.label "Events in this Calendar Month">
+<!ENTITY calendar.events.filter.next7Days.label "Události následujících 7 dní">
+<!ENTITY calendar.events.filter.next14Days.label "Události následujících 14 dní">
+<!ENTITY calendar.events.filter.next31Days.label "Události následujících 31 dní">
+<!ENTITY calendar.events.filter.thisCalendarMonth.label "Události v tomto kalendářním měsíci">
 
 <!ENTITY calendar.unifinder.tree.done.label          "Hotovo">
 <!ENTITY calendar.unifinder.tree.priority.label      "Priorita">
@@ -261,25 +261,25 @@
 
 <!ENTITY calendar.choosedate.button.label       "Zvolit datum" >
 
-<!ENTITY calendar.cut.button.tooltip            "Cut" >
-<!ENTITY calendar.copy.button.tooltip           "Copy" >
-<!ENTITY calendar.paste.button.tooltip          "Paste" >
-<!ENTITY calendar.print.button.tooltip          "Print Calendar" >
+<!ENTITY calendar.cut.button.tooltip            "Vyjmout" >
+<!ENTITY calendar.copy.button.tooltip           "Kopírovat" >
+<!ENTITY calendar.paste.button.tooltip          "Vložit" >
+<!ENTITY calendar.print.button.tooltip          "Vytiskne kalendář" >
 
-<!ENTITY calendar.cut.button.label              "Cut" >
-<!ENTITY calendar.copy.button.label             "Copy" >
-<!ENTITY calendar.paste.button.label            "Paste" >
-<!ENTITY calendar.print.button.label            "Print" >
+<!ENTITY calendar.cut.button.label              "Vyjmout" >
+<!ENTITY calendar.copy.button.label             "Kopírovat" >
+<!ENTITY calendar.paste.button.label            "Vložit" >
+<!ENTITY calendar.print.button.label            "Tisk" >
 
-<!ENTITY calendar.import.button.tooltip            "Import: Import events from a local file." >
-<!ENTITY calendar.export.button.tooltip            "Export: Export events to a local file." >
-<!ENTITY calendar.subscribe.button.tooltip         "Subscribe: Subscribe to a calendar file on a remote machine." >
-<!ENTITY calendar.publish.button.tooltip            "Publish: Publish events to a remote machine." >
+<!ENTITY calendar.import.button.tooltip            "Import: Importuje události z lokálního souboru." >
+<!ENTITY calendar.export.button.tooltip            "Export: Exportuje události do lokálního souboru." >
+<!ENTITY calendar.subscribe.button.tooltip         "Odebírání: Odebere soubor kalendáře na vzdálený počítač." >
+<!ENTITY calendar.publish.button.tooltip            "Publikovat: Publikuje události na vzdálený počítač." >
 
 <!ENTITY calendar.import.button.label              "Import" >
 <!ENTITY calendar.export.button.label              "Export" >
-<!ENTITY calendar.subscribe.button.label           "Subscribe" >
-<!ENTITY calendar.publish.button.label             "Publish" >
+<!ENTITY calendar.subscribe.button.label           "Odebírání" >
+<!ENTITY calendar.publish.button.label             "Publikovat" >
 
 <!ENTITY calendar.localreload.button.label   "Local Reload" >
 <!ENTITY calendar.localreload.button.tooltip  "Reload all local calendars" >
@@ -333,8 +333,8 @@
 <!-- customizable toolbars -->
 <!ENTITY calendar.context.customize.label             "Vlastní">
 <!ENTITY calendar.context.customize.accesskey         "V">
-<!ENTITY calendar.menu.customize.label                "Customize Toolbars">
-<!ENTITY calendar.menu.customize.accesskey            "C">
+<!ENTITY calendar.menu.customize.label                "Vlastní lišty">
+<!ENTITY calendar.menu.customize.accesskey            "a">
 <!ENTITY calendar.maintoolbar.name                    "Hlavní lišta">
 <!ENTITY calendar.maintoolbar.accesskey               "H">
 
@@ -411,7 +411,7 @@
 <!ENTITY calendar.about.title "O Mozilla Kalendář">
 <!ENTITY calendar.about.tab   "O aplikaci">
 
-<!ENTITY throbber.tooltip "Přejít na domovskou stránku">
+<!ENTITY throbber.tooltip "Přejde na domovskou stránku">
 <!ENTITY menuBar.tooltip "Lišta menu">
 <!ENTITY navigationToolbar.tooltip "Navigační panel">
 
@@ -424,14 +424,14 @@
 
 
 <!-- Calendar Server Dialog -->
-<!ENTITY calendar.server.dialog.title.new           "Nový kalendář soubory">
-<!ENTITY calendar.server.dialog.title.open          "Otev?ít kalendář soubory">
+<!ENTITY calendar.server.dialog.title.new           "Nový kalendář">
+<!ENTITY calendar.server.dialog.title.open          "Otevřít kalendář">
 <!ENTITY calendar.server.dialog.title.edit          "Upravit kalendář">
 <!ENTITY calendar.server.dialog.name.label          "Název">
 <!ENTITY calendar.server.dialog.publish.label       "Publikovat změny automaticky? Pro vzdálené kalendáře to znamená, že bude stažena jeho aktuální verze před přidáním, editací či vymazáním události. Následně se provede nahrání nového souboru na server.">
 <!ENTITY calendar.server.dialog.location.label      "Umístění">
 <!ENTITY calendar.server.dialog.local.location.label "Umístění souboru">
-<!ENTITY calendar.server.dialog.browse.label        "Procházet lokální soubory...">
+<!ENTITY calendar.server.dialog.browse.label        "Procházet...">
 <!ENTITY calendar.local.calendar.dialog.help.label  "Volitelně můžete zvolit soubor, kde bude kalendář uložen.">
 <!ENTITY calendar.server.dialog.help.label          "Můžete vložit cestu k lokálnímu, nebo vzálenému souboru jako http://www.mozilla.org/projects/calendar/caldata/CanadaHolidays.ics">
 

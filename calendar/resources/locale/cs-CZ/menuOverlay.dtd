@@ -49,11 +49,11 @@
 <!ENTITY event.new.todo.key                     "T">
 <!ENTITY event.new.todo.accesskey               "k">
 
-<!ENTITY calendar.new.server.label              "Nový kalendář soubory…">
+<!ENTITY calendar.new.server.label              "Nový kalendář…">
 <!ENTITY calendar.new.server.key                "L">
 <!ENTITY calendar.new.server.accesskey          "l">
 
-<!ENTITY calendar.open.file.label               "Otev?ít kalendář soubory…">
+<!ENTITY calendar.open.file.label               "Otevřít kalendář…">
 <!ENTITY calendar.open.file.key                 "O">
 <!ENTITY calendar.open.file.accesskey           "O">
 
@@ -144,7 +144,7 @@
 <!ENTITY toolsMenu.label                        "Nástroje">
 <!ENTITY toolsMenu.accesskey                    "n">
 
-<!ENTITY javaScriptConsoleCmd.label             "Konzola jazyka JavaScript">
+<!ENTITY javaScriptConsoleCmd.label             "Konzola JavaScriptu">
 <!ENTITY javaScriptConsoleCmd.accesskey         "S">
 
 <!ENTITY navigatorCmd.label                     "Prohlížeč">
@@ -153,7 +153,7 @@
 <!ENTITY messengerCmd.label                     "Pošta &amp; Diskusní skupiny">
 <!ENTITY messengerCmd.accesskey                 "o">
 
-<!ENTITY addressBookCmd.label                   "Databáze kontaktů">
+<!ENTITY addressBookCmd.label                   "Adresář">
 <!ENTITY addressBookCmd.accesskey               "A">
 
 <!ENTITY helpMenu.label                         "Nápověda">
@@ -180,8 +180,8 @@
 <!ENTITY aboutCmd.accesskey                     "A">
 
 <!-- Mac OS X "Window" menu items -->
-<!ENTITY windowMenu.label                       "Window">
-<!ENTITY minimizeWindow.label                   "Minimize">
-<!ENTITY zoomWindow.label                       "Zoom">
+<!ENTITY windowMenu.label                       "Okno">
+<!ENTITY minimizeWindow.label                   "Minimalizovat">
+<!ENTITY zoomWindow.label                       "Lupa">
 <!ENTITY minimizeWindow.key                     "M">
-<!ENTITY bringAllToFront.label                  "Bring All to Front">
+<!ENTITY bringAllToFront.label                  "Přenést vše na popředí">
