@@ -101,6 +101,7 @@ LINCS=$(LINCS) -I,							\
 			   -I$(PUBLIC)\mailnews			\
 			   -I$(PUBLIC)\pref				\
 			   -I$(PUBLIC)\raptor			\
+				-I$(PUBLIC)\rdf				\
 			   -I$(PUBLIC)\dom				\
 			   -I$(PUBLIC)\appcores			\
  			     $(NULL)

@@ -9,6 +9,8 @@
 #include "nsIDOMWindow.h" /* interface nsIDOMWindow */
 #include "nsID.h" /* interface nsID */
 #include "nsIDOMBaseAppCore.h" /* interface nsIDOMBaseAppCore */
+#include "nsIDOMEditorAppCore.h" /* interface nsIDOMEditorAppCore */
+#include "nsIDOMMsgAppCore.h" /* interface nsIDOMEditorAppCore */
 
 #ifdef XPIDL_JS_STUBS
 #include "jsapi.h"
@@ -32,17 +34,22 @@ class nsIDOMComposeAppCore : public nsIDOMBaseAppCore {
   /* void SetWindow (in nsIDOMWindow ptr); */
   NS_IMETHOD SetWindow(nsIDOMWindow *ptr) = 0;
 
+  /* void SetEditor (in nsIDOMWindow ptr); */
+  NS_IMETHOD SetEditor(nsIDOMEditorAppCore *ptr) = 0;
+
   /* void CompleteCallback (in nsAutoString script); */
   NS_IMETHOD CompleteCallback(nsAutoString& script) = 0;
 
   /* void NewMessage (in nsAutoString url); */
   NS_IMETHOD NewMessage(nsAutoString& url) = 0;
 
-  /* void ReplyMessage (in nsString url, in nsISupports originalMessage, in long type); */
-  NS_IMETHOD ReplyMessage(nsAutoString& url, nsISupports * originalMessage, const PRInt32 type) = 0;
+  /* void ReplyMessage (...); */
+  NS_IMETHOD ReplyMessage(nsAutoString& url, nsIDOMXULTreeElement *tree,
+	  nsIDOMNodeList *nodeList, nsIDOMMsgAppCore * msgAppCore, const PRInt32 replyType) = 0;
 
-  /* void ForwardMessage (in nsString url, in nsISupports originalMessage, in long type); */
-  NS_IMETHOD ForwardMessage(nsAutoString& url, nsISupports * originalMessage, const PRInt32 type) = 0;
+  /* void ForwardMessage (...); */
+  NS_IMETHOD ForwardMessage(nsAutoString& url, nsIDOMXULTreeElement *tree,
+	  nsIDOMNodeList *nodeList, nsIDOMMsgAppCore * msgAppCore, const PRInt32 forwardType) = 0;
 
  /* void SendMessage (in nsAutoString addrTo, in nsAutoString addrCc, in nsAutoString addrBcc, in nsAutoString subject, in nsAutoString msg); */
   NS_IMETHOD SendMessage(nsAutoString& addrTo, nsAutoString& addrCc, nsAutoString& addrBcc, nsAutoString& subject, nsAutoString& msg) = 0;

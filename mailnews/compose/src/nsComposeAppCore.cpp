@@ -22,6 +22,7 @@
 #include "nsIDOMBaseAppCore.h"
 #include "nsJSComposeAppCore.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMNodeList.h"
 #include "nsIScriptContextOwner.h"
 
 /* rhp - for access to webshell */
@@ -30,8 +31,11 @@
 #include "nsCOMPtr.h"
 #include "nsIDocument.h"
 #include "nsIDOMWindow.h"
+#include "nsIDOMNamedNodeMap.h"
+#include "nsIDOMHTMLInputElement.h"
 #include "nsIWebShell.h"
 #include "nsIWebShellWindow.h"
+#include "nsIDOMElement.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContext.h"
 #include "nsAppShellCIDs.h"
@@ -39,6 +43,8 @@
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
 #include "nsMsgCompPrefs.h"
+#include "nsIDOMMsgAppCore.h"
+#include "nsIMessage.h"
 
 #include "nsMsgCompCID.h"
 #include "nsIMsgCompose.h"
@@ -88,9 +94,12 @@ public:
 	// nsIComposeAppCore
 	NS_IMETHOD CompleteCallback(nsAutoString& aScript);
 	NS_IMETHOD SetWindow(nsIDOMWindow* aWin);
+	NS_IMETHOD SetEditor(nsIDOMEditorAppCore *editor);
 	NS_IMETHOD NewMessage(nsAutoString& aUrl);
-	NS_IMETHOD ReplyMessage(nsAutoString& url, nsISupports * originalMessage, const PRInt32 type);
-	NS_IMETHOD ForwardMessage(nsAutoString& url, nsISupports * originalMessage, const PRInt32 type);
+	NS_IMETHOD ReplyMessage(nsAutoString& url, nsIDOMXULTreeElement *tree,
+			nsIDOMNodeList *nodeList, nsIDOMMsgAppCore * msgAppCore, const PRInt32 replyType);
+	NS_IMETHOD ForwardMessage(nsAutoString& url, nsIDOMXULTreeElement *tree,
+			nsIDOMNodeList *nodeList, nsIDOMMsgAppCore * msgAppCore, const PRInt32 forwardType);
 	NS_IMETHOD SendMessage(nsAutoString& aAddrTo, nsAutoString& aAddrCc,
 		nsAutoString& aAddrBcc, nsAutoString& aSubject, nsAutoString& aMsg);
 	NS_IMETHOD SendMessage2(PRInt32 * _retval);
@@ -98,15 +107,18 @@ public:
 protected:
   
 	nsIScriptContext *	GetScriptContext(nsIDOMWindow * aWin);
+	void SetWindowFields(nsString& to, nsString& cc, nsString& bcc,
+		nsString& subject, nsString& body);
 
 	nsString mId;
 	nsString mScript;
 	void *mScriptObject;
-	nsIScriptContext   *mScriptContext;
+	nsIScriptContext		*mScriptContext;
 
 	/* rhp - need this to drive message display */
-	nsIDOMWindow       *mWindow;
-	nsIWebShell        *mWebShell;
+	nsIDOMWindow			*mWindow;
+	nsIWebShell				*mWebShell;
+	nsIDOMEditorAppCore     *mEditor;
 };
 
 //
@@ -114,19 +126,21 @@ protected:
 //
 nsComposeAppCore::nsComposeAppCore()
 {
-  mScriptObject		= nsnull;
-  mWebShell			= nsnull; 
-  mScriptObject		= nsnull;
-  mScriptContext	= nsnull;
-  mWindow			= nsnull;
+	mScriptObject		= nsnull;
+	mWebShell			= nsnull; 
+	mScriptContext	= nsnull;
+	mWindow			= nsnull;
+	mEditor			= nsnull;
 
-  NS_INIT_REFCNT();
+	NS_INIT_REFCNT();
 }
 
 nsComposeAppCore::~nsComposeAppCore()
 {
+  NS_IF_RELEASE(mWebShell);
   NS_IF_RELEASE(mScriptContext);
   NS_IF_RELEASE(mWindow);
+  NS_IF_RELEASE(mEditor);
 }
 
 nsresult nsComposeAppCore::SetDocumentCharset(class nsString const & aCharset) 
@@ -179,6 +193,57 @@ nsComposeAppCore::GetScriptContext(nsIDOMWindow * aWin)
     }
   }
   return scriptContext;
+}
+
+
+void nsComposeAppCore::SetWindowFields(nsString& msgTo, nsString& msgCc, nsString& msgBcc,
+		nsString& msgSubject, nsString& msgBody)
+{
+	nsresult res = NS_OK;
+
+	nsCOMPtr<nsIDOMDocument> domDoc;
+	nsCOMPtr<nsIDOMNode> node;
+	nsCOMPtr<nsIDOMNodeList> nodeList;
+	nsCOMPtr<nsIDOMHTMLInputElement> inputElement;
+
+	if (nsnull != mWindow) 
+	{
+		res = mWindow->GetDocument(getter_AddRefs(domDoc));
+		if (NS_SUCCEEDED(res) && domDoc) 
+		{
+			res = domDoc->GetElementsByTagName("input", getter_AddRefs(nodeList));
+			if ((NS_SUCCEEDED(res)) && nodeList)
+			{
+				PRUint32 count;
+				PRUint32 i;
+				nodeList->GetLength(&count);
+				for (i = 0; i < count; i ++)
+				{
+					res = nodeList->Item(i, getter_AddRefs(node));
+					if ((NS_SUCCEEDED(res)) && node)
+					{
+						nsString value;
+						res = node->QueryInterface(nsIDOMHTMLInputElement::GetIID(), getter_AddRefs(inputElement));
+						if ((NS_SUCCEEDED(res)) && inputElement)
+						{
+							nsString id;
+							inputElement->GetId(id);
+							if (id == "msgTo") inputElement->SetValue(msgTo);
+							if (id == "msgCc") inputElement->SetValue(msgCc);
+							if (id == "msgBcc") inputElement->SetValue(msgBcc);
+							if (id == "msgSubject") inputElement->SetValue(msgSubject);
+						}
+
+					}
+				}
+
+				if (mEditor)
+				{
+					mEditor->InsertText(msgBody);
+				}
+			}
+		}
+	}
 }
 
 
@@ -283,6 +348,15 @@ nsComposeAppCore::SetWindow(nsIDOMWindow* aWin)
 
 
 NS_IMETHODIMP    
+nsComposeAppCore::SetEditor(nsIDOMEditorAppCore* editor)
+{
+	mEditor = editor;
+	NS_ADDREF(mEditor);
+	return NS_OK;
+}
+
+
+NS_IMETHODIMP    
 nsComposeAppCore::CompleteCallback(nsAutoString& aScript)
 {
 	mScript = aScript;
@@ -326,19 +400,54 @@ done:
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsComposeAppCore::ReplyMessage(nsAutoString& url, nsISupports * originalMessage,
-										   const PRInt32 type)
+NS_IMETHODIMP nsComposeAppCore::ReplyMessage(nsAutoString& url, nsIDOMXULTreeElement *tree,
+		nsIDOMNodeList *nodeList, nsIDOMMsgAppCore * msgAppCore, const PRInt32 replyType)
 {
-	NewMessage(url);
+	nsresult res;
+
+	if (url && tree && nodeList && msgAppCore) {
+		nsCOMPtr<nsISupports> object;
+		res = msgAppCore->GetMessageHeader(tree, nodeList, getter_AddRefs(object));
+		if ((NS_SUCCEEDED(res)) && object) {
+			nsCOMPtr<nsIMessage> message;
+			res = object->QueryInterface(nsIMessage::GetIID(), getter_AddRefs(message));
+			if ((NS_SUCCEEDED(res)) && message) {
+				nsString subject;
+				message->GetSubject(subject);
+//				subject = "Re: " + subject;
+				//We need to extract the others elements from the message
+				NewMessage(url);
+				SetWindowFields(nsString("to"), nsString("cc"), nsString("bcc"), subject, nsString("body"));
+			}
+		}
+	}
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsComposeAppCore::ForwardMessage(nsAutoString& url, nsISupports * originalMessage,
-											   const PRInt32 type)
+NS_IMETHODIMP nsComposeAppCore::ForwardMessage(nsAutoString& url, nsIDOMXULTreeElement *tree,
+		nsIDOMNodeList *nodeList, nsIDOMMsgAppCore * msgAppCore, const PRInt32 forwardType)
 {
-	NewMessage(url);
+	nsresult res;
+
+	if (url && tree && nodeList && msgAppCore) {
+		nsCOMPtr<nsISupports> object;
+		res = msgAppCore->GetMessageHeader(tree, nodeList, getter_AddRefs(object));
+		if ((NS_SUCCEEDED(res)) && object) {
+			nsCOMPtr<nsIMessage> message;
+			res = object->QueryInterface(nsIMessage::GetIID(), getter_AddRefs(message));
+			if ((NS_SUCCEEDED(res)) && message) {
+				nsString subject;
+				message->GetSubject(subject);
+//				subject = "[Fwd: " + subject + "]";
+				//We need to extract the others elements from the message
+				NewMessage(url);
+				SetWindowFields(nsString("to"), nsString("cc"), nsString("bcc"), subject, nsString("body"));
+			}
+		}
+	}
 	return NS_OK;
 }
+
 
 NS_IMETHODIMP nsComposeAppCore::SendMessage(nsAutoString& aAddrTo, nsAutoString& aAddrCc,
 									nsAutoString& aAddrBcc, nsAutoString& aSubject, nsAutoString& aMsg)
@@ -377,6 +486,7 @@ NS_IMETHODIMP nsComposeAppCore::SendMessage(nsAutoString& aAddrTo, nsAutoString&
 													(void **) &pMsgCompFields); 
 		if (NS_SUCCEEDED(NS_OK) && pMsgCompFields) { 
 			pMsgCompFields->SetFrom((char *)pCompPrefs.GetUserEmail(), NULL);
+			pMsgCompFields->SetReplyTo((char *)pCompPrefs.GetReplyTo(), NULL);
 			pMsgCompFields->SetOrganization((char *)pCompPrefs.GetOrganization(), NULL);
 			pMsgCompFields->SetTo(aAddrTo.ToNewCString(), NULL);
 			pMsgCompFields->SetCc(aAddrCc.ToNewCString(), NULL);
@@ -411,9 +521,60 @@ NS_IMETHODIMP nsComposeAppCore::SendMessage(nsAutoString& aAddrTo, nsAutoString&
 
 NS_IMETHODIMP nsComposeAppCore::SendMessage2(PRInt32 * _retval)
 {
-//	Need to retreive the fields here and then call the SendMessage()
-//	nsComposeAppCore::SendMessage(...)
-	return NS_OK;
+	nsresult res = NS_OK;
+
+	nsCOMPtr<nsIDOMDocument> domDoc;
+	nsCOMPtr<nsIDOMNode> node;
+	nsCOMPtr<nsIDOMNodeList> nodeList;
+	nsCOMPtr<nsIDOMHTMLInputElement> inputElement;
+
+	nsAutoString msgTo;
+	nsAutoString msgCc;
+	nsAutoString msgBcc;
+	nsAutoString msgSubject;
+	nsAutoString msgBody;
+
+	if (nsnull != mWindow) 
+	{
+		res = mWindow->GetDocument(getter_AddRefs(domDoc));
+		if (NS_SUCCEEDED(res) && domDoc) 
+		{
+			res = domDoc->GetElementsByTagName("input", getter_AddRefs(nodeList));
+			if ((NS_SUCCEEDED(res)) && nodeList)
+			{
+				PRUint32 count;
+				PRUint32 i;
+				nodeList->GetLength(&count);
+				for (i = 0; i < count; i ++)
+				{
+					res = nodeList->Item(i, getter_AddRefs(node));
+					if ((NS_SUCCEEDED(res)) && node)
+					{
+						nsString value;
+						res = node->QueryInterface(nsIDOMHTMLInputElement::GetIID(), getter_AddRefs(inputElement));
+						if ((NS_SUCCEEDED(res)) && inputElement)
+						{
+							nsString id;
+							inputElement->GetId(id);
+							if (id == "msgTo") inputElement->GetValue(msgTo);
+							if (id == "msgCc") inputElement->GetValue(msgCc);
+							if (id == "msgBcc") inputElement->GetValue(msgBcc);
+							if (id == "msgSubject") inputElement->GetValue(msgSubject);
+						}
+
+					}
+				}
+
+				if (mEditor)
+				{
+					mEditor->GetContentsAsText(msgBody);
+					SendMessage(msgTo, msgCc, msgBcc, msgSubject, msgBody);
+				}
+			}
+		}
+	}
+	
+	return res;
 }
   
 extern "C"

@@ -26,6 +26,8 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIPtr.h"
 #include "nsString.h"
+#include "nsIDOMEditorAppCore.h"
+#include "nsIDOMMsgAppCore.h"
 #include "nsIDOMComposeAppCore.h"
 #include "nsIDOMWindow.h"
 #include "nsIScriptNameSpaceManager.h"
@@ -173,6 +175,48 @@ ComposeAppCoreSetWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 
 
 //
+// Native method SetEditor
+//
+PR_STATIC_CALLBACK(JSBool)
+ComposeAppCoreSetEditor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMComposeAppCore *nativeThis = (nsIDOMComposeAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsIDOMEditorAppCore * b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
+										   nsIDOMEditorAppCore::GetIID(),
+                                           "Editor AppCore",
+                                           cx,
+                                           argv[0])) {
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->SetEditor(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function SetEditor requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method CompleteCallback
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -252,9 +296,11 @@ ComposeAppCoreReplyMessage(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
   nsIDOMComposeAppCore *nativeThis = (nsIDOMComposeAppCore*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
   nsAutoString b0;
-  nsISupports * b1;
+  nsIDOMXULTreeElement * b1;
+  nsIDOMNodeList * b2;
+  nsIDOMMsgAppCore * b3;
+  long b4;
   const nsString typeName;
- long b2;
 
   *rval = JSVAL_NULL;
 
@@ -263,25 +309,35 @@ ComposeAppCoreReplyMessage(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
     return JS_TRUE;
   }
 
-  if (argc >= 3) {
+  if (argc >= 5) {
 
    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
-   rBool = nsJSUtils::nsConvertJSValToObject((nsISupports**)&b1, nsISupports::GetIID(),
+   rBool = nsJSUtils::nsConvertJSValToObject((nsISupports**)&b1, nsIDOMXULTreeElement::GetIID(),
                                   typeName,
                                   cx,
                                   argv[1]);
 
-	b2 = argv[2];
+   rBool &= nsJSUtils::nsConvertJSValToObject((nsISupports**)&b2, nsIDOMNodeList::GetIID(),
+                                  typeName,
+                                  cx,
+                                  argv[2]);
 
-   if (!rBool && NS_OK != nativeThis->ReplyMessage(b0, b1, b2)) {
+   rBool &= nsJSUtils::nsConvertJSValToObject((nsISupports**)&b3, nsIDOMMsgAppCore::GetIID(),
+                                  typeName,
+                                  cx,
+                                  argv[3]);
+
+	b4 = argv[4];
+
+   if (!rBool || NS_OK != nativeThis->ReplyMessage(b0, b1, b2, b3, b4)) {
       return JS_FALSE;
     }
 
     *rval = JSVAL_VOID;
   }
   else {
-    JS_ReportError(cx, "Function ReplyMessage requires 3 parameters");
+    JS_ReportError(cx, "Function ReplyMessage requires 5 parameters");
     return JS_FALSE;
   }
 
@@ -298,9 +354,11 @@ ComposeAppCoreForwardMessage(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
   nsIDOMComposeAppCore *nativeThis = (nsIDOMComposeAppCore*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
   nsAutoString b0;
-  nsISupports * b1;
+  nsIDOMXULTreeElement * b1;
+  nsIDOMNodeList * b2;
+  nsIDOMMsgAppCore * b3;
+  long b4;
   const nsString typeName;
- long b2;
 
   *rval = JSVAL_NULL;
 
@@ -309,25 +367,35 @@ ComposeAppCoreForwardMessage(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
     return JS_TRUE;
   }
 
-  if (argc >= 3) {
+  if (argc >= 5) {
 
    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
-   rBool = nsJSUtils::nsConvertJSValToObject((nsISupports**)&b1, nsISupports::GetIID(),
+   rBool = nsJSUtils::nsConvertJSValToObject((nsISupports**)&b1, nsIDOMXULTreeElement::GetIID(),
                                   typeName,
                                   cx,
                                   argv[1]);
 
-	b2 = argv[2];
+   rBool &= nsJSUtils::nsConvertJSValToObject((nsISupports**)&b2, nsIDOMNodeList::GetIID(),
+                                  typeName,
+                                  cx,
+                                  argv[2]);
 
-   if (!rBool && NS_OK != nativeThis->ForwardMessage(b0, b1, b2)) {
+   rBool &= nsJSUtils::nsConvertJSValToObject((nsISupports**)&b3, nsIDOMMsgAppCore::GetIID(),
+                                  typeName,
+                                  cx,
+                                  argv[3]);
+
+	b4 = argv[4];
+
+   if (!rBool || NS_OK != nativeThis->ForwardMessage(b0, b1, b2, b3, b4)) {
       return JS_FALSE;
     }
 
     *rval = JSVAL_VOID;
   }
   else {
-    JS_ReportError(cx, "Function ForwardMessage requires 3 parameters");
+    JS_ReportError(cx, "Function ForwardMessage requires 5 parameters");
     return JS_FALSE;
   }
 
@@ -446,10 +514,11 @@ static JSPropertySpec ComposeAppCoreProperties[] =
 static JSFunctionSpec ComposeAppCoreMethods[] = 
 {
   {"SetWindow",				ComposeAppCoreSetWindow,		1},
+  {"SetEditor",				ComposeAppCoreSetEditor,		1},
   {"CompleteCallback",		ComposeAppCoreCompleteCallback,	1},
   {"NewMessage",			ComposeAppCoreNewMessage,		1},
-  {"ReplyMessage",			ComposeAppCoreReplyMessage,		3},
-  {"ForwardMessage",		ComposeAppCoreForwardMessage,	3},
+  {"ReplyMessage",			ComposeAppCoreReplyMessage,		5},
+  {"ForwardMessage",		ComposeAppCoreForwardMessage,	5},
   {"SendMessage",			ComposeAppCoreSendMessage,		5},
   {"SendMessage2",			ComposeAppCoreSendMessage2,		0},
   {0}

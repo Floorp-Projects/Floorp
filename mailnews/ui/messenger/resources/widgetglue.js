@@ -72,9 +72,9 @@ function MsgReplyMessage()
 		appCore.Init("MsgAppCore");
 		appCore.SetWindow(window);
 		dump("\nAppcore isn't null in MsgReplyMessage\n");
-		var NodeList = tree.getElementsByAttribute("selected", "true");
-        var messageHdr = appCore.GetMessageHeader(tree, NodeList);
-		ReplyMessage(messageHdr);
+		var nodeList = tree.getElementsByAttribute("selected", "true");
+//        var messageHdr = appCore.GetMessageHeader(tree, NodeList);
+		ReplyMessage(tree, nodeList, appCore);
 	}
 }
 
@@ -90,9 +90,9 @@ function MsgForwardMessage()
               appCore.Init("MsgAppCore");
               appCore.SetWindow(window);
               dump("\nAppcore isn't null in MsgForwardMessage\n");
-              var NodeList = tree.getElementsByAttribute("selected", "true");
-              var messageHdr = appCore.GetMessageHeader(tree, NodeList);
-			  ForwardMessage(messageHdr);
+              var nodeList = tree.getElementsByAttribute("selected", "true");
+//              var messageHdr = appCore.GetMessageHeader(tree, NodeList);
+			  ForwardMessage(tree, nodeList, appCore);
       }
   }
 

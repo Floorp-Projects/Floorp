@@ -22,6 +22,8 @@
 
 #include "nsIDOMBaseAppCore.idl"
 #include "nsIDOMWindow.idl"
+#include "nsIDOMEditorAppCore.idl"
+#include "nsIDOMMsgAppCore.idl"
 
 native nsString(nsString*);
 
@@ -29,10 +31,13 @@ native nsString(nsString*);
 interface nsIDOMComposeAppCore : nsIDOMBaseAppCore {
 
     void SetWindow(in nsIDOMWindow ptr);
+    void SetEditor(in nsIDOMEditorAppCore ptr);
 	void CompleteCallback(in nsString script);
     void NewMessage(in nsString url);
-    void ReplyMessage(in nsString url, in nsISupports originalMessage, in long type);
-    void ForwardMessage(in nsString url, in nsISupports originalMessage, in long type);
+    void ReplyMessage(in nsString url, in nsIDOMXULTreeElement tree, in nsIDOMNodeList node,
+		in nsIDOMMsgAppCore msgAppCore, in long replyType);
+    void ForwardMessage(in nsString url, in nsIDOMXULTreeElement tree, in nsIDOMNodeList node,
+		in nsIDOMMsgAppCore msgAppCore, in long forwardType);
 	void SendMessage(in nsString addrTo, in nsString addrCc,
                      in nsString addrBcc,
                      in nsString subject, in nsString msg);

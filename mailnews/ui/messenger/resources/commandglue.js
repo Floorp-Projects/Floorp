@@ -49,22 +49,22 @@ function ChangeFolder(folderNode)
 }
 
 
-function ReplyMessage(messageHdr)
+function ReplyMessage(tree, nodeList, msgAppCore)
 {
 	var appCore = new ComposeAppCore();
 	if (appCore != null) {
 		dump("Initializing ComposeAppCore and creating a new Message\n");
 		appCore.Init("ComposeAppCore");
-		appCore.ReplyMessage("resource:/res/samples/compose.xul", messageHdr, 0);
+		appCore.ReplyMessage("resource:/res/samples/compose.xul", tree, nodeList, msgAppCore, 0);
 	}
 }
 
-function ForwardMessage(messageHdr)
+function ForwardMessage(tree, nodeList, msgAppCore)
 {
 	var appCore = new ComposeAppCore();
 	if (appCore != null) {
 		dump("Initializing ComposeAppCore and creating a new Message\n");
 		appCore.Init("ComposeAppCore");
-		appCore.ForwardMessage("resource:/res/samples/compose.xul", messageHdr, 0);
+		appCore.ForwardMessage("resource:/res/samples/compose.xul", tree, nodeList, msgAppCore, 0);
 	}
 }
