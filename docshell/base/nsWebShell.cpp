@@ -2111,49 +2111,6 @@ nsWebShell::LoadURI(nsIURI * aUri,
   if (NS_FAILED(rv)) return rv;
   mURL = spec;
 
-
-  //Take care of mailto: url
-  PRBool  isMail= PR_FALSE, isBrowser = PR_FALSE;
-
-  nsAutoString mailTo("mailto");
-  if (mailTo.Equals(scheme, PR_TRUE)) {
-     isMail = PR_TRUE;
-  }
-
-  nsIWebShell * root= nsnull;
-  rv = GetRootWebShell(root);
-  if (NS_SUCCEEDED(rv) && root) {
-     nsIDocumentLoaderObserver * dlObserver = nsnull;
-
-     rv = root->GetDocLoaderObserver(dlObserver);
-     if (NS_SUCCEEDED(rv) && dlObserver) {
-        isBrowser = PR_TRUE;
-        NS_RELEASE(dlObserver);
-     }
-  }
-
-  /* Ask the URL dispatcher to take care of this URL only if it is a
-   * mailto: link clicked inside a browser or any link clicked
-   * inside a *non-browser* window. Note this mechanism s'd go away once
-   * we have the protocol registry and window manager available
-   */
-  if (root) {
-    if (isMail) {
-      //Ask the container to load the appropriate component for the URL.
-
-      nsCOMPtr<nsIUrlDispatcher>  urlDispatcher;
-      rv = GetUrlDispatcher(*getter_AddRefs(urlDispatcher));
-      if (NS_SUCCEEDED(rv) && urlDispatcher) {
-        printf("calling HandleUrl\n");
-        urlDispatcher->HandleUrl(LinkCommand.GetUnicode(),
-                                 mURL.GetUnicode(), aPostDataStream);
-        return NS_OK;
-      }
-    }
-    NS_RELEASE(root);
-  }
-
-
   /*
    * Before the new page is added to the session history,
    * save the history information of the previous page in
@@ -2294,13 +2251,46 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
         }
       } // end if colon
       rv = NS_NewURI(getter_AddRefs(uri), urlSpec, nsnull);
-      if (NS_FAILED(rv)) {
+
+	  nsAutoString  url(aURLSpec);
+	  if (((url.Find("mailto:", PR_TRUE))<0) && (NS_FAILED(rv))) {
         // no dice, even more tricks?
         return rv;
       }
     }
 
   }
+
+    //Take care of mailto: url
+  PRBool  isMail= PR_FALSE;
+
+  nsAutoString urlAStr(aURLSpec);
+  if ((urlAStr.Find("mailto", PR_TRUE)) >= 0) {
+     isMail = PR_TRUE;
+  }
+
+  nsCOMPtr<nsIWebShell>  root;
+  rv = GetRootWebShell(*getter_AddRefs(root));
+
+  /* Ask the URL dispatcher to take care of this URL only if it is a
+   * mailto: link clicked inside a browser or any link clicked
+   * inside a *non-browser* window. Note this mechanism s'd go away once
+   * we have the protocol registry and window manager available
+   */
+  if (NS_SUCCEEDED(rv) && root && isMail) {
+
+      //Ask the url Dispatcher to load the appropriate component for the URL.
+      nsCOMPtr<nsIUrlDispatcher>  urlDispatcher;
+      rv = root->GetUrlDispatcher(*getter_AddRefs(urlDispatcher));
+      if (NS_SUCCEEDED(rv) && urlDispatcher) {
+        printf("calling HandleUrl\n");
+        urlDispatcher->HandleUrl(LinkCommand.GetUnicode(),
+                                 urlAStr.GetUnicode(), aPostDataStream);
+        return NS_OK;
+      }
+  }
+
+
 
   // now that we have a uri, call the REAL LoadURI method which requires a nsIURI.
   return LoadURI(uri, aCommand, aPostDataStream, aModifyHistory, aType, aLocalIP, aHistoryState);
@@ -3425,6 +3415,7 @@ nsWebShell::OnStartURLLoad(nsIDocumentLoader* loader,
   nsCOMPtr<nsIURI> aURL;
   rv = channel->GetURI(getter_AddRefs(aURL));
   if (NS_FAILED(rv)) return rv;
+
 
   // Stop loading of the earlier document completely when the document url
   // load starts.  Now we know that this url is valid and available.

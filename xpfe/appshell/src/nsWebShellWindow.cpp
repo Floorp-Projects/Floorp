@@ -2869,12 +2869,13 @@ nsWebShellWindow::HandleUrl(const PRUnichar * aCommand,
                             nsIInputStream * aPostDataStream)
 {  
   /* Make the topic to observe. The topic will be of the format 
-   * linkclick:<prototocol>. Note thet this is a totally made up thing.
+   * linkclick:<prototocol>. Note that this is a totally made up thing.
    * Things are going to change later
    */
-  nsString topic(aCommand);
+  nsAutoString topic(aCommand);
   topic += ":";
   nsAutoString url(aURLSpec);
+  PRInt32 urllen = url.Length();
   nsresult rv;
 
   PRInt32 offset = url.FindChar(':');
@@ -2882,11 +2883,10 @@ nsWebShellWindow::HandleUrl(const PRUnichar * aCommand,
      return NS_ERROR_FAILURE;
 
   PRInt32 offset2= url.Find("mailto:", PR_TRUE);
-
   if (offset2 == 0) {
     topic += "mailto";
 
-	/* I know about all that is going on regarding using window.open
+	  /* I know about all that is going on regarding using window.open
      * instead of showWindowWithArgs(). But, I really don't have another
      * option in this case to invoke the messenger compose window.
      * This piece of code will eventually go away when I start using the 
@@ -2896,12 +2896,21 @@ nsWebShellWindow::HandleUrl(const PRUnichar * aCommand,
 	NS_WITH_SERVICE(nsIDOMToolkitCore, toolkitCore, kToolkitCoreCID, &rv)
 	if (NS_FAILED(rv))
 		return rv;
-  /* Messenger doesn't understand to:xyz@domain.com,subject="xyz" yet.
-   * So, just pass the type and mode info
-   */
-	rv = toolkitCore->ShowWindowWithArgs("chrome://messengercompose/content",
+    /* Messenger doesn't understand to:xyz@domain.com,subject="xyz" yet.
+     * So, just pass the type and mode info
+     */
+	 nsCAutoString urlcstr(url);
+   urlcstr.ReplaceChar('&', ',');
+	 urlcstr.ReplaceChar('?', ',');
+
+   nsAutoString args("format=0,");
+	 nsCAutoString tailpiece;
+	 urlcstr.Right(tailpiece, urllen-7); 
+	 args += "to=";
+	 args += tailpiece;
+	 rv = toolkitCore->ShowWindowWithArgs("chrome://messengercompose/content",
 		                                    nsnull,
-		                                   "type=0,mode=0");
+		                                    args);
 	if (NS_FAILED(rv))
 		return rv;
   }
