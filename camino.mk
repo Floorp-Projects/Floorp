@@ -37,7 +37,7 @@
 
 $(warning This file is obsolete: use client.mk directly.)
 
-checkout build alldep clean distclean:
+checkout build alldep clean distclean build_all_depend:
 	$(MAKE) -f client.mk $@
 
-.PHONY: checkout build alldep clean distclean
+.PHONY: checkout build alldep clean distclean build_all_depend
