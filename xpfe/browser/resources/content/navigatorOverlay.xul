@@ -62,6 +62,7 @@ Contributor(s): Blake Ross <BlakeR1234@aol.com>. -->
 
 
     <!-- View Menu -->
+	<key id="key_reload" xulkey="true" key="&reloadCmd.commandkey;" observes="canReload"/>
 	<!--
 	<key id="key_enlargeTextSize" xulkey="true"
 	     key="&enlargeTextSizeCmd.commandkey;"

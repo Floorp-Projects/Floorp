@@ -47,6 +47,8 @@
 <!ENTITY viewMenu.label "View">
 <!ENTITY viewMenu.accesskey "v">
 
+<!ENTITY reloadCmd.commandkey "r">
+
 <!ENTITY toolbarsCmd.label "Toolbars">
 <!ENTITY navbarCmd.label "Navigation Toolbar">
 <!ENTITY personalbarCmd.label "Personal Toolbar">
