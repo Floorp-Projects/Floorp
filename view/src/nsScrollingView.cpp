@@ -69,7 +69,8 @@ void ScrollBarView :: SetDimensions(nscoord width, nscoord height)
     nsIPresContext  *px = mViewManager->GetPresContext();
     float           t2p = px->GetTwipsToPixels();
   
-    mWindow->Resize(NS_TO_INT_ROUND(t2p * width), NS_TO_INT_ROUND(t2p * height));
+    mWindow->Resize(NS_TO_INT_ROUND(t2p * width), NS_TO_INT_ROUND(t2p * height),
+                    PR_TRUE);
 
     NS_RELEASE(px);
   }

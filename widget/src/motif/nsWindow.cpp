@@ -334,7 +334,7 @@ void nsWindow::Move(PRUint32 aX, PRUint32 aY)
 // Resize this component
 //
 //-------------------------------------------------------------------------
-void nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight)
+void nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
 }
 
@@ -344,7 +344,11 @@ void nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight)
 // Resize this component
 //
 //-------------------------------------------------------------------------
-void nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint32 aHeight)
+void nsWindow::Resize(PRUint32 aX,
+                      PRUint32 aY,
+                      PRUint32 aWidth,
+                      PRUint32 aHeight,
+                      PRBool   aRepaint)
 {
 }
 

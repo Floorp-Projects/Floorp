@@ -342,7 +342,7 @@ void WebWidgetImpl::SetBounds(const nsRect& aBounds)
 {
   NS_PRECONDITION(nsnull != mWindow, "null window");
   if (nsnull != mWindow) {
-    mWindow->Resize(aBounds.x, aBounds.y, aBounds.width, aBounds.height);
+    mWindow->Resize(aBounds.x, aBounds.y, aBounds.width, aBounds.height, PR_TRUE);
   }
 }
 

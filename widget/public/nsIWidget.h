@@ -211,24 +211,28 @@ class nsIWidget : public nsISupports {
      *
      * @param aWidth  the new width expressed in the parent's coordinate system
      * @param aHeight the new height expressed in the parent's coordinate system
+     * @param aRepaint whether the widget should be repainted
      *
      */
     virtual void Resize(PRUint32 aWidth,
-                        PRUint32 aHeight) = 0;
+                        PRUint32 aHeight,
+                        PRBool   aRepaint) = 0;
 
     /**
      * Move or resize this widget.
      *
-     * @param aX      the new x position expressed in the parent's coordinate system
-     * @param aY      the new y position expressed in the parent's coordinate system
-     * @param aWidth  the new width expressed in the parent's coordinate system
-     * @param aHeight the new height expressed in the parent's coordinate system
+     * @param aX       the new x position expressed in the parent's coordinate system
+     * @param aY       the new y position expressed in the parent's coordinate system
+     * @param aWidth   the new width expressed in the parent's coordinate system
+     * @param aHeight  the new height expressed in the parent's coordinate system
+     * @param aRepaint whether the widget should be repainted if the size changes
      *
      */
     virtual void Resize(PRUint32 aX,
                         PRUint32 aY,
                         PRUint32 aWidth,
-                        PRUint32 aHeight) = 0;
+                        PRUint32 aHeight,
+                        PRBool   aRepaint) = 0;
 
     /**
      * Enable or disable this Widget
