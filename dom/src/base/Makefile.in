@@ -22,8 +22,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME	= jsdombase_s
 MODULE		= dom
+LIBRARY_NAME	= jsdombase_s
 
 REQUIRES	= xpcom raptor dom js netlib caps oji ojiimpl
 
@@ -54,8 +54,6 @@ CPPSRCS		= \
 		$(NULL)
 
 EXPORTS		= nsJSUtils.h
-
-include $(topsrcdir)/config/config.mk
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 override NO_SHARED_LIB=1

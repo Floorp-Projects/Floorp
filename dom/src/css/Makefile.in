@@ -1,4 +1,3 @@
-#!gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -14,50 +13,48 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
+#
 
-DEPTH=../../..
+DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME = jsdomcss_s
+MODULE		= dom
+LIBRARY_NAME	= jsdomcss_s
 
-CPPSRCS =				\
-  nsJSCSS2Properties.cpp  \
-  nsJSCSSFontFaceRule.cpp \
-  nsJSCSSImportRule.cpp \
-  nsJSCSSMediaRule.cpp  \
-  nsJSCSSPageRule.cpp \
-  nsJSCSSRule.cpp \
-  nsJSCSSStyleDeclaration.cpp \
-  nsJSCSSStyleRule.cpp  \
-  nsJSCSSStyleRuleCollection.cpp  \
-  nsJSCSSStyleSheet.cpp \
-  nsJSCSSUnknownRule.cpp  \
-	$(NULL)
+REQUIRES	= xpcom raptor dom js netlib
 
-
-DEFINES += -D_IMPL_NS_DOM
-
-# nsJSCSS2Properties.cpp has problems compiling under Neutrino gcc 2.8.1 
-# with the optimize flag turned on so this makes sure its turned off.
-# sorry for this hack please complain to Jerry.Kirk@Nexwarecorp.com
-ifeq ($(TARGET_OS),nto)
-DEFINES += -O0
-endif
-
-MODULE=dom
-
-REQUIRES = xpcom raptor dom js netlib
-
-include $(topsrcdir)/config/config.mk
-
-MKSHLIB :=
+CPPSRCS		= \
+		nsJSCSS2Properties.cpp \
+		nsJSCSSFontFaceRule.cpp \
+		nsJSCSSImportRule.cpp \
+		nsJSCSSMediaRule.cpp \
+		nsJSCSSPageRule.cpp \
+		nsJSCSSRule.cpp \
+		nsJSCSSStyleDeclaration.cpp \
+		nsJSCSSStyleRule.cpp \
+		nsJSCSSStyleRuleCollection.cpp \
+		nsJSCSSStyleSheet.cpp \
+		nsJSCSSUnknownRule.cpp \
+		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 override NO_SHARED_LIB=1
 override NO_STATIC_LIB=
 
 include $(topsrcdir)/config/rules.mk
+
+DEFINES		+= -D_IMPL_NS_DOM
+
+#
+# nsJSCSS2Properties.cpp has problems compiling under Neutrino gcc 2.8.1 
+# with the optimize flag turned on, so this makes sure it's turned off.
+# Sorry for this hack; please complain to Jerry.Kirk@Nexwarecorp.com.
+#
+ifeq ($(TARGET_OS),nto)
+DEFINES		+= -O0
+endif
+
