@@ -155,7 +155,7 @@ function moreInfo()
 function showACAdvanced()
 {
   window.openDialog("chrome://communicator/content/pref/pref-smart_browsing-ac.xul", "", 
-                    "modal=yes,chrome,dialog=yes",
+                    "modal=yes,chrome,dialog=no,resizable=no",
                     document.getElementById("browserUrlbarAutoFill").getAttribute("value"),
                     document.getElementById("browserUrlbarShowPopup").getAttribute("value"),
                     document.getElementById("browserUrlbarShowSearch").getAttribute("value"));
