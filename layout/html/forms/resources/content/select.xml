@@ -654,7 +654,7 @@
         ]]>
       </constructor>
     </implementation>
-    <content sizetopopup="true">
+    <content sizetopopup="always">
         <xul:hbox class="select-label-box" flex="1">
           <xul:label flex="1" value=" " inherits="value=label"/>
         </xul:hbox>
