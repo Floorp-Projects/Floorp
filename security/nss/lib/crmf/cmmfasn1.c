@@ -37,6 +37,8 @@
 #include "secasn1.h"
 #include "secitem.h"
 
+SEC_ASN1_MKSUB(SEC_SignedCertificateTemplate)
+
 static const SEC_ASN1Template CMMFSequenceOfCertifiedKeyPairsTemplate[] = {
     { SEC_ASN1_SEQUENCE_OF, 0, CMMFCertifiedKeyPairTemplate}
 };
@@ -45,9 +47,10 @@ static const SEC_ASN1Template CMMFKeyRecRepContentTemplate[] = {
     { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(CMMFKeyRecRepContent)},
     { SEC_ASN1_INLINE, offsetof(CMMFKeyRecRepContent, status), 
       CMMFPKIStatusInfoTemplate},
-    { SEC_ASN1_OPTIONAL | SEC_ASN1_CONTEXT_SPECIFIC | SEC_ASN1_POINTER | 0,
+    { SEC_ASN1_OPTIONAL | SEC_ASN1_CONTEXT_SPECIFIC | SEC_ASN1_POINTER | 
+		SEC_ASN1_XTRN | 0,
       offsetof(CMMFKeyRecRepContent, newSigCert),
-      SEC_SignedCertificateTemplate},
+      SEC_ASN1_SUB(SEC_SignedCertificateTemplate)},
     { SEC_ASN1_CONSTRUCTED | SEC_ASN1_OPTIONAL | SEC_ASN1_CONTEXT_SPECIFIC | 1,
       offsetof(CMMFKeyRecRepContent, caCerts),
       CMMFSequenceOfCertsTemplate},
