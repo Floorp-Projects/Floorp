@@ -178,6 +178,13 @@ NS_IMETHODIMP nsMailboxProtocol::OnStopRequest(nsIChannel * aChannel, nsISupport
 // End of nsIStreamListenerSupport
 //////////////////////////////////////////////////////////////////////////////////////////////
 
+NS_IMETHODIMP nsMailboxProtocol::Cancel()  // handle stop button
+{
+	return nsMsgProtocol::Cancel();
+}
+
+
+
 PRInt32 nsMailboxProtocol::DoneReadingMessage()
 {
 	nsresult rv = NS_OK;

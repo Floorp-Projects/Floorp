@@ -510,6 +510,12 @@ nsresult nsPop3Protocol::GetPassword(char ** aPassword)
 	return rv;
 }
 
+NS_IMETHODIMP nsPop3Protocol::Cancel()  // handle stop button
+{
+	return nsMsgProtocol::Cancel();
+}
+
+
 nsresult nsPop3Protocol::LoadUrl(nsIURI* aURL, nsISupports * /* aConsumer */)
 {
 	nsresult rv = 0;

@@ -242,6 +242,8 @@ public:
 
     nsresult GetPassword(char ** aPassword);
 
+	NS_IMETHOD Cancel();  // handle stop button
+
 private:
 
     nsCString m_username;
