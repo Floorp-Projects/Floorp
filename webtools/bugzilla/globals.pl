@@ -546,14 +546,14 @@ sub InsertNewUser {
     return $password;
 }
 
-sub DBID_to_real_name {
+sub DBID_to_real_or_loginname {
     my ($id) = (@_);
-    SendSQL("SELECT realname FROM profiles WHERE userid = $id");
-    my ($r) = FetchSQLData();
+    SendSQL("SELECT login_name,realname FROM profiles WHERE userid = $id");
+    my ($l, $r) = FetchSQLData();
     if ($r eq "") {
-        return;
+        return $l;
     } else {
-        return "($r)";
+        return "$l ($r)";
     }
 }
 
