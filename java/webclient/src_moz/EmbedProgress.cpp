@@ -158,67 +158,6 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
 	(aStateFlags & STATE_STOP)) {
 	PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
 	       ("EmbedProgress::OnStateChange: END_DOCUMENT_LOAD\n"));
-	if (channel && mCapturePageInfo) {
-	    // store the request method
-	    if (NS_SUCCEEDED(rv = channel->GetRequestMethod(cstr))) {
-		jstring methodJStr = (jstring) ::util_NewGlobalRef(env, 
-								   ::util_NewStringUTF(env, cstr.get()));
-		
-		::util_StoreIntoPropertiesObject(env, properties, 
-						 METHOD_VALUE, methodJStr,
-						 (jobject)
-						 &(mOwner->GetWrapperFactory()->shareContext));
-	    }
-	    // store the response status
-	    PRUint32 responseStatus;
-	    if (NS_SUCCEEDED(rv =channel->GetResponseStatus(&responseStatus))){
-		if (NS_SUCCEEDED(rv=channel->GetResponseStatusText(cstr))) {
-		    nsAutoString autoStatus;
-		    autoStatus.AppendInt(responseStatus);
-		    autoStatus.AppendWithConversion(" ");
-		    autoStatus.AppendWithConversion(cstr.get());
-
-		    jstring statusJStr = (jstring) ::util_NewGlobalRef(env, 
-								       ::util_NewString(env, autoStatus.get(), autoStatus.Length()));
-		    
-		    ::util_StoreIntoPropertiesObject(env, properties, 
-						     STATUS_VALUE, statusJStr,
-						     (jobject)
-						     &(mOwner->GetWrapperFactory()->shareContext));
-		    
-		}
-	    }
-
-	    // If there is an upload stream, store it as well
-	    nsCOMPtr<nsIUploadChannel> upload = do_QueryInterface(channel);
-	    if (upload) {
-		nsIInputStream *uploadStream = nsnull;
-		if (NS_SUCCEEDED(rv = upload->GetUploadStream(&uploadStream)) 
-		    && uploadStream) {
-		    jint pStream;
-		    jclass clazz;
-		    jobject streamObj;
-		    jmethodID jID;
-		    pStream = (jint) uploadStream;
-		    uploadStream->AddRef();
-		    if (clazz = env->FindClass("org/mozilla/webclient/impl/wrapper_native/NativeInputStream")) {
-			if (jID = env->GetMethodID(clazz, "<init>", "(I)V")) {
-			    if (streamObj = env->NewObject(clazz,jID,pStream)){
-			       if (streamObj = ::util_NewGlobalRef(env,
-								   streamObj)){
-				   ::util_StoreIntoPropertiesObject(env, 
-								    properties,
-								    REQUEST_BODY_VALUE, 
-								    streamObj,
-								    (jobject)
-								    &(mOwner->GetWrapperFactory()->shareContext));
-			       }
-			    }
-			}
-		    }
-		}
-	    }
-	}
 
 	util_SendEventToJava(nsnull, 
 			     mEventRegistration, 
@@ -301,6 +240,36 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
 						     (jobject)
 						     &(mOwner->GetWrapperFactory()->shareContext));
 		    
+		}
+	    }
+
+	    // If there is an upload stream, store it as well
+	    nsCOMPtr<nsIUploadChannel> upload = do_QueryInterface(channel);
+	    if (upload) {
+		nsIInputStream *uploadStream = nsnull;
+		if (NS_SUCCEEDED(rv = upload->GetUploadStream(&uploadStream)) 
+		    && uploadStream) {
+		    jint pStream;
+		    jclass clazz;
+		    jobject streamObj;
+		    jmethodID jID;
+		    pStream = (jint) uploadStream;
+		    uploadStream->AddRef();
+		    if (clazz = env->FindClass("org/mozilla/webclient/impl/wrapper_native/NativeInputStream")) {
+			if (jID = env->GetMethodID(clazz, "<init>", "(I)V")) {
+			    if (streamObj = env->NewObject(clazz,jID,pStream)){
+			       if (streamObj = ::util_NewGlobalRef(env,
+								   streamObj)){
+				   ::util_StoreIntoPropertiesObject(env, 
+								    properties,
+								    REQUEST_BODY_VALUE, 
+								    streamObj,
+								    (jobject)
+								    &(mOwner->GetWrapperFactory()->shareContext));
+			       }
+			    }
+			}
+		    }
 		}
 	    }
 

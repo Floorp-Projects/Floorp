@@ -222,8 +222,11 @@ public class TestBrowser extends JPanel {
 		public void eventDispatched(WebclientEvent event) {
 		    Map map = (Map) event.getEventData();
 		    if (event instanceof DocumentLoadEvent) {
+			System.out.println("URI: " + map.get("URI"));
 			switch ((int) event.getType()) {
 			case ((int) DocumentLoadEvent.START_URL_LOAD_EVENT_MASK):
+			    System.out.println("requestMethod: " + 
+					       map.get("method"));
 			    if (map.get("headers") instanceof Map) {
 				Iterator iter = (map = (Map) map.get("headers")).keySet().iterator();
 				while (iter.hasNext()) {
@@ -239,6 +242,8 @@ public class TestBrowser extends JPanel {
 			    updateStatusInfo("Loading started.");
 			    break;
 			case ((int) DocumentLoadEvent.END_DOCUMENT_LOAD_EVENT_MASK):
+			    System.out.println("requestMethod: " + 
+					       map.get("method"));
 			    jBackButton.setEnabled(history.canBack());
 			    jForwardButton.setEnabled(history.canForward());
 			    updateStatusInfo("Loading completed.");
@@ -248,6 +253,10 @@ public class TestBrowser extends JPanel {
 			    }
 			    break;
 			case ((int) DocumentLoadEvent.END_URL_LOAD_EVENT_MASK):
+			    System.out.println("requestMethod: " + 
+					       map.get("method"));
+			    System.out.println("status: " + 
+					       map.get("status"));
 			    if (map.get("headers") instanceof Map) {
 				Iterator iter = (map = (Map) map.get("headers")).keySet().iterator();
 				while (iter.hasNext()) {
