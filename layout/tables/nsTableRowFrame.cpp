@@ -483,6 +483,7 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
                                         RowReflowState&      aReflowState,
                                         nsReflowStatus&      aStatus)
 {
+  aStatus = NS_FRAME_COMPLETE;
   if (nsnull == mFirstChild)
     return NS_OK;
 
@@ -555,13 +556,21 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
       // If the available width is the same as last time we reflowed the cell,
       // then just use the previous desired size and max element size.
       // if we need the max-element-size we don't need to reflow.
-      // we just grab it from the cell frame which remembers it (see the else clause below)
-      if (availWidth != ((nsTableCellFrame *)kidFrame)->GetPriorAvailWidth())
+      // we just grab it from the cell frame which remembers it (see the else clause below).
+      // Note: we can't do that optimization if our height is constrained
+      if ((aReflowState.reflowState.maxSize.height != NS_UNCONSTRAINEDSIZE) ||
+          (availWidth != ((nsTableCellFrame *)kidFrame)->GetPriorAvailWidth()))
       {
+        // XXX TROY
+#if 0
         // Always let the cell be as high as it wants. We ignore the height that's
         // passed in and always place the entire row. Let the row group decide
         // whether we fit or wehther the entire row is pushed
         nsSize  kidAvailSize(availWidth, NS_UNCONSTRAINEDSIZE);
+#else
+        // Reflow the cell to fit the available height
+        nsSize  kidAvailSize(availWidth, aReflowState.reflowState.maxSize.height);
+#endif
 
         // Reflow the child
         nsHTMLReflowState kidReflowState(aPresContext, kidFrame,
@@ -578,7 +587,15 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
                   desiredSize.width, availWidth);
         }
 #endif
+        // XXX TROY
+#if 0
         NS_ASSERTION(NS_FRAME_IS_COMPLETE(status), "unexpected reflow status");
+#else
+        // If any of the cells are not complete, then we're not complete
+        if (NS_FRAME_IS_NOT_COMPLETE(status)) {
+          aStatus = NS_FRAME_NOT_COMPLETE;
+        }
+#endif
 
         if (gsDebug)
         {
@@ -646,7 +663,8 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
       nsHTMLReflowMetrics desiredSize(nsnull);
       if (PR_TRUE==gsDebug) printf("\nRow: Resize Reflow of unknown frame %p of type %d with reason=%d\n", 
                                      kidFrame, kidDisplay->mDisplay, eReflowReason_Resize);
-      ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState, aStatus);
+      nsReflowStatus  status;
+      ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState, status);
     }
 
     // Get the next child
@@ -1363,6 +1381,7 @@ nsTableRowFrame::Reflow(nsIPresContext&          aPresContext,
     rv = InitialReflow(aPresContext, aDesiredSize, state, aStatus, nsnull, PR_TRUE);
     GetMinRowSpan(tableFrame);
     FixMinCellHeight(tableFrame);
+    aStatus = NS_FRAME_COMPLETE;
     break;
 
   case eReflowReason_Resize:
@@ -1374,7 +1393,10 @@ nsTableRowFrame::Reflow(nsIPresContext&          aPresContext,
     break;
   }
 
+  // XXX TROY
+#if 0
   aStatus = NS_FRAME_COMPLETE;  // we're never continued
+#endif
 
   if (gsDebug==PR_TRUE) 
   {
@@ -1398,10 +1420,42 @@ nsTableRowFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
                                        nsIStyleContext* aStyleContext,
                                        nsIFrame*&       aContinuingFrame)
 {
-  // Because rows are always complete we should never be asked to create
-  // a continuing frame
-  NS_ERROR("Unexpected request");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsTableRowFrame* cf = new nsTableRowFrame;
+  if (nsnull == cf) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  cf->Init(aPresContext, mContent, aParent, aStyleContext);
+  cf->AppendToFlow(this);
+
+  // Create a continuing frame for each table cell
+  nsIFrame* newChildList;
+  for (nsIFrame* kidFrame = mFirstChild;
+       nsnull != kidFrame;
+       kidFrame->GetNextSibling(kidFrame)) {
+
+    const nsStyleDisplay *kidDisplay;
+    kidFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)kidDisplay));
+    if (NS_STYLE_DISPLAY_TABLE_CELL == kidDisplay->mDisplay) {
+      nsIFrame*         contCellFrame;
+      nsIStyleContext*  kidSC;
+
+      // Create a continuing cell frame
+      kidFrame->GetStyleContext(kidSC);
+      kidFrame->CreateContinuingFrame(aPresContext, cf, kidSC, contCellFrame);
+      NS_RELEASE(kidSC);
+      
+      // Link it into the list of child frames
+      if (nsnull == cf->mFirstChild) {
+        cf->mFirstChild = contCellFrame;
+      } else {
+        newChildList->SetNextSibling(contCellFrame);
+      }
+      newChildList = contCellFrame;
+    }
+  }
+
+  aContinuingFrame = cf;
+  return NS_OK;
 }
 
 /* we overload this here because rows have children that can span outside of themselves.

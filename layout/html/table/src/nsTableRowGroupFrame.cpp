@@ -850,6 +850,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext&          aPresContext,
                                     nsReflowStatus&          aStatus)
 {
   nsIFrame* prevKidFrame = nsnull;
+  nsresult  rv = NS_OK;
 
   // Walk each of the row frames looking for the first row frame that
   // doesn't fit in the available space
@@ -857,21 +858,22 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext&          aPresContext,
     nsRect  bounds;
 
     kidFrame->GetRect(bounds);
+    // XXX This check isn't correct if there's a footer...
     if (bounds.YMost() > aReflowState.maxSize.height) {
       // If this is the first row frame then we need to split it
       if (nsnull == prevKidFrame) {
         // Reflow the row in the available space and have it split
         // XXX Account for horizontal margins...
-#if 0
         nsSize  kidAvailSize(aReflowState.maxSize.width,
                              aReflowState.maxSize.height - bounds.y);
-        nsHTMLReflowState kidReflowState(aPresContext, kidFrame, aReflowState,
-                                         kidAvailSize, eReflowReason_Resize);
-        nsReflowMetrics   desiredSize;
+        nsHTMLReflowState   kidReflowState(aPresContext, kidFrame, aReflowState,
+                                           kidAvailSize, eReflowReason_Resize);
+        nsHTMLReflowMetrics desiredSize(nsnull);
 
         rv = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState, aStatus);
         kidFrame->SizeTo(desiredSize.width, desiredSize.height);
         NS_ASSERTION(NS_FRAME_IS_NOT_COMPLETE(aStatus), "unexpected status");
+        ((nsTableRowFrame *)kidFrame)->DidResize(aPresContext, aReflowState);
 
         // Create a continuing frame, add it to the child list, and then push it
         // and the frames that follow
@@ -892,8 +894,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext&          aPresContext,
 
         // Push it and the frames that follow
         PushChildren(continuingFrame, kidFrame);
-        aDesiredSize.height = bounds.y;
-#endif
+        aDesiredSize.height = desiredSize.height;
 
       } else {
         // See whether the row frame has cells that span into it or across it
