@@ -81,7 +81,7 @@ public:
 
   NS_IMETHOD Init(nsIPresContext& aPresContext, nsIFrame* aChildList);
 
-  virtual PRBool IsSuccessful();
+  virtual PRBool IsSuccessful(nsIFormControlFrame* aSubmitter);
   NS_IMETHOD GetType(PRInt32* aType) const;
   NS_IMETHOD GetName(nsString* aName);
   NS_IMETHOD GetValue(nsString* aName);
@@ -281,13 +281,15 @@ nsHTMLButtonControlFrame::GetValue(nsString* aResult)
 }
 
 PRBool
-nsHTMLButtonControlFrame::IsSuccessful()
+nsHTMLButtonControlFrame::IsSuccessful(nsIFormControlFrame* aSubmitter)
 {
-  nsAutoString name;
-  return (NS_CONTENT_ATTR_HAS_VALUE == GetName(&name));
+  if (this == (aSubmitter)) {
+    nsAutoString name;
+    return (NS_CONTENT_ATTR_HAS_VALUE == GetName(&name));
+  } else {
+    return PR_FALSE;
+  }
 }
-
-
 
 void
 nsHTMLButtonControlFrame::MouseClicked(nsIPresContext* aPresContext) 
@@ -525,12 +527,14 @@ nsHTMLButtonControlFrame::HandleEvent(nsIPresContext& aPresContext,
 NS_IMETHODIMP
 nsHTMLButtonControlFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
 {
+  // add ourself as an nsIFormControlFrame
+  nsFormFrame::AddFormControlFrame(aPresContext, *this);
+
   // create our view, we need a view to grab the mouse 
   nsIView* view;
   GetView(view);
   if (!view) {
-    nsresult result = nsRepository::CreateInstance(kViewCID, nsnull, kIViewIID,
-                                                  (void **)&view);
+    nsresult result = nsRepository::CreateInstance(kViewCID, nsnull, kIViewIID, (void **)&view);
 	  nsIPresShell   *presShell = aPresContext.GetShell();     
 	  nsIViewManager *viewMan   = presShell->GetViewManager();  
     NS_RELEASE(presShell);

@@ -206,6 +206,14 @@ nsFormControlFrame::DidReflow(nsIPresContext& aPresContext,
   return rv;
 }
 
+NS_IMETHODIMP
+nsFormControlFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
+{
+  // add ourself as an nsIFormControlFrame
+  nsFormFrame::AddFormControlFrame(aPresContext, *this);
+  return NS_OK;
+}
+
 NS_METHOD
 nsFormControlFrame::Reflow(nsIPresContext&      aPresContext,
                      nsHTMLReflowMetrics& aDesiredSize,
@@ -491,7 +499,7 @@ nsFormControlFrame::GetValue(nsString* aResult)
 }
 
 PRBool
-nsFormControlFrame::IsSuccessful()
+nsFormControlFrame::IsSuccessful(nsIFormControlFrame* aSubmitter)
 {
   nsAutoString name;
   return (NS_CONTENT_ATTR_HAS_VALUE == GetName(&name));

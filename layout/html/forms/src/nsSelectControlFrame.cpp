@@ -479,6 +479,7 @@ nsSelectControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
       if (index >= 0) {
         nsAutoString value;
         GetOptionValue(*options, index, value);
+        aNumValues = 1;
         aNames[0]  = name;
         aValues[0] = value;
         status = PR_TRUE;
@@ -496,7 +497,7 @@ nsSelectControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
         aNumValues = 0;
         for (int i = 0; i < numSelections; i++) {
           nsAutoString value;
-          GetOptionValue(*options, i, value);
+          GetOptionValue(*options, selections[i], value);
           aNames[i]  = name;
           aValues[i] = value;
           aNumValues++;
@@ -589,10 +590,12 @@ nsSelectControlFrame::GetOptionValue(nsIDOMHTMLCollection& aCollection, PRUint32
   PRBool status = PR_FALSE;
   nsIDOMHTMLOptionElement* option = GetOption(aCollection, aIndex);
   if (option) {
-    if (NS_CONTENT_ATTR_HAS_VALUE == option->GetValue(aValue)) {
+    nsresult result = option->GetValue(aValue);
+    if (aValue.Length() > 0) {
       status = PR_TRUE;
     } else {
-      if (NS_CONTENT_ATTR_HAS_VALUE == option->GetText(aValue)) {
+      result = option->GetText(aValue);
+      if (aValue.Length() > 0) {
         status = PR_TRUE;
       }
     }

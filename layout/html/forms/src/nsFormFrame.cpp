@@ -16,6 +16,7 @@
  * Reserved.
  */
 #include "nsFormFrame.h"
+#include "nsIFormControlFrame.h"
 #include "nsFormControlFrame.h"
 #include "nsFileControlFrame.h"
 #include "nsRadioControlFrame.h"
@@ -57,12 +58,17 @@
 
 static NS_DEFINE_IID(kIFormManagerIID, NS_IFORMMANAGER_IID);
 static NS_DEFINE_IID(kIFormIID, NS_IFORM_IID);
+static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID);
 static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
 static NS_DEFINE_IID(kIDOMNSHTMLFormElementIID, NS_IDOMNSHTMLFORMELEMENT_IID);
 static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
+static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
+
+
+nsFormFrameTable* nsFormFrame::gFormFrameTable = new nsFormFrameTable();
 
 NS_IMETHODIMP
 nsFormFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
@@ -89,7 +95,6 @@ nsrefcnt nsFormFrame::Release(void)
 nsFormFrame::nsFormFrame(nsIContent* aContent, nsIFrame* aParentFrame)
   : nsLeafFrame(aContent, aParentFrame)
 {
-  mInited        = PR_FALSE;
   mTextSubmitter = nsnull;
 }
 
@@ -200,15 +205,26 @@ nsFormFrame::GetEnctype(PRInt32* aEnctype)
 }
 
 NS_IMETHODIMP
+nsFormFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
+{
+  nsresult result = NS_OK;
+  nsIDOMHTMLFormElement* content = nsnull;
+  if (mContent) {
+    nsresult result = mContent->QueryInterface(kIDOMHTMLFormElementIID, (void**)&content);
+    if ((NS_OK == result) && (nsnull != content)) {
+      nsFormFrame::PutFormFrame(aPresContext, *content, *this);
+    }
+  }
+  return result;
+}
+
+NS_IMETHODIMP
 nsFormFrame::Reflow(nsIPresContext&      aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&      aStatus)
 {
   GetDesiredSize(&aPresContext, aReflowState, aDesiredSize);
-  if (!mInited) {
-    Init(aPresContext, PR_TRUE);
-  }
   aStatus = NS_FRAME_COMPLETE;
   return NS_OK;
 }
@@ -234,108 +250,86 @@ void nsFormFrame::RemoveRadioGroups()
   mRadioGroups.Clear();
 }
 
-void nsFormFrame::Init(nsIPresContext& aPresContext, PRBool aReinit)
+void nsFormFrame::AddFormControlFrame(nsIPresContext& aPresContext, nsIFrame& aFrame)
 {
-  if (mInited && !aReinit) {
+  nsIFormControlFrame* fcFrame = nsnull;
+  nsresult result = aFrame.QueryInterface(kIFormControlFrameIID, (void**)&fcFrame);
+  if ((NS_OK != result) || (nsnull == fcFrame)) {
     return;
   }
 
-  PRUint32 numControls = mFormControls.Count();
-  nsIPresShell* presShell = aPresContext.GetShell();
-  // first time - add the controls 
-  if ((0 == numControls) && mContent) { 
-    nsIForm* form = nsnull;
-    nsresult result = mContent->QueryInterface(kIFormIID, (void**)&form);
-    if ((NS_OK == result) && form) {
-      form->GetElementCount(&numControls);
-      for (PRUint32 childX = 0; childX < numControls; childX++) {
-        nsIFormControl* formControl;
-        form->GetElementAt(childX, &formControl);
-        if (formControl) {
-          nsIContent* content = nsnull;
-          result = formControl->QueryInterface(kIContentIID, (void**)&content);
-          if ((NS_OK == result) && content) {
-            nsIFrame* frame = presShell->FindFrameWithContent(content);
-            if (frame) {
-              nsIFormControlFrame* fcFrame = nsnull;
-              result = frame->QueryInterface(kIFormControlFrameIID, (void**)&fcFrame);
-              if ((NS_OK == result) && fcFrame) {
-                mFormControls.AppendElement(fcFrame);
-                fcFrame->SetFormFrame(this);
-              }
-            }
-            NS_RELEASE(content);
-          }
-          NS_RELEASE(formControl);
+  nsIContent* iContent = nsnull;
+  aFrame.GetContent(iContent);
+  if (nsnull != iContent) {
+    nsIFormControl* formControl = nsnull;
+    result = iContent->QueryInterface(kIFormControlIID, (void**)&formControl);
+    if ((NS_OK == result) && (nsnull != formControl)) {
+      nsIDOMHTMLFormElement* formElem = nsnull;
+      result = formControl->GetForm(&formElem);
+      if (nsnull != formElem) {
+        nsFormFrame* formFrame = nsFormFrame::GetFormFrame(aPresContext, *formElem);
+        if (nsnull != formFrame) {
+          formFrame->AddFormControlFrame(*fcFrame);
+          fcFrame->SetFormFrame(formFrame);
         }
+        NS_RELEASE(formElem);
       }
-      NS_RELEASE(form);
+      NS_RELEASE(formControl);
     }
+    NS_RELEASE(iContent);
   }
-  NS_RELEASE(presShell);
+}
 
-  RemoveRadioGroups();
+void nsFormFrame::AddFormControlFrame(nsIFormControlFrame& aFrame)
+{
+  mFormControls.AppendElement(&aFrame);
 
   // determine which radio buttons belong to which radio groups, unnamed radio buttons
   // don't go into any group since they can't be submitted. Determine which controls
   // are capable of form submission.
-  PRInt32 textCount = 0;
-  nsIFormControlFrame* textFrame = nsnull;
-  numControls = mFormControls.Count();
 
-  for (PRUint32 i = 0; i < numControls; i++) {
-    nsIFormControlFrame* fcFrame = (nsIFormControlFrame *)mFormControls.ElementAt(i);
-    nsString name;
-    name.SetLength(0);
-    fcFrame->GetName(&name);
-    PRBool hasName = name.Length() > 0;
-    PRInt32 type;
-    fcFrame->GetType(&type);
+  nsString name;
+  name.SetLength(0);
+  aFrame.GetName(&name);
+  PRBool hasName = name.Length() > 0;
+  PRInt32 type;
+  aFrame.GetType(&type);
 
-    // count text for determining "return" submission 
-    if (NS_FORM_INPUT_TEXT == type) { 
-      textCount++;
-      textFrame = fcFrame;
-    }
+  // a solo text control can be a submitter (if return is hit)
+  if (NS_FORM_INPUT_TEXT == type) {
+    mTextSubmitter = (nsnull == mTextSubmitter) ? &aFrame : nsnull;
+  }
 
-    // radio group processing
-    if (hasName && (NS_FORM_INPUT_RADIO == type)) { 
-      nsRadioControlFrame* radioFrame = (nsRadioControlFrame*)fcFrame;
-      int numGroups = mRadioGroups.Count();
-      PRBool added = PR_FALSE;
-      nsRadioControlGroup* group;
-      for (int j = 0; j < numGroups; j++) {
-        group = (nsRadioControlGroup *) mRadioGroups.ElementAt(j);
-        nsString groupName;
-        group->GetName(groupName);
-        if (groupName.Equals(name)) {
-          group->AddRadio(radioFrame);
-          added = PR_TRUE;
-          break;
-        }
-      }
-      if (!added) {
-        group = new nsRadioControlGroup(name);
-        mRadioGroups.AppendElement(group);
+  // radio group processing
+  if (hasName && (NS_FORM_INPUT_RADIO == type)) { 
+    nsRadioControlFrame* radioFrame = (nsRadioControlFrame*)&aFrame;
+    int numGroups = mRadioGroups.Count();
+    PRBool added = PR_FALSE;
+    nsRadioControlGroup* group;
+    for (int j = 0; j < numGroups; j++) {
+      group = (nsRadioControlGroup *) mRadioGroups.ElementAt(j);
+      nsString groupName;
+      group->GetName(groupName);
+      if (groupName.Equals(name)) {
         group->AddRadio(radioFrame);
-      }
-      // allow only one checked radio button
-      if (radioFrame->GetChecked(PR_TRUE)) {
-	      if (nsnull == group->GetCheckedRadio()) {
-	        group->SetCheckedRadio(radioFrame);
-	      }
-	      else {
-	        radioFrame->SetChecked(PR_FALSE, PR_TRUE);
-	      }
+        added = PR_TRUE;
+        break;
       }
     }
+    if (!added) {
+      group = new nsRadioControlGroup(name);
+      mRadioGroups.AppendElement(group);
+      group->AddRadio(radioFrame);
+    }
+    // allow only one checked radio button
+    if (radioFrame->GetChecked(PR_TRUE)) {
+	    if (nsnull == group->GetCheckedRadio()) {
+	      group->SetCheckedRadio(radioFrame);
+	    } else {
+	      radioFrame->SetChecked(PR_FALSE, PR_TRUE);
+	    }
+    }
   }
-
-  // if there is only one text field, it can submit on "return" 
-  if (1 == textCount) { 
-    mTextSubmitter = textFrame;
-  }
-  mInited = PR_TRUE;
 }
   
 void
@@ -405,11 +399,14 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
   // if method is "" (not specified) use "get" as default
   PRBool isPost = (NS_FORM_METHOD_POST == method) || !isURLEncoded; 
 
+  nsIFormControlFrame* fcFrame = nsnull;
+  aFrame->QueryInterface(kIFormControlFrameIID, (void**)&fcFrame);
+  
   if (isURLEncoded) {
-    ProcessAsURLEncoded(isPost, data);
+    ProcessAsURLEncoded(isPost, data, fcFrame);
   }
   else {
-    ProcessAsMultipart(data);
+    ProcessAsMultipart(data, fcFrame);
   }
 
 
@@ -476,16 +473,17 @@ void URLEncode(char* aInString, char* aOutString)
   char* outChar = aOutString;
   for (char* inChar = aInString; *inChar; inChar++) {
     if(' ' == *inChar) {                                     // convert space to +
-	  *outChar++ = '+';
-	} else if ( (((*inChar - '0') >= 0) && (('9' - *inChar) >= 0)) || // don't conver 
-                (((*inChar - 'a') >= 0) && (('z' - *inChar) >= 0)) || // alphanumeric
-				(((*inChar - 'A') >= 0) && (('Z' - *inChar) >= 0)) ) {
-	  *outChar++ = *inChar;
-	} else {                                                 // convert all else to hex
-	  *outChar++ = '%';
+	    *outChar++ = '+';
+	  } else if ( (((*inChar - '0') >= 0) && (('9' - *inChar) >= 0)) ||   // don't conver alphanumeric
+                (((*inChar - 'a') >= 0) && (('z' - *inChar) >= 0)) ||   // or '.' or '_'
+				        (((*inChar - 'A') >= 0) && (('Z' - *inChar) >= 0)) ||
+                ('.' == *inChar) || ('_' == *inChar)) {
+	    *outChar++ = *inChar;
+	  } else {                                                 // convert all else to hex
+	    *outChar++ = '%';
       *outChar++ = toHex[(*inChar >> 4) & 0x0F];
       *outChar++ = toHex[*inChar & 0x0F];
-	}
+	  }
   }
   *outChar = 0;  // terminate the string
 }
@@ -502,7 +500,7 @@ nsString* URLEncode(nsString& aString)
 }
 
 #define CRLF "\015\012"   
-void nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData)
+void nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData, nsIFormControlFrame* aFrame)
 {
   nsString buf;
   PRBool firstTime = PR_TRUE;
@@ -511,7 +509,7 @@ void nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData)
   // collect and encode the data from the children controls
   for (PRUint32 childX = 0; childX < numChildren; childX++) {
  	  nsIFormControlFrame* child = (nsIFormControlFrame*) mFormControls.ElementAt(childX);
-    if (child && child->IsSuccessful()) {
+    if (child && child->IsSuccessful(aFrame)) {
 		  PRInt32 numValues = 0;
 		  PRInt32 maxNumValues = child->GetMaxNumValues();
 			if (maxNumValues <= 0) {
@@ -673,7 +671,7 @@ void nsFormFrame::Temp_GetContentType(char* aPathName, char* aContentType)
 #define MULTIPART "multipart/form-data"
 #define END "--"
 
-void nsFormFrame::ProcessAsMultipart(nsString& aData)
+void nsFormFrame::ProcessAsMultipart(nsString& aData, nsIFormControlFrame* aFrame)
 {
   aData.SetLength(0);
   char buffer[BUFSIZE];
@@ -714,7 +712,7 @@ void nsFormFrame::ProcessAsMultipart(nsString& aData)
     if (child) {
       PRInt32 type;
       child->GetType(&type);
-      if (child->IsSuccessful()) {
+      if (child->IsSuccessful(aFrame)) {
 		    PRInt32 numValues = 0;
 		    PRInt32 maxNumValues = child->GetMaxNumValues();
 			  if (maxNumValues <= 0) {
@@ -785,7 +783,7 @@ void nsFormFrame::ProcessAsMultipart(nsString& aData)
     if (child) {
       PRInt32 type;
       child->GetType(&type);
-      if (child->IsSuccessful()) {
+      if (child->IsSuccessful(aFrame)) {
 		    PRInt32 numValues = 0;
 		    PRInt32 maxNumValues = child->GetMaxNumValues();
 			  if (maxNumValues <= 0) {

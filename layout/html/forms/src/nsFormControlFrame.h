@@ -111,6 +111,8 @@ public:
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);
 
+  NS_IMETHOD Init(nsIPresContext& aPresContext, nsIFrame* aChildList);
+
   NS_IMETHOD DidReflow(nsIPresContext& aPresContext,
                        nsDidReflowStatus aStatus);
 
@@ -175,7 +177,7 @@ public:
   void SetColors(nsIPresContext& aPresContext);
   
   virtual void Reset();
-  virtual PRBool IsSuccessful();
+  virtual PRBool IsSuccessful(nsIFormControlFrame* aSubmitter);
 
   /**
     * Perform opertations before the widget associated with this frame has been

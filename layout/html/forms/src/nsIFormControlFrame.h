@@ -48,7 +48,7 @@ public:
 
   virtual void Reset() = 0;
 
-  virtual PRBool IsSuccessful() = 0;
+  virtual PRBool IsSuccessful(nsIFormControlFrame* aSubmitter) = 0;
 
   virtual PRInt32 GetMaxNumValues() = 0;
 
