@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: API.xs,v 1.5 1998/07/24 15:19:10 clayton Exp $
+ * $Id: API.xs,v 1.6 1998/07/29 03:30:26 leif Exp $
  *
  * The contents of this file are subject to the Mozilla Public License
  * Version 1.0 (the "License"); you may not use this file except in
@@ -365,6 +365,7 @@ int LDAP_CALL internal_rebind_proc(LDAP *ld, char **dnp, char **pwp,
 }
 
 MODULE = Mozilla::LDAP::API		PACKAGE = Mozilla::LDAP::API
+PROTOTYPES: ENABLE
 
 double
 constant(name,arg)
