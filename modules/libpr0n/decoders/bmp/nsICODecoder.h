@@ -118,7 +118,7 @@ private:
 
   PRUint8* mRow; // Holds one raw line of the image
   PRUint32 mRowBytes; // How many bytes of the row were already received
-  PRUint32 mCurLine;
+  PRInt32 mCurLine;
 
   PRUint8* mDecodedBuffer;
   PRUint8* mAlphaBuffer;
