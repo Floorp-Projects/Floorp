@@ -934,7 +934,7 @@ nsEventStatus nsXPFCCanvas :: OnResize(nscoord aX, nscoord aY, nscoord aWidth, n
     bounds.x = 0;
     bounds.y = 0;
 
-    gXPFCToolkit->GetViewManager()->UpdateView(mView, bounds, NS_VMREFRESH_AUTO_DOUBLE_BUFFER) ;
+    gXPFCToolkit->GetViewManager()->UpdateView(mView, bounds, NS_VMREFRESH_AUTO_DOUBLE_BUFFER | NS_VMREFRESH_NO_SYNC) ;
   }
 
   mLayout->Layout();
@@ -1389,7 +1389,7 @@ nsEventStatus nsXPFCCanvas :: HandleEvent(nsGUIEvent *aEvent)
               canvas->mView->GetBounds(bounds);
               bounds.x = 0;
               bounds.y = 0;
-              gXPFCToolkit->GetViewManager()->UpdateView(canvas->mView, bounds, NS_VMREFRESH_AUTO_DOUBLE_BUFFER) ;
+              gXPFCToolkit->GetViewManager()->UpdateView(canvas->mView, bounds, NS_VMREFRESH_AUTO_DOUBLE_BUFFER | NS_VMREFRESH_NO_SYNC) ;
             }
 
             iterator->Next();
@@ -1997,7 +1997,7 @@ nsresult nsXPFCCanvas::Action(nsIXPFCCommand * aCommand)
   bounds.x = 0;
   bounds.y = 0;
 
-  gXPFCToolkit->GetViewManager()->UpdateView(GetView(), bounds, NS_VMREFRESH_AUTO_DOUBLE_BUFFER);
+  gXPFCToolkit->GetViewManager()->UpdateView(GetView(), bounds, NS_VMREFRESH_AUTO_DOUBLE_BUFFER | NS_VMREFRESH_NO_SYNC);
 
   return NS_OK;
 }
@@ -2233,7 +2233,7 @@ void nsXPFCCanvas::Notify(nsIImageRequest *aImageRequest,
   {
     bounds.x = 0;
     bounds.y = 0;
-    gXPFCToolkit->GetViewManager()->UpdateView(GetView(), bounds, NS_VMREFRESH_AUTO_DOUBLE_BUFFER);
+    gXPFCToolkit->GetViewManager()->UpdateView(GetView(), bounds, NS_VMREFRESH_AUTO_DOUBLE_BUFFER | NS_VMREFRESH_NO_SYNC);
   }
   return ;
 }
