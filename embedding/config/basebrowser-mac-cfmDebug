@@ -97,7 +97,6 @@ Components:webshell.xpt
 
 ; find functionality
 ; Optional - only if your code uses nsIWebBrowserFind
-Components:TextServicesDebug.shlb
 Components:txtsvc.xpt
 
 ; gfx

@@ -90,7 +90,6 @@ components/libembedcomponents.dylib
 components/windowwatcher.xpt
 
 ; find functionality
-components/libtxtsvc.dylib
 components/txtsvc.xpt
 
 ; gfx
