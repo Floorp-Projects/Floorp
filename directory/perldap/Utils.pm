@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: Utils.pm,v 1.6 1998/07/30 09:18:38 leif Exp $
+# $Id: Utils.pm,v 1.7 1998/07/30 10:06:56 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -44,7 +44,8 @@ require Exporter;
 			   askPassword
 			   ldapArgs
 			   unixCrypt
-			   userCredentials)]
+			   userCredentials
+			   answer)]
 		);
 
 
@@ -59,15 +60,14 @@ Exporter::export_ok_tags('all');
 #
 sub normalizeDN
 {
-  my ($self, $dn) = @_;
+  my ($dn) = @_;
   my (@vals);
 
-  $dn = $self->{dn} unless $dn;
   return "" if ($dn eq "");
 
-  $vals = Mozilla::LDAP::API::ldap_explode_dn(lc $dn, 0);
+  @vals = Mozilla::LDAP::API::ldap_explode_dn(lc $dn, 0);
 
-  return join(",", @{$vals});
+  return join(",", @vals);
 }
 
 
@@ -187,7 +187,7 @@ sub str2Scope
 }
 
 
-#################################################################################
+#############################################################################
 # Ask for a password, without displaying it on the TTY. This is very non-
 # portable, we need a better solution (using the term package perhaps?).
 #
@@ -202,9 +202,9 @@ sub askPassword
 }
 
 
-#################################################################################
-# Handle some standard LDAP options, and construct a nice little structure that
-# we can use later on.
+#############################################################################
+# Handle some standard LDAP options, and construct a nice little structure
+# that we can use later on.
 #
 sub ldapArgs
 {
@@ -232,7 +232,7 @@ sub ldapArgs
 }
 
 
-#################################################################################
+#############################################################################
 # Create a Unix-type password, using the "crypt" function. A random salt
 # is always generated, perhaps it should be an optional argument?
 #
@@ -275,4 +275,20 @@ sub userCredentials
       print "Enter bind password: ";
       $ld->{pswd} = Mozilla::LDAP::Utils::askPassword();
     }
+}
+
+
+#############################################################################
+# Ask a Y/N question, return "Y" or "N".
+#
+sub answer
+{
+  die "Default string must be Y or N."
+    unless (($_[0] eq "Y") || ($_[0] eq "N"));
+
+  chop($_ = <STDIN>);
+
+  return $_[0] if /^$/;
+  return "Y" if /^[yY]/;
+  return "N" if /^[nN]/;
 }
