@@ -65,9 +65,6 @@ static XPCOMCleanupHack sXPCOMCleanupHack;
 
 extern "C" void NS_SetupRegistry();
 
-static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-
 
 nsresult NS_InitEmbedding(const char *aPath)
 {
@@ -99,10 +96,10 @@ nsresult NS_InitEmbedding(nsILocalFile *aPath)
 #endif
     {
         // Initialise XPCOM
-        if (aPath)
-            NS_InitXPCOM(&sServiceManager, aPath);
-        else
-            NS_InitXPCOM(&sServiceManager, nsnull);
+        NS_InitXPCOM(&sServiceManager, aPath);
+        
+        if (!sServiceManager)
+            return NS_ERROR_NULL_POINTER;
 
 #ifdef HACK_AROUND_NONREENTRANT_INITXPCOM
         sXPCOMInitializedFlag = PR_TRUE;
@@ -133,8 +130,11 @@ nsresult NS_InitEmbedding(nsILocalFile *aPath)
     //
     // If an event queue already exists for the thread, then 
     // CreateThreadEventQueue(...) will fail...
-    NS_WITH_SERVICE(nsIEventQueueService, eventQService,
-                    kEventQueueServiceCID, &rv);
+    // CreateThread0ueue(...) will fail...
+    nsCOMPtr<nsIEventQueueService> eventQService;
+    rv = sServiceManager->GetService(NS_EVENTQUEUESERVICE_PROGID, 
+                                     nsIEventQueueService::GetIID(), 
+                                     getter_AddRefs(eventQService));
     if (NS_FAILED(rv))
       return rv;
 
@@ -142,8 +142,10 @@ nsresult NS_InitEmbedding(nsILocalFile *aPath)
 
 #ifdef HACK_AROUND_THREADING_ISSUES
     // XXX force certain objects to be created on the main thread
-    NS_WITH_SERVICE(nsIStringBundleService, sBundleService,
-                    kStringBundleServiceCID, &rv);
+    nsCOMPtr<nsIStringBundleService> sBundleService;
+    rv = sServiceManager->GetService(NS_STRINGBUNDLE_PROGID,
+                                     nsIStringBundleService::GetIID(), 
+                                     getter_AddRefs(sBundleService));
     if (NS_SUCCEEDED(rv))
     {
         nsCOMPtr<nsIStringBundle> stringBundle;
@@ -155,8 +157,10 @@ nsresult NS_InitEmbedding(nsILocalFile *aPath)
 #endif
 
     // Init the chrome registry.
-    nsCOMPtr <nsIChromeRegistry> chromeReg = 
-        do_GetService("component://netscape/chrome/chrome-registry");
+    nsCOMPtr<nsIChromeRegistry> chromeReg;
+    rv = sServiceManager->GetService("component://netscape/chrome/chrome-registry", 
+                                     nsIChromeRegistry::GetIID(), 
+                                     getter_AddRefs(chromeReg));
     NS_ASSERTION(chromeReg, "chrome check couldn't get the chrome registry");
 
     if (!chromeReg)
@@ -180,12 +184,12 @@ nsresult NS_TermEmbedding()
     }
     sInitCounter = 0;
 
-    nsresult rv;
-    // Destroy the event queue
-    NS_WITH_SERVICE(nsIEventQueueService, eventQService,
-                    kEventQueueServiceCID, &rv);
-    if (NS_SUCCEEDED(rv))
-        rv = eventQService->DestroyThreadEventQueue();
+    nsCOMPtr<nsIEventQueueService> eventQService;
+    sServiceManager->GetService(NS_EVENTQUEUESERVICE_PROGID, 
+                                nsIEventQueueService::GetIID(), 
+                                getter_AddRefs(eventQService));
+    if (eventQService)
+        eventQService->DestroyThreadEventQueue();
 
     NS_RELEASE(sServiceManager);
 
