@@ -49,7 +49,6 @@ interface nsIProfile : nsISupports {
     [noscript] void getProfileDir(in string profileName,
                                   in nsFileSpec profileDir);
     readonly attribute long profileCount;
-    string getSingleProfile();
     readonly attribute string currentProfile;
     readonly attribute string firstProfile;
 
@@ -84,8 +83,8 @@ interface nsIProfile : nsISupports {
     long get4xProfileCount();
 
     void migrateAllProfiles();
-    void CloneProfile(in string profileName);
-
+    void cloneProfile(in string profileName);
+    void forgetCurrentProfile();
 };
 
 #endif /* nsIProfile_h__ */
