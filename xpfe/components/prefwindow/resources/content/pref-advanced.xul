@@ -38,16 +38,16 @@
     var _elementIDs = ["advancedJavaAllow", "advancedMailFTP", "advancedMailFTPAddress"];
     
     function Startup() {
-      ftpCheck();
+      ftpCheck(false);
       turboCheck();
     }   
     
-    function ftpCheck() {
+    function ftpCheck(setFocus) {
       var checked = document.getElementById("advancedMailFTP").checked;
       var field = document.getElementById("advancedMailFTPAddress");
       field.disabled = !checked;
 
-      if (! field.disabled)
+      if (!field.disabled && setFocus)
         field.focus();
     }
 
@@ -145,7 +145,7 @@
     <vbox align="start">
       <checkbox id="advancedMailFTP" label="&sendAddFtpCheck.label;" accesskey="&sendAddFtpCheck.accesskey;"
                 prefstring="advanced.mailftp"
-                oncommand="ftpCheck();"/>
+                oncommand="ftpCheck(true);"/>
     </vbox>
     <hbox class="indent">
       <textbox id="advancedMailFTPAddress"

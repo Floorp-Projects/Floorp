@@ -18,7 +18,7 @@
    Rights Reserved.
    
    Contributor(s):
-     Håkan Waara <hwaara@chello.se>
+     HÃ¥kan Waara <hwaara@chello.se>
      Peter Annema <disttsc@bart.nl>
   -->
 
@@ -41,7 +41,7 @@
   function init()
   {
     parent.initPanel('chrome://cookie/content/pref-cookies.xul');
-    setDisables();
+    setDisables(false);
 
     const NS_COOKIECONSENT_CONTRACTID = '@mozilla.org/cookie-consent;1';
     if (NS_COOKIECONSENT_CONTRACTID in Components.classes) {
@@ -56,7 +56,7 @@
   const cookies_p3p = "3";
   const cookies_enabled = "0";
 
-  function setDisables()
+  function setDisables(setFocus)
   {
     var cookieBehavior = document.getElementById("networkCookieBehaviour");
 
@@ -97,7 +97,7 @@
     if (parent.hPrefWindow.getPrefIsLocked(lifetimeDays.getAttribute("prefstring")) )
       lifetimeDays.disabled = true;
     
-    if (! lifetimeDays.disabled)
+    if (!lifetimeDays.disabled && setFocus)
       lifetimeDays.focus();
   }
   ]]>
@@ -107,18 +107,18 @@
     <radiogroup id="networkCookieBehaviour"
                 prefstring="network.cookie.cookieBehavior">
       <radio value="2" label="&disableCookies.label;"
-             accesskey="&disableCookies.accesskey;" oncommand="setDisables();"/>
+             accesskey="&disableCookies.accesskey;" oncommand="setDisables(false);"/>
       <radio value="1" label="&accOrgCookiesRadio.label;"
-             accesskey="&accOrgCookiesRadio.accesskey;" oncommand="setDisables();"/>
+             accesskey="&accOrgCookiesRadio.accesskey;" oncommand="setDisables(false);"/>
       <hbox id="p3pRadioButton" hidden="true">
         <radio value="3" label="&accP3PCookiesRadio.label;"
-               accesskey="&accP3PCookiesRadio.accesskey;" oncommand="setDisables();"/>
+               accesskey="&accP3PCookiesRadio.accesskey;" oncommand="setDisables(false);"/>
         <button label="&viewP3P.label;" accesskey="&viewP3P.accesskey;" oncommand="viewP3P();"
                 id="p3pDialog"
                 prefstring="pref.advanced.cookies.disable_button.more_info"/>
       </hbox>
       <radio value="0" label="&accAllCookiesRadio.label;"
-             accesskey="&accAllCookiesRadio.accesskey;" oncommand="setDisables();"/>
+             accesskey="&accAllCookiesRadio.accesskey;" oncommand="setDisables(false);"/>
     </radiogroup>
     <separator id="networkCookieBehaviorSeparator"/>
     <vbox align="start">
@@ -126,15 +126,15 @@
                 prefstring="network.cookie.warnAboutCookies"/>
       <checkbox id="lifetimeEnabled" label="&limitLifetime.label;" accesskey="&limitLifetime.accesskey;"
                 prefstring="network.cookie.lifetime.enabled"
-                oncommand="setDisables();"/>
+                oncommand="setDisables(false);"/>
       <hbox class="indent">
         <radiogroup id="lifetimeBehavior" prefstring="network.cookie.lifetime.behavior">
           <radio value="0" label="&current.label;" 
                  accesskey="&current.accesskey;"
-                 oncommand="setDisables();"/>
+                 oncommand="setDisables(false);"/>
           <hbox>
             <radio value="1" accesskey="&days.accesskey;"
-                    oncommand="setDisables();"/>
+                    oncommand="setDisables(true);"/>
             <textbox id="lifetimeDays" pref="true" size="4"
                      preftype="int" prefstring="network.cookie.lifetime.days"/>
             <description>&days.label;</description>
