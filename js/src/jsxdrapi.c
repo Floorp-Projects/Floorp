@@ -32,6 +32,9 @@
  * file under either the NPL or the GPL.
  */
 #include "jsstddef.h"
+#include "jsconfig.h"
+
+#if JS_HAS_XDR
 
 #include <string.h>
 #include "jstypes.h"
@@ -680,3 +683,5 @@ JS_XDRFindClassById(JSXDRState *xdr, uint32 id)
         return NULL;
     return xdr->registry[i];
 }
+
+#endif /* JS_HAS_XDR */
