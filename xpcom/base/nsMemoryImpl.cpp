@@ -200,6 +200,8 @@ nsMemoryImpl::ReleaseObservers()
 {
     // set mObservers to null to release observers
     ((nsMemoryImpl*)gMemory)->mObservers = nsnull;
+
+    return NS_OK;
 }
 
 nsresult 
