@@ -219,7 +219,14 @@ nsresult nsMsgLocalMailFolder::AddSubfolder(nsAutoString name, nsIMsgFolder **ch
 		folder->SetFlag(MSG_FOLDER_FLAG_TRASH);
 	else if(name == "Unsent Messages" || name == "Outbox")
 		folder->SetFlag(MSG_FOLDER_FLAG_QUEUE);
-  
+	//These should probably be read in from a preference.  Hacking in here for the moment.
+	else if(name == "Sent")
+		folder->SetFlag(MSG_FOLDER_FLAG_SENTMAIL);
+	else if(name == "Drafts")
+		folder->SetFlag(MSG_FOLDER_FLAG_DRAFTS);
+	else if(name == "Templates")
+		folder->SetFlag(MSG_FOLDER_FLAG_TEMPLATES);
+
 	mSubFolders->AppendElement(folder);
 	folder->SetParent(this);
 	*child = folder;
