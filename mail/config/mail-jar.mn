@@ -141,6 +141,7 @@ content/mozapps/profile,                              toolkit/content/mozapps/pr
 content/mozapps/extensions,                           toolkit/content/mozapps/extensions
 content/mozapps/update,                               toolkit/content/mozapps/update
 content/mozapps/shared,                               toolkit/content/mozapps/shared
+content/mozapps/xpinstall,                            toolkit/content/mozapps/xpinstall
 content/mozapps/contents.rdf,                         toolkit/content/mozapps/contents.rdf
 
 # from xpfe\components

@@ -58,6 +58,7 @@ skin/classic/mozapps/downloads,                       classic/skin/classic/mozap
 skin/classic/mozapps/profile,                         classic/skin/classic/mozapps/profile
 skin/classic/mozapps/extensions,                      classic/skin/classic/mozapps/extensions
 skin/classic/mozapps/update,                          classic/skin/classic/mozapps/update
+skin/classic/mozapps/xpinstall,                          classic/skin/classic/mozapps/xpinstall
 skin/classic/mozapps/shared,                          classic/skin/classic/mozapps/shared
 
 #################################################################################################

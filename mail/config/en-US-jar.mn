@@ -23,6 +23,7 @@ locale/en-US/mozapps/downloads,                           en-US/locale/en-US/moz
 locale/en-US/mozapps/profile,                             en-US/locale/en-US/mozapps/profile
 locale/en-US/mozapps/extensions,                          en-US/locale/en-US/mozapps/extensions
 locale/en-US/mozapps/update,                              en-US/locale/en-US/mozapps/update
+locale/en-US/mozapps/xpinstall,                           en-US/locale/en-US/mozapps/xpinstall
 locale/en-US/mozapps/contents.rdf,                        en-US/locale/en-US/mozapps/contents.rdf
 
 locale/en-US/navigator/contents.rdf,                      en-US/locale/en-US/navigator/contents.rdf
