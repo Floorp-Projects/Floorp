@@ -26,6 +26,7 @@
 // forward declaration of non-XPCOM types
 class nsXPTMethodInfo;
 class nsXPTConstant;
+class nsXPTParamInfo;
 
 // {215DBE04-94A7-11d2-BA58-00805F8A5DD7}
 #define NS_IINTERFACEINFO_IID   \
@@ -50,6 +51,12 @@ public:
     // There do *not* make copies ***explicit bending of XPCOM rules***
     NS_IMETHOD GetMethodInfo(uint16 index, const nsXPTMethodInfo** info) = 0;
     NS_IMETHOD GetConstant(uint16 index, const nsXPTConstant** constant) = 0;
+
+    // Get the interface information or iid associated with a param of some
+    // method in this interface.
+    NS_IMETHOD GetInfoForParam(nsXPTParamInfo* param, nsIInterfaceInfo** info)
+        = 0;
+    NS_IMETHOD GetIIDForParam(nsXPTParamInfo* param, nsIID** iid) = 0;
 };
 
 #endif /* nsIInterfaceInfo_h___ */

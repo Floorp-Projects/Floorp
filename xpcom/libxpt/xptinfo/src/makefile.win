@@ -48,14 +48,12 @@ C_OBJS =	\
 
 CPPSRCS =	nsInterfaceInfoManager.cpp	\
 		nsInterfaceInfo.cpp		\
-		nsXPTParamInfo.cpp		\
 		$(NULL)
 
 
 CPP_OBJS = 	\
 		.\$(OBJDIR)\nsInterfaceInfoManager.obj	\
 		.\$(OBJDIR)\nsInterfaceInfo.obj		\
-		.\$(OBJDIR)\nsXPTParamInfo.obj		\
 		$(NULL)
 
 MODULE	= 	xptinfo
