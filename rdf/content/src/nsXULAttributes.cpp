@@ -326,8 +326,12 @@ nsXULAttribute::GetQualifiedName(nsString& aQualifiedName)
     aQualifiedName.Truncate();
     if ((mNameSpaceID != kNameSpaceID_None) &&
         (mNameSpaceID != kNameSpaceID_Unknown)) {
+        nsresult rv;
+
         nsIAtom* prefix;
-        if (NS_SUCCEEDED(mContent->GetNameSpacePrefixFromId(mNameSpaceID, prefix))) {
+        rv = mContent->GetNameSpacePrefixFromId(mNameSpaceID, prefix);
+
+        if (NS_SUCCEEDED(rv) && (prefix != nsnull)) {
             aQualifiedName.Append(prefix->GetUnicode());
             aQualifiedName.Append(':');
             NS_RELEASE(prefix);
