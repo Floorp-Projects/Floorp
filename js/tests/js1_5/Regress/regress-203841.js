@@ -17,7 +17,7 @@
 * Portions created by the Initial Developer are Copyright (C) 2003
 * the Initial Developer. All Rights Reserved.
 *
-* Contributor(s): briang@tonic.com, pschwartau@netscape.com
+* Contributor(s): briang@tonic.com, igor@fastmail.fm, pschwartau@netscape.com
 *
 * Alternatively, the contents of this file may be used under the terms of
 * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,7 +35,7 @@
 *
 *
 * Date:    29 April 2003
-* SUMMARY: Testing the comma operator inside an if statement
+* SUMMARY: Testing  merge of if-clause and boolean expressions
 *
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=203841
 *
@@ -91,11 +91,47 @@ actual = c;
 expect = 1;
 addThis();
 
+status = inSection(5);
+c = 0;
+if (1, 1 == 6) { c = 1; }
+actual = c;
+expect = 0;
+addThis();
+
+
+/*
+ * Now some tests involving arrays
+ */
+var x=[];
+
+status = inSection(6); // get element case
+c = 0;
+if (x[1==2]) { c = 1; }
+actual = c;
+expect = 0;
+addThis();
+
+status = inSection(7); // set element case
+c = 0;
+if (x[1==2]=1) { c = 1; }
+actual = c;
+expect = 1;
+addThis();
+
+status = inSection(8); // delete element case
+c = 0;
+if (delete x[1==2]) { c = 1; }
+actual = c;
+expect = 1;
+addThis();
+
+
 
 
 //-----------------------------------------------------------------------------
 test();
 //-----------------------------------------------------------------------------
+
 
 
 
