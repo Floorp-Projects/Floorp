@@ -40,8 +40,9 @@
 #include "nsHTMLParts.h" 
 #include "nsVoidArray.h"
 #include "nsCRT.h"
-#include "nsICSSParser.h"
+#include "nsICSSLoader.h"
 #include "nsICSSStyleSheet.h"
+#include "nsIHTMLContentContainer.h"
 #include "nsHTMLAtoms.h"
 #include "nsLayoutAtoms.h"
 #include "nsIScriptContext.h"
@@ -68,6 +69,7 @@ static char kXSLType[] = "text/xsl";
 
 static NS_DEFINE_IID(kIXMLContentSinkIID, NS_IXMLCONTENT_SINK_IID);
 static NS_DEFINE_IID(kIXMLContentIID, NS_IXMLCONTENT_IID);
+static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
 static NS_DEFINE_IID(kIXMLDocumentIID, NS_IXMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMCommentIID, NS_IDOMCOMMENT_IID);
 static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
@@ -120,6 +122,7 @@ nsXMLContentSink::nsXMLContentSink()
   NS_INIT_REFCNT();
   mDocument = nsnull;
   mDocumentURL = nsnull;
+  mDocumentBaseURL = nsnull;
   mWebShell = nsnull;
   mParser = nsnull;
   mRootElement = nsnull;
@@ -131,6 +134,8 @@ nsXMLContentSink::nsXMLContentSink()
   mTextSize = 0;
   mConstrainSize = PR_TRUE;
   mInScript = PR_FALSE;
+  mStyleSheetCount = 0;
+  mCSSLoader       = nsnull;
 
 #ifdef XSL
   mXSLState.sheetExists = PR_FALSE;
@@ -142,6 +147,7 @@ nsXMLContentSink::~nsXMLContentSink()
 {
   NS_IF_RELEASE(mDocument);
   NS_IF_RELEASE(mDocumentURL);
+  NS_IF_RELEASE(mDocumentBaseURL);
   NS_IF_RELEASE(mWebShell);
   NS_IF_RELEASE(mParser);
   NS_IF_RELEASE(mRootElement);
@@ -167,6 +173,7 @@ nsXMLContentSink::~nsXMLContentSink()
   if (nsnull != mText) {
     PR_FREEIF(mText);
   }
+  NS_IF_RELEASE(mCSSLoader);
 }
 
 nsresult
@@ -185,12 +192,24 @@ nsXMLContentSink::Init(nsIDocument* aDoc,
   NS_ADDREF(aDoc);
   mDocumentURL = aURL;
   NS_ADDREF(aURL);
+  mDocumentBaseURL = aURL;
+  NS_ADDREF(aURL);
   mWebShell = aContainer;
   NS_ADDREF(aContainer);
 
   mState = eXMLContentSinkState_InProlog;
   mDocElement = nsnull;
   mRootElement = nsnull;
+
+  // XXX this presumes HTTP header info is alread set in document
+  // XXX if it isn't we need to set it here...
+  mDocument->GetHeaderData(nsHTMLAtoms::headerDefaultStyle, mPreferredStyle);
+
+  nsIHTMLContentContainer* htmlContainer = nsnull;
+  if (NS_SUCCEEDED(aDoc->QueryInterface(kIHTMLContentContainerIID, (void**)&htmlContainer))) {
+    htmlContainer->GetCSSLoader(mCSSLoader);
+    NS_RELEASE(htmlContainer);
+  }
 
   return NS_OK;
 }
@@ -933,44 +952,6 @@ nsXMLContentSink::AddCDATASection(const nsIParserNode& aNode)
   return result;
 }
 
-// XXX Borrowed from HTMLContentSink. Should be shared.
-NS_IMETHODIMP
-nsXMLContentSink::LoadStyleSheet(nsIURL* aURL,
-                                 nsIUnicharInputStream* aUIN,
-                                 PRBool aActive,
-                                 const nsString& aTitle,
-                                 const nsString& aMedia,
-                                 nsIContent* aOwner)
-{
-  /* XXX use repository */
-  nsICSSParser* parser;
-  nsresult rv = NS_NewCSSParser(&parser);
-  if (NS_OK == rv) {
-    nsICSSStyleSheet* sheet = nsnull;
-    // XXX note: we are ignoring rv until the error code stuff in the
-    // input routines is converted to use nsresult's
-    parser->SetCaseSensitive(PR_TRUE);
-    parser->Parse(aUIN, aURL, sheet);
-    if (nsnull != sheet) {
-      sheet->SetTitle(aTitle);
-      sheet->SetEnabled(aActive);
-      mDocument->AddStyleSheet(sheet);
-      if (nsnull != aOwner) {
-        nsIDOMNode* domNode = nsnull;
-        if (NS_SUCCEEDED(aOwner->QueryInterface(kIDOMNodeIID, (void**)&domNode))) {
-          sheet->SetOwningNode(domNode);
-          NS_RELEASE(domNode);
-        }
-      }
-      NS_RELEASE(sheet);
-      rv = NS_OK;
-    } else {
-      rv = NS_ERROR_OUT_OF_MEMORY;/* XXX */
-    }
-    NS_RELEASE(parser);
-  }
-  return rv;
-}
 
 static nsresult
 GetQuotedAttributeValue(nsString& aSource, 
@@ -1008,47 +989,6 @@ GetQuotedAttributeValue(nsString& aSource,
   return result;
 }
 
-typedef struct {
-  nsString mTitle;
-  nsString mMedia;
-  PRBool mIsActive;
-  nsIURL* mURL;
-  nsIContent* mElement;
-  nsXMLContentSink* mSink;
-} nsAsyncStyleProcessingDataXML;
-
-static void
-nsDoneLoadingStyle(nsIUnicharStreamLoader* aLoader,
-                   nsString& aData,
-                   void* aRef,
-                   nsresult aStatus)
-{
-  nsresult rv = NS_OK;
-  nsAsyncStyleProcessingDataXML* d = (nsAsyncStyleProcessingDataXML*)aRef;
-  nsIUnicharInputStream* uin = nsnull;
-
-  if ((NS_OK == aStatus) && (0 < aData.Length())) {
-    // wrap the string with the CSS data up in a unicode
-    // input stream.
-    rv = NS_NewStringUnicharInputStream(&uin, new nsString(aData));
-    if (NS_OK == rv) {
-      // XXX We have no way of indicating failure. Silently fail?
-      rv = d->mSink->LoadStyleSheet(d->mURL, uin, d->mIsActive, 
-                                    d->mTitle, d->mMedia, d->mElement);
-    }
-  }
-    
-  d->mSink->ResumeParsing();
-
-  NS_RELEASE(d->mURL);
-  NS_IF_RELEASE(d->mElement);
-  NS_RELEASE(d->mSink);
-  delete d;
-
-  // We added a reference when the loader was created. This
-  // release should destroy it.
-  NS_RELEASE(aLoader);
-}
 
 #ifdef XSL
 nsresult
@@ -1139,7 +1079,84 @@ ParseProcessingInstruction(const nsString& aText,
   }
 }
 
+static void SplitMimeType(const nsString& aValue, nsString& aType, nsString& aParams)
+{
+  aType.Truncate();
+  aParams.Truncate();
+  PRInt32 semiIndex = aValue.Find(PRUnichar(';'));
+  if (-1 != semiIndex) {
+    aValue.Left(aType, semiIndex);
+    aValue.Right(aParams, (aValue.Length() - semiIndex) - 1);
+  }
+  else {
+    aType = aValue;
+  }
+}
+
+
+
 #ifndef XSL
+nsresult
+nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
+                                   const nsString& aHref, PRBool aAlternate,
+                                   const nsString& aTitle, const nsString& aType,
+                                   const nsString& aMedia)
+{
+  nsresult result = NS_OK;
+
+  if (aAlternate) { // if alternate, does it have title?
+    if (0 == aTitle.Length()) { // alternates must have title
+      return NS_OK; //return without error, for now
+    }
+  }
+
+  nsAutoString  mimeType;
+  nsAutoString  params;
+  SplitMimeType(aType, mimeType, params);
+
+  if ((0 == mimeType.Length()) || mimeType.EqualsIgnoreCase("text/css")) {
+    nsIURL* url = nsnull;
+    nsIURLGroup* urlGroup = nsnull;
+    mDocumentBaseURL->GetURLGroup(&urlGroup);
+    if (urlGroup) {
+      result = urlGroup->CreateURL(&url, mDocumentBaseURL, aHref, nsnull);
+      NS_RELEASE(urlGroup);
+    }
+    else {
+      result = NS_NewURL(&url, aHref, mDocumentBaseURL);
+    }
+    if (NS_OK != result) {
+      return NS_OK; // The URL is bad, move along, don't propogate the error (for now)
+    }
+
+    PRBool blockParser = PR_FALSE;
+    if (! aAlternate) {
+      if (0 < aTitle.Length()) {  // possibly preferred sheet
+        if (0 == mPreferredStyle.Length()) {
+          mPreferredStyle = aTitle;
+          mCSSLoader->SetPreferredSheet(aTitle);
+          mDocument->SetHeaderData(nsHTMLAtoms::headerDefaultStyle, aTitle);
+        }
+      }
+      else {  // persistent sheet, block
+        blockParser = PR_TRUE;
+      }
+    }
+
+    PRBool doneLoading;
+    result = mCSSLoader->LoadStyleLink(aElement, url, aTitle, aMedia,
+                                       mStyleSheetCount++, 
+                                      ((blockParser) ? mParser : nsnull),
+                                      doneLoading);
+    NS_RELEASE(url);
+    if (NS_SUCCEEDED(result) && blockParser && (! doneLoading)) {
+      result = NS_ERROR_HTMLPARSER_BLOCK;
+    }
+  }
+  return result;
+}
+
+
 NS_IMETHODIMP 
 nsXMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
 {
@@ -1158,7 +1175,7 @@ nsXMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
   }
 
   if (NS_OK == result) {
-    nsAutoString type, href, title, media;
+    nsAutoString type, href, title, media, alternate;
     
     // If it's a stylesheet PI...
     if (target.EqualsIgnoreCase(kStyleSheetPI)) {
@@ -1182,52 +1199,14 @@ nsXMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
       if (NS_OK != result) {
         return result;
       }
-      
-      if (type.Equals(kCSSType)) {
-        // Use the SRC attribute value to load the URL
-        nsIURL* url = nsnull;
-        nsAutoString absURL;
-        nsIURL* docURL = mDocument->GetDocumentURL();
-        nsIURLGroup* urlGroup; 
-        
-        result = docURL->GetURLGroup(&urlGroup);
-        
-        if ((NS_OK == result) && urlGroup) {
-          result = urlGroup->CreateURL(&url, docURL, href, nsnull);
-          NS_RELEASE(urlGroup);
-        }
-        else {
-          result = NS_NewURL(&url, absURL);
-        }
-        NS_RELEASE(docURL);
-        if (NS_OK != result) {
-          return result;
-        }
-        
-        nsAsyncStyleProcessingDataXML* d = new nsAsyncStyleProcessingDataXML;
-        if (nsnull == d) {
-          return NS_ERROR_OUT_OF_MEMORY;
-        }
-        d->mTitle=title;
-        d->mMedia=media;
-        d->mIsActive = PR_TRUE;
-        d->mURL = url;
-        NS_ADDREF(url);
-        // XXX Need to create PI node
-        d->mElement = nsnull;
-        d->mSink = this;
-        NS_ADDREF(this);
-        
-        nsIUnicharStreamLoader* loader;
-        result = NS_NewUnicharStreamLoader(&loader,
-                                           url, 
-                                           (nsStreamCompleteFunc)nsDoneLoadingStyle, 
-                                           (void *)d);
-        NS_RELEASE(url);
-        if (NS_OK == result) {
-          result = NS_ERROR_HTMLPARSER_BLOCK;
-        }
+      media.ToLowerCase();
+      result = GetQuotedAttributeValue(text, "alternate", alternate);
+      if (NS_OK != result) {
+        return result;
       }
+      
+      result = ProcessStyleLink(node, href, alternate.Equals("yes"),
+                                title, type, media);
     }
   }
 
@@ -1717,7 +1696,11 @@ nsXMLContentSink::ProcessStartSCRIPTTag(const nsIParserNode& aNode)
       nsAutoString  type;
       
       GetAttributeValueAt(aNode, i, type);
-      isJavaScript = type.EqualsIgnoreCase("text/javascript");
+      nsAutoString  mimeType;
+      nsAutoString  params;
+      SplitMimeType(type, mimeType, params);
+
+      isJavaScript = mimeType.EqualsIgnoreCase("text/javascript");
     }
     else if (key.EqualsIgnoreCase("language")) {
       nsAutoString  lang;
