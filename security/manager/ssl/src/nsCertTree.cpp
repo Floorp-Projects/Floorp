@@ -219,11 +219,10 @@ nsCertTree::GetThreadDescAtIndex(PRInt32 index)
     if (index == idx) {
       return &mTreeArray[i];
     }
-    if (mTreeArray[i].open == PR_FALSE) {
-      idx++;
-    } else {
-      idx += mTreeArray[i].numChildren + 1;
+    if (mTreeArray[i].open) {
+      idx += mTreeArray[i].numChildren;
     }
+    idx++;
     if (idx > index) break;
   }
   return nsnull;
@@ -413,11 +412,13 @@ nsCertTree::UpdateUIContents()
     }
     orgCert = nextCert;
   }
-  mNumRows = count + mNumOrgs;
   if (mTree) {
-    mTree->RowCountChanged(0, mNumRows);
-    mTree->Invalidate();
+    mTree->BeginUpdateBatch();
+    mTree->RowCountChanged(0, -mNumRows);
   }
+  mNumRows = count + mNumOrgs;
+  if (mTree)
+    mTree->EndUpdateBatch();
   return NS_OK;
 }
 
@@ -480,11 +481,10 @@ nsCertTree::GetRowCount(PRInt32 *aRowCount)
 {
   PRUint32 count = 0;
   for (PRInt32 i=0; i<mNumOrgs; i++) {
-    if (mTreeArray[i].open == PR_TRUE) {
-      count += mTreeArray[i].numChildren + 1;
-    } else {
-      count++;
+    if (mTreeArray[i].open) {
+      count += mTreeArray[i].numChildren;
     }
+    count++;
   }
   *aRowCount = count;
   return NS_OK;
@@ -553,7 +553,7 @@ NS_IMETHODIMP
 nsCertTree::IsContainerOpen(PRInt32 index, PRBool *_retval)
 {
   treeArrayEl *el = GetThreadDescAtIndex(index);
-  if (el && el->open == PR_TRUE) {
+  if (el && el->open) {
     *_retval = PR_TRUE;
   } else {
     *_retval = PR_FALSE;
@@ -582,14 +582,14 @@ NS_IMETHODIMP
 nsCertTree::GetParentIndex(PRInt32 rowIndex, PRInt32 *_retval)
 {
   int i, idx = 0;
-  for (i=0; i<mNumOrgs; i++) {
-    if (rowIndex == idx) break; // index is for thread
-    if (rowIndex < idx + mTreeArray[i].numChildren + 1) {
-      *_retval = idx;
-      return NS_OK;
+  for (i = 0; i < mNumOrgs && idx < rowIndex; i++, idx++) {
+    if (mTreeArray[i].open) {
+      if (rowIndex <= idx + mTreeArray[i].numChildren) {
+        *_retval = idx;
+        return NS_OK;
+      }
+      idx += mTreeArray[i].numChildren;
     }
-    idx += mTreeArray[i].numChildren + 1;
-    if (idx > rowIndex) break;
   }
   *_retval = -1;
   return NS_OK;
@@ -600,6 +600,16 @@ NS_IMETHODIMP
 nsCertTree::HasNextSibling(PRInt32 rowIndex, PRInt32 afterIndex, 
                                PRBool *_retval)
 {
+  int i, idx = 0;
+  for (i = 0; i < mNumOrgs && idx <= rowIndex; i++, idx++) {
+    if (mTreeArray[i].open) {
+      idx += mTreeArray[i].numChildren;
+      if (afterIndex <= idx) {
+        *_retval = afterIndex < idx;
+        return NS_OK;
+      }
+    }
+  }
   *_retval = PR_FALSE;
   return NS_OK;
 }
