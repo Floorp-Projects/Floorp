@@ -51,6 +51,10 @@
 #include "nsIMsgFilter.h"
 #include "nsIMsgFilterService.h"
 #include "nsImapMoveCoalescer.h"
+#include "nsIPrompt.h"
+#include "nsINetSupportDialogService.h"
+
+static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kMsgFilterServiceCID, NS_MSGFILTERSERVICE_CID);
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
@@ -831,7 +835,17 @@ nsImapMailFolder::MarkMessagesRead(nsISupportsArray *messages, PRBool markRead)
 NS_IMETHODIMP
 nsImapMailFolder::MarkAllMessagesRead(void)
 {
-	return NS_ERROR_NOT_IMPLEMENTED;
+	nsresult rv = GetDatabase();
+	
+	if(NS_SUCCEEDED(rv))
+	{
+		nsMsgKeyArray thoseMarked;
+		rv = mDatabase->MarkAllRead(&thoseMarked);
+		if (NS_SUCCEEDED(rv))
+			rv = StoreImapFlags(kImapMsgSeenFlag, PR_TRUE, thoseMarked);
+	}
+
+	return rv;
 }
 
 
@@ -2852,7 +2866,47 @@ NS_IMETHODIMP
 nsImapMailFolder::GetPasswordForUser(nsIImapProtocol* aProtocol,
                                      const char* userName)
 {
-    return NS_ERROR_FAILURE;
+	nsresult rv = NS_OK;
+	NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
+
+	nsCOMPtr<nsIMsgIncomingServer> server;
+	if (NS_SUCCEEDED(rv))
+		rv = GetServer(getter_AddRefs(server));
+ 
+	if (NS_SUCCEEDED(rv))
+	{
+		PRUnichar * uniPassword;
+		PRBool okayValue = PR_TRUE;
+		char * promptText = nsnull;
+	
+		PRUnichar *passwordPrompt = IMAPGetStringByID(IMAP_ENTER_PASSWORD_PROMPT);
+        char *hostName = nsnull;
+        GetHostname(&hostName);
+
+		// lossy, but we need to use PR_smprintf
+		nsCString cStrPasswordPrompt(passwordPrompt);
+		if (hostName)
+			promptText = PR_smprintf(cStrPasswordPrompt, userName, (const char *) hostName);
+		else
+			promptText = PL_strdup("Enter your password here: ");
+
+        PR_FREEIF(hostName);
+		dialog->PromptPassword(nsAutoString(promptText).GetUnicode(), &uniPassword, &okayValue);
+		PR_FREEIF(promptText);
+		
+		if (!okayValue) // if the user pressed cancel, just return NULL;
+			return nsnull;
+
+		nsCAutoString password = uniPassword;
+
+		// passwords will always be ascii, right?
+
+		// this ugly cast is ok...there is a bug in the idl compiler that is preventing 
+		// the char * argument to SetPassword from being const.
+		server->SetPassword((char *) password.GetBuffer());
+	}
+	return rv;
+
 }
 
 NS_IMETHODIMP
@@ -2879,31 +2933,56 @@ nsImapMailFolder::LiteSelectUIDValidity(nsIImapProtocol* aProtocol,
 
 NS_IMETHODIMP
 nsImapMailFolder::FEAlert(nsIImapProtocol* aProtocol,
-                          const char* aString)
+                          const PRUnichar* aString)
 {
-    return NS_ERROR_FAILURE;
+	nsresult rv;
+	NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
+
+	rv = dialog->Alert(nsAutoString(aString).GetUnicode());
+    return rv;
 }
 
 NS_IMETHODIMP
 nsImapMailFolder::FEAlertFromServer(nsIImapProtocol* aProtocol,
                                     const char* aString)
 {
-    return NS_ERROR_FAILURE;
+	nsresult rv = NS_OK;
+	NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
+
+	const char *serverSaid = aString;
+	if (serverSaid)
+	{
+		// skip over the first two words, I guess.
+		char *whereRealMessage = PL_strchr(serverSaid, ' ');
+		if (whereRealMessage)
+			whereRealMessage++;
+		if (whereRealMessage)
+			whereRealMessage = PL_strchr(whereRealMessage, ' ');
+		if (whereRealMessage)
+			whereRealMessage++;
+
+		PRUnichar *serverSaidPrefix = IMAPGetStringByID(IMAP_SERVER_SAID);
+		if (serverSaidPrefix)
+		{
+			nsAutoString message(serverSaidPrefix);
+			message += whereRealMessage ? whereRealMessage : serverSaid;
+			rv = dialog->Alert(message.GetUnicode());
+
+			PR_Free(serverSaidPrefix);
+		}
+	}
+
+    return rv;
 }
 
 NS_IMETHODIMP
 nsImapMailFolder::ProgressStatus(nsIImapProtocol* aProtocol,
-                                 PRUint32 aMsgId)
+                                 PRUint32 aMsgId, const char *extraInfo)
 {
 	PRUnichar *progressMsg = IMAPGetStringByID(aMsgId);
 
 	if (aProtocol && progressMsg)
 	{
-#ifdef DEBUG_bienvenu
-	nsCString cString;
-	cString = progressMsg;
-	printf("status: %s\n", cString.GetBuffer());
-#endif
 		nsCOMPtr <nsIImapUrl> imapUrl;
 		aProtocol->GetRunningImapURL(getter_AddRefs(imapUrl));
 		if (imapUrl)
@@ -2914,6 +2993,20 @@ nsImapMailFolder::ProgressStatus(nsIImapProtocol* aProtocol,
 				nsCOMPtr <nsIMsgStatusFeedback> feedback;
 				mailnewsUrl->GetStatusFeedback(getter_AddRefs(feedback));
 
+				if (extraInfo)
+				{
+					// lossy, but what can we do?
+					nsCAutoString cProgressString(progressMsg);
+
+					char *printfString = PR_smprintf(cProgressString, extraInfo);
+					if (printfString)
+					{
+						nsString formattedString(printfString);
+						PR_FREEIF(progressMsg);
+						progressMsg = nsCRT::strdup(formattedString.GetUnicode());	
+
+					}
+				}
 				if (feedback)
 					feedback->ShowStatusString(progressMsg);
 			}
@@ -2928,7 +3021,7 @@ NS_IMETHODIMP
 nsImapMailFolder::PercentProgress(nsIImapProtocol* aProtocol,
                                   ProgressInfo* aInfo)
 {
-#ifdef DEBUG_bienvenu
+#ifdef DEBUG_bienvenu1
 	nsCString message(aInfo->message);
 	printf("progress: %d %s\n", aInfo->percent, message.GetBuffer());
 #endif

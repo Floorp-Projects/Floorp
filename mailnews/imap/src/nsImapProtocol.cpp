@@ -51,6 +51,7 @@ PRLogModuleInfo *IMAP;
 #include "nsIStreamListener.h"
 #include "nsIMsgIncomingServer.h"
 #include "nsIImapIncomingServer.h"
+#include "nsIPref.h"
 
 // for temp message hack
 #if defined(XP_UNIX) || defined(XP_BEOS)
@@ -72,6 +73,7 @@ static NS_DEFINE_IID(kIWebShell, NS_IWEB_SHELL_IID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kCImapService, NS_IMAPSERVICE_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 #define OUTPUT_BUFFER_SIZE (4096*2) // mscott - i should be able to remove this if I can use nsMsgLineBuffer???
 
@@ -275,7 +277,7 @@ nsresult nsImapProtocol::Initialize(nsIImapHostSessionList * aHostSessionList, n
 		SetFlag(IMAP_FIRST_PASS_IN_THREAD);
         m_thread = PR_CreateThread(PR_USER_THREAD, ImapThreadMain, (void*)
                                    this, PR_PRIORITY_NORMAL, PR_LOCAL_THREAD,
-                                   PR_JOINABLE_THREAD, 0);
+                                   PR_UNJOINABLE_THREAD, 0);
         NS_ASSERTION(m_thread, "Unable to create imap thread.\n");
     }
 	return NS_OK;
@@ -680,7 +682,12 @@ nsImapProtocol::ImapThreadMainLoop()
 
         PR_EnterMonitor(m_urlReadyToRunMonitor);
 
-        PR_Wait(m_urlReadyToRunMonitor, sleepTime);
+		PRStatus err;
+
+        err = PR_Wait(m_urlReadyToRunMonitor, sleepTime);
+
+        if (err == PR_FAILURE && PR_PENDING_INTERRUPT_ERROR == PR_GetError()) 
+			break;
 
 		if (m_nextUrlReadyToRun && m_runningUrl)
 			ProcessCurrentURL();
@@ -849,12 +856,9 @@ void nsImapProtocol::ProcessCurrentURL()
 		if ( !(GetServerStateParser().GetCapabilityFlag() & (kIMAP4Capability | kIMAP4rev1Capability | 
 					 kIMAP4other) ) )
 		{
-#ifdef UNREADY_CODE
-			AlertUserEvent_UsingId(MK_MSG_IMAP_SERVER_NOT_IMAP4);
+			AlertUserEventUsingId(IMAP_SERVER_NOT_IMAP4);
 
-			SetCurrentEntryStatus(-1);			
 			SetConnectionStatus(-1);        // stop netlib
-#endif
 		}
 		else
 		{
@@ -884,10 +888,6 @@ void nsImapProtocol::ProcessCurrentURL()
 		// The URL has now been processed
         if (!logonFailed && GetConnectionStatus() < 0)
             HandleCurrentUrlError();
-#ifdef UNREADY_CODE
-		if (GetServerStateParser().LastCommandSuccessful())
-			SetCurrentEntryStatus(0);
-#endif
         if (DeathSignalReceived())
         {
            	HandleCurrentUrlError();
@@ -3674,15 +3674,21 @@ void
 nsImapProtocol::AlertUserEventUsingId(PRUint32 aMessageId)
 {
     if (m_imapMiscellaneousSink)
-        m_imapMiscellaneousSink->FEAlert(this, 
-                          "**** Fix me with real string ****\r\n");
+	{
+		PRUnichar *progressString = IMAPGetStringByID(aMessageId);
+
+        m_imapMiscellaneousSink->FEAlert(this, progressString);
+	}
 }
 
 void
 nsImapProtocol::AlertUserEvent(const char * message)
 {
     if (m_imapMiscellaneousSink)
-        m_imapMiscellaneousSink->FEAlert(this, message);
+	{
+		nsAutoString uniString(message);
+        m_imapMiscellaneousSink->FEAlert(this, uniString.GetUnicode());
+	}
 }
 
 void
@@ -3726,7 +3732,7 @@ nsImapProtocol::ProgressEventFunctionUsingId(PRUint32 aMsgId)
 {
     if (m_imapMiscellaneousSink)
 	{
-        m_imapMiscellaneousSink->ProgressStatus(this, aMsgId);
+        m_imapMiscellaneousSink->ProgressStatus(this, aMsgId, nsnull);
 		// who's going to free this? Does ProgressStatus complete synchronously?
 	}
 }
@@ -3737,10 +3743,9 @@ nsImapProtocol::ProgressEventFunctionUsingIdWithString(PRUint32 aMsgId, const
 {
     if (m_imapMiscellaneousSink)
 	{
-//		PRUnichar *progressMsg = IMAPGetStringByID(aMsgId);
 
 		// ### FIXME - need to format this string, and pass it status. Or, invent a new interface
-        m_imapMiscellaneousSink->ProgressStatus(this, aMsgId);
+        m_imapMiscellaneousSink->ProgressStatus(this, aMsgId, aExtraInfo);
 	}
 }
 
@@ -5863,6 +5868,12 @@ PRBool nsImapProtocol::TryToLogon()
 
 	do
 	{
+		if (userName && !password && m_imapMiscellaneousSink)
+		{
+			m_imapMiscellaneousSink->GetPasswordForUser(this, userName);
+			WaitForFEEventCompletion();
+			rv = m_server->GetPassword(&password);
+		}
 	    PRBool imapPasswordIsNew = PR_FALSE;
 
 	    if (userName && password)
@@ -5871,9 +5882,10 @@ PRBool nsImapProtocol::TryToLogon()
 
 			PRBool lastReportingErrors = GetServerStateParser().GetReportingErrors();
 			GetServerStateParser().SetReportingErrors(PR_FALSE);	// turn off errors - we'll put up our own.
-#ifdef UNREADY_CODE
-			PREF_GetBoolPref("mail.auth_login", &prefBool);
-#endif
+		    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+		    if (NS_SUCCEEDED(rv) && prefs) 
+				prefs->GetBoolPref("mail.auth_login", &prefBool);
+
 			if (prefBool) 
 			{
 				if (GetServerStateParser().GetCapabilityFlag() == kCapabilityUndefined)
@@ -5902,21 +5914,14 @@ PRBool nsImapProtocol::TryToLogon()
 	            // if we failed because of an interrupt, then do not bother the user
 	            if (!DeathSignalReceived())
 	            {
-#ifdef UNREADY_CODE
-					AlertUserEvent_UsingId(XP_MSG_IMAP_LOGIN_FAILED);
-#endif
+					AlertUserEventUsingId(IMAP_LOGIN_FAILED);
 					// if we did get a password then remember so we don't have to prompt
 					// the user for it again
-		            if (password != nsnull)
-		            {
-						m_hostSessionList->SetPasswordForHost(GetImapHostName(), 
-															  GetImapUserName(), password);
-						PR_FREEIF(password);
-		            }
-#ifdef UNREADY_CODE
-		            fCurrentBiffState = MSG_BIFF_Unknown;
-		            SendSetBiffIndicatorEvent(fCurrentBiffState);
-#endif
+					m_hostSessionList->SetPasswordForHost(GetImapHostName(), 
+															  GetImapUserName(), nsnull);
+					PR_FREEIF(password);
+		            m_currentBiffState = nsMsgBiffState_Unknown;
+		            SendSetBiffIndicatorEvent(m_currentBiffState);
 				} // if we didn't receive the death signal...
 			} // if login failed
 	        else	// login succeeded
@@ -5984,10 +5989,8 @@ PRBool nsImapProtocol::TryToLogon()
 
 	if (!loginSucceeded)
 	{
-#ifdef UNREADY_CODE
-		fCurrentBiffState = MSG_BIFF_Unknown;
-		SendSetBiffIndicatorEvent(fCurrentBiffState);
-#endif
+		m_currentBiffState = nsMsgBiffState_Unknown;
+		SendSetBiffIndicatorEvent(m_currentBiffState);
 		HandleCurrentUrlError();
 		SetConnectionStatus(-1);        // stop netlib
 	}

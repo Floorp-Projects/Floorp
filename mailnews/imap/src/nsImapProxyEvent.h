@@ -228,11 +228,11 @@ public:
     NS_IMETHOD LiteSelectUIDValidity(nsIImapProtocol* aProtocol,
                                      PRUint32 uidValidity);
     NS_IMETHOD FEAlert(nsIImapProtocol* aProtocol,
-                       const char* aString);
+                       const PRUnichar* aString);
     NS_IMETHOD FEAlertFromServer(nsIImapProtocol* aProtocol,
                                  const char* aString);
     NS_IMETHOD ProgressStatus(nsIImapProtocol* aProtocol,
-                              PRUint32 statusMsgId);
+                              PRUint32 statusMsgId, const char *extraInfo);
     NS_IMETHOD PercentProgress(nsIImapProtocol* aProtocol,
                                ProgressInfo* aInfo);
     NS_IMETHOD PastPasswordCheck(nsIImapProtocol* aProtocol);
@@ -738,10 +738,10 @@ struct LiteSelectUIDValidityProxyEvent : public nsImapMiscellaneousSinkProxyEven
 struct FEAlertProxyEvent : public nsImapMiscellaneousSinkProxyEvent
 {
     FEAlertProxyEvent(nsImapMiscellaneousSinkProxy* aProxy,
-                      const char* aString);
+                      const PRUnichar* aString);
     virtual ~FEAlertProxyEvent();
     NS_IMETHOD HandleEvent();
-    char* m_alertString;
+    PRUnichar* m_alertString;
 };
 
 struct FEAlertFromServerProxyEvent : public nsImapMiscellaneousSinkProxyEvent
@@ -756,10 +756,11 @@ struct FEAlertFromServerProxyEvent : public nsImapMiscellaneousSinkProxyEvent
 struct ProgressStatusProxyEvent : public nsImapMiscellaneousSinkProxyEvent
 {
     ProgressStatusProxyEvent(nsImapMiscellaneousSinkProxy* aProxy,
-                            PRUint32 statusMsgId);
+                            PRUint32 statusMsgId, const char *extraInfo);
     virtual ~ProgressStatusProxyEvent();
     NS_IMETHOD HandleEvent();
     PRUint32 m_statusMsgId;
+	char	*m_extraInfo;
 };
 
 struct PercentProgressProxyEvent : public nsImapMiscellaneousSinkProxyEvent

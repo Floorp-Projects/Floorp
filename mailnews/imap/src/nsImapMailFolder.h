@@ -284,11 +284,11 @@ public:
 	NS_IMETHOD LiteSelectUIDValidity(nsIImapProtocol* aProtocol,
                                      PRUint32 uidValidity);
 	NS_IMETHOD FEAlert(nsIImapProtocol* aProtocol,
-                       const char* aString);
+                       const PRUnichar* aString);
 	NS_IMETHOD FEAlertFromServer(nsIImapProtocol* aProtocol,
                                  const char* aString);
 	NS_IMETHOD ProgressStatus(nsIImapProtocol* aProtocol,
-                              PRUint32 aMsgId);
+                              PRUint32 aMsgId, const char *extraInfo);
 	NS_IMETHOD PercentProgress(nsIImapProtocol* aProtocol,
                                ProgressInfo* aInfo);
 	NS_IMETHOD PastPasswordCheck(nsIImapProtocol* aProtocol);

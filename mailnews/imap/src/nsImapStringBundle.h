@@ -74,5 +74,7 @@ NS_END_EXTERN_C
 #define	IMAP_SELECTING_MAILBOX                                  5044
 #define IMAP_FOLDER_RECEIVING_MESSAGE_OF						5045
 #define IMAP_DISCOVERING_MAILBOX								5046
-
+#define IMAP_ENTER_PASSWORD_PROMPT								5047
+#define IMAP_SERVER_NOT_IMAP4									5048
+#define IMAP_SERVER_SAID										5049
 #endif /* _nsImapStringBundle_H__ */

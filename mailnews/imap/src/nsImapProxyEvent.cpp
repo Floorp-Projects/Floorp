@@ -1455,7 +1455,10 @@ nsImapMiscellaneousSinkProxy::GetPasswordForUser(nsIImapProtocol* aProtocol,
         if(nsnull == ev)
             res = NS_ERROR_OUT_OF_MEMORY;
         else
+		{
+			ev->SetNotifyCompletion(PR_TRUE);
             ev->PostEvent(m_eventQueue);
+		}
     }
     else
     {
@@ -1550,7 +1553,7 @@ nsImapMiscellaneousSinkProxy::LiteSelectUIDValidity(nsIImapProtocol* aProtocol,
 
 NS_IMETHODIMP
 nsImapMiscellaneousSinkProxy::FEAlert(nsIImapProtocol* aProtocol,
-                                  const char* aString)
+                                  const PRUnichar* aString)
 {
     nsresult res = NS_OK;
     NS_PRECONDITION (aString, "Oops... null aString");
@@ -1602,7 +1605,7 @@ nsImapMiscellaneousSinkProxy::FEAlertFromServer(nsIImapProtocol* aProtocol,
 
 NS_IMETHODIMP
 nsImapMiscellaneousSinkProxy::ProgressStatus(nsIImapProtocol* aProtocol,
-                                         PRUint32 aMsgId)
+                                         PRUint32 aMsgId, const char *extraInfo)
 {
     nsresult res = NS_OK;
     NS_ASSERTION (m_protocol == aProtocol, "Ooh ooh, wrong protocol");
@@ -1610,7 +1613,7 @@ nsImapMiscellaneousSinkProxy::ProgressStatus(nsIImapProtocol* aProtocol,
     if (PR_GetCurrentThread() == m_thread)
     {
         ProgressStatusProxyEvent *ev =
-            new ProgressStatusProxyEvent(this, aMsgId);
+            new ProgressStatusProxyEvent(this, aMsgId, extraInfo);
         if(nsnull == ev)
             res = NS_ERROR_OUT_OF_MEMORY;
         else
@@ -1618,7 +1621,7 @@ nsImapMiscellaneousSinkProxy::ProgressStatus(nsIImapProtocol* aProtocol,
     }
     else
     {
-        res = m_realImapMiscellaneousSink->ProgressStatus(aProtocol, aMsgId);
+        res = m_realImapMiscellaneousSink->ProgressStatus(aProtocol, aMsgId, extraInfo);
     }
     return res;
 }
@@ -3375,20 +3378,19 @@ LiteSelectUIDValidityProxyEvent::HandleEvent()
 }
 
 FEAlertProxyEvent::FEAlertProxyEvent(
-    nsImapMiscellaneousSinkProxy* aProxy, const char* alertString) :
+    nsImapMiscellaneousSinkProxy* aProxy, const PRUnichar* alertString) :
     nsImapMiscellaneousSinkProxyEvent(aProxy)
 {
     NS_ASSERTION (alertString, "Oops... a null alertString");
     if (alertString)
-        m_alertString = PL_strdup(alertString);
+        m_alertString = nsCRT::strdup(alertString);
     else
         m_alertString = nsnull;
 }
 
 FEAlertProxyEvent::~FEAlertProxyEvent()
 {
-    if (m_alertString)
-        PL_strfree(m_alertString);
+    PR_FREEIF(m_alertString);
 }
 
 NS_IMETHODIMP
@@ -3407,15 +3409,14 @@ FEAlertFromServerProxyEvent::FEAlertFromServerProxyEvent(
 {
     NS_ASSERTION (alertString, "Oops... a null alertString");
     if (alertString)
-        m_alertString = PL_strdup(alertString);
+        m_alertString = nsCRT::strdup(alertString);
     else
         m_alertString = nsnull;
 }
 
 FEAlertFromServerProxyEvent::~FEAlertFromServerProxyEvent()
 {
-    if (m_alertString)
-        PL_strfree(m_alertString);
+    PR_FREEIF (m_alertString);
 }
 
 NS_IMETHODIMP
@@ -3429,21 +3430,23 @@ FEAlertFromServerProxyEvent::HandleEvent()
 }
 
 ProgressStatusProxyEvent::ProgressStatusProxyEvent(
-    nsImapMiscellaneousSinkProxy* aProxy, PRUint32 aMsgId) :
+    nsImapMiscellaneousSinkProxy* aProxy, PRUint32 aMsgId, const char *extraInfo) :
     nsImapMiscellaneousSinkProxyEvent(aProxy)
 {
 	m_statusMsgId = aMsgId;
+	m_extraInfo = nsCRT::strdup(extraInfo);
 }
 
 ProgressStatusProxyEvent::~ProgressStatusProxyEvent()
 {
+	PR_FREEIF(m_extraInfo);
 }
 
 NS_IMETHODIMP
 ProgressStatusProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMiscellaneousSink->ProgressStatus(
-        m_proxy->m_protocol, m_statusMsgId);
+        m_proxy->m_protocol, m_statusMsgId, m_extraInfo);
     if (m_notifyCompletion)
         m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
