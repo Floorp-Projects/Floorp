@@ -45,7 +45,7 @@
 MODULE_PRIVATE Bool
 pacf_get_proxy_addr(MWContext *context, char *list,
 		    char **  ret_proxy_addr,
-		    u_long * ret_socks_addr,
+		    unsigned long * ret_socks_addr,
 		    short *  ret_socks_port);
 
 
