@@ -973,7 +973,7 @@ nsContentUtils::GetAncestors(nsIDOMNode* aNode,
   do {
     aArray->AppendElement(node.get());
     node->GetParentNode(getter_AddRefs(ancestor));
-    node = ancestor;
+    node.swap(ancestor);
   } while (node);
 
   return NS_OK;
@@ -1016,7 +1016,7 @@ nsContentUtils::GetAncestorsAndOffsets(nsIDOMNode* aNode,
     ancestor->IndexOf(content, offset);
     aAncestorNodes->AppendElement(ancestor.get());
     aAncestorOffsets->AppendElement(NS_INT32_TO_PTR(offset));
-    content = ancestor;
+    content.swap(ancestor);
     content->GetParent(getter_AddRefs(ancestor));
   }
 
@@ -1078,8 +1078,8 @@ nsContentUtils::GetFirstDifferentAncestors(nsIDOMNode *aNode,
       aDifferentNodes.AppendObject(aOther);
       return NS_OK;
     }
-    node = ancestor;
-  } while (ancestor);
+    node.swap(ancestor);
+  } while (node);
 
   // Insert all the ancestors of |aOther|
   nsCOMPtr<nsIDOMNode> other(aOther);
@@ -1091,8 +1091,8 @@ nsContentUtils::GetFirstDifferentAncestors(nsIDOMNode *aNode,
       aDifferentNodes.AppendObject(aNode);
       return NS_OK;
     }
-    other = ancestor;
-  } while (ancestor);
+    other.swap(ancestor);
+  } while (other);
 
   PRInt32 nodeIdx  = nodeAncestors.Count() - 1;
   PRInt32 otherIdx = otherAncestors.Count() - 1;
