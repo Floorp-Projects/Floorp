@@ -19,14 +19,15 @@ DEPTH=..\..\..
 IGNORE_MANIFEST=1
 
 
-IDLSRCS =                                         \
-			nsIMsgHost.idl            \
-			nsIMsgFolder.idl          \
-			nsIFolder.idl		  \
-			nsIFolderListener.idl	  \
+IDLSRCS =                                       \
+			nsIMsgHost.idl						\
+			nsIMsgFolder.idl					\
+			nsIFolder.idl						\
+			nsIFolderListener.idl				\
+			nsIMsgGroupRecord.idl				\
 			$(NULL)
 
-EXPORTS =                                       \
+EXPORTS =                           \
 			nsIMessenger.h			\
 			nsIMsgRFC822Parser.h    \
 			msgCore.h               \
@@ -42,10 +43,11 @@ EXPORTS =                                       \
 			nsIMsgMailNewsUrl.h		\
 			nsIUrlListenerManager.h \
 			nsIUrlListener.h		\
-			nsIFolderListener.h	\
+			nsIFolderListener.h		\
 			nsIMsgMailSession.h		\
 			nsIMsgIdentity.h		\
 			nsIDOMMsgAppCore.h		\
+			nsIMsgGroupRecord.h		\
 			$(NULL)
 
 MODULE=mailnews
