@@ -40,7 +40,8 @@ LINCS=				\
   -I..\base\src			\
   -I..\style\src		\
   -I..\..\css\layout\src	\
-  -I..\..\base\src
+  -I..\..\base\src \
+  -I..\document\src
 
 LLIBS=				\
  $(DIST)\lib\raptorhtmlbase_s.lib	\
