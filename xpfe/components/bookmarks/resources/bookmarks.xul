@@ -252,50 +252,50 @@
 
   <treecolgroup id="theColumns">
     <treecol id="Name"
-      sortSeparators="true" persist="hidden width" width="4*" flex="4"
+      sortSeparators="true" persist="hidden width sortActive sortDirection" width="4*" flex="4"
       resource="http://home.netscape.com/NC-rdf#Name"/>
 
     <splitter class="tree-splitter"/>
 
     <treecol id="URL"
-      sortSeparators="true" persist="hidden width" width="4*" flex="4"
+      sortSeparators="true" persist="hidden width sortActive sortDirection" width="4*" flex="4"
       resource="http://home.netscape.com/NC-rdf#URL"
       resource2="http://home.netscape.com/NC-rdf#Name"/>
 
     <splitter class="tree-splitter"/>
 
     <treecol id="ShortcutURL"
-      sortSeparators="true" persist="hidden width" width="1*" flex="1"
+      sortSeparators="true" persist="hidden width sortActive sortDirection" width="1*" flex="1"
       resource="http://home.netscape.com/NC-rdf#ShortcutURL"
-      resource2="http://home.netscape.com/NC-rdf#Name"/>
+      resource2="http://home.netscape.com/NC-rdf#Name" hidden="true"/>
 
     <splitter class="tree-splitter"/>
 
     <treecol id="Description"
-      sortSeparators="true" persist="hidden width" width="1*" flex="1"
+      sortSeparators="true" persist="hidden width sortActive sortDirection" width="1*" flex="1"
       resource="http://home.netscape.com/NC-rdf#Description"
-      resource2="http://home.netscape.com/NC-rdf#Name"/>
+      resource2="http://home.netscape.com/NC-rdf#Name" hidden="true"/>
 
     <splitter class="tree-splitter"/>
 
     <treecol id="LastVisitDate"
-      sortSeparators="true" persist="hidden width" width="1*" flex="1"
+      sortSeparators="true" persist="hidden width sortActive sortDirection" width="1*" flex="1"
       resource="http://home.netscape.com/WEB-rdf#LastVisitDate"
-      resource2="http://home.netscape.com/NC-rdf#Name"/>
+      resource2="http://home.netscape.com/NC-rdf#Name" hidden="true"/>
 
     <splitter class="tree-splitter"/>
 
     <treecol id="BookmarkAddDate"
-      sortSeparators="true" persist="hidden width" width="1*" flex="1"
+      sortSeparators="true" persist="hidden width sortActive sortDirection" width="1*" flex="1"
       resource="http://home.netscape.com/NC-rdf#BookmarkAddDate"
-      resource2="http://home.netscape.com/NC-rdf#Name"/>
+      resource2="http://home.netscape.com/NC-rdf#Name" hidden="true"/>
 
     <splitter class="tree-splitter"/>
 
     <treecol id="LastModifiedDate"
-      sortSeparators="true" persist="hidden width" width="1*" flex="1"
+      sortSeparators="true" persist="hidden width sortActive sortDirection" width="1*" flex="1"
       resource="http://home.netscape.com/WEB-rdf#LastModifiedDate"
-      resource2="http://home.netscape.com/NC-rdf#Name"/>
+      resource2="http://home.netscape.com/NC-rdf#Name" hidden="true"/>
     <treecol persist="width" fixed="true" width="14" id="PopupColumn"/>
   </treecolgroup>
 
@@ -316,19 +316,19 @@
       <treecell class="treecell-header sortDirectionIndicator"
         value="&tree.header.description.label;" 
         onclick="return TriStateColumnSort('Description');"
-        observes="Description" />
+        observes="Description"/>
       <treecell class="treecell-header sortDirectionIndicator"
         value="&tree.header.lastvisit.label;"
         onclick="return TriStateColumnSort('LastVisitDate');"
-        observes="LastVisitDate" />
+        observes="LastVisitDate"/>
       <treecell class="treecell-header sortDirectionIndicator"
         value="&tree.header.addedon.label;"
         onclick="return TriStateColumnSort('BookmarkAddDate');"
-        observes="BookmarkAddDate" />
+        observes="BookmarkAddDate"/>
       <treecell class="treecell-header sortDirectionIndicator"
         value="&tree.header.lastmod.label;" 
         onclick="return TriStateColumnSort('LastModifiedDate');" 
-        observes="LastModifiedDate" />
+        observes="LastModifiedDate"/>
       <treecell class="treecell-header" allowevents="true" id="popupCell">
         <menu>
           <image class="treecell-popup-icon"/>

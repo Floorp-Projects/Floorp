@@ -32,6 +32,8 @@ function Init() {
     var children = document.getElementById('treechildren-bookmarks');
     tree.selectItem(children.firstChild);
     tree.focus();
+
+    RefreshSort();
 }
 
 var BookmarksController = {
