@@ -150,6 +150,7 @@ public:
   nsFontGTK*  TryNodes(nsAWritableCString &aFFREName, PRUnichar aChar);
   nsFontGTK*  TryLangGroup(nsIAtom* aLangGroup, nsCString* aName, PRUnichar aChar);
 
+  nsFontGTK*  AddToLoadedFontsList(nsFontGTK* aFont);
   nsFontGTK*  PickASizeAndLoad(nsFontStretch* aStretch,
                                nsFontCharSetInfo* aCharSet, 
                                PRUnichar aChar,
@@ -204,6 +205,7 @@ protected:
   PRUint16            mPixelSize;
   PRUint8             mStretchIndex;
   PRUint8             mStyleIndex;
+  void                *mDocConverterType;
 };
 
 class nsFontEnumeratorGTK : public nsIFontEnumerator
