@@ -55,3 +55,15 @@ US.jar:
     locale/US/communicator-region/region.dtd          	(resources/locale/en-US/region.dtd)
     locale/US/communicator-region/region.properties     (resources/locale/en-US/region.properties)
     locale/US/communicator-region/taskbar.rdf           (resources/locale/en-US/taskbar.rdf) 
+
+en-win.jar:
+    locale/en-US/communicator-platform/contents.rdf		(resources/locale/en-US/win/contents-platform.rdf)
+    locale/en-US/communicator-platform/platformCommunicatorOverlay.dtd (resources/locale/en-US/win/platformCommunicatorOverlay.dtd)
+
+en-unix.jar:
+    locale/en-US/communicator-platform/contents.rdf	(resources/locale/en-US/unix/contents-platform.rdf)
+    locale/en-US/communicator-platform/platformCommunicatorOverlay.dtd (resources/locale/en-US/unix/platformCommunicatorOverlay.dtd)
+
+en-mac.jar:
+    locale/en-US/communicator-platform/contents.rdf		(resources/locale/en-US/mac/contents-platform.rdf)
+    locale/en-US/communicator-platform/platformCommunicatorOverlay.dtd (resources/locale/en-US/mac/platformCommunicatorOverlay.dtd)
