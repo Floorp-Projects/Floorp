@@ -944,9 +944,7 @@ nsHTMLToTXTSinkStream::AddToLine(const nsString &linefragment)
   //  Wrap?
   if(mWrapColumn &&
      ((mFlags & nsIDocumentEncoder::OutputFormatted) ||
-      (mFlags & nsIDocumentEncoder::OutputWrap)) &&
-     (mCurrentLine[0] != '>'
-      || (mFlags & nsIDocumentEncoder::OutputFormatFlowed)))
+      (mFlags & nsIDocumentEncoder::OutputWrap)))
   {
     // Yes, wrap!
     // The "+4" is to avoid wrap lines that only should be a couple
