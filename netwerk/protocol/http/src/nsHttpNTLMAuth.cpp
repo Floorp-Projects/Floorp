@@ -205,6 +205,7 @@ NS_IMPL_ISUPPORTS1(nsHttpNTLMAuth, nsIHttpAuthenticator);
 NS_IMETHODIMP
 nsHttpNTLMAuth::ChallengeReceived(nsIHttpChannel *channel,
                                   const char     *challenge,
+                                  PRBool          isProxyAuth,
                                   nsISupports   **sessionState,
                                   nsISupports   **continuationState,
                                   PRBool         *identityInvalid)
@@ -234,8 +235,9 @@ nsHttpNTLMAuth::ChallengeReceived(nsIHttpChannel *channel,
 }
 
 NS_IMETHODIMP
-nsHttpNTLMAuth::GenerateCredentials(nsIHttpChannel   *httpChannel,
+nsHttpNTLMAuth::GenerateCredentials(nsIHttpChannel  *httpChannel,
                                     const char      *challenge,
+                                    PRBool           isProxyAuth,
                                     const PRUnichar *domain,
                                     const PRUnichar *user,
                                     const PRUnichar *pass,
