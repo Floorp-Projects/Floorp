@@ -1147,6 +1147,8 @@ fe_OwnSelection (MWContext *context, Time time, Boolean clip_p)
 		fe_OwnPrimarySelection(mainw, time, 
 							   text, NULL, NULL, 0, context);
 	}
+
+        if (text) XP_FREE(text);
 }
 
 void
