@@ -24,12 +24,16 @@
 // Local Includes
 #include "CWebBrowserChrome.h"
 #include "CBrowserWindow.h"
+#include "CBrowserShell.h"
 
 #include "nsIGenericFactory.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
 #include "nsIURI.h"
 #include "nsIWebProgress.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIRequest.h"
+#include "nsIChannel.h"
 
 #include "UMacUnicode.h"
 #include "ApplIDs.h"
@@ -43,19 +47,30 @@
 
 // Interfaces needed to be included
 
-// CIDs
+// Constants
+const PRInt32     kGrowIconSize = 15;
+
+// Static Variables
+vector<CWebBrowserChrome*> CWebBrowserChrome::mgBrowserList;
+
 
 //*****************************************************************************
 //***    CWebBrowserChrome: Object Management
 //*****************************************************************************
 
-CWebBrowserChrome::CWebBrowserChrome() : mBrowserWindow(nsnull)
+CWebBrowserChrome::CWebBrowserChrome() :
+   mBrowserWindow(nsnull), mBrowserShell(nsnull)
 {
 	NS_INIT_REFCNT();
+	
+	mgBrowserList.push_back(this);
 }
 
 CWebBrowserChrome::~CWebBrowserChrome()
 {
+  vector<CWebBrowserChrome*>::iterator  iter = find(mgBrowserList.begin(), mgBrowserList.end(), this);
+  if (iter != mgBrowserList.end())
+    mgBrowserList.erase(iter);
 }
 
 //*****************************************************************************
@@ -113,15 +128,18 @@ NS_IMETHODIMP CWebBrowserChrome::SetOverLink(const PRUnichar* aLink)
 NS_IMETHODIMP CWebBrowserChrome::GetWebBrowser(nsIWebBrowser** aWebBrowser)
 {
    NS_ENSURE_ARG_POINTER(aWebBrowser);
+   NS_ENSURE_TRUE(mBrowserShell, NS_ERROR_NOT_INITIALIZED);
 
-   *aWebBrowser = mWebBrowser;
-   NS_IF_ADDREF(*aWebBrowser);
+   mBrowserShell->GetWebBrowser(aWebBrowser);
    return NS_OK;
 }
 
 NS_IMETHODIMP CWebBrowserChrome::SetWebBrowser(nsIWebBrowser* aWebBrowser)
 {
-   mWebBrowser = aWebBrowser;
+   NS_ENSURE_ARG(aWebBrowser);   // Passing nsnull is NOT OK
+   NS_ENSURE_TRUE(mBrowserShell, NS_ERROR_NOT_INITIALIZED);
+
+   mBrowserShell->SetWebBrowser(aWebBrowser);
    return NS_OK;
 }
 
@@ -138,24 +156,65 @@ NS_IMETHODIMP CWebBrowserChrome::SetChromeMask(PRUint32 aChromeMask)
 }
 
 
-NS_IMETHODIMP CWebBrowserChrome::GetNewBrowser(PRUint32 chromeMask, nsIWebBrowser **webBrowser)
+NS_IMETHODIMP CWebBrowserChrome::GetNewBrowser(PRUint32 chromeMask, nsIWebBrowser **aWebBrowser)
 {
-   NS_ERROR("Haven't Implemented this yet");
-   return NS_ERROR_FAILURE;
+   NS_ENSURE_ARG_POINTER(aWebBrowser);
+   *aWebBrowser = nsnull;
+
+   // Note: For now, until we can create a window with specific chrome flags, this will
+   // put up a plain window without navigation controls or location text. This is
+   // most likely being used to pop up an add.
+   
+   CBrowserWindow	*theWindow;
+   try
+   {
+      // CreateWindow can throw an we're being called from mozilla, so we need to catch
+      theWindow = dynamic_cast<CBrowserWindow*>(LWindow::CreateWindow(wind_PlainBrowserWindow, LCommander::GetTopCommander()));
+   }
+   catch (...)
+   {
+      theWindow = nsnull;
+   }
+   NS_ENSURE_TRUE(theWindow, NS_ERROR_FAILURE);
+   CBrowserShell *aBrowserShell = theWindow->GetBrowserShell();
+   NS_ENSURE_TRUE(aBrowserShell, NS_ERROR_FAILURE);
+   return aBrowserShell->GetWebBrowser(aWebBrowser);    
 }
 
 
 NS_IMETHODIMP CWebBrowserChrome::FindNamedBrowserItem(const PRUnichar* aName,
-                                                  	  nsIDocShellTreeItem ** aWebBrowser)
+                                                  	  nsIDocShellTreeItem ** aBrowserItem)
 {
-   NS_ERROR("Haven't Implemented this yet");
-   return NS_ERROR_FAILURE;
+   NS_ENSURE_ARG(aName);
+   NS_ENSURE_ARG_POINTER(aBrowserItem);
+   *aBrowserItem = nsnull;
+
+   vector<CWebBrowserChrome*>::iterator  iter = mgBrowserList.begin();
+   while (iter < mgBrowserList.end())
+   {
+      CWebBrowserChrome* aChrome = *iter++;
+      if (aChrome == this)
+      	continue;	// Our tree has already been searched???
+
+      NS_ENSURE_TRUE(aChrome->BrowserShell(), NS_ERROR_FAILURE);
+      nsCOMPtr<nsIWebBrowser> webBrowser;
+      aChrome->BrowserShell()->GetWebBrowser(getter_AddRefs(webBrowser));
+      nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(webBrowser));
+      NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
+
+      docShellAsItem->FindItemWithName(aName, NS_STATIC_CAST(nsIWebBrowserChrome*, this), aBrowserItem);
+ 
+      if (*aBrowserItem)
+         break;
+   }
+
+   return NS_OK; // Return OK even if we didn't find it???
 }
 
 NS_IMETHODIMP CWebBrowserChrome::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
 {
-   NS_ERROR("Haven't Implemented this yet");
-   return NS_ERROR_FAILURE;
+   mBrowserWindow->ResizeFrameTo(aCX, aCY + kGrowIconSize, true);
+   return NS_OK;
 }
 
 
@@ -186,31 +245,28 @@ CWebBrowserChrome::GetPersistence(PRBool* aPersistX, PRBool* aPersistY,
 // CWebBrowserChrome::nsIWebProgressListener
 //*****************************************************************************   
 
-NS_IMETHODIMP CWebBrowserChrome::OnProgressChange(nsIChannel *channel, PRInt32 curSelfProgress, PRInt32 maxSelfProgress, PRInt32 curTotalProgress, PRInt32 maxTotalProgress)
-{
-   return NS_OK;
-}
-
 NS_IMETHODIMP CWebBrowserChrome::OnProgressChange(nsIWebProgress *progress, nsIRequest *request,
                                                   PRInt32 curSelfProgress, PRInt32 maxSelfProgress,
                                                   PRInt32 curTotalProgress, PRInt32 maxTotalProgress)
 {
-   return NS_OK;
+	NS_ENSURE_TRUE(mBrowserWindow, NS_ERROR_NOT_INITIALIZED);
+	
+   return mBrowserWindow->OnProgressChange(progress, request,
+                                           curSelfProgress, maxSelfProgress,
+                                           curTotalProgress, maxTotalProgress);
 }
 
 NS_IMETHODIMP CWebBrowserChrome::OnStateChange(nsIWebProgress *progress, nsIRequest *request,
-                                               PRInt32 progressStateFlags nsresult status)
+                                               PRInt32 progressStateFlags, PRUint32 status)
 {
 	NS_ENSURE_TRUE(mBrowserWindow, NS_ERROR_NOT_INITIALIZED);
 	
     if (progressStateFlags & flag_is_network) {
       if (progressStateFlags & flag_start)
-        mBrowserWindow->OnStatusNetStart(channel);
+         mBrowserWindow->OnStatusNetStart(progress, request, progressStateFlags, status);
       else if (progressStateFlags & flag_stop)
-        mBrowserWindow->OnStatusNetStop(channel);
+	      mBrowserWindow->OnStatusNetStop(progress, request, progressStateFlags, status);
     }
-///	else if (progressStatusFlags & nsIWebProgress::flag_net_dns)
-///      mBrowserWindow->OnStatusDNS(channel);
 
    return NS_OK;
 }
@@ -262,57 +318,81 @@ NS_IMETHODIMP CWebBrowserChrome::Destroy()
 
 NS_IMETHODIMP CWebBrowserChrome::SetPosition(PRInt32 x, PRInt32 y)
 {
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
+	NS_ENSURE_TRUE(mBrowserWindow, NS_ERROR_NOT_INITIALIZED);
+
+   mBrowserWindow->MoveWindowTo(x, y);
    return NS_OK;
 }
 
 NS_IMETHODIMP CWebBrowserChrome::GetPosition(PRInt32* x, PRInt32* y)
 {
+	NS_ENSURE_TRUE(mBrowserWindow, NS_ERROR_NOT_INITIALIZED);
    NS_ENSURE_ARG_POINTER(x && y);
 
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
+   Rect  bounds;
+   mBrowserWindow->GetGlobalBounds(bounds);
+   *x = bounds.left;
+   *y = bounds.top;
    return NS_OK;
 }
 
 NS_IMETHODIMP CWebBrowserChrome::SetSize(PRInt32 cx, PRInt32 cy, PRBool fRepaint)
 {
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
+	NS_ENSURE_TRUE(mBrowserWindow, NS_ERROR_NOT_INITIALIZED);
+
+   mBrowserWindow->ResizeFrameTo(cx, cy + kGrowIconSize, fRepaint);
    return NS_OK;
 }
 
 NS_IMETHODIMP CWebBrowserChrome::GetSize(PRInt32* cx, PRInt32* cy)
 {
    NS_ENSURE_ARG_POINTER(cx && cy);
+	NS_ENSURE_TRUE(mBrowserWindow, NS_ERROR_NOT_INITIALIZED);
 
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
+   Rect  bounds;
+   mBrowserWindow->GetGlobalBounds(bounds);
+   *cx = bounds.right - bounds.left;
+   *cy = bounds.bottom - bounds.top - kGrowIconSize;
    return NS_OK;
 }
 
-NS_IMETHODIMP CWebBrowserChrome::SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx,
-   PRInt32 cy, PRBool fRepaint)
+NS_IMETHODIMP CWebBrowserChrome::SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy, PRBool fRepaint)
 {
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
+	NS_ENSURE_TRUE(mBrowserWindow, NS_ERROR_NOT_INITIALIZED);
+
+   Rect  bounds;
+   bounds.top = y;
+   bounds.left = x;
+   bounds.bottom = y + cy + kGrowIconSize;
+   bounds.right = x + cx;
+
+   mBrowserWindow->DoSetBounds(bounds);
    return NS_OK;
 }
 
-NS_IMETHODIMP CWebBrowserChrome::GetPositionAndSize(PRInt32* x, PRInt32* y, PRInt32* cx,
-   PRInt32* cy)
+NS_IMETHODIMP CWebBrowserChrome::GetPositionAndSize(PRInt32* x, PRInt32* y, PRInt32* cx, PRInt32* cy)
 {
-   
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
+   NS_ENSURE_ARG_POINTER(x && y && cx && cy);
+	NS_ENSURE_TRUE(mBrowserWindow, NS_ERROR_NOT_INITIALIZED);
+
+   Rect  bounds;
+   mBrowserWindow->GetGlobalBounds(bounds);
+   *x = bounds.left;
+   *y = bounds.top;
+   *cx = bounds.right - bounds.left;
+   *cy = bounds.bottom - bounds.top - kGrowIconSize;
+
    return NS_OK;
 }
 
 NS_IMETHODIMP CWebBrowserChrome::Repaint(PRBool aForce)
 {
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
+	NS_ENSURE_TRUE(mBrowserWindow, NS_ERROR_NOT_INITIALIZED);
+
+   mBrowserWindow->Refresh();
+   if (aForce)
+      mBrowserWindow->UpdatePort();
+      
    return NS_OK;
 }
 
@@ -348,16 +428,24 @@ NS_IMETHODIMP CWebBrowserChrome::SetParentNativeWindow(nativeWindow aParentNativ
 NS_IMETHODIMP CWebBrowserChrome::GetVisibility(PRBool* aVisibility)
 {
    NS_ENSURE_ARG_POINTER(aVisibility);
+	NS_ENSURE_TRUE(mBrowserWindow, NS_ERROR_NOT_INITIALIZED);
 
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
+   *aVisibility = mBrowserWindow->IsVisible();
    return NS_OK;
 }
 
 NS_IMETHODIMP CWebBrowserChrome::SetVisibility(PRBool aVisibility)
 {
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
+	NS_ENSURE_TRUE(mBrowserWindow, NS_ERROR_NOT_INITIALIZED);
+
+   if (aVisibility)
+   {
+      mBrowserWindow->Show();
+      mBrowserWindow->Select();
+   }
+   else
+      mBrowserWindow->Hide();
+      
    return NS_OK;
 }
 
@@ -431,6 +519,7 @@ NS_IMETHODIMP CWebBrowserChrome::Alert(const PRUnichar *dialogTitle, const PRUni
     msgText->SetDescriptor(aStr);
 
     theDialog->Show();
+    theDialog->Select();
 	
 	while (true)  // This is our modal dialog event loop
 	{				
@@ -457,6 +546,7 @@ NS_IMETHODIMP CWebBrowserChrome::Confirm(const PRUnichar *dialogTitle, const PRU
     msgText->SetDescriptor(aStr);
 
     theDialog->Show();
+    theDialog->Select();
 	
 	while (true)  // This is our modal dialog event loop
 	{				
@@ -495,6 +585,7 @@ NS_IMETHODIMP CWebBrowserChrome::ConfirmCheck(const PRUnichar *dialogTitle, cons
     checkBox->SetValue(*checkValue ? 1 : 0);
 
     theDialog->Show();
+    theDialog->Select();
 	
 	while (true)  // This is our modal dialog event loop
 	{				
@@ -516,7 +607,7 @@ NS_IMETHODIMP CWebBrowserChrome::ConfirmCheck(const PRUnichar *dialogTitle, cons
     return NS_OK;
 }
 
-NS_IMETHODIMP CWebBrowserChrome::Prompt(const PRUnichar *dialogTitle, const PRUnichar *text, const PRUnichar *passwordRealm, const PRUnichar *defaultText, PRUnichar **result, PRBool *_retval)
+NS_IMETHODIMP CWebBrowserChrome::Prompt(const PRUnichar *dialogTitle, const PRUnichar *text, const PRUnichar *passwordRealm, PRUint32 savePassword, const PRUnichar *defaultText, PRUnichar **result, PRBool *_retval)
 {
     NS_ENSURE_ARG_POINTER(result);
     NS_ENSURE_ARG_POINTER(_retval);
@@ -534,6 +625,7 @@ NS_IMETHODIMP CWebBrowserChrome::Prompt(const PRUnichar *dialogTitle, const PRUn
     theDialog->SetLatentSub(responseText);
     
     theDialog->Show();
+    theDialog->Select();
 	
 	while (true)  // This is our modal dialog event loop
 	{				
@@ -561,7 +653,7 @@ NS_IMETHODIMP CWebBrowserChrome::Prompt(const PRUnichar *dialogTitle, const PRUn
     return resultErr;
 }
 
-NS_IMETHODIMP CWebBrowserChrome::PromptUsernameAndPassword(const PRUnichar *dialogTitle, const PRUnichar *text, const PRUnichar *passwordRealm, PRBool persistPassword, PRUnichar **user, PRUnichar **pwd, PRBool *_retval)
+NS_IMETHODIMP CWebBrowserChrome::PromptUsernameAndPassword(const PRUnichar *dialogTitle, const PRUnichar *text, const PRUnichar *passwordRealm, PRUint32 savePassword, PRUnichar **user, PRUnichar **pwd, PRBool *_retval)
 {
     NS_ENSURE_ARG_POINTER(user);
     NS_ENSURE_ARG_POINTER(pwd);
@@ -581,6 +673,7 @@ NS_IMETHODIMP CWebBrowserChrome::PromptUsernameAndPassword(const PRUnichar *dial
  
     theDialog->SetLatentSub(userText);   
     theDialog->Show();
+    theDialog->Select();
 	
 	while (true)  // This is our modal dialog event loop
 	{				
@@ -615,7 +708,7 @@ NS_IMETHODIMP CWebBrowserChrome::PromptUsernameAndPassword(const PRUnichar *dial
     return resultErr;
 }
 
-NS_IMETHODIMP CWebBrowserChrome::PromptPassword(const PRUnichar *dialogTitle, const PRUnichar *text, const PRUnichar *passwordRealm, PRBool persistPassword, PRUnichar **pwd, PRBool *_retval)
+NS_IMETHODIMP CWebBrowserChrome::PromptPassword(const PRUnichar *dialogTitle, const PRUnichar *text, const PRUnichar *passwordRealm, PRUint32 savePassword, PRUnichar **pwd, PRBool *_retval)
 {
     NS_ENSURE_ARG_POINTER(pwd);
     NS_ENSURE_ARG_POINTER(_retval);
@@ -633,6 +726,7 @@ NS_IMETHODIMP CWebBrowserChrome::PromptPassword(const PRUnichar *dialogTitle, co
  
     theDialog->SetLatentSub(pwdText);   
     theDialog->Show();
+    theDialog->Select();
 	
 	while (true)  // This is our modal dialog event loop
 	{				
@@ -683,13 +777,13 @@ NS_IMETHODIMP CWebBrowserChrome::UniversalDialog(const PRUnichar *inTitleMessage
 // CWebBrowserChrome: Accessors
 //*****************************************************************************   
 
-void CWebBrowserChrome::BrowserWindow(CBrowserWindow* aBrowserWindow)
-{
-   mBrowserWindow = aBrowserWindow;
-}
-
-CBrowserWindow* CWebBrowserChrome::BrowserWindow()
+CBrowserWindow*& CWebBrowserChrome::BrowserWindow()
 {
    return mBrowserWindow;
+}
+
+CBrowserShell*& CWebBrowserChrome::BrowserShell()
+{
+   return mBrowserShell;
 }
 
