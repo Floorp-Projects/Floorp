@@ -22,11 +22,6 @@
 #include "nsString2.h"
 #include "nsMsgUtils.h"
 
-// we need this because of an egcs 1.0 (and possibly gcc) compiler bug
-// that doesn't allow you to call ::nsISupports::GetIID() inside of a class
-// that multiply inherits from nsISupports
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
 NS_IMPL_ISUPPORTS(nsMsgHdr, nsIMsgDBHdr::GetIID())
 
 nsMsgHdr::nsMsgHdr(nsMsgDatabase *db, nsIMdbRow *dbRow)
@@ -290,7 +285,7 @@ NS_IMETHODIMP nsMsgHdr::SetRecipientsArray(const char *names, const char *addres
 	const char *curAddress = addresses;
 	nsString	allRecipients;
 
-	for (int i = 0; i < numAddresses; i++)
+	for (PRUint32 i = 0; i < numAddresses; i++)
 	{
 		if (i > 0)
 			allRecipients += ", ";
@@ -313,9 +308,7 @@ NS_IMETHODIMP nsMsgHdr::SetRecipientsArray(const char *names, const char *addres
 		curName += strlen(curName) + 1;
 		curAddress += strlen(curAddress) + 1;
 	}
-	char *cstringRecipients = allRecipients.ToNewCString();
-	ret = SetRecipients(cstringRecipients, PR_TRUE);
-	delete [] cstringRecipients;
+	ret = SetRecipients((const char *) nsAutoCString(allRecipients), PR_TRUE);
 	return ret;
 }
 
@@ -332,7 +325,7 @@ NS_IMETHODIMP nsMsgHdr::SetCCListArray(const char *names, const char *addresses,
 	const char *curAddress = addresses;
 	nsString	allRecipients;
 
-	for (int i = 0; i < numAddresses; i++)
+	for (PRUint32 i = 0; i < numAddresses; i++)
 	{
 		if (i > 0)
 			allRecipients += ", ";
