@@ -55,6 +55,7 @@ public:
   nsHashtable *Clone();
   void Enumerate(nsHashtableEnumFunc aEnumFunc, void* closure = NULL);
   void Reset();
+  void Reset(nsHashtableEnumFunc destroyFunc, void* closure = NULL);
 };
 
 ////////////////////////////////////////////////////////////////////////////////

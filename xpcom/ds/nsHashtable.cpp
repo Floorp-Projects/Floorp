@@ -216,11 +216,30 @@ void nsHashtable::Enumerate(nsHashtableEnumFunc aEnumFunc, void* closure) {
 
 static PR_CALLBACK PRIntn _hashEnumerateRemove(PLHashEntry *he, PRIntn i, void *arg)
 {
-  return HT_ENUMERATE_REMOVE;
+  _HashEnumerateArgs* thunk = (_HashEnumerateArgs*)arg;
+  if (thunk)
+      return thunk->fn((nsHashKey *) he->key, he->value, thunk->arg)
+          ? HT_ENUMERATE_REMOVE
+          : HT_ENUMERATE_STOP;
+  else
+      return HT_ENUMERATE_REMOVE;
 }
 
 void nsHashtable::Reset() {
-  PL_HashTableEnumerateEntries(hashtable, _hashEnumerateRemove, NULL);
+  Reset(NULL);
+}
+
+void nsHashtable::Reset(nsHashtableEnumFunc destroyFunc, void* closure)
+{
+  if (destroyFunc != NULL)
+  {
+      _HashEnumerateArgs thunk;
+      thunk.fn = destroyFunc;
+      thunk.arg = closure;
+      PL_HashTableEnumerateEntries(hashtable, _hashEnumerateRemove, &thunk);
+  }
+  else
+      PL_HashTableEnumerateEntries(hashtable, _hashEnumerateRemove, NULL);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -300,7 +319,7 @@ nsObjectHashtable::nsObjectHashtable(nsHashtableCloneElementFunc cloneElementFun
 
 nsObjectHashtable::~nsObjectHashtable()
 {
-    Enumerate(mDestroyElementFun, mDestroyElementClosure);
+    Reset(mDestroyElementFun, mDestroyElementClosure);
 }
 
 PR_CALLBACK PRIntn 
