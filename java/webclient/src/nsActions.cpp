@@ -29,7 +29,9 @@
  */
 
 #include "nsActions.h"
-
+#include "nsCOMPtr.h"
+#include "nsIContentViewer.h"
+#include "nsIBaseWindow.h"
 
 
 void *          handleEvent     (PLEvent * event);
@@ -91,17 +93,26 @@ wsResizeEvent::wsResizeEvent(nsIWebShell* webShell, PRInt32 x, PRInt32 y, PRInt3
 void *
 wsResizeEvent::handleEvent ()
 {
-        if (mWebShell) {
-                
-                printf("handleEvent(resize(x = %d y = %d w = %d h = %d))\n", mLeft, mBottom, mWidth, mHeight);
-
-                nsresult rv = mWebShell->SetBounds(mLeft, mBottom, mWidth, mHeight);
-                
-                printf("result = %lx\n", rv);
-
-                return (void *) rv;
+    nsresult rv = NS_ERROR_FAILURE;
+    if (mWebShell) {
+        
+        printf("handleEvent(resize(x = %d y = %d w = %d h = %d))\n", mLeft, mBottom, mWidth, mHeight);
+        nsCOMPtr<nsIBaseWindow> baseWindow;
+        
+        rv = mWebShell->QueryInterface(NS_GET_IID(nsIBaseWindow),
+                                       getter_AddRefs(baseWindow));
+        
+        if (NS_FAILED(rv)) {
+            return NULL;
         }
-        return NULL;
+        rv = baseWindow->SetPositionAndSize(mLeft, mBottom, mWidth, mHeight, 
+                                            PR_TRUE);
+        
+        printf("result = %lx\n", rv);
+        
+        return (void *) rv;
+    }
+    return NULL;
 } // handleEvent()
 
 
@@ -188,7 +199,16 @@ wsShowEvent::handleEvent ()
                 
                 printf("handleEvent(Show))\n");
 
-                nsresult rv = mWebShell->Show();
+                nsresult rv;
+                nsCOMPtr<nsIBaseWindow> baseWindow;
+                
+                rv = mWebShell->QueryInterface(NS_GET_IID(nsIBaseWindow),
+                                               getter_AddRefs(baseWindow));
+                
+                if (NS_FAILED(rv)) {
+                    return NULL;
+                }
+                baseWindow->SetVisibility(PR_TRUE);
                 
                 printf("result = %lx\n", rv);
         }
@@ -215,8 +235,17 @@ wsHideEvent::handleEvent ()
                 
                 printf("handleEvent(Hide))\n");
 
-                nsresult rv = mWebShell->Hide();
-
+                nsresult rv;
+                nsCOMPtr<nsIBaseWindow> baseWindow;
+                
+                rv = mWebShell->QueryInterface(NS_GET_IID(nsIBaseWindow),
+                                               getter_AddRefs(baseWindow));
+                
+                if (NS_FAILED(rv)) {
+                    return NULL;
+                }
+                baseWindow->SetVisibility(PR_FALSE);
+                
                 printf("result = %lx\n", rv);
         }
         return NULL;
@@ -244,7 +273,16 @@ wsMoveToEvent::handleEvent ()
                 
                 printf("handleEvent(MoveTo(%ld, %ld))\n", mX, mY);
 
-                nsresult rv = mWebShell->MoveTo(mX, mY);
+                nsresult rv;
+                nsCOMPtr<nsIBaseWindow> baseWindow;
+                
+                rv = mWebShell->QueryInterface(NS_GET_IID(nsIBaseWindow),
+                                               getter_AddRefs(baseWindow));
+                
+                if (NS_FAILED(rv)) {
+                    return NULL;
+                }
+                rv = baseWindow->SetPosition(mX, mY);
 
                 printf("result = %lx\n", rv);
         }
@@ -270,7 +308,16 @@ wsSetFocusEvent::handleEvent ()
                 
                 printf("handleEvent(SetFocus())\n");
 
-                nsresult rv = mWebShell->SetFocus();
+                nsresult rv;
+                nsCOMPtr<nsIBaseWindow> baseWindow;
+                
+                rv = mWebShell->QueryInterface(NS_GET_IID(nsIBaseWindow),
+                                               getter_AddRefs(baseWindow));
+                
+                if (NS_FAILED(rv)) {
+                    return NULL;
+                }
+                rv = baseWindow->SetFocus();
 
                 printf("result = %lx\n", rv);
         }
@@ -325,7 +372,16 @@ wsRepaintEvent::handleEvent ()
                 
                 printf("handleEvent(Repaint(%d))\n", mForceRepaint);
 
-                nsresult rv = mWebShell->Repaint(mForceRepaint);
+                nsresult rv;
+                nsCOMPtr<nsIBaseWindow> baseWindow;
+                
+                rv = mWebShell->QueryInterface(NS_GET_IID(nsIBaseWindow),
+                                               getter_AddRefs(baseWindow));
+                
+                if (NS_FAILED(rv)) {
+                    return NULL;
+                }
+                rv = baseWindow->Repaint(mForceRepaint);
 
                 printf("result = %lx\n", rv);
         }

@@ -79,6 +79,10 @@ nsMacMessageSink gMessageSink;
 #include "DocumentObserver.h"
 #include "nsIDocumentLoader.h"
 
+#include "nsCOMPtr.h"
+#include "nsIBaseWindow.h"
+
+
 #ifdef XP_PC
 
 #define APPSHELL_DLL "appshell.dll"
@@ -338,19 +342,6 @@ EmbeddedEventHandler (void * arg) {
         return;
     }
 
-    rv = initContext->webShell->SetContainer((nsIWebShellContainer *) initContext->webShell); // PENDING(edburns): I don't think this is correct.
-    if (NS_FAILED(rv)) {
-        initContext->initFailCode = kInitWebShellError;
-        return;
-    }
-
-    rv = initContext->webShell->SetWebShellType(nsWebShellChrome); // PENDING(edburns): I don't think this is correct.
-    if (NS_FAILED(rv)) {
-        initContext->initFailCode = kInitWebShellError;
-        return;
-    }
-
-
 #if DEBUG_RAPTOR_CANVAS
 	printf("EmbeddedEventHandler(%lx): Install Prefs in the Webshell...\n", initContext);
 #endif
@@ -380,13 +371,16 @@ EmbeddedEventHandler (void * arg) {
 	printf("EmbeddedEventHandler(%lx): Show the WebShell...\n", initContext);
 #endif
 
-    nsActionEvent tAction(initContext->webShell);
-    nsIBrowserWindow *browserWindow = NULL;
-
-    if (NULL == (browserWindow = tAction.getBrowserWindow())) {
-        rv = browserWindow->Show();
-        browserWindow->Release();
+    nsCOMPtr<nsIBaseWindow> baseWindow;
+    
+    rv = initContext->webShell->QueryInterface(NS_GET_IID(nsIBaseWindow),
+                                               getter_AddRefs(baseWindow));
+    
+    if (NS_FAILED(rv)) {
+        initContext->initFailCode = kShowWebShellError;
+        return;
     }
+    rv = baseWindow->SetVisibility(PR_TRUE);
     if (NS_FAILED(rv)) {
         initContext->initFailCode = kShowWebShellError;
         return;
