@@ -44,18 +44,6 @@
 		dump("Inside the Exit Wizard function...\n");
 		parent.frames[0].commit();
 		parent.Finish();
-		var toolkitCore = XPAppCoresManager.Find("toolkitCore");
-		if (!toolkitCore) {
-			toolkitCore = new ToolkitCore();
-		
-			if (toolkitCore) {
-				toolkitCore.Init("toolkitCore");
-			}
-		}
-
-		if (toolkitCore) {
-			toolkitCore.CloseWindow(parent);
-		}
 	}
 </html:script>
 
