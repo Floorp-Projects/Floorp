@@ -370,7 +370,7 @@ ifneq (all,$(BUILD_MODULES))
 DEFINES += -DXPCOM_STANDALONE -DXPCONNECT_STANDALONE
 endif
 
-ifeq ($(OS_ARCH),OS_2)
+ifeq ($(OS_ARCH),OS2)
 ELF_DYNSTR_GC	= echo
 else
 ELF_DYNSTR_GC	= :
