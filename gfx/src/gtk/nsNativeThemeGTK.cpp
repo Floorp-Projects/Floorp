@@ -526,14 +526,23 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
   switch (aWidgetType) {
     case NS_THEME_SCROLLBAR_BUTTON_UP:
     case NS_THEME_SCROLLBAR_BUTTON_DOWN:
-    case NS_THEME_SCROLLBAR_BUTTON_LEFT:
-    case NS_THEME_SCROLLBAR_BUTTON_RIGHT:
       {
         MozGtkScrollbarMetrics metrics;
         moz_gtk_get_scrollbar_metrics(&metrics);
 
         aResult->width = metrics.slider_width;
         aResult->height = metrics.stepper_size;
+        *aIsOverridable = PR_FALSE;
+      }
+      break;
+    case NS_THEME_SCROLLBAR_BUTTON_LEFT:
+    case NS_THEME_SCROLLBAR_BUTTON_RIGHT:
+      {
+        MozGtkScrollbarMetrics metrics;
+        moz_gtk_get_scrollbar_metrics(&metrics);
+
+        aResult->width = metrics.stepper_size;
+        aResult->height = metrics.slider_width;
         *aIsOverridable = PR_FALSE;
       }
       break;
