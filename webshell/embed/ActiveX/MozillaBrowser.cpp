@@ -401,7 +401,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Refresh2(VARIANT __RPC_FAR *Level)
 	}
 
 	// Turn the IE refresh type into the nearest NG equivalent
-	nsReloadType type = nsReload;
+	nsURLReloadType type = nsURLReload;
 	switch (iRefreshLevel & OLECMDIDF_REFRESH_LEVELMASK)
 	{
 	case OLECMDIDF_REFRESH_NORMAL:
@@ -409,10 +409,10 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Refresh2(VARIANT __RPC_FAR *Level)
 	case OLECMDIDF_REFRESH_CONTINUE:
 	case OLECMDIDF_REFRESH_NO_CACHE:
 	case OLECMDIDF_REFRESH_RELOAD:
-		type = nsReload;
+		type = nsURLReload;
 		break;
 	case OLECMDIDF_REFRESH_COMPLETELY:
-		type = nsReloadBypassCacheAndProxy;
+		type = nsURLReloadBypassCacheAndProxy;
 		break;
 	default:
 		// No idea what refresh type this is supposed to be
