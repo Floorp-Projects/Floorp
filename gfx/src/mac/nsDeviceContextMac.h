@@ -81,6 +81,7 @@ public:
 
   NS_IMETHOD 	BeginDocument(PRUnichar * aTitle);
   NS_IMETHOD 	EndDocument(void);
+  NS_IMETHOD 	AbortDocument(void);
 
   NS_IMETHOD 	BeginPage(void);
   NS_IMETHOD 	EndPage(void);

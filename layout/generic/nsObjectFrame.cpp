@@ -91,6 +91,7 @@
 #include "nsXPIDLString.h"
 #include "nsIDOMRange.h"
 #include "nsIPrintContext.h"
+#include "nsIPrintPreviewContext.h"
 #include "nsIWidget.h"
 #include "nsGUIEvent.h"
 #include "nsIRenderingContext.h"
@@ -1615,7 +1616,8 @@ nsObjectFrame::Paint(nsIPresContext*      aPresContext,
 
   // determine if we are printing
   nsCOMPtr<nsIPrintContext> thePrinterContext = do_QueryInterface(aPresContext);
-  if  (thePrinterContext) {
+  nsCOMPtr<nsIPrintPreviewContext> thePrintPreviewContext = do_QueryInterface(aPresContext);
+  if  (thePrinterContext || thePrintPreviewContext) {
     // we only want to print on the content layer pass
     if (eFramePaintLayer_Content != aWhichLayer)
       return NS_OK;

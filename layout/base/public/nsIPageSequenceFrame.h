@@ -147,6 +147,8 @@ public:
   NS_IMETHOD SuppressHeadersAndFooters(PRBool aDoSup) = 0;
   NS_IMETHOD SetClipRect(nsIPresContext*  aPresContext, nsRect* aSize) = 0;
   NS_IMETHOD SetSelectionHeight(nscoord aYOffset, nscoord aHeight) = 0;
+
+  NS_IMETHOD SetTotalNumPages(PRInt32 aTotal) = 0;
   
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;

@@ -456,6 +456,10 @@ NS_IMETHODIMP nsDeviceContextPh :: EndDocument( void ) {
   return NS_OK;
 	}
 
+NS_IMETHODIMP nsDeviceContextPh :: AbortDocument( void ) {
+  return EndDocument();
+	}
+
 NS_IMETHODIMP nsDeviceContextPh :: BeginPage( void ) {
 	PpPrintContext_t *pc = ((nsDeviceContextSpecPh *)mSpec)->GetPrintContext();
 	if( !mIsPrintingStart ) PpPrintNewPage( pc );

@@ -474,6 +474,13 @@ public:
   NS_IMETHOD EndDocument(void) = 0;
 
   /**
+   * Inform the output device that output of a document is being aborted.
+   * Must be matched 1:1 with BeginDocument()
+   * @return error status
+   */
+  NS_IMETHOD AbortDocument(void) = 0;
+
+  /**
    * Inform the output device that output of a page is beginning
    * Used for print related device contexts. Must be matched 1:1 with
    * EndPage() and within a BeginDocument()/EndDocument() pair.

@@ -68,6 +68,7 @@ nsDeviceContextOS2 :: nsDeviceContextOS2()
   mCachedClientRect = PR_FALSE;
   mCachedFullRect = PR_FALSE;
   mSupportsRasterFonts = PR_FALSE;
+  mPrintingStarted = PR_FALSE;
   mPelsPerMeter = 0;
 #ifdef XP_OS2
   mPrintState = nsPrintState_ePreBeginDoc;
@@ -164,10 +165,6 @@ nsresult nsDeviceContextOS2::Init( nsNativeDeviceContext aContext,
   printf( "mPixelScale = %f\n", mPixelScale);
 #endif
 
-  // We need to begin a document now, because the client is entitled at
-  // this point to do stuff like create fonts, which required the PS to
-  // be associated with a DC which has been DEVESC_STARTDOC'd.
-  BeginDocument(nsnull);
 #endif
 
   return NS_OK;
@@ -901,19 +898,12 @@ nsresult nsDeviceContextOS2::BeginDocument(PRUnichar * aTitle)
 
     PSZ pszDocName = title != nsnull?title:"Mozilla Document";
 
-    long lResult;
-
-    // ENDDOC first so we work on Lexmark printer drivers
-    long   lOutCount = 2;
-    USHORT usJobID = 0;
-    lResult = ::DevEscape(mPrintDC, DEVESC_ENDDOC,
-                          0, NULL,
-                          &lOutCount, (PBYTE)&usJobID);
-
     long lDummy = 0;
-    lResult = ::DevEscape(mPrintDC, DEVESC_STARTDOC,
-                          strlen(pszDocName) + 1, pszDocName,
-                          &lDummy, NULL);
+    long lResult = ::DevEscape(mPrintDC, DEVESC_STARTDOC,
+                               strlen(pszDocName) + 1, pszDocName,
+                               &lDummy, NULL);
+
+    mPrintingStarted = PR_TRUE;
 
     if (lResult == DEV_OK)
       rv = NS_OK;
@@ -946,16 +936,32 @@ nsresult nsDeviceContextOS2::EndDocument()
   return NS_OK;
 }
 
-nsresult nsDeviceContextOS2::BeginPage()
-{
-  return NS_OK;
-}
-
-nsresult nsDeviceContextOS2::EndPage()
+nsresult nsDeviceContextOS2::AbortDocument()
 {
   if (NULL != mPrintDC)
   {
+    long ldummy = 0;
+    long lResult = ::DevEscape(mPrintDC, DEVESC_ABORTDOC, 0, NULL,
+                               &ldummy, NULL);
+    if (lResult == DEV_OK)
+      return NS_OK;
+    else
+      return NS_ERROR_ABORT;
+  }
 
+  return NS_OK;
+}
+
+
+nsresult nsDeviceContextOS2::BeginPage()
+{
+  if (mPrintingStarted) {
+    mPrintingStarted = PR_FALSE;
+    return NS_OK;
+  }
+
+  if (NULL != mPrintDC)
+  {
     long lDummy = 0;
     long lResult = ::DevEscape(mPrintDC, DEVESC_NEWFRAME, 0, NULL,
                                &lDummy, NULL);
@@ -963,10 +969,16 @@ nsresult nsDeviceContextOS2::EndPage()
     if (lResult == DEV_OK)
       return NS_OK;
     else
-      return NS_ERROR_GFX_PRINTER_ENDPAGE;
+      return NS_ERROR_GFX_PRINTER_STARTPAGE;
   }
 
   return NS_OK;
+
+}
+
+nsresult nsDeviceContextOS2::EndPage()
+{
+   return NS_OK;
 }
 
 char* 

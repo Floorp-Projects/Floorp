@@ -692,6 +692,15 @@ NS_IMETHODIMP nsDeviceContextMac::EndDocument(void)
 #endif
 }
 
+/** ---------------------------------------------------
+ *  See documentation in nsIDeviceContext.h
+ *	@update 12/9/98 dwc
+ */
+NS_IMETHODIMP nsDeviceContextMac::AbortDocument(void)
+{
+    return EndDocument();
+}
+
 
 /** ---------------------------------------------------
  *  See documentation in nsIDeviceContext.h

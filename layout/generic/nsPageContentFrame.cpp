@@ -123,7 +123,9 @@ NS_IMETHODIMP nsPageContentFrame::Reflow(nsIPresContext*   aPresContext,
     }
     // Return our desired size
     aDesiredSize.width = aReflowState.availableWidth;
-    aDesiredSize.height = aReflowState.availableHeight;
+    if (aReflowState.availableHeight != NS_UNCONSTRAINEDSIZE) {
+      aDesiredSize.height = aReflowState.availableHeight;
+    }
   }
 
   return NS_OK;
@@ -169,13 +171,24 @@ nsPageContentFrame::Paint(nsIPresContext*      aPresContext,
     rect = mClipRect;
   } else {
     rect = mRect;
+    rect.x = 0;
+    rect.y = 0;
   }
-  rect.x = 0;
-  rect.y = 0;
+
   PRBool clipEmpty;
   aRenderingContext.SetClipRect(rect, nsClipCombine_kReplace, clipEmpty);
 
   nsresult rv = nsContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+
+#if defined(DEBUG_rods) || defined(DEBUG_dcone)
+  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
+    nsRect r = mRect;
+    r.x = 0;
+    r.y = 0;
+    aRenderingContext.SetColor(NS_RGB(0, 0, 0));
+    aRenderingContext.DrawRect(r);
+  }
+#endif
 
   aRenderingContext.PopState(clipEmpty);
 

@@ -122,20 +122,6 @@ nsPageFrame::~nsPageFrame()
 {
 }
 
-static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
-static nsIRegion* CreateRegion()
-{
-  nsIRegion* region;
-  nsresult rv = nsComponentManager::CreateInstance(kRegionCID, nsnull, NS_GET_IID(nsIRegion), (void**)&region);
-  if (NS_SUCCEEDED(rv)) {
-    if (NS_SUCCEEDED(region->Init())) {
-      return region;
-    } else {
-      NS_RELEASE(region);
-    }
-  }
-  return nsnull;
-}
 
 NS_IMETHODIMP
 nsPageFrame::SetInitialChildList(nsIPresContext* aPresContext,
@@ -201,26 +187,22 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsIPresContext*          aPresContext,
     // XXX Pay attention to the page's border and padding...
     if (mFrames.NotEmpty()) {
       nsIFrame* frame = mFrames.FirstChild();
+      // When availableHeight is NS_UNCONSTRAINEDSIZE it means we are reflowing a single page
+      // to print selection. So this means we want to use NS_UNCONSTRAINEDSIZE without altering it
+      nscoord avHeight;
+      if (aReflowState.availableHeight == NS_UNCONSTRAINEDSIZE) {
+        avHeight = NS_UNCONSTRAINEDSIZE;
+      } else {
+        avHeight = mPD->mReflowRect.height - mPD->mReflowMargin.top - mPD->mReflowMargin.bottom;
+      }
       nsSize  maxSize(mPD->mReflowRect.width - mPD->mReflowMargin.right - mPD->mReflowMargin.left, 
-                      mPD->mReflowRect.height - mPD->mReflowMargin.top - mPD->mReflowMargin.bottom);
+                      avHeight);
       nsHTMLReflowState kidReflowState(aPresContext, aReflowState, frame, maxSize);
       kidReflowState.mFlags.mIsTopOfPage = PR_TRUE;
-      kidReflowState.availableWidth  = maxSize.width;
-      kidReflowState.availableHeight = maxSize.height;
 
       // calc location of frame
       nscoord xc = mPD->mReflowMargin.left + mPD->mDeadSpaceMargin.left + mPD->mExtraMargin.left;
       nscoord yc = mPD->mReflowMargin.top + mPD->mDeadSpaceMargin.top + mPD->mExtraMargin.top;
-
-      nsIView * view;
-      frame->GetView(aPresContext, &view);
-      if (view) {
-       nsCOMPtr<nsIViewManager> vm;
-        view->GetViewManager(*getter_AddRefs(vm));
-        nsCOMPtr<nsIRegion> region = dont_AddRef(CreateRegion());
-        region->SetTo(0,0, maxSize.width,maxSize.height);
-        vm->SetViewChildClipRegion(view, region);
-      }
 
       // Get the child's desired size
       ReflowChild(frame, aPresContext, aDesiredSize, kidReflowState, xc, yc, 0, aStatus);
@@ -230,8 +212,19 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsIPresContext*          aPresContext,
       FinishReflowChild(frame, aPresContext, &kidReflowState, aDesiredSize, xc, yc, 0);
 
       // Make sure the child is at least as tall as our max size (the containing window)
-      if (aDesiredSize.height < aReflowState.availableHeight) {
+      if (aDesiredSize.height < aReflowState.availableHeight &&
+          aReflowState.availableHeight != NS_UNCONSTRAINEDSIZE) {
         aDesiredSize.height = aReflowState.availableHeight;
+      }
+
+      nsIView * view;
+      frame->GetView(aPresContext, &view);
+      if (view) {
+        nsCOMPtr<nsIViewManager> vm;
+        view->GetViewManager(*getter_AddRefs(vm));
+        nsCOMPtr<nsIRegion> region = dont_AddRef(nsSimplePageSequenceFrame::CreateRegion());
+        region->SetTo(0,0, aDesiredSize.width, aDesiredSize.height);
+        vm->SetViewChildClipRegion(view, region);
       }
 
 #ifdef NS_DEBUG
@@ -249,7 +242,9 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsIPresContext*          aPresContext,
 
     // Return our desired size
     aDesiredSize.width = aReflowState.availableWidth;
-    aDesiredSize.height = aReflowState.availableHeight;
+    if (aReflowState.availableHeight != NS_UNCONSTRAINEDSIZE) {
+      aDesiredSize.height = aReflowState.availableHeight;
+    }
   }
   PRINT_DEBUG_MSG2("PageFrame::Reflow %p ", this);
   PRINT_DEBUG_MSG3("[%d,%d]\n", aReflowState.availableWidth, aReflowState.availableHeight);
@@ -619,8 +614,6 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
       printf("*** ClipRect: %5d,%5d,%5d,%5d\n", mClipRect.x, mClipRect.y, mClipRect.width, mClipRect.height);
     }
 #endif
-    mClipRect.x = 0;
-    mClipRect.y = 0;
     aRenderingContext.SetClipRect(mClipRect, nsClipCombine_kReplace, clipEmpty);
     rect = mClipRect;
   } else {
@@ -667,7 +660,6 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
 
 #if defined(DEBUG_rods) || defined(DEBUG_dcone)
   if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
-    nsRect r;
     fprintf(mDebugFD, "PF::Paint    -> %p  SupHF: %s  Rect: [%5d,%5d,%5d,%5d] SC:%s\n", this, 
             mSupressHF?"Yes":"No", mRect.x, mRect.y, mRect.width, mRect.height, specialClipIsSet?"Yes":"No");
     fprintf(stdout, "PF::Paint    -> %p  SupHF: %s  Rect: [%5d,%5d,%5d,%5d] SC:%s\n", this, 
@@ -690,24 +682,6 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
 
     rect.SetRect(0, 0, mRect.width - mPD->mShadowSize.width, mRect.height - mPD->mShadowSize.height);
 
-#if defined(DEBUG_rods) || defined(DEBUG_dcone)
-    {
-    nsRect rct = rect;
-    // XXX Paint a one-pixel border around the page so it's easy to see where
-    // each page begins and ends when we're
-    rct.Deflate(mMargin);
-    rct.Deflate(mPD->mDeadSpaceMargin);
-    //float   p2t;
-    //aPresContext->GetPixelsToTwips(&p2t);
-    //rect.Deflate(NSToCoordRound(p2t), NSToCoordRound(p2t));
-    aRenderingContext.SetColor(NS_RGB(0, 0, 0));
-    aRenderingContext.DrawRect(rct);
-    //rect.Inflate(NSToCoordRound(p2t), NSToCoordRound(p2t));
-    fprintf(mDebugFD, "PageFr::PaintChild -> Painting Frame %p Page No: %d\n", this, mPageNum);
-    }
-#endif
-
-   
     aRenderingContext.SetFont(*mPD->mHeadFootFont);
     aRenderingContext.SetColor(NS_RGB(0,0,0));
 
