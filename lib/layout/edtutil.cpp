@@ -850,6 +850,10 @@ static char* TagString(int32 tagType)
             return "block"; // PT_BLOCK 
         case P_NOLAYER:
             return PT_NOLAYER; // (?) jrm 97/03/08 according to instructions below.
+#ifdef SHACK
+	    case P_BUILTIN:
+			return PT_BUILTIN;
+#endif
         default:
             // If we get here, then it's a new tag that's been added to lib\libparse\pa_tags.h
             // The fix is to add this new tag to the case statement above.
