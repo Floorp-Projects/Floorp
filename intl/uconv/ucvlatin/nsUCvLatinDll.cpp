@@ -29,6 +29,7 @@
 // just for NS_IMPL_IDS
 #include "nsIUnicodeDecodeUtil.h"
 #include "nsICharsetConverterManager.h"
+#include "nsIUnicodeEncodeHelper.h"
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
