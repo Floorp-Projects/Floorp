@@ -84,3 +84,7 @@ tree[class="addressingWidget"] treeitem > treerow {
 toolbar#MsgHeadersToolbar {
   border-bottom: 1px solid #999999;
 }
+
+#msgSubject {
+  user-focus: normal;
+}
