@@ -29,6 +29,7 @@
 #include "nsIAnonymousContentCreator.h"
 #include "nsIStatefulFrame.h"
 #include "nsIEditor.h"
+#include "nsHTMLValue.h"
 
 
 class nsIPresState;
@@ -89,6 +90,16 @@ protected:
                                nsIFrame**        aFrame);
 
   NS_IMETHOD GetType(PRInt32* aType) const;
+
+  nsresult GetColRowSizeAttr(nsIFormControlFrame*  aFrame,
+                                         nsIAtom *     aColSizeAttr,
+                                         nsHTMLValue & aColSize,
+                                         nsresult &    aColStatus,
+                                         nsIAtom *     aRowSizeAttr,
+                                         nsHTMLValue & aRowSize,
+                                         nsresult &    aRowStatus);
+
+  PRInt32 GetWidthInCharacters() const;
 
 private:
   nsCOMPtr<nsIEditor> mEditor;
