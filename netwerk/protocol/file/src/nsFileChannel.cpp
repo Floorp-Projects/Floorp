@@ -666,9 +666,13 @@ nsFileChannel::Process(void)
           PR_LOG(gFileTransportLog, PR_LOG_DEBUG, 
                  ("nsFileTransport: READING [this=%x %s] amt=%d status=%x", 
                   this, (const char*)mSpec, amt, mStatus));
-		  if (mReadFixedAmount)
-			  mAmount -= amt;   // subtract off the amount we just read from mAmount.
+          if (mStatus == NS_BASE_STREAM_WOULD_BLOCK) {
+              mStatus = NS_OK;
+              return;
+          }
           if (NS_FAILED(mStatus)) goto error;
+          if (mReadFixedAmount)
+              mAmount -= amt;   // subtract off the amount we just read from mAmount.
 
           // and feed the buffer to the application via the buffer stream:
           if (mListener) {
