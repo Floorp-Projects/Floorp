@@ -533,17 +533,6 @@ nsLDAPChannel::AsyncOpen(nsIStreamListener* aListener,
     nsXPIDLCString host;
     PRInt32 port;
 
-    // save off the args
-    //
-    mResponseContext = aCtxt;
-    mUnproxiedListener = aListener;
-
-    // add ourselves to the appropriate loadgroup
-    //
-    if (mLoadGroup) {
-        mLoadGroup->AddRequest(this, mResponseContext);
-    }
-
     // slurp out relevant pieces of the URL
     //
     rv = mURI->GetHost(getter_Copies(host));
@@ -557,9 +546,23 @@ nsLDAPChannel::AsyncOpen(nsIStreamListener* aListener,
         NS_ERROR("nsLDAPChannel::AsyncRead(): mURI->GetPort failed\n");
         return NS_ERROR_FAILURE;
     }
-
     if (port == -1)
         port = LDAP_PORT;
+
+    rv = NS_CheckPortSafety(port, "ldap");
+    if (NS_FAILED(rv))
+        return rv;
+
+    // save off the args
+    //
+    mResponseContext = aCtxt;
+    mUnproxiedListener = aListener;
+
+    // add ourselves to the appropriate loadgroup
+    //
+    if (mLoadGroup) {
+        mLoadGroup->AddRequest(this, mResponseContext);
+    }
 
     // we don't currently allow for a default host
     //
