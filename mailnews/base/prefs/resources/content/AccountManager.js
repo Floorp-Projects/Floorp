@@ -42,7 +42,6 @@ function onLoad() {
 }
 
 function onOk() {
-  dump("Ok pressed!\n");
   onSave();
   return true;
 }
@@ -55,27 +54,33 @@ function onSave() {
   for (var accountid in accountArray) {
     var account = getAccountFromServerId(accountid);
     var accountValues = accountArray[accountid];
-
-    var identity = account.defaultIdentity;
-    var server = account.incomingServer;
     
-    for (var val in accountValues) {
-      var vals = val.split(".");
-      if (vals[0] == "identity") {
-        dump("Saving identity info " + vals[1] + "(" +
-             accountValues[val] + ") to " + identity +"\n");
-        identity[vals[1]] = accountValues[val];
-      }
+    saveAccount(accountValues, account);
+  }
+}
 
-      if (vals[0] == "server") {
-        dump("Saving server info " + vals[1] + "(" +
-             accountValues[val] + ") to " + server +"\n");
-        server[vals[1]] = accountValues[val];
-      }
+function saveAccount(accountValues, account)
+{
+  var identity = account.defaultIdentity;
+  var server = account.incomingServer;
+  
+  for (var type in accountValues) {
+    var typeArray = accountValues[type];
+    
+    for (var slot in typeArray) {
+      var dest;
+      
+      if (type == "identity") dest = identity;
+      if (type == "server") dest = server;
 
+      if (dest == undefined) continue;
+      
+      if (dest[slot] != typeArray[slot]) {
+        dump("Saving: " + slot + " to " + dest + "\n");
+        dest[slot] = typeArray[slot];
+      }
     }
   }
-
 }
 
 // called when a prefs page is done loading
@@ -165,26 +170,65 @@ function savePage(serverId, pageId) {
   // store the value in the account
   for (var i=0; i<pageElements.length; i++) {
       if (pageElements[i].name) {
-          accountValues[pageElements[i].name] =
-              getFormElementValue(pageElements[i]);
+        var vals = pageElements[i].name.split(".");
+        var type = vals[0];
+        var slot = vals[1];
+
+        setAccountValue(accountValues,
+                        type, slot,
+                        getFormElementValue(pageElements[i]));
       }
   }
 
 }
 
+function setAccountValue(accountValues, type, slot, value) {
+  if (!accountValues[type])
+    accountValues[type] = new Array;
+
+  //  dump("Form->Array: accountValues[" + type + "][" + slot + "] = " + value + "\n");
+  
+  accountValues[type][slot] = value;
+}
+
+function getAccountValue(account, accountValues, type, slot) {
+  if (!accountValues[type])
+    accountValues[type] = new Array;
+
+  // fill in the slot from the account if necessary
+  if (accountValues[type][slot]== undefined) {
+    //    dump("Array->Form: lazily reading in the " + slot + " from the " + type + "\n");
+    var source;
+    if (type == "identity")
+      source = account.defaultIdentity;
+    if (type == "server")
+      source = account.incomingServer;
+
+    accountValues[type][slot] = source[slot];
+  }
+  var value = accountValues[type][slot];
+  //  dump("Array->Form: accountValues[" + type + "][" + slot + "] = " + value + "\n");
+  return value;
+}
 //
 // restore the values of the widgets from the given server
 //
 function restorePage(serverId, pageId) {
   if (!serverId || !pageId) return;
   
-  var account = getValueArrayFor(serverId);
+  var accountValues = getValueArrayFor(serverId);
   var pageElements = getPageFormElements(pageId);
 
   // restore the value from the account
   for (var i=0; i<pageElements.length; i++) {
       if (pageElements[i].name) {
-          setFormElementValue(pageElements[i],account[pageElements[i].name]);
+        var vals = pageElements[i].name.split(".");
+        var type = vals[0];
+        var slot = vals[1];
+
+        var account = getAccountFromServerId(serverId);
+        setFormElementValue(pageElements[i],
+                            getAccountValue(account, accountValues, type, slot));
       }
   }
 
@@ -197,7 +241,6 @@ function restorePage(serverId, pageId) {
 // gets the value of a widget
 //
 function getFormElementValue(formElement) {
-  dump("Getting " + formElement.name + " value = " + formElement.value + "\n");
   if (formElement.type=="checkbox") {
     if (formElement.getAttribute("reversed"))
       return !formElement.checked;
@@ -211,7 +254,6 @@ function getFormElementValue(formElement) {
 // sets the value of a widget
 //
 function setFormElementValue(formElement, value) {
-  dump("Setting " + formElement.name + " to " + value + "\n");
   if (formElement.type == "checkbox") {
     if (value)
       if (formElement.getAttribute("reversed"))
@@ -228,30 +270,21 @@ function setFormElementValue(formElement, value) {
   }
 }
 
-//
-// return an array that has all the values for the given account
-//
-function createAccountValues(account) {
-  var accountvalues = new Array;
-  var i;
+
+function fillAccountValues(accountValues, account, fields) {
 
   var identity = account.defaultIdentity;
-  for (i in identity) {
-    if (typeof(identity[i]) != "function")
-      accountvalues["identity." + i] = identity[i];
-  }
-
   var server = account.incomingServer;
-  for (i in server) {
-    if (typeof(server[i]) != "function")
-      accountvalues["server." + i] = server[i];
-  }
+  
+  for (var i=0; i<fields.length; i++) {
+    var fullname = fields.name;
+    var vals = fullname.split(".");
+    var type = vals[0];
+    var slot = fields[1];
 
-  for (i in accountvalues) {
-    dump("accountvalues[" + i + "] = " + accountvalues[i] + "\n");
   }
+  accountValues[type][slot] = identity[slot];
 
-  return accountvalues;
 }
 
 //
@@ -290,8 +323,7 @@ function getPageFormElements(pageId) {
 //
 function getValueArrayFor(serverId) {
   if (accountArray[serverId] == null) {
-    var account = getAccountFromServerId(serverId);
-    accountArray[serverId] = createAccountValues(account);
+    accountArray[serverId] = new Array;
   }
   
   return accountArray[serverId];
