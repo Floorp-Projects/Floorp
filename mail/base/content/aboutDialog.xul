@@ -50,7 +50,7 @@
         buttons="accept"
         onload="onLoad();"
         title="&aboutDialog.title;"
-        width="300" height="315"> 
+        style="width: 20em; height: 16.3em;"> 
 
     <script type="application/x-javascript">
       <![CDATA[
