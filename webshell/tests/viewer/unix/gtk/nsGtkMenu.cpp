@@ -132,8 +132,17 @@ GtkItemFactoryEntry menu_items[] =
   { "/Style/_Compatibility Mode",		nsnull,	nsnull,			0,			"<Branch>" },
   { "/Style/Compatibility Mode/Nav Quirks",	nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_NAV_QUIRKS_MODE,	nsnull },
   { "/Style/Compatibility Mode/Standard",	nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_STANDARD_MODE,	nsnull },
-
+  { "/Style/_Gfx Scrollbars Mode",		nsnull,	nsnull,			0,			"<Branch>" },
+  { "/Style/Gfx Scrollbars Mode/Gfx On",	nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_GFX_SCROLLBARS_ON,	nsnull },
+  { "/Style/Gfx Scrollbars Mode/Gfx Off",	nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_GFX_SCROLLBARS_OFF,	nsnull },
 //#endif
+
+  { "/_URLs",                                nsnull, nsnull,                 0,              "<Branch>" },
+  { "/URLs/Goto URL 1",		nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_GOTO_TEST_URL1,nsnull },
+  { "/URLs/Goto URL 2",		nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_GOTO_TEST_URL2,nsnull },
+  { "/URLs/sep1",			nsnull,	nsnull,			0,			"<Separator>" },
+  { "/URLs/Save URL 1",		nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_SAVE_TEST_URL1,nsnull },
+  { "/URLs/Save URL 2",		nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_SAVE_TEST_URL2,nsnull },
 
   { "/_Tools",                                nsnull, nsnull,                 0,              "<Branch>" },
   { "/Tools/_JavaScript Console",	nsnull,	(GIFC)gtk_ifactory_cb,	JS_CONSOLE,	nsnull },
