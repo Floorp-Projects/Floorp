@@ -41,7 +41,7 @@
 #include "nsIAutoCompleteResult.h"
 #include "nsIAutoCompleteResultTypes.h"
 #include "nsString.h"
-#include "nsVoidArray.h"
+#include "nsArray.h"
 #include "mdb.h"
 
 class nsAutoCompleteMdbResult : public nsIAutoCompleteMdbResult
@@ -57,7 +57,7 @@ public:
   NS_DECL_NSIAUTOCOMPLETEMDBRESULT
 
 protected:
-  nsAutoVoidArray mResults;
+  nsCOMArray<nsIMdbRow> mResults;
 
   nsAutoString mSearchString;
   nsAutoString mErrorDescription;
