@@ -19,9 +19,9 @@
 <!ENTITY moveToFolder.label "Move To Folder">
 <!ENTITY changePriority.label "Change Priority">
 <!ENTITY delete.label "Delete">
-<!ENTITY markRead.label "Mark read">
-<!ENTITY ignoreThread.label "Ignore thread">
-<!ENTITY watchThread.label "Watch thread">
+<!ENTITY markRead.label "Mark as Read">
+<!ENTITY ignoreThread.label "Ignore Thread">
+<!ENTITY watchThread.label "Watch Thread">
 <!ENTITY filterName.label "Filter Name:">
 
 <!ENTITY lowestPriorityCmd.label "Lowest">
