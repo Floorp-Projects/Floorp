@@ -53,7 +53,7 @@ BOOL              IsDownloadRequired();
 BOOL              InstallFiles(HWND hDlg);
 
 void              ToggleCheck(HWND hwndListBox, DWORD dwIndex, DWORD dwACFlag);
-BOOL              AskCancelDlg(HWND hDlg);
+BOOL              ShouldExitSetup(HWND hDlg);
 void              lbAddItem(HWND hList, siC *siCComponent);
 HWND              InstantiateDialog(HWND hParent, DWORD dwDlgID, LPSTR szTitle, WNDPROC wpDlgProc);
 void              InitSequence(HINSTANCE hInstance);
@@ -71,10 +71,7 @@ void              TruncateString(HWND hWnd, LPSTR szInPath, LPSTR szOutPath, DWO
 void              SaveAdditionalOptions(HWND hDlg, HWND hwndCBSiteSelector);
 WNDPROC           SubclassWindow( HWND hWnd, WNDPROC NewWndProc);
 LRESULT CALLBACK  ListBoxBrowseWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-void              DisableSystemMenuItems(HWND hWnd, BOOL bDisableClose);
 void              CommitInstall(void);
-void              RepositionWindow(HWND aHwndDlg, DWORD aBannerImage);
-void              SaveWindowPosition(HWND aDlg);
 
 #endif /* _DIALOGS_H_ */
 
