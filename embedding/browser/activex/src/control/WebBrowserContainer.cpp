@@ -62,6 +62,8 @@ NS_INTERFACE_MAP_BEGIN(CWebBrowserContainer)
 	NS_INTERFACE_MAP_ENTRY(nsIDocumentLoaderObserver)
 	NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
 	NS_INTERFACE_MAP_ENTRY(nsIPrompt)
+	NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
+	NS_INTERFACE_MAP_ENTRY(nsIDOMMouseListener)
 NS_INTERFACE_MAP_END
 
 
@@ -70,7 +72,8 @@ NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP CWebBrowserContainer::GetInterface(const nsIID & uuid, void * *result)
 {
-	if (memcmp(&uuid, &nsIPrompt::GetIID(), sizeof(nsIID)) == 0)
+	const nsIID &iid = NS_GET_IID(nsIPrompt);
+	if (memcmp(&uuid, &iid, sizeof(nsIID)) == 0)
 	{
 		*result = (nsIPrompt *) this;
 		AddRef();
@@ -461,7 +464,7 @@ NS_IMETHODIMP CWebBrowserContainer::GetNewWindow(PRInt32 aChromeFlags,
 
 		nsIDocShell *docShell;
 		pBrowser->mWebBrowser->GetDocShell(&docShell);
-		docShell->QueryInterface(nsIDocShellTreeItem::GetIID(), (void **) aDocShellTreeItem);
+		docShell->QueryInterface(NS_GET_IID(nsIDocShellTreeItem), (void **) aDocShellTreeItem);
 		docShell->Release();
 		pDispNew->Release();
 		return NS_OK;
@@ -833,3 +836,50 @@ CWebBrowserContainer::OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channe
 	return NS_OK; 
 } 
 
+
+nsresult
+CWebBrowserContainer::HandleEvent(nsIDOMEvent* aEvent)
+{
+	return NS_OK; 
+}
+
+
+nsresult
+CWebBrowserContainer::MouseDown(nsIDOMEvent* aMouseEvent)
+{
+	return NS_OK; 
+}
+
+
+nsresult
+CWebBrowserContainer::MouseUp(nsIDOMEvent* aMouseEvent)
+{
+	return NS_OK; 
+}
+
+nsresult
+CWebBrowserContainer::MouseClick(nsIDOMEvent* aMouseEvent)
+{
+	return NS_OK; 
+}
+
+
+nsresult
+CWebBrowserContainer::MouseDblClick(nsIDOMEvent* aMouseEvent)
+{
+	return NS_OK; 
+}
+
+
+nsresult
+CWebBrowserContainer::MouseOver(nsIDOMEvent* aMouseEvent)
+{
+	return NS_OK; 
+}
+
+
+nsresult
+CWebBrowserContainer::MouseOut(nsIDOMEvent* aMouseEvent)
+{
+	return NS_OK; 
+}
