@@ -6172,7 +6172,7 @@ nsXULTemplateBuilder::IsOpen(nsIContent* aElement)
     // Treat the 'root' element as always open, -unless- it's a
     // menu/menupopup. We don't need to "fake" these as being open.
     if ((aElement == mRoot.get()) && (tag.get() != nsXULAtoms::menu) &&
-        (tag.get() != nsXULAtoms::menulist) && (tag.get() != nsXULAtoms::menubutton))
+        (tag.get() != nsXULAtoms::menubutton))
       return PR_TRUE;
 
     nsAutoString value;
