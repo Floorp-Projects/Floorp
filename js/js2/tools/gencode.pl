@@ -76,7 +76,7 @@ sub collect {
     }
 
     my $opname = $k;
-    my $cname = get_classname ($k);
+    my $cname = jsicodes::get_classname ($k);
     my $super = $c->{"super"};
     my $constructor = $super;
 	my @params;
@@ -169,26 +169,6 @@ sub spew {
     print "$tab};\n\n";
 
     print "#endif\n\n"
-}
-
-sub get_classname {
-    # munge an OPCODE_MNEMONIC into a ClassName
-    my ($enum_name) = @_;
-    my @words = split ("_", $enum_name);
-    my $cname = "";
-    my $i = 0;
-    my $word;
-
-    for $word (@words) {
-        if ((length($word) == 2) && ($i != 0)) {
-            $cname .= uc($word);
-        } else {
-            $cname .= uc(substr($word, 0, 1)) . lc(substr($word, 1));
-        }
-        $i++;
-    }
-    
-    return $cname;
 }
 
 sub get_paramlists {
