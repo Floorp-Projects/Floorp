@@ -1067,6 +1067,10 @@ sub DropField ($$)
 }
 
 
+my $regenerateshadow = 0;
+
+
+
 
 # 1999-05-12 Added a pref to control how much email you get.  This needs a new
 # column in the profiles table, so feed the following to mysql:
@@ -1308,8 +1312,7 @@ if (GetFieldDef('bugs', 'long_desc')) {
     DropField('bugs', 'long_desc');
 
     $dbh->do("UNLOCK TABLES");
-    print "Now regenerating the shadow database for all bugs.\n";
-    system("./processmail regenerate");
+    $regenerateshadow = 1;
 
 }
 
@@ -1430,3 +1433,9 @@ AddField('namedqueries', 'linkinfooter', 'tinyint not null');
 # AddField/DropField/ChangeFieldType/RenameField code above. This would then
 # be honored by everyone who updates his Bugzilla installation.
 #
+#
+# Final checks...
+if ($regenerateshadow) {
+    print "Now regenerating the shadow database for all bugs.\n";
+    system("./processmail regenerate");
+}
