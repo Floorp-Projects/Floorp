@@ -536,26 +536,6 @@ public:
                             const nsAString& aLocalName,
                             PRBool* aReturn);
 
-  // Generic DOMNode implementations
-  /**
-   * Generic implementation of InsertBefore to be called by subclasses
-   * @see nsIDOMNode::InsertBefore
-   */
-  static nsresult doInsertBefore(nsIContent *aElement, nsIDOMNode* aNewChild,
-                                 nsIDOMNode* aRefChild, nsIDOMNode** aReturn);
-  /**
-   * Generic implementation of ReplaceChild to be called by subclasses
-   * @see nsIDOMNode::ReplaceChild
-   */
-  static nsresult doReplaceChild(nsIContent *aElement, nsIDOMNode* aNewChild,
-                                 nsIDOMNode* aOldChild, nsIDOMNode** aReturn);
-  /**
-   * Generic implementation of RemoveChild to be called by subclasses
-   * @see nsIDOMNode::RemoveChild
-   */
-  static nsresult doRemoveChild(nsIContent *aElement, nsIDOMNode* aOldChild,
-                                nsIDOMNode** aReturn);
-
   //----------------------------------------
 
   /**
