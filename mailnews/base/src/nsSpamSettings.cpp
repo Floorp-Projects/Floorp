@@ -474,10 +474,6 @@ NS_IMETHODIMP nsSpamSettings::LogJunkHit(nsIMsgDBHdr *aMsgHdr, PRBool aMoveMessa
   if (!loggingEnabled)
     return NS_OK;
 
-  nsCOMPtr <nsIOutputStream> logStream;
-  rv = GetLogStream(getter_AddRefs(logStream));
-  NS_ENSURE_SUCCESS(rv,rv);
-  
   PRTime date;
   char dateStr[40];	/* 30 probably not enough */
   
@@ -520,6 +516,22 @@ NS_IMETHODIMP nsSpamSettings::LogJunkHit(nsIMsgDBHdr *aMsgHdr, PRBool aMoveMessa
     buffer += junkFolderURI.get();
     buffer += "\n";
   }
+
+  return LogJunkString(buffer.get());
+}
+
+NS_IMETHODIMP nsSpamSettings::LogJunkString(const char *string)
+{
+  PRBool loggingEnabled;
+  nsresult rv = GetLoggingEnabled(&loggingEnabled);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  if (!loggingEnabled)
+    return NS_OK;
+
+  nsCOMPtr <nsIOutputStream> logStream;
+  rv = GetLogStream(getter_AddRefs(logStream));
+  NS_ENSURE_SUCCESS(rv,rv);
   
   PRUint32 writeCount;
   
@@ -530,13 +542,13 @@ NS_IMETHODIMP nsSpamSettings::LogJunkHit(nsIMsgDBHdr *aMsgHdr, PRBool aMoveMessa
   // html escape the log for security reasons.
   // we don't want some to send us a message with a subject with
   // html tags, especially <script>
-  char *escapedBuffer = nsEscapeHTML(buffer.get());
+  char *escapedBuffer = nsEscapeHTML(string);
   if (!escapedBuffer)
     return NS_ERROR_OUT_OF_MEMORY;
   
   PRUint32 escapedBufferLen = strlen(escapedBuffer);
   rv = logStream->Write(escapedBuffer, escapedBufferLen, &writeCount);
-  PR_FREEIF(escapedBuffer);
+  PR_Free(escapedBuffer);
   NS_ENSURE_SUCCESS(rv,rv);
   NS_ASSERTION(writeCount == escapedBufferLen, "failed to write out log hit");
   
@@ -545,7 +557,6 @@ NS_IMETHODIMP nsSpamSettings::LogJunkHit(nsIMsgDBHdr *aMsgHdr, PRBool aMoveMessa
   NS_ASSERTION(writeCount == LOG_ENTRY_END_TAG_LEN, "failed to write out end log tag");
   return NS_OK;
 }
-
 
 NS_IMETHODIMP nsSpamSettings::OnStartRunningUrl(nsIURI* aURL)
 {
