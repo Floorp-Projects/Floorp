@@ -86,8 +86,8 @@ CPP_OBJS=				\
 
 EXPORTS=nsGlobalVariables.h
 
-LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor \
- -I..\..\style\src -I$(PUBLIC)\dom \
+LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
+ -I..\..\style\src -I$(PUBLIC)\dom -I$(PUBLIC)\netlib \
  -I..\..\..\base\src
 
 LCFLAGS = \

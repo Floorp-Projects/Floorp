@@ -48,7 +48,7 @@ EXPORTS =     \
 
 MODULE = raptor
 
-REQUIRES = xpcom raptor
+REQUIRES = xpcom netlib raptor
 
 include $(DEPTH)/config/config.mk
 
