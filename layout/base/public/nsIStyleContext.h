@@ -79,6 +79,12 @@ struct nsStyleSpacing: public nsStyleStruct {
   PRUint8       mBorderStyle[4];  // [reset] See nsStyleConsts.h
   nscolor       mBorderColor[4];  // [reset] 
 
+  PRBool GetMargin(nsMargin& aMargin) const;
+  PRBool GetPadding(nsMargin& aPadding) const;
+  PRBool GetBorder(nsMargin& aBorder) const;
+  PRBool GetBorderPadding(nsMargin& aBorderPadding) const;
+
+// XXX these are deprecated methods
   void CalcMarginFor(const nsIFrame* aFrame, nsMargin& aMargin) const;
   void CalcPaddingFor(const nsIFrame* aFrame, nsMargin& aPadding) const;
   void CalcBorderFor(const nsIFrame* aFrame, nsMargin& aBorder) const;
