@@ -489,6 +489,11 @@ ImageNetContextImpl::Clone()
   ilINetContext *cx;
   nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mLoadGroup);
 
+  //mReconnectArg is ImageGroup. If GetURL is triggered
+  //by timer for animation, ImageGroup may have been unloaded
+  //before timer kicks off.
+  mReconnectCallback=nsnull; mReconnectArg=nsnull;
+
   if (NS_NewImageNetContext(&cx, group, mReconnectCallback, mReconnectArg) == NS_OK)
   {
     return cx;
