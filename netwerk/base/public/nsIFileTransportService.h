@@ -27,22 +27,20 @@ class nsIStreamListener;
 class nsIProtocolConnection;
 class nsITransport;
 
-// XXX regenerate:
 #define NS_IFILETRANSPORTSERVICE_IID                 \
-{ /* 677d9a90-93ee-11d2-816a-006008119d7a */         \
-    0x677d9a90,                                      \
-    0x93ee,                                          \
+{ /* 2355dca0-ea35-11d2-931b-00104ba0fd40 */         \
+    0x2355dca0,                                      \
+    0xea35,                                          \
     0x11d2,                                          \
-    {0x81, 0x6a, 0x00, 0x60, 0xf8, 0x12, 0x9d, 0x7a} \
+    {0x93, 0x1b, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
 }
 
-// XXX regenerate:
 #define NS_FILETRANSPORTSERVICE_CID                  \
-{ /* 677d9a90-93ee-11d2-816a-006008119d7a */         \
-    0x677d9a90,                                      \
-    0x93ee,                                          \
+{ /* 2bb2b250-ea35-11d2-931b-00104ba0fd40 */         \
+    0x2bb2b250,                                      \
+    0xea35,                                          \
     0x11d2,                                          \
-    {0x81, 0x6a, 0x00, 0x60, 0xf8, 0x32, 0x9d, 0x7a} \
+    {0x93, 0x1b, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
 }
 
 class nsIFileTransportService : public nsISupports

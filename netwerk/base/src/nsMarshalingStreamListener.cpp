@@ -39,7 +39,7 @@ public:
     // nsMarshalingStreamListener methods:
     nsMarshalingStreamListener(PLEventQueue* eventQueue,
                                nsIStreamListener* receiver) 
-        : mEventQueue(eventQueue), mReceiver(receiver) {
+        : mEventQueue(eventQueue), mReceiver(receiver), mStatus(NS_OK) {
         NS_INIT_REFCNT();
     }
     virtual ~nsMarshalingStreamListener();
@@ -263,14 +263,14 @@ protected:
 
 nsOnStopBindingEvent::~nsOnStopBindingEvent()
 {
-    NS_RELEASE(mMessage);
+    NS_IF_RELEASE(mMessage);
 }
 
 nsresult
 nsOnStopBindingEvent::Init(nsresult status, nsIString* aMsg)
 {
     mMessage = aMsg;
-    NS_ADDREF(mMessage);
+    NS_IF_ADDREF(mMessage);
     return NS_OK;
 }
 

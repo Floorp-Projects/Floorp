@@ -22,10 +22,10 @@
 #include "nscore.h"
 #include "nsString2.h"
 #include "nsIServiceManager.h"
-#include "nsITransportService.h"
+#include "nsIFileTransportService.h"
 #include "nsConnectionGroup.h"
 
-static NS_DEFINE_CID(kTransportService, NS_TRANSPORTSERVICE_CID);
+static NS_DEFINE_CID(kFileTransportService, NS_FILETRANSPORTSERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -124,11 +124,15 @@ nsNetService::Open(nsIUrl* url, nsISupports* eventSink,
 NS_IMETHODIMP
 nsNetService::HasActiveConnections()
 {
+#if 0
     nsresult rv;
-    NS_WITH_SERVICE(nsITransportService, trans, kTransportService, &rv);
+    NS_WITH_SERVICE(nsIFileTransportService, trans, kFileTransportService, &rv);
     if (NS_FAILED(rv)) return rv;
 
     return trans->HasActiveTransports();
+#else
+    return NS_OK;
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -22,6 +22,9 @@
 #include "nsIProtocolConnection.h"
 #include "nsCRT.h"
 #include "nscore.h"
+#include "nsIFileStream.h"
+#include "nsFileSpec.h"
+#include "nsIByteBuffer.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
@@ -109,53 +112,61 @@ nsFileTransport::Resume(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-nsresult
-nsFileTransport::OnStartBinding()
-{
-    return mListener->OnStartBinding(mConnection);
-}
-
-nsresult
-nsFileTransport::OnDataAvailable(nsIInputStream* stream, PRUint32 count)
-{
-    return mListener->OnDataAvailable(mConnection, stream, count);
-}
-
-nsresult
-nsFileTransport::OnStopBinding(nsresult status, nsIString* msg)
-{
-    return mListener->OnStopBinding(mConnection, status, msg);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 NS_IMETHODIMP
 nsFileTransport::Run(void)
 {
     nsresult rv;
-#if 0
     nsISupports* fs;
-    nsIInputStream* inStr;
+    nsFileSpec spec(mPath);
+    PRUint32 count;
+    nsIInputStream* fileStr = nsnull;
+    nsIByteBuffer* buf = nsnull;
+    nsIInputStream* inStr = nsnull;
 
-    request->OnStartBinding(mConnection);  // always send the start notification
+    rv = mListener->OnStartBinding(mConnection);  // always send the start notification
 
-    rv = NS_NewTypicalInputFileStream(&fs, request->mSpec);
+    rv = NS_NewTypicalInputFileStream(&fs, spec);
     if (NS_FAILED(rv)) goto done;
-    rv = fs->QueryInterface(nsIInputStream::GetIID(), (void**)&inStr);
+    rv = fs->QueryInterface(nsIInputStream::GetIID(), (void**)&fileStr);
     NS_RELEASE(fs);
     if (NS_FAILED(rv)) goto done;
 
-    while (PR_TRUE) {
-        if (request->IsCanceled()) {
-            rv = NS_USER_CANCELED;
+    rv = NS_NewByteBuffer(&buf, nsnull, NS_FILE_TRANSPORT_BUFFER_SIZE);
+    if (NS_FAILED(rv)) goto done;
+
+    rv = NS_NewByteBufferInputStream(buf, &inStr);
+    if (NS_FAILED(rv)) goto done;
+
+    rv = fileStr->GetLength(&count);
+    if (NS_FAILED(rv)) goto done;
+
+    while (count > 0) {
+        // check if the user canceled:
+        if (mCanceled) {
+            rv = NS_BINDING_ABORTED;
             break;
         }
-        request->OnDataAvailable(mConnection, inStr, count);
+
+        // reuse the buffer each time around
+        PRUint32 amt = PR_MIN(NS_FILE_TRANSPORT_BUFFER_SIZE, count);
+        PRInt32 filledAmt = buf->Fill(&rv, fileStr, 0);
+        if (NS_FAILED(rv)) goto done;
+
+        // and feed the buffer to the application via the byte buffer stream:
+        rv = mListener->OnDataAvailable(mConnection, inStr, count);
+        if (NS_FAILED(rv)) goto done;
+
+        count -= filledAmt;
     }
+
   done:
-    request->OnStopBinding(mConnection, rv, msg);
-    NS_RELEASE(inStr);
-#endif
+    inStr->Close();
+    NS_IF_RELEASE(buf);
+    NS_IF_RELEASE(inStr);
+    NS_IF_RELEASE(fileStr);
+
+    // XXX where do we get the error message?
+    rv = mListener->OnStopBinding(mConnection, rv, nsnull);
     return rv;
 }
 
