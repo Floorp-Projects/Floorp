@@ -38,6 +38,8 @@ static NS_DEFINE_CID(kIMBBCID, NS_IMBB_IID);
 #endif
 
 
+
+
 nsDBChangeAnnouncer::nsDBChangeAnnouncer()
 {
 }
@@ -1135,7 +1137,7 @@ nsresult	nsMsgDatabase::ListNext(ListContext *pContext, nsMsgHdr **pResultHdr)
 
 	*pResultHdr = NULL;
 	err = pContext->m_rowCursor->NextRow(GetEnv(), &hdrRow, &rowPos);
-	if (err == NS_OK)
+	if (err == NS_OK && hdrRow)
 		*pResultHdr = new nsMsgHdr(this, hdrRow);
 
 	return err;
