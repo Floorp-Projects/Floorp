@@ -48,6 +48,8 @@
         
   <script type="application/x-javascript" src="chrome://global/content/nsWidgetStateManager.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/pref/nsPrefWindow.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-help.js"/>
+  <script type="application/x-javascript" src="chrome://help/content/help.js"/>
 
   <keyset id="dialogKeys"/>
 
@@ -75,6 +77,6 @@
 
   <separator/>
 
-  <box id="okCancelButtonsRight" />
+  <box id="okCancelHelpButtonsRight" />
 
 </window>

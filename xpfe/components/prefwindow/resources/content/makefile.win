@@ -51,6 +51,7 @@ CHROME_CONTENT = \
 	.\pref-calibrate-screen.xul \
 	.\pref-fonts.js \
 	.\pref-history.xul \
+	.\pref-help.js \
 	.\pref-languages.xul \
 	.\pref-languages-add.xul \
 	.\pref-languages.js \
