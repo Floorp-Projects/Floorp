@@ -93,7 +93,8 @@ PERLLDFLAGS := $(shell perl -MExtUtils::Embed -e ldopts)
 PERLLDFLAGS := $(subst -rdynamic,-export-dynamic,$(PERLLDFLAGS))
 
 CFLAGS += $(PERLCFLAGS)
-LDFLAGS += $(PERLLDFLAGS)
+#LDFLAGS += $(PERLLDFLAGS) #PH removed this assgnment
+INCLUDES += -I. #needed for perlconnect/jsperl.c
 endif
 
 #
@@ -267,6 +268,9 @@ else
 LIBRARY = $(OBJDIR)/libjs.a
 SHARED_LIBRARY = $(OBJDIR)/libjs.$(SO_SUFFIX)
 PROGRAM = $(OBJDIR)/js
+ifdef JS_PERLCONNECT
+PROG_LIBS += $(PERLLDFLAGS)
+endif
 endif
 
 include rules.mk

@@ -36,7 +36,7 @@
 /* needs to include to enable the Perl object. See README.html for more      */
 /* documentation                                                             */
 
-#include "../jsapi.h"
+#include <jsapi.h>
 
 /*
     This is the only function that must be called by an
