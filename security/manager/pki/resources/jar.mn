@@ -35,6 +35,7 @@ pippki.jar:
     content/pippki/clientauthask.xul	     (content/clientauthask.xul)
     content/pippki/clientauthask.js          (content/clientauthask.js)
     content/pippki/certViewer.xul            (content/certViewer.xul)
+    content/pippki/certViewer.css            (content/certViewer.css)
     content/pippki/certDump.xul              (content/certDump.xul)
     content/pippki/device_manager.xul        (content/device_manager.xul)
     content/pippki/device_manager.js         (content/device_manager.js)
@@ -47,8 +48,6 @@ pippki.jar:
     content/pippki/pref-validation.js        (content/pref-validation.js)
     content/pippki/crlManager.xul            (content/crlManager.xul)
     content/pippki/crlManager.js             (content/crlManager.js)
-
-en-US.jar:
     locale/en-US/pippki/contents.rdf         (locale/en-US/contents.rdf)
     locale/en-US/pippki/pippki.dtd           (locale/en-US/pippki.dtd)
     locale/en-US/pippki/pref-ssl.dtd         (locale/en-US/pref-ssl.dtd)
