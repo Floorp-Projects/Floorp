@@ -1367,9 +1367,8 @@ extern "C" JSBool pref_InitInitialObjects()
 			continue;
 		char* leafName;
 		rv = child->GetLeafName(&leafName);
-		NS_RELEASE(child);
 		if NS_FAILED(rv)
-			continue;
+			goto next_child;
 		PRBool shouldParse = PR_TRUE;
 		// Skip non-js files
 		if (strstr(leafName, ".js") + strlen(".js") != leafName + strlen(leafName))
@@ -1392,6 +1391,8 @@ extern "C" JSBool pref_InitInitialObjects()
 		    	PR_FALSE) == PREF_NOERROR);
 			NS_ASSERTION(worked, "Config file not parsed successfully");
 		}
+	next_child:
+		NS_IF_RELEASE(child);
 	}
 	// Finally, parse any other special files (platform-specific ones).
 	for (k = 1; k < sizeof(specialFiles) / sizeof(char*); k++)
