@@ -57,14 +57,14 @@
                 accesskey="&reloadCmd.accesskey;"
                 oncommand="reload();"/>
       <menuseparator/>
-      <menuitem id="zoom-out"
-      		label="&textZoomReduceBtn.label;"
-      		accesskey="&textZoomReduceBtn.accesskey;"
-      		oncommand="ZoomManager.prototype.getInstance().reduce();"/>
       <menuitem id="zoom-in"
       		label="&textZoomEnlargeBtn.label;"
       		accesskey="&textZoomEnlargeBtn.accesskey;"
       		oncommand="ZoomManager.prototype.getInstance().enlarge();"/>
+      <menuitem id="zoom-out"
+      		label="&textZoomReduceBtn.label;"
+      		accesskey="&textZoomReduceBtn.accesskey;"
+      		oncommand="ZoomManager.prototype.getInstance().reduce();"/>
     </popup>
   </popupset>
 </overlay>
