@@ -23,10 +23,6 @@ include $(DEPTH)/config/config.mk
 
 DIRS	= layout libcgi libi18n libmisc
 
-ifndef NO_SECURITY
-DIRS	+= libjar
-endif
-
 ifndef NO_UNIX_LDAP
 DIRS	+= ldap
 endif
