@@ -96,6 +96,10 @@ struct _MDFileDesc {
 	PRBool      writeReady;
 	PRBool      exceptReady;
 	PRLock *    miscLock;
+	
+	/* Server sockets: listen bit tells the notifier func what to do */
+	PRBool		doListen;
+	
 	_MDSocketCallerInfo  misc;
 	_MDSocketCallerInfo  read;
 	_MDSocketCallerInfo  write;

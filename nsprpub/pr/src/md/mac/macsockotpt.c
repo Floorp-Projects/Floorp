@@ -229,19 +229,16 @@ static void macsock_map_error(OSStatus err)
             PR_SetError(PR_WOULD_BLOCK_ERROR, err);
             break;
         default:
-            PR_ASSERT(0);
             PR_SetError(PR_UNKNOWN_ERROR, err);
             break;
         }
     }
 }
 
-
-
-static void PrepareForAsyncCompletion(PRThread * thread, PRFileDesc * fd)
+static void PrepareForAsyncCompletion(PRThread * thread, PRInt32 osfd)
 {
     thread->io_pending       = PR_TRUE;
-    thread->io_fd            = fd->secret->md.osfd;
+    thread->io_fd            = osfd;
     thread->md.osErrCode     = noErr;
 }
 
@@ -251,8 +248,9 @@ static void PrepareForAsyncCompletion(PRThread * thread, PRFileDesc * fd)
 // A5 is OK. Cannot allocate memory here
 pascal void  NotifierRoutine(void * contextPtr, OTEventCode code, OTResult result, void * cookie)
 {
-	PRFileDesc *  fd       = (PRFileDesc *) contextPtr;
-	EndpointRef   endpoint = (EndpointRef)fd->secret->md.osfd;
+	PRFilePrivate *secret  = (PRFilePrivate *) contextPtr;
+	_MDFileDesc * md       = &(secret->md);
+	EndpointRef   endpoint = (EndpointRef)secret->md.osfd;
     PRThread *    thread   = NULL;
     _PRCPU *      cpu      = _PR_MD_CURRENT_CPU(); 
 	OSStatus      err;
@@ -262,7 +260,20 @@ pascal void  NotifierRoutine(void * contextPtr, OTEventCode code, OTResult resul
     {
 // OTLook Events - 
         case T_LISTEN:        // A connection request is available
-            PR_ASSERT(!"T_LISTEN Not implemented");  // listen or reject?
+        	// If md->doListen is true, then PR_Listen has been
+        	// called on this endpoint; therefore, we're ready to
+        	// accept connections. But we'll do that with PR_Accept
+        	// (which calls OTListen, OTAccept, etc) instead of 
+        	// doing it here. 
+        	if (md->doListen) {
+				thread = secret->md.misc.thread;
+	            secret->md.misc.thread    = NULL;
+	            secret->md.misc.cookie    = cookie;
+	            break;
+        	} else {
+        		// Reject the connection, we're not listening
+        		OTSndDisconnect(endpoint, NULL);
+        	}
             break;
 			
         case T_CONNECT:      // Confirmation of a connect request
@@ -271,19 +282,20 @@ pascal void  NotifierRoutine(void * contextPtr, OTEventCode code, OTResult resul
             PR_ASSERT(err == kOTNoError);
 
 			// wake up waiting thread, if any
-            thread = fd->secret->md.write.thread;
-            fd->secret->md.write.thread    = NULL;
-            fd->secret->md.write.cookie    = cookie;
-            fd->secret->md.connectionOpen  = PR_TRUE;
+            thread = secret->md.write.thread;
+            secret->md.write.thread    = NULL;
+            secret->md.write.cookie    = cookie;
+            secret->md.connectionOpen  = PR_TRUE;
             break;
 
         case T_DATA:        // Standard data is available
-			fd->secret->md.readReady = PR_TRUE;
+			// Mark this socket as readable.
+			secret->md.readReady = PR_TRUE;
 
 			// wake up waiting thread, if any
-            thread = fd->secret->md.read.thread;
-            fd->secret->md.read.thread    = NULL;
-            fd->secret->md.read.cookie    = cookie;
+            thread = secret->md.read.thread;
+            secret->md.read.thread    = NULL;
+            secret->md.read.cookie    = cookie;
 			break;
 
         case T_EXDATA:      // Expedited data is available
@@ -293,8 +305,8 @@ pascal void  NotifierRoutine(void * contextPtr, OTEventCode code, OTResult resul
         case T_DISCONNECT:  // A disconnect is available
             err = OTRcvDisconnect(endpoint, NULL);
             PR_ASSERT(err == kOTNoError);
-            fd->secret->md.exceptReady     = PR_TRUE;
-            fd->secret->md.connectionOpen  = PR_FALSE;
+            secret->md.exceptReady     = PR_TRUE;
+            secret->md.connectionOpen  = PR_FALSE;
             break;
 		
         case T_ERROR:       // obsolete/unused in library
@@ -308,20 +320,20 @@ pascal void  NotifierRoutine(void * contextPtr, OTEventCode code, OTResult resul
         case T_ORDREL:      // An orderly release is available
             err = OTRcvOrderlyDisconnect(endpoint);
             PR_ASSERT(err == kOTNoError);
-            fd->secret->md.readReady      = PR_TRUE;   // mark readable (to emulate bsd sockets)
+            secret->md.readReady      = PR_TRUE;   // mark readable (to emulate bsd sockets)
             // remember connection is closed, so we can return 0 on read or receive
-			fd->secret->md.connectionOpen = PR_FALSE;
+			secret->md.connectionOpen = PR_FALSE;
             break;		
 
         case T_GODATA:   // Flow control lifted on standard data
-            fd->secret->md.writeReady = PR_TRUE;
+            secret->md.writeReady = PR_TRUE;
 			resultOT = OTLook(endpoint);		// clear T_GODATA event
 			PR_ASSERT(resultOT == T_GODATA);
 			
 			// wake up waiting thread, if any
-            thread = fd->secret->md.write.thread;
-            fd->secret->md.write.thread    = NULL;
-            fd->secret->md.write.cookie    = cookie;
+            thread = secret->md.write.thread;
+            secret->md.write.thread    = NULL;
+            secret->md.write.cookie    = cookie;
             break;
 
         case T_GOEXDATA: // Flow control lifted on expedited data
@@ -351,9 +363,9 @@ pascal void  NotifierRoutine(void * contextPtr, OTEventCode code, OTResult resul
         case T_ACCEPTCOMPLETE:
         case T_OPTMGMTCOMPLETE:
         case T_GETPROTADDRCOMPLETE:
-			thread = fd->secret->md.misc.thread;
-            fd->secret->md.misc.thread    = NULL;
-            fd->secret->md.misc.cookie    = cookie;
+			thread = secret->md.misc.thread;
+            secret->md.misc.thread    = NULL;
+            secret->md.misc.cookie    = cookie;
             break;
 
 //      case T_OPENCOMPLETE:			// we open endpoints in synchronous mode
@@ -386,6 +398,7 @@ pascal void  NotifierRoutine(void * contextPtr, OTEventCode code, OTResult resul
 			thread->md.missedIONotify = PR_TRUE;
 			return;
 		}
+
 		DoneWaitingOnThisThread(thread);
 	}
 }
@@ -516,7 +529,7 @@ TryAgain:
     bindReq.qlen = 1;
 
 	PR_Lock(fd->secret->md.miscLock);
-    PrepareForAsyncCompletion(me, fd);
+    PrepareForAsyncCompletion(me, fd->secret->md.osfd);
 	fd->secret->md.misc.thread = me;
 
     err = OTBind(endpoint, &bindReq, NULL);
@@ -551,13 +564,17 @@ ErrorExit:
 // EBADF -- bad socket id
 PRInt32 _MD_listen(PRFileDesc *fd, PRIntn backlog)
 {
-#if 0
     PRInt32 osfd = fd->secret->md.osfd;
-    OSStatus err;
+    OSStatus err = 0;
     EndpointRef endpoint = (EndpointRef) osfd;
     TBind bindReq;
     PRNetAddr addr;
     PRThread *me = _PR_MD_CURRENT_THREAD();
+
+	if ((fd == NULL) || (endpoint == NULL)) {
+		err = EBADF;
+		goto ErrorExit;
+	}
 
     if (backlog == 0)
         backlog = 1;
@@ -574,7 +591,8 @@ PRInt32 _MD_listen(PRFileDesc *fd, PRIntn backlog)
     bindReq.addr.buf = (UInt8*) &addr;
     bindReq.qlen = 0;
     
-    PrepareForAsyncCompletion(me, osfd);    
+    PrepareForAsyncCompletion(me, fd->secret->md.osfd);    
+	fd->secret->md.misc.thread = me; // tell notifier routine what to wake up
 
     err = OTGetProtAddress(endpoint, &bindReq, NULL);
     if (err != kOTNoError)
@@ -586,7 +604,8 @@ PRInt32 _MD_listen(PRFileDesc *fd, PRIntn backlog)
     if (err != kOTNoError)
         goto ErrorExit;
 
-    PrepareForAsyncCompletion(me, osfd);    
+    PrepareForAsyncCompletion(me, fd->secret->md.osfd);    
+	fd->secret->md.misc.thread = me; // tell notifier routine what to wake up
 
     err = OTUnbind(endpoint);
     if (err != kOTNoError)
@@ -598,9 +617,13 @@ PRInt32 _MD_listen(PRFileDesc *fd, PRIntn backlog)
     if (err != kOTNoError)
         goto ErrorExit;
 
+	/* tell the notifier func that we are interested in pending connections */
+	fd->secret->md.doListen = PR_TRUE;
+	/* accept up to (backlog) pending connections at any one time */
     bindReq.qlen = backlog;
     
-    PrepareForAsyncCompletion(me, osfd);    
+    PrepareForAsyncCompletion(me, fd->secret->md.osfd);    
+	fd->secret->md.misc.thread = me; // tell notifier routine what to wake up
 
     err = OTBind(endpoint, &bindReq, NULL);
     if (err != kOTNoError)
@@ -610,20 +633,18 @@ PRInt32 _MD_listen(PRFileDesc *fd, PRIntn backlog)
 
     err = me->md.osErrCode;
     if (err != kOTNoError)
+    {
+    	// If OTBind failed, we're really not ready to listen after all.
+		fd->secret->md.doListen = PR_FALSE;
         goto ErrorExit;
-
-    PR_ASSERT(me->md.cookie == NULL);
+    }
 
     return kOTNoError;
 
 ErrorExit:
+	me->io_pending = PR_FALSE; // clear pending wait state if any
     macsock_map_error(err);
     return -1;
-#endif
-
-#pragma unused (fd, backlog)    
-    return kOTNoError;
-
 }
 
 
@@ -658,7 +679,7 @@ PRInt32 _MD_getsockname(PRFileDesc *fd, PRNetAddr *addr, PRUint32 *addrlen)
     bindReq.qlen = 0;
     
 	PR_Lock(fd->secret->md.miscLock);
-    PrepareForAsyncCompletion(me, fd);    
+    PrepareForAsyncCompletion(me, fd->secret->md.osfd);    
 	fd->secret->md.misc.thread = me;
 
     err = OTGetProtAddress(endpoint, &bindReq, NULL);
@@ -721,7 +742,7 @@ PRStatus _MD_getsockopt(PRFileDesc *fd, PRInt32 level, PRInt32 optname, char* op
     cmd.flags = T_CURRENT;
 
 	PR_Lock(fd->secret->md.miscLock);
-    PrepareForAsyncCompletion(me, fd);    
+    PrepareForAsyncCompletion(me, fd->secret->md.osfd);    
 	fd->secret->md.misc.thread = me;
 
     err = OTOptionManagement(endpoint, &cmd, &cmd);
@@ -914,7 +935,7 @@ PRStatus _MD_setsockopt(PRFileDesc *fd, PRInt32 level, PRInt32 optname, const ch
     }
     
 	PR_Lock(fd->secret->md.miscLock);
-    PrepareForAsyncCompletion(me, fd);    
+    PrepareForAsyncCompletion(me, fd->secret->md.osfd);    
 	fd->secret->md.misc.thread = me;
 
     err = OTOptionManagement(endpoint, &cmd, &cmd);
@@ -967,7 +988,7 @@ PRInt32 _MD_socketavailable(PRFileDesc *fd)
     
     err = OTCountDataBytes(endpoint, &bytes);
     if ((err == kOTLookErr) ||         // Not really errors, we just need to do a read,
-        (err == kOTNoDataErr))        // or thereÕs nothing there.
+        (err == kOTNoDataErr))        // or there’s nothing there.
         err = kOTNoError;
         
     if (err != kOTNoError)
@@ -981,23 +1002,123 @@ ErrorExit:
 }
 
 
+typedef struct RawEndpointAndThread
+{
+	PRThread *  thread;
+	EndpointRef endpoint;
+} RawEndpointAndThread;
+
+// Notification routine for raw endpoints not yet attached to a PRFileDesc.
+// Async callback routine.
+// A5 is OK. Cannot allocate memory here
+pascal void  RawEndpointNotifierRoutine(void * contextPtr, OTEventCode code, OTResult result, void * cookie)
+{
+	RawEndpointAndThread *endthr = (RawEndpointAndThread *) contextPtr;
+    PRThread *    thread   = endthr->thread;
+    EndpointRef * endpoint = endthr->endpoint;
+    _PRCPU *      cpu      = _PR_MD_CURRENT_CPU(); 
+	OSStatus      err;
+	OTResult	  resultOT;
+
+    switch (code)
+    {
+// OTLook Events - 
+        case T_LISTEN:        // A connection request is available
+            PR_ASSERT(!"T_EXDATA not implemented for raw endpoints");
+            break;
+			
+        case T_CONNECT:      // Confirmation of a connect request
+			// cookie = sndCall parameter from OTConnect()
+            err = OTRcvConnect(endpoint, NULL);
+            PR_ASSERT(err == kOTNoError);
+
+			// wake up waiting thread
+            break;
+
+        case T_DATA:        // Standard data is available
+			break;
+
+        case T_EXDATA:      // Expedited data is available
+            PR_ASSERT(!"T_EXDATA Not implemented for raw endpoints");
+			return;
+
+        case T_DISCONNECT:  // A disconnect is available
+            err = OTRcvDisconnect(endpoint, NULL);
+            PR_ASSERT(err == kOTNoError);
+            break;
+		
+        case T_ERROR:       // obsolete/unused in library
+            PR_ASSERT(!"T_ERROR Not implemented for raw endpoints");
+			return;		
+		
+        case T_UDERR:       // UDP Send error; clear the error
+			(void) OTRcvUDErr((EndpointRef) cookie, NULL);
+            break;
+
+        case T_ORDREL:      // An orderly release is available
+            err = OTRcvOrderlyDisconnect(endpoint);
+            PR_ASSERT(err == kOTNoError);
+            break;		
+
+        case T_GODATA:   // Flow control lifted on standard data
+			resultOT = OTLook(endpoint);		// clear T_GODATA event
+			PR_ASSERT(resultOT == T_GODATA);
+			
+			// wake up waiting thread, if any
+            break;
+
+        case T_GOEXDATA: // Flow control lifted on expedited data
+            PR_ASSERT(!"T_GOEXDATA Not implemented");
+			return;
+
+        case T_REQUEST:  // An Incoming request is available
+            PR_ASSERT(!"T_REQUEST Not implemented");
+            return;
+
+        case T_REPLY:    // An Incoming reply is available
+            PR_ASSERT(!"T_REPLY Not implemented");
+            return;
+
+        case T_PASSCON:  // State is now T_DATAXFER
+			// OTAccept() complete, receiving endpoint in T_DATAXFER state
+			// cookie = OTAccept() resRef parameter
+			break;
+            
+// Async Completion Events
+        case T_BINDCOMPLETE:
+        case T_UNBINDCOMPLETE:
+        case T_ACCEPTCOMPLETE:
+        case T_OPTMGMTCOMPLETE:
+        case T_GETPROTADDRCOMPLETE:
+            break;
+
+		// for other OT events, see NotifierRoutine above
+        default:
+            return;
+    }
+
+	if (thread) {
+		thread->md.osErrCode = result;
+		if (_PR_MD_GET_INTSOFF()) {
+			cpu->u.missed[cpu->where] |= _PR_MISSED_IO;
+			thread->md.asyncNotifyPending = PR_TRUE;
+			return;
+		}
+		DoneWaitingOnThisThread(thread);
+	}
+}
+
 PRInt32 _MD_accept(PRFileDesc *fd, PRNetAddr *addr, PRUint32 *addrlen, PRIntervalTime timeout)
 {
-#pragma unused (fd, addr, addrlen, timeout)
-
-    PR_ASSERT(!"_MD_accept Not implemented");
-	return -1;
-
-#if 0
     OSStatus err;
     EndpointRef endpoint = (EndpointRef) fd->secret->md.osfd;
     PRThread *me = _PR_MD_CURRENT_THREAD();
     TBind bindReq;
     PRNetAddr bindAddr;
     PRInt32 newosfd = -1;
-    EndpointRef newEndpoint;
     TCall call;
     PRNetAddr callAddr;
+    RawEndpointAndThread *endthr = NULL;
 
     if (endpoint == NULL) {
         err = kEBADFErr;
@@ -1009,48 +1130,54 @@ PRInt32 _MD_accept(PRFileDesc *fd, PRNetAddr *addr, PRUint32 *addrlen, PRInterva
     call.addr.maxlen = PR_NETADDR_SIZE(&callAddr);
     call.addr.len = PR_NETADDR_SIZE(&callAddr);
     call.addr.buf = (UInt8*) &callAddr;
-    
-    PrepareForAsyncCompletion(me, fd);    
 
-    err = OTListen (endpoint, &call);
-    if (err != kOTNoError && (err != kOTNoDataErr || fd->secret->nonblocking)) {
-        me->io_pending = PR_FALSE;
-        goto ErrorExit;
-    }
-
-    while (err == kOTNoDataErr) {
-        WaitOnThisThread(me, timeout);
-        err = me->md.osErrCode;
-        if (err != kOTNoError)
-            goto ErrorExit;
-
-        PrepareForAsyncCompletion(me, fd);    
-
-        err = OTListen (endpoint, &call);
-        if (err == kOTNoError)
-            break;
-
-        PR_ASSERT(err == kOTNoDataErr);
-    }        
+	do {
+	    PrepareForAsyncCompletion(me, fd->secret->md.osfd);
+	    fd->secret->md.misc.thread = me;
+	    
+	    // Perform the listen. 
+	    err = OTListen (endpoint, &call);
+	    if (err == kOTNoError)
+	    	break; // got the call information
+	    else if ((!fd->secret->nonblocking) && (err == kOTNoDataErr)) {
+	        WaitOnThisThread(me, timeout);
+	        err = me->md.osErrCode;
+	        if ((err != kOTNoError) && (err != kOTNoDataErr))
+	        	goto ErrorExit;
+			// we can get kOTNoError here, but still need
+			// to loop back to call OTListen, in order
+			// to get call info for OTAccept
+	    } else {
+	    	goto ErrorExit; // we're nonblocking, and/or we got an error
+	    }   
+	}
+	while(1);
 
     newosfd = _MD_socket(AF_INET, SOCK_STREAM, 0);
     if (newosfd == -1)
         return -1;
-
-    newEndpoint = (EndpointRef)newosfd;
+            
+	// Attach the raw endpoint handler to this endpoint for now.
+	endthr = (RawEndpointAndThread *) PR_Malloc(sizeof(RawEndpointAndThread));
+	endthr->thread = me;
+	endthr->endpoint = (EndpointRef) newosfd;
+	
+	err = OTInstallNotifier((ProviderRef) newosfd, RawEndpointNotifierRoutine, endthr);
+    PR_ASSERT(err == kOTNoError);
     
-    // Bind to a local port; let the system assign it.
+	err = OTSetAsynchronous((EndpointRef) newosfd);
+	PR_ASSERT(err == kOTNoError);
 
+    // Bind to a local port; let the system assign it.
     bindAddr.inet.port = bindAddr.inet.ip = 0;
 
     bindReq.addr.maxlen = PR_NETADDR_SIZE (&bindAddr);
     bindReq.addr.len = 0;
     bindReq.addr.buf = (UInt8*) &bindAddr;
     bindReq.qlen = 0;
-    
-    PrepareThreadForAsyncIO(me, newosfd);    
 
-    err = OTBind(newEndpoint, &bindReq, NULL);
+    PrepareForAsyncCompletion(me, newosfd);    
+    err = OTBind((EndpointRef) newosfd, &bindReq, NULL);
     if (err != kOTNoError)
         goto ErrorExit;
 
@@ -1060,10 +1187,10 @@ PRInt32 _MD_accept(PRFileDesc *fd, PRNetAddr *addr, PRUint32 *addrlen, PRInterva
     if (err != kOTNoError)
         goto ErrorExit;
 
-    PrepareThreadForAsyncIO(me, newosfd);    
+    PrepareForAsyncCompletion(me, newosfd);    
 
-    err = OTAccept (endpoint, newEndpoint, &call);
-    if (err != kOTNoError)
+    err = OTAccept (endpoint, (EndpointRef) newosfd, &call);
+ 	if ((err != kOTNoError) && (err != kOTNoDataErr))
         goto ErrorExit;
 
     WaitOnThisThread(me, timeout);
@@ -1077,14 +1204,18 @@ PRInt32 _MD_accept(PRFileDesc *fd, PRNetAddr *addr, PRUint32 *addrlen, PRInterva
     if (addrlen != NULL)
         *addrlen = call.addr.len;
 
+	// Remove the temporary notifier we installed to set up the new endpoint.
+	OTRemoveNotifier((EndpointRef) newosfd);
+	PR_Free(endthr); // free the temporary context we set up for this endpoint
+
     return newosfd;
 
 ErrorExit:
+	me->io_pending = PR_FALSE; // clear pending wait state if any
     if (newosfd != -1)
         _MD_closesocket(newosfd);
     macsock_map_error(err);
     return -1;
-#endif
 }
 
 
@@ -1117,7 +1248,7 @@ PRInt32 _MD_connect(PRFileDesc *fd, PRNetAddr *addr, PRUint32 addrlen, PRInterva
     bindReq.qlen = 0;
     
 	PR_Lock(fd->secret->md.miscLock);
-    PrepareForAsyncCompletion(me, fd);    
+    PrepareForAsyncCompletion(me, fd->secret->md.osfd);    
 	fd->secret->md.misc.thread = me;
 
     err = OTBind(endpoint, &bindReq, NULL);
@@ -1141,7 +1272,7 @@ PRInt32 _MD_connect(PRFileDesc *fd, PRNetAddr *addr, PRUint32 addrlen, PRInterva
     sndCall.addr.buf = (UInt8*) addr;
 
 	if (!fd->secret->nonblocking) {    
-        PrepareForAsyncCompletion(me, fd);    
+        PrepareForAsyncCompletion(me, fd->secret->md.osfd);    
 	    fd->secret->md.write.thread = me;
     }
 	
@@ -1205,21 +1336,71 @@ static PRInt32 SendReceiveStream(PRFileDesc *fd, void *buf, PRInt32 amount,
         
     while (bytesLeft > 0) {
     
-        PrepareForAsyncCompletion(me, fd);    
+        PrepareForAsyncCompletion(me, fd->secret->md.osfd);    
 
         if (opCode == kSTREAM_SEND) {
-			fd->secret->md.write.thread = me;
-			fd->secret->md.writeReady = PR_FALSE;				// expect the worst
-            result = OTSnd(endpoint, buf, bytesLeft, NULL);
-			if (result != kOTFlowErr)							// hope for the best
-				fd->secret->md.writeReady = PR_TRUE;
+        	do {
+
+				fd->secret->md.write.thread = me;
+				fd->secret->md.writeReady = PR_FALSE;				// expect the worst
+	            result = OTSnd(endpoint, buf, bytesLeft, NULL);
+				fd->secret->md.writeReady = (result != kOTFlowErr);
+				if (fd->secret->nonblocking)							// hope for the best
+					break;
+				else {
+
+					// We drop through on anything other than a blocking write.
+					if (result != kOTFlowErr)
+						break;
+
+					// Blocking write, but the pipe is full. Wait for an event,
+					// hoping that it's a T_GODATA event.
+					WaitOnThisThread(me, PR_INTERVAL_NO_TIMEOUT);
+					result = me->md.osErrCode;
+					if (result != kOTNoError) // got interrupted, or some other error
+						break;
+
+					// Prepare to loop back and try again
+  			   		PrepareForAsyncCompletion(me, fd->secret->md.osfd);  
+				}
+			}
+			while(1);
         } else {
-			fd->secret->md.read.thread = me;
-			fd->secret->md.readReady = PR_FALSE;				// expect the worst			
-            result = OTRcv(endpoint, buf, bytesLeft, NULL);
-			if (result != kOTNoDataErr)							// hope for the best
-				fd->secret->md.readReady = PR_TRUE;
+        	do {
+				fd->secret->md.read.thread = me;
+				fd->secret->md.readReady = PR_FALSE;				// expect the worst			
+	            result = OTRcv(endpoint, buf, bytesLeft, NULL);
+	            if (fd->secret->nonblocking) {
+					fd->secret->md.readReady = (result != kOTNoDataErr);
+					break;
+				} else {
+					if (result != kOTNoDataErr) {
+			      		// If we successfully read a blocking socket, check for more data.
+			      		// According to IM:OT, we should be able to rely on OTCountDataBytes
+			      		// to tell us whether there is a nonzero amount of data pending.
+			        	size_t count;
+			        	OSErr tmpResult;
+			        	tmpResult = OTCountDataBytes(endpoint, &count);
+				        fd->secret->md.readReady = ((tmpResult == kOTNoError) && (count > 0));
+		
+						break;
+				    }
+
+					// Blocking read, but no data available. Wait for an event
+					// on this endpoint, and hope that we get a T_DATA event.
+					WaitOnThisThread(me, PR_INTERVAL_NO_TIMEOUT);
+					result = me->md.osErrCode;
+					if (result != kOTNoError) // interrupted thread, etc.
+						break;
+
+					// Prepare to loop back and try again
+  			   		PrepareForAsyncCompletion(me, fd->secret->md.osfd);  
+				}
+			}
+			// Retry read if we had to wait for data to show up.
+			while(1);
         }
+
 		me->io_pending = PR_FALSE;
 
         if (result > 0) {
@@ -1321,7 +1502,7 @@ static PRInt32 SendReceiveDgram(PRFileDesc *fd, void *buf, PRInt32 amount,
 
     while (bytesLeft > 0) {
     
-        PrepareForAsyncCompletion(me, fd);    
+        PrepareForAsyncCompletion(me, fd->secret->md.osfd);    
 
         if (opCode == kDGRAM_SEND) {
 			fd->secret->md.write.thread = me;
@@ -1559,6 +1740,8 @@ void _MD_freefiledesc(PRFileDesc *fd)
 	}
 }
 
+// _MD_makenonblock is also used for sockets meant to be used for blocking I/O,
+// in order to install the notifier routine for async completion.
 void _MD_makenonblock(PRFileDesc *fd)
 {
 	// We simulate non-blocking mode using async mode rather
@@ -1568,8 +1751,13 @@ void _MD_makenonblock(PRFileDesc *fd)
 	ProviderRef	endpointRef = (ProviderRef)fd->secret->md.osfd;
 	OSStatus	err;
 	
-	// Install the PRFileDesc as the contextPtr for the Notifier function associated with this Endpoint.
-	err = OTInstallNotifier(endpointRef, NOTIFIER_ROUTINE, fd);
+	// Install fd->secret as the contextPtr for the Notifier function associated with this 
+	// endpoint. We use this instead of the fd itself because:
+	//            (a) in cases where you import I/O layers, the containing 
+	//                fd changes, but the secret structure does not;
+	//            (b) the notifier func refers only to the secret data structure
+	//                anyway.
+	err = OTInstallNotifier(endpointRef, NOTIFIER_ROUTINE, fd->secret);
 	PR_ASSERT(err == kOTNoError);
 	
 	// Now that we have a NotifierRoutine installed, we can make the endpoint asynchronous
@@ -1587,12 +1775,52 @@ return (0);
 }                               
 
 
-PR_IMPLEMENT(PRStatus) _MD_getpeername(PRFileDesc *fd, PRNetAddr *addr, PRUint32 *addrlen)
+PR_IMPLEMENT(PRStatus) 
+_MD_getpeername(PRFileDesc *fd, PRNetAddr *addr, PRUint32 *addrlen)
 {
-#pragma unused (fd, addr, addrlen)
+    PRThread *me = _PR_MD_CURRENT_THREAD();
+	EndpointRef ep = (EndpointRef) fd->secret->md.osfd;
+	InetAddress inetAddr;
+	TBind peerAddr;
+	OSErr err;
+	
+	if (*addrlen < PR_NETADDR_SIZE(addr)) {
 
-    PR_ASSERT(0);
-    _PR_MD_CURRENT_THREAD()->md.osErrCode = unimpErr;
+		err = (OSErr) kEINVALErr;
+		goto ErrorExit;
+	}
+
+    peerAddr.addr.maxlen = sizeof(InetAddress);
+    peerAddr.addr.len = 0;
+    peerAddr.addr.buf = (UInt8*) &inetAddr;
+    peerAddr.qlen = 0;
+
+    PrepareForAsyncCompletion(me, fd->secret->md.osfd);    
+	fd->secret->md.misc.thread = me; // tell notifier routine what to wake up
+
+	err = OTGetProtAddress(ep, NULL, &peerAddr);
+	
+    if (err != kOTNoError)
+        goto ErrorExit;
+
+    WaitOnThisThread(me, PR_INTERVAL_NO_TIMEOUT);
+
+    err = me->md.osErrCode;
+    if ((err == kOTNoError) && (peerAddr.addr.len < sizeof(InetAddress)))
+    	err = kEBADFErr; // we don't understand the address we got
+    if (err != kOTNoError)
+    	goto ErrorExit;
+    	
+    // Translate the OT peer information into an NSPR address.
+    addr->inet.family = AF_INET;
+    addr->inet.port = (PRUint16) inetAddr.fPort;
+    addr->inet.ip = (PRUint32) inetAddr.fHost;
+    
+    *addrlen = PR_NETADDR_SIZE(addr); // return the amount of data obtained
+	return PR_SUCCESS;
+
+ErrorExit:
+    macsock_map_error(err);
     return PR_FAILURE;
 }                               
 
