@@ -81,7 +81,7 @@
 #     check for more required modules                  --MODULES--
 #     change the defaults for local configuration vars --LOCAL--
 #     update the assigned file permissions             --CHMOD--
-#     add more MySQL-related checks                    --MYSQL--
+#     add more database-related checks                 --DATABASE--
 #     change table definitions                         --TABLE--
 #     add more groups                                  --GROUPS--
 #     create initial administrator account             --ADMIN--
@@ -294,7 +294,7 @@ my $modules = [
     }, 
     { 
         name => 'DBI', 
-        version => '1.36' 
+        version => '1.38' 
     }, 
     { 
         name => 'DBD::mysql', 
@@ -672,9 +672,15 @@ LocalVar('db_host', q[
 # How to access the SQL database:
 #
 $db_host = 'localhost';         # where is the database?
-$db_port = 3306;                # which port to use
 $db_name = 'bugs';              # name of the MySQL database
 $db_user = 'bugs';              # user to attach to the MySQL database
+
+# Sometimes the database server is running on a non-standard
+# port. If that's the case for your database server, set this
+# to the port number that your database server is running on.
+# Setting this to 0 means "use the default port for my database
+# server."
+$db_port = 0;
 ]);
 LocalVar('db_pass', q[
 #
@@ -688,15 +694,17 @@ $db_pass = '';
 ]);
 
 LocalVar('db_sock', q[
-# Enter a path to the unix socket for mysql. If this is blank, then mysql\'s
-# compiled-in default will be used. You probably want that.
+# MySQL Only: Enter a path to the unix socket for mysql. If this is 
+# blank, then mysql\'s compiled-in default will be used. You probably 
+# want that.
 $db_sock = '';
 ]);
 
 LocalVar('db_check', q[
 #
-# Should checksetup.pl try to verify that your MySQL setup is correct?
-# (with some combinations of MySQL/Msql-mysql/Perl/moonphase this doesn't work)
+# Should checksetup.pl try to verify that your database setup is correct?
+# (with some combinations of database servers/Perl modules/moonphase this 
+# doesn't work)
 #
 $db_check = 1;
 ]);
@@ -1470,11 +1478,11 @@ require "globals.pl";
 $::ENV{'PATH'} = $origPath;
 
 ###########################################################################
-# Check MySQL setup
+# Check Database setup
 ###########################################################################
 
 #
-# Check if we have access to --MYSQL--
+# Check if we have access to the --DATABASE--
 #
 
 # No need to "use" this here.  It should already be loaded from the
@@ -1486,34 +1494,38 @@ $::ENV{'PATH'} = $origPath;
 if ($my_db_check) {
     # Do we have the database itself?
 
-    my $sql_want = "3.23.41";  # minimum version of MySQL
-    
     my $dbh = Bugzilla::DB::connect_main("no database connection");
-    printf("Checking for %15s %-9s ", "MySQL Server", "(v$sql_want)") unless $silent;
-    my $qh = $dbh->prepare("SELECT VERSION()");
-    $qh->execute;
-    my ($sql_vers) = $qh->fetchrow_array;
-    $qh->finish;
+    my $sql_want = $dbh->REQUIRED_VERSION;
+    my $sql_server = $dbh->PROGRAM_NAME;
+
+    printf("Checking for %15s %-9s ", $sql_server, "(v$sql_want)") unless $silent;
+    my $sql_vers = $dbh->bz_server_version;
 
     # Check what version of MySQL is installed and let the user know
     # if the version is too old to be used with Bugzilla.
     if ( vers_cmp($sql_vers,$sql_want) > -1 ) {
         print "ok: found v$sql_vers\n" unless $silent;
     } else {
-        die "\nYour MySQL server v$sql_vers is too old.\n" . 
-            "   Bugzilla requires version $sql_want or later of MySQL.\n" . 
-            "   Please visit http://www.mysql.com/ and download a newer version.\n";
+        die "\nYour $sql_server v$sql_vers is too old.\n" . 
+            "   Bugzilla requires version $sql_want or later of $sql_server.\n" . 
+            "   Please download and install a newer version.\n";
     }
-    if (( $sql_vers =~ /^4\.0\.(\d+)/ ) && ($1 < 2)) {
+    # This message is specific to MySQL.
+    if ($dbh->isa('Bugzilla::DB::Mysql') && ($sql_vers =~ /^4\.0\.(\d+)/) && ($1 < 2)) {
         die "\nYour MySQL server is incompatible with Bugzilla.\n" .
             "   Bugzilla does not support versions 4.x.x below 4.0.2.\n" .
             "   Please visit http://www.mysql.com/ and download a newer version.\n";
     }
 
-    my @databases = $dbh->func('_ListDBs');
-    unless (grep /^$my_db_name$/, @databases) {
+    # See if we can connect to the database.
+    my $conn_success = eval { 
+        my $check_dbh = Bugzilla::DB::connect_main(); 
+        $check_dbh->disconnect;
+    };
+    if (!$conn_success) {
        print "Creating database $my_db_name ...\n";
-       if (!$dbh->func('createdb', $my_db_name, 'admin')) {
+       # Try to create the DB, and if we fail print an error.
+       if (!eval { $dbh->do("CREATE DATABASE $my_db_name") }) {
             my $error = $dbh->errstr;
             die <<"EOF"
 
@@ -1523,11 +1535,12 @@ $error
 
 This might have several reasons:
 
-* MySQL is not running.
-* MySQL is running, but the rights are not set correct. Go and read the
-  Bugzilla Guide in the doc directory and all parts of the MySQL
-  documentation.
-* There is a subtle problem with Perl, DBI, DBD::mysql and MySQL. Make
+* $sql_server is not running.
+* $sql_server is running, but there is a problem either in the
+  server configuration or the database access rights. Read the Bugzilla
+  Guide in the doc directory. The section about database configuration
+  should help.
+* There is a subtle problem with Perl, DBI, or $sql_server. Make
   sure all settings in '$localconfig' are correct. If all else fails, set
   '\$db_check' to zero.\n
 EOF

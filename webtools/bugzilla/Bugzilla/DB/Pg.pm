@@ -47,12 +47,21 @@ use Carp;
 # This module extends the DB interface via inheritance
 use base qw(Bugzilla::DB);
 
+use constant REQUIRED_VERSION => '7.02.0000';
+use constant PROGRAM_NAME => 'PostgreSQL';
+
 sub new {
     my ($class, $user, $pass, $host, $dbname, $port) = @_;
 
+    # The default database name for PostgreSQL. We have
+    # to connect to SOME database, even if we have
+    # no $dbname parameter.
+    $dbname ||= 'template1';
+
     # construct the DSN from the parameters we got
-    my $dsn = "DBI:Pg:host=$host;dbname=$dbname;port=$port";
-    
+    my $dsn = "DBI:Pg:host=$host;dbname=$dbname";
+    $dsn .= ";port=$port" if $port;
+   
     my $self = $class->db_new($dsn, $user, $pass);
 
     # all class local variables stored in DBI derived class needs to have

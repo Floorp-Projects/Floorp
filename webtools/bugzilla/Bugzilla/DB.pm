@@ -173,7 +173,8 @@ sub _handle_error {
 # List of abstract methods we are checking the derived class implements
 our @_abstract_methods = qw(new sql_regexp sql_not_regexp sql_limit
                             sql_to_days sql_date_format sql_interval
-                            bz_lock_tables bz_unlock_tables);
+                            bz_lock_tables bz_unlock_tables
+                            REQUIRED_VERSION PROGRAM_NAME);
 
 # This overriden import method will check implementation of inherited classes
 # for missing implementation of abstract methods
@@ -200,17 +201,10 @@ sub import {
     $Exporter::ExportLevel-- if $is_exporter;
 }
 
-# note that when multiple databases are supported, version number does not
-# make sense anymore (as it is DB-dependent). This needs to be removed in
-# the future and places where it's used fixed.
-my $cached_server_version;
-sub server_version {
-    return $cached_server_version if defined($cached_server_version);
-    my $dbh = Bugzilla->dbh;
-    my $sth = $dbh->prepare('SELECT VERSION()');
-    $sth->execute();
-    ($cached_server_version) = $sth->fetchrow_array();
-    return $cached_server_version;
+# XXX - Needs to be documented.
+sub bz_server_version {
+    my ($self) = @_;
+    return $self->get_info(18); # SQL_DBMS_VER
 }
 
 sub bz_get_field_defs {
@@ -521,6 +515,26 @@ should be always preffered over hard-coding SQL commands.
 Access to the old SendSQL-based database routines are also provided by
 importing the C<:deprecated> tag. These routines should not be used in new
 code.
+
+=head1 CONSTANTS
+
+Subclasses of Bugzilla::DB are required to define certain constants. These
+constants are required to be subroutines or "use constant" variables.
+
+=over 4
+
+=item C<REQUIRED_VERSION>
+
+This is the minimum required version of the database server that the
+Bugzilla::DB subclass requires. It should be in a format suitable for
+passing to vers_cmp during installation.
+
+=item C<PROGRAM_NAME>
+
+The human-readable name of this database. For example, for MySQL, this
+would be 'MySQL.' You should not depend on this variable to know what
+type of database you are running on; this is intended merely for displaying
+to the admin to let them know what DB they're running.
 
 =head1 CONNECTION
 

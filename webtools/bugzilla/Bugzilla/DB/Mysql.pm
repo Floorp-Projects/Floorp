@@ -47,11 +47,15 @@ use Carp;
 # This module extends the DB interface via inheritance
 use base qw(Bugzilla::DB);
 
+use constant REQUIRED_VERSION => '3.23.41';
+use constant PROGRAM_NAME => 'MySQL';
+
 sub new {
     my ($class, $user, $pass, $host, $dbname, $port, $sock) = @_;
 
     # construct the DSN from the parameters we got
-    my $dsn = "DBI:mysql:host=$host;database=$dbname;port=$port";
+    my $dsn = "DBI:mysql:host=$host;database=$dbname";
+    $dsn .= ";port=$port" if $port;
     $dsn .= ";mysql_socket=$sock" if $sock;
     
     my $self = $class->db_new($dsn, $user, $pass);
