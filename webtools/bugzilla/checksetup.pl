@@ -1097,7 +1097,7 @@ AddFDef("component", "Component", 1);
 AddFDef("assigned_to", "AssignedTo", 1);
 AddFDef("reporter", "ReportedBy", 1);
 AddFDef("votes", "Votes", 0);
-AddFDef("qa_contact", "QAContact", 0);
+AddFDef("qa_contact", "QAContact", 1);
 AddFDef("cc", "CC", 1);
 AddFDef("dependson", "BugsThisDependsOn", 0);
 AddFDef("blocked", "OtherBugsDependingOnThis", 0);

@@ -68,12 +68,6 @@ foreach my $i (@::param_list) {
 #      print "Old: '" . url_quote(Param($i)) . "'<BR>\n";
 #      print "New: '" . url_quote($::FORM{$i}) . "'<BR>\n";
         $::param{$i} = $::FORM{$i};
-        # If the useqacontact Param is changing, update the mailheader
-        if ($i eq 'useqacontact') {
-            print "&nbsp;&nbsp;&nbsp;- Updating mailhead information<br>\n";
-            SendSQL("UPDATE fielddefs SET mailhead = " . SqlQuote($::param{$i}) .
-                    "WHERE name = 'qa_contact'");
-        }
     }
 }
 
