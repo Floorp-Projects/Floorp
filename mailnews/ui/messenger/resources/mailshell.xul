@@ -99,7 +99,9 @@
 <!ENTITY pageInfoCmd.label ".Page Info">  
 <!ENTITY charSetMenu.label "Character Set"> 
 <!ENTITY westernCmd.label "Western (ISO-8859-1)">  
-<!ENTITY japaneseCmd.label "Japanese (ISO-2022-JP)">  
+<!ENTITY japaneseISO_2022_JPCmd.label "Japanese (ISO-2022-JP)">  
+<!ENTITY japaneseShift_JISCmd.label "Japanese (Shift_JIS)">  
+<!ENTITY japaneseEUC_JPCmd.label "Japanese (EUC-JP)">  
 <!ENTITY goMenu.label ".Go"> 
 <!ENTITY firstUnreadMsgCmd.label ".First Unread Message">  
 <!ENTITY firstFlaggedMsgCmd.label ".First Flagged Message">  
@@ -320,7 +322,9 @@
       <separator/>
       <menu name="&charSetMenu.label;">
         <menuitem name="&westernCmd.label;" onclick="SetDocumentCharacterSet('ISO-8859-1');"/>
-        <menuitem name="&japaneseCmd.label;" onclick="SetDocumentCharacterSet('ISO-2022-JP');"/>
+        <menuitem name="&japaneseISO_2022_JPCmd.label;" onclick="SetDocumentCharacterSet('ISO-2022-JP');"/>
+        <menuitem name="&japaneseShift_JISCmd.label;" onclick="SetDocumentCharacterSet('Shift_JIS');"/>
+        <menuitem name="&japaneseEUC_JPCmd.label;" onclick="SetDocumentCharacterSet('EUC-JP');"/>
       </menu>
     </menu>
     <menu name="&goMenu.label;">

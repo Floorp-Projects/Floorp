@@ -23,6 +23,8 @@ function SetDocumentCharacterSet(aCharset)
   var appCore = FindMsgAppCore(); 
   if (appCore != null) {
     dump(aCharset);dump("\n");
+    appCore.SetDocumentCharset(aCharset);
+    MsgReload();
   } else {
     dump("MsgAppCore has not been created!\n");
   }
