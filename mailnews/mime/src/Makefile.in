@@ -45,6 +45,7 @@ EXPORTS =\
 		$(NULL)
 
 CPPSRCS = \
+    nsMimeURLUtils.cpp  \
 		nsMimeFactory.cpp	\
 		nsMimeObjectClassAccess.cpp		\
 		nsMimeConverter.cpp		\

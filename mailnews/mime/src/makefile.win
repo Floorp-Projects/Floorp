@@ -42,7 +42,7 @@ DEPTH=..\..\..
 MODULE  = mime
 REQUIRES= 
 #EXPORTS =\
-#		$(NULL)
+#        $(NULL)
 
 
 #DEFINES= -DEBUG_rhp -DHAVE_MIME_DATA_SLOT -D_IMPL_NS_HTML 
@@ -96,6 +96,7 @@ OBJS=							\
 			.\$(OBJDIR)\mimecom.obj		\
 			.\$(OBJDIR)\mimemoz2.obj	\
 			.\$(OBJDIR)\nsMsgHeaderParser.obj \
+      .\$(OBJDIR)\nsMimeURLUtils.obj \
 #
 # THIS WILL NEED WORK AFTER WE GET A LIBMSG MORE XP-COM-afied
 #			.\$(OBJDIR)\mimedrft.obj	\

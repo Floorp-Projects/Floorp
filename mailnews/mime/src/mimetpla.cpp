@@ -21,6 +21,7 @@
 #include "prmem.h"
 #include "plstr.h"
 #include "nsMimeTransition.h"
+#include "nsMimeURLUtils.h"
 
 #define MIME_SUPERCLASS mimeInlineTextClass
 MimeDefClass(MimeInlineTextPlain, MimeInlineTextPlainClass,
@@ -125,11 +126,15 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
 	 been done.
    */
   *obj->obuffer = 0;
-  status = nsScanForURLs (
-							line, length, obj->obuffer, obj->obuffer_size - 10,
-							(obj->options ?
-							 obj->options->dont_touch_citations_p : PR_FALSE));
-  if (status < 0) return status;
+
+  nsMimeURLUtils myUtil;
+
+  status = myUtil.ScanForURLs(line, length, obj->obuffer, obj->obuffer_size - 10,
+							                (obj->options ?
+							                obj->options->dont_touch_citations_p : PR_FALSE));
+  if (status != NS_OK)
+    return status;
+
   PR_ASSERT(*line == 0 || *obj->obuffer);
   return MimeObject_write(obj, obj->obuffer, PL_strlen(obj->obuffer), PR_TRUE);
 }

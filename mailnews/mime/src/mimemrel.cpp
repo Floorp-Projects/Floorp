@@ -111,6 +111,7 @@
 #include "nsCRT.h"
 #include "msgCore.h"
 #include "nsCOMPtr.h"
+#include "nsMimeURLUtils.h"
 
 extern "C" int MK_UNABLE_TO_OPEN_TMP_FILE;
 
@@ -343,42 +344,13 @@ MimeThisIsStartPart(MimeObject *obj, MimeObject* child)
 PUBLIC char *
 MakeAbsoluteURL(char * absolute_url, char * relative_url)
 {
-  return nsMakeAbsoluteURL(absolute_url, relative_url);
+  nsMimeURLUtils myUtil;
+  char           *retString;
 
-  /***
-
-  nsString  aBaseURL(absolute_url);
-  nsString  aSpec(relative_url);
-  nsString  aResult;
-  nsIURL    *url = nsnull;
-  char      *retVal;
-
-  nsCOMPtr<nsIURL> tmpURL;
-  nsresult rv = NS_NewURL(getter_AddRefs(tmpURL), aBaseURL);
-  if (NS_FAILED(rv))
-    return NULL;
-
-  rv = NS_MakeAbsoluteURL(tmpURL, aBaseURL, aSpec, aResult);
-
-  if (rv != NS_OK)
-    return NULL;
+  if (myUtil.MakeAbsoluteURL(absolute_url, relative_url, &retString) == NS_OK)
+    return retString;
   else
-    return (aResult.ToNewCString());
-
-  nsresult err = NS_NewURL(&url, aSpec, aBaseURL);
-  if (err != NS_OK) 
     return NULL;
-
-  if (NS_OK != url->GetSpec(&retVal))
-    return NULL;
-
-  return retVal;
-
-  if (NS_OK != NS_MakeAbsoluteURL(nsnull, aBaseURL, aSpec, aResult))
-    return NULL;
-  else
-    return (aResult.ToNewCString());
-*/
 }
 
 static PRBool

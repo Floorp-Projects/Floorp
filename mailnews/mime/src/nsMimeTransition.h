@@ -73,11 +73,4 @@ NET_cinfo_find_type (char *uri);
 extern "C" NET_cinfo *
 NET_cinfo_find_info_by_type (char *uri);
 
-extern "C" int
-nsScanForURLs(const char *input, int32 input_size,
-              char *output, int output_size, XP_Bool urls_only);
-
-extern "C" char *
-nsMakeAbsoluteURL(char * absolute_url, char * relative_url);
-
 #endif /* nsMimeTransition_h_ */

@@ -48,6 +48,9 @@ static   NS_DEFINE_CID(kINetPluginMIMECID,  NS_INET_PLUGIN_MIME_CID);
 #include "nsMsgHeaderParser.h"
 static NS_DEFINE_CID(kCMsgHeaderParserCID, NS_MSGHEADERPARSER_CID);
 
+#include "nsMimeURLUtils.h"
+static NS_DEFINE_CID(kCIMimeURLUtilsCID, NS_IMIME_URLUTILS_CID);
+
 ////////////////////////////////////////////////////////////
 //
 ////////////////////////////////////////////////////////////
@@ -154,6 +157,12 @@ nsresult nsMimeFactory::CreateInstance(nsISupports *aOuter, const nsIID &aIID, v
 	{
 		res = NS_NewHeaderParser((nsIMsgHeaderParser **) &inst);
 	}
+  else if (mClassID.Equals(kCIMimeURLUtilsCID))
+  {
+    res = NS_NewMimeURLUtils((nsIMimeURLUtils **) &inst);
+    if (res != NS_OK)  // was there a problem creating the object ?
+		    return res;
+  }
 
 	// End of checking the interface ID code....
 	if (inst)

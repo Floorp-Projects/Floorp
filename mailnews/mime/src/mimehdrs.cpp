@@ -38,6 +38,7 @@
 #include "comi18n.h"
 #include "nsMailHeaders.h"
 #include "msgCore.h"
+#include "nsMimeURLUtils.h"
 
 extern "C" int MK_OUT_OF_MEMORY;
 extern "C" int MK_MSG_NO_HEADERS;
@@ -1041,11 +1042,21 @@ MimeHeaders_write_random_header_1 (MimeHeaders *hdrs,
 		 Note: this function does no charset conversion; that has
 		 already been done.
 	   */
+/*RICHIE
 	  status = nsScanForURLs (
 								contents, contents_length, out,
 								hdrs->obuffer_size - (out - hdrs->obuffer) -10,
 								PR_TRUE);
 	  if (status < 0) return status;
+*/
+    nsMimeURLUtils myUtil;
+
+    status = myUtil.ScanForURLs(contents, contents_length, out,
+								              hdrs->obuffer_size - (out - hdrs->obuffer) -10,
+								              PR_TRUE);
+    if (status != NS_OK)
+      return status;
+
 	  out += PL_strlen(out);
 	  PR_ASSERT(out < (hdrs->obuffer + hdrs->obuffer_size));
 
@@ -2112,11 +2123,13 @@ MimeHeaders_write_microscopic_headers (MimeHeaders *hdrs,
   PL_strcpy(out, ": </B></TD><TD VALIGN=TOP BGCOLOR=\"#CCCCCC\">");
   out += PL_strlen(out);
   if (subj) {
-	  status = nsScanForURLs(
+    nsMimeURLUtils myUtil;
+
+    status = myUtil.ScanForURLs(
 							   subj, PL_strlen(subj), out,
 							   hdrs->obuffer_size - (out - hdrs->obuffer) - 10,
 							   PR_TRUE);
-	  if (status < 0) goto FAIL;
+	  if (status != NS_OK) goto FAIL;
   } else {
 	  PL_strcpy(out, "<BR>");
   }
