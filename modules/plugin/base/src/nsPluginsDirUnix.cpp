@@ -337,12 +337,17 @@ nsPluginsDir::~nsPluginsDir()
 PRBool nsPluginsDir::IsPluginFile(const nsFileSpec& fileSpec)
 {
     const char* pathname = fileSpec.GetCString();
-
+    PRBool ret = PR_FALSE;
+    if (pathname) {
+        int n = PL_strlen(pathname) - (sizeof(LOCAL_PLUGIN_DLL_SUFFIX) - 1); 
+        if (n > 0 && !PL_strcmp(&pathname[n], LOCAL_PLUGIN_DLL_SUFFIX)) {
+            ret  = PR_TRUE; // *.so or *.sl file
+        }
 #ifdef NS_DEBUG
-    printf("IsPluginFile(%s)\n", pathname);
+        printf("IsPluginFile(%s) == %s\n", pathname, ret?"TRUE":"FALSE");
 #endif
-
-    return PR_TRUE;
+    }
+    return ret;
 }
 
 ///////////////////////////////////////////////////////////////////////////
