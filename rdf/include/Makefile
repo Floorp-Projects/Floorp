@@ -23,6 +23,7 @@ MODULE	= rdf
 DEPTH	= ../..
 EXPORTS	= \
 	rdf.h 			\
+	rdfc.h 			\
 	htrdf.h 		\
 	vocab.h			\
 	jsec2rdf.h		\
