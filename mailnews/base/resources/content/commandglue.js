@@ -386,6 +386,7 @@ function FindThreadPaneColumnBySortResource(sortID)
 //If it's not true then use the direction passed in.
 function SortThreadPane(column, sortKey, secondarySortKey, toggleCurrentDirection, direction)
 {
+	dump("In SortThreadPane\n");
 	var node = document.getElementById(column);
 	if(!node)
 		return false;
@@ -403,6 +404,8 @@ function SortThreadPane(column, sortKey, secondarySortKey, toggleCurrentDirectio
 					direction = "ascending";
 		}
 	}
+
+	UpdateSortIndicator(column, direction);
 
    var folder = GetSelectedFolder();
 	if(folder)
@@ -426,6 +429,75 @@ function SortThreadPane(column, sortKey, secondarySortKey, toggleCurrentDirectio
 	return result;
 }
 
+//------------------------------------------------------------
+// Sets the column header sort icon based on the requested 
+// column and direction.
+// 
+// Notes:
+// (1) This function relies on the first part of the 
+//     <treecell id> matching the <treecol id>.  The treecell
+//     id must have a "Header" suffix.
+// (2) By changing the "sortDirection" attribute, a different
+//     CSS style will be used, thus changing the icon based on
+//     the "sortDirection" parameter.
+//------------------------------------------------------------
+function UpdateSortIndicator(column,sortDirection)
+{
+	// Find the <treerow> element
+	var treerow = document.getElementById("headRow");
+
+	//The SortThreadPane function calls the Sender/Recipient column 'AuthorColumn' 
+	//but it's treecell header id is actually 'SenderColumnHeader', so we need to flip
+	//it here so that the css can handle changing it's style correctly.
+	if(column == "AuthorColumn"){
+		column = "SenderColumn";
+	}
+
+	//Sorting by UnreadButtonColumn and FlaggedButtonColumn causes 
+	//display problems in their respective column headers, so we disable
+	//the changing of their header appearances. (We also need to remove the
+	//sort indicator from the other columns, because sorting by FlaggedButton
+	//and UnreadButton is still taking place, only not being indicated.)
+	if(column == "UnreadButtonColumn" || column == "FlaggedButtonColumn"){
+		var treecell = treerow.getElementsByTagName("treecell");
+		// Loop through each treecell...
+		var node_count = treecell.length;
+		for (var i=0; i < node_count; i++)
+		{
+			treecell[i].removeAttribute('sortDirection');
+		}
+		return;
+	}
+
+	var id = column + "Header";
+	
+	if (treerow)
+	{
+		// Grab all of the <treecell> elements
+		var treecell = treerow.getElementsByTagName("treecell");
+		if (treecell)
+		{
+			// Loop through each treecell...
+			var node_count = treecell.length;
+			for (var i=0; i < node_count; i++)
+			{
+				// Is this the requested column ?
+				if (id == treecell[i].getAttribute("id"))
+				{
+					// Set the sortDirection so the class (CSS) will add the
+					// appropriate icon to the header cell
+					treecell[i].setAttribute('sortDirection',sortDirection);
+				}
+				else
+				{
+					// This is not the sorted row
+					treecell[i].removeAttribute('sortDirection');
+				}
+			}
+		}
+	}
+}
+
 function SortFolderPane(column, sortKey)
 {
 	var node = FindInSidebar(window, column);
@@ -439,7 +511,7 @@ function SortFolderPane(column, sortKey)
 
 function SortColumn(node, sortKey, secondarySortKey, direction)
 {
-	dump('In sortColumn\n');
+	dump('In SortColumn\n');
 	var xulSortService = Components.classes["component://netscape/rdf/xul-sort-service"].getService();
 
 	if (xulSortService)
