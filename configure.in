@@ -1964,10 +1964,6 @@ dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(Untested or Broken Options)
 
-MOZ_ARG_ENABLE_BOOL(crypto,
-[  --enable-crypto         Enable use of SSL (untested)],
-  MOZ_SECURITY=1)
-
 dnl Netcaster is dead
 dnl MOZ_ARG_ENABLE_BOOL(netcast,
 dnl [  --enable-netcast        Enable use of netcast (untested)],
