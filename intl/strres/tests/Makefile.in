@@ -21,8 +21,17 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+include $(DEPTH)/config/config.mk
+
 CPPSRCS		= StringBundleTest.cpp
 
+ifeq ($(OS_ARCH),BEOS)
+LIBS		=\
+	-lxpcom		\
+	$(ZLIB_LIBS)	\
+	$(NSPR_LIBS)	\
+	$(NULL)		
+else
 LIBS		= \
 	-lraptorgfx	\
 	-lgfx$(MOZ_TOOLKIT) \
@@ -51,6 +60,7 @@ LIBS		= \
 	$(ZLIB_LIBS) \
 	$(NSPR_LIBS) \
 	$(NULL)
+endif
 
 SIMPLE_PROGRAMS = $(CPPSRCS:.cpp=)
 
