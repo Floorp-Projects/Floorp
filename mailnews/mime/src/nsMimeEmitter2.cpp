@@ -149,11 +149,9 @@ nsMimeEmitter2::StartHeader(PRBool rootMailHeader, PRBool headerOnly, const char
   {
     if ( (!headerOnly) && (outCharset) && (*outCharset) )
     {
-/**
       UtilityWrite("<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=");
       UtilityWrite(outCharset);
       UtilityWrite("\">");
-**/
 #ifdef NS_DEBUG
 printf("Warning: <META HTTP-EQUIV> with charset defined chokes Ender!\n");
 #endif
