@@ -58,7 +58,7 @@ function InitDialog() {
     // We don't have an element selected, 
     //  so create one with default attributes
     dump("Element not selected - calling createElementWithDefaults\n");
-    element = appCore.createElementWithDefaults(tagName);
+    element = editorShell.createElementWithDefaults(tagName);
   }
 
   if(!element)
