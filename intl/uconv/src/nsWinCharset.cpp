@@ -33,6 +33,9 @@
 NS_DEFINE_IID(kIWin32LocaleIID, NS_IWIN32LOCALE_IID);
 NS_DEFINE_CID(kWin32LocaleFactoryCID, NS_WIN32LOCALEFACTORY_CID);
 
+static nsURLProperties *gInfo = nsnull;
+static PRInt32 gCnt= 0;
+
 class nsWinCharset : public nsIPlatformCharset
 {
   NS_DECL_ISUPPORTS
@@ -54,23 +57,30 @@ nsWinCharset::nsWinCharset()
 {
   NS_INIT_REFCNT();
   PR_AtomicIncrement(&g_InstanceCount);
-  nsAutoString propertyURL("resource:/res/wincharset.properties");
+  PR_AtomicIncrement(&gCnt); // count for gInfo
 
-  nsURLProperties *info = new nsURLProperties( propertyURL );
+  // XXX We should make the following block critical section
+  if(nsnull == gInfo)
+  {
+     nsAutoString propertyURL("resource:/res/wincharset.properties");
 
-  if( info ) 
+     nsURLProperties *info = new nsURLProperties( propertyURL );
+     NS_ASSERTION( info , " cannot create nsURLProperties");
+     gInfo = info;
+  }
+  NS_ASSERTION(gInfo, "Cannot open property file");
+  if( gInfo ) 
   {
           UINT acp = ::GetACP();
           PRInt32 acpint = (PRInt32)(acp & 0x00FFFF);
           nsAutoString acpKey("acp.");
           acpKey.Append(acpint, 10);
 
-          nsresult res = info->Get(acpKey, mCharset);
+          nsresult res = gInfo->Get(acpKey, mCharset);
           if(NS_FAILED(res)) {
               mCharset = "windows-1252";
           }
 
-          delete info;
   } else {
         mCharset = "windows-1252";
   }
@@ -78,6 +88,11 @@ nsWinCharset::nsWinCharset()
 nsWinCharset::~nsWinCharset()
 {
   PR_AtomicDecrement(&g_InstanceCount);
+  PR_AtomicDecrement(&gCnt);
+  if(0 == gCnt) {
+     delete gInfo;
+     gInfo = nsnull;
+  }
 }
 
 NS_IMETHODIMP 
@@ -109,16 +124,12 @@ nsWinCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar*
 	//
 	// load property file and convert from LCID->charset
 	//
-	// XXX - this should be cached for the lifetime of the component, nicht wahr?
-	nsAutoString property_url("resource:/res/wincharset.properties");
-	nsURLProperties *charset_properties = new nsURLProperties(property_url);
-	if (!charset_properties) { *_retValue = charset.ToNewUnicode(); return NS_ERROR_OUT_OF_MEMORY; }
+	if (!gInfo) { *_retValue = charset.ToNewUnicode(); return NS_ERROR_OUT_OF_MEMORY; }
 
      nsAutoString acp_key("acp.");
 	 acp_key.Append(acp_name);
-	 result = charset_properties->Get(acp_key,charset);
+	 result = gInfo->Get(acp_key,charset);
 	
-	 delete [] charset_properties;	
 	 *_retValue = charset.ToNewUnicode();
 	 return result;
 }
