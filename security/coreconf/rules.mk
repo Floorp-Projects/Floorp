@@ -284,7 +284,11 @@ get_objs:
 $(LIBRARY): $(BUILT_SRCS) $(OBJS)
 	@$(MAKE_OBJDIR)
 	rm -f $@
+ifeq ($(OS_ARCH), WINNT)
 	$(AR) $(subst /,\\,$(OBJS))
+else
+	$(AR) $(OBJS)
+endif
 	$(RANLIB) $@
 	echo $(BUILT_SRCS) $(OBJS)
 
