@@ -27,7 +27,9 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = accessibility
 LIBRARY_NAME = accessibility_base_s
-REQUIRES	= content \
+REQUIRES	= commandhandler \
+		  composer \
+		  content \
 		  docshell \
 		  dom \
 		  editor \

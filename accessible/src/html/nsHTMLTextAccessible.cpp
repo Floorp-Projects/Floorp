@@ -39,6 +39,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsHTMLTextAccessible.h"
+#include "nsIFrame.h"
+#include "nsIPresContext.h"
+#include "nsIPresShell.h"
+#include "nsISelection.h"
+#include "nsISelectionController.h"
 
 nsHTMLTextAccessible::nsHTMLTextAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
 nsTextAccessible(aDomNode, aShell)
@@ -52,6 +57,48 @@ NS_IMETHODIMP nsHTMLTextAccessible::GetAccName(nsAString& aName)
     return NS_ERROR_FAILURE;
   accName.CompressWhitespace();
   aName = accName;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsHTMLTextAccessible::GetAccState(PRUint32 *aState)
+{
+  nsTextAccessible::GetAccState(aState);
+  // Get current selection and find out if current node is in it
+  nsCOMPtr<nsIPresShell> shell(GetPresShell());
+  if (!shell) {
+     return NS_ERROR_FAILURE;  
+  }
+
+  nsCOMPtr<nsIPresContext> context;
+  shell->GetPresContext(getter_AddRefs(context));
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  nsIFrame *frame = nsnull;
+  if (content && NS_SUCCEEDED(shell->GetPrimaryFrameFor(content, &frame)) && frame) {
+    nsCOMPtr<nsISelectionController> selCon;
+    frame->GetSelectionController(context, getter_AddRefs(selCon));
+    if (selCon) {
+      nsCOMPtr<nsISelection> domSel;
+      selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSel));
+      if (domSel) {
+        PRBool isSelected = PR_FALSE, isCollapsed = PR_TRUE;
+        domSel->ContainsNode(mDOMNode, PR_TRUE, &isSelected);
+        domSel->GetIsCollapsed(&isCollapsed);
+        if (isSelected && !isCollapsed)
+          *aState |=STATE_SELECTED;
+      }
+    }
+  }
+  *aState |= STATE_SELECTABLE;
+
+  nsCOMPtr<nsIAccessibleDocument> docAccessible(GetDocAccessible());
+  if (docAccessible) {
+    PRBool isEditable;
+    docAccessible->GetIsEditable(&isEditable);
+    if (!isEditable) {
+      *aState |= STATE_READONLY;
+    }
+  }
+
   return NS_OK;
 }
 

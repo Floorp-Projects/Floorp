@@ -50,6 +50,7 @@ class nsHTMLTextAccessible : public nsTextAccessible
 public:
   nsHTMLTextAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
   NS_IMETHOD GetAccName(nsAString& _retval);
+  NS_IMETHOD GetAccState(PRUint32 *aState);
 };
 
 class nsHTMLHRAccessible : public nsLeafAccessible

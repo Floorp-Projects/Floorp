@@ -70,7 +70,7 @@ EXTERN_C GUID CDECL CLSID_Accessible =
 // construction 
 //-----------------------------------------------------
 nsAccessibleWrap::nsAccessibleWrap(nsIDOMNode* aNode, nsIWeakReference *aShell): 
-  nsAccessible(aNode, aShell)
+  nsAccessible(aNode, aShell), mEnumVARIANTPosition(0)
 {
 }
 
