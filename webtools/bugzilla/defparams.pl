@@ -193,7 +193,7 @@ DefParam("whinedays",
 
 
 DefParam("whinemail",
-         "The email that gets sent to anyone who has a NEW bug that hasn't been touched for more than <b>whinedays</b>.  Within this text, %email% gets replaced by the offender's email address.  %<i>anythingelse</i>% gets replaced by the definition of that parameter (as defined on this page).<p> It is a good idea to make sure this message has a valid From: address, so that if the mail bounces, a real person can know that there are bugs assigned to an invalid address.",
+         "The email that gets sent to anyone who has a NEW bug that hasn't been touched for more than <b>whinedays</b>.  Within this text, %email% gets replaced by the offender's email address.  %userid% gets replaced by the offender's bugzilla login (which, in most installations, is the same as the email address.)  %<i>anythingelse</i>% gets replaced by the definition of that parameter (as defined on this page).<p> It is a good idea to make sure this message has a valid From: address, so that if the mail bounces, a real person can know that there are bugs assigned to an invalid address.",
          "l",
          q{From: %maintainer%
 To: %email%
@@ -222,7 +222,7 @@ Generally, this means one of three things:
 
 To get a list of all NEW bugs, you can use this URL (bookmark it if you like!):
 
-    %urlbase%buglist.cgi?bug_status=NEW&assigned_to=%email%
+    %urlbase%buglist.cgi?bug_status=NEW&assigned_to=%userid%
 
 Or, you can use the general query page, at
 %urlbase%query.cgi.

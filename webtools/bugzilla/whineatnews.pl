@@ -55,6 +55,7 @@ my $emailsuffix = Param('emailsuffix');
 foreach my $email (sort (keys %bugs)) {
     my %substs;
     $substs{'email'} = $email . $emailsuffix;
+    $substs{'userid'} = $email;
     my $msg = PerformSubsts($template, \%substs);
 
     foreach my $i (@{$bugs{$email}}) {
