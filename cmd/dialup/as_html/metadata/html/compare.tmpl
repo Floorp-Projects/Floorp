@@ -18,15 +18,15 @@
 <HTML>
 <HEAD>
 <TITLE>Account Setup</TITLE>
-<SCRIPT LANGUAGE="JavaScript" ARCHIVE="asw.jar" SRC="compare.js"></SCRIPT>
+<SCRIPT LANGUAGE="JavaScript" SRC="metadata/compare.js"></SCRIPT>
 <LINK REL=STYLESHEET TYPE="text/JavaScript" ARCHIVE="asw.jar" HREF="sheet.js"></LINK>
 </HEAD>
 
-<BODY BGCOLOR="FFFFFF" ID="compare100">
+<BODY BGCOLOR="FFFFFF">
 
 <!-- The layer below contains the headline and text of this screen -->
 
-<LAYER NAME="allisp" LEFT=0 VISIBILITY="hide" ID="compare102">
+<LAYER NAME="allisp" LEFT=0 VISIBILITY="hide">
 
 	<ILAYER LEFT=0 NAME="level1isp">
 	<LAYER NAME="control" HEIGHT=20>
@@ -40,8 +40,8 @@
 
 	<ILAYER LEFT=0 NAME="level2isp">
 	<LAYER NAME="control" HEIGHT=20>
-	<LAYER LEFT=200 NAME="hide"><A HREF="about:blank" onClick="toggle( 'level2isp' ); return false;" ID="compare103"><P CLASS="compare">Hide Level 2</P></A></LAYER>
-	<LAYER LEFT=200 NAME="show"><A HREF="about:blank" onClick="toggle( 'level2isp' ); return false;" ID="compare104"><P CLASS="compare">Show Level 2</P></A></LAYER>
+	<LAYER LEFT=200 NAME="hide"><A HREF="about:blank" onClick="toggle( 'level2isp' ); return false;"><P CLASS="compare">Hide Level 2</P></A></LAYER>
+	<LAYER LEFT=200 NAME="show"><A HREF="about:blank" onClick="toggle( 'level2isp' ); return false;"><P CLASS="compare">Show Level 2</P></A></LAYER>
 	</LAYER>
 		
 	<LAYER TOP=20 NAME="levelDisplay">
@@ -51,7 +51,7 @@
 
 </LAYER>
 
-<SCRIPT LANGUAGE="JavaScript1.2" ID="compare105">
+<SCRIPT LANGUAGE="JavaScript1.2">
 document.allisp.visibility="show";
 document.allisp.layers.level1isp.visibility="show";
 document.allisp.layers.level1isp.layers.control.layers.hide.visibility="show";
