@@ -1458,7 +1458,12 @@ RDFGenericBuilderImpl::IsElementInWidget(nsIContent* aElement)
     if (NS_FAILED(FindWidgetRootElement(aElement, getter_AddRefs(rootElement))))
         return PR_FALSE;
 
-    if (rootElement.get() != mRoot)
+    nsCOMPtr<nsIAtom> rootTag;
+    nsCOMPtr<nsIAtom> elementTag;
+    mRoot->GetTag(*getter_AddRefs(rootTag));
+    rootElement->GetTag(*getter_AddRefs(elementTag));
+
+    if (rootTag.get() != elementTag.get())
         return PR_FALSE;
 
     return PR_TRUE;
