@@ -458,34 +458,50 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
     // it, but better than nothing.
     // Also set mWrapColumn to the value given there
     // (which arguably we should only do if told to do so).
-    nsString value;
-    if(NS_SUCCEEDED(GetValueOfAttribute(aNode, "style", value)) &&
-       (-1 != value.Find("-moz-pre-wrap")))
+    nsString style;
+    PRInt32 whitespace;
+    if(NS_SUCCEEDED(GetValueOfAttribute(aNode, "style", style)) &&
+       (-1 != (whitespace = style.Find("white-space:"))))
     {
-      mPreFormatted = PR_TRUE;
-      mCacheLine = PR_TRUE;
-      PRInt32 widthOffset = value.Find("width:");
-      if (widthOffset >= 0)
+      if (-1 != style.Find("-moz-pre-wrap", PR_TRUE, whitespace))
       {
-        // We have to search for the ch before the semicolon,
-        // not for the semicolon itself, because nsString::ToInteger()
-        // considers 'c' to be a valid numeric char (even if radix=10)
-        // but then gets confused if it sees it next to the number
-        // when the radix specified was 10, and returns an error code.
-        PRInt32 semiOffset = value.Find("ch", widthOffset+6);
-        PRInt32 length = (semiOffset > 0 ? semiOffset - widthOffset - 6
-                          : value.Length() - widthOffset);
-        nsString widthstr;
-        value.Mid(widthstr, widthOffset+6, length);
-        PRInt32 err;
-        PRInt32 col = widthstr.ToInteger(&err);
-        if (NS_SUCCEEDED(err))
-        {
-          SetWrapColumn((PRUint32)col);
 #ifdef DEBUG_akkana
-          printf("Set wrap column to %d based on style\n", mWrapColumn);
+        printf("Set mPreFormatted based on style moz-pre-wrap\n");
 #endif
+        mPreFormatted = PR_TRUE;
+        mCacheLine = PR_TRUE;
+        PRInt32 widthOffset = style.Find("width:");
+        if (widthOffset >= 0)
+        {
+          // We have to search for the ch before the semicolon,
+          // not for the semicolon itself, because nsString::ToInteger()
+          // considers 'c' to be a valid numeric char (even if radix=10)
+          // but then gets confused if it sees it next to the number
+          // when the radix specified was 10, and returns an error code.
+          PRInt32 semiOffset = style.Find("ch", widthOffset+6);
+          PRInt32 length = (semiOffset > 0 ? semiOffset - widthOffset - 6
+                            : style.Length() - widthOffset);
+          nsString widthstr;
+          style.Mid(widthstr, widthOffset+6, length);
+          PRInt32 err;
+          PRInt32 col = widthstr.ToInteger(&err);
+          if (NS_SUCCEEDED(err))
+          {
+            SetWrapColumn((PRUint32)col);
+#ifdef DEBUG_akkana
+            printf("Set wrap column to %d based on style\n", mWrapColumn);
+#endif
+          }
         }
+      }
+      else if (-1 != style.Find("pre", PR_TRUE, whitespace))
+      {
+#ifdef DEBUG_akkana
+        printf("Set mPreFormatted based on style pre\n");
+#endif
+        mPreFormatted = PR_TRUE;
+        mCacheLine = PR_TRUE;
+        SetWrapColumn(0);
       }
     } else {
       mPreFormatted = PR_FALSE;
@@ -633,10 +649,11 @@ nsHTMLToTXTSinkStream::CloseContainer(const nsIParserNode& aNode)
       // We want the output to end with a new line,
       // but in preformatted areas like text fields,
       // we can't emit newlines that weren't there.
-      if (mPreFormatted || (mFlags & nsIDocumentEncoder::OutputPreformatted))
-        FlushLine();
-      else
+      // So add the newline only in the case of formatted output.
+      if (mFlags & nsIDocumentEncoder::OutputFormatted)
         EnsureVerticalSpace(0);
+      else
+        FlushLine();
     } else if ((type == eHTMLTag_tr) ||
                (type == eHTMLTag_li) ||
                (type == eHTMLTag_pre) ||
