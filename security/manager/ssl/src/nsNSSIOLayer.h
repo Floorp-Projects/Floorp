@@ -55,8 +55,8 @@ public:
   nsresult SetSecurityState(PRInt32 aState);
   nsresult SetShortSecurityDescription(const PRUnichar *aText);
 
-  nsresult SetUseTLS(PRBool useTLS);
-  nsresult GetUseTLS(PRBool *useTLS);
+  nsresult SetForTLSStepUp(PRBool useTLS);
+  nsresult GetForTLSStepUp(PRBool *useTLS);
 
   nsresult GetFileDescPtr(PRFileDesc** aFilePtr);
   nsresult SetFileDescPtr(PRFileDesc* aFilePtr);
@@ -73,7 +73,7 @@ protected:
   PRInt32 mSecurityState;
   nsString mShortDesc;
   PRBool mForceHandshake;
-  PRBool mUseTLS;
+  PRBool mForTLSStepUp;
 };
 
 nsresult nsSSLIOLayerNewSocket(const char *host,
@@ -82,7 +82,7 @@ nsresult nsSSLIOLayerNewSocket(const char *host,
                                PRInt32 proxyPort,
                                PRFileDesc **fd,
                                nsISupports **securityInfo,
-                               PRBool useTLS);
+                               PRBool forTLSStepUp);
 
 nsresult nsSSLIOLayerAddToSocket(const char *host,
                                  PRInt32 port,
@@ -90,5 +90,5 @@ nsresult nsSSLIOLayerAddToSocket(const char *host,
                                  PRInt32 proxyPort,
                                  PRFileDesc *fd,
                                  nsISupports **securityInfo,
-                                 PRBool useTLS);
+                                 PRBool forTLSStepUp);
 #endif /* _NSNSSIOLAYER_H */
