@@ -617,7 +617,7 @@ Contributor(s): ______________________________________. -->
 		  <menuitem value="&goPrevnCmd.label;" onaction="BrowserBack();"/>
 	  </menupopup>
     </menu>
-    <menu accesskey="b" value="&bookmarksMenu.label;" onaction="OpenBookmarkURL(event.target)" 
+    <menu accesskey="b" value="&bookmarksMenu.label;"
                            datasources="rdf:bookmarks rdf:files rdf:find" id="NC:BookmarksRoot">
 		<template>
 			<rule iscontainer="true">
