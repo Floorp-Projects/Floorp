@@ -24,6 +24,8 @@
 #include "nsIPluginManager.h"
 #include "nsIJVMManager.h"
 #include "nsILiveconnect.h"
+#include "nsICapsManager.h"
+#include "nsISecurityContext.h"
 
 #include "MRJPlugin.h"
 #include "MRJContext.h"
@@ -47,6 +49,8 @@ static jfieldID netscape_javascript_JSObject_internal;
 static jclass netscape_oji_JNIUtils = NULL;
 static jmethodID netscape_oji_JNIUtils_NewLocalRef = NULL;
 static jmethodID netscape_oji_JNIUtils_GetCurrentThread = NULL;
+static jmethodID netscape_oji_JNIUtils_GetCurrentClassLoader = NULL;
+static jmethodID netscape_oji_JNIUtils_GetObjectClassLoader = NULL;
 
 nsresult InitLiveConnectSupport(MRJPlugin* jvmPlugin)
 {
@@ -98,6 +102,8 @@ nsresult InitLiveConnectSupport(MRJPlugin* jvmPlugin)
     		env->DeleteLocalRef(classJNIUtils);
 		    netscape_oji_JNIUtils_NewLocalRef = env->GetStaticMethodID(netscape_oji_JNIUtils, "NewLocalRef", "(Ljava/lang/Object;)Ljava/lang/Object;");
 		    netscape_oji_JNIUtils_GetCurrentThread = env->GetStaticMethodID(netscape_oji_JNIUtils, "GetCurrentThread", "()Ljava/lang/Object;");
+		    netscape_oji_JNIUtils_GetCurrentClassLoader = env->GetStaticMethodID(netscape_oji_JNIUtils, "GetCurrentClassLoader", "()Ljava/lang/Object;");
+		    netscape_oji_JNIUtils_GetObjectClassLoader = env->GetStaticMethodID(netscape_oji_JNIUtils, "GetObjectClassLoader", "(Ljava/lang/Object;)Ljava/lang/Object;");
 	    }
 	    
 	    jvmPlugin->ReleaseJNIEnv(env);
@@ -143,6 +149,69 @@ static jobject GetCurrentThread(JNIEnv* env)
 }
 
 /**
+ * Security Considerations.
+ */
+
+class MRJSecurityContext : public nsISecurityContext {
+public:
+	MRJSecurityContext();
+
+	NS_DECL_ISUPPORTS
+    
+	NS_IMETHOD Implies(const char* target, const char* action, PRBool *bAllowedAccess);
+};
+
+MRJSecurityContext::MRJSecurityContext()
+{
+	NS_INIT_REFCNT();
+}
+
+// work around a bug in Metrowerks pre-processor.
+static NS_DEFINE_IID(kISecurityContextIID, NS_ISECURITYCONTEXT_IID);
+NS_IMPL_ISUPPORTS(MRJSecurityContext, kISecurityContextIID)
+
+NS_METHOD MRJSecurityContext::Implies(const char* target, const char* action, PRBool *bAllowedAccess)
+{
+	*bAllowedAccess = (target != NULL && action == NULL);
+	return NS_OK;
+}
+
+static nsISecurityContext* newSecurityContext()
+{
+	MRJSecurityContext* context = new MRJSecurityContext();
+	NS_IF_ADDREF(context);
+	return context;
+}
+
+static jobject GetCurrentClassLoader(JNIEnv* env)
+{
+	return env->CallStaticObjectMethod(netscape_oji_JNIUtils, netscape_oji_JNIUtils_GetCurrentClassLoader);
+}
+
+static jobject GetObjectClassLoader(JNIEnv* env, jobject object)
+{
+	return env->CallStaticObjectMethod(netscape_oji_JNIUtils, netscape_oji_JNIUtils_GetObjectClassLoader, object);
+}
+
+static MRJPluginInstance* GetCurrentPlugin(JNIEnv* env)
+{
+	MRJPluginInstance* pluginInstance = NULL;
+	jobject classLoader = GetCurrentClassLoader(env);
+	if (classLoader != NULL) {
+		pluginInstance = MRJPluginInstance::getInstances();
+		while (pluginInstance != NULL) {
+			jobject applet;
+			pluginInstance->GetJavaObject(&applet);
+			jobject appletClassLoader = GetObjectClassLoader(env, applet);
+			if (env->IsSameObject(appletClassLoader, classLoader))
+				break;
+			pluginInstance = pluginInstance->getNextInstance();
+		}
+	}
+	return pluginInstance;
+}
+
+/**
  * Sends a message by rendezvousing with an existing JavaScript thread, or creates a new one
  * if none exists for this thread already.
  */
@@ -183,6 +252,19 @@ static void sendMessage(JNIEnv* env, JavaMessage* msg)
 		}
 		sharedMonitor.exit();
 	}
+}
+
+static nsIPrincipal* newCodebasePrincipal(const char* codebaseURL)
+{
+	nsIPrincipal* principal = NULL;
+	nsICapsManager* capsManager = NULL;
+	static NS_DEFINE_IID(kICapsManagerIID, NS_ICAPSMANAGER_IID);
+	if (thePluginManager->QueryInterface(kICapsManagerIID, &capsManager) == NS_OK) {
+		if (capsManager->CreateCodebasePrincipal(codebaseURL, &principal) != NS_OK)
+			principal = NULL;
+		capsManager->Release();
+	}
+	return principal;
 }
 
 /****************** Implementation of methods of JSObject *******************/
@@ -328,21 +410,31 @@ class CallMessage : public JavaMessage {
 	jsize mLength;
 	jobjectArray mJavaArgs;
 	jobject* mJavaResult;
+	const char* mCodebaseURL;
 public:
-	CallMessage(jsobject obj, const jchar* functionName, jsize length, jobjectArray java_args, jobject* javaResult);
+	CallMessage(jsobject obj, const jchar* functionName, jsize length, jobjectArray java_args, jobject* javaResult, const char* codebaseURL);
 
 	virtual void execute(JNIEnv* env);
 };
 
-CallMessage::CallMessage(jsobject obj, const jchar* functionName, jsize length, jobjectArray javaArgs, jobject* javaResult)
+CallMessage::CallMessage(jsobject obj, const jchar* functionName, jsize length, jobjectArray javaArgs, jobject* javaResult, const char* codebaseURL)
 	:	mObject(obj), mFunctionName(functionName), mLength(length),
-		mJavaArgs(javaArgs), mJavaResult(javaResult)
+		mJavaArgs(javaArgs), mJavaResult(javaResult), mCodebaseURL(codebaseURL)
 {
 }
 
 void CallMessage::execute(JNIEnv* env)
 {
-	nsresult status = theLiveConnectManager->Call(env, mObject, mFunctionName, mLength, mJavaArgs, NULL, 0, NULL, mJavaResult);
+	/* If we have an applet, try to create a codebase principle. */
+	nsIPrincipal* principal = NULL;
+	nsISecurityContext* context = NULL;
+	if (mCodebaseURL != NULL) {
+		principal = newCodebasePrincipal(mCodebaseURL);
+		context = newSecurityContext();
+	}
+	nsresult status = theLiveConnectManager->Call(env, mObject, mFunctionName, mLength, mJavaArgs, &principal, (principal != NULL ? 1 : 0), context, mJavaResult);
+	NS_IF_RELEASE(principal);
+	NS_IF_RELEASE(context);
 }
 
 /*
@@ -359,6 +451,12 @@ Java_netscape_javascript_JSObject_call(JNIEnv* env, jobject java_wrapper_obj,
 		return NULL;
 	}
 
+	/* Try to determine which plugin instance is responsible for this thread. This is done by checking class loaders. */
+	const char* codebaseURL = NULL;
+	MRJPluginInstance* pluginInstance = GetCurrentPlugin(env);
+	if (pluginInstance != NULL)
+		codebaseURL = pluginInstance->getContext()->getDocumentBase();
+
 	/* Get the Unicode string for the JS function name */
 	jboolean is_copy;
 	const jchar* function_name_ucs2 = env->GetStringChars(function_name_jstr, &is_copy);
@@ -367,7 +465,7 @@ Java_netscape_javascript_JSObject_call(JNIEnv* env, jobject java_wrapper_obj,
 	jsobject js_obj = Unwrap_JSObject(env, java_wrapper_obj);
 	jobject jresult = NULL;
 
-	CallMessage msg(js_obj, function_name_ucs2, function_name_len, java_args, &jresult);
+	CallMessage msg(js_obj, function_name_ucs2, function_name_len, java_args, &jresult, codebaseURL);
 
 	sendMessage(env, &msg);
 
