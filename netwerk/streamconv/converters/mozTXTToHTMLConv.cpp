@@ -37,6 +37,7 @@
 #include "nsIServiceManager.h"
 #include "nsNetCID.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
@@ -541,8 +542,8 @@ mozTXTToHTMLConv::ItMatchesDelimited(const PRUnichar * aInString,
           nsCRT::IsAsciiDigit(textAfterPos) ||
           textAfterPos == *rep
         ) ||
-        !(before == LT_IGNORE ? !nsCRT::strncasecmp(aInString, rep, aRepLen) :
-          !nsCRT::strncasecmp(aInString + 1, rep, aRepLen))
+        !(before == LT_IGNORE ? !Compare(nsDependentString(aInString), nsDependentString(rep, aRepLen), nsCaseInsensitiveStringComparator()) :
+          !Compare(nsDependentString(aInString+1), nsDependentString(rep, aRepLen), nsCaseInsensitiveStringComparator()))
     )
     return PR_FALSE;
 
@@ -973,9 +974,10 @@ mozTXTToHTMLConv::CiteLevelTXT(const PRUnichar *line,
       // Placed here for performance increase
       const PRUnichar * indexString = &line[logLineStart];
            // here, |logLineStart < lineLength| is always true
-      if (!nsCRT::strncasecmp(indexString, NS_LITERAL_STRING(">From ").get(),
-                              MinInt(6, nsCRT::strlen(indexString))))
-                              //XXX RFC2646
+      PRUint32 minlength = MinInt(6,nsCRT::strlen(indexString));
+      if (!Compare(nsDependentString(indexString, minlength),
+                   nsDependentString(NS_LITERAL_STRING(">From ").get(), minlength), nsCaseInsensitiveStringComparator()))
+        //XXX RFC2646
         moreCites = PR_FALSE;
       else
       {
