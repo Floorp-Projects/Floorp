@@ -447,6 +447,15 @@ PK11_PBEKeyGen(PK11SlotInfo *slot, SECAlgorithmID *algid,  SECItem *pwitem,
 SECItem *
 PK11_GetPBEIV(SECAlgorithmID *algid, SECItem *pwitem);
 
+/**********************************************************************
+ * New fucntions which are already depricated....
+ **********************************************************************/
+SECItem *
+PK11GetLowLevelKeyIDForCert(PK11SlotInfo *slot,
+					CERTCertificate *cert, void *pwarg);
+SECItem *
+PK11GetLowLevelKeyIDForPrivateKey(SECKEYPrivateKey *key);
+
 SEC_END_PROTOS
 
 #endif
