@@ -1002,6 +1002,9 @@ case "$target" in
 *-*-os2_*)
     NO_LD_ARCHIVE_FLAGS=
     ;;
+*-aix4.3*)
+    NO_LD_ARCHIVE_FLAGS=
+    ;;
 esac
 AC_SUBST(NO_LD_ARCHIVE_FLAGS)
 
