@@ -16,6 +16,8 @@
  * Reserved.
  */
 
+/* Portions copyright Metrowerks Corporation. */
+
 #include "CSizePopup.h"
 
 #include "PascalString.h"
@@ -180,6 +182,7 @@ void CSizePopup::SetValue(Int32 inValue)
 Boolean CSizePopup::TrackHotSpot(Int16 inHotSpot, Point inPoint, Int16 inModifiers)
 //-----------------------------------
 {
+	// Portions of this function are from LGAPopup.cp in PowerPlant
 
 	// ¥ We only want the popup menu to appear if the mouse went down
 	// in the our hot spot which is the popup portion of the control
