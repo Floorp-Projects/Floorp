@@ -105,7 +105,6 @@ CPPSRCS =			   \
 	nsSetupRegistry.cpp	   \
 	nsViewerApp.cpp		   \
 	nsWebCrawler.cpp	   \
-	nsStubs.cpp		   \
 	$(NULL)
 
 ifdef MOZ_OJI
