@@ -2499,7 +2499,13 @@ nsWindow::SetWindowTranslucency(PRBool aTranslucent)
         // Pass the request to the toplevel window
         GtkWidget *topWidget = nsnull;
         GetToplevelWidget(&topWidget);
+        if (!topWidget)
+            return NS_ERROR_FAILURE;
+
         nsWindow *topWindow = get_window_for_gtk_widget(topWidget);
+        if (!topWindow)
+            return NS_ERROR_FAILURE;
+
         return topWindow->SetWindowTranslucency(aTranslucent);
     }
 
@@ -2526,7 +2532,17 @@ nsWindow::GetWindowTranslucency(PRBool& aTranslucent)
         // Pass the request to the toplevel window
         GtkWidget *topWidget = nsnull;
         GetToplevelWidget(&topWidget);
+        if (!topWidget) {
+            aTranslucent = PR_FALSE;
+            return NS_ERROR_FAILURE;
+        }
+
         nsWindow *topWindow = get_window_for_gtk_widget(topWidget);
+        if (!topWindow) {
+            aTranslucent = PR_FALSE;
+            return NS_ERROR_FAILURE;
+        }
+
         return topWindow->GetWindowTranslucency(aTranslucent);
     }
 
@@ -2635,7 +2651,13 @@ nsWindow::UpdateTranslucentWindowAlpha(const nsRect& aRect, PRUint8* aAlphas)
         // Pass the request to the toplevel window
         GtkWidget *topWidget = nsnull;
         GetToplevelWidget(&topWidget);
+        if (!topWidget)
+            return NS_ERROR_FAILURE;
+
         nsWindow *topWindow = get_window_for_gtk_widget(topWidget);
+        if (!topWindow)
+            return NS_ERROR_FAILURE;
+
         return topWindow->UpdateTranslucentWindowAlpha(aRect, aAlphas);
     }
 
