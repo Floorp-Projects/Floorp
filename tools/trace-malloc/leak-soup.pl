@@ -999,6 +999,10 @@ sub addr2line($$) {
     # of filehandles that are talking to an addr2line process.
     my $fhs = $::Addr2Lines{$dso};
     if (! $fhs) {
+        if (!(-r $dso)) {
+            # bogus filename (that happens sometimes), so bail
+            return { 'dso' => $dso, 'addr' => $addr };
+        }
         my ($in, $out) = (new FileHandle, new FileHandle);
         open2($in, $out, "addr2line --exe=$dso") || die "unable to open addr2line --exe=$dso";
         $::Addr2Lines{$dso} = $fhs = { 'in' => $in, 'out' => $out };
@@ -1088,10 +1092,11 @@ sub dump_objects($$$) {
           my $result = addr2line($2, $3);
 
           if ($result->{'file'}) {
-              if ($result->{'file'} =~ s/.*\/mozilla/http:\/\/lxr.mozilla.org\/mozilla\/source/) {
-                  # It's mozilla source! Clean up refs to dist/include
-                  $result->{'file'} =~ s/..\/..\/dist\/include\///;
-                  print "<a href=\"$result->{'file'}#$result->{'line'}\">$mangled</a><br>\n";
+              # It's mozilla source! Clean up refs to dist/include
+              if (($result->{'file'} =~ s/.*\.\.\/\.\.\/dist\/include\//http:\/\/bonsai.mozilla.org\/cvsguess.cgi\?file=/) ||
+                  ($result->{'file'} =~ s/.*\/mozilla/http:\/\/bonsai.mozilla.org\/cvsblame.cgi\?file=mozilla/)) {
+                  my $prevline = $result->{'line'} - 10;
+                  print "<a target=\"lxr_source\" href=\"$result->{'file'}\&mark=$result->{'line'}#$prevline\">$mangled</a><br>\n";
               }
               else {
                   print "$mangled ($result->{'file'}, line $result->{'line'})<br>\n";
@@ -1135,7 +1140,7 @@ print "<html>
 <head>
 <title>Object Graph</title>
 <style type='text/css'>
-    body { font: small monospace; background-color: white; }
+    body { font: medium monospace; background-color: white; }
 
     /* give nested div's some margins to make it look like a tree */
     div.children > div.object { margin-left: 1em; }
@@ -1155,7 +1160,7 @@ print "<html>
     div.children { display: none; }
 
     /* make ``toggle'' spans look like links */
-    span.toggle { color: blue; text-decoration: underline; }
+    span.toggle { color: blue; text-decoration: underline; cursor: pointer; }
     span.toggle:active { color: red; }
 </style>
 <script language='JavaScript'>
