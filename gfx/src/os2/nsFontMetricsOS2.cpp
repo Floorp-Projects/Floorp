@@ -128,7 +128,7 @@ static nsCharsetInfo gCharsetInfo[eCharset_COUNT] =
   { "RUSSIAN",     FM_DEFN_CYRILLIC, 1251, "x-cyrillic" },
   { "GREEK",       FM_DEFN_GREEK,    813,  "el" },
   { "TURKISH",     0,                1254, "tr" },
-  { "HEBREW",      FM_DEFN_HEBREW,   862,  "he" },
+  { "HEBREW",      FM_DEFN_HEBREW,   1208,  "he" },
   { "ARABIC",      FM_DEFN_ARABIC,   864,  "ar" },
   { "BALTIC",      0,                1257, "x-baltic" },
   { "THAI",        FM_DEFN_THAI,     874,  "th" },
