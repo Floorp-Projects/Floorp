@@ -252,10 +252,10 @@
                     a = STRING_TO_JS2VAL(object_StringAtom);
                     break;
                 case SimpleInstanceKind:
-                    a = STRING_TO_JS2VAL(checked_cast<SimpleInstance *>(obj)->typeofString);
+                    a = STRING_TO_JS2VAL(checked_cast<SimpleInstance *>(obj)->type->getName());
                     break;
                 case CallableInstanceKind:
-                    a = STRING_TO_JS2VAL(checked_cast<CallableInstance *>(obj)->typeofString);
+                    a = STRING_TO_JS2VAL(checked_cast<CallableInstance *>(obj)->type->getName());
                     break;
                 }
             }

@@ -68,6 +68,7 @@ namespace MetaData {
         Arena a;
         Pragma::Flags flags = Pragma::es4;
         Parser p(world, a, flags, str, fileName);
+        CompilationData *oldData = NULL;
         try {
             StmtNode *parsedStatements = p.parseProgram();
             ASSERT(p.lexer.peek(true).hasKind(Token::end));
@@ -84,16 +85,18 @@ namespace MetaData {
                 stdOut << '\n';
             }
             if (parsedStatements) {
-                CompilationData *oldData = startCompilationUnit(NULL, str, fileName);
+                oldData = startCompilationUnit(NULL, str, fileName);
                 ValidateStmtList(parsedStatements);
                 result = ExecuteStmtList(RunPhase, parsedStatements);
-                restoreCompilationUnit(oldData);
             }
         }
         catch (Exception &x) {
-//            ASSERT(false);
+            if (oldData)
+                restoreCompilationUnit(oldData);
             throw x;
         }
+        if (oldData)
+            restoreCompilationUnit(oldData);
         return result;
     }
 
@@ -2973,6 +2976,14 @@ doUnary:
         return BOOLEAN_TO_JS2VAL(JSDOUBLE_IS_NaN(d));
     }
 
+    static js2val GlobalObject_eval(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint32 argc)
+    {
+        if (!JS2VAL_IS_STRING(argv[0]))
+            return argv[0];
+        return meta->readEvalString(*meta->toString(argv[0]), widenCString("Eval Source"));
+    }
+
+    // XXX need length value
     void JS2Metadata::addGlobalObjectFunction(char *name, NativeCode *code)
     {
         CallableInstance *fInst = new CallableInstance(functionClass);
@@ -3015,7 +3026,7 @@ doUnary:
 
 
         // A 'forbidden' member, used to mark hidden bindings
-        forbiddenMember = new StaticMember(Member::Forbidden);
+        forbiddenMember = new StaticMember(Member::Forbidden, true);
 
         // needed for class instance variables etc...
         NamespaceList publicNamespaceList;
@@ -3041,6 +3052,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         writeDynamicProperty(glob, new Multiname(&world.identifiers["Infinity"], publicNamespace), true, engine->posInfValue, RunPhase);
         // Function properties of the global object 
         addGlobalObjectFunction("isNaN", GlobalObject_isNaN);
+        addGlobalObjectFunction("eval", GlobalObject_eval);
 
 
 /*** ECMA 3  Object Class ***/
@@ -3074,6 +3086,11 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         v = new Variable(classClass, OBJECT_TO_JS2VAL(numberClass), true);
         defineStaticMember(env, &world.identifiers["Number"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
         initNumberObject(this);
+
+/*** ECMA 3  Boolean Class ***/
+        v = new Variable(classClass, OBJECT_TO_JS2VAL(booleanClass), true);
+        defineStaticMember(env, &world.identifiers["Boolean"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+        initBooleanObject(this);
 
 /*** ECMA 3  Math Class ***/
         MAKEBUILTINCLASS(mathClass, objectClass, true, true, true, &world.identifiers["Math"]);
@@ -4198,6 +4215,7 @@ deleteClassProperty:
         bConList.pop_back();
 
         bCon = oldData->bCon;
+        engine->bCon = bCon;
 
         delete oldData;
     }
@@ -4345,7 +4363,7 @@ deleteClassProperty:
 //            call(NULL), 
 //            construct(NULL), 
 //            env(NULL), 
-            typeofString(type->getName()),
+//            typeofString(type->getName()),
             slots(new Slot[type->slotCount]),
             dynamicProperties(type->dynamic ? new DynamicPropertyMap() : NULL)
     {
@@ -4390,7 +4408,7 @@ deleteClassProperty:
     SimpleInstance::SimpleInstance(JS2Class *type) 
         : JS2Object(SimpleInstanceKind), 
             type(type), 
-            typeofString(type->getName()),
+//            typeofString(type->getName()),
             slots(new Slot[type->slotCount]),
             dynamicProperties(type->dynamic ? new DynamicPropertyMap() : NULL)
     {

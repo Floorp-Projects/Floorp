@@ -65,6 +65,7 @@ extern void initArrayObject(JS2Metadata *meta);
 extern void initRegExpObject(JS2Metadata *meta);
 extern void initNumberObject(JS2Metadata *meta);
 extern void initErrorObject(JS2Metadata *meta);
+extern void initBooleanObject(JS2Metadata *meta);
 
 extern js2val Error_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
 extern js2val EvalError_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
@@ -281,7 +282,8 @@ public:
 // A static member is either forbidden, a variable, a hoisted variable, a constructor method, or an accessor:
 class StaticMember : public Member {
 public:
-    StaticMember(MemberKind kind) : Member(kind) { }
+    StaticMember(MemberKind kind) : Member(kind), forbidden(false) { }
+    StaticMember(MemberKind kind, bool forbidden) : Member(kind), forbidden(forbidden) { }
 
     StaticMember *cloneContent; // Used during cloning operation to prevent cloning of duplicates (i.e. once
                                 // a clone exists for this member it's recorded here and used for any other
@@ -289,7 +291,8 @@ public:
                                 // Also used thereafter by 'assignArguments' to initialize the singular
                                 // variable instantations in a parameter frame.
 
-    virtual StaticMember *clone()       { ASSERT(false); return NULL; }
+    virtual StaticMember *clone()       { if (forbidden) return this; ASSERT(false); return NULL; }
+    bool forbidden;
 };
 
 #define FUTURE_TYPE ((JS2Class *)(-1))
@@ -533,7 +536,7 @@ public:
     SimpleInstance(JS2Class *type);
 
     JS2Class    *type;                      // This instance's type
-    const String  *typeofString;            // A string to return if typeof is invoked on this instance
+//    const String  *typeofString;            // A string to return if typeof is invoked on this instance
     Slot        *slots;                     // A set of slots that hold this instance's fixed property values
     DynamicPropertyMap *dynamicProperties;  // A set of this instance's dynamic properties, or NULL if this is a fixed instance
 
@@ -553,7 +556,7 @@ public:
 //    Environment *env;             // The environment to pass to the call or construct procedure
     FunctionWrapper *fWrap;
 
-    const String  *typeofString;            // A string to return if typeof is invoked on this instance
+//    const String  *typeofString;            // A string to return if typeof is invoked on this instance
     Slot        *slots;                     // A set of slots that hold this instance's fixed property values
     DynamicPropertyMap *dynamicProperties;  // A set of this instance's dynamic properties, or NULL if this is a fixed instance
     virtual void markChildren();
@@ -607,6 +610,15 @@ public:
     NumberInstance(JS2Class *type) : CallableInstance(type), mValue(0.0) { }
 
     float64     mValue;
+};
+
+// Boolean instances are Callable instances created by the Boolean class, they have an extra field 
+// that contains the bool data
+class BooleanInstance : public CallableInstance {
+public:
+    BooleanInstance(JS2Class *type) : CallableInstance(type), mValue(false) { }
+
+    bool     mValue;
 };
 
 // Array instances are Callable instances created by the Array class, they 

@@ -110,6 +110,11 @@ namespace MetaData {
             }
             catch (Exception &jsx) {
                 if (mTryStack.size() > 0) {
+                    // The handler for this exception is on the top of the try stack.
+                    // It specifies the activation that was active when the try block
+                    // was entered. We unwind the activation stack, looking for the
+                    // one that matches the handler's. The bytecode container, pc and
+                    // sp are all reset appropriately, and execution continues.
                     HandlerData *hndlr = (HandlerData *)mTryStack.top();
                     ActivationFrame *curAct = (activationStackEmpty()) ? NULL : (activationStackTop - 1);
                 
@@ -122,6 +127,10 @@ namespace MetaData {
                             if (prev->pc == NULL) {
                                 // Yikes! the exception is getting thrown across a re-invocation
                                 // of the interpreter loop.
+                                // (pc == NULL) is the flag on an activation to indicate that the
+                                // interpreter loop was re-invoked (probably a 'load' or 'eval' is
+                                // in process). In this case we simply re-throw the exception and let
+                                // the prior invocation deal with it.
                                 throw jsx;
                             }
                             curAct = --activationStackTop;
