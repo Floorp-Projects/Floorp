@@ -2967,15 +2967,4 @@ nsViewManager2::ProcessWidgetChanges(nsIView* aView)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsViewManager2::SetDefaultBackgroundColor(nscolor aColor)
-{
-	return NS_OK;
-}
 
-NS_IMETHODIMP
-nsViewManager2::GetDefaultBackgroundColor(nscolor* aColor)
-{
-	*aColor = 0;
-	return NS_OK;
-}

@@ -423,7 +423,6 @@ nsViewManager::nsViewManager()
   mX = 0;
   mY = 0;
   mCachingWidgetChanges = 0;
-  mDefaultBackgroundColor = NS_RGBA(0, 0, 0, 0);
   mAllowDoubleBuffering = PR_TRUE; 
   mHasPendingInvalidates = PR_FALSE;
   mPendingInvalidateEvent = PR_FALSE;
@@ -946,35 +945,6 @@ void nsViewManager::Refresh(nsIView *aView, nsIRenderingContext *aContext, const
   MOZ_TIMER_LOG(("vm2 Paint time (this=%p): ", this));
   MOZ_TIMER_PRINT(mWatch);
 #endif
-}
-
-void nsViewManager::DefaultRefresh(nsIView* aView, const nsRect* aRect)
-{
-    nsCOMPtr<nsIWidget> widget;
-    GetWidgetForView(aView, getter_AddRefs(widget));
-    if (! widget)
-        return;
-
-    nsCOMPtr<nsIRenderingContext> context
-        = getter_AddRefs(CreateRenderingContext(*aView));
-
-    if (! context)
-        return;
-
-    nscolor bgcolor = mDefaultBackgroundColor;
-
-    if (NS_GET_A(mDefaultBackgroundColor) == 0) {
-        // If we haven't been given a default bgcolor, then use the
-        // widget's bgcolor.
-        nsCOMPtr<nsIWidget> widget;
-        GetWidgetForView(aView, getter_AddRefs(widget));
-
-        if (widget)
-            bgcolor = widget->GetBackgroundColor();
-    }
-
-    context->SetColor(bgcolor);
-    context->FillRect(*aRect);
 }
 
 // Perform a *stable* sort of the buffer by increasing Z-index. The common case is
@@ -1960,13 +1930,27 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
 											Refresh(view, ((nsPaintEvent*)aEvent)->renderingContext, &damrect, updateFlags);
 										}
 										else {
-                                            // since we got an NS_PAINT event, we need to
-                                            // draw something so we don't get blank areas.
-                                            DefaultRefresh(view, &damrect);
+											// since we got an NS_PAINT event we need to draw something so we don't get blank areas.
+											nsCOMPtr<nsIWidget> widget;
+											GetWidgetForView(view, getter_AddRefs(widget));
+											if (widget) {
+												nsCOMPtr<nsIRenderingContext> context;
+												context = getter_AddRefs(CreateRenderingContext(*view));
+												if (context) {
+													nscolor bgColor = 0;
+													SystemAttrStruct info;
+													info.mColor = &bgColor;
+													mContext->GetSystemAttribute(eSystemAttr_Color_WindowBackground, &info);
+													context->SetColor(bgColor);
+													context->FillRect(damrect);
+												}
 											}
 										}
 									}
 							}
+
+						*aStatus = nsEventStatus_eConsumeNoDefault;
+					}
 
 				break;
 			}
@@ -3849,16 +3833,4 @@ nsViewManager::ProcessWidgetChanges(nsIView* aView)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsViewManager::SetDefaultBackgroundColor(nscolor aColor)
-{
-    mDefaultBackgroundColor = aColor;
-    return NS_OK;
-}
 
-NS_IMETHODIMP
-nsViewManager::GetDefaultBackgroundColor(nscolor* aColor)
-{
-    *aColor = mDefaultBackgroundColor;
-    return NS_OK;
-}
