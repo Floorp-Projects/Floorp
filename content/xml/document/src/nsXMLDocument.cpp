@@ -990,35 +990,41 @@ nsXMLDocument::CreateElementNS(const nsAString& aNamespaceURI,
   return CreateElement(nodeInfo, aReturn);
 }
 
-static nsIContent *
-MatchId(nsIContent *aContent, const nsAString& aName)
+// Id attribute matching function used by nsXMLDocument and
+// nsHTMLDocument.
+nsIContent *
+MatchElementId(nsIContent *aContent, const nsAString& aId)
 {
-  nsAutoString value;
-  nsIContent *result = nsnull;
-  PRInt32 ns;
+  if (aContent->IsContentOfType(nsIContent::eHTML)) {
+    if (aContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::id)) {
+      nsAutoString value;
+      aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, value);
 
-  aContent->GetNameSpaceID(ns);
-  if (kNameSpaceID_XHTML == ns) {
-    if ((NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, value)) &&
-        aName.Equals(value)) {
-      return aContent;
+      if (aId.Equals(value)) {
+        return aContent;
+      }
     }
   }
-  else {
+  else if (aContent->IsContentOfType(nsIContent::eELEMENT)) {
     nsCOMPtr<nsIXMLContent> xmlContent = do_QueryInterface(aContent);    
-    nsCOMPtr<nsIAtom> IDValue;
-    if (xmlContent && NS_SUCCEEDED(xmlContent->GetID(*getter_AddRefs(IDValue))) && IDValue) {
-      if (IDValue->Equals(aName))
+
+    if (xmlContent) {
+      nsCOMPtr<nsIAtom> value;
+      if (NS_SUCCEEDED(xmlContent->GetID(*getter_AddRefs(value))) &&
+          value && value->Equals(aId)) {
         return aContent;
+      }
     }
   }
   
+  nsIContent *result = nsnull;
   PRInt32 i, count;
+
   aContent->ChildCount(count);
   for (i = 0; i < count && result == nsnull; i++) {
     nsIContent *child;
     aContent->ChildAt(i, child);
-    result = MatchId(child, aName);
+    result = MatchElementId(child, aId);
     NS_RELEASE(child);
   }  
 
@@ -1027,12 +1033,12 @@ MatchId(nsIContent *aContent, const nsAString& aName)
 
 NS_IMETHODIMP
 nsXMLDocument::GetElementById(const nsAString& aElementId,
-                             nsIDOMElement** aReturn)
+                              nsIDOMElement** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = nsnull;
 
-  NS_WARN_IF_FALSE(!aElementId.IsEmpty(),"getElementById(\"\"), fix caller?");
+  NS_WARN_IF_FALSE(!aElementId.IsEmpty(), "getElementById(\"\"), fix caller?");
   if (aElementId.IsEmpty())
     return NS_OK;
 
@@ -1044,14 +1050,14 @@ nsXMLDocument::GetElementById(const nsAString& aElementId,
 
   // XXX For now, we do a brute force search of the content tree.
   // We should come up with a more efficient solution.
-  nsCOMPtr<nsIContent> content(do_QueryInterface(MatchId(mRootContent,aElementId)));
+  // Note that content is *not* refcounted here, so do *not* release it!
+  nsIContent *content = MatchElementId(mRootContent, aElementId);
 
-  nsresult rv = NS_OK;
-  if (content) {
-    rv = CallQueryInterface(content, aReturn);
+  if (!content) {
+    return NS_OK;
   }
 
-  return rv;
+  return CallQueryInterface(content, aReturn);
 }
 
 // nsIXMLDocument
@@ -1072,63 +1078,6 @@ nsXMLDocument::SetDefaultStylesheets(nsIURI* aUrl)
 
   return result;
 }
-
-NS_IMETHODIMP 
-nsXMLDocument::SetXMLDeclaration(const nsAString& aVersion,
-                                 const nsAString& aEncoding,
-                                 const nsAString& aStandalone)
-{
-  if (aVersion.IsEmpty()) {
-    mXMLDeclarationBits = 0;
-    return NS_OK;
-  }
-
-  mXMLDeclarationBits = XML_DECLARATION_BITS_DECLARATION_EXISTS;
-
-  if (!aEncoding.IsEmpty()) {
-    mXMLDeclarationBits |= XML_DECLARATION_BITS_ENCODING_EXISTS;
-  }
-
-  if (aStandalone.Equals(NS_LITERAL_STRING("yes"))) {
-    mXMLDeclarationBits |= XML_DECLARATION_BITS_STANDALONE_EXISTS |
-                           XML_DECLARATION_BITS_STANDALONE_YES;
-  } else if (aStandalone.Equals(NS_LITERAL_STRING("no"))) {
-    mXMLDeclarationBits |= XML_DECLARATION_BITS_STANDALONE_EXISTS;
-  }
-
-  return NS_OK;
-}                               
-
-NS_IMETHODIMP 
-nsXMLDocument::GetXMLDeclaration(nsAString& aVersion,
-                                 nsAString& aEncoding,
-                                 nsAString& aStandalone)
-{
-  aVersion.Truncate();
-  aEncoding.Truncate();
-  aStandalone.Truncate();
-
-  if (!(mXMLDeclarationBits & XML_DECLARATION_BITS_DECLARATION_EXISTS)) {
-    return NS_OK;
-  }
-
-  aVersion.Assign(NS_LITERAL_STRING("1.0")); // always until we start supporting 1.1 etc.
-
-  if (mXMLDeclarationBits & XML_DECLARATION_BITS_ENCODING_EXISTS) {
-    GetDocumentCharacterSet(aEncoding); // This is what we have stored, not necessarily what was written in the original
-  }
-
-  if (mXMLDeclarationBits & XML_DECLARATION_BITS_STANDALONE_EXISTS) {
-    if (mXMLDeclarationBits & XML_DECLARATION_BITS_STANDALONE_YES) {
-      aStandalone.Assign(NS_LITERAL_STRING("yes"));
-    } else {
-      aStandalone.Assign(NS_LITERAL_STRING("no"));
-    }
-  }
-
-  return NS_OK;
-}
-
 
 NS_IMETHODIMP 
 nsXMLDocument::SetBaseTarget(const nsAString &aBaseTarget)

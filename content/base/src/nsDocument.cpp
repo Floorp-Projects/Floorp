@@ -686,6 +686,8 @@ nsDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
     mPrincipal = do_QueryInterface(owner);
   }
 
+  mXMLDeclarationBits = 0;
+
   return rv;
 }
 
@@ -811,8 +813,6 @@ nsDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
 
       if (NS_SUCCEEDED(rv)) {
         mContentLanguage.AssignWithConversion(prefLanguage);
-
-        have_contentLanguage = PR_TRUE;
       }
     }
   }
@@ -2449,12 +2449,23 @@ nsDocument::CreateAttribute(const nsAString& aName,
 }
 
 NS_IMETHODIMP
-nsDocument::CreateAttributeNS(const nsAString & namespaceURI,
-                              const nsAString & qualifiedName,
-                              nsIDOMAttr **_retval)
+nsDocument::CreateAttributeNS(const nsAString & aNamespaceURI,
+                              const nsAString & aQualifiedName,
+                              nsIDOMAttr **aResult)
 {
-  // Should be implemented by subclass
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = nsnull;
+
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+  nsresult rv = mNodeInfoManager->GetNodeInfo(aQualifiedName, aNamespaceURI,
+                                              *getter_AddRefs(nodeInfo));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString value;
+  nsDOMAttribute* attribute = new nsDOMAttribute(nsnull, nodeInfo, value);
+  NS_ENSURE_TRUE(attribute, NS_ERROR_OUT_OF_MEMORY);
+
+  return CallQueryInterface(attribute, aResult);
 }
 
 NS_IMETHODIMP
@@ -3936,6 +3947,71 @@ nsDocument::GetScriptEventManager(nsIScriptEventManager **aResult)
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsDocument::SetXMLDeclaration(const nsAString& aVersion,
+                              const nsAString& aEncoding,
+                              const nsAString& aStandalone)
+{
+  if (aVersion.IsEmpty()) {
+    mXMLDeclarationBits = 0;
+    return NS_OK;
+  }
+
+  mXMLDeclarationBits = XML_DECLARATION_BITS_DECLARATION_EXISTS;
+
+  if (!aEncoding.IsEmpty()) {
+    mXMLDeclarationBits |= XML_DECLARATION_BITS_ENCODING_EXISTS;
+  }
+
+  if (aStandalone.Equals(NS_LITERAL_STRING("yes"))) {
+    mXMLDeclarationBits |= XML_DECLARATION_BITS_STANDALONE_EXISTS |
+                           XML_DECLARATION_BITS_STANDALONE_YES;
+  } else if (aStandalone.Equals(NS_LITERAL_STRING("no"))) {
+    mXMLDeclarationBits |= XML_DECLARATION_BITS_STANDALONE_EXISTS;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocument::GetXMLDeclaration(nsAString& aVersion, nsAString& aEncoding,
+                              nsAString& aStandalone)
+{
+  aVersion.Truncate();
+  aEncoding.Truncate();
+  aStandalone.Truncate();
+
+  if (!(mXMLDeclarationBits & XML_DECLARATION_BITS_DECLARATION_EXISTS)) {
+    return NS_OK;
+  }
+
+  // always until we start supporting 1.1 etc.
+  aVersion.Assign(NS_LITERAL_STRING("1.0"));
+
+  if (mXMLDeclarationBits & XML_DECLARATION_BITS_ENCODING_EXISTS) {
+    // This is what we have stored, not necessarily what was written
+    // in the original
+    GetDocumentCharacterSet(aEncoding);
+  }
+
+  if (mXMLDeclarationBits & XML_DECLARATION_BITS_STANDALONE_EXISTS) {
+    if (mXMLDeclarationBits & XML_DECLARATION_BITS_STANDALONE_YES) {
+      aStandalone.Assign(NS_LITERAL_STRING("yes"));
+    } else {
+      aStandalone.Assign(NS_LITERAL_STRING("no"));
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP_(PRBool)
+nsDocument::IsCaseSensitive()
+{
+  return PR_TRUE;
+}
+
 nsresult
 nsDocument::GetRadioGroup(const nsAString& aName,
                           nsRadioGroupStruct **aRadioGroup)

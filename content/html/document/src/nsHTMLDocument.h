@@ -126,7 +126,10 @@ public:
   NS_IMETHOD GetCompatibilityMode(nsCompatibility& aMode);
   NS_IMETHOD SetCompatibilityMode(nsCompatibility aMode);
 
-  NS_IMETHOD_(PRBool) IsWriting() { return mWriteLevel != PRUint32(0); }
+  NS_IMETHOD_(PRBool) IsWriting()
+  {
+    return mWriteLevel != PRUint32(0);
+  }
 
   NS_IMETHOD ContentAppended(nsIContent* aContainer,
                              PRInt32 aNewIndexInContainer);
@@ -151,6 +154,8 @@ public:
 
   NS_IMETHOD FlushPendingNotifications(PRBool aFlushReflows = PR_TRUE,
                                        PRBool aUpdateViews = PR_FALSE);
+
+  NS_IMETHOD_(PRBool) IsCaseSensitive();
 
   // nsIDOMDocument interface
   NS_DECL_NSIDOMDOCUMENT
@@ -198,6 +203,11 @@ public:
   NS_IMETHOD AddedForm();
   NS_IMETHOD RemovedForm();
   NS_IMETHOD GetNumFormsSynchronous(PRInt32* aNumForms);
+
+  PRBool IsXHTML()
+  {
+    return mDefaultNamespaceID == kNameSpaceID_XHTML;
+  }
 
 protected:
   nsresult GetPixelDimensions(nsIPresShell* aShell,
@@ -342,6 +352,10 @@ protected:
   nsresult   DoClipboardSecurityCheck(PRBool aPaste);
   static jsval       sCutCopyInternal_id;
   static jsval       sPasteInternal_id;
+
+  // kNameSpaceID_None for good ol' HTML documents, and
+  // kNameSpaceID_XHTML for spiffy new XHTML documents.
+  PRInt32 mDefaultNamespaceID;
 };
 
 #endif /* nsHTMLDocument_h___ */

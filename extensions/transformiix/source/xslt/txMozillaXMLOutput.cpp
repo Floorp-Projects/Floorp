@@ -116,8 +116,8 @@ txMozillaXMLOutput::txMozillaXMLOutput(txOutputFormat* aFormat,
 
     aFragment->GetOwnerDocument(getter_AddRefs(mDocument));
 
-    nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(mDocument);
-    mDocumentIsHTML = !!htmlDoc;
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocument);
+    mDocumentIsHTML = doc && !doc->IsCaseSensitive();
 
     mCurrentNode = aFragment;
 }
@@ -710,8 +710,8 @@ txMozillaXMLOutput::createResultDocument(const nsAString& aName, PRInt32 aNsID,
         mDocument = aResultDocument;
         doc = do_QueryInterface(aResultDocument);
         
-        nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(aResultDocument);
-        mDocumentIsHTML = !!htmlDoc;
+        nsCOMPtr<nsIDocument> doc = do_QueryInterface(aResultDocument);
+        mDocumentIsHTML = doc && !doc->IsCaseSensitive();
     }
 
     mCurrentNode = mDocument;

@@ -55,7 +55,6 @@
 #include "prprf.h"
 #include "nsUnicharUtils.h"
 #include "nsCRT.h"
-#include "nsIXMLDocument.h"
 #include "nsContentUtils.h"
 
 typedef struct {
@@ -757,13 +756,13 @@ nsXMLContentSerializer::AppendDocumentStart(nsIDOMDocument *aDocument,
 {
   NS_ENSURE_ARG_POINTER(aDocument);
 
-  nsCOMPtr<nsIXMLDocument> xml(do_QueryInterface(aDocument));
-  if (!xml) {
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(aDocument));
+  if (!doc) {
     return NS_OK;
   }
 
   nsAutoString version, encoding, standalone;
-  xml->GetXMLDeclaration(version, encoding, standalone);
+  doc->GetXMLDeclaration(version, encoding, standalone);
 
   if (version.IsEmpty())
     return NS_OK; // A declaration must have version, or there is no decl

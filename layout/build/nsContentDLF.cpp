@@ -96,13 +96,13 @@ static const char* const gHTMLTypes[] = {
   "text/javascript",
   "application/x-javascript",
   "application/x-view-source", //XXX I wish I could just use nsMimeTypes.h here
+  "application/xhtml+xml",
   0
 };
   
 static const char* const gXMLTypes[] = {
   "text/xml",
   "application/xml",
-  "application/xhtml+xml",
   0
 };
 

@@ -48,6 +48,7 @@
 #include "nsHTMLDocument.h"
 #include "nsIParserFilter.h"
 #include "nsIHTMLContentSink.h"
+#include "nsIXMLContentSink.h"
 #include "nsHTMLParts.h"
 #include "nsIHTMLStyleSheet.h"
 #include "nsIHTMLCSSStyleSheet.h"
@@ -74,6 +75,7 @@
 #include "nsIContentViewer.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIDocShell.h"
+#include "nsIWebShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIWebNavigation.h"
 #include "nsIBaseWindow.h"
@@ -158,6 +160,11 @@ static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
 
 static PRBool
 IsNamedItem(nsIContent* aContent, nsIAtom *aTag, nsAString& aName);
+
+// MatchElementId is defined in nsXMLDocument.cpp
+nsIContent *
+MatchElementId(nsIContent *aContent, const nsAString& aId);
+
 
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
@@ -818,7 +825,24 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
                                   PRBool aReset,
                                   nsIContentSink* aSink)
 {
-  PRBool needsParser=PR_TRUE;
+  nsCAutoString contentType;
+  aChannel->GetContentType(contentType);
+
+  if (contentType.Equals("application/xhtml+xml") &&
+      (!aCommand || nsCRT::strcmp(aCommand, "view-source") != 0)) {
+    // We're parsing XHTML as XML, remember that.
+
+    mDefaultNamespaceID = kNameSpaceID_XHTML;
+    mCompatMode = eCompatibility_FullStandards;
+  }
+#ifdef DEBUG
+  else {
+    NS_ASSERTION(mDefaultNamespaceID == kNameSpaceID_None,
+                 "Hey, someone forgot to reset mDefaultNamespaceID!!!");
+  }
+#endif
+
+  PRBool needsParser = PR_TRUE;
   if (aCommand)
   {
     if (!nsCRT::strcmp(aCommand, "view delayedContentLoad")) {
@@ -997,15 +1021,29 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     mParser->SetCommand(aCommand);
 
     // create the content sink
-    nsCOMPtr<nsIHTMLContentSink> sink;
+    nsCOMPtr<nsIContentSink> sink;
+
     if (aSink)
-      sink = do_QueryInterface(aSink);
+      sink = aSink;
     else {
-      rv = NS_NewHTMLContentSink(getter_AddRefs(sink), this, aURL, aContainer,
-                                 aChannel);
-      if (NS_FAILED(rv)) {
-        return rv;
+      if (IsXHTML()) {
+        nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(aContainer));
+        nsCOMPtr<nsIXMLContentSink> xmlsink;
+
+        rv = NS_NewXMLContentSink(getter_AddRefs(xmlsink), this, aURL,
+                                  webShell, aChannel);
+
+        sink = xmlsink;
+      } else {
+        nsCOMPtr<nsIHTMLContentSink> htmlsink;
+
+        rv = NS_NewHTMLContentSink(getter_AddRefs(htmlsink), this, aURL,
+                                   docShell, aChannel);
+
+        sink = htmlsink;
       }
+      NS_ENSURE_SUCCESS(rv, rv);
+
       NS_ASSERTION(sink,
                    "null sink with successful result from factory method");
     }
@@ -1147,7 +1185,15 @@ nsHTMLDocument::GetImageMap(const nsAString& aMapName,
   for (i = 0; i < n; i++) {
     nsCOMPtr<nsIDOMHTMLMapElement> map = mImageMaps[i];
     if (map && NS_SUCCEEDED(map->GetName(name))) {
-      if (name.Equals(aMapName, nsCaseInsensitiveStringComparator())) {
+      PRBool match;
+
+      if (IsXHTML()) {
+        match = name.Equals(aMapName);
+      } else {
+        match = name.Equals(aMapName, nsCaseInsensitiveStringComparator());
+      }
+
+      if (match) {
         *aResult = map;
         NS_ADDREF(*aResult);
         return NS_OK;
@@ -1304,7 +1350,7 @@ nsHTMLDocument::GetCSSLoader(nsICSSLoader*& aLoader)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  mCSSLoader->SetCaseSensitive(PR_FALSE);
+  mCSSLoader->SetCaseSensitive(IsXHTML());
   mCSSLoader->SetCompatibilityMode(mCompatMode);
 
   aLoader = mCSSLoader;
@@ -1324,6 +1370,9 @@ nsHTMLDocument::GetCompatibilityMode(nsCompatibility& aMode)
 NS_IMETHODIMP
 nsHTMLDocument::SetCompatibilityMode(nsCompatibility aMode)
 {
+  NS_ASSERTION(!IsXHTML() || aMode == eCompatibility_FullStandards,
+               "Bad compat mode for XHTML document!");
+
   mCompatMode = aMode;
   if (mCSSLoader) {
     mCSSLoader->SetCompatibilityMode(mCompatMode);
@@ -1421,9 +1470,8 @@ nsHTMLDocument::AttributeWillChange(nsIContent* aContent, PRInt32 aNameSpaceID,
 {
   NS_ABORT_IF_FALSE(aContent, "Null content!");
 
-  // XXX: Check namespaces!!!
-
-  if (aAttribute == nsHTMLAtoms::name) {
+  if (!IsXHTML() && aAttribute == nsHTMLAtoms::name &&
+      aNameSpaceID == kNameSpaceID_None) {
     nsCOMPtr<nsIAtom> tag;
     nsAutoString value;
 
@@ -1436,7 +1484,8 @@ nsHTMLDocument::AttributeWillChange(nsIContent* aContent, PRInt32 aNameSpaceID,
         return rv;
       }
     }
-  } else if (aAttribute == nsHTMLAtoms::id) {
+  } else if (aAttribute == nsHTMLAtoms::id &&
+             aNameSpaceID == kNameSpaceID_None) {
     nsresult rv = RemoveFromIdTable(aContent);
 
     if (NS_FAILED(rv)) {
@@ -1449,13 +1498,13 @@ nsHTMLDocument::AttributeWillChange(nsIContent* aContent, PRInt32 aNameSpaceID,
 
 NS_IMETHODIMP
 nsHTMLDocument::AttributeChanged(nsIContent* aContent, PRInt32 aNameSpaceID,
-                                 nsIAtom* aAttribute, PRInt32 aModType, nsChangeHint aHint)
+                                 nsIAtom* aAttribute, PRInt32 aModType,
+                                 nsChangeHint aHint)
 {
   NS_ABORT_IF_FALSE(aContent, "Null content!");
 
-  // XXX: Check namespaces!
-
-  if (aAttribute == nsHTMLAtoms::name) {
+  if (!IsXHTML() && aAttribute == nsHTMLAtoms::name &&
+      aNameSpaceID == kNameSpaceID_None) {
     nsCOMPtr<nsIAtom> tag;
     nsAutoString value;
 
@@ -1468,7 +1517,8 @@ nsHTMLDocument::AttributeChanged(nsIContent* aContent, PRInt32 aNameSpaceID,
         return rv;
       }
     }
-  } else if (aAttribute == nsHTMLAtoms::id) {
+  } else if (aAttribute == nsHTMLAtoms::id &&
+             aNameSpaceID == kNameSpaceID_None) {
     nsAutoString value;
 
     aContent->GetAttr(aNameSpaceID, nsHTMLAtoms::id, value);
@@ -1520,6 +1570,12 @@ nsHTMLDocument::FlushPendingNotifications(PRBool aFlushReflows,
   return nsDocument::FlushPendingNotifications(aFlushReflows, aUpdateViews);
 }
 
+NS_IMETHODIMP_(PRBool)
+nsHTMLDocument::IsCaseSensitive()
+{
+  return IsXHTML();
+}
+
 NS_IMETHODIMP
 nsHTMLDocument::CreateElementNS(const nsAString& aNamespaceURI,
                                 const nsAString& aQualifiedName,
@@ -1567,20 +1623,23 @@ nsHTMLDocument::CreateElement(const nsAString& aTagName,
   NS_ENSURE_TRUE(!aTagName.IsEmpty(), NS_ERROR_DOM_INVALID_CHARACTER_ERR);
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  nsAutoString tmp(aTagName);
-  ToLowerCase(tmp);
 
-  mNodeInfoManager->GetNodeInfo(tmp, nsnull, kNameSpaceID_None,
-                                *getter_AddRefs(nodeInfo));
+  nsAutoString tmp(aTagName);
+
+  if (!IsXHTML()) {
+    ToLowerCase(tmp);
+  }
+
+  nsresult rv = mNodeInfoManager->GetNodeInfo(tmp, nsnull, mDefaultNamespaceID,
+                                              *getter_AddRefs(nodeInfo));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIHTMLContent> content;
-  nsresult rv = NS_CreateHTMLElement(getter_AddRefs(content), nodeInfo,
-                                     PR_FALSE);
-  if (NS_SUCCEEDED(rv)) {
-    content->SetContentID(mNextContentID++);
-    rv = CallQueryInterface(content, aReturn);
-  }
-  return rv;
+  rv = NS_CreateHTMLElement(getter_AddRefs(content), nodeInfo, IsXHTML());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  content->SetContentID(mNextContentID++);
+  return CallQueryInterface(content, aReturn);
 }
 
 NS_IMETHODIMP
@@ -1864,16 +1923,14 @@ NS_IMETHODIMP
 nsHTMLDocument::LookupNamespacePrefix(const nsAString& aNamespaceURI,
                                       nsAString& aPrefix)
 {
-  aPrefix.Truncate();
-  return NS_OK;
+  return nsDocument::LookupNamespacePrefix(aNamespaceURI, aPrefix);
 }
 
 NS_IMETHODIMP
 nsHTMLDocument::LookupNamespaceURI(const nsAString& aNamespacePrefix,
                                    nsAString& aNamespaceURI)
 {
-  aNamespaceURI.Truncate();
-  return NS_OK;
+  return nsDocument::LookupNamespaceURI(aNamespacePrefix, aNamespaceURI);
 }
 
 
@@ -2044,6 +2101,8 @@ nsHTMLDocument::GetBody(nsIDOMHTMLElement** aBody)
 
     nsCOMPtr<nsIDOMNodeList> nodeList;
 
+    // XXX: This is not quite right, and we should deal with XHTML
+    // here too.
     nsresult rv = GetElementsByTagName(NS_LITERAL_STRING("frameset"),
                                        getter_AddRefs(nodeList));
     if (NS_FAILED(rv))
@@ -2065,6 +2124,9 @@ NS_IMETHODIMP
 nsHTMLDocument::SetBody(nsIDOMHTMLElement* aBody)
 {
   nsCOMPtr<nsIDOMHTMLBodyElement> bodyElement(do_QueryInterface(aBody));
+
+  // Hmm, this is wrong, and not XHTML cool. The body can be a
+  // frameset too!
 
   // The body element must be of type nsIDOMHTMLBodyElement.
   if (!bodyElement) {
@@ -2113,7 +2175,7 @@ NS_IMETHODIMP
 nsHTMLDocument::GetImages(nsIDOMHTMLCollection** aImages)
 {
   if (!mImages) {
-    mImages = new nsContentList(this, nsHTMLAtoms::img, kNameSpaceID_Unknown);
+    mImages = new nsContentList(this, nsHTMLAtoms::img, mDefaultNamespaceID);
     if (!mImages) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -2130,7 +2192,7 @@ nsHTMLDocument::GetApplets(nsIDOMHTMLCollection** aApplets)
 {
   if (!mApplets) {
     mApplets = new nsContentList(this, nsHTMLAtoms::applet,
-                                 kNameSpaceID_None);
+                                 mDefaultNamespaceID);
     if (!mApplets) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -2142,14 +2204,42 @@ nsHTMLDocument::GetApplets(nsIDOMHTMLCollection** aApplets)
   return NS_OK;
 }
 
+PRInt32
+GetHTMLDocumentNamespace(nsIContent *aContent)
+{
+  nsCOMPtr<nsIDocument> doc;
+  aContent->GetDocument(*getter_AddRefs(doc));
+
+  NS_ASSERTION(doc, "This method should never be called on content nodes "
+               "that are not in a document!");
+
+#ifdef DEBUG
+  {
+    nsCOMPtr<nsIHTMLDocument> htmldoc(do_QueryInterface(doc));
+
+    if (!htmldoc) {
+      NS_ERROR("Huh, how did this happen? This should only be used with "
+               "HTML documents!");
+    }
+  }
+#endif
+
+  return doc->IsCaseSensitive() ? kNameSpaceID_XHTML : kNameSpaceID_None;
+}
+
 PRBool
 nsHTMLDocument::MatchLinks(nsIContent *aContent, nsString* aData)
 {
-  nsCOMPtr<nsIAtom> name;
-  aContent->GetTag(*getter_AddRefs(name));
+  nsCOMPtr<nsINodeInfo> ni;
+  aContent->GetNodeInfo(*getter_AddRefs(ni));
 
-  if (name == nsHTMLAtoms::area || name == nsHTMLAtoms::a) {
-    return aContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::href);
+  if (ni) {
+    PRInt32 namespaceID = GetHTMLDocumentNamespace(aContent);
+
+    if (ni->Equals(nsHTMLAtoms::a, namespaceID) ||
+        ni->Equals(nsHTMLAtoms::area, namespaceID)) {
+      return aContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::href);
+    }
   }
 
   return PR_FALSE;
@@ -2174,11 +2264,15 @@ nsHTMLDocument::GetLinks(nsIDOMHTMLCollection** aLinks)
 PRBool
 nsHTMLDocument::MatchAnchors(nsIContent *aContent, nsString* aData)
 {
-  nsCOMPtr<nsIAtom> name;
-  aContent->GetTag(*getter_AddRefs(name));
+  nsCOMPtr<nsINodeInfo> ni;
+  aContent->GetNodeInfo(*getter_AddRefs(ni));
 
-  if (name == nsHTMLAtoms::a) {
-    return aContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::name);
+  if (ni) {
+    PRInt32 namespaceID = GetHTMLDocumentNamespace(aContent);
+
+    if (ni->Equals(nsHTMLAtoms::a, namespaceID)) {
+      return aContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::name);
+    }
   }
 
   return PR_FALSE;
@@ -2337,8 +2431,15 @@ nsresult
 nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
 {
   // If we already have a parser we ignore the document.open call.
-  if (mParser)
+  if (mParser) {
+    if (IsXHTML()) {
+      // No calling document.open() while we're parsing XHTML
+
+      return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+    }
+
     return NS_OK;
+  }
 
   nsCOMPtr<nsIDocShell> docshell;
 
@@ -2589,6 +2690,10 @@ nsHTMLDocument::WriteCommon(const nsAString& aText,
     if (NS_FAILED(rv)) {
       return rv;
     }
+  } else if (IsXHTML()) {
+    // No calling document.write*() while parsing XHTML!
+
+    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
   }
 
   mWriteLevel++;
@@ -2737,37 +2842,6 @@ nsHTMLDocument::Writeln()
   return ScriptWriteCommon(PR_TRUE);
 }
 
-
-nsIContent *
-nsHTMLDocument::MatchId(nsIContent *aContent, const nsAString& aId)
-{
-  // Most elements don't have an id, so lets call the faster HasAttr()
-  // method before we create a string object and call GetAttr().
-
-  if (aContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::id)) {
-    nsAutoString value;
-
-    nsresult rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, value);
-
-    if (rv == NS_CONTENT_ATTR_HAS_VALUE && aId.Equals(value)) {
-      return aContent;
-    }
-  }
-
-  nsIContent *result = nsnull;
-  PRInt32 i, count;
-
-  aContent->ChildCount(count);
-  for (i = 0; i < count && !result; i++) {
-    nsIContent *child;
-    aContent->ChildAt(i, child);
-    result = MatchId(child, aId);
-    NS_RELEASE(child);
-  }
-
-  return result;
-}
-
 NS_IMETHODIMP
 nsHTMLDocument::GetElementById(const nsAString& aElementId,
                                nsIDOMElement** aReturn)
@@ -2794,7 +2868,7 @@ nsHTMLDocument::GetElementById(const nsAString& aElementId,
                      "getElementById(\"\") called, fix caller?");
 
     if (mRootContent && !aElementId.IsEmpty()) {
-      e = MatchId(mRootContent, aElementId);
+      e = MatchElementId(mRootContent, aElementId);
     }
 
     if (!e) {
@@ -2825,8 +2899,7 @@ nsHTMLDocument::CreateAttributeNS(const nsAString& aNamespaceURI,
                                   const nsAString& aQualifiedName,
                                   nsIDOMAttr** aReturn)
 {
-  NS_NOTYETIMPLEMENTED("write me");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return nsDocument::CreateAttributeNS(aNamespaceURI, aQualifiedName, aReturn);
 }
 
 NS_IMETHODIMP
@@ -2835,9 +2908,12 @@ nsHTMLDocument::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
                                        nsIDOMNodeList** aReturn)
 {
   nsAutoString tmp(aLocalName);
-  ToLowerCase(tmp); // HTML elements are lower case internally.
-  return nsDocument::GetElementsByTagNameNS(aNamespaceURI, tmp,
-                                            aReturn);
+
+  if (!IsXHTML()) {
+    ToLowerCase(tmp); // HTML elements are lower case internally.
+  }
+
+  return nsDocument::GetElementsByTagNameNS(aNamespaceURI, tmp, aReturn);
 }
 
 PRBool
@@ -3226,8 +3302,7 @@ NS_IMETHODIMP
 nsHTMLDocument::GetEmbeds(nsIDOMHTMLCollection** aEmbeds)
 {
   if (!mEmbeds) {
-    mEmbeds = new nsContentList(this, nsHTMLAtoms::embed,
-                                kNameSpaceID_Unknown);
+    mEmbeds = new nsContentList(this, nsHTMLAtoms::embed, mDefaultNamespaceID);
     if (!mEmbeds) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -3458,6 +3533,8 @@ nsresult
 nsHTMLDocument::UpdateNameTableEntry(const nsAString& aName,
                                      nsIContent *aContent)
 {
+  NS_ASSERTION(!IsXHTML(), "Don't call me on an XHTML document!!!");
+
   IdAndNameMapEntry *entry =
     NS_STATIC_CAST(IdAndNameMapEntry *,
                    PL_DHashTableOperate(&mIdAndNameHashTable, &aName,
@@ -3521,6 +3598,8 @@ nsresult
 nsHTMLDocument::RemoveFromNameTable(const nsAString& aName,
                                     nsIContent *aContent)
 {
+  NS_ASSERTION(!IsXHTML(), "Don't call me on an XHTML document!!!");
+
   IdAndNameMapEntry *entry =
     NS_STATIC_CAST(IdAndNameMapEntry *,
                    PL_DHashTableOperate(&mIdAndNameHashTable, &aName,
@@ -3579,7 +3658,7 @@ nsHTMLDocument::UnregisterNamedItems(nsIContent *aContent)
   nsAutoString value;
   nsresult rv = NS_OK;
 
-  if (IsNamedItem(aContent, tag, value)) {
+  if (!IsXHTML() && IsNamedItem(aContent, tag, value)) {
     rv = RemoveFromNameTable(value, aContent);
 
     if (NS_FAILED(rv)) {
@@ -3625,7 +3704,7 @@ nsHTMLDocument::RegisterNamedItems(nsIContent *aContent)
 
   nsAutoString value;
 
-  if (IsNamedItem(aContent, tag, value)) {
+  if (!IsXHTML() && IsNamedItem(aContent, tag, value)) {
     UpdateNameTableEntry(value, aContent);
   }
 
@@ -3658,7 +3737,7 @@ nsHTMLDocument::RegisterNamedItems(nsIContent *aContent)
 
 static void
 FindNamedItems(const nsAString& aName, nsIContent *aContent,
-               IdAndNameMapEntry& aEntry)
+               IdAndNameMapEntry& aEntry, PRBool aIsXHTML)
 {
   NS_ASSERTION(aEntry.mContentList,
                "Entry w/o content list passed to FindNamedItems()!");
@@ -3674,7 +3753,7 @@ FindNamedItems(const nsAString& aName, nsIContent *aContent,
 
   nsAutoString value;
 
-  if (IsNamedItem(aContent, tag, value) && value.Equals(aName)) {
+  if (!aIsXHTML && IsNamedItem(aContent, tag, value) && value.Equals(aName)) {
     aEntry.mContentList->AppendElement(aContent);
   }
 
@@ -3695,7 +3774,7 @@ FindNamedItems(const nsAString& aName, nsIContent *aContent,
   for (i = 0; i < count; i++) {
     aContent->ChildAt(i, *getter_AddRefs(child));
 
-    FindNamedItems(aName, child, aEntry);
+    FindNamedItems(aName, child, aEntry, aIsXHTML);
   }
 }
 
@@ -3705,6 +3784,12 @@ nsHTMLDocument::ResolveName(const nsAString& aName,
                             nsISupports **aResult)
 {
   *aResult = nsnull;
+
+  if (IsXHTML()) {
+    // We don't dynamically resolve names on XHTML documents.
+
+    return NS_OK;
+  }
 
   // Bug 69826 - Make sure to flush the content model if the document
   // is still loading.
@@ -3737,8 +3822,10 @@ nsHTMLDocument::ResolveName(const nsAString& aName,
     entry->mContentList = list;
     NS_ADDREF(entry->mContentList);
 
-    if(mRootContent && !aName.IsEmpty()) {
-      FindNamedItems(aName, mRootContent, *entry);
+    if (mRootContent && !aName.IsEmpty()) {
+      // We'll never get here if !IsXHTML(), so we can just pass
+      // PR_FALSE to FindNamedItems().
+      FindNamedItems(aName, mRootContent, *entry, PR_FALSE);
     }
   }
 
@@ -3864,7 +3951,7 @@ nsHTMLDocument::GetBodyContent()
       nsCOMPtr<nsINodeInfo> ni;
       child->GetNodeInfo(*getter_AddRefs(ni));
 
-      if (ni->Equals(nsHTMLAtoms::body)) {
+      if (ni->Equals(nsHTMLAtoms::body, mDefaultNamespaceID)) {
         mBodyContent = do_QueryInterface(child);
 
         return PR_TRUE;
@@ -3895,7 +3982,7 @@ NS_IMETHODIMP
 nsHTMLDocument::GetForms(nsIDOMHTMLCollection** aForms)
 {
   if (!mForms) {
-    mForms = new nsContentList(this, nsHTMLAtoms::form, kNameSpaceID_Unknown);
+    mForms = new nsContentList(this, nsHTMLAtoms::form, mDefaultNamespaceID);
     if (!mForms) {
       return NS_ERROR_OUT_OF_MEMORY;
     }

@@ -243,7 +243,7 @@ nsXULPrototypeDocument::Init()
     rv = NS_NewISupportsArray(getter_AddRefs(mOverlayReferences));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    mNodeInfoManager = do_CreateInstance(NS_NODEINFOMANAGER_CONTRACTID, &rv);
+    rv = NS_NewNodeInfoManager(getter_AddRefs(mNodeInfoManager));
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = mNodeInfoManager->Init(nsnull);

@@ -2011,11 +2011,6 @@ nsXMLContentSink::HandleXMLDeclaration(const PRUnichar *aData,
   // strlen("<?xml version='a'?>") == 19, shortest decl
   NS_ENSURE_TRUE(aLength >= 19, NS_ERROR_INVALID_ARG);
 
-  nsCOMPtr<nsIXMLDocument> xml(do_QueryInterface(mDocument));
-  NS_WARN_IF_FALSE(xml, "why is XML sink building non-XML document?");
-  if (!xml)
-    return NS_OK;
-
   // <?xml version="a" encoding="a" standalone="yes|no"?>
   const nsAString& data = Substring(aData + 6, aData + aLength - 2); // strip out "<?xml " and "?>"
 
@@ -2026,7 +2021,7 @@ nsXMLContentSink::HandleXMLDeclaration(const PRUnichar *aData,
   nsParserUtils::GetQuotedAttributeValue(data, NS_LITERAL_STRING("encoding"), encoding);
   nsParserUtils::GetQuotedAttributeValue(data, NS_LITERAL_STRING("standalone"), standalone);
 
-  return xml->SetXMLDeclaration(version, encoding, standalone);
+  return mDocument->SetXMLDeclaration(version, encoding, standalone);
 }
 
 NS_IMETHODIMP
