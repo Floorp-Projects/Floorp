@@ -416,7 +416,7 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
     rv = nsMemoryImpl::Startup();
     if (NS_FAILED(rv)) return rv;
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_OS2)
     NS_StartupNativeCharsetUtils();
 #endif
     NS_StartupLocalFile();
