@@ -34,8 +34,6 @@
         title="&progress.label;"
 		align = "vertical"
 		class = "dialog"
-		width="350"
-		height="300"
         > 
 
     <html:script language="javascript" src="xpistatus.js"/>
@@ -44,14 +42,14 @@
         <box align="horizontal" id="interiorTitleBox">
             <html:div id="interiorTitle"> &progress.label; </html:div>
             <spring flex="100%"/>
-            <titlebutton class="graphic"/>
+            <titledbutton class="graphic" />
         </box>
 
         <html:div>
 		    <html:hr/>
 		</html:div>
 
-        <spring id="verticalSmallSpace"/>  
+        <spring id="verticalSmallSpacer"/>  
 
         <box align="vertical" id="treeBox">  
 		    <html:div id="table-housing">
@@ -72,15 +70,16 @@
 			</html:div>
         </box>
 
-        <spring id="verticalLargeSpace"/>
+        <spring id="verticalLargeSpacer"/>
 
-        <html:input id="dialog.uiPackageName" readonly="" style="width:100%" />
-        <html:input id="dialog.currentAction" readonly="" style="width:100%" />
-        
-		<spring style="height:1em"/>
+        <box align="vertical" id="statusMessages">
+        <html:input id="dialog.uiPackageName" readonly="" />
+        <html:input id="dialog.currentAction" readonly="" />
+        </box>
+
+		<spring style="height:1ex"/>
 
         <box align="horizontal">
-            <spring style="width:2px"/>
 
             <box align="vertical">
                 <spring style="height:6px"/>
@@ -88,11 +87,9 @@
                 </progressmeter>
             </box>
 
-		        <spring flex="80%"/>
+		    <spring flex="80%"/>
 
-            <!--box align="horizontal"-->
-                <titledbutton class="dialog push" id="dialog.cancel" disabled="false" onclick="cancel()" value="&dialogCancel.label;"/>
-            <!--/box-->
+            <titledbutton class="dialog push" id="dialog.cancel" disabled="false" onclick="cancel()" value="&dialogCancel.label;"/>
         </box>
     </box>
 

@@ -46,15 +46,19 @@ box#treeBox{
   height                    : 18ex;
 }
 
+box#statusMessages{
+  width                     : 36em;
+}
 
 div#interiorTitle {
   font-size                 : 24px;
   font-weight               : bold;
 }
 
+
 /*
 #table-housing {
-  height:                   : 100%;
+  height                    : 100%;
 }
 */
 
@@ -93,7 +97,7 @@ spring#verticalSmallSpacer {
 }
 
 spring#verticalLargeSpacer {
-  height                    : 20px;
+  height                    : 6ex;
 }
 
 spring#verticalMediumSpacer {
