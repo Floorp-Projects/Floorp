@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-noinst_PROGRAMS = simplebrowser
+bin_PROGRAMS = simplebrowser
 simplebrowser_SOURCES = \
 	    simplebrowser.c
 

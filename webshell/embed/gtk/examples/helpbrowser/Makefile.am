@@ -2,7 +2,7 @@
 
 SUBDIRS = help_data
 
-noinst_PROGRAMS = helpbrowser
+bin_PROGRAMS = helpbrowser
 helpbrowser_SOURCES = \
 	    helpbrowser.c
 
