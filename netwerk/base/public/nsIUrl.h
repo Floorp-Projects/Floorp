@@ -20,8 +20,48 @@
 #define nsIUrl_h___
 
 #include "nsISupports.h"
+#include "nscore.h"
 
 #undef GetPort  // Windows (sigh)
+
+////////////////////////////////////////////////////////////////////////////////
+// The "Typical URL" Implementation
+
+// XXX regenerate:
+#define NS_ITYPICALURL_IID                           \
+{ /* 5053f850-f11e-11d2-9322-000000000000 */         \
+    0x5053f850,                                      \
+    0xf11e,                                          \
+    0x11d2,                                          \
+    {0x93, 0x22, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00} \
+}
+
+// XXX regenerate:
+#define NS_TYPICALURL_CID                            \
+{ /* 8ffae6d0-ee37-11d2-9322-000000000000 */         \
+    0x8ffae6d0,                                      \
+    0xee37,                                          \
+    0x11d2,                                          \
+    {0x93, 0x22, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00} \
+}
+
+/**
+ * The nsITypicalUrl interface defines the initializer for a URL
+ * implementation that only supports the accessors of nsIUrl.
+ *
+ * Protocol writers can obtain one by calling the component manager
+ * to create an instance of a typical URL by the CID, and then call
+ * the Init routine on it and finally QueryInterface to get the nsIUrl
+ * to return.
+ */
+
+class nsIUrl;
+
+class nsITypicalUrl : public nsISupports
+{
+public:
+    NS_IMETHOD Init(const char* spec, nsIUrl* baseUrl) = 0;
+};
 
 #define NS_IURL_IID                                  \
 { /* 82c1b000-ea35-11d2-931b-00104ba0fd40 */         \
@@ -56,8 +96,8 @@
  * This class pretty much "final" and there shouldn't be anything added.
  * If you do feel something belongs here, please do send me a mail. Thanks!
  */
-class nsIUrl : public nsISupports
-{
+
+class nsIUrl : public nsITypicalUrl {
 public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IURL_IID);
 
@@ -129,40 +169,6 @@ public:
 
 };
 
-////////////////////////////////////////////////////////////////////////////////
-// The "Typical URL" Implementation
-
-// XXX regenerate:
-#define NS_ITYPICALURL_IID                           \
-{ /* 5053f850-f11e-11d2-9322-000000000000 */         \
-    0x5053f850,                                      \
-    0xf11e,                                          \
-    0x11d2,                                          \
-    {0x93, 0x22, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00} \
-}
-
-// XXX regenerate:
-#define NS_TYPICALURL_CID                            \
-{ /* 8ffae6d0-ee37-11d2-9322-000000000000 */         \
-    0x8ffae6d0,                                      \
-    0xee37,                                          \
-    0x11d2,                                          \
-    {0x93, 0x22, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00} \
-}
-
-/**
- * The nsITypicalUrl interface defines the initializer for a URL
- * implementation that only supports the accessors of nsIUrl.
- *
- * Protocol writers can obtain one by calling the component manager
- * to create an instance of a typical URL by the CID, and then call
- * the Init routine on it and finally QueryInterface to get the nsIUrl
- * to return.
- */
-class nsITypicalUrl : public nsISupports
-{
-public:
-    NS_IMETHOD Init(const char* spec, nsIUrl* baseUrl) = 0;
-};
+extern nsresult NS_NewURL(nsIUrl** aInstancePtrResult, const char *aSpec, nsIUrl* aBaseUrl);
 
 #endif /* nsIIUrl_h___ */
