@@ -48,16 +48,16 @@ pref("general.useragent.locale", "chrome://navigator/locale/navigator.properties
 pref("general.useragent.contentlocale", "chrome://navigator-region/locale/region.properties");
 pref("general.useragent.misc", "rv:1.3a");
 pref("general.useragent.vendor", "Phoenix");
-pref("general.useragent.vendorSub", "0.4");
+pref("general.useragent.vendorSub", "0.5");
 
 pref("backups.number_of_prefs_copies", 1);
 
 // 0 = blank, 1 = home (browser.startup.homepage), 2 = last
 // XXXBlake Remove this stupid pref
 pref("browser.startup.page",                1);
-pref("browser.startup.homepage",            "http://texturizer.net/phoenix/index.html");
+pref("browser.startup.homepage",	          "chrome://navigator-region/locale/region.properties");
 // "browser.startup.homepage_override" was for 4.x
-pref("browser.startup.homepage_override.1", false);
+pref("browser.startup.homepage_override.1", true);
 
 pref("browser.cache.enable",                true); // see also network.http.use-cache
 pref("browser.cache.disk.enable",           true);
@@ -111,7 +111,8 @@ pref("accessibility.accesskeycausesactivation", true);
 pref("accessibility.typeaheadfind", true);
 pref("accessibility.typeaheadfind.linksonly", true);
 pref("accessibility.typeaheadfind.startlinksonly", false);
-pref("accessibility.typeaheadfind.timeout", 5000);
+pref("accessibility.typeaheadfind.timeout", 4000);
+pref("accessibility.typeaheadfind.soundURL", "default");
 
 pref("browser.download.progressDnldDialog.keepAlive", true); // keep the dnload progress dialog up after dnload is complete
 pref("browser.download.progressDnldDialog.enable_launch_reveal_buttons", true);
@@ -250,8 +251,6 @@ pref("capability.policy.default.History.toString", "UniversalBrowserRead");
 
 pref("capability.policy.default.HTMLDocument.close", "allAccess");
 pref("capability.policy.default.HTMLDocument.open", "allAccess");
-pref("capability.policy.default.HTMLDocument.write", "allAccess");
-pref("capability.policy.default.HTMLDocument.writeln", "allAccess");
 
 pref("capability.policy.default.Location.hash.set", "allAccess");
 pref("capability.policy.default.Location.href.set", "allAccess");
@@ -269,7 +268,6 @@ pref("capability.policy.default.Window.Components", "allAccess");
 pref("capability.policy.default.Window.document", "allAccess");
 pref("capability.policy.default.Window.focus", "allAccess");
 pref("capability.policy.default.Window.frames", "allAccess");
-pref("capability.policy.default.Window.fullScreen", "noAccess");
 pref("capability.policy.default.Window.history", "allAccess");
 pref("capability.policy.default.Window.length", "allAccess");
 pref("capability.policy.default.Window.location", "allAccess");
@@ -300,6 +298,8 @@ pref("dom.disable_window_open_feature.scrollbars",  false);
 pref("dom.disable_window_open_feature.resizable",   false);
 pref("dom.disable_window_open_feature.minimizable", false);
 pref("dom.disable_window_open_feature.status",      false);
+
+pref("dom.allow_scripts_to_close_windows",          false);
 
 pref("javascript.enabled",                  true);
 pref("javascript.options.strict",           false);
@@ -375,15 +375,14 @@ pref("network.http.connect.timeout",  30);	// in seconds
 pref("network.http.request.timeout", 120);	// in seconds
 
 // Headers
-pref("network.http.accept.default", "text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,video/x-mng,image/png,image/jpeg,image/gif;q=0.2,text/css,*/*;q=0.1");
-
+pref("network.http.accept.default", "text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,video/x-mng,image/png,image/jpeg,image/gif;q=0.2,*/*;q=0.1");
 pref("network.http.sendRefererHeader",      2); // 0=don't send any, 1=send only on clicks, 2=send on image requests as well
 
 // Maximum number of consecutive redirects before aborting.
 pref("network.http.redirection-limit", 10);
 
 // Enable http compression: comment this out in case of problems with 1.1
-pref("network.http.accept-encoding" ,"gzip, deflate, compress;q=0.9");
+pref("network.http.accept-encoding" ,"gzip,deflate,compress;q=0.9");
 
 pref("network.http.pipelining"      , false);
 pref("network.http.proxy.pipelining", false);
