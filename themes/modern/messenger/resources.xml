@@ -37,8 +37,8 @@
       <image src="chrome://messenger/skin/messengercompose/btn1/address-act.gif"/>
       <image src="chrome://messenger/skin/messengercompose/btn1/attach-hov.gif"/>
       <image src="chrome://messenger/skin/messengercompose/btn1/attach-act.gif"/>
-      <image src="chrome://editor/skin/messengercompose/btn1/spell-hov.gif"/>
-      <image src="chrome://editor/skin/messengercompose/btn1/spell-act.gif"/>
+      <image src="chrome://editor/skin/btn1/spell-hov.gif"/>
+      <image src="chrome://editor/skin/btn1/spell-act.gif"/>
       <image src="chrome://editor/skin/btn1/savefile-hov.gif"/>
       <image src="chrome://editor/skin/btn1/savefile-act.gif"/>
       <image src="chrome://communicator/skin/btn1/stop-hov.gif"/>

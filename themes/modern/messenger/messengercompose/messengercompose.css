@@ -99,10 +99,6 @@
 } 
 
 #spellingButton {
-  list-style-image: url("chrome://editor/skin/messengercompose/btn1/spell.gif");
-}
-
-#spellingButton {
   list-style-image: url("chrome://editor/skin/btn1/spell.gif");
 }
 
@@ -267,3 +263,4 @@ spring.spacer {
 .label {
   color: #000000;
 }
+

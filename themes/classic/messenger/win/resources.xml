@@ -63,8 +63,8 @@
       <image src="chrome://messenger/skin/messengercompose/attach-hover-active.gif"/>
       <image src="chrome://messenger/skin/messengercompose/quote-hover.gif"/>
       <image src="chrome://messenger/skin/messengercompose/quote-hover-active.gif"/>
-      <image src="chrome://messenger/skin/messengercompose/spelling-hover.gif"/>
-      <image src="chrome://messenger/skin/messengercompose/spelling-hover-active.gif"/>
+      <image src="chrome://editor/skin/images/spell-hover.gif"/>
+      <image src="chrome://editor/skin/images/spell-hover-active.gif"/>
       <image src="chrome://messenger/skin/messengercompose/savemsg-hover.gif"/>
       <image src="chrome://messenger/skin/messengercompose/savemsg-hover-active.gif"/>
       <image src="chrome://global/skin/stop-hover.gif"/>
