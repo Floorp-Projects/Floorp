@@ -61,6 +61,10 @@ DEFINES =
 # Libraries to be linked
 LIBS =
 
+ifdef GC_LEAK_DETECTOR
+LIBS += -lboehm
+endif
+
 include $(topsrcdir)/config/config.mk
 
 include $(srcdir)/../config/xmlterm_config.mk
