@@ -84,5 +84,5 @@ build:
 # Build & install nspr.  Classic build, no autoconf.
 # Linux/RPM available.
 nspr:
-	(cd mozilla/nsprpub; $(MAKE))
+	($(MAKE) -C mozilla/nsprpub DIST=$(WITH_NSPR) NSDISTMODE=copy NS_USE_GCC=1 MOZILLA_CLIENT=1 NO_MDUPDATE=1 NS_USE_NATIVE= )
 
