@@ -41,9 +41,9 @@ ifdef ENABLE_GNOME
 CPPSRCS	       += TestGtkEmbedMDI.cpp
 
 LIBS		= \
-		$(MOZ_COMPONENT_LIBS) \
 		-lgtkembedmoz \
 		-lgtksuperwin \
+		$(MOZ_COMPONENT_LIBS) \
 		`gnome-config --libs gnomeui` \
 		$(TK_LIBS) \
 		$(NULL)
@@ -51,9 +51,9 @@ LIBS		= \
 else
 
 LIBS		= \
-		$(MOZ_COMPONENT_LIBS) \
 		-lgtkembedmoz \
 		-lgtksuperwin \
+		$(MOZ_COMPONENT_LIBS) \
 		$(TK_LIBS) \
 		$(NULL)
 
