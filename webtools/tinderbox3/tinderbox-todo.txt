@@ -27,6 +27,8 @@ Todo:
 - require build administrator email
 - add hostname into the machine_name automatically
 - have client report versions of files it updates so a correct "C" letter can happen
+- allow clients to send status via email
+- allow server to receive status via email
 
 Bugs:
 - add proper constraints into the DB
@@ -57,11 +59,11 @@ Would be nice:
 - normalize patch roots so that a patch made in content/html/content will still apply
 - * allow people to register for notification when a build (or builds) fail
 - * "auto-checkin hook" when someone checks in, they are added to the hook and notified when a build they checked in to fails
+- support horizontal as well as vertical layout
+- ensure output prints OK
+- make sure non-Mozilla/IE browsers can read all the information it need and add comments (i.e. make links for them)
+- tbox3 on Solaris should print stack traces of codedumps using /usr/proc/bin/pstack, dbx or gdb if mozilla or any test tool created a coredump.
 
 Test:
 - --notrust and friends
 - changing cvs co date around (esp. having one and then not having one--do we need to unstick the tree?)
-
-Not Now, Dammit
-- allow clients to send status as multiple machines to different tinderboxen
-- allow clients to send status via email
