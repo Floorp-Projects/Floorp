@@ -652,7 +652,6 @@ then
 		if test -x /usr/bin/orbit-config
 		then
 			SKIP_IDL_CHECK="yes"
-			BUILD_XPIDL=1
 			LIBIDL_CFLAGS="-I/usr/lib/glib/include"
 			LIBIDL_LIBS="-lglib -lIDL"
 			AC_SUBST(LIBIDL_CFLAGS)
@@ -663,7 +662,7 @@ fi
 
 if test "$SKIP_IDL_CHECK" = "no"
 then
-AM_PATH_LIBIDL($LIBIDL_VERSION,BUILD_XPIDL=1,
+AM_PATH_LIBIDL($LIBIDL_VERSION,,
   [echo libIDL $LIBIDL_VERSION or higher is required.]
   [echo Get yourself a RPM or source package from ftp://ftp.mozilla.org/]
   [echo before your tree is HOSED.]
@@ -1800,7 +1799,6 @@ AC_SUBST(MOZ_DOM)
 AC_SUBST(MOZ_MAIL_COMPOSE)
 AC_SUBST(FULL_STATIC_BUILD)
 AC_SUBST(NO_UNIX_LDAP)
-AC_SUBST(BUILD_XPIDL)
 AC_SUBST(BUILD_IDLC)
 AC_SUBST(MOZ_ENABLE_GTK_MOZILLA)
 AC_SUBST(MOZ_BUILD_ROOT)
