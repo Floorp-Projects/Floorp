@@ -1426,6 +1426,10 @@ nsHTMLDocument::CreateProcessingInstruction(const nsAString& aTarget,
                                             const nsAString& aData,
                                             nsIDOMProcessingInstruction** aReturn)
 {
+  if (IsXHTML()) {
+    return nsDocument::CreateProcessingInstruction(aTarget, aData, aReturn);
+  }
+
   // There are no PIs for HTML
   *aReturn = nsnull;
 
@@ -1436,6 +1440,10 @@ NS_IMETHODIMP
 nsHTMLDocument::CreateCDATASection(const nsAString& aData,
                                    nsIDOMCDATASection** aReturn)
 {
+  if (IsXHTML()) {
+    return nsDocument::CreateCDATASection(aData, aReturn);
+  }
+
   // There are no CDATASections in HTML
   *aReturn = nsnull;
 
@@ -1446,6 +1454,10 @@ NS_IMETHODIMP
 nsHTMLDocument::CreateEntityReference(const nsAString& aName,
                                       nsIDOMEntityReference** aReturn)
 {
+  if (IsXHTML()) {
+    return nsDocument::CreateEntityReference(aName, aReturn);
+  }
+
   // There are no EntityReferences in HTML
   *aReturn = nsnull;
 
