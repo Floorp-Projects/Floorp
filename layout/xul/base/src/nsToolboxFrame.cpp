@@ -893,6 +893,8 @@ nsToolboxFrame::DragDrop(nsIDOMEvent* aMouseEvent)
                 printf("Dropped: %s\n", stuffToPaste);
                 dragSession->SetCanDrop(PR_TRUE);
               }
+              
+              delete [] whichFlavor;
             }
           } // foreach drag item
         }
