@@ -612,7 +612,7 @@ nsXPrintContext::DrawImage(xGC *xgc, nsIImage *aImage,
           (int)aSX, (int)aSY, (int)aSWidth, (int)aSHeight,
           (int)aDX, (int)aDY, (int)aDWidth, (int)aDHeight));
   
-  double   scaler;
+  double   scalingFactor;
   int      prev_res = 0,
            dummy;
   long     imageResolution;
@@ -634,15 +634,37 @@ nsXPrintContext::DrawImage(xGC *xgc, nsIImage *aImage,
     return NS_OK;
   }
 
-  float pixelscaler = 1.0;
-  mContext->GetCanonicalPixelScale(pixelscaler);
-  scaler = 1.0 / pixelscaler;
+  /* Get the general scaling factor for this device */
+  float pixelscale = 1.0;
+  mContext->GetCanonicalPixelScale(pixelscale);
+  scalingFactor = 1.0 / pixelscale;
 
-  imageResolution = (double)mPrintResolution * scaler;
-  aDWidth_scaled  = (double)aDWidth  * scaler;
-  aDHeight_scaled = (double)aDHeight * scaler;
+  /* Calculate image scaling factors */
+  double scale_x = double(aSWidth)  / (double(aDWidth)  * scalingFactor);
+  double scale_y = double(aSHeight) / (double(aDHeight) * scalingFactor);
   
-  /* set image resolution */
+  /* Which scaling factor is the "bigger" one ? 
+   * (XpSetImageResolution() sets one image resolution for both X- and
+   * Y-axis - therefore we want to get the "best"(=smallest job size) out
+   * of the scaling factor...).
+   */
+  scalingFactor *= (scale_x < scale_y)?(scale_x):(scale_y);
+  
+  /* Adjust destination size to the match the scaling factor */
+  imageResolution = double(mPrintResolution) * scalingFactor;
+  aDWidth_scaled  = double(aDWidth)          * scalingFactor;
+  aDHeight_scaled = double(aDHeight)         * scalingFactor;
+
+  NS_ASSERTION(!((aDWidth_scaled <= 0) || (aDHeight_scaled <= 0)),
+               "Image scaled to zero width/height");
+  NS_ASSERTION(!(imageResolution <= 0),
+               "Image resolution must not be 0");
+
+  /* Image scaled to 0 width/height ? */
+  if( (aDWidth_scaled <= 0) || (aDHeight_scaled <= 0) || (imageResolution <= 0))
+    return NS_OK;
+
+  /* Set image resolution */
   if( XpSetImageResolution(mPDisplay, mPContext, imageResolution, &prev_res) )
   {
     /* draw image, Xprt will do the main scaling part... */
