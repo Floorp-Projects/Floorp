@@ -26,14 +26,13 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS = $(NULL)
 
-ifneq (,$(MOZ_ACTIVEX_PLUGIN_SUPPORT)$(MOZ_ACTIVEX_PLUGIN_SUPPORT))
+# Common
 DIRS += common
-endif
 
-ifdef MOZ_ACTIVEX_PLUGIN_SUPPORT
+# ActiveX control
 DIRS += control control_kicker
-endif
 
+# ActiveX plugin
 ifdef MOZ_ACTIVEX_PLUGIN_SUPPORT
 DIRS += plugin
 endif
