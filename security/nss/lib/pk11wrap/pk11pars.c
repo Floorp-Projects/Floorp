@@ -181,14 +181,17 @@ SECStatus
 pk11_DeletePermDB(SECMODModule *module)
 {
     SECMODModuleDBFunc func;
+    char *moduleSpec;
     char **retString;
 
     if (module->parent == NULL) return SECFailure;
 
     func  = (SECMODModuleDBFunc) module->parent->moduleDBFunc;
     if (func) {
+	moduleSpec = pk11_mkModuleSpec(module);
 	retString = (*func)(SECMOD_MODULE_DB_FUNCTION_DEL,
-		module->parent->libraryParams,module->commonName);
+		module->parent->libraryParams,moduleSpec);
+	PORT_Free(moduleSpec);
 	if (retString != NULL) return SECSuccess;
     }
     return SECFailure;
@@ -205,7 +208,7 @@ pk11_freeModuleSpecList(char **moduleSpecList)
 }
 
 SECStatus
-PK11_LoadPKCS11Module(char *modulespec,SECMODModule *parent)
+PK11_LoadPKCS11Module(char *modulespec,SECMODModule *parent, PRBool recurse)
 {
     char *library = NULL, *moduleName = NULL, *parameters = NULL, *nss= NULL;
     SECStatus status;
@@ -233,14 +236,14 @@ PK11_LoadPKCS11Module(char *modulespec,SECMODModule *parent)
 	goto loser;
     }
 
-    if (module->isModuleDB) {
+    if (recurse && module->isModuleDB) {
 	char ** moduleSpecList;
 	char **index;
 
 	moduleSpecList = pk11_getModuleSpecList(module);
 
 	for (index = moduleSpecList; index && *index; index++) {
-	    rv = PK11_LoadPKCS11Module(*index,module);
+	    rv = PK11_LoadPKCS11Module(*index,module,PR_TRUE);
 	    if (rv != SECSuccess) break;
 	}
 
