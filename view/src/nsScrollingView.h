@@ -49,6 +49,7 @@ public:
   //overrides
   virtual void SetDimensions(nscoord width, nscoord height);
   virtual void SetPosition(nscoord aX, nscoord aY);
+  virtual void HandleScrollEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags);
   virtual nsEventStatus HandleEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags);
   virtual void AdjustChildWidgets(nsScrollingView *aScrolling, nsIView *aView, nscoord aDx, nscoord aDy, float aScale);
   virtual PRBool Paint(nsIRenderingContext& rc, const nsRect& rect,
