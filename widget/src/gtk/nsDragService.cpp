@@ -25,6 +25,7 @@
 #include "nsIServiceManager.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
+#include "nsIObserverService.h"
 #include "prlog.h"
 #include "nsVoidArray.h"
 #include "nsXPIDLString.h"
@@ -45,8 +46,11 @@ static const char gTextUriListType[] = "text/uri-list";
 
 NS_IMPL_ADDREF_INHERITED(nsDragService, nsBaseDragService)
 NS_IMPL_RELEASE_INHERITED(nsDragService, nsBaseDragService)
-NS_IMPL_QUERY_INTERFACE3(nsDragService, nsIDragService, nsIDragSession, \
-                         nsIDragSessionGTK)
+NS_IMPL_QUERY_INTERFACE4(nsDragService,
+                         nsIDragService,
+                         nsIDragSession,
+                         nsIDragSessionGTK,
+                         nsIObserver)
 
 static void
 invisibleSourceDragEnd     (GtkWidget        *aWidget,
@@ -63,6 +67,11 @@ invisibleSourceDragDataGet (GtkWidget        *aWidget,
 
 nsDragService::nsDragService()
 {
+  // We have to destroy the hidden widget before the event loop stops running.
+  nsCOMPtr<nsIObserverService> obsServ =
+    do_GetService("@mozilla.org/observer-service;1");
+  obsServ->AddObserver(this, "quit-application", PR_FALSE);
+
   // our hidden source widget
   mHiddenWidget = gtk_invisible_new();
   // make sure that the widget is realized so that
@@ -94,8 +103,25 @@ nsDragService::nsDragService()
 nsDragService::~nsDragService()
 {
   PR_LOG(sDragLm, PR_LOG_DEBUG, ("nsDragService::~nsDragService"));
-  gtk_widget_unref(mHiddenWidget);
-  TargetResetData();
+}
+
+// nsIObserver
+
+NS_IMETHODIMP
+nsDragService::Observe(nsISupports *aSubject, const char *aTopic,
+                       const PRUnichar *aData)
+{
+  if (!nsCRT::strcmp(aTopic, "quit-application")) {
+    PR_LOG(sDragLm, PR_LOG_DEBUG,
+           ("nsDragService::Observe(\"quit-application\")"));
+    gtk_widget_unref(mHiddenWidget);
+    TargetResetData();
+  } else {
+    NS_NOTREACHED("unexpected topic");
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  return NS_OK;
 }
 
 // nsIDragService
