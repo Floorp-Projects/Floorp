@@ -386,6 +386,21 @@ si_RemoveAllSignonData();
 PRIVATE void
 si_SetSignonRememberingPref(PRBool x)
 {
+
+    /* Note:
+     * We initially want the signon pref to be TRUE so that a notification will be given
+     * the first time a signon form is sumbitted.  So that is the default value if
+     * we don't find the pref in the preference file.  However, if the user opens the
+     * preference panel and clicks OK, a value of false for the signon pref is written
+     * to the file.  This will prevent the notification message from ever occurring.
+     *
+     * To get around this problem, if the signon pref is FALSE and no notification has
+     * ever been given, we will treat this as if the signon pref were TRUE
+     */
+    if (!x && !SI_GetBoolPref("signon.Notified", PR_FALSE)) {
+        x = PR_TRUE;
+    }
+
     /* do nothing if new value of pref is same as current value */
     if (x == si_RememberSignons) {
         return;
