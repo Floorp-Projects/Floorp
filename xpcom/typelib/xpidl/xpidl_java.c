@@ -340,6 +340,9 @@ xpcom_to_java_type (TreeState *state)
                      strcmp(ident_str, "PRUint64") == 0) {
                 fputs("long", state->file);
             }
+            else if (strcmp(ident_str, "PRBool") == 0) {
+                fputs("boolean", state->file);
+            }
             else if (strcmp(ident_str, "nsrefcnt") == 0) {
                 fputs("int", state->file);
             }
@@ -441,6 +444,7 @@ method_declaration(TreeState *state)
         (IDL_tree_property_get(method->ident, "noscript") != NULL);
     IDL_tree iterator = NULL;
     IDL_tree retval_param = NULL;
+    const char *method_name = IDL_IDENT(method->ident).str;
 
     if (!verify_method_declaration(state->tree))
         return FALSE;
@@ -501,8 +505,7 @@ method_declaration(TreeState *state)
     /*
      * Write method name
      */
-
-    fprintf(state->file, " %s(", IDL_IDENT(method->ident).str);
+    fprintf(state->file, " %c%s(", tolower(method_name[0]), method_name + 1);
 
     /*
      * Write parameters
