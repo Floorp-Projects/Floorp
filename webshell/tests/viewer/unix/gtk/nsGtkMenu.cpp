@@ -172,8 +172,8 @@ void CreateViewerMenus(nsIWidget *   aParent,
 
   gtk_container_add(GTK_CONTAINER(mozBox), menubar);
   gtk_mozbox_set_position(GTK_MOZBOX(mozBox), 0, 0 );
-  gtk_widget_show(mozBox);
   gtk_widget_show(menubar);
+  gtk_widget_show(mozBox);
 
   *aMenuBarOut = menubar;
 }
