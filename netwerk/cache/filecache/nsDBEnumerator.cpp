@@ -39,12 +39,13 @@ nsDBEnumerator::nsDBEnumerator(nsIDBAccessor* aDB, nsNetDiskCache* aCache) :
   m_bReset(PR_TRUE) 
 {
   NS_INIT_REFCNT();
-
+  NS_IF_ADDREF(m_DiskCache);
 }
 
 nsDBEnumerator::~nsDBEnumerator()
 {
-  NS_IF_RELEASE(m_CacheEntry) ;
+  NS_IF_RELEASE(m_CacheEntry);
+  NS_IF_RELEASE(m_DiskCache);
 }
 
 //
