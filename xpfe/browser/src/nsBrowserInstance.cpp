@@ -594,42 +594,21 @@ nsBrowserInstance::LoadInitialPage(void)
 }
 
 NS_IMETHODIMP
-nsBrowserInstance::BackButtonPopup()
+nsBrowserInstance::BackButtonPopup(nsIDOMNode * aParent)
 {
-/*
-  if (!mSHistory)  {
+
+  if (!mContentAreaDocShell)  {
     printf("nsBrowserInstance::BackButtonPopup Couldn't get a handle to SessionHistory\n");
     return NS_ERROR_FAILURE;
   }
-
- // Get handle to the "backbuttonpopup" element
-  nsCOMPtr<nsIDOMElement>   backPopupElement;
-  nsresult rv = FindNamedXULElement(mDocShell, "backbuttonpopup", &backPopupElement);
-
-  if (!NS_SUCCEEDED(rv) ||  !backPopupElement)
-  {
-     return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIDOMNode> backPopupNode(do_QueryInterface(backPopupElement)); 
-  if (!backPopupNode) {
-    return NS_ERROR_FAILURE;
-  }
-
-  //get handle to the Menu item under popup
-  nsCOMPtr<nsIDOMNode>   menu;
-  backPopupNode->GetFirstChild(getter_AddRefs(menu));
-  if (!menu) {
-   printf("nsBrowserInstance::BackButtonPopup Call to GetFirstChild failed\n");
-     return NS_ERROR_FAILURE;
-  }
   
   PRBool hasChildren=PR_FALSE;
+  nsresult rv;
 
   // Check if menu has children. If so, remove them.
-  rv = menu->HasChildNodes(&hasChildren);
+  rv = aParent->HasChildNodes(&hasChildren);
   if (NS_SUCCEEDED(rv) && hasChildren) {
-    rv = ClearHistoryPopup(menu);
+    rv = ClearHistoryMenus(aParent);
     if (!NS_SUCCEEDED(rv))
       printf("nsBrowserInstance::BackButtonPopup ERROR While removing old history menu items\n");
   }    // hasChildren
@@ -637,77 +616,65 @@ nsBrowserInstance::BackButtonPopup()
    if (APP_DEBUG) printf("nsBrowserInstance::BackButtonPopup Menu has no children\n");
   }             
 
-  PRInt32 indix=0, i=0;
-  //Get current index in Session History. We have already verified 
-  // if mSHistory is null
-  mSHistory->GetCurrentIndex(&indix);
+  nsCOMPtr<nsISHistory> mSHistory;
+  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mContentAreaDocShell));
+  webNav->GetSessionHistory(getter_AddRefs(mSHistory));
+  NS_ENSURE_TRUE(mSHistory, NS_ERROR_FAILURE);
+
+  PRInt32 length=0,i=0, indix = 0;
+  //Get total length of the  Session History
+  mSHistory->GetCount(&length);
+  mSHistory->GetIndex(&indix);
 
   //Decide on the # of items in the popup list 
   if (indix > SHISTORY_POPUP_LIST)
      i  = indix-SHISTORY_POPUP_LIST;
 
   for (PRInt32 j=indix-1;j>=i;j--) {
-      PRUnichar *title=nsnull;
-    char * url=nsnull;
-    
-        mSHistory->GetURLForIndex(j, &url);
-        nsAutoString  histURL(url);
-        mSHistory->GetTitleForIndex(j, &title);
-        nsAutoString  histTitle(title);
-        rv = CreateMenuItem(menu, j, title);
-      if (!NS_SUCCEEDED(rv)) 
-      printf("nsBrowserInstance:;BackButtonpopup ERROR while creating menu item\n");
-    Recycle(title);
-    Recycle(url);
-     } 
-*/
+      PRUnichar  *title=nsnull;
+      nsCOMPtr<nsIURI> uri;
+      nsXPIDLCString   uriSpec;
+
+	  nsCOMPtr<nsISHEntry> shEntry;
+	  mSHistory->GetEntryAtIndex(j, PR_FALSE, getter_AddRefs(shEntry));
+      NS_ENSURE_TRUE(shEntry, NS_ERROR_FAILURE);
+
+      shEntry->GetURI(getter_AddRefs(uri));
+	  NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
+	  uri->GetSpec(getter_Copies(uriSpec));
+
+      shEntry->GetTitle(&title);	 
+      nsAutoString  histTitle(title);
+      if (APP_DEBUG)printf("nsBrowserInstance::BackButtonPopup URL = %s, TITLE = %s\n", (const char *) uriSpec, histTitle.ToNewCString());
+      rv = CreateMenuItem(aParent, j, title);
+      if (!NS_SUCCEEDED(rv)) {
+        printf("nsBrowserInstance::BackButtonPopup Error while creating history mene item\n");
+	  }  
+   Recycle(title);
+  }  //for
   return NS_OK;
 
-}
+}   //BackButtonpopup
+
 
 NS_IMETHODIMP
-nsBrowserInstance::ForwardButtonPopup()
+nsBrowserInstance::ForwardButtonPopup(nsIDOMNode * aParent)
 {
-/*
-  if (!mSHistory)  {
+
+  if (!mContentAreaDocShell)  {
     printf("nsBrowserInstance::ForwardButtonPopup Couldn't get a handle to SessionHistory\n");
     return NS_ERROR_FAILURE;
   }
 
-  if (APP_DEBUG) printf("In BrowserAppCore::Forwardbuttonpopup\n");
-
- // Get handle to the "forwardbuttonpopup" element
-  nsCOMPtr<nsIDOMElement>   forwardPopupElement;
-  nsresult rv = FindNamedXULElement(mDocShell, "forwardbuttonpopup", &forwardPopupElement);
-
-  if (!NS_SUCCEEDED(rv) ||  !forwardPopupElement)
-  {
-   printf("nsBrowserInstance::ForwardButtonPopup Couldn't get handle to forwardPopupElement\n");
-     return NS_ERROR_FAILURE;
-  }
-
-  // Make a nsIDOMNode out of it
-  nsCOMPtr<nsIDOMNode> forwardPopupNode(do_QueryInterface(forwardPopupElement)); 
-  if (!forwardPopupNode) {
-    printf("nsBrowserInstance::ForwardButtonPopup Couldn't make a node out of forwardpopupelement\n");
-    return NS_ERROR_FAILURE;
-  }
-  
-  //get handle to the Menu item under popup
-  nsCOMPtr<nsIDOMNode>   menu;
-  rv = forwardPopupNode->GetFirstChild(getter_AddRefs(menu));
-  if (!NS_SUCCEEDED(rv) || !menu) {
-    printf("nsBrowserInstance::ForwardButtonPopup Call to GetFirstChild failed\n");
-     return NS_ERROR_FAILURE;
-  }
   
   PRBool hasChildren=PR_FALSE;
+  nsresult rv;
 
   // Check if menu has children. If so, remove them.
-  menu->HasChildNodes(&hasChildren);
+  aParent->HasChildNodes(&hasChildren);
   if (hasChildren) {
     // Remove all old entries 
-    rv = ClearHistoryPopup(menu);
+    rv = ClearHistoryMenus(aParent);
     if (!NS_SUCCEEDED(rv)) {
       printf("nsBrowserInstance::ForwardMenuPopup Error while clearing old history entries\n");
     }
@@ -716,11 +683,15 @@ nsBrowserInstance::ForwardButtonPopup()
     if (APP_DEBUG) printf("nsBrowserInstance::ForwardButtonPopup Menu has no children\n");
   }  
 
-  PRInt32 indix=0, i=0, length=0;
-  //Get current index in Session History
-  mSHistory->GetCurrentIndex(&indix);
- //Get total length of Session History
-  mSHistory->GetHistoryLength(&length);
+  nsCOMPtr<nsISHistory> mSHistory;
+  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mContentAreaDocShell));
+  webNav->GetSessionHistory(getter_AddRefs(mSHistory));
+  NS_ENSURE_TRUE(mSHistory, NS_ERROR_FAILURE);
+
+  PRInt32 length=0,i=0, indix = 0;
+  //Get total length of the  Session History
+  mSHistory->GetCount(&length);
+  mSHistory->GetIndex(&indix);
 
   //Decide on the # of items in the popup list 
   if ((length-indix) > SHISTORY_POPUP_LIST)
@@ -729,19 +700,28 @@ nsBrowserInstance::ForwardButtonPopup()
    i = length;
 
   for (PRInt32 j=indix+1;j<i;j++) {
-      PRUnichar *title=nsnull;
-    char * url=nsnull;
+      PRUnichar  *title=nsnull;
+      nsCOMPtr<nsIURI> uri;
+      nsXPIDLCString   uriSpec;
 
-      mSHistory->GetURLForIndex(j, &url);
-      mSHistory->GetTitleForIndex(j, &title);
-      nsAutoString  histTitle(title);      
-      rv = CreateMenuItem(menu, j, title);
-    if (!NS_SUCCEEDED(rv)) 
-      printf("nsBrowserInstance::ForwardbuttonPopup, Error while creating history menu items\n");
-    Recycle(title);
-    Recycle(url);
-  } 
-*/
+	  nsCOMPtr<nsISHEntry> shEntry;
+	  mSHistory->GetEntryAtIndex(j, PR_FALSE, getter_AddRefs(shEntry));
+      NS_ENSURE_TRUE(shEntry, NS_ERROR_FAILURE);
+
+      shEntry->GetURI(getter_AddRefs(uri));
+	  NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
+	  uri->GetSpec(getter_Copies(uriSpec));
+
+      shEntry->GetTitle(&title);	 
+      nsAutoString  histTitle(title);
+      if (APP_DEBUG)printf("nsBrowserInstance::ForwardButtonPopup URL = %s, TITLE = %s\n", (const char *) uriSpec, histTitle.ToNewCString());
+      rv = CreateMenuItem(aParent, j, title);
+      if (!NS_SUCCEEDED(rv)) {
+        printf("nsBrowserInstance::ForwardButtonPopup Error while creating history mene item\n");
+	  }  
+   Recycle(title);
+  }
+
    return NS_OK;
 
 }
@@ -1289,19 +1269,6 @@ nsBrowserInstance::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* cha
 
       // XXX Ignore rv for now. They are using nsIEnumerator instead of
       // nsISimpleEnumerator.
-    /*
-     * Update the 'Go' menu. I know this adds discrepancy between the 'Go'
-     * menu and the Back button when it comes to Session History in frame
-     * pages. But most of these sub-frames don't have title which leads to
-     * blank menu items in the 'go' menu. So, I'm taking sub-frames
-     * totally off the go menu. This is how 4.x behaves.
-     */ 
-      /* Partially loaded and unresolved urls now get in to SH. So,
-     * add them in to go menu too for consistency sake. Revisit when
-     * browser implements nsStreamListener or something similar when it can
-     * distinguish between unresolved urls and partially loaded urls
-     */
-      UpdateGoMenu();
 
       /* To satisfy a request from the QA group */
       if (aStatus == NS_OK) {
@@ -1579,6 +1546,15 @@ NS_IMETHODIMP nsBrowserInstance::CreateMenuItem(
     return NS_ERROR_FAILURE;
   }
 
+  /*
+  // Set the hist attribute to true
+  rv = menuItemElement->SetAttribute(nsString("ishist"), nsString("true"));
+  if (!NS_SUCCEEDED(rv)) {
+    printf("nsBrowserAppCore::CreateMenuItem ERROR setting ishist handler\n");
+    return NS_ERROR_FAILURE;
+  }
+*/
+
   //Set the label for the menu item
   nsString menuitemlabel(aName);
   if (APP_DEBUG) printf("nsBrowserInstance::CreateMenuItem Setting menu name to %s\n", menuitemlabel.ToNewCString());
@@ -1588,10 +1564,14 @@ NS_IMETHODIMP nsBrowserInstance::CreateMenuItem(
     return NS_ERROR_FAILURE;
   }
 
-  // Set the hist attribute to true
-  rv = menuItemElement->SetAttribute(NS_ConvertASCIItoUCS2("ishist"), NS_ConvertASCIItoUCS2("true"));
+
+    // Set the index attribute to  item's index
+  nsString indexString;
+  indexString += aIndex;
+  rv = menuItemElement->SetAttribute(nsString("index"), indexString);
+
   if (!NS_SUCCEEDED(rv)) {
-    printf("nsBrowserInstance::CreateMenuItem ERROR setting ishist handler\n");
+    printf("nsBrowserAppCore::CreateMenuItem ERROR setting ishist handler\n");
     return NS_ERROR_FAILURE;
   }
 
@@ -1612,129 +1592,35 @@ NS_IMETHODIMP nsBrowserInstance::CreateMenuItem(
      return NS_ERROR_FAILURE;
   }
 
-  //Set the onaction attribute
-  nsString menuitemCmd; menuitemCmd.AssignWithConversion("gotoHistoryIndex(");
-  menuitemCmd.AppendInt(aIndex);
-  menuitemCmd.AppendWithConversion(")");  
-  if (APP_DEBUG) printf("nsBrowserInstance::CreateMenuItem Setting action handler to %s\n", menuitemCmd.ToNewCString());
-  nsString attrName; attrName.AssignWithConversion("oncommand");
-  rv = menuItemElement->SetAttribute(attrName, menuitemCmd);
-  if (!NS_SUCCEEDED(rv)) {
-    printf("nsBrowserInstance::CreateMenuItem ERROR setting onaction handler\n");
-    return NS_ERROR_FAILURE;
-  }
-  else
-       if (APP_DEBUG) printf("nsBrowserInstance::CreateMenuItem Successfully appended menu item to parent\n");
-
-
-
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBrowserInstance::UpdateGoMenu()
+nsBrowserInstance::UpdateGoMenu(nsIDOMNode * aGoMenu)
 {
-/*
-    if (!mSHistory)  {
-    printf("nsBrowserInstance::UpdateGoMenu Couldn't get a handle to SessionHistory\n");
+
+ if (!mContentAreaDocShell)  {
+    printf("nsBrowserInstance::UpdateGoMenu Couldn't get a handle to Content Area DocShell\n");
     return NS_ERROR_FAILURE;
   }
 
-  // Get handle to the "main-menubar" element
-  nsCOMPtr<nsIDOMElement>   mainMenubarElement;
-  nsresult rv = FindNamedXULElement(mDocShell, "main-menubar", &mainMenubarElement);
-
-  if (!NS_SUCCEEDED(rv) ||  !mainMenubarElement)
-  {
-   printf("Couldn't get handle to the Go menu\n");
-     return NS_ERROR_FAILURE;
-  }
-  else {
-    if (APP_DEBUG) printf("nsBrowserInstance::UpdateGoMenu Got handle to the main-toolbox element\n"); 
-  }
-
-  nsCOMPtr<nsIDOMNode> mainMenubarNode(do_QueryInterface(mainMenubarElement)); 
-  if (!mainMenubarNode) {
-    if (APP_DEBUG) printf("nsBrowserInstance::UpdateGoMenu Couldn't get Node out of Element\n");
-    return NS_ERROR_FAILURE;
-  }
-
-   nsCOMPtr<nsIDOMNode> goMenuNode;
-   PRBool hasChildren=PR_FALSE;
-  // Check if toolbar has children.
-  rv = mainMenubarNode->HasChildNodes(&hasChildren);
-  if (NS_SUCCEEDED(rv) && hasChildren) {  
-     nsCOMPtr<nsIDOMNodeList>   childList;
-
-     //Get handle to the children list
-     rv = mainMenubarNode->GetChildNodes(getter_AddRefs(childList));
-     if (NS_SUCCEEDED(rv) && childList) {
-        PRInt32 ccount=0;
-        childList->GetLength((unsigned int *)&ccount);
-        
-    // Get the 'Go' menu
-        for (PRInt32 i=0; i<ccount; i++) {
-            nsCOMPtr<nsIDOMNode> child;
-            rv = childList->Item(i, getter_AddRefs(child));
-      if (!NS_SUCCEEDED(rv) || !child) {
-               if (APP_DEBUG) printf("nsBrowserInstance::UpdateGoMenu Couldn't get child %d from menu bar\n", i);
-         return NS_ERROR_FAILURE;
-      }
-      // Get element out of the node
-      nsCOMPtr<nsIDOMElement> childElement(do_QueryInterface(child));
-      if (!childElement) {
-        printf("nsBrowserInstance::UpdateGoMenu Could n't get DOMElement out of DOMNode for child\n");
-        return NS_ERROR_FAILURE;
-      }
-      nsString nodelabel;
-            rv = childElement->GetAttribute(nsAutoString("value"), nodelabel);
-      if (APP_DEBUG) printf("nsBrowserInstance::UpdateGoMenu Node Name for menu = %s\n", nodelabel.ToNewCString());
-      if (!NS_SUCCEEDED(rv)) {
-        printf("nsBrowserInstance::UpdateGoMenu Couldn't get node name\n");
-        return NS_ERROR_FAILURE;
-      }
-      nsString nodeid;
-            rv = childElement->GetAttribute(nsAutoString("id"), nodeid);
-      if (nodeid.Equals("gomenu")) {
-        goMenuNode = child;
-        break;
-      }
-        } //(for) 
-     }   // if (childList)
-  }    // hasChildren
-  else {
-    if (APP_DEBUG) printf("nsBrowserInstance::UpdateGoMenu Menubar has no children\n");
-    return NS_ERROR_FAILURE;
-  }
-
-  if (!goMenuNode) {
-     printf("nsBrowserInstance::UpdateGoMenu Couldn't find Go Menu. returning\n");
-   return NS_ERROR_FAILURE;
- 
-  }
-
-    //get handle to the menupopup under gomenu
-  nsCOMPtr<nsIDOMNode>   menuPopup;
-  rv = goMenuNode->GetFirstChild(getter_AddRefs(menuPopup));
-  if (!NS_SUCCEEDED(rv) || !menuPopup) {
-    printf("nsBrowserInstance::UpdateGoMenu Call to get menupopup under go menu failed\n");
-     return NS_ERROR_FAILURE;
-  }
-  nsCOMPtr<nsIDOMElement> menuPopupElement(do_QueryInterface(menuPopup));
-  if (!menuPopupElement) {
-  printf("nsBrowserInstance::UpdateGoMenu Could n't get DOMElement out of DOMNode for menuPopup\n");
-  return NS_ERROR_FAILURE;
-  }
+  nsCOMPtr<nsIDOMNode> menuPopup = aGoMenu;
+  nsresult rv;
 
   // Clear all history children under Go menu
-  rv = ClearHistoryPopup(menuPopup);
+  rv = ClearHistoryMenus(menuPopup);
   if (!NS_SUCCEEDED(rv)) {
     printf("nsBrowserInstance::UpdateGoMenu Error while clearing old history list\n");
   }
-  
+
+  nsCOMPtr<nsISHistory> mSHistory;
+  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mContentAreaDocShell));
+  webNav->GetSessionHistory(getter_AddRefs(mSHistory));
+  NS_ENSURE_TRUE(mSHistory, NS_ERROR_FAILURE);
+
   PRInt32 length=0,i=0;
   //Get total length of the  Session History
-  mSHistory->GetHistoryLength(&length);
+  mSHistory->GetCount(&length);
 
   //Decide on the # of items in the popup list 
   if (length > SHISTORY_POPUP_LIST)
@@ -1742,27 +1628,33 @@ nsBrowserInstance::UpdateGoMenu()
 
   for (PRInt32 j=length-1;j>=i;j--) {
       PRUnichar  *title=nsnull;
-    char * url=nsnull;
+      nsCOMPtr<nsIURI> uri;
+      nsXPIDLCString   uriSpec;
 
-      mSHistory->GetURLForIndex(j, &url);
-      nsAutoString  histURL(url);
-      mSHistory->GetTitleForIndex(j, &title);
+	  nsCOMPtr<nsISHEntry> shEntry;
+	  mSHistory->GetEntryAtIndex(j, PR_FALSE, getter_AddRefs(shEntry));
+      NS_ENSURE_TRUE(shEntry, NS_ERROR_FAILURE);
+
+      shEntry->GetURI(getter_AddRefs(uri));
+	  NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
+	  uri->GetSpec(getter_Copies(uriSpec));
+
+      shEntry->GetTitle(&title);	 
       nsAutoString  histTitle(title);
-      if (APP_DEBUG) printf("nsBrowserInstance::UpdateGoMenu URL = %s, TITLE = %s\n", histURL.ToNewCString(), histTitle.ToNewCString());
+      if (APP_DEBUG)printf("nsBrowserInstance::UpdateGoMenu URL = %s, TITLE = %s\n", (const char *) uriSpec, histTitle.ToNewCString());
       rv = CreateMenuItem(menuPopup, j, title);
-    if (!NS_SUCCEEDED(rv)) {
+      if (!NS_SUCCEEDED(rv)) {
         printf("nsBrowserInstance::UpdateGoMenu Error while creating history mene item\n");
-    }
-    Recycle(title);
-    Recycle(url);
-     }
-*/
+	  }
+      Recycle(title);
+	}
+
   return NS_OK;
 
 }
 
 NS_IMETHODIMP
-nsBrowserInstance::ClearHistoryPopup(nsIDOMNode * aParent)
+nsBrowserInstance::ClearHistoryMenus(nsIDOMNode * aParent)
 {
 
    nsresult rv;
@@ -1790,10 +1682,12 @@ nsBrowserInstance::ClearHistoryPopup(nsIDOMNode * aParent)
         printf("nsBrowserInstance::ClearHistorypopup Could n't get DOMElement out of DOMNode for child\n");
         return NS_ERROR_FAILURE;
       }
-      nsString  attrname; attrname.AssignWithConversion("ishist");
+
+      nsString  attrname("index");
       nsString  attrvalue;
       rv = childElement->GetAttribute(attrname, attrvalue);
-      if (NS_SUCCEEDED(rv) && attrvalue.EqualsWithConversion("true")) {
+
+      if (NS_SUCCEEDED(rv) && (attrvalue.Length() > 0)) {
         // It is a history menu item. Remove it
                 nsCOMPtr<nsIDOMNode> ret;         
                 rv = menu->RemoveChild(child, getter_AddRefs(ret));
@@ -1804,13 +1698,17 @@ nsBrowserInstance::ClearHistoryPopup(nsIDOMNode * aParent)
            else {
               printf("nsBrowserInstance::ClearHistoryPopup Child %x was not removed from popuplist\n", (unsigned int) child.get());
            }
-        }  // NS_SUCCEEDED(rv)
+		  }  // NS_SUCCEEDED(rv)
           else
-        {
+		  {
            printf("nsBrowserInstance::ClearHistoryPopup Child %x was not removed from popuplist\n", (unsigned int) child.get());
                    return NS_ERROR_FAILURE;
-        }         
+		  }         
       }  // atrrvalue == true      
+	  else
+	  {
+		  if (APP_DEBUG) printf("Couldn't get attribute values \n");
+	  }
     } //(for) 
    }   // if (childList)
    return NS_OK;
