@@ -480,6 +480,8 @@ PR_ProcessAttrSetInheritableFD(
 #define NSPR_INHERIT_FDS_STRLEN 17
     /* The length of osfd (PRInt32) printed in hexadecimal with 0x prefix */
 #define OSFD_STRLEN 10
+    /* The length of fd type (PRDescType) printed in decimal */
+#define FD_TYPE_STRLEN 1
     int newSize;
     int remainder;
     char *newBuffer;
@@ -501,13 +503,13 @@ PR_ProcessAttrSetInheritableFD(
      * terminating null byte.
      */
     if (NULL == attr->fdInheritBuffer) {
-        /* The first time, we print "NSPR_INHERIT_FDS=<name>:<val>" */
+        /* The first time, we print "NSPR_INHERIT_FDS=<name>:<type>:<val>" */
         newSize = NSPR_INHERIT_FDS_STRLEN + strlen(name)
-                + OSFD_STRLEN + 1 + 1;
+                + FD_TYPE_STRLEN + OSFD_STRLEN + 2 + 1;
     } else {
-        /* At other times, we print ":<name>:<val>" */
+        /* At other times, we print ":<name>:<type>:<val>" */
         newSize = attr->fdInheritBufferUsed + strlen(name)
-                + OSFD_STRLEN + 2 + 1;
+                + FD_TYPE_STRLEN + OSFD_STRLEN + 3 + 1;
     }
     if (newSize > attr->fdInheritBufferSize) {
         /* Make newSize a multiple of FD_INHERIT_BUFFER_INCR */
@@ -530,11 +532,12 @@ PR_ProcessAttrSetInheritableFD(
     cur = attr->fdInheritBuffer + attr->fdInheritBufferUsed;
     freeSize = attr->fdInheritBufferSize - attr->fdInheritBufferUsed;
     if (0 == attr->fdInheritBufferUsed) {
-        nwritten = PR_snprintf(cur, freeSize, "NSPR_INHERIT_FDS=%s:0x%lx",
-                name, fd->secret->md.osfd);
+        nwritten = PR_snprintf(cur, freeSize,
+                "NSPR_INHERIT_FDS=%s:%d:0x%lx",
+                name, (PRIntn)fd->methods->file_type, fd->secret->md.osfd);
     } else {
-        nwritten = PR_snprintf(cur, freeSize, ":%s:0x%lx",
-                name, fd->secret->md.osfd);
+        nwritten = PR_snprintf(cur, freeSize, ":%s:%d:0x%lx",
+                name, (PRIntn)fd->methods->file_type, fd->secret->md.osfd);
     }
     attr->fdInheritBufferUsed += nwritten; 
     return PR_SUCCESS;
@@ -549,6 +552,7 @@ PR_IMPLEMENT(PRFileDesc *) PR_GetInheritedFD(
     int len = strlen(name);
     PRInt32 osfd;
     int nColons;
+    PRIntn fileType;
 
     envVar = PR_GetEnv("NSPR_INHERIT_FDS");
     if (NULL == envVar || '\0' == envVar[0]) {
@@ -560,15 +564,30 @@ PR_IMPLEMENT(PRFileDesc *) PR_GetInheritedFD(
     while (1) {
         if ((ptr[len] == ':') && (strncmp(ptr, name, len) == 0)) {
             ptr += len + 1;
-            PR_sscanf(ptr, "0x%lx", &osfd);
-            fd = PR_ImportFile(osfd);
+            PR_sscanf(ptr, "%d:0x%lx", &fileType, &osfd);
+            switch ((PRDescType)fileType) {
+                case PR_DESC_FILE:
+                    fd = PR_ImportFile(osfd);
+                    break;
+                case PR_DESC_SOCKET_TCP:
+                    fd = PR_ImportTCPSocket(osfd);
+                    break;
+                case PR_DESC_SOCKET_UDP:
+                    fd = PR_ImportUDPSocket(osfd);
+                    break;
+                default:
+                    PR_ASSERT(0);
+                    PR_SetError(PR_UNKNOWN_ERROR, 0);
+                    fd = NULL;
+                    break;
+            }
             return fd;
         }
-        /* Skip two colons */
+        /* Skip three colons */
         nColons = 0;
         while (*ptr) {
             if (*ptr == ':') {
-                if (++nColons == 2) {
+                if (++nColons == 3) {
                     break;
                 }
             }
