@@ -55,10 +55,14 @@ interface nsIScriptSecurityManager : nsISupports
 	const short eJSTarget_UniversalDialerAccess=7;
 	const short eJSTarget_Max=8;
 
-	void CheckScriptAccess(in nsIScriptContext cx, in voidStar obj, 
-	                       [const] in string prop, in boolean isWrite, 
-                         out boolean res);
-	void CanAccessTarget(in JSContext cx, in short target, out boolean res);
+	boolean CheckScriptAccess(in nsIScriptContext cx, in voidStar obj, 
+	                          [const] in string prop, in boolean isWrite);
+
+    boolean CheckURI(in nsIScriptContext cx, in nsIURI uri);
+
+    nsIPrincipal GetSystemPrincipal();
+
+    nsIPrincipal CreateCodebasePrincipal(in nsIURI aURI);
 };
 
 %{C++

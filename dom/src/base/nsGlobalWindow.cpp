@@ -83,8 +83,6 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsMimeTypeArray.h"
 #include "nsPluginArray.h"
 
-#include "nsIPrincipalManager.h"
-
 #include "jsapi.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -2958,13 +2956,13 @@ GlobalWindowImpl::GetPrincipal(nsIPrincipal **result)
         return NS_ERROR_FAILURE;
 
       nsresult rv;
-      NS_WITH_SERVICE(nsIPrincipalManager, prinMan, 
-                      NS_PRINCIPALMANAGER_PROGID, &rv);
+      NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
+                      NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
       if (NS_FAILED(rv)) 
-        return NS_ERROR_FAILURE;
-
-      if (NS_FAILED(prinMan->CreateCodebasePrincipal(nsnull, uri, &mPrincipal)))
-        return NS_ERROR_FAILURE;
+          return NS_ERROR_FAILURE;
+      nsCOMPtr<nsIPrincipal> principal;
+      if (NS_FAILED(securityManager->CreateCodebasePrincipal(uri, &mPrincipal)))
+          return NS_ERROR_FAILURE;
     }
     NS_ADDREF(mPrincipal);
   }

@@ -49,27 +49,15 @@ DLL=.\$(OBJDIR)\$(DLLNAME).dll
 #//------------------------------------------------------------------------
 
 C_OBJS=                                     \
-    .\$(OBJDIR)\jpermission.obj             \
      $(NULL)
 
 CPP_OBJS=                                    \
-    .\$(OBJDIR)\admin.obj                    \
-    .\$(OBJDIR)\nsCaps.obj                   \
-    .\$(OBJDIR)\nsCCapsManager.obj           \
     .\$(OBJDIR)\nsCertificatePrincipal.obj   \
     .\$(OBJDIR)\nsCodebasePrincipal.obj      \
     .\$(OBJDIR)\nsJSPrincipals.obj           \
-    .\$(OBJDIR)\nsPrincipalArray.obj         \
-    .\$(OBJDIR)\nsPrincipalManager.obj       \
-    .\$(OBJDIR)\nsPrivilege.obj              \
-    .\$(OBJDIR)\nsPrivilegeManager.obj       \
-    .\$(OBJDIR)\nsPrivilegeTable.obj         \
     .\$(OBJDIR)\nsScriptSecurityManager.obj  \
     .\$(OBJDIR)\nsSecurityManagerFactory.obj \
-    .\$(OBJDIR)\nsSystemPrivilegeTable.obj   \
-    .\$(OBJDIR)\nsTarget.obj                 \
-    .\$(OBJDIR)\nsUserDialogHelper.obj       \
-    .\$(OBJDIR)\nsUserTarget.obj             \
+    .\$(OBJDIR)\nsSystemPrincipal.obj        \
      $(NULL)
 
 #//------------------------------------------------------------------------

@@ -23,6 +23,14 @@ static NS_DEFINE_IID(kICertificatePrincipalIID, NS_ICERTIFICATEPRINCIPAL_IID);
 NS_IMPL_ISUPPORTS(nsCertificatePrincipal, kICertificatePrincipalIID);
 
 NS_IMETHODIMP
+nsCertificatePrincipal::CanAccess(const char *capability, PRBool *result)
+{
+    // Later: query database for this capability
+    *result = PR_FALSE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsCertificatePrincipal::GetPublicKey(char ** publicKey)
 {
 	* publicKey = (char *)this->itsKey;

@@ -11,6 +11,7 @@ nsPrivilege.h
 nsPrivilegeManager.h
 nsPrivilegeTable.h
 nsScriptSecurityManager.h
+nsSystemPrincipal.h
 nsSystemPrivilegeTable.h
 nsTarget.h
 nsUserDialogHelper.h

@@ -424,23 +424,25 @@ LocationImpl::SetHrefWithBase(const nsString& aHref,
   }
 
   if ((NS_OK == result) && (nsnull != mWebShell)) {
+#if 0
+    // Get JSContext from stack
+    NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", 
+                    &result);
+    if (NS_FAILED(result))
+      return NS_ERROR_FAILURE;
+    JSContext *cx = stack.Peek();
 
-#if 0 // need to find a way to get a JSContext
-    PRBool ok = PR_FALSE;
-    nsIScriptContext *scriptCX;
-    nsIScriptSecurityManager *secMan;
+    // Get security manager
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsCOMPtr<nsIScriptSecurityManager> secMan;
+    if (NS_FAILED(scriptCX->GetSecurityManager(getter_AddRefs(secMan))))
+      return NS_ERROR_FAILURE;
 
     // Check to see if URI is legal.
-    scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-    if (!NS_SUCCEEDED(result = scriptCX->GetSecurityManager(&secMan)) ||
-        !NS_SUCCEEDED(result = secMan->CheckURI(&newHref, aBase, PR_TRUE, &ok))) 
-      return result;
-    if (!ok) {
-      // TODO: report error
-      return NS_ERROR_FAILURE;  // TODO: get security error code
-    }
+    PRBool ok = PR_FALSE;
+    if (NS_FAILED(secMan->CheckURI(scriptCX, newUrl, &ok) || !ok)) 
+      return NS_ERROR_FAILURE;
 #endif
-
     result = mWebShell->LoadURL(newHref.GetUnicode(), nsnull, aReplace);
   }
   

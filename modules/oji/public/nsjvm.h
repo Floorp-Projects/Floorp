@@ -38,7 +38,6 @@
 #include "nsIJVMPluginTagInfo.h"
 #include "nsISymantecDebugManager.h"
 #include "nsISymantecDebugger.h"
-#include "nsICapsManager.h"
 #include "nsILiveconnect.h"
 #include "nsIThreadManager.h"
 

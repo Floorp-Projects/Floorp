@@ -31,6 +31,7 @@
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 #include "nsIURL.h"
+#include "nsCOMPtr.h"
 
 #define UNSIGNED_PRINCIPAL_KEY "4a:52:4f:53:4b:49:4e:44"
 #define UNKNOWN_PRINCIPAL_KEY "52:4f:53:4b:49:4e:44:4a"
@@ -52,11 +53,46 @@ static NS_DEFINE_CID(kURLCID, NS_STANDARDURL_CID);
 
 NS_IMPL_ISUPPORTS(nsPrincipalManager, kIPrincipalManagerIID);
 
-nsIPrincipal * 
-nsPrincipalManager::GetSystemPrincipal(void)
+NS_IMETHODIMP
+nsPrincipalManager::CreateCodebasePrincipal(nsIURI *url, nsIPrincipal **result) 
 {
-	return theSystemPrincipal;
+    if (!url) 
+        return NS_ERROR_FAILURE;
+    nsresult rv;
+    NS_WITH_SERVICE(nsIComponentManager, compMan, kComponentManagerCID, &rv);
+    nsCodebasePrincipal *codebasePrincipal;
+    rv = compMan->CreateInstance(NS_CODEBASEPRINCIPAL_PROGID, nsnull, 
+                                 NS_GET_IID(nsICodebasePrincipal), 
+                                 (void **) &codebasePrincipal);
+    if (NS_FAILED(rv))
+        return NS_ERROR_FAILURE;
+    if (NS_FAILED(codebasePrincipal->Init(url))) {
+        NS_RELEASE(codebasePrincipal);
+        return NS_ERROR_FAILURE;
+    }
+    *result = codebasePrincipal;
+    NS_ADDREF(*result);
+
+    NS_RELEASE(codebasePrincipal);
+    return NS_OK;
 }
+
+NS_IMETHODIMP
+nsPrincipalManager::GetSystemPrincipal(nsIPrincipal **result)
+{
+    *result = theSystemPrincipal;
+    return NS_OK;
+}
+
+
+
+
+
+
+
+
+#if 0
+
 nsIPrincipal * 
 nsPrincipalManager::GetUnsignedPrincipal(void)
 {
@@ -86,32 +122,6 @@ nsPrincipalManager::HasSystemPrincipal(nsIPrincipalArray * prinArray)
 	return PR_FALSE;
 }
 
-NS_IMETHODIMP
-nsPrincipalManager::CreateCodebasePrincipal(const char * codebaseURL, nsIURI * url, nsIPrincipal * * prin) 
-{
-  nsresult rv;
-  if (!codebaseURL && !url) return NS_ERROR_FAILURE;
-  NS_WITH_SERVICE(nsIComponentManager, compMan, kComponentManagerCID, &rv);
-  if (!url) {
-    if (!NS_SUCCEEDED(rv)) return rv;
-    rv = compMan->CreateInstance(kURLCID, nsnull, NS_GET_IID(nsIURL), (void **) &url);
-    if (!NS_SUCCEEDED(rv)) return rv;
-    if (!NS_SUCCEEDED(rv = url->SetSpec((char *) codebaseURL))) {
-      NS_RELEASE(url);
-      return rv;
-    }
-  }
-  nsCodebasePrincipal * codebasePrin;
-  compMan->CreateInstance(NS_CODEBASEPRINCIPAL_PROGID, nsnull, NS_GET_IID(nsICodebasePrincipal),(void * *)& codebasePrin);
-  if (codebasePrin == nsnull) return NS_ERROR_OUT_OF_MEMORY;
-  rv = codebasePrin->Init(url);
-  if (!NS_SUCCEEDED(rv)) {
-    NS_RELEASE(codebasePrin);
-    return rv;
-  }
-  * prin = codebasePrin;
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsPrincipalManager::CreateCertificatePrincipal(const unsigned char * * certChain, PRUint32 * certChainLengths, PRUint32 noOfCerts, nsIPrincipal * * prin)
@@ -438,3 +448,5 @@ RDF_RemovePrincipal(nsIPrincipal * prin)
 #endif /* ENABLE_RDF */
 	return found;
 }
+
+#endif

@@ -26,7 +26,7 @@
 #include "nsIChannel.h"
 #include "nsIChromeRegistry.h"
 #include "nsCOMPtr.h"
-#include "nsIPrincipalManager.h"
+#include "nsIScriptSecurityManager.h"
 
 static NS_DEFINE_CID(kStandardURLCID,            NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
@@ -177,13 +177,13 @@ nsChromeProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
     // Create a special principal for chrome and set the creator property
     //  of the result
     if (NS_SUCCEEDED(rv)) {
-        NS_WITH_SERVICE(nsIPrincipalManager, prinMan, 
-                        NS_PRINCIPALMANAGER_PROGID, &rv);
-        if (NS_FAILED(rv)) 
+        nsresult rv2;
+        NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
+                        NS_SCRIPTSECURITYMANAGER_PROGID, &rv2);
+        if (NS_FAILED(rv2)) 
             return NS_ERROR_FAILURE;
         nsCOMPtr<nsIPrincipal> principal;
-        if (NS_FAILED(prinMan->CreateCodebasePrincipal(nsnull, chromeURI, 
-                        getter_AddRefs(principal))))
+        if (NS_FAILED(securityManager->GetSystemPrincipal(getter_AddRefs(principal))))
         {
             return NS_ERROR_FAILURE;
         }
