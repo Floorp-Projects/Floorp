@@ -94,9 +94,9 @@ struct nsMargin;
 typedef class nsIFrame nsIBox;
 
 // IID for the nsIFrame interface 
-// 7a243690-a766-4394-bc13-788b1bf63ef1
+// 8657598f-a18a-4b7f-96f3-6e7fe8a8beee
 #define NS_IFRAME_IID \
- { 0x7a243690, 0xa766, 0x4394,{0xbc, 0x13, 0x78, 0x8b, 0x1b, 0xf6, 0x3e, 0xf1}}
+ { 0x8657598f, 0xa18a, 0x4b7f, { 0x96, 0xf3, 0x6e, 0x7f, 0xe8, 0xa8, 0xbe, 0xee } }
 
 /**
  * Indication of how the frame can be split. This is used when doing runaround
@@ -1269,9 +1269,10 @@ NS_PTR_TO_INT32(frame->GetProperty(nsLayoutAtoms::embeddingLevel))
    *         < 0 if not tabbable
    *         == 0 if in normal tab order
    *         > 0 can be tabbed to in the order specified by this value
+   * @param  [in, optional] aWithMouse, is this focus query for mouse clicking
    * @return whether the frame is focusable via mouse, kbd or script.
    */
-  PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
+  PRBool IsFocusable(PRInt32 *aTabIndex = nsnull, PRBool aWithMouse = PR_FALSE);
 
   // BOX LAYOUT METHODS
   // These methods have been migrated from nsIBox and are in the process of

@@ -350,19 +350,26 @@ nsLayoutUtils::FindSiblingViewFor(nsIView* aParentView, nsIFrame* aFrame) {
 }
 
 //static
-nsPresContext::ScrollbarStyles
-nsLayoutUtils::ScrollbarStylesOfView(nsIScrollableView *aScrollableView)
+nsIScrollableFrame*
+nsLayoutUtils::GetScrollableFrameFor(nsIScrollableView *aScrollableView)
 {
-  nsIFrame *frame =
-    NS_STATIC_CAST(nsIFrame*, aScrollableView->View()->GetClientData());
+  nsIFrame *frame = GetFrameFor(aScrollableView->View());
   if (frame && ((frame = frame->GetParent()))) {
     nsIScrollableFrame *sf;
     CallQueryInterface(frame, &sf);
-    if (sf)
-      return sf->GetScrollbarStyles();
+    return sf;
   }
-  return nsPresContext::ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN,
-                                        NS_STYLE_OVERFLOW_HIDDEN);
+  return nsnull;
+}
+
+//static
+nsPresContext::ScrollbarStyles
+nsLayoutUtils::ScrollbarStylesOfView(nsIScrollableView *aScrollableView)
+{
+  nsIScrollableFrame *sf = GetScrollableFrameFor(aScrollableView);
+  return sf ? sf->GetScrollbarStyles() :
+              nsPresContext::ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN,
+                                             NS_STYLE_OVERFLOW_HIDDEN);
 }
 
 // static
@@ -370,7 +377,9 @@ nsIScrollableView*
 nsLayoutUtils::GetNearestScrollingView(nsIView* aView, Direction aDirection)
 {
   // Find the first view that has a scrollable frame whose
-  // ScrollbarStyles is not NS_STYLE_OVERFLOW_HIDDEN in aDirection.
+  // ScrollbarStyles is not NS_STYLE_OVERFLOW_HIDDEN in aDirection
+  // and where there is something currently not visible
+  // that can be scrolled to in aDirection.
   NS_ASSERTION(aView, "GetNearestScrollingView expects a non-null view");
   nsIScrollableView* scrollableView = nsnull;
   for (; aView; aView = aView->GetParent()) {
@@ -378,12 +387,28 @@ nsLayoutUtils::GetNearestScrollingView(nsIView* aView, Direction aDirection)
     if (scrollableView) {
       nsPresContext::ScrollbarStyles ss =
         nsLayoutUtils::ScrollbarStylesOfView(scrollableView);
+      nsIScrollableFrame *scrollableFrame = GetScrollableFrameFor(scrollableView);
+      // NS_ASSERTION(scrollableFrame, "Must have scrollable frame for view!");
+      if (!scrollableFrame) {
+        // XXX Once bug 260652 is fixed we should get scrollable frames for HTML
+        //     frames and can uncomment the above scrollableFrame assertion instead
+        //     of using this if condition.
+        break; // If scrollableView but not scrollable Frame, on an HTML <frame>
+      }
+      nsMargin margin = scrollableFrame->GetActualScrollbarSizes();
+      // Get size of total scrollable area
+      nscoord totalWidth, totalHeight;
+      scrollableView->GetContainerSize(&totalWidth, &totalHeight);
+      // Get size of currently visible area
+      nsSize visibleSize = GetFrameFor(aView)->GetSize();
       // aDirection can be eHorizontal, eVertical, or eEither
       if (aDirection != eHorizontal &&
-          ss.mVertical != NS_STYLE_OVERFLOW_HIDDEN)
+          ss.mVertical != NS_STYLE_OVERFLOW_HIDDEN &&
+          (totalHeight > visibleSize.height || margin.right))
         break;
       if (aDirection != eVertical &&
-          ss.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN)
+          ss.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN &&
+          (totalWidth > visibleSize.width || margin.bottom))
         break;
     }
   }

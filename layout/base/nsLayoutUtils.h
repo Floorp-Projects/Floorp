@@ -42,13 +42,14 @@ class nsIFrame;
 class nsPresContext;
 class nsIContent;
 class nsIAtom;
-class nsIView;
 class nsIScrollableView;
+class nsIScrollableFrame;
 
 #include "prtypes.h"
 #include "nsStyleContext.h"
 #include "nsAutoPtr.h"
 #include "nsStyleSet.h"
+#include "nsIView.h"
 
 /**
  * nsLayoutUtils is a namespace class used for various helper
@@ -163,6 +164,22 @@ public:
    */
   static PRBool IsProperAncestorFrame(nsIFrame* aAncestorFrame, nsIFrame* aFrame,
                                       nsIFrame* aCommonAncestor = nsnull);
+
+  /**
+    * GetFrameFor returns the root frame for a view
+    * @param aView is the view to return the root frame for
+    * @return the root frame for the view
+    */
+  static nsIFrame* GetFrameFor(nsIView *aView)
+  { return NS_STATIC_CAST(nsIFrame*, aView->GetClientData()); }
+  
+  /**
+    * GetScrollableFrameFor returns the scrollable frame for a scrollable view
+    * @param aScrollableView is the scrollable view to return the 
+    *        scrollable frame for.
+    * @return the scrollable frame for the scrollable view
+    */
+  static nsIScrollableFrame* GetScrollableFrameFor(nsIScrollableView *aScrollableView);
 
   static nsPresContext::ScrollbarStyles
     ScrollbarStylesOfView(nsIScrollableView *aScrollableView);

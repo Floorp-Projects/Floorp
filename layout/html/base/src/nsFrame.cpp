@@ -4546,7 +4546,7 @@ nsFrame::GetStyleDataExternal(nsStyleStructID aSID) const
 }
 
 PRBool
-nsIFrame::IsFocusable(PRInt32 *aTabIndex)
+nsIFrame::IsFocusable(PRInt32 *aTabIndex, PRBool aWithMouse)
 {
   PRInt32 tabIndex = -1;
   PRBool isFocusable = PR_FALSE;
@@ -4574,13 +4574,18 @@ nsIFrame::IsFocusable(PRInt32 *aTabIndex)
         tabIndex = 0;
       }
       isFocusable = mContent->IsFocusable(&tabIndex);
-      if (!isFocusable && GetType() == nsLayoutAtoms::scrollFrame &&
+      if (!isFocusable && !aWithMouse &&
+          GetType() == nsLayoutAtoms::scrollFrame &&
           mContent->IsContentOfType(nsIContent::eHTML) &&
           !mContent->IsNativeAnonymous() && mContent->GetParent() &&
           !mContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex)) {
-        // Elements with scrollable view always focusable & tabbable
+        // Elements with scrollable view are focusable with script & tabbable
         // Otherwise you couldn't scroll them with keyboard, which is
         // an accessibility issue (e.g. Section 508 rules)
+        // However, we don't make them to be focusable with the mouse,
+        // because the extra focus outlines are considered unnecessarily ugly.
+        // When clicked on, the selection position within the element 
+        // will be enough to make them keyboard scrollable.
         nsCOMPtr<nsIScrollableFrame> scrollFrame = do_QueryInterface(this);
         if (scrollFrame) {
           nsIScrollableFrame::ScrollbarStyles styles =
