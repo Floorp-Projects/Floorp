@@ -157,6 +157,7 @@ public: //for methods who access nsGfxTextControlFrame2 directly
   NS_IMETHOD InternalContentChanged();//notify that we have some kind of change.
   NS_IMETHOD CallOnChange();
 protected:
+  PRBool IsScrollable() const;
   nsresult SetInitialValue();
   nsString *GetCachedString();
   virtual PRIntn GetSkipSides() const;
