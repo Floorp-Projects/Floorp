@@ -704,11 +704,7 @@ NPPluginFuncs* FE_LoadPlugin(void* pluginType, NPNetscapeFuncs* pNavigatorFuncs,
     else {
 
         NP_GETENTRYPOINTS getentrypoints =
-#ifndef NSPR20
-            (NP_GETENTRYPOINTS)PR_FindSymbol("NP_GetEntryPoints", pNPMgtBlock->pLibrary);
-#else
             (NP_GETENTRYPOINTS)PR_FindSymbol(pNPMgtBlock->pLibrary, "NP_GetEntryPoints");
-#endif
         if(getentrypoints == NULL)
         {
             PR_UnloadLibrary(pNPMgtBlock->pLibrary);
@@ -759,18 +755,10 @@ NPPluginFuncs* FE_LoadPlugin(void* pluginType, NPNetscapeFuncs* pNavigatorFuncs,
             // to  break the plugins already in the field, so I'll accept either
             // name
             npinit =
-#ifndef NSPR20
-                (NP_PLUGININIT)PR_FindSymbol("NP_Initialize", pNPMgtBlock->pLibrary);
-#else
                 (NP_PLUGININIT)PR_FindSymbol(pNPMgtBlock->pLibrary, "NP_Initialize");
-#endif
             if(!npinit) {
                 npinit =
-#ifndef NSPR20
-                    (NP_PLUGININIT)PR_FindSymbol("NP_PluginInit", pNPMgtBlock->pLibrary);
-#else
                     (NP_PLUGININIT)PR_FindSymbol(pNPMgtBlock->pLibrary, "NP_PluginInit");
-#endif
             }
         }
 
@@ -830,18 +818,10 @@ void FE_UnloadPlugin(void* pluginType, struct _np_handle* handle)
             // to  break the plugins already in the field, so I'll accept either
             // name
             NP_PLUGINSHUTDOWN npshutdown =
-#ifndef NSPR20
-                (NP_PLUGINSHUTDOWN)PR_FindSymbol("NP_Shutdown", pNPMgtBlk->pLibrary);
-#else
                 (NP_PLUGINSHUTDOWN)PR_FindSymbol(pNPMgtBlk->pLibrary, "NP_Shutdown");
-#endif
             if (!npshutdown) {
                 npshutdown =
-#ifndef NSPR20
-                    (NP_PLUGINSHUTDOWN)PR_FindSymbol("NP_PluginShutdown", pNPMgtBlk->pLibrary);
-#else
                     (NP_PLUGINSHUTDOWN)PR_FindSymbol(pNPMgtBlk->pLibrary, "NP_PluginShutdown");
-#endif
             }
 
             if (npshutdown != NULL) {
