@@ -949,7 +949,28 @@ PK11_MakePrivKey(PK11SlotInfo *slot, KeyType keyType,
 unsigned int
 PK11_GetKeyLength(PK11SymKey *key)
 {
-   if (key->size != 0) return key->size ;
+    CK_KEY_TYPE keyType;
+
+    if (key->size != 0) return key->size;
+
+    /* First try to figure out the key length from its type */
+    keyType = PK11_ReadULongAttribute(key->slot,key->objectID,CKA_KEY_TYPE);
+    switch (keyType) {
+      case CKK_DES: key->size = 8; break;
+      case CKK_DES2: key->size = 16; break;
+      case CKK_DES3: key->size = 24; break;
+      case CKK_SKIPJACK: key->size = 10; break;
+      case CKK_BATON: key->size = 20; break;
+      case CKK_JUNIPER: key->size = 20; break;
+      case CKK_GENERIC_SECRET:
+	if (key->type == CKM_SSL3_PRE_MASTER_KEY_GEN)  {
+	    key->size=48;
+	}
+	break;
+      default: break;
+    }
+   if( key->size != 0 ) return key->size;
+
    if (key->data.data == NULL) {
 	PK11_ExtractKeyValue(key);
    }
@@ -961,28 +982,11 @@ PK11_GetKeyLength(PK11SymKey *key)
 	keyLength = PK11_ReadULongAttribute(key->slot,key->objectID,CKA_VALUE_LEN);
 	/* doesn't have a length field, check the known PKCS #11 key types,
 	 * which don't have this field */
-	if (keyLength == CK_UNAVAILABLE_INFORMATION) {
-	    CK_KEY_TYPE keyType;
-	    keyType = PK11_ReadULongAttribute(key->slot,key->objectID,CKA_KEY_TYPE);
-	    switch (keyType) {
-	    case CKK_DES: key->size = 8; break;
-	    case CKK_DES2: key->size = 16; break;
-	    case CKK_DES3: key->size = 24; break;
-	    case CKK_SKIPJACK: key->size = 10; break;
-	    case CKK_BATON: key->size = 20; break;
-	    case CKK_JUNIPER: key->size = 20; break;
-	    case CKK_GENERIC_SECRET:
-		if (key->type == CKM_SSL3_PRE_MASTER_KEY_GEN)  {
-		    key->size=48;
-		}
-		break;
-	    default: break;
-	    }
-	} else {
+	if (keyLength != CK_UNAVAILABLE_INFORMATION) {
 	    key->size = (unsigned int)keyLength;
 	}
     }
-	
+
    return key->size;
 }
 
