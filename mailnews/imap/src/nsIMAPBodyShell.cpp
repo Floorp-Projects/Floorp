@@ -1050,9 +1050,23 @@ PRInt32 nsIMAPBodypartMessage::Generate(PRBool stream, PRBool prefetch)
 
 	if (!m_topLevelMessage && !m_shell->GetPseudoInterrupted())	// not the top-level message - we need the MIME header as well as the message header
 	{
-    // but we don't need the MIME header of a message/rfc822 part!
-    if (PL_strcasecmp(m_bodyType, "message") || PL_strcasecmp(m_bodySubType, "rfc822"))
-		m_contentLength += GenerateMIMEHeader(stream, prefetch);
+    // but we don't need the MIME headers of a message/rfc822 part if this content
+    // type is in (part of) the main msg header. In other words, we still need
+    // these MIME headers if this message/rfc822 body part is enclosed in the msg
+    // body (most likely as a body part of a multipart/mixed msg).
+    //       Don't fetch (bug 128888)              Do fetch (bug 168097)
+    //  ----------------------------------  -----------------------------------
+    //  message/rfc822  (parent part)       message/rfc822
+    //   message/rfc822 <<<---               multipart/mixed  (parent part)
+    //    multipart/mixed                     message/rfc822  <<<---
+    //     text/html   (body text)             multipart/mixed
+    //     text/plain  (attachment)             text/html   (body text)
+    //     application/msword (attachment)      text/plain  (attachment)
+    //                                          application/msword (attachment)
+    // "<<<---" points to the part we're examining here.
+    if ( PL_strcasecmp(m_bodyType, "message") || PL_strcasecmp(m_bodySubType, "rfc822") ||
+         PL_strcasecmp(m_parentPart->GetBodyType(), "message") || PL_strcasecmp(m_parentPart->GetBodySubType(), "rfc822") )
+		  m_contentLength += GenerateMIMEHeader(stream, prefetch);
 	}
 
 	if (!m_shell->GetPseudoInterrupted())
