@@ -824,7 +824,8 @@ namespace JavaScript {
 	  public:
 		explicit LineReader(FILE *in): in(in), crWasLast(false) {}
 
-		size_t readLine(string &str);
+		size_t readLine(string& str);
+		size_t readLine(String& wstr);
 	};
 
 

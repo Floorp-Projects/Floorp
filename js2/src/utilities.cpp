@@ -1970,7 +1970,7 @@ JS::AsciiFileFormatter JS::stdErr(stderr);
 // Return the total number of characters read, which is str's length.
 // Translate <CR> and <CR><LF> sequences to <LF> characters; a <CR><LF> sequence
 // only counts as one character.
-size_t JS::LineReader::readLine(string &str)
+size_t JS::LineReader::readLine(string& str)
 {
 	int ch;
 	bool oldCRWasLast = crWasLast;
@@ -1995,6 +1995,14 @@ size_t JS::LineReader::readLine(string &str)
 	return str.size();
 }
 
+size_t JS::LineReader::readLine(String& wstr)
+{
+    string str;
+    size_t n = readLine(str);
+    wstr.resize(n);
+	std::transform(str.begin(), str.end(), wstr.begin(), widen);
+	return n;
+}
 
 //
 // Exceptions
