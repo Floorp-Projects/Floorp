@@ -58,7 +58,7 @@
 static PRBool PR_CALLBACK
 DeleteEncodingEntry(nsHashKey *aKey, void *aData, void *aClosure)
 {
-  NS_DELETEXPCOM((nsISOAPEncoding*)aData);
+  NS_DELETEXPCOM((nsSOAPEncoding*)aData);
   return PR_TRUE;
 }
 
