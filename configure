@@ -22,19 +22,19 @@ ac_help="$ac_help
 ac_help="$ac_help
   --disable-async-dns     Disable separate dns thread"
 ac_help="$ac_help
+  --disable-build-nspr    Dont build mozilla/nsprpub"
+ac_help="$ac_help
+  --disable-build-xpfe    Dont build mozilla/xpfe"
+ac_help="$ac_help
   --enable-editor         Enable editor"
 ac_help="$ac_help
   --enable-mailnews       Enable Mail & News"
-ac_help="$ac_help
-  --disable-build-nspr    Dont build mozilla/nsprpub"
 ac_help="$ac_help
   --enable-oji            Enable use of Open JVM Interface"
 ac_help="$ac_help
   --enable-tests          Enable test stubs"
 ac_help="$ac_help
   --enable-toolkit=\$val   Enable \$val fe (defaults to gtk)"
-ac_help="$ac_help
-  --disable-build-xpfe    Dont build mozilla/xpfe"
 ac_help="$ac_help
   --disable-asserts       Disable asserts during debugging"
 ac_help="$ac_help
@@ -6096,6 +6096,36 @@ if test "${enable_async_dns+set}" = set; then
 fi
 
 
+MOZ_BUILD_NSPR=1
+
+# Check whether --enable-build-nspr or --disable-build-nspr was given.
+if test "${enable_build_nspr+set}" = set; then
+  enableval="$enable_build_nspr"
+  if test "$enableval" = "no"; then
+    MOZ_BUILD_NSPR= 
+  elif test "$enableval" = "yes"; then
+    :
+  else
+    { echo "configure: error: Option, build-nspr, does not take an argument ($enableval)." 1>&2; exit 1; }
+  fi
+fi
+
+
+MOZ_BUILD_XPFE=1
+
+# Check whether --enable-build-xpfe or --disable-build-xpfe was given.
+if test "${enable_build_xpfe+set}" = set; then
+  enableval="$enable_build_xpfe"
+  if test "$enableval" = "no"; then
+    MOZ_BUILD_XPFE= 
+  elif test "$enableval" = "yes"; then
+    :
+  else
+    { echo "configure: error: Option, build-xpfe, does not take an argument ($enableval)." 1>&2; exit 1; }
+  fi
+fi
+
+
 # Check whether --enable-editor or --disable-editor was given.
 if test "${enable_editor+set}" = set; then
   enableval="$enable_editor"
@@ -6119,21 +6149,6 @@ if test "${enable_mailnews+set}" = set; then
     :
   else
     { echo "configure: error: Option, mailnews, does not take an argument ($enableval)." 1>&2; exit 1; }
-  fi
-fi
-
-
-MOZ_BUILD_NSPR=1
-
-# Check whether --enable-build-nspr or --disable-build-nspr was given.
-if test "${enable_build_nspr+set}" = set; then
-  enableval="$enable_build_nspr"
-  if test "$enableval" = "no"; then
-    MOZ_BUILD_NSPR= 
-  elif test "$enableval" = "yes"; then
-    :
-  else
-    { echo "configure: error: Option, build-nspr, does not take an argument ($enableval)." 1>&2; exit 1; }
   fi
 fi
 
@@ -6187,21 +6202,6 @@ if test "$MOZ_TOOLKIT" = "USE_DEFAULT"; then
     MOZ_TOOLKIT="gtk"
   fi
 fi
-
-MOZ_BUILD_XPFE=1
-
-# Check whether --enable-build-xpfe or --disable-build-xpfe was given.
-if test "${enable_build_xpfe+set}" = set; then
-  enableval="$enable_build_xpfe"
-  if test "$enableval" = "no"; then
-    MOZ_BUILD_XPFE= 
-  elif test "$enableval" = "yes"; then
-    :
-  else
-    { echo "configure: error: Option, build-xpfe, does not take an argument ($enableval)." 1>&2; exit 1; }
-  fi
-fi
-
 
 
 # Compiler Options
