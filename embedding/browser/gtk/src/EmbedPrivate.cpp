@@ -394,7 +394,7 @@ EmbedPrivate::SetURI(const char *aURI)
 #endif
 
 #ifdef MOZ_WIDGET_GTK2
-  mURI.Assign(NS_ConvertUTF8toUCS2(aURI));
+  CopyUTF8toUTF16(aURI, mURI);
 #endif
 }
 

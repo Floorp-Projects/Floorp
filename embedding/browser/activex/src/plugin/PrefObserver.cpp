@@ -126,7 +126,7 @@ NS_IMETHODIMP PrefObserver::Observe(nsISupports *aSubject, const char *aTopic, c
     if (NS_FAILED(rv))
         return rv;
 
-    nsCAutoString pref = NS_ConvertUCS2toUTF8(aData);
+    NS_ConvertUTF16toUTF8 pref(aData);
     if (nsCRT::strcmp(kActiveXHostingFlags, pref.get()) == 0 ||
         nsCRT::strcmp(kUserAgentPref, pref.get()) == 0 ||
         nsCRT::strcmp(kProxyPref, pref.get()) == 0)

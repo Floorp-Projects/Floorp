@@ -215,9 +215,8 @@ nsresult CHeaderSniffer::PerformSave(nsIURI* inOriginalURI, const ESaveFormat in
         if (index >= 0) {
             // Take the substring following the prefix.
             index += 9;
-            nsCAutoString filename;
-            mContentDisposition.Right(filename, mContentDisposition.Length() - index);
-            defaultFileName = NS_ConvertUTF8toUCS2(filename);
+            AppendUTF8toUTF16(Substring(mContentDisposition, index),
+                              defaultFileName);
         }
     }
     
@@ -226,7 +225,7 @@ nsresult CHeaderSniffer::PerformSave(nsIURI* inOriginalURI, const ESaveFormat in
         if (url) {
             nsCAutoString fileNameCString;
             url->GetFileName(fileNameCString); // (2) For file URLs, use the file name.
-            defaultFileName = NS_ConvertUTF8toUCS2(fileNameCString);
+            AppendUTF8toUTF16(fileNameCString, defaultFileName);
         }
     }
     
@@ -245,7 +244,7 @@ nsresult CHeaderSniffer::PerformSave(nsIURI* inOriginalURI, const ESaveFormat in
         // (5) Use the host.
         nsCAutoString hostName;
         mURL->GetHost(hostName);
-        defaultFileName = NS_ConvertUTF8toUCS2(hostName);
+        AppendUTF8toUTF16(hostName, defaultFileName);
     }
     
     // One last case to handle about:blank and other fruity untitled pages.
@@ -294,7 +293,7 @@ nsresult CHeaderSniffer::PerformSave(nsIURI* inOriginalURI, const ESaveFormat in
             nsCAutoString ext;
             extensions->GetNext(ext);
             defaultFileName.Append(PRUnichar('.'));
-            defaultFileName.Append(NS_ConvertUTF8toUCS2(ext));
+            AppendUTF8toUTF16(ext, defaultFileName);
         }
     }
 

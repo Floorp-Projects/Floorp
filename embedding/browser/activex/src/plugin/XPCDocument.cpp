@@ -1821,7 +1821,7 @@ END_COM_MAP()
         hr = pihlNavigate->GetTargetFrameName(&szTargetFrame);
         if (szTarget && szTarget[0] != WCHAR('\0'))
         {
-            nsCAutoString spec = NS_ConvertUCS2toUTF8(szTarget);
+            NS_ConvertUTF16toUTF8 spec(szTarget);
             nsCOMPtr<nsIURI> uri;
             nsresult rv = NS_NewURI(getter_AddRefs(uri), spec);
             if (NS_SUCCEEDED(rv) && uri)

@@ -86,7 +86,7 @@ Mozilla::Embedding::CopyString(String *aSrc, nsAFlatCString& aDest)
 {
   const wchar_t __pin * strbuf = PtrToStringChars(aSrc);
 
-  aDest = NS_ConvertUCS2toUTF8(nsDependentString(strbuf, aSrc->Length));
+  CopyUTF16toUTF8(nsDependentString(strbuf, aSrc->Length), aDest);
 
   return aDest;
 }

@@ -1012,7 +1012,7 @@ nsresult nsWebBrowserPersist::SendErrorStatusChange(
     {
         nsCAutoString fileurl;
         aURI->GetSpec(fileurl);
-        path = NS_ConvertUTF8toUCS2(fileurl);
+        AppendUTF8toUTF16(fileurl, path);
     }
     
     nsAutoString msgId;
@@ -1115,7 +1115,7 @@ nsresult nsWebBrowserPersist::AppendPathToURI(nsIURI *aURI, const nsAString & aP
     }
 
     // Store the path back on the URI
-    newPath += NS_ConvertUCS2toUTF8(aPath);
+    AppendUTF16toUTF8(aPath, newPath);
     aURI->SetPath(newPath);
 
     return NS_OK;
@@ -3187,14 +3187,14 @@ nsWebBrowserPersist::FixupURI(nsAString &aURI)
         rawPathURL.Append(filename);
 
         nsCAutoString buf;
-        newValue = NS_ConvertUTF8toUCS2(
-            NS_EscapeURL(rawPathURL, esc_FilePath, buf));
+        AppendUTF8toUTF16(NS_EscapeURL(rawPathURL, esc_FilePath, buf),
+                          newValue);
     }
     else
     {
         nsCAutoString fileurl;
         fileAsURI->GetSpec(fileurl);
-        newValue.Assign(NS_ConvertUTF8toUCS2(fileurl));
+        AppendUTF8toUTF16(fileurl, newValue);
     }
     if (data->mIsSubFrame)
     {
