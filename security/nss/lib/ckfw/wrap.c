@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: wrap.c,v $ $Revision: 1.1 $ $Date: 2000/03/31 19:43:41 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: wrap.c,v $ $Revision: 1.2 $ $Date: 2000/04/19 21:32:26 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -778,7 +778,12 @@ NSSCKFWC_GetMechanismList
   (void)nsslibc_memset(pMechanismList, 0, *pulCount * sizeof(CK_MECHANISM_TYPE));
 
   *pulCount = count;
-  error = nssCKFWToken_GetMechanismTypes(fwToken, pMechanismList);
+
+  if( 0 != count ) {
+    error = nssCKFWToken_GetMechanismTypes(fwToken, pMechanismList);
+  } else {
+    error = CKR_OK;
+  }
 
   if( CKR_OK == error ) {
     return CKR_OK;
@@ -1316,10 +1321,8 @@ NSSCKFWC_CloseSession
     goto loser;
   }
 
-  error = nssCKFWSession_Destroy(fwSession, CK_TRUE);
-
-  /* In any case: */
   nssCKFWInstance_DestroySessionHandle(fwInstance, hSession);
+  error = nssCKFWSession_Destroy(fwSession, CK_TRUE);
 
   if( CKR_OK != error ) {
     goto loser;
@@ -2320,8 +2323,6 @@ NSSCKFWC_SetAttributeValue
   NSSCKFWObject *fwObject;
   NSSCKFWObject *newFwObject;
 
-  CK_ULONG i;
-
   if( (NSSCKFWInstance *)NULL == fwInstance ) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
@@ -2419,7 +2420,7 @@ NSSCKFWC_FindObjectsInit
     goto loser;
   }
 
-  if( (CK_ATTRIBUTE_PTR)CK_NULL_PTR == pTemplate ) {
+  if( ((CK_ATTRIBUTE_PTR)CK_NULL_PTR == pTemplate) && (ulCount != 0) ) {
     error = CKR_ARGUMENTS_BAD;
     goto loser;
   }
@@ -2533,7 +2534,7 @@ NSSCKFWC_FindObjects
     NSSCKFWObject *fwObject = nssCKFWFindObjects_Next(fwFindObjects,
                                 arena, &error);
     if( (NSSCKFWObject *)NULL == fwObject ) {
-      goto loser;
+      break;
     }
 
     phObject[i] = nssCKFWInstance_FindObjectHandle(fwInstance, fwObject);

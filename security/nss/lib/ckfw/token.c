@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: token.c,v $ $Revision: 1.1 $ $Date: 2000/03/31 19:43:39 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: token.c,v $ $Revision: 1.2 $ $Date: 2000/04/19 21:32:20 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -1348,27 +1348,32 @@ nssCKFWToken_OpenSession
     goto done;
   }
 
-  mdSession = fwToken->mdToken->OpenSession(fwToken->mdToken, fwToken,
-                fwToken->mdInstance, fwToken->fwInstance,
-                /*XXX fgmr! */(NSSCKFWSession *)NULL,
-                rw, pError);
-  if( (NSSCKMDSession *)NULL == mdSession ) {
+  fwSession = nssCKFWSession_Create(fwToken, rw, pApplication, Notify, pError);
+  if( (NSSCKFWSession *)NULL == fwSession ) {
     if( CKR_OK == *pError ) {
       *pError = CKR_GENERAL_ERROR;
     }
     goto done;
   }
 
-  fwSession = nssCKFWSession_Create(fwToken, mdSession, rw, 
-    pApplication, Notify, pError);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  mdSession = fwToken->mdToken->OpenSession(fwToken->mdToken, fwToken,
+                fwToken->mdInstance, fwToken->fwInstance, fwSession,
+                rw, pError);
+  if( (NSSCKMDSession *)NULL == mdSession ) {
+    (void)nssCKFWSession_Destroy(fwSession, CK_FALSE);
     if( CKR_OK == *pError ) {
       *pError = CKR_GENERAL_ERROR;
     }
+    goto done;
+  }
+
+  *pError = nssCKFWSession_SetMDSession(fwSession, mdSession);
+  if( CKR_OK != *pError ) {
     if( (void *)NULL != (void *)mdSession->Close ) {
       mdSession->Close(mdSession, fwSession, fwToken->mdToken, fwToken,
       fwToken->mdInstance, fwToken->fwInstance);
     }
+    (void)nssCKFWSession_Destroy(fwSession, CK_FALSE);
     goto done;
   }
 
@@ -1527,7 +1532,7 @@ nssCKFWToken_RemoveSession
     return error;
   }
 
-  if( CKR_OK != nssCKFWHash_Exists(fwToken->sessions, fwSession) ) {
+  if( CK_TRUE != nssCKFWHash_Exists(fwToken->sessions, fwSession) ) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto done;
   }

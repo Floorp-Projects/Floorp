@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: object.c,v $ $Revision: 1.1 $ $Date: 2000/03/31 19:43:34 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: object.c,v $ $Revision: 1.2 $ $Date: 2000/04/19 21:31:54 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -69,6 +69,8 @@ static const char CVS_ID[] = "@(#) $RCSfile: object.c,v $ $Revision: 1.1 $ $Date
  *  nssCKFWObject_GetArena
  *
  * -- private accessors --
+ *  nssCKFWObject_SetHandle
+ *  nssCKFWObject_GetHandle
  *
  * -- module fronts --
  *  nssCKFWObject_IsTokenObject
@@ -90,6 +92,7 @@ struct NSSCKFWObjectStr {
   NSSCKFWToken *fwToken;
   NSSCKMDInstance *mdInstance;
   NSSCKFWInstance *fwInstance;
+  CK_OBJECT_HANDLE hObject;
 };
 
 #ifdef DEBUG
@@ -331,6 +334,56 @@ nssCKFWObject_GetArena
 #endif /* NSSDEBUG */
 
   return fwObject->arena;
+}
+
+/*
+ * nssCKFWObject_SetHandle
+ *
+ */
+NSS_IMPLEMENT CK_RV
+nssCKFWObject_SetHandle
+(
+  NSSCKFWObject *fwObject,
+  CK_OBJECT_HANDLE hObject
+)
+{
+#ifdef NSSDEBUG
+  CK_RV error = CKR_OK;
+#endif /* NSSDEBUG */
+
+#ifdef NSSDEBUG
+  error = nssCKFWObject_verifyPointer(fwObject);
+  if( CKR_OK != error ) {
+    return error;
+  }
+#endif /* NSSDEBUG */
+
+  if( (CK_OBJECT_HANDLE)0 != fwObject->hObject ) {
+    return CKR_GENERAL_ERROR;
+  }
+
+  fwObject->hObject = hObject;
+
+  return CKR_OK;
+}
+
+/*
+ * nssCKFWObject_GetHandle
+ *
+ */
+NSS_IMPLEMENT CK_OBJECT_HANDLE
+nssCKFWObject_GetHandle
+(
+  NSSCKFWObject *fwObject
+)
+{
+#ifdef NSSDEBUG
+  if( CKR_OK != nssCKFWObject_verifyPointer(fwObject) ) {
+    return (CK_OBJECT_HANDLE)0;
+  }
+#endif /* NSSDEBUG */
+
+  return fwObject->hObject;
 }
 
 /*

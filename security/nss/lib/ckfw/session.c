@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: session.c,v $ $Revision: 1.1 $ $Date: 2000/03/31 19:43:35 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: session.c,v $ $Revision: 1.2 $ $Date: 2000/04/19 21:31:55 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -71,6 +71,9 @@ static const char CVS_ID[] = "@(#) $RCSfile: session.c,v $ $Revision: 1.1 $ $Dat
  *  nssCKFWSession_GetSessionState
  *  nssCKFWSession_SetFWFindObjects
  *  nssCKFWSession_GetFWFindObjects
+ *  nssCKFWSession_SetMDSession
+ *  nssCKFWSession_SetHandle
+ *  nssCKFWSession_GetHandle
  *
  *  -- module fronts --
  *  nssCKFWSession_GetDeviceError
@@ -106,6 +109,7 @@ struct NSSCKFWSessionStr {
 
   CK_BBOOL rw;
   NSSCKFWFindObjects *fwFindObjects;
+  CK_SESSION_HANDLE hSession;
 };
 
 #ifdef DEBUG
@@ -157,7 +161,6 @@ NSS_IMPLEMENT NSSCKFWSession *
 nssCKFWSession_Create
 (
   NSSCKFWToken *fwToken,
-  NSSCKMDSession *mdSession,
   CK_BBOOL rw,
   CK_VOID_PTR pApplication,
   CK_NOTIFY Notify,
@@ -192,7 +195,7 @@ nssCKFWSession_Create
   }
 
   fwSession->arena = arena;
-  fwSession->mdSession = mdSession;
+  fwSession->mdSession = (NSSCKMDSession *)NULL; /* set later */
   fwSession->fwToken = fwToken;
   fwSession->mdToken = nssCKFWToken_GetMDToken(fwToken);
 
@@ -438,7 +441,9 @@ nssCKFWSession_SetFWFindObjects
   NSSCKFWFindObjects *fwFindObjects
 )
 {
+#ifdef NSSDEBUG
   CK_RV error = CKR_OK;
+#endif /* NSSDEBUG */
 
 #ifdef NSSDEBUG
   error = nssCKFWSession_verifyPointer(fwSession);
@@ -449,7 +454,8 @@ nssCKFWSession_SetFWFindObjects
   /* fwFindObjects may be null */
 #endif /* NSSDEBUG */
 
-  if( (NSSCKFWFindObjects *)NULL != fwSession->fwFindObjects ) {
+  if( ((NSSCKFWFindObjects *)NULL != fwSession->fwFindObjects) &&
+      ((NSSCKFWFindObjects *)NULL != fwFindObjects) ) {
     return CKR_OPERATION_ACTIVE;
   }
 
@@ -489,6 +495,91 @@ nssCKFWSession_GetFWFindObjects
 }
 
 /*
+ * nssCKFWSession_SetMDSession
+ *
+ */
+NSS_IMPLEMENT CK_RV
+nssCKFWSession_SetMDSession
+(
+  NSSCKFWSession *fwSession,
+  NSSCKMDSession *mdSession
+)
+{
+#ifdef NSSDEBUG
+  CK_RV error = CKR_OK;
+#endif /* NSSDEBUG */
+
+#ifdef NSSDEBUG
+  error = nssCKFWSession_verifyPointer(fwSession);
+  if( CKR_OK != error ) {
+    return error;
+  }
+
+  if( (NSSCKMDSession *)NULL == mdSession ) {
+    return CKR_ARGUMENTS_BAD;
+  }
+#endif /* NSSDEBUG */
+
+  if( (NSSCKMDSession *)NULL != fwSession->mdSession ) {
+    return CKR_GENERAL_ERROR;
+  }
+
+  fwSession->mdSession = mdSession;
+
+  return CKR_OK;
+}
+
+/*
+ * nssCKFWSession_SetHandle
+ *
+ */
+NSS_IMPLEMENT CK_RV
+nssCKFWSession_SetHandle
+(
+  NSSCKFWSession *fwSession,
+  CK_SESSION_HANDLE hSession
+)
+{
+#ifdef NSSDEBUG
+  CK_RV error = CKR_OK;
+#endif /* NSSDEBUG */
+
+#ifdef NSSDEBUG
+  error = nssCKFWSession_verifyPointer(fwSession);
+  if( CKR_OK != error ) {
+    return error;
+  }
+#endif /* NSSDEBUG */
+
+  if( (CK_SESSION_HANDLE)0 != fwSession->hSession ) {
+    return CKR_GENERAL_ERROR;
+  }
+
+  fwSession->hSession = hSession;
+
+  return CKR_OK;
+}
+
+/*
+ * nssCKFWSession_GetHandle
+ *
+ */
+NSS_IMPLEMENT CK_SESSION_HANDLE
+nssCKFWSession_GetHandle
+(
+  NSSCKFWSession *fwSession
+)
+{
+#ifdef NSSDEBUG
+  if( CKR_OK != nssCKFWSession_verifyPointer(fwSession) ) {
+    return (NSSCKMDSession *)NULL;
+  }
+#endif /* NSSDEBUG */
+
+  return fwSession->hSession;
+}
+
+/*
  * nssCKFWSession_GetDeviceError
  *
  */
@@ -500,7 +591,11 @@ nssCKFWSession_GetDeviceError
 {
 #ifdef NSSDEBUG
   if( CKR_OK != nssCKFWSession_verifyPointer(fwSession) ) {
-    return CK_FALSE;
+    return (CK_ULONG)0;
+  }
+
+  if( (NSSCKMDSession *)NULL == fwSession->mdSession ) {
+    return (CK_ULONG)0;
   }
 #endif /* NSSDEBUG */
 
@@ -547,6 +642,10 @@ nssCKFWSession_Login
     if( CK_TRUE != nssCKFWToken_GetHasProtectedAuthenticationPath(fwSession->fwToken) ) {
       return CKR_ARGUMENTS_BAD;
     }
+  }
+
+  if( (NSSCKMDSession *)NULL == fwSession->mdSession ) {
+    return CKR_GENERAL_ERROR;
   }
 #endif /* NSSDEBUG */
 
@@ -645,6 +744,10 @@ nssCKFWSession_Logout
   if( CKR_OK != error ) {
     return error;
   }
+
+  if( (NSSCKMDSession *)NULL == fwSession->mdSession ) {
+    return CKR_GENERAL_ERROR;
+  }
 #endif /* NSSDEBUG */
 
   oldState = nssCKFWToken_GetSessionState(fwSession->fwToken);
@@ -716,6 +819,10 @@ nssCKFWSession_InitPIN
   if( CKR_OK != error ) {
     return error;
   }
+
+  if( (NSSCKMDSession *)NULL == fwSession->mdSession ) {
+    return CKR_GENERAL_ERROR;
+  }
 #endif /* NSSDEBUG */
 
   state = nssCKFWToken_GetSessionState(fwSession->fwToken);
@@ -760,6 +867,10 @@ nssCKFWSession_SetPIN
   error = nssCKFWSession_verifyPointer(fwSession);
   if( CKR_OK != error ) {
     return error;
+  }
+
+  if( (NSSCKMDSession *)NULL == fwSession->mdSession ) {
+    return CKR_GENERAL_ERROR;
   }
 #endif /* NSSDEBUG */
 
@@ -817,6 +928,11 @@ nssCKFWSession_GetOperationStateLen
   if( CKR_OK != *pError ) {
     return (CK_ULONG)0;
   }
+
+  if( (NSSCKMDSession *)NULL == fwSession->mdSession ) {
+    *pError = CKR_GENERAL_ERROR;
+    return (CK_ULONG)0;
+  }
 #endif /* NSSDEBUG */
 
   if( (void *)NULL == (void *)fwSession->mdSession->GetOperationStateLen ) {
@@ -872,6 +988,10 @@ nssCKFWSession_GetOperationState
 
   if( (void *)NULL == buffer->data ) {
     return CKR_ARGUMENTS_BAD;
+  }
+
+  if( (NSSCKMDSession *)NULL == fwSession->mdSession ) {
+    return CKR_GENERAL_ERROR;
   }
 #endif /* NSSDEBUG */
 
@@ -969,6 +1089,10 @@ nssCKFWSession_SetOperationState
     if( CKR_OK != error ) {
       return error;
     }
+  }
+
+  if( (NSSCKMDSession *)NULL == fwSession->mdSession ) {
+    return CKR_GENERAL_ERROR;
   }
 #endif /* NSSDEBUG */
 
@@ -1074,6 +1198,11 @@ nssCKFWSession_CreateObject
 
   if( (CK_ATTRIBUTE_PTR)NULL == pTemplate ) {
     *pError = CKR_ARGUMENTS_BAD;
+    return (NSSCKFWObject *)NULL;
+  }
+
+  if( (NSSCKMDSession *)NULL == fwSession->mdSession ) {
+    *pError = CKR_GENERAL_ERROR;
     return (NSSCKFWObject *)NULL;
   }
 #endif /* NSSDEBUG */
@@ -1192,6 +1321,11 @@ nssCKFWSession_CopyObject
 
   *pError = nssCKFWObject_verifyPointer(fwObject);
   if( CKR_OK != *pError ) {
+    return (NSSCKFWObject *)NULL;
+  }
+
+  if( (NSSCKMDSession *)NULL == fwSession->mdSession ) {
+    *pError = CKR_GENERAL_ERROR;
     return (NSSCKFWObject *)NULL;
   }
 #endif /* NSSDEBUG */
@@ -1345,8 +1479,13 @@ nssCKFWSession_FindObjectsInit
     return (NSSCKFWFindObjects *)NULL;
   }
 
-  if( (CK_ATTRIBUTE_PTR)NULL == pTemplate ) {
+  if( ((CK_ATTRIBUTE_PTR)NULL == pTemplate) && (ulAttributeCount != 0) ) {
     *pError = CKR_ARGUMENTS_BAD;
+    return (NSSCKFWFindObjects *)NULL;
+  }
+
+  if( (NSSCKMDSession *)NULL == fwSession->mdSession ) {
+    *pError = CKR_GENERAL_ERROR;
     return (NSSCKFWFindObjects *)NULL;
   }
 #endif /* NSSDEBUG */
@@ -1480,6 +1619,10 @@ nssCKFWSession_SeedRandom
   if( 0 == seed->size ) {
     return CKR_ARGUMENTS_BAD;
   }
+
+  if( (NSSCKMDSession *)NULL == fwSession->mdSession ) {
+    return CKR_GENERAL_ERROR;
+  }
 #endif /* NSSDEBUG */
 
   if( (void *)NULL == (void *)fwSession->mdSession->SeedRandom ) {
@@ -1518,6 +1661,10 @@ nssCKFWSession_GetRandom
 
   if( (void *)NULL == buffer->data ) {
     return CKR_ARGUMENTS_BAD;
+  }
+
+  if( (NSSCKMDSession *)NULL == fwSession->mdSession ) {
+    return CKR_GENERAL_ERROR;
   }
 #endif /* NSSDEBUG */
 

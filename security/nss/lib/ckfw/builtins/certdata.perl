@@ -31,7 +31,7 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-my $cvs_id = '@(#) $RCSfile: certdata.perl,v $ $Revision: 1.1 $ $Date: 2000/03/31 19:43:47 $ $Name:  $';
+my $cvs_id = '@(#) $RCSfile: certdata.perl,v $ $Revision: 1.2 $ $Date: 2000/04/19 21:32:33 $ $Name:  $';
 use strict;
 
 my %constants;
@@ -41,7 +41,7 @@ my @objects = ();
 my @objsize;
 my $cvsid;
 
-$constants{CKO_DATA} = "static const CK_OBJECT_CLASS cko_data = CKO_DATA;\n";
+$constants{CKO_DATA} = "static const CK_OBJECT_CLASS cko_data = HTONL(CKO_DATA);\n";
 $constants{CK_TRUE} = "static const CK_BBOOL ck_true = CK_TRUE;\n";
 $constants{CK_FALSE} = "static const CK_BBOOL ck_false = CK_FALSE;\n";
 
@@ -117,6 +117,8 @@ while(<>) {
   if( $fields[1] =~ /^CK_/ ) {
     my $lcv = $fields[2];
     $lcv =~ tr/A-Z/a-z/;
+    $lcv =~ s/[hn]to[nh][ls]\(//;
+    $lcv =~ s/\)//;
     if( !defined($constants{$fields[2]}) ) {
       $constants{$fields[2]} = "static const $fields[1] $lcv = $fields[2];\n";
     }
@@ -200,6 +202,19 @@ static const char CVS_ID[] = $cvsid;
 #ifndef BUILTINS_H
 #include "builtins.h"
 #endif /* BUILTINS_H */
+
+#if IS_BIG_ENDIAN
+#define HTONS(x) (x)
+#define HTONL(x) (x)
+#endif
+
+#if IS_LITTLE_ENDIAN
+#define HTONS(x) ((((x)<<8)&0xff00)|(((x)>>8)&0x00ff))
+#define HTONL(x) ((((x)<<24)&0xff000000)|(((x)<<8)&0x00ff0000)|(((x)>>8)&0x0000ff00)|(((x)>>24)&0x000000ff))
+#endif
+
+#define NTOHS(x) HTONS(x)
+#define NTOHL(x) HTONL(x)
 
 EOD
     ;
