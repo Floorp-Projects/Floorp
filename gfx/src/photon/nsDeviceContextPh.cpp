@@ -37,6 +37,9 @@ nsDeviceContextPh :: nsDeviceContextPh()
   mHeightFloat = 0.0f;
   mWidth = -1;
   mHeight = -1;
+  mWidth = 0;
+  mHeight = 0;
+  mStupid = 1;
   mSpec = nsnull;
 }
 
@@ -249,6 +252,7 @@ NS_IMETHODIMP nsDeviceContextPh :: CheckFontExistence(const nsString& aFontName)
 
 NS_IMETHODIMP nsDeviceContextPh::GetDepth(PRUint32& aDepth)
 {
+  aDepth = 24;	//kedl, FIXME!
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::GetDepth - Not Implemented\n"));
   return NS_OK;
 }
@@ -277,11 +281,19 @@ NS_IMETHODIMP nsDeviceContextPh :: GetDeviceSurfaceDimensions(PRInt32 &aWidth, P
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::GetDeviceSurfaceDimensions - Not Implemented\n"));
 
+  if (mStupid)
+  {
+	mWidth = NSToIntRound(mWidthFloat * mDevUnitsToAppUnits);
+	mHeight = NSToIntRound(mHeightFloat * mDevUnitsToAppUnits);
+	mStupid=0;
+  }
+/*
   if (mWidth == -1)
 	mWidth = NSToIntRound(mWidthFloat * mDevUnitsToAppUnits);
 
   if (mHeight == -1)
     mHeight = NSToIntRound(mHeightFloat * mDevUnitsToAppUnits);
+*/
 
   aWidth = mWidth;
   aHeight = mHeight;

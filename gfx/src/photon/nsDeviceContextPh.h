@@ -77,6 +77,7 @@ protected:
   float                 mHeightFloat;
   PRInt32               mWidth;
   PRInt32               mHeight;
+  PRInt32		mStupid;
   nsIDeviceContextSpec  *mSpec;
 
 public:

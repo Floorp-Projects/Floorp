@@ -38,6 +38,8 @@ CXXFLAGS += $(TK_CFLAGS)
 INCLUDES += $(TK_CFLAGS) -I$(srcdir)/..
 
 CPPSRCS = \
+	clip.cpp							\
+	ostream_hack.cpp					\
 	nsDeviceContextPh.cpp				\
 	nsDeviceContextSpecFactoryP.cpp		\
 	nsDeviceContextSpecPh.cpp			\

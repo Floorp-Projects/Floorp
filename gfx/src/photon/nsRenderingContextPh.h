@@ -174,7 +174,7 @@ private:
   void SetGC();
   NS_IMETHOD CommonInit();
   void RestoreGC();
-  void ApplyClipping( PRBool = PR_FALSE );
+  void ApplyClipping( PhGC_t *);
 
 protected:
   PhGC_t             *mGC;

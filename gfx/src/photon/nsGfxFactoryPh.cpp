@@ -25,6 +25,7 @@
 #include "nsImagePh.h"
 #include "nsDeviceContextPh.h"
 #include "nsRegionPh.h"
+#include "nsBlender.h"
 #include "nsDeviceContextSpecPh.h"
 #include "nsDeviceContextSpecFactoryP.h"
 
@@ -35,6 +36,7 @@ static NS_DEFINE_IID(kCRenderingContext, NS_RENDERING_CONTEXT_CID);
 static NS_DEFINE_IID(kCImage, NS_IMAGE_CID);
 static NS_DEFINE_IID(kCDeviceContext, NS_DEVICE_CONTEXT_CID);
 static NS_DEFINE_IID(kCRegion, NS_REGION_CID);
+static NS_DEFINE_IID(kCBlender, NS_BLENDER_CID);
 
 static NS_DEFINE_IID(kCDeviceContextSpec, NS_DEVICE_CONTEXT_SPEC_CID);
 static NS_DEFINE_IID(kCDeviceContextSpecFactory, NS_DEVICE_CONTEXT_SPEC_FACTORY_CID);
@@ -166,6 +168,9 @@ nsresult nsGfxFactoryPh::CreateInstance(nsISupports *aOuter,
     nsRegionPh*  region;
     NS_NEWXPCOM(region, nsRegionPh);
     inst = (nsISupports *)region;
+  }
+  else if (mClassID.Equals(kCBlender)) {
+    inst = (nsISupports *)new nsBlender;
   }
   else if (mClassID.Equals(kCDeviceContextSpec)) {
     PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsGfxFactoryPh::CreateInstance asking for nsDeviceContextSpecPh.\n"));
