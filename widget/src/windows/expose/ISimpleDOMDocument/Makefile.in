@@ -69,7 +69,7 @@ $(MIDL_GENERATED_FILES): done_gen
 
 done_gen: ISimpleDOMDocument.idl
 	$(RM) $(SRCDIR_CSRCS)
-	$(MIDL) $(srcdir)/ISimpleDOMDocument.idl
+	"$(MIDL)" $(srcdir)/ISimpleDOMDocument.idl
 	cp ISimpleDOMDocument.h ../..
 	cp ISimpleDOMDocument_i.c ../../ISimpleDOMDocument_iid.h
 	touch $@

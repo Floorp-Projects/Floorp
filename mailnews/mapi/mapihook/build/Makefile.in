@@ -60,7 +60,7 @@ $(MIDL_GENERATED_FILES): done_gen
 
 done_gen: msgMapi.idl
 	$(RM) $(SRCDIR_CSRCS)
-	$(MIDL) $(UNICODE_FLAGS) $(srcdir)/msgMapi.idl
+	"$(MIDL)" $(UNICODE_FLAGS) $(srcdir)/msgMapi.idl
 	touch $@
 
 copy_csrcs: done_gen

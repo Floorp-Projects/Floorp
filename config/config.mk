@@ -466,8 +466,6 @@ endif
 #
 CCC		= $(CXX)
 CCF		= $(CC) $(CFLAGS)
-LINK_EXE	= $(LINK) $(OS_LFLAGS) $(LFLAGS)
-LINK_DLL	= $(LINK) $(OS_DLLFLAGS) $(DLLFLAGS)
 NFSPWD		= $(CONFIG_TOOLS)/nfspwd
 PURIFY		= purify $(PURIFYOPTIONS)
 QUANTIFY	= quantify $(QUANTIFYOPTIONS)
@@ -478,7 +476,6 @@ else
 XPIDL_COMPILE 	= $(DIST)/bin/xpidl$(BIN_SUFFIX)
 XPIDL_LINK	= $(DIST)/bin/xpt_link$(BIN_SUFFIX)
 endif
-MIDL		= midl
 
 ifeq ($(OS_ARCH),OS2)
 PATH_SEPARATOR	:= \;
