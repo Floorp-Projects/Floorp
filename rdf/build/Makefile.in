@@ -97,6 +97,7 @@ install:: $(TARGETS)
 	$(INSTALL) $(srcdir)/../resources/personal-folder-open.gif $(DIST)/bin/res/rdf
 	$(INSTALL) $(srcdir)/../resources/folder-open.gif $(DIST)/bin/res/rdf
 	$(INSTALL) $(srcdir)/../resources/folder-closed.gif $(DIST)/bin/res/rdf
+	$(INSTALL) $(srcdir)/../resources/document.gif $(DIST)/bin/res/rdf
 	$(INSTALL) $(srcdir)/../resources/History/h1.hst $(DIST)/bin/res/rdf/History
 	$(INSTALL) $(srcdir)/../resources/dom-test-1.xul $(DIST)/bin/res/rdf
 	$(INSTALL) $(srcdir)/../resources/dom-test-2.xul $(DIST)/bin/res/rdf
