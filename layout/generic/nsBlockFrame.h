@@ -98,6 +98,9 @@ public:
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
   NS_IMETHOD VerifyTree() const;
   NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame);
+  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
+                         nsGUIEvent*     aEvent,
+                         nsEventStatus&  aEventStatus);
 
   // nsIHTMLReflow
   NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
