@@ -236,6 +236,10 @@ ifeq (,$(filter mozilla firefox,$(MOZ_PKG_APPNAME)))
 	@echo "Creating start script $(MOZ_PKG_APPNAME)..."
 	cd $(DIST)/$(MOZ_PKG_APPNAME); if [ -f mozilla ]; then cp mozilla $(MOZ_PKG_APPNAME); fi
 endif
+ifdef NO_PKG_FILES
+	@echo "Removing unpackaged files..."
+	cd $(DIST)/$(MOZ_PKG_APPNAME); rm -rf $(NO_PKG_FILES)
+endif
 	@echo "Compressing..."
 	cd $(DIST); $(MAKE_PACKAGE)
 
