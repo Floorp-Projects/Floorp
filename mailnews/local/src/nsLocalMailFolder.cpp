@@ -1348,7 +1348,10 @@ nsMsgLocalMailFolder::CopyFileMessage(nsIFileSpec* fileSpec, nsIMessage*
   }
 
   inputStream = do_QueryInterface(inputFileStream->GetIStream());
-  if (NS_FAILED(rv)) goto done;
+  if (!inputStream) {
+	rv = NS_ERROR_FAILURE;
+	goto done;
+  }
 
   rv = inputStream->GetLength(&fileSize);
   if (NS_FAILED(rv)) goto done;
