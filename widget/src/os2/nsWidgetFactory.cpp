@@ -70,6 +70,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShell)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFrameWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
@@ -77,43 +78,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
-
-
-// custom "contructor" methods
-
-static NS_IMETHODIMP nsAppShellConstructor (nsISupports *aOuter, REFNSIID aIID, void **aResult)
-{
-  nsresult rv;
-  nsISupports *inst = nsnull;
-
-  if ( NULL == aResult )
-  {
-    rv = NS_ERROR_NULL_POINTER;
-    return rv;
-  }
-  *aResult = NULL;
-  if (NULL != aOuter)
-  {
-    rv = NS_ERROR_NO_AGGREGATION;
-    return rv;
-  }
-
-  // need to do this in order to keep initial window on the screen
-  // and be able to close browser  
-  nsIAppShell *pShell = nsnull;
-  NS_CreateAppshell(&pShell);
-  inst = (nsISupports*)pShell;
-
-  if (inst == NULL)
-  {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  NS_ADDREF(inst);
-  rv = inst->QueryInterface(aIID, aResult);
-  NS_RELEASE(inst);
-
-  return rv;
-}
 
 // component definition, will be exported using XPCOM
 static const nsModuleComponentInfo components[] =

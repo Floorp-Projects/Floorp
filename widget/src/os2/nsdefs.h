@@ -41,6 +41,9 @@
 #ifdef _DEBUG
 #define INCL_WINERRORS
 #endif
+#define INCL_WIN
+#define INCL_DOS
+#define INCL_GPI
 #include <os2.h>
 
 #ifdef _DEBUG
