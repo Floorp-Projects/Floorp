@@ -32,14 +32,17 @@
 #include "nsVoidArray.h"
 #include "nsIReflowCommand.h"
 #include "nsIPtr.h"
+#include "prinrval.h"
 
 #ifdef NS_DEBUG
 static PRBool gsDebug = PR_FALSE;
+static PRBool gsTiming = PR_FALSE;
 //#define NOISY
 //#define NOISY_FLOW
 #define NOISY_MARGINS
 #else
 static const PRBool gsDebug = PR_FALSE;
+static const PRBool gsTiming = PR_FALSE;
 #endif
 
 static NS_DEFINE_IID(kITableContentIID, NS_ITABLECONTENT_IID);
@@ -334,6 +337,11 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext* aPresContext,
     printf("%p: nsTableOuterFrame::Reflow : maxSize=%d,%d\n",
            this, aReflowState.maxSize.width, aReflowState.maxSize.height);
 
+  PRIntervalTime startTime;
+  if (gsTiming) {
+    startTime = PR_IntervalNow();
+  }
+
 #ifdef NS_DEBUG
   // replace with a check that does not assume linear placement of children
   // PreReflowCheck();
@@ -380,14 +388,13 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext* aPresContext,
       aStatus = NS_FRAME_COMPLETE;
       return NS_OK;
     }
-    
+
     // lay out inner table, if required
+    nsReflowState innerTableReflowState(mInnerTableFrame, aReflowState, aReflowState.maxSize);
     if (PR_FALSE==mInnerTableFrame->IsFirstPassValid())
     { 
      // we treat the table as if we've never seen the layout data before
-   
       mInnerTableFrame->SetReflowPass(nsTableFrame::kPASS_FIRST);
-      nsReflowState innerTableReflowState(mInnerTableFrame, aReflowState, aReflowState.maxSize);
       aStatus = mInnerTableFrame->ResizeReflowPass1(aPresContext, aDesiredSize,
                                                     innerTableReflowState, aStatus);
     }
@@ -399,8 +406,8 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext* aPresContext,
     if (nsnull==prevInFlow)
     {
       // assign column widths, and assign aMaxElementSize->width
-      mInnerTableFrame->BalanceColumnWidths(aPresContext, aReflowState,
-                                            aReflowState.maxSize,
+      mInnerTableFrame->BalanceColumnWidths(aPresContext, innerTableReflowState,
+                                            innerTableReflowState.maxSize,
                                             aDesiredSize.maxElementSize);
       // assign table width
       mInnerTableFrame->SetTableWidth(aPresContext);
@@ -415,7 +422,7 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext* aPresContext,
     // Reflow the child frames
     PRBool  reflowMappedOK = PR_TRUE;
     if (nsnull != mFirstChild) {
-      reflowMappedOK = ReflowMappedChildren(aPresContext, state, aDesiredSize.maxElementSize);
+      reflowMappedOK = ReflowMappedChildren(aPresContext, state, nsnull);
       if (PR_FALSE == reflowMappedOK) {
         aStatus = NS_FRAME_NOT_COMPLETE;
       }
@@ -491,6 +498,13 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext* aPresContext,
   // replace with a check that does not assume linear placement of children
   // PostReflowCheck(status);
 #endif
+
+  if (gsTiming) {
+    PRIntervalTime endTime = PR_IntervalNow();
+    printf("Table reflow took %ld ticks for frame %d\n",
+           endTime-startTime, this);/* XXX need to use LL_* macros! */
+  }
+
 
   return NS_OK;
 

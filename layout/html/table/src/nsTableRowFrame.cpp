@@ -256,7 +256,7 @@ void nsTableRowFrame::PlaceChild(nsIPresContext*    aPresContext,
 																 nsIFrame*          aKidFrame,
 																 const nsRect&      aKidRect,
 																 nsSize*            aMaxElementSize,
-																 nsSize&            aKidMaxElementSize)
+																 nsSize*            aKidMaxElementSize)
 {
   if (PR_TRUE==gsDebug1)
     printf ("row: placing cell at %d, %d, %d, %d\n",
@@ -272,10 +272,10 @@ void nsTableRowFrame::PlaceChild(nsIPresContext*    aPresContext,
   PRInt32 rowSpan = ((nsTableCellFrame*)aKidFrame)->GetRowSpan();
   if (nsnull != aMaxElementSize) 
   {
-    aMaxElementSize->width += aKidMaxElementSize.width;
-    if ((mMinRowSpan==rowSpan) && (aKidMaxElementSize.height>aMaxElementSize->height))
+    aMaxElementSize->width += aKidMaxElementSize->width;
+    if ((mMinRowSpan==rowSpan) && (aKidMaxElementSize->height>aMaxElementSize->height))
     {
-      aMaxElementSize->height = aKidMaxElementSize.height;
+      aMaxElementSize->height = aKidMaxElementSize->height;
     }
   }
 
@@ -394,26 +394,35 @@ PRBool nsTableRowFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
     for (PRInt32 numColSpan=0; numColSpan<cellColSpan; numColSpan++)
       availWidth += aState.tableFrame->GetColumnWidth(cellStartingCol+numColSpan);
     kidAvailSize.width = availWidth;
-
-    // Reflow the child
-    kidFrame->WillReflow(*aPresContext);
-    kidFrame->MoveTo(x, kidMargin.top);
-
-    nsReflowState kidReflowState(kidFrame, aState.reflowState, kidAvailSize,
-                                 eReflowReason_Resize);
-    status = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState);
-
-    if (gsDebug1)
+    if (availWidth != ((nsTableCellFrame *)kidFrame)->GetPriorAvailWidth())
     {
-      if (nsnull!=pKidMaxElementSize)
-        printf("reflow of cell returned result = %s with desired=%d,%d, min = %d,%d\n",
-                NS_FRAME_IS_COMPLETE(status)?"complete":"NOT complete", 
-                desiredSize.width, desiredSize.height, 
-                pKidMaxElementSize->width, pKidMaxElementSize->height);
-      else
-        printf("reflow of cell returned result = %s with desired=%d,%d, min = nsnull\n",
-                NS_FRAME_IS_COMPLETE(status)?"complete":"NOT complete", 
-                desiredSize.width, desiredSize.height);
+      // Reflow the child
+      kidFrame->WillReflow(*aPresContext);
+      kidFrame->MoveTo(x, kidMargin.top);
+      nsReflowState kidReflowState(kidFrame, aState.reflowState, kidAvailSize,
+                                   eReflowReason_Resize);
+      status = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState);
+
+      if (gsDebug1)
+      {
+        if (nsnull!=pKidMaxElementSize)
+          printf("reflow of cell returned result = %s with desired=%d,%d, min = %d,%d\n",
+                  NS_FRAME_IS_COMPLETE(status)?"complete":"NOT complete", 
+                  desiredSize.width, desiredSize.height, 
+                  pKidMaxElementSize->width, pKidMaxElementSize->height);
+        else
+          printf("reflow of cell returned result = %s with desired=%d,%d, min = nsnull\n",
+                  NS_FRAME_IS_COMPLETE(status)?"complete":"NOT complete", 
+                  desiredSize.width, desiredSize.height);
+      }
+    }
+    else
+    {
+      nsRect cellRect;
+      kidFrame->GetRect(cellRect);
+      desiredSize.width = cellRect.width;
+      desiredSize.height = cellRect.height;
+      status = NS_FRAME_COMPLETE; // XXX: in paginated world, this doesn't work!
     }
 
     // Did the child fit?
@@ -472,7 +481,7 @@ PRBool nsTableRowFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
     nsRect kidRect (x, kidMargin.top, cellWidth, cellHeight);
 
     PlaceChild(aPresContext, aState, kidFrame, kidRect, aMaxElementSize,
-               kidMaxElementSize);
+               pKidMaxElementSize);
     childCount++;
 
 		// Remember where we just were in case we end up pushing children
@@ -720,7 +729,7 @@ PRBool nsTableRowFrame::PullUpChildren(nsIPresContext*      aPresContext,
           aState.x += aState.tableFrame->GetColumnWidth(colIndex);
     // Place the child
     nsRect kidRect (aState.x, 0, desiredSize.width, desiredSize.height);
-    PlaceChild(aPresContext, aState, kidFrame, kidRect, aMaxElementSize, *pKidMaxElementSize);
+    PlaceChild(aPresContext, aState, kidFrame, kidRect, aMaxElementSize, pKidMaxElementSize);
 
     // Remove the frame from its current parent
     kidFrame->GetNextSibling(nextInFlow->mFirstChild);
@@ -974,20 +983,17 @@ nsTableRowFrame::ReflowUnmappedChildren( nsIPresContext*      aPresContext,
     status = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState);
     nsCellLayoutData *kidLayoutData = new nsCellLayoutData((nsTableCellFrame *)kidFrame, &desiredSize, pKidMaxElementSize);
     ((nsTableCellFrame *)kidFrame)->SetCellLayoutData(kidLayoutData);
-    if (nsnull!=pKidMaxElementSize)
+    if (gsDebug1) 
     {
-      if (gsDebug1) 
-      {
-        if (nsnull!=pKidMaxElementSize)
-          printf("reflow of cell returned result = %s with desired=%d,%d, min = %d,%d\n",
-                  NS_FRAME_IS_COMPLETE(status)?"complete":"NOT complete", 
-                  desiredSize.width, desiredSize.height, 
-                  pKidMaxElementSize->width, pKidMaxElementSize->height);
-        else
-          printf("reflow of cell returned result = %s with desired=%d,%d, min = nsnull\n",
-                  NS_FRAME_IS_COMPLETE(status)?"complete":"NOT complete", 
-                  desiredSize.width, desiredSize.height);
-      }
+      if (nsnull!=pKidMaxElementSize)
+        printf("reflow of cell returned result = %s with desired=%d,%d, min = %d,%d\n",
+                NS_FRAME_IS_COMPLETE(status)?"complete":"NOT complete", 
+                desiredSize.width, desiredSize.height, 
+                pKidMaxElementSize->width, pKidMaxElementSize->height);
+      else
+        printf("reflow of cell returned result = %s with desired=%d,%d, min = nsnull\n",
+                NS_FRAME_IS_COMPLETE(status)?"complete":"NOT complete", 
+                desiredSize.width, desiredSize.height);
     }
     NS_RELEASE(cell);                                                          // cell: REFCNT--
 
@@ -1006,7 +1012,7 @@ nsTableRowFrame::ReflowUnmappedChildren( nsIPresContext*      aPresContext,
 
     // Place the child
     nsRect kidRect (x, topMargin, desiredSize.width, desiredSize.height);
-    PlaceChild(aPresContext, aState, kidFrame, kidRect, aMaxElementSize, *pKidMaxElementSize);
+    PlaceChild(aPresContext, aState, kidFrame, kidRect, aMaxElementSize, pKidMaxElementSize);
 
     prevKidFrame = kidFrame;
     kidIndex++;
@@ -1211,7 +1217,7 @@ nsresult nsTableRowFrame::IncrementalReflow(nsIPresContext*      aPresContext,
   nsRect kidRect (x, kidMargin.top, cellWidth, cellHeight);
 
   PlaceChild(aPresContext, aState, kidFrame, kidRect, aMaxElementSize,
-             kidMaxElementSize);
+             &kidMaxElementSize);
 
   // Now iterate over the remaining cells, and update our max cell
   // height and our running x-offset
@@ -1284,7 +1290,6 @@ nsTableRowFrame::Reflow(nsIPresContext*      aPresContext,
   if (eReflowReason_Incremental == aReflowState.reason) {
     aStatus = IncrementalReflow(aPresContext, state, aReflowState,
                                 aDesiredSize.maxElementSize);
-
   } else {
     // Initialize out parameter
     if (nsnull != aDesiredSize.maxElementSize) {
