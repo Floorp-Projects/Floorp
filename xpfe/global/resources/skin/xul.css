@@ -210,6 +210,10 @@ treecolgroup {
   display: table-column-group;
 }
 
+treehead > treerow > treecell {
+  behavior: url("resource:/chrome/xulBindings.xml#treecell-header");
+}
+
 /********** Tab widget *********/
 
 tab {

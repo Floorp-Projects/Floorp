@@ -110,7 +110,15 @@
     </content>
   </binding>
 
-  <binding name="checkbox">
+  <binding name="treecell-header">
+    <content>
+      <xul:image class="tree-button" inherits="src"/>
+      <xul:text class="tree-text" inherits="crop,value" flex="1" crop="right"/>
+      <xul:image class="treeheader-sortdirection"/>
+    </content>
+  </binding>
+  
+    <binding name="checkbox">
     <content>
       <xul:box class="internal-box" autostretch="never">
         <xul:box class="checkmark-box" autostretch="never">
