@@ -114,7 +114,7 @@ sub MailMessage {
   $header.= "Subject: $subject\n\n";
 
   open(SENDMAIL,
-    "|/usr/lib/sendmail -ODeliveryMode=background -t") ||
+    "|/usr/lib/sendmail -ODeliveryMode=background -ti") ||
       die "Can't open sendmail";
   print SENDMAIL $header . $message . "\n";
   close SENDMAIL;

@@ -64,7 +64,7 @@ foreach my $email (sort (keys %bugs)) {
     }
 
     my $sendmailparam = Param('sendmailnow') ? '' : "-ODeliveryMode=deferred";
-    open SENDMAIL, "|/usr/lib/sendmail $sendmailparam -t"
+    open SENDMAIL, "|/usr/lib/sendmail $sendmailparam -ti"
         or die "Can't open sendmail";
     print SENDMAIL $msg;
     close SENDMAIL;

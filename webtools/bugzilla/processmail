@@ -771,7 +771,7 @@ sub NewProcessOnePerson ($$$$$$$$$$$$) {
     }
 
     if ($enableSendMail == 1) {
-    open(SENDMAIL, "|/usr/lib/sendmail $sendmailparam -t") ||
+    open(SENDMAIL, "|/usr/lib/sendmail $sendmailparam -ti") ||
       die "Can't open sendmail";
     
     print SENDMAIL trim($msg) . "\n";

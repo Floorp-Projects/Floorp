@@ -150,7 +150,7 @@ $msg .= "Subject: Moving bug(s) $buglist\n\n";
 $msg .= $xml . "\n";
 
 open(SENDMAIL,
-  "|/usr/lib/sendmail -ODeliveryMode=background -t") ||
+  "|/usr/lib/sendmail -ODeliveryMode=background -ti") ||
     die "Can't open sendmail";
 print SENDMAIL $msg;
 close SENDMAIL;
