@@ -236,7 +236,7 @@
         <editor type="content-primary" id="content-frame" src="about:blank" context="editorContentContext" flex="1"/>
       </stack>
       <vbox>
-        <label id="doctype-text" style="width:1em"/>
+        <label id="doctype-text" crop="right"/>
         <textbox class="source-editor plain" id="content-source" multiline="true" rows="1"
                    flex="1" style="width:1em; height:1em;"/>
       </vbox>
