@@ -21,7 +21,7 @@
  * Keith Visco 
  *    -- original author.
  *
- * $Id: XMLDOMUtils.h,v 1.2 1999/11/15 07:12:49 nisheeth%netscape.com Exp $
+ * $Id: XMLDOMUtils.h,v 1.3 2000/04/06 22:37:48 Peter.VanderBeken%pandora.be Exp $
  */
 
 /**
@@ -41,12 +41,12 @@ public:
      *  Copies the given Node, using the owner Document to create all
      *  necessary new Node(s)
     **/
-   static Node* XMLDOMUtils::copyNode(Node* node, Document* owner);
+   static Node* copyNode(Node* node, Document* owner);
 
     /**
      *  Appends the value of the given Node to the target DOMString
     **/
-   static void XMLDOMUtils::getNodeValue(Node* node, DOMString* target);
+   static void getNodeValue(Node* node, DOMString* target);
 
 
 }; //-- XMLDOMUtils
