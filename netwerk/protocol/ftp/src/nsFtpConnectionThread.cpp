@@ -315,6 +315,9 @@ nsFtpConnectionThread::Process() {
                     mConn->mCwd = mCwd;
                     rv = mConnCache->InsertConn(mCacheKey.GetBuffer(), mConn);
                     if (NS_FAILED(rv)) return rv;
+                } else {
+                    delete mConn;
+                    mConn = 0;
                 }
 
                 rv = StopProcessing();
