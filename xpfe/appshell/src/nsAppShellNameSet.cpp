@@ -30,7 +30,6 @@
 
 
 static NS_DEFINE_CID(kXPConnectFactoryCID,       NS_XPCONNECTFACTORY_CID);
-static NS_DEFINE_IID(kIScriptObjectOwnerIID,     NS_ISCRIPTOBJECTOWNER_IID);
 
 nsAppShellNameSet::nsAppShellNameSet()
 {
@@ -68,7 +67,7 @@ nsAppShellNameSet::AddNameSet(nsIScriptContext* aScriptContext)
   rv = aScriptContext->GetNameSpaceManager(&manager);
   if (NS_SUCCEEDED(rv)) {
     rv = manager->RegisterGlobalName(NS_ConvertASCIItoUCS2("XPComFactory"), 
-				     kIScriptObjectOwnerIID,
+				     NS_GET_IID(nsIScriptObjectOwner),
                                      kXPConnectFactoryCID, 
                                      PR_FALSE);
     NS_RELEASE(manager);

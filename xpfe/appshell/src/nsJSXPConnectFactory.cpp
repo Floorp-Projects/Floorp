@@ -31,10 +31,6 @@
 #include "nsString.h"
 #include "nsIDOMXPConnectFactory.h"
 
-static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
-static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
-static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
-static NS_DEFINE_IID(kIXPConnectFactoryIID, NS_IDOMXPCONNECTFACTORY_IID);
 
 /***********************************************************************/
 //
@@ -270,7 +266,7 @@ extern "C" NS_APPSHELL nsresult NS_NewScriptXPConnectFactory(nsIScriptContext *a
   if (nsnull == aParent) {
     parent = nsnull;
   }
-  else if (NS_OK == aParent->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+  else if (NS_OK == aParent->QueryInterface(NS_GET_IID(nsIScriptObjectOwner), (void**)&owner)) {
     if (NS_OK != owner->GetScriptObject(aContext, (void **)&parent)) {
       NS_RELEASE(owner);
       return NS_ERROR_FAILURE;
@@ -285,7 +281,7 @@ extern "C" NS_APPSHELL nsresult NS_NewScriptXPConnectFactory(nsIScriptContext *a
     return NS_ERROR_FAILURE;
   }
 
-  result = aSupports->QueryInterface(kIXPConnectFactoryIID, (void **)&aXPConnectFactory);
+  result = aSupports->QueryInterface(NS_GET_IID(nsIDOMXPConnectFactory), (void **)&aXPConnectFactory);
   if (NS_OK != result) {
     return result;
   }
