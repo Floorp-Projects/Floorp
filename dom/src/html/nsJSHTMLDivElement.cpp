@@ -39,7 +39,7 @@ NS_DEF_PTR(nsIDOMHTMLDivElement);
 // HTMLDivElement property ids
 //
 enum HTMLDivElement_slots {
-  HTMLDIVELEMENT_ALIGN = -11
+  HTMLDIVELEMENT_ALIGN = -1
 };
 
 /***********************************************************************/

@@ -45,9 +45,9 @@ NS_DEF_PTR(nsIDOMHTMLCollection);
 // HTMLTableSectionElement property ids
 //
 enum HTMLTableSectionElement_slots {
-  HTMLTABLESECTIONELEMENT_ALIGN = -11,
-  HTMLTABLESECTIONELEMENT_VALIGN = -12,
-  HTMLTABLESECTIONELEMENT_ROWS = -13
+  HTMLTABLESECTIONELEMENT_ALIGN = -1,
+  HTMLTABLESECTIONELEMENT_VALIGN = -2,
+  HTMLTABLESECTIONELEMENT_ROWS = -3
 };
 
 /***********************************************************************/

@@ -34,7 +34,9 @@ IDLSRCS =  \
 	Node.idl \
 	NodeList.idl \
 	ProcessingInstruction.idl \
-	Text.idl
+	Text.idl \
+        StyleSheet.idl \
+        StyleSheetCollection.idl
 
 
 XPCOM_DESTDIR=$(DEPTH)\dom\public\coreDom

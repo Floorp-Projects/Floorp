@@ -39,9 +39,9 @@ NS_DEF_PTR(nsIDOMHTMLStyleElement);
 // HTMLStyleElement property ids
 //
 enum HTMLStyleElement_slots {
-  HTMLSTYLEELEMENT_DISABLED = -11,
-  HTMLSTYLEELEMENT_MEDIA = -12,
-  HTMLSTYLEELEMENT_TYPE = -13
+  HTMLSTYLEELEMENT_DISABLED = -1,
+  HTMLSTYLEELEMENT_MEDIA = -2,
+  HTMLSTYLEELEMENT_TYPE = -3
 };
 
 /***********************************************************************/

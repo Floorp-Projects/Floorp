@@ -39,10 +39,10 @@ NS_DEF_PTR(nsIDOMHTMLMetaElement);
 // HTMLMetaElement property ids
 //
 enum HTMLMetaElement_slots {
-  HTMLMETAELEMENT_CONTENT = -11,
-  HTMLMETAELEMENT_HTTPEQUIV = -12,
-  HTMLMETAELEMENT_NAME = -13,
-  HTMLMETAELEMENT_SCHEME = -14
+  HTMLMETAELEMENT_CONTENT = -1,
+  HTMLMETAELEMENT_HTTPEQUIV = -2,
+  HTMLMETAELEMENT_NAME = -3,
+  HTMLMETAELEMENT_SCHEME = -4
 };
 
 /***********************************************************************/

@@ -26,24 +26,28 @@
 #include "nsIPtr.h"
 #include "nsString.h"
 #include "nsIDOMHTMLElement.h"
+#include "nsIDOMCSSStyleDeclaration.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kIHTMLElementIID, NS_IDOMHTMLELEMENT_IID);
+static NS_DEFINE_IID(kICSSStyleDeclarationIID, NS_IDOMCSSSTYLEDECLARATION_IID);
 
 NS_DEF_PTR(nsIDOMHTMLElement);
+NS_DEF_PTR(nsIDOMCSSStyleDeclaration);
 
 //
 // HTMLElement property ids
 //
 enum HTMLElement_slots {
-  HTMLELEMENT_ID = -11,
-  HTMLELEMENT_TITLE = -12,
-  HTMLELEMENT_LANG = -13,
-  HTMLELEMENT_DIR = -14,
-  HTMLELEMENT_CLASSNAME = -15
+  HTMLELEMENT_ID = -1,
+  HTMLELEMENT_TITLE = -2,
+  HTMLELEMENT_LANG = -3,
+  HTMLELEMENT_DIR = -4,
+  HTMLELEMENT_CLASSNAME = -5,
+  HTMLELEMENT_STYLE = -6
 };
 
 /***********************************************************************/
@@ -121,6 +125,33 @@ GetHTMLElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
           // set the return value
           *vp = STRING_TO_JSVAL(jsstring);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case HTMLELEMENT_STYLE:
+      {
+        nsIDOMCSSStyleDeclaration* prop;
+        if (NS_OK == a->GetStyle(&prop)) {
+          // get the js object
+          if (prop != nsnull) {
+            nsIScriptObjectOwner *owner = nsnull;
+            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+              JSObject *object = nsnull;
+              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+                // set the return value
+                *vp = OBJECT_TO_JSVAL(object);
+              }
+              NS_RELEASE(owner);
+            }
+            NS_RELEASE(prop);
+          }
+          else {
+            *vp = JSVAL_NULL;
+          }
         }
         else {
           return JS_FALSE;
@@ -358,6 +389,7 @@ static JSPropertySpec HTMLElementProperties[] =
   {"lang",    HTMLELEMENT_LANG,    JSPROP_ENUMERATE},
   {"dir",    HTMLELEMENT_DIR,    JSPROP_ENUMERATE},
   {"className",    HTMLELEMENT_CLASSNAME,    JSPROP_ENUMERATE},
+  {"style",    HTMLELEMENT_STYLE,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 

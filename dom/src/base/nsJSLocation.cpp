@@ -39,14 +39,14 @@ NS_DEF_PTR(nsIDOMLocation);
 // Location property ids
 //
 enum Location_slots {
-  LOCATION_HASH = -11,
-  LOCATION_HOST = -12,
-  LOCATION_HOSTNAME = -13,
-  LOCATION_HREF = -14,
-  LOCATION_PATHNAME = -15,
-  LOCATION_PORT = -16,
-  LOCATION_PROTOCOL = -17,
-  LOCATION_SEARCH = -18
+  LOCATION_HASH = -1,
+  LOCATION_HOST = -2,
+  LOCATION_HOSTNAME = -3,
+  LOCATION_HREF = -4,
+  LOCATION_PATHNAME = -5,
+  LOCATION_PORT = -6,
+  LOCATION_PROTOCOL = -7,
+  LOCATION_SEARCH = -8
 };
 
 /***********************************************************************/

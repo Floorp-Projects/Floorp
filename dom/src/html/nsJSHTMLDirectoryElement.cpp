@@ -39,7 +39,7 @@ NS_DEF_PTR(nsIDOMHTMLDirectoryElement);
 // HTMLDirectoryElement property ids
 //
 enum HTMLDirectoryElement_slots {
-  HTMLDIRECTORYELEMENT_COMPACT = -11
+  HTMLDIRECTORYELEMENT_COMPACT = -1
 };
 
 /***********************************************************************/

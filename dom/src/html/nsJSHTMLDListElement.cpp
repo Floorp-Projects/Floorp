@@ -39,7 +39,7 @@ NS_DEF_PTR(nsIDOMHTMLDListElement);
 // HTMLDListElement property ids
 //
 enum HTMLDListElement_slots {
-  HTMLDLISTELEMENT_COMPACT = -11
+  HTMLDLISTELEMENT_COMPACT = -1
 };
 
 /***********************************************************************/

@@ -38,6 +38,8 @@ CPPSRCS =				\
 	nsJSNodeList.cpp		\
 	nsJSProcessingInstruction.cpp	\
 	nsJSText.cpp			\
+	nsJSStyleSheet.cpp		\
+	nsJSStyleCollection.cpp		\
 	$(NULL)
 
 CPP_OBJS=						\
@@ -55,6 +57,8 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsJSNodeList.obj			\
 	.\$(OBJDIR)\nsJSProcessingInstruction.obj	\
 	.\$(OBJDIR)\nsJSText.obj			\
+	.\$(OBJDIR)\nsJSStyleSheet.obj			\
+	.\$(OBJDIR)\nsJSStyleSheetCollection.obj	\
 	$(NULL)
 
 

@@ -39,7 +39,7 @@ NS_DEF_PTR(nsIDOMHTMLPreElement);
 // HTMLPreElement property ids
 //
 enum HTMLPreElement_slots {
-  HTMLPREELEMENT_WIDTH = -11
+  HTMLPREELEMENT_WIDTH = -1
 };
 
 /***********************************************************************/

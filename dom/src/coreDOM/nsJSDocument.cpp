@@ -72,10 +72,10 @@ NS_DEF_PTR(nsIDOMNodeList);
 // Document property ids
 //
 enum Document_slots {
-  DOCUMENT_DOCUMENTTYPE = -11,
-  DOCUMENT_PROLOG = -12,
-  DOCUMENT_EPILOG = -13,
-  DOCUMENT_DOCUMENTELEMENT = -14
+  DOCUMENT_DOCUMENTTYPE = -1,
+  DOCUMENT_PROLOG = -2,
+  DOCUMENT_EPILOG = -3,
+  DOCUMENT_DOCUMENTELEMENT = -4
 };
 
 /***********************************************************************/

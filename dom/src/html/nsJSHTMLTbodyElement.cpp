@@ -39,10 +39,10 @@ NS_DEF_PTR(nsIDOMHTMLTbodyElement);
 // HTMLTbodyElement property ids
 //
 enum HTMLTbodyElement_slots {
-  HTMLTBODYELEMENT_ALIGN = -11,
-  HTMLTBODYELEMENT_CH = -12,
-  HTMLTBODYELEMENT_CHOFF = -13,
-  HTMLTBODYELEMENT_VALIGN = -14
+  HTMLTBODYELEMENT_ALIGN = -1,
+  HTMLTBODYELEMENT_CH = -2,
+  HTMLTBODYELEMENT_CHOFF = -3,
+  HTMLTBODYELEMENT_VALIGN = -4
 };
 
 /***********************************************************************/

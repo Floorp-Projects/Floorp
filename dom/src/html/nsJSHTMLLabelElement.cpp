@@ -42,9 +42,9 @@ NS_DEF_PTR(nsIDOMHTMLLabelElement);
 // HTMLLabelElement property ids
 //
 enum HTMLLabelElement_slots {
-  HTMLLABELELEMENT_FORM = -11,
-  HTMLLABELELEMENT_ACCESSKEY = -12,
-  HTMLLABELELEMENT_HTMLFOR = -13
+  HTMLLABELELEMENT_FORM = -1,
+  HTMLLABELELEMENT_ACCESSKEY = -2,
+  HTMLLABELELEMENT_HTMLFOR = -3
 };
 
 /***********************************************************************/

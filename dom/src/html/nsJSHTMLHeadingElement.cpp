@@ -39,7 +39,7 @@ NS_DEF_PTR(nsIDOMHTMLHeadingElement);
 // HTMLHeadingElement property ids
 //
 enum HTMLHeadingElement_slots {
-  HTMLHEADINGELEMENT_ALIGN = -11
+  HTMLHEADINGELEMENT_ALIGN = -1
 };
 
 /***********************************************************************/

@@ -39,7 +39,7 @@ NS_DEF_PTR(nsIDOMHTMLHeadElement);
 // HTMLHeadElement property ids
 //
 enum HTMLHeadElement_slots {
-  HTMLHEADELEMENT_PROFILE = -11
+  HTMLHEADELEMENT_PROFILE = -1
 };
 
 /***********************************************************************/

@@ -39,10 +39,10 @@ NS_DEF_PTR(nsIDOMHTMLTheadElement);
 // HTMLTheadElement property ids
 //
 enum HTMLTheadElement_slots {
-  HTMLTHEADELEMENT_ALIGN = -11,
-  HTMLTHEADELEMENT_CH = -12,
-  HTMLTHEADELEMENT_CHOFF = -13,
-  HTMLTHEADELEMENT_VALIGN = -14
+  HTMLTHEADELEMENT_ALIGN = -1,
+  HTMLTHEADELEMENT_CH = -2,
+  HTMLTHEADELEMENT_CHOFF = -3,
+  HTMLTHEADELEMENT_VALIGN = -4
 };
 
 /***********************************************************************/

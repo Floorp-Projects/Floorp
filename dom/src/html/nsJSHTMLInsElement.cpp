@@ -39,8 +39,8 @@ NS_DEF_PTR(nsIDOMHTMLInsElement);
 // HTMLInsElement property ids
 //
 enum HTMLInsElement_slots {
-  HTMLINSELEMENT_CITE = -11,
-  HTMLINSELEMENT_DATETIME = -12
+  HTMLINSELEMENT_CITE = -1,
+  HTMLINSELEMENT_DATETIME = -2
 };
 
 /***********************************************************************/

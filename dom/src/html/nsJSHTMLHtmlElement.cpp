@@ -39,7 +39,7 @@ NS_DEF_PTR(nsIDOMHTMLHtmlElement);
 // HTMLHtmlElement property ids
 //
 enum HTMLHtmlElement_slots {
-  HTMLHTMLELEMENT_VERSION = -11
+  HTMLHTMLELEMENT_VERSION = -1
 };
 
 /***********************************************************************/

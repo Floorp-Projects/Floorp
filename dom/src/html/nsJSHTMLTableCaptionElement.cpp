@@ -39,7 +39,7 @@ NS_DEF_PTR(nsIDOMHTMLTableCaptionElement);
 // HTMLTableCaptionElement property ids
 //
 enum HTMLTableCaptionElement_slots {
-  HTMLTABLECAPTIONELEMENT_ALIGN = -11
+  HTMLTABLECAPTIONELEMENT_ALIGN = -1
 };
 
 /***********************************************************************/

@@ -1,0 +1,49 @@
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
+
+DEPTH=..\..\..
+IGNORE_MANIFEST=1
+
+LIBRARY_NAME=jsdomcss_s 
+MODULE=raptor 
+REQUIRES=xpcom raptor js netlib
+DEFINES=-D_IMPL_NS_DOM -DWIN32_LEAN_AND_MEAN
+
+CPPSRCS =				\
+	nsJSCSSFontFaceRule.cpp		\
+	nsJSCSSMediaRule.cpp		\
+	nsJSCSSPageRule.cpp		\
+	nsJSCSSStyleDeclaration.cpp	\
+	nsJSCSSStyleRule.cpp		\
+	nsJSCSSStyleRuleCollection.cpp	\
+	nsJSCSSStyleRuleSimple.cpp	\
+	nsJSCSSStyleSheet.cpp		\
+	$(NULL)
+
+CPP_OBJS=						\
+	.\$(OBJDIR)\nsJSCSSFontFaceRule.obj		\
+	.\$(OBJDIR)\nsJSCSSMediaRule.obj		\
+	.\$(OBJDIR)\nsJSCSSPageRule.obj			\
+	.\$(OBJDIR)\nsJSCSSStyleDeclaration.obj		\
+	.\$(OBJDIR)\nsJSCSSStyleRule.obj		\
+	.\$(OBJDIR)\nsJSCSSStyleRuleCollection.obj	\
+	.\$(OBJDIR)\nsJSCSSStyleRuleSimple.obj		\
+	.\$(OBJDIR)\nsJSCSSStyleSheet.obj		\
+	$(NULL)
+
+LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor \
+	-I$(XPDIST)\public\dom -I$(XPDIST)\public\js -I$(PUBLIC)\netlib
+
+LCFLAGS = \
+        $(LCFLAGS) \
+        $(DEFINES) \
+        $(NULL)
+
+
+include <$(DEPTH)\config\rules.mak>
+
+libs:: $(LIBRARY)
+	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+
+clobber::
+	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib

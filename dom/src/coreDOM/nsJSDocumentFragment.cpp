@@ -42,7 +42,7 @@ NS_DEF_PTR(nsIDOMDocumentFragment);
 // DocumentFragment property ids
 //
 enum DocumentFragment_slots {
-  DOCUMENTFRAGMENT_MASTERDOC = -11
+  DOCUMENTFRAGMENT_MASTERDOC = -1
 };
 
 /***********************************************************************/

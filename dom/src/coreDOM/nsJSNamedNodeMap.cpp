@@ -42,7 +42,7 @@ NS_DEF_PTR(nsIDOMNode);
 // NamedNodeMap property ids
 //
 enum NamedNodeMap_slots {
-  NAMEDNODEMAP_LENGTH = -11
+  NAMEDNODEMAP_LENGTH = -1
 };
 
 /***********************************************************************/

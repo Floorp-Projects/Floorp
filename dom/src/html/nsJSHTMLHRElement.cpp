@@ -39,10 +39,10 @@ NS_DEF_PTR(nsIDOMHTMLHRElement);
 // HTMLHRElement property ids
 //
 enum HTMLHRElement_slots {
-  HTMLHRELEMENT_ALIGN = -11,
-  HTMLHRELEMENT_NOSHADE = -12,
-  HTMLHRELEMENT_SIZE = -13,
-  HTMLHRELEMENT_WIDTH = -14
+  HTMLHRELEMENT_ALIGN = -1,
+  HTMLHRELEMENT_NOSHADE = -2,
+  HTMLHRELEMENT_SIZE = -3,
+  HTMLHRELEMENT_WIDTH = -4
 };
 
 /***********************************************************************/

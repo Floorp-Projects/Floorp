@@ -4,4 +4,5 @@
      attribute wstring         lang;
      attribute wstring         dir;
      attribute wstring         className;
+     readonly attribute CSSStyleDeclaration style;
    };
