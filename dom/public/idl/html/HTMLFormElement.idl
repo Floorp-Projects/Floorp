@@ -3,7 +3,7 @@
   { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
 
    readonly attribute  HTMLCollection       elements;
-   readonly attribute  unsigned long        length;
+   readonly attribute  long                 length;
             attribute  DOMString            name;
             attribute  DOMString            acceptCharset;
             attribute  DOMString            action;

@@ -102,7 +102,7 @@ GetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLFORMELEMENT_LENGTH, PR_FALSE);
         if (NS_SUCCEEDED(rv)) {
-          PRUint32 prop;
+          PRInt32 prop;
           rv = a->GetLength(&prop);
           if (NS_SUCCEEDED(rv)) {
             *vp = INT_TO_JSVAL(prop);
@@ -206,6 +206,7 @@ GetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsIDOMElement* prop;
         nsIDOMNSHTMLFormElement* b;
         if (NS_OK == a->QueryInterface(kINSHTMLFormElementIID, (void **)&b)) {
+          nsresult result = NS_OK;
           rv = b->Item(JSVAL_TO_INT(id), &prop);
           if (NS_SUCCEEDED(rv)) {
             // get the js object

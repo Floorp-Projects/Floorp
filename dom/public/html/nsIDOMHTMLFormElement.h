@@ -41,7 +41,7 @@ public:
 
   NS_IMETHOD    GetElements(nsIDOMHTMLCollection** aElements)=0;
 
-  NS_IMETHOD    GetLength(PRUint32* aLength)=0;
+  NS_IMETHOD    GetLength(PRInt32* aLength)=0;
 
   NS_IMETHOD    GetName(nsString& aName)=0;
   NS_IMETHOD    SetName(const nsString& aName)=0;
@@ -69,7 +69,7 @@ public:
 
 #define NS_DECL_IDOMHTMLFORMELEMENT   \
   NS_IMETHOD    GetElements(nsIDOMHTMLCollection** aElements);  \
-  NS_IMETHOD    GetLength(PRUint32* aLength);  \
+  NS_IMETHOD    GetLength(PRInt32* aLength);  \
   NS_IMETHOD    GetName(nsString& aName);  \
   NS_IMETHOD    SetName(const nsString& aName);  \
   NS_IMETHOD    GetAcceptCharset(nsString& aAcceptCharset);  \
@@ -89,7 +89,7 @@ public:
 
 #define NS_FORWARD_IDOMHTMLFORMELEMENT(_to)  \
   NS_IMETHOD    GetElements(nsIDOMHTMLCollection** aElements) { return _to GetElements(aElements); } \
-  NS_IMETHOD    GetLength(PRUint32* aLength) { return _to GetLength(aLength); } \
+  NS_IMETHOD    GetLength(PRInt32* aLength) { return _to GetLength(aLength); } \
   NS_IMETHOD    GetName(nsString& aName) { return _to GetName(aName); } \
   NS_IMETHOD    SetName(const nsString& aName) { return _to SetName(aName); } \
   NS_IMETHOD    GetAcceptCharset(nsString& aAcceptCharset) { return _to GetAcceptCharset(aAcceptCharset); } \

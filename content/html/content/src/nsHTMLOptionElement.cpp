@@ -89,21 +89,7 @@ public:
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
 
   // nsIDOMHTMLOptionElement
-  NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm);
-  NS_IMETHOD GetDefaultSelected(PRBool* aDefaultSelected);
-  NS_IMETHOD SetDefaultSelected(PRBool aDefaultSelected);
-  NS_IMETHOD GetText(nsString& aText);
-  NS_IMETHOD SetText(const nsString& aText);
-  NS_IMETHOD GetIndex(PRInt32* aIndex);
-  NS_IMETHOD SetIndex(PRInt32 aIndex);
-  NS_IMETHOD GetDisabled(PRBool* aDisabled);
-  NS_IMETHOD SetDisabled(PRBool aDisabled);
-  NS_IMETHOD GetLabel(nsString& aLabel);
-  NS_IMETHOD SetLabel(const nsString& aLabel);
-  NS_IMETHOD GetSelected(PRBool* aSelected);
-  NS_IMETHOD SetSelected(PRBool aValue);
-  NS_IMETHOD GetValue(nsString& aValue);
-  NS_IMETHOD SetValue(const nsString& aValue);
+  NS_DECL_IDOMHTMLOPTIONELEMENT
 
   // nsIJSScriptObject
   NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
@@ -381,14 +367,6 @@ nsHTMLOptionElement::GetIndex(PRInt32* aIndex)
     NS_RELEASE(thisNode);
   }
   return res;
-}
-
-// This method does nothing for now as Index is supposed to be a read-only property
-// (See the DOM Errata)
-NS_IMETHODIMP
-nsHTMLOptionElement::SetIndex(PRInt32 aIndex)
-{
-  return NS_OK;
 }
 
 NS_IMETHODIMP
