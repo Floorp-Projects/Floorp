@@ -97,6 +97,8 @@ var gReceiptOptionChanged;
 var gAttachVCardOptionChanged;
 
 var gMailSession;
+var gAutoSaveInterval;
+var gAutoSaveTimeout;
 
 const kComposeAttachDirPrefName = "mail.compose.attach.dir";
 
@@ -227,6 +229,8 @@ var gComposeRecyclingListener = {
     var event = document.createEvent('Events');
     event.initEvent('compose-window-close', false, true);
     document.getElementById("msgcomposeWindow").dispatchEvent(event);
+    if (gAutoSaveTimeout)
+      clearTimeout(gAutoSaveTimeout);
   },
 
   onReopen: function(params) {
@@ -1376,6 +1380,12 @@ function ComposeStartup(recycled, aParams)
     if (document.getElementById("sidebar").getAttribute("src") == "")
       setTimeout(toggleAddressPicker, 0);   // do this on a delay so we don't hurt perf. on bringing up a new compose window
   }
+  gAutoSaveInterval = sPrefs.getBoolPref("mail.compose.autosave") 
+    ? sPrefs.getIntPref("mail.compose.autosaveinterval") * 60000
+    : 0;
+
+  if (gAutoSaveInterval)
+    gAutoSaveTimeout = setTimeout("AutoSave()", gAutoSaveInterval);
 }
 
 // The new, nice, simple way of getting notified when a new editor has been created
@@ -1454,7 +1464,6 @@ function ComposeLoad()
     // do nothing...
   }
 
-
   if (gLogComposePerformance)
     sMsgComposeService.TimeStamp("Start initializing the compose window (ComposeLoad)", false);
 
@@ -1514,6 +1523,8 @@ function ComposeUnload()
     RemoveDirectorySettingsObserver(gCurrentAutocompleteDirectory);
   if (gMsgCompose)
     gMsgCompose.UnregisterStateListener(stateListener);
+  if (gAutoSaveTimeout)
+    clearTimeout(gAutoSaveTimeout);
 }
 
 function SetDocumentCharacterSet(aCharset)
@@ -1762,6 +1773,7 @@ function GenericSendMessage( msgType )
         msgType == nsIMsgCompDeliverMode.Later ||
         msgType == nsIMsgCompDeliverMode.Save || 
         msgType == nsIMsgCompDeliverMode.SaveAsDraft || 
+        msgType == nsIMsgCompDeliverMode.AutoSaveAsDraft || 
         msgType == nsIMsgCompDeliverMode.SaveAsTemplate) 
       {
         var fallbackCharset = new Object;
@@ -3262,3 +3274,12 @@ function loadHTMLMsgPrefs()
     }
   } catch (e) {}
 }
+
+function AutoSave()
+{
+  if (gMsgCompose.editor && (gContentChanged || gMsgCompose.bodyModified))
+    GenericSendMessage(nsIMsgCompDeliverMode.AutoSaveAsDraft);
+
+  gAutoSaveTimeout = setTimeout("AutoSave()", gAutoSaveInterval);
+}
+

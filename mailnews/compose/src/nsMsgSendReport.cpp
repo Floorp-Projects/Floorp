@@ -401,6 +401,7 @@ NS_IMETHODIMP nsMsgSendReport::DisplayReport(nsIPrompt *prompt, PRBool showError
         preStrId = NS_MSG_UNABLE_TO_SEND_LATER;
         break;
 
+      case nsIMsgCompDeliverMode::AutoSaveAsDraft:
       case nsIMsgCompDeliverMode::SaveAsDraft:
         titleID = NS_MSG_SAVE_DRAFT_TITLE;
         preStrId = NS_MSG_UNABLE_TO_SAVE_DRAFT;

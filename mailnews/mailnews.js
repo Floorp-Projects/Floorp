@@ -71,6 +71,9 @@ pref("mailnews.headers.showUserAgent",       false);
 // is displayed in the message pane or not...
 pref("mailnews.headers.showOrganization",    false);
 
+// mailnews tcp read+write timeout in seconds.
+pref("mailnews.tcptimeout", 60);
+
 // Mail server preferences, pop by default
 pref("mail.server_type",	0); 	// 0 pop, 1 imap,
 					// (Unix only:)
@@ -152,6 +155,8 @@ pref("mail.html_compose",                   true);
 // this will show up in the address picker in the compose window
 // examples: "X-Face" or "Approved,X-No-Archive"
 pref("mail.compose.other.header",	    "");
+pref("mail.compose.autosave", false);
+pref("mail.compose.autosaveinterval", 5); // in minutes
 pref("mail.fcc_folder",                     "");
 pref("mail.encrypt_outgoing_mail",          false);
 pref("mail.crypto_sign_outgoing_mail",      false);

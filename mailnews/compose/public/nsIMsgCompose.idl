@@ -59,7 +59,7 @@ interface nsIMsgCompSaveType {
 
 typedef long MSG_DeliverMode;
 
-[scriptable, uuid(f338eba4-7530-11d3-8833-006008948010)]
+[scriptable, uuid(a9f27dd7-8f89-4de3-8fbf-41b789c16ee5)]
 interface nsIMsgCompDeliverMode {
     const long Now = 0;
     const long Later = 1;
@@ -68,6 +68,7 @@ interface nsIMsgCompDeliverMode {
     const long SaveAsDraft = 4;
     const long SaveAsTemplate = 5;
     const long SendUnsent = 6;
+    const long AutoSaveAsDraft = 7;
 };
 
 [scriptable, uuid(f38ea280-e090-11d3-a449-e3153319347c)]

@@ -13,7 +13,8 @@
   <script type="application/x-javascript">
     <![CDATA[
       var _elementIDs = ["forwardMessageMode", "spellCheckBeforeSend", "strictlyMime", 
-                         "wrapLength", "mailWarnOnSendAccelKey", 
+                         "wrapLength", "mailWarnOnSendAccelKey", "autoSave", 
+                         "autoSaveInterval",
                          // auto complete prefs 
                          "addressingAutocomplete", "autocompleteLDAP",
                          "directoriesList"];
@@ -78,6 +79,12 @@
     <checkbox id="mailWarnOnSendAccelKey" label="&warnOnSendAccelKey.label;"
               prefstring="mail.warn_on_send_accel_key"
               accesskey="&warnOnSendAccelKey.accesskey;"/>
+
+      <hbox align="center" pack="start">
+        <checkbox id="autoSave" label="&autoSave.label;" prefstring="mail.compose.autosave"/>
+        <textbox  id="autoSaveInterval" size="2" preftype="int" prefstring="mail.compose.autosaveinterval"/>
+        <label value="&autoSaveEnd.label;"/>
+      </hbox>
     
     <hbox align="center">
       <label value="&wrapOutMsg.label;" accesskey="&wrapOutMsg.accesskey;" control="wrapLength"/>

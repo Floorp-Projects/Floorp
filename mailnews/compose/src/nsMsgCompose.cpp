@@ -879,6 +879,13 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *ide
       if (!composeSendListener)
         return NS_ERROR_OUT_OF_MEMORY;
       
+      // right now, AutoSaveAsDraft is identical to SaveAsDraft as
+      // far as the msg send code is concerned. This way, we don't have
+      // to add an nsMsgDeliverMode for autosaveasdraft, and add cases for
+      // it in the msg send code.
+      if (deliverMode == nsIMsgCompDeliverMode::AutoSaveAsDraft)
+        deliverMode = nsIMsgCompDeliverMode::SaveAsDraft;
+
       composeSendListener->SetMsgCompose(this);
       composeSendListener->SetDeliverMode(deliverMode);
 
@@ -1003,25 +1010,29 @@ NS_IMETHODIMP nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity 
   if (progress)
   {
     mProgress = progress;
-    nsAutoString msgSubject;
-    m_compFields->GetSubject(msgSubject);
 
-    PRBool showProgress = PR_FALSE;
-    nsCOMPtr<nsIPrefBranch> prefBranch (do_GetService(NS_PREFSERVICE_CONTRACTID));
-    if (prefBranch)
+    if (deliverMode != nsIMsgCompDeliverMode::AutoSaveAsDraft)
     {
-      prefBranch->GetBoolPref("mailnews.show_send_progress", &showProgress);
-      if (showProgress)
-      {
-        nsCOMPtr<nsIMsgComposeProgressParams> params = do_CreateInstance(NS_MSGCOMPOSEPROGRESSPARAMS_CONTRACTID, &rv);
-        if (NS_FAILED(rv) || !params)
-          return NS_ERROR_FAILURE;
+      nsAutoString msgSubject;
+      m_compFields->GetSubject(msgSubject);
 
-        params->SetSubject(msgSubject.get());
-        params->SetDeliveryMode(deliverMode);
+      PRBool showProgress = PR_FALSE;
+      nsCOMPtr<nsIPrefBranch> prefBranch (do_GetService(NS_PREFSERVICE_CONTRACTID));
+      if (prefBranch)
+      {
+        prefBranch->GetBoolPref("mailnews.show_send_progress", &showProgress);
+        if (showProgress)
+        {
+          nsCOMPtr<nsIMsgComposeProgressParams> params = do_CreateInstance(NS_MSGCOMPOSEPROGRESSPARAMS_CONTRACTID, &rv);
+          if (NS_FAILED(rv) || !params)
+            return NS_ERROR_FAILURE;
+
+          params->SetSubject(msgSubject.get());
+          params->SetDeliveryMode(deliverMode);
         
-        mProgress->OpenProgressDialog(m_window, aMsgWindow, "chrome://messenger/content/messengercompose/sendProgress.xul", params);
-        mProgress->GetPrompter(getter_AddRefs(prompt));
+          mProgress->OpenProgressDialog(m_window, aMsgWindow, "chrome://messenger/content/messengercompose/sendProgress.xul", params);
+          mProgress->GetPrompter(getter_AddRefs(prompt));
+        }
       }
     }
 
@@ -1099,6 +1110,7 @@ NS_IMETHODIMP nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity 
         case nsIMsgCompDeliverMode::Later:
           nsMsgDisplayMessageByID(prompt, NS_MSG_UNABLE_TO_SEND_LATER);
           break;
+        case nsIMsgCompDeliverMode::AutoSaveAsDraft:
         case nsIMsgCompDeliverMode::SaveAsDraft:
           nsMsgDisplayMessageByID(prompt, NS_MSG_UNABLE_TO_SAVE_DRAFT);
           break;
