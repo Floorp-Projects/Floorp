@@ -91,6 +91,10 @@ BookmarksToolbar.prototype = {
 
     editCell: function (aSelectedItem, aXXXLameAssIndex)
     {
+      goDoCommand("cmd_properties");
+      return; // Disable Inline Edit for now. See bug 77125 for why this is being disabled
+              // on the personal toolbar for the moment. 
+
       if (aSelectedItem.getAttribute("editable") != "true")
         return;
       var property = "http://home.netscape.com/NC-rdf#Name";
@@ -114,6 +118,41 @@ BookmarksToolbar.prototype = {
     // to create new bookmarks/folders.
     createBookmarkItem: function (aMode, aSelectedItem)
     {
+      /////////////////////////////////////////////////////////////////////////
+      // HACK HACK HACK HACK HACK         
+      // Disable Inline-Edit for now and just use a dialog. 
+      
+      // XXX - most of this is just copy-pasted from the other two folder
+      //       creation functions. Yes it's ugly, but it'll do the trick for 
+      //       now as this is in no way intended to be a long-term solution.
+
+      const kPromptSvcContractID = "@mozilla.org/embedcomp/prompt-service;1";
+      const kPromptSvcIID = Components.interfaces.nsIPromptService;
+      const kPromptSvc = Components.classes[kPromptSvcContractID].getService(kPromptSvcIID);
+      
+      var defaultValue  = gBookmarksShell.getLocaleString("ile_newfolder");
+      var dialogTitle   = gBookmarksShell.getLocaleString("newfolder_dialog_title");
+      var dialogMsg     = gBookmarksShell.getLocaleString("newfolder_dialog_msg");
+      var stringValue   = { value: defaultValue };
+      if (kPromptSvc.prompt(window, dialogTitle, dialogMsg, stringValue, null, { value: 0 })) {
+        var relativeNode = aSelectedItem || gBookmarksShell.element;
+        var parentNode = relativeNode ? gBookmarksShell.findRDFNode(relativeNode, false) : gBookmarksShell.element;
+
+        var args = [{ property: NC_NS + "parent",
+                      resource: NODE_ID(parentNode) },
+                    { property: NC_NS + "Name",
+                      literal:  stringValue.value }];
+        
+        const kBMDS = gBookmarksShell.RDF.GetDataSource("rdf:bookmarks");
+        var relId = relativeNode ? NODE_ID(relativeNode) : "NC:PersonalToolbarFolder";
+        BookmarksUtils.doBookmarksCommand(relId, NC_NS_CMD + "newfolder", args);
+      }
+      
+      return; 
+      
+      // HACK HACK HACK HACK HACK         
+      /////////////////////////////////////////////////////////////////////////
+      
       const kXULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
       var dummyButton = document.createElementNS(kXULNS, "menubutton");
       dummyButton = gBookmarksShell.createBookmarkFolderDecorations(dummyButton);
