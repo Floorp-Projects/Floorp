@@ -267,6 +267,46 @@ ForkAndExec(
 
 #ifdef AIX
     process->md.pid = (*pr_wp.forkptr)();
+#elif defined(NTO)
+    /*
+     * fork() & exec() does not work in a multithreaded process.
+     * Use spawn() instead.
+     */
+    {
+        int fd_map[3] = { 0, 1, 2 };
+
+        if (attr) {
+            if (attr->stdinFd && attr->stdinFd->secret->md.osfd != 0) {
+                fd_map[0] = dup(attr->stdinFd->secret->md.osfd);
+                flags = fcntl(fd_map[0], F_GETFL, 0);
+                if (flags & O_NONBLOCK)
+                    fcntl(fd_map[0], F_SETFL, flags & ~O_NONBLOCK);
+            }
+            if (attr->stdoutFd && attr->stdoutFd->secret->md.osfd != 1) {
+                fd_map[1] = dup(attr->stdoutFd->secret->md.osfd);
+                flags = fcntl(fd_map[1], F_GETFL, 0);
+                if (flags & O_NONBLOCK)
+                    fcntl(fd_map[1], F_SETFL, flags & ~O_NONBLOCK);
+            }
+            if (attr->stderrFd && attr->stderrFd->secret->md.osfd != 2) {
+                fd_map[2] = dup(attr->stderrFd->secret->md.osfd);
+                flags = fcntl(fd_map[2], F_GETFL, 0);
+                if (flags & O_NONBLOCK)
+                    fcntl(fd_map[2], F_SETFL, flags & ~O_NONBLOCK);
+            }
+
+            PR_ASSERT(attr->currentDirectory == NULL);  /* not implemented */
+        }
+
+        process->md.pid = spawn(path, 3, fd_map, NULL, argv, childEnvp);
+
+        if (fd_map[0] != 0)
+            close(fd_map[0]);
+        if (fd_map[1] != 1)
+            close(fd_map[1]);
+        if (fd_map[2] != 2)
+            close(fd_map[2]);
+    }
 #else
     process->md.pid = fork();
 #endif
@@ -285,6 +325,7 @@ ForkAndExec(
          * the parent process's standard I/O data structures.
          */
 
+#if !defined(NTO)
 #ifdef VMS
        /* OpenVMS has already handled all this above */
 #else
@@ -367,6 +408,7 @@ ForkAndExec(
 #else
         _exit(1);
 #endif /* VMS */
+#endif /* !NTO */
     }
 
     if (newEnvp) {
