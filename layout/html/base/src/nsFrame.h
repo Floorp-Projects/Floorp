@@ -106,6 +106,8 @@ public:
   // Overloaded new operator. Initializes the memory to 0
   void* operator new(size_t size);
 
+  void operator delete(void* ptr, size_t size);
+
   // nsISupports
   NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
