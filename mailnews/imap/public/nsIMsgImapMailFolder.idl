@@ -50,6 +50,7 @@ interface nsIMsgImapFolderProps : nsISupports {
     void setFolderType(in wstring folderType);
     void setFolderTypeDescription(in wstring folderTypeDescription);
     void setFolderPermissions(in wstring permissions);
+    void serverDoesntSupportACL();
 };
 
 

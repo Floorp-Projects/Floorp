@@ -971,7 +971,8 @@ void nsImapServerResponseParser::numeric_mailbox_data()
 		}
 		else if (!PL_strcasecmp(fNextToken, "EXPUNGE"))
 		{
-			fFlagState->ExpungeByIndex((PRUint32) tokenNumber);
+                        if (!fServerConnection.GetIgnoreExpunges())
+			  fFlagState->ExpungeByIndex((PRUint32) tokenNumber);
 			skip_to_CRLF();
 		}
 		else

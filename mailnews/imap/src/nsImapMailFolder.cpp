@@ -4787,6 +4787,28 @@ nsImapMailFolder::FillInFolderProps(nsIMsgImapFolderProps *aFolderProps)
   nsresult rv = IMAPGetStringBundle(getter_AddRefs(bundle));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // get the host session list and see if this server supports ACL.
+  // If not, just set the folder description to a string that says
+  // the server doesn't support sharing, and return.
+  PRUint32 capability = kCapabilityUndefined;
+
+  nsCOMPtr<nsIImapHostSessionList> hostSession = do_GetService(kCImapHostSessionList, &rv);
+  // if for some bizarre reason this fails, we'll still fall through to the normal sharing code
+  if (NS_SUCCEEDED(rv) && hostSession)
+  {
+    nsXPIDLCString serverKey;
+    GetServerKey(getter_Copies(serverKey));
+    hostSession->GetCapabilityForHost(serverKey, capability);
+
+    if (! (capability & kACLCapability))
+    {
+      rv = IMAPGetStringByID(IMAP_SERVER_DOESNT_SUPPORT_ACL, getter_Copies(folderTypeDesc));
+      if (NS_SUCCEEDED(rv))
+        aFolderProps->SetFolderTypeDescription(folderTypeDesc);
+      aFolderProps->ServerDoesntSupportACL();
+      return NS_OK;
+    }
+  }
   if (mFlags & MSG_FOLDER_FLAG_IMAP_PUBLIC)
   {
     folderTypeStringID = IMAP_PUBLIC_FOLDER_TYPE_NAME;
