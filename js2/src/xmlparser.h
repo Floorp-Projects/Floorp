@@ -13,6 +13,45 @@ namespace JavaScript {
 typedef enum {Tag, EmptyTag, EndTag, CommentTag, DocTypeTag, ProcessInstructionTag } TagFlag;
 
 
+class XMLLexer 
+{
+public:
+    XMLLexer(const char *filename);
+    ~XMLLexer() { if (base) delete base; }
+
+    char get()                  { if (p != end) return *p++; else return '\0'; }
+    void skip(uint32 n)         { p += n; ASSERT(p <= end); }
+    char peek()                 { return *p; }
+    void unget(uint32 n = 1)    { p -=n; ASSERT(p >= base); }
+    bool getEof()               { return (p == end); }
+    bool hasAvailable(uint32 n) { return (end - p) >= n; }
+    bool match(const char *s, uint32 n)   { return hasAvailable(n) && (strstr(p, s) == p); }
+    bool match(const char *s)             { return match(s, strlen(s)); }
+
+    uint32 getPos()             { return p - base; }
+
+    void beginRecording(String &s);
+    String &endRecording();
+    void recordChar(char c);
+
+    void beginLine()            { }
+
+    char *base;
+    char *p;
+    char *end;
+
+    char *recordPos;
+    char *recordBase;
+    String *recordString; 
+
+    bool isAlpha(char c)        { return JavaScript::isAlpha(CharInfo(c)); }
+    bool isAlphanumeric(char c) { return JavaScript::isAlphanumeric(CharInfo(c)); }
+    bool isSpace(char c)        { return JavaScript::isSpace(CharInfo(c)); }
+    bool isLineBreak(char c)    { return JavaScript::isLineBreak(CharInfo(c)); }
+
+};
+
+
 class XMLNode;
 typedef std::vector<XMLNode *> XMLNodeList;
 typedef std::multimap<String, String, std::less<String> > AttributeList;
@@ -111,7 +150,7 @@ public:
 	void syntaxError(const char *message, uint backUp = 1);
     char16 doEscape();
 
-    XMLParser(const String &source, const char *fileName) : mReader(source, widenCString(fileName)) { }
+    XMLParser(const char *fileName) : mReader(fileName) { }
 
 
     void parseName(String &id);
@@ -122,7 +161,7 @@ public:
     XMLNode *parseDocument();
 
 
-    Reader mReader;
+    XMLLexer mReader;
 
 };
 

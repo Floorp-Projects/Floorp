@@ -2398,14 +2398,7 @@ Formatter& operator<<(Formatter &f, string &s)
 
 void ICodeGenerator::readICode(const char *fileName)
 {
-    String buffer;
-    int ch;
-
-    FILE *f = fopen(fileName, "r");
-    while ((ch = getc(f)) != EOF) buffer += static_cast<char>(ch);
-    fclose(f);
-
-    XMLParser xp(buffer, fileName);
+    XMLParser xp(fileName);
     XMLNode *top = xp.parseDocument();
     stdOut << *top;
 

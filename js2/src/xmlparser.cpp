@@ -19,24 +19,73 @@ bool XMLTag::getValue(const String &name, String &value)
     }
 }
 
+/* ---------------------------------------------------------------------- */
+
+
+XMLLexer::XMLLexer(const char *filename)
+{
+    FILE *f = fopen(filename, "r");
+    fseek(f, 0, SEEK_END);
+    uint32 length = ftell(f);
+    base = new char[length + 1];
+    fseek(f, 0, SEEK_SET);
+    fread(base, 1, length, f);
+    fclose(f);
+    base[length] = '\0';
+    p = base;
+    end = base + length;
+}
+
+void XMLLexer::beginRecording(String &s)
+{
+	recordString = &s;
+	recordBase = p;
+	recordPos = p;
+}
+
+void XMLLexer::recordChar(char c)
+{
+	ASSERT(recordString);
+	if (recordPos) {
+		if (recordPos != end && *recordPos == c) {
+			recordPos++;
+			return;
+		} else {
+			insertChars(*recordString, 0, recordBase, recordPos - recordBase);
+			recordPos = NULL;
+		}
+	}
+	*recordString += c;
+}
+
+String &XMLLexer::endRecording()
+{
+	String *rs = recordString;
+	ASSERT(rs);
+	if (recordPos)
+		insertChars(*rs, 0, recordBase, recordPos - recordBase);
+	recordString = NULL;
+	return *rs;
+}
+
+/* ---------------------------------------------------------------------- */
+
 
 void XMLParser::syntaxError(const char *msg, uint backUp)
 {
 	mReader.unget(backUp);
-    mReader.error(Exception::syntaxError, widenCString(msg), mReader.getPos());
+    throw Exception(Exception::syntaxError, widenCString(msg));
 }
 
 void XMLParser::parseName(String &id)
 {
-    char16 ch = mReader.peek();
-	CharInfo chi(ch);
-    if (isAlpha(chi)) {
+    char ch = mReader.peek();
+    if (mReader.isAlpha(ch)) {
         mReader.beginRecording(id);
         mReader.recordChar(mReader.get());
         while (true) {
             ch = mReader.peek();
-		    CharInfo chi(ch);
-            if (isAlphanumeric(chi))
+            if (mReader.isAlphanumeric(ch))
 		        mReader.recordChar(mReader.get());
             else
                 break;        
@@ -49,26 +98,23 @@ void XMLParser::parseName(String &id)
 
 void XMLParser::parseWhiteSpace()
 {
-    char16 ch = mReader.peek();
-    CharInfo chi(ch);
-    while (isSpace(chi)) {
-        ch = mReader.get();
-		if (isLineBreak(ch))
+    while (mReader.isSpace(mReader.peek())) {
+        char ch = mReader.get();
+		if (mReader.isLineBreak(ch))
 			mReader.beginLine();
-        chi = CharInfo(mReader.peek());
     }
 }
 
 void XMLParser::parseAttrValue(String &val)
 {
-    char16 ch = mReader.get();
+    char ch = mReader.get();
     if (ch != '\"')
         syntaxError("'\"' expected");
     else {
         mReader.beginRecording(val);
         while (true) {
             ch = mReader.get();
-            if (mReader.getEof(ch))
+            if (mReader.getEof())
                 syntaxError("Unterminated value");
             if (ch == '\"')
                 break;
@@ -80,52 +126,40 @@ void XMLParser::parseAttrValue(String &val)
 
 XMLTag *XMLParser::parseTag()
 {
-    char16 ch;
     XMLTag *tag = new XMLTag();
-    ch = mReader.peek();
+    char ch = mReader.peek();
     if (ch == '/') {
         tag->setEndTag();
-        mReader.get();
+        mReader.skip(1);
     }
     else {
         if (ch == '!') {
-            mReader.get();
-            if (mReader.peek() != '-')
-                syntaxError("badly formed tag");
-            mReader.get();
-            if (mReader.peek() != '-')
-                syntaxError("badly formed tag");
-            mReader.get();
-            while (true) {
-                ch = mReader.get();
-                if (mReader.getEof(ch))
-                    syntaxError("Unterminated comment tag");
-                if (ch == '-') {
+            mReader.skip(1);
+            if (mReader.match("--", 2)) {
+                mReader.skip(2);
+                tag->setComment();
+                while (true) {
                     ch = mReader.get();
-                    if (mReader.getEof(ch))
+                    if (mReader.getEof())
                         syntaxError("Unterminated comment tag");
-                    if (ch != '-')
-                        mReader.unget();
-                    else {
-                        ch = mReader.get();
-                        if (mReader.getEof(ch))
-                            syntaxError("Unterminated comment tag");
-                        if (ch != '>')
+                    if (ch == '-') {
+                        if (mReader.match("->", 2)) {
+                            mReader.skip(2);
+                            return tag;
+                        }
+                        if (mReader.peek() == '-')
                             syntaxError("encountered '--' in comment");
-                        break;
-                    }                
+                    }
+                    else
+		                if (mReader.isLineBreak(ch))
+			                mReader.beginLine();
                 }
-		        if (isLineBreak(ch))
-			        mReader.beginLine();
             }
-            tag->setComment();
-            return tag;
         }
     }
     parseName(tag->name());
     parseWhiteSpace();
-    CharInfo chi(mReader.peek());
-    while (isAlpha(chi)) {
+    while (isAlpha(mReader.peek())) {
         String attrValue;
         String attrName;
         parseName(attrName);
@@ -135,10 +169,9 @@ XMLTag *XMLParser::parseTag()
         }
         tag->addAttribute(attrName, attrValue);
         parseWhiteSpace();
-        chi = CharInfo(mReader.peek());
     }
     ch = mReader.get(); 
-    if (mReader.getEof(ch))
+    if (mReader.getEof())
         syntaxError("Unterminated tag");
     if (ch == '/') {
         tag->setEmpty();
@@ -152,9 +185,9 @@ XMLTag *XMLParser::parseTag()
 void XMLParser::parseTagBody(XMLNode *parent, XMLTag *startTag)
 {
     while (true) {
-        char16 ch = mReader.get();
+        char ch = mReader.get();
         while (ch != '<') {
-            if (mReader.getEof(ch))
+            if (mReader.getEof())
                 syntaxError("Unterminated tag body");
             parent->addToBody(ch);
             ch = mReader.get();
@@ -174,7 +207,7 @@ void XMLParser::parseTagBody(XMLNode *parent, XMLTag *startTag)
 XMLNode *XMLParser::parseDocument()
 {
     XMLNode *top = new XMLNode(NULL, new XMLTag(widenCString("TOP")));
-    char16 ch = mReader.get();
+    char ch = mReader.get();
     while (ch == '<') {
         XMLTag *tag = parseTag();
         XMLNode *n = new XMLNode(top, tag);
@@ -183,7 +216,7 @@ XMLNode *XMLParser::parseDocument()
         }
         parseWhiteSpace();
         ch = mReader.get();
-        if (mReader.getEof(ch))
+        if (mReader.getEof())
             break;
     }
     return top;
