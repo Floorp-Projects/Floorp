@@ -8,7 +8,9 @@
 <!ENTITY languages.customize.engOrder.label             "1">
 <!ENTITY languages.customize.engOption.label            "English">
 <!ENTITY languages.customize.addButton.label            "Add...">
+<!ENTITY languages.customize.addButton.accesskey        "A">
 <!ENTITY languages.customize.deleteButton.label         "Remove">
+<!ENTITY languages.customize.deleteButton.accesskey     "R">
 <!ENTITY languages.customize.title.label			    "Customize Languages">
 <!ENTITY languages.customize.add.title.label		    "Add Languages">
 <!ENTITY languages.customize.left.header			    "Character Coding">
@@ -20,8 +22,10 @@
 <!ENTITY languages.customize.additional.label           "Available Charactersets">
 <!ENTITY languages.customize.add.label                  "Add">
 <!ENTITY languages.customize.others.label               "Others:">
+<!ENTITY languages.customize.others.accesskey           "O">
 <!ENTITY languages.customize.Charset.grouplabel         "Character Coding">
 <!ENTITY languages.customize.DefaultCharset.label       "Default Character Coding:">
+<!ENTITY languages.customize.DefaultCharset.accesskey   "C">
 <!-- LOCALIZATION NOTE  Charset Coding Preferences Dialog: Do NOT localize the terms "en-bz, ar-jo"  -->
 <!ENTITY languages.customize.others.examples            "e.g.: en-bz, ar-jo">
 <!ENTITY languages.customize.cancel.label		            "Cancel">
