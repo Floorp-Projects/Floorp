@@ -334,8 +334,7 @@ class Parser {
      * Whether the "catch (e: e instanceof Exception) { ... }" syntax
      * is implemented.
      */
-    private static final boolean implementsCatchCond = false;
-    
+   
     private Object statementHelper(TokenStream ts, Source source)
         throws IOException, JavaScriptException
     {
@@ -556,6 +555,7 @@ class Parser {
 
             catchblocks = nf.createLeaf(TokenStream.BLOCK);
 
+            boolean sawDefaultCatch = false;
             int peek = ts.peekToken();
             if (peek == ts.CATCH) {
                 while (ts.matchToken(ts.CATCH)) {
@@ -568,9 +568,14 @@ class Parser {
                     source.addString(ts.NAME, varName);
                     
                     Object catchCond = null;
-                    if (implementsCatchCond && ts.matchToken(ts.COLON)) {
-                        source.append((char)ts.COLON);
+                    if (ts.matchToken(ts.IF)) {
+                        source.append((char)ts.IF);
                         catchCond = expr(ts, source, false);
+                    } else {
+                        if (sawDefaultCatch) {
+                            reportError(ts, "msg.dup.catch");
+                        }
+                        sawDefaultCatch = true;
                     }
 
                     mustMatchToken(ts, ts.RP, "msg.bad.catchcond");
