@@ -967,7 +967,7 @@ nsImageWin :: PatBltTile(nsIRenderingContext &aContext, nsDrawingSurface aSurfac
 
 
   if (PR_TRUE != gIsWinNT) {
-    if((mBHead->biWidth<8)&&(mBHead->biHeight<8)){
+    if((mBHead->biWidth<8)||(mBHead->biHeight<8)){
       return PR_FALSE;    // this does not seem to work on win 98
     }
   }
