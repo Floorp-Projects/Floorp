@@ -90,6 +90,7 @@ class nsXPInstallManager : public nsIXPIListener,
         void        LoadDialogWithNames(nsIDialogParamBlock* ioParamBlock);
         PRBool      ConfirmInstall(nsIDialogParamBlock* ioParamBlock);
         PRBool      ConfirmChromeInstall();
+        PRBool      TimeToUpdate(PRTime now);
         
         nsXPITriggerInfo*   mTriggers;
         nsXPITriggerItem*   mItem;
