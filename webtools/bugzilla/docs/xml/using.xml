@@ -328,9 +328,9 @@ system against which all others are measured.
 	for your perusal.
       </para>
       <para>
-	At this point, please visit the main Bugzilla site,
-	<ulink url="http://bugzilla.mozilla.org/query.cgi">
-	bugzilla.mozilla.org</ulink>, to see a more fleshed-out query page.
+	At this point, let's visit the query page.
+	<ulink url="http://landfill.tequilarista.org/bugzilla-tip/query.cgi">
+	landfill.tequilarista.org/bugzilla-tip/query.cgi</ulink>
       </para>
       <para>
 	The first thing you need to notice about the Bugzilla Query
@@ -744,20 +744,20 @@ system against which all others are measured.
 	</para>
 	<para>
 	  There is a <ulink
-			    url="http://bugzilla.mozilla.org/help.html">CLUE</ulink> on the Query page that will teach you more how to use the form.
+			    url="http://landfill.tequilarista.org/bugzilla-tip/help.html">CLUE</ulink> on the Query page that will teach you more how to use the form.
 	</para>
 	<para>
 	  If you click the hyperlink on the <ulink
-						   url="http://bugzilla.mozilla.org/describecomponents.cgi">Component</ulink> box of the Query page, you will be presented a form that will describe what all the components are.
+						   url="http://landfill.tequilarista.org/bugzilla-tip/describecomponents.cgi">Component</ulink> box of the Query page, you will be presented a form that will describe what all the components are.
 	</para>
 	<para>
 	  Possibly the most powerful feature of the Query page is the
 	  <ulink
-		 url="http://bugzilla.mozilla.org/booleanchart.html">Boolean Chart</ulink> section. It's a bit confusing to use the first time, but can provide unparalleled flexibility in your queries, allowing you to build extremely powerful requests.
+		 url="http://landfill.tequilarista.org/bugzilla-tip/booleanchart.html">Boolean Chart</ulink> section. It's a bit confusing to use the first time, but can provide unparalleled flexibility in your queries, allowing you to build extremely powerful requests.
 	</para>
 	<para>
 	  Finally, you can build some nifty  <ulink
-						    url="http://bugzilla.mozilla.org/reports.cgi">Reports</ulink> using the "Bug Reports" link near the bottom of the query page, and also available via the "Reports" link at the footer of each page.
+						    url="http://landfill.tequilarista.org/bugzilla-tip/reports.cgi">Reports</ulink> using the "Bug Reports" link near the bottom of the query page, and also available via the "Reports" link at the footer of each page.
 	</para>
       </section>
     </section>
