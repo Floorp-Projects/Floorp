@@ -418,3 +418,8 @@ function searchHistory(aInput)
      gHistoryTree.setAttribute("ref",
                                "find:datasource=history&match=Name&method=contains&text=" + escape(aInput));
  }
+
+function openAboutDialog()
+{
+  window.openDialog("chrome://browser/content/aboutDialog.xul", "About", "modal,centerscreen,chrome,resizable=no");
+}

@@ -22,7 +22,7 @@
  
   Contributor(s): 
     Ben Goodger <ben@netscape.com>
-    Blake Ross <blakeross@telocity.com>
+    Blake Ross <blaker@netscape.com>
     Dean Tessman <dean_tessman@hotmail.com>
     Pierre Chanial <chanial@noos.fr>
 
@@ -38,6 +38,10 @@
 %utilDTD;
 <!ENTITY % bmDTD SYSTEM "chrome://browser/locale/bookmarks/bookmarks.dtd">
 %bmDTD;
+<!ENTITY % globalRegionDTD SYSTEM "chrome://global-region/locale/region.dtd">
+%globalRegionDTD;
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+%brandDTD;
 ]>
 
 <window id="bookmark-window" windowtype="bookmarks:manager"
@@ -237,7 +241,18 @@
                     accesskey="&menuitem.personaltoolbarfolder.accesskey;"/>
         </menupopup>
       </menu>
-      <menu id="menu_Help"/>
+      <menu label="&helpMenu.label;"
+            accesskey="&helpMenu.accesskey;">
+        <menupopup>
+          <menuitem accesskey="&releaseCmd.accesskey;"
+                    label="&releaseCmd.label;"
+                    oncommand="openTopWin('&releaseURL;');"/>
+          <menuseparator/>
+          <menuitem accesskey="&aboutCmd.accesskey;"
+                    label="&aboutCmd.label;"
+                    oncommand="openAboutDialog();"/>
+        </menupopup>
+      </menu>
     </menubar>
 
     <toolbar id="command-toolbar" tbalign="stretch" grippytooltiptext="&bookmarkToolbar.tooltip;">
