@@ -641,7 +641,7 @@ RDFXULBuilderImpl::CreateContents(nsIContent* aElement)
         }
 
         nsCOMPtr<nsIRDFResource> rdfResource;
-        //xulElement->GetResource(rdfResource);
+        xulElement->GetResource(getter_AddRefs(rdfResource));
         if (!rdfResource) {
             NS_ERROR("The fragment root doesn't have an RDF resource behind it.");
             return rv;

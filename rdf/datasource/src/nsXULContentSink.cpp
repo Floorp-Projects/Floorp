@@ -849,46 +849,42 @@ XULContentSinkImpl::Init(nsIDocument* aDocument, nsIWebShell* aWebShell, nsIRDFD
         return NS_ERROR_NULL_POINTER;
     
     nsCOMPtr<nsIXULChildDocument> childDocument;
-    childDocument = do_QueryInterface(mDocument);
-    if (childDocument != nsnull) {
-        childDocument->GetFragmentRoot(&mFragmentRoot);
-        NS_PRECONDITION(mFragmentRoot, "must have a fragment root to place the fragment properly");
-        if (mFragmentRoot) {
-            // We're totally a subdocument. Find the root document's
-            // data source and make assertions there.
-            
-            // First of all, find the root document.
-            nsIDocument* rootDocument; 
-            nsIDocument* currDocument; 
-            currDocument = aDocument; 
-            NS_ADDREF(currDocument); 
-            while (currDocument != nsnull) { 
-                NS_IF_RELEASE(rootDocument); 
-                rootDocument = currDocument; 
-                currDocument = rootDocument->GetParentDocument(); 
-            } 
+    childDocument = do_QueryInterface(aDocument);
+    childDocument->GetFragmentRoot(&mFragmentRoot);
+    if (mFragmentRoot) {
+        // We're totally a subdocument. Find the root document's
+        // data source and make assertions there.
+      
+        // First of all, find the root document.
+        nsIDocument* rootDocument = nsnull; 
+        nsIDocument* currDocument; 
+        currDocument = aDocument; 
+        NS_ADDREF(currDocument); 
+        while (currDocument != nsnull) { 
+            NS_IF_RELEASE(rootDocument); 
+            rootDocument = currDocument; 
+            currDocument = rootDocument->GetParentDocument(); 
+        } 
 
-            // Retrieve the root data source. 
-            nsCOMPtr<nsIRDFDocument> rdfRootDoc; 
-            rdfRootDoc = do_QueryInterface(rootDocument); 
-            if (rdfRootDoc == nsnull) { 
-                NS_ERROR("Root document of a XUL fragment is not an RDF doc."); 
-                NS_RELEASE(rootDocument); 
-                return rv; 
-            } 
+        // Retrieve the root data source. 
+        nsCOMPtr<nsIRDFDocument> rdfRootDoc; 
+        rdfRootDoc = do_QueryInterface(rootDocument); 
+        if (rdfRootDoc == nsnull) { 
+            NS_ERROR("Root document of a XUL fragment is not an RDF doc."); 
+            NS_RELEASE(rootDocument); 
+            return rv; 
+        } 
 
-            nsCOMPtr<nsIRDFDataSource> docDataSource; 
-            if (NS_FAILED(rv = rdfRootDoc->GetDocumentDataSource(getter_AddRefs(docDataSource)))) { 
-                NS_ERROR("Unable to retrieve an RDF document's data source."); 
-                NS_RELEASE(rootDocument); 
-                return rv; 
-            } 
-  
-            NS_IF_RELEASE(mDataSource);
-            mDataSource = docDataSource.get();
-            NS_ADDREF(mDataSource);
-        }
-        else return NS_ERROR_NULL_POINTER;
+        nsCOMPtr<nsIRDFDataSource> docDataSource; 
+        if (NS_FAILED(rv = rdfRootDoc->GetDocumentDataSource(getter_AddRefs(docDataSource)))) { 
+            NS_ERROR("Unable to retrieve an RDF document's data source."); 
+            NS_RELEASE(rootDocument); 
+            return rv; 
+        } 
+
+        NS_IF_RELEASE(mDataSource);
+        mDataSource = docDataSource.get();
+        NS_ADDREF(mDataSource);
     }
     else {
 
@@ -914,8 +910,9 @@ XULContentSinkImpl::Init(nsIDocument* aDocument, nsIWebShell* aWebShell, nsIRDFD
         return rv;
     }
 
-    if (mFragmentRoot) {
+    if (mFragmentRoot == nsnull) {
         // XUL Namespace isn't registered if we're a root document.
+        // We need to register it.
         rv = mNameSpaceManager->RegisterNameSpace(kXULNameSpaceURI, kNameSpaceID_XUL);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register XUL namespace");
     }
@@ -1133,9 +1130,8 @@ XULContentSinkImpl::OpenTag(const nsIParserNode& aNode)
 
     SplitQualifiedName(aNode.GetText(), nameSpaceID, tag);
 
-    // HTML tags all need to be upper-cased
+    // HTML tags must be lowercase
     if (nameSpaceID == kNameSpaceID_HTML) {
-        tag.ToLowerCase();
         if (tag.Equals("script")) {
             return OpenScript(aNode);
         }
