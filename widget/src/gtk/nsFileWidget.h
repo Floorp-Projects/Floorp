@@ -43,7 +43,7 @@ public:
   // nsIWidget interface
   
   NS_IMETHOD		Create(nsIWidget *aParent,
-                       nsString& aTitle,
+                       const nsString& aTitle,
                        nsFileDlgMode aMode,
                        nsIDeviceContext *aContext = nsnull,
                        nsIAppShell *aAppShell = nsnull,
@@ -52,26 +52,25 @@ public:
 
   // nsIFileWidget part
   virtual PRBool	Show();
-  NS_IMETHOD GetFile(nsString& aFile);
   NS_IMETHOD GetFile(nsFileSpec& aFile);
-  NS_IMETHOD SetDefaultString(nsString& aFile);
+  NS_IMETHOD SetDefaultString(const nsString& aFile);
   NS_IMETHOD SetFilterList(PRUint32 aNumberOfFilters,
                            const nsString aTitles[],
                            const nsString aFilters[]);
 
-  NS_IMETHOD GetDisplayDirectory(nsString& aDirectory);
-  NS_IMETHOD SetDisplayDirectory(nsString& aDirectory);
+  NS_IMETHOD GetDisplayDirectory(nsFileSpec& aDirectory);
+  NS_IMETHOD SetDisplayDirectory(const nsFileSpec& aDirectory);
   
   virtual nsFileDlgResults GetFile(nsIWidget *aParent,
-                                   nsString &promptString,
+                                   const nsString &promptString,
                                    nsFileSpec &theFileSpec);
   
   virtual nsFileDlgResults GetFolder(nsIWidget *aParent,
-                                     nsString &promptString,
+                                     const nsString &promptString,
                                      nsFileSpec &theFileSpec);
 
   virtual nsFileDlgResults PutFile(nsIWidget *aParent,
-                                   nsString &promptString,
+                                   const nsString &promptString,
                                    nsFileSpec &theFileSpec);
 
 protected:
@@ -87,7 +86,7 @@ protected:
   const nsString*	mTitles;
   const nsString*	mFilters;
   nsString		mDefault;
-  nsString    mDisplayDirectory;
+  nsFileSpec    mDisplayDirectory;
 };
 
 #endif // nsFileWidget_h__

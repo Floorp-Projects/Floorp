@@ -52,48 +52,43 @@ NS_METHOD nsFileWidget::SetFilterList(PRUint32 aNumberOfFilters,const nsString a
   return NS_OK;
 }
 
-NS_METHOD  nsFileWidget::GetFile(nsString& aFile)
-{
-  return NS_OK;
-}
-
 NS_METHOD nsFileWidget::GetFile(nsFileSpec& aFile)
 {
   return NS_OK;
 }
 
 nsFileDlgResults nsFileWidget::GetFile(nsIWidget        * aParent,
-                                       nsString         & promptString,
+                                       const nsString         & promptString,
                                        nsFileSpec       & theFileSpec)
 {
   return nsFileDlgResults_OK;
 }
 
 nsFileDlgResults nsFileWidget::GetFolder(nsIWidget        * aParent,
-                                         nsString         & promptString,
+                                         const nsString         & promptString,
                                          nsFileSpec       & theFileSpec)
 {
   return nsFileDlgResults_OK;
 }
 
 nsFileDlgResults nsFileWidget::PutFile(nsIWidget        * aParent,
-                                       nsString         & promptString,
+                                       const nsString         & promptString,
                                        nsFileSpec       & theFileSpec)
 {
   return nsFileDlgResults_OK;
 
 }
-NS_METHOD  nsFileWidget::SetDefaultString(nsString& aString)
+NS_METHOD  nsFileWidget::SetDefaultString(const nsString& aString)
 {
   return NS_OK;
 }
 
-NS_METHOD  nsFileWidget::SetDisplayDirectory(nsString& aDirectory)
+NS_METHOD  nsFileWidget::SetDisplayDirectory(const nsFileSpec& aDirectory)
 {
   return NS_OK;
 }
 
-NS_METHOD  nsFileWidget::GetDisplayDirectory(nsString& aDirectory)
+NS_METHOD  nsFileWidget::GetDisplayDirectory(nsFileSpec& aDirectory)
 {
   return NS_OK;
 }
