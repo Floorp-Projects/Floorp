@@ -108,7 +108,7 @@ nsViewerApp::nsViewerApp()
 {
   char * text = PR_GetEnv("NGLAYOUT_HOME");
 
-  mStartURL = text ? text : "http://developer.netscape.com/software/communicator/ngl/index.html";
+  mStartURL = text ? text : "http://www.mozilla.org";
 
   mDelay = 1;
   mRepeatCount = 1;
