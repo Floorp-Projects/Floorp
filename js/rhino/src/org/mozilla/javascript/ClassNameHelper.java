@@ -22,6 +22,7 @@
  * Norris Boyd
  * Roger Lawrence
  * Andi Vajda
+ * Kemal Bayram
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -39,25 +40,21 @@ package org.mozilla.javascript;
 
 public interface ClassNameHelper {
 
-    public String getTargetClassFileName();
-
-    public void setTargetClassFileName(String classFileName);
-
     public String getTargetPackage();
 
     public void setTargetPackage(String targetPackage);
 
-    public String getTargetClassFileName(String className);
-    
-    public String getGeneratingDirectory();
-    
     public void setTargetExtends(Class extendsClass);
     
     public void setTargetImplements(Class[] implementsClasses);
 
-    public ClassOutput getClassOutput();
+    public ClassRepository getClassRepository();
 
-    public void setClassOutput(ClassOutput classOutput);
+    public void setClassRepository(ClassRepository repository);
+    
+    public String getClassName();
+
+    public void setClassName(String initialName);
     
     public void reset();
 }

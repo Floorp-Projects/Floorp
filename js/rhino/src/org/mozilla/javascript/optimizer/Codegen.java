@@ -21,6 +21,7 @@
  * Norris Boyd
  * Roger Lawrence
  * Andi Vajda
+ * Kemal Bayram
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -86,41 +87,18 @@ public class Codegen extends Interpreter {
             }
             generatedName = generateCode(tree, names, classFiles, nameHelper);
 
+            ClassRepository repository = nameHelper.getClassRepository();
+
             for (int i=0; i < names.size(); i++) {
                 String name = (String) names.elementAt(i);
                 byte[] classFile = (byte[]) classFiles.elementAt(i);
-                if (nameHelper.getGeneratingDirectory() != null) {
-                    try {
-                        int lastDot = name.lastIndexOf('.');
-                        if (lastDot != -1)
-                            name = name.substring(lastDot+1);
-                        String filename 
-                                    = nameHelper.getTargetClassFileName(name);
-                        FileOutputStream out = new FileOutputStream(filename);
-                        out.write(classFile);
-                        out.close();
-                    }
-                    catch (IOException iox) {
-                        throw WrappedException.wrapException(iox);
-                    }
-                } else {
-                    boolean isTopLevel = name.equals(generatedName);
-                    ClassOutput classOutput = nameHelper.getClassOutput();
-                    if (classOutput != null) {
-                        try {
-                            OutputStream out =
-                                classOutput.getOutputStream(name, isTopLevel);
+                boolean isTopLevel = name.equals(generatedName);
 
-                            out.write(classFile);
-                            out.close();
-                        } catch (IOException iox) {
-                            throw WrappedException.wrapException(iox);
-                        }
-                    }
-                    try {
+                try {
+                    if (repository.storeClass(name, classFile, isTopLevel)) {
                         Class clazz = null;
                         if (securitySupport != null) {
-                            clazz = securitySupport.defineClass(name, classFile, 
+                            clazz = securitySupport.defineClass(name, classFile,
                                                                 securityDomain);
                         }
                         if (clazz == null) {
@@ -131,11 +109,13 @@ public class Codegen extends Interpreter {
                         }
                         if (isTopLevel)
                             result = clazz;
-                    } catch (ClassFormatError ex) {
-                        throw new RuntimeException(ex.toString());
-                    } catch (ClassNotFoundException ex) {
-                        throw new RuntimeException(ex.toString());
-                    }   
+                    }
+                } catch (ClassFormatError ex) {
+                    throw new RuntimeException(ex.toString());
+                } catch (ClassNotFoundException ex) {
+                    throw new RuntimeException(ex.toString());
+                } catch (IOException iox) {
+                    throw WrappedException.wrapException(iox);
                 }
             }
         }
@@ -177,6 +157,8 @@ public class Codegen extends Interpreter {
             }
         }
         if (tree instanceof OptFunctionNode) {
+            if (result == null) 
+                return null;
             return ScriptRuntime.createFunctionObject(scope, result, cx, true);
         } else {
             try {

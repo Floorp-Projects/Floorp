@@ -29,6 +29,7 @@
  * Ian D. Stewart
  * Andi Vajda
  * Andrew Wason
+ * Kemal Bayram
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -1271,7 +1272,26 @@ public class Context {
             optimizationLevel = -1;
         this.optimizationLevel = optimizationLevel;
     }
+    
+    /**
+     * Get the current class name.
+     * 
+     * @since 30/10/01 tip + patch (Kemal Bayram)
+     */
+    public String getClassName() {
+        return nameHelper != null ? nameHelper.getClassName() : null;
+    }
 
+    /**
+     * Set the current class name.
+     * 
+     * @since 30/10/01 tip + patch (Kemal Bayram)
+     */
+    public void setClassName(String className) {
+        if (nameHelper != null) 
+	      nameHelper.setClassName(className);
+    }
+    
     /**
      * Get the current target class file name.
      * <p>
@@ -1280,11 +1300,14 @@ public class Context {
      * @since 1.3
      */
     public String getTargetClassFileName() {
-        return nameHelper == null
-               ? null 
-               : nameHelper.getTargetClassFileName();
+        if (nameHelper != null) {
+	  	ClassRepository repository = nameHelper.getClassRepository();
+		if (repository instanceof FileClassRepository)
+		    return ((FileClassRepository)repository).getTargetClassFileName(nameHelper.getClassName());
+	  }
+	  return null;
     }
-
+    
     /**
      * Set the current target class file name.
      * <p>
@@ -1296,7 +1319,10 @@ public class Context {
      */
     public void setTargetClassFileName(String classFileName) {
         if (nameHelper != null)
-            nameHelper.setTargetClassFileName(classFileName);
+	      if (classFileName != null)
+                nameHelper.setClassRepository(new FileClassRepository(classFileName));
+		else
+		    nameHelper.setClassName(null);
     }
 
     /**
@@ -1305,7 +1331,7 @@ public class Context {
      * @since 1.3
      */
     public String getTargetPackage() {
-        return (nameHelper == null) ? null : nameHelper.getTargetPackage();
+        return nameHelper != null ? nameHelper.getTargetPackage() : null;
     }
 
     /**
@@ -1317,6 +1343,27 @@ public class Context {
         if (nameHelper != null)
             nameHelper.setTargetPackage(targetPackage);
     }
+    
+    /**
+     * Get the current class repository.
+     * 
+     * @see ClassRepository
+     * @since 30/10/01 tip + patch (Kemal Bayram)
+     */
+    public ClassRepository getClassRepository() {
+        return nameHelper != null ? nameHelper.getClassRepository() : null;
+    }
+
+    /**
+     * Set the current class repository.
+     * 
+     * @see ClassRepository
+     * @since 30/10/01 tip + patch (Kemal Bayram)
+     */
+    public void setClassRepository(ClassRepository classRepository) {
+	  if (nameHelper != null)
+	      nameHelper.setClassRepository(classRepository);
+    }
 
     /**
      * Get the current interface to write class bytes into.
@@ -1325,7 +1372,13 @@ public class Context {
      * @since 1.5 Release 2
      */
     public ClassOutput getClassOutput() {
-        return nameHelper == null ? null : nameHelper.getClassOutput();
+        if (nameHelper != null) {
+	       ClassRepository repository = nameHelper.getClassRepository();
+		 if ((repository != null) && (repository instanceof ClassOutputWrapper)) {
+		     return ((ClassOutputWrapper)repository).classOutput;
+		 }
+	  }
+    	  return null;
     }
 
     /**
@@ -1339,7 +1392,10 @@ public class Context {
      */
     public void setClassOutput(ClassOutput classOutput) {
         if (nameHelper != null)
-            nameHelper.setClassOutput(classOutput);
+	      if (classOutput != null) 
+                nameHelper.setClassRepository(new ClassOutputWrapper(classOutput));
+		else
+		    nameHelper.setClassRepository(null);
     }
     
     /**
@@ -2082,4 +2138,69 @@ public class Context {
     // For instruction counting (interpreter only)
     int instructionCount;
     int instructionThreshold;
+    
+    // Implement class file saving here instead of inside codegen.
+    private class FileClassRepository implements ClassRepository {
+    
+        FileClassRepository(String classFileName) {	  
+	  	int lastSeparator = classFileName.lastIndexOf(File.separatorChar);
+      	String initialName;
+      	if (lastSeparator == -1) {
+                generatingDirectory = null;
+                initialName = classFileName;
+      	} else {
+                generatingDirectory = classFileName.substring(0, lastSeparator);
+                initialName = classFileName.substring(lastSeparator+1);
+      	}
+      	if (initialName.endsWith(".class"))
+                initialName = initialName.substring(0, initialName.length() - 6);
+      	nameHelper.setClassName(initialName);
+	  }
+    
+        public boolean storeClass(String className, byte[] bytes, boolean tl) throws IOException {
+
+		// no "elegant" way of getting file name from fully qualified class name.
+	  	String targetPackage = nameHelper.getTargetPackage();
+		if ((targetPackage != null) && (targetPackage.length()>0) && className.startsWith(targetPackage+".")) {
+		    className = className.substring(targetPackage.length()+1);
+		}
+
+            FileOutputStream out = new FileOutputStream(getTargetClassFileName(className));
+            out.write(bytes);
+            out.close();
+		
+		return false;
+	  }
+	  
+	  String getTargetClassFileName(String className) {
+      	StringBuffer sb = new StringBuffer();
+      	if (generatingDirectory != null) {
+                sb.append(generatingDirectory);
+                sb.append(File.separator);
+      	}
+      	sb.append(className);
+      	sb.append(".class");
+      	return sb.toString();	  
+	  }
+	  
+ 	  String generatingDirectory;
+    };
+    
+    private static class ClassOutputWrapper implements ClassRepository {
+	  
+	  ClassOutputWrapper(ClassOutput classOutput) {
+	     this.classOutput = classOutput;
+	  }
+	  
+	  public boolean storeClass(String name, byte[] bytes, boolean tl) throws IOException {
+	  
+	  	OutputStream out = classOutput.getOutputStream(name, tl);
+		out.write(bytes);
+            out.close();
+		
+		return true;
+	  }
+	  
+	  ClassOutput classOutput;
+    }
 }

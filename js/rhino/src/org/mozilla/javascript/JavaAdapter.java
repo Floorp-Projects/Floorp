@@ -25,6 +25,7 @@
  * Matthias Radestock
  * Andi Vajda
  * Andrew Wason
+ * Kemal Bayram
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -278,37 +279,19 @@ public class JavaAdapter extends ScriptableObject {
             throw new RuntimeException("unexpected IOException");
         }
         byte[] bytes = out.toByteArray();
-        
+  
         if (nameHelper != null) {
-            if (nameHelper.getGeneratingDirectory() != null) {
-                try {
-                    int lastDot = adapterName.lastIndexOf('.');
-                    if (lastDot != -1)
-                        adapterName = adapterName.substring(lastDot+1);
-                    String filename = nameHelper.getTargetClassFileName(adapterName);
-                    FileOutputStream file = new FileOutputStream(filename);
-                    file.write(bytes);
-                    file.close();
+            try {
+                if (!nameHelper.getClassRepository().storeClass(adapterName, 
+                                                                bytes, true))
+                {
+                    return null;
                 }
-                catch (IOException iox) {
-                    throw WrappedException.wrapException(iox);
-                }
-                return null;
-            } else {
-                try {
-                    ClassOutput classOutput = nameHelper.getClassOutput();
-                    if (classOutput != null) {
-                        OutputStream cOut =
-                            classOutput.getOutputStream(adapterName, true);
-                        cOut.write(bytes);
-                        cOut.close();
-                    }
-                } catch (IOException iox) {
-                    throw WrappedException.wrapException(iox);
-                }
+            } catch(IOException iox) {
+                throw WrappedException.wrapException(iox);
             }
         }
-            
+
         SecuritySupport ss = cx.getSecuritySupport();
         if (ss != null) {
             Object securityDomain = cx.getSecurityDomainForStackDepth(-1);

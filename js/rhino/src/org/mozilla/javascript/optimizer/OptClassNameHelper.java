@@ -21,6 +21,7 @@
  * Norris Boyd
  * Roger Lawrence
  * Andi Vajda
+ * Kemal Bayram
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -42,15 +43,11 @@ import java.io.*;
 import java.util.Hashtable;
 
 public class OptClassNameHelper implements ClassNameHelper {
-  
+
     public OptClassNameHelper() {
-        setTargetClassFileName(null);
+        setClassName(null);
     }
 
-    public String getGeneratingDirectory() {
-        return generatingDirectory;
-    }
-    
     public synchronized void reset() {
         classNames = null;
     }
@@ -64,15 +61,21 @@ public class OptClassNameHelper implements ClassNameHelper {
             s.append('.');
         }
         s.append(initialName);
-        if (generatingDirectory != null) {
+        if (appendFunctionName) {
             if (functionName != null) {
                 s.append('$');
-                s.append(functionName);
+                if (functionName.length() > 0) {
+                    s.append(functionName);
+                } else {
+                    s.append(++fserial);
+                }
             } else if (!primary) {
                 s.append(++serial);
             }
         } else {
-            s.append(globalSerial++);
+            synchronized(defaultRepository) {
+                s.append(globalSerial++);
+            }
         }
         
         // We wish to produce unique class names between calls to reset()
@@ -87,32 +90,9 @@ public class OptClassNameHelper implements ClassNameHelper {
         while (classNames.get(lowerResult) != null) {
             lowerResult = base + ++count;
         }
+
         classNames.put(lowerResult, Boolean.TRUE);
         return count == 0 ? result : (result + count);
-    }
-
-    public String getTargetClassFileName() {
-        return getTargetClassFileName(getInitialClassName());
-    }
-
-    public void setTargetClassFileName(String classFileName) {
-        if (classFileName == null) {
-            packageName = "org.mozilla.javascript.gen";
-            initialName = "c";
-            return;
-        }
-        int lastSeparator = classFileName.lastIndexOf(File.separatorChar);
-        String initialName;
-        if (lastSeparator == -1) {
-            generatingDirectory = "";
-            initialName = classFileName;
-        } else {
-            generatingDirectory = classFileName.substring(0, lastSeparator);
-            initialName = classFileName.substring(lastSeparator+1);
-        }
-        if (initialName.endsWith(".class"))
-            initialName = initialName.substring(0, initialName.length() - 6);
-        setInitialClassName(initialName);
     }
 
     public String getTargetPackage() {
@@ -121,19 +101,6 @@ public class OptClassNameHelper implements ClassNameHelper {
 
     public void setTargetPackage(String targetPackage) {
         this.packageName = targetPackage;
-    }
-
-    public String getTargetClassFileName(String className) {
-        if (generatingDirectory == null)
-            return null;
-        StringBuffer sb = new StringBuffer();
-        if (generatingDirectory.length() > 0) {
-            sb.append(generatingDirectory);
-            sb.append(File.separator);
-        }
-        sb.append(className);
-        sb.append(".class");
-        return sb.toString();
     }
 
     public Class getTargetExtends() {
@@ -152,30 +119,46 @@ public class OptClassNameHelper implements ClassNameHelper {
         targetImplements = implementsClasses;
     }
 
-    String getInitialClassName() {
+    public String getClassName() {
         return initialName;
     }
 
-    void setInitialClassName(String initialName) {
-        this.initialName = initialName;
-        serial = 0;
+    public void setClassName(String initialName) {    
+        if (initialName != null) {
+            this.initialName = initialName;
+            appendFunctionName = true;
+        } else {
+            packageName = "org.mozilla.javascript.gen";
+            this.initialName = "c";
+            classRepository = defaultRepository;
+            appendFunctionName = false;
+        }
+        serial = fserial = 0;
     }
 
-    public ClassOutput getClassOutput() {
-        return classOutput;
+    public ClassRepository getClassRepository() {
+        return classRepository;
     }
 
-    public void setClassOutput(ClassOutput classOutput) {
-        this.classOutput = classOutput;
+    public void setClassRepository(ClassRepository classRepository) {
+        this.classRepository = classRepository != null ? classRepository : defaultRepository;
     }
 
-    private String generatingDirectory;
+    private boolean appendFunctionName;
     private String packageName;
     private String initialName;
     private static int globalSerial=1;
-    private int serial=1;
+    private int serial, fserial;
     private Class targetExtends;
     private Class[] targetImplements;
-    private ClassOutput classOutput;
+    private ClassRepository classRepository;
     private Hashtable classNames;
+   
+    static class DefaultRepository implements ClassRepository {
+        public boolean storeClass(String name, byte[] bytes, boolean tl) {
+            return true;
+        }
+    }
+    
+    private static ClassRepository defaultRepository = new DefaultRepository();
 }
