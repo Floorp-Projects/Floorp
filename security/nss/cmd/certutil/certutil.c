@@ -564,6 +564,33 @@ printCertCB(CERTCertificate *cert, void *arg)
 }
 
 static SECStatus
+dumpChain(CERTCertDBHandle *handle, char *name, PK11SlotInfo *slot,
+          PRBool raw, PRBool ascii, PRFileDesc *outfile, void *pwarg)
+{
+    SECStatus rv;
+    CERTCertificate *the_cert;
+    CERTCertificateList *chain;
+    int i, j;
+    the_cert = PK11_FindCertFromNickname(name, NULL);
+    if (!the_cert) {
+	SECU_PrintError(progName, "Could not find: %s\n", name);
+	return SECFailure;
+    }
+    chain = CERT_CertChainFromCert(the_cert, 0, PR_TRUE);
+    if (!chain) {
+	SECU_PrintError(progName, "Could not obtain chain for: %s\n", name);
+	return SECFailure;
+    }
+    for (i=chain->len-1; i>=0; i--) {
+	CERTCertificate *c;
+	c = CERT_FindCertByDERCert(handle, &chain->certs[i]);
+	for (j=i; j<chain->len-1; j++) printf("  ");
+	printf("\"%s\" [%s]\n\n", c->nickname, c->subjectName);
+    }
+    return SECSuccess;
+}
+
+static SECStatus
 listCerts(CERTCertDBHandle *handle, char *name, PK11SlotInfo *slot,
           PRBool raw, PRBool ascii, PRFileDesc *outfile, void *pwarg)
 {
@@ -672,6 +699,28 @@ ListCerts(CERTCertDBHandle *handle, char *name, PK11SlotInfo *slot,
 	}
     } else {
 	rv = listCerts(handle,name,slot,raw,ascii,outfile,pwdata);
+    }
+    return rv;
+}
+
+static SECStatus
+DumpChain(CERTCertDBHandle *handle, char *name, PK11SlotInfo *slot,
+          PRBool raw, PRBool ascii, PRFileDesc *outfile, secuPWData *pwdata)
+{
+    SECStatus rv;
+
+    if (slot == NULL) {
+	PK11SlotList *list;
+	PK11SlotListElement *le;
+
+	list= PK11_GetAllTokens(CKM_INVALID_MECHANISM,
+						PR_FALSE,PR_FALSE,pwdata);
+	if (list) for (le = list->head; le; le = le->next) {
+	    printf("\n\nListing certificates for %s:\n\n", PK11_GetSlotName(le->slot));
+	    rv = dumpChain(handle,name,le->slot,raw,ascii,outfile,pwdata);
+	}
+    } else {
+	rv = dumpChain(handle,name,slot,raw,ascii,outfile,pwdata);
     }
     return rv;
 }
@@ -2100,6 +2149,7 @@ enum {
     cmd_ListCerts,
     cmd_ModifyCertTrust,
     cmd_NewDBs,
+    cmd_DumpChain,
     cmd_CertReq,
     cmd_CreateAndAddCert,
     cmd_TokenReset,
@@ -2160,6 +2210,7 @@ static secuCommandFlag certutil_commands[] =
 	{ /* cmd_ListCerts           */  'L', PR_FALSE, 0, PR_FALSE },
 	{ /* cmd_ModifyCertTrust     */  'M', PR_FALSE, 0, PR_FALSE },
 	{ /* cmd_NewDBs              */  'N', PR_FALSE, 0, PR_FALSE },
+	{ /* cmd_DumpChain           */  'P', PR_FALSE, 0, PR_FALSE },
 	{ /* cmd_CertReq             */  'R', PR_FALSE, 0, PR_FALSE },
 	{ /* cmd_CreateAndAddCert    */  'S', PR_FALSE, 0, PR_FALSE },
 	{ /* cmd_TokenReset          */  'T', PR_FALSE, 0, PR_FALSE },
@@ -2478,6 +2529,7 @@ main(int argc, char **argv)
     /*  Using slotname == NULL for listing keys and certs on all slots, 
      *  but only that. */
     if (!(certutil.commands[cmd_ListKeys].activated ||
+	  certutil.commands[cmd_DumpChain].activated ||
     	  certutil.commands[cmd_ListCerts].activated) && slotname == NULL) {
 	PR_fprintf(PR_STDERR,
 	           "%s -%c: cannot use \"-h all\" for this command.\n",
@@ -2564,6 +2616,13 @@ main(int argc, char **argv)
     /*  List certs (-L)  */
     if (certutil.commands[cmd_ListCerts].activated) {
 	rv = ListCerts(certHandle, name, slot,
+	               certutil.options[opt_BinaryDER].activated,
+	               certutil.options[opt_ASCIIForIO].activated, 
+                       (outFile) ? outFile : PR_STDOUT, &pwdata);
+	return rv ? 255 : 0;
+    }
+    if (certutil.commands[cmd_DumpChain].activated) {
+	rv = DumpChain(certHandle, name, slot,
 	               certutil.options[opt_BinaryDER].activated,
 	               certutil.options[opt_ASCIIForIO].activated, 
                        (outFile) ? outFile : PR_STDOUT, &pwdata);
