@@ -232,6 +232,17 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
   }
 }
 
+- (void)isOpaque
+{
+  return YES;
+}
+
+- (void)drawRect:(NSRect)inRect
+{
+  [[NSColor whiteColor] set];
+  NSRectFill(inRect);
+}
+
 - (void)addListener:(id <CHBrowserListener>)listener
 {
   if ( _listener )
