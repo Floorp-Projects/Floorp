@@ -490,6 +490,7 @@ nsProfileAccess::FillProfileInfo(nsIFile* regName)
     mCount = 0;
     mNumProfiles = 0;
     mNumOldProfiles = 0;
+    PRBool currentProfileValid = mCurrentProfile.IsEmpty();
 
     while( (NS_OK != enumKeys->IsDone()) ) 
     {
@@ -578,6 +579,9 @@ nsProfileAccess::FillProfileInfo(nsIFile* regName)
                                 getter_Copies(NCHavePregInfo));
         }
 
+        // Make sure that mCurrentProfile is valid
+        if (!mCurrentProfile.IsEmpty() && mCurrentProfile.Equals(profile))
+          currentProfileValid = PR_TRUE;
 
         ProfileStruct*  profileItem	= new ProfileStruct();
         if (!profileItem)
@@ -624,6 +628,9 @@ nsProfileAccess::FillProfileInfo(nsIFile* regName)
         rv = enumKeys->Next();
     }
 
+    if (!currentProfileValid)
+      mCurrentProfile.SetLength(0);
+      
     mFixRegEntries = PR_FALSE;
     rv = CloseRegistry();
     return rv;
