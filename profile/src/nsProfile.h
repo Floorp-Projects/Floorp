@@ -85,6 +85,8 @@ private:
     nsresult IsProfileDirSalted(nsIFile *profileDir, PRBool *isSalted);
     nsresult DefineLocaleDefaultsDir();
     nsresult UndefineFileLocations();
+    nsresult Update4xProfileInfo();
+    char * GetOldRegLocation();
 
     PRBool mStartingUp;
     PRBool mAutomigrate;

@@ -93,6 +93,7 @@ nsProfileAccess::nsProfileAccess()
 {
     mProfileDataChanged	 =  PR_FALSE;
     mForgetProfileCalled =  PR_FALSE;
+    m4xProfilesAdded     =  PR_FALSE;
     mProfiles            =  new nsVoidArray();
 
     // Get the profile registry path
@@ -202,7 +203,7 @@ nsProfileAccess::GetValue(const PRUnichar* profileName, ProfileStruct** aProfile
     *aProfile = nsnull;
     
     PRInt32 index = 0;
-    index = FindProfileIndex(profileName);
+    index = FindProfileIndex(profileName, PR_FALSE);
     if (index < 0) 
         return NS_ERROR_FAILURE; 
 
@@ -228,7 +229,7 @@ nsProfileAccess::SetValue(ProfileStruct* aProfile)
     PRBool isNewProfile = PR_FALSE;
     ProfileStruct* profileItem;
 
-    index = FindProfileIndex(aProfile->profileName.get());
+    index = FindProfileIndex(aProfile->profileName.get(), aProfile->isImportType);
 
     if (index >= 0)
     {
@@ -248,6 +249,8 @@ nsProfileAccess::SetValue(ProfileStruct* aProfile)
     aProfile->CopyProfileLocation(profileItem);
 
     profileItem->isMigrated = aProfile->isMigrated;
+
+    profileItem->isImportType = aProfile->isImportType;
 
     profileItem->updateProfileEntry = PR_TRUE;
 
@@ -454,6 +457,7 @@ nsProfileAccess::FillProfileInfo(nsIFile* regName)
         if (NCHavePregInfo)
             profileItem->NCHavePregInfo = NS_STATIC_CAST(const PRUnichar*, NCHavePregInfo);
 
+        profileItem->isImportType = PR_FALSE;
         if (!mProfiles) {
             mProfiles = new nsVoidArray();
 
@@ -492,7 +496,7 @@ nsProfileAccess::GetNumProfiles(PRInt32 *numProfiles)
     {
         ProfileStruct* profileItem = (ProfileStruct *) (mProfiles->ElementAt(index));
 
-        if (profileItem->isMigrated)
+        if (profileItem->isMigrated && !profileItem->isImportType)
         {
             (*numProfiles)++;
         }
@@ -516,7 +520,7 @@ nsProfileAccess::GetNum4xProfiles(PRInt32 *numProfiles)
     {
         ProfileStruct* profileItem = (ProfileStruct *) (mProfiles->ElementAt(index));
 
-        if (!profileItem->isMigrated)
+        if (!profileItem->isMigrated && !profileItem->isImportType)
         {
             (*numProfiles)++;
         }
@@ -543,7 +547,7 @@ nsProfileAccess::GetFirstProfile(PRUnichar **firstProfile)
     {
         ProfileStruct* profileItem = (ProfileStruct *) (mProfiles->ElementAt(index));
 
-        if (profileItem->isMigrated)
+        if (profileItem->isMigrated && !profileItem->isImportType)
         {
             *firstProfile = ToNewUnicode(profileItem->profileName);
             break;
@@ -595,7 +599,7 @@ nsProfileAccess::RemoveSubTree(const PRUnichar* profileName)
     NS_ASSERTION(profileName, "Invalid profile name");
 
     // delete this entry from the mProfiles array
-    PRInt32	index = FindProfileIndex(profileName);
+    PRInt32	index = FindProfileIndex(profileName, PR_FALSE);
 
     if (index >= 0)
     {
@@ -612,7 +616,7 @@ nsProfileAccess::RemoveSubTree(const PRUnichar* profileName)
     
 // Return the index of a given profiel from the arraf of profile structs.
 PRInt32
-nsProfileAccess::FindProfileIndex(const PRUnichar* profileName)
+nsProfileAccess::FindProfileIndex(const PRUnichar* profileName, PRBool forImport)
 {    
     NS_ASSERTION(profileName, "Invalid profile name");
 
@@ -623,7 +627,7 @@ nsProfileAccess::FindProfileIndex(const PRUnichar* profileName)
     {
         ProfileStruct* profileItem = (ProfileStruct *) (mProfiles->ElementAt(index));
 
-        if(profileItem->profileName.Equals(profileName))
+        if(profileItem->profileName.Equals(profileName) && (profileItem->isImportType == forImport))
         {
             retval = index;
             break;
@@ -726,7 +730,7 @@ nsProfileAccess::UpdateRegistry(nsIFile* regName)
 
         PRInt32 index = 0;
 
-        index = FindProfileIndex(profile);
+        index = FindProfileIndex(profile, PR_FALSE);
 
         if (index < 0)
         {
@@ -784,7 +788,7 @@ nsProfileAccess::UpdateRegistry(nsIFile* regName)
     {
         ProfileStruct* profileItem = (ProfileStruct *) (mProfiles->ElementAt(i));
 
-        if (profileItem->updateProfileEntry)
+        if (!profileItem->isImportType && profileItem->updateProfileEntry)
         {
             nsRegistryKey profKey;								
 
@@ -829,6 +833,46 @@ nsProfileAccess::UpdateRegistry(nsIFile* regName)
     return rv;
 }
 
+nsresult
+nsProfileAccess::GetOriginalProfileDir(const PRUnichar *profileName, nsILocalFile **originalDir)
+{
+    NS_ENSURE_ARG(profileName);
+    NS_ENSURE_ARG_POINTER(originalDir);
+    *originalDir = nsnull;
+    nsresult rv = NS_OK;
+
+    PRInt32 index = FindProfileIndex(profileName, PR_TRUE);
+    if (index >= 0)
+    {
+        ProfileStruct* profileItem = (ProfileStruct *) (mProfiles->ElementAt(index));
+        nsCOMPtr<nsILocalFile> profileDir;
+        rv = profileItem->GetResolvedProfileDir(getter_AddRefs(profileDir));
+        if (NS_SUCCEEDED(rv) && profileDir)
+        {
+#ifdef XP_MAC
+            PRBool exists;
+            rv = profileDir->Exists(&exists);
+            if (NS_FAILED(rv)) 
+                return rv;
+            if (exists) {
+                PRBool inTrash;
+                nsCOMPtr<nsIFile> trashFolder;
+                            
+                rv = NS_GetSpecialDirectory(NS_MAC_TRASH_DIR, getter_AddRefs(trashFolder));
+                if (NS_FAILED(rv)) return rv;
+                rv = trashFolder->Contains(profileDir, PR_TRUE, &inTrash);
+                if (NS_FAILED(rv)) return rv;
+                if (inTrash) {
+                    return NS_ERROR_FILE_NOT_FOUND;
+                }  
+            }
+#endif
+            NS_IF_ADDREF(*originalDir = profileDir);
+        }
+        return rv;
+    }
+    return NS_ERROR_FAILURE;    
+}
 // Return the list of profiles, 4x, 5x, or both.
 nsresult
 nsProfileAccess::GetProfileList(PRInt32 whichKind, PRUint32 *length, PRUnichar ***result)
@@ -842,6 +886,7 @@ nsProfileAccess::GetProfileList(PRInt32 whichKind, PRUint32 *length, PRUnichar *
     PRInt32 count, localLength = 0;
     PRUnichar **outArray, **next;
     PRInt32 numElems = mProfiles->Count();
+    PRInt32 profilesCount;
     
     switch (whichKind)
     {
@@ -852,7 +897,14 @@ nsProfileAccess::GetProfileList(PRInt32 whichKind, PRUint32 *length, PRUnichar *
             GetNum4xProfiles(&count);
             break;
         case nsIProfileInternal::LIST_ALL:
-            count = numElems;
+            GetNum4xProfiles(&count);
+            GetNumProfiles(&profilesCount);
+            count += profilesCount;
+            break;
+        case nsIProfileInternal::LIST_FOR_IMPORT:
+            GetNum4xProfiles(&count);
+            GetNumProfiles(&profilesCount);
+            count = numElems - (count + profilesCount);
             break;
         default:
             NS_ASSERTION(PR_FALSE, "Bad parameter");
@@ -867,11 +919,14 @@ nsProfileAccess::GetProfileList(PRInt32 whichKind, PRUint32 *length, PRUnichar *
     {
         ProfileStruct* profileItem = (ProfileStruct *) (mProfiles->ElementAt(index));
         
-        if (whichKind == nsIProfileInternal::LIST_ONLY_OLD && profileItem->isMigrated)
+        if (whichKind == nsIProfileInternal::LIST_ONLY_OLD && (profileItem->isMigrated || profileItem->isImportType))
             continue;
-        else if (whichKind == nsIProfileInternal::LIST_ONLY_NEW && !profileItem->isMigrated)
+        else if (whichKind == nsIProfileInternal::LIST_ONLY_NEW && (!profileItem->isMigrated || profileItem->isImportType))
             continue;
-
+        else if (whichKind == nsIProfileInternal::LIST_ALL && profileItem->isImportType)
+            continue;
+        else if (whichKind == nsIProfileInternal::LIST_FOR_IMPORT && !profileItem->isImportType)
+            continue;
         *next = ToNewUnicode(profileItem->profileName);
         if (*next == nsnull)
         {
@@ -909,7 +964,7 @@ nsProfileAccess::ProfileExists(const PRUnichar *profileName)
     for (PRInt32 index=0; index < numElems; index++)
     {
         ProfileStruct* profileItem = (ProfileStruct *) (mProfiles->ElementAt(index));
-        if (profileItem->profileName.Equals(profileName))
+        if (!profileItem->isImportType && profileItem->profileName.Equals(profileName))
         {
             exists = PR_TRUE;
             break;
@@ -920,9 +975,11 @@ nsProfileAccess::ProfileExists(const PRUnichar *profileName)
 
 // Capture the 4x profile information from the old registry (4x)
 nsresult
-nsProfileAccess::Get4xProfileInfo(const char *registryName)
+nsProfileAccess::Get4xProfileInfo(const char *registryName, PRBool fromImport)
 {
     nsresult rv = NS_OK;
+    if (fromImport && m4xProfilesAdded)
+        return rv;
 
     nsAutoString charSet;
     rv = GetPlatformCharset(charSet);
@@ -947,6 +1004,8 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName)
     rv = enumKeys->First();
     if (NS_FAILED(rv)) return rv;
 
+    if (fromImport)
+        m4xProfilesAdded = PR_TRUE;
     // Enumerate subkeys till done.
     while( (NS_OK != enumKeys->IsDone())) 
     {
@@ -984,13 +1043,14 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName)
 #endif
 
         PRBool exists = PR_FALSE;
-        exists = ProfileExists(convertedProfName.get());
-        if (exists)
-        {		
-            rv = enumKeys->Next();
-            if (NS_FAILED(rv)) return rv;
-
-            continue;
+        if (!fromImport) {
+            exists = ProfileExists(convertedProfName.get());
+            if (exists)
+            {
+                rv = enumKeys->Next();
+                if (NS_FAILED(rv)) return rv;
+                continue;
+            }
         }
 
         nsRegistryKey key;								
@@ -1006,6 +1066,7 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName)
         rv = profileItem->InternalizeLocation(oldReg, key, PR_TRUE, PR_FALSE);
         NS_ASSERTION(NS_SUCCEEDED(rv), "Could not get 4x profile location");
         profileItem->isMigrated = PR_FALSE;
+        profileItem->isImportType = fromImport;
 
         SetValue(profileItem);
 
@@ -1032,13 +1093,14 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName)
             }
         }
 
-        PRBool exists = PR_FALSE;;
-        exists = ProfileExists(NS_ConvertASCIItoUCS2(unixProfileName).get());
-        if (exists)
-        {		
-            return NS_OK;
+        PRBool exists = PR_FALSE;
+        if (!fromImport) {
+            exists = ProfileExists(NS_ConvertASCIItoUCS2(unixProfileName).get());
+            if (exists)
+            {
+                return NS_OK;
+            }
         }
-
         if ( ! unixProfileName.IsEmpty() && ! unixProfileDirectory.IsEmpty() ) {
             nsCAutoString profileLocation(unixProfileDirectory);
             profileLocation += "/.netscape";
@@ -1070,6 +1132,7 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName)
                 if (NS_FAILED(rv)) return rv;
                 profileItem->SetResolvedProfileDir(localFile);
                 profileItem->isMigrated = PR_FALSE;
+                profileItem->isImportType = fromImport;
 
                 SetValue(profileItem);
             }
@@ -1105,7 +1168,7 @@ nsProfileAccess::CheckRegString(const PRUnichar *profileName, char **info)
     *info = nsnull;
     PRInt32 index = 0;
 
-    index = FindProfileIndex(profileName);
+    index = FindProfileIndex(profileName, PR_FALSE);
 
     if (index >= 0 )
     {
@@ -1160,6 +1223,7 @@ ProfileStruct::ProfileStruct(const ProfileStruct& src) :
     NCProfileName(src.NCProfileName), NCDeniedService(src.NCDeniedService),
     NCEmailAddress(src.NCEmailAddress), NCHavePregInfo(src.NCHavePregInfo),
     updateProfileEntry(src.updateProfileEntry),
+    isImportType(src.isImportType),
     regLocationData(src.regLocationData)
 {
     if (src.resolvedLocation) {

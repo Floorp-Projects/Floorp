@@ -74,6 +74,8 @@ public:
     nsString    NCEmailAddress;
     nsString    NCHavePregInfo;
     PRBool      updateProfileEntry;
+    // this flag detemines if we added this profile to the list for the import module.
+    PRBool      isImportType; 
 
 private:
     nsresult    EnsureDirPathExists(nsILocalFile *aFile, PRBool *wasCreated);
@@ -97,6 +99,7 @@ private:
 
     nsString      mCurrentProfile;
     nsString      mHavePREGInfo;
+    PRBool        m4xProfilesAdded;
     
 public:
     PRBool        mProfileDataChanged;
@@ -111,8 +114,11 @@ public:
     void GetNum4xProfiles(PRInt32 *numProfiles);
     void GetFirstProfile(PRUnichar **firstProfile);
     nsresult GetProfileList(PRInt32 whichKind, PRUint32 *length, PRUnichar ***result);
+    nsresult GetOriginalProfileDir(const PRUnichar *profileName, nsILocalFile **orginalDir);
 
-    nsresult Get4xProfileInfo(const char *registryName);
+    // if fromImport is true all the 4.x profiles will be added to mProfiles with the isImportType flag set.
+    // pass fromImport as True only if you are calling from the Import Module.
+    nsresult Get4xProfileInfo(const char *registryName, PRBool fromImport);
 
     void SetCurrentProfile(const PRUnichar *profileName);
     void GetCurrentProfile(PRUnichar **profileName);
@@ -133,7 +139,10 @@ private:
 
 
     nsresult HavePregInfo(char **info);
-    PRInt32	 FindProfileIndex(const PRUnichar* profileName);
+
+    // if forImport is true searches only the ImportType profiles
+    // else searches the non-ImportType profiles.
+    PRInt32	 FindProfileIndex(const PRUnichar* profileName, PRBool forImport);
 
     void SetPREGInfo(const char* pregInfo);
     void FreeProfileMembers(nsVoidArray *aProfile);

@@ -39,6 +39,7 @@
 
 interface nsICmdLineService;
 interface nsIFile;
+interface nsILocalFile;
 
 %{C++
 #define NS_ERROR_PROFILE_REQUIRES_INTERACTION NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_PROFILE, 1)
@@ -69,12 +70,16 @@ interface nsIProfileInternal : nsIProfile {
     * LIST_ONLY_NEW     - the list will contain only migrated profiles
     * LIST_ONLY_OLD     - the list will contain only un-migrated profiles
     * LIST_ALL          - the list will contain all profiles
+    * LIST_FOR_IMPORT   - the list is generated from 4.x registry and contains
+    *                     all the 4.x profiles
+    *                     do not use this except from the import module
     * 
     */
     
     const unsigned long LIST_ONLY_NEW  = 1;
     const unsigned long LIST_ONLY_OLD  = 2;
     const unsigned long LIST_ALL       = 3;
+    const unsigned long LIST_FOR_IMPORT= 4;
     
     void getProfileListX(in unsigned long which, out unsigned long length, [retval, array, size_is(length)] out wstring profileNames);
    
@@ -97,6 +102,12 @@ interface nsIProfileInternal : nsIProfile {
      */
     wstring getProfilePath(in wstring profileName);
     
+    /**
+     * Returns a profile directory of the importType. The path will point to 
+     * the 4.x profile directory. Should be used only from the import module.
+     */
+    nsILocalFile getOriginalProfileDir(in wstring profileName);
+
     attribute boolean automigrate;
     readonly attribute nsIFile defaultProfileParentDir;
     readonly attribute wstring firstProfile;

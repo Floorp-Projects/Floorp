@@ -1401,6 +1401,7 @@ sub BuildIDLProjects()
     BuildIDLProject(":mozilla:mailnews:imap:macbuild:msgimapIDL.xml",               "MsgImap");
     BuildIDLProject(":mozilla:mailnews:mime:macbuild:mimeIDL.xml",                  "Mime");
     BuildIDLProject(":mozilla:mailnews:import:macbuild:msgImportIDL.xml",           "msgImport");
+    BuildIDLProject(":mozilla:mailnews:import:comm4x:macbuild:msgImportComm4xMIDL.xml",    "msgImportComm4xM");
     if ($main::options{smime} && $main::options{psm}) {
     	BuildIDLProject(":mozilla:mailnews:extensions:smime:macbuild:msgsmimeIDL.xml",  "msgsmime");
     }
@@ -2300,6 +2301,7 @@ sub BuildMailNewsProjects()
     BuildOneProject(":mozilla:mailnews:import:macbuild:msgImport.xml",                  "msgImport$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:mailnews:import:text:macbuild:msgImportText.xml",         "msgImportText$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:mailnews:import:eudora:macbuild:msgImportEudora.xml",     "msgImportEudora$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:mailnews:import:comm4x:macbuild:msgImportComm4xM.xml",    "msgImportComm4xM$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     
          
     if ($main::options{static_build}) {

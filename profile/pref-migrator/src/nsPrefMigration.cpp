@@ -178,20 +178,6 @@
 
 #define NEW_DIR_SUFFIX "5"
 
-/* who's going to win the file name battle? */
-#if defined(XP_UNIX)
-#define PREF_FILE_NAME_IN_4x "preferences.js"
-#elif defined(XP_MAC)
-#define PREF_FILE_NAME_IN_4x "Netscape Preferences"
-#elif defined(XP_PC)
-#define PREF_FILE_NAME_IN_4x "prefs.js"
-#else
-/* this will cause a failure at run time, as it should, since we don't know
-   how to migrate platforms other than Mac, Windows and UNIX */
-#define PREF_FILE_NAME_IN_4x ""
-#endif /* XP_UNIX */
-
-/* and the winner is:  Windows */
 #define PREF_FILE_NAME_IN_5x "prefs.js"
 
 #define PREF_MIGRATION_PROGRESS_URL "chrome://communicator/content/profile/profileMigrationProgress.xul"

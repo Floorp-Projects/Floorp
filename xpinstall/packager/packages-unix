@@ -334,6 +334,7 @@ bin/components/libvcard.so
 bin/components/libsmimestb.so
 bin/components/libimport.so
 bin/components/libimpText.so
+bin/components/libimpComm4xMail.so
 bin/components/libabsyncsvc.so
 bin/components/mailnews.xpt
 bin/components/mime.xpt
@@ -348,6 +349,7 @@ bin/components/msgsearch.xpt
 bin/components/nsLDAPPrefsService.js
 bin/components/txmgr.xpt
 bin/components/import.xpt
+bin/components/impComm4xMail.xpt
 bin/components/absync.xpt
 bin/chrome/messenger.jar
 bin/components/libmsgsmime.so
