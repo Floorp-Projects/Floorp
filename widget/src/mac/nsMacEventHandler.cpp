@@ -697,7 +697,6 @@ PRBool nsMacEventHandler::HandleKeyEvent(EventRecord& aOSEvent)
 			break;
 
 		case keyDown:	
-		case autoKey:
 			InitializeKeyEvent(keyEvent,aOSEvent,focusedWidget,NS_KEY_DOWN);
 			result = focusedWidget->DispatchWindowEvent(keyEvent);
 			//if (result == PR_FALSE) // continue processing???  talk to Tague about this (key event spec)
@@ -705,6 +704,11 @@ PRBool nsMacEventHandler::HandleKeyEvent(EventRecord& aOSEvent)
 				InitializeKeyEvent(keyEvent,aOSEvent,focusedWidget,NS_KEY_PRESS);
 				result = focusedWidget->DispatchWindowEvent(keyEvent);
 			}
+			break;
+		
+		case autoKey:
+			InitializeKeyEvent(keyEvent,aOSEvent,focusedWidget,NS_KEY_PRESS);
+			result = focusedWidget->DispatchWindowEvent(keyEvent);
 			break;
 	}
 
