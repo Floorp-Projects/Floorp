@@ -510,6 +510,12 @@ nsXMLMIMEDataSource::InitFromHack() {
     rv = AddMapping(IMAGE_PNG, "png", "PNG Image", nsnull);
     if (NS_FAILED(rv)) return rv;
 
+    rv = AddMapping(IMAGE_MNG, "mng", "MNG Image", nsnull);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = AddMapping(IMAGE_JNG, "jng", "JNG Image", nsnull);
+    if (NS_FAILED(rv)) return rv;
+
     rv = AddMapping(IMAGE_ART, "art", "ART Image", nsnull);
     if (NS_FAILED(rv)) return rv;
 

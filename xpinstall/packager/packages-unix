@@ -116,6 +116,7 @@ bin/components/libimgjpeg.so
 bin/components/libimgpng.so
 bin/components/libimgppm.so
 bin/components/libimgbmp.so
+bin/components/libimgmng.so
 bin/components/libjsurl.so
 bin/components/liblwbrk.so
 bin/components/libmork.so

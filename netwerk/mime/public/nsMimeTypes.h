@@ -104,6 +104,8 @@
 #define IMAGE_TIFF                          "image/tiff"
 #define IMAGE_BMP                           "image/bmp"
 #define IMAGE_ICO                           "image/x-icon"
+#define IMAGE_MNG                           "video/x-mng"
+#define IMAGE_JNG                           "image/x-jng"
 
 #define MESSAGE_EXTERNAL_BODY               "message/external-body"
 #define MESSAGE_NEWS                        "message/news"

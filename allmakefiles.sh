@@ -803,6 +803,7 @@ fi
         modules/libpr0n/decoders/ppm/Makefile
         modules/libpr0n/decoders/jpeg/Makefile
         modules/libpr0n/decoders/bmp/Makefile
+        modules/libpr0n/decoders/mng/Makefile
 "
 
     MAKEFILES_gfx2="
