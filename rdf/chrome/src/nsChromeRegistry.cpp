@@ -1107,39 +1107,74 @@ NS_IMETHODIMP nsChromeRegistry::SelectSkinForPackage(const PRUnichar *aSkin,
                                                   const PRUnichar *aPackageName,
                                                   PRBool aUseProfile)
 {
-  NS_ERROR("Write me!\n");
-  return NS_OK;
+  nsAutoString provider("skin");
+  return SelectProviderForPackage(provider, aSkin, aPackageName, mSelectedSkin, aUseProfile, PR_TRUE);
 }
 
 NS_IMETHODIMP nsChromeRegistry::SelectLocaleForPackage(const PRUnichar *aLocale,
                                                     const PRUnichar *aPackageName,
                                                     PRBool aUseProfile)
 {
-  NS_ERROR("Write me!\n");
-  return NS_OK;
+  nsAutoString provider("locale");
+  return SelectProviderForPackage(provider, aLocale, aPackageName, mSelectedLocale, aUseProfile, PR_TRUE);
 }
 
 NS_IMETHODIMP nsChromeRegistry::DeselectSkinForPackage(const PRUnichar *aSkin,
                                                   const PRUnichar *aPackageName,
                                                   PRBool aUseProfile)
 {
-  NS_ERROR("Write me!\n");
-  return NS_OK;
+  nsAutoString provider("skin");
+  return SelectProviderForPackage(provider, aSkin, aPackageName, mSelectedSkin, aUseProfile, PR_FALSE);
 }
 
 NS_IMETHODIMP nsChromeRegistry::DeselectLocaleForPackage(const PRUnichar *aLocale,
                                                     const PRUnichar *aPackageName,
                                                     PRBool aUseProfile)
 {
-  NS_ERROR("Write me!\n");
-  return NS_OK;
+  nsAutoString provider("skin");
+  return SelectProviderForPackage(provider, aLocale, aPackageName, mSelectedLocale, aUseProfile, PR_FALSE);
 }
 
-NS_IMETHODIMP nsChromeRegistry::SelectProviderForPackage(const PRUnichar *aThemeFileName,
-                                                         const PRUnichar *aPackageName, 
-                                                         const PRUnichar *aProviderName)
+NS_IMETHODIMP nsChromeRegistry::SelectProviderForPackage(const nsCAutoString& aProviderType,
+                                        const PRUnichar *aProviderName, 
+                                        const PRUnichar *aPackageName, 
+                                        nsIRDFResource* aSelectionArc, 
+                                        PRBool aUseProfile, PRBool aIsAdding)
 {
-  return NS_OK;
+  nsCAutoString package = "urn:mozilla:package:";
+  package += aPackageName;
+
+  nsCAutoString provider = "urn:mozilla:";
+  provider += aProviderType;
+  provider += ":";
+  provider += aProviderName;
+  provider += ":";
+  provider += aPackageName;
+
+  // Obtain the package resource.
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIRDFResource> packageResource;
+  rv = GetResource(package, getter_AddRefs(packageResource));
+  if (NS_FAILED(rv)) {
+    NS_ERROR("Unable to obtain the package resource.");
+    return rv;
+  }
+
+  if (!packageResource)
+    return NS_ERROR_FAILURE;
+
+  // Obtain the provider resource.
+  nsCOMPtr<nsIRDFResource> providerResource;
+  rv = GetResource(provider, getter_AddRefs(providerResource));
+  if (NS_FAILED(rv)) {
+    NS_ERROR("Unable to obtain the provider resource.");
+    return rv;
+  }
+
+  if (!providerResource)
+    return NS_ERROR_FAILURE;
+
+  return SetProviderForPackage(aProviderType, packageResource, providerResource, aSelectionArc, aUseProfile, aIsAdding);;
 }
    
 NS_IMETHODIMP nsChromeRegistry::InstallSkin(nsIURI* aBaseURL, PRBool aUseProfile)

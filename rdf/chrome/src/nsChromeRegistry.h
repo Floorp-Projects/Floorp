@@ -53,10 +53,6 @@ public:
                             nsIRDFResource* aProperty);
 
 protected:
-  NS_IMETHOD SelectProviderForPackage(const PRUnichar *aThemeFileName,
-                                      const PRUnichar *aPackageName, 
-                                      const PRUnichar *aProviderName);
-
   NS_IMETHOD GetOverlayDataSource(nsIURI *aChromeURL, nsIRDFDataSource **aResult);
    
   nsresult GetResource(const nsCAutoString& aChromeType, nsIRDFResource** aResult);
@@ -98,6 +94,13 @@ private:
                                    nsIRDFResource* aProviderPackageResource, 
                                    nsIRDFResource* aSelectionArc, 
                                    PRBool aAllUsers, PRBool aIsAdding);
+
+  NS_IMETHOD SelectProviderForPackage(const nsCAutoString& aProviderType,
+                                        const PRUnichar *aProviderName, 
+                                        const PRUnichar *aPackageName, 
+                                        nsIRDFResource* aSelectionArc, 
+                                        PRBool aUseProfile, PRBool aIsAdding);
+
 
 protected:
   PRBool mInstallInitialized;
