@@ -55,8 +55,7 @@ function onLoad()
     // if no download button
     // set title to "Install Font"
     // and set cancel button to "OK"
-    var downloadFontDialog = document.getElementById("downloadFontDialog");
-    downloadFontDialog.setAttribute("title", fontPackageBundle.getString("windowTitleNoDownload"));
+    document.title = fontPackageBundle.getString("windowTitleNoDownload");
     var cancelButton = document.getElementById("cancelButton");
     cancelButton.setAttribute("label", fontPackageBundle.getString("cancelButtonNoDownload"));
   } 
