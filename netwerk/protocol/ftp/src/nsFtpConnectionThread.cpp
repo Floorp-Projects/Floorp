@@ -1701,27 +1701,35 @@ nsFtpState::R_pasv() {
         // (xxx,xxx,xxx,xxx,ppp,ppp) or
         //  xxx,xxx,xxx,xxx,ppp,ppp (without parens)
         PRInt32 h0, h1, h2, h3, p0, p1;
-        while (*ptr) {
-            if (*ptr == '(') {
-                // move just beyond the open paren
-                ptr++;
-                break;
-            }
-            if (*ptr == ',') {
+
+        PRUint32 fields = 0;
+        // First try with parens
+        while (*ptr && *ptr != '(')
+            ++ptr;
+        if (*ptr) {
+            ++ptr;
+            fields = PR_sscanf(ptr, 
+                               "%ld,%ld,%ld,%ld,%ld,%ld",
+                               &h0, &h1, &h2, &h3, &p0, &p1);
+        }
+        if (!*ptr || fields < 6) {
+            // OK, lets try w/o parens
+            ptr = response;
+            while (*ptr && *ptr != ',')
+                ++ptr;
+            if (*ptr) {
                 // backup to the start of the digits
                 do {
                     ptr--;
                 } while ((ptr >=response) && (*ptr >= '0') && (*ptr <= '9'));
                 ptr++; // get back onto the numbers
-                break;
+                fields = PR_sscanf(ptr, 
+                                   "%ld,%ld,%ld,%ld,%ld,%ld",
+                                   &h0, &h1, &h2, &h3, &p0, &p1);
             }
-            ptr++;
-        } // end while
+        }
 
-        PRInt32 fields = PR_sscanf(ptr, 
-            "%ld,%ld,%ld,%ld,%ld,%ld",
-            &h0, &h1, &h2, &h3, &p0, &p1);
-
+        NS_ASSERTION(fields == 6, "Can't parse PASV response");
         if (fields < 6) {
             return FTP_ERROR;
         }
