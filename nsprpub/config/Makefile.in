@@ -105,10 +105,6 @@ XCFLAGS = $(OS_EXE_CFLAGS)
 XLDOPTS = -Zlinker /PM:VIO
 endif
 
-ifeq ($(MOZ_OS2_TOOLS),VACPP)
-OS_CFLAGS = $(OS_EXE_CFLAGS)
-endif
-
 include $(topsrcdir)/config/rules.mk
 
 PROGS	= $(OBJDIR)/now$(PROG_SUFFIX)
@@ -135,7 +131,7 @@ export:: $(TARGETS)
 $(OBJDIR)/%$(PROG_SUFFIX): $(OBJDIR)/%.$(OBJ_SUFFIX)
 	@$(MAKE_OBJDIR)
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
-	$(LINK) $(EXEFLAGS) $<
+	$(LD) $(EXEFLAGS) $<
 else
 	$(CC) $(XCFLAGS) $< $(XLDOPTS) $(OUTOPTION)$@
 endif

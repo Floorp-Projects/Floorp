@@ -295,7 +295,7 @@ $(LIBRARY): $(OBJS)
 	@$(MAKE_OBJDIR)
 	rm -f $@
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
-	$(AR) $(subst /,\\,$(OBJS)) $(AR_EXTRA_ARGS)
+	$(AR) $(subst /,\\,$(OBJS)) $(AR_FLAGS)
 else
 ifdef USE_AUTOCONF
 	$(AR) $(AR_FLAGS) $(OBJS) $(AR_EXTRA_ARGS)
