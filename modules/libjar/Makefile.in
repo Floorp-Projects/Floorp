@@ -67,12 +67,12 @@ PACKAGE_FILE = libjar.pkg
 REQUIRES	= xpcom \
 		  string \
 		  caps \
-			mimetype \
-			js \
-			pref \
-			xpconnect \
-			uconv \
-			necko \
+		  mimetype \
+		  js \
+		  pref \
+		  xpconnect \
+		  uconv \
+		  necko \
 		  $(ZLIB_REQUIRES) \
 		  $(NULL)
 
