@@ -275,8 +275,7 @@ protected:
 
   void PaintFloaters(nsIPresContext& aPresContext,
                      nsIRenderingContext& aRenderingContext,
-                     const nsRect& aDirtyRect,
-                     nsFramePaintLayer aWhichLayer);
+                     const nsRect& aDirtyRect);
 
   nsLineBox* FindLineFor(nsIFrame* aFrame, PRBool& aIsFloaterResult);
 
