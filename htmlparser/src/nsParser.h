@@ -65,7 +65,6 @@
 #include "nsHTMLTags.h"
 
 class IContentSink;
-class nsIHTMLContentSink;
 class nsIDTD;
 class nsScanner;
 class nsIParserFilter;
