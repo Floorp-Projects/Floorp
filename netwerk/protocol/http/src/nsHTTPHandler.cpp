@@ -614,7 +614,9 @@ nsHTTPHandler::nsHTTPHandler():
     mConnectTimeout (DEFAULT_HTTP_CONNECT_TIMEOUT),
     mMaxAllowedKeepAlives (DEFAULT_MAX_ALLOWED_KEEPALIVES),
     mMaxAllowedKeepAlivesPerServer (DEFAULT_MAX_ALLOWED_KEEPALIVES_PER_SERVER),
-    mProxySSLConnectAllowed (PR_FALSE)
+    mProxySSLConnectAllowed (PR_FALSE),
+    mPipelineFirstRequest   (PR_FALSE),
+    mPipelineMaxRequests    (DEFAULT_PIPELINE_MAX_REQUESTS)
 {
     NS_INIT_REFCNT ();
     SetAcceptEncodings (DEFAULT_ACCEPT_ENCODINGS);
@@ -1401,6 +1403,12 @@ nsHTTPHandler::PrefsChanged(const char* pref)
             mCapabilities &= ~ALLOW_PIPELINING;
     }
 
+    mPipelineFirstRequest = PR_FALSE;
+    rv = mPrefs->GetBoolPref("network.http.pipelining.firstrequest", &mPipelineFirstRequest);
+
+    mPipelineMaxRequests  = DEFAULT_PIPELINE_MAX_REQUESTS;
+    rv = mPrefs->GetIntPref ("network.http.pipelining.maxrequests",  &mPipelineMaxRequests );
+
     cVar = PR_FALSE;
     rv = mPrefs->GetBoolPref("network.http.proxy.pipelining", &cVar);
     if (NS_SUCCEEDED (rv))
@@ -1474,7 +1482,11 @@ nsHTTPHandler::GetServerCapabilities (
     if (o_Cap == nsnull)
         return NS_ERROR_NULL_POINTER;
 
-    PRUint32 capabilities = (mCapabilities & defCap);
+
+    PRUint32 capabilities  = (mCapabilities & defCap);
+
+    if (mPipelineFirstRequest)
+        capabilities |= (mCapabilities & (ALLOW_PROXY_PIPELINING|ALLOW_PIPELINING));
 
     nsCString hStr (host);
     hStr.Append ( ':');
@@ -1515,6 +1527,8 @@ nsHTTPHandler::GetPipelinedRequest(nsIHTTPChannel* i_Channel, nsHTTPPipelinedReq
 
     PRUint32 count = 0;
     PRUint32 index = 0;
+    PRInt32  sameReqCount = 0;
+
     mPipelinedRequests->Count(&count);
     
     nsHTTPPipelinedRequest *pReq = nsnull;
@@ -1528,11 +1542,16 @@ nsHTTPHandler::GetPipelinedRequest(nsIHTTPChannel* i_Channel, nsHTTPPipelinedReq
             pReq->GetSameRequest(host, port, &same);
             if (same)
             {
-                PRBool commit = PR_FALSE;
-                pReq->GetMustCommit(&commit);
+                if (sameReqCount++ >= mPipelineMaxRequests)
+                    sameReqCount = 0;
+                else
+                {
+                    PRBool commit = PR_FALSE;
+                    pReq->GetMustCommit(&commit);
 
-                if (!commit)
-                    break;
+                    if (!commit)
+                        break;
+                }
             }
             NS_RELEASE (pReq);
         }
