@@ -20,6 +20,51 @@
    - Contributor(s): 
   -->
 
-<!ENTITY tableWindow.title "Table Properties">
-<!ENTITY tableTab.label "Table">
-<!ENTITY cellTab.label "Cells">
+<!ENTITY tableWindow.title                "Table Properties">
+<!ENTITY tableTab.label                   "Table">
+<!ENTITY cellTab.label                    "Cells">
+<!ENTITY tableSize.label                  "Size">
+<!ENTITY tableRows.label                  "Row">
+<!ENTITY tableColumns.label               "Columns">
+<!ENTITY tableHeight.label                "Height:">
+<!ENTITY tableWidth.label                 "Width:">
+<!ENTITY tablePixels.label                "pixels">
+<!ENTITY tablePercent.label               "percent of window">
+<!ENTITY tableBorderSpacing.label         "Borders and Spacing">
+<!ENTITY tableBorderWidth.label           "Border width:">
+<!ENTITY tableSpacing.label               "Spacing:">
+<!ENTITY tablePadding.label               "Padding:">
+<!ENTITY tablePxBetwCells.label           "pixels between cells">
+<!ENTITY tablePxBetwBrdrCellContent.label "pixels between border <html:br/> and cell content">
+<!ENTITY tableBackground.label            "Background">
+<!ENTITY tableColor.label                 "Color:">
+<!ENTITY tableImage.label                 "Image:">
+<!ENTITY tableLeaveImageAtLocation.label  "Leave image at original location">
+<!ENTITY tableChooseImage.label           "Choose Image...">
+<!ENTITY tableAlignment.label             "Table<html:br/>Alignment:">
+<!ENTITY tableCaption.label               "Caption:">
+<!ENTITY tableAlignLeft.label             "Left">
+<!ENTITY tableAlignCenter.label           "Center">
+<!ENTITY tableAlignRight.label            "Right">
+<!ENTITY tableCaptionAbove.label          "Above Table">
+<!ENTITY tableCaptionBelow.label          "Below Table">
+<!ENTITY tableCaptionNone.label           "None">
+
+<!ENTITY cellSelection.label              "Selection">
+<!ENTITY cellSelectionCell.label          "Cell">
+<!ENTITY cellSelectionRow.label           "Row">
+<!ENTITY cellSelectionColumn.label        "Column">
+<!ENTITY cellSelectionNext.label          "Next">
+<!ENTITY cellSelectionPrevious.label      "Previous">
+<!ENTITY cellSpans.label                  "Spans:">
+<!ENTITY cellContentAlignment.label       "Content Alignment:">
+<!ENTITY cellHorizontal.label             "Horizontal:">
+<!ENTITY cellVertical.label               "Vertical:">
+<!ENTITY cellTextStyle.label              "Text Style">
+<!ENTITY cellHeader.label                 "Header">
+<!ENTITY cellNonbreaking.label            "Nonbreaking">
+<!ENTITY cellAlignTop.label               "Top">
+<!ENTITY cellAlignCenter.label            "Center">
+<!ENTITY cellAlignBottom.label            "Bottom">
+<!ENTITY cellSpanRows.label               "rows">
+<!ENTITY cellSpanCells.label              "cells">

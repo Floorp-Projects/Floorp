@@ -21,3 +21,5 @@
   -->
 
 <!ENTITY AdvancedEditButton.label "Advanced Edit...">
+<!ENTITY pixelsPopup.value "pixels">
+<!ENTITY percentPopup.value "percent">

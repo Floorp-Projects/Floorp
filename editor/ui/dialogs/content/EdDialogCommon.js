@@ -123,8 +123,7 @@ function ValidateNumberString(value, minValue, maxValue)
 {
   // Get the number version (strip out non-numbers)
 
-  var pat           = /\D/g;
-  value           = value.replace(pat, "");
+  value           = value.replace(/\D+/g, "");
   number           = value - 0;
   if ((value+"") != "") {
     if (number && number >= minValue && number <= maxValue ){
@@ -154,45 +153,30 @@ function GetString(name)
 
 function TrimStringLeft(string)
 {
-  if(!StringExists(string))
-    return "";
-  if( IsWhitespace(string.charAt(0)))
-    string           = string.replace(/\s+/, "");
-  return string;
+  if(!string) return "";
+  return string.replace(/^\s+/, "");
 }
 
 function TrimStringRight(string)
 {
-  if(!StringExists(string))
-    return "";
-  var lastCharIndex         = string.length-1;
-  var result;
-  var done           = false;
-  while (!done && lastCharIndex >= 0) {
-
-    // Find the last non-whitespace char
-
-    if (!IsWhitespace(string.charAt(lastCharIndex))) break;
-    lastCharIndex--;
-  }
-  if (lastCharIndex < 0) {
-    string           = "";
-  } else {
-    string           = string.slice(0, lastCharIndex+1);
-  }
-  return string;
+  if (!string) return "";
+  return string.replace(/\s+$/, '');
 }
 
 // Remove whitespace from both ends of a string
-
 function TrimString(string)
 {
-  return TrimStringRight(TrimStringLeft(string));
+  if (!string) return "";
+  return string.replace(/(^\s+)|(\s+$)/g, '')
+}
+
+String.prototype.trimString = function() {
+  return this.replace(/(^\s+)|(\s+$)/g, '')
 }
 
 function IsWhitespace(character)
 {
-  var result           = character.match(/\s/);
+  var result = character.match(/\s/);
   if (result == null)
     return false;
   return true;
@@ -200,77 +184,30 @@ function IsWhitespace(character)
 
 function TruncateStringAtWordEnd(string, maxLength, addEllipses)
 {
-  // We assume they probably don't want whitespace at the beginning
+    // Return empty if string is null, undefined, or the empty string
+    if (!string)
+      return "";
 
-  var string           = TrimStringLeft(string);
+    // We assume they probably don't want whitespace at the beginning
+    string = string.replace(/^\s+/, '');
+    if (string.length <= maxLength)
+      return string;
 
-  var len           = string.length;
-  if (len > maxLength) {
+    // We need to truncate the string to maxLength or fewer chars
+    if (addEllipses) 
+      maxLength -= 3; 
+    string = string.replace(RegExp("(.{0," + maxLength + "})\\s.*"), "$1")
 
-    // We need to truncate the string
-
-    var max;
-    if (addEllipses) {
-      // Make room for ellipses
-      max           = maxLength - 3;
-    } else {
-      max           = maxLength;
-    }
-    var lastCharIndex = 0;
-    
-    // Start search just past max if there's enough characters
-
-    if (len >= (max+1)) {
-      lastCharIndex         = max;
-    } else {
-      lastCharIndex         = len-1;
-    }
-    dump("Len="+len+" lastCharIndex="+lastCharIndex+" max="+max+"\n");
-
-    // Find the last whitespace char from the end
-
-    dump("Skip to first whitspace from end: ");
-
-    while (lastCharIndex > 0) {
-      var lastChar         = string.charAt(lastCharIndex);
-      dump(lastChar);
-      if (IsWhitespace(lastChar)) break;
-      lastCharIndex         = lastCharIndex -1;
-    }
-    dump("[space found]\nlastCharIndex="+lastCharIndex+"\nSkip over whitespace:");
-
-    while (lastCharIndex > 0) {
-
-      // Find the last non-whitespace char
-
-      lastChar           = string.charAt(lastCharIndex);
-      dump(lastChar);
-      if (!IsWhitespace(lastChar)) break;
-      lastCharIndex         = lastCharIndex -1;
-    }
-    dump("[non-space found]\nlastCharIndex="+lastCharIndex+"\n");
-    
-    string           = string.slice(0, lastCharIndex+1);
-    if (addEllipses) {
-      string = string+"...";
-      dump(string+"\n");
-    }
-  }
-  return string;
+    if (addEllipses)
+      string += "...";
+    return string;
 }
 
 // Replace all whitespace characters with supplied character
 // E.g.: Use charReplace = " ", to "unwrap" the string by removing line-end chars
 //       Use charReplace = "_" when you don't want spaces (like in a URL)
 function ReplaceWhitespace(string, charReplace) {
-  if (string.length > 0 )
-  {
-    string           = TrimString(string);
-    // This replaces a run of whitespace with just one character
-    string           = string.replace(/\s+/g, charReplace);
-  }
-  dump(string+"\n");
-  return string;
+  return string.replace(/(^\s+)|(\s+$)/g,'').replace(/\s+/g,charReplace)
 }
 
 // this function takes an elementID and a flag
@@ -383,20 +320,18 @@ sysBeep               = sysBeep.QueryInterface(Components.interfaces.nsISound);
 
 function forceInteger(elementID)
 {
-  editfield           = document.getElementById( elementID );
-  if ( !editfield )
+  var editField = document.getElementById( elementID );
+  if ( !editField )
     return;
-  
-  var stringIn           = editfield.value;
-  var pat = /\D/g;
-  
-  result           = stringIn.match(pat, "");
-  if (result) {
-    editfield.value         = stringIn.replace(pat,"");
 
-    // hopefully we can remove the following line for blur() once xp widgets land
+  var stringIn = editField.value;
+  var pat = /\D+/g;
+  if (pat.test(stringIn)) {
+    editField.value = stringIn.replace(pat,"");
 
-    editfield.blur();
+    // we hope to remove the following line for blur() once xp widgets land
+    // cmanske (9/15) testing this now that GFX ender widget is active
+    //editField.blur();
     sysBeep.Beep();
   }
 }
