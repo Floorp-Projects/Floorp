@@ -1,3 +1,22 @@
+Better errors for failures in Storable.pm
+
+BasicTxtHeader.pm had a bug which prevented it from working when using Storable
+
+Rework the BT modules to allow use when URL is not easily mapped from the bugid
+
+Begin work to allow tinderbox admin pages to open and close bonsai trees
+
+fix code which allowed tinderbox to determine the state of bonsai trees
+
+Major bug in theh untainting code, fixed. This was a security
+problem. I suspect people may have trouble with the fix but this was
+how the code was inteneded to work.  I do not understand how this got
+through my unit tests.
+
+Give a useful example of how use the new build script.
+
+Improve the specfiles, split out build machine packages.
+
 
 Release 0.9
 
