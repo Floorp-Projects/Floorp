@@ -86,6 +86,8 @@ nsScrollPortView::nsScrollPortView()
 
   mListeners = nsnull;
   mSmoothScroll = nsnull;
+
+  SetClipChildrenToBounds(PR_TRUE);
 }
 
 nsScrollPortView::~nsScrollPortView()

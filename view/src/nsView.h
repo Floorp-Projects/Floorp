@@ -128,15 +128,34 @@ public:
    * All of the children of this view will be clipped using
    * the specified rectangle
    */
-  void SetClipChildren(PRBool aDoClip) {
-    mVFlags = (mVFlags & ~NS_VIEW_FLAG_CLIPCHILDREN) | (aDoClip ? NS_VIEW_FLAG_CLIPCHILDREN : 0);
+  void SetClipChildrenToRect(const nsRect* aRect) {
+    if (!aRect) {
+      delete mClipRect;
+      mClipRect = nsnull;
+    } else {
+      if (mClipRect) {
+        *mClipRect = *aRect;
+      } else {
+        mClipRect = new nsRect(*aRect);
+      }
+    }
   }
-  void SetChildClip(const nsRect &aRect) { mChildClip = aRect; }
+  void SetClipChildrenToBounds(PRBool aDoClip) {
+    mVFlags = (mVFlags & ~NS_VIEW_FLAG_CLIP_CHILDREN_TO_BOUNDS)
+      | (aDoClip ? NS_VIEW_FLAG_CLIP_CHILDREN_TO_BOUNDS : 0);
+  }
+  void SetClipPlaceholdersToBounds(PRBool aDoClip) {
+    mVFlags = (mVFlags & ~NS_VIEW_FLAG_CLIP_PLACEHOLDERS_TO_BOUNDS)
+      | (aDoClip ? NS_VIEW_FLAG_CLIP_PLACEHOLDERS_TO_BOUNDS : 0);
+  }
+
   /**
    * Called to get the dimensions and position of the clip for the children of this view.
    */
-  PRBool GetClipChildren() const { return (mVFlags & NS_VIEW_FLAG_CLIPCHILDREN) != 0; }
-  void GetChildClip(nsRect &aRect) const { aRect = mChildClip; }
+  const nsRect* GetClipChildrenToRect() const
+  { return mClipRect; }
+  PRBool GetClipChildrenToBounds(PRBool aPlaceholders) const
+  { return (mVFlags & (aPlaceholders ? NS_VIEW_FLAG_CLIP_PLACEHOLDERS_TO_BOUNDS : NS_VIEW_FLAG_CLIP_CHILDREN_TO_BOUNDS)) != 0; }
 
   /**
    * Called to indicate that the visibility of a view has been
@@ -193,15 +212,12 @@ public:
    * @return error status
    */
   NS_IMETHOD  SetWidget(nsIWidget *aWidget);
-  /**
-   * Return a rectangle containing the view's bounds adjusted for it's ancestors clipping
-   * @param aClippedRect views bounds adjusted for ancestors clipping. If aEmpty is TRUE it
-   * aClippedRect is set to an empty rect.
-   * @param aIsClipped returns with PR_TRUE if view's rectangle is clipped by an ancestor
-   * @param aEmpty returns with PR_TRUE if view's rectangle is 'clipped out'
-   */
-  NS_IMETHOD  GetClippedRect(nsRect& aClippedRect, PRBool& aIsClipped, PRBool& aEmpty) const;
 
+  /**
+   * @return the view's dimensions after clipping by ancestors is applied
+   * (the rect is relative to the view's origin)
+   */
+  nsRect GetClippedRect();
 
   /**
    * Sync your widget size and position with the view
@@ -211,9 +227,6 @@ public:
 
   // Helper function to get the view that's associated with a widget
   static nsView*  GetViewFor(nsIWidget* aWidget);
-
-   // Helper function to determine if the view point is inside of a view
-  PRBool PointIsInside(nsView& aView, nscoord x, nscoord y) const;
 
   // Helper function to get mouse grabbing off this view (by moving it to the
   // parent, if we can)
@@ -249,7 +262,13 @@ public:
   void SetTopMost(PRBool aTopMost) { aTopMost ? mVFlags |= NS_VIEW_FLAG_TOPMOST : mVFlags &= ~NS_VIEW_FLAG_TOPMOST; }
   PRBool IsTopMost() { return((mVFlags & NS_VIEW_FLAG_TOPMOST) != 0); }
 
+  // Don't use this method when you want to adjust an nsPoint.
+  // Just write "pt += view->GetPosition();"
+  // When everything's converted to nsPoint, this can go away.
   void ConvertToParentCoords(nscoord* aX, nscoord* aY) const { *aX += mPosX; *aY += mPosY; }
+  // Don't use this method when you want to adjust an nsPoint.
+  // Just write "pt -= view->GetPosition();"
+  // When everything's converted to nsPoint, this can go away.
   void ConvertFromParentCoords(nscoord* aX, nscoord* aY) const { *aX -= mPosX; *aY -= mPosY; }
   void ResetWidgetPosition(PRBool aRecurse);
   void SetPositionIgnoringChildWidgets(nscoord aX, nscoord aY);
@@ -261,10 +280,10 @@ protected:
 protected:
   nsZPlaceholderView*mZParent;
 
-  //XXX should there be pointers to last child so backward walking is fast?
-  nsRect            mChildClip;
-  nsIRegion*        mDirtyRegion;
-  PRPackedBool      mChildRemoved;
+  // mClipRect is relative to the view's origin.
+  nsRect*         mClipRect;
+  nsIRegion*      mDirtyRegion;
+  PRPackedBool    mChildRemoved;
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
