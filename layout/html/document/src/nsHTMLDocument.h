@@ -178,11 +178,13 @@ protected:
   nsresult GetBodyElement(nsIDOMHTMLBodyElement** aBody);
 
   virtual nsresult Reset(nsIURL *aURL);
-  nsresult WriteCommon(JSContext *cx, 
-                       jsval *argv, 
-                       PRUint32 argc,
+  nsresult WriteCommon(const nsString& aText,
                        PRBool aNewlineTerminate);
-
+  nsresult ScriptWriteCommon(JSContext *cx, 
+                             jsval *argv, 
+                             PRUint32 argc,
+                             PRBool aNewlineTerminate);
+  nsresult OpenCommon(nsIURL* aUrl);
 
   nsIHTMLStyleSheet*    mAttrStyleSheet;
   nsIHTMLCSSStyleSheet* mStyleAttrStyleSheet;
