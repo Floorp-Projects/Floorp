@@ -84,6 +84,7 @@
 #include "nsProcess.h"
 #include "nsSlidingString.h"
 #include "nsIInputStreamTee.h"
+#include "nsDoubleHashtable.h"
 #ifdef DEBUG
 #include "pure.h"
 #endif
@@ -114,6 +115,7 @@ void XXXNeverCalled()
     dummyComparitor dummy;
     nsVoidArray();
     nsSmallVoidArray();
+    nsDoubleHashtableStringSupports dhss;
     nsValueArray(0);
     nsAVLTree(dummy, nsnull);
     nsSupportsArray();
