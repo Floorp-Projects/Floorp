@@ -1078,8 +1078,10 @@ Rights Reserved.
   	  </menubutton>
 			<button class="button-toolbar-2 top" id="button-stop" value="&stopButton.label;"  tooltip="aTooltip" tooltiptext="&stopButton.tooltip;" oncommand="MsgStop();"/>
 			<spring flex="1"/>
+            <box autostretch="never">
+  	            <button id="navigator-throbber" oncommand='goClickThrobber("messenger.throbber.url")'/>
+            </box>
 		</box>
-  	<button id="navigator-throbber" oncommand='goClickThrobber("messenger.throbber.url")'/>
 	</toolbar>
 </toolbox>
 

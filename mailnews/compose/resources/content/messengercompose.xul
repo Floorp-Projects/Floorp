@@ -424,11 +424,13 @@
                tooltip="aTooltip" tooltiptext="&saveButton.tooltip;" 
                observes="cmd_saveDefault"/>
        <spring flex="1"/>
-      </box>
-       <button id="navigator-throbber" 
+       <box autostretch="never">
+         <button id="navigator-throbber" 
                oncommand="goClickThrobber('compose.throbber.url')">
-         <observes element="broadcaster_throbber" attribute="busy"/>
-       </button>
+           <observes element="broadcaster_throbber" attribute="busy"/>
+         </button>
+       </box>
+       </box>
     </toolbar>
   
     <toolbar id="MsgHeadersToolbar" persist="collapsed" tborient="vertical" tbautostretch="always" flex="1">
