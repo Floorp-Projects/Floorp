@@ -407,6 +407,11 @@ struct PA_Tag_struct {
     ED_Element *edit_element;
 };
 
+typedef struct _TagList {
+	PA_Tag *tagList; 
+    PA_Tag *lastTag; 
+} TagList;
+
 #define PA_HAS_PDATA( tag ) (tag->pVoid != 0 )
 
 #ifdef XP_UNIX
