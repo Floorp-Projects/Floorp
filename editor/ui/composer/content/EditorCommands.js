@@ -1494,7 +1494,7 @@ function EditorSetSelectionFromOffsets(selRanges)
 
 function EditorExit()
 {
-	dump("Exiting\n");
+  dump("Exiting in EditorExit\n");
   // This is in globalOverlay.js
   goQuitApplication();
 }
