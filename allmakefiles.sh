@@ -102,6 +102,7 @@ extensions/pics/tests/Makefile
 gfx/Makefile
 gfx/public/Makefile
 gfx/src/Makefile
+gfx/src/beos/Makefile
 gfx/src/gtk/Makefile
 gfx/src/ps/Makefile
 gfx/src/motif/Makefile
@@ -341,6 +342,7 @@ webshell/embed/Makefile
 widget/Makefile
 widget/public/Makefile
 widget/src/Makefile
+widget/src/beos/Makefile
 widget/src/build/Makefile
 widget/src/gtk/Makefile
 widget/src/motif/Makefile
