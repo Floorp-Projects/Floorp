@@ -4,6 +4,7 @@ interface XULMenuListElement : XULElement {
   attribute DOMString value;
   attribute DOMString data;
   attribute Element selectedItem;
+  attribute int selectedIndex;
   attribute DOMString crop;
   attribute boolean disabled;
   attribute DOMString src;

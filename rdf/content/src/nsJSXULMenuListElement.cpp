@@ -51,9 +51,10 @@ enum XULMenuListElement_slots {
   XULMENULISTELEMENT_VALUE = -1,
   XULMENULISTELEMENT_DATA = -2,
   XULMENULISTELEMENT_SELECTEDITEM = -3,
-  XULMENULISTELEMENT_CROP = -4,
-  XULMENULISTELEMENT_DISABLED = -5,
-  XULMENULISTELEMENT_SRC = -6
+  XULMENULISTELEMENT_SELECTEDINDEX = -4,
+  XULMENULISTELEMENT_CROP = -5,
+  XULMENULISTELEMENT_DISABLED = -6,
+  XULMENULISTELEMENT_SRC = -7
 };
 
 /***********************************************************************/
@@ -70,7 +71,7 @@ GetXULMenuListElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
   }
 
-  nsresult rv;
+  nsresult rv = NS_OK;
   if (JSVAL_IS_INT(id)) {
     nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
     if (!secMan)
@@ -109,6 +110,18 @@ GetXULMenuListElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           if (NS_SUCCEEDED(rv)) {
             // get the js object
             nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+          }
+        }
+        break;
+      }
+      case XULMENULISTELEMENT_SELECTEDINDEX:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULMENULISTELEMENT_SELECTEDINDEX, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          rv = a->GetSelectedIndex(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
           }
         }
         break;
@@ -176,7 +189,7 @@ SetXULMenuListElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
   }
 
-  nsresult rv;
+  nsresult rv = NS_OK;
   if (JSVAL_IS_INT(id)) {
     nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
     if (!secMan)
@@ -219,6 +232,24 @@ SetXULMenuListElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       
           rv = a->SetSelectedItem(prop);
           NS_IF_RELEASE(prop);
+        }
+        break;
+      }
+      case XULMENULISTELEMENT_SELECTEDINDEX:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULMENULISTELEMENT_SELECTEDINDEX, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          int32 temp;
+          if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
+            prop = (PRInt32)temp;
+          }
+          else {
+            rv = NS_ERROR_DOM_NOT_NUMBER_ERR;
+          }
+      
+          rv = a->SetSelectedIndex(prop);
+          
         }
         break;
       }
@@ -332,6 +363,7 @@ static JSPropertySpec XULMenuListElementProperties[] =
   {"value",    XULMENULISTELEMENT_VALUE,    JSPROP_ENUMERATE},
   {"data",    XULMENULISTELEMENT_DATA,    JSPROP_ENUMERATE},
   {"selectedItem",    XULMENULISTELEMENT_SELECTEDITEM,    JSPROP_ENUMERATE},
+  {"selectedIndex",    XULMENULISTELEMENT_SELECTEDINDEX,    JSPROP_ENUMERATE},
   {"crop",    XULMENULISTELEMENT_CROP,    JSPROP_ENUMERATE},
   {"disabled",    XULMENULISTELEMENT_DISABLED,    JSPROP_ENUMERATE},
   {"src",    XULMENULISTELEMENT_SRC,    JSPROP_ENUMERATE},

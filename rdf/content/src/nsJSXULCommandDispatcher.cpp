@@ -74,7 +74,7 @@ GetXULCommandDispatcherProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
     return JS_TRUE;
   }
 
-  nsresult rv;
+  nsresult rv = NS_OK;
   if (JSVAL_IS_INT(id)) {
     nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
     if (!secMan)
@@ -157,7 +157,7 @@ SetXULCommandDispatcherProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
     return JS_TRUE;
   }
 
-  nsresult rv;
+  nsresult rv = NS_OK;
   if (JSVAL_IS_INT(id)) {
     nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
     if (!secMan)
