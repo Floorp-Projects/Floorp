@@ -733,6 +733,12 @@ var BookmarksUtils = {
     }
     catch (e) {
     }
+
+    // XXX - 0.8 hack - prevent dialog from appearing on Mac, as there are
+    //       crashes in optimized builds. 
+    if (navigator.platform.toLowerCase().indexOf("mac") != -1) {
+      showDialog = false;
+    }
     
     if (showDialog)
       openDialog("chrome://communicator/content/bookmarks/addBookmark.xul", "", 
