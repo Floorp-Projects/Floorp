@@ -467,6 +467,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
     JSValues* registers = &mActivation->mRegisters;
 
     mPC = mActivation->mICode->its_iCode->begin();
+    InstructionIterator endPC = mActivation->mICode->its_iCode->end();
 
     // stack of all catch/finally handlers available for the current activation
     // to implement jsr/rts for finally code
@@ -479,6 +480,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
             if (mListeners.size())
                 broadcast(EV_STEP);
 
+            assert(mPC != endPC);
             Instruction* instruction = *mPC;
             switch (instruction->op()) {
             case FUNCTION:
@@ -526,6 +528,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                         mActivation = new Activation(target->getICode(), mActivation, base, op4(call));
                         registers = &mActivation->mRegisters;
                         mPC = mActivation->mICode->its_iCode->begin();
+                        endPC = mActivation->mICode->its_iCode->end();
                         continue;
                     }
                 }
@@ -562,6 +565,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                         mActivation = new Activation(target->getICode(), mActivation, kNull, op4(call));
                         registers = &mActivation->mRegisters;
                         mPC = mActivation->mICode->its_iCode->begin();
+                        endPC = mActivation->mICode->its_iCode->end();
                         continue;
                     }
                 }
@@ -581,6 +585,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     registers = &mActivation->mRegisters;
                     (*registers)[linkage->mResult.first] = result;
                     mPC = linkage->mReturnPC;
+                    endPC = mActivation->mICode->its_iCode->end();
                 }
                 continue;
 
@@ -602,6 +607,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     registers = &mActivation->mRegisters;
                     (*registers)[linkage->mResult.first] = result;
                     mPC = linkage->mReturnPC;
+                    endPC = mActivation->mICode->its_iCode->end();
                 }
                 continue;
             case MOVE:
@@ -781,6 +787,7 @@ using JSString throughout.
                         mActivation = new Activation(target->getICode(), r1, r2);
                         registers = &mActivation->mRegisters;
                         mPC = mActivation->mICode->its_iCode->begin();
+                        endPC = mActivation->mICode->its_iCode->end();
                         continue;
                     }
                 }
