@@ -26,7 +26,7 @@ DeleteTextTxn::DeleteTextTxn()
 {
 }
 
-nsresult DeleteTextTxn::Init(nsIEditor *aEditor,
+NS_IMETHODIMP DeleteTextTxn::Init(nsIEditor *aEditor,
                              nsIDOMCharacterData *aElement,
                              PRUint32 aOffset,
                              PRUint32 aNumCharsToDelete)
@@ -40,7 +40,7 @@ nsresult DeleteTextTxn::Init(nsIEditor *aEditor,
   return NS_OK;
 }
 
-nsresult DeleteTextTxn::Do(void)
+NS_IMETHODIMP DeleteTextTxn::Do(void)
 {
   nsresult result = NS_ERROR_NULL_POINTER;
   if (mEditor && mElement)
@@ -66,7 +66,7 @@ nsresult DeleteTextTxn::Do(void)
 
 //XXX: we may want to store the selection state and restore it properly
 //     was it an insertion point or an extended selection?
-nsresult DeleteTextTxn::Undo(void)
+NS_IMETHODIMP DeleteTextTxn::Undo(void)
 {
   nsresult result = NS_ERROR_NULL_POINTER;
   if (mEditor && mElement)
@@ -87,19 +87,19 @@ nsresult DeleteTextTxn::Undo(void)
   return result;
 }
 
-nsresult DeleteTextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
+NS_IMETHODIMP DeleteTextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
 {
   if (nsnull!=aDidMerge)
     *aDidMerge=PR_FALSE;
   return NS_OK;
 }
 
-nsresult DeleteTextTxn::Write(nsIOutputStream *aOutputStream)
+NS_IMETHODIMP DeleteTextTxn::Write(nsIOutputStream *aOutputStream)
 {
   return NS_OK;
 }
 
-nsresult DeleteTextTxn::GetUndoString(nsString **aString)
+NS_IMETHODIMP DeleteTextTxn::GetUndoString(nsString **aString)
 {
   if (nsnull!=aString)
   {
@@ -109,7 +109,7 @@ nsresult DeleteTextTxn::GetUndoString(nsString **aString)
   return NS_OK;
 }
 
-nsresult DeleteTextTxn::GetRedoString(nsString **aString)
+NS_IMETHODIMP DeleteTextTxn::GetRedoString(nsString **aString)
 {
   if (nsnull!=aString)
   {

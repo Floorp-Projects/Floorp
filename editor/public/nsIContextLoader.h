@@ -52,7 +52,7 @@ class nsIContextLoader  : public nsISupports{
    * @param aIndex2 second index to lookup the result
    * @param aResult place to put the result of the lookup
    */
-  virtual nsresult Lookup(PRUint32 aIndex1, PRUint32 aIndex2, PRUint32 **aResult)= 0;
+  NS_IMETHOD Lookup(PRUint32 aIndex1, PRUint32 aIndex2, PRUint32 **aResult)= 0;
 
 };
 

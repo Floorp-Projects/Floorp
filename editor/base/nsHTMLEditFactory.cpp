@@ -51,7 +51,7 @@ GetHTMLEditFactory(nsIFactory **aFactory, const nsCID & aClass)
 ////////////////////////////////////////////////////////////////////////////
 // from nsISupports 
 
-NS_METHOD
+NS_IMETHODIMP
 nsHTMLEditFactory::QueryInterface(const nsIID& aIID, void** aInstancePtr) 
 {
   if (nsnull == aInstancePtr) {
@@ -74,7 +74,7 @@ NS_IMPL_RELEASE(nsHTMLEditFactory)
 ////////////////////////////////////////////////////////////////////////////
 // from nsIFactory:
 
-NS_METHOD
+NS_IMETHODIMP
 nsHTMLEditFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
   *aResult  = nsnull;
@@ -99,7 +99,7 @@ nsHTMLEditFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aRe
 
 
 
-NS_METHOD
+NS_IMETHODIMP
 nsHTMLEditFactory::LockFactory(PRBool aLock)
 {
   return NS_OK;

@@ -37,10 +37,10 @@ class nsIEditProperty : public nsISupports
 public:
   static const nsIID& IID() { static nsIID iid = NS_IEDITPROPERTY_IID; return iid; }
 
-  virtual nsresult Init(nsIAtom *aPropName, nsIAtom *aValue, PRBool aAppliesToAll)=0;
-  virtual nsresult GetProperty(nsIAtom **aProperty) const =0;  
-  virtual nsresult GetValue(nsIAtom **aValue) const =0;  
-  virtual nsresult GetAppliesToAll(PRBool *aAppliesToAll) const =0;  
+  NS_IMETHOD Init(nsIAtom *aPropName, nsIAtom *aValue, PRBool aAppliesToAll)=0;
+  NS_IMETHOD GetProperty(nsIAtom **aProperty) const =0;  
+  NS_IMETHOD GetValue(nsIAtom **aValue) const =0;  
+  NS_IMETHOD GetAppliesToAll(PRBool *aAppliesToAll) const =0;  
 
 /* we're still trying to decide how edit atoms will work.  Until then, use these */
 // XXX: fix ASAP!

@@ -43,7 +43,7 @@ EditAggregateTxn::~EditAggregateTxn()
   }
 }
 
-nsresult EditAggregateTxn::Do(void)
+NS_IMETHODIMP EditAggregateTxn::Do(void)
 {
   nsresult result=NS_OK;  // it's legal (but not very useful) to have an empty child list
   if (nsnull!=mChildren)
@@ -61,7 +61,7 @@ nsresult EditAggregateTxn::Do(void)
   return result;
 }
 
-nsresult EditAggregateTxn::Undo(void)
+NS_IMETHODIMP EditAggregateTxn::Undo(void)
 {
   nsresult result=NS_OK;  // it's legal (but not very useful) to have an empty child list
   if (nsnull!=mChildren)
@@ -80,7 +80,7 @@ nsresult EditAggregateTxn::Undo(void)
   return result;
 }
 
-nsresult EditAggregateTxn::Redo(void)
+NS_IMETHODIMP EditAggregateTxn::Redo(void)
 {
   nsresult result=NS_OK;  // it's legal (but not very useful) to have an empty child list
   if (nsnull!=mChildren)
@@ -98,14 +98,14 @@ nsresult EditAggregateTxn::Redo(void)
   return result;
 }
 
-nsresult EditAggregateTxn::GetIsTransient(PRBool *aIsTransient)
+NS_IMETHODIMP EditAggregateTxn::GetIsTransient(PRBool *aIsTransient)
 {
   if (nsnull!=aIsTransient)
     *aIsTransient = PR_FALSE;
   return NS_OK;
 }
 
-nsresult EditAggregateTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
+NS_IMETHODIMP EditAggregateTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
 {
   nsresult result=NS_OK;  // it's legal (but not very useful) to have an empty child list
   if (nsnull!=aDidMerge)
@@ -124,26 +124,26 @@ nsresult EditAggregateTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction
 
 }
 
-nsresult EditAggregateTxn::Write(nsIOutputStream *aOutputStream)
+NS_IMETHODIMP EditAggregateTxn::Write(nsIOutputStream *aOutputStream)
 {
   return NS_OK;
 }
 
-nsresult EditAggregateTxn::GetUndoString(nsString **aString)
-{
-  if (nsnull!=aString)
-    *aString=nsnull;
-  return NS_OK;
-}
-
-nsresult EditAggregateTxn::GetRedoString(nsString **aString)
+NS_IMETHODIMP EditAggregateTxn::GetUndoString(nsString **aString)
 {
   if (nsnull!=aString)
     *aString=nsnull;
   return NS_OK;
 }
 
-nsresult EditAggregateTxn::AppendChild(EditTxn *aTxn)
+NS_IMETHODIMP EditAggregateTxn::GetRedoString(nsString **aString)
+{
+  if (nsnull!=aString)
+    *aString=nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP EditAggregateTxn::AppendChild(EditTxn *aTxn)
 {
   if ((nsnull!=mChildren) && (nsnull!=aTxn))
   {
@@ -153,13 +153,13 @@ nsresult EditAggregateTxn::AppendChild(EditTxn *aTxn)
   return NS_ERROR_NULL_POINTER;
 }
 
-nsresult EditAggregateTxn::SetName(nsIAtom *aName)
+NS_IMETHODIMP EditAggregateTxn::SetName(nsIAtom *aName)
 {
   mName = do_QueryInterface(aName);
   return NS_OK;
 }
 
-nsresult EditAggregateTxn::GetName(nsIAtom **aName)
+NS_IMETHODIMP EditAggregateTxn::GetName(nsIAtom **aName)
 {
   if (aName)
   {
@@ -173,7 +173,7 @@ nsresult EditAggregateTxn::GetName(nsIAtom **aName)
   return NS_ERROR_NULL_POINTER;
 }
 
-nsresult EditAggregateTxn::GetCount(PRInt32 *aCount)
+NS_IMETHODIMP EditAggregateTxn::GetCount(PRInt32 *aCount)
 {
   if (!aCount) {
     return NS_ERROR_NULL_POINTER;
@@ -185,7 +185,7 @@ nsresult EditAggregateTxn::GetCount(PRInt32 *aCount)
   return NS_OK;
 }
 
-nsresult EditAggregateTxn::GetTxnAt(PRInt32 aIndex, EditTxn **aTxn)
+NS_IMETHODIMP EditAggregateTxn::GetTxnAt(PRInt32 aIndex, EditTxn **aTxn)
 {
   if (!aTxn) {
     return NS_ERROR_NULL_POINTER;

@@ -39,10 +39,10 @@ protected:
   virtual ~nsEditProperty();
 
 public:
-  virtual nsresult Init(nsIAtom *aPropName, nsIAtom *aValue, PRBool aAppliesToAll);
-  virtual nsresult GetProperty(nsIAtom **aProperty) const;  
-  virtual nsresult GetValue(nsIAtom **aValue) const;  
-  virtual nsresult GetAppliesToAll(PRBool *aAppliesToAll) const; 
+  NS_IMETHOD Init(nsIAtom *aPropName, nsIAtom *aValue, PRBool aAppliesToAll);
+  NS_IMETHOD GetProperty(nsIAtom **aProperty) const;  
+  NS_IMETHOD GetValue(nsIAtom **aValue) const;  
+  NS_IMETHOD GetAppliesToAll(PRBool *aAppliesToAll) const; 
 
 protected:
   nsCOMPtr<nsIAtom>mProperty;

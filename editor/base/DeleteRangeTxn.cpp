@@ -45,7 +45,7 @@ DeleteRangeTxn::DeleteRangeTxn()
 {
 }
 
-nsresult DeleteRangeTxn::Init(nsIEditor *aEditor, nsIDOMRange *aRange)
+NS_IMETHODIMP DeleteRangeTxn::Init(nsIEditor *aEditor, nsIDOMRange *aRange)
 {
   if (aEditor && aRange)
   {
@@ -103,7 +103,7 @@ DeleteRangeTxn::~DeleteRangeTxn()
 {
 }
 
-nsresult DeleteRangeTxn::Do(void)
+NS_IMETHODIMP DeleteRangeTxn::Do(void)
 {
   if (!mStartParent || !mEndParent || !mCommonParent)
     return NS_ERROR_NULL_POINTER;
@@ -149,7 +149,7 @@ nsresult DeleteRangeTxn::Do(void)
   return result;
 }
 
-nsresult DeleteRangeTxn::Undo(void)
+NS_IMETHODIMP DeleteRangeTxn::Undo(void)
 {
   if (!mStartParent || !mEndParent || !mCommonParent)
     return NS_ERROR_NULL_POINTER;
@@ -168,7 +168,7 @@ nsresult DeleteRangeTxn::Undo(void)
   return result;
 }
 
-nsresult DeleteRangeTxn::Redo(void)
+NS_IMETHODIMP DeleteRangeTxn::Redo(void)
 {
   if (!mStartParent || !mEndParent || !mCommonParent)
     return NS_ERROR_NULL_POINTER;
@@ -187,19 +187,19 @@ nsresult DeleteRangeTxn::Redo(void)
   return result;
 }
 
-nsresult DeleteRangeTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
+NS_IMETHODIMP DeleteRangeTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
 {
   if (nsnull!=aDidMerge)
     *aDidMerge=PR_FALSE;
   return NS_OK;
 }
 
-nsresult DeleteRangeTxn::Write(nsIOutputStream *aOutputStream)
+NS_IMETHODIMP DeleteRangeTxn::Write(nsIOutputStream *aOutputStream)
 {
   return NS_OK;
 }
 
-nsresult DeleteRangeTxn::GetUndoString(nsString **aString)
+NS_IMETHODIMP DeleteRangeTxn::GetUndoString(nsString **aString)
 {
   if (nsnull!=aString)
   {
@@ -208,7 +208,7 @@ nsresult DeleteRangeTxn::GetUndoString(nsString **aString)
   return NS_OK;
 }
 
-nsresult DeleteRangeTxn::GetRedoString(nsString **aString)
+NS_IMETHODIMP DeleteRangeTxn::GetRedoString(nsString **aString)
 {
   if (nsnull!=aString)
   {
@@ -217,7 +217,7 @@ nsresult DeleteRangeTxn::GetRedoString(nsString **aString)
   return NS_OK;
 }
 
-nsresult DeleteRangeTxn::CreateTxnsToDeleteBetween(nsIDOMNode *aStartParent, 
+NS_IMETHODIMP DeleteRangeTxn::CreateTxnsToDeleteBetween(nsIDOMNode *aStartParent, 
                                                    PRUint32    aStartOffset, 
                                                    PRUint32    aEndOffset)
 {
@@ -272,7 +272,7 @@ nsresult DeleteRangeTxn::CreateTxnsToDeleteBetween(nsIDOMNode *aStartParent,
   return result;
 }
 
-nsresult DeleteRangeTxn::CreateTxnsToDeleteContent(nsIDOMNode *aParent, 
+NS_IMETHODIMP DeleteRangeTxn::CreateTxnsToDeleteContent(nsIDOMNode *aParent, 
                                                    PRUint32    aOffset, 
                                                    nsIEditor::Direction aDir)
 {
@@ -361,7 +361,7 @@ nsresult DeleteRangeTxn::CreateTxnsToDeleteContent(nsIDOMNode *aParent,
   return result;
 }
 
-nsresult DeleteRangeTxn::CreateTxnsToDeleteNodesBetween(nsIDOMNode *aCommonParent, 
+NS_IMETHODIMP DeleteRangeTxn::CreateTxnsToDeleteNodesBetween(nsIDOMNode *aCommonParent, 
                                                         nsIDOMNode *aFirstChild,
                                                         nsIDOMNode *aLastChild)
 {
@@ -509,7 +509,7 @@ nsresult DeleteRangeTxn::CreateTxnsToDeleteNodesBetween(nsIDOMNode *aCommonParen
 }
 
 // XXX: probably want to move this to editor as a standard support method
-nsresult DeleteRangeTxn::BuildAncestorList(nsIDOMNode *aNode, nsISupportsArray *aList)
+NS_IMETHODIMP DeleteRangeTxn::BuildAncestorList(nsIDOMNode *aNode, nsISupportsArray *aList)
 {
   nsresult result=NS_OK;
   if (nsnull!=aNode && nsnull!=aList)

@@ -46,10 +46,10 @@ public:
     * @param aOffsetInParent the location in aParent to insert the new element
     *                        if eAppend, the new element is appended as the last child
     */
-  virtual nsresult Init(nsIEditor *aEditor,
-                        const nsString& aTag,
-                        nsIDOMNode *aParent,
-                        PRUint32 aOffsetInParent);
+  NS_IMETHOD Init(nsIEditor *aEditor,
+                  const nsString& aTag,
+                  nsIDOMNode *aParent,
+                  PRUint32 aOffsetInParent);
 
 private:
   CreateElementTxn();
@@ -58,21 +58,21 @@ public:
 
   virtual ~CreateElementTxn();
 
-  virtual nsresult Do(void);
+  NS_IMETHOD Do(void);
 
-  virtual nsresult Undo(void);
+  NS_IMETHOD Undo(void);
 
-  virtual nsresult Redo(void);
+  NS_IMETHOD Redo(void);
 
-  virtual nsresult Merge(PRBool *aDidMerge, nsITransaction *aTransaction);
+  NS_IMETHOD Merge(PRBool *aDidMerge, nsITransaction *aTransaction);
 
-  virtual nsresult Write(nsIOutputStream *aOutputStream);
+  NS_IMETHOD Write(nsIOutputStream *aOutputStream);
 
-  virtual nsresult GetUndoString(nsString **aString);
+  NS_IMETHOD GetUndoString(nsString **aString);
 
-  virtual nsresult GetRedoString(nsString **aString);
+  NS_IMETHOD GetRedoString(nsString **aString);
 
-  virtual nsresult GetNewNode(nsIDOMNode **aNewNode);
+  NS_IMETHOD GetNewNode(nsIDOMNode **aNewNode);
 
 protected:
   

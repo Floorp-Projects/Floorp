@@ -40,17 +40,17 @@ DeleteTableRowTxn::DeleteTableRowTxn()
 {
 }
 
-nsresult DeleteTableRowTxn::Init(nsIDOMCharacterData *aElement,
+NS_IMETHODIMP DeleteTableRowTxn::Init(nsIDOMCharacterData *aElement,
                              nsIDOMNode *aNode,
                              nsIPresShell* aPresShell)
 {
-  mElement = aElement;
+  mElement = do_QueryInterface(aElement);
   mNodeToInsert = aNode;
   mPresShell = aPresShell;
   return NS_OK;
 }
 
-nsresult DeleteTableRowTxn::Do(void)
+NS_IMETHODIMP DeleteTableRowTxn::Do(void)
 {
   //nsresult res = mElement->InsertData(mOffset, mStringToInsert);
   // advance caret: This requires the presentation shell to get the selection.
@@ -64,7 +64,7 @@ nsresult DeleteTableRowTxn::Do(void)
   return res;
 }
 
-nsresult DeleteTableRowTxn::Undo(void)
+NS_IMETHODIMP DeleteTableRowTxn::Undo(void)
 {
   nsresult result = NS_ERROR_FAILURE;
 #if 0
@@ -83,7 +83,7 @@ nsresult DeleteTableRowTxn::Undo(void)
 }
 
 #if 0
-nsresult DeleteTableRowTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
+NS_IMETHODIMP DeleteTableRowTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
 {
   // set out param default value
   if (nsnull!=aDidMerge)
@@ -134,12 +134,12 @@ nsresult DeleteTableRowTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransactio
 }
 #endif
 
-nsresult DeleteTableRowTxn::Write(nsIOutputStream *aOutputStream)
+NS_IMETHODIMP DeleteTableRowTxn::Write(nsIOutputStream *aOutputStream)
 {
   return NS_OK;
 }
 
-nsresult DeleteTableRowTxn::GetUndoString(nsString **aString)
+NS_IMETHODIMP DeleteTableRowTxn::GetUndoString(nsString **aString)
 {
   if (nsnull!=aString)
   {
@@ -148,7 +148,7 @@ nsresult DeleteTableRowTxn::GetUndoString(nsString **aString)
   return NS_OK;
 }
 
-nsresult DeleteTableRowTxn::GetRedoString(nsString **aString)
+NS_IMETHODIMP DeleteTableRowTxn::GetRedoString(nsString **aString)
 {
   if (nsnull!=aString)
   {
@@ -159,7 +159,7 @@ nsresult DeleteTableRowTxn::GetRedoString(nsString **aString)
 
 /* ============= nsISupports implementation ====================== */
 
-nsresult
+NS_IMETHODIMP
 DeleteTableRowTxn::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   if (nsnull == aInstancePtr) {

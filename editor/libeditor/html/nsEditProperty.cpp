@@ -29,7 +29,7 @@ NS_IMPL_RELEASE(nsEditProperty)
 nsIAtom * nsIEditProperty::bold = NS_NewAtom("BOLD");
 nsIAtom * nsIEditProperty::italic = NS_NewAtom("ITALIC");
 
-nsresult
+NS_IMETHODIMP
 nsEditProperty::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   if (nsnull == aInstancePtr) {

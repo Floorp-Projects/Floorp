@@ -27,7 +27,7 @@ CreateElementTxn::CreateElementTxn()
 {
 }
 
-nsresult CreateElementTxn::Init(nsIEditor *aEditor,
+NS_IMETHODIMP CreateElementTxn::Init(nsIEditor *aEditor,
                                 const nsString& aTag,
                                 nsIDOMNode *aParent,
                                 PRUint32 aOffsetInParent)
@@ -59,7 +59,7 @@ CreateElementTxn::~CreateElementTxn()
 {
 }
 
-nsresult CreateElementTxn::Do(void)
+NS_IMETHODIMP CreateElementTxn::Do(void)
 {
   NS_ASSERTION(mEditor, "bad state -- null editor");
   nsresult result = NS_ERROR_NULL_POINTER;
@@ -112,7 +112,7 @@ nsresult CreateElementTxn::Do(void)
   return result;
 }
 
-nsresult CreateElementTxn::Undo(void)
+NS_IMETHODIMP CreateElementTxn::Undo(void)
 {
   nsCOMPtr<nsIDOMNode> resultNode;
   nsresult result = mParent->RemoveChild(mNewNode, getter_AddRefs(resultNode));
@@ -132,7 +132,7 @@ nsresult CreateElementTxn::Undo(void)
   return result;
 }
 
-nsresult CreateElementTxn::Redo(void)
+NS_IMETHODIMP CreateElementTxn::Redo(void)
 {
   nsCOMPtr<nsIDOMNode> resultNode;
   nsresult result = mParent->InsertBefore(mNewNode, mRefNode, getter_AddRefs(resultNode));
@@ -152,19 +152,19 @@ nsresult CreateElementTxn::Redo(void)
   return result;
 }
 
-nsresult CreateElementTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
+NS_IMETHODIMP CreateElementTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
 {
   if (nsnull!=aDidMerge)
     *aDidMerge=PR_FALSE;
   return NS_OK;
 }
 
-nsresult CreateElementTxn::Write(nsIOutputStream *aOutputStream)
+NS_IMETHODIMP CreateElementTxn::Write(nsIOutputStream *aOutputStream)
 {
   return NS_OK;
 }
 
-nsresult CreateElementTxn::GetUndoString(nsString **aString)
+NS_IMETHODIMP CreateElementTxn::GetUndoString(nsString **aString)
 {
   if (nsnull!=aString)
   {
@@ -174,7 +174,7 @@ nsresult CreateElementTxn::GetUndoString(nsString **aString)
   return NS_OK;
 }
 
-nsresult CreateElementTxn::GetRedoString(nsString **aString)
+NS_IMETHODIMP CreateElementTxn::GetRedoString(nsString **aString)
 {
   if (nsnull!=aString)
   {
@@ -184,7 +184,7 @@ nsresult CreateElementTxn::GetRedoString(nsString **aString)
   return NS_OK;
 }
 
-nsresult CreateElementTxn::GetNewNode(nsIDOMNode **aNewNode)
+NS_IMETHODIMP CreateElementTxn::GetNewNode(nsIDOMNode **aNewNode)
 {
   if (!aNewNode)
     return NS_ERROR_NULL_POINTER;

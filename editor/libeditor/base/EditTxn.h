@@ -40,21 +40,21 @@ public:
 
   EditTxn();
 
-  virtual nsresult Do(void);
+  NS_IMETHOD Do(void);
 
-  virtual nsresult Undo(void);
+  NS_IMETHOD Undo(void);
 
-  virtual nsresult Redo(void);
+  NS_IMETHOD Redo(void);
 
-  virtual nsresult GetIsTransient(PRBool *aIsTransient);
+  NS_IMETHOD GetIsTransient(PRBool *aIsTransient);
 
-  virtual nsresult Merge(PRBool *aDidMerge, nsITransaction *aTransaction);
+  NS_IMETHOD Merge(PRBool *aDidMerge, nsITransaction *aTransaction);
 
-  virtual nsresult Write(nsIOutputStream *aOutputStream);
+  NS_IMETHOD Write(nsIOutputStream *aOutputStream);
 
-  virtual nsresult GetUndoString(nsString **aString);
+  NS_IMETHOD GetUndoString(nsString **aString);
 
-  virtual nsresult GetRedoString(nsString **aString);
+  NS_IMETHOD GetRedoString(nsString **aString);
 
 };
 

@@ -25,7 +25,7 @@ ChangeAttributeTxn::ChangeAttributeTxn()
 {
 }
 
-nsresult ChangeAttributeTxn::Init(nsIEditor      *aEditor,
+NS_IMETHODIMP ChangeAttributeTxn::Init(nsIEditor      *aEditor,
                                   nsIDOMElement  *aElement,
                                   const nsString& aAttribute,
                                   const nsString& aValue,
@@ -46,7 +46,7 @@ nsresult ChangeAttributeTxn::Init(nsIEditor      *aEditor,
     return NS_ERROR_NULL_POINTER;
 }
 
-nsresult ChangeAttributeTxn::Do(void)
+NS_IMETHODIMP ChangeAttributeTxn::Do(void)
 {
   // need to get the current value of the attribute and save it, and set mAttributeWasSet
   const int stringlen=100;
@@ -72,7 +72,7 @@ nsresult ChangeAttributeTxn::Do(void)
   return result;
 }
 
-nsresult ChangeAttributeTxn::Undo(void)
+NS_IMETHODIMP ChangeAttributeTxn::Undo(void)
 {
   nsresult result=NS_OK;
   if (PR_TRUE==mAttributeWasSet)
@@ -83,7 +83,7 @@ nsresult ChangeAttributeTxn::Undo(void)
   return result;
 }
 
-nsresult ChangeAttributeTxn::Redo(void)
+NS_IMETHODIMP ChangeAttributeTxn::Redo(void)
 {
   nsresult result;
 
@@ -95,19 +95,19 @@ nsresult ChangeAttributeTxn::Redo(void)
   return result;
 }
 
-nsresult ChangeAttributeTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
+NS_IMETHODIMP ChangeAttributeTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
 {
   if (nsnull!=aDidMerge)
     *aDidMerge=PR_FALSE;
   return NS_OK;
 }
 
-nsresult ChangeAttributeTxn::Write(nsIOutputStream *aOutputStream)
+NS_IMETHODIMP ChangeAttributeTxn::Write(nsIOutputStream *aOutputStream)
 {
   return NS_OK;
 }
 
-nsresult ChangeAttributeTxn::GetUndoString(nsString **aString)
+NS_IMETHODIMP ChangeAttributeTxn::GetUndoString(nsString **aString)
 {
   if (nsnull!=aString)
   {
@@ -120,7 +120,7 @@ nsresult ChangeAttributeTxn::GetUndoString(nsString **aString)
   return NS_OK;
 }
 
-nsresult ChangeAttributeTxn::GetRedoString(nsString **aString)
+NS_IMETHODIMP ChangeAttributeTxn::GetRedoString(nsString **aString)
 {
   if (nsnull!=aString)
   {

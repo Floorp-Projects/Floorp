@@ -53,9 +53,9 @@ public:
   /** Initialize the text editor 
     *
     */
-  virtual nsresult InitTextEditor(nsIDOMDocument *aDoc, 
-                                  nsIPresShell   *aPresShell,
-                                  nsIEditorCallback *aCallback=nsnull)=0;
+  NS_IMETHOD InitTextEditor(nsIDOMDocument *aDoc, 
+                            nsIPresShell   *aPresShell,
+                            nsIEditorCallback *aCallback=nsnull)=0;
 
   /**
    * SetTextProperties() sets the aggregate properties on the current selection
@@ -63,7 +63,7 @@ public:
    * @param aPropList  a list of properties to set across the selection 
    * NOTE: this method is experimental, expect it to change.
    */
-  virtual nsresult SetTextProperties(nsISupportsArray *aPropList)=0;
+  NS_IMETHOD SetTextProperties(nsISupportsArray *aPropList)=0;
 
   /**
    * GetTextProperties() gets the aggregate properties of the current selection.
@@ -74,7 +74,7 @@ public:
    *                  in the current selection.  Each item in aPropList is an nsEditProperty.
    * NOTE: this method is experimental, expect it to change.
    */
-  virtual nsresult GetTextProperties(nsISupportsArray *aPropList)=0;
+  NS_IMETHOD GetTextProperties(nsISupportsArray *aPropList)=0;
 
   /**
    * RemoveTextProperties() deletes the properties from all text in the current selection.
@@ -83,14 +83,14 @@ public:
    * @param aElement      the content element to operate on
    * @param aAttribute    the string representation of the attribute to get
    */
-  virtual nsresult RemoveTextProperties(nsISupportsArray *aPropList)=0;
+  NS_IMETHOD RemoveTextProperties(nsISupportsArray *aPropList)=0;
 
   /** 
    * DeleteSelection removes all nodes in the current selection.
    * @param aDir  if eLTR, delete to the right (for example, the DEL key)
    *              if eRTL, delete to the left (for example, the BACKSPACE key)
    */
-  virtual nsresult DeleteSelection(nsIEditor::Direction aDir)=0;
+  NS_IMETHOD DeleteSelection(nsIEditor::Direction aDir)=0;
 
   /**
    * InsertText() Inserts a string at the current location, given by the selection.
@@ -102,7 +102,7 @@ public:
    *
    * @param aString   the string to be inserted
    */
-  virtual nsresult InsertText(const nsString& aStringToInsert)=0;
+  NS_IMETHOD InsertText(const nsString& aStringToInsert)=0;
 
   /**
    * The handler for the ENTER key.
@@ -110,7 +110,7 @@ public:
    * It may insert a <BR> or a <P> or activate the properties of the element
    * @param aCtrlKey  was the CtrlKey down?
    */
-  virtual nsresult InsertBreak(PRBool aCtrlKey)=0;
+  NS_IMETHOD InsertBreak(PRBool aCtrlKey)=0;
 
   /** turn the undo system on or off
     * @param aEnable  if PR_TRUE, the undo system is turned on if it is available
@@ -118,7 +118,7 @@ public:
     * @return         if aEnable is PR_TRUE, returns NS_OK if the undo system could be initialized properly
     *                 if aEnable is PR_FALSE, returns NS_OK.
     */
-  virtual nsresult EnableUndo(PRBool aEnable)=0;
+  NS_IMETHOD EnableUndo(PRBool aEnable)=0;
 
   /** Undo reverses the effects of the last Do operation, if Undo is enabled in the editor.
     * It is provided here so clients need no knowledge of whether the editor has a transaction manager or not.
@@ -127,13 +127,13 @@ public:
     * Otherwise, the Undo request is ignored and an error NS_ERROR_NOT_AVAILABLE is returned.
     *
     */
-  virtual nsresult Undo(PRUint32 aCount)=0;
+  NS_IMETHOD Undo(PRUint32 aCount)=0;
 
   /** returns state information about the undo system.
     * @param aIsEnabled [OUT] PR_TRUE if undo is enabled
     * @param aCanUndo   [OUT] PR_TRUE if at least one transaction is currently ready to be undone.
     */
-  virtual nsresult CanUndo(PRBool &aIsEnabled, PRBool &aCanUndo)=0;
+  NS_IMETHOD CanUndo(PRBool &aIsEnabled, PRBool &aCanUndo)=0;
 
   /** Redo reverses the effects of the last Undo operation
     * It is provided here so clients need no knowledge of whether the editor has a transaction manager or not.
@@ -143,13 +143,13 @@ public:
     * the Redo request is ignored and an error NS_ERROR_NOT_AVAILABLE is returned.
     *
     */
-  virtual nsresult Redo(PRUint32 aCount)=0;
+  NS_IMETHOD Redo(PRUint32 aCount)=0;
 
   /** returns state information about the redo system.
     * @param aIsEnabled [OUT] PR_TRUE if redo is enabled
     * @param aCanRedo   [OUT] PR_TRUE if at least one transaction is currently ready to be redone.
     */
-  virtual nsresult CanRedo(PRBool &aIsEnabled, PRBool &aCanRedo)=0;
+  NS_IMETHOD CanRedo(PRBool &aIsEnabled, PRBool &aCanRedo)=0;
 
   /** BeginTransaction is a signal to the editor that the caller will execute multiple updates
     * to the content tree that should be treated as a single operation, 
@@ -159,13 +159,13 @@ public:
     * EndTransaction must be called after BeginTransaction.<br>
     * Calls to BeginTransaction can be nested, as long as EndTransaction is called once per BeginTransaction.
     */
-  virtual nsresult BeginTransaction()=0;
+  NS_IMETHOD BeginTransaction()=0;
 
   /** EndTransaction is a signal to the editor that the caller is finished updating the content model.
     * BeginTransaction must be called before EndTransaction is called.
     * Calls to BeginTransaction can be nested, as long as EndTransaction is called once per BeginTransaction.
     */
-  virtual nsresult EndTransaction()=0;
+  NS_IMETHOD EndTransaction()=0;
 
 /* the following methods are the convenience methods to make text editing easy for the embedding App
  * all simple getter and setter methods use Get/Set/RemoveProperties
@@ -179,13 +179,13 @@ public:
     * @param aIncrement  the amount to move the Selection 
     *                    legal values are nsIEditor::Line, nsIEditor::Page
     */
-  virtual nsresult MoveSelectionUp(nsIAtom *aIncrement, PRBool aExtendSelection)=0;
+  NS_IMETHOD MoveSelectionUp(nsIAtom *aIncrement, PRBool aExtendSelection)=0;
 
   /** move the selection down (towards the end of the document.)
     * @param aIncrement  the amount to move the Selection 
     *                    legal values are nsIEditor::Line, nsIEditor::Page
     */
-  virtual nsresult MoveSelectionDown(nsIAtom *aIncrement, PRBool aExtendSelection)=0;
+  NS_IMETHOD MoveSelectionDown(nsIAtom *aIncrement, PRBool aExtendSelection)=0;
 
   /** move the selection by some increment.
     * The dir attribute for the document is used to decide if "next" is LTR or RTL
@@ -193,9 +193,9 @@ public:
     *                    legal values are nsIEditor::Word, nsIEditor::Sentence, nsIEditor::Paragraph
     * @param aExtendSelection
     */
-  virtual nsresult MoveSelectionNext(nsIAtom *aIncrement, PRBool aExtendSelection)=0;
+  NS_IMETHOD MoveSelectionNext(nsIAtom *aIncrement, PRBool aExtendSelection)=0;
 
-  virtual nsresult MoveSelectionPrevious(nsIAtom *aIncrement, PRBool aExtendSelection)=0;
+  NS_IMETHOD MoveSelectionPrevious(nsIAtom *aIncrement, PRBool aExtendSelection)=0;
 
   /** select the next portion of the document
     * The dir attribute for the document is used to decide if "next" is LTR or RTL
@@ -204,7 +204,7 @@ public:
     *                                nsIEditor::Document
     * @param aExtendSelection
     */
-  virtual nsresult SelectNext(nsIAtom *aIncrement, PRBool aExtendSelection)=0; 
+  NS_IMETHOD SelectNext(nsIAtom *aIncrement, PRBool aExtendSelection)=0; 
 
   /** select the previous portion of the document
     * The dir attribute for the document is used to decide if "next" is LTR or RTL
@@ -213,36 +213,36 @@ public:
     *                                nsIEditor::Document
     * @param aExtendSelection
     */
-  virtual nsresult SelectPrevious(nsIAtom *aIncrement, PRBool aExtendSelection)=0;
+  NS_IMETHOD SelectPrevious(nsIAtom *aIncrement, PRBool aExtendSelection)=0;
 
   /** scroll the viewport up (towards the beginning of the document.)
     * @param aIncrement  the amount to scroll
     *                    legal values are nsIEditor::Line, nsIEditor::Page
     */
-  virtual nsresult ScrollUp(nsIAtom *aIncrement)=0;
+  NS_IMETHOD ScrollUp(nsIAtom *aIncrement)=0;
   
   /** scroll the viewport down (towards the end of the document.)
     * @param aIncrement  the amount to scroll
     *                    legal values are nsIEditor::Line, nsIEditor::Page
     */
-  virtual nsresult ScrollDown(nsIAtom *aIncrement)=0;
+  NS_IMETHOD ScrollDown(nsIAtom *aIncrement)=0;
 
   /** scroll the viewport so the selection is in view.
     * @param aScrollToBegin  PR_TRUE if the beginning of the selection is to be scrolled into view.
     *                        PR_FALSE if the end of the selection is to be scrolled into view
     */
-  virtual nsresult ScrollIntoView(PRBool aScrollToBegin)=0;
+  NS_IMETHOD ScrollIntoView(PRBool aScrollToBegin)=0;
 
 // Input/Output
   // nsString will be a stream, as soon as I can figure out what kind of stream we should be using
-  virtual nsresult Insert(nsIInputStream *aInputStream)=0;
-  virtual nsresult OutputText(nsIOutputStream *aOutputStream)=0;
-  virtual nsresult OutputHTML(nsIOutputStream *aOutputStream)=0;
+  NS_IMETHOD Insert(nsIInputStream *aInputStream)=0;
+  NS_IMETHOD OutputText(nsIOutputStream *aOutputStream)=0;
+  NS_IMETHOD OutputHTML(nsIOutputStream *aOutputStream)=0;
 
 // Miscellaneous Methods
   /*
-  virtual nsresult CheckSpelling()=0;
-  virtual nsresult SpellingLanguage(nsIAtom *aLanguage)=0;
+  NS_IMETHOD CheckSpelling()=0;
+  NS_IMETHOD SpellingLanguage(nsIAtom *aLanguage)=0;
   */
   /* The editor doesn't know anything about specific services like SpellChecking.  
    * Services can be invoked on the content, and these services can use the editor if they choose

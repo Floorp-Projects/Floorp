@@ -42,27 +42,27 @@ public:
     * @param aOffset  the location in aElement to begin the deletion
     * @param aNumCharsToDelete  the number of characters to delete.  Not the number of bytes!
     */
-  virtual nsresult Init(nsIEditor *aEditor,
-                        nsIDOMCharacterData *aElement,
-                        PRUint32 aOffset,
-                        PRUint32 aNumCharsToDelete);
+  NS_IMETHOD Init(nsIEditor *aEditor,
+                  nsIDOMCharacterData *aElement,
+                  PRUint32 aOffset,
+                  PRUint32 aNumCharsToDelete);
 
 private:
   DeleteTextTxn();
 
 public:
 	
-  virtual nsresult Do(void);
+  NS_IMETHOD Do(void);
 
-  virtual nsresult Undo(void);
+  NS_IMETHOD Undo(void);
 
-  virtual nsresult Merge(PRBool *aDidMerge, nsITransaction *aTransaction);
+  NS_IMETHOD Merge(PRBool *aDidMerge, nsITransaction *aTransaction);
 
-  virtual nsresult Write(nsIOutputStream *aOutputStream);
+  NS_IMETHOD Write(nsIOutputStream *aOutputStream);
 
-  virtual nsresult GetUndoString(nsString **aString);
+  NS_IMETHOD GetUndoString(nsString **aString);
 
-  virtual nsresult GetRedoString(nsString **aString);
+  NS_IMETHOD GetRedoString(nsString **aString);
 
 protected:
 

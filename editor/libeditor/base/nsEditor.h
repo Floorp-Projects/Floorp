@@ -82,69 +82,73 @@ public:
   /*interfaces for addref and release and queryinterface*/
   NS_DECL_ISUPPORTS
 
-  virtual nsresult Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell);
+  NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell);
 
-  virtual nsresult GetDocument(nsIDOMDocument **aDoc);
+  NS_IMETHOD GetDocument(nsIDOMDocument **aDoc);
 
-  virtual nsresult GetSelection(nsIDOMSelection **aSelection);
+  NS_IMETHOD GetSelection(nsIDOMSelection **aSelection);
 
-  virtual nsresult SetProperties(nsVoidArray *aPropList);
+  NS_IMETHOD SetProperties(nsVoidArray *aPropList);
 
-  virtual nsresult GetProperties(nsVoidArray *aPropList);
+  NS_IMETHOD GetProperties(nsVoidArray *aPropList);
 
-  virtual nsresult SetAttribute(nsIDOMElement * aElement, 
-                                const nsString& aAttribute, 
-                                const nsString& aValue);
+  NS_IMETHOD SetAttribute(nsIDOMElement * aElement, 
+                          const nsString& aAttribute, 
+                          const nsString& aValue);
 
-  virtual nsresult GetAttributeValue(nsIDOMElement * aElement, 
-                                     const nsString& aAttribute, 
-                                     nsString&       aResultValue, 
-                                     PRBool&         aResultIsSet);
+  NS_IMETHOD GetAttributeValue(nsIDOMElement * aElement, 
+                               const nsString& aAttribute, 
+                               nsString&       aResultValue, 
+                               PRBool&         aResultIsSet);
 
-  virtual nsresult RemoveAttribute(nsIDOMElement *aElement, const nsString& aAttribute);
+  NS_IMETHOD RemoveAttribute(nsIDOMElement *aElement, const nsString& aAttribute);
 
-  virtual nsresult CreateNode(const nsString& aTag,
-                              nsIDOMNode *    aParent,
-                              PRInt32         aPosition,
-                              nsIDOMNode **   aNewNode);
+  NS_IMETHOD CreateNode(const nsString& aTag,
+                        nsIDOMNode *    aParent,
+                        PRInt32         aPosition,
+                        nsIDOMNode **   aNewNode);
 
-  virtual nsresult InsertNode(nsIDOMNode * aNode,
-                              nsIDOMNode * aParent,
-                              PRInt32      aPosition);
-  virtual nsresult InsertText(const nsString& aStringToInsert);
+  NS_IMETHOD InsertNode(nsIDOMNode * aNode,
+                        nsIDOMNode * aParent,
+                        PRInt32      aPosition);
+  NS_IMETHOD InsertText(const nsString& aStringToInsert);
 
-  virtual nsresult DeleteNode(nsIDOMNode * aChild);
+  NS_IMETHOD DeleteNode(nsIDOMNode * aChild);
 
-  virtual nsresult DeleteSelection(nsIEditor::Direction aDir);
+  NS_IMETHOD DeleteSelection(nsIEditor::Direction aDir);
 
-  virtual nsresult SplitNode(nsIDOMNode * aExistingRightNode,
-                             PRInt32      aOffset,
-                             nsIDOMNode ** aNewLeftNode);
+  NS_IMETHOD DeleteSelectionAndCreateNode(const nsString& aTag, nsIDOMNode ** aNewNode);
 
-  virtual nsresult JoinNodes(nsIDOMNode * aNodeToKeep,
-                            nsIDOMNode * aNodeToJoin,
-                            nsIDOMNode * aParent,
-                            PRBool       aNodeToKeepIsFirst);
+  NS_IMETHOD SplitNode(nsIDOMNode * aExistingRightNode,
+                       PRInt32      aOffset,
+                       nsIDOMNode ** aNewLeftNode);
+
+  NS_IMETHOD JoinNodes(nsIDOMNode * aNodeToKeep,
+                       nsIDOMNode * aNodeToJoin,
+                       nsIDOMNode * aParent,
+                       PRBool       aNodeToKeepIsFirst);
   
-  virtual nsresult InsertBreak(PRBool aCtrlKey);
+  NS_IMETHOD InsertBreak(PRBool aCtrlKey);
 
-  virtual nsresult EnableUndo(PRBool aEnable);
+  NS_IMETHOD EnableUndo(PRBool aEnable);
 
-  virtual nsresult Do(nsITransaction *aTxn);
+  NS_IMETHOD Do(nsITransaction *aTxn);
 
-  virtual nsresult Undo(PRUint32 aCount);
+  NS_IMETHOD Undo(PRUint32 aCount);
 
-  virtual nsresult CanUndo(PRBool &aIsEnabled, PRBool &aCanUndo);
+  NS_IMETHOD CanUndo(PRBool &aIsEnabled, PRBool &aCanUndo);
 
-  virtual nsresult Redo(PRUint32 aCount);
+  NS_IMETHOD Redo(PRUint32 aCount);
 
-  virtual nsresult CanRedo(PRBool &aIsEnabled, PRBool &aCanRedo);
+  NS_IMETHOD CanRedo(PRBool &aIsEnabled, PRBool &aCanRedo);
 
-  virtual nsresult BeginTransaction();
+  NS_IMETHOD BeginTransaction();
 
-  virtual nsresult EndTransaction();
+  NS_IMETHOD EndTransaction();
 
-  virtual nsresult ScrollIntoView(PRBool aScrollToBegin);
+  NS_IMETHOD GetLayoutObject(nsIDOMNode *aNode, nsISupports **aLayoutObject);
+
+  NS_IMETHOD ScrollIntoView(PRBool aScrollToBegin);
 
 /*END nsIEditor interfaces*/
 
@@ -161,7 +165,7 @@ public:
    *
    * NOTE: this method will probably be removed.
    */
-  nsresult GetFirstTextNode(nsIDOMNode *aNode, nsIDOMNode **aRetNode);
+  NS_IMETHOD GetFirstTextNode(nsIDOMNode *aNode, nsIDOMNode **aRetNode);
 
   /** GetFirstNodeOfType ADDREFFS and will get the next available node from the passed
    *  in aStartNode parameter of type aTag.
@@ -170,84 +174,86 @@ public:
    *  @param nsIAtom *aTag is the type of node we are searching for
    *  @param nsIDOMNode **aResult is the node we found, or nsnull if there is none
    */
-  nsresult GetFirstNodeOfType(nsIDOMNode *aStartNode, const nsString &aTag, nsIDOMNode **aResult);
+  NS_IMETHOD GetFirstNodeOfType(nsIDOMNode *aStartNode, const nsString &aTag, nsIDOMNode **aResult);
 
 /*END public methods of nsEditor*/
 
 
 /*BEGIN private methods used by the implementations of the above functions*/
 protected:
-  virtual nsresult CreateTxnForSetAttribute(nsIDOMElement *aElement, 
-                                            const nsString& aAttribute, 
-                                            const nsString& aValue,
-                                            ChangeAttributeTxn ** aTxn);
+  NS_IMETHOD CreateTxnForSetAttribute(nsIDOMElement *aElement, 
+                                      const nsString& aAttribute, 
+                                      const nsString& aValue,
+                                      ChangeAttributeTxn ** aTxn);
 
-  virtual nsresult CreateTxnForRemoveAttribute(nsIDOMElement *aElement, 
-                                               const nsString& aAttribute,
-                                               ChangeAttributeTxn ** aTxn);
+  NS_IMETHOD CreateTxnForRemoveAttribute(nsIDOMElement *aElement, 
+                                         const nsString& aAttribute,
+                                         ChangeAttributeTxn ** aTxn);
 
-  virtual nsresult CreateTxnForCreateElement(const nsString& aTag,
-                                             nsIDOMNode     *aParent,
-                                             PRInt32         aPosition,
-                                             CreateElementTxn ** aTxn);
+  NS_IMETHOD CreateTxnForCreateElement(const nsString& aTag,
+                                       nsIDOMNode     *aParent,
+                                       PRInt32         aPosition,
+                                       CreateElementTxn ** aTxn);
 
-  virtual nsresult CreateTxnForInsertElement(nsIDOMNode * aNode,
-                                             nsIDOMNode * aParent,
-                                             PRInt32      aOffset,
-                                             InsertElementTxn ** aTxn);
+  NS_IMETHOD CreateTxnForInsertElement(nsIDOMNode * aNode,
+                                       nsIDOMNode * aParent,
+                                       PRInt32      aOffset,
+                                       InsertElementTxn ** aTxn);
 
-  virtual nsresult CreateTxnForDeleteElement(nsIDOMNode * aElement,
-                                             DeleteElementTxn ** aTxn);
+  NS_IMETHOD CreateTxnForDeleteElement(nsIDOMNode * aElement,
+                                       DeleteElementTxn ** aTxn);
 
-  virtual nsresult CreateTxnForInsertText(const nsString & aStringToInsert,
-                                          InsertTextTxn ** aTxn);
+  NS_IMETHOD CreateTxnForInsertText(const nsString & aStringToInsert,
+                                    InsertTextTxn ** aTxn);
 
 
-  virtual nsresult DeleteText(nsIDOMCharacterData *aElement,
-                              PRUint32             aOffset,
-                              PRUint32             aLength);
+  NS_IMETHOD DeleteText(nsIDOMCharacterData *aElement,
+                        PRUint32             aOffset,
+                        PRUint32             aLength);
 
-  virtual nsresult CreateTxnForDeleteText(nsIDOMCharacterData *aElement,
-                                          PRUint32             aOffset,
-                                          PRUint32             aLength,
-                                          DeleteTextTxn      **aTxn);
+  NS_IMETHOD CreateTxnForDeleteText(nsIDOMCharacterData *aElement,
+                                    PRUint32             aOffset,
+                                    PRUint32             aLength,
+                                    DeleteTextTxn      **aTxn);
 
-  virtual nsresult CreateTxnForDeleteSelection(nsIEditor::Direction aDir,
-                                               EditAggregateTxn  ** aTxn);
+  NS_IMETHOD CreateTxnForDeleteSelection(nsIEditor::Direction aDir,
+                                         EditAggregateTxn  ** aTxn);
 
-  virtual nsresult CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange, 
-                                            nsIEditor::Direction aDir, 
-                                            EditAggregateTxn    *aTxn);
+  NS_IMETHOD CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange, 
+                                              nsIEditor::Direction aDir, 
+                                              EditAggregateTxn    *aTxn);
 
-  virtual nsresult CreateTxnForSplitNode(nsIDOMNode *aNode,
-                                         PRUint32    aOffset,
-                                         SplitElementTxn **aTxn);
+  NS_IMETHOD CreateTxnForSplitNode(nsIDOMNode *aNode,
+                                   PRUint32    aOffset,
+                                   SplitElementTxn **aTxn);
 
-  virtual nsresult SplitNodeImpl(nsIDOMNode * aExistingRightNode,
-                                 PRInt32      aOffset,
-                                 nsIDOMNode * aNewLeftNode,
-                                 nsIDOMNode * aParent);
+  NS_IMETHOD SplitNodeImpl(nsIDOMNode * aExistingRightNode,
+                           PRInt32      aOffset,
+                           nsIDOMNode * aNewLeftNode,
+                           nsIDOMNode * aParent);
 
-  virtual nsresult CreateTxnForJoinNode(nsIDOMNode  *aLeftNode,
-                                        nsIDOMNode  *aRightNode,
-                                        JoinElementTxn **aTxn);
+  NS_IMETHOD CreateTxnForJoinNode(nsIDOMNode  *aLeftNode,
+                                  nsIDOMNode  *aRightNode,
+                                  JoinElementTxn **aTxn);
 
-  virtual nsresult JoinNodesImpl(nsIDOMNode * aNodeToKeep,
-                                 nsIDOMNode * aNodeToJoin,
-                                 nsIDOMNode * aParent,
-                                 PRBool       aNodeToKeepIsFirst);
+  NS_IMETHOD JoinNodesImpl(nsIDOMNode * aNodeToKeep,
+                           nsIDOMNode * aNodeToJoin,
+                           nsIDOMNode * aParent,
+                           PRBool       aNodeToKeepIsFirst);
+
+  NS_IMETHOD CreateAggregateTxnForDeleteSelection(nsIAtom *aTxnName, nsISupports **aAggTxn);
 
 #if 0
-  nsresult CreateTxnToHandleEnterKey(EditAggregateTxn **aTxn);
+  NS_IMETHOD CreateTxnToHandleEnterKey(EditAggregateTxn **aTxn);
 #endif
 
-  nsresult GetPriorNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode);
+  NS_IMETHOD GetPriorNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode);
 
-  nsresult GetNextNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode);
+  NS_IMETHOD GetNextNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode);
 
-  nsresult GetRightmostChild(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode);
+  NS_IMETHOD GetRightmostChild(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode);
 
-  nsresult GetLeftmostChild(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode);
+  NS_IMETHOD GetLeftmostChild(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode);
 
 
 };

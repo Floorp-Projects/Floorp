@@ -40,7 +40,7 @@ InsertTextTxn::InsertTextTxn()
 {
 }
 
-nsresult InsertTextTxn::Init(nsIDOMCharacterData *aElement,
+NS_IMETHODIMP InsertTextTxn::Init(nsIDOMCharacterData *aElement,
                              PRUint32 aOffset,
                              const nsString& aStringToInsert,
                              nsIPresShell* aPresShell)
@@ -52,7 +52,7 @@ nsresult InsertTextTxn::Init(nsIDOMCharacterData *aElement,
   return NS_OK;
 }
 
-nsresult InsertTextTxn::Do(void)
+NS_IMETHODIMP InsertTextTxn::Do(void)
 {
   // advance caret: This requires the presentation shell to get the selection.
   nsCOMPtr<nsIDOMSelection> selection;
@@ -70,7 +70,7 @@ nsresult InsertTextTxn::Do(void)
   return result;
 }
 
-nsresult InsertTextTxn::Undo(void)
+NS_IMETHODIMP InsertTextTxn::Undo(void)
 {
   nsresult result;
   PRUint32 length = mStringToInsert.Length();
@@ -89,7 +89,7 @@ nsresult InsertTextTxn::Undo(void)
   return result;
 }
 
-nsresult InsertTextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
+NS_IMETHODIMP InsertTextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
 {
   // set out param default value
   if (nsnull!=aDidMerge)
@@ -141,12 +141,12 @@ nsresult InsertTextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
   return result;
 }
 
-nsresult InsertTextTxn::Write(nsIOutputStream *aOutputStream)
+NS_IMETHODIMP InsertTextTxn::Write(nsIOutputStream *aOutputStream)
 {
   return NS_OK;
 }
 
-nsresult InsertTextTxn::GetUndoString(nsString **aString)
+NS_IMETHODIMP InsertTextTxn::GetUndoString(nsString **aString)
 {
   if (nsnull!=aString)
   {
@@ -156,7 +156,7 @@ nsresult InsertTextTxn::GetUndoString(nsString **aString)
   return NS_OK;
 }
 
-nsresult InsertTextTxn::GetRedoString(nsString **aString)
+NS_IMETHODIMP InsertTextTxn::GetRedoString(nsString **aString)
 {
   if (nsnull!=aString)
   {
@@ -168,7 +168,7 @@ nsresult InsertTextTxn::GetRedoString(nsString **aString)
 
 /* ============= nsISupports implementation ====================== */
 
-nsresult
+NS_IMETHODIMP
 InsertTextTxn::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   if (nsnull == aInstancePtr) {
@@ -184,7 +184,7 @@ InsertTextTxn::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 /* ============ protected methods ================== */
 
-nsresult InsertTextTxn::GetData(nsString& aResult)
+NS_IMETHODIMP InsertTextTxn::GetData(nsString& aResult)
 {
   aResult = mStringToInsert;
   return NS_OK;

@@ -39,67 +39,67 @@ public:
 
 //Initialization
   nsHTMLEditor();
-  virtual nsresult InitHTMLEditor(nsIDOMDocument *aDoc, 
-                                  nsIPresShell   *aPresShell,
-                                  nsIEditorCallback *aCallback=nsnull);
+  NS_IMETHOD InitHTMLEditor(nsIDOMDocument *aDoc, 
+                            nsIPresShell   *aPresShell,
+                            nsIEditorCallback *aCallback=nsnull);
   virtual ~nsHTMLEditor();
 
 //============================================================================
 // Methods that are duplicates of nsTextEditor -- exposed here for convenience
 
 // Editing Operations
-  virtual nsresult SetTextProperties(nsISupportsArray *aPropList);
-  virtual nsresult GetTextProperties(nsISupportsArray *aPropList);
-  virtual nsresult RemoveTextProperties(nsISupportsArray *aPropList);
-  virtual nsresult DeleteSelection(nsIEditor::Direction aDir);
-  virtual nsresult InsertText(const nsString& aStringToInsert);
-  virtual nsresult InsertBreak(PRBool aCtrlKey);
+  NS_IMETHOD SetTextProperties(nsISupportsArray *aPropList);
+  NS_IMETHOD GetTextProperties(nsISupportsArray *aPropList);
+  NS_IMETHOD RemoveTextProperties(nsISupportsArray *aPropList);
+  NS_IMETHOD DeleteSelection(nsIEditor::Direction aDir);
+  NS_IMETHOD InsertText(const nsString& aStringToInsert);
+  NS_IMETHOD InsertBreak(PRBool aCtrlKey);
 
 // Transaction control
-  virtual nsresult EnableUndo(PRBool aEnable);
-  virtual nsresult Undo(PRUint32 aCount);
-  virtual nsresult CanUndo(PRBool &aIsEnabled, PRBool &aCanUndo);
-  virtual nsresult Redo(PRUint32 aCount);
-  virtual nsresult CanRedo(PRBool &aIsEnabled, PRBool &aCanRedo);
-  virtual nsresult BeginTransaction();
-  virtual nsresult EndTransaction();
+  NS_IMETHOD EnableUndo(PRBool aEnable);
+  NS_IMETHOD Undo(PRUint32 aCount);
+  NS_IMETHOD CanUndo(PRBool &aIsEnabled, PRBool &aCanUndo);
+  NS_IMETHOD Redo(PRUint32 aCount);
+  NS_IMETHOD CanRedo(PRBool &aIsEnabled, PRBool &aCanRedo);
+  NS_IMETHOD BeginTransaction();
+  NS_IMETHOD EndTransaction();
 
 // Selection and navigation -- exposed here for convenience
-  virtual nsresult MoveSelectionUp(nsIAtom *aIncrement, PRBool aExtendSelection);
-  virtual nsresult MoveSelectionDown(nsIAtom *aIncrement, PRBool aExtendSelection);
-  virtual nsresult MoveSelectionNext(nsIAtom *aIncrement, PRBool aExtendSelection);
-  virtual nsresult MoveSelectionPrevious(nsIAtom *aIncrement, PRBool aExtendSelection);
-  virtual nsresult SelectNext(nsIAtom *aIncrement, PRBool aExtendSelection); 
-  virtual nsresult SelectPrevious(nsIAtom *aIncrement, PRBool aExtendSelection);
-  virtual nsresult ScrollUp(nsIAtom *aIncrement);
-  virtual nsresult ScrollDown(nsIAtom *aIncrement);
-  virtual nsresult ScrollIntoView(PRBool aScrollToBegin);
+  NS_IMETHOD MoveSelectionUp(nsIAtom *aIncrement, PRBool aExtendSelection);
+  NS_IMETHOD MoveSelectionDown(nsIAtom *aIncrement, PRBool aExtendSelection);
+  NS_IMETHOD MoveSelectionNext(nsIAtom *aIncrement, PRBool aExtendSelection);
+  NS_IMETHOD MoveSelectionPrevious(nsIAtom *aIncrement, PRBool aExtendSelection);
+  NS_IMETHOD SelectNext(nsIAtom *aIncrement, PRBool aExtendSelection); 
+  NS_IMETHOD SelectPrevious(nsIAtom *aIncrement, PRBool aExtendSelection);
+  NS_IMETHOD ScrollUp(nsIAtom *aIncrement);
+  NS_IMETHOD ScrollDown(nsIAtom *aIncrement);
+  NS_IMETHOD ScrollIntoView(PRBool aScrollToBegin);
 
 // Input/Output
-  virtual nsresult Insert(nsIInputStream *aInputStream);
-  virtual nsresult OutputText(nsIOutputStream *aOutputStream);
-  virtual nsresult OutputHTML(nsIOutputStream *aOutputStream);
+  NS_IMETHOD Insert(nsIInputStream *aInputStream);
+  NS_IMETHOD OutputText(nsIOutputStream *aOutputStream);
+  NS_IMETHOD OutputHTML(nsIOutputStream *aOutputStream);
 
 //=====================================
 // HTML Editing methods
 
 // Table Editing (implemented in EditTable.cpp)
-  virtual nsresult CreateTxnForInsertTable(const nsIDOMElement *aTableNode, InsertTableTxn ** aTxn);
-  virtual nsresult GetColIndexForCell(nsIDOMNode *aCellNode, PRInt32 &aCellIndex);
-  virtual nsresult GetRowIndexForCell(nsIDOMNode *aCellNode, PRInt32 &aCellIndex);
-  virtual nsresult GetFirstCellInColumn(nsIDOMNode *aCurrentCellNode, nsIDOMNode* &aFirstCellNode);
-  virtual nsresult GetNextCellInColumn(nsIDOMNode *aCurrentCellNode, nsIDOMNode* &aNextCellNode);
-  virtual nsresult GetFirstCellInRow(nsIDOMNode *aCurrentCellNode, nsIDOMNode* &aCellNode);
-  virtual nsresult GetNextCellInRow(nsIDOMNode *aCurrentCellNode, nsIDOMNode* &aNextCellNode);
-  virtual nsresult InsertTable();
-  virtual nsresult InsertTableCell(PRInt32 aNumber, PRBool aAfter);
-  virtual nsresult InsertTableColumn(PRInt32 aNumber, PRBool aAfter);
-  virtual nsresult InsertTableRow(PRInt32 aNumber, PRBool aAfter);
-  virtual nsresult DeleteTable();
-  virtual nsresult DeleteTableCell(PRInt32 aNumber);
-  virtual nsresult DeleteTableColumn(PRInt32 aNumber);
-  virtual nsresult DeleteTableRow(PRInt32 aNumber);
-  virtual nsresult JoinTableCells(PRBool aCellToRight);
+  NS_IMETHOD CreateTxnForInsertTable(const nsIDOMElement *aTableNode, InsertTableTxn ** aTxn);
+  NS_IMETHOD GetColIndexForCell(nsIDOMNode *aCellNode, PRInt32 &aCellIndex);
+  NS_IMETHOD GetRowIndexForCell(nsIDOMNode *aCellNode, PRInt32 &aCellIndex);
+  NS_IMETHOD GetFirstCellInColumn(nsIDOMNode *aCurrentCellNode, nsIDOMNode* &aFirstCellNode);
+  NS_IMETHOD GetNextCellInColumn(nsIDOMNode *aCurrentCellNode, nsIDOMNode* &aNextCellNode);
+  NS_IMETHOD GetFirstCellInRow(nsIDOMNode *aCurrentCellNode, nsIDOMNode* &aCellNode);
+  NS_IMETHOD GetNextCellInRow(nsIDOMNode *aCurrentCellNode, nsIDOMNode* &aNextCellNode);
+  NS_IMETHOD InsertTable();
+  NS_IMETHOD InsertTableCell(PRInt32 aNumber, PRBool aAfter);
+  NS_IMETHOD InsertTableColumn(PRInt32 aNumber, PRBool aAfter);
+  NS_IMETHOD InsertTableRow(PRInt32 aNumber, PRBool aAfter);
+  NS_IMETHOD DeleteTable();
+  NS_IMETHOD DeleteTableCell(PRInt32 aNumber);
+  NS_IMETHOD DeleteTableColumn(PRInt32 aNumber);
+  NS_IMETHOD DeleteTableRow(PRInt32 aNumber);
+  NS_IMETHOD JoinTableCells(PRBool aCellToRight);
 
 // Data members
 protected:
