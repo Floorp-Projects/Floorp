@@ -1272,7 +1272,8 @@ NS_IMETHODIMP nsNntpService::Search(nsIMsgSearchSession *aSearchSession, nsIMsgW
     if (NS_FAILED(rv)) return rv;
 
     nsCString searchUrl = serverUri;
-    nsCString asciiNewsgroupName = newsgroupName;
+    nsCString asciiNewsgroupName;
+    asciiNewsgroupName.AssignWithConversion(newsgroupName);
     searchUrl.Append(aSearchUri);
     rv = ConstructNntpUrl(searchUrl.GetBuffer(), asciiNewsgroupName.GetBuffer(), nsMsgKey_None, nsnull, getter_AddRefs(uri));
     if (NS_FAILED(rv)) return rv;
