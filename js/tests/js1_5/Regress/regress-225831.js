@@ -103,14 +103,14 @@ addThis();
 
 status = inSection(4);
 
-// build string of the form ({1:({a:1}), 2:({a:1}), ... N:({a:1})})
+// build string of the form ({1:{a:1}, 2:{a:1}, ... N:{a:1}})
 str = function() {
   var arr = new Array(N+1);
   arr[0] = "({";
   for (var i = 1; i < N; ++i) {
-    arr[i] = i+":({a:1}), ";
+    arr[i] = i+":{a:1}, ";
   }
-  arr[N] = N+":({a:1})})";
+  arr[N] = N+":{a:1}})";
   return "".concat.apply("", arr);
 }();
 
