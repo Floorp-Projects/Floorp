@@ -87,7 +87,7 @@
 
     <separator/>
 
-    <hbox autostretch="never" halign="right">
+    <hbox pack="end">
       <button class="dialog" label="&viewCookies.label;" accesskey="&viewCookies.accesskey;" oncommand="viewCookies();"
               id="viewCookieButton" pref="true" preftype="bool"
               prefstring="pref.advanced.cookies.disable_button.view_cookies" prefattribute="disabled"/>
