@@ -848,11 +848,6 @@ const int kReuseWindowOnAE = 2;
     [[self preferencesController] showPreferences:nil] ;
 }
 
-- (IBAction)showAboutBox:(id)sender
-{
-    [[AboutBox sharedInstance] showPanel:sender];
-}
-
 - (BOOL)application:(NSApplication *)theApplication openFile:(NSString *)filename
 {
 /*
