@@ -873,7 +873,7 @@ XULContentSinkImpl::Init(nsIDocument* aDocument, nsIRDFDataSource* aDataSource)
         if (rdfRootDoc == nsnull) { 
             NS_ERROR("Root document of a XUL fragment is not an RDF doc."); 
             NS_RELEASE(rootDocument); 
-            return rv; 
+            return NS_ERROR_INVALID_ARG; 
         } 
 
         nsCOMPtr<nsIRDFDataSource> docDataSource; 
