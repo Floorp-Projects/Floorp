@@ -287,7 +287,10 @@ AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_AWK
 AC_PATH_PROGS(EMACS, xemacs lemacs emacs, :)
-AC_PATH_PROGS(PERL, perl5 perl, :)
+AC_PATH_PROGS(PERL, perl5 perl )
+if test -z "PERL"; then
+    AC_MSG_ERROR([perl not found in \$PATH])
+fi
 AC_PATH_PROG(WHOAMI, whoami, :)
 AC_PATH_PROG(AUTOCONF, autoconf, :)
 AC_PATH_PROG(UNZIP, unzip, :)
