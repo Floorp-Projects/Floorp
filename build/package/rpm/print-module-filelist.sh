@@ -17,14 +17,34 @@
 #
 #
 
+
+# The way this thing works:
+#
+# + a phony $(DIST) is created: /tmp/foo
+#
+# + The module is instaled there so that it can be isolated and
+#   catalogued.
+#
+# + A bunch of case statements determine what gets ignored
+#   and what is otherwise echoed as a file or dir member for
+#   the module
+#
+# + Most of this hacks are a result of the totally messed
+#   way in which mozilla pretentsto do "make install"
+
 here=`pwd`
 
 dist=/tmp/dist-$$.tmp
-list=/tmp/list-$$.txt
-list2=/tmp/list2-$$.txt
 
-rm -rf $dist $list $list2
+raw_file_list=/tmp/raw-file-list-$$.txt
+file_list=/tmp/file-list-$$.txt
 
+raw_dir_list=/tmp/raw-dir-list-$$.txt
+dir_list=/tmp/dir-list-$$.txt
+
+rm -rf $dist $raw_file_list $file_list $raw_dir_list $dir_list
+
+# Need to mkdir include or else "make export" in mozilla gets confused
 mkdir -p $dist
 mkdir -p $dist/include
 
@@ -32,11 +52,12 @@ make -s DIST=$dist XPDIST=$dist PUBLIC=$dist/include EXTRA_DEPS= >/dev/null 2>&1
 
 cd $dist
 
-find -type l | cut -b3- > $list
+find -type l | cut -b3- > $raw_file_list
+find -type d | cut -b3- | grep -v -e "^[ \t]*$" > $raw_dir_list
 
-touch $list2
+touch $file_list
 
-for i in `cat $list`
+for i in `cat $raw_file_list`
 do
 	skip="false"
 
@@ -84,15 +105,48 @@ do
 
 	if [ "$skip" != "true" ]
 	then
-		echo $i >> $list2
+		echo $i >> $file_list
 #	else
 #		echo "skipping $i"
 	fi
 done
 
-cat $list2
+touch $dir_list
 
-#rm -rf $dist $list $list2
+for i in `cat $raw_dir_list`
+do
+	skip="false"
+
+	# Skip directories that are shared across all of mozilla's components
+	case $i in
+		# level 1
+		include|idl|lib|bin)
+			skip="true"
+		;;
+
+		# level 2
+		lib/components|bin/components|bin/chrome|bin/res|bin/defaults|bin/plugins)
+			skip="true"
+		;;
+
+		# level 3
+		bin/defaults/pref)
+			skip="true"
+		;;
+	esac
+
+	if [ "$skip" != "true" ]
+	then
+		echo DIR:$i >> $dir_list
+#	else
+#		echo "skipping $i"
+	fi
+done
+
+cat $file_list
+cat $dir_list
+
+rm -rf $dist $raw_file_list $file_list $raw_dir_list $dir_list
 
 cd $here
 

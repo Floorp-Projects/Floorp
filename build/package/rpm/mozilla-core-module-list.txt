@@ -2,6 +2,7 @@ db
 xpcom
 intl
 js
+modules/libutil
 modules/security/freenav
 modules/libpref
 modules/libimg

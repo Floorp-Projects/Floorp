@@ -7,10 +7,40 @@ Copyright:		NPL/MPL
 Group:			Mozilla
 Source0:		ftp://ftp.mozilla.org/pub/mozilla/nightly/latest/mozilla-source.tar.gz
 #Source0:		ftp://ftp.mozilla.org/pub/mozilla/nightly/latest/mozilla-binary.tar.gz
-Source1:		mozilla-run-regxpcom.sh
 Buildroot:		/var/tmp/mozilla-root
 Prefix:			/usr
 Requires:		gtk+ >= 1.2.4
+
+#
+# TODO: lots of stuff
+#
+# + Add nice summary and description entries
+#
+# + Make sure the requires entries make sense
+#
+# + Add more packages for other mozilla extensions (for instance: irc)
+#
+# + Remove and/or combine the current packages that make more sense
+#
+# + mozilla-xpcom package ?
+#
+# + should nspr be its own package ?
+#
+# + it is probably a good idea to have a mozilla-browser package
+#   instead of mozilla-xptoolkit
+#
+# + the mozilla-xpinstall package obviously doesnt make sense - 
+#   its there for show
+#
+# + a lot of stuff is dumped into the default package that 
+#   should really be in the devel package.  For example the
+#   gecko viewer and all its tests.
+#
+#   For the code that determines what goes where, see:
+# 
+#   mozilla/build/package/rpm/print-module-filelist.sh
+#   mozilla/build/package/rpm/generate-package-info.sh
+#
 
 #Exclusivearch:		i386
 
@@ -168,6 +198,24 @@ Requires:	mozilla-layout-devel
 %description wallet-devel
 mozilla-wallet devel
 
+%package mailnews
+Summary:	mozilla-mailnews
+Group:		Mozilla
+Requires:	mozilla-layout
+
+%description mailnews
+mozilla-mailnews
+
+%package mailnews-devel
+Requires:	mozilla-mailnews
+Summary:	mozilla-mailnews-devel
+Group:		Mozilla
+Requires:	mozilla-layout-devel
+
+%description mailnews-devel
+mozilla-mailnews devel
+
+
 %prep
 %setup -n mozilla
 
@@ -197,11 +245,12 @@ touch $here/blank
 MOZCONFIG=blank
 export MOZCONFIG
 
-./configure --disable-mailnews --disable-tests --with-xlib=no --with-motif=no --disable-gtk-mozilla
+./configure --disable-tests --with-xlib=no --with-motif=no --disable-gtk-mozilla
 
 #./configure --disable-debug --enable-optimize --disable-mailnews --disable-tests --with-xlib=no --with-motif=no --enable-strip-libs --disable-gtk-mozilla
 
-make
+make everything
+
 fi
 ################################
 
@@ -238,14 +287,26 @@ cd $RPM_BUILD_ROOT/%{prefix}/lib/mozilla/
 /bin/mv -f bin/netscape.cfg .
 /bin/mv -f bin/res .
 
+strip lib/*.so
+strip components/*.so
+
 cd $here
 
 install -m 755 build/package/rpm/mozilla $RPM_BUILD_ROOT/%{prefix}/lib/mozilla/bin
-
-install -m 755 $RPM_SOURCE_DIR/mozilla-run-regxpcom.sh $RPM_BUILD_ROOT/%{prefix}/lib/mozilla/bin
-
-touch $RPM_BUILD_ROOT/%{prefix}/lib/mozilla/component.reg
 ################################
+
+##
+## This function gets called on the %post stage to make sure any
+## new components that are installed in the system get 
+## registered to component.reg
+##
+call-regxpcom()
+{
+	here=`pwd`
+	cd %{prefix}/lib/mozilla
+	MOZILLA_FIVE_HOME=`pwd` LD_LIBRARY_PATH=`pwd`/lib ./bin/regxpcom
+	cd $here
+}
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -258,14 +319,21 @@ rm -rf $RPM_BUILD_ROOT
 
 %files -f file-lists/mozilla-core-file-list.txt core
 %defattr(-,root,root)
-%config(missingok) %{prefix}/lib/mozilla/component.reg
-%{prefix}/lib/mozilla/bin/mozilla-run-regxpcom.sh %{prefix}/lib/mozilla
+%dir %{prefix}/lib/mozilla
+%dir %{prefix}/lib/mozilla/bin
+%dir %{prefix}/lib/mozilla/chrome
+%dir %{prefix}/lib/mozilla/components
+%dir %{prefix}/lib/mozilla/defaults
+%dir %{prefix}/lib/mozilla/defaults/pref
+%dir %{prefix}/lib/mozilla/lib
+%dir %{prefix}/lib/mozilla/plugins
+%dir %{prefix}/lib/mozilla/res
 
 %files -f file-lists/mozilla-core-devel-file-list.txt core-devel
 %defattr(-,root,root)
 
 %post core
-%{prefix}/lib/mozilla/bin/mozilla-run-regxpcom.sh %{prefix}/lib/mozilla
+call-regxpcom
 
 %files -f file-lists/mozilla-network-file-list.txt network
 %defattr(-,root,root)
@@ -274,7 +342,7 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root)
 
 %post network
-%{prefix}/lib/mozilla/bin/mozilla-run-regxpcom.sh %{prefix}/lib/mozilla
+call-regxpcom
 
 %files -f file-lists/mozilla-layout-file-list.txt layout
 %defattr(-,root,root)
@@ -283,7 +351,7 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root)
 
 %post layout
-%{prefix}/lib/mozilla/bin/mozilla-run-regxpcom.sh %{prefix}/lib/mozilla
+call-regxpcom
 
 %files -f file-lists/mozilla-xpinstall-file-list.txt xpinstall
 %defattr(-,root,root)
@@ -292,7 +360,7 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root)
 
 %post xpinstall
-%{prefix}/lib/mozilla/bin/mozilla-run-regxpcom.sh %{prefix}/lib/mozilla
+call-regxpcom
 
 %files -f file-lists/mozilla-profile-file-list.txt profile
 %defattr(-,root,root)
@@ -301,7 +369,7 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root)
 
 %post profile
-%{prefix}/lib/mozilla/bin/mozilla-run-regxpcom.sh %{prefix}/lib/mozilla
+call-regxpcom
 
 %files -f file-lists/mozilla-xptoolkit-file-list.txt xptoolkit
 %defattr(-,root,root)
@@ -311,7 +379,7 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root)
 
 %post xptoolkit
-%{prefix}/lib/mozilla/bin/mozilla-run-regxpcom.sh %{prefix}/lib/mozilla
+call-regxpcom
 
 %files -f file-lists/mozilla-cookie-file-list.txt cookie
 %defattr(-,root,root)
@@ -320,7 +388,7 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root)
 
 %post cookie
-%{prefix}/lib/mozilla/bin/mozilla-run-regxpcom.sh %{prefix}/lib/mozilla
+call-regxpcom
 
 %files -f file-lists/mozilla-wallet-file-list.txt wallet
 %defattr(-,root,root)
@@ -329,7 +397,16 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root)
 
 %post wallet
-%{prefix}/lib/mozilla/bin/mozilla-run-regxpcom.sh %{prefix}/lib/mozilla
+call-regxpcom
+
+%files -f file-lists/mozilla-mailnews-file-list.txt mailnews
+%defattr(-,root,root)
+
+%files -f file-lists/mozilla-mailnews-devel-file-list.txt mailnews-devel
+%defattr(-,root,root)
+
+%post mailnews
+call-regxpcom
 
 %changelog
 * Wed Oct 20 1999 Ramiro Estrugo <ramiro@fateware.com>
