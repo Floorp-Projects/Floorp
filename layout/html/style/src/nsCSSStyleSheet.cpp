@@ -247,26 +247,30 @@ void RuleHash::EnumerateAllRules(nsIAtom* aTag, nsIAtom* aID, const nsVoidArray&
   PRInt32 valueCount = 0;
 
   { // universal tag rules
-    RuleValue*  value = (RuleValue*)mTagTable.Get(&RuleKey(nsCSSAtoms::universalSelector));
+    RuleKey universalKey(nsCSSAtoms::universalSelector);
+    RuleValue*  value = (RuleValue*)mTagTable.Get(&universalKey);
     if (nsnull != value) {
       mEnumList[valueCount++] = value;
     }
   }
   if (nsnull != aTag) {
-    RuleValue* value = (RuleValue*)mTagTable.Get(&RuleKey(aTag));
+    RuleKey tagKey(aTag);
+    RuleValue* value = (RuleValue*)mTagTable.Get(&tagKey);
     if (nsnull != value) {
       mEnumList[valueCount++] = value;
     }
   }
   if (nsnull != aID) {
-    RuleValue* value = (RuleValue*)mIdTable.Get(&RuleKey(aID));
+    RuleKey idKey(aID);
+    RuleValue* value = (RuleValue*)mIdTable.Get(&idKey);
     if (nsnull != value) {
       mEnumList[valueCount++] = value;
     }
   }
   for (index = 0; index < classCount; index++) {
     nsIAtom* classAtom = (nsIAtom*)aClassList.ElementAt(index);
-    RuleValue* value = (RuleValue*)mClassTable.Get(&RuleKey(classAtom));
+    RuleKey classKey(classAtom);
+    RuleValue* value = (RuleValue*)mClassTable.Get(&classKey);
     if (nsnull != value) {
       mEnumList[valueCount++] = value;
     }
@@ -306,8 +310,10 @@ void RuleHash::EnumerateAllRules(nsIAtom* aTag, nsIAtom* aID, const nsVoidArray&
 
 void RuleHash::EnumerateTagRules(nsIAtom* aTag, RuleEnumFunc aFunc, void* aData)
 {
-  RuleValue*  tagValue = (RuleValue*)mTagTable.Get(&RuleKey(aTag));
-  RuleValue*  uniValue = (RuleValue*)mTagTable.Get(&RuleKey(nsCSSAtoms::universalSelector));
+  RuleKey tagKey(aTag);
+  RuleKey universalKey(nsCSSAtoms::universalSelector);
+  RuleValue*  tagValue = (RuleValue*)mTagTable.Get(&tagKey);
+  RuleValue*  uniValue = (RuleValue*)mTagTable.Get(&universalKey);
 
   if (nsnull == tagValue) {
     if (nsnull != uniValue) {
@@ -963,7 +969,7 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
           switch (attr->mFunction) {
             case NS_ATTR_FUNC_SET:    break;
             case NS_ATTR_FUNC_EQUALS: 
-              if (attr->mCaseSensative) {
+              if (attr->mCaseSensitive) {
                 result = value.Equals(attr->mValue);
               }
               else {
@@ -971,13 +977,13 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
               }
               break;
             case NS_ATTR_FUNC_INCLUDES: 
-              if (PR_FALSE == attr->mCaseSensative) {
+              if (PR_FALSE == attr->mCaseSensitive) {
                 value.ToUpperCase();
               }
               result = ValueIncludes(value, attr->mValue);
               break;
             case NS_ATTR_FUNC_DASHMATCH: 
-              if (PR_FALSE == attr->mCaseSensative) {
+              if (PR_FALSE == attr->mCaseSensitive) {
                 value.ToUpperCase();
               }
               result = ValueDashMatch(value, attr->mValue);
