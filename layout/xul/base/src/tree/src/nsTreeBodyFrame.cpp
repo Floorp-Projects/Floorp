@@ -1708,21 +1708,21 @@ nsTreeBodyFrame::CreateTimer(const nsILookAndFeel::nsMetricID aID,
 
 NS_IMETHODIMP nsTreeBodyFrame::RowCountChanged(PRInt32 aIndex, PRInt32 aCount)
 {
-  if (mUpdateBatchNest)
-    return NS_OK;
-
   if (aCount == 0 || !mView)
     return NS_OK; // Nothing to do.
-
-  PRInt32 count = PR_ABS(aCount);
-  PRInt32 rowCount;
-  mView->GetRowCount(&rowCount);
 
   // Adjust our selection.
   nsCOMPtr<nsITreeSelection> sel;
   mView->GetSelection(getter_AddRefs(sel));
   if (sel)
     sel->AdjustSelection(aIndex, aCount);
+
+  if (mUpdateBatchNest)
+    return NS_OK;
+
+  PRInt32 count = PR_ABS(aCount);
+  PRInt32 rowCount;
+  mView->GetRowCount(&rowCount);
 
   PRInt32 last;
   GetLastVisibleRow(&last);
