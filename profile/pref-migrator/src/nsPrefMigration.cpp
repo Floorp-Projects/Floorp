@@ -2026,22 +2026,7 @@ nsresult
 nsPrefMigration::DetermineOldPath(nsIFileSpec *profilePath, const char *oldPathName, const char *oldPathEntityName, nsIFileSpec *oldPath)
 {
 	nsresult rv;
-	PRBool exists = PR_FALSE;
 
-	/* use the default locations */
-	rv = oldPath->FromFileSpec(profilePath);
-	if (NS_FAILED(rv)) return rv;
-		
-	/* first check if the directory with the appropriate ascii name exists */
-	rv = oldPath->AppendRelativeUnixPath(oldPathName);
-	if (NS_FAILED(rv)) return rv;
-
-    rv = oldPath->Exists(&exists);
-	if (exists) {
-		/* at this point, the folder with the english name exists.  use it */
-		return NS_OK;
-	}
- 
   	/* set oldLocalFile to profilePath.  need to convert nsIFileSpec->nsILocalFile */
 	nsCOMPtr<nsILocalFile> oldLocalFile;
 	nsFileSpec pathSpec;
@@ -2066,18 +2051,20 @@ nsPrefMigration::DetermineOldPath(nsIFileSpec *profilePath, const char *oldPathN
 	rv = oldLocalFile->AppendRelativeUnicodePath((const PRUnichar *)localizedDirName);
 	if (NS_FAILED(rv)) return rv;
 
-	exists = PR_FALSE;
+	PRBool exists = PR_FALSE;
 	rv = oldLocalFile->Exists(&exists);
 	if (!exists) {
-		/* at this point, neither the folder with the localized name or the english name
-		 * exist.  oldPath is set to the english name.  just use that. 
-	     */
+		/* if the localized name doesn't exist, use the english name */
+		rv = oldPath->FromFileSpec(profilePath);
+		if (NS_FAILED(rv)) return rv;
+		
+		rv = oldPath->AppendRelativeUnixPath(oldPathName);
+		if (NS_FAILED(rv)) return rv;
+		
 		return NS_OK;
 	}
 
-	/* at this point, the folder with the english name doesn't exist, but the 
-	 * folder with the localized name does.  use the localized one 
-	 */
+	/* at this point, the folder with the localized name exists, so use it */
 	nsXPIDLCString persistentDescriptor;
 	rv = oldLocalFile->GetPersistentDescriptor(getter_Copies(persistentDescriptor));
 	if (NS_FAILED(rv)) return rv;
