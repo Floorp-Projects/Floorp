@@ -192,11 +192,11 @@ void* nsDeque::ObjectAt(PRInt32 anIndex) const {
 
   if((anIndex>=0) && (anIndex<mSize))
   {
-    if(anIndex<(mSize-mOrigin)) {
+    if(anIndex<(mCapacity-mOrigin)) {
       result=mData[mOrigin+anIndex];
     }
     else {
-      result=mData[anIndex-(mSize-mOrigin)];
+      result=mData[anIndex-(mCapacity-mOrigin)];
     }
   }
   return result;
