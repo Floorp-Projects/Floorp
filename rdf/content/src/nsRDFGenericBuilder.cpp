@@ -180,12 +180,13 @@ public:
 
     nsresult
     BuildContentFromTemplate(nsIContent *aTemplateNode,
-                             nsIContent *trueParent,
+                             nsIContent *aResourceNode,
                              nsIContent *aRealNode,
                              PRBool aIsUnique,
                              nsIRDFResource* aChild,
                              PRBool aNotify,
-                             nsIContent** aFirstGeneratedChild);
+                             nsIContent** aContainer,
+                             PRInt32* aNewIndexInContainer);
 
     nsresult
     AddPersistentAttributes(nsIContent* aTemplateNode, nsIRDFResource* aResource, nsIContent* aRealNode);
@@ -195,7 +196,8 @@ public:
                      nsIRDFResource* aProperty,
                      nsIRDFResource* aChild,
                      PRBool aNotify,
-                     nsIContent** aFirstGeneratedChild);
+                     nsIContent** aContainer,
+                     PRInt32* aNewIndexInContainer);
 
     enum eUpdateAction { eSet, eClear };
 
@@ -213,13 +215,22 @@ public:
                      PRBool aNotify);
 
     nsresult
-    CreateTemplateAndContainerContents(nsIContent* aElement, nsIContent** aFirstGeneratedChild);
+    CreateTemplateAndContainerContents(nsIContent* aElement,
+                                       nsIContent** aContainer,
+                                       PRInt32* aNewIndexInContainer);
 
     nsresult
-    CreateContainerContents(nsIContent* aElement, nsIRDFResource* aResource, PRBool aNotify, nsIContent** aFirstGeneratedChild);
+    CreateContainerContents(nsIContent* aElement,
+                            nsIRDFResource* aResource,
+                            PRBool aNotify,
+                            nsIContent** aContainer,
+                            PRInt32* aNewIndexInContainer);
 
     nsresult
-    CreateTemplateContents(nsIContent* aElement, const nsString& aTemplateID, nsIContent** aFirstGeneratedChild);
+    CreateTemplateContents(nsIContent* aElement,
+                           const nsString& aTemplateID,
+                           nsIContent** aContainer,
+                           PRInt32* aNewIndexInContainer);
 
     nsresult
     EnsureElementHasGenericChild(nsIContent* aParent,
@@ -356,7 +367,7 @@ protected:
     static nsIRDFResource* kXUL_element;
 
     static nsIXULSortService* gXULSortService;
-    
+
     static nsString    trueStr;
     static nsString    falseStr;
 };
@@ -364,7 +375,7 @@ protected:
 //----------------------------------------------------------------------
 
 nsrefcnt            RDFGenericBuilderImpl::gRefCnt = 0;
-nsIXULSortService*    RDFGenericBuilderImpl::gXULSortService = nsnull;
+nsIXULSortService*  RDFGenericBuilderImpl::gXULSortService = nsnull;
 
 nsIAtom* RDFGenericBuilderImpl::kContainerAtom;
 nsIAtom* RDFGenericBuilderImpl::kContainmentAtom;
@@ -724,7 +735,7 @@ RDFGenericBuilderImpl::CreateContents(nsIContent* aElement)
     // First, make sure that the element is in the right widget -- ours.
     nsresult rv = NS_OK;
     if (IsElementInWidget(aElement)) {
-        rv = CreateTemplateAndContainerContents(aElement, nsnull /* don't care */);
+        rv = CreateTemplateAndContainerContents(aElement, nsnull /* don't care */, nsnull /* don't care */);
     }
 
     return rv;
@@ -753,34 +764,19 @@ RDFGenericBuilderImpl::OpenContainer(nsIContent* aElement)
     // create its contents.
     //
     // Create the container's contents "quietly" (i.e., |aNotify ==
-    // PR_FALSE|), and then use the |firstGeneratedChild| to notify
-    // layout where content got created.
-    nsCOMPtr<nsIContent> firstGeneratedChild;
-    rv = CreateContainerContents(aElement, resource, PR_FALSE, getter_AddRefs(firstGeneratedChild));
+    // PR_FALSE|), and then use the |container| and |newIndex| to
+    // notify layout where content got created.
+    nsCOMPtr<nsIContent> container;
+    PRInt32 newIndex;
+    rv = CreateContainerContents(aElement, resource, PR_FALSE, getter_AddRefs(container), &newIndex);
     if (NS_FAILED(rv)) return rv;
 
-    if (firstGeneratedChild) {
-        nsCOMPtr<nsIContent> parent;
-        rv = firstGeneratedChild->GetParent(*getter_AddRefs(parent));
-        if (NS_FAILED(rv)) return rv;
-
-        NS_ASSERTION(parent != nsnull, "generated child has no parent");
-        if (! parent)
-            return NS_ERROR_UNEXPECTED;
-
-        PRInt32 indx;
-        rv = parent->IndexOf(firstGeneratedChild, indx);
-        if (NS_FAILED(rv)) return rv;
-
-        NS_ASSERTION(indx != -1, "generated child not found in parent");
-        if (indx == -1)
-            return NS_ERROR_UNEXPECTED;
-        
+    if (container) {
         nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocument);
         if (! doc)
             return NS_ERROR_UNEXPECTED;
 
-        rv = doc->ContentAppended(parent, indx);
+        rv = doc->ContentAppended(container, newIndex);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -886,32 +882,17 @@ RDFGenericBuilderImpl::RebuildContainer(nsIContent* aElement)
 
     // Now, regenerate both the template-generated contents for the
     // current node...
-    nsCOMPtr<nsIContent> firstGeneratedChild;
-    rv = CreateTemplateAndContainerContents(aElement, getter_AddRefs(firstGeneratedChild));
+    nsCOMPtr<nsIContent> container;
+    PRInt32 newIndex;
+    rv = CreateTemplateAndContainerContents(aElement, getter_AddRefs(container), &newIndex);
     if (NS_FAILED(rv)) return rv;
 
-    if (firstGeneratedChild) {
-        nsCOMPtr<nsIContent> parent;
-        rv = firstGeneratedChild->GetParent(*getter_AddRefs(parent));
-        if (NS_FAILED(rv)) return rv;
-
-        NS_ASSERTION(parent != nsnull, "generated child has no parent");
-        if (! parent)
-            return NS_ERROR_UNEXPECTED;
-
-        PRInt32 indx;
-        rv = parent->IndexOf(firstGeneratedChild, indx);
-        if (NS_FAILED(rv)) return rv;
-
-        NS_ASSERTION(indx != -1, "generated child not found in parent");
-        if (indx == -1)
-            return NS_ERROR_UNEXPECTED;
-        
+    if (container) {
         nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocument);
         if (! doc)
             return NS_ERROR_UNEXPECTED;
 
-        rv = doc->ContentAppended(parent, indx);
+        rv = doc->ContentAppended(container, newIndex);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -1004,7 +985,10 @@ RDFGenericBuilderImpl::OnAssert(nsIRDFResource* aSource,
 
             // Okay, it's a "live" element, so go ahead and append the new
             // child to this node.
-            rv = CreateWidgetItem(element, aProperty, resource, PR_TRUE, nsnull /* don't care */);
+            rv = CreateWidgetItem(element, aProperty, resource, PR_TRUE,
+                                  nsnull /* don't care */,
+                                  nsnull /* don't care */);
+
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create widget item");
             if (NS_FAILED(rv)) return rv;
 
@@ -1273,7 +1257,9 @@ RDFGenericBuilderImpl::OnChange(nsIRDFResource* aSource,
             if (! newresource)
                 return NS_OK;
 
-            rv = CreateWidgetItem(element, aProperty, newresource, PR_TRUE, nsnull /* don't care */);
+            rv = CreateWidgetItem(element, aProperty, newresource, PR_TRUE,
+                                  nsnull /* don't care */,
+                                  nsnull /* don't care */);
             if (NS_FAILED(rv)) return rv;
         }
         else {
@@ -1700,13 +1686,56 @@ RDFGenericBuilderImpl::SubstituteText(nsIRDFResource* aResource,
 
 nsresult
 RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
-                                                nsIContent *trueParent,
+                                                nsIContent *aResourceNode,
                                                 nsIContent *aRealNode,
                                                 PRBool aIsUnique,
                                                 nsIRDFResource* aChild,
                                                 PRBool aNotify,
-                                                nsIContent** aFirstGeneratedChild)
+                                                nsIContent** aContainer,
+                                                PRInt32* aNewIndexInContainer)
 {
+    // This is the mother lode. Here is where we grovel through an
+    // element in the template, copying children from the template
+    // into the "real" content tree, performing substitution as we go
+    // by looking stuff up in the RDF graph.
+    //
+    //   |aTemplateNode| is the element in the "template tree", whose
+    //   children we will duplicate and move into the "real" content
+    //   tree.
+    //
+    //   |aResourceNode| is the element in the "real" content tree that
+    //   has the "id" attribute set to an RDF resource's URI. This is
+    //   not directly used here, but rather passed down to the XUL
+    //   sort service to perform container-level sort.
+    //
+    //   |aRealNode| is the element in the "real" content tree to which
+    //   the new elements will be copied.
+    //
+    //   |aIsUnique| is set to "true" so long as content has been
+    //   "unique" (or "above" the resource element) so far in the
+    //   template.
+    //
+    //   |aChild| is the RDF resource at the end of a property link for
+    //   which we are building content.
+    //
+    //   |aNotify| is set to "true" if content should be constructed
+    //   "noisily"; that is, whether the document observers should be
+    //   notified when new content is added to the content model.
+    //
+    //   |aContainer| is an out parameter that will be set to the first
+    //   container element in the "real" content tree to which content
+    //   was appended.
+    //
+    //   |aNewIndexInContainer| is an out parameter that will be set to
+    //   the index in aContainer at which new content is first
+    //   constructed.
+    //
+    // If |aNotify| is "false", then |aContainer| and
+    // |aNewIndexInContainer| are used to determine where in the
+    // content model new content is constructed. This allows a single
+    // notification to be propogated to document observers.
+    //
+
     nsresult rv;
 
 #ifdef PR_LOGGING
@@ -1856,12 +1885,19 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
                     if (NS_FAILED(rv)) return rv;
                 }
 
-                // Potentially remember this element as the first
+                // Potentially remember the index of this element as the first
                 // element that we've generated. Note that we remember
                 // this -before- we recurse!
-                if (aFirstGeneratedChild && !*aFirstGeneratedChild) {
-                    *aFirstGeneratedChild = realKid;
-                    NS_ADDREF(*aFirstGeneratedChild);
+                if (aContainer && !*aContainer) {
+                    *aContainer = aRealNode;
+                    NS_ADDREF(*aContainer);
+
+					PRInt32 indx;
+                    aRealNode->ChildCount(indx);
+
+					// Since EnsureElementHasGenericChild() added us, make
+					// sure to subtract one for our real index.
+					*aNewIndexInContainer = indx - 1;
                 }
             }
 
@@ -1870,7 +1906,7 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
             // unique. The check for the "resource" element at the top
             // of the function will trip this to |false| as soon as we
             // encounter it.
-            rv = BuildContentFromTemplate(tmplKid, trueParent, realKid, PR_TRUE, aChild, aNotify, aFirstGeneratedChild);
+            rv = BuildContentFromTemplate(tmplKid, aResourceNode, realKid, PR_TRUE, aChild, aNotify, aContainer, aNewIndexInContainer);
             if (NS_FAILED(rv)) return rv;
         }
         else if (isResourceElement) {
@@ -1960,11 +1996,19 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
         }
 
         if (realKid && !realKidAlreadyExisted) {
-            // Potentially remember this element as the first
-            // element that we've generated.
-            if (aFirstGeneratedChild && !*aFirstGeneratedChild) {
-                *aFirstGeneratedChild = realKid;
-                NS_ADDREF(*aFirstGeneratedChild);
+            // Potentially remember the index of this element as the
+            // first element that we've generated.
+            if (aContainer && !*aContainer) {
+                *aContainer = aRealNode;
+                NS_ADDREF(*aContainer);
+
+                PRInt32 indx;
+                aRealNode->ChildCount(indx);
+
+                // Since we haven't inserted any content yet, our new
+                // index in the container will be the current count of
+                // elements in the container.
+                *aNewIndexInContainer = indx;
             }
 
             // Mark the node with the ID of the template node used to
@@ -2023,16 +2067,20 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 // lazily. Note that we _don't_ need to notify: we'll
                 // add the entire subtree in a single whack.
                 //
-                // Note that we don't bother passing
-                // aFirstGeneratedChild down: since we're HTML, we
+                // Note that we don't bother passing aContainer and
+                // aNewIndexInContainer down: since we're HTML, we
                 // -know- that we -must- have just been created.
-                rv = BuildContentFromTemplate(tmplKid, trueParent, realKid, isUnique,
-                                              aChild, PR_FALSE, nsnull /* don't care */);
+                rv = BuildContentFromTemplate(tmplKid, aResourceNode, realKid, isUnique,
+                                              aChild, PR_FALSE,
+                                              nsnull /* don't care */,
+                                              nsnull /* don't care */);
 
                 if (NS_FAILED(rv)) return rv;
 
                 if (isResourceElement) {
-                    rv = CreateContainerContents(realKid, aChild, PR_FALSE, nsnull /* don't care */);
+                    rv = CreateContainerContents(realKid, aChild, PR_FALSE,
+                                                 nsnull /* don't care */,
+                                                 nsnull /* don't care */);
                     if (NS_FAILED(rv)) return rv;
                 }
             }
@@ -2054,10 +2102,11 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
             if (! isUnique) {
                 rv = NS_ERROR_UNEXPECTED;
 
-                if (gXULSortService && isResourceElement)
-                {
-			rv = gXULSortService->InsertContainerNode(mDB, &sortState,
-				mRoot, trueParent, aRealNode, realKid, aNotify);
+                if (gXULSortService && isResourceElement) {
+                    rv = gXULSortService->InsertContainerNode(mDB, &sortState,
+                                                              mRoot, aResourceNode,
+                                                              aRealNode, realKid,
+                                                              aNotify);
                 }
 
                 if (NS_FAILED(rv)) {
@@ -2140,7 +2189,8 @@ RDFGenericBuilderImpl::CreateWidgetItem(nsIContent *aElement,
                                         nsIRDFResource *aProperty,
                                         nsIRDFResource *aChild,
                                         PRBool aNotify,
-                                        nsIContent** aFirstGeneratedChild)
+                                        nsIContent** aContainer,
+                                        PRInt32* aNewIndexInContainer)
 {
     nsresult rv;
 
@@ -2155,7 +2205,9 @@ RDFGenericBuilderImpl::CreateWidgetItem(nsIContent *aElement,
     }
 
     // ...and build content with it.
-    rv = BuildContentFromTemplate(tmpl, aElement, aElement, PR_TRUE, aChild, aNotify, aFirstGeneratedChild);
+    rv = BuildContentFromTemplate(tmpl, aElement, aElement, PR_TRUE, aChild,
+                                  aNotify, aContainer, aNewIndexInContainer);
+
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to build content from template");
     return rv;
 }
@@ -2353,7 +2405,9 @@ RDFGenericBuilderImpl::RemoveWidgetItem(nsIContent* aElement,
 
 
 nsresult
-RDFGenericBuilderImpl::CreateTemplateAndContainerContents(nsIContent* aElement, nsIContent** aFirstGeneratedChild)
+RDFGenericBuilderImpl::CreateTemplateAndContainerContents(nsIContent* aElement,
+                                                          nsIContent** aContainer,
+                                                          PRInt32* aNewIndexInContainer)
 {
     // Generate both 1) the template content for the current element,
     // and 2) recursive subcontent (if the current element refers to a
@@ -2362,8 +2416,10 @@ RDFGenericBuilderImpl::CreateTemplateAndContainerContents(nsIContent* aElement, 
 
     // If we're asked to return the first generated child, then
     // initialize to "none".
-    if (aFirstGeneratedChild)
-        *aFirstGeneratedChild = nsnull;
+    if (aContainer) {
+        *aContainer = nsnull;
+        *aNewIndexInContainer = -1;
+    }
 
     // Create the current resource's contents from the template, if
     // appropriate
@@ -2372,7 +2428,7 @@ RDFGenericBuilderImpl::CreateTemplateAndContainerContents(nsIContent* aElement, 
     if (NS_FAILED(rv)) return rv;
 
     if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-        rv = CreateTemplateContents(aElement, templateID, aFirstGeneratedChild);
+        rv = CreateTemplateContents(aElement, templateID, aContainer, aNewIndexInContainer);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -2382,7 +2438,7 @@ RDFGenericBuilderImpl::CreateTemplateAndContainerContents(nsIContent* aElement, 
         // The element has a resource; that means that it corresponds
         // to something in the graph, so we need to go to the graph to
         // create its contents.
-        rv = CreateContainerContents(aElement, resource, PR_FALSE, aFirstGeneratedChild);
+        rv = CreateContainerContents(aElement, resource, PR_FALSE, aContainer, aNewIndexInContainer);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -2394,14 +2450,17 @@ nsresult
 RDFGenericBuilderImpl::CreateContainerContents(nsIContent* aElement,
                                                nsIRDFResource* aResource,
                                                PRBool aNotify,
-                                               nsIContent** aFirstGeneratedChild)
+                                               nsIContent** aContainer,
+                                               PRInt32* aNewIndexInContainer)
 {
     // Create the contents of a container by iterating over all of the
     // "containment" arcs out of the element's resource.
     nsresult rv;
 
-    if (aFirstGeneratedChild)
-        *aFirstGeneratedChild = nsnull;
+    if (aContainer) {
+        *aContainer = nsnull;
+        *aNewIndexInContainer = -1;
+    }
 
     // If it's XUL, then see if the item is even "open" (HTML content
     // must be generated eagerly). If not, then just pretend it
@@ -2499,7 +2558,7 @@ RDFGenericBuilderImpl::CreateContainerContents(nsIContent* aElement,
             if (! target)
                 continue;
 
-            rv = CreateWidgetItem(aElement, property, target, aNotify, aFirstGeneratedChild);
+            rv = CreateWidgetItem(aElement, property, target, aNotify, aContainer, aNewIndexInContainer);
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create item");
             if (NS_FAILED(rv)) return rv;
         }
@@ -2512,7 +2571,8 @@ RDFGenericBuilderImpl::CreateContainerContents(nsIContent* aElement,
 nsresult
 RDFGenericBuilderImpl::CreateTemplateContents(nsIContent* aElement,
                                               const nsString& aTemplateID,
-                                              nsIContent** aFirstGeneratedChild)
+                                              nsIContent** aContainer,
+                                              PRInt32* aNewIndexInContainer)
 {
     // Create the contents of an element using the templates
     nsresult rv;
@@ -2568,7 +2628,9 @@ RDFGenericBuilderImpl::CreateTemplateContents(nsIContent* aElement,
         element = parent;
     }
 
-    rv = BuildContentFromTemplate(tmpl, aElement, aElement, PR_FALSE, resource, PR_FALSE, aFirstGeneratedChild);
+    rv = BuildContentFromTemplate(tmpl, aElement, aElement, PR_FALSE, resource, PR_FALSE,
+                                  aContainer, aNewIndexInContainer);
+
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
