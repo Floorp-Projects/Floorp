@@ -205,6 +205,8 @@ var fWindowsSystem;
 var fileComponentRegStr;
 var fileComponentReg;
 
+$Ren8dot3List$
+
 srDest = $SpaceRequired$:bin;
 err    = initInstall("$ProductName$", "Browser", "$Version$"); 
 logComment("initInstall: " + err);
@@ -216,6 +218,9 @@ logComment("fProgram: " + fProgram);
 if(verifyDiskSpace(fProgram, srDest))
 {
   setPackageFolder(fProgram);
+
+  $Ren8dot3Call$
+
   err = addDirectory("",
                      "$Version$",
                      "bin",              // dir name in jar to extract 

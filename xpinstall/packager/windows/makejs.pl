@@ -28,9 +28,9 @@
 # value(s).
 #
 # Input: .jst file              - which is a .js template
-#        default version        - a julian date in the form of:
-#                                 major.minor.release.yydoy
-#                                 ie: 5.0.0.99256
+#        default version        - a date in the form of:
+#                                 major.minor.release.yyyymmdyhr
+#                                 ie: 5.0.0.1999120910
 #        component staging path - path to where the components are staged at
 #
 #        ie: perl makejs.pl xpcom.jst 5.0.0.99256
@@ -69,9 +69,11 @@ $outJsFile        = $inJstFileSplit[0];
 $outJsFile       .= ".js";
 $outTempFile      = $inJstFileSplit[0];
 $outTempFile     .= ".template";
+$foundLongFiles   = 0;
 
-system("copy ..\\common\\share.t $outTempFile");
-system("type windows.t >> $outTempFile");  # append windows specific functions
+print "copy \"$ENV{MOZ_SRC}\\mozilla\\xpinstall\\packager\\common\\share.t\" $outTempFile\n";
+system("copy \"$ENV{MOZ_SRC}\\mozilla\\xpinstall\\packager\\common\\share.t\" $outTempFile");
+system("type \"$ENV{MOZ_SRC}\\mozilla\\xpinstall\\packager\\common\\windows.t\" >> $outTempFile");  # append windows specific functions
 system("type $inJstFile >> $outTempFile");
 
 # Open the input .template file
@@ -83,7 +85,7 @@ open(fpOutJs, ">$outJsFile") || die "\nCould not open $outJsFile: $!\n";
 # While loop to read each line from input file
 while($line = <fpInTemplate>)
 {
-  if($line =~ /\$SpaceRequired\$/i) # For each line read, search and replace $InstallSize$ with the calculated size
+  if($line =~ /\$SpaceRequired\$/i) # For each line read, search and replace $SpaceRequired$ with the calculated size
   {
     $spaceRequired = 0;
 
@@ -102,6 +104,38 @@ while($line = <fpInTemplate>)
       $line =~ s/\$SpaceRequired\$/$spaceRequired/i;
     }
   }
+  elsif($line =~ /\$Ren8dot3List\$/i)
+  {
+    if(-d "$inStagePath\\bin")
+    {
+      # need to close the output file because GetLongFile.pl will attempt to open
+      # it in order to update it.
+      close(fpOutJs);
+      $rv = system("perl \"$ENV{MOZ_SRC}\\mozilla\\xpinstall\\packager\\windows\\GetLongFile.pl\" \"$inStagePath\\bin\" \"$outJsFile\"")/256;
+      if($rv == 0)
+      {
+        # set var when long filenames have been found.  This is so that the 
+        # call to prepareRen8dot3() will not be written out.
+        $foundLongFiles = 1;
+      }
+      elsif($rv == 1)
+      {
+        exit($rv);
+      }
+
+      # reopen the output .js file
+      open(fpOutJs, ">>$outJsFile") || die "\nCould not open $outJsFile: $!\n";
+    }
+  }
+  elsif($line =~ /\$Ren8dot3Call\$/i)
+  {
+    if($foundLongFiles)
+    {
+      print fpOutJs "  // Ren8dot3 process needs to be done before any files have been installed\n";
+      print fpOutJs "  // (this includes the temp files during the prepare phase)\n";
+      print fpOutJs "  prepareRen8dot3(listLongFilePaths);\n";
+    }
+  }
   else
   {
     $line =~ s/\$Version\$/$inVersion/i;
@@ -113,8 +147,17 @@ while($line = <fpInTemplate>)
     $line =~ s/\$UninstallFile\$/$fileUninstall/i;
   }
 
-  print fpOutJs $line;
+  # Do not print $line if $Ren8dot3List$ or $Ren8dot3Call$ have been detected.
+  # They have their own print routines.
+  if(!($line =~ /\$Ren8dot3List\$/i) && !($line =~ /\$Ren8dot3Call\$/i))
+  {
+    print fpOutJs $line;
+  }
 }
+
+close(fpInTemplate);
+close(fpOutJs);
+exit(0);
 
 sub GetSpaceRequired()
 {
@@ -122,7 +165,7 @@ sub GetSpaceRequired()
   my($spaceRequired);
 
   print "   calculating size for $inPath\n";
-  $spaceRequired    = `$ENV{MOZ_TOOLS}\\bin\\ds32.exe /D /L0 /A /S /C 32768 $inPath`;
+  $spaceRequired    = `\"$ENV{MOZ_TOOLS}\\bin\\ds32.exe\" /D /L0 /A /S /C 32768 $inPath`;
   $spaceRequired    = int($spaceRequired / 1024);
   $spaceRequired   += 1;
   return($spaceRequired);
