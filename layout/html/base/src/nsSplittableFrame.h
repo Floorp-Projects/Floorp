@@ -64,6 +64,8 @@ protected:
 
   void SizeOfWithoutThis(nsISizeOfHandler* aHandler) const;
 
+  virtual void DumpBaseRegressionData(FILE* out, PRInt32 aIndent);
+
   nsIFrame*   mPrevInFlow;
   nsIFrame*   mNextInFlow;
 };
