@@ -22,11 +22,6 @@
 /* the RDF HT API */
 
 #include "rdf.h"
-#ifdef NSPR20
-#else
-#include "prtypes.h"
-#include "prfile.h"
-#endif
 
 #include "ntypes.h"
 #include "structs.h"
