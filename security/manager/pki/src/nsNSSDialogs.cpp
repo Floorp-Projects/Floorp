@@ -496,7 +496,7 @@ nsNSSDialogs::ConfirmPostToInsecureFromSecure(nsIInterfaceRequestor *ctx, PRBool
 {
   nsresult rv;
 
-  rv = ConfirmDialog(ctx, INSECURE_SUBMIT_PREF,
+  rv = ConfirmDialog(ctx, nsnull,
                      NS_LITERAL_STRING("PostToInsecure").get(), _result);
 
   return rv;
@@ -509,9 +509,11 @@ nsNSSDialogs::ConfirmDialog(nsIInterfaceRequestor *ctx, const char *prefName,
   nsresult rv;
 
   // Get user's preference for this alert
-  PRBool prefValue;
-  rv = mPref->GetBoolPref(prefName, &prefValue);
-  if (NS_FAILED(rv)) prefValue = PR_TRUE;
+  PRBool prefValue = PR_TRUE;
+  if (prefName) {
+    rv = mPref->GetBoolPref(prefName, &prefValue);
+    if (NS_FAILED(rv)) prefValue = PR_TRUE;
+  }
 
   // Stop if confirm is not requested
   if (!prefValue) {
@@ -530,14 +532,20 @@ nsNSSDialogs::ConfirmDialog(nsIInterfaceRequestor *ctx, const char *prefName,
                                    getter_Copies(windowTitle));
   mStringBundle->GetStringFromName(messageName,
                                    getter_Copies(message));
-  mStringBundle->GetStringFromName(NS_LITERAL_STRING("DontShowAgain").get(),
-                                   getter_Copies(dontShowAgain));
-  if (!windowTitle || !message || !dontShowAgain) return NS_ERROR_FAILURE;
+  if (!windowTitle || !message) return NS_ERROR_FAILURE;
+
+  if (prefName) {
+    mStringBundle->GetStringFromName(NS_LITERAL_STRING("DontShowAgain").get(),
+                                     getter_Copies(dontShowAgain));
+    if (!dontShowAgain) return NS_ERROR_FAILURE;
       
-  rv = prompt->ConfirmCheck(windowTitle, message, dontShowAgain, &prefValue, _result);
+    rv = prompt->ConfirmCheck(windowTitle, message, dontShowAgain, &prefValue, _result);
+  } else {
+    rv = prompt->Confirm(windowTitle, message, _result);
+  }
   if (NS_FAILED(rv)) return rv;
       
-  if (!prefValue) {
+  if (prefName && !prefValue) {
     mPref->SetBoolPref(prefName, PR_FALSE);
   }
 
