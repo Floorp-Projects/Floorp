@@ -49,7 +49,7 @@ public:
 
   // nsEditRules methods
   NS_IMETHOD Init(nsHTMLEditor *aEditor, PRUint32 aFlags);
-  NS_IMETHOD WillDoAction(nsIDOMSelection *aSelection, nsRulesInfo *aInfo, PRBool *aCancel);
+  NS_IMETHOD WillDoAction(nsIDOMSelection *aSelection, nsRulesInfo *aInfo, PRBool *aCancel, PRBool *aHandled);
   NS_IMETHOD DidDoAction(nsIDOMSelection *aSelection, nsRulesInfo *aInfo, nsresult aResult);
   NS_IMETHOD GetFlags(PRUint32 *aFlags);
   NS_IMETHOD SetFlags(PRUint32 aFlags);
@@ -85,6 +85,7 @@ protected:
   // nsTextEditRules implementation methods
   nsresult WillInsertText(nsIDOMSelection  *aSelection, 
                             PRBool         *aCancel,
+                            PRBool         *aHandled,
                             const nsString *inString,
                             nsString       *outString,
                             TypeInState    typeInState,
@@ -92,7 +93,7 @@ protected:
   nsresult DidInsertText(nsIDOMSelection *aSelection, nsresult aResult);
   nsresult CreateStyleForInsertText(nsIDOMSelection *aSelection, TypeInState &aTypeInState);
 
-  nsresult WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel);
+  nsresult WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool *aHandled);
   nsresult DidInsertBreak(nsIDOMSelection *aSelection, nsresult aResult);
 
   nsresult WillInsert(nsIDOMSelection *aSelection, PRBool *aCancel);
@@ -100,21 +101,22 @@ protected:
 
   nsresult WillDeleteSelection(nsIDOMSelection *aSelection, 
                                nsIEditor::ESelectionCollapseDirection aCollapsedAction, 
-                               PRBool *aCancel);
+                               PRBool *aCancel,
+                               PRBool *aHandled);
   nsresult DidDeleteSelection(nsIDOMSelection *aSelection, 
                               nsIEditor::ESelectionCollapseDirection aCollapsedAction, 
                               nsresult aResult);
 
-  nsresult WillSetTextProperty(nsIDOMSelection *aSelection, PRBool *aCancel);
+  nsresult WillSetTextProperty(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool *aHandled);
   nsresult DidSetTextProperty(nsIDOMSelection *aSelection, nsresult aResult);
 
-  nsresult WillRemoveTextProperty(nsIDOMSelection *aSelection, PRBool *aCancel);
+  nsresult WillRemoveTextProperty(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool *aHandled);
   nsresult DidRemoveTextProperty(nsIDOMSelection *aSelection, nsresult aResult);
 
-  nsresult WillUndo(nsIDOMSelection *aSelection, PRBool *aCancel);
+  nsresult WillUndo(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool *aHandled);
   nsresult DidUndo(nsIDOMSelection *aSelection, nsresult aResult);
 
-  nsresult WillRedo(nsIDOMSelection *aSelection, PRBool *aCancel);
+  nsresult WillRedo(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool *aHandled);
   nsresult DidRedo(nsIDOMSelection *aSelection, nsresult aResult);
 
   /** called prior to nsIEditor::OutputToString
@@ -127,7 +129,8 @@ protected:
   nsresult WillOutputText(nsIDOMSelection *aSelection,
                           const nsString  *aInFormat,
                           nsString *aOutText, 
-                          PRBool   *aOutCancel);
+                          PRBool   *aOutCancel, 
+                          PRBool *aHandled);
 
   nsresult DidOutputText(nsIDOMSelection *aSelection, nsresult aResult);
 

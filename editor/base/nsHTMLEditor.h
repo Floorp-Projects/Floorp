@@ -62,6 +62,7 @@ public:
   /* ------------ nsIHTMLEditor methods -------------- */
 
   NS_IMETHOD EditorKeyPress(nsIDOMUIEvent* aKeyEvent);
+  NS_IMETHOD TypedText(const nsString& aString, PRInt32 aAction);
 
   NS_IMETHOD GetDocumentIsEmpty(PRBool *aDocumentIsEmpty);
   NS_IMETHOD GetDocumentLength(PRInt32 *aCount);
@@ -482,6 +483,7 @@ protected:
 
 public:
   static nsIAtom *gTypingTxnName;
+  static nsIAtom *gDeleteTxnName;
 
 // friends
 friend class nsHTMLEditRules;

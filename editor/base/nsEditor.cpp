@@ -563,7 +563,7 @@ nsEditor::BeginPlaceHolderTransaction(nsIAtom *aName)
     PRBool collapsed;
     res = selection->GetIsCollapsed(&collapsed);
     if (NS_FAILED(res)) return res;
-    if (collapsed)  // we cant merge with previous typing if selection not collapsed
+    if (collapsed)  // we cant merge with previous typing/deleting if selection not collapsed
     {
       // need to remember colapsed selection point to Init the placeholder with later.
       // this is because we dont actually make the placeholder until we need it, and we

@@ -112,8 +112,9 @@ NS_IMETHODIMP PlaceholderTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransact
     if (gNoisy) { printf("Placeholder txn assimilated %p\n", aTransaction); }
   }
   else
-  { // merge typing transactions if the selection matches
-    if (mName.get() == nsHTMLEditor::gTypingTxnName)
+  { // merge typing or deletion transactions if the selection matches
+    if ( (mName.get() == nsHTMLEditor::gTypingTxnName) ||
+         (mName.get() == nsHTMLEditor::gDeleteTxnName) ) 
     {
       nsCOMPtr<nsIAbsorbingTransaction> plcTxn;// = do_QueryInterface(editTxn);
       // cant do_QueryInterface() above due to our broken transaction interfaces.
@@ -123,7 +124,7 @@ NS_IMETHODIMP PlaceholderTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransact
       {
         nsIAtom *atom;
         plcTxn->GetTxnName(&atom);
-        if (atom && (atom == nsHTMLEditor::gTypingTxnName))
+        if (atom && (atom == mName.get()))
         {
           nsCOMPtr<nsIDOMNode> otherTxnStartNode;
           PRInt32 otherTxnStartOffset;
@@ -167,8 +168,9 @@ NS_IMETHODIMP PlaceholderTxn::EndPlaceHolderBatch()
     if (plcTxn) plcTxn->EndPlaceHolderBatch();
   }
   
-  // if we are a typing transaction, remember our selection state
-  if (mName.get() == nsHTMLEditor::gTypingTxnName)
+  // if we are a typing or deleting transaction, remember our selection state
+  if ( (mName.get() == nsHTMLEditor::gTypingTxnName) ||
+       (mName.get() == nsHTMLEditor::gDeleteTxnName) ) 
   {
     nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
     if (!ps) return NS_ERROR_NOT_INITIALIZED;

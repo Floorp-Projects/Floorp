@@ -156,6 +156,27 @@ nsHTMLEditorLog::DeleteSelection(nsIEditor::ESelectionCollapseDirection aAction)
 }
 
 NS_IMETHODIMP
+nsHTMLEditorLog::TypedText(const nsString& aStringToInsert, PRInt32 aAction)
+{
+  nsAutoHTMLEditorLogLock logLock(this);
+
+  if (!mLocked && mFileSpec)
+  {
+    PrintSelection();
+
+    Write("window.editorShell.TypedText(\"");
+    PrintUnicode(aStringToInsert);
+    Write("\", ");
+    WriteInt("%d", aAction);
+    Write(");\n");
+
+    Flush();
+  }
+
+  return nsHTMLEditor::TypedText(aStringToInsert, aAction);
+}
+
+NS_IMETHODIMP
 nsHTMLEditorLog::InsertText(const nsString& aStringToInsert)
 {
   nsAutoHTMLEditorLogLock logLock(this);

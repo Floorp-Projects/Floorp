@@ -1782,6 +1782,32 @@ nsEditorShell::DeleteSelection(PRInt32 action)
   return err;
 }
 
+/* This routine should only be called when playing back a log */
+NS_IMETHODIMP
+nsEditorShell::TypedText(const PRUnichar *aTextToInsert, PRInt32 aAction)
+{
+  nsresult  err = NS_NOINTERFACE;
+  
+  nsAutoString textToInsert(aTextToInsert);
+  
+  switch (mEditorType)
+  {
+    case ePlainTextEditorType:
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
+        if (htmlEditor)
+          err = htmlEditor->TypedText(textToInsert, aAction);
+      }
+      break;
+
+    default:
+      err = NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  return err;
+}
+
 
 NS_IMETHODIMP
 nsEditorShell::InsertText(const PRUnichar *textToInsert)

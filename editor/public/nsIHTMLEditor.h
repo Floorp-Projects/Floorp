@@ -65,6 +65,12 @@ public:
     eEditorMailMask           = (1 << eEditorMailBit)
   };
   
+  // below used by TypedText()
+  enum {
+    eTypedText,  // user typed text
+    eTypedBR,    // user typed shift-enter to get a br
+    eTypedBreak  // user typed enter
+  };
   
   /* ------------ Document info methods -------------- */
 
@@ -148,6 +154,12 @@ public:
    */
   NS_IMETHOD EditorKeyPress(nsIDOMUIEvent* aKeyEvent)=0;
 
+  /** 
+   * TypedText responds to user typing.  Provides a logging bottleneck for typing.
+   * @param aString    string to type
+   * @param aAction    action to take: insert text, insert BR, insert break
+   */
+  NS_IMETHOD TypedText(const nsString& aString, PRInt32 aAction)=0;
 
   /**
    * Insert a break into the content model.<br>

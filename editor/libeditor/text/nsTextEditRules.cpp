@@ -121,12 +121,15 @@ nsTextEditRules::SetFlags(PRUint32 aFlags)
 
 NS_IMETHODIMP 
 nsTextEditRules::WillDoAction(nsIDOMSelection *aSelection, 
-                              nsRulesInfo *aInfo, PRBool *aCancel)
+                              nsRulesInfo *aInfo, 
+                              PRBool *aCancel, 
+                              PRBool *aHandled)
 {
   // null selection is legal
-  if (!aInfo || !aCancel) { return NS_ERROR_NULL_POINTER; }
+  if (!aInfo || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
 
   *aCancel = PR_FALSE;
+  *aHandled = PR_FALSE;
 
   // my kingdom for dynamic cast
   nsTextRulesInfo *info = NS_STATIC_CAST(nsTextRulesInfo*, aInfo);
@@ -134,10 +137,11 @@ nsTextEditRules::WillDoAction(nsIDOMSelection *aSelection,
   switch (info->action)
   {
     case kInsertBreak:
-      return WillInsertBreak(aSelection, aCancel);
+      return WillInsertBreak(aSelection, aCancel, aHandled);
     case kInsertText:
       return WillInsertText(aSelection, 
-                            aCancel, 
+                            aCancel,
+                            aHandled, 
                             info->inString,
                             info->outString,
                             info->typeInState,
@@ -145,20 +149,21 @@ nsTextEditRules::WillDoAction(nsIDOMSelection *aSelection,
     case kInsertTextIME:
       return WillInsert(aSelection, aCancel);
     case kDeleteSelection:
-      return WillDeleteSelection(aSelection, info->collapsedAction, aCancel);
+      return WillDeleteSelection(aSelection, info->collapsedAction, aCancel, aHandled);
     case kUndo:
-      return WillUndo(aSelection, aCancel);
+      return WillUndo(aSelection, aCancel, aHandled);
     case kRedo:
-      return WillRedo(aSelection, aCancel);
+      return WillRedo(aSelection, aCancel, aHandled);
     case kSetTextProperty:
-      return WillSetTextProperty(aSelection, aCancel);
+      return WillSetTextProperty(aSelection, aCancel, aHandled);
     case kRemoveTextProperty:
-      return WillRemoveTextProperty(aSelection, aCancel);
+      return WillRemoveTextProperty(aSelection, aCancel, aHandled);
     case kOutputText:
       return WillOutputText(aSelection, 
                             info->outputFormat,
                             info->outString,                            
-                            aCancel);
+                            aCancel,
+                            aHandled);
   }
   return NS_ERROR_FAILURE;
 }
@@ -239,10 +244,11 @@ nsTextEditRules::DidInsert(nsIDOMSelection *aSelection, nsresult aResult)
 }
 
 nsresult
-nsTextEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel)
+nsTextEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool *aHandled)
 {
-  if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
+  if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
   CANCEL_OPERATION_IF_READONLY_OR_DISABLED
+  *aHandled = PR_FALSE;
   if (mFlags & nsIHTMLEditor::eEditorSingleLineMask) {
     *aCancel = PR_TRUE;
   }
@@ -261,19 +267,22 @@ nsTextEditRules::DidInsertBreak(nsIDOMSelection *aSelection, nsresult aResult)
 
 nsresult
 nsTextEditRules::WillInsertText(nsIDOMSelection *aSelection, 
-                                PRBool          *aCancel,
+                                PRBool          *aCancel, 
+                                PRBool          *aHandled,
                                 const nsString  *aInString,
                                 nsString        *aOutString,
                                 TypeInState      aTypeInState,
                                 PRInt32          aMaxLength)
 {
-  if (!aSelection || !aCancel || !aInString || !aOutString) {return NS_ERROR_NULL_POINTER;}
+  if (!aSelection || !aCancel || !aHandled || !aInString || !aOutString) 
+    {return NS_ERROR_NULL_POINTER;}
   CANCEL_OPERATION_IF_READONLY_OR_DISABLED
 
   nsresult res;
 
   // initialize out params
-  *aCancel = PR_TRUE;
+  *aCancel = PR_FALSE;
+  *aHandled = PR_TRUE;
   *aOutString = *aInString;
   
   // handle docs with a max length
@@ -576,8 +585,10 @@ nsTextEditRules::InsertStyleAndNewTextNode(nsIDOMNode *aParentNode, nsIAtom *aTa
 }
 
 nsresult
-nsTextEditRules::WillSetTextProperty(nsIDOMSelection *aSelection, PRBool *aCancel)
+nsTextEditRules::WillSetTextProperty(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool *aHandled)
 {
+  if (!aSelection || !aCancel || !aHandled) 
+    { return NS_ERROR_NULL_POINTER; }
   nsresult res = NS_OK;
 
   // XXX: should probably return a success value other than NS_OK that means "not allowed"
@@ -594,8 +605,10 @@ nsTextEditRules::DidSetTextProperty(nsIDOMSelection *aSelection, nsresult aResul
 }
 
 nsresult
-nsTextEditRules::WillRemoveTextProperty(nsIDOMSelection *aSelection, PRBool *aCancel)
+nsTextEditRules::WillRemoveTextProperty(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool *aHandled)
 {
+  if (!aSelection || !aCancel || !aHandled) 
+    { return NS_ERROR_NULL_POINTER; }
   nsresult res = NS_OK;
 
   // XXX: should probably return a success value other than NS_OK that means "not allowed"
@@ -614,13 +627,15 @@ nsTextEditRules::DidRemoveTextProperty(nsIDOMSelection *aSelection, nsresult aRe
 nsresult
 nsTextEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, 
                                      nsIEditor::ESelectionCollapseDirection aCollapsedAction, 
-                                     PRBool *aCancel)
+                                     PRBool *aCancel,
+                                     PRBool *aHandled)
 {
-  if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
+  if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
   CANCEL_OPERATION_IF_READONLY_OR_DISABLED
 
   // initialize out param
   *aCancel = PR_FALSE;
+  *aHandled = PR_FALSE;
   
   // if there is only bogus content, cancel the operation
   if (mBogusNode) {
@@ -745,12 +760,13 @@ nsTextEditRules::DidDeleteSelection(nsIDOMSelection *aSelection,
 }
 
 nsresult
-nsTextEditRules::WillUndo(nsIDOMSelection *aSelection, PRBool *aCancel)
+nsTextEditRules::WillUndo(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool *aHandled)
 {
-  if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
+  if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
   CANCEL_OPERATION_IF_READONLY_OR_DISABLED
   // initialize out param
   *aCancel = PR_FALSE;
+  *aHandled = PR_FALSE;
   return NS_OK;
 }
 
@@ -808,12 +824,13 @@ nsTextEditRules:: DidUndo(nsIDOMSelection *aSelection, nsresult aResult)
 }
 
 nsresult
-nsTextEditRules::WillRedo(nsIDOMSelection *aSelection, PRBool *aCancel)
+nsTextEditRules::WillRedo(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool *aHandled)
 {
-  if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
+  if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
   CANCEL_OPERATION_IF_READONLY_OR_DISABLED
   // initialize out param
   *aCancel = PR_FALSE;
+  *aHandled = PR_FALSE;
   return NS_OK;
 }
 
@@ -869,25 +886,28 @@ nsresult
 nsTextEditRules::WillOutputText(nsIDOMSelection *aSelection, 
                                 const nsString  *aOutputFormat,
                                 nsString *aOutString,                                
-                                PRBool   *aCancel)
+                                PRBool   *aCancel,
+                                PRBool   *aHandled)
 {
   // null selection ok
-  if (!aOutString || !aOutputFormat || !aCancel) { return NS_ERROR_NULL_POINTER; }
+  if (!aOutString || !aOutputFormat || !aCancel || !aHandled) 
+    { return NS_ERROR_NULL_POINTER; }
 
   // initialize out param
   *aCancel = PR_FALSE;
+  *aHandled = PR_FALSE;
 
   if (PR_TRUE == aOutputFormat->Equals("text/plain"))
   { // only use these rules for plain text output
     if (mFlags & nsIHTMLEditor::eEditorPasswordMask)
     {
       *aOutString = mPasswordText;
-      *aCancel = PR_TRUE;
+      *aHandled = PR_TRUE;
     }
     else if (mBogusNode)
     { // this means there's no content, so output null string
       *aOutString = "";
-      *aCancel = PR_TRUE;
+      *aHandled = PR_TRUE;
     }
   }
   return NS_OK;
