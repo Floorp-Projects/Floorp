@@ -449,7 +449,7 @@ ifeq ($(OS_ARCH),Darwin)
 ifdef IS_COMPONENT
 EXTRA_DSO_LDOPTS	+= -bundle
 else
-EXTRA_DSO_LDOPTS	+= -dynamiclib -install_name @executable_path/\$@
+EXTRA_DSO_LDOPTS	+= -dynamiclib -install_name @executable_path/\$@ -compatibility_version 1 -current_version 1
 endif
 endif
 
