@@ -2020,17 +2020,18 @@ dnl Start by checking whether the system support pthreads
 dnl 
 
 
-dnl 
-dnl Try lib pthread
-dnl 
-AC_CHECK_LIB(pthread, pthread_attr_init, 
-             USE_PTHREADS=1 _PTHREAD_LDFLAGS="-lpthread",
-    AC_CHECK_LIB(c_r, pthread_attr_init,
-        USE_PTHREADS=1 _PTHREAD_LDFLAGS="-lc_r",
-        AC_CHECK_LIB(c, pthread_attr_init,
-            USE_PTHREADS=1 )
+MOZ_CHECK_PTHREADS(pthreads,
+    USE_PTHREADS=1 _PTHREAD_LDFLAGS="-lpthreads",
+    MOZ_CHECK_PTHREADS(pthread,
+        USE_PTHREADS=1 _PTHREAD_LDFLAGS="-lpthread",
+        MOZ_CHECK_PTHREADS(c_r,
+            USE_PTHREADS=1 _PTHREAD_LDFLAGS="-lc_r",
+            MOZ_CHECK_PTHREADS(c,
+                USE_PTHREADS=1
+            )
         )
     )
+)
 
 dnl
 dnl Check the command line for --with-pthreads 
