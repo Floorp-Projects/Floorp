@@ -87,7 +87,7 @@ NS_METHOD nsGenericFactory::Create(nsISupports* outer, const nsIID& aIID, void* 
 	return res;
 }
 
-extern nsresult
+NS_COM nsresult
 NS_NewGenericFactory(nsIGenericFactory* *result,
                      nsIGenericFactory::ConstructorProcPtr constructor,
                      nsIGenericFactory::DestructorProcPtr destructor)
