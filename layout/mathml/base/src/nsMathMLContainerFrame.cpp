@@ -504,7 +504,7 @@ nsMathMLContainerFrame::FinalizeReflow(nsIPresContext*      aPresContext,
         NS_MATHML_WILL_STRETCH_ALL_CHILDREN_HORIZONTALLY(mEmbellishData.flags);
 
       nsBoundingMetrics defaultSize;
-      if (!mEmbellishData.core /* case of a bare <mo>...</mo> itself */
+      if (mEmbellishData.core == this /* case of a bare <mo>...</mo> itself */
           || stretchAll) { /* or <mover><mo>...</mo>...</mover>, or friends */
         // use our current size as computed earlier by Place()
         defaultSize = aDesiredSize.mBoundingMetrics;

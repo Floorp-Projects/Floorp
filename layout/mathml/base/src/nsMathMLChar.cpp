@@ -132,12 +132,12 @@ CheckFontExistence(nsIPresContext* aPresContext, const nsString& aFontName)
 }
 
 // alert the user if some of the needed MathML fonts are not installed.
-void
+static void
 AlertMissingFonts(nsString& aMissingFonts)
 {
   nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
-  nsCOMPtr<nsIPrompt> prompter;
   if (wwatch) {
+    nsCOMPtr<nsIPrompt> prompter;
     wwatch->GetNewPrompter(0, getter_AddRefs(prompter));
     if (prompter) {
       nsAutoString message;
@@ -1038,7 +1038,7 @@ MathFontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
 //#ifndef _WIN32
    // XXX In principle, the mathfont-family list in the mathfont.properties file
    // is customizable depending on the platform. For now, this is here since there
-   // is no need to alter Linux users about TrueType fonts specific to Windows.
+   // is no need to alert Linux users about TrueType fonts specific to Windows.
    if (aFamily.EqualsIgnoreCase("MT Extra"))
      return PR_TRUE; // continue to try other fonts
 //#endif
