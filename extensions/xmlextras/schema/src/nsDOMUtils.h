@@ -62,7 +62,7 @@ public:
   }    
   
   nsChildElementIterator(nsIDOMElement* aParent,
-                         const nsAReadableString& aNamespace) :
+                         const nsAString& aNamespace) :
     mIndex(0), mLength(0), mNamespace(aNamespace), mNumNamespaces(0)
   {
     SetElement(aParent);

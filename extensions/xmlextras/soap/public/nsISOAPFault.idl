@@ -39,7 +39,7 @@
 #include "nsISupports.idl"
 
 %{ C++
-#include "nsAWritableString.h"
+#include "nsAString.h"
 %} 
 
 interface nsIDOMElement;

@@ -174,7 +174,7 @@ NS_IMPL_RELEASE(nsXMLHttpRequest)
 /* void addEventListener (in string type, in nsIDOMEventListener
    listener); */
 NS_IMETHODIMP
-nsXMLHttpRequest::AddEventListener(const nsAReadableString& type,
+nsXMLHttpRequest::AddEventListener(const nsAString& type,
                                    nsIDOMEventListener *listener,
                                    PRBool useCapture)
 {
@@ -208,7 +208,7 @@ nsXMLHttpRequest::AddEventListener(const nsAReadableString& type,
 /* void removeEventListener (in string type, in nsIDOMEventListener
    listener); */
 NS_IMETHODIMP 
-nsXMLHttpRequest::RemoveEventListener(const nsAReadableString & type,
+nsXMLHttpRequest::RemoveEventListener(const nsAString & type,
                                       nsIDOMEventListener *listener,
                                       PRBool useCapture)
 {
@@ -332,7 +332,7 @@ NS_IMETHODIMP nsXMLHttpRequest::GetResponseXML(nsIDOMDocument **aResponseXML)
  * from HTTP headers.
  */
 nsresult
-nsXMLHttpRequest::DetectCharset(nsAWritableString& aCharset)
+nsXMLHttpRequest::DetectCharset(nsAString& aCharset)
 {
   aCharset.Truncate();
   nsresult rv;

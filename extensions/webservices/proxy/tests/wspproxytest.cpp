@@ -123,7 +123,7 @@ WSPProxyTest::CreateComplexTypeWrapper(nsIWebServiceComplexTypeWrapper** aWrappe
 }
 
 NS_IMETHODIMP
-WSPProxyTest::TestComplexTypeWrapper(nsAWritableString& aResult)
+WSPProxyTest::TestComplexTypeWrapper(nsAString& aResult)
 {
   nsCOMPtr<nsIInterfaceInfo> info;
   nsCOMPtr<nsIWebServiceComplexTypeWrapper> wrapper;
@@ -148,7 +148,7 @@ WSPProxyTest::TestComplexTypeWrapper(nsAWritableString& aResult)
 
 nsresult
 WSPProxyTest::TestComplexTypeWrapperInstance(nsIPropertyBag* propBag,
-                                             nsAWritableString& aResult)
+                                             nsAString& aResult)
 {
   nsCOMPtr<nsISimpleEnumerator> enumerator;
   nsresult rv = propBag->GetEnumerator(getter_AddRefs(enumerator));
@@ -306,7 +306,7 @@ WSPProxyTest::TestComplexTypeWrapperInstance(nsIPropertyBag* propBag,
 
 
 NS_IMETHODIMP
-WSPProxyTest::TestPropertyBagWrapper(nsAWritableString& aResult)
+WSPProxyTest::TestPropertyBagWrapper(nsAString& aResult)
 {
   nsCOMPtr<nsIInterfaceInfo> info;
   nsCOMPtr<nsIWebServiceComplexTypeWrapper> ctwrapper;

@@ -46,7 +46,7 @@
 #include "nsISOAPBlock.idl"
 
 %{ C++
-#include "nsAWritableString.h"
+#include "nsAString.h"
 %} 
 
 interface nsIWebServiceProxy;

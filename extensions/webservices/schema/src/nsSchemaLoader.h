@@ -138,11 +138,11 @@ public:
   NS_DECL_NSISCHEMACOLLECTION
 
 protected:
-  nsresult GetBuiltinType(const nsAReadableString& aName,
-                          const nsAReadableString& aNamespace,
+  nsresult GetBuiltinType(const nsAString& aName,
+                          const nsAString& aNamespace,
                           nsISchemaType** aType);
-  nsresult GetSOAPType(const nsAReadableString& aName,
-                       const nsAReadableString& aNamespace,
+  nsresult GetSOAPType(const nsAString& aName,
+                       const nsAString& aNamespace,
                        nsISchemaType** aType);
 
 protected:
@@ -199,15 +199,15 @@ protected:
                              nsISchemaSimpleType** aSimpleType);
   nsresult ProcessSimpleTypeRestriction(nsSchema* aSchema, 
                                         nsIDOMElement* aElement,
-                                        const nsAReadableString& aName,
+                                        const nsAString& aName,
                                         nsISchemaSimpleType** aSimpleType);
   nsresult ProcessSimpleTypeList(nsSchema* aSchema, 
                                  nsIDOMElement* aElement,
-                                 const nsAReadableString& aName,
+                                 const nsAString& aName,
                                  nsISchemaSimpleType** aSimpleType);
   nsresult ProcessSimpleTypeUnion(nsSchema* aSchema, 
                                   nsIDOMElement* aElement,
-                                  const nsAReadableString& aName,
+                                  const nsAString& aName,
                                   nsISchemaSimpleType** aSimpleType);
   nsresult ProcessAttribute(nsSchema* aSchema, 
                             nsIDOMElement* aElement,
@@ -235,7 +235,7 @@ protected:
 
   nsresult GetNewOrUsedType(nsSchema* aSchema,
                             nsIDOMElement* aContext,
-                            const nsAReadableString& aTypeName,
+                            const nsAString& aTypeName,
                             nsISchemaType** aType);
 
   void GetUse(nsIDOMElement* aElement, 
@@ -246,22 +246,22 @@ protected:
                     PRUint32* aMinOccurs,
                     PRUint32* aMaxOccurs);
 
-  nsresult GetResolvedURI(const nsAReadableString& aSchemaURI,
+  nsresult GetResolvedURI(const nsAString& aSchemaURI,
                           const char* aMethod, nsIURI** aURI);
 
   nsresult ParseArrayType(nsSchema* aSchema,
                           nsIDOMElement* aAttrElement,
-                          const nsAReadableString& aStr,
+                          const nsAString& aStr,
                           nsISchemaType** aType,
                           PRUint32* aDimension);
   nsresult ParseDimensions(nsSchema* aSchema,
                            nsIDOMElement* aAttrElement,
-                           const nsAReadableString& aStr,
+                           const nsAString& aStr,
                            nsISchemaType* aBaseType,
                            nsISchemaType** aArrayType,
                            PRUint32* aDimension);
   void ConstructArrayName(nsISchemaType* aType,
-                          nsAWritableString& aName);
+                          nsAString& aName);
 
 protected:
   nsSupportsHashtable mSchemas;

@@ -87,7 +87,7 @@ nsSchemaParticleBase::SetMaxOccurs(PRUint32 aMaxOccurs)
 //
 ////////////////////////////////////////////////////////////
 nsSchemaModelGroup::nsSchemaModelGroup(nsSchema* aSchema, 
-                                       const nsAReadableString& aName)
+                                       const nsAString& aName)
   : nsSchemaParticleBase(aSchema), mName(aName), mCompositor(COMPOSITOR_SEQUENCE)
 {
   NS_INIT_ISUPPORTS();
@@ -169,7 +169,7 @@ nsSchemaModelGroup::GetParticleType(PRUint16 *aParticleType)
 }
 
 NS_IMETHODIMP
-nsSchemaModelGroup::GetName(nsAWritableString& aName)
+nsSchemaModelGroup::GetName(nsAString& aName)
 {
   aName.Assign(mName);
 
@@ -208,7 +208,7 @@ nsSchemaModelGroup::GetParticle(PRUint32 index, nsISchemaParticle **_retval)
 
 /* nsISchemaElement getElementByName(in AString name); */
 NS_IMETHODIMP
-nsSchemaModelGroup::GetElementByName(const nsAReadableString& aName,
+nsSchemaModelGroup::GetElementByName(const nsAString& aName,
                                      nsISchemaElement** _retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
@@ -266,7 +266,7 @@ nsSchemaModelGroup::AddParticle(nsISchemaParticle* aParticle)
 //
 ////////////////////////////////////////////////////////////
 nsSchemaModelGroupRef::nsSchemaModelGroupRef(nsSchema* aSchema,
-                                             const nsAReadableString& aRef)
+                                             const nsAString& aRef)
   : nsSchemaParticleBase(aSchema), mRef(aRef)
 {
   NS_INIT_ISUPPORTS();
@@ -331,7 +331,7 @@ nsSchemaModelGroupRef::GetParticleType(PRUint16 *aParticleType)
 }
 
 NS_IMETHODIMP
-nsSchemaModelGroupRef::GetName(nsAWritableString& aName)
+nsSchemaModelGroupRef::GetName(nsAString& aName)
 {
   if (!mModelGroup) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -381,7 +381,7 @@ nsSchemaModelGroupRef::GetParticle(PRUint32 index, nsISchemaParticle **_retval)
 }
 
 NS_IMETHODIMP
-nsSchemaModelGroupRef::GetElementByName(const nsAReadableString& aName,
+nsSchemaModelGroupRef::GetElementByName(const nsAString& aName,
                                         nsISchemaElement** _retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
@@ -439,7 +439,7 @@ nsSchemaAnyParticle::GetParticleType(PRUint16 *aParticleType)
 }
 
 NS_IMETHODIMP
-nsSchemaAnyParticle::GetName(nsAWritableString& aName)
+nsSchemaAnyParticle::GetName(nsAString& aName)
 {
   aName.Assign(NS_LITERAL_STRING("any"));
 
@@ -459,7 +459,7 @@ nsSchemaAnyParticle::GetProcess(PRUint16 *aProcess)
 
 /* readonly attribute AString namespace; */
 NS_IMETHODIMP 
-nsSchemaAnyParticle::GetNamespace(nsAWritableString & aNamespace)
+nsSchemaAnyParticle::GetNamespace(nsAString & aNamespace)
 {
   aNamespace.Assign(mNamespace);
 
@@ -475,7 +475,7 @@ nsSchemaAnyParticle::SetProcess(PRUint16 aProcess)
 }
 
 NS_IMETHODIMP 
-nsSchemaAnyParticle::SetNamespace(const nsAReadableString& aNamespace)
+nsSchemaAnyParticle::SetNamespace(const nsAString& aNamespace)
 {
   mNamespace.Assign(aNamespace);
 
@@ -488,7 +488,7 @@ nsSchemaAnyParticle::SetNamespace(const nsAReadableString& aNamespace)
 //
 ////////////////////////////////////////////////////////////
 nsSchemaElement::nsSchemaElement(nsSchema* aSchema, 
-                                 const nsAReadableString& aName)
+                                 const nsAString& aName)
   : nsSchemaParticleBase(aSchema), mName(aName), 
     mNillable(PR_FALSE), mAbstract(PR_FALSE)
 {
@@ -556,7 +556,7 @@ nsSchemaElement::GetParticleType(PRUint16 *aParticleType)
 }
 
 NS_IMETHODIMP
-nsSchemaElement::GetName(nsAWritableString& aName)
+nsSchemaElement::GetName(nsAString& aName)
 {
   aName.Assign(mName);
 
@@ -577,7 +577,7 @@ nsSchemaElement::GetType(nsISchemaType * *aType)
 
 /* readonly attribute AString defaultValue; */
 NS_IMETHODIMP 
-nsSchemaElement::GetDefaultValue(nsAWritableString & aDefaultValue)
+nsSchemaElement::GetDefaultValue(nsAString & aDefaultValue)
 {
   aDefaultValue.Assign(mDefaultValue);
   
@@ -586,7 +586,7 @@ nsSchemaElement::GetDefaultValue(nsAWritableString & aDefaultValue)
 
 /* readonly attribute AString fixedValue; */
 NS_IMETHODIMP 
-nsSchemaElement::GetFixedValue(nsAWritableString & aFixedValue)
+nsSchemaElement::GetFixedValue(nsAString & aFixedValue)
 {
   aFixedValue.Assign(mFixedValue);
   
@@ -626,8 +626,8 @@ nsSchemaElement::SetType(nsISchemaType* aType)
 }
 
 NS_IMETHODIMP 
-nsSchemaElement::SetConstraints(const nsAReadableString& aDefaultValue,
-                                const nsAReadableString& aFixedValue)
+nsSchemaElement::SetConstraints(const nsAString& aDefaultValue,
+                                const nsAString& aFixedValue)
 {
   mDefaultValue.Assign(aDefaultValue);
   mFixedValue.Assign(aFixedValue);
@@ -650,7 +650,7 @@ nsSchemaElement::SetFlags(PRBool aNillable, PRBool aAbstract)
 //
 ////////////////////////////////////////////////////////////
 nsSchemaElementRef::nsSchemaElementRef(nsSchema* aSchema, 
-                                       const nsAReadableString& aRef)
+                                       const nsAString& aRef)
   : nsSchemaParticleBase(aSchema), mRef(aRef)
 {
   NS_INIT_ISUPPORTS();
@@ -714,7 +714,7 @@ nsSchemaElementRef::GetParticleType(PRUint16 *aParticleType)
 }
 
 NS_IMETHODIMP
-nsSchemaElementRef::GetName(nsAWritableString& aName)
+nsSchemaElementRef::GetName(nsAString& aName)
 {
   if (!mElement) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -738,7 +738,7 @@ nsSchemaElementRef::GetType(nsISchemaType * *aType)
 
 /* readonly attribute AString defaultValue; */
 NS_IMETHODIMP 
-nsSchemaElementRef::GetDefaultValue(nsAWritableString & aDefaultValue)
+nsSchemaElementRef::GetDefaultValue(nsAString & aDefaultValue)
 {
   if (!mElement) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -749,7 +749,7 @@ nsSchemaElementRef::GetDefaultValue(nsAWritableString & aDefaultValue)
 
 /* readonly attribute AString fixedValue; */
 NS_IMETHODIMP 
-nsSchemaElementRef::GetFixedValue(nsAWritableString & aFixedValue)
+nsSchemaElementRef::GetFixedValue(nsAString & aFixedValue)
 {
   if (!mElement) {
     return NS_ERROR_NOT_INITIALIZED;

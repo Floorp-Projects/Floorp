@@ -40,7 +40,7 @@ nsSchemaComponentBase::~nsSchemaComponentBase()
 
 /* readonly attribute wstring targetNamespace; */
 NS_IMETHODIMP 
-nsSchemaComponentBase::GetTargetNamespace(nsAWritableString& aTargetNamespace)
+nsSchemaComponentBase::GetTargetNamespace(nsAString& aTargetNamespace)
 {
   if (mSchema) {
     return mSchema->GetTargetNamespace(aTargetNamespace);

@@ -40,7 +40,7 @@ NS_IMPL_ISUPPORTS3_CI(nsSOAPArray,
 
 /* readonly attribute wstring targetNamespace; */
 NS_IMETHODIMP 
-nsSOAPArray::GetTargetNamespace(nsAWritableString& aTargetNamespace)
+nsSOAPArray::GetTargetNamespace(nsAString& aTargetNamespace)
 {
   aTargetNamespace.Assign(NS_LITERAL_STRING(NS_SOAP_1_2_ENCODING_NAMESPACE));
   return NS_OK;
@@ -62,7 +62,7 @@ nsSOAPArray::Clear()
 
 /* readonly attribute wstring name; */
 NS_IMETHODIMP 
-nsSOAPArray::GetName(nsAWritableString& aName)
+nsSOAPArray::GetName(nsAString& aName)
 {
   aName.Assign(NS_LITERAL_STRING("Array")); 
   return NS_OK;
@@ -143,7 +143,7 @@ nsSOAPArray::GetAttributeByIndex(PRUint32 index,
 
 /* nsISchemaAttributeComponent getAttributeByName (in AString name); */
 NS_IMETHODIMP 
-nsSOAPArray::GetAttributeByName(const nsAReadableString& name, 
+nsSOAPArray::GetAttributeByName(const nsAString& name, 
                                 nsISchemaAttributeComponent **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
@@ -205,7 +205,7 @@ NS_IMPL_ISUPPORTS4_CI(nsSOAPArrayType,
 
 /* readonly attribute wstring targetNamespace; */
 NS_IMETHODIMP 
-nsSOAPArrayType::GetTargetNamespace(nsAWritableString& aTargetNamespace)
+nsSOAPArrayType::GetTargetNamespace(nsAString& aTargetNamespace)
 {
   aTargetNamespace.Assign(NS_LITERAL_STRING(NS_SOAP_1_2_ENCODING_NAMESPACE));
   return NS_OK;
@@ -227,7 +227,7 @@ nsSOAPArrayType::Clear()
 
 /* readonly attribute wstring name; */
 NS_IMETHODIMP 
-nsSOAPArrayType::GetName(nsAWritableString& aName)
+nsSOAPArrayType::GetName(nsAString& aName)
 {
   aName.Assign(NS_LITERAL_STRING("arrayType"));
   return NS_OK;

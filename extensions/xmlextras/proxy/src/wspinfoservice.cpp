@@ -252,10 +252,10 @@ static nsresult AppendStandardInterface(const nsIID& iid,
 // BuildInterfaceName is used to construct the name of an interface
 // based on three AStrings.
 
-static void BuildInterfaceName(const nsAReadableString& qualifier,
-                               const nsAReadableString& name,
-                               const nsAReadableString& uri,
-                               nsAWritableCString& aCIdentifier)
+static void BuildInterfaceName(const nsAString& qualifier,
+                               const nsAString& name,
+                               const nsAString& uri,
+                               nsACString& aCIdentifier)
 {
   nsCAutoString temp;
   aCIdentifier.Truncate();

@@ -62,7 +62,7 @@ protected:
   nsresult CreateComplexTypeWrapper(nsIWebServiceComplexTypeWrapper** aWrapper,
                                     nsIInterfaceInfo** aInfo);
   nsresult TestComplexTypeWrapperInstance(nsIPropertyBag* propBag,
-                                          nsAWritableString& aResult);
+                                          nsAString& aResult);
   nsCOMPtr<nsIWSPProxyTestListener> mListener;
   nsCOMPtr<SpheonJSAOPStatisticsPortTypeAsync> mProxy;
 };

@@ -25,7 +25,7 @@
 #include "nsIWSDL.idl"
 
 %{ C++
-#include "nsAWritableString.h"
+#include "nsAString.h"
 %} 
 
 [scriptable, uuid(0458dac7-65de-11d5-9b42-00104bdf5339)]

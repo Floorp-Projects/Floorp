@@ -25,7 +25,7 @@
 #include "nsISchema.idl"
 
 %{ C++
-#include "nsAWritableString.h"
+#include "nsAString.h"
 %} 
 
 interface nsIWSDLBinding;

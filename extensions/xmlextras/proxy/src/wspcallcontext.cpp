@@ -47,7 +47,7 @@
 
 WSPCallContext::WSPCallContext(WSPProxy* aProxy,
                                nsISOAPCall* aSOAPCall,
-                               const nsAReadableString& aMethodName,
+                               const nsAString& aMethodName,
                                nsIWSDLOperation* aOperation)
   : mProxy(aProxy), mCall(aSOAPCall), mMethodName(aMethodName),
     mOperation(aOperation), mStatus(NS_ERROR_NOT_AVAILABLE)

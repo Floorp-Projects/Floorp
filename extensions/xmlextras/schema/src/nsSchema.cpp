@@ -29,8 +29,8 @@
 //
 ////////////////////////////////////////////////////////////
 nsSchema::nsSchema(nsISchemaCollection* aCollection,
-                   const nsAReadableString& aTargetNamespace,
-                   const nsAReadableString& aSchemaNamespace) 
+                   const nsAString& aTargetNamespace,
+                   const nsAString& aSchemaNamespace) 
   : mTargetNamespace(aTargetNamespace), mSchemaNamespace(aSchemaNamespace)
 {
   NS_INIT_ISUPPORTS();
@@ -46,7 +46,7 @@ NS_IMPL_ISUPPORTS2_CI(nsSchema, nsISchema, nsISchemaComponent)
 
 /* readonly attribute wstring targetNamespace; */
 NS_IMETHODIMP 
-nsSchema::GetTargetNamespace(nsAWritableString& aTargetNamespace)
+nsSchema::GetTargetNamespace(nsAString& aTargetNamespace)
 {
   aTargetNamespace.Assign(mTargetNamespace);
   return NS_OK;
@@ -54,7 +54,7 @@ nsSchema::GetTargetNamespace(nsAWritableString& aTargetNamespace)
 
 /* readonly attribute wstring schemaNamespace; */
 NS_IMETHODIMP 
-nsSchema::GetSchemaNamespace(nsAWritableString& aSchemaNamespace)
+nsSchema::GetSchemaNamespace(nsAString& aSchemaNamespace)
 {
   aSchemaNamespace.Assign(mSchemaNamespace);
   return NS_OK;
@@ -226,7 +226,7 @@ nsSchema::GetTypeByIndex(PRUint32 index, nsISchemaType **_retval)
 
 /* nsISchemaType getTypeByName (in wstring name); */
 NS_IMETHODIMP 
-nsSchema::GetTypeByName(const nsAReadableString& name, nsISchemaType **_retval)
+nsSchema::GetTypeByName(const nsAString& name, nsISchemaType **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
 
@@ -261,7 +261,7 @@ nsSchema::GetAttributeByIndex(PRUint32 index, nsISchemaAttribute **_retval)
 
 /* nsISchemaAttribute getAttributeByName (in wstring name); */
 NS_IMETHODIMP 
-nsSchema::GetAttributeByName(const nsAReadableString& name, nsISchemaAttribute **_retval)
+nsSchema::GetAttributeByName(const nsAString& name, nsISchemaAttribute **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
 
@@ -296,7 +296,7 @@ nsSchema::GetElementByIndex(PRUint32 index, nsISchemaElement **_retval)
 
 /* nsISchemaElement getElementByName (in wstring name); */
 NS_IMETHODIMP 
-nsSchema::GetElementByName(const nsAReadableString& name, 
+nsSchema::GetElementByName(const nsAString& name, 
                            nsISchemaElement **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
@@ -333,7 +333,7 @@ nsSchema::GetAttributeGroupByIndex(PRUint32 index, nsISchemaAttributeGroup **_re
 
 /* nsISchemaAttributeGroup getAttributeGroupByName (in wstring name); */
 NS_IMETHODIMP 
-nsSchema::GetAttributeGroupByName(const nsAReadableString& name, nsISchemaAttributeGroup **_retval)
+nsSchema::GetAttributeGroupByName(const nsAString& name, nsISchemaAttributeGroup **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
 
@@ -369,7 +369,7 @@ nsSchema::GetModelGroupByIndex(PRUint32 index, nsISchemaModelGroup **_retval)
 
 /* nsISchemaModelGroup getModelGroupByName (in wstring name); */
 NS_IMETHODIMP 
-nsSchema::GetModelGroupByName(const nsAReadableString& name, nsISchemaModelGroup **_retval)
+nsSchema::GetModelGroupByName(const nsAString& name, nsISchemaModelGroup **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
 

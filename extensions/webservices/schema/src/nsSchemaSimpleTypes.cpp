@@ -46,7 +46,7 @@ NS_IMPL_ISUPPORTS4_CI(nsSchemaBuiltinType,
 
 /* readonly attribute wstring targetNamespace; */
 NS_IMETHODIMP 
-nsSchemaBuiltinType::GetTargetNamespace(nsAWritableString& aTargetNamespace)
+nsSchemaBuiltinType::GetTargetNamespace(nsAString& aTargetNamespace)
 {
   aTargetNamespace.Assign(NS_LITERAL_STRING(NS_SCHEMA_2001_NAMESPACE));
   
@@ -69,7 +69,7 @@ nsSchemaBuiltinType::Clear()
 
 /* readonly attribute wstring name; */
 NS_IMETHODIMP 
-nsSchemaBuiltinType::GetName(nsAWritableString& aName)
+nsSchemaBuiltinType::GetName(nsAString& aName)
 {
   switch(mBuiltinType) {
     case BUILTIN_TYPE_ANYTYPE:
@@ -254,7 +254,7 @@ nsSchemaBuiltinType::GetBuiltinType(PRUint16 *aBuiltinType)
 //
 ////////////////////////////////////////////////////////////
 nsSchemaListType::nsSchemaListType(nsSchema* aSchema, 
-                                   const nsAReadableString& aName)
+                                   const nsAString& aName)
   : nsSchemaComponentBase(aSchema), mName(aName)
 {
   NS_INIT_ISUPPORTS();
@@ -315,7 +315,7 @@ nsSchemaListType::Clear()
 
 /* readonly attribute wstring name; */
 NS_IMETHODIMP 
-nsSchemaListType::GetName(nsAWritableString& aName)
+nsSchemaListType::GetName(nsAString& aName)
 {
   aName.Assign(mName);
   
@@ -370,7 +370,7 @@ nsSchemaListType::SetListType(nsISchemaSimpleType* aListType)
 //
 ////////////////////////////////////////////////////////////
 nsSchemaUnionType::nsSchemaUnionType(nsSchema* aSchema, 
-                                     const nsAReadableString& aName)
+                                     const nsAString& aName)
   : nsSchemaComponentBase(aSchema), mName(aName)
 {
   NS_INIT_ISUPPORTS();
@@ -451,7 +451,7 @@ nsSchemaUnionType::Clear()
 
 /* readonly attribute wstring name; */
 NS_IMETHODIMP 
-nsSchemaUnionType::GetName(nsAWritableString& aName)
+nsSchemaUnionType::GetName(nsAString& aName)
 {
   aName.Assign(mName);
   
@@ -513,7 +513,7 @@ nsSchemaUnionType::AddUnionType(nsISchemaSimpleType* aType)
 //
 ////////////////////////////////////////////////////////////
 nsSchemaRestrictionType::nsSchemaRestrictionType(nsSchema* aSchema, 
-                                                 const nsAReadableString& aName)
+                                                 const nsAString& aName)
   : nsSchemaComponentBase(aSchema), mName(aName)
 {
   NS_INIT_ISUPPORTS();
@@ -588,7 +588,7 @@ nsSchemaRestrictionType::Clear()
 
 /* readonly attribute wstring name; */
 NS_IMETHODIMP 
-nsSchemaRestrictionType::GetName(nsAWritableString& aName)
+nsSchemaRestrictionType::GetName(nsAString& aName)
 {
   aName.Assign(mName);
   
@@ -672,7 +672,7 @@ nsSchemaRestrictionType::AddFacet(nsISchemaFacet* aFacet)
 //
 ////////////////////////////////////////////////////////////
 nsSchemaTypePlaceholder::nsSchemaTypePlaceholder(nsSchema* aSchema,
-                                                 const nsAReadableString& aName)
+                                                 const nsAString& aName)
   : nsSchemaComponentBase(aSchema), mName(aName)
 {
   NS_INIT_ISUPPORTS();
@@ -704,7 +704,7 @@ nsSchemaTypePlaceholder::Clear()
 
 /* readonly attribute wstring name; */
 NS_IMETHODIMP 
-nsSchemaTypePlaceholder::GetName(nsAWritableString& aName)
+nsSchemaTypePlaceholder::GetName(nsAString& aName)
 {
   aName.Assign(mName);
   
@@ -792,7 +792,7 @@ nsSchemaFacet::GetFacetType(PRUint16 *aFacetType)
 
 /* readonly attribute AString value; */
 NS_IMETHODIMP 
-nsSchemaFacet::GetValue(nsAWritableString & aValue)
+nsSchemaFacet::GetValue(nsAString & aValue)
 {
   if ((mFacetType == FACET_TYPE_TOTALDIGITS) ||
       (mFacetType == FACET_TYPE_FRACTIONDIGITS) ||
@@ -868,7 +868,7 @@ nsSchemaFacet::GetIsfixed(PRBool *aIsFixed)
 }
 
 NS_IMETHODIMP 
-nsSchemaFacet::SetValue(const nsAReadableString& aStrValue)
+nsSchemaFacet::SetValue(const nsAString& aStrValue)
 {
   mStrValue.Assign(aStrValue);
 

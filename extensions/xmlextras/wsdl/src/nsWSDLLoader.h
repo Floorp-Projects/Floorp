@@ -85,7 +85,7 @@ public:
   NS_DECL_NSIWSDLLOADER
 
 protected:
-  nsresult GetResolvedURI(const nsAReadableString& aSchemaURI,
+  nsresult GetResolvedURI(const nsAString& aSchemaURI,
                           const char* aMethod,
                           nsIURI** aURI);
 
@@ -97,7 +97,7 @@ protected:
 class nsWSDLLoadingContext {
 public:
   nsWSDLLoadingContext(nsIDOMDocument* aDocument,
-                       const nsAReadableString& aLocation) :
+                       const nsAString& aLocation) :
     mDocument(aDocument), mChildIndex(0), mDocumentLocation(aLocation) {
   }
   ~nsWSDLLoadingContext() {
@@ -110,7 +110,7 @@ public:
   PRUint32 GetChildIndex() { return mChildIndex; }
   void SetChildIndex(PRUint32 aChildIndex) { mChildIndex = aChildIndex; }
 
-  void GetTargetNamespace(nsAWritableString& aNamespace) {
+  void GetTargetNamespace(nsAString& aNamespace) {
     nsCOMPtr<nsIDOMElement> element;
     GetRootElement(getter_AddRefs(element));
     if (element) {
@@ -122,7 +122,7 @@ public:
     }
   }
 
-  void GetDocumentLocation(nsAWritableString& aLocation) {
+  void GetDocumentLocation(nsAString& aLocation) {
     aLocation.Assign(mDocumentLocation);
   }
 
@@ -140,33 +140,33 @@ class nsWSDLLoadRequest : public nsIDOMEventListener
 public:
   nsWSDLLoadRequest(PRBool aIsSync, 
                     nsIWSDLLoadListener* aListener,
-                    const nsAReadableString& aPortName);
+                    const nsAString& aPortName);
   virtual ~nsWSDLLoadRequest();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMEVENTLISTENER
 
-  nsresult LoadDefinition(const nsAReadableString& aURI);
+  nsresult LoadDefinition(const nsAString& aURI);
   nsresult ResumeProcessing();
   nsresult ContineProcessingTillDone();
   nsresult GetPort(nsIWSDLPort** aPort);
 
   nsresult PushContext(nsIDOMDocument* aDocument, 
-                       const nsAReadableString& aLocation);
+                       const nsAString& aLocation);
   nsWSDLLoadingContext* GetCurrentContext();
   void PopContext();
 
-  nsresult GetSchemaElement(const nsAReadableString& aName,
-                            const nsAReadableString& aNamespace,
+  nsresult GetSchemaElement(const nsAString& aName,
+                            const nsAString& aNamespace,
                             nsISchemaElement** aSchemaComponent);
-  nsresult GetSchemaType(const nsAReadableString& aName,
-                         const nsAReadableString& aNamespace,
+  nsresult GetSchemaType(const nsAString& aName,
+                         const nsAString& aNamespace,
                          nsISchemaType** aSchemaComponent);
-  nsresult GetMessage(const nsAReadableString& aName,
-                      const nsAReadableString& aNamespace,
+  nsresult GetMessage(const nsAString& aName,
+                      const nsAString& aNamespace,
                       nsIWSDLMessage** aMessage);
-  nsresult GetPortType(const nsAReadableString& aName,
-                       const nsAReadableString& aNamespace,
+  nsresult GetPortType(const nsAString& aName,
+                       const nsAString& aNamespace,
                        nsIWSDLPort** aPort);
 
   nsresult ProcessImportElement(nsIDOMElement* aElement, 

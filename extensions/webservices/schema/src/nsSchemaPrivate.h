@@ -43,8 +43,8 @@ class nsSchema : public nsISchema
 {
 public:
   nsSchema(nsISchemaCollection* aCollection,
-           const nsAReadableString& aTargetNamespace,
-           const nsAReadableString& aSchemaNamespace);
+           const nsAString& aTargetNamespace,
+           const nsAString& aSchemaNamespace);
   virtual ~nsSchema();
 
   NS_DECL_ISUPPORTS
@@ -81,7 +81,7 @@ public:
   nsSchemaComponentBase(nsSchema* aSchema);
   virtual ~nsSchemaComponentBase();
 
-  NS_IMETHOD GetTargetNamespace(nsAWritableString& aTargetNamespace);
+  NS_IMETHOD GetTargetNamespace(nsAString& aTargetNamespace);
 
 protected:
   nsSchema* mSchema;  // [WEAK] It owns me
@@ -91,7 +91,7 @@ protected:
 };
 
 #define NS_IMPL_NSISCHEMACOMPONENT_USING_BASE                           \
-  NS_IMETHOD GetTargetNamespace(nsAWritableString& aTargetNamespace) {  \
+  NS_IMETHOD GetTargetNamespace(nsAString& aTargetNamespace) {          \
     return nsSchemaComponentBase::GetTargetNamespace(aTargetNamespace); \
   }                                                                     \
   NS_IMETHOD Resolve();                                                 \
@@ -117,7 +117,7 @@ class nsSchemaListType : public nsSchemaComponentBase,
                          public nsISchemaListType
 {
 public:
-  nsSchemaListType(nsSchema* aSchema, const nsAReadableString& aName);
+  nsSchemaListType(nsSchema* aSchema, const nsAString& aName);
   virtual ~nsSchemaListType();
 
   NS_DECL_ISUPPORTS
@@ -137,7 +137,7 @@ class nsSchemaUnionType : public nsSchemaComponentBase,
                           public nsISchemaUnionType
 {
 public:
-  nsSchemaUnionType(nsSchema* aSchema, const nsAReadableString& aName);
+  nsSchemaUnionType(nsSchema* aSchema, const nsAString& aName);
   virtual ~nsSchemaUnionType();
   
   NS_DECL_ISUPPORTS
@@ -157,7 +157,7 @@ class nsSchemaRestrictionType : public nsSchemaComponentBase,
                                 public nsISchemaRestrictionType
 {
 public:
-  nsSchemaRestrictionType(nsSchema* aSchema, const nsAReadableString& aName);
+  nsSchemaRestrictionType(nsSchema* aSchema, const nsAString& aName);
   virtual ~nsSchemaRestrictionType();
 
   NS_DECL_ISUPPORTS
@@ -193,7 +193,7 @@ class nsSchemaComplexType : public nsSchemaComponentBase,
                             public nsISchemaComplexType
 {
 public:
-  nsSchemaComplexType(nsSchema* aSchema, const nsAReadableString& aName,
+  nsSchemaComplexType(nsSchema* aSchema, const nsAString& aName,
                       PRBool aAbstract);
   virtual ~nsSchemaComplexType();
 
@@ -226,7 +226,7 @@ class nsSchemaTypePlaceholder : public nsSchemaComponentBase,
                                 public nsISchemaSimpleType
 {
 public:
-  nsSchemaTypePlaceholder(nsSchema* aSchema, const nsAReadableString& aName);
+  nsSchemaTypePlaceholder(nsSchema* aSchema, const nsAString& aName);
   virtual ~nsSchemaTypePlaceholder();
 
   NS_DECL_ISUPPORTS
@@ -269,14 +269,14 @@ protected:
     return nsSchemaParticleBase::SetMaxOccurs(aMaxOccurs);             \
   }                                                                    \
   NS_IMETHOD GetParticleType(PRUint16 *aParticleType);                 \
-  NS_IMETHOD GetName(nsAWritableString& aName);                        
+  NS_IMETHOD GetName(nsAString& aName);                        
 
 class nsSchemaModelGroup : public nsSchemaParticleBase,
                            public nsISchemaModelGroup
 {
 public:
   nsSchemaModelGroup(nsSchema* aSchema, 
-                     const nsAReadableString& aName);
+                     const nsAString& aName);
   virtual ~nsSchemaModelGroup();
 
   NS_DECL_ISUPPORTS
@@ -298,7 +298,7 @@ class nsSchemaModelGroupRef : public nsSchemaParticleBase,
 {
 public:
   nsSchemaModelGroupRef(nsSchema* aSchema, 
-                        const nsAReadableString& aRef);
+                        const nsAString& aRef);
   virtual ~nsSchemaModelGroupRef();
 
   NS_DECL_ISUPPORTS
@@ -324,7 +324,7 @@ public:
   NS_DECL_NSISCHEMAANYPARTICLE
 
   NS_IMETHOD SetProcess(PRUint16 aProcess);
-  NS_IMETHOD SetNamespace(const nsAReadableString& aNamespace);
+  NS_IMETHOD SetNamespace(const nsAString& aNamespace);
 
 protected:
   PRUint16 mProcess;
@@ -335,7 +335,7 @@ class nsSchemaElement : public nsSchemaParticleBase,
                         public nsISchemaElement
 {
 public:
-  nsSchemaElement(nsSchema* aSchema, const nsAReadableString& aName);
+  nsSchemaElement(nsSchema* aSchema, const nsAString& aName);
   virtual ~nsSchemaElement();
 
   NS_DECL_ISUPPORTS
@@ -344,8 +344,8 @@ public:
   NS_DECL_NSISCHEMAELEMENT
 
   NS_IMETHOD SetType(nsISchemaType* aType);
-  NS_IMETHOD SetConstraints(const nsAReadableString& aDefaultValue,
-                            const nsAReadableString& aFixedValue);
+  NS_IMETHOD SetConstraints(const nsAString& aDefaultValue,
+                            const nsAString& aFixedValue);
   NS_IMETHOD SetFlags(PRBool aNillable, PRBool aAbstract);
 
 protected:
@@ -361,7 +361,7 @@ class nsSchemaElementRef : public nsSchemaParticleBase,
                            public nsISchemaElement
 {
 public:
-  nsSchemaElementRef(nsSchema* aSchema, const nsAReadableString& aRef);
+  nsSchemaElementRef(nsSchema* aSchema, const nsAString& aRef);
   virtual ~nsSchemaElementRef();
 
   NS_DECL_ISUPPORTS
@@ -378,7 +378,7 @@ class nsSchemaAttribute : public nsSchemaComponentBase,
                           public nsISchemaAttribute 
 {
 public:
-  nsSchemaAttribute(nsSchema* aSchema, const nsAReadableString& aName);
+  nsSchemaAttribute(nsSchema* aSchema, const nsAString& aName);
   virtual ~nsSchemaAttribute();
 
   NS_DECL_ISUPPORTS
@@ -387,8 +387,8 @@ public:
   NS_DECL_NSISCHEMAATTRIBUTE
 
   NS_IMETHOD SetType(nsISchemaSimpleType* aType);
-  NS_IMETHOD SetConstraints(const nsAReadableString& aDefaultValue,
-                            const nsAReadableString& aFixedValue);
+  NS_IMETHOD SetConstraints(const nsAString& aDefaultValue,
+                            const nsAString& aFixedValue);
   NS_IMETHOD SetUse(PRUint16 aUse);
 
 protected:
@@ -403,7 +403,7 @@ class nsSchemaAttributeRef : public nsSchemaComponentBase,
                              public nsISchemaAttribute 
 {
 public:
-  nsSchemaAttributeRef(nsSchema* aSchema, const nsAReadableString& aRef);
+  nsSchemaAttributeRef(nsSchema* aSchema, const nsAString& aRef);
   virtual ~nsSchemaAttributeRef();
   
   NS_DECL_ISUPPORTS
@@ -411,8 +411,8 @@ public:
   NS_DECL_NSISCHEMAATTRIBUTECOMPONENT
   NS_DECL_NSISCHEMAATTRIBUTE
 
-  NS_IMETHOD SetConstraints(const nsAReadableString& aDefaultValue,
-                            const nsAReadableString& aFixedValue);
+  NS_IMETHOD SetConstraints(const nsAString& aDefaultValue,
+                            const nsAString& aFixedValue);
   NS_IMETHOD SetUse(PRUint16 aUse);
 
 protected:
@@ -427,7 +427,7 @@ class nsSchemaAttributeGroup : public nsSchemaComponentBase,
                                public nsISchemaAttributeGroup
 {
 public:
-  nsSchemaAttributeGroup(nsSchema* aSchema, const nsAReadableString& aName);
+  nsSchemaAttributeGroup(nsSchema* aSchema, const nsAString& aName);
   virtual ~nsSchemaAttributeGroup();
   
   NS_DECL_ISUPPORTS
@@ -447,7 +447,7 @@ class nsSchemaAttributeGroupRef : public nsSchemaComponentBase,
                                   public nsISchemaAttributeGroup
 {
 public:
-  nsSchemaAttributeGroupRef(nsSchema* aSchema, const nsAReadableString& aRef);
+  nsSchemaAttributeGroupRef(nsSchema* aSchema, const nsAString& aRef);
   virtual ~nsSchemaAttributeGroupRef();
   
   NS_DECL_ISUPPORTS
@@ -473,7 +473,7 @@ public:
   NS_DECL_NSISCHEMAANYATTRIBUTE
   
   NS_IMETHOD SetProcess(PRUint16 aProcess);
-  NS_IMETHOD SetNamespace(const nsAReadableString& aNamespace);
+  NS_IMETHOD SetNamespace(const nsAString& aNamespace);
 
 protected:
   PRUint16 mProcess;
@@ -493,7 +493,7 @@ public:
 
   NS_IMETHOD SetFacetType(PRUint16 aFacetType);
   NS_IMETHOD SetIsFixed(PRBool aIsFixed);
-  NS_IMETHOD SetValue(const nsAReadableString& aStrValue);
+  NS_IMETHOD SetValue(const nsAString& aStrValue);
   NS_IMETHOD SetUintValue(PRUint32 aUintValue);
   NS_IMETHOD SetWhitespaceValue(PRUint16 aWhitespaceValue);
 

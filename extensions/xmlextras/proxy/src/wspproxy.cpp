@@ -67,7 +67,7 @@ WSPProxy::~WSPProxy()
 NS_IMETHODIMP
 WSPProxy::Init(nsIWSDLPort* aPort,
                nsIInterfaceInfo* aPrimaryInterface,
-               const nsAReadableString& aQualifier,
+               const nsAString& aQualifier,
                PRBool aIsAsync)
 {
   NS_ENSURE_ARG(aPort);

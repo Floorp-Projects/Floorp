@@ -54,7 +54,7 @@
 
 class nsSOAPPortBinding : public nsISOAPPortBinding {
 public:
-  nsSOAPPortBinding(const nsAReadableString& aName);
+  nsSOAPPortBinding(const nsAString& aName);
   virtual ~nsSOAPPortBinding();
   
   NS_DECL_ISUPPORTS
@@ -62,9 +62,9 @@ public:
   NS_DECL_NSISOAPPORTBINDING
 
   NS_IMETHOD SetDocumentationElement(nsIDOMElement* aElement);
-  NS_IMETHOD SetAddress(const nsAReadableString& aAddress);
+  NS_IMETHOD SetAddress(const nsAString& aAddress);
   NS_IMETHOD SetStyle(PRUint16 aStyle);
-  NS_IMETHOD SetTransport(const nsAReadableString& aTransport);
+  NS_IMETHOD SetTransport(const nsAString& aTransport);
   NS_IMETHOD SetSoapVersion(PRUint16 aSoapVersion);
 
 protected:
@@ -78,7 +78,7 @@ protected:
 
 class nsWSDLPort : public nsIWSDLPort {
 public:
-  nsWSDLPort(const nsAReadableString &aName);
+  nsWSDLPort(const nsAString &aName);
   virtual ~nsWSDLPort();
 
   NS_DECL_ISUPPORTS
@@ -106,7 +106,7 @@ public:
 
   NS_IMETHOD SetDocumentationElement(nsIDOMElement* aElement);
   NS_IMETHOD SetStyle(PRUint16 aStyle);
-  NS_IMETHOD SetSoapAction(const nsAReadableString& aAction);
+  NS_IMETHOD SetSoapAction(const nsAString& aAction);
 
 protected:
   PRUint16 mStyle;
@@ -116,7 +116,7 @@ protected:
 
 class nsWSDLOperation : public nsIWSDLOperation {
 public:
-  nsWSDLOperation(const nsAReadableString &aName);
+  nsWSDLOperation(const nsAString &aName);
   virtual ~nsWSDLOperation();
 
   NS_DECL_ISUPPORTS
@@ -126,7 +126,7 @@ public:
   NS_IMETHOD SetInput(nsIWSDLMessage* aInputMessage);
   NS_IMETHOD SetOutput(nsIWSDLMessage* aOutputMessage);
   NS_IMETHOD AddFault(nsIWSDLMessage* aFaultMessage);
-  NS_IMETHOD AddParameter(const nsAReadableString& aParameter);
+  NS_IMETHOD AddParameter(const nsAString& aParameter);
   NS_IMETHOD SetBinding(nsIWSDLBinding* aBinding);
 
 protected:
@@ -141,7 +141,7 @@ protected:
 
 class nsSOAPMessageBinding : public nsISOAPMessageBinding {
 public:
-  nsSOAPMessageBinding(const nsAReadableString& aNamespace);
+  nsSOAPMessageBinding(const nsAString& aNamespace);
   virtual ~nsSOAPMessageBinding();
 
   NS_DECL_ISUPPORTS
@@ -154,7 +154,7 @@ protected:
 
 class nsWSDLMessage : public nsIWSDLMessage {
 public:
-  nsWSDLMessage(const nsAReadableString& aName);
+  nsWSDLMessage(const nsAString& aName);
   virtual ~nsWSDLMessage();
 
   NS_DECL_ISUPPORTS
@@ -174,8 +174,8 @@ protected:
 class nsSOAPPartBinding : public nsISOAPPartBinding {
 public:
   nsSOAPPartBinding(PRUint16 aLocation, PRUint16 aUse,
-                    const nsAReadableString& aEncodingStyle,
-                    const nsAReadableString& aNamespace);
+                    const nsAString& aEncodingStyle,
+                    const nsAString& aNamespace);
   virtual ~nsSOAPPartBinding();
 
   NS_DECL_ISUPPORTS
@@ -191,14 +191,14 @@ protected:
 
 class nsWSDLPart : public nsIWSDLPart {
 public:
-  nsWSDLPart(const nsAReadableString& aName);
+  nsWSDLPart(const nsAString& aName);
   virtual ~nsWSDLPart();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWSDLPART
 
-  NS_IMETHOD SetTypeInfo(const nsAReadableString& aType,
-                         const nsAReadableString& aElementName,
+  NS_IMETHOD SetTypeInfo(const nsAString& aType,
+                         const nsAString& aElementName,
                          nsISchemaComponent* aSchemaComponent);
   NS_IMETHOD SetBinding(nsIWSDLBinding* aBinding);
 
@@ -239,7 +239,7 @@ class nsWSDLInterfaceInfo : public nsIInterfaceInfo,
                             public nsSupportsWeakReference
 {
 public:
-  nsWSDLInterfaceInfo(nsAReadableCString& aName, 
+  nsWSDLInterfaceInfo(const nsACString& aName, 
                       const nsIID& aIID,
                       nsWSDLInterfaceSet* aInterfaceSet);
   virtual ~nsWSDLInterfaceInfo();

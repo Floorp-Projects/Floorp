@@ -410,7 +410,7 @@ NS_IMPL_ISUPPORTS1(nsBuiltinSchemaCollection,
 
 /* nsISchema getSchema (in AString targetNamespace); */
 NS_IMETHODIMP 
-nsBuiltinSchemaCollection::GetSchema(const nsAReadableString & targetNamespace,
+nsBuiltinSchemaCollection::GetSchema(const nsAString & targetNamespace,
                                      nsISchema **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
@@ -420,8 +420,8 @@ nsBuiltinSchemaCollection::GetSchema(const nsAReadableString & targetNamespace,
 
 /* nsISchemaElement getElement (in AString name, in AString namespace); */
 NS_IMETHODIMP 
-nsBuiltinSchemaCollection::GetElement(const nsAReadableString & aName, 
-                                      const nsAReadableString & aNamespace, 
+nsBuiltinSchemaCollection::GetElement(const nsAString & aName, 
+                                      const nsAString & aNamespace, 
                                       nsISchemaElement **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
@@ -431,8 +431,8 @@ nsBuiltinSchemaCollection::GetElement(const nsAReadableString & aName,
 
 /* nsISchemaAttribute getAttribute (in AString name, in AString namespace); */
 NS_IMETHODIMP 
-nsBuiltinSchemaCollection::GetAttribute(const nsAReadableString & aName, 
-                                        const nsAReadableString & aNamespace, 
+nsBuiltinSchemaCollection::GetAttribute(const nsAString & aName, 
+                                        const nsAString & aNamespace, 
                                         nsISchemaAttribute **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
@@ -441,7 +441,7 @@ nsBuiltinSchemaCollection::GetAttribute(const nsAReadableString & aName,
 }
 
 static PRBool
-IsSchemaNamespace(const nsAReadableString& aNamespace)
+IsSchemaNamespace(const nsAString& aNamespace)
 {
   if (aNamespace.Equals(NS_LITERAL_STRING(NS_SCHEMA_2001_NAMESPACE)) ||
       aNamespace.Equals(NS_LITERAL_STRING(NS_SCHEMA_1999_NAMESPACE))) {
@@ -453,7 +453,7 @@ IsSchemaNamespace(const nsAReadableString& aNamespace)
 }
 
 static PRBool
-IsSOAPNamespace(const nsAReadableString& aNamespace)
+IsSOAPNamespace(const nsAString& aNamespace)
 {
   if (aNamespace.Equals(NS_LITERAL_STRING(NS_SOAP_1_1_ENCODING_NAMESPACE)) ||
       aNamespace.Equals(NS_LITERAL_STRING(NS_SOAP_1_2_ENCODING_NAMESPACE))) {
@@ -466,8 +466,8 @@ IsSOAPNamespace(const nsAReadableString& aNamespace)
 
 /* nsISchemaType getType (in AString name, in AString namespace); */
 NS_IMETHODIMP 
-nsBuiltinSchemaCollection::GetType(const nsAReadableString & aName, 
-                                   const nsAReadableString & aNamespace, 
+nsBuiltinSchemaCollection::GetType(const nsAString & aName, 
+                                   const nsAString & aNamespace, 
                                    nsISchemaType **_retval)
 {
   if (IsSchemaNamespace(aNamespace)) {
@@ -482,8 +482,8 @@ nsBuiltinSchemaCollection::GetType(const nsAReadableString & aName,
 }
 
 nsresult
-nsBuiltinSchemaCollection::GetBuiltinType(const nsAReadableString& aName,
-                                          const nsAReadableString& aNamespace,
+nsBuiltinSchemaCollection::GetBuiltinType(const nsAString& aName,
+                                          const nsAString& aNamespace,
                                           nsISchemaType** aType)
 {
   nsresult rv = NS_OK;
@@ -650,8 +650,8 @@ nsBuiltinSchemaCollection::GetBuiltinType(const nsAReadableString& aName,
 }
 
 nsresult
-nsBuiltinSchemaCollection::GetSOAPType(const nsAReadableString& aName,
-                                       const nsAReadableString& aNamespace,
+nsBuiltinSchemaCollection::GetSOAPType(const nsAString& aName,
+                                       const nsAString& aNamespace,
                                        nsISchemaType** aType)
 {
   nsresult rv = NS_OK;
@@ -722,7 +722,7 @@ NS_IMPL_ISUPPORTS2_CI(nsSchemaLoader,
 
 /* nsISchema getSchema (in AString targetNamespace); */
 NS_IMETHODIMP 
-nsSchemaLoader::GetSchema(const nsAReadableString & targetNamespace, 
+nsSchemaLoader::GetSchema(const nsAString & targetNamespace, 
                           nsISchema **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
@@ -743,8 +743,8 @@ nsSchemaLoader::GetSchema(const nsAReadableString & targetNamespace,
 
 /* nsISchemaElement getElement (in AString name, in AString namespace); */
 NS_IMETHODIMP 
-nsSchemaLoader::GetElement(const nsAReadableString & aName, 
-                           const nsAReadableString & aNamespace, 
+nsSchemaLoader::GetElement(const nsAString & aName, 
+                           const nsAString & aNamespace, 
                            nsISchemaElement **_retval)
 {
   nsCOMPtr<nsISchema> schema;
@@ -758,8 +758,8 @@ nsSchemaLoader::GetElement(const nsAReadableString & aName,
 
 /* nsISchemaAttribute getAttribute (in AString name, in AString namespace); */
 NS_IMETHODIMP 
-nsSchemaLoader::GetAttribute(const nsAReadableString & aName, 
-                             const nsAReadableString & aNamespace, 
+nsSchemaLoader::GetAttribute(const nsAString & aName, 
+                             const nsAString & aNamespace, 
                              nsISchemaAttribute **_retval)
 {
   nsCOMPtr<nsISchema> schema;
@@ -773,8 +773,8 @@ nsSchemaLoader::GetAttribute(const nsAReadableString & aName,
 
 /* nsISchemaType getType (in AString name, in AString namespace); */
 NS_IMETHODIMP 
-nsSchemaLoader::GetType(const nsAReadableString & aName, 
-                        const nsAReadableString & aNamespace, 
+nsSchemaLoader::GetType(const nsAString & aName, 
+                        const nsAString & aNamespace, 
                         nsISchemaType **_retval)
 {
   if (IsSchemaNamespace(aNamespace) || IsSOAPNamespace(aNamespace)) {
@@ -791,7 +791,7 @@ nsSchemaLoader::GetType(const nsAReadableString & aName,
 }
 
 nsresult
-nsSchemaLoader::GetResolvedURI(const nsAReadableString& aSchemaURI,
+nsSchemaLoader::GetResolvedURI(const nsAString& aSchemaURI,
                                const char* aMethod,
                                nsIURI** aURI)
 {
@@ -842,7 +842,7 @@ nsSchemaLoader::GetResolvedURI(const nsAReadableString& aSchemaURI,
 
 /* nsISchema load (in AString schemaURI); */
 NS_IMETHODIMP 
-nsSchemaLoader::Load(const nsAReadableString& schemaURI, 
+nsSchemaLoader::Load(const nsAString& schemaURI, 
                      nsISchema **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
@@ -898,7 +898,7 @@ nsSchemaLoader::Load(const nsAReadableString& schemaURI,
 
 /* void loadAsync (in AString schemaURI, in nsISchemaLoadListener listener); */
 NS_IMETHODIMP 
-nsSchemaLoader::LoadAsync(const nsAReadableString& schemaURI, 
+nsSchemaLoader::LoadAsync(const nsAString& schemaURI, 
                           nsISchemaLoadListener *aListener)
 {
   NS_ENSURE_ARG(aListener);
@@ -1069,10 +1069,10 @@ nsSchemaLoader::ProcessSchemaElement(nsIDOMElement *element,
 
 PRBool 
 ParseQualifiedName(nsIDOMElement* aContext,
-                   const nsAReadableString& aQualifiedName,
-                   nsAWritableString& aPrefix,
-                   nsAWritableString& aLocalName,
-                   nsAWritableString& aNamespaceURI) 
+                   const nsAString& aQualifiedName,
+                   nsAString& aPrefix,
+                   nsAString& aLocalName,
+                   nsAString& aNamespaceURI) 
 {
   nsReadingIterator<PRUnichar> pos, begin, end;
   
@@ -1096,7 +1096,7 @@ ParseQualifiedName(nsIDOMElement* aContext,
 nsresult
 nsSchemaLoader::GetNewOrUsedType(nsSchema* aSchema,
                                  nsIDOMElement* aContext,
-                                 const nsAReadableString& aTypeName,
+                                 const nsAString& aTypeName,
                                  nsISchemaType** aType)
 {
   nsresult rv = NS_OK;
@@ -1337,7 +1337,7 @@ nsSchemaLoader::ProcessComplexType(nsSchema* aSchema,
 
 void
 nsSchemaLoader::ConstructArrayName(nsISchemaType* aType,
-                                   nsAWritableString& aName)
+                                   nsAString& aName)
 {
   nsAutoString typeName;
   
@@ -1348,7 +1348,7 @@ nsSchemaLoader::ConstructArrayName(nsISchemaType* aType,
 nsresult
 nsSchemaLoader::ParseDimensions(nsSchema* aSchema,
                                 nsIDOMElement* aAttrElement,
-                                const nsAReadableString& aStr,
+                                const nsAString& aStr,
                                 nsISchemaType* aBaseType,
                                 nsISchemaType** aArrayType,
                                 PRUint32* aDimension)
@@ -1428,7 +1428,7 @@ nsSchemaLoader::ParseDimensions(nsSchema* aSchema,
 nsresult
 nsSchemaLoader::ParseArrayType(nsSchema* aSchema,
                                nsIDOMElement* aAttrElement,
-                               const nsAReadableString& aStr,
+                               const nsAString& aStr,
                                nsISchemaType** aType,
                                PRUint32* aDimension)
 {
@@ -2032,7 +2032,7 @@ nsSchemaLoader::ProcessSimpleType(nsSchema* aSchema,
 nsresult 
 nsSchemaLoader::ProcessSimpleTypeRestriction(nsSchema* aSchema, 
                                              nsIDOMElement* aElement,
-                                             const nsAReadableString& aName,
+                                             const nsAString& aName,
                                              nsISchemaSimpleType** aSimpleType)
 {
   nsresult rv = NS_OK;
@@ -2124,7 +2124,7 @@ nsSchemaLoader::ProcessSimpleTypeRestriction(nsSchema* aSchema,
 nsresult 
 nsSchemaLoader::ProcessSimpleTypeList(nsSchema* aSchema, 
                                       nsIDOMElement* aElement,
-                                      const nsAReadableString& aName,
+                                      const nsAString& aName,
                                       nsISchemaSimpleType** aSimpleType)
 {
   nsresult rv = NS_OK;
@@ -2187,7 +2187,7 @@ nsSchemaLoader::ProcessSimpleTypeList(nsSchema* aSchema,
 nsresult 
 nsSchemaLoader::ProcessSimpleTypeUnion(nsSchema* aSchema, 
                                        nsIDOMElement* aElement,
-                                       const nsAReadableString& aName,
+                                       const nsAString& aName,
                                        nsISchemaSimpleType** aSimpleType)
 {
   nsresult rv = NS_OK;

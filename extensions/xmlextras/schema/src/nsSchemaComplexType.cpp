@@ -29,7 +29,7 @@
 //
 ////////////////////////////////////////////////////////////
 nsSchemaComplexType::nsSchemaComplexType(nsSchema* aSchema,
-                                         const nsAReadableString& aName,
+                                         const nsAString& aName,
                                          PRBool aAbstract)
   : nsSchemaComponentBase(aSchema), mName(aName), mAbstract(aAbstract),
     mContentModel(CONTENT_MODEL_ELEMENT_ONLY), 
@@ -161,7 +161,7 @@ nsSchemaComplexType::Clear()
 
 /* readonly attribute wstring name; */
 NS_IMETHODIMP 
-nsSchemaComplexType::GetName(nsAWritableString& aName)
+nsSchemaComplexType::GetName(nsAString& aName)
 {
   aName.Assign(mName);
   
@@ -260,7 +260,7 @@ nsSchemaComplexType::GetAttributeByIndex(PRUint32 index,
 
 /* nsISchemaAttributeComponent getAttributeByName (in AString name); */
 NS_IMETHODIMP 
-nsSchemaComplexType::GetAttributeByName(const nsAReadableString& name, 
+nsSchemaComplexType::GetAttributeByName(const nsAString& name, 
                                         nsISchemaAttributeComponent **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);

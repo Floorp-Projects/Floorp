@@ -29,7 +29,7 @@
 //
 ////////////////////////////////////////////////////////////
 nsSchemaAttribute::nsSchemaAttribute(nsSchema* aSchema, 
-                                     const nsAReadableString& aName)
+                                     const nsAString& aName)
   : nsSchemaComponentBase(aSchema), mName(aName)
 {
   NS_INIT_ISUPPORTS();
@@ -90,7 +90,7 @@ nsSchemaAttribute::Clear()
 
 /* readonly attribute AString name; */
 NS_IMETHODIMP 
-nsSchemaAttribute::GetName(nsAWritableString & aName)
+nsSchemaAttribute::GetName(nsAString & aName)
 {
   aName.Assign(mName);
 
@@ -122,7 +122,7 @@ nsSchemaAttribute::GetType(nsISchemaSimpleType * *aType)
 
 /* readonly attribute AString defaultValue; */
 NS_IMETHODIMP 
-nsSchemaAttribute::GetDefaultValue(nsAWritableString & aDefaultValue)
+nsSchemaAttribute::GetDefaultValue(nsAString & aDefaultValue)
 {
   aDefaultValue.Assign(mDefaultValue);
   
@@ -131,7 +131,7 @@ nsSchemaAttribute::GetDefaultValue(nsAWritableString & aDefaultValue)
 
 /* readonly attribute AString fixedValue; */
 NS_IMETHODIMP 
-nsSchemaAttribute::GetFixedValue(nsAWritableString & aFixedValue)
+nsSchemaAttribute::GetFixedValue(nsAString & aFixedValue)
 {
   aFixedValue.Assign(mFixedValue);
   
@@ -160,8 +160,8 @@ nsSchemaAttribute::SetType(nsISchemaSimpleType* aType)
 }
 
 NS_IMETHODIMP
-nsSchemaAttribute::SetConstraints(const nsAReadableString& aDefaultValue,
-                                  const nsAReadableString& aFixedValue)
+nsSchemaAttribute::SetConstraints(const nsAString& aDefaultValue,
+                                  const nsAString& aFixedValue)
 {
   mDefaultValue.Assign(aDefaultValue);
   mFixedValue.Assign(aFixedValue);
@@ -183,7 +183,7 @@ nsSchemaAttribute::SetUse(PRUint16 aUse)
 //
 ////////////////////////////////////////////////////////////
 nsSchemaAttributeRef::nsSchemaAttributeRef(nsSchema* aSchema, 
-                                           const nsAReadableString& aRef)
+                                           const nsAString& aRef)
   : nsSchemaComponentBase(aSchema), mRef(aRef)
 {
   NS_INIT_ISUPPORTS();
@@ -239,7 +239,7 @@ nsSchemaAttributeRef::Clear()
 
 /* readonly attribute AString name; */
 NS_IMETHODIMP 
-nsSchemaAttributeRef::GetName(nsAWritableString & aName)
+nsSchemaAttributeRef::GetName(nsAString & aName)
 {
   if (!mAttribute) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -274,7 +274,7 @@ nsSchemaAttributeRef::GetType(nsISchemaSimpleType * *aType)
 
 /* readonly attribute AString defaultValue; */
 NS_IMETHODIMP 
-nsSchemaAttributeRef::GetDefaultValue(nsAWritableString & aDefaultValue)
+nsSchemaAttributeRef::GetDefaultValue(nsAString & aDefaultValue)
 {
   aDefaultValue.Assign(mDefaultValue);
   
@@ -283,7 +283,7 @@ nsSchemaAttributeRef::GetDefaultValue(nsAWritableString & aDefaultValue)
 
 /* readonly attribute AString fixedValue; */
 NS_IMETHODIMP 
-nsSchemaAttributeRef::GetFixedValue(nsAWritableString & aFixedValue)
+nsSchemaAttributeRef::GetFixedValue(nsAString & aFixedValue)
 {
   aFixedValue.Assign(mFixedValue);
   
@@ -302,8 +302,8 @@ nsSchemaAttributeRef::GetUse(PRUint16 *aUse)
 }
 
 NS_IMETHODIMP
-nsSchemaAttributeRef::SetConstraints(const nsAReadableString& aDefaultValue,
-                                     const nsAReadableString& aFixedValue)
+nsSchemaAttributeRef::SetConstraints(const nsAString& aDefaultValue,
+                                     const nsAString& aFixedValue)
 {
   mDefaultValue.Assign(aDefaultValue);
   mFixedValue.Assign(aFixedValue);
@@ -325,7 +325,7 @@ nsSchemaAttributeRef::SetUse(PRUint16 aUse)
 //
 ////////////////////////////////////////////////////////////
 nsSchemaAttributeGroup::nsSchemaAttributeGroup(nsSchema* aSchema,
-                                               const nsAReadableString& aName)
+                                               const nsAString& aName)
   : nsSchemaComponentBase(aSchema), mName(aName)
 {
   NS_INIT_ISUPPORTS();
@@ -398,7 +398,7 @@ nsSchemaAttributeGroup::Clear()
 
 /* readonly attribute AString name; */
 NS_IMETHODIMP 
-nsSchemaAttributeGroup::GetName(nsAWritableString & aName)
+nsSchemaAttributeGroup::GetName(nsAString & aName)
 {
   aName.Assign(mName);
 
@@ -439,7 +439,7 @@ nsSchemaAttributeGroup::GetAttributeByIndex(PRUint32 index,
 
 /* nsISchemaAttributeComponent getAttributeByName (in AString name); */
 NS_IMETHODIMP 
-nsSchemaAttributeGroup::GetAttributeByName(const nsAReadableString & name, 
+nsSchemaAttributeGroup::GetAttributeByName(const nsAString & name, 
                                            nsISchemaAttributeComponent **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
@@ -475,7 +475,7 @@ nsSchemaAttributeGroup::AddAttribute(nsISchemaAttributeComponent* aAttribute)
 //
 ////////////////////////////////////////////////////////////
 nsSchemaAttributeGroupRef::nsSchemaAttributeGroupRef(nsSchema* aSchema,
-                                                     const nsAReadableString& aRef)
+                                                     const nsAString& aRef)
   : nsSchemaComponentBase(aSchema), mRef(aRef)
 {
   NS_INIT_ISUPPORTS();
@@ -530,7 +530,7 @@ nsSchemaAttributeGroupRef::Clear()
 
 /* readonly attribute AString name; */
 NS_IMETHODIMP 
-nsSchemaAttributeGroupRef::GetName(nsAWritableString & aName)
+nsSchemaAttributeGroupRef::GetName(nsAString & aName)
 {
   if (!mAttributeGroup) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -579,7 +579,7 @@ nsSchemaAttributeGroupRef::GetAttributeByIndex(PRUint32 index,
 
 /* nsISchemaAttributeComponent getAttributeByName (in AString name); */
 NS_IMETHODIMP 
-nsSchemaAttributeGroupRef::GetAttributeByName(const nsAReadableString & name, 
+nsSchemaAttributeGroupRef::GetAttributeByName(const nsAString & name, 
                                               nsISchemaAttributeComponent **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
@@ -638,7 +638,7 @@ nsSchemaAnyAttribute::GetComponentType(PRUint16 *aComponentType)
 
 /* readonly attribute AString name; */
 NS_IMETHODIMP 
-nsSchemaAnyAttribute::GetName(nsAWritableString & aName)
+nsSchemaAnyAttribute::GetName(nsAString & aName)
 {
   aName.Assign(NS_LITERAL_STRING("anyAttribute"));
 
@@ -658,7 +658,7 @@ nsSchemaAnyAttribute::GetProcess(PRUint16 *aProcess)
 
 /* readonly attribute AString namespace; */
 NS_IMETHODIMP 
-nsSchemaAnyAttribute::GetNamespace(nsAWritableString & aNamespace)
+nsSchemaAnyAttribute::GetNamespace(nsAString & aNamespace)
 {
   aNamespace.Assign(mNamespace);
 
@@ -674,7 +674,7 @@ nsSchemaAnyAttribute::SetProcess(PRUint16 aProcess)
 }
  
 NS_IMETHODIMP 
-nsSchemaAnyAttribute::SetNamespace(const nsAReadableString& aNamespace)
+nsSchemaAnyAttribute::SetNamespace(const nsAString& aNamespace)
 {
   mNamespace.Assign(aNamespace);
 

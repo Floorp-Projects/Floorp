@@ -150,7 +150,7 @@ nsWSDLLoader::~nsWSDLLoader()
 NS_IMPL_ISUPPORTS1_CI(nsWSDLLoader, nsIWSDLLoader)
 
 nsresult
-nsWSDLLoader::GetResolvedURI(const nsAReadableString& aWSDLURI,
+nsWSDLLoader::GetResolvedURI(const nsAString& aWSDLURI,
                              const char* aMethod,
                              nsIURI** aURI)
 {
@@ -201,8 +201,8 @@ nsWSDLLoader::GetResolvedURI(const nsAReadableString& aWSDLURI,
 
 /* nsIWSDLService load (in AString wsdlURI, in AString portName); */
 NS_IMETHODIMP 
-nsWSDLLoader::Load(const nsAReadableString& wsdlURI,
-                   const nsAReadableString& portName,
+nsWSDLLoader::Load(const nsAString& wsdlURI,
+                   const nsAString& portName,
                    nsIWSDLPort **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
@@ -235,8 +235,8 @@ nsWSDLLoader::Load(const nsAReadableString& wsdlURI,
 /* void loadAsync (in AString wsdlURI, in AString portName, 
    in nsIWSDLLoadListener listener); */
 NS_IMETHODIMP 
-nsWSDLLoader::LoadAsync(const nsAReadableString& wsdlURI, 
-                        const nsAReadableString& portName,
+nsWSDLLoader::LoadAsync(const nsAString& wsdlURI, 
+                        const nsAString& portName,
                         nsIWSDLLoadListener *aListener)
 {
   NS_ENSURE_ARG(aListener);
@@ -263,7 +263,7 @@ nsWSDLLoader::LoadAsync(const nsAReadableString& wsdlURI,
 /*  nsISupports createPortProxy(in nsIWSDLPort service, in AString nameSpace); */
 NS_IMETHODIMP 
 nsWSDLLoader::CreatePortProxy(nsIWSDLPort *port, 
-                              const nsAReadableString& nameSpace,
+                              const nsAString& nameSpace,
                               PRBool sync,
                               nsISupports **_retval)
 {
@@ -277,7 +277,7 @@ nsWSDLLoader::CreatePortProxy(nsIWSDLPort *port,
 ////////////////////////////////////////////////////////////
 nsWSDLLoadRequest::nsWSDLLoadRequest(PRBool aIsSync,
                                      nsIWSDLLoadListener* aListener,
-                                     const nsAReadableString& aPortName)
+                                     const nsAString& aPortName)
   : mListener(aListener), mIsSync(aIsSync), mPortName(aPortName)
 {
   NS_INIT_ISUPPORTS();
@@ -295,7 +295,7 @@ NS_IMPL_ISUPPORTS1(nsWSDLLoadRequest,
 
 static inline PRBool
 IsElementOfNamespace(nsIDOMElement* aElement,
-                     const nsAReadableString& aNamespace)
+                     const nsAString& aNamespace)
 {
 	nsAutoString namespaceURI;           
 	aElement->GetNamespaceURI(namespaceURI);  
@@ -303,7 +303,7 @@ IsElementOfNamespace(nsIDOMElement* aElement,
 }
 
 nsresult 
-nsWSDLLoadRequest::LoadDefinition(const nsAReadableString& aURI)
+nsWSDLLoadRequest::LoadDefinition(const nsAString& aURI)
 {
   nsresult rv;
   
@@ -617,7 +617,7 @@ nsWSDLLoadRequest::GetPort(nsIWSDLPort** aPort)
 
 nsresult
 nsWSDLLoadRequest::PushContext(nsIDOMDocument* aDocument, 
-                               const nsAReadableString& aURISpec)
+                               const nsAString& aURISpec)
 {
   nsWSDLLoadingContext* context = new nsWSDLLoadingContext(aDocument,
                                                            aURISpec);
@@ -655,8 +655,8 @@ nsWSDLLoadRequest::PopContext()
 }
 
 nsresult
-nsWSDLLoadRequest::GetSchemaElement(const nsAReadableString& aName,
-                                    const nsAReadableString& aNamespace,
+nsWSDLLoadRequest::GetSchemaElement(const nsAString& aName,
+                                    const nsAString& aNamespace,
                                     nsISchemaElement** aSchemaComponent)
 {
   nsStringKey key(aNamespace);
@@ -679,8 +679,8 @@ nsWSDLLoadRequest::GetSchemaElement(const nsAReadableString& aName,
 }
 
 nsresult
-nsWSDLLoadRequest::GetSchemaType(const nsAReadableString& aName,
-                                 const nsAReadableString& aNamespace,
+nsWSDLLoadRequest::GetSchemaType(const nsAString& aName,
+                                 const nsAString& aNamespace,
                                  nsISchemaType** aSchemaComponent)
 {
   if (aNamespace.Equals(NS_LITERAL_STRING(SCHEMA_2001_NAMESPACE)) ||
@@ -709,8 +709,8 @@ nsWSDLLoadRequest::GetSchemaType(const nsAReadableString& aName,
 }
 
 nsresult
-nsWSDLLoadRequest::GetMessage(const nsAReadableString& aName,
-                              const nsAReadableString& aNamespace,
+nsWSDLLoadRequest::GetMessage(const nsAString& aName,
+                              const nsAString& aNamespace,
                               nsIWSDLMessage** aMessage)
 {
   nsAutoString keyStr;
@@ -731,8 +731,8 @@ nsWSDLLoadRequest::GetMessage(const nsAReadableString& aName,
 }
 
 nsresult
-nsWSDLLoadRequest::GetPortType(const nsAReadableString& aName,
-                               const nsAReadableString& aNamespace,
+nsWSDLLoadRequest::GetPortType(const nsAString& aName,
+                               const nsAString& aNamespace,
                                nsIWSDLPort** aPort)
 {
   nsAutoString keyStr;
@@ -754,10 +754,10 @@ nsWSDLLoadRequest::GetPortType(const nsAReadableString& aName,
 
 static nsresult
 ParseQualifiedName(nsIDOMElement* aContext,
-                   const nsAReadableString& aQualifiedName,
-                   nsAWritableString& aPrefix,
-                   nsAWritableString& aLocalName,
-                   nsAWritableString& aNamespaceURI) 
+                   const nsAString& aQualifiedName,
+                   nsAString& aPrefix,
+                   nsAString& aLocalName,
+                   nsAString& aNamespaceURI) 
 {
   nsReadingIterator<PRUnichar> pos, begin, end;
   

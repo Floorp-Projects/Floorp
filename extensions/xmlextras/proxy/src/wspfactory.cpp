@@ -80,8 +80,8 @@ WSPFactory::CreateProxyAsync(const nsAString & wsdlURL,
 #define P2M_ESCAPE_CHARACTER '_'
 
 nsresult
-WSPFactory::C2XML(const nsAReadableCString& aCIdentifier,
-                  nsAWritableString& aXMLIdentifier)
+WSPFactory::C2XML(const nsACString& aCIdentifier,
+                  nsAString& aXMLIdentifier)
 {
   nsReadingIterator<char> current, end;
 
@@ -119,8 +119,8 @@ WSPFactory::C2XML(const nsAReadableCString& aCIdentifier,
 }
  
 void
-WSPFactory::XML2C(const nsAReadableString& aXMLIndentifier,
-                  nsAWritableCString& aCIdentifier)
+WSPFactory::XML2C(const nsAString& aXMLIndentifier,
+                  nsACString& aCIdentifier)
 {
   nsReadingIterator<PRUnichar> current, end;
 

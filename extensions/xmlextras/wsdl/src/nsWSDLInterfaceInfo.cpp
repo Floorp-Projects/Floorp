@@ -369,7 +369,7 @@ nsWSDLInterfaceSet::Count()
 
 #define NS_WSDL_PARENT_METHOD_BASE 3
 
-nsWSDLInterfaceInfo::nsWSDLInterfaceInfo(nsAReadableCString& aName, 
+nsWSDLInterfaceInfo::nsWSDLInterfaceInfo(const nsACString& aName, 
                                          const nsIID& aIID,
                                          nsWSDLInterfaceSet* aInterfaceSet)
   : mName(aName), mIID(aIID)

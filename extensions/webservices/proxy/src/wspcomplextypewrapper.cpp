@@ -49,7 +49,7 @@
 
 class WSPComplexTypeProperty : public nsIProperty {
 public:
-  WSPComplexTypeProperty(const nsAReadableString& aName,
+  WSPComplexTypeProperty(const nsAString& aName,
                          nsIVariant* aValue);
   virtual ~WSPComplexTypeProperty() {}
 
@@ -61,7 +61,7 @@ protected:
   nsCOMPtr<nsIVariant> mValue;
 };
 
-WSPComplexTypeProperty::WSPComplexTypeProperty(const nsAReadableString& aName,
+WSPComplexTypeProperty::WSPComplexTypeProperty(const nsAString& aName,
                                                nsIVariant* aValue)
   : mName(aName), mValue(aValue)
 {
@@ -72,7 +72,7 @@ NS_IMPL_ISUPPORTS1(WSPComplexTypeProperty, nsIProperty)
 
 /* readonly attribute AString name; */
 NS_IMETHODIMP 
-WSPComplexTypeProperty::GetName(nsAWritableString & aName)
+WSPComplexTypeProperty::GetName(nsAString & aName)
 {
     aName.Assign(mName);
     return NS_OK;

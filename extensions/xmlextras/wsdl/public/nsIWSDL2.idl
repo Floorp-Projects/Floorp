@@ -37,7 +37,7 @@
  */
 
 %{ C++
-#include "nsAWritableString.h"
+#include "nsAString.h"
 %} 
 
 interface nsIWSDLPort;

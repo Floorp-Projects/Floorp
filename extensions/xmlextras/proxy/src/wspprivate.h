@@ -73,10 +73,10 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWEBSERVICEPROXYFACTORY  
 
-  static nsresult C2XML(const nsAReadableCString& aCIdentifier,
-                        nsAWritableString& aXMLIdentifier);
-  static void XML2C(const nsAReadableString& aXMLIndentifier,
-                    nsAWritableCString& aCIdentifier);
+  static nsresult C2XML(const nsACString& aCIdentifier,
+                        nsAString& aXMLIdentifier);
+  static void XML2C(const nsAString& aXMLIndentifier,
+                    nsACString& aCIdentifier);
 };
 
 class WSPProxy : public nsXPTCStubBase,
@@ -163,7 +163,7 @@ class WSPCallContext : public nsIWebServiceSOAPCallContext,
 public:
   WSPCallContext(WSPProxy* aProxy,
                  nsISOAPCall* aSOAPCall,
-                 const nsAReadableString& aMethodName,
+                 const nsAString& aMethodName,
                  nsIWSDLOperation* aOperation);
   virtual ~WSPCallContext();
 

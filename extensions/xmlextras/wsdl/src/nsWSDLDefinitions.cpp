@@ -29,7 +29,7 @@
 // nsWSDLPort implementation
 //
 ////////////////////////////////////////////////////////////
-nsWSDLPort::nsWSDLPort(const nsAReadableString& aName)
+nsWSDLPort::nsWSDLPort(const nsAString& aName)
   : mName(aName)
 {
   NS_INIT_ISUPPORTS();  
@@ -43,7 +43,7 @@ NS_IMPL_ISUPPORTS1_CI(nsWSDLPort, nsIWSDLPort)
 
 /* readonly attribute AString name; */
 NS_IMETHODIMP 
-nsWSDLPort::GetName(nsAWritableString & aName)
+nsWSDLPort::GetName(nsAString & aName)
 {
   aName.Assign(mName);
 
@@ -83,7 +83,7 @@ nsWSDLPort::GetOperation(PRUint32 index, nsIWSDLOperation **_retval)
 
 /* nsIWSDLOperation getOperationByName(in AString name); */
 NS_IMETHODIMP
-nsWSDLPort::GetOperationByName(const nsAReadableString& aName,
+nsWSDLPort::GetOperationByName(const nsAString& aName,
                                nsIWSDLOperation** aOperation)
 {
   nsresult rv;
@@ -155,7 +155,7 @@ nsWSDLPort::SetBinding(nsIWSDLBinding* aBinding)
 // nsSOAPPortBinding implementation
 //
 ////////////////////////////////////////////////////////////
-nsSOAPPortBinding::nsSOAPPortBinding(const nsAReadableString& aName)
+nsSOAPPortBinding::nsSOAPPortBinding(const nsAString& aName)
   : mName(aName), mStyle(STYLE_RPC), 
   mSoapVersion(nsISOAPPortBinding::SOAP_VERSION_UNKNOWN)
 {
@@ -172,7 +172,7 @@ NS_IMPL_ISUPPORTS2_CI(nsSOAPPortBinding,
 
 /*  readonly attribute AString protocol; */
 NS_IMETHODIMP
-nsSOAPPortBinding::GetProtocol(nsAWritableString& aProtocol)
+nsSOAPPortBinding::GetProtocol(nsAString& aProtocol)
 {
   aProtocol.Assign(NS_LITERAL_STRING("soap"));
   
@@ -193,7 +193,7 @@ nsSOAPPortBinding::GetDocumentation(nsIDOMElement * *aDocumentation)
 
 /* readonly attribute AString bindingName; */
 NS_IMETHODIMP 
-nsSOAPPortBinding::GetName(nsAWritableString & aBindingName)
+nsSOAPPortBinding::GetName(nsAString & aBindingName)
 {
   aBindingName.Assign(mName);
 
@@ -202,7 +202,7 @@ nsSOAPPortBinding::GetName(nsAWritableString & aBindingName)
 
 /* readonly attribute AString address; */
 NS_IMETHODIMP 
-nsSOAPPortBinding::GetAddress(nsAWritableString & aAddress)
+nsSOAPPortBinding::GetAddress(nsAString & aAddress)
 {
   aAddress.Assign(mAddress);
 
@@ -222,7 +222,7 @@ nsSOAPPortBinding::GetStyle(PRUint16 *aStyle)
 
 /* readonly attribute AString transport; */
 NS_IMETHODIMP 
-nsSOAPPortBinding::GetTransport(nsAWritableString & aTransport)
+nsSOAPPortBinding::GetTransport(nsAString & aTransport)
 {
   aTransport.Assign(mTransport);
 
@@ -247,7 +247,7 @@ nsSOAPPortBinding::SetDocumentationElement(nsIDOMElement* aElement)
 }
 
 NS_IMETHODIMP
-nsSOAPPortBinding::SetAddress(const nsAReadableString& aAddress)
+nsSOAPPortBinding::SetAddress(const nsAString& aAddress)
 {
   mAddress.Assign(aAddress);
 
@@ -263,7 +263,7 @@ nsSOAPPortBinding::SetStyle(PRUint16 aStyle)
 }
   
 NS_IMETHODIMP
-nsSOAPPortBinding::SetTransport(const nsAReadableString& aTransport)
+nsSOAPPortBinding::SetTransport(const nsAString& aTransport)
 {
   mTransport.Assign(aTransport);
 
@@ -282,7 +282,7 @@ nsSOAPPortBinding::SetSoapVersion(PRUint16 aVersion)
 // nsWSDLOperation implementation
 //
 ////////////////////////////////////////////////////////////
-nsWSDLOperation::nsWSDLOperation(const nsAReadableString &aName)
+nsWSDLOperation::nsWSDLOperation(const nsAString &aName)
   : mName(aName)
 {
   NS_INIT_ISUPPORTS();
@@ -296,7 +296,7 @@ NS_IMPL_ISUPPORTS1_CI(nsWSDLOperation, nsIWSDLOperation)
 
 /* readonly attribute AString name; */
 NS_IMETHODIMP 
-nsWSDLOperation::GetName(nsAWritableString & aName)
+nsWSDLOperation::GetName(nsAString & aName)
 {
   aName.Assign(mName);
 
@@ -382,7 +382,7 @@ nsWSDLOperation::GetParameterOrderCount(PRUint32 *aParameterCount)
 
 /* AString getParameter (in PRUint32 index); */
 NS_IMETHODIMP 
-nsWSDLOperation::GetParameter(PRUint32 index, nsAWritableString & _retval)
+nsWSDLOperation::GetParameter(PRUint32 index, nsAString & _retval)
 {
   nsString* str = mParameters.StringAt((PRInt32)index);
   if (!str) {
@@ -395,7 +395,7 @@ nsWSDLOperation::GetParameter(PRUint32 index, nsAWritableString & _retval)
 
 /* PRUint32 getParameterIndex(in AString name); */
 NS_IMETHODIMP
-nsWSDLOperation::GetParameterIndex(const nsAReadableString& aName,
+nsWSDLOperation::GetParameterIndex(const nsAString& aName,
                                    PRUint32* aIndex)
 {
   NS_ENSURE_ARG_POINTER(aIndex);
@@ -449,7 +449,7 @@ nsWSDLOperation::SetBinding(nsIWSDLBinding* aBinding)
 }
 
 NS_IMETHODIMP
-nsWSDLOperation::AddParameter(const nsAReadableString& aParameter)
+nsWSDLOperation::AddParameter(const nsAString& aParameter)
 {
   mParameters.AppendString(aParameter);
   
@@ -477,7 +477,7 @@ NS_IMPL_ISUPPORTS2_CI(nsSOAPOperationBinding,
 
 /*  readonly attribute AString protocol; */
 NS_IMETHODIMP
-nsSOAPOperationBinding::GetProtocol(nsAWritableString& aProtocol)
+nsSOAPOperationBinding::GetProtocol(nsAString& aProtocol)
 {
   aProtocol.Assign(NS_LITERAL_STRING("soap"));
   
@@ -509,7 +509,7 @@ nsSOAPOperationBinding::GetStyle(PRUint16 *aStyle)
 
 /* readonly attribute AString soapAction; */
 NS_IMETHODIMP 
-nsSOAPOperationBinding::GetSoapAction(nsAWritableString & aSoapAction)
+nsSOAPOperationBinding::GetSoapAction(nsAString & aSoapAction)
 {
   aSoapAction.Assign(mSoapAction);
 
@@ -533,7 +533,7 @@ nsSOAPOperationBinding::SetStyle(PRUint16 aStyle)
 }
 
 NS_IMETHODIMP
-nsSOAPOperationBinding::SetSoapAction(const nsAReadableString& aAction)
+nsSOAPOperationBinding::SetSoapAction(const nsAString& aAction)
 {
   mSoapAction.Assign(aAction);
   
@@ -545,7 +545,7 @@ nsSOAPOperationBinding::SetSoapAction(const nsAReadableString& aAction)
 // nsWSDLMessage implementation
 //
 ////////////////////////////////////////////////////////////
-nsWSDLMessage::nsWSDLMessage(const nsAReadableString& aName)
+nsWSDLMessage::nsWSDLMessage(const nsAString& aName)
   : mName(aName)
 {
   NS_INIT_ISUPPORTS();
@@ -559,7 +559,7 @@ NS_IMPL_ISUPPORTS1_CI(nsWSDLMessage, nsIWSDLMessage)
 
 /* readonly attribute AString name; */
 NS_IMETHODIMP 
-nsWSDLMessage::GetName(nsAWritableString & aName)
+nsWSDLMessage::GetName(nsAString & aName)
 {
   aName.Assign(mName);
 
@@ -611,7 +611,7 @@ nsWSDLMessage::GetPart(PRUint32 index, nsIWSDLPart **_retval)
 
 /* nsIWSDLPart getPartByName(in AString name); */
 NS_IMETHODIMP
-nsWSDLMessage::GetPartByName(const nsAReadableString& aName,
+nsWSDLMessage::GetPartByName(const nsAString& aName,
                              nsIWSDLPart** aPart)
 {
   nsresult rv;
@@ -671,7 +671,7 @@ nsWSDLMessage::SetBinding(nsIWSDLBinding* aBinding)
 // nsSOAPMessageBinding implementation
 //
 ////////////////////////////////////////////////////////////
-nsSOAPMessageBinding::nsSOAPMessageBinding(const nsAReadableString& aNamespace)
+nsSOAPMessageBinding::nsSOAPMessageBinding(const nsAString& aNamespace)
   : mNamespace(aNamespace)
 {
   NS_INIT_ISUPPORTS();
@@ -687,7 +687,7 @@ NS_IMPL_ISUPPORTS2_CI(nsSOAPMessageBinding,
 
 /*  readonly attribute AString protocol; */
 NS_IMETHODIMP
-nsSOAPMessageBinding::GetProtocol(nsAWritableString& aProtocol)
+nsSOAPMessageBinding::GetProtocol(nsAString& aProtocol)
 {
   aProtocol.Assign(NS_LITERAL_STRING("soap"));
   
@@ -707,7 +707,7 @@ nsSOAPMessageBinding::GetDocumentation(nsIDOMElement * *aDocumentation)
 
 /* readonly attribute AString namespace; */
 NS_IMETHODIMP 
-nsSOAPMessageBinding::GetNamespace(nsAWritableString & aNamespace)
+nsSOAPMessageBinding::GetNamespace(nsAString & aNamespace)
 {
   aNamespace.Assign(mNamespace);
 
@@ -719,7 +719,7 @@ nsSOAPMessageBinding::GetNamespace(nsAWritableString & aNamespace)
 // nsWSDLPart implementation
 //
 ////////////////////////////////////////////////////////////
-nsWSDLPart::nsWSDLPart(const nsAReadableString& aName)
+nsWSDLPart::nsWSDLPart(const nsAString& aName)
   : mName(aName)
 {
   NS_INIT_ISUPPORTS();
@@ -733,7 +733,7 @@ NS_IMPL_ISUPPORTS1_CI(nsWSDLPart, nsIWSDLPart)
 
 /* readonly attribute AString name; */
 NS_IMETHODIMP 
-nsWSDLPart::GetName(nsAWritableString & aName)
+nsWSDLPart::GetName(nsAString & aName)
 {
   aName.Assign(mName);
 
@@ -742,7 +742,7 @@ nsWSDLPart::GetName(nsAWritableString & aName)
 
 /* readonly attribute AString type; */
 NS_IMETHODIMP 
-nsWSDLPart::GetType(nsAWritableString & aType)
+nsWSDLPart::GetType(nsAString & aType)
 {
   aType.Assign(mType);
 
@@ -751,7 +751,7 @@ nsWSDLPart::GetType(nsAWritableString & aType)
 
 /* readonly attribute AString elementName; */
 NS_IMETHODIMP 
-nsWSDLPart::GetElementName(nsAWritableString & aElementName)
+nsWSDLPart::GetElementName(nsAString & aElementName)
 {
   aElementName.Assign(mElementName);
 
@@ -782,8 +782,8 @@ nsWSDLPart::GetBinding(nsIWSDLBinding** aBinding)
 }
 
 NS_IMETHODIMP
-nsWSDLPart::SetTypeInfo(const nsAReadableString& aType,
-                        const nsAReadableString& aElementName,
+nsWSDLPart::SetTypeInfo(const nsAString& aType,
+                        const nsAString& aElementName,
                         nsISchemaComponent* aSchemaComponent)
 {
   mType.Assign(aType);
@@ -807,8 +807,8 @@ nsWSDLPart::SetBinding(nsIWSDLBinding* aBinding)
 //
 ////////////////////////////////////////////////////////////
 nsSOAPPartBinding::nsSOAPPartBinding(PRUint16 aLocation, PRUint16 aUse,
-                                     const nsAReadableString& aEncodingStyle,
-                                     const nsAReadableString& aNamespace)
+                                     const nsAString& aEncodingStyle,
+                                     const nsAString& aNamespace)
   : mLocation(aLocation), mUse(aUse), 
   mEncodingStyle(aEncodingStyle), mNamespace(aNamespace)
 {
@@ -825,7 +825,7 @@ NS_IMPL_ISUPPORTS2_CI(nsSOAPPartBinding,
 
 /*  readonly attribute AString protocol; */
 NS_IMETHODIMP
-nsSOAPPartBinding::GetProtocol(nsAWritableString& aProtocol)
+nsSOAPPartBinding::GetProtocol(nsAString& aProtocol)
 {
   aProtocol.Assign(NS_LITERAL_STRING("soap"));
   
@@ -867,7 +867,7 @@ nsSOAPPartBinding::GetUse(PRUint16 *aUse)
 
 /* readonly attribute AString encodingStyle; */
 NS_IMETHODIMP 
-nsSOAPPartBinding::GetEncodingStyle(nsAWritableString & aEncodingStyle)
+nsSOAPPartBinding::GetEncodingStyle(nsAString & aEncodingStyle)
 {
   aEncodingStyle.Assign(mEncodingStyle);
 
@@ -876,7 +876,7 @@ nsSOAPPartBinding::GetEncodingStyle(nsAWritableString & aEncodingStyle)
 
 /* readonly attribute AString namespace; */
 NS_IMETHODIMP 
-nsSOAPPartBinding::GetNamespace(nsAWritableString & aNamespace)
+nsSOAPPartBinding::GetNamespace(nsAString & aNamespace)
 {
   aNamespace.Assign(mNamespace);
 
