@@ -84,6 +84,10 @@ public:
     mRecord = aFile;
   }
 
+  void SetMaxPages(PRInt32 aMax) {
+    mMaxPages = aMax;
+  }
+
   void LoadNextURL();
 
 protected:
@@ -110,6 +114,7 @@ protected:
   PRBool mJiggleLayout;
   PRBool mPostExit;
   PRInt32 mDelay;
+  PRInt32 mMaxPages;
 
   nsVoidArray mPendingURLs;
   nsVoidArray mSafeDomains;
