@@ -240,7 +240,8 @@ sub DESTROY {
                 scalar(@{$self->services}) . 
                 ' services registered, of which ' .
                 scalar(keys(%{$self->servicesHash})) .
-                ' had been placed in the services hash.')
+                ' had been placed in the services hash.');
+    $self->SUPER::DESTROY(@_);
 }
 
 
