@@ -27,3 +27,4 @@ en-US.jar:
     locale/en-US/cookie/pref-cookies.dtd           (resources/locale/en-US/pref-cookies.dtd)
     locale/en-US/cookie/pref-images.dtd            (resources/locale/en-US/pref-images.dtd)
     locale/en-US/cookie/p3p.dtd                    (resources/locale/en-US/p3p.dtd)
+    locale/en-US/cookie/cookie.properties          (resources/locale/en-US/cookie.properties)

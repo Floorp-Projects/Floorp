@@ -48,7 +48,7 @@
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 #define BUFSIZE 128
-#define LOCALIZATION "chrome://communicator/locale/wallet/cookie.properties"
+#define LOCALIZATION "chrome://cookie/locale/cookie.properties"
 
 nsresult
 ckutil_getChar(nsInputFileStream& strm, char& c) {
