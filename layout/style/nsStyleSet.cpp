@@ -461,35 +461,20 @@ nsIStyleContext* StyleSetImpl::GetContext(nsIPresContext* aPresContext,
   nsIStyleContext* result = nsnull;
 
   aUsedRules = PR_FALSE;
-  if ((PR_FALSE == aForceUnique) && 
-      (nsnull != aParentContext) && (nsnull == aRules) && 
-      (0 == aParentContext->GetStyleRuleCount())) {
-    nsIAtom*  parentTag = nsnull;
-    aParentContext->GetPseudoType(parentTag);
-    if (parentTag == aPseudoTag) {
-      // this and parent are empty, and compatible
-      result = aParentContext;
-      NS_ADDREF(result);  // add ref for the caller
-    }
-    NS_IF_RELEASE(parentTag);
-//fprintf(stdout, ".");
+  if ((PR_FALSE == aForceUnique) && (nsnull != aParentContext)) {
+    aParentContext->FindChildWithRules(aPseudoTag, aRules, result);
   }
   if (nsnull == result) {
-    if ((PR_FALSE == aForceUnique) && (nsnull != aParentContext)) {
-      aParentContext->FindChildWithRules(aPseudoTag, aRules, result);
-    }
-    if (nsnull == result) {
-      if (NS_OK == NS_NewStyleContext(&result, aParentContext, aPseudoTag, aRules, aPresContext)) {
-        if (PR_TRUE == aForceUnique) {
-          result->ForceUnique();
-        }
-        aUsedRules = PRBool(nsnull != aRules);
+    if (NS_OK == NS_NewStyleContext(&result, aParentContext, aPseudoTag, aRules, aPresContext)) {
+      if (PR_TRUE == aForceUnique) {
+        result->ForceUnique();
       }
+      aUsedRules = PRBool(nsnull != aRules);
+    }
 //fprintf(stdout, "+");
-    }
-    else {
+  }
+  else {
 //fprintf(stdout, "-");
-    }
   }
   return result;
 }
