@@ -647,29 +647,6 @@ nsImapMailFolder::InitializeFilterPlugins(void)
                  " error creating filter plugin");
         return rv;
     }
-
-    // figure out the preferences key for this server so we can pass
-    // it to the initialization routine
-    //
-    nsXPIDLCString serverKey;
-    rv = GetServerKey(getter_Copies(serverKey));
-    if (NS_FAILED(rv)) {
-        NS_ERROR("nsImapMailFolder::InitializeFilterPlugins():" 
-                 " error getting server prefs key");
-        m_filterPlugin = 0;
-        return rv;
-    }
-
-    // initialize it
-    //
-    rv = m_filterPlugin->Init(serverKey);
-    if (NS_FAILED(rv)) {
-        NS_ERROR("nsImapMailFolder::InitializeFilterPlugins():" 
-                 " call to filterPlugin->Init() failed");
-        m_filterPlugin = 0;
-        return rv;
-    }
-
     return NS_OK;
 }
 
@@ -7151,7 +7128,7 @@ nsresult nsImapMailFolder::GetMoveCoalescer()
 }
 
 NS_IMETHODIMP
-nsImapMailFolder::OnMessageClassified(const char *aMsgURL, PRInt32 aClassification)
+nsImapMailFolder::OnMessageClassified(const char *aMsgURL, nsMsgJunkStatus aClassification)
 {
   nsCOMPtr<nsIMsgIncomingServer> server;
   nsresult rv = GetServer(getter_AddRefs(server));
