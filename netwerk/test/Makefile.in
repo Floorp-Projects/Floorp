@@ -37,6 +37,7 @@ CPPSRCS		= \
 		urltest.cpp \
 		TestFileInput2.cpp \
 		TestRes.cpp \
+		TestCallbacks.cpp \
 		$(NULL)
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=)
