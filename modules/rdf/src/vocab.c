@@ -186,8 +186,11 @@ createNavCenterVocab () {
   gNavCenter->RDF_prompt = RDF_GetResource (gCoreDB, "prompt", true);  
   gNavCenter->RDF_HTMLType = RDF_GetResource (gCoreDB, "HTMLPage", true);
   gNavCenter->RDF_URLShortcut = RDF_GetResource(gCoreDB, "URLShortcut", true);
+  gNavCenter->RDF_Poll = RDF_GetResource(gCoreDB, "poll", true);
+  gNavCenter->RDF_PollInterval = RDF_GetResource(gCoreDB, "pollInterval", true);
+  gNavCenter->RDF_PollURL = RDF_GetResource(gCoreDB, "pollURL", true);
+  
   gNavCenter->RDF_Cookies = createContainer("NC:Cookies");
-
   setResourceType(gNavCenter->RDF_Cookies, COOKIE_RT); 
 
   gNavCenter->RDF_Toolbar = createContainer("NC:Toolbar");

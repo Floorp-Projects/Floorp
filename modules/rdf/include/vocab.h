@@ -110,6 +110,10 @@ typedef struct _RDF_NCVocabStruct {
   RDF_Resource RDF_prompt;
   RDF_Resource RDF_HTMLType;
   RDF_Resource RDF_URLShortcut;
+  RDF_Resource RDF_Poll;
+  RDF_Resource RDF_PollInterval;
+  RDF_Resource RDF_PollURL;
+
   RDF_Resource RDF_Cookies;
 #ifdef TRANSACTION_RECEIPTS
   RDF_Resource RDF_Receipts;

@@ -47,6 +47,8 @@ HT_MenuCommand		menuCommandsList = NULL;
 void			*htTimerID = NULL;
 _htmlElementPtr         htmlElementList = NULL;
 static int32		htCounter = 0;
+static RDF_Resource	pollingResource = NULL;
+static RDFT		gPollRDFT = NULL;
 
 HT_Pane			gNavigationTemplate = NULL;
 HT_Pane			gChromeTemplate = NULL;
@@ -137,11 +139,40 @@ HT_Shutdown()
 
 
 void
+htLoadComplete(char *url, int status)
+{
+	RDF_Resource		pollR;
+
+	if (url != NULL)
+	{
+		if ((pollR = RDF_GetResource(gNCDB, url, PR_TRUE)) != NULL)
+		{
+			if (pollR == pollingResource)
+			{
+				pollingResource = NULL;
+				if (gPollRDFT != NULL)
+				{
+					DeleteRemStore(gPollRDFT);
+					gPollRDFT = NULL;
+				}
+			}
+		}
+	}
+}
+
+
+
+void
 htTimerRoutine(void *timerData)
 {
 	PRBool		foundFlag = PR_FALSE;
 	HT_Pane		pane;
 	HT_View		view;
+	RDF_Cursor	c;
+	RDF_Resource	r, pollR;
+	char		*pollURL, *pollInterval;
+	uint32		now, pollTime, lastPoll;
+	PRTime		prNow, oneMillion, temp;
 
 	htTimerID = NULL;
 
@@ -159,6 +190,63 @@ htTimerRoutine(void *timerData)
 			}
 		}
 		pane = pane->next;
+	}
+
+	if (pollingResource == NULL)
+	{
+		if ((c = RDF_Find(gNavCenter->RDF_PollURL, gCoreVocab->RDF_stringNotEquals,
+			"", RDF_STRING_TYPE)) != NULL)
+		{
+			prNow = PR_Now();
+			LL_I2L(oneMillion, PR_USEC_PER_SEC);
+			LL_DIV(temp, prNow, oneMillion);
+			LL_L2I(now, temp);
+			while ((r = RDF_NextValue(c)) != NULL)
+			{
+				pollURL = RDF_GetSlotValue(gNCDB, r, gNavCenter->RDF_PollURL,
+					RDF_STRING_TYPE, PR_FALSE, PR_TRUE);
+				pollInterval = RDF_GetSlotValue(gNCDB, r, gNavCenter->RDF_PollInterval,
+					RDF_STRING_TYPE, PR_FALSE, PR_TRUE);
+				if ((pollURL != NULL) && (pollInterval != NULL))
+				{
+					pollTime = (time_t)(60L * atol(pollInterval));
+					if ((pollR = RDF_GetResource(gNCDB, pollURL, PR_TRUE)) != NULL)
+					{
+						lastPoll = (time_t)RDF_GetSlotValue(gNCDB, pollR,
+							gNavCenter->RDF_PollInterval, RDF_INT_TYPE,
+							PR_FALSE, PR_TRUE);
+						if ((pollTime > 0L) && ((lastPoll == 0L) ||
+							((now - lastPoll) > pollTime)))
+						{
+							remoteStoreRemove(gRemoteStore, pollR,
+								gNavCenter->RDF_PollInterval,
+								(void *)lastPoll, RDF_INT_TYPE);
+							remoteStoreAdd(gRemoteStore, pollR,
+								gNavCenter->RDF_PollInterval,
+								(void *)now, RDF_INT_TYPE, PR_TRUE);
+							if ((gPollRDFT = NewRemoteStore(resourceID(pollR))) != NULL)
+							{
+								gPollRDFT->possiblyAccessFile = RDFFilePossiblyAccessFile;
+								if (readRDFFile(resourceID(pollR), pollR, 0, gPollRDFT) != NULL)
+								{
+									pollingResource = pollR;
+									break;
+								}
+								else
+								{
+									pollingResource = NULL;
+									DeleteRemStore(gPollRDFT);
+									gPollRDFT = NULL;
+								}
+							}
+						}
+					}
+				}
+				if (pollURL != NULL)		freeMem(pollURL);
+				if (pollInterval != NULL)	freeMem(pollInterval);
+			}
+			RDF_DisposeCursor(c);
+		}
 	}
 
 	/* if found/updated something, try again a bit (half second later),

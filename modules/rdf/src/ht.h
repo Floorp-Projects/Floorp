@@ -254,6 +254,7 @@ XP_BEGIN_PROTOS
 
 void				HT_Startup();
 void				HT_Shutdown();
+void				htLoadComplete(char *url, int status);
 void				htTimerRoutine(void *timerID);
 PRBool				possiblyUpdateView(HT_View view);
 void				updateViewItem(HT_Resource node);

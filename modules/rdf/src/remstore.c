@@ -624,8 +624,11 @@ readRDFFile (char* url, RDF_Resource top, PRBool localp, RDFT db)
   return f;
 }
 
+
+
 RDFFile 
-makeNewRDFFile (char* url, RDF_Resource top, PRBool localp, RDFT db) {  
+makeNewRDFFile (char* url, RDF_Resource top, PRBool localp, RDFT db)
+{
   if ((!strstr(url, ":/")) ||
       (fileReadp(db, url, true))) {
     return NULL;
@@ -709,10 +712,10 @@ NewRemoteStore (char* url)
 		ntr->nextValue = remoteStoreNextValue;
 		ntr->disposeCursor = remoteStoreDisposeCursor;
 		ntr->url = copyString(url);
-        ntr->destroy =  DeleteRemStore;
+		ntr->destroy =  DeleteRemStore;
 		ntr->arcLabelsIn = remoteStoreArcLabelsIn;
 		ntr->arcLabelsOut = remoteStoreArcLabelsOut;
-        ntr->update = remStoreUpdate;
+		ntr->update = remStoreUpdate;
 	}
 	return(ntr);
 }

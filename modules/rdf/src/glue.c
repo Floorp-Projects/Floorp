@@ -34,6 +34,7 @@
 #include "es2mcf.h"
 #include "mcff2mcf.h"
 #include "nlcstore.h"
+#include "ht.h"
 
 
 /* external routines */
@@ -149,22 +150,35 @@ rdf_Converter(FO_Present_Types format_out, void *client_data,
 void
 rdf_GetUrlExitFunc (URL_Struct *urls, int status, MWContext *cx)
 {
+	RDFFile		f;
 	char		*navCenterURL = NULL;
 
 	if ((status < 0) && (urls != NULL))
 	{
-          RDFFile f = (RDFFile) urls->fe_data;
 		if ((cx != NULL) && (urls->error_msg != NULL))
 		{
 			FE_Alert(cx, urls->error_msg);
 		}
 
 		/* if unable to read in navcntr.rdf file, create some default views */
-		if (strcmp(f->url, gNavCntrUrl) == 0) {
-             parseNextRDFXMLBlobInt(f, gDefaultNavcntr, strlen(gDefaultNavcntr));
-          }
-	 
+		if ((f = (RDFFile) urls->fe_data) != NULL)
+		{
+			if (strcmp(f->url, gNavCntrUrl) == 0)
+			{
+				parseNextRDFXMLBlobInt(f, gDefaultNavcntr,
+						strlen(gDefaultNavcntr));
+			}
+		}
 	}
+
+	if (urls != NULL)
+	{
+		if ((f = (RDFFile) urls->fe_data) != NULL)
+		{
+			htLoadComplete(f->url, status);
+		}
+	}
+
 	NET_FreeURLStruct (urls);
 }
 
