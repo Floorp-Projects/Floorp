@@ -49,6 +49,11 @@
 #include "nsVoidArray.h"
 #include "nsSOAPUtils.h"
 
+#define NS_SOAP_1_1_ENCODING_NAMESPACE \
+   "http://schemas.xmlsoap.org/soap/encoding/"
+#define NS_SOAP_1_2_ENCODING_NAMESPACE \
+   "http://www.w3.org/2001/09/soap-encoding"
+
 WSPProxy::WSPProxy()
   : mIID(nsnull)
 {
@@ -574,8 +579,8 @@ WSPProxy::IsArray(nsIWSDLPart* aPart)
   complexType->GetTargetNamespace(ns);
 
   if (name.Equals(NS_LITERAL_STRING("Array")) &&
-      (ns.Equals(nsSOAPUtils::kSOAPEncURI11) ||
-       ns.Equals(nsSOAPUtils::kSOAPEncURI))) {
+      (ns.Equals(NS_LITERAL_STRING(NS_SOAP_1_1_ENCODING_NAMESPACE)) ||
+       ns.Equals(NS_LITERAL_STRING(NS_SOAP_1_2_ENCODING_NAMESPACE)))) {
     return PR_TRUE;
   }
 
@@ -655,6 +660,17 @@ WSPProxy::XPTCMiniVariantToVariant(uint8 aTypeTag,
                                    nsIVariant** aVariant)
 {
   nsresult rv;
+
+  // If a variant is passed in, just return it as is.
+  if (aTypeTag == nsXPTType::T_INTERFACE) {
+    nsISupports* inst = (nsISupports*)aResult.val.p;
+    nsCOMPtr<nsIVariant> instVar = do_QueryInterface(inst);
+    if (instVar) {
+      *aVariant = instVar;
+      NS_ADDREF(*aVariant);
+      return NS_OK;
+    }
+  }
 
   nsCOMPtr<nsIWritableVariant> var = do_CreateInstance(NS_VARIANT_CONTRACTID, 
                                                        &rv);
@@ -759,6 +775,7 @@ WSPProxy::ArrayXPTCMiniVariantToVariant(uint8 aTypeTag,
     PRUint32 i = 0;
     void* array = aResult.val.p;
     void* entries;
+    nsISupports** entriesSup = nsnull;
     const nsIID* iid = nsnull; 
 
     switch (aTypeTag) {
@@ -781,29 +798,35 @@ WSPProxy::ArrayXPTCMiniVariantToVariant(uint8 aTypeTag,
         break;
       case nsXPTType::T_INTERFACE:  
       {
-        nsISupports** entriesSup = (nsISupports**)nsMemory::Alloc(aLength * 
-                                                        sizeof(nsISupports*));
-        if (!entriesSup) {
-          return NS_ERROR_OUT_OF_MEMORY;
+        aInterfaceInfo->GetIIDShared(&iid);
+        if (iid->Equals(NS_GET_IID(nsIVariant))) {
+          entries = array;
         }
-        const nsIID& propbagIID = NS_GET_IID(nsIPropertyBag);
-        iid = &propbagIID;
-        entries = (void*)entriesSup;
-        for(i = 0; i < aLength; i++) {
-          nsISupports* instance = *((nsISupports**)array + i);
-          nsISupports** outptr = entriesSup + i;
-          if (instance) {
-            nsCOMPtr<nsIPropertyBag> propBag;
-            rv = WrapInPropertyBag(instance, aInterfaceInfo,
-                                   getter_AddRefs(propBag));
-            if (NS_FAILED(rv)) {
-              break;
-            }
-            propBag->QueryInterface(NS_GET_IID(nsISupports),
-                                    (void**)outptr);
+        else {
+          entriesSup = (nsISupports**)nsMemory::Alloc(aLength * 
+                                                      sizeof(nsISupports*));
+          if (!entriesSup) {
+            return NS_ERROR_OUT_OF_MEMORY;
           }
-          else {
-            *outptr = nsnull;
+          const nsIID& propbagIID = NS_GET_IID(nsIPropertyBag);
+          iid = &propbagIID;
+          entries = (void*)entriesSup;
+          for(i = 0; i < aLength; i++) {
+            nsISupports* instance = *((nsISupports**)array + i);
+            nsISupports** outptr = entriesSup + i;
+            if (instance) {
+              nsCOMPtr<nsIPropertyBag> propBag;
+              rv = WrapInPropertyBag(instance, aInterfaceInfo,
+                                     getter_AddRefs(propBag));
+              if (NS_FAILED(rv)) {
+                break;
+              }
+              propBag->QueryInterface(NS_GET_IID(nsISupports),
+                                      (void**)outptr);
+            }
+            else {
+              *outptr = nsnull;
+            }
           }
         }
         aTypeTag = nsXPTType::T_INTERFACE_IS;
@@ -818,8 +841,8 @@ WSPProxy::ArrayXPTCMiniVariantToVariant(uint8 aTypeTag,
       rv = retvar->SetAsArray(aTypeTag, iid, aLength, entries);
     }
 
-    if (aTypeTag == nsXPTType::T_INTERFACE_IS) {
-      NS_FREE_XPCOM_ISUPPORTS_POINTER_ARRAY(i, (nsISupports**)entries);
+    if (entriesSup) {
+      NS_FREE_XPCOM_ISUPPORTS_POINTER_ARRAY(i, entriesSup);
     }
   }
   else {
@@ -1007,10 +1030,16 @@ WSPProxy::VariantToValue(uint8 aTypeTag,
       break;
     case nsXPTType::T_INTERFACE:
     {
+      const nsIID* iid;
+      aInterfaceInfo->GetIIDShared(&iid);
       PRUint16 dataType;
       aProperty->GetDataType(&dataType);
       if (dataType == nsIDataType::VTYPE_EMPTY) {
         *(nsISupports**)aValue = nsnull;
+      }
+      else if (iid->Equals(NS_GET_IID(nsIVariant))) {
+        *(nsIVariant**)aValue = aProperty;
+        NS_ADDREF(*(nsIVariant**)aValue);
       }
       else {
         nsCOMPtr<nsISupports> sup;
@@ -1029,8 +1058,6 @@ WSPProxy::VariantToValue(uint8 aTypeTag,
           return rv;
         }
 
-        const nsIID* iid;
-        aInterfaceInfo->GetIIDShared(&iid);
         rv = wrapper->QueryInterface(*iid, (void**)aValue);
       }
       break;
@@ -1081,40 +1108,45 @@ WSPProxy::VariantToArrayValue(uint8 aTypeTag,
     case nsXPTType::T_INTERFACE:
     case nsXPTType::T_INTERFACE_IS:
     {
-      if (!arrayIID.Equals(NS_GET_IID(nsIPropertyBag))) {
+      if (arrayIID.Equals(NS_GET_IID(nsIVariant))) {
+        *((void**)aResult[1].val.p) = array;
+      }
+      else if (!arrayIID.Equals(NS_GET_IID(nsIPropertyBag))) {
         NS_ERROR("Array of complex types should be represented by property bags");
         return NS_ERROR_FAILURE;
       }
-      nsISupports** outptr = (nsISupports**)nsMemory::Alloc(count * 
-                                                         sizeof(nsISupports*));
-      if (!outptr) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-      nsISupports** arraySup = (nsISupports**)array;
-      const nsIID* iid;
-      aInterfaceInfo->GetIIDShared(&iid);
-      PRUint32 i;
-      for (i = 0; i < count; i++) {
-        nsCOMPtr<nsIPropertyBag> propBag(do_QueryInterface(arraySup[i]));
-        if (!propBag) {
-          *(outptr + i) = nsnull;
+      else {
+        nsISupports** outptr = (nsISupports**)nsMemory::Alloc(count * 
+                                                              sizeof(nsISupports*));
+        if (!outptr) {
+          return NS_ERROR_OUT_OF_MEMORY;
         }
-        else {
-          nsCOMPtr<nsISupports> wrapper;
-          rv = WrapInComplexType(propBag, aInterfaceInfo, 
-                                 getter_AddRefs(wrapper));
-          if (NS_FAILED(rv)) {
-            NS_FREE_XPCOM_ISUPPORTS_POINTER_ARRAY(i, outptr);
-            return rv;
+        nsISupports** arraySup = (nsISupports**)array;
+        const nsIID* iid;
+        aInterfaceInfo->GetIIDShared(&iid);
+        PRUint32 i;
+        for (i = 0; i < count; i++) {
+          nsCOMPtr<nsIPropertyBag> propBag(do_QueryInterface(arraySup[i]));
+          if (!propBag) {
+            *(outptr + i) = nsnull;
           }
-          rv = wrapper->QueryInterface(*iid, (void**)(outptr + i));
-          if (NS_FAILED(rv)) {
-            NS_FREE_XPCOM_ISUPPORTS_POINTER_ARRAY(i, outptr);
-            return rv;
+          else {
+            nsCOMPtr<nsISupports> wrapper;
+            rv = WrapInComplexType(propBag, aInterfaceInfo, 
+                                   getter_AddRefs(wrapper));
+            if (NS_FAILED(rv)) {
+              NS_FREE_XPCOM_ISUPPORTS_POINTER_ARRAY(i, outptr);
+              return rv;
+            }
+            rv = wrapper->QueryInterface(*iid, (void**)(outptr + i));
+            if (NS_FAILED(rv)) {
+              NS_FREE_XPCOM_ISUPPORTS_POINTER_ARRAY(i, outptr);
+              return rv;
+            }
           }
         }
+        *((void**)aResult[1].val.p) = outptr;
       }
-      *((void**)aResult[1].val.p) = outptr;
       break;
     }
     default:
