@@ -36,6 +36,7 @@ CPP_OBJS=\
 
 LLIBS=\
  $(DIST)\lib\rdfbase_s.lib       \
+ $(DIST)\lib\rdfutil_s.lib       \
  $(DIST)\lib\rdfcontent_s.lib    \
  $(DIST)\lib\rdfdatasource_s.lib \
  $(DIST)\lib\xpcom32.lib         \
@@ -44,6 +45,8 @@ LLIBS=\
  $(DIST)\lib\netlib.lib          \
  $(DIST)\lib\libplc21.lib        \
  $(DIST)\lib\raptorhtml.lib      \
+ $(DIST)\lib\jsdom.lib           \
+ $(DIST)\lib\js3250.lib          \
  $(LIBNSPR)  
 
 MISCDEP=$(LLIBS)
@@ -67,9 +70,9 @@ install:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
 	$(MAKE_INSTALL) ..\resources\Mail\joe@meer.net\inbox $(DIST)\bin\res\rdf\Mail\joe@meer.net
-	$(MAKE_INSTALL) ..\resources\LocalStore.rdf $(DIST)\bin\res\rdf
+	$(MAKE_INSTALL) ..\resources\sidebar.xul $(DIST)\bin\res\rdf
+	$(MAKE_INSTALL) ..\resources\sidebar.css $(DIST)\bin\res\rdf
 	$(MAKE_INSTALL) ..\resources\bookmarks.html $(DIST)\bin\res\rdf
-	$(MAKE_INSTALL) ..\resources\LocalStore.css $(DIST)\bin\res\rdf
 	$(MAKE_INSTALL) ..\resources\Mail\joe@meer.net\work $(DIST)\bin\res\rdf\Mail\joe@meer.net
 	$(MAKE_INSTALL) ..\resources\Mail\joe@meer.net\other $(DIST)\bin\res\rdf\Mail\joe@meer.net
 	$(MAKE_INSTALL) ..\resources\Mail\jane@aol.com\inbox $(DIST)\bin\res\rdf\Mail\jane@aol.com
