@@ -1312,8 +1312,8 @@ MapDeclarationFontInto(nsICSSDeclaration* aDeclaration,
         else if (eCSSUnit_Inherit == ourFont->mFamily.GetUnit()) {
           font->mFont.name = parentFont->mFont.name;
           font->mFixedFont.name = parentFont->mFixedFont.name;
-          font->mFlags &= ~NS_STYLE_FONT_FACE_EXPLICIT;
-          font->mFlags |= (parentFont->mFlags & NS_STYLE_FONT_FACE_EXPLICIT);
+          font->mFlags &= ~(NS_STYLE_FONT_FACE_EXPLICIT | NS_STYLE_FONT_USE_FIXED);
+          font->mFlags |= (parentFont->mFlags & (NS_STYLE_FONT_FACE_EXPLICIT | NS_STYLE_FONT_USE_FIXED));
         }
 
         // font-style: enum, normal, inherit
