@@ -116,7 +116,7 @@ int ssl3CipherSuites[] = {
  * which ciphers to use. 
  */
 
-char *cipherString;
+const char *cipherString;
 
 int MakeCertOK;
 
@@ -221,7 +221,7 @@ errWarn(char * funcString)
     PRErrorCode  perr      = PR_GetError();
     const char * errString = SECU_Strerror(perr);
 
-    fprintf(stderr, "exit after %s with error %d:\n%s\n",
+    fprintf(stderr, "%s returned error %d:\n%s\n",
             funcString, perr, errString);
 }
 
@@ -818,7 +818,6 @@ client_main(
     PRFileDesc *model_sock	= NULL;
     int         i;
     int         rv;
-    SECStatus	secStatus;
     PRUint32	ipAddress;	/* in host byte order */
     PRNetAddr   addr;
 
@@ -959,23 +958,22 @@ done:
 int
 main(int argc, char **argv)
 {
-    char *               dir         = ".";
+    const char *         dir         = ".";
     char *               fNickName   = NULL;
-    char *               fileName    = NULL;
+    const char *         fileName    = NULL;
     char *               hostName    = NULL;
     char *               nickName    = NULL;
     char *               progName    = NULL;
     char *               tmp         = NULL;
+    char *		 passwd      = NULL;
     CERTCertificate *    cert   [kt_kea_size] = { NULL };
     SECKEYPrivateKey *   privKey[kt_kea_size] = { NULL };
-    int                  optchar;
     int                  connections = 1;
+    int                  exitVal;
     unsigned short       port        = 443;
     SECStatus            rv;
-    PRBool				 useCommandLinePasswd = PR_FALSE;
-    char *				 passwd = NULL;
-    PLOptState *optstate;
-    PLOptStatus status;
+    PLOptState *         optstate;
+    PLOptStatus          status;
 
     /* Call the NSPR initialization routines */
     PR_Init( PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
@@ -1025,7 +1023,6 @@ main(int argc, char **argv)
 	    break;
 	case 'w':
 	    passwd = optstate->value;
-	    useCommandLinePasswd = PR_TRUE;
 	    break;
 	case '\0':
 	    hostName = PL_strdup(optstate->value);
@@ -1047,11 +1044,11 @@ main(int argc, char **argv)
     	readBigFile(fileName);
 
     /* set our password function */
-	if ( useCommandLinePasswd ) {
-		PK11_SetPasswordFunc(ownPasswd);
-	} else {
-    	PK11_SetPasswordFunc(SECU_GetModulePassword);
-	}
+    if ( passwd ) {
+	PK11_SetPasswordFunc(ownPasswd);
+    } else {
+	PK11_SetPasswordFunc(SECU_GetModulePassword);
+    }
 
     /* Call the libsec initialization routines */
     rv = NSS_Init(dir);
@@ -1062,22 +1059,13 @@ main(int argc, char **argv)
 
     if (nickName) {
 
-	if (useCommandLinePasswd) {
-		    cert[kt_rsa] = PK11_FindCertFromNickname(nickName, passwd);
-	} else {
-			cert[kt_rsa] = PK11_FindCertFromNickname(nickName, NULL);
-	}
+	cert[kt_rsa] = PK11_FindCertFromNickname(nickName, passwd);
 	if (cert[kt_rsa] == NULL) {
 	    fprintf(stderr, "Can't find certificate %s\n", nickName);
 	    exit(1);
 	}
 
-	if (useCommandLinePasswd) {
-		    privKey[kt_rsa] = PK11_FindKeyByAnyCert(cert[kt_rsa], passwd);
-	} else {
-			privKey[kt_rsa] = PK11_FindKeyByAnyCert(cert[kt_rsa], NULL);
-	}
-
+	privKey[kt_rsa] = PK11_FindKeyByAnyCert(cert[kt_rsa], passwd);
 	if (privKey[kt_rsa] == NULL) {
 	    fprintf(stderr, "Can't find Private Key for cert %s\n", nickName);
 	    exit(1);
@@ -1085,13 +1073,13 @@ main(int argc, char **argv)
 
     }
     if (fNickName) {
-	cert[kt_fortezza] = PK11_FindCertFromNickname(fNickName, NULL);
+	cert[kt_fortezza] = PK11_FindCertFromNickname(fNickName, passwd);
 	if (cert[kt_fortezza] == NULL) {
 	    fprintf(stderr, "Can't find certificate %s\n", fNickName);
 	    exit(1);
 	}
 
-	privKey[kt_fortezza] = PK11_FindKeyByAnyCert(cert[kt_fortezza], NULL);
+	privKey[kt_fortezza] = PK11_FindKeyByAnyCert(cert[kt_fortezza], passwd);
 	if (privKey[kt_fortezza] == NULL) {
 	    fprintf(stderr, "Can't find Private Key for cert %s\n", fNickName);
 	    exit(1);
@@ -1105,9 +1093,11 @@ main(int argc, char **argv)
     	ssl3_hsh_sid_cache_hits, 
 	ssl3_hsh_sid_cache_misses,
 	ssl3_hsh_sid_cache_not_ok);
+    exitVal = (ssl3_hsh_sid_cache_misses != 1) ||
+              (ssl3_hsh_sid_cache_not_ok != 0);
 
     NSS_Shutdown();
     PR_Cleanup();
-    return 0;
+    return exitVal;
 }
 
