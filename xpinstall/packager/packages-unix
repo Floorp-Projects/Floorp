@@ -25,6 +25,7 @@ bin/mozilla
 bin/mozilla-bin
 bin/libdocshell.so
 bin/libgfx_gtk.so
+bin/splash.xpm
 bin/libgtksuperwin.so
 bin/libmsgbaseutil.so
 bin/libraptorgfx.so
