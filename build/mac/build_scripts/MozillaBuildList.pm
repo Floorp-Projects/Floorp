@@ -311,6 +311,10 @@ sub ProcessJarManifests()
     {
       CreateJarFromManifest(":mozilla:extensions:irc:jar.mn", $chrome_dir, \%jars);
     }
+    if ($main::options{content_packs})
+    {
+      CreateJarFromManifest(":mozilla:extensions:content-packs:resources:jar.mn", $chrome_dir, \%jars);
+    }
     if ($main::options{cview})
     {
       CreateJarFromManifest(":mozilla:extensions:cview:resources:jar.mn", $chrome_dir, \%jars);
