@@ -42,8 +42,8 @@
   <!-- editor specific UI items -->
   <menupopup id="menu_NewPopup">
     <!-- Command nodes and implemention are in mailOverlay.xul -->
-    <menuitem id="menu_newMessage" position="2"/>
-    <menuitem id="menu_newCard" position="3"/>
+    <menuitem id="menu_newMessage" insertafter="menu_newNavigator"/>
+    <menuitem id="menu_newCard" insertafter="menu_newNavigator"/>
   </menupopup>
 
   <menupopup id="menu_FilePopup">
