@@ -63,6 +63,9 @@ interface nsINntpIncomingServer : nsISupports {
 	/* abbreviate the newsgroup names in the folder pane? */
 	attribute boolean abbreviate;
 
+    /* do we use a single login per server or do we login per group */
+    attribute boolean singleSignon;
+
 	/* the server keeps track of all the newsgroups we are subscribed to */
 	void addNewsgroup(in string name);
 	void removeNewsgroup(in string name);

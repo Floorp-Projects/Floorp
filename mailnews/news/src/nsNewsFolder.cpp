@@ -1244,8 +1244,32 @@ nsresult nsMsgNewsFolder::CreateNewsgroupUrlForSignon(const char *inUriStr, cons
     nsCOMPtr<nsIURL> url = do_CreateInstance(NS_STANDARDURL_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv,rv);
 
+    nsCOMPtr<nsIMsgIncomingServer> server;
+    rv = GetServer(getter_AddRefs(server));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsINntpIncomingServer> nntpServer;
+    rv = GetNntpServer(getter_AddRefs(nntpServer));
+    if (NS_FAILED(rv)) return rv;
+
+    PRBool singleSignon = PR_TRUE;
+    rv = nntpServer->GetSingleSignon(&singleSignon);
+
+    if (singleSignon)
+    {
+
+      nsXPIDLCString serverURI;
+      rv = server->GetServerURI(getter_Copies(serverURI));
+      if (NS_FAILED(rv)) return rv;
+
+      rv = url->SetSpec(serverURI);
+      if (NS_FAILED(rv)) return rv;
+    }
+    else
+    {
     rv = url->SetSpec(nsDependentCString(inUriStr));
     if (NS_FAILED(rv)) return rv;
+    }
 
     rv = url->GetPort(&port);
     if (NS_FAILED(rv)) return rv;
