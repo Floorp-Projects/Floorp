@@ -70,8 +70,7 @@ const char * nsMapiRegistryUtils::thisApplication()
         char buffer[MAX_PATH] = {0};
         DWORD len = ::GetModuleFileName(NULL, buffer, MAX_PATH);
         if (!len) return nsnull ; 
-        char shortPathBuf[MAX_PATH] = {0};
-        len = ::GetShortPathName(buffer, shortPathBuf, MAX_PATH);
+        len = ::GetShortPathName(buffer, buffer, MAX_PATH);
         if (!len) return nsnull ; 
         m_thisApp = buffer;
         ToUpperCase(m_thisApp);
