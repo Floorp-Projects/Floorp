@@ -1044,6 +1044,11 @@ cleanup:
 		PR_Close(outputFD);
 	}
 	rm_dash_r(TMP_OUTPUT);
+	if (retval == 0) {
+		if (NSS_Shutdown() != SECSuccess) {
+			exit(1);
+		}
+	}
   return retval;
 }
 
