@@ -176,6 +176,10 @@ nsCookieHTTPNotify::OnModifyRequest(nsIHttpChannel *aHttpChannel)
     rv = mCookieService->GetCookieStringFromHttp(pURL, pFirstURL, &cookie);
     if (NS_FAILED(rv)) return rv;
 
+    // Clear any existing Cookie request header
+    rv = aHttpChannel->SetRequestHeader("Cookie", nsnull);
+    if (NS_FAILED(rv)) return rv;
+
     // Set the cookie into the request headers
     if (cookie && *cookie)
         rv = aHttpChannel->SetRequestHeader("Cookie", cookie);
