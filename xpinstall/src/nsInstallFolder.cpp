@@ -94,27 +94,40 @@ nsInstallFolder::nsInstallFolder(const nsString& aFolderID, const nsString& aRel
     mFileSpec = nsnull;
 
     /*
-        aFolderID can be either a Folder enum in which case we merely pass it to SetDirectoryPath, or
-        it can be a Directory.  If it is the later, it must already exist and of course be a directory
-        not a file.  
+        aFolderID can be either a Folder enum in which case we merely pass it
+        to SetDirectoryPath, or it can be a Directory.  If it is the later, it
+        must already exist and of course be a directory not a file.  
     */
-    
-    nsFileSpec dirCheck(aFolderID);
-    if ( (dirCheck.Error() == NS_OK) && (dirCheck.IsDirectory()) && (dirCheck.Exists()))
-    {
-        nsString tempString = aFolderID;
-        tempString += aRelativePath;
-        mFileSpec = new nsFileSpec(tempString);
 
-        // This paranoia makes no sense since dirCheck.IsDirectory() && dirCheck.Exists() !
-        //      vvvv
-        // make sure that the directory is created. 
-        //      ^^^^
-        nsFileSpec(mFileSpec->GetCString(), PR_TRUE);
-    }
-    else
+    SetDirectoryPath( aFolderID, aRelativePath );
+
+    // check to see if that worked
+    if ( !mFileSpec )
     {
-        SetDirectoryPath( aFolderID, aRelativePath);
+        // it didn't, so aFolderID is not one of the magic strings.
+        // maybe it's already a pathname? If so it had better be a directory
+        // if it already exists...
+        nsFileSpec dirCheck(aFolderID);
+        if ( (dirCheck.Error() == NS_OK) && 
+             ( dirCheck.IsDirectory() || !dirCheck.Exists() ) )
+        {
+            mFileSpec = new nsFileSpec( dirCheck );
+
+            if (mFileSpec && aRelativePath.Length() > 0 )
+            {
+                // we've got a subdirectory to tack on
+                nsString morePath(aRelativePath);
+
+                if ( morePath.Last() != '/' || morePath.Last() != '\\' )
+                    morePath += '/';
+
+                *mFileSpec += morePath;
+            }
+
+            // make sure that the directory is created. 
+            // XXX: **why** are we creating these? they might not be used!
+            nsFileSpec(mFileSpec->GetCString(), PR_TRUE);
+        }
     }
 }
 

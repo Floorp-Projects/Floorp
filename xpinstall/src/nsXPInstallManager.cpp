@@ -53,8 +53,6 @@
 #include "nsIAppShellComponentImpl.h"
 
 
-static NS_DEFINE_IID(kISoftwareUpdateIID, NS_ISOFTWAREUPDATE_IID);
-static NS_DEFINE_IID(kSoftwareUpdateCID,  NS_SoftwareUpdate_CID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID );
 static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
@@ -178,7 +176,7 @@ nsresult nsXPInstallManager::DownloadNext()
         }
         else if ( mItem->IsFileURL() )
         {
-            // don't need to download local files, just point at them
+            // don't need to download, just point at local file
             rv = NS_NewFileSpecWithSpec( nsFileSpec(nsFileURL(mItem->mURL)),
                     getter_AddRefs(mItem->mFile) );
             if (NS_FAILED(rv))
@@ -200,7 +198,7 @@ nsresult nsXPInstallManager::DownloadNext()
                 temp += jarleaf;
             }
             else
-                temp += "xpinstall.jar";
+                temp += "xpinstall.xpi";
 
             temp.MakeUnique();
 
@@ -381,136 +379,43 @@ nsXPInstallManager::OnDataAvailable(nsIURI* aURL,
 NS_IMETHODIMP 
 nsXPInstallManager::BeforeJavascriptEvaluation()
 {
-    nsresult rv = NS_OK;
-#if 0
-    // Get app shell service.
-    nsIAppShellService *appShell;
-    rv = nsServiceManager::GetService( kAppShellServiceCID,
-                                       nsIAppShellService::GetIID(),
-                                       (nsISupports**)&appShell );
-
-    if ( NS_SUCCEEDED( rv ) ) 
-    {
-        // Open "progress" dialog.
-        nsIURI *url;
-        rv = NS_NewURL( &url, "resource:/res/xpinstall/progress.xul" );
-        
-        if ( NS_SUCCEEDED(rv) ) 
-        {
-        
-            nsCOMPtr<nsIWebShellWindow> newWindow;
-            rv = appShell->CreateTopLevelWindow( nsnull,
-                                                 url,
-                                                 PR_TRUE,
-                                                 getter_AddRefs(newWindow),
-                                                 nsnull,
-                                                 this,  // callbacks??
-                                                 0,
-                                                 0 );
-
-            if ( NS_SUCCEEDED( rv ) ) 
-            {
-                mWindow = newWindow;			// ownership ?
-                 if (mWindow != nsnull)
-                    mWindow->Show(PR_TRUE);
-            }
-            else 
-            {
-                DEBUG_PRINTF( PR_STDOUT, "Error creating progress dialog, rv=0x%X\n", (int)rv );
-            }
-            NS_RELEASE( url );
-        }
-        
-        nsServiceManager::ReleaseService( kAppShellServiceCID, appShell );
-    } 
-    else 
-    {
-        DEBUG_PRINTF( PR_STDOUT, "Unable to get app shell service, rv=0x%X\n", (int)rv );
-    }
-#endif
+    mFinalizing = PR_FALSE;
     return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsXPInstallManager::AfterJavascriptEvaluation()
 {
-#if 0
-    if (mWindow)
-    {
-        mWindow->Close();
-    }
-#endif
     return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsXPInstallManager::InstallStarted(const char *UIPackageName)
 {
-//    setDlgAttribute( mDocument, "dialog.uiPackageName", "value", nsString(UIPackageName) );
-    return NS_OK;
+    return mDlg->SetHeading( nsString(UIPackageName).GetUnicode() );
 }
 
 NS_IMETHODIMP 
 nsXPInstallManager::ItemScheduled(const char *message)
 {
-#if 0
-    PRInt32 maxChars = 40;
+    PRBool cancelled = PR_FALSE;
 
-    nsString theMessage(message);
-    PRInt32 len = theMessage.Length();
-    if (len > maxChars)
-    {
-        PRInt32 offset = (len/2) - ((len - maxChars)/2);
-        PRInt32 count  = (len - maxChars);
-        theMessage.Cut(offset, count); 
-        theMessage.Insert(nsString("..."), offset);
-    }
-    setDlgAttribute( mDocument, "dialog.currentAction", "value", theMessage );
-    
-    nsString aValue;
-    getAttribute( mDocument, "data.canceled", "value", aValue );
+    mDlg->GetCancelStatus(&cancelled);
+    if (cancelled)
+        return NS_ERROR_FAILURE;
 
-    if (aValue.EqualsIgnoreCase("true"))
-        return -1;
-#endif
-    return NS_OK;
+    return mDlg->SetActionText( nsString(message).GetUnicode() );
 }
 
 NS_IMETHODIMP 
 nsXPInstallManager::InstallFinalization(const char *message, PRInt32 itemNum, PRInt32 totNum)
 {
-#if 0
-    PRInt32 maxChars = 40;
-
-    nsString theMessage(message);
-    PRInt32 len = theMessage.Length();
-    if (len > maxChars)
+    if (!mFinalizing)
     {
-        PRInt32 offset = (len/2) - ((len - maxChars)/2);
-        PRInt32 count  = (len - maxChars);
-        theMessage.Cut(offset, count);  
-        theMessage.Insert(nsString("..."), offset);
+        mFinalizing = PR_TRUE;
+        mDlg->SetActionText( nsString("Finishing install... please wait").GetUnicode() );
     }
-
-    setDlgAttribute( "dialog.currentAction", "value", theMessage );
-
-    nsresult rv = NS_OK;
-    char buf[16];
-    
-    PR_snprintf( buf, sizeof buf, "%lu", totNum );
-    setDlgAttribute( "dialog.progress", "max", buf );
-   
-    if (totNum != 0)
-    {
-        PR_snprintf( buf, sizeof buf, "%lu", ((totNum-itemNum)/totNum) );
-    }
-    else
-    {
-        PR_snprintf( buf, sizeof buf, "%lu", 0 );
-    }
-    setDlgAttribute( "dialog.progress", "value", buf );
-#endif
-    return NS_OK;
+    return mDlg->SetProgress( itemNum, totNum );
 }
 
 NS_IMETHODIMP 

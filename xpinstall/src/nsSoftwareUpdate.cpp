@@ -82,8 +82,6 @@ static NS_DEFINE_IID(kInstallTrigger_CID, NS_SoftwareUpdateInstallTrigger_CID);
 static NS_DEFINE_IID(kIInstallVersion_IID, NS_IDOMINSTALLVERSION_IID);
 static NS_DEFINE_IID(kInstallVersion_CID, NS_SoftwareUpdateInstallVersion_CID);
 
-static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
-static NS_DEFINE_IID(kEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 
 
 nsSoftwareUpdate::nsSoftwareUpdate()
@@ -145,31 +143,6 @@ nsSoftwareUpdate::nsSoftwareUpdate()
 
     nsLoggingProgressNotifier *logger = new nsLoggingProgressNotifier();
     RegisterNotifier(logger);
-
-#if 0
-    nsInstallProgressDialog *dialog = new nsInstallProgressDialog();
-    nsInstallProgressDialog *proxy; 
-    nsISupports *dialogBase;
-
-    nsresult rv = dialog->QueryInterface(kISupportsIID, (void**)&dialogBase);
-
-    if (NS_SUCCEEDED(rv))
-    {
-        NS_WITH_SERVICE(nsIProxyObjectManager, manager, kProxyObjectManagerCID, &rv);
-
-        if (NS_SUCCEEDED(rv))
-        {
-            rv = manager->GetProxyObject(nsnull, nsIXPINotifier::GetIID(), dialogBase, PROXY_SYNC, (void**)&proxy);
-            if (NS_SUCCEEDED(rv))
-            {
-                RegisterNotifier(proxy);
-            }
-        }
-    }
-
-    if (dialog)
-        dialog->Release();
-#endif
 }
 
 
