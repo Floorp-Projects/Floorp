@@ -286,3 +286,10 @@ patch: $(PROGRAM)
 #		gmake import;					\
 #	fi;
 #	-$(DIST)/bin/plcypatch $(PLCYPATCH_ARGS) $(PROGRAM)
+
+# Files required for .xpi file
+#   - psm
+#   - nspr libraries
+#   - i18n libraries
+#   - xpcom libraries
+#   - subdirectories (ui, do)
