@@ -4,12 +4,12 @@
  * Version 1.1 (the "NPL"); you may not use this file except in
  * compliance with the NPL.  You may obtain a copy of the NPL at
  * http://www.mozilla.org/NPL/
- * 
+ *
  * Software distributed under the NPL is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
  * for the specific language governing rights and limitations under the
  * NPL.
- * 
+ *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
@@ -44,10 +44,10 @@ PRLock *_pr_mcacheLock;
 typedef struct MonitorCacheEntryStr MonitorCacheEntry;
 
 struct MonitorCacheEntryStr {
-    MonitorCacheEntry*	next;
-    void* 		address;
-    PRMonitor*		mon;
-    long		cacheEntryCount;
+    MonitorCacheEntry*  next;
+    void*               address;
+    PRMonitor*          mon;
+    long                cacheEntryCount;
 };
 
 static PRUint32 hash_mask;
@@ -59,9 +59,11 @@ static PRUintn num_free_entries;
 static PRBool expanding;
 int _pr_mcache_ready;
 
-#define HASH(address)			       \
-    ((PRUint32) ( ((PRUptrdiff)(address) >> 2) ^ \
-	      ((PRUptrdiff)(address) >> 10) )  \
+static void (*OnMonitorRecycle)(void *address);
+
+#define HASH(address)                               \
+    ((PRUint32) ( ((PRUptrdiff)(address) >> 2) ^    \
+                  ((PRUptrdiff)(address) >> 10) )   \
      & hash_mask)
 
 /*
@@ -75,7 +77,7 @@ int _pr_mcache_ready;
 ** starvation during monitor cache expansion.
 */
 
-#define FREE_THRESHOLD	5
+#define FREE_THRESHOLD  5
 
 static PRStatus ExpandMonitorCache(PRUintn new_size_log2)
 {
@@ -88,43 +90,40 @@ static PRStatus ExpandMonitorCache(PRUintn new_size_log2)
     /*
     ** Expand the monitor-cache-entry free list
     */
-    new_entries = (MonitorCacheEntry*)PR_CALLOC(
-        entries * sizeof(MonitorCacheEntry));
+    new_entries = (MonitorCacheEntry*)
+        PR_CALLOC(entries * sizeof(MonitorCacheEntry));
     if (NULL == new_entries) return PR_FAILURE;
 
     /*
     ** Allocate system monitors for the new monitor cache entries. If we
     ** run out of system monitors, break out of the loop.
     */
-    for (i = 0, added = 0, p = new_entries; i < entries; i++, p++, added++)
-    {
-	    p->mon = PR_NewMonitor();
-	    if (!p->mon) break;
+    for (i = 0, added = 0, p = new_entries; i < entries; i++, p++, added++) {
+        p->mon = PR_NewMonitor();
+        if (!p->mon)
+            break;
     }
-    if (added != entries)
-    {
-	    if (added == 0)
-	    {
-	        /* Totally out of system monitors. Lossage abounds */
-	        PR_DELETE(new_entries);
-	        return PR_FAILURE;
-	    }
+    if (added != entries) {
+        if (added == 0) {
+            /* Totally out of system monitors. Lossage abounds */
+            PR_DELETE(new_entries);
+            return PR_FAILURE;
+        }
 
-	    /*
-	    ** We were able to allocate some of the system monitors. Use
-	    ** realloc to shrink down the new_entries memory
-	    */
-	    p = (MonitorCacheEntry*)PR_REALLOC(
-            new_entries, added * sizeof(MonitorCacheEntry));
-	    if (p == 0)
-	    {
-	        /*
-	        ** Total lossage. We just leaked a bunch of system monitors
-	        ** all over the floor. This should never ever happen.
-	        */
-	        PR_ASSERT(p != 0);
-	        return PR_FAILURE;
-	    }
+        /*
+        ** We were able to allocate some of the system monitors. Use
+        ** realloc to shrink down the new_entries memory
+        */
+        p = (MonitorCacheEntry*)
+            PR_REALLOC(new_entries, added * sizeof(MonitorCacheEntry));
+        if (p == 0) {
+            /*
+            ** Total lossage. We just leaked a bunch of system monitors
+            ** all over the floor. This should never ever happen.
+            */
+            PR_ASSERT(p != 0);
+            return PR_FAILURE;
+        }
     }
 
     /*
@@ -133,24 +132,24 @@ static PRStatus ExpandMonitorCache(PRUintn new_size_log2)
     ** the mcache-lock and we aren't calling anyone who might want to use
     ** it.
     */
-    for (i = 0, p = new_entries; i < added - 1; i++, p++) p->next = p + 1;
+    for (i = 0, p = new_entries; i < added - 1; i++, p++)
+        p->next = p + 1;
     p->next = free_entries;
     free_entries = new_entries;
     num_free_entries += added;
-	
+
     /* Try to expand the hash table */
-    new_hash_buckets = (MonitorCacheEntry**)PR_CALLOC(
-        entries * sizeof(MonitorCacheEntry*));
-    if (NULL == new_hash_buckets)
-    {
-	    /*
-	    ** Partial lossage. In this situation we don't get any more hash
-	    ** buckets, which just means that the table lookups will take
-	    ** longer. This is bad, but not fatal
-	    */
-	    PR_LOG(_pr_cmon_lm, PR_LOG_WARNING,
-	           ("unable to grow monitor cache hash buckets"));
-	    return PR_SUCCESS;
+    new_hash_buckets = (MonitorCacheEntry**)
+        PR_CALLOC(entries * sizeof(MonitorCacheEntry*));
+    if (NULL == new_hash_buckets) {
+        /*
+        ** Partial lossage. In this situation we don't get any more hash
+        ** buckets, which just means that the table lookups will take
+        ** longer. This is bad, but not fatal
+        */
+        PR_LOG(_pr_cmon_lm, PR_LOG_WARNING,
+               ("unable to grow monitor cache hash buckets"));
+        return PR_SUCCESS;
     }
 
     /*
@@ -166,20 +165,18 @@ static PRStatus ExpandMonitorCache(PRUintn new_size_log2)
     */
     old_hash_buckets = hash_buckets;
     old_num_hash_buckets = num_hash_buckets;
-    for (i = 0; i < old_num_hash_buckets; i++)
-    {
-	    p = old_hash_buckets[i];
-	    while (p)
-	    {
-	        MonitorCacheEntry *next = p->next;
+    for (i = 0; i < old_num_hash_buckets; i++) {
+        p = old_hash_buckets[i];
+        while (p) {
+            MonitorCacheEntry *next = p->next;
 
-	        /* Hash based on new table size, and then put p in the new table */
-	        PRUintn hash = HASH(p->address);
-	        p->next = new_hash_buckets[hash];
-	        new_hash_buckets[hash] = p;
+            /* Hash based on new table size, and then put p in the new table */
+            PRUintn hash = HASH(p->address);
+            p->next = new_hash_buckets[hash];
+            new_hash_buckets[hash] = p;
 
-	        p = next;
-	    }
+            p = next;
+        }
     }
 
     /*
@@ -193,8 +190,8 @@ static PRStatus ExpandMonitorCache(PRUintn new_size_log2)
     PR_DELETE(old_hash_buckets);
 
     PR_LOG(_pr_cmon_lm, PR_LOG_NOTICE,
-	   ("expanded monitor cache to %d (buckets %d)",
-	    num_free_entries, entries));
+           ("expanded monitor cache to %d (buckets %d)",
+            num_free_entries, entries));
 
     return PR_SUCCESS;
 }  /* ExpandMonitorCache */
@@ -211,13 +208,12 @@ static MonitorCacheEntry **LookupMonitorCacheEntry(void *address)
     hash = HASH(address);
     pp = hash_buckets + hash;
     while ((p = *pp) != 0) {
-	if (p->address == address) {
-	    if (p->cacheEntryCount > 0)
-		return pp;
-	    else
-		return NULL;
-	}
-	pp = &p->next;
+        if (p->address == address) {
+            if (p->cacheEntryCount > 0)
+                return pp;
+            return NULL;
+        }
+        pp = &p->next;
     }
     return NULL;
 }
@@ -235,46 +231,44 @@ static PRMonitor *CreateMonitor(void *address)
     hash = HASH(address);
     pp = hash_buckets + hash;
     while ((p = *pp) != 0) {
-	if (p->address == address) goto gotit;
+        if (p->address == address) goto gotit;
 
-	pp = &p->next;
+        pp = &p->next;
     }
 
     /* Expand the monitor cache if we have run out of free slots in the table */
-    if (num_free_entries < FREE_THRESHOLD)
-    {
-	    /* Expand monitor cache */
+    if (num_free_entries < FREE_THRESHOLD) {
+        /* Expand monitor cache */
 
         /*
         ** This function is called with the lock held. So what's the 'expanding'
         ** boolean all about? Seems a bit redundant.
         */
-	    if (!expanding)
-	    {
-	        PRStatus rv;
+        if (!expanding) {
+            PRStatus rv;
 
-	        expanding = PR_TRUE;
-	        rv = ExpandMonitorCache(num_hash_buckets_log2 + 1);
-	        expanding = PR_FALSE;
-	        if (PR_FAILURE == rv)  return NULL;
+            expanding = PR_TRUE;
+            rv = ExpandMonitorCache(num_hash_buckets_log2 + 1);
+            expanding = PR_FALSE;
+            if (PR_FAILURE == rv)  return NULL;
 
-	        /* redo the hash because it'll be different now */
-	        hash = HASH(address);
-	    }
-	    else
-	    {
-	        /*
-	        ** We are in process of expanding and we need a cache
-	        ** monitor.  Make sure we have enough!
-	        */
-	        PR_ASSERT(num_free_entries > 0);
-	    }
+            /* redo the hash because it'll be different now */
+            hash = HASH(address);
+        } else {
+            /*
+            ** We are in process of expanding and we need a cache
+            ** monitor.  Make sure we have enough!
+            */
+            PR_ASSERT(num_free_entries > 0);
+        }
     }
 
     /* Make a new monitor */
     p = free_entries;
     free_entries = p->next;
     num_free_entries--;
+    if (OnMonitorRecycle && p->address)
+        OnMonitorRecycle(p->address);
     p->address = address;
     p->next = hash_buckets[hash];
     hash_buckets[hash] = p;
@@ -290,9 +284,9 @@ static PRMonitor *CreateMonitor(void *address)
 */
 void _PR_InitCMon(void)
 {
-	_PR_NEW_LOCK_MCACHE();
+    _PR_NEW_LOCK_MCACHE();
     ExpandMonitorCache(3);
-	_pr_mcache_ready = 1;
+    _pr_mcache_ready = 1;
 }
 
 /*
@@ -322,26 +316,26 @@ PR_IMPLEMENT(PRStatus) PR_CExitMonitor(void *address)
 
     _PR_LOCK_MCACHE();
     pp = LookupMonitorCacheEntry(address);
-	if (pp != NULL) {
-	    p = *pp;
-	    if (--p->cacheEntryCount == 0) {
-		/*
-		** Nobody is using the system monitor. Put it on the cached free
-		** list. We are safe from somebody trying to use it because we
-		** have the mcache locked.
-		*/
-	    p->address = 0; /* defensive move */
-		*pp = p->next;			/* unlink from hash_buckets */
-		p->next = free_entries;		/* link into free list */
-		free_entries = p;
-		num_free_entries++;		/* count it as free */
-	    }
-    	status = PR_ExitMonitor(p->mon);
+    if (pp != NULL) {
+        p = *pp;
+        if (--p->cacheEntryCount == 0) {
+            /*
+            ** Nobody is using the system monitor. Put it on the cached free
+            ** list. We are safe from somebody trying to use it because we
+            ** have the mcache locked.
+            */
+            p->address = 0;             /* defensive move */
+            *pp = p->next;              /* unlink from hash_buckets */
+            p->next = free_entries;     /* link into free list */
+            free_entries = p;
+            num_free_entries++;         /* count it as free */
+        }
+        status = PR_ExitMonitor(p->mon);
     } else {
-	status = PR_FAILURE;
+        status = PR_FAILURE;
     }
     _PR_UNLOCK_MCACHE();
-    
+
     return status;
 }
 
@@ -355,10 +349,9 @@ PR_IMPLEMENT(PRStatus) PR_CWait(void *address, PRIntervalTime ticks)
     mon = pp ? ((*pp)->mon) : NULL;
     _PR_UNLOCK_MCACHE();
 
-	if (mon == NULL) 
-	    return PR_FAILURE;
-	else
-	    return PR_Wait(mon, ticks);
+    if (mon == NULL)
+        return PR_FAILURE;
+    return PR_Wait(mon, ticks);
 }
 
 PR_IMPLEMENT(PRStatus) PR_CNotify(void *address)
@@ -371,10 +364,9 @@ PR_IMPLEMENT(PRStatus) PR_CNotify(void *address)
     mon = pp ? ((*pp)->mon) : NULL;
     _PR_UNLOCK_MCACHE();
 
-	if (mon == NULL) 
-	    return PR_FAILURE;
-	else
-	    return PR_Notify(mon);
+    if (mon == NULL)
+        return PR_FAILURE;
+    return PR_Notify(mon);
 }
 
 PR_IMPLEMENT(PRStatus) PR_CNotifyAll(void *address)
@@ -387,8 +379,13 @@ PR_IMPLEMENT(PRStatus) PR_CNotifyAll(void *address)
     mon = pp ? ((*pp)->mon) : NULL;
     _PR_UNLOCK_MCACHE();
 
-	if (mon == NULL) 
-	    return PR_FAILURE;
-	else
-   	    return PR_NotifyAll(mon);
+    if (mon == NULL)
+        return PR_FAILURE;
+    return PR_NotifyAll(mon);
+}
+
+PR_IMPLEMENT(void)
+PR_CSetOnMonitorRecycle(void (*callback)(void *address))
+{
+    OnMonitorRecycle = callback;
 }
