@@ -431,10 +431,11 @@ CWebShellContainer::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCo
                          PRInt32 aXPos, PRInt32 aYPos, 
                          const nsString& aPopupType, const nsString& anAnchorAlignment,
                          const nsString& aPopupAlignment,
-                         nsIDOMWindow* aWindow)
+                         nsIDOMWindow* aWindow, nsIDOMWindow** outPopup)
 {
 	NG_TRACE_METHOD(CWebShellContainer::CreatePopup);
 	HMENU hMenu = ::CreatePopupMenu();
+    *outPopup = NULL;
 	InsertMenu(hMenu, 0, MF_BYPOSITION, 1, _T("TODO"));
 	TrackPopupMenu(hMenu, TPM_LEFTALIGN, aXPos, aYPos, NULL, NULL, NULL);
 	return NS_OK;
