@@ -60,7 +60,7 @@ which have the following meanings:
     <li> <b>JP_DEFER</b> : Install the signal handler, but don't start sending
     the timer signals.  The user must start the signals by sending the first
     one (with <code>kill -PROF</code>, or with <code>kill -ALRM</code> if
-    JP_REALTIME is used, or with <code>kill -POLL</code> if JP_RTZ_HZ is used).
+    JP_REALTIME is used, or with <code>kill -POLL</code> (also known as <code>kill -IO</code>) if JP_RTC_HZ is used).
 
     <li> <b>JP_FIRST=x</b> : Wait x seconds before starting the timer
 
@@ -104,7 +104,7 @@ which have the following meanings:
   <li>To make the timer start on your signal and fire at 8192 Hz in wall-clock
   time use:
     <pre>
-        setenv JPROF_FLAGS "JP_DEFER JP_RTZ_HZ=8192" </pre>
+        setenv JPROF_FLAGS "JP_DEFER JP_RTC_HZ=8192" </pre>
   
 </ul>
 
@@ -116,7 +116,7 @@ written, but it will not close jprof-log.  Combining SIGUSR1 with the JP_DEFER
 option allows profiling of one sequence of actions by starting the timer right
 before starting the actions and stopping the timer right afterward.
 
-<P>After a SIGUSR1, sending another timer signal (SIGPROF, SIGALRM, or SIGPOLL,
+<P>After a SIGUSR1, sending another timer signal (SIGPROF, SIGALRM, or SIGPOLL (aka SIGIO),
 depending on the mode) can be used to continue writing data to the same output.
 
 <h4>Looking at the results</h4>
