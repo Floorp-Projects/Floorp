@@ -31,6 +31,38 @@ sub sillyness { # shut up "used only once" warnings
 
 require "CGI.pl";
 
+# Use the template toolkit (http://www.template-toolkit.org/) to generate
+# the user interface (HTML pages and mail messages) using templates in the
+# "template/" subdirectory.
+use Template;
+
+# Create the global template object that processes templates and specify
+# configuration parameters that apply to all templates processed in this script.
+my $template = Template->new(
+{
+    # Colon-separated list of directories containing templates.
+    INCLUDE_PATH => "template/custom:template/default",
+    # Allow templates to be specified with relative paths.
+    RELATIVE => 1,
+    PRE_CHOMP => 1,
+});
+
+# Define the global variables and functions that will be passed to the UI 
+# template.  Individual functions add their own values to this hash before
+# sending them to the templates they process.
+my $vars = 
+{
+    # Function for retrieving global parameters.
+    'Param' => \&Param, 
+
+    # Function for processing global parameters that contain references
+    # to other global parameters.
+    'PerformSubsts' => \&PerformSubsts,
+
+    # Function to search an array for a value   
+    'lsearch' => \&lsearch,
+};
+
 print "Content-type: text/html\n";
 
 # The master list not only says what fields are possible, but what order
@@ -59,6 +91,7 @@ if (@::legal_keywords) {
 
 push(@masterlist, ("summary", "summaryfull"));
 
+$vars->{masterlist} = \@masterlist;
 
 my @collist;
 if (defined $::FORM{'rememberedquery'}) {
@@ -95,13 +128,14 @@ if (defined $::COOKIE{'COLUMNLIST'}) {
     @collist = @::default_column_list;
 }
 
-my $splitheader = 0;
+$vars->{collist} = \@collist;
+
+$vars->{splitheader} = 0;
 if ($::COOKIE{'SPLITHEADER'}) {
-    $splitheader = 1;
+    $vars->{splitheader} = 1;
 }
 
-
-my %desc;
+my %desc = ();
 foreach my $i (@masterlist) {
     $desc{$i} = $i;
 }
@@ -109,36 +143,12 @@ foreach my $i (@masterlist) {
 $desc{'summary'} = "Summary (first 60 characters)";
 $desc{'summaryfull'} = "Full Summary";
 
+$vars->{desc} = \%desc;
+$vars->{buffer} = $::buffer;
 
-print "\n";
-PutHeader ("Change columns");
-print "Check which columns you wish to appear on the list, and then click\n";
-print "on submit.  (Cookies are required.)\n";
-print "<p>\n";
-print "<FORM ACTION=colchange.cgi>\n";
-print "<INPUT TYPE=HIDDEN NAME=rememberedquery VALUE=$::buffer>\n";
+# Generate and return the UI (HTML page) from the appropriate template.
+print "Content-type: text/html\n\n";
+$template->process("buglist/colchange.tmpl", $vars)
+  || DisplayError("Template process failed: " . $template->error())
+  && exit;
 
-foreach my $i (@masterlist) {
-    my $c;
-    if (lsearch(\@collist, $i) >= 0) {
-        $c = 'CHECKED';
-    } else {
-        $c = '';
-    }
-    print "<INPUT TYPE=checkbox NAME=column_$i $c>$desc{$i}<br>\n";
-}
-print "<P>\n";
-print BuildPulldown("splitheader",
-                    [["0", "Normal headers (prettier)"],
-                     ["1", "Stagger headers (often makes list more compact)"]],
-                    $splitheader);
-print "<P>\n";
-
-print "<INPUT TYPE=\"submit\" VALUE=\"Submit\">\n";
-print "</FORM>\n";
-print "<FORM ACTION=colchange.cgi>\n";
-print "<INPUT TYPE=HIDDEN NAME=rememberedquery VALUE=$::buffer>\n";
-print "<INPUT TYPE=HIDDEN NAME=resetit VALUE=1>\n";
-print "<INPUT TYPE=\"submit\" VALUE=\"Reset to Bugzilla default\">\n";
-print "</FORM>\n";
-PutFooter();
