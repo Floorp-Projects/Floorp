@@ -86,6 +86,9 @@
 #include "nsIPrefService.h"
 
 #include "nsIGlobalHistory.h"
+#ifdef MOZ_PHOENIX
+#include "nsToolkitCompsCID.h"
+#endif
 
 #include "nsCRT.h"
 #include "plstr.h"
