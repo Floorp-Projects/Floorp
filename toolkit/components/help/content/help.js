@@ -552,35 +552,16 @@ function findParentNode(node, parentNode)
   return null;
 }
 
-function onselect_loadURI(tree, columnName) {
+function onselect_loadURI(tree) {
     try {
-        var row = tree.treeBoxObject.view.selection.currentIndex;
-        var properties = Components.classes["@mozilla.org/supports-array;1"]
-            .createInstance(Components.interfaces.nsISupportsArray);
-        tree.treeBoxObject.view.getCellProperties(row, columnName, properties);
-        if (!properties) {
-            return;
-        }
-        var uri = getPropertyValue(properties, "link-");
-        if (uri) {
-            loadURI(uri);
+        var resource = tree.view.getResourceAtIndex(tree.currentIndex);
+	var link = tree.database.GetTarget(resource, NC_LINK, true);
+	if (link) {
+            link = link.QueryInterface(Components.interfaces.nsIRDFLiteral);
+            loadURI(link.Value);
         }
     } catch (e) {
     }// when switching between tabs a spurious row number is returned.
-}
-
-/** Search properties nsISupportsArray for an nsIAtom which starts with the
-    given property name. **/
-function getPropertyValue(properties, propName) {
-    for (var i=0; i< properties.Count(); ++i) {
-        var atom = properties.GetElementAt(i)
-            .QueryInterface(Components.interfaces.nsIAtom);
-        var atomValue = atom.toString();
-        if (atomValue.substr(0, propName.length) == propName) {
-            return atomValue.substr(propName.length);
-        }
-    }
-    return null;
 }
 
 # doFind - Searches the help files for what is located in findText and outputs into
