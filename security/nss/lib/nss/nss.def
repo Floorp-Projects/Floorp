@@ -560,11 +560,12 @@ PK11_DestroyPBEParams;
 ;+};
 ;+NSS_3.4 { 	# NSS 3.4 release
 ;+    global:
-SECMOD_LoadModule;
-SECMOD_GetModuleSpecList;
-SECMOD_FreeModuleSpecList;
-SECMOD_UpdateModule;
+SECMOD_AddNewModuleEx;
 SECMOD_DeleteModule;
+SECMOD_FreeModuleSpecList;
+SECMOD_GetModuleSpecList;
+SECMOD_LoadModule;
+SECMOD_UpdateModule;
 ;+# for PKCS #12
 PK11_RawPBEKeyGen;
 ;+# for PSM

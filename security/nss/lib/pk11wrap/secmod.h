@@ -113,6 +113,12 @@ extern SECStatus SECMOD_DeleteInternalModule(char *name);
 extern SECStatus SECMOD_AddNewModule(char* moduleName, char* dllPath,
                               unsigned long defaultMechanismFlags,
                               unsigned long cipherEnableFlags);
+extern SECStatus SECMOD_AddNewModuleEx(char* moduleName, char* dllPath,
+                              unsigned long defaultMechanismFlags,
+                              unsigned long cipherEnableFlags,
+                              char* modparms,
+                              char* nssparms);
+
 /* database/memory management */
 extern SECMODModule *SECMOD_GetInternalModule(void);
 extern SECMODModule *SECMOD_ReferenceModule(SECMODModule *module);
