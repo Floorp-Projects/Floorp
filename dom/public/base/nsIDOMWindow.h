@@ -116,7 +116,11 @@ public:
 
   NS_IMETHOD    Dump(const nsString& aStr)=0;
 
-  NS_IMETHOD    Alert(const nsString& aStr)=0;
+  NS_IMETHOD    Alert(JSContext *cx, jsval *argv, PRUint32 argc)=0;
+
+  NS_IMETHOD    Confirm(JSContext *cx, jsval *argv, PRUint32 argc, PRBool* aReturn)=0;
+
+  NS_IMETHOD    Prompt(JSContext *cx, jsval *argv, PRUint32 argc, nsString& aReturn)=0;
 
   NS_IMETHOD    Focus()=0;
 
@@ -206,7 +210,9 @@ public:
   NS_IMETHOD    SetPageYOffset(PRInt32 aPageYOffset);  \
   NS_IMETHOD    Equals(nsIDOMWindow* aWindow, PRBool* aReturn);  \
   NS_IMETHOD    Dump(const nsString& aStr);  \
-  NS_IMETHOD    Alert(const nsString& aStr);  \
+  NS_IMETHOD    Alert(JSContext *cx, jsval *argv, PRUint32 argc);  \
+  NS_IMETHOD    Confirm(JSContext *cx, jsval *argv, PRUint32 argc, PRBool* aReturn);  \
+  NS_IMETHOD    Prompt(JSContext *cx, jsval *argv, PRUint32 argc, nsString& aReturn);  \
   NS_IMETHOD    Focus();  \
   NS_IMETHOD    Blur();  \
   NS_IMETHOD    Close();  \
@@ -275,7 +281,9 @@ public:
   NS_IMETHOD    SetPageYOffset(PRInt32 aPageYOffset) { return _to SetPageYOffset(aPageYOffset); } \
   NS_IMETHOD    Equals(nsIDOMWindow* aWindow, PRBool* aReturn) { return _to Equals(aWindow, aReturn); }  \
   NS_IMETHOD    Dump(const nsString& aStr) { return _to Dump(aStr); }  \
-  NS_IMETHOD    Alert(const nsString& aStr) { return _to Alert(aStr); }  \
+  NS_IMETHOD    Alert(JSContext *cx, jsval *argv, PRUint32 argc) { return _to Alert(cx, argv, argc); }  \
+  NS_IMETHOD    Confirm(JSContext *cx, jsval *argv, PRUint32 argc, PRBool* aReturn) { return _to Confirm(cx, argv, argc, aReturn); }  \
+  NS_IMETHOD    Prompt(JSContext *cx, jsval *argv, PRUint32 argc, nsString& aReturn) { return _to Prompt(cx, argv, argc, aReturn); }  \
   NS_IMETHOD    Focus() { return _to Focus(); }  \
   NS_IMETHOD    Blur() { return _to Blur(); }  \
   NS_IMETHOD    Close() { return _to Close(); }  \

@@ -43,6 +43,7 @@
 #include "nsIDOMLoadListener.h"
 #include "nsIDOMDragListener.h"
 #include "nsIDOMPaintListener.h"
+#include "nsJSUtils.h"
 #include "nsIScriptEventListener.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIBrowserWindow.h"
@@ -943,9 +944,17 @@ GlobalWindowImpl::Dump(const nsString& aStr)
 }
 
 NS_IMETHODIMP
-GlobalWindowImpl::Alert(const nsString& aStr)
+GlobalWindowImpl::Alert(JSContext *cx, jsval *argv, PRUint32 argc)
 {
   nsresult ret;
+  nsAutoString str;
+
+  if (argc > 0) {
+    nsJSUtils::nsConvertJSValToString(str, cx, argv[0]);
+  }
+  else {
+    str.SetString("undefined");
+  }
   
   nsIWebShell *rootWebShell;
   ret = mWebShell->GetRootWebShellEvenIfChrome(rootWebShell);
@@ -955,7 +964,7 @@ GlobalWindowImpl::Alert(const nsString& aStr)
     if (nsnull != rootContainer) {
       nsINetSupport *support;
         if (NS_OK == (ret = rootContainer->QueryInterface(kINetSupportIID, (void**)&support))) {
-          support->Alert(aStr);
+          support->Alert(str);
           NS_RELEASE(support);
         }
       NS_RELEASE(rootContainer);
@@ -963,8 +972,77 @@ GlobalWindowImpl::Alert(const nsString& aStr)
     NS_RELEASE(rootWebShell);
   }
   return ret;
-  // XXX Temporary
-  //return Dump(aStr);
+}
+
+NS_IMETHODIMP    
+GlobalWindowImpl::Confirm(JSContext *cx, jsval *argv, PRUint32 argc, PRBool* aReturn)
+{
+  nsresult ret;
+  nsAutoString str;
+
+  if (argc > 0) {
+    nsJSUtils::nsConvertJSValToString(str, cx, argv[0]);
+  }
+  else {
+    str.SetString("undefined");
+  }
+
+  nsIWebShell *rootWebShell;
+  ret = mWebShell->GetRootWebShellEvenIfChrome(rootWebShell);
+  if (nsnull != rootWebShell) {
+    nsIWebShellContainer *rootContainer;
+    ret = rootWebShell->GetContainer(rootContainer);
+    if (nsnull != rootContainer) {
+      nsINetSupport *support;
+        if (NS_OK == (ret = rootContainer->QueryInterface(kINetSupportIID, (void**)&support))) {
+          *aReturn = support->Confirm(str);
+          NS_RELEASE(support);
+        }
+      NS_RELEASE(rootContainer);
+    }
+    NS_RELEASE(rootWebShell);
+  }
+  return ret;
+}
+
+NS_IMETHODIMP    
+GlobalWindowImpl::Prompt(JSContext *cx, jsval *argv, PRUint32 argc, nsString& aReturn)
+{
+  nsresult ret;
+  nsAutoString str, initial;
+
+  if (argc > 0) {
+    nsJSUtils::nsConvertJSValToString(str, cx, argv[0]);
+
+    if (argc > 1) {
+      nsJSUtils::nsConvertJSValToString(initial, cx, argv[1]);
+    }
+    else {
+      initial.SetString("undefined");
+    }
+  }
+    
+  nsIWebShell *rootWebShell;
+  ret = mWebShell->GetRootWebShellEvenIfChrome(rootWebShell);
+  if (nsnull != rootWebShell) {
+    nsIWebShellContainer *rootContainer;
+    ret = rootWebShell->GetContainer(rootContainer);
+    if (nsnull != rootContainer) {
+      nsINetSupport *support;
+        if (NS_OK == (ret = rootContainer->QueryInterface(kINetSupportIID, (void**)&support))) {
+          if (!support->Prompt(str, initial, aReturn)) {
+            // XXX Need to check return value and return null if the
+            // user hits cancel. Currently, we can only return a 
+            // string reference.
+            aReturn.SetString("");
+          }
+          NS_RELEASE(support);
+        }
+      NS_RELEASE(rootContainer);
+    }
+    NS_RELEASE(rootWebShell);
+  }
+  return ret;
 }
 
 NS_IMETHODIMP
