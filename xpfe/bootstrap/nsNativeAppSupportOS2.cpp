@@ -592,7 +592,9 @@ MRESULT EXPENTRY DialogProc( HWND dlg, ULONG msg, MPARAM mp1, MPARAM mp2 ) {
     else if ( msg == WM_PAINT ) {
         nsSplashScreenOS2 *splashScreen = (nsSplashScreenOS2*)WinQueryWindowPtr( dlg, QWL_USER );
         HPS hps = WinBeginPaint (dlg, NULLHANDLE, NULL);
+#if 0
         nsPaletteOS2::SelectGlobalPalette(hps, dlg);
+#endif
         GpiErase (hps);
         POINTL aptl[8] = {0, 0, splashScreen->mBitmapCX, splashScreen->mBitmapCY,
                           0, 0, 0, 0,
@@ -603,6 +605,7 @@ MRESULT EXPENTRY DialogProc( HWND dlg, ULONG msg, MPARAM mp1, MPARAM mp2 ) {
         WinEndPaint( hps );
         return (MRESULT)TRUE;
     }
+#if 0
     else if ( msg == WM_REALIZEPALETTE ) {
         HPS hps = WinGetPS(dlg);
         nsPaletteOS2::SelectGlobalPalette(hps, dlg);
@@ -610,6 +613,7 @@ MRESULT EXPENTRY DialogProc( HWND dlg, ULONG msg, MPARAM mp1, MPARAM mp2 ) {
         WinInvalidateRect( dlg, 0, TRUE);
         return (MRESULT)TRUE;
     }
+#endif
     return WinDefDlgProc (dlg, msg, mp1, mp2);
 }
 

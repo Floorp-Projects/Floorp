@@ -103,7 +103,7 @@ CPPSRCS		= \
 		$(NULL)
 
 
-ifneq ($(OS_ARCH),WINNT)
+ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
 STACKWALK_SRC_LCSRCS =               \
 		nsStackFrameUnix.cpp \
 		nsStackFrameUnix.h   \
@@ -357,6 +357,7 @@ libs:: $(srcdir)/splash.bmp
 endif
 
 ifeq ($(OS_ARCH),OS2)
+LDFLAGS += /NOE
 ifdef BUILD_STATIC_LIBS
 $(EXE_DEF_FILE):
 	rm -f $@
@@ -366,7 +367,6 @@ $(EXE_DEF_FILE):
 	@echo 	WinRemoveProperty		= PMMERGE.5451 >>$(EXE_DEF_FILE)
 	@echo 	WinSetProperty			= PMMERGE.5452 >>$(EXE_DEF_FILE)
 
-LDFLAGS += /NOE
 endif
 endif
 
