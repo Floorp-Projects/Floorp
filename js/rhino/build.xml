@@ -2,6 +2,7 @@
 
 <!-- 
 Build file for Rhino using Ant (see http://jakarta.apache.org/ant/index.html)
+Requires Ant version 1.2
 -->
 <project name="Rhino" default="package" basedir=".">
 
@@ -46,10 +47,6 @@ Build file for Rhino using Ant (see http://jakarta.apache.org/ant/index.html)
     <mkdir dir="${dist.examples}"/>
     <mkdir dir="${dist.docs}"/>
     <mkdir dir="${dist.apidocs}"/>
-    <tstamp/>
-    <exec command="echo"
-          dir="${dist.dir}"
-          output="${dist.dir}/built-${DSTAMP}"/>
   </target>
 
   <target name="compile-from-cvs" if="in-cvs-tree" depends="prepare">
@@ -71,9 +68,9 @@ Build file for Rhino using Ant (see http://jakarta.apache.org/ant/index.html)
   <target name="compile" depends="compile-from-dist,compile-from-cvs"/>
 
   <target name="copy-properties" depends="prepare">
-    <copydir src="${src.dir}" 
-           dest="${build.dest}" 
-           includes="org/**/*.properties" />
+    <copy todir="${build.dest}">
+      <fileset dir="${src.dir}" includes="org/**/*.properties" />
+    </copy>
   </target>
 
   <target name="jar" depends="compile,copy-properties">
@@ -83,24 +80,31 @@ Build file for Rhino using Ant (see http://jakarta.apache.org/ant/index.html)
   </target>
   
   <target name="copy-source" depends="prepare">
-    <copydir src="${src.dir}" 
-           dest="${dist.src}" 
-           includes="org/**/*.java,org/**/*.properties" />
+    <copy todir="${dist.src}">
+      <fileset dir="${src.dir}"
+               includes="org/**/*.java,org/**/*.properties" />
+    </copy>
   </target>
 
   <target name="copy-examples" depends="prepare">
-    <copydir src="${src.examples}" 
-             dest="${dist.examples}" 
-             includes="*.java,*.js,*.html" />
+    <copy todir="${dist.examples}">
+      <fileset dir="${src.examples}" includes="*.java,*.js,*.html" />
+    </copy>
   </target>
 
   <target name="copy-misc" depends="prepare">
-    <copyfile src="${src.dir}/build.xml" 
-              dest="${dist.dir}/build.xml" />
-    <copyfile src="${src.dir}/apiClasses.properties" 
-              dest="${dist.dir}/apiClasses.properties" />
-    <copyfile src="${src.dir}/manifest" 
-              dest="${dist.dir}/manifest" />
+    <tstamp/>
+    <filter token="datestamp" value="${TODAY}"/>
+    <copy todir="${dist.dir}" filtering="yes">
+      <fileset dir="${src.dir}">
+        <patternset>
+          <include name="build.xml"/>
+          <include name="apiClasses.properties"/>
+          <include name="manifest"/>
+          <include name="built-on-date"/>
+        </patternset>
+      </fileset>
+    </copy>
   </target>
 
   <target name="copy-all" depends="copy-source,copy-examples,copy-misc">
@@ -108,9 +112,10 @@ Build file for Rhino using Ant (see http://jakarta.apache.org/ant/index.html)
 
   <target name="copy-docs-cvs" if="in-cvs-tree" depends="prepare"> 
     <echo message="copy from ${cvs.docsrc.dir}"/>
-    <copydir src="${cvs.docsrc.dir}" 
-           dest="${dist.docs}" 
-           includes="**/*.html,**/*.jpg,**/*.gif" />
+    <copy todir="${dist.docs}">
+      <fileset dir="${cvs.docsrc.dir}" 
+               includes="**/*.html,**/*.jpg,**/*.gif" />
+    </copy>
   </target>
 
   <target name="copy-docs-dist" unless="in-cvs-tree" depends="prepare"> 
