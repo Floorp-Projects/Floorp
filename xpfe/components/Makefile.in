@@ -55,7 +55,10 @@ DIRS += \
 endif
 
 ifeq ($(OS_ARCH),WINNT)
-DIRS		+= winhooks urlwidget alerts
+DIRS		+= winhooks urlwidget 
+ifndef MOZ_PHOENIX
+DIRS		+= alerts
+endif
 endif
 
 else

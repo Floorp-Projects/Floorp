@@ -58,7 +58,9 @@
 #endif
 #endif
 #if defined(XP_WIN)
+#ifndef MOZ_PHOENIX
 #include "nsAlertsService.h" 
+#endif
 #include "nsUrlWidget.h"
 #include "nsWindowsHooks.h"
 #endif // Windows
@@ -88,7 +90,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPAutoCompleteSession)
 #endif
 #endif
 #if defined(XP_WIN)
+#ifndef MOZ_PHOENIX
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAlertsService)
+#endif
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsUrlWidget, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowsHooks)
 #endif // Windows
@@ -190,7 +194,9 @@ static const nsModuleComponentInfo components[] = {
 #if defined(XP_WIN)
     { NS_IURLWIDGET_CLASSNAME, NS_IURLWIDGET_CID, NS_IURLWIDGET_CONTRACTID,
       nsUrlWidgetConstructor },
+#ifndef MOZ_PHOENIX
     { "nsAlertsService", NS_ALERTSSERVICE_CID, NS_ALERTSERVICE_CONTRACTID, nsAlertsServiceConstructor},
+#endif
     { NS_IWINDOWSHOOKS_CLASSNAME, NS_IWINDOWSHOOKS_CID, NS_IWINDOWSHOOKS_CONTRACTID,
       nsWindowsHooksConstructor },
 #endif // Windows
