@@ -42,6 +42,15 @@
 #include "certdb.h"
 #include "cryptohi.h"
 
+#ifndef NSS_3_4_CODE
+#define NSS_3_4_CODE
+#endif /* NSS_3_4_CODE */
+#include "nsspki.h"
+#include "pkitm.h"
+#include "pkim.h"
+#include "pkinss3hack.h"
+#include "base.h"
+
 #define PENDING_SLOP (24L*60L*60L)
 
 /*
@@ -308,6 +317,7 @@ done:
 CERTCertificate *
 CERT_FindCertIssuer(CERTCertificate *cert, int64 validTime, SECCertUsage usage)
 {
+#ifndef NSS_SOFTOKEN_MODULE
     CERTAuthKeyID *   authorityKeyID = NULL;  
     CERTCertificate * issuerCert     = NULL;
     SECItem *         caName;
@@ -390,6 +400,26 @@ loser:
     }
 
     return(issuerCert);
+#else
+    NSSCertificate *me;
+    NSSTime *nssTime;
+    NSSUsage nssUsage;
+    NSSCertificate *issuer;
+    PRStatus status;
+    me = STAN_GetNSSCertificate(cert);
+    nssTime = NSSTime_SetPRTime(NULL, validTime);
+    nssUsage.anyUsage = PR_FALSE;
+    nssUsage.nss3usage = usage;
+    nssUsage.nss3lookingForCA = PR_TRUE;
+    (void)NSSCertificate_BuildChain(me, nssTime, &nssUsage, NULL, 
+                                    &issuer, 1, NULL, &status);
+    nss_ZFreeIf(nssTime);
+    if (status == PR_SUCCESS) {
+	CERTCertificate *rvc = STAN_GetCERTCertificate(issuer);
+	return rvc;
+    }
+    return NULL;
+#endif
 }
 
 /*
