@@ -222,8 +222,7 @@ thunderbird\components\uconv.xpt
 thunderbird\components\unicharutil.xpt
 thunderbird\components\ucnative.xpt
 
-; dom
-thunderbird\components\jsdom.dll   
+; dom 
 thunderbird\components\dom.xpt                      
 thunderbird\components\dom_base.xpt
 thunderbird\components\dom_core.xpt
