@@ -13004,8 +13004,6 @@ EOF
 
   HAVE_MOVEMAIL=1
   
-  MOZ_LDAP_XPCOM=0
-  MOZ_LDAP_XPCOM_EXPERIMENTAL=0
 elif test "$OS_TARGET" = "Mac OS"; then
   cat >> confdefs.h <<\EOF
 #define XP_UNIX 1
