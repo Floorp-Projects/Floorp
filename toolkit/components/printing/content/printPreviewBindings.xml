@@ -160,7 +160,7 @@
         var print = PrintUtils.getWebBrowserPrint();
         this.mTotalPages.value = print.printPreviewNumPages;
 
-        this.updateSettings();
+        this.updateToolbar();
 
         // Hide the ``Print...'' button when the underlying gfx code does not
         // support multiple devicecontext to be used concurrently
@@ -217,7 +217,7 @@
           var didOK = PrintUtils.showPageSetup();
           if (didOK) {
             // the changes that effect the UI
-            this.updateSettings();
+            this.updateToolbar();
 
             // Now do PrintPreview
             PrintUtils.printPreview();
@@ -401,7 +401,7 @@
         </body>
       </method>
 
-      <method name="updateSettings">
+      <method name="updateToolbar">
         <body>
         <![CDATA[
           var print = PrintUtils.getWebBrowserPrint();
