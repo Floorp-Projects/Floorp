@@ -34,7 +34,7 @@
 /*
  * Test program to mangle 1 bit in a binary
  *
- * $Id: mangle.c,v 1.4 2003/02/07 23:05:07 relyea%netscape.com Exp $
+ * $Id: mangle.c,v 1.5 2003/02/08 01:52:37 relyea%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -118,7 +118,7 @@ main (int argc, char **argv)
     fd = PR_OpenFile(libFile,PR_RDWR,0666);
     if (fd == NULL ) {
 	/* lperror(libFile); */
-	PR_fprintf(pr_stderr,"Open %s failed\n",libFile);
+	PR_fprintf(pr_stderr,"Couldn't Open %s\n",libFile);
 	goto loser;
     }
 
