@@ -866,42 +866,42 @@ nsresult nsSocketTransport::doConnection(PRInt16 aSelectFlags)
     }
     //
     // Step 3:
-    //	  Process the flags returned by PR_Poll() if any...
+    //    Process the flags returned by PR_Poll() if any...
     //
     else if (aSelectFlags) {
-      	status = PR_ConnectContinue(mSocketFD, aSelectFlags);
-      	LOG(("nsSocketTransport: PR_ConnectContinue\n"));
-      	if (status == PR_SUCCESS) {
-	          //
-	          // We are connected.
-	          //
-	          rv = NS_OK;
-      	}
-      	else {
-      	    PRErrorCode code = PR_GetError();
-	          //
-	          // If the connect is still not ready, then return WOULD_BLOCK...
-	          // It is the callers responsibility to place the transport on the
-	          // select list of the transport thread...
-	          //
-	          if (PR_IN_PROGRESS_ERROR == code) {     
-		            // Set up the select flags for connect...
-		            mSelectFlags = (PR_POLL_READ | PR_POLL_EXCEPT | PR_POLL_WRITE);
-		            rv = NS_BASE_STREAM_WOULD_BLOCK;
-	          } 
-	          //
-	          // The connection failed...
-	          //
-	          else {
-            		LOG(("nsSocketTransport: Connection Failed [%s:%d %x]. PRErrorCode = %x\n",
-            		    mHostName, mPort, this, code));
-		            // FIXME: "Connection refused" is just one of the possible
-		            // errors.  Other possible errors are "Connection timed out"
-		            // and "No route to host".  'rv' should be based on 'code',
-		            // the error code provided by NSPR. 
-		            rv = NS_ERROR_CONNECTION_REFUSED;
-      	    }
-      	}
+        status = PR_ConnectContinue(mSocketFD, aSelectFlags);
+        LOG(("nsSocketTransport: PR_ConnectContinue\n"));
+        if (status == PR_SUCCESS) {
+            //
+            // We are connected.
+            //
+            rv = NS_OK;
+        }
+        else {
+            PRErrorCode code = PR_GetError();
+            //
+            // If the connect is still not ready, then return WOULD_BLOCK...
+            // It is the callers responsibility to place the transport on the
+            // select list of the transport thread...
+            //
+            if (PR_IN_PROGRESS_ERROR == code) {     
+                // Set up the select flags for connect...
+                mSelectFlags = (PR_POLL_READ | PR_POLL_EXCEPT | PR_POLL_WRITE);
+                rv = NS_BASE_STREAM_WOULD_BLOCK;
+            } 
+            //
+            // The connection failed...
+            //
+            else {
+                LOG(("nsSocketTransport: Connection Failed [%s:%d %x]. PRErrorCode = %x\n",
+                    mHostName, mPort, this, code));
+                // FIXME: "Connection refused" is just one of the possible
+                // errors.  Other possible errors are "Connection timed out"
+                // and "No route to host".  'rv' should be based on 'code',
+                // the error code provided by NSPR. 
+                rv = NS_ERROR_CONNECTION_REFUSED;
+            }
+        }
     } else
         rv = NS_BASE_STREAM_WOULD_BLOCK;
 
