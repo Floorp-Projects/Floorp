@@ -419,7 +419,7 @@ XPT_DumpInterfaceDescriptor(XPTCursor *cursor, XPTInterfaceDescriptor *id,
     fprintf(stdout, "%*sFlags:\n", indent, " ");
 
     fprintf(stdout, "%*sScriptable: %s\n", new_indent, " ", 
-            XPT_ID_IS_SCRIPTABLE(id->flags) ? "TRUE" : "FASLE");
+            XPT_ID_IS_SCRIPTABLE(id->flags) ? "TRUE" : "FALSE");
 
     if (verbose_mode) {
         if (id->parent_interface) {
