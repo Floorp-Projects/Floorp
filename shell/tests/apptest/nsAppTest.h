@@ -21,6 +21,7 @@
 
 #include <stdio.h>
 #include "nsIApplicationShell.h"
+#include "nsIShellInstance.h"
 #include "nsIFactory.h"
 #include "nsRepository.h"
 #include "nsShellInstance.h"
@@ -43,6 +44,9 @@ public:
   NS_IMETHOD Init();
   NS_IMETHOD Run();
 
+public:
+  nsIShellInstance * mShellInstance;
+
 };
 
 /*
@@ -62,6 +66,7 @@ public:
                             void ** aResult);
 
   NS_IMETHOD LockFactory(PRBool aLock);
+
 
 };
 

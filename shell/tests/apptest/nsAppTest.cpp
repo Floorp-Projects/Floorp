@@ -17,7 +17,12 @@
  */
 #include "nscore.h"
 #include "nsAppTest.h"
-#include "AppTestImpl.h"
+#include "nsApplicationManager.h"
+
+#include "nsString.h"
+#include "nsFont.h"
+
+nsEventStatus HandleEventApplication(nsGUIEvent *aEvent);
 
 // All Applications must specify this *special* application CID
 // to their own unique IID.
@@ -51,21 +56,25 @@ NS_IMPL_ISUPPORTS(nsAppTest,kIAppTestIID);
 
 nsresult nsAppTest::Init()
 {
-#ifdef NS_WIN32
-  InitAppTest(this);
-#else
-  PRUnichar * p;
-  nsCRT::strlen(p);
-#endif
-  return NS_OK;
+
+  
+  nsresult res = nsApplicationManager::GetShellInstance(this, &mShellInstance) ;
+
+  if (NS_OK != res)
+    return res ;
+
+  nsRect aRect(100,100,540, 380) ;
+
+  mShellInstance->CreateApplicationWindow(aRect, HandleEventApplication);
+  mShellInstance->ShowApplicationWindow(PR_TRUE) ;
+
+  return res ;
+
 }
 
 nsresult nsAppTest::Run()
 {
-#ifdef NS_WIN32
-  RunAppTest(this);
-#endif
-  return NS_OK;
+  return (mShellInstance->Run());
 }
 
 /*
@@ -115,3 +124,61 @@ nsresult nsAppTestFactory::LockFactory(PRBool aLock)
 {
   return NS_OK;
 }
+
+
+
+nsEventStatus PR_CALLBACK HandleEventApplication(nsGUIEvent *aEvent)
+{
+    nsEventStatus result = nsEventStatus_eConsumeNoDefault;
+
+    switch(aEvent->message) {
+
+        case NS_CREATE:
+        {
+          return nsEventStatus_eConsumeNoDefault;
+        }
+        break ;
+
+        case NS_DESTROY:
+        {
+          //mShellInstance->ExitApplication() ;
+#ifdef NS_WIN32
+          PostQuitMessage(0);
+#endif
+          return nsEventStatus_eConsumeNoDefault;
+        }
+        break ;
+
+        case NS_PAINT:
+        {
+
+	  // paint the background
+	  nsString aString("Hello World!\n");
+	  nsIRenderingContext * rndctx = ((nsPaintEvent*)aEvent)->renderingContext;
+	  rndctx->SetColor(aEvent->widget->GetBackgroundColor());
+	  rndctx->FillRect(*(((nsPaintEvent*)aEvent)->rect));
+	  
+	  nsFont font("Times", NS_FONT_STYLE_NORMAL,
+		      NS_FONT_VARIANT_NORMAL,
+		      NS_FONT_WEIGHT_BOLD,
+		      0,
+		      12);
+	  rndctx->SetFont(font);
+
+	  rndctx->SetColor(NS_RGB(255, 0, 0));
+	  rndctx->DrawString(aString, 50, 50, 100);
+	  
+	  
+	  return nsEventStatus_eConsumeNoDefault;
+
+
+        }
+        break;
+
+    }
+
+    return nsEventStatus_eIgnore; 
+}
+
+
+
