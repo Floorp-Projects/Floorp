@@ -57,6 +57,7 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
   class="color-dialog non-resizable"
   title="&windowtitle.label;"
+  windowtype="mozilla:profileSelection"
   orient="vertical"
   style="width: 42em;"
   onclose="onExit();"
