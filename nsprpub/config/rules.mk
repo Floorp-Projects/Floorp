@@ -141,6 +141,10 @@ TARGETS		= $(LIBRARY)
 endif
 endif
 
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+EXTRA_LIBS                := $(patsubst -l%,$(DIST)/lib/%.$(LIB_SUFFIX),$(EXTRA_LIBS))
+endif
+
 #
 # OBJS is the list of object files.  It can be constructed by
 # specifying CSRCS (list of C source files) and ASFILES (list
