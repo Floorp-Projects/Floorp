@@ -236,7 +236,7 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
                 if (NS_FAILED(rv)) {
                     return rv;
                 }
-				if (last_possible < mark)
+				if (last_possible < ((PRInt32)mark))
 					newsGroupInfo->SetHighWater(last_possible, TRUE);
 				if (m_knownArts.set) {
 					delete m_knownArts.set;

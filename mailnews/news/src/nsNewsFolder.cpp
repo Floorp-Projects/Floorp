@@ -47,9 +47,6 @@
 #include "nsINntpIncomingServer.h"
 #include "nsMsgBaseCID.h"
 
-//not using nsMsgLineBuffer yet, but I need to soon...
-//#include "nsMsgLineBuffer.h"
-
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
 // that multiply inherits from nsISupports
@@ -61,14 +58,15 @@ static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 #define PREF_NEWS_MAX_HEADERS_TO_SHOW "news.max_headers_to_show"
+#define NEWSRC_FILE_BUFFER_SIZE 1024
 
 ////////////////////////////////////////////////////////////////////////////////
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-nsMsgNewsFolder::nsMsgNewsFolder(void)
-  : mPath(nsnull), mExpungedBytes(0), mGettingNews(PR_FALSE),
+nsMsgNewsFolder::nsMsgNewsFolder(void) : nsMsgLineBuffer(nsnull, PR_FALSE),
+    mPath(nsnull), mExpungedBytes(0), mGettingNews(PR_FALSE),
     mInitialized(PR_FALSE), mOptionLines(nsnull), mHostname(nsnull)
 {
 //  NS_INIT_REFCNT(); done by superclass
@@ -76,14 +74,19 @@ nsMsgNewsFolder::nsMsgNewsFolder(void)
 
 nsMsgNewsFolder::~nsMsgNewsFolder(void)
 {
-	if (mPath)
+	if (mPath) {
 		delete mPath;
+    mPath = nsnull;
+  }
 
   // mHostname allocated in nsGetNewsHostName() with new char[]
-  if (mHostname)
+  if (mHostname) {
     delete [] mHostname;
+    mHostname = nsnull;
+  }
 
   PR_FREEIF(mOptionLines);
+  mOptionLines = nsnull;
 }
 
 NS_IMPL_ADDREF_INHERITED(nsMsgNewsFolder, nsMsgDBFolder)
@@ -108,35 +111,6 @@ NS_IMETHODIMP nsMsgNewsFolder::QueryInterface(REFNSIID aIID, void** aInstancePtr
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-#if 0
-static PRBool
-nsShouldIgnoreFile(nsString& name)
-{
-  PRUnichar theFirstChar=name.CharAt(0);
-  if (theFirstChar == '.' || theFirstChar == '#' || name.CharAt(name.Length() - 1) == '~')
-    return PR_TRUE;
-
-  if (name.EqualsIgnoreCase("rules.dat"))
-    return PR_TRUE;
-
-  PRInt32 len = name.Length();
-
-  // don't add summary files to the list of folders;
-  // don't add popstate files to the list either, or rules (sort.dat). 
-  if ((len > 4 && name.RFind(".snm", PR_TRUE) == len - 4) ||
-      name.EqualsIgnoreCase("popstate.dat") ||
-      name.EqualsIgnoreCase("sort.dat") ||
-      name.EqualsIgnoreCase("newsfilt.log") ||
-      name.EqualsIgnoreCase("filters.js") ||
-      name.RFind(".toc", PR_TRUE) == len - 4)
-    return PR_TRUE;
-
-  if ((len > 4 && name.RFind(".sbd", PR_TRUE) == len - 4) ||
-		(len > 4 && name.RFind(".msf", PR_TRUE) == len - 4))
-	  return PR_TRUE;
-  return PR_FALSE;
-}
-#endif
 
 PRBool
 nsMsgNewsFolder::isNewsHost() 
@@ -156,7 +130,7 @@ nsMsgNewsFolder::isNewsHost()
 #ifdef DEBUG_NEWS
     printf("search for a slash in %s\n",rightAfterTheRoot);
 #endif
-    if (PL_strstr(rightAfterTheRoot,"/") == nsnull) {
+    if (!PL_strstr(rightAfterTheRoot,"/")) {
       // there is no slashes after news://,
       // so mURI is of the form news://x
       return PR_TRUE;
@@ -190,7 +164,7 @@ nsMsgNewsFolder::MapHostToNewsrcFile(char *newshostname, nsFileSpec &fatFile, ns
   printf("MapHostToNewsrcFile(%s,%s,%s,??)\n",newshostname,(const char *)fatFile, newshostname);
 #endif
   lookingFor = PR_smprintf("newsrc-%s",newshostname);
-  if (lookingFor == nsnull) {
+  if (!lookingFor) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -215,7 +189,7 @@ nsMsgNewsFolder::MapHostToNewsrcFile(char *newshostname, nsFileSpec &fatFile, ns
 
 	while (!inputStream.eof()) {
     char * p;
-    int i;
+    PRInt32 i;
 
     rv = inputStream.readline(buffer, sizeof(buffer));
     if (!rv) {
@@ -295,7 +269,7 @@ nsMsgNewsFolder::GetNewsrcFile(char *newshostname, nsFileSpec &path, nsFileSpec 
 {
   nsresult rv = NS_OK;
   
-  if (newshostname == nsnull) {
+  if (!newshostname) {
     return NS_ERROR_NULL_POINTER;
   }
 
@@ -310,7 +284,7 @@ nsMsgNewsFolder::GetNewsrcFile(char *newshostname, nsFileSpec &path, nsFileSpec 
   char *str = nsnull;
 
   str = PR_smprintf(".newsrc-%s", newshostname);
-  if (str == nsnull) {
+  if (!str) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   newsrcFile = path;
@@ -338,7 +312,7 @@ nsMsgNewsFolder::CreateSubFolders(nsFileSpec &path)
 #endif
     nsFileSpec newsrcFile("");
     rv = GetNewsrcFile(hostname, path, newsrcFile);
-    if (rv == NS_OK) {
+    if (NS_SUCCEEDED(rv)) {
 #ifdef DEBUG_NEWS
       printf("uri = %s newsrc file = %s\n", mURI, (const char *)newsrcFile);
 #endif
@@ -558,14 +532,14 @@ nsMsgNewsFolder::GetMessages(nsIEnumerator* *result)
       if(NS_SUCCEEDED(rv)) {
         NS_NewISupportsArray(getter_AddRefs(shortlist));
         PRInt32 total = 0;
-        for (msgHdrEnumerator->First(); msgHdrEnumerator->IsDone() != NS_OK; msgHdrEnumerator->Next()) {
+        for (msgHdrEnumerator->First(); NS_FAILED(msgHdrEnumerator->IsDone()); msgHdrEnumerator->Next()) {
           total++;
         }
 #ifdef DEBUG_NEWS
         printf("total = %d\n",total);
 #endif
         PRInt32 count = 0;
-        for (msgHdrEnumerator->First(); msgHdrEnumerator->IsDone() != NS_OK; msgHdrEnumerator->Next()) {
+        for (msgHdrEnumerator->First(); NS_FAILED(msgHdrEnumerator->IsDone()); msgHdrEnumerator->Next()) {
           if (count >= (total - number_to_show)) {
             nsCOMPtr<nsISupports> i;
             rv = msgHdrEnumerator->CurrentItem(getter_AddRefs(i));
@@ -708,7 +682,7 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateSubfolder(const char *folderName)
 	rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, nsIMsgDatabase::GetIID(), (void **) &newsDBFactory);
 	if (NS_SUCCEEDED(rv) && newsDBFactory)
 	{
-        nsIMsgDatabase *unusedDB = NULL;
+        nsIMsgDatabase *unusedDB = nsnull;
 		rv = newsDBFactory->Open(path, PR_TRUE, (nsIMsgDatabase **) &unusedDB, PR_TRUE);
 
         if (NS_SUCCEEDED(rv) && unusedDB)
@@ -735,7 +709,7 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateSubfolder(const char *folderName)
         }
 		NS_IF_RELEASE(newsDBFactory);
 	}
-	if(rv == NS_OK && child)
+	if(NS_SUCCEEDED(rv) && child)
 	{
 		nsISupports *folderSupports;
 
@@ -875,8 +849,8 @@ nsresult  nsMsgNewsFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, ns
 
 NS_IMETHODIMP nsMsgNewsFolder::UpdateSummaryTotals()
 {
-	PRUint32 oldUnreadMessages = mNumUnreadMessages;
-	PRUint32 oldTotalMessages = mNumTotalMessages;
+	PRInt32 oldUnreadMessages = mNumUnreadMessages;
+	PRInt32 oldTotalMessages = mNumTotalMessages;
 	//We need to read this info from the database
 	ReadDBFolderInfo(PR_TRUE);
 
@@ -890,8 +864,8 @@ NS_IMETHODIMP nsMsgNewsFolder::UpdateSummaryTotals()
 		char *oldTotalMessagesStr = PR_smprintf("%d", oldTotalMessages);
 		char *totalMessagesStr = PR_smprintf("%d",mNumTotalMessages);
 		NotifyPropertyChanged("TotalMessages", oldTotalMessagesStr, totalMessagesStr);
-		PR_smprintf_free(totalMessagesStr);
-		PR_smprintf_free(oldTotalMessagesStr);
+		PR_FREEIF(totalMessagesStr);
+		PR_FREEIF(oldTotalMessagesStr);
 	}
 
 	if(oldUnreadMessages != mNumUnreadMessages)
@@ -899,8 +873,8 @@ NS_IMETHODIMP nsMsgNewsFolder::UpdateSummaryTotals()
 		char *oldUnreadMessagesStr = PR_smprintf("%d", oldUnreadMessages);
 		char *totalUnreadMessages = PR_smprintf("%d",mNumUnreadMessages);
 		NotifyPropertyChanged("TotalUnreadMessages", oldUnreadMessagesStr, totalUnreadMessages);
-		PR_smprintf_free(totalUnreadMessages);
-		PR_smprintf_free(oldUnreadMessagesStr);
+		PR_FREEIF(totalUnreadMessages);
+		PR_FREEIF(oldUnreadMessagesStr);
 	}
 
 	return NS_OK;
@@ -1033,7 +1007,7 @@ NS_IMETHODIMP nsMsgNewsFolder::UserNeedsToAuthenticateForFolder(PRBool displayOn
 NS_IMETHODIMP nsMsgNewsFolder::RememberPassword(const char *password)
 {
 #ifdef HAVE_DB
-  NewsDB *newsDb = NULL;
+  NewsDB *newsDb = nsnull;
   NewsDB::Open(m_pathName, TRUE, &newsDb);
   if (newsDb)
   {
@@ -1105,7 +1079,9 @@ NS_IMETHODIMP nsMsgNewsFolder::GetNewMessages()
 #endif
 
   if (isNewsHost()) {
+#ifdef DEBUG_NEWS
 		printf("sorry, can't get news for entire news server yet.  try it on a newsgroup by newsgroup level\n");
+#endif 
 		return NS_OK;
   }
 
@@ -1151,8 +1127,10 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr, 
 	{
 		rv = rdfService->GetResource(msgURI, &res);
   }
-	if(msgURI)
-		PR_smprintf_free(msgURI);
+	if(msgURI) {
+		PR_FREEIF(msgURI);
+    msgURI = nsnull;
+  }
   
 	if(NS_SUCCEEDED(rv))
     {
@@ -1171,243 +1149,47 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr, 
 	return rv;
 }
 
-
-/* sspitzer:  from mozilla/network/protocol/pop3/mkpop3.c */
-
-static PRInt32
-msg_GrowBuffer (PRUint32 desired_size, PRUint32 element_size, PRUint32 quantum,
-				char **buffer, PRUint32 *size)
-{
-  if (*size <= desired_size)
-	{
-	  char *new_buf;
-	  PRUint32 increment = desired_size - *size;
-	  if (increment < quantum) /* always grow by a minimum of N bytes */
-		increment = quantum;
-
-#ifdef TESTFORWIN16
-	  if (((*size + increment) * (element_size / sizeof(char))) >= 64000)
-		{
-		  /* Make sure we don't choke on WIN16 */
-		  PR_ASSERT(0);
-		  return -1;
-		}
-#endif /* DEBUG */
-
-	  new_buf = (*buffer
-				 ? (char *) PR_Realloc (*buffer, (*size + increment)
-										* (element_size / sizeof(char)))
-				 : (char *) PR_Malloc ((*size + increment)
-									  * (element_size / sizeof(char))));
-	  if (! new_buf)
-      return -1; // NS_ERROR_OUT_OF_MEMORY;
-	  *buffer = new_buf;
-	  *size += increment;
-	}
-  return 0;
-}
-
-/* Take the given buffer, tweak the newlines at the end if necessary, and
-   send it off to the given routine.  We are guaranteed that the given
-   buffer has allocated space for at least one more character at the end. */
-static PRInt32
-msg_convert_and_send_buffer(char* buf, PRUint32 length, PRBool convert_newlines_p,
-							PRInt32 (*per_line_fn) (char *line,
-												  PRUint32 line_length,
-												  void *closure),
-							void *closure)
-{
-  /* Convert the line terminator to the native form.
-   */
-  char* newline;
-
-  PR_ASSERT(buf && length > 0);
-  if (!buf || length <= 0) return -1;
-  newline = buf + length;
-  PR_ASSERT(newline[-1] == CR || newline[-1] == LF);
-  if (newline[-1] != CR && newline[-1] != LF) return -1;
-
-  if (!convert_newlines_p)
-	{
-	}
-#if (LINEBREAK_LEN == 1)
-  else if ((newline - buf) >= 2 &&
-		   newline[-2] == CR &&
-		   newline[-1] == LF)
-	{
-	  /* CRLF -> CR or LF */
-	  buf [length - 2] = LINEBREAK[0];
-	  length--;
-	}
-  else if (newline > buf + 1 &&
-		   newline[-1] != LINEBREAK[0])
-	{
-	  /* CR -> LF or LF -> CR */
-	  buf [length - 1] = LINEBREAK[0];
-	}
-#else
-  else if (((newline - buf) >= 2 && newline[-2] != CR) ||
-		   ((newline - buf) >= 1 && newline[-1] != LF))
-	{
-	  /* LF -> CRLF or CR -> CRLF */
-	  length++;
-	  buf[length - 2] = LINEBREAK[0];
-	  buf[length - 1] = LINEBREAK[1];
-	}
-#endif
-
-  return (*per_line_fn)(buf, length, closure);
-}
-
-static int
-msg_LineBuffer (const char *net_buffer, PRInt32 net_buffer_size,
-				char **bufferP, PRUint32 *buffer_sizeP, PRUint32 *buffer_fpP,
-				PRBool convert_newlines_p,
-				PRInt32 (*per_line_fn) (char *line, PRUint32 line_length,
-									  void *closure),
-				void *closure)
-{
-  int status = 0;
-  if (*buffer_fpP > 0 && *bufferP && (*bufferP)[*buffer_fpP - 1] == CR &&
-	  net_buffer_size > 0 && net_buffer[0] != LF) {
-	/* The last buffer ended with a CR.  The new buffer does not start
-	   with a LF.  This old buffer should be shipped out and discarded. */
-	PR_ASSERT(*buffer_sizeP > *buffer_fpP);
-	if (*buffer_sizeP <= *buffer_fpP) return -1;
-	status = msg_convert_and_send_buffer(*bufferP, *buffer_fpP,
-										 convert_newlines_p,
-										 per_line_fn, closure);
-	if (status < 0) return status;
-	*buffer_fpP = 0;
-  }
-  while (net_buffer_size > 0)
-	{
-	  const char *net_buffer_end = net_buffer + net_buffer_size;
-	  const char *newline = 0;
-	  const char *s;
-
-
-	  for (s = net_buffer; s < net_buffer_end; s++)
-		{
-		  /* Move forward in the buffer until the first newline.
-			 Stop when we see CRLF, CR, or LF, or the end of the buffer.
-			 *But*, if we see a lone CR at the *very end* of the buffer,
-			 treat this as if we had reached the end of the buffer without
-			 seeing a line terminator.  This is to catch the case of the
-			 buffers splitting a CRLF pair, as in "FOO\r\nBAR\r" "\nBAZ\r\n".
-		   */
-		  if (*s == CR || *s == LF)
-			{
-			  newline = s;
-			  if (newline[0] == CR)
-				{
-				  if (s == net_buffer_end - 1)
-					{
-					  /* CR at end - wait for the next character. */
-					  newline = 0;
-					  break;
-					}
-				  else if (newline[1] == LF)
-					/* CRLF seen; swallow both. */
-					newline++;
-				}
-			  newline++;
-			  break;
-			}
-		}
-
-	  /* Ensure room in the net_buffer and append some or all of the current
-		 chunk of data to it. */
-	  {
-		const char *end = (newline ? newline : net_buffer_end);
-		PRUint32 desired_size = (end - net_buffer) + (*buffer_fpP) + 1;
-
-		if (desired_size >= (*buffer_sizeP))
-		  {
-			status = msg_GrowBuffer (desired_size, sizeof(char), 1024,
-									 bufferP, buffer_sizeP);
-			if (status < 0) return status;
-		  }
-		nsCRT::memcpy((*bufferP) + (*buffer_fpP), net_buffer, (end - net_buffer));
-		(*buffer_fpP) += (end - net_buffer);
-	  }
-
-	  /* Now *bufferP contains either a complete line, or as complete
-		 a line as we have read so far.
-
-		 If we have a line, process it, and then remove it from `*bufferP'.
-		 Then go around the loop again, until we drain the incoming data.
-	   */
-	  if (!newline)
-		return 0;
-
-	  status = msg_convert_and_send_buffer(*bufferP, *buffer_fpP,
-										   convert_newlines_p,
-										   per_line_fn, closure);
-	  if (status < 0) return status;
-
-	  net_buffer_size -= (newline - net_buffer);
-	  net_buffer = newline;
-	  (*buffer_fpP) = 0;
-	}
-  return 0;
-}
-
 nsresult 
 nsMsgNewsFolder::LoadNewsrcFileAndCreateNewsgroups(nsFileSpec &newsrcFile)
 {
-	char *ibuffer = 0;
-	PRUint32 ibuffer_size = 0;
-	PRUint32 ibuffer_fp = 0;
-  int size = 1024;
-  char *buffer;
-  buffer = new char[size];
-  int status = 0;
+  nsInputFileStream newsrcStream(newsrcFile); 
+	nsresult rv = NS_OK;
   PRInt32 numread = 0;
 
-  PR_FREEIF(mOptionLines);
-
-  if (!buffer) return NS_ERROR_OUT_OF_MEMORY;
-
-  nsInputFileStream inputStream(newsrcFile); 
+  if (NS_FAILED(m_inputStream.GrowBuffer(NEWSRC_FILE_BUFFER_SIZE))) {
+#ifdef DEBUG_NEWS
+    printf("GrowBuffer failed\n");
+#endif
+    return NS_ERROR_FAILURE;
+  }
+	
   while (1) {
-    numread = inputStream.read(buffer, size);
+    numread = newsrcStream.read(m_inputStream.GetBuffer(), NEWSRC_FILE_BUFFER_SIZE);
+#ifdef DEBUG_NEWS
+    printf("numread == %d\n", numread);
+#endif
     if (numread == 0) {
       break;
     }
     else {
-      msg_LineBuffer(buffer, numread,
-                     &ibuffer, &ibuffer_size, &ibuffer_fp,
-                     FALSE,
-#ifdef XP_OS2
-                     (PRInt32 (_Optlink*) (char*,PRUint32,void*))
-#endif /* XP_OS2 */
-                     nsMsgNewsFolder::ProcessLine_s, this);
-      if (numread <= 0) {
+      rv = BufferInput(m_inputStream.GetBuffer(), numread);
+      if (NS_FAILED(rv)) {
+#ifdef DEBUG_NEWS
+        printf("bufferInput did not return NS_OK\n");
+#endif
         break;
       }
     }
   }
 
-  if (status == 0 && ibuffer_fp > 0) {
-    status = ProcessLine_s(ibuffer, ibuffer_fp, this);
-    ibuffer_fp = 0;
-  }
-
-  inputStream.close();
-  delete [] buffer;
+  newsrcStream.close();
   
-  return NS_OK;
+  return rv;
 }
 
-PRInt32
-nsMsgNewsFolder::ProcessLine_s(char* line, PRUint32 line_size, void* closure)
-{
-  return ((nsMsgNewsFolder*) closure)->ProcessLine(line, line_size);
-}
 
 PRInt32
-nsMsgNewsFolder::ProcessLine(char* line, PRUint32 line_size)
+nsMsgNewsFolder::HandleLine(char* line, PRUint32 line_size)
 {
 	/* guard against blank line lossage */
 	if (line[0] == '#' || line[0] == CR || line[0] == LF) return 0;
@@ -1469,10 +1251,9 @@ nsMsgNewsFolder::ProcessLine(char* line, PRUint32 line_size)
   // So lines like this in a newsrc file should be ignored:
   // 3746EF3F.6080309@netscape.com:
   // 3746EF3F.6080309%40netscape.com:
-  if ((PL_strstr(line,"@") != nsnull) || 
-      (PL_strstr(line,"%40") != nsnull)) {
+  if (PL_strstr(line,"@") || PL_strstr(line,"%40")) {
 #ifdef DEBUG_NEWS
-	printf("skipping %s.  it contains @ or %%40\n",line);
+    printf("skipping %s.  it contains @ or %%40\n",line);
 #endif
   	subscribed = PR_FALSE;
   }
@@ -1519,8 +1300,9 @@ nsMsgNewsFolder::ProcessLine(char* line, PRUint32 line_size)
 			if (!info) {	// autosubscribe, if we haven't seen this one.
 				char* groupLine = PR_smprintf("%s:", fullname);
 				if (groupLine) {
-					ProcessLine(groupLine, PL_strlen(groupLine));
-					XP_FREE(groupLine);
+					HandleLine(groupLine, PL_strlen(groupLine));
+					PR_FREEIF(groupLine);
+          groupLine = nsnull;
 				}
 			}
 			delete [] fullname;
@@ -1569,4 +1351,11 @@ nsMsgNewsFolder::RememberLine(char* line)
 
 	return 0;
 
+}
+
+nsresult nsMsgNewsFolder::ForgetLine()
+{
+  PR_FREEIF(mOptionLines);
+  mOptionLines = nsnull;
+  return NS_OK;
 }

@@ -271,8 +271,8 @@ private:
 	void SetGroupSucceeded(PRBool value) {m_groupSucceeded = value;}
 	// Completely obliterate this news host.  Remove all traces of it from
 	// disk and memory.
-	int RemoveHost();
-	int DeleteFiles();
+	PRInt32 RemoveHost();
+	PRInt32 DeleteFiles();
 
 	// Returns the pretty name for the given group.  The resulting string
 	// must be free'd using delete[].
@@ -287,18 +287,18 @@ private:
 
 	PRBool IsCategory(char* name);
 	PRBool IsCategoryContainer(char* name);
-	int SetIsCategoryContainer(const char* name, PRBool value, nsMsgGroupRecord *inGroupRecord = NULL);
+	PRInt32 SetIsCategoryContainer(const char* name, PRBool value, nsMsgGroupRecord *inGroupRecord = nsnull);
 	
 	NS_IMETHOD SetGroupNeedsExtraInfo(const char *name, PRBool value);
-	// Finds the container newsgroup for this category (or NULL if this isn't
+	// Finds the container newsgroup for this category (or nsnull if this isn't
 	// a category).  The resulting string must be free'd using delete[].
-	char* GetCategoryContainer(const char* name, nsMsgGroupRecord *inGroupRecord = NULL);
+	char* GetCategoryContainer(const char* name, nsMsgGroupRecord *inGroupRecord = nsnull);
     nsINNTPNewsgroup * GetCategoryContainerFolderInfo(const char *name);
 
 	// Get/Set whether this is a real group (as opposed to a container of
 	// other groups, like "mcom".)
 	PRBool IsGroup(char* name);
-	int SetIsGroup(char* name, PRBool value);
+	PRInt32 SetIsGroup(char* name, PRBool value);
 	
 
 	// Returns PR_TRUE if it's OK to post HTML in this group (either because the
@@ -308,44 +308,44 @@ private:
 
 	// Get/Set if it's OK to post HTML in just this group.
 	PRBool IsHTMLOKGroup(char* name);
-	int SetIsHTMLOKGroup(char* name, PRBool value);
+	PRInt32 SetIsHTMLOKGroup(char* name, PRBool value);
 
 	// Get/Set if it's OK to post HTML in this group and all of its subgroups.
 	PRBool IsHTMLOKTree(char* name);
-	int SetIsHTMLOKTree(char* name, PRBool value);
+	PRInt32 SetIsHTMLOKTree(char* name, PRBool value);
 
 	// Create the given group (if not already present).  Returns 0 if the
 	// group is already present, 1 if we had to create it, negative on error.
 	// The given group will have the "isgroup" bit set on it (in other words,
 	// it is not to be just a container of other groups, like "mcom" is.)
-	int NoticeNewGroup(const char* name, nsMsgGroupRecord **outGroupRecord = NULL);
+	PRInt32 NoticeNewGroup(const char* name, nsMsgGroupRecord **outGroupRecord = nsnull);
 	
 
 	// Makes sure that we have records in memory for all known descendants
 	// of the given newsgroup.
-	int AssureAllDescendentsLoaded(nsMsgGroupRecord* group);
+	PRInt32 AssureAllDescendentsLoaded(nsMsgGroupRecord* group);
 
 
-	int SaveHostInfo();
+	PRInt32 SaveHostInfo();
 
 	// Suck the entire hostinfo file into memory.  If force is PR_TRUE, then throw
 	// away whatever we had in memory first.
-	int Inhale(PRBool force = PR_FALSE);
+	PRInt32 Inhale(PRBool force = PR_FALSE);
 
 	// If we inhale'd, then write thing out to the file and free up the
 	// memory.
-	int Exhale();
+	PRInt32 Exhale();
 
 	// Inhale, but make believe the file is empty.  In other words, set the
 	// inhaled bit, but empty out the memory.
-	int EmptyInhale();
+	PRInt32 EmptyInhale();
 
 	nsMsgGroupRecord* GetGroupTree() {return m_groupTree;}
 	PRTime GetFirstNewDate() {return m_firstnewdate;}
 	
 	NS_IMETHOD GroupNotFound(const char *name, PRBool opening);
 
-	int ReorderGroup (nsINNTPNewsgroup *groupToMove, nsINNTPNewsgroup *groupToMoveBefore, PRInt32 *newIdx);
+	PRInt32 ReorderGroup (nsINNTPNewsgroup *groupToMove, nsINNTPNewsgroup *groupToMoveBefore, PRInt32 *newIdx);
 
 protected:
 	void OpenGroupFile(const PRIntn = PR_WRONLY);
@@ -353,8 +353,8 @@ protected:
 	static nsresult ProcessLine_s(char* line, PRUint32 line_size, void* closure);
 	nsresult ProcessLine(char* line, PRUint32 line_size);
 	static void WriteTimer(void* closure);
-	int CreateFileHeader();
-	int ReadInitialPart();
+	PRInt32 CreateFileHeader();
+	PRInt32 ReadInitialPart();
 	nsMsgGroupRecord* FindGroupInBlock(nsMsgGroupRecord* parent,
 									  char* name,
 									  PRInt32* comp);
@@ -363,7 +363,7 @@ protected:
 									 PRInt32 min, PRInt32 max);
 	static PRInt32 InhaleLine(char* line, PRUint32 length, void* closure);
 	nsMsgGroupRecord* FindOrCreateGroup(const char* name,
-									   int* statusOfMakingGroup = NULL);	
+									   PRInt32 * statusOfMakingGroup = nsnull);	
 
 	nsINNTPCategoryContainer *SwitchNewsToCategoryContainer(nsINNTPNewsgroup *newsInfo);
   
@@ -442,7 +442,7 @@ protected:
 	nsMsgGroupRecord* m_groupTree; // Tree of groups we're remembering.
 	PRBool m_inhaled;			// Whether we inhaled the entire list of
 								// groups, or just some.
-	int m_groupTreeDirty;		// Whether the group tree is dirty.  If 0, then
+	PRInt32 m_groupTreeDirty;		// Whether the group tree is dirty.  If 0, then
 								// we don't need to write anything.  If 1, then
 								// we can write things in place.  If >1, then
 								// we need to rewrite the whole tree file.
