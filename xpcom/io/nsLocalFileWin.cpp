@@ -694,11 +694,20 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
 NS_IMETHODIMP  
 nsLocalFile::Append(const char *node)
 {
-    if ( (node == nsnull)                                       ||
-         (*node == '/')                                         ||
-         (strstr(node, "..")                         != nsnull) ||
-         (_mbschr((const unsigned char*) node, '\\') != nsnull) ||
-         (strchr(node, '/')                          != nsnull) )
+    // Append only one component. Check for subdirs.
+    if (!node || (_mbschr((const unsigned char*) node, '\\') != nsnull))
+    {
+        return NS_ERROR_FILE_UNRECOGNIZED_PATH;
+    }
+    return AppendRelativePath(node);
+}
+
+NS_IMETHODIMP  
+nsLocalFile::AppendRelativePath(const char *node)
+{
+    // Cannot start with a / or have .. or have / anywhere
+    if (!node || (*node == '/') || (strstr(node, "..") != nsnull) ||
+        (strchr(node, '/') != nsnull))
     {
         return NS_ERROR_FILE_UNRECOGNIZED_PATH;
     }

@@ -64,6 +64,18 @@ interface nsILocalFile : nsIFile
     [noscript] PRLibraryStar  load();
     
     readonly attribute PRInt64 diskSpaceAvailable;  // maybe we should put this somewhere else.
+
+    /**
+     * appendRelativePath
+     *
+     * Append a relative path to the current path of the nsILocalFile object.
+     *
+     * @param relativeFilePath
+     *        relativeFilePath is a native relative path. For security reasons,
+     *        this cannot contain ..	or cannot start with a directory separator
+     */
+    void appendRelativePath([const] in string relativeFilePath);
+    void appendRelativeUnicodePath([const] in wstring relativeFilePath);
 };
 
 %{C++

@@ -417,6 +417,28 @@ nsLocalFile::Append(const char *fragment)
 {
     NS_ENSURE_ARG(fragment);
     CHECK_mPath();
+
+    // only one component of path can be appended
+    if (strstr(fragment, "/") != nsnull)
+    {
+        return NS_ERROR_FILE_UNRECOGNIZED_PATH;
+    }
+
+    return AppendRelativePath(fragment);
+}
+
+NS_IMETHODIMP
+nsLocalFile::AppendRelativePath(const char *fragment)
+{
+    NS_ENSURE_ARG(fragment);
+    CHECK_mPath();
+
+    // Cannot start with a '/' and no .. allowed in the fragment
+    if ((*fragment == '/') || (strstr(fragment, "..") != nsnull))
+    {
+        return NS_ERROR_FILE_UNRECOGNIZED_PATH;
+    }
+
     char * newPath = (char *)nsAllocator::Alloc(strlen(mPath) +
                                                 strlen(fragment) + 2);
     if (!newPath)

@@ -1119,9 +1119,18 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
 
 	return NS_ERROR_FILE_UNKNOWN_TYPE;
 }
-	
+
 NS_IMETHODIMP  
 nsLocalFile::Append(const char *node)
+{
+  if (!node || (strstr(node, ":") != nsnull))
+    return NS_ERROR_FILE_UNRECOGNIZED_PATH;
+
+  return AppendRelativePath(node);
+}
+	
+NS_IMETHODIMP  
+nsLocalFile::AppendRelativePath(const char *node)
 {
 	if ( (node == nsnull) )
 		return NS_ERROR_FILE_UNRECOGNIZED_PATH;

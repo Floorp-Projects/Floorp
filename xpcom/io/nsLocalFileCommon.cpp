@@ -240,6 +240,11 @@ nsLocalFile::AppendUnicode(const PRUnichar *node)
    SET_UCS( Append , node);
 }
 NS_IMETHODIMP  
+nsLocalFile::AppendRelativeUnicodePath(const PRUnichar *node)
+{
+   SET_UCS( AppendRelativePath , node);
+}
+NS_IMETHODIMP  
 nsLocalFile::GetUnicodeLeafName(PRUnichar **aLeafName)
 {
    GET_UCS(GetLeafName, aLeafName);
