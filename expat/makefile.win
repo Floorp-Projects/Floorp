@@ -1,0 +1,21 @@
+
+DEPTH=..
+
+DIRS= xmltok xmlparse
+
+MODULE=raptor
+LIBRARY_NAME=expat
+
+OBJS=                                          \
+	.\xmlparse\$(OBJDIR)\hashtable.obj      \
+	.\xmlparse\$(OBJDIR)\xmlparse.obj      \
+	.\xmltok\$(OBJDIR)\xmltok.obj          \
+	.\xmltok\$(OBJDIR)\xmlrole.obj         \
+	$(NULL)
+
+include <$(DEPTH)\config\rules.mak>
+
+libs:: $(LIBRARY)
+
+install:: $(LIBRARY)
+    $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
