@@ -142,7 +142,7 @@ nsInternetCiter::StripCitesAndLinebreaks(const nsString& aInString,
       else
         aOutString.AppendWithConversion('\n');    // DOM linebreaks, not NS_LINEBREAK
       // Skip over any more consecutive linebreak-like characters:
-      while (aOutString[i] == '\r' || aOutString[i] == '\n')
+      while (i < length && (aInString[i] == '\r' || aInString[i] == '\n'))
         ++i;
     }
     else    // no more newlines
