@@ -947,6 +947,11 @@ pre_call_clean_up:
                     if(nsnull != scriptError)
                         consoleService->LogMessage(scriptError);
                 }
+            }
+            // Whether or not it passes the 'reportable' test, it might
+            // still be an error and we have to do the right thing here...
+            if(NS_FAILED(e_result))
+            {
                 xpc->SetPendingException(xpc_exception);
                 retval = e_result;
             }
