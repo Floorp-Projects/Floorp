@@ -239,7 +239,7 @@ public:
   NS_IMETHOD  GetOffsetFromView(nsIPresContext* aPresContext, nsPoint& aOffset, nsIView** aView) const;
   NS_IMETHOD  GetOriginToViewOffset(nsIPresContext *aPresContext, nsPoint& aOffset, nsIView **aView) const;
   virtual nsIAtom* GetType() const;
-  NS_IMETHOD  IsPercentageBase(PRBool& aBase) const;
+  virtual PRBool IsContainingBlock() const;
 #ifdef NS_DEBUG
   NS_IMETHOD  List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const;
   NS_IMETHOD  GetFrameName(nsAString& aResult) const;

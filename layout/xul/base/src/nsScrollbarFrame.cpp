@@ -121,14 +121,13 @@ nsScrollbarFrame::Reflow(nsIPresContext*          aPresContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsScrollbarFrame::IsPercentageBase(PRBool& aBase) const
+/* virtual */ PRBool
+nsScrollbarFrame::IsContainingBlock() const
 {
   // Return true so that the nsHTMLReflowState code is happy with us
   // being a reflow root.
-  aBase = PR_TRUE;
-  return NS_OK;
+  return PR_TRUE;
 }
-
 
 NS_IMETHODIMP
 nsScrollbarFrame::AttributeChanged(nsIPresContext* aPresContext,

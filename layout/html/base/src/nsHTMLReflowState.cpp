@@ -338,9 +338,7 @@ nsHTMLReflowState::Init(nsIPresContext* aPresContext,
 
 void nsHTMLReflowState::InitCBReflowState()
 {
-  PRBool isContainingBlock;
-  nsresult rv = frame->IsPercentageBase(isContainingBlock);
-  if (NS_SUCCEEDED(rv) && isContainingBlock) {
+  if (frame->IsContainingBlock()) {
     // a block inside a table cell needs to use the table cell
     if (parentReflowState) {
       if (IS_TABLE_CELL(parentReflowState->frame->GetType())) {

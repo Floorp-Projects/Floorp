@@ -104,11 +104,10 @@ nsTableRowGroupFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   }
 }
 
-NS_IMETHODIMP
-nsTableRowGroupFrame::IsPercentageBase(PRBool& aBase) const
+/* virtual */ PRBool
+nsTableRowGroupFrame::IsContainingBlock() const
 {
-  aBase = PR_TRUE;
-  return NS_OK;
+  return PR_TRUE;
 }
 
 PRInt32

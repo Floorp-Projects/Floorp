@@ -100,7 +100,7 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-  NS_IMETHOD  IsPercentageBase(PRBool& aBase) const;
+  virtual PRBool IsContainingBlock() const;
 
   // nsIScrollbarFrame
   NS_IMETHOD SetScrollbarMediator(nsIScrollbarMediator* aMediator) { mScrollbarMediator = aMediator; return NS_OK; };

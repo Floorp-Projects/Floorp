@@ -60,7 +60,7 @@ public:
                     nsFramePaintLayer    aWhichLayer,
                     PRUint32             aFlags = 0);
 
-  NS_IMETHOD IsPercentageBase(PRBool& aBase) const;
+  virtual PRBool IsContainingBlock() const;
 
   virtual void  SetClipRect(nsRect* aClipRect) { mClipRect = *aClipRect; }
 

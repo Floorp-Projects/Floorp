@@ -152,11 +152,10 @@ NS_IMETHODIMP nsTableOuterFrame::GetAccessible(nsIAccessible** aAccessible)
 }
 #endif
 
-NS_IMETHODIMP
-nsTableOuterFrame::IsPercentageBase(PRBool& aBase) const
+/* virtual */ PRBool
+nsTableOuterFrame::IsContainingBlock() const
 {
-  aBase = PR_FALSE;
-  return NS_OK;
+  return PR_FALSE;
 }
 
 NS_IMETHODIMP

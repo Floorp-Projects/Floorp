@@ -230,7 +230,7 @@ public:
                                                PRBool                   aNeedSpecialHeightReflow,
                                                nsHTMLReflowMetrics&     aMetrics);
 
-  NS_IMETHOD IsPercentageBase(PRBool& aBase) const;
+  virtual PRBool IsContainingBlock() const;
 
   static nsresult AppendDirtyReflowCommand(nsIPresShell* aPresShell,
                                            nsIFrame*     aFrame);
