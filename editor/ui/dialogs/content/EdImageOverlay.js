@@ -590,12 +590,12 @@ function ValidateImage()
   //  and we couldn't obtain actual dimensions
   var srcChanged = (src != gOriginalSrc);
   if (width)
-    globalElement.setAttribute("width", width);
+    editor.setAttributeOrEquivalent(globalElement, "width", width, true);
   else if (srcChanged)
     editor.removeAttributeOrEquivalent(globalElement, "width", true);
 
   if (height)
-    globalElement.setAttribute("height", height);
+    editor.setAttributeOrEquivalent(globalElement, "height", height, true);
   else if (srcChanged) 
     editor.removeAttributeOrEquivalent(globalElement, "height", true);
 
@@ -627,7 +627,8 @@ function ValidateImage()
     case "middle":
     case "right":
     case "left":
-      globalElement.setAttribute( "align", gDialog.alignTypeSelect.value );
+      editor.setAttributeOrEquivalent( globalElement, "align",
+                                       gDialog.alignTypeSelect.value , true);
       break;
     default:
       try {
