@@ -51,36 +51,129 @@
 #define USER_DEFINED_PRIMARYLANG	0x0200
 #define USER_DEFINED_SUBLANGUAGE	0x20
 
-#define LENGTH_MAPPING_LIST		50
 
 struct iso_pair 
 {
-	char*	iso_code;
-	DWORD	win_code;
+	const char*	iso_code;
+	DWORD       win_code;
 };
-typedef struct iso_pair iso_pair;
 
 struct iso_map
 {
-	char*				iso_code;
-	DWORD				win_code;
-	iso_pair			sublang_list[20];
+	const char* iso_code;
+	DWORD       win_code;
+	iso_pair    sublang_list[20];
 };
-typedef struct iso_map iso_map;
+
+// Older versions of VC++ and Win32 SDK  and mingw don't have 
+// macros for languages and sublanguages recently added to Win32. 
+// see http://www.tug.org/ftp/tex/texinfo/intl/localename.c
+
+#ifndef LANG_URDU
+#define LANG_URDU                           0x20
+#endif
+#ifndef LANG_ARMENIAN
+#define LANG_ARMENIAN                       0x2b
+#endif
+#ifndef LANG_AZERI
+#define LANG_AZERI                          0x2c
+#endif
+#ifndef LANG_MACEDONIAN
+#define LANG_MACEDONIAN                     0x2f
+#endif
+#ifndef LANG_GEORGIAN
+#define LANG_GEORGIAN                       0x37
+#endif
+#ifndef LANG_HINDI
+#define LANG_HINDI                          0x39
+#endif
+#ifndef LANG_MALAY
+#define LANG_MALAY                          0x3e
+#endif
+#ifndef LANG_KAZAK
+#define LANG_KAZAK                          0x3f
+#endif
+#ifndef LANG_KYRGYZ
+#define LANG_KYRGYZ                         0x40
+#endif
+#ifndef LANG_SWAHILI
+#define LANG_SWAHILI                        0x41
+#endif
+#ifndef LANG_UZBEK
+#define LANG_UZBEK                          0x43
+#endif
+#ifndef LANG_TATAR
+#define LANG_TATAR                          0x44
+#endif
+#ifndef LANG_PUNJABI
+#define LANG_PUNJABI                        0x46
+#endif
+#ifndef LANG_GUJARAT
+#define LANG_GUJARAT                        0x47
+#endif
+#ifndef LANG_TAMIL
+#define LANG_TAMIL                          0x49
+#endif
+#ifndef LANG_TELUGU
+#define LANG_TELUGU                         0x4a
+#endif
+#ifndef LANG_KANNADA
+#define LANG_KANNADA                        0x4b
+#endif
+#ifndef LANG_MARATHI
+#define LANG_MARATHI                        0x4e
+#endif
+#ifndef LANG_SANSKRIT
+#define LANG_SANSKRIT                       0x4f
+#endif
+#ifndef LANG_MONGOLIAN
+#define LANG_MONGOLIAN                      0x50
+#endif
+#ifndef LANG_GALICIAN
+#define LANG_GALICIAN                       0x56
+#endif
+#ifndef LANG_KONKANI
+#define LANG_KONKANI                        0x57
+#endif
+#ifndef LANG_DIVEHI
+#define LANG_DIVEHI                         0x65
+#endif
+
+#ifndef SUBLANG_MALAY_MALAYSIA
+#define SUBLANG_MALAY_MALAYSIA              0x01
+#endif
+#ifndef SUBLANG_MALAY_BRUNEI_DARUSSALAM
+#define SUBLANG_MALAY_BRUNEI_DARUSSALAM     0x02
+#endif
+#ifndef SUBLANG_CHINESE_MACAU
+#define SUBLANG_CHINESE_MACAU               0x05
+#endif
+#ifndef SUBLANG_FRENCH_MONACO
+#define SUBLANG_FRENCH_MONACO               0x06
+#endif
+#ifndef SUBLANG_ENGLISH_ZIMBABWE
+#define SUBLANG_ENGLISH_ZIMBABWE            0x0c
+#endif
+#ifndef SUBLANG_ENGLISH_PHILIPPINES
+#define SUBLANG_ENGLISH_PHILIPPINES         0x0d
+#endif
 
 
-//
-// Additional ISO <--> Windows 32 Language values from http://www.unicode.org
-//
-#define MOZ_LANG_HINDI			0x39
-#define MOZ_LANG_MACEDONIAN		0x2f
-#define MOZ_LANG_MALAY			0x3e
-#define MOZ_LANG_SWAHILI		0x41
-#define MOZ_LANG_URDU			0x20
+// Turn this on when ParseLocaleString(), GetXPLocale(), and 
+// GetPlatformLocale() are fixed to support three letter lang codes.
+#undef THREE_LETTER_LANG_CODE_SUPPORTED
 
 //
 // This list is used to map between ISO language
-iso_map iso_list[LENGTH_MAPPING_LIST] =
+// References : 
+// http://www.iso.ch/iso/en/prods-services/iso3166ma/02iso-3166-code-lists/list-en1.html
+// http://www.loc.gov/standards/iso639-2/
+// http://www.ethnologue.com/
+// http://msdn.microsoft.com/library/default.asp?url=/library/en-us/intl/nls_19ir.asp
+// http://msdn.microsoft.com/library/default.asp?url=/library/en-us/intl/nls_61df.asp
+ 
+static const
+iso_map iso_list[] =
 {
 	{"af",	LANG_AFRIKAANS, {
 		{ "ZA", SUBLANG_DEFAULT },
@@ -104,6 +197,10 @@ iso_map iso_list[LENGTH_MAPPING_LIST] =
 		{ "BH", SUBLANG_ARABIC_BAHRAIN },
 		{ "QA", SUBLANG_ARABIC_QATAR },
 		{"",0}}
+	},
+	{"az",	LANG_AZERI, {
+		{ "AZ",SUBLANG_DEFAULT },  // XXX Latin vs Cyrillic vs Arabic
+		{ "",0}}
 	},
 	{"be",	LANG_BELARUSIAN, {
 		{ "BY",SUBLANG_DEFAULT },
@@ -133,6 +230,10 @@ iso_map iso_list[LENGTH_MAPPING_LIST] =
 		{ "LI", SUBLANG_GERMAN_LIECHTENSTEIN },
 		{ "" , 0}}
 	},
+	{"dv",	LANG_DIVEHI, {
+		{ "MV", SUBLANG_DEFAULT},
+		{ "", 0}}
+	},
 	{"el",	LANG_GREEK, {
 		{ "GR", SUBLANG_DEFAULT},
 		{ "", 0}}
@@ -148,9 +249,11 @@ iso_map iso_list[LENGTH_MAPPING_LIST] =
 		{ "JM", SUBLANG_ENGLISH_JAMAICA },
 		{ "BZ", SUBLANG_ENGLISH_BELIZE },
 		{ "TT", SUBLANG_ENGLISH_TRINIDAD },
+		{ "ZW", SUBLANG_ENGLISH_ZIMBABWE },
+		{ "PH", SUBLANG_ENGLISH_PHILIPPINES },
 		{ "",0}}
 	},
-	{ "es", LANG_SPANISH, {
+	{ "es", LANG_SPANISH, {  // XXX : SUBLANG_SPANISH_MODERN
 		{ "ES", SUBLANG_SPANISH },
 		{ "MX", SUBLANG_SPANISH_MEXICAN },
 		{ "GT", SUBLANG_SPANISH_GUATEMALA },
@@ -198,13 +301,22 @@ iso_map iso_list[LENGTH_MAPPING_LIST] =
 		{ "CA", SUBLANG_FRENCH_CANADIAN },
 		{ "CH", SUBLANG_FRENCH_SWISS },
 		{ "LU", SUBLANG_FRENCH_LUXEMBOURG },
+		{ "MC", SUBLANG_FRENCH_MONACO },
 		{"",0}}
+	},
+	{ "gl", LANG_GALICIAN, {
+		{ "ES", SUBLANG_DEFAULT }, 
+		{ "", 0}}
+	},
+	{ "gu", LANG_GUJARATI, {
+		{ "IN", SUBLANG_DEFAULT }, 
+		{ "", 0}}
 	},
 	{"he",	LANG_HEBREW, {
 		{ "IL", SUBLANG_DEFAULT},
 		{ "", 0}}
 	},
-	{"hi",	MOZ_LANG_HINDI, {
+	{"hi",	LANG_HINDI, {
 		{ "IN", SUBLANG_DEFAULT },
 		{ "", 0}}
 	},
@@ -216,13 +328,13 @@ iso_map iso_list[LENGTH_MAPPING_LIST] =
 		{ "HU", SUBLANG_DEFAULT },
 		{ "" , 0 }}
 	},
+	{"hy",	LANG_ARMENIAN, {
+		{ "AM", SUBLANG_DEFAULT},
+		{ "" ,0 }}
+	},
 	{"id",	LANG_INDONESIAN, {
 		{ "ID", SUBLANG_DEFAULT },
 		{"", 0}}
-	},
-	{"in",	LANG_INDONESIAN, {
-		{ "ID", SUBLANG_DEFAULT },
-		{ "", 0}}
 	},
 	{"is",	LANG_ICELANDIC, {
 		{ "IS", SUBLANG_DEFAULT },
@@ -241,8 +353,30 @@ iso_map iso_list[LENGTH_MAPPING_LIST] =
 		{ "JP", SUBLANG_DEFAULT },
 		{ "", 0}}
 	},
+	{ "ka", LANG_GEORGIAN, {
+		{ "GE", SUBLANG_DEFAULT },
+		{ "", 0}}
+	},
+	{ "kk", LANG_KAZAK, {
+		{ "KZ", SUBLANG_DEFAULT }, // KAZAKHSTAN
+		{ "", 0}}
+	},
+	{ "kn", LANG_KANNADA, {
+		{ "IN", SUBLANG_DEFAULT }, 
+		{ "", 0}}
+	},
 	{ "ko", LANG_KOREAN, {
-		{ "KO", SUBLANG_KOREAN },
+		{ "KR", SUBLANG_KOREAN },
+		{ "", 0}}
+	},
+#ifdef THREE_LETTER_LANG_CODE_SUPPORTED
+	{ "kok", LANG_KONKANI, {
+		{ "IN", SUBLANG_DEFAULT }, 
+		{ "", 0}}
+	},
+#endif
+	{ "ky", LANG_KYRGYZ, {
+		{ "KG", SUBLANG_DEFAULT }, // Kygyzstan
 		{ "", 0}}
 	},
 	{"lt",	LANG_LITHUANIAN, {
@@ -253,12 +387,21 @@ iso_map iso_list[LENGTH_MAPPING_LIST] =
 		{ "LV", SUBLANG_DEFAULT},
 		{ "", 0}}
 	},
-	{"mk",	MOZ_LANG_MACEDONIAN, {
+	{"mk",	LANG_MACEDONIAN, {
 		{ "MK", SUBLANG_DEFAULT },
 		{ "", 0 }}
 	},
-	{"ms",	MOZ_LANG_MALAY, {
-		{ "MY", SUBLANG_DEFAULT },
+	{ "mn", LANG_MONGOLIAN, {
+		{ "MN", SUBLANG_DEFAULT }, 
+		{ "", 0}}
+	},
+	{ "mr", LANG_MARATHI, {
+		{ "IN", SUBLANG_DEFAULT }, 
+		{ "", 0}}
+	},
+	{"ms",	LANG_MALAY, {
+		{ "MY", SUBLANG_MALAY_MALAYSIA },
+		{ "BN", SUBLANG_MALAY_BRUNEI_DARUSSALAM }, // XXX
 		{ "", 0}}
 	},
 	{"nl",	LANG_DUTCH, {
@@ -266,8 +409,12 @@ iso_map iso_list[LENGTH_MAPPING_LIST] =
 		{"BE", SUBLANG_DUTCH_BELGIAN },
 		{ "", 0}}
 	},
-	{"no",	LANG_NORWEGIAN, {
+	{"no",	LANG_NORWEGIAN, {     // XXX : Nynorsk vs Bokmal 
 		{ "NO",  SUBLANG_DEFAULT },
+		{ "", 0}}
+	},
+	{ "pa", LANG_PUNJABI, {
+		{ "IN", SUBLANG_DEFAULT }, 
 		{ "", 0}}
 	},
 	{"pl",	LANG_POLISH, {
@@ -287,6 +434,10 @@ iso_map iso_list[LENGTH_MAPPING_LIST] =
 		{ "RU", SUBLANG_DEFAULT },
 		{ "", 0 }}
 	},
+	{ "sa", LANG_SANSKRIT, {
+		{ "IN", SUBLANG_DEFAULT }, 
+		{ "", 0}}
+	},
 	{"sk",	LANG_SLOVAK, {
 		{ "SK", SUBLANG_DEFAULT },
 		{ "", 0}}
@@ -300,7 +451,7 @@ iso_map iso_list[LENGTH_MAPPING_LIST] =
 		{ "", 0}}
 	},		
 	{"sr",	LANG_SERBIAN, {
-		{ "YU", SUBLANG_DEFAULT },
+		{ "CS", SUBLANG_DEFAULT }, // XXX Latin vs Cyrillic
 		{ "", 0}}
 	},
 	{ "sv", LANG_SWEDISH, {
@@ -308,8 +459,16 @@ iso_map iso_list[LENGTH_MAPPING_LIST] =
 		{ "FI", SUBLANG_SWEDISH_FINLAND },
 		{ "", 0 }}
 	},
-	{"sw",	MOZ_LANG_SWAHILI, {
+	{"sw",	LANG_SWAHILI, {
 		{ "KE", SUBLANG_DEFAULT },
+		{ "", 0}}
+	},
+	{ "ta", LANG_TAMIL, {
+		{ "IN", SUBLANG_DEFAULT }, 
+		{ "", 0}}
+	},
+	{ "te", LANG_TELUGU, {
+		{ "IN", SUBLANG_DEFAULT }, 
 		{ "", 0}}
 	},
 	{"th",	LANG_THAI, {
@@ -320,12 +479,21 @@ iso_map iso_list[LENGTH_MAPPING_LIST] =
 		{ "TR", SUBLANG_DEFAULT },
 		{ "", 0}}
 	},
+	{ "tt", LANG_TATAR, {
+		{ "RU", SUBLANG_DEFAULT }, 
+		{ "", 0}}
+	},
 	{"uk",	LANG_UKRAINIAN, {
 		{ "UA", SUBLANG_DEFAULT },
 		{ "", 0}}
 	},
-	{"ur",	MOZ_LANG_URDU, {
-		{ "IN", SUBLANG_DEFAULT },
+	{"ur",	LANG_URDU, {
+		{ "PK", SUBLANG_URDU_PAKISTAN },
+		{ "IN", SUBLANG_URDU_INDIA },
+		{ "", 0}}
+	},
+	{"uz",	LANG_UZBEK, {   // XXX : Cyrillic, Latin
+		{ "UZ", SUBLANG_DEFAULT },
 		{ "", 0}}
 	},
 	{"vi",	LANG_VIETNAMESE, {
@@ -337,9 +505,12 @@ iso_map iso_list[LENGTH_MAPPING_LIST] =
 		{ "CN", SUBLANG_CHINESE_SIMPLIFIED },
 		{ "HK", SUBLANG_CHINESE_HONGKONG },
 		{ "SG", SUBLANG_CHINESE_SINGAPORE },
+		{ "MO", SUBLANG_CHINESE_MACAU },
 		{ "",0}}
 	}
 };
+
+#define LENGTH_MAPPING_LIST		NS_ARRAY_LENGTH(iso_list)
 	
 //
 // This list maps ISO 2 digit country codes to Win32 country codes.
@@ -348,16 +519,19 @@ iso_map iso_list[LENGTH_MAPPING_LIST] =
 // of the internal tables.
 //
 #ifdef DEBUG
-iso_pair dbg_list[LENGTH_MAPPING_LIST+1] =
+static const
+iso_pair dbg_list[] =
 {
 	{"af",	LANG_AFRIKAANS},		
 	{"ar",	LANG_ARABIC},
+	{"az",	LANG_AZERI},
 	{"be",	LANG_BELARUSIAN},
 	{"bg",	LANG_BULGARIAN},
 	{"ca",	LANG_CATALAN},
 	{"cs",	LANG_CZECH},
 	{"da",	LANG_DANISH},
 	{"de",	LANG_GERMAN},
+	{"dv",  LANG_DIVEHI},
 	{"el",	LANG_GREEK},
 	{"en",	LANG_ENGLISH},
 	{"es",	LANG_SPANISH},
@@ -367,37 +541,53 @@ iso_pair dbg_list[LENGTH_MAPPING_LIST+1] =
 	{"fi",	LANG_FINNISH},
 	{"fo",	LANG_FAEROESE},
 	{"fr",	LANG_FRENCH},
+	{"gl",  LANG_GALICIAN},
+	{"gu",  LANG_GUJARATI},
 	{"he",	LANG_HEBREW},
-	{"hi",	MOZ_LANG_HINDI},
+	{"hi",	LANG_HINDI},
 	{"hr",	LANG_CROATIAN},
 	{"hu",	LANG_HUNGARIAN},
+	{"hy",	LANG_ARMENIAN},
 	{"id",	LANG_INDONESIAN},
 	{"in",	LANG_INDONESIAN},
 	{"is",	LANG_ICELANDIC},
 	{"it",	LANG_ITALIAN},
 	{"iw",	LANG_HEBREW},
 	{"ja",	LANG_JAPANESE},
+	{"ka",	LANG_GEORGIAN},
+	{"kn",  LANG_KANNADA},
 	{"ko",	LANG_KOREAN},
+#ifdef THREE_LETTER_LANG_CODE_SUPPORTED
+	{"kok", LANG_KONKANI},
+#endif
 	{"lt",	LANG_LITHUANIAN},
 	{"lv",	LANG_LATVIAN},
-	{"mk",	MOZ_LANG_MACEDONIAN},
-	{"ms",	MOZ_LANG_MALAY},
+	{"mk",	LANG_MACEDONIAN},
+	{"mn",  LANG_MONGOLIAN},
+	{"mr",  LANG_MARATHI},
+	{"ms",	LANG_MALAY},
 	{"nl",	LANG_DUTCH},
 	{"no",	LANG_NORWEGIAN},
+	{"pa",  LANG_PUNJABI},
 	{"pl",	LANG_POLISH},
 	{"pt",	LANG_PORTUGUESE},
 	{"ro",	LANG_ROMANIAN},
 	{"ru",	LANG_RUSSIAN},
+	{"sa",  LANG_SANSKRIT},
 	{"sk",	LANG_SLOVAK},
 	{"sl",	LANG_SLOVENIAN},
 	{"sq",	LANG_ALBANIAN},		
 	{"sr",	LANG_SERBIAN},
 	{"sv",	LANG_SWEDISH},
-	{"sw",	MOZ_LANG_SWAHILI},
+	{"sw",	LANG_SWAHILI},
+	{"ta",  LANG_TAMIL},
+	{"te",  LANG_TELUGU},
 	{"th",	LANG_THAI},
 	{"tr",	LANG_TURKISH},
+	{"tt",  LANG_TATAR},
 	{"uk",	LANG_UKRAINIAN},
-	{"ur",	MOZ_LANG_URDU},
+	{"ur",	LANG_URDU},
+	{"uz",	LANG_UZBEK},
 	{"vi",	LANG_VIETNAMESE},
 	{"zh",	LANG_CHINESE},
 	{"",0}
@@ -482,9 +672,11 @@ nsIWin32LocaleImpl::GetXPLocale(LCID winLCID, nsAString& locale)
   }
 
   //
-  // totally didn't find it
+  // didn't find any match. fall back to en-US, which is better 
+  // than unusable buttons without 'OK', 'Cancel', etc (bug 224546)       
   //
-  return NS_ERROR_FAILURE;
+  locale.Assign(NS_LITERAL_STRING("en-US")); 
+  return NS_OK;
 
 }
 
