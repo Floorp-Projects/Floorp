@@ -74,6 +74,9 @@ si_SaveSignonDataInKeychain();
  * a pointer in the context (context->func->confirm) and the context
  * doesn't exist when we get control from layout, namely when SI_RememberSignonData
  * is called
+ *
+ * Samee applies to FE_SelectDialog because context doesn't exist when
+ * SI_RestoreSignonData is called
  */
 #undef FE_Confirm
 Bool
@@ -91,6 +94,31 @@ FE_Confirm(MWContext* context, const char* szMessage)
         }
     }
 }
+
+#undef FE_SelectDialog
+Bool
+FE_SelectDialog
+    (MWContext* context, const char* szMessage, const char** pList, int16* pCount)
+{
+    char c;
+    int i;
+    fprintf(stdout, "%s\n", szMessage);
+    for (i=0; i<*pCount; i++) {
+        fprintf(stdout, "%d: %s\n", i, pList[i]);
+    }
+    fprintf(stdout, "%cType user number (max=9) or type n to cancel.  ", '\007'); /* \007 is BELL */
+    for (;;) {
+        c = getchar();
+        if (c >= '0' && c <= '9') {
+            *pCount = c - '0';
+            return JS_TRUE;
+        }
+        if (tolower(c) == 'n') {
+            return JS_FALSE;
+        }
+    }
+}
+
 /* end of temporary */
 
 PRIVATE void
@@ -547,10 +575,10 @@ si_GetUser(
             user_count = 0;
             while((user = (si_SignonUserStruct *) XP_ListNextObject(user_ptr))!=0) {
                 data_ptr = user->signonData_list;
-                /* consider first item in data list to be the identifying item */
+                /* consider first data node to be the identifying item */
                 data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr);
                 if (PL_strcmp(data->name, userText)) {
-                    /* current user is not from the form that was saved */
+                    /* name of current data item does not match name in data node */
                     continue;
                 }
                 *(list2++) = data->value;
@@ -559,7 +587,11 @@ si_GetUser(
             }
 
             /* have user select a username from the list */
-            if (user_count == 1) {
+            if (user_count == 0) {
+                /* not first data node for any saved user, so simply pick first user */
+                user_ptr = url->signonUser_list;
+                user = (si_SignonUserStruct *) XP_ListNextObject(user_ptr);
+            } else if (user_count == 1) {
                 /* only one user for this form at this url, so select it */
                 user = users[0];
             } else if ((user_count > 1) && FE_SelectDialog(
@@ -642,6 +674,101 @@ si_GetUserForChangeForm(MWContext *context, char* URLName, int messageNumber)
     }
     XP_FREE(message);
     return NULL;
+}
+
+/*
+ * Get the url and user for which a change-of-password is to be applied
+ *
+ * This routine is called only when holding the signon lock!!!
+ *
+ * This routine is called only if signon pref is enabled!!!
+ */
+PRIVATE si_SignonUserStruct*
+si_GetURLAndUserForChangeForm(MWContext *context)
+{
+    si_SignonURLStruct* url;
+    si_SignonUserStruct* user;
+    si_SignonDataStruct * data;
+    XP_List * url_ptr = 0;
+    XP_List * user_ptr = 0;
+    XP_List * data_ptr = 0;
+    char *message = 0;
+    int16 user_count;
+
+    char ** list;
+    char ** list0;
+    si_SignonUserStruct** users;
+    si_SignonUserStruct** users0;
+    si_SignonURLStruct** urls;
+    si_SignonURLStruct** urls0;
+
+    /* get count of total number of user nodes at all url nodes */
+    user_count = 0;
+    url_ptr = si_signon_list;
+    while((url = (si_SignonURLStruct *) XP_ListNextObject(url_ptr))!=0) {
+      user_ptr = url->signonUser_list;
+      while((user = (si_SignonUserStruct *) XP_ListNextObject(user_ptr))!=0) {
+        user_count++;
+      }
+    }
+
+    /* allocate lists for url and user names */
+    list0 = XP_ALLOC(user_count*sizeof(char*));
+    users0 = XP_ALLOC(user_count*sizeof(si_SignonUserStruct*));
+    urls0 = XP_ALLOC(user_count*sizeof(si_SignonUserStruct*));
+    list = list0;
+    users = users0;
+    urls = urls0;
+    
+    /* step through set of URLs and users and create list of each */
+    url_ptr = si_signon_list;
+    while((url = (si_SignonURLStruct *) XP_ListNextObject(url_ptr))!=0) {
+      user_ptr = url->signonUser_list;
+      while((user = (si_SignonUserStruct *) XP_ListNextObject(user_ptr))!=0) {
+          data_ptr = user->signonData_list;
+          /* consider first data node to be the identifying item */
+          data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr);
+          *list = 0;
+          StrAllocCopy(*list, url->URLName);
+          StrAllocCat(*list,": ");
+          StrAllocCat(*list, data->value);
+          list++;
+          *(users++) = user;
+          *(urls++) = url;
+      }
+    }
+
+    /* query user */
+    if (FE_SelectDialog
+            (context,
+            "Is this a change of password for one of the following?",
+            list0,
+            &user_count)) {
+        user = users0[user_count];
+        url = urls0[user_count];
+        /*
+         * since this user node is now the most-recently-used one, move it
+         * to the head of the user list so that it can be favored for
+         * re-use the next time this form is encountered
+         */
+        XP_ListRemoveObject(url->signonUser_list, user);
+        XP_ListAddObject(url->signonUser_list, user);
+        si_signon_list_changed = TRUE;
+        si_SaveSignonDataLocked(NULL);
+    } else {
+        user = NULL;
+    }
+
+    /* free allocated strings */
+    while (--list > list0) {
+      XP_FREE(*list);
+    }
+    XP_FREE(list0);
+    XP_FREE(users0);
+    XP_FREE(urls0);
+
+    return user;
+
 }
 
 PRIVATE void
@@ -1813,8 +1940,7 @@ SI_RememberSignonData(char* URLName, LO_FormSubmitData * submit)
 
         /* ask user if this is a password change */
         si_lock_signon_list();
-        user = si_GetUserForChangeForm
-            (context, URLName, MK_SIGNON_PASSWORDS_REMEMBER);
+        user = si_GetURLAndUserForChangeForm(context);
 
         /* return if user said no */
         if (!user) {
@@ -1854,7 +1980,6 @@ SI_RestoreSignonData
     (char* URLName, char* name, char** value)
 {
     MWContext *context; /* not used -- just a hold-over from the old world order */
-//    si_SignonURLStruct* url;
     si_SignonUserStruct* user;
     si_SignonDataStruct* data;
     XP_List * data_ptr=0;
@@ -1864,17 +1989,47 @@ SI_RestoreSignonData
         return;
     }
 
-    /* get first user for this url */
     si_lock_signon_list();
-//    url = si_GetURL(URLName);
-    user = si_GetUser(context, URLName, TRUE, NULL);
+
+#ifdef xxx
+    /*
+     * determine if it is a change-of-password field
+     *    the heuristic that we will use is that if this is the first
+     *    item on the form and it is a password, this is probably a
+     *    change-of-password form
+     */
+    /* see if this is first item in form and is a password */
+    /* get first saved user just so we can see the name of the first item on the form */
+    user = si_GetUser(context, URLName, TRUE, NULL); /* this is the first saved user */
+    if (user) {
+        data_ptr = user->signonData_list; /* this is first item on form */
+        data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr);
+        if(data->isPassword && name && XP_STRCMP(data->name, name)==0) {
+            /* current item is first item on form and is a password */
+            user = si_GetUserForChangeForm(context, URLName, MK_SIGNON_PASSWORDS_FETCH);
+            if (user) {
+                /* user has confirmed it's a change-of-password form */
+                data_ptr = user->signonData_list;
+                data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr);
+                while((data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr))!=0) {
+                    if (data->isPassword) {
+                        *value = data->value;
+                        si_unlock_signon_list();
+                        return;
+                    }
+                }
+            }
+        }
+    }
+#endif
 
     /* restore the data from previous time this URL was visited */
+    user = si_GetUser(context, URLName, FALSE, name);
     if (user) {
         data_ptr = user->signonData_list;
         while((data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr))!=0) {
             if(name && XP_STRCMP(data->name, name)==0) {
-                StrAllocCopy(*value, data->value);
+                *value = data->value;
                 si_unlock_signon_list();
                 return;
             }
