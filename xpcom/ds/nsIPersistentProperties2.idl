@@ -50,13 +50,39 @@ interface nsIPropertyElement : nsISupports {
 [scriptable, uuid(1A180F60-93B2-11d2-9B8B-00805F8A16D9)]
 interface nsIPersistentProperties : nsIProperties
 {
+  /**
+   * load a set of name/value pairs from the input stream
+   * names and values should be in UTF8
+   */
   void load(in nsIInputStream input);
+
+  /**
+   * output the values to the stream - results will be in UTF8
+   */
   void save(in nsIOutputStream output, in AUTF8String header);
+
+  /**
+   * call subclass() to make future calls to load() set the properties
+   * in this "superclass" instead
+   */
   void subclass(in nsIPersistentProperties superclass);
 
+  /**
+   * get an enumeration of nsIPropertyElement objects,
+   * which are read-only (i.e. setting properties on the element will
+   * not make changes back into the source nsIPersistentProperties
+   */
   nsISimpleEnumerator enumerate();
 
+  /**
+   * shortcut to nsIProperty's get() which retrieves a string value
+   * directly (and thus faster)
+   */
   AString getStringProperty(in AUTF8String key);
+
+  /**
+   * shortcut to nsIProperty's set() which sets a string value
+   * directly (and thus faster)
   AString setStringProperty(in AUTF8String key, in AString value);
 };
 
