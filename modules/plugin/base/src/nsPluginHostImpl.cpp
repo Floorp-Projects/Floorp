@@ -5592,7 +5592,7 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
       if (NS_SUCCEEDED(rv) && doc)
       {
         nsCOMPtr<nsIURI> docURL;
-        doc->GetDocumentURL(getter_AddRefs(docURL));
+        doc->GetBaseURL(*getter_AddRefs(docURL));
         doc->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
  
         // Create an absolute URL
