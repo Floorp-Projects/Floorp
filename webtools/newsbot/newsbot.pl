@@ -192,7 +192,7 @@ for (my $i=$index; $i > 0 ; $i--) {
     print ("  </item>\n\n");
     }
 
-print "</rdf:FDF>\n";
+print "</rdf:RDF>\n";
 } #end printrdf()
 
 
