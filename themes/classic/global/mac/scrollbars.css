@@ -41,28 +41,28 @@ thumb {
   -moz-binding: url("chrome://global/skin/classicBindings.xml#thumb");
   -moz-user-focus: ignore;
   -moz-user-select: none;
-  background-color: #9999FF;
+  background-color: -moz-mac-accentface;
   border-left: 1px solid #000000;
   border-right: 1px solid #000000;
   list-style-image: url("chrome://global/skin/scroll-thumb-horiz.gif");
 }
 
 .thumb-border {
-  border-right: 1px solid rgb(40%,40%,80%);      /* #6666CC */
-  border-bottom: 1px solid rgb(40%,40%,80%);      /* #6666CC */
-  border-top: 1px solid rgb(80%,80%,100%);         /* #CCCCFF */
-  border-left: 1px solid rgb(80%,80%,100%);         /* #CCCCFF */
+  border-right: 1px solid -moz-mac-accentlightshadow;
+  border-bottom: 1px solid -moz-mac-accentlightshadow;
+  border-top: 1px solid -moz-mac-accentregularhighlight;
+  border-left: 1px solid -moz-mac-accentregularhighlight;  
 }
 
 thumb:active > .thumb-border {
-  border-right: 1px solid #333399;
-  border-bottom: 1px solid #333399;
-  border-top: 1px solid #9999FF;
-  border-left: 1px solid #9999FF;
+  border-right: 1px solid -moz-mac-accentregularshadow;
+  border-bottom: 1px solid -moz-mac-accentregularshadow;
+  border-top: 1px solid -moz-mac-accentface;
+  border-left: 1px solid -moz-mac-accentface;
 }
 
 thumb:active {
-	background-color: #6666CC;
+	background-color: -moz-mac-accentlightshadow;
 	list-style-image: url("chrome://global/skin/scroll-thumb-horiz-active.gif");
 }
 
@@ -81,7 +81,7 @@ thumb[align="vertical"] {
 }
 
 thumb[align="vertical"]:active {
-	background-color: #6666CC;
+	background-color: -moz-mac-accentlightshadow;
 	list-style-image: url("chrome://global/skin/scroll-thumb-vert-active.gif");
 }
 
