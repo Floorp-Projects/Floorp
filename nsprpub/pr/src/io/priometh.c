@@ -348,7 +348,7 @@ PR_IMPLEMENT(PRInt32) PR_EmulateSendFile(
     PRFileInfo info;
     PRIOVec iov[3];
     PRFileMap *mapHandle = NULL;
-    void *addr;
+    void *addr = (void*)0; /* initialized to some arbitrary value. Keeps compiler warnings down. */
     PRUint32 file_mmap_offset, alignment;
     PRInt64 zero64;
     PROffset64 file_mmap_offset64;
