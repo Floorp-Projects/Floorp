@@ -533,9 +533,9 @@ nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
     if (mIsFindAllowedInWindow) {
       UseInWindow(domWin);
     }
+    mFocusedWindow = domWin;
   }
   if (!mIsFindAllowedInWindow) {
-    mFocusedWindow = domWin;
     return NS_OK;
   }
 
