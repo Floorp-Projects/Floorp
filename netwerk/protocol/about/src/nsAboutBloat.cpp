@@ -81,10 +81,9 @@ nsAboutBloat::NewChannel(const char *verb,
         inStr = do_QueryInterface(s, &rv);
         if (NS_FAILED(rv)) return rv;
     }
-    else
-    if (leaks) {
-    	// dump the current set of leaks.
-		GC_gcollect();
+    else if (leaks) {
+        // dump the current set of leaks.
+        GC_gcollect();
     	
         nsCOMPtr<nsISupports> s;
         const char* msg = "Memory leaks dumped.";
@@ -115,19 +114,14 @@ nsAboutBloat::NewChannel(const char *verb,
         dumpFileName += time;
         file += (const char*)dumpFileName;
 
-        nsCOMPtr<nsISupports> out;
-        rv = NS_NewTypicalOutputFileStream(getter_AddRefs(out), file);
-        if (NS_FAILED(rv)) return rv;
-        nsCOMPtr<nsIOutputStream> outStr = do_QueryInterface(out, &rv);
+        FILE* out = ::fopen(file, "w");
+        if (out == nsnull)
+            return NS_ERROR_FAILURE;
+
+        rv = nsTraceRefcnt::DumpStatistics(statType, out);
+        ::fclose(out);
         if (NS_FAILED(rv)) return rv;
 
-        rv = nsTraceRefcnt::DumpStatistics(statType, outStr);
-        if (NS_FAILED(rv)) return rv;
-
-        // close the output stream to flush it to disk
-        outStr = null_nsCOMPtr();
-        out = null_nsCOMPtr();
-    
         size = file.GetFileSize();
 
         nsCOMPtr<nsISupports> in;

@@ -107,8 +107,6 @@ PR_END_MACRO
 
 //----------------------------------------------------------------------
 
-class nsIOutputStream;
-
 struct nsTraceRefcntStats {
   nsrefcnt mAddRefs;
   nsrefcnt mReleases;
@@ -182,7 +180,7 @@ public:
   };
 
   static NS_COM nsresult DumpStatistics(StatisticsType type = ALL_STATS,
-                                        nsIOutputStream* out = 0);
+                                        FILE* out = 0);
   
   static NS_COM void ResetStatistics(void);
 
@@ -196,7 +194,6 @@ public:
                                     char * aBuffer,
                                     int aBufLen);
 
-  // XXX change this to take an nsIOutputStream
   static NS_COM void WalkTheStack(FILE* aStream);
 };
 
