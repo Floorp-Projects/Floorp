@@ -197,7 +197,7 @@ static PRStatus PR_CALLBACK pl_DefConnectcontinue (
     PR_ASSERT(fd != NULL);
     PR_ASSERT(fd->lower != NULL);
 
-    return (fd->lower->methods->connectcontinue)(fd->lower, out_flags);
+    return (fd->lower->methods->reserved_fn_4)(fd->lower, out_flags);
 }
 
 static PRFileDesc* PR_CALLBACK pl_TopAccept (
