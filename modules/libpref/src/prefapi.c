@@ -414,7 +414,9 @@ void PREF_CleanupPrefs()
             JS_DestroyContext(gMochaContext);
             gMochaContext = NULL;
         } else {
+#ifdef DEBUG
             fputs("Runtime mismatch, so leaking context!\n", stderr);
+#endif
         }
     }
 
