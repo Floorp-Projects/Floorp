@@ -88,14 +88,6 @@ public class Undefined implements Scriptable, Serializable
         throw reportError();
     }
 
-    public void setAttributes(String id, Scriptable start, short attributes) {
-        throw reportError();
-    }
-
-    public void setAttributes(int index, Scriptable start, short attributes) {
-        throw reportError();
-    }
-
     public Scriptable getPrototype() {
         throw reportError();
     }
