@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4; c-file-style: "stroustrup" -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8; c-file-style: "stroustrup" -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -176,7 +176,7 @@ private:
     static nsIRDFService	*gRDFService;
 
 nsresult	FindTreeElement(nsIContent* aElement,nsIContent** aTreeElement);
-nsresult	FindTreeBodyElement(nsIContent *tree, nsIContent **treeBody);
+nsresult	FindTreeChildrenElement(nsIContent *tree, nsIContent **treeBody);
 nsresult	GetSortColumnIndex(nsIContent *tree, const nsString&sortResource, const nsString& sortDirection, PRInt32 *colIndex);
 nsresult	GetSortColumnInfo(nsIContent *tree, nsString &sortResource, nsString &sortDirection);
 nsresult	GetTreeCell(nsIContent *node, PRInt32 colIndex, nsIContent **cell);
@@ -357,15 +357,15 @@ XULSortServiceImpl::~XULSortServiceImpl(void)
 nsresult
 XULSortServiceImpl::GetSortService(nsIXULSortService** mgr)
 {
-    if (! gXULSortService) {
-        gXULSortService = new XULSortServiceImpl();
-        if (! gXULSortService)
-            return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    NS_ADDREF(gXULSortService);
-    *mgr = gXULSortService;
-    return NS_OK;
+	if (! gXULSortService)
+	{
+		gXULSortService = new XULSortServiceImpl();
+		if (! gXULSortService)
+			return NS_ERROR_OUT_OF_MEMORY;
+	}
+	NS_ADDREF(gXULSortService);
+	*mgr = gXULSortService;
+	return NS_OK;
 }
 
 
@@ -428,7 +428,7 @@ XULSortServiceImpl::FindTreeElement(nsIContent *aElement, nsIContent **aTreeElem
 
 
 nsresult
-XULSortServiceImpl::FindTreeBodyElement(nsIContent *tree, nsIContent **treeBody)
+XULSortServiceImpl::FindTreeChildrenElement(nsIContent *tree, nsIContent **treeBody)
 {
         nsCOMPtr<nsIContent>	child;
 	PRInt32			childIndex = 0, numChildren = 0, nameSpaceID;
@@ -443,7 +443,7 @@ XULSortServiceImpl::FindTreeBodyElement(nsIContent *tree, nsIContent **treeBody)
 		{
 			nsCOMPtr<nsIAtom> tag;
 			if (NS_FAILED(rv = child->GetTag(*getter_AddRefs(tag))))	return rv;
-			if (tag.get() == kTreeBodyAtom)
+			if (tag.get() == kTreeChildrenAtom)
 			{
 				*treeBody = child;
 				NS_ADDREF(*treeBody);
@@ -605,20 +605,20 @@ XULSortServiceImpl::GetTreeCellValue(sortPtr sortInfo, nsIContent *node, nsStrin
 	for (childIndex=0; childIndex<numChildren; childIndex++)
 	{
 		if (NS_FAILED(rv = node->ChildAt(childIndex, *getter_AddRefs(child))))
-            break;
+			break;
 		if (NS_FAILED(rv = child->GetNameSpaceID(nameSpaceID)))
-            break;
+			break;
 		if (nameSpaceID != sortInfo->kNameSpaceID_XUL)
 		{
-            // Get text using the DOM
-            nsCOMPtr<nsIDOMText> domText;
-            rv = child->QueryInterface(kIDOMTextIID, getter_AddRefs(domText));
-            if (NS_FAILED(rv))
-                break;
-            val.Truncate();
-            domText->GetData(val);
-            found = PR_TRUE;
-            break;
+			// Get text using the DOM
+			nsCOMPtr<nsIDOMText> domText;
+			rv = child->QueryInterface(kIDOMTextIID, getter_AddRefs(domText));
+			if (NS_FAILED(rv))
+				break;
+			val.Truncate();
+			domText->GetData(val);
+			found = PR_TRUE;
+			break;
 		}
 	}
 	return((found == PR_TRUE) ? NS_OK : NS_ERROR_FAILURE);
@@ -1038,7 +1038,7 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, PRInt32 colIndex, so
 			// performance problems for some datasources.
 			for (loop = 0; loop < numElements; loop++)
 			{
-				nsIRDFResource* resource;
+				nsIRDFResource	*resource;
 				nsRDFContentUtils::GetElementResource(flatArray[loop], &resource);
 				// Note that we don't release; see part deux below...
 			}
@@ -1061,9 +1061,9 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, PRInt32 colIndex, so
 			// Bug 6665, part deux. The Big Hack.
 			for (loop = 0; loop < numElements; loop++)
 			{
-				nsIRDFResource* resource;
+				nsIRDFResource	*resource;
 				nsRDFContentUtils::GetElementResource(flatArray[loop], &resource);
-				nsrefcnt refcnt;
+				nsrefcnt	refcnt;
 				NS_RELEASE2(resource, refcnt);
 				NS_RELEASE(resource);
 			}
@@ -1379,7 +1379,7 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 	if (NS_FAILED(rv = GetSortColumnIndex(treeNode, sortResource, sortDirection, &colIndex)))	return(rv);
 	sortInfo.colIndex = colIndex;
 	nsCOMPtr<nsIContent>	treeBody;
-	if (NS_FAILED(rv = FindTreeBodyElement(treeNode, getter_AddRefs(treeBody))))	return(rv);
+	if (NS_FAILED(rv = FindTreeChildrenElement(treeNode, getter_AddRefs(treeBody))))	return(rv);
 	if (NS_SUCCEEDED(rv = SortTreeChildren(treeBody, colIndex, &sortInfo, 0)))
 	{
 	}
