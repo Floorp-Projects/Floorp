@@ -961,10 +961,10 @@ NS_IMETHODIMP nsTextEditor::OutputText(nsIOutputStream* aOutputStream, nsString*
 NS_IMETHODIMP nsTextEditor::OutputText(nsIOutputStream* aOutputStream, nsString* aOutputString, nsString* aCharsetOverride)
 { 
   nsresult rv = NS_ERROR_FAILURE;
-  nsIPresShell* shell = nsnull;
-  
- 	GetPresShell(&shell);
-  if (nsnull != shell) {
+
+  nsCOMPtr<nsIPresShell> shell;
+ 	GetPresShell(getter_AddRefs(shell));
+  if (shell) {
     nsCOMPtr<nsIDocument> doc;
     shell->GetDocument(getter_AddRefs(doc));
     if (doc) {
@@ -1017,7 +1017,6 @@ NS_IMETHODIMP nsTextEditor::OutputText(nsIOutputStream* aOutputStream, nsString*
         }        
       }
     }
-    NS_RELEASE(shell);
   }
   return rv;
 }
@@ -1038,10 +1037,9 @@ NS_IMETHODIMP nsTextEditor::OutputHTML(nsIOutputStream* aOutputStream, nsString*
 {
   
   nsresult rv = NS_ERROR_FAILURE;
-  nsIPresShell* shell = nsnull;
-  
-  GetPresShell(&shell);
-  if (nsnull != shell) {
+  nsCOMPtr<nsIPresShell> shell;
+ 	GetPresShell(getter_AddRefs(shell));
+  if (shell) {
     nsCOMPtr<nsIDocument> doc;
     shell->GetDocument(getter_AddRefs(doc));
     if (doc) {

@@ -304,9 +304,6 @@ nsEditor::nsEditor()
 
 nsEditor::~nsEditor()
 {
-  NS_IF_RELEASE(mPresShell);
-  NS_IF_RELEASE(mViewManager);
-
   if (mActionListeners)
   {
     PRInt32 i;
@@ -403,7 +400,7 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell)
     return NS_ERROR_NULL_POINTER;
 
   mDoc = aDoc;
-  mPresShell = aPresShell;
+  mPresShell = aPresShell;		// we don't addref the pres shell
   mPresShell->GetViewManager(&mViewManager);
   if (mViewManager){
     mViewManager->Release(); //we want a weak link
@@ -2252,11 +2249,11 @@ void nsEditor::HACKForceRedraw()
  	GetPresShell(getter_AddRefs(shell));
   if (shell) {
     nsCOMPtr<nsIViewManager> viewmgr;
-    nsCOMPtr<nsIView> view;
 
     shell->GetViewManager(getter_AddRefs(viewmgr));
     if (viewmgr) {
-      viewmgr->GetRootView(*getter_AddRefs(view));
+      nsIView* view;
+      viewmgr->GetRootView(view);			// views are not refCounted
       if (view) {
         viewmgr->UpdateView(view,nsnull,NS_VMREFRESH_IMMEDIATE);
       }
