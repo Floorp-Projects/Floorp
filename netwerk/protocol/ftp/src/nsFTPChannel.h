@@ -59,6 +59,7 @@
 #include "nsIUploadChannel.h"
 #include "nsIProxyInfo.h"
 #include "nsIResumableChannel.h"
+#include "nsHashPropertyBag.h"
 
 #include "nsICacheService.h"
 #include "nsICacheEntryDescriptor.h"
@@ -73,7 +74,8 @@
 
 #define FTP_CACHE_CONTROL_CONNECTION 1
 
-class nsFTPChannel : public nsIFTPChannel,
+class nsFTPChannel : public nsHashPropertyBag,
+                     public nsIFTPChannel,
                      public nsIUploadChannel,
                      public nsIInterfaceRequestor,
                      public nsIProgressEventSink,
@@ -82,7 +84,7 @@ class nsFTPChannel : public nsIFTPChannel,
                      public nsIResumableChannel
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSIREQUEST
     NS_DECL_NSICHANNEL
     NS_DECL_NSIUPLOADCHANNEL
@@ -139,8 +141,7 @@ protected:
     PRPackedBool                    mCanceled;
 
     nsCOMPtr<nsIIOService>          mIOService;
-    nsCOMPtr<nsISupports>           mProperties;
-    
+
     nsCOMPtr<nsICacheSession>         mCacheSession;
     nsCOMPtr<nsICacheEntryDescriptor> mCacheEntry;
     nsCOMPtr<nsIProxyInfo>            mProxyInfo;

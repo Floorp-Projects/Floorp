@@ -146,6 +146,9 @@ interface nsIChannel : nsIRequest
     /**
      * The length of the data associated with the channel if available.  A value
      * of -1 indicates that the content length is unknown.
+     *
+     * Callers should prefer getting the "content-length" property
+     * using nsIPropertyBag2 as 64-bit value, if available.
      */
     attribute long contentLength;
 

@@ -107,3 +107,4 @@ ifeq ($(OS_ARCH),WINNT)
 DEFINES		+= -DZLIB_DLL
 endif
 
+DEFINES += -DIMPL_NS_NET

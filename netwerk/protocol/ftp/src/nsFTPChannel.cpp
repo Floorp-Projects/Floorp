@@ -100,8 +100,8 @@ nsFTPChannel::~nsFTPChannel()
     NS_IF_RELEASE(mFTPState);
 }
 
-NS_IMPL_ADDREF(nsFTPChannel)
-NS_IMPL_RELEASE(nsFTPChannel)
+NS_IMPL_ADDREF_INHERITED(nsFTPChannel, nsHashPropertyBag)
+NS_IMPL_RELEASE_INHERITED(nsFTPChannel, nsHashPropertyBag)
 
 NS_INTERFACE_MAP_BEGIN(nsFTPChannel)
     NS_INTERFACE_MAP_ENTRY(nsIChannel)
@@ -114,22 +114,14 @@ NS_INTERFACE_MAP_BEGIN(nsFTPChannel)
     NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
     NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
     NS_INTERFACE_MAP_ENTRY(nsICacheListener)
-    if (aIID.Equals(NS_GET_IID(nsIProperties))) {
-        if (!mProperties) {
-            mProperties =
-                do_CreateInstance(NS_PROPERTIES_CONTRACTID, (nsIChannel *) this);
-            NS_ENSURE_STATE(mProperties);
-        }
-        return mProperties->QueryInterface(aIID, aInstancePtr);
-    }
-    else
-    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIChannel)
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_END_INHERITING(nsHashPropertyBag)
 
 nsresult
 nsFTPChannel::Init(nsIURI* uri, nsIProxyInfo* proxyInfo, nsICacheSession* session)
 {
-    nsresult rv = NS_OK;
+    nsresult rv = nsHashPropertyBag::Init();
+    if (NS_FAILED(rv))
+        return rv;
 
     // setup channel state
     mURL = uri;

@@ -47,6 +47,8 @@
 #include "nsCOMPtr.h"
 #include "nsInt64.h"
 
+#include "nsHashPropertyBag.h"
+
 #include "nsIHttpChannel.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIHttpHeaderVisitor.h"
@@ -83,7 +85,8 @@ class nsProxyInfo;
 // nsHttpChannel
 //-----------------------------------------------------------------------------
 
-class nsHttpChannel : public nsIHttpChannel
+class nsHttpChannel : public nsHashPropertyBag
+                    , public nsIHttpChannel
                     , public nsIHttpChannelInternal
                     , public nsIStreamListener
                     , public nsICachingChannel
@@ -95,7 +98,7 @@ class nsHttpChannel : public nsIHttpChannel
                     , public nsISupportsPriority
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSIREQUEST
     NS_DECL_NSICHANNEL
     NS_DECL_NSIHTTPCHANNEL
@@ -231,8 +234,6 @@ private:
     nsCString                         mContentTypeHint;
     nsCString                         mContentCharsetHint;
 
-    nsCOMPtr<nsISupports>             mProperties;
-    
     // cache specific data
     nsCOMPtr<nsICacheEntryDescriptor> mCacheEntry;
     nsCOMPtr<nsIInputStreamPump>      mCachePump;

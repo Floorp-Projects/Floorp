@@ -118,6 +118,8 @@ EXPORTS		= \
 		netCore.h \
 		nsNetError.h \
 		nsNetUtil.h \
+		nsNetStrings.h \
+		nsChannelProperties.h \
 		nsURIHashKey.h \
 		nsReadLine.h \
 		nsCPasswordManager.h \
@@ -128,3 +130,4 @@ PREF_JS_EXPORTS = $(srcdir)/security-prefs.js
 
 include $(topsrcdir)/config/rules.mk
 
+DEFINES += -DIMPL_NS_NET

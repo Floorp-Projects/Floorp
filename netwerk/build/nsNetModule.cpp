@@ -57,6 +57,7 @@
 #include "nsCacheService.h"
 #include "nsIOThreadPool.h"
 #include "nsMimeTypes.h"
+#include "nsNetStrings.h"
 
 #include "nsNetCID.h"
 
@@ -575,8 +576,16 @@ CreateNewNSTXTToHTMLConvFactory(nsISupports *aOuter, REFNSIID aIID, void **aResu
 ///////////////////////////////////////////////////////////////////////////////
 // Module implementation for the net library
 
-// Necko module shutdown hook
-static void PR_CALLBACK nsNeckoShutdown(nsIModule *neckoModule)
+// Net module startup hook
+PR_STATIC_CALLBACK(nsresult) nsNetStartup(nsIModule *neckoModule)
+{
+    gNetStrings = new nsNetStrings();
+    return gNetStrings ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+
+// Net module shutdown hook
+static void PR_CALLBACK nsNetShutdown(nsIModule *neckoModule)
 {
     // Release the url parser that the stdurl is holding.
     nsStandardURL::ShutdownGlobalObjects();
@@ -586,6 +595,10 @@ static void PR_CALLBACK nsNeckoShutdown(nsIModule *neckoModule)
 
     // Release global state used by the URL helper module.
     net_ShutdownURLHelper();
+
+    // Release necko strings
+    delete gNetStrings;
+    gNetStrings = nsnull;
 }
 
 static const nsModuleComponentInfo gNetModuleInfo[] = {
@@ -1044,5 +1057,6 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
 
 };
 
-NS_IMPL_NSGETMODULE_WITH_DTOR(necko_core_and_primary_protocols, gNetModuleInfo,
-                              nsNeckoShutdown)
+NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(necko_core_and_primary_protocols,
+                                   gNetModuleInfo,
+                                   nsNetStartup, nsNetShutdown)

@@ -70,6 +70,8 @@
 #include "nsICookieService.h"
 #include "nsIResumableChannel.h"
 #include "nsInt64.h"
+#include "nsIVariant.h"
+#include "nsChannelProperties.h"
 
 static NS_DEFINE_CID(kStreamListenerTeeCID, NS_STREAMLISTENERTEE_CID);
 
@@ -152,11 +154,13 @@ nsHttpChannel::Init(nsIURI *uri,
                     PRUint8 caps,
                     nsProxyInfo *proxyInfo)
 {
-    nsresult rv;
-
     LOG(("nsHttpChannel::Init [this=%x]\n", this));
 
     NS_PRECONDITION(uri, "null uri");
+
+    nsresult rv = nsHashPropertyBag::Init();
+    if (NS_FAILED(rv))
+        return rv;
 
     mURI = uri;
     mOriginalURI = uri;
@@ -681,6 +685,10 @@ nsHttpChannel::CallOnStartRequest()
 
     if (mResponseHead && mResponseHead->ContentCharset().IsEmpty())
         mResponseHead->SetContentCharset(mContentCharsetHint);
+
+    if (mResponseHead)
+        SetPropertyAsInt64(NS_CHANNEL_PROP_CONTENT_LENGTH,
+                           mResponseHead->ContentLength());
     
     LOG(("  calling mListener->OnStartRequest\n"));
     nsresult rv = mListener->OnStartRequest(this, mListenerContext);
@@ -1762,6 +1770,15 @@ nsHttpChannel::InstallCacheListener(PRUint32 offset)
 // nsHttpChannel <redirect>
 //-----------------------------------------------------------------------------
 
+PR_STATIC_CALLBACK(PLDHashOperator)
+CopyProperties(const nsAString& aKey, nsIVariant *aData, void *aClosure)
+{
+    nsIWritablePropertyBag* bag = NS_STATIC_CAST(nsIWritablePropertyBag*,
+                                                 aClosure);
+    bag->SetProperty(aKey, aData);
+    return PL_DHASH_NEXT;
+}
+
 nsresult
 nsHttpChannel::SetupReplacementChannel(nsIURI       *newURI, 
                                        nsIChannel   *newChannel,
@@ -1846,24 +1863,9 @@ nsHttpChannel::SetupReplacementChannel(nsIURI       *newURI,
     }
 
     // transfer any properties
-    if (mProperties) {
-        nsCOMPtr<nsIProperties> oldProps = do_QueryInterface(mProperties);
-        nsCOMPtr<nsIProperties> newProps = do_QueryInterface(newChannel);
-        if (newProps) {
-            PRUint32 count;
-            char **keys;
-            if (NS_SUCCEEDED(oldProps->GetKeys(&count, &keys))) {
-                nsCOMPtr<nsISupports> val;
-                for (PRUint32 i=0; i<count; ++i) {
-                    oldProps->Get(keys[i],
-                                  NS_GET_IID(nsISupports),
-                                  getter_AddRefs(val));
-                    newProps->Set(keys[i], val);
-                }
-                NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(count, keys);
-            }
-        }
-    }
+    nsCOMPtr<nsIWritablePropertyBag> bag(do_QueryInterface(newChannel));
+    if (bag)
+        mPropertyHash.EnumerateRead(CopyProperties, bag.get());
 
     return NS_OK;
 }
@@ -2806,8 +2808,8 @@ nsHttpChannel::GetCurrentPath(nsACString &path)
 // nsHttpChannel::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_THREADSAFE_ADDREF(nsHttpChannel)
-NS_IMPL_THREADSAFE_RELEASE(nsHttpChannel)
+NS_IMPL_ADDREF_INHERITED(nsHttpChannel, nsHashPropertyBag)
+NS_IMPL_RELEASE_INHERITED(nsHttpChannel, nsHashPropertyBag)
 
 NS_INTERFACE_MAP_BEGIN(nsHttpChannel)
     NS_INTERFACE_MAP_ENTRY(nsIRequest)
@@ -2823,17 +2825,7 @@ NS_INTERFACE_MAP_BEGIN(nsHttpChannel)
     NS_INTERFACE_MAP_ENTRY(nsIResumableChannel)
     NS_INTERFACE_MAP_ENTRY(nsITransportEventSink)
     NS_INTERFACE_MAP_ENTRY(nsISupportsPriority)
-    if (aIID.Equals(NS_GET_IID(nsIProperties))) {
-        if (!mProperties) {
-            mProperties =
-                do_CreateInstance(NS_PROPERTIES_CONTRACTID, (nsIChannel *) this);
-            NS_ENSURE_STATE(mProperties);
-        }
-        return mProperties->QueryInterface(aIID, aInstancePtr);
-    }
-    else
-    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIChannel)
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_END_INHERITING(nsHashPropertyBag)
 
 //-----------------------------------------------------------------------------
 // nsHttpChannel::nsIRequest

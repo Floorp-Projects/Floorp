@@ -50,14 +50,16 @@
 #include "nsITransport.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
+#include "nsHashPropertyBag.h"
 
-class nsFileChannel : public nsIFileChannel
+class nsFileChannel : public nsHashPropertyBag
+                    , public nsIFileChannel
                     , public nsIUploadChannel
                     , public nsIStreamListener
                     , public nsITransportEventSink
 {
 public: 
-    NS_DECL_ISUPPORTS
+    NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSIREQUEST
     NS_DECL_NSICHANNEL
     NS_DECL_NSIFILECHANNEL

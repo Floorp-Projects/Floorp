@@ -56,6 +56,7 @@
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 #include "nsAutoLock.h"
+#include "nsAutoPtr.h"
 #include "nsIEventQueueService.h"
 #include "nsIPrompt.h"
 #include "nsIAuthPrompt.h"
@@ -104,6 +105,7 @@ typedef enum _FTP_STATE {
 typedef enum _FTP_ACTION {GET, PUT} FTP_ACTION;
 
 class DataRequestForwarder;
+class nsFTPChannel;
 
 class nsFtpState : public nsIStreamListener,
                    public nsIRequest {
@@ -116,7 +118,7 @@ public:
     nsFtpState();
     virtual ~nsFtpState();
 
-    nsresult Init(nsIFTPChannel *aChannel, 
+    nsresult Init(nsFTPChannel *aChannel, 
                   nsIPrompt *aPrompter, 
                   nsIAuthPrompt *aAuthPrompter, 
                   nsIFTPEventSink *sink, 
@@ -197,7 +199,7 @@ private:
     nsCString                       mModTime;
 
         // ****** consumer vars
-    nsCOMPtr<nsIFTPChannel>         mChannel;         // our owning FTP channel we pass through our events
+    nsRefPtr<nsFTPChannel>          mChannel;         // our owning FTP channel we pass through our events
     nsCOMPtr<nsIProxyInfo>          mProxyInfo;
 
         // ****** connection cache vars

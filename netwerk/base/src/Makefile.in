@@ -87,6 +87,7 @@ CPPSRCS		= \
 		nsURIChecker.cpp \
 		nsURLHelper.cpp \
 		nsURLParsers.cpp \
+		nsNetStrings.cpp \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
@@ -119,3 +120,4 @@ FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
+DEFINES += -DIMPL_NS_NET

@@ -71,6 +71,7 @@
 #include "nsMimeTypes.h"
 #include "nsIStringBundle.h"
 #include "nsEventQueueUtils.h"
+#include "nsChannelProperties.h"
 
 #include "nsICacheEntryDescriptor.h"
 #include "nsICacheListener.h"
@@ -471,10 +472,8 @@ nsFtpState::OnDataAvailable(nsIRequest *request,
         return NS_OK; /*** should this be an error?? */
     
     if (!mReceivedControlData) {
-        nsCOMPtr<nsIProgressEventSink> sink(do_QueryInterface(mChannel));
-        if (sink)
-            // parameter can be null cause the channel fills them in.
-            sink->OnStatus(nsnull, nsnull, 
+        // parameter can be null cause the channel fills them in.
+        mChannel->OnStatus(nsnull, nsnull, 
                            NS_NET_STATUS_BEGIN_FTP_TRANSACTION, nsnull);
         
         mReceivedControlData = PR_TRUE;
@@ -625,8 +624,7 @@ nsFtpState::EstablishControlConnection()
     nsFtpControlConnection* connection;
     (void) gFtpHandler->RemoveConnection(mURL, &connection);
 
-    nsCOMPtr<nsIProgressEventSink> psink(do_QueryInterface(mChannel));
-    nsRefPtr<TransportEventForwarder> fwd(new TransportEventForwarder(psink));
+    nsRefPtr<TransportEventForwarder> fwd(new TransportEventForwarder(mChannel));
     if (connection) {
         mControlConnection = connection;
         if (mControlConnection->IsAlive())
@@ -1398,6 +1396,10 @@ nsFtpState::R_size() {
         LL_L2UI(size32, mFileSize);
         if (NS_FAILED(mChannel->SetContentLength(size32))) return FTP_ERROR;
 
+        // Set the 64-bit length too
+        mChannel->SetPropertyAsUint64(NS_CHANNEL_PROP_CONTENT_LENGTH,
+                                      mFileSize);
+
         mDRequestForwarder->SetFileSize(mFileSize);
     }
 
@@ -2161,7 +2163,7 @@ nsFtpState::CanReadEntry()
 }
 
 nsresult
-nsFtpState::Init(nsIFTPChannel* aChannel,
+nsFtpState::Init(nsFTPChannel* aChannel,
                  nsIPrompt*  aPrompter,
                  nsIAuthPrompt* aAuthPrompter,
                  nsIFTPEventSink* sink,
@@ -2191,7 +2193,7 @@ nsFtpState::Init(nsIFTPChannel* aChannel,
     // parameter validation
     NS_ASSERTION(aChannel, "FTP: needs a channel");
 
-    mChannel = aChannel; // a straight com ptr to the channel
+    mChannel = aChannel; // a straight ref ptr to the channel
 
     nsresult rv = aChannel->GetURI(getter_AddRefs(mURL));
     if (NS_FAILED(rv))
@@ -2420,11 +2422,10 @@ nsFtpState::StopProcessing()
     {
         // The forwarding object was never created which  means that we never sent our notifications.
         
-        nsCOMPtr<nsIRequestObserver> asyncObserver = do_QueryInterface(mChannel);
-        nsCOMPtr<nsIRequestObserver> arg = do_QueryInterface(mChannel);
+        nsCOMPtr<nsIRequestObserver> asyncObserver;
 
         NS_NewRequestObserverProxy(getter_AddRefs(asyncObserver), 
-                                   arg,
+                                   mChannel,
                                    NS_CURRENT_EVENTQ);
         if(asyncObserver) {
             (void) asyncObserver->OnStartRequest(this, nsnull);
@@ -2439,9 +2440,7 @@ nsFtpState::StopProcessing()
 
     KillControlConnection();
 
-    nsCOMPtr<nsIProgressEventSink> sink(do_QueryInterface(mChannel));
-    if (sink)
-        sink->OnStatus(nsnull, nsnull, NS_NET_STATUS_END_FTP_TRANSACTION, nsnull);
+    mChannel->OnStatus(nsnull, nsnull, NS_NET_STATUS_END_FTP_TRANSACTION, nsnull);
 
     // Release the Observers
     mWriteStream = 0;  // should this call close before setting to null?
@@ -2463,7 +2462,6 @@ nsFtpState::BuildStreamConverter(nsIStreamListener** convertStreamListener)
     // unconverted data of fromType, and the final listener in the chain (in this case
     // the mListener).
     nsCOMPtr<nsIStreamListener> converterListener;
-    nsCOMPtr<nsIStreamListener> listener = do_QueryInterface(mChannel);
 
     nsCOMPtr<nsIStreamConverterService> scs = 
              do_GetService(kStreamConverterServiceCID, &rv);
@@ -2473,7 +2471,7 @@ nsFtpState::BuildStreamConverter(nsIStreamListener** convertStreamListener)
 
     rv = scs->AsyncConvertData("text/ftp-dir",
                                APPLICATION_HTTP_INDEX_FORMAT,
-                               listener, 
+                               mChannel,
                                mURL, 
                                getter_AddRefs(converterListener));
     if (NS_FAILED(rv)) {

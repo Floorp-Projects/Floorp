@@ -83,6 +83,7 @@
 #include "nsISeekableStream.h"
 #include "nsAutoPtr.h"
 #include "nsIPrefService.h"
+#include "nsIWritablePropertyBag2.h"
 
 // we want to explore making the document own the load group
 // so we can associate the document URI with the load group.
@@ -5762,12 +5763,13 @@ nsDocShell::DoURILoad(nsIURI * aURI,
       }
     }
 
-    nsCOMPtr<nsIProperties> props(do_QueryInterface(channel));
+    nsCOMPtr<nsIWritablePropertyBag2> props(do_QueryInterface(channel));
     if (props)
     {
       // save true referrer for those who need it (e.g. xpinstall whitelisting)
       // Currently only http and ftp channels support this.
-      props->Set("docshell.internalReferrer", aReferrerURI);
+      props->SetPropertyAsInterface(NS_LITERAL_STRING("docshell.internalReferrer"),
+                                    aReferrerURI);
     }
 
     //
