@@ -275,6 +275,7 @@ public:
   NS_IMETHOD BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL);
   NS_IMETHOD ProgressLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aProgress, PRInt32 aProgressMax);
   NS_IMETHOD EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsresult aStatus);
+  NS_IMETHOD CaptureHistoryState(nsISupports** aLayoutHistoryState);
   NS_IMETHOD GetHistoryState(nsISupports** aLayoutHistoryState);
   NS_IMETHOD SetHistoryState(nsISupports* aLayoutHistoryState);
   NS_IMETHOD FireUnloadEvent(void);
@@ -1724,7 +1725,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
      shist->GetCurrentIndex(&indix);
      if (indix >= 0 && (aModifyHistory)) {
        nsCOMPtr<nsISupports>  historyState;
-       rv = GetHistoryState(getter_AddRefs(historyState));
+       rv = CaptureHistoryState(getter_AddRefs(historyState));
      if (NS_SUCCEEDED(rv) && historyState)
           shist->SetHistoryObjectForIndex(indix, historyState);
    }
@@ -1952,7 +1953,7 @@ nsWebShell::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsresult aSta
 }
 
 NS_IMETHODIMP
-nsWebShell::GetHistoryState(nsISupports** aLayoutHistoryState)
+nsWebShell::CaptureHistoryState(nsISupports** aLayoutHistoryState)
 {
   nsresult rv = NS_OK;
   // XXX Need to think about what to do for framesets.
@@ -1971,12 +1972,20 @@ nsWebShell::GetHistoryState(nsISupports** aLayoutHistoryState)
       nsCOMPtr<nsIPresShell> shell;
       rv = docv->GetPresShell(*getter_AddRefs(shell));
       if (NS_SUCCEEDED(rv)) {
-        rv = shell->GetHistoryState((nsILayoutHistoryState**) aLayoutHistoryState);
+        rv = shell->CaptureHistoryState((nsILayoutHistoryState**) aLayoutHistoryState);
       }
     }
   }
 
   return rv;
+}
+
+NS_IMETHODIMP
+nsWebShell::GetHistoryState(nsISupports** aLayoutHistoryState)
+{
+  NS_IF_ADDREF(mHistoryState);
+  *aLayoutHistoryState = mHistoryState;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

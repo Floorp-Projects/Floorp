@@ -228,6 +228,7 @@ public:
   /**
    * Get and set the history state for the document.
    */
+  NS_IMETHOD CaptureHistoryState(nsISupports** aLayoutHistoryState) = 0;
   NS_IMETHOD GetHistoryState(nsISupports** aLayoutHistoryState) = 0;
   NS_IMETHOD SetHistoryState(nsISupports* aLayoutHistoryState) = 0;
 
