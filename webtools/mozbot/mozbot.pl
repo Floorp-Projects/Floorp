@@ -126,7 +126,7 @@ LoadStockList();
 &create_pid_file;
 
 # read admin list 
-my %admins = ( "cyeh" => "netscape.com", "terry" => "netscape.com" );
+my %admins = ( "rko" => "netscape.com", "cyeh" => "netscape.com", "terry" => "netscape.com" );
 my $adminf = ".$nick-admins";
 &fetch_admin_conf (\%admins);
 
