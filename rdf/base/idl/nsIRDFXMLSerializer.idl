@@ -23,7 +23,7 @@
 #include "nsISupports.idl"
 #include "nsIRDFDataSource.idl"
 
-[uuid(8ae1fbf8-1dd2-11b2-bd21-d728069cca92)]
+[scriptable, uuid(8ae1fbf8-1dd2-11b2-bd21-d728069cca92)]
 interface nsIRDFXMLSerializer : nsISupports
 {
     /**

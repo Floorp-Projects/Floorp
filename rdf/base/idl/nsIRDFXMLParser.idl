@@ -24,7 +24,7 @@
 #include "nsIStreamListener.idl"
 #include "nsIURI.idl"
 
-[uuid(1831dd2e-1dd2-11b2-bdb3-86b7b50b70b5)]
+[scriptable, uuid(1831dd2e-1dd2-11b2-bdb3-86b7b50b70b5)]
 interface nsIRDFXMLParser : nsISupports
 {
     /**
