@@ -456,7 +456,12 @@ NS_IMETHODIMP nsDecoderSupport::Convert(const char * aSrc,
 
     if ((res == NS_OK_UDEC_MOREINPUT) && (bcw == 0)) {
       // not enough input to convert even a single char: repeat!
-      DoubleBuffer();
+      if (mBufferLength <= 32) DoubleBuffer();
+      else {
+        // somehow we got into an error state and the buffer is growing out of control
+        res = NS_ERROR_UNEXPECTED;
+        break;
+      }
     } else {
       if (bcr < buffLen) {
         // we didn't convert that residual data - unfill the buffer
@@ -482,7 +487,15 @@ NS_IMETHODIMP nsDecoderSupport::Convert(const char * aSrc,
     if (res == NS_OK_UDEC_MOREINPUT) {
       bcr = srcEnd - src;
       // make sure buffer is large enough
-      while (bcr > mBufferCapacity) DoubleBuffer();
+      while (bcr > mBufferCapacity) {
+        if (mBufferLength <= 32) DoubleBuffer();
+        else {
+          // somehow we got into an error state and the buffer is growing out of control
+          res = NS_ERROR_UNEXPECTED;
+          break;
+        }
+      }
+
       FillBuffer(&src, bcr);
     }
   }
