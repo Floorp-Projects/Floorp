@@ -45,6 +45,10 @@ ChildIterator::Init(nsIContent*    aContent,
                     ChildIterator* aFirst,
                     ChildIterator* aLast)
 {
+  // Initialize out parameters to be equal, in case of failure.
+  aFirst->mContent = aLast->mContent = nsnull;
+  aFirst->mIndex   = aLast->mIndex   = 0;
+  
   NS_PRECONDITION(aContent != nsnull, "no content");
   if (! aContent)
     return NS_ERROR_NULL_POINTER;

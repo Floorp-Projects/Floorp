@@ -8049,7 +8049,8 @@ nsCSSFrameConstructor::FindPreviousSibling(nsIPresShell*     aPresShell,
   NS_ASSERTION(aPresShell && aContainer, "null arguments");
 
   ChildIterator first, iter;
-  ChildIterator::Init(aContainer, &first, &iter);
+  nsresult rv = ChildIterator::Init(aContainer, &first, &iter);
+  NS_ENSURE_SUCCESS(rv, nsnull);
   iter.seek(aIndexInContainer);
 
   PRUint8 childDisplay = UNSET_DISPLAY;
@@ -8115,7 +8116,8 @@ nsCSSFrameConstructor::FindNextSibling(nsIPresShell*     aPresShell,
                                        const nsIContent* aChild)
 {
   ChildIterator iter, last;
-  ChildIterator::Init(aContainer, &iter, &last);
+  nsresult rv = ChildIterator::Init(aContainer, &iter, &last);
+  NS_ENSURE_SUCCESS(rv, nsnull);
   iter.seek(aIndexInContainer);
 
   // Catch the case where someone tries to append
