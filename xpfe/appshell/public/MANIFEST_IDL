@@ -4,3 +4,4 @@
 
 nsIFileLocator.idl
 nsIWindowMediator.idl
+nsIAppShellService.idl
