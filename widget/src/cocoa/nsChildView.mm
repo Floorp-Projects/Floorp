@@ -1743,8 +1743,6 @@ nsChildView::GetQuickDrawPort()
   // send event into Gecko by going directly to the
   // the widget.
   PRBool result = mGeckoChild->DispatchMouseEvent(geckoEvent);
-
-  printf("The result is: %d\n");
   
   // XXX If we don't get an ignore status, then we now need to go up our
   // view chain and ask for a menu to return.
@@ -1928,6 +1926,32 @@ nsChildView::GetQuickDrawPort()
 {
   printf("got mouse EXIT view\n");
 }
+
+- (void)otherMouseDown:(NSEvent *)theEvent
+{
+  nsMouseEvent geckoEvent;
+  geckoEvent.eventStructType = NS_MOUSE_EVENT;
+  [self convert:theEvent message:NS_MOUSE_MIDDLE_BUTTON_DOWN toGeckoEvent:&geckoEvent];
+  geckoEvent.clickCount = [theEvent clickCount];
+  
+  // send event into Gecko by going directly to the
+  // the widget.
+  mGeckoChild->DispatchMouseEvent(geckoEvent);
+  
+} // otherMouseDown
+
+
+- (void)otherMouseUp:(NSEvent *)theEvent
+{
+  nsMouseEvent geckoEvent;
+  geckoEvent.eventStructType = NS_MOUSE_EVENT;
+  [self convert:theEvent message:NS_MOUSE_MIDDLE_BUTTON_UP toGeckoEvent:&geckoEvent];
+  
+  // send event into Gecko by going directly to the
+  // the widget.
+  mGeckoChild->DispatchMouseEvent(geckoEvent);
+  
+} // mouseUp
 
 const PRInt32 kNumLines = 8;
 
