@@ -3,13 +3,8 @@
 #  . $topsrcdir/xulrunner/config/mozconfig
 # to the top of your mozconfig file.
 
-export MOZ_XULRUNNER=1
-mk_add_options MOZ_XULRUNNER=1
+mk_add_options MOZ_CO_PROJECT=xulrunner
+ac_add_options --enable-application=xulrunner
 
-ac_add_options --disable-ldap
-ac_add_options --disable-mailnews
 ac_add_options --enable-extensions=xml-rpc,xmlextras,pref,transformiix,universalchardet,webservices,gnomevfs,negotiateauth
 ac_add_options --enable-crypto
-ac_add_options --disable-composer
-ac_add_options --enable-single-profile
-ac_add_options --disable-profilesharing
