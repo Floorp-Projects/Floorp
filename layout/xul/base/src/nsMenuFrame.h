@@ -34,6 +34,8 @@
 #include "nsITimer.h"
 #include "nsITimerCallback.h"
 #include "nsISupportsArray.h"
+#include "nsIDOMText.h"
+#include "nsIContent.h"
 
 nsresult NS_NewMenuFrame(nsIFrame** aResult, PRUint32 aFlags) ;
 
@@ -161,6 +163,9 @@ protected:
   nsFrameList mPopupFrames;
   PRBool mIsMenu; // Whether or not we can even have children or not.
   PRBool mMenuOpen;
+  PRBool mHasAnonymousContent;  // Do we have anonymous content frames?
+  nsCOMPtr<nsIContent> mMenuText;
+  nsCOMPtr<nsIDOMText> mAccelText;
   nsIMenuParent* mMenuParent; // Our parent menu.
   nsCOMPtr<nsITimer> mOpenTimer;
   nsIPresContext* mPresContext; // Our pres context.

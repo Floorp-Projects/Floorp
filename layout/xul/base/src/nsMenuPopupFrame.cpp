@@ -603,7 +603,9 @@ nsMenuPopupFrame::HandleEvent(nsIPresContext& aPresContext,
 {
   aEventStatus = nsEventStatus_eConsumeDoDefault;
   if (aEvent->message == NS_MOUSE_MOVE) {
+#ifdef DEBUG_hyatt
     printf("Mouse enter!\n");
+#endif
     //HandleMouseEnterEvent(aPresContext, aEvent, aEventStatus);
   }
   

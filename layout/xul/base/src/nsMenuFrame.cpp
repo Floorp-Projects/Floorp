@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -103,6 +103,7 @@ NS_IMETHODIMP nsMenuFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsMenuFrame::nsMenuFrame()
   : mIsMenu(PR_FALSE),
     mMenuOpen(PR_FALSE),
+    mHasAnonymousContent(PR_FALSE),
     mMenuParent(nsnull),
     mPresContext(nsnull)
 {
@@ -365,13 +366,27 @@ nsMenuFrame::AttributeChanged(nsIPresContext* aPresContext,
                               nsIAtom* aAttribute,
                               PRInt32 aHint)
 {
+  nsAutoString value;
+
   if (aAttribute == nsXULAtoms::open) {
-    nsAutoString openVal;
-    nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(aChild);
-    domElement->GetAttribute("open", openVal);
-    if (openVal == "true")
+    aChild->GetAttribute(kNameSpaceID_None, aAttribute, value);
+    if (value == "true")
       OpenMenuInternal(PR_TRUE);
-    else OpenMenuInternal(PR_FALSE);
+    else
+      OpenMenuInternal(PR_FALSE);
+  }
+
+  if (mHasAnonymousContent) {
+    if (aAttribute == nsXULAtoms::accesskey ||
+        aAttribute == nsHTMLAtoms::value) {
+      /* update accesskey or value on menu-left */
+      aChild->GetAttribute(kNameSpaceID_None, aAttribute, value);
+      mMenuText->SetAttribute(kNameSpaceID_None, aAttribute, value, PR_TRUE);
+    } else if (aAttribute == nsXULAtoms::acceltext) {
+      /* update content in accel-text */
+      aChild->GetAttribute(kNameSpaceID_None, aAttribute, value);
+      mAccelText->SetData(value);
+    }
   }
 
   return NS_OK;
@@ -686,7 +701,7 @@ nsMenuFrame::CreateAnonymousContent(nsISupportsArray& aAnonymousChildren)
   
   PRInt32 childCount;
   mContent->ChildCount(childCount);
-  PRBool createContent = PR_TRUE;
+  mHasAnonymousContent = PR_TRUE;
   for (PRInt32 i = 0; i < childCount; i++) {
     // XXX Should optimize this to look for a display type of none.
     // Not sure how to do this.  For now screen out some known tags.
@@ -697,12 +712,12 @@ nsMenuFrame::CreateAnonymousContent(nsISupportsArray& aAnonymousChildren)
     if (tag.get() != nsXULAtoms::menupopup &&
       tag.get() != nsXULAtoms::templateAtom &&
       tag.get() != nsXULAtoms::observes) {
-      createContent = PR_FALSE;
+      mHasAnonymousContent = PR_FALSE;
       break;
     }
   }
 
-  if (!createContent)
+  if (!mHasAnonymousContent)
     return NS_OK;
 
   nsCOMPtr<nsIDocument> idocument;
@@ -717,60 +732,43 @@ nsMenuFrame::CreateAnonymousContent(nsISupportsArray& aAnonymousChildren)
   nsCOMPtr<nsIDOMElement> node;
   nsCOMPtr<nsIContent> content;
 
-  // Create the "menu-left" object. It's a titledbutton. Don't make this for menu bar items.
   PRBool onMenuBar = PR_FALSE;
   if (mMenuParent)
     mMenuParent->IsMenuBar(onMenuBar);
   
-  if (!onMenuBar) { // XXX Maybe we should make one for a .menubar-left class so that the option exists
-    nsDocument->CreateElementWithNameSpace("titledbutton", xulNamespace, getter_AddRefs(node));
-    content = do_QueryInterface(node);
-    content->SetAttribute(kNameSpaceID_None, classAtom, "menu-left", PR_FALSE);
-    aAnonymousChildren.AppendElement(content);
-  }
-  
-  // Create the div object. Split the text based on our accesskey value and
-  // make a div that contains the before string, an underline node with the
-  // access key as a child, and the after string.
-  nsDocument->CreateElementWithNameSpace("div", htmlNamespace, getter_AddRefs(node));
+  /* Create .menu-left (.menubar-left) titledbutton for icon. */
+  nsDocument->CreateElementWithNameSpace("titledbutton", xulNamespace,
+                                         getter_AddRefs(node));
   content = do_QueryInterface(node);
+  content->SetAttribute(kNameSpaceID_None, classAtom,
+                        onMenuBar ? "menubar-left" : "menu-left" , PR_FALSE);
   aAnonymousChildren.AppendElement(content);
   
-  nsAutoString beforeString;
-  nsAutoString accessString;
-  nsAutoString afterString;
-  SplitOnShortcut(beforeString, accessString, afterString);
+  /*
+   * Create the .menu-text titledbutton, and propagate crop, accesskey and
+   * value attributes.  If we're a menubar, make the class menubar-text
+   * instead.
+   */
+  nsDocument->CreateElementWithNameSpace("titledbutton", xulNamespace,
+                                         getter_AddRefs(node));
+  content = do_QueryInterface(node);
+  content->SetAttribute(kNameSpaceID_None, classAtom, 
+                        onMenuBar ? "menubar-text" : "menu-text", PR_FALSE);
+  nsAutoString accessKey, value, crop;
+
+  mMenuText = content;
+  mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value);
+  content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value, PR_FALSE);
+  mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::accesskey, accessKey);
+  content->SetAttribute(kNameSpaceID_None, nsXULAtoms::accesskey, accessKey,
+                        PR_FALSE);
   
-  // Create the before text node.
-  nsCOMPtr<nsIDOMText> beforeTextNode;
-  if (beforeString != "")
-    document->CreateTextNode(beforeString, getter_AddRefs(beforeTextNode));
-  
-  // Create the <html:u> element.
-  nsCOMPtr<nsIDOMElement> underlineElement;
+  mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::crop, crop);
+  content->SetAttribute(kNameSpaceID_None, nsXULAtoms::crop,
+                        crop == "" ? "right" : crop, PR_FALSE);
 
-  if (accessString != "") {
-    nsDocument->CreateElementWithNameSpace("u", htmlNamespace, getter_AddRefs(underlineElement));
- 
-    // Create the child of the <html:u> element and append it to the U element.
-    nsCOMPtr<nsIDOMText> accessTextNode;
-    document->CreateTextNode(accessString, getter_AddRefs(accessTextNode));
-    underlineElement->AppendChild(accessTextNode, getter_AddRefs(dummyResult));
-  }
-
-  // Create the after text node.
-  nsCOMPtr<nsIDOMText> afterTextNode;
-  if (afterString != "") {
-    document->CreateTextNode(afterString, getter_AddRefs(afterTextNode));
-  }
-
-  // Append the before, the underline, and the after to the div.
-  if (beforeTextNode)
-    node->AppendChild(beforeTextNode, getter_AddRefs(dummyResult));
-  if (underlineElement) 
-    node->AppendChild(underlineElement, getter_AddRefs(dummyResult));
-  if (afterTextNode)
-    node->AppendChild(afterTextNode, getter_AddRefs(dummyResult));
+  // append now, after we've set all the attributes
+  aAnonymousChildren.AppendElement(content);
 
   // Create a spring that serves as padding between the text and the
   // accelerator.
@@ -791,6 +789,7 @@ nsMenuFrame::CreateAnonymousContent(nsISupportsArray& aAnonymousChildren)
 
       nsCOMPtr<nsIDOMText> accelNode;
       document->CreateTextNode(accelString, getter_AddRefs(accelNode));
+      mAccelText = accelNode;
       node->AppendChild(accelNode, getter_AddRefs(dummyResult));
     }
 
@@ -831,13 +830,10 @@ nsMenuFrame::SplitOnShortcut(nsString& aBeforeString, nsString& aAccessString, n
 {
   nsString value;
   nsString accessKey;
-  mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value);
-  
   aBeforeString = value;
   aAccessString = "";
   aAfterString = "";
 
-  mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::accesskey, accessKey);
   if (accessKey == "") // Nothing to do. 
     return;
 
