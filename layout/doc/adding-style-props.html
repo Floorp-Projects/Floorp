@@ -1,0 +1,218 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"><html><head>
+  <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+  <meta name="author" content="Marc Attinasi"><title>Adding a new style property - layout cookbook</title></head>
+
+<body>
+<h1>Adding a new style property</h1>
+<br>
+<blockquote>
+  <h4>Document history:</h4>
+  <ul>
+    <li>03/21/2001: Marc Attinasi (attinasi@netscape.com) created document
+/ implementing -moz-force-broken-image-icon for bug <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=58646">
+58646</a>
+      <br>
+    </li>
+  </ul>
+  </blockquote>
+  <br>
+  <h4> </h4>
+  <h2>Overview</h2>
+When a new style property is needed there are many places in the code that
+need to be updated. This document outlines the proceedure used to add a new
+property, in this case the property is a proprietary one called '-moz-force-broken-image-icons'
+and is used as a way for a stylesheet to force broken image icons to be displayed.
+This is all being done in the context of <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=58646">
+bug 58646</a>
+.<br>
+  <h2>Analysis</h2>
+Up front you have to decide some things about the new property:<br>
+  <br>
+  <b>Questions:</b><br>
+  <ol>
+    <li>Is the property proprietary or specified by the CSS standard?<br>
+    </li>
+    <li>Is the property inherited?</li>
+    <li>What types of values can the property have?<br>
+    </li>
+    <li>Does it logically fit with other existing properties?</li>
+    <li>What is the impact to the layout of a page if that property changes?</li>
+    <li>What do you want to name it?</li>
+  </ol>
+  <b>Answers:</b><br>
+  <ol>
+    <li>In our specific case, we want a property that is used internally,
+so it is a proprietary property.  </li>
+    <li>The property is to be used for images, which are leaf elements, so
+there is no need to inherit it. </li>
+    <li>The property is used simply to force a broken image to be represented
+by an icon, so it only supports the values '0' and '1' as numerics. </li>
+    <li>It is hard to see how this property fits logically in with other
+properties, but if we stretch our imaginations we could say that it is a
+sort of UI property. </li>
+    <li>If this property changes, the image frame has to be recreated. This
+is because the decision about whether to display the icon or not will impact
+the decision to replace the image frame with an inline text frame for the
+ALT text, so if the ALT text inline is already made, there is no image frame
+left around to reflow or otherwise modify. </li>
+    <li>Finally, the name will be '-moz-force-broken-image-icons' - that
+should be pretty self-describing (by convention we start proprietary property
+names with '-moz-').</li>
+  </ol>
+  <h2>Implementation</h2>
+There are several places that need to be educated about a new style property.
+The are:<br>
+  <ul>
+    <li>CSS Property Names and Hint Tables: the new property name must be
+made formally know to the system<br>
+    </li>
+    <li>CSS Declaration: the declaration must be able to hold the property
+and its value(s)</li>
+    <li>CSS Parser: the parser must be able to parse the property name, validate
+the values, and provide a declaration for the property and value</li>
+    <li>Style Context: the StyleContext must be able to hold the resolved
+value of the property, and provide a means to retrieve the property value.
+Additionally, the StyleContext has to know what kind of impact a change to
+this property causes.</li>
+    <li>Rule Nodes: the RuleNodes need to know how the property is inherited
+and how it is shared by other elements.</li>
+    <li>Layout: layout has to know what to do with the property, in other
+words, the meaning of the property.</li>
+  </ul>
+  <h3>CSS Property Name / Constants / Hints</h3>
+First, add the new name to the property list in <a href="http://lxr.mozilla.org/seamonkey/source/content/shared/public/nsCSSPropList.h">
+nsCSSPropList.h</a>
+  Insert the property in the list alphabetically, using the existing
+property names as a template. The format of the entry you will create is:
+  <pre>CSS_PROP(-moz-force-broken-image-iconst, force_broken_image_icons, FRAMECHANGE) // bug 58646</pre>
+The first value is the formal property name, in other words the property
+name as it is seen by the CSS parser.<br>
+The second value is the name of the property as it will appear internally.<br>
+The last value indicates what must change when the value of the property
+changes. It should be one of (<a href="http://lxr.mozilla.org/seamonkey/source/layout/base/public/nsStyleConsts.h#46">
+VISUAL, AURAL, REFLOW, CONTENT, FRAMECHANGE</a>
+).<br>
+  <br>
+If you need to introduce new constants for the values of the property, they
+must be added to <a href="http://lxr.mozilla.org/seamonkey/source/layout/base/public/nsStyleConsts.h">
+nsStyleConsts.h</a>
+ and to the appropriate keyword tables in <a href="http://lxr.mozilla.org/seamonkey/source/content/shared/src/nsCSSProps.cpp">
+nsCSSProps.cpp</a>
+ (note: this cookbook does not do this since the new property does not require
+any new keywords for the property values).
+  <h3>CSS Declaration</h3>
+Changes will need to be made to the structs and classes defined in <a href="http://lxr.mozilla.org/seamonkey/source/content/html/style/src/nsCSSDeclaration.h">
+nsCSSDeclaration.h </a>
+and <a href="http://lxr.mozilla.org/seamonkey/source/content/html/style/src/nsCSSDeclaration.cpp">
+nsCSSDeclaration.cpp</a>
+  <br>
+  <br>
+First, find the declaration of the struct that will hold the new property
+value (in the header file). For this example it is the struct <b>nsCSSUserInterface</b>
+. Modify the struct declaration to include a new data member for the new
+property, of the type CSSValue. Next, open the implementation file (the cpp)
+and modify the struct's constructors. <br>
+  <br>
+Next, the <a href="http://lxr.mozilla.org/seamonkey/source/content/html/style/src/nsCSSDeclaration.cpp#1410">
+AppendValue</a>
+ method must be updated to support your new property. The CSSParser will
+call this to build up a declaration. Find the portion of that method that
+deals with the other properties in the struct that you are adding your property
+to (or create a new section if you are creating a new style struct). For
+this example we will find the 'UserInterface' section and add our new property
+  <a href="#AppendValueCase">there</a>
+.<br>
+  <pre>    // nsCSSUserInterface<br>    case eCSSProperty_user_input:<br>    case eCSSProperty_user_modify:<br>    case eCSSProperty_user_select:<br>    case eCSSProperty_key_equivalent:<br>    case eCSSProperty_user_focus:<br>    case eCSSProperty_resizer:<br>    case eCSSProperty_cursor:<br>    case eCSSProperty_force_broken_image_icons: {<br>      CSS_ENSURE(UserInterface) {<br>        switch (aProperty) {<br>          case eCSSProperty_user_input:       theUserInterface-&gt;mUserInput = aValue;      break;<br>          case eCSSProperty_user_modify:      theUserInterface-&gt;mUserModify = aValue;     break;<br>          case eCSSProperty_user_select:      theUserInterface-&gt;mUserSelect = aValue;     break;<br>          case eCSSProperty_key_equivalent: <br>            CSS_ENSURE_DATA(theUserInterface-&gt;mKeyEquivalent, nsCSSValueList) {<br>              theUserInterface-&gt;mKeyEquivalent-&gt;mValue = aValue;<br>              CSS_IF_DELETE(theUserInterface-&gt;mKeyEquivalent-&gt;mNext);<br>            }<br>            break;<br>          case eCSSProperty_user_focus:       theUserInterface-&gt;mUserFocus = aValue;      break;<br>          case eCSSProperty_resizer:          theUserInterface-&gt;mResizer = aValue;        break;<br>          case eCSSProperty_cursor:<br>            CSS_ENSURE_DATA(theUserInterface-&gt;mCursor, nsCSSValueList) {<br>              theUserInterface-&gt;mCursor-&gt;mValue = aValue;<br>              CSS_IF_DELETE(theUserInterface-&gt;mCursor-&gt;mNext);<br>            }<br>            break;<br><b>          <a name="AppendValueCase"></a>case eCSSProperty_force_broken_image_icons: theUserInterface-&gt;mForceBrokenImageIcon = aValue; break;<br></b><br>          CSS_BOGUS_DEFAULT; // make compiler happy<br>        }<br>      }<br>      break;<br>    }<br><br></pre>
+The GetValue method must be similarly <a href="#GetValueCase">modified</a>
+:<br>
+  <pre>    // nsCSSUserInterface<br>    case eCSSProperty_user_input:<br>    case eCSSProperty_user_modify:<br>    case eCSSProperty_user_select:<br>    case eCSSProperty_key_equivalent:<br>    case eCSSProperty_user_focus:<br>    case eCSSProperty_resizer:<br>    case eCSSProperty_cursor:<br>    case eCSSProperty_force_broken_image_icons: {<br>      CSS_VARONSTACK_GET(UserInterface);<br>      if (nsnull != theUserInterface) {<br>        switch (aProperty) {<br>          case eCSSProperty_user_input:       aValue = theUserInterface-&gt;mUserInput;       break;<br>          case eCSSProperty_user_modify:      aValue = theUserInterface-&gt;mUserModify;      break;<br>          case eCSSProperty_user_select:      aValue = theUserInterface-&gt;mUserSelect;      break;<br>          case eCSSProperty_key_equivalent:<br>            if (nsnull != theUserInterface-&gt;mKeyEquivalent) {<br>              aValue = theUserInterface-&gt;mKeyEquivalent-&gt;mValue;<br>            }<br>            break;<br>          case eCSSProperty_user_focus:       aValue = theUserInterface-&gt;mUserFocus;       break;<br>          case eCSSProperty_resizer:          aValue = theUserInterface-&gt;mResizer;         break;<br>          case eCSSProperty_cursor:<br>            if (nsnull != theUserInterface-&gt;mCursor) {<br>              aValue = theUserInterface-&gt;mCursor-&gt;mValue;<br>            }<br>            break;<br><b>          <a name="GetValueCase"></a>case eCSSProperty_force_broken_image_icons: aValue = theUserInterface-&gt;mForceBrokenImageIcons; break;<br></b><br>          CSS_BOGUS_DEFAULT; // make compiler happy<br>        }<br>      }<br>      else {<br>        aValue.Reset();<br>      }<br>      break;<br>    }<br><br></pre>
+Finally <a href="#ListCase">modify </a>
+the 'List' method to output the property value.<br>
+  <pre>void nsCSSUserInterface::List(FILE* out, PRInt32 aIndent) const<br>{<br>  for (PRInt32 index = aIndent; --index &gt;= 0; ) fputs("  ", out);<br><br>  nsAutoString buffer;<br><br>  mUserInput.AppendToString(buffer, eCSSProperty_user_input);<br>  mUserModify.AppendToString(buffer, eCSSProperty_user_modify);<br>  mUserSelect.AppendToString(buffer, eCSSProperty_user_select);<br>  nsCSSValueList*  keyEquiv = mKeyEquivalent;<br>  while (nsnull != keyEquiv) {<br>    keyEquiv-&gt;mValue.AppendToString(buffer, eCSSProperty_key_equivalent);<br>    keyEquiv= keyEquiv-&gt;mNext;<br>  }<br>  mUserFocus.AppendToString(buffer, eCSSProperty_user_focus);<br>  mResizer.AppendToString(buffer, eCSSProperty_resizer);<br>  <br>  nsCSSValueList*  cursor = mCursor;<br>  while (nsnull != cursor) {<br>    cursor-&gt;mValue.AppendToString(buffer, eCSSProperty_cursor);<br>    cursor = cursor-&gt;mNext;<br>  }<br><br> <b> <a name="ListCase"></a>mForceBrokenImageIcon.AppendToString(buffer,eCSSProperty_force_broken_image_icons);</b><br><br>  fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);<br>}<br><br></pre>
+ 
+  <h3>CSS Parser</h3>
+Next, the CSSParser must be educated about this new property so that it can
+read in the formal declarations and build up the internal declarations that
+will be used to build the rules. If you are adding a simple property that
+takes a single value, you simply add your new property to the ParseSingleProperty
+method. If a more complex parsing is required you will have to write a new
+method to handle it, modeling it off of one of the existing parsing helper
+methods (see <a href="http://lxr.mozilla.org/seamonkey/source/content/html/style/src/nsCSSParser.cpp#4151">
+ParseBackground</a>
+, for and example). We are just adding a simple single-value property here.<br>
+  <br>
+Open nsCSSParser.cpp and look for the method <a href="http://lxr.mozilla.org/seamonkey/source/content/html/style/src/nsCSSParser.cpp#3580">
+ParseSingleProperty</a>
+. This method is responsible for calling the relevant helper routine to parse
+the value(s). Find an existing property that is similar to the property you
+are adding. For our example we are adding a property that takes a numeric
+value so we will model it after the 'height' property and call ParsePositiveVariant.
+Add a new case for the new property and call the appropriate parser-helper
+and make a call to ParseVariant passing the <a href="http://lxr.mozilla.org/seamonkey/source/content/html/style/src/nsCSSParser.cpp#2754">
+variant flag</a>
+ that makes sense for your property. In our case<br>
+  <br>
+  <pre>  case eCSSProperty_force_broken_image_icons:</pre>
+  <pre>    return ParsePositiveVariant(aErrorCode, aValue, VARIANT_INTEGER, nsnull);</pre>
+This will parse the value as a positive integer value, which is what we want.<br>
+  <br>
+  <h3>Style Context</h3>
+Having implemented support for the new property in the CSS Parser and CSS
+Declaration classes in the content module, it is now time to provide support
+for the new property in layout. The Style Context must be given a new data
+member corresponding to the declaration's new data member, so the computed
+value can be held for the layout objects to use.<br>
+  <br>
+First look into <a href="http://lxr.mozilla.org/seamonkey/source/content/shared/public/nsStyleStruct.h">
+nsStyleStruct.h</a>
+ to see the existing style strucs. Find the one that you want to store the
+data on. In this example, we want to put it on the nsStyleUserInterface struct,
+however there is also a class nsStyleUIReset that holds the non-inherited
+values, so we will use that one (remember, our property is not inherited).
+Add a <a href="#StyleContextMember">data member</a>
+ to hold the value:
+  <pre>struct nsStyleUIReset: public nsStyleStruct {<br>  nsStyleUIReset(void);<br>  nsStyleUIReset(const nsStyleUIReset&amp; aOther);<br>  ~nsStyleUIReset(void);<br><br>  NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_UIReset)<br><br>  void* operator new(size_t sz, nsIPresContext* aContext) {<br>    void* result = nsnull;<br>    aContext-&gt;AllocateFromShell(sz, &amp;result);<br>    return result;<br>  }<br>  void Destroy(nsIPresContext* aContext) {<br>    this-&gt;~nsStyleUIReset();<br>    aContext-&gt;FreeToShell(sizeof(nsStyleUIReset), this);<br>  };<br><br>  PRInt32 CalcDifference(const nsStyleUIReset&amp; aOther) const;<br><br>  PRUint8   mUserSelect;      // [reset] (selection-style)<br>  PRUnichar mKeyEquivalent;   // [reset] XXX what type should this be?<br>  PRUint8   mResizer;         // [reset]<br>  <b><a name="StyleContextMember"></a>PRUint8   mForceBrokenImageIcon; // [reset]  (0 if not forcing, otherwise forcing)</b><br>};<br></pre>
+In the implementation file <a href="http://lxr.mozilla.org/seamonkey/source/content/shared/src/nsStyleStruct.cpp">
+nsStyleContext.cpp </a>
+add the new data member to the constructors of the style struct and the CalcDifference
+method, which must return the correct style-change hint when a change to
+your new property is detected. The constructor changes are obvious, but here
+is the CalcDifference change for our example:<br>
+  <pre>PRInt32 nsStyleUIReset::CalcDifference(const nsStyleUIReset&amp; aOther) const<br>{<br> <b> if (mForceBrokenImageIcon == aOther.mForceBrokenImageIcon) {</b><br>    if (mResizer == aOther.mResizer) {<br>      if (mUserSelect == aOther.mUserSelect) {<br>        if (mKeyEquivalent == aOther.mKeyEquivalent) {<br>          return NS_STYLE_HINT_NONE;<br>        }<br>        return NS_STYLE_HINT_CONTENT;<br>      }<br>      return NS_STYLE_HINT_VISUAL;<br>    }<br>    return NS_STYLE_HINT_VISUAL;<br>  }<br>  <b>return NS_STYLE_HINT_FRAMECHANGE;<br></b>}<br></pre>
+  <h3>CSSStyleRule</h3>
+The nsCSSStyleRule must be updated to manage mapping the declaration to the
+style struct. In the file <a href="http://lxr.mozilla.org/seamonkey/source/content/html/style/src/nsCSSStyleRule.cpp">
+nsCSSStyleRule.cpp</a>
+, locate the Declaration mapping function corresponding to the style struct
+you have added your property to. For example, we <a href="http://bugzilla.mozilla.org/MapUIForDeclChange">
+update </a>
+MapUIForDeclaration:<br>
+  <pre>static nsresult<br>MapUIForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID&amp; aID, nsCSSUserInterface&amp; aUI)<br>{<br>  if (!aDecl)<br>    return NS_OK; // The rule must have a declaration.<br><br>  nsCSSUserInterface* ourUI = (nsCSSUserInterface*)aDecl-&gt;GetData(kCSSUserInterfaceSID);<br>  if (!ourUI)<br>    return NS_OK; // We don't have any rules for UI.<br><br>  if (aID == eStyleStruct_UserInterface) {<br>    if (aUI.mUserFocus.GetUnit() == eCSSUnit_Null &amp;&amp; ourUI-&gt;mUserFocus.GetUnit() != eCSSUnit_Null)<br>      aUI.mUserFocus = ourUI-&gt;mUserFocus;<br>    <br>    if (aUI.mUserInput.GetUnit() == eCSSUnit_Null &amp;&amp; ourUI-&gt;mUserInput.GetUnit() != eCSSUnit_Null)<br>      aUI.mUserInput = ourUI-&gt;mUserInput;<br><br>    if (aUI.mUserModify.GetUnit() == eCSSUnit_Null &amp;&amp; ourUI-&gt;mUserModify.GetUnit() != eCSSUnit_Null)<br>      aUI.mUserModify = ourUI-&gt;mUserModify;<br><br>    if (!aUI.mCursor &amp;&amp; ourUI-&gt;mCursor)<br>      aUI.mCursor = ourUI-&gt;mCursor;<br><br><br>  }<br>  else if (aID == eStyleStruct_UIReset) {<br>    if (aUI.mUserSelect.GetUnit() == eCSSUnit_Null &amp;&amp; ourUI-&gt;mUserSelect.GetUnit() != eCSSUnit_Null)<br>      aUI.mUserSelect = ourUI-&gt;mUserSelect;<br>   <br>    if (!aUI.mKeyEquivalent &amp;&amp; ourUI-&gt;mKeyEquivalent)<br>      aUI.mKeyEquivalent = ourUI-&gt;mKeyEquivalent;<br><br>    if (aUI.mResizer.GetUnit() == eCSSUnit_Null &amp;&amp; ourUI-&gt;mResizer.GetUnit() != eCSSUnit_Null)<br>      aUI.mResizer = ourUI-&gt;mResizer;<br>    <b><br>    <a name="MapUIForDeclChange"></a>if (aUI.mForceBrokenImageIcon.GetUnit() == eCSSUnit_Null &amp;&amp; ourUI-&gt;mForceBrokenImageIcon.GetUnit() == eCSSUnit_Integer)<br>      aUI.mForceBrokenImageIcon = ourUI-&gt;mForceBrokenImageIcon;</b><br>  }<br><br>  return NS_OK;<br><br>}<br></pre>
+  <h3>Rule Node</h3>
+Now we have to update the RuleNode code to know about the new property. First,
+locate the PropertyCheckData array for the data that you added the new property
+to. For this example, we add the following:<br>
+  <pre>static const PropertyCheckData UIResetCheckProperties[] = {<br>  CHECKDATA_PROP(nsCSSUserInterface, mUserSelect, CHECKDATA_VALUE, PR_FALSE),<br>  CHECKDATA_PROP(nsCSSUserInterface, mResizer, CHECKDATA_VALUE, PR_FALSE),<br>  CHECKDATA_PROP(nsCSSUserInterface, mKeyEquivalent, CHECKDATA_VALUELIST, PR_FALSE)<br>  <b>CHECKDATA_PROP(nsCSSUserInterface, mForceBrokenImageIcon, CHECKDATA_VALUE, PR_FALSE)</b><br>};<br></pre>
+The first two arguments correspond to the structure and data member from
+teh CSSDeclaration, the third is the data type, the fourth indicates if it
+is a coord value or not.<br>
+  <br>
+Next, we have to make sure the ComputeXXX method for the structure the property
+was added to is updated to mange the new value. In this example we need to
+modify the nsRuleNode::ComputeUIResetData method to handle the CSS Declaration
+to the style struct:<br>
+  <pre>  ...<br>  // resizer: auto, none, enum, inherit<br>  if (eCSSUnit_Enumerated == uiData.mResizer.GetUnit()) {<br>    ui-&gt;mResizer = uiData.mResizer.GetIntValue();<br>  }<br>  else if (eCSSUnit_Auto == uiData.mResizer.GetUnit()) {<br>    ui-&gt;mResizer = NS_STYLE_RESIZER_AUTO;<br>  }<br>  else if (eCSSUnit_None == uiData.mResizer.GetUnit()) {<br>    ui-&gt;mResizer = NS_STYLE_RESIZER_NONE;<br>  }<br>  else if (eCSSUnit_Inherit == uiData.mResizer.GetUnit()) {<br>    inherited = PR_TRUE;<br>    ui-&gt;mResizer = parentUI-&gt;mResizer;<br>  }<br><br>  <b>// force-broken-image-icons: integer<br>  if (eCSSUnit_Integer == uiData.mForceBrokenImageIcons.GetUnit()) {<br>    ui-&gt;mForceBrokenImageIcons = uiData.mForceBrokenImageIcons.GetIntValue();<br>  }</b><br>  <br>  if (inherited)<br>    // We inherited, and therefore can't be cached in the rule node.  We have to be put right on the<br>    // style context.<br>    aContext-&gt;SetStyle(eStyleStruct_UIReset, *ui);<br>  else {<br>    // We were fully specified and can therefore be cached right on the rule node.<br>    if (!aHighestNode-&gt;mStyleData.mResetData)<br>      aHighestNode-&gt;mStyleData.mResetData = new (mPresContext) nsResetStyleData;<br>    aHighestNode-&gt;mStyleData.mResetData-&gt;mUIData = ui;<br>    // Propagate the bit down.<br>    PropagateDependentBit(NS_STYLE_INHERIT_UI_RESET, aHighestNode);<br>  }<br>  ...<br></pre>
+  <h3>Layout</h3>
+OK, finally the style system is supporting the new property. It is time to
+actually make use of it now.<br>
+  <br>
+In layout, retrieve the styleStruct that has the new property from the frame's
+style context. Access the new property and get its value. It is that simple.
+For this example, it looks like this, in nsImageFrame:<br>
+  <pre>        PRBool forceIcon = PR_FALSE;<br><br>        const nsStyleUIReset* styleData;<br>        GetStyleData(eStyleStruct_UIReset, (const nsStyleStruct*&amp;) styleData);<br>        if (styleData-&gt;mForceBrokenImageIcon) {<br>          forceIcon = PR_TRUE;<br>        }<br><br></pre>
+Create some testcases with style rules that use the new property, make sure
+it is being parsed correctly. Test it in an external stylesheet and in inline
+style. Test that it is inherited correctly, or not inherited as appropriate
+to your property. Update this document with any further details, or correcting
+any errors.<br>
+  </body></html>
