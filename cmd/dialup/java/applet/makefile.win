@@ -19,7 +19,7 @@ DEPTH=..\..\..\..
 
 JSRCS=  \
 !ifdef MOZ_PRIV
-	$(DEPTH)\dialup\java\AMDProgressBar.java \
+	$(DEPTH)\..\ns_priv\dialup\java\AMDProgressBar.java \
 !endif
 	ProgressApplet.java \
 	CPGeneratorProgress.java \
