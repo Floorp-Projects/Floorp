@@ -867,6 +867,7 @@ pref_saveLIPref(PLHashEntry *he, int i, void *arg)
 {
 	char **prefArray = (char**) arg;
 	PrefNode *pref = (PrefNode *) he->value;
+
 	if (pref && PREF_HAS_USER_VALUE(pref) && !PREF_HAS_LI_VALUE(pref) && 
 		pref_ValueChanged(pref->defaultPref, 
 						  pref->userPref, 
@@ -877,6 +878,12 @@ pref_saveLIPref(PLHashEntry *he, int i, void *arg)
 		if (pref->flags & PREF_STRING)
 	    {
 			char *tmp_str = str_escape(pref->userPref.stringVal);
+    
+            //Error checks to be sure length not too long.
+            //18 refers to the number of characters in the "user_pref..." string.
+            if(((PL_strlen((char *) he->key)+PL_strlen(tmp_str))+18)>2048)
+                return PREF_BAD_PARAMETER;
+
 			if (tmp_str)
 			{
 				PR_snprintf(buf, 2048, "user_pref(\"%s\", \"%s\");" LINEBREAK,
@@ -947,6 +954,12 @@ pref_savePref(PLHashEntry *he, int i, void *arg)
 		if (pref->flags & PREF_STRING)
 		{
 			char *tmp_str = str_escape(pref->userPref.stringVal);
+
+            //Error checks to be sure length not too long.
+            //18 refers to the number of characters in the "user_pref..." string.
+            if(((PL_strlen((char *) he->key)+PL_strlen(tmp_str))+18)>2048)
+                return PREF_BAD_PARAMETER;
+
 			if (tmp_str)
 			{
 				PR_snprintf(buf, 2048, "user_pref(\"%s\", \"%s\");",
@@ -1687,7 +1700,7 @@ PrefResult pref_HashPref(const char *key, PrefValue value, PrefType type, PrefAc
 
 	if (!gHashTable && !pref_useDefaultPrefFile())
 		return PREF_NOT_INITIALIZED;
-
+    
 	pref = (PrefNode*) PR_HashTableLookup(gHashTable, key);
 	if (!pref)
 	{
@@ -1709,7 +1722,7 @@ PrefResult pref_HashPref(const char *key, PrefValue value, PrefType type, PrefAc
       /* NS_ASSERTION(0, "Trying to set pref to with the wrong type!"); */
 		return PREF_TYPE_CHANGE_ERR;
     }
-    
+
     switch (action)
     {
     	case PREF_SETDEFAULT:
