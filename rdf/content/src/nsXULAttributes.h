@@ -54,7 +54,7 @@ struct nsClassList {
   }
   ~nsClassList(void)
   {
-    NS_RELEASE(mAtom);
+    NS_IF_RELEASE(mAtom);
     if (nsnull != mNext) {
       delete mNext;
     }
