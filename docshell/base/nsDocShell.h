@@ -177,6 +177,8 @@ public:
   // used when the docshell gets content that's being redirected (so we don't go through
   // our own InternalLoad method) to reset the load type...
   nsresult SetLoadType(PRUint32 aLoadType);
+  nsDocShellInfoLoadType ConvertLoadTypeToDocShellLoadInfo(PRUint32 aLoadType);
+  PRUint32 ConvertDocShellLoadInfoToLoadType(nsDocShellInfoLoadType aDocShellLoadType);
 
 protected:
    // Object Management
