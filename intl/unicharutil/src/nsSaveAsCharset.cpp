@@ -203,8 +203,14 @@ nsSaveAsCharset::DoCharsetConversion(const PRUnichar *inString, char **outString
     saveResult = rv;
     rv = NS_OK;
 
-    // reset the encoder, estimate target length again
-    mEncoder->Reset();
+    // finish encoder, give it a chance to write extra data like escape sequences
+    dstLength = bufferLength - pos2;
+    rv = mEncoder->Finish(&dstPtr[pos2], &dstLength);
+    if (NS_SUCCEEDED(rv)) {
+      pos2 += dstLength;
+      dstPtr[pos2] = '\0';
+    }
+
     srcLength = inStringLength - pos1;
 
     // do the fallback
