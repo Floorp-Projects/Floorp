@@ -222,10 +222,21 @@ void _MD_StopInterrupts(void)
 	}
 }
 
+
+#define MAX_PAUSE_TIMEOUT_MS    500
+
 void _MD_PauseCPU(PRIntervalTime timeout)
 {
     if (timeout != PR_INTERVAL_NO_WAIT)
     {
+        // There is a race condition entering the critical section
+        // in AsyncIOCompletion (and probably elsewhere) that can
+        // causes deadlock for the duration of this timeout. To
+        // work around this, use a max 500ms timeout for now.
+        // See bug 99561 for details.
+        if (PR_IntervalToMilliseconds(timeout) > MAX_PAUSE_TIMEOUT_MS)
+            timeout = PR_MillisecondsToInterval(MAX_PAUSE_TIMEOUT_MS);
+
         WaitOnIdleSemaphore(timeout);
         (void) _MD_IOInterrupt();
     }
