@@ -57,3 +57,13 @@ class JNIThread extends Thread {
 	
 	public native void run();
 }
+
+class JNIRunnable implements Runnable {
+    private int mJavaMessage;
+
+	private JNIRunnable(int javaMessage) {
+        mJavaMessage = javaMessage;
+    }
+
+    public native void run();
+}
