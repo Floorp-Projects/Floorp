@@ -50,7 +50,6 @@ CPPSRCS=					\
         nsSpringFrame.cpp \
     	nsSliderFrame.cpp \
         nsProgressMeterFrame.cpp        \
-        nsTitledButtonFrame.cpp        \
         nsTitledBoxFrame.cpp        \
         nsBox.cpp        \
         nsContainerBox.cpp        \
@@ -63,7 +62,6 @@ CPPSRCS=					\
         nsTextBoxFrame.cpp \
         nsFrameNavigator.cpp        \
         nsRepeatService.cpp        \
-        nsToolbarItemFrame.cpp        \
         nsGrippyFrame.cpp        \
         nsStackFrame.cpp        \
         nsDeckFrame.cpp        \
@@ -117,7 +115,6 @@ CPP_OBJS=					\
         .\$(OBJDIR)\nsSpringFrame.obj    \
     	.\$(OBJDIR)\nsSliderFrame.obj \
         .\$(OBJDIR)\nsProgressMeterFrame.obj    \
-		    .\$(OBJDIR)\nsTitledButtonFrame.obj    \
          .\$(OBJDIR)\nsTitledBoxFrame.obj    \
         .\$(OBJDIR)\nsBox.obj    \
         .\$(OBJDIR)\nsContainerBox.obj    \
@@ -130,7 +127,6 @@ CPP_OBJS=					\
         .\$(OBJDIR)\nsTextBoxFrame.obj    \
         .\$(OBJDIR)\nsFrameNavigator.obj    \
         .\$(OBJDIR)\nsRepeatService.obj    \
-        .\$(OBJDIR)\nsToolbarItemFrame.obj    \
         .\$(OBJDIR)\nsGrippyFrame.obj    \
         .\$(OBJDIR)\nsDeckFrame.obj    \
         .\$(OBJDIR)\nsStackFrame.obj    \
