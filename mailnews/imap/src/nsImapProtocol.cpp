@@ -1173,6 +1173,8 @@ nsImapProtocol::ImapThreadMainLoop()
     {
       HandleIdleResponses();
     }
+    if (!GetServerStateParser().Connected())
+      break;
 #ifdef DEBUG_bienvenu
     else
       printf("read to run but no url and not idle\n");
@@ -1193,7 +1195,7 @@ void nsImapProtocol::HandleIdleResponses()
   {
     ParseIMAPandCheckForNewMail(commandBuffer.get());
   }
-  while (m_inputStreamBuffer->NextLineAvailable());
+  while (m_inputStreamBuffer->NextLineAvailable() && GetServerStateParser().Connected());
 
   //  if (oldRecent != GetServerStateParser().NumberOfRecentMessages())
   //  We might check that something actually changed, but for now we can
@@ -4171,13 +4173,12 @@ char* nsImapProtocol::CreateNewLineFromSocket()
             break;
     }
   
-    PR_CEnterMonitor(this);
+    nsAutoCMonitor mon(this);
     nsCAutoString logMsg("clearing IMAP_CONNECTION_IS_OPEN - rv = ");
     logMsg.AppendInt(rv, 16);
     Log("CreateNewLineFromSocket", nsnull, logMsg.get());
     ClearFlag(IMAP_CONNECTION_IS_OPEN);
     TellThreadToDie(PR_FALSE);
-    PR_CExitMonitor(this);
   
     m_transport = nsnull;
     m_outputStream = nsnull;
