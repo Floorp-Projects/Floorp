@@ -349,7 +349,7 @@ NS_IMETHODIMP nsNetSupportDialog::Alert( const nsString &aText )
 	 	rv = nsComponentManager::CreateInstance( kCommonDialogsCID,0, nsICommonDialogs::GetIID(),
                                                       (void**)&dialogService );
         if( NS_SUCCEEDED ( rv ) )
-        	rv = dialogService->Alert( window, text );
+        	rv = dialogService->Alert( window, NULL, text );
 	 
 	 }
 	 return rv;
@@ -382,7 +382,7 @@ NS_IMETHODIMP nsNetSupportDialog::Confirm( const nsString &aText, PRInt32* retur
 	 	rv = nsComponentManager::CreateInstance( kCommonDialogsCID,0, nsICommonDialogs::GetIID(),
                                                       (void**)&dialogService );
         if( NS_SUCCEEDED ( rv ) )
-        	rv = dialogService->Confirm( window, text, returnValue );
+        	rv = dialogService->Confirm( window, NULL, text, returnValue );
 	 
 	 }
 	 return rv;
@@ -418,7 +418,7 @@ NS_IMETHODIMP	nsNetSupportDialog::ConfirmCheck( const nsString &aText, const nsS
 	 	rv = nsComponentManager::CreateInstance( kCommonDialogsCID,0, nsICommonDialogs::GetIID(),
                                                       (void**)&dialogService );
         if( NS_SUCCEEDED ( rv ) )
-        	rv = dialogService->ConfirmCheck( window, text, checkMsg, checkValue, returnValue );
+        	rv = dialogService->ConfirmCheck( window,NULL, text, checkMsg, checkValue, returnValue );
 	 
 	 }
 	 return rv;
@@ -498,7 +498,7 @@ NS_IMETHODIMP nsNetSupportDialog::Prompt(	const nsString &aText, const nsString 
 	 	rv = nsComponentManager::CreateInstance( kCommonDialogsCID,0, nsICommonDialogs::GetIID(),
                                                       (void**)&dialogService );
         if( NS_SUCCEEDED ( rv ) )
-        	rv = dialogService->Prompt( window, text, defaultText, resultText, returnValue );
+        	rv = dialogService->Prompt( window, NULL, text, defaultText, resultText, returnValue );
 	 
 	 }
 	 return rv;
@@ -543,7 +543,7 @@ NS_IMETHODIMP nsNetSupportDialog::PromptUserAndPassword(  const nsString &aText,
 	 	rv = nsComponentManager::CreateInstance( kCommonDialogsCID,0, nsICommonDialogs::GetIID(),
                                                       (void**)&dialogService );
         if( NS_SUCCEEDED ( rv ) )
-        	rv = dialogService->PromptUsernameAndPassword( window, text, user, pwd, returnValue );
+        	rv = dialogService->PromptUsernameAndPassword( window, NULL,text, user, pwd, returnValue );
 	 
 	 }
 	 return rv;
@@ -587,7 +587,7 @@ NS_IMETHODIMP nsNetSupportDialog::PromptPassword( 	const nsString &aText,
 	 	rv = nsComponentManager::CreateInstance( kCommonDialogsCID,0, nsICommonDialogs::GetIID(),
                                                       (void**)&dialogService );
         if( NS_SUCCEEDED ( rv ) )
-        	rv = dialogService->PromptPassword( window, text, pwd, returnValue );
+        	rv = dialogService->PromptPassword( window, NULL,text, pwd, returnValue );
 	 
 	 }
 	 return rv;

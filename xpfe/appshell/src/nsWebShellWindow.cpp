@@ -2920,7 +2920,7 @@ NS_IMETHODIMP nsWebShellWindow::Alert(const PRUnichar *text)
  
  NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv);
  if ( NS_SUCCEEDED( rv ) )
- 	rv = dialog->Alert( domWindow, text );
+ 	rv = dialog->Alert( domWindow, NULL,text );
   return rv; 
 }
 
@@ -2939,7 +2939,7 @@ NS_IMETHODIMP nsWebShellWindow::Confirm(const PRUnichar *text, PRBool *_retval)
  
  NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv);
  if ( NS_SUCCEEDED( rv ) )
- 	rv = dialog->Confirm( domWindow, text, _retval );
+ 	rv = dialog->Confirm( domWindow, NULL, text, _retval );
   return rv; 
 }
 
@@ -2958,7 +2958,7 @@ NS_IMETHODIMP nsWebShellWindow::ConfirmCheck(const PRUnichar *text, const PRUnic
  
  NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv);
  if ( NS_SUCCEEDED( rv ) )
- 	rv =dialog->ConfirmCheck( domWindow, text, checkMsg, checkValue, _retval );
+ 	rv =dialog->ConfirmCheck( domWindow,NULL, text, checkMsg, checkValue, _retval );
   return rv; 
 }
 
@@ -2977,7 +2977,7 @@ NS_IMETHODIMP nsWebShellWindow::Prompt(const PRUnichar *text, const PRUnichar *d
  
  NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv);
  if ( NS_SUCCEEDED( rv ) )
- 	rv = dialog->Prompt( domWindow, text, defaultText, result, _retval );
+ 	rv = dialog->Prompt( domWindow, NULL, text, defaultText, result, _retval );
   return rv; 
 }
 
@@ -2996,7 +2996,7 @@ NS_IMETHODIMP nsWebShellWindow::PromptUsernameAndPassword(const PRUnichar *text,
  
  NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv);
  if ( NS_SUCCEEDED( rv ) )
- 	rv = dialog->PromptUsernameAndPassword( domWindow, text, user, pwd, _retval );
+ 	rv = dialog->PromptUsernameAndPassword( domWindow, NULL, text, user, pwd, _retval );
   return rv;
 }
 
@@ -3015,7 +3015,7 @@ NS_IMETHODIMP nsWebShellWindow::PromptPassword(const PRUnichar *text, PRUnichar 
  
  NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv);
  if ( NS_SUCCEEDED( rv ) )
- 	rv = dialog->PromptPassword( domWindow, text, pwd, _retval );
+ 	rv = dialog->PromptPassword( domWindow, NULL, text, pwd, _retval );
   return rv;
 }
 
