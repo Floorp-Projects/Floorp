@@ -205,7 +205,6 @@ sub load_buildlog {
   
   for $t (@treelist) {
     use Backwards;
-    
     my ($bw) = Backwards->new("$t->{name}/build.dat") or die;
 
     my $tooearly = 0;
@@ -228,14 +227,14 @@ sub load_buildlog {
       }
       $tooearly = 0;
       $buildrec = {    
-         mailtime => $mailtime,
-         buildtime => $buildtime,
-         buildname => ($tree2 ne '' ? $t->{name} . ' ' : '' ) . $buildname,
+         mailtime    => $mailtime,
+         buildtime   => $buildtime,
+         buildname   => ($tree2 ne '' ? $t->{name} . ' ' : '' ) . $buildname,
          errorparser => $errorparser,
          buildstatus => $buildstatus,
-         logfile => $logfile,
-         binaryname => $binaryname,
-         td => $t
+         logfile     => $logfile,
+         binaryname  => $binaryname,
+         td          => $t
       };
       if ($form{noignore} or not $t->{ignore_builds}->{$buildname}) {
         push @{$build_list}, $buildrec;
@@ -532,4 +531,26 @@ sub check_password {
   }
   print "<INPUT TYPE=SUBMIT value=Submit></FORM>\n";
   exit;
+}
+
+sub find_build_record {
+  my ($tree, $logfile) = @_;
+
+  my $log_entry = `grep $logfile $tree/build.dat`;
+
+  chomp($log_entry);
+  my ($mailtime, $buildtime, $buildname, $errorparser,
+      $buildstatus, $logfile, $binaryname) = split /\|/, $log_entry;
+
+  $buildrec = {    
+    mailtime    => $mailtime,
+    buildtime   => $buildtime,
+    buildname   => $buildname,
+    errorparser => $errorparser,
+    buildstatus => $buildstatus,
+    logfile     => $logfile,
+    binaryname  => $binaryname,
+    td          => undef
+  };
+  return $buildrec;
 }
