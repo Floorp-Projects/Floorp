@@ -3,7 +3,7 @@
 <!ENTITY account.accesskey "A">
 <!ENTITY viewLog.label "Junk Mail Log">
 <!ENTITY viewLog.accesskey "j">
-<!ENTITY info1.label "Junk mail controls evaluate your incoming messages and identify those which are most likely to be junk mail, or unsolicted mail.  A junk icon is displayed if the message is identified as junk mail.  An unknown icon is displayed if the message might be junk mail.">
+<!ENTITY info1.label "Junk mail controls evaluate your incoming messages and identify those which are most likely to be junk mail, or unsolicited mail.  A junk icon is displayed if the message is identified as junk mail.  An unknown icon is displayed if the message might be junk mail.">
 <!ENTITY info2.label "Junk mail controls can be fine-tuned by using the Junk Mail toolbar button to mark junk messages appropriately.">
 <!ENTITY level.label "Enable junk mail controls">
 <!ENTITY level.accesskey "E">
