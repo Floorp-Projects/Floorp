@@ -2207,10 +2207,9 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
     // Create the root frame. The document element's frame is a child of the
     // root frame.
     //
-    // Note: the major reason we need the root frame is to implement margins for
-    // the document element's frame. If we didn't need to support margins on the
-    // document element's frame, then we could eliminate the root frame and make
-    // the document element frame a child of the viewport (or its scroll frame)
+    // The root frame serves two purposes:
+    // - reserves space for any margins needed for the document element's frame
+    // - makes sure that the document element's frame covers the entire canvas
     nsIFrame* rootFrame;
     NS_NewRootFrame(&rootFrame);
 
@@ -2516,7 +2515,6 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*          aPresContext
   PRBool    canBePositioned = PR_TRUE;
   PRBool    frameHasBeenInitialized = PR_FALSE;
   nsIFrame* newFrame = nsnull;  // the frame we construct
-  PRBool    newFrameIsFloaterContainer = PR_FALSE;
   PRBool    isReplaced = PR_FALSE;
   nsresult  rv = NS_OK;
 
@@ -2662,14 +2660,8 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*          aPresContext
       nsFrameItems childItems;
       nsAbsoluteItems floaterList(newFrame);
       if (processChildren) {
-        if (newFrameIsFloaterContainer) {
-          rv = ProcessChildren(aPresContext, aState, aContent, newFrame,
-                               PR_TRUE, childItems);
-        }
-        else {
-          rv = ProcessChildren(aPresContext, aState, aContent, newFrame,
-                               PR_TRUE, childItems);
-        }
+        rv = ProcessChildren(aPresContext, aState, aContent, newFrame,
+                             PR_TRUE, childItems);
       }
 
       // Set the frame's initial child list
