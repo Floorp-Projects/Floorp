@@ -26,7 +26,7 @@ VPATH		= @srcdir@
 MODULE		= webbrwsr
 XPIDL_MODULE	= webBrowser_core
 LIBRARY_NAME	= nsWebBrowser_s
-REQUIRES	= xpcom string docshell widget layout dom js locale necko uriloader shistory webshell mimetype exthandler timer windowwatcher txtsvc gfx2 wallet
+REQUIRES	= xpcom string docshell widget layout dom js locale necko uriloader shistory webshell mimetype exthandler timer windowwatcher txtsvc gfx2 wallet windowwatcher
 
 include $(DEPTH)/config/autoconf.mk
 
