@@ -127,12 +127,12 @@ protected:
         mEOF = PR_FALSE;
     }
 
-    PRInt32                        mOffset;
+    PRUint32                       mOffset;
     nsresult                       mLastResult;
     PRPackedBool                   mEOF;
     PRPackedBool                   mOwned;
     const char*                    mConstString;
-    PRInt32                        mLength;
+    PRUint32                       mLength;
 };
 
 NS_IMPL_THREADSAFE_ISUPPORTS4(nsStringInputStream,
@@ -214,9 +214,9 @@ NS_IMETHODIMP nsStringInputStream::Read(char* aBuf, PRUint32 aCount,
     if (NS_FAILED(mLastResult))
         return mLastResult;
 
-    PRInt32 bytesRead;
-    PRInt32 maxCount = mLength - mOffset;
-    if ((PRInt32)aCount > maxCount)
+    PRUint32 bytesRead;
+    PRUint32 maxCount = mLength - mOffset;
+    if (aCount > maxCount)
         bytesRead = maxCount;
     else
         bytesRead = aCount;
@@ -225,7 +225,7 @@ NS_IMETHODIMP nsStringInputStream::Read(char* aBuf, PRUint32 aCount,
     mOffset += bytesRead;
 
     *aReadCount = bytesRead;
-    if (bytesRead < (PRInt32)aCount)
+    if (bytesRead < aCount)
         SetAtEOF(PR_TRUE);
     return NS_OK;
 }
@@ -236,17 +236,19 @@ nsStringInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure,
                                   PRUint32 aCount, PRUint32 * result)
 {
     nsresult rv;
-    PRInt32 maxCount = mLength - mOffset;
+    PRUint32 maxCount = mLength - mOffset;
     if (maxCount == 0) {
         *result = 0;
         return NS_OK;
     }
-    if ((PRInt32)aCount > maxCount)
+    if (aCount > maxCount)
         aCount = maxCount;
     rv = writer(this, closure, mConstString + mOffset, 
                 0, aCount, result);
-    if (NS_SUCCEEDED(rv))
+    if (NS_SUCCEEDED(rv)) {
+        NS_ASSERTION(*result <= aCount, "writer should not write more than we asked it to write");
         mOffset += *result;
+    }
     // errors returned from the writer end here!
     return NS_OK;
 }
