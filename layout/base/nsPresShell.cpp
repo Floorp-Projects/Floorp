@@ -5880,13 +5880,27 @@ PresShell::HandleEvent(nsIView         *aView,
         }
       }
       else {
-        // This is because we want to give the point in the same
-        // coordinates as the frame's own Rect, so mRect.Contains(aPoint)
-        // works.  However, this point is relative to the frame's rect, so
-        // we need to add on the origin of the rect.
+        // aEvent->point is relative to aView's upper left corner. We need
+        // a point that is in the same coordinate system as frame's rect
+        // so that the frame->mRect.Contains(aPoint) calls in 
+        // GetFrameForPoint() work. The assumption here is that frame->GetView()
+        // will return aView, and frame's parent view is aView's parent.
+
         nsPoint eventPoint;
         frame->GetOrigin(eventPoint);
         eventPoint += aEvent->point;
+
+        nsPoint originOffset;
+        nsIView *view = nsnull;
+        frame->GetOriginToViewOffset(mPresContext, originOffset, &view);
+
+#ifdef DEBUG_kin
+        NS_ASSERTION(view == aView, "view != aView");
+#endif // DEBUG_kin
+
+        if (view == aView)
+          eventPoint -= originOffset;
+
         rv = frame->GetFrameForPoint(mPresContext, eventPoint, NS_FRAME_PAINT_LAYER_FOREGROUND, &mCurrentEventFrame);
         if (rv != NS_OK) {
           rv = frame->GetFrameForPoint(mPresContext, eventPoint, NS_FRAME_PAINT_LAYER_FLOATERS, &mCurrentEventFrame);

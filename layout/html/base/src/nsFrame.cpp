@@ -2042,6 +2042,62 @@ NS_IMETHODIMP nsFrame::GetOffsetFromView(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
+// The (x,y) value of the frame's upper left corner is always
+// relative to its parentFrame's upper left corner, unless
+// its parentFrame has a view associated with it, in which case, it
+// will be relative to the upper left corner of the view returned
+// by a call to parentFrame->GetView().
+//
+// This means that while drilling down the frame hierarchy, from
+// parent to child frame, we sometimes need to take into account
+// crossing these view boundaries, because the coordinate system
+// changes from parent frame coordinate system, to the associated
+// view's coordinate system.
+//
+// GetOriginToViewOffset() is a utility method that returns the
+// offset necessary to map a point, relative to the frame's upper
+// left corner, into the coordinate system of the view associated
+// with the frame.
+//
+// If there is no view associated with the frame, the offset
+// returned will always be (0,0).
+
+NS_IMETHODIMP nsFrame::GetOriginToViewOffset(nsIPresContext* aPresContext,
+                                             nsPoint&        aOffset,
+                                             nsIView**       aView) const
+{
+  NS_ENSURE_ARG_POINTER(aPresContext);
+
+  aOffset.MoveTo(0,0);
+
+  if (aView)
+    *aView = nsnull;
+
+  nsIView *view = nsnull;
+  nsresult rv = GetView(aPresContext, &view);
+
+  if (NS_SUCCEEDED(rv) && view) {
+    nsIView *parentView = nsnull;
+    nsPoint offsetToParentView;
+    rv = GetOffsetFromView(aPresContext, offsetToParentView, &parentView);
+
+    if (NS_SUCCEEDED(rv)) {
+      nsPoint viewPos;
+      rv = view->GetPosition(&viewPos.x, &viewPos.y);
+
+      if (NS_SUCCEEDED(rv)) {
+        aOffset = offsetToParentView - viewPos;
+
+        if (aView)
+          *aView = view;
+      }
+    }
+  }
+
+  return rv;
+}
+
+
 NS_IMETHODIMP nsFrame::GetWindow(nsIPresContext* aPresContext,
                                  nsIWidget**     aWindow) const
 {

@@ -1977,7 +1977,8 @@ nsBoxFrame::GetFrameForPoint(nsIPresContext* aPresContext,
     return NS_ERROR_FAILURE;
 
   nsIView* view = nsnull;
-  GetView(aPresContext, &view);
+  nsPoint originOffset;
+  GetOriginToViewOffset(aPresContext, originOffset, &view);
 
   // get the debug frame.
   if (view || (mState & NS_STATE_IS_ROOT))
@@ -2002,6 +2003,10 @@ nsBoxFrame::GetFrameForPoint(nsIPresContext* aPresContext,
   FirstChild(aPresContext, nsnull, &kid);
   *aFrame = nsnull;
   tmp.MoveTo(aPoint.x - mRect.x, aPoint.y - mRect.y);
+
+  if (view)
+    tmp += originOffset;
+
   while (nsnull != kid) {
     // have we hit a child before
     PRBool haveKid = (hit != nsnull);

@@ -293,8 +293,16 @@ nsContainerFrame::GetFrameForPointUsing(nsIPresContext* aPresContext,
   FirstChild(aPresContext, aList, &kid);
   *aFrame = nsnull;
   tmp.MoveTo(aPoint.x - mRect.x, aPoint.y - mRect.y);
+
+  nsPoint originOffset;
+  nsIView *view = nsnull;
+  nsresult rv = GetOriginToViewOffset(aPresContext, originOffset, &view);
+
+  if (NS_SUCCEEDED(rv) && view)
+    tmp += originOffset;
+
   while (nsnull != kid) {
-    nsresult rv = kid->GetFrameForPoint(aPresContext, tmp, aWhichLayer, &hit);
+    rv = kid->GetFrameForPoint(aPresContext, tmp, aWhichLayer, &hit);
 
     if (NS_SUCCEEDED(rv) && hit) {
       *aFrame = hit;

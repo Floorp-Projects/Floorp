@@ -962,6 +962,18 @@ public:
                                 nsIView**       aView) const = 0;
 
   /**
+   * Returns the offset from this frame's upper left corner to the upper
+   * left corner of the view returned by a call to GetView(). aOffset
+   * will contain the offset to the view or (0,0) if the frame has no
+   * view. aView will contain a pointer to the view returned by GetView().
+   * aView is optional, that is, you may pass null if you are not interested
+   * in getting a pointer to the view.
+   */
+  NS_IMETHOD  GetOriginToViewOffset(nsIPresContext* aPresContext,
+                                    nsPoint&        aOffset,
+                                    nsIView**       aView) const = 0;
+
+  /**
    * Returns the window that contains this frame. If this frame has a
    * view and the view has a window, then this frames window is
    * returned, otherwise this frame's geometric parent is checked
