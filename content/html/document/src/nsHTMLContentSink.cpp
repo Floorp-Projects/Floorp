@@ -16,7 +16,7 @@
  * Reserved.
  */
 #include "nsIHTMLContentSink.h"
-#include "nsIStyleSheet.h"
+#include "nsICSSStyleSheet.h"
 #include "nsIUnicharInputStream.h"
 #include "nsIHTMLContent.h"
 #include "nsIURL.h"
@@ -57,6 +57,7 @@
 #include "nsIDOMHTMLTitleElement.h"
 
 static NS_DEFINE_IID(kIDOMHTMLTitleElementIID, NS_IDOMHTMLTITLEELEMENT_IID);
+static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 
 #define XXX_ART_HACK 1
 
@@ -201,8 +202,6 @@ public:
   nsString mBaseHREF;
   nsString mBaseTarget;
 
-  nsIStyleSheet* mStyleSheet;
-
   void StartLayout();
 
   void ScrollToRef();
@@ -211,7 +210,10 @@ public:
 
   nsresult LoadStyleSheet(nsIURL* aURL,
                           nsIUnicharInputStream* aUIN,
-                          PRBool aInline);
+                          PRBool aActive,
+                          const nsString& aTitle,
+                          const nsString& aMedia,
+                          nsIHTMLContent* aOwner);
 
   // Routines for tags that require special handling
   nsresult ProcessATag(const nsIParserNode& aNode, nsIHTMLContent* aContent);
@@ -1234,7 +1236,6 @@ HTMLContentSink::~HTMLContentSink()
   NS_IF_RELEASE(mDocumentURL);
   NS_IF_RELEASE(mWebShell);
 
-  NS_IF_RELEASE(mStyleSheet);
   NS_IF_RELEASE(mCurrentForm);
   NS_IF_RELEASE(mCurrentMap);
   NS_IF_RELEASE(mRefContent);
@@ -2025,6 +2026,7 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
   nsAutoString rel; 
   nsAutoString title; 
   nsAutoString type; 
+  nsAutoString media; 
 
   nsIScriptContextOwner* sco = mDocument->GetScriptContextOwner();
   for (index = 0; index < count; index++) {
@@ -2045,10 +2047,32 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
       GetAttributeValueAt(aNode, index, type, sco);
       type.StripWhitespace();
     }
+    else if (key.EqualsIgnoreCase("media")) {
+      GetAttributeValueAt(aNode, index, media, sco);
+    }
   }
-  NS_RELEASE(sco);
 
-  if (rel.EqualsIgnoreCase("stylesheet")) {
+  // Create content object
+  nsAutoString tag("LINK");
+  nsIHTMLContent* element = nsnull;
+  result = NS_CreateHTMLElement(&element, tag);
+  if (NS_SUCCEEDED(result)) {
+    // Add in the attributes and add the style content object to the
+    // head container.
+    result = AddAttributes(aNode, element, sco);
+    if (NS_FAILED(result)) {
+      NS_RELEASE(element);
+      return result;
+    }
+    mHead->AppendChildTo(element, PR_FALSE);
+  }
+  else {
+    NS_IF_RELEASE(sco);
+    return result;
+  }
+  NS_IF_RELEASE(sco);
+
+  if (rel.EqualsIgnoreCase("stylesheet") || rel.EqualsIgnoreCase("alternate stylesheet")) {
     if ((0 == type.Length()) || type.EqualsIgnoreCase("text/css")) {
       nsIURL* url = nsnull;
       nsIUnicharInputStream* uin = nsnull;
@@ -2076,7 +2100,8 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
         return result;
       }
 
-      result = LoadStyleSheet(url, uin, PR_FALSE);
+      result = LoadStyleSheet(url, uin, rel.EqualsIgnoreCase("stylesheet"), 
+                              title, media, element);
       NS_RELEASE(uin);
       NS_RELEASE(url);
     }
@@ -2297,24 +2322,59 @@ nsresult
 HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
 {
   nsresult rv = NS_OK;
-  PRInt32 i, ac = aNode.GetAttributeCount();
+  PRInt32 index, count = aNode.GetAttributeCount();
 
-  nsString* src = nsnull;
-  PRBool    isInline;
+  nsAutoString src;
+  nsAutoString title; 
+  nsAutoString type; 
+  nsAutoString media; 
 
-  for (i = 0; i < ac; i++) {
-    const nsString& key = aNode.GetKeyAt(i);
+  nsIScriptContextOwner* sco = mDocument->GetScriptContextOwner();
+  for (index = 0; index < count; index++) {
+    const nsString& key = aNode.GetKeyAt(index);
     if (key.EqualsIgnoreCase("src")) {
-      src = new nsString(aNode.GetValueAt(i));
+      GetAttributeValueAt(aNode, index, src, sco);
+      src.StripWhitespace();
+    }
+    else if (key.EqualsIgnoreCase("title")) {
+      GetAttributeValueAt(aNode, index, title, sco);
+      title.CompressWhitespace();
+    }
+    else if (key.EqualsIgnoreCase("type")) {
+      GetAttributeValueAt(aNode, index, type, sco);
+      type.StripWhitespace();
+    }
+    else if (key.EqualsIgnoreCase("media")) {
+      GetAttributeValueAt(aNode, index, media, sco);
     }
   }
 
-  // The skipped content contains the inline style data
+  // Create content object
+  nsAutoString tag("STYLE");
+  nsIHTMLContent* element = nsnull;
+  rv = NS_CreateHTMLElement(&element, tag);
+  if (NS_SUCCEEDED(rv)) {
+    // Add in the attributes and add the style content object to the
+    // head container.
+    rv = AddAttributes(aNode, element, sco);
+    if (NS_FAILED(rv)) {
+      NS_RELEASE(element);
+      return rv;
+    }
+    mHead->AppendChildTo(element, PR_FALSE);
+  }
+  else {
+    NS_IF_RELEASE(sco);
+    return rv;
+  }
+  NS_IF_RELEASE(sco);
+
+    // The skipped content contains the inline style data
   const nsString& content = aNode.GetSkippedContent();
 
   nsIURL* url = nsnull;
   nsIUnicharInputStream* uin = nsnull;
-  if (nsnull == src) {
+  if (0 == src.Length()) {
     // Create a string to hold the data and wrap it up in a unicode
     // input stream.
     rv = NS_NewStringUnicharInputStream(&uin, new nsString(content));
@@ -2325,13 +2385,12 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
     // Use the document's url since the style data came from there
     url = mDocumentURL;
     NS_IF_ADDREF(url);
-    isInline = PR_TRUE;
   } else {
     // src with immediate style data doesn't add up
     // XXX what does nav do?
     nsAutoString absURL;
     nsIURL* docURL = mDocument->GetDocumentURL();
-    rv = NS_MakeAbsoluteURL(docURL, mBaseHREF, *src, absURL);
+    rv = NS_MakeAbsoluteURL(docURL, mBaseHREF, src, absURL);
     if (NS_OK != rv) {
       return rv;
     }
@@ -2353,50 +2412,121 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
       NS_RELEASE(url);
       return rv;
     }
-    isInline = PR_FALSE;
   }
 
   // Now that we have a url and a unicode input stream, parse the
   // style sheet.
-  rv = LoadStyleSheet(url, uin, isInline);
+  rv = LoadStyleSheet(url, uin, PR_TRUE, title, media, element);
   NS_RELEASE(uin);
   NS_RELEASE(url);
 
   return rv;
 }
 
+
+typedef PRBool (*nsStringEnumFunc)(const nsString& aSubString, void *aData);
+
+const PRUnichar kNullCh       = PRUnichar('\0');
+const PRUnichar kSingleQuote  = PRUnichar('\'');
+const PRUnichar kDoubleQuote  = PRUnichar('\"');
+const PRUnichar kComma        = PRUnichar(',');
+
+static PRBool EnumerateString(const nsString& aStringList, nsStringEnumFunc aFunc, void* aData)
+{
+  PRBool    running = PR_TRUE;
+
+  nsAutoString  stringList(aStringList); // copy to work buffer
+  nsAutoString  subStr;
+
+  stringList.Append(kNullCh);  // put an extra null at the end
+
+  PRUnichar* start = (PRUnichar*)stringList;
+  PRUnichar* end   = start;
+
+  while (running && (kNullCh != *start)) {
+    PRBool  quoted = PR_FALSE;
+
+    while ((kNullCh != *start) && nsString::IsSpace(*start)) {  // skip leading space
+      start++;
+    }
+
+    if ((kSingleQuote == *start) || (kDoubleQuote == *start)) { // quoted string
+      PRUnichar quote = *start++;
+      quoted = PR_TRUE;
+      end = start;
+      while (kNullCh != *end) {
+        if (quote == *end) {  // found closing quote
+          *end++ = kNullCh;     // end string here
+          while ((kNullCh != *end) && (kComma != *end)) { // keep going until comma
+            end++;
+          }
+          break;
+        }
+        end++;
+      }
+    }
+    else {  // non-quoted string or ended
+      end = start;
+
+      while ((kNullCh != *end) && (kComma != *end)) { // look for comma
+        end++;
+      }
+      *end = kNullCh; // end string here
+    }
+
+    subStr = start;
+
+    if (PR_FALSE == quoted) {
+      subStr.CompressWhitespace(PR_FALSE, PR_TRUE);
+    }
+
+    if (0 < subStr.Length()) {
+      running = (*aFunc)(subStr, aData);
+    }
+
+    start = ++end;
+  }
+
+  return running;
+}
+
+static PRBool MediumEnumFunc(const nsString& aSubString, void *aData)
+{
+  ((nsICSSStyleSheet*)aData)->AppendMedium(aSubString);
+  return PR_TRUE;
+}
+
 nsresult
 HTMLContentSink::LoadStyleSheet(nsIURL* aURL,
                                 nsIUnicharInputStream* aUIN,
-                                PRBool aInline)
+                                PRBool aActive,
+                                const nsString& aTitle,
+                                const nsString& aMedia,
+                                nsIHTMLContent* aOwner)
 {
   /* XXX use repository */
   nsICSSParser* parser;
   nsresult rv = NS_NewCSSParser(&parser);
   if (NS_OK == rv) {
-    if (aInline && (nsnull != mStyleSheet)) {
-      parser->SetStyleSheet(mStyleSheet);
-      // XXX we do probably need to trigger a style change reflow
-      // when we are finished if this is adding data to the same sheet
-    }
-    nsIStyleSheet* sheet = nsnull;
+    nsICSSStyleSheet* sheet = nsnull;
     // XXX note: we are ignoring rv until the error code stuff in the
     // input routines is converted to use nsresult's
     parser->Parse(aUIN, aURL, sheet);
     if (nsnull != sheet) {
-      if (aInline) {
-        if (nsnull == mStyleSheet) {
-          // Add in the sheet the first time; if we update the sheet
-          // with new data (mutliple style tags in the same document)
-          // then the sheet will be updated by the css parser and
-          // therefore we don't need to add it to the document)
-          mDocument->AddStyleSheet(sheet);
-          mStyleSheet = sheet;
+      sheet->SetTitle(aTitle);
+      sheet->SetEnabled(aActive);
+      if (0 < aMedia.Length()) {
+        EnumerateString(aMedia, MediumEnumFunc, sheet);
+      }
+      if (nsnull != aOwner) {
+        nsIDOMNode* domNode = nsnull;
+        if (NS_SUCCEEDED(aOwner->QueryInterface(kIDOMNodeIID, (void**)&domNode))) {
+          sheet->SetOwningNode(domNode);
+          NS_RELEASE(domNode);
         }
       }
-      else {
-        mDocument->AddStyleSheet(sheet);
-      }
+      mDocument->AddStyleSheet(sheet);
+      NS_RELEASE(sheet);
       rv = NS_OK;
     } else {
       rv = NS_ERROR_OUT_OF_MEMORY;/* XXX */
