@@ -2339,7 +2339,7 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
 
 
   nsresult rv;
-  char *platformText;
+  char *platformText = nsnull;
   PRInt32 platformLen;
 
   // Set UTF8_STRING title for NET_WM-supporting window managers
@@ -2389,11 +2389,13 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
 
   if (platformLen > 0 && platformText) {
     gtk_window_set_title(GTK_WINDOW(mShell), platformText);
-    nsMemory::Free(platformText);
   }
   else {
     gtk_window_set_title(GTK_WINDOW(mShell), "");
   }
+
+  if (platformText)
+    nsMemory::Free(platformText);
 
   return NS_OK;
 }
