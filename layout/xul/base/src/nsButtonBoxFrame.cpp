@@ -42,6 +42,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMNodeList.h"
+#include "nsIDOMXULButtonElement.h"
 #include "nsHTMLAtoms.h"
 #include "nsINameSpaceManager.h"
 #include "nsIPresContext.h"
@@ -116,7 +117,10 @@ nsButtonBoxFrame::HandleEvent(nsIPresContext* aPresContext,
       if (NS_KEY_EVENT == aEvent->eventStructType) {
         nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
         if (NS_VK_RETURN == keyEvent->keyCode) {
-           MouseClicked(aPresContext, aEvent);
+          nsCOMPtr<nsIDOMXULButtonElement> buttonEl(do_QueryInterface(mContent));
+          if (buttonEl) {
+            MouseClicked(aPresContext, aEvent);
+          }
         }
       }
       break;
