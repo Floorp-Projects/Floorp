@@ -36,13 +36,16 @@ function SetUpTree()
 	var folder = GetMsgFolderFromUri(gServerURI);
 	var server = folder.server;
 
-	/* todo:  this should be server.buildSubscribeDatasource() which does the right thing with its server.  for imap */
-	var nntpService = Components.classes['component://netscape/messenger/nntpservice'].getService(Components.interfaces.nsINntpService);
-	nntpService = nntpService.QueryInterface(Components.interfaces.nsINntpService);
-	nntpService.buildSubscribeDatasource(server);
+	try {
+		subscribableServer = server.QueryInterface(Components.interfaces.nsISubscribableServer);
+		subscribableServer.populateSubscribeDatasource(null /* eventual, a nsIMsgWindow */);
 
-	dump("root subscribe tree at: "+ gServerURI +"\n");
-	gSubscribeTree.setAttribute('ref',gServerURI);
+		dump("root subscribe tree at: "+ gServerURI +"\n");
+		gSubscribeTree.setAttribute('ref',gServerURI);
+	}
+	catch (ex) {
+		dump("failed to populate subscribe ds: " + ex + "\n");
+	}
 }
 
 function SubscribeOnLoad()

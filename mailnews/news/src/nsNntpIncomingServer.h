@@ -37,6 +37,7 @@
 
 #include "nsEnumeratorUtils.h" 
 #include "nsIMsgWindow.h"
+#include "nsISubscribableServer.h"
 
 class nsINntpUrl;
 class nsIMsgMailNewsUrl;
@@ -44,13 +45,15 @@ class nsIMsgMailNewsUrl;
 /* get some implementation from nsMsgIncomingServer */
 class nsNntpIncomingServer : public nsMsgIncomingServer,
                              public nsINntpIncomingServer,
-			     public nsIUrlListener
+			     public nsIUrlListener,
+			     public nsISubscribableServer
 							 
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSINNTPINCOMINGSERVER
     NS_DECL_NSIURLLISTENER
+    NS_DECL_NSISUBSCRIBABLESERVER
 
     nsNntpIncomingServer();
     virtual ~nsNntpIncomingServer();
@@ -70,6 +73,8 @@ private:
 	nsresult SetNewsgroupAsSubscribed(const char *aName);
     PRBool mNewsrcHasChanged;
 	nsAdapterEnumerator *mGroupsEnumerator;
+	PRBool mHostInfoLoaded;
+	PRBool mHostInfoHasChanged;
 };
 
 #endif

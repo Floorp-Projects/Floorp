@@ -61,6 +61,7 @@ XPIDLSRCS =								\
     .\nsIMsgStringService.idl \
 		.\nsIMsgViewNavigationService.idl \
 		.\nsIMsgPrintEngine.idl \
+		.\nsISubscribableServer.idl \
 		$(NULL)
 
 ################################################################################

@@ -36,6 +36,7 @@
 #include "nsRDFCID.h"
 #include "nsMsgNewsCID.h"
 #include "nsNNTPProtocol.h"
+#include "nsISubscribableServer.h"
 
 #define NEW_NEWS_DIR_NAME        "News"
 #define PREF_MAIL_NEWSRC_ROOT    "mail.newsrc_root"
@@ -56,18 +57,24 @@ static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kNntpServiceCID, NS_NNTPSERVICE_CID);
 
-NS_IMPL_ISUPPORTS_INHERITED2(nsNntpIncomingServer,
-                            nsMsgIncomingServer,
-                            nsINntpIncomingServer,
-			    nsIUrlListener);
+NS_IMPL_ADDREF_INHERITED(nsNntpIncomingServer, nsMsgIncomingServer)
+NS_IMPL_RELEASE_INHERITED(nsNntpIncomingServer, nsMsgIncomingServer)
+
+NS_INTERFACE_MAP_BEGIN(nsNntpIncomingServer)
+    NS_INTERFACE_MAP_ENTRY(nsINntpIncomingServer)
+    NS_INTERFACE_MAP_ENTRY(nsIUrlListener)
+    NS_INTERFACE_MAP_ENTRY(nsISubscribableServer)
+NS_INTERFACE_MAP_END_INHERITING(nsMsgIncomingServer)
 
 nsNntpIncomingServer::nsNntpIncomingServer()
 {    
   NS_INIT_REFCNT();
 
   mNewsrcHasChanged = PR_FALSE;
-	mGroupsEnumerator = nsnull;
-	NS_NewISupportsArray(getter_AddRefs(m_connectionCache));
+  mGroupsEnumerator = nsnull;
+  NS_NewISupportsArray(getter_AddRefs(m_connectionCache));
+  mHostInfoLoaded = PR_FALSE;
+  mHostInfoHasChanged = PR_FALSE;
 }
 
 
@@ -828,3 +835,17 @@ nsNntpIncomingServer::SubscribeToNewsgroup(const char *name)
 	return NS_OK;
 }
 
+NS_IMETHODIMP
+nsNntpIncomingServer::PopulateSubscribeDatasource(nsIMsgWindow *aMsgWindow)
+{
+	nsresult rv;
+	printf("in PopulateSubscribeDatasource()\n");
+	nsCOMPtr<nsINntpService> nntpService = do_GetService(kNntpServiceCID, &rv);
+	if (NS_FAILED(rv)) return rv;
+	if (!nntpService) return NS_ERROR_FAILURE;
+
+        rv = nntpService->BuildSubscribeDatasource(this, aMsgWindow);
+        if (NS_FAILED(rv)) return rv;
+
+        return NS_OK;
+}

@@ -1291,7 +1291,7 @@ nsNntpService::UpdateCounts(nsINntpIncomingServer *aNntpServer, nsIMsgWindow *aM
 }
 
 NS_IMETHODIMP 
-nsNntpService::BuildSubscribeDatasource(nsINntpIncomingServer *aNntpServer)
+nsNntpService::BuildSubscribeDatasource(nsINntpIncomingServer *aNntpServer, nsIMsgWindow *aMsgWindow)
 {
 	nsresult rv;
 #ifdef DEBUG_NEWS
@@ -1318,8 +1318,7 @@ nsNntpService::BuildSubscribeDatasource(nsINntpIncomingServer *aNntpServer)
 	if (NS_FAILED(rv)) return rv;
 
 	// now run the url to add the rest of the groups
-    // TODO:  pass in the nsIMsgWindow for progress.
-    rv = RunNewsUrl(uri, nsnull /* nsIMsgWindow */, nsnull);  
+        rv = RunNewsUrl(uri, aMsgWindow, nsnull);
 	if (NS_FAILED(rv)) return rv;
 
 	return NS_OK;
