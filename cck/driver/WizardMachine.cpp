@@ -80,7 +80,8 @@ BOOL UseCache = FALSE;
 extern CSingleLock prevLock;
 extern BOOL isBuildInstaller;
 //Output file pointer for QA purposes
-FILE *out, *globs;
+// Optimize here on global pointers. This many not needed.
+FILE *out, *globs, *filePtr;;
 //CString CWizardMachineApp::GetGlobal(CString theName);
 //BOOL CWizardMachineApp::SetGlobal(CString theName, CString theValue);
 //CString CWizardMachineApp::GetGlobalOptions(CString theName);
@@ -110,8 +111,6 @@ BOOL CWizardMachineApp::InitInstance()
 
 	Path = GetModulePath();
 
-	//_getcwd(currDirPath, MAX_SIZE);
-	//strcat(currDirPath, "\\");
 	strcpy(currDirPath, Path);
 
 	CString outputFile = Path + "output.dat";
@@ -147,7 +146,7 @@ BOOL CWizardMachineApp::InitInstance()
 			action = argv[i+1];
 	}
 
-	if (iniFile.GetLength() < 5)
+	if ((iniFile.IsEmpty()) || (iniFile.GetLength() < 5) || (iniFile.Right(4) != ".ini"))
 	{
 		myWnd.MessageBox("Please provide a valid inifile name.", "ERROR", MB_OK);
 		fprintf(out, "----------------** TERMINATED - Invalid INI file name **---------------\n");
@@ -161,40 +160,53 @@ BOOL CWizardMachineApp::InitInstance()
 		}
 	}
 	
-	char tmpStr[MAX_SIZE] = {'\0'};
-	if (strstr(iniFile,"iniFiles")) {
-		strncpy(tmpStr, iniFile, strlen(iniFile) - strlen(strstr(iniFile,"iniFiles")));
+	// Take care of absolute path to iniFiles and bitmaps
+	if (iniFile[1] == ':' && iniFile[2] == '\\')
+	{
+		int len = 0;
+		strcpy(iniFilePath, iniFile);
+
+		int extractPosition = iniFile.ReverseFind('\\');
+		extractPosition++;
+		extractPosition = (iniFile.GetLength()) - extractPosition;
+		iniFile = iniFile.Right(extractPosition);
+
+		len = strlen(iniFilePath);
+
+		while(iniFilePath[len] != '\\')
+		{
+			iniFilePath[len] = '\0';
+			len--;
+		}
+
+		strcpy(imagesPath, iniFilePath);
+
+		len--;
+
+		while(imagesPath[len] != '\\')
+		{
+			imagesPath[len] = '\0';
+			len--;
+		}
+
+		strcat(imagesPath, "bitmaps\\");
+	}
+	else
+	{
+		// Take care of relative path to iniFiles and bitmaps
+
+		strcpy(iniFilePath, currDirPath);
+		strcat(iniFilePath, "iniFiles\\");
+		strcpy(imagesPath, currDirPath);
+		strcat(imagesPath, "bitmaps\\");
 	}
 
-	strcat(currDirPath, "..\\..\\");
+	strcpy(customizationPath, currDirPath);
+	strcat(customizationPath, "customizations\\");
 
-	strcpy(iniFilePath, currDirPath);
-	//strcat(iniFilePath, "..\\");
-	strcpy(imagesPath, currDirPath);
-	//strcat(imagesPath, "..\\");
-
-	if (tmpStr) {
-		strcat(iniFilePath, tmpStr);
-		strcat(imagesPath, tmpStr);
-
-		strcpy(customizationPath, currDirPath);
-		//strcat(customizationPath, "..\\");
-		strcat(customizationPath, tmpStr);
-		strcat(customizationPath, "customizations\\");
-	}
-
-	strcat(iniFilePath, "iniFiles\\");
-	strcat(imagesPath, "bitmaps\\");
-
-	char* baseIniFile;
-	if (strrchr(iniFile,'\\')) {
-		baseIniFile = new char[MAX_SIZE];
-		strcpy(baseIniFile, strrchr(iniFile,'\\'));		
-		baseIniFile++;
-	}
 
 	CString cacheExt = ".che";
-	CacheFile = CString(baseIniFile); 
+	CacheFile = CString(iniFile); 
 	CacheFile = CacheFile.GetBufferSetLength(CacheFile.Find(".ini")) + cacheExt;
 
 	char buffer[MAX_SIZE] = {'\0'};
@@ -212,8 +224,8 @@ BOOL CWizardMachineApp::InitInstance()
 	
 	SetGlobalDefaults();
 	
-	InitializeTree(CString(baseIniFile));
-	CreateFirstLeaf(WizardTree, CString(iniFilePath) + CString(baseIniFile));
+	InitializeTree(CString(iniFile));
+	CreateFirstLeaf(WizardTree, CString(iniFilePath) + CString(iniFile));
 
 	//BEGIN - Command line QA enable code
 	/**
@@ -256,7 +268,6 @@ BOOL CWizardMachineApp::InitInstance()
 	{
 		CreateRshell();
 		if (!isBuildInstaller) {
-			theApp.CreateNewCache();
 
 			NODE* tmpNode = WizardTree->childNodes[0];
 			while (!tmpNode->numWidgets) {
@@ -265,37 +276,19 @@ BOOL CWizardMachineApp::InitInstance()
 
 			CurrentNode = tmpNode;
 		}
+		theApp.CreateNewCache();
+
 	}
 
 	if (PageReturnValue == IDCANCEL)
 	{
-	//	theApp.CreateNewCache();
-
-//		CWnd Mywnd;
-//		Mywnd.MessageBox("hello","hello",MB_OK);
 		theApp.CreateNewCache();
-		/**
-		NODE* tmpNode = WizardTree->childNodes[0];
-		while (!tmpNode->numWidgets) {
-			tmpNode = tmpNode->childNodes[0];
-		}
-
-		CurrentNode = tmpNode;
-		**/
 	}
 	if (PageReturnValue == ID_HELP)
 	{
 		
 		CWnd Mywnd;
 		Mywnd.MessageBox("hello","hello",MB_OK);
-		/**
-		NODE* tmpNode = WizardTree->childNodes[0];
-		while (!tmpNode->numWidgets) {
-			tmpNode = tmpNode->childNodes[0];
-		}
-
-		CurrentNode = tmpNode;
-		**/
 	}
 //
 
@@ -917,11 +910,11 @@ void CWizardMachineApp::ExitApp()
 	CreateNewCache();
 }
 
+
 FILE* CWizardMachineApp::OpenAFile(CString outputFile, CString mode)
 {
-	FILE* fPtr;
 
-	if( !( fPtr = fopen( outputFile, mode ) ) )
+	if( !( filePtr = fopen( outputFile, mode ) ) )
 	{
 	    CWnd myWnd;
 	
@@ -930,7 +923,7 @@ FILE* CWizardMachineApp::OpenAFile(CString outputFile, CString mode)
 		exit( 3 );
 	}
 
-	return fPtr;
+	return filePtr;
 }
 
 void CWizardMachineApp::PrintNodeInfo(NODE* node)
