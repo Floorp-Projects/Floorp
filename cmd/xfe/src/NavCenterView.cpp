@@ -438,12 +438,13 @@ XFE_NavCenterView::createSelectorBar()
 void
 XFE_NavCenterView::createTree()
 {
+
 	_rdftree = new XFE_RDFChromeTreeView(this, getBaseWidget(),
-										 this, m_contextData);
+										 this, _isStandalone ? RDF_PANE_STANDALONE : RDF_PANE_DOCKED, m_contextData);
 	
 	_rdftree->setStandAloneState(_isStandalone);
-
-  	_rdftree->setHtmlPaneHeightPercent(50);
+    
+    //  	_rdftree->setHtmlPaneHeightPercent(50);
 
 //	_rdftree->setHtmlPaneHeightFixed(100);
 }
