@@ -583,15 +583,7 @@ nsSVGSVGElement::ForceRedraw()
   nsIDocument* doc = GetCurrentDoc();
   if (!doc) return NS_ERROR_FAILURE;
 
-  nsIPresShell *presShell = doc->GetShellAt(0);
-  NS_ASSERTION(presShell, "need presShell to unsuspend redraw");
-  if (!presShell) return NS_ERROR_FAILURE;
-
-  nsIViewManager* vm = presShell->GetViewManager();
-  NS_ASSERTION(vm, "need viewmanager to unsuspend redraw");
-  if (!vm) return NS_ERROR_FAILURE;
-
-  vm->EnableRefresh(NS_VMREFRESH_IMMEDIATE);
+  doc->FlushPendingNotifications(Flush_Display);
 
   return NS_OK;
 }
