@@ -360,3 +360,12 @@ META {
 OBJECT {
   display: inline;
 }
+SCRIPT {
+  display: none;
+}
+STYLE {
+  display: none;
+}
+TITLE {
+  display: none;
+}
