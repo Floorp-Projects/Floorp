@@ -46,7 +46,6 @@
 #include "nsIDocShell.h"
 #include "nsIEventStateManager.h"
 #include "nsIDOMEvent.h"
-#include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
 #include "nsINodeInfo.h"
 #include "nsIURL.h"

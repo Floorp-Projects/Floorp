@@ -44,7 +44,6 @@
 #include "nsXBLWindowKeyHandler.h"
 #include "nsXBLWindowDragHandler.h"
 #include "nsIInputStream.h"
-#include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
 #include "nsHashtable.h"
 #include "nsIURI.h"

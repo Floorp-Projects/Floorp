@@ -38,7 +38,8 @@
 #ifndef NS_EXPAT_DRIVER__
 #define NS_EXPAT_DRIVER__
 
-#include "xmlparse.h"
+#include "expat_config.h"
+#include "expat.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsIDTD.h"

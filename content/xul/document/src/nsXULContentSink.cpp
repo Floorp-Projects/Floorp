@@ -64,7 +64,6 @@
 #include "nsIDocumentLoader.h"
 #include "nsIFormControl.h"
 #include "nsHTMLStyleSheet.h"
-#include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
 #include "nsINodeInfo.h"
 #include "nsIParser.h"
@@ -108,8 +107,6 @@
 #include "nsXMLContentSink.h"
 #include "nsLayoutAtoms.h"
 
-static const char kNameSpaceSeparator = ':';
-
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gLog;
 #endif
@@ -152,11 +149,6 @@ protected:
     PRInt32 mTextSize;
     PRBool mConstrainSize;
 
-    // namespace management -- XXX combine with ContextStack?
-    nsresult PushNameSpacesFrom(const PRUnichar** aAttributes);
-
-    // RDF-specific parsing
-    nsresult ParseTag(const PRUnichar* aText, nsINodeInfo** aNodeInfo);
     nsresult AddAttributes(const PRUnichar** aAttributes, 
                            const PRUint32 aAttrLen, 
                            nsXULPrototypeElement* aElement);
@@ -181,17 +173,11 @@ protected:
     nsresult AddText(const PRUnichar* aText, PRInt32 aLength);
 
 
-    
-    void PopNameSpaces(void);
-    nsresult GetTopNameSpace(nsCOMPtr<nsINameSpace>* aNameSpace);
-
-    nsAutoVoidArray mNameSpaceStack;
-
     nsRefPtr<nsNodeInfoManager> mNodeInfoManager;
     
     
-    nsresult NormalizeAttributeString(const nsAFlatString& aText,
-                                      nsAttrName& aName);
+    nsresult NormalizeAttributeString(const PRUnichar *aExpatName,
+                                      nsAttrName &aName);
     nsresult CreateElement(nsINodeInfo *aNodeInfo, nsXULPrototypeElement** aResult);
 
     // Style sheets
@@ -353,47 +339,6 @@ XULContentSinkImpl::XULContentSinkImpl(nsresult& rv)
 XULContentSinkImpl::~XULContentSinkImpl()
 {
     NS_IF_RELEASE(mParser); // XXX should've been released by now, unless error.
-
-    {
-        // There shouldn't be any here except in an error condition
-        PRInt32 i = mNameSpaceStack.Count();
-
-        while (0 < i--) {
-            nsINameSpace* nameSpace = (nsINameSpace*)mNameSpaceStack[i];
-
-#ifdef PR_LOGGING
-            if (PR_LOG_TEST(gLog, PR_LOG_WARNING)) {
-                nsAutoString uri;
-                nsCOMPtr<nsIAtom> prefixAtom;
-
-                nameSpace->GetNameSpaceURI(uri);
-                nameSpace->GetNameSpacePrefix(getter_AddRefs(prefixAtom));
-
-                nsAutoString prefix;
-                if (prefixAtom)
-                    {
-                        prefixAtom->ToString(prefix);
-                    }
-                else
-                    {
-                        prefix.AssignLiteral("<default>");
-                    }
-
-                char* prefixStr = ToNewCString(prefix);
-                char* uriStr = ToNewCString(uri);
-
-                PR_LOG(gLog, PR_LOG_WARNING,
-                       ("xul: warning: unclosed namespace '%s' (%s)",
-                        prefixStr, uriStr));
-
-                nsCRT::free(prefixStr);
-                nsCRT::free(uriStr);
-            }
-#endif
-
-            NS_RELEASE(nameSpace);
-        }
-    }
 
     // Pop all of the elements off of the context stack, and delete
     // any remaining content elements. The context stack _should_ be
@@ -700,39 +645,22 @@ XULContentSinkImpl::FlushText(PRBool aCreateTextNode)
 //----------------------------------------------------------------------
 
 nsresult
-XULContentSinkImpl::NormalizeAttributeString(const nsAFlatString& aText,
-                                             nsAttrName& aName)
+XULContentSinkImpl::NormalizeAttributeString(const PRUnichar *aExpatName,
+                                             nsAttrName &aName)
 {
-    PRInt32 nameSpaceID = kNameSpaceID_None;
+    PRInt32 nameSpaceID;
+    nsCOMPtr<nsIAtom> prefix, localName;
+    nsContentUtils::SplitExpatName(aExpatName, getter_AddRefs(prefix),
+                                   getter_AddRefs(localName), &nameSpaceID);
 
-    nsCOMPtr<nsIAtom> nameSpacePrefix, nameAtom;
+    if (nameSpaceID == kNameSpaceID_None) {
+        aName.SetTo(localName);
 
-    nsXMLContentSink::SplitXMLName(aText,
-                                   getter_AddRefs(nameSpacePrefix),
-                                   getter_AddRefs(nameAtom));
-
-    if (nameSpacePrefix) {
-        nsCOMPtr<nsINameSpace> ns;
-        GetTopNameSpace(address_of(ns));
-
-        if (ns) {
-            ns->FindNameSpaceID(nameSpacePrefix, &nameSpaceID);
-
-            if (nameSpaceID == kNameSpaceID_Unknown) {
-                NS_WARNING("Undeclared prefix used in attribute name.");
-
-                nameSpaceID = kNameSpaceID_None;
-            }
-        } else {
-            NS_WARNING("Undeclared prefix used in attribute name.");
-        }
-    } else if (nameAtom == nsLayoutAtoms::xmlnsNameSpace) {
-        nameSpaceID = kNameSpaceID_XMLNS;
+        return NS_OK;
     }
-    // else use kNameSpaceID_None
-        
+
     nsCOMPtr<nsINodeInfo> ni;
-    nsresult rv = mNodeInfoManager->GetNodeInfo(nameAtom, nameSpacePrefix,
+    nsresult rv = mNodeInfoManager->GetNodeInfo(localName, prefix,
                                                 nameSpaceID,
                                                 getter_AddRefs(ni));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -803,18 +731,15 @@ XULContentSinkImpl::HandleStartElement(const PRUnichar *aName,
       FlushText();
   }
 
-  // We must register namespace declarations found in the attribute
-  // list of an element before creating the element. This is because
-  // the namespace prefix for an element might be declared within
-  // the attribute list.
-  nsresult rv = PushNameSpacesFrom(aAtts);
-  NS_ENSURE_SUCCESS(rv, rv);
+  PRInt32 nameSpaceID;
+  nsCOMPtr<nsIAtom> prefix, localName;
+  nsContentUtils::SplitExpatName(aName, getter_AddRefs(prefix),
+                                 getter_AddRefs(localName), &nameSpaceID);
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  rv = ParseTag(aName, getter_AddRefs(nodeInfo));
-  if (NS_FAILED(rv)) {
-     return rv;
-  }
+  nsresult rv = mNodeInfoManager->GetNodeInfo(localName, prefix, nameSpaceID,
+                                              getter_AddRefs(nodeInfo));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   switch (mState) {
   case eInProlog:
@@ -917,8 +842,6 @@ XULContentSinkImpl::HandleEndElement(const PRUnichar *aName)
     rv = mContextStack.Pop(&mState);
     NS_ASSERTION(NS_SUCCEEDED(rv), "context stack corrupted");
     if (NS_FAILED(rv)) return rv;
-
-    PopNameSpaces();
 
     if (mContextStack.Depth() == 0) {
         // The root element should -always- be an element, because
@@ -1124,148 +1047,6 @@ XULContentSinkImpl::ReportError(const PRUnichar* aErrorText,
   return rv;
 }
 
-//----------------------------------------------------------------------
-//
-// Namespace management
-//
-
-nsresult
-XULContentSinkImpl::PushNameSpacesFrom(const PRUnichar** aAttributes)
-{
-    nsCOMPtr<nsINameSpace> nameSpace;
-
-    if (mNameSpaceStack.Count() > 0) {
-        nameSpace =
-            (nsINameSpace*)mNameSpaceStack.ElementAt(mNameSpaceStack.Count() - 1);
-    } else {
-        nsContentUtils::GetNSManagerWeakRef()->
-            CreateRootNameSpace(getter_AddRefs(nameSpace));
-        if (! nameSpace)
-            return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    static NS_NAMED_LITERAL_STRING(kNameSpaceDef, "xmlns");
-    static const PRUint32 xmlns_len = kNameSpaceDef.Length();
-
-    for (; *aAttributes; aAttributes += 2) {
-        nsDependentString key(aAttributes[0]);
-
-        // Look for "xmlns" at the start of the attribute name
-
-        if (StringBeginsWith(key, kNameSpaceDef)) {
-            nsCOMPtr<nsIAtom> prefixAtom;
-
-            // If key.Length() > xmlns_len we have a xmlns:foo type attribute,
-            // extract the prefix. If not, we have a xmlns attribute in
-            // which case there is no prefix.
-
-            if (key.Length() > xmlns_len) {
-                nsDependentString::const_iterator start, end;
-
-                key.BeginReading(start);
-                key.EndReading(end);
-
-                start.advance(xmlns_len);
-
-                if (*start == ':' && ++start != end) {
-                    prefixAtom = do_GetAtom(Substring(start, end));
-                } else {
-                    NS_WARNING("Bad XML namespace declaration 'xmlns:' "
-                               "found!");
-                }
-            }
-
-            nsDependentString value(aAttributes[1]);
-
-            nsCOMPtr<nsINameSpace> child;
-            nsresult rv =
-                nameSpace->CreateChildNameSpace(prefixAtom, value,
-                                                getter_AddRefs(child));
-            NS_ENSURE_SUCCESS(rv, rv);
-
-            nameSpace = child;
-        }
-    }
-
-    nsINameSpace *tmp = nameSpace;
-    mNameSpaceStack.AppendElement(tmp);
-    NS_ADDREF(tmp);
-
-    return NS_OK;
-}
-
-void
-XULContentSinkImpl::PopNameSpaces(void)
-{
-    if (0 < mNameSpaceStack.Count()) {
-        PRInt32 i = mNameSpaceStack.Count() - 1;
-        nsINameSpace* nameSpace = (nsINameSpace*)mNameSpaceStack[i];
-        mNameSpaceStack.RemoveElementAt(i);
-
-        // Releasing the most deeply nested namespace will recursively
-        // release intermediate parent namespaces until the next
-        // reference is held on the namespace stack.
-        NS_RELEASE(nameSpace);
-    }
-}
-
-nsresult
-XULContentSinkImpl::GetTopNameSpace(nsCOMPtr<nsINameSpace>* aNameSpace)
-{
-    PRInt32 count = mNameSpaceStack.Count();
-    if (count == 0)
-        return NS_ERROR_UNEXPECTED;
-
-    *aNameSpace = NS_REINTERPRET_CAST(nsINameSpace*, mNameSpaceStack[count - 1]);
-    return NS_OK;
-}
-
-//----------------------------------------------------------------------
-
-nsresult
-XULContentSinkImpl::ParseTag(const PRUnichar* aText, 
-                             nsINodeInfo** aNodeInfo)
-{
-    // Split the tag into prefix and tag substrings.
-
-    nsDependentString text(aText);
-
-    nsDependentString::const_iterator start, end;
-    text.BeginReading(start);
-    text.EndReading(end);
-
-    nsDependentString::const_iterator colon(start);
-
-    nsCOMPtr<nsIAtom> prefix;
-
-    if (!FindCharInReadable(kNameSpaceSeparator, colon, end)) {
-        colon = start; // No ':' found, reset colon
-    } else if (colon != start) {
-        prefix = do_GetAtom(Substring(start, colon));
-
-        ++colon; // Step over ':'
-    }
-
-    nsCOMPtr<nsINameSpace> ns;
-    GetTopNameSpace(address_of(ns));
-
-    PRInt32 namespaceID = kNameSpaceID_None;
-
-    if (ns) {
-        ns->FindNameSpaceID(prefix, &namespaceID);
-
-        if (namespaceID == kNameSpaceID_Unknown) {
-            NS_WARNING("Undeclared prefix used in tag name!");
-
-            namespaceID = kNameSpaceID_None;
-        }
-    } else {
-        NS_WARNING("Undeclared prefix used in tag name!");
-    }
-
-    return mNodeInfoManager->GetNodeInfo(Substring(colon, end), prefix,
-                                         namespaceID, aNodeInfo);
-}
 
 nsresult
 XULContentSinkImpl::OpenRoot(const PRUnichar** aAttributes, 
@@ -1517,8 +1298,7 @@ XULContentSinkImpl::AddAttributes(const PRUnichar** aAttributes,
   // Copy the attributes into the prototype
   PRUint32 i;
   for (i = 0; i < aAttrLen; ++i) {
-      rv = NormalizeAttributeString(nsDependentString(aAttributes[i * 2]),
-                                    attrs[i].mName);
+      rv = NormalizeAttributeString(aAttributes[i * 2], attrs[i].mName);
       NS_ENSURE_SUCCESS(rv, rv);
 
       rv = aElement->SetAttrAt(i, nsDependentString(aAttributes[i * 2 + 1]),

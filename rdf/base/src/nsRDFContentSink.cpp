@@ -97,13 +97,6 @@
 #include "nsStaticAtom.h"
 
 ////////////////////////////////////////////////////////////////////////
-
-static const char kNameSpaceSeparator = ':';
-
-static const char kRDFNameSpaceURI[] = RDF_NAMESPACE_URI;
-static const char kNCNameSpaceURI[] = NC_NAMESPACE_URI;
-
-////////////////////////////////////////////////////////////////////////
 // XPCOM IIDs
 
 static NS_DEFINE_IID(kIContentSinkIID,         NS_ICONTENT_SINK_IID); // XXX grr...
@@ -232,51 +225,23 @@ protected:
     nsresult AddProperties(const PRUnichar** aAttributes, nsIRDFResource* aSubject, PRInt32* aCount = nsnull);
     void SetParseMode(const PRUnichar **aAttributes);
 
-    // namespace management
-    nsresult PushNameSpacesFrom(const PRUnichar** aAttributes);
-    PRBool   IsXMLNSDirective(const nsAString& aAttributeKey, nsIAtom** aPrefix = nsnull);
-    nsresult PopNameSpaces();
-
     PRUnichar* mText;
     PRInt32 mTextLength;
     PRInt32 mTextSize;
 
-    struct NameSpaceEntry {
-    public:
-        NameSpaceEntry(nsIAtom* aPrefix, const char* aNameSpaceURI)
-            : mPrefix(aPrefix), mNext(nsnull) {
-            MOZ_COUNT_CTOR(RDFContentSinkImpl::NameSpaceEntry);
-            mNameSpaceURI = PL_strdup(aNameSpaceURI);
-        }
-
-        ~NameSpaceEntry() {
-            MOZ_COUNT_DTOR(RDFContentSinkImpl::NameSpaceEntry);
-            PL_strfree(mNameSpaceURI);
-        }
-
-        nsCOMPtr<nsIAtom> mPrefix;
-        char*             mNameSpaceURI;
-        NameSpaceEntry*   mNext;
-    };
-
-    NameSpaceEntry* mNameSpaceStack;
-    nsAutoVoidArray mNameSpaceScopes;
-
-    nsIAtom*
-    CutNameSpacePrefix(const nsAString& aString, nsIAtom** aTagAtom);
-
-    nsresult
-    GetNameSpaceURI(nsIAtom* aPrefix, const char** aNameSpaceURI);
-
-    nsresult
-    ParseTagString(const PRUnichar* aTagName,
-                   const char** aNameSpaceURI,
-                   nsIAtom** aTag);
-
-    nsresult
-    ParseAttributeString(const nsAString& aAttributeName,
-                         const char** aNameSpaceURI,
-                         nsIAtom** aAttribute);
+    /**
+     * Extracts the localname from aExpatName, the name that the Expat parser
+     * passes us. aValue should contain a namespace URI if we need to register
+     * a new prefix-to-namespace-URI mapping when aExpatName declares a
+     * namespace (namespace URI in aExpatName being
+     * http://www.w3.org/2000/xmlns/). aValue is typically the value of an
+     * xmlns attribute.
+     * aLocalName will contain the localname in aExpatName and the returned
+     * value will be the namespace URI.
+     */
+    const nsDependentSubstring SplitExpatName(const PRUnichar *aExpatName,
+                                              nsIAtom **aLocalName,
+                                              const PRUnichar* aValue = nsnull);
 
     enum eContainerType { eBag, eSeq, eAlt };
     nsresult InitContainer(nsIRDFResource* aContainerType, nsIRDFResource* aContainer);
@@ -350,7 +315,6 @@ RDFContentSinkImpl::RDFContentSinkImpl()
     : mText(nsnull),
       mTextLength(0),
       mTextSize(0),
-      mNameSpaceStack(nsnull),
       mState(eRDFContentSinkState_InProlog),
       mParseMode(eRDFContentSinkParseMode_Literal),
       mContextStack(nsnull),
@@ -397,12 +361,6 @@ RDFContentSinkImpl::~RDFContentSinkImpl()
 
     NS_IF_RELEASE(mDocumentURL);
 
-    if (mNameSpaceStack) {
-        // There shouldn't be any here except in an error condition
-        PRInt32 i = mNameSpaceScopes.Count();
-        while (--i >= 0)
-            PopNameSpaces();
-    }
     if (mContextStack) {
         PR_LOG(gLog, PR_LOG_WARNING,
                ("rdfxml: warning! unclosed tag"));
@@ -488,12 +446,6 @@ RDFContentSinkImpl::HandleStartElement(const PRUnichar *aName,
 {
   FlushText();
 
-  // We must register namespace declarations found in the attribute
-  // list of an element before creating the element. This is because
-  // the namespace prefix for an element might be declared within
-  // the attribute list.
-  PushNameSpacesFrom(aAtts);
-
   nsresult rv = NS_ERROR_UNEXPECTED; // XXX
 
   switch (mState) {
@@ -576,8 +528,6 @@ RDFContentSinkImpl::HandleEndElement(const PRUnichar *aName)
   if (nestLevel == 0)
       mState = eRDFContentSinkState_InEpilog;
 
-  PopNameSpaces();
-    
   NS_IF_RELEASE(resource);
   return NS_OK;
 }
@@ -870,42 +820,6 @@ RDFContentSinkImpl::AddText(const PRUnichar* aText, PRInt32 aLength)
 }
 
 nsresult
-RDFContentSinkImpl::PushNameSpacesFrom(const PRUnichar** aAttributes)
-{
-  // Remember the current top of the stack as the namespace
-  // scope. When popping namespaces, we'll remove stack elements
-  // until we hit this.
-  mNameSpaceScopes.AppendElement(mNameSpaceStack);
-
-  for (; *aAttributes; aAttributes += 2) {
-      nsCOMPtr<nsIAtom> prefix;
-      if (! IsXMLNSDirective(nsDependentString(aAttributes[0]), 
-                             getter_AddRefs(prefix))) {
-          continue;
-      }
-    
-      nsAutoString uri(aAttributes[1]);
-      nsRDFParserUtils::StripAndConvert(uri);
-
-      // Open a local namespace
-      NameSpaceEntry* ns = new NameSpaceEntry(prefix, NS_ConvertUCS2toUTF8(uri).get());
-      if (! ns) {
-          return NS_ERROR_OUT_OF_MEMORY;
-      }
-
-      ns->mNext = mNameSpaceStack;
-      mNameSpaceStack = ns;
-
-      // Add it to the set of namespaces used in the RDF/XML document.
-      nsCOMPtr<nsIRDFXMLSink> sink = do_QueryInterface(mDataSource);
-      if (sink) {
-          sink->AddNameSpace(prefix, uri);
-      }
-  }
-  return NS_OK;
-}
-
-nsresult
 RDFContentSinkImpl::GetIdAboutAttribute(const PRUnichar** aAttributes,
                                         nsIRDFResource** aResource,
                                         PRBool* aIsAnonymous)
@@ -917,26 +831,24 @@ RDFContentSinkImpl::GetIdAboutAttribute(const PRUnichar** aAttributes,
     rv = mDocumentURL->GetSpec(docURI);
     if (NS_FAILED(rv)) return rv;
 
+    nsCOMPtr<nsIAtom> localName;
     for (; *aAttributes; aAttributes += 2) {
-        // Get upper-cased key
-        const char* nameSpaceURI;
-        nsCOMPtr<nsIAtom> attr;
-        rv = ParseAttributeString(nsDependentString(aAttributes[0]), 
-                                  &nameSpaceURI, 
-                                  getter_AddRefs(attr));
-        if (NS_FAILED(rv)) return rv;
+        const nsDependentSubstring& nameSpaceURI =
+            SplitExpatName(aAttributes[0], getter_AddRefs(localName),
+                           aAttributes[1]);
 
         // We'll accept either `ID' or `rdf:ID' (ibid with `about' or
         // `rdf:about') in the spirit of being liberal towards the
         // input that we receive.
-        if (nameSpaceURI && 0 != PL_strcmp(nameSpaceURI, kRDFNameSpaceURI)) {
+        if (!nameSpaceURI.IsEmpty() &&
+            !nameSpaceURI.EqualsLiteral(RDF_NAMESPACE_URI)) {
           continue;
         }
 
         // XXX you can't specify both, but we'll just pick up the
         // first thing that was specified and ignore the other.
       
-        if (attr.get() == kAboutAtom) {
+        if (localName == kAboutAtom) {
             if (aIsAnonymous)
                 *aIsAnonymous = PR_FALSE;
 
@@ -947,7 +859,7 @@ RDFContentSinkImpl::GetIdAboutAttribute(const PRUnichar** aAttributes,
 
             return gRDFService->GetUnicodeResource(uri, aResource);
         }
-        else if (attr.get() == kIdAtom) {
+        else if (localName == kIdAtom) {
             if (aIsAnonymous)
                 *aIsAnonymous = PR_FALSE;
 
@@ -968,7 +880,7 @@ RDFContentSinkImpl::GetIdAboutAttribute(const PRUnichar** aAttributes,
 
             return gRDFService->GetUnicodeResource(name, aResource);
         }
-        else if (attr.get() == kAboutEachAtom) {
+        else if (localName == kAboutEachAtom) {
             // XXX we don't deal with aboutEach...
             //PR_LOG(gLog, PR_LOG_WARNING,
             //       ("rdfxml: ignoring aboutEach at line %d",
@@ -988,28 +900,24 @@ nsresult
 RDFContentSinkImpl::GetResourceAttribute(const PRUnichar** aAttributes,
                                          nsIRDFResource** aResource)
 {
-  nsresult rv;
-
+  nsCOMPtr<nsIAtom> localName;
   for (; *aAttributes; aAttributes += 2) {
-      // Get upper-cased key
-      const char* nameSpaceURI;
-      nsCOMPtr<nsIAtom> attr;
-      rv = ParseAttributeString(nsDependentString(aAttributes[0]), 
-                                &nameSpaceURI, 
-                                getter_AddRefs(attr));
-      if (NS_FAILED(rv)) return rv;
+      const nsDependentSubstring& nameSpaceURI =
+          SplitExpatName(aAttributes[0], getter_AddRefs(localName),
+                         aAttributes[1]);
 
       // We'll accept `resource' or `rdf:resource', under the spirit
       // that we should be liberal towards the input that we
       // receive.
-      if (nameSpaceURI && 0 != PL_strcmp(nameSpaceURI, kRDFNameSpaceURI)) {
+      if (!nameSpaceURI.IsEmpty() &&
+          !nameSpaceURI.EqualsLiteral(RDF_NAMESPACE_URI)) {
           continue;
       }
 
       // XXX you can't specify both, but we'll just pick up the
       // first thing that was specified and ignore the other.
 
-      if (attr.get() == kResourceAtom) {
+      if (localName == kResourceAtom) {
           nsAutoString uri(aAttributes[1]);
           nsRDFParserUtils::StripAndConvert(uri);
 
@@ -1034,33 +942,33 @@ RDFContentSinkImpl::AddProperties(const PRUnichar** aAttributes,
   if (aCount)
       *aCount = 0;
 
+  nsCOMPtr<nsIAtom> localName;
   for (; *aAttributes; aAttributes += 2) {
-      // Get upper-cased key
-      const nsDependentString key(aAttributes[0]);
+      const nsDependentSubstring& nameSpaceURI =
+          SplitExpatName(aAttributes[0], getter_AddRefs(localName),
+                         aAttributes[1]);
 
       // skip 'xmlns' directives, these are "meta" information
-      if (IsXMLNSDirective(key)) {
+      if (nameSpaceURI.EqualsLiteral("http://www.w3.org/2000/xmlns/")) {
         continue;
       }
-
-      const char* nameSpaceURI;
-      nsCOMPtr<nsIAtom> attr;
-      ParseAttributeString(key, &nameSpaceURI, getter_AddRefs(attr));
 
       // skip `about', `ID', and `resource' attributes (either with or
       // without the `rdf:' prefix); these are all "special" and
       // should've been dealt with by the caller.
-      if (attr == kAboutAtom || attr == kIdAtom || attr == kResourceAtom) {
-          if (!nameSpaceURI || 0 == PL_strcmp(nameSpaceURI, kRDFNameSpaceURI))
+      if (localName == kAboutAtom || localName == kIdAtom ||
+          localName == kResourceAtom) {
+          if (nameSpaceURI.IsEmpty() ||
+              nameSpaceURI.EqualsLiteral(RDF_NAMESPACE_URI))
               continue;
       }
 
       // Skip `parseType', `RDF:parseType', and `NC:parseType'. This
       // is meta-information that will be handled in SetParseMode.
-      if (attr == kParseTypeAtom) {
-          if (!nameSpaceURI
-              || 0 == PL_strcmp(nameSpaceURI, kRDFNameSpaceURI)
-              || 0 == PL_strcmp(nameSpaceURI, kNCNameSpaceURI)) {
+      if (localName == kParseTypeAtom) {
+          if (nameSpaceURI.IsEmpty() ||
+              nameSpaceURI.EqualsLiteral(RDF_NAMESPACE_URI) ||
+              nameSpaceURI.EqualsLiteral(NC_NAMESPACE_URI)) {
               continue;
           }
       }
@@ -1069,17 +977,10 @@ RDFContentSinkImpl::AddProperties(const PRUnichar** aAttributes,
       nsRDFParserUtils::StripAndConvert(v);
 
       const char* attrName;
-      attr->GetUTF8String(&attrName);
+      localName->GetUTF8String(&attrName);
 
-      nsCAutoString propertyStr;
-    
-      if (nameSpaceURI) {
-        propertyStr.Assign(nsDependentCString(nameSpaceURI) + 
-                           nsDependentCString(attrName));
-      }
-      else {
-        propertyStr.Assign(attrName);
-      }
+      NS_ConvertUTF16toUTF8 propertyStr(nameSpaceURI);    
+      propertyStr.Append(attrName);
 
       // Add the assertion to RDF
       nsCOMPtr<nsIRDFResource> property;
@@ -1096,24 +997,24 @@ RDFContentSinkImpl::AddProperties(const PRUnichar** aAttributes,
 void
 RDFContentSinkImpl::SetParseMode(const PRUnichar **aAttributes)
 {
+    nsCOMPtr<nsIAtom> localName;
     for (; *aAttributes; aAttributes += 2) {
-        const nsDependentString key(aAttributes[0]);
+        const nsDependentSubstring& nameSpaceURI =
+            SplitExpatName(aAttributes[0], getter_AddRefs(localName),
+                           aAttributes[1]);
 
-        const char *nameSpaceURI;
-        nsCOMPtr<nsIAtom> attr;
-        ParseAttributeString(key, &nameSpaceURI, getter_AddRefs(attr));
-
-        if (attr == kParseTypeAtom) {
+        if (localName == kParseTypeAtom) {
             nsAutoString v(aAttributes[1]);
             nsRDFParserUtils::StripAndConvert(v);
 
-            if (!nameSpaceURI || 0 == PL_strcmp(nameSpaceURI, kRDFNameSpaceURI)) {
+            if (nameSpaceURI.IsEmpty() ||
+                nameSpaceURI.EqualsLiteral(RDF_NAMESPACE_URI)) {
                 if (v.EqualsLiteral("Resource"))
                     mParseMode = eRDFContentSinkParseMode_Resource;
 
                 break;
             }
-            else if (0 == PL_strcmp(nameSpaceURI, kNCNameSpaceURI)) {
+            else if (nameSpaceURI.EqualsLiteral(NC_NAMESPACE_URI)) {
                 if (v.EqualsLiteral("Date"))
                     mParseMode = eRDFContentSinkParseMode_Date;
                 else if (v.EqualsLiteral("Integer"))
@@ -1134,16 +1035,12 @@ RDFContentSinkImpl::OpenRDF(const PRUnichar* aName)
     // ensure that we're actually reading RDF by making sure that the
     // opening tag is <rdf:RDF>, where "rdf:" corresponds to whatever
     // they've declared the standard RDF namespace to be.
-    nsresult rv;
+    nsCOMPtr<nsIAtom> localName;
+    const nsDependentSubstring& nameSpaceURI =
+        SplitExpatName(aName, getter_AddRefs(localName));
 
-    nsCOMPtr<nsIAtom> tag;
-    const char* nameSpaceURI;
-    rv = ParseTagString(aName, &nameSpaceURI, getter_AddRefs(tag));
-    if (NS_FAILED(rv)) return rv;
-
-    if ((nameSpaceURI && 0 != PL_strcmp(nameSpaceURI, kRDFNameSpaceURI))
-        || (tag.get() != kRDFAtom)) {
-       // PR_LOG(gLog, PR_LOG_WARNING,
+    if (!nameSpaceURI.EqualsLiteral(RDF_NAMESPACE_URI) || localName != kRDFAtom) {
+       // PR_LOG(gLog, PR_LOG_ALWAYS,
        //        ("rdfxml: expected RDF:RDF at line %d",
        //         aNode.GetSourceLineNumber()));
 
@@ -1162,11 +1059,9 @@ RDFContentSinkImpl::OpenObject(const PRUnichar* aName,
     // an "object" non-terminal is either a "description", a "typed
     // node", or a "container", so this change the content sink's
     // state appropriately.
-    nsresult rv;
-
-    nsCOMPtr<nsIAtom> tag;
-    const char* nameSpaceURI;
-    ParseTagString(aName, &nameSpaceURI, getter_AddRefs(tag));
+    nsCOMPtr<nsIAtom> localName;
+    const nsDependentSubstring& nameSpaceURI =
+        SplitExpatName(aName, getter_AddRefs(localName));
 
     // Figure out the URI of this object, and create an RDF node for it.
     nsCOMPtr<nsIRDFResource> source;
@@ -1184,24 +1079,24 @@ RDFContentSinkImpl::OpenObject(const PRUnichar* aName,
     // description or a container.
     PRBool isaTypedNode = PR_TRUE;
 
-    if (nameSpaceURI && 0 == PL_strcmp(nameSpaceURI, kRDFNameSpaceURI)) {
+    if (nameSpaceURI.EqualsLiteral(RDF_NAMESPACE_URI)) {
         isaTypedNode = PR_FALSE;
 
-        if (tag.get() == kDescriptionAtom) {
+        if (localName == kDescriptionAtom) {
             // it's a description
             mState = eRDFContentSinkState_InDescriptionElement;
         }
-        else if (tag.get() == kBagAtom) {
+        else if (localName == kBagAtom) {
             // it's a bag container
             InitContainer(kRDF_Bag, source);
             mState = eRDFContentSinkState_InContainerElement;
         }
-        else if (tag.get() == kSeqAtom) {
+        else if (localName == kSeqAtom) {
             // it's a seq container
             InitContainer(kRDF_Seq, source);
             mState = eRDFContentSinkState_InContainerElement;
         }
-        else if (tag.get() == kAltAtom) {
+        else if (localName == kAltAtom) {
             // it's an alt container
             InitContainer(kRDF_Alt, source);
             mState = eRDFContentSinkState_InContainerElement;
@@ -1214,18 +1109,14 @@ RDFContentSinkImpl::OpenObject(const PRUnichar* aName,
     }
 
     if (isaTypedNode) {
-        nsCAutoString typeStr;
-
-        if (nameSpaceURI)
-            typeStr = nameSpaceURI;
-
         const char* attrName;
-        tag->GetUTF8String(&attrName);
+        localName->GetUTF8String(&attrName);
 
-        typeStr += attrName;
+        NS_ConvertUTF16toUTF8 typeStr(nameSpaceURI);
+        typeStr.Append(attrName);
 
         nsCOMPtr<nsIRDFResource> type;
-        rv = gRDFService->GetResource(typeStr, getter_AddRefs(type));
+        nsresult rv = gRDFService->GetResource(typeStr, getter_AddRefs(type));
         if (NS_FAILED(rv)) return rv;
 
         rv = mDataSource->Assert(source, kRDF_type, type, PR_TRUE);
@@ -1246,22 +1137,15 @@ RDFContentSinkImpl::OpenProperty(const PRUnichar* aName, const PRUnichar** aAttr
     // an "object" non-terminal is either a "description", a "typed
     // node", or a "container", so this change the content sink's
     // state appropriately.
-    const char* nameSpaceURI;
-    nsCOMPtr<nsIAtom> tag;
-    ParseTagString(aName, &nameSpaceURI, getter_AddRefs(tag));
-
+    nsCOMPtr<nsIAtom> localName;
+    const nsDependentSubstring& nameSpaceURI =
+        SplitExpatName(aName, getter_AddRefs(localName));
 
     const char* attrName;
-    tag->GetUTF8String(&attrName);
+    localName->GetUTF8String(&attrName);
 
-    nsCAutoString propertyStr;
-    if (nameSpaceURI) {
-        propertyStr.Assign(nsDependentCString(nameSpaceURI) + 
-                           nsDependentCString(attrName));
-    }
-    else {
-        propertyStr.Assign(attrName);
-    }
+    NS_ConvertUTF16toUTF8 propertyStr(nameSpaceURI);
+    propertyStr.Append(attrName);
 
     nsCOMPtr<nsIRDFResource> property;
     rv = gRDFService->GetResource(propertyStr, getter_AddRefs(property));
@@ -1330,12 +1214,13 @@ RDFContentSinkImpl::OpenMember(const PRUnichar* aName,
     // to whatever they've declared the standard RDF namespace to be.
     nsresult rv;
 
-    const char* nameSpaceURI;
-    nsCOMPtr<nsIAtom> tag;
-    ParseTagString(aName, &nameSpaceURI, getter_AddRefs(tag));
+    nsCOMPtr<nsIAtom> localName;
+    const nsDependentSubstring& nameSpaceURI =
+        SplitExpatName(aName, getter_AddRefs(localName));
 
-    if ((0 != PL_strcmp(nameSpaceURI, kRDFNameSpaceURI)) || (tag.get() != kLiAtom)) {
-        PR_LOG(gLog, PR_LOG_WARNING,
+    if (!nameSpaceURI.EqualsLiteral(RDF_NAMESPACE_URI) ||
+        localName != kLiAtom) {
+        PR_LOG(gLog, PR_LOG_ALWAYS,
                ("rdfxml: expected RDF:li at line %d",
                 -1)); // XXX pass in line number
 
@@ -1387,93 +1272,50 @@ RDFContentSinkImpl::OpenValue(const PRUnichar* aName, const PRUnichar** aAttribu
 ////////////////////////////////////////////////////////////////////////
 // Qualified name resolution
 
-nsIAtom*
-RDFContentSinkImpl::CutNameSpacePrefix(const nsAString& aString,
-                                       nsIAtom** aTagAtom)
+const nsDependentSubstring
+RDFContentSinkImpl::SplitExpatName(const PRUnichar *aExpatName,
+                                   nsIAtom **aLocalName,
+                                   const PRUnichar *aValue)
 {
-    nsIAtom* prefixAtom = nsnull;
-    NS_PRECONDITION(aTagAtom != nsnull, "null ptr");
-    *aTagAtom = nsnull;
+    /**
+     *  Expat can send the following:
+     *    localName
+     *    namespaceURI<separator>localName
+     *    namespaceURI<separator>localName<separator>prefix
+     *
+     *  and we use 0xFFFF for the <separator>.
+     *
+     */
 
-    nsAString::const_iterator start, end;
-    aString.BeginReading(start);
-    aString.EndReading(end);
-    nsAString::const_iterator colon(start);
+    const PRUnichar *uriEnd = aExpatName;
+    const PRUnichar *nameStart = aExpatName;
+    const PRUnichar *pos;
+    for (pos = aExpatName; *pos; ++pos) {
+        if (*pos == 0xFFFF) {
+            if (uriEnd != aExpatName) {
+                break;
+            }
 
-    if (FindCharInReadable(kNameSpaceSeparator, colon, end)) {
-        prefixAtom = NS_NewAtom(Substring(start, colon));
-        *aTagAtom = NS_NewAtom(Substring(++colon, end));
-    }
-    else
-        *aTagAtom = NS_NewAtom(aString);
-    return prefixAtom;
-}
-
-
-nsresult
-RDFContentSinkImpl::GetNameSpaceURI(nsIAtom* aPrefix, const char** aNameSpaceURI)
-{
-    // If we're trying to resolve a namespace ID from a prefix, then
-    // we'd better have some namespaces open. We don't assert here
-    // because the likelihood of bogus files is high, and it doesn't
-    // make sense to drop into the debugger.
-    for (NameSpaceEntry* ns = mNameSpaceStack; ns != nsnull; ns = ns->mNext) {
-        if (ns->mPrefix.get() == aPrefix) {
-            *aNameSpaceURI = ns->mNameSpaceURI;
-            return NS_OK;
+            uriEnd = pos;
+            nameStart = pos + 1;
         }
     }
 
-    // Couldn't find the namespace, probably because the prefix
-    // was never declared using an 'xmlns' decl.
-    *aNameSpaceURI = nsnull;
+    const nsDependentSubstring& nameSpaceURI = Substring(aExpatName, uriEnd);
+    *aLocalName = NS_NewAtom(NS_ConvertUTF16toUTF8(nameStart,
+                                                   pos - nameStart));
 
-#ifdef PR_LOGGING
-    if (PR_LOG_TEST(gLog, PR_LOG_WARNING)) {
-        const char* prefixStr;
-        if (aPrefix)
-            aPrefix->GetUTF8String(&prefixStr);
-
-        PR_LogPrint
-               ("rdfxml: undeclared namespace prefix '%s'",
-                prefixStr);
-
-    }
-#endif
-
-    return NS_ERROR_FAILURE;
-}
-
-nsresult
-RDFContentSinkImpl::ParseTagString(const PRUnichar* aTagName,
-                                   const char** aNameSpaceURI,
-                                   nsIAtom** aTag)
-{
-    // Split the fully-qualified name into a prefix and a tag part.
-    nsDependentString tagStr(aTagName);
-    nsCOMPtr<nsIAtom> prefix = getter_AddRefs(CutNameSpacePrefix(tagStr, aTag));
-
-    GetNameSpaceURI(prefix, aNameSpaceURI);
-    return NS_OK;
-}
-
-
-nsresult
-RDFContentSinkImpl::ParseAttributeString(const nsAString& aAttributeName,
-                                         const char** aNameSpaceURI,
-                                         nsIAtom** aAttribute)
-{
-    // Split the fully-qualified name into a prefix and a tag part.
-    nsCOMPtr<nsIAtom> prefix = getter_AddRefs(CutNameSpacePrefix(aAttributeName,
-                                                                 aAttribute));
-    if (prefix) {
-        GetNameSpaceURI(prefix, aNameSpaceURI);
-    }
-    else {
-        *aNameSpaceURI = nsnull;
+    if (uriEnd != aExpatName && aValue &&
+        nameSpaceURI.EqualsLiteral("http://www.w3.org/2000/xmlns/")) {
+        nsCOMPtr<nsIAtom> prefix =
+            *aLocalName == kXMLNSAtom ? nsnull : *aLocalName;
+        nsCOMPtr<nsIRDFXMLSink> sink = do_QueryInterface(mDataSource);
+        if (sink) {
+            sink->AddNameSpace(prefix, nsDependentString(aValue));
+        }
     }
 
-    return NS_OK;
+    return nameSpaceURI;
 }
 
 nsresult
@@ -1613,62 +1455,6 @@ RDFContentSinkImpl::PopContext(nsIRDFResource         *&aResource,
     return NS_OK;
 }
  
-
-////////////////////////////////////////////////////////////////////////
-// Namespace management
-
-PRBool
-RDFContentSinkImpl::IsXMLNSDirective(const nsAString& aAttributeKey, nsIAtom** aPrefix)
-{
-    NS_NAMED_LITERAL_STRING(kNameSpaceDef, "xmlns");
-    const size_t kNameSpaceDef_Length = sizeof("xmlns") - 1;
-
-    // Look for `xmlns' at the start of the attribute name
-    if (!Substring(aAttributeKey, 0, kNameSpaceDef_Length).Equals(kNameSpaceDef))
-        return PR_FALSE;
-
-    PRInt32 prefixLen = aAttributeKey.Length() - kNameSpaceDef_Length - 1;
-    if (prefixLen <= 0) {
-        // they're setting the default namespace; leave `prefix'
-        // as nsnull.
-    }
-    else {
-        // make sure there's a `:' character
-        nsAString::const_iterator iter;
-        if (*aAttributeKey.BeginReading(iter).advance(kNameSpaceDef_Length)
-                != kNameSpaceSeparator)
-            return PR_FALSE;
-
-        // if the caller wants the prefix back, compute it for them.
-        if (aPrefix)
-            *aPrefix = NS_NewAtom(Substring(aAttributeKey,
-                                            kNameSpaceDef_Length + 1,
-                                            prefixLen));
-    }
-
-    return PR_TRUE;
-}
-
-nsresult
-RDFContentSinkImpl::PopNameSpaces()
-{
-    // Close a namespace scope by removing the topmost entries from
-    // the namespace stack.
-    PRInt32 top = mNameSpaceScopes.Count() - 1;
-    if (top < 0)
-        return NS_ERROR_UNEXPECTED; // XXX huh?
-
-    NameSpaceEntry* ns = NS_STATIC_CAST(NameSpaceEntry*, mNameSpaceScopes[top]);
-    mNameSpaceScopes.RemoveElementAt(top);
-
-    while (mNameSpaceStack && mNameSpaceStack != ns) {
-        NameSpaceEntry* doomed = mNameSpaceStack;
-        mNameSpaceStack = mNameSpaceStack->mNext;
-        delete doomed;
-    }
-
-    return NS_OK;
-}
 
 ////////////////////////////////////////////////////////////////////////
 

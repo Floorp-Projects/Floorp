@@ -299,6 +299,9 @@ public:
                                        nsNodeInfoManager* aNodeInfoManager,
                                        nsINodeInfo** aNodeInfo);
 
+  static void SplitExpatName(const PRUnichar *aExpatName, nsIAtom **aPrefix,
+                             nsIAtom **aTagName, PRInt32 *aNameSpaceID);
+
   static nsAdoptingCString GetCharPref(const char *aPref);
   static PRPackedBool GetBoolPref(const char *aPref,
                                   PRBool aDefault = PR_FALSE);
