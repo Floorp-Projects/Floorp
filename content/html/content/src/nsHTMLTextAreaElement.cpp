@@ -20,6 +20,12 @@
  * Contributor(s): 
  */
 #include "nsIDOMHTMLTextAreaElement.h"
+#include "nsIDOMNSHTMLTextAreaElement.h"
+#include "nsIControllers.h"
+#include "nsEditorController.h"
+#include "nsRDFCID.h"
+#include "nsCOMPtr.h"
+#include "nsComponentManager.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIFormControl.h"
 #include "nsIForm.h"
@@ -44,8 +50,10 @@ static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kIFormIID, NS_IFORM_IID);
 static NS_DEFINE_IID(kIFocusableContentIID, NS_IFOCUSABLECONTENT_IID);
+static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
 
 class nsHTMLTextAreaElement : public nsIDOMHTMLTextAreaElement,
+                              public nsIDOMNSHTMLTextAreaElement,
                               public nsIScriptObjectOwner,
                               public nsIDOMEventReceiver,
                               public nsIHTMLContent,
@@ -93,6 +101,9 @@ public:
   NS_IMETHOD Focus();
   NS_IMETHOD Select();
 
+  // nsIDOMNSHTMLTextAreaElement
+  NS_DECL_IDOMNSHTMLTEXTAREAELEMENT
+
   // nsIScriptObjectOwner
   NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(mInner)
 
@@ -117,6 +128,7 @@ public:
 protected:
   nsGenericHTMLContainerElement mInner;
   nsIForm*   mForm;
+  nsCOMPtr<nsIControllers> mControllers;
 };
 
 nsresult
@@ -158,6 +170,11 @@ nsHTMLTextAreaElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
   if (aIID.Equals(kIDOMHTMLTextAreaElementIID)) {
     *aInstancePtr = (void*)(nsIDOMHTMLTextAreaElement*) this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(nsIDOMNSHTMLTextAreaElement::GetIID())) {
+    *aInstancePtr = (void*)(nsIDOMNSHTMLTextAreaElement*) this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -521,5 +538,36 @@ nsHTMLTextAreaElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
     }
   }
 #endif
+  return NS_OK;
+}
+
+
+// Controllers Methods
+NS_IMETHODIMP
+nsHTMLTextAreaElement::GetControllers(nsIControllers** aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+
+  if (!mControllers)
+  {
+    NS_ENSURE_SUCCESS (
+      nsComponentManager::CreateInstance(kXULControllersCID,
+                                         nsnull,
+                                         NS_GET_IID(nsIControllers),
+                                         getter_AddRefs(mControllers)),
+      NS_ERROR_FAILURE);
+    if (!mControllers) { return NS_ERROR_NULL_POINTER; }
+
+    nsEditorController *controller = new nsEditorController();
+    if (!controller) { return NS_ERROR_NULL_POINTER; }
+    nsCOMPtr<nsIController> iController = do_QueryInterface(controller);
+    if (!iController) { return NS_ERROR_NULL_POINTER; }
+    NS_ADDREF(controller);
+    mControllers->AppendController(iController);
+    controller->SetContent(this);
+  }
+
+  *aResult = mControllers;
+  NS_IF_ADDREF(*aResult);
   return NS_OK;
 }

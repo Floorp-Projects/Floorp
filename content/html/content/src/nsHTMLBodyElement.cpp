@@ -39,6 +39,8 @@
 #include "nsIHTMLCSSStyleSheet.h"
 #include "nsICSSStyleRule.h"
 #include "nsIWebShell.h"
+#include "nsIContentViewer.h"
+#include "nsIMarkupDocumentViewer.h"
 #include "nsIHTMLAttributes.h"
 #include "nsIHTMLContentContainer.h"
 #include "nsISupportsArray.h"
@@ -338,9 +340,10 @@ BodyRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresCo
           container->QueryInterface(kIWebShellIID, (void**) &webShell);
           if (nsnull != webShell) {
             nscoord pixel = NSIntPixelsToTwips(1, p2t);
-            nscoord frameMarginWidth, frameMarginHeight; 
-            webShell->GetMarginWidth(frameMarginWidth); // -1 indicates not set   
-            webShell->GetMarginHeight(frameMarginHeight); 
+            nscoord frameMarginWidth=-1;  // default value
+            nscoord frameMarginHeight=-1; // default value
+            webShell->GetMarginWidth(&frameMarginWidth); // -1 indicates not set   
+            webShell->GetMarginHeight(&frameMarginHeight); 
             if ((frameMarginWidth >= 0) && (0 > bodyMarginWidth)) { // set in <frame> & not in <body> 
               if (eCompatibility_NavQuirks == mode) { // allow 0 margins
                 if ((0 > bodyMarginHeight) && (0 > frameMarginHeight)) { // another nav quirk 
