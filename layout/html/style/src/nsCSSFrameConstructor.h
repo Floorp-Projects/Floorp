@@ -134,6 +134,11 @@ protected:
                                     nsIStyleContext*         aParentStyleContext,
                                     nsIFrame*&               aNewFrame);
 
+  nsresult ConstructDocElementTableFrame(nsIPresContext* aPresContext,
+                                         nsIContent*     aDocElement,
+                                         nsIFrame*       aParentFrame,
+                                         nsIFrame*&      aNewTableFrame);
+
   nsresult CreateGeneratedFrameFor(nsIPresContext*       aPresContext,
                                    nsIFrame*             aParentFrame,
                                    nsIContent*           aContent,
@@ -276,6 +281,75 @@ protected:
                              nsFrameItems&            aChildItems,
                              nsTableCreator&          aTableCreator);
 
+  nsresult ConstructTableRowFrameOnly(nsIPresContext*  aPresContext,
+                                      nsIContent*      aContent,
+                                      nsIFrame*        aParentFrame,
+                                      nsIStyleContext* aStyleContext,
+                                      nsAbsoluteItems& aAbsoluteItems,
+                                      PRBool           aProcessChildren,
+                                      nsIFrame*&       aNewRowFrame,
+                                      nsAbsoluteItems& aFixedItems,
+                                      nsTableCreator&  aTableCreator);
+
+  nsresult ConstructTableColFrame(nsIPresContext*  aPresContext,
+                                  nsIContent*      aContent,
+                                  nsIFrame*        aParent,
+                                  nsIStyleContext* aStyleContext,
+                                  nsAbsoluteItems& aAbsoluteItems,
+                                  nsIFrame*&       aNewTopMostFrame,
+                                  nsIFrame*&       aNewColFrame,
+                                  nsAbsoluteItems& aFixedItems,
+                                  nsTableCreator&  aTableCreator);
+
+  nsresult ConstructTableColFrameOnly(nsIPresContext*  aPresContext,
+                                      nsIContent*      aContent,
+                                      nsIFrame*        aParentFrame,
+                                      nsIStyleContext* aStyleContext,
+                                      nsAbsoluteItems& aAbsoluteItems,
+                                      nsIFrame*&       aNewColFrame,
+                                      nsAbsoluteItems& aFixedItems,
+                                      nsTableCreator&  aTableCreator);
+
+  nsresult ConstructTableCellFrame(nsIPresContext*  aPresContext,
+                                   nsIContent*      aContent,
+                                   nsIFrame*        aParentFrame,
+                                   nsIStyleContext* aStyleContext,
+                                   nsAbsoluteItems& aAbsoluteItems,
+                                   nsIFrame*&       aNewTopMostFrame,
+                                   nsIFrame*&       aNewCellFrame,
+                                   nsIFrame*&       aNewCellBodyFrame,
+                                   nsAbsoluteItems& aFixedItems,
+                                   nsTableCreator&  aTableCreator,
+                                   PRBool           aProcessChildren = PR_TRUE);
+
+  nsresult ConstructTableCellFrameOnly(nsIPresContext*  aPresContext,
+                                       nsIContent*      aContent,
+                                       nsIFrame*        aParentFrame,
+                                       nsIStyleContext* aStyleContext,
+                                       nsAbsoluteItems& aAbsoluteItems,
+                                       nsIFrame*&       aNewCellFrame,
+                                       nsIFrame*&       aNewCellBodyFrame,
+                                       nsAbsoluteItems& aFixedItems,
+                                       nsTableCreator&  aTableCreator,
+                                       PRBool           aProcessChildren);
+
+  nsresult TableProcessChildren(nsIPresContext*  aPresContext,
+                                nsIContent*      aContent,
+                                nsIFrame*        aParentFrame,
+                                nsAbsoluteItems& aAbsoluteItems,
+                                nsFrameItems&    aChildList,
+                                nsAbsoluteItems& aFixedItems,
+                                nsTableCreator&  aTableCreator);
+
+  nsresult TableProcessChild(nsIPresContext*  aPresContext,
+                             nsIContent*      aChildContent,
+                             nsIFrame*        aParentFrame,
+                             nsIStyleContext* aParentStyleContext,
+                             nsAbsoluteItems& aAbsoluteItems,
+                             nsFrameItems&    aChildItems,
+                             nsAbsoluteItems& aFixedItems,
+                             nsTableCreator&  aTableCreator);
+
   nsresult TableProcessTableList(nsIPresContext* aPresContext,
                                  nsTableList& aTableList);
 
@@ -288,6 +362,8 @@ protected:
                                  nsIContent*     aContent);
 
   const nsStyleDisplay* GetDisplay(nsIFrame* aFrame);
+
+  PRBool IsTableRelated(PRUint8 aDisplay);
  
   // END TABLE SECTION
 

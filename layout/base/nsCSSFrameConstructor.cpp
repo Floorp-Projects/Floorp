@@ -1559,13 +1559,7 @@ nsCSSFrameConstructor::TableProcessChild(nsIPresContext*          aPresContext,
                                          getter_AddRefs(childStyleContext));
     const nsStyleDisplay* childDisplay = (const nsStyleDisplay*)
       childStyleContext->GetStyleData(eStyleStruct_Display);
-    if ( (childDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE) ||
-         (childDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_HEADER_GROUP) ||
-         (childDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_ROW_GROUP) ||
-         (childDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP) ||
-         (childDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_ROW) ||
-         (childDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_COLUMN) ||
-         (childDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_CELL) ) {
+    if (IsTableRelated(childDisplay->mDisplay)) {
       nsAbsoluteItems floaterList(nsnull);
       rv = ConstructFrame(aPresContext, aState, aChildContent, aParentFrame,
                           PR_FALSE, aChildItems);
@@ -1751,9 +1745,35 @@ nsCSSFrameConstructor:: GetDisplay(nsIFrame* aFrame)
   return display;
 }
 
+nsCSSFrameConstructor::IsTableRelated(PRUint8 aDisplay)
+{
+  return (aDisplay == NS_STYLE_DISPLAY_TABLE)              ||
+         (aDisplay == NS_STYLE_DISPLAY_TABLE_HEADER_GROUP) ||
+         (aDisplay == NS_STYLE_DISPLAY_TABLE_ROW_GROUP)    ||
+         (aDisplay == NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP) ||
+         (aDisplay == NS_STYLE_DISPLAY_TABLE_ROW)          ||
+         (aDisplay == NS_STYLE_DISPLAY_TABLE_COLUMN)       ||
+         (aDisplay == NS_STYLE_DISPLAY_TABLE_CELL);
+}
+
 /***********************************************
  * END TABLE SECTION
  ***********************************************/
+
+nsresult
+nsCSSFrameConstructor::ConstructDocElementTableFrame(nsIPresContext* aPresContext,
+                                                     nsIContent*     aDocElement,
+                                                     nsIFrame*       aParentFrame,
+                                                     nsIFrame*&      aNewTableFrame)
+{
+  nsFrameConstructorState state(nsnull, nsnull, nsnull);
+  nsFrameItems    frameItems;
+
+  ConstructFrame(aPresContext, state, aDocElement, aParentFrame, PR_FALSE, frameItems);
+  aNewTableFrame = frameItems.childList;
+  return NS_OK;
+}
+
 
 nsresult
 nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*          aPresContext,
@@ -1769,13 +1789,24 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*          aPresCo
                                        PR_FALSE,
                                        getter_AddRefs(styleContext));
   
+  const nsStyleDisplay* display = 
+    (const nsStyleDisplay*)styleContext->GetStyleData(eStyleStruct_Display);
+
+  PRBool docElemIsTable = IsTableRelated(display->mDisplay);
+
   // See if we're paginated
   PRBool isPaginated;
   aPresContext->IsPaginated(&isPaginated);
   if (isPaginated) {
+    if (docElemIsTable) {
+      nsIFrame* tableFrame;
+      ConstructDocElementTableFrame(aPresContext, aDocElement, aParentFrame, tableFrame);
+      mInitialContainingBlock = tableFrame;
+      aNewFrame = tableFrame;
+      return NS_OK;
+    }
     // Create an area frame for the document element
     nsIFrame* areaFrame;
-
     NS_NewAreaFrame(areaFrame, 0);
     areaFrame->Init(*aPresContext, aDocElement, aParentFrame, styleContext, nsnull);
     nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, areaFrame,
@@ -1815,9 +1846,6 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*          aPresCo
     // scroll frame.
     nsIFrame* scrollFrame = nsnull;
 
-    const nsStyleDisplay* display = (const nsStyleDisplay*)
-      styleContext->GetStyleData(eStyleStruct_Display);
-
     if (IsScrollable(aPresContext, display)) {
       NS_NewScrollFrame(scrollFrame);
       scrollFrame->Init(*aPresContext, aDocElement, aParentFrame, styleContext,
@@ -1832,16 +1860,24 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*          aPresCo
                                                  getter_AddRefs(scrolledPseudoStyle));
       styleContext = scrolledPseudoStyle;
     }
+    nsIFrame* parFrame = scrollFrame ? scrollFrame : aParentFrame;
+    nsIFrame* areaFrame;
 
+    if (docElemIsTable) {
+      nsIFrame* tableFrame;
+      ConstructDocElementTableFrame(aPresContext, aDocElement, parFrame, tableFrame);
+      mInitialContainingBlock = tableFrame;
+      aNewFrame = tableFrame;
+      return NS_OK;
+    }
     // Create an area frame for the document element. This serves as the
     // "initial containing block"
-    nsIFrame* areaFrame;
 
     // XXX Until we clean up how painting damage is handled, we need to use the
     // flag that says that this is the body...
     NS_NewAreaFrame(areaFrame, NS_BLOCK_DOCUMENT_ROOT|NS_BLOCK_MARGIN_ROOT);
-    areaFrame->Init(*aPresContext, aDocElement, scrollFrame ? scrollFrame :
-                    aParentFrame, styleContext, nsnull);
+    areaFrame->Init(*aPresContext, aDocElement, parFrame, styleContext, nsnull);
+
     if (scrollFrame) {
       // If the document element is scrollable, then it needs a view. Otherwise,
       // don't bother, because the root frame has a view and the extra view is
@@ -1852,7 +1888,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*          aPresCo
 
     // The area frame is the "initial containing block"
     mInitialContainingBlock = areaFrame;
-    
+
     // Process the child content
     nsFrameConstructorSaveState absoluteSaveState;
     nsFrameConstructorSaveState floaterSaveState;
@@ -3397,53 +3433,6 @@ nsCSSFrameConstructor::ConstructFrame(nsIPresContext*          aPresContext,
 
   nsCOMPtr<nsIStyleContext> styleContext;
   rv = ResolveStyleContext(aPresContext, aParentFrame, aContent, tag, getter_AddRefs(styleContext));
-
-#ifdef chris_needs_to_remove_this
-  // Resolve the style context based on the content object and the parent
-  // style context
-  nsCOMPtr<nsIStyleContext> styleContext;
-  nsCOMPtr<nsIStyleContext> parentStyleContext;
-
-  aParentFrame->GetStyleContext(getter_AddRefs(parentStyleContext));
-  if (nsLayoutAtoms::textTagName == tag) {
-    // Use a special pseudo element style context for text
-    nsCOMPtr<nsIContent> parentContent;
-    if (nsnull != aParentFrame) {
-      aParentFrame->GetContent(getter_AddRefs(parentContent));
-    }
-    rv = aPresContext->ResolvePseudoStyleContextFor(parentContent, 
-                                                    nsHTMLAtoms::textPseudo, 
-                                                    parentStyleContext,
-                                                    PR_FALSE,
-                                                    getter_AddRefs(styleContext));
-  } else if (nsLayoutAtoms::commentTagName == tag) {
-    // Use a special pseudo element style context for comments
-    nsCOMPtr<nsIContent> parentContent;
-    if (nsnull != aParentFrame) {
-      aParentFrame->GetContent(getter_AddRefs(parentContent));
-    }
-    rv = aPresContext->ResolvePseudoStyleContextFor(parentContent, 
-                                                    nsHTMLAtoms::commentPseudo, 
-                                                    parentStyleContext,
-                                                    PR_FALSE,
-                                                    getter_AddRefs(styleContext));
-  } else if (nsLayoutAtoms::processingInstructionTagName == tag) {
-    // Use a special pseudo element style context for comments
-    nsCOMPtr<nsIContent> parentContent;
-    if (nsnull != aParentFrame) {
-      aParentFrame->GetContent(getter_AddRefs(parentContent));
-    }
-    rv = aPresContext->ResolvePseudoStyleContextFor(parentContent, 
-                                                    nsHTMLAtoms::processingInstructionPseudo, 
-                                                    parentStyleContext,
-                                                    PR_FALSE,
-                                                    getter_AddRefs(styleContext));
-  } else {
-    rv = aPresContext->ResolveStyleContextFor(aContent, parentStyleContext,
-                                              PR_FALSE,
-                                              getter_AddRefs(styleContext));
-  }
-#endif
 
   if (NS_SUCCEEDED(rv)) {
     // Pre-check for display "none" - if we find that, don't create
