@@ -42,7 +42,23 @@ JS_DHashTableEnumerate
 JS_strtod
 
 <JS-unclassified>
+tzset
+adjtime
+tzset
+mktime
+PRMJ_LocalGMTDifference
+js_InitDateClass
+
+<JS-unclassified>
 js_SetupLocks
+
+<JS-unclassified>
+PR_Malloc
+PR_NewCondVar
+js_SetSlotThreadSafe
+
+<JS-unclassified>
+js_SetSlotThreadSafe
 
 <JS-unclassified>
 js_DeflateString
@@ -251,6 +267,15 @@ __builtin_new
 __builtin_vec_new
 nsVoidArray::Compact(void)
 
+<nsVoidArray>
+__builtin_new
+__builtin_vec_new
+nsVoidArray::ReplaceElementAt(void *, int)
+
+<nsCheapVoidArray>
+__builtin_new
+nsCheapVoidArray::SwitchToVector(void)
+
 <nsSupportsArray>
 __builtin_new
 __builtin_vec_new
@@ -319,6 +344,12 @@ nsFontMetricsGTK::Init(nsFont const &, nsIAtom *, nsIDeviceContext *)
 
 <nsFontMetricsGTK>
 __builtin_new
+nsCStringKey::Clone(void) const
+nsHashtable::Put(nsHashKey *, void *)
+nsFontMetricsGTK::SearchNode(nsFontNode *, unsigned short)
+
+<nsFontMetricsGTK>
+__builtin_new
 __builtin_vec_new
 nsFontMetricsGTK::SearchNode(nsFontNode *, unsigned short)
 
@@ -352,6 +383,13 @@ nsFontStyle::operator new(unsigned int)
 nsFontMetricsGTK::SearchNode(nsFontNode *, unsigned short)
 
 <nsFontMetricsGTK>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
+PL_HashTableRawAdd
+nsHashtable::Put(nsHashKey *, void *)
+nsFontMetricsGTK::SearchNode(nsFontNode *, unsigned short)
+
+<nsFontMetricsGTK>
 PR_Realloc
 PR_vsxprintf
 PR_WaitForPollableEvent
@@ -368,6 +406,20 @@ PR_WaitForPollableEvent
 PR_vsmprintf
 PR_smprintf
 nsFontMetricsGTK::SearchNode(nsFontNode *, unsigned short)
+
+<nsFontMetricsGTK>
+PR_Realloc
+PR_vsxprintf
+PR_WaitForPollableEvent
+PR_WaitForPollableEvent
+PR_WaitForPollableEvent
+PR_vsmprintf
+PR_smprintf
+nsFontMetricsGTK::SearchNode(nsFontNode *, unsigned short)
+
+<nsFontMetricsGTK>
+PR_Realloc
+nsFontMetricsGTK::PickASizeAndLoad(nsFontStretch *, nsFontCharSetInfo *, unsigned short)
 
 <nsFontMetricsGTK>
 PR_Malloc
@@ -456,10 +508,35 @@ FrameArena::AllocateFrame(unsigned int, void **)
 <PresShell>
 PR_Malloc
 PL_HashTableFinalize(PLHashTable *)
+PL_HashTableRawAdd
+nsHashtable::Put(nsHashKey *, void *)
+nsSupportsHashtable::Put(nsHashKey *, nsISupports *, nsISupports **)
+PresShell::SetAnonymousContentFor(nsIContent *, nsISupportsArray *)
+
+<PresShell>
+__builtin_new
+nsISupportsKey::Clone(void) const
+nsHashtable::Put(nsHashKey *, void *)
+nsSupportsHashtable::Put(nsHashKey *, nsISupports *, nsISupports **)
+PresShell::SetAnonymousContentFor(nsIContent *, nsISupportsArray *)
+
+<PresShell>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
 PL_HashTableInit__FP11PLHashTableUiPFPCv_UiPFPCvPCv_iT3PC14PLHashAllocOpsPv
 nsHashtable::nsHashtable(unsigned int, int)
 nsSupportsHashtable::nsSupportsHashtable(unsigned int, int)
 PresShell::SetAnonymousContentFor(nsIContent *, nsISupportsArray *)
+
+<StackArena>
+PR_Malloc
+StackBlock::StackBlock(void)
+StackArena::StackArena(void)
+
+<StackArena>
+__builtin_new
+__builtin_vec_new
+StackArena::StackArena(void)
 
 <FrameManager>
 PR_Malloc
@@ -467,6 +544,41 @@ PL_ArenaAllocate
 nsDST::NodeArena::AllocLeafNode(void)
 nsDST::LeafNode::operator new(unsigned int, nsDST::NodeArena *)
 nsDST::Insert(void *, void *, void **)
+
+<FrameManager>
+PR_Malloc
+PL_ArenaAllocate
+nsDST::NodeArena::AllocTwoNode(void)
+nsDST::TwoNode::operator new(unsigned int, nsDST::NodeArena *)
+nsDST::ConvertToTwoNode(nsDST::LeafNode **)
+nsDST::Insert(void *, void *, void **)
+FrameManager::SetPrimaryFrameFor(nsIContent *, nsIFrame *)
+
+<FrameManager>
+PR_Malloc
+PL_ArenaAllocate
+nsDST::NodeArena::AllocTwoNode(void)
+nsDST::TwoNode::operator new(unsigned int, nsDST::NodeArena *)
+nsDST::ConvertToTwoNode(nsDST::LeafNode **)
+nsDST::Insert(void *, void *, void **)
+FrameManager::SetFrameProperty(nsIFrame *, nsIAtom *, void *, void (*)(nsIPresContext *, nsIFrame *, nsIAtom *, void *))
+
+<FrameManager>
+PR_Malloc
+PL_ArenaFinish
+PL_HashTableRawAdd
+FrameHashTable::Put(void *, void *)
+FrameManager::SetPlaceholderFrameFor(nsIFrame *, nsIFrame *)
+
+<UndisplayedMap>
+PR_Malloc
+PL_ArenaFinish
+PL_HashTableRawAdd
+UndisplayedMap::AppendNodeFor(UndisplayedNode *, nsIContent *)
+
+<UndisplayedMap>
+__builtin_new
+UndisplayedMap::AddNodeFor(nsIContent *, nsIContent *, nsIStyleContext *)
 
 <PRLock>
 PR_Calloc
@@ -574,6 +686,12 @@ PL_HashTableFinalize(PLHashTable *)
 PL_HashTableInit__FP11PLHashTableUiPFPCv_UiPFPCvPCv_iT3PC14PLHashAllocOpsPv
 nsHashtable::nsHashtable(unsigned int, int)
 DeviceContextImpl::CreateFontAliasTable(void)
+
+<DeviceContextImpl>
+__builtin_new
+FontAliasKey::Clone(void) const
+nsHashtable::Put(nsHashKey *, void *)
+DeviceContextImpl::AliasFont(nsString const &, nsString const &, nsString const &, int)
 
 <nsCompressedMap>
 __builtin_new
@@ -1025,7 +1143,7 @@ PR_Malloc
 PL_HashTableFinalize(PLHashTable *)
 PL_HashTableInit__FP11PLHashTableUiPFPCv_UiPFPCvPCv_iT3PC14PLHashAllocOpsPv
 nsHashtable::nsHashtable(unsigned int, int)
-__17nsObjectHashtablePFP9nsHashKeyPvPv_PvPvPFP9nsHashKeyPvPv_iT2Uii[./libxpcom.so +0x933D6]
+__17nsObjectHashtablePFP9nsHashKeyPvPv_PvPvPFP9nsHashKeyPvPv_iT2Uii
 CategoryNode::CategoryNode(void)
 nsCategoryManager::AddCategoryEntry(char const *, char const *, char const *, int, int, char **)
 
@@ -1034,7 +1152,7 @@ PR_Malloc
 PL_HashTableFinalize(PLHashTable *)
 PL_HashTableInit__FP11PLHashTableUiPFPCv_UiPFPCvPCv_iT3PC14PLHashAllocOpsPv
 nsHashtable::nsHashtable(unsigned int, int)
-__17nsObjectHashtablePFP9nsHashKeyPvPv_PvPvPFP9nsHashKeyPvPv_iT2Uii[./libxpcom.so +0x933D6]
+__17nsObjectHashtablePFP9nsHashKeyPvPv_PvPvPFP9nsHashKeyPvPv_iT2Uii
 nsCategoryManager::nsCategoryManager(void)
 
 <nsCategoryManager>
@@ -1144,9 +1262,32 @@ PL_HashTableInit__FP11PLHashTableUiPFPCv_UiPFPCvPCv_iT3PC14PLHashAllocOpsPv
 nsHashtable::nsHashtable(unsigned int, int)
 HTMLStyleSheetImpl::HTMLStyleSheetImpl(void)
 
+<HTMLStyleSheetImpl>
+__builtin_new
+AttributeKey::Clone(void) const
+nsHashtable::Put(nsHashKey *, void *)
+HTMLStyleSheetImpl::UniqueMappedAttributes(nsIHTMLMappedAttributes *, nsIHTMLMappedAttributes *&)
+
+<HTMLStyleSheetImpl>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
+PL_HashTableRawAdd
+nsHashtable::Put(nsHashKey *, void *)
+HTMLStyleSheetImpl::UniqueMappedAttributes(nsIHTMLMappedAttributes *, nsIHTMLMappedAttributes *&)
+
 <nsStyleContextData>
 __builtin_new
 nsStyleContextData::Create(nsIPresContext *)
+
+<nsStyleContent>
+__builtin_new
+__builtin_vec_new
+nsStyleContent::AllocateCounterResets(unsigned int)
+
+<nsStyleContent>
+__builtin_new
+__builtin_vec_new
+nsStyleContent::AllocateContents(unsigned int)
 
 <xptiManifest>
 __builtin_new
@@ -1273,6 +1414,14 @@ PR_Malloc
 nsMemoryImpl::Alloc(unsigned int)
 nsMemory::Alloc(unsigned int)
 nsTextFragment::SetTo(unsigned short const *, int)
+
+<nsTextFragment>
+PR_Malloc
+nsMemoryImpl::Alloc(unsigned int)
+nsMemory::Alloc(unsigned int)
+char * AllocateStringCopy<unsigned short, char>(basic_nsAReadableString<unsigned short> const &, char *)
+ToNewCString(basic_nsAReadableString<unsigned short> const &)
+nsTextFragment::operator=(basic_nsAReadableString<unsigned short> const &)
 
 <nsSimpleURI>
 PR_Malloc
@@ -1482,6 +1631,25 @@ nsHashtable::nsHashtable(unsigned int, int)
 nsSupportsHashtable::nsSupportsHashtable(unsigned int, int)
 nsGenericModule::nsGenericModule(char const *, unsigned int, nsModuleComponentInfo *, void (*)(nsIModule *))
 
+<nsUNIXCharset>
+gettext
+gettext
+setlocale
+setlocale
+nsUNIXCharset::nsUNIXCharset(void)
+
+<nsLocaleService>
+textdomain
+textdomain
+setlocale
+setlocale
+nsLocaleService::nsLocaleService(void)
+
+<nsLocaleService>
+setlocale
+setlocale
+setlocale
+nsLocaleService::nsLocaleService(void)
 
 <nsLocale>
 PR_Malloc
@@ -1687,6 +1855,10 @@ nsEventQueueServiceImpl::nsEventQueueServiceImpl(void)
 __builtin_new
 nsEventListenerManager::AddEventListener(nsIDOMEventListener *, nsID const &, int, int)
 
+<nsEventListenerManager>
+PR_Malloc
+nsEventListenerManager::AddEventListener(nsIDOMEventListener *, nsID const &, int, int)
+
 <nsCParserNode>
 __builtin_new
 nsCParserNode::AddAttribute(CToken *)
@@ -1706,6 +1878,14 @@ nsSocketTransportService::Init(void)
 PR_Malloc
 nsSocketTransport::AsyncWrite(nsIInputStream *, nsIStreamObserver *, nsISupports *)
 
+<nsSocketTransport>
+PR_Malloc
+_PR_Getfd
+PR_GetConnectStatus
+PR_Socket
+PR_OpenTCPSocket
+nsSocketTransport::doConnection(short)
+
 <CompositeDataSourceImpl>
 PR_Malloc
 PL_ArenaAllocate
@@ -1720,6 +1900,14 @@ nsMemory::Alloc(unsigned int)
 unsigned short * AllocateStringCopy<unsigned short, unsigned short>(basic_nsAReadableString<unsigned short> const &, unsigned short *)
 ToNewUnicode(basic_nsAReadableString<unsigned short> const &)
 nsHTMLValue::nsHTMLValue(basic_nsAReadableString<unsigned short> const &, nsHTMLUnit)
+
+<nsHTMLValue>
+PR_Malloc
+nsMemoryImpl::Alloc(unsigned int)
+nsMemory::Alloc(unsigned int)
+unsigned short * AllocateStringCopy<unsigned short, unsigned short>(basic_nsAReadableString<unsigned short> const &, unsigned short *)
+ToNewUnicode(basic_nsAReadableString<unsigned short> const &)
+nsHTMLValue::SetStringValue(basic_nsAReadableString<unsigned short> const &, nsHTMLUnit)
 
 <nsImageGTK>
 __builtin_new
@@ -1751,14 +1939,14 @@ PR_Malloc
 nsMemoryImpl::Alloc(unsigned int)
 nsMemory::Alloc(unsigned int)
 nsOpaqueKey::Clone(void) const
-nsHashtable::Put(nsHashKey *, void *)[./libxpcom.so +0x92641]
+nsHashtable::Put(nsHashKey *, void *)
 nsMemCache::GetCachedNetData(char const *, unsigned int, nsINetDataCacheRecord **)
 
 <nsMemCache>
 __builtin_new
 nsOpaqueKey::Clone(void) const
-nsHashtable::Put(nsHashKey *, void *)[./libxpcom.so +0x92641]
-nsMemCache::GetCachedNetData(char const *, unsigned int, nsINetDataCacheRecord **)[/usr/src/seamonkey/mozilla/dist/bin/components/libnecko.so +0xEE024]
+nsHashtable::Put(nsHashKey *, void *)
+nsMemCache::GetCachedNetData(char const *, unsigned int, nsINetDataCacheRecord **)
 
 <nsMemCache>
 PR_Malloc
@@ -1794,7 +1982,7 @@ nsTextFormatter::vsmprintf(unsigned short const *, void *)
 <nsTextFormatter>
 PR_Realloc
 nsXPIDLString type_info function
-nsXPIDLString type_info function[./libxpcom.so +0xB06AB]
+nsXPIDLString type_info function
 nsTextFormatter::vsmprintf(unsigned short const *, void *)
 
 <nsPresState>
@@ -1842,7 +2030,7 @@ PR_Malloc
 nsMemoryImpl::Alloc(unsigned int)
 nsMemory::Alloc(unsigned int)
 nsSupportsWStringImpl::SetDataWithLength(unsigned int, unsigned short const *)
-nsSupportsWStringImpl::SetData(unsigned short const *)[./libxpcom.so +0xA6FC8]
+nsSupportsWStringImpl::SetData(unsigned short const *)
 nsPresState::SetStateProperty(basic_nsAReadableString<unsigned short> const &, basic_nsAReadableString<unsigned short> const &)
 
 <nsPresState>
@@ -1867,9 +2055,34 @@ nsSupportsWStringImpl::SetDataWithLength(unsigned int, unsigned short const *)
 nsSupportsWStringImpl::SetData(unsigned short const *)
 nsPresState::SetStateProperty(basic_nsAReadableString<unsigned short> const &, basic_nsAReadableString<unsigned short> const &)
 
+<ImageRequestImpl>
+__builtin_new
+ImageRequestImpl::AddObserver(nsIImageRequestObserver *)
+
+<ImageRequestImpl>
+PR_Malloc
+XP_AddObserver
+ImageRequestImpl::Init(void *, char const *, nsIImageRequestObserver *, unsigned int const *, unsigned int, unsigned int, unsigned int, ilINetContext *)
+
 <imglib-unclassified>
 __builtin_new
 ImageNetContextImpl::GetURL(ilIURL *, ImgCachePolicy, ilINetReader *, int)
+
+<imglib-unclassified>
+PR_Calloc
+il_gif_write(il_container_struct *, unsigned char const *, int)
+
+<imglib-unclassified>
+PR_Malloc
+il_gif_write(il_container_struct *, unsigned char const *, int)
+
+<imglib-unclassified>
+PR_Calloc
+IL_GetImage
+
+<imglib-unclassified>
+PR_Calloc
+il_gif_init(il_container_struct *)
 
 <imglib-unclassified>
 PR_Calloc
@@ -1883,6 +2096,10 @@ IL_CreateTrueColorSpace
 PR_Calloc
 il_size(il_container_struct *)
 ImgDCallbk::ImgDCBImageSize(void)
+
+<imglib-unclassified>
+PR_Calloc
+ImgDCallbk::CreateInstance(nsID const &, il_container_struct *, nsID const &, void **)
 
 <imglib-unclassified>
 PR_Calloc
@@ -2016,3 +2233,141 @@ PL_HashTableRawAdd
 nsHashtable::Put(nsHashKey *, void *)
 nsSupportsHashtable::Put(nsHashKey *, nsISupports *, nsISupports **)
 nsDNSService::GetLookupEntry(char const *, nsDNSLookup **)
+
+<nsDNSLookup>
+gethostbyname2
+PR_GetIPNodeByName
+nsDNSLookup::InitiateLookup(void)
+
+<nsFormControlList>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
+PL_HashTableRawAdd
+nsHashtable::Put(nsHashKey *, void *)
+nsSupportsHashtable::Put(nsHashKey *, nsISupports *, nsISupports **)
+nsFormControlList::AddElementToTable(nsIFormControl *, basic_nsAReadableString<unsigned short> const &)
+
+<nsFormControlList>
+__builtin_new
+nsFormControlList::AddElementToTable(nsIFormControl *, basic_nsAReadableString<unsigned short> const &)
+
+<nsFormControlList>
+__builtin_new
+nsStringKey::Clone(void) const
+nsHashtable::Put(nsHashKey *, void *)
+nsSupportsHashtable::Put(nsHashKey *, nsISupports *, nsISupports **)
+nsFormControlList::AddElementToTable(nsIFormControl *, basic_nsAReadableString<unsigned short> const &)
+
+<nsFormControlList>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
+PL_HashTableInit__FP11PLHashTableUiPFPCv_UiPFPCvPCv_iT3PC14PLHashAllocOpsPv
+nsHashtable::nsHashtable(unsigned int, int)
+nsSupportsHashtable::nsSupportsHashtable(unsigned int, int)
+nsFormControlList::AddElementToTable(nsIFormControl *, basic_nsAReadableString<unsigned short> const &)
+
+<nsControllerCommandManager>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
+PL_HashTableRawAdd
+nsHashtable::Put(nsHashKey *, void *)
+nsSupportsHashtable::Put(nsHashKey *, nsISupports *, nsISupports **)
+nsControllerCommandManager::RegisterCommand(unsigned short const *, nsIControllerCommand *)
+
+<nsConsoleService>
+PR_Malloc
+nsMemoryImpl::Alloc(unsigned int)
+nsMemory::Alloc(unsigned int)
+nsConsoleService::nsConsoleService(void)
+
+<nsGenericElement>
+PR_Malloc
+nsGenericElement::GetDOMSlots(void)
+
+<HTMLAttributesImpl>
+__builtin_new
+HTMLAttributesImpl::SetAttributeFor(nsIAtom *, basic_nsAReadableString<unsigned short> const &, int, nsIHTMLContent *, nsIHTMLStyleSheet *)
+
+<HTMLAttributesImpl>
+__builtin_new
+nsHTMLMappedAttributes::SetAttribute(nsIAtom *, basic_nsAReadableString<unsigned short> const &)
+HTMLAttributesImpl::SetAttributeFor(nsIAtom *, basic_nsAReadableString<unsigned short> const &, int, nsIHTMLContent *, nsIHTMLStyleSheet *)
+
+<HTMLAttributesImpl>
+__builtin_new
+HTMLAttributesImpl::SetAttributeFor(nsIAtom *, nsHTMLValue const &, int, nsIHTMLContent *, nsIHTMLStyleSheet *, int &)
+
+<HTMLAttributesImpl>
+__builtin_new
+__builtin_vec_new
+HTMLAttributesImpl::SetAttributeName(nsIAtom *, int &)
+
+<HTMLAttributesImpl>
+__builtin_new
+nsHTMLMappedAttributes::SetAttribute(nsIAtom *, nsHTMLValue const &)
+HTMLAttributesImpl::SetAttributeFor(nsIAtom *, nsHTMLValue const &, int, nsIHTMLContent *, nsIHTMLStyleSheet *, int &)
+
+<nsLineBox>
+__builtin_new
+nsLineBox::SetCombinedArea(nsRect const &)
+
+<nsEntityConverter>
+__builtin_new
+__builtin_vec_new
+nsEntityConverter::LoadVersionPropertyFile(void)
+
+<nsTableFrame>
+__builtin_new
+__builtin_vec_new
+nsTableFrame::nsTableFrame(void)
+
+<nsTableFrame>
+__builtin_new
+__builtin_vec_new
+nsTableFrame::BalanceColumnWidths(nsIPresContext *, nsHTMLReflowState const &, nsSize const &, nsSize *)
+
+<nsTableFrame>
+__builtin_new
+nsTableFrame::Init(nsIPresContext *, nsIContent *, nsIFrame *, nsIStyleContext *, nsIFrame *)
+
+<nsTableCellFrame>
+__builtin_new
+nsTableCellFrame::GetFrameName(nsString &) const
+
+<nsCellMap>
+__builtin_new
+nsCellMap::AppendCell(nsTableCellMap &, nsTableCellFrame &, int, int)
+
+<nsCellMap>
+__builtin_new
+nsCellMap::Grow(nsTableCellMap &, int, int)
+
+<nsTableCellMap>
+__builtin_new
+nsTableCellMap::InsertGroupCellMap(nsTableRowGroupFrame &, nsTableRowGroupFrame *&)
+
+<nsTableCellMap>
+__builtin_new
+nsTableCellMap::AddColsAtEnd(unsigned int)
+
+<nsEncoderSupport>
+__builtin_new
+__builtin_vec_new
+nsEncoderSupport::nsEncoderSupport(void)
+
+<nsFrameImageLoader>
+__builtin_new
+Init__18nsFrameImageLoaderP14nsIPresContextP13nsIImageGroupRC8nsStringPCUiPC6nsSizeP8nsIFrame16nsImageAnimationPFP14nsIPresContextP19nsIFrameImageLoaderP8nsIFramePvUi_UiPvT9
+
+<nsFrameImageLoader>
+__builtin_new
+AddFrame__18nsFrameImageLoaderP8nsIFramePFP14nsIPresContextP19nsIFrameImageLoaderP8nsIFramePvUi_UiPvT3
+
+
+<nsFloaterCacheFreeList>
+__builtin_new
+nsFloaterCacheFreeList::Alloc(void)
+
+<nsDocLoaderImpl>
+__builtin_new
+nsDocLoaderImpl::AddChannelInfo(nsIChannel *)
