@@ -46,6 +46,7 @@ interface nsIHTTPProtocolHandler : nsIProtocolHandler
 	const unsigned long	ALLOW_PIPELINING		= 2;
 	const unsigned long ALLOW_PROXY_KEEPALIVE	= 4;
 	const unsigned long ALLOW_PROXY_PIPELINING	= 8;
+	const unsigned long DONTRECORD_CAPABILITIES	= 16;
 
     /**
      *

@@ -39,16 +39,11 @@
 #endif
 
 //
-// This is the default timeout value (in milliseconds) for sockets which have
-// no activity...
-//
-#define DEFAULT_SOCKET_TIMEOUT_IN_MS  35*1000
-
-//
 // This is the Maximum number of Socket Transport instances that can be active
 // at once...
 //
 #define MAX_OPEN_CONNECTIONS 50
+#define DEFAULT_POLL_TIMEOUT_IN_MS  35*1000
 
 
 // Forward declarations...
@@ -88,8 +83,6 @@ protected:
 #endif /* USE_POLLABLE_EVENT */
   PRLock*               mThreadLock;
   PRBool                mThreadRunning;
-
-  PRIntervalTime        mSocketTimeoutInterval;
 
   PRCList               mWorkQ;
 

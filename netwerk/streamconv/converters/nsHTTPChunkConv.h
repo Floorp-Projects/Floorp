@@ -27,6 +27,8 @@
 #include "nsIFactory.h"
 #include "nsCOMPtr.h"
 
+#include "nsISupportsPrimitives.h"
+
 #define NS_HTTPCHUNKCONVERTER_CID					\
 {													\
 	/* 95ca98d9-2a96-48d6-a014-0dffa84834a1 */		\
@@ -85,7 +87,7 @@ private:
 	char mLenBuf[20];
 	PRUint32	mLenBufCnt;
     
-    void * mAsyncConvContext;
+    nsCOMPtr<nsISupportsPRBool> mAsyncConvContext;
 };
 
 

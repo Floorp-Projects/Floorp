@@ -601,7 +601,10 @@ nsHTTPHandler::nsHTTPHandler():
     mCapabilities     (DEFAULT_ALLOWED_CAPABILITIES ),
     mKeepAliveTimeout (DEFAULT_KEEP_ALIVE_TIMEOUT),
     mMaxConnections   (MAX_NUMBER_OF_OPEN_TRANSPORTS),
-    mReferrerLevel(0)
+    mReferrerLevel  (0),
+    mRequestTimeout (DEFAULT_HTTP_REQUEST_TIMEOUT),
+    mConnectTimeout (DEFAULT_HTTP_CONNECT_TIMEOUT),
+    mMaxAllowedKeepAlives (DEFAULT_MAX_ALLOWED_KEEPALIVES)
 {
     NS_INIT_REFCNT ();
     SetAcceptEncodings (DEFAULT_ACCEPT_ENCODINGS);
@@ -931,7 +934,7 @@ nsresult nsHTTPHandler::RequestTransport (nsIURI* i_Uri,
                 PR_LOG (gHTTPLog, PR_LOG_ALWAYS, 
                        ("nsHTTPHandler::RequestTransport.""\tAll socket transports are busy."
                         "\tAdding nsHTTPChannel [%x] to pending list.\n",
-                        i_Channel));       
+                        i_Channel));
                 return NS_ERROR_BUSY;
             }
         }
@@ -970,19 +973,28 @@ nsresult nsHTTPHandler::CreateTransport(const char* host,
 {
     nsresult rv;
 
-    NS_WITH_SERVICE(nsISocketTransportService, sts, 
-                    kSocketTransportServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
+    NS_WITH_SERVICE (nsISocketTransportService, sts, kSocketTransportServiceCID, &rv);
+    if (NS_FAILED (rv))
+        return rv;
 
-    return sts->CreateTransport(host, port, aPrintHost,
-                                bufferSegmentSize, bufferMaxSize,
-                                o_pTrans);
+    rv = sts -> CreateTransport (host, port, aPrintHost, bufferSegmentSize, bufferMaxSize, o_pTrans);
+    if (NS_SUCCEEDED (rv))
+    {
+        nsCOMPtr<nsISocketTransport> trans = do_QueryInterface (*o_pTrans, &rv);
+        if (NS_SUCCEEDED (rv))
+        {
+            trans -> SetSocketTimeout        (mRequestTimeout);
+            trans -> SetSocketConnectTimeout (mConnectTimeout);
+        }
+    }
+    return rv;
 }
 
-nsresult nsHTTPHandler::ReleaseTransport (nsIChannel* i_pTrans, PRUint32 aCapabilities)
+nsresult nsHTTPHandler::ReleaseTransport (nsIChannel* i_pTrans, PRUint32 aCapabilities, PRBool aDontRestartChannels)
 {
     nsresult rv;
     PRUint32 count = 0, transportsInUseCount = 0;
+
     PRUint32 capabilities = (mCapabilities & aCapabilities);
 
     PR_LOG (gHTTPLog, PR_LOG_ALWAYS, 
@@ -991,7 +1003,8 @@ nsresult nsHTTPHandler::ReleaseTransport (nsIChannel* i_pTrans, PRUint32 aCapabi
             i_pTrans));
 
     // ruslan: now update capabilities for this specific host
-    setCapabilities (i_pTrans, aCapabilities);
+    if (! (aCapabilities & DONTRECORD_CAPABILITIES) )
+        setCapabilities (i_pTrans, aCapabilities);
 
     if (capabilities & (ALLOW_KEEPALIVE|ALLOW_PROXY_KEEPALIVE))
     {
@@ -1005,6 +1018,12 @@ nsresult nsHTTPHandler::ReleaseTransport (nsIChannel* i_pTrans, PRUint32 aCapabi
         
             if (NS_SUCCEEDED (rv) && alive)
             {
+                // remove the oldest connection when we hit the maximum
+                mIdleTransports -> Count (&count);
+
+                if (count >= (PRUint32) mMaxAllowedKeepAlives)
+                    mIdleTransports -> RemoveElementAt (0);
+
                 PRBool added = mIdleTransports -> AppendElement (i_pTrans);
                 NS_ASSERTION(added, 
                     "Failed to add a socket to idle transports list!");
@@ -1026,13 +1045,19 @@ nsresult nsHTTPHandler::ReleaseTransport (nsIChannel* i_pTrans, PRUint32 aCapabi
     NS_ASSERTION(NS_SUCCEEDED(rv), "Transport not in table...");
 
     // Now trigger an additional one from the pending list
-    while (1) {
+    while (!aDontRestartChannels)
+    {
         // There's no guarantee that a channel will re-request a transport once
         // it's taken off the pending list, so we loop until there are no
         // pending channels or all transports are in use
 
-        mPendingChannelList->Count(&count);
-        mTransportList->Count(&transportsInUseCount);
+        count = 0;
+        mPendingChannelList->Count (&count);
+        mTransportList->Count (&transportsInUseCount);
+
+        PR_LOG (gHTTPLog, PR_LOG_ALWAYS, ("nsHTTPHandler::ReleaseTransport ():"
+                "pendingChannels=%d, InUseCount=%d\n", count, transportsInUseCount));
+
         if (!count || (transportsInUseCount >= (PRUint32) mMaxConnections))
             return NS_OK;
 
@@ -1045,12 +1070,10 @@ nsresult nsHTTPHandler::ReleaseTransport (nsIChannel* i_pTrans, PRUint32 aCapabi
         mPendingChannelList->RemoveElement(item);
         channel = (nsHTTPChannel*)(nsIRequest*)(nsISupports*)item;
 
-        PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-               ("nsHTTPHandler::ReleaseTransport."
-                "\tRestarting nsHTTPChannel [%x]\n",
-                channel));
+        PR_LOG (gHTTPLog, PR_LOG_ALWAYS, ("nsHTTPHandler::ReleaseTransport."
+                "\tRestarting nsHTTPChannel [%x]\n", channel));
         
-        channel->Open();
+        channel -> Open ();
     }
 
     return rv;
@@ -1225,6 +1248,10 @@ nsHTTPHandler::PrefsChanged(const char* pref)
             mCapabilities &= ~ALLOW_PROXY_PIPELINING;
     }
 
+    mPrefs -> GetIntPref ("network.http.connect.timeout", &mConnectTimeout);
+    mPrefs -> GetIntPref ("network.http.request.timeout", &mRequestTimeout);
+    mPrefs -> GetIntPref ("network.http.keep-alive.max-connections", &mMaxAllowedKeepAlives);
+
     // Things read only during initialization...
     if (bChangedAll) // intl.accept_languages
     {
@@ -1340,8 +1367,7 @@ nsHTTPHandler::GetPipelinedRequest (nsIHTTPChannel* i_Channel, nsHTTPPipelinedRe
                 if (!commit)
                     break;
             }
-            else
-                NS_RELEASE (pReq);
+            NS_RELEASE (pReq);
         }
     } /* for */
 

@@ -49,8 +49,6 @@ nsSocketTransportService::nsSocketTransportService()
   mActiveTransportList = nsnull;
 
   mThreadRunning = PR_FALSE;
-
-  SetSocketTimeoutInterval(PR_MillisecondsToInterval(DEFAULT_SOCKET_TIMEOUT_IN_MS));
 }
 
 
@@ -345,24 +343,6 @@ nsresult nsSocketTransportService::RemoveFromSelectList(nsSocketTransport* aTran
 }
 
 
-nsresult 
-nsSocketTransportService::GetSocketTimeoutInterval(PRIntervalTime* aResult)
-{
-  *aResult = mSocketTimeoutInterval;
-  return NS_OK;
-}
-
-nsresult
-nsSocketTransportService::SetSocketTimeoutInterval(PRIntervalTime aTime)
-{
-  mSocketTimeoutInterval = aTime;
-
-  // Update the timeout value in the socket transport...
-  nsSocketTransport::SetSocketTimeout(aTime);
-
-  return NS_OK;
-}
-
 //
 // --------------------------------------------------------------------------
 // nsISupports implementation...
@@ -389,7 +369,7 @@ nsSocketTransportService::Run(void)
   mSelectFDSet[0].fd       = mThreadEvent;
   mSelectFDSet[0].in_flags = PR_POLL_READ;
   mSelectFDSetCount = 1;
-  pollTimeout = mSocketTimeoutInterval;
+  pollTimeout = PR_MillisecondsToInterval (DEFAULT_POLL_TIMEOUT_IN_MS);
 #else
   //
   // For now, rather than breaking out of the call to PR_Poll(...) just set

@@ -135,11 +135,9 @@ NS_IMETHODIMP
 nsHTTPCacheListener::OnStartRequest(nsIChannel *aChannel,
                                     nsISupports *aContext)
 {
-  PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
-         ("nsHTTPCacheListener::OnStartRequest [this=%x].\n",
-          this));
-
-  return mResponseDataListener->OnStartRequest(mChannel, aContext);
+    PR_LOG (gHTTPLog, PR_LOG_DEBUG, ("nsHTTPCacheListener::OnStartRequest [this=%x]\n", this));
+  
+    return mResponseDataListener -> OnStartRequest (mChannel, aContext);
 }
 
 NS_IMETHODIMP
@@ -148,18 +146,14 @@ nsHTTPCacheListener::OnStopRequest(nsIChannel *aChannel,
                                    nsresult aStatus,
                                    const PRUnichar *aErrorMsg)
 {
-  PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
-         ("nsHTTPCacheListener::OnStopRequest [this=%x]."
-          "\tStatus = %x\n", this, aStatus));
+    PR_LOG (gHTTPLog, PR_LOG_DEBUG, ("nsHTTPCacheListener::OnStopRequest [this=%x]\n", this));
 
-  //
-  // Notify the channel that the response has finished.  Since there
-  // is no socket transport involved nsnull is passed as the
-  // transport...
-  //
-  return mChannel->ResponseCompleted(mResponseDataListener, 
-                                     aStatus, 
-                                     aErrorMsg);
+    //
+    // Notify the channel that the response has finished.  Since there
+    // is no socket transport involved nsnull is passed as the
+    // transport...
+    //
+    return mChannel -> ResponseCompleted (mResponseDataListener, aStatus, aErrorMsg);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -172,7 +166,15 @@ nsHTTPCacheListener::OnDataAvailable(nsIChannel *aChannel,
                                      PRUint32 aSourceOffset,
                                      PRUint32 aCount)
 {
-  return mResponseDataListener->OnDataAvailable(mChannel, 
+    nsresult channelStatus = NS_OK;
+    
+    if (mChannel)
+        mChannel -> GetStatus (&channelStatus);
+
+    if (NS_FAILED (channelStatus))  // Canceled http channel
+         return NS_OK;
+
+    return mResponseDataListener -> OnDataAvailable(mChannel, 
                                                 aContext,
                                                 aStream,
                                                 aSourceOffset,
@@ -218,12 +220,17 @@ nsHTTPServerListener::nsHTTPServerListener(nsHTTPChannel* aChannel, nsHTTPHandle
                       mBytesReceived(0),
                       mBodyBytesReceived (0),
                       mCompressHeaderChecked (PR_FALSE),
-                      mChunkHeaderEOF(PR_FALSE),
                       mChunkHeaderChecked (PR_FALSE),
-                      mPipelinedRequest (request)
+                      mPipelinedRequest (request),
+                      mDataReceived (PR_FALSE)
 {
     nsHTTPRequest * req = nsnull;    
     mChannel -> mHTTPServerListener = this;
+
+    NS_NewISupportsPRBool (getter_AddRefs (mChunkHeaderEOF));
+
+    if (mChunkHeaderEOF)
+        mChunkHeaderEOF -> SetData (PR_FALSE);
 
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("Creating nsHTTPServerListener [this=%x].\n", this));
@@ -253,8 +260,15 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
                                       PRUint32 i_SourceOffset,
                                       PRUint32 i_Length)
 {
-    nsresult rv = NS_OK;
+    nsresult rv = NS_OK, channelStatus = NS_OK;
     PRUint32 actualBytesRead;
+
+    if (mChannel)
+        mChannel -> GetStatus (&channelStatus);
+
+    if (NS_FAILED (channelStatus))      // Canceled http channel
+         return NS_OK;
+
     NS_ASSERTION(i_pStream, "No stream supplied by the transport!");
     nsCOMPtr<nsIBufferInputStream> bufferInStream = 
         do_QueryInterface(i_pStream);
@@ -263,6 +277,9 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
            ("nsHTTPServerListener::OnDataAvailable [this=%x].\n"
             "\tstream=%x. \toffset=%d. \tlength=%d.\n",
             this, i_pStream, i_SourceOffset, i_Length));
+
+    if (i_Length > 0)
+        mDataReceived = PR_TRUE;
 
     if (!mResponse)
     {
@@ -408,13 +425,16 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
 
 			    		nsString fromStr; fromStr.AssignWithConversion ( chunkHeader );
 				    	nsString toStr;     toStr.AssignWithConversion ( "unchunked" );
-				    
+
+                        if (mChunkHeaderEOF)
+                            mChunkHeaderEOF -> SetData (PR_FALSE);
+
                         nsCOMPtr<nsIStreamListener> converterListener;
 					    rv = StreamConvService->AsyncConvertData(
                                 fromStr.GetUnicode(), 
                                 toStr.GetUnicode(), 
                                 mResponseDataListener, 
-                                (nsISupports *) &mChunkHeaderEOF,   // XXX/ruslan: hack for now - FIX ME
+                                mChunkHeaderEOF,
                                 getter_AddRefs (converterListener));
 					    if (NS_FAILED(rv)) return rv;
 					    mResponseDataListener = converterListener;
@@ -428,8 +448,12 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
 
                 mBodyBytesReceived += i_Length;
 
+                PRBool eof = PR_FALSE;
+                if (mChunkHeaderEOF)
+                    mChunkHeaderEOF -> GetData (&eof);
+
                 if (mPipelinedRequest
-                    && (cl != -1 && cl - mBodyBytesReceived == 0 || mChunkHeaderEOF))
+                    && (cl != -1 && cl - mBodyBytesReceived == 0 || eof))
                 {
                     nsresult rv = mPipelinedRequest -> AdvanceToNextRequest ();
 
@@ -477,6 +501,8 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
 NS_IMETHODIMP
 nsHTTPServerListener::OnStartRequest (nsIChannel* channel, nsISupports* i_pContext)
 {
+    nsresult channelStatus = NS_OK;
+    
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("nsHTTPServerListener::OnStartRequest [this=%x].\n", this));
 
@@ -484,8 +510,8 @@ nsHTTPServerListener::OnStartRequest (nsIChannel* channel, nsISupports* i_pConte
     mHeadersDone     = PR_FALSE;
     mFirstLineParsed = PR_FALSE;
     mCompressHeaderChecked = PR_FALSE;
-    mChunkHeaderEOF        = PR_FALSE;
     mChunkHeaderChecked    = PR_FALSE;
+    mDataReceived          = PR_FALSE;
     mBytesReceived     = 0;
     mBodyBytesReceived = 0;
     mHeaderBuffer.Truncate ();
@@ -496,6 +522,9 @@ nsHTTPServerListener::OnStartRequest (nsIChannel* channel, nsISupports* i_pConte
     mResponse = nsnull;
     mChannel  = nsnull;
     mResponseDataListener = null_nsCOMPtr ();
+
+    if (mChunkHeaderEOF)
+        mChunkHeaderEOF -> SetData (PR_FALSE);
 
     nsHTTPRequest * req;
     mPipelinedRequest -> GetCurrentRequest (&req);
@@ -517,13 +546,29 @@ nsHTTPServerListener::OnStartRequest (nsIChannel* channel, nsISupports* i_pConte
 NS_IMETHODIMP
 nsHTTPServerListener::OnStopRequest (nsIChannel* channel, nsISupports* i_pContext, nsresult i_Status, const PRUnichar* i_pMsg)
 {
-    nsresult rv = NS_OK;
+    nsresult rv = i_Status, channelStatus = NS_OK;
+
+    if (mChannel)
+        mChannel -> GetStatus (&channelStatus);
 
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("nsHTTPServerListener::OnStopRequest [this=%x]."
-            "\tStatus = %x\n", this, i_Status));
+            "\tStatus = %x, mDataReceived=%d\n", this, i_Status, mDataReceived));
 
-    if (NS_SUCCEEDED(rv) && !mHeadersDone)
+    if (NS_SUCCEEDED (channelStatus) && NS_SUCCEEDED (i_Status) && !mDataReceived)
+    {
+        // no data has been received from the channel at all - must be due to the fact that the
+        // server has dropped the connection on keep-alive
+
+        if (mPipelinedRequest)
+        {
+            nsresult rv = mPipelinedRequest -> RestartRequest ();
+            if (NS_SUCCEEDED (rv))
+                return rv;
+        }
+    }
+
+    if (NS_SUCCEEDED (i_Status) && !mHeadersDone)
     {
         //
         // Oh great!!  The server has closed the connection without sending 

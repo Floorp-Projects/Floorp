@@ -33,6 +33,8 @@
 #include "nsHTTPHandler.h"
 #include "nsHTTPRequest.h"
 
+#include "nsISupportsPrimitives.h"
+
 class nsIBufferInputStream;
 class nsHTTPResponse;
 class nsHTTPChannel;
@@ -122,7 +124,8 @@ protected:
 
     PRBool                      mCompressHeaderChecked;
     PRBool                      mChunkHeaderChecked;
-    PRBool                      mChunkHeaderEOF;
+    PRBool                      mDataReceived;
+    nsCOMPtr<nsISupportsPRBool> mChunkHeaderEOF;
     nsHTTPPipelinedRequest*     mPipelinedRequest;
 };
 
