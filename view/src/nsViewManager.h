@@ -238,9 +238,10 @@ public:
 	 * is completely, or partially visible.
    * @param aView view that aRect coordinates are specified relative to
    * @param aRect rectangle in twips to test for visibility 
-   * @returns PR_TRUE if the rect is visible, PR_FALSE otherwise.
+   * @param aMinTwips is the min. pixel rows or cols at edge of screen needed for object to be counted visible
+   * @param aIsVisible returns PR_TRUE if the rect is visible, PR_FALSE otherwise.
 	 */
-  NS_IMETHOD IsRectVisible(nsIView *aView, const nsRect &aRect, PRBool aMustBeFullyVisible, PRBool *isVisible);
+  NS_IMETHOD IsRectVisible(nsIView *aView, const nsRect &aRect, PRUint16 aMinTwips, PRBool *aIsVisible);
 
 protected:
   virtual ~nsViewManager();

@@ -1184,7 +1184,7 @@ NS_IMETHODIMP nsViewManager2::UpdateView(nsIView *aView, const nsRect &aRect, PR
    // can be expensive.
    // This also checks for silly request like damagedRect.width = 0 or damagedRect.height = 0
   PRBool isVisible;
-  IsRectVisible(aView, damagedRect, PR_FALSE, &isVisible);
+  IsRectVisible(aView, damagedRect, 0, &isVisible);
   if (!isVisible) {
     return NS_OK;
   }
@@ -2849,10 +2849,10 @@ nsresult nsViewManager2::GetAbsoluteRect(nsIView *aView, const nsRect &aRect,
 }
 
 
-NS_IMETHODIMP nsViewManager2::IsRectVisible(nsIView *aView, const nsRect &aRect, PRBool aMustBeEntirelyVisible, PRBool *aIsVisible)
+NS_IMETHODIMP nsViewManager2::IsRectVisible(nsIView *aView, const nsRect &aRect, PRUint16 aMinTwips, PRBool *aIsVisible)
 {
-  // The parameter PRBool aMustBeEntirelyVisible determines if rectangle that is partially on the screen
-  // and partially off the screen should be counted as visible
+  // The parameter aMinTwips determines how many rows/cols of pixels must be visible on each side of the element,
+  // in order to be counted as visible
 
   *aIsVisible = PR_FALSE;
   if (aRect.width == 0 || aRect.height == 0) {
@@ -2881,11 +2881,18 @@ NS_IMETHODIMP nsViewManager2::IsRectVisible(nsIView *aView, const nsRect &aRect,
     return NS_OK;
   }
  
-    // Compare the visible rect against the rect passed in.
-  if (aMustBeEntirelyVisible)
-    *aIsVisible = visibleRect.Contains(absRect);
-  else
-    *aIsVisible = absRect.IntersectRect(absRect, visibleRect);
+  /*
+   * If aMinTwips > 0, ensure at least aMinTwips of space around object is visible
+   * The object is visible if:
+   * ((objectTop     >= windowTop    || objectBottom >= windowTop) &&
+   *  (objectLeft   >= windowLeft   || objectRight  >= windowLeft) &&
+   *  (objectBottom <= windowBottom || objectTop    <= windowBottom) &&
+   *  (objectRight  <= windowRight  || objectLeft   <= windowRight))
+   */
+  *aIsVisible = ((absRect.y >= visibleRect.y  ||  absRect.y + absRect.height >= visibleRect.y + aMinTwips) &&
+                 (absRect.x >= visibleRect.x  ||  absRect.x + absRect.width  >=  visibleRect.x + aMinTwips) &&
+                 (absRect.y + absRect.height <= visibleRect.y  + visibleRect.height  ||  absRect.y <= visibleRect.y + visibleRect.height - aMinTwips) &&
+                 (absRect.x + absRect.width <= visibleRect.x  + visibleRect.width    ||  absRect.x <= visibleRect.x + visibleRect.width - aMinTwips));
 
 #if 0
   // Debugging code

@@ -601,8 +601,13 @@ nsresult nsAccessible::GetTranslatedString(const nsAReadableString& aKey, nsAWri
   return NS_OK;
 }
 
-PRBool nsAccessible::IsEntirelyVisible() 
+PRBool nsAccessible::IsPartiallyVisible() 
 {
+  // We need to know if at least a kMinPixels around the object is visible
+  // Otherwise it will be marked STATE_OFFSCREEN and STATE_INVISIBLE
+  
+  const PRUint16 kMinPixels  = 12;
+
   // Set up the variables we need, return false if we can't get at them all
   nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
   if (!shell) 
@@ -643,8 +648,10 @@ PRBool nsAccessible::IsEntirelyVisible()
     relFrameRect.y = frameOffset.y;
   }
 
+  float p2t;
+  presContext->GetPixelsToTwips(&p2t);
   PRBool isVisible = PR_FALSE;
-  viewManager->IsRectVisible(containingView, relFrameRect, PR_TRUE, &isVisible);
+  viewManager->IsRectVisible(containingView, relFrameRect, kMinPixels * p2t, &isVisible);
 
   return isVisible;
 }
@@ -702,7 +709,7 @@ NS_IMETHODIMP nsAccessible::GetAccState(PRUint32 *aAccState)
   }
 
   // Check if STATE_OFFSCREEN bitflag should be turned on for this object
-  if (!IsEntirelyVisible())
+  if (!IsPartiallyVisible())
     *aAccState |= STATE_OFFSCREEN | STATE_INVISIBLE;
 
   return rv;
