@@ -34,11 +34,10 @@
 ]>
 
 <window xmlns:html="http://www.w3.org/1999/xhtml"
-		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-		class="color-dialog"
-		onload="parent.initPanel('chrome://communicator/content/pref/pref-winhooks.xul');"
-		orient="vertical"
-		>
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        class="color-dialog"
+        onload="parent.initPanel('chrome://communicator/content/pref/pref-winhooks.xul');"
+        orient="vertical">
 
 <script language="JavaScript" src="chrome://communicator/content/pref/pref-winhooks.js"></script>
     
@@ -46,20 +45,18 @@
 
         <!-- File types -->
         <titledbox>
-            <title>
-                <text value="&files.label;"/>
-            </title>
-            <box orient="vertical" autostretch="never" flex="1">
-                <html flex="1">
+            <title value="&files.label;"/>
+            <box orient="vertical" flex="1">
+                <html>
                     &files.text;
                 </html>
-                <box>
-                  <box orient="vertical">
+                <box class="indent">
+                  <box orient="vertical" autostretch="never" flex="1">
                     <checkbox id="isHandlingHTML" value="&html.label;"/>
                     <checkbox id="isHandlingXML"  value="&xml.label;"/>
                     <checkbox id="isHandlingXUL"  value="&xul.label;"/>
                   </box>
-                  <box orient="vertical">
+                  <box orient="vertical" autostretch="never" flex="1">
                     <checkbox id="isHandlingJPEG" value="&jpeg.label;"/>
                     <checkbox id="isHandlingGIF"  value="&gif.label;"/>
                     <checkbox id="isHandlingPNG"  value="&png.label;"/>
@@ -69,17 +66,15 @@
         </titledbox>
         <!-- Internet Shortcuts -->
         <titledbox>
-            <title>
-                <text value="&shortcuts.label;"/>
-            </title>
+            <title value="&shortcuts.label;"/>
             <box orient="vertical" autostretch="never" flex="1">
-                <html flex="1">
+                <html>
                     &shortcuts.text;
                 </html>
-                <checkbox id="isHandlingHTTP"   value="&http.label;"/>
-                <checkbox id="isHandlingHTTPS"  value="&https.label;"/>
-                <checkbox id="isHandlingFTP"    value="&ftp.label;"/>
-                <checkbox id="isHandlingCHROME" value="&chrome.label;"/>
+                <checkbox id="isHandlingHTTP"   value="&http.label;" class="indent"/>
+                <checkbox id="isHandlingHTTPS"  value="&https.label;" class="indent"/>
+                <checkbox id="isHandlingFTP"    value="&ftp.label;" class="indent"/>
+                <checkbox id="isHandlingCHROME" value="&chrome.label;" class="indent"/>
             </box>
         </titledbox>
 

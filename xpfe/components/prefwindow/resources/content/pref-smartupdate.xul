@@ -30,6 +30,7 @@
               prefattribute="checked"/>
   </titledbox>
 
+<!--
   <titledbox orient="vertical" autostretch="never">
     <title><text value="Installed Packages"/></title>
   
@@ -46,10 +47,10 @@
       }
     ]]>
     </script>
-<!--
     <button value="Install Package" oncommand="InstallPackage();"/>
--->
   </titledbox>
+-->
+
 <!--
   <html:fieldset style="width: 100%; height: 100%">
     <html:div class="hspace-both">&selectUninstall.label;</html:div>
