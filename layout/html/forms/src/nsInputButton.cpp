@@ -378,7 +378,8 @@ nsInputButtonFrame::ResizeReflow(nsIPresContext* aPresContext,
                                  nsSize* aMaxElementSize,
                                  ReflowStatus& aStatus)
 {
-  if ((kButtonTag_Input == GetButtonTagType()) && (kButton_Image == GetButtonType())) {
+  if ((kButtonTag_Input == GetButtonTagType()) &&
+      (kButton_Image == GetButtonType())) {
     nsSize ignore;
     GetDesiredSize(aPresContext, aMaxSize, aDesiredSize, ignore);
     AddBordersAndPadding(aPresContext, aDesiredSize);
@@ -386,10 +387,6 @@ nsInputButtonFrame::ResizeReflow(nsIPresContext* aPresContext,
       aMaxElementSize->width = aDesiredSize.width;
       aMaxElementSize->height = aDesiredSize.height;
     }
-    mViewBounds.x = 0;
-    mViewBounds.y = 0;
-    mViewBounds.width = aDesiredSize.width;
-    mViewBounds.height = aDesiredSize.height;
     aStatus = frComplete;
     return NS_OK;
   }
