@@ -1046,7 +1046,7 @@ nsHTMLContentSinkStream::SetParser(nsIParser* aParser) {
 }
 
 NS_IMETHODIMP 
-nsHTMLContentSinkStream::NotifyError(nsresult aErrorResult)
+nsHTMLContentSinkStream::NotifyError(const nsParserError* aError)
 {
   return NS_OK;
 }

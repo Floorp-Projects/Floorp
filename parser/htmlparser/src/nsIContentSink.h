@@ -34,6 +34,7 @@
 
 #include "nsIParserNode.h"
 #include "nsISupports.h"
+#include "nsParserError.h"
 
 class nsIParser;
 
@@ -139,7 +140,7 @@ public:
    *
    * @param aErrorResult the error code
    */
-  NS_IMETHOD NotifyError(nsresult aErrorResult)=0;
+  NS_IMETHOD NotifyError(const nsParserError* aError)=0;
 };
 
 #endif /* nsIContentSink_h___ */

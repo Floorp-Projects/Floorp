@@ -80,7 +80,7 @@ public:
   NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
   NS_IMETHOD CloseContainer(const nsIParserNode& aNode);
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
-  NS_IMETHOD NotifyError(nsresult aErrorResult);
+  NS_IMETHOD NotifyError(const nsParserError* aError);
   NS_IMETHOD AddComment(const nsIParserNode& aNode);
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
 
@@ -251,7 +251,7 @@ nsLoggingSink::AddLeaf(const nsIParserNode& aNode)
 }
 
 NS_IMETHODIMP 
-nsLoggingSink::NotifyError(nsresult aErrorResult)
+nsLoggingSink::NotifyError(const nsParserError* aError)
 {
   return NS_OK;
 }
