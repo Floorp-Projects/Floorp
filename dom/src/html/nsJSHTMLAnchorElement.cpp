@@ -85,7 +85,7 @@ GetHTMLAnchorElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetAccessKey(prop)) {
+        if (NS_SUCCEEDED(a->GetAccessKey(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -101,7 +101,7 @@ GetHTMLAnchorElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetCharset(prop)) {
+        if (NS_SUCCEEDED(a->GetCharset(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -117,7 +117,7 @@ GetHTMLAnchorElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetCoords(prop)) {
+        if (NS_SUCCEEDED(a->GetCoords(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -133,7 +133,7 @@ GetHTMLAnchorElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetHref(prop)) {
+        if (NS_SUCCEEDED(a->GetHref(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -149,7 +149,7 @@ GetHTMLAnchorElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetHreflang(prop)) {
+        if (NS_SUCCEEDED(a->GetHreflang(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -165,7 +165,7 @@ GetHTMLAnchorElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetName(prop)) {
+        if (NS_SUCCEEDED(a->GetName(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -181,7 +181,7 @@ GetHTMLAnchorElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetRel(prop)) {
+        if (NS_SUCCEEDED(a->GetRel(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -197,7 +197,7 @@ GetHTMLAnchorElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetRev(prop)) {
+        if (NS_SUCCEEDED(a->GetRev(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -213,7 +213,7 @@ GetHTMLAnchorElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetShape(prop)) {
+        if (NS_SUCCEEDED(a->GetShape(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -229,7 +229,7 @@ GetHTMLAnchorElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRInt32 prop;
-        if (NS_OK == a->GetTabIndex(&prop)) {
+        if (NS_SUCCEEDED(a->GetTabIndex(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -245,7 +245,7 @@ GetHTMLAnchorElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetTarget(prop)) {
+        if (NS_SUCCEEDED(a->GetTarget(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -261,7 +261,7 @@ GetHTMLAnchorElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetType(prop)) {
+        if (NS_SUCCEEDED(a->GetType(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {

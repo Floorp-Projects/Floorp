@@ -99,7 +99,7 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetNodeName(prop)) {
+        if (NS_SUCCEEDED(a->GetNodeName(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -115,7 +115,7 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetNodeValue(prop)) {
+        if (NS_SUCCEEDED(a->GetNodeValue(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -131,7 +131,7 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRUint16 prop;
-        if (NS_OK == a->GetNodeType(&prop)) {
+        if (NS_SUCCEEDED(a->GetNodeType(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -147,7 +147,7 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMNode* prop;
-        if (NS_OK == a->GetParentNode(&prop)) {
+        if (NS_SUCCEEDED(a->GetParentNode(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -164,7 +164,7 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMNodeList* prop;
-        if (NS_OK == a->GetChildNodes(&prop)) {
+        if (NS_SUCCEEDED(a->GetChildNodes(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -181,7 +181,7 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMNode* prop;
-        if (NS_OK == a->GetFirstChild(&prop)) {
+        if (NS_SUCCEEDED(a->GetFirstChild(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -198,7 +198,7 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMNode* prop;
-        if (NS_OK == a->GetLastChild(&prop)) {
+        if (NS_SUCCEEDED(a->GetLastChild(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -215,7 +215,7 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMNode* prop;
-        if (NS_OK == a->GetPreviousSibling(&prop)) {
+        if (NS_SUCCEEDED(a->GetPreviousSibling(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -232,7 +232,7 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMNode* prop;
-        if (NS_OK == a->GetNextSibling(&prop)) {
+        if (NS_SUCCEEDED(a->GetNextSibling(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -249,7 +249,7 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMNamedNodeMap* prop;
-        if (NS_OK == a->GetAttributes(&prop)) {
+        if (NS_SUCCEEDED(a->GetAttributes(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -266,7 +266,7 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMDocument* prop;
-        if (NS_OK == a->GetOwnerDocument(&prop)) {
+        if (NS_SUCCEEDED(a->GetOwnerDocument(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }

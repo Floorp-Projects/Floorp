@@ -77,7 +77,7 @@ GetStyleSheetCollectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
           return JS_FALSE;
         }
         PRUint32 prop;
-        if (NS_OK == a->GetLength(&prop)) {
+        if (NS_SUCCEEDED(a->GetLength(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {

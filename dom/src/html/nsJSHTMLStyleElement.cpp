@@ -76,7 +76,7 @@ GetHTMLStyleElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRBool prop;
-        if (NS_OK == a->GetDisabled(&prop)) {
+        if (NS_SUCCEEDED(a->GetDisabled(&prop))) {
           *vp = BOOLEAN_TO_JSVAL(prop);
         }
         else {
@@ -92,7 +92,7 @@ GetHTMLStyleElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetMedia(prop)) {
+        if (NS_SUCCEEDED(a->GetMedia(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -108,7 +108,7 @@ GetHTMLStyleElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetType(prop)) {
+        if (NS_SUCCEEDED(a->GetType(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {

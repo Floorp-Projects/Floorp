@@ -93,7 +93,7 @@ GetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetLowSrc(prop)) {
+        if (NS_SUCCEEDED(a->GetLowSrc(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -109,7 +109,7 @@ GetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetName(prop)) {
+        if (NS_SUCCEEDED(a->GetName(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -125,7 +125,7 @@ GetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetAlign(prop)) {
+        if (NS_SUCCEEDED(a->GetAlign(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -141,7 +141,7 @@ GetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetAlt(prop)) {
+        if (NS_SUCCEEDED(a->GetAlt(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -157,7 +157,7 @@ GetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetBorder(prop)) {
+        if (NS_SUCCEEDED(a->GetBorder(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -173,7 +173,7 @@ GetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetHeight(prop)) {
+        if (NS_SUCCEEDED(a->GetHeight(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -189,7 +189,7 @@ GetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetHspace(prop)) {
+        if (NS_SUCCEEDED(a->GetHspace(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -205,7 +205,7 @@ GetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRBool prop;
-        if (NS_OK == a->GetIsMap(&prop)) {
+        if (NS_SUCCEEDED(a->GetIsMap(&prop))) {
           *vp = BOOLEAN_TO_JSVAL(prop);
         }
         else {
@@ -221,7 +221,7 @@ GetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetLongDesc(prop)) {
+        if (NS_SUCCEEDED(a->GetLongDesc(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -237,7 +237,7 @@ GetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetSrc(prop)) {
+        if (NS_SUCCEEDED(a->GetSrc(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -253,7 +253,7 @@ GetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetUseMap(prop)) {
+        if (NS_SUCCEEDED(a->GetUseMap(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -269,7 +269,7 @@ GetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetVspace(prop)) {
+        if (NS_SUCCEEDED(a->GetVspace(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -285,7 +285,7 @@ GetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetWidth(prop)) {
+        if (NS_SUCCEEDED(a->GetWidth(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {

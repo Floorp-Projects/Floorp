@@ -75,7 +75,7 @@ GetHTMLLIElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetType(prop)) {
+        if (NS_SUCCEEDED(a->GetType(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -91,7 +91,7 @@ GetHTMLLIElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRInt32 prop;
-        if (NS_OK == a->GetValue(&prop)) {
+        if (NS_SUCCEEDED(a->GetValue(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {

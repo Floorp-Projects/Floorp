@@ -91,7 +91,7 @@ GetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMHTMLFormElement* prop;
-        if (NS_OK == a->GetForm(&prop)) {
+        if (NS_SUCCEEDED(a->GetForm(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -108,7 +108,7 @@ GetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRBool prop;
-        if (NS_OK == a->GetDefaultSelected(&prop)) {
+        if (NS_SUCCEEDED(a->GetDefaultSelected(&prop))) {
           *vp = BOOLEAN_TO_JSVAL(prop);
         }
         else {
@@ -124,7 +124,7 @@ GetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetText(prop)) {
+        if (NS_SUCCEEDED(a->GetText(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -140,7 +140,7 @@ GetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRInt32 prop;
-        if (NS_OK == a->GetIndex(&prop)) {
+        if (NS_SUCCEEDED(a->GetIndex(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -156,7 +156,7 @@ GetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRBool prop;
-        if (NS_OK == a->GetDisabled(&prop)) {
+        if (NS_SUCCEEDED(a->GetDisabled(&prop))) {
           *vp = BOOLEAN_TO_JSVAL(prop);
         }
         else {
@@ -172,7 +172,7 @@ GetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetLabel(prop)) {
+        if (NS_SUCCEEDED(a->GetLabel(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -188,7 +188,7 @@ GetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRBool prop;
-        if (NS_OK == a->GetSelected(&prop)) {
+        if (NS_SUCCEEDED(a->GetSelected(&prop))) {
           *vp = BOOLEAN_TO_JSVAL(prop);
         }
         else {
@@ -204,7 +204,7 @@ GetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetValue(prop)) {
+        if (NS_SUCCEEDED(a->GetValue(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {

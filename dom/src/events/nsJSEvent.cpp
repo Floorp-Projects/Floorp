@@ -80,7 +80,7 @@ GetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetType(prop)) {
+        if (NS_SUCCEEDED(a->GetType(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -96,7 +96,7 @@ GetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMNode* prop;
-        if (NS_OK == a->GetTarget(&prop)) {
+        if (NS_SUCCEEDED(a->GetTarget(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -113,7 +113,7 @@ GetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMNode* prop;
-        if (NS_OK == a->GetCurrentNode(&prop)) {
+        if (NS_SUCCEEDED(a->GetCurrentNode(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -130,7 +130,7 @@ GetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRUint16 prop;
-        if (NS_OK == a->GetEventPhase(&prop)) {
+        if (NS_SUCCEEDED(a->GetEventPhase(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {

@@ -94,7 +94,7 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetDefaultValue(prop)) {
+        if (NS_SUCCEEDED(a->GetDefaultValue(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -110,7 +110,7 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRBool prop;
-        if (NS_OK == a->GetDefaultChecked(&prop)) {
+        if (NS_SUCCEEDED(a->GetDefaultChecked(&prop))) {
           *vp = BOOLEAN_TO_JSVAL(prop);
         }
         else {
@@ -126,7 +126,7 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMHTMLFormElement* prop;
-        if (NS_OK == a->GetForm(&prop)) {
+        if (NS_SUCCEEDED(a->GetForm(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -143,7 +143,7 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetAccept(prop)) {
+        if (NS_SUCCEEDED(a->GetAccept(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -159,7 +159,7 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetAccessKey(prop)) {
+        if (NS_SUCCEEDED(a->GetAccessKey(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -175,7 +175,7 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetAlign(prop)) {
+        if (NS_SUCCEEDED(a->GetAlign(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -191,7 +191,7 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetAlt(prop)) {
+        if (NS_SUCCEEDED(a->GetAlt(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -207,7 +207,7 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRBool prop;
-        if (NS_OK == a->GetChecked(&prop)) {
+        if (NS_SUCCEEDED(a->GetChecked(&prop))) {
           *vp = BOOLEAN_TO_JSVAL(prop);
         }
         else {
@@ -223,7 +223,7 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRBool prop;
-        if (NS_OK == a->GetDisabled(&prop)) {
+        if (NS_SUCCEEDED(a->GetDisabled(&prop))) {
           *vp = BOOLEAN_TO_JSVAL(prop);
         }
         else {
@@ -239,7 +239,7 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRInt32 prop;
-        if (NS_OK == a->GetMaxLength(&prop)) {
+        if (NS_SUCCEEDED(a->GetMaxLength(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -255,7 +255,7 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetName(prop)) {
+        if (NS_SUCCEEDED(a->GetName(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -271,7 +271,7 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRBool prop;
-        if (NS_OK == a->GetReadOnly(&prop)) {
+        if (NS_SUCCEEDED(a->GetReadOnly(&prop))) {
           *vp = BOOLEAN_TO_JSVAL(prop);
         }
         else {
@@ -287,7 +287,7 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetSize(prop)) {
+        if (NS_SUCCEEDED(a->GetSize(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -303,7 +303,7 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetSrc(prop)) {
+        if (NS_SUCCEEDED(a->GetSrc(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -319,7 +319,7 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRInt32 prop;
-        if (NS_OK == a->GetTabIndex(&prop)) {
+        if (NS_SUCCEEDED(a->GetTabIndex(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -335,7 +335,7 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetType(prop)) {
+        if (NS_SUCCEEDED(a->GetType(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -351,7 +351,7 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetUseMap(prop)) {
+        if (NS_SUCCEEDED(a->GetUseMap(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -367,7 +367,7 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetValue(prop)) {
+        if (NS_SUCCEEDED(a->GetValue(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {

@@ -77,7 +77,7 @@ GetCSSFontFaceRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMCSSStyleDeclaration* prop;
-        if (NS_OK == a->GetStyle(&prop)) {
+        if (NS_SUCCEEDED(a->GetStyle(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }

@@ -74,7 +74,7 @@ GetHTMLHtmlElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetVersion(prop)) {
+        if (NS_SUCCEEDED(a->GetVersion(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {

@@ -74,7 +74,7 @@ GetHTMLDirectoryElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
           return JS_FALSE;
         }
         PRBool prop;
-        if (NS_OK == a->GetCompact(&prop)) {
+        if (NS_SUCCEEDED(a->GetCompact(&prop))) {
           *vp = BOOLEAN_TO_JSVAL(prop);
         }
         else {

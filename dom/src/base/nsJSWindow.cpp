@@ -133,7 +133,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMWindow* prop;
-        if (NS_OK == a->GetWindow(&prop)) {
+        if (NS_SUCCEEDED(a->GetWindow(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -150,7 +150,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMWindow* prop;
-        if (NS_OK == a->GetSelf(&prop)) {
+        if (NS_SUCCEEDED(a->GetSelf(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -167,7 +167,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMDocument* prop;
-        if (NS_OK == a->GetDocument(&prop)) {
+        if (NS_SUCCEEDED(a->GetDocument(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -184,7 +184,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMNavigator* prop;
-        if (NS_OK == a->GetNavigator(&prop)) {
+        if (NS_SUCCEEDED(a->GetNavigator(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -201,7 +201,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMScreen* prop;
-        if (NS_OK == a->GetScreen(&prop)) {
+        if (NS_SUCCEEDED(a->GetScreen(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -218,7 +218,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMHistory* prop;
-        if (NS_OK == a->GetHistory(&prop)) {
+        if (NS_SUCCEEDED(a->GetHistory(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -235,7 +235,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMWindow* prop;
-        if (NS_OK == a->GetParent(&prop)) {
+        if (NS_SUCCEEDED(a->GetParent(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -252,7 +252,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMWindow* prop;
-        if (NS_OK == a->GetTop(&prop)) {
+        if (NS_SUCCEEDED(a->GetTop(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -269,7 +269,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMWindow* prop;
-        if (NS_OK == a->GetContent(&prop)) {
+        if (NS_SUCCEEDED(a->GetContent(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -286,7 +286,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMBarProp* prop;
-        if (NS_OK == a->GetMenubar(&prop)) {
+        if (NS_SUCCEEDED(a->GetMenubar(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -303,7 +303,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMBarProp* prop;
-        if (NS_OK == a->GetToolbar(&prop)) {
+        if (NS_SUCCEEDED(a->GetToolbar(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -320,7 +320,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMBarProp* prop;
-        if (NS_OK == a->GetLocationbar(&prop)) {
+        if (NS_SUCCEEDED(a->GetLocationbar(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -337,7 +337,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMBarProp* prop;
-        if (NS_OK == a->GetPersonalbar(&prop)) {
+        if (NS_SUCCEEDED(a->GetPersonalbar(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -354,7 +354,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMBarProp* prop;
-        if (NS_OK == a->GetStatusbar(&prop)) {
+        if (NS_SUCCEEDED(a->GetStatusbar(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -371,7 +371,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMBarProp* prop;
-        if (NS_OK == a->GetScrollbars(&prop)) {
+        if (NS_SUCCEEDED(a->GetScrollbars(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -388,7 +388,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMBarProp* prop;
-        if (NS_OK == a->GetDirectories(&prop)) {
+        if (NS_SUCCEEDED(a->GetDirectories(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -405,7 +405,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRBool prop;
-        if (NS_OK == a->GetClosed(&prop)) {
+        if (NS_SUCCEEDED(a->GetClosed(&prop))) {
           *vp = BOOLEAN_TO_JSVAL(prop);
         }
         else {
@@ -421,7 +421,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMWindowCollection* prop;
-        if (NS_OK == a->GetFrames(&prop)) {
+        if (NS_SUCCEEDED(a->GetFrames(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -438,7 +438,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMWindow* prop;
-        if (NS_OK == a->GetOpener(&prop)) {
+        if (NS_SUCCEEDED(a->GetOpener(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -455,7 +455,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetStatus(prop)) {
+        if (NS_SUCCEEDED(a->GetStatus(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -471,7 +471,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetDefaultStatus(prop)) {
+        if (NS_SUCCEEDED(a->GetDefaultStatus(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -487,7 +487,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetName(prop)) {
+        if (NS_SUCCEEDED(a->GetName(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -503,7 +503,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRInt32 prop;
-        if (NS_OK == a->GetInnerWidth(&prop)) {
+        if (NS_SUCCEEDED(a->GetInnerWidth(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -519,7 +519,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRInt32 prop;
-        if (NS_OK == a->GetInnerHeight(&prop)) {
+        if (NS_SUCCEEDED(a->GetInnerHeight(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -535,7 +535,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRInt32 prop;
-        if (NS_OK == a->GetOuterWidth(&prop)) {
+        if (NS_SUCCEEDED(a->GetOuterWidth(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -551,7 +551,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRInt32 prop;
-        if (NS_OK == a->GetOuterHeight(&prop)) {
+        if (NS_SUCCEEDED(a->GetOuterHeight(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -567,7 +567,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRInt32 prop;
-        if (NS_OK == a->GetScreenX(&prop)) {
+        if (NS_SUCCEEDED(a->GetScreenX(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -583,7 +583,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRInt32 prop;
-        if (NS_OK == a->GetScreenY(&prop)) {
+        if (NS_SUCCEEDED(a->GetScreenY(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -599,7 +599,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRInt32 prop;
-        if (NS_OK == a->GetPageXOffset(&prop)) {
+        if (NS_SUCCEEDED(a->GetPageXOffset(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -615,7 +615,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRInt32 prop;
-        if (NS_OK == a->GetPageYOffset(&prop)) {
+        if (NS_SUCCEEDED(a->GetPageYOffset(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {

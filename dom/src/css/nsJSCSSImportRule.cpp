@@ -79,7 +79,7 @@ GetCSSImportRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetHref(prop)) {
+        if (NS_SUCCEEDED(a->GetHref(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -95,7 +95,7 @@ GetCSSImportRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetMedia(prop)) {
+        if (NS_SUCCEEDED(a->GetMedia(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -111,7 +111,7 @@ GetCSSImportRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMCSSStyleSheet* prop;
-        if (NS_OK == a->GetStyleSheet(&prop)) {
+        if (NS_SUCCEEDED(a->GetStyleSheet(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }

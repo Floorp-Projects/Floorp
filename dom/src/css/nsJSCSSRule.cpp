@@ -79,7 +79,7 @@ GetCSSRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRUint16 prop;
-        if (NS_OK == a->GetType(&prop)) {
+        if (NS_SUCCEEDED(a->GetType(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -95,7 +95,7 @@ GetCSSRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetCssText(prop)) {
+        if (NS_SUCCEEDED(a->GetCssText(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -111,7 +111,7 @@ GetCSSRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMCSSStyleSheet* prop;
-        if (NS_OK == a->GetSheet(&prop)) {
+        if (NS_SUCCEEDED(a->GetSheet(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }

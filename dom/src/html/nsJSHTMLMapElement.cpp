@@ -78,7 +78,7 @@ GetHTMLMapElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMHTMLCollection* prop;
-        if (NS_OK == a->GetAreas(&prop)) {
+        if (NS_SUCCEEDED(a->GetAreas(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -95,7 +95,7 @@ GetHTMLMapElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetName(prop)) {
+        if (NS_SUCCEEDED(a->GetName(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {

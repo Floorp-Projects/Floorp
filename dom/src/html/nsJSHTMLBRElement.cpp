@@ -74,7 +74,7 @@ GetHTMLBRElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetClear(prop)) {
+        if (NS_SUCCEEDED(a->GetClear(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {

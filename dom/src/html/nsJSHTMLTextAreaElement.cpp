@@ -87,7 +87,7 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetDefaultValue(prop)) {
+        if (NS_SUCCEEDED(a->GetDefaultValue(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -103,7 +103,7 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
           return JS_FALSE;
         }
         nsIDOMHTMLFormElement* prop;
-        if (NS_OK == a->GetForm(&prop)) {
+        if (NS_SUCCEEDED(a->GetForm(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -120,7 +120,7 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetAccessKey(prop)) {
+        if (NS_SUCCEEDED(a->GetAccessKey(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -136,7 +136,7 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
           return JS_FALSE;
         }
         PRInt32 prop;
-        if (NS_OK == a->GetCols(&prop)) {
+        if (NS_SUCCEEDED(a->GetCols(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -152,7 +152,7 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
           return JS_FALSE;
         }
         PRBool prop;
-        if (NS_OK == a->GetDisabled(&prop)) {
+        if (NS_SUCCEEDED(a->GetDisabled(&prop))) {
           *vp = BOOLEAN_TO_JSVAL(prop);
         }
         else {
@@ -168,7 +168,7 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetName(prop)) {
+        if (NS_SUCCEEDED(a->GetName(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -184,7 +184,7 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
           return JS_FALSE;
         }
         PRBool prop;
-        if (NS_OK == a->GetReadOnly(&prop)) {
+        if (NS_SUCCEEDED(a->GetReadOnly(&prop))) {
           *vp = BOOLEAN_TO_JSVAL(prop);
         }
         else {
@@ -200,7 +200,7 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
           return JS_FALSE;
         }
         PRInt32 prop;
-        if (NS_OK == a->GetRows(&prop)) {
+        if (NS_SUCCEEDED(a->GetRows(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -216,7 +216,7 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
           return JS_FALSE;
         }
         PRInt32 prop;
-        if (NS_OK == a->GetTabIndex(&prop)) {
+        if (NS_SUCCEEDED(a->GetTabIndex(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -232,7 +232,7 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetType(prop)) {
+        if (NS_SUCCEEDED(a->GetType(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -248,7 +248,7 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetValue(prop)) {
+        if (NS_SUCCEEDED(a->GetValue(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {

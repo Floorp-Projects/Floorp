@@ -78,7 +78,7 @@ GetHTMLIsIndexElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMHTMLFormElement* prop;
-        if (NS_OK == a->GetForm(&prop)) {
+        if (NS_SUCCEEDED(a->GetForm(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -95,7 +95,7 @@ GetHTMLIsIndexElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetPrompt(prop)) {
+        if (NS_SUCCEEDED(a->GetPrompt(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {

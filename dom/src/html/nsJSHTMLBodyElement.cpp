@@ -79,7 +79,7 @@ GetHTMLBodyElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetALink(prop)) {
+        if (NS_SUCCEEDED(a->GetALink(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -95,7 +95,7 @@ GetHTMLBodyElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetBackground(prop)) {
+        if (NS_SUCCEEDED(a->GetBackground(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -111,7 +111,7 @@ GetHTMLBodyElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetBgColor(prop)) {
+        if (NS_SUCCEEDED(a->GetBgColor(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -127,7 +127,7 @@ GetHTMLBodyElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetLink(prop)) {
+        if (NS_SUCCEEDED(a->GetLink(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -143,7 +143,7 @@ GetHTMLBodyElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetText(prop)) {
+        if (NS_SUCCEEDED(a->GetText(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -159,7 +159,7 @@ GetHTMLBodyElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetVLink(prop)) {
+        if (NS_SUCCEEDED(a->GetVLink(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {

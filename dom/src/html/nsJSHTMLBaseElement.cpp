@@ -75,7 +75,7 @@ GetHTMLBaseElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetHref(prop)) {
+        if (NS_SUCCEEDED(a->GetHref(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -91,7 +91,7 @@ GetHTMLBaseElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetTarget(prop)) {
+        if (NS_SUCCEEDED(a->GetTarget(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {

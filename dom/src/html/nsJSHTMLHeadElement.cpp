@@ -74,7 +74,7 @@ GetHTMLHeadElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetProfile(prop)) {
+        if (NS_SUCCEEDED(a->GetProfile(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {

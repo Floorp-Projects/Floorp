@@ -77,7 +77,7 @@ GetHTMLFieldSetElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
           return JS_FALSE;
         }
         nsIDOMHTMLFormElement* prop;
-        if (NS_OK == a->GetForm(&prop)) {
+        if (NS_SUCCEEDED(a->GetForm(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }

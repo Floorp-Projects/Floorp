@@ -78,7 +78,7 @@ GetCSSMediaRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetMediaTypes(prop)) {
+        if (NS_SUCCEEDED(a->GetMediaTypes(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -94,7 +94,7 @@ GetCSSMediaRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMCSSStyleRuleCollection* prop;
-        if (NS_OK == a->GetCssRules(&prop)) {
+        if (NS_SUCCEEDED(a->GetCssRules(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
