@@ -29,6 +29,7 @@ EXPORTS =        \
 LIBRARY_NAME = plug
 
 LINCS = -I$(DIST)\include  \
+	-I$(DIST)\include\private  \
         -I$(PUBLIC)\plugin \
         -I$(PUBLIC)\java   \
         -I$(PUBLIC)\pref   \
@@ -38,7 +39,8 @@ LINCS = -I$(DIST)\include  \
         -I$(PUBLIC)\xpcom  \
         -I$(PUBLIC)\raptor \
         -I$(PUBLIC)\oji    \
-        -I$(PUBLIC)\ojiimpl
+        -I$(PUBLIC)\ojiimpl \
+        -I$(PUBLIC)\caps
 
 OBJS =  .\$(OBJDIR)\npassoc.obj \
         .\$(OBJDIR)\nsplugin.obj \

@@ -43,8 +43,14 @@
 #include <TArray.h>
 #endif
 
+#include "prthread.h"
+#include "pprthred.h"
+#include "prtypes.h"
 #include "nsHashtable.h"
 #include "nsMalloc.h"
+#include "nsICapsManager.h"
+#include "nsCCapsManager.h"
+#include "nsILiveconnect.h"
 
 #include "intl_csi.h"
 
@@ -100,7 +106,7 @@ nsresult fromNPError[] = {
 nsPluginManager* thePluginManager = NULL;
 
 nsPluginManager::nsPluginManager(nsISupports* outer)
-    : fJVMMgr(NULL), fMalloc(NULL), fFileUtils(NULL), fAllocatedMenuIDs(NULL)
+    : fJVMMgr(NULL), fMalloc(NULL), fAllocatedMenuIDs(NULL), fCapsManager(NULL), fLiveconnect(NULL)
 {
     NS_INIT_AGGREGATED(outer);
 }
@@ -118,6 +124,16 @@ nsPluginManager::~nsPluginManager(void)
     if (fFileUtils) {
         fFileUtils->Release();
         fFileUtils = NULL;
+    }
+
+    if (fCapsManager) {
+        fCapsManager->Release();
+        fCapsManager = NULL;
+    }
+
+    if (fLiveconnect) {
+        fCapsManager->Release();
+        fCapsManager = NULL;
     }
 
 #ifdef XP_MAC
@@ -140,6 +156,7 @@ nsPluginManager::Create(nsISupports* outer, const nsIID& aIID, void* *aInstanceP
         return NS_ERROR_OUT_OF_MEMORY;
     mgr->AddRef();
     *aInstancePtr = mgr->GetInner();
+    *aInstancePtr = (outer != NULL)? (void *)mgr->GetInner(): (void *)mgr;
     return NS_OK;
 }
 
@@ -216,6 +233,17 @@ nsPluginManager::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr
                          (void**)&fJVMMgr);
     if (fJVMMgr && fJVMMgr->QueryInterface(aIID, aInstancePtr) == NS_OK)
         return NS_OK;
+
+    nsICapsManager* pNSICapsManager = GetCapsManager(aIID);
+    if (pNSICapsManager) {
+        *aInstancePtr = (void*) ((nsISupports*)pNSICapsManager);
+        return NS_OK; 
+    }
+    nsILiveconnect* pNSILiveconnect = GetLiveconnect(aIID);
+    if (pNSILiveconnect) {
+        *aInstancePtr = (void*) ((nsISupports*)pNSILiveconnect);
+        return NS_OK; 
+    }
 #endif
     if (fMalloc == NULL)
         nsMalloc::Create((nsIPluginManager*)this, kISupportsIID,
@@ -231,6 +259,86 @@ nsPluginManager::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr
 
     return NS_NOINTERFACE;
 }
+
+
+nsICapsManager*
+nsPluginManager::GetCapsManager(const nsIID& aIID)
+{
+    nsICapsManager* result = NULL;
+    nsresult        err    = NS_OK;
+    PRThread       *threadAttached = NULL;
+#ifdef OJI
+    if (fCapsManager == NULL) {
+	      if ( PR_GetCurrentThread() == NULL )
+	      {
+ 		       threadAttached = PR_AttachThread(PR_USER_THREAD, PR_PRIORITY_NORMAL, NULL);
+	      }
+
+       NS_DEFINE_CID(kCCapsManagerCID, NS_CCAPSMANAGER_CID);
+       nsresult err    = NS_OK;
+       err = nsRepository::CreateInstance(kCCapsManagerCID, 
+                                          (nsIPluginManager*)this,    /* outer */
+                                          kISupportsIID,
+                                          (void **)&fCapsManager);
+       NS_DEFINE_IID(kICapsManagerIID, NS_ICAPSMANAGER_IID);
+       if (   (err == NS_OK) 
+           && (fCapsManager != NULL) 
+           && (err = (fCapsManager->QueryInterface(kICapsManagerIID, (void**)&result)) == NS_OK)
+          )
+       {
+           ((nsCCapsManager*)result)->SetSystemPrivilegeManager();
+           result->Release();
+       }
+     }
+     if (  (err == NS_OK) 
+         &&(fCapsManager->QueryInterface(aIID, (void**)&result) != NS_OK)
+        )
+     {
+       result = NULL;
+     }
+	    if (threadAttached != NULL )
+     {
+       PR_DetachThread();
+     }
+#endif
+    return result;
+}
+
+nsILiveconnect*
+nsPluginManager::GetLiveconnect(const nsIID& aIID)
+{
+    nsILiveconnect* result = NULL;
+    PRThread       *threadAttached = NULL;
+#ifdef OJI
+    nsresult        err    = NS_OK;
+    if (fLiveconnect == NULL) {
+	     if ( PR_GetCurrentThread() == NULL )
+	     {
+ 		      threadAttached = PR_AttachThread(PR_USER_THREAD, PR_PRIORITY_NORMAL, NULL);
+	     }
+      NS_DEFINE_CID(kCLiveconnectCID, NS_CLIVECONNECT_CID);
+      nsresult err    = NS_OK;
+      err = nsRepository::CreateInstance(kCLiveconnectCID, 
+                                         (nsIPluginManager*)this,    /* outer */
+                                         kISupportsIID,
+                                         (void **)&fLiveconnect);
+     }
+     if (  (err == NS_OK) 
+         &&(fLiveconnect->QueryInterface(aIID, (void**)&result) != NS_OK)
+        )
+     {
+       result = NULL;
+     }
+	    if (threadAttached != NULL )
+     {
+       PR_DetachThread();
+     }
+#endif
+    return result;
+}
+
+
+
 
 NS_METHOD
 nsPluginManager::BeginWaitCursor(void)

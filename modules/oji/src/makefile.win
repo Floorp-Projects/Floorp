@@ -61,6 +61,7 @@ LINCS= $(LINCS) -I_jri \
 # ns/dist/public/win16
 #
 !if "$(MOZ_BITS)" == "32"
+		-I$(PUBLIC)/caps     \
 		-I$(PUBLIC)/js       \
 		-I$(PUBLIC)/java     \
 		-I$(PUBLIC)/libimg   \
@@ -74,6 +75,7 @@ LINCS= $(LINCS) -I_jri \
 		-I$(PUBLIC)/oji      \
 		-I$(PUBLIC)/plugimpl \
 !endif
+		-I$(DIST)/include/private \
 		-I$(DEPTH)/lib/layout   \
 		-I$(DEPTH)/lib/libstyle \
 		-I$(DEPTH)/lib/libjar   \

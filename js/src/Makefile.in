@@ -21,7 +21,9 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+ifdef MOZ_OJI
 DIRS = liveconnect
+endif
 
 LIBRARY_NAME	= js
 
