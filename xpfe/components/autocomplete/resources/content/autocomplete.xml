@@ -8,7 +8,7 @@
 <binding id="autocomplete" extends="chrome://global/content/xulBindings.xml#textfield">
     <content excludes="template,observes,menupopup">
         <xul:box class="textfield-internal-box" flex="1">
-            <html:input class="textfield-input" flex="1" inherits="value,type,maxlength,disabled,size,readonly"/>
+            <html:input class="textfield-input" flex="1" inherits="onfocus,onblur,value,type,maxlength,disabled,size,readonly"/>
             <xul:popupset ignorekeys="true"
 				oncommand="var me = this.parentNode.parentNode; me.privatefunc.onMenuCommand(me, this);"
 			>

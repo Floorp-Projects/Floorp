@@ -1808,3 +1808,15 @@ function getNewThemes()
 {
 window._content.location.href = brandBundle.GetStringFromName("getNewThemesURL");
 }
+
+function URLBarFocusHandler(aEvent)
+{
+  var URLBar = aEvent.target;
+  URLBar.setSelectionRange(0, URLBar.value.length);
+}
+
+function URLBarBlurHandler(aEvent)
+{
+  var URLBar = aEvent.target;
+  URLBar.setSelectionRange(0, 0);
+}
