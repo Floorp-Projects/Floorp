@@ -511,6 +511,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
         // fire focus on window, not document
         nsCOMPtr<nsIScriptGlobalObject> globalObject;
         mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
+        mDocument->HandleDOMEvent(aPresContext, &focusevent, nsnull, NS_EVENT_FLAG_INIT, &status);
         if(!globalObject) break;
                      
         globalObject->HandleDOMEvent(aPresContext, &focusevent, nsnull, NS_EVENT_FLAG_INIT, &status); 
@@ -554,6 +555,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
                 // fire focus on window, not document
                 nsCOMPtr<nsIScriptGlobalObject> globalObject;
                 mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
+                mDocument->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
                 if(!globalObject) break;
                      
                 globalObject->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
