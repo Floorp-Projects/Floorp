@@ -7,7 +7,7 @@
 <!ENTITY tabNavigationTextboxes.label "Note: text boxes are always part of the tabbing order.">
 <!ENTITY tabNavigationDesc.label "When Tab or Shift+Tab is pressed, move between:">
 <!ENTITY findAsYouTypeBehavior.label "Find As You Type">
-<!ENTITY findAsYouTypeTip.label "Tip: to manually start Find As You Type, type / to find text or ' to find links, followed by the text you want to find.">
+<!ENTITY findAsYouTypeTip.label "Tip: To manually start Find As You Type, type / to find text or ' to find links, followed by the text you want to find.">
 <!ENTITY findAsYouTypeTimeout.label "Clear the current search after a few seconds of inactivity">
 <!ENTITY findAsYouTypeTimeout.accesskey "C">
 <!ENTITY findAsYouTypeSound.label "Play a sound when typed text isn't found">
