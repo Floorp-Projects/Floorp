@@ -128,7 +128,6 @@ CPPSRCS		= \
 		nsUnicodeToCP866.cpp \
 		nsUnicodeToKOI8R.cpp \
 		nsUnicodeToKOI8U.cpp \
-		nsUnicodeToLangBoxArabic8.cpp \
 		nsUnicodeToMacCE.cpp \
 		nsUnicodeToMacGreek.cpp \
 		nsUnicodeToMacTurkish.cpp \
@@ -161,6 +160,13 @@ CPPSRCS		= \
 		nsUnicodeToZapfDingbat.cpp \
 		nsUnicodeToAdobeEuro.cpp \
 		$(NULL)
+
+ifdef MOZ_EXTRA_X11CONVERTERS
+CPPSRCS		+= \
+		nsUnicodeToLangBoxArabic8.cpp \
+		nsUnicodeToLangBoxArabic16.cpp \
+		$(NULL)
+endif
 
 EXPORTS		= nsUCvLatinCID.h
 

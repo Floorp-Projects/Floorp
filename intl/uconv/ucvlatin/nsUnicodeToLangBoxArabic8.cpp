@@ -206,11 +206,6 @@ NS_IMETHODIMP nsUnicodeToLangBoxArabic8::Convert(
    char* dest = aDest;
    PRInt32 inlen = 0;
 
-   if(*aSrc<=0) {
-      *aDestLength = 0;
-      return NS_OK;
-   }
-
    while (inlen < *aSrcLength) {
      PRUnichar aChar = aSrc[inlen];
 
