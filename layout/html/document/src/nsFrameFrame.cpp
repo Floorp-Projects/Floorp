@@ -297,6 +297,11 @@ nsHTMLFrameOuterFrame::Paint(nsIPresContext* aPresContext,
                              const nsRect& aDirtyRect,
                              nsFramePaintLayer aWhichLayer)
 {
+  PRBool isVisible;
+  if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_TRUE, &isVisible)) && !isVisible) {
+    return NS_OK;
+  }
+
   //printf("outer paint %X (%d,%d,%d,%d) \n", this, aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
   nsIFrame* firstChild = mFrames.FirstChild();
   if (nsnull != firstChild) {
@@ -692,7 +697,12 @@ nsHTMLFrameInnerFrame::Paint(nsIPresContext*      aPresContext,
   //printf("inner paint %X (%d,%d,%d,%d) \n", this, aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
   // if there is not web shell paint based on our background color, 
   // otherwise let the web shell paint the sub document 
-  if (!mSubShell) {
+
+  // isPaginated is a temporary fix for Bug 75737 
+  // and this should all be fixed correctly by Bug 75739
+  PRBool isPaginated;
+  aPresContext->IsPaginated(&isPaginated);
+   if (!mSubShell && !isPaginated) {
     const nsStyleColor* color =
       (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
     aRenderingContext.SetColor(color->mBackgroundColor);
