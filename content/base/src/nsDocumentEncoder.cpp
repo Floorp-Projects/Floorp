@@ -907,6 +907,11 @@ nsDocumentEncoder::EncodeToStream(nsIOutputStream* aStream)
                                                    getter_AddRefs(mUnicodeEncoder));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  if (mMimeType.EqualsIgnoreCase("text/plain")) {
+    rv = mUnicodeEncoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nsnull, '?');
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   // xxx Also make sure mString is a mime type "text/html" or "text/plain"
 
   mStream = aStream;
