@@ -61,7 +61,8 @@ public:
    * of the aParentFrame frame. Don't use this for pseudo frames.
    */
   virtual nsIStyleContext* ResolveStyleContextFor(nsIContent* aContent,
-                                                  nsIFrame* aParentFrame) = 0;
+                                                  nsIFrame* aParentFrame,
+                                                  PRBool aForceUnique = PR_FALSE) = 0;
 
   /**
    * Resolve style for a pseudo frame within the given aParentFrame frame.
@@ -69,7 +70,8 @@ public:
    * ie: NS_NewAtom(":FIRST-LINE");
    */
   virtual nsIStyleContext* ResolvePseudoStyleContextFor(nsIAtom* aPseudoTag,
-                                                        nsIFrame* aParentFrame) = 0;
+                                                        nsIFrame* aParentFrame,
+                                                        PRBool aForceUnique = PR_FALSE) = 0;
 
   /**
    * Probe style for a pseudo frame within the given aParentFrame frame.
@@ -78,7 +80,8 @@ public:
    * ie: NS_NewAtom(":FIRST-LINE");
    */
   virtual nsIStyleContext* ProbePseudoStyleContextFor(nsIAtom* aPseudoTag,
-                                                      nsIFrame* aParentFrame) = 0;
+                                                      nsIFrame* aParentFrame,
+                                                      PRBool aForceUnique = PR_FALSE) = 0;
   /**
    * Get the font metrics for a given font.
    */
