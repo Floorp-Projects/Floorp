@@ -121,19 +121,19 @@ Contributor(s):
                 <hbox align="center" pack="end">
                   <label id="hLeftLabel" control="hLeftInput" value="&leftInput.label;"/>
                 </hbox>
-                <textbox id="hLeftInput" style="width:10em;" onkeyup="checkDouble(this)"/>
+                <textbox id="hLeftInput" style="width:10em;"/>
               </row>
               <row>
                 <hbox align="center" pack="end">
                   <label id="hCenterLabel" control="hCenterInput" value="&centerInput.label;"/>
                 </hbox>
-                <textbox id="hCenterInput" style="width:10em;" onkeyup="checkDouble(this)"/>
+                <textbox id="hCenterInput" style="width:10em;"/>
               </row>
               <row>
                 <hbox align="center" pack="end">
                   <label id="hRightLabel" control="hRightInput" value="&rightInput.label;"/>
                 </hbox>
-                <textbox id="hRightInput" style="width:10em;" onkeyup="checkDouble(this)"/>
+                <textbox id="hRightInput" style="width:10em;"/>
               </row>
             </rows>
           </grid>
@@ -160,19 +160,19 @@ Contributor(s):
                 <hbox align="center" pack="end">
                   <label id="fLeftLabel" control="fLeftInput" value="&leftInput.label;"/>
                 </hbox>
-                <textbox id="fLeftInput" style="width:10em;" onkeyup="checkDouble(this)"/>
+                <textbox id="fLeftInput" style="width:10em;"/>
               </row>
               <row>
                 <hbox align="center" pack="end">
                   <label id="fCenterLabel" control="fCenterInput" value="&centerInput.label;"/>
                 </hbox>
-                <textbox id="fCenterInput" style="width:10em;" onkeyup="checkDouble(this)"/>
+                <textbox id="fCenterInput" style="width:10em;"/>
               </row>
               <row>
                 <hbox align="center" pack="end">
                   <label id="fRightLabel" control="fRightInput" value="&rightInput.label;"/>
                 </hbox>
-                <textbox id="fRightInput" style="width:10em;" onkeyup="checkDouble(this)"/>
+                <textbox id="fRightInput" style="width:10em;"/>
               </row>
             </rows>
           </grid>
