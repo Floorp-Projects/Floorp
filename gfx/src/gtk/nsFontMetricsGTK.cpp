@@ -4099,9 +4099,12 @@ nsFontMetricsGTK::FamilyExists(const nsString& aName)
 static void
 FFREToXLFDPattern(nsACString &aFFREName, nsACString &oPattern)
 {
+  PRInt32 charsetHyphen;
+
   oPattern.Append("-");
   oPattern.Append(aFFREName);
-  PRInt32 charsetHyphen = oPattern.FindChar('-');
+  /* Search for the 3rd appearance of '-' */
+  charsetHyphen = oPattern.FindChar('-');
   charsetHyphen = oPattern.FindChar('-', charsetHyphen + 1);
   charsetHyphen = oPattern.FindChar('-', charsetHyphen + 1);
   oPattern.Insert("-*-*-*-*-*-*-*-*-*-*", charsetHyphen);
@@ -4127,7 +4130,10 @@ static void
 FFRESubstituteEncoding(nsACString &aFFREName,
                        const char *aReplacementEncoding)
 {
-  PRInt32 encodingHyphen = aFFREName.FindChar('-');
+  PRInt32 encodingHyphen;
+  /* Search for the 3rd apperance of '-' */
+  encodingHyphen = aFFREName.FindChar('-');
+  encodingHyphen = aFFREName.FindChar('-', encodingHyphen + 1);
   encodingHyphen = aFFREName.FindChar('-', encodingHyphen + 1);
   aFFREName.Truncate(encodingHyphen+1);
   aFFREName.Append(aReplacementEncoding);
