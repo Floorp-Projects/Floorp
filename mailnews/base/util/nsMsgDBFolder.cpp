@@ -56,7 +56,7 @@ NS_IMETHODIMP nsMsgDBFolder::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 		return NS_OK;
 	}
 
-	return nsRDFResource::QueryInterface(aIID, aInstancePtr);
+	return nsMsgFolder::QueryInterface(aIID, aInstancePtr);
 }
 
 nsMsgDBFolder::nsMsgDBFolder(void)
