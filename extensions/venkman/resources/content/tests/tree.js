@@ -104,7 +104,7 @@ function formatBranch (rec, indent)
     }
 }
 
-function dbg()
+function nativeFrameTest()
 {
     function compare(a, b)
     {
@@ -120,7 +120,10 @@ function dbg()
     
     var ary = [2, 1];
     ary.sort(compare);
-        
+}
+
+function dbg()
+{
     var a = 0;
     dbg2();
     var c = 0;
