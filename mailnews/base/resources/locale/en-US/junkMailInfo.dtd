@@ -1,8 +1,8 @@
-<!ENTITY window.title  "Junk Mail">
+<!ENTITY window.title  "About Junk Mail">
 <!ENTITY window.width  "450">
 <!ENTITY window.height "200">
 <!ENTITY info1a.label  "Mail automatically detects incoming messages that appear to be junk mail (also known as spam). Messages that Mail thinks are junk will display a junk icon">
 <!ENTITY info1b.label  ".">
 <!ENTITY info2.label   "At first, you must train Mail to identify junk mail by using the Junk toolbar button to mark messages as junk or not junk.">
-<!ENTITY info3.label   "Once Mail is correctly identifying junk mail, you can use the Junk Mail Controls to automatically move incoming junk mail to the Junk folder">
+<!ENTITY info3.label   "Once Mail is correctly identifying junk mail, you can use the Junk Mail Controls to automatically move incoming junk mail to the Junk folder.">
 <!ENTITY info4.label   "For more information, click Help.">
