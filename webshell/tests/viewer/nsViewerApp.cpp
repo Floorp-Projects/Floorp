@@ -486,10 +486,14 @@ nsViewerApp::AfterDispatch()
 #include "nsIDocument.h"
 #include "nsIURL.h"
 
+#ifndef XP_PC
+#define _MAX_PATH 512
+#endif
+
 #define DEBUG_EMPTY "(none)"
-static int gDebugRobotLoads = 5000;
-static char gVerifyDir[_MAX_PATH];
-static BOOL gVisualDebug = TRUE;
+static PRInt32 gDebugRobotLoads = 5000;
+static char    gVerifyDir[_MAX_PATH];
+static PRBool  gVisualDebug = TRUE;
 
 // Robot
 static nsIDialog      * mRobotDialog = nsnull;
@@ -521,9 +525,9 @@ static NS_DEFINE_IID(kICheckButtonIID, NS_ICHECKBUTTON_IID);
 static NS_DEFINE_IID(kILabelIID, NS_ILABEL_IID);
 
 
-extern JSConsole *gConsole;
 
 #ifdef XP_PC
+extern JSConsole *gConsole;
 // XXX temporary robot code until it's made XP
 extern HINSTANCE gInstance, gPrevInstance;
 
@@ -578,7 +582,7 @@ nsEventStatus PR_CALLBACK HandleRobotEvent(nsGUIEvent *aEvent)
         delete[] cStr;
 
         mVerDirTxt->GetText(str, 255);
-        str.ToCString(gVerifyDir, (PRInt32)MAX_PATH);
+        str.ToCString(gVerifyDir, (PRInt32)_MAX_PATH);
         if (!strcmp(gVerifyDir,DEBUG_EMPTY)) {
           gVerifyDir[0] = '\0';
         }
@@ -611,10 +615,10 @@ nsEventStatus PR_CALLBACK HandleRobotEvent(nsGUIEvent *aEvent)
 //--------------------------------------------
 //
 //--------------------------------------------
-BOOL CreateRobotDialog(nsIWidget * aParent)
+PRBool CreateRobotDialog(nsIWidget * aParent)
 {
 
-  BOOL result = TRUE;
+  PRBool result = TRUE;
 
   if (mRobotDialog != nsnull) {
     mRobotDialog->Show(PR_TRUE);
@@ -978,10 +982,10 @@ nsEventStatus PR_CALLBACK HandleSiteEvent(nsGUIEvent *aEvent)
 //-----------------------------------------
 //--
 //-----------------------------------------
-BOOL CreateSiteDialog(nsIWidget * aParent)
+PRBool CreateSiteDialog(nsIWidget * aParent)
 {
 
-  BOOL result = TRUE;
+  PRBool result = TRUE;
 
    /* mSiteDialog->Show(PR_TRUE);
     mSiteNextBtn->SetFocus();
