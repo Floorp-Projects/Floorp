@@ -1305,4 +1305,5 @@ ProcessorState::ImportFrame::~ImportFrame()
             delete templList;
         }
     }
+    delete templKeys;
 }

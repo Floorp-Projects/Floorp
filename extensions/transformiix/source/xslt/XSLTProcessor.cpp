@@ -694,7 +694,7 @@ void XSLTProcessor::processInclude(String& aHref,
         return;
     }
     
-    while(iter->hasNext()) {
+    while (iter->hasNext()) {
         if (((String*)iter->next())->isEqual(aHref)) {
             String err("Stylesheet includes itself. URI: ");
             err.append(aHref);
@@ -1203,22 +1203,9 @@ void XSLTProcessor::processAction
                 if (!templateName.isEmpty()) {
                     Element* xslTemplate = ps->getNamedTemplate(templateName);
                     if ( xslTemplate ) {
-                        //-- new code from OG
                         NamedMap* actualParams = processParameters(actionElement, node, ps);
                         processTemplate(node, xslTemplate, ps, actualParams);
                         delete actualParams;
-                        //-- end new code OG
-                        /*
-                          //-- original code
-                        NamedMap params;
-                        params.setObjectDeletion(MB_TRUE);
-                        Stack* bindings = ps->getVariableSetStack();
-                        bindings->push(&params);
-                        processTemplateParams(xslTemplate, node, ps);
-                        processParameters(actionElement, node, ps);
-                        processTemplate(node, xslTemplate, ps);
-                        bindings->pop();
-                        */
                     }
                 }
                 else {
@@ -1800,8 +1787,16 @@ void XSLTProcessor::processTemplate(Node* node, Node* xslTemplate, ProcessorStat
         if (keys) {
             StringListIterator keyIter(keys);
             String* key;
-            while((key = keyIter.next()))
-                localBindings.remove(*key);
+            while((key = keyIter.next())) {
+                VariableBinding *var, *param;
+                var = (VariableBinding*)localBindings.get(*key);
+                param = (VariableBinding*)params->get(*key);
+                if (var && var->getValue() == param->getValue()) {
+                    // Don't delete the contained ExprResult since it's
+                    // not ours
+                    var->setValue(0);
+                }
+            }
         }
         else {
             // out of memory so we can't get the keys
