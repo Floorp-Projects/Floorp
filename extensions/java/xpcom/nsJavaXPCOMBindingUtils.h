@@ -124,7 +124,7 @@ public:
 	nsIInterfaceInfo* InterfaceInfo();
 
 private:
-	nsCOMPtr<nsISupports>      mInstance;
+	nsISupports*               mInstance;
 	nsCOMPtr<nsIInterfaceInfo> mIInfo;
 };
 

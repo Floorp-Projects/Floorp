@@ -45,6 +45,8 @@
 #include "nsIInputStream.h"
 #include "nsEnumeratorUtils.h"
 #include "nsArray.h"
+#include "nsEventQueueUtils.h"
+#include "nsProxyRelease.h"
 
 #define GECKO_NATIVE(func) Java_org_mozilla_xpcom_GeckoEmbed_##func
 #define XPCOM_NATIVE(func) Java_org_mozilla_xpcom_XPCOM_##func
@@ -554,20 +556,16 @@ XPCOM_NATIVE(FinalizeStub) (JNIEnv *env, jclass that, jobject aJavaObject)
 #endif
 
   void* obj = GetMatchingXPCOMObject(env, aJavaObject);
-  RemoveJavaXPCOMBinding(env, aJavaObject, nsnull);
+  NS_ASSERTION(!IsXPTCStub(obj), "Expecting JavaXPCOMInstance, got nsJavaXPTCStub");
+  nsISupports* xpcom_obj = ((JavaXPCOMInstance*)obj)->GetInstance();
 
-  nsISupports* xpcom_obj = nsnull;
-  if (IsXPTCStub(obj)) {
-    GetXPTCStubAddr(obj)->QueryInterface(NS_GET_IID(nsISupports),
-                                         (void**) &xpcom_obj);
-  } else {
-    JavaXPCOMInstance* inst = (JavaXPCOMInstance*) obj;
-    xpcom_obj = inst->GetInstance();
-    // XXX Getting some odd thread issues when calling delete.  Addreffing for
-    //  now to work around the errors.
-//    NS_ADDREF(inst);
-    delete inst;
-  }
-  NS_RELEASE(xpcom_obj);
+  RemoveJavaXPCOMBinding(env, aJavaObject, nsnull);
+  delete (JavaXPCOMInstance*) obj;
+
+  nsCOMPtr<nsIEventQueue> eventQ;
+  nsresult rv = NS_GetMainEventQ(getter_AddRefs(eventQ));
+  if (NS_SUCCEEDED(rv))
+    rv = NS_ProxyRelease(eventQ, xpcom_obj);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to get MainEventQ");
 }
 
