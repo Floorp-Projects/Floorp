@@ -41,7 +41,7 @@ private:
 	
 	static PLHashNumber Hash_HashFunction(const void* key);
 	static PRIntn Hash_CompareNSString(const void* s1, const void* s2);
-	static PRIntn Hash_EnmerateDelete(PLHashEntry *he, PRIntn index, void *arg);
+	static PRIntn Hash_EnmerateDelete(PLHashEntry *he, PRIntn hashIndex, void *arg);
 
 	PLHashTable*	fHashtable;
 	PRUint32		fCategoryCount;
