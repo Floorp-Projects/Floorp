@@ -523,10 +523,12 @@ nsThreadPoolRunnable::nsThreadPoolRunnable(nsThreadPool* pool)
 {
     NS_INIT_REFCNT();
     mPool = pool;
+    NS_ADDREF(pool);
 }
 
 nsThreadPoolRunnable::~nsThreadPoolRunnable()
 {
+    NS_RELEASE(mPool);
 }
 
 NS_IMPL_ISUPPORTS1(nsThreadPoolRunnable, nsIRunnable)

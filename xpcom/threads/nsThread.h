@@ -108,7 +108,7 @@ public:
     virtual ~nsThreadPoolRunnable();
 
 protected:
-    nsCOMPtr<nsThreadPool>      mPool;
+    nsThreadPool*       mPool;
 
 };
 
