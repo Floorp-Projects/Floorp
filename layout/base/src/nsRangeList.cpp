@@ -3320,8 +3320,6 @@ nsDOMSelection::ContainsNode(nsIDOMNode* aNode, PRBool aRecursive, PRBool* aYes)
 nsresult
 nsDOMSelection::GetPresContext(nsIPresContext **aPresContext)
 {
-  nsresult rv = NS_OK;
-
   nsIFocusTracker *tracker = mRangeList->GetTracker();
 
   if (!tracker)
