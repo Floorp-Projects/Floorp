@@ -242,6 +242,14 @@ nsFirstLetterFrame::Reflow(nsIPresContext&          aPresContext,
       kid->SetNextSibling(nsnull);
       mOverflowFrames.SetFrames(nextInFlow);
     }
+    else {
+      nsIFrame* nextSib;
+      kid->GetNextSibling(&nextSib);
+      if (nextSib) {
+        kid->SetNextSibling(nsnull);
+        mOverflowFrames.SetFrames(nextSib);
+      }
+    }
   }
 
   return rv;
@@ -275,7 +283,9 @@ nsFirstLetterFrame::DrainOverflowFrames(nsIPresContext* aPresContext)
 
   // Now repair our first frames style context
   nsIFrame* kid = mFrames.FirstChild();
-  kid->ReResolveStyleContext(aPresContext, mStyleContext,
-                             NS_STYLE_HINT_REFLOW,
-                             nsnull, nsnull);
+  if (kid) {
+    kid->ReResolveStyleContext(aPresContext, mStyleContext,
+                               NS_STYLE_HINT_REFLOW,
+                               nsnull, nsnull);
+  }
 }
