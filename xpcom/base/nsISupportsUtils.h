@@ -744,5 +744,43 @@ CallQueryInterface( nsISupports* aSource, DestinationType** aDestination )
 } // extern "C++"
 
 ////////////////////////////////////////////////////////////////////////////////
+// Macros for checking state and arguments upon entering interface boundaries
+////////////////////////////////////////////////////////////////////////////////
+#if defined(NS_DEBUG)
+
+	#define NS_ENSURE(x, ret) { if(!(x)) { NS_ERROR("Ensure Failed"); return ret; } }
+
+#else // NS_DEBUG
+
+	#define NS_ENSURE(x, ret) {if(!(x)) {return ret; } }
+
+#endif // NS_DEBUG
+
+#define NS_ENSURE_NOT(x, ret) \
+NS_ENSURE(!(x), ret)
+
+#define NS_ENSURE_ARG(arg) \
+NS_ENSURE(arg, NS_ERROR_INVALID_ARG)
+
+#define NS_ENSURE_ARG_POINTER(arg) \
+NS_ENSURE(arg, NS_ERROR_INVALID_POINTER)
+
+#define NS_ENSURE_ARG_MIN(arg, min) \
+NS_ENSURE((arg) >= min, NS_ERROR_INVALID_ARG)
+
+#define NS_ENSURE_ARG_MAX(arg, max) \
+NS_ENSURE((arg) <= min, NS_ERROR_INVALID_ARG)
+
+#define NS_ENSURE_ARG_RANGE(arg, min, max) \
+NS_ENSURE(((arg) >= min) && ((arg) <= max), NS_ERROR_INVALID_ARG)
+
+#define NS_ENSURE_STATE(state) \
+NS_ENSURE(state, NS_ERROR_UNEXPECTED)
+
+#define NS_ENSURE_PROPER_AGGREGATION(outer, iid) \
+NS_ENSURE_NOT(outer && !iid.Equals(NS_GET_IID(nsISupports)), NS_ERROR_INVALID_ARG)
+
+
+////////////////////////////////////////////////////////////////////////////////
 
 #endif /* __nsISupportsUtils_h */
