@@ -3301,6 +3301,36 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
     // Get the geometric parent.
     nsIFrame* parentFrame;
     if ((nsnull == prevSibling) && (nsnull == nextSibling)) {
+
+#ifdef INCLUDE_XUL
+      // Need to (for XUL only) do a special check for the treechildren tag
+      PRInt32 nameSpaceID;
+      if (NS_SUCCEEDED(aContainer->GetNameSpaceID(nameSpaceID)) &&
+          nameSpaceID == nsXULAtoms::nameSpaceID) {
+        // See if we're the treechildren tag.  This tag is treated differently,
+        // since it has no corresponding frame, but may have children that have
+        // frames (the whole hierarchical content model vs. flat table frame model
+        // problem).
+        nsIAtom* tag;
+        aContainer->GetTag(tag);
+        nsString tagName;
+        tag->ToString(tagName);
+        if (tagName == "treechildren")
+        {
+          // Retrieve the parent treeitem, and then obtain its frame.  This is
+          // the prevSibling frame that we should use.
+          nsCOMPtr<nsIContent> parentItem;
+          aContainer->GetParent(*getter_AddRefs(parentItem));
+          
+          shell->GetPrimaryFrameFor(parentItem, &prevSibling);
+          prevSibling->GetParent(&parentFrame);
+        }
+
+        // XXX: Optimize for the lazy frame instantiation case. Need to bail
+        // if our frame isn't visible
+      }
+#endif // INCLUDE_XUL
+
       // No previous or next sibling so treat this like an appended frame.
       // XXX This won't always be true if there's auto-generated before/after
       // content
