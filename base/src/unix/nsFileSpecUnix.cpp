@@ -319,7 +319,7 @@ nsresult nsFileSpec::Execute(const char* inArgs ) const
 //----------------------------------------------------------------------------------------
 nsDirectoryIterator::nsDirectoryIterator(
     const nsFileSpec& inDirectory
-,    int inIterateDirection)
+,   int /*inIterateDirection*/)
 //----------------------------------------------------------------------------------------
     : mCurrent(inDirectory)
     , mExists(PR_FALSE)
