@@ -30,6 +30,10 @@
 #include "nsIRDFService.h"
 #include "nsIRDFRemoteDataSource.h"
 
+#include "nsSpecialSystemDirectory.h"
+#include "nsNetUtil.h"
+#include "nsIChromeRegistry.h"
+
 #include "nsIFileSpec.h"
 #include "nsFileLocations.h"
 #include "nsIFileLocator.h"
@@ -38,6 +42,69 @@ static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFCompositeDataSourceCID, NS_RDFCOMPOSITEDATASOURCE_CID);
 static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID, NS_RDFXMLDATASOURCE_CID);
+static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
+static NS_DEFINE_CID(kChromeRegistryCID, NS_CHROMEREGISTRY_CID);
+static NS_DEFINE_CID(kFileSpecCID, NS_FILESPEC_CID);
+
+//----------------------------------------------------------------------------------------
+static nsresult GetConvertedChromeURL(const char* uriStr, nsIFileSpec* *outSpec)
+//----------------------------------------------------------------------------------------
+{
+
+  nsresult rv;
+    
+  nsCOMPtr<nsIURI> uri;
+  uri = do_CreateInstance(kStandardUrlCID);
+  uri->SetSpec(uriStr);
+  if (NS_FAILED(rv)) return rv;
+  
+  nsCOMPtr<nsIChromeRegistry> chromeRegistry =
+      do_GetService(kChromeRegistryCID, &rv);
+
+  nsXPIDLCString newSpec;  
+  if (NS_SUCCEEDED(rv)) {
+
+      rv = chromeRegistry->ConvertChromeURL(uri, getter_Copies(newSpec));
+      if (NS_FAILED(rv))
+          return rv;
+  }
+  const char *urlSpec = newSpec;
+  uri->SetSpec(urlSpec);
+
+  /* won't deal remote URI yet */
+  nsString fileStr; fileStr.AssignWithConversion("file");
+  nsString resStr; resStr.AssignWithConversion("res");
+  nsString resoStr; resoStr.AssignWithConversion("resource");
+  
+  char *uriScheme = nsnull;
+  uri->GetScheme(&uriScheme);
+  nsString tmpStr; tmpStr.AssignWithConversion(uriScheme);
+   
+  NS_ASSERTION(((tmpStr == fileStr) || (tmpStr == resStr) || (tmpStr == resoStr)), "won't deal remote URI yet! \n");
+   
+  if ((tmpStr != fileStr)) {
+       /* resolve to fileURL */
+       nsSpecialSystemDirectory dir(nsSpecialSystemDirectory::Moz_BinDirectory);
+       nsFileURL fileURL(dir); // file:///moz_0511/mozilla/...
+       
+       char *uriPath = nsnull;
+       uri->GetPath(&uriPath);
+       fileURL += uriPath;
+       urlSpec = fileURL.GetURLString();
+  }
+
+  nsCOMPtr<nsIFileSpec> dataFilesDir = do_GetService(kFileSpecCID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  *outSpec = dataFilesDir;
+  NS_ADDREF(*outSpec);
+
+  return dataFilesDir->SetURLString(urlSpec);
+}
+
+//========================================================================================
+// Implementation of nsMsgServiceProviderService
+//========================================================================================
 
 nsMsgServiceProviderService::nsMsgServiceProviderService()
 {
@@ -64,14 +131,9 @@ nsMsgServiceProviderService::Init()
 
   nsCOMPtr<nsIFileLocator> locator = do_GetService(kFileLocatorCID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
-  
-  nsCOMPtr<nsIFileSpec> dataFilesDir;
-  rv = locator->GetFileLocation(nsSpecialFileSpec::App_DefaultsFolder50,
-                                getter_AddRefs(dataFilesDir));
-  NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = dataFilesDir->AppendRelativeUnixPath("isp");
-  NS_ENSURE_SUCCESS(rv,rv);
+  nsCOMPtr<nsIFileSpec> dataFilesDir;
+  rv = GetConvertedChromeURL("chrome://messenger/locale/isp/", getter_AddRefs(dataFilesDir));
 
   // now enumerate every file in the directory, and suck it into the datasource
 
@@ -94,7 +156,7 @@ nsMsgServiceProviderService::Init()
     nsXPIDLCString url;
     ispFile->GetURLString(getter_Copies(url));
     
-#ifdef DEBUG_alecf
+#if defined(DEBUG_alecf) || defined(DEBUG_tao)
     printf("nsMsgServiceProvider: reading %s\n", (const char*)url);
 #endif
 
