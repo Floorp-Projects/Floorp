@@ -37,11 +37,7 @@ class nsIStyleSet;
 class nsIStyleSheet;
 class nsIStyleRule;
 class nsIURI;
-#ifdef NECKO
 class nsILoadGroup;
-#else
-class nsILoadGroup;
-#endif
 class nsIViewManager;
 class nsString;
 class nsIScriptContextOwner;
