@@ -882,9 +882,7 @@ var nsColorPropertiesCommand =
   },
   doCommand: function(aCommand)
   {
-    window.openDialog("chrome://editor/content/EdColorProps.xul","_blank", "chrome,close,titlebar,modal", "", 
-                       GetDefaultBrowserColors());
-
+    window.openDialog("chrome://editor/content/EdColorProps.xul","_blank", "chrome,close,titlebar,modal", ""); 
     window._content.focus();
   }
 };

@@ -28,6 +28,7 @@
 <!ENTITY defaultColorsRadio.tooltip "Use the color settings from the viewer (reader's) browser only">
 <!ENTITY customColorsRadio.label "Use custom colors:">
 <!ENTITY customColorsRadio.tooltip "These color settings override the viewer's browser settings">
+
 <!ENTITY normalText.label "Normal text">
 <!ENTITY linkText.label "Link text">
 <!ENTITY activeLinkText.label "Active link text">

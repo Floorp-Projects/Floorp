@@ -37,9 +37,9 @@ var NoDefault = false;
 // dialog initialization code
 function Startup()
 {
-  if (!InitEditorShell() || !window.arguments[1])
+  if (!window.arguments[1])
   {
-    dump("EdColorPicker: Failed to get EditorShell or arguments[1]\n");
+    dump("EdColorPicker: Missing color object param\n");
     return;
   }
 

@@ -39,8 +39,9 @@
   <script language="JavaScript" src="chrome://communicator/content/pref/prefutilities.js"></script>
 
   <script language="JavaScript">
+  <!-- Add "shouldAutoSave", "autoSaveAmount" to _elementIDs when implemented -->
   <![CDATA[
-    _elementIDs = ["maintainTableStructure", "tableDeleteKey", "preserveFormatting", "recentFiles", "shouldAutoSave", "autoSaveAmount"];
+    _elementIDs = ["maintainTableStructure", "tableDeleteKey", "preserveFormatting", "recentFiles"];
   ]]>
   </script>        
         
@@ -70,34 +71,30 @@
 <!-- HTML formatting on output -->
 	<titledbox orient="vertical">
     <title value="&savingFiles.title;"/>
-    <box align="horizontal" valign="middle">
-      <checkbox 
-        value      = "&preserveExistingFormatting;"
-        id         = "preserveFormatting" 
-        tooltip    = "aTooltip" tooltiptext="&preserveExistingFormatting.tooltip;"
-        pref       = "true" 
-        preftype   = "bool" 
-        prefstring = "editor.prettyprint"
-        prefattribute="checked"
-      />
-    </box>
+    <checkbox 
+      value      = "&preserveExistingFormatting;"
+      id         = "preserveFormatting" 
+      tooltip    = "aTooltip" tooltiptext="&preserveExistingFormatting.tooltip;"
+      pref       = "true" 
+      preftype   = "bool" 
+      prefstring = "editor.prettyprint"
+      prefattribute="checked"
+    />
 	</titledbox>
 	
   <titledbox orient="vertical" autostretch="never">
     <title value="&tableEditing.label;"/>
-      <checkbox 
-        value     = "&maintainTableStructure.label;"
-        id        = "maintainTableStructure" 
-        accesskey = "&maintainStructure.accesskey;"
-        tooltip   = "aTooltip" tooltiptext="&maintainTableStructure.tooltip;"
-        pref      = "true"
-        preftype  = "bool"
-        prefstring= "editor.table.maintain_structure"
-        prefattribute="checked"
-      />
-              
+    <checkbox 
+      value     = "&maintainTableStructure.label;"
+      id        = "maintainTableStructure" 
+      accesskey = "&maintainStructure.accesskey;"
+      tooltip   = "aTooltip" tooltiptext="&maintainTableStructure.tooltip;"
+      pref      = "true"
+      preftype  = "bool"
+      prefstring= "editor.table.maintain_structure"
+      prefattribute="checked"
+    />
     <separator class = "thin"/>
-              
     <box autostretch="never" valign="top">
       <text class="label"
         value="&pressingTheDeleteKey.label;" 
@@ -117,7 +114,6 @@
   </titledbox>
 
 <!-- Take out Auto-Save; not supported at this time
-  -->
 	<titledbox orient="vertical">
     <title value="&saving;"/>
     <box align="horizontal" valign="middle">
@@ -144,6 +140,7 @@
       <text value="&minText;" />
     </box>
 	</titledbox>
+-->
 
 <!-- External Editors are not supported at this time
 		<titledbox orient="vertical">

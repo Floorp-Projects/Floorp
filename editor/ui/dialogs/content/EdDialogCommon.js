@@ -42,6 +42,7 @@ var gOutputWrap          = 32;
 var gOutputFormatFlowed  = 64;
 var gOutputAbsoluteLinks = 128;
 var gOutputEncodeEntities = 256;
+var gStringBundle;
 
 // Use for 'defaultIndex' param in InitPixelOrPercentMenulist
 var gPixel = 0;
@@ -136,7 +137,22 @@ function ShowInputErrorMessage(message)
 
 function GetString(name)
 {
-  return editorShell.GetString(name);
+  if (editorShell)
+  {
+    return editorShell.GetString(name);
+  }
+  else
+  {
+    // Non-editors (like prefs) may use these methods
+    if (!gStringBundle)
+    {
+      gStringBundle = srGetStrBundle("chrome://editor/locale/editor.properties");
+      if (!gStringBundle)
+        return null;
+    }
+    return gStringBundle.GetStringFromName(name);
+  }
+  return null;
 }
 
 function TrimStringLeft(string)
@@ -773,7 +789,7 @@ const nsIFilePicker = Components.interfaces.nsIFilePicker;
 function GetLocalFileURL(filterType)
 {
   var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
-  fp.init(window, editorShell.GetString("OpenHTMLFile"), nsIFilePicker.modeOpen);
+  fp.init(window, GetString("OpenHTMLFile"), nsIFilePicker.modeOpen);
 
   if (filterType == "img")
     fp.appendFilters(nsIFilePicker.filterImages);
@@ -954,4 +970,34 @@ function onCancel()
 {
   SaveWindowLocation();
   window.close();
+}
+
+function GetDefaultBrowserColors()
+{
+  var prefs = GetPrefs();
+  var colors = new Object();
+  var useWinColors = false;
+  if (navigator.appVersion.indexOf("Win") != -1)
+  {
+    // In Windows only, there's a pref to use system colors instead of pref colors
+    try { useWinColors = prefs.GetBoolPref("browser.display.wfe.use_windows_colors"); } catch (e) {}
+  }
+
+  if (!useWinColors)
+  {
+    try { colors.TextColor = prefs.CopyCharPref("browser.display.foreground_color"); } catch (e) {}
+
+    try { colors.BackgroundColor = prefs.CopyCharPref("browser.display.background_color"); } catch (e) {}
+  }
+  // Use OS colors for text and background if explicitly asked or pref is not set
+  if (!colors.TextColor)
+    colors.TextColor = "windowtext";
+  
+  if (!colors.BackgroundColor)
+    colors.BackgroundColor = "window";
+
+  colors.LinkColor = prefs.CopyCharPref("browser.anchor_color");
+  colors.VisitedLinkColor = prefs.CopyCharPref("browser.visited_color");
+
+  return colors;
 }

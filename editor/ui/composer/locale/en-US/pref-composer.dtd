@@ -17,7 +17,7 @@
 <!ENTITY  pressingTheDeleteKey.tooltip          "Assign an action to the Delete key for table editing purposes">
 <!ENTITY  deleteCell.label                      "Removes the entire cell">
 <!ENTITY  deleteCell.accesskey                  "r">
-<!ENTITY  deleteContent.label                   "Removes the cells' contents">
+<!ENTITY  deleteContent.label                   "Removes the cell's contents">
 <!ENTITY  deleteContent.accesskey               "c">
 
 <!ENTITY  savingFiles.title           "When Saving Files">

@@ -153,7 +153,7 @@
 
       <!-- CELL PANEL -->
     	<box id="CellPanel" orient="vertical">
-        <titledbox autostretch="never" valign="top">
+        <titledbox autostretch="never" valign="middle">
           <title value="&cellSelection.label;"/>
           <box orient="vertical">
             <menulist id="SelectionList" oncommand="ChangeSelection(event.target.data)" flex="1">
@@ -171,26 +171,25 @@
           </box>
           <spring class="bigspacer"/>
           <box orient="vertical" flex="1">
-            <checkbox class="wrap" style="width: 1em" value="&cellApplyBeforeMove.label;" id="ApplyBeforeMove" checked="true" persist="checked"/>
-<!--
-            <checkbox value="&cellKeepCurrentData.label;" id="KeepCurrentData" persist="checked"/>
--->
+            <text class="label" value="&applyBeforeChange1.label;"/>
+            <text class="label" value="&applyBeforeChange2.label;"/>
           </box>
         </titledbox>
+
         <!-- cell size titledbox -->
         <titledbox><title align="left" value="&size.label;"/>
           <grid>
             <columns><column/><column/><column/></columns>
             <rows>
               <row valign="middle" autostretch="never">
-                <text class="label" value="&tableHeight.label;"/>
-                <textfield class="narrow" id="CellHeightInput" onkeyup="ChangeCellTextfield(this.id);"/>
-                <menulist id="CellHeightUnits" oncommand="ChangeCellData();"/>
+                <checkbox id="CellHeightCheckbox" value="&tableHeight.label;"/>
+                <textfield class="narrow" id="CellHeightInput" onkeyup="ChangeIntTextfield(this.id,'CellHeightCheckbox');"/>
+                <menulist id="CellHeightUnits" oncommand="SetCheckbox('CellHeightCheckbox');"/>
               </row>
               <row valign="middle" autostretch="never">
-                <text class="label" value="&tableWidth.label;"/>
-                <textfield class="narrow" id="CellWidthInput" onkeyup="ChangeCellTextfield(this.id);"/>
-                <menulist id="CellWidthUnits" oncommand="ChangeCellData();"/>
+                <checkbox id="CellWidthCheckbox" value="&tableWidth.label;"/>
+                <textfield class="narrow" id="CellWidthInput" onkeyup="ChangeIntTextfield(this.id,'CellWidthCheckbox');"/>
+                <menulist id="CellWidthUnits" oncommand="SetCheckbox('CellWidthCheckbox');"/>
               </row>
             </rows>
           </grid>
@@ -199,12 +198,12 @@
             <columns><column/><column/></columns>
             <rows>
               <row valign="middle" autostretch="never">
-                <text class="label" value="&cellRowSpan.label;"/>
-                <textfield class="narrow" id="RowSpanInput" onkeyup="ChangeCellTextfield(this.id);"/>
+                <checkbox id="RowSpanCheckbox" value="&cellRowSpan.label;"/>
+                <textfield class="narrow" id="RowSpanInput" onkeyup="ChangeIntTextfield(this.id,'RowSpanCheckbox');"/>
               </row>
               <row valign="middle" autostretch="never">
-                <text class="label" value="&cellColSpan.label;"/>
-                <textfield class="narrow" id="ColSpanInput" onkeyup="ChangeCellTextfield(this.id);"/>
+                <checkbox id="ColSpanCheckbox" value="&cellColSpan.label;"/>
+                <textfield class="narrow" id="ColSpanInput" onkeyup="ChangeIntTextfield(this.id,'ColSpanCheckbox');"/>
               </row>
             </rows>
           </grid>
@@ -213,7 +212,7 @@
         <!-- Alignment -->
         <titledbox valign="middle" autostretch="never">
           <title value="&cellContentAlignment.label;"/>
-          <text class="label" value="&cellHorizontal.label;"/>
+          <checkbox id="CellHAlignCheckbox" value="&cellHorizontal.label;"/>
           <menulist id="CellHAlignList"  oncommand="SelectCellHAlign()">
             <menupopup>
               <menuitem value="&AlignLeft.label;"        data="left"/>
@@ -224,12 +223,14 @@
             </menupopup>
           </menulist>
           <box style="width: 5em min-width: 5em">
-            <!-- We collapse this if not needed, so box preserves space -->
-            <textfield id="CellAlignCharInput" style="width: 2em"/>
+            <!-- We collapse this if not needed, so box preserves space 
+                 XXX doesn't work! collapse/uncollapse causes relayout
+            -->
+            <textfield id="CellAlignCharInput" style="width: 2em" collapsed="true"/>
           </box>
-          <spring flex="1"/>
-          <text class="label" value="&cellVertical.label;"/>
-          <menulist id="CellVAlignList" oncommand="ChangeCellData();">
+          <spring class="spacer"/>
+          <checkbox id="CellVAlignCheckbox" value="&cellVertical.label;"/>
+          <menulist id="CellVAlignList" oncommand="SetCheckbox('CellVAlignCheckbox');">
             <menupopup>
               <menuitem value="&cellAlignTop.label;"    data="top"/>
               <menuitem value="&cellAlignMiddle.label;" data="middle"/>
@@ -240,16 +241,25 @@
         <spring class="spacer"/>
         
         <box valign="middle" autostretch="never">
-          <spring class="spacer"/>
-          <checkbox id="HeaderCheck" value="&cellHeader.label;"/>
+          <checkbox id="CellStyleCheckbox" value="&cellStyle.label;"/>
+          <menulist id="CellStyleList" oncommand="SetCheckbox('CellStyleCheckbox');">
+            <menupopup>
+              <menuitem value="&cellNormal.label;" data="td"/>
+              <menuitem value="&cellHeader.label;" data="th"/>
+            </menupopup>
+          </menulist>
           <spring class="bigspacer"/>
-          <spring class="bigspacer"/>
-          <checkbox id="NoWrapCheck"  value="&cellNoWrap.label;"/>
+          <checkbox id="TextWrapCheckbox" value="&cellTextWrap.label;"/>
+          <menulist id="TextWrapList" oncommand="SetCheckbox('TextWrapCheckbox');">
+            <menupopup>
+              <menuitem value="&cellWrap.label;" data="wrap"/>
+              <menuitem value="&cellNoWrap.label;" data="nowrap"/>
+            </menupopup>
+          </menulist>
         </box>
-
         <separator class="groove"/>
         <box valign="middle" autostretch="never">
-          <text class="label" value="&backgroundColor.label;"/>
+          <checkbox id="CellColorCheckbox" value="&backgroundColor.label;"/>
           <stack>
             <button class="dialog color-button" onclick="GetColorAndUpdate('cellBackgroundCW')" flex="1"/>
     	      <box autostretch="never" valign="middle" mousethrough="always">
@@ -263,11 +273,11 @@
         </box>
         <separator class="groove"/>
         <box autostretch="never">
+          <html  class="wrap" flex="1" style="width: 1em">&cellUseCheckboxHelp.label;</html>
           <!-- From EdDialogOvlerlay.xul -->
-          <spring flex="1"/>
           <button class="dialog" id="AdvancedEditButton2"/>
         </box>
-        <spring class="spacer"/>
+        <spring flex="1"/>
       </box><!-- Cell Panel -->
 
     </tabpanel> 

@@ -439,7 +439,7 @@ function onOK()
       {
         // Append the link text as the last child node 
         //   of the anchor node
-        textNode = editorShell.editorDocument.createTextNode(newLinkText);
+        var textNode = editorShell.editorDocument.createTextNode(newLinkText);
         if (textNode)
           anchorElement.appendChild(textNode);
         try {

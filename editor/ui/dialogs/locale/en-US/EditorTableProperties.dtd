@@ -49,19 +49,28 @@
 <!ENTITY cellSelectPrevious.label         "Previous">
 <!ENTITY cellApplyBeforeMove.label        "Apply changes before changing selection">
 <!ENTITY cellKeepCurrentData.label        "Keep current settings">
+<!-- LOCALIZATION NOTE Next 2 form 1 sentence (we don't want to use HTML tag to wrap) -->
+<!ENTITY applyBeforeChange1.label         "Current changes will be applied">
+<!ENTITY applyBeforeChange2.label         "before changing the selection.">
 <!ENTITY cellRowSpan.label                "Row Span:">
 <!ENTITY cellColSpan.label                "Column Span:">
 <!ENTITY cellContentAlignment.label       "Content Alignment">
 <!ENTITY cellHorizontal.label             "Horizontal:">
 <!ENTITY cellVertical.label               "Vertical:">
-<!ENTITY cellHeader.label                 "Header style">
-<!ENTITY cellNoWrap.label                 "Don't wrap text">
+<!ENTITY cellStyle.label                  "Cell Style:">
+<!ENTITY cellNormal.label                 "Normal">
+<!ENTITY cellHeader.label                 "Header">
+<!ENTITY cellTextWrap.label               "Text Wrap:">
+<!ENTITY cellWrap.label                   "Wrap">
+<!ENTITY cellNoWrap.label                 "Don't wrap">
 <!ENTITY cellAlignTop.label               "Top">
 <!ENTITY cellAlignMiddle.label            "Middle">
 <!ENTITY cellAlignBottom.label            "Bottom">
 <!ENTITY cellAlignJustify.label           "Justify">
 <!ENTITY cellAlignAtChar.label            "At Character:">
 <!ENTITY cellInheritColor.label           "(Let table color show through)">
+<!-- Don't translate <html:br/> -->
+<!ENTITY cellUseCheckboxHelp.label        "Use checkboxes to determine which properties<html:br/>are applied to all selected cells">
 
 <!-- Used in both Table and Cell panels  -->
 <!ENTITY size.label                       "Size">
