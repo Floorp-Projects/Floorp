@@ -116,7 +116,7 @@
     var local_name = target.localName;
 
     if (local_name) {
-      local_name.toLowerCase();
+      local_name = local_name.toLowerCase();
     }
 
     switch (local_name) {
