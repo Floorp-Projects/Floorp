@@ -207,16 +207,11 @@ function unifinderMouseDownToDo( event )
    var ThisToDo = getToDoFromEvent( event );
    if( ThisToDo ) 
    {
-      if(event.button == 2)
-         treechildren.setAttribute("context", "taskitem-context-menu")
-
       // TODO HACK notifiers should be rewritten to integrate events and todos
       document.getElementById( "delete_todo_command" ).removeAttribute( "disabled" );
       document.getElementById( "print_command" ).setAttribute( "disabled", "true" );
    } else
    {
-      if(event.button == 2)
-          treechildren.setAttribute("context", "context-menu");
       tree.view.selection.clearSelection();
 
       // TODO HACK notifiers should be rewritten to integrate events and todos
@@ -614,10 +609,13 @@ function changeToolTipTextForToDo( event )
 
 function changeContextMenuForToDo( event )
 {
+   if (event.target.id != "taskitem-context-menu")
+     return;
+
    var toDoItem = getToDoFromEvent( event );
-   
    if( toDoItem )
    {
+      document.getElementById("is_editable").removeAttribute("disabled");
       var liveList = document.getElementById( "taskitem-context-menu" ).getElementsByAttribute( "checked", "true" );
       // Delete in reverse order.  Moz1.8+ getElementsByAttribute list is
       // 'live', so when attribute is deleted the indexes of later elements
@@ -636,6 +634,8 @@ function changeContextMenuForToDo( event )
       {
          document.getElementById( "priority-"+toDoItem.priority+"-menuitem" ).setAttribute( "checked", "true" );
       }
+   } else {
+      document.getElementById("is_editable").setAttribute("disabled", "true");
    }
 }
 

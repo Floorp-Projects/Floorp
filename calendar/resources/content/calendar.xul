@@ -301,18 +301,10 @@
             persist="checked"
             disabled="true"/>
 
-<!--
-  <menuitem label="test" observes="change_display_todo_in_view"  checked="true"/>
--->   
-
   <menuseparator/>
   <menuitem label="&calendar.context.emailevent.label;"
             accesskey="&calendar.context.emailevent.accesskey;"
             observes="send_event_command"/>
-  <!--
-  <menuseparator/>
-  <menuitem label="&calendar.context.reload.label;" accesskey="&calendar.context.reload.accesskey;" oncommand="window.location = 'chrome://calendar/content/calendar.xul';"/>
-  -->
 </popup>
 
 <!-- TASK ITEM CONTEXT MENU -->
@@ -327,7 +319,8 @@
             accesskey="&calendar.context.deletetask.accesskey;"
             observes="delete_todo_command"/>
   <menu label="&calendar.context.progress.label;"
-        accesskey="&calendar.context.progress.accesskey;">
+        accesskey="&calendar.context.progress.accesskey;"
+        observes="is_editable">
     <menupopup>
       <menuitem type="checkbox"
                 id="percent-0-menuitem"
@@ -357,7 +350,8 @@
     </menupopup>
   </menu>
   <menu label="&calendar.context.priority.label;"
-        accesskey="&calendar.context.priority.accesskey;">
+        accesskey="&calendar.context.priority.accesskey;"
+        observes="is_editable">
     <menupopup>
       <menuitem type="checkbox"
                 id="priority-0-menuitem"
@@ -545,18 +539,20 @@
                     oncommand="toDoUnifinderRefresh( event )"
                     persist="checked"/>
         </box>
-        <tree id="unifinder-todo-tree" flex="1" enableColumnDrag="false" ondblclick="modifyToDoCommand( event )">
+        <tree id="unifinder-todo-tree" flex="1" enableColumnDrag="false" 
+              ondblclick="modifyToDoCommand( event )"
+              context="taskitem-context-menu">
           <treecols id="unifinder-todo-tree-cols">
             <treecol id="unifinder-todo-tree-col-completed"
                      persist="hidden ordinal width sortDirection sortActive" width="18" cycler="true"
                      label="&calendar.unifinder.tree.done.label;">
-              <image id="checkboximg" contextmenu="taskitem-context-menu"/>
+              <image id="checkboximg" />
             </treecol>
             <splitter class="tree-splitter"/>
             <treecol id="unifinder-todo-tree-col-priority" 
                      persist="hidden ordinal width sortDirection sortActive" width="18" 
                      label="&calendar.unifinder.tree.priority.label;">
-              <image id="priorityimg" contextmenu="taskitem-context-menu"/>
+              <image id="priorityimg"/>
             </treecol>
             <splitter class="tree-splitter"/>
             <treecol id="unifinder-todo-tree-col-title"
@@ -590,8 +586,7 @@
           </treecols>
        
           <treechildren tooltip="taskTooltip"
-                        onmousedown="unifinderMouseDownToDo( event )"
-                        context="taskitem-context-menu"/>
+                        onmousedown="unifinderMouseDownToDo( event )"/>
         </tree>
       </vbox>
     </vbox>
