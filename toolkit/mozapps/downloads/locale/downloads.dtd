@@ -28,6 +28,7 @@
 <!ENTITY cmd.info.commandKey              "i">
 
 <!ENTITY cmd.close.commandKey             "w">
+<!ENTITY cmd.close2.commandKey            "y">
 <!ENTITY cmd.cleanUp.label                "Clean Up">
 <!ENTITY cmd.cleanUp.tooltip              "Removes completed, canceled and failed downloads from the list">
 <!ENTITY cmd.cleanUp.accesskey            "a">

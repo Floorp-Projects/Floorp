@@ -75,8 +75,10 @@
     
   <keyset id="downloadKeys">
     <key id="key_cleanUp" keycode="VK_DELETE" command="cmd_cleanUp" modifiers="accel,shift"/>
-    <key id="key_close"   key="&cmd.close.commandKey;" oncommand="closeWindow(true);"     modifiers="accel"/>
-    <key id="key_info"    key="&cmd.info.commandKey;"  oncommand="onDownloadShowInfo();"  modifiers="accel"/>
+    <key id="key_close"   key="&cmd.close.commandKey;"  oncommand="closeWindow(true);"    modifiers="accel"/>
+    <key id="key_close2"  key="&cmd.close2.commandKey;" oncommand="closeWindow(true);"    modifiers="accel"/>
+    <key                  keycode="VK_ESCAPE"           oncommand="closeWindow(true);"/>
+    <key id="key_info"    key="&cmd.info.commandKey;"   oncommand="onDownloadShowInfo();" modifiers="accel"/>
   </keyset>
   
   <vbox id="contextMenuPalette" hidden="true">
