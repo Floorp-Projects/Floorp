@@ -973,12 +973,30 @@ PRStatus gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
                 GETN(2,gif_extension);
                 break;
             }
-                        
-            if (*q!=',') /* invalid start character */
+ 
+            /* If we get anything other than ',' (image separator), '!'
+             * (extension), or ';' (trailer), there is extraneous data
+             * between blocks. The GIF87a spec tells us to keep reading
+             * until we find an image separator, but GIF89a says such
+             * a file is corrupt. We follow GIF89a and bail out. */
+            if (*q!=',')
             {
                 //ILTRACE(2,("il:gif: bogus start character 0x%02x",
                 //           (int)*q));
-                gs->state=gif_error;
+                if (gs->images_decoded > 0)
+                {
+                    /* The file is corrupt, but one or more images have
+                     * been decoded correctly. In this case, we proceed
+                     * as if the file were correctly terminated and set
+                     * the state to gif_done, so the GIF will display.
+                     */
+                    gs->state = gif_done;
+                }
+                else
+                {
+                    /* No images decoded, there is nothing to display. */
+                    gs->state = gif_error;
+                }
                 break;
             }
             else
