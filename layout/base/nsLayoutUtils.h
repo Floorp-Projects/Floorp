@@ -164,14 +164,23 @@ public:
   static PRBool IsProperAncestorFrame(nsIFrame* aAncestorFrame, nsIFrame* aFrame,
                                       nsIFrame* aCommonAncestor = nsnull);
 
+  static nsPresContext::ScrollbarStyles
+    ScrollbarStylesOfView(nsIScrollableView *aScrollableView);
+
   /**
    * GetNearestScrollingView locates the first ancestor of aView (or
-   * aView itself) that is scrollable.
+   * aView itself) that is scrollable.  It does *not* count an
+   * 'overflow' style of 'hidden' as scrollable, even though a scrolling
+   * view is present.  Thus, the direction of the scroll is needed as
+   * an argument.
    *
    * @param  aView the view we're looking at
+   * @param  aDirection Whether it's for horizontal or vertical scrolling.
    * @return the nearest scrollable view or nsnull if not found
    */
-  static nsIScrollableView* GetNearestScrollingView(nsIView* aView);
+  enum Direction { eHorizontal, eVertical, eEither };
+  static nsIScrollableView* GetNearestScrollingView(nsIView* aView,
+                                                    Direction aDirection);
 
   /**
    * HasPseudoStyle returns PR_TRUE if aContent (whose primary style

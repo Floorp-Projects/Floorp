@@ -5243,7 +5243,8 @@ nsTypedSelection::ScrollPointIntoClipView(nsPresContext *aPresContext, nsIView *
   // Get aView's scrollable view.
   //
 
-  nsIScrollableView *scrollableView = nsLayoutUtils::GetNearestScrollingView(aView);
+  nsIScrollableView *scrollableView =
+    nsLayoutUtils::GetNearestScrollingView(aView, nsLayoutUtils::eEither);
 
   if (!scrollableView)
     return NS_OK; // Nothing to do!
@@ -5287,25 +5288,33 @@ nsTypedSelection::ScrollPointIntoClipView(nsPresContext *aPresContext, nsIView *
   //
 
   nscoord dx = 0, dy = 0;
-  nsPoint ePoint = aPoint;
 
-  ePoint.x += viewOffset.x;
-  ePoint.y += viewOffset.y;
+  nsPresContext::ScrollbarStyles ss =
+    nsLayoutUtils::ScrollbarStylesOfView(scrollableView);
+
+  if (ss.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN) {
+    nscoord e = aPoint.x + viewOffset.x;
   
-  nscoord x1 = bounds.x;
-  nscoord x2 = bounds.x + bounds.width;
-  nscoord y1 = bounds.y;
-  nscoord y2 = bounds.y + bounds.height;
+    nscoord x1 = bounds.x;
+    nscoord x2 = bounds.x + bounds.width;
 
-  if (ePoint.x < x1)
-    dx = ePoint.x - x1;
-  else if (ePoint.x > x2)
-    dx = ePoint.x - x2;
-      
-  if (ePoint.y < y1)
-    dy = ePoint.y - y1;
-  else if (ePoint.y > y2)
-    dy = ePoint.y - y2;
+    if (e < x1)
+      dx = e - x1;
+    else if (e > x2)
+      dx = e - x2;
+  }
+
+  if (ss.mVertical != NS_STYLE_OVERFLOW_HIDDEN) {
+    nscoord e = aPoint.y + viewOffset.y;
+
+    nscoord y1 = bounds.y;
+    nscoord y2 = bounds.y + bounds.height;
+
+    if (e < y1)
+      dy = e - y1;
+    else if (e > y2)
+      dy = e - y2;
+  }
 
   //
   // Now clip the scroll amounts so that we don't scroll
@@ -5326,7 +5335,7 @@ nsTypedSelection::ScrollPointIntoClipView(nsPresContext *aPresContext, nsIView *
       dx = 0;
     else if (dx > 0)
     {
-      x1 = scrollX + dx + bounds.width;
+      nscoord x1 = scrollX + dx + bounds.width;
 
       if (x1 > docWidth)
         dx -= x1 - docWidth;
@@ -5337,7 +5346,7 @@ nsTypedSelection::ScrollPointIntoClipView(nsPresContext *aPresContext, nsIView *
       dy = 0;
     else if (dy > 0)
     {
-      y1 = scrollY + dy + bounds.height;
+      nscoord y1 = scrollY + dy + bounds.height;
 
       if (y1 > docHeight)
         dy -= y1 - docHeight;
@@ -5420,7 +5429,8 @@ nsTypedSelection::ScrollPointIntoView(nsPresContext *aPresContext, nsIView *aVie
     // Find aView's parent scrollable view.
     //
 
-    nsIScrollableView *scrollableView = nsLayoutUtils::GetNearestScrollingView(aView);
+    nsIScrollableView *scrollableView =
+      nsLayoutUtils::GetNearestScrollingView(aView, nsLayoutUtils::eEither);
 
     if (scrollableView)
     {
@@ -5442,7 +5452,9 @@ nsTypedSelection::ScrollPointIntoView(nsPresContext *aPresContext, nsIView *aVie
 
         while (view)
         {
-          scrollableView = nsLayoutUtils::GetNearestScrollingView(view);
+          scrollableView =
+            nsLayoutUtils::GetNearestScrollingView(view,
+                                                   nsLayoutUtils::eEither);
 
           if (!scrollableView)
             break;
@@ -6886,7 +6898,8 @@ nsTypedSelection::GetSelectionRegionRectAndScrollableView(SelectionRegion aRegio
 
   nsIView* view = parentWithView->GetView();
 
-  *aScrollableView = nsLayoutUtils::GetNearestScrollingView(view);
+  *aScrollableView =
+    nsLayoutUtils::GetNearestScrollingView(view, nsLayoutUtils::eEither);
 
   if (!*aScrollableView)
     return NS_OK;
@@ -7049,47 +7062,54 @@ nsTypedSelection::ScrollRectIntoView(nsIScrollableView *aScrollableView,
   nscoord scrollOffsetX = visibleRect.x;
   nscoord scrollOffsetY = visibleRect.y;
 
+  nsPresContext::ScrollbarStyles ss =
+    nsLayoutUtils::ScrollbarStylesOfView(aScrollableView);
+
   // See how aRect should be positioned vertically
-  if (NS_PRESSHELL_SCROLL_ANYWHERE == aVPercent) {
-    // The caller doesn't care where aRect is positioned vertically,
-    // so long as it's fully visible
-    if (aRect.y < visibleRect.y) {
-      // Scroll up so aRect's top edge is visible
-      scrollOffsetY = aRect.y;
-    } else if (aRect.YMost() > visibleRect.YMost()) {
-      // Scroll down so aRect's bottom edge is visible. Make sure
-      // aRect's top edge is still visible
-      scrollOffsetY += aRect.YMost() - visibleRect.YMost();
-      if (scrollOffsetY > aRect.y) {
+  if (ss.mVertical != NS_STYLE_OVERFLOW_HIDDEN) {
+    if (NS_PRESSHELL_SCROLL_ANYWHERE == aVPercent) {
+      // The caller doesn't care where aRect is positioned vertically,
+      // so long as it's fully visible
+      if (aRect.y < visibleRect.y) {
+        // Scroll up so aRect's top edge is visible
         scrollOffsetY = aRect.y;
+      } else if (aRect.YMost() > visibleRect.YMost()) {
+        // Scroll down so aRect's bottom edge is visible. Make sure
+        // aRect's top edge is still visible
+        scrollOffsetY += aRect.YMost() - visibleRect.YMost();
+        if (scrollOffsetY > aRect.y) {
+          scrollOffsetY = aRect.y;
+        }
       }
+    } else {
+      // Align the aRect edge according to the specified percentage
+      nscoord frameAlignY = aRect.y + (aRect.height * aVPercent) / 100;
+      scrollOffsetY = frameAlignY - (visibleRect.height * aVPercent) / 100;
     }
-  } else {
-    // Align the aRect edge according to the specified percentage
-    nscoord frameAlignY = aRect.y + (aRect.height * aVPercent) / 100;
-    scrollOffsetY = frameAlignY - (visibleRect.height * aVPercent) / 100;
   }
 
   // See how the aRect should be positioned horizontally
-  if (NS_PRESSHELL_SCROLL_ANYWHERE == aHPercent) {
-    // The caller doesn't care where the aRect is positioned horizontally,
-    // so long as it's fully visible
-    if (aRect.x < visibleRect.x) {
-      // Scroll left so the aRect's left edge is visible
-      scrollOffsetX = aRect.x;
-    } else if (aRect.XMost() > visibleRect.XMost()) {
-      // Scroll right so the aRect's right edge is visible. Make sure the
-      // aRect's left edge is still visible
-      scrollOffsetX += aRect.XMost() - visibleRect.XMost();
-      if (scrollOffsetX > aRect.x) {
+  if (ss.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN) {
+    if (NS_PRESSHELL_SCROLL_ANYWHERE == aHPercent) {
+      // The caller doesn't care where the aRect is positioned horizontally,
+      // so long as it's fully visible
+      if (aRect.x < visibleRect.x) {
+        // Scroll left so the aRect's left edge is visible
         scrollOffsetX = aRect.x;
+      } else if (aRect.XMost() > visibleRect.XMost()) {
+        // Scroll right so the aRect's right edge is visible. Make sure the
+        // aRect's left edge is still visible
+        scrollOffsetX += aRect.XMost() - visibleRect.XMost();
+        if (scrollOffsetX > aRect.x) {
+          scrollOffsetX = aRect.x;
+        }
       }
+        
+    } else {
+      // Align the aRect edge according to the specified percentage
+      nscoord frameAlignX = aRect.x + (aRect.width * aHPercent) / 100;
+      scrollOffsetX = frameAlignX - (visibleRect.width * aHPercent) / 100;
     }
-      
-  } else {
-    // Align the aRect edge according to the specified percentage
-    nscoord frameAlignX = aRect.x + (aRect.width * aHPercent) / 100;
-    scrollOffsetX = frameAlignX - (visibleRect.width * aHPercent) / 100;
   }
 
   aScrollableView->ScrollTo(scrollOffsetX, scrollOffsetY, NS_VMREFRESH_IMMEDIATE);
@@ -7118,7 +7138,8 @@ nsTypedSelection::ScrollRectIntoView(nsIScrollableView *aScrollableView,
 
     if (view)
     {
-      nsIScrollableView *parentSV = nsLayoutUtils::GetNearestScrollingView(view);
+      nsIScrollableView *parentSV =
+        nsLayoutUtils::GetNearestScrollingView(view, nsLayoutUtils::eEither);
 
       if (parentSV)
       {
