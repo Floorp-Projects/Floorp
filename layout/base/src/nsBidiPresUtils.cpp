@@ -832,12 +832,19 @@ nsBidiPresUtils::RemoveBidiContinuation(nsIPresContext* aPresContext,
       delete frame;
       ++aOffset;
     }
-    else if (parent != nsnull) {
-      parent->RemoveFrame(aPresContext, *presShell, nsLayoutAtoms::nextBidi,
-                          frame);
-    }
     else {
-      frame->Destroy(aPresContext);
+      nsFrameState frameState;
+      frame->GetFrameState(&frameState);
+      if (frameState & NS_FRAME_IS_BIDI) {
+        // only delete Bidi frames
+        if (parent != nsnull) {
+          parent->RemoveFrame(aPresContext, *presShell,
+                              nsLayoutAtoms::nextBidi, frame);
+        }
+        else {
+          frame->Destroy(aPresContext);
+        }
+      }
     }
   }
   if (aNextFrame) {
