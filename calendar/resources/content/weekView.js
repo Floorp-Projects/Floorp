@@ -48,6 +48,8 @@
 *   
 
 */
+var gDebugEnabled=false;
+
 
 var gRefColumnIndex = 0;
 
@@ -114,17 +116,17 @@ function WeekView( calendarWindow )
 WeekView.prototype.refreshEvents = function()
 {
     //initialize view limits from prefs
-    var LowestStartHour = getIntPref(this.calendarWindow.calendarPreferences.calendarPref, "event.defaultstarthour", 8);
-    var HighestEndHour = getIntPref(this.calendarWindow.calendarPreferences.calendarPref, "event.defaultendhour", 17);
+    this.lowestStartHour = getIntPref(this.calendarWindow.calendarPreferences.calendarPref, "event.defaultstarthour", 8);
+    this.highestEndHour = getIntPref(this.calendarWindow.calendarPreferences.calendarPref, "event.defaultendhour", 17);
 
     //now hide those that aren't applicable
     for (i = 0; i < 24; i++) {
         document.getElementById("week-view-row-"+i).removeAttribute("collapsed");
     }
-    for (i = 0; i < LowestStartHour; i++) {
+    for (i = 0; i < this.lowestStartHour; i++) {
         document.getElementById("week-view-row-"+i).setAttribute("collapsed", "true");
     }
-    for (i = (HighestEndHour + 1); i < 24; i++) {
+    for (i = (this.highestEndHour + 1); i < 24; i++) {
         document.getElementById("week-view-row-"+i ).setAttribute("collapsed", "true");
     }
 
@@ -133,32 +135,30 @@ WeekView.prototype.refreshEvents = function()
 
 
     // Figure out the start and end days for the week we're currently viewing
-    var startDate = new Date(gHeaderDateItemArray[1].getAttribute("date"));
-    var endDate = new Date(startDate);
-    endDate.setDate(endDate.getDate() + 7);
-    endDate.setSeconds(endDate.getSeconds() - 1);
+    this.displayStartDate = new Date(gHeaderDateItemArray[1].getAttribute("date"));
+    this.displayEndDate = new Date(this.displayStartDate);
+    this.displayEndDate.setDate(this.displayEndDate.getDate() + 7);
+    this.displayEndDate.setSeconds(this.displayEndDate.getSeconds() - 1);
 
     // Save this off so we can get it again in onGetResult below
     var savedThis = this;
     var getListener = {
         onOperationComplete: function(aCalendar, aStatus, aOperationType, aId, aDetail) {
-            dump("onOperationComplete\n");
+            debug("onOperationComplete\n");
         },
         onGetResult: function(aCalendar, aStatus, aItemType, aDetail, aCount, aItems) {
             for (var i = 0; i < aCount; ++i) {
-                var eventBox = savedThis.createEventBox(aItems[i]);
-                dump("Adding eventBox " + eventBox + "\n");
-                document.getElementById("week-view-content-board").appendChild(eventBox);
+                savedThis.createEventBox(aItems[i]);
             }
         }
     };
 
     var ccalendar = createCalendar(); // XXX Should get the composite calendar here
 
-    dump("Fetching events from " + startDate.toString() + " to " + endDate.toString() + "\n");
+    debug("Fetching events from " + this.displayStartDate.toString() + " to " + this.displayEndDate.toString() + "\n");
 
     ccalendar.getItems(ccalendar.ITEM_FILTER_TYPE_EVENT | ccalendar.ITEM_FILTER_CLASS_OCCURRENCES,
-                      0, jsDateToDateTime(startDate), jsDateToDateTime(endDate), getListener);
+                       0, jsDateToDateTime(this.displayStartDate), jsDateToDateTime(this.displayEndDate), getListener);
 
     return;
 
@@ -172,7 +172,7 @@ WeekView.prototype.refreshEvents = function()
 
 
 
-
+/*
 
   var isOnlyWorkDays = (gOnlyWorkdayChecked == "true");
   var isDayOff = (isOnlyWorkDays? this.preferredDaysOff() : null);
@@ -320,7 +320,10 @@ WeekView.prototype.refreshEvents = function()
          }
       }
    } //--> END THE FOR LOOP FOR THE WEEK VIEW
+*/
 }
+
+//WeekView.prototype.displayTimezone = "/mozilla.org/20050126_1/Europe/Amsterdam";
 
 /** PRIVATE
 *
@@ -328,10 +331,78 @@ WeekView.prototype.refreshEvents = function()
 */
 WeekView.prototype.createEventBox = function ( itemOccurrence )
 {    
+    var startDate;
+    var origEndDate;
+
+    if ("displayTimezone" in this) {
+        startDate = itemOccurrence.occurrenceStartDate.getInTimezone(this.displayTimezone).clone();
+        origEndDate = itemOccurrence.occurrenceEndDate.getInTimezone(this.displayTimezone).clone();
+    } else {
+        // Copy the values from jsDate. jsDate is in de users timezone
+        // It's a hack, but it kind of works. It doesn't set the right
+        // timezone info for the date, but that's not a real problem.
+        startDate = itemOccurrence.occurrenceStartDate.clone();
+        startDate.year = startDate.jsDate.getFullYear();
+        startDate.month = startDate.jsDate.getMonth();
+        startDate.day = startDate.jsDate.getDate();
+        startDate.hour = startDate.jsDate.getHours();
+        startDate.minute = startDate.jsDate.getMinutes();
+        startDate.second = startDate.jsDate.getSeconds();
+        startDate.normalize();
+
+        origEndDate = itemOccurrence.occurrenceEndDate.clone();
+        origEndDate.year = origEndDate.jsDate.getFullYear();
+        origEndDate.month = origEndDate.jsDate.getMonth();
+        origEndDate.day = origEndDate.jsDate.getDate();
+        origEndDate.hour = origEndDate.jsDate.getHours();
+        origEndDate.minute = origEndDate.jsDate.getMinutes();
+        origEndDate.second = origEndDate.jsDate.getSeconds();
+        origEndDate.normalize();
+    }
+
+    var endDate = startDate.clone();
+    endDate.hour = 23;
+    endDate.minute = 59;
+    endDate.second = 59;
+    endDate.normalize();
+    while (endDate.compare(origEndDate) < 0) {
+        this.createEventBoxInternal(itemOccurrence, startDate, endDate);
+
+        startDate.day = startDate.day + 1;
+        startDate.hour = 0;
+        startDate.minute = 0;
+        startDate.second = 0;
+        startDate.normalize();
+
+        endDate.day = endDate.day + 1;
+        endDate.normalize();
+    }
+    this.createEventBoxInternal(itemOccurrence, startDate, origEndDate);
+}
+
+WeekView.prototype.createEventBoxInternal = function (itemOccurrence, startDate, endDate)
+{    
     var calEvent = itemOccurrence.item.QueryInterface(Components.interfaces.calIEvent);
 
-    var startDate = itemOccurrence.occurrenceStartDate;
-    var endDate = itemOccurrence.occurrenceEndDate;
+    // Check if the event is within the bounds of events to be displayed.
+    if ((endDate.jsDate < this.displayStartDate) ||
+        (startDate.jsDate > this.displayEndDate))
+        return;
+
+    // XXX Should this really be done? better would be to adjust the
+    // lowestStart and highestEnd
+    if ((endDate.hour < this.lowestStartHour) ||
+        (startDate.hour > this.highestEndHour))
+        return;
+     
+    if (startDate.hour < this.lowestStartHour) {
+        startDate.hour = this.lowestStartHour;
+        startDate.normalize();
+    }
+    if (endDate.hour > this.highestEndHour) {
+        endDate.hour = this.highestEndHour;
+        endDate.normalize();
+    }
 
     /*
     if (calEvent.isAllDay) {
@@ -341,15 +412,15 @@ WeekView.prototype.createEventBox = function ( itemOccurrence )
         endDate.normalize();
     }
     */
-    dump("all day:   " + calEvent.isAllDay + "\n");
-    dump("startdate: " + startDate + "\n");
-    dump("enddate:   " + endDate + "\n");
+    debug("all day:   " + calEvent.isAllDay + "\n");
+    debug("startdate: " + startDate + "\n");
+    debug("enddate:   " + endDate + "\n");
 
-    var startHour = startDate.jsDate.getHours();
+    var startHour = startDate.hour;
     var startMinutes = startDate.minute;
     var eventDuration = (endDate.jsDate - startDate.jsDate) / (60 * 60 * 1000);
 
-    dump("duration:  " + eventDuration + "\n");
+    debug("duration:  " + eventDuration + "\n");
 
     var eventBox = document.createElement("vbox");
 
@@ -358,8 +429,8 @@ WeekView.prototype.createEventBox = function ( itemOccurrence )
 
     var ElementOfRef = document.getElementById("week-tree-day-" + gRefColumnIndex + "-item-" + startHour) ;
     var hourHeight = ElementOfRef.boxObject.height;
-    var Height = eventDuration * hourHeight + 1;
-    eventBox.setAttribute("height", Height);
+    var ElementOfRefEnd = document.getElementById("week-tree-day-" + gRefColumnIndex + "-item-" + endDate.hour) ;
+    var hourHeightEnd = ElementOfRefEnd.boxObject.height;
    
     var hourWidth = ElementOfRef.boxObject.width;
     var eventSlotWidth = Math.round(hourWidth / 1/*calendarEventDisplay.totalSlotCount*/);
@@ -370,12 +441,16 @@ WeekView.prototype.createEventBox = function ( itemOccurrence )
     var top = eval( ElementOfRef.boxObject.y + ( ( startMinutes/60 ) * hourHeight ) );
     top = top - ElementOfRef.parentNode.boxObject.y - 2;
     eventBox.setAttribute("top", top);
-   
+
+    var bottom = eval( ElementOfRefEnd.boxObject.y + ( ( endDate.minute/60 ) * hourHeightEnd ) );
+    bottom = bottom - ElementOfRefEnd.parentNode.boxObject.y - 2;
+    eventBox.setAttribute("height", bottom - top);
 
     // figure out what column we need to put this on
+    debug("d: "+gHeaderDateItemArray[1].getAttribute("date")+"\n");
     var dayIndex = new Date(gHeaderDateItemArray[1].getAttribute("date"));
-    var index = startDate.jsDate.getDay() - dayIndex.getDay();
-    dump("index is:" + index + "(" + startDate.jsDate.getDay() + " - " + dayIndex.getDay() + ")\n");
+    var index = startDate.weekday - dayIndex.getDay();
+    debug("index is:" + index + "(" + startDate.weekday + " - " + dayIndex.getDay() + ")\n");
 
     var boxLeft = document.getElementById("week-tree-day-"+index+"-item-"+startHour).boxObject.x - 
                   document.getElementById( "week-view-content-box" ).boxObject.x +
@@ -414,7 +489,9 @@ WeekView.prototype.createEventBox = function ( itemOccurrence )
       descriptionElement.appendChild( document.createTextNode( calEvent.getProperty("description") ));
       eventBox.appendChild( descriptionElement );
     }
-    return eventBox;
+
+    debug("Adding eventBox " + eventBox + "\n");
+    document.getElementById("week-view-content-board").appendChild(eventBox);
 }
 
 /** PUBLIC
