@@ -64,17 +64,22 @@ require Exporter;
 #         # always called after try block and any handlers
 #     };
 
+# constants for stringifying exceptions
+sub seMaxLength() { 80 }
+sub seMaxArguments() { 10 }
+sub seEllipsis() { '...' }
 
 sub syntax($@) {
     my($message, $package, $filename, $line) = @_;
     die "$message at $filename line $line\n";
 }
 
-sub stacktrace($) {
-    my($index) = @_;
-    my @stacktrace;
+sub getFrames() {
+    package DB;
+    my @frames;
+    my $index = 0;
     while (my @data = caller($index++)) {
-        push(@stacktrace, {
+        push(@frames, {
             'package' => $data[0],
             'filename' => $data[1],
             'line' => $data[2],
@@ -83,9 +88,28 @@ sub stacktrace($) {
             'wantarray' => $data[5],
             'evaltext' => $data[6], # undef for eval {}, EXPR for eval EXPR
             'is_require' => $data[7], # true if eval was caused by require or use statement
-        });
+            'arguments' => [@DB::args], # take a copy since the same array is used each time
+        });        
     }
-    return \@stacktrace;
+    return @frames;
+}
+
+sub stacktrace() {
+    my $count;
+    my $filename;
+    my $line;
+    my @stacktrace;
+    foreach my $frame (getFrames) {
+        if ($frame->{'filename'} ne __FILE__) {
+            if ($count++) {
+                push(@stacktrace, $frame);
+            } else {
+                $filename = $frame->{'filename'};
+                $line = $frame->{'line'};
+            }
+        }
+    }
+    return $filename, $line, \@stacktrace;
 }
 
 sub create {
@@ -95,8 +119,7 @@ sub create {
 
 sub raise {
     my($exception, @data) = @_;
-    my($package, $filename, $line) = caller;
-    my $stacktrace = stacktrace(2);
+    my($filename, $line, $stacktrace) = stacktrace;
     PLIF->warn(7, "Exception raised: $exception");
     if (ref($exception) and $exception->isa('PLIF::Exception')) {
         # if the exception is an object, raise it
@@ -150,7 +173,7 @@ sub try(&;$) {
         }
     };
     if (defined($continuation)) {
-        $continuation->handle($@, caller, stacktrace(2));
+        $continuation->handle($@);
     }
     return $context ? @result : $result;
 }
@@ -235,16 +258,25 @@ sub stringify {
     my $stacktrace = '';
     foreach my $frame (@{$self->{'stacktrace'}}) {
         # XXX this should be made better
-        if ($frame->{'subroutine'} eq '(eval)') {
+        if ($frame->{'subroutine'} eq 'PLIF::Exception::try') {
+            $stacktrace .= "  try { ... } in $frame->{'filename'} line $frame->{'line'}\n";
+        } elsif ($frame->{'subroutine'} eq '(eval)') {
             if ($frame->{'is_require'}) {
-                $stacktrace .= "  require in $frame->{'filename'} line $frame->{'line'}\n";
+                $stacktrace .= "  require $frame->{'evaltext'} in $frame->{'filename'} line $frame->{'line'}\n";
             } elsif (defined($frame->{'evaltext'})) {
-                $stacktrace .= "  eval '$frame->{'evaltext'}' in $frame->{'filename'} line $frame->{'line'}\n";
+                my $eval = $frame->{'evaltext'};
+                $eval =~ s/([\\\'])/\\$1/gos;
+                if (length($eval) > seMaxLength) {
+                    substr($eval, seMaxLength) = seEllipsis;
+                }
+                $stacktrace .= "  eval '$eval' in $frame->{'filename'} line $frame->{'line'}\n";
             } else {
                 $stacktrace .= "  eval {...} in $frame->{'filename'} line $frame->{'line'}\n";
             }
         } elsif ($frame->{'hasargs'}) {
-            $stacktrace .= "  $frame->{'subroutine'}(...) called from $frame->{'filename'} line $frame->{'line'}\n";
+            my @arguments = arguments(@{$frame->{'arguments'}});
+            local $" = ', ';
+            $stacktrace .= "  $frame->{'subroutine'}(@arguments) called from $frame->{'filename'} line $frame->{'line'}\n";
         } else {
             $stacktrace .= "  $frame->{'subroutine'}() called from $frame->{'filename'} line $frame->{'line'}\n";
         }
@@ -254,6 +286,81 @@ sub stringify {
     } else {
         return ref($self) . " exception raised at $self->{'filename'} line $self->{'line'}\n$stacktrace";
     }
+}
+
+sub arguments(@) {
+    my(@values) = @_;
+    my @arguments;
+    foreach my $value (@values) {
+        my $argument;
+        if (ref($value)) {
+            # some object
+            if ($value =~ m/    ^           # start of the string
+                          (?:  (.+)         # the class                  "PLIF::Exception" (optional)
+                                 =      )?  # an equals sign             "="    (if there is a class)
+                            ([^(=:)]+)      # the type of reference      "HASH"
+                         \(0x([0-9a-f]+)\)  # the address of the object  "(0x12345678)"
+                                 $          # end of the string
+                                   /osx) {
+                my $class = $1;
+                my $ref = $2;
+                my $address = "0x$3";
+                if (UNIVERSAL::isa($value, 'UNIVERSAL')) {
+                    $argument = "$class object at $address";
+                    if ($ref ne 'HASH') {
+                        $argument .= " ($ref)";
+                    }
+                } elsif (ref($value) eq 'ARRAY') {
+                    my @items = arguments(@$value);
+                    local $" = ', ';
+                    $argument = "[@items] at $address";
+                } elsif (ref($value) eq 'HASH') {
+                    my @items;
+                    my $count = 0;
+                    foreach my $key (sort keys %$value) {
+                        if (++$count > seMaxArguments) {
+                            push(@items, seEllipsis);
+                            last;
+                        }
+                        my($keyName, $valueName) = arguments($key, $value->{$key});
+                        push(@items, "$keyName => $valueName");
+                    }
+                    local $" = ', ';
+                    $argument = "{@items} at $address";
+                } elsif (ref($value) eq 'SCALAR') {
+                    my @items = arguments($$value);
+                    $argument = "\\@items";
+                } elsif (ref($value) eq 'CODE') {
+                    $argument = "sub { ... } at $address";
+                } else {
+                    if (defined($class)) {
+                        # !!!
+                        $argument = "$ref at $address blessed as $class but not a class (!)";
+                    } else {
+                        $argument = "$ref at $address";
+                    }
+                }
+            } else {
+                $argument = "$value (!)";
+            }
+        } else {
+            # scalar
+            if (not defined($value)) {
+                $argument = 'undef';
+            } elsif ($value =~ m/^-?[0-9]+(?:\.[0-9]+)$/os) {
+                $argument = $value;
+            } else {
+                $argument = $value;
+                $argument =~ s/([\\\'])/\\$1/gos;
+                $argument = "'$argument'";
+            }
+        }
+        push(@arguments, $argument);
+    }
+    if (@arguments > seMaxArguments) {
+        @arguments = (@arguments[0..seMaxArguments], seEllipsis);
+    }
+    return @arguments;
 }
 
 sub comparison {
@@ -268,8 +375,8 @@ sub comparison {
 
 package PLIF::Exception::Internal::Continuation;
 
-sub wrap($$$$) {
-    my($exception, $filename, $line, $stacktrace) = @_;
+sub wrap($) {
+    my($exception) = @_;
     if ($exception ne '') {
         if (not ref($exception) or
             not $exception->isa('PLIF::Exception')) {
@@ -277,6 +384,7 @@ sub wrap($$$$) {
             $exception = PLIF::Exception->create('message' => $exception);
         }
         if (not exists $exception->{'stacktrace'}) {
+            my($filename, $line, $stacktrace) = PLIF::Exception::stacktrace;
             $exception->{'filename'} = $filename;
             $exception->{'line'} = $line;
             $exception->{'stacktrace'} = $stacktrace;
@@ -301,16 +409,16 @@ sub create {
 
 sub handle {
     my $self = shift;
-    my($exception, $package, $filename, $line, $stacktrace) = @_;
+    my($exception) = @_;
     $self->{'resolved'} = 1;
-    $exception = wrap($exception, $filename, $line, $stacktrace);
     my $reraise = undef;
+    $exception = wrap($exception);
     handler: while (1) {
         if (defined($exception)) {
             foreach my $handler (@{$self->{'handlers'}}) {
                 if ($exception->isa($handler->[0])) {
                     my $result = eval { &{$handler->[1]}($exception) };
-                    $reraise = wrap($@, $filename, $line, $stacktrace);
+                    $reraise = wrap($@);
                     if (not defined($result) or # $result is not defined if $reraise is now defined
                         not ref($result) or
                         not $result->isa('PLIF::Exception::Internal::Fallthrough')) {
@@ -322,7 +430,7 @@ sub handle {
             }
             if (defined($self->{'except'})) {
                 my $result = eval { &{$self->{'except'}}($exception) };
-                $reraise = wrap($@, $filename, $line, $stacktrace);
+                $reraise = wrap($@);
             } else {
                 # fallthrough exception
                 $reraise = $exception;
@@ -330,7 +438,7 @@ sub handle {
         } else {
             if (defined($self->{'otherwise'})) {
                 my $result = eval { &{$self->{'otherwise'}}($exception) };
-                $reraise = wrap($@, $filename, $line, $stacktrace);
+                $reraise = wrap($@);
             }
         }
         last;
@@ -347,7 +455,6 @@ sub handle {
 sub DESTROY {
     my $self = shift;
     return $self->SUPER::DESTROY(@_) if $self->{'resolved'};
-    my($package, $filename, $line) = caller;
     my $parts = 0x00;
     $parts |= 0x01 if scalar(@{$self->{'handlers'}});
     $parts |= 0x02 if defined($self->{'except'});
