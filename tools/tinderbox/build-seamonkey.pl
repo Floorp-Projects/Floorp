@@ -10,7 +10,7 @@ use Sys::Hostname;
 use POSIX qw(sys_wait_h strftime);
 use Cwd;
 
-$Version = '$Revision: 1.53 $ ';
+$Version = '$Revision: 1.54 $ ';
 
 
 sub PrintUsage {
@@ -148,7 +148,7 @@ sub BuildIt {
       $begin = 0 * 60; # Starts 0 minutes after the hour.
       $lag = 2 * 60;   # Takes 2 minute to update.
 
-      $StartTime = int(($StartTime + $begin - $lag) / $cycle) * $cycle - $begin;
+      $StartTime = int(($StartTime - $begin - $lag) / $cycle) * $cycle + $begin;
       $UseTimeStamp = 1;
       $ENV{MOZ_CO_USE_MIRROR} = 1;
     }
