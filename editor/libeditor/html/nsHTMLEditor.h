@@ -110,6 +110,9 @@ public:
   NS_IMETHOD RemoveParagraphStyle();
   NS_IMETHOD RemoveParent(const nsString &aParentTag);
 
+  NS_IMETHOD GetParagraphFormat(nsString& aParagraphFormat);
+  NS_IMETHOD SetParagraphFormat(const nsString& aParagraphFormat);
+
   NS_IMETHOD InsertLink(nsString& aURL);
   NS_IMETHOD InsertImage(nsString& aURL,
                          nsString& aWidth, nsString& aHeight,

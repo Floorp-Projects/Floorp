@@ -1,11 +1,11 @@
 <?xml version="1.0"?> 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
-<?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://editor/skin/" type="text/css"?> 
 
 <!DOCTYPE window
 [
 
-<!-- These entity declarations will go into a separare, locale file at some point -->
+<!-- These entity declarations will go into a separate, locale file at some point -->
 <!-- Window title -->
 <!ENTITY editorWindow.title "Editor">
 
@@ -78,7 +78,19 @@
       <menuitem name=".Color..." onclick=""/>
       <menuitem name=".Remove All Style(s)" onclick=""/>
       <separator />
-      <menuitem name=".Heading" onclick=""/>
+      <menu name="Paragraph/Heading">
+        <menuitem name="Normal"    onclick="SetParagraphFormat('normal')"/>
+        <menuitem name="Heading 1" onclick="SetParagraphFormat('h1')"/>
+        <menuitem name="Heading 2" onclick="SetParagraphFormat('h2')"/>
+        <menuitem name="Heading 3" onclick="SetParagraphFormat('h3')"/>
+        <menuitem name="Heading 4" onclick="SetParagraphFormat('h4')"/>
+        <menuitem name="Heading 5" onclick="SetParagraphFormat('h5')"/>
+        <menuitem name="Address"   onclick="SetParagraphFormat('address')"/>
+        <menuitem name="Preformat" onclick="SetParagraphFormat('pre')"/>
+        <menuitem name="List item" onclick="SetParagraphFormat('li')"/>
+        <menuitem name="Definition term" onclick="SetParagraphFormat('dt')"/>
+        <menuitem name="Definition description" onclick="SetParagraphFormat('dd')"/>
+      </menu>
     </menu>
     <menu name="Tools">
       <menuitem name=".Spell Check" onclick=""/>
@@ -100,21 +112,43 @@
 
   </menubar>
   
-  <box id="outer-box" align="vertical">
-
   <broadcaster id="Editor:Style:IsBold" bold="false"/>
   <broadcaster id="Editor:Style:IsItalic"/>
   <broadcaster id="Editor:Style:IsUnderline"/>
-
+  <box id="outer-box" align="vertical">
+  
   <toolbox>
-   <toolbar>
-		<titledbutton align="left" class="popup" value="Normal"/>
-		<titledbutton align="left" class="popup" value="Size"/>
-		<titledbutton align="left" class="popup" value="Color"/>
-	    <titledbutton src="chrome://editor/skin/images/ED_Bold.gif" align="bottom"
-	    	onclick="EditorApplyStyle('b')">
+    <toolbar>
+      <!-- Most of the message handlers don't work! -->
+      <html:select class="combobox" size="1" id="paraFormat" onchange="OnChangeParaFormat()">
+        <html:optgroup>
+          <html:option onclick="SetParagraphFormat('normal')">Normal</html:option>
+          <html:option onclick="SetParagraphFormat('h1')">Heading 1</html:option>
+          <html:option onclick="SetParagraphFormat('h2')">Heading 2</html:option>
+          <html:option onclick="SetParagraphFormat('h3')">Heading 3</html:option>
+          <html:option onclick="SetParagraphFormat('h4')">Heading 4</html:option>
+          <html:option onclick="SetParagraphFormat('h5')">Heading 5</html:option>
+          <html:option onclick="SetParagraphFormat('address')">Address</html:option>
+          <html:option onclick="SetParagraphFormat('li')">List Item</html:option>
+          <html:option onclick="SetParagraphFormat('dt')">Definition Term</html:option>
+          <html:option onclick="SetParagraphFormat('dd')">Definition Description</html:option>
+        </html:optgroup>
+      </html:select>
+      <html:select class="combobox" size="1" id="fontSize" onchange="OnChangeFontSize()">
+        <html:optgroup label="fontSize">
+          <html:option>-2</html:option>
+          <html:option>-1</html:option>
+          <html:option>0</html:option>
+          <html:option>1</html:option>
+          <html:option>2</html:option>
+          <html:option>3</html:option>
+          <html:option>4</html:option>
+        </html:optgroup>
+      </html:select>
+		  <titledbutton align="left" class="popup" value="Color"/>
+      <titledbutton src="chrome://editor/skin/images/ED_Bold.gif" align="bottom" onclick="EditorApplyStyle('b')">
 		    <observes element="Editor:Style:IsBold" attribute="bold" onchange="onBoldChange()"/>
-	    </titledbutton>
+      </titledbutton>
 	    <titledbutton src="chrome://editor/skin/images/ED_Italic.gif" align="bottom" onclick="EditorApplyStyle('i')"/>
 	    <titledbutton src="chrome://editor/skin/images/ED_Underline.gif" align="bottom" onclick="EditorApplyStyle('u')"/>
 	    <titledbutton src="chrome://editor/skin/images/ED_ClearStyle.gif" align="bottom" onclick="EditorRemoveStyle('all')"/>
@@ -122,13 +156,14 @@
 	    <titledbutton src="chrome://editor/skin/images/ED_Numbers.gif" align="bottom" onclick="EditorInsertList('ol')"/>
 	    <titledbutton src="chrome://editor/skin/images/ED_Indent.gif" align="bottom" onclick="EditorIndent('indent')"/>
 	    <titledbutton src="chrome://editor/skin/images/ED_Left.gif" align="bottom" class="popup" onclick="EditorAlign('left')"/>
-	    <titledbutton src="chrome://editor/skin/images/ED_Link.gif" align="bottom" class="popup" onclick="EditorInsertLink()"/>
+	    <titledbutton src="chrome://editor/skin/images/ED_Link.gif" align="bottom" onclick="EditorInsertLink()"/>
+	    <titledbutton src="chrome://editor/skin/images/ED_Image.gif" align="bottom" onclick= "EditorInsertImage()"/>
     </toolbar>
   </toolbox>
 
-  <html:iframe type="content" id="content-frame" html:name="content" html:src="chrome://editor/content/EditorInitPage.html" flex="100%" />
-  
+  <html:iframe type="content" id="content-frame" html:src="chrome://editor/content/EditorInitPage.html" flex="100%" />
   </box>
+
 </window>
 
 

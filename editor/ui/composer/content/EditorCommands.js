@@ -1,247 +1,219 @@
-  	var editorType = "html";
-    var editorName = "EditorAppCoreHTML";
-  
-  /* the following variables are expected to be defined
-  	in the embedding file:
+/* Main Composer window UI control */
 
-  	var editorType  -- the editor type, i.e. "text" or "html"
-    var editorName	-- the name of the editor. Must be unique to this window clique
-  */
-  
+  /*the editor type, i.e. "text" or "html" */
+  var editorType = "html";   
+  /* the name of the editor. Must be unique to this window clique */
+  var editorName = "EditorAppCoreHTML";
+  var appCore = null;  
+  var toolkitCore = null;
+
   function Startup()
   {
     dump("Doing Startup...\n");
+
+    /* Get the global Editor AppCore and the XPFE toolkit core into globals here */
     appCore = XPAppCoresManager.Find(editorName);  
     dump("Looking up EditorAppCore...\n");
     if (appCore == null) {
       dump("Creating EditorAppCore...\n");
       appCore = new EditorAppCore();
-      if (appCore != null) {
+      if (appCore) {
         dump("EditorAppCore has been created.\n");
 				appCore.Init(editorName);
 				appCore.setEditorType(editorType);
-				appCore.setContentWindow(window.frames[0]);
-				appCore.setWebShellWindow(window);
-				appCore.setToolbarWindow(window);
+        appCore.setContentWindow( window.frames[0] );
+        appCore.setWebShellWindow(window);
+        appCore.setToolbarWindow(window);
+        dump("EditorAppCore windows have been set.\n");
       }
     } else {
       dump("EditorAppCore has already been created! Why?\n");
+    }
+    toolkitCore = XPAppCoresManager.Find("ToolkitCore");
+    if (!toolkitCore) {
+      toolkitCore = new ToolkitCore();
+      if (toolkitCore) {
+        toolkitCore.Init("ToolkitCore");
+        dump("ToolkitCore initialized for Editor\n");
+      }
+    } else {
+      dump("ToolkitCore found\n");
     }
   }
 
   function EditorFind(firstTime)
   {
-    var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
-    if (!toolkitCore) {
-      toolkitCore = new ToolkitCore();
-      if (toolkitCore) {
-        toolkitCore.Init("ToolkitCore");
-      }
-    }
     if (toolkitCore && firstTime) {
       toolkitCore.ShowWindow("resource:/res/samples/find.xul", window);
     }
     
-    appCore = XPAppCoresManager.Find(editorName);  
-    if (appCore != null) {
+    if (appCore) {
     	appCore.find("test", true, true);
-    
     }
-    
   }
 
   function EditorShowClipboard()
   {
     dump("In EditorShowClipboard...\n");
    
-    appCore = XPAppCoresManager.Find(editorName);  
-    if (appCore != null) {
+    if (appCore) {
       dump("Doing EditorShowClipboard...\n");
       appCore.showClipboard(); 
     }
-    
+  }
+
+  function SetParagraphFormat(paraFormat)
+  {
+    if (appCore) {
+      dump("Doing SetParagraphFormat...\n");
+      appCore.setParagraphFormat(paraFormat);
+    }        
+  }
+
+// Debug methods to test the SELECT element used in a toolbar:  
+  function OnChangeParaFormat()
+  {
+    dump(" *** Change Paragraph Format combobox setting\n");
+  }
+
+  function OnFocusParaFormat()
+  {
+    dump(" *** OnFocus -- Paragraph Format\n");
+  }
+
+  function OnBlurParaFormat()
+  {
+    dump(" *** OnBlur -- Paragraph Format\n");
   }
 
   function EditorApplyStyle(styleName)
   {
-    appCore = XPAppCoresManager.Find(editorName);  
-    if (appCore != null) {
+    if (appCore) {
 	  	dump("Applying Style\n");
       appCore.setTextProperty(styleName, null, null);
-    } else {
-      dump("EditorAppCore has not been created!\n");
     }
   }
 
   function EditorRemoveStyle(styleName)
   {
-    appCore = XPAppCoresManager.Find(editorName);  
-    if (appCore != null) {
+    if (appCore) {
 	  	dump("Removing Style\n");
       appCore.removeTextProperty(styleName, null);
-    } else {
-      dump("EditorAppCore has not been created!\n");
     }
   }
 
   function EditorGetText()
   {
-    appCore = XPAppCoresManager.Find(editorName);  
-    if (appCore != null) {
+    if (appCore) {
 	  	dump("Getting text\n");
 			var	outputText = appCore.contentsAsText;
 			dump(outputText + "\n");
-    } else {
-      dump("EditorAppCore has not been created!\n");
     }
   }
 
   function EditorGetHTML()
   {
-    appCore = XPAppCoresManager.Find(editorName);  
-    if (appCore != null) {
+    if (appCore) {
 	  	dump("Getting HTML\n");
 			var	outputText = appCore.contentsAsHTML;
 			dump(outputText + "\n");
-    } else {
-      dump("EditorAppCore has not been created!\n");
     }
   }
 
   function EditorUndo()
   {
-    appCore = XPAppCoresManager.Find(editorName);  
-    if (appCore != null) {
+    if (appCore) {
 	    dump("Undoing\n");
       appCore.undo();
-    } else {
-      dump("EditorAppCore has not been created!\n");
     }
   }
 
   function EditorRedo()
   {
-    appCore = XPAppCoresManager.Find(editorName);  
-    if (appCore != null) {
+    if (appCore) {
 	    dump("Redoing\n");
       appCore.redo();
-    } else {
-      dump("EditorAppCore has not been created!\n");
     }
   }
 
 	function EditorCut()
   {
-    appCore = XPAppCoresManager.Find(editorName);  
-    if (appCore != null) {
+    if (appCore) {
 	    dump("Cutting\n");
       appCore.cut();
-    } else {
-      dump("EditorAppCore has not been created!\n");
     }
   }
 
 	function EditorCopy()
   {
-    appCore = XPAppCoresManager.Find(editorName);  
-    if (appCore != null) {
+    if (appCore) {
 	    dump("Copying\n");
       appCore.copy();
-    } else {
-      dump("EditorAppCore has not been created!\n");
     }
   }
 
 	function EditorPaste()
   {
-    appCore = XPAppCoresManager.Find(editorName);  
-    if (appCore != null) {
+    if (appCore) {
 	    dump("Pasting\n");
       appCore.paste();
-    } else {
-      dump("EditorAppCore has not been created!\n");
     }
   }
 
   function EditorSelectAll()
   {
-    appCore = XPAppCoresManager.Find(editorName);  
-    if (appCore != null) {
+    if (appCore) {
 	    dump("Selecting all\n");
       appCore.selectAll();
-    } else {
-      dump("EditorAppCore has not been created!\n");
     }
   }
 
 	function EditorInsertText()
   {
-    appCore = XPAppCoresManager.Find(editorName);  
-    if (appCore != null) {
+    if (appCore) {
 	    dump("Inserting text\n");
       appCore.insertText("Once more into the breach, dear friends.\n");
-    } else {
-      dump("EditorAppCore has not been created!\n");
     }
   }
 
 function EditorInsertLink()
   {
-    dump("Starting Insert Link...\n");
-    appCore = XPAppCoresManager.Find(editorName);  
-    if (appCore != null) {
-	    dump("Link Properties Dialog starting...\n");
-      var toolkitCore = GetToolkitCore();
-      if (toolkitCore) {
-        toolkitCore.ShowModalDialog("chrome://editordlgs/content/EdLinkProps.xul",
-            window);
-      }
-    } else {
-      dump("EditorAppCore has not been created!\n");
+    dump("Starting Insert Link... appCore, toolkitCore: "+(appCore==null)+(toolkitCore==null)+"\n");
+    if (appCore && toolkitCore) {
+  	  dump("Link Properties Dialog starting...\n");
+      toolkitCore.ShowModalDialog("chrome://editordlgs/content/EdLinkProps.xul",
+          window);
     }
   }
 
 
   function EditorInsertList(listType)
   {
-    appCore = XPAppCoresManager.Find(editorName);  
-    if (appCore != null) {
+    if (appCore) {
       dump("Inserting link\n");
       appCore.insertList(listType);
-    } else {
-      dump("EditorAppCore has not been created!\n");
     }
   }
 
   function EditorInsertImage()
   {
-    appCore = XPAppCoresManager.Find(editorName);  
-    if (appCore != null) {
-      dump("Inserting image\n");
-      appCore.insertImage();
-    } else {
-      dump("EditorAppCore has not been created!\n");
+    dump("Starting Insert Image...\n");
+    if (appCore && toolkitCore) {
+      dump("Link Properties Dialog starting...\n");
+      toolkitCore.ShowModalDialog("chrome://editordlgs/content/EdImageProps.xul",
+          window);
     }
   }
-
+  
   function EditorExit()
   {
-    appCore = XPAppCoresManager.Find(editorName);  
-    if (appCore != null) {
+    if (appCore) {
 	    dump("Exiting\n");
       appCore.exit();
-    } else {
-      dump("EditorAppCore has not been created!\n");
     }
   }
 
  function EditorPrintPreview() {
-    var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
-    if (!toolkitCore) {
-      toolkitCore = new ToolkitCore();
-      if (toolkitCore)
-        toolkitCore.Init("ToolkitCore");
-    }
     if (toolkitCore) {
       toolkitCore.ShowWindow("resource:/res/samples/printsetup.html", window);
     }
@@ -250,8 +222,7 @@ function EditorInsertLink()
 
 	function EditorTestSelection()
 	{
-    appCore = XPAppCoresManager.Find(editorName);  
-    if (appCore != null)
+    if (appCore)
     {
  	    dump("Testing selection\n");
 	    var selection = appCore.editorSelection;
@@ -267,16 +238,11 @@ function EditorInsertLink()
 	    }
 	    
     }
-    else
-    {
-      dump("EditorAppCore has not been created!\n");
-    }
 	}
 
 	function EditorTestDocument()
 	{
-    appCore = XPAppCoresManager.Find(editorName);  
-    if (appCore != null)
+    if (appCore)
     {
 	    dump("Getting document\n");
 	    var theDoc = appCore.editorDocument;
@@ -290,10 +256,6 @@ function EditorInsertLink()
 	    {
 	    		dump("Failed to get the doc\n");
 	    }
-    }
-    else
-    {
-      dump("EditorAppCore has not been created!\n");
     }
 	}
 
@@ -319,12 +281,3 @@ function EditorInsertLink()
 		}
 	}
 
-  function GetToolkitCore() {
-    var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
-    if (!toolkitCore) {
-      toolkitCore = new ToolkitCore();
-      if (toolkitCore)
-        toolkitCore.Init("ToolkitCore");
-    }
-    return toolkitCore;
-  }

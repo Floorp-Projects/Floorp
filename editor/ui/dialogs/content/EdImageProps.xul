@@ -1,57 +1,51 @@
 <?xml version="1.0"?>
-<?xml-stylesheet href="xul.css" type="text/css"?> 
-<?xml-stylesheet href="EditorDialog.css" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://editordlgs/skin/EditorDialog.css" type="text/css"?>
 <!DOCTYPE window>
 <!-- dialog containing a control requiring initial setup -->
-<xul:window width="200" height="200"
-    xmlns:html="http://www.w3.org/TR/REC-html40"
+<xul:window width="370" height="255" title="Image Properties"
     xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    xmlns="http://www.w3.org/TR/REC-html40"
     onload = "Startup()">
 
-  <html:script>
-    // dialog initialization code
-    function Startup()
-    {
-      dump("Doing Startup...\n");
-      appCore = XPAppCoresManager.Find("EditorAppCore");  
-      if (appCore == null) {
-        dump("EditorAppCore has NOT been created!\n");
-      } else {
-        dump("EditorAppCore was found\n");
-      }
-	  }
-
-    // find and return the DOM element with the given ID
-    // the equivalent of document.getElementById(), but also
-    // works for XML documents (unused in the example)
-    function ElementByID(id) {
-      var element;
-      var ctr;
-      var taglist = document.getElementsByTagName("*");
-
-      element = null;
-      for (ctr = 0; ctr < taglist.length; ctr++)
-        if (taglist[ctr].getAttribute("id") == id) {
-          element = taglist[ctr];
-          break;
-        }
-      return element;
-    }
-  </html:script>
-
-  <table xmlns="http://www.w3.org/TR/REC-html40">
+  <script language="JavaScript" src="chrome://editordlgs/content/EdImageProps.js">
+  </script>
+  <table>
     <tr>
-      <td width="500">
-        <fieldset><legend align="left"> <xul:checkbox value="Image Location and Name"/>Image Location and Name </legend>
+      <td>
+        <fieldset><legend align="left">Image Information </legend>
+          <input type="file" value=" Choose File... " size="50" length="50" maxlength="255" id="image.url" />
+          <br/>
+          <p class="smallmargin">Alternative Text</p>
+          <input type="text" size="30" length="30" maxlength="255" id="image.AltText" />
+        </fieldset>
+      </td>
+    </tr>
+    <tr>
+    <td  align = "right">
+      <button class="spaced" id="OK" onclick="onOK()" width="50">OK</button>  
+      <button class="spaced" id="Preview" onclick="applyChanges()" width="50">Preview</button>
+      <button class="spaced" id="Undo" onclick="onUndo()" width="50">Undo</button>  
+      <button class="spaced" id="Cancel" onclick="onCancel()" width="50">Cancel</button>
+    </td>
+  </tr>
+</table>
+</xul:window>
+
+<!-- The old stuff:
+  <table>
+    <tr>
+      <td>
+        <fieldset><legend align="left">Image Location and Name </legend>
           <input type="file" value=" Choose File... " size="50" length="50" maxlength="255" name="image.url" />
           <br/>
-            <xul:checkbox value="Leave Image at Original Location" disabled />
+            <xul:checkbox value="1"/>
             Leave Image at Original Location
 
-            <xul:checkbox value="Page Background" disabled />
+            <xul:checkbox value="1"/>
             Page Background
 
-            <input type="button" value=" Edit Image " disabled />
+            <input type="button" value=" Edit Image "/>
           <br/>
             Alternative Text
             <input type="text" size="30" length="30" maxlength="255" name="image.alttext" />
@@ -67,13 +61,13 @@
                   <xul:radio name="image.dimensionType" value="Custom Size" />
                   Custom Size
 
-                <table cellspacing="0" cellpadding="2" width="100%" valign="top">
+                <table>
                   <tr>
                     <td width="8"></td>
                     <td width="40" valign="middle" align="right">
                       <p>Height</p>
                     </td>
-                    <td valign="middle">
+                    <td>
                       <input type="text" size="4" length="4" maxlength="4" name="image.height" />
                       <select size="1" name="image.heightType">
                         <optgroup label="pixels">
@@ -100,8 +94,6 @@
                   </tr>
 
                   <tr>
-                    <td/>
-                    <td/>
                     <td>
                       <p>
                         <xul:checkbox value="Constrain" disabled />
@@ -141,7 +133,7 @@
                     </td>
                   </tr>
 
-                  <tr valign="middle">
+                  <tr>
                     <td>
                       <p>Top and Bottom</p>
                     </td>
@@ -153,7 +145,7 @@
                     </td>
                   </tr>
 
-                  <tr valign="middle">
+                  <tr>
                     <td align="right">
                       <p>Solid Border</p>
                     </td>
@@ -187,5 +179,5 @@
       </td>
     </tr>
   </table>
+-->
 
-</xul:window>

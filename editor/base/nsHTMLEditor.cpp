@@ -232,6 +232,36 @@ NS_IMETHODIMP nsHTMLEditor::InsertBreak()
   return result;
 }
 
+NS_IMETHODIMP nsHTMLEditor::GetParagraphFormat(nsString& aParagraphFormat)
+{
+  nsresult result = NS_ERROR_NOT_INITIALIZED;
+
+  return result;
+}
+
+NS_IMETHODIMP nsHTMLEditor::SetParagraphFormat(const nsString& aParagraphFormat)
+{
+  nsresult result = NS_ERROR_NOT_INITIALIZED;
+  //Kinda sad to waste memory just to force lower case
+  nsAutoString tag = aParagraphFormat;
+  tag.ToLowerCase();
+  if (tag == "normal" || tag == "p") {
+    result = RemoveParagraphStyle();
+  } else {
+    result = ReplaceBlockParent(tag);
+  }
+
+// XXXX: Horrible hack! We are doing this because
+// of an error in Gecko which is not rendering the
+// document after a change via the DOM - gpk 2/13/99
+  // BEGIN HACK!!!
+  HACKForceRedraw();
+  // END HACK
+
+  return result;
+}
+
+
 // Methods shared with the base editor.
 // Note: We could call each of these via nsTextEditor -- is that better?
 NS_IMETHODIMP nsHTMLEditor::EnableUndo(PRBool aEnable)
@@ -1037,7 +1067,7 @@ NS_IMETHODIMP
 nsHTMLEditor::RemoveParent(const nsString &aParentTag)
 {
   if (gNoisy) { 
-    printf("---------- nsHTMLEditor::RemoveParagraphStyle ----------\n"); 
+    printf("---------- nsHTMLEditor::RemoveParent ----------\n"); 
   }
   
   nsresult result=NS_ERROR_NOT_INITIALIZED;

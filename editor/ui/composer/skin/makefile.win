@@ -20,6 +20,7 @@ DEPTH=..\..\..\..
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
+  $(MAKE_INSTALL) Editor.css              $(DIST)\bin\chrome\editor\composer\skin\default
   $(MAKE_INSTALL) images\ED_Bold.gif			$(DIST)\bin\chrome\editor\composer\skin\default\images
   $(MAKE_INSTALL) images\ED_Bullets.gif		$(DIST)\bin\chrome\editor\composer\skin\default\images
   $(MAKE_INSTALL) images\ED_Center.gif		$(DIST)\bin\chrome\editor\composer\skin\default\images
@@ -45,6 +46,7 @@ install:: $(DLL)
   $(MAKE_INSTALL) images\ED_Undo.gif			$(DIST)\bin\chrome\editor\composer\skin\default\images
 
 clobber::
+  rm -f $(DIST)\bin\chrome\editor\composer\skin\default\Editor.css
   rm -f $(DIST)\bin\chrome\editor\composer\skin\default\images\ED_Bold.gif			
   rm -f $(DIST)\bin\chrome\editor\composer\skin\default\images\ED_Bullets.gif			
   rm -f $(DIST)\bin\chrome\editor\composer\skin\default\images\ED_Center.gif			
