@@ -26,7 +26,7 @@
 #include "nsISupportsArray.h"
 #include "nsError.h"
 #include "prnetdb.h"
-#include "nsString2.h"
+#include "nsString.h"
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
 #include "netCore.h"
@@ -484,7 +484,7 @@ nsDNSLookup::InitiateLookup(void)
 
     PRBool numeric = PR_TRUE;
     for (const char *hostCheck = mHostName; *hostCheck; hostCheck++) {
-        if (!nsString2::IsDigit(*hostCheck) && (*hostCheck != '.') ) {
+        if (!nsCRT::IsAsciiDigit(*hostCheck) && (*hostCheck != '.') ) {
             numeric = PR_FALSE;
             break;
         }
