@@ -4903,6 +4903,8 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsIPresContext*          aPresContex
      rv = NS_NewMathMLmstyleFrame(&newFrame);
   else if (aTag == nsMathMLAtoms::msqrt)
      rv = NS_NewMathMLmsqrtFrame(&newFrame);
+  else if (aTag == nsMathMLAtoms::mroot)
+     rv = NS_NewMathMLmrootFrame(&newFrame);
   else if (aTag == nsMathMLAtoms::mrow   ||
            aTag == nsMathMLAtoms::mtext  ||
            aTag == nsMathMLAtoms::merror ||
