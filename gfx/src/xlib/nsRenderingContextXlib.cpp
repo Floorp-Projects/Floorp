@@ -27,6 +27,8 @@ static NS_DEFINE_IID(kIDOMRenderingContextIID, NS_IDOMRENDERINGCONTEXT_IID);
 static NS_DEFINE_IID(kIRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 
+static PRLogModuleInfo * RenderingContextXlibLM = PR_NewLogModule("RenderingContextXlib");
+
 class GraphicsState
 {
 public:
@@ -57,7 +59,7 @@ GraphicsState::~GraphicsState()
 
 nsRenderingContextXlib::nsRenderingContextXlib()
 {
-  printf("nsRenderingContextXlib::nsRenderingContextXlib()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::nsRenderingContextXlib()\n"));
   NS_INIT_REFCNT();
   mOffscreenSurface = nsnull;
   mRenderingSurface = nsnull;
@@ -76,7 +78,7 @@ nsRenderingContextXlib::nsRenderingContextXlib()
 
 nsRenderingContextXlib::~nsRenderingContextXlib()
 {
-  printf("nsRenderingContextXlib::~nsRenderingContextXlib()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::~nsRenderingContextXlib()\n"));
   NS_IF_RELEASE(mContext);
   NS_IF_RELEASE(mFontMetrics);
   if (mStateCache) {
@@ -143,7 +145,7 @@ NS_IMPL_RELEASE(nsRenderingContextXlib)
 NS_IMETHODIMP
 nsRenderingContextXlib::Init(nsIDeviceContext* aContext, nsIWidget *aWindow)
 {
-  printf("nsRenderingContextXlib::Init(DeviceContext, Widget)\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::Init(DeviceContext, Widget)\n"));
   mContext = aContext;
   NS_IF_ADDREF(mContext);
 
@@ -162,7 +164,7 @@ nsRenderingContextXlib::Init(nsIDeviceContext* aContext, nsIWidget *aWindow)
 NS_IMETHODIMP
 nsRenderingContextXlib::Init(nsIDeviceContext* aContext, nsDrawingSurface aSurface)
 {
-  printf("nsRenderingContxtXlib::Init(DeviceContext, DrawingSurface)\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContxtXlib::Init(DeviceContext, DrawingSurface)\n"));
 
   mContext = aContext;
   NS_IF_ADDREF(mContext);
@@ -199,14 +201,14 @@ nsresult nsRenderingContextXlib::CommonInit(void)
 NS_IMETHODIMP
 nsRenderingContextXlib::Reset(void)
 {
-  printf("nsRenderingContext::Reset()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContext::Reset()\n"));
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsRenderingContextXlib::GetDeviceContext(nsIDeviceContext *&aContext)
 {
-  printf("nsRenderingContext::GetDeviceContext()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContext::GetDeviceContext()\n"));
   NS_IF_ADDREF(mContext);
   aContext = mContext;
   return NS_OK;
@@ -220,7 +222,7 @@ nsRenderingContextXlib::LockDrawingSurface(PRInt32 aX, PRInt32 aY,
                                            PRInt32 *aWidthBytes,
                                            PRUint32 aFlags)
 {
-  printf("nsRenderingContextXlib::LockDrawingSurface()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::LockDrawingSurface()\n"));
   PushState();
   return mRenderingSurface->Lock(aX, aY, aWidth, aHeight,
                                  aBits, aStride, aWidthBytes, aFlags);
@@ -229,7 +231,7 @@ nsRenderingContextXlib::LockDrawingSurface(PRInt32 aX, PRInt32 aY,
 NS_IMETHODIMP
 nsRenderingContextXlib::UnlockDrawingSurface(void)
 {
-  printf("nsRenderingContextXlib::UnlockDrawingSurface()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::UnlockDrawingSurface()\n"));
   PRBool clipstate;
   PopState(clipstate);
   mRenderingSurface->Unlock();
@@ -239,7 +241,7 @@ nsRenderingContextXlib::UnlockDrawingSurface(void)
 NS_IMETHODIMP
 nsRenderingContextXlib::SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
 {
-  printf("nsRenderingContextXlib::SelectOffScreenDrawingSurface()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::SelectOffScreenDrawingSurface()\n"));
   if (nsnull == aSurface)
     mRenderingSurface = mOffscreenSurface;
   else 
@@ -250,7 +252,7 @@ nsRenderingContextXlib::SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
 NS_IMETHODIMP
 nsRenderingContextXlib::GetDrawingSurface(nsDrawingSurface *aSurface)
 {
-  printf("nsRenderingContextXlib::GetDrawingSurface()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::GetDrawingSurface()\n"));
   *aSurface = mRenderingSurface;
   return NS_OK;
 }
@@ -258,7 +260,7 @@ nsRenderingContextXlib::GetDrawingSurface(nsDrawingSurface *aSurface)
 NS_IMETHODIMP
 nsRenderingContextXlib::GetHints(PRUint32& aResult)
 {
-  printf("nsRenderingContextXlib::GetHints()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::GetHints()\n"));
   PRUint32 result = 0;
   // Most X servers implement 8 bit text rendering alot faster than
   // XChar2b rendering. In addition, we can avoid the PRUnichar to
@@ -271,7 +273,7 @@ nsRenderingContextXlib::GetHints(PRUint32& aResult)
 NS_IMETHODIMP
 nsRenderingContextXlib::PushState(void)
 {
-  printf("nsRenderingContextXlib::PushState()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::PushState()\n"));
   GraphicsState *state = new GraphicsState();
 
   state->mMatrix = mTMatrix;
@@ -302,7 +304,7 @@ nsRenderingContextXlib::PushState(void)
 NS_IMETHODIMP
 nsRenderingContextXlib::PopState(PRBool &aClipState)
 {
-  printf("nsRenderingContextXlib::PopState()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::PopState()\n"));
 
   PRUint32 cnt = mStateCache->Count();
   GraphicsState *state;
@@ -345,7 +347,7 @@ nsRenderingContextXlib::PopState(PRBool &aClipState)
 NS_IMETHODIMP
 nsRenderingContextXlib::IsVisibleRect(const nsRect& aRect, PRBool &aVisible)
 {
-  printf("nsRenderingContextXlib::IsVisibleRect()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::IsVisibleRect()\n"));
   aVisible = PR_TRUE;
   return NS_OK;
 }
@@ -353,7 +355,7 @@ nsRenderingContextXlib::IsVisibleRect(const nsRect& aRect, PRBool &aVisible)
 NS_IMETHODIMP
 nsRenderingContextXlib::SetClipRect(const nsRect& aRect, nsClipCombine aCombine, PRBool &aClipState)
 {
-  printf("nsRenderingContextXlib::SetClipRect()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::SetClipRect()\n"));
   nsRect trect = aRect;
   Region rgn;
   mTMatrix->TransformCoord(&trect.x, &trect.y,
@@ -383,7 +385,7 @@ nsRenderingContextXlib::SetClipRect(const nsRect& aRect, nsClipCombine aCombine,
 NS_IMETHODIMP
 nsRenderingContextXlib::GetClipRect(nsRect &aRect, PRBool &aClipState)
 {
-  printf("nsRenderingContextXlib::GetClipRext()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::GetClipRext()\n"));
   PRInt32 x, y, w, h;
   if (!mClipRegion->IsEmpty()) {
     mClipRegion->GetBoundingBox(&x,&y,&w,&h);
@@ -399,7 +401,7 @@ nsRenderingContextXlib::GetClipRect(nsRect &aRect, PRBool &aClipState)
 NS_IMETHODIMP
 nsRenderingContextXlib::SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine, PRBool &aClipState)
 {
-  printf("nsRenderingContextXlib::SetClipRegion()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::SetClipRegion()\n"));
   Region rgn;
   switch(aCombine)
   {
@@ -427,7 +429,7 @@ nsRenderingContextXlib::SetClipRegion(const nsIRegion& aRegion, nsClipCombine aC
 NS_IMETHODIMP
 nsRenderingContextXlib::GetClipRegion(nsIRegion **aRegion)
 {
-  printf("nsRenderingContextXlib::GetClipRegion()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::GetClipRegion()\n"));
   nsresult  rv = NS_OK;
   
   NS_ASSERTION(!(nsnull == aRegion), "no region ptr");
@@ -458,7 +460,7 @@ nsRenderingContextXlib::GetClipRegion(nsIRegion **aRegion)
 NS_IMETHODIMP
 nsRenderingContextXlib::SetLineStyle(nsLineStyle aLineStyle)
 {
-  printf("nsRenderingContextXlib::SetLineStyle()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::SetLineStyle()\n"));
   if (aLineStyle != mCurrentLineStyle) {
     switch(aLineStyle)
       { 
@@ -498,7 +500,7 @@ nsRenderingContextXlib::SetLineStyle(nsLineStyle aLineStyle)
 NS_IMETHODIMP
 nsRenderingContextXlib::GetLineStyle(nsLineStyle &aLineStyle)
 {
-  printf("nsRenderingContextXlib::GetLineStyle()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::GetLineStyle()\n"));
   aLineStyle = mCurrentLineStyle;
   return NS_OK;
 }
@@ -506,7 +508,7 @@ nsRenderingContextXlib::GetLineStyle(nsLineStyle &aLineStyle)
 NS_IMETHODIMP
 nsRenderingContextXlib::SetColor(nscolor aColor)
 {
-  printf("nsRenderingContextXlib::SetColor(nscolor)\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::SetColor(nscolor)\n"));
   if (nsnull == mContext)
     return NS_ERROR_FAILURE;
 
@@ -517,7 +519,7 @@ nsRenderingContextXlib::SetColor(nscolor aColor)
   xlib_rgb_gc_set_background(mRenderingSurface->GetGC(), NS_RGB(NS_GET_R(aColor),
                                                                 NS_GET_G(aColor),
                                                                 NS_GET_B(aColor)));
-  printf("Setting color to %d %d %d\n", NS_GET_R(aColor), NS_GET_G(aColor), NS_GET_B(aColor));
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("Setting color to %d %d %d\n", NS_GET_R(aColor), NS_GET_G(aColor), NS_GET_B(aColor)));
   return NS_OK;
 }
 
@@ -539,7 +541,7 @@ nsRenderingContextXlib::SetColor(const nsString &aColor)
 NS_IMETHODIMP
 nsRenderingContextXlib::GetColor(nscolor &aColor) const
 {
-  printf("nsRenderingContextXlib::GetColor()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::GetColor()\n"));
   aColor = mCurrentColor;
   return NS_OK;
 }
@@ -559,7 +561,7 @@ nsRenderingContextXlib::GetColor(nsString &aColor)
 NS_IMETHODIMP
 nsRenderingContextXlib::SetFont(const nsFont& aFont)
 {
-  printf("nsRenderingContextXlib::SetFont(nsFont)\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::SetFont(nsFont)\n"));
   NS_IF_RELEASE(mFontMetrics);
   mContext->GetMetricsFor(aFont, mFontMetrics);
   return SetFont(mFontMetrics);
@@ -568,7 +570,7 @@ nsRenderingContextXlib::SetFont(const nsFont& aFont)
 NS_IMETHODIMP
 nsRenderingContextXlib::SetFont(nsIFontMetrics *aFontMetrics)
 {
-  printf("nsRenderingContextXlib::SetFont(nsIFontMetrics)\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::SetFont(nsIFontMetrics)\n"));
   NS_IF_RELEASE(mFontMetrics);
   mFontMetrics = aFontMetrics;
   NS_IF_ADDREF(mFontMetrics);
@@ -586,7 +588,7 @@ nsRenderingContextXlib::SetFont(nsIFontMetrics *aFontMetrics)
 NS_IMETHODIMP
 nsRenderingContextXlib::GetFontMetrics(nsIFontMetrics *&aFontMetrics)
 {
-  printf("nsRenderingContextXlib::GetFontMetrics()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::GetFontMetrics()\n"));
   NS_IF_ADDREF(mFontMetrics);
   aFontMetrics = mFontMetrics;
   return NS_OK;
@@ -595,7 +597,7 @@ nsRenderingContextXlib::GetFontMetrics(nsIFontMetrics *&aFontMetrics)
 NS_IMETHODIMP
 nsRenderingContextXlib::Translate(nscoord aX, nscoord aY)
 {
-  printf("nsRenderingContextXlib::Translate()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::Translate()\n"));
   mTMatrix->AddTranslation((float)aX,(float)aY);
   return NS_OK;
 }
@@ -603,7 +605,7 @@ nsRenderingContextXlib::Translate(nscoord aX, nscoord aY)
 NS_IMETHODIMP
 nsRenderingContextXlib::Scale(float aSx, float aSy)
 {
-  printf("nsRenderingContextXlib::Scale()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::Scale()\n"));
   mTMatrix->AddScale(aSx, aSy);
   return NS_OK;
 }
@@ -611,7 +613,7 @@ nsRenderingContextXlib::Scale(float aSx, float aSy)
 NS_IMETHODIMP
 nsRenderingContextXlib::GetCurrentTransform(nsTransform2D *&aTransform)
 {
-  printf("nsRenderingContextXlib::GetCurrentTransform()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::GetCurrentTransform()\n"));
   aTransform = mTMatrix;
   return NS_OK;
 }
@@ -619,7 +621,7 @@ nsRenderingContextXlib::GetCurrentTransform(nsTransform2D *&aTransform)
 NS_IMETHODIMP
 nsRenderingContextXlib::CreateDrawingSurface(nsRect *aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface)
 {
-  printf("nsRenderingContextXlib::CreateDrawingSurface()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::CreateDrawingSurface()\n"));
   if (nsnull == mRenderingSurface) {
     aSurface = nsnull;
     return NS_ERROR_FAILURE;
@@ -641,7 +643,7 @@ nsRenderingContextXlib::CreateDrawingSurface(nsRect *aBounds, PRUint32 aSurfFlag
 NS_IMETHODIMP
 nsRenderingContextXlib::DestroyDrawingSurface(nsDrawingSurface aDS)
 {
-  printf("nsRenderingContextXlib::DestroyDrawingSurface()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::DestroyDrawingSurface()\n"));
   nsDrawingSurfaceXlib *surf = (nsDrawingSurfaceXlib *) aDS;
 
   NS_IF_RELEASE(surf);
@@ -652,7 +654,7 @@ nsRenderingContextXlib::DestroyDrawingSurface(nsDrawingSurface aDS)
 NS_IMETHODIMP
 nsRenderingContextXlib::DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
 {
-  printf("nsRenderingContextXlib::DrawLine()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::DrawLine()\n"));
   if (nsnull == mTMatrix || nsnull == mRenderingSurface)
     return NS_ERROR_FAILURE;
 
@@ -670,7 +672,7 @@ NS_IMETHODIMP
 nsRenderingContextXlib::DrawLine2(PRInt32 aX0, PRInt32 aY0,
                                   PRInt32 aX1, PRInt32 aY1)
 {
-  printf("nsRenderingContextXlib::DrawLine2()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::DrawLine2()\n"));
   return DrawLine(aX0, aY0, aX1, aY1);
 }
 
@@ -678,7 +680,7 @@ nsRenderingContextXlib::DrawLine2(PRInt32 aX0, PRInt32 aY0,
 NS_IMETHODIMP
 nsRenderingContextXlib::DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
-  printf("nsRenderingContextXlib::DrawPolyLine()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::DrawPolyLine()\n"));
   if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
     return NS_ERROR_FAILURE;
   }
@@ -708,14 +710,14 @@ nsRenderingContextXlib::DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints
 NS_IMETHODIMP
 nsRenderingContextXlib::DrawRect(const nsRect& aRect)
 {
-  printf("nsRenderingContextXlib::DrawRext()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::DrawRext()\n"));
   return DrawRect(aRect.x, aRect.y, aRect.width, aRect.height);
 }
 
 NS_IMETHODIMP
 nsRenderingContextXlib::DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-  printf("nsRenderingContextXlib::DrawRect()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::DrawRect()\n"));
   if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
     return NS_ERROR_FAILURE;
   }
@@ -740,14 +742,14 @@ nsRenderingContextXlib::DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord
 NS_IMETHODIMP
 nsRenderingContextXlib::FillRect(const nsRect& aRect)
 {
-  printf("nsRenderingContextXlib::FillRect()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::FillRect()\n"));
   return FillRect(aRect.x, aRect.y, aRect.width, aRect.height);
 }
 
 NS_IMETHODIMP
 nsRenderingContextXlib::FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-  printf("nsRenderingContextXlib::FillRect()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::FillRect()\n"));
   if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
     return NS_ERROR_FAILURE;
   }
@@ -758,8 +760,8 @@ nsRenderingContextXlib::FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord
   h = aHeight;
 
   mTMatrix->TransformCoord(&x,&y,&w,&h);
-  printf("About to fill window 0x%lxd with rect %d %d %d %d\n",
-         mRenderingSurface->GetDrawable(), x, y, w, h);
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("About to fill window 0x%lxd with rect %d %d %d %d\n",
+                                                mRenderingSurface->GetDrawable(), x, y, w, h));
   ::XFillRectangle(gDisplay,
                    mRenderingSurface->GetDrawable(),
                    mRenderingSurface->GetGC(),
@@ -771,7 +773,7 @@ nsRenderingContextXlib::FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord
 NS_IMETHODIMP
 nsRenderingContextXlib::DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
-  printf("nsRenderingContextXlib::DrawPolygon()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::DrawPolygon()\n"));
   if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
     return NS_ERROR_FAILURE;
   }
@@ -801,7 +803,7 @@ nsRenderingContextXlib::DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 NS_IMETHODIMP
 nsRenderingContextXlib::FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
-  printf("nsRenderingContextXlib::FillPolygon()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::FillPolygon()\n"));
   if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
     return NS_ERROR_FAILURE;
   }
@@ -834,14 +836,14 @@ nsRenderingContextXlib::FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 NS_IMETHODIMP
 nsRenderingContextXlib::DrawEllipse(const nsRect& aRect)
 {
-  printf("nsRenderingContextXlib::DrawEllipse()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::DrawEllipse()\n"));
   return DrawEllipse(aRect.x, aRect.y, aRect.width, aRect.height);
 }
 
 NS_IMETHODIMP
 nsRenderingContextXlib::DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-  printf("nsRenderingContextXlib::DrawEllipse()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::DrawEllipse()\n"));
   if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
     return NS_ERROR_FAILURE;
   }
@@ -865,14 +867,14 @@ nsRenderingContextXlib::DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nsco
 NS_IMETHODIMP
 nsRenderingContextXlib::FillEllipse(const nsRect& aRect)
 {
-  printf("nsRenderingContextXlib::FillEllipse()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::FillEllipse()\n"));
   return FillEllipse(aRect.x, aRect.y, aRect.width, aRect.height);
 }
 
 NS_IMETHODIMP
 nsRenderingContextXlib::FillEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-  printf("nsRenderingContextXlib::FillEllipse()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::FillEllipse()\n"));
   if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
     return NS_ERROR_FAILURE;
   }
@@ -897,7 +899,7 @@ NS_IMETHODIMP
 nsRenderingContextXlib::DrawArc(const nsRect& aRect,
                                 float aStartAngle, float aEndAngle)
 {
-  printf("nsRenderingContextXlib::DrawArc()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::DrawArc()\n"));
   return DrawArc(aRect.x,aRect.y,aRect.width,aRect.height,aStartAngle,aEndAngle); 
 }
 
@@ -905,7 +907,7 @@ NS_IMETHODIMP
 nsRenderingContextXlib::DrawArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
                                 float aStartAngle, float aEndAngle)
 {
-  printf("nsRenderingContextXlib::DrawArc()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::DrawArc()\n"));
   if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
     return NS_ERROR_FAILURE;
   }
@@ -931,7 +933,7 @@ NS_IMETHODIMP
 nsRenderingContextXlib::FillArc(const nsRect& aRect,
                                 float aStartAngle, float aEndAngle)
 {
-  printf("nsRenderingContextXlib::FillArc()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::FillArc()\n"));
   return FillArc(aRect.x, aRect.y, aRect.width, aRect.height, aStartAngle, aEndAngle);
 }
 
@@ -939,7 +941,7 @@ NS_IMETHODIMP
 nsRenderingContextXlib::FillArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
                                 float aStartAngle, float aEndAngle)
 {
-  printf("nsRenderingContextXlib::FillArc()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::FillArc()\n"));
   if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
     return NS_ERROR_FAILURE;
   }
@@ -964,7 +966,7 @@ nsRenderingContextXlib::FillArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord 
 NS_IMETHODIMP
 nsRenderingContextXlib::GetWidth(char aC, nscoord& aWidth)
 {
-  printf("nsRenderingContextXlib::GetWidth()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::GetWidth()\n"));
   // Check for the very common case of trying to get the width of a single
   // space.
   if ((aC == ' ') && (nsnull != mFontMetrics)) {
@@ -978,7 +980,7 @@ NS_IMETHODIMP
 nsRenderingContextXlib::GetWidth(PRUnichar aC, nscoord& aWidth,
                                  PRInt32 *aFontID)
 {
-  printf("nsRenderingContextXlib::GetWidth()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::GetWidth()\n"));
   return GetWidth(&aC, 1, aWidth, aFontID);
 }
 
@@ -986,21 +988,21 @@ NS_IMETHODIMP
 nsRenderingContextXlib::GetWidth(const nsString& aString, nscoord& aWidth,
                                  PRInt32 *aFontID)
 {
-  printf("nsRenderingContextXlib::GetWidth()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::GetWidth()\n"));
   return GetWidth(aString.GetUnicode(), aString.Length(), aWidth, aFontID);
 }
 
 NS_IMETHODIMP
 nsRenderingContextXlib::GetWidth(const char* aString, nscoord& aWidth)
 {
-  printf("nsRenderingContextXlib::GetWidth()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::GetWidth()\n"));
   return GetWidth(aString, strlen(aString), aWidth);
 }
 
 NS_IMETHODIMP
 nsRenderingContextXlib::GetWidth(const char* aString, PRUint32 aLength, nscoord& aWidth)
 {
-  printf("nsRenderingContextXlib::GetWidth()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::GetWidth()\n"));
   if (0 == aLength) {
     aWidth = 0;
   }
@@ -1016,7 +1018,7 @@ NS_IMETHODIMP
 nsRenderingContextXlib::GetWidth(const PRUnichar* aString, PRUint32 aLength,
                                  nscoord& aWidth, PRInt32 *aFontID)
 {
-  printf("nsRenderingContextXlib::GetWidth()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::GetWidth()\n"));
   if (0 == aLength) {
     aWidth = 0;
   }
@@ -1073,7 +1075,7 @@ nsRenderingContextXlib::DrawString(const char *aString, PRUint32 aLength,
                                    nscoord aX, nscoord aY,
                                    const nscoord* aSpacing)
 {
-  printf("nsRenderingContextXlib::DrawString()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::DrawString()\n"));
   if (0 != aLength) {
     if (mTMatrix == nsnull)
       return NS_ERROR_FAILURE;
@@ -1159,7 +1161,7 @@ nsRenderingContextXlib::DrawString(const PRUnichar *aString, PRUint32 aLength,
                                    PRInt32 aFontID,
                                    const nscoord* aSpacing)
 {
-  printf("nsRenderingContextXlib::DrawString()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::DrawString()\n"));
     if (aLength && mFontMetrics) {
       if (mTMatrix == nsnull)
         return NS_ERROR_FAILURE;
@@ -1254,7 +1256,7 @@ NS_IMETHODIMP nsRenderingContextXlib::DrawString(const nsString& aString, nscoor
                                                  PRInt32 aFontID,
                                                  const nscoord* aSpacing)
 {
-  printf("nsRenderingContextXlib::DrawString()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::DrawString()\n"));
   return DrawString(aString.GetUnicode(), aString.Length(),
                     aX, aY, aFontID, aSpacing);
   return NS_OK;
@@ -1263,7 +1265,7 @@ NS_IMETHODIMP nsRenderingContextXlib::DrawString(const nsString& aString, nscoor
 NS_IMETHODIMP
 nsRenderingContextXlib::DrawImage(nsIImage *aImage, nscoord aX, nscoord aY)
 {
-  printf("nsRenderingContextXlib::DrawImage()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::DrawImage()\n"));
   nscoord width, height;
 
   // we have to do this here because we are doing a transform below
@@ -1277,7 +1279,7 @@ NS_IMETHODIMP
 nsRenderingContextXlib::DrawImage(nsIImage *aImage, nscoord aX, nscoord aY,
                                   nscoord aWidth, nscoord aHeight)
 {
-  printf("nsRenderingContextXlib::DrawImage()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::DrawImage()\n"));
   nsRect tr;
   
   tr.x = aX;
@@ -1290,7 +1292,7 @@ nsRenderingContextXlib::DrawImage(nsIImage *aImage, nscoord aX, nscoord aY,
 NS_IMETHODIMP
 nsRenderingContextXlib::DrawImage(nsIImage *aImage, const nsRect& aRect)
 {
-  printf("nsRenderingContextXlib::DrawImage()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::DrawImage()\n"));
 
   nsRect tr;
   tr = aRect;
@@ -1301,7 +1303,7 @@ nsRenderingContextXlib::DrawImage(nsIImage *aImage, const nsRect& aRect)
 NS_IMETHODIMP
 nsRenderingContextXlib::DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect)
 {
-  printf("nsRenderingContextXlib::DrawImage()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::DrawImage()\n"));
   nsRect	sr,dr;
   
   sr = aSRect;
@@ -1324,7 +1326,7 @@ NS_IMETHODIMP
 nsRenderingContextXlib::CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
                                           const nsRect &aDestBounds, PRUint32 aCopyFlags)
 {
-  printf("nsRenderingContextXlib::CopyOffScreenBits()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::CopyOffScreenBits()\n"));
   PRInt32               srcX = aSrcX;
   PRInt32               srcY = aSrcY;
   nsRect                drect = aDestBounds;
@@ -1367,14 +1369,14 @@ nsRenderingContextXlib::CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSr
 NS_IMETHODIMP
 nsRenderingContextXlib::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
 {
-  printf("nsRenderingContextXlib::GetScriptObject()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::GetScriptObject()\n"));
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsRenderingContextXlib::SetScriptObject(void* aScriptObject)
 {
-  printf("nsRenderingContextXlib::SetScriptObject()\n");
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::SetScriptObject()\n"));
   return NS_OK;
 }
 
