@@ -47,6 +47,7 @@
 #include "nsIChannel.idl"
 
 interface nsIStreamListener;
+interface nsIProgressEventSink;
 interface nsILoadGroup;
 interface nsIURI;
 
@@ -54,6 +55,7 @@ interface nsIURI;
 
 interface nsIImapMockChannel : nsIChannel
 {
+	void GetProgressEventSink(out nsIProgressEventSink aProgressSink);
     void GetChannelListener(out nsIStreamListener aChannelListener);
     void GetChannelContext(out nsISupports aChannelContext);
     void Close();
