@@ -433,7 +433,7 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
     
     nsCAutoString bindingURI;
     if (mPrototypeBinding)
-      mPrototypeBinding->GetDocURI(bindingURI);
+      mPrototypeBinding->DocURI()->GetSpec(bindingURI);
     
     boundContext->CompileEventHandler(scriptObject, onEventAtom, handlerText,
                                       bindingURI.get(),

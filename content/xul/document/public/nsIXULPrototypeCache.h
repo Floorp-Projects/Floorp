@@ -82,7 +82,7 @@ public:
     NS_IMETHOD PutScript(nsIURI* aURI, void* aScriptObject) = 0;
     NS_IMETHOD FlushScripts() = 0;
 
-    NS_IMETHOD GetXBLDocumentInfo(const nsCString& aString, nsIXBLDocumentInfo** aResult) = 0;
+    NS_IMETHOD GetXBLDocumentInfo(nsIURI* aURL, nsIXBLDocumentInfo** aResult) = 0;
     NS_IMETHOD PutXBLDocumentInfo(nsIXBLDocumentInfo* aDocument) = 0;
 
     NS_IMETHOD FlushXBLInformation() = 0;

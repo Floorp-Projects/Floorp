@@ -46,7 +46,6 @@
 #ifndef nsIXBLBinding_h__
 #define nsIXBLBinding_h__
 
-#include "nsString.h"
 #include "nsISupports.h"
 #include "nsISupportsArray.h"
 
@@ -56,6 +55,8 @@ class nsIDOMNodeList;
 class nsIScriptContext;
 class nsXBLPrototypeBinding;
 class nsVoidArray;
+class nsIURI;
+class nsACString;
 
 // {DDDBAD20-C8DF-11d3-97FB-00400553EEF0}
 #define NS_IXBLBINDING_IID \
@@ -100,9 +101,9 @@ public:
   NS_IMETHOD UnhookEventHandlers() = 0;
   NS_IMETHOD ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocument) = 0;
 
-  NS_IMETHOD GetBindingURI(nsCString& aResult) = 0;
-  NS_IMETHOD GetDocURI(nsCString& aResult) = 0;
-  NS_IMETHOD GetID(nsCString& aResult) = 0;
+  NS_IMETHOD_(nsIURI*) BindingURI() const = 0;
+  NS_IMETHOD_(nsIURI*) DocURI() const = 0;
+  NS_IMETHOD GetID(nsACString& aResult) const = 0;
 
   // Get the list of insertion points for aParent.  The nsVoidArray is owned
   // by the binding, you should not delete it.

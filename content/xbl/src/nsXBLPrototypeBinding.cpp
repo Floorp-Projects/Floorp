@@ -220,9 +220,7 @@ static const PRInt32 kInsInitialSize = (NS_SIZE_IN_HEAP(sizeof(nsXBLInsertionPoi
 // Implementation /////////////////////////////////////////////////////////////////
 
 // Constructors/Destructors
-nsXBLPrototypeBinding::nsXBLPrototypeBinding(const nsACString& aID,
-                                             nsIXBLDocumentInfo* aInfo,
-                                             nsIContent* aElement)
+nsXBLPrototypeBinding::nsXBLPrototypeBinding()
 : mImplementation(nsnull),
   mBaseBinding(nsnull),
   mInheritStyle(PR_TRUE), 
@@ -233,22 +231,43 @@ nsXBLPrototypeBinding::nsXBLPrototypeBinding(const nsACString& aID,
   mInsertionPointTable(nsnull),
   mInterfaceTable(nsnull)
 {
-  
-  mID = ToNewCString(aID);
-
-  mXBLDocInfoWeak = do_GetWeakReference(aInfo);
-  
   gRefCnt++;
-  //  printf("REF COUNT UP: %d %s\n", gRefCnt, (const char*)mID);
 
   if (gRefCnt == 1) {
     kAttrPool = new nsFixedSizeAllocator();
-    kAttrPool->Init("XBL Attribute Entries", kAttrBucketSizes, kAttrNumBuckets, kAttrInitialSize);
+    if (kAttrPool) {
+      kAttrPool->Init("XBL Attribute Entries", kAttrBucketSizes, kAttrNumBuckets, kAttrInitialSize);
+    }
     kInsPool = new nsFixedSizeAllocator();
-    kInsPool->Init("XBL Insertion Point Entries", kInsBucketSizes, kInsNumBuckets, kInsInitialSize);
+    if (kInsPool) {
+      kInsPool->Init("XBL Insertion Point Entries", kInsBucketSizes, kInsNumBuckets, kInsInitialSize);
+    }
+  }
+}
+
+nsresult
+nsXBLPrototypeBinding::Init(const nsACString& aID,
+                            nsIXBLDocumentInfo* aInfo,
+                            nsIContent* aElement)
+{
+  if (!kAttrPool || !kInsPool) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri),
+                          NS_LITERAL_CSTRING("#") + aID,
+                          nsnull,
+                          aInfo->DocumentURI());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mBindingURI = do_QueryInterface(uri, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  mXBLDocInfoWeak = do_GetWeakReference(aInfo);
+
   SetBindingElement(aElement);
+  return NS_OK;
 }
 
 void
@@ -263,7 +282,6 @@ nsXBLPrototypeBinding::Initialize()
 
 nsXBLPrototypeBinding::~nsXBLPrototypeBinding(void)
 {
-  nsMemory::Free(mID);
   delete mResources;
   delete mAttributeTable;
   delete mInsertionPointTable;
@@ -308,32 +326,12 @@ nsXBLPrototypeBinding::SetBindingElement(nsIContent* aElement)
     mInheritStyle = PR_FALSE;
 }
 
-nsresult
-nsXBLPrototypeBinding::GetBindingURI(nsCString& aResult)
+nsIURI*
+nsXBLPrototypeBinding::DocURI() const
 {
   nsCOMPtr<nsIXBLDocumentInfo> info = GetXBLDocumentInfo(nsnull);
   
-  NS_ASSERTION(info, "The prototype binding has somehow lost its XBLDocInfo! Bad bad bad!!!\n");
-  if (!info)
-    return NS_ERROR_FAILURE;
-
-  info->GetDocumentURI(aResult);
-  aResult += "#";
-  aResult += mID;
-  return NS_OK;
-}
-
-nsresult
-nsXBLPrototypeBinding::GetDocURI(nsCString& aResult)
-{
-  nsCOMPtr<nsIXBLDocumentInfo> info = GetXBLDocumentInfo(nsnull);
-  
-  NS_ASSERTION(info, "The prototype binding has somehow lost its XBLDocInfo! Bad bad bad!!!\n");
-  if (!info)
-    return NS_ERROR_FAILURE;
-
-  info->GetDocumentURI(aResult);
-  return NS_OK;
+  return info->DocumentURI();
 }
 
 nsresult
@@ -393,7 +391,7 @@ nsXBLPrototypeBinding::BindingDetached(nsIDOMEventReceiver* aReceiver)
 }
 
 already_AddRefed<nsIXBLDocumentInfo>
-nsXBLPrototypeBinding::GetXBLDocumentInfo(nsIContent* aBoundElement)
+nsXBLPrototypeBinding::GetXBLDocumentInfo(nsIContent* aBoundElement) const
 {
   nsIXBLDocumentInfo* result = nsnull;
   CallQueryReferent(mXBLDocInfoWeak.get(), &result);  // addrefs

@@ -360,15 +360,12 @@ static PRBool IsChromeOrResourceURI(nsIURI* aURI)
 /* Implementation file */
 NS_IMPL_ISUPPORTS3(nsXBLDocumentInfo, nsIXBLDocumentInfo, nsIScriptGlobalObjectOwner, nsISupportsWeakReference)
 
-nsXBLDocumentInfo::nsXBLDocumentInfo(const char* aDocURI, nsIDocument* aDocument)
+nsXBLDocumentInfo::nsXBLDocumentInfo(nsIDocument* aDocument)
+  : mDocument(aDocument),
+    mScriptAccess(PR_TRUE),
+    mBindingTable(nsnull)
 {
-  /* member initializers and constructor code */
-  mDocURI = aDocURI;
-  mDocument = aDocument;
-  mScriptAccess = PR_TRUE;
-  mBindingTable = nsnull;
-
-  nsIURI *uri = mDocument->GetDocumentURL();
+  nsIURI* uri = aDocument->GetDocumentURL();
   if (IsChromeOrResourceURI(uri)) {
     // Cache whether or not this chrome XBL can execute scripts.
     nsCOMPtr<nsIXULChromeRegistry> reg(do_GetService(NS_CHROMEREGISTRY_CONTRACTID));
@@ -483,12 +480,14 @@ nsXBLDocumentInfo::ReportScriptError(nsIScriptError *errorObject)
 
 nsresult NS_NewXBLDocumentInfo(nsIDocument* aDocument, nsIXBLDocumentInfo** aResult)
 {
-  nsCAutoString str;
-  aDocument->GetDocumentURL()->GetSpec(str);
+  NS_PRECONDITION(aDocument, "Must have a document!");
 
-  *aResult = new nsXBLDocumentInfo(str.get(), aDocument);
-  
-  NS_IF_ADDREF(*aResult);
+  *aResult = new nsXBLDocumentInfo(aDocument);
+  if (!*aResult) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  NS_ADDREF(*aResult);
   return NS_OK;
 }
 

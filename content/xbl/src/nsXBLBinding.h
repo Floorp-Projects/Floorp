@@ -95,9 +95,9 @@ class nsXBLBinding: public nsIXBLBinding
   NS_IMETHOD UnhookEventHandlers();
   NS_IMETHOD ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocument);
 
-  NS_IMETHOD GetBindingURI(nsCString& aResult);
-  NS_IMETHOD GetDocURI(nsCString& aResult);
-  NS_IMETHOD GetID(nsCString& aResult);
+  NS_IMETHOD_(nsIURI*) BindingURI() const;
+  NS_IMETHOD_(nsIURI*) DocURI() const;
+  NS_IMETHOD GetID(nsACString& aResult) const;
 
   NS_IMETHOD GetInsertionPointsFor(nsIContent* aParent, nsVoidArray** aResult);
 

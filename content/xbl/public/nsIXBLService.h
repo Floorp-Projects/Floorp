@@ -46,7 +46,6 @@
 #ifndef nsIXBLService_h__
 #define nsIXBLService_h__
 
-#include "nsString.h"
 #include "nsISupports.h"
 
 class nsIContent;
@@ -73,14 +72,14 @@ public:
                           nsIXBLBinding** aBinding, PRBool* aResolveStyle) = 0;
 
   // Indicates whether or not a binding is fully loaded.
-  NS_IMETHOD BindingReady(nsIContent* aBoundElement, const nsCString& aURLStr, PRBool* aIsReady) = 0;
+  NS_IMETHOD BindingReady(nsIContent* aBoundElement, nsIURI* aURI, PRBool* aIsReady) = 0;
 
   // Retrieves our base class (e.g., tells us what type of frame and content node to build)
   NS_IMETHOD ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID, nsIAtom** aResult) = 0;
 
   // This method checks the hashtable and then calls FetchBindingDocument on a miss.
   NS_IMETHOD LoadBindingDocumentInfo(nsIContent* aBoundElement, nsIDocument* aBoundDocument,
-                                     const nsCString& aURI, const nsCString& aRef,
+                                     nsIURI* aBindingURI,
                                      PRBool aForceSyncLoad, nsIXBLDocumentInfo** aResult) = 0;
 
   // Hooks up the global key and DragDrop event handlers to the document root.

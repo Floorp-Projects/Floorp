@@ -229,7 +229,7 @@ inDOMUtils::GetBindingURLs(nsIDOMElement *aElement, nsISimpleEnumerator **_retva
   nsCOMPtr<nsIXBLBinding> tempBinding;
   while (binding) {
     nsCAutoString uri;
-    binding->GetBindingURI(uri);
+    binding->BindingURI()->GetSpec(uri);
 
     nsCOMPtr<nsIAtom> atom = do_GetAtom(uri.get());
     urls->AppendElement(atom);

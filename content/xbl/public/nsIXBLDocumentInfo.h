@@ -46,14 +46,14 @@
 #ifndef nsIXBLDocumentInfo_h__
 #define nsIXBLDocumentInfo_h__
 
-#include "nsString.h"
 #include "nsISupports.h"
-#include "nsISupportsArray.h"
 
 class nsIContent;
 class nsIDocument;
 class nsIScriptContext;
 class nsXBLPrototypeBinding;
+class nsIURI;
+class nsACString;
 
 // {5C4D9674-A2CF-4ddf-9F65-E1806C34D28D}
 #define NS_IXBLDOCUMENTINFO_IID \
@@ -69,7 +69,8 @@ public:
   NS_IMETHOD GetScriptAccess(PRBool* aResult)=0;
   NS_IMETHOD SetScriptAccess(PRBool aAccess)=0;
 
-  NS_IMETHOD GetDocumentURI(nsCString& aDocURI)=0;
+  /* Never returns null */
+  NS_IMETHOD_(nsIURI*) DocumentURI()=0;
 
   NS_IMETHOD GetPrototypeBinding(const nsACString& aRef, nsXBLPrototypeBinding** aResult)=0;
   NS_IMETHOD SetPrototypeBinding(const nsACString& aRef, nsXBLPrototypeBinding* aBinding)=0;
