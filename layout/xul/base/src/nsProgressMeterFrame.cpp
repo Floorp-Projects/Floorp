@@ -239,7 +239,6 @@ nsProgressMeterFrame :: nsProgressMeterFrame ( )
 //
 nsProgressMeterFrame :: ~nsProgressMeterFrame ( )
 {
-
     gStripeAnimator->RemoveFrame(this);
 }
 
@@ -273,10 +272,8 @@ nsProgressMeterFrame::Init(nsIPresContext*  aPresContext,
   setMode(mode); 
 
   nsCOMPtr<nsIAtom> barPseudo ( dont_AddRef(NS_NewAtom(":progressmeter-stripe")) );
-  nsIStyleContext* barStyle = nsnull;
   aPresContext->ProbePseudoStyleContextFor(aContent, barPseudo, aContext, 
-                                          PR_FALSE, &barStyle);
-  mBarStyle = barStyle;
+                                          PR_FALSE, getter_AddRefs(mBarStyle));
 
   return rv;
 }
