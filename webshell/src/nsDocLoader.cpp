@@ -458,7 +458,6 @@ nsDocFactoryImpl::CreateRDFDocument(const char* aContentType, nsIURL* aURL,
 
     nsresult rv = NS_ERROR_FAILURE;
     nsIDocument* doc = nsnull;
-    nsIRDFDocument* rdfDoc = nsnull;
     nsIDocumentViewer* docv = nsnull;
     nsIRDFContentModelBuilder* builder = nsnull;
 
@@ -472,15 +471,8 @@ nsDocFactoryImpl::CreateRDFDocument(const char* aContentType, nsIURL* aURL,
      */
     if (NS_FAILED(rv = nsRepository::CreateInstance(kCXULDocumentCID,
                                                     nsnull,
-                                                    kIRDFDocumentIID,
-                                                    (void **)&rdfDoc)))
-        goto done;
-
-	// Take the RDF document and set its document type (so it knows
-	// whether it's handling RDF or XUL.
-	rdfDoc->SetContentType(aContentType);
-
-    if (NS_FAILED(rv = rdfDoc->QueryInterface(kIDocumentIID, (void**) &doc)))
+                                                    kIDocumentIID,
+                                                    (void **)&doc)))
         goto done;
 
     /*
@@ -511,7 +503,6 @@ nsDocFactoryImpl::CreateRDFDocument(const char* aContentType, nsIURL* aURL,
 done:
     NS_IF_RELEASE(doc);
     NS_IF_RELEASE(builder);
-    NS_IF_RELEASE(rdfDoc);
     return rv;
 }
 
