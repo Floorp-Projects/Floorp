@@ -56,6 +56,7 @@ class NS_COM nsHashPropertyBag : public nsIWritablePropertyBag
 {
 public:
     nsHashPropertyBag() { }
+    virtual ~nsHashPropertyBag() {}
 
     nsresult Init();
 
