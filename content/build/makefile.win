@@ -27,8 +27,6 @@ DEFINES=-D_IMPL_NS_HTML
 MODULE=raptor 
 IS_COMPONENT = 1
 
-BUILD_DATE=gbdate.h
-
 CPPSRCS=dlldeps.cpp nsContentDLF.cpp nsContentFactory.cpp nsContentModule.cpp
 
 CPP_OBJS=				\
@@ -86,14 +84,23 @@ LLIBS=					\
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(DLL)
+install:: gbdate.h $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
 
 clobber::
 	rm -f $(DIST)\bin\$(DLLNAME).dll
 	rm -f $(DIST)\lib\$(DLLNAME).lib
+	rm -f gbdate.h
 
-$(BUILD_DATE)::
-	rm -f $@
-	$(PERL) gbdate.pl > $@
+!if !EXIST ( gbdate.h )
+
+gbdate.h::
+  $(PERL) gbdate.pl > gbdate.h
+
+!else
+
+gbdate.h::
+
+!endif
+
