@@ -116,7 +116,7 @@ public:
 
 protected:
   nsresult SetSrcInner(nsIURI* aBaseURL, const nsAReadableString& aSrc);
-  nsresult GetCallerSourceURL(JSContext* cx, nsIURI** sourceURL);
+  static nsresult GetCallerSourceURL(JSContext* cx, nsIURI** sourceURL);
 
   nsresult GetImageFrame(nsImageFrame** aImageFrame);
 
@@ -609,8 +609,11 @@ nsHTMLImageElement::GetProperty(JSContext *aContext, JSObject *aObj,
 {
   // XXX Security manager needs to be called
   if (JSVAL_IS_STRING(aID)) {
-    char* cString = JS_GetStringBytes(JS_ValueToString(aContext, aID));
-    if (PL_strcmp("src", cString) == 0) {
+    PRUnichar* ustr =
+      NS_REINTERPRET_CAST(PRUnichar *,
+                          JS_GetStringChars(JS_ValueToString(aContext, aID)));
+
+    if (NS_LITERAL_STRING("src").Equals(ustr)) {
       nsAutoString src;
       if (NS_SUCCEEDED(GetSrc(src))) {
         const PRUnichar* bytes = src.GetUnicode();
@@ -648,14 +651,14 @@ nsHTMLImageElement::GetCallerSourceURL(JSContext* cx,
   nsCOMPtr<nsIScriptGlobalObject> global;
   nsLayoutUtils::GetDynamicScriptGlobal(cx, getter_AddRefs(global));
   if (global) {
-    nsCOMPtr<nsIDOMWindowInternal> window = do_QueryInterface(global);
+    nsCOMPtr<nsIDOMWindowInternal> window(do_QueryInterface(global));
 
     if (window) {
       nsCOMPtr<nsIDOMDocument> domDoc;
 
       result = window->GetDocument(getter_AddRefs(domDoc));
       if (NS_SUCCEEDED(result)) {
-        nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+        nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
 
         if (doc) {
           result = doc->GetBaseURL(*sourceURL);
@@ -678,28 +681,32 @@ nsHTMLImageElement::SetProperty(JSContext *aContext, JSObject *aObj,
 
   // XXX Security manager needs to be called
   if (JSVAL_IS_STRING(aID)) {
-    char* cString = JS_GetStringBytes(JS_ValueToString(aContext, aID));
-    
-    if (PL_strcmp("src", cString) == 0) {
+    PRUnichar* ustr =
+      NS_REINTERPRET_CAST(PRUnichar *,
+                          JS_GetStringChars(JS_ValueToString(aContext, aID)));
+
+    if (NS_LITERAL_STRING("src").Equals(ustr)) {
       nsCOMPtr<nsIURI> base;
       nsAutoString src, url;
-      
+
       // Get the parameter passed in
       JSString *jsstring;
-      if ((jsstring = JS_ValueToString(aContext, *aVp)) != nsnull) {
+      if ((jsstring = JS_ValueToString(aContext, *aVp))) {
         src.Assign(NS_REINTERPRET_CAST(const PRUnichar*,
                                        JS_GetStringChars(jsstring)));
         src.Trim(" \t\n\r");
-      }
-      else {
-        src.Truncate();
       }
 
       // Get the source of the caller
       result = GetCallerSourceURL(aContext, getter_AddRefs(base));
 
       if (NS_SUCCEEDED(result)) {
-        result = NS_MakeAbsoluteURI(url, src, base);
+        if (base) {
+          result = NS_MakeAbsoluteURI(url, src, base);
+        } else {
+          url.Assign(src);
+        }
+
         if (NS_SUCCEEDED(result)) {
           result = SetSrcInner(base, url);
         }
