@@ -180,6 +180,39 @@ print "
 <hr>
 ";
 
+
+#
+# Toggle scraping for builds.
+#
+
+if (defined($tree)) {
+    print "
+<B><font size=+1>Turn on log scraping.</font></b><br>  Checked builds will have the logs scanned fora token of the form <b>TinderboxPrint:aaa,bbb,ccc</b>.  These values will show up as-is in the showbuilds.cgi output.<br>
+<FORM method=post action=doadmin.cgi>
+<INPUT TYPE=HIDDEN NAME=tree VALUE=$tree>
+<INPUT TYPE=HIDDEN NAME=command VALUE=scrape_builds>
+";
+
+    @names = sort (@$build_names) ;
+
+    for $i (@names){
+        if( $i ne "" ){
+            $checked = ($scrape_builds->{$i} != 0 ? "CHECKED": "" );
+            print "<INPUT TYPE=checkbox NAME='build_$i' $checked >";
+            print "$i<br>\n";
+        }
+    }
+
+    print "
+<B>Password:</B> <INPUT NAME=password TYPE=password>
+<INPUT TYPE=SUBMIT VALUE='Scrape only checked builds'>
+</FORM>
+<hr>
+";
+}
+
+
+
 #
 # Turn builds off.
 #
@@ -187,9 +220,8 @@ print "
 if (defined($tree)) {
     print "
 <B><font size=+1>If builds are behaving badly you can turn them off.</font></b><br>  Uncheck
-the build that is misbehaving and click the button.  You can still see all the
-builds even if some are disabled by adding the parameter <b><tt>&noignore=1</tt></b> to
-the tinderbox URL.<br>
+the build that is misbehaving and click the button.  Add <b><tt>&noignore=1</tt></b> to
+the tinderbox URL to override.<br>
 <FORM method=post action=doadmin.cgi>
 <INPUT TYPE=HIDDEN NAME=tree VALUE=$tree>
 <INPUT TYPE=HIDDEN NAME=command VALUE=disable_builds>
