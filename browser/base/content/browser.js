@@ -3442,9 +3442,14 @@ nsBrowserContentListener.prototype =
 
         // hook up the whole parent chain thing
         var windowDocShell = this.convertWindowToDocShell(toplevelWindow);
-        if (windowDocShell)
-            windowDocshell.parentURIContentListener = this;
-    
+        if (windowDocShell) {
+            // XXXbz this listener is never unregistered.  Did someone neglect 
+            // to read the interface they're using?
+            windowDocshell
+              .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+              .getInterface(Components.interfaces.nsIURIContentListener)
+              .parentContentListener = this;
+        }
         var registerWindow = false;
         try {          
           var treeItem = contentWindow.docShell.QueryInterface(Components.interfaces.nsIDocShellTreeItem);

@@ -1315,20 +1315,6 @@ nsDocShell::GetChromeEventHandler(nsIChromeEventHandler ** aChromeEventHandler)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocShell::GetParentURIContentListener(nsIURIContentListener ** aParent)
-{
-    NS_PRECONDITION(aParent, "Null out param?");
-
-    return mContentListener->GetParentContentListener(aParent);
-}
-
-NS_IMETHODIMP
-nsDocShell::SetParentURIContentListener(nsIURIContentListener * aParent)
-{
-    return mContentListener->SetParentContentListener(aParent);
-}
-
 /* [noscript] void setCurrentURI (in nsIURI uri); */
 NS_IMETHODIMP
 nsDocShell::SetCurrentURI(nsIURI *aURI)
@@ -1792,7 +1778,7 @@ nsDocShell::SetDocLoaderParent(nsDocLoader * aParent)
 
     nsCOMPtr<nsIURIContentListener> parentURIListener(do_GetInterface(parent));
     if (parentURIListener)
-        SetParentURIContentListener(parentURIListener);
+        mContentListener->SetParentContentListener(parentURIListener);
     return NS_OK;
 }
 
