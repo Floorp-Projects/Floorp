@@ -423,7 +423,7 @@ MAKEDEPDETECT=$(MAKEDEPDETECT:	=)
 !if !defined(NODEPEND) && "$(MAKEDEPDETECT)" != ""
 
 depend:: $(OBJDIR)
-	@echo $(MAKEDEP) -s -o potentially too long a list of object files
+    @echo $(MAKEDEP) -s -o $(LINCS) $(OBJS)
     $(MAKEDEP) -s -o $(MAKEDEPFILE) @<<
 $(LINCS)
 $(OBJS)
