@@ -189,6 +189,7 @@ public:
     return mFlags.mTrimmed;
   }
 
+  // mHasPercentageChild bit
   void SetHasPercentageChild(PRBool aOn) {
     mFlags.mHasPercentageChild = aOn;
   }
@@ -196,6 +197,14 @@ public:
     return mFlags.mHasPercentageChild;
   }
 
+  // mLineWrapped bit
+  void SetLineWrapped(PRBool aOn) {
+    mFlags.mLineWrapped = aOn;
+  }
+  PRBool IsLineWrapped() const {
+    return mFlags.mLineWrapped;
+  }
+  
   // mChildCount value
   PRInt32 GetChildCount() const {
     return (PRInt32) mFlags.mChildCount;
@@ -299,10 +308,11 @@ public:
     PRUint32 mImpactedByFloater : 1;
     PRUint32 mTrimmed : 1;
     PRUint32 mHasPercentageChild : 1;
+    PRUint32 mLineWrapped: 1;
 
     PRUint32 mBreakType : 4;
 
-    PRUint32 mChildCount : 23;
+    PRUint32 mChildCount : 22;
   };
 
   struct ExtraData {

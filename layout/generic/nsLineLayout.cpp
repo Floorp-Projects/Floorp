@@ -800,8 +800,12 @@ nsresult
 nsLineLayout::ReflowFrame(nsIFrame* aFrame,
                           nsIFrame** aNextRCFrame,
                           nsReflowStatus& aReflowStatus,
-                          nsHTMLReflowMetrics* aMetrics)
+                          nsHTMLReflowMetrics* aMetrics,
+                          PRBool& aPushedFrame)
 {
+  // Initialize OUT parameter
+  aPushedFrame = PR_FALSE;
+
   PerFrameData* pfd;
   nsresult rv = NewPerFrameData(&pfd);
   if (NS_FAILED(rv)) {
@@ -1132,6 +1136,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     }
     else {
       PushFrame(aFrame);
+      aPushedFrame = PR_TRUE;
     }
   }
   else {
@@ -2354,8 +2359,10 @@ nsLineLayout::TrimTrailingWhiteSpace()
   return 0 != deltaWidth;
 }
 
-void
-nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds, PRBool aAllowJustify)
+PRBool
+nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds,
+                                    PRBool aAllowJustify,
+                                    PRBool aShrinkWrapWidth)
 {
   PerSpanData* psd = mRootSpan;
   nscoord availWidth = psd->mRightEdge;
@@ -2365,7 +2372,7 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds, PRBool aAllowJustify)
     nsFrame::ListTag(stdout, mBlockReflowState->frame);
     printf(": skipping horizontal alignment in pass1 table reflow\n");
 #endif
-    return;
+    return PR_TRUE;
   }
   availWidth -= psd->mLeftEdge;
   nscoord remainingWidth = availWidth - aLineBounds.width;
@@ -2412,6 +2419,12 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds, PRBool aAllowJustify)
         break;
     }
     if (0 != dx) {
+      // If we need to move the frames but we're shrink wrapping, then
+      // we need to wait until the final width is known
+      if (aShrinkWrapWidth) {
+        return PR_FALSE;
+      }
+
       PerFrameData* pfd = psd->mFirstFrame;
       while (nsnull != pfd) {
         pfd->mBounds.x += dx;
@@ -2426,6 +2439,9 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds, PRBool aAllowJustify)
       psd->mChangedFrameDirection = PR_TRUE;
   
       /* Assume that all frames have been right aligned.*/
+      if (aShrinkWrapWidth) {
+        return PR_FALSE;
+      }
       PerFrameData* pfd = psd->mFirstFrame;
       PRUint32 maxX = psd->mRightEdge;
       while (nsnull != pfd) {
@@ -2436,6 +2452,8 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds, PRBool aAllowJustify)
       }
     }
   }
+
+  return PR_TRUE;
 }
 
 void

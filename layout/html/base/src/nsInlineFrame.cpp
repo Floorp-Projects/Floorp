@@ -486,7 +486,9 @@ nsInlineFrame::ReflowInlineFrame(nsIPresContext* aPresContext,
 {
   nsLineLayout* lineLayout = aReflowState.mLineLayout;
   PRBool reflowingFirstLetter = lineLayout->GetFirstLetterStyleOK();
-  nsresult rv = lineLayout->ReflowFrame(aFrame, &irs.mNextRCFrame, aStatus);
+  PRBool pushedFrame;
+  nsresult rv = lineLayout->ReflowFrame(aFrame, &irs.mNextRCFrame, aStatus,
+                                        nsnull, pushedFrame);
   if (NS_FAILED(rv)) {
     return rv;
   }
