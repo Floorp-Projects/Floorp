@@ -59,25 +59,38 @@ public interface SymmetricKey {
     String getFormat();
 
     public final static class Type {
+        // all names converted to lowercase for case insensitivity
+        private static Hashtable nameMap = new Hashtable();
+
         private String name;
+        private KeyGenAlgorithm keyGenAlg;
         private Type() { }
-        private Type(String name) {
+        private Type(String name, KeyGenAlgorithm keyGenAlg) {
             this.name = name;
+            this.keyGenAlg = keyGenAlg;
             nameMap.put(name.toLowerCase(), this);
         }
-        public static final Type DES = new Type("DES");
-        public static final Type DES3 = new Type("DESede");
-        public static final Type RC4 = new Type("RC4");
-        public static final Type RC2 = new Type("RC2");
-        public static final Type SHA1_HMAC = new Type("SHA1_HMAC");
-        public static final Type AES = new Type("AES");
+        public static final Type DES = new Type("DES", KeyGenAlgorithm.DES);
+        public static final Type DES3 =
+            new Type("DESede", KeyGenAlgorithm.DES3);
+        public static final Type DESede = DES3;
+        public static final Type RC4 = new Type("RC4", KeyGenAlgorithm.RC4);
+        public static final Type RC2 = new Type("RC2", null);
+        public static final Type SHA1_HMAC = new Type("SHA1_HMAC",
+            KeyGenAlgorithm.PBA_SHA1_HMAC);
+        public static final Type AES = new Type("AES", KeyGenAlgorithm.AES);
+
 
         public String toString() {
             return name;
         }
 
-        // all names converted to lowercase for case insensitivity
-        private static Hashtable nameMap = new Hashtable();
+        public KeyGenAlgorithm getKeyGenAlg() throws NoSuchAlgorithmException {
+            if( keyGenAlg == null ) {
+                throw new NoSuchAlgorithmException(name);
+            }
+            return keyGenAlg;
+        }
 
         public static Type fromName(String name)
                 throws NoSuchAlgorithmException
