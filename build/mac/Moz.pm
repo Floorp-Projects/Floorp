@@ -136,6 +136,7 @@ sub OpenErrorLog($)
 				$log_file = full_path_to($log_file);
  
 				open(ERROR_LOG, ">$log_file") || die "Can't open logfile, check the file path.\n";
+				MacPerl::SetFileInfo("CWIE", "TEXT", $log_file);
 
 				$log_file =~ m/.+:(.+)/;
 				$recent_errors_file = full_path_to("$1.part");
