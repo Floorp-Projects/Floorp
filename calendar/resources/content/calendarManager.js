@@ -160,12 +160,16 @@ calendarManager.prototype.launchEditCalendarDialog = function calMan_launchEditC
    // set up a bunch of args to pass to the dialog
    var ThisCalendarObject = new CalendarObject();
 
-   var TempCalendar = this.getSelectedCalendar();
-   ThisCalendarObject.name = TempCalendar.getAttribute( "http://home.netscape.com/NC-rdf#name" );
-   ThisCalendarObject.path = TempCalendar.getAttribute( "http://home.netscape.com/NC-rdf#path" );
-   ThisCalendarObject.active = TempCalendar.getAttribute( "http://home.netscape.com/NC-rdf#active" );
-   ThisCalendarObject.remote = TempCalendar.getAttribute( "http://home.netscape.com/NC-rdf#remote" );
-   ThisCalendarObject.remotePath = TempCalendar.getAttribute( "http://home.netscape.com/NC-rdf#remotePath" );
+   var SelectedCalendarId = this.getSelectedCalendarId();
+   
+   var SelectedCalendar = this.rdf.getNode( SelectedCalendarId );
+   ThisCalendarObject.Id = SelectedCalendarId;
+   
+   ThisCalendarObject.name = SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#name" );
+   ThisCalendarObject.path = SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#path" );
+   ThisCalendarObject.active = SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#active" );
+   ThisCalendarObject.remote = SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#remote" );
+   ThisCalendarObject.remotePath = SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#remotePath" );
    
    var args = new Object();
    args.mode = "edit";
@@ -238,10 +242,10 @@ calendarManager.prototype.addServerDialogResponse = function calMan_addServerDia
 */
 calendarManager.prototype.editServerDialogResponse = function calMan_editServerDialogResponse( CalendarObject )
 {
-   var name = "calendar"+CalendarObject.serverNumber;
-
+   var name = CalendarObject.Id;
+   
    //get the node
-   var node = this.rootContainer.getNode( name );
+   var node = this.rdf.getNode( name );
    
    node.setAttribute( "http://home.netscape.com/NC-rdf#name", CalendarObject.name );
 
@@ -298,11 +302,11 @@ calendarManager.prototype.deleteCalendar = function calMan_deleteCalendar( ThisC
 }
 
 
-calendarManager.prototype.getSelectedCalendar = function calMan_getSelectedCalendar( )
+calendarManager.prototype.getSelectedCalendarId = function calMan_getSelectedCalendarId( )
 {
    var calendarListBox = document.getElementById( "list-calendars-listbox" );
    
-   return( this.rdf.getNode( calendarListBox.selectedItem.getAttribute( "id" ) ) );
+   return( calendarListBox.selectedItem.getAttribute( "id" ) );
 }
 
 
@@ -690,7 +694,9 @@ function switchCalendar( event )
 
 function deleteCalendar( )
 {
-   var calendarObjectToDelete = gCalendarWindow.calendarManager.getSelectedCalendar();
+   var IdToDelete = gCalendarWindow.calendarManager.getSelectedCalendarId()
+
+   var calendarObjectToDelete = this.rdf.getNode( IdToDelete );
 
    gCalendarWindow.calendarManager.deleteCalendar( calendarObjectToDelete );
 
