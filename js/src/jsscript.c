@@ -418,15 +418,15 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
     for (; numtrys; numtrys--) {
         JSTryNote *tn = &script->trynotes[numtrys - 1];
         uint32 start = (ptrdiff_t) tn->start,
-               length = (ptrdiff_t) tn->length,
+               catchLength = (ptrdiff_t) tn->length,
                catchStart = (ptrdiff_t) tn->catchStart;
         if (!JS_XDRUint32(xdr, &start) ||
-            !JS_XDRUint32(xdr, &length) ||
+            !JS_XDRUint32(xdr, &catchLength) ||
             !JS_XDRUint32(xdr, &catchStart)) {
             goto error;
         }
         tn->start = (ptrdiff_t) start;
-        tn->length = (ptrdiff_t) length;
+        tn->length = (ptrdiff_t) catchLength;
         tn->catchStart = (ptrdiff_t) catchStart;
     }
     return JS_TRUE;
