@@ -199,12 +199,12 @@ nsXFormsMDGEngine::AddMIP(ModelItemPropName       aType,
         return NS_ERROR_NULL_POINTER;
       }
       
-      dep_gnode = GetNode(dep_domnode, (ModelItemPropName) aType);
+      dep_gnode = GetNode(dep_domnode, aType);
       if (!dep_gnode) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
   
-      if (aType == aType && dep_gnode->mContextNode == aContextNode) {
+      if (dep_gnode->mType == aType && dep_gnode->mContextNode == aContextNode) {
         // Reference to itself, ignore
         continue;
       }
