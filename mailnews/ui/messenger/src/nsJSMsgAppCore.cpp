@@ -36,6 +36,7 @@
 #include "nsRepository.h"
 #include "nsDOMCID.h"
 
+#include "nsJSMsgAppCore.h"
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
