@@ -20,7 +20,10 @@
 #include "nsIAppShell.h"
 #include <stdlib.h>
 
-XtAppContext gAppContext;
+extern XtAppContext gAppContext;
+
+//XtAppContext nsAppShell::gAppContext = NULL;
+
 
 //-------------------------------------------------------------------------
 //
@@ -34,6 +37,7 @@ NS_IMPL_ISUPPORTS(nsAppShell,kIAppShellIID);
 NS_METHOD nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener)
 {
   mDispatchListener = aDispatchListener;
+
   return NS_OK;
 }
 
@@ -48,6 +52,7 @@ NS_METHOD nsAppShell::Create(int* argc, char ** argv)
   XtSetLanguageProc(NULL, NULL, NULL);
   mTopLevel = XtVaAppInitialize(&mAppContext, "nsAppShell", NULL, 
                                 0, argc, argv, NULL, NULL);
+  // XXX This is BAD -- needs to be fixed
   gAppContext = mAppContext;
   return NS_OK;
 }

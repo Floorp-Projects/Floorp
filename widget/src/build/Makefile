@@ -15,9 +15,42 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-
-include manifest.mn
+DEPTH = ../../..
 
 include $(DEPTH)/config/config.mk
 
+LIBRARY_NAME = widgetunix
+
+MODULE=raptor 
+
+REQUIRES=util img xpcom raptor netlib
+
+INCLUDES+= -I../xpwidgets -I../motif -I.
+
+CPPSRCS=dlldeps.cpp nsWidgetSupport.cpp nsMotifWidgetFactory.cpp
+
+ifeq ($(OS_ARCH),IRIX)
+LD = $(CCC)
+LD_ALL = -all
+LD_NONE = -none
+endif
+
+EXTRA_DSO_LDOPTS+=\
+	$(DIST)/lib/libraptorwidgetunix_s.a \
+	$(DIST)/lib/libraptorbasewidget_s.a \
+	$(DIST)/bin/libxpcom.so \
+	$(DIST)/bin/libraptorbase.so \
+	$(DIST)/bin/libreg.so \
+	$(LIBNSPR)\
+	$(DIST)/lib/libplc21.a
+
+# This should really be done properly in 'config'
+ifeq ($(OS_ARCH),Linux)
+EXTRA_DSO_LDOPTS+=\
+	-L/usr/X11R6/lib -lX11 -lm
+else
+EXTRA_DSO_LDOPTS+= -lXm -lXt -lX11 -lm
+endif
+
 include $(DEPTH)/config/rules.mk
+
