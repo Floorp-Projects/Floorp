@@ -269,7 +269,7 @@ public:
   NS_IMETHOD WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsLoadType aReason);
   NS_IMETHOD BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL);
   NS_IMETHOD ProgressLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aProgress, PRInt32 aProgressMax);
-  NS_IMETHOD EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aStatus);
+  NS_IMETHOD EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsresult aStatus);
   NS_IMETHOD NewWebShell(PRUint32 aChromeMask,
                          PRBool aVisible,
                          nsIWebShell *&aNewWebShell);
@@ -314,7 +314,7 @@ public:
                                  const char* aCommand);
   NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, 
                                nsIChannel* channel, 
-                               PRInt32 aStatus,
+                               nsresult aStatus,
                                nsIDocumentLoaderObserver * );
   NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, 
                             nsIChannel* channel,
@@ -325,7 +325,7 @@ public:
   NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader, 
                              nsIChannel* channel, nsString& aMsg);
   NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, 
-                          nsIChannel* channel, PRInt32 aStatus);
+                          nsIChannel* channel, nsresult aStatus);
   NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* loader, 
                                       nsIChannel* channel,
                                       const char *aContentType,
@@ -2479,7 +2479,7 @@ nsWebShell::ProgressLoadURL(nsIWebShell* aShell,
 }
 
 NS_IMETHODIMP
-nsWebShell::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aStatus)
+nsWebShell::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsresult aStatus)
 {
   nsresult rv = NS_OK;
   if (nsnull != mContainer) {
@@ -3036,7 +3036,11 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
 #else
                               nsIURI* aURL, 
 #endif
-                              PRInt32 aStatus,
+#ifdef NECKO
+                              nsresult aStatus,
+#else
+                              PRInt32  aStatus,
+#endif
 							                nsIDocumentLoaderObserver * aWebShell)
 {
   nsresult rv = NS_ERROR_FAILURE;
@@ -3120,6 +3124,57 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
        dlObserver->OnEndDocumentLoad(mDocLoader, aURL, aStatus, aWebShell);
 #endif
     }
+
+#ifdef NECKO
+    if ( (mDocLoader == loader) && (aStatus == NS_ERROR_UNKNOWN_HOST) ) {
+        // We need to check for a dns failure in aStatus, but dns failure codes
+        // aren't proliferated yet. This checks for failure for a host lacking
+        // "www." and/or ".com" and munges the url acordingly, then fires off
+        // a new request.
+        //
+        // XXX This code may or may not have mem leaks depending on the version
+        // XXX stdurl that is in the tree at a given point in time. This needs to
+        // XXX be fixed once we have a solid version of std url in.
+        char *host = nsnull;
+        nsString2 hostStr;
+        rv = aURL->GetHost(&host);
+        if (NS_FAILED(rv)) return rv;
+
+        hostStr.SetString(host);
+        nsAllocator::Free(host);
+        PRInt32 dotLoc = -1;
+        dotLoc = hostStr.Find('.');
+        PRBool retry = PR_FALSE;
+        if (-1 == dotLoc) {
+            hostStr.Insert("www.", 0, 4);
+            hostStr.Append(".com");
+            retry = PR_TRUE;
+        } else if ( (hostStr.Length() - dotLoc) == 3) {
+            hostStr.Insert("www.", 0, 4);
+            retry = PR_TRUE;
+        }
+
+        if (retry) {
+            char *modHost = hostStr.ToNewCString();
+            if (!modHost)
+                return NS_ERROR_OUT_OF_MEMORY;
+            rv = aURL->SetHost(modHost);
+            nsAllocator::Free(modHost);
+            modHost = nsnull;
+            if (NS_FAILED(rv)) return rv;
+            char *aSpec = nsnull;
+            rv = aURL->GetSpec(&aSpec);
+            if (NS_FAILED(rv)) return rv;
+            nsString2 newURL(aSpec);
+            // reload the url
+            //const PRUnichar *spec = newURL.GetUnicode();
+            //if (spec) {
+                //rv = LoadURL(spec, "load");
+                rv = DoLoadURL(newURL,"view", nsnull, nsIChannel::LOAD_NORMAL, 0);
+            //}
+        } // retry
+    } // unknown host
+#endif //NECKO
 
   } //!mProcessedEndDocumentLoad
   else {
@@ -3236,11 +3291,12 @@ nsWebShell::OnStatusURLLoad(nsIDocumentLoader* loader,
 NS_IMETHODIMP
 nsWebShell::OnEndURLLoad(nsIDocumentLoader* loader, 
 #ifdef NECKO
-                         nsIChannel* channel, 
+                         nsIChannel* channel,
+                         nsresult aStatus)
 #else
                          nsIURI* aURL, 
-#endif
                          PRInt32 aStatus)
+#endif // NECKO
 {
 #if 0
   const char* spec;

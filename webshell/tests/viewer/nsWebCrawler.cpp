@@ -212,7 +212,7 @@ NS_IMETHODIMP
 #ifdef NECKO
 nsWebCrawler::OnEndDocumentLoad(nsIDocumentLoader* loader,
                                 nsIChannel* channel,
-                                PRInt32 aStatus,
+                                nsresult aStatus,
                                 nsIDocumentLoaderObserver* aObserver)
 #else
 nsWebCrawler::OnEndDocumentLoad(nsIDocumentLoader* loader,
@@ -370,7 +370,7 @@ nsWebCrawler::OnStatusURLLoad(nsIDocumentLoader* loader, nsIURI* aURL,
 NS_IMETHODIMP
 #ifdef NECKO
 nsWebCrawler::OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel,
-                           PRInt32 aStatus)
+                           nsresult aStatus)
 #else
 nsWebCrawler::OnEndURLLoad(nsIDocumentLoader* loader, nsIURI* aURL,
                            PRInt32 aStatus)

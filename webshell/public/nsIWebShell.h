@@ -92,7 +92,7 @@ public:
  
    NS_IMETHOD EndLoadURL(nsIWebShell* aShell,
                          const PRUnichar* aURL,
-                         PRInt32 aStatus) = 0;
+                         nsresult aStatus) = 0;
  
  //instances
 

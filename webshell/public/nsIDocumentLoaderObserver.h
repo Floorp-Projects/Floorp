@@ -55,7 +55,7 @@ public:
    * Notify the observer that a document has been completely loaded.
    */
 #ifdef NECKO
-  NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel* channel, PRInt32 aStatus,
+  NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus,
 								nsIDocumentLoaderObserver * aObserver) = 0;
 #else
   NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIURI *aUrl, PRInt32 aStatus,
@@ -104,7 +104,7 @@ public:
    * Notify the observer that the specified nsIURI has finished loading.
    */
 #ifdef NECKO
-  NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, PRInt32 aStatus) = 0;
+  NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus) = 0;
 #else
   NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, PRInt32 aStatus) = 0;
 #endif

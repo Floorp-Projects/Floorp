@@ -1126,7 +1126,7 @@ nsBrowserAppCore::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL, 
 
 NS_IMETHODIMP
 #ifdef NECKO
-nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* channel, PRInt32 aStatus,
+nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* channel, nsresult aStatus,
 									nsIDocumentLoaderObserver * aObserver)
 #else
 nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIURI *aUrl, PRInt32 aStatus,
@@ -1384,7 +1384,7 @@ nsBrowserAppCore::OnStatusURLLoad(nsIDocumentLoader* loader,
 NS_IMETHODIMP
 #ifdef NECKO
 nsBrowserAppCore::OnEndURLLoad(nsIDocumentLoader* loader, 
-                               nsIChannel* channel, PRInt32 aStatus)
+                               nsIChannel* channel, nsresult aStatus)
 #else
 nsBrowserAppCore::OnEndURLLoad(nsIDocumentLoader* loader, 
                                nsIURI* aURL, PRInt32 aStatus)

@@ -526,7 +526,7 @@ CWebShellContainer::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL,
 
 // we need this to fire the document complete 
 NS_IMETHODIMP
-CWebShellContainer::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel *aChannel, PRInt32 aStatus, nsIDocumentLoaderObserver * aObserver)
+CWebShellContainer::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel *aChannel, nsresult aStatus, nsIDocumentLoaderObserver * aObserver)
 {
 	char* aString = nsnull;    
     nsIURI* uri = nsnull;
@@ -647,7 +647,7 @@ CWebShellContainer::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL,
 
 // we need this to fire the document complete 
 NS_IMETHODIMP
-CWebShellContainer::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIURI *aUrl, PRInt32 aStatus, nsIDocumentLoaderObserver * aObserver)
+CWebShellContainer::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIURI *aUrl, nsresult aStatus, nsIDocumentLoaderObserver * aObserver)
 {
 	PRUnichar* wString = nsnull;    
 
@@ -691,7 +691,7 @@ CWebShellContainer::OnStatusURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, nsS
 
 
 NS_IMETHODIMP
-CWebShellContainer::OnEndURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, PRInt32 aStatus)
+CWebShellContainer::OnEndURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, nsresult aStatus)
 {
 	return NS_OK; 
 } 

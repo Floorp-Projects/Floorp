@@ -1742,7 +1742,7 @@ nsBrowserWindow::ProgressLoadURL(nsIWebShell* aShell,
 NS_IMETHODIMP
 nsBrowserWindow::EndLoadURL(nsIWebShell* aShell,
                             const PRUnichar* aURL,
-                            PRInt32 aStatus)
+                            nsresult aStatus)
 {
   if (aShell == mWebShell) {
     PRTime endLoadTime = PR_Now();
