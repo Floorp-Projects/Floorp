@@ -268,7 +268,16 @@ NS_IMETHODIMP
 nsLocalFile::InitWithPath(const char *filePath)
 {
     NS_ENSURE_ARG(filePath);
-    mPath = filePath;
+    
+    int   len  = strlen(filePath);
+    char* name = (char*) nsAllocator::Clone( filePath, len+1 );
+    if(name[len-1] == '/')
+        name[len-1] = '\0';
+    
+    mPath = name;
+    
+    nsAllocator::Free(name);
+    
     InvalidateCache();
     return NS_OK;
 }
