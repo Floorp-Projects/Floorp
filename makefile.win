@@ -105,3 +105,31 @@ export::
 #//------------------------------------------------------------------------
 include <$(DEPTH)\config\rules.mak>
 
+
+#// should make sure we have rebase, and die if not
+
+!if [for %i in (. %PATH%) do $(QUIET)if exist %i\$(REBASE) echo %i\$(REBASE) > rebase.yes]
+!endif
+
+!if !exist(rebase.yes)  
+REBASE=
+!if [del rebase.yes]                                                           
+!endif
+!endif
+
+rebase:
+!if defined(FIND)
+!if defined(REBASE)
+	echo rebasing $(DIST)
+        $(FIND) $(DIST) -name "*.dll" > rebase.lst
+        $(REBASE) -b 60000000 -R . -G rebase.lst
+        del rebase.lst
+!else
+        echo No rebase defined.
+!endif
+!else
+        echo No find defined.
+!endif
+
+install:: rebase
+
