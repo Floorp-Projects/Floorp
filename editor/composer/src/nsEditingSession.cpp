@@ -615,7 +615,7 @@ nsEditingSession::TearDownEditorOnWindow(nsIDOMWindow *aWindow)
     docShell->SetAllowJavascript(PR_TRUE);
   }
 
-  nsCOMPtr<nsIDOMWindowUtils> utils(do_QueryInterface(aWindow));
+  nsCOMPtr<nsIDOMWindowUtils> utils(do_GetInterface(aWindow));
   if (utils)
     utils->SetImageAnimationMode(mImageAnimationMode);
 
