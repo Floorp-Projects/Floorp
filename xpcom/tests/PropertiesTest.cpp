@@ -32,17 +32,11 @@
 
 #ifdef XP_PC
 #define NETLIB_DLL "netlib.dll"
-#define RAPTORBASE_DLL "raptorbase.dll"
-#define XPCOM_DLL "xpcom32.dll"
 #else
 #ifdef XP_MAC
 #define NETLIB_DLL "NETLIB_DLL"
-#define RAPTORBASE_DLL "base.shlb"
-#define XPCOM_DLL "XPCOM_DLL"
 #else
 #define NETLIB_DLL "libnetlib.so"
-#define RAPTORBASE_DLL "libraptorbase.so"
-#define XPCOM_DLL "libxpcom.so"
 #endif
 #endif
 static NS_DEFINE_IID(kEventQueueCID, NS_EVENTQUEUE_CID);
@@ -62,30 +56,14 @@ main(int argc, char* argv[])
 {
   nsresult ret;
 
+  // XXX why do I have to do this?!
+  ret = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup,
+                                         "components");
+  if (NS_FAILED(ret)) return ret;
+
   ret = nsComponentManager::RegisterComponent(kNetServiceCID, NULL,
     NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
-  if (NS_FAILED(ret)) {
-    printf("cannot register net service\n");
-    return 1;
-  }
-  ret = nsComponentManager::RegisterComponent(kEventQueueCID, NULL,
-    NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
-  if (NS_FAILED(ret)) {
-    printf("cannot register event queue\n");
-    return 1;
-  }
-  ret = nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL,
-    NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
-  if (NS_FAILED(ret)) {
-    printf("cannot register event queue service\n");
-    return 1;
-  }
-  ret = nsComponentManager::RegisterComponent(kPersistentPropertiesCID, NULL,
-    NULL, RAPTORBASE_DLL, PR_FALSE, PR_FALSE);
-  if (NS_FAILED(ret)) {
-    printf("cannot register persistent properties\n");
-    return 1;
-  }
+
 #ifdef XP_MAC    // have not build this on PC and UNIX yet so make it #ifdef XP_MAC
   NS_SetupRegistry(); 
 #endif
