@@ -30,7 +30,7 @@
 #include "X11/Intrinsic.h"
 
 /* nsDrawingSurface is actually the following struct */
-typedef struct nsDrawingSurfaceUnix {
+struct nsDrawingSurfaceUnix {
   Display *display ;
   Drawable drawable ;
   GC       gc ;
