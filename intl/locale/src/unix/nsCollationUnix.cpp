@@ -60,7 +60,7 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
   mLocale.SetString("C");
 
   if (locale != nsnull) {
-    const PRUnichar *aLocaleUnichar;
+    PRUnichar *aLocaleUnichar;
     nsString aLocale;
     nsString aCategory("NSILOCALE_COLLATE");
     nsresult res = locale->GetCategory(aCategory.ToNewUnicode(), &aLocaleUnichar);
