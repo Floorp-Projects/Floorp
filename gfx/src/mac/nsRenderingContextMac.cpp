@@ -34,6 +34,28 @@
 #include <Gestalt.h>
 #endif
 
+// Converts a Latin-1 String to a MacRoman one in place
+static void ConvertLatin1ToMacRoman( char* aString)
+{
+	char* location = aString;
+	static char  conversionTable[]={
+0xDB, 0x2A,  0xE2, 0xC4, 0xE3, 0xC9,  0xA0, 0xE0,  0xF6, 0xE4,  0x53, 0xDC,  0xCE, 0x2A,  0x2A, 0x2A,
+0x2A, 0xD4,  0xD5, 0xD2,  0xD3, 0xA5,  0xD0, 0xD1,  0xF7, 0xAA,  0x73, 0xDD,  0xCF, 0x2A,  0x2A, 0xD9,
+0xCA, 0xC1,  0xA2, 0xA3,  0xDB, 0xB4,  0x7C, 0xA4,  0xAC, 0xA9, 0xBB, 0xC7,  0xC2, 0xD0,  0xA8, 0xF8,
+0xA1, 0xB1,  0x32, 0x33,  0xAB, 0xB5,  0xA6, 0xE1,  0xFC, 0x31,  0xBC, 0xC8,  0x2A, 0x2A,  0x2A, 0xC0,
+0xCB, 0xE7,  0xE5, 0xCC,  0x80, 0x81,  0xAE, 0x82, 0xE9, 0x83,  0xE6, 0xE8,  0xED, 0xEA,  0xEB, 0xEC,
+0xDC, 0x84,  0xF1, 0xEE,  0xEF, 0xCD,  0x85, 0x78,  0xAF, 0xF4,  0xF2, 0xF3,  0x86, 0xA0,  0xDE, 0xA7,
+0x88, 0x87,  0x89, 0x8B,  0x8A, 0x8C,  0xBE, 0x8D,  0x8F, 0x8E,  0x90, 0x91,  0x93, 0x92,  0x94, 0x95,
+0xDD, 0x96,  0x98, 0x97,  0x99, 0x9B,  0x9A, 0xD6,  0xBF, 0x9D,  0x9C, 0x9E,  0x9F, 0xE0,  0xDF, 0xD8
+};
+	int	ch;
+	while ( (ch= (*location)) != 0 )
+	{
+		if ( ch<0 )
+			*location = conversionTable[ *location+128];
+		location++;
+	}
+}
 //------------------------------------------------------------------------
 
 
@@ -1315,6 +1337,7 @@ nsRenderingContextMac :: GetWidth(const char* aString, PRUint32 aLength, nscoord
 	short textWidth = ::TextWidth(aString, 0, aLength);
 	aWidth = NSToCoordRound(float(textWidth) * mP2T);
 
+
 #if 0
 	// add a bit for italic
 	switch (font->style)
@@ -1326,6 +1349,7 @@ nsRenderingContextMac :: GetWidth(const char* aString, PRUint32 aLength, nscoord
 			aWidth += aAdvance;
 			break;
 	}
+
 #endif
 
 	EndDraw();
@@ -1339,6 +1363,7 @@ NS_IMETHODIMP nsRenderingContextMac :: GetWidth(const PRUnichar *aString, PRUint
 	nsString nsStr;
 	nsStr.SetString(aString, aLength);
 	char* cStr = nsStr.ToNewCString();
+	ConvertLatin1ToMacRoman ( cStr );
   GetWidth(cStr, aLength, aWidth);
 	delete[] cStr;
   return NS_OK;
@@ -1355,7 +1380,7 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawString(const char *aString, PRUint32 
 
 	PRInt32 x = aX;
 	PRInt32 y = aY;
-
+	
   if (mGS->mFontMetrics)
   {
 		// set native font and attributes
@@ -1370,8 +1395,43 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawString(const char *aString, PRUint32 
   mGS->mTMatrix->TransformCoord(&x,&y);
 
 	::MoveTo(x,y);
-	::DrawText(aString,0,aLength);
+  char* macRomanString;
+  char stringBuffer[128];
+  if ( aLength < 128 )
+  {
+  	memcpy( stringBuffer, aString, aLength+1 );
+  	macRomanString = stringBuffer;
+  }
+  else
+  {
+  	macRomanString = strdup( aString );
+  }
+  ConvertLatin1ToMacRoman ( macRomanString );
+  if ( aSpacing == NULL )
+	::DrawText(macRomanString,0,aLength);
+  else
+  {
+	int buffer[500];
+	int* spacing = NULL;
 
+	if (aLength > 500)
+	  spacing = new int[aLength];
+	else
+	  spacing = buffer;
+	
+	mGS->mTMatrix->ScaleXCoords(aSpacing, aLength, spacing);
+	PRInt32 currentX = x;
+	for ( PRInt32 i = 0; i<= aLength; i++ )
+	{
+		::DrawChar( macRomanString[i] );
+		currentX += spacing[ i ];
+		::MoveTo( currentX, y );
+	}
+	// clean up and restore settings
+	if ( (spacing != buffer))
+		delete [] spacing; 
+  }
+  
   if (mGS->mFontMetrics)
 	{
 		const nsFont* font;
@@ -1400,7 +1460,8 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawString(const char *aString, PRUint32 
 			DrawLine(aX, aY + (height >> 1), aX + aWidth, aY + (height >> 1));
 		}
 	}
-
+	if ( macRomanString != stringBuffer )
+		free( macRomanString );
 	EndDraw();
   return NS_OK;
 }
@@ -1589,7 +1650,8 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawString(const PRUnichar *aString, PRUi
 	  err = ATSUSetTransientFontMatching(txLayout, true);
 	   NS_ASSERTION((noErr == err), "ATSUSetTransientFontMatching failed");
 	  
-	  err = ATSUDrawText( txLayout, 0, aLength, Long2Fix(x), Long2Fix(y) );	
+	  err = ATSUDrawText( txLayout, 0, aLength, Long2Fix(x), Long2Fix(y) );
+	
 	   NS_ASSERTION((noErr == err), "ATSUDrawText failed");
 	  err =   ATSUDisposeTextLayout(txLayout);
 	   NS_ASSERTION((noErr == err), "ATSUDisposeTextLayout failed");
