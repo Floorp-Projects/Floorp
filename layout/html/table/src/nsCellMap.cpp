@@ -26,6 +26,11 @@
 #include "nsTableFrame.h"
 #include "nsTableCellFrame.h"
 #include "nsTableRowGroupFrame.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsCellMapLog)
+#define PRINTF NS_LOG_PRINTF(nsCellMapLog)
+#define FLUSH  NS_LOG_FLUSH(nsCellMapLog)
 
 // colspan=0 gets a minimum number of cols initially to make computations easier
 #define MIN_NUM_COLS_FOR_ZERO_COLSPAN 2
@@ -407,20 +412,20 @@ nsTableCellMap::GetNumCellsOriginatingInCol(PRInt32 aColIndex) const
 void 
 nsTableCellMap::Dump() const
 {
-  printf("***** START TABLE CELL MAP DUMP ***** %p\n", this);
+  PRINTF("***** START TABLE CELL MAP DUMP ***** %p\n", this);
   // output col info
   PRInt32 colCount = mCols.Count();
-	printf ("cols array orig/span-> %p", this);
+	PRINTF ("cols array orig/span-> %p", this);
 	for (PRInt32 colX = 0; colX < colCount; colX++) {
     nsColInfo* colInfo = (nsColInfo *)mCols.ElementAt(colX);
-		printf ("%d=%d/%d ", colX, colInfo->mNumCellsOrig, colInfo->mNumCellsSpan);
+		PRINTF ("%d=%d/%d ", colX, colInfo->mNumCellsOrig, colInfo->mNumCellsSpan);
 	}
   nsCellMap* cellMap = mFirstMap;
   while (cellMap) {
     cellMap->Dump();
     cellMap = cellMap->GetNextSibling();
   }
-  printf("***** END TABLE CELL MAP DUMP *****\n");
+  PRINTF("***** END TABLE CELL MAP DUMP *****\n");
 }
 #endif
 
@@ -775,7 +780,7 @@ nsCellMap::AppendCell(nsTableCellMap&   aMap,
       }
     }
   }
-  //printf("appended cell=%p row=%d \n", &aCellFrame, aRowIndex);
+  //PRINTF("appended cell=%p row=%d \n", &aCellFrame, aRowIndex);
   //aMap.Dump();
   return startColIndex;
 }
@@ -1481,40 +1486,40 @@ void nsCellMap::RemoveCell(nsTableCellMap&   aMap,
 #ifdef NS_DEBUG
 void nsCellMap::Dump() const
 {
-  printf("\n  ***** START GROUP CELL MAP DUMP ***** %p\n", this);
+  PRINTF("\n  ***** START GROUP CELL MAP DUMP ***** %p\n", this);
   PRInt32 mapRowCount = mRows.Count();
-  printf("  mapRowCount=%d tableRowCount=%d \n", mapRowCount, mRowCount);
+  PRINTF("  mapRowCount=%d tableRowCount=%d \n", mapRowCount, mRowCount);
 
   PRInt32 rowIndex, colIndex;
   for (rowIndex = 0; rowIndex < mapRowCount; rowIndex++) {
     nsVoidArray* row = (nsVoidArray *)mRows.ElementAt(rowIndex);
-    printf("  row %d : ", rowIndex);
+    PRINTF("  row %d : ", rowIndex);
     PRInt32 colCount = row->Count();
     for (colIndex = 0; colIndex < colCount; colIndex++) {
       CellData* cd = (CellData *)row->ElementAt(colIndex);
       if (cd) {
         if (cd->IsOrig()) {
-          printf("C%d,%d  ", rowIndex, colIndex);
+          PRINTF("C%d,%d  ", rowIndex, colIndex);
         } else {
           nsTableCellFrame* cell = nsnull;
           if (cd->IsRowSpan()) {
             cell = GetCellFrame(rowIndex, colIndex, *cd, PR_TRUE);
-            printf("R ");
+            PRINTF("R ");
           }
           if (cd->IsColSpan()) {
             cell = GetCellFrame(rowIndex, colIndex, *cd, PR_FALSE);
-            printf("C ");
+            PRINTF("C ");
           }
           if (!(cd->IsRowSpan() && cd->IsColSpan())) {
-            printf("  ");
+            PRINTF("  ");
           } 
-          printf("  ");  
+          PRINTF("  ");  
         }
       } else {
-        printf("----  ");
+        PRINTF("----  ");
       }
     }
-    printf("\n");
+    PRINTF("\n");
   }
 
   // output info mapping Ci,j to cell address
@@ -1522,7 +1527,7 @@ void nsCellMap::Dump() const
   for (PRInt32 rIndex = 0; rIndex < mapRowCount; rIndex++) {
     nsVoidArray* row = (nsVoidArray *)mRows.ElementAt(rIndex);
     PRInt32 colCount = row->Count();
-    printf("  ");
+    PRINTF("  ");
     for (colIndex = 0; colIndex < colCount; colIndex++) {
       CellData* cd = (CellData *)row->ElementAt(colIndex);
       if (cd) {
@@ -1530,15 +1535,15 @@ void nsCellMap::Dump() const
           nsTableCellFrame* cellFrame = cd->GetCellFrame();
           PRInt32 cellFrameColIndex;
           cellFrame->GetColIndex(cellFrameColIndex);
-          printf("C%d,%d=%p(%d)  ", rIndex, colIndex, cellFrame, cellFrameColIndex);
+          PRINTF("C%d,%d=%p(%d)  ", rIndex, colIndex, cellFrame, cellFrameColIndex);
           cellCount++;
         }
       }
     }
-    printf("\n");
+    PRINTF("\n");
   }
 
-  printf("  ***** END GROUP CELL MAP DUMP *****\n");
+  PRINTF("  ***** END GROUP CELL MAP DUMP *****\n");
 }
 #endif
 

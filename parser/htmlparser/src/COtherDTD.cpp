@@ -50,7 +50,6 @@
 
 #include "prmem.h" 
 
-
 static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kIDTDIID,      NS_IDTD_IID);
@@ -234,7 +233,7 @@ COtherDTD::~COtherDTD(){
 #if 0
   PRInt32 count=gNodeCount-mSharedNodes.GetSize();
   if(count) {
-    printf("%i of %i nodes leaked!\n",count,gNodeCount);
+    PRINTF("%i of %i nodes leaked!\n",count,gNodeCount);
   }
 #endif
 #endif

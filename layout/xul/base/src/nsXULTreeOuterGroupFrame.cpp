@@ -44,6 +44,11 @@
 #include "nsTempleLayout.h"
 #include "nsTreeLayout.h"
 #include "nsITimer.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsXULTreeOuterGroupFrameLog)
+#define PRINTF NS_LOG_PRINTF(nsXULTreeOuterGroupFrameLog)
+#define FLUSH  NS_LOG_FLUSH(nsXULTreeOuterGroupFrameLog)
 
 #define TICK_FACTOR 50
 
@@ -193,7 +198,7 @@ void nsScrollSmoother::Stop()
 
 NS_IMETHODIMP_(void) nsScrollSmoother::Notify(nsITimer *timer)
 {
-  //printf("Timer Callback!\n");
+  //PRINTF("Timer Callback!\n");
 
   Stop();
 
@@ -565,7 +570,7 @@ nsXULTreeOuterGroupFrame::PositionChanged(PRInt32 aOldIndex, PRInt32& aNewIndex)
 
   nsScrollSmoother* smoother = GetSmoother();
 
-  //printf("%d rows, %d per row, Estimated time needed %d, Threshhold %d (%s)\n", rowDelta, mTimePerRow, mTimePerRow * rowDelta, USER_TIME_THRESHOLD, (mTimePerRow * rowDelta > USER_TIME_THRESHOLD) ? "Nope" : "Yep");
+  //PRINTF("%d rows, %d per row, Estimated time needed %d, Threshhold %d (%s)\n", rowDelta, mTimePerRow, mTimePerRow * rowDelta, USER_TIME_THRESHOLD, (mTimePerRow * rowDelta > USER_TIME_THRESHOLD) ? "Nope" : "Yep");
 
   // if we can't scroll the rows in time then start a timer. We will eat
   // events until the user stops moving and the timer stops.
@@ -579,7 +584,7 @@ nsXULTreeOuterGroupFrame::PositionChanged(PRInt32 aOldIndex, PRInt32& aNewIndex)
 
      smoother->mDelta = newTwipIndex > oldTwipIndex ? rowDelta : -rowDelta;
 
-     //printf("Eating scroll!\n");
+     //PRINTF("Eating scroll!\n");
 
      smoother->Start();
 
@@ -635,7 +640,7 @@ nsXULTreeOuterGroupFrame::InternalPositionChanged(PRBool aUp, PRInt32 aDelta)
     // begin timing how long it takes to scroll a row
     PRTime start = PR_Now();
 
-    //printf("Actually doing scroll mCurrentIndex=%d, delta=%d!\n", mCurrentIndex, aDelta);
+    //PRINTF("Actually doing scroll mCurrentIndex=%d, delta=%d!\n", mCurrentIndex, aDelta);
 
   //if (mContentChain) {
     // XXX Eventually we need to make the code smart enough to look at a content chain
@@ -731,7 +736,7 @@ nsXULTreeOuterGroupFrame::InternalPositionChanged(PRBool aUp, PRInt32 aDelta)
   // average old and new
   mTimePerRow = (newTime + mTimePerRow)/2;
   
-  //printf("time per row=%d\n", mTimePerRow);
+  //PRINTF("time per row=%d\n", mTimePerRow);
 
   return NS_OK;
 }
@@ -1320,14 +1325,14 @@ nsXULTreeOuterGroupFrame :: HandleAutoScrollTracking ( const nsPoint & aPoint )
   PRBool scrollUp = PR_FALSE;
   if ( IsInDragScrollRegion(aPoint, &scrollUp) ) {
     if ( mAutoScrollTimerStarted ) {
-printf("waiting...\n");
+      PRINTF("waiting...\n");
       if ( mAutoScrollTimerHasFired ) {
         // we're in the right area and the timer has fired, so scroll
         ScrollToIndex ( scrollUp ? mCurrentIndex - 1 : mCurrentIndex + 1);
       }
     }
     else {
-printf("starting timer\n");
+      PRINTF("starting timer\n");
       // timer hasn't started yet, kick it off. Remember, this timer is a one-shot
       mAutoScrollTimer = do_CreateInstance("@mozilla.org/timer;1");
       if ( mAutoScrollTimer ) {
@@ -1418,7 +1423,7 @@ nsXULTreeOuterGroupFrame :: IsInDragScrollRegion ( const nsPoint& inPoint, PRBoo
 void
 nsXULTreeOuterGroupFrame :: Notify ( nsITimer* timer )
 {
-printf("000 FIRE\n");
+  PRINTF("000 FIRE\n");
   mAutoScrollTimerHasFired = PR_TRUE;
 }
 
@@ -1426,7 +1431,7 @@ printf("000 FIRE\n");
 nsresult
 nsXULTreeOuterGroupFrame :: StopScrollTracking()
 {
-printf("--stop\n");
+  PRINTF("--stop\n");
   if ( mAutoScrollTimer && mAutoScrollTimerStarted )
     mAutoScrollTimer->Cancel();
   mAutoScrollTimerHasFired = PR_FALSE;

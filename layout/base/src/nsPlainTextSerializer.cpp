@@ -36,6 +36,11 @@
 #include "nsITextContent.h"
 #include "nsTextFragment.h"
 #include "nsParserCIID.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsPlainTextSerializerLog)
+#define PRINTF NS_LOG_PRINTF(nsPlainTextSerializerLog)
+#define FLUSH  NS_LOG_FLUSH(nsPlainTextSerializerLog)
 
 static NS_DEFINE_CID(kLWBrkCID, NS_LWBRK_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
@@ -482,7 +487,7 @@ nsPlainTextSerializer::DoOpenContainer(PRInt32 aTag)
 
       if (-1 != style.Find("-moz-pre-wrap", PR_TRUE, whitespace)) {
 #ifdef DEBUG_preformatted
-        printf("Set mPreFormatted based on style moz-pre-wrap\n");
+        PRINTF("Set mPreFormatted based on style moz-pre-wrap\n");
 #endif
         mPreFormatted = PR_TRUE;
         mCacheLine = PR_TRUE;
@@ -504,14 +509,14 @@ nsPlainTextSerializer::DoOpenContainer(PRInt32 aTag)
           if (NS_SUCCEEDED(err)) {
             mWrapColumn = (PRUint32)col;
 #ifdef DEBUG_preformatted
-            printf("Set wrap column to %d based on style\n", mWrapColumn);
+            PRINTF("Set wrap column to %d based on style\n", mWrapColumn);
 #endif
           }
         }
       }
       else if (-1 != style.Find("pre", PR_TRUE, whitespace)) {
 #ifdef DEBUG_preformatted
-        printf("Set mPreFormatted based on style pre\n");
+        PRINTF("Set mPreFormatted based on style pre\n");
 #endif
         mPreFormatted = PR_TRUE;
         mCacheLine = PR_TRUE;
@@ -1262,7 +1267,7 @@ nsPlainTextSerializer::Write(const nsString& aString)
 {
 #ifdef DEBUG_wrapping
   char* foo = aString.ToNewCString();
-  printf("Write(%s): wrap col = %d, mColPos = %d\n", foo, mWrapColumn, mColPos);
+  PRINTF("Write(%s): wrap col = %d, mColPos = %d\n", foo, mWrapColumn, mColPos);
   nsMemory::Free(foo);
 #endif
 
@@ -1328,7 +1333,7 @@ nsPlainTextSerializer::Write(const nsString& aString)
     }
 
 #ifdef DEBUG_wrapping
-    printf("No wrapping: newline is %d, totLen is %d; leaving mColPos = %d\n",
+    PRINTF("No wrapping: newline is %d, totLen is %d; leaving mColPos = %d\n",
            newline, totLen, mColPos);
 #endif
     return;
@@ -1348,8 +1353,8 @@ nsPlainTextSerializer::Write(const nsString& aString)
     nsString remaining;
     aString.Right(remaining, totLen - bol);
     foo = remaining.ToNewCString();
-    //    printf("Next line: bol = %d, newlinepos = %d, totLen = %d, string = '%s'\n",
-    //           bol, nextpos, totLen, foo);
+    //    PRINTF("Next line: bol = %d, newlinepos = %d, totLen = %d, string = '%s'\n",
+    //           bol, nextpos, totLen, foo))x;
     nsMemory::Free(foo);
 #endif
 
@@ -1425,7 +1430,7 @@ nsPlainTextSerializer::Write(const nsString& aString)
          }
       }
     }
-  } // Continue looping over the string
+  }// Continue looping over the string
 }
 
 PRBool 

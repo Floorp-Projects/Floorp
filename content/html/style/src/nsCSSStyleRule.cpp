@@ -54,11 +54,16 @@
 
 #include "nsIStyleSet.h"
 #include "nsISizeOfHandler.h"
-
 // MJA: bug 31816
 #include "nsIPresShell.h"
 #include "nsIDocShellTreeItem.h"
 // - END MJA
+
+#include "nslog.h"
+
+NS_IMPL_LOG(nsCSSStyleRuleLog)
+#define PRINTF NS_LOG_PRINTF(nsCSSStyleRuleLog)
+#define FLUSH  NS_LOG_FLUSH(nsCSSStyleRuleLog)
 
 // #define DEBUG_REFS
 
@@ -164,7 +169,7 @@ nsAttrSelector::nsAttrSelector(PRInt32 aNameSpace, const nsString& aAttr)
 
 #ifdef DEBUG_REFS
   gAttrSelectorCount++;
-  printf( "nsAttrSelector Instances (ctor): %ld\n", (long)gAttrSelectorCount);
+  PRINTF( "nsAttrSelector Instances (ctor): %ld\n", (long)gAttrSelectorCount);
 #endif
 
   mAttr = NS_NewAtom(aAttr);
@@ -183,7 +188,7 @@ nsAttrSelector::nsAttrSelector(PRInt32 aNameSpace, const nsString& aAttr, PRUint
 
 #ifdef DEBUG_REFS
   gAttrSelectorCount++;
-  printf( "nsAttrSelector Instances (ctor): %ld\n", (long)gAttrSelectorCount);
+  PRINTF( "nsAttrSelector Instances (ctor): %ld\n", (long)gAttrSelectorCount);
 #endif
 
   mAttr = NS_NewAtom(aAttr);
@@ -201,7 +206,7 @@ nsAttrSelector::nsAttrSelector(const nsAttrSelector& aCopy)
 
 #ifdef DEBUG_REFS
   gAttrSelectorCount++;
-  printf( "nsAttrSelector Instances (cp-ctor): %ld\n", (long)gAttrSelectorCount);
+  PRINTF( "nsAttrSelector Instances (cp-ctor): %ld\n", (long)gAttrSelectorCount);
 #endif
 
   NS_IF_ADDREF(mAttr);
@@ -214,7 +219,7 @@ nsAttrSelector::~nsAttrSelector(void)
 
 #ifdef DEBUG_REFS
   gAttrSelectorCount--;
-  printf( "nsAttrSelector Instances (dtor): %ld\n", (long)gAttrSelectorCount);
+  PRINTF( "nsAttrSelector Instances (dtor): %ld\n", (long)gAttrSelectorCount);
 #endif
 
   NS_IF_RELEASE(mAttr);
@@ -304,7 +309,7 @@ nsCSSSelector::nsCSSSelector(void)
 
 #ifdef DEBUG_REFS
   gSelectorCount++;
-  printf( "nsCSSSelector Instances (ctor): %ld\n", (long)gSelectorCount);
+  PRINTF( "nsCSSSelector Instances (ctor): %ld\n", (long)gSelectorCount);
 #endif
 }
 
@@ -326,7 +331,7 @@ nsCSSSelector::nsCSSSelector(const nsCSSSelector& aCopy)
 
 #ifdef DEBUG_REFS
   gSelectorCount++;
-  printf( "nsCSSSelector Instances (cp-ctor): %ld\n", (long)gSelectorCount);
+  PRINTF( "nsCSSSelector Instances (cp-ctor): %ld\n", (long)gSelectorCount);
 #endif
 }
 
@@ -337,7 +342,7 @@ nsCSSSelector::~nsCSSSelector(void)
 
 #ifdef DEBUG_REFS
   gSelectorCount--;
-  printf( "nsCSSSelector Instances (dtor): %ld\n", (long)gSelectorCount);
+  PRINTF( "nsCSSSelector Instances (dtor): %ld\n", (long)gSelectorCount);
 #endif
 }
 
@@ -1080,7 +1085,7 @@ CSSStyleRuleImpl::CSSStyleRuleImpl(const nsCSSSelector& aSelector)
 {
 #ifdef DEBUG_REFS
   gStyleRuleCount++;
-  printf( "CSSStyleRuleImpl Instances (ctor): %ld\n", (long)gStyleRuleCount);
+  PRINTF( "CSSStyleRuleImpl Instances (ctor): %ld\n", (long)gStyleRuleCount);
 #endif
 }
 
@@ -1095,7 +1100,7 @@ CSSStyleRuleImpl::CSSStyleRuleImpl(const CSSStyleRuleImpl& aCopy)
 {
 #ifdef DEBUG_REFS
   gStyleRuleCount++;
-  printf( "CSSStyleRuleImpl Instances (cp-ctor): %ld\n", (long)gStyleRuleCount);
+  PRINTF( "CSSStyleRuleImpl Instances (cp-ctor): %ld\n", (long)gStyleRuleCount);
 #endif
 
   nsCSSSelector* copySel = aCopy.mSelector.mNext;
@@ -1118,7 +1123,7 @@ CSSStyleRuleImpl::~CSSStyleRuleImpl(void)
 {
 #ifdef DEBUG_REFS
   gStyleRuleCount--;
-  printf( "CSSStyleRuleImpl Instances (dtor): %ld\n", (long)gStyleRuleCount);
+  PRINTF( "CSSStyleRuleImpl Instances (dtor): %ld\n", (long)gStyleRuleCount);
 #endif
 
   nsCSSSelector*  next = mSelector.mNext;

@@ -62,7 +62,11 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 #include "nsIFrameManager.h"
 #include "nsIScriptSecurityManager.h"
+#include "nslog.h"
 
+NS_IMPL_LOG(nsImageFrameLog)
+#define PRINTF NS_LOG_PRINTF(nsImageFrameLog)
+#define FLUSH  NS_LOG_FLUSH(nsImageFrameLog)
 
 #ifdef DEBUG
 #undef NOISY_IMAGE_LOADING
@@ -205,7 +209,7 @@ nsImageFrame::UpdateImage(nsIPresContext* aPresContext, PRUint32 aStatus, void* 
 {
 #ifdef NOISY_IMAGE_LOADING
   ListTag(stdout);
-  printf(": UpdateImage: status=%x\n", aStatus);
+  PRINTF(": UpdateImage: status=%x\n", aStatus);
 #endif
 
   nsCOMPtr<nsIPresShell> presShell;
@@ -1031,11 +1035,8 @@ nsImageFrame::AttributeChanged(nsIPresContext* aPresContext,
     if (!oldSRC.Equals(newSRC)) {
 #ifdef NOISY_IMAGE_LOADING
       ListTag(stdout);
-      printf(": new image source; old='");
-      fputs(oldSRC, stdout);
-      printf("' new='");
-      fputs(newSRC, stdout);
-      printf("'\n");
+      PRINTF(": new image source; old='%s", oldSRC);
+      PRINTF("' new='%s'\n", newSRC);
 #endif
 
       if (mImageLoader.IsImageSizeKnown()) {

@@ -37,6 +37,11 @@
 #endif
 
 #include "nsIPref.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(ns4xPluginLog, 0)
+#define PRINTF NS_LOG_PRINTF(ns4xPluginLog)
+#define FLUSH  NS_LOG_FLUSH(ns4xPluginLog)
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_IID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
@@ -203,7 +208,7 @@ ns4xPlugin::CreatePlugin(nsIServiceManager* aServiceMgr,
 	}
 
 #ifdef NS_DEBUG
-    printf("debug: edburns ns4xPlugin::CreatePlugin\n");
+    PRINTF("debug: edburns ns4xPlugin::CreatePlugin\n");
 #endif
 
 #ifdef XP_UNIX
@@ -215,7 +220,7 @@ ns4xPlugin::CreatePlugin(nsIServiceManager* aServiceMgr,
     callbacks.size = sizeof(callbacks);
 
 #ifdef NS_DEBUG
-    printf("debug: edburns ns4xPlugin::CreatePlugin: cleared callbacks\n");
+    PRINTF("debug: edburns ns4xPlugin::CreatePlugin: cleared callbacks\n");
 #endif
 
     NP_PLUGINSHUTDOWN pfnShutdown =
@@ -244,8 +249,8 @@ ns4xPlugin::CreatePlugin(nsIServiceManager* aServiceMgr,
 		return NS_ERROR_UNEXPECTED;
 
 #ifdef NS_DEBUG
-	printf("debug: edburns: ns4xPlugin::CreatePlugin: callbacks->newstream: %p\n",
-	       callbacks.newstream);
+	PRINTF("debug: edburns: ns4xPlugin::CreatePlugin: callbacks->newstream: %p\n",
+           callbacks.newstream);
 #endif
 
     // now copy function table back to ns4xPlugin instance
@@ -432,7 +437,7 @@ ns4xPlugin::Shutdown(void)
   if (nsnull != fShutdownEntry)
   {
 #ifdef NS_DEBUG
-	printf("shutting down plugin %08x\n",(int)this);
+      PRINTF("shutting down plugin %08x\n",(int)this);
 #endif
 #ifdef XP_MAC
 #if !TARGET_CARBON
@@ -454,7 +459,7 @@ nsresult
 ns4xPlugin::GetMIMEDescription(const char* *resultingDesc)
 {
 #ifdef NS_DEBUG
-  printf("plugin getmimedescription called\n");
+    PRINTF("plugin getmimedescription called\n");
 #endif
   const char* (*npGetMIMEDescrpition)() =
     (const char* (*)()) PR_FindSymbol(fLibrary, "NP_GetMIMEDescription");
@@ -467,7 +472,7 @@ nsresult
 ns4xPlugin::GetValue(nsPluginVariable variable, void *value)
 {
 #ifdef NS_DEBUG
-  printf("plugin getvalue %d called\n", variable);
+    PRINTF("plugin getvalue %d called\n", variable);
 #endif
 
   NPError (*npGetValue)(void*, nsPluginVariable, void*) =

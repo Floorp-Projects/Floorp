@@ -82,6 +82,11 @@
 #include "nsIDateTimeFormat.h"
 #include "nsDateTimeFormatCID.h"
 #include "nsIScriptableDateFormat.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsXULContentUtilsLog)
+#define PRINTF NS_LOG_PRINTF(nsXULContentUtilsLog)
+#define FLUSH  NS_LOG_FLUSH(nsXULContentUtilsLog)
 
 
 static NS_DEFINE_CID(kDateTimeFormatCID,    NS_DATETIMEFORMAT_CID);
@@ -301,7 +306,7 @@ nsXULContentUtils::~nsXULContentUtils()
 {
 #ifdef DEBUG_REFS
     --gInstanceCount;
-    fprintf(stdout, "%d - RDF: nsXULContentUtils\n", gInstanceCount);
+    PRINTF("%d - RDF: nsXULContentUtils\n", gInstanceCount);
 #endif
 
     if (--gRefCnt == 0) {

@@ -35,7 +35,11 @@
 #include "Courier-BoldOblique.h"
 #include "Courier-Oblique.h"
 #include "Symbol.h"
+#include "nslog.h"
 
+NS_IMPL_LOG(nsAFMObjectLog)
+#define PRINTF NS_LOG_PRINTF(nsAFMObjectLog)
+#define FLUSH  NS_LOG_FLUSH(nsAFMObjectLog)
 
 
 // this is the basic font set supported currently
@@ -775,7 +779,7 @@ float     totallen=0.0f;
     idx = asciichar-32;
     fwidth = (PRInt32)(mPSFontInfo->mAFMCharMetrics[idx].mW0x);
     //    if ( (*cptr == 0x0020) || (*cptr == 0x002c) )
-    //   printf("fwidth = %d\n", fwidth);
+    //   PRINTF("fwidth = %d\n", fwidth);
     if (*cptr & 0xff00)
        fwidth = 1056;
     if ( (*cptr  == 0x0020) || (*cptr == 0x002c) )

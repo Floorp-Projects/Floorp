@@ -75,6 +75,12 @@
 // XXX misnamed header file, but oh well
 #include "nsHTMLTokens.h"
 
+#include "nslog.h"
+
+NS_IMPL_LOG(nsXMLContentSinkLog)
+#define PRINTF NS_LOG_PRINTF(nsXMLContentSinkLog)
+#define FLUSH  NS_LOG_FLUSH(nsXMLContentSinkLog)
+
 static char kNameSpaceSeparator = ':';
 static char kNameSpaceDef[] = "xmlns";
 static char kStyleSheetPI[] = "xml-stylesheet";
@@ -768,7 +774,7 @@ NS_IMETHODIMP
 nsXMLContentSink::AddXMLDecl(const nsIParserNode& aNode)
 {
   // XXX We'll ignore it for now
-  printf("nsXMLContentSink::AddXMLDecl\n");
+  PRINTF("nsXMLContentSink::AddXMLDecl\n");
   return NS_OK;
 }
 
@@ -1369,21 +1375,21 @@ nsXMLContentSink::AddText(const nsString& aString)
 NS_IMETHODIMP
 nsXMLContentSink::AddUnparsedEntity(const nsIParserNode& aNode)
 {
-  printf("nsXMLContentSink::AddUnparsedEntity\n");
+  PRINTF("nsXMLContentSink::AddUnparsedEntity\n");
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXMLContentSink::AddNotation(const nsIParserNode& aNode)
 {
-  printf("nsXMLContentSink::AddNotation\n");
+  PRINTF("nsXMLContentSink::AddNotation\n");
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXMLContentSink::AddEntityReference(const nsIParserNode& aNode)
 {
-  printf("nsXMLContentSink::AddEntityReference\n");
+  PRINTF("nsXMLContentSink::AddEntityReference\n");
   return NS_OK;
 }
 

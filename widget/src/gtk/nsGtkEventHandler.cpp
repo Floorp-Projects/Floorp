@@ -40,6 +40,11 @@
 #include <gdk/gdkkeysyms.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+#include "nslog.h"
+
+NS_IMPL_LOG(nsGtkEventHandlerLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsGtkEventHandlerLog)
+#define FLUSH  NS_LOG_FLUSH(nsGtkEventHandlerLog)
 
 #ifdef DEBUG_pavlov
 //#define DEBUG_EVENTS 1
@@ -305,7 +310,7 @@ int nsPlatformToDOMKeyCode(GdkEventKey *aGEK)
     return keysym - GDK_F1 + NS_VK_F1;
 
 #if defined(DEBUG_akkana) || defined(DEBUG_ftang)
-  printf("No match in nsPlatformToDOMKeyCode: keysym is 0x%x, string is '%s', keyval = %d\n", keysym, aGEK->string, aGEK->keyval);
+  PRINTF("No match in nsPlatformToDOMKeyCode: keysym is 0x%x, string is '%s', keyval = %d\n", keysym, aGEK->string, aGEK->keyval);
 #endif
 
   return((int)0);
@@ -432,20 +437,20 @@ void InitKeyPressEvent(GdkEventKey *aGEK,
     }
 
 #if defined(DEBUG_akkana_not) || defined (DEBUG_ftang)
-    if (!aGEK->length) printf("!length, ");
-    printf("Key Press event: gtk string = '%s', keyval = '%c' = %d,\n",
+    if (!aGEK->length) PRINTF("!length, ");
+    PRINTF("Key Press event: gtk string = '%s', keyval = '%c' = %d,\n",
            aGEK->string, aGEK->keyval, aGEK->keyval);
-    printf("    --> keyCode = 0x%x, char code = '%c'",
+    PRINTF("    --> keyCode = 0x%x, char code = '%c'",
            anEvent.keyCode, anEvent.charCode);
     if (anEvent.isShift)
-      printf(" [shift]");
+      PRINTF(" [shift]");
     if (anEvent.isControl)
-      printf(" [ctrl]");
+      PRINTF(" [ctrl]");
     if (anEvent.isAlt)
-      printf(" [alt]");
+      PRINTF(" [alt]");
     if (anEvent.isMeta)
-      printf(" [meta]");
-    printf("\n");
+      PRINTF(" [meta]");
+    PRINTF("\n");
 #endif
 
     anEvent.time = aGEK->time;
@@ -1067,13 +1072,13 @@ handle_configure_event(GtkWidget *w, GdkEventConfigure *conf, gpointer p)
 
   if ((oldBounds.x == x) && (oldBounds.y == y)) {
 #ifdef DEBUG_MOVE
-    printf("Window: No position change\n");
+    PRINTF("Window: No position change\n");
 #endif
     return PR_FALSE;
   }
 
 #ifdef DEBUG_MOVE
-  printf("Window: Move from (%d,%d) to (%d,%d)\n", oldBounds.x,
+  PRINTF("Window: Move from (%d,%d) to (%d,%d)\n", oldBounds.x,
          oldBounds.y, x, y);
 #endif
 

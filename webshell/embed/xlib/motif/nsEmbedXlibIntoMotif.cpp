@@ -13,6 +13,11 @@
 #include "nsRepository.h"
 #include "nsIPref.h"
 #include "xlibrgb.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsEmbedXlibIntoMotifLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsEmbedXlibIntoMotifLog)
+#define FLUSH  NS_LOG_FLUSH(nsEmbedXlibIntoMotifLog)
 
 static NS_DEFINE_IID(kIEventQueueServiceIID,
                      NS_IEVENTQUEUESERVICE_IID);
@@ -34,7 +39,7 @@ static void event_processor_callback(XtPointer       aClosure,
                                      int *           aFd,
                                      XtIntervalId *  aId)
 {
-//   printf("event_processor_callback()\n");
+//   PRINTF("event_processor_callback()\n");
   nsIEventQueue *eventQueue = (nsIEventQueue*)aClosure;
   eventQueue->ProcessPendingEvents();
 }
@@ -56,11 +61,11 @@ static void EmbedEventHandler(Widget     w,
 //   nsXtWidget_InitNSMouseEvent(event, p, mevent, NS_MOUSE_LEFT_BUTTON_DOWN);
 //   widgetWindow->DispatchMouseEvent(mevent);
 
-	printf("test_filter called\n");
+    PRINTF("test_filter called\n");
 
   if (nsnull != gsEventDispatcher)
   {
-	printf("dispatching native event\n");
+      PRINTF("dispatching native event\n");
 	(*gsEventDispatcher)((nsXlibNativeEvent) xevent);
   }
 
@@ -92,12 +97,12 @@ static void WindowCreateCallback(PRUint32 aID)
 					EmbedEventHandler,
 					NULL);
 
-//   printf("window created\n");
+//   PRINTF("window created\n");
 }
 
 static void WindowDestroyCallback(PRUint32 aID)
 {
-  printf("window destroyed\n");
+    PRINTF("window destroyed\n");
 }
 
 
@@ -168,7 +173,7 @@ int main(int argc, char **argv)
   //////////////////////////////////////////////////////////////////////
   NS_SetupRegistry();
 
-  printf("Creating event queue.\n");
+  PRINTF("Creating event queue.\n");
     
   nsIEventQueueService * eventQueueService = nsnull;
   nsIEventQueue * eventQueue = nsnull;
@@ -239,7 +244,7 @@ int main(int argc, char **argv)
 					  (void **) &sgPrefs);
 
   if (NS_OK != rv) {
-    printf("failed to get prefs instance\n");
+      PRINTF("failed to get prefs instance\n");
     return rv;
   }
   

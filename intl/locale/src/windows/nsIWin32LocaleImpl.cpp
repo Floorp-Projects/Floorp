@@ -28,6 +28,11 @@
 #include "nsLocaleCID.h"
 #include "prprf.h"
 #include <Windows.h>
+#include "nslog.h"
+
+NS_IMPL_LOG(nsIWin32LocaleImplLog)
+#define PRINTF NS_LOG_PRINTF(nsIWin32LocaleImplLog)
+#define FLUSH  NS_LOG_FLUSH(nsIWin32LocaleImplLog)
 
 NS_DEFINE_IID(kIWin32LocaleIID, NS_IWIN32LOCALE_IID);
 NS_DEFINE_IID(kIWin32LocaleImplCID, NS_WIN32LOCALE_CID);
@@ -534,7 +539,7 @@ test_internal_tables(void)
 
 	for(i=1;i<LENGTH_MAPPING_LIST;i++) {
 		if (strcmp(dbg_list[i-1].iso_code,dbg_list[i].iso_code)>=0)
-			fprintf(stderr,"nsLocale: language_list %s and %s are not ordered\n",dbg_list[i-1].iso_code,dbg_list[i].iso_code);
+			PRINTF("nsLocale: language_list %s and %s are not ordered\n",dbg_list[i-1].iso_code,dbg_list[i].iso_code);
 	}
 
 	i=0;
@@ -542,11 +547,11 @@ test_internal_tables(void)
 		i++;
 	}
 	if (i!=LENGTH_MAPPING_LIST)
-		fprintf(stderr,"nsLocale: language_list length is %d, reported length is %d\n",i,LENGTH_MAPPING_LIST);
+		PRINTF("nsLocale: language_list length is %d, reported length is %d\n",i,LENGTH_MAPPING_LIST);
 
 	for(i=0;i<LENGTH_MAPPING_LIST;i++) {
 		if (strcmp(iso_list[i].iso_code,dbg_list[i].iso_code)!=0) {
-			fprintf(stderr,"nsLocale: iso_list and dbg_list differet at item: %d\n",i);
+			PRINTF("nsLocale: iso_list and dbg_list differet at item: %d\n",i);
 		}
 	}
 }

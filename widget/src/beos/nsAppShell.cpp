@@ -32,6 +32,11 @@
 #include <stdlib.h>
 #include <AppKit.h>
 #include <AppFileInfo.h>
+#include "nslog.h"
+
+NS_IMPL_LOG(nsAppShellLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsAppShellLog)
+#define FLUSH  NS_LOG_FLUSH(nsAppShellLog)
 
 static int gBAppCount = 0;
 
@@ -206,7 +211,7 @@ nsresult nsAppShell::Run()
 				break;
 
 			default :
-				printf("nsAppShell::Run - UNKNOWN EVENT\n");
+				PRINTF("nsAppShell::Run - UNKNOWN EVENT\n");
 				break;
 		}
 
@@ -286,13 +291,13 @@ NS_METHOD nsAppShell::Spindown()
 NS_METHOD nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
 {
 	aRealEvent = PR_FALSE;
-	printf("nsAppShell::GetNativeEvent - FIXME: not implemented\n");
+	PRINTF("nsAppShell::GetNativeEvent - FIXME: not implemented\n");
 	return NS_OK;
 }
 
 NS_METHOD nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void *aEvent)
 {
-	printf("nsAppShell::DispatchNativeEvent - FIXME: not implemented\n");
+    PRINTF("nsAppShell::DispatchNativeEvent - FIXME: not implemented\n");
 	return NS_OK;
 }
 

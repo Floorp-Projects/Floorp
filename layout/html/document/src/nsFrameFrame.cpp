@@ -70,6 +70,11 @@
 #include "nsIBrowserBoxObject.h"
 #include "nsISHistory.h"
 #endif
+#include "nslog.h"
+
+NS_IMPL_LOG(nsFrameFrameLog)
+#define PRINTF NS_LOG_PRINTF(nsFrameFrameLog)
+#define FLUSH  NS_LOG_FLUSH(nsFrameFrameLog)
 
 class nsHTMLFrame;
 
@@ -215,7 +220,7 @@ nsHTMLFrameOuterFrame::nsHTMLFrameOuterFrame()
 
 nsHTMLFrameOuterFrame::~nsHTMLFrameOuterFrame()
 {
-  //printf("nsHTMLFrameOuterFrame destructor %X \n", this);
+  //PRINTF("nsHTMLFrameOuterFrame destructor %X \n", this);
 }
 
 NS_IMETHODIMP
@@ -285,7 +290,7 @@ nsHTMLFrameOuterFrame::Paint(nsIPresContext* aPresContext,
                              const nsRect& aDirtyRect,
                              nsFramePaintLayer aWhichLayer)
 {
-  //printf("outer paint %X (%d,%d,%d,%d) \n", this, aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
+  //PRINTF("outer paint %X (%d,%d,%d,%d) \n", this, aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
   nsIFrame* firstChild = mFrames.FirstChild();
   if (nsnull != firstChild) {
     firstChild->Paint(aPresContext, aRenderingContext, aDirtyRect,
@@ -322,7 +327,7 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext*          aPresContext,
                               nsReflowStatus&          aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("nsHTMLFrameOuterFrame", aReflowState.reason);
-  //printf("OuterFrame::Reflow %X (%d,%d) \n", this, aReflowState.availableWidth, aReflowState.availableHeight); 
+  //PRINTF("OuterFrame::Reflow %X (%d,%d) \n", this, aReflowState.availableWidth, aReflowState.availableHeight); 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
      ("enter nsHTMLFrameOuterFrame::Reflow: maxSize=%d,%d reason=%d",
       aReflowState.availableWidth, aReflowState.availableHeight, aReflowState.reason));
@@ -428,7 +433,7 @@ nsHTMLFrameOuterFrame::AttributeChanged(nsIPresContext* aPresContext,
                                         PRInt32 aHint)
 {
   if (nsHTMLAtoms::src == aAttribute) {
-    printf("got a request\n");
+    PRINTF("got a request\n");
     nsIFrame* firstChild = mFrames.FirstChild();
     if (nsnull != firstChild) {
       return ((nsHTMLFrameInnerFrame*)firstChild)->ReloadURL(aPresContext);
@@ -463,7 +468,7 @@ nsHTMLFrameInnerFrame::nsHTMLFrameInnerFrame()
 
 nsHTMLFrameInnerFrame::~nsHTMLFrameInnerFrame()
 {
-   //printf("nsHTMLFrameInnerFrame destructor %X \n", this);
+  //PRINTF("nsHTMLFrameInnerFrame destructor %X \n", this);
 
 #ifdef INCLUDE_XUL
   nsCOMPtr<nsIDOMXULElement> xulElt(do_QueryInterface(mContent));
@@ -650,7 +655,7 @@ nsHTMLFrameInnerFrame::Paint(nsIPresContext*      aPresContext,
                              const nsRect&        aDirtyRect,
                              nsFramePaintLayer    aWhichLayer)
 {
-  //printf("inner paint %X (%d,%d,%d,%d) \n", this, aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
+  //PRINTF("inner paint %X (%d,%d,%d,%d) \n", this, aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
   // if there is not web shell paint based on our background color, 
   // otherwise let the web shell paint the sub document 
   if (!mSubShell) {

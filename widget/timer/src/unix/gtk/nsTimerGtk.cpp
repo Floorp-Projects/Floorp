@@ -27,6 +27,11 @@
 #include "nsVoidArray.h"
 #include "nsTimerGtk.h"
 #include "nsCOMPtr.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsTimerGtkLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsTimerGtkLog)
+#define FLUSH  NS_LOG_FLUSH(nsTimerGtkLog)
 
 static NS_DEFINE_IID(kITimerIID, NS_ITIMER_IID);
 
@@ -174,7 +179,7 @@ PRBool TimeVal::operator<=(const struct timeval &tv) const
 
 PRBool nsTimerGtk::FireTimeout()
 {
-  //  printf("%p FireTimeout() priority = %i\n", this, mPriority);
+  //  PRINTF("%p FireTimeout() priority = %i\n", this, mPriority);
   // because Notify can cause 'this' to get destroyed, we need to hold a ref
   nsCOMPtr<nsITimer> kungFuDeathGrip = this;
   
@@ -213,7 +218,7 @@ PRBool nsTimerGtk::gProcessingTimer = PR_FALSE;
 
 nsTimerGtk::nsTimerGtk()
 {
-  //  printf("nsTimerGtke::nsTimerGtk called for %p\n", this);
+  //  PRINTF("nsTimerGtke::nsTimerGtk called for %p\n", this);
   NS_INIT_REFCNT();
   mFunc = NULL;
   mCallback = NULL;
@@ -225,7 +230,7 @@ nsTimerGtk::nsTimerGtk()
 
 nsTimerGtk::~nsTimerGtk()
 {
-//  printf("nsTimerGtk::~nsTimerGtk called for %p\n", this);
+//  PRINTF("nsTimerGtk::~nsTimerGtk called for %p\n", this);
   Cancel();
   NS_IF_RELEASE(mCallback);
 }
@@ -291,7 +296,7 @@ nsresult nsTimerGtk::Init(nsTimerCallbackFunc aFunc,
                  PRUint32 aPriority,
                  PRUint32 aType)
 {
-  //printf("%p nsTimerGtk::Init() mDelay = %i\n", this, aDelay);
+  //PRINTF("%p nsTimerGtk::Init() mDelay = %i\n", this, aDelay);
   mFunc = aFunc;
   mClosure = aClosure;
   mPriority = aPriority;

@@ -23,6 +23,11 @@
 /* Implementation of misc. xpti stuff. */
 
 #include "xptiprivate.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(xptiMiscLog)
+#define PRINTF NS_LOG_PRINTF(xptiMiscLog)
+#define FLUSH  NS_LOG_FLUSH(xptiMiscLog)
 
 struct xptiFileTypeEntry
 {
@@ -82,9 +87,7 @@ xptiAutoLog::xptiAutoLog(xptiInterfaceInfoManager* mgr,
         }
         else
         {
-#ifdef DEBUG
-        printf("xpti failed to open log file for writing\n");
-#endif
+            PRINTF("xpti failed to open log file for writing\n");
         }
     }
 };

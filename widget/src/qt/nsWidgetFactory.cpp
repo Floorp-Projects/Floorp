@@ -42,6 +42,11 @@
 #include "nsDragService.h"
 #include "nsFileSpecWithUIImpl.h"
 #include "nsScrollbar.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsWidgetFactoryLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsWidgetFactoryLog)
+#define FLUSH  NS_LOG_FLUSH(nsWidgetFactoryLog)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(ChildWindow)

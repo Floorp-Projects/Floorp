@@ -32,6 +32,11 @@
 #include "nsLayoutAtoms.h"
 #include "nsIContent.h"
 #include "nsIDOMHTMLTableColElement.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsTableColFrameLog)
+#define PRINTF NS_LOG_PRINTF(nsTableColFrameLog)
+#define FLUSH  NS_LOG_FLUSH(nsTableColFrameLog)
 
 #define COL_TYPE_CONTENT              0x0
 #define COL_TYPE_ANONYMOUS_COL        0x1
@@ -187,7 +192,7 @@ void nsTableColFrame::SetWidth(PRUint32 aWidthType,
   if (aWidth > 0) {
     nscoord minWidth = GetMinWidth();
     if ((MIN_CON != aWidthType) && (aWidth < minWidth)) {
-      printf("non min width set to lower than min \n");
+      PRINTF("non min width set to lower than min \n");
     }
   }
 #endif
@@ -221,13 +226,13 @@ void nsTableColFrame::Dump(PRInt32 aIndent)
   }
   indent[aIndent] = 0;
 
-  printf("%s**START COL DUMP** colIndex=%d isAnonymous=%d constraint=%d",
-    indent, mColIndex, mIsAnonymous, mConstraint);
-  printf("\n%s widths=", indent);
+  PRINTF("%s**START COL DUMP** colIndex=%d isAnonymous=%d constraint=%d",
+         indent, mColIndex, mIsAnonymous, mConstraint);
+  PRINTF("\n%s widths=", indent);
   for (PRInt32 widthX = 0; widthX < NUM_WIDTHS; widthX++) {
-    printf("%d ", mWidths[widthX]);
+    PRINTF("%d ", mWidths[widthX]);
   }
-  printf(" **END COL DUMP** ");
+  PRINTF(" **END COL DUMP** ");
   delete [] indent;
 }
 

@@ -39,6 +39,13 @@
 #include "nsNetUtil.h"
 #include "nsIURL.h"
 #include "nsPIXPIManagerCallbacks.h"
+#include "nslog.h"
+#undef PRINTF
+#undef FLUSH
+
+NS_IMPL_LOG(nsInstallProgressDialogLog)
+#define PRINTF NS_LOG_PRINTF(nsInstallProgressDialogLog)
+#define FLUSH  NS_LOG_FLUSH(nsInstallProgressDialogLog)
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID( kAppShellServiceCID, NS_APPSHELL_SERVICE_CID );
@@ -304,12 +311,12 @@ nsresult nsInstallProgressDialog::setDlgAttribute( const char *id,
             rv = elem->SetAttribute( NS_ConvertASCIItoUCS2(name), value );
             if ( NS_SUCCEEDED( rv ) ) {
             } else {
-                 DEBUG_PRINTF( PR_STDOUT, "%s %d: SetAttribute failed, rv=0x%X\n",
-                               __FILE__, (int)__LINE__, (int)rv );
+                 PRINTF("%s %d: SetAttribute failed, rv=0x%X\n",
+                        __FILE__, (int)__LINE__, (int)rv );
             }
         } else {
-            DEBUG_PRINTF( PR_STDOUT, "%s %d: GetElementById failed, rv=0x%X\n",
-                          __FILE__, (int)__LINE__, (int)rv );
+            PRINTF("%s %d: GetElementById failed, rv=0x%X\n",
+                   __FILE__, (int)__LINE__, (int)rv );
         }
     } else {
         rv = NS_ERROR_NULL_POINTER;
@@ -344,12 +351,12 @@ nsresult nsInstallProgressDialog::getDlgAttribute(  const char *id,
             rv = elem->GetAttribute( NS_ConvertASCIItoUCS2(name), value );
             if ( NS_SUCCEEDED( rv ) ) {
             } else {
-                 DEBUG_PRINTF( PR_STDOUT, "%s %d: GetAttribute failed, rv=0x%X\n",
-                               __FILE__, (int)__LINE__, (int)rv );
+                 PRINTF("%s %d: GetAttribute failed, rv=0x%X\n",
+                        __FILE__, (int)__LINE__, (int)rv );
             }
         } else {
-            DEBUG_PRINTF( PR_STDOUT, "%s %d: GetElementById failed, rv=0x%X\n",
-                          __FILE__, (int)__LINE__, (int)rv );
+            PRINTF("%s %d: GetElementById failed, rv=0x%X\n",
+                   __FILE__, (int)__LINE__, (int)rv );
         }
     } else {
         rv = NS_ERROR_NULL_POINTER;

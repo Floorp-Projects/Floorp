@@ -25,6 +25,11 @@
 #include "nsFontMetricsPh.h"
 #include "nsPhGfxLog.h"
 #include "nsHashtable.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsFontMetricsPhLog)
+#define PRINTF NS_LOG_PRINTF(nsFontMetricsPhLog)
+#define FLUSH  NS_LOG_FLUSH(nsFontMetricsPhLog)
 
 #include <errno.h>
 
@@ -163,7 +168,7 @@ nsFontMetricsPh :: Init ( const nsFont& aFont, nsIAtom* aLangGroup,
 	app2twip *= (app2dev * textZoom);
 	PRInt32 sizePoints = NSTwipsToFloorIntPoints(nscoord(mFont->size * app2twip * 0.90));
   
-	//printf("FONTSIZE: %f, %f, %f, %f, %d, %d (%d)\n", app2dev, app2twip, scale, textZoom, \
+	//PRINTF("FONTSIZE: %f, %f, %f, %f, %d, %d (%d)\n", app2dev, app2twip, scale, textZoom, \
 	//	mFont->size, sizePoints, sizePoints2);
 
 	char NSFontName[64];	/* Local buffer to keep the fontname in */
@@ -189,7 +194,7 @@ nsFontMetricsPh :: Init ( const nsFont& aFont, nsIAtom* aLangGroup,
 		if (PfGenerateFontName((const uchar_t *)"Courier 10 Pitch BT", uiFlags, sizePoints, (uchar_t *)NSFullFontName) == NULL)
 		{
   		  NS_ASSERTION(0,"nsFontMetricsPh::Init Name generate failed for default font\n");
-		  printf(" nsFontMetricsPh::Init Name generate failed for default font:  %s, %d, %d\n", str, uiFlags, sizePoints);
+        PRINTF((" nsFontMetricsPh::Init Name generate failed for default font:  %s, %d, %d\n", str, uiFlags, sizePoints));
  		}
 	}
 

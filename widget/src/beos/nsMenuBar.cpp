@@ -35,6 +35,11 @@
 #include "nsWidgetsCID.h"
 
 #include <MenuItem.h>
+#include "nslog.h"
+
+NS_IMPL_LOG(nsMenuBarLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsMenuBarLog)
+#define FLUSH  NS_LOG_FLUSH(nsMenuBarLog)
 
 static NS_DEFINE_CID(kMenuBarCID, NS_MENUBAR_CID);
 static NS_DEFINE_CID(kMenuCID, NS_MENU_CID);
@@ -184,7 +189,7 @@ NS_METHOD nsMenuBar::RemoveMenu(const PRUint32 aPos)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBar::RemoveAll()
 {
-printf("nsMenuBar::RemoveAll - FIXME: not implemented\n");
+  PRINTF("nsMenuBar::RemoveAll - FIXME: not implemented\n");
 #if 0
   while (mItems->Count()) {
     nsISupports * supports = (nsISupports *)mItems->ElementAt(0);

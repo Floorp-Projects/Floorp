@@ -34,6 +34,11 @@
 #include "xlibrgb.h"
 
 #include <stdio.h>
+#include "nslog.h"
+
+NS_IMPL_LOG(QMozillaContainerLog, 0)
+#define PRINTF NS_LOG_PRINTF(QMozillaContainerLog)
+#define FLUSH  NS_LOG_FLUSH(QMozillaContainerLog)
 
 //-----------------------------------------------------------------------------
 static NS_DEFINE_CID(kCUnixToolkitServiceCID, NS_UNIX_TOOLKIT_SERVICE_CID);
@@ -97,10 +102,10 @@ QMozillaContainer::QMozillaContainer( QWidget* parent ) : QWidget( parent, "Cont
 {
 	NS_INIT_ISUPPORTS();
 	
-	printf("calling   init()\n");
+	PRINTF("calling   init()\n");
 	if ( init() != 0 )
-		printf("MOZILLA CONTAINER WIDGET: !!! ERROR !!!    in init()\n");
-	printf("done\n");
+		PRINTF("MOZILLA CONTAINER WIDGET: !!! ERROR !!!    in init()\n");
+	PRINTF("done\n");
 }
 	
 QMozillaContainer::~QMozillaContainer()
@@ -153,7 +158,7 @@ bool QMozillaContainer::x11Event( XEvent* xevent )
 	
 		if ( changed )
 		{
-			//printf("RESIZE...%p(%d, %d)\n", w, width, height);
+			//PRINTF("RESIZE...%p(%d, %d)\n", w, width, height);
 			m_WebShell->SetBounds( 0, 0, width(), height() );   changed = 0;
 		}
 	}
@@ -208,7 +213,7 @@ void QMozillaContainer::stop()
 static void WindowCreateCallback( PRUint32 aID )
 {
 	// XXX Milind:
-  printf( "window created: %u\n", aID );
+  PRINTF( "window created: %u\n", aID );
 
 	QWidget*	qwidget = new QMozillaWidget( ( WId )aID );
 	qwidget->setMouseTracking( TRUE );
@@ -226,7 +231,7 @@ static void WindowCreateCallback( PRUint32 aID )
 
 static void WindowDestroyCallback(PRUint32 aID)
 {
-  printf("window destroyed\n");
+  PRINTF("window destroyed\n");
 }
 
 
@@ -275,7 +280,7 @@ int QMozillaContainer::init()
   //////////////////////////////////////////////////////////////////////
   NS_SetupRegistry();
 
-  printf("Creating event queue.\n");
+  PRINTF("Creating event queue.\n");
     
   nsIEventQueueService * eventQueueService = nsnull;
   nsIEventQueue * eventQueue = nsnull;
@@ -319,11 +324,11 @@ int QMozillaContainer::init()
   m_WindowService->SetWindowCreateCallback(WindowCreateCallback);
   m_WindowService->SetWindowDestroyCallback(WindowDestroyCallback);
 
-	printf("adding xlib event queue callback...\n");
+	PRINTF("adding xlib event queue callback...\n");
 	m_MozillaEventProcessor = new nsQtEventProcessor( eventQueue, this );
 
 
-	printf("creating webshell...\n");
+	PRINTF("creating webshell...\n");
   rv = nsRepository::CreateInstance(kWebShellCID, 
 	                                  nsnull, 
 																		kIWebShellIID, 
@@ -334,7 +339,7 @@ int QMozillaContainer::init()
 	if (!NS_SUCCEEDED(rv))
 		return 1;
 
-	printf("initializing webshell...\n");
+	PRINTF("initializing webshell...\n");
   m_WebShell->Init( ( nsNativeWidget )winId(), 0, 0, 500, 500);
 	m_WebShell->SetContainer( this );
 
@@ -347,7 +352,7 @@ int QMozillaContainer::init()
 					                                (void **) &m_Prefs);
 
   if (NS_OK != rv) {
-    printf("failed to get prefs instance\n");
+    PRINTF("failed to get prefs instance\n");
     return rv;
   }
   
@@ -355,7 +360,7 @@ int QMozillaContainer::init()
   m_Prefs->ReadUserPrefs();
 
   m_WebShell->SetPrefs(m_Prefs);
-	printf("showing webshell...\n");
+	PRINTF("showing webshell...\n");
   m_WebShell->Show();
 
 
@@ -395,7 +400,7 @@ NS_METHOD QMozillaContainer::WillLoadURL(nsIWebShell* aShell,
 																							nsLoadType aReason)
 {
 	char	*url = makeCString( aURL );
-	printf("MOZILLA CONTAINER WIDGET: will load %s...\n", url);
+	PRINTF("MOZILLA CONTAINER WIDGET: will load %s...\n", url);
 	delete url;
 
 	return NS_OK;
@@ -405,7 +410,7 @@ NS_METHOD QMozillaContainer::WillLoadURL(nsIWebShell* aShell,
 NS_METHOD QMozillaContainer::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
 {
 	char	*url = makeCString( aURL );
-	printf("MOXILLA CONTAINER WIDGET: loading %s...\n", url);
+	PRINTF("MOXILLA CONTAINER WIDGET: loading %s...\n", url);
 	delete url;
 
 	emit urlLoadStarted();
@@ -433,9 +438,9 @@ NS_METHOD QMozillaContainer::EndLoadURL(nsIWebShell* aShell,
 	char	*url = makeCString( aURL );
 
 	if ( aStatus != NS_OK )
-		printf("MOZILLA CONTAINER WIDGET: error loading %s...\n", url);
+		PRINTF("MOZILLA CONTAINER WIDGET: error loading %s...\n", url);
 	else
-		printf("MOXILLA CONTAINER WIDGET: done loading %s...\n", url);
+		PRINTF("MOXILLA CONTAINER WIDGET: done loading %s...\n", url);
 
 	delete url;
 

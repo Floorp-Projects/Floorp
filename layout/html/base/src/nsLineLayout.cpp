@@ -46,6 +46,11 @@
 #include "nsIViewManager.h"
 #include "nsHTMLAtoms.h"
 #include "nsTextFragment.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsLineLayoutLog)
+#define PRINTF NS_LOG_PRINTF(nsLineLayoutLog)
+#define FLUSH  NS_LOG_FLUSH(nsLineLayoutLog)
 
 #ifdef DEBUG
 #undef  NOISY_HORIZONTAL_ALIGN
@@ -179,20 +184,20 @@ nsLineLayout::BeginLineReflow(nscoord aX, nscoord aY,
 #ifdef DEBUG
   if ((aWidth != NS_UNCONSTRAINEDSIZE) && CRAZY_WIDTH(aWidth)) {
     nsFrame::ListTag(stdout, mBlockReflowState->frame);
-    printf(": Init: bad caller: width WAS %d(0x%x)\n",
+    PRINTF(": Init: bad caller: width WAS %d(0x%x)\n",
            aWidth, aWidth);
     aWidth = NS_UNCONSTRAINEDSIZE;
   }
   if ((aHeight != NS_UNCONSTRAINEDSIZE) && CRAZY_HEIGHT(aHeight)) {
     nsFrame::ListTag(stdout, mBlockReflowState->frame);
-    printf(": Init: bad caller: height WAS %d(0x%x)\n",
+    PRINTF(": Init: bad caller: height WAS %d(0x%x)\n",
            aHeight, aHeight);
     aHeight = NS_UNCONSTRAINEDSIZE;
   }
 #endif
 #ifdef NOISY_REFLOW
   nsFrame::ListTag(stdout, mBlockReflowState->frame);
-  printf(": BeginLineReflow: %d,%d,%d,%d impacted=%s %s\n",
+  PRINTF(": BeginLineReflow: %d,%d,%d,%d impacted=%s %s\n",
          aX, aY, aWidth, aHeight,
          aImpactedByFloaters?"true":"false",
          aIsTopOfPage ? "top-of-page" : "");
@@ -258,7 +263,7 @@ nsLineLayout::EndLineReflow()
 {
 #ifdef NOISY_REFLOW
   nsFrame::ListTag(stdout, mBlockReflowState->frame);
-  printf(": EndLineReflow: width=%d\n", mRootSpan->mX - mRootSpan->mLeftEdge);
+  PRINTF(": EndLineReflow: width=%d\n", mRootSpan->mX - mRootSpan->mLeftEdge);
 #endif
 
   FreeSpan(mRootSpan);
@@ -271,11 +276,11 @@ nsLineLayout::EndLineReflow()
   static PRInt32 maxSpansAllocated = NS_LINELAYOUT_NUM_SPANS;
   static PRInt32 maxFramesAllocated = NS_LINELAYOUT_NUM_FRAMES;
   if (mSpansAllocated > maxSpansAllocated) {
-    printf("XXX: saw a line with %d spans\n", mSpansAllocated);
+    PRINTF("XXX: saw a line with %d spans\n", mSpansAllocated);
     maxSpansAllocated = mSpansAllocated;
   }
   if (mFramesAllocated > maxFramesAllocated) {
-    printf("XXX: saw a line with %d frames\n", mFramesAllocated);
+    PRINTF("XXX: saw a line with %d frames\n", mFramesAllocated);
     maxFramesAllocated = mFramesAllocated;
   }
 #endif
@@ -293,7 +298,7 @@ nsLineLayout::UpdateBand(nscoord aX, nscoord aY,
                          nsIFrame* aFloaterFrame)
 {
 #ifdef REALLY_NOISY_REFLOW
-  printf("nsLL::UpdateBand %d, %d, %d, %d, frame=%p placedLeft=%s\n  will set mImpacted to PR_TRUE\n",
+  PRINTF("nsLL::UpdateBand %d, %d, %d, %d, frame=%p placedLeft=%s\n  will set mImpacted to PR_TRUE\n",
          aX, aY, aWidth, aHeight, aFloaterFrame, aPlacedLeftFloater?"true":"false");
 #endif
   PerSpanData* psd = mRootSpan;
@@ -301,13 +306,13 @@ nsLineLayout::UpdateBand(nscoord aX, nscoord aY,
 #ifdef DEBUG
   if ((aWidth != NS_UNCONSTRAINEDSIZE) && CRAZY_WIDTH(aWidth)) {
     nsFrame::ListTag(stdout, mBlockReflowState->frame);
-    printf(": UpdateBand: bad caller: width WAS %d(0x%x)\n",
+    PRINTF(": UpdateBand: bad caller: width WAS %d(0x%x)\n",
            aWidth, aWidth);
     aWidth = NS_UNCONSTRAINEDSIZE;
   }
   if ((aHeight != NS_UNCONSTRAINEDSIZE) && CRAZY_HEIGHT(aHeight)) {
     nsFrame::ListTag(stdout, mBlockReflowState->frame);
-    printf(": UpdateBand: bad caller: height WAS %d(0x%x)\n",
+    PRINTF(": UpdateBand: bad caller: height WAS %d(0x%x)\n",
            aHeight, aHeight);
     aHeight = NS_UNCONSTRAINEDSIZE;
   }
@@ -322,7 +327,7 @@ nsLineLayout::UpdateBand(nscoord aX, nscoord aY,
   }
 #ifdef NOISY_REFLOW
   nsFrame::ListTag(stdout, mBlockReflowState->frame);
-  printf(": UpdateBand: %d,%d,%d,%d deltaWidth=%d %s floater\n",
+  PRINTF(": UpdateBand: %d,%d,%d,%d deltaWidth=%d %s floater\n",
          aX, aY, aWidth, aHeight, deltaWidth,
          aPlacedLeftFloater ? "left" : "right");
 #endif
@@ -367,7 +372,7 @@ nsLineLayout::UpdateBand(nscoord aX, nscoord aY,
     }
     psd->mContainsFloater = PR_TRUE;
 #ifdef NOISY_REFLOW
-    printf("  span %p: oldRightEdge=%d newRightEdge=%d\n",
+    PRINTF("  span %p: oldRightEdge=%d newRightEdge=%d\n",
            psd, psd->mRightEdge - deltaWidth, psd->mRightEdge);
 #endif
     psd = psd->mParent;
@@ -440,7 +445,7 @@ nsLineLayout::BeginSpan(nsIFrame* aFrame,
 #ifdef NOISY_REFLOW
   nsFrame::IndentBy(stdout, mSpanDepth+1);
   nsFrame::ListTag(stdout, aFrame);
-  printf(": BeginSpan leftEdge=%d rightEdge=%d\n", aLeftEdge, aRightEdge);
+  PRINTF(": BeginSpan leftEdge=%d rightEdge=%d\n", aLeftEdge, aRightEdge);
 #endif
 
   PerSpanData* psd;
@@ -490,7 +495,7 @@ nsLineLayout::EndSpan(nsIFrame* aFrame,
 #ifdef NOISY_REFLOW
   nsFrame::IndentBy(stdout, mSpanDepth);
   nsFrame::ListTag(stdout, aFrame);
-  printf(": EndSpan width=%d\n", mCurrentSpan->mX - mCurrentSpan->mLeftEdge);
+  PRINTF(": EndSpan width=%d\n", mCurrentSpan->mX - mCurrentSpan->mLeftEdge);
 #endif
   PerSpanData* psd = mCurrentSpan;
   nscoord width = 0;
@@ -569,7 +574,7 @@ nsLineLayout::SplitLineTo(PRInt32 aNewCount)
   NS_ASSERTION(mCurrentSpan == mRootSpan, "bad linelayout user");
 
 #ifdef REALLY_NOISY_PUSHING
-  printf("SplitLineTo %d (current count=%d); before:\n", aNewCount,
+  PRINTF("SplitLineTo %d (current count=%d); before:\n", aNewCount,
          GetCurrentSpanCount());
   DumpPerSpanData(mRootSpan, 1);
 #endif
@@ -601,7 +606,7 @@ nsLineLayout::SplitLineTo(PRInt32 aNewCount)
     pfd = pfd->mNext;
   }
 #ifdef NOISY_PUSHING
-  printf("SplitLineTo %d (current count=%d); after:\n", aNewCount,
+  PRINTF("SplitLineTo %d (current count=%d); after:\n", aNewCount,
          GetCurrentSpanCount());
   DumpPerSpanData(mRootSpan, 1);
 #endif
@@ -615,7 +620,7 @@ nsLineLayout::PushFrame(nsIFrame* aFrame)
 
 #ifdef REALLY_NOISY_PUSHING
   nsFrame::IndentBy(stdout, mSpanDepth);
-  printf("PushFrame %p, before:\n", psd);
+  PRINTF("PushFrame %p, before:\n", psd);
   DumpPerSpanData(psd, 1);
 #endif
 
@@ -643,7 +648,7 @@ nsLineLayout::PushFrame(nsIFrame* aFrame)
   }
 #ifdef NOISY_PUSHING
   nsFrame::IndentBy(stdout, mSpanDepth);
-  printf("PushFrame: %p after:\n", psd);
+  PRINTF("PushFrame: %p after:\n", psd);
   DumpPerSpanData(psd, 1);
 #endif
 }
@@ -762,9 +767,9 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
 
 #ifdef REALLY_NOISY_REFLOW
   nsFrame::IndentBy(stdout, mSpanDepth);
-  printf("%p: Begin ReflowFrame pfd=%p ", psd, pfd);
+  PRINTF("%p: Begin ReflowFrame pfd=%p ", psd, pfd);
   nsFrame::ListTag(stdout, aFrame);
-  printf("\n");
+  PRINTF("\n");
 #endif
 
   // Compute the available size for the frame. This available width
@@ -1027,16 +1032,16 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   // frame will be reflowed another time.
   if (!NS_INLINE_IS_BREAK_BEFORE(aReflowStatus)) {
     if (CRAZY_WIDTH(metrics.width) || CRAZY_HEIGHT(metrics.height)) {
-      printf("nsLineLayout: ");
+      PRINTF("nsLineLayout: ");
       nsFrame::ListTag(stdout, aFrame);
-      printf(" metrics=%d,%d!\n", metrics.width, metrics.height);
+      PRINTF(" metrics=%d,%d!\n", metrics.width, metrics.height);
     }
     if (mComputeMaxElementSize &&
         ((nscoord(0xdeadbeef) == metrics.maxElementSize->width) ||
          (nscoord(0xdeadbeef) == metrics.maxElementSize->height))) {
-      printf("nsLineLayout: ");
+      PRINTF("nsLineLayout: ");
       nsFrame::ListTag(stdout, aFrame);
-      printf(" didn't set max-element-size!\n");
+      PRINTF(" didn't set max-element-size!\n");
       metrics.maxElementSize->width = 0;
       metrics.maxElementSize->height = 0;
     }
@@ -1047,9 +1052,9 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     if (mComputeMaxElementSize &&
         ((metrics.maxElementSize->width > metrics.width) ||
          (metrics.maxElementSize->height > metrics.height))) {
-      printf("nsLineLayout: ");
+      PRINTF("nsLineLayout: ");
       nsFrame::ListTag(stdout, aFrame);
-      printf(": WARNING: maxElementSize=%d,%d > metrics=%d,%d\n",
+      PRINTF(": WARNING: maxElementSize=%d,%d > metrics=%d,%d\n",
              metrics.maxElementSize->width,
              metrics.maxElementSize->height,
              metrics.width, metrics.height);
@@ -1059,9 +1064,9 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
         (metrics.height == nscoord(0xdeadbeef)) ||
         (metrics.ascent == nscoord(0xdeadbeef)) ||
         (metrics.descent == nscoord(0xdeadbeef))) {
-      printf("nsLineLayout: ");
+      PRINTF("nsLineLayout: ");
       nsFrame::ListTag(stdout, aFrame);
-      printf(" didn't set whad %d,%d,%d,%d!\n", metrics.width, metrics.height,
+      PRINTF(" didn't set whad %d,%d,%d,%d!\n", metrics.width, metrics.height,
              metrics.ascent, metrics.descent);
     }
   }
@@ -1069,9 +1074,9 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
 #ifdef NOISY_MAX_ELEMENT_SIZE
   if (!NS_INLINE_IS_BREAK_BEFORE(aReflowStatus)) {
     if (mComputeMaxElementSize) {
-      printf("  ");
+      PRINTF("  ");
       nsFrame::ListTag(stdout, aFrame);
-      printf(": maxElementSize=%d,%d wh=%d,%d,\n",
+      PRINTF(": maxElementSize=%d,%d wh=%d,%d,\n",
              metrics.maxElementSize->width,
              metrics.maxElementSize->height,
              metrics.width, metrics.height);
@@ -1159,9 +1164,9 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
 
 #ifdef REALLY_NOISY_REFLOW
   nsFrame::IndentBy(stdout, mSpanDepth);
-  printf("End ReflowFrame ");
+  PRINTF("End ReflowFrame ");
   nsFrame::ListTag(stdout, aFrame);
-  printf(" status=%x\n", aReflowStatus);
+  PRINTF(" status=%x\n", aReflowStatus);
 #endif
   return rv;
 }
@@ -1286,9 +1291,9 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
   else {
     nsFrame::ListTag(stdout, mBlockReflowState->frame);
   } 
-  printf(": aNotSafeToBreak=%s frame=", aNotSafeToBreak ? "true" : "false");
+  PRINTF(": aNotSafeToBreak=%s frame=", aNotSafeToBreak ? "true" : "false");
   nsFrame::ListTag(stdout, pfd->mFrame);
-  printf(" frameWidth=%d\n", pfd->mBounds.XMost() + rightMargin - psd->mX);
+  PRINTF(" frameWidth=%d\n", pfd->mBounds.XMost() + rightMargin - psd->mX);
 #endif
 
   // Set outside to PR_TRUE if the result of the reflow leads to the
@@ -1297,7 +1302,7 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
   if (!outside) {
     // If it fits, it fits
 #ifdef NOISY_CAN_PLACE_FRAME
-    printf("   ==> inside\n");
+    PRINTF("   ==> inside\n");
 #endif
     return PR_TRUE;
   }
@@ -1307,7 +1312,7 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
   if (0 == pfd->mMargin.left + pfd->mBounds.width + rightMargin) {
     // Empty frames always fit right where they are
 #ifdef NOISY_CAN_PLACE_FRAME
-    printf("   ==> empty frame fits\n");
+    PRINTF("   ==> empty frame fits\n");
 #endif
     return PR_TRUE;
   }
@@ -1318,7 +1323,7 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
   pfd->mFrame->GetFrameType(getter_AddRefs(frameType));
   if (nsLayoutAtoms::brFrame == frameType.get()) {
 #ifdef NOISY_CAN_PLACE_FRAME
-    printf("   ==> BR frame fits\n");
+    PRINTF("   ==> BR frame fits\n");
 #endif
     return PR_TRUE;
   }
@@ -1330,12 +1335,12 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
     // current frame fits.
     if (!GetFlag(LL_IMPACTEDBYFLOATERS)) {
 #ifdef NOISY_CAN_PLACE_FRAME
-      printf("   ==> not-safe and not-impacted fits: ");
+      PRINTF("   ==> not-safe and not-impacted fits: ");
       while (nsnull != psd) {
-        printf("<psd=%p x=%d left=%d> ", psd, psd->mX, psd->mLeftEdge);
+        PRINTF("<psd=%p x=%d left=%d> ", psd, psd->mX, psd->mLeftEdge);
         psd = psd->mParent;
       }
-      printf("\n");
+      PRINTF("\n");
 #endif
       return PR_TRUE;
     }
@@ -1362,7 +1367,7 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
 
       if (pfd->GetFlag(PFD_ISSTICKY)) {
 #ifdef NOISY_CAN_PLACE_FRAME
-        printf("   ==> last floater was letter frame && frame is sticky\n");
+        PRINTF("   ==> last floater was letter frame && frame is sticky\n");
 #endif
         return PR_TRUE;
       }
@@ -1436,7 +1441,7 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
   }
 
 #ifdef NOISY_CAN_PLACE_FRAME
-  printf("   ==> didn't fit\n");
+  PRINTF("   ==> didn't fit\n");
 #endif
   aStatus = NS_INLINE_LINE_BREAK_BEFORE();
   return PR_FALSE;
@@ -1523,13 +1528,13 @@ void
 nsLineLayout::DumpPerSpanData(PerSpanData* psd, PRInt32 aIndent)
 {
   nsFrame::IndentBy(stdout, aIndent);
-  printf("%p: left=%d x=%d right=%d\n", psd, psd->mLeftEdge,
+  PRINTF("%p: left=%d x=%d right=%d\n", psd, psd->mLeftEdge,
          psd->mX, psd->mRightEdge);
   PerFrameData* pfd = psd->mFirstFrame;
   while (nsnull != pfd) {
     nsFrame::IndentBy(stdout, aIndent+1);
     nsFrame::ListTag(stdout, pfd->mFrame);
-    printf(" %d,%d,%d,%d\n", pfd->mBounds.x, pfd->mBounds.y,
+    PRINTF(" %d,%d,%d,%d\n", pfd->mBounds.x, pfd->mBounds.y,
            pfd->mBounds.width, pfd->mBounds.height);
     if (pfd->mSpan) {
       DumpPerSpanData(pfd->mSpan, aIndent + 1);
@@ -1689,7 +1694,7 @@ nsLineLayout::VerticalAlignFrames(nsLineBox* aLineBox,
     lineHeight = mMaxTopBoxHeight;
   }
 #ifdef NOISY_VERTICAL_ALIGN
-  printf("  [line]==> lineHeight=%d baselineY=%d\n", lineHeight, baselineY);
+  PRINTF("  [line]==> lineHeight=%d baselineY=%d\n", lineHeight, baselineY);
 #endif
 
   // Now position all of the frames in the root span. We will also
@@ -1751,9 +1756,9 @@ nsLineLayout::VerticalAlignFrames(nsLineBox* aLineBox,
     }
     pfd->mFrame->SetRect(mPresContext, pfd->mBounds);
 #ifdef NOISY_VERTICAL_ALIGN
-    printf("  [child of line]");
+    PRINTF("  [child of line]");
     nsFrame::ListTag(stdout, pfd->mFrame);
-    printf(": y=%d\n", pfd->mBounds.y);
+    PRINTF(": y=%d\n", pfd->mBounds.y);
 #endif
     if (span) {
       nscoord distanceFromTop = pfd->mBounds.y - mTopEdge;
@@ -1807,9 +1812,9 @@ nsLineLayout::PlaceTopBottomFrames(PerSpanData* psd,
         }
         pfd->mFrame->SetRect(mPresContext, pfd->mBounds);
 #ifdef NOISY_VERTICAL_ALIGN
-        printf("    ");
+        PRINTF("    ");
         nsFrame::ListTag(stdout, pfd->mFrame);
-        printf(": y=%d dTop=%d [bp.top=%d topLeading=%d]\n",
+        PRINTF(": y=%d dTop=%d [bp.top=%d topLeading=%d]\n",
                pfd->mBounds.y, aDistanceFromTop,
                span ? pfd->mBorderPadding.top : 0,
                span ? span->mTopLeading : 0);
@@ -1828,9 +1833,9 @@ nsLineLayout::PlaceTopBottomFrames(PerSpanData* psd,
         }
         pfd->mFrame->SetRect(mPresContext, pfd->mBounds);
 #ifdef NOISY_VERTICAL_ALIGN
-        printf("    ");
+        PRINTF("    ");
         nsFrame::ListTag(stdout, pfd->mFrame);
-        printf(": y=%d\n", pfd->mBounds.y);
+        PRINTF(": y=%d\n", pfd->mBounds.y);
 #endif
         break;
     }
@@ -1880,15 +1885,15 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
     (0 == spanFramePFD->mBounds.width) && (0 == spanFramePFD->mBounds.height);
 
 #ifdef NOISY_VERTICAL_ALIGN
-  printf("[%sSpan]", (psd == mRootSpan)?"Root":"");
+  PRINTF("[%sSpan]", (psd == mRootSpan)?"Root":"");
   nsFrame::ListTag(stdout, spanFrame);
-  printf(": preMode=%s strictMode=%s w/h=%d,%d emptyContinuation=%s",
+  PRINTF(": preMode=%s strictMode=%s w/h=%d,%d emptyContinuation=%s",
          preMode ? "yes" : "no",
          InStrictMode() ? "yes" : "no",
          spanFramePFD->mBounds.width, spanFramePFD->mBounds.height,
          emptyContinuation ? "yes" : "no");
   if (psd != mRootSpan) {
-    printf(" bp=%d,%d,%d,%d margin=%d,%d,%d,%d",
+    PRINTF(" bp=%d,%d,%d,%d margin=%d,%d,%d,%d",
            spanFramePFD->mBorderPadding.top,
            spanFramePFD->mBorderPadding.right,
            spanFramePFD->mBorderPadding.bottom,
@@ -1898,7 +1903,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
            spanFramePFD->mMargin.bottom,
            spanFramePFD->mMargin.left);
   }
-  printf("\n");
+  PRINTF("\n");
 #endif
 
   // Compute the span's mZeroEffectiveSpanBox flag. What we are trying
@@ -1968,9 +1973,9 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
     minY = VERTICAL_ALIGN_FRAMES_NO_MINIMUM;
     maxY = VERTICAL_ALIGN_FRAMES_NO_MAXIMUM;
 #ifdef NOISY_VERTICAL_ALIGN
-    printf("[RootSpan]");
+    PRINTF("[RootSpan]");
     nsFrame::ListTag(stdout, spanFrame);
-    printf(": pass1 valign frames: topEdge=%d minLineHeight=%d zeroEffectiveSpanBox=%s\n",
+    PRINTF(": pass1 valign frames: topEdge=%d minLineHeight=%d zeroEffectiveSpanBox=%s\n",
            mTopEdge, mMinLineHeight,
            zeroEffectiveSpanBox ? "yes" : "no");
 #endif
@@ -2017,9 +2022,9 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
 
 
 #ifdef NOISY_VERTICAL_ALIGN
-    printf("[%sSpan]", (psd == mRootSpan)?"Root":"");
+    PRINTF("[%sSpan]", (psd == mRootSpan)?"Root":"");
     nsFrame::ListTag(stdout, spanFrame);
-    printf(": baseLine=%d logicalHeight=%d topLeading=%d h=%d bp=%d,%d zeroEffectiveSpanBox=%s\n",
+    PRINTF(": baseLine=%d logicalHeight=%d topLeading=%d h=%d bp=%d,%d zeroEffectiveSpanBox=%s\n",
            baselineY, psd->mLogicalHeight, psd->mTopLeading,
            spanFramePFD->mBounds.height,
            spanFramePFD->mBorderPadding.top, spanFramePFD->mBorderPadding.bottom,
@@ -2057,15 +2062,15 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
     nsStyleUnit verticalAlignUnit = textStyle->mVerticalAlign.GetUnit();
 #ifdef DEBUG
     if (eStyleUnit_Inherit == verticalAlignUnit) {
-      printf("XXX: vertical-align: inherit not implemented for ");
+      PRINTF("XXX: vertical-align: inherit not implemented for ");
       nsFrame::ListTag(stdout, frame);
-      printf("\n");
+      PRINTF("\n");
     }
 #endif
 #ifdef NOISY_VERTICAL_ALIGN
-    printf("  [frame]");
+    PRINTF("  [frame]");
     nsFrame::ListTag(stdout, frame);
-    printf(": verticalAlignUnit=%d (enum == %d)\n",
+    PRINTF(": verticalAlignUnit=%d (enum == %d)\n",
            verticalAlignUnit,
            ((eStyleUnit_Enumerated == verticalAlignUnit)
             ? textStyle->mVerticalAlign.GetIntValue()
@@ -2270,7 +2275,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
         if (yTop < minY) minY = yTop;
         if (yBottom > maxY) maxY = yBottom;
 #ifdef NOISY_VERTICAL_ALIGN
-        printf("     [frame]raw: a=%d d=%d h=%d bp=%d,%d logical: h=%d leading=%d y=%d minY=%d maxY=%d\n",
+        PRINTF("     [frame]raw: a=%d d=%d h=%d bp=%d,%d logical: h=%d leading=%d y=%d minY=%d maxY=%d\n",
                pfd->mAscent, pfd->mDescent, pfd->mBounds.height,
                pfd->mBorderPadding.top, pfd->mBorderPadding.bottom,
                logicalHeight,
@@ -2332,7 +2337,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
     if (applyMinLH) {
       if ((psd->mX != psd->mLeftEdge) || preMode || foundLI) {
 #ifdef NOISY_VERTICAL_ALIGN
-        printf("  [span]==> adjusting min/maxY: currentValues: %d,%d", minY, maxY);
+        PRINTF("  [span]==> adjusting min/maxY: currentValues: %d,%d", minY, maxY);
 #endif
         nscoord minimumLineHeight = mMinLineHeight;
         nscoord fontAscent, fontHeight;
@@ -2352,7 +2357,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
         if (yBottom > maxY) maxY = yBottom;
 
 #ifdef NOISY_VERTICAL_ALIGN
-        printf(" new values: %d,%d\n", minY, maxY);
+        PRINTF(" new values: %d,%d\n", minY, maxY);
 #endif
       }
       else {
@@ -2363,7 +2368,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
 
         // XXX Are there other problems with this?
 #ifdef NOISY_VERTICAL_ALIGN
-        printf("  [span]==> zapping min/maxY: currentValues: %d,%d newValues: 0,0\n",
+        PRINTF("  [span]==> zapping min/maxY: currentValues: %d,%d newValues: 0,0\n",
                minY, maxY);
 #endif
         minY = maxY = 0;
@@ -2378,8 +2383,8 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
 
   if ((psd != mRootSpan) && (psd->mZeroEffectiveSpanBox)) {
 #ifdef NOISY_VERTICAL_ALIGN
-    printf("   [span]adjusting for zeroEffectiveSpanBox\n");
-    printf("     Original: minY=%d, maxY=%d, height=%d, ascent=%d, descent=%d, logicalHeight=%d, topLeading=%d, bottomLeading=%d\n",
+    PRINTF("   [span]adjusting for zeroEffectiveSpanBox\n");
+    PRINTF("     Original: minY=%d, maxY=%d, height=%d, ascent=%d, descent=%d, logicalHeight=%d, topLeading=%d, bottomLeading=%d\n",
            minY, maxY, spanFramePFD->mBounds.height,
            spanFramePFD->mAscent, spanFramePFD->mDescent,
            psd->mLogicalHeight, psd->mTopLeading, psd->mBottomLeading);
@@ -2423,7 +2428,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
       psd->mBottomLeading += adjust;
     }
 #ifdef NOISY_VERTICAL_ALIGN
-    printf("     New: minY=%d, maxY=%d, height=%d, ascent=%d, descent=%d, logicalHeight=%d, topLeading=%d, bottomLeading=%d\n",
+    PRINTF("     New: minY=%d, maxY=%d, height=%d, ascent=%d, descent=%d, logicalHeight=%d, topLeading=%d, bottomLeading=%d\n",
            minY, maxY, spanFramePFD->mBounds.height,
            spanFramePFD->mAscent, spanFramePFD->mDescent,
            psd->mLogicalHeight, psd->mTopLeading, psd->mBottomLeading);
@@ -2433,7 +2438,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
   psd->mMinY = minY;
   psd->mMaxY = maxY;
 #ifdef NOISY_VERTICAL_ALIGN
-  printf("  [span]==> minY=%d maxY=%d delta=%d maxTopBoxHeight=%d maxBottomBoxHeight=%d\n",
+  PRINTF("  [span]==> minY=%d maxY=%d delta=%d maxTopBoxHeight=%d maxBottomBoxHeight=%d\n",
          minY, maxY, maxY - minY, maxTopBoxHeight, maxBottomBoxHeight);
 #endif
   if (maxTopBoxHeight > mMaxTopBoxHeight) {
@@ -2465,9 +2470,9 @@ nsLineLayout::TrimTrailingWhiteSpaceIn(PerSpanData* psd,
     nsFrame::ListTag(stdout, (psd == mRootSpan
                               ? mBlockReflowState->frame
                               : psd->mFrame->mFrame));
-    printf(": attempting trim of ");
+    PRINTF(": attempting trim of ");
     nsFrame::ListTag(stdout, pfd->mFrame);
-    printf("\n");
+    PRINTF("\n");
 #endif
     PerSpanData* childSpan = pfd->mSpan;
     if (childSpan) {
@@ -2521,9 +2526,9 @@ nsLineLayout::TrimTrailingWhiteSpaceIn(PerSpanData* psd,
       nsFrame::ListTag(stdout, (psd == mRootSpan
                                 ? mBlockReflowState->frame
                                 : psd->mFrame->mFrame));
-      printf(": trim of ");
+      PRINTF(": trim of ");
       nsFrame::ListTag(stdout, pfd->mFrame);
-      printf(" returned %d\n", deltaWidth);
+      PRINTF(" returned %d\n", deltaWidth);
 #endif
       if (deltaWidth) {
         if (pfd->mJustificationNumSpaces > 0) {
@@ -2676,7 +2681,7 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds,
     // Don't bother horizontal aligning on pass1 table reflow
 #ifdef NOISY_HORIZONTAL_ALIGN
     nsFrame::ListTag(stdout, mBlockReflowState->frame);
-    printf(": skipping horizontal alignment in pass1 table reflow\n");
+    PRINTF(": skipping horizontal alignment in pass1 table reflow\n");
 #endif
     return PR_TRUE;
   }
@@ -2684,7 +2689,7 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds,
   nscoord remainingWidth = availWidth - aLineBounds.width;
 #ifdef NOISY_HORIZONTAL_ALIGN
     nsFrame::ListTag(stdout, mBlockReflowState->frame);
-    printf(": availWidth=%d lineWidth=%d delta=%d\n",
+    PRINTF(": availWidth=%d lineWidth=%d delta=%d\n",
            availWidth, aLineBounds.width, remainingWidth);
 #endif
   if (remainingWidth > 0) {

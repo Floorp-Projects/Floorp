@@ -43,6 +43,11 @@
 
 #include "nsMathMLOperators.h"
 #include "nsMathMLChar.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsMathMLCharLog)
+#define PRINTF NS_LOG_PRINTF(nsMathMLCharLog)
+#define FLUSH  NS_LOG_FLUSH(nsMathMLCharLog)
 
 // List of all stretchy MathML chars with their attributes --------------
 // ----------------------------------------------------------------------
@@ -358,8 +363,8 @@ nsGlyphTableList::Init(nsIPresContext* aPresContext,
 #ifdef NS_DEBUG
       char str[50];
       localName.ToCString(str, sizeof(str));
-      printf("WARNING *** Missing the %s font to stretch MathML symbols!\n", str);
-      printf("            Why don't you install the %s font on your system for a better MathML experience!\n", str);
+      PRINTF("WARNING *** Missing the %s font to stretch MathML symbols!\n", str);
+      PRINTF("            Why don't you install the %s font on your system for a better MathML experience!\n", str);
 #endif
     }
     glyphTable++;
@@ -822,7 +827,7 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
                                             PRUint32(mData.Length()),
                                             mBoundingMetrics);
   if (NS_FAILED(rv)) {
-    printf ("GetBoundingMetrics failed\n");
+      PRINTF ("GetBoundingMetrics failed\n");
     // ensure that the char later behaves like a normal char
     mEnum = eMathMLChar_DONT_STRETCH; // XXX need to reset in dynamic updates
     return rv;
@@ -892,8 +897,8 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
   nsBoundingMetrics bestbm = mBoundingMetrics;
 
 #ifdef NOISY_SEARCH
-  printf("Searching a font with a glyph of appropriate size for: 0x%04X:%c\n",
-          mData[0], mData[0]&0x00FF);
+  PRINTF("Searching a font with a glyph of appropriate size for: 0x%04X:%c\n",
+         mData[0], mData[0]&0x00FF);
 #endif
   nsGlyphTable* glyphTable = gGlyphTableList.FirstTable();
   while (glyphTable && !sizeOK) {
@@ -905,7 +910,7 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
 #ifdef NOISY_SEARCH
       char str[50];
       fontName.ToCString(str, sizeof(str));
-      printf("  searching in %s ...\n", str);
+      PRINTF("  searching in %s ...\n", str);
 #endif
       size = 1; // size=0 is the char at its normal size
       ch = glyphTable->BigOf(mEnum, size++);
@@ -921,7 +926,7 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
                IsSizeOK(w, aContainerSize.width, aStretchHint)))
           {
 #ifdef NOISY_SEARCH
-            printf("    size:%d OK!\n", size-1);
+              PRINTF("    size:%d OK!\n", size-1);
 #endif
             bestbm = bm;
             bestGlyphTable = glyphTable;
@@ -938,7 +943,7 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
                             aContainerSize.width, aStretchHint)))
           {
 #ifdef NOISY_SEARCH
-            printf("    size:%d Current best\n", size-1);
+              PRINTF("    size:%d Current best\n", size-1);
 #endif
             bestGlyphTable = glyphTable;
             bestGlyph = ch;
@@ -946,7 +951,7 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
           }
 #ifdef NOISY_SEARCH
           else {
-            printf("    size:%d Rejected!\n", size-1);
+              PRINTF("    size:%d Rejected!\n", size-1);
           }
 #endif
         }
@@ -962,7 +967,7 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
 
   if (!sizeOK) {
 #ifdef NOISY_SEARCH
-    printf("  searching for the font with the smallest glue\n");
+      PRINTF("  searching for the font with the smallest glue\n");
 #endif
     if (gCharInfo[mEnum].mGlyphTable == &gGlyphTableUNDEFINED) { // first time
       // gCharInfo[mEnum].mGlyphTable is not yet initialized, scan the global list
@@ -988,14 +993,14 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
 #ifdef NOISY_SEARCH
               char str[50];
               fontName.ToCString(str, sizeof(str));
-              printf("    %s glue:%d Current best\n", str, lengthGlue);
+              PRINTF("    %s glue:%d Current best\n", str, lengthGlue);
 #endif
             }
 #ifdef NOISY_SEARCH
             else {
               char str[50];
               fontName.ToCString(str, sizeof(str));
-              printf("    %s glue:%d Rejected!\n", str, length);
+              PRINTF("    %s glue:%d Rejected!\n", str, length);
             }
 #endif
           }
@@ -1007,7 +1012,7 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
         gCharInfo[mEnum].mGlyphTable->GetFontName(fontName);
         char str[50];
         fontName.ToCString(str, sizeof(str));
-        printf("    Found %s in the global list\n", str);
+        PRINTF("    Found %s in the global list\n", str);
       }
 #endif
     }
@@ -1016,10 +1021,10 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
       gCharInfo[mEnum].mGlyphTable->GetFontName(fontName);
       char str[50];
       fontName.ToCString(str, sizeof(str));
-      printf("    Found %s in the cache\n", str);
+      PRINTF("    Found %s in the cache\n", str);
     }
     else {
-      printf("    no font found\n");
+        PRINTF("    no font found\n");
     }
 #endif
   }
@@ -1053,7 +1058,7 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
       if (!ch) ch = glyphTable->GlueOf(mEnum); // empty slots are filled with the glue
       rv = glyphTable->GetBoundingMetrics(aRenderingContext, ch, bm);
       if (NS_FAILED(rv)) {
-        printf("GetBoundingMetrics failed for %04X:%c\n", ch, ch&0x00FF);
+          PRINTF("GetBoundingMetrics failed for %04X:%c\n", ch, ch&0x00FF);
         // stop if we failed to compute the bounding metrics of a part.
         // we will use the best glyph encountered earlier
         break;
@@ -1210,14 +1215,14 @@ nsMathMLChar::Paint(nsIPresContext*      aPresContext,
 
     if (eMathMLChar_DONT_STRETCH == mEnum || NS_STRETCH_DIRECTION_UNSUPPORTED == mDirection) {
       // normal drawing if there is nothing special about this char ...
-      //printf("Painting %04X like a normal char\n", mData[0]);
+        //PRINTF("Painting %04X like a normal char\n", mData[0]);
 //aRenderingContext.SetColor(NS_RGB(255,0,0));
       aRenderingContext.DrawString(mData.GetUnicode(), PRUint32(mData.Length()), 
                                    mRect.x, 
                                    mRect.y - (fontAscent - mBoundingMetrics.ascent));
     }
     else if (0 < mGlyph) { // wow, there is a glyph of appropriate size!
-     //printf("Painting %04X with a glyph of appropriate size\n", mData[0]);
+        //PRINTF("Painting %04X with a glyph of appropriate size\n", mData[0]);
 //aRenderingContext.SetColor(NS_RGB(0,0,255));
       mGlyphTable->DrawGlyph(aRenderingContext, mGlyph,
                              mRect.x,
@@ -1273,7 +1278,7 @@ nsMathMLChar::PaintVertically(nsIPresContext*      aPresContext,
     if (!ch) ch = aGlyphTable->GlueOf(aCharEnum);
     rv = aGlyphTable->GetBoundingMetrics(aRenderingContext, ch, bm);
     if (NS_FAILED(rv)) {
-      printf("GetBoundingMetrics failed for %04X:%c\n", ch, ch&0x00FF);
+        PRINTF("GetBoundingMetrics failed for %04X:%c\n", ch, ch&0x00FF);
       return rv;
     }
     chdata[i] = ch;
@@ -1390,7 +1395,7 @@ nsMathMLChar::PaintHorizontally(nsIPresContext*      aPresContext,
     if (!ch) ch = aGlyphTable->GlueOf(aCharEnum);
     rv = aGlyphTable->GetBoundingMetrics(aRenderingContext, ch, bm);
     if (NS_FAILED(rv)) {
-      printf("GetBoundingMetrics failed for %04X:%c\n", ch, ch&0x00FF);
+        PRINTF("GetBoundingMetrics failed for %04X:%c\n", ch, ch&0x00FF);
       return rv;
     }
     chdata[i] = ch;

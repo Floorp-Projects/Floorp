@@ -26,6 +26,11 @@
 #endif
 
 #include "nsFileWidget.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsFileWidgetLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsFileWidgetLog)
+#define FLUSH  NS_LOG_FLUSH(nsFileWidgetLog)
 
 //NS_IMPL_ISUPPORTS(nsFileWidget, NS_IFILEWIDGET_IID)
 NS_DEFINE_IID(kIFileWidgetIID, NS_IFILEWIDGET_IID);
@@ -51,7 +56,7 @@ nsFileWidget::nsFileWidget() : nsIFileWidget()
 
 PRBool nsFileWidget::Show()
 {
-printf("nsFileWidget::Show not implemented\n");
+    PRINTF("nsFileWidget::Show not implemented\n");
 #if 0
   char fileBuffer[MAX_PATH+1] = "";
   mDefault.ToCString(fileBuffer,MAX_PATH);

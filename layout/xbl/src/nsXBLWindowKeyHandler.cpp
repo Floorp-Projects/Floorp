@@ -45,6 +45,11 @@
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 #include "nsIDOMElement.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsXBLWindowKeyHandlerLog)
+#define PRINTF NS_LOG_PRINTF(nsXBLWindowKeyHandlerLog)
+#define FLUSH  NS_LOG_FLUSH(nsXBLWindowKeyHandlerLog)
 
 PRUint32 nsXBLWindowKeyHandler::gRefCnt = 0;
 nsIAtom* nsXBLWindowKeyHandler::kKeyDownAtom = nsnull;
@@ -94,7 +99,7 @@ nsXBLWindowKeyHandler::IsEditor()
   nsCOMPtr<nsIDOMXULCommandDispatcher> commandDispatcher;
   privateWindow->GetRootCommandDispatcher(getter_AddRefs(commandDispatcher));
   if (!commandDispatcher) {
-    NS_WARNING("********* Problem for embedding. They have no command dispatcher!!!\n");
+    NS_WARNING("********* Problem for embedding. They have no command dispatcher!!!");
     return PR_FALSE;
   }
 
@@ -244,7 +249,7 @@ nsXBLWindowKeyHandler::WalkHandlersInternal(nsIDOMKeyEvent* aKeyEvent, nsIAtom* 
       nsCAutoString idc; idc.AssignWithConversion(id);
    
       if (!idc.IsEmpty())
-        printf("Key matched with id of: %s\n", (const char*)idc);
+      PRINTF("Key matched with id of: %s", (const char*)idc);
 */
 
       elt->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, disabled);

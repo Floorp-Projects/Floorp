@@ -44,6 +44,11 @@
 #include "nsMathMLParts.h"
 #include "nsMathMLChar.h"
 #include "nsMathMLContainerFrame.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsMathMLContainerFrameLog)
+#define PRINTF NS_LOG_PRINTF(nsMathMLContainerFrameLog)
+#define FLUSH  NS_LOG_FLUSH(nsMathMLContainerFrameLog)
 
 //
 // nsMathMLContainerFrame implementation
@@ -200,8 +205,8 @@ nsMathMLContainerFrame::GetRuleThickness(nsIRenderingContext& aRenderingContext,
   rv = aRenderingContext.GetBoundingMetrics(&sqrt, PRUint32(1), bm);
   nscoord sqrtrule = bm.ascent; // according to TeX, the ascent should be the rule
 
-  printf("xheight:%4d rule:%4d oldrule:%4d  sqrtrule:%4d\n",
-          xHeight, aRuleThickness, oldRuleThickness, sqrtrule);
+  PRINTF("xheight:%4d rule:%4d oldrule:%4d  sqrtrule:%4d\n",
+         xHeight, aRuleThickness, oldRuleThickness, sqrtrule);
 #endif
 }
 
@@ -233,8 +238,8 @@ nsMathMLContainerFrame::GetAxisHeight(nsIRenderingContext& aRenderingContext,
   rv = aRenderingContext.GetBoundingMetrics(&plus, PRUint32(1), bm);
   nscoord plusAxis = bm.ascent - (bm.ascent + bm.descent)/2;;
   
-  printf("xheight:%4d Axis:%4d oldAxis:%4d  plusAxis:%4d\n",
-          xHeight, aAxisHeight, oldAxis, plusAxis);
+  PRINTF("xheight:%4d Axis:%4d oldAxis:%4d  plusAxis:%4d\n",
+         xHeight, aAxisHeight, oldAxis, plusAxis);
 #endif
 }
 
@@ -303,7 +308,7 @@ char s1[50], s2[50], s3[50];
 aString.ToCString(s1, 50);
 number.ToCString(s2, 50);
 unit.ToCString(s3, 50);
-printf("String:%s,  Number:%s,  Unit:%s\n", s1, s2, s3);
+ PRINTF("String:%s,  Number:%s,  Unit:%s\n", s1, s2, s3);
 #endif
 
   // Convert number to floating point
@@ -473,7 +478,7 @@ nsMathMLContainerFrame::ReflowError(nsIPresContext*      aPresContext,
                                             PRUint32(errorMsg.Length()),
                                             mBoundingMetrics);
   if (NS_FAILED(rv)) {
-    printf("GetBoundingMetrics failed\n");
+      PRINTF("GetBoundingMetrics failed\n");
     aDesiredSize.width = aDesiredSize.height = 0;
     aDesiredSize.ascent = aDesiredSize.descent = 0;
     return NS_OK;
@@ -605,8 +610,8 @@ nsMathMLContainerFrame::GetReflowAndBoundingMetricsFor(nsIFrame*            aFra
     aMathMLFrame->GetBoundingMetrics(aBoundingMetrics);
 #if 0
     nsFrame::ListTag(stdout, aFrame);
-    printf(" subItalicCorrection:%d supItalicCorrection:%d\n",
-    aBoundingMetrics.subItalicCorrection, aBoundingMetrics.supItalicCorrection);
+    PRINTF(" subItalicCorrection:%d supItalicCorrection:%d\n",
+           aBoundingMetrics.subItalicCorrection, aBoundingMetrics.supItalicCorrection);
 #endif
   }
   else { // aFrame is not a MathML frame, just return the reflow metrics
@@ -614,9 +619,9 @@ nsMathMLContainerFrame::GetReflowAndBoundingMetricsFor(nsIFrame*            aFra
     aBoundingMetrics.ascent  = aReflowMetrics.ascent;
     aBoundingMetrics.width   = aReflowMetrics.width;
 #if 0
-    printf("GetBoundingMetrics() failed for: "); /* getchar(); */
+    PRINTF("GetBoundingMetrics() failed for: "); /* getchar(); */
     nsFrame::ListTag(stdout, aFrame);
-    printf("\n");
+    PRINTF("\n");
 #endif
   }
 }
@@ -637,14 +642,14 @@ nsMathMLContainerFrame::Stretch(nsIPresContext*      aPresContext,
   if (NS_MATHML_IS_EMBELLISH_OPERATOR(mEmbellishData.flags)) {
 
     if (NS_MATHML_STRETCH_WAS_DONE(mEmbellishData.flags)) {
-      printf("WARNING *** it is wrong to fire stretch more than once on a frame...\n");
+        PRINTF("WARNING *** it is wrong to fire stretch more than once on a frame...\n");
 //      NS_ASSERTION(PR_FALSE,"Stretch() was fired more than once on a frame!");
       return NS_OK;
     }
     mEmbellishData.flags |= NS_MATHML_STRETCH_DONE;
 
     if (NS_MATHML_HAS_ERROR(mPresentationData.flags)) {
-      printf("WARNING *** it is wrong to fire stretch on a erroneous frame...\n");
+        PRINTF("WARNING *** it is wrong to fire stretch on a erroneous frame...\n");
       return NS_OK;
     }
 
@@ -1083,7 +1088,7 @@ nsMathMLContainerFrame::InsertScriptLevelStyleContext(nsIPresContext* aPresConte
             else {
               char str[50];
               value.ToCString(str, 50);
-              printf("Invalid attribute scriptminsize=%s\n", str);
+              PRINTF("Invalid attribute scriptminsize=%s\n", str);
             }
 #endif
           }
@@ -1126,11 +1131,11 @@ nsMathMLContainerFrame::InsertScriptLevelStyleContext(nsIPresContext* aPresConte
               smallestFontIndex = nsStyleUtil::FindNextSmallerFontSize(smallestFontSize, (PRInt32)defaultFont.size, scaleFactor, aPresContext);
               smallestFontSize = nsStyleUtil::CalcFontPointSize(smallestFontIndex, (PRInt32)defaultFont.size, scaleFactor, aPresContext);
 //((nsFrame*)childFrame)->ListTag(stdout);
-//printf(" About to move to fontsize:%dpt(%dtwips)\n", 
+//PRINTF(" About to move to fontsize:%dpt(%dtwips)\n", 
 //NSTwipsToFloorIntPoints(smallestFontSize), smallestFontSize);
               if (smallestFontSize < scriptminsize) {
                 // don't bother doing any work
-//printf("..... stopping ......\n");
+//PRINTF(("..... stopping ......\n"));
 // XXX there should be a mechanism so that we never try this subtree again
                 break;
               }
@@ -1365,11 +1370,11 @@ nsMathMLContainerFrame::ReflowTokenFor(nsIFrame*                aFrame,
     nsIFrame* targetFrame;
     aReflowState.reflowCommand->GetTarget(targetFrame);
 #ifdef MATHML_NOISY_INCREMENTAL_REFLOW
-printf("nsMathMLContainerFrame::ReflowTokenFor:IncrementalReflow received by: ");
+    PRINTF("nsMathMLContainerFrame::ReflowTokenFor:IncrementalReflow received by: ");
 nsFrame::ListTag(stdout, aFrame);
-printf("for target: ");
+ PRINTF("for target: ");
 nsFrame::ListTag(stdout, targetFrame);
-printf("\n");
+ PRINTF("\n");
 #endif
     if (aFrame == targetFrame) {
     }
@@ -1525,11 +1530,11 @@ nsMathMLContainerFrame::Reflow(nsIPresContext*          aPresContext,
     nsIFrame* targetFrame;
     aReflowState.reflowCommand->GetTarget(targetFrame);
 #ifdef MATHML_NOISY_INCREMENTAL_REFLOW
-printf("nsMathMLContainerFrame::Reflow:IncrementalReflow received by: ");
+    PRINTF("nsMathMLContainerFrame::Reflow:IncrementalReflow received by: ");
 nsFrame::ListTag(stdout, this);
-printf("for target: ");
+ PRINTF("for target: ");
 nsFrame::ListTag(stdout, targetFrame);
-printf("\n");
+ PRINTF("\n");
 #endif
     if (this == targetFrame) {
       // XXX We are the target of the incremental reflow.
@@ -1752,11 +1757,11 @@ nsMathMLWrapperFrame::Reflow(nsIPresContext*          aPresContext,
     nsIFrame* targetFrame;
     aReflowState.reflowCommand->GetTarget(targetFrame);
 #ifdef MATHML_NOISY_INCREMENTAL_REFLOW
-printf("nsMathMLWrapperFrame::Reflow:IncrementalReflow received by: ");
+    PRINTF("nsMathMLWrapperFrame::Reflow:IncrementalReflow received by: ");
 nsFrame::ListTag(stdout, this);
-printf("for target: ");
+ PRINTF("for target: ");
 nsFrame::ListTag(stdout, targetFrame);
-printf("\n");
+ PRINTF("\n");
 #endif
     if (this == targetFrame) {
     }

@@ -32,6 +32,11 @@
 #include "prlink.h"
 #include "plstr.h"
 #include "prmem.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsPluginsDirBeOSLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsPluginsDirBeOSLog)
+#define FLUSH  NS_LOG_FLUSH(nsPluginsDirBeOSLog)
 
 #include "nsSpecialSystemDirectory.h"
 
@@ -97,9 +102,7 @@ PRBool nsPluginsDir::IsPluginFile(const nsFileSpec& fileSpec)
 {
     const char* pathname = fileSpec.GetCString();
 
-#ifdef NS_DEBUG
-	printf("IsPluginFile(%s)\n", pathname);
-#endif
+	PRINTF("IsPluginFile(%s)\n", pathname);
 
 	return PR_TRUE;
 }
@@ -128,9 +131,7 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
         const char* path = this->GetCString();
         pLibrary = outLibrary = PR_LoadLibrary(path);
 
-#ifdef NS_DEBUG
-        printf("LoadPlugin() %s returned %lx\n",path,(unsigned long)pLibrary);
-#endif
+        PRINTF("LoadPlugin() %s returned %lx\n",path,(unsigned long)pLibrary);
 
         return NS_OK;
 }
@@ -153,18 +154,14 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
     if((procedure = (BeOS_Plugin_GetMIMEDescription)PR_FindSymbol(pLibrary,"NP_GetMIMEDescription")) != 0) {
         mimedescr = procedure();
     } else {
-#ifdef NS_DEBUG
-        printf("Cannot get plugin info: no GetMIMEDescription procedure!\n");
-#endif
+        PRINTF("Cannot get plugin info: no GetMIMEDescription procedure!\n");
         return NS_ERROR_FAILURE;
     }
 
 	info.fName = GetFileName(path);
 
-#ifdef NS_DEBUG
-    printf("GetMIMEDescription() %lx returned \"%s\"\n",
+    PRINTF("GetMIMEDescription() %lx returned \"%s\"\n",
            (unsigned long)procedure, mimedescr);
-#endif
 
     // copy string
     
@@ -202,9 +199,7 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
         if(descr)
             *descr++=0;
 
-#ifdef NS_DEBUG
-        printf("Registering plugin for: \"%s\",\"%s\",\"%s\"\n", mtype,descr ? descr : "null",exten ? exten : "null");
-#endif
+        PRINTF("Registering plugin for: \"%s\",\"%s\",\"%s\"\n", mtype,descr ? descr : "null",exten ? exten : "null");
 
         if(!*mtype && !descr && !exten) {
             i--;

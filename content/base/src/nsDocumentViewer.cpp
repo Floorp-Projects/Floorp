@@ -80,7 +80,6 @@
 #include "nsIDOMHTMLFrameSetElement.h"
 #include "nsIFrameManager.h"
 
-
 #include "nsIChromeRegistry.h"
 
 #include "nsIServiceManager.h"
@@ -93,6 +92,11 @@
 #include "nsISelectionController.h"
 
 #include "nsITransformMediator.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsDocumentViewerLog)
+#define PRINTF NS_LOG_PRINTF(nsDocumentViewerLog)
+#define FLUSH  NS_LOG_FLUSH(nsDocumentViewerLog)
 
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 
@@ -459,7 +463,7 @@ DocumentViewerImpl::BindToDocument(nsISupports *aDoc, const char *aCommand)
   NS_PRECONDITION(!mDocument, "Viewer is already bound to a document!");
 
 #ifdef NOISY_VIEWER
-  printf("DocumentViewerImpl::BindToDocument\n");
+  PRINTF("DocumentViewerImpl::BindToDocument\n");
 #endif
 
   nsresult rv;
@@ -1550,7 +1554,7 @@ PRInt32                               width,height;
   if (factory) {
 
 #ifdef DEBUG_dcone
-    printf("PRINT JOB STARTING\n");
+    PRINTF("PRINT JOB STARTING\n");
 #endif
 
     nsIDeviceContextSpec *devspec = nsnull;
@@ -1622,48 +1626,48 @@ PRInt32                               width,height;
           float   a1,a2;
           PRInt32 i1,i2;
 
-          printf("CRITICAL PRINTING INFORMATION\n");
-          printf("PRESSHELL(%x)  PRESCONTEXT(%x)\nVIEWMANAGER(%x) VIEW(%x)\n",
-              mPrintPS, mPrintPC,mPrintDC,mPrintVM,mPrintView);
+          PRINTF("CRITICAL PRINTING INFORMATION\n");
+          PRINTF("PRESSHELL(%x)  PRESCONTEXT(%x)\nVIEWMANAGER(%x) VIEW(%x)\n",
+                 mPrintPS, mPrintPC,mPrintDC,mPrintVM,mPrintView);
           
           // DEVICE CONTEXT INFORMATION from PresContext
-          printf("DeviceContext of Presentation Context(%x)\n",dx);
+          PRINTF("DeviceContext of Presentation Context(%x)\n",dx);
           dx->GetDevUnitsToTwips(a1);
           dx->GetTwipsToDevUnits(a2);
-          printf("    DevToTwips = %f TwipToDev = %f\n",a1,a2);
+          PRINTF("    DevToTwips = %f TwipToDev = %f\n",a1,a2);
           dx->GetAppUnitsToDevUnits(a1);
           dx->GetDevUnitsToAppUnits(a2);
-          printf("    AppUnitsToDev = %f DevUnitsToApp = %f\n",a1,a2);
+          PRINTF("    AppUnitsToDev = %f DevUnitsToApp = %f\n",a1,a2);
           dx->GetCanonicalPixelScale(a1);
-          printf("    GetCanonicalPixelScale = %f\n",a1);
+          PRINTF("    GetCanonicalPixelScale = %f\n",a1);
           dx->GetScrollBarDimensions(a1, a2);
-          printf("    ScrollBar x = %f y = %f\n",a1,a2);
+          PRINTF("    ScrollBar x = %f y = %f\n",a1,a2);
           dx->GetZoom(a1);
-          printf("    Zoom = %f\n",a1);
+          PRINTF("    Zoom = %f\n",a1);
           dx->GetDepth((PRUint32&)i1);
-          printf("    Depth = %d\n",i1);
+          PRINTF("    Depth = %d\n",i1);
           dx->GetDeviceSurfaceDimensions(i1,i2);
-          printf("    DeviceDimension w = %d h = %d\n",i1,i2);
+          PRINTF("    DeviceDimension w = %d h = %d\n",i1,i2);
 
 
           // DEVICE CONTEXT INFORMATION
-          printf("DeviceContext created for print(%x)\n",mPrintDC);
+          PRINTF("DeviceContext created for print(%x)\n",mPrintDC);
           mPrintDC->GetDevUnitsToTwips(a1);
           mPrintDC->GetTwipsToDevUnits(a2);
-          printf("    DevToTwips = %f TwipToDev = %f\n",a1,a2);
+          PRINTF("    DevToTwips = %f TwipToDev = %f\n",a1,a2);
           mPrintDC->GetAppUnitsToDevUnits(a1);
           mPrintDC->GetDevUnitsToAppUnits(a2);
-          printf("    AppUnitsToDev = %f DevUnitsToApp = %f\n",a1,a2);
+          PRINTF("    AppUnitsToDev = %f DevUnitsToApp = %f\n",a1,a2);
           mPrintDC->GetCanonicalPixelScale(a1);
-          printf("    GetCanonicalPixelScale = %f\n",a1);
+          PRINTF("    GetCanonicalPixelScale = %f\n",a1);
           mPrintDC->GetScrollBarDimensions(a1, a2);
-          printf("    ScrollBar x = %f y = %f\n",a1,a2);
+          PRINTF("    ScrollBar x = %f y = %f\n",a1,a2);
           mPrintDC->GetZoom(a1);
-          printf("    Zoom = %f\n",a1);
+          PRINTF("    Zoom = %f\n",a1);
           mPrintDC->GetDepth((PRUint32&)i1);
-          printf("    Depth = %d\n",i1);
+          PRINTF("    Depth = %d\n",i1);
           mPrintDC->GetDeviceSurfaceDimensions(i1,i2);
-          printf("    DeviceDimension w = %d h = %d\n",i1,i2);
+          PRINTF("    DeviceDimension w = %d h = %d\n",i1,i2);
 
 #endif
           // Print listener setup...
@@ -1682,12 +1686,12 @@ PRInt32                               width,height;
           if(!mIsPrinting){
             DocumentReadyForPrinting();
 #ifdef DEBUG_dcone
-            printf("PRINT JOB ENDING, OBSERVER WAS NOT CALLED\n");
+            PRINTF("PRINT JOB ENDING, OBSERVER WAS NOT CALLED\n");
 #endif
           } else {
             // use the observer mechanism to finish the printing
 #ifdef DEBUG_dcone
-            printf("PRINTING OBSERVER STARTED\n");
+            PRINTF("PRINTING OBSERVER STARTED\n");
 #endif
           }
         }

@@ -36,6 +36,11 @@
 
 #include "nsPluginSafety.h"
 #include "nsIPref.h" // needed for NS_TRY_SAFE_CALL_*
+#include "nslog.h"
+
+NS_IMPL_LOG(ns4xPluginInstanceLog)
+#define PRINTF NS_LOG_PRINTF(ns4xPluginInstanceLog)
+#define FLUSH  NS_LOG_FLUSH(ns4xPluginInstanceLog)
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID); // needed for NS_TRY_SAFE_CALL_*
 static NS_DEFINE_IID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
@@ -384,7 +389,7 @@ ns4xPluginInstance :: ns4xPluginInstance(NPPluginFuncs* callbacks, PRLibrary* aL
 ns4xPluginInstance :: ~ns4xPluginInstance(void)
 {
 #ifdef NS_DEBUG
-  printf("ns4xPluginInstance::~ns4xPluginInstance()\n");
+  PRINTF("ns4xPluginInstance::~ns4xPluginInstance()\n");
 #endif
 #if defined(MOZ_WIDGET_GTK)
   if (mXtBin)
@@ -428,7 +433,7 @@ NS_IMETHODIMP ns4xPluginInstance::GetPeer(nsIPluginInstancePeer* *resultingPeer)
 NS_IMETHODIMP ns4xPluginInstance::Start(void)
 {
 #ifdef NS_DEBUG
-  printf("Inside ns4xPluginInstance::Start(void)...\n");
+  PRINTF("Inside ns4xPluginInstance::Start(void)...\n");
 #endif
 
   if(mStarted)
@@ -442,7 +447,7 @@ NS_IMETHODIMP ns4xPluginInstance::Stop(void)
   NPError error;
 
 #ifdef NS_DEBUG
-  printf("ns4xPluginInstance::Stop()\n");
+  PRINTF("ns4xPluginInstance::Stop()\n");
 #endif
 
 #ifdef MOZ_WIDGET_GTK
@@ -541,7 +546,7 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
   // XXX 4.x plugins don't want a SetWindow(NULL).
 
 #ifdef NS_DEBUG
-  printf("Inside ns4xPluginInstance::SetWindow(%p)...\n", window);
+  PRINTF("Inside ns4xPluginInstance::SetWindow(%p)...\n", window);
 #endif
 
   if (!window || !mStarted)
@@ -553,7 +558,7 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
   // Allocate and fill out the ws_info data
   if (!window->ws_info) {
 #ifdef NS_DEBUG
-    printf("About to create new ws_info...\n");
+    PRINTF("About to create new ws_info...\n");
 #endif    
 
     // allocate a new NPSetWindowCallbackStruct structure at ws_info
@@ -567,10 +572,8 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
     GdkWindow *win = gdk_window_lookup((XID)window->window);
     if (win)
     {
-#ifdef NS_DEBUG      
-      printf("About to create new xtbin of %i X %i from %p...\n",
+      PRINTF("About to create new xtbin of %i X %i from %p...\n",
              window->width, window->height, win);
-#endif
 
 #if 1
       // if we destroyed the plugin when we left the page, we could remove this
@@ -598,11 +601,11 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
       gtk_widget_set_usize(mXtBin, window->width, window->height);
 
 #ifdef NS_DEBUG
-      printf("About to show xtbin(%p)...\n", mXtBin); fflush(NULL);
+      PRINTF("About to show xtbin(%p)...\n", mXtBin); fflush(NULL);
 #endif
       gtk_widget_show(mXtBin);
 #ifdef NS_DEBUG
-      printf("completed gtk_widget_show(%p)\n", mXtBin); fflush(NULL);
+      PRINTF("completed gtk_widget_show(%p)\n", mXtBin); fflush(NULL);
 #endif
     }
 
@@ -630,7 +633,7 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
     // relies on routine descriptors, not present in carbon. We 
     // need to fix this.
 #ifdef NS_DEBUG
-    printf("About to call CallNPP_SetWindowProc()...\n");
+    PRINTF("About to call CallNPP_SetWindowProc()...\n");
     fflush(NULL);
 #endif
 
@@ -646,7 +649,7 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
   }
   
 #ifdef NS_DEBUG
-  printf("Falling out of ns4xPluginInstance::SetWindow()...\n");
+  PRINTF("Falling out of ns4xPluginInstance::SetWindow()...\n");
 #endif
   return NS_OK;
 }

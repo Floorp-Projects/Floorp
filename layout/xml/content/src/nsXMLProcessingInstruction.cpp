@@ -39,6 +39,12 @@
 #include "nsIXMLContent.h"
 
 #include "nsNetUtil.h"
+#include "nslog.h"
+#undef fprintf
+
+NS_IMPL_LOG(nsXMLProcessingInstructionLog)
+#define PRINTF NS_LOG_PRINTF(nsXMLProcessingInstructionLog)
+#define FLUSH  NS_LOG_FLUSH(nsXMLProcessingInstructionLog)
 
 
 class nsXMLProcessingInstruction : public nsIDOMProcessingInstruction,

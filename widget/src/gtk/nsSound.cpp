@@ -35,6 +35,12 @@
 #include <unistd.h>
 
 #include <gtk/gtk.h>
+#include "nslog.h"
+
+NS_IMPL_LOG(nsSoundLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsSoundLog)
+#define FLUSH  NS_LOG_FLUSH(nsSoundLog)
+
 /* used with esd_open_sound */
 static int esdref = -1;
 static PRLibrary *elib = nsnull;
@@ -124,7 +130,7 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
         if (uri) {
           char* uriSpec;
           uri->GetSpec(&uriSpec);
-          printf("Failed to load %s\n", uriSpec ? uriSpec : "");
+          PRINTF("Failed to load %s\n", uriSpec ? uriSpec : "");
         }
       }
     }
@@ -138,7 +144,7 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
 
 
   if (strncmp(string, "RIFF", 4)) {
-    printf("We only support WAV files currently.\n");
+    PRINTF("We only support WAV files currently.\n");
     return NS_ERROR_FAILURE;
   }
 
@@ -181,7 +187,7 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
   }
 
 #if 0
-  printf("f: %d | c: %d | sps: %li | abps: %li | ba: %d | bps: %d | rate: %li\n",
+  PRINTF("f: %d | c: %d | sps: %li | abps: %li | ba: %d | bps: %d | rate: %li\n",
          format, channels, samples_per_sec, avg_bytes_per_sec, block_align, bits_per_sample, rate);
 #endif
 

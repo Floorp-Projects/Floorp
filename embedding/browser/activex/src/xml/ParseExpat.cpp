@@ -60,8 +60,7 @@ HRESULT ParseExpat(const char *pBuffer, unsigned long cbBufSize, IXMLDocument *p
 	if (!XML_Parse(parser, pBuffer, cbBufSize, 1))
 	{
 		/* TODO Create error code
-		   fprintf(stderr,
-			"%s at line %d\n",
+		   PRINTF("%s at line %d\n",
 		   XML_ErrorString(XML_GetErrorCode(parser)),
 		   XML_GetCurrentLineNumber(parser));
 		 */

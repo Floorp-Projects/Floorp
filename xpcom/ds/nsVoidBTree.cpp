@@ -20,6 +20,11 @@
  */
 
 #include "nsVoidBTree.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsVoidBTreeLog)
+#define PRINTF NS_LOG_PRINTF(nsVoidBTreeLog)
+#define FLUSH  NS_LOG_FLUSH(nsVoidBTreeLog)
 
 #ifdef DEBUG
 #include <stdio.h>
@@ -726,13 +731,13 @@ void
 nsVoidBTree::Dump(Node* aNode, PRInt32 aIndent)
 {
     for (PRInt32 i = 0; i < aIndent; ++i)
-        printf("  ");
+        PRINTF("  ");
 
     if (aNode->GetType() == Node::eType_Data) {
-        printf("data(%d/%d)\n", aNode->GetCount(), aNode->GetSubTreeSize());
+        PRINTF("data(%d/%d)\n", aNode->GetCount(), aNode->GetSubTreeSize());
     }
     else {
-        printf("index(%d/%d)\n", aNode->GetCount(), aNode->GetSubTreeSize());
+        PRINTF("index(%d/%d)\n", aNode->GetCount(), aNode->GetSubTreeSize());
         for (PRInt32 j = 0; j < aNode->GetCount(); ++j)
             Dump(NS_REINTERPRET_CAST(Node*, aNode->GetElementAt(j)), aIndent + 1);
     }

@@ -47,6 +47,11 @@
 #include "nsWidgetsCID.h"
 #include "nsIAppShell.h"
 #include "nsIDOMDocument.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(gtkmozembedLog)
+#define PRINTF NS_LOG_PRINTF(gtkmozembedLog)
+#define FLUSH  NS_LOG_FLUSH(gtkmozembedLog)
 
 // freakin X headers
 #ifdef Success
@@ -489,7 +494,7 @@ GtkMozEmbedPrivate::OnChromeStateChange(nsIWebProgress *aWebProgress,
       {
 	// apparently our primary content area hasn't been loaded.
 	// tis ok
-	printf("Warning: Failed to find primary content shell!  I will try again later.\n");
+        PRINTF("Warning: Failed to find primary content shell!  I will try again later.\n");
 	return NS_OK;
       }
       // if we made it this far, our primary content shell has been

@@ -24,6 +24,11 @@
 
 #include "EmbedMozilla.h"
 #include "EmbedMozillaP.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(EmbedMozillaLog, 0)
+#define PRINTF NS_LOG_PRINTF(EmbedMozillaLog)
+#define FLUSH  NS_LOG_FLUSH(EmbedMozillaLog)
 
 static XtGeometryResult
 QueryGeometry( Widget w, XtWidgetGeometry *request, XtWidgetGeometry *reply );
@@ -188,9 +193,9 @@ CoreRealize(Widget w,XtValueMask *mask,XSetWindowAttributes* wa)
 {
   XtEmbedMozilla em = (XtEmbedMozilla) w;
 
-  printf("CoreRealize(%s),window = %ld\n", 
-				 XtName(w), em->embed_mozilla.embed_window);
-  printf("CoreRealize: parent widget = %p\n", em->core.parent );
+  PRINTF("CoreRealize(%s),window = %ld\n", 
+         XtName(w), em->embed_mozilla.embed_window);
+  PRINTF("CoreRealize: parent widget = %p\n", em->core.parent );
   
   em->core.window = em->embed_mozilla.embed_window;
 }

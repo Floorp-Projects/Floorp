@@ -31,6 +31,11 @@
 #include "prmem.h"
 
 #include <unidef.h>     // for UniStrlen
+#include "nslog.h"
+
+NS_IMPL_LOG(nsClipboardLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsClipboardLog)
+#define FLUSH  NS_LOG_FLUSH(nsClipboardLog)
 
 // The relation between mozilla's mime formats and those understood by the
 // clipboard is a little hazy, mostly in the areas of images.
@@ -130,7 +135,7 @@ PRBool nsClipboard::GetClipboardData(const char *aFlavour)
       nsPrimitiveHelpers::CreatePrimitiveForData(flavorStr, pData, cbData, getter_AddRefs(genericDataWrapper));
       nsresult errCode = mTransferable->SetTransferData(flavorStr, genericDataWrapper, cbData);
 #ifdef NS_DEBUG
-      if (errCode != NS_OK) printf("nsClipboard:: Error setting data into transferable\n");
+      if (errCode != NS_OK) PRINTF("nsClipboard:: Error setting data into transferable\n");
 #endif
     }
   }
@@ -153,7 +158,7 @@ void nsClipboard::SetClipboardData(const char *aFlavour)
   nsCOMPtr<nsISupports> genericDataWrapper;
   nsresult errCode = mTransferable->GetTransferData(aFlavour, getter_AddRefs(genericDataWrapper), &cbMozData);
 #ifdef NS_DEBUG
-  if (NS_FAILED(errCode)) printf("nsClipboard:: Error getting data from transferable\n");
+  if (NS_FAILED(errCode)) PRINTF("nsClipboard:: Error getting data from transferable\n");
 #endif
   nsPrimitiveHelpers::CreateDataFromPrimitive(aFlavour, genericDataWrapper, &pMozData, cbMozData);
 
@@ -175,7 +180,7 @@ void nsClipboard::SetClipboardData(const char *aFlavour)
     pRecord->pfnExport(pMozData, cbMozData, pData);
 
     if (!WinSetClipbrdData(0/*hab*/, (ULONG)pData, pRecord->ulClipboardFmt, CFI_POINTER))
-      printf("ERROR: nsClipboard setting %s transfer data\n", pRecord->szMimeType);
+      PRINTF("ERROR: nsClipboard setting %s transfer data\n", pRecord->szMimeType);
   }
 
   // If the flavor is unicode, we also put it on the clipboard as CF_TEXT
@@ -199,7 +204,7 @@ void nsClipboard::SetClipboardData(const char *aFlavour)
         pRecord->pfnExport((void*)plainTextData, plainTextLen, pData);
 
         if (!WinSetClipbrdData(0/*hab*/, (ULONG)pData, CF_TEXT, CFI_POINTER))
-          printf("ERROR: nsClipboard setting CF_TEXT\n");
+          PRINTF("ERROR: nsClipboard setting CF_TEXT\n");
       }
     }
     PR_Free(uniBuf);

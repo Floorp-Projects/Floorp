@@ -49,6 +49,11 @@
 #include <Resources.h>
 #include <Appearance.h>
 #include "nsMacResources.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsMenuBarLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsMenuBarLog)
+#define FLUSH  NS_LOG_FLUSH(nsMenuBarLog)
 
 
 static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
@@ -205,7 +210,7 @@ nsMenuBar::MenuSelected(const nsMenuEvent & aMenuEvent)
 
   nsCOMPtr<nsIMenuListener> menuListener;
   //((nsISupports*)mMenuVoidArray[i-1])->QueryInterface(NS_GET_IID(nsIMenuListener), (void**)&menuListener);
-  //printf("gPreviousMenuStack.Count() = %d \n", gPreviousMenuStack.Count());
+  //PRINTF("gPreviousMenuStack.Count() = %d ", gPreviousMenuStack.Count());
 #if !TARGET_CARBON
   nsCOMPtr<nsIMenu> theMenu;
   gPreviousMenuStack.GetMenuAt(gPreviousMenuStack.Count() - 1, getter_AddRefs(theMenu));
@@ -500,7 +505,7 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
 	  nsresult ret;
 	    nsCOMPtr<nsIStringBundleService> pStringService = do_GetService(kStringBundleServiceCID, &ret);
       if (NS_FAILED(ret)) {
-        NS_WARNING("cannot get string service\n");
+        NS_WARNING("cannot get string service");
         return ret;
       }
       
@@ -508,7 +513,7 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
       nsCOMPtr<nsIStringBundle> bundle;
       ret = pStringService->CreateBundle("chrome://global/locale/brand.properties", nsnull, getter_AddRefs(bundle));
       if (NS_FAILED(ret)) {
-        NS_WARNING("cannot create instance\n");
+        NS_WARNING("cannot create instance");
         return ret;
       }      
       

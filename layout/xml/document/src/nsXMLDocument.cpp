@@ -72,6 +72,11 @@
 #include "nsDOMError.h"
 #include "nsScriptSecurityManager.h"
 #include "nsIPrincipal.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsXMLDocumentLog)
+#define PRINTF NS_LOG_PRINTF(nsXMLDocumentLog)
+#define FLUSH  NS_LOG_FLUSH(nsXMLDocumentLog)
 
 
 // XXX The XML world depends on the html atoms
@@ -453,7 +458,7 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
 #ifdef DEBUG_charset
    									nsAutoString d(defaultCharsetFromDocShell);
  									char* cCharset = d.ToNewCString();
- 									printf("From default charset, charset = %s\n", cCharset);
+ 									PRINTF("From default charset, charset = %s\n", cCharset);
  									Recycle(cCharset);
 #endif
 							charset = defaultCharsetFromDocShell;
@@ -470,7 +475,7 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
 #ifdef DEBUG_charset
 								nsAutoString d(requestCharset);
 								char* cCharset = d.ToNewCString();
-								printf("From request charset, charset = %s req=%d->%d\n", 
+								PRINTF("From request charset, charset = %s req=%d->%d\n", 
 			  					cCharset, charsetSource, requestCharsetSource);
 								Recycle(cCharset);
 #endif
@@ -492,7 +497,7 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
 #ifdef DEBUG_charset
 								nsAutoString d(forceCharsetFromDocShell);
 								char* cCharset = d.ToNewCString();
-								printf("From force, charset = %s \n", cCharset);
+								PRINTF("From force, charset = %s \n", cCharset);
 								Recycle(cCharset);
 #endif
 							charset = forceCharsetFromDocShell;

@@ -34,6 +34,11 @@
 #include "nsHashTable.h" // For CreateFontAliasTable()
 
 #include "nsGfxDefs.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsDeviceContextOS2Log)
+#define PRINTF NS_LOG_PRINTF(nsDeviceContextOS2Log)
+#define FLUSH  NS_LOG_FLUSH(nsDeviceContextOS2Log)
 
 // Size of the color cube
 #define COLOR_CUBE_SIZE       216
@@ -166,8 +171,8 @@ nsresult nsDeviceContextOS2::Init( nsNativeDeviceContext aContext,
   mWidth = hcinfo.xPels;
   mHeight = hcinfo.yPels;
   // XXX hsb says there are margin problems, must be from here...
-  printf( "Got surface of size %d x %d pixels\n", mWidth, mHeight);
-  printf( "mPixelScale = %f\n", mPixelScale);
+  PRINTF("Got surface of size %d x %d pixels\n", mWidth, mHeight);
+  PRINTF("mPixelScale = %f\n", mPixelScale);
 
   // We need to begin a document now, because the client is entitled at
   // this point to do stuff like create fonts, which required the PS to
@@ -860,7 +865,7 @@ nsresult nsDeviceContextOS2::BeginDocument()
    if( mPrintState == nsPrintState_ePreBeginDoc)
    {
       PrnStartJob( mDC, "Warpzilla NGLayout job");
-      printf( "BeginDoc\n");
+      PRINTF("BeginDoc\n");
       mPrintState = nsPrintState_eBegunDoc;
    }
    return NS_OK;
@@ -870,7 +875,7 @@ nsresult nsDeviceContextOS2::EndDocument()
 {
    PrnEndJob( mDC);
    mPrintState = nsPrintState_ePreBeginDoc;
-   printf("EndDoc\n");
+   PRINTF("EndDoc\n");
    return NS_OK;
 }
 
@@ -881,7 +886,7 @@ nsresult nsDeviceContextOS2::BeginPage()
    else
    {
       PrnNewPage( mDC);
-      printf("NewPage");
+      PRINTF("NewPage");
    }
    return NS_OK;
 }

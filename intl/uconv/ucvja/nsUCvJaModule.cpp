@@ -42,6 +42,7 @@
 #include "nsUnicodeToJISx0201.h"
 #include "nsUnicodeToJISx0208.h"
 #include "nsUnicodeToJISx0212.h"
+
 //----------------------------------------------------------------------------
 // Global functions and data [declaration]
 

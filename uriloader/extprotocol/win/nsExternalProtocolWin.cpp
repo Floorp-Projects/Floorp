@@ -28,15 +28,11 @@
 #include "nsXPIDLString.h"
 
 #include <windows.h>
+#include "nslog.h"
 
-#ifdef NS_DEBUG
-#define DEBUG_LOG0( x) printf( x)
-#define DEBUG_LOG1( x, y) printf( x, y)
-#else
-#define DEBUG_LOG0( x)
-#define DEBUG_LOG1( x, y)
-#endif
-
+NS_IMPL_LOG(nsExternalProtocolWinLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsExternalProtocolWinLog)
+#define FLUSH  NS_LOG_FLUSH(nsExternalProtocolWinLog)
 
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
@@ -108,7 +104,7 @@ nsresult nsExternalProtocol::DefaultLaunch( nsIURI *pUri)
 		}
 		LONG r = (LONG) ::ShellExecute( NULL, "open", uriStr, NULL, NULL, SW_SHOWNORMAL);
 		if (r < 32) {
-			DEBUG_LOG1( "ShellExecute failed: %d\n", (int)r);
+			PRINTF("ShellExecute failed: %d\n", (int)r);
 			rv = NS_ERROR_FAILURE;
 		}
 		else

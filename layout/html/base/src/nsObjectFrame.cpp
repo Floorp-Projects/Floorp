@@ -68,6 +68,11 @@
 #include "nsMimeTypes.h"
 
 #include "nsObjectFrame.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsObjectFrameLog)
+#define PRINTF NS_LOG_PRINTF(nsObjectFrameLog)
+#define FLUSH  NS_LOG_FLUSH(nsObjectFrameLog)
 
 static NS_DEFINE_IID(kIDOMMouseListenerIID, NS_IDOMMOUSELISTENER_IID);
 
@@ -2159,7 +2164,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetDocumentBase(const char* *result)
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetDocumentEncoding(const char* *result)
 {
-printf("instance owner getdocumentencoding called\n");
+  PRINTF("instance owner getdocumentencoding called\n");
   return NS_ERROR_FAILURE;
 }
   
@@ -2792,7 +2797,7 @@ static void GetWidgetPosAndClip(nsIWidget* aWidget,nscoord& aAbsX, nscoord& aAbs
     widget = getter_AddRefs(widget->GetParent());
     if (widget == nsnull) { 
       // Don't include the top-level windows offset 
-      // printf("Top level window offset %d %d\n", wx, wy); 
+      // PRINTF("Top level window offset %d %d\n", wx, wy); 
       aAbsX -= wx; 
       aAbsY -= wy; 
     } 
@@ -2803,9 +2808,9 @@ static void GetWidgetPosAndClip(nsIWidget* aWidget,nscoord& aAbsX, nscoord& aAbs
   aClipRect.x += aAbsX; 
   aClipRect.y += aAbsY; 
 
-  //printf("--------------\n"); 
-  //printf("Widget clip X %d Y %d rect %d %d %d %d\n", aAbsX, aAbsY,  aClipRect.x,  aClipRect.y, aClipRect.width,  aClipRect.height ); 
-  //printf("--------------\n"); 
+  //PRINTF("--------------\n"); 
+  //PRINTF("Widget clip X %d Y %d rect %d %d %d %d\n", aAbsX, aAbsY,  aClipRect.x,  aClipRect.y, aClipRect.width,  aClipRect.height ); 
+  //PRINTF("--------------\n"); 
 } 
 
 

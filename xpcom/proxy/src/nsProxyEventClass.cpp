@@ -36,6 +36,11 @@
 #include "nsAutoLock.h"
 #include "nsIInterfaceInfoManager.h"
 #include "xptcall.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsProxyEventClassLog)
+#define PRINTF NS_LOG_PRINTF(nsProxyEventClassLog)
+#define FLUSH  NS_LOG_FLUSH(nsProxyEventClassLog)
 
 // LIFETIME_CACHE will cache class for the entire cyle of the application.
 #define LIFETIME_CACHE
@@ -79,7 +84,7 @@ nsProxyEventClass::GetNewOrUsedClass(REFNSIID aIID)
 
 #ifdef PROXYEVENTCLASS_DEBUG 
 	char* iidStr = aIID.ToString();
-	printf("GetNewOrUsedClass  %s\n", iidStr);
+	PRINTF("GetNewOrUsedClass  %s\n", iidStr);
 	nsCRT::free(iidStr);
 #endif
 
@@ -89,7 +94,7 @@ nsProxyEventClass::GetNewOrUsedClass(REFNSIID aIID)
         NS_ADDREF(clazz);
 #ifdef PROXYEVENTCLASS_DEBUG
 		char* iidStr = aIID.ToString();
-		printf("GetNewOrUsedClass  %s hit\n", iidStr);
+		PRINTF("GetNewOrUsedClass  %s hit\n", iidStr);
 		nsCRT::free(iidStr);
 #endif
     }
@@ -168,7 +173,7 @@ nsProxyEventClass::nsProxyEventClass(REFNSIID aIID, nsIInterfaceInfo* aInfo)
 #endif
 #ifdef PROXYEVENTCLASS_DEBUG
 		char* iidStr = aIID.ToString();
-		printf("GetNewOrUsedClass  %s put\n", iidStr);
+		PRINTF("GetNewOrUsedClass  %s put\n", iidStr);
 		nsCRT::free(iidStr);
 #endif
     }
@@ -211,7 +216,7 @@ nsProxyEventClass::~nsProxyEventClass()
         iidToClassMap->Remove(&key);
 #ifdef PROXYEVENTCLASS_DEBUG
 		char* iidStr = mIID.ToString();
-		printf("GetNewOrUsedClass  %s remove\n", iidStr);
+		PRINTF("GetNewOrUsedClass  %s remove\n", iidStr);
 		nsCRT::free(iidStr);
 #endif
     }

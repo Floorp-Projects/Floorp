@@ -36,6 +36,11 @@
 #include "nsIClipView.h"
 #include "nsISupportsArray.h"
 #include "nsIScrollPositionListener.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsScrollingViewLog)
+#define PRINTF NS_LOG_PRINTF(nsScrollingViewLog)
+#define FLUSH  NS_LOG_FLUSH(nsScrollingViewLog)
 
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
@@ -780,7 +785,7 @@ NS_IMETHODIMP_(void) nsScrollingView::Notify(nsITimer * aTimer)
   event.point.x = rect.x;
   event.point.y = (mScrollingDelta > 0) ? (rect.height - rect.y - 1) : 135;
 
-  //printf("timer %d %d\n", event.point.x, event.point.y);
+  //PRINTF("timer %d %d\n", event.point.x, event.point.y);
 
   nsIViewObserver *obs;
 

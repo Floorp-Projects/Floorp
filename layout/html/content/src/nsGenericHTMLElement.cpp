@@ -91,6 +91,13 @@
 #include "nsIHTMLContentSink.h"
 #include "nsHTMLContentSinkStream.h"
 #include "nsLayoutCID.h"
+#include "nslog.h"
+#undef fprintf
+
+NS_IMPL_LOG(nsGenericHTMLElementLog)
+#define PRINTF NS_LOG_PRINTF(nsGenericHTMLElementLog)
+#define FLUSH  NS_LOG_FLUSH(nsGenericHTMLElementLog)
+
 // XXX todo: add in missing out-of-memory checks
 
 #include "nsIPref.h" // Used by the temp pref, should be removed!

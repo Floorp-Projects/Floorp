@@ -47,6 +47,13 @@
 #include "nsRDFCID.h"
 #include "nsXPIDLString.h"
 #include "prlog.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsChromeProtocolHandlerLog)
+#define PRINTF NS_LOG_PRINTF(nsChromeProtocolHandlerLog)
+#define FLUSH  NS_LOG_FLUSH(nsChromeProtocolHandlerLog)
+
+#define gLog nsChromeProtocolHandlerLog
 
 //----------------------------------------------------------------------
 
@@ -105,10 +112,6 @@ protected:
     static void* PR_CALLBACK HandleStopLoadEvent(PLEvent* aEvent);
     static void PR_CALLBACK DestroyLoadEvent(PLEvent* aEvent);
 
-#ifdef PR_LOGGING
-    static PRLogModuleInfo* gLog;
-#endif
-
 public:
     static nsresult
     Create(nsIURI* aURI, nsIChannel** aResult);
@@ -129,10 +132,6 @@ public:
     // nsIChannel    
     NS_DECL_NSICHANNEL
 };
-
-#ifdef PR_LOGGING
-PRLogModuleInfo* nsCachedChromeChannel::gLog;
-#endif
 
 NS_IMPL_ADDREF(nsCachedChromeChannel);
 NS_IMPL_RELEASE(nsCachedChromeChannel);
@@ -159,11 +158,6 @@ nsCachedChromeChannel::nsCachedChromeChannel(nsIURI* aURI)
     : mURI(aURI), mLoadGroup(nsnull), mLoadAttributes (nsIChannel::LOAD_NORMAL), mStatus(NS_OK)
 {
     NS_INIT_REFCNT();
-
-#ifdef PR_LOGGING
-    if (! gLog)
-        gLog = PR_NewLogModule("nsCachedChromeChannel");
-#endif
 
     PR_LOG(gLog, PR_LOG_DEBUG,
            ("nsCachedChromeChannel[%p]: created", this));
@@ -683,7 +677,7 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
 
         //nsXPIDLCString oldSpec;
         //aURI->GetSpec(getter_Copies(oldSpec));
-        //printf("*************************** %s\n", (const char*)oldSpec);
+        //PRINTF("*************************** %s", (const char*)oldSpec);
 
         nsXPIDLCString spec;
         rv = reg->ConvertChromeURL(chromeURI, getter_Copies(spec));
@@ -709,7 +703,7 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
             jar = do_QueryInterface(result);
         }
         if (!res && !file && !jar) {
-          NS_WARNING("Remote chrome not allowed! Only file:, resource:, and jar: are valid.\n");
+          NS_WARNING("Remote chrome not allowed! Only file:, resource:, and jar: are valid.");
           result = nsnull;
           return NS_ERROR_FAILURE;
         }

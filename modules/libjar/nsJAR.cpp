@@ -32,6 +32,11 @@
 #include "nsIServiceManager.h"
 #include "plbase64.h"
 #include "nsIConsoleService.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsJARLog)
+#define PRINTF NS_LOG_PRINTF(nsJARLog)
+#define FLUSH  NS_LOG_FLUSH(nsJARLog)
 
 #ifdef XP_UNIX
   #include <sys/stat.h>
@@ -813,7 +818,7 @@ void nsJAR::ReportError(const char* aFilename, PRInt16 errorCode)
   {
     char* messageCstr = message.ToNewCString();
     if (!messageCstr) return;
-    fprintf(stderr, "%s\n", messageCstr);
+    PRINTF("%s\n", messageCstr);
     nsMemory::Free(messageCstr);
   }
 }
@@ -889,7 +894,7 @@ PrintManItem(nsHashKey* aKey, void* aData, void* closure)
       nsCStringKey* key2 = (nsCStringKey*)aKey;
       char* name = key2->GetString().ToNewCString();
       if (!(PL_strcmp(name, "") == 0))
-        printf("%s s=%i\n",name, manItem->status);
+        PRINTF("%s s=%i\n",name, manItem->status);
     }
     return PR_TRUE;
 }
@@ -898,18 +903,18 @@ PrintManItem(nsHashKey* aKey, void* aData, void* closure)
 void nsJAR::DumpMetadata(const char* aMessage)
 {
 #if 0
-  printf("### nsJAR::DumpMetadata at %s ###\n", aMessage);
+  PRINTF("### nsJAR::DumpMetadata at %s ###\n", aMessage);
   if (mPrincipal)
   {
     char* toStr;
     mPrincipal->ToString(&toStr);
-    printf("Principal: %s.\n", toStr);
+    PRINTF("Principal: %s.\n", toStr);
     PR_FREEIF(toStr);
   }
   else
-    printf("No Principal. \n");
+    PRINTF("No Principal. \n");
   mManifestData.Enumerate(PrintManItem);
-  printf("\n");
+  PRINTF("\n");
 #endif
 } 
 
@@ -1143,7 +1148,7 @@ nsZipReaderCache::~nsZipReaderCache()
   mZips.Enumerate(DropZipReaderCache, nsnull);
 
 #ifdef ZIP_CACHE_HIT_RATE
-  printf("nsZipReaderCache size=%d hits=%d lookups=%d rate=%f%% flushes=%d\n",
+  PRINTF("nsZipReaderCache size=%d hits=%d lookups=%d rate=%f%% flushes=%d\n",
          mZipCacheHits, mZipCacheLookups, (float)mZipCacheHits / mZipCacheLookups,
          mZipCacheFlushes);
 #endif

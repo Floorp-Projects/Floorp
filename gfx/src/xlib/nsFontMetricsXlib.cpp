@@ -45,6 +45,11 @@
 #include <X11/Xatom.h>
 #include <stdlib.h>
 #include "xlibrgb.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsFontMetricsXlibLog)
+#define PRINTF NS_LOG_PRINTF(nsFontMetricsXlibLog)
+#define FLUSH  NS_LOG_FLUSH(nsFontMetricsXlibLog)
 
 #undef USER_DEFINED
 #define USER_DEFINED "x-user-def"
@@ -1467,13 +1472,13 @@ SetUpFontCharSetInfo(nsFontCharSetInfo* aSelf)
         }
       }
       else 
-       fprintf(stderr, "=== nsICharRepresentable %s failed\n", aSelf->mCharSet);
+        PRINTF("=== nsICharRepresentable %s failed\n", aSelf->mCharSet);
     }
     else
-       fprintf(stderr, "=== GetUnicodeEncoder %s failed\n", aSelf->mCharSet);
+      PRINTF("=== GetUnicodeEncoder %s failed\n", aSelf->mCharSet);
   }
   else
-    fprintf(stderr, "=== GetCharsetAtom2 %s failed\n", aSelf->mCharSet);
+    PRINTF("=== GetCharsetAtom2 %s failed\n", aSelf->mCharSet);
 }
 
 #undef DEBUG_DUMP_TREE
@@ -2621,7 +2626,7 @@ GetFontNames(char* aPattern, nsFontNodeArray* aNodes)
         if (NS_FAILED(res))
         {
           #ifdef NOISY_FONTS
-          fprintf(stderr, "=== cannot get lang group for %s\n", charSetInfo->mCharSet);
+          PRINTF("=== cannot get lang group for %s\n", charSetInfo->mCharSet);
           #endif
         }
       }
@@ -3173,16 +3178,16 @@ nsFontMetricsXlib::FindFont(PRUnichar aChar)
   
 #ifdef NS_FONT_DEBUG_CALL_TRACE
   if (gDebug & NS_FONT_DEBUG_CALL_TRACE) {
-    printf("FindFont(%04X)[", aChar);
+    PRINTF("FindFont(%04X)[", aChar);
      for (PRInt32 i = 0; i < mFonts.Count(); i++) {
-       printf("%s, ", mFonts.CStringAt(i)->GetBuffer());
+       PRINTF("%s, ", mFonts.CStringAt(i)->GetBuffer());
     }
-    printf("]\nreturns ");
+     PRINTF("]\nreturns ");
     if (font) {
-      printf("%s\n", font->mName ? font->mName : "(substitute)");
+      PRINTF("%s\n", font->mName ? font->mName : "(substitute)");
     }
     else {
-      printf("NULL\n");
+      PRINTF("NULL\n");
     }
   }
 #endif

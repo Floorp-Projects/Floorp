@@ -48,6 +48,12 @@
 #include "prenv.h" 
 #include "nsParserCIID.h"
 #include "nsCOMPtr.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsParserLog)
+#define PRINTF NS_LOG_PRINTF(nsParserLog)
+#define FLUSH  NS_LOG_FLUSH(nsParserLog)
+
 //#define rickgdebug 
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
@@ -1536,7 +1542,7 @@ nsresult nsParser::EnableParser(PRBool aState){
     mParserContext->mParserEnabled=aState;
     if(aState) {
 
-      //printf("  Re-enable parser\n");
+      //PRINTF("  Re-enable parser\n");
 
       result=ResumeParse();
       if(result!=NS_OK) 
@@ -1709,7 +1715,7 @@ aMimeType,PRBool aVerifyEnabled,PRBool aLastCall,nsDTDMode aMode){
         pc->SetMimeType(aMimeType);
         mUnusedInput.Truncate(0); 
 
-        //printf("Parse(string) iterate: %i",PR_FALSE); 
+        //PRINTF("Parse(string) iterate: %i",PR_FALSE); 
         pc->mScanner->Append(aSourceBuffer); 
         result=ResumeParse(PR_FALSE); 
 
@@ -1869,7 +1875,7 @@ nsresult nsParser::ParseFragment(const nsAReadableString& aSourceBuffer,void* aK
  */
 nsresult nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk) {
 
-  //printf("  Resume %i, prev-context: %p\n",allowIteration,mParserContext->mPrevContext);
+  //PRINTF("  Resume %i, prev-context: %p\n",allowIteration,mParserContext->mPrevContext);
   
 
   nsresult result=NS_OK;
@@ -2311,7 +2317,7 @@ theContext->mTransferBufferSize;
                                     theNumRead, guess, guessSource)) 
              { 
     #ifdef DEBUG_XMLENCODING 
-                printf("xmlencoding detect- %s\n", guess.ToNewCString()); 
+               PRINTF("xmlencoding detect- %s\n", guess.ToNewCString()); 
     #endif 
                 this->SetDocumentCharset(guess, guessSource); 
              } 
@@ -2324,7 +2330,7 @@ theContext->mTransferBufferSize;
           unsigned int index=0; 
           for(index=0;index<theNumRead;index++) { 
             if(0==theContext->mTransferBuffer[index]){ 
-              printf("\nNull found at buffer[%i] provided by netlib...\n",index); 
+              PRINTF("\nNull found at buffer[%i] provided by netlib...\n",index); 
               break; 
             } 
           } 
@@ -2334,7 +2340,7 @@ theContext->mTransferBufferSize;
           static int dump=0;
           if(dump) {
             theContext->mTransferBuffer[theNumRead]=0;
-            printf("\n\n-----------------------------------------------------%s\n",theContext->mTransferBuffer);
+            PRINTF("\n\n-----------------------------------------------------%s\n",theContext->mTransferBuffer);
           }
 #endif
 

@@ -50,6 +50,11 @@
 #include <Balloons.h>
 
 #include "nsDynamicMDEF.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsMenuLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsMenuLog)
+#define FLUSH  NS_LOG_FLUSH(nsMenuLog)
 
 extern MenuHandle gLevel2HierMenu;
 extern MenuHandle gLevel3HierMenu;
@@ -167,7 +172,7 @@ nsMenu::~nsMenu()
    
   // Don't destroy the 4 Golden Hierarchical Menu
   if((mMacMenuID > 5) || (mMacMenuID < 2) && !mIsHelpMenu) {
-    //printf("WARNING: DeleteMenu called!!! \n");
+    //PRINTF("WARNING: DeleteMenu called!!! \n");
     ::DeleteMenu(mMacMenuID);
   }
   
@@ -300,7 +305,7 @@ NS_METHOD nsMenu::SetLabel(const nsAReadableString &aText)
 #endif
   }
   
-  //printf("MacMenuID = %d", mMacMenuID);
+  //PRINTF("MacMenuID = %d", mMacMenuID);
   
   return NS_OK;
 }
@@ -350,8 +355,8 @@ NS_METHOD nsMenu::AddMenuItem(nsIMenuItem * aMenuItem)
 
   nsAutoString label;
   aMenuItem->GetLabel(label);
-  //printf("%s \n", label.ToNewCString());
-  //printf("%d = mMacMenuID\n", mMacMenuID);
+  //PRINTF("%s \n", label.ToNewCString());
+  //PRINTF("%d = mMacMenuID\n", mMacMenuID);
   ::InsertMenuItem(mMacMenuHandle, "\p(Blank menu item", currItemIndex);
   MenuHelpers::SetMenuItemText(mMacMenuHandle, currItemIndex, label, mUnicodeTextRunConverter);
 	  
@@ -419,7 +424,7 @@ NS_METHOD nsMenu::AddMenu(nsIMenu * aMenu)
   // We have to add it as a menu item and then associate it with the item
   nsAutoString label;
   aMenu->GetLabel(label);
-  //printf("AddMenu %s \n", label.ToNewCString());
+  //PRINTF("AddMenu %s \n", label.ToNewCString());
 
   ::InsertMenuItem(mMacMenuHandle, "\p(Blank Menu", currItemIndex);
   MenuHelpers::SetMenuItemText(mMacMenuHandle, currItemIndex, label, mUnicodeTextRunConverter);
@@ -543,7 +548,7 @@ NS_METHOD nsMenu::RemoveMenuListener(nsIMenuListener * aMenuListener)
 //-------------------------------------------------------------------------
 nsEventStatus nsMenu::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 {
-  //printf("MenuItemSelected called \n");
+  //PRINTF("MenuItemSelected called \n");
   nsEventStatus eventStatus = nsEventStatus_eIgnore;
       
   // Determine if this is the correct menu to handle the event
@@ -718,7 +723,7 @@ nsEventStatus nsMenu::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 //-------------------------------------------------------------------------
 nsEventStatus nsMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
-  //printf("MenuSelected called for %s \n", mLabel.ToNewCString());
+  //PRINTF("MenuSelected called for %s \n", mLabel.ToNewCString());
   nsEventStatus eventStatus = nsEventStatus_eIgnore;
       
   // Determine if this is the correct menu to handle the event
@@ -762,7 +767,7 @@ nsEventStatus nsMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
   	    mConstructed = true;
       }	
 	} else {
-	  //printf("Menu already constructed \n");
+	  //PRINTF("Menu already constructed \n");
 	}
 	eventStatus = nsEventStatus_eConsumeNoDefault;  
   }
@@ -791,7 +796,7 @@ nsEventStatus nsMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
 //-------------------------------------------------------------------------
 nsEventStatus nsMenu::MenuDeselected(const nsMenuEvent & aMenuEvent)
 {
-  //printf("MenuDeselect called for %s\n", mLabel.ToNewCString());
+  //PRINTF("MenuDeselect called for %s\n", mLabel.ToNewCString());
   // Destroy the menu
   if(mConstructed) {
     MenuDestruct(aMenuEvent);
@@ -814,7 +819,7 @@ nsEventStatus nsMenu::MenuConstruct(
   // reset destroy handler flag so that we'll know to fire it next time this menu goes away.
   mDestroyHandlerCalled = PR_FALSE;
   
-  //printf("nsMenu::MenuConstruct called for %s = %d \n", mLabel.ToNewCString(), mMacMenuHandle);
+  //PRINTF("nsMenu::MenuConstruct called for %s = %d \n", mLabel.ToNewCString(), mMacMenuHandle);
   // Begin menuitem inner loop
   
   gCurrentMenuDepth++;
@@ -836,7 +841,7 @@ nsEventStatus nsMenu::MenuConstruct(
     {        
       nsAutoString label;
       menuitemElement->GetAttribute(NS_LITERAL_STRING("value"), label);
-      //printf("label = %s \n", label.ToNewCString());
+      //PRINTF("label = %s \n", label.ToNewCString());
       
       // depending on the type, create a menu item, separator, or submenu
       nsAutoString menuitemNodeType;
@@ -855,7 +860,7 @@ nsEventStatus nsMenu::MenuConstruct(
   
   gConstructingMenu = PR_FALSE;
   mNeedsRebuild = PR_FALSE;
-  //printf("  Done building, mMenuItemVoidArray.Count() = %d \n", mMenuItemVoidArray.Count());
+  //PRINTF("  Done building, mMenuItemVoidArray.Count() = %d \n", mMenuItemVoidArray.Count());
   
   gCurrentMenuDepth--;
               
@@ -869,7 +874,7 @@ nsEventStatus nsMenu::HelpMenuConstruct(
     void              * menuNode,
     void              * aWebShell)
 {
-  //printf("nsMenu::MenuConstruct called for %s = %d \n", mLabel.ToNewCString(), mMacMenuHandle);
+  //PRINTF("nsMenu::MenuConstruct called for %s = %d \n", mLabel.ToNewCString(), mMacMenuHandle);
   // Begin menuitem inner loop
 
   int numHelpItems = ::CountMenuItems(mMacMenuHandle);
@@ -900,7 +905,7 @@ nsEventStatus nsMenu::HelpMenuConstruct(
       
       nsAutoString label;
       menuitemElement->GetAttribute(NS_LITERAL_STRING("value"), label);
-      //printf("label = %s \n", label.ToNewCString());
+      //PRINTF("label = %s \n", label.ToNewCString());
       
       menuitemElement->GetNodeName(menuitemNodeType);
       if (menuitemNodeType == NS_LITERAL_STRING("menuitem")) {
@@ -918,7 +923,7 @@ nsEventStatus nsMenu::HelpMenuConstruct(
     oldmenuitemNode->GetNextSibling(getter_AddRefs(menuitemNode));
   } // end menu item innner loop
   
-  //printf("  Done building, mMenuItemVoidArray.Count() = %d \n", mMenuItemVoidArray.Count());
+  //PRINTF("  Done building, mMenuItemVoidArray.Count() = %d \n", mMenuItemVoidArray.Count());
   
   gCurrentMenuDepth--;
     
@@ -931,7 +936,7 @@ nsEventStatus nsMenu::HelpMenuConstruct(
 //-------------------------------------------------------------------------
 nsEventStatus nsMenu::MenuDestruct(const nsMenuEvent & aMenuEvent)
 {
-  //printf("nsMenu::MenuDestruct() called for %s \n", mLabel.ToNewCString());
+  //PRINTF("nsMenu::MenuDestruct() called for %s \n", mLabel.ToNewCString());
   
   // Fire our ondestroy handler. If we're told to stop, don't destroy the menu
   PRBool keepProcessing = OnDestroy();
@@ -948,7 +953,7 @@ nsEventStatus nsMenu::MenuDestruct(const nsMenuEvent & aMenuEvent)
     if(mNeedsRebuild) {
         RemoveAll();
         mConstructed = false;
-        //printf("  mMenuItemVoidArray.Count() = %d \n", mMenuItemVoidArray.Count());
+        //PRINTF("  mMenuItemVoidArray.Count() = %d \n", mMenuItemVoidArray.Count());
         // Close the node.
         mNeedsRebuild = PR_TRUE;
     } 
@@ -1105,7 +1110,7 @@ void nsMenu::LoadMenuItem(
   // Create nsMenuItem
   nsCOMPtr<nsIMenuItem> pnsMenuItem = do_CreateInstance ( kMenuItemCID ) ;
   if ( pnsMenuItem ) {
-    //printf("menuitem %s \n", menuitemName.ToNewCString());
+    //PRINTF("menuitem %s \n", menuitemName.ToNewCString());
           
     // Create MenuDelegate - this is the intermediator inbetween 
     // the DOM node and the nsIMenuItem
@@ -1221,7 +1226,7 @@ nsMenu::LoadSubMenu( nsIMenu * pParentMenu, nsIDOMElement * menuElement, nsIDOMN
   
   nsAutoString menuName; 
   menuElement->GetAttribute(NS_LITERAL_STRING("value"), menuName);
-  //printf("Creating Menu [%s] \n", menuName.ToNewCString()); // this leaks
+  //PRINTF("Creating Menu [%s] \n", menuName.ToNewCString()); // this leaks
 
   // Create nsMenu
   nsCOMPtr<nsIMenu> pnsMenu ( do_CreateInstance(kMenuCID) );

@@ -1120,7 +1120,7 @@ NS_IMETHODIMP nsDocShell::AddChild(nsIDocShellTreeItem *aChild)
   res = dcInfo->SetParentCharset(&parentCS);
   if (NS_FAILED(res)) return NS_OK;
 
-  // printf("### 1 >>> Adding child. Parent CS = %s. ItemType = %d.\n", parentCS.ToNewCString(), mItemType);
+  // PRINTF("### 1 >>> Adding child. Parent CS = %s. ItemType = %d.\n", parentCS.ToNewCString(), mItemType);
 
   return NS_OK;
 }

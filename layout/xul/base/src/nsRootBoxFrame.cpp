@@ -45,6 +45,11 @@
 #include "nsIPresShell.h"
 #include "nsBoxFrame.h"
 #include "nsStackLayout.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsRootBoxFrameLog)
+#define PRINTF NS_LOG_PRINTF(nsRootBoxFrameLog)
+#define FLUSH  NS_LOG_FLUSH(nsRootBoxFrameLog)
 
 // Interface IDs
 static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
@@ -205,7 +210,7 @@ nsRootBoxFrame::Reflow(nsIPresContext*          aPresContext,
 
 #ifdef DEBUG_REFLOW
   gReflows++;
-  printf("----Reflow %d----\n", gReflows);
+  PRINTF("----Reflow %d----\n", gReflows);
 #endif
   return nsBoxFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 }

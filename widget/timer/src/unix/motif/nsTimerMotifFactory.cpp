@@ -30,6 +30,11 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsTimerMotifFactoryLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsTimerMotifFactoryLog)
+#define FLUSH  NS_LOG_FLUSH(nsTimerMotifFactoryLog)
 
 static NS_DEFINE_CID(kCTimerMotif, NS_TIMER_MOTIF_CID);
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
@@ -133,7 +138,7 @@ NSRegisterSelf(nsISupports* aServMgr, const char *fullpath)
   nsresult rv;
 
 #ifdef NS_DEBUG
-  printf("*** Registering MOTIF timer\n");
+  PRINTF("*** Registering MOTIF timer\n");
 #endif
 
   nsCOMPtr<nsIServiceManager>

@@ -24,6 +24,11 @@
 #include <gdk/gdkx.h>
 #include <gdk/gdkprivate.h>
 #include "nsDrawingSurfaceGTK.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsDrawingSurfaceGTKLog)
+#define PRINTF NS_LOG_PRINTF(nsDrawingSurfaceGTKLog)
+#define FLUSH  NS_LOG_FLUSH(nsDrawingSurfaceGTKLog)
 
 NS_IMPL_ISUPPORTS2(nsDrawingSurfaceGTK, nsIDrawingSurface, nsIDrawingSurfaceGTK)
 
@@ -148,7 +153,7 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Lock(PRInt32 aX, PRInt32 aY,
   //  MOZ_TIMER_STOP(mLockTime);
   //  MOZ_TIMER_LOG(("Time taken to lock: "));
   //  MOZ_TIMER_PRINT(mLockTime);
-  printf("Time taken to lock:   %d\n", PR_Now() - mLockTime);
+  PRINTF("Time taken to lock:   %d\n", PR_Now() - mLockTime);
 #endif
 
   return NS_OK;
@@ -195,7 +200,7 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Unlock(void)
 
 
 #ifdef CHEAP_PERFORMANCE_MEASUREMENT
-  printf("Time taken to unlock: %d\n", PR_Now() - mUnlockTime);
+  PRINTF("Time taken to unlock: %d\n", PR_Now() - mUnlockTime);
 #endif
 
   return NS_OK;

@@ -40,6 +40,11 @@
 #include "nsILocalFile.h"
 #include "nsIFactory.h"
 #include "nsLocalFile.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsLocalFileOS2Log, 0)
+#define PRINTF NS_LOG_PRINTF(nsLocalFileOS2Log)
+#define FLUSH  NS_LOG_FLUSH(nsLocalFileOS2Log)
 
 #define INCL_DOSFILEMGR
 #define INCL_DOSERRORS
@@ -69,7 +74,7 @@ nsresultForErrno(int err)
 {
 #ifdef DEBUG
     if (err)
-        fprintf(stderr, "errno %d\n", err);
+      PRINTF("errno %d\n", err);
 #endif
     switch(err) {
       case 0:

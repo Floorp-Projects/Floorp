@@ -37,12 +37,19 @@
 #include "nsILocalFile.h"
 #include "nsLocalFile.h"
 #include "nsXPIDLString.h"
+#include "nslog.h"
+
+NS_DECL_LOG(nsLocalFileUnixLog)
+#define FILE_PRINTF NS_LOG_PRINTF(nsLocalFileUnixLog)
+#define FILE_FLUSH  NS_LOG_FLUSH(nsLocalFileUnixLog)
 
 #define NSRESULT_FOR_RETURN(ret) (((ret) < 0) ? NSRESULT_FOR_ERRNO() : NS_OK)
 
 inline nsresult
 nsresultForErrno(int err)
 {
+    if (err)
+        FILE_PRINTF("errno %d\n", err);
     switch(err) {
       case 0:
         return NS_OK;
@@ -97,6 +104,7 @@ protected:
 
     nsresult FillStatCache() {
 	if (stat(mPath, &mCachedStat) == -1) {
+	    FILE_PRINTF("stat(%s) -> %d\n", (const char *)mPath, errno);
 	    return NS_ERROR_FAILURE;
 	}
 	mHaveCachedStat = PR_TRUE;

@@ -45,6 +45,11 @@
 #include "nsIViewManager.h"
 #include "nsBoxLayoutState.h"
 #include "nsStackLayout.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsStackFrameLog)
+#define PRINTF NS_LOG_PRINTF(nsStackFrameLog)
+#define FLUSH  NS_LOG_FLUSH(nsStackFrameLog)
 
 nsresult
 NS_NewStackFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, nsIBoxLayout* aLayoutManager)
@@ -141,11 +146,11 @@ nsStackFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 
  
   #ifdef NS_DEBUG
-                            printf("\n------------");
+  PRINTF("\n------------");
 
       if (*aFrame)
       nsFrame::ListTag(stdout, *aFrame);
-                            printf("--------------\n");
+      PRINTF("--------------\n");
   #endif
 
 

@@ -50,6 +50,11 @@
 //TABLECELL SELECTION
 #include "nsIFrameSelection.h"
 #include "nsILookAndFeel.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsTableCellFrameLog)
+#define PRINTF NS_LOG_PRINTF(nsTableCellFrameLog)
+#define FLUSH  NS_LOG_FLUSH(nsTableCellFrameLog)
 
 static NS_DEFINE_IID(kIHTMLTableCellElementIID, NS_IHTMLTABLECELLELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLTableCellElementIID, NS_IDOMHTMLTABLECELLELEMENT_IID);
@@ -659,28 +664,28 @@ void DebugCheckChildSize(nsIFrame*            aChild,
   if (aMet.width > aAvailSize.width) {
     nsAutoString tmp;
     aChild->GetFrameName(tmp);
-    printf("WARNING: cell ");
+    PRINTF("WARNING: cell ");
     fputs(tmp, stdout);
-    printf(" content has desired width %d given avail width %d\n",
-            aMet.width, aAvailSize.width);
+    PRINTF(" content has desired width %d given avail width %d\n",
+    aMet.width, aAvailSize.width);
   }
 */
   if (aIsPass2Reflow) {
     if ((aMet.width < 0) || (aMet.width > 60000)) {
-      printf("WARNING: cell content %p has large width %d \n", aChild, aMet.width);
+      PRINTF("WARNING: cell content %p has large width %d \n", aChild, aMet.width);
     }
     if ((aMet.height < 0) || (aMet.height > 60000)) {
-      printf("WARNING: cell content %p has large height %d \n", aChild, aMet.height);
+      PRINTF("WARNING: cell content %p has large height %d \n", aChild, aMet.height);
     }
   }
   if (aMet.maxElementSize) {
     nscoord tmp = aMet.maxElementSize->width;
     if ((tmp < 0) || (tmp > 60000)) {
-      printf("WARNING: cell content %p has large max element width %d \n", aChild, tmp);
+      PRINTF("WARNING: cell content %p has large max element width %d \n", aChild, tmp);
     }
     tmp = aMet.maxElementSize->height;
     if ((tmp < 0) || (tmp > 60000)) {
-      printf("WARNING: cell content %p has large max element height %d \n", aChild, tmp);
+      PRINTF("WARNING: cell content %p has large max element height %d \n", aChild, tmp);
     }
   }
 }
@@ -1124,7 +1129,7 @@ void nsTableCellFrame::MapHAlignAttribute(nsIPresContext* aPresContext,
 NS_METHOD nsTableCellFrame::DidSetStyleContext(nsIPresContext* aPresContext)
 {
 #ifdef NOISY_STYLE
-  printf("nsTableCellFrame::DidSetStyleContext \n");
+  PRINTF("nsTableCellFrame::DidSetStyleContext \n");
 #endif
 
   MapBorderPadding(aPresContext);

@@ -23,14 +23,19 @@
 
 #include <stdio.h>
 #include "nsQtEventProcessor.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsQtEventProcessorLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsQtEventProcessorLog)
+#define FLUSH  NS_LOG_FLUSH(nsQtEventProcessorLog)
 
 nsQtEventProcessor::nsQtEventProcessor( nsIEventQueue* eventQueue, QObject* parent )
 : QSocketNotifier( eventQueue->GetEventQueueSelectFD(), QSocketNotifier::Read, parent ), 
 	m_eventQueue( eventQueue )
 {
-	printf("CONNETING SOCKET...\n");
+	PRINTF("CONNETING SOCKET...\n");
 	connect(this, SIGNAL(activated(int)), SLOT(handleActivated(int)));
-	printf("DONE.\n");
+	PRINTF("DONE.\n");
 }
 
 
@@ -42,7 +47,7 @@ nsQtEventProcessor::~nsQtEventProcessor( )
 // private slot
 void nsQtEventProcessor::handleActivated( int socket )
 {
-	printf("nsQtEventProcessor::handleActivated( %d )\n", socket);
+	PRINTF("nsQtEventProcessor::handleActivated( %d )\n", socket);
 	m_eventQueue->ProcessPendingEvents( );
 }
 

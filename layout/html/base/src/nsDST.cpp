@@ -797,7 +797,7 @@ nsDST::Dump(FILE* out) const
   for (int i = 1; i < height; i++) {
     fprintf(out, ", %d", nodesPerLevel[i]);
   }
-  fputs("\n", out);
+  fprintf(out, "\n");
 }
 #endif
 

@@ -82,6 +82,11 @@
 #include "nsViewsCID.h"
 #include "nsIScrollableView.h"
 #include "nsHTMLContainerFrame.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsBoxFrameLog)
+#define PRINTF NS_LOG_PRINTF(nsBoxFrameLog)
+#define FLUSH  NS_LOG_FLUSH(nsBoxFrameLog)
 
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
@@ -282,7 +287,7 @@ nsBoxFrame::SetInitialChildList(nsIPresContext* aPresContext,
     nsBoxLayoutState state(shell);
     InitChildren(state, aChildList);
   } else {
-    printf("Warning add child failed!!\n");
+    PRINTF("Warning add child failed!!\n");
   }
 
   SanityCheck(mFrames);
@@ -361,9 +366,9 @@ void
 nsBoxFrameInner::CacheAttributes()
 {
   /*
-  printf("Caching: ");
+    PRINTF("Caching: ");
   mOuter->DumpBox(stdout);
-  printf("\n");
+  PRINTF("\n");
    */
 
   mValign = nsBoxFrame::vAlign_Top;
@@ -671,11 +676,11 @@ nsBoxFrame::DidReflow(nsIPresContext* aPresContext,
 static int myCounter = 0;
 static void printSize(char * aDesc, nscoord aSize) 
 {
-  printf(" %s: ", aDesc);
+  PRINTF(" %s: ", aDesc);
   if (aSize == NS_UNCONSTRAINEDSIZE) {
-    printf("UC");
+    PRINTF("UC");
   } else {
-    printf("%d", aSize);
+    PRINTF("%d", aSize);
   }
 }
 #endif
@@ -691,21 +696,21 @@ nsBoxFrame::Reflow(nsIPresContext*   aPresContext,
   NS_ASSERTION(aReflowState.mComputedWidth >=0 && aReflowState.mComputedHeight >= 0, "Computed Size < 0");
 
 #ifdef DO_NOISY_REFLOW
-  printf("\n-------------Starting BoxFrame Reflow ----------------------------\n");
-  printf("%p ** nsBF::Reflow %d R: ", this, myCounter++);
+  PRINTF("\n-------------Starting BoxFrame Reflow ----------------------------\n");
+  PRINTF("%p ** nsBF::Reflow %d R: ", this, myCounter++);
   switch (aReflowState.reason) {
     case eReflowReason_Initial:
-      printf("Ini");break;
+      PRINTF("Ini");break;
     case eReflowReason_Incremental:
-      printf("Inc");break;
+      PRINTF("Inc");break;
     case eReflowReason_Resize:
-      printf("Rsz");break;
+      PRINTF("Rsz");break;
     case eReflowReason_StyleChange:
-      printf("Sty");break;
+      PRINTF("Sty");break;
     case eReflowReason_Dirty:
-      printf("Drt ");
+      PRINTF("Drt ");
       break;
-    default:printf("<unknown>%d", aReflowState.reason);break;
+    default:PRINTF("<unknown>%d", aReflowState.reason);break;
   }
   
   printSize("AW", aReflowState.availableWidth);
@@ -713,7 +718,7 @@ nsBoxFrame::Reflow(nsIPresContext*   aPresContext,
   printSize("CW", aReflowState.mComputedWidth);
   printSize("CH", aReflowState.mComputedHeight);
 
-  printf(" *\n");
+  PRINTF(" *\n");
 
 #endif
 
@@ -832,12 +837,12 @@ nsBoxFrame::Reflow(nsIPresContext*   aPresContext,
   }
 #ifdef DO_NOISY_REFLOW
   {
-    printf("%p ** nsBF(done) W:%d H:%d  ", this, aDesiredSize.width, aDesiredSize.height);
+    PRINTF("%p ** nsBF(done) W:%d H:%d  ", this, aDesiredSize.width, aDesiredSize.height);
 
     if (maxElementSize) {
-      printf("MW:%d MH:%d\n", maxElementSize->width, maxElementSize->height); 
+      PRINTF("MW:%d MH:%d\n", maxElementSize->width, maxElementSize->height); 
     } else {
-      printf("MW:? MH:?\n"); 
+      PRINTF("MW:? MH:?\n"); 
     }
 
   }
@@ -1109,7 +1114,7 @@ nsBoxFrame::InsertFrames(nsIPresContext* aPresContext,
 
    nsIBox* prevBox = GetBox(aPrevFrame);
    if (prevBox == nsnull && aPrevFrame != nsnull) {
-     printf("Warning prev sibling is not in our list!!!");
+     PRINTF("Warning prev sibling is not in our list!!!");
      aPrevFrame = nsnull;
    }
 
@@ -1833,9 +1838,9 @@ nsBoxFrame::GetCursor(nsIPresContext* aPresContext,
 {
   /*
     #ifdef NS_DEBUG
-    printf("Get Cursor: ");
+    PRINTF("Get Cursor: ");
                             nsFrame::ListTag(stdout, this);
-    printf("\n");
+                            PRINTF("\n");
                             
     #endif
  */
@@ -2288,7 +2293,7 @@ nsBoxFrameInner::DisplayDebugInfoFor(nsIBox* aBox,
     if (!insideBorder.Contains(nsPoint(x,y)))
         return NS_ERROR_FAILURE;
 
-        //printf("%%%%%% inside box %%%%%%%\n");
+    //PRINTF("%%%%%% inside box %%%%%%%\n");
 
         int count = 0;
         nsIBox* child = nsnull;
@@ -2306,7 +2311,7 @@ nsBoxFrameInner::DisplayDebugInfoFor(nsIBox* aBox,
 
         if ((isHorizontal && y < insideBorder.y + m.top) ||
             (!isHorizontal && x < insideBorder.x + m.left)) {
-            //printf("**** inside debug border *******\n");
+          //PRINTF("**** inside debug border *******\n");
             while (child) 
             {    
                nsRect r;
@@ -2326,17 +2331,17 @@ nsBoxFrameInner::DisplayDebugInfoFor(nsIBox* aBox,
                             ourFrame->GetContent(getter_AddRefs(content));
 
                             if (content) {                             
-                              printf("---------------\n");
+                              PRINTF("---------------\n");
                               mOuter->DumpBox(stdout);
-                              printf("\n");
+                              PRINTF("\n");
                             }
 
                         childFrame->GetContent(getter_AddRefs(content));
 
                         if (content) {
-                            printf("child #%d: ", count);
+                          PRINTF("child #%d: ", count);
                             child->DumpBox(stdout);
-                            printf("\n");
+                            PRINTF("\n");
 
                         }
 
@@ -2380,13 +2385,13 @@ nsBoxFrameInner::DisplayDebugInfoFor(nsIBox* aBox,
                         GetValue(aPresContext, flexSize,  flexCSS, flex);
 
 
-                        printf("min%s, pref%s, max%s, actual%s, flex=%s\n\n", 
+                        PRINTF("min%s, pref%s, max%s, actual%s, flex=%s\n\n", 
                             min,
                             pref,
                             max,
                             calc,
                             flex
-                        );
+                          );
 
                         return NS_OK;   
                 }

@@ -22,7 +22,7 @@
 
 /*   if.h --- Top-level image library internal routines
  *
- * $Id: if.h,v 3.24 2000/08/26 18:17:25 pnunn%netscape.com Exp $
+ * $Id: if.h,v 3.25 2000/10/27 22:41:14 warren%netscape.com Exp $
  */
 
 #ifndef _if_h
@@ -71,14 +71,9 @@ typedef struct il_container_struct il_container;
 /* #define DEBUG_GROUP_OBSERVER */
 
 
-
-#ifdef DEBUG
-extern int il_debug;
-extern PRLogModuleInfo *il_log_module;
-#define ILTRACE(l,t) { if(il_debug>l) {PR_LOG(il_log_module, 1, t);} }
-#else
-#define ILTRACE(l,t) {}
-#endif
+#include "nslog.h"
+NS_DECL_LOG(IMGLIBLog)
+#define ILTRACE(l,t) NS_LOG_PRINTF(IMGLIBLog) t     // level, l, no longer used
 
 #define FREE_IF_NOT_NULL(x)    do {if (x) {PR_FREEIF(x); (x) = NULL;}} while (0)
 

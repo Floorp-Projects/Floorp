@@ -29,6 +29,11 @@
 #include "nsIMenu.h"
 
 #include <Menus.h>
+#include "nslog.h"
+
+NS_IMPL_LOG(nsDynamicMDEFLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsDynamicMDEFLog)
+#define FLUSH  NS_LOG_FLUSH(nsDynamicMDEFLog)
 
 pascal void nsDynamicMDEFMain(
   short message,
@@ -54,7 +59,7 @@ public:
         
         ~nsInstanceCounter()
         {
-          printf("%s %ld\n", mDescription, mInstanceCount);
+          PRINTF("%s %ld\n", mDescription, mInstanceCount);
         }
 
         nsInstanceCounter& operator ++()          // prefix

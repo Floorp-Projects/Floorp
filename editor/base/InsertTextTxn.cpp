@@ -25,14 +25,13 @@
 #include "nsIDOMCharacterData.h"
 #include "nsISelection.h"
 #include "EditAggregateTxn.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(InsertTextTxnLog)
+#define PRINTF NS_LOG_PRINTF(InsertTextTxnLog)
+#define FLUSH  NS_LOG_FLUSH(InsertTextTxnLog)
 
 static NS_DEFINE_IID(kIDOMSelectionIID, NS_ISELECTION_IID);
-
-#ifdef NS_DEBUG
-static PRBool gNoisy = PR_FALSE;
-#else
-static const PRBool gNoisy = PR_FALSE;
-#endif
 
 nsIAtom *InsertTextTxn::gInsertTextTxnName;
 
@@ -66,11 +65,11 @@ NS_IMETHODIMP InsertTextTxn::Init(nsIDOMCharacterData *aElement,
                                   nsIEditor           *aEditor)
 {
 #if 0 //def DEBUG_cmanske
-      nsAutoString text;
-      aElement->GetData(text);
-      printf("InsertTextTxn: Offset to insert at = %d. Text of the node to insert into:\n", aOffset);
-      wprintf(text.GetUnicode());
-      printf("\n");
+  nsAutoString text;
+  aElement->GetData(text);
+  PRINTF("InsertTextTxn: Offset to insert at = %d. Text of the node to insert into:\n", aOffset);
+  WPRINTF(text.GetUnicode());
+  PRINTF("\n");
 #endif
 
   NS_ASSERTION(aElement && aEditor, "bad args");
@@ -85,7 +84,7 @@ NS_IMETHODIMP InsertTextTxn::Init(nsIDOMCharacterData *aElement,
 
 NS_IMETHODIMP InsertTextTxn::Do(void)
 {
-  if (gNoisy) { printf("Do Insert Text element = %p\n", mElement.get()); }
+  PRINTF("Do Insert Text element = %p\n", mElement.get());
   NS_ASSERTION(mElement && mEditor, "bad state");
   if (!mElement || !mEditor) { return NS_ERROR_NOT_INITIALIZED; }
 
@@ -114,7 +113,7 @@ NS_IMETHODIMP InsertTextTxn::Do(void)
 
 NS_IMETHODIMP InsertTextTxn::Undo(void)
 {
-  if (gNoisy) { printf("Undo Insert Text element = %p\n", mElement.get()); }
+  PRINTF("Undo Insert Text element = %p\n", mElement.get());
   NS_ASSERTION(mElement && mEditor, "bad state");
   if (!mElement || !mEditor) { return NS_ERROR_NOT_INITIALIZED; }
 
@@ -144,7 +143,7 @@ NS_IMETHODIMP InsertTextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransacti
         otherInsTxn->GetData(otherData);
         mStringToInsert += otherData;
         *aDidMerge = PR_TRUE;
-        if (gNoisy) { printf("InsertTextTxn assimilated %p\n", aTransaction); }
+        PRINTF("InsertTextTxn assimilated %p\n", aTransaction);
       }
       NS_RELEASE(otherInsTxn);
     }
@@ -176,7 +175,7 @@ NS_IMETHODIMP InsertTextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransacti
 	                otherInsertTxn->GetData(otherData);
 	                mStringToInsert += otherData;
 	                *aDidMerge = PR_TRUE;
-	                if (gNoisy) { printf("InsertTextTxn assimilated %p\n", aTransaction); }
+	                PRINTF("InsertTextTxn assimilated %p\n", aTransaction);
 	              }
 	              NS_RELEASE(otherInsertTxn);
 	            }

@@ -41,6 +41,13 @@ static void debug_RegisterPrefCallbacks();
 static PRInt32 gNumWidgets;
 #endif
 
+#include "nslog.h"
+#undef fprintf
+
+NS_IMPL_LOG(nsBaseWidgetLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsBaseWidgetLog)
+#define FLUSH  NS_LOG_FLUSH(nsBaseWidgetLog)
+
 // nsBaseWidget
 NS_IMPL_ISUPPORTS1(nsBaseWidget, nsIWidget)
 
@@ -75,7 +82,7 @@ nsBaseWidget::nsBaseWidget()
 {
 #ifdef NOISY_WIDGET_LEAKS
   gNumWidgets++;
-  printf("WIDGETS+ = %d\n", gNumWidgets);
+  PRINTF("WIDGETS+ = %d\n", gNumWidgets);
 #endif
 
 #ifdef NS_DEBUG
@@ -97,7 +104,7 @@ nsBaseWidget::~nsBaseWidget()
 {
 #ifdef NOISY_WIDGET_LEAKS
   gNumWidgets--;
-  printf("WIDGETS- = %d\n", gNumWidgets);
+  PRINTF("WIDGETS- = %d\n", gNumWidgets);
 #endif
 
 	NS_IF_RELEASE(mMenuListener);

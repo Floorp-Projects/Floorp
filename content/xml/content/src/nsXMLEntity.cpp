@@ -31,6 +31,12 @@
 #include "nsLayoutAtoms.h"
 #include "nsString.h"
 #include "nsIXMLContent.h"
+#include "nslog.h"
+#undef fprintf
+
+NS_IMPL_LOG(nsXMLEntityLog)
+#define PRINTF NS_LOG_PRINTF(nsXMLEntityLog)
+#define FLUSH  NS_LOG_FLUSH(nsXMLEntityLog)
 
 
 class nsXMLEntity : public nsIDOMEntity,

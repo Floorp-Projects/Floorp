@@ -40,6 +40,11 @@
 #include <stdio.h>
 #include "npapi.h"
 #include "npupp.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(npunixLog, 0)
+#define PRINTF NS_LOG_PRINTF(npunixLog)
+#define FLUSH  NS_LOG_FLUSH(npunixLog)
 
 /*
  * Define PLUGIN_TRACE to have the wrapper functions print
@@ -48,7 +53,7 @@
 
 #ifdef PLUGIN_TRACE
 #include <stdio.h>
-#define PLUGINDEBUGSTR(msg) fprintf(stderr, "%s\n", msg)
+#define PLUGINDEBUGSTR(msg) PRINTF("%s\n", msg)
 #else
 #define PLUGINDEBUGSTR(msg)
 #endif

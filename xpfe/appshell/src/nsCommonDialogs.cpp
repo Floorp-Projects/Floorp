@@ -456,30 +456,30 @@ nsresult nsCommonDialogs::Select(nsIDOMWindowInternal *inParent, const PRUnichar
                     else
                     {
                     	
-                        NS_WARNING( "JS_PushArguments failed\n" );
+                        NS_WARNING( "JS_PushArguments failed" );
                         rv = NS_ERROR_FAILURE;
                     }
                 }
                 else
                 {
-                    NS_WARNING(" GetNativeContext failed\n" );
+                    NS_WARNING(" GetNativeContext failed" );
                     rv = NS_ERROR_FAILURE;
                 }
             }
             else
             {
-                NS_WARNING( "GetContext failed\n" );
+                NS_WARNING( "GetContext failed" );
                 rv = NS_ERROR_FAILURE;
             }
         }
         else
         {
-            NS_WARNING( "QueryInterface (for nsIScriptGlobalObject) failed \n" );
+            NS_WARNING( "QueryInterface (for nsIScriptGlobalObject) failed " );
         }
     }
     else
     {
-        NS_WARNING( " OpenDialogWithArg was passed a null pointer!\n" );
+        NS_WARNING( " OpenDialogWithArg was passed a null pointer!" );
         rv = NS_ERROR_NULL_POINTER;
     }
     return rv;

@@ -66,6 +66,11 @@
 #include "nsISocketTransportService.h"
 #include "nsIFileTransportService.h"
 
+#include "nslog.h"
+
+NS_IMPL_LOG(nsMacMessagePumpLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsMacMessagePumpLog)
+#define FLUSH  NS_LOG_FLUSH(nsMacMessagePumpLog)
 
 #ifndef topLeft
 #define topLeft(r)	(((Point *) &(r))[0])
@@ -291,9 +296,9 @@ PRBool nsMacMessagePump::BrowserIsBusy()
 	if (isBusy != wasBusy)
 	{
 		if (isBusy)
-			printf("い Message pump became busy\n");
+        PRINTF("い Message pump became busy\n");
 		else
-			printf("い Message pump became idle\n");
+        PRINTF("い Message pump became idle\n");
 			
 	  wasBusy = isBusy;
 	}

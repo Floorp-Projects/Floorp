@@ -27,6 +27,11 @@
 #include "nsDrawingSurfaceWin.h"
 #include "prmem.h"
 #include "nscrt.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsDrawingSurfaceWinLog)
+#define PRINTF NS_LOG_PRINTF(nsDrawingSurfaceWinLog)
+#define FLUSH  NS_LOG_FLUSH(nsDrawingSurfaceWinLog)
 
 //#define GFX_DEBUG
 
@@ -850,7 +855,7 @@ nsresult nsDrawingSurfaceWin :: CreateDDraw()
       mDDraw2->SetCooperativeLevel(NULL, DDSCL_NORMAL);
 
 #ifdef NS_DEBUG
-      printf("using DirectDraw (%08X)\n", mDDraw2);
+      PRINTF("using DirectDraw (%08X)\n", mDDraw2);
 
       DDSCAPS ddscaps;
       DWORD   totalmem, freemem;
@@ -860,12 +865,12 @@ nsresult nsDrawingSurfaceWin :: CreateDDraw()
 
       if (NS_SUCCEEDED(res))
       {
-        printf("total video memory: %d\n", totalmem);
-        printf("free video memory: %d\n", freemem);
+        PRINTF("total video memory: %d\n", totalmem);
+        PRINTF("free video memory: %d\n", freemem);
       }
       else
       {
-        printf("GetAvailableVidMem() returned %08x: %s\n", res,
+        PRINTF("GetAvailableVidMem() returned %08x: %s\n", res,
                (res == DDERR_NODIRECTDRAWHW) ?
                "no hardware ddraw driver available" : "unknown error code");
       }

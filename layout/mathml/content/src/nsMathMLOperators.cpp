@@ -30,6 +30,11 @@
 #include "nsMathMLOperatorList.h"
 #undef WANT_MATHML_OPERATOR_COUNT
 
+#include "nslog.h"
+
+NS_IMPL_LOG(nsMathMLOperatorsLog)
+#define PRINTF NS_LOG_PRINTF(nsMathMLOperatorsLog)
+#define FLUSH  NS_LOG_FLUSH(nsMathMLOperatorsLog)
 
 // define a zero-separated linear array of all MathML Operators in Unicode
 const PRUnichar kMathMLOperator[] = {
@@ -267,9 +272,9 @@ void DEBUG_PrintString(const nsString aString)
   for (PRInt32 i = 0; i<aString.Length(); i++) {
     PRUnichar ch = aString.CharAt(i);
     if (ch < 0x00FF)
-      printf("%c", char(ch));
+        PRINTF("%c", char(ch));
     else
-      printf("[0x%04X]", ch);
+        PRINTF("[0x%04X]", ch);
   }
 }
 
@@ -304,7 +309,7 @@ TestOperators() {
   nsOperatorFlags flags, form;
   float lspace, rspace;
 
-  printf("\nChecking the operator dictionary...\n");
+  PRINTF("\nChecking the operator dictionary...\n");
     
   nsAutoString aOperator;
   nsStr::Initialize(aOperator, eTwoByte);
@@ -322,12 +327,12 @@ TestOperators() {
                                &flags, &lspace, &rspace);       
 
     if (!found) {
-      printf("bug: can't find operator="); DEBUG_PrintString(aOperator);
+        PRINTF("bug: can't find operator="); DEBUG_PrintString(aOperator);
       rv = -1;
     }
     if (flags != kMathMLOperatorFlags[i]) {
-      printf("bug: operator="); DEBUG_PrintString(aOperator);
-      printf(" .... flags are wrong\n");
+        PRINTF("bug: operator="); DEBUG_PrintString(aOperator);
+        PRINTF(" .... flags are wrong\n");
       getchar();
       rv = -1;
     }
@@ -335,7 +340,7 @@ TestOperators() {
 
     if (i<10) { 
       DEBUG_PrintString(aOperator);
-      printf(" tested. Press return to continue...");
+      PRINTF(" tested. Press return to continue...");
       getchar();
     }
 
@@ -347,13 +352,13 @@ TestOperators() {
     found = nsMathMLOperators::LookupOperator(nsCAutoString(name), form, 
                                &flags, &lspace, &rspace);
     if (found) {
-      printf("bug: found '%s'\n", name ? name : "(null)");
+        PRINTF("bug: found '%s'\n", name ? name : "(null)");
       rv = -1;
     }
   }
 
-  printf("%d operators.",i);
-  printf((rv == 0)? " All tests passed!\n" : " ERROR *** Corrupted Dictionary\n");
+  PRINTF("%d operators.",i);
+  PRINTF((rv == 0)? " All tests passed!\n" : " ERROR *** Corrupted Dictionary\n");
 
   ReleaseTable();
   return rv;

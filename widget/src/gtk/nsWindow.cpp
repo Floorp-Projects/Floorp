@@ -58,6 +58,11 @@
 #include "nsIDragSessionGTK.h"
 
 #include <unistd.h>
+#include "nslog.h"
+
+NS_IMPL_LOG(nsWindowLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsWindowLog)
+#define FLUSH  NS_LOG_FLUSH(nsWindowLog)
 
 #ifdef NEED_USLEEP_PROTOTYPE
 extern "C" int usleep(unsigned int);
@@ -181,7 +186,7 @@ nsWindow::~nsWindow()
   // make sure to unset any drag motion timers here.
   ResetDragMotionTimer(0, 0, 0, 0, 0);
 
-  //  printf("%p nsWindow::~nsWindow\n", this);
+  //  PRINTF("%p nsWindow::~nsWindow\n", this);
   // make sure that we release the grab indicator here
   if (sGrabWindow == this) {
     sIsGrabbing = PR_FALSE;
@@ -843,7 +848,7 @@ void nsWindow::NativeGrab(PRBool aGrab)
                                 GDK_POINTER_MOTION_MASK),
                                (GdkWindow*)NULL, cursor, GDK_CURRENT_TIME);
 #ifdef DEBUG_GRAB
-    printf("nsWindow::NativeGrab %p pointer_grab %d\n", this, retval);
+    PRINTF("nsWindow::NativeGrab %p pointer_grab %d\n", this, retval);
 #endif
     // check and set our flag if the grab failed
     if (retval != 0)
@@ -851,7 +856,7 @@ void nsWindow::NativeGrab(PRBool aGrab)
 
     retval = gdk_keyboard_grab(mSuperWin->bin_window, PR_TRUE, GDK_CURRENT_TIME);
 #ifdef DEBUG_GRAB
-    printf("nsWindow::NativeGrab %p keyboard_grab %d\n", this, retval);
+    PRINTF("nsWindow::NativeGrab %p keyboard_grab %d\n", this, retval);
 #endif
     // check and set our flag if the grab failed
     if (retval != 0)
@@ -860,7 +865,7 @@ void nsWindow::NativeGrab(PRBool aGrab)
     gdk_cursor_destroy(cursor);
   } else {
 #ifdef DEBUG_GRAB
-    printf("nsWindow::NativeGrab %p ungrab\n", this);
+    PRINTF("nsWindow::NativeGrab %p ungrab\n", this);
 #endif
     gdk_keyboard_ungrab(GDK_CURRENT_TIME);
     gdk_pointer_ungrab(GDK_CURRENT_TIME);
@@ -1067,13 +1072,13 @@ NS_IMETHODIMP
 nsWindow::SetFocus(void)
 {
 #ifdef DEBUG_FOCUS
-  printf("nsWindow::SetFocus %p\n", this);
+  PRINTF("nsWindow::SetFocus %p\n", this);
 #endif /* DEBUG_FOCUS */
 
   if (mHasFocus)
   {
 #ifdef DEBUG_FOCUS
-    printf("Already have focus.\n");
+    PRINTF("Already have focus.\n");
 #endif /* DEBUG_FOCUS */
     return NS_OK;
   }
@@ -1087,7 +1092,7 @@ nsWindow::SetFocus(void)
       nsWindow *mozAreaWindow = (nsWindow *)gtk_object_get_data(GTK_OBJECT(top_mozarea), "nsWindow");
       mozAreaWindow->mBlockMozAreaFocusIn = PR_TRUE;
 #ifdef DEBUG_FOCUS
-      printf("mozarea grabbing focus!\n");
+      PRINTF("mozarea grabbing focus!\n");
 #endif
       gtk_widget_grab_focus(top_mozarea);
       // this will show the window if it's minimized and bring it to
@@ -1126,7 +1131,7 @@ nsWindow::SetFocus(void)
 void nsWindow::DispatchSetFocusEvent(void)
 {
 #ifdef DEBUG_FOCUS
-  printf("nsWindow::DispatchSetFocusEvent %p\n", this);
+  PRINTF("nsWindow::DispatchSetFocusEvent %p\n", this);
 #endif /* DEBUG_FOCUS */
 
   nsGUIEvent event;
@@ -1148,7 +1153,7 @@ void nsWindow::DispatchLostFocusEvent(void)
 {
 
 #ifdef DEBUG_FOCUS
-  printf("nsWindow::DispatchLostFocusEvent %p\n", this);
+  PRINTF("nsWindow::DispatchLostFocusEvent %p\n", this);
 #endif /* DEBUG_FOCUS */
 
   nsGUIEvent event;
@@ -1171,7 +1176,7 @@ void nsWindow::DispatchLostFocusEvent(void)
 void nsWindow::DispatchActivateEvent(void)
 {
 #ifdef DEBUG_FOCUS
-  printf("nsWindow::DispatchActivateEvent %p\n", this);
+  PRINTF("nsWindow::DispatchActivateEvent %p\n", this);
 #endif
 
   if(!gJustGotDeactivate)
@@ -1205,7 +1210,7 @@ void nsWindow::DispatchActivateEvent(void)
 void nsWindow::DispatchDeactivateEvent(void)
 {
 #ifdef DEBUG_FOCUS
-  printf("nsWindow::DispatchDeactivateEvent %p\n", this);
+  PRINTF("nsWindow::DispatchDeactivateEvent %p\n", this);
 #endif
 #ifdef USE_XIM
   IMEBeingActivate(PR_TRUE);
@@ -1249,7 +1254,7 @@ void nsWindow::HandleMozAreaFocusIn(void)
     return;
   // otherwise, dispatch our focus events
 #ifdef DEBUG_FOCUS
-  printf("nsWindow::HandleMozAreaFocusIn %p\n", this);
+  PRINTF("nsWindow::HandleMozAreaFocusIn %p\n", this);
 #endif /* DEBUG_FOCUS */
   gJustGotActivate = PR_TRUE;
   DispatchSetFocusEvent();
@@ -1271,7 +1276,7 @@ void nsWindow::HandleMozAreaFocusOut(void)
   
   // otherwise handle our focus out here.
 #ifdef DEBUG_FOCUS
-  printf("nsWindow::HandleMozAreaFocusOut %p\n", this);
+  PRINTF("nsWindow::HandleMozAreaFocusOut %p\n", this);
 #endif /* DEBUG_FOCUS */
   // if there's a window with focus, send a focus out event for that
   // window.
@@ -1300,7 +1305,7 @@ nsWindow::OnFocusInSignal(GdkEventFocus * aGdkFocusEvent)
 
   nsGUIEvent event;
   
-  printf("send NS_GOTFOCUS from nsWindow::OnFocusInSignal\n");
+  PRINTF("send NS_GOTFOCUS from nsWindow::OnFocusInSignal\n");
   event.message = NS_GOTFOCUS;
   event.widget  = this;
 
@@ -1597,7 +1602,7 @@ gint nsWindow::ConvertBorderStyles(nsBorderStyle bs)
   if (bs & eBorderStyle_maximize)
     w |= GDK_DECOR_MAXIMIZE;
   if (bs & eBorderStyle_close)
-    printf("we don't handle eBorderStyle_close yet... please fix me\n");
+    PRINTF("we don't handle eBorderStyle_close yet... please fix me\n");
 
   return w;
 }
@@ -2232,7 +2237,7 @@ PRBool nsWindow::OnExpose(nsPaintEvent &event)
   {
     event.renderingContext = nsnull;
 
-    //    printf("nsWindow::OnExpose\n");
+    //    PRINTF("nsWindow::OnExpose\n");
 
     // expose.. we didn't get an Invalidate, so we should up the count here
     mUpdateArea->Union(event.rect->x, event.rect->y, event.rect->width, event.rect->height);
@@ -2274,11 +2279,11 @@ PRBool nsWindow::OnDraw(nsPaintEvent &event)
     //    NS_ADDREF(mUpdateArea);
     //    event.region = mUpdateArea;
 
-    //    printf("\n\n");
+    //    PRINTF("\n\n");
     PRInt32 x, y, w, h;
     mUpdateArea->GetBoundingBox(&x,&y,&w,&h);
-    //    printf("should be painting x = %i , y = %i , w = %i , h = %i\n", x, y, w, h);
-    //    printf("\n\n");
+    //    PRINTF("should be painting x = %i , y = %i , w = %i , h = %i\n", x, y, w, h);
+    //    PRINTF("\n\n");
     event.rect->x = x;
     event.rect->y = y;
     event.rect->width = w;
@@ -2286,7 +2291,7 @@ PRBool nsWindow::OnDraw(nsPaintEvent &event)
 
     if (event.rect->width == 0 || event.rect->height == 0)
     {
-      //      printf("ignoring paint for 0x0\n");
+      //      PRINTF("ignoring paint for 0x0\n");
       return NS_OK;
     }
 
@@ -2481,7 +2486,7 @@ NS_IMETHODIMP nsWindow::Move(PRInt32 aX, PRInt32 aY)
     PRInt32 screenHeight = gdk_screen_height();
     // no annoying assertions. just mention the issue.
     if (aX < 0 || aX >= screenWidth || aY < 0 || aY >= screenHeight)
-      printf("window moved to offscreen position\n");
+      PRINTF("window moved to offscreen position\n");
 #endif
 
     // do it the way it should be done period.
@@ -2509,7 +2514,7 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
   PRInt32 sizeWidth = aWidth;
 
 #if 0
-  printf("nsWindow::Resize %s (%p) to %d %d\n",
+  PRINTF("nsWindow::Resize %s (%p) to %d %d\n",
          (const char *) debug_GetName(mWidget),
          this,
          aWidth, aHeight);
@@ -2676,7 +2681,7 @@ gint handle_toplevel_focus_in(GtkWidget *      aWidget,
     return PR_TRUE;
 
 #ifdef DEBUG_FOCUS
-  printf("handle_toplevel_focus_in %p\n", widget);
+  PRINTF("handle_toplevel_focus_in %p\n", widget);
 #endif /* DEBUG_FOCUS */
 
   window = GTK_WINDOW(aWidget);
@@ -2708,7 +2713,7 @@ gint handle_toplevel_focus_out(GtkWidget *      aWidget,
     return PR_TRUE;
 
 #ifdef DEBUG_FOCUS
-  printf("handle_toplevel_focus_out %p\n", widget); 
+  PRINTF("handle_toplevel_focus_out %p\n", widget); 
 #endif
 
   // addref the widget here since we might send > 1 event to it.
@@ -2751,7 +2756,7 @@ gint handle_mozarea_focus_in(GtkWidget *      aWidget,
     return PR_TRUE;
 
 #ifdef DEBUG_FOCUS
-  printf("handle_mozarea_focus_in\n");
+  PRINTF("handle_mozarea_focus_in\n");
 #endif
 
   // make sure that we set our focus flag
@@ -2767,7 +2772,7 @@ gint handle_mozarea_focus_out(GtkWidget *      aWidget,
                               gpointer         aData)
 {
 #ifdef DEBUG_FOCUS
-  printf("handle_mozarea_focus_out\n");
+  PRINTF("handle_mozarea_focus_out\n");
 #endif
 
   if (!aWidget) {
@@ -2994,7 +2999,7 @@ nsWindow::DrawSignal(GtkWidget *    /* aWidget */,
 /* virtual */ gint
 nsWindow::OnDrawSignal(GdkRectangle * aArea)
 {
-  //printf("nsWindow::OnDrawSignal()\n");
+  //PRINTF("nsWindow::OnDrawSignal()\n");
 
   nsPaintEvent pevent;
 
@@ -3460,7 +3465,7 @@ ChildWindow::~ChildWindow()
 {
 #ifdef NOISY_DESTROY
   IndentByDepth(stdout);
-  printf("ChildWindow::~ChildWindow:%p\n", this);
+  PRINTF("ChildWindow::~ChildWindow:%p\n", this);
 #endif
 }
 

@@ -26,6 +26,11 @@
 #include "nsDeviceContextMotif.h"
 
 #include "nspr.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsImageMotifLog)
+#define PRINTF NS_LOG_PRINTF(nsImageMotifLog)
+#define FLUSH  NS_LOG_FLUSH(nsImageMotifLog)
 
 #define IsFlagSet(a,b) (a & b)
 
@@ -384,12 +389,12 @@ void nsImageMotif::CreateImage(nsDrawingSurface aSurface)
       format = ZPixmap;
     } 
     else {
-printf("Format XYPixmap\n");
+      PRINTF("Format XYPixmap\n");
      format = XYPixmap;
     }
 #endif
 
-/* printf("Width %d  Height %d Visual Depth %d  Image Depth %d\n", 
+/* PRINTF("Width %d  Height %d Visual Depth %d  Image Depth %d\n", 
                   mWidth, mHeight,  
                   motifdrawing->depth, mDepth); */
 

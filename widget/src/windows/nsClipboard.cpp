@@ -49,6 +49,11 @@
 
 #include "nsGfxCIID.h"
 #include "nsIImage.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsClipboardLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsClipboardLog)
+#define FLUSH  NS_LOG_FLUSH(nsClipboardLog)
 
 
 #define DEBUG_PINK 0
@@ -96,7 +101,7 @@ UINT nsClipboard::GetFormat(const char* aMimeStr)
     format = ::RegisterClipboardFormat(aMimeStr);
 
 #if DEBUG_PINK
-   printf("nsClipboard::GetFormat [%s] 0x%x\n", aMimeStr, format);
+  PRINTF("nsClipboard::GetFormat [%s] 0x%x\n", aMimeStr, format);
 #endif
   return format;
 }
@@ -287,39 +292,39 @@ nsresult nsClipboard::GetNativeDataOffClipboard(nsIWidget * aWindow, UINT /*aInd
 static void DisplayErrCode(HRESULT hres) 
 {
   if (hres == E_INVALIDARG) {
-    printf("E_INVALIDARG\n");
+    PRINTF("E_INVALIDARG\n");
   } else
   if (hres == E_UNEXPECTED) {
-    printf("E_UNEXPECTED\n");
+    PRINTF("E_UNEXPECTED\n");
   } else
   if (hres == E_OUTOFMEMORY) {
-    printf("E_OUTOFMEMORY\n");
+    PRINTF("E_OUTOFMEMORY\n");
   } else
   if (hres == DV_E_LINDEX ) {
-    printf("DV_E_LINDEX\n");
+    PRINTF("DV_E_LINDEX\n");
   } else
   if (hres == DV_E_FORMATETC) {
-    printf("DV_E_FORMATETC\n");
+    PRINTF("DV_E_FORMATETC\n");
   }  else
   if (hres == DV_E_TYMED) {
-    printf("DV_E_TYMED\n");
+    PRINTF("DV_E_TYMED\n");
   }  else
   if (hres == DV_E_DVASPECT) {
-    printf("DV_E_DVASPECT\n");
+    PRINTF("DV_E_DVASPECT\n");
   }  else
   if (hres == OLE_E_NOTRUNNING) {
-    printf("OLE_E_NOTRUNNING\n");
+    PRINTF("OLE_E_NOTRUNNING\n");
   }  else
   if (hres == STG_E_MEDIUMFULL) {
-    printf("STG_E_MEDIUMFULL\n");
+    PRINTF("STG_E_MEDIUMFULL\n");
   }  else
   if (hres == DV_E_CLIPFORMAT) {
-    printf("DV_E_CLIPFORMAT\n");
+    PRINTF("DV_E_CLIPFORMAT\n");
   }  else
   if (hres == S_OK) {
-    printf("S_OK\n");
+    PRINTF("S_OK\n");
   } else {
-    printf("****** DisplayErrCode 0x%X\n", hres);
+    PRINTF("****** DisplayErrCode 0x%X\n", hres);
   }
 }
 #endif
@@ -549,7 +554,7 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
 
       case TYMED_GDI: 
         {
-          printf("*********************** TYMED_GDI\n");
+          PRINTF("*********************** TYMED_GDI\n");
         } break;
 
       default:

@@ -27,6 +27,8 @@
 #include "nsGfxCIID.h"
 #include "nsLayoutAtoms.h"
 #include "prlog.h"
+#undef PRLogModuleInfo
+#undef PR_NewLogModule
 
 static NS_DEFINE_IID(kIPresContextIID, NS_IPRESCONTEXT_IID);
 

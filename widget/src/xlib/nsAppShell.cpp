@@ -50,6 +50,11 @@
 #endif /* !MOZ_MONOLITHIC_TOOLKIT */
 
 #include "xlibrgb.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsAppShellLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsAppShellLog)
+#define FLUSH  NS_LOG_FLUSH(nsAppShellLog)
 
 #define CHAR_BUF_SIZE 40
 
@@ -142,7 +147,7 @@ static nsXlibTimeToNextTimeoutFunc GetTimeToNextTimeoutFunc(void)
       xlibWindowService->GetTimeToNextTimeoutFunc(&sFunc);
 
 #ifdef DEBUG_ramiro
-      printf("Time to next timeout func is null - for now.\n");
+      PRINTF("Time to next timeout func is null - for now.\n");
 
       static int once = 1;
 
@@ -150,7 +155,7 @@ static nsXlibTimeToNextTimeoutFunc GetTimeToNextTimeoutFunc(void)
       {
         once = 0;
 
-        printf("YES! Time to next timeout func is good.\n");
+        PRINTF("YES! Time to next timeout func is good.\n");
       }
 #endif
       
@@ -180,7 +185,7 @@ static nsXlibProcessTimeoutsProc GetProcessTimeoutsProc(void)
       xlibWindowService->GetProcessTimeoutsProc(&sProc);
     
 #ifdef DEBUG_ramiro
-      printf("Process timeout proc is null - for now.\n");
+      PRINTF("Process timeout proc is null - for now.\n");
 
       static int once = 1;
 
@@ -188,7 +193,7 @@ static nsXlibProcessTimeoutsProc GetProcessTimeoutsProc(void)
       {
         once = 0;
 
-        printf("YES! Process timeout proc is good.\n");
+        PRINTF("YES! Process timeout proc is good.\n");
       }
 #endif
 
@@ -284,7 +289,7 @@ NS_METHOD nsAppShell::Create(int* argc, char ** argv)
 
     if (mDisplay == NULL) 
     {
-      fprintf(stderr, "%s: Cannot connect to X server %s\n",
+      PRINTF("%s: Cannot connect to X server %s\n",
               argv[0], 
               XDisplayName(NULL));
     
@@ -366,7 +371,7 @@ nsresult nsAppShell::Run()
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  printf("Getting the xlib connection number.\n");
+  PRINTF("Getting the xlib connection number.\n");
   xlib_fd = ConnectionNumber(mDisplay);
   // process events.
   while (DieAppShellDie == PR_FALSE) {
@@ -394,7 +399,7 @@ nsresult nsAppShell::Run()
     FD_SET(queue_fd, &select_set);
     FD_SET(xlib_fd, &select_set);
 
-    //printf("cur time: %ld %ld\n", cur_time.tv_sec, cur_time.tv_usec);
+    //PRINTF("cur time: %ld %ld\n", cur_time.tv_sec, cur_time.tv_usec);
     if (CallTimeToNextTimeoutFunc(&cur_time) == 0) {
       cur_time_ptr = NULL;
     }
@@ -415,7 +420,7 @@ nsresult nsAppShell::Run()
     DelayTime.tv_usec = 100;
     select_retval = select(max_fd, &select_set, NULL, NULL, &DelayTime);
     if (select_retval == -1) {
-      fprintf(stderr, "Select returned error: %s.\n", strerror(errno));
+        PRINTF("Select returned error: %s.\n", strerror(errno));
       return NS_ERROR_FAILURE;
     }
 
@@ -981,7 +986,7 @@ nsAppShell::HandleKeyPressEvent(XEvent *event, nsWidget *aWidget)
   keyEvent.widget = focusWidget;
   keyEvent.eventStructType = NS_KEY_EVENT;
 
-  //  printf("keysym = %x, keycode = %x, vk = %x\n",
+  //  PRINTF("keysym = %x, keycode = %x, vk = %x\n",
   //         keysym,
   //         event->xkey.keycode,
   //         keyEvent.keyCode);
@@ -1217,10 +1222,10 @@ void nsAppShell::HandleUnmapNotifyEvent(XEvent *event, nsWidget *aWidget)
 void nsAppShell::HandleClientMessageEvent(XEvent *event, nsWidget *aWidget)
 {
   // check to see if it's a WM_DELETE message
-  printf("handling client message\n");
+    PRINTF("handling client message\n");
   if (nsWidget::WMProtocolsInitialized) {
     if ((Atom)event->xclient.data.l[0] == nsWidget::WMDeleteWindow) {
-      printf("got a delete window event\n");
+        PRINTF("got a delete window event\n");
       aWidget->OnDeleteWindow();
     }
   }

@@ -45,6 +45,11 @@
 #include "nsITextWidget.h"
 #include "nsIBlender.h"
 #include "nsIServiceManager.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(BitTestLog)
+#define PRINTF NS_LOG_PRINTF(BitTestLog)
+#define FLUSH  NS_LOG_FLUSH(BitTestLog)
 
 // widget interface
 static NS_DEFINE_IID(kITextWidgetIID,     NS_ITEXTWIDGET_IID);
@@ -419,7 +424,7 @@ PRUint32    size;
     if(blendamount > 1.0)
       blendamount = 1.0f;
 
-    printf("\nSTARTING TIMING TEST\n");
+    PRINTF("\nSTARTING TIMING TEST\n");
     ::GetSystemTime(&thetime);
     min = thetime.wMinute;
     seconds = thetime.wSecond;
@@ -449,7 +454,7 @@ PRUint32    size;
     else
       seconds = thetime.wMilliseconds;
     milli=seconds-milli;
-    printf("The Blending Time was %lu Milliseconds\n",milli);
+    PRINTF("The Blending Time was %lu Milliseconds\n",milli);
 
     return(milli);
     }
@@ -607,7 +612,7 @@ speedtest(nsIImage *aTheImage,nsIRenderingContext *aSurface, PRInt32 aX, PRInt32
 PRUint32    min,seconds,milli,i;
 SYSTEMTIME  thetime;
 
-  printf("\nSTARTING TIMING TEST\n");
+ PRINTF("\nSTARTING TIMING TEST\n");
   ::GetSystemTime(&thetime);
   min = thetime.wMinute;
   seconds = thetime.wSecond;
@@ -635,9 +640,9 @@ SYSTEMTIME  thetime;
   milli=seconds-milli;
 
   if(aOptimize==PR_TRUE)
-    printf("The Optimized Blitting Time was %lu Milliseconds\n",milli);
+    PRINTF("The Optimized Blitting Time was %lu Milliseconds\n",milli);
   else
-    printf("The Non-Optimized Blitting Time was %lu Milliseconds\n",milli);
+    PRINTF("The Non-Optimized Blitting Time was %lu Milliseconds\n",milli);
 
   return(milli);
 }

@@ -59,6 +59,11 @@
 #include "nsIAppShellComponentImpl.h"
 #include "nsICommonDialogs.h"
 #include "nsIScriptGlobalObject.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsXPInstallManagerLog)
+#define PRINTF NS_LOG_PRINTF(nsXPInstallManagerLog)
+#define FLUSH  NS_LOG_FLUSH(nsXPInstallManagerLog)
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID );
@@ -800,7 +805,7 @@ nsXPInstallManager::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt,
         if (amt == 0) break;
         if (NS_FAILED(err)) 
         {
-            //printf("pIStream->Read Failed!  %d", err);   
+            //PRINTF("pIStream->Read Failed!  %d", err);   
             return err;
         }
         err = mItem->mOutStream->Write( buffer, amt, &writeCount);

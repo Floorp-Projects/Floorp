@@ -25,6 +25,11 @@
 #include "nsIComponentManager.h"
 #include "nsFilePicker.h"
 #include "nsILocalFile.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsFilePickerLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsFilePickerLog)
+#define FLUSH  NS_LOG_FLUSH(nsFilePickerLog)
 
 NS_IMPL_ISUPPORTS1(nsFilePicker, nsIFilePicker)
 
@@ -167,7 +172,7 @@ NS_IMETHODIMP nsFilePicker::SetFilterList(PRUint32 aNumberOfFilters,
     // we need *.{htm, html, xul, etc}
     char *foo = aTitles[i].ToNewCString();
     char *filters = aFilters[i].ToNewCString();
-    printf("%20s %s\n", foo, filters);
+    PRINTF("%20s %s\n", foo, filters);
 
     menu_item = gtk_menu_item_new_with_label(nsCAutoString(aTitles[i]));
 

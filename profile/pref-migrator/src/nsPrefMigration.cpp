@@ -59,6 +59,11 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIWebBrowserChrome.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsPrefMigrationLog)
+#define PRINTF NS_LOG_PRINTF(nsPrefMigrationLog)
+#define FLUSH  NS_LOG_FLUSH(nsPrefMigrationLog)
 
 #if defined(XP_MAC) && !defined(DEBUG)
 //lower silly optimization level which takes an age for this file.
@@ -371,7 +376,7 @@ extern "C" void ProfileMigrationController(void *data)
         if (NS_FAILED(rv))
         {
           migrator->mErrorCode = rv;
-          printf("failed to migrate properly.  err=%d\n",rv);
+          PRINTF("failed to migrate properly.  err=%d\n",rv);
         }
     }
     else
@@ -446,9 +451,7 @@ nsPrefMigration::WindowCloseCallback()
         if (baseWindow) (void)baseWindow->Destroy();
     }
   
-#ifdef DEBUG
-   printf("end of pref migration\n");
-#endif
+    PRINTF("end of pref migration\n");
    return NS_OK;
 }
 
@@ -617,9 +620,7 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
   PRInt64  DriveID[MAX_DRIVES];
   PRUint32 SpaceRequired[MAX_DRIVES];
   
-#if defined(NS_DEBUG)
-  printf("*Entered Actual Migration routine*\n");
-#endif
+  PRINTF("*Entered Actual Migration routine*\n");
 
   for (int i=0; i < MAX_DRIVES; i++)
   {
@@ -715,6 +716,9 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
     rv = GetDirFromPref(oldProfilePath,newProfilePath,NEW_MAIL_DIR_NAME, PREF_MAIL_DIRECTORY, newPOPMailPath, oldPOPMailPath);
     if (NS_FAILED(rv)) {
       rv = DetermineOldPath(oldProfilePath, OLD_MAIL_DIR_NAME, "mailDirName", oldPOPMailPath);
+      if (NS_FAILED(rv)) return rv;
+            
+      rv = oldPOPMailPath->AppendRelativeUnixPath(OLD_MAIL_DIR_NAME);
       if (NS_FAILED(rv)) return rv;
 
       rv = SetPremigratedFilePref(PREF_MAIL_DIRECTORY, oldPOPMailPath);
@@ -1492,7 +1496,7 @@ nsPrefMigration::CopyAndRenameNewsrcFiles(nsIFileSpec * newPathSpec)
 
     if (nsStringStartsWith(fileOrDirNameStr, NEWSRC_PREFIX_IN_4x) || nsStringStartsWith(fileOrDirNameStr, SNEWSRC_PREFIX_IN_4x)) {
 #ifdef DEBUG_seth
-	    printf("newsrc file == %s\n",folderName);
+	    PRINTF("newsrc file == %s\n",folderName);
 #endif /* DEBUG_seth */
 
 	fileOrDirName.CopyToDir(newPath);
@@ -1974,7 +1978,7 @@ nsPrefMigration::GetPremigratedFilePref(const char *pref_name, nsIFileSpec **pat
         char premigration_pref[MAX_PREF_LEN];
         PR_snprintf(premigration_pref,MAX_PREF_LEN,"%s%s",PREMIGRATION_PREFIX,pref_name);
 #ifdef DEBUG_seth
-        printf("getting %s (into a nsFileSpec)\n", premigration_pref);
+        PRINTF("getting %s (into a nsFileSpec)\n", premigration_pref);
 #endif
         rv = m_prefs->GetFilePref((const char *)premigration_pref, path);
         return rv;
@@ -1997,7 +2001,7 @@ nsPrefMigration::SetPremigratedFilePref(const char *pref_name, nsIFileSpec *path
 	char premigration_pref[MAX_PREF_LEN];
 	PR_snprintf(premigration_pref,MAX_PREF_LEN,"%s%s",PREMIGRATION_PREFIX,pref_name);
 #ifdef DEBUG_seth
-	printf("setting %s (from a nsFileSpec) for later...\n", premigration_pref);
+	PRINTF("setting %s (from a nsFileSpec) for later...\n", premigration_pref);
 #endif
 
   // need to convert nsIFileSpec->nsILocalFile
@@ -2162,7 +2166,7 @@ ConvertPrefToUTF8(const char *prefname, nsIPref *prefs, nsAutoString &charSet)
 
     if (!prefname || !prefs) return NS_ERROR_FAILURE;
 #ifdef DEBUG_UTF8_CONVERSION 
-    printf("converting %s to UTF8\n", prefname);
+    PRINTF("converting %s to UTF8\n", prefname);
 #endif /* DEBUG_UTF8_CONVERSION */
     
     nsXPIDLCString prefval;
@@ -2180,7 +2184,7 @@ ConvertPrefToUTF8(const char *prefname, nsIPref *prefs, nsAutoString &charSet)
     // only set the pref if the conversion worked, and it convert to something non null
     if (NS_SUCCEEDED(rv) && (const char *)outval && PL_strlen((const char *)outval)) {
 #ifdef DEBUG_UTF8_CONVERSION
-        printf("converting %s to %s\n",(const char *)prefval, (const char *)outval);
+      PRINTF("converting %s to %s\n",(const char *)prefval, (const char *)outval);
 #endif /* DEBUG_UTF8_CONVERSION */
         rv = prefs->SetCharPref(prefname, (const char *)outval);
     }
@@ -2211,7 +2215,7 @@ void fontPrefEnumerationFunction(const char *name, void *data)
   nsCStringArray *arr;
   arr = (nsCStringArray *)data;
 #ifdef DEBUG_UTF8_CONVERSION
-  printf("fontPrefEnumerationFunction: %s\n", name);
+  PRINTF("fontPrefEnumerationFunction: %s\n", name);
 #endif 
 
   if (charEndsWith(name,".fixed_font") || charEndsWith(name,".prop_font")) {
@@ -2226,7 +2230,7 @@ void ldapPrefEnumerationFunction(const char *name, void *data)
   nsCStringArray *arr;
   arr = (nsCStringArray *)data;
 #ifdef DEBUG_UTF8_CONVERSION
-  printf("ldapPrefEnumerationFunction: %s\n", name);
+  PRINTF("ldapPrefEnumerationFunction: %s\n", name);
 #endif 
 
   // we only want to convert "ldap_2.servers.*.description"

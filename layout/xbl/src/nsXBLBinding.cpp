@@ -80,6 +80,11 @@
 #include "nsXBLLoadHandler.h"
 
 #include "nsXBLBinding.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsXBLBindingLog)
+#define PRINTF NS_LOG_PRINTF(nsXBLBindingLog)
+#define FLUSH  NS_LOG_FLUSH(nsXBLBindingLog)
 
 // Static IIDs/CIDs. Try to minimize these.
 static char kNameSpaceSeparator = ':';
@@ -228,7 +233,7 @@ nsXBLBinding::nsXBLBinding(nsIXBLPrototypeBinding* aBinding)
   NS_INIT_REFCNT();
   mPrototypeBinding = aBinding;
   gRefCnt++;
-  //  printf("REF COUNT UP: %d %s\n", gRefCnt, (const char*)mID);
+  //  PRINTF("REF COUNT UP: %d %s\n", gRefCnt, (const char*)mID);
 
   if (gRefCnt == 1) {
     kXULTemplateAtom = NS_NewAtom("template");
@@ -268,7 +273,7 @@ nsXBLBinding::nsXBLBinding(nsIXBLPrototypeBinding* aBinding)
 nsXBLBinding::~nsXBLBinding(void)
 {
   gRefCnt--;
-  //  printf("REF COUNT DOWN: %d %s\n", gRefCnt, (const char*)mID);
+  //  PRINTF("REF COUNT DOWN: %d %s\n", gRefCnt, (const char*)mID);
 
   if (gRefCnt == 0) {
     NS_RELEASE(kXULTemplateAtom);
