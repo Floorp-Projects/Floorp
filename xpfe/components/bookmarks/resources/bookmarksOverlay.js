@@ -126,7 +126,7 @@ BookmarksUIElement.prototype = {
     if (!("findRDFNode" in this))
       throw "Clients must implement findRDFNode!";
     var itemNode = this.findRDFNode(popupNode, true);
-    if (!itemNode || !itemNode.getAttribute("type") || itemNode.getAttribute("mode") == "edit") {
+    if (!itemNode || !itemNode.getAttributeNS(RDF_NS, "type") || itemNode.getAttribute("mode") == "edit") {
       aEvent.preventDefault();
       return;
     }
@@ -763,7 +763,6 @@ var BookmarksUtils = {
   // Execute a command with the given source and arguments
   doBookmarksCommand: function (aSourceURI, aCommand, aArgumentsArray)
   {
-    alert(aSourceURI);
     var rCommand = this.RDF.GetResource(aCommand);
   
     var kSuppArrayContractID = "@mozilla.org/supports-array;1";
@@ -780,7 +779,6 @@ var BookmarksUtils = {
       argsArray.AppendElement(rArc);
       var rValue = null;
       if ("resource" in aArgumentsArray[i]) { 
-        alert(aArgumentsArray[i].resource);
         rValue = this.RDF.GetResource(aArgumentsArray[i].resource);
       }
       else
