@@ -17,19 +17,24 @@
  * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  * 
- * Contributor(s): 
+ * Contributor(s):
+ *   Charles Manske (cmanske@netscape.com)
+ *   Ryan Cassin (rcassin@supernova.org)
+ *   David Turley (dturley@pobox.com) contributed Roman Numeral conversion code.
  */
 
 //Cancel() is in EdDialogCommon.js
-var tagname = "TAG NAME"
-var BulletStyleIndex = 0;
-var NumberStyleIndex = 0;
-var ListElement;
-var originalListType = "";
-var ListType = "";
-var MixedListSelection = false;
-var BulletStyleType = "";
-var originalBulletStyleType = "";
+var gBulletStyleIndex = 0;
+var gNumberStyleIndex = 0;
+var gListElement;
+var gOriginalListType = "";
+var gListType = "";
+var gMixedListSelection = false;
+var gBulletStyleType = "";
+var gOriginalBulletStyleType = "";
+var gOnesArray = ["I","II","III","IV","V","VI","VII","VIII","IX"];
+var gTensArray = ["X","XX","XXX","XL","L","LX","LXX","LXXX","XC"];
+var gHundredsArray = ["C","CC","CCC","CD","D","DC","DCC","DCCC","CM"];
 
 // dialog initialization code
 function Startup()
@@ -49,29 +54,31 @@ function Startup()
   
   // Try to get an existing list(s)
   var mixedObj = new Object;
-  ListType = editorShell.GetListState(mixedObj);
+  gListType = editorShell.GetListState(mixedObj);
   // We may have mixed list and non-list, or > 1 list type in selection
-  MixedListSelection = mixedObj.value;
+  gMixedListSelection = mixedObj.value;
 
   // Get the list element at the anchor node
-  ListElement = editorShell.GetElementOrParentByTagName("list", null);
+  gListElement = editorShell.GetElementOrParentByTagName("list", null);
 
   // The copy to use in AdvancedEdit
-  if (ListElement)
-    globalElement = ListElement.cloneNode(false);
+  if (gListElement)
+    globalElement = gListElement.cloneNode(false);
 
-  // Radio button index is persistent
-  if (ListElement && gDialog.RadioGroup.getAttribute("index") == "1")
-    gDialog.RadioGroup.selectedItem = gDialog.ChangeSelectedRadio;
-  else
-    gDialog.RadioGroup.selectedItem = gDialog.ChangeAllRadio;
-
-  // Show extra options for changing entire list only if we already have a list
-  gDialog.RadioGroup.setAttribute("collapsed", ListElement ? "false" : "true");
+  // Show extra options for changing entire list if we have one already.
+  gDialog.RadioGroup.setAttribute("collapsed", gListElement ? "false" : "true");
+  if (gListElement)
+  {
+    // Radio button index is persistant
+    if (gDialog.RadioGroup.getAttribute("index") == "1")
+      gDialog.RadioGroup.selectedItem = gDialog.ChangeSelectedRadio;
+    else
+      gDialog.RadioGroup.selectedItem = gDialog.ChangeAllRadio;
+  }
 
   InitDialog();
 
-  originalListType = ListType;
+  gOriginalListType = gListType;
 
   gDialog.ListTypeList.focus();
 
@@ -83,23 +90,23 @@ function InitDialog()
   // Note that if mixed, we we pay attention 
   //   only to the anchor node's list type
   // (i.e., don't confuse user with "mixed" designation)
-  if (ListElement)
-    ListType = ListElement.nodeName.toLowerCase();
+  if (gListElement)
+    gListType = gListElement.nodeName.toLowerCase();
   else
-    ListType = "";
+    gListType = "";
   
   BuildBulletStyleList();
   gDialog.StartingNumberInput.value = "";
-
+  
+  // Last param = true means attribute value is case-sensitive
   var type = globalElement ? GetHTMLOrCSSStyleValue(globalElement, "type", "list-style-type") : null;
-  if (type)
-    type = type.toLowerCase();
 
   var index = 0;
-  if (ListType == "ul")
+  if (gListType == "ul")
   {
     if (type)
     {
+      type = type.toLowerCase();
       if (type == "disc")
         index = 1;
       else if (type == "circle")
@@ -108,7 +115,7 @@ function InitDialog()
         index = 3;
     }
   }
-  else if (ListType == "ol")
+  else if (gListType == "ol")
   {
     switch (type)
     {
@@ -133,10 +140,43 @@ function InitDialog()
         index = 5;
         break;
     }
-    gDialog.StartingNumberInput.value = globalElement.getAttribute("start");
+    gNumberStyleIndex = index;
   }
   gDialog.BulletStyleList.selectedIndex = index;
-  originalBulletStyleType = type;
+
+  // Convert attribute number to appropriate letter or roman numeral
+  gDialog.StartingNumberInput.value = 
+    ConvertStartAttrToUserString(globalElement.getAttribute("start"), index);
+
+  gOriginalBulletStyleType = type;
+}
+
+// Convert attribute number to appropriate letter or roman numeral
+function ConvertStartAttrToUserString(startAttr, numberStyleIndex)
+{
+  if (!startAttr)
+    return startAttr;
+
+  var start = "";
+  switch (numberStyleIndex)
+  {
+    case 1:
+      start = startAttr;
+      break;
+    case 2:
+      start = toRoman(startAttr);
+      break;
+    case 3:
+      start = toRoman(startAttr).toLowerCase();
+      break;
+    case 4:
+      start = String.fromCharCode(Number(startAttr) + 64);
+      break;
+    case 5:
+      start = String.fromCharCode(Number(startAttr) + 96);
+      break;
+  }
+  return start;
 }
 
 function BuildBulletStyleList()
@@ -144,7 +184,7 @@ function BuildBulletStyleList()
   ClearMenulist(gDialog.BulletStyleList);
   var label;
 
-  if (ListType == "ul")
+  if (gListType == "ul")
   {
     gDialog.BulletStyleList.removeAttribute("disabled");
     gDialog.BulletStyleLabel.removeAttribute("disabled");
@@ -158,10 +198,10 @@ function BuildBulletStyleList()
     AppendStringToMenulistById(gDialog.BulletStyleList,"OpenCircle");
     AppendStringToMenulistById(gDialog.BulletStyleList,"SolidSquare");
 
-    gDialog.BulletStyleList.selectedIndex = BulletStyleIndex;
+    gDialog.BulletStyleList.selectedIndex = gBulletStyleIndex;
     gDialog.ListTypeList.selectedIndex = 1;
   }
-  else if (ListType == "ol")
+  else if (gListType == "ol")
   {
     gDialog.BulletStyleList.removeAttribute("disabled");
     gDialog.BulletStyleLabel.removeAttribute("disabled");
@@ -176,7 +216,7 @@ function BuildBulletStyleList()
     AppendStringToMenulistById(gDialog.BulletStyleList,"Style_A");
     AppendStringToMenulistById(gDialog.BulletStyleList,"Style_a");
 
-    gDialog.BulletStyleList.selectedIndex = NumberStyleIndex;
+    gDialog.BulletStyleList.selectedIndex = gNumberStyleIndex;
     gDialog.ListTypeList.selectedIndex = 2;
   } 
   else 
@@ -186,7 +226,7 @@ function BuildBulletStyleList()
     gDialog.StartingNumberInput.setAttribute("disabled", "true");
     gDialog.StartingNumberLabel.setAttribute("disabled", "true");
 
-    if (ListType == "dl")
+    if (gListType == "dl")
       gDialog.ListTypeList.selectedIndex = 3;
     else
     {
@@ -198,7 +238,7 @@ function BuildBulletStyleList()
   }
   
   // Disable advanced edit button if changing to "normal"
-  if (ListType)
+  if (gListType)
     gDialog.AdvancedEditButton.removeAttribute("disabled");
   else
     gDialog.AdvancedEditButton.setAttribute("disabled","true");
@@ -226,13 +266,13 @@ function SelectListType()
       NewType = "";
       break;
   }
-  if (ListType != NewType)
+  if (gListType != NewType)
   {
-    ListType = NewType;
+    gListType = NewType;
     
     // Create a newlist object for Advanced Editing
-    if (ListType)
-      globalElement = editorShell.CreateElementWithDefaults(ListType);
+    if (gListType)
+      globalElement = editorShell.CreateElementWithDefaults(gListType);
 
     BuildBulletStyleList();
   }
@@ -242,25 +282,22 @@ function SelectBulletStyle()
 {
   // Save the selected index so when user changes
   //   list style, restore index to associated list
-  if (ListType == "ul")
-    BulletStyleIndex = gDialog.BulletStyleList.selectedIndex;
-  else if (ListType == "ol")
+  if (gListType == "ul")
+    gBulletStyleIndex = gDialog.BulletStyleList.selectedIndex;
+  else if (gListType == "ol")
   {
     var index = gDialog.BulletStyleList.selectedIndex;
-    if (NumberStyleIndex != index)
+    if (gNumberStyleIndex != index)
     {
-      NumberStyleIndex = index;
+      // Convert existing input value to attr number first,
+      //   then convert to the appropriate format for the newly-selected
+      gDialog.StartingNumberInput.value = 
+        ConvertStartAttrToUserString( ConvertUserStringToStartAttr(gNumberStyleIndex), index);
+
+      gNumberStyleIndex = index;
       SetTextboxFocus(gDialog.StartingNumberInput);
     }
   }
-}
-
-function ChangeListType(type, changeAll)
-{
-  if (type && changeAll)
-    globalElement.setAttribute("type",type);
-  else
-    globalElement.removeAttribute("type");
 }
 
 function ValidateData()
@@ -270,7 +307,7 @@ function ValidateData()
 
   if (globalElement)
   {
-    if (ListType == "ul")
+    if (gListType == "ul")
     {
       switch (gDialog.BulletStyleList.selectedIndex)
       {
@@ -285,11 +322,14 @@ function ValidateData()
           type = "square";
           break;
       }
-      BulletStyleType = type;
-      ChangeListType(type, gDialog.ChangeAllRadio.selected);
+      gBulletStyleType = type;
+      if (type && gDialog.ChangeAllRadio.selected)
+        globalElement.setAttribute("type",type);
+      else
+        globalElement.removeAttribute("type");
 
     } 
-    else if (ListType == "ol")
+    else if (gListType == "ol")
     {
       switch (gDialog.BulletStyleList.selectedIndex)
       {
@@ -310,14 +350,165 @@ function ValidateData()
           type = "a";
           break;
       }
-      BulletStyleType = type;
-      ChangeListType(type, gDialog.ChangeAllRadio.selected);
-        
-      var startingNumber = TrimString(gDialog.StartingNumberInput.value);
+      gBulletStyleType = type;
+      if (type)
+        globalElement.setAttribute("type", type);
+      else
+        globalElement.removeAttribute("type");
+      
+      var startingNumber = ConvertUserStringToStartAttr(gDialog.BulletStyleList.selectedIndex);
       if (startingNumber)
         globalElement.setAttribute("start",startingNumber);
       else
         globalElement.removeAttribute("start");
+    }
+  }
+  return true;
+}
+
+function ConvertUserStringToStartAttr(selectedIndex) 
+{
+  var startingNumber = TrimString(gDialog.StartingNumberInput.value);
+
+  switch (selectedIndex)
+  {
+    // Index 0 = automatic, the default, so we don't set it explicitly
+    case 1:
+      startingNumber = Number(startingNumber);
+      break;
+    case 2:
+      // If the input isn't an integer, assume it's a roman numeral. Convert it.
+      if (!Number(startingNumber))
+        startingNumber = toArabic(startingNumber);
+      break;
+    case 3:
+      // If the input isn't an integer, assume it's a roman numeral. Convert it.
+      if (!Number(startingNumber))
+        startingNumber = toArabic(startingNumber);
+      break;
+    case 4:
+      // Convert to ASCII and get the number equivalent of the letter
+      if (!Number(startingNumber) && startingNumber)
+        startingNumber = startingNumber.toUpperCase().charCodeAt(0) - 64;
+      break;
+    case 5:
+      // Convert to ASCII and get the number equivalent of the letter
+      if (!Number(startingNumber) && startingNumber)
+        startingNumber = startingNumber.toLowerCase().charCodeAt(0) - 96;
+      break;
+  }
+  return startingNumber;
+}
+
+function toArabic(num)
+{
+  num = num.toUpperCase();
+  if (checkRomanInput(num))
+  {
+    var Arabic = 0;
+    var last_digit = 1000;
+    var digit;
+    for (var i=0; i < num.length; i++)
+    {
+      switch (num.charAt(i))
+      {
+        case  "I":
+          digit=1;
+          break;
+        case  "V":
+          digit=5;
+          break;
+        case  "X":
+          digit=10;
+          break;
+        case  "L":
+          digit=50;
+          break;
+        case  "C":
+          digit=100;
+          break;
+        case  "D":
+          digit=500;
+          break;
+        case  "M":
+          digit=1000;
+          break;
+      }
+      if (last_digit < digit)
+        Arabic -= 2 * last_digit;
+
+      last_digit = digit;
+      Arabic += last_digit;
+    }
+    
+    return Arabic;
+  }
+
+  return "";
+}
+
+function toRoman(num)
+{
+  if (checkArabicInput(num))
+  {
+    var ones = num % 10;
+    num = (num - ones) / 10;
+    var tens = num % 10;
+    num = (num - tens) / 10;
+    var hundreds = num % 10;
+    num = (num - hundreds) / 10;
+
+    var Roman = "";
+
+    for (var i=0; i < num; i++)
+      Roman += "M";
+
+    if (hundreds)
+      Roman += gHundredsArray[hundreds-1];
+
+    if (tens)
+      Roman += gTensArray[tens-1];
+
+    if (ones)
+      Roman += gOnesArray[ones-1];
+
+    return Roman;
+  }
+  return "";
+}
+
+function checkArabicInput(num)
+{
+  if (!num)
+    return false;
+
+  num = String(num);
+  for (var k = 0; k < num.length; k++)
+  {
+	  if (num.charAt(k) < "0" || num.charAt(k) > "9")
+		  return false;
+  }
+
+	if (num > 4000 || num <= 0)
+    return false;
+
+	return true;
+}
+
+function checkRomanInput(num)
+{
+  if (!num)
+    return false;
+
+  num = num.toUpperCase();
+  for (var k = 0; k < num.length; k++)
+  {
+    if (num.charAt(k) != "I" && num.charAt(k) != "V" && 
+        num.charAt(k) != "X" && num.charAt(k) != "L" && 
+        num.charAt(k) != "C" && num.charAt(k) != "D" && 
+        num.charAt(k) != "M")
+    {
+      return false;
     }
   }
   return true;
@@ -332,48 +523,38 @@ function onAccept()
 
 
     // Remember which radio button was selected
-    if (ListElement)
+    if (gListElement)
       gDialog.RadioGroup.setAttribute("index", gDialog.ChangeAllRadio.selected ? "0" : "1");
 
     var changeList;
-    if (ListElement && gDialog.ChangeAllRadio.selected)
+    if (gListElement && gDialog.ChangeAllRadio.selected)
     {
       changeList = true;
     }
     else
-      changeList = MixedListSelection || ListType != originalListType || BulletStyleType != originalBulletStyleType;
+      changeList = gMixedListSelection || gListType != gOriginalListType || 
+                   gBulletStyleType != gOriginalBulletStyleType;
 
     if (changeList)
     {
-      if (ListElement && gDialog.ChangeAllRadio.selected && BulletStyleType != originalBulletStyleType) {
-        var child = ListElement.firstChild;
-        while (child) {
-          if (child.nodeType == Node.ELEMENT_NODE &&
-              child.nodeName.toLowerCase() == "li") {
-            editorShell.editor.removeAttributeOrEquivalent(child, "type");
-          }
-          child = child.nextSibling;
-        }
-      }
+      editorShell.MakeOrChangeList(gListType, gDialog.ChangeAllRadio.selected,
+                   (gBulletStyleType != gOriginalBulletStyleType) ? gBulletStyleType : null);
 
-      editorShell.MakeOrChangeList(ListType, gDialog.ChangeAllRadio.selected,
-                                   (BulletStyleType != originalBulletStyleType) ? BulletStyleType : null);
-
-      if (ListType)
+      if (gListType)
       {
         // Get the new list created:
-        ListElement = editorShell.GetElementOrParentByTagName(ListType, null);
+        gListElement = editorShell.GetElementOrParentByTagName(gListType, null);
       }
       else
       {
         // We removed an existing list
-        ListElement = null;
+        gListElement = null;
       }
     }
 
     // Set the new list attributes
-    if (ListElement)
-      editorShell.CloneAttributes(ListElement, globalElement);
+    if (gListElement)
+      editorShell.CloneAttributes(gListElement, globalElement);
 
     editorShell.EndBatchChanges();
     
