@@ -140,6 +140,8 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 public: //for methods who access nsGfxTextControlFrame2 directly
   void SubmitAttempt();
+  NS_IMETHOD InternalContentChanged();//notify that we have some kind of change.
+  NS_IMETHOD CallOnChange();
 protected:
   nsString *GetCachedString();
   virtual PRIntn GetSkipSides() const;
@@ -233,6 +235,7 @@ private:
   nsFormFrame *mFormFrame;
   nsTextInputSelectionImpl *mTextSelImpl;
   nsTextInputListener *mTextListener;
+  PRBool mNotifyOnInput;//default this to off to stop any notifications until setup is complete
 };
 
 #endif

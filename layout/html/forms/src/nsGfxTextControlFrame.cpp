@@ -4556,7 +4556,7 @@ nsEnderEventListener::Blur(nsIDOMEvent* aEvent)
     nsString currentValue;
     gfxFrame->GetText(&currentValue, PR_FALSE);
     if (PR_FALSE==currentValue.Equals(mTextValue)) {
-      // Dispatch the change event
+      // Dispatch th1e change event
       nsEventStatus status = nsEventStatus_eIgnore;
       nsInputEvent event;
       event.eventStructType = NS_INPUT_EVENT;

@@ -79,6 +79,13 @@
 #include "nsIDOMKeyEvent.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIDOMEventReceiver.h"
+#include "nsIDocument.h" //observe documents to send onchangenotifications
+#include "nsIDocumentObserver.h" //observe documents to send onchangenotifications
+#include "nsIStyleSheet.h"//observe documents to send onchangenotifications
+#include "nsIStyleRule.h"//observe documents to send onchangenotifications
+#include "nsIDOMEventListener.h"//observe documents to send onchangenotifications
+
+#include "nsIDOMFocusListener.h" //onchange events
 #include "nsIDOMCharacterData.h" //for selection setting helper func
 #include "nsIDOMNodeList.h" //for selection settting helper func
 #include "nsIDOMRange.h" //for selection settting helper func
@@ -103,7 +110,8 @@ static void RemoveNewlines(nsString &aString)
 
 
 //listen for the return key. kinda lame.
-class nsTextInputListener : public nsIDOMKeyListener, public nsSupportsWeakReference, public nsIDOMSelectionListener
+//listen for onchange notifications
+class nsTextInputListener : public nsIDOMKeyListener, public nsSupportsWeakReference, public nsIDOMSelectionListener, public nsIDocumentObserver, public nsIDOMFocusListener
 {
 public:
   /** the default constructor
@@ -133,8 +141,73 @@ public:
   NS_IMETHOD    NotifySelectionChanged(nsIDOMDocument* aDoc, nsIDOMSelection* aSel, PRInt16 aReason);
 /*END nsIDOMSelectionListener*/
 
+/* BEGIN DOMDocumentObserver*/
+  NS_IMETHOD BeginUpdate(nsIDocument *aDocument){return NS_OK;}
+  NS_IMETHOD EndUpdate(nsIDocument *aDocument){return NS_OK;}
+  NS_IMETHOD BeginLoad(nsIDocument *aDocument){return NS_OK;}
+  NS_IMETHOD EndLoad(nsIDocument *aDocument){return NS_OK;}
+  NS_IMETHOD BeginReflow(nsIDocument *aDocument, nsIPresShell* aShell){return NS_OK;}
+  NS_IMETHOD EndReflow(nsIDocument *aDocument, nsIPresShell* aShell){return NS_OK;}
+  NS_IMETHOD ContentChanged(nsIDocument *aDocument,
+                            nsIContent* aContent,
+                            nsISupports* aSubContent);
+  NS_IMETHOD ContentStatesChanged(nsIDocument* aDocument,
+                                  nsIContent* aContent1,
+                                  nsIContent* aContent2){return NS_OK;}
+  NS_IMETHOD AttributeChanged(nsIDocument *aDocument,
+                              nsIContent*  aContent,
+                              PRInt32      aNameSpaceID,
+                              nsIAtom*     aAttribute,
+                              PRInt32      aHint){return NS_OK;}
+  NS_IMETHOD ContentAppended(nsIDocument *aDocument,
+                             nsIContent* aContainer,
+                             PRInt32     aNewIndexInContainer);
+  NS_IMETHOD ContentInserted(nsIDocument *aDocument,
+                             nsIContent* aContainer,
+                             nsIContent* aChild,
+                             PRInt32 aIndexInContainer);
+  NS_IMETHOD ContentReplaced(nsIDocument *aDocument,
+                             nsIContent* aContainer,
+                             nsIContent* aOldChild,
+                             nsIContent* aNewChild,
+                             PRInt32 aIndexInContainer);
+  NS_IMETHOD ContentRemoved(nsIDocument *aDocument,
+                            nsIContent* aContainer,
+                            nsIContent* aChild,
+                            PRInt32 aIndexInContainer);
+  NS_IMETHOD StyleSheetAdded(nsIDocument *aDocument,
+                             nsIStyleSheet* aStyleSheet){return NS_OK;}
+  NS_IMETHOD StyleSheetRemoved(nsIDocument *aDocument,
+                               nsIStyleSheet* aStyleSheet){return NS_OK;}
+  NS_IMETHOD StyleSheetDisabledStateChanged(nsIDocument *aDocument,
+                                            nsIStyleSheet* aStyleSheet,
+                                            PRBool aDisabled){return NS_OK;}
+  NS_IMETHOD StyleRuleChanged(nsIDocument *aDocument,
+                              nsIStyleSheet* aStyleSheet,
+                              nsIStyleRule* aStyleRule,
+                              PRInt32 aHint){return NS_OK;}
+  NS_IMETHOD StyleRuleAdded(nsIDocument *aDocument,
+                            nsIStyleSheet* aStyleSheet,
+                            nsIStyleRule* aStyleRule){return NS_OK;}
+  NS_IMETHOD StyleRuleRemoved(nsIDocument *aDocument,
+                              nsIStyleSheet* aStyleSheet,
+                              nsIStyleRule* aStyleRule){return NS_OK;}
+  NS_IMETHOD DocumentWillBeDestroyed(nsIDocument *aDocument){return NS_OK;}
+
+/*END DocObserver*/
+
+  /** nsIDOMFocusListener interfaces 
+    * used to propogate focus, blur, and change notifications
+    * @see nsIDOMFocusListener
+    */
+  virtual nsresult Focus(nsIDOMEvent* aEvent); //must use virtual nsresult. the header does for somereason
+  virtual nsresult Blur (nsIDOMEvent* aEvent);
+  /* END interfaces from nsIDOMFocusListener*/
+
+
 protected:
   nsGfxTextControlFrame2* mFrame;  // weak reference
+  nsString mFocusedValue;
 };
 
 
@@ -159,7 +232,7 @@ nsTextInputListener::~nsTextInputListener()
 }
 
 
-NS_IMPL_QUERY_INTERFACE4(nsTextInputListener, nsIDOMEventListener, nsIDOMKeyListener, nsISupportsWeakReference, nsIDOMSelectionListener)
+NS_IMPL_QUERY_INTERFACE5(nsTextInputListener, nsIDOMKeyListener, nsISupportsWeakReference, nsIDOMSelectionListener, nsIDocumentObserver, nsIDOMFocusListener)
 
 
 nsresult
@@ -249,9 +322,99 @@ nsTextInputListener::NotifySelectionChanged(nsIDOMDocument* aDoc, nsIDOMSelectio
   return domWindow->UpdateCommands(NS_ConvertASCIItoUCS2("select"));
 
 }
+//DOCUMENT INTERFACE
 
+NS_IMETHODIMP nsTextInputListener::ContentChanged(nsIDocument *aDocument,
+                                                      nsIContent* aContent,
+                                                      nsISupports* aSubContent)
+{
+  nsresult result;
+  nsCOMPtr <nsIContent> parent;
+  if (aContent && !aSubContent)
+  {
+    result = aContent->GetParent(*getter_AddRefs(parent));
+    if (NS_SUCCEEDED(result) && parent)
+    {
+      return ContentAppended(aDocument,parent,0); //to stop code duplication
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsTextInputListener::ContentAppended(nsIDocument *aDocument,
+                                                       nsIContent* aContainer,
+                                                       PRInt32     aNewIndexInContainer)
+{
+  nsresult result = NS_OK;
+  nsCOMPtr <nsIContent> parent;
+  if (aContainer)
+  {
+    result = aContainer->GetParent(*getter_AddRefs(parent));
+    if (NS_SUCCEEDED(result) && parent)
+    {
+      nsCOMPtr<nsIContent> frameContent;
+      if (NS_SUCCEEDED(mFrame->GetContent(getter_AddRefs(frameContent))) && frameContent.get() == parent.get())
+      {
+        if (mFrame) {//check parent to see if its the same as the containers parent.
+          result = mFrame->InternalContentChanged();
+        }
+      }
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsTextInputListener::ContentInserted(nsIDocument *aDocument,
+                                                       nsIContent* aContainer,
+                                                       nsIContent* aChild,
+                                                       PRInt32 aIndexInContainer)
+{
+  return ContentAppended(aDocument,aContainer,aIndexInContainer); //to stop code duplication
+}
+
+NS_IMETHODIMP nsTextInputListener::ContentReplaced(nsIDocument *aDocument,
+                                                       nsIContent* aContainer,
+                                                       nsIContent* aOldChild,
+                                                       nsIContent* aNewChild,
+                                                       PRInt32 aIndexInContainer)
+{
+  return ContentAppended(aDocument,aContainer,aIndexInContainer); //to stop code duplication
+}
+
+NS_IMETHODIMP nsTextInputListener::ContentRemoved(nsIDocument *aDocument,
+                                                      nsIContent* aContainer,
+                                                      nsIContent* aChild,
+                                                      PRInt32 aIndexInContainer)
+{
+  return ContentAppended(aDocument,aContainer,aIndexInContainer); //to stop code duplication
+}
 
 //END NS_IDOMSELECTIONLISTENER
+//focuslistener
+
+nsresult
+nsTextInputListener::Focus(nsIDOMEvent* aEvent)
+{
+  return mFrame->GetText(&mFocusedValue, PR_FALSE);
+}
+
+nsresult
+nsTextInputListener::Blur (nsIDOMEvent* aEvent)
+{
+  if (!mFrame)
+    return NS_OK;
+  nsAutoString blurValue;
+  mFrame->GetText(&blurValue,PR_FALSE);
+  if (mFocusedValue.Compare(blurValue))//different fire onchange
+  {
+    return mFrame->CallOnChange();
+  }
+  return NS_OK;
+}
+
+
+//END focuslistener
+
 //END NSTEXTINPUTLISTENER
 
   
@@ -310,7 +473,9 @@ public:
   NS_IMETHOD GetDelayedCaretData(nsMouseEvent **aMouseEvent);
   NS_IMETHOD GetTableCellSelection(PRBool *aState);
   NS_IMETHOD GetTableCellSelectionStyleColor(const nsStyleColor **aStyleColor);
-  NS_IMETHOD GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, nsIFrame **aReturnFrame, PRInt32 *aReturnOffset);
+  NS_IMETHOD GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, HINT aHint, nsIFrame **aReturnFrame, PRInt32 *aReturnOffset);
+  NS_IMETHOD GetHint(nsIFrameSelection::HINT *aHint);
+  NS_IMETHOD SetHint(nsIFrameSelection::HINT aHint);
   NS_IMETHOD SetScrollableView(nsIScrollableView *aScrollableView);
   //END INTERFACES
 
@@ -656,9 +821,19 @@ nsTextInputSelectionImpl::GetTableCellSelectionStyleColor(const nsStyleColor **a
 
 
 NS_IMETHODIMP
-nsTextInputSelectionImpl::GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, nsIFrame **aReturnFrame, PRInt32 *aReturnOffset)
+nsTextInputSelectionImpl::GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, HINT aHint, nsIFrame **aReturnFrame, PRInt32 *aReturnOffset)
 {
-  return mFrameSelection->GetFrameForNodeOffset(aNode, aOffset,aReturnFrame,aReturnOffset);
+  return mFrameSelection->GetFrameForNodeOffset(aNode, aOffset, aHint,aReturnFrame,aReturnOffset);
+}
+
+NS_IMETHODIMP nsTextInputSelectionImpl::GetHint(nsIFrameSelection::HINT *aHint)
+{
+  return mFrameSelection->GetHint(aHint);
+}
+
+NS_IMETHODIMP nsTextInputSelectionImpl::SetHint(nsIFrameSelection::HINT aHint)
+{
+  return mFrameSelection->SetHint(aHint);
 }
 
 NS_IMETHODIMP nsTextInputSelectionImpl::SetScrollableView(nsIScrollableView *aScrollableView)
@@ -721,6 +896,7 @@ nsGfxTextControlFrame2::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 nsGfxTextControlFrame2::nsGfxTextControlFrame2(nsIPresShell* aShell):nsStackFrame(aShell)
 {
   mIsProcessing=PR_FALSE;
+  mNotifyOnInput = PR_FALSE;
   mFormFrame = nsnull;
   mCachedState = nsnull;
   mSuggestedWidth = NS_FORMSIZE_NOTSET;
@@ -729,7 +905,8 @@ nsGfxTextControlFrame2::nsGfxTextControlFrame2(nsIPresShell* aShell):nsStackFram
 
 nsGfxTextControlFrame2::~nsGfxTextControlFrame2()
 {
- 
+  //delete mTextListener;
+  //delete mTextSelImpl; dont delete this since mSelCon will release it.
 }
 
 NS_IMETHODIMP
@@ -778,6 +955,29 @@ nsGfxTextControlFrame2::Destroy(nsIPresContext* aPresContext)
   if (mFormFrame) {
     mFormFrame->RemoveFormControlFrame(*this);
     mFormFrame = nsnull;
+  }
+  nsCOMPtr<nsIDOMEventReceiver> erP;
+  if (mTextListener)
+  {
+    if (NS_SUCCEEDED(mContent->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(erP))) && erP)
+    {
+      erP->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMFocusListener  *,mTextListener), NS_GET_IID(nsIDOMFocusListener));
+      erP->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMKeyListener*,mTextListener), NS_GET_IID(nsIDOMKeyListener));
+    }
+    nsCOMPtr<nsIPresShell> shell;
+    nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
+    if (NS_FAILED(rv) || !shell)
+      return rv?rv:NS_ERROR_FAILURE;
+
+  //get the document
+    nsCOMPtr<nsIDocument> doc;
+    rv = shell->GetDocument(getter_AddRefs(doc));
+    if (NS_FAILED(rv) || !doc)
+      return rv?rv:NS_ERROR_FAILURE;
+    if (doc)
+    {
+      doc->RemoveObserver(mTextListener);
+    }
   }
   return nsBoxFrame::Destroy(aPresContext);
 }
@@ -1383,6 +1583,7 @@ nsGfxTextControlFrame2::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
           SetTextControlFrameState(value);
       }        
     }
+    mNotifyOnInput = PR_TRUE;//its ok to notify now. all has been prepared.
   }
 
   nsCompatibility mode;
@@ -2152,6 +2353,68 @@ nsGfxTextControlFrame2::SubmitAttempt()
   }
 }
 
+// this is where we propogate a content changed event
+NS_IMETHODIMP
+nsGfxTextControlFrame2::InternalContentChanged()
+{
+  NS_PRECONDITION(mContent, "illegal to call unless we map to a content node");
+
+  if (!mContent) { return NS_ERROR_NULL_POINTER; }
+
+  if (PR_FALSE==mNotifyOnInput) { 
+    return NS_OK; // if notification is turned off, just return ok
+  } 
+
+  // Dispatch the change event
+  nsEventStatus status = nsEventStatus_eIgnore;
+  nsGUIEvent event;
+  event.eventStructType = NS_GUI_EVENT;
+  event.widget = nsnull;
+  event.message = NS_FORM_INPUT;
+  event.flags = NS_EVENT_FLAG_INIT;
+
+  // Have the content handle the event, propogating it according to normal DOM rules.
+  nsWeakPtr &shell = mTextSelImpl->GetPresShell();
+  nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(shell);
+  if (!presShell) 
+    return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIPresContext> context;
+  if (NS_SUCCEEDED(presShell->GetPresContext(getter_AddRefs(context))) && context)
+    return mContent->HandleDOMEvent(context, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
+  return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP
+nsGfxTextControlFrame2::CallOnChange()
+{
+  // Dispatch th1e change event
+  nsCOMPtr<nsIContent> content;
+  if (NS_SUCCEEDED(GetFormContent(*getter_AddRefs(content))))
+  {
+    nsEventStatus status = nsEventStatus_eIgnore;
+    nsInputEvent event;
+    event.eventStructType = NS_INPUT_EVENT;
+    event.widget = nsnull;
+    event.message = NS_FORM_CHANGE;
+    event.flags = NS_EVENT_FLAG_INIT;
+    event.isShift = PR_FALSE;
+    event.isControl = PR_FALSE;
+    event.isAlt = PR_FALSE;
+    event.isMeta = PR_FALSE;
+
+    // Have the content handle the event.
+    nsWeakPtr &shell = mTextSelImpl->GetPresShell();
+    nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(shell);
+    if (!presShell)
+      return NS_ERROR_FAILURE;
+    nsCOMPtr<nsIPresContext> context;
+    if (NS_SUCCEEDED(presShell->GetPresContext(getter_AddRefs(context))) && context)
+      return mContent->HandleDOMEvent(context, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
+  }
+  return NS_OK;
+}
+
 
 //======
 //privates
@@ -2289,8 +2552,21 @@ nsGfxTextControlFrame2::SetInitialChildList(nsIPresContext* aPresContext,
     if (NS_SUCCEEDED(mContent->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(erP))) && erP)
     {
       // register the event listeners with the DOM event reveiver
-      rv = erP->AddEventListenerByIID(mTextListener, NS_GET_IID(nsIDOMKeyListener));
+      rv = erP->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMKeyListener *,mTextListener), NS_GET_IID(nsIDOMKeyListener));
       NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register key listener");
+      rv = erP->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMFocusListener *,mTextListener), NS_GET_IID(nsIDOMFocusListener));
+      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register focus listener");
+      nsCOMPtr<nsIPresShell> shell;
+      nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
+      if (NS_FAILED(rv) || !shell)
+        return rv?rv:NS_ERROR_FAILURE;
+
+    //get the document
+      nsCOMPtr<nsIDocument> doc;
+      rv = shell->GetDocument(getter_AddRefs(doc));
+      if (NS_FAILED(rv) || !doc)
+        return rv?rv:NS_ERROR_FAILURE;
+      doc->AddObserver(mTextListener);
     }
 
   }

@@ -287,7 +287,9 @@ public:
   NS_IMETHOD GetSelection(SelectionType aType, nsIDOMSelection **aDomSelection);
   NS_IMETHOD ScrollSelectionIntoView(SelectionType aType, SelectionRegion aRegion);
   NS_IMETHOD RepaintSelection(nsIPresContext* aPresContext, SelectionType aType);
-  NS_IMETHOD GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, nsIFrame **aReturnFrame, PRInt32 *aReturnOffset);
+  NS_IMETHOD GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, HINT aHint, nsIFrame **aReturnFrame, PRInt32 *aReturnOffset);
+  NS_IMETHOD SetHint(HINT aHintRight);
+  NS_IMETHOD GetHint(HINT *aHintRight);
   NS_IMETHOD CharacterMove(PRBool aForward, PRBool aExtend);
   NS_IMETHOD WordMove(PRBool aForward, PRBool aExtend);
   NS_IMETHOD LineMove(PRBool aForward, PRBool aExtend);
@@ -342,8 +344,6 @@ private:
 
   nsresult     NotifySelectionListeners(SelectionType aType);			// add parameters to say collapsed etc?
 
-  NS_IMETHOD    SetHint(PRBool aHintRight);
-  NS_IMETHOD    GetHint(PRBool *aHintRight);
 
   nsDOMSelection *mDomSelections[nsISelectionController::NUM_SELECTIONTYPES];
   nsIScrollableView *GetScrollView(){return mScrollView;}
@@ -385,7 +385,6 @@ private:
   PRInt16 mDisplaySelection; //for visual display purposes.
   PRInt32 mDesiredX;
   PRBool mDesiredXSet;
-  enum HINT {HINTLEFT=0,HINTRIGHT=1}mHint;//end of this line or beginning of next
   nsIScrollableView *mScrollView;
 
   PRBool mDelayCaretOverExistingSelection;
@@ -1116,7 +1115,7 @@ nsSelection::ConstrainFrameAndPointToAnchorSubtree(nsIPresContext *aPresContext,
   if (!anchorContent)
     return NS_ERROR_FAILURE;
   
-  result = GetFrameForNodeOffset(anchorContent, anchorOffset, &anchorFrame, &anchorFrameOffset);
+  result = GetFrameForNodeOffset(anchorContent, anchorOffset, mHint, &anchorFrame, &anchorFrameOffset);
 
   //
   // Now find the root of the subtree containing the anchor's content.
@@ -1558,13 +1557,24 @@ nsDOMSelection::ToString(const nsString& aFormatType, PRUint32 aFlags, PRInt32 a
 NS_IMETHODIMP
 nsDOMSelection::SetHint(PRBool aHintRight)
 {
-  return mFrameSelection->SetHint(aHintRight);
+  nsIFrameSelection::HINT hint;
+  if (aHintRight)
+    hint = nsIFrameSelection::HINTRIGHT;
+  else
+    hint = nsIFrameSelection::HINTLEFT;
+  return mFrameSelection->SetHint(hint);
 }
 
 NS_IMETHODIMP
 nsDOMSelection::GetHint(PRBool *aHintRight)
 {
-  return mFrameSelection->GetHint(aHintRight);
+  nsIFrameSelection::HINT hint;
+  nsresult rv = mFrameSelection->GetHint(&hint);
+  if (hint == nsIFrameSelection::HINTRIGHT)
+    *aHintRight = PR_TRUE;
+  else
+    *aHintRight = PR_FALSE;
+  return rv;
 }
 
 
@@ -1831,7 +1841,7 @@ nsSelection::RepaintSelection(nsIPresContext* aPresContext, SelectionType aType)
 }
  
 NS_IMETHODIMP
-nsSelection::GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, nsIFrame **aReturnFrame, PRInt32 *aReturnOffset)
+nsSelection::GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, HINT aHint, nsIFrame **aReturnFrame, PRInt32 *aReturnOffset)
 {
   if (!aNode || !aReturnFrame || !aReturnOffset)
     return NS_ERROR_NULL_POINTER;
@@ -1856,7 +1866,7 @@ nsSelection::GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, nsIFrame 
     PRInt32 childIndex  = 0;
     PRInt32 numChildren = 0;
 
-    if (mHint == HINTLEFT)
+    if (aHint == HINTLEFT)
     {
       if (aOffset > 0)
         childIndex = aOffset - 1;
@@ -1919,7 +1929,7 @@ nsSelection::GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, nsIFrame 
         newOffset = numChildren;
       }
 
-      return GetFrameForNodeOffset(theNode, newOffset, aReturnFrame,aReturnOffset);
+      return GetFrameForNodeOffset(theNode, newOffset, aHint, aReturnFrame,aReturnOffset);
     }
     else
 #endif // DONT_DO_THIS_YET
@@ -1956,7 +1966,7 @@ nsSelection::GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, nsIFrame 
     return NS_ERROR_UNEXPECTED;
 		
   // find the child frame containing the offset we want
-  result = (*aReturnFrame)->GetChildFrameContainingOffset(*aReturnOffset, mHint, &aOffset, aReturnFrame);
+  result = (*aReturnFrame)->GetChildFrameContainingOffset(*aReturnOffset, aHint, &aOffset, aReturnFrame);
   return result;
 }
 
@@ -2854,24 +2864,16 @@ nsSelection::CreateAndAddRange(nsIDOMNode *aParentNode, PRInt32 aOffset)
 // End of Table Selection
 
 NS_IMETHODIMP
-nsSelection::SetHint(PRBool aHintRight)
+nsSelection::SetHint(HINT aHintRight)
 {
-  if (aHintRight)
-    mHint = HINTRIGHT;
-  else
-    mHint = HINTLEFT;
+  mHint = aHintRight;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSelection::GetHint(PRBool *aHintRight)
+nsSelection::GetHint(HINT *aHintRight)
 {
-  if (!aHintRight)
-    return NS_ERROR_NULL_POINTER;
-  if (HINTRIGHT == mHint)
-    *aHintRight = PR_TRUE;
-  else
-    *aHintRight = PR_FALSE;
+  *aHintRight = mHint;
   return NS_OK; 
 }
 
@@ -3432,7 +3434,11 @@ nsDOMSelection::GetPrimaryFrameForAnchorNode(nsIFrame **aReturnFrame)
   *aReturnFrame = 0;
   nsCOMPtr<nsIContent> content = do_QueryInterface(FetchAnchorNode());
   if (content && mFrameSelection)
-    return mFrameSelection->GetFrameForNodeOffset(content, FetchAnchorOffset(),aReturnFrame, &frameOffset);
+  {
+    nsIFrameSelection::HINT hint;
+    mFrameSelection->GetHint(&hint);
+    return mFrameSelection->GetFrameForNodeOffset(content, FetchAnchorOffset(),hint,aReturnFrame, &frameOffset);
+  }
   return NS_ERROR_FAILURE;
 }
 
@@ -3447,7 +3453,11 @@ nsDOMSelection::GetPrimaryFrameForFocusNode(nsIFrame **aReturnFrame)
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(FetchFocusNode());
   if (content && mFrameSelection)
-    return mFrameSelection->GetFrameForNodeOffset(content, FetchFocusOffset(),aReturnFrame, &frameOffset);
+  {
+    nsIFrameSelection::HINT hint;
+    mFrameSelection->GetHint(&hint);
+    return mFrameSelection->GetFrameForNodeOffset(content, FetchFocusOffset(),hint,aReturnFrame, &frameOffset);
+  }
   return NS_ERROR_FAILURE;
 }
 
@@ -5330,7 +5340,11 @@ nsDOMSelection::GetSelectionRegionRect(SelectionRegion aRegion, nsRect *aRect)
   PRInt32 frameOffset = 0;
 
   if (content)
-    result = mFrameSelection->GetFrameForNodeOffset(content, nodeOffset, &frame, &frameOffset);
+  {
+    nsIFrameSelection::HINT hint;
+    mFrameSelection->GetHint(&hint);
+    result = mFrameSelection->GetFrameForNodeOffset(content, nodeOffset, hint, &frame, &frameOffset);
+  }
   else
     result = NS_ERROR_FAILURE;
   if(NS_FAILED(result))
