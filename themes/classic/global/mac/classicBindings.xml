@@ -104,7 +104,7 @@
     </content>
   </binding>
   
-  <binding id="grippy">
+  <binding id="grippy" extends="chrome://global/content/bindings/splitter.xml#grippy">
     <content>
       <xul:box class="grippy-box" flex="1">
         <xul:image class="grippy-image" inherits="src" />
