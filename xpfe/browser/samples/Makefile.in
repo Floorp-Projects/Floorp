@@ -35,6 +35,8 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/dexsimplemaster.xul \
 	$(srcdir)/dexsimpledialog.xul \
 	$(srcdir)/dexopenchrome.xul \
+	$(srcdir)/hidetoolicon.xul \
+	$(srcdir)/hidetoolicon.css \
 	$(srcdir)/tab.xul \
         $(srcdir)/xpmenu.xul \
         $(NULL)
