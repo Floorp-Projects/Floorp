@@ -153,6 +153,7 @@ bin/components/libucvko.so
 bin/components/libucvlatin.so
 bin/components/libucvtw.so
 bin/components/libucvtw2.so
+bin/components/libucvmath.so
 bin/components/liburiloader.so
 bin/components/libwebbrwsr.so
 bin/components/webBrowser_core.xpt
