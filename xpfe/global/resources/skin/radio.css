@@ -1,41 +1,78 @@
+/* stylesheet for XUL <radio> element */
 
-/* NEW WIDGET LANDING: <radio> */
+/* default radio for dialogs */
 radio {
-  margin: 0px 5px 0px 5px;
-}
-radio[checked="true"] > .internal-box > .checkmark-box > image {
-  list-style-image: url(chrome://global/skin/check-radio.gif);
+  margin: 3px 5px 3px 5px;
 }
 
 radio > .internal-box > .checkmark-box {
   border: 1px solid #CCCCCC;
-  -moz-border-radius: 8px;
+  -moz-border-radius: 50%;
 }
 radio > .internal-box > .checkmark-box > image {
   border: 1px outset #CCCCCC;
-  width: 10px;
-  height: 10px;
-  -moz-border-radius: 8px;
-}
-radio > .internal-box > html {
-  margin-left: 5px;
-  /*border: 1px solid #CCCCCC;*/
+  width: 8px;
+  height: 8px;
+  -moz-border-radius: 50%;
 }
 
+radio[checked="true"] > .internal-box > .checkmark-box > image {
+  list-style-image: url(chrome://global/skin/check-radio.gif);
+}
 
-/* mouseover rules */
+radio[value] > .internal-box > html,
+radio.iconic > .internal-box > .icon {
+  margin-left: 4px;
+  padding: 0px;
+}
+
+radio.iconic > .internal-box > html {
+  margin-left: 4px;
+}
+
 radio:hover > .internal-box > .checkmark-box {
   border: 1px solid #000000;
 }
 
-/* mousedown rules */
 radio:hover:active > .internal-box > .checkmark-box > image {
   border: 1px inset #CCCCCC;
 }
 
-/* focus rules 
-radio:focus > .internal-box > html {
-  border: 1px dotted #000000;
-}*/
+/* radio for trees/lists */
+radio.tree {
+  margin: 1px 5px 1px 5px;
+}
 
+radio.tree > .internal-box > .checkmark-box {
+  border: 1px solid #000000;
+  background-color: #CCCCCC;
+}
 
+radio.tree > .internal-box > .checkmark-box > image {
+  border: 1px solid inherit;
+  width: 8px;
+  height: 8px;
+}
+
+radio.tree[checked="true"] > .checkmark-box > image {
+  list-style-image: url(chrome://global/skin/check-radio.gif);
+}
+
+radio.tree:hover:active > .internal-box > .checkmark-box > image {
+  border: 1px solid inherit;
+}
+
+/* disabled radioes */
+radio[disabled="true"] > .internal-box > .checkmark-box > image,
+radio[disabled="true"]:active > .internal-box > .checkmark-box > image {
+  border: 1px solid gray;
+}
+
+radio[disabled="true"] > .internal-box > .checkmark-box,
+radio[disabled="true"]:hover > .internal-box > .checkmark-box {
+  border: 1px solid #CCCCCC;
+}
+
+radio[disabled="true"][value] > .internal-box > html {
+  color: gray;
+}

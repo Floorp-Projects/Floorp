@@ -118,7 +118,7 @@
     </content>
   </binding>
   
-    <binding name="checkbox">
+  <binding name="checkbox">
     <content>
       <xul:box flex="1" class="internal-box" autostretch="never">
         <xul:box class="checkmark-box" autostretch="never">
@@ -133,6 +133,22 @@
     </handlers>
   </binding>
 
+  <binding name="checkbox-iconic">
+    <content>
+      <xul:box flex="1" class="internal-box" autostretch="never">
+        <xul:box class="checkmark-box" autostretch="never">
+          <xul:image/>
+        </xul:box>
+        <xul:image inherits="src" class="icon" />
+        <xul:html flex="1" inherits="value"/>
+      </xul:box>
+    </content>
+    <handlers>
+      <handler type="mouseup" value="this.checked = !this.checked;"/>
+      <handler type="keypress" key=" " value="this.checked = !this.checked;"/>
+    </handlers>
+  </binding>
+  
   <binding name="radio">
     <content>
       <xul:box flex="1" class="internal-box" autostretch="never">
@@ -143,6 +159,18 @@
       </xul:box>
     </content>  
   </binding>
+  
+  <binding name="radio-iconic">
+    <content>
+      <xul:box flex="1" class="internal-box" autostretch="never">
+        <xul:box class="checkmark-box" autostretch="never">
+          <xul:image/>
+        </xul:box>
+        <xul:image inherits="src" class="icon"/>
+        <xul:html flex="1" inherits="value"/>
+      </xul:box>
+    </content>  
+  </binding>  
 
   <binding name="radiogroup">
   	<handlers>
@@ -151,9 +179,9 @@
 	  </handlers>
   </binding>
 
-  <binding name="buttonleft" excludes="observes,template">
-    <content>
-  	  <xul:box class="internal-box" autostretch="never" flex="1">
+  <binding name="buttonleft">
+    <content excludes="observes,template">
+  	  <xul:box class="internal-box" inherits="orient" autostretch="never" flex="1">
         <xul:image inherits="src"/>
         <xul:box orient="vertical" class="text-container" autostretch="never" flex="1">
           <xul:text inherits="value,accesskey,crop"/>
@@ -162,36 +190,14 @@
     </content>
   </binding>
   
-  <binding name="buttontop" excludes="observes,template">
-    <content>
-	    <xul:box orient="vertical" autostretch="never" class="internal-box" flex="1">
-        <xul:image inherits="src"/>
-        <xul:box orient="vertical" class="text-container" autostretch="never" flex="1">
-          <xul:text inherits="value,accesskey,crop"/>
-        </xul:box>
-	    </xul:box>
-	  </content>
-  </binding>
-
-  <binding name="buttonright" excludes="observes,template">
-    <content>
-	    <xul:box autostretch="never" class="internal-box" flex="1">
+  <binding name="buttonright">
+    <content excludes="observes,template">
+	    <xul:box autostretch="never" inherits="orient" class="internal-box" flex="1">
         <xul:box orient="vertical" class="text-container" autostretch="never" flex="1">
   	      <xul:text inherits="value,accesskey,crop"/>
         </xul:box>
         <xul:image inherits="src"/>
       </xul:box>
-	  </content>
-  </binding>
-
-  <binding name="buttonbottom" excludes="observes,template">
-    <content>
-	    <xul:box orient="vertical" autostretch="never" class="internal-box" flex="1">
-        <xul:box orient="vertical" class="text-container" autostretch="never" flex="1">
-  	      <xul:text inherits="value,accesskey,crop"/>
-        </xul:box>
-        <xul:image inherits="src"/>
-	    </xul:box>
 	  </content>
   </binding>
 
