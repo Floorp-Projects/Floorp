@@ -422,6 +422,12 @@ public:
   NS_IMETHOD GetLanguageSpecificTransformType(
               nsLanguageSpecificTransformType* aType) = 0;
 
+  /**
+   * Set and get methods for controling the background drawing
+  */
+  NS_IMETHOD GetBackgroundDraw(PRBool &aCanDraw)=0;
+  NS_IMETHOD SetBackgroundDraw(PRBool aCanDraw)=0;
+
 #ifdef IBMBIDI
   /**
    *  Check if bidi enabled (set depending on the presence of RTL
@@ -509,11 +515,6 @@ public:
    */
   NS_IMETHOD GetBidiCharset(nsAWritableString &aCharSet) = 0;
 
-  /**
-   * Set and get methods for controling the background drawing
-   */
-  NS_IMETHOD GetBackgroundDraw(PRBool &aCanDraw)=0;
-  NS_IMETHOD SetBackgroundDraw(PRBool aCanDraw)=0;
 
 #endif // IBMBIDI
 
