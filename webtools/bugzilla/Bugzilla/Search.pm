@@ -730,17 +730,21 @@ sub init {
              }
          },
          "^requestees.login_name," => sub {
-             push(@supptables, "flags flags_$chartid");
-             push(@wherepart, "bugs.bug_id = flags_$chartid.bug_id");
-             push(@supptables, "profiles requestees_$chartid");
-             push(@wherepart, "flags_$chartid.requestee_id = requestees_$chartid.userid");
+             my $flags = "flags_$chartid";
+             push(@supptables, "LEFT JOIN flags $flags " .
+                               "ON bugs.bug_id = $flags.bug_id " .
+                               "AND $flags.is_active = 1");
+             push(@supptables, "LEFT JOIN profiles requestees_$chartid " .
+                               "ON $flags.requestee_id = requestees_$chartid.userid");
              $f = "requestees_$chartid.login_name";
          },
          "^setters.login_name," => sub {
-             push(@supptables, "flags flags_$chartid");
-             push(@wherepart, "bugs.bug_id = flags_$chartid.bug_id");
-             push(@supptables, "profiles setters_$chartid");
-             push(@wherepart, "flags_$chartid.setter_id = setters_$chartid.userid");
+             my $flags = "flags_$chartid";
+             push(@supptables, "LEFT JOIN flags $flags " .
+                               "ON bugs.bug_id = $flags.bug_id " .
+                               "AND $flags.is_active = 1");
+             push(@supptables, "LEFT JOIN profiles setters_$chartid " .
+                               "ON $flags.setter_id = setters_$chartid.userid");
              $f = "setters_$chartid.login_name";
          },
          
