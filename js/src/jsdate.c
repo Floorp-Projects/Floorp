@@ -1640,6 +1640,9 @@ date_toLocaleHelper(JSContext *cx, JSObject *obj, uintN argc,
 
     }
 
+    if (cx->localeCallbacks && cx->localeCallbacks->localeToUnicode)
+        return cx->localeCallbacks->localeToUnicode(cx, buf, rval);
+    
     str = JS_NewStringCopyZ(cx, buf);
     if (!str)
 	return JS_FALSE;
