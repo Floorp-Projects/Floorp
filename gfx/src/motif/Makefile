@@ -38,9 +38,9 @@ EXTRA_DSO_LDOPTS+=\
 # This should really be done properly in 'config'
 ifeq ($(OS_ARCH),Linux)
 EXTRA_DSO_LDOPTS+=\
-	 -L/usr/X11R6/lib -lX11 -lm
+	 -L/usr/X11R6/lib -lXt -lX11 -lm
 else
-EXTRA_DSO_LDOPTS+= -lX11 -lm
+EXTRA_DSO_LDOPTS+= -lXt -lX11 -lm
 endif
 
 
