@@ -267,10 +267,13 @@ nsMenuPopupFrame :: AdjustClientXYForNestedDocuments ( nsIDOMXULDocument* inPopu
   nsCOMPtr<nsIWidget> popupDocumentWidget;
   nsCOMPtr<nsIViewManager> viewManager;
   inPopupShell->GetViewManager(getter_AddRefs(viewManager));
-  nsIView* rootView;
-  viewManager->GetRootView(rootView);
-  nscoord wOffsetX, wOffsetY;
-  rootView->GetOffsetFromWidget(&wOffsetX, &wOffsetY, *getter_AddRefs(popupDocumentWidget));
+  if ( viewManager ) {  
+    nsIView* rootView;
+    viewManager->GetRootView(rootView);
+    nscoord wOffsetX, wOffsetY;
+    if ( rootView )
+      rootView->GetOffsetFromWidget(&wOffsetX, &wOffsetY, *getter_AddRefs(popupDocumentWidget));
+  }
   NS_WARN_IF_FALSE(popupDocumentWidget, "ACK, BAD WIDGET");
   
   // Find the widget associated with the target's document. Recall that we cached the
@@ -286,13 +289,20 @@ nsMenuPopupFrame :: AdjustClientXYForNestedDocuments ( nsIDOMXULDocument* inPopu
     if (targetDocument) {
       nsCOMPtr<nsIPresShell> shell ( dont_AddRef(targetDocument->GetShellAt(0)) );
       nsCOMPtr<nsIViewManager> viewManagerTarget;
-      shell->GetViewManager(getter_AddRefs(viewManagerTarget));
-      nsIView* rootViewTarget;
-      viewManagerTarget->GetRootView(rootViewTarget);
-      nscoord unusedX, unusedY;
-      rootViewTarget->GetOffsetFromWidget(&unusedX, &unusedY, *getter_AddRefs(targetDocumentWidget));
+      if ( shell ) {
+        shell->GetViewManager(getter_AddRefs(viewManagerTarget));
+        if ( viewManagerTarget ) {
+          nsIView* rootViewTarget;
+          viewManagerTarget->GetRootView(rootViewTarget);
+          if ( rootViewTarget ) {
+            nscoord unusedX, unusedY;
+            rootViewTarget->GetOffsetFromWidget(&unusedX, &unusedY, *getter_AddRefs(targetDocumentWidget));
+          }
+        }
+      }
     }
   }
+  NS_WARN_IF_FALSE(targetDocumentWidget, "ACK, BAD TARGET");
 
   // the offset we need is the difference between the upper left corner of the two widgets. Use
   // screen coordinates to find the global offset between them.
