@@ -30,6 +30,7 @@ EXPORTS		= \
 		  nsDebug.h \
 		  nsError.h \
 		  nsHashtable.h \
+		  nsIAllocator.h \
 		  nsICollection.h \
 		  nsID.h \
 		  nsIFactory.h \
