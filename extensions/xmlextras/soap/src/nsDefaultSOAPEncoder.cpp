@@ -1302,6 +1302,10 @@ NS_IMETHODIMP
     rc = c->AddProperty(name, value);
     if (NS_FAILED(rc))
       return rc;
+
+    nsCOMPtr<nsIDOMElement> nextchild;
+    nsSOAPUtils::GetNextSiblingElement(child, getter_AddRefs(nextchild));
+    child = nextchild;
   }
   nsCOMPtr<nsIPropertyBag> pb;
   c->GetPropertyBag(getter_AddRefs(pb));
