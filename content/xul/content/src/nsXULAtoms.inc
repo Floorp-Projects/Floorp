@@ -30,6 +30,7 @@
 
  */
 
+NS_XULATOM(action);
 NS_XULATOM(child);
 NS_XULATOM(conditions);
 NS_XULATOM(container);
