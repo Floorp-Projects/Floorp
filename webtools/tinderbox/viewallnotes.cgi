@@ -96,6 +96,7 @@ if (!defined $start) {
 
 if (!defined $end) {
     $end = time2str($TIMEFORMAT, time()); # #now
+}
 
 print qq|
 <form>
