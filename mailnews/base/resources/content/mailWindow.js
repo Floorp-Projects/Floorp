@@ -61,6 +61,25 @@ var gMeterObserver;
 var startTime = 0;
 //End progress and Status variables
 
+function OnMailWindowUnload()
+{
+	mailSession.RemoveMsgWindow(msgWindow);
+	messenger.SetWindow(null, null);
+
+	var msgDS = folderDataSource.QueryInterface(Components.interfaces.nsIMsgRDFDataSource);
+	msgDS.window = null;
+
+	msgDS = messageDataSource.QueryInterface(Components.interfaces.nsIMsgRDFDataSource);
+	msgDS.window = null;
+
+	msgDS = accountManagerDataSource.QueryInterface(Components.interfaces.nsIMsgRDFDataSource);
+	msgDS.window = null;
+
+
+  	msgWindow.closeWindow();
+
+}
+
 function CreateMailWindowGlobals()
 {
 	// get the messenger instance
@@ -75,6 +94,7 @@ function CreateMailWindowGlobals()
 	statusFeedback           = Components.classes[statusFeedbackProgID].createInstance();
 	statusFeedback = statusFeedback.QueryInterface(Components.interfaces.nsIMsgStatusFeedback);
 
+	window.MsgWindowCommands = new nsMsgWindowCommands();
 	//Create message view object
 	messageView = Components.classes[messageViewProgID].createInstance();
 	messageView = messageView.QueryInterface(Components.interfaces.nsIMessageView);
@@ -111,7 +131,9 @@ function InitMsgWindow()
 	msgWindow.statusFeedback = statusFeedback;
 	msgWindow.messageView = messageView;
 	msgWindow.msgHeaderSink = messageHeaderSink;
-  msgWindow.SetDOMWindow(window);
+	msgWindow.SetDOMWindow(window);
+	mailSession.AddMsgWindow(msgWindow);
+
 }
 
 function AddDataSources()
@@ -244,3 +266,29 @@ nsMsgStatusFeedback.prototype =
 		{
 		}
 }
+
+
+function nsMsgWindowCommands()
+{
+}
+
+nsMsgWindowCommands.prototype = 
+{
+	QueryInterface : function(iid)
+	{
+		if(iid.equals(Components.interfaces.nsIMsgWindowCommands))
+			return this;
+		throw Components.results.NS_NOINTERFACE;
+	},
+	SelectFolder: function(folderUri)
+	{
+
+		SelectFolder(folderUri);
+
+	},
+	SelectMessage: function(messageUri)
+	{
+		SelectMessage(messageUri);
+	}
+}
+

@@ -35,6 +35,8 @@
 #include "nsILoadGroup.h"
 #include "nsIMsgMailNewsUrl.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsPIDOMWindow.h"
+
 
 static NS_DEFINE_CID(kTransactionManagerCID, NS_TRANSACTIONMANAGER_CID);
 static NS_DEFINE_CID(kComponentManagerCID,  NS_COMPONENTMANAGER_CID);
@@ -74,6 +76,18 @@ nsresult nsMsgWindow::Init()
   }
   
   return rv;
+}
+
+/* void SelectFolder (in string folderUri); */
+NS_IMETHODIMP nsMsgWindow::SelectFolder(const char *folderUri)
+{
+	return mMsgWindowCommands->SelectFolder(folderUri);
+}
+
+/* void SelectMessage (in string messasgeUri); */
+NS_IMETHODIMP nsMsgWindow::SelectMessage(const char *messageUri)
+{
+    return mMsgWindowCommands->SelectMessage(messageUri);
 }
 
 NS_IMETHODIMP nsMsgWindow::CloseWindow()
@@ -232,6 +246,18 @@ NS_IMETHODIMP nsMsgWindow::SetDOMWindow(nsIDOMWindow *aWindow)
       // we don't own mMessageWindowWebShell so don't try to keep a reference to it!
       mMessageWindowWebShell = msgWebShell;
       }
+
+	//Get nsIMsgWindowCommands object
+     nsCOMPtr<nsISupports> xpConnectObj;
+     nsCOMPtr<nsPIDOMWindow> piDOMWindow(do_QueryInterface(aWindow));
+     if (piDOMWindow)
+     {
+        nsAutoString msgWindowCommandsWinId; 
+		msgWindowCommandsWinId.AssignWithConversion("MsgWindowCommands");
+        piDOMWindow->GetObjectProperty(msgWindowCommandsWinId.GetUnicode(), getter_AddRefs(xpConnectObj));
+        mMsgWindowCommands = do_QueryInterface(xpConnectObj);
+     }
+
 	return rv;
 }
 

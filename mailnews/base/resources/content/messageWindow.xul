@@ -44,14 +44,20 @@ Rights Reserved.
 		windowtype="mail:messageWindow">
 
 
-<html:script src="chrome://global/content/strres.js"/>
-<html:script src="chrome://messenger/content/commandglue.js"/>
-<html:script src="chrome://messenger/content/mailWindow.js"/>
-<html:script src="chrome://messenger/content/messageWindow.js"/>
-<html:script src="chrome://messenger/content/accountUtils.js"/>
+	<html:script src="chrome://global/content/strres.js"/>
+	<html:script src="chrome://messenger/content/commandglue.js"/>
+	<html:script src="chrome://messenger/content/mailWindow.js"/>
+	<html:script src="chrome://messenger/content/messageWindow.js"/>
+	<html:script src="chrome://messenger/content/accountUtils.js"/>
 
 	<broadcasterset id="broadcasterset"/>
 
+	<popupset>
+		<popup id="emailAddressPopup"  oncreate="return fillEmailAddressMenu(document.popupNode);" popupanchor="bottomleft">
+			<menuitem value="&AddToAddressBook.label;" oncommand="AddNodeToAddressBook(document.popupNode)"/>
+			<menuitem value="&SendMailTo.label;" oncommand="SendMailToNode(document.popupNode)"/>
+		</popup>
+	</popupset>
     <menubar id="mailMenubar"/>
 
 	<toolbox id="mailToolbarToolbox"/>	

@@ -267,22 +267,10 @@ function OnUnloadMessenger()
 		if(mailSession)
 		{
 			mailSession.RemoveFolderListener(folderListener);
-			mailSession.RemoveMsgWindow(msgWindow);
-			messenger.SetWindow(null, null);
 		}
 	}
 	
-	var msgDS = folderDataSource.QueryInterface(Components.interfaces.nsIMsgRDFDataSource);
-	msgDS.window = null;
-
-	msgDS = messageDataSource.QueryInterface(Components.interfaces.nsIMsgRDFDataSource);
-	msgDS.window = null;
-
-	msgDS = accountManagerDataSource.QueryInterface(Components.interfaces.nsIMsgRDFDataSource);
-	msgDS.window = null;
-
-
-  	msgWindow.closeWindow();
+	OnMailWindowUnload();
 }
 
 
@@ -405,7 +393,6 @@ function AddToSession()
         var mailSession = Components.classes[mailSessionProgID].getService(Components.interfaces.nsIMsgMailSession);
         
         mailSession.AddFolderListener(folderListener);
-        mailSession.AddMsgWindow(msgWindow);
 	} catch (ex) {
         dump("Error adding to session\n");
     }
@@ -1317,6 +1304,24 @@ function SetNextMessageAfterDelete(messagesToCheck, useSelection)
 			gNextMessageAfterDelete = null;
 	}
 }
+
+function SelectFolder(folderUri)
+{
+	var tree = GetFolderTree();
+	var treeitem = document.getElementById(folderUri);
+	if(tree && treeitem)
+		ChangeSelection(tree, treeitem);
+}
+
+function SelectMessage(messageUri)
+{
+	var tree = GetThreadTree();
+	var treeitem = document.getElementById(messageUri);
+	if(tree && treeitem)
+		ChangeSelection(tree, treeitem);
+
+}
+
 
 //3pane related commands.  Need to go in own file.  Putting here for the moment.
 function MsgSortByDate()

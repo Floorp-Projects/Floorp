@@ -79,7 +79,7 @@ Rights Reserved.
                   onclick="return top.ToggleMessageFlagged(event.target.parentNode.parentNode.parentNode)"
                   value="rdf:http://home.netscape.com/NC-rdf#Flagged" />
 				<treecell value="rdf:http://home.netscape.com/NC-rdf#Status"/>
-				<treecell value="rdf:http://home.netscape.com/NC-rdf#Size"/>
+				<treecell value="rdf:http://home.netscape.com/NC-rdf#Size" align="right"/>
 				<treecell value="rdf:http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>
 				<treecell value="rdf:http://home.netscape.com/NC-rdf#TotalMessages"/>
 				<treecell value="rdf:http://home.netscape.com/NC-rdf#OrderReceived"/>

@@ -70,9 +70,7 @@ function OnLoadMessageWindow()
 
 function OnUnloadMessageWindow()
 {
-	messenger.SetWindow(null, null);
-  	msgWindow.closeWindow();
-
+	OnMailWindowUnload();
 }
 
 function CreateMessageWindowGlobals()
@@ -147,4 +145,15 @@ function GetCompositeDataSource(command)
 function SetNextMessageAfterDelete(messagesToCheck, useSelection)
 {
 	gCurrentMessageIsDeleted = true;
+}
+
+function SelectFolder(folderUri)
+{
+	gCurrentFolderUri = folderUri;
+}
+
+function SelectMessage(messageUri)
+{
+	gCurrentMessageUri = messageUri;
+	OpenURL(gCurrentMessageUri);
 }

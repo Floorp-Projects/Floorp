@@ -300,7 +300,7 @@ nsresult nsMsgMailSession::GetTopmostMsgWindow(nsIMsgWindow* *aMsgWindow)
 
 	if(count > 0)
 	{
-	  nsCOMPtr<nsISupports> windowSupports = mWindows->ElementAt(0);
+	  nsCOMPtr<nsISupports> windowSupports = mWindows->ElementAt(count - 1);
 	  if(windowSupports)
 		  rv = windowSupports->QueryInterface(NS_GET_IID(nsIMsgWindow), (void**)aMsgWindow);
 	  if(NS_FAILED(rv))

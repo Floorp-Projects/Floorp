@@ -52,6 +52,7 @@ protected:
 	nsCOMPtr<nsITransactionManager> mTransactionManager;
 	nsCOMPtr<nsIMessageView> mMessageView;
 	nsCOMPtr<nsIMsgFolder> mOpenFolder;
+	nsCOMPtr<nsIMsgWindowCommands> mMsgWindowCommands;
 
 	// let's not make this a strong ref - we don't own it.
 	nsIWebShell *mRootWebShell;
