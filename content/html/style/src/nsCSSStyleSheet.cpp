@@ -509,7 +509,7 @@ public:
   NS_IMETHOD DropRuleProcessorReference(nsICSSStyleRuleProcessor* aProcessor);
 
 
-  NS_IMETHOD ContainsStyleSheet(nsIURI* aURL) const;
+  NS_IMETHOD ContainsStyleSheet(nsIURI* aURL, PRBool& aContains, nsIStyleSheet** aTheChild=nsnull);
 
   NS_IMETHOD AppendStyleSheet(nsICSSStyleSheet* aSheet);
   NS_IMETHOD InsertStyleSheetAt(nsICSSStyleSheet* aSheet, PRInt32 aIndex);
@@ -1784,20 +1784,35 @@ CSSStyleSheetImpl::SetOwningNode(nsIDOMNode* aOwningNode)
 }
 
 NS_IMETHODIMP
-CSSStyleSheetImpl::ContainsStyleSheet(nsIURI* aURL) const
+CSSStyleSheetImpl::ContainsStyleSheet(nsIURI* aURL, PRBool& aContains, nsIStyleSheet** aTheChild /*=nsnull*/)
 {
   NS_PRECONDITION(nsnull != aURL, "null arg");
 
-  PRBool result;
-  nsresult rv = mInner->mURL->Equals(aURL, &result);
-  if (NS_FAILED(rv)) result = PR_FALSE;
+  // first check ourself out
+  nsresult rv = mInner->mURL->Equals(aURL, &aContains);
+  if (NS_FAILED(rv)) aContains = PR_FALSE;
 
-  const CSSStyleSheetImpl*  child = mFirstChild;
-  while ((PR_FALSE == result) && (nsnull != child)) {
-    result = (NS_OK == child->ContainsStyleSheet(aURL));
-    child = child->mNext;
+  if (aContains) {
+    // if we found it and the out-param is there, set it and addref
+    if (aTheChild) {
+      rv = QueryInterface( nsIStyleSheet::GetIID(), (void **)aTheChild);
+    }
+  } else {
+    CSSStyleSheetImpl*  child = mFirstChild;
+    // now check the chil'ins out (recursively)
+    while ((PR_FALSE == aContains) && (nsnull != child)) {
+      child->ContainsStyleSheet(aURL, aContains, aTheChild);
+      if (aContains) {
+        break;
+      } else {
+        child = child->mNext;
+      }
+    }
   }
-  return ((result) ? NS_OK : NS_COMFALSE);
+
+  // NOTE: if there are errors in the above we are handling them locally 
+  //       and not promoting them to the caller
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -3747,8 +3762,10 @@ CSSRuleProcessor::CascadeSheetRulesInto(nsISupports* aSheet, void* aData)
   nsICSSStyleSheet* iSheet = (nsICSSStyleSheet*)aSheet;
   CSSStyleSheetImpl*  sheet = (CSSStyleSheetImpl*)iSheet;
   CascadeEnumData*  data = (CascadeEnumData*)aData;
+  PRBool bSheetEnabled = PR_TRUE;
+  sheet->GetEnabled(bSheetEnabled);
 
-  if ((NS_OK == sheet->UseForMedium(data->mMedium))) {
+  if ((bSheetEnabled) && (NS_OK == sheet->UseForMedium(data->mMedium))) {
     CSSStyleSheetImpl*  child = sheet->mFirstChild;
     while (child) {
       CascadeSheetRulesInto((nsICSSStyleSheet*)child, data);
@@ -3813,15 +3830,14 @@ PRBool IsSimpleXlink(nsIContent *aContent, nsString &aHREF)
       nsAutoString strSimple;
       strSimple.AssignWithConversion("simple");
 
-      // see if there is an xlink namespace'd href attribute
-      nsresult attrState = aContent->GetAttribute(kNameSpaceID_XLink, nsHTMLAtoms::href, aHREF);
-      if (NS_CONTENT_ATTR_HAS_VALUE == attrState) {
-        // see if it is type=simple (we don't deal with other types)
-        nsAutoString val;
-        attrState = aContent->GetAttribute(kNameSpaceID_XLink, nsHTMLAtoms::type, val);
-        if (val == strSimple) {
-          rv = PR_TRUE;
-        }
+      // see if it is type=simple (we don't deal with other types)
+      nsAutoString val;
+      aContent->GetAttribute(kNameSpaceID_XLink, nsHTMLAtoms::type, val);
+      if (val == strSimple) {
+        // see if there is an xlink namespace'd href attribute: 
+        // - get it if there is, if not no big deal, it is not required for xlinks
+        aContent->GetAttribute(kNameSpaceID_XLink, nsHTMLAtoms::href, aHREF);
+        rv = PR_TRUE;
       }
     }
   }

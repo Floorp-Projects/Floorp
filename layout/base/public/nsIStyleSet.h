@@ -75,6 +75,10 @@ public:
   virtual nsIStyleSheet* GetBackstopStyleSheetAt(PRInt32 aIndex) = 0;
   virtual void ReplaceBackstopStyleSheets(nsISupportsArray* aNewSheets) = 0;
 
+  // enable / disable the Quirk style sheet: 
+  // returns NS_FAILURE if none is found, otherwise NS_OK
+  NS_IMETHOD EnableQuirkStyleSheet(PRBool aEnable) = 0;
+
   // get a style context for a non-pseudo frame
   virtual nsIStyleContext* ResolveStyleFor(nsIPresContext* aPresContext,
                                            nsIContent* aContent,
@@ -204,16 +208,22 @@ extern NS_LAYOUT nsresult
   NS_NewStyleSet(nsIStyleSet** aInstancePtrResult);
 
 
-#define kUniqueItemsStartSize 128
 
 class nsUniqueStyleItems : private nsVoidArray
 {
 public :
   // return a singleton instance of the nsUniqueStyleItems object
+  // - will create the instance if none yet exists
   static nsUniqueStyleItems *GetUniqueStyleItems( void ){
     if(mInstance == nsnull){
-      nsUniqueStyleItems *pInstance = new nsUniqueStyleItems;
-      NS_ASSERTION(pInstance == mInstance, "Singleton?");
+#ifdef DEBUG
+      nsUniqueStyleItems *pInstance =
+#endif
+      new nsUniqueStyleItems;
+      NS_ASSERTION(pInstance==mInstance, "Singleton?");
+
+      // mInstance static data member is set in the constructor
+      //  if it is null, then we just end up returning null...
     }
     return mInstance;
   }
@@ -252,7 +262,7 @@ protected:
   nsUniqueStyleItems& operator =(const nsUniqueStyleItems& src);
 
   // make this accessable to factory only
-  nsUniqueStyleItems(void) : nsVoidArray(kUniqueItemsStartSize){
+  nsUniqueStyleItems(void) : nsVoidArray(){
     NS_ASSERTION(mInstance == nsnull, "singleton?");
     mInstance=this;
   }

@@ -491,6 +491,7 @@ sub MakeResourceAliases()
     #//
     _MakeAlias(":mozilla:layout:html:document:src:ua.css",                              "$resource_dir");
     _MakeAlias(":mozilla:layout:html:document:src:html.css",                            "$resource_dir");
+    _MakeAlias(":mozilla:layout:html:document:src:quirk.css",                           "$resource_dir");
     _MakeAlias(":mozilla:layout:html:document:src:arrow.gif",                           "$resource_dir"); 
     _MakeAlias(":mozilla:webshell:tests:viewer:resources:viewer.properties",            "$resource_dir");
     _MakeAlias(":mozilla:intl:uconv:src:charsetalias.properties",                       "$resource_dir");

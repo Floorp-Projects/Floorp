@@ -419,6 +419,14 @@ nsPresContext::SetCompatibilityMode(nsCompatibility aMode)
   if (! mCompatibilityLocked) {
     mCompatibilityMode = aMode;
   }
+
+  // enable the QuirkSheet
+  nsCOMPtr<nsIStyleSet> set;
+  nsresult rv = mShell->GetStyleSet(getter_AddRefs(set));
+  if (NS_SUCCEEDED(rv) && set) {
+    set->EnableQuirkStyleSheet(mCompatibilityMode != eCompatibility_Standard ? PR_TRUE : PR_FALSE);
+  }
+
   return NS_OK;
 }
 
