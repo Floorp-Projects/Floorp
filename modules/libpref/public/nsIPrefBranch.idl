@@ -25,11 +25,31 @@
 #include "nsIFileSpec.idl"
 #include "nsIPrefListener.idl"
 
+%{C++
+
+typedef int (*PrefChangedFunc)(const char *, void *);
+typedef void (*PrefEnumerationFunc)(const char *, void *);
+ 
+%}
+      
+
 native PrefEnumerationFunc(PrefEnumerationFunc);
+native PrefChangedFunc(PrefChangedFunc);
 
 [scriptable, uuid(56c35506-f14b-11d3-99d3-ddbfac2ccf65)]
 interface nsIPrefBranch : nsISupports
 {
+    const long ePrefInvalid = 0;
+    const long ePrefLocked = 1;
+    const long ePrefUserset = 2;
+    const long ePrefConfig = 4;
+    const long ePrefRemote = 8;
+    const long ePrefLilocal = 16;
+    const long ePrefString = 32;
+    const long ePrefInt = 64;
+    const long ePrefBool = 128;
+    const long ePrefValuetypeMask = (ePrefString | ePrefInt | ePrefBool);
+    
     /**
      * the root of this branch, such as "browser."
      */
@@ -38,6 +58,8 @@ interface nsIPrefBranch : nsISupports
     /*
      * standard methods for accessing prefs
      */
+    PRInt32 getPrefType(in string prefName);
+    
     boolean getBoolPref(in string prefName);
     void    setBoolPref(in string prefName, in long value);
     
@@ -54,6 +76,8 @@ interface nsIPrefBranch : nsISupports
     nsIFileSpec getFileSpecPref(in string prefName);
     void setFileSpecPref(in string prefName, in nsIFileSpec value);
 
+    boolean prefIsLocked(in string pref);
+    
     void clearPref(in string prefName);
     
     /* do we need other prefs like color, rect, etc?
@@ -64,10 +88,10 @@ interface nsIPrefBranch : nsISupports
      * same as above but for getting default prefs
      */
     boolean getDefaultBoolPref(in string prefName);
-    void    setDefaultBoolPref(in string prefName in boolean value);
+    void    setDefaultBoolPref(in string prefName, in boolean value);
     
     long    getDefaultIntPref(in string prefName);
-    void    setDefaultIntPref(in string prefName, in long value)
+    void    setDefaultIntPref(in string prefName, in long value);
     
     string  getDefaultCharPref(in string prefName);
     void    setDefaultCharPref(in string prefName, in string value);
