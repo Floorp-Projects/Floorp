@@ -44,6 +44,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 DIRS		= module
+MOZILLA_INTERNAL_API = 1
 
 MODULE		= ipcd_test
 REQUIRES	= \

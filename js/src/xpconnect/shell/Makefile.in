@@ -45,6 +45,8 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpcshell
 SIMPLE_PROGRAMS	= xpcshell$(BIN_SUFFIX)
+MOZILLA_INTERNAL_API = 1
+
 REQUIRES	= xpconnect \
 		  xpcom \
 		  js \

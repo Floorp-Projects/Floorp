@@ -46,6 +46,8 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpctools
 LIBRARY_NAME	= xpctools
+MOZILLA_INTERNAL_API = 1
+
 REQUIRES	= xpcom \
 		  xpconnect \
 		  js \

@@ -45,6 +45,8 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= TestXPC
 SIMPLE_PROGRAMS = TestXPC$(BIN_SUFFIX)
+MOZILLA_INTERNAL_API = 1
+
 REQUIRES	= xpconnect \
 		  xpcom \
 		  string \
