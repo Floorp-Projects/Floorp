@@ -38,8 +38,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.68 $ 
-# $Date: 2003/08/17 01:37:53 $ 
+# $Revision: 1.69 $ 
+# $Date: 2003/12/23 13:32:16 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_Bonsai.pm,v $ 
 # $Name:  $ 
@@ -105,7 +105,7 @@ use HTMLPopUp;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.68 $ )[1];
+$VERSION = ( qw $Revision: 1.69 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -180,11 +180,11 @@ sub get_all_bonsai_data {
 
       # Allow us to create links which point to any row.
 
-      my $localtime = localtime($time);
+      my $pretty_time = HTMLPopUp::timeHTML($time);
       my $cell_time =
           HTMLPopUp::Link(
                           "name" => $time,
-                          "linktxt" => $localtime,
+                          "linktxt" => $pretty_time,
                           ) ;
       
       ($names) &&
@@ -575,7 +575,6 @@ sub render_authors {
             
 
             my (@times) = sort {$b <=> $a} keys %{ $authors{$author} };   
-            my $checkin_page_reference = $times[0];
             my @bug_numbers;
             # sort numerically descending
             foreach $time (@times) {
@@ -634,7 +633,7 @@ sub render_authors {
             $link_choices .= "<br>";
 
             my ($href) = (FileStructure::get_filename($tree, 'tree_URL').
-                          "/all_vc.html#$checkin_page_reference");
+                          "/all_vc.html#$mindate");
 
             $link_choices .= 
               HTMLPopUp::Link(
@@ -776,6 +775,7 @@ sub render_empty_cell {
     if ($DEBUG) {
         push @outrow, ("\t<!-- VC_Bonsai: empty data. ".
                        "tree: $tree, ".
+                       "last_treestate: $last_treestate, ".
                        "filling till: $local_till_time, ".
                        "-->\n");
     }
@@ -902,7 +902,7 @@ sub status_table_row {
   $next_db_index = $db_index;
     
   while (
-         ($row_index+$rowspan < $#{ $row_times }) &&
+         ($row_index+$rowspan <= $#{ $row_times }) &&
 
          ( (!($next_authors)) || (!(scalar(%{$next_authors}))) ) &&
 
