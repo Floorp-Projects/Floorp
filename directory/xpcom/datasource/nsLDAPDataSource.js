@@ -276,7 +276,7 @@ nsLDAPDataSource.prototype = {
     forceAssert: function() {
 	dump("forceAssert() called\n");
 	for ( var i = 0 ; i < this.mObserverList.length ; i++) {
-	    this.mObserverList[i].OnAssert(this.kRasputin, this.kNC_child, 
+	    this.mObserverList[i].onAssert(this.kRasputin, this.kNC_child, 
 					   this.kElvis);
 	}
     },

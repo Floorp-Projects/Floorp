@@ -499,9 +499,10 @@ NS_IMETHODIMP nsMessageViewDataSource::GetDataSources(nsISimpleEnumerator** _res
   return NS_NewSingletonEnumerator(_result, mDataSource);
 }
 
-NS_IMETHODIMP nsMessageViewDataSource::OnAssert(nsIRDFResource* subject,
-						nsIRDFResource* predicate,
-						nsIRDFNode* object)
+NS_IMETHODIMP nsMessageViewDataSource::OnAssert(nsIRDFDataSource* aDataSource,
+                                                nsIRDFResource* subject,
+                                                nsIRDFResource* predicate,
+                                                nsIRDFNode* object)
 {
 	if (mObservers) {
     PRUint32 count;
@@ -510,7 +511,7 @@ NS_IMETHODIMP nsMessageViewDataSource::OnAssert(nsIRDFResource* subject,
 
     for (PRInt32 i = count - 1; i >= 0; --i) {
         nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
-        obs->OnAssert(subject, predicate, object);
+        obs->OnAssert(this, subject, predicate, object);
         NS_RELEASE(obs);
     }
     }
@@ -518,9 +519,10 @@ NS_IMETHODIMP nsMessageViewDataSource::OnAssert(nsIRDFResource* subject,
 
 }
 
-NS_IMETHODIMP nsMessageViewDataSource::OnUnassert(nsIRDFResource* subject,
-                          nsIRDFResource* predicate,
-                          nsIRDFNode* object)
+NS_IMETHODIMP nsMessageViewDataSource::OnUnassert(nsIRDFDataSource* aDataSource,
+                                                  nsIRDFResource* subject,
+                                                  nsIRDFResource* predicate,
+                                                  nsIRDFNode* object)
 {
     if (mObservers) {
         PRUint32 count;
@@ -529,7 +531,7 @@ NS_IMETHODIMP nsMessageViewDataSource::OnUnassert(nsIRDFResource* subject,
 
         for (PRInt32 i = PRInt32(count) - 1; i >= 0; --i) {
             nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
-            obs->OnUnassert(subject, predicate, object);
+            obs->OnUnassert(this, subject, predicate, object);
             NS_RELEASE(obs);
         }
     }
@@ -537,7 +539,8 @@ NS_IMETHODIMP nsMessageViewDataSource::OnUnassert(nsIRDFResource* subject,
 }
 
 
-NS_IMETHODIMP nsMessageViewDataSource::OnChange(nsIRDFResource* aSource,
+NS_IMETHODIMP nsMessageViewDataSource::OnChange(nsIRDFDataSource* aDataSource,
+                                                nsIRDFResource* aSource,
                                                 nsIRDFResource* aProperty,
                                                 nsIRDFNode* aOldTarget,
                                                 nsIRDFNode* aNewTarget)
@@ -549,7 +552,7 @@ NS_IMETHODIMP nsMessageViewDataSource::OnChange(nsIRDFResource* aSource,
 
     for (PRInt32 i = PRInt32(count) - 1; i >= 0; --i) {
       nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
-      obs->OnChange(aSource, aProperty, aOldTarget, aNewTarget);
+      obs->OnChange(this, aSource, aProperty, aOldTarget, aNewTarget);
       NS_RELEASE(obs);
     }
   }
@@ -557,7 +560,8 @@ NS_IMETHODIMP nsMessageViewDataSource::OnChange(nsIRDFResource* aSource,
 }
 
 
-NS_IMETHODIMP nsMessageViewDataSource::OnMove(nsIRDFResource* aOldSource,
+NS_IMETHODIMP nsMessageViewDataSource::OnMove(nsIRDFDataSource* aDataSource,
+                                              nsIRDFResource* aOldSource,
                                               nsIRDFResource* aNewSource,
                                               nsIRDFResource* aProperty,
                                               nsIRDFNode* aTarget)
@@ -569,10 +573,20 @@ NS_IMETHODIMP nsMessageViewDataSource::OnMove(nsIRDFResource* aOldSource,
 
     for (PRInt32 i = PRInt32(count) - 1; i >= 0; --i) {
       nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
-      obs->OnMove(aOldSource, aNewSource, aProperty, aTarget);
+      obs->OnMove(aDataSource, aOldSource, aNewSource, aProperty, aTarget);
       NS_RELEASE(obs);
     }
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMessageViewDataSource::BeginUpdateBatch(nsIRDFDataSource* aDataSource)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMessageViewDataSource::EndUpdateBatch(nsIRDFDataSource* aDataSource)
+{
   return NS_OK;
 }
 

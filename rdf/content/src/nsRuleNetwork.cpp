@@ -655,23 +655,25 @@ JoinNode::Propogate(const InstantiationSet& aInstantiations, void* aClosure)
     InstantiationSet instantiations = aInstantiations;
     InnerNode* test = hasLeftAssignment ? mRightParent : mLeftParent;
 
-    // extend the assignments
-    InstantiationSet::Iterator last = instantiations.Last();
-    for (InstantiationSet::Iterator inst = instantiations.First(); inst != last; ++inst) {
-        if (hasLeftAssignment) {
-            // the left is bound
-            Value leftValue;
-            inst->mAssignments.GetAssignmentFor(mLeftVariable, &leftValue);
-            rv = inst->AddAssignment(mRightVariable, leftValue);
-        }
-        else {
-            // the right is bound
-            Value rightValue;
-            inst->mAssignments.GetAssignmentFor(mRightVariable, &rightValue);
-            rv = inst->AddAssignment(mLeftVariable, rightValue);
-        }
+    {
+        // extend the assignments
+        InstantiationSet::Iterator last = instantiations.Last();
+        for (InstantiationSet::Iterator inst = instantiations.First(); inst != last; ++inst) {
+            if (hasLeftAssignment) {
+                // the left is bound
+                Value leftValue;
+                inst->mAssignments.GetAssignmentFor(mLeftVariable, &leftValue);
+                rv = inst->AddAssignment(mRightVariable, leftValue);
+            }
+            else {
+                // the right is bound
+                Value rightValue;
+                inst->mAssignments.GetAssignmentFor(mRightVariable, &rightValue);
+                rv = inst->AddAssignment(mLeftVariable, rightValue);
+            }
 
-        if (NS_FAILED(rv)) return rv;
+            if (NS_FAILED(rv)) return rv;
+        }
     }
 
     if (! instantiations.Empty()) {

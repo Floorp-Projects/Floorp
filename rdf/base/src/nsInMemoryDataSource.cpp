@@ -1149,7 +1149,7 @@ InMemoryDataSource::Assert(nsIRDFResource* aSource,
 
         for (PRInt32 i = PRInt32(count) - 1; i >= 0; --i) {
             nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
-            obs->OnAssert(aSource, aProperty, aTarget);
+            obs->OnAssert(this, aSource, aProperty, aTarget);
             NS_RELEASE(obs);
             // XXX ignore return value?
         }
@@ -1259,7 +1259,7 @@ InMemoryDataSource::Unassert(nsIRDFResource* aSource,
 
         for (PRInt32 i = PRInt32(count) - 1; i >= 0; --i) {
             nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
-            obs->OnUnassert(aSource, aProperty, aTarget);
+            obs->OnUnassert(this, aSource, aProperty, aTarget);
             NS_RELEASE(obs);
             // XXX ignore return value?
         }
@@ -1314,7 +1314,7 @@ InMemoryDataSource::Change(nsIRDFResource* aSource,
 
         for (PRInt32 i = PRInt32(count) - 1; i >= 0; --i) {
             nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
-            obs->OnChange(aSource, aProperty, aOldTarget, aNewTarget);
+            obs->OnChange(this, aSource, aProperty, aOldTarget, aNewTarget);
             NS_RELEASE(obs);
             // XXX ignore return value?
         }
@@ -1369,7 +1369,7 @@ InMemoryDataSource::Move(nsIRDFResource* aOldSource,
 
         for (PRInt32 i = PRInt32(count) - 1; i >= 0; --i) {
             nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
-            obs->OnMove(aOldSource, aNewSource, aProperty, aTarget);
+            obs->OnMove(this, aOldSource, aNewSource, aProperty, aTarget);
             NS_RELEASE(obs);
             // XXX ignore return value?
         }
@@ -1639,7 +1639,7 @@ InMemoryDataSource::Sweep()
             if (NS_SUCCEEDED(rv)) {
                 for (PRInt32 i = PRInt32(count) - 1; i >= 0; --i) {
                     nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
-                    obs->OnUnassert(as->mSource, as->mProperty, as->mTarget);
+                    obs->OnUnassert(this, as->mSource, as->mProperty, as->mTarget);
                     // XXX ignore return value?
                 }
             }

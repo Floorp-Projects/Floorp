@@ -3474,9 +3474,9 @@ nsBookmarksService::ChangeURL(nsIRDFResource* aOldURL,
 		if (NS_FAILED(rv)) return rv;
 
 		// XXX rjc: was just aNewURL. Don't both aOldURL as well as aNewURL need to be pinged?
-		rv = OnAssert(aOldURL, kNC_URL, literal);
+		rv = OnAssert(this, aOldURL, kNC_URL, literal);
 		if (NS_FAILED(rv)) return rv;
-		rv = OnAssert(aNewURL, kNC_URL, literal);
+		rv = OnAssert(this, aNewURL, kNC_URL, literal);
 		if (NS_FAILED(rv)) return rv;
 	}
 
@@ -4917,7 +4917,8 @@ nsBookmarksService::CanAccept(nsIRDFResource* aSource,
 //
 
 NS_IMETHODIMP
-nsBookmarksService::OnAssert(nsIRDFResource* aSource,
+nsBookmarksService::OnAssert(nsIRDFDataSource* aDataSource,
+			     nsIRDFResource* aSource,
 			     nsIRDFResource* aProperty,
 			     nsIRDFNode* aTarget)
 {
@@ -4932,7 +4933,7 @@ nsBookmarksService::OnAssert(nsIRDFResource* aSource,
 			nsIRDFObserver* obs =
 				NS_REINTERPRET_CAST(nsIRDFObserver*, mObservers->ElementAt(i));
 
-			(void) obs->OnAssert(aSource, aProperty, aTarget);
+			(void) obs->OnAssert(this, aSource, aProperty, aTarget);
 			NS_RELEASE(obs);
 		}
 	}
@@ -4942,7 +4943,8 @@ nsBookmarksService::OnAssert(nsIRDFResource* aSource,
 
 
 NS_IMETHODIMP
-nsBookmarksService::OnUnassert(nsIRDFResource* aSource,
+nsBookmarksService::OnUnassert(nsIRDFDataSource* aDataSource,
+			       nsIRDFResource* aSource,
 			       nsIRDFResource* aProperty,
 			       nsIRDFNode* aTarget)
 {
@@ -4957,7 +4959,7 @@ nsBookmarksService::OnUnassert(nsIRDFResource* aSource,
 			nsIRDFObserver* obs =
 				NS_REINTERPRET_CAST(nsIRDFObserver*, mObservers->ElementAt(i));
 
-			(void) obs->OnUnassert(aSource, aProperty, aTarget);
+			(void) obs->OnUnassert(this, aSource, aProperty, aTarget);
 			NS_RELEASE(obs);
 		}
 	}
@@ -4966,7 +4968,8 @@ nsBookmarksService::OnUnassert(nsIRDFResource* aSource,
 }
 
 NS_IMETHODIMP
-nsBookmarksService::OnChange(nsIRDFResource* aSource,
+nsBookmarksService::OnChange(nsIRDFDataSource* aDataSource,
+			     nsIRDFResource* aSource,
 			     nsIRDFResource* aProperty,
 			     nsIRDFNode* aOldTarget,
 			     nsIRDFNode* aNewTarget)
@@ -4982,7 +4985,7 @@ nsBookmarksService::OnChange(nsIRDFResource* aSource,
 			nsIRDFObserver* obs =
 				NS_REINTERPRET_CAST(nsIRDFObserver*, mObservers->ElementAt(i));
 
-			(void) obs->OnChange(aSource, aProperty, aOldTarget, aNewTarget);
+			(void) obs->OnChange(this, aSource, aProperty, aOldTarget, aNewTarget);
 			NS_RELEASE(obs);
 		}
 	}
@@ -4991,7 +4994,8 @@ nsBookmarksService::OnChange(nsIRDFResource* aSource,
 }
 
 NS_IMETHODIMP
-nsBookmarksService::OnMove(nsIRDFResource* aOldSource,
+nsBookmarksService::OnMove(nsIRDFDataSource* aDataSource,
+			   nsIRDFResource* aOldSource,
 			   nsIRDFResource* aNewSource,
 			   nsIRDFResource* aProperty,
 			   nsIRDFNode* aTarget)
@@ -5007,12 +5011,24 @@ nsBookmarksService::OnMove(nsIRDFResource* aOldSource,
 			nsIRDFObserver* obs =
 				NS_REINTERPRET_CAST(nsIRDFObserver*, mObservers->ElementAt(i));
 
-			(void) obs->OnMove(aOldSource, aNewSource, aProperty, aTarget);
+			(void) obs->OnMove(this, aOldSource, aNewSource, aProperty, aTarget);
 			NS_RELEASE(obs);
 		}
 	}
 
 	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBookmarksService::BeginUpdateBatch(nsIRDFDataSource* aDataSource)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBookmarksService::EndUpdateBatch(nsIRDFDataSource* aDataSource)
+{
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////

@@ -388,7 +388,7 @@ nsresult nsMsgRDFDataSource::NotifyObservers(nsIRDFResource *subject,
     
 	if(mObservers)
 	{
-		nsMsgRDFNotification note = { subject, property, object };
+		nsMsgRDFNotification note = { this, subject, property, object };
 		if(change)
 			mObservers->EnumerateForwards(changeEnumFunc, &note);
 		else if (assert)
@@ -405,7 +405,8 @@ nsMsgRDFDataSource::assertEnumFunc(nsISupports *aElement, void *aData)
   nsMsgRDFNotification *note = (nsMsgRDFNotification *)aData;
   nsIRDFObserver* observer = (nsIRDFObserver *)aElement;
   
-  observer->OnAssert(note->subject,
+  observer->OnAssert(note->datasource,
+                     note->subject,
                      note->property,
                      note->object);
   return PR_TRUE;
@@ -417,9 +418,10 @@ nsMsgRDFDataSource::unassertEnumFunc(nsISupports *aElement, void *aData)
   nsMsgRDFNotification* note = (nsMsgRDFNotification *)aData;
   nsIRDFObserver* observer = (nsIRDFObserver *)aElement;
 
-  observer->OnUnassert(note->subject,
-                     note->property,
-                     note->object);
+  observer->OnUnassert(note->datasource,
+                       note->subject,
+                       note->property,
+                       note->object);
   return PR_TRUE;
 }
 
@@ -429,7 +431,8 @@ nsMsgRDFDataSource::changeEnumFunc(nsISupports *aElement, void *aData)
   nsMsgRDFNotification* note = (nsMsgRDFNotification *)aData;
   nsIRDFObserver* observer = (nsIRDFObserver *)aElement;
 
-  observer->OnChange(note->subject,
+  observer->OnChange(note->datasource,
+                     note->subject,
                      note->property,
                      nsnull, note->object);
   return PR_TRUE;

@@ -31,6 +31,7 @@
 
 // this is used for notification of observers using nsVoidArray
 typedef struct _nsMsgRDFNotification {
+  nsIRDFDataSource *datasource;
   nsIRDFResource *subject;
   nsIRDFResource *property;
   nsIRDFNode *object;

@@ -43,6 +43,7 @@
 
 // this is used for notification of observers using nsVoidArray
 typedef struct _nsAbRDFNotification {
+  nsIRDFDataSource *datasource;
   nsIRDFResource *subject;
   nsIRDFResource *property;
   nsIRDFNode *object;
@@ -83,7 +84,8 @@ PRBool nsAbRDFDataSource::changeEnumFunc(nsISupports *aElement, void *aData)
   nsAbRDFNotification* note = (nsAbRDFNotification *)aData;
   nsIRDFObserver* observer = (nsIRDFObserver *)aElement;
 
-  observer->OnChange(note->subject,
+  observer->OnChange(note->datasource,
+                     note->subject,
                      note->property,
                      nsnull, note->object);
   return PR_TRUE;
@@ -94,7 +96,8 @@ PRBool nsAbRDFDataSource::assertEnumFunc(nsISupports *aElement, void *aData)
   nsAbRDFNotification *note = (nsAbRDFNotification *)aData;
   nsIRDFObserver* observer = (nsIRDFObserver *)aElement;
   
-  observer->OnAssert(note->subject,
+  observer->OnAssert(note->datasource,
+                     note->subject,
                      note->property,
                      note->object);
   return PR_TRUE;
@@ -105,9 +108,10 @@ PRBool nsAbRDFDataSource::unassertEnumFunc(nsISupports *aElement, void *aData)
   nsAbRDFNotification* note = (nsAbRDFNotification *)aData;
   nsIRDFObserver* observer = (nsIRDFObserver *)aElement;
 
-  observer->OnUnassert(note->subject,
-                     note->property,
-                     note->object);
+  observer->OnUnassert(note->datasource,
+                       note->subject,
+                       note->property,
+                       note->object);
   return PR_TRUE;
 }
 
@@ -122,7 +126,7 @@ nsresult nsAbRDFDataSource::NotifyObservers(nsIRDFResource *subject,
 
 	if (mObservers)
 	{
-		nsAbRDFNotification note = { subject, property, object };
+		nsAbRDFNotification note = { this, subject, property, object };
 		if (change)
 			mObservers->EnumerateForwards(changeEnumFunc, &note);
 		else if (assert)

@@ -107,6 +107,7 @@ protected:
 
 	PRBool      mAllowNegativeAssertions;
 	PRBool      mCoalesceDuplicateArcs;
+    PRInt32     mUpdateBatchNest;
 
     nsFixedSizeAllocator mAllocator;
 
@@ -531,7 +532,8 @@ NS_NewRDFCompositeDataSource(nsIRDFCompositeDataSource** result)
 
 CompositeDataSourceImpl::CompositeDataSourceImpl(void)
 	: mAllowNegativeAssertions(PR_TRUE),
-	  mCoalesceDuplicateArcs(PR_TRUE)
+	  mCoalesceDuplicateArcs(PR_TRUE),
+      mUpdateBatchNest(0)
 {
     NS_INIT_REFCNT();
 
@@ -1408,7 +1410,8 @@ CompositeDataSourceImpl::GetDataSources(nsISimpleEnumerator** _result)
 }
 
 NS_IMETHODIMP
-CompositeDataSourceImpl::OnAssert(nsIRDFResource* aSource,
+CompositeDataSourceImpl::OnAssert(nsIRDFDataSource* aDataSource,
+                                  nsIRDFResource* aSource,
                                   nsIRDFResource* aProperty,
                                   nsIRDFNode* aTarget)
 {
@@ -1433,14 +1436,15 @@ CompositeDataSourceImpl::OnAssert(nsIRDFResource* aSource,
 
     for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
         nsIRDFObserver* obs = NS_STATIC_CAST(nsIRDFObserver*, mObservers[i]);
-        obs->OnAssert(aSource, aProperty, aTarget);
+        obs->OnAssert(this, aSource, aProperty, aTarget);
         // XXX ignore return value?
     }
     return NS_OK;
 }
 
 NS_IMETHODIMP
-CompositeDataSourceImpl::OnUnassert(nsIRDFResource* aSource,
+CompositeDataSourceImpl::OnUnassert(nsIRDFDataSource* aDataSource,
+                                    nsIRDFResource* aSource,
                                     nsIRDFResource* aProperty,
                                     nsIRDFNode* aTarget)
 {
@@ -1465,7 +1469,7 @@ CompositeDataSourceImpl::OnUnassert(nsIRDFResource* aSource,
 
     for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
         nsIRDFObserver* obs = NS_STATIC_CAST(nsIRDFObserver*, mObservers[i]);
-        obs->OnUnassert(aSource, aProperty, aTarget);
+        obs->OnUnassert(this, aSource, aProperty, aTarget);
         // XXX ignore return value?
     }
     return NS_OK;
@@ -1473,7 +1477,8 @@ CompositeDataSourceImpl::OnUnassert(nsIRDFResource* aSource,
 
 
 NS_IMETHODIMP
-CompositeDataSourceImpl::OnChange(nsIRDFResource* aSource,
+CompositeDataSourceImpl::OnChange(nsIRDFDataSource* aDataSource,
+                                  nsIRDFResource* aSource,
                                   nsIRDFResource* aProperty,
                                   nsIRDFNode* aOldTarget,
                                   nsIRDFNode* aNewTarget)
@@ -1486,7 +1491,7 @@ CompositeDataSourceImpl::OnChange(nsIRDFResource* aSource,
     // ignore for now :-/.
     for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
         nsIRDFObserver* obs = NS_STATIC_CAST(nsIRDFObserver*, mObservers[i]);
-        obs->OnChange(aSource, aProperty, aOldTarget, aNewTarget);
+        obs->OnChange(this, aSource, aProperty, aOldTarget, aNewTarget);
         // XXX ignore return value?
     }
     return NS_OK;
@@ -1494,7 +1499,8 @@ CompositeDataSourceImpl::OnChange(nsIRDFResource* aSource,
 
 
 NS_IMETHODIMP
-CompositeDataSourceImpl::OnMove(nsIRDFResource* aOldSource,
+CompositeDataSourceImpl::OnMove(nsIRDFDataSource* aDataSource,
+                                nsIRDFResource* aOldSource,
                                 nsIRDFResource* aNewSource,
                                 nsIRDFResource* aProperty,
                                 nsIRDFNode* aTarget)
@@ -1507,9 +1513,43 @@ CompositeDataSourceImpl::OnMove(nsIRDFResource* aOldSource,
     // ignore for now :-/.
     for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
         nsIRDFObserver* obs = NS_STATIC_CAST(nsIRDFObserver*, mObservers[i]);
-        obs->OnMove(aOldSource, aNewSource, aProperty, aTarget);
+        obs->OnMove(this, aOldSource, aNewSource, aProperty, aTarget);
         // XXX ignore return value?
     }
     return NS_OK;
 }
 
+
+NS_IMETHODIMP
+CompositeDataSourceImpl::BeginUpdateBatch(nsIRDFDataSource* aDataSource)
+{
+    PRInt32 nest = mUpdateBatchNest++;
+    if (nest == 0) {
+        for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
+            nsIRDFObserver* obs = NS_STATIC_CAST(nsIRDFObserver*, mObservers[i]);
+            obs->BeginUpdateBatch(this);
+            // XXX ignore return value?
+        }
+    }
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+CompositeDataSourceImpl::EndUpdateBatch(nsIRDFDataSource* aDataSource)
+{
+    PRInt32 nest = --mUpdateBatchNest;
+    if (nest < 0) {
+        NS_ERROR("badly nested update batch");
+        mUpdateBatchNest = 0;
+        return NS_ERROR_UNEXPECTED;
+    }
+    if (nest == 0) {
+        for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
+            nsIRDFObserver* obs = NS_STATIC_CAST(nsIRDFObserver*, mObservers[i]);
+            obs->EndUpdateBatch(this);
+            // XXX ignore return value?
+        }
+    }
+    return NS_OK;
+}
