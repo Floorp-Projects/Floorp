@@ -983,17 +983,18 @@ nsHTMLReflowState::ComputeBlockBoxData(nsIPresContext& aPresContext,
   if (eStyleUnit_Auto == aWidthUnit) {
     if (NS_FRAME_IS_REPLACED(frameType)) {
       // Block-level replaced element in the flow. A specified value of 
-      // 'auto' uses the element's intrinsic width
+      // 'auto' uses the element's intrinsic width (CSS2 10.3.4)
       computedWidth = NS_INTRINSICSIZE;
     } else {
-      // Block-level non-replaced element in the flow
+      // Block-level non-replaced element in the flow. 'auto' values
+      // for margin-left and margin-right become 0 and the sum of the
+      // areas must equal the width of the content-area of the parent
+      // element.
       if (NS_UNCONSTRAINEDSIZE == availableWidth) {
+        // During pass1 table reflow, auto side margin values are
+        // uncomputable (== 0).
         computedWidth = NS_UNCONSTRAINEDSIZE;
       } else {
-        // Block-level non-replaced element in the flow. 'auto'
-        // values for margin-left and margin-right become 0 and the
-        // sum of the areas must equal the width of the content-area
-        // of the parent element.
         computedWidth = availableWidth - computedMargin.left -
           computedMargin.right - mComputedBorderPadding.left -
           mComputedBorderPadding.right;
@@ -1008,7 +1009,6 @@ nsHTMLReflowState::ComputeBlockBoxData(nsIPresContext& aPresContext,
           // the value for 'width'
           computedWidth = mComputedMinWidth;
         }
-        CalculateLeftRightMargin(cbrs, computedWidth);
       }
     }
   } else {
@@ -1039,11 +1039,10 @@ nsHTMLReflowState::ComputeBlockBoxData(nsIPresContext& aPresContext,
       computedWidth = mComputedMinWidth;
     }
 
-    // Calculate the computed left and right margin again taking into
-    // account the computed width, border/padding, and width of the
-    // containing block
-    CalculateLeftRightMargin(cbrs, computedWidth);
+    // Now that we have the computed-width, compute the side margins
+    CalculateBlockSideMargins(cbrs, computedWidth);
   }
+
   
   // Compute the content height
   if (eStyleUnit_Inherit == aHeightUnit) {
@@ -1078,44 +1077,89 @@ nsHTMLReflowState::ComputeBlockBoxData(nsIPresContext& aPresContext,
   }
 }
 
-// Helper function that re-calculates the left and right margin based on
-// the width of the containing block, the border/padding, and the computed
-// width.
+// This code enforces section 10.3.3 of the CSS2 spec for this formula:
 //
-// This function is called by InitConstraints() when the 'width' property
-// has a value other than 'auto'
+// 'margin-left' + 'border-left-width' + 'padding-left' + 'width' +
+//   'padding-right' + 'border-right-width' + 'margin-right'
+//   = width of containing block 
+//
+// Note: the width unit is not auto when this is called
 void
-nsHTMLReflowState::CalculateLeftRightMargin(const nsHTMLReflowState* cbrs,
-                                            nscoord aComputedWidth)
+nsHTMLReflowState::CalculateBlockSideMargins(const nsHTMLReflowState* cbrs,
+                                             nscoord aComputedWidth)
+{
+  // We can only provide values for auto side margins in a constrained
+  // reflow. For unconstrained reflow there is no effective width to
+  // compute against...
+  if ((NS_UNCONSTRAINEDSIZE == aComputedWidth) ||
+      (NS_UNCONSTRAINEDSIZE == cbrs->computedWidth)) {
+    return;
+  }
+
+  nscoord sum = computedMargin.left + mComputedBorderPadding.left +
+    aComputedWidth + mComputedBorderPadding.right + computedMargin.right;
+  if (sum == cbrs->computedWidth) {
+    // The sum is already correct
+    return;
+  }
+
+  // Determine the left and right margin values. The width value
+  // remains constant while we do this.
+  PRBool isAutoLeftMargin =
+    eStyleUnit_Auto == mStyleSpacing->mMargin.GetLeftUnit();
+  PRBool isAutoRightMargin =
+    eStyleUnit_Auto == mStyleSpacing->mMargin.GetRightUnit();
+
+  // Calculate how much space is available for margins
+  nscoord availMarginSpace = cbrs->computedWidth - aComputedWidth -
+    mComputedBorderPadding.left - mComputedBorderPadding.right;
+
+  // See whether we're over constrained
+  if (!isAutoLeftMargin && !isAutoRightMargin) {
+    // Neither margin is 'auto' so we're over constrained. Use the
+    // 'direction' property to tell which margin to ignore
+    if (NS_STYLE_DIRECTION_LTR == mStyleDisplay->mDirection) {
+      isAutoRightMargin = PR_TRUE;
+    } else {
+      isAutoLeftMargin = PR_TRUE;
+    }
+  }
+
+  if (isAutoLeftMargin) {
+    if (isAutoRightMargin) {
+      // Both margins are 'auto' so their computed values are equal
+      computedMargin.left = availMarginSpace / 2;
+      computedMargin.right = availMarginSpace - computedMargin.left;
+    } else {
+      computedMargin.left = availMarginSpace - computedMargin.right;
+    }
+  } else if (isAutoRightMargin) {
+    computedMargin.right = availMarginSpace - computedMargin.left;
+  }
+}
+
+#if 0
+// XXX I have no idea if this is right or not -- kipp
+void
+nsHTMLReflowState::CalculateTableSideMargins(const nsHTMLReflowState* cbrs,
+                                             nscoord aComputedWidth)
 {
   // We can only provide values for auto side margins in a constrained
   // reflow. For unconstrained reflow there is no effective width to
   // compute against...
   if ((NS_UNCONSTRAINEDSIZE != aComputedWidth) && 
       (NS_UNCONSTRAINEDSIZE != cbrs->computedWidth)) {
-
-    PRBool isAutoLeftMargin = eStyleUnit_Auto == mStyleSpacing->mMargin.GetLeftUnit();
-    PRBool isAutoRightMargin = eStyleUnit_Auto == mStyleSpacing->mMargin.GetRightUnit();
+    PRBool isAutoLeftMargin =
+      eStyleUnit_Auto == mStyleSpacing->mMargin.GetLeftUnit();
+    PRBool isAutoRightMargin =
+      eStyleUnit_Auto == mStyleSpacing->mMargin.GetRightUnit();
 
     // Calculate how much space is available for margins
     nscoord availMarginSpace = cbrs->computedWidth - aComputedWidth -
       mComputedBorderPadding.left - mComputedBorderPadding.right;
 
-    if (availMarginSpace > 0) {
-
+    if (availMarginSpace != 0) {
       // See whether we're over constrained
-      if (!isAutoLeftMargin && !isAutoRightMargin) {
-        // Neither margin is 'auto' so we're over constrained. Use the
-        // 'direction' property to tell which margin to ignore
-/*XXX*/      if (NS_STYLE_DISPLAY_TABLE != mStyleDisplay->mDisplay) {
-  if (NS_STYLE_DIRECTION_LTR == mStyleDisplay->mDirection) {
-    isAutoRightMargin = PR_TRUE;
-  } else {
-    isAutoLeftMargin = PR_TRUE;
-  }
-/*XXX*/      }
-      }
-
       if (isAutoLeftMargin) {
         if (isAutoRightMargin) {
           // Both margins are 'auto' so their computed values are equal
@@ -1124,13 +1168,13 @@ nsHTMLReflowState::CalculateLeftRightMargin(const nsHTMLReflowState* cbrs,
         } else {
           computedMargin.left = availMarginSpace - computedMargin.right;
         }
-
       } else if (isAutoRightMargin) {
         computedMargin.right = availMarginSpace - computedMargin.left;
       }
     }
   }
 }
+#endif
 
 nscoord
 nsHTMLReflowState::CalcLineHeight(nsIPresContext& aPresContext,
@@ -1148,10 +1192,9 @@ nsHTMLReflowState::CalcLineHeight(nsIPresContext& aPresContext,
       if (nsnull != text) {
         nsStyleUnit unit = text->mLineHeight.GetUnit();
         if (eStyleUnit_Normal == unit) {
-          // Normal value; we use a factor of 1.0 for normal
-          lineHeight = elementFont->mFont.size;
+          // Normal value
 #ifdef NOISY_VERTICAL_ALIGN
-          printf("  line-height: normal result=%d\n", lineHeight);
+          printf("  line-height: normal\n");
 #endif
           break;
         } else if (eStyleUnit_Factor == unit) {
@@ -1160,6 +1203,9 @@ nsHTMLReflowState::CalcLineHeight(nsIPresContext& aPresContext,
           // element times the inherited number.
           nscoord size = elementFont->mFont.size;
           lineHeight = nscoord(size * text->mLineHeight.GetFactorValue());
+          if (lineHeight < 0) {
+            lineHeight = -1;
+          }
 #ifdef NOISY_VERTICAL_ALIGN
           printf("  line-height: factor=%g result=%d\n",
                  text->mLineHeight.GetFactorValue(), lineHeight);
@@ -1168,6 +1214,9 @@ nsHTMLReflowState::CalcLineHeight(nsIPresContext& aPresContext,
         }
         else if (eStyleUnit_Coord == unit) {
           lineHeight = text->mLineHeight.GetCoordValue();
+          if (lineHeight < 0) {
+            lineHeight = -1;
+          }
           break;
         }
         else if (eStyleUnit_Percent == unit) {
@@ -1177,6 +1226,9 @@ nsHTMLReflowState::CalcLineHeight(nsIPresContext& aPresContext,
             sc->GetStyleData(eStyleStruct_Font);
           nscoord size = font->mFont.size;
           lineHeight = nscoord(size * text->mLineHeight.GetPercentValue());
+          if (lineHeight < 0) {
+            lineHeight = -1;
+          }
           break;
         }
         else if (eStyleUnit_Inherit == unit) {
