@@ -55,7 +55,7 @@ nsCParserNode::nsCParserNode(CToken* aToken,PRInt32 aLineNumber,nsITokenRecycler
 static void RecycleTokens(nsITokenRecycler* aRecycler,nsDeque& aDeque) {
   CToken* theToken=0;
   if(aRecycler) {
-    while(theToken=((CToken*)aDeque.Pop())){
+    while((theToken=(CToken*)aDeque.Pop())){
       aRecycler->RecycleToken(theToken);
     }
   }

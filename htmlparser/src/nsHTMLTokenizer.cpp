@@ -551,7 +551,6 @@ nsresult nsHTMLTokenizer::ConsumeEntity(PRUnichar aChar,CToken*& aToken,nsScanne
         //convert it into a text token.
         nsAutoString temp("&");
         temp.Append(theStr);
-        temp.Append(';');
         CToken* theToken=theRecycler->CreateTokenOfType(eToken_text,eHTMLTag_text,temp);
         theRecycler->RecycleToken(aToken);
         aToken=theToken;

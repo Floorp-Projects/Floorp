@@ -887,7 +887,7 @@ nsresult nsParser::ResumeParse(nsIDTD* aDefaultDTD, PRBool aIsFinalChunk) {
         // If we're told to block the parser, we disable
         // all further parsing (and cache any data coming
         // in) until the parser is enabled.
-          PRUint32 b1=NS_ERROR_HTMLPARSER_BLOCK;
+          //PRUint32 b1=NS_ERROR_HTMLPARSER_BLOCK;
           if(NS_ERROR_HTMLPARSER_BLOCK==result) {
             EnableParser(PR_FALSE);
             result=NS_OK;

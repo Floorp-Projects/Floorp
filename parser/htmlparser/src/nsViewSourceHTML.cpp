@@ -195,7 +195,7 @@ static void SetFont(const char* aFace,const char* aSize,PRBool aEnable,nsIConten
     aSink.CloseContainer(theNode);
   }
 
-  while(theToken=((CToken*)theNode.PopAttributeToken())){
+  while((theToken=(CToken*)theNode.PopAttributeToken())){
     //dump the attributes since they're on the stack...
   }
 
@@ -219,7 +219,7 @@ static void SetColor(const char* aColor,PRBool aEnable,nsIContentSink& aSink) {
     aSink.CloseContainer(theNode);
   }
 
-  while(theToken=((CToken*)theNode.PopAttributeToken())){
+  while((theToken=(CToken*)theNode.PopAttributeToken())){
     //dump the attributes since they're on the stack...
   }
 
@@ -866,7 +866,7 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
           }
         }
         theStr.Append(aToken->GetStringValueXXX());
-        theStr.Append(";");
+        //theStr.Append(";");
         ::WriteText(theStr,*mSink,PR_FALSE,mIsPlaintext,theContext);
         if(!mIsPlaintext){
           SetStyle(eHTMLTag_font,PR_FALSE,*mSink);

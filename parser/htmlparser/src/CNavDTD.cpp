@@ -370,7 +370,7 @@ void CNavDTD::RecycleNode(nsCParserNode* aNode) {
   if(aNode) {
 
     CToken* theToken=0;
-    while(theToken=((CToken*)aNode->PopAttributeToken())){
+    while((theToken=(CToken*)aNode->PopAttributeToken())){
       gRecycler->RecycleToken(theToken);
     }
 
@@ -402,7 +402,7 @@ CNavDTD::~CNavDTD(){
   if(mTokenizer)
     delete (nsHTMLTokenizer*)mTokenizer;
   nsCParserNode* theNode=0;
-  while(theNode=((nsCParserNode*)mSharedNodes.Pop())){
+  while((theNode=(nsCParserNode*)mSharedNodes.Pop())){
     delete theNode;
   }
   NS_IF_RELEASE(mDTDDebug);
