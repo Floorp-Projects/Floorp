@@ -44,6 +44,9 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsDOMError.h"
 #include "nsLayoutUtils.h"
+#include "nsHashTable.h"
+
+static const int NS_FORM_CONTROL_LIST_HASHTABLE_SIZE = 64;
 
 static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
@@ -109,6 +112,7 @@ public:
 
   // nsIForm
   NS_IMETHOD AddElement(nsIFormControl* aElement);
+  NS_IMETHOD AddElementToTable(nsIFormControl* aChild, const nsString& aName);
   NS_IMETHOD GetElementAt(PRInt32 aIndex, nsIFormControl** aElement) const;
   NS_IMETHOD GetElementCount(PRUint32* aCount) const;
   NS_IMETHOD RemoveElement(nsIFormControl* aElement, PRBool aChildIsRef = PR_TRUE);
@@ -137,14 +141,21 @@ public:
   NS_DECL_IDOMHTMLCOLLECTION
   NS_DECL_IDOMHTMLFORMCONTROLLIST
 
-  nsresult      GetNamedObject(JSContext* aContext, jsval aID, JSObject** aObj);
+  nsresult GetNamedObject(JSContext* aContext, jsval aID, JSObject** aObj);
+
+  nsresult AddElementToTable(nsIFormControl* aChild, const nsString& aName);
+  nsresult RemoveElementFromTable(nsIFormControl* aChild, PRBool aChildIsRef);
+
 #ifdef DEBUG
   nsresult SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 #endif
 
   void        *mScriptObject;
-  nsVoidArray  mElements;
+  nsVoidArray mElements;  
   nsIDOMHTMLFormElement* mForm;  // WEAK - the form owns me
+
+protected:
+  nsHashtable* mLookupTable;  // A map from an ID or NAME attribute to the form control
 };
 
 // nsHTMLFormElement implementation
@@ -468,21 +479,32 @@ nsHTMLFormElement::GetElementAt(PRInt32 aIndex, nsIFormControl** aFormControl) c
 }
 
 NS_IMETHODIMP
-nsHTMLFormElement::AddElement(nsIFormControl* aChild) 
+nsHTMLFormElement::AddElement(nsIFormControl* aChild)
 {
   PRBool rv = mControls->mElements.AppendElement(aChild);
   if (rv) {
-    NS_ADDREF(aChild);
+    NS_ADDREF(aChild);        
   }
+
   return rv;
 }
+
+NS_IMETHODIMP
+nsHTMLFormElement::AddElementToTable(nsIFormControl* aChild, const nsString& aName)
+{
+  return mControls->AddElementToTable(aChild, aName);  
+}
+
 
 NS_IMETHODIMP 
 nsHTMLFormElement::RemoveElement(nsIFormControl* aChild, PRBool aChildIsRef) 
 { 
   PRBool rv = mControls->mElements.RemoveElement(aChild);
-  if (rv && aChildIsRef) {
-    NS_RELEASE(aChild);
+  if (rv) {   
+    mControls->RemoveElementFromTable(aChild, aChildIsRef);    
+    if (aChildIsRef) {
+      NS_RELEASE(aChild);
+    }
   }
   return rv;
 }
@@ -701,10 +723,15 @@ nsFormControlList::nsFormControlList(nsIDOMHTMLFormElement* aForm)
   NS_INIT_REFCNT();
   mScriptObject = nsnull;
   mForm = aForm; // WEAK - the form owns me
+  mLookupTable = nsnull;
 }
 
 nsFormControlList::~nsFormControlList()
 {
+  if (mLookupTable) {
+    delete mLookupTable;
+    mLookupTable = nsnull;
+  }
   mForm = nsnull;
   Clear();
 }
@@ -728,6 +755,9 @@ nsFormControlList::Clear()
   PRUint32 numElements = mElements.Count();
   for (PRUint32 i = 0; i < numElements; i++) {
     nsIFormControl* elem = (nsIFormControl*) mElements.ElementAt(i);
+    if (mLookupTable) {
+      RemoveElementFromTable(elem, PR_TRUE);
+    }
     NS_IF_RELEASE(elem);
   }
 }
@@ -947,31 +977,57 @@ nsFormControlList::NamedItem(JSContext* cx, jsval* argv, PRUint32 argc, jsval* a
 NS_IMETHODIMP 
 nsFormControlList::NamedItem(const nsString& aName, nsIDOMNode** aReturn)
 {
-  PRUint32 count = mElements.Count();
   nsresult result = NS_OK;
-
+  nsStringKey key(aName);
+  nsIFormControl* control = nsnull;
   *aReturn = nsnull;
-  for (PRUint32 i = 0; i < count && *aReturn == nsnull; i++) {
-    nsIFormControl *control = (nsIFormControl*)mElements.ElementAt(i);
-    if (nsnull != control) {
-      nsIContent *content;
-      
-      result = control->QueryInterface(kIContentIID, (void **)&content);
-      if (NS_OK == result) {
-        nsAutoString name;
-        // XXX Should it be an EqualsIgnoreCase?
-        if (((content->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::name, name) == NS_CONTENT_ATTR_HAS_VALUE) &&
-             (aName.Equals(name))) ||
-            ((content->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::id, name) == NS_CONTENT_ATTR_HAS_VALUE) &&
-             (aName.Equals(name)))) {
-          result = control->QueryInterface(kIDOMNodeIID, (void **)aReturn);
-        }
-        NS_RELEASE(content);
-      }
-    }
+
+  if (mLookupTable) {
+    control = (nsIFormControl*) mLookupTable->Get(&key);
+  }
+
+  if (control) {
+    result = control->QueryInterface(kIDOMNodeIID, (void **)aReturn);
+  }
+
+  return result;
+}
+
+nsresult
+nsFormControlList::AddElementToTable(nsIFormControl* aChild, const nsString& aName)
+{
+  nsStringKey key(aName);
+  if (!mLookupTable)
+    mLookupTable = (nsHashtable*) new nsHashtable(NS_FORM_CONTROL_LIST_HASHTABLE_SIZE);
+  
+  mLookupTable->Put(&key, NS_STATIC_CAST(void*, aChild));
+  return NS_OK;
+}
+
+nsresult
+nsFormControlList::RemoveElementFromTable(nsIFormControl* aChild, PRBool aChildIsRef)
+{  
+  // This nsIContent* cannot be a COM pointer because it shouldn't
+  // be released at the end of this function when aChildIsRef is FALSE.
+  nsIContent* content = nsnull;  
+  nsAutoString name;
+ 
+  aChild->QueryInterface(kIContentIID, (void**) &content);
+
+  if (mLookupTable && content &&
+      (content->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::name, name) == NS_CONTENT_ATTR_HAS_VALUE ||
+       content->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::id, name) == NS_CONTENT_ATTR_HAS_VALUE))
+  {
+    nsStringKey key(name);
+    mLookupTable->Remove(&key);
   }
   
-  return result;
+  if (aChildIsRef) 
+  {
+    NS_RELEASE(content);
+  }
+
+  return NS_OK;
 }
 
 #ifdef DEBUG

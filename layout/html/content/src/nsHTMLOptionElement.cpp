@@ -108,7 +108,7 @@ protected:
   nsGenericHTMLContainerElement mInner;
 
   // Get the primary frame associated with this content
-  nsresult GetPrimaryFrame(nsIFormControlFrame *&aFormControlFrame);
+  nsresult GetPrimaryFrame(nsIFormControlFrame *&aFormControlFrame, PRBool aFlushNotifications = PR_TRUE);
 
   // Get the select content element that contains this option
   nsresult GetSelect(nsIDOMHTMLSelectElement *&aSelectElement);
@@ -249,14 +249,14 @@ nsHTMLOptionElement::GetSelected(PRBool* aValue)
       *aValue = value.EqualsWithConversion("1");
     }
   }
-  return rv;      
+  return rv;
 }
 
 NS_IMETHODIMP 
 nsHTMLOptionElement::SetSelected(PRBool aValue)
 {
   nsIFormControlFrame* fcFrame = nsnull;
-  nsresult result = GetPrimaryFrame(fcFrame);
+  nsresult result = GetPrimaryFrame(fcFrame, PR_FALSE);
   if (NS_SUCCEEDED(result) && (nsnull != fcFrame)) {
     nsISelectControlFrame* selectFrame = nsnull;
     result = fcFrame->QueryInterface(NS_GET_IID(nsISelectControlFrame),(void **) &selectFrame);
@@ -542,7 +542,7 @@ nsHTMLOptionElement::SetText(const nsString& aText)
 
 // Options don't have frames - get the select content node
 // then call nsGenericHTMLElement::GetPrimaryFrame()
-nsresult nsHTMLOptionElement::GetPrimaryFrame(nsIFormControlFrame *&aIFormControlFrame)
+nsresult nsHTMLOptionElement::GetPrimaryFrame(nsIFormControlFrame *&aIFormControlFrame, PRBool aFlushNotifications)
 {
   nsIDOMHTMLSelectElement* selectElement = nsnull;
   nsresult res = GetSelect(selectElement);
@@ -552,7 +552,7 @@ nsresult nsHTMLOptionElement::GetPrimaryFrame(nsIFormControlFrame *&aIFormContro
     NS_RELEASE(selectElement);
 
     if (NS_OK == gotContent) {
-      res = nsGenericHTMLElement::GetPrimaryFrame(selectContent, aIFormControlFrame);
+      res = nsGenericHTMLElement::GetPrimaryFrame(selectContent, aIFormControlFrame, aFlushNotifications);
       NS_RELEASE(selectContent);
     }
   }

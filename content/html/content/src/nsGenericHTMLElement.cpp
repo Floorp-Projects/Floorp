@@ -3121,3 +3121,69 @@ nsGenericHTMLContainerElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
 
   return NS_OK;
 }
+
+//----------------------------------------------------------------------
+
+nsGenericHTMLContainerFormElement::nsGenericHTMLContainerFormElement()
+{
+  mForm = nsnull;
+}
+
+nsGenericHTMLContainerFormElement::~nsGenericHTMLContainerFormElement()
+{
+  // Do nothing
+}
+
+nsresult
+nsGenericHTMLContainerFormElement::SetForm(nsIForm* aForm)
+{
+  mForm = aForm;
+  return NS_OK;
+}
+
+nsresult
+nsGenericHTMLContainerFormElement::SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, const nsString& aValue,
+                                                PRBool aNotify)
+{
+  // Add the control to the hash table
+  nsCOMPtr<nsIFormControl> control;  
+  control = do_QueryInterface(mContent);
+  if (mForm && (nsHTMLAtoms::name == aName || nsHTMLAtoms::id == aName))  
+    mForm->AddElementToTable(control, aValue);
+
+  return nsGenericHTMLElement::SetAttribute(aNameSpaceID, aName, aValue, aNotify);
+}
+
+//----------------------------------------------------------------------
+
+nsGenericHTMLLeafFormElement::nsGenericHTMLLeafFormElement()
+{
+  mForm = nsnull;
+}
+
+nsGenericHTMLLeafFormElement::~nsGenericHTMLLeafFormElement()
+{
+  // Do nothing
+}
+
+nsresult
+nsGenericHTMLLeafFormElement::SetForm(nsIForm* aForm)
+{
+  mForm = aForm;
+  return NS_OK;
+}
+
+nsresult
+nsGenericHTMLLeafFormElement::SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, const nsString& aValue,
+                                           PRBool aNotify)
+{
+  // Add the control to the hash table
+  nsCOMPtr<nsIFormControl> control;  
+  control = do_QueryInterface(mContent);
+  if (mForm && (nsHTMLAtoms::name == aName || nsHTMLAtoms::id == aName))  
+    mForm->AddElementToTable(control, aValue);
+
+  return nsGenericHTMLElement::SetAttribute(aNameSpaceID, aName, aValue, aNotify);
+}
+
+//----------------------------------------------------------------------
