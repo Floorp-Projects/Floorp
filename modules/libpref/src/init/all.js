@@ -35,6 +35,8 @@ pref("general.bproxy_cert_digest",0);
 
 pref("keyword.URL", "http://keyword.netscape.com/keyword/");
 pref("keyword.enabled", false);
+pref("general.useragent.locale", "en-US");
+pref("general.milestone", "m13");
 
 pref("general.startup.browser",             true);
 pref("general.startup.mail",                false);
