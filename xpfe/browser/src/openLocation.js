@@ -42,6 +42,9 @@ function onLoad() {
 		dump( "unable to get browser app core\n" );
 		//toolkit.CloseWindow( window );
 	}
+
+	/* Give input field the focus. */
+	dialog.input.focus();
 }
 
 function onTyping( key ) {
