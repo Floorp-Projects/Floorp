@@ -138,7 +138,7 @@ var dragObserver = {
   onDragStart: function (aEvent, aXferData, aDragAction) {
     aXferData.data = new TransferDataSet();
     var data = new TransferData();
-    data.addDataForFlavour("text/unicode", aEvent.target.firstChild.id);
+    data.addDataForFlavour("text/button-id", aEvent.target.firstChild.id);
     aXferData.data.push(data);
   }
 }
@@ -146,6 +146,11 @@ var dragObserver = {
 var dropObserver = {
   onDragOver: function (aEvent, aFlavour, aDragSession)
   {
+    if (aFlavour.contentType != "text/button-id") {
+      aDragSession.canDrop = true;
+      return;
+    }
+
     if (gCurrentDragOverItem)
       gCurrentDragOverItem.removeAttribute("dragactive");
 
@@ -162,7 +167,7 @@ var dropObserver = {
   },
   onDrop: function (aEvent, aXferData, aDragSession)
   {
-    var newButtonId = transferUtils.retrieveURLFromData(aXferData.data, aXferData.flavour.contentType);
+    var newButtonId = aXferData.data;
     var toolbar = document.getElementById("cloneToolbar");
     
     // If dropping a button that's already on the toolbar, we want to move it to
@@ -206,7 +211,7 @@ var dropObserver = {
   {
     if (!this._flavourSet) {
       this._flavourSet = new FlavourSet();
-      this._flavourSet.appendFlavour("text/unicode");
+      this._flavourSet.appendFlavour("text/button-id");
     }
     return this._flavourSet;
   }
@@ -215,7 +220,7 @@ var dropObserver = {
 var trashObserver = {
   onDragOver: function (aEvent, aFlavour, aDragSession)
   {
-    if (gDraggingFromPalette) {
+    if (gDraggingFromPalette || aFlavour.contentType != "text/button-id") {
       aDragSession.canDrop = false;
       return;
     }
@@ -227,7 +232,7 @@ var trashObserver = {
   {
     if (gDraggingFromPalette)
       return;
-    var buttonId = transferUtils.retrieveURLFromData(aXferData.data, aXferData.flavour.contentType);
+    var buttonId = aXferData.data;
     var toolbar = document.getElementById("cloneToolbar");
     var toolbarItem = toolbar.firstChild;
     while (toolbarItem) {
@@ -244,7 +249,7 @@ var trashObserver = {
   {
     if (!this._flavourSet) {
       this._flavourSet = new FlavourSet();
-      this._flavourSet.appendFlavour("text/unicode");
+      this._flavourSet.appendFlavour("text/button-id");
     }
     return this._flavourSet;
   }
