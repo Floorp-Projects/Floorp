@@ -370,8 +370,7 @@ NS_IMETHODIMP nsMsgWindow::StopUrls()
 
 
 // nsIURIContentListener support
-NS_IMETHODIMP nsMsgWindow::OnStartURIOpen(nsIURI* aURI, 
-   const char* aWindowTarget, PRBool* aAbortOpen)
+NS_IMETHODIMP nsMsgWindow::OnStartURIOpen(nsIURI* aURI, PRBool* aAbortOpen)
 {
    return NS_OK;
 }
@@ -384,7 +383,7 @@ NS_IMETHODIMP nsMsgWindow::GetProtocolHandler(nsIURI * /* aURI */, nsIProtocolHa
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgWindow::DoContent(const char *aContentType, nsURILoadCommand aCommand, const char *aWindowTarget, 
+NS_IMETHODIMP nsMsgWindow::DoContent(const char *aContentType, nsURILoadCommand aCommand, 
                                      nsIRequest *request, nsIStreamListener **aContentHandler, PRBool *aAbortProcess)
 {
   if (aContentType)
@@ -409,7 +408,7 @@ NS_IMETHODIMP nsMsgWindow::DoContent(const char *aContentType, nsURILoadCommand 
         if (mailnewsUrl)
           mailnewsUrl->SetMsgWindow(this);
       }
-      return ctnListener->DoContent(aContentType, aCommand, aWindowTarget, request, aContentHandler, aAbortProcess);
+      return ctnListener->DoContent(aContentType, aCommand, request, aContentHandler, aAbortProcess);
     }
   }
   return NS_OK;
@@ -418,7 +417,6 @@ NS_IMETHODIMP nsMsgWindow::DoContent(const char *aContentType, nsURILoadCommand 
 NS_IMETHODIMP 
 nsMsgWindow::IsPreferred(const char * aContentType,
                          nsURILoadCommand aCommand,
-                         const char * aWindowTarget,
                          char ** aDesiredContentType,
                          PRBool * aCanHandleContent)
 {
@@ -428,7 +426,6 @@ nsMsgWindow::IsPreferred(const char * aContentType,
 
 NS_IMETHODIMP nsMsgWindow::CanHandleContent(const char * aContentType,
                                             nsURILoadCommand aCommand,
-                                            const char * aWindowTarget,
                                             char ** aDesiredContentType,
                                             PRBool * aCanHandleContent)
 
@@ -441,7 +438,7 @@ NS_IMETHODIMP nsMsgWindow::CanHandleContent(const char * aContentType,
   GetMessageWindowDocShell(getter_AddRefs(messageWindowDocShell));
   nsCOMPtr<nsIURIContentListener> ctnListener (do_GetInterface(messageWindowDocShell));
   if (ctnListener)
-    return ctnListener->CanHandleContent(aContentType, aCommand, aWindowTarget, 
+    return ctnListener->CanHandleContent(aContentType, aCommand,
                                          aDesiredContentType, aCanHandleContent);
   else
     *aCanHandleContent = PR_FALSE;

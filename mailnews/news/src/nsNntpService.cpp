@@ -1507,7 +1507,7 @@ NS_IMETHODIMP nsNntpService::GetChromeUrlForTask(char **aChromeUrlForTask)
 
 
 NS_IMETHODIMP 
-nsNntpService::HandleContent(const char * aContentType, const char * aCommand, const char * aWindowTarget, nsISupports * aWindowContext, nsIRequest *request)
+nsNntpService::HandleContent(const char * aContentType, const char * aCommand, nsISupports * aWindowContext, nsIRequest *request)
 {
   nsresult rv = NS_OK;
   if (!request) return NS_ERROR_NULL_POINTER;

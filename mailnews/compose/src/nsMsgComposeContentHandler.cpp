@@ -42,7 +42,7 @@ nsMsgComposeContentHandler::~nsMsgComposeContentHandler()
 }
 
 NS_IMETHODIMP nsMsgComposeContentHandler::HandleContent(const char * aContentType, const char * aCommand,
-                                                const char * aWindowTarget, nsISupports * aWindowContext, nsIRequest *request)
+                                                nsISupports * aWindowContext, nsIRequest *request)
 {
   nsresult rv = NS_OK;
   if (!request)

@@ -187,8 +187,7 @@ NS_IMETHODIMP ImageConsumer::GetInterface(const nsIID & aIID, void * *aInstanceP
 // nsIURIContentListener support
 
 NS_IMETHODIMP 
-ImageConsumer::OnStartURIOpen(nsIURI* aURI, 
-   const char* aWindowTarget, PRBool* aAbortOpen)
+ImageConsumer::OnStartURIOpen(nsIURI* aURI, PRBool* aAbortOpen)
 {
    return NS_OK;
 }
@@ -231,19 +230,17 @@ ImageConsumer::SetLoadCookie(nsISupports * aLoadCookie)
 NS_IMETHODIMP 
 ImageConsumer::IsPreferred(const char * aContentType,
                                 nsURILoadCommand aCommand,
-                                const char * aWindowTarget,
                                 char ** aDesiredContentType,
                                 PRBool * aCanHandleContent)
 
 {
-  return CanHandleContent(aContentType, aCommand, aWindowTarget, 
+  return CanHandleContent(aContentType, aCommand, 
                           aDesiredContentType, aCanHandleContent);
 }
 
 NS_IMETHODIMP 
 ImageConsumer::CanHandleContent(const char * aContentType,
                                 nsURILoadCommand aCommand,
-                                const char * aWindowTarget,
                                 char ** aDesiredContentType,
                                 PRBool * aCanHandleContent)
 
@@ -261,7 +258,6 @@ ImageConsumer::CanHandleContent(const char * aContentType,
 NS_IMETHODIMP 
 ImageConsumer::DoContent(const char * aContentType,
                       nsURILoadCommand aCommand,
-                      const char * aWindowTarget,
                       nsIRequest * aOpenedChannel,
                       nsIStreamListener ** aContentHandler,
                       PRBool * aAbortProcess)
@@ -810,8 +806,7 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
       }
 
 
-      rv = pURILoader->OpenURI(channel, loadCmd, nsnull /* window target */, 
-                               window);
+      rv = pURILoader->OpenURI(channel, loadCmd, window);
     }
     // rv = channel->AsyncOpen(ic, nsnull);
     if (NS_FAILED(rv)) goto error;

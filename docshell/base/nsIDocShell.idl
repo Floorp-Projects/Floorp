@@ -1,4 +1,3 @@
-
 /* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Mozilla Public
@@ -32,7 +31,7 @@
 %}
 
 /**
- * The nsIDocShell
+ * The nsIDocShell interface.
  */
 
 [ptr] native nsIPresContext(nsIPresContext);
@@ -43,162 +42,204 @@ interface nsIDocShellLoadInfo;
 interface nsIDocumentCharsetInfo;
 interface nsIWebNavigation;
 interface nsISimpleEnumerator;
+interface nsISHEntry;
 
 [scriptable, uuid(69E5DE00-7B8B-11d3-AF61-00A024FFC08C)]
 interface nsIDocShell : nsISupports
 {
-	/*
-	Loads a given URI.  This will give priority to loading the requested URI
-	in the object implementing	this interface.  If it can't be loaded here
-	however, the URL dispatcher will go through its normal process of content
-	loading.
+  /**
+   * Loads a given URI.  This will give priority to loading the requested URI
+   * in the object implementing	this interface.  If it can't be loaded here
+   * however, the URL dispatcher will go through its normal process of content
+   * loading.
+   *
+   * @param uri        - The URI to load.
+   * @param loadInfo   - This is the extended load info for this load.  This
+   *                     most often will be null, but if you need to do 
+   *                     additional setup for this load you can get a loadInfo
+   *                     object by calling createLoadInfo.  Once you have this
+   *                     object you can set the needed properties on it and
+   *                     then pass it to loadURI.
+   * @param aLoadFlags - Flags to modify load behaviour. Flags are defined
+   *                     in nsIWebNavigation.
+   */
+  [noscript]void loadURI(in nsIURI uri,
+                         in nsIDocShellLoadInfo loadInfo,
+                         in unsigned long aLoadFlags);
 
-	@param uri - The URI to load.
-	@param loadInfo - This is the extended load info for this load.  This
-	    most often will be null, but if you need to do additional setup for
-		this load you can get a loadInfo object by calling createLoadInfo.
-		Once you have this object you can set the needed properties on it and
-		then pass it to loadURI.
-	@param aLoadFlags - Flags to modify load behaviour. Flags are defined
-	    in nsIWebNavigation.
-	*/
-	[noscript]void loadURI(in nsIURI uri, in nsIDocShellLoadInfo loadInfo, in unsigned long aLoadFlags);
+  /**
+   * Loads a given stream. This will give priority to loading the requested
+   * stream in the object implementing this interface. If it can't be loaded
+   * here however, the URL dispatched will go through its normal process of
+   * content loading.
+   *
+   * @param aStream      - The input stream that provides access to the data
+   *                       to be loaded.
+   * @param aURI         - The URI representing the stream, or null.
+   * @param aContentType - The type (MIME) of data being loaded.
+   * @param aContentLen  - The length (in bytes) of the stream.  If you don't
+   *                       know the length of the stream this can be -1.
+   * @param aLoadInfo    - This is the extended load info for this load.  This
+   *                       most often will be null, but if you need to do 
+   *                       additional setup for this load you can get a
+   *                       loadInfo object by calling createLoadInfo.  Once
+   *                       you have this object you can set the needed 
+   *                       properties on it and then pass it to loadStream.
+   */
+  [noscript]void loadStream(in nsIInputStream aStream,
+                            in nsIURI aURI,
+                            in string aContentType,
+                            in long aContentLen,
+                            in nsIDocShellLoadInfo aLoadInfo);
 
-	/*
-	Loads a given stream. This will give priority to loading the requested stream
-	in the object implementing this interface. If it can't be loaded here however,
-	the URL dispatched will go through its normal process of content loading.
+  /**
+   * Loads the given URI.  This method is identical to loadURI(...) except
+   * that its parameter list is broken out instead of being packaged inside
+   * of an nsIDocShellLoadInfo object...
+   *
+   * @param aURI            - The URI to load.
+   * @param aReferrer       - Refering URI
+   * @param aOwner          - Owner (security principal) 
+   * @param aInheritOwner   - Flag indicating whether the owner of the current
+   *                          document should be inherited if aOwner is null.
+   * @param aStopActiveDoc  - Flag indicating whether loading the current
+   *                          document should be stopped.
+   * @param aWindowTarget   - Window target for the load.
+   * @param aPostDataStream - Post data stream (if POSTing)
+   * @param aHeadersStream  - Stream containing "extra" request headers...
+   * @param aLoadFlags      - Flags to modify load behaviour. Flags are defined
+   *                          in nsIWebNavigation.
+   * @param aSHEntry        - Active Session History entry (if loading from SH)
+   */
+  [noscript]void InternalLoad(in nsIURI aURI,
+                              in nsIURI aReferrer,
+                              in nsISupports aOwner,
+                              in boolean aInheritOwner,
+                              in boolean aStopActiveDoc,
+                              in wstring aWindowTarget,
+                              in nsIInputStream aPostDataStream,
+                              in nsIInputStream aHeadersStream,
+                              in unsigned long aLoadFlags,
+                              in nsISHEntry aSHEntry);
 
-	@param aStream - The input stream that provides access to the data to be loaded.
-	@param aURI	   - The URI representing the stream, or null.
-	@param aContentType - The type (MIME) of data being loaded.
-	@param aContentLen  - The length (in bytes) of the stream.  If you don't know
-        the length of the stream this can be -1.
-	@param aLoadInfo - This is the extended load info for this load.  This most
-		most often will be null, but if you need to do additional setup for this
-		load you can get a loadInfo object by calling createLoadInfo.  Once you have
-		this object you can set the needed properties on it and then pass it to 
-		loadURI.
-	*/
-	[noscript]void loadStream(in nsIInputStream aStream, in nsIURI aURI,
-							  in string aContentType, in long aContentLen,
-							  in nsIDocShellLoadInfo aLoadInfo);
+  /**
+   * Creates a DocShellLoadInfo object that you can manipulate and then pass
+   * to loadURI.
+   */
+  void createLoadInfo(out nsIDocShellLoadInfo loadInfo);
 
-	/*
-	Creates a DocShellLoadInfo object that you can manipulate and then pass to 
-	loadURI.
-	*/
-	void createLoadInfo(out nsIDocShellLoadInfo loadInfo);
+  /**
+   * Stops a current load.  This simply stops the network portion of the load.
+   * If you wish to do a complete stop, then you should us the
+   * nsIWebNavigation::Stop() method. 
+   */
+  void stopLoad();
 
-	/*
-	Stops a current load.  This simply stops the network portion of the load.
-	If you wish to do a complete stop, then you should us the
-	nsIWebNavigation::Stop() method. 
-	*/
-	void stopLoad();
+  /**
+   * Presentation context for the currently loaded document.  This may be null.
+   */
+  [noscript] readonly attribute nsIPresContext presContext;
 
-	/*
-	Presentation context for the currently loaded document.  This may be null.
-	*/
-	[noscript] readonly attribute nsIPresContext presContext;
+  /**
+   * Presentation context for the currently loaded document.  This may be null.
+   */
+  [noscript] readonly attribute nsIPresShell presShell;
 
-	/*
-	Presentation context for the currently loaded document.  This may be null.
-	*/
-	[noscript] readonly attribute nsIPresShell presShell;
+  /**
+   * Content Viewer that is currently loaded for this DocShell.  This may
+   * change as the underlying content changes.
+   */
+  readonly attribute nsIContentViewer contentViewer;
 
-	/*
-	Content Viewer that is currently loaded for this DocShell.  This may change
-	as the underlying content changes.
-	*/
-	readonly attribute nsIContentViewer contentViewer;
+  /**
+   * This attribute allows chrome to tie in to handle DOM events that may
+   * be of interest to chrome.
+   */
+  attribute nsIChromeEventHandler chromeEventHandler;
 
-	/*
-	This attribute allows chrome to tie in to handle DOM events that may be of
-	interest to chrome.
-	*/
-	attribute nsIChromeEventHandler chromeEventHandler;
+  /**
+   * URI content listener parent.  This is not refcounted and is assumed to be
+   * nulled out by the parent when the parent is going away.
+   */
+  attribute nsIURIContentListener parentURIContentListener;
 
-	/*
-	URI content listener parent.  This is not refcounted and is assumed to be
-	nulled out by the parent when the parent is going away.
-	*/
-	attribute nsIURIContentListener parentURIContentListener;
+  /**
+   * The document charset info.  This is used by a load to determine priorities
+   * for charset detection etc.
+   */
+  attribute nsIDocumentCharsetInfo documentCharsetInfo;
 
-   /*
-	The document charset info.  This is used by a load to determine priorities for 
-	charset detection etc.
-	*/
-	attribute nsIDocumentCharsetInfo documentCharsetInfo;
+  /**
+   * Whether to allow plugin execution
+   */
+  attribute boolean allowPlugins;
 
-	/*
-	Whether to allow plugin execution
-	*/
-	attribute boolean allowPlugins;
+  /**
+   * Whether to allow Javascript execution
+   */
+  attribute boolean allowJavascript;
 
-	/*
-	Whether to allow Javascript execution
-	*/
-	attribute boolean allowJavascript;
+  /**
+   * Attribute stating if refresh based redirects can be allowed
+   */
+  attribute  boolean allowMetaRedirects;
 
-    /*
-    Attribute stating if refresh based redirects can be allowed
-    */
-    attribute  boolean allowMetaRedirects;
- 
-    /*
-    Attribute stating if it should allow subframes (framesets/iframes) or not.
-    */
-    attribute boolean allowSubframes;
+  /**
+   * Attribute stating if it should allow subframes (framesets/iframes) or not
+   */
+  attribute boolean allowSubframes;
 
-	/*
-	Get an enumerator over this docShell and its children.
-	
-	@param aItemType     - Only include docShells of this type, or if typeAll, include
-	                       all child shells. Uses types from nsIDocShellTreeItem.
-	@param aDirection	 - Whether to enumerate forwards or backwards.
-	*/
-    
-    const long ENUMERATE_FORWARDS  = 0;
-    const long ENUMERATE_BACKWARDS = 1;
+  /**
+   * Get an enumerator over this docShell and its children.
+   *
+   * @param aItemType  - Only include docShells of this type, or if typeAll,
+   *                     include all child shells.
+   *                     Uses types from nsIDocShellTreeItem.
+   * @param aDirection - Whether to enumerate forwards or backwards.
+   */
 
-    nsISimpleEnumerator getDocShellEnumerator(in long aItemType, in long aDirection);
-    
-	/*
-	The type of application that created this window
-	*/
-	const unsigned long APP_TYPE_UNKNOWN  = 0;
-	const unsigned long APP_TYPE_MAIL     = 1;
+  const long ENUMERATE_FORWARDS  = 0;
+  const long ENUMERATE_BACKWARDS = 1;
 
-	attribute unsigned long appType;
+  nsISimpleEnumerator getDocShellEnumerator(in long aItemType,
+                                            in long aDirection);
 
-	/**
-	* Set/Get the document scale factor.  When setting this attribute, a
-	* NS_ERROR_NOT_IMPLEMENTED error may be returned by implementations
-	* not supporting zoom.  Implementations not supporting zoom should return
-	* 1.0 all the time for the Get operation.  1.0 by the way is the default
-	* of zoom.  This means 100% of normal scaling or in other words normal size
-	* no zoom. 
-	*/
-	attribute float zoom;
+  /**
+   * The type of application that created this window
+   */
+  const unsigned long APP_TYPE_UNKNOWN  = 0;
+  const unsigned long APP_TYPE_MAIL     = 1;
 
-	/*
-	XXX Comment here!
-	*/
-	attribute long marginWidth;
+  attribute unsigned long appType;
 
-	/*
-	XXX Comment here!
-	*/
-	attribute long marginHeight;
+  /**
+   * Set/Get the document scale factor.  When setting this attribute, a
+   * NS_ERROR_NOT_IMPLEMENTED error may be returned by implementations
+   * not supporting zoom.  Implementations not supporting zoom should return
+   * 1.0 all the time for the Get operation.  1.0 by the way is the default
+   * of zoom.  This means 100% of normal scaling or in other words normal size
+   * no zoom. 
+   */
+  attribute float zoom;
 
-	/* Current busy state for DocShell */
-	const unsigned long BUSY_FLAGS_NONE = 0;
-	const unsigned long BUSY_FLAGS_BUSY = 1;
-	const unsigned long BUSY_FLAGS_BEFORE_PAGE_LOAD = 2;
-	const unsigned long BUSY_FLAGS_PAGE_LOADING = 4;
+  /*
+   * XXX Comment here!
+   */
+  attribute long marginWidth;
 
-	readonly attribute unsigned long busyFlags;
+  /*
+   * XXX Comment here!
+   */
+  attribute long marginHeight;
 
+  /**
+   * Current busy state for DocShell
+   */
+  const unsigned long BUSY_FLAGS_NONE             = 0;
+  const unsigned long BUSY_FLAGS_BUSY             = 1;
+  const unsigned long BUSY_FLAGS_BEFORE_PAGE_LOAD = 2;
+  const unsigned long BUSY_FLAGS_PAGE_LOADING     = 4;
+
+  readonly attribute unsigned long busyFlags;
 };
 

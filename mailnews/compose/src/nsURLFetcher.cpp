@@ -97,8 +97,7 @@ NS_IMETHODIMP nsURLFetcher::GetInterface(const nsIID & aIID, void * *aInstancePt
 
 // nsIURIContentListener support
 NS_IMETHODIMP 
-nsURLFetcher::OnStartURIOpen(nsIURI* aURI, 
-   const char* aWindowTarget, PRBool* aAbortOpen)
+nsURLFetcher::OnStartURIOpen(nsIURI* aURI, PRBool* aAbortOpen)
 {
    return NS_OK;
 }
@@ -113,19 +112,17 @@ nsURLFetcher::GetProtocolHandler(nsIURI *aURI, nsIProtocolHandler **aProtocolHan
 NS_IMETHODIMP 
 nsURLFetcher::IsPreferred(const char * aContentType,
                                 nsURILoadCommand aCommand,
-                                const char * aWindowTarget,
                                 char ** aDesiredContentType,
                                 PRBool * aCanHandleContent)
 
 {
-  return CanHandleContent(aContentType, aCommand, aWindowTarget, aDesiredContentType,
+  return CanHandleContent(aContentType, aCommand, aDesiredContentType,
                           aCanHandleContent);
 }
 
 NS_IMETHODIMP 
 nsURLFetcher::CanHandleContent(const char * aContentType,
                                 nsURILoadCommand aCommand,
-                                const char * aWindowTarget,
                                 char ** aDesiredContentType,
                                 PRBool * aCanHandleContent)
 
@@ -141,7 +138,6 @@ nsURLFetcher::CanHandleContent(const char * aContentType,
 NS_IMETHODIMP 
 nsURLFetcher::DoContent(const char * aContentType,
                       nsURILoadCommand aCommand,
-                      const char * aWindowTarget,
                       nsIRequest *request,
                       nsIStreamListener ** aContentHandler,
                       PRBool * aAbortProcess)
@@ -377,8 +373,7 @@ nsURLFetcher::FireURLRequest(nsIURI *aURL, nsOutputFileStream *fOut,
   pURILoader->GetLoadGroupForContext(cntListener, getter_AddRefs(loadGroup));
   NS_ENSURE_SUCCESS(NS_OpenURI(getter_AddRefs(channel), aURL, nsnull, loadGroup, this), NS_ERROR_FAILURE);
  
-  rv = pURILoader->OpenURI(channel, nsIURILoader::viewNormal, nsnull /* window target */, 
-                           cntListener);
+  rv = pURILoader->OpenURI(channel, nsIURILoader::viewNormal, cntListener);
 
   mOutStream = fOut;
   mCallback = cb;

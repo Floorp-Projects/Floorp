@@ -295,8 +295,7 @@ NS_IMETHODIMP nsAbSyncPostEngine::GetInterface(const nsIID & aIID, void * *aInst
 
 // nsIURIContentListener support
 NS_IMETHODIMP 
-nsAbSyncPostEngine::OnStartURIOpen(nsIURI* aURI, 
-   const char* aWindowTarget, PRBool* aAbortOpen)
+nsAbSyncPostEngine::OnStartURIOpen(nsIURI* aURI, PRBool* aAbortOpen)
 {
    return NS_OK;
 }
@@ -311,19 +310,17 @@ nsAbSyncPostEngine::GetProtocolHandler(nsIURI *aURI, nsIProtocolHandler **aProto
 NS_IMETHODIMP 
 nsAbSyncPostEngine::IsPreferred(const char * aContentType,
                                 nsURILoadCommand aCommand,
-                                const char * aWindowTarget,
                                 char ** aDesiredContentType,
                                 PRBool * aCanHandleContent)
 
 {
-  return CanHandleContent(aContentType, aCommand, aWindowTarget, aDesiredContentType,
+  return CanHandleContent(aContentType, aCommand, aDesiredContentType,
                           aCanHandleContent);
 }
 
 NS_IMETHODIMP 
 nsAbSyncPostEngine::CanHandleContent(const char * aContentType,
                                 nsURILoadCommand aCommand,
-                                const char * aWindowTarget,
                                 char ** aDesiredContentType,
                                 PRBool * aCanHandleContent)
 
@@ -339,7 +336,6 @@ nsAbSyncPostEngine::CanHandleContent(const char * aContentType,
 NS_IMETHODIMP 
 nsAbSyncPostEngine::DoContent(const char * aContentType,
                       nsURILoadCommand aCommand,
-                      const char * aWindowTarget,
                       nsIRequest *request,
                       nsIStreamListener ** aContentHandler,
                       PRBool * aAbortProcess)

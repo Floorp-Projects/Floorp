@@ -204,22 +204,19 @@ protected:
         nsIStreamListener ** aContentHandler, nsIContentViewer ** aViewer);
     NS_IMETHOD SetupNewViewer(nsIContentViewer * aNewViewer);
 
-    NS_IMETHOD InternalLoad(nsIURI * aURI, nsIURI * aReferrerURI, 
-        nsISupports * owner, PRBool inheritOwnerFromDocument,
-        PRBool stopActiveDoc, const char * aWindowTarget = nsnull, 
-        nsIInputStream * aPostData = nsnull,
-        nsIInputStream * aHeadersData = nsnull,
-        PRUint32 aLoadType = LOAD_NORMAL, nsISHEntry * aSHEntry = nsnull);
     NS_IMETHOD CreateFixupURI(const PRUnichar * aStringURI, nsIURI ** aURI);
     NS_IMETHOD GetCurrentDocumentOwner(nsISupports ** aOwner);
-    NS_IMETHOD DoURILoad(nsIURI * aURI, nsIURI * aReferrer,
-        nsISupports * aOwner, PRBool inheritOwnerFromDocument,
-        nsURILoadCommand aLoadCmd, const char * aWindowTarget, 
-        nsIInputStream * aPostData, nsIInputStream * aHeadersData);
+    virtual nsresult DoURILoad(nsIURI * aURI,
+                               nsIURI * aReferrer,
+                               nsISupports * aOwner,
+                               nsURILoadCommand aLoadCmd,
+                               nsIInputStream * aPostData,
+                               nsIInputStream * aHeadersData);
     NS_IMETHOD AddHeadersToChannel(nsIInputStream * aHeadersData, 
                                   nsIChannel * aChannel);
-    NS_IMETHOD DoChannelLoad(nsIChannel * aChannel, nsURILoadCommand aLoadCmd,
-        const char * aWindowTarget, nsIURILoader * aURILoader);
+    virtual nsresult DoChannelLoad(nsIChannel * aChannel,
+                                   nsURILoadCommand aLoadCmd,
+                                   nsIURILoader * aURILoader);
     NS_IMETHOD ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor);
     NS_IMETHOD OnLoadingSite(nsIChannel * aChannel);
 
@@ -253,6 +250,11 @@ protected:
     NS_IMETHOD EnsureContentListener();
     NS_IMETHOD EnsureScriptEnvironment();
     NS_IMETHOD EnsureFind();
+
+
+    virtual nsresult FindTarget(const PRUnichar *aTargetName,
+                                PRBool *aIsNewWindow,
+                                nsIDocShell **aResult);
 
     PRBool IsFrame();
 
@@ -322,6 +324,9 @@ protected:
 
     // Disallow popping up new windows with target=
     PRBool                     mDisallowPopupWindows;
+
+    // Validate window targets to prevent frameset spoofing
+    PRBool                     mValidateOrigin;
 
     PRBool                     mIsBeingDestroyed;
 

@@ -452,7 +452,7 @@ NS_IMETHODIMP PhMozEmbedChrome::ExitModalEventLoop(nsresult aStatus)
 
 // nsIURIContentListener
 
-NS_IMETHODIMP PhMozEmbedChrome::OnStartURIOpen(nsIURI *aURI, const char *aWindowTarget, PRBool *aAbortOpen)
+NS_IMETHODIMP PhMozEmbedChrome::OnStartURIOpen(nsIURI *aURI, PRBool *aAbortOpen)
 {
   PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("PhMozEmbedChrome::OnStartURIOpen\n"));
   NS_ENSURE_ARG_POINTER(aAbortOpen);
@@ -483,7 +483,7 @@ NS_IMETHODIMP PhMozEmbedChrome::GetProtocolHandler(nsIURI *aURI, nsIProtocolHand
 }
 
 NS_IMETHODIMP PhMozEmbedChrome::DoContent(const char *aContentType, nsURILoadCommand aCommand,
-					   const char *aWindowTarget, nsIChannel *aOpenedChannel,
+					   nsIChannel *aOpenedChannel,
 					   nsIStreamListener **aContentHandler, PRBool *aAbortProcess)
 {
   PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("PhMozEmbedChrome::DoContent\n"));
@@ -491,7 +491,7 @@ NS_IMETHODIMP PhMozEmbedChrome::DoContent(const char *aContentType, nsURILoadCom
 }
 
 NS_IMETHODIMP PhMozEmbedChrome::IsPreferred(const char *aContentType, nsURILoadCommand aCommand,
-					     const char *aWindowTarget, char **aDesiredContentType,
+					     char **aDesiredContentType,
 					     PRBool *aCanHandleContent)
 {
   PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("PhMozEmbedChrome::IsPreferred\n"));
@@ -520,7 +520,7 @@ NS_IMETHODIMP PhMozEmbedChrome::IsPreferred(const char *aContentType, nsURILoadC
 }
 
 NS_IMETHODIMP PhMozEmbedChrome::CanHandleContent(const char *aContentType, nsURILoadCommand aCommand,
-						  const char *aWindowTarget, char **aDesiredContentType,
+						  char **aDesiredContentType,
 						  PRBool *_retval)
 {
   PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("PhMozEmbedChrome::CanHandleContent\n"));

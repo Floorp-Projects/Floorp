@@ -159,6 +159,29 @@ NS_IMETHODIMP nsDocShellLoadInfo::SetTarget(const char* aTarget)
    return NS_OK;
 }
 
+
+NS_IMETHODIMP
+nsDocShellLoadInfo::GetPostDataStream(nsIInputStream **aResult)
+{
+  if (!aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  *aResult = mPostDataStream;
+
+  NS_IF_ADDREF(*aResult);
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsDocShellLoadInfo::SetPostDataStream(nsIInputStream *aStream)
+{
+  mPostDataStream = aStream;
+  return NS_OK;
+}
+
+
 //*****************************************************************************
 // nsDocShellLoadInfo: Helpers
 //*****************************************************************************   

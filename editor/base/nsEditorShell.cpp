@@ -4704,8 +4704,8 @@ nsEditorShell::DeleteSuggestedWordList()
 #pragma mark -
 #endif
 
-/* void onStartURIOpen (in nsIURI aURI, in string aWindowTarget, out boolean aAbortOpen); */
-NS_IMETHODIMP nsEditorShell::OnStartURIOpen(nsIURI *aURI, const char *aWindowTarget, PRBool *aAbortOpen)
+/* void onStartURIOpen (in nsIURI aURI, out boolean aAbortOpen); */
+NS_IMETHODIMP nsEditorShell::OnStartURIOpen(nsIURI *aURI, PRBool *aAbortOpen)
 {
   return NS_OK;
 }
@@ -4718,8 +4718,8 @@ NS_IMETHODIMP nsEditorShell::GetProtocolHandler(nsIURI *aURI, nsIProtocolHandler
   return NS_OK;
 }
 
-/* void doContent (in string aContentType, in nsURILoadCommand aCommand, in string aWindowTarget, in nsIChannel aOpenedChannel, out nsIStreamListener aContentHandler, out boolean aAbortProcess); */
-NS_IMETHODIMP nsEditorShell::DoContent(const char *aContentType, nsURILoadCommand aCommand, const char *aWindowTarget, nsIRequest* request, nsIStreamListener **aContentHandler, PRBool *aAbortProcess)
+/* void doContent (in string aContentType, in nsURILoadCommand aCommand, in nsIChannel aOpenedChannel, out nsIStreamListener aContentHandler, out boolean aAbortProcess); */
+NS_IMETHODIMP nsEditorShell::DoContent(const char *aContentType, nsURILoadCommand aCommand, nsIRequest* request, nsIStreamListener **aContentHandler, PRBool *aAbortProcess)
 {
   NS_ENSURE_ARG_POINTER(aContentHandler);
   NS_ENSURE_ARG_POINTER(aAbortProcess);
@@ -4728,8 +4728,8 @@ NS_IMETHODIMP nsEditorShell::DoContent(const char *aContentType, nsURILoadComman
   return NS_OK;
 }
 
-/* boolean isPreferred (in string aContentType, in nsURILoadCommand aCommand, in string aWindowTarget, out string aDesiredContentType); */
-NS_IMETHODIMP nsEditorShell::IsPreferred(const char *aContentType, nsURILoadCommand aCommand, const char *aWindowTarget, char **aDesiredContentType, PRBool *_retval)
+/* boolean isPreferred (in string aContentType, in nsURILoadCommand aCommand, out string aDesiredContentType); */
+NS_IMETHODIMP nsEditorShell::IsPreferred(const char *aContentType, nsURILoadCommand aCommand, char **aDesiredContentType, PRBool *_retval)
 {
   NS_ENSURE_ARG_POINTER(aDesiredContentType);
   NS_ENSURE_ARG_POINTER(_retval);
@@ -4738,8 +4738,8 @@ NS_IMETHODIMP nsEditorShell::IsPreferred(const char *aContentType, nsURILoadComm
   return NS_OK;
 }
 
-/* boolean canHandleContent (in string aContentType, in nsURILoadCommand aCommand, in string aWindowTarget, out string aDesiredContentType); */
-NS_IMETHODIMP nsEditorShell::CanHandleContent(const char *aContentType, nsURILoadCommand aCommand, const char *aWindowTarget, char **aDesiredContentType, PRBool *_retval)
+/* boolean canHandleContent (in string aContentType, in nsURILoadCommand aCommand, out string aDesiredContentType); */
+NS_IMETHODIMP nsEditorShell::CanHandleContent(const char *aContentType, nsURILoadCommand aCommand, char **aDesiredContentType, PRBool *_retval)
 {
   NS_ENSURE_ARG_POINTER(aDesiredContentType);
   NS_ENSURE_ARG_POINTER(_retval);

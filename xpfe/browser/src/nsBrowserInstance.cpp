@@ -951,7 +951,6 @@ NS_IMETHODIMP nsBrowserContentHandler::GetDefaultArgs(PRUnichar **aDefaultArgs)
 
 NS_IMETHODIMP nsBrowserContentHandler::HandleContent(const char * aContentType,
                                                      const char * aCommand,
-                                                     const char * aWindowTarget,
                                                      nsISupports * aWindowContext,
                                                      nsIRequest * aRequest)
 {
@@ -971,20 +970,10 @@ NS_IMETHODIMP nsBrowserContentHandler::HandleContent(const char * aContentType,
   nsXPIDLCString spec;
   uri->GetSpec(getter_Copies(spec));
 
-  // we only want to pass in the window target name if it isn't something like _new or _blank....
-  // i.e. only real names like "my window", etc...
-  const char * windowTarget = aWindowTarget;
-  if (!aWindowTarget || !nsCRT::strcasecmp(aWindowTarget, "_new") ||
-                        !nsCRT::strcasecmp(aWindowTarget, "_blank") ||
-                        !nsCRT::strcasecmp(aWindowTarget, "_top") ||
-                        !nsCRT::strcasecmp(aWindowTarget, "_parent") ||
-                        !nsCRT::strcasecmp(aWindowTarget, "_content"))
-    windowTarget = "";
-
   nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
   if (wwatch) {
     nsCOMPtr<nsIDOMWindow> newWindow;
-    wwatch->OpenWindow(parentWindow, spec, windowTarget, 0, 0,
+    wwatch->OpenWindow(parentWindow, spec, "", 0, 0,
               getter_AddRefs(newWindow));
   }
 
