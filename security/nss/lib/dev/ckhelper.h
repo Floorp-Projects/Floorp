@@ -41,7 +41,7 @@
 #define CKHELPER_H
 
 #ifdef DEBUG
-static const char CKHELPER_CVS_ID[] = "@(#) $RCSfile: ckhelper.h,v $ $Revision: 1.16 $ $Date: 2002/04/18 17:29:53 $ $Name:  $";
+static const char CKHELPER_CVS_ID[] = "@(#) $RCSfile: ckhelper.h,v $ $Revision: 1.17 $ $Date: 2002/08/30 22:56:58 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKT_H
@@ -116,6 +116,11 @@ NSS_EXTERN_DATA const NSSItem g_ck_class_privkey;
 	} else {                                         \
 	    boolvar = PR_FALSE;                          \
 	}                                                \
+    }
+
+#define NSS_CK_ATTRIBUTE_TO_ULONG(attrib, ulongvar)      \
+    if ((attrib)->ulValueLen > 0) {                      \
+	ulongvar = *((CK_ULONG*)(attrib)->pValue);       \
     }
 
 /* NSS_CK_ATTRIBUTE_TO_UTF8(attrib, str)
