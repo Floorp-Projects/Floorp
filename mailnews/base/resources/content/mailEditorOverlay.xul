@@ -26,7 +26,7 @@
 
   <!-- editor specific commands -->
   <broadcasterset id="broadcasterset">
-  	<broadcaster id="cmd_sendPage" value="&sendPage.label;" accesskey="&sendPage.accesskey;" oncommand="SendPage();"/>
+  	<broadcaster id="cmd_sendPage" value="&sendPage.label;" accesskey="&sendPage.accesskey;" oncommand="sendPage();"/>
   </broadcasterset>
 
   <!-- editor specific UI items -->

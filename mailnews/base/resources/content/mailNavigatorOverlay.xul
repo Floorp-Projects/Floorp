@@ -34,7 +34,7 @@
 
   <!-- navigator specific commands -->
   <broadcasterset id="broadcasterset">
-  	<broadcaster id="cmd_sendPage" value="&sendPage.label;" accesskey="&sendPage.accesskey;" oncommand="SendPage();"/>
+  	<broadcaster id="cmd_sendPage" value="&sendPage.label;" accesskey="&sendPage.accesskey;" oncommand="sendPage();"/>
   	<broadcaster id="Browser:SendLink" value="&sendLinkCmd.label;" accesskey="&sendLinkCmd.accesskey;" oncommand="sendLink(window.content.location.href, window.content.document.title);"/>
   </broadcasterset>
          
