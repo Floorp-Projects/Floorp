@@ -975,8 +975,10 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
           }
         }
         break;
-        
+
       }
+      *aStatus = nsEventStatus_eConsumeNoDefault;
+
     }
 
     break;
