@@ -1103,26 +1103,26 @@ mime_encode_qp_buffer (MimeEncoderData *data, const char *buffer, PRInt32 size)
   char *out = out_buffer;
   PRBool white = PR_FALSE;
   PRBool mb_p = PR_FALSE;
-
-/*
+  
+  /*
   #### I don't know how to hook this back up:
   ####  mb_p = INTL_DefaultWinCharSetID(state->context) & 0x300 ;    
- */
-
-
+  */
+  
+  
   NS_ASSERTION(data->in_buffer_count == 0, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
-
+  
   /* Populate the out_buffer with quoted-printable data, one line at a time.
-   */
+  */
   for (; in < end; in++)
-	{
-	  if (*in == nsCRT::CR || *in == nsCRT::LF)
-		{
-
-      /* Whitespace cannot be allowed to occur at the end of           
-         the line, so we backup and replace the whitespace with        
-         it's code.                                                    
-       */                                                               
+  {
+    if (*in == nsCRT::CR || *in == nsCRT::LF)
+    {
+      
+    /* Whitespace cannot be allowed to occur at the end of           
+    the line, so we backup and replace the whitespace with        
+    its code.                                                    
+      */                                                               
       if (white)                                                       
       {                                                              
         out--;                                                       
@@ -1131,99 +1131,99 @@ mime_encode_qp_buffer (MimeEncoderData *data, const char *buffer, PRInt32 size)
         *out++ = hexdigits[whitespace_char >> 4];                    
         *out++ = hexdigits[whitespace_char & 0xF];                   
       }                                                   
-
-		  /* Now write out the newline. */
-		  *out++ = nsCRT::CR;
-		  *out++ = nsCRT::LF;
-		  white = PR_FALSE;
-
-		  status = data->write_buffer (out_buffer, (out - out_buffer),
-									   data->closure);
-		  if (status < 0) return status;
-		  out = out_buffer;
-
-		  /* If its CRLF, swallow two chars instead of one. */
-		  if (in[0] == nsCRT::CR && in[1] == nsCRT::LF)
-			in++;
-
-		  out = out_buffer;
-		  white = PR_FALSE;
-		  data->current_column = 0;
-		}
-	  else if (data->current_column == 0 && *in == '.')
-		{
+      
+      /* Now write out the newline. */
+      *out++ = nsCRT::CR;
+      *out++ = nsCRT::LF;
+      white = PR_FALSE;
+      
+      status = data->write_buffer (out_buffer, (out - out_buffer),
+        data->closure);
+      if (status < 0) return status;
+      out = out_buffer;
+      
+      /* If it's CRLF, swallow two chars instead of one. */
+      if (in[0] == nsCRT::CR && in[1] == nsCRT::LF)
+        in++;
+      
+      out = out_buffer;
+      white = PR_FALSE;
+      data->current_column = 0;
+    }
+    else if (data->current_column == 0 && *in == '.')
+    {
 		  /* Just to be SMTP-safe, if "." appears in column 0, encode it.
-			 (mmencode does this too.)
-		   */
-		  goto HEX;
-		}
-	  else if (data->current_column == 0 && *in == 'F'
+                  (mmencode does this too.)
+      */
+      goto HEX;
+    }
+    else if (data->current_column == 0 && *in == 'F'
 			   && (in >= end-1 || in[1] == 'r')
-			   && (in >= end-2 || in[2] == 'o')
-			   && (in >= end-3 || in[3] == 'm')
-			   && (in >= end-4 || in[4] == ' '))
-		{
+                           && (in >= end-2 || in[2] == 'o')
+                           && (in >= end-3 || in[3] == 'm')
+                           && (in >= end-4 || in[4] == ' '))
+    {
 		  /* If this line begins with 'F' and we cannot determine that
-			 this line does not begin with "From " then do the safe thing
-			 and assume that it does, and encode the 'F' in hex to avoid
-			 BSD mailbox lossage.  (We might not be able to tell that it
-			 is really "From " if the end of the buffer was early.  So
-			 this means that "\nFoot" will have the F encoded if the end of
-			 the buffer happens to fall just after the F; but will not have
-			 it encoded if it's after the first "o" or later.  Oh well.
-			 It's a little inconsistent, but it errs on the safe side.)
-		   */
-		  goto HEX;
-		}
-	  else if ((*in >= 33 && *in <= 60) ||		/* safe printing chars */
+                  this line does not begin with "From " then do the safe thing
+                  and assume that it does, and encode the 'F' in hex to avoid
+                  BSD mailbox lossage.  (We might not be able to tell that it
+                  is really "From " if the end of the buffer was early.  So
+                  this means that "\nFoot" will have the F encoded if the end of
+                  the buffer happens to fall just after the F; but will not have
+                  it encoded if it's after the first "o" or later.  Oh well.
+                  It's a little inconsistent, but it errs on the safe side.)
+      */
+      goto HEX;
+    }
+    else if ((*in >= 33 && *in <= 60) ||		/* safe printing chars */
 			   (*in >= 62 && *in <= 126) ||
-			   (mb_p && (*in == 61 || *in == 127 || *in == 0x1B)))
-		{
+                           (mb_p && (*in == 61 || *in == 127 || *in == 0x1B)))
+    {
+      white = PR_FALSE;
+      *out++ = *in;
+      data->current_column++;
+    }
+    else if (*in == ' ' || *in == '\t')		/* whitespace */
+    {
+      white = PR_TRUE;
+      *out++ = *in;
+      data->current_column++;
+    }
+    else										/* print as =FF */
+    {
+HEX:
 		  white = PR_FALSE;
-		  *out++ = *in;
-		  data->current_column++;
-		}
-	  else if (*in == ' ' || *in == '\t')		/* whitespace */
-		{
-		  white = PR_TRUE;
-		  *out++ = *in;
-		  data->current_column++;
-		}
-	  else										/* print as =FF */
-		{
-		HEX:
-		  white = PR_FALSE;
-		  *out++ = '=';
-		  *out++ = hexdigits[*in >> 4];
-		  *out++ = hexdigits[*in & 0xF];
-		  data->current_column += 3;
-		}
-
-	  NS_ASSERTION (data->current_column <= 76, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00"); /* Hard limit required by spec */
-
-	  if (data->current_column >= 73)		/* soft line break: "=\r\n" */
-		{
-		  *out++ = '=';
-		  *out++ = nsCRT::CR;
-		  *out++ = nsCRT::LF;
-
-		  status = data->write_buffer (out_buffer, (out - out_buffer),
-									   data->closure);
-		  if (status < 0) return status;
-		  out = out_buffer;
-		  white = PR_FALSE;
-		  data->current_column = 0;
-		}
-	}
-
+                  *out++ = '=';
+                  *out++ = hexdigits[*in >> 4];
+                  *out++ = hexdigits[*in & 0xF];
+                  data->current_column += 3;
+    }
+    
+    NS_ASSERTION (data->current_column <= 76, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00"); /* Hard limit required by spec */
+    
+    if (data->current_column >= 73)		/* soft line break: "=\r\n" */
+    {
+      *out++ = '=';
+      *out++ = nsCRT::CR;
+      *out++ = nsCRT::LF;
+      
+      status = data->write_buffer (out_buffer, (out - out_buffer),
+        data->closure);
+      if (status < 0) return status;
+      out = out_buffer;
+      white = PR_FALSE;
+      data->current_column = 0;
+    }
+  }
+  
   /* Write out the unwritten portion of the last line buffer. */
   if (out > out_buffer)
-	{
-	  status = data->write_buffer (out_buffer, (out - out_buffer),
-								   data->closure);
-	  if (status < 0) return status;
-	}
-
+  {
+    status = data->write_buffer (out_buffer, (out - out_buffer),
+      data->closure);
+    if (status < 0) return status;
+  }
+  
   return 0;
 }
 
