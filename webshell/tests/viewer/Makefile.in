@@ -103,15 +103,24 @@ GTK_GLUE		= -lgtksuperwin
 endif
 
 ifdef MOZ_OJI
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+JSJ_LIB			= $(DIST)/lib/jsj.lib
+else
 JSJ_LIB			= -ljsj
+endif
 endif
 
 XP_DIST_LIBS		= \
-			-lgkgfx \
 			$(MOZ_JS_LIBS) \
 			$(XPCOM_LIBS) \
 			$(JSJ_LIB) \
 			$(NULL)
+
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+XP_DIST_LIBS		+= $(DIST)/lib/gkgfx.lib
+else
+XP_DIST_LIBS		+= -lgkgfx
+endif
 
 XP_NS_UNDERBAR_CRAP	= \
 			$(MOZ_WIDGET_SUPPORT_LIBS) \
