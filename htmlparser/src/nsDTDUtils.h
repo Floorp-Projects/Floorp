@@ -253,6 +253,7 @@ public:
   PRInt32         mContextTopIndex;
   PRBool          mHadBody;
   PRBool          mHadFrameset;
+  PRBool          mHadDocTypeDecl;
 
   static   CNodeRecycler* mNodeRecycler;
 

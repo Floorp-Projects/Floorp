@@ -2094,10 +2094,21 @@ CDoctypeDeclToken::CDoctypeDeclToken(eHTMLTags aTag) : CHTMLToken(aTag) {
  *  @return  
  */
 nsresult CDoctypeDeclToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode) {
-  
+    
+  nsresult result =NS_OK;
+ 
+  nsString& theBuffer=aScanner.GetBuffer();
+  PRInt32   theCurrOffset=aScanner.GetOffset();
+  PRInt32   thePos=(aScanner.GetBuffer()).FindChar(kLessThan,PR_TRUE,theCurrOffset);
+
   mTextValue.AssignWithConversion("<!");
-  
-  nsresult result=aScanner.ReadUntil(mTextValue,'<',PR_FALSE); 
+    
+  if(thePos>-1) {
+    result=aScanner.ReadUntil(mTextValue,'<',PR_FALSE);
+  }
+  else {
+    result=aScanner.ReadUntil(mTextValue,'>',PR_TRUE);
+  }
   return result;
 }
 

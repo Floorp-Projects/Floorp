@@ -138,8 +138,9 @@ const nsCString&
 nsHTMLTags::GetStringValue(nsHTMLTag aTag)
 {
   NS_ASSERTION(gTagArray, "no lookup table, needs addref");
+  // Note: NS_HTML_TAG_MAX=113
   if ((eHTMLTag_unknown < aTag) && 
-      (aTag < NS_HTML_TAG_MAX) && gTagArray) {
+      (aTag <= NS_HTML_TAG_MAX) && gTagArray) {
     return gTagArray[aTag - 1].mStr;
   }
   else {
@@ -152,8 +153,9 @@ nsHTMLTags::GetStringValue(nsHTMLTag aTag)
 
 const char* nsHTMLTags::GetCStringValue(nsHTMLTag aTag) {
   NS_ASSERTION(gTagArray, "no lookup table, needs addref");
+  // Note: NS_HTML_TAG_MAX=113
   if ((eHTMLTag_unknown < aTag) && 
-      (aTag < NS_HTML_TAG_MAX) && gTagArray) {
+      (aTag <= NS_HTML_TAG_MAX) && gTagArray) {
     return gTagArray[aTag - 1].mStr.mStr;
   }
   else {

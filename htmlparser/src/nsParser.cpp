@@ -658,7 +658,6 @@ void DetermineParseMode(nsString& aBuffer,nsDTDMode& aParseMode,eParserDocType& 
   }
   else {
     if(eDTDMode_unknown==aParseMode) {
-      aBuffer.InsertWithConversion("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\">\n",0);
       aDocType=eHTML3Text;
       aParseMode=eDTDMode_quirks;
     }
@@ -1289,7 +1288,17 @@ aMimeType,PRBool aVerifyEnabled,PRBool aLastCall,nsDTDMode aMode){
           pc->mMultipart |= pc->mPrevContext->mMultipart;  //if available 
         } 
 
-        pc->mStreamListenerState = (pc->mMultipart) ? eOnDataAvail : eOnStop; 
+        // start fix bug 40143
+        if(pc->mMultipart) {
+          pc->mStreamListenerState=eOnDataAvail;
+          if(pc->mScanner) pc->mScanner->SetIncremental(PR_TRUE);
+        }
+        else {
+          pc->mStreamListenerState=eOnStop;
+          if(pc->mScanner) pc->mScanner->SetIncremental(PR_FALSE);
+        }
+        // end fix for 40143
+
         pc->mContextType=CParserContext::eCTString; 
         pc->SetMimeType(aMimeType);
         mUnusedInput.Truncate(0); 
