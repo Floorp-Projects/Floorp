@@ -51,7 +51,6 @@ public:
   NS_IMETHOD  GetWidth(const char *aString, nscoord &aWidth);
   NS_IMETHOD  GetWidth(const char *aString, PRUint32 aLength, nscoord &aWidth);
   NS_IMETHOD  GetWidth(const PRUnichar *aString, PRUint32 aLength, nscoord &aWidth);
-  NS_IMETHOD  GetWidth(const nsString& aString, nscoord &aWidth);
 
   NS_IMETHOD  GetHeight(nscoord &aHeight);
   NS_IMETHOD  GetLeading(nscoord &aLeading);
