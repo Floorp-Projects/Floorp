@@ -133,14 +133,9 @@ NS_NewPolylineFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
 #ifdef INCLUDE_XUL
 #include "nsXULAtoms.h"
-#include "nsTreeFrame.h"
-#include "nsTreeOuterFrame.h"
-#include "nsTreeRowGroupFrame.h"
-#include "nsTreeRowFrame.h"
 #include "nsToolboxFrame.h"
 #include "nsToolbarFrame.h"
 #include "nsTreeIndentationFrame.h"
-#include "nsTreeCellFrame.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
 #include "nsDocument.h"
@@ -153,13 +148,12 @@ static PRBool gReallyNoisyContentUpdates = PR_FALSE;
 static PRBool gNoisyInlineConstruction = PR_FALSE;
 #endif
 
-#define XULTREE
-#ifdef XULTREE
 #include "nsXULTreeFrame.h"
 #include "nsXULTreeOuterGroupFrame.h"
 #include "nsXULTreeSliceFrame.h"
 #include "nsXULTreeCellFrame.h"
-#endif
+#include "nsMenuFrame.h"
+#include "nsPopupSetFrame.h"
 
 #define NEWGFX_LIST_SCROLLFRAME
 //------------------------------------------------------------------
@@ -728,8 +722,6 @@ struct nsTableCreator {
   virtual nsresult CreateTableCellFrame(nsIFrame** aNewFrame);
   virtual nsresult CreateTableCellInnerFrame(nsIFrame** aNewFrame);
 
-  virtual PRBool IsTreeCreator() { return PR_FALSE; };
-
   nsTableCreator(nsIPresShell* aPresShell)
   {
     mPresShell = aPresShell;
@@ -784,60 +776,6 @@ nsresult
 nsTableCreator::CreateTableCellInnerFrame(nsIFrame** aNewFrame) {
   return NS_NewTableCellInnerFrame(mPresShell, aNewFrame);
 }
-
-#ifdef INCLUDE_XUL
-
-// Structure used when creating tree frames
-struct nsTreeCreator: public nsTableCreator {
-  nsresult CreateTableOuterFrame(nsIFrame** aNewFrame);
-  nsresult CreateTableFrame(nsIFrame** aNewFrame);
-  nsresult CreateTableCellFrame(nsIFrame** aNewFrame);
-  nsresult CreateTableRowGroupFrame(nsIFrame** aNewFrame);
-  nsresult CreateTableRowFrame(nsIFrame** aNewFrame);
-  nsresult CreateTableCellInnerFrame(nsIFrame** aNewFrame);
-
-  PRBool IsTreeCreator() { return PR_TRUE; };
-
-  nsTreeCreator(nsIPresShell* aPresShell)
-    :nsTableCreator(aPresShell) {};
-};
-
-nsresult
-nsTreeCreator::CreateTableOuterFrame(nsIFrame** aNewFrame)
-{
-  return NS_NewTreeOuterFrame(mPresShell, aNewFrame);
-}
-
-nsresult
-nsTreeCreator::CreateTableFrame(nsIFrame** aNewFrame)
-{
-  return NS_NewTreeFrame(mPresShell, aNewFrame);
-}
-
-nsresult
-nsTreeCreator::CreateTableCellFrame(nsIFrame** aNewFrame)
-{
-  return NS_NewTreeCellFrame(mPresShell, aNewFrame);
-}
-
-nsresult
-nsTreeCreator::CreateTableRowGroupFrame(nsIFrame** aNewFrame)
-{
-  return NS_NewTreeRowGroupFrame(mPresShell, aNewFrame);
-}
-
-nsresult
-nsTreeCreator::CreateTableRowFrame(nsIFrame** aNewFrame) {
-  return NS_NewTreeRowFrame(mPresShell, aNewFrame);
-}
-
-nsresult
-nsTreeCreator::CreateTableCellInnerFrame(nsIFrame** aNewFrame) {
-  return NS_NewBoxFrame(mPresShell, aNewFrame);
-  //return NS_NewTableCellInnerFrame(mPresShell, aNewFrame);
-}
-
-#endif // INCLUDE_XUL
 
 //MathML Mod - RBS
 #ifdef MOZ_MATHML
@@ -2462,10 +2400,10 @@ nsCSSFrameConstructor::GetParentFrame(nsIPresShell*            aPresShell,
     }
   }
   else if (nsLayoutAtoms::tableRowGroupFrame == aChildFrameType) { // row group child
+    // XXX can this go away?
     if (nsLayoutAtoms::tableFrame != parentFrameType.get()) {
       // trees allow row groups to contain row groups, so don't create pseudo frames
-      if (!((aTableCreator.IsTreeCreator()) && 
-            (nsLayoutAtoms::tableRowGroupFrame == parentFrameType.get()))) { // need pseudo table parent
+      if (nsLayoutAtoms::tableRowGroupFrame == parentFrameType.get()) { // need pseudo table parent
         rv = GetPseudoTableFrame(aPresShell, aPresContext, aTableCreator, aState, aParentFrameIn);
         if (NS_FAILED(rv)) return rv;
         pseudoParentFrame = pseudoFrames.mTableInner.mFrame;
@@ -2490,8 +2428,7 @@ nsCSSFrameConstructor::GetParentFrame(nsIPresShell*            aPresShell,
     NS_ASSERTION(PR_FALSE, "GetParentFrame called on nsLayoutAtoms::tableFrame child");
   }
   else { // foreign frame
-    if (!aTableCreator.IsTreeCreator() &&
-        IsTableRelated(parentFrameType) && 
+    if (IsTableRelated(parentFrameType) && 
         (nsLayoutAtoms::tableCaptionFrame != parentFrameType.get())) { // need pseudo cell parent
       rv = GetPseudoCellFrame(aPresShell, aPresContext, aTableCreator, aState, aParentFrameIn);
       if (NS_FAILED(rv)) return rv;
@@ -2696,38 +2633,15 @@ nsCSSFrameConstructor::ConstructTableRowGroupFrame(nsIPresShell*            aPre
 
   if (!aIsPseudo) {
     nsFrameItems childItems;
+    nsIFrame* captionFrame;
+    rv = TableProcessChildren(aPresShell, aPresContext, aState, aContent, 
+                              aNewFrame, aTableCreator, childItems, captionFrame);
+    if (NS_FAILED(rv)) return rv;
+    // if there are any anonymous children for the table, create frames for them
+    CreateAnonymousFrames(aPresShell, aPresContext, nsnull, aState, aContent, aNewFrame,
+                          childItems);
 
-    // Create some anonymous extras within the tree body.
-    if (aTableCreator.IsTreeCreator()) {
-      const nsStyleDisplay* parentDisplay;
-      parentFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)parentDisplay);
-
-      if (parentDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_ROW_GROUP) {
-        // We're the child of another row group. If it's lazy, we're lazy.
-        ((nsTreeRowGroupFrame*)aNewFrame)->SetFrameConstructor(this);
-      }
-      else if (parentDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE) {
-        // We're the child of a table. See if our parent is a tree.
-        // We will want to have a scrollbar.
-        ((nsTreeRowGroupFrame*)aNewFrame)->SetFrameConstructor(this);
-      }
-      // Stop the processing if we're lazy. The tree row group frame 
-      // builds its children as needed.
-      // Still install event handlers and methods/properties
-      CreateAnonymousFrames(aPresShell, aPresContext, nsnull, aState, aContent, aNewFrame,
-                            childItems);
-    }
-    else {
-      nsIFrame* captionFrame;
-      rv = TableProcessChildren(aPresShell, aPresContext, aState, aContent, 
-                                aNewFrame, aTableCreator, childItems, captionFrame);
-      if (NS_FAILED(rv)) return rv;
-      // if there are any anonymous children for the table, create frames for them
-      CreateAnonymousFrames(aPresShell, aPresContext, nsnull, aState, aContent, aNewFrame,
-                            childItems);
-
-      aNewFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
-    }
+    aNewFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
     if (aIsPseudoParent) {
       nsIFrame* child = (scrollFrame) ? scrollFrame : aNewFrame;
       aState.mPseudoFrames.mTableInner.mChildList.AddChild(child);
@@ -2965,11 +2879,8 @@ nsCSSFrameConstructor::ConstructTableCellFrame(nsIPresShell*            aPresShe
     // if there are any tree anonymous children create frames for them
     nsCOMPtr<nsIAtom> tagName;
     aContent->GetTag(*getter_AddRefs(tagName));
-    if (tagName && tagName.get() == nsXULAtoms::treecell) {
-      // XXX hyatt - Should work with table cells also!!!!
-      CreateAnonymousTreeCellFrames(aPresShell, aPresContext, tagName, aState, aContent, 
-                                    aNewCellInnerFrame, aNewCellOuterFrame, childItems);
-    }
+    CreateAnonymousTableCellFrames(aPresShell, aPresContext, tagName, aState, aContent, 
+                                  aNewCellInnerFrame, aNewCellOuterFrame, childItems);
 
     aNewCellInnerFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
     if (aState.mFloatedItems.childList) {
@@ -3066,8 +2977,7 @@ nsCSSFrameConstructor::ConstructTableForeignFrame(nsIPresShell*            aPres
     }
   }
   // Do not construct pseudo frames for trees 
-  else if (!aTableCreator.IsTreeCreator() &&
-           MustGeneratePseudoParent(aPresContext, aParentFrameIn, tag.get(), aContent)) {
+  else if (MustGeneratePseudoParent(aPresContext, aParentFrameIn, tag.get(), aContent)) {
     // this frame may have a pseudo parent, use block frame type to trigger foreign
     GetParentFrame(aPresShell, aPresContext, aTableCreator, *aParentFrameIn, 
                    nsLayoutAtoms::blockFrame, aState, parentFrame, aIsPseudoParent);
@@ -5298,13 +5208,6 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
                                              nsIFrame*                aNewFrame,
                                              nsFrameItems&            aChildItems)
 {
-#ifndef XULTREE
-  // XXX hyatt - This should be checking for a display type of table cell!
-  if (aTag == nsXULAtoms::treecell)
-    return NS_OK; // Don't even allow the XBL check.  The inner cell frame throws it off.
-                  // There's a separate special method for XBL treecells.
-#endif
-
   nsCOMPtr<nsIStyleContext> styleContext;
   aNewFrame->GetStyleContext(getter_AddRefs(styleContext));
 
@@ -5524,7 +5427,7 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
 // after the node has been constructed and initialized create any
 // anonymous content a node needs.
 nsresult
-nsCSSFrameConstructor::CreateAnonymousTreeCellFrames(nsIPresShell*        aPresShell, 
+nsCSSFrameConstructor::CreateAnonymousTableCellFrames(nsIPresShell*        aPresShell, 
                                              nsIPresContext*  aPresContext,
                                              nsIAtom*                 aTag,
                                              nsFrameConstructorState& aState,
@@ -5609,8 +5512,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
   // newFrame will still point to the child that we created like a "div" for example.
   nsIFrame* topFrame = nsnull;
 
-  nsTreeCreator treeCreator(aPresShell); // Used to make tree views.
-
   NS_ASSERTION(aTag != nsnull, "null XUL tag");
   if (aTag == nsnull)
     return NS_OK;
@@ -5631,18 +5532,14 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
       // BOX CONSTRUCTION
     if (aTag == nsXULAtoms::box || aTag == nsXULAtoms::vbox || aTag == nsXULAtoms::hbox || aTag == nsXULAtoms::tabbox || 
         aTag == nsXULAtoms::tabpage || aTag == nsXULAtoms::tabcontrol
-#ifdef XULTREE
         || aTag == nsXULAtoms::treecell  
-#endif
         ) {
       processChildren = PR_TRUE;
       isReplaced = PR_TRUE;
 
-#ifdef XULTREE
       if (aTag == nsXULAtoms::treecell)
         rv = NS_NewXULTreeCellFrame(aPresShell, &newFrame);
       else
-#endif
 
       // create a box. Its not root, its layout manager is default (nsnull) which is "sprocket" and
       // its default orientation is horizontal for hbox and vertical for vbox
@@ -5814,6 +5711,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
       processChildren = PR_TRUE; // Will need this to be custom.
       isReplaced = PR_TRUE;
       rv = NS_NewMenuFrame(aPresShell, &newFrame, (aTag != nsXULAtoms::menuitem));
+      ((nsMenuFrame*) newFrame)->SetFrameConstructor(this);
     }
     else if (aTag == nsXULAtoms::menubar) {
 #if (defined(XP_MAC) && !TARGET_CARBON) || defined(RHAPSODY) // The Mac uses its native menu bar.
@@ -5829,6 +5727,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
       processChildren = PR_TRUE;
       isReplaced = PR_TRUE;
       rv = NS_NewPopupSetFrame(aPresShell, &newFrame);
+      ((nsPopupSetFrame*) newFrame)->SetFrameConstructor(this);
     }
     else if (aTag == nsXULAtoms::menupopup || aTag == nsXULAtoms::popup) {
       // This is its own frame that derives from
@@ -5839,21 +5738,15 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
     } 
 
     // ------- Begin Grid ---------
-#ifdef XULTREE
     else if (aTag == nsXULAtoms::grid || aTag == nsXULAtoms::tree) {
-#else
-    else if (aTag == nsXULAtoms::grid) {
-#endif
       processChildren = PR_TRUE;
       isReplaced = PR_TRUE;
       nsCOMPtr<nsIBoxLayout> layout;
       NS_NewGridLayout(aPresShell, layout);
 
-#ifdef XULTREE
       if (aTag == nsXULAtoms::tree)
         rv = NS_NewXULTreeFrame(aPresShell, &newFrame, PR_FALSE, layout);
       else
-#endif
         rv = NS_NewBoxFrame(aPresShell, &newFrame, PR_FALSE, layout);
 
       const nsStyleDisplay* display = (const nsStyleDisplay*)
@@ -5878,22 +5771,17 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
 
     // ------- Begin Rows/Columns ---------
     else if (aTag == nsXULAtoms::rows || aTag == nsXULAtoms::columns
-#ifdef XULTREE      
              || aTag == nsXULAtoms::treechildren || aTag == nsXULAtoms::treecolgroup ||
              aTag == nsXULAtoms::treehead || aTag == nsXULAtoms::treerows || 
              aTag == nsXULAtoms::treecols || aTag == nsXULAtoms::treeitem
-#endif
       ) {
       processChildren = PR_TRUE;
       isReplaced = PR_TRUE;
       PRBool isHorizontal = (aTag == nsXULAtoms::columns)
-#ifdef XULTREE
         || (aTag == nsXULAtoms::treecolgroup) || (aTag == nsXULAtoms::treecols) 
-#endif
         ;
       nsCOMPtr<nsIBoxLayout> layout;
       
-#ifdef XULTREE
       if (aTag == nsXULAtoms::treechildren || aTag == nsXULAtoms::treeitem) {
         NS_NewTreeLayout(aPresShell, layout);
         nsCOMPtr<nsIContent> parentContent;
@@ -5912,7 +5800,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
         processChildren = PR_FALSE;
       }
       else
-#endif
       {
         NS_NewTempleLayout(aPresShell, layout);
         rv = NS_NewBoxFrame(aPresShell, &newFrame, PR_FALSE, layout,  isHorizontal);
@@ -5940,25 +5827,17 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
 
     // ------- Begin Row/Column ---------
     else if (aTag == nsXULAtoms::row || aTag == nsXULAtoms::column
-#ifdef XULTREE      
              || aTag == nsXULAtoms::treerow || aTag == nsXULAtoms::treecol
-#endif
       ) {
       processChildren = PR_TRUE;
       isReplaced = PR_TRUE;
-#ifdef XULTREE
       PRBool isHorizontal = (aTag == nsXULAtoms::row) || (aTag == nsXULAtoms::treerow);
-#else
-      PRBool isHorizontal = (aTag == nsXULAtoms::row);
-#endif
       nsCOMPtr<nsIBoxLayout> layout;
       NS_NewObeliskLayout(aPresShell, layout);
 
-#ifdef XULTREE
       if (aTag == nsXULAtoms::treerow)
         rv = NS_NewXULTreeSliceFrame(aPresShell, &newFrame, PR_FALSE, layout, isHorizontal);
       else
-#endif
         rv = NS_NewBoxFrame(aPresShell, &newFrame, PR_FALSE, layout, isHorizontal);
 
       const nsStyleDisplay* display = (const nsStyleDisplay*)
@@ -6056,93 +5935,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
       isReplaced = PR_TRUE;
       rv = NS_NewHTMLFrameOuterFrame(aPresShell, &newFrame);
     }
-  
-#ifndef XULTREE
-    // TREE CONSTRUCTION
-    // The following code is used to construct a tree view from the XUL content
-    // model.  
-    else if (aTag == nsXULAtoms::treeitem ||
-             aTag == nsXULAtoms::treechildren) {
-      PRBool pseudoParent;
-      rv = ConstructTableRowGroupFrame(aPresShell, aPresContext, aState, aContent, 
-                                       aParentFrame, aStyleContext, treeCreator, 
-                                       PR_FALSE, aFrameItems, newFrame, pseudoParent);
-      if (!pseudoParent) {
-        aFrameItems.AddChild(newFrame);
-      }
-      return rv;
-    }
-    else if (aTag == nsXULAtoms::tree)
-    {
-      nsIFrame* geometricParent = aParentFrame;
-      if (NS_STYLE_POSITION_ABSOLUTE == position->mPosition) {
-        isAbsolutelyPositioned = PR_TRUE;
-        aParentFrame = aState.mAbsoluteItems.containingBlock;
-      }
-      if (NS_STYLE_POSITION_FIXED == position->mPosition) {
-        isFixedPositioned = PR_TRUE;
-        aParentFrame = aState.mFixedItems.containingBlock;
-      }
-      nsIFrame* innerTable;
-      PRBool pseudoParent = PR_FALSE;
-      rv = ConstructTableFrame(aPresShell, aPresContext, aState, aContent, 
-                               geometricParent, aStyleContext, treeCreator, 
-                               PR_FALSE, aFrameItems, newFrame, innerTable, pseudoParent);
-      // Note: table construction function takes care of initializing the frame,
-      // processing children, and setting the initial child list
-      if (isAbsolutelyPositioned || isFixedPositioned) {
-        nsIFrame* placeholderFrame;
-
-        CreatePlaceholderFrameFor(aPresShell, aPresContext, aState.mFrameManager, aContent,
-                                  newFrame, aStyleContext, aParentFrame, &placeholderFrame);
-
-        // Add the positioned frame to its containing block's list of child frames
-        if (isAbsolutelyPositioned) {
-          aState.mAbsoluteItems.AddChild(newFrame);
-        } else {
-          aState.mFixedItems.AddChild(newFrame);
-        }
-
-        // Add the placeholder frame to the flow
-        aFrameItems.AddChild(placeholderFrame);
-      
-      } else {
-        // Add the table frame to the flow
-        if (!pseudoParent) {
-          aFrameItems.AddChild(newFrame);
-        }
-      }
-      // Make sure we add a mapping in the content->frame hash table
-      goto addToHashTable;
-    }
-    else if (aTag == nsXULAtoms::treerow)
-    {
-      // A tree item causes a table row to be constructed that is always
-      // slaved to the nearest enclosing table row group (regardless of how
-      // deeply nested it is within other tree items).
-      PRBool pseudoParent;
-      rv = ConstructTableRowFrame(aPresShell, aPresContext, aState, aContent, 
-                                  aParentFrame, aStyleContext, treeCreator, 
-                                  PR_FALSE, aFrameItems, newFrame, pseudoParent);
-      if (!pseudoParent) {
-        aFrameItems.AddChild(newFrame);
-      }
-      return rv;
-    }
-    else if (aTag == nsXULAtoms::treecell)
-    {
-      nsIFrame* innerCell;
-      PRBool pseudoParent;
-      rv = ConstructTableCellFrame(aPresShell, aPresContext, aState, aContent, 
-                                   aParentFrame, aStyleContext, treeCreator, 
-                                   PR_FALSE, aFrameItems, newFrame, innerCell, pseudoParent);
-      if (!pseudoParent) {
-        aFrameItems.AddChild(newFrame);
-      }
-      
-      return rv;
-    }
-#endif
     else if (aTag == nsXULAtoms::treeindentation)
     {
       rv = NS_NewTreeIndentationFrame(aPresShell, &newFrame);
@@ -8281,17 +8073,12 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
         nsIFrame* outerFrame = GetFrameFor(shell, aPresContext, child);
 
         // Convert to a tree row group frame.
-#ifdef XULTREE
         nsXULTreeOuterGroupFrame* treeRowGroup = (nsXULTreeOuterGroupFrame*)outerFrame;
-#else
-        nsTreeRowGroupFrame* treeRowGroup = (nsTreeRowGroupFrame*)outerFrame;
-#endif
         if (treeRowGroup) {
 
           // Get the primary frame for the parent of the child that's being added.
           nsIFrame* innerFrame = GetFrameFor(shell, aPresContext, aContainer);
   
-#ifdef XULTREE
           nsXULTreeGroupFrame* innerGroup = (nsXULTreeGroupFrame*) innerFrame;
           if (innerGroup) {
             nsBoxLayoutState state(aPresContext);
@@ -8299,32 +8086,6 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
           }
           treeRowGroup->ClearRowGroupInfo();
           shell->FlushPendingNotifications();
-#else
-          // See if there's a previous sibling.
-          nsIFrame* prevSibling = FindPreviousSibling(shell,
-                                                      aContainer,
-                                                      aNewIndexInContainer);
-
-          // This needs to really be a previous sibling.
-          if (prevSibling && aNewIndexInContainer > 0) {
-            nsCOMPtr<nsIContent> prevContent;
-            nsCOMPtr<nsIContent> frameContent;
-            aContainer->ChildAt(aNewIndexInContainer-1, *getter_AddRefs(prevContent));
-            prevSibling->GetContent(getter_AddRefs(frameContent));
-            if (frameContent.get() != prevContent.get()) 
-              prevSibling = nsnull;
-          }
-
-          if (prevSibling || (innerFrame && aNewIndexInContainer == 0)) {
-            // We're onscreen. Make sure a full reflow happens.
-            treeRowGroup->OnContentAdded(aPresContext);
-          }
-          else {
-            // We're going to be offscreen.
-            treeRowGroup->ClearRowGroupInfo();
-            treeRowGroup->ReflowScrollbar(aPresContext);
-          }
-#endif
 
           return NS_OK;
         }
@@ -9281,22 +9042,11 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
         // Convert to a tree row group frame.
         nsIFrame* parentFrame;
         childFrame->GetParent(&parentFrame);
-#ifdef XULTREE
         nsXULTreeGroupFrame* treeRowGroup = (nsXULTreeGroupFrame*)parentFrame;
         if (treeRowGroup) {
           treeRowGroup->OnContentRemoved(aPresContext, childFrame, aIndexInContainer);
         }
-#else
-        nsTreeRowGroupFrame* treeRowGroup = (nsTreeRowGroupFrame*)parentFrame;
-        if (treeRowGroup) {
-          treeRowGroup->OnContentRemoved(aPresContext, childFrame, aIndexInContainer);
-          return NS_OK;
-        }
-#endif
       }
-#ifndef XULTREE
-      else 
-#endif
       {
         // Ensure that we notify the outermost row group that the item
         // has been removed (so that we can update the scrollbar state).
@@ -9318,7 +9068,6 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
           nsIFrame*     parentFrame = GetFrameFor(shell, aPresContext, child);
 
           // Convert to a tree row group frame.
-#ifdef XULTREE
           nsXULTreeOuterGroupFrame* treeRowGroup = (nsXULTreeOuterGroupFrame*)parentFrame;
           if (treeRowGroup) {
             nsBoxLayoutState state(aPresContext);
@@ -9327,13 +9076,6 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
             shell->FlushPendingNotifications();
           }
           return NS_OK;
-#else
-          nsTreeRowGroupFrame* treeRowGroup = (nsTreeRowGroupFrame*)parentFrame;
-          if (treeRowGroup) {
-            treeRowGroup->ReflowScrollbar(aPresContext);
-            return NS_OK;
-          }
-#endif
         }
       }
     }
@@ -12418,19 +12160,10 @@ nsCSSFrameConstructor::CreateTreeWidgetContent(nsIPresContext* aPresContext,
       bm->ProcessAttachedQueue();
 
       // Notify the parent frame
-#ifdef XULTREE
       if (aIsAppend)
         rv = ((nsXULTreeGroupFrame*)aParentFrame)->TreeAppendFrames(newFrame);
       else
         rv = ((nsXULTreeGroupFrame*)aParentFrame)->TreeInsertFrames(aPrevFrame, newFrame);
-#else
-      if (aIsScrollbar)
-        ((nsTreeRowGroupFrame*)aParentFrame)->SetScrollbarFrame(aPresContext, newFrame);
-      else if (aIsAppend)
-        rv = ((nsTreeRowGroupFrame*)aParentFrame)->TreeAppendFrames(newFrame);
-      else
-        rv = ((nsTreeRowGroupFrame*)aParentFrame)->TreeInsertFrames(aPrevFrame, newFrame);
-#endif        
       // If there are new absolutely positioned child frames, then notify
       // the parent
       // XXX We can't just assume these frames are being appended, we need to
