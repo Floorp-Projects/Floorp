@@ -51,8 +51,10 @@
 ** Note: on some platforms va_list is defined as an array,
 ** and requires array notation.
 */
-#if (defined(LINUX) && defined(__powerpc__)) || defined(WIN16) || \
-    defined(QNX) || \
+#if (defined(LINUX) && defined(__powerpc__)) || \
+    (defined(LINUX) && defined(__s390__)) || \
+    (defined(LINUX) && defined(__s390x__)) || \
+    defined(WIN16) || defined(QNX) || \
     (defined(__NetBSD__) && defined(__powerpc__) && \
     __NetBSD_Version__ < 105000000)
 #define VARARGS_ASSIGN(foo, bar) foo[0] = bar[0]
