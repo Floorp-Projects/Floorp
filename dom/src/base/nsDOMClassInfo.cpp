@@ -143,6 +143,7 @@
 #include "nsIDOMCSSRule.h"
 #include "nsIDOMCSSRuleList.h"
 #include "nsIDOMRect.h"
+#include "nsIDOMRGBColor.h"
 
 // XBL related includes.
 #include "nsIXBLService.h"
@@ -767,6 +768,10 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            nsIXPCScriptable::WANT_DELPROPERTY |
                            nsIXPCScriptable::WANT_ENUMERATE |
                            nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE)
+
+  NS_DEFINE_CLASSINFO_DATA(CSSRGBColor, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
 };
 
 nsIXPConnect *nsDOMClassInfo::sXPConnect = nsnull;
@@ -1724,6 +1729,10 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(CSSRect, nsIDOMRect)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMRect)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(CSSRGBColor, nsIDOMRGBColor)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMRGBColor)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(Range, nsIDOMRange)

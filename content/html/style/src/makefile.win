@@ -82,6 +82,7 @@ CPP_OBJS =					\
 	.\$(OBJDIR)\nsInspectorCSSUtils.obj 	\
 	.\$(OBJDIR)\nsROCSSPrimitiveValue.obj 	\
 	.\$(OBJDIR)\nsDOMCSSRect.obj		\
+	.\$(OBJDIR)\nsDOMCSSRGBColor.obj	\
   $(NULL)
 
 LINCS=  -I..\..\..\base\src \

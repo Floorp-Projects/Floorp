@@ -68,6 +68,7 @@ CPPSRCS		= \
 		nsInspectorCSSUtils.cpp \
 		nsROCSSPrimitiveValue.cpp \
 		nsDOMCSSRect.cpp \
+		nsDOMCSSRGBColor.cpp \
 		$(NULL)
 
 EXPORTS		= \
