@@ -256,34 +256,33 @@ eAutoDetectResult CViewSourceHTML::AutoDetectContentType(nsString& aBuffer,nsStr
  * @param 
  * @return
  */
-NS_IMETHODIMP CViewSourceHTML::WillBuildModel(nsString& aFilename,PRBool aNotifySink){
+NS_IMETHODIMP CViewSourceHTML::WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsIParser* aParser){
   nsresult result=NS_OK;
   mFilename=aFilename;
 
-  if((aNotifySink) && (mSink)) {
-    mLineNumber=0;
-    result = mSink->WillBuildModel();
+  if(aParser){
+    mSink=(nsIHTMLContentSink*)aParser->GetContentSink();
+    if((aNotifySink) && (mSink)) {
+      mLineNumber=0;
+      result = mSink->WillBuildModel();
 
-    /* COMMENT OUT THIS BLOCK IF: you aren't using an nsHTMLContentSink...*/
-    mIsHTML=(0<aFilename.RFind(".htm",PR_TRUE));
-    {
-      nsIHTMLContentSink* theSink=(nsIHTMLContentSink*)mSink;
+      /* COMMENT OUT THIS BLOCK IF: you aren't using an nsHTMLContentSink...*/
+      mIsHTML=(0<aFilename.RFind(".htm",PR_TRUE)); 
 
-        //now let's automatically open the html...
+      //now let's automatically open the html...
       CStartToken theHTMLToken(eHTMLTag_html);
       nsCParserNode theHTMLNode(&theHTMLToken,0);
-      theSink->OpenHTML(theHTMLNode);
+      mSink->OpenHTML(theHTMLNode);
 
         //now let's automatically open the body...
       CStartToken theBodyToken(eHTMLTag_body);
       nsCParserNode theBodyNode(&theBodyToken,0);
-      theSink->OpenBody(theBodyNode);
+      mSink->OpenBody(theBodyNode);
+
+      SetFont("courier","-1",PR_TRUE,*mSink);
+
     }
-
-    SetFont("courier","-1",PR_TRUE,*mSink);
-
   }
-
   return result;
 }
 
@@ -293,61 +292,33 @@ NS_IMETHODIMP CViewSourceHTML::WillBuildModel(nsString& aFilename,PRBool aNotify
  * @param 
  * @return
  */
-NS_IMETHODIMP CViewSourceHTML::DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySink){
+NS_IMETHODIMP CViewSourceHTML::DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySink,nsIParser* aParser){
   nsresult result= NS_OK;
 
   //ADD CODE HERE TO CLOSE OPEN CONTAINERS...
 
-  if((aNotifySink) && (mSink)) {
-
-    {
-      nsIHTMLContentSink* theSink=(nsIHTMLContentSink*)mSink;
-
+  if(aParser){
+    mSink=(nsIHTMLContentSink*)aParser->GetContentSink();
+    if((aNotifySink) && (mSink)) {
         //now let's automatically close the pre...
 
       SetStyle(eHTMLTag_font,PR_FALSE,*mSink);
-      
+  
       //now let's automatically close the body...
       CEndToken theBodyToken(eHTMLTag_body);
       nsCParserNode theBodyNode(&theBodyToken,0);
-      theSink->CloseBody(theBodyNode);
+      mSink->CloseBody(theBodyNode);
 
        //now let's automatically close the html...
       CEndToken theHTMLToken(eHTMLTag_html);
       nsCParserNode theHTMLNode(&theBodyToken,0);
-      theSink->CloseHTML(theBodyNode);
+      mSink->CloseHTML(theBodyNode);
+      result = mSink->DidBuildModel(1);
     }
-
-    result = mSink->DidBuildModel(1);
-
   }
   return result;
 }
 
-/**
- * 
- *  
- *  @update  gess 3/25/98
- *  @param   
- *  @return 
- */
-void CViewSourceHTML::SetParser(nsIParser* aParser) {
-  mParser=(nsParser*)aParser;
-}
-
-/**
- *  This method gets called in order to set the content
- *  sink for this parser to dump nodes to.
- *  
- *  @update  gess 3/25/98
- *  @param   nsIContentSink interface for node receiver
- *  @return  
- */
-nsIContentSink* CViewSourceHTML::SetContentSink(nsIContentSink* aSink) {
-  nsIContentSink* old=mSink;
-  mSink=aSink;
-  return old;
-}
 
 static eHTMLTags gSkippedContentTags[]={ eHTMLTag_script, eHTMLTag_style,  eHTMLTag_title,  eHTMLTag_textarea};
 
@@ -626,12 +597,14 @@ NS_IMETHODIMP CViewSourceHTML::ConsumeTag(PRUnichar aChar,CScanner& aScanner,CTo
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null 
  */
-NS_IMETHODIMP CViewSourceHTML::ConsumeToken(CToken*& aToken){
+NS_IMETHODIMP CViewSourceHTML::ConsumeToken(CToken*& aToken,nsIParser* aParser) {
   aToken=0;
   if(mTokenDeque.GetSize()>0) {
     aToken=(CToken*)mTokenDeque.Pop();
     return NS_OK;
   }
+
+  mParser=(nsParser*)aParser;
 
   nsresult   result=NS_OK;
   CScanner* theScanner=mParser->GetScanner();
@@ -721,8 +694,9 @@ NS_IMETHODIMP CViewSourceHTML::WillInterruptParse(void){
  * @param 
  * @return
  */
-PRBool CViewSourceHTML::Verify(nsString& aURLRef){
+PRBool CViewSourceHTML::Verify(nsString& aURLRef,nsIParser* aParser) {
   PRBool result=PR_TRUE;
+  mParser=(nsParser*)aParser;
   return result;
 }
 
@@ -930,12 +904,14 @@ PRBool WriteTag(nsCParserNode& aNode,nsIContentSink& aSink,PRBool anEndToken,PRB
  *  @param   aToken -- token object to be put into content model
  *  @return  0 if all is well; non-zero is an error
  */
-NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken) {
+NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
   nsresult        result=NS_OK;
   CHTMLToken*     theToken= (CHTMLToken*)(aToken);
   eHTMLTokenTypes theType= (eHTMLTokenTypes)theToken->GetTokenType();
   PRBool          theEndTag=PR_TRUE;
 
+  mParser=(nsParser*)aParser;
+  mSink=(nsIHTMLContentSink*)aParser->GetContentSink();
   nsCParserNode theNode(theToken,mLineNumber);
   switch(theType) {
 

@@ -439,6 +439,9 @@ PRInt32 NavDispatchTokenHandler(CToken* aToken,nsIDTD* aDTD) {
   if(aDTD) {
     switch(theType) {
       case eToken_start:
+      case eToken_whitespace:
+      case eToken_newline:
+      case eToken_text:
         result=theDTD->HandleStartToken(aToken); break;
       case eToken_end:
         result=theDTD->HandleEndToken(aToken); break;
@@ -446,12 +449,6 @@ PRInt32 NavDispatchTokenHandler(CToken* aToken,nsIDTD* aDTD) {
         result=theDTD->HandleCommentToken(aToken); break;
       case eToken_entity:
         result=theDTD->HandleEntityToken(aToken); break;
-      case eToken_whitespace:
-        result=theDTD->HandleStartToken(aToken); break;
-      case eToken_newline:
-        result=theDTD->HandleStartToken(aToken); break;
-      case eToken_text:
-        result=theDTD->HandleStartToken(aToken); break;
       case eToken_attribute:
         result=theDTD->HandleAttributeToken(aToken); break;
       case eToken_style:
@@ -504,12 +501,11 @@ static CTokenDeallocator gTokenKiller;
  */
 CNavDTD::CNavDTD() : nsIDTD(), mTokenDeque(gTokenKiller)  {
   NS_INIT_REFCNT();
-  mParser=0;
   mSink = 0;
+  mParser=0;
   mDTDDebug=0;
   mLineNumber=1;
   mHasOpenBody=PR_FALSE;
-  mParseMode=eParseMode_navigator;
   nsCRT::zero(mTokenHandlers,sizeof(mTokenHandlers));
   mHasOpenForm=PR_FALSE;
   mHasOpenMap=PR_FALSE;
@@ -566,7 +562,7 @@ nsITokenRecycler* CNavDTD::GetTokenRecycler(void){
  * @param 
  * @return
  */
-PRBool CNavDTD::Verify(nsString& aURLRef){
+PRBool CNavDTD::Verify(nsString& aURLRef,nsIParser* aParser){
   PRBool result=PR_TRUE;
 
   if(!mDTDDebug){;
@@ -578,7 +574,7 @@ PRBool CNavDTD::Verify(nsString& aURLRef){
     else mDTDDebug->SetVerificationDirectory(kVerificationDir);
   }
   if(mDTDDebug) {
-    mDTDDebug->Verify(this,mParser,mBodyContext->mElements.mCount,mBodyContext->mElements.mTags,aURLRef);
+    mDTDDebug->Verify(this,aParser,mBodyContext->mElements.mCount,mBodyContext->mElements.mTags,aURLRef);
   }
   return result;
 }
@@ -627,18 +623,20 @@ eAutoDetectResult CNavDTD::AutoDetectContentType(nsString& aBuffer,nsString& aTy
  * @param 
  * @return
  */
-nsresult CNavDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink){
+nsresult CNavDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsIParser* aParser){
   nsresult result=NS_OK;
 
   mFilename=aFilename;
-  if((aNotifySink) && (mSink)) {
-    mHasOpenBody=PR_FALSE;
-    mLineNumber=1;
-    result = mSink->WillBuildModel();
-    //CStartToken theToken(eHTMLTag_body);  //open the body container...
-    //result=HandleStartToken(&theToken);
+  if(aParser){
+    mSink=(nsIHTMLContentSink*)aParser->GetContentSink();
+    if((aNotifySink) && (mSink)) {
+      mHasOpenBody=PR_FALSE;
+      mLineNumber=1;
+      result = mSink->WillBuildModel();
+      //CStartToken theToken(eHTMLTag_body);  //open the body container...
+      //result=HandleStartToken(&theToken);
+    }
   }
-
   return result;
 }
 
@@ -648,7 +646,7 @@ nsresult CNavDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink){
  * @param 
  * @return
  */
-nsresult CNavDTD::DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySink){
+nsresult CNavDTD::DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySink,nsIParser* aParser){
   nsresult result= NS_OK;
 
 /*  if((kNoError==anErrorCode) && (!mHasOpenBody)) {
@@ -657,16 +655,20 @@ nsresult CNavDTD::DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySink){
   }
 */
 
-  if((kNoError==anErrorCode) && (mBodyContext->mElements.mCount>0)) {
-    result = CloseContainersTo(0,eHTMLTag_unknown,PR_FALSE);
-  }
+  if(aParser){
+    mSink=(nsIHTMLContentSink*)aParser->GetContentSink();
 
-  if((aNotifySink) && (mSink)) {
-    result = mSink->DidBuildModel(1);
-  }
+    if((kNoError==anErrorCode) && (mBodyContext->mElements.mCount>0)) {
+      result = CloseContainersTo(0,eHTMLTag_unknown,PR_FALSE);
+    }
 
-  if(mDTDDebug) {
-    mDTDDebug->DumpVectorRecord();
+    if((aNotifySink) && (mSink)) {
+      result = mSink->DidBuildModel(1);
+    }
+
+    if(mDTDDebug) {
+      mDTDDebug->DumpVectorRecord();
+    }
   }
   return result;
 }
@@ -683,7 +685,7 @@ nsresult CNavDTD::DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySink){
  *  @param   aParser
  *  @return  
  */
-nsresult CNavDTD::HandleToken(CToken* aToken){
+nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
   nsresult result=NS_OK;
 
   if(aToken) {
@@ -692,6 +694,8 @@ nsresult CNavDTD::HandleToken(CToken* aToken){
     CITokenHandler* theHandler=GetTokenHandler(theType);
 
     if(theHandler) {
+      mParser=(nsParser*)aParser;
+      mSink=(nsIHTMLContentSink*)mParser->GetContentSink();
       result=(*theHandler)(theToken,this);
       if (mDTDDebug)
          mDTDDebug->Verify(this, mParser, mBodyContext->mElements.mCount, mBodyContext->mElements.mTags, mFilename);
@@ -1260,36 +1264,6 @@ CITokenHandler* CNavDTD::AddTokenHandler(CITokenHandler* aHandler) {
     }
   }
   return 0;
-}
-
-/**
- *  The parser calls this method after it's selected
- *  an constructed a DTD.
- *  
- *  @update  gess 3/25/98
- *  @param   aParser is a ptr to the controlling parser.
- *  @return  nada
- */
-void CNavDTD::SetParser(nsIParser* aParser) {
-  mParser=(nsParser*)aParser;
-  if(aParser)
-    mParseMode=aParser->GetParseMode();
-//  mParseMode=eParseMode_noquirks;
-}
-
-
-/**
- *  This method gets called in order to set the content
- *  sink for this parser to dump nodes to.
- *  
- *  @update  gess 3/25/98
- *  @param   nsIContentSink interface for node receiver
- *  @return  
- */
-nsIContentSink* CNavDTD::SetContentSink(nsIContentSink* aSink) {
-  nsIContentSink* old=mSink;
-  mSink=(nsIHTMLContentSink*)aSink;
-  return old;
 }
 
 
@@ -3510,13 +3484,14 @@ nsresult CNavDTD::ConsumeNewline(PRUnichar aChar,CScanner& aScanner,CToken*& aTo
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null 
  */
-nsresult CNavDTD::ConsumeToken(CToken*& aToken){
+nsresult CNavDTD::ConsumeToken(CToken*& aToken,nsIParser* aParser){
   aToken=0;
   if(mTokenDeque.GetSize()>0) {
     aToken=(CToken*)mTokenDeque.Pop();
     return NS_OK;
   }
 
+  mParser=(nsParser*)aParser;
   nsresult   result=NS_OK;
   CScanner* theScanner=mParser->GetScanner();
   if(NS_OK==result){

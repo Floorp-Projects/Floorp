@@ -33,13 +33,13 @@
 #include "nshtmlpars.h"
 #include "nsVoidArray.h"
 #include "nsDeque.h"
+#include "nsIHTMLContentSink.h"
 
 #define NS_VIEWSOURCE_HTML_IID      \
   {0xb6003010, 0x7932, 0x11d2, \
   {0x80, 0x1b, 0x0, 0x60, 0x8, 0xbf, 0xc4, 0x89 }}
 
 
-class nsIHTMLContentSink;
 class nsIDTDDebug;
 class nsIParserNode;
 class CITokenHandler;
@@ -108,7 +108,7 @@ class CViewSourceHTML: public nsIDTD {
       * @param	aFilename is the name of the file being parsed.
       * @return	error code (almost always 0)
       */
-    NS_IMETHOD WillBuildModel(nsString& aFilename,PRBool aNotifySink);
+    NS_IMETHOD WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsIParser* aParser);
 
    /**
      * The parser uses a code sandwich to wrap the parsing process. Before
@@ -118,7 +118,7 @@ class CViewSourceHTML: public nsIDTD {
      * @param	anErrorCode contans the last error that occured
      * @return	error code
      */
-    NS_IMETHOD DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySink);
+    NS_IMETHOD DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySink,nsIParser* aParser);
 
     /**
      *  
@@ -126,16 +126,7 @@ class CViewSourceHTML: public nsIDTD {
      *  @param   aToken -- token object to be put into content model
      *  @return  0 if all is well; non-zero is an error
      */
-    NS_IMETHOD HandleToken(CToken* aToken);
-
-    /**
-     * 
-     *  
-     *  @update  gess 3/25/98
-     *  @param   
-     *  @return 
-     */
-    virtual void SetParser(nsIParser* aParser);
+    NS_IMETHOD HandleToken(CToken* aToken,nsIParser* aParser);
 
     /**
      *  Cause the tokenizer to consume the next token, and 
@@ -145,7 +136,7 @@ class CViewSourceHTML: public nsIDTD {
      *  @param   anError -- ref to error code
      *  @return  new token or null
      */
-    NS_IMETHOD ConsumeToken(CToken*& aToken);
+    NS_IMETHOD ConsumeToken(CToken*& aToken,nsIParser* aParser);
 
     /**
      *  This method causes all tokens to be dispatched to the given tag handler.
@@ -181,13 +172,6 @@ class CViewSourceHTML: public nsIDTD {
      */
     NS_IMETHOD WillInterruptParse(void);
 
-   /**
-     * Select given content sink into parser for parser output
-     * @update	gess5/11/98
-     * @param   aSink is the new sink to be used by parser
-     * @return  old sink, or NULL
-     */
-    virtual nsIContentSink* SetContentSink(nsIContentSink* aSink);
 
     /**
      * Called by the parser to initiate dtd verification of the
@@ -196,7 +180,7 @@ class CViewSourceHTML: public nsIDTD {
      * @param 
      * @return
      */
-    virtual PRBool Verify(nsString& aURLRef);
+    virtual PRBool Verify(nsString& aURLRef,nsIParser* aParser);
 
     /**
      * Set this to TRUE if you want the DTD to verify its
@@ -249,7 +233,7 @@ protected:
     NS_IMETHODIMP ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,CStartToken* aToken);
 
     nsParser*           mParser;
-    nsIContentSink*     mSink;
+    nsIHTMLContentSink* mSink;
     nsString            mFilename;
     PRInt32             mLineNumber;
     nsDeque             mTokenDeque;

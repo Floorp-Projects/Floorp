@@ -89,44 +89,6 @@ class COtherDTD : public CNavDTD {
      */
     virtual eAutoDetectResult AutoDetectContentType(nsString& aBuffer,nsString& aType);
     
-    /**
-      * The parser uses a code sandwich to wrap the parsing process. Before
-      * the process begins, WillBuildModel() is called. Afterwards the parser
-      * calls DidBuildModel(). 
-      * @update	gess5/18/98
-      * @param	aFilename is the name of the file being parsed.
-      * @return	error code (almost always 0)
-      */
-    NS_IMETHOD WillBuildModel(nsString& aFilename,PRBool aNotifySink);
-
-   /**
-     * The parser uses a code sandwich to wrap the parsing process. Before
-     * the process begins, WillBuildModel() is called. Afterwards the parser
-     * calls DidBuildModel(). 
-     * @update	gess5/18/98
-     * @param	anErrorCode contans the last error that occured
-     * @return	error code
-     */
-    NS_IMETHOD DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySink);
-
-    /**
-     *  
-     *  @update  gess 3/25/98
-     *  @param   aToken -- token object to be put into content model
-     *  @return  0 if all is well; non-zero is an error
-     */
-    NS_IMETHOD HandleToken(CToken* aToken);
-
-    /**
-     *  Cause the tokenizer to consume the next token, and 
-     *  return an error result.
-     *  
-     *  @update  gess 3/25/98
-     *  @param   anError -- ref to error code
-     *  @return  new token or null
-     */
-    NS_IMETHOD ConsumeToken(CToken*& aToken);
-
 
     /**
      * 

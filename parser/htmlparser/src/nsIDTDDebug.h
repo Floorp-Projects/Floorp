@@ -36,7 +36,7 @@
 
 
 class nsIDTD;
-class nsParser;
+class nsIParser;
 class nsVoidArray;
 
 class nsIDTDDebug : public nsISupports {
@@ -47,7 +47,7 @@ public:
 
    virtual void SetRecordStatistics(PRBool bval) = 0;
 
-   virtual PRBool Verify(nsIDTD * aDTD, nsParser * aParser, int ContextStackPos, eHTMLTags aContextStack[], nsString& aURLRef) = 0;
+   virtual PRBool Verify(nsIDTD * aDTD, nsIParser * aParser, int ContextStackPos, eHTMLTags aContextStack[], nsString& aURLRef) = 0;
 
    virtual void DumpVectorRecord(void) = 0;
 

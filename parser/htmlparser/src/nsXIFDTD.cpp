@@ -407,14 +407,15 @@ eAutoDetectResult nsXIFDTD::AutoDetectContentType(nsString& aBuffer,nsString& aT
  * @param 
  * @return
  */
-nsresult nsXIFDTD::WillBuildModel(nsString& aFileName,PRBool aNotifySink){
+nsresult nsXIFDTD::WillBuildModel(nsString& aFileName,PRBool aNotifySink,nsIParser* aParser){
   nsresult result=NS_OK;
 
-  if(mSink)
-  {
-    mSink->WillBuildModel();
+  if(aParser){
+    mSink=(nsIHTMLContentSink*)aParser->GetContentSink();
+    if(mSink) {
+      mSink->WillBuildModel();
+    }
   }
-
   return result;
 }
 
@@ -424,12 +425,14 @@ nsresult nsXIFDTD::WillBuildModel(nsString& aFileName,PRBool aNotifySink){
  * @param 
  * @return
  */
-nsresult nsXIFDTD::DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySink){
+nsresult nsXIFDTD::DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySink,nsIParser* aParser){
   nsresult result=NS_OK;
 
-  if(mSink) 
-  {
-    result = mSink->DidBuildModel(anErrorCode);
+  if(aParser){
+    mSink=(nsIHTMLContentSink*)aParser->GetContentSink();
+    if(mSink) {
+      mSink->DidBuildModel(anErrorCode);
+    }
   }
 
   return result;
@@ -447,8 +450,11 @@ nsresult nsXIFDTD::DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySink){
  *  @param   aParser
  *  @return  
  */
-nsresult nsXIFDTD::HandleToken(CToken* aToken){
+nsresult nsXIFDTD::HandleToken(CToken* aToken,nsIParser* aParser) {
   nsresult result=NS_OK;
+
+  mParser=(nsParser*)aParser;
+  mSink=(nsIHTMLContentSink*)aParser->GetContentSink();  //this can change in the parser between calls.
 
   if(aToken) {
     CHTMLToken*     theToken= (CHTMLToken*)(aToken);
@@ -794,33 +800,6 @@ CTokenHandler* nsXIFDTD::AddTokenHandler(CTokenHandler* aHandler) {
     }
   }
   return 0;
-}
-
-/**
- * 
- *  
- *  @update  gpk 06/18/98
- *  @param   
- *  @return 
- */
-void nsXIFDTD::SetParser(nsIParser* aParser) {
-  mParser=(nsParser*)aParser;
-}
-
-/**
- *  This method gets called in order to set the content
- *  sink for this parser to dump nodes to.
- *  
- *  @update  gpk 06/18/98
- *  @param   nsIContentSink interface for node receiver
- *  @return  
- */
-nsIContentSink* nsXIFDTD::SetContentSink(nsIContentSink* aSink) {
-  nsIContentSink* old=mSink;
-  mSink=(nsIHTMLContentSink*)aSink;
-
-
-  return old;
 }
 
 
@@ -1658,13 +1637,15 @@ PRInt32 nsXIFDTD::ConsumeNewline(PRUnichar aChar,CScanner& aScanner,CToken*& aTo
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null 
  */
-nsresult nsXIFDTD::ConsumeToken(CToken*& aToken){
+nsresult nsXIFDTD::ConsumeToken(CToken*& aToken,nsIParser* aParser) {
   
   aToken=0;
   if(mTokenDeque.GetSize()>0) {
     aToken=(CToken*)mTokenDeque.Pop();
     return kNoError;
   }
+
+  mParser=(nsParser*)aParser;
 
   nsresult   result=NS_OK;
   CScanner* theScanner=mParser->GetScanner();
@@ -1854,8 +1835,9 @@ void nsXIFDTD::SetVerification(PRBool aEnabled){
  * @param 
  * @return
  */
-PRBool nsXIFDTD::Verify(nsString& aURLRef){
+PRBool nsXIFDTD::Verify(nsString& aURLRef,nsIParser* aParser) {
   PRBool result=PR_TRUE;
+  mParser=(nsParser*)aParser;
   return result;
 }
 

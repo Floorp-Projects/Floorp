@@ -256,7 +256,7 @@ eAutoDetectResult CRtfDTD::AutoDetectContentType(nsString& aBuffer,nsString& aTy
  * @param 
  * @return
  */
-NS_IMETHODIMP CRtfDTD::WillBuildModel(nsString& aFilename,PRInt32 aLevel){
+NS_IMETHODIMP CRtfDTD::WillBuildModel(nsString& aFilename,PRInt32 aLevel,nsIParser* aParser){
   nsresult result=NS_OK;
   return result;
 }
@@ -267,34 +267,12 @@ NS_IMETHODIMP CRtfDTD::WillBuildModel(nsString& aFilename,PRInt32 aLevel){
  * @param 
  * @return
  */
-NS_IMETHODIMP CRtfDTD::DidBuildModel(PRInt32 anErrorCode,PRInt32 aLevel){
+NS_IMETHODIMP CRtfDTD::DidBuildModel(PRInt32 anErrorCode,PRInt32 aLevel,nsIParser* aParser){
   nsresult result=NS_OK;
 
   return result;
 }
 
-/**
- * 
- *  
- *  @update  gess 3/25/98
- *  @param   
- *  @return 
- */
-void CRtfDTD::SetParser(nsIParser* aParser) {
-  mParser=(nsParser*)aParser;
-}
-
-/**
- *  This method gets called in order to set the content
- *  sink for this parser to dump nodes to.
- *  
- *  @update  gess 3/25/98
- *  @param   nsIContentSink interface for node receiver
- *  @return  
- */
-nsIContentSink* CRtfDTD::SetContentSink(nsIContentSink* aSink) {
-  return 0;
-}
 
 
 /*******************************************************************
@@ -376,8 +354,9 @@ PRInt32 CRtfDTD::ConsumeContent(PRUnichar aChar,CToken*& aToken){
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null 
  */
-nsresult CRtfDTD::ConsumeToken(CToken*& aToken){
-  
+nsresult CRtfDTD::ConsumeToken(CToken*& aToken,nsIParser* aParser){
+
+  mParser=(nsParser*)aParser;
   CScanner* theScanner=mParser->GetScanner();
 
   PRUnichar aChar;
@@ -446,8 +425,9 @@ nsresult CRtfDTD::WillInterruptParse(void){
  * @param 
  * @return
  */
-PRBool CRtfDTD::Verify(nsString& aURLRef){
+PRBool CRtfDTD::Verify(nsString& aURLRef,nsIParser* aParser){
   PRBool result=PR_TRUE;
+  mParser=(nsParser*)aParser;
   return result;
 }
 
@@ -527,9 +507,10 @@ PRInt32 CRtfDTD::HandleContent(CToken* aToken){
  *  @param   aToken -- token object to be put into content model
  *  @return  0 if all is well; non-zero is an error
  */
-nsresult CRtfDTD::HandleToken(CToken* aToken) {
+nsresult CRtfDTD::HandleToken(CToken* aToken,nsIParser* aParser) {
   nsresult result=NS_OK;
 
+  mParser=(nsParser*)aParser;
   if(aToken) {
     eRTFTokenTypes theType=eRTFTokenTypes(aToken->GetTokenType());
     
