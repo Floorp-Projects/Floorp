@@ -31,6 +31,7 @@
 #include <string.h>
 #include "nsKeyboardUtils.h"
 #include "nspr.h"
+#include "nsWindow.h"
 
 //
 // xkbms: X KeyBoard Mode Switch
@@ -44,43 +45,56 @@
 // during a keyboard grab; eg: German keyboards use 
 // Mode_switch (AltGr) and Q for '@' which is an 
 // important key for entering email addresses.
+// Finnish keyboards use dead_tilde for '~' which is an
+// important key for entering user's home page URLs
 //
-// This workaround simulates the Mode_switch bit during a
-// keyboard grab. The Mode_switch bit really belongs to
-// the X Server issue so only do this workaround when 
-// necessary.
+// This workaround turns off the keyboard grab when
+// the Mode_switch down.
 //
 // Note:
 // Mode_switch MappingNotify should be called when the
 // keyboard mapping changes (a MappingNotify event) but
-// this event has a null window and gdk only allows an
+// the XMappingNotify event has a null window and gdk only allows an
 // application to filter events with a non-null window
 //
 
 #undef DEBUG_X_KEYBOARD_MODE_SWITCH
+#ifdef DEBUG_X_KEYBOARD_MODE_SWITCH
+#define DEBUG_PRINTF(x) \
+            PR_BEGIN_MACRO \
+              printf x ; \
+              printf(", %s %d\n", __FILE__, __LINE__); \
+            PR_END_MACRO 
+#else
+#define DEBUG_PRINTF(x) \
+            PR_BEGIN_MACRO \
+            PR_END_MACRO 
+#endif
+
 
 // Xlib should define this!
 #define MODIFIERMAP_ROW_SIZE 8
 
-PRBool   nsXKBModeSwitch::gInitedGlobals = PR_FALSE;
 PRUint32 nsXKBModeSwitch::gModeSwitchKeycode1 = 0;
 PRUint32 nsXKBModeSwitch::gModeSwitchKeycode2 = 0;
-PRUint32 nsXKBModeSwitch::gModeSwitchBit = 0;
-PRBool   nsXKBModeSwitch::gWorkaroundEnabled = PR_FALSE;
-PRBool   nsXKBModeSwitch::gAreGrabbingKeyboard = PR_FALSE;
+PRBool   nsXKBModeSwitch::gGrabDuringPopup = PR_TRUE;
+PRBool   nsXKBModeSwitch::gUnGrabDuringModeSwitch = PR_TRUE;
 PRBool   nsXKBModeSwitch::gModeSwitchDown = PR_FALSE;
-PRBool   nsXKBModeSwitch::gEnableXkbKeysymToModifiers = PR_FALSE;
-PRUint32 nsXKBModeSwitch::gUserDefinedModeSwitchBit = 0;
+gint     nsXKBModeSwitch::gOwnerEvents;
+guint32  nsXKBModeSwitch::gGrabTime;
 
 
-void
-nsXKBModeSwitch::EnableWorkaround(gboolean enable)
+void 
+nsXKBModeSwitch::ControlWorkaround(gboolean grab_during_popup,
+                                   gboolean ungrab_during_mode_switch)
 {
-#ifdef DEBUG_X_KEYBOARD_MODE_SWITCH
-    printf("nsXKBModeSwitch::EnableWorkaround: enable = %d, %s %d\n", 
-                               enable, __FILE__, __LINE__);
-#endif
-  gWorkaroundEnabled = enable;
+  DEBUG_PRINTF(("nsXKBModeSwitch::ControlWorkaround:"));
+  DEBUG_PRINTF(("    grab_during_popup = %d",
+                     grab_during_popup));
+  DEBUG_PRINTF(("    ungrab_during_mode_switch = %d",
+                     ungrab_during_mode_switch));
+  gGrabDuringPopup = grab_during_popup;
+  gUnGrabDuringModeSwitch = ungrab_during_mode_switch;
 
   //
   // This really should be called whenever a MappingNotify
@@ -89,14 +103,26 @@ nsXKBModeSwitch::EnableWorkaround(gboolean enable)
   HandleMappingNotify();
 }
 
-void
-nsXKBModeSwitch::AreGrabbingKeyboard(gboolean grabbing)
+gint
+nsXKBModeSwitch::GrabKeyboard(GdkWindow *win, gint owner_events, guint32 time)
 {
-#ifdef DEBUG_X_KEYBOARD_MODE_SWITCH
-    printf("nsXKBModeSwitch::AreGrabbingKeyboard: grabbing = %d, %s %d\n", 
-                               grabbing, __FILE__, __LINE__);
-#endif
-  gAreGrabbingKeyboard = grabbing;
+  // if grab is disabled pretend it succeeded
+  if (!gGrabDuringPopup) {
+    return GrabSuccess;
+  }
+
+  gint retval;
+  retval = gdk_keyboard_grab(win, owner_events, time);
+  if (retval == GrabSuccess) {
+    gOwnerEvents = owner_events;
+    gGrabTime = time;
+  }
+  else {
+    gOwnerEvents = 0;
+    gGrabTime = 0;
+  }
+ 
+  return retval;
 }
 
 void
@@ -128,14 +154,6 @@ nsXKBModeSwitch::HandleMappingNotify()
       if (!keysymName)
         continue;
       if (!strcmp(keysymName,"Mode_switch")) {
-        if (gEnableXkbKeysymToModifiers) {
-#ifdef HAVE_X11_XKBLIB_H
-          gModeSwitchBit |= XkbKeysymToModifiers(GDK_DISPLAY(), keysym);
-#endif
-        }
-        else {
-          gModeSwitchBit |= gUserDefinedModeSwitchBit;
-        }
         if (!gModeSwitchKeycode1)
           gModeSwitchKeycode1 = keycode;
         else if (!gModeSwitchKeycode2)
@@ -146,21 +164,11 @@ nsXKBModeSwitch::HandleMappingNotify()
   XFreeModifiermap(xmodmap);
 
   if (!gModeSwitchKeycode1) {
-#ifdef DEBUG_X_KEYBOARD_MODE_SWITCH
-  printf("\n\n");
-  printf("nsXKBModeSwitch::HandleMappingNotify: no Mode_switch, %s %d\n", 
-                              __FILE__, __LINE__);
-  printf("\n\n");
-#endif
-    return;
+    DEBUG_PRINTF(("\n\nnsXKBModeSwitch::HandleMappingNotify: no Mode_switch\n\n"));
   }
-
-#ifdef DEBUG_X_KEYBOARD_MODE_SWITCH
-  printf("\n\n");
-  printf("nsXKBModeSwitch::HandleMappingNotify:, %s %d\n", __FILE__, __LINE__);
-  printf("    gModeSwitchKeycode1 = %d\n", gModeSwitchKeycode1);
-  printf("    gModeSwitchKeycode2 = %d\n", gModeSwitchKeycode2);
-#endif
+  DEBUG_PRINTF(("\n\nnsXKBModeSwitch::HandleMappingNotify:"));
+  DEBUG_PRINTF(("    gModeSwitchKeycode1 = %d", gModeSwitchKeycode1));
+  DEBUG_PRINTF(("    gModeSwitchKeycode2 = %d", gModeSwitchKeycode2));
 
 #ifdef HAVE_X11_XKBLIB_H
   {
@@ -171,19 +179,11 @@ nsXKBModeSwitch::HandleMappingNotify()
       xkb_minor = XkbMinorVersion;
       if (XkbQueryExtension (gdk_display, NULL, NULL, NULL,
                                &xkb_major, &xkb_minor)) {
-        gint group = 1;
-        gModeSwitchBit = XkbBuildCoreState(0, group);
-#ifdef DEBUG_X_KEYBOARD_MODE_SWITCH
-        printf("    gModeSwitchBit(XKB) = 0x%x\n", gModeSwitchBit);
-        printf("\n\n");
-#endif
       }
     }
   }
-#else
-  printf("         gModeSwitchBit = 0x%x\n", gModeSwitchBit);
-  printf("\n\n");
 #endif
+
 }
 
 void
@@ -191,37 +191,14 @@ nsXKBModeSwitch::Init()
 {
     gModeSwitchKeycode1 = 0;
     gModeSwitchKeycode2 = 0;
-    gModeSwitchBit = 0;
-    gAreGrabbingKeyboard = FALSE;
     gModeSwitchDown = FALSE;
-
-  if (!gInitedGlobals) {
-    gInitedGlobals = PR_TRUE;
-
-    // allow the user to specify the Mode_Switch bit
-    char *env_str;
-    env_str = getenv("MOZ_XKB_MODE_SWITCH_BIT");
-    if (env_str) 
-      PR_sscanf(env_str, "%lX", &gUserDefinedModeSwitchBit);
-
-    // Risk management: the value from XkbKeysymToModifier
-    // has not been tested. For those systems without
-    // the X KeyBoard Extension: if XkbKeysymToModifier
-    // works allow users to enable its use
-    // Please resolve if this works soon.
-    env_str = getenv("MOZ_XKB_KEYSYM_TO_MODIFIERS");
-    if (env_str) 
-      gEnableXkbKeysymToModifiers = PR_TRUE;
-  }
 }
 
 void
 nsXKBModeSwitch::HandleKeyPress(XKeyEvent *xke)
 {
-  // if we do not have a Mode_switch keycode mapping
-  // there is nothing to do
-  if (!gModeSwitchKeycode1) {
-    gModeSwitchDown = FALSE;
+  // if grab is completely disabled then there is nothing to do
+  if (!gGrabDuringPopup) {
     return;
   }
 
@@ -229,39 +206,56 @@ nsXKBModeSwitch::HandleKeyPress(XKeyEvent *xke)
   if ((xke->keycode == gModeSwitchKeycode1) 
       || (xke->keycode == gModeSwitchKeycode2)) {
     gModeSwitchDown = TRUE;
-#ifdef DEBUG_X_KEYBOARD_MODE_SWITCH
-    printf("nsXKBModeSwitch::HandleKeyPress: Mode_switch is down, %s %d\n", 
-                               __FILE__, __LINE__);
-#endif
-    return;
-  }
-
-  // if all the conditions are met we simulate the
-  // Mode_switch bit
-  if (gModeSwitchDown 
-      && gAreGrabbingKeyboard
-      && gWorkaroundEnabled
-      ) {
-    xke->state |= gModeSwitchBit;
-#ifdef DEBUG_X_KEYBOARD_MODE_SWITCH
-    printf("nsXKBModeSwitch::HandleKeyPress: set Mode_switch bit (0x%x), %s %d\n", 
-                               gModeSwitchBit, __FILE__, __LINE__);
-#endif
+    DEBUG_PRINTF(("nsXKBModeSwitch::HandleKeyPress: Mode_switch is down"));
+    nsWindow *win = nsWindow::GetGrabWindow();
+    if (!win)
+      return;
+    if (win->GrabInProgress()) {
+      if (gUnGrabDuringModeSwitch) {
+        gdk_keyboard_ungrab(GDK_CURRENT_TIME);
+        DEBUG_PRINTF(("\n\n*** ungrab keyboard ***\n\n"));
+      }
+    }
   }
 }
 
 void
 nsXKBModeSwitch::HandleKeyRelease(XKeyEvent *xke)
 {
-  if (!gModeSwitchKeycode1
-      || (xke->keycode == gModeSwitchKeycode1)
-      || (xke->keycode == gModeSwitchKeycode2)
-      ) {
-    gModeSwitchDown = FALSE;
-#ifdef DEBUG_X_KEYBOARD_MODE_SWITCH
-    printf("nsXKBModeSwitch::HandleKeyRelease: Mode_switch is up, %s %d\n", 
-                               __FILE__, __LINE__);
-#endif
+  // if grab is completely disabled then there is nothing to do
+  if (!gGrabDuringPopup) {
+    return;
   }
+
+  // check for a Mode_switch keyrelease
+  if ((xke->keycode == gModeSwitchKeycode1) 
+          || (xke->keycode == gModeSwitchKeycode2)) {
+    gModeSwitchDown = FALSE;
+    DEBUG_PRINTF(("nsXKBModeSwitch::HandleKeyPress: Mode_switch is up"));
+    nsWindow *win = nsWindow::GetGrabWindow();
+    if (!win)
+      return;
+    if (win->GrabInProgress()) {
+      if (gUnGrabDuringModeSwitch) {
+        if (!win->GetGdkGrabWindow())
+          return;
+        gdk_keyboard_grab(win->GetGdkGrabWindow(), gOwnerEvents, gGrabTime);
+        DEBUG_PRINTF(("\n\n*** re-grab keyboard ***\n\n"));
+      }
+    }
+  }
+}
+
+void
+nsXKBModeSwitch::UnGrabKeyboard(guint32 time)
+{
+  // if grab is completely disabled then there is nothing to do
+  if (!gGrabDuringPopup) {
+    return;
+  }
+
+  gdk_keyboard_ungrab(time);
+  gOwnerEvents = 0;
+  gGrabTime = 0;
 }
 
