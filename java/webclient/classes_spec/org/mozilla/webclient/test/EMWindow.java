@@ -59,7 +59,7 @@ import java.io.FileInputStream;
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EMWindow.java,v 1.33 2001/07/12 23:18:49 edburns%acm.org Exp $
+ * @version $Id: EMWindow.java,v 1.34 2001/07/17 20:46:32 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlFactory
 
@@ -993,6 +993,10 @@ public void actionPerformed(ActionEvent event) {
 }
 }
 
+public BrowserControl getBrowserControl()
+{
+    return browserControl;
+}
 
 //
 // Package methods
@@ -1002,6 +1006,7 @@ Navigation getNavigation()
 {
     return navigation;
 }
+
 
 }
 
