@@ -970,7 +970,7 @@ PR_IMPLEMENT(PRRecvWait*) PR_WaitRecvReady(PRWaitGroup *group)
                 ** it is still full of if's with continue and goto.
                 */
                 PRStatus st;
-                while (PR_CLIST_IS_EMPTY(&group->io_ready))
+                do 
                 {
                     st = PR_WaitCondVar(group->io_complete, PR_INTERVAL_NO_TIMEOUT);
                     if (_prmw_running != group->state)
@@ -979,7 +979,7 @@ PR_IMPLEMENT(PRRecvWait*) PR_WaitRecvReady(PRWaitGroup *group)
                         goto aborted;
                     }
                     if (_MW_ABORTED(st) || (NULL == group->poller)) break;
-                }
+                } while (PR_CLIST_IS_EMPTY(&group->io_ready));
 
                 /*
                 ** The thread is interrupted and has to leave.  It might

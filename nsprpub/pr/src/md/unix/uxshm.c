@@ -625,7 +625,7 @@ extern PRFileMap * _md_ImportFileMapFromString(
     PRInt32     osfd;
     PRIntn      prot; /* really: a PRFileMapProtect */
     PRFileDesc  *fd;
-    PRFileMap   *fm;
+    PRFileMap   *fm = NULL; /* default return value */
     PRFileInfo64 info;
 
     PR_sscanf( fmstring, "%ld:%d", &osfd, &prot );

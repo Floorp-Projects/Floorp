@@ -419,7 +419,7 @@ Convert(ScanfState *state, const char *fmt)
 {
     const char *cPtr;
     int ch;
-    char *cArg;
+    char *cArg = NULL;
 
     state->converted = PR_FALSE;
     cPtr = fmt;
