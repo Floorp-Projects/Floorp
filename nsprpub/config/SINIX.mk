@@ -55,6 +55,13 @@ endif
 
 ODD_CFLAGS		+= -DSVR4 -DSNI -DRELIANTUNIX -Dsinix -D_SVID_GETTOD
 
+# On SINIX 5.43, need to define IP_MULTICAST in order to get the
+# IP multicast macro and struct definitions in netinet/in.h.
+# (SINIX 5.42 does not have IP multicast at all.)
+ifeq ($(OS_RELEASE),5.43)
+ODD_CFLAGS		+= -DIP_MULTICAST
+endif
+
 CPU_ARCH		= mips
 
 RANLIB			= /bin/true
