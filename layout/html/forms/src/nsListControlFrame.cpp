@@ -778,6 +778,31 @@ static void printSize(char * aDesc, nscoord aSize)
 }
 #endif
 
+static nscoord
+GetMaxOptionHeight(nsIPresContext *aPresContext, nsIFrame *aContainer)
+{
+  nscoord result = 0;
+  nsIFrame *option;
+  for (aContainer->FirstChild(aPresContext, nsnull, &option);
+       option; option->GetNextSibling(&option)) {
+    nscoord optionHeight;
+    nsCOMPtr<nsIContent> content;
+    option->GetContent(getter_AddRefs(content));
+    if (nsCOMPtr<nsIDOMHTMLOptGroupElement>(do_QueryInterface(content))) {
+      // an optgroup
+      optionHeight = GetMaxOptionHeight(aPresContext, option);
+    } else {
+      // an option
+      nsSize size;
+      option->GetSize(size);
+      optionHeight = size.height;
+    }
+    if (result < optionHeight)
+      result = optionHeight;
+  }
+  return result;
+}
+
 //-----------------------------------------------------------------
 // Main Reflow for ListBox/Dropdown
 //-----------------------------------------------------------------
@@ -1047,16 +1072,9 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
    // list by using the tallest of the grandchildren, since there may be
    // option groups in addition to option elements, either of which may
    // be visible or invisible.
-  PRInt32 heightOfARow = 0;
-  nsIFrame *optionsContainer, *option;
+  nsIFrame *optionsContainer;
   GetOptionsContainer(aPresContext, &optionsContainer);
-  for (optionsContainer->FirstChild(aPresContext, nsnull, &option);
-       option; option->GetNextSibling(&option)) {
-    nsSize size;
-    option->GetSize(size);
-    if (heightOfARow < size.height)
-      heightOfARow = size.height;
-  }
+  PRInt32 heightOfARow = GetMaxOptionHeight(aPresContext, optionsContainer);
 
   // Check to see if we have zero items 
   PRInt32 length = 0;
