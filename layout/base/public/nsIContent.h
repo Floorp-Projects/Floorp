@@ -30,6 +30,7 @@ class nsISizeOfHandler;
 class nsString;
 class nsString;
 class nsVoidArray;
+class nsIDOMEvent;
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
@@ -132,6 +133,7 @@ public:
 
   NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext,
                                   nsGUIEvent* aEvent,
+                                  nsIDOMEvent* aDOMEvent,
                                   nsEventStatus& aEventStatus) = 0;
 
 };

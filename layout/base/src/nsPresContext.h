@@ -59,19 +59,21 @@ public:
   virtual float GetPixelsToTwips() const;
   virtual float GetTwipsToPixels() const;
   virtual nsIDeviceContext* GetDeviceContext() const;
+  NS_IMETHOD GetEventStateManager(nsIEventStateManager** aManager);
 
 protected:
   nsPresContext();
   virtual ~nsPresContext();
 
-  nsIPresShell*     mShell;
-  nsRect            mVisibleArea;
-  nsIDeviceContext* mDeviceContext;
-  nsIImageGroup*    mImageGroup;
-  nsILinkHandler*   mLinkHandler;
-  nsISupports*      mContainer;
-  nsFont            mDefaultFont;
-  nsVoidArray       mImageLoaders;
+  nsIPresShell*         mShell;
+  nsRect                mVisibleArea;
+  nsIDeviceContext*     mDeviceContext;
+  nsIImageGroup*        mImageGroup;
+  nsILinkHandler*       mLinkHandler;
+  nsISupports*          mContainer;
+  nsFont                mDefaultFont;
+  nsVoidArray           mImageLoaders;
+  nsIEventStateManager* mEventManager;
 };
 
 #endif /* nsPresContext_h___ */

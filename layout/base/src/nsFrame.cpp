@@ -32,6 +32,7 @@
 #include <stdarg.h>
 #include "nsIPtr.h"
 #include "nsISizeOfHandler.h"
+#include "nsIEventStateManager.h"
 
 #define DO_SELECTION 0
 
@@ -533,7 +534,12 @@ NS_METHOD nsFrame::HandleEvent(nsIPresContext& aPresContext,
 {
   aEventStatus = nsEventStatus_eIgnore;
   
-  mContent->HandleDOMEvent(aPresContext, aEvent, aEventStatus);
+  nsIEventStateManager *mManager;
+  if (NS_OK == aPresContext.GetEventStateManager(&mManager)) {
+    mManager->SetEventTarget((nsISupports*)mContent);
+    NS_RELEASE(mManager);
+  }
+  mContent->HandleDOMEvent(aPresContext, aEvent, nsnull, aEventStatus);
 
 #if DO_SELECTION
 

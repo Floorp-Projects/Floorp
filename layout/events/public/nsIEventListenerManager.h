@@ -25,6 +25,7 @@
 
 class nsIPresContext;
 class nsIDOMEventListener;
+class nsIDOMEvent;
 
 /*
  * Event listener manager interface.
@@ -66,6 +67,7 @@ public:
 
   virtual nsresult HandleEvent(nsIPresContext& aPresContext,
                               nsGUIEvent* aEvent,
+                              nsIDOMEvent* aDOMEvent,
                               nsEventStatus& aEventStatus) = 0;
 
   /**

@@ -35,6 +35,7 @@ class nsIStyleSheet;
 class nsIURL;
 class nsIViewManager;
 class nsString;
+class nsIDOMEvent;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
@@ -174,6 +175,7 @@ public:
 
   NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext, 
                                   nsGUIEvent* aEvent, 
+                                  nsIDOMEvent* aDOMEvent,
                                   nsEventStatus& aEventStatus) = 0;
 
 };

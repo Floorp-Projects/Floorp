@@ -35,6 +35,7 @@ class nsIPresShell;
 class nsIStyleContext;
 class nsIAtom;
 class nsString;
+class nsIEventStateManager;
 
 #define NS_IPRESCONTEXT_IID   \
 { 0x0a5d12e0, 0x944e, 0x11d1, \
@@ -157,6 +158,8 @@ public:
 
   //be sure to Relase() after you are done with the Get()
   virtual nsIDeviceContext * GetDeviceContext() const = 0;
+
+  NS_IMETHOD GetEventStateManager(nsIEventStateManager** aManager) = 0;
 };
 
 // Bit values for LoadImage's aImageStatus

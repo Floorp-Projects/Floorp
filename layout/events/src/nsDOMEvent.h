@@ -23,6 +23,8 @@
 #include "nsINSEvent.h"
 #include "nsISupports.h"
 #include "nsPoint.h"
+#include "nsGUIEvent.h"
+class nsIContent;
 
 class nsDOMEvent : public nsIDOMEvent, public nsINSEvent {
 
@@ -44,7 +46,7 @@ public:
   // nsIDOMEventInterface
   NS_IMETHOD GetType(nsString& aType);
 
-  NS_IMETHOD GetTarget(nsIDOMNode*& aTarget);
+  NS_IMETHOD GetTarget(nsIDOMNode** aTarget);
 
   NS_IMETHOD GetScreenX(PRInt32& aX);
   NS_IMETHOD GetScreenY(PRInt32& aY);
@@ -65,22 +67,14 @@ public:
   NS_IMETHOD GetLayerX(PRInt32& aX);
   NS_IMETHOD GetLayerY(PRInt32& aY);
 
-  struct nsDOMEventStruct {
-    PRUint32    message;
-    nsPoint     point;               
-    PRUint32    time;                                                
-    void*       nativeMsg;        
-
-    PRBool          isShift;        
-    PRBool          isControl;      
-    PRBool          isAlt;          
-    PRUint32        clickCount;          
-    PRUint32        keyCode;   
-} es;
+  NS_IMETHOD SetGUIEvent(nsGUIEvent *aEvent);
+  NS_IMETHOD SetEventTarget(nsISupports *aTarget);
 
 protected:
 
   PRUint32 mRefCnt : 31;
+  nsGUIEvent *kEvent;
+  nsISupports *kTarget;
 
 };
 #endif // nsDOMEvent_h__
