@@ -61,9 +61,13 @@ the scripts. There are more things you will have to get and install.
 The short list of the things you will need:
 
    1) MySQL database server.
-   2) Perl 5.004+ with Mysql module (included with MySQL).
-   3) Date::Parse module for Perl
-   4) Some kind of HTTP server so you could use CGI scripts
+   2) Perl 5.004+ plus modules:
+   	2a) Date::Parse 
+   	2b) Mail::Mailer 
+   	2c) DBI 
+   	2d) DBD::mysql 
+   3) Some kind of HTTP server so you could use CGI scripts
+
 
    You could try running the ./configure script to see what tools it
 complains about right now. Mind you, it won't check for the MySQL
