@@ -138,8 +138,8 @@ app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
     if (NS_FAILED(rv)) {
       if (rv == NS_ERROR_FILE_ACCESS_DENIED) {
         //horrible, horrible, bad, fixed strings.  need localization string file.
-        NSRunAlertPanel(@"A version of Navigator is already running on this system.",
-                        @"Only one copy may be run at any time.",
+        NSRunAlertPanel(@"Cannot Launch Navigator",
+                        @"Navigator is already running on this system. Only one version may be run at any time.",
                         @"Quit",nil,nil);
         [NSApp terminate:self];
       }
