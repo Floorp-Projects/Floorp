@@ -81,6 +81,8 @@ interface nsIAppShellService : nsISupports
    * @param aParent the parent window.  Can be null.
    * @param aUrl the contents of the new window.
    * @param aShowWindow the window remains invisible if PR_FALSE.
+   * @param aLoadDefaultPage controls whether the window should try to
+   *                         load a default content page on its own.
    * @param aChromeMask chrome flags affecting the kind of OS border
    *                    given to the window. see nsIBrowserWindow for
    *                    bit/flag definitions.
@@ -96,7 +98,8 @@ interface nsIAppShellService : nsISupports
    */
   void CreateTopLevelWindow(in nsIWebShellWindow aParent,
                             in nsIURI aUrl, 
-                            in boolean showWindow, 
+                            in boolean aShowWindow, 
+                            in boolean aLoadDefaultPage,
                             in PRUint32 aChromeMask,
                             in nsIXULWindowCallbacks aCallbacks,
                             in long aInitialWidth, in long aInitialHeight,

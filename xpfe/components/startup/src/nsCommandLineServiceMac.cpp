@@ -1042,7 +1042,7 @@ nsIWebShellWindow* FindWebShellWindow(nsIXULWindowCallbacks* inCallbacks)
 	rv = appShellService->CreateTopLevelWindow(
     	nsnull,
     	urlObj, // nsIURI* of chrome
-    	PR_TRUE,
+    	PR_TRUE, PR_TRUE,
         NS_CHROME_ALL_CHROME,
         inCallbacks, // callbacks
         NS_SIZETOCONTENT, NS_SIZETOCONTENT,

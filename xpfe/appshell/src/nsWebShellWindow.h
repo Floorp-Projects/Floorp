@@ -114,6 +114,9 @@ public:
   NS_IMETHOD LockUntilChromeLoad() { mLockedUntilChromeLoad = PR_TRUE; return NS_OK; }
   NS_IMETHOD GetLockedState(PRBool& aResult) { aResult = mLockedUntilChromeLoad; return NS_OK; }
 
+  NS_IMETHOD ShouldLoadDefaultPage(PRBool *aYes)
+               { *aYes = mLoadDefaultPage; return NS_OK; }
+
   NS_IMETHOD FindWebShellWithName(const PRUnichar* aName,
                                   nsIWebShell*& aResult);
 
@@ -130,7 +133,8 @@ public:
   NS_IMETHOD ConvertWebShellToDOMWindow(nsIWebShell* aShell, nsIDOMWindow** aDOMWindow);
   // nsWebShellWindow methods...
   nsresult Initialize(nsIWebShellWindow * aParent, nsIAppShell* aShell, nsIURI* aUrl,
-                      PRBool aCreatedVisible, nsIStreamObserver* anObserver,
+                      PRBool aCreatedVisible, PRBool aLoadDefaultPage,
+                      nsIStreamObserver* anObserver,
                       nsIXULWindowCallbacks *aCallbacks,
                       PRInt32 aInitialWidth, PRInt32 aInitialHeight,
                       nsWidgetInitData& widgetInitData);
@@ -310,6 +314,7 @@ protected:
   PRBool                  mChromeInitialized;
   PRUint32                mChromeMask;
   PRBool                  mCreatedVisible;
+  PRBool                  mLoadDefaultPage;
 
   nsVoidArray mMenuDelegates;
 

@@ -168,7 +168,7 @@ nsToolkitCore::ShowDialog(const nsString& aUrl, nsIDOMWindow* aParent) {
   nsCOMPtr<nsIWebShellWindow> parent;
   DOMWindowToWebShellWindow(aParent, &parent);
   window = nsnull;
-  appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE,
+  appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE, PR_TRUE,
                                NS_CHROME_ALL_CHROME | NS_CHROME_OPEN_AS_DIALOG,
                                nsnull, 615, 480, &window);
 
@@ -203,8 +203,9 @@ nsToolkitCore::ShowWindow(const nsString& aUrl, nsIDOMWindow* aParent) {
   nsCOMPtr<nsIWebShellWindow> parent;
   DOMWindowToWebShellWindow(aParent, &parent);
   nsCOMPtr<nsIWebShellWindow> window;
-  appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE, NS_CHROME_ALL_CHROME,
-                               nsnull, NS_SIZETOCONTENT, NS_SIZETOCONTENT,
+  appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE, PR_TRUE,
+                               NS_CHROME_ALL_CHROME, nsnull,
+                               NS_SIZETOCONTENT, NS_SIZETOCONTENT,
                                getter_AddRefs(window));
 
   return rv;
@@ -320,8 +321,9 @@ nsToolkitCore::ShowWindowWithArgs(const nsString& aUrl,
   cb = nsDontQueryInterface<nsArgCallbacks>( new nsArgCallbacks( aArgs ) );
 
   nsCOMPtr<nsIWebShellWindow>  window;
-  appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE, NS_CHROME_ALL_CHROME,
-                               cb, NS_SIZETOCONTENT, NS_SIZETOCONTENT,
+  appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE, PR_TRUE,
+                               NS_CHROME_ALL_CHROME, cb,
+                               NS_SIZETOCONTENT, NS_SIZETOCONTENT,
                                getter_AddRefs(window));
 
   return rv;

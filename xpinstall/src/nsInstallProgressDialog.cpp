@@ -233,6 +233,7 @@ nsInstallProgressDialog::Open()
             rv = appShell->CreateTopLevelWindow( nsnull,
                                                  url,
                                                  PR_TRUE,
+                                                 PR_TRUE,
                                                  NS_CHROME_ALL_CHROME,
                                                  this,  // callbacks??
                                                  0,

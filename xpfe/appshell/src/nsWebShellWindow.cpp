@@ -224,6 +224,7 @@ nsWebShellWindow::nsWebShellWindow()
   mChromeMask = NS_CHROME_ALL_CHROME;
   mIntrinsicallySized = PR_FALSE;
   mCreatedVisible = PR_TRUE;
+  mLoadDefaultPage = PR_TRUE;
 }
 
 
@@ -329,6 +330,7 @@ nsWebShellWindow::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsresult nsWebShellWindow::Initialize(nsIWebShellWindow* aParent,
                                       nsIAppShell* aShell, nsIURI* aUrl, 
                                       PRBool aCreatedVisible,
+                                      PRBool aLoadDefaultPage,
                                       nsIStreamObserver* anObserver,
                                       nsIXULWindowCallbacks *aCallbacks,
                                       PRInt32 aInitialWidth, PRInt32 aInitialHeight,
@@ -338,6 +340,7 @@ nsresult nsWebShellWindow::Initialize(nsIWebShellWindow* aParent,
   nsIWidget *parentWidget;
 
   mCreatedVisible = aCreatedVisible;
+  mLoadDefaultPage = aLoadDefaultPage;
   
   // XXX: need to get the default window size from prefs...
   // Doesn't come from prefs... will come from CSS/XUL/RDF
@@ -1309,15 +1312,13 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
   if (nsnull == window) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  // temporarily disabling parentage because non-Windows platforms
-  // seem to be interpreting it in unexpected ways.
   nsWidgetInitData widgetInitData;
   widgetInitData.mWindowType = eWindowType_popup;
   widgetInitData.mBorderStyle = eBorderStyle_default;
 
   window->SetIntrinsicallySized(PR_TRUE);
   rv = window->Initialize((nsIWebShellWindow *) nsnull, nsnull, nsnull,
-                          PR_TRUE, nsnull, nsnull,
+                          PR_TRUE, PR_TRUE, nsnull, nsnull,
                           1, 1, widgetInitData);
 
   if (NS_FAILED(rv)) 
@@ -1475,8 +1476,9 @@ nsWebShellWindow::NewWebShell(PRUint32 aChromeMask, PRBool aVisible,
     // return it immediately. 
 
     nsIWebShellWindow *parent = aChromeMask & NS_CHROME_DEPENDENT ? this : nsnull;
-    rv = appShell->CreateTopLevelWindow(parent, nsnull, PR_FALSE, aChromeMask,
-                                 nsnull, NS_SIZETOCONTENT, NS_SIZETOCONTENT,
+    rv = appShell->CreateTopLevelWindow(parent, nsnull, PR_FALSE, PR_FALSE,
+                                 aChromeMask, nsnull,
+                                 NS_SIZETOCONTENT, NS_SIZETOCONTENT,
                                  getter_AddRefs(newWindow));
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsIBrowserWindow> browser(do_QueryInterface(newWindow));
@@ -1513,8 +1515,8 @@ nsWebShellWindow::NewWebShell(PRUint32 aChromeMask, PRBool aVisible,
 #endif // NECKO
 
   if (NS_SUCCEEDED(rv)) {
-    rv = appShell->CreateTopLevelWindow(nsnull, urlObj, PR_FALSE, aChromeMask,
-                                 nsnull, 615, 480,
+    rv = appShell->CreateTopLevelWindow(nsnull, urlObj, PR_FALSE, PR_FALSE,
+                                 aChromeMask, nsnull, 615, 480,
                                  getter_AddRefs(newWindow));
   }
 
@@ -2546,7 +2548,7 @@ NS_IMETHODIMP nsWebShellWindow::Init(nsIAppShell* aAppShell,
    widgetInitData.mWindowType = eWindowType_child;
    widgetInitData.mBorderStyle = eBorderStyle_default;
 
-   rv = Initialize(nsnull, aAppShell, urlObj, PR_TRUE,
+   rv = Initialize(nsnull, aAppShell, urlObj, PR_TRUE, PR_TRUE,
        nsnull, nsnull, aBounds.width, aBounds.height, widgetInitData);
    mChromeMask = aChromeMask;
    if (NS_SUCCEEDED(rv))
