@@ -399,7 +399,9 @@ nsPipe::nsPipeInputStream::ReadSegments(nsWriteSegmentFun writer,
         readBufferLen = PR_MIN(readBufferLen, amt);
         while (readBufferLen > 0) {
             PRUint32 writeCount = 0;
+            mon.Exit(); // XXX avoid deadlock better
             rv = writer(this, closure, readBuffer, *readCount, readBufferLen, &writeCount);
+            mon.Enter();
             if (NS_FAILED(rv) && rv != NS_BASE_STREAM_WOULD_BLOCK)
                 goto done;
             NS_ASSERTION(writeCount <= readBufferLen, "writer returned bad writeCount");
@@ -690,7 +692,9 @@ nsPipe::nsPipeOutputStream::WriteSegments(nsReadSegmentFun reader,
             writeBufLen = PR_MIN(writeBufLen, amt);
             while (writeBufLen > 0) {
                 PRUint32 readCount = 0;
+                mon.Exit(); // XXX avoid deadlock better
                 rv = reader(this, closure, writeBuf, *writeCount, writeBufLen, &readCount);
+                mon.Enter();
                 if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
                     NS_ASSERTION(readCount <= writeBufLen, "reader returned bad readCount");
                     // XXX should not update counters if reader returned WOULD_BLOCK!!
