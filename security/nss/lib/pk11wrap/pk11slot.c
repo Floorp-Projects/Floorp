@@ -406,16 +406,17 @@ PK11_NewSlotInfo(SECMODModule *mod)
     if (slot == NULL) return slot;
 
 #ifdef PKCS11_USE_THREADS
-    slot->freeListLock = PZ_NewLock(nssILockFreelist);
-    if (slot->freeListLock == NULL) {
-	PZ_DestroyLock(slot->sessionLock);
-	PORT_Free(slot);
-	return slot;
-    }
-
     slot->sessionLock = mod->isThreadSafe ?
 	PZ_NewLock(nssILockSession) : (PZLock *)mod->refLock;
     if (slot->sessionLock == NULL) {
+	PORT_Free(slot);
+	return slot;
+    }
+    slot->freeListLock = PZ_NewLock(nssILockFreelist);
+    if (slot->freeListLock == NULL) {
+	if (mod->isThreadSafe) {
+	    PZ_DestroyLock(slot->sessionLock);
+	}
 	PORT_Free(slot);
 	return slot;
     }
