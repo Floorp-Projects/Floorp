@@ -220,18 +220,15 @@ nsCacheProfilePrefObserver::Observe(nsISupports *     subject,
     } else if (NS_LITERAL_STRING("profile-before-change").Equals(topic)) {
         // profile before change
         mHaveProfile = PR_FALSE;
-        
+
         // XXX shutdown devices
-        if (NS_LITERAL_STRING("shutdown-cleanse").Equals(data)) {
-            // XXX we need to delete the disk cache
-            // printf("cache observer: shutdown-cleanse\n");
-        }
+        nsCacheService::OnProfileShutdown(NS_LITERAL_STRING("shutdown-cleanse").Equals(data));
         
     } else if (NS_LITERAL_STRING("profile-after-change").Equals(topic)) {
         // profile after change
         mHaveProfile = PR_TRUE;
         ReadPrefs();
-        nsCacheService::ProfileChanged();
+        nsCacheService::OnProfileChanged();
     
     } else if (NS_LITERAL_STRING("nsPref:changed").Equals(topic)) {
         if (!mHaveProfile)  return NS_OK;
@@ -317,7 +314,7 @@ nsCacheProfilePrefObserver::ReadPrefs()
         if (directory)
             mDiskCacheParentDirectory = do_QueryInterface(directory, &rv);
     }
-
+    
     // read memory cache device prefs
     rv = prefBranch->GetBoolPref(MEMORY_CACHE_ENABLE_PREF, &mMemoryCacheEnabled);
     if (NS_FAILED(rv)) rv2 = rv;
@@ -1054,21 +1051,59 @@ nsCacheService::ProxyObjectRelease(nsISupports * object, PRThread * thread)
 
 
 void
-nsCacheService::ProfileChanged()
+nsCacheService::OnProfileShutdown(PRBool cleanse)
 {
     if (!gService)  return;
     nsAutoLock lock(gService->mCacheServiceLock);
 
-    NS_ASSERTION(!gService->mDiskDevice, "switching cache directories not supported yet.");
+    if (gService->mDiskDevice) {
+        if (cleanse)
+            gService->mDiskDevice->EvictEntries(nsnull);
+        gService->mDiskDevice->Shutdown();
+        gService->mEnableDiskDevice = PR_FALSE;
+    }
+#if 0
+    if (gService->mMemoryDevice) {
+        gService->mMemoryDevice->Shutdown();
+        gService->mEnableMemoryDevice = PR_FALSE;
+    }
+#endif
+}
 
+
+void
+nsCacheService::OnProfileChanged()
+{
+    if (!gService)  return;
+ 
+    nsresult   rv = NS_OK;
+    nsAutoLock lock(gService->mCacheServiceLock);
+    
     gService->mEnableDiskDevice   = gService->mObserver->DiskCacheEnabled();
     gService->mEnableMemoryDevice = gService->mObserver->MemoryCacheEnabled();
 
-    if (gService->mDiskDevice)
+    if (gService->mDiskDevice) {
+        gService->mDiskDevice->SetCacheParentDirectory(gService->mObserver->DiskCacheParentDirectory());
         gService->mDiskDevice->SetCapacity(gService->mObserver->DiskCacheCapacity());
+
+        // XXX initialization of mDiskDevice could be made lazily, if mEnableDiskDevice is false
+        rv = gService->mDiskDevice->Init();
+        if (NS_FAILED(rv)) {
+            NS_ERROR("nsCacheService::OnProfileChanged: Re-initializing disk device failed");
+            gService->mEnableDiskDevice = PR_FALSE;
+            // XXX delete mDiskDevice?
+        }
+    }
     
-    if (gService->mMemoryDevice)
+    if (gService->mMemoryDevice) {
         gService->mMemoryDevice->SetCapacity(gService->mObserver->MemoryCacheCapacity());
+        rv = gService->mMemoryDevice->Init();
+        if (NS_FAILED(rv) && (rv != NS_ERROR_ALREADY_INITIALIZED)) {
+            NS_ERROR("nsCacheService::OnProfileChanged: Re-initializing disk device failed");
+            gService->mEnableMemoryDevice = PR_FALSE;
+            // XXX delete mMemoryDevice?
+        }
+    }
 }
 
 

@@ -274,6 +274,8 @@ nsresult
 nsDiskCacheDevice::Init()
 {
     nsresult rv;
+
+    NS_ENSURE_TRUE(!mInitialized, NS_ERROR_FAILURE);
     
     rv = mBindery.Init();
     if (NS_FAILED(rv)) return rv;
@@ -327,6 +329,10 @@ nsDiskCacheDevice::Shutdown()
 
         // write out persistent information about the cache.
         (void) mCacheMap->Close();
+        delete mCacheMap;
+        mCacheMap = nsnull;
+
+        mBindery.Reset();
 
         // no longer initialized.
         mInitialized = PR_FALSE;
@@ -814,13 +820,17 @@ nsDiskCacheDevice::SetCacheParentDirectory(nsILocalFile * parentDir)
 {
     nsresult rv;
     PRBool  exists;
-    NS_ASSERTION(mCacheDirectory == nsnull, "switching cache directories not supportted.");
-    
+
+    if (mInitialized) {
+        NS_ASSERTION(PR_FALSE, "Cannot switch cache directory when initialized");
+        return;
+    }
+
     if (!parentDir) {
         mCacheDirectory = nsnull;
         return;
     }
-    
+
     // ensure parent directory exists
     rv = parentDir->Exists(&exists);
     if (NS_SUCCEEDED(rv) && !exists)

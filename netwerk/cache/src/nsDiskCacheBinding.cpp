@@ -155,8 +155,7 @@ nsDiskCacheBindery::nsDiskCacheBindery()
 
 nsDiskCacheBindery::~nsDiskCacheBindery()
 {
-    if (initialized)
-        PL_DHashTableFinish(&table);
+    Reset();
 }
 
 
@@ -169,6 +168,15 @@ nsDiskCacheBindery::Init()
     if (!initialized) rv = NS_ERROR_OUT_OF_MEMORY;
     
     return rv;
+}
+
+void
+nsDiskCacheBindery::Reset()
+{
+    if (initialized) {
+        PL_DHashTableFinish(&table);
+        initialized = PR_FALSE;
+    }
 }
 
 
