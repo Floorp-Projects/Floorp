@@ -3737,6 +3737,9 @@ nsDocShell::CreateContentViewer(const char *aContentType,
         if (currentLoadGroup)
             currentLoadGroup->RemoveRequest(request, nsnull, NS_OK);
 
+        // Update the notification callbacks, so that progress and
+        // status information are sent to the right docshell...
+        aOpenedChannel->SetNotificationCallbacks(this);
     }
 
     NS_ENSURE_SUCCESS(Embed(viewer, "", (nsISupports *) nsnull),

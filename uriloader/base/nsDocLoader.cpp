@@ -431,11 +431,13 @@ nsDocLoaderImpl::OnStartRequest(nsIRequest *request, nsISupports *aCtxt)
             count));
   }
 #endif /* PR_LOGGING */
-    
+  PRBool bJustStartedLoading = PR_FALSE;
+
   PRUint32 loadFlags = 0;
   request->GetLoadFlags(&loadFlags);
 
   if (!mIsLoadingDocument && (loadFlags & nsIChannel::LOAD_DOCUMENT_URI)) {
+      bJustStartedLoading = PR_TRUE;
       mIsLoadingDocument = PR_TRUE;
       ClearInternalProgress(); // only clear our progress if we are starting a new load....
   }
@@ -468,7 +470,7 @@ nsDocLoaderImpl::OnStartRequest(nsIRequest *request, nsISupports *aCtxt)
       // Only fire the start document load notification for the first
       // document URI...  Do not fire it again for redirections
       //
-      if (!(loadFlags & nsIChannel::LOAD_REPLACE)) {
+      if (bJustStartedLoading) {
         // Update the progress status state
         mProgressStateFlags = nsIWebProgressListener::STATE_START;
 

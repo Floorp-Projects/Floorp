@@ -76,16 +76,12 @@ static NS_DEFINE_CID(kMultiMixedConverterCID,          NS_MULTIMIXEDCONVERTER_CI
 //  
 //
 
-class nsMultiMixedConv : public nsIStreamConverter, public nsIByteRangeRequest, public nsIChannel {
+class nsMultiMixedConv : public nsIStreamConverter {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSISTREAMCONVERTER
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSIREQUESTOBSERVER
-    NS_DECL_NSIBYTERANGEREQUEST
-    
-    NS_FORWARD_SAFE_NSICHANNEL(mPartChannel)
-    NS_FORWARD_SAFE_NSIREQUEST(mPartChannel)
 
     nsMultiMixedConv();
     virtual ~nsMultiMixedConv();
@@ -102,10 +98,10 @@ protected:
 
     // member data
     PRBool              mNewPart;        // Are we processing the beginning of a part?
-	PRBool				mProcessingHeaders;
+    PRBool              mProcessingHeaders;
     nsCOMPtr<nsIStreamListener> mFinalListener; // this guy gets the converted data via his OnDataAvailable()
 
-	nsXPIDLCString		mToken;
+    nsXPIDLCString      mToken;
     PRUint32            mTokenLen;
 
     nsCOMPtr<nsIChannel>mPartChannel;   // the channel for the given part we're processing.
@@ -118,6 +114,9 @@ protected:
     PRUint32            mBufLen;
     PRBool              mFirstOnData;   // used to determine if we're in our first OnData callback.
 
+    // The following members are for tracking the byte ranges in
+    // multipart/mixed content which specified the 'Content-Range:'
+    // header...
     PRInt32             mByteRangeStart;
     PRInt32             mByteRangeEnd;
     PRBool              mIsByteRangeRequest;

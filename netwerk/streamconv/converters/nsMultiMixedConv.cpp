@@ -30,13 +30,311 @@
 #include "nsMimeTypes.h"
 #include "nsIByteArrayInputStream.h"
 
+
+//
+// nsPartChannel is a "dummy" channel which represents an individual part of
+// a multipart/mixed stream...
+//
+// Instances on this channel are passed out to the consumer through the
+// nsIStreamListener interface.
+//
+class nsPartChannel : public nsIChannel,
+                      public nsIByteRangeRequest
+{
+public:
+  nsPartChannel(nsIChannel *aMultipartChannel);
+
+  void InitializeByteRange(PRInt32 aStart, PRInt32 aEnd);
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIREQUEST
+  NS_DECL_NSICHANNEL
+  NS_DECL_NSIBYTERANGEREQUEST
+
+protected:
+  virtual ~nsPartChannel();
+
+protected:
+  nsCOMPtr<nsIChannel>    mMultipartChannel;
+  
+  nsresult                mStatus;
+  nsLoadFlags             mLoadFlags;
+
+  nsCOMPtr<nsILoadGroup>  mLoadGroup;
+
+  nsCString               mContentType;
+  PRInt32                 mContentLength;
+
+  PRBool                  mIsByteRangeRequest;
+  PRInt32                 mByteRangeStart;
+  PRInt32                 mByteRangeEnd;
+};
+
+nsPartChannel::nsPartChannel(nsIChannel *aMultipartChannel) :
+  mStatus(NS_OK),
+  mContentLength(-1),
+  mIsByteRangeRequest(PR_FALSE),
+  mByteRangeStart(0),
+  mByteRangeEnd(0)
+{
+    NS_INIT_ISUPPORTS();
+
+    mMultipartChannel = aMultipartChannel;
+
+    // Inherit the load flags from the original channel...
+    mMultipartChannel->GetLoadFlags(&mLoadFlags);
+
+    mMultipartChannel->GetLoadGroup(getter_AddRefs(mLoadGroup));
+}
+
+nsPartChannel::~nsPartChannel()
+{
+}
+
+void nsPartChannel::InitializeByteRange(PRInt32 aStart, PRInt32 aEnd)
+{
+    mIsByteRangeRequest = PR_TRUE;
+    
+    mByteRangeStart = aStart;
+    mByteRangeEnd   = aEnd;
+}
+
+
+//
+// nsISupports implementation...
+//
+
+NS_IMPL_ADDREF(nsPartChannel)
+NS_IMPL_RELEASE(nsPartChannel)
+
+NS_INTERFACE_MAP_BEGIN(nsPartChannel)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIChannel)
+    NS_INTERFACE_MAP_ENTRY(nsIRequest)
+    NS_INTERFACE_MAP_ENTRY(nsIChannel)
+    NS_INTERFACE_MAP_ENTRY(nsIByteRangeRequest)
+NS_INTERFACE_MAP_END
+
+//
+// nsIRequest implementation...
+//
+
+NS_IMETHODIMP
+nsPartChannel::GetName(PRUnichar * *aResult)
+{
+    return mMultipartChannel->GetName(aResult);
+}
+
+NS_IMETHODIMP
+nsPartChannel::IsPending(PRBool *aResult)
+{
+    // For now, consider the active lifetime of each part the same as
+    // the underlying multipart channel...  This is not exactly right,
+    // but it is good enough :-)
+    return mMultipartChannel->IsPending(aResult);
+}
+
+NS_IMETHODIMP
+nsPartChannel::GetStatus(nsresult *aResult)
+{
+    nsresult rv = NS_OK;
+
+    if (NS_FAILED(mStatus)) {
+        *aResult = mStatus;
+    } else {
+        rv = mMultipartChannel->GetStatus(aResult);
+    }
+
+    return rv;
+}
+
+NS_IMETHODIMP
+nsPartChannel::Cancel(nsresult aStatus)
+{
+    // Cancelling an individual part must not cancel the underlying
+    // multipart channel...
+    mStatus = aStatus;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPartChannel::Suspend(void)
+{
+    // Suspending an individual part must not suspend the underlying
+    // multipart channel...
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPartChannel::Resume(void)
+{
+    // Resuming an individual part must not resume the underlying
+    // multipart channel...
+    return NS_OK;
+}
+
+//
+// nsIChannel implementation
+//
+
+NS_IMETHODIMP
+nsPartChannel::GetOriginalURI(nsIURI * *aURI)
+{
+    return mMultipartChannel->GetOriginalURI(aURI);
+}
+
+NS_IMETHODIMP
+nsPartChannel::SetOriginalURI(nsIURI *aURI)
+{
+    return mMultipartChannel->SetOriginalURI(aURI);
+}
+
+NS_IMETHODIMP
+nsPartChannel::GetURI(nsIURI * *aURI)
+{
+    return mMultipartChannel->GetURI(aURI);
+}
+
+NS_IMETHODIMP
+nsPartChannel::Open(nsIInputStream **result)
+{
+    // This channel cannot be opened!
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsPartChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext)
+{
+    // This channel cannot be opened!
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsPartChannel::GetLoadFlags(nsLoadFlags *aLoadFlags)
+{
+    *aLoadFlags = mLoadFlags;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPartChannel::SetLoadFlags(nsLoadFlags aLoadFlags)
+{
+    mLoadFlags = aLoadFlags;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPartChannel::GetLoadGroup(nsILoadGroup* *aLoadGroup)
+{
+    *aLoadGroup = mLoadGroup;
+    NS_IF_ADDREF(*aLoadGroup);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPartChannel::SetLoadGroup(nsILoadGroup* aLoadGroup)
+{
+    mLoadGroup = aLoadGroup;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPartChannel::GetOwner(nsISupports* *aOwner)
+{
+    return mMultipartChannel->GetOwner(aOwner);
+}
+
+NS_IMETHODIMP
+nsPartChannel::SetOwner(nsISupports* aOwner)
+{
+    return mMultipartChannel->SetOwner(aOwner);
+}
+
+NS_IMETHODIMP
+nsPartChannel::GetNotificationCallbacks(nsIInterfaceRequestor* *aCallbacks)
+{
+    return mMultipartChannel->GetNotificationCallbacks(aCallbacks);
+}
+
+NS_IMETHODIMP
+nsPartChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks)
+{
+    return mMultipartChannel->SetNotificationCallbacks(aCallbacks);
+}
+
+NS_IMETHODIMP 
+nsPartChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
+{
+    return mMultipartChannel->GetSecurityInfo(aSecurityInfo);
+}
+
+NS_IMETHODIMP
+nsPartChannel::GetContentType(char * *aContentType)
+{
+    *aContentType = mContentType.ToNewCString();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPartChannel::SetContentType(const char *aContentType)
+{
+    mContentType.Assign(aContentType);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPartChannel::GetContentLength(PRInt32 *aContentLength)
+{
+    *aContentLength = mContentLength;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPartChannel::SetContentLength(PRInt32 aContentLength)
+{
+    mContentLength = aContentLength;
+    return NS_OK;
+}
+
+
+//
+// nsIByteRangeRequest implementation...
+//
+
+NS_IMETHODIMP 
+nsPartChannel::GetIsByteRangeRequest(PRBool *aIsByteRangeRequest)
+{
+    *aIsByteRangeRequest = mIsByteRangeRequest;
+
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP 
+nsPartChannel::GetStartRange(PRInt32 *aStartRange)
+{
+    *aStartRange = mByteRangeStart;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsPartChannel::GetEndRange(PRInt32 *aEndRange)
+{
+    *aEndRange = mByteRangeEnd;
+    return NS_OK;
+}
+
+
+
+
+
 // nsISupports implementation
-NS_IMPL_THREADSAFE_ISUPPORTS5(nsMultiMixedConv,
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsMultiMixedConv,
                               nsIStreamConverter, 
-							  nsIStreamListener,
-                              nsIRequestObserver,
-                              nsIByteRangeRequest, 
-                              nsIChannel);
+                              nsIStreamListener,
+                              nsIRequestObserver);
 
 
 // nsIStreamConverter implementation
@@ -321,28 +619,6 @@ nsMultiMixedConv::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
 }
 
 
-NS_IMETHODIMP 
-nsMultiMixedConv::GetIsByteRangeRequest(PRBool *aIsByteRangeRequest)
-{
-    *aIsByteRangeRequest = mIsByteRangeRequest;
-    return NS_OK;
-}
-
-
-NS_IMETHODIMP 
-nsMultiMixedConv::GetStartRange(PRInt32 *aStartRange)
-{
-    *aStartRange = mByteRangeStart;
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsMultiMixedConv::GetEndRange(PRInt32 *aEndRange)
-{
-    *aEndRange = mByteRangeEnd;
-    return NS_OK;
-}
-
 // nsMultiMixedConv methods
 nsMultiMixedConv::nsMultiMixedConv() {
     NS_INIT_ISUPPORTS();
@@ -359,6 +635,10 @@ nsMultiMixedConv::nsMultiMixedConv() {
 
 nsMultiMixedConv::~nsMultiMixedConv() {
     NS_ASSERTION(!mBuffer, "all buffered data should be gone");
+    if (mBuffer) {
+        nsMemory::Free(mBuffer);
+        mBuffer = nsnull;
+    }
 }
 
 nsresult
@@ -377,12 +657,7 @@ nsMultiMixedConv::BufferData(char *aData, PRUint32 aLen) {
 
 nsresult
 nsMultiMixedConv::SendStart(nsIChannel *aChannel) {
-	nsresult rv = NS_OK;
-
-    // First build up a dummy uri.
-    nsCOMPtr<nsIURI> partURI;
-    rv = aChannel->GetURI(getter_AddRefs(partURI));
-    if (NS_FAILED(rv)) return rv;
+    nsresult rv = NS_OK;
 
     if (mContentType.IsEmpty())
         mContentType = UNKNOWN_CONTENT_TYPE;
@@ -391,11 +666,22 @@ nsMultiMixedConv::SendStart(nsIChannel *aChannel) {
     // before starting up another "part." that would be bad.
     NS_ASSERTION(!mPartChannel, "tisk tisk, shouldn't be overwriting a channel");
 
-    rv = NS_NewInputStreamChannel(getter_AddRefs(mPartChannel), 
-                                                 partURI, 
-                                                 nsnull,       // inStr
-                                                 mContentType.get(), 
-                                                 mContentLength);
+    nsPartChannel *newChannel;
+    newChannel = new nsPartChannel(aChannel);
+    if (!newChannel)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    if (mIsByteRangeRequest) {
+        newChannel->InitializeByteRange(mByteRangeStart, mByteRangeEnd);
+    }
+
+    // Set up the new part channel...
+    mPartChannel = newChannel;
+
+    rv = mPartChannel->SetContentType(mContentType);
+    if (NS_FAILED(rv)) return rv;
+
+    mPartChannel->SetContentLength(mContentLength);
     if (NS_FAILED(rv)) return rv;
 
     nsLoadFlags loadFlags = 0;
@@ -403,19 +689,18 @@ nsMultiMixedConv::SendStart(nsIChannel *aChannel) {
     loadFlags |= nsIChannel::LOAD_REPLACE;
     mPartChannel->SetLoadFlags(loadFlags);
 
-	nsCOMPtr<nsILoadGroup> loadGroup;
-    (void)aChannel->GetLoadGroup(getter_AddRefs(loadGroup));
+    nsCOMPtr<nsILoadGroup> loadGroup;
+    (void)mPartChannel->GetLoadGroup(getter_AddRefs(loadGroup));
+
     // Add the new channel to the load group (if any)
     if (loadGroup) {
-        rv = mPartChannel->SetLoadGroup(loadGroup);
-        if (NS_FAILED(rv)) return rv;
         rv = loadGroup->AddRequest(mPartChannel, nsnull);
         if (NS_FAILED(rv)) return rv;
     }
 
     // Let's start off the load. NOTE: we don't forward on the channel passed
     // into our OnDataAvailable() as it's the root channel for the raw stream.
-    return mFinalListener->OnStartRequest(this, mContext);
+    return mFinalListener->OnStartRequest(mPartChannel, mContext);
 }
 
 
@@ -424,7 +709,7 @@ nsMultiMixedConv::SendStop(nsresult aStatus) {
     
     nsresult rv = NS_OK;
     if (mPartChannel) {
-        rv = mFinalListener->OnStopRequest(this, mContext, aStatus);
+        rv = mFinalListener->OnStopRequest(mPartChannel, mContext, aStatus);
         // don't check for failure here, we need to remove the channel from 
         // the loadgroup.
 
@@ -466,7 +751,7 @@ nsMultiMixedConv::SendData(char *aBuffer, PRUint32 aLen) {
     rv = inStream->Available(&len);
     if (NS_FAILED(rv)) return rv;
 
-    return mFinalListener->OnDataAvailable(this, mContext, inStream, 0, len);
+    return mFinalListener->OnDataAvailable(mPartChannel, mContext, inStream, 0, len);
 }
 
 PRInt32
