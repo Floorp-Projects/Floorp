@@ -302,147 +302,139 @@ extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* /* aServMgr */)
 extern "C" NS_EXPORT nsresult
 NSRegisterSelf(nsISupports* aServMgr, const char* path)
 {
-	nsresult rv;
+	nsresult rv = NS_OK;
 
 	nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
 	if (NS_FAILED(rv)) return rv;
 
-	nsIComponentManager* compMgr;
-	rv = servMgr->GetService(kComponentManagerCID, 
-                           nsIComponentManager::GetIID(), 
-                           (nsISupports**)&compMgr);
+	NS_WITH_SERVICE(nsIComponentManager,compMgr,kComponentManagerCID,&rv); 
 	if (NS_FAILED(rv)) return rv;
   
 	rv = compMgr->RegisterComponent(kNntpUrlCID,
                                   "NNTP Url",
                                   "component://netscape/messenger/nntpurl",
                                   path, PR_TRUE, PR_TRUE);
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) return rv;
 
 	rv = compMgr->RegisterComponent(kNntpServiceCID, "NNTP Service", 
 									"component://netscape/messenger/nntpservice", 
 									path, PR_TRUE, PR_TRUE);
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) return rv;
 
 	rv = compMgr->RegisterComponent(kNntpServiceCID, "NNTP News Service", 
                                   "component://netscape/messenger/messageservice;type=news", 
                                   path, PR_TRUE, PR_TRUE);
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) return rv;
 
 	rv = compMgr->RegisterComponent(kNntpServiceCID, "NNTP News Message Service",
                                   "component://netscape/messenger/messageservice;type=news_message", 
                                   path, PR_TRUE, PR_TRUE);
-	if (NS_FAILED(rv)) goto done;  
+	if (NS_FAILED(rv)) return rv;
 
 	rv = compMgr->RegisterComponent(kNewsFolderResourceCID,
                                   "News Folder Resource Factory",
                                   NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "news",
                                   path, PR_TRUE, PR_TRUE);
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) return rv;
   
 
 	rv = compMgr->RegisterComponent(kNewsMessageResourceCID,
 									"News Resource Factory",
 									NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "news_message",
 									path, PR_TRUE, PR_TRUE);
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) return rv;
 
 	rv = compMgr->RegisterComponent(kNntpIncomingServerCID,
 									"Nntp Incoming Server",
 									"component://netscape/messenger/server&type=nntp",
 									path, PR_TRUE, PR_TRUE);
                                   
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) return rv;
   
 	rv = compMgr->RegisterComponent(kNNTPProtocolCID,
                                   "NNTP Protocol",
                                   "component://netscape/messeneger/nntpprotocol",
                                   path, PR_TRUE, PR_TRUE);
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) return rv;
 
 	rv = compMgr->RegisterComponent(kNNTPNewsgroupCID,
                                   "NNTP Newsgroup",
                                   "component://netscape/messeneger/nntpnewsgroup",
                                   path, PR_TRUE, PR_TRUE);
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) return rv;
 
   rv = compMgr->RegisterComponent(kNNTPNewsgroupPostCID,
                                   "NNTP Newsgroup Post",
                                   "component://netscape/messeneger/nntpnewsgrouppost",
                                   path, PR_TRUE, PR_TRUE);
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) return rv;
 
   rv = compMgr->RegisterComponent(kNNTPNewsgroupListCID,
                                   "NNTP Newsgroup List",
                                   "component://netscape/messeneger/nntpnewsgrouplist",
                                   path, PR_TRUE, PR_TRUE);
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) return rv;
 
   rv = compMgr->RegisterComponent(kNNTPArticleListCID,
                                   "NNTP Article List",
                                   "component://netscape/messeneger/nntparticlelist",
                                   path, PR_TRUE, PR_TRUE);
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) return rv;
 
   rv = compMgr->RegisterComponent(kNNTPHostCID,
                                   "NNTP Host",
                                   "component://netscape/messeneger/nntphost",
                                   path, PR_TRUE, PR_TRUE);
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) return rv;
   
-done:
-	(void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
-	return rv;
+	return NS_OK;
 }
 
 extern "C" NS_EXPORT nsresult
 NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 {
-	nsresult rv;
+	nsresult rv = NS_OK;
 
 	nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
 	if (NS_FAILED(rv)) return rv;
 
-	nsIComponentManager* compMgr;
-	rv = servMgr->GetService(kComponentManagerCID, nsIComponentManager::GetIID(), (nsISupports**)&compMgr);
+	NS_WITH_SERVICE(nsIComponentManager,compMgr,kComponentManagerCID,&rv); 
 	if (NS_FAILED(rv)) return rv;
 
 	rv = compMgr->UnregisterComponent(kNntpUrlCID, path);
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) return rv;
 
 	rv = compMgr->UnregisterComponent(kNntpServiceCID, path);
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) return rv;
 
 	rv = compMgr->UnregisterComponent(kNewsFolderResourceCID, path);
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) return rv;
 
 	rv = compMgr->UnregisterComponent(kNntpIncomingServerCID, path);
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) return rv;
 
 	rv = compMgr->UnregisterComponent(kNewsMessageResourceCID, path);
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) return rv;
 
   rv = compMgr->UnregisterComponent(kNNTPProtocolCID, path);
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) return rv;
   
   rv = compMgr->UnregisterComponent(kNNTPNewsgroupCID, path);
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) return rv;
 
   rv = compMgr->UnregisterComponent(kNNTPNewsgroupPostCID, path);
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) return rv;
 
   rv = compMgr->UnregisterComponent(kNNTPNewsgroupListCID, path);
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) return rv;
 
   rv = compMgr->UnregisterComponent(kNNTPArticleListCID, path);
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) return rv;
 
   rv = compMgr->UnregisterComponent(kNNTPHostCID, path);
-	if (NS_FAILED(rv)) goto done;
+	if (NS_FAILED(rv)) return rv;
 
-done:
-	(void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
-	return rv;
+	return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
