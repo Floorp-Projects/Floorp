@@ -50,7 +50,7 @@ static NS_DEFINE_IID(kIStyleFrameConstructionIID, NS_ISTYLE_FRAME_CONSTRUCTION_I
 class HTMLAnchorRule : public nsIStyleRule {
 public:
   HTMLAnchorRule(nsIHTMLStyleSheet* aSheet);
-  ~HTMLAnchorRule();
+  virtual ~HTMLAnchorRule();
 
   NS_DECL_ISUPPORTS
 

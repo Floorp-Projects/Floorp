@@ -39,7 +39,7 @@ class nsTextNode : public nsIDOMText,
 {
 public:
   nsTextNode();
-  ~nsTextNode();
+  virtual ~nsTextNode();
 
   // nsISupports
   NS_DECL_ISUPPORTS

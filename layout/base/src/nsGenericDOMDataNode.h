@@ -48,7 +48,7 @@ class nsIDOMText;
 
 struct nsGenericDOMDataNode {
   nsGenericDOMDataNode();
-  ~nsGenericDOMDataNode();
+  virtual ~nsGenericDOMDataNode();
 
   void Init(nsIContent* aOuterContentObject);
 
