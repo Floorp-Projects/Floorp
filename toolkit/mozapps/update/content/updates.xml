@@ -17,15 +17,6 @@
         <xul:image xbl:inherits="severity" class="updateIcon"/>
         <xul:label xbl:inherits="value=updateCount" flex="1" crop="right"/>
       </xul:hbox>
-      <xul:popupset>
-        <xul:popup anonid="infoPopup" class="infoPopup">
-          <xul:hbox>
-            <xul:label flex="1" crop="right" class="infoPopupTitle">&updatesAvailable.title;</xul:label>
-            <xul:button class="popupCloseBox"/>
-          </xul:hbox>
-          <xul:description anonid="infoPopupDetails"/>
-        </xul:popup>
-      </xul:popupset>
     </content>
     <implementation implements="nsIObserver, nsIAlertListener">
       <constructor>
@@ -134,16 +125,19 @@
     <content>
       <xul:hbox flex="1">
         <xul:stack>
-          <xul:vbox align="center" pack="center">
+          <xul:vbox align="center">
             <xul:image class="updateItemIcon" xbl:inherits="src=icon"/>
           </xul:vbox>
-          <xul:vbox align="right" pack="end">
-            <xul:checkbox class="updateItemChecked" xbl:inherits="checked"/>
+          <xul:vbox align="right">
+            <xul:checkbox class="updateItemChecked" anonid="updateItemChecked" xbl:inherits="checked"/>
           </xul:vbox>
         </xul:stack>
         <xul:vbox flex="1">
           <xul:hbox class="updateItemNameRow" align="center">
             <xul:label class="updateItemName" xbl:inherits="value=name" flex="1" crop="right"/>
+          </xul:hbox>
+          <xul:hbox class="updateItemInfoRow" anonid="updateItemInfoRow" align="center" hidden="true">
+            <xul:label class="updateItemInfo" anonid="updateItemText" flex="1" crop="right">&appInfo.label;</xul:label>
           </xul:hbox>
           <xul:hbox class="updateItemDetailsRow" align="center">
             <xul:label class="updateItemFromLabel">&from.label;</xul:label>
@@ -159,8 +153,30 @@
                                 onget="return this.getAttribute('url');"/>
       <property name="icon"     onset="this.setAttribute('icon', val); return val;"
                                 onget="return this.getAttribute('icon');"/>
-      <property name="checked"  onset="this.setAttribute('checked', val); return val;"
-                                onget="return this.getAttribute('checked');"/>
+      <property name="type"     onget="return parseInt(this.getAttribute('type'));">
+        <setter>
+        <![CDATA[
+          this.setAttribute("type", val);
+          if (val == Components.interfaces.nsIUpdateItem.TYPE_APP) {
+            var infoRow = document.getAnonymousElementByAttribute(this, "anonid", "updateItemInfoRow");
+            infoRow.removeAttribute("hidden");
+          }          
+          return val;
+        ]]> 
+        </setter>               
+      </property>
+      <property name="checked">
+        <setter>
+          var checkbox = document.getAnonymousElementByAttribute(this, "anonid", "updateItemChecked");
+          checkbox.checked = val;
+          return val;
+        </setter>
+        <getter>
+          var checkbox = document.getAnonymousElementByAttribute(this, "anonid", "updateItemChecked");
+          return checkbox.checked;
+        </getter>
+      </property>
+      
     </implementation>
   </binding>
 

@@ -106,7 +106,8 @@
 
     <label>&found.intro.label;</label>
     
-    <vbox id="foundList" flex="1" style="height: 16em; overflow: auto;"/>
+    <vbox id="foundList" flex="1" style="height: 16em; overflow: auto;"
+          oncommand="gFoundPage.onCommand(event);"/>
 
     <label>&found.instructions.label;</label>
     
