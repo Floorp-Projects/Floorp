@@ -388,7 +388,7 @@ static js2val Date_makeTime(JS2Metadata *meta, const js2val thisValue, js2val *a
 	argc = maxargs;  /* clamp argc */
 
     for (i = 0; i < argc; i++) {
-        float64 f = meta->engine->toNumber(argv[i]);        
+        float64 f = meta->engine->toFloat64(argv[i]);        
         if (JSDOUBLE_IS_NaN(f)) {
             *date = nan;
             return meta->engine->nanValue;
@@ -454,7 +454,7 @@ static js2val Date_makeDate(JS2Metadata *meta, const js2val thisValue, js2val *a
 	argc = maxargs;   /* clamp argc */
 
     for (i = 0; i < argc; i++) {
-        float64 f = meta->engine->toNumber(argv[i]);      
+        float64 f = meta->engine->toFloat64(argv[i]);      
         if (JSDOUBLE_IS_NaN(f)) {
             *date = nan;
             return meta->engine->nanValue;
@@ -874,7 +874,7 @@ js2val Date_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv,
         if (argc == 1) {
             if (!JS2VAL_IS_STRING(argv[0])) {
 	        /* the argument is a millisecond number */
-                float64 d = meta->engine->toNumber(argv[0]);
+                float64 d = meta->engine->toFloat64(argv[0]);
 	        thisInst->ms = TIMECLIP(d);
 	    } else {
 	        /* the argument is a string; parse it. */
@@ -891,7 +891,7 @@ js2val Date_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv,
 
 	    for (loop = 0; loop < MAXARGS; loop++) {
 	        if (loop < argc) {
-	            float64 double_arg = meta->engine->toNumber(argv[loop]);
+	            float64 double_arg = meta->engine->toFloat64(argv[loop]);
 		    /* if any arg is NaN, make a NaN date object
 		       and return */
 		    if (!JSDOUBLE_IS_FINITE(double_arg)) {
@@ -938,7 +938,7 @@ js2val Date_UTC(JS2Metadata *meta, const js2val /*thisValue*/, js2val *argv, uin
 
     for (loop = 0; loop < MAXARGS; loop++) {
 	if (loop < argc) {
-            d = meta->engine->toNumber(argv[loop]);
+            d = meta->engine->toFloat64(argv[loop]);
 	    if (!JSDOUBLE_IS_FINITE(d))
                 return meta->engine->allocNumber(d);
 	    array[loop] = floor(d);
@@ -1272,7 +1272,7 @@ static js2val Date_getUTCMilliseconds(JS2Metadata *meta, const js2val thisValue,
 static js2val Date_setTime(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 /*argc*/)
 {
     float64 *date = Date_getProlog(meta, thisValue);
-    float64 result = meta->engine->toNumber(argv[0]);
+    float64 result = meta->engine->toFloat64(argv[0]);
     *date = TIMECLIP(result);
     return meta->engine->allocNumber(*date);
 }
@@ -1286,7 +1286,7 @@ static js2val Date_setYear(JS2Metadata *meta, const js2val thisValue, js2val arg
 
     float64 *date = Date_getProlog(meta, thisValue);
     result = *date;
-    year = meta->engine->toNumber(argv[0]);
+    year = meta->engine->toFloat64(argv[0]);
     if (!JSDOUBLE_IS_FINITE(year)) {
 	*date = nan;
         return meta->engine->allocNumber(*date);

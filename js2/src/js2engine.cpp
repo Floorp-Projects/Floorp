@@ -237,14 +237,14 @@ namespace MetaData {
             char16 *numEnd;
             return stringToDouble(str->data(), str->data() + str->length(), numEnd);
         }
-        return toNumber(toPrimitive(x));
+        return toFloat64(toPrimitive(x));
     }
 
     // x is not a number, convert it to one
     js2val JS2Engine::convertValueToGeneralNumber(js2val x)
     {
         // XXX Assuming convert to float64, rather than long/ulong
-        return allocNumber(toNumber(x));
+        return allocNumber(toFloat64(x));
     }
 
     // x is a Number, validate that it has no fractional component
@@ -283,7 +283,7 @@ namespace MetaData {
     }
 
     // x is any js2val
-    float64 JS2Engine::toNumber(js2val x)
+    float64 JS2Engine::toFloat64(js2val x)
     { 
         if (JS2VAL_IS_INT(x)) 
             return JS2VAL_TO_INT(x); 

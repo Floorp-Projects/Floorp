@@ -527,7 +527,7 @@ static js2val String_indexOf(JS2Metadata *meta, const js2val thisValue, js2val *
     uint32 pos = 0;
 
     if (argc > 1) {
-        float64 fpos = meta->engine->toNumber(argv[1]);
+        float64 fpos = meta->engine->toFloat64(argv[1]);
         if (JSDOUBLE_IS_NaN(fpos))
             pos = 0;
         if (fpos < 0)
@@ -554,7 +554,7 @@ static js2val String_lastIndexOf(JS2Metadata *meta, const js2val thisValue, js2v
     uint32 pos = str->size();
 
     if (argc > 1) {
-        float64 fpos = meta->engine->toNumber(argv[1]);
+        float64 fpos = meta->engine->toFloat64(argv[1]);
         if (JSDOUBLE_IS_NaN(fpos))
             pos = str->size();
         else {
@@ -701,7 +701,7 @@ static js2val String_substring(JS2Metadata *meta, const js2val thisValue, js2val
     uint32 start, end;
 
     if (argc > 0) {
-        float64 farg0 = meta->engine->toNumber(argv[0]);
+        float64 farg0 = meta->engine->toFloat64(argv[0]);
         if (JSDOUBLE_IS_NaN(farg0) || (farg0 < 0))
             start = 0;
         else {
@@ -718,7 +718,7 @@ static js2val String_substring(JS2Metadata *meta, const js2val thisValue, js2val
         start = 0;
 
     if (argc > 1) {
-        float64 farg1 = meta->engine->toNumber(argv[1]);
+        float64 farg1 = meta->engine->toFloat64(argv[1]);
         if (JSDOUBLE_IS_NaN(farg1) || (farg1 < 0))
             end = 0;
         else {
