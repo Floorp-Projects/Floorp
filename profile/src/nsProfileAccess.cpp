@@ -36,7 +36,6 @@
 #include "nsFileStream.h"
 #include "nsEscape.h"
 
-// kill me now.
 #define REGISTRY_YES_STRING             "yes"
 #define REGISTRY_NO_STRING              "no"
 
@@ -933,35 +932,53 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName)
 	}
 
     if (unixProfileName && unixProfileDirectory) {
+        nsCAutoString profileLocation(unixProfileDirectory);
+        profileLocation += "/.netscape";
+      
+        nsCOMPtr<nsIFileSpec> users4xDotNetscapeDirectory;
+        rv = NS_NewFileSpec(getter_AddRefs(users4xDotNetscapeDirectory));
+        if (NS_FAILED(rv)) return rv;
+    
+        rv = users4xDotNetscapeDirectory->SetNativePath((const char *)profileLocation);
+        if (NS_FAILED(rv)) return rv;
 
-		ProfileStruct*	profileItem	= new ProfileStruct();
-		if (!profileItem)
-			return NS_ERROR_OUT_OF_MEMORY;
+        rv = users4xDotNetscapeDirectory->Exists(&exists);
+        if (NS_FAILED(rv)) return rv;
 
-		profileItem->profileName			= nsnull;
-		profileItem->profileLocation		= nsnull;
-		profileItem->isMigrated			= nsnull;
-		profileItem->NCProfileName			= nsnull;
-		profileItem->NCDeniedService		= nsnull;
-        profileItem->NCEmailAddress			= nsnull;
-        profileItem->NCHavePregInfo		= nsnull;
-		profileItem->updateProfileEntry	= PR_TRUE;
+#ifdef DEBUG
+	printf("%s exists:  %d\n",(const char *)profileLocation, exists);
+#endif
+        if (exists) {
+            ProfileStruct*  profileItem     = new ProfileStruct();
+            if (!profileItem)
+                return NS_ERROR_OUT_OF_MEMORY;
 
-		profileItem->profileName			= nsCRT::strdup(nsUnescape(unixProfileName));
-		profileItem->profileLocation		= nsCRT::strdup(unixProfileDirectory);
 
-		PRInt32 length = PL_strlen(unixProfileDirectory) + PL_strlen("/.netscape");
-		profileItem->profileLocation = (char *) PR_Realloc(profileItem->profileLocation, length+1);
-		PL_strcpy(profileItem->profileLocation, unixProfileDirectory);
-		PL_strcat(profileItem->profileLocation, "/.netscape");
-
-		profileItem->isMigrated			= nsCRT::strdup(REGISTRY_NO_STRING);
-
-		if (!m4xProfiles)
-			m4xProfiles = new nsVoidArray();
-		m4xProfiles->AppendElement((void*)profileItem);
-
-        mNumOldProfiles++;
+            profileItem->profileName			= nsnull;
+            profileItem->profileLocation		= nsnull;
+            profileItem->isMigrated			= nsnull;
+            profileItem->NCProfileName			= nsnull;
+            profileItem->NCDeniedService		= nsnull;
+            profileItem->NCEmailAddress			= nsnull;
+            profileItem->NCHavePregInfo		= nsnull;
+            profileItem->updateProfileEntry	= PR_TRUE;
+            
+            profileItem->profileName			= nsCRT::strdup(nsUnescape(unixProfileName));
+            profileItem->profileLocation		= nsCRT::strdup((const char *)profileLocation);
+            
+            profileItem->isMigrated			= nsCRT::strdup(REGISTRY_NO_STRING);
+            
+            if (!m4xProfiles)
+                m4xProfiles = new nsVoidArray();
+            m4xProfiles->AppendElement((void*)profileItem);
+            
+            mNumOldProfiles++;
+        }
+        else {
+#ifdef DEBUG
+            printf("no 4.x profile\n");
+#endif
+        }
 	}
 #endif
 	

@@ -84,7 +84,6 @@
 // A default profile name, in case automigration 4x profile fails
 #define DEFAULT_PROFILE_NAME "default"
 
-// kill me now.
 #define REGISTRY_YES_STRING		"yes"
 #define REGISTRY_NO_STRING		"no"
 
@@ -105,9 +104,10 @@
 
 #define PREF_CONFIRM_AUTOMIGRATION	"profile.confirm_automigration"
 
-#if defined(DEBUG_sspitzer) || defined(DEBUG_seth)
-#define DEBUG_profile_ 1
-#endif
+// we want everyone to have the debugging info to the console for now
+// to help track down profile manager problems
+// when we ship, we'll turn this off
+#define DEBUG_profile 1
 
 // ProfileAccess varaible (gProfileDataAccess) to access registry operations
 // gDataAccessInstCount is used to keep track of instance count to activate
@@ -391,9 +391,6 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
     printf("Profile Manager : Command Line Options : Begin\n");
 #endif
  
-    rv = MigrateProfileInfo();
-    if (NS_FAILED(rv)) return rv;
-
     // check for command line arguments for profile manager
     //	
     // -P command line option works this way:
@@ -526,6 +523,9 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
     rv = cmdLineArgs->GetCmdLineValue(INSTALLER_CMD_LINE_ARG, &cmdResult);
     if (NS_SUCCEEDED(rv))
     {		
+        rv = MigrateProfileInfo();
+        if (NS_FAILED(rv)) return rv;
+
         if (cmdResult) {
             PRInt32 num4xProfiles = 0;
             rv = Get4xProfileCount(&num4xProfiles);
@@ -565,6 +565,14 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
             }
         }
     }
+
+#ifdef DEBUG
+    if (profileURLStr.Length() == 0) {
+        printf("DEBUG BUILDS ONLY:  we are forcing you to use the profile manager to help smoke test it.\n");
+        profileURLStr = PROFILE_MANAGER_URL;
+    }
+#endif /* DEBUG */
+
 #ifdef DEBUG_profile
     printf("Profile Manager : Command Line Options : End\n");
 #endif
