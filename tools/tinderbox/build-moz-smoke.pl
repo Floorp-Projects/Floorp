@@ -6,7 +6,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.29 $';
+$Version = '$Revision: 1.30 $';
 
 sub InitVars {
     # PLEASE FILL THIS IN WITH YOUR PROPER EMAIL ADDRESS
@@ -18,6 +18,8 @@ sub InitVars {
     $BuildOnce = 0;		# Build once, don't send results to server
     $ReportStatus = 1;		# Send results to server, or not
     $RunTest = 1;		# Run the smoke test on successful build, or not
+    $UseFullCircle = 0;		# Enable FullCircle Talkback debugging, or not
+    $UseMotif = 0;		# Build using Motif instead of GTK+, or not
     $UseObjDir = 1;		# Use a separate object dir, or build in the source tree
     $UseTimeStamp = 0;		# Use the CVS 'pull-by-timestamp' option, or not
 
@@ -33,6 +35,7 @@ sub InitVars {
     $BaseDir = '/builds/tinderbox/SeaMonkey';
     $NSPRDir = '/builds/tinderbox/SeaMonkey/nspr';
     $DisplayServer = 'costarica.mcom.com:0.0';
+    $FullCircleDir = '/usr/local/lib';	# If you even have it, which is very unlikely.
 
     # These shouldn't really need to be changed
     $BinaryName = '/dist/bin/apprunner';
@@ -86,7 +89,7 @@ sub SetupEnv {
 
     if ( $OS eq 'BSD_OS' ) {
 	$ENV{'PATH'} = '/usr/contrib/bin:/bin:/usr/bin:' . $ENV{'PATH'};
-	$ConfigureArgs .= '--disable-shared --disable-debug --enable-optimize';
+	$ConfigureArgs .= '--disable-shared --enable-static --disable-debug --enable-optimize';
 	$ConfigureEnvArgs = 'CC=shlicc2 CXX=shlicc2';
 	$Compiler = 'shlicc2';
 	$mail = '/usr/ucb/mail';
@@ -141,6 +144,7 @@ sub SetupEnv {
 
     if ( $OS eq 'OpenServer' ) {
 	$ENV{'PATH'} = $BaseDir . '/' . $DirName . '/mozilla/build:/usr/local/bin:' . $ENV{'PATH'};
+	$ConfigureEnvArgs = 'CC="gcc -belf" CXX="g++ -belf"';
 	$NSPRArgs .= 'NS_USE_NATIVE=1';
     }
 
@@ -155,7 +159,7 @@ sub SetupEnv {
 
     if ( $OS eq 'QNX' ) {
 	$ENV{'PATH'} = '/usr/local/bin:' . $ENV{'PATH'};
-	$ConfigureArgs .= '--disable-shared --x-includes=/usr/X11/include --x-libraries=/usr/X11/lib';
+	$ConfigureArgs .= '--disable-shared --enable-static --x-includes=/usr/X11/include --x-libraries=/usr/X11/lib';
 	$ConfigureEnvArgs = 'CC=cc CXX=cc LIBS="-lunix" CONFIG_SHELL="/usr/local/bin/bash"';
 	$Compiler = 'cc';
 	$ShellOverride = '/usr/local/bin/bash';
@@ -170,7 +174,7 @@ sub SetupEnv {
 	if ( $OSVerMajor eq '4' ) {
 	    $ENV{'PATH'} = '/usr/gnu/bin:/usr/local/sun4/bin:/usr/bin:' . $ENV{'PATH'};
 	    $ConfigureArgs .= '--x-includes=/home/motif/usr/include/X11 --x-libraries=/home/motif/usr/lib';
-	    $ConfigureEnvArgs = 'CC="egcc -DSUNOS4" CXX="eg++ -DSUNOS4"';
+	    $ConfigureEnvArgs = 'CC=egcc CXX=eg++';
 	    $Compiler = 'egcc';
 	} else {
 	    $ENV{'PATH'} = '/usr/ccs/bin:' . $ENV{'PATH'};
@@ -180,7 +184,7 @@ sub SetupEnv {
 	    $ConfigureEnvArgs = 'CC=egcc CXX=eg++';
 	    $Compiler = 'egcc';
 	    # This may just be an NSPR bug, but if USE_PTHREADS is defined, then
-	    # _PR_HAVE_ATOMIC_CAS gets defined (erroneously?) and libnspr21 doesn't work.
+	    # _PR_HAVE_ATOMIC_CAS gets defined (erroneously?) and libnspr doesn't work.
 	    $NSPRArgs .= 'CLASSIC_NSPR=1 NS_USE_GCC=1 NS_USE_NATIVE=';
 	} else {
 	    # This is utterly lame....
@@ -206,7 +210,11 @@ sub SetupEnv {
 }
 
 sub FinalizeLDLibPath {
-    $ENV{"LD_LIBRARY_PATH"} = $BaseDir . '/' . $DirName . '/mozilla/' . $BuildObjName . '/dist/bin:' . $NSPRDir . '/lib:/usr/lib/png:/usr/local/lib';
+    if ( $_[0] eq 'ns' ) {
+	$ENV{"LD_LIBRARY_PATH"} = $BaseDir . '/' . $DirName . '/ns/' . $BuildObjName . '/dist/bin:' . $BaseDir . '/' . $DirName . '/ns/' . $BuildObjName . '/dist/bin/Cool:' . $NSPRDir . '/lib:/usr/lib/png:/usr/local/lib';
+    } else {
+	$ENV{"LD_LIBRARY_PATH"} = $BaseDir . '/' . $DirName . '/mozilla/' . $BuildObjName . '/dist/bin:' . $NSPRDir . '/lib:/usr/lib/png:/usr/local/lib';
+    }
 
     if ( $OS eq 'HP-UX' ) {
 	$ENV{'LPATH'} = '/usr/lib:' . $ENV{'LD_LIBRARY_PATH'} . ':/builds/local/lib';
@@ -228,6 +236,10 @@ sub FinalizeLDLibPath {
     if ( $OS eq 'SunOS' ) {
 	if ( $OSVerMajor eq '4' ) {
 	    $ENV{'LD_LIBRARY_PATH'} = '/home/motif/usr/lib:' . $ENV{'LD_LIBRARY_PATH'};
+	} else {
+	    if ( $UseMotif ) {
+		$ENV{'LD_LIBRARY_PATH'} = '/usr/dt/lib:/usr/openwin/lib:' . $ENV{'LD_LIBRARY_PATH'};
+	    }
 	}
 	if ( $CPU eq 'i86pc' ) {
 	    $ENV{'LD_LIBRARY_PATH'} .= ':/opt/gnu/lib';
@@ -305,6 +317,9 @@ sub GetSystemInfo {
     if ( $OS eq 'Linux' ) {
 	if ( $CPU eq 'alpha' || $CPU eq 'sparc' ) {
 	    $BuildName = $host . ' ' . $OS . '/' . $CPU . ' ' . $OSVer;
+	    if ( $CPU eq 'alpha' ) {
+	        $ConfigureArgs .= '--disable-tests';
+		}
 	} elsif ( $CPU eq 'arm32' || $CPU eq 'armv4l' || $CPU eq 'sa110' ) {
 	    $BuildName = $host . ' ' . $OS . '/arm ' . $OSVer;
 	    # This is here because I ran out of space on my netwinder. --briano.
@@ -472,7 +487,7 @@ sub BuildIt {
 	    chdir($BuildObjName) || die "chdir($BuildObjName): $!\n";
 	}
 
-	&FinalizeLDLibPath;
+	&FinalizeLDLibPath('mozilla');
 
 	print LOG "$ConfigureEnvArgs ../configure $ConfigureArgs\n";
 	open (CONFIGURE, "$ConfigureEnvArgs $ShellOverride ../configure $ConfigureArgs 2>&1 |") || die "../configure: $!\n";
@@ -508,6 +523,41 @@ sub BuildIt {
 	}
 	close(BUILD);
 
+	if ( $BuildNSCommercial ) {
+	    chdir('../../ns') || die "chdir('../../ns'): $!\n";
+	    if ( $UseObjDir ) {
+		mkdir($BuildObjName, 0777);
+		chdir($BuildObjName) || die "chdir($BuildObjName): $!\n";
+	    }
+
+	    &FinalizeLDLibPath('ns');
+
+	    print LOG "$ConfigureEnvArgs ../configure $ConfigureArgs\n";
+	    open (CONFIGURE, "$ConfigureEnvArgs $ShellOverride ../configure $ConfigureArgs 2>&1 |") || die "../configure: $!\n";
+	    while (<CONFIGURE>) {
+		print $_;
+		print LOG $_;
+	    }
+	    close(CONFIGURE);
+
+	    print LOG "$Make MAKE='$Make $jflag' $DependTarget $ClobberTarget 2>&1 |\n";
+	    open (MAKEPREBUILD, "$Make MAKE='$Make $jflag' $DependTarget $ClobberTarget 2>&1 |");
+	    while (<MAKEPREBUILD>) {
+		print $_;
+		print LOG $_;
+	    }
+	    close (MAKEPREBUILD);
+	    system("rm -rf dist");
+
+	    print LOG "$Make MAKE='$Make $jflag' $MakeOverrides 2>&1 |\n";
+	    open(BUILD, "$Make MAKE='$Make $jflag' $MakeOverrides 2>&1 |\n");
+	    while (<BUILD>) {
+		print $_;
+		print LOG $_;
+	    }
+	    close(BUILD);
+	}
+
 	@felist = split(/,/, $FE);
 
 	foreach $fe (@felist) {
@@ -535,7 +585,11 @@ sub BuildIt {
 	    print LOG "tinderbox: tree: $BuildTree\n";
 	    print LOG "tinderbox: builddate: $StartTime\n";
 	    print LOG "tinderbox: status: $BuildStatusStr\n";
-	    print LOG "tinderbox: build: $BuildName $fe\n";
+	    if ( $UseMotif ) {
+		print LOG "tinderbox: build: $BuildName Motif $fe\n";
+	    } else {
+		print LOG "tinderbox: build: $BuildName $fe\n";
+	    }
 	    print LOG "tinderbox: errorparser: unix\n";
 	    print LOG "tinderbox: buildfamily: unix\n";
 	    print LOG "tinderbox: END\n";	    
@@ -612,6 +666,11 @@ sub StartBuild {
 	print LOG "tinderbox: tree: $BuildTree\n";
 	print LOG "tinderbox: builddate: $StartTime\n";
 	print LOG "tinderbox: status: building\n";
+	if ( $UseMotif ) {
+	    print LOG "tinderbox: build: $BuildName Motif $fe\n";
+	} else {
+	    print LOG "tinderbox: build: $BuildName $fe\n";
+	}
 	print LOG "tinderbox: build: $BuildName $fe\n";
 	print LOG "tinderbox: errorparser: unix\n";
 	print LOG "tinderbox: buildfamily: unix\n";
@@ -625,7 +684,11 @@ sub StartBuild {
 sub BinaryExists {
     my($Binname);
 
-    $BinName = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . '/' . $BuildObjName . $BinaryName;
+    if ( $BuildNSCommercial ) {
+	$BinName = $BuildDir . '/' . $Toplevel . '/ns/' . $BuildObjName . $BinaryName;
+    } else {
+	$BinName = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . '/' . $BuildObjName . $BinaryName;
+    }
 
     print LOG $BinName . "\n"; 
     if ( (-e $BinName) && (-x $BinName) && (-s $BinName) ) {
@@ -652,6 +715,7 @@ sub ParseArgs {
 	}
 	elsif ( $ARGV[$i] eq '--commercial' ) {
 	    $BuildNSCommercial = 1;
+	    $Tinderbox_server = 'tinderbox-daemon\@warp';
 	}
 	elsif ( $ARGV[$i] eq '--compress' ) {
 	    $CVS = 'cvs -q -z3';
@@ -662,6 +726,10 @@ sub ParseArgs {
 	}
 	elsif ( $ARGV[$i] eq '--help' || $ARGV[$i] eq '-h' ) {
 	    &PrintUsage;
+	}
+	elsif ( $ARGV[$i] eq '--motif' ) {
+	    $UseMotif = 1;
+	    $ConfigureArgs .= '--enable-toolkit=motif ';
 	}
 	elsif ( $ARGV[$i] eq '--noobjdir' ) {
 	    $UseObjDir = 0;
@@ -683,6 +751,10 @@ sub ParseArgs {
 	    } else {
 		$CVSCO .= " -r $BuildTag";
 	    }
+	}
+	elsif ( $ARGV[$i] eq '--talkback' ) {
+	    $UseFullCircle = 1;
+	    $ConfigureArgs .= '--enable-fullcircle --with-fullcircle=' . $FullCircleDir . ' ';
 	}
 	elsif ( $ARGV[$i] eq '--timestamp' ) {
 	    $UseTimeStamp = 1;
@@ -731,8 +803,14 @@ sub RunSmokeTest {
     my($waittime) = 60;
     my($pid) = fork;
 
-    $ENV{"MOZILLA_FIVE_HOME"} = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . '/' . $BuildObjName . '/dist/bin';
-    $Binary = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . '/' . $BuildObjName . $BinaryName;
+    if ( $BuildNSCommercial ) {
+	$ENV{"MOZILLA_FIVE_HOME"} = $BuildDir . '/' . $TopLevel . '/ns/' . $BuildObjName . '/dist/bin';
+	$Binary = $BuildDir . '/' . $TopLevel . '/ns/' . $BuildObjName . $BinaryName;
+    } else {
+	$ENV{"MOZILLA_FIVE_HOME"} = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . '/' . $BuildObjName . '/dist/bin';
+	$Binary = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . '/' . $BuildObjName . $BinaryName;
+    }
+
     $BinaryLog = $BuildDir . '/runlog';
 
     print LOG $Binary . "\n";
