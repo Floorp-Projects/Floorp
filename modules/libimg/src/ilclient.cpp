@@ -20,7 +20,7 @@
  *   ilclient.c --- Management of imagelib client data structures,
  *                  including image cache.
  *
- *   $Id: ilclient.cpp,v 3.2 1998/08/18 22:24:59 pnunn%netscape.com Exp $
+ *   $Id: ilclient.cpp,v 3.3 1998/09/09 19:08:32 pnunn%netscape.com Exp $
  */
 
 
@@ -460,7 +460,8 @@ il_get_container(IL_GroupContext *img_cx,
 		/* 2) Their namespace crosses document boundaries, so caching    */
 		/*    could result in incorrect behavior.                        */
 
-        else if ((FORCE_RELOAD(cache_reload_policy) && !ic->forced) ||
+        else if((cache_reload_policy == NET_SUPER_RELOAD) ||
+		((cache_reload_policy == NET_NORMAL_RELOAD) && (!ic->forced)) ||
 				 (cache_reload_policy != NET_CACHE_ONLY_RELOAD &&
 				  ic->expires && (time(NULL) > ic->expires))
 #ifndef STANDALONE_IMAGE_LIB
