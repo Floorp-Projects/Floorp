@@ -27,7 +27,6 @@ INCLUDES	+= -I$(DIST)/include
 
 LIBS		= \
 		  -lxpcom \
-		  -lreg \
 		  $(NSPR_LIBS) \
 		  $(NULL)
 
