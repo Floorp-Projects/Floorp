@@ -6,7 +6,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.36 $';
+$Version = '$Revision: 1.37 $';
 
 sub InitVars {
     # PLEASE FILL THIS IN WITH YOUR PROPER EMAIL ADDRESS
@@ -121,10 +121,14 @@ sub SetupEnv {
 	$ENV{'PATH'} = $BaseDir . '/' . $DirName . '/mozilla/build:/opt/bin:/builds/local/bin:' . $ENV{'PATH'};
 	if ( $OSVer eq '5.2' ) {
 	    $ConfigureEnvArgs = 'CC=cc CXX="hcpp CC"';
+	    $Compiler = 'cc/CC';
+	} elsif ( $OSVer eq '5.3' ) {
+	    $ENV{'PATH'} = '/local/bin:' . $ENV{'PATH'};
+	    $ConfigureArgs .= '--disable-pedantic';
 	} else {
 	    $ConfigureEnvArgs = 'CC=cc CXX=CC';
+	    $Compiler = 'cc/CC';
 	}
-	$Compiler = 'cc/CC';
 	$NSPRArgs .= 'NS_USE_NATIVE=1';
 	if ( $OSVerMajor eq '6' ) {
 	    $NSPRArgs .= ' USE_PTHREADS=1 USE_N32=1';
@@ -247,7 +251,11 @@ sub FinalizeLDLibPath {
     }
     if ( $OS eq 'IRIX' ) {
 	$ENV{'LD_LIBRARY_PATH'} .= ':/opt/lib:/builds/local/lib';
-	$ENV{'LD_LIBRARYN32_PATH'} = $ENV{'LD_LIBRARY_PATH'};
+	if ( $OSVer eq '5.3' ) {
+	    $ENV{'LD_LIBRARY_PATH'} = '/local/lib:' . $ENV{'LD_LIBRARY_PATH'};
+	} else {
+	    $ENV{'LD_LIBRARYN32_PATH'} = $ENV{'LD_LIBRARY_PATH'};
+	}
     }
     if ( $OS eq 'NetBSD' || $OS eq 'OpenBSD' ) {
 	$ENV{'LD_LIBRARY_PATH'} .= ':/usr/X11R6/lib';
