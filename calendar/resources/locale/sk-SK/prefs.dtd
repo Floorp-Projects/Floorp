@@ -68,6 +68,7 @@
 <!ENTITY pref.dateformat.label      "Formát dátumu:" >
 <!ENTITY pref.dateformat.long       "Dlhý" >
 <!ENTITY pref.dateformat.short      "Krátky"  >
+<!ENTITY pref.dateformat.storeingmt "Store dates in Universal Time" >
 <!ENTITY pref.defaultlength.label   "Východzia dĺžka udalosti:" >
 <!ENTITY pref.defaultsnoozelength.label   "Východzia dĺžka periódy:" >
 

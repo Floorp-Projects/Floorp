@@ -69,6 +69,7 @@
 <!ENTITY pref.dateformat.label      "Datum Text Format:" >
 <!ENTITY pref.dateformat.long       "Långt" >
 <!ENTITY pref.dateformat.short      "Kort"  >
+<!ENTITY pref.dateformat.storeingmt "Store dates in Universal Time" >
 <!ENTITY pref.defaultlength.label   "Standard Händelse Längd:" >
 <!ENTITY pref.defaultsnoozelength.label   "Standard Snooze Längd:" >
 

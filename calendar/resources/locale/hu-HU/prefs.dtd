@@ -70,6 +70,7 @@
 <!ENTITY pref.dateformat.label      "Dátumszöveg formátuma" >
 <!ENTITY pref.dateformat.long       "Hosszú" >
 <!ENTITY pref.dateformat.short      "Rövid"  >
+<!ENTITY pref.dateformat.storeingmt "Store dates in Universal Time" >
 <!ENTITY pref.defaultlength.label   "Alapértelmezett eseményhossz" >
 <!ENTITY pref.defaultsnoozelength.label   "Alapértelmezett szundihossz" >
 

@@ -68,6 +68,7 @@
 <!ENTITY pref.dateformat.label      "Fformat Testun Dyddiad:" >
 <!ENTITY pref.dateformat.long       "Hir (hy. Ebr 1, 2002)" >
 <!ENTITY pref.dateformat.short      "Byr (hy. 04/01/02)"  >
+<!ENTITY pref.dateformat.storeingmt "Store dates in Universal Time" >
 <!ENTITY pref.defaultlength.label   "Hyd Digwddiad Rhagosodedig:" >
 <!ENTITY pref.defaultsnoozelength.label   "Hyd Cwsg Rhagsodedig:" >
 

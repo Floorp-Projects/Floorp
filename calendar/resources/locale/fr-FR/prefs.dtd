@@ -68,6 +68,7 @@
 <!ENTITY pref.dateformat.label      "Format texte pour la date :" >
 <!ENTITY pref.dateformat.long       "Long" >
 <!ENTITY pref.dateformat.short      "Court"  >
+<!ENTITY pref.dateformat.storeingmt "Stocker les dates au format universel" >
 <!ENTITY pref.defaultlength.label   "Durée par défaut des événements :" >
 <!ENTITY pref.defaultsnoozelength.label   "Durée par défaut du snooze :" >
 

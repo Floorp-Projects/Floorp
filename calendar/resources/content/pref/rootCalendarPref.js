@@ -120,6 +120,7 @@ function calendarPreferences( CalendarWindow )
    getIntPref( this.calendarPref, "event.defaultlength", calendarStringBundle.GetStringFromName("defaultEventLength" ) );
    getIntPref( this.calendarPref, "alarms.defaultsnoozelength", calendarStringBundle.GetStringFromName("defaultSnoozeAlarmLength" ) );
    getIntPref( this.calendarPref, "date.format", calendarStringBundle.GetStringFromName("dateFormat" ) );
+   getBoolPref( this.calendarPref, "dateformat.storeingmt", calendarStringBundle.GetStringFromName("storeInGmt") );
    getIntPref( this.calendarPref, "event.defaultstarthour", calendarStringBundle.GetStringFromName("defaultStartHour" ) );
    getIntPref( this.calendarPref, "event.defaultendhour", calendarStringBundle.GetStringFromName("defaultEndHour" ) );
    getIntPref( this.calendarPref, "week.start", calendarStringBundle.GetStringFromName("defaultWeekStart" ) );

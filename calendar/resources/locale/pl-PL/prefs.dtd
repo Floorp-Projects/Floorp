@@ -66,6 +66,7 @@
 <!ENTITY pref.dateformat.label      "Tekstowy format daty:" >
 <!ENTITY pref.dateformat.long       "Długi" >
 <!ENTITY pref.dateformat.short      "Krótki"  >
+<!ENTITY pref.dateformat.storeingmt "Store dates in Universal Time" >
 <!ENTITY pref.defaultlength.label   "Domyślna długość wydarzenia:" >
 <!ENTITY pref.defaultsnoozelength.label   "Domyślna długość odstępu powiadamiania:" >
 

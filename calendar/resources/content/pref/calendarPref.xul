@@ -82,12 +82,14 @@
       */
        
       var _elementIDs = [
-      "dateformat", "defaultlength", "defaultsnoozelength", "reloadonlaunch", "categories"
+      "dateformat", "defaultlength", "defaultsnoozelength",
+      "reloadonlaunch", "categories", "storeingmt"
        ];
    </script>
 
    <groupbox align="start" orient="vertical">
       <caption label="&pref.mainbox.label;"/>
+      <checkbox id="storeingmt" preftype="bool" prefstring="calendar.dateformat.storeingmt" label="&pref.dateformat.storeingmt;" />
       <hbox>
          <description>&pref.dateformat.label;</description>
          <menulist id="dateformat" crop="none" prefstring="calendar.date.format">

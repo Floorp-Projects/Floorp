@@ -68,6 +68,7 @@
 <!ENTITY pref.dateformat.label      "Tekstovni zapis datuma:">
 <!ENTITY pref.dateformat.long       "dolg">
 <!ENTITY pref.dateformat.short      "kratek">
+<!ENTITY pref.dateformat.storeingmt "Store dates in Universal Time" >
 <!ENTITY pref.defaultlength.label   "Privzeta dolžina dogodka:">
 <!ENTITY pref.defaultsnoozelength.label   "Privzeti čas do opomnika:">
 

@@ -68,6 +68,7 @@
 <!ENTITY pref.dateformat.label      "Tekstowy format datuma:" >
 <!ENTITY pref.dateformat.long       "Dołhi" >
 <!ENTITY pref.dateformat.short      "Krótki"  >
+<!ENTITY pref.dateformat.storeingmt "Store dates in Universal Time" >
 <!ENTITY pref.defaultlength.label   "Standardna dołhosć podawka:" >
 <!ENTITY pref.defaultsnoozelength.label   "Standardna dołhosć drěmka:" >
 
