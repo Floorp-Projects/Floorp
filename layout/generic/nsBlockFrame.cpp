@@ -1361,8 +1361,12 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
     if (aState.GetFlag(BRS_ISBOTTOMMARGINROOT)) {
       // When we are a bottom-margin root make sure that our last
       // childs bottom margin is fully applied.
-      // XXX check for a fit
-      autoHeight += aState.mPrevBottomMargin.get();
+      // Apply the margin only if there's space for it.
+      if (autoHeight < aState.mReflowState.availableHeight)
+      {
+        // Truncate bottom margin if it doesn't fit to our available height.
+        autoHeight = PR_MIN(autoHeight + aState.mPrevBottomMargin.get(), aState.mReflowState.availableHeight);
+      }
     }
 
     if (NS_BLOCK_SPACE_MGR & mState) {
