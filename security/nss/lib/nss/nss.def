@@ -767,12 +767,12 @@ NSS_Get_CERT_TimeChoiceTemplate;
 PK11_ExportEncryptedPrivKeyInfo;
 PK11_FindSlotsByAliases;
 PK11_PubDeriveExtended;
-SECKEY_ECParams2KeySize;
-SECMOD_GetDBModuleList;
-SECMOD_GetDeadModuleList;
 SEC_ASN1DecoderAbort;
 SEC_ASN1EncoderAbort;
 SEC_DupCrl;
+SECKEY_ECParams2KeySize;
+SECMOD_GetDBModuleList;
+SECMOD_GetDeadModuleList;
 ;+    local:
 ;+       *;
 ;+};

@@ -35,7 +35,7 @@
  * Support for ENcoding ASN.1 data based on BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1e.c,v 1.12 2003/10/16 23:49:15 relyea%netscape.com Exp $
+ * $Id: secasn1e.c,v 1.13 2003/10/17 17:56:56 relyea%netscape.com Exp $
  */
 
 #include "secasn1.h"
@@ -1329,9 +1329,6 @@ void
 SEC_ASN1EncoderAbort(SEC_ASN1EncoderContext *cx, int error)
 {
     PORT_Assert(cx);
-    if (!cx) {
-	return;
-    }
     PORT_SetError(error);
     cx->status = encodeError;
 }

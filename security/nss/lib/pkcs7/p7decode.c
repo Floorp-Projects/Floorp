@@ -34,7 +34,7 @@
 /*
  * PKCS7 decoding, verification.
  *
- * $Id: p7decode.c,v 1.12 2003/10/16 23:49:14 relyea%netscape.com Exp $
+ * $Id: p7decode.c,v 1.13 2003/10/17 17:56:55 relyea%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -1256,9 +1256,6 @@ void
 SEC_PKCS7DecoderAbort(SEC_PKCS7DecoderContext *p7dcx, int error)
 {
     PORT_Assert(p7dcx);
-    if (!p7dcx) {
-	return;
-    }
     SEC_ASN1DecoderAbort(p7dcx->dcx, error);
 }
 

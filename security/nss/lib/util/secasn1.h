@@ -36,7 +36,7 @@
  * Encoding Rules).  The routines are found in and used extensively by the
  * security library, but exported for other use.
  *
- * $Id: secasn1.h,v 1.10 2003/10/16 23:49:15 relyea%netscape.com Exp $
+ * $Id: secasn1.h,v 1.11 2003/10/17 17:56:56 relyea%netscape.com Exp $
  */
 
 #ifndef _SECASN1_H_
@@ -69,6 +69,8 @@ extern SECStatus SEC_ASN1DecoderUpdate(SEC_ASN1DecoderContext *cx,
 				       unsigned long len);
 
 extern SECStatus SEC_ASN1DecoderFinish(SEC_ASN1DecoderContext *cx);
+
+/* Higher level code detected an error, abort the rest of the processing */
 extern void SEC_ASN1DecoderAbort(SEC_ASN1DecoderContext *cx, int error);
 
 extern void SEC_ASN1DecoderSetFilterProc(SEC_ASN1DecoderContext *cx,
@@ -110,6 +112,8 @@ extern SECStatus SEC_ASN1EncoderUpdate(SEC_ASN1EncoderContext *cx,
 				       unsigned long len);
 
 extern void SEC_ASN1EncoderFinish(SEC_ASN1EncoderContext *cx);
+
+/* Higher level code detected an error, abort the rest of the processing */
 extern void SEC_ASN1EncoderAbort(SEC_ASN1EncoderContext *cx, int error);
 
 extern void SEC_ASN1EncoderSetNotifyProc(SEC_ASN1EncoderContext *cx,
