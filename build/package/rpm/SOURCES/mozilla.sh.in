@@ -64,9 +64,12 @@ export LD_LIBRARY_PATH
 
 ##
 ## Make sure that we set the plugin path for backwards compatibility
+## if it hasn't already been set.
 ##
-MOZ_PLUGIN_PATH=/usr/lib/mozilla/plugins
-export MOZ_PLUGIN_PATH
+if [ -z "$MOZ_PLUGIN_PATH" ]; then
+    MOZ_PLUGIN_PATH=/usr/lib/mozilla/plugins
+    export MOZ_PLUGIN_PATH
+fi
 
 ##
 ## Set FONTCONFIG_PATH for Xft/fontconfig
