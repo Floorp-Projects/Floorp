@@ -313,7 +313,7 @@ nsresult nsMsgLocalMailFolder::ParseFolder(nsFileSpec& path)
 	if(!parser)
 		return NS_ERROR_OUT_OF_MEMORY;
   
-	rv = mailboxService->ParseMailbox(path, parser, nsnull, nsnull);
+	rv = mailboxService->ParseMailbox(path, parser, this, nsnull);
 
 	return rv;
 }

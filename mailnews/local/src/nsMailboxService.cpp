@@ -99,6 +99,7 @@ nsresult nsMailboxService::ParseMailbox(nsFileSpec& aMailboxPath, nsIStreamListe
 		nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(mailboxurl);
 		// okay now generate the url string
 		nsFilePath filePath(aMailboxPath); // convert to file url representation...
+		url->SetUpdatingFolder(PR_TRUE);
 		char * urlSpec = PR_smprintf("mailbox://%s", (const char *) filePath);
 		url->SetSpec(urlSpec);
 		PR_FREEIF(urlSpec);

@@ -2563,6 +2563,8 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                 break;
             }
         }
+		// give base class a chance to send folder loaded notification...
+		rv = nsMsgDBFolder::OnStopRunningUrl(aUrl, aExitCode);
 		// query it for a mailnews interface for now....
 		nsCOMPtr<nsIMsgMailNewsUrl> mailUrl = do_QueryInterface(aUrl);
 		if (mailUrl)

@@ -26,6 +26,7 @@
 #include "nsIMessage.h"
 #include "nsCOMPtr.h"
 #include "nsIDBChangeListener.h"
+#include "nsIUrlListener.h"
 
 class nsIMsgFolderCacheElement;
  /* 
@@ -33,7 +34,7 @@ class nsIMsgFolderCacheElement;
   * class derived from nsMsgFolder for those folders that use an nsIMsgDatabase
   */ 
 
-class NS_MSG_BASE nsMsgDBFolder: public nsMsgFolder, public nsIDBChangeListener
+class NS_MSG_BASE nsMsgDBFolder: public nsMsgFolder, public nsIDBChangeListener, public nsIUrlListener
 {
 public: 
 	nsMsgDBFolder(void);
@@ -49,6 +50,8 @@ public:
   NS_IMETHOD GetMsgDatabase(nsIMsgDatabase** aMsgDatabase);
 
 	NS_DECL_ISUPPORTS_INHERITED
+
+	NS_DECL_NSIURLLISTENER
 
 	NS_IMETHOD WriteToFolderCache(nsIMsgFolderCache *folderCache);
 	NS_IMETHOD WriteToFolderCacheElem(nsIMsgFolderCacheElement *element);

@@ -33,6 +33,7 @@ nsMsgMailNewsUrl::nsMsgMailNewsUrl()
 	// nsIURI specific state
 	m_errorMessage = nsnull;
 	m_runningUrl = PR_FALSE;
+	m_updatingFolder = PR_FALSE;
 
 	nsComponentManager::CreateInstance(kUrlListenerManagerCID, nsnull, nsCOMTypeInfo<nsIUrlListenerManager>::GetIID(), (void **) getter_AddRefs(m_urlListeners));
 	nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, nsCOMTypeInfo<nsIURL>::GetIID(), (void **) getter_AddRefs(m_baseURL));
@@ -214,6 +215,21 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetStatusFeedback(nsIMsgStatusFeedback **aMsgFee
 	return rv;
 }
 
+NS_IMETHODIMP nsMsgMailNewsUrl::GetUpdatingFolder(PRBool *aResult)
+{
+	if (!aResult)
+		return NS_ERROR_NULL_POINTER;
+	*aResult = m_updatingFolder;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgMailNewsUrl::SetUpdatingFolder(PRBool updatingFolder)
+{
+	m_updatingFolder = updatingFolder;
+	return NS_OK;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////////
 // End nsIMsgMailNewsUrl specific support
 ////////////////////////////////////////////////////////////////////////////////////
@@ -355,3 +371,4 @@ NS_IMETHODIMP nsMsgMailNewsUrl::DirFile(char **o_DirFile)
 {
 	return m_baseURL->DirFile(o_DirFile);
 }
+

@@ -56,6 +56,7 @@ protected:
 	nsCOMPtr<nsIMsgStatusFeedback> m_statusFeedback;
 	char		*m_errorMessage;
 	PRBool		m_runningUrl;
+	PRBool		m_updatingFolder;
 
 	// manager of all of current url listeners....
 	nsCOMPtr<nsIUrlListenerManager> m_urlListeners;

@@ -122,7 +122,7 @@ nsImapService::SelectFolder(nsIEventQueue * aClientEventQueue,
 
 		nsCOMPtr <nsIMsgMailNewsUrl> mailNewsUrl = do_QueryInterface(imapUrl);
     	mailNewsUrl->SetStatusFeedback(aStatusFeedback);  
-
+		mailNewsUrl->SetUpdatingFolder(PR_TRUE);
         rv = SetImapUrlSink(aImapMailFolder, imapUrl);
 
 		if (NS_SUCCEEDED(rv))

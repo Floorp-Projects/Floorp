@@ -25,6 +25,7 @@
 #include "nsIMsgFolderCacheElement.h"
 #include "nsIMsgMailSession.h"
 #include "nsMsgBaseCID.h"
+#include "nsIMsgMailNewsUrl.h"
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
@@ -39,6 +40,10 @@ NS_IMETHODIMP nsMsgDBFolder::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 	if (aIID.Equals(nsCOMTypeInfo<nsIDBChangeListener>::GetIID()))
 	{
 		*aInstancePtr = NS_STATIC_CAST(nsIDBChangeListener*, this);
+	}              
+	else if (aIID.Equals(nsCOMTypeInfo<nsIUrlListener>::GetIID()))
+	{
+		*aInstancePtr = NS_STATIC_CAST(nsIUrlListener*, this);
 	}              
 
 	if(*aInstancePtr)
@@ -485,3 +490,33 @@ nsMsgDBFolder::MarkAllMessagesRead(void)
 	return rv;
 }
 
+NS_IMETHODIMP
+nsMsgDBFolder::OnStartRunningUrl(nsIURI *aUrl)
+{
+	NS_PRECONDITION(aUrl, "just a sanity check");
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgDBFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
+{
+	nsresult rv = NS_OK;
+
+	NS_PRECONDITION(aUrl, "just a sanity check");
+	nsCOMPtr<nsIMsgMailNewsUrl> mailUrl = do_QueryInterface(aUrl);
+	if (mailUrl)
+	{
+		PRBool updatingFolder = PR_FALSE;
+		if (NS_SUCCEEDED(mailUrl->GetUpdatingFolder(&updatingFolder)) && updatingFolder)
+		{
+			PRInt32 i;
+			for(i = 0; i < mListeners->Count(); i++)
+			{
+				//Folderlistener's aren't refcounted.
+				nsIFolderListener *listener = (nsIFolderListener*)mListeners->ElementAt(i);
+				listener->OnFolderLoaded(this);
+			}
+		}
+	}
+    return NS_OK;
+}

@@ -50,6 +50,8 @@ interface nsIMsgMailNewsUrl : nsIURL {
 	// the ownership model for msg feedback
 	void SetStatusFeedback(in nsIMsgStatusFeedback aMsgFeedback);
 	void GetStatusFeedback(out nsIMsgStatusFeedback aMsgFeedback); 
+
+	attribute boolean updatingFolder;
 };
 
 //////////////////////////////////////////////////////////////////////////////////
