@@ -393,7 +393,7 @@ sub filterExcludeList ($$) {
 # if the Status was changed to Resolved or Verified
 #       set the Resolved flag
 #
-# else if Severity, Status OR Priority fields have any change
+# else if Severity, Status, Target Milestone OR Priority fields have any change
 #       set the Status flag
 #
 # else if Keywords has changed
@@ -426,14 +426,14 @@ sub getEmailAttributes (\%\@$) {
         
         #print qq{field: $fieldName $new<br>};
         
-        # the STATUS will be flagged for Severity, Status and 
+        # the STATUS will be flagged for Severity, Status, Target Milestone and 
         # Priority changes
         #
         if ( $fieldName eq 'Status' && ($new eq 'RESOLVED' || $new eq 'VERIFIED')) {
             push (@flags, 'Resolved');
         }
         elsif ( $fieldName eq 'Severity' || $fieldName eq 'Status' ||
-                $fieldName eq 'Priority' ) {
+                $fieldName eq 'Priority' || $fieldName eq 'Target Milestone') {
             push (@flags, 'Status');
         } elsif ( $fieldName eq 'Keywords') {
             push (@flags, 'Keywords');
