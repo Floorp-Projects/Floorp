@@ -411,7 +411,7 @@ nsResProtocolHandler::ResolveURI(nsIURI *uri, char **result)
     substitutions->GetElementAt(0, getter_AddRefs(substURI));
     if (!substURI) return NS_ERROR_NOT_AVAILABLE;
 
-    rv = substURI->Resolve(path[0] == '/' ? path+1 : path, result);
+    rv = substURI->Resolve(path[0] == '/' ? path+1 : path.get(), result);
 #if 0
     nsXPIDLCString spec;
     uri->GetSpec(getter_Copies(spec));
