@@ -147,7 +147,7 @@ nsTextEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
 
       case nsIDOMEvent::VK_RETURN:
         // Need to implement creation of either <P> or <BR> nodes.
-        mEditor->InsertBreak(ctrlKey);
+        mEditor->InsertBreak();
         break;
       default:
         {
@@ -205,6 +205,16 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
     // XXX: please please please get these mappings from an external source!
     switch (keyCode)
     {
+      // XXX: hard-coded select all
+      case nsIDOMEvent::VK_A:
+        if (PR_TRUE==ctrlKey)
+        {
+          aProcessed=PR_TRUE;
+          if (mEditor)
+            mEditor->SelectAll();
+        }
+        break;
+
       // XXX: hard-coded undo
       case nsIDOMEvent::VK_Z:
         if (PR_TRUE==ctrlKey)
