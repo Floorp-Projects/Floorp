@@ -1589,7 +1589,7 @@ nsFtpConnectionThread::R_pasv() {
     host.Append(h3);
 
     // now we know where to connect our data channel
-    rv = mSTS->CreateTransport(host.GetBuffer(), port, &mDPipe); // the data channel
+    rv = mSTS->CreateTransport(host.GetBuffer(), port, nsnull, &mDPipe); // the data channel
     if (NS_FAILED(rv)) return FTP_ERROR;
 
     if (mAction == GET) {
@@ -1763,7 +1763,7 @@ nsFtpConnectionThread::Run() {
         mList = conn->mList;
     } else {
         // build our own
-        rv = mSTS->CreateTransport(host, port, &mCPipe); // the command channel
+        rv = mSTS->CreateTransport(host, port, nsnull, &mCPipe); // the command channel
         nsAllocator::Free(host);
         if (NS_FAILED(rv)) return rv;
 

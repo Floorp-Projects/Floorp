@@ -34,11 +34,14 @@
 #include "nsISocketProvider.h"
 #include "nsISocketProviderService.h"
 #include "nsStdURL.h"
+#include "nsIEventSinkGetter.h"
+#include "nsProxyObjectManager.h"
+#include "nsXPIDLString.h"
 
 static NS_DEFINE_CID(kSocketProviderService, NS_SOCKETPROVIDERSERVICE_CID);
 static NS_DEFINE_CID(kDNSService, NS_DNSSERVICE_CID);
-
-
+static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
+static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 //
 // This is the State table which maps current state to next state
 // for each socket operation...
@@ -205,13 +208,8 @@ nsSocketTransport::~nsSocketTransport()
 
   NS_IF_RELEASE(mService);
 
-  if (mHostName) {
-    nsCRT::free(mHostName);
-  }
-
-  if (mSocketType) {
-    nsCRT::free(mSocketType);
-  }
+  CRTFREEIF(mHostName);
+  CRTFREEIF(mSocketType);
 
   if (mSocketFD) {
     PR_Close(mSocketFD);
@@ -222,13 +220,15 @@ nsSocketTransport::~nsSocketTransport()
     PR_DestroyLock(mLock);
     mLock = nsnull;
   }
+
 }
 
 
 nsresult nsSocketTransport::Init(nsSocketTransportService* aService,
                                  const char* aHost, 
                                  PRInt32 aPort,
-                                 const char* aSocketType)
+                                 const char* aSocketType,
+                                 nsIEventSinkGetter* eventSinkGetter)
 {
   nsresult rv = NS_OK;
 
@@ -253,6 +253,31 @@ nsresult nsSocketTransport::Init(nsSocketTransportService* aService,
       rv = NS_ERROR_OUT_OF_MEMORY;
     }
   } 
+
+  // Get a nsIProgressEventSink so that we can fire status/progress on it-
+  if (eventSinkGetter) 
+  {
+        nsIProgressEventSink* sink;
+        (void) eventSinkGetter->GetEventSink("load", // Hmmm...
+                                nsIProgressEventSink::GetIID(),
+                                (nsISupports**)&sink);
+        if (sink)
+        {
+            // Now generate a proxied event sink-
+            NS_WITH_SERVICE(nsIProxyObjectManager, 
+                    proxyMgr, kProxyObjectManagerCID, &rv);
+            if (NS_SUCCEEDED(rv))
+            {
+                rv = proxyMgr->GetProxyObject(
+                                nsnull, // primordial thread - should change?
+                                NS_GET_IID(nsIProgressEventSink),
+                                sink,
+                                PROXY_ASYNC | PROXY_ALWAYS,
+                                getter_AddRefs(mEventSink));
+            }
+            NS_RELEASE(sink);
+        }
+  }
 
   //
   // Create the lock used for synchronizing access to the transport instance.
@@ -465,6 +490,8 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
         mStatus = NS_ERROR_FAILURE;
         break;
     }
+
+    fireStatus(mCurrentState);
     //
     // If the current state has successfully completed, then move to the
     // next state for the current operation...
@@ -1728,3 +1755,87 @@ nsSocketTransport::SetOwner(nsISupports * aOwner)
 }
 
 
+nsresult
+nsSocketTransport::fireStatus(PRUint32 aCode)
+{
+    // need to optimize this - TODO
+    nsXPIDLString tempmesg;
+    nsresult rv = GetSocketErrorString(aCode, getter_Copies(tempmesg));
+
+    nsAutoString mesg(tempmesg);
+    mesg.Append(mHostName);
+
+    if (NS_FAILED(rv)) return rv;
+#ifndef BUG_16273_FIXED //TODO
+    return mEventSink ? mEventSink->OnStatus(this,
+                            mReadContext, 
+                            mesg.ToNewUnicode()) // this gets freed elsewhere.
+                        : NS_ERROR_FAILURE;
+#else
+    return mEventSink ? mEventSink->OnStatus(this,
+                            mReadContext, 
+                            mesg.mUStr) // this gets freed elsewhere.
+                        : NS_ERROR_FAILURE;
+#endif
+
+}
+
+
+//TODO l10n and i18n stuff here!
+NS_IMETHODIMP
+nsSocketTransport::GetSocketErrorString(PRUint32 iCode, 
+        PRUnichar** oString) const
+{
+    nsresult rv = NS_ERROR_FAILURE;
+    if (!oString)
+        return NS_ERROR_NULL_POINTER;
+
+    *oString = nsnull;
+
+    switch (iCode) /* these are currently just nsSocketState 
+                      (as in nsSocketTransport.h) */
+    {
+        case eSocketState_WaitDNS:
+            {
+                static nsAutoString mesg("Resolving host ");
+                *oString = mesg.ToNewUnicode();
+                if (!*oString) return NS_ERROR_OUT_OF_MEMORY;
+                rv = NS_OK;
+            }
+            break;
+        case eSocketState_Connected:
+            {
+                static nsAutoString mesg("Connected to ");
+                *oString = mesg.ToNewUnicode();
+                if (!*oString) return NS_ERROR_OUT_OF_MEMORY;
+                rv = NS_OK;
+            }
+            break;
+        case eSocketState_WaitReadWrite:
+            {
+                static nsAutoString mesg("Transfering data from ");
+                *oString = mesg.ToNewUnicode();
+                if (!*oString) return NS_ERROR_OUT_OF_MEMORY;
+                rv = NS_OK;
+            }
+            break;
+        case eSocketState_WaitConnect:
+            {
+                static nsAutoString mesg("Connecting to ");
+                *oString = mesg.ToNewUnicode();
+                if (!*oString) return NS_ERROR_OUT_OF_MEMORY;
+                rv = NS_OK;
+            }
+            break;
+        case eSocketState_Created: 
+        case eSocketState_Closed:
+        case eSocketState_Done:
+        case eSocketState_Timeout:
+        case eSocketState_Error:
+        case eSocketState_Max:
+        default:
+            return rv; // just return error, ie no status strings for this case
+            break;
+    }
+    return rv;
+}

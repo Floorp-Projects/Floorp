@@ -32,6 +32,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContextOwner.h"
 #include "nsIDocumentLoaderObserver.h"
+#include "nsIProgressEventSink.h"
 #include "nsDOMEvent.h"
 #include "nsIPresContext.h"
 #include "nsIComponentManager.h"
@@ -149,6 +150,7 @@ class nsWebShell : public nsIWebShell,
                    public nsILinkHandler,
                    public nsIScriptContextOwner,
                    public nsIDocumentLoaderObserver,
+                   public nsIProgressEventSink, // should go away (nsIDocLoaderObs)
                    public nsIPrompt,
                    public nsIRefreshURI,
                    public nsIClipboardCommands
@@ -349,6 +351,9 @@ public:
   // nsIPrompt
   NS_DECL_NSIPROMPT
 
+  // nsIProgressEventSink
+  NS_DECL_NSIPROGRESSEVENTSINK
+
   // nsIClipboardCommands
   NS_IMETHOD CanCutSelection  (PRBool* aResult);
   NS_IMETHOD CanCopySelection (PRBool* aResult);
@@ -518,12 +523,12 @@ static NS_DEFINE_IID(kDeviceContextCID,       NS_DEVICE_CONTEXT_CID);
 static NS_DEFINE_IID(kDocLoaderServiceCID,    NS_DOCUMENTLOADER_SERVICE_CID);
 static NS_DEFINE_IID(kWebShellCID,            NS_WEB_SHELL_CID);
 
-
 // IID's
 static NS_DEFINE_IID(kIContentViewerContainerIID,
                      NS_ICONTENT_VIEWER_CONTAINER_IID);
 static NS_DEFINE_IID(kIDocumentLoaderObserverIID,
                      NS_IDOCUMENT_LOADER_OBSERVER_IID);
+static NS_DEFINE_IID(kIProgressEventSinkIID,  NS_IPROGRESSEVENTSINK_IID);
 static NS_DEFINE_IID(kIDeviceContextIID,      NS_IDEVICE_CONTEXT_IID);
 static NS_DEFINE_IID(kIDocumentLoaderIID,     NS_IDOCUMENTLOADER_IID);
 static NS_DEFINE_IID(kIFactoryIID,            NS_IFACTORY_IID);
@@ -783,6 +788,11 @@ nsWebShell::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
   if (aIID.Equals(kIDocumentLoaderObserverIID)) {
     *aInstancePtr = (void*)(nsIDocumentLoaderObserver*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIProgressEventSinkIID)) {
+    *aInstancePtr = (void*)(nsIProgressEventSink*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -1959,6 +1969,7 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
   if (!aUri)
     return NS_ERROR_NULL_POINTER;
 
+  // This should probably get saved in mHistoryService or something... 
   // Ugh. It sucks that we have to hack webshell like this. Forgive me, Father.
   do {
     nsresult rv;
@@ -2051,9 +2062,6 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
               mProcessedEndDocumentLoad = PR_FALSE;
 
               rv = OnEndDocumentLoad(mDocLoader, dummyChannel, 0, this);
-
-
-
             }
             return rv;
           }
@@ -2121,7 +2129,7 @@ nsWebShell::LoadURI(nsIURI * aUri,
   CancelRefreshURITimers();
   nsXPIDLCString scheme, CUriSpec;
 
-  if (!aUri) return NS_ERROR_NULL_POINTER; 
+  if (!aUri) return NS_ERROR_NULL_POINTER;
 
   rv = aUri->GetScheme(getter_Copies(scheme));
   if (NS_FAILED(rv)) return rv;
@@ -2134,7 +2142,6 @@ nsWebShell::LoadURI(nsIURI * aUri,
   rv = aUri->GetSpec(getter_Copies(spec));
   if (NS_FAILED(rv)) return rv;
 
-  
   nsString* url = new nsString(uriSpec);
   if (aModifyHistory) {
     // Discard part of history that is no longer reachable
@@ -2186,6 +2193,12 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
 {
   nsresult rv;
 
+  /* 
+     TODO This doesnt belong here... The app should be doing all this
+     URL play. The webshell should not have a clue about whats "mailto" 
+     If you insist that this should be here, then put in URL parsing 
+     optimizations here. -Gagan
+  */
   nsAutoString urlStr(aURLSpec);
   // first things first. try to create a uri out of the string.
   nsCOMPtr<nsIURI> uri;
@@ -2447,6 +2460,7 @@ nsWebShell::CanForward(void)
 NS_IMETHODIMP
 nsWebShell::GoTo(PRInt32 aHistoryIndex)
 {
+#ifdef OLD_HISTORY
   nsresult rv = NS_ERROR_ILLEGAL_VALUE;
   if ((aHistoryIndex >= 0) &&
       (aHistoryIndex < mHistory.Count())) {
@@ -2478,6 +2492,13 @@ nsWebShell::GoTo(PRInt32 aHistoryIndex)
                    nsnull);      // referrer
   }
   return rv;
+#else
+   if (mSHist)
+     return mSHist->Goto(aHistoryIndex, this, PR_FALSE);
+   return NS_OK;
+
+
+#endif
 
 }
 
@@ -3274,7 +3295,7 @@ nsWebShell::OnStartDocumentLoad(nsIDocumentLoader* loader,
       dlObserver = do_QueryInterface(mDocLoaderObserver);  // we need this to addref
     }
     /*
-     *Fire the OnStartDocumentLoad of the webshell observer
+     * Fire the OnStartDocumentLoad of the webshell observer
      */
     if ((nsnull != mContainer) && (nsnull != dlObserver))
     {
@@ -3515,7 +3536,7 @@ nsWebShell::OnEndURLLoad(nsIDocumentLoader* loader,
   printf("nsWebShell::OnEndURLLoad:%p: loader=%p url=%s status=%d\n", this, loader, spec, aStatus);
 #endif
   /*
-   *Fire the OnStartDocumentLoad of the webshell observer
+   *Fire the OnEndDocumentLoad of the webshell observer
    */
   if ((nsnull != mContainer) && (nsnull != mDocLoaderObserver))
   {
@@ -3712,8 +3733,6 @@ nsresult nsWebShell::CheckForTrailingSlash(nsIURI* aURL)
 
   return NS_OK;
 }
-
-
 
 //----------------------------------------------------------------------
 
@@ -4066,6 +4085,57 @@ nsWebShell::FindNext(const PRUnichar * aSearchStr, PRBool aMatchCase, PRBool aSe
   return NS_ERROR_FAILURE;
 }
 
+// Methods from nsIProgressEventSink
+NS_IMETHODIMP
+nsWebShell::OnProgress(nsIChannel* channel, nsISupports* ctxt, 
+    PRUint32 aProgress, 
+    PRUint32 aProgressMax)
+{
+    if (nsnull != mDocLoaderObserver)
+    {
+        return mDocLoaderObserver->OnProgressURLLoad(
+            mDocLoader,
+            channel,
+            aProgress,
+            aProgressMax);
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShell::OnStatus(nsIChannel* channel, nsISupports* ctxt, 
+    const PRUnichar* aMsg)
+{
+    if (nsnull != mDocLoaderObserver)
+    {
+        nsAutoString temp(aMsg);
+#ifdef DEBUG_gagan
+
+#ifdef XP_UNIX
+        printf("\033[33m"); // Start yellow
+#endif
+
+        char* tmp = temp.ToNewCString();
+        printf("%s\n",tmp);
+        CRTFREEIF(tmp);
+#ifdef XP_UNIX
+        printf("\033[0m"); // End colors
+#endif
+
+#endif // DEBUG_gagan
+        nsresult rv =  mDocLoaderObserver->OnStatusURLLoad(
+            mDocLoader,
+            channel,
+            temp);
+
+#ifndef BUG_16273_FIXED
+        //free the message-
+        CRTFREEIF((PRUnichar*)aMsg);
+#endif
+        return rv;
+    }
+    return NS_OK;
+}
 
 nsresult nsWebShell::GetViewManager(nsIViewManager* *viewManager)
 {

@@ -158,7 +158,6 @@ nsresult nsSocketTransportService::Init(void)
     mThreadRunning = PR_TRUE;
     rv = NS_NewThread(&mThread, this, 0, PR_JOINABLE_THREAD);
   }
-
   return rv;
 }
 
@@ -483,16 +482,18 @@ nsSocketTransportService::Run(void)
 NS_IMETHODIMP
 nsSocketTransportService::CreateTransport(const char* aHost, 
                                           PRInt32 aPort,
+                                          nsIEventSinkGetter* eventSinkGetter, 
                                           nsIChannel** aResult)
 {
-  return CreateTransportOfType(nsnull, aHost, aPort, aResult);
+  return CreateTransportOfType(nsnull, aHost, aPort, eventSinkGetter, aResult);
 }
 
 NS_IMETHODIMP
 nsSocketTransportService::CreateTransportOfType(const char* aSocketType,
-                                                const char* aHost, 
-                                                PRInt32 aPort,
-                                                nsIChannel** aResult)
+                                        const char* aHost, 
+                                        PRInt32 aPort,
+                                        nsIEventSinkGetter* eventSinkGetter,
+                                        nsIChannel** aResult)
 {
   nsresult rv = NS_OK;
   nsSocketTransport* transport = nsnull;
@@ -506,7 +507,7 @@ nsSocketTransportService::CreateTransportOfType(const char* aSocketType,
   // Create and initialize a new connection object...
   NS_NEWXPCOM(transport, nsSocketTransport);
   if (transport) {
-    rv = transport->Init(this, aHost, aPort, aSocketType);
+    rv = transport->Init(this, aHost, aPort, aSocketType, eventSinkGetter);
     if (NS_FAILED(rv)) {
       delete transport;
       transport = nsnull;
@@ -524,7 +525,6 @@ nsSocketTransportService::CreateTransportOfType(const char* aSocketType,
 
   return rv;
 }
-
 
 NS_IMETHODIMP
 nsSocketTransportService::Shutdown(void)

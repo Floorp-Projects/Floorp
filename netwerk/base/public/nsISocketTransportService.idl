@@ -19,15 +19,26 @@
 #include "nsISupports.idl"
 
 interface nsIChannel;
+interface nsIEventSinkGetter;
 
 [scriptable, uuid(05331390-6884-11d3-9382-00104ba0fd40)]
 interface nsISocketTransportService : nsISupports 
 {
+    /**
+     * Creates a transport for a specified host and port. 
+     * The eventSinkGetter is used to get the appropriate callbacks
+     * for the socket activity from the application. These include
+     * the progress and the status messages like "Contacting host.."
+     * etc.
+     */
     nsIChannel createTransport(in string host,
-                               in long port);
+                               in long port,
+                               in nsIEventSinkGetter eventSinkGetter);
     nsIChannel createTransportOfType(in string socketType,
-                                     in string host, 
-                                     in long port);
+                               in string host, 
+                               in long port,
+                               in nsIEventSinkGetter eventSinkGetter);
+
     void shutdown();
 };
 

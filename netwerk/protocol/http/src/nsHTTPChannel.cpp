@@ -573,7 +573,11 @@ nsHTTPChannel::Open(void)
       }
     }
      
-    rv = mHandler->RequestTransport(mURI, this, getter_AddRefs(channel));
+    rv = mHandler->RequestTransport(mURI, 
+                        this, 
+                        mEventSinkGetter, 
+                        getter_AddRefs(channel));
+
     if (NS_ERROR_BUSY == rv) {
         mState = HS_WAITING_FOR_OPEN;
         return NS_OK;
@@ -861,12 +865,12 @@ nsHTTPChannel::Authenticate(const char *iChallenge, nsIChannel **oChannel)
     {
         nsXPIDLCString prehost;
         
-		if (NS_SUCCEEDED(rv = mURI->GetPreHost(getter_Copies(prehost))))
-		{
-			if (!(newUserPass = nsCRT::strdup(prehost)))
-				return NS_ERROR_OUT_OF_MEMORY;
-		}
- 	}
+        if (NS_SUCCEEDED(rv = mURI->GetPreHost(getter_Copies(prehost))))
+        {
+            if (!(newUserPass = nsCRT::strdup(prehost)))
+                return NS_ERROR_OUT_OF_MEMORY;
+        }
+    }
 
     // Couldnt get one from prehost or has already been tried so...ask
     if (!newUserPass || (0==PL_strlen(newUserPass)))
@@ -875,32 +879,33 @@ nsHTTPChannel::Authenticate(const char *iChallenge, nsIChannel **oChannel)
             Throw a modal dialog box asking for 
             username, password. Prefill (!?!)
         */
-		/* 
-			Currently this is being thrown from here itself. 
-			The correct way to do this is to push this on the 
-			HTTPEventSink and let that notify the window that
-			triggered this load to throw the userpass dialog
-		*/
+        /* 
+            Currently this is being thrown from here itself. 
+            The correct way to do this is to push this on the 
+            HTTPEventSink and let that notify the window that
+            triggered this load to throw the userpass dialog
+        */
         NS_WITH_PROXIED_SERVICE(nsIPrompt, authdialog, kNetSupportDialogCID, nsnull, &rv);
         if (NS_FAILED(rv)) return rv;
 
         PRUnichar *user, *passwd;
         PRBool retval;
+
         nsAutoString message = "Enter username for "; //TODO localize it!
 		message += iChallenge; // later on change to only show realm and then host's info. 
 		PRUnichar* msg = message.ToNewUnicode();
 		rv = authdialog->PromptUsernameAndPassword(
             msg, &user, &passwd, &retval);
-		CRTFREEIF(msg);
+        CRTFREEIF(msg);
         if (retval)
         {
             nsAutoString temp(user);
             temp += ':';
             temp += passwd;
-			CRTFREEIF(newUserPass);
+            CRTFREEIF(newUserPass);
             newUserPass = temp.ToNewCString();
         }
-	}
+    }
 
     // Construct the auth string request header based on info provided. 
     nsXPIDLCString authString;

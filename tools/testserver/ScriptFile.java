@@ -87,10 +87,9 @@ class ScriptFile {
         boolean outDirty = false;
 	    if (file != null)
 	    {
-              DataInputStream in =
-                new DataInputStream(
-                  new BufferedInputStream(
-                    new FileInputStream(file)));
+			  BufferedReader in = new BufferedReader(
+			  	new InputStreamReader(
+					new FileInputStream(file)));
 
               String s = new String();
               while((s = in.readLine())!= null)
@@ -163,10 +162,9 @@ class ScriptFile {
 	}
 
     protected void WriteOutFile(String filename) throws IOException {
-        DataInputStream incl =
-            new DataInputStream(
-                new BufferedInputStream(
-                    new FileInputStream(filename)));
+		  BufferedReader incl = new BufferedReader(
+			new InputStreamReader(
+               new FileInputStream(filename)));
         // This doesn't have to be line wise... change later TODO
         String s;
         while ((s = incl.readLine()) != null)
