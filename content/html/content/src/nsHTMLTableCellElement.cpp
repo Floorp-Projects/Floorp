@@ -353,7 +353,8 @@ nsHTMLTableCellElement::StringToAttribute(nsIAtom* aAttribute,
            (aAttribute == nsHTMLAtoms::rowspan)) {
     if (nsGenericHTMLElement::ParseValue(aValue, -1, MAX_COLSPAN, aResult, eHTMLUnit_Integer)) {
       PRInt32 val = aResult.GetIntValue();
-      if (val < 0) {
+      // quirks mode does not honor the special html 4 value of 0
+      if ((val < 0) || ((0 == val) && mInner.InNavQuirksMode())) {
         nsHTMLUnit unit = aResult.GetUnit();
         aResult.SetIntValue(1, unit);
       }
