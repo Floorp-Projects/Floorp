@@ -59,9 +59,10 @@ Properties properties = null;
 // Constructors and Initializers    
 //
 
-protected BookmarkEntryImpl(int nativeNode, RDFTreeNode yourParent)
+protected BookmarkEntryImpl(int nativeWebShell, int nativeNode, 
+                            RDFTreeNode yourParent)
 {
-    super(nativeNode, yourParent);
+    super(nativeWebShell, nativeNode, yourParent);
 }
 
 //
@@ -76,10 +77,10 @@ protected BookmarkEntryImpl(int nativeNode, RDFTreeNode yourParent)
 // Abstract Method Implementations
 //
 
-protected RDFTreeNode newRDFTreeNode(int nativeNode, 
+protected RDFTreeNode newRDFTreeNode(int nativeWebShell, int nativeNode, 
                                      RDFTreeNode yourParent)
 {
-    return new BookmarkEntryImpl(nativeNode, yourParent);
+    return new BookmarkEntryImpl(nativeWebShell, nativeNode, yourParent);
 }
 
 //
@@ -123,7 +124,7 @@ public Properties getProperties()
 
 public boolean isFolder()
 {
-    return nativeIsContainer(getNativeRDFNode());
+    return nativeIsContainer(nativeWebShell, getNativeRDFNode());
 }
 
 // ----VERTIGO_TEST_START
@@ -138,7 +139,7 @@ public static void main(String [] args)
 
     Log.setApplicationName("BookmarkEntryImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: BookmarkEntryImpl.java,v 1.2 2000/08/04 21:46:10 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: BookmarkEntryImpl.java,v 1.3 2000/11/03 03:16:48 edburns%acm.org Exp $");
 
 }
 

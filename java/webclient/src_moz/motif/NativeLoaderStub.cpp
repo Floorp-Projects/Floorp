@@ -110,7 +110,7 @@ void (* nativeInitialize) (JNIEnv *, jobject, jint);
 void (* nativeProcessEvents) (JNIEnv *, jobject, jint);
 // from BookmarksImpl.h
 jint (* nativeGetBookmarks) (JNIEnv *, jobject, jint);
-jint (* nativeNewRDFNode)  (JNIEnv *, jobject, jstring, jboolean);
+jint (* nativeNewRDFNode)  (JNIEnv *, jobject, jint, jstring, jboolean);
 // from CurrentPageImpl.h
 void (* nativeCopyCurrentSelectionToSystemClipboard) (JNIEnv *, jobject, jint);
 void (* nativeFindInPage) (JNIEnv *, jobject, jint, jstring, jboolean, jboolean);
@@ -143,17 +143,17 @@ void (* nativeLoadURL) (JNIEnv *, jobject, jint, jstring);
 void (* nativeRefresh) (JNIEnv *, jobject, jint, jlong);
 void (* nativeStop) (JNIEnv *, jobject, jint);
 // from RDFEnumeration.h
-void (* nativeFinalize) (JNIEnv *, jobject);
-jboolean (* nativeHasMoreElements) (JNIEnv *, jobject, jint);
-jint (* nativeNextElement) (JNIEnv *, jobject, jint);
+void (* nativeFinalize) (JNIEnv *, jobject, jint);
+jboolean (* nativeHasMoreElements) (JNIEnv *, jobject, jint, jint);
+jint (* nativeNextElement) (JNIEnv *, jobject, jint, jint);
 // from RDFTreeNode.h
-jint (* nativeGetChildAt) (JNIEnv *, jobject, jint, jint);
-jint (* nativeGetChildCount) (JNIEnv *, jobject, jint);
-jint (* nativeGetIndex) (JNIEnv *, jobject, jint, jint);
-void (* nativeInsertElementAt) (JNIEnv *, jobject, jint, jint, jint);
-jboolean (* nativeIsContainer) (JNIEnv *, jobject, jint);
-jboolean (* nativeIsLeaf) (JNIEnv *, jobject, jint);
-jstring (* nativeToString) (JNIEnv *, jobject, jint);
+jint (* nativeGetChildAt) (JNIEnv *, jobject, jint, jint, jint);
+jint (* nativeGetChildCount) (JNIEnv *, jobject, jint, jint);
+jint (* nativeGetIndex) (JNIEnv *, jobject, jint, jint, jint);
+void (* nativeInsertElementAt) (JNIEnv *, jobject, jint, jint, jint, jint);
+jboolean (* nativeIsContainer) (JNIEnv *, jobject, jint, jint);
+jboolean (* nativeIsLeaf) (JNIEnv *, jobject, jint, jint);
+jstring (* nativeToString) (JNIEnv *, jobject, jint, jint);
 // from WindowControlImpl.h
 jint (* nativeCreateInitContext) (JNIEnv *, jobject, jint, jint, jint, jint, jint, jobject);
 void (* nativeMoveWindowTo) (JNIEnv *, jobject, jint, jint, jint);
@@ -216,44 +216,44 @@ void locateBrowserControlStubFunctions(void * dll) {
     printf("got dlsym error %s\n", dlerror());
   }
 
-  nativeGetChildAt = (jint (*) (JNIEnv *, jobject, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeGetChildAt");
+  nativeGetChildAt = (jint (*) (JNIEnv *, jobject, jint, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeGetChildAt");
   if (!nativeGetChildAt) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeGetChildCount = (jint (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeGetChildCount");
+  nativeGetChildCount = (jint (*) (JNIEnv *, jobject, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeGetChildCount");
   if (!nativeGetChildCount) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeGetIndex = (jint (*) (JNIEnv *, jobject, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeGetIndex");
+  nativeGetIndex = (jint (*) (JNIEnv *, jobject, jint, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeGetIndex");
   if (!nativeGetIndex) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeInsertElementAt = (void (*) (JNIEnv *, jobject, jint, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeInsertElementAt");
+  nativeInsertElementAt = (void (*) (JNIEnv *, jobject, jint, jint, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeInsertElementAt");
   if (!nativeInsertElementAt) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeIsContainer = (jboolean (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeIsContainer");
+  nativeIsContainer = (jboolean (*) (JNIEnv *, jobject, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeIsContainer");
   if (!nativeIsContainer) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeIsLeaf = (jboolean (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeIsLeaf");
+  nativeIsLeaf = (jboolean (*) (JNIEnv *, jobject, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeIsLeaf");
   if (!nativeIsLeaf) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeToString = (jstring (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeToString");
+  nativeToString = (jstring (*) (JNIEnv *, jobject, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeToString");
   if (!nativeToString) {
     printf("got dlsym error %s\n", dlerror());
   }
 
-  nativeFinalize = (void (*) (JNIEnv *, jobject)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_RDFEnumeration_nativeFinalize");
+  nativeFinalize = (void (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_RDFEnumeration_nativeFinalize");
   if (!nativeFinalize) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeHasMoreElements = (jboolean (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_RDFEnumeration_nativeHasMoreElements");
+  nativeHasMoreElements = (jboolean (*) (JNIEnv *, jobject, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_RDFEnumeration_nativeHasMoreElements");
   if (!nativeHasMoreElements) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeNextElement = (jint (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_RDFEnumeration_nativeNextElement");
+  nativeNextElement = (jint (*) (JNIEnv *, jobject, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_RDFEnumeration_nativeNextElement");
   if (!nativeNextElement) {
     printf("got dlsym error %s\n", dlerror());
   }
@@ -375,7 +375,7 @@ void locateBrowserControlStubFunctions(void * dll) {
   if (!nativeGetBookmarks) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeNewRDFNode = (jint (*) (JNIEnv *, jobject, jstring, jboolean)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_BookmarksImpl_nativeNewRDFNode");
+  nativeNewRDFNode = (jint (*) (JNIEnv *, jobject, jint, jstring, jboolean)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_BookmarksImpl_nativeNewRDFNode");
   if (!nativeNewRDFNode) {
     printf("got dlsym error %s\n", dlerror());
   }
@@ -484,8 +484,8 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_BookmarksImpl_
  * Signature: (Ljava/lang/String;)I
  */
 JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_BookmarksImpl_nativeNewRDFNode
-(JNIEnv * env, jobject obj, jstring url, jboolean isFolder) {
-  return (* nativeNewRDFNode) (env, obj, url, isFolder);
+(JNIEnv * env, jobject obj, jint webShellPtr, jstring url, jboolean isFolder) {
+  return (* nativeNewRDFNode) (env, obj, webShellPtr, url, isFolder);
 }
 
 
@@ -783,8 +783,8 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NavigationImpl
  */
 JNIEXPORT void JNICALL 
 Java_org_mozilla_webclient_wrapper_1native_RDFEnumeration_nativeFinalize
-(JNIEnv *env, jobject obj) {
-  (* nativeFinalize) (env, obj);
+(JNIEnv *env, jobject obj, jint webShellPtr) {
+  (* nativeFinalize) (env, obj, webShellPtr);
 }
 
 /*
@@ -794,8 +794,8 @@ Java_org_mozilla_webclient_wrapper_1native_RDFEnumeration_nativeFinalize
  */
 JNIEXPORT jboolean JNICALL 
 Java_org_mozilla_webclient_wrapper_1native_RDFEnumeration_nativeHasMoreElements
-(JNIEnv *env, jobject obj, jint nativeRDFNode) {
-  return (* nativeHasMoreElements) (env, obj, nativeRDFNode);
+(JNIEnv *env, jobject obj, jint webShellPtr, jint nativeRDFNode) {
+  return (* nativeHasMoreElements) (env, obj, webShellPtr, nativeRDFNode);
 }
 
 /*
@@ -805,8 +805,8 @@ Java_org_mozilla_webclient_wrapper_1native_RDFEnumeration_nativeHasMoreElements
  */
 JNIEXPORT jint JNICALL 
 Java_org_mozilla_webclient_wrapper_1native_RDFEnumeration_nativeNextElement
-(JNIEnv *env, jobject obj, jint nativeRDFNode) {
-  return (* nativeNextElement) (env, obj, nativeRDFNode);
+(JNIEnv *env, jobject obj, jint webShellPtr, jint nativeRDFNode) {
+  return (* nativeNextElement) (env, obj, webShellPtr, nativeRDFNode);
 }
 
 
@@ -819,8 +819,10 @@ Java_org_mozilla_webclient_wrapper_1native_RDFEnumeration_nativeNextElement
  */
 JNIEXPORT jint JNICALL 
 Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeGetChildAt
-(JNIEnv *env, jobject obj, jint nativeRDFNode, jint childIndex) {
-  return (* nativeGetChildAt) (env, obj, nativeRDFNode, childIndex);
+(JNIEnv *env, jobject obj, jint webShellPtr, jint nativeRDFNode, 
+ jint childIndex) {
+  return (* nativeGetChildAt) (env, obj, webShellPtr, nativeRDFNode, 
+                               childIndex);
 }
 
 /*
@@ -830,8 +832,8 @@ Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeGetChildAt
  */
 JNIEXPORT jint JNICALL 
 Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeGetChildCount
-(JNIEnv *env, jobject obj, jint nativeRDFNode) {
-  return (* nativeGetChildCount) (env, obj, nativeRDFNode);
+(JNIEnv *env, jobject obj, jint webShellPtr, jint nativeRDFNode) {
+  return (* nativeGetChildCount) (env, obj, webShellPtr, nativeRDFNode);
 }
 
 /*
@@ -841,8 +843,10 @@ Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeGetChildCount
  */
 JNIEXPORT jint JNICALL 
 Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeGetIndex
-(JNIEnv *env, jobject obj, jint nativeRDFNode, jint childRDFNode) {
-  return (* nativeGetIndex) (env, obj, nativeRDFNode, childRDFNode);
+(JNIEnv *env, jobject obj, jint webShellPtr, jint nativeRDFNode, 
+ jint childRDFNode) {
+  return (* nativeGetIndex) (env, obj, webShellPtr, nativeRDFNode, 
+                             childRDFNode);
 }
 
 /*
@@ -852,8 +856,10 @@ Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeGetIndex
  */
 JNIEXPORT void JNICALL 
 Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeInsertElementAt
-(JNIEnv *env, jobject obj, jint parentRDFNode, jint childRDFNode, jint childIndex) {
-  (* nativeInsertElementAt) (env, obj, parentRDFNode, childRDFNode, childIndex);
+(JNIEnv *env, jobject obj, jint webShellPtr, jint parentRDFNode, 
+ jint childRDFNode, jint childIndex) {
+  (* nativeInsertElementAt) (env, obj, webShellPtr, parentRDFNode, 
+                             childRDFNode, childIndex);
 }
 
 /*
@@ -862,8 +868,8 @@ Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeInsertElementAt
  * Signature: (I)Z
  */
 JNIEXPORT jboolean JNICALL Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeIsContainer
-(JNIEnv *env, jobject obj, jint nativeRDFNode) {
-  return (* nativeIsContainer) (env, obj, nativeRDFNode);
+(JNIEnv *env, jobject obj, jint webShellPtr, jint nativeRDFNode) {
+  return (* nativeIsContainer) (env, obj, webShellPtr, nativeRDFNode);
 }
 
 /*
@@ -872,8 +878,8 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_webclient_wrapper_1native_RDFTreeNod
  * Signature: (I)Z
  */
 JNIEXPORT jboolean JNICALL Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeIsLeaf
-(JNIEnv *env, jobject obj, jint nativeRDFNode) {
-  return (* nativeIsLeaf) (env, obj, nativeRDFNode);
+(JNIEnv *env, jobject obj, jint webShellPtr, jint nativeRDFNode) {
+  return (* nativeIsLeaf) (env, obj, webShellPtr, nativeRDFNode);
 }
 
 /*
@@ -883,8 +889,8 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_webclient_wrapper_1native_RDFTreeNod
  */
 JNIEXPORT jstring JNICALL 
 Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeToString
-(JNIEnv *env, jobject obj, jint nativeRDFNode) {
-  return (* nativeToString) (env, obj, nativeRDFNode);
+(JNIEnv *env, jobject obj, jint webShellPtr, jint nativeRDFNode) {
+  return (* nativeToString) (env, obj, webShellPtr, nativeRDFNode);
 }
 
 

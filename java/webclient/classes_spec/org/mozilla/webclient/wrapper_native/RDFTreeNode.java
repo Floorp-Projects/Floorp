@@ -53,12 +53,24 @@ private int nativeRDFNode = -1;
 private RDFTreeNode parent;
 
 
+/** 
+      
+ * a handle to the actual mozilla webShell, owned, allocated, and
+ * released by WindowControl
+   
+ */
+  
+public int nativeWebShell = -1;
+
+
 //
 // Constructors and Initializers    
 //
 
-protected RDFTreeNode(int nativeNode, RDFTreeNode yourParent)
+protected RDFTreeNode(int yourNativeWebShell, 
+                      int nativeNode, RDFTreeNode yourParent)
 {
+    nativeWebShell = yourNativeWebShell;
     nativeRDFNode = nativeNode;
     parent = yourParent;
 }
@@ -76,7 +88,8 @@ protected RDFTreeNode(int nativeNode, RDFTreeNode yourParent)
 // Abstract Methods
 //
 
-protected abstract RDFTreeNode newRDFTreeNode(int nativeNode, 
+protected abstract RDFTreeNode newRDFTreeNode(int nativeWebShell, 
+                                              int nativeNode, 
                                               RDFTreeNode yourParent);
 
 int getNativeRDFNode()
@@ -106,7 +119,7 @@ public String toString()
 {
     String result = null;
     if (-1 != nativeRDFNode) {
-        result = nativeToString(nativeRDFNode);
+      result = nativeToString(nativeWebShell, nativeRDFNode);
     }
     else {
         result = super.toString();
@@ -124,7 +137,7 @@ public Enumeration children()
     Assert.assert(-1 != nativeRDFNode);
     Enumeration enum = null;
 
-    enum = new RDFEnumeration(this);
+    enum = new RDFEnumeration(nativeWebShell, this);
 
     return enum;
 }
@@ -143,9 +156,10 @@ public TreeNode getChildAt(int childIndex)
     int childNode;
 
     if (!isLeaf()) {
-        if (-1 != (childNode = nativeGetChildAt(nativeRDFNode, childIndex))) {
-            result = newRDFTreeNode(childNode, this);
-        }
+      if (-1 != (childNode = nativeGetChildAt(nativeWebShell, nativeRDFNode, 
+					      childIndex))) {
+	result = newRDFTreeNode(nativeWebShell, childNode, this);
+      }
     }
     
     return result;
@@ -156,7 +170,7 @@ public int getChildCount()
     Assert.assert(-1 != nativeRDFNode);
     int result = -1;
 
-    result = nativeGetChildCount(nativeRDFNode);
+    result = nativeGetChildCount(nativeWebShell, nativeRDFNode);
 
     return result;
 }
@@ -166,8 +180,8 @@ public int getIndex(TreeNode node)
     Assert.assert(-1 != nativeRDFNode);
     int result = -1;
     if (node instanceof RDFTreeNode) {
-        result = nativeGetIndex(nativeRDFNode, 
-                                ((RDFTreeNode)node).nativeRDFNode);
+      result = nativeGetIndex(nativeWebShell, nativeRDFNode, 
+			      ((RDFTreeNode)node).nativeRDFNode);
     }
 
     return result;
@@ -183,7 +197,7 @@ public boolean isLeaf()
 {
     Assert.assert(-1 != nativeRDFNode);
 
-    return nativeIsLeaf(nativeRDFNode);
+    return nativeIsLeaf(nativeWebShell, nativeRDFNode);
 }
     
 
@@ -202,7 +216,9 @@ public void insert(MutableTreeNode child, int index)
     int childNativeRDFNode = childNode.getNativeRDFNode();
 
     // hook up the child to its native peer
-    nativeInsertElementAt(nativeRDFNode, childNativeRDFNode, index);
+    nativeInsertElementAt(nativeWebShell, nativeRDFNode, 
+			  childNativeRDFNode, index);
+
     // hook up the child to its java parent
     childNode.setParent(this);
     
@@ -239,8 +255,8 @@ public void setUserObject(Object object)
 // Native methods
 //
 
-public native boolean nativeIsLeaf(int nativeRDFNode);
-public native boolean nativeIsContainer(int nativeRDFNode);
+public native boolean nativeIsLeaf(int webShellPtr, int nativeRDFNode);
+public native boolean nativeIsContainer(int webShellPtr, int nativeRDFNode);
 
 /**
 
@@ -248,11 +264,14 @@ public native boolean nativeIsContainer(int nativeRDFNode);
 
  */
 
-public native int nativeGetChildAt(int nativeRDFNode, int childIndex);
-public native int nativeGetChildCount(int nativeRDFNode);
-public native int nativeGetIndex(int nativeRDFNode, int childRDFNode);
-public native String nativeToString(int nativeRDFNode);
-public native void nativeInsertElementAt(int parentNativeRDFNode,
+public native int nativeGetChildAt(int webShellPtr, int nativeRDFNode, 
+                                   int childIndex);
+public native int nativeGetChildCount(int webShellPtr, int nativeRDFNode);
+public native int nativeGetIndex(int webShellPtr, int nativeRDFNode, 
+                                 int childRDFNode);
+public native String nativeToString(int webShellPtr, int nativeRDFNode);
+public native void nativeInsertElementAt(int webShellPtr, 
+                                         int parentNativeRDFNode,
                                          int childNativeRDFNode, int index);
 
 // ----VERTIGO_TEST_START
@@ -267,7 +286,7 @@ public static void main(String [] args)
 
     Log.setApplicationName("RDFTreeNode");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: RDFTreeNode.java,v 1.1 2000/03/04 01:10:56 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: RDFTreeNode.java,v 1.2 2000/11/03 03:16:50 edburns%acm.org Exp $");
 
 }
 

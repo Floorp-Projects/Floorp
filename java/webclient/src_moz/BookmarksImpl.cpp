@@ -24,6 +24,7 @@
 
 #include "rdf_util.h"
 #include "ns_util.h"
+#include "nsActions.h"
 
 
 #include "nsCOMPtr.h"
@@ -39,64 +40,63 @@ Java_org_mozilla_webclient_wrapper_1native_BookmarksImpl_nativeAddBookmark
 JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_BookmarksImpl_nativeGetBookmarks
 (JNIEnv *env, jobject obj, jint webShellPtr)
 {
-    nsresult rv;
     jint result = -1;
-
-    rv = rdf_InitRDFUtils();
-    if (NS_FAILED(rv)) {
+    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
+    void	*	voidResult = nsnull;
+    
+	if (initContext == nsnull) {
+		::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to nativeGetBookmarks");
+		return result;
+	}
+    
+    if (!initContext->initComplete) {
         ::util_ThrowExceptionToJava(env, "Exception: can't initialize RDF Utils");
         return result;
     }
-        
-    result = (jint) kNC_BookmarksRoot.get();
+    
+    wsInitBookmarksEvent *actionEvent = new wsInitBookmarksEvent(initContext);
+    PLEvent	   	* event       = (PLEvent*) *actionEvent;
+    
+    voidResult = ::util_PostSynchronousEvent(initContext, event);
+    result = (jint) voidResult;
+
     return result;
 }
 
 JNIEXPORT jint JNICALL 
 Java_org_mozilla_webclient_wrapper_1native_BookmarksImpl_nativeNewRDFNode
-(JNIEnv *env, jobject obj, jstring urlString, jboolean isFolder)
+(JNIEnv *env, jobject obj, jint webShellPtr, jstring urlString, 
+ jboolean isFolder)
 {
-    nsCOMPtr<nsIRDFResource> newNode;
-    nsresult rv;
     jint result = -1;
 	nsCAutoString uri("NC:BookmarksRoot");
+    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
+    void	*	voidResult = nsnull;
     
-    const char *url = ::util_GetStringUTFChars(env, urlString);
-	uri.Append("#$");
-	uri.Append(url);
-    PRUnichar *uriUni = uri.ToNewUnicode();
+    if (initContext == nsnull) {
+      ::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to nativeNewRDFNode");
+      return result;
+    }
     
-    rv = gRDF->GetUnicodeResource(uriUni, getter_AddRefs(newNode));
-    nsCRT::free(uriUni);
-    ::util_ReleaseStringUTFChars(env, urlString, url);
-    if (NS_FAILED(rv)) {
-        ::util_ThrowExceptionToJava(env, "Exception: nativeNewRDFNode: can't create new nsIRDFResource.");
+    if (!initContext->initComplete) {
+        ::util_ThrowExceptionToJava(env, "Exception: can't get new RDFNode");
         return result;
     }
-
-    if (isFolder) {
-        rv = gRDFCU->MakeSeq(gBookmarksDataSource, newNode, nsnull);
-        if (NS_FAILED(rv)) {
-            ::util_ThrowExceptionToJava(env, "Exception: unable to make new folder as a sequence.");
-            return result;
-        }
-        rv = gBookmarksDataSource->Assert(newNode, kRDF_type, 
-                                          kNC_Folder, PR_TRUE);
-        if (rv != NS_OK) {
-            ::util_ThrowExceptionToJava(env, "Exception: unable to mark new folder as folder.");
-            
-            return result;
-        }
+    
+    const char *url = ::util_GetStringUTFChars(env, urlString);
+    if (!url) {
+        ::util_ThrowExceptionToJava(env, "Exception: can't get new RDFNode, can't create url string");
+        return result;
     }
-
-    /*
-
-     * Do the AddRef here.
-
-     */
-
-    result = (jint)newNode.get();
-    ((nsISupports *)result)->AddRef();
-
+    
+    wsNewRDFNodeEvent *actionEvent = new wsNewRDFNodeEvent(initContext,
+                                                           url, 
+                                                           (PRBool) isFolder);
+    PLEvent	   	* event       = (PLEvent*) *actionEvent;
+    
+    voidResult = ::util_PostSynchronousEvent(initContext, event);
+    result = (jint) voidResult;
+    
+    ::util_ReleaseStringUTFChars(env, urlString, url);
     return result;
 }

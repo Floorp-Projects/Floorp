@@ -54,7 +54,7 @@ import org.w3c.dom.Document;
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EMWindow.java,v 1.23 2000/11/03 01:25:31 ashuk%eng.sun.com Exp $
+ * @version $Id: EMWindow.java,v 1.24 2000/11/03 03:16:46 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlFactory
 
@@ -171,8 +171,8 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
         stopButton.setEnabled(false);
 		refreshButton = makeItem(buttonsPanel, "Refresh", 3, 0, 1, 1, 0.0, 0.0);
         refreshButton.setEnabled(false);
-        //		makeItem(buttonsPanel, "Bookmarks",    4, 0, 1, 1, 0.0, 0.0);
-        //		makeItem(buttonsPanel, "DOMViewer",    5, 0, 1, 1, 0.0, 0.0);
+	makeItem(buttonsPanel, "Bookmarks",    4, 0, 1, 1, 0.0, 0.0);
+	//	makeItem(buttonsPanel, "DOMViewer",    5, 0, 1, 1, 0.0, 0.0);
 
 		// Create the control panel
 		controlPanel = new Panel();
@@ -260,7 +260,6 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
             eventRegistration.addDocumentLoadListener(this);
             eventRegistration.addMouseListener(this);
 
-            /*********
             // PENDING(edburns): test code, replace with production code
             bookmarks = 
                 (Bookmarks)
@@ -268,6 +267,8 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
             System.out.println("debug: edburns: got Bookmarks instance");
 
             bookmarksTree = bookmarks.getBookmarks();
+            /*********
+
             TreeNode bookmarksRoot = (TreeNode) bookmarksTree.getRoot();
 
             System.out.println("debug: edburns: testing the Enumeration");

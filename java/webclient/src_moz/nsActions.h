@@ -359,6 +359,15 @@ protected:
     WebShellInitContext *mInitContext;
 };
 
+class wsInitBookmarksEvent : public nsActionEvent {
+public:
+    wsInitBookmarksEvent(WebShellInitContext *yourInitContext);
+    void * handleEvent(void);
+
+protected:
+    WebShellInitContext *mInitContext;
+};
+
 class wsFindEvent : public nsActionEvent {
 public:
     wsFindEvent(nsIFindComponent *findComponent, 
@@ -370,6 +379,28 @@ protected:
     nsISearchContext * mSearchContext;
 };
 
+class wsNewRDFNodeEvent : public nsActionEvent {
+public:
+    wsNewRDFNodeEvent(WebShellInitContext *yourInitContext, 
+                      const char *yourUrlString, PRBool yourIsFolder);
+    void * handleEvent(void);
+
+protected:
+    WebShellInitContext *mInitContext;
+    const char *mUrlString;
+    PRBool mIsFolder;
+};
+
+class wsRDFIsContainerEvent : public nsActionEvent {
+public:
+    wsRDFIsContainerEvent(WebShellInitContext *yourInitContext, 
+                          PRUint32 yourNativeRDFNode);
+    void * handleEvent(void);
+
+protected:
+    WebShellInitContext *mInitContext;
+    PRUint32 mNativeRDFNode;
+};
 
 class wsSelectAllEvent : public nsActionEvent {
 public:
@@ -380,6 +411,28 @@ protected:
     nsIContentViewerEdit * mContentViewerEdit;
 };
 
+class wsRDFGetChildAtEvent : public nsActionEvent {
+public:
+    wsRDFGetChildAtEvent(WebShellInitContext *yourInitContext, 
+                         PRUint32 yourNativeRDFNode, PRUint32 childIndex);
+    void * handleEvent(void);
+
+protected:
+    WebShellInitContext *mInitContext;
+    PRUint32 mNativeRDFNode;
+    PRUint32 mChildIndex;
+};
+
+class wsRDFGetChildCountEvent : public nsActionEvent {
+public:
+    wsRDFGetChildCountEvent(WebShellInitContext *yourInitContext, 
+                            PRUint32 yourNativeRDFNode);
+    void * handleEvent(void);
+
+protected:
+    WebShellInitContext *mInitContext;
+    PRUint32 mNativeRDFNode;
+};
 
 class wsCopySelectionEvent : public nsActionEvent {
 public:
@@ -388,6 +441,80 @@ public:
 
 protected:
     nsIContentViewerEdit * mContentViewerEdit;
+};
+
+class wsRDFGetChildIndexEvent : public nsActionEvent {
+public:
+    wsRDFGetChildIndexEvent(WebShellInitContext *yourInitContext, 
+                            PRUint32 yourNativeRDFNode, 
+                            PRUint32 yourChildRDFNode);
+    void * handleEvent(void);
+
+protected:
+    WebShellInitContext *mInitContext;
+    PRUint32 mNativeRDFNode;
+    PRUint32 mChildRDFNode;
+};
+
+class wsRDFToStringEvent : public nsActionEvent {
+public:
+    wsRDFToStringEvent(WebShellInitContext *yourInitContext, 
+                       PRUint32 yourNativeRDFNode);
+    void * handleEvent(void);
+
+protected:
+    WebShellInitContext *mInitContext;
+    PRUint32 mNativeRDFNode;
+};
+
+class wsRDFInsertElementAtEvent : public nsActionEvent {
+public:
+    wsRDFInsertElementAtEvent(WebShellInitContext *yourInitContext, 
+                              PRUint32 yourParentRDFNode, 
+                              PRUint32 yourChildRDFNode, 
+                              PRUint32 yourChildIndex);
+    void * handleEvent(void);
+
+protected:
+    WebShellInitContext *mInitContext;
+    PRUint32 mParentRDFNode;
+    PRUint32 mChildRDFNode;
+    PRUint32 mChildIndex;
+};
+
+class wsRDFHasMoreElementsEvent : public nsActionEvent {
+public:
+    wsRDFHasMoreElementsEvent(WebShellInitContext *yourInitContext,
+                              PRUint32 mNativeRDFNode,
+                              void *yourJobject);
+    void * handleEvent(void);
+
+protected:
+    WebShellInitContext *mInitContext;
+    PRUint32 mNativeRDFNode;
+    void *mJobject;
+};
+
+class wsRDFNextElementEvent : public nsActionEvent {
+public:
+    wsRDFNextElementEvent(WebShellInitContext *yourInitContext,
+                          PRUint32 mNativeRDFNode,
+                          void *yourJobject);
+    void * handleEvent(void);
+
+protected:
+    WebShellInitContext *mInitContext;
+    PRUint32 mNativeRDFNode;
+    void *mJobject;
+};
+
+class wsRDFFinalizeEvent : public nsActionEvent {
+public:
+    wsRDFFinalizeEvent(void *yourJobject);
+    void * handleEvent(void);
+
+protected:
+    void *mJobject;
 };
 
 

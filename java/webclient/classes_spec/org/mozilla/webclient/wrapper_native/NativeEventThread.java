@@ -222,9 +222,7 @@ public void run()
                 return;
             }
 
-            synchronized (this.browserControlCanvas.getTreeLock()) {
-                nativeProcessEvents(nativeWebShell);
-            }
+            nativeProcessEvents(nativeWebShell);
             
             if (null != listenersToAdd && !listenersToAdd.isEmpty()) {
                 tempEnum = listenersToAdd.elements();

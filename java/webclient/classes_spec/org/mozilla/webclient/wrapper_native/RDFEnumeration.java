@@ -66,12 +66,24 @@ private int nativeEnum = -1;
 
 private int nativeContainer = -1;
 
+/** 
+      
+ * a handle to the actual mozilla webShell, owned, allocated, and
+ * released by WindowControl
+   
+ */
+  
+public int nativeWebShell = -1;
+
+
+
 //
 // Constructors and Initializers    
 //
 
-public RDFEnumeration(RDFTreeNode enumParent)
+public RDFEnumeration(int yourNativeWebShell, RDFTreeNode enumParent)
 {
+    nativeWebShell = yourNativeWebShell;
     parent = enumParent;
     nativeRDFNode = parent.getNativeRDFNode();
 }
@@ -90,7 +102,7 @@ public RDFEnumeration(RDFTreeNode enumParent)
 
 protected void finalize() throws Throwable
 {
-    nativeFinalize();
+  nativeFinalize(nativeWebShell);
     super.finalize();
 }
 
@@ -101,8 +113,7 @@ protected void finalize() throws Throwable
 public boolean hasMoreElements()
 {
     Assert.assert(-1 != nativeRDFNode);
-
-    return nativeHasMoreElements(nativeRDFNode);
+    return nativeHasMoreElements(nativeWebShell, nativeRDFNode);
 }
 
 public Object nextElement()
@@ -111,8 +122,10 @@ public Object nextElement()
     Object result = null;
     int nextNativeRDFNode;
 
-    if (-1 != (nextNativeRDFNode = nativeNextElement(nativeRDFNode))) {
-        result = parent.newRDFTreeNode(nextNativeRDFNode, parent);
+    if (-1 != (nextNativeRDFNode = nativeNextElement(nativeWebShell,
+						     nativeRDFNode))) {
+      result = parent.newRDFTreeNode(nativeWebShell,
+				     nextNativeRDFNode, parent);
     }
 
     return result;
@@ -122,7 +135,8 @@ public Object nextElement()
 // Native Methods
 // 
 
-private native boolean nativeHasMoreElements(int nativeRDFNode);
+private native boolean nativeHasMoreElements(int webShellPtr, 
+                                             int nativeRDFNode);
 
 /**
 
@@ -130,8 +144,9 @@ private native boolean nativeHasMoreElements(int nativeRDFNode);
 
  */ 
 
-private native int nativeNextElement(int nativeRDFNode);
-protected native void nativeFinalize();
+private native int nativeNextElement(int webShellPtr, 
+                                     int nativeRDFNode);
+protected native void nativeFinalize(int webShellPtr);
 
 // ----VERTIGO_TEST_START
 
@@ -145,7 +160,7 @@ public static void main(String [] args)
 
     Log.setApplicationName("RDFEnumeration");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: RDFEnumeration.java,v 1.1 2000/03/04 01:10:56 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: RDFEnumeration.java,v 1.2 2000/11/03 03:16:50 edburns%acm.org Exp $");
 
 }
 

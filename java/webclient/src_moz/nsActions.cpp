@@ -44,8 +44,25 @@
 #include "nsIContentViewerEdit.h"
 
 #include "ns_util.h"
+#include "rdf_util.h"
 
 #include "nsEmbedAPI.h"  // for NS_TermEmbedding
+
+#include "nsRDFCID.h" // for NS_RDFCONTAINER_CID
+
+static NS_DEFINE_CID(kRDFContainerCID, NS_RDFCONTAINER_CID);
+
+//
+// Local function prototypes
+//
+
+/**
+
+ * pull the int for the field nativeEnum from the java object obj.
+
+ */
+
+jint getNativeEnumFromJava(JNIEnv *env, jobject obj, jint nativeRDFNode);
 
 void *          handleEvent     (PLEvent * event);
 void            destroyEvent    (PLEvent * event);
@@ -753,7 +770,125 @@ wsDeallocateInitContextEvent::handleEvent ()
     return (void *) NS_OK;
 } // handleEvent()
 
+wsInitBookmarksEvent::wsInitBookmarksEvent(WebShellInitContext* yourInitContext) :
+        nsActionEvent(),
+        mInitContext(yourInitContext)
+{
+}
 
+void *
+wsInitBookmarksEvent::handleEvent ()
+{
+    void *result = nsnull;
+    if (!mInitContext) {
+        return (void *) NS_ERROR_UNEXPECTED;
+    }
+    nsresult rv;
+    rv = rdf_InitRDFUtils();
+    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
+
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: can't initialize RDF Utils");
+        return (void *) result;
+    }
+    result = (void *) kNC_BookmarksRoot.get();
+
+    return result;
+} // handleEvent()
+
+
+wsNewRDFNodeEvent::wsNewRDFNodeEvent(WebShellInitContext* yourInitContext,
+                                     const char * yourUrlString,
+                                     PRBool yourIsFolder) :
+        nsActionEvent(),
+        mInitContext(yourInitContext), mUrlString(yourUrlString),
+        mIsFolder(yourIsFolder)
+{
+}
+
+void *
+wsNewRDFNodeEvent::handleEvent ()
+{
+    void *result = nsnull;
+    if (!mInitContext) {
+        return (void *) NS_ERROR_UNEXPECTED;
+    }
+    nsresult rv;
+    nsCOMPtr<nsIRDFResource> newNode;
+	nsCAutoString uri("NC:BookmarksRoot");
+    JNIEnv *env = (JNIEnv*) JNU_GetEnv(gVm, JNI_VERSION);
+    
+    const char *url = mUrlString;
+	uri.Append("#$");
+	uri.Append(url);
+    PRUnichar *uriUni = uri.ToNewUnicode();
+    
+    rv = gRDF->GetUnicodeResource(uriUni, getter_AddRefs(newNode));
+    nsCRT::free(uriUni);
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativeNewRDFNode: can't create new nsIRDFResource.");
+        return result;
+    }
+
+    if (mIsFolder) {
+        rv = gRDFCU->MakeSeq(gBookmarksDataSource, newNode, nsnull);
+        if (NS_FAILED(rv)) {
+            ::util_ThrowExceptionToJava(env, "Exception: unable to make new folder as a sequence.");
+            return result;
+        }
+        rv = gBookmarksDataSource->Assert(newNode, kRDF_type, 
+                                          kNC_Folder, PR_TRUE);
+        if (rv != NS_OK) {
+            ::util_ThrowExceptionToJava(env, "Exception: unable to mark new folder as folder.");
+            
+            return result;
+        }
+    }
+
+    /*
+
+     * Do the AddRef here.
+
+     */
+
+    result = (void *)newNode.get();
+    ((nsISupports *)result)->AddRef();
+
+    return result;
+} // handleEvent()
+
+wsRDFIsContainerEvent::wsRDFIsContainerEvent(WebShellInitContext* yourInitContext, 
+                                             PRUint32 yourNativeRDFNode) :
+        nsActionEvent(),
+        mInitContext(yourInitContext), mNativeRDFNode(yourNativeRDFNode)
+{
+}
+
+void *
+wsRDFIsContainerEvent::handleEvent ()
+{
+    if (!mInitContext) {
+        return (void *) NS_ERROR_UNEXPECTED;
+    }
+    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
+    nsCOMPtr<nsIRDFNode> node = (nsIRDFNode *) mNativeRDFNode;
+    nsCOMPtr<nsIRDFResource> nodeResource;
+    nsresult rv;
+    jboolean result = JNI_FALSE;
+    PRBool prBool;
+    
+    rv = node->QueryInterface(NS_GET_IID(nsIRDFResource), 
+                              getter_AddRefs(nodeResource));
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativeIsContainer: nativeRDFNode is not an RDFResource.");
+        return nsnull;
+    }
+    rv = gRDFCU->IsContainer(gBookmarksDataSource, nodeResource, 
+                             &prBool);
+    result = (prBool == PR_FALSE) ? JNI_FALSE : JNI_TRUE;
+    
+    return (void *) result;
+} // handleEvent()
 
 void *
 wsFindEvent::handleEvent ()
@@ -775,6 +910,94 @@ wsFindEvent::wsFindEvent(nsIFindComponent * findcomponent, nsISearchContext * sr
 {
 }
 
+wsRDFGetChildAtEvent::wsRDFGetChildAtEvent(WebShellInitContext* yourInitContext, 
+                                           PRUint32 yourNativeRDFNode, 
+                                           PRUint32 yourChildIndex) :
+        nsActionEvent(),
+        mInitContext(yourInitContext), mNativeRDFNode(yourNativeRDFNode),
+        mChildIndex(yourChildIndex)
+{
+}
+
+void *
+wsRDFGetChildAtEvent::handleEvent ()
+{
+    if (!mInitContext) {
+        return (void *) NS_ERROR_UNEXPECTED;
+    }
+    jint result = -1;
+    nsresult rv;
+    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
+    // PENDING(edburns): assert rdf_InitRDFUtils()
+    nsCOMPtr<nsIRDFResource> parent = (nsIRDFResource *) mNativeRDFNode;
+    nsCOMPtr<nsIRDFResource> child;
+
+    rv = rdf_getChildAt(mChildIndex, parent, getter_AddRefs(child));
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativeGetChildAt: Can't get child.");
+        return nsnull;
+    }
+    result = (jint)child.get();
+    ((nsISupports *)result)->AddRef();
+    return (void *) result;
+} // handleEvent()
+
+wsRDFGetChildCountEvent::wsRDFGetChildCountEvent(WebShellInitContext* yourInitContext, 
+                                                 PRUint32 yourNativeRDFNode) :
+        nsActionEvent(),
+        mInitContext(yourInitContext), mNativeRDFNode(yourNativeRDFNode)
+{
+}
+
+void *
+wsRDFGetChildCountEvent::handleEvent ()
+{
+    if (!mInitContext) {
+        return (void *) NS_ERROR_UNEXPECTED;
+    }
+    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
+    jint result = -1;
+    PRInt32 count;
+    nsresult rv;
+    // PENDING(edburns): assert rdf_InitRDFUtils()
+    nsCOMPtr<nsIRDFResource> parent = (nsIRDFResource *) mNativeRDFNode;
+
+    rv = rdf_getChildCount(parent, &count);
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativeGetChildCount: Can't get child count.");
+        return nsnull;
+    }
+    result = (jint)count;
+  return (void *) result;
+} // handleEvent()
+
+wsRDFGetChildIndexEvent::wsRDFGetChildIndexEvent(WebShellInitContext* yourInitContext, 
+                                                 PRUint32 yourNativeRDFNode, 
+                                                 PRUint32 yourChildRDFNode) :
+        nsActionEvent(),
+        mInitContext(yourInitContext), mNativeRDFNode(yourNativeRDFNode), 
+        mChildRDFNode(yourChildRDFNode)
+{
+}
+
+void *
+wsRDFGetChildIndexEvent::handleEvent ()
+{
+    if (!mInitContext) {
+        return (void *) NS_ERROR_UNEXPECTED;
+    }
+    jint result = -1;
+    PRInt32 index;
+    nsresult rv;
+    // PENDING(edburns): assert rdf_InitRDFUtils()
+    nsCOMPtr<nsIRDFResource> parent = (nsIRDFResource *) mNativeRDFNode;
+    nsCOMPtr<nsIRDFResource> child = (nsIRDFResource *) mChildRDFNode;
+    
+    rv = rdf_getIndexOfChild(parent, child, &index);
+    result = (jint) index;
+    
+    return (void *) result;
+} // handleEvent()
 
 void *
 wsSelectAllEvent::handleEvent ()
@@ -794,6 +1017,274 @@ wsSelectAllEvent::wsSelectAllEvent(nsIContentViewerEdit * contentViewerEdit) :
 {
 }
 
+wsRDFToStringEvent::wsRDFToStringEvent(WebShellInitContext* yourInitContext, 
+                                       PRUint32 yourNativeRDFNode) :
+        nsActionEvent(),
+        mInitContext(yourInitContext), mNativeRDFNode(yourNativeRDFNode)
+{
+}
+
+void *
+wsRDFToStringEvent::handleEvent ()
+{
+    if (!mInitContext) {
+        return (void *) NS_ERROR_UNEXPECTED;
+    }
+    nsCOMPtr<nsIRDFResource> currentResource = 
+        (nsIRDFResource *) mNativeRDFNode;
+    nsCOMPtr<nsIRDFNode> node;
+    nsCOMPtr<nsIRDFLiteral> literal;
+    jstring result = nsnull;
+    PRBool isContainer = PR_FALSE;
+    nsresult rv;
+    const PRUnichar *textForNode = nsnull;
+    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
+
+    rv = gRDFCU->IsContainer(gBookmarksDataSource, currentResource, 
+                             &isContainer);
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativeToString: Can't tell if RDFResource is container.");
+        return nsnull;
+    }
+    
+    if (isContainer) {
+        // It's a bookmarks folder
+        rv = gBookmarksDataSource->GetTarget(currentResource,
+                                             kNC_Name, PR_TRUE, 
+                                             getter_AddRefs(node));
+        // get the name of the folder
+        if (rv == 0) {
+            // if so, make sure it's an nsIRDFLiteral
+            rv = node->QueryInterface(NS_GET_IID(nsIRDFLiteral), 
+                                      getter_AddRefs(literal));
+            if (NS_SUCCEEDED(rv)) {
+                rv = literal->GetValueConst(&textForNode);
+            }
+            else {
+                if (prLogModuleInfo) {
+                    PR_LOG(prLogModuleInfo, 3, 
+                           ("nativeToString: node is not an nsIRDFLiteral.\n"));
+                }
+            }
+        }
+    }
+    else {
+        // It's a bookmark or a Separator
+        rv = gBookmarksDataSource->GetTarget(currentResource,
+                                             kNC_URL, PR_TRUE, 
+                                             getter_AddRefs(node));
+        // See if it has a Name
+        if (0 != rv) {
+            rv = gBookmarksDataSource->GetTarget(currentResource,
+                                                 kNC_Name, PR_TRUE, 
+                                                 getter_AddRefs(node));
+        }
+        
+        if (0 == rv) {
+            rv = node->QueryInterface(NS_GET_IID(nsIRDFLiteral), 
+                                      getter_AddRefs(literal));
+            if (NS_SUCCEEDED(rv)) {
+                // get the value of the literal
+                rv = literal->GetValueConst(&textForNode);
+                if (NS_FAILED(rv)) {
+                    if (prLogModuleInfo) {
+                        PR_LOG(prLogModuleInfo, 3, 
+                               ("nativeToString: node doesn't have a value.\n"));
+                    }
+                }
+            }
+            else {
+                if (prLogModuleInfo) {
+                    PR_LOG(prLogModuleInfo, 3, 
+                           ("nativeToString: node is not an nsIRDFLiteral.\n"));
+                }
+            }
+        }
+        else {
+            if (prLogModuleInfo) {
+                PR_LOG(prLogModuleInfo, 3, 
+                       ("nativeToString: node doesn't have a URL.\n"));
+            }
+        }
+    }
+
+    if (nsnull != textForNode) {
+        nsString * string = new nsString(textForNode);
+        int length = 0;
+        if (nsnull != string) {
+            length = string->Length();
+        }
+
+        result = ::util_NewString(env, (const jchar *) textForNode, length);
+    }
+    else {
+        result = ::util_NewStringUTF(env, "");
+    }
+
+    return (void *) result;
+} // handleEvent()
+
+wsRDFInsertElementAtEvent::wsRDFInsertElementAtEvent(WebShellInitContext* yourInitContext, 
+                                                     PRUint32 yourParentRDFNode, 
+                                                     PRUint32 yourChildRDFNode, 
+                                                     PRUint32 yourChildIndex) :
+        nsActionEvent(),
+        mInitContext(yourInitContext), mParentRDFNode(yourParentRDFNode),
+        mChildRDFNode(yourChildRDFNode), mChildIndex(yourChildIndex)
+{
+}
+
+void *
+wsRDFInsertElementAtEvent::handleEvent ()
+{
+    if (!mInitContext) {
+        return (void *) NS_ERROR_UNEXPECTED;
+    }
+    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
+    nsCOMPtr<nsIRDFResource> parent = (nsIRDFResource *) mParentRDFNode;
+    nsCOMPtr<nsIRDFResource> newChild = (nsIRDFResource *) mChildRDFNode;
+    nsCOMPtr<nsIRDFContainer> container;
+    nsresult rv;
+    PRBool isContainer;
+    
+    rv = gRDFCU->IsContainer(gBookmarksDataSource, parent, 
+                             &isContainer);
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativeNewRDFNode: RDFResource is not a container.");
+        return (void *) NS_ERROR_UNEXPECTED;
+    }
+
+    PR_ASSERT(gComponentManager);
+
+    // get a container in order to create a child
+    rv = gComponentManager->CreateInstance(kRDFContainerCID,
+                                           nsnull,
+                                           NS_GET_IID(nsIRDFContainer),
+                                           getter_AddRefs(container));
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativeNewRDFNode: can't create container.");
+        return (void *) NS_ERROR_UNEXPECTED;
+    }
+    rv = container->Init(gBookmarksDataSource, parent);
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativeNewRDFNode: can't create container.");
+        return (void *) NS_ERROR_UNEXPECTED;
+    }
+
+    rv = container->InsertElementAt(newChild, mChildIndex, PR_TRUE);
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativeNewRDFNode: can't insert element into parent container.");
+        return (void *) NS_ERROR_UNEXPECTED;
+    }
+
+    return (void *) NS_OK;
+} // handleEvent()
+
+wsRDFHasMoreElementsEvent::wsRDFHasMoreElementsEvent(WebShellInitContext* yourInitContext,
+                                                     PRUint32 yourNativeRDFNode,
+                                                     void *yourJobject) :
+        nsActionEvent(),
+        mInitContext(yourInitContext), mNativeRDFNode(yourNativeRDFNode),
+        mJobject(yourJobject)
+{
+}
+
+void *
+wsRDFHasMoreElementsEvent::handleEvent ()
+{
+    if (!mInitContext) {
+        return (void *) NS_ERROR_UNEXPECTED;
+    }
+    nsresult rv;
+    jboolean result = JNI_FALSE;
+    PRBool prResult = PR_FALSE;
+    // assert -1 != nativeRDFNode
+    jint nativeEnum;
+    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
+    
+    if (-1 == (nativeEnum = getNativeEnumFromJava(env, (jobject) mJobject, 
+                                                  mNativeRDFNode))) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativeHasMoreElements: Can't get nativeEnum from nativeRDFNode.");
+        return (void *) NS_ERROR_UNEXPECTED;
+    }
+    
+    nsCOMPtr<nsISimpleEnumerator> enumerator = (nsISimpleEnumerator *)nativeEnum;
+    rv = enumerator->HasMoreElements(&prResult);
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativeHasMoreElements: Can't ask nsISimpleEnumerator->HasMoreElements().");
+        return (void *) NS_ERROR_UNEXPECTED;
+    }
+    result = (PR_FALSE == prResult) ? JNI_FALSE : JNI_TRUE;
+    
+    return (void *) result;
+    
+} // handleEvent()
+
+wsRDFNextElementEvent::wsRDFNextElementEvent(WebShellInitContext* yourInitContext,
+                                             PRUint32 yourNativeRDFNode,
+                                             void *yourJobject) :
+    nsActionEvent(),
+    mInitContext(yourInitContext), mNativeRDFNode(yourNativeRDFNode),
+    mJobject(yourJobject)
+{
+}
+
+void *
+wsRDFNextElementEvent::handleEvent ()
+{
+    if (!mInitContext) {
+        return (void *) NS_ERROR_UNEXPECTED;
+    }
+    nsresult rv;
+    jint result = -1;
+    PRBool hasMoreElements = PR_FALSE;
+    // assert -1 != nativeRDFNode
+    jint nativeEnum;
+    nsCOMPtr<nsISupports> supportsResult;
+    nsCOMPtr<nsIRDFNode> nodeResult;
+    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
+    
+    if (-1 == (nativeEnum = getNativeEnumFromJava(env, (jobject) mJobject, 
+                                                  mNativeRDFNode))) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativeNextElement: Can't get nativeEnum from nativeRDFNode.");
+        return (void *) NS_ERROR_UNEXPECTED;
+    }
+    
+    nsCOMPtr<nsISimpleEnumerator> enumerator = (nsISimpleEnumerator *)nativeEnum;
+    rv = enumerator->HasMoreElements(&hasMoreElements);
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativeNextElement: Can't ask nsISimpleEnumerator->HasMoreElements().");
+        return (void *) NS_ERROR_UNEXPECTED;
+    }
+    
+    if (!hasMoreElements) {
+        return (void *) NS_ERROR_UNEXPECTED;
+    }
+    
+    rv = enumerator->GetNext(getter_AddRefs(supportsResult));
+    if (NS_FAILED(rv)) {
+        if (prLogModuleInfo) {
+            PR_LOG(prLogModuleInfo, 3, 
+                   ("Exception: nativeNextElement: Can't get next from enumerator.\n"));
+        }
+        return (void *) NS_ERROR_UNEXPECTED;
+    }
+    
+    // make sure it's an RDFNode
+    rv = supportsResult->QueryInterface(NS_GET_IID(nsIRDFNode), 
+                                        getter_AddRefs(nodeResult));
+    if (NS_FAILED(rv)) {
+        if (prLogModuleInfo) {
+            PR_LOG(prLogModuleInfo, 3, 
+                   ("Exception: nativeNextElement: next from enumerator is not an nsIRDFNode.\n"));
+        }
+        return (void *) NS_ERROR_UNEXPECTED;
+    }
+    
+    result = (jint)nodeResult.get();
+    ((nsISupports *)result)->AddRef();
+    return (void *) result;
+} // handleEvent()
 
 void *
 wsCopySelectionEvent::handleEvent ()
@@ -813,6 +1304,132 @@ wsCopySelectionEvent::wsCopySelectionEvent(nsIContentViewerEdit * contentViewerE
 {
 }
 
+wsRDFFinalizeEvent::wsRDFFinalizeEvent(void *yourJobject) :
+        nsActionEvent(),
+        mJobject(yourJobject)
+{
+}
 
-// EOF
+void *
+wsRDFFinalizeEvent::handleEvent ()
+{
+    if (!mJobject) {
+        return (void *) NS_ERROR_UNEXPECTED;
+    }
+    jint nativeEnum, nativeContainer;
+    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
 
+    // release the nsISimpleEnumerator
+    if (-1 == (nativeEnum = 
+               ::util_GetIntValueFromInstance(env, (jobject) mJobject, 
+                                              "nativeEnum"))) {
+        if (prLogModuleInfo) {
+            PR_LOG(prLogModuleInfo, 3, 
+                   ("nativeFinalize: Can't get fieldID for nativeEnum.\n"));
+        }
+        return (void *) NS_ERROR_UNEXPECTED;
+    }
+    nsCOMPtr<nsISimpleEnumerator> enumerator = 
+        (nsISimpleEnumerator *) nativeEnum;
+    ((nsISupports *)enumerator.get())->Release();
+    
+    // release the nsIRDFContainer
+    if (-1 == (nativeContainer = 
+               ::util_GetIntValueFromInstance(env, (jobject) mJobject, 
+                                              "nativeContainer"))) {
+        if (prLogModuleInfo) {
+            PR_LOG(prLogModuleInfo, 3, 
+                   ("nativeFinalize: Can't get fieldID for nativeContainerFieldID.\n"));
+        }
+        return (void *) NS_ERROR_UNEXPECTED;
+    }
+    nsCOMPtr<nsIRDFContainer> container = 
+        (nsIRDFContainer *) nativeContainer;
+    ((nsISupports *)container.get())->Release();
+
+    return (void *) NS_OK;
+} // handleEvent()
+
+//
+// Local functions
+//
+
+jint getNativeEnumFromJava(JNIEnv *env, jobject obj, jint nativeRDFNode)
+{
+    nsresult rv;
+    jint result = -1;
+
+    result = ::util_GetIntValueFromInstance(env, obj, "nativeEnum");
+
+    // if the field has been initialized, just return the value
+    if (-1 != result) {
+        // NORMAL EXIT 1
+        return result;
+    }
+
+    // else, we need to create the enum
+    nsCOMPtr<nsIRDFNode> node = (nsIRDFNode *) nativeRDFNode;
+    nsCOMPtr<nsIRDFResource> nodeResource;
+    nsCOMPtr<nsIRDFContainer> container;
+    nsCOMPtr<nsISimpleEnumerator> enumerator;
+
+    rv = node->QueryInterface(NS_GET_IID(nsIRDFResource), 
+                              getter_AddRefs(nodeResource));
+    if (NS_FAILED(rv)) {
+        if (prLogModuleInfo) {
+            PR_LOG(prLogModuleInfo, 3, 
+                   ("getNativeEnumFromJava: Argument nativeRDFNode isn't an nsIRDFResource.\n"));
+        }
+        return -1;
+    }
+
+    PR_ASSERT(gComponentManager);
+    
+    // get a container in order to get the enum
+    rv = gComponentManager->CreateInstance(kRDFContainerCID,
+                                           nsnull,
+                                           NS_GET_IID(nsIRDFContainer),
+                                           getter_AddRefs(container));
+    if (NS_FAILED(rv)) {
+        if (prLogModuleInfo) {
+            PR_LOG(prLogModuleInfo, 3, 
+                   ("recursiveResourceTraversal: can't get a new container\n"));
+        }
+        return -1;
+    }
+    
+    rv = container->Init(gBookmarksDataSource, nodeResource);
+    if (NS_FAILED(rv)) {
+        if (prLogModuleInfo) {
+            PR_LOG(prLogModuleInfo, 3, 
+                   ("getNativeEnumFromJava: Can't Init container.\n"));
+        }
+        return -1;
+    }
+
+    rv = container->GetElements(getter_AddRefs(enumerator));
+    if (NS_FAILED(rv)) {
+        if (prLogModuleInfo) {
+            PR_LOG(prLogModuleInfo, 3, 
+                   ("getNativeEnumFromJava: Can't get enumeration from container.\n"));
+        }
+        return -1;
+    }
+
+    // IMPORTANT: Store the enum back into java
+    ::util_SetIntValueForInstance(env,obj,"nativeEnum",(jint)enumerator.get());
+    // IMPORTANT: make sure it doesn't get deleted when it goes out of scope
+    ((nsISupports *)enumerator.get())->AddRef(); 
+
+    // PENDING(edburns): I'm not sure if we need to keep the
+    // nsIRDFContainer from being destructed in order to maintain the
+    // validity of the nsISimpleEnumerator that came from the container.
+    // Just to be safe, I'm doing so.
+    ::util_SetIntValueForInstance(env, obj, "nativeContainer", 
+                                  (jint) container.get());
+    ((nsISupports *)container.get())->AddRef();
+    
+    // NORMAL EXIT 2
+    result = (jint)enumerator.get();    
+    return result;
+}
