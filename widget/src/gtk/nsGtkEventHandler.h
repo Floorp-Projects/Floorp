@@ -36,6 +36,9 @@ gint handle_leave_notify_event(GtkWidget *w, GdkEventCrossing * event, gpointer 
 gint handle_key_release_event(GtkWidget *w, GdkEventKey* event, gpointer p);
 gint handle_key_press_event(GtkWidget *w, GdkEventKey* event, gpointer p);
 
+gint handle_focus_in_event(GtkWidget *w, GdkEventFocus * event, gpointer p);
+gint handle_focus_out_event(GtkWidget *w, GdkEventFocus * event, gpointer p);
+
 void handle_scrollbar_value_changed(GtkAdjustment *adjustment, gpointer p);
 
 

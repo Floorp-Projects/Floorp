@@ -72,8 +72,6 @@ class nsWidget : public nsBaseWidget
 
     NS_IMETHOD GetBounds(nsRect &aRect);
 
-    NS_IMETHOD SetBackgroundColor(const nscolor &aColor);
-
     nsIFontMetrics *GetFont(void);
     NS_IMETHOD SetFont(const nsFont &aFont);
 
@@ -82,8 +80,6 @@ class nsWidget : public nsBaseWidget
     NS_IMETHOD SetColorMap(nsColorMap *aColorMap);
 
     void* GetNativeData(PRUint32 aDataType);
-    nsIRenderingContext *GetRenderingContext(void);
-    nsIDeviceContext *GetDeviceContext(void);
 
     NS_IMETHOD WidgetToScreen(const nsRect &aOldRect, nsRect &aNewRect);
     NS_IMETHOD ScreenToWidget(const nsRect &aOldRect, nsRect &aNewRect);
@@ -100,7 +96,6 @@ class nsWidget : public nsBaseWidget
 
     NS_IMETHOD Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
     NS_IMETHOD SetMenuBar(nsIMenuBar *aMenuBar);
-    nsIAppShell *GetAppShell(void);
 
     NS_IMETHOD Invalidate(PRBool aIsSynchronous);
     NS_IMETHOD Invalidate(const nsRect &aRect, PRBool aIsSynchronous);

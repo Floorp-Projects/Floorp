@@ -258,31 +258,6 @@ NS_METHOD nsWidget::GetBounds(nsRect &aRect)
 
 //-------------------------------------------------------------------------
 //
-// Set the background color
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsWidget::SetBackgroundColor(const nscolor &aColor)
-{
-    GtkStyle *style;
-    GdkColor color;
-    mBackground = aColor;
-
-    nsBaseWidget::SetBackgroundColor(aColor);
-
-/* FIXME do we need the rest of this? (look at the windows code) */
-    NSCOLOR_TO_GDKCOLOR(color, aColor);
-#ifdef DBG
-    g_print("nsWidget::SetBackgroundColor %d %d %d\n", color.red, color.blue, color.green);
-#endif
-    style = gtk_style_copy(mWidget->style);
-    style->bg[GTK_STATE_NORMAL] = color;
-    gtk_widget_set_style(mWidget, style);
-
-    return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
 // Get this component font
 //
 //-------------------------------------------------------------------------
@@ -412,6 +387,7 @@ void *nsWidget::GetNativeData(PRUint32 aDataType)
 	      return res;
 	  }
       default:
+        g_print("nsWidget::GetNativeData(%i) - weird value\n", aDataType);
 	break;
     }
     return nsnull;
@@ -425,18 +401,6 @@ void *nsWidget::GetNativeData(PRUint32 aDataType)
 NS_METHOD nsWidget::SetColorMap(nsColorMap *aColorMap)
 {
     return NS_OK;
-}
-
-nsIDeviceContext* nsWidget::GetDeviceContext(void)
-{
-    NS_NOTYETIMPLEMENTED("nsWidget::GetDeviceContext");
-    return mContext;
-}
-
-nsIAppShell* nsWidget::GetAppShell(void)
-{
-    NS_NOTYETIMPLEMENTED("nsWidget::GetAppShell");
-    return nsnull;
 }
 
 NS_METHOD nsWidget::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
@@ -571,30 +535,7 @@ void nsWidget::InitCallbacks(char *aName)
     NS_NOTYETIMPLEMENTED("nsWidget::InitCallbacks");
 }
 
-nsIRenderingContext* nsWidget::GetRenderingContext()
-{
-    nsIRenderingContext * ctx = nsnull;
-
-    if (GetNativeData(NS_NATIVE_WIDGET)) {
-
-	nsresult  res;
-
-	static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
-	static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
-
-	res = nsRepository::CreateInstance(kRenderingContextCID, nsnull,
-					   kRenderingContextIID,
-					   (void **)&ctx);
-
-	if (NS_OK == res)
-	    ctx->Init(mContext, this);
-
-	NS_ASSERTION(NULL != ctx, "Null rendering context");
-    }
-
-    return ctx;
-}
-
+/* this is only used for nsWindow's */
 void nsWidget::CreateGC()
 {
   if (mWidget && !mGC)
