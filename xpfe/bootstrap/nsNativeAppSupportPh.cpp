@@ -35,6 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <dirent.h> //For random splash screen.
 #include "nsNativeAppSupport.h"
 
 #define PX_IMAGE_MODULES
@@ -101,6 +102,53 @@ public:
     nsrefcnt mRefCnt;
 }; // class nsSplashScreenPh
 
+char *RandomSplash( char *gob )
+{
+ int i=0;
+ int value=0;
+ int foundIT=0;
+ char duper[80];
+
+ DIR* dirp;
+ struct dirent* direntp;
+
+    dirp = opendir( gob );
+    if( dirp != NULL )
+    {
+        for(;;)
+        {
+            direntp = readdir( dirp );
+            if( direntp == NULL ) break;
+                i++;// number of available splash screens
+        }
+
+    closedir( dirp );
+
+    // generate random number based on currnet time
+    srand(time(NULL));
+    for(value = 0; value < 9999; value = rand());
+
+    dirp = opendir( gob );
+    if( dirp != NULL ) {
+        for(foundIT=1;foundIT<=i;foundIT++) {
+            direntp = readdir( dirp );
+            if( direntp == NULL ) break;
+            if( foundIT == value%i ) break;
+        }
+
+        closedir( dirp );
+
+        // return the original splash.bmp if the directory entries are "." or ".."
+        if (((value%i) == 1) || ((value%i) == 2))
+            return "../splash.bmp";
+
+        return direntp->d_name;
+    }
+
+
+    }
+    return (char *)EXIT_FAILURE;
+}
 
 NS_IMETHODIMP
 nsSplashScreenPh::Show()
@@ -108,12 +156,15 @@ nsSplashScreenPh::Show()
   PhImage_t  *img = nsnull;
   char       *p = NULL;
   char       *splash = NULL;
-  int         inp_grp;
+  //char       splash[80];
+  char       splashdir[80];
+  int         inp_grp,n=0;
   PhRid_t     rid;
   PhRegion_t  region;
   PhRect_t    rect;
   PRInt32     aWidth, aHeight;
   PhRect_t  console;
+  struct stat sbuf;
 
    /* Get the Screen Size and Depth, so I can center the splash dialog, there has to be a better way!*/
 	 p = getenv("PHIG");
@@ -136,8 +187,17 @@ nsSplashScreenPh::Show()
    /* Only try and open the splash screen bitmap if running exec'ing from mozilla shellscript*/
    splash = getenv ("ADDON_PATH");
    if ( splash )  {
-      strcat (splash,"/splash.bmp");
-      if (img = PxLoadImage(splash, NULL))
+	  // if ADDON_PATH/splash/ exists -- randomly choose a splash screen from here...
+	  strcpy (splashdir,"/opt/Mozilla/mozilla/splash/");
+      if( lstat( splashdir, &sbuf ) == 0)
+      {
+            strcpy (splash,splashdir);
+            strcat (splash,(char *)RandomSplash(splashdir));
+      }
+      else
+     	strcat (splash,"/splash.bmp");
+
+      if ((img = PxLoadImage(splash, NULL)) !=NULL )
       {
         PtArg_t     arg[6];
         PhPoint_t   pos;
@@ -150,19 +210,22 @@ nsSplashScreenPh::Show()
           pos.x += console.ul.x;
           pos.y += console.ul.y;
 
-          PtSetArg( &arg[0], Pt_ARG_DIM, &img->size, 0 );
-          PtSetArg( &arg[1], Pt_ARG_POS, &pos, 0 );
-          PtSetArg( &arg[2], Pt_ARG_WINDOW_RENDER_FLAGS, 0, 0xFFFFFFFF );
-          PtSetArg( &arg[3], Pt_ARG_FILL_COLOR, Pg_BLACK, 0 );
-          mDialog = PtCreateWidget( PtWindow, NULL, 4, arg );
+          PtSetArg( &arg[n], Pt_ARG_DIM, &img->size, 0 );
+          PtSetArg( &arg[++n], Pt_ARG_POS, &pos, 0 );
+          PtSetArg( &arg[++n], Pt_ARG_WINDOW_RENDER_FLAGS, 0, 0xFFFFFFFF );
+          PtSetArg( &arg[++n], Pt_ARG_FILL_COLOR, Pg_BLACK, 0 );
+          PtSetArg( &arg[++n], Pt_ARG_WINDOW_MANAGED_FLAGS, Ph_WM_CLOSE | Ph_WM_TOFRONT | Ph_WM_TOBACK | Ph_WM_MOVE, ~0 );
+          PtSetArg( &arg[++n], Pt_ARG_WINDOW_MANAGED_FLAGS, Ph_WM_RESIZE, ~0 );
+          mDialog = PtCreateWidget( PtWindow, NULL, n, arg );
 
-          PtSetArg( &arg[0], Pt_ARG_LABEL_TYPE, Pt_IMAGE, 0 );
-          PtSetArg( &arg[1], Pt_ARG_LABEL_DATA, img, sizeof(PhImage_t) );
-          PtSetArg( &arg[2], Pt_ARG_BASIC_FLAGS, 0, 0xFFFFFFFF );
-          PtSetArg( &arg[3], Pt_ARG_FLAGS, 0, Pt_HIGHLIGHTED);
-          PtSetArg( &arg[4], Pt_ARG_MARGIN_HEIGHT, 0, 0);
-          PtSetArg( &arg[5], Pt_ARG_MARGIN_WIDTH, 0, 0);
-          PtCreateWidget( PtLabel, mDialog, 6, arg );
+          n=0;	
+          PtSetArg( &arg[n], Pt_ARG_LABEL_TYPE, Pt_IMAGE, 0 );
+          PtSetArg( &arg[++n], Pt_ARG_LABEL_DATA, img, sizeof(PhImage_t) );
+          PtSetArg( &arg[++n], Pt_ARG_BASIC_FLAGS, 0, 0xFFFFFFFF );
+          PtSetArg( &arg[++n], Pt_ARG_FLAGS, 0, Pt_HIGHLIGHTED);
+          PtSetArg( &arg[++n], Pt_ARG_MARGIN_HEIGHT, 0, 0);
+          PtSetArg( &arg[++n], Pt_ARG_MARGIN_WIDTH, 0, 0);
+          PtCreateWidget( PtLabel, mDialog, n, arg );
           PtRealizeWidget( mDialog );
           PtFlush();
       }
