@@ -10,9 +10,9 @@ ARCH			:= qnx
 CPU_ARCH		:= x86
 GFX_ARCH		:= x
 
-ifdef NS_USE_NATIVE
+ifndef NS_USE_GCC
 CC			= cc
-CCC			= 
+CCC			= cc
 endif
 BSDECHO			= echo
 EMACS			= true
