@@ -55,6 +55,7 @@
 #include "nsImageBeOS.h" 
 #include "nsFontList.h"
 #include "nsPrintSession.h"
+#include "gfxImageFrame.h"
 
 // objects that just require generic constructors 
 
@@ -72,6 +73,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerBeOS)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrinterEnumeratorBeOS) 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrintOptionsBeOS)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(gfxImageFrame)
  
 // our custom constructors 
  
@@ -189,7 +191,11 @@ static const nsModuleComponentInfo components[] =
   { "Print Session",
     NS_PRINTSESSION_CID,
     "@mozilla.org/gfx/printsession;1",
-    nsPrintSessionConstructor }
+    nsPrintSessionConstructor },
+  { "windows image frame",
+    GFX_IMAGEFRAME_CID,
+    "@mozilla.org/gfx/image/frame;2",
+    gfxImageFrameConstructor, },
 };   
 
 NS_IMPL_NSGETMODULE(nsGfxBeOSModule, components) 

@@ -65,6 +65,7 @@ INCLUDES	+= $(TK_CFLAGS)
 
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) $(MOZ_JS_LIBS) \
 	-lgkgfx \
+	-lgfxshared_s \
 	$(XPCOM_LIBS) \
 	$(TK_LIBS) \
 	$(NSPR_LIBS)
@@ -72,4 +73,5 @@ EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) $(MOZ_JS_LIBS) \
 INCLUDES       += \
 	-I$(srcdir)/. \
 	-I$(srcdir)/.. \
+	-I$(srcdir)/../shared \
 	$(NULL)
