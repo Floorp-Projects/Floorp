@@ -33,10 +33,10 @@ NS_HashNumber(const void* key)
 PR_CALLBACK PRIntn
 NS_RemoveFrameInfoEntries(PLHashEntry* he, PRIntn i, void* arg)
 {
-  SpaceManager::BandRect* bandRect = (SpaceManager::BandRect*)he->value;
+  SpaceManager::FrameInfo* frameInfo = (SpaceManager::FrameInfo*)he->value;
 
-  NS_ASSERTION(nsnull != bandRect, "null band rect");
-  delete bandRect;
+  NS_ASSERTION(nsnull != frameInfo, "null frameInfo");
+  delete frameInfo;
   return HT_ENUMERATE_REMOVE;
 }
 
