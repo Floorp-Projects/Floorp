@@ -95,7 +95,15 @@ function Startup()
 function InitDialog()
 {
   dialog.TitleInput.value = editorShell.GetDocumentTitle();
-  dialog.AuthorInput.value = authorElement.getAttribute("content");
+  var author = authorElement.getAttribute("content").trimString();
+  if (author.length == 0)
+  {
+    // Fill in with value from editor prefs
+    var prefs = GetPrefs();
+    if (prefs) 
+      author = prefs.CopyCharPref("editor.author");
+  }
+  dialog.AuthorInput.value = author;
   dialog.DescriptionInput.value = descriptionElement.getAttribute("content");
 }
 

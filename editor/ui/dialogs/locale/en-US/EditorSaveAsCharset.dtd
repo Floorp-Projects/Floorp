@@ -27,7 +27,7 @@
 <!-- These strings are for use specifically in the editor's link dialog. -->
 <!ENTITY windowTitle.label "Save As Charset">
 <!ENTITY documentTitleTitle.label "Page Title">
-<!ENTITY documentCharsetTitle.label "Document Charset">
+<!ENTITY documentCharsetTitle.label "Character Set">
 <!ENTITY documentCharsetDesc.label "Select the charset you want to save as:">
 
 

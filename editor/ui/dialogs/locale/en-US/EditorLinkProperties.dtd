@@ -27,5 +27,4 @@
 <!ENTITY NamedAnchorMsg.label "or select a Named Anchor:">
 <!ENTITY HeadingMsg.label "or select a Heading:">
 <!ENTITY HeadingMsg2.label "(A named anchor will be created automatically)">
-
-
+<!ENTITY RemoveLinkMsg.label "(Clear text to remove existing link from page.)">

@@ -23,6 +23,7 @@
 var anchorElement = null;
 var imageElement = null;
 var insertNew = false;
+var replaceExistingLink = false;
 var insertLinkAtCaret;
 var needLinkText = false;
 var href;
@@ -62,7 +63,6 @@ function Startup()
   dialog.MoreSection         = document.getElementById("MoreSection");
   dialog.MoreFewerButton     = document.getElementById("MoreFewerButton");
   dialog.AdvancedEditSection = document.getElementById("AdvancedEdit");
-  dialog.ok                  = document.getElementById("ok");
 
   var selection = editorShell.editorSelection;
   if (selection)
@@ -86,7 +86,8 @@ dump("Selected imageElement="+imageElement+"\n");
         //  this image away by inserting a new link around it,
         //  so make a new node and copy existing attributes
         anchorElement = anchorElement.cloneNode(false);
-        insertNew = true;
+        //insertNew = true;
+        replaceExistingLink = true;
       }
     }
   }
@@ -122,7 +123,8 @@ dump("Selected element="+anchorElement+"\n");
         // But clone it for reinserting/merging around existing
         //   link that only partially overlaps the selection
         anchorElement = anchorElement.cloneNode(false);
-        insertNew = true;
+        //insertNew = true;
+        replaceExistingLink = true;
       }
     }
   }
@@ -132,6 +134,8 @@ dump("Selected element="+anchorElement+"\n");
     // No existing link -- create a new one
     anchorElement = editorShell.CreateElementWithDefaults(tagName);
     insertNew = true;
+    // Hide message about removing existing link
+    document.getElementById("RemoveLinkMsg").setAttribute("hidden","true");
   }
   if(!anchorElement)
   {
@@ -148,9 +152,6 @@ dump("Selected element="+anchorElement+"\n");
     dialog.linkTextCaption.setAttribute("value",GetString("LinkText"));
     // Message above input field:
     dialog.linkTextMessage.setAttribute("value", GetString("EnterLinkText"));
-    
-    // This sets enable state on OK button
-    ChangeText();
   }
   else
   {
@@ -217,7 +218,11 @@ dump("Selected element="+anchorElement+"\n");
     dialog.linkTextInput.setAttribute("hidden","true");
     dialog.linkTextInput = null;
   }
+
   InitMoreFewer();
+    
+  // This sets enable state on OK button
+  ChangeText();
 }
 
 // Set dialog widgets with attribute data
@@ -308,10 +313,16 @@ function FillListboxes()
 
 function ChangeText()
 {
-  if (insertLinkAtCaret)
+  // Set OK button enable state only if inserting a new link
+  // (allow empty location to remove existing link)
+  if (insertNew)
   {
-    var text = dialog.linkTextInput.value.trimString();
-    SetElementEnabledById( "ok", (text.length > 0));
+    var enable = true;
+    if (insertLinkAtCaret)
+      enable = dialog.linkTextInput.value.trimString().length > 0;
+    if (enable)
+      enable = dialog.hrefInput.value.trimString().length > 0;
+    SetElementEnabledById( "ok", enable);
   }
 }
 
@@ -320,6 +331,9 @@ function ChangeLocation()
   // Unselect the treelists
   UnselectNamedAnchor();
   UnselectHeadings();
+  
+  // Set OK button enable state
+  ChangeText();
 }
 
 function GetExistingHeadingIndex(text)
@@ -435,7 +449,7 @@ function onOK()
           dump("Exception occured in InsertElementAtSelection\n");
           return true;
         }
-      } else if (insertNew)
+      } else if (insertNew || replaceExistingLink)
       {
         //  Link source was supplied by the selection,
         //  so insert a link node as parent of this

@@ -22,7 +22,6 @@
 
 <!ENTITY windowTitle.label "Named Anchor Properties">
 <!ENTITY anchorNameEditField.label "Anchor Name:">
-<!ENTITY noSpacesMsg.label "(Spaces are not allowed.)">
 <!ENTITY nameInput.tooltip "Enter a unique name for this named anchor (target)">
 
 

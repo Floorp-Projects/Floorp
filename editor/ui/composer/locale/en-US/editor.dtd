@@ -45,5 +45,5 @@
 <!-- Display Mode Toolbar -->
 <!ENTITY editMode.label "Edit Mode:">
 
-<!ENTITY statusText.label "Document: Done">
+<!ENTITY statusText.label "Done loading page">
 

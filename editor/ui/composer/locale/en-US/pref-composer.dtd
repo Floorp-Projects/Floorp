@@ -22,7 +22,7 @@
 
 <!ENTITY  savingFiles.title           "When Saving Files">
 <!ENTITY  preserveExistingFormatting  "Retain HTML framework">
-<!ENTITY  preserveExistingFormatting.tooltip    "Preserves line breaks and document's original structure ">
+<!ENTITY  preserveExistingFormatting.tooltip    "Preserves line breaks and page's original structure ">
 
 <!ENTITY  saving                    "Saving">
 <!ENTITY  AutoSaveCheck             "Automatically save every">
@@ -34,4 +34,4 @@
 <!ENTITY  chooseButton.label        "Choose">
 
 <!ENTITY  recentFiles.title         "Recent Pages Menu">
-<!ENTITY  documentsInMenu           "Max number of documents listed:">
+<!ENTITY  documentsInMenu           "Max number of pages listed:">
