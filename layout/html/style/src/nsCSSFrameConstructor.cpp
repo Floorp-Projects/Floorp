@@ -1280,7 +1280,9 @@ nsCSSFrameConstructor::ConstructTableGroupFrameOnly(nsIPresContext*          aPr
         CreateAnonymousXULContent(aPresContext, tag, aState, aContent, aNewGroupFrame,
                                   childItems);
 
-        if (styleDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_ROW_GROUP) {
+		const nsStyleDisplay *parentDisplay;
+        aParentFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)parentDisplay);
+        if (parentDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_ROW_GROUP) {
           // We're the child of another row group. If it's lazy, we're lazy.
           nsTreeRowGroupFrame* treeFrame = (nsTreeRowGroupFrame*)aParentFrame;
           if (treeFrame->IsLazy()) {
