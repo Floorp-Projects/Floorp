@@ -34,6 +34,8 @@ class nsIDOMTextListener : public nsIDOMEventListener {
 
 public:
 
+    static const nsIID& GetIID() { static nsIID iid = NS_IDOMTEXTLISTENER_IID; return iid; }
+
     virtual nsresult HandleText(nsIDOMEvent* aTextEvent) = 0;
 
 };
