@@ -744,10 +744,16 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
           availDropHgt -= (border.top + border.bottom + padding.top + padding.bottom);
 
           nscoord hgt = visibleHeight + border.top + border.bottom + padding.top + padding.bottom;
-          if (hgt > availDropHgt) {
-            visibleHeight = (availDropHgt / heightOfARow) * heightOfARow;
+          if (heightOfARow > 0) {
+            if (hgt > availDropHgt) {
+              visibleHeight = (availDropHgt / heightOfARow) * heightOfARow;
+            }
+            mNumDisplayRows = visibleHeight / heightOfARow;
+          } else {
+            // Hmmm, not sure what to do here. Punt, and make both of them one
+            visibleHeight   = 1;
+            mNumDisplayRows = 1;
           }
-          mNumDisplayRows = visibleHeight / heightOfARow;
         }
       }
     }
@@ -3072,6 +3078,7 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
 
   if (NS_SUCCEEDED(GetIndexFromDOMEvent(aMouseEvent, oldIndex, curIndex))) {
     if (IsInDropDownMode() == PR_TRUE) {
+#if 0 // Fix for Bug 50024
       // the pop up stole focus away from the webshell
       // now I am giving it back
       nsIFrame * parentFrame;
@@ -3099,6 +3106,7 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
       if (NS_SUCCEEDED(mPresContext->GetEventStateManager(getter_AddRefs(stateManager)))) {
         stateManager->ConsumeFocusEvents(PR_TRUE);
       }
+#endif
     } else {
       mSelectedIndex    = curIndex;
       mOldSelectedIndex = oldIndex;
@@ -3385,7 +3393,7 @@ nsListControlFrame::AdjustIndexForDisabledOpt(PRInt32 &anNewIndex, PRInt32 &anOl
   if (newIndex < bottom) {
     newIndex = 0;
   } else if (newIndex >= top) {
-    newIndex = aNumOptions;
+    newIndex = aNumOptions-1;
   }
 
 
@@ -3467,6 +3475,15 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
       REFLOW_DEBUG_MSG3("KeyCode: %c %d\n", code, code);
     }
 #endif
+    PRBool isControl = PR_FALSE;
+    PRBool isAlt     = PR_FALSE;
+    PRBool isMeta    = PR_FALSE;
+    keyEvent->GetCtrlKey(&isControl);
+    keyEvent->GetCtrlKey(&isAlt);
+    keyEvent->GetCtrlKey(&isMeta);
+    if (isControl || isAlt || isMeta) {
+      return NS_OK;
+    }
 
     keyEvent->GetShiftKey(&isShift);
 
@@ -3517,7 +3534,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
     case nsIDOMKeyEvent::DOM_VK_RIGHT: {
       REFLOW_DEBUG_MSG2("DOM_VK_DOWN mSelectedIndex: %d ", mSelectedIndex);
 
-      if (mSelectedIndex < (PRInt32)numOptions) {
+      if (mSelectedIndex < (PRInt32)(numOptions-1)) {
         PRBool wasDisabled;
         AdjustIndexForDisabledOpt(mSelectedIndex, mOldSelectedIndex, 
                                   doSetNewIndex, wasDisabled, 
@@ -3555,7 +3572,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
       } break;
 
     case nsIDOMKeyEvent::DOM_VK_PAGE_DOWN: {
-      if (mSelectedIndex < (PRInt32)numOptions) {
+      if (mSelectedIndex < (PRInt32)(numOptions-1)) {
         PRBool wasDisabled;
         AdjustIndexForDisabledOpt(mSelectedIndex, mOldSelectedIndex, 
                                   doSetNewIndex, wasDisabled, 
@@ -3626,7 +3643,12 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
     if (multipleSelections && isShift) {
       REFLOW_DEBUG_MSG2("mStartExtendedIndex: %d\n", mStartExtendedIndex);
 
-      if (mSelectedIndex < mStartExtendedIndex) {
+      // determine the direct it is moving and this if the select should be added to or not
+      PRBool appendSel = ((code == nsIDOMKeyEvent::DOM_VK_UP || code == nsIDOMKeyEvent::DOM_VK_LEFT) && 
+                          mSelectedIndex < mStartExtendedIndex) ||
+                         ((code == nsIDOMKeyEvent::DOM_VK_DOWN || code == nsIDOMKeyEvent::DOM_VK_RIGHT) && 
+                          mSelectedIndex > mStartExtendedIndex);
+      if (appendSel) {
         SetContentSelected(mSelectedIndex, PR_TRUE);
       } else {
         SetContentSelected(mSelectedIndex, PR_TRUE);
