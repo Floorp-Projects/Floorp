@@ -106,6 +106,7 @@ public:
     eColor_windowframe,
     eColor_windowtext,
 
+    eColor__moz_buttondefault,
     // Colors which will hopefully become CSS3
     eColor__moz_field,
     eColor__moz_fieldtext,
