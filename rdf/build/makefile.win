@@ -85,6 +85,7 @@ install:: $(DLL)
         $(MAKE_INSTALL) ..\resources\folder-open.gif $(DIST)\bin\res\rdf
         $(MAKE_INSTALL) ..\resources\folder-closed.gif $(DIST)\bin\res\rdf
         $(MAKE_INSTALL) ..\resources\document.gif $(DIST)\bin\res\rdf
+        $(MAKE_INSTALL) ..\resources\iefavorite.gif $(DIST)\bin\res\rdf
         $(MAKE_INSTALL) ..\resources\History\h1.hst $(DIST)\bin\res\rdf\History
         $(MAKE_INSTALL) ..\resources\dom-test-1.xul $(DIST)\bin\res\rdf
         $(MAKE_INSTALL) ..\resources\dom-test-2.xul $(DIST)\bin\res\rdf
