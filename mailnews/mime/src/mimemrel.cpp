@@ -842,8 +842,14 @@ flush_tag(MimeMultipartRelated* relobj)
         ptr2++;
       /* Compare the beginning of the word with "cid:". Yuck. */
       if (((ptr2 - buf) > 4) && 
-        (buf[0]=='c' && buf[1]=='i' && buf[2]=='d' && buf[3]==':'))
+        ((buf[0]=='c' || buf[0]=='C') && 
+         (buf[1]=='i' || buf[1]=='I') && 
+         (buf[2]=='d' || buf[2]=='D') && 
+          buf[3]==':'))
       {
+        // Make sure it's lowercase, otherwise it won't be found in the hash table
+        buf[0] = 'c'; buf[1] = 'i'; buf[2] = 'd';
+
         /* Null terminate the word so we can... */
         c = *ptr2;
         *ptr2 = '\0';
