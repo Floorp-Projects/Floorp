@@ -10,6 +10,7 @@
     <key id="goBackKbMac" xulkey="true" key="[" observes="Browser:Back"/>
     <key id="goForwardKbMac" xulkey="true" key="]" observes="Browser:Forward"/>
     <key id="stopMac" xulkey="true" key="." onkeypres="BrowserStop();"/>
+    <key id="key_reload" xulkey="true" key="r" observes="canReload"/>
   </keyset>  
 
 </overlay>
