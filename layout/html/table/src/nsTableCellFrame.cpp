@@ -95,7 +95,11 @@ void  nsTableCellFrame::VerticallyAlignChild(nsIPresContext* aPresContext)
   
   nscoord topInset = spacing->mBorderPadding.top;
   nscoord bottomInset = spacing->mBorderPadding.bottom;
-  PRUint8 verticalAlignFlags = textStyle->mVerticalAlignFlags;
+  PRUint8 verticalAlignFlags = NS_STYLE_VERTICAL_ALIGN_MIDDLE;
+  if (textStyle->mVerticalAlign.GetUnit() == eStyleUnit_Enumerated) {
+    verticalAlignFlags = textStyle->mVerticalAlign.GetIntValue();
+  }
+
   nscoord       height = mRect.height;
 
   nsRect        kidRect;  

@@ -565,7 +565,7 @@ void ImagePart::MapAttributesInto(nsIStyleContext* aContext,
       display->mFloats = NS_STYLE_FLOAT_RIGHT;
       break;
     default:
-      text->mVerticalAlignFlags = mAlign;
+      text->mVerticalAlign.Set(mAlign, eStyleUnit_Enumerated);
       break;
     }
   }
