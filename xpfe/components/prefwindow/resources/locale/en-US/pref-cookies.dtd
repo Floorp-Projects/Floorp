@@ -22,4 +22,7 @@
 <!ENTITY viewCookies.label              "View Stored Cookies">
 <!ENTITY viewCookies.accesskey          "v">
 
+<!ENTITY viewTutorial.label              "Understanding Privacy">
+<!ENTITY viewTutorial.accesskey          "u">
+
 
