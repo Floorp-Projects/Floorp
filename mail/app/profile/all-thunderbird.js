@@ -392,3 +392,6 @@ pref("browser.download.progressDnldDialog.enable_launch_reveal_buttons", false);
 pref("browser.urlbar.clickSelectsAll", false);
 #endif
 #endif
+
+// prevent status-bar spoofing even if people are foolish enough to turn on JS
+pref("dom.disable_window_status_change",          true);
