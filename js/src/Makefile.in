@@ -223,6 +223,8 @@ else
 	$(CC) -o $@ -c $(CFLAGS) $<
 endif
 
+ALL_TRASH += $(JSMATH_PRELINK)
+
 # ripped from $(topsrcdir)/config/rules.mk
 $(FDLIBM_LIBRARY):
 			set -e;					\
