@@ -59,22 +59,16 @@ Java_org_mozilla_webclient_wrapper_1native_BookmarksImpl_nativeNewRDFNode
     nsCOMPtr<nsIRDFResource> newNode;
     nsresult rv;
     jint result = -1;
-#ifdef XP_PC
-	nsAutoString uri(L"NC:BookmarksRoot");
-#else
-	nsAutoString uri(NS_LITERAL_STRING("NC:BookmarksRoot"));
-#endif
+	nsCAutoString uri("NC:BookmarksRoot");
     
-    const jchar *url = ::util_GetStringChars(env, urlString);
-#ifdef XP_PC
-	uri.Append(L"#$");
-#else
-	uri.Append(NS_LITERAL_STRING("#$"));
-#endif
+    const char *url = ::util_GetStringUTFChars(env, urlString);
+	uri.Append("#$");
 	uri.Append(url);
+    PRUnichar *uriUni = uri.ToNewUnicode();
     
-    rv = gRDF->GetUnicodeResource(uri.GetUnicode(), getter_AddRefs(newNode));
-    ::util_ReleaseStringChars(env, urlString, url);
+    rv = gRDF->GetUnicodeResource(uriUni, getter_AddRefs(newNode));
+    nsCRT::free(uriUni);
+    ::util_ReleaseStringUTFChars(env, urlString, url);
     if (NS_FAILED(rv)) {
         ::util_ThrowExceptionToJava(env, "Exception: nativeNewRDFNode: can't create new nsIRDFResource.");
         return result;
