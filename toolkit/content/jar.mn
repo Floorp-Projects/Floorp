@@ -1,0 +1,65 @@
+toolkit.jar:
++  content/global/MPL-1.1.html
++  content/global/contents.rdf
++  content/global-platform/contents.rdf       (contents-platform.rdf)
++  content/global-region/contents.rdf         (contents-region.rdf)
+*+ content/global/xul.css
++  content/global/buildconfig.html
++  content/global/charsetOverlay.js
++  content/global/charsetOverlay.xul
++  content/global/commonDialog.js
++  content/global/commonDialog.xul
+*  content/global/customizeCharset.js
+*  content/global/customizeCharset.xul
+   content/global/customizeToolbar.css
+*  content/global/customizeToolbar.js
+*  content/global/customizeToolbar.xul
++  content/global/editMenuOverlay.js
++  content/global/editMenuOverlay.xul
+*+ content/global/finddialog.js
+*+ content/global/finddialog.xul
+*+ content/global/findUtils.js
+*+ content/global/fontpackage.js
+*+ content/global/fontpackage.xul
++  content/global/globalOverlay.js
++  content/global/mozilla.xhtml
+*+ content/global/nsDragAndDrop.js
++  content/global/nsTransferable.js
+*+ content/global/nsWidgetStateManager.js
++  content/global/selectDialog.js
++  content/global/selectDialog.xul
+*+ content/global/viewZoomOverlay.js
+*  content/global/widgets/autocomplete.xml    (widgets/autocomplete.xml)
+*  content/global/widgets/browser.xml         (widgets/browser.xml)
+*  content/global/widgets/browserUtils.xml    (widgets/browserUtils.xml)
+*  content/global/widgets/button.xml          (widgets/button.xml)
+*  content/global/widgets/checkbox.xml        (widgets/checkbox.xml)
+*  content/global/widgets/colorpicker.xml     (widgets/colorpicker.xml)
+*  content/global/widgets/dialog.xml          (widgets/dialog.xml)
+*  content/global/widgets/editor.xml          (widgets/editor.xml)
+*  content/global/widgets/expander.xml        (widgets/expander.xml)
+*  content/global/widgets/general.xml         (widgets/general.xml)
+*  content/global/widgets/groupbox.xml        (widgets/groupbox.xml)
+*  content/global/widgets/listbox.xml         (widgets/listbox.xml)
+*  content/global/widgets/menu.xml            (widgets/menu.xml)
+*  content/global/widgets/menulist.xml        (widgets/menulist.xml)
+*  content/global/widgets/nativescrollbar.xml (widgets/nativescrollbar.xml)
+*  content/global/widgets/popup.xml           (widgets/popup.xml)
+*  content/global/widgets/progressmeter.xml   (widgets/progressmeter.xml)
+*  content/global/widgets/radio.xml           (widgets/radio.xml)
+*  content/global/widgets/scrollbar.xml       (widgets/scrollbar.xml)
+*  content/global/widgets/scrollbox.xml       (widgets/scrollbox.xml)
+*  content/global/widgets/splitter.xml        (widgets/splitter.xml)
+*  content/global/widgets/spinbuttons.xml     (widgets/spinbuttons.xml)
+*  content/global/widgets/stringbundle.xml    (widgets/stringbundle.xml)
+*  content/global/widgets/tabbox.xml          (widgets/tabbox.xml)
+*  content/global/widgets/tabbrowser.xml      (widgets/tabbrowser.xml)
+*  content/global/widgets/text.xml            (widgets/text.xml)
+*  content/global/widgets/textbox.xml         (widgets/textbox.xml)
+*  content/global/widgets/toolbar.xml         (widgets/toolbar.xml)
+*  content/global/widgets/toolbarbutton.xml   (widgets/toolbarbutton.xml)
+*  content/global/widgets/tree.xml            (widgets/tree.xml)
+*  content/global/widgets/wizard.xml          (widgets/wizard.xml)
+   content/global/widgets/autoscroll_all.png  (widgets/autoscroll_all.png)
+   content/global/widgets/autoscroll_h.png    (widgets/autoscroll_h.png)
+   content/global/widgets/autoscroll_v.png    (widgets/autoscroll_v.png)
