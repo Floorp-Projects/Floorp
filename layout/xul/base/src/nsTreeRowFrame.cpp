@@ -175,7 +175,7 @@ nsTreeRowFrame::Reflow(nsIPresContext&          aPresContext,
 							         const nsHTMLReflowState& aReflowState,
 							         nsReflowStatus&          aStatus)
 {
-
+/*
   if (aReflowState.reason != eReflowReason_Incremental) {
     // Determine the row's generation.
     nsTableFrame* tableFrame;
@@ -193,7 +193,7 @@ nsTreeRowFrame::Reflow(nsIPresContext&          aPresContext,
       }
     }
   }
-
+*/
  /* static int i = 0;
   i++;
   printf("Full row reflow! Number %d\n", i);
