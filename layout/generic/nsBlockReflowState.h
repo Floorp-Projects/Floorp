@@ -5984,18 +5984,20 @@ nsBlockFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                                const nsPoint& aPoint,
                                nsIFrame** aFrame)
 {
-  nsresult rv = GetFrameForPointUsing(aPresContext, aPoint, nsnull, aFrame);
+  nsresult rv;
+
+  if (mFloaters.NotEmpty()) {
+    rv = GetFrameForPointUsing(aPresContext, aPoint, nsLayoutAtoms::floaterList, aFrame);
+    if (NS_OK == rv) {
+      return NS_OK;
+    }
+  }
+  rv = GetFrameForPointUsing(aPresContext, aPoint, nsnull, aFrame);
   if (NS_OK == rv) {
     return NS_OK;
   }
   if (nsnull != mBullet) {
     rv = GetFrameForPointUsing(aPresContext, aPoint, nsLayoutAtoms::bulletList, aFrame);
-    if (NS_OK == rv) {
-      return NS_OK;
-    }
-  }
-  if (mFloaters.NotEmpty()) {
-    rv = GetFrameForPointUsing(aPresContext, aPoint, nsLayoutAtoms::floaterList, aFrame);
     if (NS_OK == rv) {
       return NS_OK;
     }

@@ -3731,6 +3731,14 @@ nsEnderEventListener::MouseOut(nsIDOMEvent* aEvent)
 nsresult
 nsEnderEventListener::Focus(nsIDOMEvent* aEvent)
 {
+  //Need to set text value for onchange
+  nsGfxTextControlFrame *gfxFrame = mFrame.Reference();
+
+  if (gfxFrame && mContent && mView) {
+    mTextValue = "";
+    gfxFrame->GetText(&mTextValue, PR_FALSE);
+  }
+
   /*
   // In this case, the focus has all ready been set because of the mouse down
   // and setting it on the native widget causes an event to be dispatched
@@ -3802,7 +3810,7 @@ nsEnderEventListener::Focus(nsIDOMEvent* aEvent)
 nsresult
 nsEnderEventListener::Blur(nsIDOMEvent* aEvent)
 {
-/*
+
   nsCOMPtr<nsIDOMUIEvent>uiEvent;
   uiEvent = do_QueryInterface(aEvent);
   if (!uiEvent) {
@@ -3811,16 +3819,14 @@ nsEnderEventListener::Blur(nsIDOMEvent* aEvent)
 
   nsGfxTextControlFrame *gfxFrame = mFrame.Reference();
 
-  if (gfxFrame && mContent && mView)
-  {
+  if (gfxFrame && mContent && mView) {
     nsString currentValue;
     gfxFrame->GetText(&currentValue, PR_FALSE);
-    if (PR_FALSE==currentValue.Equals(mTextValue))
-    {
+    if (PR_FALSE==currentValue.Equals(mTextValue)) {
       // Dispatch the change event
       nsEventStatus status = nsEventStatus_eIgnore;
-      nsGUIEvent event;
-      event.eventStructType = NS_GUI_EVENT;
+      nsInputEvent event;
+      event.eventStructType = NS_INPUT_EVENT;
       event.widget = nsnull;
       event.message = NS_FORM_CHANGE;
       event.flags = NS_EVENT_FLAG_INIT;
@@ -3832,7 +3838,8 @@ nsEnderEventListener::Blur(nsIDOMEvent* aEvent)
       // Have the content handle the event.
       mContent->HandleDOMEvent(mContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
     }
-
+  }
+/*
     // XXX No longer dispatching event
     // this notification has already taken place
     // this causes two blur notifcations to be sent

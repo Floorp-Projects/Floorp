@@ -269,18 +269,13 @@ nsContainerFrame::GetFrameForPointUsing(nsIPresContext* aPresContext,
       if (NS_SUCCEEDED(rv) && *aFrame) {
         // We found the target frame somewhere in the child frame.
         childFrame = *aFrame;
+        break;
       }
       else {
         // We didn't find the target frame in any of the children,
         // but save the fact that this kid contains the point.
         childFrame = kid;
       }
-
-      // We need to break out of this loop and look elsewhere so that
-      // situations where overlap occurs (e.g. floaters overlapping
-      // the background of a block element) find the floater.
-
-      break;
     }
     kid->GetNextSibling(&kid);
   }
