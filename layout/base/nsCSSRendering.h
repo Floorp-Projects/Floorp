@@ -106,6 +106,17 @@ public:
 
 
   /**
+   * Fill in an nsStyleBackground to be used to paint the background for
+   * an element.  The nsStyleBackground should first be initialized
+   * using the pres context.  This applies the rules for propagating
+   * backgrounds between BODY, the root element, and the canvas.
+   */
+  static PRBool FindBackground(nsIPresContext* aPresContext,
+                               nsIFrame* aForFrame,
+                               const nsStyleBackground** aBackground,
+                               PRBool* aIsCanvas);
+
+  /**
    * Render the background for an element using css rendering rules
    * for backgrounds.
    *
@@ -117,10 +128,24 @@ public:
                               nsIFrame* aForFrame,
                               const nsRect& aDirtyRect,
                               const nsRect& aBorderArea,
-                              const nsStyleBackground& aColor,
                               const nsStyleBorder& aBorder,
                               nscoord aDX,
                               nscoord aDY);
+
+  /**
+   * Same as |PaintBackground|, except using the provided style context
+   * (which short-circuits the code that ensures that the root element's
+   * background is drawn on the canvas.
+   */
+  static void PaintBackgroundWithSC(nsIPresContext* aPresContext,
+                                    nsIRenderingContext& aRenderingContext,
+                                    nsIFrame* aForFrame,
+                                    const nsRect& aDirtyRect,
+                                    const nsRect& aBorderArea,
+                                    const nsStyleBackground& aColor,
+                                    const nsStyleBorder& aBorder,
+                                    nscoord aDX,
+                                    nscoord aDY);
 
   static void DrawDashedSides(PRIntn startSide,
                               nsIRenderingContext& aContext,

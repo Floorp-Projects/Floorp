@@ -66,21 +66,19 @@ nsLeafFrame::Paint(nsIPresContext*      aPresContext,
       (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
     
     if (vis->IsVisibleOrCollapsed()) {
-      const nsStyleBackground* myColor = (const nsStyleBackground*)
-        mStyleContext->GetStyleData(eStyleStruct_Background);
       const nsStyleBorder* myBorder = (const nsStyleBorder*)
         mStyleContext->GetStyleData(eStyleStruct_Border);
       const nsStyleOutline* myOutline = (const nsStyleOutline*)
         mStyleContext->GetStyleData(eStyleStruct_Outline);
       nsRect rect(0, 0, mRect.width, mRect.height);
       nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                      aDirtyRect, rect, *myColor, *myBorder, 0, 0);
-
+                                      aDirtyRect, rect, *myBorder, 0, 0);
       nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                  aDirtyRect, rect, *myBorder, mStyleContext, 0);
-
+                                  aDirtyRect, rect, *myBorder,
+                                  mStyleContext, 0);
       nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
-                                  aDirtyRect, rect, *myBorder, *myOutline, mStyleContext, 0);
+                                   aDirtyRect, rect, *myBorder,
+                                   *myOutline, mStyleContext, 0);
     }
   }
   DO_GLOBAL_REFLOW_COUNT_DSP("nsLeafFrame", &aRenderingContext);

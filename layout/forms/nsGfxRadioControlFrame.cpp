@@ -305,10 +305,14 @@ nsGfxRadioControlFrame::PaintRadioButton(nsIPresContext* aPresContext,
      // So we will use the PaintBackground to paint the dot, 
      // but it uses the mBackgroundColor for painting and we need to use the mColor
      // so create a temporary style color struct and set it up appropriately
+     // XXXldb It would make more sense to use
+     // |aRenderingContext.FillEllipse| here, but on at least GTK that
+     // doesn't draw a round enough circle.
      nsStyleBackground tmpColor     = *myColor;
      tmpColor.mBackgroundColor = color->mColor;
-     nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                        aDirtyRect, rect, tmpColor, *myBorder, 0, 0);
+     nsCSSRendering::PaintBackgroundWithSC(aPresContext, aRenderingContext,
+                                           this, aDirtyRect, rect,
+                                           tmpColor, *myBorder, 0, 0);
      nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                   aDirtyRect, rect, *myBorder, mRadioButtonFaceStyle, 0);
    }

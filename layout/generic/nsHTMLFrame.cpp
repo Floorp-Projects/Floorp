@@ -385,9 +385,6 @@ CanvasFrame::Paint(nsIPresContext*      aPresContext,
                    nsFramePaintLayer    aWhichLayer,
                    PRUint32             aFlags)
 {
-  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-    SetDefaultBackgroundColor(aPresContext);
-  }
   nsresult rv = nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 
   if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {

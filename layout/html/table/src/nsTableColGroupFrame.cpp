@@ -442,11 +442,9 @@ nsTableColGroupFrame::Paint(nsIPresContext*      aPresContext,
       if (vis->IsVisibleOrCollapsed()) {
         const nsStyleBorder* border =
           (const nsStyleBorder*)mStyleContext->GetStyleData(eStyleStruct_Border);
-        const nsStyleBackground* color =
-          (const nsStyleBackground*)mStyleContext->GetStyleData(eStyleStruct_Background);
         nsRect rect(0, 0, mRect.width, mRect.height);
         nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                        aDirtyRect, rect, *color, *border, 0, 0);
+                                        aDirtyRect, rect, *border, 0, 0);
       }
     }
   }

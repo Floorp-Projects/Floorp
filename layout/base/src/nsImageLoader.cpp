@@ -229,7 +229,6 @@ nsImageLoader::RedrawDirtyFrame(const nsRect* aDamageRect)
   const nsStyleBackground* bg = (const nsStyleBackground*)styleContext->GetStyleData(eStyleStruct_Background);
 
   if ((bg->mBackgroundFlags & NS_STYLE_BG_IMAGE_NONE) ||
-      (bg->mBackgroundFlags & NS_STYLE_BG_PROPAGATED_TO_PARENT) ||
       (bg->mBackgroundRepeat == NS_STYLE_BG_REPEAT_OFF)) {
     // The frame does not have a background image so we are free
     // to invalidate only the intersection of the damage rect and

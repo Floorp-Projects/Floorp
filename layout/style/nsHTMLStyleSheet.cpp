@@ -56,6 +56,8 @@
 #include "nsStyleConsts.h"
 #include "nsLayoutAtoms.h"
 #include "nsLayoutCID.h"
+#include "nsIDOMHTMLDocument.h"
+#include "nsIDOMHTMLElement.h"
 
 #include "nsRuleWalker.h"
 
@@ -102,13 +104,13 @@ public:
 #endif
 
   void Reset() {
-    mForegroundSet = PR_FALSE;
-    mBackgroundSet = PR_FALSE;
+    mInitialized = PR_FALSE;
   }
 
-  nscolor mBackgroundColor;
-  PRPackedBool mForegroundSet;
-  PRPackedBool mBackgroundSet;
+protected:
+  void Initialize(nsIPresContext* aPresContext);
+
+  PRBool mInitialized;
 };
 
 HTMLColorRule::HTMLColorRule(nsIHTMLStyleSheet* aSheet)
@@ -156,7 +158,7 @@ HTMLColorRule::GetStrength(PRInt32& aStrength) const
 NS_IMETHODIMP
 HTMLColorRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
-  if (aRuleData->mSID == eStyleStruct_Color && aRuleData->mColorData) {
+  if (aRuleData->mSID == eStyleStruct_Color) {
     if (aRuleData->mColorData->mColor.GetUnit() == eCSSUnit_Null)
       aRuleData->mColorData->mColor = nsCSSValue(mColor);
   }
@@ -222,15 +224,39 @@ HTMLDocumentColorRule::~HTMLDocumentColorRule()
 NS_IMETHODIMP
 HTMLDocumentColorRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
-  if (mForegroundSet && aRuleData->mSID == eStyleStruct_Color && aRuleData->mColorData) {
-    nsCSSValue val; val.SetColorValue(mColor);
-    aRuleData->mColorData->mColor = val;
-  }
-  else if (mBackgroundSet && aRuleData->mSID == eStyleStruct_Background && aRuleData->mColorData) {
-    nsCSSValue val; val.SetColorValue(mBackgroundColor);
-    aRuleData->mColorData->mBackColor = val;
+  if (aRuleData->mSID == eStyleStruct_Color) {
+    if (aRuleData->mColorData->mColor.GetUnit() == eCSSUnit_Null) {
+      if (!mInitialized)
+        Initialize(aRuleData->mPresContext);
+      nsCSSValue val; val.SetColorValue(mColor);
+      aRuleData->mColorData->mColor = val;
+    }
   }
   return NS_OK;
+}
+
+void
+HTMLDocumentColorRule::Initialize(nsIPresContext* aPresContext)
+{
+  aPresContext->GetDefaultColor(&mColor); // in case something below fails
+
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell));
+  nsCOMPtr<nsIDocument> doc;
+  shell->GetDocument(getter_AddRefs(doc));
+  nsCOMPtr<nsIDOMHTMLDocument> domdoc = do_QueryInterface(doc);
+  if (!domdoc)
+    return;
+  nsCOMPtr<nsIDOMHTMLElement> body;
+  domdoc->GetBody(getter_AddRefs(body));
+  nsCOMPtr<nsIContent> bodyContent = do_QueryInterface(body);
+  nsIFrame *bodyFrame;
+  shell->GetPrimaryFrameFor(bodyContent, &bodyFrame);
+  if (!bodyFrame)
+    return;
+  const nsStyleColor *bodyColor;
+  ::GetStyleData(bodyFrame, &bodyColor);
+  mColor = bodyColor->mColor;
 }
 
 #ifdef DEBUG
@@ -574,13 +600,9 @@ public:
   NS_IMETHOD GetLinkColor(nscolor& aColor);
   NS_IMETHOD GetActiveLinkColor(nscolor& aColor);
   NS_IMETHOD GetVisitedLinkColor(nscolor& aColor);
-  NS_IMETHOD GetDocumentForegroundColor(nscolor& aColor);
-  NS_IMETHOD GetDocumentBackgroundColor(nscolor& aColor);
   NS_IMETHOD SetLinkColor(nscolor aColor);
   NS_IMETHOD SetActiveLinkColor(nscolor aColor);
   NS_IMETHOD SetVisitedLinkColor(nscolor aColor);
-  NS_IMETHOD SetDocumentForegroundColor(nscolor aColor);
-  NS_IMETHOD SetDocumentBackgroundColor(nscolor aColor);
 
   // Attribute management methods, aAttributes is an in/out param
   NS_IMETHOD SetAttributesFor(nsIHTMLContent* aContent, 
@@ -830,9 +852,6 @@ HTMLStyleSheetImpl::RulesMatching(ElementRuleProcessorData* aData,
         if (aData->mIsQuirkMode)
           ruleWalker->Forward(mDocumentColorRule);
       }
-      else if (tag == nsHTMLAtoms::html) {
-        ruleWalker->Forward(mDocumentColorRule);
-      }
     } // end html element
 
     // just get the style rules from the content
@@ -1035,26 +1054,6 @@ HTMLStyleSheetImpl::GetVisitedLinkColor(nscolor& aColor)
 }
 
 NS_IMETHODIMP
-HTMLStyleSheetImpl::GetDocumentForegroundColor(nscolor& aColor)
-{
-  if (!mDocumentColorRule->mForegroundSet)
-    return NS_HTML_STYLE_PROPERTY_NOT_THERE;
-
-  aColor = mDocumentColorRule->mColor;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLStyleSheetImpl::GetDocumentBackgroundColor(nscolor& aColor)
-{
-  if (!mDocumentColorRule->mBackgroundSet)
-    return NS_HTML_STYLE_PROPERTY_NOT_THERE;
-
-  aColor = mDocumentColorRule->mBackgroundColor;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 HTMLStyleSheetImpl::SetLinkColor(nscolor aColor)
 {
   if (!mLinkRule) {
@@ -1094,22 +1093,6 @@ HTMLStyleSheetImpl::SetVisitedLinkColor(nscolor aColor)
     NS_ADDREF(mVisitedRule);
   }
   mVisitedRule->mColor = aColor;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLStyleSheetImpl::SetDocumentForegroundColor(nscolor aColor)
-{
-  mDocumentColorRule->mColor = aColor;
-  mDocumentColorRule->mForegroundSet = PR_TRUE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLStyleSheetImpl::SetDocumentBackgroundColor(nscolor aColor)
-{
-  mDocumentColorRule->mBackgroundColor = aColor;
-  mDocumentColorRule->mBackgroundSet = PR_TRUE;
   return NS_OK;
 }
 

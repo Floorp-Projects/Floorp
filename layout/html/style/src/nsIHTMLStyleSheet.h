@@ -64,10 +64,6 @@ public:
   NS_IMETHOD SetActiveLinkColor(nscolor aColor) = 0;
   NS_IMETHOD GetVisitedLinkColor(nscolor& aColor) = 0;
   NS_IMETHOD SetVisitedLinkColor(nscolor aColor) = 0;
-  NS_IMETHOD GetDocumentForegroundColor(nscolor& aColor) = 0;
-  NS_IMETHOD SetDocumentForegroundColor(nscolor aColor) = 0;
-  NS_IMETHOD GetDocumentBackgroundColor(nscolor& aColor) = 0;
-  NS_IMETHOD SetDocumentBackgroundColor(nscolor aColor) = 0;
 
   // Attribute management methods
   NS_IMETHOD SetAttributesFor(nsIHTMLContent* aContent, 

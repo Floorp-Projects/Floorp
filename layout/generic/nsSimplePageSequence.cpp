@@ -234,11 +234,6 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext*          aPresContext,
 
   aStatus = NS_FRAME_COMPLETE;  // we're always complete
 
-  if (aReflowState.reason == eReflowReason_Initial) {
-    CacheBackground(aPresContext);
-  }
-
-
   nsCOMPtr<nsIPrintPreviewContext> ppContext = do_QueryInterface(aPresContext);
 
   // *** Special Override ***
@@ -1080,25 +1075,3 @@ nsSimplePageSequenceFrame::SetPageSizes(const nsRect& aRect, const nsMargin& aMa
   mPageData->mReflowRect   = aRect;
   mPageData->mReflowMargin = aMarginRect;
 }
-
-//------------------------------------------------------------------------------
-
-// Get the Style Data from the first child of this frame, the nsPageFrame
-// uses this to paint the background for printing
-// No return code, there not much we can do if this fails
-void
-nsSimplePageSequenceFrame::CacheBackground(nsIPresContext* aPresContext)
-{
-  nsIFrame* pageFrame = mFrames.FirstChild();
-  if (pageFrame == nsnull) {
-    return;
-  }
-
-  nsCOMPtr<nsIStyleContext> parentContext;
-  pageFrame->GetStyleContext(getter_AddRefs(parentContext));
-  mPageData->mBackground = (nsStyleBackground*)parentContext->GetStyleData(eStyleStruct_Background);
-}
-
-
-
-

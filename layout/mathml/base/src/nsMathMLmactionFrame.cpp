@@ -295,8 +295,6 @@ nsMathMLmactionFrame::Paint(nsIPresContext*      aPresContext,
     if (visib->IsVisible() && mRect.width && mRect.height) {
       // Paint our background and border
       PRIntn skipSides = GetSkipSides();
-      const nsStyleBackground* backg = (const nsStyleBackground*)
-        mStyleContext->GetStyleData(eStyleStruct_Background);
       const nsStyleBorder* border = (const nsStyleBorder*)
         mStyleContext->GetStyleData(eStyleStruct_Border);
       const nsStyleOutline* outline = (const nsStyleOutline*)
@@ -304,7 +302,7 @@ nsMathMLmactionFrame::Paint(nsIPresContext*      aPresContext,
 
       nsRect  rect(0, 0, mRect.width, mRect.height);
       nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                      aDirtyRect, rect, *backg, *border, 0, 0);
+                                      aDirtyRect, rect, *border, 0, 0);
       nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                   aDirtyRect, rect, *border, mStyleContext, skipSides);
       nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,

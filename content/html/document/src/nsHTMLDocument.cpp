@@ -2967,17 +2967,9 @@ nsHTMLDocument::GetBgColor(nsAWritableString& aBgColor)
 
   aBgColor.Truncate();
   result = GetBodyElement(&body);
-  if (NS_OK == result) {
+  if (NS_SUCCEEDED(result)) {
     result = body->GetBgColor(aBgColor);
     NS_RELEASE(body);
-  }
-  else if (nsnull != mAttrStyleSheet) {
-    nscolor color;
-    result = mAttrStyleSheet->GetDocumentBackgroundColor(color);
-    if (NS_OK == result) {
-      nsHTMLValue value(color);
-      nsGenericHTMLElement::ColorToString(value, aBgColor);
-    }
   }
 
   return NS_OK;
@@ -2990,16 +2982,11 @@ nsHTMLDocument::SetBgColor(const nsAReadableString& aBgColor)
   nsIDOMHTMLBodyElement* body;
 
   result = GetBodyElement(&body);
-  if (NS_OK == result) {
+  if (NS_SUCCEEDED(result)) {
     result = body->SetBgColor(aBgColor);
     NS_RELEASE(body);
   }
-  else if (nsnull != mAttrStyleSheet) {
-    nsHTMLValue value;
-    if (nsGenericHTMLElement::ParseColor(aBgColor, this, value)) {
-      mAttrStyleSheet->SetDocumentBackgroundColor(value.GetColorValue());
-    }
-  }
+  // XXXldb And otherwise?
   
   return NS_OK;
 }
@@ -3012,17 +2999,9 @@ nsHTMLDocument::GetFgColor(nsAWritableString& aFgColor)
 
   aFgColor.Truncate();
   result = GetBodyElement(&body);
-  if (NS_OK == result) {
+  if (NS_SUCCEEDED(result)) {
     result = body->GetText(aFgColor);
     NS_RELEASE(body);
-  }
-  else if (nsnull != mAttrStyleSheet) {
-    nscolor color;
-    result = mAttrStyleSheet->GetDocumentForegroundColor(color);
-    if (NS_OK == result) {
-      nsHTMLValue value(color);
-      nsGenericHTMLElement::ColorToString(value, aFgColor);
-    }
   }
 
   return NS_OK;
@@ -3035,17 +3014,11 @@ nsHTMLDocument::SetFgColor(const nsAReadableString& aFgColor)
   nsIDOMHTMLBodyElement* body;
 
   result = GetBodyElement(&body);
-  if (NS_OK == result) {
+  if (NS_SUCCEEDED(result)) {
     result = body->SetText(aFgColor);
     NS_RELEASE(body);
   }
-  else if (nsnull != mAttrStyleSheet) {
-    nsHTMLValue value;
-  
-    if (nsGenericHTMLElement::ParseColor(aFgColor, this, value)) {
-      mAttrStyleSheet->SetDocumentForegroundColor(value.GetColorValue());
-    }
-  }
+  // XXXldb And otherwise?
   
   return NS_OK;
 }

@@ -724,18 +724,15 @@ nsPageFrame::DrawBackground(nsIPresContext*      aPresContext,
 {
   nsSimplePageSequenceFrame* seqFrame = NS_STATIC_CAST(nsSimplePageSequenceFrame*, mParent);
   if (seqFrame != nsnull) {
-    nsStyleBackground *theBackground;
-    theBackground = mPD->mBackground;
-
     nsRect rect = mPD->mReflowRect;
     rect.Deflate(mPD->mReflowMargin);
     rect.Deflate(mPD->mExtraMargin);
 
-    const nsStyleBorder* border = (const nsStyleBorder*)
-                        mStyleContext->GetStyleData(eStyleStruct_Border);
+    const nsStyleBorder* border = NS_STATIC_CAST(const nsStyleBorder*,
+                             mStyleContext->GetStyleData(eStyleStruct_Border));
 
     nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                          aDirtyRect, rect, *theBackground, *border, 0, 0);      
+                                    aDirtyRect, rect, *border, 0, 0);      
   }
 }
 
