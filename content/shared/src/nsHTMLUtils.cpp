@@ -36,6 +36,7 @@
 #include "nsString.h"
 #include "nsXPIDLString.h"
 #include "prprf.h"
+#include "nsEscape.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
@@ -159,30 +160,19 @@ NS_MakeAbsoluteURIWithCharset(char* *aResult,
         }
 
       }
-      // Now we need to URL-escape the string.  Make sure we've got an
-      // nsIIOService.
-      nsCOMPtr<nsIIOService> ioservice;
-      if (aIOService) {
-        ioservice = aIOService;
-      }
-      else {
-        ioservice = do_GetService(kIOServiceCID);
-      }
-
-      if (! ioservice)
-        return NS_ERROR_FAILURE;
-
+      // Now we need to URL-escape the string. 
       // XXX andreas.otte has warned that using the nsIIOService::Escape
       // method in this way may be too conservative (e.g., it won't
       // escape a "#" character that appears in a hostname -- does that
       // matter?) But, since there's nothing better, we'll do it...
-      static const PRInt32 kEscapeConservatively = nsIIOService::url_Forced - 1;
+      static const PRInt32 kEscapeConservatively = esc_Forced - 1;
 
       // XXX Unfortunately, we can't escape "in place". Maybe the new string
       // APIs will make that better some day.
-      nsXPIDLCString escaped;
-      ioservice->Escape(spec.get(), kEscapeConservatively, getter_Copies(escaped));
-
+      nsCAutoString escaped;
+      nsresult rv = nsStdEscape(spec.get(), kEscapeConservatively, escaped);
+      if (NS_FAILED(rv))
+        return rv;
       spec = escaped;
     }
   }

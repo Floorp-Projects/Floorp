@@ -33,9 +33,9 @@ interface nsIIOService : nsISupports
 {
     /**
      * Returns a protocol handler for a given URI scheme.
-	 *
-	 * @param scheme	URI scheme
-	 * @return	reference to nsIProtcolHandler
+     *
+     * @param scheme	URI scheme
+     * @return	reference to nsIProtcolHandler
      */
     nsIProtocolHandler getProtocolHandler(in string scheme);
 
@@ -52,35 +52,35 @@ interface nsIIOService : nsISupports
      * of the URI spec, and then delegating the construction of the URI
      * to the protocol handler for that scheme. QueryInterface can be used
      * on the resulting URI object to obtain a more specific type of URI.
-	 *
-	 * @param aSpec	URI spec (http, ftp, etc)
-	 * @param aBaseURI	nsIURI to construct the actual URI from
-	 * @return	reference to a new nsIURI object
+     *
+     * @param aSpec	URI spec (http, ftp, etc)
+     * @param aBaseURI	nsIURI to construct the actual URI from
+     * @return	reference to a new nsIURI object
      */
     nsIURI newURI(in string aSpec, in nsIURI aBaseURI);
 
     /**
      * This method constructs a new file URI 
      *
-	 * @param aSpec	nsIFile
-	 * @return	reference to a new nsIURI object
+     * @param aSpec	nsIFile
+     * @return	reference to a new nsIURI object
      */
     nsIURI newFileURI(in nsIFile aSpec);
 
     /**
      * Creates a channel for a given URI. The notificationCallbacks argument
-     * is used to obtain the appropriate callbacks for the URI's protocol from the
-     * application.
+     * is used to obtain the appropriate callbacks for the URI's protocol 
+     * from the application.
      *
-     * @param originalURI - Specifies the original URI which caused the creation
-     * of this channel. This can occur when the construction of one channel
-     * (e.g. for resource:) causes another channel to be created on its behalf
-     * (e.g. a file: channel), or if a redirect occurs, causing the current
-     * URL to become different from the original URL. If NULL, the aURI parameter
-     * will be used as the originalURI instead.
-	 *
-	 * @param aURI	- nsIURI to make a channel from
-	 * @return	a reference to the new nsIChannel object
+     * @param originalURI - Specifies the original URI which caused the 
+     * creation of this channel. This can occur when the construction of 
+     * one channel (e.g. for resource:) causes another channel to be created 
+     * on its behalf (e.g. a file: channel), or if a redirect occurs, 
+     * causing the current URL to become different from the original URL. 
+     * If NULL, the aURI parameter will be used as the originalURI instead.
+     *
+     * @param aURI	- nsIURI to make a channel from
+     * @return	a reference to the new nsIChannel object
      */
     nsIChannel newChannelFromURI(in nsIURI aURI);
 
@@ -88,33 +88,35 @@ interface nsIIOService : nsISupports
      * Convenience routine that first creates a URI by calling NewURI, and
      * then passes the URI to NewChannelFromURI. 
      *
-     * @param originalURI - Specifies the original URI which caused the creation
-     * of this channel. This can occur when the construction of one channel
-     * (e.g. for resource:) causes another channel to be created on its behalf
-     * (e.g. a file: channel), or if a redirect occurs, causing the current
-     * URL to become different from the original URL. If NULL, the aURI parameter
-     * will be used as the originalURI instead.
-	 *
-	 * @param aSpec	URI spec to select the appropriate protocol handler
-	 * @param aBaseURI	a base URI to create a channel to
-	 * @return	a reference to the new nsIChannel object
+     * @param originalURI - Specifies the original URI which caused the 
+     * creation of this channel. This can occur when the construction of 
+     * one channel (e.g. for resource:) causes another channel to be created 
+     * on its behalf (e.g. a file: channel), or if a redirect occurs, 
+     * causing the current URL to become different from the original URL. 
+     * If NULL, the aURI parameter will be used as the originalURI instead.
+     *
+     * @param aSpec	URI spec to select the appropriate protocol handler
+     * @param aBaseURI	a base URI to create a channel to
+     * @return	a reference to the new nsIChannel object
      */
     nsIChannel newChannel(in string aSpec, in nsIURI aBaseURI);
 
     /**
-     * Returns true if networking is in "offline" mode. When in offline mode, attempts
-     * to access the network will fail (although this is not necessarily corrolated with
-     * whether there is actually a network available -- that's hard to detect without
-     * causing the dialer to come up).
+     * Returns true if networking is in "offline" mode. When in offline mode, 
+     * attempts to access the network will fail (although this is not 
+     * necessarily corrolated with whether there is actually a network 
+     * available -- that's hard to detect without causing the dialer to 
+     * come up).
      */
     attribute boolean offline;
 
     /**
      * Checks if a port number is banned.
      *
-     * |allowPort| will check a list of "known-to-do-bad-things" port numbers.  If the 
-     * given port is found on the blacklist, |allowPort| will ask the protocol handler
-     * if it wishes to override. Scheme can be null. 
+     * |allowPort| will check a list of "known-to-do-bad-things" 
+     * port numbers.  If the given port is found on the blacklist, 
+     * |allowPort| will ask the protocol handler if it wishes to override. 
+     * Scheme can be null. 
      */
      
     boolean allowPort(in long port, in string scheme);
@@ -126,16 +128,18 @@ interface nsIIOService : nsISupports
      * Utility for protocol implementors -- extracts the scheme from a URL 
      * string, consistently and according to spec.
      * @param urlString - the URL string to parse
-     * @param schemeStartPos - the resulting starting position of the scheme substring
-     *        (may skip over whitespace)
-     * @param schemeEndPos - the resulting ending position of the scheme substring
-     *        (the position of the colon)
-     * @param scheme - an allocated substring containing the scheme. If this parameter
-     *        is null going into the routine, then the scheme is not allocated and
-     *        returned. Free with nsCRT::free.
+     * @param schemeStartPos - the resulting starting position 
+     *        of the scheme substring (may skip over whitespace)
+     * @param schemeEndPos - the resulting ending position 
+     *        of the scheme substring (the position of the colon)
+     * @param scheme - an allocated substring containing the scheme. 
+     *        If this parameter is null going into the routine, 
+     *        then the scheme is not allocated and returned. 
+     *        Free with nsCRT::free.
      *
      * @return NS_OK - if successful
-     * @return NS_ERROR_MALFORMED_URI - if the urlString is not of the right form
+     * @return NS_ERROR_MALFORMED_URI - if the urlString is not of 
+     *                                  the right form
      */
     string extractScheme(in string urlString,
                          out unsigned long schemeStartPos,
@@ -151,7 +155,7 @@ interface nsIIOService : nsISupports
 
 
     /**
-     * Constants for the mask in the call to Escape
+     * Constants for the mask in the call to extractUrlPart
      */
     const short url_Scheme        = (1<<0);
     const short url_Username      = (1<<1);
@@ -163,30 +167,12 @@ interface nsIIOService : nsISupports
     const short url_Param         = (1<<7);
     const short url_Query         = (1<<8);
     const short url_Ref           = (1<<9);
-    const short url_Forced        = (1<<10);
-
-    /**
-     * Encode characters into % escaped hexcodes.
-	 *
-	 * @param	str	a string to convert from
-	 * @param	mask	a mask of flags to tell the converter which part of the url to escape
-	 * @return	escaped string
-     */
-    string escape(in string str, in short mask);
-
-    /**
-     * Decode % escaped hex codes into character values.
-	 *
-	 * @param str	a string to unescape from
-	 * @return	resulted unescaped string
-     */
-    string unescape(in string str);
 
     /**
      * Get port from string.
-	 *
-	 * @param	str	URI-style string
-	 * @return	port number
+     *
+     * @param	str	URI-style string
+     * @return	port number
      */
     long extractPort(in string str);
 
@@ -197,10 +183,10 @@ interface nsIIOService : nsISupports
      * "/a/b/c/d/e/" yields "/a/b/c/foo/baz.html". Attempting to 
      * ascend above the base results in the NS_ERROR_MALFORMED_URI
      * exception. If basePath is null, it treats it as "/".
-	 *
-	 * @param relativePath	a relative URI
-	 * @param basePath	a base URI
-	 * @return	a new string, representing canonical uri
+     *
+     * @param relativePath	a relative URI
+     * @param basePath	a base URI
+     * @return	a new string, representing canonical uri
      */
     string resolveRelativePath(in string relativePath,
                                in string basePath);

@@ -69,6 +69,7 @@
 #endif // XP_MAC
 
 #include "nsIPluginHost.h"
+#include "nsEscape.h"
 
 const char *FORCE_ALWAYS_ASK_PREF = "browser.helperApps.alwaysAsk.force";
 
@@ -837,15 +838,12 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
     url->GetFileName(getter_Copies(leafName));
     if (leafName.get())
     {
-      nsCOMPtr<nsIIOService> ioService (do_GetService(kIOServiceCID, &rv));
+      nsXPIDLCString unescapedFileName; 
+      rv = nsStdUnescape((char*)leafName.get(), getter_Copies(unescapedFileName));
       if (NS_SUCCEEDED(rv))
-      {
-        nsXPIDLCString unescapedFileName; 
-        rv = ioService->Unescape(leafName.get(), getter_Copies(unescapedFileName));
         mSuggestedFileName.Assign(NS_ConvertUTF8toUCS2(unescapedFileName));
-      }
       else
-      mSuggestedFileName.AssignWithConversion(leafName);
+        mSuggestedFileName.AssignWithConversion(leafName);
     }
   }
 

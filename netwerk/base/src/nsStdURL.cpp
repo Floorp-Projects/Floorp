@@ -517,7 +517,7 @@ nsStdURL::GetString(char** result, char* fromEscapedStr, Format toFormat)
     }
 
     if (toFormat == UNESCAPED) {
-        rv = nsURLUnescape(fromEscapedStr, result);
+        rv = nsStdUnescape(fromEscapedStr, result);
     } else
         rv = DupString(result, fromEscapedStr);
     return rv;
@@ -555,14 +555,14 @@ nsStdURL::AppendPreHost(nsCString& buffer, char* i_Username,
     if (i_Username)
     {
         rv = AppendString(buffer,i_Username,ESCAPED,
-                          nsIIOService::url_Username);
+                          esc_Username);
         if (NS_FAILED(rv))
             return rv;
         if (i_Password) 
         {
            buffer += ':';
            rv = AppendString(buffer,i_Password,ESCAPED,
-                             nsIIOService::url_Password);
+                             esc_Password);
            if (NS_FAILED(rv))
                return rv;
         }
@@ -578,7 +578,7 @@ nsStdURL::AppendFileName(nsCString& buffer, char* i_FileBaseName,
     if (i_FileBaseName)
     {
         rv = AppendString(buffer,i_FileBaseName,ESCAPED,
-                          nsIIOService::url_FileBaseName);
+                          esc_FileBaseName);
         if (NS_FAILED(rv))
             return rv;
     }
@@ -586,7 +586,7 @@ nsStdURL::AppendFileName(nsCString& buffer, char* i_FileBaseName,
     {
         buffer += '.';
         rv = AppendString(buffer,i_FileExtension,ESCAPED,
-                          nsIIOService::url_FileExtension);
+                          esc_FileExtension);
     }
     return rv;
 }
@@ -598,7 +598,7 @@ nsStdURL::GetSpec(char **o_Spec)
     nsCAutoString finalSpec; // guaranteed to be singlebyte.
     if (mScheme)
     {
-        rv = AppendString(finalSpec,mScheme,ESCAPED,nsIIOService::url_Scheme);
+        rv = AppendString(finalSpec,mScheme,ESCAPED,esc_Scheme);
         finalSpec += "://";
     }
 
@@ -610,7 +610,7 @@ nsStdURL::GetSpec(char **o_Spec)
 
     if (mHost)
     {
-        rv = AppendString(finalSpec,mHost,HOSTESCAPED,nsIIOService::url_Host);
+        rv = AppendString(finalSpec,mHost,HOSTESCAPED,esc_Host);
         if (-1 != mPort && mPort != mDefaultPort)
         {
             char* portBuffer = PR_smprintf(":%d", mPort);
@@ -645,7 +645,7 @@ nsStdURL::GetPrePath(char **o_Spec)
     nsCAutoString finalSpec; // guaranteed to be singlebyte.
     if (mScheme)
     {
-        rv = AppendString(finalSpec,mScheme,ESCAPED,nsIIOService::url_Scheme);
+        rv = AppendString(finalSpec,mScheme,ESCAPED,esc_Scheme);
         finalSpec += "://";
     }
 
@@ -657,7 +657,7 @@ nsStdURL::GetPrePath(char **o_Spec)
 
     if (mHost)
     {
-        rv = AppendString(finalSpec,mHost,HOSTESCAPED,nsIIOService::url_Host);
+        rv = AppendString(finalSpec,mHost,HOSTESCAPED,esc_Host);
         if (-1 != mPort && mDefaultPort != mPort)
         {
             char* portBuffer = PR_smprintf(":%d", mPort);
@@ -771,7 +771,7 @@ nsStdURL::SetFileName(const char* i_FileName)
     // Otherwise concatenate Directory and Filename and the call SetPath
     nsCAutoString dir;
     nsresult status = AppendString(dir,mDirectory,ESCAPED,
-                                   nsIIOService::url_Directory);
+                                   esc_Directory);
     dir += i_FileName;
     char *eNewPath = dir.ToNewCString();
     if (!eNewPath) 
@@ -835,7 +835,7 @@ nsStdURL::Resolve(const char *relativePath, char **result)
         if (mScheme)
         {
             rv = AppendString(finalSpec,mScheme,ESCAPED,
-                              nsIIOService::url_Scheme);
+                              esc_Scheme);
             finalSpec += ":";
         }
 
@@ -857,7 +857,7 @@ nsStdURL::Resolve(const char *relativePath, char **result)
 
     if (mScheme)
     {
-        rv = AppendString(finalSpec,mScheme,ESCAPED,nsIIOService::url_Scheme);
+        rv = AppendString(finalSpec,mScheme,ESCAPED,esc_Scheme);
         finalSpec += "://";
     }
 
@@ -869,7 +869,7 @@ nsStdURL::Resolve(const char *relativePath, char **result)
 
     if (mHost)
     {
-        rv = AppendString(finalSpec,mHost,HOSTESCAPED,nsIIOService::url_Host);
+        rv = AppendString(finalSpec,mHost,HOSTESCAPED,esc_Host);
         if (-1 != mPort)
         {
             char* portBuffer = PR_smprintf(":%d", mPort);
@@ -889,40 +889,40 @@ nsStdURL::Resolve(const char *relativePath, char **result)
             break;
         case '?': 
             rv = AppendString(finalSpec,mDirectory,ESCAPED,
-                              nsIIOService::url_Directory);
+                              esc_Directory);
             rv = AppendFileName(finalSpec,mFileBaseName,mFileExtension,
                                 ESCAPED);
             if (mParam)
             {
                 finalSpec += ';';
                 rv = AppendString(finalSpec,mParam,ESCAPED,
-                                  nsIIOService::url_Param);
+                                  esc_Param);
             }
             finalSpec += (char*)start;
             break;
         case '#':
         case '\0':
             rv = AppendString(finalSpec,mDirectory,ESCAPED,
-                              nsIIOService::url_Directory);
+                              esc_Directory);
             rv = AppendFileName(finalSpec,mFileBaseName,mFileExtension,
                                 ESCAPED);
             if (mParam)
             {
                 finalSpec += ';';
                 rv = AppendString(finalSpec,mParam,ESCAPED,
-                                  nsIIOService::url_Param);
+                                  esc_Param);
             }
             if (mQuery)
             {
                 finalSpec += '?';
                 rv = AppendString(finalSpec,mQuery,ESCAPED,
-                                  nsIIOService::url_Query);
+                                  esc_Query);
             }
             finalSpec += (char*)start;
             break;
         default:
             rv = AppendString(finalSpec,mDirectory,ESCAPED,
-                              nsIIOService::url_Directory);
+                              esc_Directory);
             finalSpec += (char*)start;
       }
     }
@@ -948,7 +948,7 @@ nsStdURL::GetPath(char** o_Path)
     nsresult rv = NS_OK;
     if (mDirectory)
     {
-        rv = AppendString(path,mDirectory,ESCAPED,nsIIOService::url_Directory);
+        rv = AppendString(path,mDirectory,ESCAPED,esc_Directory);
         if (NS_FAILED(rv))
             return rv;
     }
@@ -960,21 +960,21 @@ nsStdURL::GetPath(char** o_Path)
     if (mParam)
     {
         path += ';';
-        rv = AppendString(path,mParam,ESCAPED,nsIIOService::url_Param);
+        rv = AppendString(path,mParam,ESCAPED,esc_Param);
         if (NS_FAILED(rv))
             return rv;
     }
     if (mQuery)
     {
         path += '?';
-        rv = AppendString(path,mQuery,ESCAPED,nsIIOService::url_Query);
+        rv = AppendString(path,mQuery,ESCAPED,esc_Query);
         if (NS_FAILED(rv))
             return rv;
     }
     if (mRef)
     {
         path += '#';
-        rv = AppendString(path,mRef,ESCAPED,nsIIOService::url_Ref);
+        rv = AppendString(path,mRef,ESCAPED,esc_Ref);
         if (NS_FAILED(rv))
             return rv;
     }
@@ -988,7 +988,7 @@ nsStdURL::GetDirectory(char** o_Directory)
     nsCAutoString directory;
     nsresult rv = NS_OK;
     rv = AppendString(directory,mDirectory,ESCAPED,
-                      nsIIOService::url_Directory);
+                      esc_Directory);
     if (NS_FAILED(rv))
         return rv;
     *o_Directory = directory.ToNewCString();
@@ -1099,7 +1099,7 @@ nsStdURL::GetFilePath(char **o_DirFile)
     nsCAutoString temp;
     if (mDirectory)
     {
-        rv = AppendString(temp,mDirectory,ESCAPED,nsIIOService::url_Directory);
+        rv = AppendString(temp,mDirectory,ESCAPED,esc_Directory);
     }
 
     rv = AppendFileName(temp,mFileBaseName,mFileExtension,ESCAPED);
@@ -1156,7 +1156,7 @@ nsStdURL::GetFile(nsIFile * *aFile)
     // we do not use the path cause it can contain the # char
     nsCAutoString path;
     if (mDirectory) {
-        rv = AppendString(path,mDirectory,ESCAPED,nsIIOService::url_Directory);
+        rv = AppendString(path,mDirectory,ESCAPED,esc_Directory);
 #if defined( XP_MAC )
         // Now Swap the / and colons to convert back to a mac path
         // Do this only on the mDirectory portion - not mFileBaseName or mFileExtension
@@ -1257,8 +1257,7 @@ nsStdURL::SetFile(nsIFile * aFile)
         SwapSlashColon(ePath);
 #endif
         // Escape the path with the directory mask
-        rv = nsURLEscape(ePath,nsIIOService::url_Directory+
-                         nsIIOService::url_Forced,escPath);
+        rv = nsStdEscape(ePath,esc_Directory+esc_Forced,escPath);
         if (NS_SUCCEEDED(rv)) {
             PRBool dir = PR_FALSE;
             rv = aFile->IsDirectory(&dir);

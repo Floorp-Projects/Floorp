@@ -41,6 +41,7 @@
 #include "nsReadableUtils.h"
 #include "plstr.h"
 #include "prprf.h"
+#include "nsEscape.h"
 
 static NS_DEFINE_CID(kStreamListenerTeeCID, NS_STREAMLISTENERTEE_CID);
 
@@ -1369,11 +1370,7 @@ nsHttpChannel::GetUserPassFromURI(nsAString &user,
         nsresult rv;
 
         nsXPIDLCString buf;
-        nsCOMPtr<nsIIOService> ioService;
-        rv = nsHttpHandler::get()->GetIOService(getter_AddRefs(ioService));
-        if (NS_FAILED(rv)) return rv;
-        
-        rv = ioService->Unescape(prehost, getter_Copies(buf));
+        rv = nsStdUnescape((char*)prehost.get(), getter_Copies(buf));
         if (NS_FAILED(rv)) return rv;
 
         char *p = PL_strchr(buf, ':');
