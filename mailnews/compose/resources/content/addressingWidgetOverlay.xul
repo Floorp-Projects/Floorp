@@ -33,8 +33,6 @@ Rights Reserved.
 		 align="vertical"
 		 style="border:solid black 1px">
 
-		<html:div style="width:100px; height:5em">
-
 			<!-- for fixed height:  style="height:5em"  -->
 			<tree id="addressingWidgetTree"		
 				  class="addressingWidget"
@@ -75,7 +73,6 @@ Rights Reserved.
 					
 				</treechildren>
 			</tree>
-		</html:div>
 	</box>
 
 </overlay>
