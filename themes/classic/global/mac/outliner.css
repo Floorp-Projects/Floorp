@@ -30,6 +30,7 @@
 /* ::::: outliner ::::: */
 
 outliner {
+  -moz-appearance: tree;
   border: 2px solid;
   -moz-border-top-colors: ThreeDShadow ThreeDDarkShadow;
   -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
@@ -43,6 +44,7 @@ outliner {
 /* ::::: outliner rows ::::: */
 
 outlinerchildren:-moz-outliner-row {
+  -moz-appearance: treeitem;
   border-top: 1px solid -moz-Field;
   height: 18px;
 }
@@ -101,6 +103,7 @@ outlinerchildren:-moz-outliner-line {
   /* XXX there should be no border on Mac, but outliners currently
          paint the line black by default, so I'll just leave this
          for now. */
+  visibility: hidden;
   border: 1px dotted grey;
 }
 
@@ -113,6 +116,7 @@ outlinerchildren:-moz-outliner-separator {
 
 outlinercol,
 outlinercolpicker { 
+  -moz-appearance: treeheadercell;
   -moz-box-align: center;
   -moz-box-pack: center;
   border: 2px solid;
@@ -185,14 +189,17 @@ outlinerchildren:-moz-outliner-column(insertafter) {
 /* ::::: sort direction indicator :::::  */
 
 .outlinercol-sortdirection {
+  -moz-appearance: treeheadersortarrow;
   list-style-image: none;
 }
 
 .sortDirectionIndicator[sortDirection="ascending"] > .outlinercol-sortdirection {
+  -moz-appearance: treeheadersortarrow;
   list-style-image: url("chrome://global/skin/tree/sort-asc.gif");
 }
 
 .sortDirectionIndicator[sortDirection="descending"] > .outlinercol-sortdirection {
+  -moz-appearance: treeheadersortarrow;
   list-style-image: url("chrome://global/skin/tree/sort-dsc.gif");
 }
 
@@ -212,7 +219,7 @@ outlinerchildren:-moz-outliner-twisty {
 }
 
 outlinerchildren:-moz-outliner-twisty(open) {
-  -moz-appearance: treetwisty;
+  -moz-appearance: treetwistyopen;
   width: 10px; /* The image's width is 10 pixels */
   list-style-image: url("chrome://global/skin/tree/twisty-open.gif");
 }

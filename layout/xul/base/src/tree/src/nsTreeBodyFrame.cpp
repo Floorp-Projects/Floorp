@@ -85,6 +85,7 @@
 #include "nsOutlinerUtils.h"
 #include "nsChildIterator.h"
 #include "nsIScrollableView.h"
+#include "nsITheme.h"
 
 #ifdef USE_IMG2
 #include "imgIRequest.h"
@@ -1991,10 +1992,29 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintRow(int aRowIndex, const nsRect& aRowRec
   rowRect.Deflate(rowMargin);
 
   // If the layer is the background layer, we must paint our borders and background for our
-  // row rect.
-  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer)
-    PaintBackgroundLayer(rowContext, aPresContext, aRenderingContext, rowRect, aDirtyRect);
-
+  // row rect. If a -moz-appearance is provided, use theme drawing only if the current row
+  // is not selected (since we draw the selection as part of drawing the background).
+  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
+    PRBool useTheme = PR_FALSE;
+    nsCOMPtr<nsITheme> theme;
+    const nsStyleDisplay* displayData = (const nsStyleDisplay*)rowContext->GetStyleData(eStyleStruct_Display);
+    if ( displayData->mAppearance ) {
+      aPresContext->GetTheme(getter_AddRefs(theme));
+      if (theme && theme->ThemeSupportsWidget(aPresContext, displayData->mAppearance))
+        useTheme = PR_TRUE;
+    }
+    PRBool isSelected = PR_FALSE;
+    nsCOMPtr<nsIOutlinerSelection> selection;
+    GetSelection(getter_AddRefs(selection));
+    if ( selection ) 
+      selection->IsSelected(aRowIndex, &isSelected);
+    if ( useTheme && !isSelected )
+      theme->DrawWidgetBackground(&aRenderingContext, this, 
+                                    displayData->mAppearance, rowRect, aDirtyRect);     
+    else
+      PaintBackgroundLayer(rowContext, aPresContext, aRenderingContext, rowRect, aDirtyRect);
+  }
+  
   // Adjust the rect for its border and padding.
   AdjustForBorderPadding(rowContext, rowRect);
 
@@ -2255,6 +2275,15 @@ nsOutlinerBodyFrame::PaintTwisty(int                  aRowIndex,
   nsCOMPtr<nsIStyleContext> twistyContext;
   GetPseudoStyleContext(nsXULAtoms::mozoutlinertwisty, getter_AddRefs(twistyContext));
 
+  PRBool useTheme = PR_FALSE;
+  nsCOMPtr<nsITheme> theme;
+  const nsStyleDisplay* twistyDisplayData = (const nsStyleDisplay*)twistyContext->GetStyleData(eStyleStruct_Display);
+  if ( twistyDisplayData->mAppearance ) {
+    aPresContext->GetTheme(getter_AddRefs(theme));
+    if (theme && theme->ThemeSupportsWidget(aPresContext, twistyDisplayData->mAppearance))
+      useTheme = PR_TRUE;
+  }
+  
   // Obtain the margins for the twisty and then deflate our rect by that 
   // amount.  The twisty is assumed to be contained within the deflated rect.
   nsRect twistyRect(aTwistyRect);
@@ -2266,10 +2295,26 @@ nsOutlinerBodyFrame::PaintTwisty(int                  aRowIndex,
   // The twisty rect extends all the way to the end of the cell.  This is incorrect.  We need to
   // determine the twisty rect's true width.  This is done by examining the style context for
   // a width first.  If it has one, we use that.  If it doesn't, we use the image's natural width.
-  // If the image hasn't loaded and if no width is specified, then we just bail.
+  // If the image hasn't loaded and if no width is specified, then we just bail. If there is
+  // a -moz-apperance involved, adjust the rect by the minimum widget size provided by
+  // the theme implementation.
   nsRect imageSize = GetImageSize(aRowIndex, aColumn->GetID().get(), twistyContext);
   twistyRect.width = imageSize.width;
+  if ( useTheme ) {
+    nsSize minTwistySize(0,0);
+    PRBool canOverride = PR_TRUE;
+    theme->GetMinimumWidgetSize(&aRenderingContext, this, twistyDisplayData->mAppearance, &minTwistySize, &canOverride);
+    
+    // GMWS() returns size in pixels, we need to convert it back to twips
+    float p2t;
+    aPresContext->GetScaledPixelsToTwips(&p2t);
+    minTwistySize.width = NSIntPixelsToTwips(minTwistySize.width, p2t);
+    minTwistySize.height = NSIntPixelsToTwips(minTwistySize.height, p2t);
 
+    if ( twistyRect.width < minTwistySize.width || !canOverride )
+      twistyRect.width = minTwistySize.width;
+  }
+  
   // Subtract out the remaining width.  This is done even when we don't actually paint a twisty in 
   // this cell, so that cells in different rows still line up.
   nsRect copyRect(twistyRect);
@@ -2283,34 +2328,41 @@ nsOutlinerBodyFrame::PaintTwisty(int                  aRowIndex,
     if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer)
       PaintBackgroundLayer(twistyContext, aPresContext, aRenderingContext, twistyRect, aDirtyRect);
     else if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
-      // Time to paint the twisty.
-      // Adjust the rect for its border and padding.
-      AdjustForBorderPadding(twistyContext, twistyRect);
-      AdjustForBorderPadding(twistyContext, imageSize);
-
-#ifdef USE_IMG2
-      // Get the image for drawing.
-      nsCOMPtr<imgIContainer> image; 
-      GetImage(aRowIndex, aColumn->GetID().get(), twistyContext, getter_AddRefs(image));
-      if (image) {
-        nsPoint p(twistyRect.x, twistyRect.y);
-        
-        // Center the image. XXX Obey vertical-align style prop?
-        if (imageSize.height < twistyRect.height) {
-          p.y += (twistyRect.height - imageSize.height)/2;
-          float t2p;
-          mPresContext->GetTwipsToPixels(&t2p);
-          if (NSTwipsToIntPixels(twistyRect.height - imageSize.height, t2p)%2 != 0) {
-            float p2t;
-            mPresContext->GetPixelsToTwips(&p2t);
-            p.y -= NSIntPixelsToTwips(1, p2t);
-          }
-        }
-        
-        // Paint the image.
-        aRenderingContext.DrawImage(image, &imageSize, &p);
+      if ( useTheme ) {
+        // yeah, i know it says we're drawing a background, but a twisty is really a fg
+        // object since it doesn't have anything that gecko would want to draw over it. Besides,
+        // we have to prevent imagelib from drawing it.
+        theme->DrawWidgetBackground(&aRenderingContext, this, 
+                                      twistyDisplayData->mAppearance, twistyRect, aDirtyRect);
       }
-#endif
+      else {
+        // Time to paint the twisty.
+        // Adjust the rect for its border and padding.
+        AdjustForBorderPadding(twistyContext, twistyRect);
+        AdjustForBorderPadding(twistyContext, imageSize);
+
+        // Get the image for drawing.
+        nsCOMPtr<imgIContainer> image; 
+        GetImage(aRowIndex, aColumn->GetID().get(), twistyContext, getter_AddRefs(image));
+        if (image) {
+          nsPoint p(twistyRect.x, twistyRect.y);
+          
+          // Center the image. XXX Obey vertical-align style prop?
+          if (imageSize.height < twistyRect.height) {
+            p.y += (twistyRect.height - imageSize.height)/2;
+            float t2p;
+            mPresContext->GetTwipsToPixels(&t2p);
+            if (NSTwipsToIntPixels(twistyRect.height - imageSize.height, t2p)%2 != 0) {
+              float p2t;
+              mPresContext->GetPixelsToTwips(&p2t);
+              p.y -= NSIntPixelsToTwips(1, p2t);
+            }
+          }
+          
+          // Paint the image.
+          aRenderingContext.DrawImage(image, &imageSize, &p);
+        }
+      }        
     }
   }
 

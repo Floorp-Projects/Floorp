@@ -179,6 +179,20 @@ CheckBooleanAttr(nsIFrame* aFrame, nsIAtom* aAtom)
 }
 
 
+//
+// DoNothing
+//
+// An eraseProc for drawing theme buttons so that we don't erase over anything
+// that might be drawn before us in the background layer. Does absolutely
+// nothing.
+//
+static pascal void
+DoNothing(const Rect *bounds, UInt32 eraseData, SInt16 depth, Boolean isColorDev)
+{
+  // be gentle, erase nothing.
+}
+
+
 #ifdef XP_MAC
 #pragma mark -
 #endif
@@ -187,8 +201,11 @@ CheckBooleanAttr(nsIFrame* aFrame, nsIAtom* aAtom)
 NS_IMPL_ISUPPORTS1(nsNativeThemeMac, nsITheme)
 
 nsNativeThemeMac::nsNativeThemeMac()
+  : mEraseProc(nsnull)
 {
   NS_INIT_ISUPPORTS();
+
+  mEraseProc = NewThemeEraseUPP(DoNothing);
 
   mCheckedAtom = do_GetAtom("checked");
   mDisabledAtom = do_GetAtom("disabled");
@@ -200,11 +217,14 @@ nsNativeThemeMac::nsNativeThemeMac()
   mCurPosAtom = do_GetAtom("curpos");
   mMaxPosAtom = do_GetAtom("maxpos");
   mScrollbarAtom = do_GetAtom("scrollbar");
+  mClassAtom = do_GetAtom("class");
+  mSortDirectionAtom = do_GetAtom("sortDirection");
 }
 
 nsNativeThemeMac::~nsNativeThemeMac()
 {
-
+  if ( mEraseProc )
+    ::DisposeThemeEraseUPP(mEraseProc);
 }
 
 
@@ -234,6 +254,40 @@ PRBool
 nsNativeThemeMac::IsSelected(nsIFrame* aFrame)
 {
   return CheckBooleanAttr(aFrame, mSelectedAtom);
+}
+
+
+PRBool
+nsNativeThemeMac::IsSortedColumn(nsIFrame* aFrame)
+{
+  // if the "sortDirection" attribute is set, we're the sorted column
+  nsCAutoString mode;
+  if ( GetAttribute(aFrame, mSortDirectionAtom, mode) )
+    return !mode.IsEmpty();
+  
+  return PR_FALSE;
+}
+
+
+PRBool
+nsNativeThemeMac::IsSortReversed(nsIFrame* aFrame)
+{
+  nsCAutoString mode;
+  if ( GetAttribute(aFrame, mSortDirectionAtom, mode) )
+    return mode.Equals("descending");
+  
+  return PR_FALSE;
+}
+
+
+PRBool
+nsNativeThemeMac::DoTabsPointUp(nsIFrame* aFrame)
+{
+  nsCAutoString mode;
+  if ( GetAttribute(aFrame, mClassAtom, mode) )
+    return mode.Find("tab-bottom") != kNotFound;
+  
+  return PR_FALSE;
 }
 
 
@@ -270,17 +324,25 @@ nsNativeThemeMac::GetScrollbarParent(nsIFrame* inButton, nsPoint* outOffset)
     // |scrollbar|. If not, keep going up the chain.
     nsCOMPtr<nsIContent> content;
     currFrame->GetContent(getter_AddRefs(content));
-    nsCOMPtr<nsIAtom> tag;
-    content->GetTag(*getter_AddRefs(tag));
-    if ( tag == mScrollbarAtom )
-      found = PR_TRUE;
+    NS_ASSERTION(content, "Couldn't get content from frame, are we in a scrollbar?");
+    if ( content ) {
+      nsCOMPtr<nsIAtom> tag;
+      content->GetTag(*getter_AddRefs(tag));
+      if ( tag == mScrollbarAtom )
+        found = PR_TRUE;
+      else {
+        // drat, add to our offset and check the parent
+        nsPoint offsetFromParent;
+        currFrame->GetOrigin(offsetFromParent);
+        *outOffset += offsetFromParent;
+        
+        currFrame->GetParent(&currFrame);
+      }
+    }
     else {
-      // drat, add to our offset and check the parent
-      nsPoint offsetFromParent;
-      currFrame->GetOrigin(offsetFromParent);
-      *outOffset += offsetFromParent;
-      
-      currFrame->GetParent(&currFrame);
+      // hrm, no content, we're probably not in a scrollbar. just bail
+      currFrame = nsnull;
+      found = PR_TRUE;
     }
   } while ( !found && currFrame );
     
@@ -359,7 +421,8 @@ nsNativeThemeMac::DrawRadio ( const Rect& inBoxRect, PRBool inChecked, PRBool in
 
 void
 nsNativeThemeMac::DrawButton ( ThemeButtonKind inKind, const Rect& inBoxRect, PRBool inIsDefault, 
-                                  PRBool inDisabled, PRInt32 inState )
+                                  PRBool inDisabled, ThemeButtonValue inValue, ThemeButtonAdornment inAdornment,
+                                  PRInt32 inState )
 {
   ThemeButtonDrawInfo info;
   if ( inDisabled )
@@ -367,14 +430,14 @@ nsNativeThemeMac::DrawButton ( ThemeButtonKind inKind, const Rect& inBoxRect, PR
   else
     info.state = ((inState & NS_EVENT_STATE_ACTIVE) && (inState & NS_EVENT_STATE_HOVER)) ? 
                     kThemeStatePressed : kThemeStateActive;
-  info.value = kThemeButtonOn;
-  info.adornment = kThemeAdornmentNone;
+  info.value = inValue;
+  info.adornment = inAdornment;
   if ( inState & NS_EVENT_STATE_FOCUS )    
     info.adornment = kThemeAdornmentFocus;
   if ( inIsDefault )
     info.adornment |= kThemeAdornmentDefault;
 
-  ::DrawThemeButton ( &inBoxRect, inKind, &info, nsnull, nsnull, nsnull, 0L );
+  ::DrawThemeButton ( &inBoxRect, inKind, &info, nsnull, mEraseProc, nsnull, 0L );
 }
 
 
@@ -446,7 +509,7 @@ nsNativeThemeMac::DrawTabPanel ( const Rect& inBoxRect, PRBool inIsDisabled )
 
 void
 nsNativeThemeMac::DrawTab ( const Rect& inBoxRect, PRBool inIsDisabled, PRBool inIsFrontmost, 
-                              PRBool inIsHorizontal, PRInt32 inState )
+                              PRBool inIsHorizontal, PRBool inTabBottom, PRInt32 inState )
 {
   ThemeTabStyle style = 0L;
   if ( inIsFrontmost ) {
@@ -464,7 +527,8 @@ nsNativeThemeMac::DrawTab ( const Rect& inBoxRect, PRBool inIsDisabled, PRBool i
       style = kThemeTabNonFront;  
   }
 
-  ::DrawThemeTab(&inBoxRect, style, kThemeTabNorth, nsnull, 0L);
+  ThemeTabDirection direction = inTabBottom ? kThemeTabSouth : kThemeTabNorth; // don't yet support vertical tabs
+  ::DrawThemeTab(&inBoxRect, style, direction, nsnull, 0L);
 }
 
 
@@ -587,6 +651,18 @@ nsNativeThemeMac::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame* 
 
   switch ( aWidgetType ) {
   
+    case NS_THEME_DIALOG:
+    printf("!!! draw dialog bg\n");
+      ::SetThemeBackground(kThemeBrushDialogBackgroundActive, 24, true);
+      ::EraseRect(&macRect);
+      break;
+      
+    case NS_THEME_MENU:
+    printf("!!! draw menu bg\n");
+      ::SetThemeBackground(kThemeBrushDialogBackgroundActive, 24, true);
+      ::EraseRect(&macRect);
+      break;
+
     case NS_THEME_CHECKBOX:
       DrawCheckbox ( macRect, IsChecked(aFrame), IsDisabled(aFrame), eventState );
       break;    
@@ -594,10 +670,12 @@ nsNativeThemeMac::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame* 
       DrawRadio ( macRect, IsSelected(aFrame), IsDisabled(aFrame), eventState );
       break;
     case NS_THEME_BUTTON:
-      DrawButton ( kThemePushButton, macRect, IsDefaultButton(aFrame), IsDisabled(aFrame), eventState );
+      DrawButton ( kThemePushButton, macRect, IsDefaultButton(aFrame), IsDisabled(aFrame), 
+                    kThemeButtonOn, kThemeAdornmentNone, eventState );
       break;      
     case NS_THEME_TOOLBAR_BUTTON:
-      DrawButton ( kThemePushButton, macRect, IsDefaultButton(aFrame), IsDisabled(aFrame), eventState );
+      DrawButton ( kThemePushButton, macRect, IsDefaultButton(aFrame), IsDisabled(aFrame),
+                    kThemeButtonOn, kThemeAdornmentNone, eventState );
       break;
       
     case NS_THEME_TOOLBAR:
@@ -607,7 +685,8 @@ nsNativeThemeMac::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame* 
       break;
       
     case NS_THEME_DROPDOWN:
-      DrawButton ( kThemePopupButton, macRect, IsDefaultButton(aFrame), IsDisabled(aFrame), eventState );
+      DrawButton ( kThemePopupButton, macRect, IsDefaultButton(aFrame), IsDisabled(aFrame), 
+                    kThemeButtonOn, kThemeAdornmentNone, eventState );
       break;
     case NS_THEME_DROPDOWN_BUTTON:
       // do nothing, this is covered by the DROPDOWN case
@@ -629,9 +708,31 @@ nsNativeThemeMac::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame* 
       break;
 
     case NS_THEME_TREEVIEW_TWISTY:
-      DrawButton ( kThemeDisclosureButton, macRect, PR_FALSE, IsDisabled(aFrame), eventState );      
+      DrawButton ( kThemeDisclosureButton, macRect, PR_FALSE, IsDisabled(aFrame), 
+                    kThemeDisclosureRight, kThemeAdornmentNone, eventState );
       break;
-   
+    case NS_THEME_TREEVIEW_TWISTY_OPEN:
+      DrawButton ( kThemeDisclosureButton, macRect, PR_FALSE, IsDisabled(aFrame), 
+                    kThemeDisclosureDown, kThemeAdornmentNone, eventState );
+      break;
+    case NS_THEME_TREEVIEW_HEADER_CELL:
+      DrawButton ( kThemeListHeaderButton, macRect, PR_FALSE, IsDisabled(aFrame), 
+                    IsSortedColumn(aFrame) ? kThemeButtonOn : kThemeButtonOff,
+                    IsSortReversed(aFrame) ? kThemeAdornmentHeaderButtonSortUp : kThemeAdornmentNone,
+                    eventState );      
+      break;
+    case NS_THEME_TREEVIEW_TREEITEM:
+    case NS_THEME_TREEVIEW:
+      ::EraseRect ( &macRect );
+      break;
+    case NS_THEME_TREEVIEW_HEADER:
+      // do nothing, taken care of by individual header cells
+    case NS_THEME_TREEVIEW_HEADER_SORTARROW:
+      // do nothing, taken care of by treeview header
+    case NS_THEME_TREEVIEW_LINE:
+      // do nothing, these lines don't exist on macos
+      break;
+       
 #if 0
     case NS_THEME_SCROLLBAR:
       break;
@@ -681,9 +782,8 @@ nsNativeThemeMac::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame* 
       break;
     
     case NS_THEME_TAB:
-      DrawTab(macRect, IsDisabled(aFrame), IsSelected(aFrame), PR_TRUE, eventState);
-      break;
-      
+      DrawTab(macRect, IsDisabled(aFrame), IsSelected(aFrame), PR_TRUE, DoTabsPointUp(aFrame), eventState);
+      break;      
     case NS_THEME_TAB_PANELS:
       DrawTabPanel(macRect, IsDisabled(aFrame));
       break;
@@ -784,6 +884,7 @@ nsNativeThemeMac::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
       ::GetThemeMetric(kThemeMetricCheckBoxHeight, &radioHeight);
       aResult->SizeTo(radioWidth, radioHeight);
       *aIsOverridable = PR_FALSE;
+      aResult->SizeTo(18,18);
       break;
     }
 
@@ -814,6 +915,7 @@ nsNativeThemeMac::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
     }
 
     case NS_THEME_TREEVIEW_TWISTY:
+    case NS_THEME_TREEVIEW_TWISTY_OPEN:   
     {
       SInt32 twistyHeight = 0, twistyWidth = 0;
       ::GetThemeMetric(kThemeMetricDisclosureButtonWidth, &twistyWidth);
@@ -823,6 +925,15 @@ nsNativeThemeMac::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
       break;
     }
     
+    case NS_THEME_TREEVIEW_HEADER:
+    case NS_THEME_TREEVIEW_HEADER_CELL:
+    {
+      SInt32 headerHeight = 0;
+      ::GetThemeMetric(kThemeMetricListHeaderHeight, &headerHeight);
+      aResult->SizeTo(0, headerHeight);
+      break;
+    }
+      
     case NS_THEME_SCROLLBAR:
     case NS_THEME_SCROLLBAR_BUTTON_UP:
     case NS_THEME_SCROLLBAR_BUTTON_DOWN:
@@ -913,6 +1024,10 @@ nsNativeThemeMac::ThemeSupportsWidget(nsIPresContext* aPresContext,
   PRBool retVal = PR_FALSE;
   
   switch ( aWidgetType ) {
+    case NS_THEME_DIALOG:
+    case NS_THEME_WINDOW:
+    case NS_THEME_MENU:
+    
     case NS_THEME_CHECKBOX:
     case NS_THEME_CHECKBOX_CONTAINER:
     case NS_THEME_RADIO:
@@ -930,7 +1045,6 @@ nsNativeThemeMac::ThemeSupportsWidget(nsIPresContext* aPresContext,
     case NS_THEME_PROGRESSBAR_VERTICAL:
     case NS_THEME_PROGRESSBAR_CHUNK:
     case NS_THEME_PROGRESSBAR_CHUNK_VERTICAL:
-    case NS_THEME_TREEVIEW_TWISTY:
     
     case NS_THEME_LISTBOX:
     
@@ -938,6 +1052,15 @@ nsNativeThemeMac::ThemeSupportsWidget(nsIPresContext* aPresContext,
     case NS_THEME_TAB:
     case NS_THEME_TAB_LEFT_EDGE:
     case NS_THEME_TAB_RIGHT_EDGE:
+    
+    case NS_THEME_TREEVIEW_TWISTY:
+    case NS_THEME_TREEVIEW_TWISTY_OPEN:
+    case NS_THEME_TREEVIEW:
+    case NS_THEME_TREEVIEW_HEADER:
+    case NS_THEME_TREEVIEW_HEADER_CELL:
+    case NS_THEME_TREEVIEW_HEADER_SORTARROW:
+    case NS_THEME_TREEVIEW_TREEITEM:
+    case NS_THEME_TREEVIEW_LINE:
     
     case NS_THEME_SCROLLBAR:
     case NS_THEME_SCROLLBAR_BUTTON_UP:

@@ -32,6 +32,7 @@
 
 menu, 
 menuitem {
+  -moz-appearance: menu !important;
   -moz-box-align: center;
   color: MenuText;
   font: menu;
