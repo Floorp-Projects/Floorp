@@ -756,17 +756,17 @@ Rights Reserved.
       <toolbox>
         <toolbar id="msgToolbar" class="standard" persist="collapsed">
           <box id="toolbar_button_box">
-            <titledbutton id="button_getmsg" class="button28" align="top" value="&getMsgButton.label;" onclick="MsgGetMessage()"/>
-            <titledbutton id="button_newmsg" class="button28" align="top" value="&newMsgButton.label;" onclick="MsgNewMessage(event)"/>
+            <button class="key-toolbar left" orient="vertical" id="button_getmsg" value="&getMsgButton.label;" onclick="MsgGetMessage()"/>
+            <button class="key-toolbar left" orient="vertical" id="button_newmsg" value="&newMsgButton.label;" onclick="MsgNewMessage(event)"/>
             <toolbarseparator/>
-            <titledbutton id="button_reply" class="button28" align="top" value="&replyButton.label;" onclick="MsgReplyMessage(event)"/>
-            <titledbutton id="button_replyall" class="button28" align="top" value="&replyAllButton.label;" onclick="MsgReplyToAllMessage(event)"/>
-            <titledbutton id="button_forward" class="button28" align="top" value="&forwardButton.label;" onclick="MsgForwardMessage(event)"/>
+            <button class="key-toolbar left" orient="vertical" id="button_reply" value="&replyButton.label;" onclick="MsgReplyMessage(event)"/>
+            <button class="key-toolbar left" orient="vertical" id="button_replyall" value="&replyAllButton.label;" onclick="MsgReplyToAllMessage(event)"/>
+            <button class="key-toolbar left" orient="vertical" id="button_forward" value="&forwardButton.label;" onclick="MsgForwardMessage(event)"/>
             <toolbarseparator/>
 			<menu id="FileButtonMenu" datasources="rdf:null" 
 					    rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild"
 				>
-				<titledbutton id="button_file" class="other28" align="top" value="&fileButton.label;"/>
+				<button class="toolbar left" orient="vertical" id="button_file" value="&fileButton.label;"/>
  				<template> 
 				  <rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
 					<menupopup>
@@ -816,10 +816,10 @@ Rights Reserved.
 
 			  </menu>
 
-            <titledbutton id="button_next" class="other28" align="top" value="&nextButton.label;" onclick="MsgNextUnreadMessage()"/>
-			<titledbutton id="button_delete" class="other28" disabled="true" align="top" value="&deleteButton.label;" onclick="goDoCommand('button_delete')"/>
-            <titledbutton id="button_print" class="other28" align="top" value="&printButton.label;" onclick="PrintEnginePrint()"/>
-            <titledbutton id="button_stop" class="other28" align="top" value="&stopButton.label;" onclick="MsgStop();"/>
+            <button class="toolbar left" orient="vertical" id="button_next" value="&nextButton.label;" onclick="MsgNextUnreadMessage()"/>
+			      <button class="toolbar left" orient="vertical" id="button_delete" disabled="true" value="&deleteButton.label;" onclick="goDoCommand('button_delete')"/>
+            <button class="toolbar left" orient="vertical" id="button_print" value="&printButton.label;" onclick="PrintEnginePrint()"/>
+            <button class="toolbar left" orient="vertical" id="button_stop" value="&stopButton.label;" onclick="MsgStop();"/>
             <spring flex="100%"/>
           </box>
 

@@ -368,15 +368,15 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
   <toolbox>
     <toolbar id="composeToolbar" class="standard" persist="collapsed">
 		<box id="toolbar_button_box">
-	 		<titledbutton id="button_send" class="button28" align="top" value="&sendButton.label;" onclick="SendMessage()"/>
+	 		<button class="key-toolbar left" orient="vertical" id="button_send" value="&sendButton.label;" onclick="SendMessage()"/>
             <toolbarseparator/>
-	 		<titledbutton id="button_address" class="other28" align="top" value="&addressButton.label;" onclick="SelectAddress()"/>
-	 		<titledbutton id="button_attach" class="other28" align="top" value="&attachButton.label;" onclick="AttachFile()"/>
-	 		<titledbutton id="button_quote" class="other28" align="top" disabled="true" value="&quoteButton.label;" onclick="QuoteMessage()"/>
-	 		<!--titledbutton id="button_spelling" class="other28" align="top" value="&spellingButton.label;" onclick="Spelling()"/-->
+	 		<button class="toolbar left" orient="vertical" id="button_address" value="&addressButton.label;" onclick="SelectAddress()"/>
+	 		<button class="toolbar left" orient="vertical" id="button_attach" value="&attachButton.label;" onclick="AttachFile()"/>
+	 		<button class="toolbar left" orient="vertical" id="button_quote" disabled="true" value="&quoteButton.label;" onclick="QuoteMessage()"/>
+	 		<!--button class="toolbar left" orient="vertical" id="button_spelling" value="&spellingButton.label;" onclick="Spelling()"/-->
             <toolbarseparator/>
-	 		<titledbutton id="button_save" class="other28" align="top" value="&saveButton.label;" onclick="SaveAsDraft()"/>
-	 		<titledbutton id="button_stop" class="other28" align="top" disabled="true" value="&stopButton.label;" onclick="Stop()"/>
+	 		<button class="toolbar left" orient="vertical" id="button_save" value="&saveButton.label;" onclick="SaveAsDraft()"/>
+	 		<button class="toolbar left" orient="vertical" id="button_stop" disabled="true" value="&stopButton.label;" onclick="Stop()"/>
 	    	<spring flex="100%"/>
 		</box>
 
