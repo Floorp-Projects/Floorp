@@ -401,6 +401,8 @@ MimeMultipartSigned_parse_line (char *line, PRInt32 length, MimeObject *obj)
              !nsCRT::strcasecmp(encoding.get(), ENCODING_UUENCODE3) ||
              !nsCRT::strcasecmp(encoding.get(), ENCODING_UUENCODE4))
       fn = &MimeUUDecoderInit;
+    else if (!nsCRT::strcasecmp(encoding.get(), ENCODING_YENCODE))
+      fn = &MimeYDecoderInit;
 		if (fn)
 		  {
 			sig->sig_decoder_data =

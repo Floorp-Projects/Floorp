@@ -44,12 +44,12 @@
 #include "prprf.h"
 
 typedef enum mime_encoding {
-  mime_Base64, mime_QuotedPrintable, mime_uuencode
+  mime_Base64, mime_QuotedPrintable, mime_uuencode, mime_yencode
 } mime_encoding;
 
-typedef enum mime_uue_state {
-  UUE_BEGIN, UUE_BODY, UUE_END
-} mime_uue_state;
+typedef enum mime_decoder_state {
+  DS_BEGIN, DS_BODY, DS_END
+} mime_decoder_state;
 
 struct MimeDecoderData {
   mime_encoding encoding;		/* Which encoding to use */
@@ -58,9 +58,10 @@ struct MimeDecoderData {
   char token[4];
   int token_size;
 
-  /* State and read-buffer used for uudecode. */
-  mime_uue_state uue_state;
-  char uue_line_buffer [128];
+  /* State and read-buffer used for uudecode and yencode. */
+  mime_decoder_state ds_state;
+  char *line_buffer;
+  int line_buffer_size;
 
   /* Where to write the decoded data */
   nsresult (*write_buffer) (const char *buf, PRInt32 size, void *closure);
@@ -324,22 +325,31 @@ static int
 mime_decode_uue_buffer (MimeDecoderData *data,
 						const char *input_buffer, PRInt32 input_length)
 {
-  /* First, copy input_buffer into state->uue_line_buffer until we have
+  /* First, copy input_buffer into state->line_buffer until we have
 	 a complete line.
 
-	 Then decode that line in place (in the uue_line_buffer) and write
+	 Then decode that line in place (in the line_buffer) and write
 	 it out.
 
-	 Then pull the next line into uue_line_buffer and continue.
+	 Then pull the next line into line_buffer and continue.
    */
+  if (!data->line_buffer)
+  {
+    data->line_buffer_size = 128;
+    data->line_buffer = (char *)PR_MALLOC(data->line_buffer_size);
+    if (!data->line_buffer)
+      return -1;
+    data->line_buffer[0] = 0;
+  }
+
   int status = 0;
-  char *line = data->uue_line_buffer;
-  char *line_end = data->uue_line_buffer + sizeof (data->uue_line_buffer) - 1;
+  char *line = data->line_buffer;
+  char *line_end = data->line_buffer + data->line_buffer_size - 1;
 
   NS_ASSERTION(data->encoding == mime_uuencode, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
   if (data->encoding != mime_uuencode) return -1;
 
-  if (data->uue_state == UUE_END)
+  if (data->ds_state == DS_END)
 	{
 	  status = 0;
 	  goto DONE;
@@ -410,7 +420,7 @@ mime_decode_uue_buffer (MimeDecoderData *data,
 	   */
 
 
-	  if (data->uue_state == UUE_BODY &&
+	  if (data->ds_state == DS_BODY &&
 		  line[0] == 'e' &&
 		  line[1] == 'n' &&
 		  line[2] == 'd' &&
@@ -418,25 +428,25 @@ mime_decode_uue_buffer (MimeDecoderData *data,
 		   line[3] == nsCRT::LF))
 		{
 		  /* done! */
-		  data->uue_state = UUE_END;
+		  data->ds_state = DS_END;
 		  *line = 0;
 		  break;
 		}
-	  else if (data->uue_state == UUE_BEGIN)
+	  else if (data->ds_state == DS_BEGIN)
 		{
-		  if (!nsCRT::strncmp (line, "begin ", 6))
-			data->uue_state = UUE_BODY;
+		  if (!strncmp (line, "begin ", 6))
+			data->ds_state = DS_BODY;
 		  *line = 0;
 		  continue;
 		}
 	  else
 		{
-		  /* We're in UUE_BODY.  Decode the line. */
+		  /* We're in DS_BODY.  Decode the line. */
 		  char *in, *out;
 		  PRInt32 i;
 		  long lost;
 
-		  NS_ASSERTION (data->uue_state == UUE_BODY, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
+		  NS_ASSERTION (data->ds_state == DS_BODY, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
 
 		  /* We map down `line', reading four bytes and writing three.
 			 That means that `out' always stays safely behind `in'.
@@ -544,6 +554,198 @@ mime_decode_uue_buffer (MimeDecoderData *data,
   return status;
 }
 
+static int
+mime_decode_yenc_buffer (MimeDecoderData *data,
+						const char *input_buffer, PRInt32 input_length)
+{
+  /* First, copy input_buffer into state->line_buffer until we have
+	 a complete line.
+
+	 Then decode that line in place (in the line_buffer) and write
+	 it out.
+
+	 Then pull the next line into line_buffer and continue.
+   */
+  if (!data->line_buffer)
+  {
+    data->line_buffer_size = 1000; // let make sure we have plenty of space for the header line
+    data->line_buffer = (char *)PR_MALLOC(data->line_buffer_size);
+    if (!data->line_buffer)
+      return -1;
+    data->line_buffer[0] = 0;
+  }
+
+  int status = 0;
+  char *line = data->line_buffer;
+  char *line_end = data->line_buffer + data->line_buffer_size - 1;
+
+  NS_ASSERTION(data->encoding == mime_yencode, "wrong decoder!");
+  if (data->encoding != mime_yencode) return -1;
+
+  if (data->ds_state == DS_END)
+    return 0;
+
+  while (input_length > 0)
+  {
+    /* Copy data from input_buffer to `line' until we have a complete line,
+       or until we've run out of input.
+
+       (line may have data in it already if the last time we were called,
+       we weren't called with a buffer that ended on a line boundary.)
+    */
+    {
+      char *out = line + strlen(line);
+      while (input_length > 0 && out < line_end)
+      {
+        *out++ = *input_buffer++;
+        input_length--;
+
+        if (out[-1] == nsCRT::CR || out[-1] == nsCRT::LF)
+        {
+          /* If we just copied a CR, and an LF is waiting, grab it too. */
+          if (out[-1] == nsCRT::CR &&
+                  input_length > 0 &&
+                  *input_buffer == nsCRT::LF)
+            input_buffer++, input_length--;
+
+           /* We have a line. */
+           break;
+        }
+      }
+      *out = 0;
+
+      /* Ignore blank lines. */
+      if (*line == nsCRT::CR || *line == nsCRT::LF)
+      {
+        *line = 0;
+        continue;
+      }
+
+      /* If this line was bigger than our buffer, truncate it.
+         (This means the data was way corrupted, and there's basically
+         no chance of decoding it properly, but give it a shot anyway.)
+      */
+      if (out == line_end)
+      {
+        out--;
+        out[-1] = nsCRT::CR;
+        out[0] = 0;
+      }
+
+      /* If we didn't get a complete line, simply return; we'll be called
+         with the rest of this line next time.
+      */
+      if (out[-1] != nsCRT::CR && out[-1] != nsCRT::LF)
+      {
+        NS_ASSERTION (input_length == 0, "empty buffer!");
+        break;
+      }
+    }
+
+
+	  /* Now we have a complete line.  Deal with it.
+	   */
+    const char * endOfLine = line + strlen(line);
+
+	  if (data->ds_state == DS_BEGIN)
+		{
+      int new_line_size = 0;
+      /* this yenc decoder does not support yenc v2 or multipart yenc.
+         Therefore, we are looking first for "=ybegin line="
+      */
+		  if ((endOfLine - line) >= 13 && !strncmp (line, "=ybegin line=", 13))
+      {
+        /* ...then couple digits. */
+        for (line += 13; line < endOfLine; line ++)
+        {
+          if (*line < '0' || *line > '9')
+            break;
+          new_line_size = (new_line_size * 10) + *line - '0';
+        }
+
+        /* ...next, look for <space>size= */
+        if ((endOfLine - line) >= 6 && !strncmp (line, " size=", 6))
+        {
+          /* ...then couple digits. */
+          for (line += 6; line < endOfLine; line ++)
+            if (*line < '0' || *line > '9')
+              break;
+
+          /* ...next, look for <space>name= */
+          if ((endOfLine - line) >= 6 && !strncmp (line, " name=", 6))
+          {
+            /* we have found the yenc header line.
+               Now check if we need to grow our buffer line
+            */
+			      data->ds_state = DS_BODY;
+            if (new_line_size > data->line_buffer_size && new_line_size <= 997) /* don't let bad value hurt us! */
+            {
+              PR_Free(data->line_buffer);
+              data->line_buffer_size = new_line_size + 4; //extra chars for line ending and potential escape char
+              data->line_buffer = (char *)PR_MALLOC(data->line_buffer_size);
+              if (!data->line_buffer)
+                return -1;
+            }
+          }
+        }
+
+      }
+		  *data->line_buffer = 0;
+		  continue;
+		}
+
+    if (data->ds_state == DS_BODY && line[0] == '=')
+    {
+      /* look if this this the final line */
+		  if (!strncmp (line, "=yend size=", 11))
+      {
+		    /* done! */
+		    data->ds_state = DS_END;
+		    *line = 0;
+		    break;
+      }
+		}
+
+    /* We're in DS_BODY.  Decode the line in place. */
+    {
+      char *src = line;
+      char *dest = src;
+      char c;
+      for (; src < line_end; src ++)
+      {
+        c = *src;
+        if (!c || c == nsCRT::CR || c == nsCRT::LF)
+          break;
+
+        if (c == '=')
+        {
+          src++;
+          c = *src;
+          if (c == 0)
+            return -1;  /* last character cannot be escape char */
+          c -= 64;
+        }
+        c -= 42;
+        *dest = c;
+        dest ++;
+      }
+      
+		  /* Now write out what we decoded for this line. */
+		  NS_ASSERTION(dest >= line && dest < src, "nothing to write!");
+		  if (dest > line)
+      {
+			  status = data->write_buffer (line, dest - line, data->closure);
+		    if (status < 0) /* abort */
+			    return status;
+      }
+
+		  /* Reset the line so that we don't think it's partial next time. */
+		  *line = 0;
+    }
+  }
+
+  return 1;
+}
 
 int
 MimeDecoderDestroy (MimeDecoderData *data, PRBool abort_p)
@@ -562,6 +764,8 @@ MimeDecoderDestroy (MimeDecoderData *data, PRBool abort_p)
 								   data->closure);
 	}
 
+  if (data->line_buffer)
+    PR_Free(data->line_buffer);
   PR_Free (data);
   return status;
 }
@@ -578,6 +782,9 @@ mime_decoder_init (mime_encoding which,
   data->encoding = which;
   data->write_buffer = output_fn;
   data->closure = closure;
+  data->line_buffer_size = 0;
+  data->line_buffer = nsnull;
+
   return data;
 }
 
@@ -602,6 +809,13 @@ MimeUUDecoderInit (nsresult (*output_fn) (const char *, PRInt32, void *),
   return mime_decoder_init (mime_uuencode, output_fn, closure);
 }
 
+MimeDecoderData *
+MimeYDecoderInit (nsresult (*output_fn) (const char *, PRInt32, void *),
+				   void *closure)
+{
+  return mime_decoder_init (mime_yencode, output_fn, closure);
+}
+
 int
 MimeDecoderWrite (MimeDecoderData *data, const char *buffer, PRInt32 size)
 {
@@ -615,6 +829,8 @@ MimeDecoderWrite (MimeDecoderData *data, const char *buffer, PRInt32 size)
 	  return mime_decode_qp_buffer (data, buffer, size);
 	case mime_uuencode:
 	  return mime_decode_uue_buffer (data, buffer, size);
+	case mime_yencode:
+	  return mime_decode_yenc_buffer (data, buffer, size);
 	default:
 	  NS_ASSERTION(0, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
 	  return -1;

@@ -221,7 +221,7 @@ MimeObject_parse_begin (MimeObject *obj)
           if (mime_typep(obj->parent, (MimeObjectClass*) &mimeMessageClass) ||
             mime_typep(obj->parent, (MimeObjectClass*) &mimeMultipartAppleDoubleClass))
           {
-            obj->output_p = !nsCRT::strncmp((const char*)id, (const char*)obj->options->part_to_load, 
+            obj->output_p = !strncmp((const char*)id, (const char*)obj->options->part_to_load, 
                                             (unsigned int)strlen(obj->options->part_to_load));
           }
       }

@@ -369,7 +369,7 @@ MimeMultipart_check_boundary(MimeObject *obj, const char *line, PRInt32 length)
   if (term_p)
     length -= 2;
 
-  if (blen == length-2 && !nsCRT::strncmp(line+2, mult->boundary, length-2))
+  if (blen == length-2 && !strncmp(line+2, mult->boundary, length-2))
 	  return (term_p
 			? MimeMultipartBoundaryTypeTerminator
 			: MimeMultipartBoundaryTypeSeparator);

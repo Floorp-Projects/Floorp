@@ -124,6 +124,8 @@ MimeEncrypted_parse_begin (MimeObject *obj)
 		   !nsCRT::strcasecmp(obj->encoding, ENCODING_UUENCODE3) ||
 		   !nsCRT::strcasecmp(obj->encoding, ENCODING_UUENCODE4))
 	fn = &MimeUUDecoderInit;
+  else if (!nsCRT::strcasecmp(obj->encoding, ENCODING_YENCODE))
+    fn = &MimeYDecoderInit;
   if (fn)
 	{
 	  enc->decoder_data =

@@ -1577,8 +1577,8 @@ mime_bridge_create_display_stream(
   }
  
   if (msd->options->headers == MimeHeadersMicro &&
-     (msd->url_name == NULL || (nsCRT::strncmp(msd->url_name, "news:", 5) != 0 &&
-              nsCRT::strncmp(msd->url_name, "snews:", 6) != 0)) )
+     (msd->url_name == NULL || (strncmp(msd->url_name, "news:", 5) != 0 &&
+              strncmp(msd->url_name, "snews:", 6) != 0)) )
     msd->options->headers = MimeHeadersMicroPlus;
 
   msd->options->url = msd->url_name;

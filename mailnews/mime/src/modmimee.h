@@ -71,6 +71,10 @@ MimeDecoderData *MimeUUDecoderInit (nsresult (*output_fn) (const char *buf,
 													  PRInt32 size,
 													  void *closure),
 									void *closure);
+MimeDecoderData *MimeYDecoderInit (nsresult (*output_fn) (const char *buf,
+													  PRInt32 size,
+													  void *closure),
+									void *closure);
 
 MimeEncoderData *MimeB64EncoderInit(nsresult (*output_fn) (const char *buf,
 													  PRInt32 size,

@@ -781,7 +781,7 @@ mime_insert_all_headers(char            **body,
     char *c2 = 0;
 
     // Hack for BSD Mailbox delimiter. 
-    if (i == 0 && head[0] == 'F' && !nsCRT::strncmp(head, "From ", 5))
+    if (i == 0 && head[0] == 'F' && !strncmp(head, "From ", 5))
     {
       colon = head + 4;
       contents = colon + 1;
@@ -1961,6 +1961,8 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
              !nsCRT::strcasecmp(newAttachment->encoding, ENCODING_UUENCODE3) ||
              !nsCRT::strcasecmp(newAttachment->encoding, ENCODING_UUENCODE4))
       fn = &MimeUUDecoderInit;
+    else if (!nsCRT::strcasecmp(newAttachment->encoding, ENCODING_YENCODE))
+      fn = &MimeYDecoderInit;
     
     if (fn) 
     {

@@ -170,6 +170,7 @@
 #define ENCODING_UUENCODE2                  "x-uue"
 #define ENCODING_UUENCODE3                  "uuencode"
 #define ENCODING_UUENCODE4                  "uue"
+#define ENCODING_YENCODE                    "x-yencode"
 
 /* Some names of parameters that various MIME headers include.
  */

@@ -67,6 +67,12 @@ static PRBool MimeUntypedText_uu_begin_line_p(const char *line, PRInt32 length,
 											   char **name_ret);
 static PRBool MimeUntypedText_uu_end_line_p(const char *line, PRInt32 length);
 
+static PRBool MimeUntypedText_yenc_begin_line_p(const char *line, PRInt32 length,
+											   MimeDisplayOptions *opt,
+											   char **type_ret,
+											   char **name_ret);
+static PRBool MimeUntypedText_yenc_end_line_p(const char *line, PRInt32 length);
+
 static PRBool MimeUntypedText_binhex_begin_line_p(const char *line,
 												   PRInt32 length,
 												   MimeDisplayOptions *opt);
@@ -154,6 +160,21 @@ MimeUntypedText_parse_line (char *line, PRInt32 length, MimeObject *obj)
 	  begin_line_p = PR_TRUE;
 	}
 
+  else if (line[0] == '=' &&
+	  MimeUntypedText_yenc_begin_line_p(line, length, obj->options,
+									  &type, &name))
+	{
+	  /* Close the old part and open a new one. */
+	  status = MimeUntypedText_open_subpart (obj,
+											 MimeUntypedTextSubpartTypeYEnc,
+											 type, ENCODING_YENCODE,
+											 name, NULL);
+	  PR_FREEIF(name);
+	  PR_FREEIF(type);
+	  if (status < 0) return status;
+	  begin_line_p = PR_TRUE;
+	}
+
   else if (line[0] == '(' && line[1] == 'T' &&
 		   MimeUntypedText_binhex_begin_line_p(line, length, obj->options))
 	{
@@ -202,14 +223,22 @@ MimeUntypedText_parse_line (char *line, PRInt32 length, MimeObject *obj)
 	{
 	  status = MimeUntypedText_close_subpart (obj);
 	  if (status < 0) return status;
-	  PR_ASSERT(!uty->open_subpart);
+	  NS_ASSERTION(!uty->open_subpart, "no open subpart");
+	}
+  else if (line[0] == '=' &&
+		   uty->type == MimeUntypedTextSubpartTypeYEnc &&
+		   MimeUntypedText_yenc_end_line_p(line, length))
+	{
+	  status = MimeUntypedText_close_subpart (obj);
+	  if (status < 0) return status;
+	  NS_ASSERTION(!uty->open_subpart, "no open subpart");
 	}
   else if (uty->type == MimeUntypedTextSubpartTypeBinhex &&
 		   MimeUntypedText_binhex_end_line_p(line, length))
 	{
 	  status = MimeUntypedText_close_subpart (obj);
 	  if (status < 0) return status;
-	  PR_ASSERT(!uty->open_subpart);
+	  NS_ASSERTION(!uty->open_subpart, "no open subpart");
 	}
 
   return 0;
@@ -274,8 +303,8 @@ MimeUntypedText_open_subpart (MimeObject *obj,
 	  status = MimeUntypedText_close_subpart (obj);
 	  if (status < 0) return status;
 	}
-  PR_ASSERT(!uty->open_subpart);
-  PR_ASSERT(!uty->open_hdrs);
+  NS_ASSERTION(!uty->open_subpart, "no open subpart");
+  NS_ASSERTION(!uty->open_hdrs, "no open headers");
 
   /* To make one of these implicitly-typed sub-objects, we make up a fake
 	 header block, containing only the minimum number of MIME headers needed.
@@ -400,7 +429,7 @@ MimeUntypedText_uu_begin_line_p(const char *line, PRInt32 length,
   if (type_ret) *type_ret = 0;
   if (name_ret) *name_ret = 0;
 
-  if (nsCRT::strncmp (line, "begin ", 6)) return PR_FALSE;
+  if (strncmp (line, "begin ", 6)) return PR_FALSE;
   /* ...then three or four octal digits. */
   s = line + 6;
   if (*s < '0' || *s > '7') return PR_FALSE;
@@ -482,6 +511,78 @@ MimeUntypedText_uu_end_line_p(const char *line, PRInt32 length)
 #endif
 }
 
+static PRBool
+MimeUntypedText_yenc_begin_line_p(const char *line, PRInt32 length,
+								MimeDisplayOptions *opt,
+								char **type_ret, char **name_ret)
+{
+  const char *s;
+  const char *endofline = line + length;
+  char *name = 0;
+  char *type = 0;
+
+  if (type_ret) *type_ret = 0;
+  if (name_ret) *name_ret = 0;
+
+  /* we don't support yenc V2 neither multipart yencode,
+     therefore the second parameter should always be "line="*/
+  if (length < 13 || strncmp (line, "=ybegin line=", 13)) return PR_FALSE;
+
+  /* ...then couple digits. */
+  for (s = line + 13; s < endofline; s ++)
+    if (*s < '0' || *s > '9')
+      break;
+
+  /* ...next, look for <space>size= */
+  if ((endofline - s) < 6 || strncmp (s, " size=", 6)) return PR_FALSE;
+  
+  /* ...then couple digits. */
+  for (s += 6; s < endofline; s ++)
+    if (*s < '0' || *s > '9')
+      break;
+
+   /* ...next, look for <space>name= */
+  if ((endofline - s) < 6 || strncmp (s, " name=", 6)) return PR_FALSE;
+
+  /* anything left is the file name */
+  s += 6;
+  name = (char *) PR_MALLOC((endofline-s) + 1);
+  if (!name) return PR_FALSE; /* grr... */
+  memcpy(name, s, endofline-s);
+  name[endofline-s] = 0;
+
+  /* take off newline. */
+  if (name[strlen(name)-1] == nsCRT::LF) name[strlen(name)-1] = 0;
+  if (name[strlen(name)-1] == nsCRT::CR) name[strlen(name)-1] = 0;
+
+  /* Now try and figure out a type.
+   */
+  if (opt && opt->file_type_fn)
+	type = opt->file_type_fn(name, opt->stream_closure);
+  else
+	type = 0;
+
+  if (name_ret)
+	*name_ret = name;
+  else
+	PR_FREEIF(name);
+
+  if (type_ret)
+	*type_ret = type;
+  else
+	PR_FREEIF(type);
+
+  return PR_TRUE;
+}
+
+static PRBool
+MimeUntypedText_yenc_end_line_p(const char *line, PRInt32 length)
+{
+  if (length < 11 || strncmp (line, "=yend size=", 11)) return PR_FALSE;
+
+  return PR_TRUE;	
+}
+
 
 #define BINHEX_MAGIC "(This file must be converted with BinHex 4.0)"
 #define BINHEX_MAGIC_LEN 45
@@ -499,7 +600,7 @@ MimeUntypedText_binhex_begin_line_p(const char *line, PRInt32 length,
   if (length != BINHEX_MAGIC_LEN)
 	return PR_FALSE;
 
-  if (!nsCRT::strncmp(line, BINHEX_MAGIC, BINHEX_MAGIC_LEN))
+  if (!strncmp(line, BINHEX_MAGIC, BINHEX_MAGIC_LEN))
 	return PR_TRUE;
   else
 	return PR_FALSE;

@@ -85,6 +85,7 @@ extern MimeUntypedTextClass mimeUntypedTextClass;
 typedef enum {
   MimeUntypedTextSubpartTypeText,	/* text/plain */
   MimeUntypedTextSubpartTypeUUE,	/* uuencoded data */
+  MimeUntypedTextSubpartTypeYEnc,	/* yencoded data */
   MimeUntypedTextSubpartTypeBinhex	/* Mac BinHex data */
 } MimeUntypedTextSubpartType;
 
