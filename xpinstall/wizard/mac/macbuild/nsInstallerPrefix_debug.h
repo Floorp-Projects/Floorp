@@ -20,7 +20,5 @@
  *     Samir Gehani <sgehani@netscape.com>
  */
  
-#include <MacHeaders.h>
-
 #define MIW_DEBUG 1
 #define MOZILLA 0
