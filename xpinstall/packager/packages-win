@@ -174,6 +174,7 @@ bin\components\wallet.dll
 bin\components\wallet.xpt
 bin\components\walleteditor.xpt
 bin\components\walletpreview.xpt
+bin\components\webshell_idls.xpt
 bin\components\widget.xpt
 bin\components\wlltvwrs.dll
 bin\components\xpc3250.dll

@@ -22,6 +22,7 @@
 DEPTH=..\..
 
 MODULE=raptor
+XPIDL_MODULE=webshell_idls
 
 include <$(DEPTH)\config\config.mak>
 
