@@ -28,9 +28,28 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= editor
 LIBRARY_NAME	= htmleditor_s
-# REQUIRES	= xpcom string dom js locale layout uriloader widget txmgr htmlparser necko pref view appshell rdf webshell timer txtsvc intl lwbrk docshell chrome caps appcomps xuldoc
 
-# Building the full blown HTML Editor  so add it's source files and objects:
+REQUIRES        = xpcom \
+                  string \
+                  dom \
+                  layout \
+                  locale \
+                  content \
+                  uriloader \
+                  txmgr \
+                  htmlparser \
+                  necko \
+                  pref \
+                  view \
+                  webshell \
+                  timer \
+                  intl \
+                  docshell \
+                  gfx \
+                  widget \
+                  $(NULL)
+
+# Building the full blown HTML Editor  so add its source files and objects:
 
 CPPSRCS  = \
            nsEditProperty.cpp             \
