@@ -93,6 +93,7 @@
 #include "nsILayoutHistoryState.h"
 #include "nsIScrollPositionListener.h"
 #include "nsICompositeListener.h"
+#include "nsILineIterator.h" // for ScrollFrameIntoView
 #include "nsTimer.h"
 #include "nsWeakPtr.h"
 #include "plarena.h"
@@ -3417,6 +3418,44 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
       // getting the offset from its closest view and then walking up
       scrollingView->GetScrolledView(scrolledView);
       aFrame->GetOffsetFromView(mPresContext, offset, &closestView);
+
+      // If this is an inline frame, we need to change the top of the
+      // offset to include the whole line.
+      nsCOMPtr<nsIAtom> frameType;
+      nsIFrame *prevFrame = aFrame;
+      nsIFrame *frame = aFrame;
+      while (frame && (frame->GetFrameType(getter_AddRefs(frameType)),
+                       frameType.get() == nsLayoutAtoms::inlineFrame)) {
+        prevFrame = frame;
+        prevFrame->GetParent(&frame);
+      }
+      if (frame != aFrame &&
+          frame &&
+          frameType.get() == nsLayoutAtoms::blockFrame) {
+        // find the line containing aFrame and increase the top of |offset|.
+        nsCOMPtr<nsILineIterator> lines( do_QueryInterface(frame) );
+        if (lines) {
+          PRInt32 index = -1;
+          lines->FindLineContaining(prevFrame, &index);
+          if (index >= 0) {
+            nsIFrame *trash1;
+            PRInt32 trash2;
+            nsRect lineBounds;
+            PRUint32 trash3;
+            if (NS_SUCCEEDED(lines->GetLine(index, &trash1, &trash2,
+                                            lineBounds, &trash3))) {
+              nsPoint blockOffset;
+              nsIView* blockView;
+              frame->GetOffsetFromView(mPresContext, blockOffset, &blockView);
+              if (blockView == closestView) {
+                // XXX If views not equal, this is hard.  Do we want to bother?
+                nscoord newoffset = lineBounds.y + blockOffset.y;
+                if (newoffset < offset.y) offset.y = newoffset;
+              }
+            }
+          }
+        }
+      }
 
       // XXX Deal with the case where there is a scrolled element, e.g., a
       // DIV in the middle...
