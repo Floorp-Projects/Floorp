@@ -426,7 +426,12 @@ motif_check_xpm()
 	then
 		if [ -f $_lib ]
 		then
-			_count=`strings $_lib | grep Xpm | wc -l`
+			# Solaris 2.6's motif has builtin Xpm support.
+			# Its a dumbass hack...  Why not ship libXpm to avoid
+			# the confusion ?  Anyway, do 'grep -v XmXpm' to catch this
+			# problem.  In this case Xpm is not needed, since the symbols
+			# are builtin to the libXm library.
+			_count=`strings $_lib | grep Xpm | grep -v XmXpm wc -l`
 		fi
 	fi
 
