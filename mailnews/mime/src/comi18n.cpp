@@ -1142,8 +1142,8 @@ char *intl_decode_mime_part2_str(const char *header,
   // initialize charset name to an empty string
   charset[0] = '\0';
 
-  /* Assume no more than 2X expansion due to UTF-8 conversion */
-  retbuff = (char *)PR_Malloc(2*nsCRT::strlen(header)+1);
+  /* Assume no more than 3X expansion due to UTF-8 conversion */
+  retbuff = (char *)PR_Malloc(3*nsCRT::strlen(header)+1);
 
   if (retbuff == NULL)
     return NULL;
