@@ -53,6 +53,8 @@ is_selfserv_alive()
 		sleep 5
 		if [ ! -f "${SERVERPID}" ]
 		then
+			echo "<TR><TD>fatal error - no serverpidfile</TD><TD bgcolor=red>Failed</TD><TR>" >> ${RESULTS}
+			echo "</TABLE><BR>" >> ${RESULTS}
 			Exit "Fatal Error - selfserver pid file ${SERVERPID} still does not exist - exiting"
 		fi
 	fi
@@ -66,7 +68,9 @@ is_selfserv_alive()
 	fi
 	if [ "$SERVER_OK" = "FALSE" ]
 	then
-		Exit "Fatal Error - selfserver process not dedectable"
+		echo "<TR><TD>fatal error - no selfserverprocess</TD><TD bgcolor=red>Failed</TD><TR>" >> ${RESULTS}
+		echo "</TABLE><BR>" >> ${RESULTS}
+		Exit "Fatal Error - selfserver process not detectable"
 	fi
 }
 
