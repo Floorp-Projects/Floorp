@@ -68,8 +68,9 @@ protected:
 
 public:
   // nsIRenderingContext
-  NS_IMETHOD Init(nsIDeviceContext* aContext, nsIWidget *aWindow);
-  NS_IMETHOD Init(nsIDeviceContext* aContext, nsDrawingSurface aSurface);
+  NS_IMETHOD Init(nsIDeviceContext* aContext, nsIRenderingContext *aDelRenderingContext);
+  NS_IMETHOD Init(nsIDeviceContext* aContext, nsIWidget *aWidget){return NS_OK;}
+  NS_IMETHOD Init(nsIDeviceContext* aContext, nsDrawingSurface aSurface){return NS_OK;}
 
   NS_IMETHOD Reset(void);
 
@@ -167,46 +168,13 @@ private:
   void PushClipState(void);
 
 protected:
-  nscolor					    mCurrentColor;
-  nsTransform2D		    *mTMatrix;		// transform that all the graphics drawn here will obey
-  nsIFontMetrics	    *mFontMetrics;
-  //HDC                 mDC;
-  //HDC                 mMainDC;
-  nsDrawingSurfacePS *mSurface;
-  //nsDrawingSurfaceWin *mMainSurface;
-  COLORREF            mColor;
-  //nsIWidget           *mDCOwner;
   nsIDeviceContext    *mContext;
-  float               mP2T;
-  HRGN                mClipRegion;
-  //default objects
-  HBRUSH              mOrigSolidBrush;
-  HBRUSH              mBlackBrush;
-  HFONT               mOrigFont;
-  HFONT               mDefFont;
-  HPEN                mOrigSolidPen;
-  HPEN                mBlackPen;
-  HPALETTE            mOrigPalette;
+  nsIRenderingContext *mDelRenderingContext;
 
   //state management
-  nsVoidArray         *mStateCache;
-  nscolor             mCurrBrushColor;
-  HBRUSH              mCurrBrush;
-  nsIFontMetrics      *mCurrFontMetrics;
-  HFONT               mCurrFont;
-  nscolor             mCurrPenColor;
-  HPEN                mCurrPen;
-  HPEN                mNullPen;
   PRUint8             *mGammaTable;
-  COLORREF            mCurrTextColor;
-  nsLineStyle         mCurrLineStyle;
-  PRBool              mGetNearestColor;
   MWContext           *mPrintContext; //XXX: Remove need for MWContext
-	nsDrawingSurfacePS  mFrontBuffer;		// screen port
 
-	// graphic state management
-	GraphicState *			  mStates;				// Pointer to the current graphic state, top of stack
-	nsVoidArray *			    mGSArray;
 
 };
 

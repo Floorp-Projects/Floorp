@@ -18,7 +18,6 @@
 
 #include "nsDeviceContextPS.h"
 #include "nsRenderingContextPS.h"
-//#include "nsDeviceContextSpecPS.h"
 #include "nsString.h"
 
 #include "prprf.h"
@@ -37,6 +36,7 @@ nsDeviceContextPS :: nsDeviceContextPS()
 
   NS_INIT_REFCNT();
   mSpec = nsnull;
+  mDelContext = nsnull;
   
 }
 
@@ -56,41 +56,45 @@ NS_IMPL_RELEASE(nsDeviceContextPS)
  *  See documentation in nsDeviceContextPS.h
  *	@update 12/21/98 dwc
  */
-NS_IMETHODIMP nsDeviceContextPS :: Init(nsNativeWidget aNativeWidget)
+NS_IMETHODIMP nsDeviceContextPS :: Init(nsIDeviceContext *aCreatingDeviceContext)
 {
+  mDelContext = aCreatingDeviceContext;
+
   return  NS_OK;
 }
 
 
 /** ---------------------------------------------------
- *  See documentation in nsIDeviceContext.h
+ *  Create a Postscript RenderingContext.  This will create a RenderingContext
+ *  from the deligate RenderingContext and intall that into our Postscript RenderingContext.
  *	@update 12/21/98 dwc
+ *  @param aContext -- our newly created Postscript RenderingContextPS
+ *  @return -- NS_OK if everything succeeded.
  */
 NS_IMETHODIMP nsDeviceContextPS :: CreateRenderingContext(nsIRenderingContext *&aContext)
 {
-nsIRenderingContext   *pContext;
-nsresult              rv;
-//GrafPtr								thePort;
+nsIRenderingContext   *delContext;
+nsresult              rv = NS_ERROR_OUT_OF_MEMORY;
 
-	pContext = new nsRenderingContextPS();
-  if (nsnull != pContext){
-    NS_ADDREF(pContext);
+  if(mDelContext){
+    // create the platform specific RenderingContext from the deligate
+    mDelContext->CreateRenderingContext(delContext);
 
-   	//::GetPort(&thePort);
+    // create a new postscript renderingcontext
+	  aContext = new nsRenderingContextPS();
+    if (nsnull != aContext){
+      NS_ADDREF(aContext);
+      rv = ((nsRenderingContextPS*) aContext)->Init(this,delContext);
+    }
+    else{
+      rv = NS_ERROR_OUT_OF_MEMORY;
+    }
 
-    //if (nsnull != thePort){
-      rv = pContext->Init(this,(nsDrawingSurface)nsnull);
-    //}
-    //else
-      //rv = NS_ERROR_OUT_OF_MEMORY;
+    if (NS_OK != rv){
+      NS_IF_RELEASE(aContext);
+    }
   }
-  else
-    rv = NS_ERROR_OUT_OF_MEMORY;
 
-  if (NS_OK != rv){
-    NS_IF_RELEASE(pContext);
-  }
-  aContext = pContext;
   return rv;
 }
 
@@ -100,8 +104,10 @@ nsresult              rv;
  */
 NS_IMETHODIMP nsDeviceContextPS :: SupportsNativeWidgets(PRBool &aSupportsWidgets)
 {
-  aSupportsWidgets = PR_TRUE;
-  return NS_OK;
+
+  return (mDelContext->SupportsNativeWidgets(aSupportsWidgets));
+  //aSupportsWidgets = PR_FALSE;
+  //return NS_OK;
 }
 
 /** ---------------------------------------------------
@@ -110,10 +116,13 @@ NS_IMETHODIMP nsDeviceContextPS :: SupportsNativeWidgets(PRBool &aSupportsWidget
  */
 NS_IMETHODIMP nsDeviceContextPS :: GetScrollBarDimensions(float &aWidth, float &aHeight) const
 {
+
+  return (mDelContext->GetScrollBarDimensions(aWidth, aHeight));
+
   // XXX Should we push this to widget library
-  aWidth = 320.0;
-  aHeight = 320.0;
-  return NS_OK;
+  //aWidth = 320.0;
+  //aHeight = 320.0;
+  //return NS_OK;
 }
 
 /** ---------------------------------------------------
@@ -122,8 +131,10 @@ NS_IMETHODIMP nsDeviceContextPS :: GetScrollBarDimensions(float &aWidth, float &
  */
 NS_IMETHODIMP nsDeviceContextPS :: GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface)
 {
-  aContext.CreateDrawingSurface(nsnull, 0, aSurface);
-  return nsnull == aSurface ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+
+  return(mDelContext->GetDrawingSurface(aContext,aSurface));
+  //aContext.CreateDrawingSurface(nsnull, 0, aSurface);
+  //return nsnull == aSurface ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
 }
 
 /** ---------------------------------------------------
@@ -132,8 +143,10 @@ NS_IMETHODIMP nsDeviceContextPS :: GetDrawingSurface(nsIRenderingContext &aConte
  */
 NS_IMETHODIMP nsDeviceContextPS::GetDepth(PRUint32& aDepth)
 {
-  aDepth = mDepth;
-  return NS_OK;
+  return(mDelContext->GetDepth(aDepth));
+
+  //aDepth = mDepth;
+  //return NS_OK;
 }
 
 /** ---------------------------------------------------
@@ -153,6 +166,9 @@ NS_IMETHODIMP nsDeviceContextPS::CreateILColorSpace(IL_ColorSpace*& aColorSpace)
 NS_IMETHODIMP nsDeviceContextPS::GetILColorSpace(IL_ColorSpace*& aColorSpace)
 {
 
+    return (mDelContext->GetILColorSpace(aColorSpace));
+
+#ifdef NOTNOW
   if (nsnull == mColorSpace) {
     IL_RGBBits colorRGBBits;
   
@@ -175,6 +191,7 @@ NS_IMETHODIMP nsDeviceContextPS::GetILColorSpace(IL_ColorSpace*& aColorSpace)
   //aColorSpace = mColorSpace;
   //IL_AddRefToColorSpace(aColorSpace);
   return NS_OK;
+#endif
 }
 
 
