@@ -6,11 +6,20 @@
 package BotModules::Greeting;
 use vars qw(@ISA);
 @ISA = qw(BotModules);
+use AnyDBM_File;
+use Fcntl;
 1;
 
 # SpottedNickChange would be a nice one to do if you 
 # can solve the problem of working out which channel
 # to say stuff in...
+
+# database for seen data
+our $seen = {'times' => {}, 'states' => {}};
+# the times that the relevant nicks were last seen active
+tie(%{$seen->{'times'}}, 'AnyDBM_File', 'seen-times', O_RDWR|O_CREAT, 0666);
+# what the relevant nicks were last seen doing
+tie(%{$seen->{'states'}}, 'AnyDBM_File', 'seen-states', O_RDWR|O_CREAT, 0666);
 
 sub Help {
     my $self = shift;
@@ -71,8 +80,6 @@ sub RegisterConfig {
         ['lastEvil', 1, 0, 0], # when the last c++ insult took place
         ['assumeThanksTime', 1, 1, 10], # how long to assume that thanks are directed to us after hearing from them (seconds)
         ['_lastSpoken', 0, 0, {}], # who has spoken to us
-        ['seenTimes', 1, 1, {}], # the times that the relevant nicks were last seen active
-        ['seenStates', 1, 1, {}], # what the relevant nicks were last seen doing
         ['seenOverrides', 1, 1, {'therapist' => 'Look, dude, I\'m feeling fine, mm\'k?'}], # canned responses
         ['source', 1, 1, 'http://lxr.mozilla.org/mozilla/source/webtools/mozbot/'], # reply to give for CTCP SOURCE
     );
@@ -85,8 +92,8 @@ sub Told {
     $self->{'_lastSpoken'}->{$event->{'user'}} = $now;
     if ($event->{'channel'} ne '') {
         my $channel = $event->{'channel'};
-        $self->{'seenTimes'}->{lc $event->{'from'}} = $now;
-        $self->{'seenStates'}->{lc $event->{'from'}} = "saying '$message' to me in $channel.";
+        $seen->{'times'}->{lc $event->{'from'}} = $now;
+        $seen->{'states'}->{lc $event->{'from'}} = "saying '$message' to me in $channel.";
     }
     my $me = quotemeta($event->{'bot'}->nick);
     my $expandedme = join('+', split(//gos, $me)).'+';
@@ -145,8 +152,8 @@ sub Heard {
     my ($event, $message) = @_;
     if ($event->{'channel'} ne '') {
         my $channel = $event->{'channel'};
-        $self->{'seenTimes'}->{lc $event->{'from'}} = time();
-        $self->{'seenStates'}->{lc $event->{'from'}} = "saying '$message' in $channel.";
+        $seen->{'times'}->{lc $event->{'from'}} = time();
+        $seen->{'states'}->{lc $event->{'from'}} = "saying '$message' in $channel.";
     }
     my $me = quotemeta($event->{'bot'}->nick);
     my $expandedme = join('+', split(//gos, $me)).'+';
@@ -197,8 +204,8 @@ sub Felt {
     if ($event->{'channel'} ne '') {
         my $nick = $event->{'from'};
         my $channel = $event->{'channel'};
-        $self->{'seenTimes'}->{lc $event->{'from'}} = time();
-        $self->{'seenStates'}->{lc $event->{'from'}} = "saying '* $nick $message' in $channel.";
+        $seen->{'times'}->{lc $event->{'from'}} = time();
+        $seen->{'states'}->{lc $event->{'from'}} = "saying '* $nick $message' in $channel.";
     }
     my $me = quotemeta($event->{'bot'}->nick);
     if ($message =~ /^\s*(?:pokes|prods)\s+$me(?:[,\s]+too|\s+as\s+well)?[\s!1.]*$/si) {
@@ -233,8 +240,8 @@ sub Saw {
     if ($event->{'channel'} ne '') {
         my $nick = $event->{'from'};
         my $channel = $event->{'channel'};
-        $self->{'seenTimes'}->{lc $event->{'from'}} = time();
-        $self->{'seenStates'}->{lc $event->{'from'}} = "saying '* $nick $message' in $channel.";
+        $seen->{'times'}->{lc $event->{'from'}} = time();
+        $seen->{'states'}->{lc $event->{'from'}} = "saying '* $nick $message' in $channel.";
     }
     if ($message =~ /^\s*r+h+e(e+)t+s?[!1.\s]*$/osi) {
         if ((time()-$self->{'lastrheet'}) > $self->{'rheetbuffer'}) {
@@ -266,8 +273,8 @@ sub SpottedJoin {
 sub SpottedNickChange {
     my $self = shift;
     my ($event, $from, $to) = @_;
-    $self->{'seenTimes'}->{lc $event->{'from'}} = time();
-    $self->{'seenStates'}->{lc $event->{'from'}} = "changing nick to $to.";
+    $seen->{'times'}->{lc $event->{'from'}} = time();
+    $seen->{'states'}->{lc $event->{'from'}} = "changing nick to $to.";
     return $self->SUPER::SpottedNickChange(@_);
 }
 
@@ -353,7 +360,7 @@ sub DoSeen {
     } elsif (defined($self->{'seenOverrides'}->{$who})) {
         $self->say($event, $self->{'seenOverrides'}->{$who});
     } else {
-        my $seconds = $self->{'seenTimes'}->{lc $who};
+        my $seconds = $seen->{'times'}->{lc $who};
         if (defined($seconds)) {
             my $seconds = time() - $seconds;
             my $time = '';
@@ -434,7 +441,7 @@ sub DoSeen {
                     $time .= "$seconds seconds ago";
                 }
             }
-            my $what = $self->{'seenStates'}->{lc $who};
+            my $what = $seen->{'states'}->{lc $who};
             $self->say($event, "$who was last seen $time, $what");
         } else {
             my $n = '';
@@ -444,4 +451,12 @@ sub DoSeen {
             $self->say($event, "I've never seen a$n '$who', sorry.");
         }
     }
+}
+
+sub unload {
+    my $self = shift;
+    $self->SUPER::unload(@_);
+    # just to make sure...
+    untie(%{$seen->{'times'}});
+    untie(%{$seen->{'states'}});
 }
