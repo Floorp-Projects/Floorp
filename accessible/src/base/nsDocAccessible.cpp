@@ -970,7 +970,8 @@ NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
 {
   PRUint32 length = mEventsToFire.Count();
   NS_ASSERTION(length, "How did we get here without events to fire?");
-  for (PRUint32 index = 0; index < length; index ++) {
+  PRUint32 index;
+  for (index = 0; index < length; index ++) {
     nsIAccessibleEvent *accessibleEvent = mEventsToFire[index];
     NS_ASSERTION(accessibleEvent, "Array item is not an accessible event");
     nsCOMPtr<nsIAccessible> accessible;
