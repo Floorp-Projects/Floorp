@@ -44,11 +44,7 @@
 #include "nsFileLocations.h"
 #include "nsFileStream.h"
 #include "nsSpecialSystemDirectory.h"
-#include "nsIWalletService.h"
 #include "nsIWebShell.h"
-#ifdef NECKO
-#include "nsICookieService.h"
-#endif // NECKO
 #include "nsIWindowMediator.h"
 static NS_DEFINE_IID(kIWindowMediatorIID,NS_IWINDOWMEDIATOR_IID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
@@ -105,14 +101,6 @@ static NS_DEFINE_CID(kAppShellServiceCID,   NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kCmdLineServiceCID,    NS_COMMANDLINE_SERVICE_CID);
 static NS_DEFINE_CID(kPrefCID,              NS_PREF_CID);
 static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID);
-static NS_DEFINE_IID(kWalletServiceCID,     NS_WALLETSERVICE_CID);
-
-static NS_DEFINE_IID(kIWalletServiceIID, NS_IWALLETSERVICE_IID);
-
-#ifdef NECKO
-static NS_DEFINE_CID(kCookieServiceCID,    NS_COOKIESERVICE_CID);
-#endif // NECKO
-
 static NS_DEFINE_CID(kProfileCID,           NS_PROFILE_CID);
 
 /*********************************************
@@ -549,22 +537,6 @@ static nsresult main1(int argc, char* argv[])
   if ( CheckAndRunPrefs(cmdLineArgs) )
   	return NS_OK;
   
-
-#ifdef NECKO
-  // fire up an instance of the cookie manager.
-  // I'm doing this using the serviceManager for convenience's sake.
-  // Presumably an application will init it's own cookie service a 
-  // different way (this way works too though).
-  NS_WITH_SERVICE(nsICookieService, cookieService, kCookieServiceCID, &rv);
-  // quiet the compiler
-  (void)cookieService;
-#ifndef XP_MAC
-  // Until the cookie manager actually exists on the Mac we don't want to bail here
-  if (NS_FAILED(rv))
-    return rv;
-#endif // XP_MAC
-#endif // NECKO
-	
 	// Enumerate AppShellComponenets
 	appShell->EnumerateAndInitializeComponents();
 	
@@ -581,10 +553,6 @@ static nsresult main1(int argc, char* argv[])
   if (NS_FAILED(rv))
     return rv;
 
-  // Fire up the walletService
-  NS_WITH_SERVICE(nsIWalletService, walletService, kWalletServiceCID, &rv);
-  if ( NS_SUCCEEDED(rv) )
-  	walletService->WALLET_FetchFromNetCenter();
   NS_HideSplashScreen();
   // Start main event loop
   rv = appShell->Run();
