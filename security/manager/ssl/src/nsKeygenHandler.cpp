@@ -101,8 +101,6 @@ static NS_DEFINE_IID(kFormProcessorIID,   NS_IFORMPROCESSOR_IID);
 static NS_DEFINE_IID(kIDOMHTMLSelectElementIID, NS_IDOMHTMLSELECTELEMENT_IID);
 static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
-static const char *mozKeyGen = "-mozilla-keygen";
-
 static PQGParams *
 decode_pqg_params(char *aStr)
 {
@@ -611,20 +609,14 @@ NS_METHOD nsKeygenFormProcessor::ProvideContent(const nsString& aFormType,
 						nsVoidArray& aContent, 
 						nsString& aAttribute) 
 { 
-  nsString selectKey;
-  SECKeySizeChoiceInfo *choice = SECKeySizeChoiceList;
-
-  selectKey.Assign(NS_LITERAL_STRING("SELECT"));
   if (Compare(aFormType, NS_LITERAL_STRING("SELECT"), 
     nsCaseInsensitiveStringComparator()) == 0) {
     for (SECKeySizeChoiceInfo* choice = SECKeySizeChoiceList; choice && choice->name; ++choice) {
       nsString *str = new nsString(choice->name);
       aContent.AppendElement(str);
     }
-    aAttribute.AssignWithConversion(mozKeyGen);
+    aAttribute.Assign(NS_LITERAL_STRING("-mozilla-keygen"));
   }
   return NS_OK;
 } 
-
-
 

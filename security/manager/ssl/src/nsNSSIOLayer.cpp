@@ -1461,6 +1461,7 @@ static const SEC_ASN1Template cert_CertificateScopeOfUseTemplate[] = {
     { SEC_ASN1_SEQUENCE_OF, 0, cert_CertificateScopeEntryTemplate }
 };
 
+#if 0
 /* 
  * decodes the extension data and create CERTCertificateScopeEntry that can
  * be consumed by the code
@@ -1710,6 +1711,7 @@ done:
     }
     return rv;
 }
+#endif
 
 /*
  * Function: SSMStatus SSM_SetUserCertChoice()
@@ -1966,9 +1968,17 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
     }
 
     /* Get CN and O of the subject and O of the issuer */
-    NS_ConvertUTF8toUCS2 cn(CERT_GetCommonName(&serverCert->subject));
-    NS_ConvertUTF8toUCS2 org(CERT_GetOrgName(&serverCert->subject));
-    NS_ConvertUTF8toUCS2 issuer(CERT_GetOrgName(&serverCert->issuer));
+    char *ccn = CERT_GetCommonName(&serverCert->subject);
+    NS_ConvertUTF8toUCS2 cn(ccn);
+    if (ccn) PORT_Free(ccn);
+
+    char *corg = CERT_GetOrgName(&serverCert->subject);
+    NS_ConvertUTF8toUCS2 org(corg);
+    if (corg) PORT_Free(corg);
+
+    char *cissuer = CERT_GetOrgName(&serverCert->issuer);
+    NS_ConvertUTF8toUCS2 issuer(cissuer);
+    if (cissuer) PORT_Free(cissuer);
 
     certNicknameList = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * nicknames->numnicknames);
     certDetailsList = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * nicknames->numnicknames);

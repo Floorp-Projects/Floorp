@@ -340,7 +340,8 @@ NS_IMETHODIMP nsCMSMessage::CreateEncrypted(nsISupportsArray * aRecipientCerts)
   CERTCertificate **recipientCerts;
   PLArenaPool *tmpPoolp = nsnull;
   SECOidTag bulkAlgTag;
-  int keySize, i;
+  int keySize;
+  PRUint32 i;
   nsNSSCertificate *nssRecipientCert;
   nsresult rv = NS_ERROR_FAILURE;
 
