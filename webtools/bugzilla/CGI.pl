@@ -221,6 +221,7 @@ sub make_options {
     my $last = "";
     my $popup = "";
     my $found = 0;
+    $default = "" if !defined $default;
 
     if ($src) {
         foreach my $item (@$src) {
@@ -282,6 +283,9 @@ sub quietly_check_login() {
     if (defined $::COOKIE{"Bugzilla_login"} &&
 	defined $::COOKIE{"Bugzilla_logincookie"}) {
         ConnectToDatabase();
+        if (!defined $ENV{'REMOTE_HOST'}) {
+            $ENV{'REMOTE_HOST'} = $ENV{'REMOTE_ADDR'};
+        }
         SendSQL("select profiles.groupset, profiles.login_name, " .
                 "profiles.login_name = " .
 		SqlQuote($::COOKIE{"Bugzilla_login"}) .
@@ -400,6 +404,9 @@ sub confirm_login {
             exit;
         }
         $::COOKIE{"Bugzilla_login"} = $enteredlogin;
+        if (!defined $ENV{'REMOTE_HOST'}) {
+            $ENV{'REMOTE_HOST'} = $ENV{'REMOTE_ADDR'};
+        }
 	SendSQL("insert into logincookies (userid,cryptpassword,hostname) values (@{[DBNameToIdAndCheck($enteredlogin)]}, @{[SqlQuote($realcryptpwd)]}, @{[SqlQuote($ENV{'REMOTE_HOST'})]})");
         SendSQL("select LAST_INSERT_ID()");
         my $logincookie = FetchOneColumn();
