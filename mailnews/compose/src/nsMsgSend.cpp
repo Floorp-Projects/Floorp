@@ -1044,6 +1044,10 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 		status = DeliverMessage();
 		shouldDeleteDeliveryState = PR_FALSE;
 	}
+	goto FAIL;
+
+FAILMEM:
+	status = NS_ERROR_OUT_OF_MEMORY;
 
 FAIL:
 	if (toppart)
@@ -1070,9 +1074,6 @@ FAIL:
 
 	return status;
 
-FAILMEM:
-	status = NS_ERROR_OUT_OF_MEMORY;
-	goto FAIL;
 }
 
 PRInt32

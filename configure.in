@@ -638,7 +638,7 @@ case "$target" in
 	   AR='$(CXX) -ar'
 	   AR_FLAGS='-o $@'
        CFLAGS="$CFLAGS -woff 3262"
-       CXXFLAGS="$CXXFLAGS -woff 3262 -LANG:exceptions=OFF"
+       CXXFLAGS="$CXXFLAGS -woff 3262"
        if test -n "$USE_N32"; then
 	   CFLAGS="$CFLAGS -n32"
 	   CXXFLAGS="$CXXFLAGS -n32"
