@@ -377,10 +377,8 @@ NS_IMETHODIMP nsPop3IncomingServer::PerformBiff(nsIMsgWindow *aMsgWindow)
 NS_IMETHODIMP
 nsPop3IncomingServer::SetFlagsOnDefaultMailboxes()
 {
-    nsresult rv;
-    
     nsCOMPtr<nsIMsgFolder> rootFolder;
-    rv = GetRootFolder(getter_AddRefs(rootFolder));
+    nsresult rv = GetRootFolder(getter_AddRefs(rootFolder));
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIMsgLocalMailFolder> localFolder =

@@ -80,10 +80,8 @@ nsNoIncomingServer::GetLocalStoreType(char **type)
 NS_IMETHODIMP 
 nsNoIncomingServer::SetFlagsOnDefaultMailboxes()
 {
-    nsresult rv;
-    
     nsCOMPtr<nsIMsgFolder> rootFolder;
-    rv = GetRootFolder(getter_AddRefs(rootFolder));
+    nsresult rv = GetRootFolder(getter_AddRefs(rootFolder));
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIMsgLocalMailFolder> localFolder =
@@ -223,13 +221,6 @@ nsNoIncomingServer::GetNewMail(nsIMsgWindow *aMsgWindow, nsIUrlListener *aUrlLis
   return rv;
 }
 
-// the "none" server does not support filters, because
-// it doesn't support incoming messages!
-NS_IMETHODIMP
-nsNoIncomingServer::GetFilterList(nsIMsgWindow *aMsgWindow, nsIMsgFilterList **aResult)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
 
 NS_IMETHODIMP
 nsNoIncomingServer::GetCanSearchMessages(PRBool *canSearchMessages)

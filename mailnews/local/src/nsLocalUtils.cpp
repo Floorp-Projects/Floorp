@@ -62,26 +62,38 @@ static nsresult
 nsGetMailboxServer(char *username, char *hostname, nsIMsgIncomingServer** aResult)
 {
   nsresult rv = NS_OK;
-
+  
   nsUnescape(username);
   nsUnescape(hostname);
   // retrieve the AccountManager
   nsCOMPtr<nsIMsgAccountManager> accountManager = 
-           do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+    do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
-
+  
   // find all local mail "no servers" matching the given hostname
   nsCOMPtr<nsIMsgIncomingServer> none_server;
   rv = accountManager->FindServer(username,
-                                  hostname,
-                                  "none",
-                                  getter_AddRefs(none_server));
+    hostname,
+    "none",
+    getter_AddRefs(none_server));
   if (NS_SUCCEEDED(rv)) {
-	 *aResult = none_server;
-	  NS_ADDREF(*aResult);
-	  return rv;
+    *aResult = none_server;
+    NS_ADDREF(*aResult);
+    return rv;
   }
-
+  
+  // if that fails, look for the rss hosts matching the given hostname
+  nsCOMPtr<nsIMsgIncomingServer> rss_server;
+  rv = accountManager->FindServer(username,
+    hostname,
+    "rss",
+    getter_AddRefs(rss_server));
+  if (NS_SUCCEEDED(rv))
+  {
+     *aResult = rss_server;
+     NS_ADDREF(*aResult);
+     return rv;
+  }
 #ifdef HAVE_MOVEMAIL
   // find all movemail "servers" matching the given hostname
   nsCOMPtr<nsIMsgIncomingServer> movemail_server;
@@ -90,9 +102,9 @@ nsGetMailboxServer(char *username, char *hostname, nsIMsgIncomingServer** aResul
                                   "movemail",
                                   getter_AddRefs(movemail_server));
   if (NS_SUCCEEDED(rv)) {
-	 *aResult = movemail_server;
-	  NS_ADDREF(*aResult);
-	  return rv;
+	   *aResult = movemail_server;
+           NS_ADDREF(*aResult);
+           return rv;
   }
 #endif /* HAVE_MOVEMAIL */
 
@@ -100,30 +112,30 @@ nsGetMailboxServer(char *username, char *hostname, nsIMsgIncomingServer** aResul
   nsCOMPtr<nsIMsgIncomingServer> server;
   if (NS_FAILED(rv)) 
   {
-	  rv = accountManager->FindServer(username,
-                                    hostname,
-                                    "pop3",
-                                    getter_AddRefs(server));
-
+    rv = accountManager->FindServer(username,
+      hostname,
+      "pop3",
+      getter_AddRefs(server));
+  
     // if we can't find a pop server, maybe it's a local message 
     // in an imap hiearchy. look for an imap server.
     if (NS_FAILED(rv)) 
     {
-	  rv = accountManager->FindServer(username,
-                                    hostname,
-                                    "imap",
-                                    getter_AddRefs(server));
+      rv = accountManager->FindServer(username,
+        hostname,
+        "imap",
+        getter_AddRefs(server));
     }
   }
-	if (NS_SUCCEEDED(rv)) 
+  if (NS_SUCCEEDED(rv)) 
   {
-		*aResult = server;
-		NS_ADDREF(*aResult);
-		return rv;
-	}
+		  *aResult = server;
+                  NS_ADDREF(*aResult);
+                  return rv;
+}
 
-  // if you fail after looking at all "pop3", "movemail" and "none" servers, you fail.
-  return rv;
+// if you fail after looking at all "pop3", "movemail" and "none" servers, you fail.
+return rv;
 }
 
 static nsresult

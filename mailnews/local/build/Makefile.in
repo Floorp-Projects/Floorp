@@ -67,6 +67,8 @@ REQUIRES	= xpcom \
 		  intl \
 		  pref \
 		  nkcache \
+		  xmlextras \
+		  dom \
 		  $(NULL)
 
 ifeq ($(USE_SHORT_LIBNAME),1)

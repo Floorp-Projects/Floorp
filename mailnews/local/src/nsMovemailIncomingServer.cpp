@@ -83,10 +83,8 @@ nsMovemailIncomingServer::GetLocalStoreType(char **type)
 NS_IMETHODIMP
 nsMovemailIncomingServer::SetFlagsOnDefaultMailboxes()
 {
-    nsresult rv;
-    
     nsCOMPtr<nsIMsgFolder> rootFolder;
-    rv = GetRootFolder(getter_AddRefs(rootFolder));
+    nsresult rv = GetRootFolder(getter_AddRefs(rootFolder));
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIMsgLocalMailFolder> localFolder =
@@ -106,12 +104,11 @@ nsMovemailIncomingServer::SetFlagsOnDefaultMailboxes()
 
 NS_IMETHODIMP nsMovemailIncomingServer::CreateDefaultMailboxes(nsIFileSpec *path)
 {
-    nsresult rv;
-    PRBool exists;
-    if (!path) return NS_ERROR_NULL_POINTER;
+    NS_ENSURE_ARG_POINTER(path);
 
-    rv = path->AppendRelativeUnixPath("Inbox");
+    nsresult rv = path->AppendRelativeUnixPath("Inbox");
     if (NS_FAILED(rv)) return rv;
+    PRBool exists;
     rv = path->Exists(&exists);
     if (NS_FAILED(rv)) return rv;
     if (!exists) {

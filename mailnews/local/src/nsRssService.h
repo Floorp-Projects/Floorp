@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,18 +11,18 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is mozilla mailnews.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Seth Spitzer <sspitzer@mozilla.org>.
+ * Portions created by the Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -35,33 +34,23 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __nsNoIncomingServer_h
-#define __nsNoIncomingServer_h
+#ifndef nsRssService_h___
+#define nsRssService_h___
 
-#include "msgCore.h"
-#include "nsINoIncomingServer.h"
-#include "nsILocalMailIncomingServer.h"
-#include "nsMsgIncomingServer.h"
-#include "nsIFileSpec.h"
+#include "nsIRssService.h"
+#include "nsIMsgProtocolInfo.h"
 
-/* get some implementation from nsMsgIncomingServer */
-class nsNoIncomingServer : public nsMsgIncomingServer,
-                             public nsINoIncomingServer,
-                             public nsILocalMailIncomingServer
-                             
+class nsRssService : public nsIMsgProtocolInfo, public nsIRssService
 {
 public:
-    NS_DECL_ISUPPORTS_INHERITED
-    NS_DECL_NSINOINCOMINGSERVER
-    NS_DECL_NSILOCALMAILINCOMINGSERVER
 
-    nsNoIncomingServer();
-    virtual ~nsNoIncomingServer();
-    
-    NS_IMETHOD GetLocalStoreType(char * *type);
-    NS_IMETHOD GetCanSearchMessages(PRBool *canSearchMessages);
-    NS_IMETHOD GetServerRequiresPasswordForBiff(PRBool *aServerRequiresPasswordForBiff);
+  nsRssService();
+  virtual ~nsRssService();
+  
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIRSSSERVICE
+  NS_DECL_NSIMSGPROTOCOLINFO
+
 };
 
-
-#endif
+#endif /* nsRssService_h___ */

@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Adam D. Moss <adam@gimp.org>
+ *   Seth Spitzer <sspitzer@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -57,6 +58,8 @@
 #include "nsPop3IncomingServer.h"
 #include "nsNoIncomingServer.h"
 #include "nsLocalStringBundle.h"
+#include "nsRssService.h"
+#include "nsRssIncomingServer.h"
 #include "nsCOMPtr.h"
 
 // private factory declarations for each component we know how to produce
@@ -78,6 +81,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMovemailIncomingServer)
 #endif /* HAVE_MOVEMAIL */
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNoIncomingServer)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLocalStringService)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsRssService)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsRssIncomingServer)
 
 // The list of components we register
 static const nsModuleComponentInfo gComponents[] = {
@@ -149,6 +154,15 @@ static const nsModuleComponentInfo gComponents[] = {
 
     { "Pop String Bundle Service", NS_MSG_LOCALSTRINGSERVICE_CID,
       NS_MSG_POPSTRINGSERVICE_CONTRACTID, nsLocalStringServiceConstructor },
+      
+    { "RSS Service", NS_RSSSERVICE_CID,
+      NS_RSSSERVICE_CONTRACTID, nsRssServiceConstructor },
+    
+    { "RSS Protocol Information", NS_RSSSERVICE_CID,
+      NS_RSSPROTOCOLINFO_CONTRACTID, nsRssServiceConstructor },
+        
+    { "RSS Incoming Server", NS_RSSINCOMINGSERVER_CID,
+      NS_RSSINCOMINGSERVER_CONTRACTID, nsRssIncomingServerConstructor },
 };
 
 NS_IMPL_NSGETMODULE(local_mail_services, gComponents)

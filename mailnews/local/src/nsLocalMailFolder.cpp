@@ -2220,18 +2220,26 @@ nsresult nsMsgLocalMailFolder::DeleteMessage(nsISupports *message,
   return rv;
 }
 
+#include "nsIRssIncomingServer.h"
+
 NS_IMETHODIMP nsMsgLocalMailFolder::GetNewMessages(nsIMsgWindow *aWindow, nsIUrlListener *aListener)
 {
-  nsresult rv = NS_OK;
-  
   nsCOMPtr<nsIMsgIncomingServer> server;
-  rv = GetServer(getter_AddRefs(server)); 
+  nsresult rv = GetServer(getter_AddRefs(server)); 
   if (NS_FAILED(rv)) return rv;
   if (!server) return NS_MSG_INVALID_OR_MISSING_SERVER;
   
-  nsCOMPtr<nsILocalMailIncomingServer> localMailServer = do_QueryInterface(server, &rv);
-  if (NS_FAILED(rv)) return rv;
-  if (!localMailServer) return NS_MSG_INVALID_OR_MISSING_SERVER;
+  nsCOMPtr<nsILocalMailIncomingServer> localMailServer = do_QueryInterface(server);
+  if (!localMailServer) 
+      return NS_MSG_INVALID_OR_MISSING_SERVER;
+  
+  // XXX todo, move all this into nsILocalMailIncomingServer's GetNewMail
+  // so that we don't have to have RSS foo here.
+  nsCOMPtr<nsIRssIncomingServer> rssServer = do_QueryInterface(server);
+  if (rssServer)
+  {
+      return localMailServer->GetNewMail(aWindow, aListener, this, nsnull); 
+  }
   
   nsCOMPtr<nsIMsgFolder> inbox;
   nsCOMPtr<nsIMsgFolder> rootFolder;

@@ -57,6 +57,9 @@ XPIDLSRCS	= \
 		nsIMsgLocalMailFolder.idl \
 		nsILocalMailIncomingServer.idl \
 		nsIPop3Protocol.idl \
+		nsIRssIncomingServer.idl \
+		nsIRssService.idl \
+		nsINewsBlogFeedDownloader.idl \
 		$(NULL)
 
 ifdef MOZ_MOVEMAIL
