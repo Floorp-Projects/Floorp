@@ -122,7 +122,7 @@ nsDownloadProgressListener.prototype = {
         percent = -1;
 
         // Progress meter should be barber-pole in this case.
-        progressCol.firstChild.setAttribute( "mode", "undetermined" );
+        progressCol.setAttribute( "mode", "undetermined" );
       }
 
       // now that we've set the progress and the time, update # bytes downloaded...
