@@ -64,7 +64,6 @@
 #include "nsTextEditUtils.h"
 #include "nsHTMLEditUtils.h"
 
-static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
 
 
 /***************************************************************************
