@@ -72,6 +72,8 @@ protected:
                                    PRBool aIsOverlay, PRBool aUseProfile, PRBool aRemove);
  
   void LoadStyleSheet(nsICSSStyleSheet** aSheet, const nsCString & aURL);
+  void LoadStyleSheetWithURL(nsIURI* aURL, nsICSSStyleSheet** aSheet);
+  
   void GetUserSheetURL(nsCString & aURL);
 
 private:
@@ -82,8 +84,6 @@ private:
   NS_IMETHOD GetInstallRoot(nsCString& aFileURL);
 
   NS_IMETHOD RefreshWindow(nsIDOMWindow* aWindow);
-
-	NS_IMETHOD ProcessStyleSheet(nsIURL* aURL, nsICSSLoader* aLoader, nsIDocument* aDocument);
 
   NS_IMETHOD GetArcs(nsIRDFDataSource* aDataSource,
                         const nsCString& aType,

@@ -61,6 +61,7 @@ class nsINodeInfoManager;
 class nsIDOMDocument;
 class nsIDOMDocumentType;
 class nsIBindingManager;
+class nsISupportsArray;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
@@ -223,6 +224,8 @@ public:
   virtual PRInt32 GetIndexOfStyleSheet(nsIStyleSheet* aSheet) = 0;
   virtual void AddStyleSheet(nsIStyleSheet* aSheet) = 0;
   virtual void RemoveStyleSheet(nsIStyleSheet* aSheet) = 0;
+  NS_IMETHOD UpdateStyleSheets(nsISupportsArray* aOldSheets, nsISupportsArray* aNewSheets) = 0;
+
   NS_IMETHOD InsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex, PRBool aNotify) = 0;
   virtual void SetStyleSheetDisabledState(nsIStyleSheet* aSheet,
                                           PRBool mDisabled) = 0;

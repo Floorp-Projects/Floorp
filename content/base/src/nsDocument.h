@@ -266,6 +266,11 @@ public:
   virtual PRInt32 GetIndexOfStyleSheet(nsIStyleSheet* aSheet);
   virtual void AddStyleSheet(nsIStyleSheet* aSheet);
   virtual void RemoveStyleSheet(nsIStyleSheet* aSheet);
+  
+  NS_IMETHOD UpdateStyleSheets(nsISupportsArray* aOldSheets, nsISupportsArray* aNewSheets);
+  virtual void AddStyleSheetToStyleSets(nsIStyleSheet* aSheet);
+  virtual void RemoveStyleSheetFromStyleSets(nsIStyleSheet* aSheet);
+
   NS_IMETHOD InsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex, PRBool aNotify);
   virtual void SetStyleSheetDisabledState(nsIStyleSheet* aSheet,
                                           PRBool mDisabled);

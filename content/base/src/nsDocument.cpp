@@ -1362,6 +1362,21 @@ void nsDocument::InternalAddStyleSheet(nsIStyleSheet* aSheet)  // subclass hook 
   mStyleSheets.AppendElement(aSheet);
 }
 
+void nsDocument::AddStyleSheetToStyleSets(nsIStyleSheet* aSheet)
+{
+  PRInt32 count = mPresShells.Count();
+  PRInt32 index;
+  for (index = 0; index < count; index++) {
+    nsIPresShell* shell = (nsIPresShell*)mPresShells.ElementAt(index);
+    nsCOMPtr<nsIStyleSet> set;
+    if (NS_SUCCEEDED(shell->GetStyleSet(getter_AddRefs(set)))) {
+      if (set) {
+        set->AddDocStyleSheet(aSheet, this);
+      }
+    }
+  }
+}
+
 void nsDocument::AddStyleSheet(nsIStyleSheet* aSheet)
 {
   NS_PRECONDITION(nsnull != aSheet, "null arg");
@@ -1373,24 +1388,29 @@ void nsDocument::AddStyleSheet(nsIStyleSheet* aSheet)
   aSheet->GetEnabled(enabled);
 
   if (enabled) {
-    PRInt32 count = mPresShells.Count();
-    PRInt32 index;
-    for (index = 0; index < count; index++) {
-      nsIPresShell* shell = (nsIPresShell*)mPresShells.ElementAt(index);
-      nsCOMPtr<nsIStyleSet> set;
-      if (NS_SUCCEEDED(shell->GetStyleSet(getter_AddRefs(set)))) {
-        if (set) {
-          set->AddDocStyleSheet(aSheet, this);
-        }
-      }
-    }
+    AddStyleSheetToStyleSets(aSheet);
 
     // XXX should observers be notified for disabled sheets??? I think not, but I could be wrong
-    for (index = 0; index < mObservers.Count(); index++) {
+    for (PRInt32 index = 0; index < mObservers.Count(); index++) {
       nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(index);
       observer->StyleSheetAdded(this, aSheet);
       if (observer != (nsIDocumentObserver*)mObservers.ElementAt(index)) {
         index--;
+      }
+    }
+  }
+}
+
+void nsDocument::RemoveStyleSheetFromStyleSets(nsIStyleSheet* aSheet)
+{
+  PRInt32 count = mPresShells.Count();
+  PRInt32 index;
+  for (index = 0; index < count; index++) {
+    nsIPresShell* shell = (nsIPresShell*)mPresShells.ElementAt(index);
+    nsCOMPtr<nsIStyleSet> set;
+    if (NS_SUCCEEDED(shell->GetStyleSet(getter_AddRefs(set)))) {
+      if (set) {
+        set->RemoveDocStyleSheet(aSheet);
       }
     }
   }
@@ -1405,20 +1425,10 @@ void nsDocument::RemoveStyleSheet(nsIStyleSheet* aSheet)
   aSheet->GetEnabled(enabled);
 
   if (enabled) {
-    PRInt32 count = mPresShells.Count();
-    PRInt32 index;
-    for (index = 0; index < count; index++) {
-      nsIPresShell* shell = (nsIPresShell*)mPresShells.ElementAt(index);
-      nsCOMPtr<nsIStyleSet> set;
-      if (NS_SUCCEEDED(shell->GetStyleSet(getter_AddRefs(set)))) {
-        if (set) {
-          set->RemoveDocStyleSheet(aSheet);
-        }
-      }
-    }
+    RemoveStyleSheetFromStyleSets(aSheet);
 
     // XXX should observers be notified for disabled sheets??? I think not, but I could be wrong
-    for (index = 0; index < mObservers.Count(); index++) {
+    for (PRInt32 index = 0; index < mObservers.Count(); index++) {
       nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(index);
       observer->StyleSheetRemoved(this, aSheet);
       if (observer != (nsIDocumentObserver*)mObservers.ElementAt(index)) {
@@ -1430,6 +1440,63 @@ void nsDocument::RemoveStyleSheet(nsIStyleSheet* aSheet)
   aSheet->SetOwningDocument(nsnull);
   NS_RELEASE(aSheet);
 }
+
+NS_IMETHODIMP
+nsDocument::UpdateStyleSheets(nsISupportsArray* aOldSheets, nsISupportsArray* aNewSheets)
+{
+  PRUint32 oldCount;
+  aOldSheets->Count(&oldCount);
+  nsCOMPtr<nsIStyleSheet> sheet;
+  for (PRUint32 i = 0; i < oldCount; i++) {
+    nsCOMPtr<nsISupports> supp;
+    aOldSheets->GetElementAt(i, getter_AddRefs(supp));
+    sheet = do_QueryInterface(supp);
+    if (sheet) {
+      mStyleSheets.RemoveElement(sheet);
+      PRBool enabled = PR_TRUE;
+      sheet->GetEnabled(enabled);
+      if (enabled) {
+        RemoveStyleSheetFromStyleSets(sheet);
+      }
+
+      sheet->SetOwningDocument(nsnull);
+      nsIStyleSheet* sheetPtr = sheet.get();
+      NS_RELEASE(sheetPtr);
+    }
+  }
+
+  PRUint32 newCount;
+  aNewSheets->Count(&newCount);
+  for (i = 0; i < newCount; i++) {
+    nsCOMPtr<nsISupports> supp;
+    aNewSheets->GetElementAt(i, getter_AddRefs(supp));
+    sheet = do_QueryInterface(supp);
+    if (sheet) {
+      InternalAddStyleSheet(sheet);
+      nsIStyleSheet* sheetPtr = sheet;
+      NS_ADDREF(sheetPtr);
+      sheet->SetOwningDocument(this);
+
+      PRBool enabled = PR_TRUE;
+      sheet->GetEnabled(enabled);
+      if (enabled) {
+        AddStyleSheetToStyleSets(sheet);
+        sheet->SetOwningDocument(nsnull);
+      }
+    }
+  }
+
+  for (PRInt32 index = 0; index < mObservers.Count(); index++) {
+    nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(index);
+    observer->StyleSheetRemoved(this, sheet);
+    if (observer != (nsIDocumentObserver*)mObservers.ElementAt(index)) {
+      index--;
+    }
+  }
+
+  return NS_OK;
+}
+
 
 void 
 nsDocument::InternalInsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex)
