@@ -1785,7 +1785,6 @@ nsDocumentBindInfo::OnStartBinding(nsIURI* aURL, const char *aContentType)
     if (NS_FAILED(rv)) return rv;
     char* aContentType = nsnull;
     channel->GetContentType(&aContentType);
-    aContentType = "text/html";
 #endif // NECKO
 
 #if defined(DEBUG)
