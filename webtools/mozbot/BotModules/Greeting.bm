@@ -119,7 +119,7 @@ sub Told {
         $self->Perform($event, 'happy');
     } elsif ($message =~ /^\s*(?:i|we)\s+love\s+you[.!1\s]*(?:[;:8][-o]?[]()\|O0<>[]\s*)?$/osi) {
         $self->Perform($event, 'happy');
-    } elsif ($message =~ /^\s*(?:please[\s,.]+)?(?:(?:would|will)\s+you\s+)?(?:hit|smack)\s+(\S+?)(?:[\s,.]+please)?[.!?\s]*\s*$/osi) {
+    } elsif ($message =~ /^\s*(?:please[\s,.]+)?(?:(?:would|will)\s+you\s+)?(?:hit|kick|slap|smack)\s+(\S+?)(?:[\s,.]+please)?[.!?\s]*\s*$/osi) {
         if ($self->{'hitEnabled'}) {
             $self->PerformOnOther($event, 'hit', $1);
         }
@@ -222,7 +222,7 @@ sub Felt {
         $self->Perform($event, 'happy');
     } elsif ($message =~ /^\s*slaps\s+$me\s+(?:around\s+)?(?:a\s+(?:bit|lot|little|while)\s+)?with\s+a\s+(?:(?:big|fat|large|wet|and)[\s,]+)*trout[\s!1.]*$/si) {
         $self->Perform($event, 'ow');
-    } elsif ($message =~ /^\s*(?:slaps|kicks|smacks)\s+$me[\s!1.]*$/si) {
+    } elsif ($message =~ /^\s*(?:hits|kicks|slaps|smacks)\s+$me[\s!1.]*$/si) {
         $self->Perform($event, 'yousuck');
     } elsif ($message =~ /^\s*(?:glares|stares)\s+at\s+$me[\s!1.]*$/si) {
         $self->Perform($event, 'yousuck');
