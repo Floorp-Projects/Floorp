@@ -53,8 +53,8 @@ public class Interpreter
     // Stack: ... value1 -> ... value1 value1
         Icode_DUP                       = BASE_ICODE + 1,
 
-    // Stack: ... value2 value1 -> ... value2 value1 value2
-        Icode_DUPSECOND                 = BASE_ICODE + 2,
+    // Stack: ... value2 value1 -> ... value2 value1 value2 value1
+        Icode_DUP2                      = BASE_ICODE + 2,
 
     // Stack: ... value2 value1 -> ... value1 value2
         Icode_SWAP                      = BASE_ICODE + 3,
@@ -115,22 +115,26 @@ public class Interpreter
     // Array literal with skipped index like [1,,2]
         Icode_SPARE_ARRAYLIT            = BASE_ICODE + 33,
 
-    // Load string register to prepare for the following string operation
-        Icode_REG_STR1                  = BASE_ICODE + 34,
-        Icode_REG_STR2                  = BASE_ICODE + 35,
-        Icode_REG_STR4                  = BASE_ICODE + 36,
-
     // Load index register to prepare for the following index operation
-        Icode_REG_IND_C0                = BASE_ICODE + 37,
-        Icode_REG_IND_C1                = BASE_ICODE + 38,
-        Icode_REG_IND_C2                = BASE_ICODE + 39,
-        Icode_REG_IND_C3                = BASE_ICODE + 40,
-        Icode_REG_IND1                  = BASE_ICODE + 41,
-        Icode_REG_IND2                  = BASE_ICODE + 42,
-        Icode_REG_IND4                  = BASE_ICODE + 43,
+        Icode_REG_IND_C0                = BASE_ICODE + 34,
+        Icode_REG_IND_C1                = BASE_ICODE + 35,
+        Icode_REG_IND_C2                = BASE_ICODE + 36,
+        Icode_REG_IND_C3                = BASE_ICODE + 37,
+        Icode_REG_IND1                  = BASE_ICODE + 38,
+        Icode_REG_IND2                  = BASE_ICODE + 39,
+        Icode_REG_IND4                  = BASE_ICODE + 40,
+
+    // Load string register to prepare for the following string operation
+        Icode_REG_STR_C0                = BASE_ICODE + 41,
+        Icode_REG_STR_C1                = BASE_ICODE + 42,
+        Icode_REG_STR_C2                = BASE_ICODE + 43,
+        Icode_REG_STR_C3                = BASE_ICODE + 44,
+        Icode_REG_STR1                  = BASE_ICODE + 45,
+        Icode_REG_STR2                  = BASE_ICODE + 46,
+        Icode_REG_STR4                  = BASE_ICODE + 47,
 
     // Last icode
-        MAX_ICODE                       = BASE_ICODE + 43;
+        MAX_ICODE                       = BASE_ICODE + 47;
 
     public Object compile(Scriptable scope,
                           CompilerEnvirons compilerEnv,
@@ -490,11 +494,9 @@ public class Interpreter
                     // the rest will be generated when the case
                     // statements are encountered as siblings of
                     // the switch statement.
+                    iCodeTop = addIcode(Icode_DUP, iCodeTop);
+                    stackChange(1);
                     iCodeTop = generateICode(first, iCodeTop);
-                    iCodeTop = addIcode(Icode_DUPSECOND, iCodeTop);
-                    itsStackDepth++;
-                    if (itsStackDepth > itsData.itsMaxStack)
-                        itsData.itsMaxStack = itsStackDepth;
                     iCodeTop = addToken(Token.SHEQ, iCodeTop);
                     itsStackDepth--;
                     Node.Target target = new Node.Target();
@@ -750,11 +752,8 @@ public class Interpreter
                 iCodeTop = generateICode(child, iCodeTop);
                 child = child.getNext();
                 if (type == Token.SETELEM_OP) {
-                    iCodeTop = addIcode(Icode_DUPSECOND, iCodeTop);
-                    iCodeTop = addIcode(Icode_DUPSECOND, iCodeTop);
-                    itsStackDepth += 2;
-                    if (itsStackDepth > itsData.itsMaxStack)
-                        itsData.itsMaxStack = itsStackDepth;
+                    iCodeTop = addIcode(Icode_DUP2, iCodeTop);
+                    stackChange(2);
                     iCodeTop = addToken(Token.GETELEM, iCodeTop);
                     itsStackDepth--;
                     // Compensate for the following USE_STACK
@@ -1407,15 +1406,44 @@ public class Interpreter
             index = itsStrings.size();
             itsStrings.put(str, index);
         }
-        if (index <= 0xFF) {
-            iCodeTop = addIcode(Icode_REG_STR1, iCodeTop);
+        int indexSize = 0;
+        int indexOp;
+        switch (index) {
+          case 0:
+            indexOp = Icode_REG_STR_C0;
+            break;
+          case 1:
+            indexOp = Icode_REG_STR_C1;
+            break;
+          case 2:
+            indexOp = Icode_REG_STR_C2;
+            break;
+          case 3:
+            indexOp = Icode_REG_STR_C3;
+            break;
+          default:
+            if (index <= 0xFF) {
+                indexOp = Icode_REG_STR1;
+                indexSize = 1;
+             } else if (index <= 0xFFFF) {
+                indexOp = Icode_REG_STR2;
+                indexSize = 2;
+             } else {
+                indexOp = Icode_REG_STR4;
+                indexSize = 4;
+            }
+        }
+        iCodeTop = addIcode(indexOp, iCodeTop);
+        switch (indexSize) {
+          case 1:
             iCodeTop = addByte(index, iCodeTop);
-        } else if (index <= 0xFFFF) {
-            iCodeTop = addIcode(Icode_REG_STR2, iCodeTop);
+            break;
+          case 2:
             iCodeTop = addShort(index, iCodeTop);
-        } else {
-            iCodeTop = addIcode(Icode_REG_STR4, iCodeTop);
+            break;
+          case 4:
             iCodeTop = addInt(index, iCodeTop);
+            break;
         }
         if (op > BASE_ICODE) {
             iCodeTop = addIcode(op, iCodeTop);
@@ -1566,7 +1594,7 @@ public class Interpreter
             } else {
                 switch (icode) {
                     case Icode_DUP:              return "DUP";
-                    case Icode_DUPSECOND:        return "DUPSECOND";
+                    case Icode_DUP2:             return "DUP2";
                     case Icode_SWAP:             return "SWAP";
                     case Icode_IFEQ_POP:         return "IFEQ_POP";
                     case Icode_NAMEINC:          return "NAMEINC";
@@ -1598,9 +1626,6 @@ public class Interpreter
                     case Icode_LITERAL_NEW:      return "LITERAL_NEW";
                     case Icode_LITERAL_SET:      return "LITERAL_SET";
                     case Icode_SPARE_ARRAYLIT:   return "SPARE_ARRAYLIT";
-                    case Icode_REG_STR1:         return "LOAD_STR1";
-                    case Icode_REG_STR2:         return "LOAD_STR2";
-                    case Icode_REG_STR4:         return "LOAD_STR4";
                     case Icode_REG_IND_C0:       return "REG_IND_C0";
                     case Icode_REG_IND_C1:       return "REG_IND_C1";
                     case Icode_REG_IND_C2:       return "REG_IND_C2";
@@ -1608,6 +1633,13 @@ public class Interpreter
                     case Icode_REG_IND1:         return "LOAD_IND1";
                     case Icode_REG_IND2:         return "LOAD_IND2";
                     case Icode_REG_IND4:         return "LOAD_IND4";
+                    case Icode_REG_STR_C0:       return "REG_STR_C0";
+                    case Icode_REG_STR_C1:       return "REG_STR_C1";
+                    case Icode_REG_STR_C2:       return "REG_STR_C2";
+                    case Icode_REG_STR_C3:       return "REG_STR_C3";
+                    case Icode_REG_STR1:         return "LOAD_STR1";
+                    case Icode_REG_STR2:         return "LOAD_STR2";
+                    case Icode_REG_STR4:         return "LOAD_STR4";
                 }
             }
             return "<UNKNOWN ICODE: "+icode+">";
@@ -1766,105 +1798,9 @@ public class Interpreter
         }
     }
 
-    private static int icodeTokenLength(int icodeToken)
+    private static int icodeTokenLength(int op)
     {
-        switch (icodeToken) {
-            case Icode_SCOPE :
-            case Icode_GETPROTO :
-            case Icode_PUSH_PARENT :
-            case Icode_GETSCOPEPARENT :
-            case Icode_SETPROTO :
-            case Icode_SETPARENT :
-            case Token.DELPROP :
-            case Token.TYPEOF :
-            case Token.ENTERWITH :
-            case Token.LEAVEWITH :
-            case Token.RETURN :
-            case Token.RETURN_POPV :
-            case Token.SETELEM :
-            case Token.GETELEM :
-            case Token.SETPROP :
-            case Token.GETPROP :
-            case Icode_PROPINC :
-            case Icode_PROPDEC :
-            case Icode_ELEMINC :
-            case Icode_ELEMDEC :
-            case Token.BITNOT :
-            case Token.BITAND :
-            case Token.BITOR :
-            case Token.BITXOR :
-            case Token.LSH :
-            case Token.RSH :
-            case Token.URSH :
-            case Token.NOT :
-            case Token.POS :
-            case Token.NEG :
-            case Token.SUB :
-            case Token.MUL :
-            case Token.DIV :
-            case Token.MOD :
-            case Token.ADD :
-            case Token.POPV :
-            case Token.POP :
-            case Icode_DUP :
-            case Icode_DUPSECOND :
-            case Icode_SWAP :
-            case Token.LT :
-            case Token.GT :
-            case Token.LE :
-            case Token.GE :
-            case Token.IN :
-            case Token.INSTANCEOF :
-            case Token.EQ :
-            case Token.NE :
-            case Token.SHEQ :
-            case Token.SHNE :
-            case Token.ZERO :
-            case Token.ONE :
-            case Token.NULL :
-            case Token.THIS :
-            case Token.THISFN :
-            case Token.FALSE :
-            case Token.TRUE :
-            case Token.UNDEFINED :
-            case Icode_CATCH:
-            case Icode_RETUNDEF:
-            case Icode_LITERAL_SET:
-            case Icode_SPARE_ARRAYLIT:
-            case Token.STRING :
-            case Token.NAME :
-            case Token.SETNAME :
-            case Icode_TYPEOFNAME :
-            case Token.BINDNAME :
-            case Icode_NAMEINC :
-            case Icode_NAMEDEC :
-            case Token.CATCH_SCOPE :
-            case Token.REGEXP :
-            case Icode_CLOSURE :
-            case Token.NEW :
-            case Token.CALL :
-            case Icode_LITERAL_NEW:
-            case Token.NUMBER :
-            case Token.OBJECTLIT:
-            case Token.ARRAYLIT:
-            case Icode_NAME_FAST_THIS :
-            case Icode_NAME_SLOW_THIS :
-            case Token.LOCAL_SAVE :
-            case Icode_RETSUB :
-            case Token.LOCAL_LOAD :
-            case Token.ENUM_INIT :
-            case Token.ENUM_NEXT :
-            case Token.ENUM_ID :
-            case Icode_REG_IND_C0:
-            case Icode_REG_IND_C1:
-            case Icode_REG_IND_C2:
-            case Icode_REG_IND_C3:
-            case Icode_VARINC :
-            case Icode_VARDEC :
-            case Token.GETVAR :
-            case Token.SETVAR :
-                return 1;
-
+        switch (op) {
             case Token.THROW :
                 // source line
                 return 1 + 2;
@@ -1891,18 +1827,6 @@ public class Interpreter
                 // int number
                 return 1 + 4;
 
-            case Icode_REG_STR1:
-                // ubyte string index
-                return 1 + 1;
-
-            case Icode_REG_STR2:
-                // ushort string index
-                return 1 + 2;
-
-            case Icode_REG_STR4:
-                // int string index
-                return 1 + 4;
-
             case Icode_REG_IND1:
                 // ubyte index
                 return 1 + 1;
@@ -1915,13 +1839,25 @@ public class Interpreter
                 // int index
                 return 1 + 4;
 
+            case Icode_REG_STR1:
+                // ubyte string index
+                return 1 + 1;
+
+            case Icode_REG_STR2:
+                // ushort string index
+                return 1 + 2;
+
+            case Icode_REG_STR4:
+                // int string index
+                return 1 + 4;
+
             case Icode_LINE :
                 // line number
                 return 1 + 2;
-            default:
-                Kit.codeBug(); // Bad icodeToken
-                return 0;
         }
+        if (!(Token.FIRST_BYTECODE_TOKEN <= op && op <= MAX_ICODE))
+            throw Kit.codeBug();
+        return 1;
     }
 
     static int[] getLineNumbers(InterpreterData data)
@@ -2413,12 +2349,13 @@ public class Interpreter
         sDbl[stackTop + 1] = sDbl[stackTop];
         stackTop++;
         continue Loop;
-    case Icode_DUPSECOND : {
+    case Icode_DUP2 :
         stack[stackTop + 1] = stack[stackTop - 1];
         sDbl[stackTop + 1] = sDbl[stackTop - 1];
-        stackTop++;
+        stack[stackTop + 2] = stack[stackTop];
+        sDbl[stackTop + 2] = sDbl[stackTop];
+        stackTop += 2;
         continue Loop;
-    }
     case Icode_SWAP : {
         Object o = stack[stackTop];
         stack[stackTop] = stack[stackTop - 1];
@@ -2552,42 +2489,6 @@ public class Interpreter
                           ? Boolean.FALSE : Boolean.TRUE;
         continue Loop;
     }
-    case Icode_REG_STR1:
-        stringReg = strings[0xFF & iCode[pc]];
-        ++pc;
-        continue Loop;
-    case Icode_REG_STR2:
-        stringReg = strings[getIndex(iCode, pc)];
-        pc += 2;
-        continue Loop;
-    case Icode_REG_STR4:
-        stringReg = strings[getInt(iCode, pc)];
-        pc += 4;
-        continue Loop;
-    case Icode_REG_IND_C0:
-        indexReg = 0;
-        continue Loop;
-    case Icode_REG_IND_C1:
-        indexReg = 1;
-        continue Loop;
-    case Icode_REG_IND_C2:
-        indexReg = 2;
-        continue Loop;
-    case Icode_REG_IND_C3:
-        indexReg = 3;
-        continue Loop;
-    case Icode_REG_IND1:
-        indexReg = 0xFF & iCode[pc];
-        ++pc;
-        continue Loop;
-    case Icode_REG_IND2:
-        indexReg = getIndex(iCode, pc);
-        pc += 2;
-        continue Loop;
-    case Icode_REG_IND4:
-        indexReg = getInt(iCode, pc);
-        pc += 4;
-        continue Loop;
     case Token.BINDNAME :
         stack[++stackTop] = ScriptRuntime.bind(scope, stringReg);
         continue Loop;
@@ -3016,7 +2917,7 @@ public class Interpreter
         stack[stackTop] = val;
         continue Loop;
     }
-    case Icode_LINE : {
+    case Icode_LINE :
         cx.interpreterLineIndex = pc;
         if (debuggerFrame != null) {
             int line = getShort(iCode, pc);
@@ -3024,11 +2925,57 @@ public class Interpreter
         }
         pc += 2;
         continue Loop;
-    }
-    default : {
+    case Icode_REG_IND_C0:
+        indexReg = 0;
+        continue Loop;
+    case Icode_REG_IND_C1:
+        indexReg = 1;
+        continue Loop;
+    case Icode_REG_IND_C2:
+        indexReg = 2;
+        continue Loop;
+    case Icode_REG_IND_C3:
+        indexReg = 3;
+        continue Loop;
+    case Icode_REG_IND1:
+        indexReg = 0xFF & iCode[pc];
+        ++pc;
+        continue Loop;
+    case Icode_REG_IND2:
+        indexReg = getIndex(iCode, pc);
+        pc += 2;
+        continue Loop;
+    case Icode_REG_IND4:
+        indexReg = getInt(iCode, pc);
+        pc += 4;
+        continue Loop;
+    case Icode_REG_STR_C0:
+        stringReg = strings[0];
+        continue Loop;
+    case Icode_REG_STR_C1:
+        stringReg = strings[1];
+        continue Loop;
+    case Icode_REG_STR_C2:
+        stringReg = strings[2];
+        continue Loop;
+    case Icode_REG_STR_C3:
+        stringReg = strings[3];
+        continue Loop;
+    case Icode_REG_STR1:
+        stringReg = strings[0xFF & iCode[pc]];
+        ++pc;
+        continue Loop;
+    case Icode_REG_STR2:
+        stringReg = strings[getIndex(iCode, pc)];
+        pc += 2;
+        continue Loop;
+    case Icode_REG_STR4:
+        stringReg = strings[getInt(iCode, pc)];
+        pc += 4;
+        continue Loop;
+    default :
         dumpICode(idata);
         throw new RuntimeException("Unknown icode : "+op+" @ pc : "+(pc-1));
-    }
                 }  // end of interpreter switch
 
                 // This should be reachable only for jump implementation
