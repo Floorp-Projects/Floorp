@@ -154,7 +154,7 @@ nsRDFCore::DoSort(nsIDOMNode* node, const nsString& sortResource,
 	{
 		if (nsnull != XULSortService)
 		{
-			XULSortService->DoSort(node, sortResource, sortDirection);
+			XULSortService->Sort(node, nsCAutoString(sortResource), nsCAutoString(sortDirection));
 			nsServiceManager::ReleaseService(kXULSortServiceCID, XULSortService);
 		}
 	}
