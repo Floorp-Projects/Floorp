@@ -33,8 +33,9 @@ NS_IMPL_QUERY_INTERFACE(nsFontSizeIterator, NS_GET_IID(nsIFontSizeIterator))
 //----------------------------------------------------------
 nsFontSizeIterator::nsFontSizeIterator() 
 {
+#ifdef DEBUG
 printf("JCG nsFontSizeIterator CTOR\n");
-
+#endif
   NS_INIT_REFCNT();
   mFontInfo     = nsnull;
   mSizeIterInx  = 0;
@@ -43,8 +44,9 @@ printf("JCG nsFontSizeIterator CTOR\n");
 //----------------------------------------------------------
 nsFontSizeIterator::~nsFontSizeIterator()
 {
+#ifdef DEBUG
 printf("JCG nsFontSizeIterator DTOR\n");
-
+#endif
 }
 
 ///----------------------------------------------------------
