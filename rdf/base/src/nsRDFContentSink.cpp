@@ -230,18 +230,22 @@ protected:
     PRInt32 mTextSize;
 
     /**
+     * From the set of given attributes, this method extracts the 
+     * namespace definitions and feeds them to the datasource.
+     * These can then be suggested to the serializer to be used again.
+     * Hopefully, this will keep namespace definitions intact in a 
+     * parse - serialize cycle.
+     */
+    void RegisterNamespaces(const PRUnichar **aAttributes);
+
+    /**
      * Extracts the localname from aExpatName, the name that the Expat parser
-     * passes us. aValue should contain a namespace URI if we need to register
-     * a new prefix-to-namespace-URI mapping when aExpatName declares a
-     * namespace (namespace URI in aExpatName being
-     * http://www.w3.org/2000/xmlns/). aValue is typically the value of an
-     * xmlns attribute.
-     * aLocalName will contain the localname in aExpatName and the returned
-     * value will be the namespace URI.
+     * passes us.
+     * aLocalName will contain the localname in aExpatName.
+     * The return value is a dependent string containing just the namespace.
      */
     const nsDependentSubstring SplitExpatName(const PRUnichar *aExpatName,
-                                              nsIAtom **aLocalName,
-                                              const PRUnichar* aValue = nsnull);
+                                              nsIAtom **aLocalName);
 
     enum eContainerType { eBag, eSeq, eAlt };
     nsresult InitContainer(nsIRDFResource* aContainerType, nsIRDFResource* aContainer);
@@ -447,6 +451,8 @@ RDFContentSinkImpl::HandleStartElement(const PRUnichar *aName,
   FlushText();
 
   nsresult rv = NS_ERROR_UNEXPECTED; // XXX
+
+  RegisterNamespaces(aAtts);
 
   switch (mState) {
   case eRDFContentSinkState_InProlog:
@@ -835,8 +841,7 @@ RDFContentSinkImpl::GetIdAboutAttribute(const PRUnichar** aAttributes,
     nsCOMPtr<nsIAtom> localName;
     for (; *aAttributes; aAttributes += 2) {
         const nsDependentSubstring& nameSpaceURI =
-            SplitExpatName(aAttributes[0], getter_AddRefs(localName),
-                           aAttributes[1]);
+            SplitExpatName(aAttributes[0], getter_AddRefs(localName));
 
         // We'll accept either `ID' or `rdf:ID' (ibid with `about' or
         // `rdf:about') in the spirit of being liberal towards the
@@ -904,8 +909,7 @@ RDFContentSinkImpl::GetResourceAttribute(const PRUnichar** aAttributes,
   nsCOMPtr<nsIAtom> localName;
   for (; *aAttributes; aAttributes += 2) {
       const nsDependentSubstring& nameSpaceURI =
-          SplitExpatName(aAttributes[0], getter_AddRefs(localName),
-                         aAttributes[1]);
+          SplitExpatName(aAttributes[0], getter_AddRefs(localName));
 
       // We'll accept `resource' or `rdf:resource', under the spirit
       // that we should be liberal towards the input that we
@@ -946,8 +950,7 @@ RDFContentSinkImpl::AddProperties(const PRUnichar** aAttributes,
   nsCOMPtr<nsIAtom> localName;
   for (; *aAttributes; aAttributes += 2) {
       const nsDependentSubstring& nameSpaceURI =
-          SplitExpatName(aAttributes[0], getter_AddRefs(localName),
-                         aAttributes[1]);
+          SplitExpatName(aAttributes[0], getter_AddRefs(localName));
 
       // skip 'xmlns' directives, these are "meta" information
       if (nameSpaceURI.EqualsLiteral("http://www.w3.org/2000/xmlns/")) {
@@ -1001,8 +1004,7 @@ RDFContentSinkImpl::SetParseMode(const PRUnichar **aAttributes)
     nsCOMPtr<nsIAtom> localName;
     for (; *aAttributes; aAttributes += 2) {
         const nsDependentSubstring& nameSpaceURI =
-            SplitExpatName(aAttributes[0], getter_AddRefs(localName),
-                           aAttributes[1]);
+            SplitExpatName(aAttributes[0], getter_AddRefs(localName));
 
         if (localName == kParseTypeAtom) {
             nsAutoString v(aAttributes[1]);
@@ -1271,12 +1273,47 @@ RDFContentSinkImpl::OpenValue(const PRUnichar* aName, const PRUnichar** aAttribu
 }
 
 ////////////////////////////////////////////////////////////////////////
+// namespace resolution
+void
+RDFContentSinkImpl::RegisterNamespaces(const PRUnichar **aAttributes)
+{
+    nsCOMPtr<nsIRDFXMLSink> sink = do_QueryInterface(mDataSource);
+    if (!sink) {
+        return;
+    }
+    NS_NAMED_LITERAL_STRING(xmlns, "http://www.w3.org/2000/xmlns/");
+    for (; *aAttributes; aAttributes += 2) {
+        // check the namespace
+        const PRUnichar* attr = aAttributes[0];
+        const PRUnichar* xmlnsP = xmlns.BeginReading();
+        while (*attr ==  *xmlnsP) {
+            ++attr;
+            ++xmlnsP;
+        }
+        if (*attr != 0xFFFF ||
+            xmlnsP != xmlns.EndReading()) {
+            continue;
+        }
+        // get the localname (or "xmlns" for the default namespace)
+        const PRUnichar* endLocal = ++attr;
+        while (*endLocal && *endLocal != 0xFFFF) {
+            ++endLocal;
+        }
+        nsDependentSubstring lname(attr, endLocal);
+        nsCOMPtr<nsIAtom> preferred = do_GetAtom(lname);
+        if (preferred == kXMLNSAtom) {
+            preferred = nsnull;
+        }
+        sink->AddNameSpace(preferred, nsDependentString(aAttributes[1]));
+    }
+}
+
+////////////////////////////////////////////////////////////////////////
 // Qualified name resolution
 
 const nsDependentSubstring
 RDFContentSinkImpl::SplitExpatName(const PRUnichar *aExpatName,
-                                   nsIAtom **aLocalName,
-                                   const PRUnichar *aValue)
+                                   nsIAtom **aLocalName)
 {
     /**
      *  Expat can send the following:
@@ -1305,17 +1342,6 @@ RDFContentSinkImpl::SplitExpatName(const PRUnichar *aExpatName,
     const nsDependentSubstring& nameSpaceURI = Substring(aExpatName, uriEnd);
     *aLocalName = NS_NewAtom(NS_ConvertUTF16toUTF8(nameStart,
                                                    pos - nameStart));
-
-    if (uriEnd != aExpatName && aValue &&
-        nameSpaceURI.EqualsLiteral("http://www.w3.org/2000/xmlns/")) {
-        nsCOMPtr<nsIAtom> prefix =
-            *aLocalName == kXMLNSAtom ? nsnull : *aLocalName;
-        nsCOMPtr<nsIRDFXMLSink> sink = do_QueryInterface(mDataSource);
-        if (sink) {
-            sink->AddNameSpace(prefix, nsDependentString(aValue));
-        }
-    }
-
     return nameSpaceURI;
 }
 
