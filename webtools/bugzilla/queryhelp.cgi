@@ -79,7 +79,7 @@ Until you get better, you can use the "brute force" method where you enter a ver
 the long list of bugs manually. Just try not to overuse this method if you don't have to as you might be slowing down
 the search for other people if there are many people searching at the same time. Finally, I would recommend learning the Boolean Chart immediately because it is extremely 
 powerful. Also, there is a navigation bar at the <a href="#bottom">bottom</a> of 
-most Bugzilla pages, and important links at the <a href="index.html">front page</a>.
+most Bugzilla pages, and important links at the <a href="index.cgi">front page</a>.
 
 
 
