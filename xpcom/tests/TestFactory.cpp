@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <stdio.h>
 #include "TestFactory.h"
 #include "nsISupports.h"
 #include "nsIComponentManager.h"

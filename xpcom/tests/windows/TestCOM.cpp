@@ -38,6 +38,7 @@
 
 #include <windows.h>
 #include <unknwn.h>
+#include <stdio.h>
 #include "nsISupports.h"
 #include "nsIFactory.h"
 
