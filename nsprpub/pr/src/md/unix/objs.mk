@@ -154,7 +154,7 @@ ifeq ($(OS_ARCH), AIX)
 endif
 
 ifeq ($(OS_ARCH),SunOS)
-    ifeq ($(OS_TEST),i86pc)
+    ifeq ($(CPU_ARCH),x86)
 	ASFILES = os_$(OS_ARCH)_x86.s
     else
 	ifneq ($(OS_RELEASE),4.1.3_U1)
@@ -171,6 +171,6 @@ ifeq ($(OS_ARCH)$(OS_RELEASE),BSD_3862.1)
     ASFILES = os_BSD_386_2.s
 endif
 	
-OBJS += $(addprefix md/unix/$(OBJDIR)/,$(CSRCS:.c=.o))  \
-	$(addprefix md/unix/$(OBJDIR)/,$(ASFILES:.s=.o))
+OBJS += $(addprefix md/unix/$(OBJDIR)/,$(CSRCS:.c=.$(OBJ_SUFFIX)))  \
+	$(addprefix md/unix/$(OBJDIR)/,$(ASFILES:.s=.$(OBJ_SUFFIX)))
 

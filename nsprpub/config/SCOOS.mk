@@ -16,7 +16,7 @@
 #
 
 #
-# Config stuff for SCO Unix for x86.
+# Config stuff for SCO OpenServer for x86.
 #
 
 include $(MOD_DEPTH)/config/UNIX.mk
@@ -32,7 +32,7 @@ DEFINES			+= -D_PR_LOCAL_THREADS_ONLY
 # -DSCO - Changes to Netscape source (consistent with AIX, LINUX, etc..)
 # -Dsco - Needed for /usr/include/X11/*
 #
-OS_CFLAGS		= -DSCO_SV -DSYSV -D_SVID3 -DHAVE_STRERROR -DSCO_PM -DSCO -Dsco
+OS_CFLAGS		= -DSCO_SV -DSYSV -D_SVID3 -DHAVE_STRERROR -D_PR_NEED_H_ERRNO -DSCO_PM -DSCO -Dsco
 #OS_LIBS			= -lpmapi -lsocket -lc
 
 MKSHLIB			= $(LD) $(DSO_LDOPTS)

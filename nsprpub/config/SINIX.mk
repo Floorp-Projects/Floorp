@@ -16,7 +16,7 @@
 #
 
 #
-# Config stuff for ReliantUNIX
+# Config stuff for SNI SINIX-N (aka ReliantUNIX)
 #
 
 include $(MOD_DEPTH)/config/UNIX.mk

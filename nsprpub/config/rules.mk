@@ -118,8 +118,8 @@ endif
 #
 
 ifndef OBJS
-OBJS		= $(addprefix $(OBJDIR)/,$(CSRCS:.c=.o)) \
-		  $(addprefix $(OBJDIR)/,$(ASFILES:.s=.o))
+OBJS		= $(addprefix $(OBJDIR)/,$(CSRCS:.c=.$(OBJ_SUFFIX))) \
+		  $(addprefix $(OBJDIR)/,$(ASFILES:.s=.$(OBJ_SUFFIX)))
 endif
 
 ifeq ($(OS_TARGET), WIN16)
@@ -291,7 +291,7 @@ else
 endif
 endif
 else
-	$(MKSHLIB) -o $@ $(OBJS) $(LD_LIBS) $(EXTRA_LIBS) $(OS_LIBS)
+	$(MKSHLIB) -o $@ $(OBJS) $(EXTRA_LIBS) $(OS_LIBS)
 endif
 endif
 
@@ -313,7 +313,7 @@ endif
 	@echo $(RES) finished
 endif
 
-$(OBJDIR)/%.o: %.cpp
+$(OBJDIR)/%.$(OBJ_SUFFIX): %.cpp
 	@$(MAKE_OBJDIR)
 ifeq ($(OS_ARCH), WINNT)
 	$(CCC) -Fo$@ -c $(CFLAGS) $<
@@ -324,13 +324,13 @@ endif
 WCCFLAGS1 = $(subst /,\\,$(CFLAGS))
 WCCFLAGS2 = $(subst -I,-i=,$(WCCFLAGS1))
 WCCFLAGS3 = $(subst -D,-d,$(WCCFLAGS2))
-$(OBJDIR)/%.o: %.c
+$(OBJDIR)/%.$(OBJ_SUFFIX): %.c
 	@$(MAKE_OBJDIR)
 ifeq ($(OS_ARCH), WINNT)
 ifeq ($(OS_TARGET), WIN16)
 #	$(MOD_DEPTH)/config/w16opt $(WCCFLAGS3)
 	echo $(WCCFLAGS3) >w16wccf
-	$(CC) -zq -fo$(OBJDIR)\\$*.o  @w16wccf $*.c
+	$(CC) -zq -fo$(OBJDIR)\\$*.$(OBJ_SUFFIX)  @w16wccf $*.c
 	rm w16wccf
 else
 	$(CC) -Fo$@ -c $(CFLAGS) $*.c
@@ -339,7 +339,7 @@ else
 	$(CC) -o $@ -c $(CFLAGS) $*.c
 endif
 
-$(OBJDIR)/%.o: %.s
+$(OBJDIR)/%.$(OBJ_SUFFIX): %.s
 	@$(MAKE_OBJDIR)
 	$(AS) -o $@ $(ASFLAGS) -c $*.s
 
@@ -358,7 +358,7 @@ $(OBJDIR)/%.o: %.s
 # hundreds of built-in suffix rules for stuff we don't need.
 #
 .SUFFIXES:
-.SUFFIXES: .a .o .c .cpp .s .h .i .pl
+.SUFFIXES: .a .$(OBJ_SUFFIX) .c .cpp .s .h .i .pl
 
 #
 # Fake targets.  Always run these rules, even if a file/directory with that

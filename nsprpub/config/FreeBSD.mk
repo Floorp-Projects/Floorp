@@ -16,7 +16,35 @@
 #
 
 #
-# Config stuff for BSDI BSD/OS 2.1.
+# Config stuff for FreeBSD
 #
 
-include $(MOD_DEPTH)/config/BSD_OS.mk
+include $(MOD_DEPTH)/config/UNIX.mk
+
+CC			= gcc
+CCC			= g++
+RANLIB			= ranlib
+
+OS_REL_CFLAGS		= -mno-486 -Di386
+CPU_ARCH		= x86
+
+OS_CFLAGS		= $(DSO_CFLAGS) $(OS_REL_CFLAGS) -ansi -Wall -pipe -DFREEBSD -DHAVE_STRERROR -DHAVE_BSD_FLOCK -D_PR_NEED_POLL
+
+ifeq ($(USE_PTHREADS),1)
+OS_LIBS			= -lc_r
+# XXX probably should define _THREAD_SAFE too.
+DEFINES			+= -D_PR_NEED_FAKE_POLL
+else
+OS_LIBS			= -lc
+DEFINES			+= -D_PR_LOCAL_THREADS_ONLY
+endif
+
+ARCH			= freebsd
+
+DSO_CFLAGS		= -fPIC
+DSO_LDOPTS		= -Bshareable
+DSO_LDFLAGS		=
+
+MKSHLIB			= $(LD) $(DSO_LDOPTS)
+
+G++INCLUDES		= -I/usr/include/g++

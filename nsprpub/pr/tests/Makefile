@@ -23,7 +23,7 @@ include $(MOD_DEPTH)/config/config.mk
 
 ifeq ($(OS_TARGET), WIN16)
 OS_CFLAGS = $(OS_EXE_CFLAGS)
-W16STDIO = $(MOD_DEPTH)/pr/src/md/windows/$(OBJDIR)/w16stdio.o
+W16STDIO = $(MOD_DEPTH)/pr/src/md/windows/$(OBJDIR)/w16stdio.$(OBJ_SUFFIX)
 endif
 
 ifeq ($(OS_TARGET),WIN16)
@@ -161,7 +161,7 @@ PWD = $(shell pwd)
 endif
 
 ifeq ($(OS_ARCH), IRIX)
-LDOPTS += -rpath $(PWD)/$(DIST)/lib
+LDOPTS += -rpath $(PWD)/$(DIST)/lib -rdata_shared
 
 ifeq ($(USE_N32),1)
 LDOPTS += -n32
@@ -216,10 +216,6 @@ ifneq ($(LOCAL_THREADS_ONLY),1)
 # even though we already linked with these system libraries
 # when we built libnspr.so.
 ifeq ($(OS_RELEASE), 5.4)
-EXTRA_LIBS = -lthread
-endif
-
-ifeq ($(OS_RELEASE), 5.4_i86pc)
 EXTRA_LIBS = -lthread
 endif
 
@@ -329,10 +325,10 @@ ifeq ($(AIX_PRE_4_2),1)
 # get at the original system select().
 #
 # We use a pattern rule in ns/nspr20/config/rules.mk to generate
-# the .o file from the .c source file, then do the two-step linking
-# hack below.
+# the .$(OBJ_SUFFIX) file from the .c source file, then do the
+# two-step linking hack below.
 
-$(OBJDIR)/%: $(OBJDIR)/%.o
+$(OBJDIR)/%: $(OBJDIR)/%.$(OBJ_SUFFIX)
 	@$(MAKE_OBJDIR)
 	rm -f $@ $(AIX_TMP)
 	$(CC) $(AIX_LINK_OPTS) -o $(AIX_TMP) $< $(DIST)/lib/libnspr$(MOD_VERSION).a
@@ -345,7 +341,7 @@ else
 
 
 ifeq ($(USE_PTHREADS), 1)
-$(OBJDIR)/attach: $(OBJDIR)/attach.o
+$(OBJDIR)/attach: $(OBJDIR)/attach.$(OBJ_SUFFIX)
 	@$(MAKE_OBJDIR)
 ifeq ($(OS_ARCH), AIX)
 	$(CC) $< $(LDOPTS) $(LIBPLC) $(LIBPR) -lpthreads -o $@
@@ -359,7 +355,7 @@ endif
 endif
 
 
-$(OBJDIR)/%$(PROG_SUFFIX): $(OBJDIR)/%.o
+$(OBJDIR)/%$(PROG_SUFFIX): $(OBJDIR)/%.$(OBJ_SUFFIX)
 	@$(MAKE_OBJDIR)
 ifeq ($(OS_ARCH), WINNT)
 ifeq ($(OS_TARGET),WIN16)
@@ -395,3 +391,38 @@ install:: export
 clean::
 	rm -f $(TARGETS)
 
+#
+# Run the test programs with no arguments
+#
+# Test output goes to the file pointed to by the environment variable
+# NSPR_TEST_LOGFILE, if set, else to /dev/null
+#
+ECHO = echo
+PROGRAMS = $(notdir $(PROGS))
+ifdef NSPR_TEST_LOGFILE
+LOGFILE = $(NSPR_TEST_LOGFILE)
+else
+ifeq ($(OS_ARCH), WINNT)
+LOGFILE = nul
+else
+LOGFILE = /dev/null
+endif
+endif
+
+ALWAYS:
+
+runtests:: $(PROGS) ALWAYS
+	@$(ECHO) "\nNSPR Test Results - $(OBJDIR)\n"
+	@$(ECHO) "BEGIN\t\t\t`date`"
+	@$(ECHO) "NSPR_TEST_LOGFILE\t$(LOGFILE)\n"
+	@$(ECHO) "Test\t\t\tResult\n"
+	@cd $(OBJDIR); for i in $(PROGRAMS); do					\
+	$(ECHO) "$$i\c";										\
+	./$$i >> $(LOGFILE) 2>&1 ;								\
+	if  [ 0 = $$? ] ; then									\
+		$(ECHO) "\t\t\tPassed";								\
+	else													\
+		$(ECHO) "\t\t\tFAILED";								\
+	fi														\
+	done
+	@$(ECHO) "\nEND\t\t`date`\n"

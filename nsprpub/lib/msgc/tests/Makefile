@@ -23,7 +23,7 @@ include $(MOD_DEPTH)/config/config.mk
 
 ifeq ($(OS_TARGET), WIN16)
 OS_CFLAGS = $(OS_EXE_CFLAGS)
-W16STDIO = $(MOD_DEPTH)/pr/src/md/windows/$(OBJDIR)/w16stdio.o
+W16STDIO = $(MOD_DEPTH)/pr/src/md/windows/$(OBJDIR)/w16stdio.$(OBJ_SUFFIX)
 endif
 
 ifeq ($(OS_TARGET), OS2)
@@ -78,7 +78,7 @@ PWD = $(shell pwd)
 endif
 
 ifeq ($(OS_ARCH), IRIX)
-LDOPTS += -rpath $(PWD)/$(DIST)/lib
+LDOPTS += -rpath $(PWD)/$(DIST)/lib -rdata_shared
 
 ifeq ($(USE_N32),1)
 LDOPTS += -n32
@@ -135,10 +135,6 @@ ifneq ($(LOCAL_THREADS_ONLY),1)
 # even though we already linked with these system libraries
 # when we built libnspr.so.
 ifeq ($(OS_RELEASE), 5.4)
-EXTRA_LIBS = -lthread
-endif
-
-ifeq ($(OS_RELEASE), 5.4_i86pc)
 EXTRA_LIBS = -lthread
 endif
 
@@ -235,10 +231,10 @@ ifeq ($(AIX_PRE_4_2),1)
 # get at the original system select().
 #
 # We use a pattern rule in ns/nspr20/config/rules.mk to generate
-# the .o file from the .c source file, then do the two-step linking
-# hack below.
+# the .$(OBJ_SUFFIX) file from the .c source file, then do the
+# two-step linking hack below.
 
-$(OBJDIR)/%: $(OBJDIR)/%.o
+$(OBJDIR)/%: $(OBJDIR)/%.$(OBJ_SUFFIX)
 	@$(MAKE_OBJDIR)
 	rm -f $@ $(AIX_TMP)
 	$(CC) $(AIX_LINK_OPTS) -o $(AIX_TMP) $< $(DIST)/lib/libnspr$(NSPR_VERSION).a
@@ -249,7 +245,7 @@ else
 
 # All platforms that are not AIX pre-4.2.
 
-$(OBJDIR)/%$(PROG_SUFFIX): $(OBJDIR)/%.o
+$(OBJDIR)/%$(PROG_SUFFIX): $(OBJDIR)/%.$(OBJ_SUFFIX)
 	@$(MAKE_OBJDIR)
 ifeq ($(OS_ARCH), WINNT)
 ifeq ($(OS_TARGET),WIN16)

@@ -29,7 +29,7 @@ CXXSRCS =           \
 	testprstrm.cpp    \
 	$(NULL)
 
-OBJS = $(addprefix $(OBJDIR)/,$(CXXSRCS:.cpp=.o))
+OBJS = $(addprefix $(OBJDIR)/,$(CXXSRCS:.cpp=.$(OBJ_SUFFIX)))
 
 ifeq ($(OS_ARCH), WINNT)
 PROG_SUFFIX = .exe
@@ -78,9 +78,18 @@ endif
 
 # AIX
 ifeq ($(OS_ARCH),AIX)
+ifeq ($(CLASSIC_NSPR),1)
+LDOPTS += -blibpath:.:$(PWD)/$(DIST)/lib:/usr/lpp/xlC/lib:/usr/lib:/lib
+else
 LDOPTS += -blibpath:.:$(PWD)/$(DIST)/lib:/usr/lib/threads:/usr/lpp/xlC/lib:/usr/lib:/lib                                        
+endif
+ifeq ($(OS_ARCH)$(OS_RELEASE),AIX4.1)
 LIBPR = -lnspr$(MOD_VERSION)_shr
 LIBPRSTRMS = -lprstrms$(MOD_VERSION)_shr
+else
+LDOPTS += -brtl
+EXTRA_LIBS = -ldl
+endif
 endif
 
 # Solaris
@@ -158,10 +167,10 @@ ifeq ($(AIX_PRE_4_2),1)
 # get at the original system select().
 #
 # We use a pattern rule in ns/nspr20/config/rules.mk to generate
-# the .o file from the .c source file, then do the two-step linking
-# hack below.
+# the .$(OBJ_SUFFIX) file from the .c source file, then do the
+# two-step linking hack below.
 
-$(OBJDIR)/%: $(OBJDIR)/%.o
+$(OBJDIR)/%: $(OBJDIR)/%.$(OBJ_SUFFIX)
 	@$(MAKE_OBJDIR)
 	rm -f $@ $(AIX_TMP)
 	$(CC) $(AIX_LINK_OPTS) -o $(AIX_TMP) $< $(DIST)/lib/libnspr$(MOD_VERSION).a
@@ -172,7 +181,7 @@ else
 
 # All platforms that are not AIX pre-4.2.
 
-$(OBJDIR)/%$(PROG_SUFFIX): $(OBJDIR)/%.o
+$(OBJDIR)/%$(PROG_SUFFIX): $(OBJDIR)/%.$(OBJ_SUFFIX)
 	@$(MAKE_OBJDIR)
 ifeq ($(OS_ARCH), WINNT)
 ifeq ($(OS_TARGET),WIN16)

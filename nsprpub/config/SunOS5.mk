@@ -95,8 +95,9 @@ RANLIB			= echo
 
 OS_DEFINES		= -DSVR4 -DSYSV -D__svr4 -D__svr4__ -DSOLARIS
 
-ifeq (i86pc,$(findstring i86pc,$(OS_RELEASE)))
+ifeq ($(OS_TEST),i86pc)
 CPU_ARCH		= x86
+CPU_ARCH_TAG		= _i86pc
 OS_DEFINES		+= -Di386
 else
 CPU_ARCH		= sparc
@@ -104,6 +105,11 @@ endif
 
 ifeq (5.5,$(findstring 5.5,$(OS_RELEASE)))
 OS_DEFINES		+= -DSOLARIS2_5
+SOL_CFLAGS		= -D_SVID_GETTOD
+endif
+
+ifeq ($(OS_RELEASE),5.6)
+SOL_CFLAGS		= -D_SVID_GETTOD
 endif
 
 ifneq ($(LOCAL_THREADS_ONLY),1)
@@ -149,10 +155,8 @@ NOSUCHFILE		= /no-such-file
 # accident on non-UltraSparc systems.
 # The directory containing the ultrasparc libraries should be in LD_LIBRARY_PATH.
 #
-ifneq ($(OS_RELEASE),4.1.3_U1)
 ifeq ($(OS_TEST),sun4u)
 ULTRASPARC_LIBRARY = ultrasparc
 ULTRASPARC_FILTER_LIBRARY = libatomic.so
 DSO_LDOPTS		+= -f $(ULTRASPARC_FILTER_LIBRARY)
-endif
 endif
