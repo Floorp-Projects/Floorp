@@ -1059,38 +1059,8 @@ nsBlockFrame::DoResizeReflow(nsBlockReflowState& aState,
     }
   }
 
-  // Return our desired rect and our status
-  aDesiredRect.x = 0;
-  aDesiredRect.y = 0;
-  aDesiredRect.width = aState.mKidXMost + aState.mBorderPadding.right;
-  if (!aState.mUnconstrainedWidth) {
-    // Make sure we're at least as wide as the max size we were given
-    nscoord maxWidth = aState.mAvailSize.width + aState.mBorderPadding.left +
-      aState.mBorderPadding.right;
-    if (aDesiredRect.width < maxWidth) {
-      aDesiredRect.width = maxWidth;
-    }
-  }
-  aState.mY += aState.mBorderPadding.bottom;
-  nscoord lastBottomMargin = aState.mPrevMaxPosBottomMargin -
-    aState.mPrevMaxNegBottomMargin;
-  if (!aState.mUnconstrainedHeight && (lastBottomMargin > 0)) {
-    // It's possible that we don't have room for the last bottom
-    // margin (the last bottom margin is the margin following a block
-    // element that we contain; it isn't applied immediately because
-    // of the margin collapsing logic). This can happen when we are
-    // reflowed in a limited amount of space because we don't know in
-    // advance what the last bottom margin will be.
-    nscoord maxY = aMaxSize.height;
-    if (aState.mY + lastBottomMargin > maxY) {
-      lastBottomMargin = maxY - aState.mY;
-      if (lastBottomMargin < 0) {
-        lastBottomMargin = 0;
-      }
-    }
-    aState.mY += lastBottomMargin;
-  }
-  aDesiredRect.height = aState.mY;
+  // Return our desired rect
+  ComputeDesiredRect(aState, aMaxSize, aDesiredRect);
 
   // Set return status
   aStatus = frComplete;
@@ -1258,7 +1228,7 @@ nsBlockFrame::IncrementalReflow(nsIPresContext*         aPresContext,
         }
 
         // XXX This isn't really right...
-        state.mKidXMost = mRect.XMost();
+        state.mKidXMost = mRect.width - state.mBorderPadding.right;
 
         // If the previous line is a block, then factor in its bottom margin
         if (prevLine->mIsBlock) {
@@ -1291,39 +1261,8 @@ nsBlockFrame::IncrementalReflow(nsIPresContext*         aPresContext,
     NS_NOTYETIMPLEMENTED("unexpected reflow command");
   }
 
-  // Return our desired rect and our status
-  // XXX Share this code with DoResizeReflow()...
-  aDesiredRect.x = 0;
-  aDesiredRect.y = 0;
-  aDesiredRect.width = state.mKidXMost + state.mBorderPadding.right;
-  if (!state.mUnconstrainedWidth) {
-    // Make sure we're at least as wide as the max size we were given
-    nscoord maxWidth = state.mAvailSize.width + state.mBorderPadding.left +
-      state.mBorderPadding.right;
-    if (aDesiredRect.width < maxWidth) {
-      aDesiredRect.width = maxWidth;
-    }
-  }
-  state.mY += state.mBorderPadding.bottom;
-  nscoord lastBottomMargin = state.mPrevMaxPosBottomMargin -
-    state.mPrevMaxNegBottomMargin;
-  if (!state.mUnconstrainedHeight && (lastBottomMargin > 0)) {
-    // It's possible that we don't have room for the last bottom
-    // margin (the last bottom margin is the margin following a block
-    // element that we contain; it isn't applied immediately because
-    // of the margin collapsing logic). This can happen when we are
-    // reflowed in a limited amount of space because we don't know in
-    // advance what the last bottom margin will be.
-    nscoord maxY = aMaxSize.height;
-    if (state.mY + lastBottomMargin > maxY) {
-      lastBottomMargin = maxY - state.mY;
-      if (lastBottomMargin < 0) {
-        lastBottomMargin = 0;
-      }
-    }
-    state.mY += lastBottomMargin;
-  }
-  aDesiredRect.height = state.mY;
+  // Return our desired rect
+  ComputeDesiredRect(state, aMaxSize, aDesiredRect);
 
   // Now that reflow has finished, remove the cached pointer
   shell->RemoveCachedData(this);
@@ -1334,6 +1273,43 @@ nsBlockFrame::IncrementalReflow(nsIPresContext*         aPresContext,
   PostReflowCheck(aStatus);
 #endif
   return rv;
+}
+
+void nsBlockFrame::ComputeDesiredRect(nsBlockReflowState& aState,
+                                      const nsSize&       aMaxSize,
+                                      nsRect&             aDesiredRect)
+{
+  aDesiredRect.x = 0;
+  aDesiredRect.y = 0;
+  aDesiredRect.width = aState.mKidXMost + aState.mBorderPadding.right;
+  if (!aState.mUnconstrainedWidth) {
+    // Make sure we're at least as wide as the max size we were given
+    nscoord maxWidth = aState.mAvailSize.width + aState.mBorderPadding.left +
+      aState.mBorderPadding.right;
+    if (aDesiredRect.width < maxWidth) {
+      aDesiredRect.width = maxWidth;
+    }
+  }
+  aState.mY += aState.mBorderPadding.bottom;
+  nscoord lastBottomMargin = aState.mPrevMaxPosBottomMargin -
+    aState.mPrevMaxNegBottomMargin;
+  if (!aState.mUnconstrainedHeight && (lastBottomMargin > 0)) {
+    // It's possible that we don't have room for the last bottom
+    // margin (the last bottom margin is the margin following a block
+    // element that we contain; it isn't applied immediately because
+    // of the margin collapsing logic). This can happen when we are
+    // reflowed in a limited amount of space because we don't know in
+    // advance what the last bottom margin will be.
+    nscoord maxY = aMaxSize.height;
+    if (aState.mY + lastBottomMargin > maxY) {
+      lastBottomMargin = maxY - aState.mY;
+      if (lastBottomMargin < 0) {
+        lastBottomMargin = 0;
+      }
+    }
+    aState.mY += lastBottomMargin;
+  }
+  aDesiredRect.height = aState.mY;
 }
 
 //----------------------------------------------------------------------

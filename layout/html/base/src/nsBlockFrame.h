@@ -245,6 +245,10 @@ protected:
                           nsRect&             aDesiredRect,
                           ReflowStatus&       aStatus);
 
+  void ComputeDesiredRect(nsBlockReflowState& aState,
+                          const nsSize&       aMaxSize,
+                          nsRect&             aDesiredRect);
+
   void DestroyLines();
 
   void DrainOverflowList();
