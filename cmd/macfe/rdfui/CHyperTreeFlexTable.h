@@ -197,3 +197,31 @@ protected:
 	HT_View mTreeView;
 
 }; // class CHyperTreeSelector
+
+
+#pragma mark -- class CPopdownFlexTable --
+
+
+//
+// class CPopdownFlexTable
+//
+// The flex table used by the popdown view. It needs to broadcast some messages to the
+// coordinator (such as when to close up) and do funny things to handle closing when
+// items are opened.
+//
+
+class CPopdownFlexTable : public CHyperTreeFlexTable
+{
+public:	
+	enum { class_ID = 'pdFT' };
+	enum { msg_ClosePopdownTree = 'clos' };
+		
+	CPopdownFlexTable(LStream *inStream);
+	~CPopdownFlexTable();
+
+private:
+
+//	void	OpenSelection();
+	void	OpenRow ( TableIndexT inRow ) ;
+
+}; // class CPopdownFlexTable

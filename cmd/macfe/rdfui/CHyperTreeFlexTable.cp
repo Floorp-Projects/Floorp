@@ -1539,3 +1539,53 @@ CHyperTreeSelector :: SyncSelectorWithHT ( )
 	}
 	
 } // SyncSelectorWithHT
+
+
+#pragma mark -
+
+CPopdownFlexTable :: CPopdownFlexTable ( LStream* inStream )
+	: CHyperTreeFlexTable(inStream)
+{
+
+}
+
+
+CPopdownFlexTable :: ~CPopdownFlexTable ( )
+{
+}
+
+
+//
+// OpenRow
+//
+// Do the normal thing, but close up the tree afterwards.
+//
+void
+CPopdownFlexTable :: OpenRow ( TableIndexT inRow )
+{
+	CHyperTreeFlexTable::OpenRow(inRow);
+	BroadcastMessage ( msg_ClosePopdownTree, NULL );
+	
+} // OpenRow
+
+#if 0
+//
+// OpenSelection
+//
+// The inherited version of this routine iterates over the selection and opens each row in 
+// turn. The problem, as you may be able to see from OpenRow() above, is that as soon as
+// we open a row, the tree goes away. Guess what then happens when it tries to fetch the
+// next selected row from a tree that has been obliterated....
+//
+// To avoid this nasty happening, only open the first selected item we encounter, even if
+// many things are selected. What would it mean to open all of them in the browser window
+// anyway?
+//
+void 
+CPopdownFlexTable :: OpenSelection()
+{
+	TableIndexT selectedRow = 0;
+	if ( GetNextSelectedRow(selectedRow) && !CmdPeriod() )
+		OpenRow(selectedRow);
+}
+#endif
