@@ -1072,7 +1072,7 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode
   if(eHTMLTag_userdefined==aTag) {
     CAttributeToken* theToken= (CAttributeToken*)mTokenRecycler->CreateTokenOfType(eToken_attribute,aTag);
     if(theToken) {
-      theToken->mTextKey.AssignWithConversion("-moz-userdefined");
+      theToken->mTextKey.AssignWithConversion("_moz-userdefined");
       aNode.AddAttribute(theToken);    
     }
   }
