@@ -542,10 +542,11 @@ nsJSUtils::nsGlobalResolve(JSContext* aContext,
         result = manager->LookupName(name, isConstructor, interfaceID, classID);
         if (NS_SUCCEEDED(result)) {
           if (isConstructor) {
-            return (JSBool) JS_DefineFunction(aContext, aObj, 
+            // XXX would like JS_DefineUCFunction in jsapi.h...
+            return (NULL != JS_DefineFunction(aContext, aObj, 
                                               JS_GetStringBytes(jsstring),
                                               StubConstructor, 0,
-                                              JSPROP_READONLY);
+                                              JSPROP_READONLY));
           }
           result = nsComponentManager::CreateInstance(classID,
                                                       nsnull,
