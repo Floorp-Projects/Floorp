@@ -28,7 +28,7 @@ LIB=.\$(OBJDIR)\$(LIBRARY_NAME).lib
 
 CFLAGS = $(CFLAGS) -I..\include -I..\..\include
 
-CPP_OBJS = \
+OBJS = \
   .\$(OBJDIR)\npn_gate.obj \
   .\$(OBJDIR)\npp_gate.obj \
   .\$(OBJDIR)\np_entry.obj \
