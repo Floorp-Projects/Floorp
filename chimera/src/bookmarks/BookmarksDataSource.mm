@@ -429,6 +429,8 @@
   return BookmarksService::ResolveKeyword(aKeyword);
 }
 
+#pragma mark -
+
 //
 // outlineView:shouldEditTableColumn:item: (delegate method)
 //
@@ -591,9 +593,8 @@
 
 - (BOOL)outlineView:(NSOutlineView *)ov writeItems:(NSArray*)items toPasteboard:(NSPasteboard*)pboard 
 {
-  if (!mBookmarks || [mOutlineView selectedRow] == -1) {
+  if (!mBookmarks)
     return NO;
-  }
  
 #ifdef FILTER_DESCENDANT_ON_DRAG
   NSArray *toDrag = BookmarksService::FilterOutDescendantsForDrag(items);

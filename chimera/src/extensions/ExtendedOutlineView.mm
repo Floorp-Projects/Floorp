@@ -25,7 +25,8 @@
 
 @implementation CHExtendedOutlineView
 
-- (id)initWithFrame:(NSRect)frame {
+- (id)initWithFrame:(NSRect)frame
+{
   if ( (self = [super initWithFrame:frame]) ) {
     mDeleteAction = 0;
   }
