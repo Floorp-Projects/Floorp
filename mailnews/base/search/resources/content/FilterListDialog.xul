@@ -37,6 +37,7 @@ Contributor(s):  Håkan Waara <hwaara@chello.se>
   title="&window.title;">
 
   <script language="JavaScript" src="chrome://messenger/content/FilterListDialog.js"/>
+  <stringbundle id="bundle_filter" src="chrome://messenger/locale/filter.properties"/>
 
   <keyset id="dialogKeys"/>
 
