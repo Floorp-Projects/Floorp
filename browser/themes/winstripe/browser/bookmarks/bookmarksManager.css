@@ -6,7 +6,7 @@
 }
 
 #bookmark-window toolbarbutton > .toolbarbutton-icon {
-  margin-right: 0px;
+  -moz-margin-end: 0px;
 }
 
 /* new bookmark */

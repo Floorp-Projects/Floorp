@@ -51,7 +51,7 @@ textbox > .textarea-internal-box {
 }
 
 textbox.header {
-  margin-left: 0;
+  -moz-margin-start: 0;
 }
 
 .iframe {

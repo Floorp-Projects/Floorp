@@ -124,7 +124,8 @@
       <xul:hbox anonid="accel">
         <xul:label class="menu-iconic-accel" xbl:inherits="value=acceltext"/>
       </xul:hbox>
-      <xul:hbox class="menu-right" xbl:inherits="_moz-menuactive,disabled" align="center" pack="center">
+      <xul:hbox class="menu-right" chromedir="&locale.dir;"
+                xbl:inherits="_moz-menuactive,disabled" align="center" pack="center">
         <xul:image/>
       </xul:hbox>
       <children includes="menupopup|template"/>

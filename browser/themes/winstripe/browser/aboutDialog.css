@@ -19,10 +19,16 @@
 }
 
 #userAgent {
-  margin: 3px 10px 3px 5px;
+  margin-top: 3px;
+  margin-bottom: 3px;
+  -moz-margin-start: 5px;
+  -moz-margin-end: 10px;
   background-color: #FFFFFF;
   color: #000000;
-  padding: 1px 0px 1px 3px;
+  padding-top: 1px;
+  padding-bottom: 1px;
+  -moz-padding-start: 3px;
+  -moz-padding-end: 0px;
   -moz-appearance: none;
   overflow: hidden;
   height: 2.4em;
@@ -41,18 +47,24 @@
 #version {
   font-weight: bold;
   color: #909090;
-  margin: 1em 0px 10px 17px;
+  margin-top: 1em;
+  margin-bottom: 10px;
+  -moz-margin-start: 17px;
+  -moz-margin-end: 0px;
 }
 
 #copyright {
-  margin: 0px 0px 3px 16px;
+  margin-top: 0px;
+  margin-bottom: 3px;
+  -moz-margin-start: 16px;
+  -moz-margin-end: 0px;
 }
 
 button[dlgtype="extra2"] {
-  margin-left: 13px;
+  -moz-margin-start: 13px;
 }
 
 button[dlgtype="accept"] {
-  margin-right: 13px;
+  -moz-margin-end: 13px;
 }
 

@@ -40,5 +40,8 @@
 }
 
 .settingsContainer {
-  padding: 3px 5px 5px 20px;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  -moz-padding-start: 20px;
+  -moz-padding-end: 5px;
 }

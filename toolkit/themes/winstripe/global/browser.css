@@ -12,7 +12,7 @@ tabpanels {
 .tabbrowser-tabs {
 	padding-top: 1px;
         background: transparent url("chrome://global/skin/icons/tabstrip-bottom.png") repeat-x bottom center !important;
-        	padding-left: 2px;
+        -moz-padding-start: 2px;
         border-bottom: 2px solid;
         -moz-border-bottom-colors: threedshadow threedlightshadow;
 }
@@ -25,7 +25,7 @@ tabpanels {
 
 .tab-icon {
   margin-top: 1px;
-  margin-right: 3px;
+  -moz-margin-end: 3px;
   width: 16px;
   height: 16px;
   list-style-image: url("chrome://global/skin/icons/folder-item.png");
@@ -66,10 +66,9 @@ browsermessage[type="bottom"] {
 }
 
 .messageText {
-  margin-left: 5px;
+  -moz-margin-start: 5px;
 }
 
 .messageButton {
   margin: 0px 5px 0px 5px;
 }
-

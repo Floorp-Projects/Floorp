@@ -58,7 +58,10 @@ toolbarbutton.bookmark-item {
 
 toolbarbutton.bookmark-item:hover:active,
 toolbarbutton.bookmark-item[open="true"] {
-  padding: 3px 2px 1px 4px;
+  padding-top: 3px;
+  padding-bottom: 1px;
+  -moz-padding-start: 4px;
+  -moz-padding-end: 2px;
 }
 
 .bookmark-item > .toolbarbutton-icon {
@@ -106,7 +109,10 @@ menuitem.bookmark-item {
   max-width: 26em;
   border-top: 1px solid transparent !important;
   border-bottom: 1px solid transparent !important;
-  padding: 1px 3px 1px 2px;
+  padding-top: 1px;
+  padding-bottom: 1px;
+  -moz-padding-start: 2px;
+  -moz-padding-end: 3px;
   margin-top: -1px;
 }
 
@@ -152,6 +158,10 @@ menuitem.bookmark-item {
   list-style-image: url("chrome://browser/skin/livemark-item.png") !important;
 }
 
+.bookmark-item[livemark="true"][chromedir="rtl"] { 
+  list-style-image: url("chrome://browser/skin/livemark-item-rtl.png") !important;
+}
+
 .bookmark-item[type="menu"][livemark="true"] { 
   -moz-image-region: rect(0px, 48px, 16px, 32px) !important;
 }
@@ -169,7 +179,7 @@ menuitem.bookmark-item {
 }
 
 .toolbarbutton-1 .toolbarbutton-icon {
-  margin-right: 0px;
+  -moz-margin-end: 0px;
 }
 
 toolbar[mode="full"] .toolbarbutton-1,
@@ -185,11 +195,17 @@ toolbar[mode="full"] .toolbarbutton-menubutton-button {
 .toolbarbutton-1[open="true"], 
 .toolbarbutton-menubutton-button:hover:active:not([disabled]),
 .toolbarbutton-menubutton-button[open="true"] {
-  padding: 5px 4px 5px 6px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  -moz-padding-start: 6px;
+  -moz-padding-end: 4px;
 }
 
 .toolbarbutton-1[checked="true"] {
-  padding: 5px 4px 5px 6px !important;
+  padding-top: 5px !important;
+  padding-bottom: 5px !important;
+  -moz-padding-start: 6px !important;
+  -moz-padding-end: 4px !important;
 }
 
 .toolbarbutton-1[type="menu-button"] {
@@ -221,29 +237,29 @@ toolbar[mode="text"] .toolbarbutton-text {
 
 /* ::::: 24px primary toolbar buttons ::::: */
 
-#back-button {
+/* back button-- */
+
+#back-button, #forward-button[chromedir="rtl"] {
   -moz-image-region: rect(0px 24px 24px 0px);
 }
 
-/* back button-- */
-
-#back-button[buttonover="true"] {
+#back-button[buttonover="true"], #forward-button[buttonover="true"][chromedir="rtl"] {
   -moz-image-region: rect(24px 24px 48px 0px);
 }
-#back-button[disabled="true"] {
+#back-button[disabled="true"], #forward-button[disabled="true"][chromedir="rtl"] {
   -moz-image-region: rect(48px 24px 72px 0px) !important;
 }
 
 /* forward button */
 
-#forward-button {
+#forward-button, #back-button[chromedir="rtl"] {
   -moz-image-region: rect(0px 48px 24px 24px);
-  padding-right: 2px;
+  -moz-padding-end: 2px;
 }
-#forward-button[buttonover="true"] {
+#forward-button[buttonover="true"], #back-button[buttonover="true"][chromedir="rtl"] {
   -moz-image-region: rect(24px 48px 48px 24px);
 }
-#forward-button[disabled="true"] {
+#forward-button[disabled="true"], #back-button[disabled="true"][chromedir="rtl"] {
    -moz-image-region: rect(48px 48px 72px 24px) !important;
 }
 
@@ -412,23 +428,29 @@ toolbar[iconsize="small"] .toolbarbutton-1 {
 }
 
 toolbar[iconsize="small"] .toolbarbutton-1 .toolbarbutton-icon {
-  margin-right: 0px;
+  -moz-margin-end: 0px;
 }
 
 toolbar[iconsize="small"] .toolbarbutton-1, toolbar[iconsize="small"] .toolbarbutton-menubutton-button {
   padding: 3px;
-	margin-right: 2px;
+  -moz-margin-end: 2px;
 }
 
 toolbar[iconsize="small"] .toolbarbutton-1:hover:active:not([disabled]),
 toolbar[iconsize="small"] .toolbarbutton-1[open="true"], 
 toolbar[iconsize="small"] .toolbarbutton-menubutton-button:hover:active:not([disabled]),
 toolbar[iconsize="small"] .toolbarbutton-menubutton-button[open="true"] {
-  padding: 3px 2px 3px 4px;
+  padding-top: 3px;
+  padding-bottom: 3px;
+  -moz-padding-start: 4px;
+  -moz-padding-end: 2px;
 }
 
 toolbar[iconsize="small"] .toolbarbutton-1[checked="true"] {
-  padding: 3px 2px 3px 4px !important;
+  padding-top: 3px !important;
+  padding-bottom: 3px !important;
+  -moz-padding-start: 4px !important;
+  -moz-padding-end: 2px !important;
 }
 
 toolbar[iconsize="small"] .toolbarbutton-1[type="menu-button"] {
@@ -447,27 +469,28 @@ toolbar[iconsize="small"] .toolbarbutton-menubutton-button:hover:active {
 
 /* back button-- */
 
-toolbar[iconsize="small"] #back-button {
+toolbar[iconsize="small"] #back-button, toolbar[iconsize="small"] #forward-button[chromedir="rtl"] {
   -moz-image-region: rect(0px 16px 16px 0px);
 }
 
-toolbar[iconsize="small"] #back-button[buttonover="true"] {
+toolbar[iconsize="small"] #back-button[buttonover="true"], toolbar[iconsize="small"] #forward-button[buttonover="true"][chromedir="rtl"] {
   -moz-image-region: rect(16px 16px 32px 0px);
 }
-toolbar[iconsize="small"] #back-button[disabled="true"] {
+
+toolbar[iconsize="small"] #back-button[disabled="true"], toolbar[iconsize="small"] #forward-button[disabled="true"][chromedir="rtl"] {
   -moz-image-region: rect(32px 16px 48px 0px) !important;
 }
 
 /* forward button */
 
-toolbar[iconsize="small"] #forward-button {
+toolbar[iconsize="small"] #forward-button, toolbar[iconsize="small"] #back-button[chromedir="rtl"] {
   -moz-image-region: rect(0px 32px 16px 16px);
-  padding-right: 2px;
+  -moz-padding-end: 2px;
 }
-toolbar[iconsize="small"] #forward-button[buttonover="true"] {
+toolbar[iconsize="small"] #forward-button[buttonover="true"], toolbar[iconsize="small"] #back-button[buttonover="true"][chromedir="rtl"] {
   -moz-image-region: rect(16px 32px 32px 16px);
 }
-toolbar[iconsize="small"] #forward-button[disabled="true"] {
+toolbar[iconsize="small"] #forward-button[disabled="true"], toolbar[iconsize="small"] #back-button[disabled="true"][chromedir="rtl"] {
    -moz-image-region: rect(32px 32px 48px 16px) !important;
 }
 
@@ -632,7 +655,10 @@ toolbar[iconsize="small"] #mail-button[disabled="true"] {
 
 #window-controls {
   -moz-box-align: center;
-  padding: 0 2px 0 4px;
+  padding-top: 0px;
+  padding-bottom: 0px;
+  -moz-padding-start: 4px;
+  -moz-padding-end: 2px;
   border-left: 2px solid;
   -moz-border-left-colors: ThreeDHighlight ThreeDShadow;
 }
@@ -682,7 +708,7 @@ toolbar[iconsize="small"] #mail-button[disabled="true"] {
 
 
 statusbarpanel#statusbar-display {
-  padding-left: 0;
+  -moz-padding-start: 0;
 }
 
 /* ::::: autocomplete ::::: */
@@ -696,7 +722,14 @@ statusbarpanel#statusbar-display {
 #go-button {
   list-style-image: url("chrome://browser/skin/Go.png");
   -moz-image-region: rect(0px 20px 20px 0px);
-  padding: 2px 5px 2px 3px;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  -moz-padding-start: 3px;
+  -moz-padding-end: 5px;
+}
+
+#go-button[chromedir="rtl"] {
+  list-style-image: url("chrome://browser/skin/Go-rtl.png");
 }
 
 #go-button:hover {
@@ -774,6 +807,10 @@ statusbarpanel#statusbar-display {
   display: -moz-box;
 }
 
+#livemark-button[livemarks][chromedir="rtl"] {
+  list-style-image: url("chrome://browser/skin/page-livemarks-rtl.png");
+}
+
 /* ::::: throbber ::::: */
 
 #navigator-throbber {
@@ -803,9 +840,9 @@ toolbar[mode="text"] #navigator-throbber[busy="true"] {
 }
 
 .tabs-closebutton > .toolbarbutton-icon {
-  margin-right: 0px !important;
-  padding-right: 2px !important;
-  padding-left: 2px !important;
+  -moz-margin-end: 0px !important;
+  -moz-padding-end: 2px !important;
+  -moz-padding-start: 2px !important;
 }
 
 .tabs-closebutton {
@@ -838,6 +875,10 @@ toolbarbutton.chevron {
   list-style-image: url("chrome://global/skin/toolbar/chevron.gif") !important;
 }
 
+toolbarbutton.chevron[chromedir="rtl"] {
+  list-style-image: url("chrome://global/skin/toolbar/chevron-rtl.gif") !important;
+}
+
 toolbarbutton.chevron > .toolbarbutton-text {
   display: none; /* hide chevron label */
 }
@@ -861,7 +902,7 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
 #sidebar-throbber[loading="true"] {
   list-style-image: url("chrome://browser/skin/Throbber-small.gif");
   -moz-opacity: 0.5;
-  margin-right: 4px;
+  -moz-margin-end: 4px;
 }
 
 #urlbar[level="high"] > .autocomplete-textbox-container,
@@ -881,4 +922,3 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
 #urlbar[level="broken"] > .autocomplete-textbox-container > .info-icon {
   list-style-image: url("chrome://browser/skin/Security-broken.png");
 }
-

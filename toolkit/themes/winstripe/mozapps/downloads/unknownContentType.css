@@ -8,7 +8,10 @@
 }
 
 #contentTypeImage {
-  margin: 0px 5px 0px 0px;
+  margin-top: 0px;
+  margin-bottom: 0px;
+  -moz-margin-start: 0px;
+  -moz-margin-end: 5px;
 }
 
 .small-indent {

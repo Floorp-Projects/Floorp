@@ -27,7 +27,10 @@
 }
 
 #cleanUpButton .button-icon {
-  margin: 0px 5px 0px 0px !important;
+  margin-top: 0px;
+  margin-bottom: 0px;
+  -moz-margin-start: 0px;
+  -moz-margin-end: 5px;
 }
 
 #cleanUpButton[disabled="true"] {
@@ -35,12 +38,15 @@
 }
 
 #commandBarSeparator {
-  margin-left: 5px;
+  -moz-margin-start: 5px;
 }
 
 /* Download View Items */
 download {
-  padding: 13px 10px 13px 13px;
+  padding-top: 13px;
+  padding-bottom: 13px;
+  -moz-padding-start: 13px;
+  -moz-padding-end: 10px;
   min-height: 25px;
   border-bottom: 1px dotted #C0C0C0;
 }
@@ -66,7 +72,7 @@ download[state="5"], download[state="6"] {
 }
 
 .downloadTypeIcon {
-  margin-right: 10px;
+  -moz-margin-end: 10px;
 }
 
 .link {
@@ -95,11 +101,13 @@ download[state="5"], download[state="6"] {
 }
 
 #saveToFolder {
-  padding: 1px 6px 3px 5px; 
+  padding-top: 1px;
+  padding-bottom: 3px;
+  -moz-padding-start: 5px;
+  -moz-padding-end: 6px;
 }
 
 #saveToFolder .toolbarbutton-text {
   text-align: left;
-  margin-left: 5px !important;
+  -moz-margin-start: 5px !important;
 }
-
