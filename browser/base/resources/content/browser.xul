@@ -22,8 +22,6 @@ Contributor(s): ______________________________________. -->
 
 
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?> 
-<?xml-stylesheet href="chrome://communicator/content/sidebar/sidebarOverlay.css" type="text/css"?> 
-<?xml-stylesheet href="chrome://communicator/skin/sidebar/sidebar.css" type="text/css"?>
 
 <?xul-overlay href="chrome://communicator/content/platformCommunicatorOverlay.xul"?>
 <?xul-overlay href="chrome://browser/content/bookmarks/bookmarksOverlay.xul"?>
