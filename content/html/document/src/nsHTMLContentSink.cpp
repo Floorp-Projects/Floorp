@@ -266,6 +266,7 @@ public:
   nsresult FlushTags();
 
   void MaybeMarkSinkDirty();
+  void MaybeMarkSinkClean();
 
   HTMLContentSink* mSink;
   PRBool mPreAppend;
@@ -919,6 +920,16 @@ SinkContext::MaybeMarkSinkDirty()
   }
 }
 
+void 
+SinkContext::MaybeMarkSinkClean()
+{
+  // XXX For now just clear the dirty bit. In the future, we might
+  // selectively clear it based on the current context.
+  // Note that it will be marked dirty again when we're in a 
+  // safe state.
+  mSink->mDirty = PR_FALSE;
+}
+
 nsresult
 SinkContext::OpenContainer(const nsIParserNode& aNode)
 {
@@ -1199,7 +1210,10 @@ nsresult
 SinkContext::FlushTags()
 {
   FlushText();
-  
+  // Prevent reflows if we're in a situation where we have
+  // incomplete content.
+  MaybeMarkSinkClean();
+
   PRInt32 stackPos = mStackPos-1;
   while ((stackPos > 0) && (0 == (mStack[stackPos].mFlags & APPENDED))) {
     nsIHTMLContent* content = mStack[stackPos].mContent;
