@@ -86,5 +86,6 @@ private:
 #define COPYING_MSGS_STATUS                                 4027
 #define MOVING_MSGS_STATUS                                  4028
 #define POP3_MESSAGE_FOLDER_BUSY                            4029
+#define CANNOT_PROCESS_SECURE_AUTH                          4030
 
-#endif /* _nsImapStringBundle_H__ */
+#endif /* _nsLocalStringBundle_H__ */

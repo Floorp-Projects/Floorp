@@ -1018,7 +1018,7 @@ PRInt32 nsPop3Protocol::ProcessAuth()
       if (TestCapFlag(POP3_HAS_AUTH_CRAM_MD5))
           m_pop3ConData->next_state = POP3_SEND_USERNAME;
       else
-          return(Error(POP3_SERVER_ERROR));
+          return(Error(CANNOT_PROCESS_SECURE_AUTH));
     }
     else
     {
