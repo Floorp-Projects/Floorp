@@ -66,6 +66,7 @@ NSINSTALL='$(MOD_DEPTH)/config/$(OBJDIR_NAME)/nsinstall'
 NOSUCHFILE=/no-such-file
 LIBNSPR='-L$(dist_libdir) -lnspr$(MOD_MAJOR_VERSION)'
 LIBPLC='-L$(dist_libdir) -lplc$(MOD_MAJOR_VERSION)'
+CYGWIN_WRAPPER=
 
 dnl Link in libraries necessary to resolve all symbols for shared libs
 RESOLVE_LINK_SYMBOLS=
@@ -84,7 +85,7 @@ HOST_CFLAGS="${HOST_CFLAGS=}"
 HOST_LDFLAGS="${HOST_LDFLAGS=}"
 
 case "$target" in
-*-cygwin*|*-mingw*|*-msvc*|*-mksnt*)
+*-cygwin*|*-mingw*)
     # Check to see if we are really running in a msvc environemnt
     _WIN32_MSVC=
     AC_CHECK_PROGS(CC, cl)
@@ -99,6 +100,12 @@ case "$target" in
         fi
         rm -f dummy dummy.o dummy.obj dummy.exe dummy.c
     fi
+    ;;
+*-msvc*)
+    _WIN32_MSVC=1
+    ;;
+*-mksnt*)
+    _WIN32_MSVC=1
     ;;
 esac
 
@@ -324,7 +331,7 @@ if test -n "$MOZ_DEBUG"; then
         DEFINES="$DEFINES -DDEBUG_`echo ${USERNAME} | sed -e 's| |_|g'`"
         ;;
     *) 
-        DEFINES="$MOZ_DEBUG_ENABLE_DEFS -DDEBUG_`$WHOAMI`"
+        DEFINES="$DEFINES -DDEBUG_`$WHOAMI`"
         ;;
     esac
 else
@@ -1137,6 +1144,10 @@ case "$target" in
     DSO_CFLAGS=-fPIC
     DSO_LDOPTS='-shared -Wl,-soname -Wl,$(notdir $@)'
     _OPTIMIZE_FLAGS=-O2
+    _DEBUG_FLAGS="-g -fno-inline"  # most people on linux use gcc/gdb, and that
+                                   # combo is not yet good at debugging inlined
+                                   # functions (even when using DWARF2 as the
+                                   # debugging format)
     COMPILER_TAG=_glibc
     if echo "$OS_TEST" | grep -c 86 >/dev/null; then
         CPU_ARCH=x86
@@ -1170,20 +1181,22 @@ case "$target" in
     AC_DEFINE(WIN32)
     PR_MD_ARCH_DIR=windows
     RESOLVE_LINK_SYMBOLS=1
+    NSINSTALL='$(CYGWIN_WRAPPER) nsinstall'
 
     if test -n "$GNU_CC"; then
         AC_DEFINE(NONAMELESSUNION)
         MKSHLIB='$(DLLTOOL) --as=$(AS) -k --dllname $*.dll --output-lib $@'
     else
-        CC=cl
-        CXX=cl
+        topsrcdir=$srcdir
+        CYGWIN_WRAPPER='sh $(topsrcdir)/build/cygwin-wrapper'
+        CC='$(CYGWIN_WRAPPER) cl'
+        CXX='$(CYGWIN_WRAPPER) cl'
         LD=link
         AR='lib -NOLOGO -OUT:"$@"'
         AR_FLAGS=
         RANLIB='echo not_ranlib'
         STRIP='echo not_strip'
-        NSINSTALL=nsinstall
-        RC=rc.exe
+        RC='$(CYGWIN_WRAPPER) rc.exe'
         GARBAGE='$(OBJDIR)/vc20.pdb $(OBJDIR)/vc40.pdb'
 	    OBJ_SUFFIX=obj
 	    LIB_SUFFIX=lib
@@ -2351,6 +2364,7 @@ AC_SUBST(RC)
 AC_SUBST(DLLFLAGS)
 AC_SUBST(EXEFLAGS)
 AC_SUBST(OS_DLLFLAGS)
+AC_SUBST(CYGWIN_WRAPPER)
 
 dnl ========================================================
 dnl Generate output files.
