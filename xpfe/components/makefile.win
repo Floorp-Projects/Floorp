@@ -17,6 +17,6 @@
 
 DEPTH=..\..
 
-DIRS= public find
+DIRS= public find ucth xfer
 
 include <$(DEPTH)\config\rules.mak>
