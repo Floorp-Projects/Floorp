@@ -258,14 +258,7 @@ function SendMailToNode(emailAddressNode)
 
 function OpenAttachURL(contentType, url, displayName, messageUri)
 {
-    var args = {dspname: displayName, opval: 0};
-
-  window.openDialog("chrome://messenger/content/openSaveAttachment.xul",
-                    "openSaveAttachment", "chrome,modal", args);
-  if (args.opval == 1)
-      messenger.openAttachment(contentType, url, displayName, messageUri);
-  else if (args.opval == 2)
-      messenger.saveAttachment(url, displayName, messageUri);
+  messenger.openAttachment(contentType, url, displayName, messageUri);
 }
 
 function AddAttachmentToMenu(name, oncommand) 
