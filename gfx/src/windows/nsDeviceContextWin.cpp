@@ -78,7 +78,7 @@ nsDrawingSurface nsDeviceContextWin :: GetDrawingSurface(nsIRenderingContext &aC
 int CALLBACK fontcallback(ENUMLOGFONT FAR *lpelf, NEWTEXTMETRIC FAR *lpntm,
                           int FontType, LPARAM lParam)  
 {
-  if ((NULL != lpelf) && (TRUETYPE_FONTTYPE == FontType))
+  if (NULL != lpelf)
     *((PRBool *)lParam) = PR_TRUE;
 
   return 0;
