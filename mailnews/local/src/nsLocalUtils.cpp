@@ -162,7 +162,7 @@ nsLocalURI2Path(const char* rootURI, const char* uriStr,
   }
 
   // verify that uristr starts with rooturi
-  nsAutoString uri; uri.AssignWithConversion(uriStr);
+  nsCAutoString uri(uriStr);
   if (uri.Find(rootURI) != 0)
     return NS_ERROR_FAILURE;
 
@@ -245,13 +245,7 @@ nsresult nsBuildLocalMessageURI(const char *baseURI, PRUint32 key, nsCString& ur
 
 	uri.Append(baseURI);
 	uri.Append('#');
-	char *keyStr = PR_smprintf("%u", key);
-	if(!keyStr)
-		return NS_ERROR_OUT_OF_MEMORY;
-
-	uri.Append(keyStr);
-
-	PR_smprintf_free(keyStr);
+	uri.AppendInt(key);
 	return NS_OK;
 }
 
