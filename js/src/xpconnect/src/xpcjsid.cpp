@@ -433,6 +433,14 @@ NS_IMETHODIMP nsJSIID::GetValid(PRBool *aValid)
 
 NS_IMETHODIMP nsJSIID::Equals(nsIJSID *other, PRBool *_retval)
 {
+    if(!_retval)
+        return NS_ERROR_NULL_POINTER;
+
+    *_retval = PR_FALSE;
+
+    if(!other)
+        return NS_OK;
+
     nsID* otherID;
     if(NS_SUCCEEDED(other->GetId(&otherID)))
     {
