@@ -481,9 +481,10 @@ InternetSearchDataSource::InternetSearchDataSource(void)
 		gRDFService->GetResource(kURINC_SearchResultsSitesRoot,          &kNC_SearchResultsSitesRoot);
 		gRDFService->GetResource(kURINC_FilterSearchURLsRoot,            &kNC_FilterSearchURLsRoot);
 		gRDFService->GetResource(kURINC_FilterSearchSitesRoot,           &kNC_FilterSearchSitesRoot);
+		gRDFService->GetResource(kURINC_SearchCategoryRoot,              &kNC_SearchCategoryRoot);
+
 		gRDFService->GetResource(NC_NAMESPACE_URI "searchtype",          &kNC_SearchType);
 		gRDFService->GetResource(NC_NAMESPACE_URI "SearchResult",        &kNC_SearchResult);
-		gRDFService->GetResource(NC_NAMESPACE_URI "SearchCategoryRoot",  &kNC_SearchCategoryRoot);
 		gRDFService->GetResource(NC_NAMESPACE_URI "ref",                 &kNC_Ref);
 		gRDFService->GetResource(NC_NAMESPACE_URI "child",               &kNC_Child);
 		gRDFService->GetResource(NC_NAMESPACE_URI "title",               &kNC_Title);
@@ -1139,7 +1140,108 @@ InternetSearchDataSource::GetCategoryList()
 	rv = remoteCategoryDataSource->Refresh(PR_TRUE);
 	if (NS_FAILED(rv))	return(rv);
 
-	// XXX: TO DO - ensure that all search engine references actually exist; if not, remove them
+	// ensure that all search engine references actually exist; if not, forget about them
+
+	PRBool				isDirtyFlag = PR_FALSE;
+	nsCOMPtr<nsIRDFContainer> 	categoryRoot;
+	rv = gRDFC->MakeSeq(categoryDataSource, kNC_SearchCategoryRoot, getter_AddRefs(categoryRoot));
+	if (NS_FAILED(rv))	return(rv);
+	if (!categoryRoot)	return(NS_ERROR_UNEXPECTED);
+
+	rv = categoryRoot->Init(categoryDataSource, kNC_SearchCategoryRoot);
+	if (NS_FAILED(rv))	return(rv);
+
+	PRInt32		numCategories = 0;
+	rv = categoryRoot->GetCount(&numCategories);
+	if (NS_FAILED(rv))	return(rv);
+
+	// Note: one-based
+	for (PRInt32 catLoop=1; catLoop <= numCategories; catLoop++)
+	{
+		nsCOMPtr<nsIRDFResource>	aCategoryOrdinal;
+		rv = gRDFC->IndexToOrdinalResource(catLoop,
+			getter_AddRefs(aCategoryOrdinal));
+		if (NS_FAILED(rv))	break;
+		if (!aCategoryOrdinal)	break;
+
+		nsCOMPtr<nsIRDFNode>		aCategoryNode;
+		rv = categoryDataSource->GetTarget(kNC_SearchCategoryRoot, aCategoryOrdinal,
+			PR_TRUE, getter_AddRefs(aCategoryNode));
+		if (NS_FAILED(rv))	break;
+		nsCOMPtr<nsIRDFResource>	aCategoryRes = do_QueryInterface(aCategoryNode);
+		if (!aCategoryRes)	break;
+		const	char			*catResURI = nsnull;
+		aCategoryRes->GetValueConst(&catResURI);
+		if (!catResURI)		break;
+		nsAutoString		categoryStr;
+		categoryStr.AssignWithConversion(kURINC_SearchCategoryPrefix);
+		categoryStr.AppendWithConversion(catResURI);
+
+		nsCOMPtr<nsIRDFResource>	searchCategoryRes;
+		if (NS_FAILED(rv = gRDFService->GetUnicodeResource(categoryStr.GetUnicode(),
+			getter_AddRefs(searchCategoryRes))))	break;
+
+		nsCOMPtr<nsIRDFContainer> categoryContainer;
+		rv = gRDFC->MakeSeq(categoryDataSource, searchCategoryRes,
+			getter_AddRefs(categoryContainer));
+		if (NS_FAILED(rv))	continue;
+
+		rv = categoryContainer->Init(categoryDataSource, searchCategoryRes);
+		if (NS_FAILED(rv))	return(rv);
+
+		PRInt32		numEngines = 0;
+		rv = categoryContainer->GetCount(&numEngines);
+		if (NS_FAILED(rv))	break;
+
+		// Note: one-based, and loop backwards as we might be removing entries
+		for (PRInt32 engineLoop=numEngines; engineLoop >= 1; engineLoop--)
+		{
+			nsCOMPtr<nsIRDFResource>	aEngineOrdinal;
+			rv = gRDFC->IndexToOrdinalResource(engineLoop,
+				getter_AddRefs(aEngineOrdinal));
+			if (NS_FAILED(rv))	break;
+			if (!aEngineOrdinal)	break;
+
+			nsCOMPtr<nsIRDFNode>		aEngineNode;
+			rv = categoryDataSource->GetTarget(searchCategoryRes, aEngineOrdinal,
+				PR_TRUE, getter_AddRefs(aEngineNode));
+			if (NS_FAILED(rv))	break;
+			nsCOMPtr<nsIRDFResource>	aEngineRes = do_QueryInterface(aEngineNode);
+			if (!aEngineRes)	break;
+
+			if (isSearchCategoryEngineURI(aEngineRes))
+			{
+				nsCOMPtr<nsIRDFResource>	trueEngine;
+				rv = resolveSearchCategoryEngineURI(aEngineRes,
+					getter_AddRefs(trueEngine));
+				if (NS_FAILED(rv) || (!trueEngine))
+				{
+					// unable to resolve, so forget about this engine reference
+#ifdef	DEBUG
+					const	char		*catEngineURI = nsnull;
+					aEngineRes->GetValueConst(&catEngineURI);
+					if (catEngineURI)
+					{
+						printf("**** Stale search engine reference to '%s'\n",
+							catEngineURI);
+					}
+#endif
+					nsCOMPtr<nsIRDFNode>	staleCatEngine;
+					rv = categoryContainer->RemoveElementAt(engineLoop, PR_TRUE,
+						getter_AddRefs(staleCatEngine));
+					isDirtyFlag = PR_TRUE;
+				}
+			}
+		}
+	}
+
+	if (isDirtyFlag == PR_TRUE)
+	{
+		if (remoteCategoryDataSource)
+		{
+			remoteCategoryDataSource->Flush();
+		}
+	}
 
 	return(rv);
 }
