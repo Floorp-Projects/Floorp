@@ -256,7 +256,9 @@ void listSelfTest(FILE * fd, char * aTitle, nsIListWidget * listBox) {
   }
   fprintf(fd, "Removing Item #4\n");fflush(fd);
   listBox->RemoveItemAt(4);
-  fprintf(fd, "\nTesting RemoveItemAt\n\tTest: [%s]\n", eval(-1 == (int)listBox->FindItem(nsString(item4), 0))); fflush(fd);
+  
+  nsString item4string(item4);
+  fprintf(fd, "\nTesting RemoveItemAt\n\tTest: [%s]\n", eval(-1 == (int)listBox->FindItem(item4string, 0))); fflush(fd);
 
   for (i=0;i<(int)listBox->GetItemCount();i++) {
     nsAutoString buf;
@@ -389,7 +391,9 @@ void multiListSelfTest(FILE * fd, char * aTitle, nsIListBox * listBox) {
   }
   fprintf(fd, "Removing Item #4\n");fflush(fd);
   multi->RemoveItemAt(4);
-  fprintf(fd, "\nTesting RemoveItemAt\n\tTest: [%s]\n", eval(-1 == (int)multi->FindItem(nsString(item4), 0))); fflush(fd);
+
+  nsString item4string(item4);
+  fprintf(fd, "\nTesting RemoveItemAt\n\tTest: [%s]\n", eval(-1 == (int)multi->FindItem(item4string, (PRInt32)0))); fflush(fd);
 
   for (i=0;i<(int)multi->GetItemCount();i++) {
     nsAutoString buf;
