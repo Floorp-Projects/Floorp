@@ -107,6 +107,7 @@ const MSG_TYPE_UNKNOWN    = getMsg("msg.type.unknown");
 const MSG_TYPE_VOID       = getMsg("msg.type.void");
 
 const MSG_CLASS_XPCOBJ    = getMsg("msg.class.xpcobj");
+const MSG_BLACKLIST       = getMsg("msg.blacklist");
 const MSG_BREAK_REC       = getMsg("msg.break.rec");
 const MSG_CALL_STACK      = getMsg("msg.callstack");
 
@@ -252,6 +253,7 @@ const MSN_FBP_DISABLED       = "msg.fbp.disabled";
 const MSN_FBP_EXISTS         = "msg.fbp.exists";
 const MSN_SOURCE_LINE        = "msg.source.line";
 const MSN_EXCP_TRACE         = "msg.exception.trace";
+const MSN_VERSION            = "msg.version";
 
 const MSN_CONT             = "msg.cont";
 const MSN_EVAL_ERROR       = "msg.eval.error";
