@@ -5912,6 +5912,20 @@ nsHTMLEditRules::CheckInterlinePosition(nsISelection *aSelection)
     selPriv->SetInterlinePosition(PR_FALSE);
     return NS_OK;
   }
+  
+  // are we between to <br>s?  If so we want to stick to the second one.
+  mHTMLEditor->GetPriorHTMLNode(selNode, selOffset, address_of(node), PR_TRUE);
+  if (node && nsTextEditUtils::IsBreak(node))
+  {
+    nsCOMPtr<nsIDOMNode> nextNode;
+	  mHTMLEditor->GetNextHTMLNode(selNode, selOffset, address_of(nextNode), PR_TRUE);
+	  if (nextNode && nsTextEditUtils::IsBreak(nextNode))
+	  {
+      // selection between two br's.  make it stick to second
+      // so that it will be on blank line.   
+      selPriv->SetInterlinePosition(PR_TRUE);
+    }
+  }
   return NS_OK;
 }
 
