@@ -1922,19 +1922,13 @@ XFE_PrefsOutgoingServer::XFE_PrefsOutgoingServer(Widget outgoingServerBox)
     XtManageChildren(kids, i);
 }
 
-#ifdef MOZ_SECURITY
-int32
-XFE_PrefsOutgoingServer::get_ssl() {
-    HG18159
-    return -1;
-}
+HG18159
  
-void
-XFE_PrefsOutgoingServer::set_ssl(int32 val) {
+
  
-    HG28688
-}
-#endif
+HG28688
+
+
  
 void XFE_PrefsLocalMailDir::cb_choose(Widget    /*w*/,
  									  XtPointer clientData,
