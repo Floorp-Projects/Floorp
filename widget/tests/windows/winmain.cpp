@@ -68,6 +68,10 @@ nsIListBox    *gMultiListBox = NULL;
 nsIWidget     *movingWidget  = NULL;
 nsIScrollbar  *scrollbar     = NULL;
 nsITabWidget  *tabWidget     = NULL;
+nsIButton     *toolTipButton1 = NULL;
+nsIButton     *toolTipButton2 = NULL;
+
+nsIButton     *tooltipWindow = NULL;
 
 
 char * gFailedMsg = NULL;
@@ -89,6 +93,16 @@ char * gFailedMsg = NULL;
 #define kHideBtn         "Hide Btn"
 #define kShowBtn         "Show Btn"
 #define kBrowseBtn       "Browse..."
+
+#define kTooltip1_x 400
+#define kTooltip1_y 100
+#define kTooltip1_width 100
+#define kTooltip1_height 100
+
+#define kTooltip2_x 200
+#define kTooltip2_y 300
+#define kTooltip2_width 100
+#define kTooltip2_height 100
 
 // class ids
 static NS_DEFINE_IID(kCWindowCID, NS_WINDOW_CID);
@@ -344,6 +358,27 @@ int createTestButton(nsIWidget * aWin,
   NS_RELEASE(button);
   return aX + aWidth;
 }
+
+/**--------------------------------------------------------------------------------
+  *
+ */
+nsIButton* createSimpleButton(nsIWidget * aWin, 
+                     char * aTitle, 
+                     int aX, 
+                     int aY, 
+                     int aWidth, 
+                     EVENT_CALLBACK aHandleEventFunction) {
+  nsIButton *button;
+  nsRect rect(aX, aY, aWidth, 25);  
+  NSRepository::CreateInstance(kCButtonCID, nsnull, kIButtonIID, (LPVOID*)&button);
+  button->Create(window, rect, aHandleEventFunction, NULL);
+  nsString label(aTitle);
+  button->SetLabel(label);
+  button->Show(PR_TRUE);
+//  NS_RELEASE(button);
+  return button;
+}
+
 
 /**--------------------------------------------------------------------------------
   * List Test Handler
@@ -701,6 +736,17 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
     nsEventStatus result = nsEventStatus_eIgnore;
     switch(aEvent->message) {
 
+        case NS_SHOW_TOOLTIP:
+          statusText->SetText("Show tooltip");
+          tooltipWindow->Move(aEvent->point.x + 5, aEvent->point.y + 5);
+          tooltipWindow->Show(PR_TRUE);
+          break;
+
+        case NS_HIDE_TOOLTIP:
+          statusText->SetText("Hide tooltip");
+          tooltipWindow->Show(PR_FALSE);
+          break;
+        
         case NS_MOVE:
             char str[256];
             sprintf(str, "Moved window to %d,%d", aEvent->point.x, aEvent->point.y);
@@ -861,6 +907,57 @@ nsEventStatus PR_CALLBACK HandleTabEvent(nsGUIEvent *aEvent)
 }
 
 
+void SetTooltipPos(int pos, nsIWidget *aWidget, nsIButton *aButton1, nsIButton *aButton2)
+{
+  switch(pos) {
+    case 1: {
+      nsRect* tips1 = {&nsRect(kTooltip1_x,kTooltip1_y,
+                      kTooltip1_width,kTooltip1_height)};
+      aWidget->SetTooltips(1, tips1);
+      aButton1->Move(kTooltip1_x, kTooltip1_y);
+      aButton2->Move(kTooltip1_x + kTooltip1_width,
+                     kTooltip1_y + kTooltip1_height);
+            }
+      break;
+    case 2: {
+      nsRect* tips2 = {&nsRect(kTooltip2_x,kTooltip2_y,
+                      kTooltip2_width,kTooltip2_height)};
+      aWidget->SetTooltips(1, tips2);
+      aButton1->Move(kTooltip2_x, kTooltip2_y);
+      aButton2->Move(kTooltip2_x + kTooltip2_width,
+                     kTooltip2_y + kTooltip2_height);
+      }
+      break;
+    }
+}
+
+
+nsEventStatus MoveTooltip(int aPos, nsGUIEvent *aEvent)
+{
+ switch(aEvent->message) {
+           
+    case NS_MOUSE_LEFT_BUTTON_DOWN:
+      SetTooltipPos(aPos, window, toolTipButton1, toolTipButton2);
+    break;
+  }
+ 
+  return(nsEventStatus_eConsumeDoDefault);
+}
+
+nsEventStatus PR_CALLBACK TooltipPos1(nsGUIEvent *aEvent)
+{
+  return(MoveTooltip(1, aEvent));
+}
+
+nsEventStatus PR_CALLBACK TooltipPos2(nsGUIEvent *aEvent)
+{
+  return(MoveTooltip(2, aEvent));
+}
+
+ 
+
+
+
 
 
 /**--------------------------------------------------------------------------------
@@ -924,9 +1021,19 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
     //
     NSRepository::CreateInstance(kCWindowCID, nsnull, kIWidgetIID, (LPVOID*)&window);
     nsRect rect(100, 100, 600, 700);
-   
+
+    
+
     window->Create((nsIWidget*)NULL, rect, HandleEvent, NULL);
     window->SetTitle("TOP-LEVEL window");
+
+    tooltipWindow = createSimpleButton(window, "INSERT <tooltip> here", 0, 0, 150, 0);
+    tooltipWindow->Show(PR_FALSE);
+    toolTipButton1 = createSimpleButton(window, "Tooltip \\/\\/",400, 100, 100, 0);
+    toolTipButton2 = createSimpleButton(window, "Tooltip /\\/\\",500, 200, 100, 0);
+    createTestButton(window, "Move Tooltip pos 1", 450, 150, 130, TooltipPos1);
+    createTestButton(window, "Move Tooltip pos 2", 450, 175, 130, TooltipPos2);
+    SetTooltipPos(1, window, toolTipButton1, toolTipButton2);
 
     //
     // create a child
@@ -946,6 +1053,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
     child->Create(window, rect, HandleEvent, NULL);
     //child->SetBackgroundColor(NS_RGB(255, 255, 0));
     child->SetForegroundColor(NS_RGB(255, 0, 0));
+  
+
     NS_RELEASE(child); // the parent keeps a reference on this child
 
     y += rect.height + 5;
@@ -1162,15 +1271,15 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
     // create a tab widget
     //
 
-    rect.SetRect(x, y, 300, 50);  
+    rect.SetRect(300, 500, 200, 50);  
     NSRepository::CreateInstance(kCTabWidgetCID, nsnull, kITabWidgetIID, (LPVOID*)&tabWidget);
     tabWidget->Create(window, rect, HandleTabEvent, NULL);
     nsString tabs[] = {"low", "medium", "high" };
    
     tabWidget->SetTabs(3, tabs);
     tabWidget->Show(PR_TRUE);
-    y += rect.height + 5;
-    x = 10;
+ //   y += rect.height + 5;
+ //   x = 10;
 
     //
     // create a Radio Group
