@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pkibase.c,v $ $Revision: 1.12 $ $Date: 2002/08/01 14:23:49 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pkibase.c,v $ $Revision: 1.13 $ $Date: 2002/08/02 17:43:36 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -842,6 +842,17 @@ loser:
     return PR_FAILURE;
 }
 
+static void
+nssPKIObjectCollection_RemoveNode
+(
+   nssPKIObjectCollection *collection,
+   pkiObjectCollectionNode *node
+)
+{
+    PR_REMOVE_LINK(&node->link); 
+    collection->size--;
+}
+
 static PRStatus
 nssPKIObjectCollection_GetObjects
 (
@@ -853,23 +864,20 @@ nssPKIObjectCollection_GetObjects
     PRUint32 i = 0;
     PRCList *link = PR_NEXT_LINK(&collection->head);
     pkiObjectCollectionNode *node;
-    while (link != &collection->head) {
+    while ((i < rvSize) && (link != &collection->head)) {
 	node = (pkiObjectCollectionNode *)link;
 	if (!node->haveObject) {
 	    /* Convert the proto-object to an object */
 	    node->object = (*collection->createObject)(node->object);
 	    if (!node->object) {
 		link = PR_NEXT_LINK(link);
-		PR_REMOVE_LINK(&node->link); /*remove bogus object from list*/
-		collection->size--;
+		/*remove bogus object from list*/
+		nssPKIObjectCollection_RemoveNode(collection,node);
 		continue;
 	    }
 	    node->haveObject = PR_TRUE;
 	}
 	rvObjects[i++] = nssPKIObject_AddRef(node->object);
-	if (i >= rvSize) {
-	    break; /* we have all we asked for */
-	}
 	link = PR_NEXT_LINK(link);
     }
     return PR_SUCCESS;
@@ -891,8 +899,8 @@ nssPKIObjectCollection_Traverse
 	    node->object = (*collection->createObject)(node->object);
 	    if (!node->object) {
 		link = PR_NEXT_LINK(link);
-		PR_REMOVE_LINK(&node->link); /*remove bogus object from list*/
-		collection->size--;
+		/*remove bogus object from list*/
+		nssPKIObjectCollection_RemoveNode(collection,node);
 		continue;
 	    }
 	    node->haveObject = PR_TRUE;
@@ -935,8 +943,8 @@ nssPKIObjectCollection_AddInstanceAsObject
     if (!node->haveObject) {
 	node->object = (*collection->createObject)(node->object);
 	if (!node->object) {
-	    PR_REMOVE_LINK(&node->link); /*remove bogus object from list*/
-	    collection->size--;
+	    /*remove bogus object from list*/
+	    nssPKIObjectCollection_RemoveNode(collection,node);
 	    return PR_FAILURE;
 	}
 	node->haveObject = PR_TRUE;
