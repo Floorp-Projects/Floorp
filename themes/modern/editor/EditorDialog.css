@@ -160,6 +160,19 @@
   min-height: 10px;
 }
 
+/* These should be the width of the checkbox and radio button images + margin + padding
+   Used to indent below those to the level of the text label next to image 
+*/
+.checkbox-spacer {
+  width: 20px;
+  min-width: 20px;
+}
+
+.radio-spacer {
+  width: 20px;
+  min-width: 20px;
+}
+
 /* ::::: widget adjustments ::::: */
 
 /* The defaults are WAY to big! */
@@ -295,4 +308,16 @@ tree.list {
   padding-right: 5px;
   min-width: 100px;
   min-height: 50px;
+}
+
+/* ::::: Publishing Progress ::::: */
+
+.progressitem[progress="busy"] {
+	list-style-image: url("chrome://editor/skin/icons/progress-busy.gif");
+}
+.progressitem[progress="done"] {
+	list-style-image: url("chrome://editor/skin/icons/progress-done.gif");
+}
+.progressitem[progress="failed"] {
+	list-style-image: url("chrome://editor/skin/icons/progress-failed.gif");
 }
