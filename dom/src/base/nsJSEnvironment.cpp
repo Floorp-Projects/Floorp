@@ -1492,6 +1492,14 @@ NS_IMETHODIMP
 nsJSContext::SetScriptsEnabled(PRBool aEnabled)
 {
   mScriptsEnabled = aEnabled;
+
+  nsCOMPtr<nsIScriptGlobalObject> global;
+  GetGlobalObject(getter_AddRefs(global));
+
+  if (global) {
+    global->SetScriptsEnabled(aEnabled);
+  }
+
   return NS_OK;
 }
 

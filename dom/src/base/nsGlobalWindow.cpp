@@ -698,6 +698,19 @@ GlobalWindowImpl::OnFinalize(JSObject *aJSObject)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+GlobalWindowImpl::SetScriptsEnabled(PRBool aEnabled)
+{
+  if (aEnabled) {
+    // Scripts are enabled (again?) on this context, run timeouts that
+    // fired on this context while scripts were disabled.
+
+    RunTimeout(nsnull);
+  }
+
+  return NS_OK;
+}
+
 
 //*****************************************************************************
 // GlobalWindowImpl::nsIScriptObjectPrincipal
@@ -3664,6 +3677,22 @@ GlobalWindowImpl::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
 
 void GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
 {
+  PRBool scripts_enabled = PR_TRUE;
+
+  mContext->GetScriptsEnabled(&scripts_enabled);
+
+  if (!scripts_enabled) {
+    // Scripts were enabled once in this window (unless aTimeout ==
+    // nsnull) but now scripts are disabled (we might be in
+    // print-preview, for instance), this means we shouldn't run any
+    // timeouts at this point.
+    //
+    // If scrips are enabled in this window again we'll fire the
+    // timeouts that are due at that point.
+
+    return;
+  }
+
   nsTimeoutImpl *next, *prev, *timeout;
   nsTimeoutImpl *last_expired_timeout, **last_insertion_point;
   nsTimeoutImpl dummy_timeout;
@@ -3687,7 +3716,7 @@ void GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
   // servicing
   LL_I2L(now, PR_IntervalNow());
 
-  if (LL_CMP(aTimeout->when, >, now)) {
+  if (aTimeout && LL_CMP(aTimeout->when, >, now)) {
     // The OS timer fired early (yikes!), and possibly out of order
     // too. Set |deadline| to be the time when the OS timer *should*
     // have fired so that any timers that *should* have fired before
