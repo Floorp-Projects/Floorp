@@ -463,11 +463,23 @@ nsGlobalHistory::nsGlobalHistory()
   // commonly used prefixes that should be chopped off all 
   // history and input urls before comparison
   mIgnorePrefixes = new nsVoidArray(5);
-  mIgnorePrefixes->ReplaceElementAt((void*)new NS_LITERAL_STRING("http://www."), 0);
-  mIgnorePrefixes->ReplaceElementAt((void*)new NS_LITERAL_STRING("http://"), 1);
-  mIgnorePrefixes->ReplaceElementAt((void*)new NS_LITERAL_STRING("www."), 2);
-  mIgnorePrefixes->ReplaceElementAt((void*)new NS_LITERAL_STRING("https://www."), 3);
-  mIgnorePrefixes->ReplaceElementAt((void*)new NS_LITERAL_STRING("https://"), 4);
+
+  nsString* temp;
+
+  temp = new nsString(NS_LITERAL_STRING("http://www."));
+  mIgnorePrefixes->ReplaceElementAt(NS_STATIC_CAST(void*, temp), 0);
+
+  temp = new nsString(NS_LITERAL_STRING("http://"));
+  mIgnorePrefixes->ReplaceElementAt(NS_STATIC_CAST(void*, temp), 1);
+
+  temp = new nsString(NS_LITERAL_STRING("www."));
+  mIgnorePrefixes->ReplaceElementAt(NS_STATIC_CAST(void*, temp), 2);
+
+  temp = new nsString(NS_LITERAL_STRING("https://www."));
+  mIgnorePrefixes->ReplaceElementAt(NS_STATIC_CAST(void*, temp), 3);
+
+  temp = new nsString(NS_LITERAL_STRING("https://"));
+  mIgnorePrefixes->ReplaceElementAt(NS_STATIC_CAST(void*, temp), 4);
 }
 
 nsGlobalHistory::~nsGlobalHistory()
@@ -505,9 +517,11 @@ nsGlobalHistory::~nsGlobalHistory()
     mExpireNowTimer->Cancel();
 
   for(PRInt32 i = 0; i < mIgnorePrefixes->Count(); ++i) {
-    nsDependentString* entry = NS_STATIC_CAST(nsDependentString*, mIgnorePrefixes->ElementAt(i));
+    nsString* entry = NS_STATIC_CAST(nsString*, mIgnorePrefixes->ElementAt(i));
     delete entry;
   }
+
+  delete mIgnorePrefixes;
 }
 
 
@@ -3639,7 +3653,7 @@ nsGlobalHistory::AutoCompleteCutPrefix(nsAWritableString& aURL)
   // potential URL whose host name is in all lower case.
   PRInt32 idx = 0;
   for (PRInt32 i = 0; i < mIgnorePrefixes->Count(); ++i) {
-    nsString* string = (nsString*) mIgnorePrefixes->ElementAt(i);    
+    nsString* string = NS_STATIC_CAST(nsString*, mIgnorePrefixes->ElementAt(i));    
     if (Substring(aURL, 0, string->Length()).Equals(*string)) {
       idx = string->Length();
       break;
