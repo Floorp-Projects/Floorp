@@ -52,11 +52,20 @@ public:
     NS_IMETHOD GetDefaultLoadAttributes(PRUint32 *aDefaultLoadAttributes);
     NS_IMETHOD SetDefaultLoadAttributes(PRUint32 aDefaultLoadAttributes);
 
-    /* void AddChannel (in nsIChannel channel); */
-    NS_IMETHOD AddChannel(nsIChannel *channel);
+    /* void AsyncRead (in nsIChannel channel, in unsigned long startPosition, in long readCount, in nsISupports ctxt, in nsIStreamListener listener); */
+    NS_IMETHOD AsyncRead(nsIChannel *channel, 
+                         PRUint32 startPosition, 
+                         PRInt32 readCount, 
+                         nsISupports *ctxt, 
+                         nsIStreamListener *listener);
 
-    /* void RemoveChannel (in nsIChannel channel); */
-    NS_IMETHOD RemoveChannel(nsIChannel *channel);
+    /* void AsyncWrite (in nsIChannel channel, in nsIInputStream fromStream, in unsigned long startPosition, in long writeCount, in nsISupports ctxt, in nsIStreamObserver observer); */
+    NS_IMETHOD AsyncWrite(nsIChannel *channel, 
+                          nsIInputStream *fromStream, 
+                          PRUint32 startPosition, 
+                          PRInt32 writeCount, 
+                          nsISupports *ctxt, 
+                          nsIStreamObserver *observer);
 
     /* readonly attribute nsISimpleEnumerator Channels; */
     NS_IMETHOD GetChannels(nsISimpleEnumerator * *aChannels);
