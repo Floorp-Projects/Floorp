@@ -836,10 +836,10 @@ sub GetCommandMenu {
             $html .= ", <a href=sanitycheck.cgi><NOBR>sanity check</NOBR></a>";
         }
         if (UserInGroup("editcomponents")) {
-            $html .= ", <a href=editproducts.cgi>components</a>\n";
+            $html .= ", <a href=editproducts.cgi>components</a>";
         }
         if (UserInGroup("editkeywords")) {
-            $html .= ", <a href=editkeywords.cgi>keywords</a>\n";
+            $html .= ", <a href=editkeywords.cgi>keywords</a>";
         }
         $html = $html . " | <NOBR><a href=relogin.cgi>Log out</a> $::COOKIE{'Bugzilla_login'}</NOBR>";
     } else {
