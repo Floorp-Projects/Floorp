@@ -51,7 +51,7 @@ use Bugzilla::Util;
 Exporter::export_ok_tags('admin', 'db');
 
 # Bugzilla version
-$Bugzilla::Config::VERSION = "2.17.3";
+$Bugzilla::Config::VERSION = "2.17.4";
 
 use Safe;
 
