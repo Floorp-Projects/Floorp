@@ -88,13 +88,13 @@ sub reportInputVerificationError {
     $app->output->loginFailed(1); # 1 means 'invalid username/password'
 }
 
-# cmdSendPassword doubles up as 'cmdNewUser'
+# cmdSendPassword could also be called 'cmdNewUser'
 # dispatcher.commands
 sub cmdSendPassword {
     my $self = shift;
     my($app) = @_;
-    my $protocol = $app->input->getAttribute('protocol');
-    my $address = $app->input->getAttribute('address');
+    my $protocol = $app->input->getArgument('protocol');
+    my $address = $app->input->getArgument('address');
     if (defined($protocol) and defined($address)) {
         my $user = $app->getService('user.factory')->getUserByContactDetails($app, $protocol, $address);
         my $password;
@@ -157,6 +157,7 @@ sub outputLoginFailed {
     my($app, $output, $tried) = @_;
     $output->output('login.failed', {
         'tried' => $tried,
+        'contacts' => 0, # XXX should fill this in
     });   
 }
 
