@@ -32,8 +32,8 @@
 #include "nsFileStream.h"
 
 typedef struct {
-	nsOutputFileStream *fileStream;
-	nsIMessage *message;
+	nsOutputFileStream* fileStream;
+	nsCOMPtr<nsIMessage> message;
 	nsMsgKey dstKey;
 } nsLocalMailCopyState;
 
@@ -144,8 +144,7 @@ protected:
 	PRBool		mHaveReadNameFromDB;
 	PRBool		mGettingMail;
 	PRBool		mInitialized;
-	nsISupportsArray *mMessages;
-	nsIMsgDatabase* mMailDatabase;
+	nsIMsgDatabase* mMailDatabase;  //Not an nsCOMPtr because we want to close it not release it
 	nsLocalMailCopyState *mCopyState; //We will only allow one of these at a time
 };
 

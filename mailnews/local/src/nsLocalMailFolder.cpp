@@ -162,7 +162,7 @@ nsMsgLocalMailFolder::CreateSubFolders(nsFileSpec &path)
 {
 	nsresult rv = NS_OK;
 	nsAutoString currentFolderNameStr;
-	nsIMsgFolder *child;
+	nsCOMPtr<nsIMsgFolder> child;
 	char *folderName;
 #ifdef DEBUG_alecf
       printf("CreateSubFolders(%s)\n", (const char*)path);
@@ -178,8 +178,7 @@ nsMsgLocalMailFolder::CreateSubFolders(nsFileSpec &path)
 			continue;
 		}
 
-		AddSubfolder(currentFolderNameStr, &child);
-		NS_IF_RELEASE(child);
+		AddSubfolder(currentFolderNameStr, getter_AddRefs(child));
 		PL_strfree(folderName);
     }
 	return rv;
@@ -191,7 +190,7 @@ nsresult nsMsgLocalMailFolder::AddSubfolder(nsAutoString name, nsIMsgFolder **ch
 		return NS_ERROR_NULL_POINTER;
 
 	nsresult rv = NS_OK;
-  NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
   
 	if(NS_FAILED(rv)) return rv;
 
@@ -204,8 +203,8 @@ nsresult nsMsgLocalMailFolder::AddSubfolder(nsAutoString name, nsIMsgFolder **ch
 	if (uriStr == nsnull) 
 		return NS_ERROR_OUT_OF_MEMORY;
 
-	nsIRDFResource* res;
-	rv = rdf->GetResource(uriStr, &res);
+	nsCOMPtr<nsIRDFResource> res;
+	rv = rdf->GetResource(uriStr, getter_AddRefs(res));
 	if (NS_FAILED(rv))
 		return rv;
 	nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(res, &rv));
@@ -234,7 +233,7 @@ nsresult nsMsgLocalMailFolder::ParseFolder(nsFileSpec& path)
 {
 	nsresult rv = NS_OK;
 
-  NS_WITH_SERVICE(nsIMailboxService, mailboxService,
+	NS_WITH_SERVICE(nsIMailboxService, mailboxService,
                   kMailboxServiceCID, &rv);
   
 	if (NS_FAILED(rv)) return rv; 
@@ -253,11 +252,11 @@ nsMsgLocalMailFolder::Enumerate(nsIEnumerator* *result)
   nsresult rv; 
 
   // local mail folders contain both messages and folders:
-  nsIEnumerator* folders;
-  nsIEnumerator* messages;
-  rv = GetSubFolders(&folders);
+  nsCOMPtr<nsIEnumerator> folders;
+  nsCOMPtr<nsIEnumerator> messages;
+  rv = GetSubFolders(getter_AddRefs(folders));
   if (NS_FAILED(rv)) return rv;
-  rv = GetMessages(&messages);
+  rv = GetMessages(getter_AddRefs(messages));
   if (NS_FAILED(rv)) return rv;
   return NS_NewConjoiningEnumerator(folders, messages, 
                                     (nsIBidirectionalEnumerator**)result);
@@ -322,17 +321,6 @@ nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
       UpdateSummaryTotals();
       // Look for a directory for this mail folder, and recurse into it.
       // e.g. if the folder is "inbox", look for "inbox.sbd". 
-#if 0
-      char *folderName = path->GetLeafName();
-      char *newLeafName = (char*)malloc(PL_strlen(folderName) + PL_strlen(kDirExt) + 2);
-      PL_strcpy(newLeafName, folderName);
-      PL_strcat(newLeafName, kDirExt);
-      path->SetLeafName(newLeafName);
-      if(folderName)
-        nsCRT::free(folderName);
-      if(newLeafName)
-        nsCRT::free(newLeafName);
-#endif
     }
 
     if (NS_FAILED(rv)) return rv;
@@ -366,9 +354,9 @@ nsresult nsMsgLocalMailFolder::GetDatabase()
 		if (NS_FAILED(rv)) return rv;
 
 		nsresult folderOpen = NS_OK;
-		nsIMsgDatabase * mailDBFactory = nsnull;
+		nsCOMPtr<nsIMsgDatabase> mailDBFactory;
 
-		rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), (void **) &mailDBFactory);
+		rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), getter_AddRefs(mailDBFactory));
 		if (NS_SUCCEEDED(rv) && mailDBFactory)
 		{
 			folderOpen = mailDBFactory->Open(path, PR_TRUE, (nsIMsgDatabase **) &mMailDatabase, PR_FALSE);
@@ -378,12 +366,10 @@ nsresult nsMsgLocalMailFolder::GetDatabase()
 				// if it's out of date then reopen with upgrade.
 				if(!NS_SUCCEEDED(rv = mailDBFactory->Open(path, PR_TRUE, &mMailDatabase, PR_TRUE)))
 				{
-					NS_RELEASE(mailDBFactory);
 					return rv;
 				}
 			}
 	
-			NS_RELEASE(mailDBFactory);
 		}
 
 		if(mMailDatabase)
@@ -416,14 +402,13 @@ nsMsgLocalMailFolder::GetMessages(nsIEnumerator* *result)
 
 	if(NS_SUCCEEDED(rv))
 	{
-		nsIEnumerator *msgHdrEnumerator = nsnull;
+		nsCOMPtr<nsIEnumerator> msgHdrEnumerator;
 		nsMessageFromMsgHdrEnumerator *messageEnumerator = nsnull;
-		rv = mMailDatabase->EnumerateMessages(&msgHdrEnumerator);
+		rv = mMailDatabase->EnumerateMessages(getter_AddRefs(msgHdrEnumerator));
 		if(NS_SUCCEEDED(rv))
 			rv = NS_NewMessageFromMsgHdrEnumerator(msgHdrEnumerator,
 												   this, &messageEnumerator);
 		*result = messageEnumerator;
-		NS_IF_RELEASE(msgHdrEnumerator);
 	}
 	return rv;
 }
@@ -444,15 +429,13 @@ nsMsgLocalMailFolder::GetThreadForMessage(nsIMessage *message, nsIMsgThread **th
 	nsresult rv = GetDatabase();
 	if(NS_SUCCEEDED(rv))
 	{
-		nsIMsgDBHdr *msgDBHdr = nsnull;
-		//We know from our factory that mailbox message resources are going to be
-  	//nsLocalMessages.
-	  nsLocalMessage *localMessage = NS_STATIC_CAST(nsLocalMessage*, message);
-		rv = localMessage->GetMsgDBHdr(&msgDBHdr);
+		nsCOMPtr<nsIMsgDBHdr> msgDBHdr;
+		nsCOMPtr<nsIDBMessage> dbMessage(do_QueryInterface(message, &rv));
+		if(NS_SUCCEEDED(rv))
+			rv = dbMessage->GetMsgDBHdr(getter_AddRefs(msgDBHdr));
 		if(NS_SUCCEEDED(rv))
 		{
 			rv = mMailDatabase->GetThreadContainingMsgHdr(msgDBHdr, thread);
-			NS_IF_RELEASE(msgDBHdr);
 		}
 	}
 	return rv;
@@ -524,7 +507,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CreateSubfolder(const char *folderName)
 	nsresult rv = NS_OK;
     
 	nsFileSpec path;
-    nsIMsgFolder *child = nsnull;
+    nsCOMPtr<nsIMsgFolder> child;
 	//Get a directory based on our current path.
 	rv = CreateDirectoryForFolder(path);
 	if(NS_FAILED(rv))
@@ -539,9 +522,9 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CreateSubfolder(const char *folderName)
 	nsOutputFileStream outputStream(path);	
    
 	// Create an empty database for this mail folder, set its name from the user  
-	nsIMsgDatabase * mailDBFactory = nsnull;
+	nsCOMPtr<nsIMsgDatabase> mailDBFactory;
 
-	rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), (void **) &mailDBFactory);
+	rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), getter_AddRefs(mailDBFactory));
 	if (NS_SUCCEEDED(rv) && mailDBFactory)
 	{
         nsIMsgDatabase *unusedDB = NULL;
@@ -550,17 +533,16 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CreateSubfolder(const char *folderName)
         if (NS_SUCCEEDED(rv) && unusedDB)
         {
 			//need to set the folder name
-			nsIDBFolderInfo *folderInfo;
-			rv = unusedDB->GetDBFolderInfo(&folderInfo);
+			nsAutoString folderNameStr(folderName);
+			nsCOMPtr<nsIDBFolderInfo> folderInfo;
+			rv = unusedDB->GetDBFolderInfo(getter_AddRefs(folderInfo));
 			if(NS_SUCCEEDED(rv))
 			{
-				//folderInfo->SetMailboxName(leafNameFromUser);
-				NS_IF_RELEASE(folderInfo);
+				folderInfo->SetMailboxName(folderNameStr);
 			}
 
 			//Now let's create the actual new folder
-			nsAutoString folderNameStr(folderName);
-			rv = AddSubfolder(folderName, &child);
+			rv = AddSubfolder(folderName, getter_AddRefs(child));
             unusedDB->SetSummaryValid(PR_TRUE);
             unusedDB->Close(PR_TRUE);
         }
@@ -569,20 +551,16 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CreateSubfolder(const char *folderName)
 			path.Delete(PR_FALSE);
             rv = NS_MSG_CANT_CREATE_FOLDER;
         }
-		NS_IF_RELEASE(mailDBFactory);
 	}
 	if(rv == NS_OK && child)
 	{
-		nsISupports *folderSupports;
+		nsCOMPtr<nsISupports> folderSupports(do_QueryInterface(child, &rv));
 
-		rv = child->QueryInterface(kISupportsIID, (void**)&folderSupports);
 		if(NS_SUCCEEDED(rv))
 		{
 			NotifyItemAdded(folderSupports);
-			NS_IF_RELEASE(folderSupports);
 		}
 	}
-	NS_IF_RELEASE(child);
 	return rv;
 }
 
@@ -757,34 +735,33 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Adopt(nsIMsgFolder *srcFolder, PRUint32 *out
 NS_IMETHODIMP 
 nsMsgLocalMailFolder::GetChildNamed(const char *name, nsISupports ** aChild)
 {
-  NS_ASSERTION(aChild, "NULL child");
+	NS_ASSERTION(aChild, "NULL child");
+	nsresult rv;
+	// will return nsnull if we can't find it
+	*aChild = nsnull;
 
-  // will return nsnull if we can't find it
-  *aChild = nsnull;
+	nsCOMPtr<nsIMsgFolder> folder;
 
-  nsIMsgFolder *folder = nsnull;
+	PRUint32 count = mSubFolders->Count();
 
-  PRUint32 count = mSubFolders->Count();
+	for (PRUint32 i = 0; i < count; i++)
+	{
+		nsCOMPtr<nsISupports> supports = getter_AddRefs(mSubFolders->ElementAt(i));
+		folder = do_QueryInterface(supports, &rv);
+		if(NS_SUCCEEDED(rv))
+		{
+			char *folderName;
 
-  for (PRUint32 i = 0; i < count; i++)
-  {
-    nsISupports *supports;
-    supports = mSubFolders->ElementAt(i);
-    if(folder)
-      NS_RELEASE(folder);
-    if(NS_SUCCEEDED(supports->QueryInterface(kISupportsIID, (void**)&folder))) {
-      char *folderName;
-
-      folder->GetName(&folderName);
-      // case-insensitive compare is probably LCD across OS filesystems
-      if (folderName && PL_strcasecmp(name, folderName)!=0) {
-        *aChild = folder;
-        PR_FREEIF(folderName);
-        return NS_OK;
-      }
-      PR_FREEIF(folderName);
-    }
-    NS_RELEASE(supports);
+			folder->GetName(&folderName);
+			// case-insensitive compare is probably LCD across OS filesystems
+			if (folderName && PL_strcasecmp(name, folderName)!=0)
+			{
+				*aChild = folder;
+				PR_FREEIF(folderName);
+				return NS_OK;
+			}
+		PR_FREEIF(folderName);
+		}
   }
   return NS_OK;
 }
@@ -801,6 +778,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetName(char **name)
       SetName("Local Mail");
       mHaveReadNameFromDB = TRUE;
       *name = mName.ToNewCString();
+	  if(!(*name))
+		  return NS_ERROR_OUT_OF_MEMORY;
       return NS_OK;
     }
     else
@@ -821,6 +800,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetPrettyName(char ** prettyName)
     // Depth == 1 means we are on the mail server level
     // override the name here to say "Local Mail"
     *prettyName = PL_strdup("Local Mail");
+	if(!(*prettyName))
+		return NS_ERROR_OUT_OF_MEMORY;
   }
   else
     return nsMsgFolder::GetPrettyName(prettyName);
@@ -837,17 +818,17 @@ nsresult  nsMsgLocalMailFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInf
 	if (!mPath)
 		return NS_ERROR_NULL_POINTER;
 
-	nsIMsgDatabase * mailDBFactory = nsnull;
-	nsIMsgDatabase *mailDB;
+	nsCOMPtr<nsIMsgDatabase> mailDBFactory;
+	nsCOMPtr<nsIMsgDatabase> mailDB;
 
-	nsresult rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), (void **) &mailDBFactory);
+	nsresult rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), getter_AddRefs(mailDBFactory));
 	if (NS_SUCCEEDED(rv) && mailDBFactory)
 	{
 		openErr = mailDBFactory->Open(*mPath, PR_FALSE, (nsIMsgDatabase **) &mailDB, PR_FALSE);
-		mailDBFactory->Release();
 	}
 
     *db = mailDB;
+	NS_IF_ADDREF(*db);
     if (NS_SUCCEEDED(openErr)&& *db)
         openErr = (*db)->GetDBFolderInfo(folderInfo);
     return openErr;
@@ -1104,14 +1085,15 @@ NS_IMETHODIMP nsMsgLocalMailFolder::DeleteMessage(nsIMessage *message)
 	if(NS_SUCCEEDED(rv))
 	{
 		nsCOMPtr <nsIMsgDBHdr> msgDBHdr;
-		//We know from our factory that mailbox message resources are going to be
-  	//nsLocalMessages.
-	  nsLocalMessage *localMessage = NS_STATIC_CAST(nsLocalMessage*, message);
+		nsCOMPtr<nsIDBMessage> dbMessage(do_QueryInterface(message, &rv));
 
-		rv = localMessage->GetMsgDBHdr(getter_AddRefs(msgDBHdr));
 		if(NS_SUCCEEDED(rv))
 		{
-			rv =mMailDatabase->DeleteHeader(msgDBHdr, nsnull, PR_TRUE, PR_TRUE);
+			rv = dbMessage->GetMsgDBHdr(getter_AddRefs(msgDBHdr));
+			if(NS_SUCCEEDED(rv))
+			{
+				rv =mMailDatabase->DeleteHeader(msgDBHdr, nsnull, PR_TRUE, PR_TRUE);
+			}
 		}
 	}
 	return rv;
@@ -1144,15 +1126,14 @@ nsMsgLocalMailFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr,
 
 	if(NS_SUCCEEDED(rv))
 	{
-		nsIMessage* messageResource;
-		rv = resource->QueryInterface(nsIMessage::GetIID(), (void**)&messageResource);
+		nsCOMPtr<nsIDBMessage> dbMessage(do_QueryInterface(resource, &rv));
 		if(NS_SUCCEEDED(rv))
 		{
 			//We know from our factory that mailbox message resources are going to be
 			//nsLocalMessages.
-			nsLocalMessage *localMessage = NS_STATIC_CAST(nsLocalMessage*, messageResource);
-			localMessage->SetMsgDBHdr(msgDBHdr);
-			*message = messageResource;
+			dbMessage->SetMsgDBHdr(msgDBHdr);
+			*message = dbMessage;
+			NS_IF_ADDREF(*message);
 		}
 	}
 	return rv;
@@ -1168,30 +1149,21 @@ NS_IMETHODIMP nsMsgLocalMailFolder::OnKeyChange(nsMsgKey aKeyChanged, PRInt32 aF
 NS_IMETHODIMP nsMsgLocalMailFolder::OnKeyDeleted(nsMsgKey aKeyChanged, PRInt32 aFlags, 
                           nsIDBChangeListener * aInstigator)
 {
-	nsIMsgDBHdr *pMsgDBHdr = nsnull;
-	nsresult rv = mMailDatabase->GetMsgHdrForKey(aKeyChanged, &pMsgDBHdr);
+	nsCOMPtr<nsIMsgDBHdr> pMsgDBHdr;
+	nsresult rv = mMailDatabase->GetMsgHdrForKey(aKeyChanged, getter_AddRefs(pMsgDBHdr));
 	if(NS_SUCCEEDED(rv))
 	{
-		nsIMessage *message = nsnull;
-		rv = CreateMessageFromMsgDBHdr(pMsgDBHdr, &message);
+		nsCOMPtr<nsIMessage> message;
+		rv = CreateMessageFromMsgDBHdr(pMsgDBHdr, getter_AddRefs(message));
 		if(NS_SUCCEEDED(rv))
 		{
-			nsISupports *msgSupports;
-			if(NS_SUCCEEDED(message->QueryInterface(kISupportsIID, (void**)&msgSupports)))
+			nsCOMPtr<nsISupports> msgSupports(do_QueryInterface(message, &rv));
+			if(NS_SUCCEEDED(rv))
 			{
-				PRUint32 i;
-				for(i = 0; i < mListeners->Count(); i++)
-				{
-					nsIFolderListener *listener = (nsIFolderListener*)mListeners->ElementAt(i);
-					listener->OnItemRemoved(this, msgSupports);
-					NS_RELEASE(listener);
-				}
-				NS_IF_RELEASE(msgSupports);
+				NotifyItemDeleted(msgSupports);
 			}
-			NS_IF_RELEASE(message);
 			UpdateSummaryTotals();
 		}
-		NS_IF_RELEASE(pMsgDBHdr);
 	}
 
 	return NS_OK;
@@ -1244,13 +1216,13 @@ NS_IMETHODIMP nsMsgLocalMailFolder::BeginCopy(nsIMessage *message)
 	//Before we continue we should verify that there is enough diskspace.
 	//XXX How do we do this?
 	mCopyState->fileStream = new nsOutputFileStream(path, PR_WRONLY | PR_CREATE_FILE);
+	if(!mCopyState->fileStream)
+		return NS_ERROR_OUT_OF_MEMORY;
 	//The new key is the end of the file
 	mCopyState->fileStream->seek(PR_SEEK_END, 0);
 	mCopyState->dstKey = mCopyState->fileStream->tell();
 
-	mCopyState->message = message;
-	if(mCopyState->message)	
-		mCopyState->message->AddRef();
+	mCopyState->message = dont_QueryInterface(message);
 	return NS_OK;
 }
 
@@ -1283,19 +1255,19 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
 
 NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
 {
+	nsresult rv = NS_OK;
 	//Copy the header to the new database
 	if(copySucceeded && mCopyState->message)
 	{
 		nsCOMPtr<nsIMsgDBHdr> newHdr;
 		nsCOMPtr<nsIMsgDBHdr> msgDBHdr;
-		//We know from our factory that mailbox message resources are going to be
-  	//nsLocalMessages.
-	  nsMessage *message = NS_STATIC_CAST(nsMessage*, mCopyState->message);
+		nsCOMPtr<nsIDBMessage> dbMessage(do_QueryInterface(mCopyState->message, &rv));
 
-		nsresult rv = message->GetMsgDBHdr(getter_AddRefs(msgDBHdr));
+
+		rv = dbMessage->GetMsgDBHdr(getter_AddRefs(msgDBHdr));
 
 		if(NS_SUCCEEDED(rv))
-			mMailDatabase->CopyHdrFromExistingHdr(mCopyState->dstKey, msgDBHdr, getter_AddRefs(newHdr));
+			rv = mMailDatabase->CopyHdrFromExistingHdr(mCopyState->dstKey, msgDBHdr, getter_AddRefs(newHdr));
 	}
 
 	if(mCopyState->fileStream)
@@ -1304,17 +1276,15 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
 		delete mCopyState->fileStream;
 	}
 	
-	if(mCopyState->message)
-		mCopyState->message->Release();
 	delete mCopyState;
 	mCopyState = nsnull;
 
 	//we finished the copy so someone else can write to us.
 	PRBool haveSemaphore;
-	nsresult rv = TestSemaphore(NS_STATIC_CAST(nsIMsgLocalMailFolder*, this), &haveSemaphore);
+	rv = TestSemaphore(NS_STATIC_CAST(nsIMsgLocalMailFolder*, this), &haveSemaphore);
 	if(NS_SUCCEEDED(rv) && haveSemaphore)
 		ReleaseSemaphore(NS_STATIC_CAST(nsIMsgLocalMailFolder*, this));
 
-	return NS_OK;
+	return rv;
 }
 

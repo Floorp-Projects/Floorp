@@ -37,7 +37,7 @@ nsLocalMessage::~nsLocalMessage(void)
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(nsLocalMessage, nsMessage, nsIMessage)
+NS_IMPL_ISUPPORTS_INHERITED(nsLocalMessage, nsMessage, nsIDBMessage)
 
 NS_IMETHODIMP nsLocalMessage::GetMsgFolder(nsIMsgFolder **folder)
 {
@@ -61,8 +61,8 @@ nsresult nsLocalMessage::GetFolderFromURI(nsIMsgFolder **folder)
 {
 	nsresult rv;
 	nsXPIDLCString uri;
-	nsIRDFResource *resource;
-	if(NS_SUCCEEDED( rv = QueryInterface(nsIRDFResource::GetIID(), (void**)&resource)))
+	nsCOMPtr<nsIRDFResource> resource;
+	if(NS_SUCCEEDED( rv = QueryInterface(nsIRDFResource::GetIID(), getter_AddRefs(resource))))
 	{
 		resource->GetValue( getter_Copies(uri) );
 		nsString messageFolderURIStr;
@@ -75,17 +75,16 @@ nsresult nsLocalMessage::GetFolderFromURI(nsIMsgFolder **folder)
 			messageFolderURIStr.Right(folderOnly, messageFolderURIStr.Length() -nsCRT::strlen(kMailboxMessageRootURI));
 			folderURIStr = kMailboxRootURI;
 			folderURIStr+= folderOnly;
-			nsIRDFResource *folderResource;
+			nsCOMPtr<nsIRDFResource> folderResource;
 			char *folderURI = folderURIStr.ToNewCString();
 
 			NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv); 
 			if (NS_SUCCEEDED(rv))   // always check this before proceeding 
 			{
-				rv = rdfService->GetResource(folderURI, &folderResource);
+				rv = rdfService->GetResource(folderURI, getter_AddRefs(folderResource));
 				if(NS_SUCCEEDED(rv))
 				{
 					rv = NS_SUCCEEDED(folderResource->QueryInterface(nsIMsgFolder::GetIID(), (void**)folder));
-					NS_RELEASE(folderResource);
 				}
 			}
 
@@ -93,7 +92,6 @@ nsresult nsLocalMessage::GetFolderFromURI(nsIMsgFolder **folder)
 			delete[] folderURI;
 		}
 
-		NS_RELEASE(resource);
 	}
 	return rv;
 }
