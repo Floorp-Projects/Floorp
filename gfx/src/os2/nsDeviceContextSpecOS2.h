@@ -25,9 +25,9 @@
 #ifndef _nsDeviceContextSpecOS2_h
 #define _nsDeviceContextSpecOS2_h
 
+#include "nsGfxDefs.h"
+
 #include "nsIDeviceContextSpec.h"
-#define INCL_DEV
-#include <os2.h>
 #include "libprint.h"
 
 class nsDeviceContextSpecOS2 : public nsIDeviceContextSpec

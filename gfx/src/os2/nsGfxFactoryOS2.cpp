@@ -1,532 +1,190 @@
-/*
- * The contents of this file are subject to the Mozilla Public License
- * Version 1.1 (the "License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
- * License for the specific language governing rights and limitations
- * under the License.
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
  *
- * The Original Code is the Mozilla OS/2 libraries.
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
  *
- * The Initial Developer of the Original Code is John Fairhurst,
- * <john_fairhurst@iname.com>.  Portions created by John Fairhurst are
- * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Christopher
+ * Blizzard.  Portions created by Christopher Blizzard are
+ * Copyright (C) 2000 Christopher Blizzard. All Rights Reserved.
  *
  * Contributor(s): 
- *   Pierre Phaneuf <pp@ludusdesign.com>
- *
- * This Original Code has been modified by IBM Corporation. Modifications made by IBM 
- * described herein are Copyright (c) International Business Machines Corporation, 2000.
- *
- * Modifications to Mozilla code or documentation identified per MPL Section 3.3.
- *
- * Date         Modified by     Description of modification
- * 05/10/2000   IBM Corp.      Make it look more like Windows.
+ *   Christopher Blizzzard <blizzard@mozilla.org>
+ *   IBM Corp.
  */
 
-// ToDo: nowt (except get rid of unicode hack)
-#define INCL_DOS
-#include "nsGfxDefs.h"
-#include "libprint.h"
-#include <stdio.h>
-
-//#include "nscore.h"
-#include "nsIFactory.h"
-#include "nsISupports.h"
+#include "nsIGenericFactory.h"
+#include "nsIModule.h"
+#include "nsCOMPtr.h"
 #include "nsGfxCIID.h"
+
+#include "nsBlender.h"
 #include "nsFontMetricsOS2.h"
 #include "nsRenderingContextOS2.h"
-#include "nsImageOS2.h"
-#include "nsDeviceContextOS2.h"
-#include "nsRegionOS2.h"
-#include "nsBlender.h"
 #include "nsDeviceContextSpecOS2.h"
 #include "nsDeviceContextSpecFactoryO.h"
-//#include "nsScriptableRegion.h"
-#include "nsIImageManager.h"
 #include "nsScreenManagerOS2.h"
-#include "nsString.h"
+#include "nsScriptableRegion.h"
+#include "nsIImageManager.h"
+#include "nsDeviceContextOS2.h"
+#include "nsImageOS2.h"
+#include "nsRegionOS2.h"
+#include "nsPrintOptionsOS2.h"
 
-#ifdef DEBUG
-  #include <ctype.h>
-  #include <string.h>
-#endif
+// objects that just require generic constructors
 
-static NS_DEFINE_IID(kCFontMetrics, NS_FONT_METRICS_CID);
-static NS_DEFINE_IID(kCFontEnumerator, NS_FONT_ENUMERATOR_CID);
-static NS_DEFINE_IID(kCRenderingContext, NS_RENDERING_CONTEXT_CID);
-static NS_DEFINE_IID(kCImage, NS_IMAGE_CID);
-static NS_DEFINE_IID(kCBlender, NS_BLENDER_CID);
-static NS_DEFINE_IID(kCDeviceContext, NS_DEVICE_CONTEXT_CID);
-static NS_DEFINE_IID(kCRegion, NS_REGION_CID);
-static NS_DEFINE_IID(kCDeviceContextSpec, NS_DEVICE_CONTEXT_SPEC_CID);
-static NS_DEFINE_IID(kCDeviceContextSpecFactory, NS_DEVICE_CONTEXT_SPEC_FACTORY_CID);
-static NS_DEFINE_IID(kCDrawingSurface, NS_DRAWING_SURFACE_CID);
-static NS_DEFINE_IID(kImageManagerImpl, NS_IMAGEMANAGER_CID);
-static NS_DEFINE_IID(kCScreenManager, NS_SCREENMANAGER_CID);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontMetricsOS2)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextOS2)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsRenderingContextOS2)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsImageOS2)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsBlender)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsRegionOS2)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecOS2)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecFactoryOS2)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontEnumeratorOS2)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerOS2)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrintOptionsOS2)
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-static NS_DEFINE_IID(kCScriptableRegion, NS_SCRIPTABLE_REGION_CID);
+// our custom constructors
 
-static BOOL bIsDBCS;
+static NS_IMETHODIMP nsScriptableRegionConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{
+  nsresult rv;
 
-#ifdef DEBUG
-PRLogModuleInfo *gGFXOS2LogModule;
-#endif
+  nsIScriptableRegion *inst;
 
-class nsGfxFactoryOS2 : public nsIFactory
-{   
- public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIFACTORY
+  if ( !aResult )
+  {
+    rv = NS_ERROR_NULL_POINTER;
+    return rv;
+  }
+  *aResult = nsnull;
+  if (aOuter)
+  {
+    rv = NS_ERROR_NO_AGGREGATION;
+    return rv;
+  }
+  // create an nsRegionOS2 and get the scriptable region from it
+  nsCOMPtr <nsIRegion> rgn;
+  NS_NEWXPCOM(rgn, nsRegionOS2);
+  if (rgn != nsnull)
+  {
+    nsCOMPtr<nsIScriptableRegion> scriptableRgn = new nsScriptableRegion(rgn);
+    inst = scriptableRgn;
+  }
+  if (!inst)
+  {
+    rv = NS_ERROR_OUT_OF_MEMORY;
+    return rv;
+  }
+  NS_ADDREF(inst);
+  rv = inst->QueryInterface(aIID, aResult);
+  NS_RELEASE(inst);
 
-    nsGfxFactoryOS2(const nsCID &aClass);   
-    ~nsGfxFactoryOS2();   
+  return rv;
+}
 
- private:
-   nsCID     mClassID;
+static nsresult nsImageManagerConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{
+    nsresult rv;
+
+  if ( !aResult )
+  {
+    rv = NS_ERROR_NULL_POINTER;
+    return rv;
+  }
+  *aResult = nsnull;
+  if (aOuter)
+  {
+    rv = NS_ERROR_NO_AGGREGATION;
+    return rv;
+  }
+  // this will return an image manager with a count of 1
+  rv = NS_NewImageManager((nsIImageManager **)aResult);
+  return rv;
+}
+
+static nsModuleComponentInfo components[] =
+{
+  { "OS/2 Font Metrics",
+    NS_FONT_METRICS_CID,
+    //    "@mozilla.org/gfx/font_metrics/gtk;1",
+    "@mozilla.org/gfx/fontmetrics;1",
+    nsFontMetricsOS2Constructor },
+  { "OS/2 Device Context",
+    NS_DEVICE_CONTEXT_CID,
+    //    "@mozilla.org/gfx/device_context/gtk;1",
+    "@mozilla.org/gfx/devicecontext;1",
+    nsDeviceContextOS2Constructor },
+  { "OS/2 Rendering Context",
+    NS_RENDERING_CONTEXT_CID,
+    //    "@mozilla.org/gfx/rendering_context/gtk;1",
+    "@mozilla.org/gfx/renderingcontext;1",
+    nsRenderingContextOS2Constructor },
+  { "OS/2 Image",
+    NS_IMAGE_CID,
+    //    "@mozilla.org/gfx/image/gtk;1",
+    "@mozilla.org/gfx/image;1",
+    nsImageOS2Constructor },
+  { "OS/2 Region",
+    NS_REGION_CID,
+    "@mozilla.org/gfx/region/gtk;1",
+    nsRegionOS2Constructor },
+  { "Scriptable Region",
+    NS_SCRIPTABLE_REGION_CID,
+    //    "@mozilla.org/gfx/scriptable_region;1",
+    "@mozilla.org/gfx/region;1",
+    nsScriptableRegionConstructor },
+  { "Blender",
+    NS_BLENDER_CID,
+    //    "@mozilla.org/gfx/blender;1",
+    "@mozilla.org/gfx/blender;1",
+    nsBlenderConstructor },
+  { "OS/2 Device Context Spec",
+    NS_DEVICE_CONTEXT_SPEC_CID,
+    //    "@mozilla.org/gfx/device_context_spec/gtk;1",
+    "@mozilla.org/gfx/devicecontextspec;1",
+    nsDeviceContextSpecOS2Constructor },
+  { "OS/2 Device Context Spec Factory",
+    NS_DEVICE_CONTEXT_SPEC_FACTORY_CID,
+    //    "@mozilla.org/gfx/device_context_spec_factory/gtk;1",
+    "@mozilla.org/gfx/devicecontextspecfactory;1",
+    nsDeviceContextSpecFactoryOS2Constructor },
+  { "Image Manager",
+    NS_IMAGEMANAGER_CID,
+    //    "@mozilla.org/gfx/image_manager;1",
+    "@mozilla.org/gfx/imagemanager;1",
+    nsImageManagerConstructor },
+  { "Print Options",
+    NS_PRINTOPTIONS_CID,
+    //    "@mozilla.org/gfx/printoptions;1",
+    "@mozilla.org/gfx/printoptions;1",
+    nsPrintOptionsOS2Constructor },
+  { "OS2 Font Enumerator",
+    NS_FONT_ENUMERATOR_CID,
+    //    "@mozilla.org/gfx/font_enumerator/gtk;1",
+    "@mozilla.org/gfx/fontenumerator;1",
+    nsFontEnumeratorOS2Constructor },
+  { "OS/2 Screen Manager",
+    NS_SCREENMANAGER_CID,
+    //    "@mozilla.org/gfx/screenmanager/gtk;1",
+    "@mozilla.org/gfx/screenmanager;1",
+    nsScreenManagerOS2Constructor }
 };
 
-static int gUseAFunctions = 0;
-
-nsGfxFactoryOS2::nsGfxFactoryOS2(const nsCID &aClass)
+PR_STATIC_CALLBACK(void)
+nsGfxOS2ModuleDtor(nsIModule *self)
 {
-  static int init = 0;
-  if (!init) {
-    init = 1;
-  /* OS2TODO
-    OSVERSIONINFO os;
-    os.dwOSVersionInfoSize = sizeof(os);
-    ::GetVersionEx(&os);
-    if ((os.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) &&
-        (os.dwMajorVersion == 4) &&
-        (os.dwMinorVersion == 0) &&    // Windows 95 (not 98)
-        (::GetACP() == 932)) {         // Shift-JIS (Japanese)
-      gUseAFunctions = 1;
-    }
-  */
-  }
-
-      // the following lines of code determine whether the system is a DBCS country
-      APIRET rc;
-      COUNTRYCODE ctrycodeInfo = {0};
-      CHAR        achDBCSInfo[12] = {0};                  // DBCS environmental vector
-      ctrycodeInfo.country  = 0;                          // current country
-      ctrycodeInfo.codepage = 0;                          // current codepage
-
-      rc = DosQueryDBCSEnv(sizeof(achDBCSInfo), &ctrycodeInfo, achDBCSInfo);
-      if (rc == NO_ERROR)
-      {
-          // NON-DBCS countries will have four bytes in the first four bytes of the
-          // DBCS environmental vector
-          if (achDBCSInfo[0] != 0 || achDBCSInfo[1] != 0 ||
-              achDBCSInfo[2] != 0 || achDBCSInfo[3] != 0)
-          {
-             bIsDBCS = TRUE;
-          }
-          else
-          {
-             bIsDBCS = FALSE;
-          }
-      } else {
-         bIsDBCS = FALSE;
-      } /* endif */
-
-  NS_INIT_REFCNT();
-  mClassID = aClass;
-
-#ifdef DEBUG  
-  if (!gGFXOS2LogModule) {
-    gGFXOS2LogModule = PR_NewLogModule("gfxos2");
-    NS_ABORT_IF_FALSE(gGFXOS2LogModule, "failed to iniailize GFX OS2 log module");
-  } /* endif */
-#endif
+//  nsRenderingContextOS2::Shutdown();
 }
 
-nsGfxFactoryOS2::~nsGfxFactoryOS2()   
-{   
-}   
+NS_IMPL_NSGETMODULE_WITH_DTOR("nsGfxOS2Module", components, nsGfxOS2ModuleDtor)
 
-nsresult nsGfxFactoryOS2::QueryInterface(const nsIID &aIID,   
-                                         void **aResult)   
-{   
-  if (aResult == NULL) {   
-    return NS_ERROR_NULL_POINTER;   
-  }   
-
-  // Always NULL result, in case of failure   
-  *aResult = NULL;   
-
-  if (aIID.Equals(kISupportsIID)) {   
-    *aResult = (void *)(nsISupports*)this;   
-  } else if (aIID.Equals(kIFactoryIID)) {   
-    *aResult = (void *)(nsIFactory*)this;   
-  }   
-
-  if (*aResult == NULL) {   
-    return NS_NOINTERFACE;   
-  }   
-
-  AddRef(); // Increase reference count for caller   
-  return NS_OK;   
-}
-
-NS_IMPL_ADDREF(nsGfxFactoryOS2);
-NS_IMPL_RELEASE(nsGfxFactoryOS2);
- 
-nsresult nsGfxFactoryOS2::CreateInstance(nsISupports *aOuter,
-                                          const nsIID &aIID,
-                                          void **aResult)
-{  
-  nsresult res;
-  if (aResult == NULL) {  
-    return NS_ERROR_NULL_POINTER;  
-  }  
-
-  *aResult = NULL;
-
-  nsISupports *inst = nsnull;
-  PRBool already_addreffed = PR_FALSE;
-
-  if (mClassID.Equals(kCFontMetrics)) {
-    nsFontMetricsOS2* fm;
-    if (gUseAFunctions) {
-     // NS_NEWXPCOM(fm, nsFontMetricsOS2A);
-    }
-    else {
-      NS_NEWXPCOM(fm, nsFontMetricsOS2);
-    }
-    inst = (nsISupports *)fm;
-  }
-  else if (mClassID.Equals(kCDeviceContext)) {
-    nsDeviceContextOS2* dc;
-    NS_NEWXPCOM(dc, nsDeviceContextOS2);
-    inst = (nsISupports *)dc;
-  }
-  else if (mClassID.Equals(kCRenderingContext)) {
-    nsRenderingContextOS2*  rc;
-    if (gUseAFunctions) {
-     // NS_NEWXPCOM(rc, nsRenderingContextOS2A);
-    }
-    else {
-      NS_NEWXPCOM(rc, nsRenderingContextOS2);
-    }
-    inst = (nsISupports *)((nsIRenderingContext*)rc);
-  }
-  else if (mClassID.Equals(kCImage)) {
-    nsImageOS2* image;
-    NS_NEWXPCOM(image, nsImageOS2);
-    inst = (nsISupports *)image;
-  }
-  else if (mClassID.Equals(kCRegion)) {
-    nsRegionOS2*  region;
-    NS_NEWXPCOM(region, nsRegionOS2);
-    inst = (nsISupports *)region;
-  }
-  else if (mClassID.Equals(kCBlender)) {
-    nsBlender* blender;
-    NS_NEWXPCOM(blender, nsBlender);
-    inst = (nsISupports *)blender;
-  }
-  // OS2TODO
-  /*else if (mClassID.Equals(kCDrawingSurface)) {
-    nsDrawingSurfaceOS2* ds;
-    NS_NEWXPCOM(ds, nsDrawingSurfaceOS2);
-    inst = (nsISupports *)((nsIDrawingSurface *)ds);
-  }*/
-  else if (mClassID.Equals(kCDeviceContextSpec)) {
-    nsDeviceContextSpecOS2* dcs;
-    NS_NEWXPCOM(dcs, nsDeviceContextSpecOS2);
-    inst = (nsISupports *)dcs;
-  }
-  else if (mClassID.Equals(kCDeviceContextSpecFactory)) {
-    nsDeviceContextSpecFactoryOS2* dcs;
-    NS_NEWXPCOM(dcs, nsDeviceContextSpecFactoryOS2);
-    inst = (nsISupports *)dcs;
-  }
-  else if (mClassID.Equals(kCScriptableRegion)) {
-    nsCOMPtr<nsIRegion> rgn;
-    NS_NEWXPCOM(rgn, nsRegionOS2);
-    /*if (rgn != nsnull) {
-      nsIScriptableRegion* scriptableRgn = new nsScriptableRegion(rgn);
-      inst = (nsISupports *)scriptableRgn;
-    }*/
-  }
-  else if (mClassID.Equals(kImageManagerImpl)) {
-    nsCOMPtr<nsIImageManager> iManager;
-    res = NS_NewImageManager(getter_AddRefs(iManager));
-    already_addreffed = PR_TRUE;
-    if (NS_SUCCEEDED(res))
-    {
-     res = iManager->QueryInterface(NS_GET_IID(nsISupports), (void**)&inst);
-    }
-  }
-  else if (mClassID.Equals(kCFontEnumerator)) {
-    nsFontEnumeratorOS2* fe;
-    NS_NEWXPCOM(fe, nsFontEnumeratorOS2);
-    inst = (nsISupports *)fe;
-  }
-	else if (mClassID.Equals(kCScreenManager)) {
-		NS_NEWXPCOM(inst, nsScreenManagerOS2);
-  } 
-
-
-  if( inst == NULL) {
-     return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  if (already_addreffed == PR_FALSE)
-     NS_ADDREF(inst);  // Stabilize
-
-  res = inst->QueryInterface(aIID, aResult);
- 
-  NS_RELEASE(inst); // Destabilize and avoid leaks. Avoid calling delete <interface pointer> 
-   
-  return res;
-}  
-
-nsresult nsGfxFactoryOS2::LockFactory(PRBool aLock)  
-{  
-  // Not implemented in simplest case.  
-  return NS_OK;
-} 
-
-// return the proper factory to the caller
-extern "C" NS_GFXNONXP nsresult NSGetFactory(nsISupports* servMgr,
-                                             const nsCID &aClass,
-                                             const char *aClassName,
-                                             const char *aContractID,
-                                             nsIFactory **aFactory)
-{
-  if (nsnull == aFactory) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  *aFactory = new nsGfxFactoryOS2(aClass);
-
-  if (nsnull == aFactory) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return (*aFactory)->QueryInterface(kIFactoryIID, (void**)aFactory);
-}
-
-// Module-level data ---------------------------------------------------------
-#ifdef DEBUG
-void GFX_LogErr (unsigned ReturnCode, const char* ErrorExpression, const char* FileName, const char* FunctionName, long LineNum)
-{
-   char TempBuf [300];
-
-   strcpy (TempBuf, ErrorExpression);
-   char* APIName = TempBuf;
-
-   char* ch = strstr (APIName , "(");                 // Find start of function parameter list
-   if (ch != NULL)                                    // Opening parenthesis found - it is a function
-   {
-      while (isspace (*--ch)) {}                      // Remove whitespaces before opening parenthesis
-      *++ch = '\0';
-
-      if (APIName [0] == ':' && APIName [1] == ':')   // Remove global scope operator
-         APIName += 2;
-
-      while (isspace (*APIName))                      // Remove spaces before function name
-         APIName++;
-   }
-
-
-   USHORT ErrorCode = ERRORIDERROR (::WinGetLastError (0));
-
-   if (FunctionName)      // Compiler knows function name from where we were called
-      PR_LogPrint ("GFX_Err: %s = 0x%X, 0x%X (%s - %s,  line %d)\n", APIName, ReturnCode, ErrorCode, FileName, FunctionName, LineNum);
-   else
-      PR_LogPrint ("GFX_Err: %s = 0x%X, 0x%X (%s,  line %d)\n", APIName, ReturnCode, ErrorCode, FileName, LineNum);
-}
-#endif
-
-void PMERROR( const char *api)
-{
-   ERRORID eid = ::WinGetLastError(0);
-   USHORT usError = ERRORIDERROR(eid);
-   PR_LogPrint( "%s failed, error = 0x%X\n", api, usError);
-}
-
-nsGfxModuleData::nsGfxModuleData() : hModResources(0), hpsScreen(0),
-                                     lDisplayDepth(0)
-{}
-
-void nsGfxModuleData::Init()
-{
-   char   buffer[CCHMAXPATH];
-   APIRET rc;
-
-   rc = DosLoadModule( buffer, CCHMAXPATH, "GFX_OS2", &hModResources);
-
-   if( rc)
-   {
-      PR_LogPrint( "Gfx failed to load self.  rc = %d, cause = %s\n", (int)rc, buffer);
-      // rats.  Can't load ourselves.  Oh well.  Try to be harmless...
-      hModResources = 0;
-   }
-   PrnInitialize( hModResources);
-
-   // get screen bit-depth
-   hpsScreen = ::WinGetScreenPS (HWND_DESKTOP);
-   HDC hdc = GFX (::GpiQueryDevice (hpsScreen), HDC_ERROR);
-   GFX (::DevQueryCaps (hdc, CAPS_COLOR_BITCOUNT, 1, &lDisplayDepth), FALSE);
-}
-
-nsGfxModuleData::~nsGfxModuleData()
-{
-  /* Free any converters that were created */
-  for (int i=0; i < 15 /* eCharSet_COUNT from nsFontMetricsOS2.cpp */ ; i++ ) {
-    if (gUconvInfo[i].mConverter) {
-      ::UniFreeUconvObject(gUconvInfo[i].mConverter);
-    } /* endif */
-  } /* endfor */
-
-  PrnTerminate();
-  if( hModResources)
-     DosFreeModule( hModResources);
-  ::WinReleasePS( hpsScreen);
-}
-
-nsGfxModuleData gModuleData;
-
-
-int WideCharToMultiByte( int CodePage, const PRUnichar *pText, ULONG ulLength, char* szBuffer, ULONG ulSize )
-{
-  UconvObject* pConverter = 0;
-  /* Free any converters that were created */
-  for (int i=0; i < 15 /* eCharSet_COUNT from nsFontMetricsOS2.cpp */ ; i++ ) {
-    if (gUconvInfo[i].mCodePage == CodePage) {
-      if (!gUconvInfo[i].mConverter) {
-        UniChar codepage[20];
-        int unirc = ::UniMapCpToUcsCp( CodePage, codepage, 20);
-        ::UniCreateUconvObject( codepage, &gUconvInfo[i].mConverter);
-      } /* endif */
-      pConverter = &gUconvInfo[i].mConverter;
-      break;
-    } /* endif */
-  } /* endfor */
-  if (!pConverter) {
-      pConverter = &gUconvInfo[0].mConverter;
-  } /* endif */
-
-  UniChar *ucsString = (UniChar*) pText;
-  size_t   ucsLen = ulLength;
-  size_t   cplen = ulSize;
-  size_t   cSubs = 0;
-
-  char *tmp = szBuffer; // function alters the out pointer
-
-   int unirc = ::UniUconvFromUcs( *pConverter, &ucsString, &ucsLen,
-                                  (void**) &tmp, &cplen, &cSubs);
-
-  if( unirc == UCONV_E2BIG) // k3w1
-  {
-    // terminate output string (truncating)
-    *(szBuffer + ulSize - 1) = '\0';
-  }
-  else if( unirc != ULS_SUCCESS)
-  {
-     PR_LogPrint("very bad");
-  }
-  return ulSize - cplen;
-}
-
-int MultiByteToWideChar( int CodePage, const char*pText, ULONG ulLength, PRUnichar *szBuffer, ULONG ulSize )
-{
-  UconvObject* pConverter = 0;
-  /* Free any converters that were created */
-  for (int i=0; i < 15 /* eCharSet_COUNT from nsFontMetricsOS2.cpp */ ; i++ ) {
-    if (gUconvInfo[i].mCodePage == CodePage) {
-      if (!gUconvInfo[i].mConverter) {
-        UniChar codepage[20];
-        int unirc = ::UniMapCpToUcsCp( CodePage, codepage, 20);
-        ::UniCreateUconvObject( codepage, &gUconvInfo[i].mConverter);
-      } /* endif */
-      pConverter = &gUconvInfo[i].mConverter;
-      break;
-    } /* endif */
-  } /* endfor */
-  if (!pConverter) {
-      pConverter = &gUconvInfo[0].mConverter;
-  } /* endif */
-
-  char *ucsString = (char*) pText;
-  size_t   ucsLen = ulLength;
-  size_t   cplen = ulSize;
-  size_t   cSubs = 0;
-
-  PRUnichar *tmp = szBuffer; // function alters the out pointer
-
-  int unirc = ::UniUconvToUcs( *pConverter, (void**)&ucsString, &ucsLen,
-                               NS_REINTERPRET_CAST(UniChar**, &tmp),
-                               &cplen, &cSubs);
-
-  if( unirc == UCONV_E2BIG) // k3w1
-  {
-    // terminate output string (truncating)
-    *(szBuffer + ulSize - 1) = '\0';
-  }
-  else if( unirc != ULS_SUCCESS)
-  {
-     PR_LogPrint("very bad");
-  }
-  return ulSize - cplen;
-}
-
-BOOL GetTextExtentPoint32(HPS aPS, const char* aString, int aLength, PSIZEL aSizeL)
-{
-  POINTL ptls[5];
-
-  aSizeL->cx = 0;
-
-  while(aLength)
-  {
-    ULONG thislen = min(aLength, 512);
-    GFX (::GpiQueryTextBox (aPS, thislen, (PCH)aString, 5, ptls), FALSE);
-    aSizeL->cx += ptls[TXTBOX_CONCAT].x;
-    aLength -= thislen;
-    aString += thislen;
-  }
-  aSizeL->cy = ptls[TXTBOX_TOPLEFT].y - ptls[TXTBOX_BOTTOMLEFT].y;
-  return TRUE;
-}
-
-BOOL ExtTextOut(HPS aPS, int X, int Y, UINT fuOptions, const RECTL* lprc,
-                const char* aString, unsigned int aLength, const int* pSpacing)
-{
-  POINTL ptl = {X, Y};
-
-  GFX (::GpiMove (aPS, &ptl), FALSE);
-
-  // GpiCharString has a max length of 512 chars at a time...
-  while( aLength)
-  {
-    ULONG ulChunkLen = min(aLength, 512);
-    if (pSpacing)
-    {
-      GFX (::GpiCharStringPos (aPS, nsnull, CHS_VECTOR, ulChunkLen,
-                               (PCH)aString, (PLONG)pSpacing), GPI_ERROR);
-        pSpacing += ulChunkLen;
-    }
-    else
-    {
-      GFX (::GpiCharString (aPS, ulChunkLen, (PCH)aString), GPI_ERROR);
-    }
-    aLength -= ulChunkLen;
-    aString += ulChunkLen;
-  }
-  return TRUE;
-}
-
-
-BOOL IsDBCS()
-{
-return bIsDBCS;
-}

@@ -23,12 +23,10 @@
 #ifndef nsDeviceContextOS2_h___
 #define nsDeviceContextOS2_h___
 
+#include "nsGfxDefs.h"
+
 #include "nsDeviceContext.h"
 #include "nsIScreenManager.h"
-#define INCL_GPI
-#define INCL_PM
-#define INCL_DOS
-#include <os2.h>
 #include "libprint.h"
 
 class nsIScreen;
