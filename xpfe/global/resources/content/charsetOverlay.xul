@@ -113,7 +113,7 @@
     </menu>
 
     <!-- Mail Edit Charset Menu -->
-    <menu id="maileditCharsetMenu" value="&charsetMenu.label;" datasources="rdf:charset-menu" ref="NC:MaileditCharsetMenuRoot" oncommand="SetDocumentCharacterSet(event);" oncreate="InitCharsetMenuCheckMark();">
+    <menu id="maileditCharsetMenu" value="&charsetMenu.label;" datasources="rdf:charset-menu" ref="NC:MaileditCharsetMenuRoot" oncommand="SetDocumentCharacterSet(event.target.getAttribute('id'));" oncreate="InitCharsetMenuCheckMark();">
         <template>
             <rule>
                 <menupopup>
