@@ -179,6 +179,7 @@ protected:
   PRBool           mInWhitespace;
   PRBool           mPreFormatted;
   PRBool           mCacheLine;   // If the line should be cached before output. This makes it possible to do smarter wrapping.
+  PRBool           mStartedOutput; // we've produced at least a character
 
   nsString         mURL;
 

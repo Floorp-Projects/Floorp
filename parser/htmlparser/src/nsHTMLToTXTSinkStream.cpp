@@ -185,6 +185,7 @@ nsHTMLToTXTSinkStream::nsHTMLToTXTSinkStream()
   mInWhitespace = PR_TRUE;
   mPreFormatted = PR_FALSE;
   mCacheLine = PR_FALSE;
+  mStartedOutput = PR_FALSE;
 
   // initialize the tag stack to zero:
   mTagStack = new nsHTMLTag[TagStackSize];
@@ -242,13 +243,6 @@ nsHTMLToTXTSinkStream::Initialize(nsIOutputStream* aOutStream,
     }
     result = nsServiceManager::ReleaseService(kLWBrkCID, lf);
   }
-
-  // If we're encoding only the selection, then we don't want to risk
-  // ignoring whitespace which might be significant:
-// Unfortunately, this isn't the right solution because then we
-// always get a space at the beginning of selection-only output!
-//  if (mFlags | nsIDocumentEncoder::OutputSelectionOnly)
-//    mInWhitespace = PR_FALSE;
 
   return result;
 }
@@ -705,6 +699,8 @@ nsHTMLToTXTSinkStream::CloseContainer(const nsIParserNode& aNode)
     // Fow now, I will only add a SPACE. Could be a TAB or something
     // else but I'm not sure everything can handle the TAB so SPACE
     // seems like a better solution.
+    // XXX This unfortunately means that every selection inside a
+    // XXX table cell ends up with an extraneous space after it.
     if(!mInWhitespace) {
       // Maybe add something else? Several spaces? A TAB? SPACE+TAB?
       if(mCacheLine) {
@@ -826,17 +822,24 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode)
     // Otherwise, either we're collapsing to minimal text, or we're
     // prettyprinting to mimic the html format, and in neither case
     // does the formatting of the html source help us.
+    // One exception: at the very beginning of a selection,
+    // we want to preserve whitespace.
     if (mFlags & nsIDocumentEncoder::OutputPreformatted ||
         ((mFlags & nsIDocumentEncoder::OutputFormatted)
          && (mTagStackIndex > 0)
          && (mTagStack[mTagStackIndex-1] == eHTMLTag_pre)) ||
         (mPreFormatted && !mWrapColumn))
-      {
-        Write(text); // XXX: spacestuffing (maybe call AddToLine if mCacheLine==true)
-      } else if(!mInWhitespace) {
-        Write( NS_ConvertToString(" ") );
-        mInWhitespace = PR_TRUE;
-      }
+    {
+      Write(text); // XXX: spacestuffing (maybe call AddToLine if mCacheLine==true)
+    }
+    else if(!mInWhitespace ||
+              (!mStartedOutput
+               && mFlags | nsIDocumentEncoder::OutputSelectionOnly))
+    {
+      mInWhitespace = PR_FALSE;
+      Write( NS_ConvertToString(" ") );
+      mInWhitespace = PR_TRUE;
+    }
   }
   else if (type == eHTMLTag_newline)
   {
@@ -945,6 +948,9 @@ nsHTMLToTXTSinkStream::FlushLine()
  */
 void nsHTMLToTXTSinkStream::WriteSimple(nsString& aString)
 {
+  if (aString.Length() > 0)
+    mStartedOutput = PR_TRUE;
+
   // First, replace all nbsp characters with spaces,
   // which the unicode encoder won't do for us.
   static PRUnichar nbsp = 160;
@@ -1166,10 +1172,6 @@ nsHTMLToTXTSinkStream::WriteQuotesAndIndent()
   }
   
 }
-
-#ifdef DEBUG_akkana_not
-#define DEBUG_wrapping 1
-#endif
 
 //
 // Write a string, wrapping appropriately to mWrapColumn.
