@@ -50,7 +50,7 @@ nsresult GetMessageServiceProgIDForURI(const char *uri, nsString &progID)
 
 	nsresult rv = NS_OK;
 	//Find protocol
-	nsAutoString uriStr(uri);
+	nsAutoString uriStr; uriStr.AssignWithConversion(uri);
 	PRInt32 pos = uriStr.FindChar(':');
 	if(pos == -1)
 		return NS_ERROR_FAILURE;
@@ -58,7 +58,7 @@ nsresult GetMessageServiceProgIDForURI(const char *uri, nsString &progID)
 	uriStr.Left(protocol, pos);
 
 	//Build message service progid
-	progID = "component://netscape/messenger/messageservice;type=";
+	progID.AssignWithConversion("component://netscape/messenger/messageservice;type=");
 	progID += protocol;
 
 	return rv;
@@ -251,22 +251,22 @@ nsresult NS_MsgGetUntranslatedPriorityName (nsMsgPriority p, nsString *outName)
 	{
 	case nsMsgPriorityNotSet:
 	case nsMsgPriorityNone:
-		*outName = "None";
+		outName->AssignWithConversion("None");
 		break;
 	case nsMsgPriorityLowest:
-		*outName = "Lowest";
+		outName->AssignWithConversion("Lowest");
 		break;
 	case nsMsgPriorityLow:
-		*outName = "Low";
+		outName->AssignWithConversion("Low");
 		break;
 	case nsMsgPriorityNormal:
-		*outName = "Normal";
+		outName->AssignWithConversion("Normal");
 		break;
 	case nsMsgPriorityHigh:
-		*outName = "High";
+		outName->AssignWithConversion("High");
 		break;
 	case nsMsgPriorityHighest:
-		*outName = "Highest";
+		outName->AssignWithConversion("Highest");
 		break;
 	default:
 		NS_ASSERTION(PR_FALSE, "invalid priority value");

@@ -67,7 +67,7 @@ nsresult nsMsgI18NConvertFromUnicode(const nsCString& aCharset,
   else if (aCharset.IsEmpty() ||
       aCharset.EqualsIgnoreCase("us-ascii") ||
       aCharset.EqualsIgnoreCase("ISO-8859-1")) {
-    outString = inString;
+    outString.AssignWithConversion(inString);
     return NS_OK;
   }
   else if (aCharset.EqualsIgnoreCase("UTF-8")) {
@@ -78,7 +78,7 @@ nsresult nsMsgI18NConvertFromUnicode(const nsCString& aCharset,
     Recycle(s);
     return NS_OK;
   }
-  nsAutoString convCharset("ISO-8859-1");
+  nsAutoString convCharset; convCharset.AssignWithConversion("ISO-8859-1");
   nsresult res;
 
   // Resolve charset alias
@@ -137,7 +137,7 @@ nsresult nsMsgI18NConvertToUnicode(const nsCString& aCharset,
   else if (aCharset.IsEmpty() ||
       aCharset.EqualsIgnoreCase("us-ascii") ||
       aCharset.EqualsIgnoreCase("ISO-8859-1")) {
-    outString = inString;
+    outString.AssignWithConversion(inString);
     return NS_OK;
   }
 
@@ -221,7 +221,7 @@ nsresult ConvertFromUnicode(const nsString& aCharset,
     return (NULL == *outCString) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
   }
 
-  nsAutoString convCharset("ISO-8859-1");
+  nsAutoString convCharset; convCharset.AssignWithConversion("ISO-8859-1");
   nsresult res;
 
   // Resolve charset alias
@@ -295,7 +295,7 @@ nsresult ConvertToUnicode(const nsString& aCharset,
   else if (aCharset.IsEmpty() ||
       aCharset.EqualsIgnoreCase("us-ascii") ||
       aCharset.EqualsIgnoreCase("ISO-8859-1")) {
-    outString.Assign(inCString);
+    outString.AssignWithConversion(inCString);
     return NS_OK;
   }
 
@@ -365,7 +365,7 @@ const nsString& nsMsgI18NFileSystemCharset()
 			rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, aPlatformCharset);
 
 		if (NS_FAILED(rv)) 
-			aPlatformCharset.Assign("ISO-8859-1");
+			aPlatformCharset.AssignWithConversion("ISO-8859-1");
 	}
 	return aPlatformCharset;
 }
@@ -441,7 +441,7 @@ PRBool nsMsgI18Nstateful_charset(const char *charset)
 // Or convert and check line by line.
 PRBool nsMsgI18N7bit_data_part(const char *charset, const char *inString, const PRUint32 size)
 {
-  nsAutoString aCharset(charset);
+  nsAutoString aCharset; aCharset.AssignWithConversion(charset);
   nsresult res;
   PRBool result = PR_TRUE;
   
@@ -571,7 +571,7 @@ nsresult nsMsgI18NSaveAsCharset(const char* contentType, const char *charset, co
   }
 
   // Resolve charset alias
-  nsAutoString aCharset(charset);
+  nsAutoString aCharset; aCharset.AssignWithConversion(charset);
   NS_WITH_SERVICE(nsICharsetAlias, calias, kCharsetAliasCID, &res); 
   if (NS_SUCCEEDED(res)) {
     nsAutoString aAlias(aCharset);

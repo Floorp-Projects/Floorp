@@ -518,8 +518,8 @@ nsMsgIncomingServer::GetPrettyName(PRUnichar **retval) {
     if (NS_FAILED(rv)) return rv;
     if ((const char*)username &&
         PL_strcmp((const char*)username, "")!=0) {
-      prettyName.Assign(username);
-      prettyName += " on ";
+      prettyName.AssignWithConversion(username);
+      prettyName.AppendWithConversion(" on ");
     }
     
     nsXPIDLCString hostname;
@@ -527,7 +527,7 @@ nsMsgIncomingServer::GetPrettyName(PRUnichar **retval) {
     if (NS_FAILED(rv)) return rv;
 
 
-    prettyName += hostname;
+    prettyName.AppendWithConversion(hostname);
   }
 
   *retval = prettyName.ToNewUnicode();
@@ -551,9 +551,9 @@ nsMsgIncomingServer::SetPrettyName(const PRUnichar *value)
 
 NS_IMETHODIMP
 nsMsgIncomingServer::ToString(PRUnichar** aResult) {
-  nsString servername("[nsIMsgIncomingServer: ");
-  servername += m_serverKey;
-  servername += "]";
+  nsString servername; servername.AssignWithConversion("[nsIMsgIncomingServer: ");
+  servername.AppendWithConversion(m_serverKey);
+  servername.AppendWithConversion("]");
   
   *aResult = servername.ToNewUnicode();
   NS_ASSERTION(*aResult, "no server name!");
@@ -649,7 +649,7 @@ nsMsgIncomingServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, const
 			}
 
 			// we got a password back...so remember it
-			nsCString aCStr(uniPassword); 
+			nsCString aCStr; aCStr.AssignWithConversion(uniPassword); 
 
 			rv = SetPassword((const char *) aCStr);
             if (NS_FAILED(rv)) return rv;
@@ -676,7 +676,7 @@ nsMsgIncomingServer::StorePassword()
     rv = GetServerURI(getter_Copies(serverUri));
     if (NS_FAILED(rv)) return rv;
 
-    nsAutoString password = (const char *)pwd;
+    nsAutoString password; password.AssignWithConversion((const char *)pwd);
     rv = walletservice->SI_StorePassword((const char *)serverUri, PR_FALSE, nsnull, password.GetUnicode());
     return rv;
 }

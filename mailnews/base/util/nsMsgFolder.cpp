@@ -521,7 +521,7 @@ nsMsgFolder::parseURI(PRBool needServer)
 
       char* result = nsnull;
       rv = ioServ->Unescape(fileName, &result);
-	  mName = result;
+	  mName.AssignWithConversion(result);
     }
   }
 
@@ -1869,9 +1869,9 @@ NS_IMETHODIMP nsMsgFolder::SetNumNewMessages(PRInt32 aNumNewMessages)
 		mNumNewBiffMessages = aNumNewMessages;
 
     nsCAutoString oldNumMessagesStr;
-    oldNumMessagesStr.Append(oldNumMessages);
+    oldNumMessagesStr.AppendInt(oldNumMessages);
 		nsCAutoString newNumMessagesStr;
-    newNumMessagesStr.Append(aNumNewMessages);
+    newNumMessagesStr.AppendInt(aNumNewMessages);
 		NotifyPropertyChanged(kNumNewBiffMessagesAtom, oldNumMessagesStr, newNumMessagesStr);
 	}
 
@@ -1881,7 +1881,7 @@ NS_IMETHODIMP nsMsgFolder::SetNumNewMessages(PRInt32 aNumNewMessages)
 NS_IMETHODIMP nsMsgFolder::GetNewMessagesNotificationDescription(PRUnichar * *aDescription)
 {
 	nsresult rv;
-	nsAutoString description("");
+	nsAutoString description;
 	nsCOMPtr<nsIMsgIncomingServer> server;
 	rv = GetServer(getter_AddRefs(server));
   
@@ -1902,7 +1902,7 @@ NS_IMETHODIMP nsMsgFolder::GetNewMessagesNotificationDescription(PRUnichar * *aD
       // put this test here because we don't want to just put "folder name on"
       // in case the above failed
       if (!(mFlags & MSG_FOLDER_FLAG_INBOX))
-        description += " on ";
+        description.AppendWithConversion(" on ");
 			description.Append(serverName);
     }
 	}
@@ -2290,7 +2290,7 @@ nsresult nsMsgFolder::NotifyFolderEvent(nsIAtom* aEvent)
 nsresult
 nsGetMailFolderSeparator(nsString& result)
 {
-  result = ".sbd";
+  result.AssignWithConversion(".sbd");
   return NS_OK;
 }
 

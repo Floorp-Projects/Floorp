@@ -232,19 +232,19 @@ NS_IMETHODIMP nsMsgProtocol::OnStopRequest(nsIChannel * aChannel, nsISupports *c
 		NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
 		if (NS_SUCCEEDED(rv) && dialog) {
 			// todo, put this into a string bundle
-			nsAutoString alertMsg("unknown error.");
+			nsAutoString alertMsg; alertMsg.AssignWithConversion("unknown error.");
 			switch (aStatus) {
 				case NS_ERROR_UNKNOWN_HOST:
 						// todo, put this into a string bundle
-						alertMsg = "Failed to connect to the server.";
+						alertMsg.AssignWithConversion("Failed to connect to the server.");
 						break;
                case NS_ERROR_CONNECTION_REFUSED:
 						// todo, put this into a string bundle
-						alertMsg = "Connection refused to the server.";
+						alertMsg.AssignWithConversion("Connection refused to the server.");
 						break;
                case NS_ERROR_NET_TIMEOUT:
 						// todo, put this into a string bundle
-						alertMsg = "Connection to the server timed out.";
+						alertMsg.AssignWithConversion("Connection to the server timed out.");
 						break;
                default:
 						break;

@@ -115,7 +115,7 @@ private:
 }
 nsFSStringConversion gConverter; 
 
-nsFSStringConversion::nsFSStringConversion() : mFSCharset("")
+nsFSStringConversion::nsFSStringConversion()
 {
    mEncoder = nsnull;
    mDecoder = nsnull;

@@ -32,8 +32,8 @@ nsMsgTxn::nsMsgTxn()
 {
   NS_INIT_REFCNT();
   m_txnType = 0;
-  m_undoString = "Undo";
-  m_redoString = "Redo";
+  m_undoString.AssignWithConversion("Undo");
+  m_redoString.AssignWithConversion("Redo");
 }
 
 nsMsgTxn::~nsMsgTxn()

@@ -66,12 +66,14 @@ void nsLocalFolderSummarySpec::	CreateSummaryFileName()
 {
 	char *leafName = GetLeafName();
 
-	nsString fullLeafName(leafName);
+    // STRING USE WARNING: perhaps |fullLeafName| should just be an |nsCString|
+
+	nsString fullLeafName; fullLeafName.AssignWithConversion(leafName);
 
 	// Append .msf (msg summary file) this is what windows will want.
 	// Mac and Unix can decide for themselves.
 
-	fullLeafName += ".msf";				// message summary file
+	fullLeafName.AppendWithConversion(".msf");				// message summary file
 	char *cLeafName = fullLeafName.ToNewCString();
 	SetLeafName(cLeafName);
     nsAllocator::Free(cLeafName);

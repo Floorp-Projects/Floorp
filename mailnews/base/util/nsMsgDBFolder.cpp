@@ -74,7 +74,7 @@ NS_IMETHODIMP nsMsgDBFolder::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 nsMsgDBFolder::nsMsgDBFolder(void)
-: mCharset(""), mAddListener(PR_TRUE)
+: mAddListener(PR_TRUE)
 {
 
 }
@@ -233,12 +233,12 @@ NS_IMETHODIMP nsMsgDBFolder::GetCharset(PRUnichar * *aCharset)
 		nsAutoString prefCharsetStr;
 		if(prefCharset)
 		{
-			prefCharsetStr = prefCharset;
+			prefCharsetStr.AssignWithConversion(prefCharset);
 			PR_Free(prefCharset);
 		}
 		else
 		{
-			prefCharsetStr = "us-ascii";
+			prefCharsetStr.AssignWithConversion("us-ascii");
 		}
 		*aCharset = prefCharsetStr.ToNewUnicode();
 	}
@@ -735,7 +735,7 @@ NS_IMETHODIMP nsMsgDBFolder::ReadFromFolderCacheElem(nsIMsgFolderCacheElement *e
 	printf("read total %ld for %s\n", mNumTotalMessages, uri);
 	PR_Free(uri);
 #endif
-	mCharset = charset;
+	mCharset.AssignWithConversion(charset);
 	PR_FREEIF(charset);
 
   mInitializedFromCache = PR_TRUE;
