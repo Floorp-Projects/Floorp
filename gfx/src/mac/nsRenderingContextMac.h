@@ -40,6 +40,8 @@ class nsGraphicState;
 class DrawingSurface;		// a surface is a combination of a port and a graphic state
 class nsUnicodeFallbackCache;
 
+class nsIGraphics;
+
 //------------------------------------------------------------------------
 
 
