@@ -1712,7 +1712,7 @@ nsEditor::GetNextNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode)
 {
   nsresult result;
   *aResultNode = nsnull;
-  // if aCurrentNode has a left sibling, return that sibling's rightmost child (or itself if it has no children)
+  // if aCurrentNode has a right sibling, return that sibling's leftmost child (or itself if it has no children)
   result = aCurrentNode->GetNextSibling(aResultNode);
   if ((NS_SUCCEEDED(result)) && *aResultNode)
     return GetLeftmostChild(*aResultNode, aResultNode);
