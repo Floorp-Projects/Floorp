@@ -81,6 +81,10 @@ nsTXTToHTMLConv::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     // Push mBuffer to the listener now, so the initial HTML will not
     // be parsed in OnDataAvailable().
 
+    nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
+    NS_ENSURE_TRUE(channel, NS_ERROR_UNEXPECTED);
+    channel->SetContentType(NS_LITERAL_CSTRING("text/html"));
+
     nsresult rv = mListener->OnStartRequest(request, aContext);
     if (NS_FAILED(rv)) return rv;
 
