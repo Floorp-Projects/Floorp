@@ -56,11 +56,11 @@ class imgRequestProxy;
 }
 
 enum {
-  onStartDecode = 0x01,
-  onStartContainer = 0x02,
-  onStopContainer = 0x04,
-  onStopDecode = 0x08,
-  onStopRequest = 0x16
+  onStartDecode    = PR_BIT(0),
+  onStartContainer = PR_BIT(1),
+  onStopContainer  = PR_BIT(2),
+  onStopDecode     = PR_BIT(3),
+  onStopRequest    = PR_BIT(4)
 };
 
 class imgRequest : public imgIRequest,
