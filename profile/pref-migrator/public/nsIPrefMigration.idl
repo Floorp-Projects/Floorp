@@ -30,6 +30,12 @@ interface nsIWebShellWindow;
 #define NS_PREFCONVERTER_PROGID "component://netscape/migration/pref-converter"
 #define NS_ERROR_NOT_ENOUGH_SPACE_TO_MIGRATE NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_MAILNEWS, 1) 
 
+/* these are hard coded, in ascii, as they will be used for directory folder names on disk.  NEW_LOCAL_MAIL_DIR_NAME is also used as the host name for the local folders account */
+#define NEW_MAIL_DIR_NAME "Mail"
+#define NEW_NEWS_DIR_NAME "News"
+#define NEW_IMAPMAIL_DIR_NAME "ImapMail"
+#define NEW_LOCAL_MAIL_DIR_NAME "Local Folders"
+
 %}
 
 [scriptable, uuid(85c86e4c-6a6c-11d3-9a55-004005263078)]
