@@ -19,6 +19,7 @@
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
 #include <gtk/gtkprivate.h>
+#include <gtk/gtktypeutils.h>
 
 #include "nsWindow.h"
 #include "nsIFontMetrics.h"
@@ -33,6 +34,8 @@
 
 #include "nsGtkEventHandler.h"
 #include "nsAppShell.h"
+
+#include "nsSelectionMgr.h"
 
 #include "stdio.h"
 
@@ -229,6 +232,7 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
                      GTK_SIGNAL_FUNC(handle_delete_event),
                      this);
 
+    nsSelectionMgr::SetTopLevelWidget(mShell);
   }
 
   // Force cursor to default setting

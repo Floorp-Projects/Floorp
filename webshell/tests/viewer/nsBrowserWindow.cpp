@@ -76,32 +76,20 @@
 
 #include "resources.h"
 
-#if defined(WIN32)
-#include <strstrea.h>
-#else
-#include <strstream.h>
-#endif
-
-#if defined(WIN32)
-#include <windows.h>
-#endif
-
-#if defined (XP_MAC)
-#include <sstream>
-#include <string>
-#include <Scrap.h>
-#include <TextEdit.h>
-#endif
-
-#ifdef DEBUG_akkana
-// Leave this commented out until we make sure it doesn't crash Linux boxes
-#if defined (XP_UNIX)
-#include <iostream.h>
-#endif
-#endif
+// I think these platform-specific ifdefs were only needed for the copy code:
+//#if defined(WIN32)
+//#include <windows.h>
+//#endif
+//
+//#if defined (XP_MAC)
+//#include <string>
+//#include <Scrap.h>
+//#include <TextEdit.h>
+//#endif
 
 // For Copy
 #include "nsIDOMSelection.h"
+#include "nsISelectionMgr.h"
 
 // XXX For font setting below
 #include "nsFont.h"
@@ -2150,6 +2138,8 @@ void PlaceHTMLOnClipboard(PRUint32 aFormat, char* aData, int aLength)
 void
 nsBrowserWindow::DoCopy()
 {
+#define USE_SELECTION_MGR
+#ifdef USE_SELECTION_MGR
   nsIPresShell* shell = GetPresShell();
   if (nsnull != shell) {
     nsCOMPtr<nsIDocument> doc;
@@ -2179,35 +2169,18 @@ nsBrowserWindow::DoCopy()
 	
         rv = NS_New_HTML_ContentSinkStream(&sink,PR_FALSE,PR_FALSE);
 
-// ifdef hell: ostrstream doesn't seem to work on mac (it's 
-// been deprecated too), but stringstream doesn't seem to 
-// work in VC 5, so for the moment we have ifdefs
-#if defined(XP_MAC)
-#define USE_STRINGSTREAM 1
-#endif
-#if defined(XP_WIN)
-#define USE_STRSTREAM 1
-#endif
-        // Leave this commented out until we're sure it won't crash Linux
-#if defined(XP_UNIX)
-#define USE_COUT 1
-#endif
+        nsISelectionMgr* selectionMgr;
+        if (!NS_SUCCEEDED(mAppShell->GetSelectionMgr(&selectionMgr))
+            || !selectionMgr)
+          return;
 
-#if defined(USE_STRINGSTREAM) || defined(USE_STRSTREAM) || defined(USE_COUT)
-
-#if defined(USE_STRINGSTREAM)
-        stringstream  data;
-#else
-#if defined(USE_STRSTREAM)
-        ostrstream  data;
-#else
-#if defined(USE_COUT)
-#define data cout
-        data << "Copied text:" << endl << "------------" << endl;
-#endif
-#endif
-#endif
-        ((nsHTMLContentSinkStream*)sink)->SetOutputStream(data);
+        ostream* copyStream;
+        if (!NS_SUCCEEDED(selectionMgr->GetCopyOStream(&copyStream)))
+        {
+          NS_RELEASE(selectionMgr);
+          return;
+        }
+        ((nsHTMLContentSinkStream*)sink)->SetOutputStream(*copyStream);
 
         if (NS_OK == rv) {
           parser->SetContentSink(sink);
@@ -2223,62 +2196,16 @@ nsBrowserWindow::DoCopy()
           }
           NS_IF_RELEASE(dtd);
           NS_IF_RELEASE(sink);
-#if defined(USE_STRINGSTREAM)
-          string      theString = data.str();
-          PRInt32     len = theString.length();
-          const char* str = theString.data();
-#else
-#if defined(USE_STRSTREAM)
-          PRInt32 len = data.pcount();
-          char* str = (char*)data.str();
-#endif
-#if defined(USE_COUT)
-#define data cout
-          data << "------------ End Copied Text" << endl;
-#endif
-#endif
 
-#if defined(WIN32)
-          PRUint32 cf_aol = RegisterClipboardFormat(gsAOLFormat);
-          PRUint32 cf_html = RegisterClipboardFormat(gsHTMLFormat);
-	 
-          if (len)
-          {   
-            OpenClipboard(NULL);
-            EmptyClipboard();
-	
-            PlaceHTMLOnClipboard(cf_aol,str,len);
-            PlaceHTMLOnClipboard(cf_html,str,len);
-            PlaceHTMLOnClipboard(CF_TEXT,str,len);            
-			
-            CloseClipboard();
-          }
-          // in ostrstreams if you cal the str() function
-          // then you are responsible for deleting the string
-          if (str) delete str;
-#endif
-
-#if defined(XP_MAC)
-          if (len)
-          {
-            char * ptr = NS_CONST_CAST(char*,str);
-            for (PRInt32 plen = len; plen > 0; plen --, ptr ++)
-              if (*ptr == '\n')
-                *ptr = '\r';
-
-            OSErr err = ::ZeroScrap();
-            err = ::PutScrap(len, 'TEXT', str);
-            ::TEFromScrap();
-          }
-#endif
-
+          selectionMgr->CopyToClipboard();
+          NS_RELEASE(selectionMgr);
         }
-#endif /* USE_STRINGSTREAM || USE_STRSTREAM || USE_OSTREAM */
         NS_RELEASE(parser);
       }
     }
     NS_RELEASE(shell);
   }
+#endif /* USE_SELECTION_MGR */
 }
 
 //----------------------------------------------------------------------
