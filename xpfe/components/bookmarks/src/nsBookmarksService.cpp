@@ -129,7 +129,7 @@ static const char kURINC_BookmarksRoot[]          = "NC:BookmarksRoot"; // XXX?
 static const char kURINC_IEFavoritesRoot[]        = "NC:IEFavoritesRoot"; // XXX?
 static const char kURINC_PersonalToolbarFolder[]  = "NC:PersonalToolbarFolder"; // XXX?
 static const char kDefaultPersonalToolbarFolder[] = "Personal Toolbar Folder";
-static const char kBookmarkCommand[]              = "http://home.netscape.com/NC-rdf#bookmarkcommand?";
+static const char kBookmarkCommand[]              = "http://home.netscape.com/NC-rdf#command?";
 
 #define bookmark_properties "chrome://bookmarks/locale/bookmark.properties"
 
@@ -222,12 +222,12 @@ bm_AddRefGlobals()
 
 		gRDF->GetResource(NC_NAMESPACE_URI "parent",              &kNC_Parent);
 
-		gRDF->GetResource(NC_NAMESPACE_URI "bookmarkcommand?newbookmark",             &kNC_BookmarkCommand_NewBookmark);
-		gRDF->GetResource(NC_NAMESPACE_URI "bookmarkcommand?newfolder",               &kNC_BookmarkCommand_NewFolder);
-		gRDF->GetResource(NC_NAMESPACE_URI "bookmarkcommand?newseparator",            &kNC_BookmarkCommand_NewSeparator);
-		gRDF->GetResource(NC_NAMESPACE_URI "bookmarkcommand?deletebookmark",          &kNC_BookmarkCommand_DeleteBookmark);
-		gRDF->GetResource(NC_NAMESPACE_URI "bookmarkcommand?deletebookmarkfolder",    &kNC_BookmarkCommand_DeleteBookmarkFolder);
-		gRDF->GetResource(NC_NAMESPACE_URI "bookmarkcommand?deletebookmarkseparator", &kNC_BookmarkCommand_DeleteBookmarkSeparator);
+		gRDF->GetResource(NC_NAMESPACE_URI "command?cmd=newbookmark",             &kNC_BookmarkCommand_NewBookmark);
+		gRDF->GetResource(NC_NAMESPACE_URI "command?cmd=newfolder",               &kNC_BookmarkCommand_NewFolder);
+		gRDF->GetResource(NC_NAMESPACE_URI "command?cmd=newseparator",            &kNC_BookmarkCommand_NewSeparator);
+		gRDF->GetResource(NC_NAMESPACE_URI "command?cmd=deletebookmark",          &kNC_BookmarkCommand_DeleteBookmark);
+		gRDF->GetResource(NC_NAMESPACE_URI "command?cmd=deletebookmarkfolder",    &kNC_BookmarkCommand_DeleteBookmarkFolder);
+		gRDF->GetResource(NC_NAMESPACE_URI "command?cmd=deletebookmarkseparator", &kNC_BookmarkCommand_DeleteBookmarkSeparator);
 	}
 	return NS_OK;
 }

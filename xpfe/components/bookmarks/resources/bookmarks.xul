@@ -43,9 +43,9 @@
   <menubar>
     <menu value="&menu.file.label;">
 	  <menupopup>
-      <menuitem value="&menuitem.newBookmark.label;" oncommand="return doContextCmd('http://home.netscape.com/NC-rdf#bookmarkcommand?newbookmark');" />
-      <menuitem value="&menuitem.newFolder.label;" oncommand="return doContextCmd('http://home.netscape.com/NC-rdf#bookmarkcommand?newfolder');"/>
-      <menuitem value="&menuitem.newSeparator.label;" oncommand="return doContextCmd('http://home.netscape.com/NC-rdf#bookmarkcommand?newseparator');"/>
+      <menuitem value="&menuitem.newBookmark.label;" oncommand="return doContextCmd('http://home.netscape.com/NC-rdf#command?cmd=newbookmark');" />
+      <menuitem value="&menuitem.newFolder.label;" oncommand="return doContextCmd('http://home.netscape.com/NC-rdf#command?cmd=newfolder');"/>
+      <menuitem value="&menuitem.newSeparator.label;" oncommand="return doContextCmd('http://home.netscape.com/NC-rdf#command?cmd=newseparator');"/>
       <menuseparator/>
       <menuitem value="&menuitem.close.label;"
                 oncommand="window.close()" />
