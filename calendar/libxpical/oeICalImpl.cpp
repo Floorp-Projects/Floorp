@@ -65,6 +65,7 @@
 #include "nsIDOMElement.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
+#include "nsNativeCharsetUtils.h"
 
 
 extern "C" {
@@ -422,7 +423,12 @@ END:VEVENT\n\
 END:VCALENDAR\n\
 ";
     
-    stream = icalfileset_new(m_serveraddr.get());
+    nsCAutoString nativeServeraddr;
+    nsresult rv = NS_CopyUnicodeToNative(NS_ConvertUTF8toUTF16(m_serveraddr),
+                                         nativeServeraddr);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    stream = icalfileset_new(nativeServeraddr.get());
     if ( !stream ) {
         #ifdef ICAL_DEBUG
         printf( "oeICalImpl::Test() failed: Cannot open stream: %s!\n", m_serveraddr.get() );
@@ -777,7 +783,12 @@ oeICalImpl::SetServer( const nsACString &aServer ) {
     if( dummy )
         stat(NULL,NULL);
 
-    stream = icalfileset_new(m_serveraddr.get());
+    nsCAutoString nativeServeraddr;
+    nsresult rv = NS_CopyUnicodeToNative(NS_ConvertUTF8toUTF16(m_serveraddr),
+                                         nativeServeraddr);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    stream = icalfileset_new(nativeServeraddr.get());
     if ( !stream ) {
         #ifdef ICAL_DEBUG
         printf( "oeICalImpl::SetServer() failed: Cannot open stream: %s!\n", m_serveraddr.get() );
@@ -785,7 +796,6 @@ oeICalImpl::SetServer( const nsACString &aServer ) {
         return NS_OK;
     }
     
-    nsresult rv;
     icalcomponent *vcalendar;
     icalcomponent *vevent,*vtodo;
     oeICalEventImpl *icalevent;
@@ -991,7 +1001,12 @@ NS_IMETHODIMP oeICalImpl::AddEvent(oeIICalEvent *icalevent,char **retid)
     icalset *stream;
     icalcomponent *vcalendar;
 
-    stream = icalfileset_new(m_serveraddr.get());
+    nsCAutoString nativeServeraddr;
+    nsresult rv = NS_CopyUnicodeToNative(NS_ConvertUTF8toUTF16(m_serveraddr),
+                                         nativeServeraddr);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    stream = icalfileset_new(nativeServeraddr.get());
     if ( !stream ) {
         #ifdef ICAL_DEBUG
         printf( "oeICalImpl::AddEvent() failed: Cannot open stream: %s!\n", serveraddr );
@@ -1069,7 +1084,12 @@ NS_IMETHODIMP oeICalImpl::ModifyEvent(oeIICalEvent *icalevent, char **retid)
         return ModifyTodo( icaltodo, retid );
     }
 
-    stream = icalfileset_new(m_serveraddr.get());
+    nsCAutoString nativeServeraddr;
+    rv = NS_CopyUnicodeToNative(NS_ConvertUTF8toUTF16(m_serveraddr),
+                                         nativeServeraddr);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    stream = icalfileset_new(nativeServeraddr.get());
     if ( !stream ) {
         #ifdef ICAL_DEBUG
         printf( "oeICalImpl::ModifyEvent() failed: Cannot open stream: %s!\n", serveraddr );
@@ -1219,7 +1239,12 @@ oeICalImpl::DeleteEvent( const char *id )
 #endif
     icalset *stream;
     
-    stream = icalfileset_new(m_serveraddr.get());
+    nsCAutoString nativeServeraddr;
+    nsresult rv = NS_CopyUnicodeToNative(NS_ConvertUTF8toUTF16(m_serveraddr),
+                                         nativeServeraddr);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    stream = icalfileset_new(nativeServeraddr.get());
     if ( !stream ) {
         #ifdef ICAL_DEBUG
         printf( "oeICalImpl::DeleteEvent() failed: Cannot open stream: %s!\n", serveraddr );
@@ -2021,7 +2046,12 @@ NS_IMETHODIMP oeICalImpl::AddTodo(oeIICalTodo *icaltodo,char **retid)
     icalset *stream;
     icalcomponent *vcalendar;
 
-    stream = icalfileset_new(m_serveraddr.get());
+    nsCAutoString nativeServeraddr;
+    nsresult rv = NS_CopyUnicodeToNative(NS_ConvertUTF8toUTF16(m_serveraddr),
+                                         nativeServeraddr);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    stream = icalfileset_new(nativeServeraddr.get());
     if ( !stream ) {
         #ifdef ICAL_DEBUG
         printf( "oeICalImpl::AddTodo() failed: Cannot open stream: %s!\n", serveraddr );
@@ -2080,7 +2110,12 @@ oeICalImpl::DeleteTodo( const char *id )
 #endif
     icalset *stream;
     
-    stream = icalfileset_new(m_serveraddr.get());
+    nsCAutoString nativeServeraddr;
+    nsresult rv = NS_CopyUnicodeToNative(NS_ConvertUTF8toUTF16(m_serveraddr),
+                                         nativeServeraddr);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    stream = icalfileset_new(nativeServeraddr.get());
     if ( !stream ) {
         #ifdef ICAL_DEBUG
         printf( "oeICalImpl::DeleteTodo() failed: Cannot open stream: %s!\n", serveraddr );
@@ -2185,7 +2220,12 @@ NS_IMETHODIMP oeICalImpl::ModifyTodo(oeIICalTodo *icalevent, char **retid)
     icalset *stream;
     icalcomponent *vcalendar;
 
-    stream = icalfileset_new(m_serveraddr.get());
+    nsCAutoString nativeServeraddr;
+    nsresult rv = NS_CopyUnicodeToNative(NS_ConvertUTF8toUTF16(m_serveraddr),
+                                         nativeServeraddr);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    stream = icalfileset_new(nativeServeraddr.get());
     if ( !stream ) {
         #ifdef ICAL_DEBUG
         printf( "oeICalImpl::ModifyTodo() failed: Cannot open stream: %s!\n", serveraddr );
