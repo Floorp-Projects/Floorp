@@ -148,7 +148,7 @@ endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 CPPSRCS += nsNativeAppSupportOS2.cpp
 CPPSRCS += nsNativeAppSupportBase.cpp
-OS2_PROGRAM_RESOURCE = $(srcdir)/splashos2.rc
+RESFILE = splashos2.res
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk)

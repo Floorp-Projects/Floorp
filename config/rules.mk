@@ -780,10 +780,9 @@ ifdef BEOS_PROGRAM_RESOURCE
 endif
 endif # BeOS
 ifeq ($(OS_ARCH),OS2)
-ifdef OS2_PROGRAM_RESOURCE
-	rc -n -x2 -i $(subst /,\,$(srcdir)) -r $(subst /,\,$(OS2_PROGRAM_RESOURCE)) $(patsubst %.rc, %.res, $(notdir $(OS2_PROGRAM_RESOURCE)))
-	rc -n -x2 -i $(subst /,\,$(srcdir)) $(patsubst %.rc, %.res, $(notdir $(OS2_PROGRAM_RESOURCE))) $@
-endif # os2_prog_rsrc
+ifdef RESFILE
+	$(RC) $(RCFLAGS) $(RESFILE) $@
+endif
 endif
 
 $(HOST_PROGRAM): $(HOST_PROGOBJS) $(HOST_EXTRA_DEPS) Makefile Makefile.in
@@ -951,6 +950,9 @@ ifeq ($(MOZ_OS2_TOOLS),VACPP)
 else
 	$(MKSHLIB) -o $@ $(OBJS) $(LOBJS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS) $(EXTRA_LIBS) $(DEF_FILE)
 endif
+ifdef RESFILE
+	$(RC) $(RCFLAGS) $(RESFILE) $@
+endif
 endif # OS2
 	chmod +x $@
 ifdef ENABLE_STRIP
@@ -1053,7 +1055,11 @@ $(OBJ_PREFIX)%.$(OBJ_SUFFIX): %.mm Makefile.in
 
 %.res: %.rc
 	@echo Creating Resource file: $@
+ifeq ($(OS_ARCH),OS2)
+	$(RC) $(RCFLAGS) -i $(subst /,\,$(srcdir)) -r $< $@
+else
 	$(RC) $(RCFLAGS) -r $(DEFINES) $(INCLUDES) $(OUTOPTION)$@ $<
+endif
 
 
 # need 3 separate lines for OS/2
