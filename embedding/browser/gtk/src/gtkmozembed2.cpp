@@ -32,6 +32,9 @@
 // so we can do our get_nsIWebBrowser later...
 #include <nsIWebBrowser.h>
 
+// so we can get callbacks from the mozarea
+#include <gtkmozarea.h>
+
 // class and instance initialization
 
 static void
@@ -61,6 +64,26 @@ gtk_moz_embed_map(GtkWidget *widget);
 
 static void
 gtk_moz_embed_unmap(GtkWidget *widget);
+
+static gint
+handle_child_focus_in(GtkWidget     *aWidget,
+		      GdkEventFocus *aGdkFocusEvent,
+		      GtkMozEmbed   *aEmbed);
+
+static gint
+handle_child_focus_out(GtkWidget     *aWidget,
+		       GdkEventFocus *aGdkFocusEvent,
+		       GtkMozEmbed   *aEmbed);
+
+// signal handlers for tracking the focus and and focus out events on
+// the toplevel window.
+
+static void
+handle_toplevel_focus_in (GtkMozArea    *aArea,
+			  GtkMozEmbed   *aEmbed);
+static void
+handle_toplevel_focus_out(GtkMozArea    *aArea,
+			  GtkMozEmbed   *aEmbed);
 
 // globals for this type of widget
 
@@ -103,7 +126,7 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
   container_class = GTK_CONTAINER_CLASS(klass);
   bin_class       = GTK_BIN_CLASS(klass);
   widget_class    = GTK_WIDGET_CLASS(klass);
-  object_class    = (GtkObjectClass *)klass;
+  object_class    = GTK_OBJECT_CLASS(klass);
 
   parent_class = (GtkBinClass *)gtk_type_class(gtk_bin_get_type());
 
@@ -373,6 +396,34 @@ gtk_moz_embed_realize(GtkWidget *widget)
 
   if (embedPrivate->mURI.Length())
     embedPrivate->LoadCurrentURI();
+
+
+  // connect to the focus out event for the child
+  GtkWidget *child_widget = GTK_BIN(widget)->child;
+  gtk_signal_connect_while_alive(GTK_OBJECT(child_widget),
+				 "focus_out_event",
+				 GTK_SIGNAL_FUNC(handle_child_focus_out),
+				 embed,
+				 GTK_OBJECT(child_widget));
+  gtk_signal_connect_while_alive(GTK_OBJECT(child_widget),
+				 "focus_in_event",
+				 GTK_SIGNAL_FUNC(handle_child_focus_in),
+				 embed,
+				 GTK_OBJECT(child_widget));
+
+  // connect to the toplevel focus out events for the child
+  GtkMozArea *mozarea = GTK_MOZAREA(child_widget);
+  gtk_signal_connect_while_alive(GTK_OBJECT(mozarea),
+				 "toplevel_focus_in",
+				 GTK_SIGNAL_FUNC(handle_toplevel_focus_in),
+				 embed,
+				 GTK_OBJECT(mozarea));
+
+  gtk_signal_connect_while_alive(GTK_OBJECT(mozarea),
+				 "toplevel_focus_out",
+				 GTK_SIGNAL_FUNC(handle_toplevel_focus_out),
+				 embed,
+				 GTK_OBJECT(mozarea));
 }
 
 static void
@@ -452,7 +503,54 @@ gtk_moz_embed_unmap(GtkWidget *widget)
   gdk_window_hide(widget->window);
 
   embedPrivate->Hide();
+}
 
+static gint
+handle_child_focus_in(GtkWidget     *aWidget,
+		      GdkEventFocus *aGdkFocusEvent,
+		      GtkMozEmbed   *aEmbed)
+{
+  EmbedPrivate *embedPrivate;
+
+  embedPrivate = (EmbedPrivate *)aEmbed->data;
+
+  embedPrivate->ChildFocusIn();
+
+  return FALSE;
+}
+
+static gint
+handle_child_focus_out(GtkWidget     *aWidget,
+		       GdkEventFocus *aGdkFocusEvent,
+		       GtkMozEmbed   *aEmbed)
+{
+  EmbedPrivate *embedPrivate;
+
+  embedPrivate = (EmbedPrivate *)aEmbed->data;
+
+  embedPrivate->ChildFocusOut();
+ 
+  return FALSE;
+}
+
+static void
+handle_toplevel_focus_in (GtkMozArea    *aArea,
+			  GtkMozEmbed   *aEmbed)
+{
+  EmbedPrivate   *embedPrivate;
+  embedPrivate = (EmbedPrivate *)aEmbed->data;
+
+  embedPrivate->TopLevelFocusIn();
+}
+
+static void
+handle_toplevel_focus_out(GtkMozArea    *aArea,
+			  GtkMozEmbed   *aEmbed)
+{
+  EmbedPrivate   *embedPrivate;
+  embedPrivate = (EmbedPrivate *)aEmbed->data;
+
+  embedPrivate->TopLevelFocusOut();
 }
 
 // Widget methods

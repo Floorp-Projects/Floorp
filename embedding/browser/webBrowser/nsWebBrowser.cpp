@@ -1331,16 +1331,6 @@ nsEventStatus PR_CALLBACK nsWebBrowser::HandleEvent(nsGUIEvent *aEvent)
 
   switch(aEvent->message) {
 
-  case NS_ACTIVATE: {
-    browser->Activate();
-    break;
-  }
-
-  case NS_DEACTIVATE: {
-    browser->Deactivate();
-    break;
-  }
-
   case NS_PAINT: {
       nsRect *rect = NS_STATIC_CAST(nsPaintEvent *, aEvent)->rect;
       browser->FillBackground(*rect);

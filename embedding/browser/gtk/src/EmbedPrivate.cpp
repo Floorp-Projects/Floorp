@@ -43,6 +43,9 @@
 #include <nsIDOMWindowInternal.h>
 #include <nsIChromeEventHandler.h>
 
+// for the focus hacking we need to do
+#include <nsIFocusController.h>
+
 // for profiles
 #include <nsMPFileLocProvider.h>
 
@@ -448,6 +451,7 @@ EmbedPrivate::FindPrivateForBrowser(nsIWebBrowserChrome *aBrowser)
 void
 EmbedPrivate::ContentStateChange(void)
 {
+
   // we don't attach listeners to chrome
   if (mListenersAttached && !mIsChrome)
     return;
@@ -492,6 +496,69 @@ EmbedPrivate::ContentFinishedLoading(void)
   }
 }
 
+// handle focus in and focus out events
+void
+EmbedPrivate::TopLevelFocusIn(void)
+{
+  nsCOMPtr<nsPIDOMWindow> piWin;
+  GetPIDOMWindow(getter_AddRefs(piWin));
+
+  if (!piWin)
+    return;
+
+  nsCOMPtr<nsIFocusController> focusController;
+  piWin->GetRootFocusController(getter_AddRefs(focusController));
+  if (focusController)
+    focusController->SetActive(PR_TRUE);
+}
+
+void
+EmbedPrivate::TopLevelFocusOut(void)
+{
+  nsCOMPtr<nsPIDOMWindow> piWin;
+  GetPIDOMWindow(getter_AddRefs(piWin));
+
+  if (!piWin)
+    return;
+
+  nsCOMPtr<nsIFocusController> focusController;
+  piWin->GetRootFocusController(getter_AddRefs(focusController));
+  if (focusController)
+    focusController->SetActive(PR_FALSE);
+}
+
+void
+EmbedPrivate::ChildFocusIn(void)
+{
+  nsCOMPtr<nsPIDOMWindow> piWin;
+  GetPIDOMWindow(getter_AddRefs(piWin));
+
+  if (!piWin)
+    return;
+
+  piWin->Activate();
+}
+
+void
+EmbedPrivate::ChildFocusOut(void)
+{
+  nsCOMPtr<nsPIDOMWindow> piWin;
+  GetPIDOMWindow(getter_AddRefs(piWin));
+
+  if (!piWin)
+    return;
+
+  piWin->Deactivate();
+
+  // but the window is still active until the toplevel gets a focus
+  // out
+  nsCOMPtr<nsIFocusController> focusController;
+  piWin->GetRootFocusController(getter_AddRefs(focusController));
+  if (focusController)
+    focusController->SetActive(PR_TRUE);
+
+}
+
 // Get the event listener for the chrome event handler.
 
 void
@@ -500,28 +567,15 @@ EmbedPrivate::GetListener(void)
   if (mEventReceiver)
     return;
 
-  // get the web browser
-  nsCOMPtr<nsIWebBrowser> webBrowser;
-  mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
+  nsCOMPtr<nsPIDOMWindow> piWin;
+  GetPIDOMWindow(getter_AddRefs(piWin));
 
-  // get the content DOM window for that web browser
-  nsCOMPtr<nsIDOMWindow> domWindow;
-  webBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
-  if (!domWindow) {
-    NS_WARNING("no dom window in content progress change\n");
+  if (!piWin)
     return;
-  }
 
-  // get the private DOM window
-  nsCOMPtr<nsPIDOMWindow> domWindowPrivate = do_QueryInterface(domWindow);
-  // and the root window for that DOM window
-  nsCOMPtr<nsIDOMWindowInternal> rootWindow;
-  domWindowPrivate->GetPrivateRoot(getter_AddRefs(rootWindow));
-  
   nsCOMPtr<nsIChromeEventHandler> chromeHandler;
-  nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(rootWindow));
   piWin->GetChromeEventHandler(getter_AddRefs(chromeHandler));
-  
+
   mEventReceiver = do_QueryInterface(chromeHandler);
 }
 
@@ -585,6 +639,41 @@ EmbedPrivate::DetachListeners(void)
 
 
   mListenersAttached = PR_FALSE;
+}
+
+nsresult
+EmbedPrivate::GetPIDOMWindow(nsPIDOMWindow **aPIWin)
+{
+  *aPIWin = nsnull;
+
+  // get the web browser
+  nsCOMPtr<nsIWebBrowser> webBrowser;
+  mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
+
+  // get the content DOM window for that web browser
+  nsCOMPtr<nsIDOMWindow> domWindow;
+  webBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
+  if (!domWindow)
+    return NS_ERROR_FAILURE;
+
+  // get the private DOM window
+  nsCOMPtr<nsPIDOMWindow> domWindowPrivate = do_QueryInterface(domWindow);
+  // and the root window for that DOM window
+  nsCOMPtr<nsIDOMWindowInternal> rootWindow;
+  domWindowPrivate->GetPrivateRoot(getter_AddRefs(rootWindow));
+  
+  nsCOMPtr<nsIChromeEventHandler> chromeHandler;
+  nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(rootWindow));
+
+  *aPIWin = piWin.get();
+
+  if (*aPIWin) {
+    NS_ADDREF(*aPIWin);
+    return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
+
 }
 
 /* static */

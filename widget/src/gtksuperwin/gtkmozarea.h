@@ -38,15 +38,21 @@ struct _GtkMozArea
 {
   GtkWidget widget;
   GdkSuperWin *superwin;
+  gboolean     toplevel_focus;
 };
   
 struct _GtkMozAreaClass
 {
   GtkWindowClass window_class;
+
+  /* signals */
+  void (* toplevel_focus_in ) (GtkMozArea *area);
+  void (* toplevel_focus_out) (GtkMozArea *area);
 };
 
 GtkType    gtk_mozarea_get_type (void);
 GtkWidget *gtk_mozarea_new ();
+gboolean   gtk_mozarea_get_toplevel_focus(GtkMozArea *area);
 
 #ifdef __cplusplus
 }
