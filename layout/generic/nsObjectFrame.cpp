@@ -123,6 +123,7 @@
 #include "nsIMIMEService.h"
 #include "nsCExternalHandlerService.h"
 #include "nsICategoryManager.h"
+#include "nsIComponentRegistrar.h"
 
 #include "nsObjectFrame.h"
 #include "nsIObjectFrame.h"
@@ -434,22 +435,13 @@ void nsObjectFrame::IsSupportedImage(nsIContent* aContent, PRBool* aImage)
   nsresult rv = aContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::type, type);
   if((rv == NS_CONTENT_ATTR_HAS_VALUE) && (type.Length() > 0)) 
   {
-    // should be really call to imlib
-    if(type.EqualsIgnoreCase(IMAGE_GIF) ||
-       type.EqualsIgnoreCase(IMAGE_JPG) ||
-       type.EqualsIgnoreCase(IMAGE_PJPG)||
-       type.EqualsIgnoreCase(IMAGE_PNG) ||
-       type.EqualsIgnoreCase(IMAGE_PPM) ||
-       type.EqualsIgnoreCase(IMAGE_XBM) ||
-       type.EqualsIgnoreCase(IMAGE_XBM2)||
-       type.EqualsIgnoreCase(IMAGE_XBM3)||
-       type.EqualsIgnoreCase(IMAGE_BMP) ||
-       type.EqualsIgnoreCase(IMAGE_ICO) ||
-       type.EqualsIgnoreCase(IMAGE_MNG) ||
-       type.EqualsIgnoreCase(IMAGE_JNG))
-    {
+    nsCOMPtr<nsIComponentRegistrar> reg;
+    NS_GetComponentRegistrar(getter_AddRefs(reg));
+    PRBool isReg = PR_FALSE;
+    nsCAutoString decoderId(NS_LITERAL_CSTRING("@mozilla.org/image/decoder;2?type=") + NS_LossyConvertUCS2toASCII(type));
+    reg->IsContractIDRegistered(decoderId.get(), &isReg);
+    if (isReg)
       *aImage = PR_TRUE;
-    }
     return;
   }
 

@@ -78,6 +78,7 @@
 #include "nsMimeStringResources.h"
 #include "nsMimeTypes.h"
 #include "nsMsgUtils.h"
+#include "nsIComponentRegistrar.h"
 
 #define	IMAP_EXTERNAL_CONTENT_HEADER "X-Mozilla-IMAP-Part"
 
@@ -442,18 +443,15 @@ mime_find_class (const char *content_type, MimeHeaders *hdrs,
     
     /* The magic image types which we are able to display internally...
     */
-    else if (!nsCRT::strcasecmp(content_type,			IMAGE_GIF)  ||
-      !nsCRT::strcasecmp(content_type,			IMAGE_JPG) ||
-      !nsCRT::strcasecmp(content_type,			IMAGE_PJPG) ||
-      !nsCRT::strcasecmp(content_type,			IMAGE_PNG) ||
-      !nsCRT::strcasecmp(content_type,			IMAGE_XBM)  ||
-      !nsCRT::strcasecmp(content_type,			IMAGE_XBM2) ||
-      !nsCRT::strcasecmp(content_type,			IMAGE_XBM3) ||
-      !nsCRT::strcasecmp(content_type,			IMAGE_BMP) ||
-      !nsCRT::strcasecmp(content_type,			IMAGE_ICO) ||
-      !nsCRT::strcasecmp(content_type,			IMAGE_MNG) ||
-      !nsCRT::strcasecmp(content_type,			IMAGE_JNG))
-      clazz = (MimeObjectClass *)&mimeInlineImageClass;
+    else if (!nsCRT::strncasecmp(content_type,		"image/", 6)) {
+        nsCOMPtr<nsIComponentRegistrar> reg;
+        NS_GetComponentRegistrar(getter_AddRefs(reg));
+        PRBool isReg = PR_FALSE;
+        nsCAutoString decoderId(NS_LITERAL_CSTRING("@mozilla.org/image/decoder;2?type=") + nsDependentCString(content_type));
+        reg->IsContractIDRegistered(decoderId.get(), &isReg);
+        if (isReg)
+          clazz = (MimeObjectClass *)&mimeInlineImageClass;
+    }
     
 #ifdef ENABLE_SMIME
     else if (!nsCRT::strcasecmp(content_type, APPLICATION_XPKCS7_MIME))
