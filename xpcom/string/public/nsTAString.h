@@ -450,8 +450,19 @@ class nsTAString_CharT
 
     private:
 
+      // GCC 2.95.3 and EGCS-2.91.66 need to be able to automatically
+      // generate a copy-constructor for some unknown reason.  It only
+      // needs to do this in order to support automatic construction of
+      // a nsTAString from a nsTStringTuple.  I believe enabling the
+      // default copy-ctor is harmless, but I do not want it to be 
+      // enabled by default because that might tempt people into using
+      // it (where it would be invalid).
+#if __GNUC__ > 2 || __GNUC_MINOR__ > 95
+
         // NOT TO BE IMPLEMENTED
       nsTAString_CharT( const self_type& );
+
+#endif
 
         // NOT TO BE IMPLEMENTED
       //size_type CountChar( incompatible_char_type );
