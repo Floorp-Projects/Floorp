@@ -326,3 +326,8 @@ export::
 distclean::
 	cat unallmakefiles | $(XARGS) rm -f
 	rm -f unallmakefiles $(DIST_GARBAGE)
+
+ifdef COMPILER_DEPEND
+depend::
+  $(MAKE) -C security/manager depend
+endif 
