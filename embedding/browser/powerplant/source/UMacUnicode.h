@@ -17,22 +17,45 @@
  * Copyright (C) 1999, Mozilla.  All Rights Reserved.
  * 
  * Contributor(s):
- *   Conrad Carlen <conrad@ingress.com>
+ *   Conrad Carlen <ccarlen@netscape.com>
  */
 
 #ifndef __UMacUnicode__
 #define __UMacUnicode__
 
+#include "nsIPlatformCharset.h"
+#include "nsIUnicodeEncoder.h"
+#include "nsIUnicodeDecoder.h"
+#include "nsString.h"
+#include "nsCOMPtr.h"
 
-class nsString;
 
-namespace UMacUnicode
-{
+class CPlatformUCSConversion {
+public:
+     CPlatformUCSConversion();
+     virtual ~CPlatformUCSConversion(){};
+     
+     static CPlatformUCSConversion* GetInstance();
+     
+     NS_IMETHOD SetCharsetSelector(nsPlatformCharsetSel aSel);
+     
+     NS_IMETHOD UCSToPlatform(const nsAReadableString& aIn, nsAWritableCString& aOut);
+     NS_IMETHOD UCSToPlatform(const nsAReadableString& aIn, Str255& aOut);  
+  
+     NS_IMETHOD PlatformToUCS(const nsAReadableCString& ain, nsAWritableString& aOut);  
+     NS_IMETHOD PlatformToUCS(const Str255& aIn, nsAWritableString& aOut);  
 
-   void              ReleaseUnit();
-   
-	void 		         StringToStr255(const nsString& aText, Str255& aStr255);
-	void 		         Str255ToString(const Str255& aStr255, nsString& aText);
-}
+private:
+     static CPlatformUCSConversion *mgInstance;
+     
+     NS_IMETHOD PreparePlatformCharset();
+     NS_IMETHOD PrepareEncoder();
+     NS_IMETHOD PrepareDecoder();
+     
+     nsPlatformCharsetSel mCharsetSel;
+     nsAutoString mPlatformCharset;
+     nsCOMPtr<nsIUnicodeEncoder> mEncoder;
+     nsCOMPtr<nsIUnicodeDecoder> mDecoder;
+};
 
 #endif // __UMacUnicode__
