@@ -121,6 +121,14 @@ nsHTMLTags::LookupTag(const nsStr& aTag)
       NS_ASSERTION(found->mStr.EqualsIgnoreCase(aTag), "bad tree");
       return found->mEnum;
     }
+    else {
+    // hack: this can come out when rickg provides a way for the editor to ask
+    // CanContain() questions without having to first fetch the parsers
+    // internal enum values for a tag name.
+      nsAutoString textTag("__moz_text");
+      if (textTag==aTag)
+        return eHTMLTag_text;
+    }
   }
   return eHTMLTag_userdefined;
 }
