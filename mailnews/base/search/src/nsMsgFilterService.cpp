@@ -311,10 +311,10 @@ class nsMsgFilterAfterTheFact : public nsIUrlListener, public nsIMsgSearchNotify
 public:
   nsMsgFilterAfterTheFact(nsIMsgWindow *aMsgWindow, nsIMsgFilterList *aFilterList, nsISupportsArray *aFolderList);
   virtual ~nsMsgFilterAfterTheFact();
-  NS_DECL_ISUPPORTS;
-  NS_DECL_NSIURLLISTENER;
-  NS_DECL_NSIMSGSEARCHNOTIFY;
-  NS_DECL_NSIMSGCOPYSERVICELISTENER;
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIURLLISTENER
+  NS_DECL_NSIMSGSEARCHNOTIFY
+  NS_DECL_NSIMSGCOPYSERVICELISTENER
 
   nsresult  AdvanceToNextFolder();  // kicks off the process
 protected:
