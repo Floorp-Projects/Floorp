@@ -594,6 +594,7 @@ NS_METHOD nsTableCellFrame::IR_StyleChanged(nsIPresContext&          aPresContex
   nsresult rv = NS_OK;
   // we presume that all the easy optimizations were done in the nsHTMLStyleSheet before we were called here
   // XXX: we can optimize this when we know which style attribute changed
+  DidSetStyleContext(&aPresContext);
   nsTableFrame* tableFrame=nsnull;
   rv = nsTableFrame::GetTableFrame(this, tableFrame);
   if ((NS_SUCCEEDED(rv)) && (nsnull!=tableFrame))
