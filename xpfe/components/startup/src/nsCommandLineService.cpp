@@ -28,12 +28,10 @@
 
 /* Define Class IDs */
 static NS_DEFINE_IID(kCmdLineServiceCID,         NS_COMMANDLINE_SERVICE_CID);
-static NS_DEFINE_IID(kICommandLineIID,	      NS_ICOMMANDLINE_SERVICE_IID);
 
 /* Define Interface IDs */
 
 static NS_DEFINE_IID(kIFactoryIID,         NS_IFACTORY_IID);
-static NS_DEFINE_IID(kICommandLineServiceIID, NS_ICOMMANDLINE_SERVICE_IID);
 
 
 class nsCmdLineService : public nsICmdLineService
@@ -44,7 +42,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD Initialize(PRInt32  aArgc, char** aArgv);
-  NS_IMETHOD GetCmdLineValue(char* aArg, char **aValue);
+  NS_IMETHOD GetCmdLineValue(const char* aArg, char **aValue);
   NS_IMETHOD GetURLToLoad(char ** aResult);
   NS_IMETHOD GetProgramName(char ** aResult);
   NS_IMETHOD GetArgc(PRInt32  *  aResult);
@@ -72,7 +70,7 @@ nsCmdLineService::nsCmdLineService()
 /*
  * Implement the nsISupports methods...
  */
-NS_IMPL_ISUPPORTS(nsCmdLineService, kICommandLineServiceIID);
+NS_IMPL_ISUPPORTS1(nsCmdLineService, nsICmdLineService);
 
 NS_IMETHODIMP
 nsCmdLineService::Initialize(int aArgc, char ** aArgv)
@@ -200,7 +198,7 @@ nsCmdLineService::GetProgramName(char ** aResult)
 
 
 NS_IMETHODIMP
-nsCmdLineService::GetCmdLineValue(char * aArg, char ** aResult)
+nsCmdLineService::GetCmdLineValue(const char * aArg, char ** aResult)
 {
    nsresult  rv = NS_OK;
    
