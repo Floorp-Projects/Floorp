@@ -455,7 +455,7 @@ void nsMsgDatabase::UnixToNative(char*& ioPath)
 			else
 				*dst++;
 		}
-		PR_Free(ioPath);
+		nsCRT::free(ioPath);
 		ioPath = result;
 	}
 }
@@ -597,7 +597,7 @@ NS_IMETHODIMP nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
 				if (ret == NS_OK)
 					ret = InitNewDB();
 			}
-			PR_FREEIF(nativeFileName);
+			nsCRT::free(nativeFileName);
 		}
 	}
 	return ret;
