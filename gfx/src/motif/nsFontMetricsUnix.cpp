@@ -38,14 +38,17 @@ nsFontMetricsUnix :: nsFontMetricsUnix()
   
 nsFontMetricsUnix :: ~nsFontMetricsUnix()
 {
-  if (nsnull != mFont)
-  {
+  if (nsnull != mFont) {    
     delete mFont;
     mFont = nsnull;
   }
-
+  
   if (nsnull != mXstring)
     PR_Free(mXstring);
+  
+  if (nsnull != mFontHandle)
+    ::XUnloadFont(XtDisplay((Widget)mContext->GetNativeWidget()), mFontHandle);  
+ 
 }
 
 NS_IMPL_ISUPPORTS(nsFontMetricsUnix, kIFontMetricsIID)
@@ -148,7 +151,7 @@ nsresult nsFontMetricsUnix :: Init(const nsFont& aFont, nsIDeviceContext* aCX)
 #ifdef NOISY_FONTS
     fprintf(stderr, " is: %s\n", nametouse);
 #endif
-    
+
     ::XFreeFontInfo(fnames, fonts, numnames);
   }
   else
