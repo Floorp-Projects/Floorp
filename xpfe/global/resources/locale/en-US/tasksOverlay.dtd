@@ -13,7 +13,7 @@
 <!ENTITY toolsMenu.label					"Tools"> 
 <!ENTITY historyCmd.label						"History">  
 <!ENTITY securityInfoCmd.label					".Security Info">  
-<!ENTITY importUtilCmd.label					".Import Utility">  
+<!ENTITY importUtilCmd.label					"Import Utility">  
 <!ENTITY javaConsoleCmd.label					"Java Console">
 
 <!-- LOCALIZATION NOTE (walletMenu.label): DONT_TRANSLATE -->
