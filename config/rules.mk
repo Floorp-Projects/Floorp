@@ -1199,8 +1199,16 @@ endif
 else
 $(MKDEPENDENCIES)::
 	touch $(MKDEPENDENCIES)
+ifneq ($(OS_ARCH),OpenVMS)
 	$(MKDEPEND) -o'.o' -f$(MKDEPENDENCIES) $(DEFINES) $(ACDEFINES) $(INCLUDES) $(addprefix $(srcdir)/,$(CSRCS) $(CPPSRCS)) >/dev/null 2>&1
 	@mv $(MKDEPENDENCIES) depend.mk.old && cat depend.mk.old | sed "s|^$(srcdir)/||g" > $(MKDEPENDENCIES) && rm -f depend.mk.old
+else
+# OpenVMS can't handle long lines, so make it shorter
+	@ln -s $(srcdir) VMSs
+	$(MKDEPEND) -o'.o' -f$(MKDEPENDENCIES) $(DEFINES) $(ACDEFINES) $(INCLUDES) $(addprefix VMSs/,$(CSRCS) $(CPPSRCS)) >/dev/null 2>&1
+	@mv $(MKDEPENDENCIES) depend.mk.old && cat depend.mk.old | sed "s|^VMSs/||g" | sed "s| VMSs/| $(srcdir)/|g" > $(MKDEPENDENCIES) && rm -f depend.mk.old
+	@rm VMSs
+endif
 
 ifndef MOZ_NATIVE_MAKEDEPEND
 $(MKDEPEND):
