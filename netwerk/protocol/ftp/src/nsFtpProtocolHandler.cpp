@@ -20,15 +20,15 @@
  * Contributor(s): 
  */
 
-#include "nspr.h"
-#include "nsFTPChannel.h"
 #include "nsFtpProtocolHandler.h"
+#include "nsFTPChannel.h"
 #include "nsIURL.h"
 #include "nsCRT.h"
 #include "nsIComponentManager.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIProgressEventSink.h"
 #include "nsConnectionCacheObj.h"
+#include "prlog.h"
 
 #if defined(PR_LOGGING)
 //
@@ -58,16 +58,7 @@ nsFtpProtocolHandler::~nsFtpProtocolHandler() {
     PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("~nsFtpProtocolHandler() called"));
 }
 
-NS_IMPL_ADDREF(nsFtpProtocolHandler)
-NS_IMPL_RELEASE(nsFtpProtocolHandler)
-
-NS_INTERFACE_MAP_BEGIN(nsFtpProtocolHandler)
-	NS_INTERFACE_MAP_ENTRY(nsIProtocolHandler)
-	NS_INTERFACE_MAP_ENTRY(nsIConnectionCache)
-	NS_INTERFACE_MAP_ENTRY(nsIObserver)
-	NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-	NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIProtocolHandler)
-NS_INTERFACE_MAP_END
+NS_IMPL_ISUPPORTS3(nsFtpProtocolHandler, nsIProtocolHandler, nsIConnectionCache, nsIObserver)
 
 NS_METHOD
 nsFtpProtocolHandler::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
@@ -209,7 +200,6 @@ nsFtpProtocolHandler::InsertConn(const char *aKey, nsConnectionCacheObj *aConn) 
 
 // cleans up a connection list entry
 PRBool CleanupConnEntry(nsHashKey *aKey, void *aData, void *closure) {
-    // XXX do we need to explicitly close the streams?
     delete (nsConnectionCacheObj*)aData;
     return PR_TRUE;
 }

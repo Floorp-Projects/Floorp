@@ -26,22 +26,16 @@
 #define nsFTPChannel_h___
 
 #include "nsPIFTPChannel.h"
-#include "nsIStreamListener.h"
 #include "nsIURI.h"
 #include "nsString2.h"
-#include "nsIEventQueue.h"
 #include "nsILoadGroup.h"
 #include "nsCOMPtr.h"
-#include "nsHashtable.h"
 #include "nsIProtocolHandler.h"
 #include "nsIProgressEventSink.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIThreadPool.h"
-#include "nsIRequest.h"
-#include "nsAutoLock.h"
 #include "nsFtpConnectionThread.h"
 #include "netCore.h"
-#include "nsIProgressEventSink.h"
 
 class nsFTPChannel : public nsPIFTPChannel,
                      public nsIInterfaceRequestor,
@@ -89,12 +83,10 @@ protected:
     PRUint32                        mSourceOffset;
     PRInt32                         mAmount;
     nsCOMPtr<nsILoadGroup>          mLoadGroup;
-    nsAutoString                    mContentType;
+    nsCAutoString                    mContentType;
     PRInt32                         mContentLength;
     nsCOMPtr<nsISupports>           mOwner;
 
-    nsCOMPtr<nsIRequest>            mThreadRequest;
-    nsCOMPtr<nsIRequest>            mProxiedThreadRequest;
     nsCOMPtr<nsIProtocolHandler>    mHandler;
     nsCOMPtr<nsIThreadPool>         mPool; // the thread pool we want to use to fire off connections.
     nsFtpConnectionThread           *mConnThread; // the raw pointer to the thread object.
