@@ -69,8 +69,8 @@
 
   [%# *** Preset Queries *** %]
   [% IF user.showmybugslink %]
-    [% user.login = user.login FILTER url_quote %]
-    [% substs = { userid => user.login } %]  
+    [% user_login = user.login FILTER url_quote %]
+    [% substs = { userid => user_login } %]  
     <link rel="Preset&nbsp;Queries" title="My Bugs"                 
           href="[% PerformSubsts(Param('mybugstemplate'), substs) %]">
   [% END %]
