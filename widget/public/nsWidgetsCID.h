@@ -17,7 +17,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
+ *   Dan Rosen <dr@netscape.com>
  */
 
 /* 2d96b3d0-c051-11d1-a827-0040959a28c9 */
@@ -191,6 +192,10 @@
 // {8B5314BA-DB01-11d2-96CE-0060B0FB9956}
 #define NS_CLIPBOARD_CID      \
 { 0x8b5314ba, 0xdb01, 0x11d2, { 0x96, 0xce, 0x0, 0x60, 0xb0, 0xfb, 0x99, 0x56 } }
+
+// {77221D5A-1DD2-11B2-8C69-C710F15D2ED5}
+#define NS_CLIPBOARDHELPER_CID      \
+{ 0x77221d5a, 0x1dd2, 0x11b2, { 0x8c, 0x69, 0xc7, 0x10, 0xf1, 0x5d, 0x2e, 0xd5 } }
 
 // {8B5314BD-DB01-11d2-96CE-0060B0FB9956}
 #define NS_DATAFLAVOR_CID      \

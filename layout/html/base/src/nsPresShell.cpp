@@ -124,6 +124,7 @@
 // Drag & Drop, Clipboard
 #include "nsWidgetsCID.h"
 #include "nsIClipboard.h"
+#include "nsIClipboardHelper.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIURI.h"
 #include "nsIEventQueue.h"
@@ -1202,11 +1203,6 @@ protected:
 #endif
 
 private:
-
-  // copy string to clipboard methods
-  static nsresult CopyStringToClipboard(nsString& aString,
-                                        PRInt32 aClipboardID);
-  static nsresult CopyStringToClipboard(nsString& aString);
 
   void FreeDynamicStack();
 
@@ -4009,79 +4005,6 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
   return rv;
 }
 
-// CopyStringToClipboard: copy simple string to clipboard
-nsresult PresShell::CopyStringToClipboard(nsString& aString,
-                                          PRInt32 aClipboardID)
-{
-  nsresult rv;
-
-  // get the clipboard
-  nsCOMPtr<nsIClipboard>
-    clipboard(do_GetService("@mozilla.org/widget/clipboard;1", &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(clipboard, NS_ERROR_FAILURE);
-
-  // create a transferable for putting data on the clipboard
-  nsCOMPtr<nsITransferable>
-    trans(do_CreateInstance("@mozilla.org/widget/transferable;1", &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(trans, NS_ERROR_FAILURE);
-
-  // Add the text data flavor to the transferable
-  rv = trans->AddDataFlavor(kUnicodeMime);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // get wStrings to hold clip data
-  nsCOMPtr<nsISupportsWString>
-    data(do_CreateInstance("@mozilla.org/supports-wstring;1", &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(data, NS_ERROR_FAILURE);
-
-  // populate the string
-  rv = data->SetData(NS_CONST_CAST(PRUnichar*, aString.GetUnicode()));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // qi the data object an |nsISupports| so that when the transferable holds
-  // onto it, it will addref the correct interface.
-  nsCOMPtr<nsISupports> genericData(do_QueryInterface(data, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(genericData, NS_ERROR_FAILURE);
-
-  // set the transfer data
-  rv = trans->SetTransferData(kUnicodeMime, genericData,
-                              aString.Length() * 2);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // put the transferable on the clipboard
-  rv = clipboard->SetData(trans, nsnull, aClipboardID);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-// CopyStringToClipboard: copy string to clipboard(s) for platform
-nsresult PresShell::CopyStringToClipboard(nsString& aString)
-{
-#ifdef DEBUG_dr
-  printf("dr :: CopyStringToClipboard: %s\n",
-         NS_ConvertUCS2toUTF8(aString).get());
-#endif
-
-  nsresult rv;
-
-  // copy to the global clipboard
-  rv = CopyStringToClipboard(aString, nsIClipboard::kGlobalClipboard);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-#ifdef XP_UNIX
-  // unix also needs us to copy to the selection clipboard
-  rv = CopyStringToClipboard(aString, nsIClipboard::kSelectionClipboard);
-  NS_ENSURE_SUCCESS(rv, rv);
-#endif
-
-  return NS_OK;
-}
-
 // DoCopyLinkLocation: copy link location to clipboard
 NS_IMETHODIMP PresShell::DoCopyLinkLocation(nsIDOMNode* aNode)
 {
@@ -4096,11 +4019,19 @@ NS_IMETHODIMP PresShell::DoCopyLinkLocation(nsIDOMNode* aNode)
   nsCOMPtr<nsIDOMHTMLAnchorElement> anchor(do_QueryInterface(aNode, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
   if (anchor) {
-    // if so, copy the link:
+    // if so, get the href
     nsAutoString anchorText;
     rv = anchor->GetHref(anchorText);
     NS_ENSURE_SUCCESS(rv, rv);
-    return CopyStringToClipboard(anchorText);
+
+    // get the clipboard helper
+    nsCOMPtr<nsIClipboardHelper>
+      clipboard(do_GetService("@mozilla.org/widget/clipboardhelper;1", &rv));
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(clipboard, NS_ERROR_FAILURE);
+
+    // copy the href onto the clipboard
+    return clipboard->CopyString(anchorText);
   }
 
   // if no link, fail.
@@ -4121,11 +4052,19 @@ NS_IMETHODIMP PresShell::DoCopyImageLocation(nsIDOMNode* aNode)
   nsCOMPtr<nsIDOMHTMLImageElement> img(do_QueryInterface(aNode, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
   if (img) {
-    // if so, copy the location:
+    // if so, get the src
     nsAutoString srcText;
     rv = img->GetSrc(srcText);
     NS_ENSURE_SUCCESS(rv, rv);
-    return CopyStringToClipboard(srcText);
+
+    // get the clipboard helper
+    nsCOMPtr<nsIClipboardHelper>
+      clipboard(do_GetService("@mozilla.org/widget/clipboardhelper;1", &rv));
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(clipboard, NS_ERROR_FAILURE);
+
+    // copy the src onto the clipboard
+    return clipboard->CopyString(srcText);
   }
 
   // if no image, fail.

@@ -11,7 +11,6 @@
 *   chrome://inspector/content/jsutil/rdf/RDFArray.js
 *   chrome://inspector/content/jsutil/rdf/RDFU.js
 *   chrome://inspector/content/jsutil/xul/FrameExchange.js
-*   chrome://inspector/content/jsutil/system/ClipboardUtils.js
 *   chrome://inspector/content/jsutil/system/file.js
 ****************************************************************/
 
@@ -31,6 +30,9 @@ const kFlasherCID          = "@mozilla.org/inspector/flasher;1"
 const kWindowMediatorIID   = "@mozilla.org/rdf/datasource;1?name=window-mediator";
 const kObserverServiceIID  = "@mozilla.org/observer-service;1";
 const kDirServiceCID       = "@mozilla.org/file/directory_service;1"
+
+const kClipboardHelperCID  = "@mozilla.org/widget/clipboardhelper;1";
+const kGlobalClipboard     = Components.interfaces.nsIClipboard.kGlobalClipboard
 
 const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
 
@@ -79,6 +81,7 @@ InspectorApp.prototype =
   mInitialized: false,
   mFlasher: null,
   mIsViewingContent: false,
+  mClipboardHelper: null,
   
   get document() { return this.mDocViewerPane.viewer.viewee },
   get searchRegistry() { return this.mSearchService },
@@ -96,6 +99,8 @@ InspectorApp.prototype =
     this.toggleBrowser(true, false);
     this.toggleSearch(true, false);
     this.setFlashSelected(PrefUtils.getPref("inspector.blink.on"));
+
+    this.mClipboardHelper = XPCU.getService(kClipboardHelperCID, "nsIClipboardHelper");
   },
 
   initViewerPanes: function()
@@ -292,13 +297,13 @@ InspectorApp.prototype =
     var mod = this.mSearchService.currentModule;
     var idx = this.mSearchService.getSelectedIndex(0);
     var text = mod.getItemText(idx);
-    ClipboardUtils.writeString(text);
+    this.mClipboardHelper.writeStringToClipboard(text, kGlobalClipboard);
   },
 
   copySearchItemAll: function()
   {
     var text = this.getAllSearchItemText();
-    ClipboardUtils.writeString(text);
+    this.mClipboardHelper.writeStringToClipboard(text, kGlobalClipboard);
   },
 
   saveSearchItemText: function()

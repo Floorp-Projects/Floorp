@@ -26,11 +26,12 @@ LIBRARY_NAME = raptorbasewidget_s
 DEFINES =-D_IMPL_NS_WIDGET -DUSE_TLS_FOR_TOOLKIT
 
 CPPSRCS = \
-    nsBaseDragService.cpp      \
-    nsBaseWidget.cpp      \
+	nsBaseDragService.cpp      \
+	nsBaseWidget.cpp      \
 	nsBaseFilePicker.cpp	\
 	nsFileSpecWithUIImpl.cpp         \
 	nsBaseClipboard.cpp         \
+	nsClipboardHelper.cpp         \
 	nsTransferable.cpp         \
 	nsHTMLFormatConverter.cpp         \
 	nsPrimitiveHelpers.cpp         \
@@ -45,6 +46,7 @@ OBJS= \
 	.\$(OBJDIR)\nsBaseFilePicker.obj  \
 	.\$(OBJDIR)\nsFileSpecWithUIImpl.obj  \
 	.\$(OBJDIR)\nsBaseClipboard.obj  \
+	.\$(OBJDIR)\nsClipboardHelper.obj  \
 	.\$(OBJDIR)\nsTransferable.obj  \
 	.\$(OBJDIR)\nsHTMLFormatConverter.obj  \
 	.\$(OBJDIR)\nsPrimitiveHelpers.obj  \

@@ -1,0 +1,57 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is the Mozilla browser.
+ *
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corp.  Portions created by Netscape are Copyright (C) 2001 Netscape
+ * Communications Corp.  All Rights Reserved.
+ *
+ * Original Author:
+ *   Dan Rosen <dr@netscape.com>
+ *
+ * Contributor(s):
+ *
+ */
+
+#include "nsISupports.idl"
+#include "nsIClipboard.idl"
+
+%{ C++
+#include "nsString.h" // needed for AString -> nsAReadableString, unfortunately
+%}
+
+/**
+ * helper service for common uses of nsIClipboard.
+ */
+
+[scriptable, uuid(44073a98-1dd2-11b2-8600-d0ae854dbe93)]
+interface nsIClipboardHelper : nsISupports
+{
+
+  /**
+   * copy string to given clipboard
+   *
+   * @param aString, the string to copy to the clipboard
+   * @param aClipboardID, the ID of the clipboard to copy to
+   *        (eg. kSelectionClipboard -- see nsIClipboard.idl)
+   */
+  void copyStringToClipboard(in AString aString, in long aClipboardID);
+
+  /**
+   * copy string to (default) clipboard
+   *
+   * @param aString, the string to copy to the clipboard
+   */
+  void copyString(in AString aString);
+
+};

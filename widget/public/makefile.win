@@ -39,6 +39,7 @@ XPIDLSRCS =               \
   .\nsIDragTracker.idl \
   .\nsIFormatConverter.idl          \
   .\nsIClipboard.idl            \
+  .\nsIClipboardHelper.idl      \
   .\nsIClipboardOwner.idl       \
   .\nsIRollupListener.idl \
   .\nsIMenuRollup.idl \

@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -17,6 +17,7 @@
  * Copyright (C) 1999, Mozilla.  All Rights Reserved.
  * 
  * Contributor(s):
+ *   Dan Rosen <dr@netscape.com>
  */
 
 #include "nsISupports.idl"
@@ -27,50 +28,78 @@
 
 [scriptable, uuid(b8100c90-73be-11d2-92a5-00105a1b0d64)]
 interface nsIClipboardCommands : nsISupports {
-	/**
-	 * Returns whether there is a selection and it is not read-only.
-	 */
-	boolean canCutSelection();
 
-	/**
-	 * Returns whether there is a selection and it is copyable.
-	 */
-	boolean canCopySelection();
+  /**
+   * Returns whether there is a selection and it is not read-only.
+   */
+  boolean canCutSelection();
 
-	/**
-	 * Returns whether the current contents of the clipboard can be
-	 * pasted and if the current selection is not read-only.
-	 */
-	boolean canPaste();
+  /**
+   * Returns whether there is a selection and it is copyable.
+   */
+  boolean canCopySelection();
 
-	/**
-	 * Cut the current selection onto the clipboard.
-	 */
-	void cutSelection();
+  /**
+   * Returns whether we can copy a link location.
+   */
+  boolean canCopyLinkLocation();
 
-	/**
-	 * Copy the current selection onto the clipboard.
-	 */
-	void copySelection();
-	
-	/**
-	 * Copy the URL of the current selection, say for an <IMG> inside an <A>
-	 */
-	void copyLinkLocation();
+  /**
+   * Returns whether we can copy an image location.
+   */
+  boolean canCopyImageLocation();
 
-	/**
-	 * Paste the contents of the clipboard into the current selection.
-	 */
-	void paste();
+  /**
+   * Returns whether we can copy an image's contents.
+   */
+  boolean canCopyImageContents();
 
-	/**
-	 * Select the entire contents.
-	 */
-	void selectAll();
+  /**
+   * Returns whether the current contents of the clipboard can be
+   * pasted and if the current selection is not read-only.
+   */
+  boolean canPaste();
 
-	/**
-	 * Clear the current selection (if any). Insertion point ends up
-	 * at beginning of current selection.
-	 */
-	void selectNone();
+  /**
+   * Cut the current selection onto the clipboard.
+   */
+  void cutSelection();
+
+  /**
+   * Copy the current selection onto the clipboard.
+   */
+  void copySelection();
+
+  /**
+   * Copy the link location of the current selection (e.g.,
+   * the |href| attribute of a selected |a| tag).
+   */
+  void copyLinkLocation();
+
+  /**
+   * Copy the location of the selected image.
+   */
+  void copyImageLocation();
+
+  /**
+   * Copy the contents of the selected image.
+   */
+  void copyImageContents();
+
+  /**
+   * Paste the contents of the clipboard into the current selection.
+   */
+  void paste();
+
+  /**
+   * Select the entire contents.
+   */
+  void selectAll();
+
+  /**
+   * Clear the current selection (if any). Insertion point ends up
+   * at beginning of current selection.
+   */
+  void selectNone();
+
 };

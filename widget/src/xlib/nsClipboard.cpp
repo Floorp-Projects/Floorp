@@ -18,9 +18,9 @@
  * Rights Reserved.
  *
  * Contributor(s):
- *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Peter Hartshorn <peter@igelaus.com.au>
  *   Ken Faulkner <faulkner@igelaus.com.au>
+ *   Dan Rosen <dr@netscape.com>
  */
 
 /* TODO:
@@ -425,6 +425,8 @@ NS_IMETHODIMP nsClipboard::HasDataMatchingFlavors(nsISupportsArray *aFlavorList,
 }
 
 NS_IMETHODIMP nsClipboard::SupportsSelectionClipboard(PRBool *_retval) {
-  *_retval = PR_TRUE;
+  NS_ENSURE_ARG_POINTER(_retval);
+
+  *_retval = PR_TRUE; // we support the selection clipboard on unix.
   return NS_OK;
 }

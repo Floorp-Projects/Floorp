@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -18,9 +18,9 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *      Denis Issoupov <denis@macadamian.com>
- *	John C. Griggs <johng@corel.com>
- *
+ *   Denis Issoupov <denis@macadamian.com>
+ *   John C. Griggs <johng@corel.com>
+ *   Dan Rosen <dr@netscape.com>
  */
 
 #ifdef NDEBUG
@@ -331,6 +331,8 @@ NS_IMETHODIMP nsClipboard::EmptyClipboard(PRInt32 aWhichClipboard)
 
 NS_IMETHODIMP nsClipboard::SupportsSelectionClipboard(PRBool *_retval)
 {
-  *_retval = PR_TRUE;   // we support the selection clipboard by default.
+  NS_ENSURE_ARG_POINTER(_retval);
+
+  *_retval = PR_TRUE; // we support the selection clipboard on unix.
   return NS_OK;
 }

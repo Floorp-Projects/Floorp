@@ -17,7 +17,9 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
+ *   Dan Rosen <dr@netscape.com>
+ *
  * This Original Code has been modified by IBM Corporation.
  * Modifications made by IBM described herein are
  * Copyright (c) International Business Machines
@@ -62,6 +64,7 @@
 
 // Drag & Drop, Clipboard
 #include "nsClipboard.h"
+#include "nsClipboardHelper.h"
 #include "nsTransferable.h"
 #include "nsHTMLFormatConverter.h"
 // OS2TODO #include "nsDragService.h"
@@ -72,6 +75,7 @@
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCanvas)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFileWidget)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontRetrieverService)
@@ -240,6 +244,10 @@ static nsModuleComponentInfo components[] =
     NS_CLIPBOARD_CID,
     "@mozilla.org/widget/clipboard;1",
     nsClipboardConstructor },
+  { "Clipboard Helper",
+    NS_CLIPBOARDHELPER_CID,
+    "@mozilla.org/widget/clipboardhelper;1",
+    nsClipboardHelperConstructor },
 
 // OS2TODO
 #if 0

@@ -20,6 +20,7 @@
  * Contributor(s): 
  *   Peter Hartshorn <peter@igelaus.com.au>
  *   Ken Faulkner <faulkner@igelaus.com.au>
+ *   Dan Rosen <dr@netscape.com>
  */
 
 #include "nsIGenericFactory.h"
@@ -38,6 +39,7 @@
 #include "nsLabel.h"
 #include "nsTransferable.h"
 #include "nsClipboard.h"
+#include "nsClipboardHelper.h"
 #include "nsHTMLFormatConverter.h"
 //#include "nsFontRetrieverService.h"
 #include "nsDragService.h"
@@ -61,6 +63,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLabel)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 //NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontRetrieverService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
@@ -193,6 +196,10 @@ static nsModuleComponentInfo components[] =
     //    "@mozilla.org/widget/clipboard/xlib;1",
     "@mozilla.org/widget/clipboard;1",
     nsClipboardConstructor },
+  { "Clipboard Helper",
+    NS_CLIPBOARDHELPER_CID,
+    "@mozilla.org/widget/clipboardhelper;1",
+    nsClipboardHelperConstructor },
   { "HTML Format Converter",
     NS_HTMLFORMATCONVERTER_CID,
     "@mozilla.org/widget/htmlformatconverter/xlib;1",

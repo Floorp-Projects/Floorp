@@ -16,9 +16,9 @@
  * Blizzard.  Portions created by Christopher Blizzard are
  * Copyright (C) 2000 Christopher Blizzard. All Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *   John C. Griggs <johng@corel.com>
- *
+ *   Dan Rosen <dr@netscape.com>
  */
 
 #include "nsIGenericFactory.h"
@@ -32,6 +32,7 @@
 #include "nsLookAndFeel.h"
 #include "nsTransferable.h"
 #include "nsClipboard.h"
+#include "nsClipboardHelper.h"
 #include "nsHTMLFormatConverter.h"
 #include "nsDragService.h"
 #include "nsFileSpecWithUIImpl.h"
@@ -48,6 +49,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFileSpecWithUIImpl)
@@ -145,6 +147,10 @@ static nsModuleComponentInfo components[] =
     NS_CLIPBOARD_CID,
     "@mozilla.org/widget/clipboard;1",
     nsClipboardConstructor },
+  { "Clipboard Helper",
+    NS_CLIPBOARDHELPER_CID,
+    "@mozilla.org/widget/clipboardhelper;1",
+    nsClipboardHelperConstructor },
   { "HTML Format Converter",
     NS_HTMLFORMATCONVERTER_CID,
     "@mozilla.org/widget/htmlformatconverter/qt;1",

@@ -18,7 +18,6 @@
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/rdf/RDFU.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/rdf/RDFArray.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xul/FrameExchange.js"/>
-  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/system/ClipboardUtils.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/system/PrefUtils.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/system/FilePickerUtils.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/system/file.js"/>
