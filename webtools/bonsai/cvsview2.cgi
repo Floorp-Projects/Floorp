@@ -768,6 +768,9 @@ sub do_directory {
 
     # pick something remotely sensible to put in the "Filename" field.
     my $file = $opt_file;
+    unless (defined $opt_rev1) { $opt_rev1 = ''; }
+    unless (defined $opt_rev2) { $opt_rev2 = ''; }
+
     if ( !$file && $opt_files ) {
         $file = $opt_files;
         $file =~ s@\+.*@@;
