@@ -458,6 +458,7 @@ function doOpen()
     var localFile = targetFile.QueryInterface(Components.interfaces.nsILocalFile);
     if (localFile)
       localFile.launch();
+    window.close();
   } catch (ex) {}
 }
 
@@ -467,6 +468,7 @@ function doOpenFolder()
     var localFile = targetFile.QueryInterface(Components.interfaces.nsILocalFile);
     if (localFile)
       localFile.reveal();
+    window.close();
   } catch (ex) {}
 }
 
