@@ -39,6 +39,7 @@ REQUIRES	= xpcom \
 		  pref \
 		  necko \
 		  uconv \
+		  intl \
 		  $(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
