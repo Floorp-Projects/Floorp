@@ -34,8 +34,15 @@
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
+NS_IMPL_THREADSAFE_ADDREF(nsCopyMessageStreamListener)
+NS_IMPL_THREADSAFE_RELEASE(nsCopyMessageStreamListener)
 
-NS_IMPL_ISUPPORTS3(nsCopyMessageStreamListener, nsIStreamListener, nsIStreamObserver, nsICopyMessageStreamListener);
+NS_INTERFACE_MAP_BEGIN(nsCopyMessageStreamListener)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStreamListener)
+   NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
+   NS_INTERFACE_MAP_ENTRY(nsIStreamObserver)
+   NS_INTERFACE_MAP_ENTRY(nsICopyMessageStreamListener)
+NS_INTERFACE_MAP_END_THREADSAFE
 
 static nsresult GetMessage(nsIURI *aURL, nsIMessage **message)
 {
