@@ -49,11 +49,14 @@
 #include "nsNetCID.h"
 #include "nsIHttpChannel.h"
 #include "nsICachingChannel.h"
+#include "nsIUploadChannel.h"
 
 class nsViewSourceChannel : public nsIViewSourceChannel,
                             public nsIStreamListener,
                             public nsIHttpChannel,
-                            public nsICachingChannel {
+                            public nsICachingChannel,
+                            public nsIUploadChannel
+{
 
 public:
     NS_DECL_ISUPPORTS
@@ -64,6 +67,7 @@ public:
     NS_DECL_NSIREQUESTOBSERVER
     NS_FORWARD_SAFE_NSIHTTPCHANNEL(mHttpChannel)
     NS_FORWARD_SAFE_NSICACHINGCHANNEL(mCachingChannel)
+    NS_FORWARD_SAFE_NSIUPLOADCHANNEL(mUploadChannel)
 
     // nsViewSourceChannel methods:
     nsViewSourceChannel();
@@ -79,6 +83,7 @@ protected:
     nsCOMPtr<nsIChannel>        mChannel;
     nsCOMPtr<nsIHttpChannel>    mHttpChannel;
     nsCOMPtr<nsICachingChannel> mCachingChannel;
+    nsCOMPtr<nsIUploadChannel>  mUploadChannel;
     nsCOMPtr<nsIStreamListener> mListener;
     nsCString                   mContentType;
 };
