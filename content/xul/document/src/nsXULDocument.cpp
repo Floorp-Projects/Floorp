@@ -2426,11 +2426,9 @@ nsXULDocument::GetElementsByTagName(const nsString& aTagName, nsIDOMNodeList** a
     NS_ASSERTION(root != nsnull, "no doc root");
 
     if (root != nsnull) {
-        nsIDOMNode* domRoot;
-        if (NS_SUCCEEDED(rv = root->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) &domRoot))) {
-            rv = GetElementsByTagName(domRoot, aTagName, elements);
-            NS_RELEASE(domRoot);
-        }
+        rv = GetElementsByTagName(root, aTagName, kNameSpaceID_Unknown,
+                                  elements);
+
         NS_RELEASE(root);
     }
 
@@ -2806,8 +2804,31 @@ nsXULDocument::GetElementsByTagNameNS(const nsString& aNamespaceURI,
                                       const nsString& aLocalName,
                                       nsIDOMNodeList** aReturn)
 {
-  NS_NOTYETIMPLEMENTED("write me");
-  return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv;
+    PRInt32 nsid;
+
+    nsRDFDOMNodeList* elements;
+    if (NS_FAILED(rv = nsRDFDOMNodeList::Create(&elements))) {
+        NS_ERROR("unable to create node list");
+        return rv;
+    }
+
+    rv = mNameSpaceManager->GetNameSpaceID(aNamespaceURI, nsid);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+
+    nsIContent* root = GetRootContent();
+    NS_ASSERTION(root != nsnull, "no doc root");
+
+    if (root != nsnull && nsid != kNameSpaceID_Unknown) {
+        rv = GetElementsByTagName(root, aLocalName, nsid,
+                                  elements);
+
+        NS_RELEASE(root);
+    }
+
+    *aReturn = elements;
+    return NS_OK;
 }
 
 nsresult
@@ -3709,62 +3730,59 @@ nsXULDocument::StartLayout(void)
 
 
 nsresult
-nsXULDocument::GetElementsByTagName(nsIDOMNode* aNode,
-                                      const nsString& aTagName,
-                                      nsRDFDOMNodeList* aElements)
+nsXULDocument::GetElementsByTagName(nsIContent *aContent,
+                                    const nsString& aName,
+                                    PRInt32 aNamespaceID,
+                                    nsRDFDOMNodeList* aElements)
 {
-    nsresult rv;
+    NS_ENSURE_ARG_POINTER(aContent);
+    NS_ENSURE_ARG_POINTER(aElements);
 
-    nsCOMPtr<nsIDOMElement> element;
-    element = do_QueryInterface(aNode);
+    nsresult rv = NS_OK;
+
+    nsCOMPtr<nsIDOMElement> element(do_QueryInterface(aContent));
     if (!element)
       return NS_OK;
 
-    if (aTagName.EqualsWithConversion("*")) {
-        if (NS_FAILED(rv = aElements->AppendNode(aNode))) {
-            NS_ERROR("unable to append element to node list");
-            return rv;
+    nsCOMPtr<nsINodeInfo> ni;
+    aContent->GetNodeInfo(*getter_AddRefs(ni));
+    NS_ENSURE_TRUE(ni, NS_OK);
+
+    if (aName.EqualsWithConversion("*")) {
+        if (aNamespaceID == kNameSpaceID_Unknown ||
+            ni->NamespaceEquals(aNamespaceID)) {
+            if (NS_FAILED(rv = aElements->AppendNode(element))) {
+                NS_ERROR("unable to append element to node list");
+                return rv;
+            }
         }
     }
     else {
-        nsAutoString name;
-        if (NS_FAILED(rv = aNode->GetNodeName(name))) {
-            NS_ERROR("unable to get node name");
-            return rv;
-        }
-
-        if (aTagName.Equals(name)) {
-            if (NS_FAILED(rv = aElements->AppendNode(aNode))) {
+        if (ni->Equals(aName) &&
+            (aNamespaceID == kNameSpaceID_Unknown ||
+             ni->NamespaceEquals(aNamespaceID))) {
+            if (NS_FAILED(rv = aElements->AppendNode(element))) {
                 NS_ERROR("unable to append element to node list");
                 return rv;
             }
         }
     }
 
-    nsCOMPtr<nsIDOMNodeList> children;
-    if (NS_FAILED(rv = aNode->GetChildNodes( getter_AddRefs(children) ))) {
-        NS_ERROR("unable to get node's children");
+    PRInt32 length;
+    if (NS_FAILED(rv = aContent->ChildCount(length))) {
+        NS_ERROR("unable to get childcount");
         return rv;
     }
 
-    // no kids: terminate the recursion
-    if (! children)
-        return NS_OK;
-
-    PRUint32 length;
-    if (NS_FAILED(children->GetLength(&length))) {
-        NS_ERROR("unable to get node list's length");
-        return rv;
-    }
-
-    for (PRUint32 i = 0; i < length; ++i) {
-        nsCOMPtr<nsIDOMNode> child;
-        if (NS_FAILED(rv = children->Item(i, getter_AddRefs(child) ))) {
-            NS_ERROR("unable to get child from list");
+    for (PRInt32 i = 0; i < length; ++i) {
+        nsCOMPtr<nsIContent> child;
+        if (NS_FAILED(rv = aContent->ChildAt(i, *getter_AddRefs(child) ))) {
+            NS_ERROR("unable to get child from content");
             return rv;
         }
 
-        if (NS_FAILED(rv = GetElementsByTagName(child, aTagName, aElements))) {
+        if (NS_FAILED(rv = GetElementsByTagName(child, aName, aNamespaceID,
+                                                aElements))) {
             NS_ERROR("unable to recursively get elements by tag name");
             return rv;
         }
