@@ -344,7 +344,7 @@ sub ProcessFormFields {
             $isnull{$name} = 1;
         }
     }
-    if (defined %isnull) {
+    if (%isnull) {
         foreach my $name (keys(%isnull)) {
             if (!defined $::FORM{$name}) {
                 $::FORM{$name} = "";
