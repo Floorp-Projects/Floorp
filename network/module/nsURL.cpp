@@ -610,7 +610,7 @@ nsIInputStream* URLImpl::Open(PRInt32* aErrorCode)
   if (NS_OK == rv) {
     rv = inet->OpenBlockingStream(this, NULL, &in);
   }
-  // XXX:  The INetService should be released...
+  NS_IF_RELEASE(inet);
 
   *aErrorCode = rv;
   return in;
@@ -634,7 +634,7 @@ nsresult URLImpl::Open(nsIStreamListener *aListener)
   if (NS_OK == rv) {
     rv = inet->OpenStream(this, aListener);
   }
-  // XXX:  The INetService should be released...
+  NS_IF_RELEASE(inet);
   return rv;
 }
 

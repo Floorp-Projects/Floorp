@@ -90,9 +90,10 @@ int main(int argc, char **argv)
 {
   PL_InitializeEventsLib("");
   nsViewerApp* app = new nsNativeViewerApp();
+  NS_ADDREF(app);
   app->Initialize(argc, argv);
   app->Run();
-  delete app;
+  NS_RELEASE(app);
 
   return 0;
 }

@@ -537,7 +537,7 @@ void nsNetlibService::NetPollSocketsCallback(nsITimer* aTimer, void* aClosure)
 
 extern "C" {
 
-static nsNetlibService *pNetlib = NULL;
+static nsNetlibService *gNetlibService = nsnull;
 
 /*
  * Factory for creating instance of the NetlibService...
@@ -545,47 +545,76 @@ static nsNetlibService *pNetlib = NULL;
 NS_NET nsresult NS_NewINetService(nsINetService** aInstancePtrResult,
                                   nsISupports* aOuter)
 {
-    if (NULL != aOuter) {
+    if (nsnull != aOuter) {
         return NS_ERROR_NO_AGGREGATION;
     }
 
-    if (NULL == pNetlib) {
-        nsresult res;
-        res = NS_InitINetService(NULL);
-        if (NS_OK != res) {
-            return res;
-        }
+#ifdef XP_MAC
+    // Perform static initialization...
+    if (nsnull == netlibInit) {
+        netlibInit = new nsNetlibInit;
+    }
+#endif /* XP_MAC */
+
+    // The Netlib Service is created by the nsNetlibInit class...
+    if (nsnull == gNetlibService) {
+        return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    return pNetlib->QueryInterface(kINetServiceIID, (void**)aInstancePtrResult);
+    return gNetlibService->QueryInterface(kINetServiceIID, (void**)aInstancePtrResult);
 }
 
 NS_NET nsresult NS_InitINetService(nsINetContainerApplication *aContainer)
 {
     /* XXX: For now only allow a single instance of the Netlib Service */
-    if (NULL == pNetlib) {
-        pNetlib = new nsNetlibService(aContainer);
-        if (NULL == pNetlib) {
+    if (nsnull == gNetlibService) {
+        gNetlibService = new nsNetlibService(aContainer);
+        if (nsnull == gNetlibService) {
             return NS_ERROR_OUT_OF_MEMORY;
         }
     }
     else {
-        pNetlib->SetContainerApplication(aContainer);
+        gNetlibService->SetContainerApplication(aContainer);
     }
 
-    NS_ADDREF(pNetlib);
+    NS_ADDREF(gNetlibService);
     return NS_OK;
 }
 
 NS_NET nsresult NS_ShutdownINetService()
 {
-    nsNetlibService *service = pNetlib;
+    nsNetlibService *service = gNetlibService;
 
-    NS_IF_RELEASE(service);
+    // Release the container...
+    if (nsnull != service) {
+        gNetlibService->SetContainerApplication(nsnull);
+        NS_RELEASE(service);
+    }
     return NS_OK;
 }
 
 }; /* extern "C" */
+
+//
+// Class to manage static initialization of the Netlib DLL...
+//
+struct nsNetlibInit {
+  nsNetlibInit() {
+    gNetlibService = nsnull;
+    (void) NS_InitINetService(nsnull);
+  }
+
+  ~nsNetlibInit() {
+    NS_ShutdownINetService();
+    gNetlibService = nsnull;
+  }
+};
+
+#ifdef XP_MAC
+static nsNetlibInit* netlibInit = nsnull;
+#else
+static nsNetlibInit netlibInit;
+#endif
 
 
 /*

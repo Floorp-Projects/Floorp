@@ -85,6 +85,7 @@ protected:
   PRInt32 mRepeatCount;
   nsWebCrawler* mCrawler;
   PRBool mAllowPlugins;
+  PRBool mIsInitialized;
 };
 
 class nsNativeViewerApp : public nsViewerApp {

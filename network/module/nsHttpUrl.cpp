@@ -311,7 +311,7 @@ done:
 nsISupports* nsHttpUrlImpl::NewHttpUrlImpl(nsISupports* aOuter)
 {
     nsHttpUrlImpl* it;
-    nsISupports *result;
+    nsISupports *result = nsnull;
 
     it = new nsHttpUrlImpl(aOuter);
     if (nsnull != it) {
