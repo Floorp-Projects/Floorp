@@ -151,7 +151,7 @@ nsAccessibilityService::Observe(nsISupports *aSubject, const char *aTopic,
 NS_IMETHODIMP nsAccessibilityService::OnStateChange(nsIWebProgress *aWebProgress,
   nsIRequest *aRequest, PRUint32 aStateFlags, nsresult aStatus)
 {
-  const kRequiredFlags = STATE_IS_DOCUMENT | STATE_TRANSFERRING;
+  const PRUint32 kRequiredFlags = STATE_IS_DOCUMENT | STATE_TRANSFERRING;
   if ((aStateFlags & kRequiredFlags ) != kRequiredFlags) {
     return NS_OK;
   }
