@@ -1364,9 +1364,31 @@ popup > menuitem[menuactive="true"] {
 }
 
 .menu-left {
+  color: inherit;
   padding: 0px;
   border: 0px;
   width: 13px;
+  margin-right: 2px;
+}
+
+.menubar-left {
+  color: inherit;
+  padding: 0px;
+  border: 0px;
+  margin-right: 2px;
+}
+
+.menu-text {
+  color: inherit;
+  padding: 0px;
+  border: 0px;
+  margin-right: 2px;
+}
+
+.menubar-text {
+  color: inherit;
+  padding: 0px;
+  border: 0px;
   margin-right: 2px;
 }
 

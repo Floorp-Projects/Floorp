@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "License"); you may not use this file except in
@@ -191,8 +191,12 @@ nsTitledButtonFrame::AttributeChanged(nsIPresContext* aPresContext,
       shell->AppendReflowCommand(reflowCmd);
   }
 
-  if (aAttribute == nsXULAtoms::accesskey)
-    nsFrame::Invalidate(nsRect(0, 0, mRect.width, mRect.height), PR_FALSE);
+  if (aAttribute == nsXULAtoms::accesskey ||
+      aAttribute == nsHTMLAtoms::value ||
+      aAttribute == nsXULAtoms::crop) {
+      UpdateAccessUnderline();
+      nsFrame::Invalidate(nsRect(0, 0, mRect.width, mRect.height), PR_FALSE);
+  }
 
   // redraw
   mRenderer->Redraw();
@@ -219,6 +223,7 @@ nsTitledButtonFrame::nsTitledButtonFrame()
 	mAlign = NS_SIDE_TOP;
 	mCropType = CropRight;
 	mNeedsLayout = PR_TRUE;
+  mNeedsAccessUpdate = PR_TRUE;
 	mHasImage = PR_FALSE;
     mHasOnceBeenInMixedState = PR_FALSE;
     mRenderer = new nsTitledButtonRenderer();
@@ -404,7 +409,10 @@ nsTitledButtonFrame::UpdateImage(nsIPresContext&  aPresContext)
   }
 }
 
-
+#ifdef DEBUG_shaver
+#include <execinfo.h>
+static PRBool dump_stack = PR_FALSE;
+#endif
 
 NS_IMETHODIMP
 nsTitledButtonFrame::Paint(nsIPresContext& aPresContext,
@@ -412,7 +420,20 @@ nsTitledButtonFrame::Paint(nsIPresContext& aPresContext,
                                 const nsRect& aDirtyRect,
                                 nsFramePaintLayer aWhichLayer)
 {	
-	
+#ifdef DEBUG_shaver
+    if (dump_stack) {
+        fprintf(stderr, "Paint(%p)\n", this);
+        void *bt[15];
+        
+        int n = backtrace(bt, sizeof bt / sizeof (bt[0]));
+        if (n) {
+            char **names = backtrace_symbols(bt, n);
+            for (int i = 5; i < n; ++i)
+                printf("\t\t%s\n", names[i]);
+            free(names);
+        }
+    }
+#endif
 	const nsStyleDisplay* disp = (const nsStyleDisplay*)
 	mStyleContext->GetStyleData(eStyleStruct_Display);
 	if (!disp->mVisible)
@@ -451,105 +472,106 @@ nsTitledButtonFrame::LayoutTitleAndImage(nsIPresContext& aPresContext,
                                 const nsRect& aDirtyRect,
                                 nsFramePaintLayer aWhichLayer)
 {
-	// and do caculations if our size changed
-	if (mNeedsLayout == PR_FALSE)
-		 return;
+    // and do caculations if our size changed
+    if (mNeedsLayout == PR_FALSE)
+        return;
+    // given our rect try to place the image and text
+    // if they don't fit then crop the text, the image can't be squeezed.
 
-	 // given our rect try to place the image and text
-	 // if they don't fit then crop the text, the image can't be squeezed.
-
-	 nsRect rect; 
-	 mRenderer->GetButtonContentRect(nsRect(0,0,mRect.width,mRect.height), rect);
+    nsRect rect; 
+    mRenderer->GetButtonContentRect(nsRect(0,0,mRect.width,mRect.height), rect);
 
 	 // set up some variables we will use a lot. 
-	 nscoord bottom_y = rect.y + rect.height;
-	 nscoord top_y    = rect.y;
-	 nscoord right_x  = rect.x + rect.width;
-	 nscoord left_x   = rect.x;
-	 nscoord center_x   = rect.x + rect.width/2;
-	 nscoord center_y   = rect.y + rect.height/2;
+    nscoord bottom_y = rect.y + rect.height;
+    nscoord top_y    = rect.y;
+    nscoord right_x  = rect.x + rect.width;
+    nscoord left_x   = rect.x;
+    nscoord center_x   = rect.x + rect.width/2;
+    nscoord center_y   = rect.y + rect.height/2;
 
-   mCroppedTitle = "";
+    mCroppedTitle = "";
 
-   nscoord spacing = 0;
+    nscoord spacing = 0;
 
    // if we have a title or an image we need to do spacing
-   if (mTitle.Length() > 0 && mHasImage) 
-   {
-     spacing = mSpacing;
-   }
+    if (mTitle.Length() > 0 && mHasImage) 
+        {
+            spacing = mSpacing;
+        }
 
   
-		// for each type of alignment layout of the image and the text.
-			 switch (mAlign) {
-			  case NS_SIDE_BOTTOM: {
-				  // get title and center it
-				  CalculateTitleForWidth(aPresContext, aRenderingContext, rect.width);
+    // for each type of alignment layout of the image and the text.
+    switch (mAlign) {
+    case NS_SIDE_BOTTOM: {
+        // get title and center it
+        CalculateTitleForWidth(aPresContext, aRenderingContext, rect.width);
 
-          if (mHasImage) {
+        if (mHasImage) {
 
-				    // title top
-				    mTitleRect.x = center_x  - mTitleRect.width/2;
-				    mTitleRect.y = top_y;
+            // title top
+            mTitleRect.x = center_x  - mTitleRect.width/2;
+            mTitleRect.y = top_y;
 
-				    // image bottom center
-				    mImageRect.x = center_x - mImageRect.width/2;
-				    mImageRect.y = rect.y + (rect.height - mTitleRect.height - spacing)/2 - mImageRect.height/2 + mTitleRect.height + spacing;
-          } else {
-				    // title bottom
-				    mTitleRect.x = center_x - mTitleRect.width/2;
-				    mTitleRect.y = bottom_y - mTitleRect.height;	  
-          }
-			  }       
-			  break;
-			  case NS_SIDE_TOP:{
-				  // get title and center it
-				  CalculateTitleForWidth(aPresContext, aRenderingContext, rect.width);
+            // image bottom center
+            mImageRect.x = center_x - mImageRect.width/2;
+            mImageRect.y = rect.y + (rect.height - mTitleRect.height - spacing)/2 - mImageRect.height/2 + mTitleRect.height + spacing;
+        } else {
+            // title bottom
+            mTitleRect.x = center_x - mTitleRect.width/2;
+            mTitleRect.y = bottom_y - mTitleRect.height;	  
+        }
+    }       
+    break;
+    case NS_SIDE_TOP:{
+        // get title and center it
+        CalculateTitleForWidth(aPresContext, aRenderingContext, rect.width);
 
-          if (mHasImage) {
-				    // image top center
-				    mImageRect.x = center_x  - mImageRect.width/2;
-				    mImageRect.y = rect.y + (rect.height - mTitleRect.height - spacing)/2 - mImageRect.height/2 + spacing;
+        if (mHasImage) {
+            // image top center
+            mImageRect.x = center_x  - mImageRect.width/2;
+            mImageRect.y = rect.y + (rect.height - mTitleRect.height - spacing)/2 - mImageRect.height/2 + spacing;
 
-				    // title bottom
-				    mTitleRect.x = center_x - mTitleRect.width/2;
-				    mTitleRect.y = bottom_y - mTitleRect.height;
-          } else {
-				    mTitleRect.x = center_x  - mTitleRect.width/2;
-				    mTitleRect.y = top_y;
-          }
-			  }       
-			  break;
-			 case NS_SIDE_LEFT: {
-				  // get title
-				  CalculateTitleForWidth(aPresContext, aRenderingContext, rect.width - (mImageRect.width + spacing));
+            // title bottom
+            mTitleRect.x = center_x - mTitleRect.width/2;
+            mTitleRect.y = bottom_y - mTitleRect.height;
+        } else {
+            mTitleRect.x = center_x  - mTitleRect.width/2;
+            mTitleRect.y = top_y;
+        }
+    }       
+    break;
+    case NS_SIDE_LEFT: {
+        // get title
+        CalculateTitleForWidth(aPresContext, aRenderingContext, rect.width - (mImageRect.width + spacing));
 
- 				  // image left
-				  mImageRect.x = left_x;
-				  mImageRect.y = center_y  - mImageRect.height/2;
+        // image left
+        mImageRect.x = left_x;
+        mImageRect.y = center_y  - mImageRect.height/2;
 
-				  // text after image
-				  mTitleRect.x = mImageRect.x + mImageRect.width + spacing;
-				  mTitleRect.y = center_y - mTitleRect.height/2;
-			  }       
-			  break;
-			  case NS_SIDE_RIGHT: {
-				  CalculateTitleForWidth(aPresContext, aRenderingContext, rect.width - (mImageRect.width + spacing));
+        // text after image
+        mTitleRect.x = mImageRect.x + mImageRect.width + spacing;
+        mTitleRect.y = center_y - mTitleRect.height/2;
+    }       
+    break;
+    case NS_SIDE_RIGHT: {
+        CalculateTitleForWidth(aPresContext, aRenderingContext, rect.width - (mImageRect.width + spacing));
 
- 				  // image right
-				  mImageRect.x = right_x - mImageRect.width;
-				  mImageRect.y = center_y - mImageRect.height/2;
+        // image right
+        mImageRect.x = right_x - mImageRect.width;
+        mImageRect.y = center_y - mImageRect.height/2;
 
-  				  // text left of image
-				  mTitleRect.x = mImageRect.x - spacing - mTitleRect.width;
-				  mTitleRect.y = center_y  - mTitleRect.height/2;
+        // text left of image
+        mTitleRect.x = mImageRect.x - spacing - mTitleRect.width;
+        mTitleRect.y = center_y  - mTitleRect.height/2;
 
-			   }
-			  break;
-		   }
+    }
+    break;
+    }
 	 
-   // ok layout complete
-   mNeedsLayout = PR_FALSE;
+    // now that we've calculated the title, update the accesskey highlighting
+    UpdateAccessUnderline();
+    // ok layout complete
+    mNeedsLayout = PR_FALSE;
 }
 
 void 
@@ -722,6 +744,21 @@ nsTitledButtonFrame::CalculateTitleForWidth(nsIPresContext& aPresContext, nsIRen
     aRenderingContext.GetWidth(mCroppedTitle, mTitleRect.width);
 }
 
+void
+nsTitledButtonFrame::UpdateAccessUnderline()
+{
+    mAccesskeyIndex = -1;
+
+    nsAutoString accesskey;
+    mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::accesskey,
+                           accesskey);
+    if (accesskey == "")
+        return;                     // our work here is done
+    
+    mAccesskeyIndex = mCroppedTitle.Find(accesskey, PR_TRUE);
+    mNeedsAccessUpdate = PR_TRUE;
+}
+
 NS_IMETHODIMP
 nsTitledButtonFrame::PaintTitle(nsIPresContext& aPresContext,
                                 nsIRenderingContext& aRenderingContext,
@@ -750,57 +787,50 @@ nsTitledButtonFrame::PaintTitle(nsIPresContext& aPresContext,
 
 	   aRenderingContext.SetFont(fontStyle->mFont);
 
-     PRBool hasAccessKey = PR_FALSE;
-     nsString accesskey, value;
-     mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value);
-     mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::accesskey,
-                            accesskey);
+     if (mAccesskeyIndex != -1 && mNeedsAccessUpdate) {
+         // get all the underline-positioning stuff
 
-     /* XXX are attribute values always two byte? */
-     const PRUnichar *titleString, *accessString;
-     titleString = mCroppedTitle.GetUnicode();
-     if (accesskey != "") {
-       PRInt32 idx = mCroppedTitle.Find(accesskey, PR_TRUE);
-       if (idx != -1) {
-         hasAccessKey = PR_TRUE;
-         accessString = titleString + idx;
-       }
-     }
-                            
-     PRInt32 fontID;
-     nscoord beforeWidth, accessWidth, offset, size, baseline;
-     if (hasAccessKey) {
-       aRenderingContext.GetWidth(titleString, accessString - titleString,
-                                  beforeWidth, &fontID);
-       aRenderingContext.GetWidth(accessString, 1, accessWidth);
+         // XXX are attribute values always two byte?
+         const PRUnichar *titleString;
+         titleString = mCroppedTitle.GetUnicode();
+         if (mAccesskeyIndex)
+             aRenderingContext.GetWidth(titleString, mAccesskeyIndex,
+                                        mBeforeWidth);
+         else
+             mBeforeWidth = 0;
+         
+         aRenderingContext.GetWidth(titleString[mAccesskeyIndex],
+                                    mAccessWidth);
 
-       /* XXX?: is there a cheaper way to do this, since we're in layout? */
-       nsIFontMetrics *metrics;
-       aRenderingContext.GetFontMetrics(metrics);
-       metrics->GetUnderline(offset, size);
-       metrics->GetMaxAscent(baseline);
-       NS_RELEASE(metrics);
+         nscoord offset, baseline;
+         nsIFontMetrics *metrics;
+         aRenderingContext.GetFontMetrics(metrics);
+         metrics->GetUnderline(offset, mAccessUnderlineSize);
+         metrics->GetMaxAscent(baseline);
+         NS_RELEASE(metrics);
+         mAccessOffset = baseline - offset;
+         mNeedsAccessUpdate = PR_FALSE;
      }
-       
+
 	   // if disabled paint 
 	   if (PR_TRUE == mRenderer->isDisabled())
 	   {
 		   aRenderingContext.SetColor(NS_RGB(255,255,255));
 		   aRenderingContext.DrawString(mCroppedTitle, disabledRect.x, 
-                                    disabledRect.y, fontID);
-       if (hasAccessKey)
-         aRenderingContext.FillRect(disabledRect.x + beforeWidth,
-                                    disabledRect.y + baseline - offset,
-                                    accessWidth, size);
+                                    disabledRect.y);
+       if (mAccesskeyIndex != -1)
+         aRenderingContext.FillRect(disabledRect.x + mBeforeWidth,
+                                    disabledRect.y + mAccessOffset,
+                                    mAccessWidth, mAccessUnderlineSize);
 	   }
 
 	   aRenderingContext.SetColor(colorStyle->mColor);
-	   aRenderingContext.DrawString(mCroppedTitle, mTitleRect.x, mTitleRect.y,
-                                  fontID);
-     if (hasAccessKey)
-       aRenderingContext.FillRect(mTitleRect.x + beforeWidth,
-                                  mTitleRect.y + baseline - offset,
-                                  accessWidth, size);
+	   aRenderingContext.DrawString(mCroppedTitle, mTitleRect.x, mTitleRect.y);
+
+     if (mAccesskeyIndex != -1)
+       aRenderingContext.FillRect(mTitleRect.x + mBeforeWidth,
+                                  mTitleRect.y + mAccessOffset,
+                                  mAccessWidth, mAccessUnderlineSize);
 
    }
 
@@ -856,7 +886,7 @@ nsTitledButtonFrame::Reflow(nsIPresContext&   aPresContext,
                      nsReflowStatus&          aStatus)
 {
   // redraw us on a reflow
-  
+  mNeedsAccessUpdate = PR_TRUE;
   if (eReflowReason_Incremental == aReflowState.reason) {
     nsIFrame* targetFrame;
     

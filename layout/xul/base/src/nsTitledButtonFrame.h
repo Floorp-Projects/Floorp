@@ -91,7 +91,7 @@ protected:
 
   CheckState GetCurrentCheckState();
   void SetCurrentCheckState(CheckState aState);
-  
+  void UpdateAccessUnderline();
 
   virtual void MouseClicked(nsIPresContext & aPresContext);
 
@@ -169,6 +169,14 @@ private:
   nscoord mSpacing;
   nsTitledButtonRenderer* mRenderer;
   PRBool mHasImage;
+
+  // accesskey highlighting
+  PRBool mNeedsAccessUpdate;
+  PRInt32 mAccesskeyIndex;
+  nscoord mBeforeWidth, mAccessWidth, mAccessUnderlineSize, mAccessOffset;
+
+ // nsIPopUpMenu * mPopUpMenu;
+ // PRBool         mMenuIsPoppedUp;
  
 }; // class nsTitledButtonFrame
 
