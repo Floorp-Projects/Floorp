@@ -808,10 +808,14 @@ endif
 endif
 
 $(HOST_PROGRAM): $(HOST_PROGOBJS) $(HOST_EXTRA_DEPS) Makefile Makefile.in
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+	$(LD) -OUT:$@ $(LDFLAGS) $(HOST_OBJS) $(HOST_LIBS) $(EXTRA_LIBS) /ST:0x100000
+else
 ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
 	$(HOST_LD) /NOLOGO /OUT:$@ /PDB:$(PDBFILE) $(HOST_OBJS) $(WIN32_EXE_LDFLAGS) $(HOST_LIBS) $(EXTRA_LIBS)
 else
 	$(HOST_CC) -o $@ $(HOST_CFLAGS) $(HOST_LDFLAGS) $(HOST_PROGOBJS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
+endif
 endif
 
 #
@@ -1013,7 +1017,6 @@ ifndef COMPILER_DEPEND
 #
 _MDDEPFILE = $(MDDEPDIR)/$(@F).pp
 
-ifneq ($(OS_ARCH),OS2)
 ifeq ($(OS_ARCH),WINNT)
 define MAKE_DEPS_AUTO
 if test -d $(@D); then \
@@ -1035,7 +1038,6 @@ if test -d $(@D); then \
 fi
 endef
 endif # WINNT
-endif # OS2
 
 endif # !COMPILER_DEPEND
 
@@ -1496,7 +1498,6 @@ else # ! COMPILER_DEPEND
 
 ifndef MOZ_AUTO_DEPS
 
-ifneq ($(OS_ARCH),OS2)
 ifeq ($(OS_ARCH),WINNT)
 define MAKE_DEPS_NOAUTO
 	set -e ; \
@@ -1512,7 +1513,6 @@ define MAKE_DEPS_NOAUTO
 	mv $@ $@.old && cat $@.old | sed "s|^$(<D)/||g" > $@ && rm -f $@.old
 endef
 endif # WINNT
-endif # OS2
 
 $(MDDEPDIR)/%.pp: %.c
 	$(REPORT_BUILD)
