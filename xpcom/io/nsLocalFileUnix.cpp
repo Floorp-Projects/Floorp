@@ -863,7 +863,7 @@ nsLocalFile::GetLastModificationDateOfLink(PRInt64 *aLastModificationDateOfLink)
     mLL_II2L(0, (PRUint32)sbuf.st_mtime, *aLastModificationDateOfLink);
 
     // lstat returns st_mtime in seconds!
-    *aLastModificationDate *= PR_MSEC_PER_SEC;
+    *aLastModificationDateOfLink *= PR_MSEC_PER_SEC;
 
     return NS_OK;
 }
