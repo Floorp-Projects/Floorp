@@ -104,11 +104,16 @@ NS_IMETHODIMP
 nsPrefMigration::ProcessPrefs(char* oldProfilePathStr, char* newProfilePathStr, nsresult *aResult)
 {
 
-  char *oldMailPathStr, *oldNewsPathStr;
-  char *newMailPathStr, *newNewsPathStr;
+#ifdef XP_MAC
+  aResult = NS_ERROR_FAILURE;
+  return NS_OK;
+#endif
+  
+  char *oldPOPMailPathStr, *oldIMAPMailPathStr, *oldNewsPathStr;
+  char *newPOPMailPathStr, *newIMAPMailPathStr, *newNewsPathStr;
 
-  nsFileSpec oldMailPath, oldNewsPath;
-  nsFileSpec newMailPath, newNewsPath;
+  nsFileSpec oldPOPMailPath, oldNewsPath;
+  nsFileSpec newPOPMailPath, newNewsPath;
 
   PRUint32 totalMailSize = 0, totalNewsSize = 0, totalProfileSize = 0, totalSize = 0,
            numberOfMailFiles = 0, numberOfNewsFiles = 0, numberOfProfileFiles = 0;
@@ -119,9 +124,9 @@ nsPrefMigration::ProcessPrefs(char* oldProfilePathStr, char* newProfilePathStr, 
 #endif
 
 
-  if((newMailPathStr = (char*) PR_MALLOC(_MAX_PATH)) == NULL)
+  if((newPOPMailPathStr = (char*) PR_MALLOC(_MAX_PATH)) == NULL)
   {
-    PR_Free(newMailPathStr);
+    PR_Free(newPOPMailPathStr);
     *aResult = NS_ERROR_OUT_OF_MEMORY;
     return 0;
   }
@@ -133,9 +138,9 @@ nsPrefMigration::ProcessPrefs(char* oldProfilePathStr, char* newProfilePathStr, 
     return 0;
   }
 
-  if((oldMailPathStr = (char*) PR_MALLOC(_MAX_PATH)) == NULL)
+  if((oldPOPMailPathStr = (char*) PR_MALLOC(_MAX_PATH)) == NULL)
   {
-    PR_Free(oldMailPathStr);
+    PR_Free(oldPOPMailPathStr);
     *aResult = NS_ERROR_OUT_OF_MEMORY;
     return 0;
   }
@@ -157,19 +162,19 @@ nsPrefMigration::ProcessPrefs(char* oldProfilePathStr, char* newProfilePathStr, 
   }
 
   /* Create the new mail directory from the setting in prefs.js or a default */
-  if(GetDirFromPref(newProfilePathStr, "mail.directory", newMailPathStr, oldMailPathStr) == NS_OK)
+  if(GetDirFromPref(newProfilePathStr, "mail.directory", newPOPMailPathStr, oldPOPMailPathStr) == NS_OK)
   {
     /* convert back to nsFileSpec */
-    oldMailPath = oldMailPathStr;
-    newMailPath = newMailPathStr;
+    oldPOPMailPath = oldPOPMailPathStr;
+    newPOPMailPath = newPOPMailPathStr;
   }
   else
   {
     /* use the default locations */
-    oldMailPath = oldProfilePathStr;
-    oldMailPath += "Mail";
-    newMailPath = newProfilePathStr;
-    newMailPath += "Mail";
+    oldPOPMailPath = oldProfilePathStr;
+    oldPOPMailPath += "Mail";
+    newPOPMailPath = newProfilePathStr;
+    newPOPMailPath += "Mail";
   }
 
   /* Create the new news directory from the setting in prefs.js or a default */
@@ -190,22 +195,28 @@ nsPrefMigration::ProcessPrefs(char* oldProfilePathStr, char* newProfilePathStr, 
   nsFileSpec newProfilePath(newProfilePathStr); /* Ditto for the profile's new 5.x root dir         */
   
   success = GetSizes(oldProfilePath, PR_FALSE, &totalProfileSize);
-  success = GetSizes(oldMailPath, PR_TRUE, &totalMailSize);
+  success = GetSizes(oldPOPMailPath, PR_TRUE, &totalMailSize);
   success = GetSizes(oldNewsPath, PR_TRUE, &totalNewsSize);
 
-  if(CheckForSpace(newMailPath, totalMailSize) != NS_OK)
-	  return -1;  /* Need error code for not enough space */
+  if(CheckForSpace(newPOPMailPath, totalMailSize) != NS_OK)
+  {
+    *aResult = NS_ERROR_ABORT;
+	  return NS_ERROR_ABORT;  /* Need error code for not enough space */
+  }
 
   if(CheckForSpace(newNewsPath, totalNewsSize) != NS_OK)
-    return -1;
+  {
+    *aResult = NS_ERROR_ABORT;
+    return NS_ERROR_ABORT;
+  }
 
-  PR_MkDir(newMailPath, PR_RDWR);
+  PR_MkDir(newPOPMailPath, PR_RDWR);
   PR_MkDir(newNewsPath, PR_RDWR);
 
 
   success = DoTheCopy(oldProfilePath, newProfilePath, PR_FALSE);
   
-  success = DoTheCopy(oldMailPath, newMailPath, PR_TRUE);
+  success = DoTheCopy(oldPOPMailPath, newPOPMailPath, PR_TRUE);
 
   success = DoTheCopy(oldNewsPath, newNewsPath, PR_TRUE);
 
@@ -213,10 +224,12 @@ nsPrefMigration::ProcessPrefs(char* oldProfilePathStr, char* newProfilePathStr, 
   success = DoSpecialUpdates(newProfilePath);
 
 
-  PR_Free(oldMailPathStr);
+  PR_Free(oldPOPMailPathStr);
   PR_Free(oldNewsPathStr);
-  PR_Free(newMailPathStr);
+  PR_Free(newPOPMailPathStr);
   PR_Free(newNewsPathStr);
+
+  *aResult = NS_OK;
 
   return NS_OK;
 }
