@@ -375,6 +375,12 @@ AC_ARG_ENABLE(pthreads,
 	    AC_CHECK_LIB(pthread, pthread_create, USE_PTHREADS=1)
         fi] )
 
+AC_ARG_ENABLE(mail-compose,
+[  --enable-mail-compose   enable old Messenger mail composer (broken)],
+	[if test "$enableval" = "yes"; then
+	    MOZ_MAIL_COMPOSE=1
+	fi])
+
 AC_SUBST(MOZ_FE)
 AC_SUBST(MOZ_SECURITY)
 AC_SUBST(NO_SECURITY)
@@ -394,6 +400,7 @@ AC_SUBST(MOZ_USER_DIR)
 AC_SUBST(MOZ_SMART_MAIL)
 AC_SUBST(MOZ_DOM)
 AC_SUBST(USE_PTHREADS)
+AC_SUBST(MOZ_MAIL_COMPOSE)
 
 dnl Checks for X libraries.
 dnl Ordering is important.
@@ -665,6 +672,7 @@ lib/libparse/Makefile
 lib/libpics/Makefile
 lib/libpwcac/Makefile
 lib/libstyle/Makefile
+lib/mailto/Makefile
 lib/mariner/Makefile
 lib/mariner/public/Makefile
 lib/mariner/src/Makefile
