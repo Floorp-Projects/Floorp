@@ -86,17 +86,41 @@ NS_IMETHODIMP nsXULWindow::GetPrimaryContentShell(nsIDocShellTreeItem**
    aDocShellTreeItem)
 {
    NS_ENSURE_ARG_POINTER(aDocShellTreeItem);
+   *aDocShellTreeItem = nsnull;
 
-   //XXX First Check
-   NS_ERROR("Not Yet Implemented");
+   PRInt32 count = mContentShells.Count();
+   for(PRInt32 i = 0; i < count; i++)
+      {
+      nsContentShellInfo* shellInfo = (nsContentShellInfo*)mContentShells.ElementAt(i);
+      if(shellInfo->primary)
+         {
+         *aDocShellTreeItem = shellInfo->child;
+         NS_ADDREF(*aDocShellTreeItem);
+         return NS_OK;
+         }
+      }
+
    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsXULWindow::GetContentShellById(const PRUnichar* aID, 
    nsIDocShellTreeItem** aDocShellTreeItem)
 {
-   //XXX First Check
-   NS_ERROR("Not Yet Implemented");
+   NS_ENSURE_ARG_POINTER(aDocShellTreeItem);
+   *aDocShellTreeItem = nsnull;
+
+   PRInt32 count = mContentShells.Count();
+   for(PRInt32 i = 0; i < count; i++)
+      {
+      nsContentShellInfo* shellInfo = (nsContentShellInfo*)mContentShells.ElementAt(i);
+      if(shellInfo->id == aID)
+         {
+         *aDocShellTreeItem = shellInfo->child;
+         NS_ADDREF(*aDocShellTreeItem);
+         return NS_OK;
+         }
+      }
+
    return NS_ERROR_FAILURE;
 }
 
@@ -214,6 +238,16 @@ NS_IMETHODIMP nsXULWindow::Create()
 
 NS_IMETHODIMP nsXULWindow::Destroy()
 {
+   // Remove our ref on the content shells
+   PRInt32 count;
+   count = mContentShells.Count();
+   for(PRInt32 i = 0; i < count; i++)
+      {
+      nsContentShellInfo* shellInfo = (nsContentShellInfo*)(mContentShells.ElementAt(i));
+      delete shellInfo;
+      }
+   mContentShells.Clear();
+
    if(mDocShell)
       {
       nsCOMPtr<nsIBaseWindow> shellAsWin(do_QueryInterface(mDocShell));
@@ -525,5 +559,17 @@ NS_IMETHODIMP nsXULWindow::PersistPositionAndSize(PRBool aPosition, PRBool aSize
 
 //*****************************************************************************
 // nsXULWindow: Accessors
+//*****************************************************************************
+
+//*****************************************************************************
+//*** nsContentShellInfo: Object Management
 //*****************************************************************************   
 
+nsContentShellInfo::nsContentShellInfo(const nsString& aID, PRBool aPrimary, 
+   nsIDocShellTreeItem* aContentShell) : id(aID), primary(aPrimary), child(aContentShell)
+{
+}
+
+nsContentShellInfo::~nsContentShellInfo()
+{
+}
