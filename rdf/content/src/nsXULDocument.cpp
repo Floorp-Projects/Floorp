@@ -38,6 +38,8 @@
 #include "nsIContent.h"
 #include "nsIDOMElementObserver.h"
 #include "nsIDOMEventCapturer.h"
+#include "nsIDOMEvent.h"
+#include "nsIPrivateDOMEvent.h"
 #include "nsIDOMNodeObserver.h"
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsIDOMSelection.h"
@@ -111,6 +113,7 @@ static NS_DEFINE_IID(kICSSParserIID,              NS_ICSS_PARSER_IID); // XXX gr
 static NS_DEFINE_IID(kIContentIID,                NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIDTDIID,                    NS_IDTD_IID);
 static NS_DEFINE_IID(kIDOMScriptObjectFactoryIID, NS_IDOM_SCRIPT_OBJECT_FACTORY_IID);
+static NS_DEFINE_IID(kIPrivateDOMEventIID,        NS_IPRIVATEDOMEVENT_IID);
 static NS_DEFINE_IID(kIDocumentIID,               NS_IDOCUMENT_IID);
 static NS_DEFINE_IID(kIHTMLContentContainerIID,   NS_IHTMLCONTENTCONTAINER_IID);
 static NS_DEFINE_IID(kIHTMLStyleSheetIID,         NS_IHTML_STYLE_SHEET_IID);
@@ -2123,7 +2126,52 @@ XULDocumentImpl::HandleDOMEvent(nsIPresContext& aPresContext,
                             PRUint32 aFlags,
                             nsEventStatus& aEventStatus)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult ret = NS_OK;
+  nsIDOMEvent* domEvent = nsnull;
+
+  if (NS_EVENT_FLAG_INIT == aFlags) {
+    aDOMEvent = &domEvent;
+  }
+  
+  //Capturing stage
+  if (NS_EVENT_FLAG_BUBBLE != aFlags) {
+    // XXX Check back with nsGenericDocument.cpp later to find out if this
+    // has been implemented.
+  }
+  
+  //Local handling stage
+  if (nsnull != mListenerManager) {
+    mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, aFlags, aEventStatus);
+  }
+
+  //Bubbling stage
+  if (NS_EVENT_FLAG_CAPTURE != aFlags && nsnull != mScriptContextOwner) {
+    nsIScriptGlobalObject* global;
+    if (NS_OK == mScriptContextOwner->GetScriptGlobalObject(&global)) {
+      global->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_BUBBLE, aEventStatus);
+      NS_RELEASE(global);
+    }
+  }
+
+  if (NS_EVENT_FLAG_INIT == aFlags) {
+    // We're leaving the DOM event loop so if we created a DOM event, release here.
+    if (nsnull != *aDOMEvent) {
+      nsrefcnt rc;
+      NS_RELEASE2(*aDOMEvent, rc);
+      if (0 != rc) {
+      //Okay, so someone in the DOM loop (a listener, JS object) still has a ref to the DOM Event but
+      //the internal data hasn't been malloc'd.  Force a copy of the data here so the DOM Event is still valid.
+        nsIPrivateDOMEvent *privateEvent;
+        if (NS_OK == (*aDOMEvent)->QueryInterface(kIPrivateDOMEventIID, (void**)&privateEvent)) {
+          privateEvent->DuplicatePrivateData();
+          NS_RELEASE(privateEvent);
+        }
+      }
+    }
+    aDOMEvent = nsnull;
+  }
+
+  return ret;
 }
 
 
