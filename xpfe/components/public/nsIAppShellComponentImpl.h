@@ -113,9 +113,9 @@ public:
         if ( !mAppShell ) {
             if ( mServiceMgr ) {
                 nsCID cid = NS_APPSHELL_SERVICE_CID;
-                nsresult rv = mServiceMgr->GetService( cid,
-                                                       nsIAppShellService::GetIID(),
-                                                       (nsISupports**)&mAppShell );
+                mServiceMgr->GetService( cid,
+                                         nsIAppShellService::GetIID(),
+                                         (nsISupports**)&mAppShell );
             }
         }
         return mAppShell;
@@ -315,13 +315,13 @@ NSRegisterSelf( nsISupports* aServiceMgr, const char* path ) { \
                     if ( NS_SUCCEEDED( rv ) ) { \
                         registry->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry); \
                         char buffer[256]; \
-                        char *cid = className::GetCID().ToString(); \
+                        char *cidString = className::GetCID().ToString(); \
                         PR_snprintf( buffer, \
                                      sizeof buffer, \
                                      "%s/%s", \
                                      NS_IAPPSHELLCOMPONENT_KEY, \
-                                     cid ? cid : "unknown" ); \
-                        delete [] cid; \
+                                     cidString ? cidString : "unknown" ); \
+                        delete [] cidString; \
                         nsIRegistry::Key key; \
                         rv = registry->AddSubtree( nsIRegistry::Common, \
                                                    buffer, \
