@@ -71,6 +71,12 @@ public class ToolErrorReporter implements ErrorReporter {
         return getMessage(messageId, args);
     }
 
+    public static String getMessage(String messageId, Object arg1, Object arg2) 
+    {
+        Object[] args = { arg1, arg2 };
+        return getMessage(messageId, args);
+    }
+
     public static String getMessage(String messageId, Object[] args) {
         Context cx = Context.getCurrentContext();
         Locale locale = cx == null ? Locale.getDefault() : cx.getLocale();

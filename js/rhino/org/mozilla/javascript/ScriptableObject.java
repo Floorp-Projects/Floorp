@@ -606,12 +606,15 @@ public abstract class ScriptableObject implements Scriptable {
     /**
      * Defines JavaScript objects from a Java class that implements Scriptable.
      *
+     * If the given class implements the <code>ScopeInitializer</code>
+     * interface, then its instance is constructed and <code>scopeInit</code>
+     * is called upon it and no further initialization is done.
+     *
      * If the given class has a method
      * <pre>
      * static void init(Scriptable scope);</pre>
      *
-     * then it is invoked and no further initialization is done and the
-     * result of the invocation will be returned.<p>
+     * then it is invoked and no further initialization is done.<p>
      *
      * However, if no such a method is found, then the class's constructors and
      * methods are used to initialize a class in the following manner.<p>
@@ -737,6 +740,13 @@ public abstract class ScriptableObject implements Scriptable {
                InvocationTargetException, ClassDefinitionException,
                PropertyException
     {
+        if (ScopeInitializerClass.isAssignableFrom(clazz)) {
+            ScopeInitializer setup = (ScopeInitializer)clazz.newInstance();
+            Context cx = Context.getContext();
+            setup.scopeInit(cx, scope, sealed);
+            return;
+        }
+        
         Method[] methods = FunctionObject.getMethodList(clazz);
         for (int i=0; i < methods.length; i++) {
             if (!methods[i].getName().equals("init"))
@@ -981,11 +991,7 @@ public abstract class ScriptableObject implements Scriptable {
             Scriptable dest = prefix == staticFunctionPrefix
                               ? ctor
                               : proto;
-            if (dest instanceof ScriptableObject) {
-                ((ScriptableObject) dest).defineProperty(name, f, DONTENUM);
-            } else {
-                dest.put(name, dest, f);
-            }
+            defineProperty(dest, name, f, DONTENUM);
             if (sealed) {
                 f.sealObject();
                 f.addPropertyAttribute(READONLY);
@@ -1030,6 +1036,25 @@ public abstract class ScriptableObject implements Scriptable {
         }
     }
 
+    /**
+     * Utility method to add properties to arbitrary Scriptable object.
+     * If destination is instance of ScriptableObject, calls 
+     * defineProperty there, otherwise calls put in destination 
+     * ignoring attributes
+     */
+    public static void defineProperty(Scriptable destination, 
+                                      String propertyName, Object value,
+                                      int attributes)
+    {
+        if (destination instanceof ScriptableObject) {
+            ScriptableObject obj = (ScriptableObject)destination;
+            obj.defineProperty(propertyName, value, attributes);
+        }
+        else {
+            destination.put(propertyName, destination, value);
+        }
+    }
+ 
     /**
      * Define a JavaScript property with getter and setter side effects.
      *
@@ -1762,4 +1787,5 @@ public abstract class ScriptableObject implements Scriptable {
         boolean setterReturnsValue;
     }
 
+    private static final Class ScopeInitializerClass = ScopeInitializer.class;
 }

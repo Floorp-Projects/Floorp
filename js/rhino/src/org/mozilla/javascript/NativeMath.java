@@ -43,31 +43,16 @@ package org.mozilla.javascript;
  */
 
 public class NativeMath extends ScriptableObject 
-    implements IdFunction.Master
+    implements IdFunction.Master, ScopeInitializer
 {
-
-    public static Scriptable init(Scriptable scope) {
-        NativeMath m = new NativeMath();
-        Context cx = Context.getContext();
-        m.scopeInit(cx, scope, false);
-        return m;
-    }
-
-    public NativeMath() { }
-    
     public void scopeInit(Context cx, Scriptable scope, boolean sealed) {
         setPrototype(getObjectPrototype(scope));
         setParentScope(scope);
         if (sealed) {
             sealObject();
         }
-        if (scope instanceof ScriptableObject) {
-            ((ScriptableObject)scope).defineProperty("Math", this,
-                                                     ScriptableObject.DONTENUM);
-        }
-        else {
-            scope.put("Math", scope, this);
-        }
+        ScriptableObject.defineProperty
+            (scope, "Math", this, ScriptableObject.DONTENUM);
     }
 
     public String getClassName() { return "Math"; }
@@ -268,7 +253,8 @@ public class NativeMath extends ScriptableObject
         for (int i = 0; i < args.length; i++) {
             double d = ScriptRuntime.toNumber(args[i]);
             if (d != d) return d;
-            if (result < d) result = d;
+            // if (result < d) result = d; does not work due to -0.0 >= +0.0
+            result = Math.max(result, d);
         }
         return result;
     }
@@ -280,6 +266,7 @@ public class NativeMath extends ScriptableObject
         for (int i = 0; i < args.length; i++) {
             double d = ScriptRuntime.toNumber(args[i]);
             if (d != d) return d;
+            // if (result > d) result = d; does not work due to -0.0 >= +0.0
             result = Math.min(result, d);
         }
         return result;
@@ -324,64 +311,54 @@ public class NativeMath extends ScriptableObject
 
     private double js_tan(double x) { return Math.tan(x); }
     
-    private static int nameToId(String s) {
-        int c;
-        int id = 0;
-        String guess = null;
-        L:switch (s.length()) {
-        case 1: if (s.charAt(0)=='E') return Id_E; 
-            break L;
-        case 2: if (s.charAt(0)=='P'&&s.charAt(1)=='I') return Id_PI; 
-            break L;
-        case 3:    switch (s.charAt(0)) {
-            case 'L': if (s.charAt(1)=='N'&&s.charAt(2)=='2') return Id_LN2;
-                break L;
-            case 'a': if (s.charAt(1)=='b'&&s.charAt(2)=='s') return Id_abs; 
-                break L;
-            case 'c': if (s.charAt(1)=='o'&&s.charAt(2)=='s') return Id_cos; 
-                break L;
-            case 'e': if (s.charAt(1)=='x'&&s.charAt(2)=='p') return Id_exp; 
-                break L;
-            case 'l': if (s.charAt(1)=='o'&&s.charAt(2)=='g') return Id_log; 
-                break L;
-            case 'm': c=s.charAt(1);
-                if (c=='a') { if (s.charAt(2)=='x') return Id_max; } 
-                else if (c=='i') { if (s.charAt(2)=='n') return Id_min; } 
-                break L;
-            case 'p': if (s.charAt(1)=='o'&&s.charAt(2)=='w') return Id_pow; 
-                break L;
-            case 's': if (s.charAt(1)=='i'&&s.charAt(2)=='n') return Id_sin; 
-                break L;
-            case 't': if (s.charAt(1)=='a'&&s.charAt(2)=='n') return Id_tan; 
-                break L;
-            }
-            break L;
-        case 4: switch (s.charAt(1)) {
-            case 'N': guess="LN10";id=Id_LN10; break L;
-            case 'c': guess="acos";id=Id_acos; break L;
-            case 's': guess="asin";id=Id_asin; break L;
-            case 't': guess="atan";id=Id_atan; break L;
-            case 'e': guess="ceil";id=Id_ceil; break L;
-            case 'q': guess="sqrt";id=Id_sqrt; break L;
-            }
-            break L;
-        case 5: switch (s.charAt(0)) {
-            case 'S': guess="SQRT2";id=Id_SQRT2; break L;
-            case 'L': guess="LOG2E";id=Id_LOG2E; break L;
-            case 'a': guess="atan2";id=Id_atan2; break L;
-            case 'f': guess="floor";id=Id_floor; break L;
-            case 'r': guess="round";id=Id_round; break L;
-            }
-            break L;
-        case 6: c=s.charAt(0);
-            if (c=='L') { guess="LOG10E";id=Id_LOG10E; }
-            else if (c=='r') { guess="random";id=Id_random; }
-            break L;
-        case 7: guess="SQRT1_2";id=Id_SQRT1_2;
-            break L;
-        }
+// #string_id_map#
 
-        return (guess != null && s.equals(guess)) ? id : 0;
+    private static int nameToId(String s) {
+        int id;
+// #generated# Last update: 2001-03-23 13:50:14 GMT+01:00
+        L0: { id = 0; String X = null; int c;
+            L: switch (s.length()) {
+            case 1: if (s.charAt(0)=='E') {id=Id_E; break L0;} break L;
+            case 2: if (s.charAt(0)=='P' && s.charAt(1)=='I') {id=Id_PI; break L0;} break L;
+            case 3: switch (s.charAt(0)) {
+                case 'L': if (s.charAt(2)=='2' && s.charAt(1)=='N') {id=Id_LN2; break L0;} break L;
+                case 'a': if (s.charAt(2)=='s' && s.charAt(1)=='b') {id=Id_abs; break L0;} break L;
+                case 'c': if (s.charAt(2)=='s' && s.charAt(1)=='o') {id=Id_cos; break L0;} break L;
+                case 'e': if (s.charAt(2)=='p' && s.charAt(1)=='x') {id=Id_exp; break L0;} break L;
+                case 'l': if (s.charAt(2)=='g' && s.charAt(1)=='o') {id=Id_log; break L0;} break L;
+                case 'm': c=s.charAt(2);
+                    if (c=='n') { if (s.charAt(1)=='i') {id=Id_min; break L0;} }
+                    else if (c=='x') { if (s.charAt(1)=='a') {id=Id_max; break L0;} }
+                    break L;
+                case 'p': if (s.charAt(2)=='w' && s.charAt(1)=='o') {id=Id_pow; break L0;} break L;
+                case 's': if (s.charAt(2)=='n' && s.charAt(1)=='i') {id=Id_sin; break L0;} break L;
+                case 't': if (s.charAt(2)=='n' && s.charAt(1)=='a') {id=Id_tan; break L0;} break L;
+                } break L;
+            case 4: switch (s.charAt(1)) {
+                case 'N': X="LN10";id=Id_LN10; break L;
+                case 'c': X="acos";id=Id_acos; break L;
+                case 'e': X="ceil";id=Id_ceil; break L;
+                case 'q': X="sqrt";id=Id_sqrt; break L;
+                case 's': X="asin";id=Id_asin; break L;
+                case 't': X="atan";id=Id_atan; break L;
+                } break L;
+            case 5: switch (s.charAt(0)) {
+                case 'L': X="LOG2E";id=Id_LOG2E; break L;
+                case 'S': X="SQRT2";id=Id_SQRT2; break L;
+                case 'a': X="atan2";id=Id_atan2; break L;
+                case 'f': X="floor";id=Id_floor; break L;
+                case 'r': X="round";id=Id_round; break L;
+                } break L;
+            case 6: c=s.charAt(0);
+                if (c=='L') { X="LOG10E";id=Id_LOG10E; }
+                else if (c=='r') { X="random";id=Id_random; }
+                break L;
+            case 7: X="SQRT1_2";id=Id_SQRT1_2; break L;
+            }
+            if (X!=null && X!=s && !X.equals(s)) id = 0;
+        }
+// #/generated#
+        return id;
     }
         
     private static final int 
@@ -414,6 +391,8 @@ public class NativeMath extends ScriptableObject
         Id_LOG10E       = 24,
         Id_SQRT1_2      = 25,
         Id_SQRT2        = 26;
+
+// #/string_id_map#
         
     private static final Double
         E       = new Double(Math.E),
