@@ -77,13 +77,12 @@ for my $k (@revs) {
         next;
     }
     my $prevrev = &PrevRev($rev);
-    
-    # this doesn't handle files in the attic
     my $fullname = "$cvsroot/$dir/$file,v";
-    if (IsHidden($fullname)) {
+    $fullname = "$cvsroot/$dir/Attic/$file,v" if (! -r $fullname);
+    if (! -r $fullname || IsHidden($fullname)) {
         next;
     }
-    open( DIFF, "$rcsdiffcommand -u -r$prevrev -r$rev" . escape_shell($fullname) ." 2>&1|" );
+    open( DIFF, "$rcsdiffcommand -r$prevrev -r$rev -u " . shell_escape($fullname) ." 2>&1|" ) || die "rcsdiff failed\n";
     while(<DIFF>){
 		if (($_ =~ /RCS file/) || ($_ =~ /rcsdiff/)) { 
 			$_ =~ s/(^.*)(.*\/)(.*)/$1 $3/;
