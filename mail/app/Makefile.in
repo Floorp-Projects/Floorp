@@ -290,6 +290,7 @@ libs:: $(PROGRAM)
 	mkdir -p $(DIST)/$(APP_NAME).app/Contents/Plug-Ins
 	cp -R $(DIST)/package/PrintPDE.plugin $(DIST)/$(APP_NAME).app/Contents/Plug-Ins/
 	cp -RL $(DIST)/branding/thunderbird.icns $(DIST)/$(APP_NAME).app/Contents/Resources/thunderbird.icns
+	cp -RL $(srcdir)/macbuild/mail-biff-badge.png 	$(DIST)/$(APP_NAME).app/Contents/Resources/mail-biff-badge.png
 	echo -n APPLMOZM > $(DIST)/$(APP_NAME).app/Contents/PkgInfo
 #       remove CVS dirs from packaged app
 	find $(DIST)/$(APP_NAME).app -type d -name "CVS" -prune -exec rm -rf {} \;
