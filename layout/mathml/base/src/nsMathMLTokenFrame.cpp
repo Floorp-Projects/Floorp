@@ -276,7 +276,7 @@ nsMathMLTokenFrame::AttributeChanged(nsIContent*     aContent,
 {
   if (nsMathMLAtoms::lquote_ == aAttribute ||
       nsMathMLAtoms::rquote_ == aAttribute) {
-    SetQuotes(aPresContext);
+    SetQuotes(GetPresContext());
   }
 
   return nsMathMLContainerFrame::
