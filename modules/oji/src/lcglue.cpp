@@ -372,7 +372,11 @@ enter_js_from_java_impl(JNIEnv *jEnv, char **errp,
 	}
 
 	// Setup tls to maintain a stack of security contexts.
-	if ((pNSIPrincipaArray != NULL) && (pNSISecurityContext != NULL)) {
+	// [Fix to #5427: test numPrincipals rather than pNSIPrincipaArray. This 
+	// allows the caller to pass in the address of a null reference to an 
+	// principal array without having to check it. jeff.dyer@compilercompany.com,
+	// Oct-4-1999]
+	if ((numPrincipals!=0) && (pNSISecurityContext != NULL)) {
 		JVMSecurityStack *pSecInfoNew    = new JVMSecurityStack;
 		pSecInfoNew->pNSIPrincipaArray   = pNSIPrincipaArray;
 		pSecInfoNew->numPrincipals       = numPrincipals;
