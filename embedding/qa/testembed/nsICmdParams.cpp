@@ -124,7 +124,7 @@ void CnsICmdParams::GetDoubleValueTest(double value, const char *stateType, int 
 		cmdParamObj->SetDoubleValue(stateType, value);
 		rv = cmdParamObj->GetDoubleValue(stateType, &retval);
 		RvTestResult(rv, "GetDoubleValue test", displayMode);
-		FormatAndPrintOutput("GetLongValue() return double = ", retval, displayMode);
+		FormatAndPrintOutput("GetDoubleValue() return double = ", retval, displayMode);
 	}
 	else
 	    QAOutput("GetDoubleValueTest: We didn't get nsICommandParams object.", 1);
