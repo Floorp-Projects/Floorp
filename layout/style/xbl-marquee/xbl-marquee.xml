@@ -44,7 +44,7 @@
           xmlns:xbl="http://www.mozilla.org/xbl">
 
 
-  <binding id="marquee">
+  <binding id="marquee" inheritstyle="false">
 
     <implementation>
 
@@ -269,7 +269,8 @@
   </binding>
 
   <binding id="marquee-horizontal"
-           extends="chrome://xbl-marquee/content/xbl-marquee.xml#marquee">
+           extends="chrome://xbl-marquee/content/xbl-marquee.xml#marquee"
+	   inheritstyle="false">
 
     <implementation>
 
