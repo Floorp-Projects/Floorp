@@ -70,6 +70,9 @@ include"inc_browserdetection.php";
     case 'macosx':
       $_GET["os"] = 'MacOSX';
       break;
+    case 'all':
+      $_GET["os"] = 'ALL';
+      break;
     default:
       unset($_GET["os"]);
       break;
