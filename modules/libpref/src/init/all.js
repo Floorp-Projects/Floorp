@@ -60,6 +60,7 @@ pref("browser.startup.license_version",     0);
 pref("browser.startup.default_window",      1); // start up browser
 pref("browser.cache.disk_cache_size",       7680);
 pref("browser.cache.enable",                true);
+pref("browser.cache.disk.enable",                true);
 pref("browser.cache.memory_cache_size",     1024);
 pref("browser.cache.disk_cache_ssl",        false);
 pref("browser.foreground_color",            "#000000");
