@@ -2219,6 +2219,7 @@ XULDocumentImpl::SearchForNodeByID(const nsString& anID,
       if (pDomNode)
       {
         *aReturn = pDomNode;
+        NS_ADDREF(*aReturn);
       }
 
       return;
