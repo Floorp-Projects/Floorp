@@ -858,14 +858,6 @@ HRESULT FileCopySequential(LPSTR szSourcePath, LPSTR szDestPath, LPSTR szFilenam
       lstrcat(szDestFullFilename, szFilenameExtensionOnly);
     }
 
-    // XXXben (11/06/2003) - I'm not sure if this is exactly the right fix
-    // for the uninstall log not being copied to the new location - this 
-    // certainly works in Seamonkey's installer, but it seems like an obvious
-    // and convenient band-aid. 
-    // Create the folder if it does not exist. 
-    if (GetFileAttributes(szDestPath) != FILE_ATTRIBUTE_DIRECTORY)
-      CreateDirectory(szDestPath, NULL);
-
     CopyFile(szSourceFullFilename, szDestFullFilename, TRUE);
   }
 
