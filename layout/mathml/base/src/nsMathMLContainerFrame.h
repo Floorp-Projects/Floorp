@@ -223,8 +223,9 @@ public:
 
   // helper to give a style context suitable for doing the stretching to the
   // MathMLChar. Frame classes that use this should make the extra style contexts
-  // accessible to the Style System via Get/Set AdditionalStyleContext
-  static void
+  // accessible to the Style System via Get/Set AdditionalStyleContext.
+  // return true if the char is a mutable char
+  static PRBool
   ResolveMathMLCharStyle(nsIPresContext*  aPresContext,
                          nsIContent*      aContent,
                          nsIStyleContext* aParenStyleContext,
