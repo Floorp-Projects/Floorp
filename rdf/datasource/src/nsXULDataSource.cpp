@@ -43,6 +43,11 @@
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
+#ifdef NECKO
+#include "nsIIOService.h"
+#include "nsIURI.h"
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
 #include "nsLayoutCID.h" // for NS_NAMESPACEMANAGER_CID.
 #include "nsParserCIID.h"
 #include "nsRDFCID.h"
@@ -356,7 +361,20 @@ static const char kResourceURIPrefix[] = "resource:";
     nsIURL* url             = nsnull;
     nsAutoString utf8("UTF-8");
 
-    if (NS_FAILED(rv = NS_NewURL(&url, uri)))
+#ifndef NECKO
+    rv = NS_NewURL(&url, uri);
+#else
+    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsIURI *uriPtr = nsnull;
+    rv = service->NewURI(uri, nsnull, &uriPtr);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = uriPtr->QueryInterface(nsIURL::GetIID(), (void**)&url);
+    NS_RELEASE(uriPtr);
+#endif // NECKO
+    if (NS_FAILED(rv))
         goto done;
 
     if (NS_FAILED(rv = mInner->Init(uri)))

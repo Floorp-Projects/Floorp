@@ -31,7 +31,11 @@
 
 #include "nsParserCIID.h"
 #include "nsDOMCID.h"
+#ifndef NECKO
 #include "nsINetService.h"
+#else
+#include "nsIIOService.h"
+#endif // NECKO
 #ifdef OJI
 #include "nsICapsManager.h"
 #include "nsILiveconnect.h"
@@ -176,7 +180,11 @@ static NS_DEFINE_CID(kWellFormedDTDCID, NS_WELLFORMEDDTD_CID);
 static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 static NS_DEFINE_IID(kCDOMScriptObjectFactory, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 static NS_DEFINE_IID(kCScriptNameSetRegistry, NS_SCRIPT_NAMESET_REGISTRY_CID);
+#ifndef NECKO
 static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
+#else
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
 
 static NS_DEFINE_IID(kClipboardCID,            NS_CLIPBOARD_CID);
 static NS_DEFINE_CID(kCTransferableCID,        NS_TRANSFERABLE_CID);
@@ -199,8 +207,6 @@ static NS_DEFINE_IID(kCMenuItemCID,               NS_MENUITEM_CID);
 static NS_DEFINE_IID(kCContextMenuCID,            NS_CONTEXTMENU_CID);
 //static NS_DEFINE_IID(kCXULCommandCID,             NS_XULCOMMAND_CID);
 static NS_DEFINE_IID(kSoundCID,            NS_SOUND_CID);
-
-
 
 static NS_DEFINE_IID(kUnicharUtilCID,             NS_UNICHARUTIL_CID);
 
@@ -245,7 +251,11 @@ NS_SetupRegistry()
   nsComponentManager::RegisterComponent(kCDOMScriptObjectFactory, NULL, NULL, DOM_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kCScriptNameSetRegistry, NULL, NULL, DOM_DLL, PR_FALSE, PR_FALSE);
 
+#ifndef NECKO
   nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
+#else
+  nsComponentManager::RegisterComponent(kIOServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
+#endif // NECKO
 
   nsComponentManager::RegisterComponent(kClipboardCID,            NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kCTransferableCID,        NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);

@@ -34,6 +34,12 @@
 #include "nsHTMLAtoms.h"
 #include "nsIDocument.h"
 #include "nsIURL.h"
+#ifdef NECKO
+#include "nsIIOService.h"
+#include "nsIURI.h"
+#include "nsIServiceManager.h"
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
 #include "nsIURLGroup.h"
 #include "nsIPluginInstanceOwner.h"
 #include "nsIHTMLContent.h"
@@ -1628,7 +1634,23 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarge
           mOwner->GetFullURL(baseURL);
 
           // Create an absolute URL
+#ifndef NECKO
           rv = NS_MakeAbsoluteURL(baseURL, nsString(), uniurl, fullurl);
+#else
+          NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+          if (NS_FAILED(rv)) return rv;
+
+          nsIURI *baseUri = nsnull;
+          rv = baseURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
+          if (NS_FAILED(rv)) return rv;
+
+          char *absUrlStr = nsnull;
+          const char *urlSpec = uniurl.GetBuffer();
+          rv = service->MakeAbsolute(urlSpec, baseUri, &absUrlStr);
+          NS_RELEASE(baseUri);
+          fullurl = absUrlStr;
+          delete [] absUrlStr;
+#endif // NECKO
 
           NS_IF_RELEASE(baseURL);
 

@@ -26,6 +26,11 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
+#ifdef NECKO
+#include "nsIIOService.h"
+#include "nsIURI.h"
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
 #include "nsIPref.h"
 
 #include "nsINameSpaceManager.h"
@@ -1257,7 +1262,20 @@ nsWebShellWindow::NewWebShell(PRUint32 aChromeMask, PRBool aVisible,
   eQueueService->PushThreadEventQueue();
 
   nsCOMPtr<nsIURL> urlObj;
-  rv = NS_NewURL(getter_AddRefs(urlObj), "chrome://navigator/content/");
+  char * urlStr = "chrome://navigator/content/";
+#ifndef NECKO
+  rv = NS_NewURL(getter_AddRefs(urlObj), urlStr);
+#else
+  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  nsIURI *uri = nsnull;
+  rv = service->NewURI(urlStr, nsnull, &uri);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&urlObj);
+  NS_RELEASE(uri);
+#endif // NECKO
 
   if (NS_SUCCEEDED(rv))
     rv = appShell->CreateTopLevelWindow(nsnull, urlObj, PR_FALSE, *getter_AddRefs(newWindow),
@@ -2266,8 +2284,21 @@ NS_IMETHODIMP nsWebShellWindow::Init(nsIAppShell* aAppShell,
 {
    nsresult rv;
    nsCOMPtr<nsIURL> urlObj;
+   char * urlStr = "chrome://navigator/content/";
  
-   rv = NS_NewURL(getter_AddRefs(urlObj), "chrome://navigator/content/");
+#ifndef NECKO
+   rv = NS_NewURL(getter_AddRefs(urlObj), urlStr);
+#else
+   NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+   if (NS_FAILED(rv)) return rv;
+
+   nsIURI *uri = nsnull;
+   rv = service->NewURI(urlStr, nsnull, &uri);
+   if (NS_FAILED(rv)) return rv;
+
+   rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&urlObj);
+   NS_RELEASE(uri);
+#endif // NECKO
    if (NS_FAILED(rv))
      return rv;
  

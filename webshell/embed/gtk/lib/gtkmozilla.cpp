@@ -20,7 +20,11 @@
 
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
+#ifndef NECKO
 #include "nsINetService.h"
+#else
+#include "nsIIOService.h"
+#endif // NECKO
 //#include "nsXPComCIID.h"
 
 static NS_DEFINE_IID(kIEventQueueServiceIID,

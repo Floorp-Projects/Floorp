@@ -26,6 +26,12 @@
 #include "nsIComponentManager.h"
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
+#ifdef NECKO
+#include "nsIIOService.h"
+#include "nsIURI.h"
+#include "nsIServiceManager.h"
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
 #include "nsIDocument.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
@@ -695,7 +701,24 @@ void TempMakeAbsURL(nsIContent* aContent, nsString& aRelURL, nsString& aAbsURL)
   }
 
   nsString empty;
+#ifndef NECKO
   NS_MakeAbsoluteURL(baseURL, empty, aRelURL, aAbsURL);
+#else
+  nsresult result;
+  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &result);
+  if (NS_FAILED(result)) return;
+
+  nsIURI *baseUri = nsnull;
+  result = baseURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
+  if (NS_FAILED(result)) return;
+
+  char *absUrlStr = nsnull;
+  const char *urlSpec = aRelURL.GetBuffer();
+  result = service->MakeAbsolute(urlSpec, baseUri, &absUrlStr);
+  NS_RELEASE(baseUri);
+  aAbsURL= absUrlStr;
+  delete [] absUrlStr;
+#endif // NECKO
   NS_IF_RELEASE(baseURL);
 }
 

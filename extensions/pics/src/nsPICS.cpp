@@ -24,6 +24,12 @@
 #include "nsIPICS.h"
 #include "nsIPref.h"
 #include "nsIURL.h"
+#ifdef NECKO
+#include "nsIIOService.h"
+#include "nsIURI.h"
+#include "nsIServiceManager.h"
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
 #include "nsIParser.h"
 #include "nsParserCIID.h"
 #include "nsIHTMLContentSink.h"
@@ -65,8 +71,6 @@ static NS_DEFINE_IID(kIWebShellServicesIID,       NS_IWEB_SHELL_SERVICES_IID);
 
 static NS_DEFINE_IID(kIStreamListenerIID,         NS_ISTREAMLISTENER_IID);
 static NS_DEFINE_IID(kIDocumentLoaderObserverIID, NS_IDOCUMENT_LOADER_OBSERVER_IID);
-
-
 
 #define PICS_DOMAIN  			"browser.PICS."
 #define PICS_ENABLED_PREF 		PICS_DOMAIN"ratings_enabled"
@@ -950,7 +954,21 @@ nsPICS::OnEndURLLoad(nsIDocumentLoader* loader,
                   // Construct a chrome URL and use it to look up a resource.
                   nsAutoString rootStr = protocolStr + "://" + hostStr + "/";
 
+#ifndef NECKO
                   rv = NS_NewURL(&rootURL, rootStr);
+#else
+                  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+                  if (NS_FAILED(rv)) return rv;
+
+                  nsIURI *uri = nsnull;
+                  const char *uriStr = rootStr.GetBuffer();
+                  rv = service->NewURI(uriStr, nsnull, &uri);
+                  if (NS_FAILED(rv)) return rv;
+
+                  rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&rootURL);
+                  NS_RELEASE(uri);
+                  if (NS_FAILED(rv)) return rv;
+#endif // NECKO
                //   rv = GetRootURL(rootURL);
                 }
               }

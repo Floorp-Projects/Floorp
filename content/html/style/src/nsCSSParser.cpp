@@ -31,6 +31,12 @@
 #include "nsICSSDeclaration.h"
 #include "nsStyleConsts.h"
 #include "nsIURL.h"
+#ifdef NECKO
+#include "nsIIOService.h"
+#include "nsIURI.h"
+#include "nsIServiceManager.h"
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
 #include "nsIURLGroup.h"
 #include "nsString.h"
 #include "nsIAtom.h"
@@ -834,7 +840,25 @@ PRBool CSSParserImpl::ProcessImport(PRInt32& aErrorCode, const nsString& aURLSpe
       NS_RELEASE(urlGroup);
     }
     else {
+#ifndef NECKO
       aErrorCode = NS_NewURL(&url, aURLSpec, mURL);
+#else
+      nsresult rv;
+      NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+      if (NS_FAILED(rv)) return PR_FALSE;
+
+      nsIURI *uri = nsnull, *baseUri = nsnull;
+      rv = mURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
+      if (NS_FAILED(rv)) return PR_FALSE;
+
+      const char *uriStr = aURLSpec.GetBuffer();
+      rv = service->NewURI(uriStr, baseUri, &uri);
+      NS_RELEASE(baseUri);
+      if (NS_FAILED(rv)) return PR_FALSE;
+
+      rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+      NS_RELEASE(uri);
+#endif // NECKO
     }
 
     if (NS_FAILED(aErrorCode)) {
@@ -2470,7 +2494,24 @@ PRBool CSSParserImpl::ParseURL(PRInt32& aErrorCode, nsCSSValue& aValue)
       nsAutoString absURL;
       if (nsnull != mURL) {
         nsString baseURL;
-        nsresult rv = NS_MakeAbsoluteURL(mURL, baseURL, tk->mIdent, absURL);
+        nsresult rv;
+#ifndef NECKO
+        rv = NS_MakeAbsoluteURL(mURL, baseURL, tk->mIdent, absURL);
+#else
+        NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+        if (NS_FAILED(rv)) return PR_FALSE;
+
+        nsIURI *baseUri = nsnull;
+        rv = mURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
+        if (NS_FAILED(rv)) return PR_FALSE;
+
+        char *absUrlStr = nsnull;
+        const char *urlSpec = (tk->mIdent).GetBuffer();
+        rv = service->MakeAbsolute(urlSpec, baseUri, &absUrlStr);
+        NS_RELEASE(baseUri);
+        absURL = absUrlStr;
+        delete [] absUrlStr;
+#endif // NECKO
         if (NS_FAILED(rv)) {
           absURL = tk->mIdent;
         }

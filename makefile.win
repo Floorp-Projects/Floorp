@@ -59,7 +59,12 @@ DIRS = \
   caps                          \
   lib\xp			\
   lib\libpwcac			\
+!if !defined(NECKO)
   network			\
+!endif
+!if defined(NECKO)
+  netwerk			\
+!endif
   profile			\
 !endif
 !if defined(LAYOUT_DIRS)
@@ -81,7 +86,7 @@ DIRS = \
   xpfe				\
   xpinstall                     \
   extensions			\
-!ifndef DISABLE_MAILNEWS
+!if !defined(DISABLE_MAILNEWS) && !defined(NECKO)
   mailnews			\
 !endif
 !endif

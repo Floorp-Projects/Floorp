@@ -47,6 +47,14 @@ ifndef MOZ_NATIVE_JPEG
 DIRS += jpeg
 endif
 
+ifndef NECKO
+DIRS += network
+endif
+
+ifdef NECKO
+DIRS += netwerk
+endif
+
 DIRS +=				\
   modules/libutil		\
   intl				\
@@ -60,7 +68,6 @@ DIRS +=				\
   caps				\
   lib/xp			\
   lib/libpwcac			\
-  network			\
   htmlparser			\
   expat             \
   gfx				\
@@ -82,7 +89,9 @@ DIRS += xpfe extensions
 endif
 
 ifdef MOZ_MAIL_NEWS
+ifndef NECKO
 DIRS += mailnews
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk

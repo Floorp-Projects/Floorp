@@ -37,6 +37,11 @@
 #include "nsISizeOfHandler.h"
 #include "nsISupportsArray.h"
 #include "nsIURL.h"
+#ifdef NECKO
+#include "nsIIOService.h"
+#include "nsIURI.h"
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
 #include "nsFrame.h"
 #include "nsIPresShell.h"
 #include "nsIView.h"
@@ -1208,7 +1213,25 @@ nsGenericElement::TriggerLink(nsIPresContext& aPresContext,
     nsAutoString absURLSpec;
     if (nsnull != aBaseURL) {
       nsString empty;
+#ifndef NECKO
       NS_MakeAbsoluteURL(aBaseURL, empty, aURLSpec, absURLSpec);
+#else
+      nsresult rv;
+      NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+      if (NS_FAILED(rv)) return;
+
+      nsIURI *baseUri = nsnull;
+      rv = aBaseURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
+      if (NS_FAILED(rv)) return;
+
+      char *absUrl = nsnull;
+      const char *uriStr = aURLSpec.GetBuffer();
+      rv = service->MakeAbsolute(uriStr, baseUri, &absUrl);
+      NS_RELEASE(baseUri);
+      if (NS_FAILED(rv)) return;
+      absURLSpec = absUrl;
+      delete [] absUrl;
+#endif // NECKO
     }
     else {
       absURLSpec = aURLSpec;

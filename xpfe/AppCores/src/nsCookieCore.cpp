@@ -20,6 +20,11 @@
 #include "nsCookieCore.h"
 #include "nsINetService.h"
 #include "nsIURL.h"
+#ifdef NECKO
+#include "nsIIOService.h"
+#include "nsIURI.h"
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
 #include "nsIFileLocator.h"
 #include "nsFileLocations.h"
 #include "nsFileSpec.h"
@@ -121,7 +126,20 @@ NS_IMETHODIMP nsCookieCore::ShowWindow(nsIDOMWindow* aCurrentFrontWin)
     window = nsnull;
 
     nsCOMPtr<nsIURL> urlObj;
-    rv = NS_NewURL(getter_AddRefs(urlObj), "resource://res/samples/CookieViewer.html");
+    char * urlStr = "resource://res/samples/CookieViewer.html";
+#ifndef NECKO
+    rv = NS_NewURL(getter_AddRefs(urlObj), urlStr);
+#else
+    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsIURI *uri = nsnull;
+    rv = service->NewURI(urlStr, nsnull, &uri);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&urlObj);
+    NS_RELEASE(uri);
+#endif // NECKO
     if (NS_FAILED(rv))
         return rv;
 

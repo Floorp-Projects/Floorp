@@ -31,8 +31,12 @@
 #include "nsCOMPtr.h"
 #include "nsIEventQueueService.h"
 #include "nsIInputStream.h"
+#ifndef NECKO
 #include "nsINetService.h"
-#include "nsINetService.h"
+NS_DEFINE_IID(kIOutputStreamIID,       NS_IOUTPUTSTREAM_IID);
+#else
+#include "nsIIOService.h"
+#endif // NECKO
 #include "nsIGenericFactory.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFXMLDataSource.h"
@@ -93,7 +97,6 @@ static NS_DEFINE_CID(kGenericFactoryCID,    NS_GENERICFACTORY_CID);
 // IIDs
 
 NS_DEFINE_IID(kIEventQueueServiceIID,  NS_IEVENTQUEUESERVICE_IID);
-NS_DEFINE_IID(kIOutputStreamIID,       NS_IOUTPUTSTREAM_IID);
 NS_DEFINE_IID(kIRDFXMLDataSourceIID,   NS_IRDFXMLDATASOURCE_IID);
 NS_DEFINE_IID(kIRDFServiceIID,         NS_IRDFSERVICE_IID);
 NS_DEFINE_IID(kIRDFXMLSourceIID,       NS_IRDFXMLSOURCE_IID);
@@ -104,9 +107,13 @@ static nsresult
 SetupRegistry(void)
 {
     // netlib
+#ifndef NECKO
     static NS_DEFINE_CID(kNetServiceCID,            NS_NETSERVICE_CID);
-
     nsComponentManager::RegisterComponent(kNetServiceCID,            NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
+#else
+    static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+    nsComponentManager::RegisterComponent(kIOServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
+#endif // NECKO
 
     // parser
     static NS_DEFINE_CID(kParserCID,                NS_PARSER_IID);

@@ -35,6 +35,11 @@
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
+#ifdef NECKO
+#include "nsIIOService.h"
+#include "nsIURI.h"
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
 #include "nsRDFCID.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
@@ -734,14 +739,24 @@ RelatedLinksHandlerImpl::SetURL(char* aURL)
 	nsAutoString	relatedLinksQueryURL("http://www-rl.netscape.com/wtgn?");
 	relatedLinksQueryURL += mRelatedLinksURL;
 
-	char *queryURL = relatedLinksQueryURL.ToNewCString();
+	const char *queryURL = relatedLinksQueryURL.GetBuffer();
 	if (! queryURL)
 		return NS_ERROR_OUT_OF_MEMORY;
 
 	nsCOMPtr<nsIURL> url;
-	rv = NS_NewURL(getter_AddRefs(url), (const char*) queryURL);
+#ifndef NECKO
+	rv = NS_NewURL(getter_AddRefs(url), queryURL);
+#else
+    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
 
-	delete[] queryURL;
+    nsIURI *uri = nsnull;
+    rv = service->NewURI(queryURL, nsnull, &uri);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+    NS_RELEASE(uri);
+#endif // NECKO
 
 	if (NS_FAILED(rv)) return rv;
 

@@ -23,6 +23,12 @@
 #include "nsRepository.h"
 //#include "nsIObserver.h"
 #include "nsIURL.h"
+#ifdef NECKO
+#include "nsIIOService.h"
+#include "nsIURI.h"
+#include "nsIServiceManager.h"
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
 #include "nsPICSElementObserver.h"
 #include "nsString.h"
 #include "nsIPICS.h"
@@ -142,7 +148,21 @@ NS_IMETHODIMP nsPICSElementObserver::Notify(PRUint32 aDocumentID, eHTMLTags aTag
         char *label = theValue2.ToNewCString();
         if (valueArray[numOfAttributes]) {
           const nsString& theURLValue=valueArray[numOfAttributes];
+#ifndef NECKO
           rv = NS_NewURL(&uaURL, theURLValue);
+#else
+          NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+          if (NS_FAILED(rv)) return rv;
+
+          nsIURI *uri = nsnull;
+          const char *uriStr = theURLValue.GetBuffer();
+          rv = service->NewURI(uriStr, nsnull, &uri);
+          if (NS_FAILED(rv)) return rv;
+
+          rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&uaURL);
+          NS_RELEASE(uri);
+          if (NS_FAILED(rv)) return rv;
+#endif // NECKO
         }
         nsIPICS *pics = NULL;
         rv = nsRepository::CreateInstance(kPICSCID,

@@ -50,6 +50,13 @@
 #include "nsIStyleContext.h"
 #include "nsIEditActionListener.h"
 
+#ifdef NECKO
+#include "nsIIOService.h"
+#include "nsIURI.h"
+#include "nsIServiceManager.h"
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
+
 #include "nsEditorShell.h"
 #include "nsEditorShellFactory.h"
 
@@ -530,7 +537,19 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell)
   if (NS_SUCCEEDED(result) && service)
   {
     nsCOMPtr<nsIURL> url;
+#ifndef NECKO
     result = NS_NewURL(getter_AddRefs(url), nsString(EDITOR_BUNDLE_URL));
+#else
+    NS_WITH_SERVICE(nsIIOService, ioService, kIOServiceCID, &result);
+    if (NS_FAILED(result)) return result;
+
+    nsIURI *uri = nsnull;
+    result = ioService->NewURI(EDITOR_BUNDLE_URL, nsnull, &uri);
+    if (NS_FAILED(result)) return result;
+
+    result = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
+    NS_RELEASE(uri);
+#endif // NECKO
 
     if (NS_SUCCEEDED(result) && url)
     {

@@ -32,6 +32,12 @@
 #include "nsIServiceManager.h"
 #include "nsINetModuleMgr.h"
 #include "nsIEventQueueService.h"
+static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+
+#if 0
+#include "nsCookieModTest.h"
+#endif //0
+
 
 
 nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL, 
@@ -296,6 +302,9 @@ static NS_DEFINE_IID(kProxyObjectManagerIID, NS_IPROXYEVENT_MANAGER_IID);
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kNetModuleMgrCID, NS_NETMODULEMGR_CID);
 
+#if 0
+static NS_DEFINE_CID(kCookieTestCID, NS_COOKIEMODTEST_CID);
+#endif
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTTPChannel methods:
 
@@ -329,6 +338,26 @@ nsHTTPChannel::Open(void)
     // send out a request.
     NS_WITH_SERVICE(nsINetModuleMgr, pNetModuleMgr, kNetModuleMgrCID, &rv);
     if (NS_FAILED(rv)) return rv;
+
+#if 0
+    nsCookieModTest *cookieTest = new nsCookieModTest();
+    nsIHTTPNotify *cookieNot = nsnull;
+    rv = cookieTest->QueryInterface(nsIHTTPNotify::GetIID(), (void**)&cookieNot);
+    if (NS_FAILED(rv)) return rv;
+
+    nsIEventQueue* eventQa; 
+    NS_WITH_SERVICE(nsIEventQueueService, eventQServicea, kEventQueueServiceCID, &rv); 
+    if (NS_SUCCEEDED(rv)) {
+        rv = eventQServicea->CreateThreadEventQueue();
+        if (NS_FAILED(rv)) return rv;
+
+        rv = eventQServicea->GetThreadEventQueue(PR_CurrentThread(), &eventQa); 
+    } 
+    if (NS_FAILED(rv)) return rv; 
+
+    rv = pNetModuleMgr->RegisterModule("http-request", eventQa, cookieNot, &kCookieTestCID);
+    if (NS_FAILED(rv)) return rv; 
+#endif //0
 
     nsISimpleEnumerator* pModules = nsnull;
     rv = pNetModuleMgr->EnumerateModules("http-request", &pModules);

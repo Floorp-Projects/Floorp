@@ -21,6 +21,12 @@
 #include "nsCRT.h"
 #include "nsIAtom.h"
 #include "nsIURL.h"
+#ifdef NECKO
+#include "nsIIOService.h"
+#include "nsIURI.h"
+#include "nsIServiceManager.h"
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
 #include "nsISupportsArray.h"
 #include "nsHashtable.h"
 #include "nsICSSStyleRule.h"
@@ -1468,7 +1474,24 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
                     }
 
                     nsAutoString absURLSpec;
+#ifndef NECKO
                     NS_MakeAbsoluteURL(docURL, base, href, absURLSpec);
+#else
+                    nsresult rv;
+                    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+                    if (NS_FAILED(rv)) return PR_FALSE;
+
+                    nsIURI *baseUri = nsnull;
+                    rv = docURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
+                    if (NS_FAILED(rv)) return PR_FALSE;
+
+                    char *absUrlStr = nsnull;
+                    const char *urlSpec = href.GetBuffer();
+                    rv = service->MakeAbsolute(urlSpec, baseUri, &absUrlStr);
+                    NS_RELEASE(baseUri);
+                    absURLSpec = absUrlStr;
+                    delete [] absUrlStr;
+#endif // NECKO
                     NS_IF_RELEASE(docURL);
 
                     linkHandler->GetLinkState(absURLSpec.GetUnicode(), linkState);

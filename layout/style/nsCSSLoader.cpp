@@ -32,6 +32,12 @@
 
 #include "nsHashtable.h"
 #include "nsIURL.h"
+#ifdef NECKO
+#include "nsIIOService.h"
+#include "nsIURI.h"
+#include "nsIServiceManager.h"
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
 #include "nsIURLGroup.h"
 #include "nsCRT.h"
 #include "nsVoidArray.h"
@@ -997,7 +1003,25 @@ static nsIURL* CloneURL(nsIURL* aURL)
       NS_RELEASE(urlGroup);
     }
     else {
+#ifndef NECKO
       NS_NewURL(&result, buffer, aURL);
+#else
+      nsresult rv;
+      NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+      if (NS_FAILED(rv)) return nsnull;
+
+      nsIURI *uri = nsnull, *baseUrl = nsnull;
+      rv = aURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUrl);
+      if (NS_FAILED(rv)) return nsnull;
+
+      const char *uriStr = buffer.GetBuffer();
+      rv = service->NewURI(uriStr, baseUrl, &uri);
+      NS_RELEASE(baseUrl);
+      if (NS_FAILED(rv)) return nsnull;
+
+      rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&result);
+      NS_RELEASE(uri);
+#endif // NECKO
     }
   }
   return result;

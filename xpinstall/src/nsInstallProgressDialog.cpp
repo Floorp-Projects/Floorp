@@ -34,18 +34,20 @@
 #include "nsINameSpaceManager.h"
 #include "nsIContentViewer.h"
 #include "nsIDOMElement.h"
+#include "nsIURL.h"
+#ifndef NECKO
 #include "nsINetService.h"
-
+#else
+#include "nsIIOService.h"
+#include "nsIURI.h"
+#include "nsIServiceManager.h"
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
 #include "nsIWebShell.h"
 #include "nsIWebShellWindow.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID( kAppShellServiceCID, NS_APPSHELL_SERVICE_CID );
-static NS_DEFINE_IID( kNetServiceCID,      NS_NETSERVICE_CID );
-
-
-
-
 
 nsInstallProgressDialog::nsInstallProgressDialog()
 {
@@ -216,7 +218,20 @@ nsInstallProgressDialog::Open()
     {
         // Open "progress" dialog.
         nsIURL *url;
-        rv = NS_NewURL( &url, "resource:/res/xpinstall/progress.xul" );
+        char * urlStr = "resource:/res/xpinstall/progress.xul";
+#ifndef NECKO
+        rv = NS_NewURL( &url, urlStr );
+#else
+        NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+        if (NS_FAILED(rv)) return rv;
+
+        nsIURI *uri = nsnull;
+        rv = service->NewURI(urlStr, nsnull, &uri);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+        NS_RELEASE(uri);
+#endif // NECKO
         
         if ( NS_SUCCEEDED(rv) ) 
         {
@@ -349,10 +364,8 @@ nsresult nsInstallProgressDialog::setDlgAttribute( const char *id,
     } else {
         rv = NS_ERROR_NULL_POINTER;
     }
-
     return rv;
 }
-
 
 // Utility to get element attribute.
 nsresult nsInstallProgressDialog::getDlgAttribute(  const char *id,

@@ -22,7 +22,15 @@
 #include "nsIStringBundle.h"
 #include "nsIEventQueueService.h"
 #include "nsILocale.h"
+
+#ifndef NECKO
 #include "nsINetService.h"
+#else
+#include "nsIIOService.h"
+#include "nsIURI.h"
+#include "nsIServiceManager.h"
+#endif
+
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 
@@ -40,8 +48,15 @@
 
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
+
+#ifndef NECKO
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
+#else
+static NS_DEFINE_IID(kIIOServiceIID, NS_IIOSERVICE_IID);
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
+
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
 
@@ -118,8 +133,13 @@ main(int argc, char *argv[])
     printf("auto-registration failed\n");
     return 1;
   }
+#ifndef NECKO
   nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL,
     PR_FALSE, PR_FALSE);
+#else
+  nsComponentManager::RegisterComponent(kIOServiceCID, NULL, NULL, NETLIB_DLL,
+    PR_FALSE, PR_FALSE);
+#endif // NECKO
 
   nsIStringBundleService* service = nsnull;
   ret = nsServiceManager::GetService(kStringBundleServiceCID,
@@ -141,7 +161,42 @@ main(int argc, char *argv[])
     printf("CreateThreadEventQueue failed\n");
     return 1;
   }
+
   nsILocale* locale = get_applocale();
+  nsIURL *url = nsnull;
+
+#ifndef NECKO
+  nsINetService* pNetService = nsnull;
+  ret = nsServiceManager::GetService(kNetServiceCID, kINetServiceIID,
+    (nsISupports**) &pNetService);
+  if (NS_FAILED(ret)) {
+    printf("cannot get net service\n");
+    return 1;
+  }
+  ret = pNetService->CreateURL(&url, nsString(TEST_URL), nsnull, nsnull,
+    nsnull);
+#else
+  NS_WITH_SERVICE(nsIIOService, pNetService, kIOServiceCID, &ret);
+  if (NS_FAILED(ret)) {
+    printf("cannot get io service\n");
+    return 1;
+  }
+
+  nsIURI *uri = nsnull;
+  ret = pNetService->NewURI(TEST_URL, nsnull, &uri);
+  if (NS_FAILED(ret)) {
+    printf("cannot get uri\n");
+    return 1;
+  }
+
+  ret = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+  NS_RELEASE(uri);
+#endif // NECKO
+
+  if (NS_FAILED(ret)) {
+    printf("cannot create URL\n");
+    return 1;
+  }
 
   nsIStringBundle* bundle = nsnull;
 

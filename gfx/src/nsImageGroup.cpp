@@ -177,8 +177,10 @@ ImageGroupImpl::Init(nsIDeviceContext *aDeviceContext, nsIURLGroup* aURLGroup)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
+#ifndef NECKO
   mURLGroup = aURLGroup;
   NS_IF_ADDREF(mURLGroup);
+#endif // NECKO
 
   // Create an async net context
   result = NS_NewImageNetContext(&mNetContext, mURLGroup, ReconnectHack, this);

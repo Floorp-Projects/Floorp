@@ -43,6 +43,11 @@
 #include "nsIStyleRule.h"
 #include "nsISupportsArray.h"
 #include "nsIURL.h"
+#ifdef NECKO
+#include "nsIIOService.h"
+#include "nsIURI.h"
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
 #include "nsIURLGroup.h"
 #include "nsStyleConsts.h"
 #include "nsXIFConverter.h"
@@ -997,7 +1002,23 @@ nsGenericHTMLElement::GetBaseURL(nsIHTMLAttributes* aAttributes,
           NS_RELEASE(urlGroup);
         }
         else {
+#ifndef NECKO
           result = NS_NewURL(&url, baseHref, docBaseURL);
+#else
+          NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &result);
+          if (NS_FAILED(result)) return result;
+
+          nsIURI *uri = nsnull, *baseUri = nsnull;
+          result = docBaseURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
+          if (NS_FAILED(result)) return result;
+
+          const char *uriStr = baseHref.GetBuffer();
+          result = service->NewURI(uriStr, baseUri, &uri);
+          NS_RELEASE(baseUri);
+          if (NS_FAILED(result)) return result;
+
+          result = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+#endif // NECKO
         }
         *aBaseURL = url;
       }
@@ -1938,7 +1959,23 @@ nsGenericHTMLElement::MapBackgroundAttributesInto(nsIHTMLAttributes* aAttributes
             nsCOMPtr<nsIURL> docURL;
             nsGenericHTMLElement::GetBaseURL(aAttributes, doc,
                                              getter_AddRefs(docURL));
+#ifndef NECKO
             rv = NS_MakeAbsoluteURL(docURL, "", spec, absURLSpec);
+#else
+            NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+            if (NS_FAILED(rv)) return;
+
+            nsIURI *baseUri = nsnull;
+            rv = docURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
+            if (NS_FAILED(rv)) return;
+
+            char *absUrlStr = nsnull;
+            const char *urlSpec = spec.GetBuffer();
+            rv = service->MakeAbsolute(urlSpec, baseUri, &absUrlStr);
+            NS_RELEASE(baseUri);
+            absURLSpec = absUrlStr;
+            delete [] absUrlStr;
+#endif // NECKO
             if (NS_SUCCEEDED(rv)) {
               nsStyleColor* color = (nsStyleColor*)
                 aContext->GetMutableStyleData(eStyleStruct_Color);

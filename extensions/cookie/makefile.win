@@ -43,7 +43,11 @@ CPP_OBJS=				\
  .\$(OBJDIR)\nsCookieHTTPNotify.obj	\
  $(NULL)
 
+!ifdef NECKO
 LINCS = -I$(DEPTH)\include \
+!else
+LINCS = -I$(DEPTH)\netwerk\dist\include \
+!endif
 
 MAKE_OBJ_TYPE = DLL
 DLLNAME = cookie

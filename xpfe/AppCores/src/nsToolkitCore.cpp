@@ -28,6 +28,11 @@
 #include "nsIServiceManager.h"
 #include "nsISupports.h"
 #include "nsIURL.h"
+#ifdef NECKO
+#include "nsIIOService.h"
+#include "nsIURI.h"
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
 #include "nsIWebShell.h"
 #include "nsIWebShellWindow.h"
 #include "nsIWidget.h"
@@ -48,7 +53,6 @@ static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 static NS_DEFINE_IID(kIDOMBaseAppCoreIID, NS_IDOMBASEAPPCORE_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIToolkitCoreIID, NS_IDOMTOOLKITCORE_IID);
-
 
 
 /////////////////////////////////////////////////////////////////////////
@@ -145,7 +149,20 @@ nsToolkitCore::ShowDialog(const nsString& aUrl, nsIDOMWindow* aParent) {
   window = nsnull;
 
   nsCOMPtr<nsIURL> urlObj;
+#ifndef NECKO
   rv = NS_NewURL(getter_AddRefs(urlObj), aUrl);
+#else
+  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  nsIURI *uri = nsnull;
+  const char *uriStr = aUrl.GetBuffer();
+  rv = service->NewURI(uriStr, nsnull, &uri);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&urlObj);
+  NS_RELEASE(uri);
+#endif // NECKO
   if (NS_FAILED(rv))
     return rv;
 
@@ -173,7 +190,21 @@ nsToolkitCore::ShowWindow(const nsString& aUrl, nsIDOMWindow* aParent) {
   window = nsnull;
 
   nsCOMPtr<nsIURL> urlObj;
+
+#ifndef NECKO
   rv = NS_NewURL(getter_AddRefs(urlObj), aUrl);
+#else
+  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  nsIURI *uri = nsnull;
+  const char *uriStr = aUrl.GetBuffer();
+  rv = service->NewURI(uriStr, nsnull, &uri);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&urlObj);
+  NS_RELEASE(uri);
+#endif // NECKO
   if (NS_FAILED(rv))
     return rv;
 
@@ -284,7 +315,20 @@ nsToolkitCore::ShowWindowWithArgs(const nsString& aUrl,
   window = nsnull;
 
   nsCOMPtr<nsIURL> urlObj;
+#ifndef NECKO
   rv = NS_NewURL(getter_AddRefs(urlObj), aUrl);
+#else
+  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  nsIURI *uri = nsnull;
+  const char *uriStr = aUrl.GetBuffer();
+  rv = service->NewURI(uriStr, nsnull, &uri);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&urlObj);
+  NS_RELEASE(uri);
+#endif // NECKO
   if (NS_FAILED(rv))
     return rv;
 
@@ -314,7 +358,20 @@ nsToolkitCore::ShowModalDialog(const nsString& aUrl, nsIDOMWindow* aParent) {
   window = nsnull;
 
   nsCOMPtr<nsIURL> urlObj;
+#ifndef NECKO
   rv = NS_NewURL(getter_AddRefs(urlObj), aUrl);
+#else
+  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  nsIURI *uri = nsnull;
+  const char *uriStr = aUrl.GetBuffer();
+  rv = service->NewURI(uriStr, nsnull, &uri);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&urlObj);
+  NS_RELEASE(uri);
+#endif // NECKO
   if (NS_FAILED(rv))
     return rv;
 

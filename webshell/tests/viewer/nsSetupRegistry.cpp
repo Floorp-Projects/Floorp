@@ -30,7 +30,11 @@
 
 #include "nsParserCIID.h"
 #include "nsDOMCID.h"
+#ifndef NECKO
 #include "nsINetService.h"
+#else
+#include "nsIIOService.h"
+#endif // NECKO
 #ifdef OJI
 #include "nsICapsManager.h"
 #include "nsILiveconnect.h"
@@ -168,7 +172,11 @@ static NS_DEFINE_IID(kCDOMScriptObjectFactory, NS_DOM_SCRIPT_OBJECT_FACTORY_CID)
 static NS_DEFINE_IID(kCScriptNameSetRegistry, NS_SCRIPT_NAMESET_REGISTRY_CID);
 
 // NETLIB
+#ifndef NECKO
 static NS_DEFINE_CID(kCNetServiceCID, NS_NETSERVICE_CID);
+#else
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
 
 // PLUGIN
 static NS_DEFINE_IID(kCPluginHostCID, NS_PLUGIN_HOST_CID);
@@ -246,7 +254,11 @@ NS_SetupRegistry()
   nsComponentManager::RegisterComponent(kCScriptNameSetRegistry, NULL, NULL, DOM_DLL, PR_FALSE, PR_FALSE);
 
   // NETLIB
+#ifndef NECKO
   nsComponentManager::RegisterComponent(kCNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
+#else
+  nsComponentManager::RegisterComponent(kIOServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
+#endif // NECKO
 
   // PLUGIN
   nsComponentManager::RegisterComponent(kCPluginHostCID, NULL, NULL, PLUGIN_DLL, PR_FALSE, PR_FALSE);

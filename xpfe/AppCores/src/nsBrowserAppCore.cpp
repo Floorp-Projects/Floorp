@@ -45,6 +45,13 @@
 
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
+#ifndef NECKO
+#include "nsINetService.h"
+#else
+#include "nsIIOService.h"
+#include "nsIURI.h"
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
 #include "nsIWidget.h"
 #include "plevent.h"
 
@@ -84,9 +91,6 @@ static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 #include "nsIContent.h"
 #include "nsINameSpaceManager.h"
 #include "nsFileStream.h"
-#include "nsINetService.h"
-NS_DEFINE_IID(kINetServiceIID,            NS_INETSERVICE_IID);
-NS_DEFINE_IID(kNetServiceCID,             NS_NETSERVICE_CID);
 
 // Stuff to implement find/findnext
 #include "nsIFindComponent.h"
@@ -167,7 +171,11 @@ nsBrowserAppCore::~nsBrowserAppCore()
   if (nsnull != mGHistory) {
     nsServiceManager::ReleaseService(kCGlobalHistoryCID, mGHistory);
   }
+ if (nsnull != mSHistory) {
+    nsServiceManager::ReleaseService(kCSessionHistoryCID, mSHistory);
+  }
   NS_IF_RELEASE(mSHistory);
+
   DecInstanceCount();  
 }
 
@@ -367,18 +375,13 @@ newWind(char* urlName) {
   char *   width=nsnull, *height=nsnull;
   char *  iconic_state=nsnull;
 
-  nsIAppShellService* appShell = nsnull;
   urlstr = urlName;
 
   /*
    * Create the Application Shell instance...
    */
-  rv = nsServiceManager::GetService(kAppShellServiceCID,
-                                    kIAppShellServiceIID,
-                                    (nsISupports**)&appShell);
-  if (!NS_SUCCEEDED(rv)) {
-    goto done;
-  }
+  NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
 
   /*
    * Post an event to the shell instance to load the AppShell 
@@ -391,22 +394,26 @@ newWind(char* urlName) {
   nsIURL* url;
   nsIWebShellWindow* newWindow;
   
+#ifndef NECKO
   rv = NS_NewURL(&url, urlstr);
-  if (NS_FAILED(rv)) {
-    goto done;
-  }
+#else
+  nsIURI *uri = nsnull;
+  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = service->NewURI(urlstr, nsnull, &uri);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+  NS_RELEASE(uri);
+#endif // NECKO
+  if (NS_FAILED(rv)) return rv;
 
   appShell->CreateTopLevelWindow(nsnull, url, PR_TRUE, newWindow,
               nsnull, nsnull, 615, 480);
 
   NS_RELEASE(url);
   
-done:
-  /* Release the shell... */
-  if (nsnull != appShell) {
-    nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
-  }
-
   return NS_OK;
 }
 
@@ -441,7 +448,20 @@ nsBrowserAppCore::WalletEditor(nsIDOMWindow* aWin)
     window = nsnull;
 
     nsCOMPtr<nsIURL> urlObj;
-    rv = NS_NewURL(getter_AddRefs(urlObj), "resource:/res/samples/xpconnect-walleteditor.html");
+    char *urlstr = "resource:/res/samples/xpconnect-walleteditor.html";
+#ifndef NECKO
+    rv = NS_NewURL(getter_AddRefs(urlObj), urlstr);
+#else
+    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsIURI *uri = nsnull;
+    rv = service->NewURI(urlstr, nsnull, &uri);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&urlObj);
+    NS_RELEASE(uri);
+#endif // NECKO
     if (NS_FAILED(rv))
         return rv;
 
@@ -487,7 +507,20 @@ nsBrowserAppCore::SignonViewer(nsIDOMWindow* aWin)
     window = nsnull;
 
     nsCOMPtr<nsIURL> urlObj;
-    rv = NS_NewURL(getter_AddRefs(urlObj), "resource:/res/samples/xpconnect-signonviewer.html");
+    char * urlstr = "resource:/res/samples/xpconnect-signonviewer.html";
+#ifndef NECKO
+    rv = NS_NewURL(getter_AddRefs(urlObj), urlstr);
+#else
+    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsIURI *uri = nsnull;
+    rv = service->NewURI(urlstr, nsnull, &uri);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&urlObj);
+    NS_RELEASE(uri);
+#endif // NECKO
     if (NS_FAILED(rv))
         return rv;
 
@@ -533,7 +566,20 @@ nsBrowserAppCore::CookieViewer(nsIDOMWindow* aWin)
     window = nsnull;
 
     nsCOMPtr<nsIURL> urlObj;
-    rv = NS_NewURL(getter_AddRefs(urlObj), "resource:/res/samples/xpconnect-cookieviewer.html");
+    char *urlstr = "resource:/res/samples/xpconnect-cookieviewer.html";
+#ifndef NECKO
+    rv = NS_NewURL(getter_AddRefs(urlObj), urlstr);
+#else
+    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsIURI *uri = nsnull;
+    rv = service->NewURI(urlstr, nsnull, &uri);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&urlObj);
+    NS_RELEASE(uri);
+#endif // NECKO
     if (NS_FAILED(rv))
         return rv;
 
@@ -622,7 +668,20 @@ nsBrowserAppCore::WalletPreview(nsIDOMWindow* aWin, nsIDOMWindow* aForm)
     window = nsnull;
 
     nsCOMPtr<nsIURL> urlObj;
-    rv = NS_NewURL(getter_AddRefs(urlObj), "resource:/res/samples/xpconnect-walletpreview.html");
+    char * urlstr = "resource:/res/samples/xpconnect-walletpreview.html";
+#ifndef NECKO
+    rv = NS_NewURL(getter_AddRefs(urlObj), urlstr);
+#else
+    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsIURI *uri = nsnull;
+    rv = service->NewURI(urlstr, nsnull, &uri);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&urlObj);
+    NS_RELEASE(uri);
+#endif // NECKO
     if (NS_FAILED(rv))
         return rv;
 
@@ -1334,8 +1393,6 @@ nsBrowserAppCore::NewWindow()
   
   char * urlstr = nsnull;
 
-  nsIAppShellService* appShell = nsnull;
-
   // Default URL if one was not provided in the cmdline
   if (nsnull == urlstr)
       urlstr = "chrome://navigator/content/";
@@ -1345,12 +1402,9 @@ nsBrowserAppCore::NewWindow()
   /*
    * Create the Application Shell instance...
    */
-  rv = nsServiceManager::GetService(kAppShellServiceCID,
-                                    kIAppShellServiceIID,
-                                    (nsISupports**)&appShell);
-  if (!NS_SUCCEEDED(rv)) {
-    goto done;
-  }
+  NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
+
+  if (!NS_SUCCEEDED(rv)) return rv;
 
   /*
    * Post an event to the shell instance to load the AppShell 
@@ -1362,22 +1416,26 @@ nsBrowserAppCore::NewWindow()
   ///write me...
   nsIURL* url;
   nsIWebShellWindow* newWindow;
-  
+#ifndef NECKO  
   rv = NS_NewURL(&url, urlstr);
-  if (NS_FAILED(rv)) {
-    goto done;
-  }
+#else
+  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  nsIURI *uri = nsnull;
+  rv = service->NewURI(urlstr, nsnull, &uri);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+  NS_RELEASE(uri);
+#endif // NECKO
+  if (NS_FAILED(rv)) return rv;
 
   appShell->CreateTopLevelWindow(nsnull, url, PR_TRUE, newWindow,
               nsnull, nsnull, 615, 480);
   NS_RELEASE(url);
   
-done:
-  /* Release the shell... */
-  if (nsnull != appShell) {
-    nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
-  }
-    return NS_OK;
+  return NS_OK;
 }
 
 //----------------------------------------------------------
@@ -1612,7 +1670,20 @@ nsBrowserAppCore::DoDialog()
   window = nsnull;
 
   nsCOMPtr<nsIURL> urlObj;
-  rv = NS_NewURL(getter_AddRefs(urlObj), "resource://res/samples/Password.html");
+  char * urlstr = "resource://res/samples/Password.html";
+#ifndef NECKO
+  rv = NS_NewURL(getter_AddRefs(urlObj), urlstr);
+#else
+  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  nsIURI *uri = nsnull;
+  rv = service->NewURI(urlstr, nsnull, &uri);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&urlObj);
+  NS_RELEASE(uri);
+#endif // NECKO
   if (NS_FAILED(rv))
     return rv;
 

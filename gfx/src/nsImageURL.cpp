@@ -22,8 +22,15 @@
 #include "ilINetReader.h"
 #include "ilIURL.h"
 #include "nsIURL.h"
+#ifndef NECKO
 #include "nsIURLGroup.h"
 #include "nsILoadAttribs.h"
+#else
+#include "nsIServiceManager.h"
+#include "nsIIOService.h"
+#include "nsIURI.h"
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
 #include "nsString.h"
 #include "il_strm.h"
 
@@ -73,7 +80,19 @@ ImageURLImpl::Init(const char *aURL, nsIURLGroup* aURLGroup)
   if (nsnull != aURLGroup) {
     rv = aURLGroup->CreateURL(&mURL, nsnull, aURL, nsnull);
   } else {
+#ifndef NECKO
     rv = NS_NewURL(&mURL, aURL);
+#else
+    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsIURI *uri = nsnull;
+    rv = service->NewURI(aURL, nsnull, &uri);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&mURL);
+    NS_RELEASE(uri);
+#endif // NECKO
   }
   return rv;
 }

@@ -59,6 +59,11 @@
 #include "nsIServiceManager.h"
 #include "nsIUnicharStreamLoader.h"
 #include "nsIURL.h"
+#ifdef NECKO
+#include "nsIIOService.h"
+#include "nsIURI.h"
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
 #include "nsIURLGroup.h"
 #include "nsIViewManager.h"
 #include "nsIXULContentSink.h"
@@ -746,7 +751,24 @@ XULContentSinkImpl::ProcessStyleLink(nsIContent* aElement,
       NS_RELEASE(urlGroup);
     }
     else {
+#ifndef NECKO
       result = NS_NewURL(&url, aHref, mDocumentBaseURL);
+#else
+      NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &result);
+      if (NS_FAILED(result)) return result;
+
+      nsIURI *uri = nsnull, *baseUri = nsnull;
+      result = mDocumentBaseURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
+      if (NS_FAILED(result)) return result;
+
+      const char *uriStr = aHref.GetBuffer();
+      result = service->NewURI(uriStr, baseUri, &uri);
+      NS_RELEASE(baseUri);
+      if (NS_FAILED(result)) return result;
+
+      result = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+      NS_RELEASE(uri);
+#endif // NECKO
     }
     if (NS_OK != result) {
       return NS_OK; // The URL is bad, move along, don't propogate the error (for now)
@@ -1425,7 +1447,20 @@ XULContentSinkImpl::OpenScript(const nsIParserNode& aNode)
                 NS_RELEASE(urlGroup);
             }
             else {
+#ifndef NECKO
                 rv = NS_NewURL(&url, absURL);
+#else
+                NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+                if (NS_FAILED(rv)) return rv;
+
+                nsIURI *uri = nsnull;
+                const char *uriStr = absURL.GetBuffer();
+                rv = service->NewURI(uriStr, nsnull, &uri);
+                if (NS_FAILED(rv)) return rv;
+
+                rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+                NS_RELEASE(uri);
+#endif // NECKO
             }
             if (NS_OK != rv) {
                 return rv;

@@ -69,6 +69,11 @@
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
+#ifdef NECKO
+#include "nsIIOService.h"
+#include "nsIURI.h"
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
 #include "nsLayoutCID.h" // for NS_NAMESPACEMANAGER_CID.
 #include "nsParserCIID.h"
 #include "nsRDFCID.h"
@@ -567,7 +572,19 @@ static const char kResourceURIPrefix[] = "resource:";
 
     nsresult rv;
 
+#ifndef NECKO
     rv = NS_NewURL(getter_AddRefs(mURL), uri);
+#else
+    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsIURI *uriPtr = nsnull;
+    rv = service->NewURI(uri, nsnull, &uriPtr);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = uriPtr->QueryInterface(nsIURL::GetIID(), (void**)&mURL);
+    NS_RELEASE(uriPtr);
+#endif // NECKO
     if (NS_FAILED(rv)) return rv;
 
     // XXX this is a hack: any "file:" URI is considered writable. All

@@ -20,13 +20,19 @@
 #include "nsICSSStyleSheet.h"
 #include "nsIStyleRule.h"
 #include "nsIURL.h"
+#ifndef NECKO
+#include "nsINetService.h"
+#else
+#include "nsIIOService.h"
+#include "nsIURI.h"
+#endif // NECKO
 #include "nsIInputStream.h"
 #include "nsIUnicharInputStream.h"
 #include "nsString.h"
 
 // XXX begin bad code
 #include "plevent.h"
-#include "nsINetService.h"
+
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
@@ -48,12 +54,16 @@
 #endif
 #endif
 
+#ifndef NECKO
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
+#else
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
+
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 static NS_DEFINE_CID(kCSSParserCID, NS_CSSPARSER_CID);
 static NS_DEFINE_IID(kICSSParserIID, NS_ICSS_PARSER_IID);
-
 // XXX end bad code
 
 static void Usage(void)
@@ -64,7 +74,13 @@ static void Usage(void)
 int main(int argc, char** argv)
 {
   nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
+
+#ifndef NECKO
   nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
+#else
+  nsComponentManager::RegisterComponent(kIOServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
+#endif // NECKO
+
   nsComponentManager::RegisterComponent(kCSSParserCID, NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
 
   nsresult rv;
@@ -134,7 +150,19 @@ int main(int argc, char** argv)
       char* urlName = argv[i];
       // Create url object
       nsIURL* url;
+#ifndef NECKO
       rv = NS_NewURL(&url, urlName);
+#else
+      NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+      if (NS_FAILED(rv)) return -1;
+
+      nsIURI *uri = nsnull;
+      rv = service->NewURI(urlName, nsnull, &uri);
+      if (NS_FAILED(rv)) return -1;
+
+      rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+      NS_RELEASE(uri);
+#endif // NECKO
       if (NS_OK != rv) {
         printf("invalid URL: '%s'\n", urlName);
         return -1;

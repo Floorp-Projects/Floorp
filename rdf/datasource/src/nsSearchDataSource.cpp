@@ -51,6 +51,11 @@
 
 #include "nsIPostToServer.h"
 #include "nsIURL.h"
+#ifdef NECKO
+#include "nsIIOService.h"
+#include "nsIURI.h"
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
 #include "nsIBuffer.h"
 #include "nsIInputStream.h"
 #include "nsIBufferInputStream.h"
@@ -949,8 +954,21 @@ SearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engine, nsStr
 	char	*searchURL = action.ToNewCString();
 	if (searchURL)
 	{
-		nsIURL		*url;
-		if (NS_SUCCEEDED(rv = NS_NewURL(&url, (const char*) searchURL)))
+		nsIURL		*url = nsnull;
+#ifndef NECKO
+        rv = NS_NewURL(&url, (const char*) searchURL);
+#else
+        NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+        if (NS_FAILED(rv)) return rv;
+
+        nsIURI *uri = nsnull;
+        rv = service->NewURI((const char*) searchURL, nsnull, &uri);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+        NS_RELEASE(uri);
+#endif // NECKO
+		if (NS_SUCCEEDED(rv))
 		{
 			if (method.EqualsIgnoreCase("post"))
 			{
