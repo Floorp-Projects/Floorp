@@ -22,6 +22,34 @@
 #include "nsIPresContext.h"
 #include "nsHTMLIIDs.h"
 #include "nsRepository.h"
+#include "nsIStreamListener.h"
+#include "nsIURL.h"
+#include "nsIDocument.h"
+
+// XXX temporary until doc manager/loader is in place
+class TempObserver : public nsIStreamListener
+{
+public:
+  TempObserver() {}
+
+  ~TempObserver() {}
+  // nsISupports
+  NS_DECL_ISUPPORTS
+
+  // nsIStreamListener
+  NS_IMETHOD GetBindInfo(void);
+  NS_IMETHOD OnProgress(PRInt32 aProgress, PRInt32 aProgressMax,
+                        const nsString& aMsg);
+  NS_IMETHOD OnStartBinding(const char *aContentType);
+  NS_IMETHOD OnDataAvailable(nsIInputStream *pIStream, PRInt32 length);
+  NS_IMETHOD OnStopBinding(PRInt32 status, const nsString& aMsg);
+
+protected:
+
+  nsString mURL;
+  nsString mOverURL;
+  nsString mOverTarget;
+};
 
 class nsHTMLIFrameFrame : public nsLeafFrame {
 
@@ -54,6 +82,7 @@ protected:
                               nsReflowMetrics& aDesiredSize);
 
   nsIWebWidget* mWebWidget;
+  TempObserver* mTempObserver;
 };
 
 class nsHTMLIFrame : public nsHTMLContainer {
@@ -86,10 +115,13 @@ nsHTMLIFrameFrame::nsHTMLIFrameFrame(nsIContent* aContent, nsIFrame* aParentFram
   : nsLeafFrame(aContent, aParentFrame)
 {
   mWebWidget = nsnull;
+  mTempObserver = new TempObserver();
 }
 
 nsHTMLIFrameFrame::~nsHTMLIFrameFrame()
 {
+  NS_IF_RELEASE(mWebWidget);
+  delete mTempObserver;
 }
 
 NS_IMETHODIMP
@@ -97,10 +129,25 @@ nsHTMLIFrameFrame::Paint(nsIPresContext& aPresContext,
                          nsIRenderingContext& aRenderingContext,
                          const nsRect& aDirtyRect)
 {
-  //mWebWidget->Show();
+  mWebWidget->Show();
   return NS_OK;
 }
 
+
+void TempMakeAbsURL(nsIContent* aContent, nsString& aRelURL, nsString& aAbsURL)
+{
+  nsIURL* docURL = nsnull;
+  nsIDocument* doc = nsnull;
+  aContent->GetDocument(doc);
+  if (nsnull != doc) {
+    docURL = doc->GetDocumentURL();
+    NS_RELEASE(doc);
+  }
+
+  nsAutoString base;
+  nsresult rv = NS_MakeAbsoluteURL(docURL, base, aRelURL, aAbsURL);
+  NS_IF_RELEASE(docURL);
+}
 
 static NS_DEFINE_IID(kCWebWidget, NS_WEBWIDGET_CID);
 static NS_DEFINE_IID(kIWebWidget, NS_IWEBWIDGET_IID);
@@ -116,12 +163,19 @@ nsHTMLIFrameFrame::Reflow(nsIPresContext*      aPresContext,
   if (nsnull == mWebWidget) {
     NSRepository::CreateInstance(kCWebWidget, nsnull, kIWebWidget, (void**)&mWebWidget);
     if (nsnull != mWebWidget) {
-      nsRect rect(0, 0, aDesiredSize.width, aDesiredSize.height);
+      float t2p = aPresContext->GetTwipsToPixels();
+      nsRect rect(0, 0, NS_TO_INT_ROUND(aDesiredSize.width * t2p), 
+                        NS_TO_INT_ROUND(aDesiredSize.height * t2p));
       nsIWidget* parentWin;
       GetWindow(parentWin);
       mWebWidget->Init(parentWin->GetNativeData(NS_NATIVE_WINDOW), rect);
       NS_IF_RELEASE(parentWin);
-      //mWebWidget->Show();
+
+      nsString absURL;
+      nsAutoString relURL("bar.html");
+      TempMakeAbsURL(mContent, relURL, absURL);
+      mWebWidget->LoadURL(absURL, mTempObserver);
+      mWebWidget->Show();
     } 
     else {
       NS_ASSERTION(0, "could not instantiate web widget for sub document");
@@ -183,3 +237,80 @@ NS_NewHTMLIFrame(nsIHTMLContent** aInstancePtrResult,
   }
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
+
+
+
+
+// XXX temp implementation
+
+static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMNOTIFICATION_IID);
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+
+NS_IMPL_ADDREF(TempObserver);
+NS_IMPL_RELEASE(TempObserver);
+
+nsresult
+TempObserver::QueryInterface(const nsIID& aIID,
+                            void** aInstancePtrResult)
+{
+  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
+  if (nsnull == aInstancePtrResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aIID.Equals(kIStreamListenerIID)) {
+    *aInstancePtrResult = (void*) ((nsIStreamListener*)this);
+    AddRef();
+    return NS_OK;
+  }
+  if (aIID.Equals(kISupportsIID)) {
+    *aInstancePtrResult = (void*) ((nsISupports*)((nsIDocumentObserver*)this));
+    AddRef();
+    return NS_OK;
+  }
+  return NS_NOINTERFACE;
+}
+
+
+NS_IMETHODIMP
+TempObserver::GetBindInfo(void)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TempObserver::OnProgress(PRInt32 aProgress, PRInt32 aProgressMax,
+                        const nsString& aMsg)
+{
+  fputs("[progress ", stdout);
+  fputs(mURL, stdout);
+  printf(" %d %d ", aProgress, aProgressMax);
+  fputs(aMsg, stdout);
+  fputs("]\n", stdout);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TempObserver::OnStartBinding(const char *aContentType)
+{
+  fputs("Loading ", stdout);
+  fputs(mURL, stdout);
+  fputs("\n", stdout);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TempObserver::OnDataAvailable(nsIInputStream *pIStream, PRInt32 length)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TempObserver::OnStopBinding(PRInt32 status, const nsString& aMsg)
+{
+  fputs("Done loading ", stdout);
+  fputs(mURL, stdout);
+  fputs("\n", stdout);
+  return NS_OK;
+}
+
+
