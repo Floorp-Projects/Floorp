@@ -24,38 +24,27 @@
 #define _nsBasicAuth_h_
 
 #include "nsISupports.h"
+#include "nsIAuthenticator.h"
 
-/* 
-	The nsBasicAuth class converts a username:password string
-	to a Base-64 encoded version. If you want to do other kind
-	of encoding (MD5, Digest) there should really be a super 
-	class that does the Authenticate function. Will add that later...
-
-	-Gagan Saksena  08/17/1999
-*/
+/*
+ * The nsBasicAuth class produces HTTP Basic-auth responses for a username/
+ * (optional)password pair, BASE64("user:pass").
+ */
 
 class nsIURI;
-class nsBasicAuth : public nsISupports
+class nsBasicAuth : public nsIAuthenticator
 {
-
 public:
 
 	// Constructor and Destructor
 	nsBasicAuth();
 	virtual ~nsBasicAuth();
-
-    // Functions from nsISupports
-    NS_DECL_ISUPPORTS
-
-	// Authenticate-- the actual method
-	static nsresult Authenticate(
-		nsIURI* iUri, 
-		const char* i_Challenge, // "Basic realm='....'" 
-		const char* i_UserPassString,  // username:password
-		char** o_Output);
-
-private:
-
+  
+  // Functions from nsISupports
+  NS_DECL_ISUPPORTS
+  
+  // Functions from nsIAuthenticator
+  NS_DECL_NSIAUTHENTICATOR
 };
 
 #endif // _nsBasicAuth_h_

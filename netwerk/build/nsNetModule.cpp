@@ -24,6 +24,7 @@
 #include "nsIGenericFactory.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
+#include "nsICategoryManager.h"
 #include "nsIOService.h"
 #include "nsNetModuleMgr.h"
 #include "nsFileTransportService.h"
@@ -78,12 +79,50 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMIMEInfoImpl);
 #include "nsIHTTPProtocolHandler.h"
 #include "nsHTTPHandler.h"
 #include "nsHTTPSHandler.h"
+#include "nsBasicAuth.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHTTPHandler, Init);
 //NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTTPSHandler);
 
 #define NS_HTTPS_HANDLER_FACTORY_CID { 0xd2771480, 0xcac4, 0x11d3, { 0x8c, 0xaf, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsBasicAuth);
+#define NS_BASICAUTH_CID { 0xd5c9bc48, 0x1dd1, 0x11b2, { 0x9a, 0x0b, 0xf7, 0x3f, 0x59, 0x53, 0x19, 0xae } }
+#define NS_BASICAUTH_PROGID "mozilla.network.http-basic-auth.1"
+
+/* XXX this should all be data-driven, via NS_IMPL_GETMODULE_WITH_CATEGORIES */
+static nsresult
+RegisterBasicAuth(nsIComponentManager *aCompMgr, nsIFile *aPath,
+                  const char *registryLocation, const char *componentType)
+{
+    nsresult rv;
+    nsCOMPtr<nsICategoryManager> catman =
+        do_GetService(NS_CATEGORYMANAGER_PROGID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    nsXPIDLCString previous;
+    return catman->AddCategoryEntry("http-auth", "Basic", NS_BASICAUTH_PROGID,
+                                    PR_TRUE, PR_TRUE, getter_Copies(previous));
+}
+
+static nsresult
+UnregisterBasicAuth(nsIComponentManager *aCompMgr, nsIFile *aPath,
+                  const char *registryLocation)
+{
+    nsresult rv;
+    nsCOMPtr<nsICategoryManager> catman =
+        do_GetService(NS_CATEGORYMANAGER_PROGID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    nsXPIDLCString basicAuth;
+    rv = catman->GetCategoryEntry("http-auth", "Basic",
+                                  getter_Copies(basicAuth));
+    if (NS_FAILED(rv)) return rv;
+
+    // only unregister if we're the current Basic-auth handler
+    if (!strcmp(basicAuth, NS_BASICAUTH_PROGID))
+        return catman->DeleteCategoryEntry("http-auth", "Basic", PR_TRUE,
+                                           getter_Copies(basicAuth));
+    return NS_OK;
+}
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "nsFileChannel.h"
@@ -534,6 +573,13 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
       NS_HTTPS_HANDLER_FACTORY_CID,
       NS_NETWORK_PROTOCOL_PROGID_PREFIX "https",
       nsHTTPSHandler::Create },
+    { "Basic Auth Encoder",
+      NS_BASICAUTH_CID,
+      NS_BASICAUTH_PROGID,
+      nsBasicAuthConstructor,
+      RegisterBasicAuth,
+      UnregisterBasicAuth
+    },
 
     // from netwerk/protocol/data:
     { "Data Protocol Handler", 

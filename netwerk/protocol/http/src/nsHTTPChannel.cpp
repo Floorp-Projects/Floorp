@@ -56,9 +56,8 @@
 // FIXME - Temporary include.  Delete this when cache is enabled on all 
 // platforms
 #include "nsIPref.h"
+#include "nsIAuthenticator.h"
 
-// Once other kinds of auth are up change TODO
-#include "nsBasicAuth.h" 
 static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 #include "nsProxiedService.h"
 
@@ -1793,6 +1792,7 @@ nsHTTPChannel::Authenticate(const char *iChallenge, PRBool iProxyAuth)
 
     NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
+
     //flush out existing records of this URI in authengine-
     nsAuthEngine* pEngine;
     if (NS_SUCCEEDED(mHandler->GetAuthEngine(&pEngine))) 
@@ -1801,78 +1801,118 @@ nsHTTPChannel::Authenticate(const char *iChallenge, PRBool iProxyAuth)
     }
     
     // Determine the new username password combination to use 
-    char* newUserPass = nsnull;
+    nsAutoString user, passwd;
     if (!mAuthTriedWithPrehost && !iProxyAuth) // Proxy auth's never in prehost
     {
         nsXPIDLCString prehost;
         
+        /* XXX utility routine to get user/pass from prehost? */
         if (NS_SUCCEEDED(rv = mURI->GetPreHost(getter_Copies(prehost))))
         {
-            if ((const char*)prehost) {
-                rv = serv->Unescape(prehost, &newUserPass);
-                if (NS_FAILED(rv)) return rv;
+          nsXPIDLCString newUserPass;
+          if ((const char*)prehost) {
+            /* XXX should we be un-escaping?  4.x didn't. */
+            rv = serv->Unescape(prehost, getter_Copies(newUserPass));
+            if (NS_FAILED(rv)) return rv;
+            const char *colonBlow = strchr(newUserPass, ':');
+            if (colonBlow) {
+              // "user:pass"
+              user.AssignWithConversion(newUserPass,
+                                        colonBlow - (const char *)newUserPass);
+              passwd.AssignWithConversion(colonBlow + 1);
+            } else {
+              /* just "user" */
+              user.AssignWithConversion(newUserPass);
             }
+          }
         }
     }
 
-    // Couldnt get one from prehost or has already been tried so...ask
-    if (!newUserPass || !*newUserPass)
+    nsCAutoString authType;
+    nsXPIDLCString authString;
+
+    const char *space = strchr(iChallenge, ' ');
+    if (space) {
+      authType.Assign(iChallenge, space - iChallenge);
+    } else {
+      authType.Assign(iChallenge);
+    }
+
+#ifdef DEBUG_shaver
+    fprintf(stderr, "Auth type: \"%s\"\n", authType.GetBuffer());
+#endif
+
+    nsCOMPtr<nsIAuthenticator> auth =
+      do_GetServiceFromCategory("http-auth", authType, &rv);
+    if (NS_FAILED(rv))
+      // XXX report "Authentication-type not supported: %s"
+      return rv;
+
+    nsXPIDLString userBuf, passwdBuf;
+    // save me, waterson!
+    *getter_Copies(userBuf) = user.ToNewUnicode();
+    *getter_Copies(passwdBuf) = passwd.ToNewUnicode();
+
+    PRUint32 interactionType;
+    rv = auth->GetInteractionType(&interactionType);
+    if (NS_FAILED(rv))
+        interactionType = nsIAuthenticator::INTERACTION_STANDARD;
+
+    // Couldnt get one from prehost
+    if (!user.Length() &&
+        interactionType == nsIAuthenticator::INTERACTION_STANDARD)
     {
         /*
-            Throw a modal dialog box asking for 
-            username, password. Prefill (!?!)
+          Throw a modal dialog box asking for 
+          username, password. Prefill (!?!)
         */
-
         if (!mPrompter)
-            return rv;
-        PRUnichar *user=nsnull, *passwd=nsnull;
+            return NS_ERROR_FAILURE;
         PRBool retval = PR_FALSE;
-
+        
         //TODO localize it!
         nsAutoString message; message.AssignWithConversion("Enter username for "); 
-         // later on change to only show realm and then host's info. 
+        // later on change to only show realm and then host's info. 
         message.AppendWithConversion(iChallenge);
         
         // Get url
         nsXPIDLCString urlCString; 
         mURI->GetPrePath(getter_Copies(urlCString));
-        
+            
         nsAutoString prePath = NS_ConvertToString(urlCString); // XXX i18n
         rv = mPrompter->PromptUsernameAndPassword(nsnull,
                                                   message.GetUnicode(),
                                                   prePath.GetUnicode(),
                                                   PR_FALSE,
-                                                  &user,
-                                                  &passwd,
+                                                  getter_Copies(userBuf),
+                                                  getter_Copies(passwdBuf),
                                                   &retval);
-       
-        if (NS_SUCCEEDED(rv) && (retval))
-        {
-            nsAutoString temp(user);
-            if (passwd) {
-                temp.AppendWithConversion(':');
-                temp += passwd;
-            }
-            CRTFREEIF(newUserPass);
-            newUserPass = temp.ToNewCString();
-        }
-        else 
+        if (NS_FAILED(rv))
             return rv;
     }
 
-    // Construct the auth string request header based on info provided. 
-    nsXPIDLCString authString;
-    // change this later to include other kinds of authentication. TODO 
-    if (NS_FAILED(rv = nsBasicAuth::Authenticate(
-                    mURI, 
-                    NS_STATIC_CAST(const char*, iChallenge), 
-                    NS_STATIC_CAST(const char*, newUserPass),
-                    getter_Copies(authString))))
-        return rv; // Failed to construct an authentication string.
+    if (!userBuf[0] &&
+        (interactionType == nsIAuthenticator::INTERACTION_STANDARD ||
+         interactionType == nsIAuthenticator::INTERACTION_NONE)) {
+        /* can't proceed without at least a username, can we? */
+        return NS_ERROR_FAILURE;
+    }
+            
+    if (NS_FAILED(rv) ||
+        NS_FAILED(rv = auth->Authenticate(mURI, "http", iChallenge,
+                                          userBuf, passwdBuf, mPrompter,
+                                          getter_Copies(authString))))
+        return rv;
+
+#ifdef DEBUG_shaver
+    fprintf(stderr, "Auth string: %s\n", (const char *)authString);
+#endif
 
     // Construct a new channel
     // For security/privacy purposes, a response to an authenticated request is
     // not cached, except perhaps in the memory cache.
+    // XXX if we had username and passwd in user-auth, and the interaction
+    // XXX was standard or none, then it's safe to cache, I think (shaver)
     mLoadAttributes |= nsIChannel::INHIBIT_PERSISTENT_CACHING;
 
     // This smells like a clone function... maybe there is a 
