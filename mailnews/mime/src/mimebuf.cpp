@@ -256,6 +256,7 @@ mime_LineBuffer (const char *net_buffer, PRInt32 net_buffer_size,
 		  }
 		memcpy ((*bufferP) + (*buffer_fpP), net_buffer, (end - net_buffer));
 		(*buffer_fpP) += (end - net_buffer);
+        (*bufferP)[*buffer_fpP] = '\0';
 	  }
 
 	  /* Now *bufferP contains either a complete line, or as complete

@@ -339,43 +339,47 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
 
   if (!skipConversion)
   {
-    PRBool whattodo = obj->options->whattodo;
-    if (plainHTML)
+    // Convert only if the source string is not empty
+    if (length - (linep - line) > 0)
     {
-      if (quoting)
-        whattodo = 0;
-      else
-        whattodo = whattodo & ~mozITXTToHTMLConv::kGlyphSubstitution;
-                   /* Do recognition for the case, the result is viewed in
-                      Mozilla, but not GlyphSubstitution, because other UAs
-                      might not be able to display the glyphs. */
-    }
-
-    nsDependentCString inputStr(linep, length - (linep - line));
-
-    // For 'SaveAs', |line| is in |mailCharset|.
-    // convert |line| to UTF-16 before 'html'izing (calling ScanTXT())
-    if (obj->options->format_out == nsMimeOutput::nsMimeMessageSaveAs)
-    {
-      // Get the mail charset of this message.
-      MimeInlineText  *inlinetext = (MimeInlineText *) obj;
-      if (!inlinetext->initializeCharset)
-         ((MimeInlineTextClass*)&mimeInlineTextClass)->initialize_charset(obj);
-      mailCharset = inlinetext->charset;
-      if (mailCharset && *mailCharset) {
-        rv = nsMsgI18NConvertToUnicode(mailCharset, inputStr, lineSource);
-        NS_ENSURE_SUCCESS(rv, -1);
+      PRBool whattodo = obj->options->whattodo;
+      if (plainHTML)
+      {
+        if (quoting)
+          whattodo = 0;
+        else
+          whattodo = whattodo & ~mozITXTToHTMLConv::kGlyphSubstitution;
+                    /* Do recognition for the case, the result is viewed in
+                        Mozilla, but not GlyphSubstitution, because other UAs
+                        might not be able to display the glyphs. */
       }
-      else // this probably never happens...
-        CopyUTF8toUTF16(inputStr, lineSource);
-    }
-    else   // line is in UTF-8
-      CopyUTF8toUTF16(inputStr, lineSource);
 
-    // This is the main TXT to HTML conversion:
-    // escaping (very important), eventually recognizing etc.
-    rv = conv->ScanTXT(lineSource.get(), whattodo, getter_Copies(lineResult));
-    NS_ENSURE_SUCCESS(rv, -1);
+      nsDependentCString inputStr(linep, length - (linep - line));
+
+      // For 'SaveAs', |line| is in |mailCharset|.
+      // convert |line| to UTF-16 before 'html'izing (calling ScanTXT())
+      if (obj->options->format_out == nsMimeOutput::nsMimeMessageSaveAs)
+      {
+        // Get the mail charset of this message.
+        MimeInlineText  *inlinetext = (MimeInlineText *) obj;
+        if (!inlinetext->initializeCharset)
+          ((MimeInlineTextClass*)&mimeInlineTextClass)->initialize_charset(obj);
+        mailCharset = inlinetext->charset;
+        if (mailCharset && *mailCharset) {
+          rv = nsMsgI18NConvertToUnicode(mailCharset, inputStr, lineSource);
+          NS_ENSURE_SUCCESS(rv, -1);
+        }
+        else // this probably never happens...
+          CopyUTF8toUTF16(inputStr, lineSource);
+      }
+      else   // line is in UTF-8
+        CopyUTF8toUTF16(inputStr, lineSource);
+
+      // This is the main TXT to HTML conversion:
+      // escaping (very important), eventually recognizing etc.
+      rv = conv->ScanTXT(lineSource.get(), whattodo, getter_Copies(lineResult));
+      NS_ENSURE_SUCCESS(rv, -1);
+    }
   }
   else
   {
