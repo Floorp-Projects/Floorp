@@ -77,7 +77,10 @@ function loadElements()
 	for (var i = 0; i < profileList.length; i++)
 	{
 		var pvals = profileList[i].split(" - ");
-    AddItem("profilekids",pvals[0],pvals[0]);
+		// only add profiles that have been migrated
+		if (pvals[1] != "migrate") {
+    			AddItem("profilekids",pvals[0],pvals[0]);
+		}
 	}
 }
 
