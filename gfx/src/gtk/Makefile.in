@@ -50,7 +50,6 @@ CPPSRCS		= \
 		nsScreenGtk.cpp \
 		nsScreenManagerGtk.cpp \
 		nsPrintOptionsGTK.cpp \
-		scale.cpp \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

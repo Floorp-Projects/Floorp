@@ -99,6 +99,10 @@ CPPSRCS += \
 		$(NULL)
 endif
 
+ifneq (,$(filter gtk xlib beos,$(MOZ_WIDGET_TOOLKIT)))
+CPPSRCS		+= scale.cpp
+endif
+
 SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libimg_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libmozutil_s.$(LIB_SUFFIX) \

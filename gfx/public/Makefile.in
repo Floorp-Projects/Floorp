@@ -62,6 +62,10 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
 EXPORTS		+= nsIPrintingContext.h
 endif
 
+ifneq (,$(filter gtk xlib beos,$(MOZ_WIDGET_TOOLKIT)))
+EXPORTS		+= scale.h
+endif
+
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 include $(topsrcdir)/config/rules.mk
