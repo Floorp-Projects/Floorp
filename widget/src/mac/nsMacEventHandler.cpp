@@ -154,11 +154,12 @@ HandleScrollEvent ( EventMouseWheelAxis inAxis, PRBool inByLine, PRInt32 inDelta
   
   // convert window-relative (local) mouse coordinates to widget-relative
   // coords for Gecko.
-  nsPoint mouseLocRelativeToWidget(0,0);
-  nsPoint widgetOrigin(0, 0);
+  nsPoint mouseLocRelativeToWidget(inMouseLoc.h, inMouseLoc.v);
+  nsRect bounds;
+  inWidget->GetBounds(bounds);
+  nsPoint widgetOrigin(bounds.x, bounds.y);
   inWidget->ConvertToDeviceCoordinates(widgetOrigin.x, widgetOrigin.y);
-  mouseLocRelativeToWidget.x = inMouseLoc.h - widgetOrigin.x;
-  mouseLocRelativeToWidget.y = inMouseLoc.v - widgetOrigin.y;
+  mouseLocRelativeToWidget.MoveBy(-widgetOrigin.x, -widgetOrigin.y);
 		
   scrollEvent.eventStructType = NS_MOUSE_SCROLL_EVENT;
   scrollEvent.isShift = PR_FALSE;
