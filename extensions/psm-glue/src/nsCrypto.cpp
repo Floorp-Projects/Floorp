@@ -25,7 +25,7 @@
 #include "nsCRT.h"
 #include "prprf.h"
 #include "prmem.h"
-#include "nsIPSMComponent.h"
+#include "nsPSMComponent.h"
 #include "nsDOMCID.h"
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsIDOMWindow.h"
@@ -160,8 +160,7 @@ getPSMComponent(nsIPSMComponent ** retPSM)
   nsresult rv;
   nsISupports *psm;
   
-  rv = nsServiceManager::GetService(nsCrypto::kPSMComponentProgID, 
-				    NS_GET_IID(nsIPSMComponent), &psm);
+  rv = nsPSMComponent::CreatePSMComponent(nsnull, NS_GET_IID(nsIPSMComponent), (void**)&psm);
   if (rv == NS_OK) 
     *retPSM = (nsIPSMComponent *)psm;
   
@@ -1257,14 +1256,14 @@ nsCryptoRunnable::~nsCryptoRunnable() {
 
 NS_IMETHODIMP
 nsCryptoRunnable::Run() {
-  char              msg[512]; 
-  nsIScriptContext *scriptCx;
   nsresult          rv;
   PRBool            reportErrors = PR_FALSE;
-  JSObject         *obj;
   JSStackFrame     *fp=nsnull;
   nsCrypto         *cryptoObject;
 #if 0 
+  char              msg[512]; 
+  nsIScriptContext *scriptCx;
+  JSObject         *obj;
   PR_snprintf(msg, 512, "Javi's test of JS_ReportError from a separate thread.\n");
   if (mHandlerInfo->cx->fp == nsnull) {
     rv = nsJSUtils::nsGetDynamicScriptContext(mHandlerInfo->cx, &scriptCx);
