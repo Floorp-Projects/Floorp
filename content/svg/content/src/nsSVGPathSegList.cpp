@@ -87,7 +87,7 @@ protected:
   
   void ReleaseSegments();
   
-  nsAutoVoidArray mSegments;
+  nsVoidArray mSegments;
 };
 
 
@@ -124,28 +124,38 @@ NS_INTERFACE_MAP_END
 NS_IMETHODIMP
 nsSVGPathSegList::SetValueString(const nsAString& aValue)
 {
-  WillModify();
-  
-  ReleaseSegments();
+  nsresult rv;
 
-  nsresult rv = NS_OK;
+  char *str = ToNewCString(aValue);
 
-  // XXX how am I supposed to do this ??? 
-  // char* str  = aValue.ToNewCString();
-  char* str;
-  {
-    nsAutoString temp(aValue);
-    str = ToNewCString(temp);
-  }
-
-  nsSVGPathDataParser parser(this);
+  nsVoidArray data;
+  nsSVGPathDataParser parser(&data);
   rv = parser.Parse(str);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "path data parse error!");
-  nsMemory::Free(str);
   
-  DidModify();
+  if (NS_SUCCEEDED(rv)) {
+    WillModify();
+    ReleaseSegments();
+    mSegments = data;
+    PRInt32 count = mSegments.Count();
+    for (PRInt32 i=0; i<count; ++i) {
+      nsIDOMSVGPathSeg* seg = ElementAt(i);
+      nsCOMPtr<nsISVGValue> val = do_QueryInterface(seg);
+      if (val)
+        val->AddObserver(this);
+    }
+    DidModify();
+  }
+  else {
+    NS_ERROR("path data parse error!");    
+    PRInt32 count = data.Count();
+    for (PRInt32 i=0; i<count; ++i) {
+      nsIDOMSVGPathSeg* seg = ElementAt(i);
+      NS_RELEASE(seg);
+    }
+  }
+  
+  nsMemory::Free(str);
   return rv;
-
 }
 
 NS_IMETHODIMP

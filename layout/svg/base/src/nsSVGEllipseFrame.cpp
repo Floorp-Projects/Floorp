@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *    William Cook <william.cook@crocodile-clips.com> (original author)
+ *    Alex Fritze <alex.fritze@crocodile-clips.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -36,16 +37,16 @@
  *
  * ----- END LICENSE BLOCK ----- */
 
-#include "nsSVGGraphicFrame.h"
+#include "nsSVGPathGeometryFrame.h"
 #include "nsIDOMSVGAnimatedLength.h"
 #include "nsIDOMSVGLength.h"
 #include "nsIDOMSVGPoint.h"
 #include "nsIDOMSVGEllipseElement.h"
 #include "nsIDOMSVGElement.h"
 #include "nsIDOMSVGSVGElement.h"
-#include "nsASVGPathBuilder.h"
+#include "nsISVGRendererPathBuilder.h"
 
-class nsSVGEllipseFrame : public nsSVGGraphicFrame
+class nsSVGEllipseFrame : public nsSVGPathGeometryFrame
 {
   friend nsresult
   NS_NewSVGEllipseFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
@@ -53,7 +54,12 @@ class nsSVGEllipseFrame : public nsSVGGraphicFrame
   virtual ~nsSVGEllipseFrame();
 
   virtual nsresult Init();
-  virtual void ConstructPath(nsASVGPathBuilder* pathBuilder);
+
+  // nsISVGValueObserver interface:
+  NS_IMETHOD DidModifySVGObservable(nsISVGValue* observable);
+
+  // nsISVGPathGeometrySource interface:
+  NS_IMETHOD ConstructPath(nsISVGRendererPathBuilder *pathBuilder);
 
   nsCOMPtr<nsIDOMSVGLength> mCx;
   nsCOMPtr<nsIDOMSVGLength> mCy;
@@ -100,6 +106,9 @@ nsSVGEllipseFrame::~nsSVGEllipseFrame()
 
 nsresult nsSVGEllipseFrame::Init()
 {
+  nsresult rv = nsSVGPathGeometryFrame::Init();
+  if (NS_FAILED(rv)) return rv;
+  
   nsCOMPtr<nsIDOMSVGEllipseElement> ellipse = do_QueryInterface(mContent);
   NS_ASSERTION(ellipse,"wrong content element");
 
@@ -147,10 +156,29 @@ nsresult nsSVGEllipseFrame::Init()
       value->AddObserver(this);
   }
 
-  return nsSVGGraphicFrame::Init();
+  return NS_OK; 
 }
 
-void nsSVGEllipseFrame::ConstructPath(nsASVGPathBuilder* pathBuilder)
+//----------------------------------------------------------------------
+// nsISVGValueObserver methods:
+
+NS_IMETHODIMP
+nsSVGEllipseFrame::DidModifySVGObservable(nsISVGValue* observable)
+{
+  nsCOMPtr<nsIDOMSVGLength> l = do_QueryInterface(observable);
+  if (l && (mCx==l || mCy==l || mRx==l || mRy==l)) {
+    UpdateGraphic(nsISVGPathGeometrySource::UPDATEMASK_PATH);
+    return NS_OK;
+  }
+  // else
+  return nsSVGPathGeometryFrame::DidModifySVGObservable(observable);
+}
+
+//----------------------------------------------------------------------
+// nsISVGPathGeometrySource methods:
+
+/* void constructPath (in nsISVGRendererPathBuilder pathBuilder); */
+NS_IMETHODIMP nsSVGEllipseFrame::ConstructPath(nsISVGRendererPathBuilder* pathBuilder)
 {
   float x,y,rx,ry;
 
@@ -164,4 +192,6 @@ void nsSVGEllipseFrame::ConstructPath(nsASVGPathBuilder* pathBuilder)
   pathBuilder->Arcto(x+rx, y, rx, ry, 0.0, 0, 0);
   pathBuilder->Arcto(x-rx, y, rx, ry, 0.0, 1, 0);
   pathBuilder->ClosePath(&x,&y);
+
+  return NS_OK;
 }

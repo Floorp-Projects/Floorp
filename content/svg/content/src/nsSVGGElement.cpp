@@ -38,6 +38,7 @@
 
 #include "nsSVGGraphicElement.h"
 #include "nsIDOMSVGGElement.h"
+#include "nsSVGAtoms.h"
 
 typedef nsSVGGraphicElement nsSVGGElementBase;
 
@@ -61,7 +62,10 @@ public:
   NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGGElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGGElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGGElementBase::)
-  
+
+  // nsISVGContent interface
+  NS_IMETHOD IsPresentationAttribute(const nsIAtom* attribute, PRBool* retval);
+    
 protected:
 };
 
@@ -166,4 +170,40 @@ nsSVGGElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   *aReturn = NS_STATIC_CAST(nsSVGGElementBase*, it);
 
   return NS_OK; 
+}
+
+//----------------------------------------------------------------------
+// nsISVGContent methods
+
+NS_IMETHODIMP
+nsSVGGElement::IsPresentationAttribute(const nsIAtom* name, PRBool *retval)
+{
+  if (
+      // PresentationAttributes-TextContentElements
+      name==nsSVGAtoms::alignment_baseline ||
+      name==nsSVGAtoms::baseline_shift    ||
+      name==nsSVGAtoms::direction         ||
+      name==nsSVGAtoms::dominant_baseline ||
+      name==nsSVGAtoms::glyph_orientation_horizontal ||
+      name==nsSVGAtoms::glyph_orientation_vertical ||
+      name==nsSVGAtoms::kerning           ||
+      name==nsSVGAtoms::letter_spacing    ||
+      name==nsSVGAtoms::text_anchor       ||
+      name==nsSVGAtoms::text_decoration   ||
+      name==nsSVGAtoms::unicode_bidi      ||
+      name==nsSVGAtoms::word_spacing      ||
+      // PresentationAttributes-FontSpecification
+      name==nsSVGAtoms::font_family       ||
+      name==nsSVGAtoms::font_size         ||
+      name==nsSVGAtoms::font_size_adjust  ||
+      name==nsSVGAtoms::font_stretch      ||
+      name==nsSVGAtoms::font_style        ||
+      name==nsSVGAtoms::font_variant      ||
+      name==nsSVGAtoms::font_weight      
+      ) {
+    *retval = PR_TRUE;
+    return NS_OK;
+  }
+  else
+    return nsSVGGElementBase::IsPresentationAttribute(name, retval);
 }

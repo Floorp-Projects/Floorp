@@ -53,11 +53,13 @@
 #include "nsISVGValueObserver.h"
 #include "nsWeakReference.h"
 #include "nsISVGStyleValue.h"
+#include "nsISVGContent.h"
 
-class nsSVGElement : public nsGenericElement,    // :nsIHTMLContent:nsIStyledContent:nsIContent
+class nsSVGElement : public nsGenericElement,    // :nsIHTMLContent:nsIXMLContent:nsIStyledContent:nsIContent
                      public nsIDOMSVGElement,    // :nsIDOMElement:nsIDOMNode
                      public nsISVGValueObserver, 
-                     public nsSupportsWeakReference // :nsISupportsWeakReference
+                     public nsSupportsWeakReference, // :nsISupportsWeakReference
+                     public nsISVGContent
 {
 protected:
   nsSVGElement();
@@ -71,6 +73,7 @@ public:
 
   // nsIContent interface methods
 
+  virtual void SetParent(nsIContent* aParent);
   virtual PRBool CanContainChildren() const;
   virtual PRUint32 GetChildCount() const;
   virtual nsIContent *GetChildAt(PRUint32 aIndex) const;
@@ -92,6 +95,7 @@ public:
   virtual nsresult GetAttrNameAt(PRUint32 aIndex, PRInt32* aNameSpaceID,
                                  nsIAtom** aName, nsIAtom** aPrefix) const;
   virtual PRUint32 GetAttrCount() const;
+
 #ifdef DEBUG
   virtual void List(FILE* out, PRInt32 aIndent) const;
   virtual void DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const;
@@ -113,23 +117,7 @@ public:
 
   virtual const nsAttrName* InternalGetExistingAttrNameFromQName(const nsAString& aStr) const;
 
-  // NS_IMETHOD RangeAdd(nsIDOMRange& aRange);
-//   NS_IMETHOD RangeRemove(nsIDOMRange& aRange);
-//   NS_IMETHOD GetRangeList(nsVoidArray** aResult) const;
-//   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,
-//                             nsEvent* aEvent,
-//                             nsIDOMEvent** aDOMEvent,
-//                             PRUint32 aFlags,
-//                             nsEventStatus* aEventStatus);
-//   NS_IMETHOD GetContentID(PRUint32* aID);
-//   NS_IMETHOD SetContentID(PRUint32 aID);
-//   NS_IMETHOD SetFocus(nsIPresContext* aContext);
-//   NS_IMETHOD RemoveFocus(nsIPresContext* aContext);
-//   NS_IMETHOD GetBindingParent(nsIContent** aContent);
-//   NS_IMETHOD SetBindingParent(nsIContent* aParent);
-
-  // nsIXMLContent
-//   NS_IMETHOD MaybeTriggerAutoLink(nsIDocShell *aShell);
+  virtual nsresult SetBindingParent(nsIContent* aParent);
 
   // nsIStyledContent
   NS_IMETHOD GetID(nsIAtom** aResult) const;
@@ -155,10 +143,15 @@ public:
 
   // nsISupportsWeakReference
   // implementation inherited from nsSupportsWeakReference
+
+  // nsISVGContent interface
+  NS_IMETHOD IsPresentationAttribute(const nsIAtom* attribute, PRBool* retval){*retval=PR_FALSE; return NS_OK;}
+
   
 protected:
 
   nsresult CopyNode(nsSVGElement* dest, PRBool deep);
+  virtual void ParentChainChanged(){}; 
   
   nsCOMArray<nsIContent>       mChildren;
   nsSVGAttributes*             mAttributes;

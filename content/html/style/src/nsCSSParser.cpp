@@ -4135,6 +4135,9 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty_box_ordinal_group:
     return ParseVariant(aErrorCode, aValue, VARIANT_INTEGER, nsnull);
 #ifdef MOZ_SVG
+  case eCSSProperty_dominant_baseline:
+    return ParseVariant(aErrorCode, aValue, VARIANT_AHK,
+                        nsCSSProps::kDominantBaselineKTable);
   case eCSSProperty_fill:
     return ParseVariant(aErrorCode, aValue, VARIANT_HC | VARIANT_NONE,
                         nsnull);
@@ -4144,6 +4147,12 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty_fill_rule:
     return ParseVariant(aErrorCode, aValue, VARIANT_HK,
                         nsCSSProps::kFillRuleKTable);
+  case eCSSProperty_pointer_events:
+    return ParseVariant(aErrorCode, aValue, VARIANT_HK,
+                        nsCSSProps::kPointerEventsKTable);
+  case eCSSProperty_shape_rendering:
+    return ParseVariant(aErrorCode, aValue, VARIANT_AHK,
+                        nsCSSProps::kShapeRenderingKTable);
   case eCSSProperty_stroke:
     return ParseVariant(aErrorCode, aValue, VARIANT_HC | VARIANT_NONE,
                         nsnull);
@@ -4168,6 +4177,12 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty_stroke_width:
     return ParsePositiveVariant(aErrorCode, aValue, VARIANT_HLPN,
                         nsnull);
+  case eCSSProperty_text_anchor:
+    return ParseVariant(aErrorCode, aValue, VARIANT_HK,
+                        nsCSSProps::kTextAnchorKTable);
+  case eCSSProperty_text_rendering:
+    return ParseVariant(aErrorCode, aValue, VARIANT_AHK,
+                        nsCSSProps::kTextRenderingKTable);
 #endif
   case eCSSProperty_box_sizing:
     return ParseVariant(aErrorCode, aValue, VARIANT_HK,

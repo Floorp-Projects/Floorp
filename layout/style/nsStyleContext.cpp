@@ -808,17 +808,34 @@ void nsStyleContext::DumpRegressionData(nsIPresContext* aPresContext, FILE* out,
     (int)xul->mBoxOrdinal);
   fprintf(out, "\" />\n");
 
-  // SVG
 #ifdef MOZ_SVG
+  // SVG
   IndentBy(out,aIndent);
   const nsStyleSVG* svg = GetStyleSVG();
-  fprintf(out, "<svg data=\"%d %f %f %d %f",
-          (int)svg->mStroke.mType,
-          svg->mStrokeWidth,
-          svg->mStrokeOpacity,
+  fprintf(out, "<svg data=\"%d %ld %f %d %d %d %d %ld %s %f %d %d %f %f %f %d %d\" />\n",
           (int)svg->mFill.mType,
-          svg->mFillOpacity);
-  fprintf(out, "\" />\n");
+          (long)svg->mFill.mColor,
+          svg->mFillOpacity,
+          (int)svg->mFillRule,
+          (int)svg->mPointerEvents,
+          (int)svg->mShapeRendering,
+          (int)svg->mStroke.mType,
+          (long)svg->mStroke.mColor,
+          NS_ConvertUCS2toUTF8(svg->mStrokeDasharray).get(),
+          svg->mStrokeDashoffset,
+          (int)svg->mStrokeLinecap,
+          (int)svg->mStrokeLinejoin,
+          svg->mStrokeMiterlimit,
+          svg->mStrokeOpacity,
+          svg->mStrokeWidth,
+          (int)svg->mTextAnchor,
+          (int)svg->mTextRendering);
+
+  // SVGReset
+  IndentBy(out,aIndent);
+  const nsStyleSVGReset* svgReset = GetStyleSVGReset();
+  fprintf(out, "<svgreset data=\"%d\" />\n",
+          (int)svgReset->mDominantBaseline);
 #endif
   //#insert new style structs here#
 }

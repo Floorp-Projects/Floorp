@@ -1186,18 +1186,43 @@ struct nsStyleSVG : public nsStyleStruct {
 
   nsChangeHint CalcDifference(const nsStyleSVG& aOther) const;
 
-  // all [inherit]ed
-  nsStyleSVGPaint  mFill;              // [inherited]
-  float            mFillOpacity;       // [inherited]
-  PRUint8          mFillRule;          // [inherited] see nsStyleConsts.h
-  nsStyleSVGPaint  mStroke;            // [inherited]
-  nsString         mStrokeDasharray;   // [inherited] XXX we want a parsed value here
-  float            mStrokeDashoffset;  // [inherited]
-  PRUint8          mStrokeLinecap;     // [inherited] see nsStyleConsts.h
-  PRUint8          mStrokeLinejoin;    // [inherited] see nsStyleConsts.h
-  float            mStrokeMiterlimit;  // [inherited]
-  float            mStrokeOpacity;     // [inherited]
-  float            mStrokeWidth;       // [inherited] in pixels
+  nsStyleSVGPaint  mFill;             // [inherited]
+  float            mFillOpacity;      // [inherited]
+  PRUint8          mFillRule;         // [inherited] see nsStyleConsts.h
+  PRUint8          mPointerEvents;    // [inherited] see nsStyleConsts.h
+  PRUint8          mShapeRendering;   // [inherited] see nsStyleConsts.h
+  nsStyleSVGPaint  mStroke;           // [inherited]
+  nsString         mStrokeDasharray;  // [inherited] XXX we want a parsed value here
+  float            mStrokeDashoffset; // [inherited]
+  PRUint8          mStrokeLinecap;    // [inherited] see nsStyleConsts.h
+  PRUint8          mStrokeLinejoin;   // [inherited] see nsStyleConsts.h
+  float            mStrokeMiterlimit; // [inherited]
+  float            mStrokeOpacity;    // [inherited]
+  float            mStrokeWidth;      // [inherited] in pixels
+  PRUint8          mTextAnchor;       // [inherited] see nsStyleConsts.h
+  PRUint8          mTextRendering;    // [inherited] see nsStyleConsts.h
+};
+
+struct nsStyleSVGReset : public nsStyleStruct {
+  nsStyleSVGReset();
+  nsStyleSVGReset(const nsStyleSVGReset& aSource);
+  ~nsStyleSVGReset();
+
+  NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_SVGReset)
+  
+  void* operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
+    void* result = nsnull;
+    aContext->AllocateFromShell(sz, &result);
+    return result;
+  }
+  void Destroy(nsIPresContext* aContext) {
+    this->~nsStyleSVGReset();
+    aContext->FreeToShell(sizeof(nsStyleSVGReset), this);
+  };
+
+  nsChangeHint CalcDifference(const nsStyleSVGReset& aOther) const;
+
+  PRUint8          mDominantBaseline; // [reset] see nsStyleConsts.h
 };
 #endif
 

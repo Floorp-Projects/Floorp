@@ -1,0 +1,216 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ----- BEGIN LICENSE BLOCK -----
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the Mozilla SVG project.
+ *
+ * The Initial Developer of the Original Code is 
+ * Crocodile Clips Ltd.
+ * Portions created by the Initial Developer are Copyright (C) 2002
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *    Alex Fritze <alex.fritze@crocodile-clips.com> (original author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the NPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ----- END LICENSE BLOCK ----- */
+
+#include "nsISupports.idl"
+
+%{C++
+#include "nsColor.h"
+%}
+
+native nscolor(nscolor);
+
+interface nsIDOMSVGMatrix;
+interface nsIPresContext;
+
+/**
+ * \addtogroup rendering_backend_interfaces Rendering Backend Interfaces
+ * @{
+ */
+
+/**
+ * Describes a 'geometry' object (either a path or a glyph) in the SVG
+ * rendering backend. The rendering backend maintains an object
+ * implementing this interface for each rendering engine-native
+ * geometry object.
+ *
+ * An engine-native geometry object will be informed of changes in a
+ * geometry's description with a call to its 'update' method with an
+ * OR-ed combination of the UPDATEMASK_* constants defined in this
+ * interface (or one of its sub-interfaces).
+ *
+ * @nosubgrouping
+ */
+[scriptable, uuid(d65a8784-5382-4b68-848d-0a91cd096937)]
+interface nsISVGGeometrySource : nsISupports
+{
+  /**
+   * @name Generic updatemasks
+   * @{
+   */
+  const unsigned long UPDATEMASK_NOTHING           = 0x00000000;
+  const unsigned long UPDATEMASK_ALL               = 0xFFFFFFFF;
+  /** @} */
+  
+  /**
+   * @name Presentation context
+   * @{
+   */
+  [noscript] readonly attribute nsIPresContext presContext;
+  const unsigned long UPDATEMASK_PRES_CONTEXT      = 0x00000001;
+  /** @} */
+  
+  /**
+   * @name Current transform matrix
+   * @{
+   */
+  readonly attribute nsIDOMSVGMatrix CTM;
+  const unsigned long UPDATEMASK_CTM               = 0x00000002;
+  /** @} */
+  
+  /**
+   * @name Stroke opacity
+   * @{
+   */
+  readonly attribute float strokeOpacity;
+  const unsigned long UPDATEMASK_STROKE_OPACITY    = 0x00000004;
+  /** @} */
+
+  /**
+   * @name Stroke width
+   * @{
+   */
+  readonly attribute float strokeWidth;
+  const unsigned long UPDATEMASK_STROKE_WIDTH      = 0x00000008;
+  /** @} */
+
+  /**
+   * @name Stroke dash-array
+   * @{
+   */
+  void getStrokeDashArray([array, size_is(count)] out float arr,
+                          out unsigned long count);
+  const unsigned long UPDATEMASK_STROKE_DASH_ARRAY = 0x00000010;
+  /** @} */
+
+  /**
+   * @name Stroke dash-offset
+   * @{
+   */
+  readonly attribute float strokeDashoffset;
+  const unsigned long UPDATEMASK_STROKE_DASHOFFSET = 0x00000020;
+  /** @} */
+
+  /**
+   * @name Stroke line-cap
+   * @{
+   */
+  const unsigned short STROKE_LINECAP_BUTT   = 0;
+  const unsigned short STROKE_LINECAP_ROUND  = 1;
+  const unsigned short STROKE_LINECAP_SQUARE = 2;
+
+  readonly attribute unsigned short strokeLinecap;
+  const unsigned long UPDATEMASK_STROKE_LINECAP    = 0x00000040;
+  /** @} */
+
+  
+  /**
+   * @name Stroke line-join
+   * @{
+   */
+  const unsigned short STROKE_LINEJOIN_MITER = 0;
+  const unsigned short STROKE_LINEJOIN_ROUND = 1;
+  const unsigned short STROKE_LINEJOIN_BEVEL = 2;
+
+  readonly attribute unsigned short strokeLinejoin;
+  const unsigned long UPDATEMASK_STROKE_LINEJOIN   = 0x00000080;
+  /** @} */
+  
+  /**
+   * @name Miterlimit
+   * @{
+   */
+  readonly attribute float strokeMiterlimit;
+  const unsigned long UPDATEMASK_STROKE_MITERLIMIT = 0x00000100;
+  /** @} */
+
+  /**
+   * @name Fill opacity
+   * @{
+   */
+  readonly attribute float fillOpacity;
+  const unsigned long UPDATEMASK_FILL_OPACITY      = 0x00000200;
+  /** @} */
+
+  
+  /**
+   * @name Fill rule
+   * @{
+   */
+  const unsigned short FILL_RULE_NONZERO = 0;
+  const unsigned short FILL_RULE_EVENODD = 1;
+  
+  readonly attribute unsigned short fillRule;
+  const unsigned long UPDATEMASK_FILL_RULE         = 0x00000400;
+  /** @} */
+
+  
+  /**
+   * @name Paint type constants for stroke and fill paint
+   * @{
+   */
+  const unsigned short PAINT_TYPE_NONE        = 0;
+  const unsigned short PAINT_TYPE_SOLID_COLOR = 1;
+  const unsigned short PAINT_TYPE_SERVER      = 2; 
+  /** @} */
+  
+  /**
+   * @name Stroke paint
+   * @{
+   */
+  /* **** stroke paint XXX needs consolidation ********************* */  
+  readonly attribute unsigned short strokePaintType; 
+  const unsigned long UPDATEMASK_STROKE_PAINT_TYPE = 0x00000800;
+
+  [noscript] readonly attribute nscolor strokePaint; 
+  const unsigned long UPDATEMASK_STROKE_PAINT      = 0x00001000;
+  /** @} */
+
+  /**
+   * @name Fill paint
+   * @{
+   */
+  /* **** fill paint XXX needs consolidation *********************** */
+  readonly attribute unsigned short fillPaintType; 
+  const unsigned long UPDATEMASK_FILL_PAINT_TYPE   = 0x00002000;
+
+  [noscript] readonly attribute nscolor fillPaint; 
+  const unsigned long UPDATEMASK_FILL_PAINT        = 0x00004000;  
+  /** @} */
+};
+
+/** @} */

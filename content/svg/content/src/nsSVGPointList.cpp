@@ -43,6 +43,7 @@
 #include "nsReadableUtils.h"
 #include "nsTextFormatter.h"
 #include "nsCRT.h"
+#include "nsCOMArray.h"
 
 nsresult
 nsSVGPointList::Create(const nsAString& aValue,
@@ -158,53 +159,57 @@ NS_INTERFACE_MAP_END
 NS_IMETHODIMP
 nsSVGPointList::SetValueString(const nsAString& aValue)
 {
-  WillModify();
-  
-  ReleasePoints();
-
   nsresult rv = NS_OK;
 
-  // XXX how am I supposed to do this ??? 
-  // char* str  = aValue.ToNewCString();
-  char* str;
-  {
-    nsAutoString temp(aValue);
-    str = ToNewCString(temp);
-  }
+  char* str = ToNewCString(aValue);
   
   char* rest = str;
   char* token1;
   char* token2;
   const char* delimiters = ",\x20\x9\xD\xA";
-
+  nsCOMArray<nsIDOMSVGPoint> points;
+  
   while ( (token1 = nsCRT::strtok(rest, delimiters, &rest)) &&
           (token2 = nsCRT::strtok(rest, delimiters, &rest)) ) {
 
     char *end;
     
     double x = PR_strtod(token1, &end);
-    if (*end != '\0') break; // parse error
-    
+    if (*end != '\0') {
+      rv = NS_ERROR_FAILURE;
+      break; // parse error
+    }
     double y = PR_strtod(token2, &end);
-    if (*end != '\0') break; // parse error
-
+    if (*end != '\0') {
+      rv = NS_ERROR_FAILURE;
+      break; // parse error
+    }
+    
     nsCOMPtr<nsIDOMSVGPoint> point;
     nsSVGPoint::Create((float)x, (float)y, getter_AddRefs(point));
     if (!point) {
       rv = NS_ERROR_OUT_OF_MEMORY;
       break;
     }
-    AppendElement(point);
+    points.AppendObject(point);
   }
 
-  if (token1) {
-    // there was a parse error. should we return an error?
-    // rv = NS_ERROR_???;
+  if (token1 || NS_FAILED(rv)) {
+    // there was a parse error. 
+    rv = NS_ERROR_FAILURE;
+  }
+  else {
+    WillModify();
+    ReleasePoints();
+    PRInt32 count = points.Count();
+    for (PRInt32 i=0; i<count; ++i) {
+      AppendElement(points.ObjectAt(i));
+    }
+    DidModify();
   }
 
   nsMemory::Free(str);
   
-  DidModify();
   return rv;
 }
 

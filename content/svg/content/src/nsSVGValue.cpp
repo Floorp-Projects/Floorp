@@ -85,8 +85,10 @@ void
 nsSVGValue::DidModify()
 {
   NS_ASSERTION(mModifyNestCount>0, "unbalanced Will/DidModify calls");
-  if (--mModifyNestCount == 0)
+  if (--mModifyNestCount == 0) {
+    OnDidModify();
     NotifyObservers(&nsISVGValueObserver::DidModifySVGObservable);
+  }
 }
 
 
@@ -112,3 +114,18 @@ nsSVGValue::RemoveObserver(nsISVGValueObserver* observer)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsSVGValue::BeginBatchUpdate()
+{
+  WillModify();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSVGValue::EndBatchUpdate()
+{
+  DidModify();
+  return NS_OK;
+}
+
+  

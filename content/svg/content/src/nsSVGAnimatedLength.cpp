@@ -192,7 +192,7 @@ NS_NewSVGAnimatedLength(nsIDOMSVGAnimatedLength** aResult,
   NS_ADDREF(animatedLength);
 
 //  nsCOMPtr<nsIDOMSVGLength> baseVal;
-//  NS_NewSVGLength(getter_AddRefs(baseVal), owner);
+//  NS_NewSVGLength(getter_AddRefs(baseVal), context);
   
   animatedLength->Init(baseVal);
   

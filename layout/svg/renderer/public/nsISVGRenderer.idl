@@ -1,0 +1,161 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ----- BEGIN LICENSE BLOCK -----
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the Mozilla SVG project.
+ *
+ * The Initial Developer of the Original Code is 
+ * Crocodile Clips Ltd.
+ * Portions created by the Initial Developer are Copyright (C) 2002
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *    Alex Fritze <alex.fritze@crocodile-clips.com> (original author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the NPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ----- END LICENSE BLOCK ----- */
+
+#include "nsISupports.idl"
+
+%{C++
+struct nsRect;
+%}
+
+[ref] native nsRectRef(nsRect);
+
+
+interface nsISVGPathGeometrySource;
+interface nsISVGGlyphMetricsSource;
+interface nsISVGGlyphGeometrySource;
+interface nsISVGRendererPathGeometry;
+interface nsISVGRendererGlyphMetrics;
+interface nsISVGRendererGlyphGeometry;
+interface nsISVGRendererCanvas;
+interface nsIRenderingContext;
+interface nsISVGRendererRegion;
+interface nsIPresContext;
+
+/**
+ * \addtogroup renderer_interfaces Rendering Engine Interfaces
+ * @{
+ */
+
+/**
+ * One of a number of interfaces (all starting with nsISVGRenderer*)
+ * to be implemented by an SVG rendering engine. 
+ *
+ * This interface serves as a factory for rendering engine-related
+ * objects. Each rendering engine needs to make available an
+ * nsIRenderer-object with a contract id of the form
+ * "@mozilla.org/svg/renderer;1?tech=NAME".
+ *
+ * Engines implemented at the moment include an ms windows gdi+ engine
+ * ("@mozilla.org/svg/renderer;1?tech=GDIPLUS") and a (somewhat)
+ * cross-platform libart engine
+ * ("@mozilla.org/svg/renderer;1?tech=LIBART").
+ */
+[scriptable, uuid(8a1398db-fb25-4711-85fc-4f5665ea7d17)]
+interface nsISVGRenderer : nsISupports
+{
+  // void Init(in nsIPresContext presContext);
+  
+  /**
+   * Create a rendering engine-native path geometry object for the
+   * source object given by 'src'.
+   *
+   * @param src The source object describing the path for which
+   * this object is being created.
+   * @return A rendering engine-native path geometry object.
+   */
+  nsISVGRendererPathGeometry createPathGeometry(in nsISVGPathGeometrySource src);
+
+  /**
+   * Create a rendering engine-native glyph metrics object for the
+   * source object given by 'src'.
+   *
+   * @param src The source object describing the glyph for which
+   * this metrics object is being created.
+   * @return A rendering engine-native glyph metrics object.
+   */
+  nsISVGRendererGlyphMetrics createGlyphMetrics(in nsISVGGlyphMetricsSource src);
+
+  /**
+   * Create a rendering engine-native glyph geometry object for the
+   * source object given by 'src'.
+   *
+   * @param src The source object describing the glyph for which
+   * this object is being created.
+   * @return A rendering engine-native glyph geometry object.
+   */
+  nsISVGRendererGlyphGeometry createGlyphGeometry(in nsISVGGlyphGeometrySource src);
+  
+  /**
+   * Create a rendering engine-native canvas object for the
+   * Mozilla-native rendering context 'ctx' and presentation context
+   * 'presContext'.
+   *
+   * @param ctx Mozilla-native rendering context.
+   * @param presContext Presentation context.
+   * @param dirtyRect Area that the canvas should cover.
+   * @return A rendering engine-native canvas object.
+   */
+  [noscript] nsISVGRendererCanvas createCanvas(in nsIRenderingContext ctx,
+                                               in nsIPresContext presContext,
+                                               [const] in nsRectRef dirtyRect);
+
+  /**
+   * Create a rendering engine-native region object for the
+   * given axis-aligned rectangle.
+   *
+   * @param x X-coordinate of rectangle (pixels).
+   * @param y Y-coordinate of rectangle (pixels).
+   * @param width Width of rectangle (pixels).
+   * @param height Height of rectangle (pixels).
+   *
+   * @return A rendering engine-native region object.
+   */
+  nsISVGRendererRegion createRectRegion(in float x, in float y, in float width, in float height);
+};
+
+/** @} */
+
+
+%{C++
+    
+#define NS_SVG_RENDERER_CONTRACTID         "@mozilla.org/svg/renderer;1"
+#define NS_SVG_RENDERER_CONTRACTID_PREFIX  NS_SVG_RENDERER_CONTRACTID "?tech="
+
+#define NS_SVG_RENDERER_LIBART_CONTRACTID NS_SVG_RENDERER_CONTRACTID_PREFIX "LIBART"
+
+// {A88E949D-AA36-4734-9C6E-F0FBCEF4FC47}
+#define NS_SVG_RENDERER_LIBART_CID \
+{ 0xa88e949d, 0xaa36, 0x4734, { 0x9c, 0x6e, 0xf0, 0xfb, 0xce, 0xf4, 0xfc, 0x47 } }
+    
+#define NS_SVG_RENDERER_GDIPLUS_CONTRACTID NS_SVG_RENDERER_CONTRACTID_PREFIX "GDIPLUS"
+
+// {D260F971-DB9D-425B-8C9B-4EB9605CE35D}
+#define NS_SVG_RENDERER_GDIPLUS_CID \
+{ 0xd260f971, 0xdb9d, 0x425b, { 0x8c, 0x9b, 0x4e, 0xb9, 0x60, 0x5c, 0xe3, 0x5d } }
+
+%}

@@ -39,6 +39,8 @@
 #include "nsSVGRect.h"
 #include "prdtoa.h"
 #include "nsSVGValue.h"
+#include "nsTextFormatter.h"
+#include "nsCRT.h"
 
 ////////////////////////////////////////////////////////////////////////
 // nsSVGRect class
@@ -108,13 +110,50 @@ NS_INTERFACE_MAP_END
 NS_IMETHODIMP
 nsSVGRect::SetValueString(const nsAString& aValue)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult rv = NS_OK;
+
+  char* str = ToNewCString(aValue);
+
+  char* rest = str;
+  char* token;
+  const char* delimiters = ",\x20\x9\xD\xA";
+
+  double vals[4];
+  int i;
+  for (i=0;i<4;++i) {
+    if (!(token = nsCRT::strtok(rest, delimiters, &rest))) break; // parse error
+    
+    char *end;
+    vals[i] = PR_strtod(token, &end);
+    if (*end != '\0') break; // parse error
+  }
+  if (i!=4 || (nsCRT::strtok(rest, delimiters, &rest)!=0)) {
+    // there was a parse error.
+    rv = NS_ERROR_FAILURE;
+  }
+  else {
+    WillModify();
+    mX      = (double)vals[0];
+    mY      = (double)vals[1];
+    mWidth  = (double)vals[2];
+    mHeight = (double)vals[3];
+    DidModify();
+  }
+  
+  return rv;
 }
 
 NS_IMETHODIMP
 nsSVGRect::GetValueString(nsAString& aValue)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  PRUnichar buf[200];
+  nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar),
+                            NS_LITERAL_STRING("%g %g %g %g").get(),
+                            (double)mX, (double)mY,
+                            (double)mWidth, (double)mHeight);
+  aValue.Append(buf);
+  
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------

@@ -483,6 +483,10 @@ protected:
                                       nsStyleContext* aContext,  
                                       nsRuleNode* aHighestNode,
                                       const RuleDetail& aRuleDetail, PRBool aInherited);
+  const nsStyleStruct* ComputeSVGResetData(nsStyleStruct* aStartSVG, const nsRuleDataStruct& aSVGData, 
+                                           nsStyleContext* aContext,  
+                                           nsRuleNode* aHighestNode,
+                                           const RuleDetail& aRuleDetail, PRBool aInherited);
 #endif
 
   // helpers for |ComputeFontData| that need access to |mNoneBits|:
@@ -534,6 +538,7 @@ protected:
   const nsStyleStruct* GetXULData(nsStyleContext* aContext);
 #ifdef MOZ_SVG
   const nsStyleStruct* GetSVGData(nsStyleContext* aContext);
+  const nsStyleStruct* GetSVGResetData(nsStyleContext* aContext);
 #endif
 
 public:

@@ -887,9 +887,45 @@ const PRInt32 nsCSSProps::kBoxPackKTable[] = {
 
 #ifdef MOZ_SVG
 // keyword tables for SVG properties
+
+const PRInt32 nsCSSProps::kDominantBaselineKTable[] = {
+  eCSSKeyword_use_script, NS_STYLE_DOMINANT_BASELINE_USE_SCRIPT,
+  eCSSKeyword_no_change, NS_STYLE_DOMINANT_BASELINE_NO_CHANGE,
+  eCSSKeyword_reset_size, NS_STYLE_DOMINANT_BASELINE_RESET_SIZE,
+  eCSSKeyword_alphabetic, NS_STYLE_DOMINANT_BASELINE_ALPHABETIC,
+  eCSSKeyword_hanging, NS_STYLE_DOMINANT_BASELINE_HANGING,
+  eCSSKeyword_ideographic, NS_STYLE_DOMINANT_BASELINE_IDEOGRAPHIC,
+  eCSSKeyword_mathematical, NS_STYLE_DOMINANT_BASELINE_MATHEMATICAL,
+  eCSSKeyword_central, NS_STYLE_DOMINANT_BASELINE_CENTRAL,
+  eCSSKeyword_middle, NS_STYLE_DOMINANT_BASELINE_MIDDLE,
+  eCSSKeyword_text_after_edge, NS_STYLE_DOMINANT_BASELINE_TEXT_AFTER_EDGE,
+  eCSSKeyword_text_before_edge, NS_STYLE_DOMINANT_BASELINE_TEXT_BEFORE_EDGE,
+  -1, -1
+};
+
 const PRInt32 nsCSSProps::kFillRuleKTable[] = {
   eCSSKeyword_nonzero, NS_STYLE_FILL_RULE_NONZERO,
   eCSSKeyword_evenodd, NS_STYLE_FILL_RULE_EVENODD,
+  -1, -1
+};
+
+const PRInt32 nsCSSProps::kPointerEventsKTable[] = {
+  eCSSKeyword_visiblepainted, NS_STYLE_POINTER_EVENTS_VISIBLEPAINTED,
+  eCSSKeyword_visiblefill, NS_STYLE_POINTER_EVENTS_VISIBLEFILL,
+  eCSSKeyword_visiblestroke, NS_STYLE_POINTER_EVENTS_VISIBLESTROKE,
+  eCSSKeyword_visible, NS_STYLE_POINTER_EVENTS_VISIBLE,
+  eCSSKeyword_painted, NS_STYLE_POINTER_EVENTS_PAINTED,
+  eCSSKeyword_fill, NS_STYLE_POINTER_EVENTS_FILL,
+  eCSSKeyword_stroke, NS_STYLE_POINTER_EVENTS_STROKE,
+  eCSSKeyword_all, NS_STYLE_POINTER_EVENTS_ALL,
+  eCSSKeyword_none, NS_STYLE_POINTER_EVENTS_NONE,
+  -1, -1
+};
+
+const PRInt32 nsCSSProps::kShapeRenderingKTable[] = {
+  eCSSKeyword_optimizespeed, NS_STYLE_SHAPE_RENDERING_OPTIMIZESPEED,
+  eCSSKeyword_crispedges, NS_STYLE_SHAPE_RENDERING_CRISPEDGES,
+  eCSSKeyword_geometricprecision, NS_STYLE_SHAPE_RENDERING_GEOMETRICPRECISION,
   -1, -1
 };
 
@@ -901,11 +937,26 @@ const PRInt32 nsCSSProps::kStrokeLinecapKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kStrokeLinejoinKTable[] = {
-  eCSSKeyword_butt, NS_STYLE_STROKE_LINEJOIN_MITER,
+  eCSSKeyword_miter, NS_STYLE_STROKE_LINEJOIN_MITER,
   eCSSKeyword_round, NS_STYLE_STROKE_LINEJOIN_ROUND,
   eCSSKeyword_bevel, NS_STYLE_STROKE_LINEJOIN_BEVEL,
   -1, -1
 };
+
+const PRInt32 nsCSSProps::kTextAnchorKTable[] = {
+  eCSSKeyword_start, NS_STYLE_TEXT_ANCHOR_START,
+  eCSSKeyword_middle, NS_STYLE_TEXT_ANCHOR_MIDDLE,
+  eCSSKeyword_end, NS_STYLE_TEXT_ANCHOR_END,
+  -1, -1
+};
+
+const PRInt32 nsCSSProps::kTextRenderingKTable[] = {
+  eCSSKeyword_optimizespeed, NS_STYLE_TEXT_RENDERING_OPTIMIZESPEED,
+  eCSSKeyword_optimizelegibility, NS_STYLE_TEXT_RENDERING_OPTIMIZELEGIBILITY,
+  eCSSKeyword_geometricprecision, NS_STYLE_TEXT_RENDERING_GEOMETRICPRECISION,
+  -1, -1
+};
+
 #endif
 
 PRInt32 
@@ -1026,12 +1077,22 @@ nsCSSProps::LookupPropertyValue(nsCSSProperty aProp, PRInt32 aValue)
   case eCSSProperty_stroke_width:
     break;
 
+  case eCSSProperty_dominant_baseline:
+    return SearchKeywordTable(aValue, kDominantBaselineKTable);
   case eCSSProperty_fill_rule:
     return SearchKeywordTable(aValue, kFillRuleKTable);
+  case eCSSProperty_pointer_events:
+    return SearchKeywordTable(aValue, kPointerEventsKTable);
+  case eCSSProperty_shape_rendering:
+    return SearchKeywordTable(aValue, kShapeRenderingKTable);
   case eCSSProperty_stroke_linecap:
     return SearchKeywordTable(aValue, kStrokeLinecapKTable);
   case eCSSProperty_stroke_linejoin:
     return SearchKeywordTable(aValue, kStrokeLinejoinKTable);
+  case eCSSProperty_text_anchor:
+    return SearchKeywordTable(aValue, kTextAnchorKTable);
+  case eCSSProperty_text_rendering:
+    return SearchKeywordTable(aValue, kTextRenderingKTable);
 #endif
     
   case eCSSProperty_box_sizing:
@@ -1400,6 +1461,7 @@ const nsStyleStructID nsCSSProps::kSIDTable[eCSSProperty_COUNT_no_shorthands] = 
     #define CSS_PROP_XUL(name_, id_, method_, datastruct_, member_, type_, iscoord_) eStyleStruct_XUL,
     #ifdef MOZ_SVG
     #define CSS_PROP_SVG(name_, id_, method_, datastruct_, member_, type_, iscoord_) eStyleStruct_SVG,
+    #define CSS_PROP_SVGRESET(name_, id_, method_, datastruct_, member_, type_, iscoord_) eStyleStruct_SVGReset,
     #endif /* defined(MOZ_SVG) */
     // This shouldn't matter, but we need something to go here.
     #define CSS_PROP_BACKENDONLY(name_, id_, method_, datastruct_, member_, type_, iscoord_) nsStyleStructID(-1),
@@ -1428,6 +1490,7 @@ const nsStyleStructID nsCSSProps::kSIDTable[eCSSProperty_COUNT_no_shorthands] = 
     #undef CSS_PROP_XUL
     #ifdef MOZ_SVG
     #undef CSS_PROP_SVG
+    #undef CSS_PROP_SVGRESET
     #endif /* undefd(MOZ_SVG) */
     #undef CSS_PROP_BACKENDONLY
 };

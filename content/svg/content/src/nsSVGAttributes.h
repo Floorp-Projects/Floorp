@@ -50,9 +50,11 @@
 #include "nsISVGValue.h"
 #include "nsISVGValueObserver.h"
 #include "nsWeakReference.h"
+#include "nsICSSStyleRule.h"
+#include "nsINameSpaceManager.h"
 #include "nsAttrName.h"
 
-class nsIContent;
+class nsIStyledContent;
 class nsSVGAttributes;
 
 ////////////////////////////////////////////////////////////////////////
@@ -127,6 +129,8 @@ public:
 
   nsISVGValue* GetValue() { return mValue; }
 
+  void SetValueString(const nsAString& aValue);
+  
   nsSVGAttributeFlags GetFlags()const { return mFlags; }
   PRBool IsRequired()const { return mFlags & NS_SVGATTRIBUTE_FLAGS_REQUIRED; }
   PRBool IsFixed()const    { return mFlags & NS_SVGATTRIBUTE_FLAGS_FIXED;    }
@@ -147,10 +151,10 @@ class nsSVGAttributes : public nsIDOMNamedNodeMap
 {
 public:
   static nsresult
-  Create(nsIContent* aElement, nsSVGAttributes** aResult);
+  Create(nsIStyledContent* aElement, nsSVGAttributes** aResult);
 
 protected:
-  nsSVGAttributes(nsIContent* aContent);
+  nsSVGAttributes(nsIStyledContent* aContent);
   virtual ~nsSVGAttributes();
 
 public:
@@ -160,29 +164,29 @@ public:
   // nsIDOMNamedNodeMap interface
   NS_DECL_NSIDOMNAMEDNODEMAP
   
-  // interface for the content element:
-
+  // interface exposed to the content element:
   PRInt32 Count() const;
-  NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
-                     nsAString& aResult);
-  NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsIAtom* aPrefix,
-                     const nsAString& aValue, PRBool aNotify);
-  NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
-                       PRBool aNotify);
+  nsresult GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
+                   nsAString& aResult);
+  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsIAtom* aPrefix,
+                   const nsAString& aValue, PRBool aNotify);
+  nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
+                     PRBool aNotify);
   NS_IMETHOD_(PRBool) HasAttr(PRInt32 aNameSpaceID,
                               nsIAtom* aName) const;
   const nsAttrName* GetExistingAttrNameFromQName(const nsAString& aStr);
-  NS_IMETHOD GetAttrNameAt(PRInt32 aIndex,
-                           PRInt32* aNameSpaceID,
-                           nsIAtom** aName,
-                           nsIAtom** aPrefix);
+  nsresult GetAttrNameAt(PRInt32 aIndex,
+                         PRInt32* aNameSpaceID,
+                         nsIAtom** aName,
+                         nsIAtom** aPrefix);
 
-  NS_IMETHOD AddMappedSVGValue(nsIAtom* name, nsISupports* value);
-
-  NS_IMETHOD CopyAttributes(nsSVGAttributes* dest);
+  nsresult AddMappedSVGValue(nsIAtom* name, nsISupports* value,
+                             PRInt32 namespaceID=kNameSpaceID_None);
+  nsresult CopyAttributes(nsSVGAttributes* dest);
+  void GetContentStyleRule(nsIStyleRule** rule);
   
-  // interface for our attributes:
-  nsIContent* GetContent(){ return mContent; }
+  // interface exposed to our attributes:
+  nsIStyledContent* GetContent(){ return mContent; }
   void AttributeWasModified(nsSVGAttribute* caller);
   
 protected:
@@ -199,9 +203,12 @@ protected:
   void AppendElement(nsSVGAttribute* aElement);
   void RemoveElementAt(PRInt32 aIndex);
 
+  PRBool AffectsContentStyleRule(const nsIAtom* aAttribute);
+  void UpdateContentStyleRule();
   
-  nsIContent* mContent; // our owner
-  
+  nsIStyledContent* mContent; // our owner
+
+  nsCOMPtr<nsICSSStyleRule> mContentStyleRule;
   nsAutoVoidArray mAttributes;
   nsAutoVoidArray mMappedAttributes;
 };

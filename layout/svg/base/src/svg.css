@@ -23,10 +23,25 @@
  *
  */
 
-
 @namespace url(http://www.w3.org/2000/svg);
 
-/* maybe we don't need this after all! */
+a {
+  -moz-binding:url('chrome://svg/content/svgBindings.xml#a'); 
+}
 
+a * {
+  cursor: pointer;
+}
+               
+svg {
+  /* XXX see bugs #71191 and #172574 before applying xbl binding to
+     either 'svg' or 'svg:not(:root)'
+  */
 
+  /* give svg elements block display style, so that they reflow
+     correctly when given a relative width/height: */
+  display: block;
 
+  font-family: sans-serif;
+}
+  

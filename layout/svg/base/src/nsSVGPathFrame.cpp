@@ -39,23 +39,30 @@
 
 #include <math.h>
 
-#include "nsSVGGraphicFrame.h"
+#include "nsSVGPathGeometryFrame.h"
 #include "nsIDOMSVGAnimatedPathData.h"
 #include "nsIDOMSVGPathSegList.h"
 #include "nsIDOMSVGPathSeg.h"
-#include "nsASVGPathBuilder.h"
 #include "nsIDOMSVGMatrix.h"
+#include "nsISVGRendererPathBuilder.h"
 
-class nsSVGPathFrame : public nsSVGGraphicFrame
+class nsSVGPathFrame : public nsSVGPathGeometryFrame
 {
+protected:
   friend nsresult
   NS_NewSVGPathFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
 
   ~nsSVGPathFrame();
-
   virtual nsresult Init();
-  virtual void ConstructPath(nsASVGPathBuilder* pathBuilder);
+  
+public:
+  // nsISVGValueObserver interface:
+  NS_IMETHOD DidModifySVGObservable(nsISVGValue* observable);
 
+  // nsISVGPathGeometrySource interface:
+  NS_IMETHOD ConstructPath(nsISVGRendererPathBuilder *pathBuilder);
+
+private:  
   nsCOMPtr<nsIDOMSVGPathSegList> mSegments;
 };
 
@@ -92,6 +99,9 @@ nsSVGPathFrame::~nsSVGPathFrame()
 
 nsresult nsSVGPathFrame::Init()
 {
+  nsresult rv = nsSVGPathGeometryFrame::Init();
+  if (NS_FAILED(rv)) return rv;
+  
   nsCOMPtr<nsIDOMSVGAnimatedPathData> anim_data = do_QueryInterface(mContent);
   NS_ASSERTION(anim_data,"wrong content element");
   anim_data->GetAnimatedPathSegList(getter_AddRefs(mSegments));
@@ -101,14 +111,33 @@ nsresult nsSVGPathFrame::Init()
   if (value)
     value->AddObserver(this);
   
-  return nsSVGGraphicFrame::Init();
+  return NS_OK;
 }  
 
-void nsSVGPathFrame::ConstructPath(nsASVGPathBuilder* pathBuilder)
+//----------------------------------------------------------------------
+// nsISVGValueObserver methods:
+
+NS_IMETHODIMP
+nsSVGPathFrame::DidModifySVGObservable(nsISVGValue* observable)
+{
+  nsCOMPtr<nsIDOMSVGPathSegList> l = do_QueryInterface(observable);
+  if (l && mSegments==l) {
+    UpdateGraphic(nsISVGPathGeometrySource::UPDATEMASK_PATH);
+    return NS_OK;
+  }
+  // else
+  return nsSVGPathGeometryFrame::DidModifySVGObservable(observable);
+}
+
+//----------------------------------------------------------------------
+// nsISVGPathGeometrySource methods:
+
+/* void constructPath (in nsISVGRendererPathBuilder pathBuilder); */
+NS_IMETHODIMP nsSVGPathFrame::ConstructPath(nsISVGRendererPathBuilder* pathBuilder)
 {
   PRUint32 count;
   mSegments->GetNumberOfItems(&count);
-  if (count == 0) return;
+  if (count == 0) return NS_OK;
   
   float cx = 0.0f; // current point
   float cy = 0.0f;
@@ -445,4 +474,5 @@ void nsSVGPathFrame::ConstructPath(nsASVGPathBuilder* pathBuilder)
     lastSegmentType = type;
   }
   
+  return NS_OK;  
 }

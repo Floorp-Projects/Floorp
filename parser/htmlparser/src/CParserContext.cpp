@@ -161,6 +161,9 @@ void CParserContext::SetMimeType(const nsACString& aMimeType){
            mMimeType.Equals(NS_LITERAL_CSTRING(kXMLApplicationContentType))   ||
            mMimeType.Equals(NS_LITERAL_CSTRING(kXHTMLApplicationContentType)) ||
            mMimeType.Equals(NS_LITERAL_CSTRING(kXULTextContentType))          ||
+#ifdef MOZ_SVG
+           mMimeType.Equals(NS_LITERAL_CSTRING(kSVGTextContentType))          ||
+#endif
            mMimeType.Equals(NS_LITERAL_CSTRING(kRDFTextContentType)))
     mDocType=eXML;
 }

@@ -381,6 +381,11 @@ NS_IMETHODIMP nsDrawingSurfaceWin :: Init(HDC aDC, PRUint32 aWidth,
 {
   NS_ASSERTION(!(aDC == nsnull), "null DC");
 
+#if defined(MOZ_SVG) && defined(SVG_FORCE_PIXEL_ACCESS_SURFACES)
+  // force pixel access on all surfaces. Improves gdi+ performance
+  aFlags |= NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS;
+#endif
+  
 #ifdef NGLAYOUT_DDRAW
   if (aFlags & NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS)
   {

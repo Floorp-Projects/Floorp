@@ -46,7 +46,11 @@ class nsSVGMatrix : public nsIDOMSVGMatrix,
                     public nsSVGValue
 {
 public:
-  static nsresult Create(nsIDOMSVGMatrix** aResult);
+  // XXX the first parameter 'a' is renamed to 'xxx_a' to work around
+  // what seems to be a VC++ compiler problem; see bug#122363, comment#2
+  static nsresult Create(nsIDOMSVGMatrix** aResult,
+                         float xxx_a=1.0f, float b=0.0f, float c=0.0f,
+                         float d=1.0f, float e=0.0f, float f=0.0f);
   
 protected:
   nsSVGMatrix(float a=1.0f,

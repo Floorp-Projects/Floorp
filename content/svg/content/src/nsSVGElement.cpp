@@ -53,7 +53,7 @@
 #include "nsIXBLService.h"
 #include "nsSVGAtoms.h"
 #include "nsICSSStyleRule.h"
-#include "nsIDOMSVGSVGElement.h"
+#include "nsISVGSVGElement.h"
 #include "nsRuleWalker.h"
 #include "nsSVGStyleValue.h"
 
@@ -89,6 +89,7 @@ NS_INTERFACE_MAP_BEGIN(nsSVGElement)
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3Node, new nsNode3Tearoff(this))
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsISVGValueObserver)
+  NS_INTERFACE_MAP_ENTRY(nsISVGContent)
 // provided by nsGenericElement:
 //  NS_INTERFACE_MAP_ENTRY(nsIStyledContent)
 //  NS_INTERFACE_MAP_ENTRY(nsIContent)
@@ -120,6 +121,14 @@ nsSVGElement::Init()
 
 //----------------------------------------------------------------------
 // nsIContent methods
+
+void
+nsSVGElement::SetParent(nsIContent* aParent)
+{
+  nsGenericElement::SetParent(aParent);
+
+  ParentChainChanged();
+}
 
 PRBool
 nsSVGElement::CanContainChildren() const
@@ -221,6 +230,17 @@ nsSVGElement::DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const
 }
 #endif // DEBUG
 
+nsresult
+nsSVGElement::SetBindingParent(nsIContent* aParent)
+{
+  nsresult rv = nsGenericElement::SetBindingParent(aParent);
+
+  // XXX Are parent and bindingparent always in sync? (in which case
+  // we don't have to call ParentChainChanged() here)
+  ParentChainChanged();
+  return rv;
+}
+
 //----------------------------------------------------------------------
 // nsIStyledContent methods
 
@@ -242,6 +262,13 @@ nsSVGElement::GetID(nsIAtom** aId)const
 NS_IMETHODIMP
 nsSVGElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 {
+#ifdef DEBUG
+//  printf("nsSVGElement(%p)::WalkContentStyleRules()\n", this);
+#endif
+  nsCOMPtr<nsIStyleRule> rule;
+  mAttributes->GetContentStyleRule(getter_AddRefs(rule));
+  if (rule)  
+    aRuleWalker->Forward(rule);
   return NS_OK;
 }
 
@@ -326,6 +353,7 @@ nsSVGElement::GetFirstChild(nsIDOMNode** aNode)
     NS_ASSERTION(NS_SUCCEEDED(res), "Must be a DOM Node"); // must be a DOM Node
     return res;
   }
+
   *aNode = nsnull;
   return NS_OK;
 }
@@ -339,6 +367,7 @@ nsSVGElement::GetLastChild(nsIDOMNode** aNode)
     NS_ASSERTION(NS_SUCCEEDED(res), "Must be a DOM Node"); // must be a DOM Node
     return res;
   }
+
   *aNode = nsnull;
   return NS_OK;
 }
@@ -528,8 +557,11 @@ nsSVGElement::GetOwnerSVGElement(nsIDOMSVGSVGElement * *aOwnerSVGElement)
 
   // are _we_ the outermost SVG element? If yes, return nsnull, but don't fail
   nsCOMPtr<nsIDOMSVGSVGElement> SVGSVGElement = do_QueryInterface((nsIDOMSVGElement*)this);
-  NS_ENSURE_TRUE(SVGSVGElement, NS_ERROR_FAILURE);
-  return NS_OK; 
+  if (SVGSVGElement) return NS_OK;
+  
+  // no owner found and we aren't the outermost SVG element either.
+  // this situation can e.g. occur during content tree teardown. 
+  return NS_ERROR_FAILURE;
 }
 
 /* readonly attribute nsIDOMSVGElement viewportElement; */

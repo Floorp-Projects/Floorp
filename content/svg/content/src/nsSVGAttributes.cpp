@@ -38,7 +38,7 @@
 
 #include "nsSVGAttributes.h"
 
-#include "nsIContent.h"
+#include "nsIStyledContent.h"
 #include "nsINodeInfo.h"
 #include "nsIDOMElement.h"
 #include "nsINameSpaceManager.h"
@@ -49,6 +49,11 @@
 #include "nsGenericElement.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsStyleConsts.h"
+#include "nsICSSParser.h"
+#include "nsCSSDeclaration.h"
+#include "nsIURI.h"
+#include "nsSVGAtoms.h"
+#include "nsISVGContent.h"
 #include "nsDOMError.h"
 
 ////////////////////////////////////////////////////////////////////////
@@ -353,7 +358,8 @@ nsSVGAttribute::SetValue(const nsAString& aValue)
                            mName.GetPrefix(), aValue, PR_TRUE);
   }
 
-  return GetValue()->SetValueString(aValue);
+  SetValueString(aValue);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -361,7 +367,7 @@ nsSVGAttribute::GetOwnerElement(nsIDOMElement** aOwnerElement)
 {
   NS_ENSURE_ARG_POINTER(aOwnerElement);
 
-  nsIContent *content;
+  nsIStyledContent *content;
   if (mOwner && (content = mOwner->GetContent())) {
     return CallQueryInterface(content, aOwnerElement);
   }
@@ -411,12 +417,31 @@ nsSVGAttribute::GetQualifiedName(nsAString& aQualifiedName)const
   mName.GetQualifiedName(aQualifiedName);
 }
 
+void
+nsSVGAttribute::SetValueString(const nsAString& aValue)
+{
+  if (NS_FAILED(mValue->SetValueString(aValue))) {
+    // The value was rejected. This happens e.g. in a XUL template
+    // when trying to set a value like "?x" on a value object that
+    // expects a length.
+    // To accomodate this "erronous" value, we'll insert a proxy
+    // object between ourselves and the actual value object:
+    nsCOMPtr<nsISVGValue> proxy;
+    NS_CreateSVGStringProxyValue(mValue, getter_AddRefs(proxy));
+    NS_ASSERTION(proxy, "failed to create proxy object");
+
+    mValue->RemoveObserver(this);
+    mValue = proxy;
+    proxy->AddObserver(this);
+    proxy->SetValueString(aValue);
+  }
+}
 
 ////////////////////////////////////////////////////////////////////////
 // nsSVGAttributes
 //
 
-nsSVGAttributes::nsSVGAttributes(nsIContent* aContent)
+nsSVGAttributes::nsSVGAttributes(nsIStyledContent* aContent)
     : mContent(aContent)
 {
 }
@@ -430,7 +455,7 @@ nsSVGAttributes::~nsSVGAttributes()
 
 
 nsresult
-nsSVGAttributes::Create(nsIContent* aContent, nsSVGAttributes** aResult)
+nsSVGAttributes::Create(nsIStyledContent* aContent, nsSVGAttributes** aResult)
 {
   NS_PRECONDITION(aResult != nsnull, "null ptr");
   if (! aResult) return NS_ERROR_NULL_POINTER;
@@ -538,6 +563,68 @@ nsSVGAttributes::RemoveElementAt(PRInt32 aIndex)
   NS_RELEASE(attrib);
 }
 
+PRBool
+nsSVGAttributes::AffectsContentStyleRule(const nsIAtom* aAttribute)
+{
+  NS_ASSERTION(mContent, "null owner");
+
+  nsCOMPtr<nsISVGContent> svgcontent = do_QueryInterface(mContent);
+  NS_ASSERTION(svgcontent, "could not get nsISVGContent interface");
+
+  PRBool retval;
+  svgcontent->IsPresentationAttribute(aAttribute, &retval); 
+  return retval;
+}
+
+void
+nsSVGAttributes::UpdateContentStyleRule()
+{
+  NS_ASSERTION(!mContentStyleRule, "we already have a content style rule");
+
+  nsCSSDeclaration* declaration = new nsCSSDeclaration();
+  NS_ASSERTION(declaration, "could not create css declaration");
+  if (!declaration->InitializeEmpty()) {
+    NS_ERROR("could not initialize nsCSSDeclaration");
+    return;
+  }
+  
+  nsIURI* baseURI;
+  {
+    NS_ASSERTION(mContent, "null owner");
+    nsCOMPtr<nsIDocument> document = mContent->GetDocument();
+    NS_ASSERTION(document, "null document");
+    baseURI = document->GetBaseURI();
+  }
+
+  nsCOMPtr<nsICSSParser> parser;
+  NS_NewCSSParser(getter_AddRefs(parser));
+
+  for (int i = 0; i< mAttributes.Count(); ++i) {
+    nsSVGAttribute* attr = (nsSVGAttribute*) mAttributes[i];
+    nsIAtom* nameatom = attr->Name()->LocalName();
+
+    if (!AffectsContentStyleRule(nameatom)) continue;
+
+    nsAutoString name;
+    nameatom->ToString(name);
+    nsAutoString value;
+
+    nsCOMPtr<nsISVGValue> svgvalue;
+    attr->GetSVGValue(getter_AddRefs(svgvalue));
+    svgvalue->GetValueString(value);
+
+    PRBool changed;
+    parser->ParseProperty(name,
+                          value,
+                          baseURI,
+                          declaration,
+                          &changed);
+  }
+  
+  NS_NewCSSStyleRule(getter_AddRefs(mContentStyleRule), nsnull, declaration);
+  NS_ASSERTION(mContentStyleRule, "could not create contentstylerule");
+}
+
 
 //----------------------------------------------------------------------
 // interface used by the content element:
@@ -548,7 +635,7 @@ nsSVGAttributes::Count() const
   return mAttributes.Count();
 }
 
-NS_IMETHODIMP
+nsresult
 nsSVGAttributes::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
                          nsAString& aResult)
 {
@@ -586,11 +673,21 @@ nsSVGAttributes::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   return rv;
 }
 
-NS_IMETHODIMP
+nsresult
 nsSVGAttributes::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
                          nsIAtom* aPrefix, const nsAString& aValue,
                          PRBool aNotify)
 {
+#ifdef DEBUG
+//    nsAutoString str;
+//    aName->ToString(str);
+//    printf("%p :: SetAttr(",this);
+//    printf(NS_ConvertUCS2toUTF8(str).get());
+//    printf("->");
+//    printf(NS_ConvertUCS2toUTF8(aValue).get());
+//    printf(")\n");
+#endif
+  
   NS_ENSURE_ARG_POINTER(aName);
   nsAutoString oldValue;
 
@@ -630,13 +727,13 @@ nsSVGAttributes::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
   if (index < count) {  // found the attr in the list
     NS_ASSERTION(attr, "How did we get here with a null attr pointer?");
     modification = PR_TRUE;
-    attr->GetValue()->SetValueString(aValue);
+    attr->SetValueString(aValue);
   } else  { // didn't find it
     // GetMappedAttribute and nsSVGAttribute::Create both addref, so we release
     // after this if block.  It's safe to use attr after the Release(), since
     // AppendElement also addrefs it.
     if (GetMappedAttribute(aNamespaceID, aName, &attr)) {
-      attr->GetValue()->SetValueString(aValue);
+      attr->SetValueString(aValue);
     }
     else {
       if (aNamespaceID == kNameSpaceID_None) {
@@ -659,6 +756,15 @@ nsSVGAttributes::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
     attr->Release();
   }
 
+  // if this is an svg presentation attribute we need to map it into
+  // the content stylerule.
+  // XXX For some reason incremental mapping doesn't work, so for now
+  // just delete the style rule and lazily reconstruct it in
+  // GetContentStyleRule()
+  if(AffectsContentStyleRule(aName)) 
+    mContentStyleRule = nsnull;
+
+  
   if (document && NS_SUCCEEDED(rv)) {
     nsIBindingManager *bindingManager = document->GetBindingManager();
     nsCOMPtr<nsIXBLBinding> binding;
@@ -679,7 +785,7 @@ nsSVGAttributes::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
       if (!aValue.IsEmpty())
         mutation.mNewAttrValue = do_GetAtom(aValue);
       mutation.mAttrChange = modification ? nsIDOMMutationEvent::MODIFICATION :
-                                             nsIDOMMutationEvent::ADDITION;
+                                            nsIDOMMutationEvent::ADDITION;
       nsEventStatus status = nsEventStatus_eIgnore;
       nsCOMPtr<nsIDOMEvent> domEvent;
       mContent->HandleDOMEvent(nsnull, &mutation, getter_AddRefs(domEvent),
@@ -697,7 +803,7 @@ nsSVGAttributes::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
   return rv;
 }
 
-NS_IMETHODIMP
+nsresult
 nsSVGAttributes::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
                            PRBool aNotify)
 {
@@ -771,7 +877,7 @@ nsSVGAttributes::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   return NS_OK;
 }
 
-NS_IMETHODIMP_(PRBool)
+PRBool
 nsSVGAttributes::HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const
 {
   // XXX - this should be hashed, or something
@@ -801,7 +907,7 @@ nsSVGAttributes::GetExistingAttrNameFromQName(const nsAString& aStr)
   return nsnull;
 }
 
-NS_IMETHODIMP
+nsresult
 nsSVGAttributes::GetAttrNameAt(PRInt32 aIndex,
                                PRInt32* aNameSpaceID,
                                nsIAtom** aName,
@@ -823,8 +929,9 @@ nsSVGAttributes::GetAttrNameAt(PRInt32 aIndex,
   return NS_ERROR_ILLEGAL_VALUE;  
 }
 
-NS_IMETHODIMP
-nsSVGAttributes::AddMappedSVGValue(nsIAtom* name, nsISupports* value)
+nsresult
+nsSVGAttributes::AddMappedSVGValue(nsIAtom* name, nsISupports* value,
+                                   PRInt32 namespaceID)
 {
   nsCOMPtr<nsISVGValue> svg_value = do_QueryInterface(value);
   NS_ENSURE_TRUE(svg_value, NS_ERROR_FAILURE);
@@ -832,15 +939,21 @@ nsSVGAttributes::AddMappedSVGValue(nsIAtom* name, nsISupports* value)
   NS_ASSERTION(mContent,"no owner content");
   if (!mContent) return NS_ERROR_FAILURE;
   
+  nsCOMPtr<nsINodeInfo> ni;
+  mContent->GetNodeInfo()->NodeInfoManager()->GetNodeInfo(name, nsnull,
+                                                          namespaceID,
+                                                          getter_AddRefs(ni));
+  NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
+
   nsSVGAttribute* attrib = nsnull;
-  nsSVGAttribute::Create(nsAttrName(name), svg_value, NS_SVGATTRIBUTE_FLAGS_MAPPED, &attrib);
+  nsSVGAttribute::Create(nsAttrName(ni), svg_value, NS_SVGATTRIBUTE_FLAGS_MAPPED, &attrib);
   NS_ENSURE_TRUE(attrib, NS_ERROR_FAILURE);
   attrib->mOwner = this;
   mMappedAttributes.AppendElement((void*)attrib);
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsSVGAttributes::CopyAttributes(nsSVGAttributes* dest)
 {
   nsresult rv;
@@ -856,6 +969,15 @@ nsSVGAttributes::CopyAttributes(nsSVGAttributes* dest)
     NS_ENSURE_SUCCESS(rv,rv);
   }
   return NS_OK;
+}
+
+void
+nsSVGAttributes::GetContentStyleRule(nsIStyleRule** rule)
+{
+  if (!mContentStyleRule)
+    UpdateContentStyleRule();
+  *rule=mContentStyleRule;
+  NS_IF_ADDREF(*rule);
 }
 
 

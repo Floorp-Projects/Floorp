@@ -1,0 +1,126 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ----- BEGIN LICENSE BLOCK -----
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the Mozilla SVG project.
+ *
+ * The Initial Developer of the Original Code is 
+ * Crocodile Clips Ltd.
+ * Portions created by the Initial Developer are Copyright (C) 2002
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *    Alex Fritze <alex.fritze@crocodile-clips.com> (original author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the NPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ----- END LICENSE BLOCK ----- */
+
+#include "nsISupports.idl"
+
+interface nsIDOMSVGRect;
+
+/**
+ * \addtogroup renderer_interfaces Rendering Engine Interfaces
+ * @{
+ */
+
+/**
+ * One of a number of interfaces (all starting with nsISVGRenderer*)
+ * to be implemented by an SVG rendering engine. See nsISVGRenderer
+ * for more details.
+ *
+ * The SVG rendering backend uses this interface to communicate to the
+ * rendering engine-native glyph metrics objects.
+ *
+ * A glyph metrics object is instantiated by the backend for a given
+ * nsISVGGlyphMetricsSource object with a call to
+ * nsISVGRenderer::createGlyphMetrics(). The glyph metrics object is
+ * assumed to store a reference to its associated source object and
+ * provide metrics information about the (composite) glyph described
+ * by nsISVGGlyphMetricsSource::characterData,
+ * nsISVGGlyphMetricsSource::font, nsISVGGlyphMetricsSource::CTM, and
+ * other relevant style such as nsISVGGlyphMetricsSource::strokeWidth.
+ */
+[scriptable, uuid(8665f6e9-6ed6-4ff8-b511-46c8068b3960)]
+interface nsISVGRendererGlyphMetrics : nsISupports
+{
+  /**
+   * Untransformed width of the composite glyph in pixels.
+   */
+  readonly attribute float advance;
+
+  /**
+   * Untransformed bounding box of the composite glyph in pixel
+   * coordinates.
+   */
+  readonly attribute nsIDOMSVGRect boundingBox;
+
+  /**
+   * Get the untransformed bounding box of an individual glyph.
+   *
+   * @param charnum The index of the character in
+   * nsISVGGlyphMetricsSource::characterData whose glyph bounding box
+   * is to be determined
+   * @return The untransformed bounding box in pixel coordinates
+   */
+  nsIDOMSVGRect getExtentOfChar(in unsigned long charnum);
+
+  /**
+   * @name Baseline offset constants for getBaselineOffset()
+   * @{
+   */
+  const unsigned short BASELINE_ALPHABETIC       = 0;
+  const unsigned short BASELINE_HANGING          = 1;
+  const unsigned short BASELINE_IDEOGRAPHC       = 2;
+  const unsigned short BASELINE_MATHEMATICAL     = 3;
+  const unsigned short BASELINE_CENTRAL          = 4;
+  const unsigned short BASELINE_MIDDLE           = 5;
+  const unsigned short BASELINE_TEXT_BEFORE_EDGE = 6;
+  const unsigned short BASELINE_TEXT_AFTER_EDGE  = 7;
+  /** @} */
+  
+  /**
+   * Retrieve the (y-axis) offset of the given baseline.
+   * 
+   * @param baselineIdentifier One of the BASELINE_* constants defined
+   * in this interface.
+   * @return Y-axis offset in pixels relative to top of bounding box.
+   */
+  float getBaselineOffset(in unsigned short baselineIdentifier);
+
+  /**
+   * Called by this object's corresponding nsISVGGlyphMetricsSource as
+   * a notification that some of the source's data (identified by
+   * paramter 'updatemask') has changed.
+   *
+   * @param updatemask An OR-ed combination of the UPDATEMASK_*
+   * constants defined in nsISVGGlyphMetricsSource.
+   * @return PR_TRUE if the metrics have changed as a result of the
+   * source update, PR_FALSE otherwise.
+   */
+  boolean update(in unsigned long updatemask); 
+
+};
+
+/** @} */

@@ -132,6 +132,7 @@
 #define CSS_PROP_XUL(name_, id_, method_, datastruct_, member_, type_, iscoord_) CSS_PROP(name_, id_, method_, datastruct_, member_, type_, iscoord_)
 #ifdef MOZ_SVG
 #define CSS_PROP_SVG(name_, id_, method_, datastruct_, member_, type_, iscoord_) CSS_PROP(name_, id_, method_, datastruct_, member_, type_, iscoord_)
+#define CSS_PROP_SVGRESET(name_, id_, method_, datastruct_, member_, type_, iscoord_) CSS_PROP(name_, id_, method_, datastruct_, member_, type_, iscoord_)
 #endif
 
 // For properties that are stored in the CSS backend but are not
@@ -232,6 +233,10 @@
 #ifndef CSS_PROP_SVG
 #define CSS_PROP_SVG(name_, id_, method_, datastruct_, member_, type_, iscoord_) /* nothing */
 #define DEFINED_CSS_PROP_SVG
+#endif
+#ifndef CSS_PROP_SVGRESET
+#define CSS_PROP_SVGRESET(name_, id_, method_, datastruct_, member_, type_, iscoord_) /* nothing */
+#define DEFINED_CSS_PROP_SVGRESET
 #endif
 #endif /* defined(MOZ_SVG) */
 
@@ -477,9 +482,12 @@ CSS_PROP_XUL(-moz-box-ordinal-group, box_ordinal_group, MozBoxOrdinalGroup, XUL,
 // XXX treat SVG's CSS Properties as internal for now.
 // Do we want to create an nsIDOMSVGCSS2Properties interface?
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
+CSS_PROP_SVGRESET(dominant-baseline, dominant_baseline, DominantBaseline, SVG, mDominantBaseline, eCSSType_Value, PR_FALSE)
 CSS_PROP_SVG(fill, fill, Fill, SVG, mFill, eCSSType_Value, PR_FALSE)
 CSS_PROP_SVG(fill-opacity, fill_opacity, FillOpacity, SVG, mFillOpacity, eCSSType_Value, PR_FALSE)
 CSS_PROP_SVG(fill-rule, fill_rule, FillRule, SVG, mFillRule, eCSSType_Value, PR_FALSE)
+CSS_PROP_SVG(pointer-events, pointer_events, PointerEvents, SVG, mPointerEvents, eCSSType_Value, PR_FALSE)
+CSS_PROP_SVG(shape-rendering, shape_rendering, ShapeRendering, SVG, mShapeRendering, eCSSType_Value, PR_FALSE)
 CSS_PROP_SVG(stroke, stroke, Stroke, SVG, mStroke, eCSSType_Value, PR_FALSE)
 CSS_PROP_SVG(stroke-dasharray, stroke_dasharray, StrokeDasharray, SVG, mStrokeDasharray, eCSSType_Value, PR_FALSE)
 CSS_PROP_SVG(stroke-dashoffset, stroke_dashoffset, StrokeDashoffset, SVG, mStrokeDashoffset, eCSSType_Value, PR_FALSE)
@@ -488,6 +496,8 @@ CSS_PROP_SVG(stroke-linejoin, stroke_linejoin, StrokeLinejoin, SVG, mStrokeLinej
 CSS_PROP_SVG(stroke-miterlimit, stroke_miterlimit, StrokeMiterlimit, SVG, mStrokeMiterlimit, eCSSType_Value, PR_FALSE)
 CSS_PROP_SVG(stroke-opacity, stroke_opacity, StrokeOpacity, SVG, mStrokeOpacity, eCSSType_Value, PR_FALSE)
 CSS_PROP_SVG(stroke-width, stroke_width, StrokeWidth, SVG, mStrokeWidth, eCSSType_Value, PR_FALSE)
+CSS_PROP_SVG(text-anchor, text_anchor, TextAnchor, SVG, mTextAnchor, eCSSType_Value, PR_FALSE)
+CSS_PROP_SVG(text-rendering, text_rendering, TextRendering, SVG, mTextRendering, eCSSType_Value, PR_FALSE)
 #endif /* !defined (CSS_PROP_LIST_EXCLUDE_INTERNAL) */
 #endif
 
@@ -530,6 +540,7 @@ CSS_PROP_TABLE(X, X, X, Table, mSpan, eCSSType_Value, PR_FALSE)
 #undef CSS_PROP_XUL
 #ifdef MOZ_SVG
 #undef CSS_PROP_SVG
+#undef CSS_PROP_SVGRESET
 #endif
 #ifdef DEFINED_CSS_PROP_BACKENDONLY
 #undef CSS_PROP_BACKENDONLY
@@ -622,6 +633,10 @@ CSS_PROP_TABLE(X, X, X, Table, mSpan, eCSSType_Value, PR_FALSE)
 #ifdef DEFINED_CSS_PROP_SVG
 #undef CSS_PROP_SVG
 #undef DEFINED_CSS_PROP_SVG
+#endif
+#ifdef DEFINED_CSS_PROP_SVGRESET
+#undef CSS_PROP_SVGRESET
+#undef DEFINED_CSS_PROP_SVGRESET
 #endif
 #endif /* defined(MOZ_SVG) */
 #ifdef DEFINED_CSS_PROP_BACKENDONLY

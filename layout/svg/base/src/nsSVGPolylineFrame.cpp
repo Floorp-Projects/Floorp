@@ -36,21 +36,30 @@
  *
  * ----- END LICENSE BLOCK ----- */
 
-#include "nsSVGGraphicFrame.h"
+#include "nsSVGPathGeometryFrame.h"
 #include "nsIDOMSVGAnimatedPoints.h"
 #include "nsIDOMSVGPointList.h"
 #include "nsIDOMSVGPoint.h"
-#include "nsASVGPathBuilder.h"
+//#include "nsASVGPathBuilder.h"
+#include "nsISVGRendererPathBuilder.h"
 
-class nsSVGPolylineFrame : public nsSVGGraphicFrame
+class nsSVGPolylineFrame : public nsSVGPathGeometryFrame
 {
+protected:
   friend nsresult
   NS_NewSVGPolylineFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
 
   virtual ~nsSVGPolylineFrame();
   virtual nsresult Init();
 
-  virtual void ConstructPath(nsASVGPathBuilder* pathBuilder);
+public:
+  // nsISVGValueObserver interface:
+  NS_IMETHOD DidModifySVGObservable(nsISVGValue* observable);
+
+  // nsISVGPathGeometrySource interface:
+  NS_IMETHOD ConstructPath(nsISVGRendererPathBuilder *pathBuilder);
+
+//  virtual void ConstructPath(nsASVGPathBuilder* pathBuilder);
 
   nsCOMPtr<nsIDOMSVGPointList> mPoints;
 };
@@ -86,6 +95,9 @@ nsSVGPolylineFrame::~nsSVGPolylineFrame()
 
 nsresult nsSVGPolylineFrame::Init()
 {
+  nsresult rv = nsSVGPathGeometryFrame::Init();
+  if (NS_FAILED(rv)) return rv;
+  
   nsCOMPtr<nsIDOMSVGAnimatedPoints> anim_points = do_QueryInterface(mContent);
   NS_ASSERTION(anim_points,"wrong content element");
   anim_points->GetPoints(getter_AddRefs(mPoints));
@@ -94,16 +106,35 @@ nsresult nsSVGPolylineFrame::Init()
   nsCOMPtr<nsISVGValue> value = do_QueryInterface(mPoints);
   if (value)
     value->AddObserver(this);
-  return nsSVGGraphicFrame::Init();
+  return NS_OK; 
 }  
 
-void nsSVGPolylineFrame::ConstructPath(nsASVGPathBuilder* pathBuilder)
+//----------------------------------------------------------------------
+// nsISVGValueObserver methods:
+
+NS_IMETHODIMP
+nsSVGPolylineFrame::DidModifySVGObservable(nsISVGValue* observable)
 {
-  if (!mPoints) return;
+  nsCOMPtr<nsIDOMSVGPointList> l = do_QueryInterface(observable);
+  if (l && mPoints==l) {
+    UpdateGraphic(nsISVGPathGeometrySource::UPDATEMASK_PATH);
+    return NS_OK;
+  }
+  // else
+  return nsSVGPathGeometryFrame::DidModifySVGObservable(observable);
+}
+
+//----------------------------------------------------------------------
+// nsISVGPathGeometrySource methods:
+
+/* void constructPath (in nsISVGRendererPathBuilder pathBuilder); */
+NS_IMETHODIMP nsSVGPolylineFrame::ConstructPath(nsISVGRendererPathBuilder* pathBuilder)
+{
+  if (!mPoints) return NS_OK;
 
   PRUint32 count;
   mPoints->GetNumberOfItems(&count);
-  if (count == 0) return;
+  if (count == 0) return NS_OK;
   
   PRUint32 i;
   for (i = 0; i < count; ++i) {
@@ -118,4 +149,6 @@ void nsSVGPolylineFrame::ConstructPath(nsASVGPathBuilder* pathBuilder)
     else
       pathBuilder->Lineto(x, y);
   }
+
+  return NS_OK;
 }

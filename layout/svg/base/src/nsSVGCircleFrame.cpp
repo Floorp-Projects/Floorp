@@ -36,25 +36,33 @@
  *
  * ----- END LICENSE BLOCK ----- */
 
-#include "nsSVGGraphicFrame.h"
+#include "nsSVGPathGeometryFrame.h"
 #include "nsIDOMSVGAnimatedLength.h"
 #include "nsIDOMSVGLength.h"
 #include "nsIDOMSVGPoint.h"
 #include "nsIDOMSVGCircleElement.h"
 #include "nsIDOMSVGElement.h"
 #include "nsIDOMSVGSVGElement.h"
-#include "nsASVGPathBuilder.h"
+//#include "nsASVGPathBuilder.h"
+#include "nsISVGRendererPathBuilder.h"
 
-class nsSVGCircleFrame : public nsSVGGraphicFrame
+class nsSVGCircleFrame : public nsSVGPathGeometryFrame
 {
+protected:
   friend nsresult
   NS_NewSVGCircleFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
 
   virtual ~nsSVGCircleFrame();
-
   virtual nsresult Init();
-  virtual void ConstructPath(nsASVGPathBuilder* pathBuilder);
 
+public:
+  // nsISVGValueObserver interface:
+  NS_IMETHOD DidModifySVGObservable(nsISVGValue* observable);
+
+  // nsISVGPathGeometrySource interface:
+  NS_IMETHOD ConstructPath(nsISVGRendererPathBuilder *pathBuilder);
+
+private:
   nsCOMPtr<nsIDOMSVGLength> mCx;
   nsCOMPtr<nsIDOMSVGLength> mCy;
   nsCOMPtr<nsIDOMSVGLength> mR;
@@ -97,6 +105,10 @@ nsSVGCircleFrame::~nsSVGCircleFrame()
 
 nsresult nsSVGCircleFrame::Init()
 {
+  nsresult rv = nsSVGPathGeometryFrame::Init();
+  if (NS_FAILED(rv)) return rv;
+
+  
   nsCOMPtr<nsIDOMSVGCircleElement> circle = do_QueryInterface(mContent);
   NS_ASSERTION(circle,"wrong content element");
 
@@ -133,10 +145,30 @@ nsresult nsSVGCircleFrame::Init()
       value->AddObserver(this);
   }
   
-  return nsSVGGraphicFrame::Init();
+  return NS_OK;
 }  
 
-void nsSVGCircleFrame::ConstructPath(nsASVGPathBuilder* pathBuilder)
+//----------------------------------------------------------------------
+// nsISVGValueObserver methods:
+
+NS_IMETHODIMP
+nsSVGCircleFrame::DidModifySVGObservable(nsISVGValue* observable)
+{
+  nsCOMPtr<nsIDOMSVGLength> l = do_QueryInterface(observable);
+  if (l && (mCx==l || mCy==l || mR==l)) {
+    UpdateGraphic(nsISVGPathGeometrySource::UPDATEMASK_PATH);
+    return NS_OK;
+  }
+  // else
+  return nsSVGPathGeometryFrame::DidModifySVGObservable(observable);
+}
+
+
+//----------------------------------------------------------------------
+// nsISVGPathGeometrySource methods:
+
+/* void constructPath (in nsISVGRendererPathBuilder pathBuilder); */
+NS_IMETHODIMP nsSVGCircleFrame::ConstructPath(nsISVGRendererPathBuilder* pathBuilder)
 {
   float x,y,r;
 
@@ -150,5 +182,7 @@ void nsSVGCircleFrame::ConstructPath(nsASVGPathBuilder* pathBuilder)
   pathBuilder->Moveto(x, y-r);
   pathBuilder->Arcto(x-r, y  , r, r, 0.0, 0, 0);
   pathBuilder->Arcto(x  , y-r, r, r, 0.0, 1, 0);
-  pathBuilder->ClosePath(&x,&y);  
+  pathBuilder->ClosePath(&x,&y);
+  
+  return NS_OK;
 }

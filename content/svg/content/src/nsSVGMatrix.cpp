@@ -42,9 +42,11 @@
 const double radPerDegree = 2.0*3.1415926535 / 360.0;
 
 nsresult
-nsSVGMatrix::Create(nsIDOMSVGMatrix** aResult)
+nsSVGMatrix::Create(nsIDOMSVGMatrix** aResult,
+                    float a, float b, float c,
+                    float d, float e, float f)
 {
-  *aResult = (nsIDOMSVGMatrix*) new nsSVGMatrix();
+  *aResult = (nsIDOMSVGMatrix*) new nsSVGMatrix(a, b, c, d, e, f);
   if(!*aResult) return NS_ERROR_OUT_OF_MEMORY;
   
   NS_ADDREF(*aResult);

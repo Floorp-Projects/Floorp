@@ -189,6 +189,46 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_Crypto_id,
   eDOMClassInfo_CRMFObject_id,
   eDOMClassInfo_Pkcs11_id,
+  
+  // DOM Traversal classes
+  eDOMClassInfo_TreeWalker_id,
+
+  // We are now trying to preserve binary compat in classinfo.  No
+  // more putting things in those categories up there.  New entries
+  // are to be added right before eDOMClassInfoIDCount
+
+  // Rect object used by getComputedStyle
+  eDOMClassInfo_CSSRect_id,
+
+  // DOM Chrome Window class, almost identical to Window
+  eDOMClassInfo_ChromeWindow_id,
+
+  // RGBColor object used by getComputedStyle
+  eDOMClassInfo_CSSRGBColor_id,
+
+  eDOMClassInfo_RangeException_id,
+
+  // CSSValueList object that represents an nsIDOMCSSValueList, used
+  // by DOM CSS
+  eDOMClassInfo_CSSValueList_id,
+
+  // ContentList object used for various live NodeLists
+  eDOMClassInfo_ContentList_id,
+  
+  // Processing-instruction with target "xml-stylesheet"
+  eDOMClassInfo_XMLStylesheetProcessingInstruction_id,
+  
+  eDOMClassInfo_ImageDocument_id,
+
+#ifdef MOZ_XUL
+  eDOMClassInfo_XULTreeBuilder_id,
+#endif
+
+  // DOMStringList object
+  eDOMClassInfo_DOMStringList_id,
+
+  // NameList object used by the DOM
+  eDOMClassInfo_NameList_id,
 
 #ifdef MOZ_SVG
   // The SVG document
@@ -238,48 +278,15 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_SVGPathSegCurvetoQuadraticSmoothRel_id,
   eDOMClassInfo_SVGRect_id,
   eDOMClassInfo_SVGAnimatedRect_id,
-#endif
+  eDOMClassInfo_SVGAnimatedLengthList_id,
+  eDOMClassInfo_SVGLengthList_id,
+  eDOMClassInfo_SVGNumber_id,
+  eDOMClassInfo_SVGTextElement_id,
+  eDOMClassInfo_SVGTSpanElement_id,
+  eDOMClassInfo_SVGAnimatedString_id,
+  eDOMClassInfo_SVGImageElement_id,
+#endif //MOZ_SVG
   
-  // DOM Traversal classes
-  eDOMClassInfo_TreeWalker_id,
-
-  // We are now trying to preserve binary compat in classinfo.  No
-  // more putting things in those categories up there.  New entries
-  // are to be added right before eDOMClassInfoIDCount
-
-  // Rect object used by getComputedStyle
-  eDOMClassInfo_CSSRect_id,
-
-  // DOM Chrome Window class, almost identical to Window
-  eDOMClassInfo_ChromeWindow_id,
-
-  // RGBColor object used by getComputedStyle
-  eDOMClassInfo_CSSRGBColor_id,
-
-  eDOMClassInfo_RangeException_id,
-
-  // CSSValueList object that represents an nsIDOMCSSValueList, used
-  // by DOM CSS
-  eDOMClassInfo_CSSValueList_id,
-
-  // ContentList object used for various live NodeLists
-  eDOMClassInfo_ContentList_id,
-  
-  // Processing-instruction with target "xml-stylesheet"
-  eDOMClassInfo_XMLStylesheetProcessingInstruction_id,
-  
-  eDOMClassInfo_ImageDocument_id,
-
-#ifdef MOZ_XUL
-  eDOMClassInfo_XULTreeBuilder_id,
-#endif
-
-  // DOMStringList object
-  eDOMClassInfo_DOMStringList_id,
-
-  // NameList object used by the DOM
-  eDOMClassInfo_NameList_id,
-
   // This one better be the last one in this list
   eDOMClassInfoIDCount
 };

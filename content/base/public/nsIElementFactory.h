@@ -74,10 +74,6 @@ public:
 #endif
 
 #ifdef MOZ_SVG
-#define NS_SVG_DEPRECATED_NAMESPACE        "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.svg"
-#define NS_SVG_DEPRECATED_ELEMENT_FACTORY_CONTRACTID      \
-                                         NS_ELEMENT_FACTORY_CONTRACTID_PREFIX NS_SVG_DEPRECATED_NAMESPACE
-
 #define NS_SVG_NAMESPACE                   "http://www.w3.org/2000/svg"
 #define NS_SVG_ELEMENT_FACTORY_CONTRACTID      NS_ELEMENT_FACTORY_CONTRACTID_PREFIX NS_SVG_NAMESPACE
 #endif
