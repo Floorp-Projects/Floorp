@@ -31,6 +31,7 @@ file:///s|/mozilla/layout/html/tests/table/bugs/bug4382.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug4385.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug4427.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug4429.html
+file:///s|/mozilla/layout/html/tests/table/bugs/bug44523.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug4501.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug45055.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug45055-2.html
