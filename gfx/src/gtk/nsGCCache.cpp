@@ -20,10 +20,14 @@
  * Contributor(s): 
  *   Stuart Parmenter <pavlov@netscape.com>
  *   Mike Shaver <shaver@zeroknowledge.com>
+ *   Tomi Leppikangas <Tomi.Leppikangas@oulu.fi>
  */
 
 #include <stdio.h>
 #include "nsGCCache.h"
+#include <gdk/gdkx.h>
+#include <gdk/gdkprivate.h>
+#include <X11/Xlib.h>
 /* The GC cache is shared among all windows, since it doesn't hog
    any scarce resources (like colormap entries.) */
 
@@ -35,9 +39,18 @@ nsGCCache::nsGCCache()
   PR_INIT_CLIST(&GCFreeList);
   for (int i = 0; i < GC_CACHE_SIZE; i++) {
     GCCacheEntry *entry = new GCCacheEntry();
+    entry->gc=NULL;
     PR_INSERT_LINK(&entry->clist, &GCFreeList);
   }
   DEBUG_METER(memset(&GCCacheStats, 0, sizeof(GCCacheStats));)
+}
+
+void
+nsGCCache::move_cache_entry(PRCList *clist)
+{
+  /* thread on the freelist, at the front */
+  PR_REMOVE_LINK(clist);
+  PR_INSERT_LINK(clist, &GCFreeList);
 }
 
 void
@@ -67,7 +80,7 @@ nsGCCache::~nsGCCache()
     free_cache_entry(head);
   }
 
-  while(!PR_CLIST_IS_EMPTY(&GCFreeList)) {
+  while (!PR_CLIST_IS_EMPTY(&GCFreeList)) {
     head = PR_LIST_HEAD(&GCFreeList);
     if (head == &GCFreeList)
       break;
@@ -149,7 +162,7 @@ GdkGC *nsGCCache::GetGC(GdkWindow *window, GdkGCValues *gcv, GdkGCValuesMask fla
   /* might need to forcibly free the LRU cache entry */
   if (PR_CLIST_IS_EMPTY(&GCFreeList)) {
     DEBUG_METER(GCCacheStats.reclaim++);
-    free_cache_entry(PR_LIST_TAIL(&GCCache));
+    move_cache_entry(PR_LIST_TAIL(&GCCache));
   }
 
   DEBUG_METER(GCCacheStats.misses++;)
@@ -158,11 +171,28 @@ GdkGC *nsGCCache::GetGC(GdkWindow *window, GdkGCValues *gcv, GdkGCValuesMask fla
   PR_REMOVE_LINK(iter);
   PR_INSERT_LINK(iter, &GCCache);
   entry = (GCCacheEntry *)iter;
-  
-  entry->gc = gdk_gc_new_with_values(window, gcv, flags);
-  entry->flags = flags;
-  entry->gcv = *gcv;
-  entry->clipRegion = NULL;
+
+  if (!entry->gc) {
+    // No old GC, greate new
+    entry->gc = gdk_gc_new_with_values(window, gcv, flags);
+    entry->flags = flags;
+    entry->gcv = *gcv;
+    entry->clipRegion = NULL;
+    //printf("creating new gc=%X\n",entry->gc); 
+  }
+  else if ( ((GdkGCPrivate*)entry->gc)->ref_count > 1 ) {
+    // Old GC still in use, create new
+    gdk_gc_unref(entry->gc);
+    entry->gc=gdk_gc_new_with_values(window, gcv, flags);
+    entry->flags = flags;
+    entry->gcv = *gcv;
+    entry->clipRegion = NULL;
+    //printf("creating new (use)gc=%X\n",entry->gc); 
+  }
+  else {
+    ReuseGC(entry, gcv, flags);
+  }
+
   if (clipRegion) {
     entry->clipRegion = gdk_region_copy(clipRegion);
     if (entry->clipRegion)
@@ -173,4 +203,100 @@ GdkGC *nsGCCache::GetGC(GdkWindow *window, GdkGCValues *gcv, GdkGCValuesMask fla
   return gdk_gc_ref(entry->gc);
 }
 
+void nsGCCache::ReuseGC(GCCacheEntry *entry, GdkGCValues *gcv, GdkGCValuesMask flags)
+{
+  // We have old GC, reuse it and check what
+  // we have to change
 
+  XGCValues xvalues;
+  unsigned long xvalues_mask=0;
+
+  if (entry->clipRegion) {
+    xvalues.clip_mask = None;
+    xvalues_mask |= GCClipMask;
+    entry->clipRegion = NULL;
+  }
+
+  if (entry->gcv.foreground.pixel != gcv->foreground.pixel) {
+    xvalues.foreground = gcv->foreground.pixel;
+    xvalues_mask |= GCForeground;
+  }
+
+  if (entry->gcv.function != gcv->function) {
+    switch (gcv->function) {
+    case GDK_COPY:
+      xvalues.function = GXcopy;
+      break;
+    case GDK_INVERT:
+      xvalues.function = GXinvert;
+      break;
+    case GDK_XOR:
+      xvalues.function = GXxor;
+      break;
+    case GDK_CLEAR:
+      xvalues.function = GXclear;
+      break;
+    case GDK_AND:
+      xvalues.function = GXand;
+      break;
+    case GDK_AND_REVERSE:
+      xvalues.function = GXandReverse;
+      break;
+    case GDK_AND_INVERT:
+      xvalues.function = GXandInverted;
+      break;
+    case GDK_NOOP:
+      xvalues.function = GXnoop;
+      break;
+    case GDK_OR:
+      xvalues.function = GXor;
+      break;
+    case GDK_EQUIV:
+      xvalues.function = GXequiv;
+      break;
+    case GDK_OR_REVERSE:
+      xvalues.function = GXorReverse;
+      break;
+    case GDK_COPY_INVERT:
+      xvalues.function = GXcopyInverted;
+      break;
+    case GDK_OR_INVERT:
+      xvalues.function = GXorInverted;
+      break;
+    case GDK_NAND:
+      xvalues.function = GXnand;
+      break;
+    case GDK_SET:
+      xvalues.function = GXset;
+      break;
+    }
+    xvalues_mask |= GCFunction;
+  }
+
+  if(entry->gcv.font != gcv->font && flags & GDK_GC_FONT) {
+    xvalues.font =  ((XFontStruct *)GDK_FONT_XFONT(gcv->font))->fid;
+    xvalues_mask |= GCFont;
+  }
+
+  if (entry->gcv.line_style != gcv->line_style) {
+    switch (gcv->line_style) {
+    case GDK_LINE_SOLID:
+      xvalues.line_style = LineSolid;
+      break;
+    case GDK_LINE_ON_OFF_DASH:
+      xvalues.line_style = LineOnOffDash;
+      break;
+    case GDK_LINE_DOUBLE_DASH:
+      xvalues.line_style = LineDoubleDash;
+      break;
+    }
+    xvalues_mask |= GCLineStyle;
+  }
+
+  if (xvalues_mask != 0) {
+    XChangeGC(GDK_GC_XDISPLAY(entry->gc), GDK_GC_XGC(entry->gc),
+              xvalues_mask, &xvalues);
+  }
+  entry->flags = flags;
+  entry->gcv = *gcv;
+}
