@@ -843,16 +843,34 @@ nsStdURL::SetSpec(const char* i_Spec)
     char* fwdPtr= (char*) eSpec;
     while (fwdPtr && (*fwdPtr > '\0') && (*fwdPtr <= ' '))
         fwdPtr++;
-    // Remove trailing spaces and control-characters
-    if (fwdPtr) {
-        char* bckPtr= (char*)fwdPtr + PL_strlen(fwdPtr) -1;
-        if (*bckPtr > '\0' && *bckPtr <= ' ') {
-            while ((bckPtr-fwdPtr) >= 0 && (*bckPtr <= ' ')) {
-                bckPtr--;
-            }
-            *(bckPtr+1) = '\0';
+
+    // Strip linebreaks
+    char* copyToPtr = 0;
+    char* midPtr = fwdPtr;
+    while (midPtr && (*midPtr != '\0')) {
+        while ((*midPtr == '\r') || (*midPtr == '\n')) { // if linebreak
+            if (!copyToPtr)
+                copyToPtr = midPtr; // start copying
+            midPtr++; // skip linebreak
         }
+        if (copyToPtr) { // if copying
+            *copyToPtr = *midPtr;
+            copyToPtr++;
+        }
+        midPtr++;
     }
+    if (copyToPtr) { // If we removed linebreaks, copyToPtr is the end of the string
+        midPtr = copyToPtr;
+    }
+
+    // Remove trailing spaces and control-characters
+    while ((midPtr-fwdPtr) >= 0) {
+        midPtr--;
+        if ((*midPtr > ' ') || (*midPtr <= '\0'))  // UTF-8 chars < 0?
+            break;
+    }
+    if (midPtr && (*midPtr != '\0'))
+        *(midPtr+1) = '\0'; // Restore trailing null
 
     // If spec is being rewritten clean up everything-
     CRTFREEIF(mScheme);
