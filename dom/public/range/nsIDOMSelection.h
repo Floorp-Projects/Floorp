@@ -46,9 +46,9 @@ public:
 
   NS_IMETHOD    GetIsCollapsed(PRBool* aIsCollapsed)=0;
 
-  NS_IMETHOD    GetAnchorNodeAndOffset(nsIDOMNode** aAnchorNode, PRInt32* aOffset)=0;
+  NS_IMETHOD    GetRangeCount(PRInt32* aRangeCount)=0;
 
-  NS_IMETHOD    GetFocusNodeAndOffset(nsIDOMNode** aFocusNode, PRInt32* aOffset)=0;
+  NS_IMETHOD    GetRangeAt(PRInt32 aIndex, nsIDOMRange** aReturn)=0;
 
   NS_IMETHOD    ClearSelection()=0;
 
@@ -76,8 +76,8 @@ public:
   NS_IMETHOD    GetFocusNode(nsIDOMNode** aFocusNode);  \
   NS_IMETHOD    GetFocusOffset(PRInt32* aFocusOffset);  \
   NS_IMETHOD    GetIsCollapsed(PRBool* aIsCollapsed);  \
-  NS_IMETHOD    GetAnchorNodeAndOffset(nsIDOMNode** aAnchorNode, PRInt32* aOffset);  \
-  NS_IMETHOD    GetFocusNodeAndOffset(nsIDOMNode** aFocusNode, PRInt32* aOffset);  \
+  NS_IMETHOD    GetRangeCount(PRInt32* aRangeCount);  \
+  NS_IMETHOD    GetRangeAt(PRInt32 aIndex, nsIDOMRange** aReturn);  \
   NS_IMETHOD    ClearSelection();  \
   NS_IMETHOD    Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset);  \
   NS_IMETHOD    Extend(nsIDOMNode* aParentNode, PRInt32 aOffset);  \
@@ -96,8 +96,8 @@ public:
   NS_IMETHOD    GetFocusNode(nsIDOMNode** aFocusNode) { return _to##GetFocusNode(aFocusNode); } \
   NS_IMETHOD    GetFocusOffset(PRInt32* aFocusOffset) { return _to##GetFocusOffset(aFocusOffset); } \
   NS_IMETHOD    GetIsCollapsed(PRBool* aIsCollapsed) { return _to##GetIsCollapsed(aIsCollapsed); } \
-  NS_IMETHOD    GetAnchorNodeAndOffset(nsIDOMNode** aAnchorNode, PRInt32* aOffset) { return _to##GetAnchorNodeAndOffset(aAnchorNode, aOffset); }  \
-  NS_IMETHOD    GetFocusNodeAndOffset(nsIDOMNode** aFocusNode, PRInt32* aOffset) { return _to##GetFocusNodeAndOffset(aFocusNode, aOffset); }  \
+  NS_IMETHOD    GetRangeCount(PRInt32* aRangeCount) { return _to##GetRangeCount(aRangeCount); } \
+  NS_IMETHOD    GetRangeAt(PRInt32 aIndex, nsIDOMRange** aReturn) { return _to##GetRangeAt(aIndex, aReturn); }  \
   NS_IMETHOD    ClearSelection() { return _to##ClearSelection(); }  \
   NS_IMETHOD    Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset) { return _to##Collapse(aParentNode, aOffset); }  \
   NS_IMETHOD    Extend(nsIDOMNode* aParentNode, PRInt32 aOffset) { return _to##Extend(aParentNode, aOffset); }  \
