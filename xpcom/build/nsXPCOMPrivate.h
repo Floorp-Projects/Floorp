@@ -88,19 +88,22 @@ typedef nsresult (* NewNativeLocalFileFunc)(const nsACString &path, PRBool follo
 typedef nsresult (* GetDebugFunc)(nsIDebug* *result);
 typedef nsresult (* GetTraceRefcntFunc)(nsITraceRefcnt* *result);
 
-typedef PRBool           (* StringContainerInitFunc)(nsStringContainer&);
-typedef void             (* StringContainerFinishFunc)(nsStringContainer&);
-typedef PRUint32         (* StringGetDataFunc)(const nsAString&, const PRUnichar**, PRBool*);
-typedef void             (* StringSetDataFunc)(nsAString&, const PRUnichar*, PRUint32);
-typedef void             (* StringSetDataRangeFunc)(nsAString&, PRUint32, PRUint32, const PRUnichar*, PRUint32);
-typedef void             (* StringCopyFunc)(nsAString &, const nsAString &);
+typedef PRBool   (* StringContainerInitFunc)(nsStringContainer&);
+typedef void     (* StringContainerFinishFunc)(nsStringContainer&);
+typedef PRUint32 (* StringGetDataFunc)(const nsAString&, const PRUnichar**, PRBool*);
+typedef void     (* StringSetDataFunc)(nsAString&, const PRUnichar*, PRUint32);
+typedef void     (* StringSetDataRangeFunc)(nsAString&, PRUint32, PRUint32, const PRUnichar*, PRUint32);
+typedef void     (* StringCopyFunc)(nsAString &, const nsAString &);
 
-typedef PRBool           (* CStringContainerInitFunc)(nsCStringContainer&);
-typedef void             (* CStringContainerFinishFunc)(nsCStringContainer&);
-typedef PRUint32         (* CStringGetDataFunc)(const nsACString&, const char**, PRBool*);
-typedef void             (* CStringSetDataFunc)(nsACString&, const char*, PRUint32);
-typedef void             (* CStringSetDataRangeFunc)(nsACString&, PRUint32, PRUint32, const char*, PRUint32);
-typedef void             (* CStringCopyFunc)(nsACString &, const nsACString &);
+typedef PRBool   (* CStringContainerInitFunc)(nsCStringContainer&);
+typedef void     (* CStringContainerFinishFunc)(nsCStringContainer&);
+typedef PRUint32 (* CStringGetDataFunc)(const nsACString&, const char**, PRBool*);
+typedef void     (* CStringSetDataFunc)(nsACString&, const char*, PRUint32);
+typedef void     (* CStringSetDataRangeFunc)(nsACString&, PRUint32, PRUint32, const char*, PRUint32);
+typedef void     (* CStringCopyFunc)(nsACString &, const nsACString &);
+
+typedef nsresult (* CStringToUTF16)(const nsACString &, PRUint32, const nsAString &);
+typedef nsresult (* UTF16ToCString)(const nsAString &, PRUint32, const nsACString &);
 
 // PRIVATE
 typedef nsresult (* RegisterXPCOMExitRoutineFunc)(XPCOMExitRoutine exitRoutine, PRUint32 priority);
@@ -122,11 +125,11 @@ typedef struct XPCOMFunctions{
     RegisterXPCOMExitRoutineFunc registerExitRoutine;
     UnregisterXPCOMExitRoutineFunc unregisterExitRoutine;
 
-    // Added Post 1.4
+    // Added for Mozilla 1.5
     GetDebugFunc getDebug;
     GetTraceRefcntFunc getTraceRefcnt;
 
-    // Added Post 1.6
+    // Added for Mozilla 1.7
     StringContainerInitFunc stringContainerInit;
     StringContainerFinishFunc stringContainerFinish;
     StringGetDataFunc stringGetData;
@@ -139,6 +142,8 @@ typedef struct XPCOMFunctions{
     CStringSetDataFunc cstringSetData;
     CStringSetDataRangeFunc cstringSetDataRange;
     CStringCopyFunc cstringCopy;
+    CStringToUTF16 cstringToUTF16;
+    UTF16ToCString utf16ToCString;
 
 } XPCOMFunctions;
 

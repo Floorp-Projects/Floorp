@@ -44,119 +44,166 @@ static const char kAsciiData[] = "hello world";
 static const PRUnichar kUnicodeData[] =
   {'h','e','l','l','o',' ','w','o','r','l','d','\0'};
 
-static PRBool
-TestACString(nsACString &s)
-{
-  const char *ptr;
-  PRUint32 len;
-
-  NS_CStringGetData(s, &ptr);
-  if (ptr == nsnull || *ptr != '\0')
-  {
-    NS_BREAK();
-    return PR_FALSE;
-  }
-
-  NS_CStringSetData(s, kAsciiData, PR_UINT32_MAX);
-  len = NS_CStringGetData(s, &ptr);
-  if (ptr == nsnull || strcmp(ptr, kAsciiData) != 0)
-  {
-    NS_BREAK();
-    return PR_FALSE;
-  }
-  if (len != sizeof(kAsciiData)-1)
-  {
-    NS_BREAK();
-    return PR_FALSE;
-  }
-
-  nsCStringContainer temp;
-  NS_CStringContainerInit(temp);
-  NS_CStringCopy(temp, s);
-
-  len = NS_CStringGetData(temp, &ptr);
-  if (ptr == nsnull || strcmp(ptr, kAsciiData) != 0)
-  {
-    NS_BREAK();
-    return PR_FALSE;
-  }
-  if (len != sizeof(kAsciiData)-1)
-  {
-    NS_BREAK();
-    return PR_FALSE;
-  }
-
-  NS_CStringContainerFinish(temp);
-  
-  return PR_TRUE;
-}
-
-static PRBool
-TestAString(nsAString &s)
-{
-  const PRUnichar *ptr;
-  PRUint32 len;
-
-  NS_StringGetData(s, &ptr);
-  if (ptr == nsnull || *ptr != '\0')
-  {
-    NS_BREAK();
-    return PR_FALSE;
-  }
-
-  NS_StringSetData(s, kUnicodeData, PR_UINT32_MAX);
-  len = NS_StringGetData(s, &ptr);
-  if (ptr == nsnull || nsCRT::strcmp(ptr, kUnicodeData) != 0)
-  {
-    NS_BREAK();
-    return PR_FALSE;
-  }
-  if (len != sizeof(kUnicodeData)/2 - 1)
-  {
-    NS_BREAK();
-    return PR_FALSE;
-  }
-
-  nsStringContainer temp;
-  NS_StringContainerInit(temp);
-  NS_StringCopy(temp, s);
-
-  len = NS_StringGetData(temp, &ptr);
-  if (ptr == nsnull || nsCRT::strcmp(ptr, kUnicodeData) != 0)
-  {
-    NS_BREAK();
-    return PR_FALSE;
-  }
-  if (len != sizeof(kUnicodeData)/2 - 1)
-  {
-    NS_BREAK();
-    return PR_FALSE;
-  }
-
-  NS_StringContainerFinish(temp);
-
-  return PR_TRUE;
-}
-
-int main()
-{
-  PRBool rv;
-
-  // TestCStringContainer
+static PRBool test_basic_1()
   {
     nsCStringContainer s;
     NS_CStringContainerInit(s);
-    rv = TestACString(s);
+
+    const char *ptr;
+    PRUint32 len;
+
+    NS_CStringGetData(s, &ptr);
+    if (ptr == nsnull || *ptr != '\0')
+      {
+        NS_ERROR("unexpected result");
+        return PR_FALSE;
+      }
+
+    NS_CStringSetData(s, kAsciiData, PR_UINT32_MAX);
+    len = NS_CStringGetData(s, &ptr);
+    if (ptr == nsnull || strcmp(ptr, kAsciiData) != 0)
+      {
+        NS_ERROR("unexpected result");
+        return PR_FALSE;
+      }
+    if (len != sizeof(kAsciiData)-1)
+      {
+        NS_ERROR("unexpected result");
+        return PR_FALSE;
+      }
+
+    nsCStringContainer temp;
+    NS_CStringContainerInit(temp);
+    NS_CStringCopy(temp, s);
+
+    len = NS_CStringGetData(temp, &ptr);
+    if (ptr == nsnull || strcmp(ptr, kAsciiData) != 0)
+      {
+        NS_ERROR("unexpected result");
+        return PR_FALSE;
+      }
+    if (len != sizeof(kAsciiData)-1)
+      {
+        NS_ERROR("unexpected result");
+        return PR_FALSE;
+      }
+
+    NS_CStringContainerFinish(temp);
+
     NS_CStringContainerFinish(s);
-    printf("TestACString\t%s\n", rv ? "PASSED" : "FAILED");
+    return PR_TRUE;
   }
 
-  // TestStringContainer
+static PRBool test_basic_2()
   {
     nsStringContainer s;
     NS_StringContainerInit(s);
-    rv = TestAString(s);
+
+    const PRUnichar *ptr;
+    PRUint32 len;
+
+    NS_StringGetData(s, &ptr);
+    if (ptr == nsnull || *ptr != '\0')
+      {
+        NS_ERROR("unexpected result");
+        return PR_FALSE;
+      }
+
+    NS_StringSetData(s, kUnicodeData, PR_UINT32_MAX);
+    len = NS_StringGetData(s, &ptr);
+    if (ptr == nsnull || nsCRT::strcmp(ptr, kUnicodeData) != 0)
+      {
+        NS_ERROR("unexpected result");
+        return PR_FALSE;
+      }
+    if (len != sizeof(kUnicodeData)/2 - 1)
+      {
+        NS_ERROR("unexpected result");
+        return PR_FALSE;
+      }
+
+    nsStringContainer temp;
+    NS_StringContainerInit(temp);
+    NS_StringCopy(temp, s);
+
+    len = NS_StringGetData(temp, &ptr);
+    if (ptr == nsnull || nsCRT::strcmp(ptr, kUnicodeData) != 0)
+      {
+        NS_ERROR("unexpected result");
+        return PR_FALSE;
+      }
+    if (len != sizeof(kUnicodeData)/2 - 1)
+      {
+        NS_ERROR("unexpected result");
+        return PR_FALSE;
+      }
+
+    NS_StringContainerFinish(temp);
+
     NS_StringContainerFinish(s);
-    printf("TestAString\t%s\n", rv ? "PASSED" : "FAILED");
+
+    return PR_TRUE;
   }
-}
+
+static PRBool test_convert()
+  {
+    nsStringContainer s;
+    NS_StringContainerInit(s);
+    NS_StringSetData(s, kUnicodeData, sizeof(kUnicodeData)/2 - 1);
+
+    nsCStringContainer temp;
+    NS_CStringContainerInit(temp);
+
+    const char *data;
+
+    NS_UTF16ToCString(s, NS_ENCODING_ASCII, temp);
+    NS_CStringGetData(temp, &data);
+    if (strcmp(data, kAsciiData) != 0)
+      return PR_FALSE;
+
+    NS_UTF16ToCString(s, NS_ENCODING_UTF8, temp);
+    NS_CStringGetData(temp, &data);
+    if (strcmp(data, kAsciiData) != 0)
+      return PR_FALSE;
+
+    NS_CStringContainerFinish(temp);
+
+    NS_StringContainerFinish(s);
+    return PR_TRUE;
+  }
+
+//----
+
+typedef PRBool (*TestFunc)();
+
+static const struct Test
+  {
+    const char* name;
+    TestFunc    func;
+  }
+tests[] =
+  {
+    { "test_basic_1", test_basic_1 },
+    { "test_basic_2", test_basic_2 },
+    { "test_convert", test_convert },
+    { nsnull, nsnull }
+  };
+
+//----
+
+int main(int argc, char **argv)
+  {
+    int count = 1;
+    if (argc > 1)
+      count = atoi(argv[1]);
+
+    while (count--)
+      {
+        for (const Test* t = tests; t->name != nsnull; ++t)
+          {
+            printf("%25s : %s\n", t->name, t->func() ? "SUCCESS" : "FAILURE");
+          }
+      }
+    
+    return 0;
+  }

@@ -42,6 +42,7 @@
 #define nsACString_external nsACString_external_
 
 #include "nsStringAPI.h"
+#include "nsNativeCharsetUtils.h"
 
 /* ------------------------------------------------------------------------- */
 
@@ -191,4 +192,52 @@ NS_STRINGAPI(void)
 NS_CStringCopy(nsACString &aDest, const nsACString &aSrc)
 {
   aDest.Assign(aSrc);
+}
+
+/* ------------------------------------------------------------------------- */
+
+NS_STRINGAPI(nsresult)
+NS_CStringToUTF16(const nsACString &aSrc, PRUint32 aSrcEncoding, nsAString &aDest)
+{
+  // XXX handle errors
+
+  switch (aSrcEncoding)
+  {
+    case NS_ENCODING_ASCII:
+      CopyASCIItoUTF16(aSrc, aDest);
+      break;
+    case NS_ENCODING_UTF8:
+      CopyUTF8toUTF16(aSrc, aDest);
+      break;
+    case NS_ENCODING_NATIVE_FILESYSTEM:
+      NS_CopyNativeToUnicode(aSrc, aDest);
+      break;
+    default:
+      return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  return NS_OK;
+}
+
+NS_STRINGAPI(nsresult)
+NS_UTF16ToCString(const nsAString &aSrc, PRUint32 aDestEncoding, nsACString &aDest)
+{
+  // XXX handle errors
+
+  switch (aDestEncoding)
+  {
+    case NS_ENCODING_ASCII:
+      LossyCopyUTF16toASCII(aSrc, aDest);
+      break;
+    case NS_ENCODING_UTF8:
+      CopyUTF16toUTF8(aSrc, aDest);
+      break;
+    case NS_ENCODING_NATIVE_FILESYSTEM:
+      NS_CopyUnicodeToNative(aSrc, aDest);
+      break;
+    default:
+      return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  return NS_OK;
 }
