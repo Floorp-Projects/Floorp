@@ -206,11 +206,13 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
 	//	eaiser
 	//
 
-  PRBool ctrlKey;
-  PRBool altKey;
+  PRBool ctrlKey, altKey, metaKey;
   uiEvent->GetCtrlKey(&ctrlKey);
   uiEvent->GetAltKey(&altKey);
-
+  uiEvent->GetMetaKey(&metaKey);
+  if (metaKey)
+    return NS_OK;	// don't consume
+  
 	if (NS_SUCCEEDED(uiEvent->GetKeyCode(&keyCode)))
 	{
     if (nsIDOMUIEvent::VK_BACK==keyCode) {
