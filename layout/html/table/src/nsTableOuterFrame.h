@@ -77,10 +77,6 @@ public:
 
 protected:
 
-  /** protected constructor 
-    * @see NewFrame
-    */
-  nsTableOuterFrame();
 
   /** implement abstract method on nsHTMLContainerFrame */
   virtual PRIntn GetSkipSides() const;
@@ -188,8 +184,6 @@ private:
   /** used to track caption max element size */
   PRInt32 mMinCaptionWidth;
 
-  /** used to cache reflow results so we can optimize out reflow in some circumstances */
-  nsHTMLReflowMetrics mDesiredSize;
   nsSize mMaxElementSize;
 
 };

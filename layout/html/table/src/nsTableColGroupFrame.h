@@ -33,10 +33,11 @@ class nsTableColFrame;
 class nsTableColGroupFrame : public nsHTMLContainerFrame
 {
 public:
+
+  // default constructor supplied by the compiler
+
   /** instantiate a new instance of nsTableColGroupFrame.
     * @param aResult    the new object is returned in this out-param
-    * @param aContent   the table object to map
-    * @param aParent    the parent of the new frame
     *
     * @return  NS_OK if the frame was properly allocated, otherwise an error code
     */
@@ -95,8 +96,6 @@ public:
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0, nsIListFilter *aFilter = nsnull) const;
 
 protected:
-
-  nsTableColGroupFrame();
 
   /** implement abstract method on nsHTMLContainerFrame */
   virtual PRIntn GetSkipSides() const;

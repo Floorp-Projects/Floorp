@@ -35,12 +35,7 @@ static const PRBool gsNoisyRefs = PR_FALSE;
 nsTableColFrame::nsTableColFrame()
   : nsFrame()
 {
-  mColIndex = 0;
-  mMaxColWidth = 0;
-  mMinColWidth = 0;
-  mMaxEffectiveColWidth = 0;
-  mMinEffectiveColWidth = 0;
-  mMinAdjustedColWidth = 0;
+  // note that all fields are initialized to 0 by nsFrame::operator new
   mWidthSource = eWIDTH_SOURCE_NONE;
 }
 
