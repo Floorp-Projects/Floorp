@@ -325,6 +325,11 @@ DocumentViewerImpl::~DocumentViewerImpl()
     mDocument->SetScriptGlobalObject(nsnull);
   }
 
+  if (mPresContext) {
+    mPresContext->SetContainer(nsnull);
+    mPresContext->SetLinkHandler(nsnull);
+  }
+
   if (mDeviceContext)
     mDeviceContext->FlushFontCache();
 

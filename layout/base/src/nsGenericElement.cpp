@@ -1275,9 +1275,8 @@ nsGenericElement::TriggerLink(nsIPresContext* aPresContext,
 {
   nsCOMPtr<nsILinkHandler> handler;
   nsresult rv = aPresContext->GetLinkHandler(getter_AddRefs(handler));
-  if (NS_FAILED(rv)) return rv;
-  if (!handler) return NS_ERROR_UNEXPECTED;		// this can happen in editor windows
-  
+  if (NS_FAILED(rv) || (nsnull == handler)) return rv;
+
   // Resolve url to an absolute url
   nsAutoString absURLSpec;
   if (nsnull != aBaseURL) {
