@@ -77,69 +77,69 @@ nsXULRadioElement::~nsXULRadioElement()
 NS_IMETHODIMP
 nsXULRadioElement::GetValue(nsString& aValue)
 {
-  return mOuter->GetAttribute("value", aValue);
+  return mOuter->GetAttribute(NS_ConvertASCIItoUCS2("value"), aValue);
 }
 
 NS_IMETHODIMP
 nsXULRadioElement::SetValue(const nsString& aValue)
 {
-  return mOuter->SetAttribute("value", aValue);
+  return mOuter->SetAttribute(NS_ConvertASCIItoUCS2("value"), aValue);
 }
 
 NS_IMETHODIMP
 nsXULRadioElement::GetCrop(nsString& aCrop)
 {
-  return mOuter->GetAttribute("crop", aCrop);
+  return mOuter->GetAttribute(NS_ConvertASCIItoUCS2("crop"), aCrop);
 }
 
 NS_IMETHODIMP
 nsXULRadioElement::SetCrop(const nsString& aCrop)
 {
-  return mOuter->SetAttribute("crop", aCrop);
+  return mOuter->SetAttribute(NS_ConvertASCIItoUCS2("crop"), aCrop);
 }
 
 NS_IMETHODIMP
 nsXULRadioElement::GetSrc(nsString& aSrc)
 {
-  return mOuter->GetAttribute("src", aSrc);
+  return mOuter->GetAttribute(NS_ConvertASCIItoUCS2("src"), aSrc);
 }
 
 NS_IMETHODIMP
 nsXULRadioElement::SetSrc(const nsString& aSrc)
 {
-  return mOuter->SetAttribute("src", aSrc);
+  return mOuter->SetAttribute(NS_ConvertASCIItoUCS2("src"), aSrc);
 }
 
 NS_IMETHODIMP
 nsXULRadioElement::GetImgalign(nsString& aImgalign)
 {
-  return mOuter->GetAttribute("imgalign", aImgalign);
+  return mOuter->GetAttribute(NS_ConvertASCIItoUCS2("imgalign"), aImgalign);
 }
 
 NS_IMETHODIMP
 nsXULRadioElement::SetImgalign(const nsString& aImgalign)
 {
-  return mOuter->SetAttribute("imgalign", aImgalign);
+  return mOuter->SetAttribute(NS_ConvertASCIItoUCS2("imgalign"), aImgalign);
 }
 
 NS_IMETHODIMP
 nsXULRadioElement::GetAccesskey(nsString& aAccesskey)
 {
-  return mOuter->GetAttribute("accesskey", aAccesskey);
+  return mOuter->GetAttribute(NS_ConvertASCIItoUCS2("accesskey"), aAccesskey);
 }
 
 NS_IMETHODIMP
 nsXULRadioElement::SetAccesskey(const nsString& aAccesskey)
 {
-  return mOuter->SetAttribute("accesskey", aAccesskey);
+  return mOuter->SetAttribute(NS_ConvertASCIItoUCS2("accesskey"), aAccesskey);
 }
 
 NS_IMETHODIMP
 nsXULRadioElement::GetChecked(PRBool* aChecked)
 {
   nsAutoString value;
-  mOuter->GetAttribute("checked", value);
-  if(value.Equals("true"))
+  mOuter->GetAttribute(NS_ConvertASCIItoUCS2("checked"), value);
+  if(value.EqualsWithConversion("true"))
     *aChecked = PR_TRUE;
   else
     *aChecked = PR_FALSE;
@@ -151,9 +151,9 @@ NS_IMETHODIMP
 nsXULRadioElement::SetChecked(PRBool aChecked)
 {
   if(aChecked)
-    mOuter->SetAttribute("checked", "true");
+    mOuter->SetAttribute(NS_ConvertASCIItoUCS2("checked"), NS_ConvertASCIItoUCS2("true"));
   else
-    mOuter->RemoveAttribute("checked");
+    mOuter->RemoveAttribute(NS_ConvertASCIItoUCS2("checked"));
 
   return NS_OK;
 }
@@ -163,8 +163,8 @@ NS_IMETHODIMP
 nsXULRadioElement::GetDisabled(PRBool* aDisabled)
 {
   nsAutoString value;
-  mOuter->GetAttribute("disabled", value);
-  if(value.Equals("true"))
+  mOuter->GetAttribute(NS_ConvertASCIItoUCS2("disabled"), value);
+  if(value.EqualsWithConversion("true"))
     *aDisabled = PR_TRUE;
   else
     *aDisabled = PR_FALSE;
@@ -176,9 +176,9 @@ NS_IMETHODIMP
 nsXULRadioElement::SetDisabled(PRBool aDisabled)
 {
   if(aDisabled)
-    mOuter->SetAttribute("disabled", "true");
+    mOuter->SetAttribute(NS_ConvertASCIItoUCS2("disabled"), NS_ConvertASCIItoUCS2("true"));
   else
-    mOuter->RemoveAttribute("disabled");
+    mOuter->RemoveAttribute(NS_ConvertASCIItoUCS2("disabled"));
 
   return NS_OK;
 }

@@ -3028,8 +3028,8 @@ nsXULTemplateBuilder::Init()
     if (gRefCnt++ == 0) {
         nsXULAtoms::AddRef();
 
-    trueStr = "true";
-    falseStr = "false";
+    trueStr.AssignWithConversion("true");
+    falseStr.AssignWithConversion("false");
 
         nsresult rv;
 
@@ -3049,11 +3049,11 @@ nsXULTemplateBuilder::Init()
         static const char kRDFNameSpaceURI[]
             = RDF_NAMESPACE_URI;
 
-        rv = gNameSpaceManager->RegisterNameSpace(kXULNameSpaceURI, kNameSpaceID_XUL);
+        rv = gNameSpaceManager->RegisterNameSpace(NS_ConvertASCIItoUCS2(kXULNameSpaceURI), kNameSpaceID_XUL);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register XUL namespace");
         if (NS_FAILED(rv)) return rv;
 
-        rv = gNameSpaceManager->RegisterNameSpace(kRDFNameSpaceURI, kNameSpaceID_RDF);
+        rv = gNameSpaceManager->RegisterNameSpace(NS_ConvertASCIItoUCS2(kRDFNameSpaceURI), kNameSpaceID_RDF);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register RDF namespace");
         if (NS_FAILED(rv)) return rv;
 
@@ -3742,10 +3742,10 @@ nsXULTemplateBuilder::SubstituteText(nsIRDFResource* aResource,
 {
     nsresult rv;
 
-    if (aAttributeValue.Equals("...") || aAttributeValue.Equals("rdf:*")) {
+    if (aAttributeValue.EqualsWithConversion("...") || aAttributeValue.EqualsWithConversion("rdf:*")) {
         const char *uri = nsnull;
         aResource->GetValueConst(&uri);
-        aAttributeValue = uri;
+        aAttributeValue.AssignWithConversion(uri);
     }
     else if (aMatch.mRule && aAttributeValue[0] == PRUnichar('?')) {
         PRInt32 var = aMatch.mRule->LookupSymbol(aAttributeValue);
@@ -3961,7 +3961,7 @@ nsXULTemplateBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 aMatch.mInstantiation.mBindings.GetBindingFor(aMatch.mRule->GetMemberVariable(), &member);
                 aChild = VALUE_TO_IRDFRESOURCE(member);
             }
-            else if (uri.Equals("...") || uri.Equals("rdf:*")) {
+            else if (uri.EqualsWithConversion("...") || uri.EqualsWithConversion("rdf:*")) {
                 // If we -are- the resource element, then we are no
                 // matter unique.
                 isResourceElement = PR_TRUE;
@@ -4056,7 +4056,7 @@ nsXULTemplateBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource URI");
             if (NS_FAILED(rv)) return rv;
 
-            nsAutoString id(uri);
+            nsAutoString id; id.AssignWithConversion(uri);
             rv = realKid->SetAttribute(kNameSpaceID_None, nsXULAtoms::id, id, PR_FALSE);
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set id attribute");
             if (NS_FAILED(rv)) return rv;
@@ -4435,7 +4435,7 @@ nsXULTemplateBuilder::SynchronizeUsingTemplate(nsIContent* aTemplateNode,
             if (NS_FAILED(rv)) return rv;
 
             if (property.get() == aProperty) {
-                nsAutoString text("");
+                nsAutoString text;
 
                 rv = gXULUtils->GetTextForNode(aValue, text);
                 if (NS_FAILED(rv)) return rv;
@@ -5191,7 +5191,7 @@ nsXULTemplateBuilder::GetElementsForResource(nsIRDFResource* aResource, nsISuppo
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource URI");
     if (NS_FAILED(rv)) return rv;
 
-    rv = mDocument->GetElementsForID(nsAutoString(uri), aElements);
+    rv = mDocument->GetElementsForID(NS_ConvertASCIItoUCS2(uri), aElements);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to retrieve elements from resource");
     if (NS_FAILED(rv)) return rv;
 
@@ -5283,7 +5283,7 @@ nsXULTemplateBuilder::GetElementFactory(PRInt32 aNameSpaceID, nsIElementFactory*
   gNameSpaceManager->GetNameSpaceURI(aNameSpaceID, nameSpace);
 
   nsCAutoString progID = NS_ELEMENT_FACTORY_PROGID_PREFIX;
-  progID.Append(nameSpace);
+  progID.AppendWithConversion(nameSpace.GetUnicode());
 
   // Retrieve the appropriate factory.
   NS_WITH_SERVICE(nsIElementFactory, elementFactory, progID, &rv);
@@ -5381,7 +5381,7 @@ nsXULTemplateBuilder::ContentIdTestNode::FilterInstantiations(InstantiationSet& 
             rv = VALUE_TO_IRDFRESOURCE(idValue)->GetValueConst(&uri);
             if (NS_FAILED(rv)) return rv;
 
-            rv = mDocument->GetElementsForID(nsAutoString(uri), elements);
+            rv = mDocument->GetElementsForID(NS_ConvertASCIItoUCS2(uri), elements);
             if (NS_FAILED(rv)) return rv;
 
             PRUint32 count;
@@ -5746,10 +5746,10 @@ nsXULTemplateBuilder::CompileSimpleRule(nsIContent* aRule,
             if (NS_FAILED(rv)) return rv;
 
             if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-                if (value.Equals("true")) {
+                if (value.EqualsWithConversion("true")) {
                     iscontainer = RDFContainerInstanceTestNode::eTrue;
                 }
-                else if (value.Equals("false")) {
+                else if (value.EqualsWithConversion("false")) {
                     iscontainer = RDFContainerInstanceTestNode::eFalse;
                 }
             }
@@ -5761,10 +5761,10 @@ nsXULTemplateBuilder::CompileSimpleRule(nsIContent* aRule,
             if (NS_FAILED(rv)) return rv;
 
             if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-                if (value.Equals("true")) {
+                if (value.EqualsWithConversion("true")) {
                     isempty = RDFContainerInstanceTestNode::eTrue;
                 }
-                else if (value.Equals("false")) {
+                else if (value.EqualsWithConversion("false")) {
                     isempty = RDFContainerInstanceTestNode::eFalse;
                 }
             }

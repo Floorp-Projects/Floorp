@@ -123,7 +123,7 @@ SetXULRadioGroupElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
         if (NS_SUCCEEDED(rv)) {
           nsIDOMXULRadioElement* prop;
           if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
-                                                  kIXULRadioElementIID, "XULRadioElement",
+                                                  kIXULRadioElementIID, NS_ConvertASCIItoUCS2("XULRadioElement"),
                                                   cx, *vp)) {
             rv = NS_ERROR_DOM_NOT_OBJECT_ERR;
           }

@@ -77,69 +77,69 @@ nsXULCheckboxElement::~nsXULCheckboxElement()
 NS_IMETHODIMP
 nsXULCheckboxElement::GetValue(nsString& aValue)
 {
-  return mOuter->GetAttribute("value", aValue);
+  return mOuter->GetAttribute(NS_ConvertASCIItoUCS2("value"), aValue);
 }
 
 NS_IMETHODIMP
 nsXULCheckboxElement::SetValue(const nsString& aValue)
 {
-  return mOuter->SetAttribute("value", aValue);
+  return mOuter->SetAttribute(NS_ConvertASCIItoUCS2("value"), aValue);
 }
 
 NS_IMETHODIMP
 nsXULCheckboxElement::GetCrop(nsString& aCrop)
 {
-  return mOuter->GetAttribute("crop", aCrop);
+  return mOuter->GetAttribute(NS_ConvertASCIItoUCS2("crop"), aCrop);
 }
 
 NS_IMETHODIMP
 nsXULCheckboxElement::SetCrop(const nsString& aCrop)
 {
-  return mOuter->SetAttribute("crop", aCrop);
+  return mOuter->SetAttribute(NS_ConvertASCIItoUCS2("crop"), aCrop);
 }
 
 NS_IMETHODIMP
 nsXULCheckboxElement::GetSrc(nsString& aSrc)
 {
-  return mOuter->GetAttribute("src", aSrc);
+  return mOuter->GetAttribute(NS_ConvertASCIItoUCS2("src"), aSrc);
 }
 
 NS_IMETHODIMP
 nsXULCheckboxElement::SetSrc(const nsString& aSrc)
 {
-  return mOuter->SetAttribute("src", aSrc);
+  return mOuter->SetAttribute(NS_ConvertASCIItoUCS2("src"), aSrc);
 }
 
 NS_IMETHODIMP
 nsXULCheckboxElement::GetImgalign(nsString& aImgalign)
 {
-  return mOuter->GetAttribute("imgalign", aImgalign);
+  return mOuter->GetAttribute(NS_ConvertASCIItoUCS2("imgalign"), aImgalign);
 }
 
 NS_IMETHODIMP
 nsXULCheckboxElement::SetImgalign(const nsString& aImgalign)
 {
-  return mOuter->SetAttribute("imgalign", aImgalign);
+  return mOuter->SetAttribute(NS_ConvertASCIItoUCS2("imgalign"), aImgalign);
 }
 
 NS_IMETHODIMP
 nsXULCheckboxElement::GetAccesskey(nsString& aAccesskey)
 {
-  return mOuter->GetAttribute("accesskey", aAccesskey);
+  return mOuter->GetAttribute(NS_ConvertASCIItoUCS2("accesskey"), aAccesskey);
 }
 
 NS_IMETHODIMP
 nsXULCheckboxElement::SetAccesskey(const nsString& aAccesskey)
 {
-  return mOuter->SetAttribute("accesskey", aAccesskey);
+  return mOuter->SetAttribute(NS_ConvertASCIItoUCS2("accesskey"), aAccesskey);
 }
 
 NS_IMETHODIMP
 nsXULCheckboxElement::GetChecked(PRBool* aChecked)
 {
   nsAutoString value;
-  mOuter->GetAttribute("checked", value);
-  if(value.Equals("true"))
+  mOuter->GetAttribute(NS_ConvertASCIItoUCS2("checked"), value);
+  if(value.EqualsWithConversion("true"))
     *aChecked = PR_TRUE;
   else
     *aChecked = PR_FALSE;
@@ -156,9 +156,9 @@ nsXULCheckboxElement::SetChecked(PRBool aChecked)
     return NS_OK;
 
   if(aChecked)
-    mOuter->SetAttribute("checked", "true");
+    mOuter->SetAttribute(NS_ConvertASCIItoUCS2("checked"), NS_ConvertASCIItoUCS2("true"));
   else
-    mOuter->RemoveAttribute("checked");
+    mOuter->RemoveAttribute(NS_ConvertASCIItoUCS2("checked"));
 
   return NS_OK;
 }
@@ -167,8 +167,8 @@ NS_IMETHODIMP
 nsXULCheckboxElement::GetDisabled(PRBool* aDisabled)
 {
   nsAutoString value;
-  mOuter->GetAttribute("disabled", value);
-  if(value.Equals("true"))
+  mOuter->GetAttribute(NS_ConvertASCIItoUCS2("disabled"), value);
+  if(value.EqualsWithConversion("true"))
     *aDisabled = PR_TRUE;
   else
     *aDisabled = PR_FALSE;
@@ -180,9 +180,9 @@ NS_IMETHODIMP
 nsXULCheckboxElement::SetDisabled(PRBool aDisabled)
 {
   if(aDisabled)
-    mOuter->SetAttribute("disabled", "true");
+    mOuter->SetAttribute(NS_ConvertASCIItoUCS2("disabled"), NS_ConvertASCIItoUCS2("true"));
   else
-    mOuter->RemoveAttribute("disabled");
+    mOuter->RemoveAttribute(NS_ConvertASCIItoUCS2("disabled"));
 
   return NS_OK;
 }
