@@ -25,6 +25,7 @@
 #                 Zach Lipton  <zach@zachlipton.com>
 #                 Jacob Steenhagen <jake@bugzilla.org>
 #                 Bradley Baetz <bbaetz@student.usyd.edu.au>
+#                 Tobias Burnus <burnus@net-b.de>
 #
 #
 # Direct any questions on this source code to
@@ -958,82 +959,81 @@ END
        }
     }
 
+    # Search for template directories
+    # We include the default and custom directories separately to make
+    # sure we compile all templates
+    my @templatepaths = ();
+    {
+        use File::Spec; 
+        opendir(DIR, "template") || die "Can't open  'template': $!";
+        my @files = grep { /^[a-z-]+$/i } readdir(DIR);
+        closedir DIR;
+
+        foreach my $dir (@files) {
+            next if($dir =~ /^CVS$/i);
+            my $path = File::Spec->catdir('template', $dir, 'custom');
+            push(@templatepaths, $path) if(-d $path);
+            $path = File::Spec->catdir('template', $dir, 'default');
+            push(@templatepaths, $path) if(-d $path);
+        }
+    }
+
     # Precompile stuff. This speeds up initial access (so the template isn't
     # compiled multiple times simulataneously by different servers), and helps
     # to get the permissions right.
-    eval("use Template");
-    my $redir = ($^O =~ /MSWin32/i) ? "NUL" : "/dev/null";
-    my $provider = Template::Provider->new(
-      {
-        # Colon-separated list of directories containing templates.
-        INCLUDE_PATH => "template/en/custom:template/en/default",
-
-        PRE_CHOMP => 1 ,
-        TRIM => 1 ,
-
-        COMPILE_DIR => 'data/', # becomes data/template/en/{custom,default}
-
-        # These don't actually need to do anything here, just exist
-        FILTERS =>
-        {
-         strike => sub { return $_; } ,
-         js => sub { return $_; },
-         html_linebreak => sub { return $_; },
-         url_quote => sub { return $_; },
-         xml => sub { return $_; },
-         quoteUrls => sub { return $_; },
-         bug_link => [ sub { return sub { return $_; } }, 1],
-         csv => sub { return $_; },
-         time => sub { return $_; },
-        },
-      }) || die ("Could not create Template Provider: "
-                 . Template::Provider->error() . "\n");
-
     sub compile {
-        # no_chdir doesn't work on perl 5.005
-
-        my $origDir = $File::Find::dir;
         my $name = $File::Find::name;
 
         return if (-d $name);
         return if ($name =~ /\/CVS\//);
         return if ($name !~ /\.tmpl$/);
-        $name =~ s!template/en/default/!!; # trim the bit we don't pass to TT
-
-        chdir($::baseDir);
+        $name =~ s/\Q$::templatepath\E\///; # trim the bit we don't pass to TT
 
         # Do this to avoid actually processing the templates
-        my ($data, $err) = $provider->fetch($name);
+        my ($data, $err) = $::provider->fetch($name);
         die "Could not compile $name: " . $data . "\n" if $err;
-
-        chdir($origDir);
     }
+    
+    eval("use Template");
 
     {
         print "Precompiling templates ...\n" unless $silent;
 
         use File::Find;
 
-        use Cwd;
-
-        $::baseDir = cwd();
-
         # Don't hang on templates which use the CGI library
         eval("use CGI qw(-no_debug)");
+        foreach $::templatepath (@templatepaths) {
+           $::provider = Template::Provider->new(
+           {
+               # Directories containing templates.
+               INCLUDE_PATH => $::templatepath,
 
-        # Disable warnings which come from running the compiled templates
-        # This way is OK, because they're all runtime warnings.
-        # The reason we get these warnings here is that none of the required
-        # vars will be present.
-        local ($^W) = 0;
+               PRE_CHOMP => 1 ,
+               TRIM => 1 ,
 
-        # Traverse the default hierachy. Custom templates will be picked up
-        # via the INCLUDE_PATH, but we know that bugzilla will only be
-        # calling stuff which exists in en/default
-        # FIXME - if we start doing dynamic INCLUDE_PATH we may have to
-        # recurse all of template/, changing the INCLUDE_PATH each time
+               # becomes data/template/{en, ...}/{custom,default}
+               COMPILE_DIR => 'data/', 
 
-        find(\&compile, "template/en/default");
+               # These don't actually need to do anything here, just exist
+               FILTERS =>
+               {
+                strike => sub { return $_; } ,
+                js => sub { return $_; },
+                html_linebreak => sub { return $_; },
+                url_quote => sub { return $_; },
+                xml => sub { return $_; },
+                quoteUrls => sub { return $_; },
+                bug_link => [ sub { return sub { return $_; } }, 1],
+                csv => sub { return $_; },
+                time => sub { return $_; },
+               },
+           }) || die ("Could not create Template Provider: "
+                       . Template::Provider->error() . "\n");
+
+           # Traverse the template hierachy. 
+           find({ wanted => \&compile, no_chdir => 1 }, $::templatepath);
+       }
     }
 }
 

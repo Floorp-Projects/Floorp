@@ -19,6 +19,7 @@
 #
 # Contributor(s): Jacob Steenhagen <jake@bugzilla.org>
 #                 David D. Kilzer <ddkilzer@kilzer.net>
+#                 Tobias Burnus <burnus@net-b.de>
 #
 
 package Support::Templates;
@@ -26,18 +27,60 @@ package Support::Templates;
 use strict;
 
 use lib 't';
-use vars qw($include_path @referenced_files @actual_files);
+use base qw(Exporter);
+@Support::Templates::EXPORT = 
+         qw(@languages @include_paths %include_path @referenced_files 
+            %actual_files $num_actual_files);
+use vars qw(@languages @include_paths %include_path @referenced_files 
+            %actual_files $num_actual_files);
 
 use Support::Files;
 
 use File::Find;
 use File::Spec 0.82;
 
-# Note that $include_path is assumed to only contain ONE path, not
-# a list of colon-separated paths.
-$include_path = File::Spec->catdir('template', 'en', 'default');
+# The available template languages
+@languages = ();
+
+# The colon separated includepath per language
+%include_path = ();
+
+# All include paths
+@include_paths = ();
+
+# Files which are referenced in the cgi files
 @referenced_files = ();
-@actual_files = ();
+
+# All files sorted by include_path
+%actual_files = ();
+
+# total number of actual_files
+$num_actual_files = 0;
+
+# Scan for the template available languages and include paths
+{
+    opendir(DIR, "template") || die "Can't open  'template': $!";
+    my @files = grep { /^[a-z-]+$/i } readdir(DIR);
+    closedir DIR;
+
+    foreach my $langdir (@files) {
+        next if($langdir =~ /^CVS$/i);
+
+        my $path = File::Spec->catdir('template', $langdir, 'custom');
+        my @dirs = ();
+        push(@dirs, $path) if(-d $path);
+        $path = File::Spec->catdir('template', $langdir, 'default');
+        push(@dirs, $path) if(-d $path);
+
+        next if(scalar(@dirs) == 0);
+        push(@languages, $langdir);
+        push(@include_paths, @dirs);
+        $include_path{$langdir} = join(":",@dirs);
+    }
+}
+
+
+my @files;
 
 # Local subroutine used with File::Find
 sub find_templates {
@@ -59,13 +102,23 @@ sub find_templates {
             $filename = $_;
         }
 
-        push(@actual_files, $filename);
+        push(@files, $filename);
     }
 }
 
-# Scan the template include path for templates then put them in
-# in the @actual_files array to be used by various tests.
-map(find(\&find_templates, $_), split(':', $include_path));
+# Scan the given template include path for templates
+sub find_actual_files {
+  my $include_path = $_[0];
+  @files = ();
+  find(\&find_templates, $include_path);
+  return @files;
+}
+
+
+foreach my $include_path (@include_paths) {
+  $actual_files{$include_path} = [ find_actual_files($include_path) ];
+  $num_actual_files += scalar(@{$actual_files{$include_path}});
+}
 
 # Scan Bugzilla's perl code looking for templates used and put them
 # in the @referenced_files array to be used by the 004template.t test.

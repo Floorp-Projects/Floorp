@@ -22,6 +22,8 @@
 #                 Jacob Steenhagen <jake@bugzilla.org>
 #                 Bradley Baetz <bbaetz@student.usyd.edu.au>
 #                 Christopher Aillon <christopher@aillon.com>
+#                 Tobias Burnus <burnus@net-b.de>
+
 
 package Bugzilla::Template;
 
@@ -34,6 +36,65 @@ use Bugzilla::Util;
 use Date::Format ();
 
 use base qw(Template);
+
+my $template_include_path;
+
+# Make an ordered list out of a HTTP Accept-Language header see RFC 2616, 14.4
+# We ignore '*' and <language-range>;q=0
+# For languages with the same priority q the order remains unchanged.
+sub sortAcceptLanguage {
+    sub sortQvalue { $b->{'qvalue'} <=> $a->{'qvalue'} }
+    my $accept_language = $_[0];
+
+    # clean up string.
+    $accept_language =~ s/[^A-Za-z;q=0-9\.\-,]//g;
+    my @qlanguages;
+    my @languages;
+    foreach(split /,/, $accept_language) {
+        if (m/([A-Za-z\-]+)(?:;q=(\d(?:\.\d+)))?/) {
+            my $lang   = $1;
+            my $qvalue = $2;
+            $qvalue = 1 if not defined $qvalue;
+            next if $qvalue == 0;
+            $qvalue = 1 if $qvalue > 1;
+            push(@qlanguages, {'qvalue' => $qvalue, 'language' => $lang});
+        }
+    }
+
+    return map($_->{'language'}, (sort sortQvalue @qlanguages));
+}
+
+# Returns the path to the templates based on the Accept-Language
+# settings of the user and of the available languages
+# If no Accept-Language is present it uses the defined default
+sub getTemplateIncludePath () {
+    # Return cached value if available
+    if ($template_include_path) {
+        return $template_include_path;
+    }
+    my $languages = trim(Param('languages'));
+    if (not ($languages =~ /,/)) {
+        return $template_include_path =
+               ["template/$languages/custom", "template/$languages/default"];
+    }
+    my @languages       = sortAcceptLanguage($languages);
+    my @accept_language = sortAcceptLanguage($ENV{'HTTP_ACCEPT_LANGUAGE'} || "" );
+    my @usedlanguages;
+    foreach my $lang (@accept_language) {
+        # Per RFC 1766 and RFC 2616 any language tag matches also its 
+        # primary tag. That is 'en' (accept lanuage)  matches 'en-us',
+        # 'en-uk' etc. but not the otherway round. (This is unfortunally
+        # not very clearly stated in those RFC; see comment just over 14.5
+        # in http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.4)
+        if(my @found = grep /^$lang(-.+)?$/i, @languages) {
+            push (@usedlanguages, @found);
+        }
+    }
+    push(@usedlanguages, Param('defaultlanguage'));
+    return $template_include_path =
+        [map(("template/$_/custom", "template/$_/default"), @usedlanguages)];
+}
+
 
 ###############################################################################
 # Templatization Code
@@ -100,7 +161,7 @@ sub create {
 
     return $class->new({
         # Colon-separated list of directories containing templates.
-        INCLUDE_PATH => "template/en/custom:template/en/default",
+        INCLUDE_PATH => [\&getTemplateIncludePath],
 
         # Remove white-space before template directives (PRE_CHOMP) and at the
         # beginning and end of templates and template blocks (TRIM) for better

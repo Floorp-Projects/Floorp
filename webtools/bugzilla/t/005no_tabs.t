@@ -34,12 +34,13 @@ use Support::Templates;
 
 use File::Spec 0.82;
 use Test::More tests => (  scalar(@Support::Files::testitems)
-                         + scalar(@Support::Templates::actual_files));
+                         + $Support::Templates::num_actual_files);
 
 my @testitems = @Support::Files::testitems;
-my @templates = map(File::Spec->catfile($Support::Templates::include_path, $_),
-                    @Support::Templates::actual_files);
-push(@testitems, @templates);
+for my $path (@Support::Templates::include_paths) {
+   push(@testitems, map(File::Spec->catfile($path, $_),
+                        Support::Templates::find_actual_files($path)));
+}
 
 foreach my $file (@testitems) {
     open (FILE, "$file");
