@@ -17,10 +17,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Original Author:
- *   Rick Gessner <rickg@netscape.com>
- *
  * Contributor(s): 
+ *   Rick Gessner <rickg@netscape.com> (original author)
  *   Scott Collins <scc@mozilla.org>
  */
 
@@ -38,15 +36,6 @@
     4. Subsumable strings
  ***********************************************************************/
 
-#ifndef NEW_STRING_APIS
-  #define NEW_STRING_APIS 1
-#endif //NEW_STRING_APIS
-
-  // Need this to enable comparison profiling for a while
-#ifdef OLD_STRING_APIS
-  #undef NEW_STRING_APIS
-#endif
-
 #ifndef _nsCString_
 #define _nsCString_
 
@@ -57,45 +46,19 @@
 #include "nsStr.h"
 #include "nsIAtom.h"
 
-#ifdef NEW_STRING_APIS
 #include "nsAWritableString.h"
-#else
-  #define NS_LITERAL_STRING(s)  (s)
-  #define NS_LITERAL_CSTRING(s) (s)
-
-  #define NS_DEF_DERIVED_STRING_OPERATOR_PLUS(_StringT, _CharT)
-  #define NS_DEF_2_STRING_STRING_OPERATOR_PLUS(_String1T, _String2T, _CharT)
-
-  inline
-  char
-  nsLiteralChar( char c )
-    {
-      return c;
-    }
-  
-  inline
-  PRUnichar
-  nsLiteralPRUnichar( PRUnichar c )
-    {
-      return c;
-    }
-#endif
 
 
 class NS_COM nsSubsumeCStr;
 
 class NS_COM nsCString :
-#ifdef NEW_STRING_APIS
   public nsAWritableCString,
-#endif
   public nsStr {
 
-#ifdef NEW_STRING_APIS
 protected:
   virtual const void* Implementation() const { return "nsCString"; }
   virtual const char* GetReadableFragment( nsReadableFragment<char>&, nsFragmentRequest, PRUint32 ) const;
   virtual char* GetWritableFragment( nsWritableFragment<char>&, nsFragmentRequest, PRUint32 );
-#endif
 
 public: 
   /**
@@ -109,36 +72,16 @@ public:
    */
   nsCString(const nsCString& aString);   
 
-#ifdef NEW_STRING_APIS
   explicit nsCString( const nsAReadableCString& );
 
-  nsCString(const char*);
+  explicit nsCString(const char*);
   nsCString(const char*, PRInt32);
-#else
-  /**
-   * This constructor accepts an isolatin string
-   * @param   aCString is a ptr to a 1-byte cstr
-   */
-  nsCString(const char* aCString,PRInt32 aLength=-1);
-
-  /**
-   * This constructor accepts a unichar string
-   * @param   aCString is a ptr to a 2-byte cstr
-   */
-//nsCString(const PRUnichar* aString,PRInt32 aLength=-1);
-
-  /**
-   * This is a copy constructor that accepts an nsStr
-   * @param   reference to another nsCString
-   */
-//nsCString(const nsStr&);
-#endif
 
   /**
    * This constructor takes a subsumestr
    * @param   reference to subsumestr
    */
-  nsCString(nsSubsumeCStr& aSubsumeStr);
+  explicit nsCString(nsSubsumeCStr& aSubsumeStr);
 
   /**
    * Destructor
@@ -186,17 +129,6 @@ public:
       SetLength(anIndex);
   }
 
-#ifndef NEW_STRING_APIS
-  /**
-   *  Determine whether or not this string has a length of 0
-   *  
-   *  @return  TRUE if empty.
-   */
-  PRBool IsEmpty(void) const {
-    return PRBool(0==mLength);
-  }
-#endif
-
   /**********************************************************************
     Accessor methods...
    *********************************************************************/
@@ -207,48 +139,7 @@ public:
      */
   const char* GetBuffer(void) const;
 
-
-#ifndef NEW_STRING_APIS
-   /**
-     * Get nth character.
-     */
-  PRUnichar operator[](PRUint32 anIndex) const;
-  PRUnichar CharAt(PRUint32 anIndex) const;
-  PRUnichar First(void) const;
-  PRUnichar Last(void) const;
-#endif
-
   PRBool SetCharAt(PRUnichar aChar,PRUint32 anIndex);
-
-  /**********************************************************************
-    String creation methods...
-   *********************************************************************/
-
-#ifndef NEW_STRING_APIS
-  /**
-   * Create a new string by appending given string to this
-   * @param   aString -- 2nd string to be appended
-   * @return  new string
-   */
-  nsSubsumeCStr operator+(const nsCString& aString);
-
-  /**
-   * create a new string by adding this to the given char*.
-   * @param   aCString is a ptr to cstring to be added to this
-   * @return  newly created string
-   */
-  nsSubsumeCStr operator+(const char* aCString);
-
-
-  /**
-   * create a new string by adding this to the given char.
-   * @param   aChar is a char to be added to this
-   * @return  newly created string
-   */
-  nsSubsumeCStr operator+(PRUnichar aChar);
-  nsSubsumeCStr operator+(char aChar);
-#endif
-
 
   /**********************************************************************
     Lexomorphic transforms...
@@ -419,49 +310,15 @@ public:
    */
 
   nsCString& operator=( const nsCString& aString )                  { Assign(aString); return *this; }
-#ifdef NEW_STRING_APIS
   nsCString& operator=( const nsAReadableCString& aReadable )       { Assign(aReadable); return *this; }
   nsCString& operator=( const nsPromiseReadable<char>& aReadable )  { Assign(aReadable); return *this; }
   nsCString& operator=( const char* aPtr )                          { Assign(aPtr); return *this; }
   nsCString& operator=( char aChar )                                { Assign(aChar); return *this; }
-#endif
 
   void AssignWithConversion(const PRUnichar*,PRInt32=-1);
   void AssignWithConversion( const nsString& aString );
-#ifdef NEW_STRING_APIS
   void AssignWithConversion( const nsAReadableString& aString );
-#endif
   void AssignWithConversion(PRUnichar);
-
-#ifndef NEW_STRING_APIS
-  nsCString& Assign(const char* aString,PRInt32 aCount=-1);
-  nsCString& Assign(char aChar);
-
-  nsCString& Assign(const nsStr& aString,PRInt32 aCount=-1);
-//nsCString& Assign(const PRUnichar* aString,PRInt32 aCount=-1) { AssignWithConversion(aString, aCount); return *this; }
-//nsCString& Assign(PRUnichar aChar)                            { AssignWithConversion(aChar); return *this; }
-
-  /**
-   * here come a bunch of assignment operators...
-   * @param   aString: string to be added to this
-   * @return  this
-   */
-//nsCString& operator=(PRUnichar aChar)           {AssignWithConversion(aChar); return *this;}
-  nsCString& operator=(char aChar)                {return Assign(aChar);}
-//nsCString& operator=(const PRUnichar* aString)  {AssignWithConversion(aString); return *this;}
-
-//nsCString& operator=(const nsStr& aString)      {return Assign(aString);}
-  nsCString& operator=(const char* aCString)      {return Assign(aCString);}
-
-    // Yes, I know this makes assignment from a |nsSubsumeString| not do the special thing
-    //  |nsSubsumeString| needs to go away
-  #if defined(AIX) || defined(XP_OS2_VACPP)
-  nsCString& operator=(const nsSubsumeCStr& aSubsumeString);  // AIX and VAC++ requires a const here
-  #else
-  nsCString& operator=(nsSubsumeCStr& aSubsumeString);
-  #endif
-#endif
- 
 
   /*
    *  Appends n characters from given string to this,
@@ -475,42 +332,13 @@ public:
 
   void AppendWithConversion(const nsString&, PRInt32=-1);
   void AppendWithConversion(PRUnichar aChar);
-#ifdef NEW_STRING_APIS
   void AppendWithConversion( const nsAReadableString& aString );
-#endif
   void AppendWithConversion(const PRUnichar*, PRInt32=-1);
   // Why no |AppendWithConversion(const PRUnichar*, PRInt32)|? --- now I know, because implicit construction hid the need for this routine
   void AppendInt(PRInt32 aInteger,PRInt32 aRadix=10); //radix=8,10 or 16
   void AppendFloat( double aFloat );
 
-#ifdef NEW_STRING_APIS
   virtual void do_AppendFromReadable( const nsAReadableCString& );
-#endif
-
-#ifndef NEW_STRING_APIS
-//nsCString& Append(const nsStr& aString,PRInt32 aCount=-1);
-  nsCString& Append(const nsCString& aString,PRInt32 aCount);
-  nsCString& Append(const nsCString& aString)           {return Append(aString,(PRInt32)aString.mLength);}
-  nsCString& Append(const char* aString,PRInt32 aCount=-1);
-  nsCString& Append(char aChar);
-
-//nsCString& Append(PRUnichar aChar)                    {AppendWithConversion(aChar); return *this;}
-//nsCString& Append(PRInt32 aInteger,PRInt32 aRadix=10) {AppendInt(aInteger,aRadix); return *this;}
-//nsCString& Append(float aFloat)                       {AppendFloat(aFloat); return *this;}
-
-  /**
-   * Here's a bunch of methods that append varying types...
-   * @param   various...
-   * @return  this
-   */
-  nsCString& operator+=(const nsCString& aString) {return Append(aString,(PRInt32)aString.mLength);}
-  nsCString& operator+=(const char* aCString)     {return Append(aCString);}
-
-//nsCString& operator+=(const PRUnichar aChar)    {return Append(aChar);}
-  nsCString& operator+=(const char aChar)         {return Append(aChar);}
-//nsCString& operator+=(const int anInt)          {return Append(anInt,10);}
-#endif
-             
   /*
    *  Copies n characters from this string to given string,
    *  starting at the leftmost offset.
@@ -548,57 +376,7 @@ public:
   void InsertWithConversion(PRUnichar aChar,PRUint32 anOffset);
   // Why no |InsertWithConversion(PRUnichar*)|?
 
-#ifdef NEW_STRING_APIS
   virtual void do_InsertFromReadable( const nsAReadableCString&, PRUint32 );
-#endif
-
-#ifndef NEW_STRING_APIS
-  /*
-   *  This method inserts n chars from given string into this
-   *  string at str[anOffset].
-   *  
-   *  @param  aCopy -- String to be inserted into this
-   *  @param  anOffset -- insertion position within this str
-   *  @param  aCount -- number of chars to be copied from aCopy
-   *  NOTE:    IFF you pass -1 as aCount, then your buffer must be null terminated.
-   *
-   *  @return number of chars inserted into this.
-   */
-  void Insert(const nsCString& aCopy,PRUint32 anOffset,PRInt32 aCount=-1);
-
-  /**
-   * Insert a given string into this string at
-   * a specified offset.
-   *
-   * @param   aString* to be inserted into this string
-   * @param   anOffset is insert pos in str 
-   * @return  the number of chars inserted into this string
-   */
-  void Insert(const char* aChar,PRUint32 anOffset,PRInt32 aCount=-1);
-
-  /**
-   * Insert a single char into this string at
-   * a specified offset.
-   *
-   * @param   character to be inserted into this string
-   * @param   anOffset is insert pos in str 
-   * @return  the number of chars inserted into this string
-   */
-//void Insert(PRUnichar aChar,PRUint32 anOffset)  {InsertWithConversion(aChar,anOffset);}
-  void Insert(char aChar,PRUint32 anOffset);
-#endif
-
-  /*
-   *  This method is used to cut characters in this string
-   *  starting at anOffset, continuing for aCount chars.
-   *  
-   *  @param  anOffset -- start pos for cut operation
-   *  @param  aCount -- number of chars to be cut
-   *  @return *this
-   */
-#ifndef NEW_STRING_APIS
-  void Cut(PRUint32 anOffset,PRInt32 aCount);
-#endif
 
 
   /**********************************************************************
@@ -699,96 +477,6 @@ public:
   PRBool  EqualsIgnoreCase(const char* aString,PRInt32 aCount=-1) const;
   PRBool  EqualsIgnoreCase(const PRUnichar* aString,PRInt32 aCount=-1) const;
 
-#ifndef NEW_STRING_APIS
-//virtual PRInt32 Compare(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const {
-//  return CompareWithConversion(aString,aIgnoreCase,aCount);
-//}
-//virtual PRInt32 Compare(const char* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const {
-//  return CompareWithConversion(aString,aIgnoreCase,aCount);
-//}
-
-  virtual PRInt32 Compare(const nsStr &aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
-
-  /**
-   * Compare this to given string; note that we compare full strings here.
-   * The optional length argument just lets us know how long the given string is.
-   * If you provide a length, it is compared to length of this string as an
-   * optimization.
-   * 
-   * @param  aString -- the string to compare to this
-   * @param  aCount  -- number of chars in given string you want to compare
-   * @return TRUE if equal
-   */
-  PRBool  Equals(const nsString &aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const {
-    return EqualsWithConversion(aString,aIgnoreCase,aCount);
-  }
-
-  PRBool  Equals(const char* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const {
-    return EqualsWithConversion(aString,aIgnoreCase,aCount);
-  }
-
-//PRBool  Equals(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const {
-//  return EqualsWithConversion(aString,aIgnoreCase,aCount);
-//}
-
-  PRBool  Equals(const nsStr& aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
-
-  PRBool  EqualsIgnoreCase(const nsStr& aString) const;
-
-  /**
-   * These methods compare a given string type to this one
-   * @param aString is the string to be compared to this
-   * @return  TRUE or FALSE
-   */
-  PRBool  operator==(const nsStr &aString) const;
-  PRBool  operator==(const char* aString) const;
-//PRBool  operator==(const PRUnichar* aString) const;
-
-  /**
-   * These methods perform a !compare of a given string type to this 
-   * @param aString is the string to be compared to this
-   * @return  TRUE 
-   */
-  PRBool  operator!=(const nsStr &aString) const;
-  PRBool  operator!=(const char* aString) const;
-//PRBool  operator!=(const PRUnichar* aString) const;
-
-  /**
-   * These methods test if a given string is < than this
-   * @param aString is the string to be compared to this
-   * @return  TRUE or FALSE
-   */
-  PRBool  operator<(const nsStr &aString) const;
-  PRBool  operator<(const char* aString) const;
-//PRBool  operator<(const PRUnichar* aString) const;
-
-  /**
-   * These methods test if a given string is > than this
-   * @param aString is the string to be compared to this
-   * @return  TRUE or FALSE
-   */
-  PRBool  operator>(const nsStr &S) const;
-  PRBool  operator>(const char* aString) const;
-//PRBool  operator>(const PRUnichar* aString) const;
-
-  /**
-   * These methods test if a given string is <= than this
-   * @param aString is the string to be compared to this
-   * @return  TRUE or FALSE
-   */
-  PRBool  operator<=(const nsStr &S) const;
-  PRBool  operator<=(const char* aString) const;
-//PRBool  operator<=(const PRUnichar* aString) const;
-
-  /**
-   * These methods test if a given string is >= than this
-   * @param aString is the string to be compared to this
-   * @return  TRUE or FALSE
-   */
-  PRBool  operator>=(const nsStr &S) const;
-  PRBool  operator>=(const char* aString) const;
-//PRBool  operator>=(const PRUnichar* aString) const;
-#endif // !defined(NEW_STRING_APIS)
 
   void    DebugDump(void) const;
 
@@ -799,28 +487,14 @@ public:
 private:
     // NOT TO BE IMPLEMENTED
     //  these signatures help clients not accidentally call the wrong thing helped by C++ automatic integral promotion
-#ifdef NEW_STRING_APIS
   void operator=( PRUnichar );
-#endif
   void AssignWithConversion( char );
   void AssignWithConversion( const char*, PRInt32=-1 );
   void AppendWithConversion( char );
   void InsertWithConversion( char, PRUint32 );
 };
 
-#if 0 // #ifdef NEW_STRING_APIS
-inline
-nsPromiseConcatenation<char>
-operator+( const nsPromiseConcatenation<char>& lhs, const nsCString& rhs )
-  {
-    return nsPromiseConcatenation<char>(lhs, rhs);
-  }
-#endif
-
-#ifdef NEW_STRING_APIS
 NS_DEF_STRING_COMPARISON_OPERATORS(nsCString, char)
-// NS_DEF_DERIVED_STRING_OPERATOR_PLUS(nsCString, char);
-#endif
 
 extern NS_COM int fputs(const nsCString& aString, FILE* out);
 //ostream& operator<<(ostream& aStream,const nsCString& aString);
@@ -839,27 +513,20 @@ public:
     virtual ~nsCAutoString();
 
     nsCAutoString();
-    nsCAutoString(const nsCString& );
-    nsCAutoString(const nsAReadableCString& aString);
-    nsCAutoString(const char* aString);
+    explicit nsCAutoString(const nsCString& );
+    explicit nsCAutoString(const nsAReadableCString& aString);
+    explicit nsCAutoString(const char* aString);
     nsCAutoString(const char* aString,PRInt32 aLength);
-    nsCAutoString(const CBufDescriptor& aBuffer);
-
-#ifndef NEW_STRING_APIS
-//  nsCAutoString(const PRUnichar* aString,PRInt32 aLength=-1);
-//  nsCAutoString(const nsStr& aString);
-//  nsCAutoString(PRUnichar aChar);
-#endif
+    explicit nsCAutoString(const CBufDescriptor& aBuffer);
 
 #if defined(AIX) || defined(XP_OS2_VACPP)
-    nsCAutoString(const nsSubsumeCStr& aSubsumeStr);  // AIX and VAC++ require a const
+    explicit nsCAutoString(const nsSubsumeCStr& aSubsumeStr);  // AIX and VAC++ require a const
 #else
-    nsCAutoString(nsSubsumeCStr& aSubsumeStr);
+    explicit nsCAutoString(nsSubsumeCStr& aSubsumeStr);
 #endif // AIX || XP_OS2_VACPP
 
 
     nsCAutoString& operator=( const nsCAutoString& aString )              { Assign(aString); return *this; }
-#ifdef NEW_STRING_APIS
   private:
     void operator=( PRUnichar ); // NOT TO BE IMPLEMENTED
   public:
@@ -867,13 +534,6 @@ public:
     nsCAutoString& operator=( const nsPromiseReadable<char>& aReadable )  { Assign(aReadable); return *this; }
     nsCAutoString& operator=( const char* aPtr )                          { Assign(aPtr); return *this; }
     nsCAutoString& operator=( char aChar )                                { Assign(aChar); return *this; }
-#else
-    nsCAutoString& operator=(const nsCString& aString) {nsCString::Assign(aString); return *this;}
-    nsCAutoString& operator=(const char* aCString) {nsCString::Assign(aCString); return *this;}
-//  nsCAutoString& operator=(const PRUnichar* aString) {nsCString::Assign(aString); return *this;}
-//  nsCAutoString& operator=(PRUnichar aChar) {nsCString::Assign(aChar); return *this;}
-    nsCAutoString& operator=(char aChar) {nsCString::Assign(aChar); return *this;}
-#endif
 
     /**
      * Retrieve the size of this string
@@ -883,14 +543,6 @@ public:
     
     char mBuffer[kDefaultStringSize];
 };
-
-#if 0//def NEW_STRING_APIS
-NS_DEF_STRING_COMPARISON_OPERATORS(nsCAutoString, char)
-#endif
-
-#ifdef NEW_STRING_APIS
-NS_DEF_DERIVED_STRING_OPERATOR_PLUS(nsCAutoString, char)
-#endif
 
 /**
  * A helper class that converts a UCS2 string to UTF8
@@ -902,6 +554,7 @@ class NS_COM NS_ConvertUCS2toUTF8
     */
   {
     public:
+      explicit
       NS_ConvertUCS2toUTF8( const PRUnichar* aString )
         {
           Append( aString, ~PRUint32(0) /* MAXINT */);
@@ -912,14 +565,13 @@ class NS_COM NS_ConvertUCS2toUTF8
           Append( aString, aLength );
         }
 
+      explicit
       NS_ConvertUCS2toUTF8( PRUnichar aChar )
         {
           Append( &aChar, 1 );
         }
 
-#ifdef NEW_STRING_APIS
-      NS_ConvertUCS2toUTF8( const nsAReadableString& aString );
-#endif
+      explicit NS_ConvertUCS2toUTF8( const nsAReadableString& aString );
 
       operator const char*() const
         {
@@ -950,19 +602,17 @@ class NS_COM NS_ConvertUCS2toUTF8
  ***************************************************************/
 class NS_COM nsSubsumeCStr : public nsCString {
 public:
-  nsSubsumeCStr(nsStr& aString);
+  explicit nsSubsumeCStr(nsStr& aString);
   nsSubsumeCStr(PRUnichar* aString,PRBool assumeOwnership,PRInt32 aLength=-1);
   nsSubsumeCStr(char* aString,PRBool assumeOwnership,PRInt32 aLength=-1);
 
   nsSubsumeCStr& operator=( const nsSubsumeCStr& aString )              { Assign(aString); return *this; }
-#ifdef NEW_STRING_APIS
   nsSubsumeCStr& operator=( const nsAReadableCString& aReadable )       { Assign(aReadable); return *this; }
   nsSubsumeCStr& operator=( const nsPromiseReadable<char>& aReadable )  { Assign(aReadable); return *this; }
   nsSubsumeCStr& operator=( const char* aPtr )                          { Assign(aPtr); return *this; }
   nsSubsumeCStr& operator=( char aChar )                                { Assign(aChar); return *this; }
 private:
   void operator=( PRUnichar ); // NOT TO BE IMPLEMENTED
-#endif
 };
 
 

@@ -17,21 +17,10 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Original Author:
- *   Rick Gessner <rickg@netscape.com>
- *
  * Contributor(s): 
+ *   Rick Gessner <rickg@netscape.com> (original author)
  *   Scott Collins <scc@mozilla.org>
  */
-
-#ifndef NEW_STRING_APIS
-  #define NEW_STRING_APIS 1
-#endif //NEW_STRING_APIS
-
-  // Need this to enable comparison profiling for a while
-#ifdef OLD_STRING_APIS
-  #undef NEW_STRING_APIS
-#endif
 
 /***********************************************************************
   MODULE NOTES:
@@ -430,21 +419,6 @@ struct NS_COM nsStr {
    * Returns a hash code for the string for use in a PLHashTable.
    */
   static PRUint32 HashCode(const nsStr& aDest);
-
-#ifndef NEW_STRING_APIS
-  static void Append(nsStr& aDest,const nsStr& aSource,PRUint32 anOffset,PRInt32 aCount) {
-    StrAppend(aDest, aSource, anOffset, aCount);
-  }
-  static void Assign(nsStr& aDest,const nsStr& aSource,PRUint32 anOffset,PRInt32 aCount) {
-    StrAssign(aDest, aSource, anOffset, aCount);
-  }
-  static void Insert( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUint32 aSrcOffset,PRInt32 aCount) {
-    StrInsert(aDest, aDestOffset, aSource, aSrcOffset, aCount);
-  }
-  static PRInt32  Compare(const nsStr& aDest,const nsStr& aSource,PRInt32 aCount,PRBool aIgnoreCase) {
-    return StrCompare(aDest, aSource, aCount, aIgnoreCase);
-  }
-#endif
 
 #ifdef NS_STR_STATS
   /**
