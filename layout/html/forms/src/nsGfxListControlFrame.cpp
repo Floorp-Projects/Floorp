@@ -58,6 +58,8 @@
 #include "nsVoidArray.h"
 
 #include "nsISelectElement.h"
+#include "nsIScrollableFrame.h"
+
 
 // included for view scrolling
 #include "nsIViewManager.h"
@@ -236,7 +238,10 @@ nsGfxListControlFrame::nsGfxListControlFrame()
   mIsCapturingMouseEvents = PR_FALSE;
 
   mSelectionCache        = new nsVoidArray();
-  mSelectionCacheLength     = 0;
+  mSelectionCacheLength  = 0;
+
+  mDelayedIndexSetting = kNothingSelected;
+  mDelayedValueSetting = PR_FALSE;
 
   mIsAllContentHere   = PR_FALSE;
   mIsAllFramesHere    = PR_FALSE;
@@ -353,6 +358,8 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
 {
   REFLOW_COUNTER_REQUEST();
 
+  aStatus = NS_FRAME_COMPLETE;
+
 #ifdef DO_REFLOW_DEBUG
   printf("%p ** Id: %d nsLCF::Reflow %d R: ", this, mReflowId, myCounter++);
   switch (aReflowState.reason) {
@@ -374,6 +381,18 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
   printSize("CW", aReflowState.mComputedWidth);
   printSize("CH", aReflowState.mComputedHeight);
   printf("\n");
+#if 0
+    {
+      const nsStyleDisplay* display;
+      GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
+      printf("+++++++++++++++++++++++++++++++++ ");
+      switch (display->mVisible) {
+        case NS_STYLE_VISIBILITY_COLLAPSE: printf("NS_STYLE_VISIBILITY_COLLAPSE\n");break;
+        case NS_STYLE_VISIBILITY_HIDDEN:   printf("NS_STYLE_VISIBILITY_HIDDEN\n");break;
+        case NS_STYLE_VISIBILITY_VISIBLE:  printf("NS_STYLE_VISIBILITY_VISIBLE\n");break;
+      }
+    }
+#endif
 #endif // DEBUG_rodsXXX
 
 
@@ -436,20 +455,127 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
   bailOnWidth  = PR_FALSE;
   bailOnHeight = PR_FALSE;
 #endif
+    if (mDelayedIndexSetting != kNothingSelected) {
+      SetOptionSelected(mDelayedIndexSetting, mDelayedValueSetting);
+      mDelayedIndexSetting = kNothingSelected;
+    }
+
+    nsIFrame * firstChildFrame = nsnull;
+    FirstChild(aPresContext, nsnull, &firstChildFrame);
+
     // XXX So this may do it too often
     // the side effect of this is if the user has scrolled to some other place in the list and
     // an incremental reflow comes through the list gets scrolled to the first selected item
     // I haven't been able to make it do it, but it will do it
     // basically the real solution is to know when all the reframes are there.
     if (aReflowState.reason == eReflowReason_Incremental) {
-      nsCOMPtr<nsIContent> content = getter_AddRefs(GetOptionContent(mSelectedIndex));
-      if (content) {
-        ScrollToFrame(content);
+      nsIFrame* targetFrame;
+      aReflowState.reflowCommand->GetTarget(targetFrame);
+      if (targetFrame == this) {
+#if 0
+        nsresult res = nsHTMLContainerFrame::Reflow(aPresContext, aDesiredSize, aReflowState,  aStatus);
+        nsRect r;
+        firstChildFrame->GetRect(r);
+        firstChildFrame->SetRect(aPresContext, r);
+
+        aDesiredSize.width  = mCacheSize.width;
+        aDesiredSize.height = mCacheSize.height;
+
+        if (aDesiredSize.maxElementSize != nsnull) {
+          aDesiredSize.maxElementSize->width  = mCachedMaxElementSize.width;
+          aDesiredSize.maxElementSize->height = mCachedMaxElementSize.height;
+        }
+        aDesiredSize.ascent = aDesiredSize.height;
+        aDesiredSize.descent = 0;
+        printf("Bottom#  DW: %d DH: %d\n", aDesiredSize.width, aDesiredSize.height);
+
+        nsIView * view;
+        GetView(aPresContext, &view);
+
+        if (view) {
+          nsIViewManager  *vm;
+          view->GetViewManager(vm);
+          const nsStyleDisplay* display;
+          GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
+
+          // See if the view should be hidden or visible
+          PRBool  viewIsVisible = PR_TRUE;
+          if (NS_STYLE_VISIBILITY_COLLAPSE == display->mVisible) {
+            viewIsVisible = PR_FALSE;
+          } else if (NS_STYLE_VISIBILITY_HIDDEN == display->mVisible) {
+            // If it has a widget, hide the view because the widget can't deal with it
+            nsIWidget* widget = nsnull;
+            view->GetWidget(widget);
+            if (widget) {
+              viewIsVisible = PR_FALSE;
+              NS_RELEASE(widget);
+            } else {
+            }
+            viewIsVisible = PR_TRUE;
+          }
+
+          // Make sure visibility is correct
+          vm->SetViewVisibility(view, viewIsVisible ? nsViewVisibility_kShow :
+                                nsViewVisibility_kHide);
+
+          NS_RELEASE(vm);
+        }
+        return NS_OK;
+#else 
+        nsCOMPtr<nsIContent> content = getter_AddRefs(GetOptionContent(mSelectedIndex));
+        if (content) {
+          ScrollToFrame(content);
+        }
+#endif
+      } else if (targetFrame == firstChildFrame) {
+        nsRect rect;
+        firstChildFrame->GetRect(rect);
+        const nsStyleSpacing* scrollSpacing;
+        firstChildFrame->GetStyleData(eStyleStruct_Spacing,  (const nsStyleStruct *&)scrollSpacing);
+        nsMargin scrollBorderPadding;
+        scrollBorderPadding.SizeTo(0, 0, 0, 0);
+        scrollSpacing->CalcBorderPaddingFor(firstChildFrame, scrollBorderPadding);
+        rect.width  -= (scrollBorderPadding.left + scrollBorderPadding.right);
+        rect.height -= (scrollBorderPadding.top + scrollBorderPadding.bottom)*2;
+        printf("Inc Pass CW: %d CH: %d\n", rect.width, rect.height);
+        nsHTMLReflowState childReflowState(aPresContext, aReflowState, 
+                                           firstChildFrame, 
+                                           nsSize(rect.width, rect.height));
+        childReflowState.mComputedWidth  = rect.width;
+        childReflowState.mComputedHeight = rect.height;
+        firstChildFrame->WillReflow(aPresContext);
+        firstChildFrame->MoveTo(aPresContext, aReflowState.mComputedBorderPadding.left, aReflowState.mComputedBorderPadding.top);
+        nsIView*  view;
+        firstChildFrame->GetView(aPresContext, &view);
+        NS_ASSERTION(view == nsnull, "Hmmmm, fix this!");
+        if (view) {
+          //nsAreaFrame::PositionFrameView(aPresContext, aDisplayFrame, view);
+        }
+#if 1 // this causes infinite reflows
+        firstChildFrame->Reflow(aPresContext, 
+                              aDesiredSize,
+                              childReflowState, 
+                              aStatus);
+#endif
+        printf("AfterInc DW: %d CH: %d\n", aDesiredSize.width, aDesiredSize.height);
+        aDesiredSize.width  = mCacheSize.width;
+        aDesiredSize.height = mCacheSize.height;
+
+        if (aDesiredSize.maxElementSize != nsnull) {
+          aDesiredSize.maxElementSize->width  = mCachedMaxElementSize.width;
+          aDesiredSize.maxElementSize->height = mCachedMaxElementSize.height;
+        }
+        aDesiredSize.ascent = aDesiredSize.height;
+        aDesiredSize.descent = 0;
+        printf("Bottom*  DW: %d DH: %d\n", aDesiredSize.width, aDesiredSize.height);
+        return NS_OK;
+      } else {
+        nsCOMPtr<nsIContent> content = getter_AddRefs(GetOptionContent(mSelectedIndex));
+        if (content) {
+          ScrollToFrame(content);
+        }
       }
     }
-
-  nsIFrame * firstChildFrame = nsnull;
-  FirstChild(aPresContext, nsnull, &firstChildFrame);
 
    // Strategy: Let the inherited reflow happen as though the width and height of the
    // ScrollFrame are big enough to allow the listbox to
@@ -507,47 +633,25 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
   nsSize scrolledAreaSize(0,0);
   nsHTMLReflowMetrics  scrolledAreaDesiredSize(&scrolledAreaSize);
 
+  printf("1st Pass CW: %d CH: %d\n", childReflowState.mComputedWidth, childReflowState.mComputedHeight);
   firstChildFrame->Reflow(aPresContext, 
                         scrolledAreaDesiredSize,
                         childReflowState, 
                         aStatus);
-#if 0
-  /*if (childReflowState.mComputedHeight == NS_INTRINSICSIZE) {
-    PRInt32 numRows = 1;
-    GetSizeAttribute(&numRows);
-    printf("Num Row : %d\n", numRows);
+  printf("After1st DW: %d DH: %d\n", scrolledAreaDesiredSize.width, scrolledAreaDesiredSize.height);
 
-    if (numRows == kNoSizeSpecified) {
-      nsIDOMNode* node;
-      nsresult rv = mContent->QueryInterface(nsCOMTypeInfo<nsIDOMNode>::GetIID(),(void**) &node);
-      if (node && NS_SUCCEEDED(rv)) {
-        numRows = 0;
-        NS_RELEASE(node);
-      }
-    }
-
-    if (numRows > 1) {
-      PRInt32 heightOfARow = scrolledAreaDesiredSize.maxElementSize->height;
-      nscoord visibleHeight;
-
-      if (isInDropDownMode) {
-        visibleHeight = childReflowState.mComputedHeight;
-
-        if (visibleHeight > (kMaxDropDownRows * heightOfARow)) {
-          visibleHeight = (kMaxDropDownRows * heightOfARow);
-        }
-      } else {
-        visibleHeight = numRows * heightOfARow;
-      }
-
-      printf("Row height: %d\n", heightOfARow);
-
-      nsHTMLReflowState secondPassState(aPresContext, aReflowState, firstChildFrame, nsSize(NS_INTRINSICSIZE, NS_INTRINSICSIZE));
-      secondPassState.mComputedHeight = visibleHeight;
-      secondPassState.mComputedWidth = childReflowState.mComputedWidth;
-      */
-#else 
-   // The nsScrollFrame::REflow adds in the scrollbar width and border dimensions
+  nsIScrollableFrame * scrollableFrame = nsnull;
+  nsRect scrolledRect;
+  if (NS_SUCCEEDED(firstChildFrame->QueryInterface(NS_GET_IID(nsIScrollableFrame), (void**)&scrollableFrame))) {
+    nsIFrame * scrolledFrame;
+    scrollableFrame->GetScrolledFrame(aPresContext, scrolledFrame);
+    NS_ASSERTION(scrolledFrame != nsnull, "Must have scrollable frame");
+    scrolledFrame->GetRect(scrolledRect);
+  } else {
+    NS_ASSERTION(scrollableFrame != nsnull, "Must have scrollableFrame frame");
+  }
+  
+  // The nsScrollFrame::REflow adds in the scrollbar width and border dimensions
   // to the maxElementSize, so these need to be subtracted
   nscoord scrolledAreaWidth  = scrolledAreaDesiredSize.maxElementSize->width;
   nscoord scrolledAreaHeight = scrolledAreaDesiredSize.height;
@@ -567,6 +671,7 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
   dc->GetScrollBarDimensions(sbWidth, sbHeight);
   // Convert to nscoord's by rounding
   nscoord scrollbarWidth  = NSToCoordRound(sbWidth);
+  
   //nscoord scrollbarHeight = NSToCoordRound(sbHeight);
 
   // Subtract out the borders
@@ -602,19 +707,17 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
   if (isInDropDownMode) {
     if (NS_UNCONSTRAINEDSIZE == aReflowState.mComputedWidth) {
       visibleWidth = scrolledAreaWidth;
-    } else {
-      visibleWidth = aReflowState.mComputedWidth;
-      visibleWidth -= (scrollBorderPadding.left + scrollBorderPadding.right);
-      //scrolledAreaHeight -= (border.top + border.bottom + padding.top + padding.bottom);
-    }
-  } else {
-    if (NS_UNCONSTRAINEDSIZE == aReflowState.mComputedWidth) {
-      visibleWidth = scrolledAreaWidth;// + 15*15;
       visibleWidth += scrollbarWidth;
     } else {
       visibleWidth = aReflowState.mComputedWidth;
-      // XXX rods - this hould not be subtracted in
-      //visibleWidth  -= (border.left + border.right + padding.left + padding.right);
+      visibleWidth -= (scrollBorderPadding.left + scrollBorderPadding.right);
+    }
+  } else {
+    if (NS_UNCONSTRAINEDSIZE == aReflowState.mComputedWidth) {
+      visibleWidth = scrolledAreaWidth;
+      //visibleWidth += scrollbarWidth;
+    } else {
+      visibleWidth = aReflowState.mComputedWidth;
     }
   }
 
@@ -775,13 +878,29 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
   secondPassState.mComputedHeight = visibleHeight;
   secondPassState.reason = eReflowReason_Resize;
 
-#endif
+  
+  printf("2nd Pass CW: %d CH: %d\n", visibleWidth, visibleHeight);
+  mCachedScrollFrameSize.width  = visibleWidth;
+  mCachedScrollFrameSize.height = visibleHeight;
+  // Reflow 
+  firstChildFrame->WillReflow(aPresContext);
+  firstChildFrame->MoveTo(aPresContext, aReflowState.mComputedBorderPadding.left, aReflowState.mComputedBorderPadding.top);
+  nsIView*  view;
+  firstChildFrame->GetView(aPresContext, &view);
+  NS_ASSERTION(view == nsnull, "Hmmmm, fix this!");
+  if (view) {
+    nsContainerFrame::PositionFrameView(aPresContext, firstChildFrame, view);
+  }
   firstChildFrame->Reflow(aPresContext, 
                           scrolledAreaDesiredSize,
                           secondPassState, 
                           aStatus);
-    //}
-  //}
+  nsRect rr;
+  firstChildFrame->GetRect(rr);
+
+  printf("After2nd DW: %d DH: %d\n", scrolledAreaDesiredSize.width, scrolledAreaDesiredSize.height);
+  //mCachedScrollFrameSize.width  = scrolledAreaDesiredSize.width;
+  //mCachedScrollFrameSize.height = scrolledAreaDesiredSize.height;
 
   nsMargin b = aReflowState.mComputedBorderPadding - aReflowState.mComputedPadding;
 
@@ -818,9 +937,8 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
   aDesiredSize.ascent  = aDesiredSize.height;
   aDesiredSize.descent = 0;
 
-  aStatus = NS_FRAME_COMPLETE;
 
-#ifdef DEBUG_rods
+#ifdef DEBUG_rodsX
   if (!isInDropDownMode) {
     PRInt32 numRows = 1;
     GetSizeAttribute(&numRows);
@@ -836,417 +954,15 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
     }
   }
 #endif
-
-  nsFormControlFrame::SetupCachedSizes(mCacheSize, mCachedMaxElementSize, aDesiredSize);
-
-  return NS_OK;
-}
-
-#if 0
-//-----------------------------------------------------------------
-// Main Reflow for ListBox/Dropdown
-//-----------------------------------------------------------------
-NS_IMETHODIMP 
-nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext, 
-                           nsHTMLReflowMetrics&     aDesiredSize,
-                           const nsHTMLReflowState& aReflowState, 
-                           nsReflowStatus&          aStatus)
-{
-  REFLOW_COUNTER_REQUEST();
-
-#ifdef DO_REFLOW_DEBUG
-  printf("%p ** Id: %d nsLCF::Reflow %d R: ", this, mReflowId, myCounter++);
-  switch (aReflowState.reason) {
-    case eReflowReason_Initial:
-      printf("Initia");break;
-    case eReflowReason_Incremental:
-      printf("Increm");break;
-    case eReflowReason_Resize:
-      printf("Resize");break;
-    case eReflowReason_StyleChange:
-      printf("StyleC");break;
-    case eReflowReason_Dirty:
-      printf("Dirty ");break;
-    default:printf("<unknown>%d", aReflowState.reason);break;
-  }
-  
-  printSize("AW", aReflowState.availableWidth);
-  printSize("AH", aReflowState.availableHeight);
-  printSize("CW", aReflowState.mComputedWidth);
-  printSize("CH", aReflowState.mComputedHeight);
-  printf("\n");
-#endif // DEBUG_rodsXXX
-
-  PRBool bailOnWidth;
-  PRBool bailOnHeight;
-  // This ifdef is for turning off the optimization
-  // so we can check timings against the old version
-#if 0
-
-  nsFormControlFrame::SkipResizeReflow(mCacheSize, 
-                                       mCachedMaxElementSize, 
-                                       mCachedAvailableSize, 
-                                       aDesiredSize, aReflowState, 
-                                       aStatus, 
-                                       bailOnWidth, bailOnHeight);
-
-  // Here we bail if both the height and the width haven't changed
-  // also we see if we should override the optimization
-  //
-  // The optimization can get overridden by the combobox 
-  // sometime the combobox knows that the list MUST do a full reflow
-  // no matter what
-  if (!mOverrideReflowOpt && bailOnWidth && bailOnHeight) {
-    REFLOW_DEBUG_MSG3("*** Done nsLCF - Bailing on DW: %d  DH: %d ", PX(aDesiredSize.width), PX(aDesiredSize.height));
-    REFLOW_DEBUG_MSG3("bailOnWidth %d  bailOnHeight %d\n", PX(bailOnWidth), PX(bailOnHeight));
-    return NS_OK;
-  } else if (mOverrideReflowOpt) {
-    mOverrideReflowOpt = PR_FALSE;
-  }
-
-#else
-  bailOnWidth  = PR_FALSE;
-  bailOnHeight = PR_FALSE;
-#endif
-
-#ifdef DEBUG_rodsXXX
-  // Lists out all the options
-  {
-  nsresult rv = NS_ERROR_FAILURE; 
-  nsCOMPtr<nsIDOMHTMLCollection> options = getter_AddRefs(GetOptions(mContent));
-  if (options) {
-    PRUint32 numOptions;
-    options->GetLength(&numOptions);
-    printf("--- Num of Items %d ---\n", numOptions);
-    for (PRUint32 i=0;i<numOptions;i++) {
-      nsCOMPtr<nsIDOMHTMLOptionElement> optionElement = getter_AddRefs(GetOption(*options, i));
-      if (optionElement) {
-        nsAutoString text;
-        rv = optionElement->GetLabel(text);
-        if (NS_CONTENT_ATTR_HAS_VALUE != rv || 0 == text.Length()) {
-          if (NS_OK != optionElement->GetText(text)) {
-            text = "No Value";
-          }
-        } else {
-            text = "No Value";
-        }          
-        printf("[%d] - %s\n", i, text.ToNewCString());
-      }
-    }
-  }
-  }
-#endif // DEBUG_rodsXXX
-
-
-  // If all the content and frames are here 
-  // then initialize it before reflow
-    if (mIsAllContentHere && !mHasBeenInitialized) {
-      if (PR_FALSE == mIsAllFramesHere) {
-        CheckIfAllFramesHere();
-      }
-      if (mIsAllFramesHere && !mHasBeenInitialized) {
-        mHasBeenInitialized = PR_TRUE;
-        Reset(aPresContext);
-      }
-    }
-
-
-    if (eReflowReason_Incremental == aReflowState.reason) {
-      nsIFrame* targetFrame;
-      aReflowState.reflowCommand->GetTarget(targetFrame);
-      if (targetFrame == this) {
-        // XXX So this may do it too often
-        // the side effect of this is if the user has scrolled to some other place in the list and
-        // an incremental reflow comes through the list gets scrolled to the first selected item
-        // I haven't been able to make it do it, but it will do it
-        // basically the real solution is to know when all the reframes are there.
-        nsCOMPtr<nsIContent> content = getter_AddRefs(GetOptionContent(mSelectedIndex));
-        if (content) {
-          ScrollToFrame(content);
-        }
-      }
-    }
-
-   // Strategy: Let the inherited reflow happen as though the width and height of the
-   // ScrollFrame are big enough to allow the listbox to
-   // shrink to fit the longest option element line in the list.
-   // The desired width and height returned by the inherited reflow is returned, 
-   // unless one of the following has been specified.
-   // 1. A css width has been specified.
-   // 2. The size has been specified.
-   // 3. The css height has been specified, but the number of rows has not.
-   //  The size attribute overrides the height setting but the height setting
-   // should be honored if there isn't a size specified.
-
-    // Determine the desired width + height for the listbox + 
-  aDesiredSize.width  = 0;
-  aDesiredSize.height = 0;
-
-  // Add the list frame as a child of the form
-  if (eReflowReason_Initial == aReflowState.reason) {
-    if (mPresState) {
-      RestoreState(aPresContext, mPresState);
-      mPresState = do_QueryInterface(nsnull);
-    }
-    if (IsInDropDownMode() == PR_FALSE && !mFormFrame) {
-      nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
-      nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
-    }
-  }
-
-  //--Calculate a width just big enough for the scrollframe to shrink around the
-  //longest element in the list
-  nsHTMLReflowState secondPassState(aReflowState);
-  nsHTMLReflowState firstPassState(aReflowState);
-
-  //nsHTMLReflowState   firstPassState(aPresContext, nsnull,
-  //                                   this, aDesiredSize);
-
-   // Get the size of option elements inside the listbox
-   // Compute the width based on the longest line in the listbox.
-  
-  firstPassState.mComputedWidth  = NS_UNCONSTRAINEDSIZE;
-  firstPassState.mComputedHeight = NS_UNCONSTRAINEDSIZE;
-  firstPassState.availableWidth  = NS_UNCONSTRAINEDSIZE;
-  firstPassState.availableHeight = NS_UNCONSTRAINEDSIZE;
- 
-  nsSize scrolledAreaSize(0,0);
-  nsHTMLReflowMetrics  scrolledAreaDesiredSize(&scrolledAreaSize);
-
-
-  if (eReflowReason_Incremental == aReflowState.reason) {
-    nsIFrame* targetFrame;
-    firstPassState.reflowCommand->GetTarget(targetFrame);
-    if (this == targetFrame) {
-      nsIReflowCommand::ReflowType type;
-      aReflowState.reflowCommand->GetType(type);
-      firstPassState.reason = eReflowReason_StyleChange;
-      firstPassState.reflowCommand = nsnull;
-    }
-  }
-
-  nsresult res = nsScrollFrame::Reflow(aPresContext, 
-                                       scrolledAreaDesiredSize,
-                                       firstPassState, 
-                                       aStatus);
-  if (NS_FAILED(res)) {
-    return res;
-  }
-
-  // Compute the bounding box of the contents of the list using the area 
-  // calculated by the first reflow as a starting point.
-  //
-   // The nsScrollFrame::REflow adds in the scrollbar width and border dimensions
-  // to the maxElementSize, so these need to be subtracted
-  nscoord scrolledAreaWidth  = scrolledAreaDesiredSize.maxElementSize->width;
-  nscoord scrolledAreaHeight = scrolledAreaDesiredSize.height;
-
-  // Keep the oringal values
-  mMaxWidth  = scrolledAreaWidth;
-  mMaxHeight = scrolledAreaDesiredSize.maxElementSize->height;
-
-  // The first reflow produces a box with the scrollbar width and borders
-  // added in so we need to subtract them out.
-
-  // Retrieve the scrollbar's width and height
-  float sbWidth  = 0.0;
-  float sbHeight = 0.0;;
-  nsCOMPtr<nsIDeviceContext> dc;
-  aPresContext->GetDeviceContext(getter_AddRefs(dc));
-  dc->GetScrollBarDimensions(sbWidth, sbHeight);
-  // Convert to nscoord's by rounding
-  nscoord scrollbarWidth  = NSToCoordRound(sbWidth);
-  //nscoord scrollbarHeight = NSToCoordRound(sbHeight);
-
-  // Subtract out the borders
-  nsMargin border;
-  if (!aReflowState.mStyleSpacing->GetBorder(border)) {
-    NS_NOTYETIMPLEMENTED("percentage border");
-    border.SizeTo(0, 0, 0, 0);
-  }
-
-  nsMargin padding;
-  if (!aReflowState.mStyleSpacing->GetPadding(padding)) {
-    NS_NOTYETIMPLEMENTED("percentage padding");
-    padding.SizeTo(0, 0, 0, 0);
-  }
-
-  mMaxWidth  -= (border.left + border.right + padding.left + padding.right);
-  mMaxHeight -= (border.top + border.bottom + padding.top + padding.bottom);
-
-  // Now the scrolledAreaWidth and scrolledAreaHeight are exactly 
-  // wide and high enough to enclose their contents
-
-  PRBool isInDropDownMode = IsInDropDownMode();
-
-  scrolledAreaWidth  -= (border.left + border.right + padding.left + padding.right);
-  scrolledAreaHeight -= (border.top + border.bottom + padding.top + padding.bottom);
-
-  nscoord visibleWidth = 0;
-  if (isInDropDownMode) {
-    if (NS_UNCONSTRAINEDSIZE == aReflowState.mComputedWidth) {
-      visibleWidth = scrolledAreaWidth;
-    } else {
-      visibleWidth = aReflowState.mComputedWidth;
-      visibleWidth -= (border.left + border.right + padding.left + padding.right);
-      //scrolledAreaHeight -= (border.top + border.bottom + padding.top + padding.bottom);
-    }
-  } else {
-    if (NS_UNCONSTRAINEDSIZE == aReflowState.mComputedWidth) {
-      visibleWidth = scrolledAreaWidth;
-    } else {
-      visibleWidth = aReflowState.mComputedWidth - scrollbarWidth;
-      // XXX rods - this hould not be subtracted in
-      //visibleWidth  -= (border.left + border.right + padding.left + padding.right);
-    }
-  }
-
-   // Determine if a scrollbar will be needed, If so we need to add
-   // enough the width to allow for the scrollbar.
-   // The scrollbar will be needed under two conditions:
-   // (size * heightOfaRow) < scrolledAreaHeight or
-   // the height set through Style < scrolledAreaHeight.
-
-   // Calculate the height of a single row in the listbox or dropdown list
-   // Note: It is calculated based on what layout returns for the maxElement
-   // size, rather than trying to take the scrolledAreaHeight and dividing by the number 
-   // of option elements. The reason is that their may be option groups in addition to
-   //  option elements. Either of which may be visible or invisible.
-  PRInt32 heightOfARow = scrolledAreaDesiredSize.maxElementSize->height;
-  heightOfARow -= (border.top + border.bottom + padding.top + padding.bottom);
-
-  // Check to see if we have zero item and
-  // whether we have no width and height
-  // The following code measures the width and height 
-  // of a bogus string so the list actually displays
-  PRInt32 length = 0;
-  GetNumberOfOptions(&length);
-
-  nscoord visibleHeight = 0;
-  if (isInDropDownMode) {
-    // Compute the visible height of the drop-down list
-    // The dropdown list height is the smaller of it's height setting or the height
-    // of the smallest box that can drawn around it's contents.
-    visibleHeight = scrolledAreaHeight;
-
-    if (visibleHeight > (kMaxDropDownRows * heightOfARow)) {
-      visibleHeight = (kMaxDropDownRows * heightOfARow);
-    }
-   
-  } else {
-      // Calculate the visible height of the listbox
-    if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedHeight) {
-      visibleHeight = aReflowState.mComputedHeight;
-      visibleHeight -= (border.top + border.bottom + padding.top + padding.bottom);
-    } else {
-      PRInt32 numRows = 1;
-      GetSizeAttribute(&numRows);
-      // because we are not a drop down 
-      // we will always have 2 or more rows
-      if (numRows >= 1) {
-        visibleHeight = numRows * heightOfARow;
-      } else {
-        PRBool multipleSelections = PR_FALSE;
-        GetMultiple(&multipleSelections);
-        if (multipleSelections) {
-          visibleHeight = PR_MIN(length, kMaxDropDownRows) * heightOfARow;
-        } else {
-          visibleHeight = 2 * heightOfARow;
-        }
-      }
-    }
-  }
-
-  // There are no items in the list
-  // but we want to include space for the scrollbars
-  // So fake like we will need scrollbars also
-  if (!isInDropDownMode && 0 == length) {
-    scrolledAreaHeight = visibleHeight+1;
-  }
-
-  PRBool needsVerticalScrollbar = PR_FALSE;
-  if (visibleHeight < scrolledAreaHeight) {
-    needsVerticalScrollbar = PR_TRUE; 
-  }
-
-  if (needsVerticalScrollbar) {
-    mIsScrollbarVisible = PR_TRUE; // XXX temp code
-  } else {
-    mIsScrollbarVisible = PR_FALSE; // XXX temp code
-  }
-
-  // The visible height is zero, this could be a select with no options
-  // or a select with a single option that has no content or no label
-  //
-  // So this may not be the best solution, but we get the height of the font
-  // for the list frame and use that as the max/minimum size for the contents
-  if (visibleHeight == 0) {
-    nsCOMPtr<nsIFontMetrics> fontMet;
-    nsresult res = nsFormControlHelper::GetFrameFontFM(aPresContext, this, getter_AddRefs(fontMet));
-    if (NS_SUCCEEDED(res) && fontMet) {
-      aReflowState.rendContext->SetFont(fontMet);
-      fontMet->GetHeight(visibleHeight);
-      mMaxHeight = visibleHeight;
-    }
-  }
-
-  if (NS_UNCONSTRAINEDSIZE == aReflowState.mComputedWidth) {
-    visibleWidth += (border.left + border.right + padding.left + padding.right);
-  }
-
-   // Do a second reflow with the adjusted width and height settings
-   // This sets up all of the frames with the correct width and height.
-  secondPassState.mComputedWidth  = visibleWidth;
-  secondPassState.mComputedHeight = visibleHeight;
-  secondPassState.reason = eReflowReason_Resize;
-
-  nsScrollFrame::Reflow(aPresContext, aDesiredSize, secondPassState, aStatus);
-
-    // Set the max element size to be the same as the desired element size.
-  if (nsnull != aDesiredSize.maxElementSize) {
-    aDesiredSize.maxElementSize->width  = aDesiredSize.width;
-	  aDesiredSize.maxElementSize->height = aDesiredSize.height;
-  }
-
-  aStatus = NS_FRAME_COMPLETE;
-
-#ifdef DEBUG_rodsXXX
   if (!isInDropDownMode) {
-    PRInt32 numRows = 1;
-    GetSizeAttribute(&numRows);
-    printf("%d ", numRows);
-    if (numRows == 2) {
-      COMPARE_QUIRK_SIZE("nsGfxListControlFrame", 56, 38) 
-    } if (numRows == 3) {
-      COMPARE_QUIRK_SIZE("nsGfxListControlFrame", 56, 54) 
-    } if (numRows == 4) {
-      COMPARE_QUIRK_SIZE("nsGfxListControlFrame", 56, 70) 
-    }
+    COMPARE_QUIRK_SIZE("nsGfxListControlFrame", 56, 86) 
   }
-#endif
-
-
-  mCachedAvailableSize.width  = aDesiredSize.width - (border.left + border.right + padding.left + padding.right);
-  mCachedAvailableSize.height = aDesiredSize.height - (border.top + border.bottom + padding.top + padding.bottom);
-
-  REFLOW_DEBUG_MSG3("** nsLCF Caching AW: %d  AH: %d\n", PX(mCachedAvailableSize.width), PX(mCachedAvailableSize.height));
 
   nsFormControlFrame::SetupCachedSizes(mCacheSize, mCachedMaxElementSize, aDesiredSize);
-
-  REFLOW_DEBUG_MSG3("** Done nsLCF DW: %d  DH: %d\n", PX(aDesiredSize.width), PX(aDesiredSize.height));
-
-  REFLOW_COUNTER();
-
-#ifdef DO_REFLOW_COUNTER
-  if (gReflowControlCnt[mReflowId] > 50) {
-    REFLOW_DEBUG_MSG3("** Id: %d Cnt: %d ", mReflowId, gReflowControlCnt[mReflowId]);
-    REFLOW_DEBUG_MSG3("Done nsLCF DW: %d  DH: %d\n", PX(aDesiredSize.width), PX(aDesiredSize.height));
-  }
-#endif
-
+  printf("Bottom   DW: %d DH: %d\n", aDesiredSize.width, aDesiredSize.height);
   return NS_OK;
 }
-#endif
+
 
 //---------------------------------------------------------
 NS_IMETHODIMP
@@ -1615,6 +1331,7 @@ nsGfxListControlFrame::HasSameContent(nsIFrame* aFrame1, nsIFrame* aFrame2)
 NS_IMETHODIMP
 nsGfxListControlFrame::CaptureMouseEvents(nsIPresContext* aPresContext, PRBool aGrabMouseEvents)
 {
+  printf("}}}}}}}}}}}}}}}}}}}} Setting Capture to %s\n", aGrabMouseEvents?"On":"Off");
 
   nsIFrame * firstChildFrame = nsnull;
   FirstChild(mPresContext, nsnull, &firstChildFrame);
@@ -1648,7 +1365,7 @@ nsGfxListControlFrame::CaptureMouseEvents(nsIPresContext* aPresContext, PRBool a
         nsIWidget * widget;
         view->GetWidget(widget);
         if (nsnull != widget) {
-          printf("}}}}}}}}}}}}}}}}}}}} Caputing is %s\n", aGrabMouseEvents?"On":"Off");
+          printf("Capture is set on widget to %s\n", aGrabMouseEvents?"On":"Off");
           widget->CaptureMouse(aGrabMouseEvents);
           NS_RELEASE(widget);
         }
@@ -2073,16 +1790,26 @@ nsGfxListControlFrame::SetContentSelected(PRInt32 aIndex, PRBool aSelected)
     return;
   }
   nsIContent* content = GetOptionContent(aIndex);
-  //NS_ASSERTION(nsnull != content && aIndex == 0, "Failed to retrieve option content");
-  if (nsnull != content) {
-    if (aSelected) {
-      DisplaySelected(content);
-      // Now that it is selected scroll to it
-      ScrollToFrame(content);
-    } else {
-      DisplayDeselected(content);
+
+  nsCOMPtr<nsIPresShell> presShell;
+  mPresContext->GetShell(getter_AddRefs(presShell));
+  nsIFrame * childframe;
+  nsresult result = presShell->GetPrimaryFrameFor(content, &childframe);
+  if (NS_SUCCEEDED(result) && childframe != nsnull) {
+    //NS_ASSERTION(nsnull != content && aIndex == 0, "Failed to retrieve option content");
+    if (nsnull != content) {
+      if (aSelected) {
+        DisplaySelected(content);
+        // Now that it is selected scroll to it
+        ScrollToFrame(content);
+      } else {
+        DisplayDeselected(content);
+      }
+      NS_RELEASE(content);
     }
-    NS_RELEASE(content);
+  } else {
+    mDelayedIndexSetting = aIndex;
+    mDelayedValueSetting = aSelected;
   }
 }
 
@@ -3227,7 +2954,7 @@ nsGfxListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
         mComboboxFrame->ListWasSelected(mPresContext); 
       } 
     }
-  } else {
+  } else if (mButtonDown) {
     mButtonDown = PR_FALSE;
     CaptureMouseEvents(mPresContext, PR_FALSE);
     UpdateSelection(PR_TRUE, PR_FALSE, mContent);
@@ -3587,8 +3314,6 @@ nsGfxListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
 {
   return NS_OK;
 }
-
-#include "nsIScrollableFrame.h"
 
 nsresult
 nsGfxListControlFrame::ScrollToFrame(nsIContent* aOptElement)

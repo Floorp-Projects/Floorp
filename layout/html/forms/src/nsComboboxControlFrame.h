@@ -28,8 +28,8 @@
 #endif
 
 #ifdef DEBUG_rods
-//#define DO_REFLOW_DEBUG
-//#define DO_REFLOW_COUNTER
+#define DO_REFLOW_DEBUG
+#define DO_REFLOW_COUNTER
 //#define DO_UNCONSTRAINED_CHECK
 //#define DO_PIXELS
 //#define DO_NEW_REFLOW
@@ -79,6 +79,9 @@ public:
    // nsIAnonymousContentCreator
   NS_IMETHOD CreateAnonymousContent(nsIPresContext* aPresContext,
                                     nsISupportsArray& aChildList);
+  NS_IMETHOD CreateFrameFor(nsIPresContext*   aPresContext,
+                            nsIContent *      aContent,
+                            nsIFrame**        aFrame);
 
    // nsIFrame
   NS_IMETHOD Init(nsIPresContext*  aPresContext,
@@ -174,7 +177,10 @@ public:
   NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState);
 
   //nsIRollupListener
+  // NS_DECL_NSIROLLUPLISTENER
   NS_IMETHOD Rollup();
+  NS_IMETHOD ShouldRollupOnMouseWheelEvent(nsIWidget *aWidget, PRBool *aShouldRollup) 
+  { *aShouldRollup = PR_FALSE; return NS_OK;}
 
   NS_IMETHOD SetFrameConstructor(nsCSSFrameConstructor *aConstructor)
     { mFrameConstructor = aConstructor; return NS_OK;} // not owner - do not addref!

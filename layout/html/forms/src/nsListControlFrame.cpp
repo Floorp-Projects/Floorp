@@ -56,6 +56,7 @@
 #include "nsLayoutAtoms.h"
 #include "nsIFontMetrics.h"
 #include "nsVoidArray.h"
+#include "nsIScrollableFrame.h"
 
 #include "nsISelectElement.h"
 
@@ -225,6 +226,8 @@ nsListControlFrame::nsListControlFrame()
   mEndExtendedIndex   = kNothingSelected;
   mStartExtendedIndex = kNothingSelected;
   mIsCapturingMouseEvents = PR_FALSE;
+  mDelayedIndexSetting = kNothingSelected;
+  mDelayedValueSetting = PR_FALSE;
 
   mSelectionCache        = new nsVoidArray();
   mSelectionCacheLength     = 0;
@@ -367,6 +370,18 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
   printSize("CW", aReflowState.mComputedWidth);
   printSize("CH", aReflowState.mComputedHeight);
   printf("\n");
+#if 0
+    {
+      const nsStyleDisplay* display;
+      GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
+      printf("+++++++++++++++++++++++++++++++++ ");
+      switch (display->mVisible) {
+        case NS_STYLE_VISIBILITY_COLLAPSE: printf("NS_STYLE_VISIBILITY_COLLAPSE\n");break;
+        case NS_STYLE_VISIBILITY_HIDDEN:   printf("NS_STYLE_VISIBILITY_HIDDEN\n");break;
+        case NS_STYLE_VISIBILITY_VISIBLE:  printf("NS_STYLE_VISIBILITY_VISIBLE\n");break;
+      }
+    }
+#endif
 #endif // DEBUG_rodsXXX
 
   PRBool bailOnWidth;
@@ -429,6 +444,11 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
   }
 #endif // DEBUG_rodsXXX
 
+
+  if (mDelayedIndexSetting != kNothingSelected) {
+    SetOptionSelected(mDelayedIndexSetting, mDelayedValueSetting);
+    mDelayedIndexSetting = kNothingSelected;
+  }
 
   // If all the content and frames are here 
   // then initialize it before reflow
@@ -537,6 +557,16 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
     return res;
   }
 
+  nsIScrollableFrame * scrollableFrame = nsnull;
+  nsRect scrolledRect;
+  if (NS_SUCCEEDED(QueryInterface(NS_GET_IID(nsIScrollableFrame), (void**)&scrollableFrame))) {
+    nsIFrame * scrolledFrame;
+    scrollableFrame->GetScrolledFrame(aPresContext, scrolledFrame);
+    NS_ASSERTION(scrolledFrame != nsnull, "Must have scrollable frame");
+    scrolledFrame->GetRect(scrolledRect);
+  } else {
+    NS_ASSERTION(scrollableFrame != nsnull, "Must have scrollableFrame frame");
+  }
   // Compute the bounding box of the contents of the list using the area 
   // calculated by the first reflow as a starting point.
   //
@@ -1614,17 +1644,28 @@ nsListControlFrame::SetContentSelected(PRInt32 aIndex, PRBool aSelected)
     return;
   }
   nsIContent* content = GetOptionContent(aIndex);
-  //NS_ASSERTION(nsnull != content && aIndex == 0, "Failed to retrieve option content");
-  if (nsnull != content) {
-    if (aSelected) {
-      DisplaySelected(content);
-      // Now that it is selected scroll to it
-      ScrollToFrame(content);
-    } else {
-      DisplayDeselected(content);
+
+  nsCOMPtr<nsIPresShell> presShell;
+  mPresContext->GetShell(getter_AddRefs(presShell));
+  nsIFrame * childframe;
+  nsresult result = presShell->GetPrimaryFrameFor(content, &childframe);
+  if (NS_SUCCEEDED(result) && childframe != nsnull) {
+    //NS_ASSERTION(nsnull != content && aIndex == 0, "Failed to retrieve option content");
+    if (nsnull != content) {
+      if (aSelected) {
+        DisplaySelected(content);
+        // Now that it is selected scroll to it
+        ScrollToFrame(content);
+      } else {
+        DisplayDeselected(content);
+      }
+      NS_RELEASE(content);
     }
-    NS_RELEASE(content);
+  } else {
+    mDelayedIndexSetting = aIndex;
+    mDelayedValueSetting = aSelected;
   }
+
 }
 
 //---------------------------------------------------------

@@ -4569,15 +4569,16 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsIPresShell*        aPresShell,
   const nsStyleDisplay* styleDisplay;
   newFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) styleDisplay);
 
-  nsIFrame * blkFrame;
-  NS_NewBlockFrame(shell, &blkFrame, flags);
+  nsIFrame * areaFrame;
+  //NS_NewBlockFrame(shell, &areaFrame, flags);
+  NS_NewAreaFrame(shell, &areaFrame, flags | NS_BLOCK_SHRINK_WRAP);// | NS_BLOCK_MARGIN_ROOT);
 
   // Resolve style and initialize the frame
   nsIStyleContext* styleContext;
   aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::fieldsetContentPseudo,
                                              aStyleContext, PR_FALSE, &styleContext);
   InitAndRestoreFrame(aPresContext, aState, aContent, 
-                      newFrame, styleContext, nsnull, blkFrame);
+                      newFrame, styleContext, nsnull, areaFrame);
 
   NS_RELEASE(styleContext);          
   
@@ -4587,7 +4588,7 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsIPresShell*        aPresShell,
     HaveSpecialBlockStyle(aPresContext, aContent, aStyleContext,
                           &haveFirstLetterStyle, &haveFirstLineStyle);
     nsFrameConstructorSaveState floaterSaveState;
-    aState.PushFloaterContainingBlock(blkFrame, floaterSaveState,
+    aState.PushFloaterContainingBlock(areaFrame, floaterSaveState,
                                       haveFirstLetterStyle,
                                       haveFirstLineStyle);
 
@@ -4600,10 +4601,10 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsIPresShell*        aPresShell,
     if (isPositionedContainingBlock) {
       // The area frame becomes a container for child frames that are
       // absolutely positioned
-      aState.PushAbsoluteContainingBlock(blkFrame, absoluteSaveState);
+      aState.PushAbsoluteContainingBlock(areaFrame, absoluteSaveState);
     }
      
-    ProcessChildren(aPresShell, aPresContext, aState, aContent, blkFrame, PR_FALSE,
+    ProcessChildren(aPresShell, aPresContext, aState, aContent, areaFrame, PR_FALSE,
                     childItems, PR_TRUE);
 
     static NS_DEFINE_IID(kLegendFrameCID, NS_LEGEND_FRAME_CID);
@@ -4617,7 +4618,7 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsIPresShell*        aPresShell,
           nsIFrame * nxt;
           legendFrame->GetNextSibling(&nxt);
           previous->SetNextSibling(nxt);
-          blkFrame->SetNextSibling(legendFrame);
+          areaFrame->SetNextSibling(legendFrame);
           legendFrame->SetParent(newFrame);
           legendFrame->SetNextSibling(nsnull);
           break;
@@ -4625,7 +4626,7 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsIPresShell*        aPresShell,
           nsIFrame * nxt;
           legendFrame->GetNextSibling(&nxt);
           childItems.childList = nxt;
-          blkFrame->SetNextSibling(legendFrame);
+          areaFrame->SetNextSibling(legendFrame);
           legendFrame->SetParent(newFrame);
           legendFrame->SetNextSibling(nsnull);
           break;
@@ -4636,21 +4637,21 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsIPresShell*        aPresShell,
     }
 
     // Set the scrolled frame's initial child lists
-    blkFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
+    areaFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
     if (isPositionedContainingBlock && aState.mAbsoluteItems.childList) {
-      blkFrame->SetInitialChildList(aPresContext,
+      areaFrame->SetInitialChildList(aPresContext,
                                          nsLayoutAtoms::absoluteList,
                                          aState.mAbsoluteItems.childList);
     }
 
     if (aState.mFloatedItems.childList) {
-      blkFrame->SetInitialChildList(aPresContext,
+      areaFrame->SetInitialChildList(aPresContext,
                                          nsLayoutAtoms::floaterList,
                                          aState.mFloatedItems.childList);
     }
 
   // Set the scroll frame's initial child list
-  newFrame->SetInitialChildList(aPresContext, nsnull, blkFrame);
+  newFrame->SetInitialChildList(aPresContext, nsnull, areaFrame);
 
   // our new frame retured is the top frame which is the list frame. 
   aNewFrame = newFrame; 
@@ -5152,11 +5153,11 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
                                              nsFrameConstructorState& aState,
                                              nsIContent*              aParent,
                                              nsIDocument*             aDocument,
-                                             nsIFrame*                aNewFrame,
+                                             nsIFrame*                aParentFrame,
                                              nsFrameItems&            aChildItems)
 {
 
-  nsCOMPtr<nsIAnonymousContentCreator> creator(do_QueryInterface(aNewFrame));
+  nsCOMPtr<nsIAnonymousContentCreator> creator(do_QueryInterface(aParentFrame));
   
   if (!creator)
      return NS_OK;
@@ -5180,8 +5181,14 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
     content->SetParent(aParent);
     content->SetDocument(aDocument, PR_TRUE);
 
-    // create the frame and attach it to our frame
-    ConstructFrame(aPresShell, aPresContext, aState, content, aNewFrame, aChildItems);
+    nsIFrame * newFrame = nsnull;
+    nsresult rv = creator->CreateFrameFor(aPresContext, content, &newFrame);
+    if (NS_SUCCEEDED(rv) && newFrame != nsnull) {
+      aChildItems.AddChild(newFrame);
+    } else {
+      // create the frame and attach it to our frame
+      ConstructFrame(aPresShell, aPresContext, aState, content, aParentFrame, aChildItems);
+    }
   }
 
   return NS_OK;

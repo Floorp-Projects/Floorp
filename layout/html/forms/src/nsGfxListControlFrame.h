@@ -31,7 +31,7 @@
 #define DO_REFLOW_COUNTER
 //#define DO_UNCONSTRAINED_CHECK
 //#define DO_PIXELS
-//#define DO_DRAGGING
+#define DO_DRAGGING
 #endif
 
 #include "nsHTMLContainerFrame.h"
@@ -371,6 +371,9 @@ protected:
 
   PRBool       mOverrideReflowOpt;
 
+  PRInt32      mDelayedIndexSetting;
+  PRBool       mDelayedValueSetting;
+
   nsIPresContext* mPresContext;             // XXX: Remove the need to cache the pres context.
 
   nsCOMPtr<nsIPresState> mPresState;        // Need cache state when list is null
@@ -386,6 +389,8 @@ protected:
   nsSize       mCachedMaxElementSize;
   nsSize       mCachedUnconstrainedSize;
   nsSize       mCachedAvailableSize;
+
+  nsSize       mCachedScrollFrameSize;
 
   // timer for autoscrolling.
 #ifdef DO_DRAGGING
