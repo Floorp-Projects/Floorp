@@ -84,7 +84,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrinterEnumeratorGTK)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeThemeGTK)
 #endif
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
-NS_GENERIC_FACTory_CONSTRUCTOR(gfxImageFrame)
+NS_GENERIC_FACTORY_CONSTRUCTOR(gfxImageFrame)
 // our custom constructors
 
 static NS_IMETHODIMP nsScriptableRegionConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
