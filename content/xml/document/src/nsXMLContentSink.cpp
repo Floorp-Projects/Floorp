@@ -208,8 +208,7 @@ nsXMLContentSink::Init(nsIDocument* aDoc,
 {
   NS_PRECONDITION(nsnull != aDoc, "null ptr");
   NS_PRECONDITION(nsnull != aURL, "null ptr");
-  NS_PRECONDITION(nsnull != aContainer, "null ptr");
-  if ((nsnull == aDoc) || (nsnull == aURL) || (nsnull == aContainer)) {
+  if ((nsnull == aDoc) || (nsnull == aURL)) {
     return NS_ERROR_NULL_POINTER;
   }
 
@@ -220,7 +219,7 @@ nsXMLContentSink::Init(nsIDocument* aDoc,
   mDocumentBaseURL = aURL;
   NS_ADDREF(aURL);
   mWebShell = aContainer;
-  NS_ADDREF(aContainer);
+  NS_IF_ADDREF(aContainer);
 
   mState = eXMLContentSinkState_InProlog;
   mDocElement = nsnull;
