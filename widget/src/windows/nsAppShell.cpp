@@ -21,10 +21,14 @@
  */
 
 #include "nsAppShell.h"
+#include "nsToolkit.h"
 #include "nsIWidget.h"
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
 #include <windows.h>
+#ifdef MOZ_AIMM
+#include "aimm.h"
+#endif
 
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
@@ -84,6 +88,9 @@ NS_METHOD nsAppShell::Run(void)
       keepGoing = (msg.message != WM_QUIT);
 
       if (keepGoing != 0) {
+//#ifdef MOZ_AIMM // not need?
+//      if (!nsToolkit::gAIMMMsgPumpOwner || (nsToolkit::gAIMMMsgPumpOwner->OnTranslateMessage(&msg) != S_OK))
+//#endif
         TranslateMessage(&msg);
         DispatchMessage(&msg);
         if (mDispatchListener)
@@ -120,6 +127,9 @@ nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
 #endif
 
   if (isOK) {
+//#ifdef MOZ_AIMM // not need?
+//  if (!nsToolkit::gAIMMMsgPumpOwner || (nsToolkit::gAIMMMsgPumpOwner->OnTranslateMessage(&msg) != S_OK))
+//#endif
     TranslateMessage(&msg);
     aEvent = &msg;
     aRealEvent = PR_TRUE;
