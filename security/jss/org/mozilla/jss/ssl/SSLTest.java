@@ -69,10 +69,10 @@ public class SSLTest {
     }
 
     private void dumpParams() {
-        Enumeration enum = params.keys();
+        Enumeration _enum = params.keys();
         System.out.println("Parameters:");
-        while (enum.hasMoreElements() ) {
-            String key = (String) enum.nextElement();
+        while (_enum.hasMoreElements() ) {
+            String key = (String) _enum.nextElement();
             System.out.println(key + "=" + (String)params.get(key));
         }
     }

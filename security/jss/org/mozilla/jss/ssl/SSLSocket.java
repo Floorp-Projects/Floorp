@@ -689,10 +689,10 @@ public class SSLSocket extends java.net.Socket {
     protected void finalize() throws Throwable { }
 
     public static class CipherPolicy {
-        private int enum;
-        private CipherPolicy(int enum) { }
+        private int _enum;
+        private CipherPolicy(int _enum) { }
 
-        int getEnum() { return enum; }
+        int getEnum() { return _enum; }
 
         public static final CipherPolicy DOMESTIC =
             new CipherPolicy(SocketBase.SSL_POLICY_DOMESTIC);
