@@ -212,13 +212,12 @@ nsContainerFrame::PaintChild(nsIPresContext*      aPresContext,
       // coordinate system.
       damageArea.x -= kidRect.x;
       damageArea.y -= kidRect.y;
-      aRenderingContext.PushState();
       aRenderingContext.Translate(kidRect.x, kidRect.y);
 
       // Paint the kid
       aFrame->Paint(aPresContext, aRenderingContext, damageArea, aWhichLayer);
-      PRBool clipState;
-      aRenderingContext.PopState(clipState);
+      // don't use PushState and PopState, because they're slow
+      aRenderingContext.Translate(-kidRect.x, -kidRect.y);
 
 #ifdef NS_DEBUG
       // Draw a border around the child
