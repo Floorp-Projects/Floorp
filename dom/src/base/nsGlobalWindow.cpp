@@ -2966,6 +2966,10 @@ PRBool GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
   nsresult rv;
   PRUint32 firingDepth = mTimeoutFiringDepth+1;
 
+  if (nsnull == mContext) {
+    return TRUE;
+  }
+
   /* Make sure that the window or the script context don't go away as 
      a result of running timeouts */
   GlobalWindowImpl* temp = this;
@@ -3146,6 +3150,9 @@ PRBool GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
       else {
         prev->next = next;
       }
+
+      PRBool isInterval = (timeout->interval && timeout->timer);
+
       // Drop timeout struct since it's out of the list
       DropTimeout(timeout, tempContext);
       
@@ -3153,7 +3160,7 @@ PRBool GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
        *  timeout (or if it was an interval timeout, but we were
        *  unsuccessful at rescheduling it.)
        */
-      if(timeout->interval && timeout->timer) {
+      if(isInterval) {
         /* Reschedule an interval timeout */
         /* Insert interval timeout onto list sorted in deadline order. */
         InsertTimeoutIntoList(mTimeoutInsertionPoint, timeout);
