@@ -25,7 +25,6 @@
 #include "net.h"
 #include "ntypes.h"
 #include "fe_proto.h"
-#include "mkutils.h"
 
 #ifdef NSPR20
 #include "prinit.h"

@@ -1317,6 +1317,11 @@ NET_GetURL (URL_Struct * URL_s,
         FO_Present_Types output_format,
         MWContext * context,
         Net_GetUrlExitFunc*	exit_routine);
+PUBLIC int
+NET_GetURLQuick (URL_Struct * URL_s,
+        FO_Present_Types output_format,
+        MWContext * context,
+        Net_GetUrlExitFunc*	exit_routine);
 
 /* URL methods
  */
