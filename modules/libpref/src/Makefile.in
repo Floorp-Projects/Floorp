@@ -63,6 +63,7 @@ else
 PREF_JS_EXPORTS	+= $(srcdir)/unix/unix.js
 endif
 endif
+endif
 
 ifeq ($(OS_ARCH),OpenVMS)
 PREF_JS_EXPORTS	+= $(srcdir)/unix/openvms.js
