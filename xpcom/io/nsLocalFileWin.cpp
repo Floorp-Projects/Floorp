@@ -830,7 +830,7 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent, const char
     // target.
     char* inFilePath;
     destParent->GetTarget(&inFilePath);  
-    nsCString destPath = inFilePath;
+    nsCString destPath(inFilePath);
     nsMemory::Free(inFilePath);
 
     destPath.Append("\\");
