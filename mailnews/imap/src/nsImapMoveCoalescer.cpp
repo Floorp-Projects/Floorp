@@ -83,8 +83,8 @@ nsresult nsImapMoveCoalescer::PlaybackMoves(nsIEventQueue *eventQueue)
 	m_destFolders->Count(&numFolders);
 	for (PRUint32 i = 0; i < numFolders; i++)
 	{
-		nsCOMPtr <nsISupports> myISupports = getter_AddRefs(m_destFolders->ElementAt(i));
-		nsCOMPtr <nsIMsgFolder> destFolder(do_QueryInterface(myISupports));
+		nsCOMPtr <nsISupports> destSupports = getter_AddRefs(m_destFolders->ElementAt(i));
+		nsCOMPtr <nsIMsgFolder> destFolder(do_QueryInterface(destSupports));
         NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
         if (NS_SUCCEEDED(rv) && imapService)
 		{
@@ -94,8 +94,8 @@ nsresult nsImapMoveCoalescer::PlaybackMoves(nsIEventQueue *eventQueue)
 				char *messageIds = keysToAdd->Output();
 				if (messageIds)
 				{
-					nsCOMPtr <nsISupports> myISupports = do_QueryInterface((nsIMsgImapMailFolder *) m_sourceFolder, &rv);
-					nsCOMPtr <nsIUrlListener> urlListener(do_QueryInterface(myISupports));
+					nsCOMPtr <nsISupports> sourceSupports = do_QueryInterface((nsIMsgImapMailFolder *) m_sourceFolder, &rv);
+					nsCOMPtr <nsIUrlListener> urlListener(do_QueryInterface(sourceSupports));
 					rv = imapService->OnlineMessageCopy(eventQueue,
 													m_sourceFolder, messageIds,
 													destFolder, PR_TRUE, PR_TRUE,
