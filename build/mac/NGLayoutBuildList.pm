@@ -1430,6 +1430,7 @@ sub BuildNeckoProjects()
 	BuildOneProject(":mozilla:netwerk:protocol:data:macbuild:data.mcp",			"data$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:netwerk:protocol:datetime:macbuild:datetime.mcp",	"datetime$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:netwerk:protocol:file:macbuild:file.mcp",			"file$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:netwerk:protocol:finger:macbuild:finger.mcp",	"finger$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:netwerk:protocol:ftp:macbuild:ftp.mcp",			"ftp$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:netwerk:protocol:http:macbuild:http.mcp",			"http$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:netwerk:protocol:jar:macbuild:jar.mcp",			"jar$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);	
