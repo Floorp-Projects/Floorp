@@ -149,9 +149,9 @@ namespace JavaScript {
         JS2Runtime::JSObject *scope;    // ditto
 #endif
 #ifdef EPIMETHEUS
-        MetaData::Member *member;           // the associated definition,
-        MetaData::InstanceMember *overridden;       // overridden member...
-        MetaData::Multiname *mn;            // ...and name constructed by the semantics phase
+        MetaData::Member *member;           // the associated definition, [used to resolve eventual type]
+        MetaData::InstanceMember *overridden;       // overridden member...	[used for resolving override legality]
+        MetaData::Multiname *mn;            // ...and name constructed by the semantics phase. [used for emitting initialization sequence]
 #endif
 
         VariableBinding(size_t pos, const StringAtom *name, ExprNode *type, ExprNode *initializer, bool constant):

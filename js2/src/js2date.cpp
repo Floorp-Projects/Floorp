@@ -1481,7 +1481,9 @@ void initDateObject(JS2Metadata *meta)
     LocalTZA = -(PRMJ_LocalGMTDifference() * msPerSecond);
 
     meta->initBuiltinClass(meta->dateClass, &staticFunctions[0], Date_Constructor, Date_Call);
-    meta->dateClass->prototype = OBJECT_TO_JS2VAL(new DateInstance(meta, OBJECT_TO_JS2VAL(meta->objectClass->prototype), meta->dateClass));   
+	DateInstance *ur = new DateInstance(meta, OBJECT_TO_JS2VAL(meta->objectClass->prototype), meta->dateClass);
+    meta->dateClass->prototype = OBJECT_TO_JS2VAL(ur);
+	ur->ms = 0;
     meta->initBuiltinClassPrototype(meta->dateClass, &prototypeFunctions[0]);
 }
 

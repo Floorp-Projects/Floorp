@@ -724,6 +724,16 @@ namespace MetaData {
         return Read(meta, base, mn, NULL, phase, rval);
     }
 
+	bool isValidIndex(const String *name, uint32 &index)
+	{
+        const char16 *numEnd;        
+        float64 f = stringToDouble(name->data(), name->data() + name->length(), numEnd);
+        index = JS2Engine::float64toUInt32(f);
+        char buf[dtosStandardBufferSize];
+        const char *chrp = doubleToStr(buf, dtosStandardBufferSize, index, dtosStandard, 0);
+        return (widenCString(chrp) == *name);
+	}
+
     bool JS2ArrayClass::Write(JS2Metadata *meta, js2val base, Multiname *multiname, Environment *env, bool createIfMissing, js2val newValue, bool initFlag)
     {
         ASSERT(JS2VAL_IS_OBJECT(base));
@@ -737,32 +747,67 @@ namespace MetaData {
         else {
             result = JS2Class::Write(meta, base, multiname, env, createIfMissing, newValue, false);
             if (result && (multiname->nsList->size() == 1) && (multiname->nsList->back() == meta->publicNamespace)) {
-                const char16 *numEnd;        
-                float64 f = stringToDouble(multiname->name->data(), multiname->name->data() + multiname->name->length(), numEnd);
-                uint32 index = JS2Engine::float64toUInt32(f);
-
-                char buf[dtosStandardBufferSize];
-                const char *chrp = doubleToStr(buf, dtosStandardBufferSize, index, dtosStandard, 0);
-
-                if (widenCString(chrp) == *multiname->name) {
+				uint32 index;
+                if (isValidIndex(multiname->name, index)) {
                     uint32 length = getLength(meta, obj);
                     if (index >= length)
                         setLength(meta, obj, index + 1);
                 }
-
             }
         }
         return result;
     }    
 
-    bool JS2ArrayClass::WritePublic(JS2Metadata *meta, js2val base, const String *name, bool createIfMissing, js2val newValue)
-    {
-        DEFINE_ROOTKEEPER(rk1, name);
-        // XXX could speed up by pushing knowledge of single namespace?
-        Multiname *mn = new Multiname(name, meta->publicNamespace);
-        DEFINE_ROOTKEEPER(rk, mn);
-        return Write(meta, base, mn, meta->env, createIfMissing, newValue, false);
-    }
+    bool JS2ArrayClass::BracketRead(JS2Metadata *meta, js2val *base, js2val indexVal, Phase phase, js2val *rval)
+	{
+		const String *indexStr = meta->toString(indexVal);
+		DEFINE_ROOTKEEPER(rk, indexStr);
+		Multiname *mn = new Multiname(indexStr, meta->publicNamespace);
+		DEFINE_ROOTKEEPER(rk1, mn);
+		return Read(meta, base, mn, NULL, phase, rval);
+	}
+
+    bool JS2ArrayClass::BracketWrite(JS2Metadata *meta, js2val base, js2val indexVal, js2val newValue)
+	{
+		const String *indexStr = meta->toString(indexVal);
+		DEFINE_ROOTKEEPER(rk, indexStr);
+		Multiname *mn = new Multiname(indexStr, meta->publicNamespace);
+		DEFINE_ROOTKEEPER(rk1, mn);
+
+		ASSERT(JS2VAL_IS_OBJECT(base));
+		JS2Object *obj = JS2VAL_TO_OBJECT(base);
+
+		bool result;
+		if (!JS2VAL_IS_INT(indexVal)) {
+			if (*mn->name == *meta->engine->length_StringAtom) {
+				Array_lengthSet(meta, base, &newValue, 1);
+				return true;
+			}
+		}
+		result = JS2Class::Write(meta, base, mn, NULL, true, newValue, false);
+		uint32 index;
+		if (result) {
+			if (JS2VAL_IS_INT(indexVal))
+				index = JS2VAL_TO_INT(indexVal);
+			else {
+                if (!isValidIndex(mn->name, index))
+					return true;	// not a valid index, don't need to set length
+			}
+		}
+		uint32 length = getLength(meta, obj);
+		if (index >= length)
+			setLength(meta, obj, index + 1);
+		return result;
+	}
+
+    bool JS2ArrayClass::BracketDelete(JS2Metadata *meta, js2val base, js2val indexVal, bool *result)
+	{
+		const String *indexStr = meta->toString(indexVal);
+		DEFINE_ROOTKEEPER(rk, indexStr);
+		Multiname *mn = new Multiname(indexStr, meta->publicNamespace);
+		DEFINE_ROOTKEEPER(rk1, mn);
+		return Delete(meta, base, mn, NULL, result);
+	}
 
     bool JS2Class::Write(JS2Metadata *meta, js2val base, Multiname *multiname, Environment *env, bool createIfMissing, js2val newValue, bool initFlag)
     {

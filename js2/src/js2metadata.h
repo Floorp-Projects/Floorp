@@ -818,7 +818,9 @@ public:
         : JS2Class(super, proto, privateNamespace, dynamic, final, name) { }
 
     virtual bool Write(JS2Metadata *meta, js2val base, Multiname *multiname, Environment *env, bool createIfMissing, js2val newValue, bool initFlag);
-    virtual bool WritePublic(JS2Metadata *meta, js2val base, const String *name, bool createIfMissing, js2val newValue);
+    virtual bool BracketRead(JS2Metadata *meta, js2val *base, js2val indexVal, Phase phase, js2val *rval);
+    virtual bool BracketWrite(JS2Metadata *meta, js2val base, js2val indexVal, js2val newValue);
+    virtual bool BracketDelete(JS2Metadata *meta, js2val base, js2val indexVal, bool *result);
 };
 
 class JS2IntegerClass : public JS2Class {
@@ -1470,7 +1472,7 @@ public:
     InstanceMember *searchForOverrides(JS2Class *c, Multiname *multiname, Access access, size_t pos);
     InstanceMember *findInstanceMember(JS2Class *c, QualifiedName *qname, Access access);
     Slot *findSlot(js2val thisObjVal, InstanceVariable *id);
-    LocalMember *findLocalMember(JS2Object *container, Multiname *multiname, Access access);
+    LocalMember *findLocalMember(JS2Object *container, Multiname *multiname, Access access, bool &enumerable);
     js2val getSuperObject(JS2Object *obj);
     JS2Class *getVariableType(Variable *v, Phase phase, size_t pos);
     InstanceMember *getDerivedInstanceMember(JS2Class *c, InstanceMember *mBase, Access access);

@@ -290,8 +290,15 @@ char16 JS::Lexer::lexEscape(bool unicodeOnly)
                 while (nDigits--) {
                     ch = getChar();
                     uint digit;
-                    if (!isASCIIHexDigit(ch, digit))
-                        goto error;
+                    if (!isASCIIHexDigit(ch, digit)) {
+						/* E3 compatibility, back off */
+						// goto error;
+						do {
+							reader.unget();
+							ch = peekChar();
+						} while (ch != '\\');
+                        return getChar();
+					}
                     n = (n << 4) | digit;
                 }
                 return static_cast<char16>(n);
@@ -306,7 +313,7 @@ char16 JS::Lexer::lexEscape(bool unicodeOnly)
 */
               return ch;
         }
-  error:
+//  error:
     syntaxError("Bad escape code");
     return 0;
 }
@@ -726,7 +733,11 @@ void JS::Lexer::lexToken(bool preferRegExp)
                     reader.unget();                 // Number
                   number:
                     kind = Token::number;
-                    lexingUnit = lexNumeral();
+#ifdef PARSE_UNIT
+                    lexingUnit = 
+#else
+						lexNumeral();
+#endif
                     break;
 
                   default:

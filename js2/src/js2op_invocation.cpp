@@ -310,24 +310,28 @@ doCall:
             if (!JS2VAL_IS_OBJECT(b))
                 meta->reportError(Exception::typeError, "Object expected for instanceof", errorPos());
             JS2Object *obj = JS2VAL_TO_OBJECT(b);
+            js2val a_protoVal;
+            js2val b_protoVal;
+			JS2Object *aObj = NULL;
             if ((obj->kind == SimpleInstanceKind)
                     && (checked_cast<SimpleInstance *>(obj)->type == meta->functionClass)) {
                 // XXX this is [[hasInstance]] from ECMA3
                 if (!JS2VAL_IS_OBJECT(a))
                     push(JS2VAL_FALSE);
                 else {
-                    JS2Object *aObj = JS2VAL_TO_OBJECT(a);
+                    aObj = JS2VAL_TO_OBJECT(a);
                     if (aObj->kind != SimpleInstanceKind)
                         meta->reportError(Exception::typeError, "Prototype instance expected for instanceof", errorPos());
-                    js2val a_protoVal = checked_cast<SimpleInstance *>(aObj)->super;
-
-                    js2val b_protoVal;
-                    Multiname mn(prototype_StringAtom);     // gc safe because the content is rooted elsewhere
-                    JS2Class *limit = meta->objectType(b);
-                    if (limit->Read(meta, &b, &mn, meta->env, RunPhase, &b_protoVal)) {
-                        if (!JS2VAL_IS_OBJECT(b_protoVal))
-                            meta->reportError(Exception::typeError, "Non-object prototype value in instanceOf", errorPos());
-                    }
+                    a_protoVal = checked_cast<SimpleInstance *>(aObj)->super;
+					{
+						Multiname mn(prototype_StringAtom);     // gc safe because the content is rooted elsewhere
+						JS2Class *limit = meta->objectType(b);
+						if (limit->Read(meta, &b, &mn, meta->env, RunPhase, &b_protoVal)) {
+							if (!JS2VAL_IS_OBJECT(b_protoVal))
+								meta->reportError(Exception::typeError, "Non-object prototype value in instanceOf", errorPos());
+						}
+					}
+doInstanceOfLoop:
                     bool result = false;
                     while (!JS2VAL_IS_NULL(a_protoVal) && !JS2VAL_IS_UNDEFINED(a_protoVal)) {
                         if (b_protoVal == a_protoVal) {
@@ -350,13 +354,13 @@ doCall:
                     if (!JS2VAL_IS_OBJECT(a))
                         push(JS2VAL_FALSE);
                     else {
-                        JS2Object *aObj = JS2VAL_TO_OBJECT(a);
+                        aObj = JS2VAL_TO_OBJECT(a);
                         if (aObj->kind != SimpleInstanceKind)
                             meta->reportError(Exception::typeError, "Prototype instance expected for instanceof", errorPos());
-                        js2val a_protoVal = checked_cast<SimpleInstance *>(aObj)->super;
-
-                        js2val b_protoVal = checked_cast<JS2Class *>(obj)->prototype;
-
+                        a_protoVal = checked_cast<SimpleInstance *>(aObj)->super;
+                        b_protoVal = checked_cast<JS2Class *>(obj)->prototype;
+						goto doInstanceOfLoop;
+/*
                         bool result = false;
                         while (!JS2VAL_IS_NULL(a_protoVal) && !JS2VAL_IS_UNDEFINED(a_protoVal)) {
                             if (b_protoVal == a_protoVal) {
@@ -371,6 +375,7 @@ doCall:
                             a_protoVal = checked_cast<SimpleInstance *>(aObj)->super;
                         }
                         push(BOOLEAN_TO_JS2VAL(result));
+*/
                     }
                 }
                 else

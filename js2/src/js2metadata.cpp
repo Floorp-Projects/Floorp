@@ -123,11 +123,17 @@ namespace MetaData {
                 }
                 pb = fnDef->parameters;
                 while (pb) {
-                    FrameVariable *v = new FrameVariable(result->fWrap->compileFrame->allocateSlot(), FrameVariable::Parameter);
                     if (pb->type)
                         ValidateTypeExpression(cxt, env, pb->type);
-                    pb->member = v;
-                    pb->mn = defineLocalMember(env, pb->name, NULL, Attribute::NoOverride, false, ReadWriteAccess, v, pb->pos, true);
+					if (unchecked) {
+						pb->member = NULL;
+						defineHoistedVar(env, pb->name, JS2VAL_UNDEFINED, true, pos);
+					}
+					else {
+						FrameVariable *v = new FrameVariable(result->fWrap->compileFrame->allocateSlot(), FrameVariable::Parameter);
+						pb->member = v;
+						defineLocalMember(env, pb->name, NULL, Attribute::NoOverride, false, ReadWriteAccess, v, pb->pos, true);
+					}
                     pb = pb->next;
                 }
             }
@@ -1332,11 +1338,13 @@ namespace MetaData {
                     bCon->fName = *f->function.name;
                     VariableBinding *pb = f->function.parameters;
                     while (pb) {
-                        FrameVariable *v = checked_cast<FrameVariable *>(pb->member);
-                        if (pb->type)
-                            v->type = EvalTypeExpression(env, CompilePhase, pb->type);
-                        else
-                            v->type = objectClass;
+						if (pb->member) {
+							FrameVariable *v = checked_cast<FrameVariable *>(pb->member);
+							if (pb->type)
+								v->type = EvalTypeExpression(env, CompilePhase, pb->type);
+							else
+								v->type = objectClass;
+						}
                         pb = pb->next;
                     }
                     if (f->function.resultType)
@@ -2435,7 +2443,8 @@ doUnary:
                         break;
                     case ParameterFrameKind:
                         {
-                            LocalMember *m = findLocalMember(pf, multiname, ReadAccess);
+							bool isEnumerable;
+                            LocalMember *m = findLocalMember(pf, multiname, ReadAccess, isEnumerable);
                             if (m) {
                                 switch (checked_cast<LocalMember *>(m)->memberKind) {
                                 case LocalMember::VariableMember:
@@ -2452,7 +2461,8 @@ doUnary:
                         break;
                     case BlockFrameKind:
                         {
-                            LocalMember *m = findLocalMember(pf, multiname, ReadAccess);
+							bool isEnumerable;
+                            LocalMember *m = findLocalMember(pf, multiname, ReadAccess, isEnumerable);
                             if (m) {
                                 switch (checked_cast<LocalMember *>(m)->memberKind) {
                                 case LocalMember::VariableMember:
@@ -2920,7 +2930,8 @@ doUnary:
             case ParameterFrameKind:
             case BlockFrameKind:
                 {
-                    LocalMember *m = meta->findLocalMember(f, multiname, ReadAccess);
+					bool isEnumerable;
+                    LocalMember *m = meta->findLocalMember(f, multiname, ReadAccess, isEnumerable);
                     if (m)
                         result = meta->readLocalMember(m, phase, rval, f);
                 }
@@ -2964,7 +2975,8 @@ doUnary:
             case ParameterFrameKind:
             case BlockFrameKind:
                 {
-                    LocalMember *m = meta->findLocalMember(f, multiname, WriteAccess);
+					bool isEnumerable;
+                    LocalMember *m = meta->findLocalMember(f, multiname, WriteAccess, isEnumerable);
                     if (m) {
                         meta->writeLocalMember(m, newValue, false, f);
                         result = true;
@@ -3016,7 +3028,8 @@ doUnary:
             case ParameterFrameKind:
             case BlockFrameKind:
                 {
-                    LocalMember *m = meta->findLocalMember(f, multiname, WriteAccess);
+					bool isEnumerable;
+                    LocalMember *m = meta->findLocalMember(f, multiname, WriteAccess, isEnumerable);
                     if (m) {
                         meta->writeLocalMember(m, newValue, true, f);
                         result = true;
@@ -3066,7 +3079,8 @@ doUnary:
             case ParameterFrameKind:
             case BlockFrameKind:
                 {
-                    LocalMember *m = meta->findLocalMember(f, multiname, WriteAccess);
+					bool isEnumerable;
+                    LocalMember *m = meta->findLocalMember(f, multiname, WriteAccess, isEnumerable);
                     if (m)
                         return false;
                 }
@@ -3596,8 +3610,8 @@ rescan:
             newchars[ni++] = ch;
         }
         newchars[ni] = 0;
-        
-        return STRING_TO_JS2VAL(meta->engine->allocStringPtr(&meta->world.identifiers[newchars]));
+        String s(newchars, ni);
+        return meta->engine->allocString(s);
     }
 
     // Taken from jsstr.c...
@@ -3693,8 +3707,8 @@ static const uint8 urlCharType[256] =
         }
         ASSERT(ni == newlength);
         newchars[newlength] = 0;
-
-        return STRING_TO_JS2VAL(meta->engine->allocStringPtr(&meta->world.identifiers[newchars]));
+        String s(newchars, newlength);
+        return meta->engine->allocString(s);
     }
 
     static js2val GlobalObject_parseInt(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint32 argc)
@@ -3848,6 +3862,47 @@ static const uint8 urlCharType[256] =
         return JS2VAL_UNDEFINED;
     }
 
+    static js2val Object_hasOwnProperty(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
+	{
+        ASSERT(JS2VAL_IS_OBJECT(thisValue));
+        JS2Object *obj = JS2VAL_TO_OBJECT(thisValue);
+		Multiname mn(meta->toString(argv[0]));
+		bool isEnumerable;
+		if (!meta->findLocalMember(obj, &mn, ReadAccess, isEnumerable))
+			return JS2VAL_FALSE;
+		return JS2VAL_TRUE;
+	}
+
+    static js2val Object_isPropertyOf(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
+	{
+        ASSERT(JS2VAL_IS_OBJECT(thisValue));
+		js2val v = argv[0];
+		while (JS2VAL_IS_OBJECT(v)) {
+			JS2Object *v_obj = JS2VAL_TO_OBJECT(v);
+			if (v_obj->kind != SimpleInstanceKind)
+				break;
+			v = checked_cast<SimpleInstance *>(v_obj)->super;
+			if (JS2VAL_IS_NULL(v))
+				break;
+			if (v == thisValue)
+				return JS2VAL_TRUE;
+		}
+		return JS2VAL_FALSE;
+	}
+
+    static js2val Object_propertyIsEnumerble(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
+	{
+        ASSERT(JS2VAL_IS_OBJECT(thisValue));
+        JS2Object *obj = JS2VAL_TO_OBJECT(thisValue);
+		Multiname mn(meta->toString(argv[0]));
+		bool isEnumerable;
+		LocalMember *m = meta->findLocalMember(obj, &mn, ReadAccess, isEnumerable);
+		if ((m == NULL) || !isEnumerable)
+			return JS2VAL_FALSE;
+		return JS2VAL_TRUE;
+	}
+
+
     static js2val class_underbarProtoGet(JS2Metadata *meta, const js2val thisValue, js2val /* argv */ [], uint32 /* argc */)
     {
         ASSERT(JS2VAL_IS_OBJECT(thisValue));
@@ -3876,8 +3931,11 @@ static const uint8 urlCharType[256] =
         if (newLength < arrInst->length) {
             // need to delete all the elements above the new length
             bool deleteResult;
-            for (uint32 i = newLength; i < arrInst->length; i++) {
-                meta->arrayClass->DeletePublic(meta, thisValue, meta->engine->numberToString(i), &deleteResult);
+			Multiname *mn = new Multiname(NULL, meta->publicNamespace);
+			DEFINE_ROOTKEEPER(rk, mn);
+			for (uint32 i = newLength; i < arrInst->length; i++) {
+				mn->name = meta->engine->numberToString(i);
+                meta->arrayClass->Delete(meta, thisValue, mn, NULL, &deleteResult);
             }
         }
         arrInst->length = newLength;
@@ -4207,7 +4265,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         return getDerivedInstanceMember(c->super, mBase, access);
     }
 
-    LocalMember *JS2Metadata::findLocalMember(JS2Object *container, Multiname *multiname, Access access)
+    LocalMember *JS2Metadata::findLocalMember(JS2Object *container, Multiname *multiname, Access access, bool &enumerable)
     {
         LocalMember *found = NULL;
         LocalBindingMap *lMap;
@@ -4225,6 +4283,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                         reportError(Exception::propertyAccessError, "Ambiguous reference to {0}", engine->errorPos(), multiname->name);
                     else {
                         found = ns.second->content;
+						enumerable = ns.second->enumerable;
                     }
                 }
             }
@@ -4250,6 +4309,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 
     Member *JS2Metadata::findCommonMember(js2val *base, Multiname *multiname, Access access, bool flat)
     {
+		bool isEnumerable;
         Member *m = NULL;
         if (JS2VAL_IS_PRIMITIVE(*base) && cxt.E3compatibility) {
             *base = toObject(*base);      // XXX E3 compatibility...
@@ -4257,13 +4317,13 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         JS2Object *baseObj = JS2VAL_TO_OBJECT(*base);
         switch (baseObj->kind) {
         case SimpleInstanceKind:
-            m = findLocalMember(baseObj, multiname, access);
+            m = findLocalMember(baseObj, multiname, access, isEnumerable);
             break;
         case PackageKind:
-            m = findLocalMember(baseObj, multiname, access);
+            m = findLocalMember(baseObj, multiname, access, isEnumerable);
             break;
         case ClassKind:
-            m = findLocalMember(baseObj, multiname, access);
+            m = findLocalMember(baseObj, multiname, access, isEnumerable);
             if (m == NULL)
                 m = findLocalInstanceMember(checked_cast<JS2Class *>(baseObj), multiname, access);
             break;
@@ -4633,10 +4693,15 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         env->removeTopFrame();
 
         // Add "constructor" as a dynamic property of the prototype
+/*
         FunctionInstance *fInst = createFunctionInstance(env, true, true, builtinClass->construct, 0, NULL);
         ASSERT(JS2VAL_IS_OBJECT(builtinClass->prototype));
         createDynamicProperty(JS2VAL_TO_OBJECT(builtinClass->prototype), &world.identifiers["constructor"], OBJECT_TO_JS2VAL(fInst), ReadWriteAccess, false, false);
-    
+*/
+		// XXX Set the class object itself as the value of 'constructor'
+        ASSERT(JS2VAL_IS_OBJECT(builtinClass->prototype));
+        createDynamicProperty(JS2VAL_TO_OBJECT(builtinClass->prototype), &world.identifiers["constructor"], OBJECT_TO_JS2VAL(builtinClass), ReadWriteAccess, false, false);
+
         FunctionData *pf = protoFunctions;
         if (pf) {
             while (pf->name) {

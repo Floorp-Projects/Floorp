@@ -374,12 +374,14 @@ JS::ExprNode *JS::Parser::parsePrimaryExpression(SuperState superState)
 
       case Token::number:
         {
+#ifdef PARSE_UNITS
             const Token &tUnit = lexer.peek(false);
             if (!lineBreakBefore(tUnit) && (tUnit.hasKind(Token::unit) || tUnit.hasKind(Token::string))) {
                 lexer.skip();
                 e = parseUnitSuffixes(new(arena) NumUnitExprNode(t.getPos(), ExprNode::numUnit, copyTokenChars(t),
                                                                  t.getValue(), copyTokenChars(tUnit)));
             } else
+#endif
                 e = new(arena) NumberExprNode(t);
         }
         break;

@@ -113,18 +113,19 @@ js2val UriError_Constructor(JS2Metadata *meta, const js2val /*thisValue*/, js2va
 js2val Error_toString(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
 {
     js2val thatValue = thisValue;
-    js2val result;
-    Multiname mn(&meta->world.identifiers["message"], meta->publicNamespace);
+    js2val nameVal;
+    js2val messageVal;
+	String s;
 
     JS2Class *c = meta->objectType(thatValue);
-    if (c->ReadPublic(meta, &thatValue, &meta->world.identifiers["message"], RunPhase, &result)) {
-        if (JS2VAL_IS_STRING(result))
-            return result;
-        else
-            return meta->engine->allocString(meta->toString(result));
+    if (c->ReadPublic(meta, &thatValue, &meta->world.identifiers["name"], RunPhase, &nameVal)) {
+		s = *meta->toString(nameVal);
+		if (c->ReadPublic(meta, &thatValue, &meta->world.identifiers["message"], RunPhase, &messageVal)) {
+			s += widenCString(":");
+			s += *meta->toString(messageVal);
+		}
     }
-    else
-        return JS2VAL_UNDEFINED;
+    return meta->engine->allocString(s);
 }
 
 static void initErrorClass(JS2Metadata *meta, JS2Class *c, Constructor *constructor)
