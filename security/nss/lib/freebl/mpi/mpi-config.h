@@ -33,7 +33,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-/* $Id: mpi-config.h,v 1.2 2000/07/17 22:22:28 nelsonb%netscape.com Exp $ */
+/* $Id: mpi-config.h,v 1.3 2000/08/01 01:36:30 nelsonb%netscape.com Exp $ */
 
 #ifndef MPI_CONFIG_H_
 #define MPI_CONFIG_H_
@@ -81,7 +81,11 @@
   1 = runtime checks, continue execution and return an error to caller
   2 = assertions; dump core on parameter errors
  */
+#ifdef DEBUG
 #define MP_ARGCHK     2  /* how to check input arguments        */
+#else
+#define MP_ARGCHK     1  /* how to check input arguments        */
+#endif
 #endif
 
 #ifndef MP_DEBUG
@@ -89,7 +93,7 @@
 #endif
 
 #ifndef MP_DEFPREC
-#define MP_DEFPREC    32 /* default precision, in digits        */
+#define MP_DEFPREC    64 /* default precision, in digits        */
 #endif
 
 #ifndef MP_MACRO
