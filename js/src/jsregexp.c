@@ -1247,6 +1247,7 @@ typedef struct MatchState {
     uintN           parenCount;         /* number of paren substring matches */
     JSSubString     *maybeParens;       /* possible paren substring pointers */
     JSSubString     *parens;            /* certain paren substring matches */
+    JSBool          ok;                 /* indicates runtime error during matching */
 } MatchState;
 
 /*
@@ -1267,57 +1268,69 @@ static JSBool matchChar(int flags, jschar c, jschar c2)
 }
 
 static const jschar *matchRENodes(MatchState *state, RENode *ren, RENode *stop,
-                                                const jschar *cp, JSBool *ok);
+                                                const jschar *cp);
 
-static const jschar *matchGreedyKid(MatchState *state, RENode *ren,
-                        int kidCount, int maxKid,
-                        const jschar *cp, const jschar *previousKid, JSBool *ok)
+typedef struct {
+    MatchState *state;
+    RENode *kid;
+    RENode *next;
+    RENode *stop;
+    int kidCount;
+    int maxKid;
+} GreedyState;
+
+static const jschar *greedyRecurse(GreedyState *grState, const jschar *cp, const jschar *previousKid)
 {
     const jschar *kidMatch;
     const jschar *match;
 
-    kidMatch = matchRENodes(state, (RENode *)ren->kid, ren->next, cp, ok);
+    kidMatch = matchRENodes(grState->state, grState->kid, grState->next, cp);
     if (kidMatch == NULL) {
-        match = matchRENodes(state, ren->next, NULL, cp, ok);
-        if (match == NULL)
-            return NULL;
-        else {
-            if (previousKid != NULL)
-                matchRENodes(state, (RENode *)ren->kid, ren->next, previousKid, ok);
-            return cp;
-        }
+        if (previousKid != NULL)
+            matchRENodes(grState->state, grState->kid, grState->next, previousKid);
+        return matchRENodes(grState->state, grState->next, grState->stop, cp);
     }
     else {
         if (kidMatch == cp) return kidMatch;    /* no point pursuing an empty match forever */
-        if ((maxKid == 0) || (++kidCount < maxKid)) {
-            match = matchGreedyKid(state, ren, kidCount, maxKid, kidMatch, cp, ok);
+        if ((grState->maxKid == 0) || (++grState->kidCount < grState->maxKid)) {
+            match = greedyRecurse(grState, kidMatch, cp);
+            --grState->kidCount;
             if (match != NULL) return match;
         }
-        match = matchRENodes(state, ren->next, NULL, kidMatch, ok);
-        if (match != NULL) {
-            matchRENodes(state, (RENode *)ren->kid, ren->next, cp, ok);
-            return kidMatch;
-        }
-        else
-            return NULL;
+        matchRENodes(grState->state, grState->kid, grState->next, cp);
+        return matchRENodes(grState->state, grState->next, grState->stop, kidMatch);
     }
 }
 
+static const jschar *matchGreedyKid(MatchState *state, RENode *ren, RENode *stop,
+                        int kidCount, const jschar *cp, const jschar *previousKid)
+{
+    GreedyState grState;
+    grState.state = state;
+    grState.kid = (RENode *)ren->kid;
+    grState.next = ren->next;
+    grState.stop = stop;
+    grState.kidCount = kidCount;
+    grState.maxKid = (ren->op == REOP_QUANT) ? ren->u.range.max : 0;
+    return greedyRecurse(&grState, cp, previousKid);
+}
+
+
 static const jschar *matchNonGreedyKid(MatchState *state, RENode *ren,
                         int kidCount, int maxKid,
-                        const jschar *cp, JSBool *ok)
+                        const jschar *cp)
 {
     const jschar *kidMatch;
     const jschar *match;
 
-    match = matchRENodes(state, ren->next, NULL, cp, ok);
+    match = matchRENodes(state, ren->next, NULL, cp);
     if (match != NULL) return cp;
-    kidMatch = matchRENodes(state, (RENode *)ren->kid, ren->next, cp, ok);
+    kidMatch = matchRENodes(state, (RENode *)ren->kid, ren->next, cp);
     if (kidMatch == NULL)
         return NULL;
     else {
         if (kidMatch == cp) return kidMatch;    /* no point pursuing an empty match forever */
-        return matchNonGreedyKid(state, ren, kidCount, maxKid, kidMatch, ok);
+        return matchNonGreedyKid(state, ren, kidCount, maxKid, kidMatch);
     }
 }
 
@@ -1567,7 +1580,7 @@ static JSBool buildBitmap(MatchState *state, RENode *ren)
 }
 
 static const jschar *matchRENodes(MatchState *state, RENode *ren, RENode *stop,
-                                                const jschar *cp, JSBool *ok)
+                                                const jschar *cp)
 {
     const jschar *cp2, *kidMatch, *lastKid, *source, *cpend = state->cpend;
     jschar c;
@@ -1584,68 +1597,60 @@ static const jschar *matchRENodes(MatchState *state, RENode *ren, RENode *stop,
               ren = (RENode *)ren->kid;
               continue;
           }
-          kidMatch = matchRENodes(state, (RENode *)ren->kid, stop, cp, ok);
+          kidMatch = matchRENodes(state, (RENode *)ren->kid, stop, cp);
           if (kidMatch != NULL) return kidMatch;
           break;
         case REOP_QUANT:
           lastKid = NULL;
           for (num = 0; num < ren->u.range.min; num++) {
               kidMatch = matchRENodes(state, (RENode *)ren->kid,
-                                          ren->next, cp, ok);
+                                          ren->next, cp);
               if (kidMatch == NULL)
                   return NULL;
               lastKid = cp;
               cp = kidMatch;
           }
           if (num == ren->u.range.max) break;
-          if ((ren->flags & RENODE_MINIMAL) == 0)
-              cp = matchGreedyKid(state, ren, num,
-                                  ren->u.range.max, cp, lastKid, ok);
-          else
-              cp = matchNonGreedyKid(state, ren, num,
-                                  ren->u.range.max, cp, ok);
+          if ((ren->flags & RENODE_MINIMAL) == 0) {
+              kidMatch = matchGreedyKid(state, ren, stop, num, cp, lastKid);
+              return kidMatch;
+          }
+          cp = matchNonGreedyKid(state, ren, num,
+                              ren->u.range.max, cp);
           if (cp == NULL) return NULL;
           break;
         case REOP_PLUS:
           kidMatch = matchRENodes(state, (RENode *)ren->kid,
-                                          ren->next, cp, ok);
+                                          ren->next, cp);
           if (kidMatch == NULL)
               return NULL;
-          if ((ren->flags & RENODE_MINIMAL) == 0) {
-              cp = matchGreedyKid(state, ren, 1, 0, cp, NULL, ok);
-              if (cp == NULL) return NULL;
-          }
-          else {
-              cp = matchNonGreedyKid(state, ren, 1, 0, kidMatch, ok);
-              if (cp == NULL) return NULL;
-          }
+          if ((ren->flags & RENODE_MINIMAL) == 0)
+              return matchGreedyKid(state, ren, stop, 1, cp, NULL);
+          cp = matchNonGreedyKid(state, ren, 1, 0, kidMatch);
+          if (cp == NULL) return NULL;
           break;
         case REOP_STAR:
-          if ((ren->flags & RENODE_MINIMAL) == 0) {
-              cp = matchGreedyKid(state, ren, 0, 0, cp, NULL, ok);
-              if (cp == NULL) return NULL;
-          }
-          else {
-              cp = matchNonGreedyKid(state, ren, 0, 0, cp, ok);
-              if (cp == NULL) return NULL;
-          }
+          if ((ren->flags & RENODE_MINIMAL) == 0)
+              return matchGreedyKid(state, ren, stop, 0, cp, NULL);
+          cp = matchNonGreedyKid(state, ren, 0, 0, cp);
+          if (cp == NULL) return NULL;
           break;
         case REOP_OPT:
           num = state->parenCount;
           if (ren->flags & RENODE_MINIMAL) {
               const jschar *restMatch = matchRENodes(state, ren->next,
-                                            stop, cp, ok);
+                                            stop, cp);
               if (restMatch != NULL) return restMatch;
           }
           kidMatch = matchRENodes(state, (RENode *)ren->kid,
-                                        ren->next, cp, ok);
+                                        ren->next, cp);
           if (kidMatch == NULL) {
               state->parenCount = num;
               break;
           }
           else {
               const jschar *restMatch = matchRENodes(state, ren->next,
-                                            stop, kidMatch, ok);
+                                            stop, kidMatch);
               if (restMatch == NULL) {
                     /* need to undo the result of running the kid */
                   state->parenCount = num;
@@ -1675,12 +1680,12 @@ static const jschar *matchRENodes(MatchState *state, RENode *ren, RENode *stop,
           break;
         case REOP_ASSERT:
           kidMatch = matchRENodes(state, (RENode *)ren->kid,
-                                            ren->next, cp, ok);
+                                            ren->next, cp);
           if (kidMatch == NULL) return NULL;
           break;
         case REOP_ASSERT_NOT:
           kidMatch = matchRENodes(state, (RENode *)ren->kid,
-                                            ren->next, cp, ok);
+                                            ren->next, cp);
           if (kidMatch != NULL) return NULL;
           break;
         case REOP_BACKREF:
@@ -1688,7 +1693,7 @@ static const jschar *matchRENodes(MatchState *state, RENode *ren, RENode *stop,
           if (num >= state->parenCount) {
 	    JS_ReportErrorNumber(state->context, js_GetErrorMessage, NULL,
 				 JSMSG_BAD_BACKREF);
-            *ok = JS_FALSE;
+            state->ok = JS_FALSE;
             return NULL;
           }
           parsub = &state->parens[num];
@@ -1706,7 +1711,7 @@ static const jschar *matchRENodes(MatchState *state, RENode *ren, RENode *stop,
           if (cp != cpend) {
               if (ren->u.ucclass.bitmap == NULL) {
                   if (!buildBitmap(state, ren)) {
-                      *ok = JS_FALSE;
+                      state->ok = JS_FALSE;
                       return NULL;
                   }
               }
@@ -1740,7 +1745,7 @@ static const jschar *matchRENodes(MatchState *state, RENode *ren, RENode *stop,
         case REOP_DOTSTARMIN:
           for (cp2 = cp; cp2 < cpend; cp2++) {
               const jschar *cp3 = matchRENodes(state, ren->next,
-                                                stop, cp2, ok);
+                                                stop, cp2);
               if (cp3 != NULL) return cp3;
               if (*cp2 == '\n')
                   return NULL;
@@ -1752,7 +1757,7 @@ static const jschar *matchRENodes(MatchState *state, RENode *ren, RENode *stop,
                   break;
           while (cp2 >= cp) {
               const jschar *cp3 = matchRENodes(state, ren->next,
-                                              stop, cp2, ok);
+                                              stop, cp2);
               if (cp3 != NULL)
                   return cp3;
               cp2--;
@@ -1869,7 +1874,7 @@ static const jschar *matchRENodes(MatchState *state, RENode *ren, RENode *stop,
 }
 
 static const jschar *
-MatchRegExp(MatchState *state, RENode *ren, const jschar *cp, JSBool *ok)
+MatchRegExp(MatchState *state, RENode *ren, const jschar *cp)
 {
     const jschar *cp2, *cp3;
     /* have to include the position beyond the last character
@@ -1877,8 +1882,8 @@ MatchRegExp(MatchState *state, RENode *ren, const jschar *cp, JSBool *ok)
     for (cp2 = cp; cp2 <= state->cpend; cp2++) {
         state->skipped = cp2 - cp;
         state->parenCount = 0;
-        cp3 = matchRENodes(state, ren, NULL, cp2, ok);
-        if (!*ok) return NULL;
+        cp3 = matchRENodes(state, ren, NULL, cp2);
+        if (!state->ok) return NULL;
         if (cp3 != NULL)
             return cp3;
     }
@@ -1938,14 +1943,14 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
     state.parenCount = 0;
     state.maybeParens = parsub;
     state.parens = parsub + re->parenCount;
-    ok = JS_TRUE;
+    state.ok = JS_TRUE;
 
     /*
      * Call the recursive matcher to do the real work.  Return null on mismatch
      * whether testing or not.  On match, return an extended Array object.
      */
-    cp = MatchRegExp(&state, re->ren, cp, &ok);
-    if (!ok) goto out;
+    cp = MatchRegExp(&state, re->ren, cp);
+    if (!(ok = state.ok)) goto out;
     if (!cp) {
 	*rval = JSVAL_NULL;
 	goto out;
