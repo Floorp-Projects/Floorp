@@ -37,6 +37,7 @@
 #include "nsString.h"
 #include "nsIAtom.h"
 #include "nsVoidArray.h"
+#include "nsXULAttributeValue.h"
 
 class nsIURI;
 class nsINodeInfo;
@@ -153,45 +154,8 @@ protected:
 
     void*        mScriptObject; // The attribute's script object, if reified
     nsINodeInfo* mNodeInfo;     // The attribute name
-    void*        mValue;        // The attribute value; either an nsIAtom* or PRUnichar*,
+    nsXULAttributeValue        mValue;        // The attribute value; either an nsIAtom* or PRUnichar*,
                                 // with the low-order bit tagging its type
-
-    static const PRInt32 kMaxAtomValueLength;
-
-    enum {
-        kTypeMask   = 0x1,
-        kStringType = 0x0,
-        kAtomType   = 0x1
-    };
-
-    PRBool IsStringValue() {
-        return (PRWord(mValue) & kTypeMask) == kStringType;
-    }
-
-    nsresult GetValueInternal(nsAWritableString& aResult) {
-        nsresult rv = NS_OK;
-        if (! mValue) {
-            aResult.Truncate();
-        }
-        else if (IsStringValue()) {
-            aResult.Assign((const PRUnichar*) mValue);
-        }
-        else {
-            nsIAtom* atom = (nsIAtom*)(PRWord(mValue) & ~PRWord(kTypeMask));
-            rv = atom->ToString(aResult);
-        }
-        return rv;
-    }
-
-    void ReleaseValue() {
-        if (IsStringValue()) {
-            nsMemory::Free(mValue);
-        }
-        else {
-            nsIAtom* atom = (nsIAtom*)(PRWord(mValue) & ~PRWord(kTypeMask));
-            NS_RELEASE(atom);
-        }
-    }
 };
 
 

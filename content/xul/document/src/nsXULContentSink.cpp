@@ -1265,7 +1265,7 @@ XULContentSinkImpl::AddAttributes(const nsIParserNode& aNode, nsXULPrototypeElem
                                       *getter_AddRefs(attrs->mNodeInfo));
         NS_ENSURE_TRUE(attrs->mNodeInfo, NS_ERROR_FAILURE);
 
-        attrs->mValue       = id;
+        attrs->mValue.SetValue( id );
 
         ++attrs;
     }
@@ -1291,9 +1291,11 @@ XULContentSinkImpl::AddAttributes(const nsIParserNode& aNode, nsXULPrototypeElem
             continue;
         }
 
-        attrs->mValue       = aNode.GetValueAt(i);
+        nsAutoString    valueStr;
+        valueStr = aNode.GetValueAt(i);
 
-        nsRDFParserUtils::StripAndConvert(attrs->mValue);
+        nsRDFParserUtils::StripAndConvert( valueStr );
+        attrs->mValue.SetValue( valueStr );
 
 #ifdef PR_LOGGING
         if (PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
@@ -1303,7 +1305,7 @@ XULContentSinkImpl::AddAttributes(const nsIParserNode& aNode, nsXULPrototypeElem
                 extraWhiteSpace += "  ";
             nsCAutoString qnameC,valueC;
             qnameC.AssignWithConversion(qname);
-            valueC.AssignWithConversion(attrs->mValue);
+            valueC.AssignWithConversion(valueStr);
             PR_LOG(gLog, PR_LOG_DEBUG,
                    ("xul: %.5d. %s    %s=%s",
                     aNode.GetSourceLineNumber(),

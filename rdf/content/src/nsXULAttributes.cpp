@@ -58,8 +58,6 @@ static NS_DEFINE_CID(kCSSParserCID, NS_CSSPARSER_CID);
 static NS_DEFINE_CID(kICSSParserIID, NS_ICSS_PARSER_IID);
 
 
-const PRInt32 nsXULAttribute::kMaxAtomValueLength = 12;
-
 //----------------------------------------------------------------------
 //
 // nsClassList
@@ -209,8 +207,7 @@ nsXULAttribute::nsXULAttribute(nsIContent* aContent,
                                const nsAReadableString& aValue)
     : mContent(aContent),
       mScriptObject(nsnull),
-      mNodeInfo(aNodeInfo),
-      mValue(nsnull)
+      mNodeInfo(aNodeInfo)
 {
     NS_INIT_REFCNT();
 
@@ -225,7 +222,7 @@ nsXULAttribute::nsXULAttribute(nsIContent* aContent,
 nsXULAttribute::~nsXULAttribute()
 {
     NS_IF_RELEASE(mNodeInfo);
-    ReleaseValue();
+    mValue.ReleaseValue();
 
     if (--gRefCnt == 0) {
         NS_IF_RELEASE(kIdAtom);
@@ -291,7 +288,7 @@ nsXULAttribute::GetNodeName(nsAWritableString& aNodeName)
 NS_IMETHODIMP
 nsXULAttribute::GetNodeValue(nsAWritableString& aNodeValue)
 {
-    return GetValueInternal(aNodeValue);
+    return mValue.GetValue(aNodeValue);
 }
 
 NS_IMETHODIMP
@@ -486,7 +483,7 @@ nsXULAttribute::GetSpecified(PRBool* aSpecified)
 NS_IMETHODIMP
 nsXULAttribute::GetValue(nsAWritableString& aValue)
 {
-    return GetValueInternal(aValue);
+    return mValue.GetValue(aValue);
 }
 
 NS_IMETHODIMP
@@ -557,52 +554,13 @@ nsXULAttribute::GetQualifiedName(nsAWritableString& aQualifiedName)
 nsresult
 nsXULAttribute::SetValueInternal(const nsAReadableString& aValue)
 {
-    nsCOMPtr<nsIAtom> newAtom;
-
-    // Atomize the value if it is short, or if it is the 'id'
-    // attribute. We atomize the 'id' attribute to "prime" the global
-    // atom table: the style system frequently asks for it, and if the
-    // table is "unprimed" we see quite a bit of thrashing as the 'id'
-    // value is repeatedly added and then removed from the atom table.
-    if ((aValue.Length() <= kMaxAtomValueLength) || mNodeInfo->Equals(kIdAtom)) {
-        newAtom = getter_AddRefs( NS_NewAtom(aValue) );
-    }
-
-    if (mValue) {
-        // Release the old value
-        ReleaseValue();
-    }
-
-    // ...and set the new value
-    if (newAtom) {
-        NS_ADDREF((nsIAtom*)newAtom.get());
-        mValue = (void*)(PRWord(newAtom.get()) | kAtomType);
-    }
-    else {
-        PRUnichar* str = ToNewUnicode(aValue);
-        if (! str)
-            return NS_ERROR_OUT_OF_MEMORY;
-
-        mValue = str;
-    }
-
-    return NS_OK;
+    return mValue.SetValue( aValue, mNodeInfo->Equals(kIdAtom) );
 }
 
 nsresult
 nsXULAttribute::GetValueAsAtom(nsIAtom** aResult)
 {
-    if (! mValue) {
-        *aResult = nsnull;
-    }
-    else if (IsStringValue()) {
-        *aResult = NS_NewAtom((const PRUnichar*) mValue);
-    }
-    else {
-        *aResult = (nsIAtom*)(PRWord(mValue) & ~PRWord(kTypeMask));
-        NS_ADDREF(*aResult);
-    }
-    return NS_OK;
+    return mValue.GetValueAsAtom( aResult );
 }
 
 

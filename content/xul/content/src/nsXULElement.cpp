@@ -458,8 +458,10 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype,
                 if (NS_FAILED(rv)) return rv;
 
                 if (found) {
+                    nsAutoString   valueStr;
+                    attr->mValue.GetValue( valueStr );
                     XUL_PROTOTYPE_ATTRIBUTE_METER(gNumEventHandlers);
-                    rv = element->AddScriptEventListener(name, attr->mValue, iid);
+                    rv = element->AddScriptEventListener(name, valueStr, iid);
                     if (NS_FAILED(rv)) return rv;
                 }
 
@@ -1927,9 +1929,9 @@ nsXULElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
                     cssDecl->GetPropertyValue(behavior, value);
                     if (!value.IsEmpty()) {
                       // We have a binding that must be installed.
-                      PRBool dummy;
+                      PRBool dummy2;
                       xblService->LoadBindings(NS_STATIC_CAST(nsIStyledContent*, this), value, PR_FALSE,
-                                               getter_AddRefs(binding), &dummy);
+                                               getter_AddRefs(binding), &dummy2);
                       if (binding) {
                         binding->ExecuteAttachedHandler();
                       }
@@ -2588,6 +2590,7 @@ nsXULElement::NormalizeAttributeString(const nsAReadableString& aStr,
     count = mPrototype ? mPrototype->mNumAttributes : 0;
     for (i = 0; i < count; i++) {
         nsXULPrototypeAttribute* attr = &(mPrototype->mAttributes[i]);
+
         nsINodeInfo *ni = attr->mNodeInfo;
         if (ni->QualifiedNameEquals(aStr)) {
             aNodeInfo = ni;
@@ -2833,10 +2836,11 @@ nsXULElement::GetAttribute(PRInt32 aNameSpaceID,
         PRInt32 count = mPrototype->mNumAttributes;
         for (PRInt32 i = 0; i < count; i++) {
             nsXULPrototypeAttribute* attr = &(mPrototype->mAttributes[i]);
+
             nsINodeInfo *ni = attr->mNodeInfo;
             if (ni->Equals(aName, aNameSpaceID)) {
                 ni->GetPrefixAtom(aPrefix);
-                aResult.Assign(attr->mValue);
+                attr->mValue.GetValue( aResult );
                 rv = aResult.Length() ? NS_CONTENT_ATTR_HAS_VALUE : NS_CONTENT_ATTR_NO_VALUE;
                 break;
             }
@@ -3029,6 +3033,7 @@ nsXULElement::GetAttributeNameAt(PRInt32 aIndex,
     else if (mPrototype) {
         if (aIndex >= 0 && aIndex < mPrototype->mNumAttributes) {
             nsXULPrototypeAttribute* attr = &(mPrototype->mAttributes[aIndex]);
+
             attr->mNodeInfo->GetNamespaceID(aNameSpaceID);
             attr->mNodeInfo->GetNameAtom(aName);
             attr->mNodeInfo->GetPrefixAtom(aPrefix);
@@ -3834,7 +3839,7 @@ nsXULElement::GetID(nsIAtom*& aResult) const
         for (PRInt32 i = 0; i < count; i++) {
             nsXULPrototypeAttribute* attr = &(mPrototype->mAttributes[i]);
             if (attr->mNodeInfo->Equals(nsXULAtoms::id, kNameSpaceID_None)) {
-                aResult = NS_NewAtom(attr->mValue);
+                attr->mValue.GetValueAsAtom( &aResult );
                 break;
             }
         }
@@ -4330,13 +4335,15 @@ nsXULElement::EnsureSlots()
 
     for (PRInt32 i = 0; i < proto->mNumAttributes; ++i) {
         nsXULPrototypeAttribute* protoattr = &(proto->mAttributes[i]);
+        nsAutoString   valueStr;
+        protoattr->mValue.GetValue( valueStr );
 
         // Create a CBufDescriptor to avoid copying the attribute's
         // value just to set it.
         nsXULAttribute* attr;
         rv = nsXULAttribute::Create(NS_STATIC_CAST(nsIStyledContent*, this),
                                     protoattr->mNodeInfo,
-                                    protoattr->mValue,
+                                    valueStr,
                                     &attr);
 
         if (NS_FAILED(rv)) return rv;
@@ -4414,7 +4421,7 @@ nsXULPrototypeElement::GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, nsAWri
 {
     for (PRInt32 i = 0; i < mNumAttributes; ++i) {
         if (mAttributes[i].mNodeInfo->Equals(aName, aNameSpaceID)) {
-            aValue = mAttributes[i].mValue;
+            mAttributes[i].mValue.GetValue( aValue );
             return aValue.Length() ? NS_CONTENT_ATTR_HAS_VALUE : NS_CONTENT_ATTR_NO_VALUE;
         }
         

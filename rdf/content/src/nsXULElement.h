@@ -61,6 +61,7 @@
 #include "nsIBoxObject.h"
 #include "nsXULAttributes.h"
 #include "nsIChromeEventHandler.h"
+#include "nsXULAttributeValue.h"
 
 class nsISizeOfHandler;
 
@@ -104,7 +105,7 @@ public:
     ~nsXULPrototypeAttribute();
 
     nsCOMPtr<nsINodeInfo> mNodeInfo;
-    nsString              mValue;
+    nsXULAttributeValue   mValue;
     void*                 mEventHandler;
 
 #ifdef XUL_PROTOTYPE_ATTRIBUTE_METERING
