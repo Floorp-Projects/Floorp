@@ -292,7 +292,7 @@ txRootPattern::~txRootPattern()
 
 MBool txRootPattern::matches(const txXPathNode& aNode, txIMatchContext* aContext)
 {
-    return (txXPathNodeUtils::getNodeType(aNode) == txXPathNodeType::DOCUMENT_NODE);
+    return txXPathNodeUtils::isRoot(aNode);
 }
 
 double txRootPattern::getDefaultPriority()
@@ -346,8 +346,8 @@ txIdPattern::~txIdPattern()
 
 MBool txIdPattern::matches(const txXPathNode& aNode, txIMatchContext* aContext)
 {
-    if (txXPathNodeUtils::getNodeType(aNode) != txXPathNodeType::ELEMENT_NODE) {
-        return MB_FALSE;
+    if (!txXPathNodeUtils::isElement(aNode)) {
+        return PR_FALSE;
     }
 
     // Get a ID attribute, if there is
@@ -480,7 +480,8 @@ MBool txStepPattern::matches(const txXPathNode& aNode, txIMatchContext* aContext
         return MB_FALSE;
 
     txXPathTreeWalker walker(aNode);
-    if ((!mIsAttr && walker.getNodeType() == txXPathNodeType::ATTRIBUTE_NODE) ||
+    if ((!mIsAttr &&
+         txXPathNodeUtils::isAttribute(walker.getCurrentPosition())) ||
         !walker.moveToParent()) {
         return MB_FALSE;
     }

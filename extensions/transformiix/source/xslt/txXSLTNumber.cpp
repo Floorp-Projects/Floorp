@@ -147,7 +147,8 @@ txXSLTNumber::getValueList(Expr* aValueExpr, txPattern* aCountPattern,
     if (!aCountPattern) {
         ownsCountPattern = MB_TRUE;
         txNodeTest* nodeTest = 0;
-        switch (txXPathNodeUtils::getNodeType(currNode)) {
+        PRUint16 nodeType = txXPathNodeUtils::getNodeType(currNode);
+        switch (nodeType) {
             case txXPathNodeType::ELEMENT_NODE:
             {
                 nsCOMPtr<nsIAtom> localName =
@@ -187,7 +188,7 @@ txXSLTNumber::getValueList(Expr* aValueExpr, txPattern* aCountPattern,
                 // this won't match anything as we walk up the tree
                 // but it's what the spec says to do
                 nodeTest = new txNameTest(0, txXPathAtoms::_asterix, 0,
-                                          txXPathNodeUtils::getNodeType(currNode));
+                                          nodeType);
                 break;
             }
         }

@@ -214,25 +214,16 @@ txStylesheet::findTemplate(const txXPathNode& aNode,
 #endif
 
     if (!matchTemplate) {
-        switch (txXPathNodeUtils::getNodeType(aNode)) {
-            case txXPathNodeType::ELEMENT_NODE:
-            case txXPathNodeType::DOCUMENT_NODE:
-            {
-                matchTemplate = mContainerTemplate;
-                break;
-            }
-            case txXPathNodeType::ATTRIBUTE_NODE:
-            case txXPathNodeType::TEXT_NODE:
-            case txXPathNodeType::CDATA_SECTION_NODE:
-            {
-                matchTemplate = mCharactersTemplate;
-                break;
-            }
-            default:
-            {
-                matchTemplate = mEmptyTemplate;
-                break;
-            }
+        if (txXPathNodeUtils::isElement(aNode) ||
+            txXPathNodeUtils::isRoot(aNode)) {
+            matchTemplate = mContainerTemplate;
+        }
+        else if (txXPathNodeUtils::isAttribute(aNode) ||
+                 txXPathNodeUtils::isText(aNode)) {
+            matchTemplate = mCharactersTemplate;
+        }
+        else {
+            matchTemplate = mEmptyTemplate;
         }
     }
 
@@ -285,20 +276,16 @@ txStylesheet::isStripSpaceAllowed(const txXPathNode& aNode, txIMatchContext* aCo
 
     txXPathTreeWalker walker(aNode);
 
-    PRUint16 nodeType = walker.getNodeType();
-    if (nodeType == txXPathNodeType::TEXT_NODE ||
-        nodeType == txXPathNodeType::CDATA_SECTION_NODE) {
-        if (!txXPathNodeUtils::isWhitespace(aNode) || !walker.moveToParent()) {
-            return PR_FALSE;
-        }
-        nodeType = walker.getNodeType();
-    }
-
-    if (nodeType != txXPathNodeType::ELEMENT_NODE) {
+    if (txXPathNodeUtils::isText(walker.getCurrentPosition()) &&
+        (!txXPathNodeUtils::isWhitespace(aNode) || !walker.moveToParent())) {
         return PR_FALSE;
     }
 
     const txXPathNode& node = walker.getCurrentPosition();
+
+    if (!txXPathNodeUtils::isElement(node)) {
+        return PR_FALSE;
+    }
 
     // check Whitespace stipping handling list against given Node
     PRInt32 i;

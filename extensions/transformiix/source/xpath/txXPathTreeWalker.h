@@ -45,6 +45,7 @@
 class nsIAtom;
 
 #ifndef TX_EXE
+#include "nsINodeInfo.h"
 #include "nsVoidArray.h"
 
 class txUint32Array : public nsVoidArray
@@ -113,8 +114,7 @@ public:
     static PRBool getAttr(const txXPathNode& aNode, nsIAtom* aLocalName,
                           PRInt32 aNSID, nsAString& aValue);
     static already_AddRefed<nsIAtom> getLocalName(const txXPathNode& aNode);
-    static void getLocalName(const txXPathNode& aNode,
-                             nsAString& aLocalName);
+    static void getLocalName(const txXPathNode& aNode, nsAString& aLocalName);
     static void getNodeName(const txXPathNode& aNode,
                             nsAString& aName);
     static PRInt32 getNamespaceID(const txXPathNode& aNode);
@@ -130,6 +130,14 @@ public:
     static void getBaseURI(const txXPathNode& aNode, nsAString& aURI);
     static PRIntn comparePosition(const txXPathNode& aNode,
                                   const txXPathNode& aOtherNode);
+    static PRBool localNameEquals(const txXPathNode& aNode,
+                                  nsIAtom* aLocalName);
+    static PRBool isRoot(const txXPathNode& aNode);
+    static PRBool isElement(const txXPathNode& aNode);
+    static PRBool isAttribute(const txXPathNode& aNode);
+    static PRBool isProcessingInstruction(const txXPathNode& aNode);
+    static PRBool isComment(const txXPathNode& aNode);
+    static PRBool isText(const txXPathNode& aNode);
 
 #ifdef TX_EXE
 private:
@@ -175,12 +183,6 @@ inline PRInt32
 txXPathTreeWalker::getNamespaceID() const
 {
     return txXPathNodeUtils::getNamespaceID(mPosition);
-}
-
-inline PRUint16
-txXPathTreeWalker::getNodeType() const
-{
-    return txXPathNodeUtils::getNodeType(mPosition);
 }
 
 inline void
@@ -236,6 +238,101 @@ txXPathNodeUtils::release(txXPathNode* aNode)
     delete aNode->mInner;
 #else
     NS_RELEASE(aNode->mDocument);
+#endif
+}
+
+/* static */
+inline PRBool
+txXPathNodeUtils::localNameEquals(const txXPathNode& aNode,
+                                  nsIAtom* aLocalName)
+{
+#ifdef TX_EXE
+    nsCOMPtr<nsIAtom> localName;
+    aNode.mInner->getLocalName(getter_AddRefs(localName));
+
+    return localName == aLocalName;
+#else
+    if (aNode.isContent()) {
+        nsINodeInfo *ni = aNode.mContent->GetNodeInfo();
+        if (ni) {
+            return ni->Equals(aLocalName);
+        }
+    }
+
+    nsCOMPtr<nsIAtom> localName = txXPathNodeUtils::getLocalName(aNode);
+
+    return localName == aLocalName;
+#endif
+}
+
+/* static */
+inline PRBool
+txXPathNodeUtils::isRoot(const txXPathNode& aNode)
+{
+#ifdef TX_EXE
+    return aNode.mInner->getNodeType() == Node::DOCUMENT_NODE;
+#else
+    return aNode.isDocument();
+#endif
+}
+
+/* static */
+inline PRBool
+txXPathNodeUtils::isElement(const txXPathNode& aNode)
+{
+#ifdef TX_EXE
+    return aNode.mInner->getNodeType() == Node::ELEMENT_NODE;
+#else
+    return aNode.isContent() &&
+           aNode.mContent->IsContentOfType(nsIContent::eELEMENT);
+#endif
+}
+
+
+/* static */
+inline PRBool
+txXPathNodeUtils::isAttribute(const txXPathNode& aNode)
+{
+#ifdef TX_EXE
+    return aNode.mInner->getNodeType() == Node::ATTRIBUTE_NODE;
+#else
+    return aNode.isAttribute();
+#endif
+}
+
+/* static */
+inline PRBool
+txXPathNodeUtils::isProcessingInstruction(const txXPathNode& aNode)
+{
+#ifdef TX_EXE
+    return aNode.mInner->getNodeType() == Node::PROCESSING_INSTRUCTION_NODE;
+#else
+    return aNode.isContent() &&
+           aNode.mContent->IsContentOfType(nsIContent::ePROCESSING_INSTRUCTION);
+#endif
+}
+
+/* static */
+inline PRBool
+txXPathNodeUtils::isComment(const txXPathNode& aNode)
+{
+#ifdef TX_EXE
+    return aNode.mInner->getNodeType() == Node::COMMENT_NODE;
+#else
+    return aNode.isContent() &&
+           aNode.mContent->IsContentOfType(nsIContent::eCOMMENT);
+#endif
+}
+
+/* static */
+inline PRBool
+txXPathNodeUtils::isText(const txXPathNode& aNode)
+{
+#ifdef TX_EXE
+    return aNode.mInner->getNodeType() == Node::TEXT_NODE;
+#else
+    return aNode.isContent() &&
+           aNode.mContent->IsContentOfType(nsIContent::eTEXT);
 #endif
 }
 

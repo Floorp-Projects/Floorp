@@ -115,7 +115,7 @@ LocationStep::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
         }
         case FOLLOWING_AXIS:
         {
-            if (walker.getNodeType() == txXPathNodeType::ATTRIBUTE_NODE) {
+            if (txXPathNodeUtils::isAttribute(walker.getCurrentPosition())) {
                 walker.moveToParent();
                 fromDescendants(walker.getCurrentPosition(), aContext, nodes);
             }
