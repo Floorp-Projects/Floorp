@@ -1066,9 +1066,27 @@ void nsMenu::NSStringSetMenuItemText(MenuHandle macMenuHandle, short menuItem, n
 	NS_ASSERTION(err==noErr,"nsMenu::NSStringSetMenuItemText: GetThemeFont failed.");
 	if (err!=noErr) { delete [] scriptRunText; return; }
 	::GetFNum(themeFontName,&themeFontID);
+  
+  Str255  menuTitle;
+  // Copy C to P string
+  if (scriptRunTextLengthInBytes > 255)
+    scriptRunTextLengthInBytes = 255;
+  BlockMoveData(scriptRunText, &menuTitle[1], scriptRunTextLengthInBytes);
+  menuTitle[0] = scriptRunTextLengthInBytes;
 
-	::SetMenuItemText(macMenuHandle,menuItem,c2pstr(scriptRunText));
-	err = ::SetMenuItemFontID(macMenuHandle,menuItem,themeFontID);	
+  if (menuItem == 0)      // setting the menu title
+  {
+#if TARGET_CARBON
+    SetMenuTitle(macMenuHandle, menuTitle);
+#else
+    BlockMoveData(menuTitle, (**macMenuHandle).menuData, menuTitle[0] + 1);
+#endif
+  }
+  else
+  {
+  	::SetMenuItemText(macMenuHandle, menuItem, menuTitle);	
+  	err = ::SetMenuItemFontID(macMenuHandle, menuItem, themeFontID);
+  }
 	
 	//
 	// clean up and exit
@@ -1499,6 +1517,54 @@ nsMenu::GetMenuPopupElement(nsIDOMNode** aResult)
 } // GetMenuPopupElement
 
 
+nsresult
+nsMenu::GetNextVisibleMenu(nsIMenu** outNextVisibleMenu)
+{
+  *outNextVisibleMenu = nsnull;
+  if (!mMenuBarParent) return NS_ERROR_FAILURE;
+
+  PRUint32    numMenus;
+  mMenuBarParent->GetMenuCount(numMenus);
+  
+  PRBool      gotThisMenu = PR_FALSE;
+  PRUint32    thisMenuIndex;
+  // Find this menu
+  for (PRUint32 i = 0; i < numMenus; i ++)
+  {
+    nsCOMPtr<nsIMenu> thisMenu;
+    mMenuBarParent->GetMenuAt(i, *getter_AddRefs(thisMenu));
+    if (!thisMenu) continue;
+    
+    if (gotThisMenu)    // we're looking for the next visible
+    {
+      nsCOMPtr<nsIDOMNode>    menuNode;
+      thisMenu->GetDOMNode(getter_AddRefs(menuNode));
+      nsCOMPtr<nsIDOMElement> menuElement = do_QueryInterface(menuNode);
+      if (!menuElement) continue;
+      
+      nsAutoString            valueString;
+      menuElement->GetAttribute(NS_ConvertASCIItoUCS2("hidden"), valueString);
+
+      if (! valueString.EqualsWithConversion("true"))
+      {
+        NS_IF_ADDREF(*outNextVisibleMenu = thisMenu);
+        break;
+      }
+    
+    }
+    else    // we're still looking for this
+    {
+      if (thisMenu.get() == (nsIMenu *)this)
+      {
+        gotThisMenu = PR_TRUE;
+        thisMenuIndex = i;
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
 #pragma mark -
 
 //
@@ -1507,7 +1573,7 @@ nsMenu::GetMenuPopupElement(nsIDOMNode** aResult)
 
 
 NS_IMETHODIMP
-nsMenu :: AttributeChanged ( nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom *aAttribute,
+nsMenu::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom *aAttribute,
                                PRInt32 aHint)
 {
   if(gConstructingMenu)
@@ -1518,18 +1584,18 @@ nsMenu :: AttributeChanged ( nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAt
   if ( aAttribute == openAtom.get() )
     return NS_OK;
         
-  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
-  if(!element) {
-    NS_ERROR("Unable to QI dom element.");
-    return NS_OK;  
-  }
-	  
   nsCOMPtr<nsIAtom> disabledAtom = NS_NewAtom("disabled");
   nsCOMPtr<nsIAtom> valueAtom = NS_NewAtom("value");
   nsCOMPtr<nsIAtom> hiddenAtom = NS_NewAtom("hidden");
   
   nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mDOMNode);
-  if(aAttribute == disabledAtom.get()) {
+  if(!domElement) {
+    NS_ERROR("Unable to QI dom element.");
+    return NS_OK;  
+  }
+
+  if(aAttribute == disabledAtom.get())    // disabled
+  {
     nsAutoString valueString;
     domElement->GetAttribute(NS_ConvertASCIItoUCS2("disabled"), valueString);
     if(valueString.EqualsWithConversion("true"))
@@ -1539,8 +1605,10 @@ nsMenu :: AttributeChanged ( nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAt
       
     ::DrawMenuBar();
   } 
-  else if(aAttribute == valueAtom.get()) {
+  else if(aAttribute == valueAtom.get())  // value
+  {
     domElement->GetAttribute(NS_ConvertASCIItoUCS2("value"), mLabel);
+
     ::DeleteMenu(mMacMenuID);
     
     mMacMenuHandle = NSStringNewMenu(mMacMenuID, mLabel);
@@ -1554,22 +1622,71 @@ nsMenu :: AttributeChanged ( nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAt
       (**mMacMenuHandle).menuProc = gMDEF;
       ::HSetState((Handle)mMacMenuHandle, state);
     }
-    ::InsertMenu(mMacMenuHandle, mMacMenuID+1);
-    if(mMenuBarParent) {
+
+    // Need to get the menuID of the next visible menu
+    SInt16  nextMenuID = -1;    // default to the submenu case
+    
+    if (mMenuBarParent) // this is a top-level menu
+    {
+      nsCOMPtr<nsIMenu> nextVisibleMenu;
+      GetNextVisibleMenu(getter_AddRefs(nextVisibleMenu));
+      
+      if (nextVisibleMenu)
+      {
+        MenuHandle   nextHandle;
+        nextVisibleMenu->GetNativeData((void **)&nextHandle);
+        nextMenuID = (nextHandle) ? (**nextHandle).menuID : mMacMenuID + 1;            
+      }
+      else
+      {
+         nextMenuID = mMacMenuID + 1;
+      }
+    }
+
+    ::InsertMenu(mMacMenuHandle, nextMenuID);
+    
+    if(mMenuBarParent)
+    {
       mMenuBarParent->SetNativeData(::GetMenuBar());
       ::DrawMenuBar();
     }
+#else
+    // what should we do for Carbon?
 #endif
+
   }
-  else if(aAttribute == hiddenAtom.get()) {
+  else if(aAttribute == hiddenAtom.get())     // hidden
+  {
       nsAutoString valueString;
       domElement->GetAttribute(NS_ConvertASCIItoUCS2("hidden"), valueString);
       if(valueString.EqualsWithConversion("true")) {
         // hide this menu
         ::DeleteMenu(mMacMenuID);
-      } else {
+      }
+      else
+      {
+        // Need to get the menuID of the next visible menu
+        SInt16  nextMenuID = -1;    // default to the submenu case
+        
+        if (mMenuBarParent) // this is a top-level menu
+        {
+          nsCOMPtr<nsIMenu> nextVisibleMenu;
+          GetNextVisibleMenu(getter_AddRefs(nextVisibleMenu));
+          
+          if (nextVisibleMenu)
+          {
+            MenuHandle   nextHandle;
+            nextVisibleMenu->GetNativeData((void **)&nextHandle);
+            nextMenuID = (nextHandle) ? (**nextHandle).menuID : mMacMenuID + 1;            
+          }
+          else
+          {
+             nextMenuID = mMacMenuID + 1;
+          }
+        }
+        
         // show this menu
-        ::InsertMenu(mMacMenuHandle, mMacMenuID+1);
+        ::InsertMenu(mMacMenuHandle, nextMenuID);
       }
       if(mMenuBarParent) {
         mMenuBarParent->SetNativeData(::GetMenuBar());

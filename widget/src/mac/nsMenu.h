@@ -136,6 +136,9 @@ protected:
   PRPackedBool          mIsEnabled;
   PRPackedBool          mDestroyHandlerCalled;
 
+
+  nsresult GetNextVisibleMenu(nsIMenu** outNextVisibleMenu);
+
     // fetch the content node associated with the menupopup item
   void GetMenuPopupElement ( nsIDOMNode** aResult ) ;
 
