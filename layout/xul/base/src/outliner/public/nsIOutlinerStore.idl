@@ -1,0 +1,70 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Original Author: David W. Hyatt (hyatt@netscape.com)
+ *
+ * Contributor(s): 
+ */
+
+#include "nsIOutlinerBoxObject.idl"
+#include "nsISupportsArray.idl"
+
+[scriptable, uuid(7660811D-3CB8-441f-8E58-466DE4F3FA9A)]
+interface nsIOutlinerStore : nsISupports
+{
+  // The total number of rows in the outliner (including the offscreen rows).
+  readonly attribute long rowCount;
+
+  // An atomized list of properties for a given row.  Each property, x, that
+  // the store gives back will cause the pseudoclass :moz-outliner-row-x
+  // to be matched on the pseudoelement ::moz-outliner-row pseudoelement.
+  // 
+  // The special property "separator" can be returned to supply the outliner
+  // with the hint that there are no cells in this row and that it should draw
+  // a separator.  It used the border properties to draw the separator.
+  nsISupportsArray getRowProperties(in long index);
+
+  // An atomized list of properties for a given cell.  Each property, x, that
+  // the store gives back will cause the pseudoclass :moz-outliner-cell-x
+  // to be matched on the ::moz-outliner-cell pseudoelement.
+  nsISupportsArray getCellProperties(in long row, in wstring colID);
+  
+  // The text for a given cell.  If a column consists only of an image, then
+  // the empty string is returned.  The alignment variable has values of 0 for left
+  // alignment (the default) and 1 for right alignment.  The crop style has values
+  // 0 (for right cropping, the default), 1 for middle cropping, and 2 for left
+  // cropping.
+  wstring getCellText(in long row, in wstring colID, out long alignment, out long cropstyle);
+  
+  // Ensures that a row at a given index is visible.
+  void scrollToRow(in long index);
+  
+  // Called during initialization to link the store to the front end box object.
+  void setOutliner(in nsIOutlinerBoxObject outliner);
+  
+  // Called on the store when an item is opened or closed.
+  void toggleOpenState(in long index);
+
+  // Called on the store when the user hits delete on a nonempty selection.
+  void deleteRows();
+};
+
+%{C++
+// Initializer,
+%}

@@ -1,0 +1,77 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Original Author: David W. Hyatt (hyatt@netscape.com)
+ *
+ * Contributor(s): 
+ */
+
+#include "nsIOutlinerRangeList.idl"
+
+interface nsIOutlinerStore;
+
+[scriptable, uuid(8398C757-6387-480c-82B2-C914E15CE00D)]
+interface nsIOutlinerBoxObject : nsISupports
+{
+  // The store that backs the outliner and that supplies it with its data.
+  // It is dynamically settable, either using a store attribute on the
+  // outliner tag or by setting this attribute to a new value.
+  attribute nsIOutlinerStore store;
+
+  // Deselect all rows and select the row at the specified index. 
+  void select(in long index);
+
+  // Toggle the selection state of the row at the specified index.
+  void toggleSelect(in long index);
+
+  // Select the range specified by the range.
+  void rangedSelect(in nsIOutlinerRange range);
+
+  // The selected row indices in a sorted list of ranges.
+  readonly attribute nsIOutlinerRangeList selectedRows;
+
+  // Clears the selection.
+  void clearSelection();
+
+  // Inverts the selection.
+  void invertSelection();
+
+  // Selects all rows.
+  void selectAll();
+
+  // Get the index of the first visible row.
+  long getIndexOfVisibleRow();
+
+  // Gets the number of possible visible rows.
+  long getPageCount();
+
+  // Invalidation methods for fine-grained painting control.
+  void invalidate();
+  void invalidateRow(in long index);
+  void invalidateCell(in long row, in wstring colID);
+  void invalidateRange(in nsIOutlinerRange range);
+  void invalidateScrollbar();
+
+  // A hit test that can tell you what cell the mouse is over.
+  void getCellAt(in long x, in long y, out long row, out wstring colID);
+};
+
+%{C++
+// Initializer,
+%}
