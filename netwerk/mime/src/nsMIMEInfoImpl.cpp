@@ -51,7 +51,7 @@ nsMIMEInfoImpl::GetExtCount() {
 NS_IMETHODIMP
 nsMIMEInfoImpl::GetFileExtensions(PRUint32 *elementCount, char ***extensions) {
     PRUint32 count = mExtensions.Count();
-    if (count < 1) return NS_OK;
+    if (count < 1) return NS_ERROR_NOT_INITIALIZED;
 
     char **_retExts = (char**)nsMemory::Alloc((count)*sizeof(char*));
     if (!_retExts) return NS_ERROR_OUT_OF_MEMORY;
