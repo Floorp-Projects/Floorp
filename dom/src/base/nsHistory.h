@@ -45,7 +45,7 @@ public:
   NS_IMETHOD    GetNext(nsString& aNext);
   NS_IMETHOD    Back();
   NS_IMETHOD    Forward();
-  NS_IMETHOD    Go(PRInt32 aIndex);
+  NS_IMETHOD    Go(JSContext* cx, jsval* argv, PRUint32 argc);
 
 protected:
   nsIWebShell* mWebShell;

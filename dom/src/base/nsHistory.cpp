@@ -171,14 +171,47 @@ HistoryImpl::Forward()
   return NS_OK;
 }
 
-NS_IMETHODIMP
-HistoryImpl::Go(PRInt32 aIndex)
+NS_IMETHODIMP    
+HistoryImpl::Go(JSContext* cx, jsval* argv, PRUint32 argc)
 {
-  if (nsnull != mWebShell) {
-    mWebShell->GoTo(aIndex);
-  }
+  nsresult result = NS_OK;
+  if (argc > 0) {
+    if (JSVAL_IS_INT(argv[0])) {
+      PRInt32 delta = JSVAL_TO_INT(argv[0]);
+      PRInt32 curIndex;
 
-  return NS_OK;
+      result = mWebShell->GetHistoryIndex(curIndex);
+      if (NS_SUCCEEDED(result)) {
+        result = mWebShell->GoTo(curIndex + delta);
+      }
+    }
+    else {
+      JSString* jsstr = JS_ValueToString(cx, argv[0]);
+      PRInt32 i, count;
+
+      if (nsnull != jsstr) {
+        nsAutoString substr(JS_GetStringBytes(jsstr));
+
+        result = mWebShell->GetHistoryLength(count);
+        for (i = 0; (i < count) && NS_SUCCEEDED(result); i++) {
+          const PRUnichar* urlstr;
+          nsAutoString url;
+          // XXX Ownership rules for the string passed back for this
+          // method are not XPCOM compliant. If they were correct, 
+          // we'd be deallocating the string passed back.
+          result = mWebShell->GetURL(i, &urlstr);
+          url.SetString(urlstr);
+
+          if (-1 != url.Find(substr)) {
+            result = mWebShell->GoTo(i);
+            break;
+          }
+        }
+      }
+    }
+  }
+  
+  return result;
 }
 
 

@@ -311,7 +311,6 @@ HistoryGo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMHistory *nativeThis = (nsIDOMHistory*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsresult result = NS_OK;
-  PRInt32 b0;
 
   *rval = JSVAL_NULL;
 
@@ -334,15 +333,8 @@ HistoryGo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
 
   {
-    if (argc < 1) {
-      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
-    }
 
-    if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
-      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_NUMBER_ERR);
-    }
-
-    result = nativeThis->Go(b0);
+    result = nativeThis->Go(cx, argv+0, argc-0);
     if (NS_FAILED(result)) {
       return nsJSUtils::nsReportError(cx, result);
     }
@@ -392,7 +384,7 @@ static JSFunctionSpec HistoryMethods[] =
 {
   {"back",          HistoryBack,     0},
   {"forward",          HistoryForward,     0},
-  {"go",          HistoryGo,     1},
+  {"go",          HistoryGo,     0},
   {0}
 };
 
