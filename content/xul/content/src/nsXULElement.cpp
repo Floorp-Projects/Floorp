@@ -2573,6 +2573,24 @@ nsXULElement::SetAttr(nsINodeInfo* aNodeInfo,
 
     nsresult rv;
 
+    nsXULAttribute* attr = FindLocalAttribute(aNodeInfo);
+    if (attr) {
+        nsAutoString  oldValue;
+        attr->GetValue(oldValue);
+        if (oldValue.Equals(aValue))
+        {
+          nsAutoString  attributeName;
+          aNodeInfo->GetName(attributeName);
+          
+          nsCAutoString blurb("SetAttr called redundantly on ");
+          blurb.AppendWithConversion(attributeName);
+          blurb.Append(" with value ");
+          blurb.AppendWithConversion(aValue);
+          NS_WARNING(blurb.get());
+        }
+       
+    }
+
     nsCOMPtr<nsIAtom> attrName;
     PRInt32 attrns;
 
@@ -2635,7 +2653,6 @@ nsXULElement::SetAttr(nsINodeInfo* aNodeInfo,
     // XXX need to check if they're changing an event handler: if so, then we need
     // to unhook the old one.
 
-    nsXULAttribute* attr = FindLocalAttribute(aNodeInfo);
 
     PRBool modification;
     nsAutoString oldValue;
@@ -3883,9 +3900,11 @@ nsXULElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModTy
              NodeInfo()->Equals(nsXULAtoms::page) ||
              NodeInfo()->Equals(nsXULAtoms::dialog) ||
              NodeInfo()->Equals(nsXULAtoms::wizard)) {
-        // Ignore 'width' and 'height' on a <window>
-        if (nsXULAtoms::width == aAttribute || nsXULAtoms::height == aAttribute)
-            aHint = NS_STYLE_HINT_NONE;
+        // Ignore 'width', 'height', 'screenX', 'screenY' and 'sizemode' on a <window>
+        if (nsXULAtoms::width == aAttribute || nsXULAtoms::height == aAttribute ||
+            nsXULAtoms::screenX == aAttribute || nsXULAtoms::screenY == aAttribute ||
+            nsXULAtoms::sizemode == aAttribute)
+           aHint = NS_STYLE_HINT_NONE;
     } else {
         // if left or top changes we reflow. This will happen in xul containers that
         // manage positioned children such as a bulletinboard.
