@@ -160,9 +160,10 @@ class nsEditorShell :   public nsIEditorShell,
 		NS_IMETHOD			CreateWindowWithURL(const char* urlStr);
 		NS_IMETHOD  	  PrepareDocumentForEditing(nsIURI *aUrl);
 		NS_IMETHOD      DoFind(PRBool aFindNext);
-    // Get a string from the string bundle file
-    NS_IMETHOD      GetString(const nsString& name, nsString& value);
- 		
+    // Bring up a Yes/No dialog WE REALLY NEED A Yes/No/Cancel dialog and would like to set our own caption as well!
+    PRBool          Confirm(const nsString& aQuestion);
+    void            Alert(const nsString& aMsg);
+
 		// this returns an AddReffed nsIScriptContext. You must relase it.
 		nsIScriptContext*  GetScriptContext(nsIDOMWindow * aWin);
 
@@ -189,6 +190,11 @@ class nsEditorShell :   public nsIEditorShell,
     // this is a holding pen for doc state listeners. They will be registered with
     // the editor when that gets created.
     nsCOMPtr<nsISupportsArray> mDocStateListeners;		// contents are nsISupports
+
+    // Get a string from the string bundle file
+    nsString        GetString(const nsString& name);
+
+private:
     // Pointer to localized strings used for UI
     nsCOMPtr<nsIStringBundle> mStringBundle;
 };
