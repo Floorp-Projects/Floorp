@@ -321,14 +321,20 @@ ns4xPluginStreamListener::OnStopBinding(nsIPluginStreamInfo* pluginInfo,
       // pinkerton
       // relies on routine descriptors, not present in carbon. 
       // We need to fix this.
-      PRLibrary* lib = nsnull;
-      if(mInst)
-        lib = mInst->fLibrary;
+    PRLibrary* lib = nsnull;
+    PRBool started = PR_FALSE;
+    if(mInst) {
+      lib = mInst->fLibrary;
+      started = mInst->IsStarted();
+    }
 
+    if (started)
+    {
       NS_TRY_SAFE_CALL_RETURN(error, CallNPP_DestroyStreamProc(callbacks->destroystream,
                                         npp,
                                         &mNPStream,
                                         NPRES_DONE), lib);
+	}
       if(error != NPERR_NO_ERROR)
         return NS_ERROR_FAILURE;
 #endif
