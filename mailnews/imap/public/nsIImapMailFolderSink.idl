@@ -97,5 +97,5 @@ interface nsIImapMailFolderSink : nsISupports {
 	void releaseUrl();
   void closeMockChannel(in nsIImapMockChannel aChannel);
   void setUrlState(in nsIImapProtocol aProtocol, in nsIMsgMailNewsUrl aUrl, in boolean isRunning, in nsresult status);
-
+  void releaseUrlCacheEntry(in nsIMsgMailNewsUrl aUrl);
 };

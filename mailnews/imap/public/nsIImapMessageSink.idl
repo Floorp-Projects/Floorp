@@ -40,6 +40,7 @@
 #include "nsIImapUrl.idl"
 
 interface nsIFileSpec;
+interface nsIMsgMailNewsUrl;
 
 [scriptable, uuid(5a53b814-68b1-11d3-a53e-0060b0fc04b7)]
 
@@ -70,4 +71,5 @@ interface nsIImapMessageSink : nsISupports {
     void GetMessageSizeFromDB(in string id, in boolean idIsUid, out unsigned long size);
 
     void SetContentModified(in nsIImapUrl aImapUrl, in nsImapContentModifiedType modified);
+    void SetImageCacheSessionForUrl(in nsIMsgMailNewsUrl aMailUrl);
 };

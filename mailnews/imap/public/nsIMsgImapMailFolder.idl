@@ -59,6 +59,8 @@ interface nsIMsgImapMailFolder : nsISupports {
                          in nsIUrlListener aUrlListener, in nsIMsgWindow aWindow);
   void playbackOfflineFolderCreate(in wstring folderName, in nsIMsgWindow aWindow, out nsIURI url);
   void liteSelect(in nsIUrlListener aUrlListener);
+
+  void folderPrivileges(in nsIMsgWindow aWindow);
   attribute boolean verifiedAsOnlineFolder;
   attribute boolean explicitlyVerify;
   attribute wchar hierarchyDelimiter;

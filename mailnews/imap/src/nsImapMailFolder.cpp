@@ -68,6 +68,7 @@
 #include "nsTextFormatter.h"
 #include "nsIPref.h"
 #include "nsMsgUtf7Utils.h"
+#include "nsICacheSession.h"
 
 #include "nsIMsgFilter.h"
 #include "nsImapMoveCoalescer.h"
@@ -91,6 +92,8 @@
 #include "nsIMsgAccountManager.h"
 #include "nsQuickSort.h"
 #include "nsIImapMockChannel.h"
+#include "nsIWebNavigation.h"
+#include "nsNetUtil.h"
 
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -3016,6 +3019,32 @@ NS_IMETHODIMP nsImapMailFolder::LiteSelect(nsIUrlListener *aUrlListener)
   return rv;
 }
 
+NS_IMETHODIMP nsImapMailFolder::FolderPrivileges(nsIMsgWindow *window)
+{
+  nsCOMPtr<nsIImapIncomingServer> imapServer;
+  nsresult rv = GetImapIncomingServer(getter_AddRefs(imapServer));
+
+  if (window && NS_SUCCEEDED(rv) && imapServer) 
+  {
+    nsXPIDLCString manageMailAccountUrl;
+    rv = imapServer->GetManageMailAccountUrl(getter_Copies(manageMailAccountUrl));
+    if (NS_SUCCEEDED(rv) && manageMailAccountUrl.Length())
+    {
+      nsCOMPtr <nsIDocShell> docShell;
+      rv = window->GetRootDocShell(getter_AddRefs(docShell));
+      if (NS_SUCCEEDED(rv) && docShell)
+      {
+        nsCOMPtr<nsIURI> uri;
+        if (NS_FAILED(rv = NS_NewURI(getter_AddRefs(uri), manageMailAccountUrl.get())))
+          return rv;
+        rv = docShell->LoadURI(uri, nsnull, nsIWebNavigation::LOAD_FLAGS_IS_LINK);
+
+      }
+    }
+  }
+  return rv;
+}
+
 nsresult nsImapMailFolder::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 
                                                    nsIMsgDatabase *sourceDB, 
                                                    const char *destFolderUri,
@@ -3571,6 +3600,14 @@ nsImapMailFolder::CloseMockChannel(nsIImapMockChannel * aChannel)
 }
 
 NS_IMETHODIMP
+nsImapMailFolder::ReleaseUrlCacheEntry(nsIMsgMailNewsUrl *aUrl)
+{
+  if (aUrl)
+    aUrl->SetMemCacheEntry(nsnull);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsImapMailFolder::BeginMessageUpload()
 {
     return NS_ERROR_FAILURE;
@@ -3835,6 +3872,21 @@ NS_IMETHODIMP
 nsImapMailFolder::SetContentModified(nsIImapUrl *aImapUrl, nsImapContentModifiedType modified)
 {
   return aImapUrl->SetContentModified(modified);
+}
+
+NS_IMETHODIMP
+nsImapMailFolder::SetImageCacheSessionForUrl(nsIMsgMailNewsUrl *mailurl)
+{
+  nsresult rv;
+  nsCOMPtr<nsIImapService> imapService = do_GetService(kCImapService, &rv);
+  if (imapService)
+  {
+    nsCOMPtr<nsICacheSession> cacheSession;
+    rv = imapService->GetCacheSession(getter_AddRefs(cacheSession));
+    if (NS_SUCCEEDED(rv) && cacheSession)
+      rv = mailurl->SetImageCacheSession(cacheSession);
+  }
+  return rv;
 }
 
 NS_IMETHODIMP nsImapMailFolder::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
