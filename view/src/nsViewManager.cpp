@@ -417,6 +417,7 @@ nsViewManager::~nsViewManager()
       // release the global array of view managers
    
       NS_ASSERTION(gViewManagers != nsnull, "About to delete null gViewManagers");
+      delete gViewManagers;
       gViewManagers = nsnull;
 
       // Cleanup all of the offscreen drawing surfaces if the last view manager
