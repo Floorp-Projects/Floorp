@@ -103,8 +103,8 @@ js_CompareAndSwap(prword *w, prword ov, prword nv)
     PR_ASSERT(nv != -1);
     asm volatile ("
 swap [%1],%4
-1:  tst %4
-bneg,a 1b
+1:  cmp %4, -1
+be,a 1b
 swap [%1],%4
 cmp %2,%4
 be,a 2f
