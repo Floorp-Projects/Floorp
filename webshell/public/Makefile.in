@@ -25,23 +25,26 @@ include $(DEPTH)/config/autoconf.mk
 MODULE = raptor
 
 EXPORTS =					\
-        nsIBrowserWindow.h			\
-        nsIContentViewer.h			\
-        nsIContentViewerContainer.h		\
-        nsIDocumentLoader.h			\
-	nsIDocumentLoaderObserver.h		\
-	nsILinkHandler.h			\
-	nsIThrobber.h				\
-	nsIWebShell.h				\
-	nsIWebShellServices.h			\
-	nsIClipboardCommands.h			\
-	nsweb.h					\
-	nsIDocStreamLoaderFactory.h		\
-  nsIUrlDispatcher.h    \
+        nsIBrowserWindow.h \
+        nsIContentViewer.h \
+        nsIContentViewerContainer.h \
+        nsIDocumentLoader.h \
+        nsIDocumentLoaderObserver.h \
+        nsILinkHandler.h \
+        nsIThrobber.h \
+        nsIWebShell.h \
+        nsIWebShellServices.h \
+        nsIClipboardCommands.h \
+        nsweb.h \
+        nsIDocStreamLoaderFactory.h \
+        nsIUrlDispatcher.h \
+        $(NULL)
+
 ifdef NECKO
-    nsIRefreshURI.h                 \
-endif
+EXPORTS +=\
+	nsIRefreshURI.h \
 	$(NULL)
+endif
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
