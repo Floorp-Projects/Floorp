@@ -432,7 +432,6 @@ sub Checkout()
     my($psm_tag) = "SECURITY_MAC_BRANCH";
     my($secbase_tag) = "SECURITY_CLIENT_BRANCH";
     my($ldapsdk_tag) = "LDAPCSDK_40_BRANCH";
-    my($jars_branch_tag) = "jar_restructuring_branch";
     
     #//
     #// Checkout commands
@@ -446,10 +445,10 @@ sub Checkout()
         $session->checkout("DirectorySDKSourceC", $ldapsdk_tag)        || print "checkout of LDAP C SDK failed\n";
 
         # we need this jar.mn file on the jar branch
-        $session->checkout("mozilla/security/base/res/jar.mn", $jars_branch_tag) || print "checkout of jar.mn failed\n";
+        # $session->checkout("mozilla/security/base/res/jar.mn", $jars_branch_tag) || print "checkout of jar.mn failed\n";
 
-       # $session->checkout("SeaMonkeyAll", $jars_branch_tag)           || 
-       #     print "MacCVS reported some errors checking out SeaMonkeyAll, but these are probably not serious.\n";
+        $session->checkout("SeaMonkeyAll")           || 
+            print "MacCVS reported some errors checking out SeaMonkeyAll, but these are probably not serious.\n";
     }
     elsif ($main::pull{runtime})
     {
