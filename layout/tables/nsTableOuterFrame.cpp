@@ -1428,7 +1428,22 @@ PRBool nsTableOuterFrame::IR_CaptionChangedAxis(const nsStyleTable* aOldStyle,
 }
 
 
-
+static PRBool
+IsPctHeight(nsIFrame* aFrame)
+{
+  if (aFrame) {
+    nsCOMPtr<nsIStyleContext> styleContext;
+    aFrame->GetStyleContext(getter_AddRefs(styleContext)); 
+    nsStylePosition* position = (nsStylePosition*)styleContext->GetStyleData(eStyleStruct_Position);
+    if (eStyleUnit_Percent == position->mHeight.GetUnit()) {
+      float percent = position->mHeight.GetPercentValue();
+      if (percent > 0.0f) {
+        return PR_TRUE;
+      }
+    }
+  }
+  return PR_FALSE;
+}
 
 /**
   * Reflow is a multi-step process.
@@ -1472,7 +1487,8 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext*          aPresContext,
 
   if ((eReflowReason_Resize    == aOuterRS.reason)  &&
       (aOuterRS.availableWidth == mPriorAvailWidth) &&
-      !isPaginated) {
+      !isPaginated                                  &&
+      !::IsPctHeight(mInnerTableFrame)) {
     // don't do much if we are resize reflowed exactly like last time
     aDesiredSize.width  = mRect.width;
     aDesiredSize.height = mRect.height;
