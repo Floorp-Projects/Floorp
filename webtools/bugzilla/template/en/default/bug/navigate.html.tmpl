@@ -29,22 +29,26 @@
   <a href="show_bug.cgi?id=[% bug_list.first %]">First</a>
   <a href="show_bug.cgi?id=[% bug_list.last %]">Last</a>
 
-  [% IF this_bug_idx != -1 %]
-    [% IF this_bug_idx > 0 %]
-      [% prev_bug = this_bug_idx - 1 %]
-      <a href="show_bug.cgi?id=[% bug_list.$prev_bug %]">Prev</a>
+  [% IF bug.bug_id %] 
+    [% IF this_bug_idx != -1 %]
+      [% IF this_bug_idx > 0 %]
+        [% prev_bug = this_bug_idx - 1 %]
+        <a href="show_bug.cgi?id=[% bug_list.$prev_bug %]">Prev</a>
+      [% ELSE %]
+        <i><font color="#777777">Prev</font></i>
+      [% END %]
+  
+      [% IF this_bug_idx + 1 < bug_list.size %]
+        [% next_bug = this_bug_idx + 1 %]
+        <a href="show_bug.cgi?id=[% bug_list.$next_bug %]">Next</a>
+      [% ELSE %]
+        <i><font color="#777777">Next</font></i>
+      [% END %]
     [% ELSE %]
-      <i><font color="#777777">Prev</font></i>
-    [% END %]
-
-    [% IF this_bug_idx + 1 < bug_list.size %]
-      [% next_bug = this_bug_idx + 1 %]
-      <a href="show_bug.cgi?id=[% bug_list.$next_bug %]">Next</a>
-    [% ELSE %]
-      <i><font color="#777777">Next</font></i>
+      (This bug is not in your list)
     [% END %]
   [% ELSE %]
-    (This bug is not in your list)
+    &nbsp;&nbsp;
   [% END %]
   
   &nbsp;&nbsp;<a href="buglist.cgi?regetlastlist=1">Show list</a>
