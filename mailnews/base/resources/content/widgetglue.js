@@ -243,9 +243,10 @@ function MsgFolderProperties()
 	var dialog = window.openDialog(
                     "chrome://messenger/content/imapFolderProps.xul",
                     "",
-                    "chrome,titlebar,modal",
-	            {preselectedURI:preselectedURI, title:windowTitle,
-                    okCallback:FolderProperties, name:name});
+                    "chrome,centerscreen,titlebar,modal",
+                    {preselectedURI:preselectedURI, title:windowTitle,
+                    okCallback:FolderProperties, 
+                    tabID:"", tabIndex:0, name:name});
 }
 
 function FolderProperties(name, uri)
@@ -313,36 +314,14 @@ function LastToClose()
 function MsgSetFolderCharset() 
 {
   var preselectedURI = GetSelectedFolderURI();
-  var selectedFolder = GetResourceFromUri(preselectedURI);
-  var msgFolder = selectedFolder.QueryInterface(Components.interfaces.nsIMsgFolder);
-
-//    dump("preselectedURI = " + preselectedURI + "\n");
-  var dialog = window.openDialog(
-              "chrome://messenger/content/folderCharsetDialog.xul",
-              "",
-              "chrome,centerscreen,titlebar,modal",
-              {preselectedURI: preselectedURI, 
-              okCallback: SetFolderCharset, 
-              folderCharset: msgFolder.charset, 
-              folderCharsetOverride: msgFolder.charsetOverride});
-}
-
-function SetFolderCharset(override, charset, uri)
-{
-//  dump("uri,charset,override = " + uri + "," + charset + "," + override + "\n");
   var folderTree = GetFolderTree();
-  if (folderTree) {
-    if (uri && charset) {
-      var selectedFolder = GetResourceFromUri(uri);
-      var msgFolder = selectedFolder.QueryInterface(Components.interfaces.nsIMsgFolder);
-      if (msgFolder) {
-        msgFolder.charset = charset;
-        msgFolder.charsetOverride = override;
-      }
-
-      ClearThreadPane();
-      ClearMessagePane();
-      folderTree.clearItemSelection();
-    }
-  }
+  var name = GetFolderNameFromUri(preselectedURI, folderTree);
+  var windowTitle = Bundle.GetStringFromName("folderProperties");
+  var dialog = window.openDialog(
+                      "chrome://messenger/content/imapFolderProps.xul",
+                      "",
+                      "chrome,centerscreen,titlebar,modal",
+                      {preselectedURI:preselectedURI, title:windowTitle,
+                      okCallback:FolderProperties, 
+                      tabID:"folderCharsetTab",  tabIndex:2, name:name});
 }

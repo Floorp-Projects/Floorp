@@ -43,10 +43,11 @@
   
 <tabcontrol orient="vertical">
   <tabbox>
-    <tab value="&generalInfo.label;" accesskey="&generalInfo.accesskey;"/>
+    <tab id="GeneralTab" value="&generalInfo.label;" accesskey="&generalInfo.accesskey;"/>
     <tab id="DownloadTab" value="&download.label;" accesskey="&download.accesskey;"/>
+    <tab id="folderCharsetTab" value="&folderCharsetTab.label;" accesskey="&folderCharsetTab.accesskey;"/>
   </tabbox>
-  <tabpanel>
+  <tabpanel id="folderPropTabPanel">
   	<box orient="vertical">
   		<box id="nameBox" orient="vertical">
   			<text class="label" value="&folderProps.name.label;" />
@@ -62,6 +63,18 @@
 			<checkbox id="selectForDownload" value="&download.check.label;" />
 		</titledbox>
 	</titledbox>
+
+    <box orient="vertical">
+      <menulist id="folderCharsetList" ref="NC:DecodersRoot" datasources="rdf:charset-menu"> 
+        <template>
+          <menupopup>
+            <menuitem value="rdf:http://home.netscape.com/NC-rdf#Name" data="..." uri="..."/>
+          </menupopup>
+        </template>
+      </menulist> 
+      <checkbox id="folderCharsetOverride" value="&folderCharsetOverride.label;" />
+    </box>
+ 
   </tabpanel>
 </tabcontrol>
   

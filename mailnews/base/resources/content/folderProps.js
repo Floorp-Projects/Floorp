@@ -13,6 +13,11 @@ function folderPropsOKButtonCallback()
       gMsgFolder.setFlag(0x8000000);
     else
       gMsgFolder.clearFlag(0x8000000);
+
+    // set charset attributes
+    var folderCharsetList = document.getElementById("folderCharsetList");
+    gMsgFolder.charset = folderCharsetList.getAttribute("data");
+    gMsgFolder.charsetOverride = document.getElementById("folderCharsetOverride").checked;
   }
   window.close();
 }
@@ -65,7 +70,36 @@ function folderPropsOnLoad()
   if (!gMsgFolder)
     dump("no gMsgFolder preselectfolder uri = "+preselectedFolderURI+'\n');
 
-  if (gMsgFolder && (gMsgFolder.flags & 0x8000000))
-  	document.getElementById("selectForDownload").checked = true;
+  if (gMsgFolder) {
+    if (gMsgFolder.flags & 0x8000000) {
+  	  document.getElementById("selectForDownload").checked = true;
+    }
 
+    // get charset title (i.e. localized name), needed in order to set value for the menu
+    var ccm = Components.classes['@mozilla.org/charset-converter-manager;1'];
+    ccm = ccm.getService();
+    ccm = ccm.QueryInterface(Components.interfaces.nsICharsetConverterManager2);
+    // get a localized string
+    var charsetTitle = ccm.GetCharsetTitle(ccm.GetCharsetAtom(gMsgFolder.charset));
+
+    // select the menu item 
+    var folderCharsetList = document.getElementById("folderCharsetList");
+    folderCharsetList.setAttribute("value", charsetTitle);
+    folderCharsetList.setAttribute("data", gMsgFolder.charset);
+
+    // set override checkbox
+    document.getElementById("folderCharsetOverride").checked = gMsgFolder.charsetOverride;
+  }
+
+  // select the initial tab
+  if (window.arguments[0].tabID) {
+    // set index for starting panel on the <tabpanel> element
+    var folderPropTabPanel = document.getElementById("folderPropTabPanel");
+    folderPropTabPanel.setAttribute("index", window.arguments[0].tabIndex);
+
+    var tab = document.getElementById(window.arguments[0].tabID);
+    tab.setAttribute("selected", "true");
+    tab = document.getElementById("GeneralTab");
+    tab.setAttribute("selected", "false");
+  }
 }
