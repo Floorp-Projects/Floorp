@@ -5,9 +5,6 @@
 	 xmlns:html="http://www.w3.org/1999/xhtml"
 	 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<!-- change the xul key for Unix -->
-<keyset id="editorKeySet" xulkey="alt">
-
 <!-- emacs delete keys -->
 <key id="emDelCharBWkb" key="h" control="true" shift="false"
   onkeypress="

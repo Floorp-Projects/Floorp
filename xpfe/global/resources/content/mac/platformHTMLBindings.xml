@@ -7,7 +7,7 @@
   <binding id="inputFields" extends="chrome://global/content/htmlBindings.xml#inputFieldsBase">
     <handlers>
       
-      <handler event="keypress" id="key_redo" key="z" modifiers="primary"
+      <handler event="keypress" id="key_redo" key="z" modifiers="accel"
         command="cmd_redo"/>
 
       <handler event="keypress" id="key_up" keycode="VK_UP" 
@@ -61,7 +61,7 @@
   <binding id="textAreas" extends="chrome://global/content/htmlBindings.xml#textAreasBase">
     <handlers>
 
-      <handler event="keypress" id="key_redo" key="z" modifiers="primary,shift"
+      <handler event="keypress" id="key_redo" key="z" modifiers="accel,shift"
         command="cmd_redo"/>
 
       <handler event="keypress" id="key_home" keycode="VK_HOME" 

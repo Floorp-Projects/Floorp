@@ -31,7 +31,7 @@
         command="cmd_selectWordPrevious"/>
       <handler event="keypress" id="key_rightshiftcontrol" keycode="VK_RIGHT" modifiers="shift,control"
         command="cmd_selectWordNext"/>
-      <handler event="keypress" id="key_redo" key="y" modifiers="primary"
+      <handler event="keypress" id="key_redo" key="y" modifiers="accel"
         command="cmd_redo"/>
 
       <handler event="keypress" id="key_altwincut" keycode="VK_DELETE" modifiers="shift"
@@ -61,7 +61,7 @@
         command="cmd_selectWordPrevious"/>
       <handler event="keypress" id="key_rightshiftcontrol" keycode="VK_RIGHT" modifiers="shift,control"
         command="cmd_selectWordNext"/>
-      <handler event="keypress" id="key_redo" key="y" modifiers="primary"
+      <handler event="keypress" id="key_redo" key="y" modifiers="accel"
         command="cmd_redo"/>
 
       <handler event="keypress" id="key_altwincut" keycode="VK_DELETE" modifiers="shift" 

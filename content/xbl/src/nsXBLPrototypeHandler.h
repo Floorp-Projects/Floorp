@@ -59,6 +59,8 @@ protected:
 
   inline PRBool KeyEventMatched(nsIDOMKeyEvent* aKeyEvent);
   inline PRBool MouseEventMatched(nsIDOMMouseEvent* aMouseEvent);
+
+  PRInt32 KeyToMask(PRInt32 key);
   
   static PRUint32 gRefCnt;
   static nsIAtom* kKeyAtom;
@@ -70,8 +72,9 @@ protected:
   static nsIAtom* kButtonAtom;
   static nsIAtom* kModifiersAtom;
 
-  static PRInt32 kAccessKey;
-  static void InitAccessKey();
+  static PRInt32 kAccelKey;
+  static PRInt32 kMenuAccessKey;
+  static void InitAccessKeys();
 
   static const PRInt32 cShift;
   static const PRInt32 cAlt;

@@ -48,8 +48,6 @@
 
 #include "nsIPref.h"
 
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
-
 /*
  * nsMenuBarListener implementation
  */
@@ -109,7 +107,7 @@ void nsMenuBarListener::InitAccessKey()
                              &mAccessKeyFocuses);
   }
 #ifdef DEBUG_akkana
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv) || !prefs)
   {
     NS_ASSERTION(PR_FALSE,"Menubar listener couldn't get accel key from prefs!\n");
   }
