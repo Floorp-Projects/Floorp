@@ -627,36 +627,51 @@ nsresult nsRenderingContextOS2::SetClipRect( const nsRect& aRect, nsClipCombine 
    nsRect trect = aRect;
    mTMatrix.TransformCoord( &trect.x, &trect.y,
                             &trect.width, &trect.height);
-   RECTL rcl;
-   long  lrc = RGN_ERROR;
+   long lrc = RGN_ERROR;
 
-   switch( aCombine)
+   if( trect.width == 0 || trect.height == 0)
    {
-      case nsClipCombine_kIntersect:
-      case nsClipCombine_kSubtract:
-         NS2PM_ININ( trect, rcl);
-         if( aCombine == nsClipCombine_kIntersect)
-            lrc = GpiIntersectClipRectangle( mSurface->mPS, &rcl);
-         else
-            lrc = GpiExcludeClipRectangle( mSurface->mPS, &rcl);
-         break;
-
-      case nsClipCombine_kUnion:
-      case nsClipCombine_kReplace:
+      if( aCombine == nsClipCombine_kIntersect || aCombine == nsClipCombine_kReplace)
       {
-         // need to create a new region & fiddle with it
-         NS2PM_INEX( trect, rcl);
-         HRGN hrgn = GpiCreateRegion( mSurface->mPS, 1, &rcl);
-         if( hrgn && aCombine == nsClipCombine_kReplace)
-            lrc = OS2_SetClipRegion2( mSurface->mPS, hrgn);
-         else if( hrgn)
-            lrc = OS2_CombineClipRegion( mSurface->mPS, hrgn, CRGN_OR);
-         break;
+         lrc = OS2_CombineClipRegion( mSurface->mPS, 0, CRGN_COPY);
       }
-      default:
-         // compiler informational...
-         NS_ASSERTION( 0, "illegal clip combination");
-         break;
+      else
+      {
+         lrc = OS2_CombineClipRegion( mSurface->mPS, 0, CRGN_OR);
+      }
+   }
+   else
+   {
+      RECTL rcl;
+
+      switch( aCombine)
+      {
+         case nsClipCombine_kIntersect:
+         case nsClipCombine_kSubtract:
+            NS2PM_ININ( trect, rcl);
+            if( aCombine == nsClipCombine_kIntersect)
+               lrc = GpiIntersectClipRectangle( mSurface->mPS, &rcl);
+            else
+               lrc = GpiExcludeClipRectangle( mSurface->mPS, &rcl);
+            break;
+
+         case nsClipCombine_kUnion:
+         case nsClipCombine_kReplace:
+         {
+            // need to create a new region & fiddle with it
+            NS2PM_INEX( trect, rcl);
+            HRGN hrgn = GpiCreateRegion( mSurface->mPS, 1, &rcl);
+            if( hrgn && aCombine == nsClipCombine_kReplace)
+               lrc = OS2_SetClipRegion2( mSurface->mPS, hrgn);
+            else if( hrgn)
+               lrc = OS2_CombineClipRegion( mSurface->mPS, hrgn, CRGN_OR);
+            break;
+         }
+         default:
+            // compiler informational...
+            NS_ASSERTION( 0, "illegal clip combination");
+            break;
+      }
    }
 
    aClipEmpty = (lrc == RGN_NULL) ? PR_TRUE : PR_FALSE;
@@ -1228,12 +1243,9 @@ void nsRenderingContextOS2::PMDrawArc( nsRect &rect, PRBool bFilled, PRBool bFul
       // draw an arc or a pie
       if( bFilled)
       {
-         long lLineType = GpiQueryLineType( mSurface->mPS);
-         GpiSetLineType( mSurface->mPS, LINETYPE_INVISIBLE);
-         GpiBeginArea( mSurface->mPS, BA_BOUNDARY);
+         GpiBeginArea( mSurface->mPS, BA_NOBOUNDARY);
          GpiPartialArc( mSurface->mPS, (PPOINTL)&rcl, MAKEFIXED(1,0), StartAngle, SweepAngle);
          GpiEndArea( mSurface->mPS);
-         GpiSetLineType( mSurface->mPS, lLineType);
       }
       else
       {
@@ -1703,7 +1715,7 @@ LONG OS2_CombineClipRegion( HPS hps, HRGN hrgnCombine, LONG lMode)
    if (!hps) return RGN_ERROR;
 
    HRGN hrgnClip = NULL;
-   LONG rc;
+   LONG rc = RGN_NULL;
 
    GpiSetClipRegion (hps, NULL, &hrgnClip);    // Get the current clip region and deselect it
 
@@ -1716,7 +1728,10 @@ LONG OS2_CombineClipRegion( HPS hps, HRGN hrgnCombine, LONG lMode)
          PMERROR( "GpiDestroyRegion [Gpi_CombineClipRegion]");
    }
 
-   rc = GpiSetClipRegion (hps, hrgnCombine, NULL);  // Set new clip region
+   if (hrgnCombine)
+   {
+      rc = GpiSetClipRegion (hps, hrgnCombine, NULL);  // Set new clip region
+   }
 
    return rc;
 }
@@ -1726,7 +1741,7 @@ HRGN OS2_CopyClipRegion( HPS hps)
 {
   if (!hps) return HRGN_ERROR;
 
-  HRGN hrgn, hrgnClip;
+  HRGN hrgn = 0, hrgnClip;
 
   GpiSetClipRegion (hps, 0, &hrgnClip);        // Get current clip region
   if (hrgnClip && hrgnClip != HRGN_ERROR)
