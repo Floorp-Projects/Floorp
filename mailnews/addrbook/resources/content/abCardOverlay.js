@@ -45,8 +45,13 @@ function OnLoadNewCard()
 
 	// set popup with address book names
 	var abPopup = document.getElementById('abPopup');
-	if ( editCard.selectedAB )
-		abPopup.value = editCard.selectedAB;
+	if ( abPopup )
+	{
+		if ( editCard.selectedAB )
+			abPopup.value = editCard.selectedAB;
+		else
+			abPopup.value = "abdirectory://abook.mab";
+	}
 	
 	//// FIX ME - looks like we need to focus on both the text field and the tab widget
 	//// probably need to do the same in the addressing widget
@@ -333,3 +338,4 @@ function DisplayNameChanged()
 	if ( top.window.title != title )
 		top.window.title = title;
 }
+
