@@ -821,7 +821,7 @@ Contributor(s):
     <toolbar id="nav-bar" class="toolbar-primary chromeclass-toolbar"
              toolbarname="&navbarCmd.label;" accesskey="&navbarCmd.accesskey;"
              fullscreentoolbar="true"
-             customizable="true" mode="icons"
+             customizable="true" mode="icons" iconsize="small"
              defaultset="back-button,forward-button,reload-button,stop-button,urlbar-container,search-container"
              context="toolbar-context-menu">
 
