@@ -267,20 +267,26 @@ InsertBefore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   NS_ASSERTION(2 == argc, "wrong number of arguments");
   *rval = JSVAL_NULL;
   if (2 == argc) {
-    // get the arguments
-    if (JSVAL_IS_OBJECT(argv[0]) && JSVAL_IS_OBJECT(argv[1])) {
+    // get the arguments. the refChild can be null
+    if (JSVAL_IS_OBJECT(argv[0]) && (JSVAL_IS_OBJECT(argv[1]) || JSVAL_IS_NULL(argv[1]))) {
       JSObject *obj1 = JSVAL_TO_OBJECT(argv[0]);
-      JSObject *obj2 = JSVAL_TO_OBJECT(argv[1]);
+      JSObject *obj2 = JSVAL_IS_OBJECT(argv[1]) ? JSVAL_TO_OBJECT(argv[1]) : nsnull;
+
       //XXX should check if that's a good class (do not just GetPrivate)
       nsISupports *support1 = (nsISupports*)JS_GetPrivate(cx, obj1);
       NS_ASSERTION(nsnull != support1, "null pointer");
-      nsISupports *support2 = (nsISupports*)JS_GetPrivate(cx, obj2);
-      NS_ASSERTION(nsnull != support2, "null pointer");
+
+      nsISupports *support2 = nsnull;
+      if (nsnull != obj2) {
+        support2 = (nsISupports*)JS_GetPrivate(cx, obj2);
+        NS_ASSERTION(nsnull != support2, "null pointer");
+      }
 
       nsIDOMNode *node1 = nsnull;
       nsIDOMNode *node2 = nsnull;
       if (NS_OK == support1->QueryInterface(kIDOMNodeIID, (void**)&node1)) {
-        if (NS_OK == support2->QueryInterface(kIDOMNodeIID, (void**)&node2)) {
+        if ((nsnull == support2) ||
+            (NS_OK == support2->QueryInterface(kIDOMNodeIID, (void**)&node2))) {
 
           // call the function
           if (NS_OK == node->InsertBefore(node1, node2)) {
@@ -295,7 +301,7 @@ InsertBefore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
               NS_RELEASE(owner);
             }
           }
-          NS_RELEASE(node2);
+          NS_IF_RELEASE(node2);
         }
         NS_RELEASE(node1);
       }
