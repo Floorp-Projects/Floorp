@@ -700,6 +700,21 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 					CImgDlg imgDlg(parms);
 					int retVal = imgDlg.DoModal();
 				}
+				else if (strcmp(pcmd, "OpenURL") == 0)
+				{
+					// This is to dsiplay an image in a separate dialog
+					CString Location = replaceVars(parms,NULL);
+					OpenBrowser((CHAR*)(LPCTSTR)Location);
+				}
+				
+				else if (strcmp(pcmd, "ViewFile") == 0)
+				{
+					// This is to dsiplay an image in a separate dialog
+					CString view = replaceVars("%Root%ImageEye.exe ",NULL);
+					CString gif_file = replaceVars(parms,NULL);
+					view += gif_file;
+					ExecuteCommand((char *) (LPCSTR) view, SW_SHOWDEFAULT,INFINITE);
+				}
 				else if (strcmp(pcmd, "ShowSum") == 0)
 				{
 					CSumDlg sumdlg;
