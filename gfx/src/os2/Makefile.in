@@ -35,15 +35,17 @@ CSRCS		= libprint.c
 
 CPPSRCS		= \
 		nsDeviceContextOS2.cpp \
+		nsDrawingSurfaceOS2.cpp \
 		nsRenderingContextOS2.cpp \
 		nsFontMetricsOS2.cpp \
 		nsImageOS2.cpp \
-		nsPaletteOS2.cpp \
 		nsRegionOS2.cpp \
-		nsDeviceContextSpecFactoryO.cpp \
 		nsDeviceContextSpecOS2.cpp \
-		nsDrawingSurfaceOS2.cpp \
+		nsDeviceContextSpecFactoryO.cpp \
+		nsScreenOS2.cpp          \
+		nsScreenManagerOS2.cpp          \
 		nsGfxFactoryOS2.cpp \
+		nsPaletteOS2.cpp \
 		$(NULL)
 
 RES_FILE	= $(srcdir)/libprint.res
