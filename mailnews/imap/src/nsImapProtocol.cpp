@@ -589,7 +589,7 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
         
         if (NS_SUCCEEDED(server->GetIsSecure(&isSecure)) && isSecure) 
         {
-          connectionType = "ssl";
+          connectionType = "ssl-forcehandshake";
           port = SECURE_IMAP_PORT;
         }
 

@@ -67,6 +67,8 @@ protected:
     
     nsString     mProxyName;
     PRInt32      mProxyPort;
+
+    PRBool       mForceHandshake;
     
     unsigned char* mPickledStatus;
 };
@@ -121,10 +123,12 @@ nsSSLIOLayerConnect(PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime timeou
     char* hostName;
     PRInt32 proxyPort;
     PRInt32 hostPort;
+    PRBool forceHandshake;
     infoObject->GetProxyName(&proxyName);
     infoObject->GetHostName(&hostName);
     infoObject->GetProxyPort(&proxyPort);
     infoObject->GetHostPort(&hostPort);
+    infoObject->GetForceHandshake(&forceHandshake);
     
     if (!proxyName)
     {
@@ -135,7 +139,7 @@ nsSSLIOLayerConnect(PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime timeou
                                        PR_ntohs(addr->inet.port),
                                        ipBuffer,
                                        (hostName ? hostName : ipBuffer),
-                                       CM_FALSE, 
+                                       forceHandshake,
                                        nsnull);
     }
     else
@@ -312,6 +316,7 @@ nsPSMSocketInfo::nsPSMSocketInfo()
     mControl = nsnull; 
     mSocket = nsnull;
     mPickledStatus = nsnull;
+    mForceHandshake = PR_FALSE;
 }
 
 nsPSMSocketInfo::~nsPSMSocketInfo()
@@ -441,6 +446,19 @@ nsPSMSocketInfo::SetProxyPort(PRInt32 aPort)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsPSMSocketInfo::GetForceHandshake(PRBool *forceHandshake)
+{
+    *forceHandshake = mForceHandshake;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPSMSocketInfo::SetForceHandshake(PRBool forceHandshake)
+{
+    mForceHandshake = forceHandshake;
+    return NS_OK;
+}
 
 
 nsresult

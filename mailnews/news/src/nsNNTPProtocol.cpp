@@ -567,7 +567,7 @@ NS_IMETHODIMP nsNNTPProtocol::Initialize(nsIURI * aURL, nsIMsgWindow *aMsgWindow
   {
   // call base class to set up the transport
     if (isSecure) {
-	    rv = OpenNetworkSocket(m_url, "ssl");
+	    rv = OpenNetworkSocket(m_url, "ssl-forcehandshake");
     }
     else {
 	    rv = OpenNetworkSocket(m_url, nsnull);
