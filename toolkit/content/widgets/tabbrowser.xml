@@ -85,6 +85,7 @@
                     ondragdrop="nsDragAndDrop.drop(event, this.parentNode.parentNode.parentNode);
                                 event.stopPropagation();"
                     xbl:inherits="onnewtab"
+                    ondblclick="if (event.target.localName == 'tabs') this.parentNode.parentNode.parentNode.addTab();"
                     onclosetab="var node = this.parentNode;
                                 while (node.localName != 'tabbrowser')
                                   node = node.parentNode;
