@@ -947,9 +947,6 @@ sub MakeResourceAliases()
 
 	MakeAlias(":mozilla:extensions:wallet:src:cookie.properties",						"$resource_dir");
 	MakeAlias(":mozilla:extensions:wallet:src:wallet.properties",						"$resource_dir");
-	MakeAlias(":mozilla:extensions:wallet:src:CookieViewer.html",						"$samples_dir");
-	MakeAlias(":mozilla:extensions:wallet:src:SignonViewer.html",						"$samples_dir");
-	MakeAlias(":mozilla:extensions:wallet:src:WalletPreview.html",						"$samples_dir");
 
 	my($html_dir) = "$resource_dir" . "html:";
 	MakeAlias(":mozilla:layout:html:base:src:broken-image.gif",							"$html_dir");
