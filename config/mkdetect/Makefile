@@ -29,7 +29,11 @@ include $(DEPTH)/config/config.mk
 MKDETECT_CONFIG	= $(MOZILLA_HOSTNAME)
 
 MKDETECT_GLIBC	= $(MOZILLA_DETECT_DIR)/detect_glibc.sh -o $(MKDETECT_CONFIG)
-MKDETECT_MOTIF	= $(MOZILLA_DETECT_DIR)/detect_motif.sh -o $(MKDETECT_CONFIG)
+
+MKDETECT_MOTIF	=\
+				$(MOZILLA_DETECT_DIR)/detect_motif.sh -o $(MKDETECT_CONFIG) \
+				-xif $(X11_INCLUDE_FLAGS)
+
 MKDETECT_X11	= $(MOZILLA_DETECT_DIR)/detect_x11.sh -o $(MKDETECT_CONFIG)
 
 # The following macros are generated:
@@ -65,6 +69,9 @@ clean::
 	@$(MKDETECT_GLIBC) --cleanup
 
 clobber: clean
+
+# This is needed for MKDETECT_MOTIF to work
+X11_INCLUDE_FLAGS=$(shell $(MKDETECT_X11) -if)
 
 $(MOZILLA_DETECT_NAME):
 	@echo "Generating $(MOZILLA_DETECT_NAME)."
