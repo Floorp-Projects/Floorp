@@ -511,15 +511,6 @@ function createBrowserInstance()
 
   function Startup()
   {
-    // Position window.
-    var win = document.getElementById( "main-window" );
-    if (win) {
-      var x = win.getAttribute( "x" );
-      var y = win.getAttribute( "y" );
-      // dump(" move to "+x+" "+y+"\n");
-      window.moveTo( x, y );
-    }
-
     //  TileWindow();
     // Make sure window fits on screen initially
    // FitToScreen();
@@ -555,19 +546,6 @@ function createBrowserInstance()
   }
 
   function Shutdown() {
-    // Get the current window position/size.
-    var x = window.screenX;
-    var y = window.screenY;
-    var h = window.outerHeight;
-    var w = window.outerWidth;
-	
-    // Store these into the window attributes (for persistence).
-    var win = document.getElementById( "main-window" );
-    win.setAttribute( "x", x );
-    win.setAttribute( "y", y );
-    win.setAttribute( "height", h );
-    win.setAttribute( "width", w );
-
     // Close the app core.
     if ( appCore ) {
         appCore.close();
