@@ -2206,32 +2206,6 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
         if (pluginFile.LoadPlugin(pluginLibrary) == NS_OK && pluginLibrary != NULL) {
 #endif
 					// create a tag describing this plugin.
-/*
-          nsPluginTag* pluginTag = new nsPluginTag();
-          if(pluginTag == nsnull)
-            return NS_ERROR_OUT_OF_MEMORY;
-
-					pluginTag->mNext = mPlugins;
-					mPlugins = pluginTag;
-					
-					nsPluginInfo info = { sizeof(info) };
-					if (pluginFile.GetPluginInfo(info) == NS_OK) {
-						pluginTag->mName = info.fName;
-						pluginTag->mDescription = info.fDescription;
-						pluginTag->mMimeType = info.fMimeType;
-						pluginTag->mMimeDescription = info.fMimeDescription;
-						pluginTag->mExtensions = info.fExtensions;
-						pluginTag->mVariants = info.fVariantCount;
-						pluginTag->mMimeTypeArray = info.fMimeTypeArray;
-						pluginTag->mMimeDescriptionArray = info.fMimeDescriptionArray;
-						pluginTag->mExtensionsArray = info.fExtensionArray;
-						pluginTag->mFileName = info.fFileName;
-					}
-					
-					pluginTag->mLibrary = pluginLibrary;
-					pluginTag->mEntryPoint = NULL;
-					pluginTag->mFlags = 0;
-*/
 	        nsPluginInfo info = { sizeof(info) };
 	        if (pluginFile.GetPluginInfo(info) != NS_OK)
         	  return NS_ERROR_FAILURE;
