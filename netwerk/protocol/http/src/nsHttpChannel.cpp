@@ -741,27 +741,38 @@ nsHttpChannel::GenerateCacheKey(nsACString &cacheKey)
 nsresult
 nsHttpChannel::UpdateExpirationTime()
 {
-    PRUint32 now = NowInSeconds(), timeRemaining = 0;
-
     NS_ENSURE_TRUE(mResponseHead, NS_ERROR_FAILURE);
 
+    PRUint32 expirationTime = 1; // this can't be 0 unless bug 120833 is fixed
     if (!mResponseHead->MustValidate()) {
+        PRUint32 freshnessLifetime = 0;
         nsresult rv;
-        PRUint32 freshnessLifetime, currentAge;
-
-        rv = mResponseHead->ComputeCurrentAge(now, mRequestTime, &currentAge); 
-        if (NS_FAILED(rv)) return rv;
 
         rv = mResponseHead->ComputeFreshnessLifetime(&freshnessLifetime);
         if (NS_FAILED(rv)) return rv;
 
-        LOG(("freshnessLifetime = %u, currentAge = %u\n",
-            freshnessLifetime, currentAge));
+        if (freshnessLifetime > 0) {
+            PRUint32 now = NowInSeconds(), currentAge = 0;
 
-        if (freshnessLifetime > currentAge)
-            timeRemaining = freshnessLifetime - currentAge;
+            rv = mResponseHead->ComputeCurrentAge(now, mRequestTime, &currentAge); 
+            if (NS_FAILED(rv)) return rv;
+
+            LOG(("freshnessLifetime = %u, currentAge = %u\n",
+                freshnessLifetime, currentAge));
+
+            if (freshnessLifetime > currentAge) {
+                PRUint32 timeRemaining = freshnessLifetime - currentAge;
+                // be careful... now + timeRemaining may overflow
+                if (now + timeRemaining < now)
+                    expirationTime = PRUint32(-1);
+                else
+                    expirationTime = now + timeRemaining;
+            }
+            else
+                expirationTime = now;
+        }
     }
-    return mCacheEntry->SetExpirationTime(now + timeRemaining);
+    return mCacheEntry->SetExpirationTime(expirationTime);
 }
 
 // CheckCache is called from Connect after a cache entry has been opened for
