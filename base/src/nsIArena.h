@@ -37,6 +37,8 @@
  */
 class nsIArena : public nsISupports {
 public:
+  static const nsIID& GetIID() { static nsIID iid = NS_IARENA_IID; return iid; }
+
   virtual void* Alloc(PRInt32 size) = 0;
 };
 

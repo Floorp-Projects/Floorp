@@ -60,6 +60,8 @@ enum nsWidgetRendering {
 // objects that provide an outer context for a presentation shell.
 class nsIPresContext : public nsISupports {
 public:
+  static const nsIID& GetIID() { static nsIID iid = NS_IPRESCONTEXT_IID; return iid; }
+
   /**
    * Initialize the presentation context from a particular device.
    */

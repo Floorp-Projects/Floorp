@@ -36,6 +36,8 @@ class nsIStyleContext;
 
 class nsIStyleSheet : public nsISupports {
 public:
+  static const nsIID& GetIID() { static nsIID iid = NS_ISTYLE_SHEET_IID; return iid; }
+
   // basic style sheet data
   NS_IMETHOD GetURL(nsIURL*& aURL) const = 0;
   NS_IMETHOD GetTitle(nsString& aTitle) const = 0;

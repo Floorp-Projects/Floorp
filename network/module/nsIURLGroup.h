@@ -36,6 +36,9 @@ class nsILoadAttribs;
 class nsIURLGroup : public nsISupports
 {
 public:
+
+    static const nsIID& GetIID() { static nsIID iid = NS_IURLGROUP_IID; return iid; }
+
     /**
      * Create a new URL, setting its LoadAttributes to the default
      * LoadAttributes for the group.
