@@ -67,12 +67,6 @@ public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISCROLLABLE_FRAME_IID)
 
   /**
-   * Set the frame that we are scrolling within the scrolling frame.
-   */
-  NS_IMETHOD SetScrolledFrame(nsIPresContext* aPresContext, 
-                              nsIFrame *aScrolledFrame) = 0;
-
-  /**
    * Get the frame that we are scrolling within the scrollable frame.
    * @result child frame
    */
@@ -90,14 +84,6 @@ public:
    * be visible due to overflowing content, are.
    */
   virtual nsMargin GetDesiredScrollbarSizes(nsBoxLayoutState* aState) = 0;
-
-  /**
-   * Get information about whether the vertical and horizontal scrollbars
-   * are currently visible
-   */
-  NS_IMETHOD GetScrollbarVisibility(nsIPresContext* aPresContext,
-                                    PRBool *aVerticalVisible,
-                                    PRBool *aHorizontalVisible) const = 0;
 
   /**
    * Query whether scroll bars should be displayed all the time, never or

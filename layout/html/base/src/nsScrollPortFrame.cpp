@@ -73,7 +73,7 @@ nsScrollPortFrame::NeedsClipWidget()
   // widgets, because they will seldom actually be scrolled.
   nsGfxScrollFrame* scrollFrame = nsGfxScrollFrame::GetScrollFrameForPort(this);
   if (scrollFrame) {
-    nsGfxScrollFrame::ScrollbarStyles scrollbars
+    nsGfxScrollFrameInner::ScrollbarStyles scrollbars
       = scrollFrame->GetScrollbarStyles();
     if ((scrollbars.mHorizontal == NS_STYLE_OVERFLOW_HIDDEN
          || scrollbars.mHorizontal == NS_STYLE_OVERFLOW_VISIBLE)

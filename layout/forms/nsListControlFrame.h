@@ -153,7 +153,7 @@ public:
                                              nscoord aInnerWidth,
                                              nscoord aCharWidth) const;
 
-  virtual ScrollbarStyles GetScrollbarStyles() const;
+  virtual nsGfxScrollFrameInner::ScrollbarStyles GetScrollbarStyles() const;
 
     // for accessibility purposes
 #ifdef ACCESSIBILITY

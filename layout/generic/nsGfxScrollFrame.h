@@ -41,9 +41,119 @@
 #include "nsIAnonymousContentCreator.h"
 #include "nsBoxFrame.h"
 #include "nsIScrollableFrame.h"
+#include "nsIScrollPositionListener.h"
 
 class nsISupportsArray;
-class nsGfxScrollFrameInner;
+class nsIScrollableView;
+class nsIPresContext;
+class nsIPresShell;
+class nsIContent;
+class nsGfxScrollFrame;
+class nsIAtom;
+class nsIDocument;
+
+class nsGfxScrollFrameInner : public nsIScrollPositionListener {
+
+public:
+
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
+  NS_IMETHOD_(nsrefcnt) AddRef(void);
+  NS_IMETHOD_(nsrefcnt) Release(void);
+
+  nsGfxScrollFrameInner(nsGfxScrollFrame* aOuter);
+
+  struct ScrollbarStyles {
+    // one of NS_STYLE_OVERFLOW_SCROLL, NS_STYLE_OVERFLOW_HIDDEN,
+    // NS_STYLE_OVERFLOW_VISIBLE, NS_STYLE_OVERFLOW_AUTO
+    PRInt32 mHorizontal;
+    PRInt32 mVertical;
+    ScrollbarStyles(PRInt32 h, PRInt32 v) : mHorizontal(h), mVertical(v) {}
+  };
+  ScrollbarStyles GetScrollbarStylesFromFrame() const;
+
+  nsIScrollableFrame::nsScrollPref GetScrollPreference() const;
+
+  // If a child frame was added or removed on the scrollframe,
+  // reload our child frame list.
+  // We need this if a scrollbar frame is recreated.
+  void ReloadChildFrames();
+
+  void CreateAnonymousContent(nsISupportsArray& aAnonymousChildren);
+
+  // nsIScrollPositionListener
+
+  NS_IMETHOD ScrollPositionWillChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY);
+  NS_IMETHOD ScrollPositionDidChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY);
+
+  // This gets called when the 'curpos' attribute on one of the scrollbars changes
+  nsresult CurPosAttributeChanged(nsIPresContext* aPresContext,
+                                  nsIContent* aChild,
+                                  PRInt32 aModType);
+
+  PRBool SetAttribute(nsIBox* aBox, nsIAtom* aAtom, nscoord aSize, PRBool aReflow=PR_TRUE);
+  PRInt32 GetIntegerAttribute(nsIBox* aFrame, nsIAtom* atom, PRInt32 defaultValue);
+
+  nsresult Layout(nsBoxLayoutState& aState);
+  nsresult LayoutBox(nsBoxLayoutState& aState, nsIBox* aBox, const nsRect& aRect);
+  
+  // Like ScrollPositionDidChange, but initiated by this frame rather than from the
+  // scrolling view
+  void InternalScrollPositionDidChange(nscoord aX, nscoord aY);
+
+   PRBool AddRemoveScrollbar       (PRBool& aHasScrollbar, 
+                                  nscoord& aXY, 
+                                  nscoord& aSize, 
+                                  nscoord aSbSize, 
+                                  PRBool aOnRightOrBottom, 
+                                  PRBool aAdd);
+
+   PRBool AddRemoveScrollbar(nsBoxLayoutState& aState, 
+                           nsRect& aScrollAreaSize, 
+                           PRBool aOnTop, 
+                           PRBool aHorizontal, 
+                           PRBool aAdd);
+
+   PRBool AddHorizontalScrollbar   (nsBoxLayoutState& aState, nsRect& aScrollAreaSize, PRBool aOnBottom);
+   PRBool AddVerticalScrollbar     (nsBoxLayoutState& aState, nsRect& aScrollAreaSize, PRBool aOnRight);
+   void RemoveHorizontalScrollbar(nsBoxLayoutState& aState, nsRect& aScrollAreaSize, PRBool aOnBottom);
+   void RemoveVerticalScrollbar  (nsBoxLayoutState& aState, nsRect& aScrollAreaSize, PRBool aOnRight);
+
+   nsIScrollableView* GetScrollableView() const;
+
+  void ScrollbarChanged(nsIPresContext* aPresContext, nscoord aX, nscoord aY, PRUint32 aFlags);
+
+  void SetScrollbarVisibility(nsIBox* aScrollbar, PRBool aVisible);
+
+  NS_IMETHOD GetScrolledSize(nsIPresContext* aPresContext, 
+                         nscoord *aWidth, 
+                         nscoord *aHeight) const;
+  void AdjustReflowStateForPrintPreview(nsBoxLayoutState& aState, PRBool& aSetBack);
+  void AdjustReflowStateBack(nsBoxLayoutState& aState, PRBool aSetBack);
+
+  nsIBox* mHScrollbarBox;
+  nsIBox* mVScrollbarBox;
+  nsIBox* mScrollAreaBox;
+  nsIBox* mScrollCornerBox;
+  nscoord mOnePixel;
+  nsGfxScrollFrame* mOuter;
+  nscoord mMaxElementWidth;
+
+  // The last dir value we saw in AddHorizontalScrollbar.  Use PRInt16
+  // so we can fit all the possible values of a PRUint8 and have a -1
+  // value that indicates "not set")
+  PRInt16     mLastDir;
+  
+  PRPackedBool mNeverHasVerticalScrollbar;   
+  PRPackedBool mNeverHasHorizontalScrollbar; 
+
+  PRPackedBool mHasVerticalScrollbar;
+  PRPackedBool mHasHorizontalScrollbar;
+  PRPackedBool mFirstPass;
+  PRPackedBool mIsRoot;
+  PRPackedBool mNeverReflowed;
+  PRPackedBool mViewInitiatedScroll;
+  PRPackedBool mFrameInitiatedScroll;
+};
 
 /**
  * The scroll frame creates and manages the scrolling view
@@ -59,15 +169,7 @@ class nsGfxScrollFrame : public nsBoxFrame,
                          public nsIAnonymousContentCreator {
 public:
   friend nsresult NS_NewGfxScrollFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, 
-                                       nsIDocument* aDocument, PRBool aIsRoot);
-
-  NS_IMETHOD Init(nsIPresContext*  aPresContext,
-                  nsIContent*      aContent,
-                  nsIFrame*        aParent,
-                  nsStyleContext*  aContext,
-                  nsIFrame*        aPrevInFlow);
-
-  virtual ~nsGfxScrollFrame();
+                                       PRBool aIsRoot);
 
   // Called to set the child frames. We typically have three: the scroll area,
   // the vertical scrollbar, and the horizontal scrollbar.
@@ -100,18 +202,11 @@ public:
 
   NS_IMETHOD Destroy(nsIPresContext* aPresContext);
 
-  // This function returns NS_ERROR_NOT_IMPLEMENTED
   NS_IMETHOD RemoveFrame(nsIPresContext* aPresContext,
                          nsIPresShell&   aPresShell,
                          nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
 
-
-  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect&        aDirtyRect,
-                   nsFramePaintLayer    aWhichLayer,
-                   PRUint32             aFlags = 0);
 
   NS_IMETHOD GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
                                            const nsPoint&  aPoint,
@@ -139,11 +234,7 @@ public:
   NS_IMETHOD GetPadding(nsMargin& aPadding);
 
   // nsIScrollableFrame
-  NS_IMETHOD  SetScrolledFrame(nsIPresContext* aPresContext, nsIFrame *aScrolledFrame);
   NS_IMETHOD  GetScrolledFrame(nsIPresContext* aPresContext, nsIFrame *&aScrolledFrame) const;
-  NS_IMETHOD  GetScrollbarVisibility(nsIPresContext* aPresContext,
-                                     PRBool *aVerticalVisible,
-                                     PRBool *aHorizontalVisible) const;
   NS_IMETHOD GetScrollableView(nsIPresContext* aContext, nsIScrollableView** aResult);
 
   NS_IMETHOD GetScrollPosition(nsIPresContext* aContext, nscoord &aX, nscoord& aY) const;
@@ -179,27 +270,15 @@ public:
 
   static nsGfxScrollFrame* GetScrollFrameForPort(nsIFrame* aPort);
 
-  struct ScrollbarStyles {
-    // one of NS_STYLE_OVERFLOW_SCROLL, NS_STYLE_OVERFLOW_HIDDEN,
-    // NS_STYLE_OVERFLOW_VISIBLE, NS_STYLE_OVERFLOW_AUTO
-    PRInt32 mHorizontal;
-    PRInt32 mVertical;
-    ScrollbarStyles(PRInt32 h, PRInt32 v) : mHorizontal(h), mVertical(v) {}
-  };
-  virtual ScrollbarStyles GetScrollbarStyles() const;
+  virtual nsGfxScrollFrameInner::ScrollbarStyles GetScrollbarStyles() const;
 
 protected:
-  nsGfxScrollFrame(nsIPresShell* aShell, nsIDocument* aDocument, PRBool aIsRoot);
+  nsGfxScrollFrame(nsIPresShell* aShell, PRBool aIsRoot);
   virtual PRIntn GetSkipSides() const;
-
-  // If a child frame was added or removed, reload our child frame list
-  // We need this if a scrollbar frame is recreated
-  void ReloadChildFrames(nsIPresContext* aPresContext);
 
 private:
   friend class nsGfxScrollFrameInner;
-  nsGfxScrollFrameInner* mInner;
-  nsIPresContext*        mPresContext;  // weak reference
+  nsGfxScrollFrameInner mInner;
 };
 
 #endif /* nsGfxScrollFrame_h___ */
