@@ -603,6 +603,12 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
       else
         return NS_NOINTERFACE;
     }
+    /*else if (mScriptObject && mDocument) {
+        nsCOMPtr<nsIBindingManager> manager;
+        mDocument->GetBindingManager(getter_AddRefs(manager));
+        return manager->GetBindingImplementation(NS_STATIC_CAST(nsIStyledContent*, this), mScriptObject, 
+                                                 iid, result);
+    }*/
     else {
         *result = nsnull;
         return NS_NOINTERFACE;
@@ -3898,16 +3904,6 @@ nsXULElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
         // *won't* change. Oh well, you're a tool for setting the
         // "style" attribute anyway.
         aHint = NS_STYLE_HINT_FRAMECHANGE;
-    }
-    else if (NodeInfo()->Equals(nsXULAtoms::treeitem)) {
-        // Force a framechange if the 'open' atom changes on a <treeitem>
-        if (nsXULAtoms::open == aAttribute)
-            aHint = NS_STYLE_HINT_FRAMECHANGE;
-    }
-    else if (NodeInfo()->Equals(nsXULAtoms::treecol)) {
-        // Ignore 'width' and 'hidden' on a <treecol>
-        if (nsXULAtoms::width == aAttribute || nsXULAtoms::hidden == aAttribute)
-            aHint = NS_STYLE_HINT_REFLOW;
     }
     else if (NodeInfo()->Equals(nsXULAtoms::window)) {
         // Ignore 'width' and 'height' on a <window>
