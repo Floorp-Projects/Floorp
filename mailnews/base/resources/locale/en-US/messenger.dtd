@@ -94,7 +94,7 @@ Rights Reserved.
 <!ENTITY spamFiltersCmd.accesskey "j">
 <!ENTITY filtersCmd.label "Message Filters...">  
 <!ENTITY filtersCmd.accesskey "i">  
-<!ENTITY folderPropsCmd.label ".Folder Properties">  
+<!ENTITY folderPropsCmd.label "Properties">  
 <!ENTITY folderPropsCmd.accesskey "o">  
 <!ENTITY accountManagerCmd.label "Mail/News Account Settings">
 <!ENTITY accountManagerCmd.accesskey "m">

@@ -80,7 +80,8 @@ Rights Reserved.
 <!ENTITY spamFiltersCmd.label ".Junk Mail Filter">
 <!ENTITY filtersCmd.label "Message Filters...">  
 <!ENTITY filtersCmd.accesskey "m">  
-<!ENTITY folderPropsCmd.label ".Folder Properties">  
+<!ENTITY folderPropsCmd.label "Properties">
+<!ENTITY folderPropsCmd.accesskey "o">
 <!ENTITY accountManagerCmd.label "Mail/News Account Settings">
 <!ENTITY accountManagerCmd.accesskey "a">
 <!ENTITY undoDeleteMsgCmd.label "Undo Delete Message">
