@@ -16,6 +16,9 @@
  * Reserved.
  */
 
+#ifndef _NSMSGUTILS_H
+#define _NSMSGUTILS_H
+
 #include "nsIMsgMessageService.h"
 #include "nsString.h"
 #include "nsIEnumerator.h"
@@ -60,3 +63,6 @@ NS_MSG_BASE nsresult NS_MsgGetPriorityFromString(const char *priority, nsMsgPrio
 NS_MSG_BASE nsresult NS_MsgGetUntranslatedPriorityName (nsMsgPriority p, nsString2 *outName);
 
 NS_MSG_BASE nsresult NS_MsgHashIfNecessary(nsString &name);
+
+#endif
+

@@ -259,7 +259,7 @@ public:
 
 	virtual nsresult GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatabase **db) = 0;
 	NS_IMETHOD DeleteMessages(nsISupportsArray *messages, 
-                            nsITransactionManager *txnMgr) = 0;
+                            nsITransactionManager *txnMgr, PRBool deleteStorage) = 0;
 	NS_IMETHOD GetNewMessages();
 
 	NS_IMETHOD GetCharset(PRUnichar * *aCharset) = 0;
@@ -272,6 +272,8 @@ public:
 	NS_IMETHOD SetNumNewMessages(PRInt32 aNumNewMessages);
 
 	NS_IMETHOD GetNewMessagesNotificationDescription(PRUnichar * *adescription);
+
+	NS_IMETHOD GetRootFolder(nsIMsgFolder * *aRootFolder);
 
 protected:
 	nsresult NotifyPropertyChanged(char *property, char* oldValue, char* newValue);

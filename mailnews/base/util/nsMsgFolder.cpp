@@ -1319,6 +1319,26 @@ NS_IMETHODIMP nsMsgFolder::GetNewMessagesNotificationDescription(PRUnichar * *aD
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgFolder::GetRootFolder(nsIMsgFolder * *aRootFolder)
+{
+	if(!aRootFolder)
+		return NS_ERROR_NULL_POINTER;
+
+	nsresult rv;
+	nsCOMPtr<nsIMsgIncomingServer> server;
+	rv = GetServer(getter_AddRefs(server));
+	if(NS_FAILED(rv))
+		return rv;
+
+	nsCOMPtr<nsIFolder> aRoot;
+	rv = server->GetRootFolder(getter_AddRefs(aRoot));
+
+	if(NS_FAILED(rv) || !aRoot)
+		return rv;
+
+	return aRoot->QueryInterface(nsIMsgFolder::GetIID(), (void**)aRootFolder);
+}
+
 nsresult nsMsgFolder::NotifyPropertyChanged(char *property, char *oldValue, char* newValue)
 {
 	nsCOMPtr<nsISupports> supports;
