@@ -100,5 +100,10 @@ ifeq ($(OS_ARCH),OS2)
 XPIDLSRCS += nsILegacyPluginWrapperOS2.idl
 endif
 
+# Just build headers if we don't want plugins support
+ifndef MOZ_PLUGINS
+NO_GEN_XPT=1
+endif
+
 include $(topsrcdir)/config/rules.mk
 
