@@ -280,7 +280,7 @@ void nsDeviceContextUnix :: InstallColormap()
   else // We have StaticGray, StaticColor or TrueColor
     mWriteable = PR_FALSE;
 
-  mNumCells = pow(2, mDepth);
+  mNumCells = (PRUint32) pow(2, mDepth);
 
   mColormap = wa.colormap;
 
