@@ -157,6 +157,7 @@ nsMIMEHeaderParamImpl::GetParameterInternal(const char *aHeaderValue,
       if (str == start)
         return NS_ERROR_UNEXPECTED;
       *aResult = (char *) nsMemory::Clone(start, (str - start) + 1);
+      (*aResult)[str - start] = '\0';  // null-terminate
       NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
       return NS_OK;
     }
@@ -589,7 +590,7 @@ void CopyRawHeader(const char *aInput, PRUint32 aLen,
   nsCAutoString utf8Text;
   if (NS_SUCCEEDED(rv) &&
       NS_SUCCEEDED(
-      cvtUTF8->ConvertStringToUTF8(nsDependentCString(aInput, aLen), 
+      cvtUTF8->ConvertStringToUTF8(Substring(aInput, aInput + aLen), 
       aDefaultCharset, skipCheck, utf8Text))) {
     aOutput.Append(utf8Text);
   } else { // replace each octet with Unicode replacement char in UTF-8.

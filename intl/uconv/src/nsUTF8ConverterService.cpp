@@ -77,7 +77,7 @@ ToUTF8(const nsACString &aString, const char *aCharset, nsACString &aResult)
 
   rv = unicodeDecoder->Convert(inStr.get(), &srcLen, ustr, &dstLen);
   if (NS_SUCCEEDED(rv))
-    CopyUTF16toUTF8(nsDependentString(ustr, dstLen), aResult);
+    CopyUTF16toUTF8(Substring(ustr, ustr + dstLen), aResult);
   return rv;
 }
 
