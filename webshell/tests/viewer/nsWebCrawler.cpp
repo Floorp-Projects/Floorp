@@ -31,10 +31,7 @@
 #include "nsIFrame.h"
 #include "nsIURL.h"
 #ifdef NECKO
-#include "nsIIOService.h"
-#include "nsIURL.h"
-#include "nsIServiceManager.h"
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#include "nsNeckoUtil.h"
 #endif // NECKO
 #include "nsITimer.h"
 #include "nsIAtom.h"
@@ -592,16 +589,7 @@ nsWebCrawler::OkToLoad(const nsString& aURLSpec)
 #ifndef NECKO
   rv = NS_NewURL(&url, aURLSpec);
 #else
-  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  nsIURI *uri = nsnull;
-  const char *uriStr = aURLSpec.GetBuffer();
-  rv = service->NewURI(uriStr, nsnull, &uri);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
-  NS_RELEASE(uri);
+  rv = NS_NewURI(&url, aURLSpec);
 #endif // NECKO
 
   if (NS_OK == rv) {
@@ -673,34 +661,13 @@ nsWebCrawler::FindURLsIn(nsIDocument* aDocument, nsIContent* aNode)
     else {
       aNode->GetAttribute(kNameSpaceID_HTML, mSrcAttr, src);
     }
-    aNode->GetAttribute(kNameSpaceID_HTML, mBaseHrefAttr, base);/* XXX not public knowledge! */
     nsIURI* docURL = aDocument->GetDocumentURL();
     nsresult rv;
 #ifndef NECKO
+    aNode->GetAttribute(kNameSpaceID_HTML, mBaseHrefAttr, base);/* XXX not public knowledge! */
     rv = NS_MakeAbsoluteURL(docURL, base, src, absURLSpec);
 #else
-    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) return;
-
-    nsIURI *baseUri = nsnull;
-
-    if (base.Length() > 0) {
-        char *uriStr = base.ToNewCString();
-        if (!uriStr) return NS_ERROR_OUT_OF_MEMORY;
-        rv = service->NewURI(uriStr, nsnull, &baseUri);
-        nsCRT::free(uriStr);
-    } else {
-        rv = docURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
-    }
-    if (NS_FAILED(rv)) return;
-
-    char *absUrlStr = nsnull;
-    char *urlSpec = src.ToNewCString();
-    if (!urlSpec) return NS_ERROR_OUT_OF_MEMORY;
-    rv = service->MakeAbsolute(urlSpec, baseUri, &absUrlStr);
-    NS_RELEASE(baseUri);
-    absURLSpec = absUrlStr;
-    delete [] absUrlStr;
+    rv = NS_MakeAbsoluteURI(src, docURL, absURLSpec);
 #endif // NECKO
     if (NS_OK == rv) {
       nsIAtom* urlAtom = NS_NewAtom(absURLSpec);
