@@ -26,7 +26,6 @@
 #include "nsIStreamListener.h"
 #include "nsIProgressEventSink.h"
 #include "nsIWebShell.h"
-#include "nsIScriptContextOwner.h"
 #include "nsIDocumentLoaderObserver.h"
 #include "nsString.h"
 #include "nsVoidArray.h"

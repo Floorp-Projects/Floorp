@@ -39,11 +39,13 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsWebCrawler.h"
 #include "nsSpecialSystemDirectory.h"    // For exe dir
 #include "prprf.h"
 #include "plstr.h"
 #include "prenv.h"
+#include "nsIScriptGlobalObject.h"
 
 // Needed for Dialog GUI
 #include "nsICheckButton.h"
@@ -1450,8 +1452,6 @@ nsViewerApp::CreateSiteWalker(nsBrowserWindow* aWindow)
 #ifdef XP_PC
 #include "jsconsres.h"
 
-static NS_DEFINE_IID(kIScriptContextOwnerIID, NS_ISCRIPTCONTEXTOWNER_IID);
-
 static void DestroyConsole()
 {
  if (gConsole) {
@@ -1472,11 +1472,10 @@ static void ShowConsole(nsBrowserWindow* aWindow)
                                                   MAKEINTRESOURCE(ACCELERATOR_TABLE));
       }
       
-      nsIScriptContextOwner *owner = nsnull;
-      nsIScriptContext *context = nsnull;        
-      // XXX needs to change to aWindow->mWebShell
-      if (NS_OK == aWindow->mWebShell->QueryInterface(kIScriptContextOwnerIID, (void **)&owner)) {
-        if (NS_OK == owner->GetScriptContext(&context)) {
+      nsIScriptContext *context = nsnull;
+      nsCOMPtr<nsIScriptGlobalObject> scriptGlobal(do_GetInterface(aWindow->mWebShell));
+      if (scriptGlobal) {       
+        if (NS_OK == scriptGlobal->GetContext(&context)) {
 
           // create the console
           gConsole = JSConsole::CreateConsole();
@@ -1487,8 +1486,6 @@ static void ShowConsole(nsBrowserWindow* aWindow)
           context->Release();
           gConsole->SetNotification(DestroyConsole);
         }
-        
-        NS_RELEASE(owner);
       }
       else {
         MessageBox(hWnd, "Unable to load JavaScript", "Viewer Error", MB_ICONSTOP);

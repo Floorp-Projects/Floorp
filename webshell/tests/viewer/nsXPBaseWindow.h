@@ -25,7 +25,6 @@
 #include "nsIXPBaseWindow.h"
 #include "nsIStreamListener.h"
 #include "nsIWebShell.h"
-#include "nsIScriptContextOwner.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
 #include "nsCRT.h"
