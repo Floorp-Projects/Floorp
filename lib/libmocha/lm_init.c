@@ -1973,9 +1973,20 @@ lm_StrToLocalEncoding(MWContext * context, JSString * str)
 #ifdef UNICODE
     if (!str)
 	return NULL;
-/*	XP_ASSERT(CS_DEFAULT != INTL_GetCSIMetaDocCSID(LO_GetDocumentCharacterSetInfo(context))); */
     
+    /*
+     * If charset has not be initialized in context (because the HTTP Charset:
+     * header hasn't been parsed, or lacking that, the META HTTP-EQUIV Charset
+     * tag hasn't been parsed), we must be called from JS initialization code.
+     * JS defines all initial identifiers (class constructor names, etc.) as
+     * ASCII.  XXX could the charset be reset later by mistake, but before the
+     * document unloads?
+     */
     charset = INTL_GetCSIWinCSID(LO_GetDocumentCharacterSetInfo(context));
+    XP_ASSERT(charset != CS_UNKNOWN);
+    if (charset == CS_DEFAULT)
+	charset = CS_ASCII;
+
     destlen = INTL_UnicodeToStrLen(charset, src, srclen);
     dest = XP_ALLOC(destlen);
     if (!dest) {
