@@ -49,6 +49,7 @@
 #include "nsIWebNavigation.h"
 #include "nsDOMClassInfo.h"
 #include "nsPluginError.h"
+#include "nsIComponentRegistrar.h"
 
 static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
 
@@ -175,17 +176,12 @@ PluginArrayImpl::Refresh(PRBool aReloadDocuments)
 {
   nsresult res = NS_OK;
 
-  nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mDocShell);
-
-  if (mPluginArray != nsnull) {
-    for (PRUint32 i = 0; i < mPluginCount; i++) 
-      NS_IF_RELEASE(mPluginArray[i]);
-
-    delete[] mPluginArray;
-  }
-
-  mPluginCount = 0;
-  mPluginArray = nsnull;
+  // refresh the component registry first, see bug 87913
+  nsCOMPtr<nsIServiceManager> servManager;
+  NS_GetServiceManager(getter_AddRefs(servManager));
+  nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servManager);
+  if (registrar)
+    registrar->AutoRegister(nsnull);
 
   if (!mPluginHost) {
     mPluginHost = do_GetService(kPluginManagerCID, &res);
@@ -207,6 +203,18 @@ PluginArrayImpl::Refresh(PRBool aReloadDocuments)
   // in fact, if we do reload we can hit recursive load problem, see bug 93351
   if(pluginsNotChanged)
     return res;
+
+  nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mDocShell);
+
+  if (mPluginArray != nsnull) {
+    for (PRUint32 i = 0; i < mPluginCount; i++) 
+      NS_IF_RELEASE(mPluginArray[i]);
+
+    delete[] mPluginArray;
+  }
+
+  mPluginCount = 0;
+  mPluginArray = nsnull;
 
   if (mNavigator)
     mNavigator->RefreshMIMEArray();
