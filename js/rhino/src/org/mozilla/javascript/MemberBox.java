@@ -81,11 +81,14 @@ final class MemberBox implements Serializable
                 }
             }
             if (master != null) {
-                invoker = master.createInvoker(method(), argTypes);
+                try {
+                    invoker = master.createInvoker(method(), argTypes);
+                } catch (RuntimeException ex) {
+                    scope.invokerOptimization = false;
+                }
             }
         }
     }
-
 
     private void init(Constructor constructor)
     {
