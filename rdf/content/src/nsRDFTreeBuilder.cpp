@@ -397,6 +397,7 @@ RDFTreeBuilderImpl::AddWidgetItem(nsIContent* aElement,
         return rv;
     }
 
+    PRBool markAsContainer = PR_FALSE;
     while (NS_SUCCEEDED(rv = arcs->Advance())) {
         nsCOMPtr<nsIRDFResource> property;
         if (NS_FAILED(rv = arcs->GetPredicate(getter_AddRefs(property)))) {
@@ -406,7 +407,10 @@ RDFTreeBuilderImpl::AddWidgetItem(nsIContent* aElement,
 
         // Ignore properties that are used to indicate "tree-ness"
         if (IsContainmentProperty(aElement, property))
+        {
+            markAsContainer = PR_TRUE;
             continue;
+        }
 
         PRInt32 nameSpaceID;
         nsCOMPtr<nsIAtom> tag;
@@ -460,10 +464,13 @@ RDFTreeBuilderImpl::AddWidgetItem(nsIContent* aElement,
         return rv;
     }
 
-    // Finally, mark this as a "container" so that we know to
-    // recursively generate kids if they're asked for.
-    if (NS_FAILED(rv = treeItem->SetAttribute(kNameSpaceID_RDF, kContainerAtom, "true", PR_FALSE)))
-        return rv;
+    if (markAsContainer == PR_TRUE)
+    {
+        // Finally, mark this as a "container" so that we know to
+        // recursively generate kids if they're asked for.
+        if (NS_FAILED(rv = treeItem->SetAttribute(kNameSpaceID_RDF, kContainerAtom, "true", PR_FALSE)))
+            return rv;
+    }
 
     return NS_OK;
 }
