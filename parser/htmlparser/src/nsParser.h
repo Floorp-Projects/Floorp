@@ -186,6 +186,13 @@ friend class CTokenHandler;
      */
     virtual PRBool EnableParser(PRBool aState);
 
+    /**
+     * Call this to query whether the parser is enabled or not.
+     *
+     *  @update  vidur 4/12/99
+     *  @return  current state
+     */
+    virtual PRBool    IsParserEnabled();
 
     /**
      *  This rather arcane method (hack) is used as a signal between the

@@ -474,6 +474,11 @@ CParserContext* nsParser::PopContext() {
   CParserContext* oldContext=mParserContext;
   if(oldContext) {
     mParserContext=oldContext->mPrevContext;
+    // If the old context was blocked, propogate the blocked state
+    // back to the newe one.
+    if (mParserContext) {
+      mParserContext->mParserEnabled = oldContext->mParserEnabled;
+    }
   }
   return oldContext;
 }
@@ -521,6 +526,18 @@ PRBool nsParser::EnableParser(PRBool aState){
   NS_IF_RELEASE(me);
 
   return aState;
+}
+
+/**
+ * Call this to query whether the parser is enabled or not.
+ *
+ *  @update  vidur 4/12/99
+ *  @return  current state
+ */
+PRBool    
+nsParser::IsParserEnabled()
+{
+  return mParserContext->mParserEnabled;
 }
 
 
@@ -738,7 +755,12 @@ nsresult nsParser::Parse(nsString& aSourceBuffer,void* aKey,const nsString& aCon
       pc->mScanner->Append(mUnusedInput);
     }
     pc->mScanner->Append(aSourceBuffer);
-    pc->mMultipart=!aLastCall;
+    if (nsnull != pc->mPrevContext) {
+      pc->mMultipart = (pc->mPrevContext->mMultipart || !aLastCall);
+    }
+    else {
+      pc->mMultipart=!aLastCall;
+    }
     result=ResumeParse();
     if(aLastCall) {
       pc->mScanner->CopyUnusedData(mUnusedInput);

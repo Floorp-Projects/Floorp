@@ -122,6 +122,7 @@ class nsIParser : public nsISupports {
 	   *  be a proxy for the NGLayout content model).
      ******************************************************************************************/
     virtual PRBool    EnableParser(PRBool aState) = 0;
+    virtual PRBool    IsParserEnabled() = 0;
     virtual nsresult  Parse(nsIURL* aURL,nsIStreamObserver* aListener = nsnull,PRBool aEnableVerify=PR_FALSE) = 0;
     virtual nsresult	Parse(nsIInputStream& aStream, PRBool aEnableVerify=PR_FALSE) = 0;
     virtual nsresult  Parse(nsString& aSourceBuffer,void* aKey,const nsString& aContentType,PRBool aEnableVerify,PRBool aLastCall) = 0;
