@@ -29,13 +29,13 @@
  *   -- Fixed bug in parse method so that we make sure we check for
  *      axis identifier wild cards, such as ancestor::*
  *
- * $Id: ExprLexer.cpp,v 1.8 2000/11/07 08:30:51 kvisco%ziplink.net Exp $
+ * $Id: ExprLexer.cpp,v 1.9 2001/01/09 20:56:28 axel%pike.org Exp $
  */
 
 /**
  * Lexical analyzer for XPath expressions
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.8 $ $Date: 2000/11/07 08:30:51 $
+ * @version $Revision: 1.9 $ $Date: 2001/01/09 20:56:28 $
 **/
 
 #include <iostream.h>
@@ -631,7 +631,10 @@ void ExprLexer::parse(const String& pattern) {
                     matchDelimiter(ch);
                     break;
                 case HYPHEN :
-                    if ( isValidQName(tokenBuffer) ) tokenBuffer.append(ch);
+                    if ( isValidQName(tokenBuffer) && 
+                         !( prevCh==SPACE || prevCh==TX_TAB||
+                            prevCh==TX_CR || prevCh==TX_LF ) )
+                        tokenBuffer.append(ch);
                     else {
                         switch ( prevToken->type ) {
                             case Token::NULL_TOKEN:
