@@ -128,9 +128,10 @@ main(int argc, char **argv)
 
 
     for (i=2; i<argc; i++) {
-        flen = get_file_length(argv[i]);
+        char *name = argv[i];
 
-        in = fopen(argv[i], "rb");
+        flen = get_file_length(name);
+        in = fopen(name, "rb");
         if (!in) {
             perror("FAILED: fopen");
             return 1;
@@ -159,11 +160,13 @@ main(int argc, char **argv)
             
             state = XPT_NewXDRState(XPT_DECODE, whole, flen);
             if (!XPT_MakeCursor(state, XPT_HEADER, 0, cursor)) {
-                perror("FAILED: XPT_MakeCursor");
+                fprintf(stdout, "XPT_MakeCursor failed for %s\n", name);
                 return 1;
             }
             if (!XPT_DoHeader(cursor, &header)) {
-                perror("FAILED: XPT_DoHeader");
+                fprintf(stdout,
+                        "DoHeader failed for %s.  Is %s a valid .xpt file?\n",
+                        name, name);
                 return 1;
             }                                        
             

@@ -133,6 +133,8 @@ struct XPTHeader {
 };
 
 #define XPT_MAGIC "XPCOM\nTypeLib\r\n\032"
+/* For error messages. */
+#define XPT_MAGIC_STRING "XPCOM\\nTypeLib\\r\\n\\032"
 #define XPT_MAJOR_VERSION 0x01
 #define XPT_MINOR_VERSION 0x00
 

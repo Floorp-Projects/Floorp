@@ -167,6 +167,7 @@ main(int argc, char **argv)
     XPTCursor curs, *cursor = &curs;
     XPTHeader *header;
     size_t flen;
+    char *name;
     char *whole;
     FILE *in;
 
@@ -181,8 +182,9 @@ main(int argc, char **argv)
             xpt_dump_usage(argv);
             return 1;
         }
-        flen = get_file_length(argv[1]);
-        in = fopen(argv[1], "rb");
+        name = argv[1];
+        flen = get_file_length(name);
+        in = fopen(name, "rb");
         break;
     case 3:
         verbose_mode = PR_TRUE;
@@ -190,8 +192,9 @@ main(int argc, char **argv)
             xpt_dump_usage(argv);
             return 1;
         }
-        flen = get_file_length(argv[2]);
-        in = fopen(argv[2], "rb");
+        name = argv[2];
+        flen = get_file_length(name);
+        in = fopen(name, "rb");
         break;
     default:
         xpt_dump_usage(argv);
@@ -224,11 +227,13 @@ main(int argc, char **argv)
         
         state = XPT_NewXDRState(XPT_DECODE, whole, flen);
         if (!XPT_MakeCursor(state, XPT_HEADER, 0, cursor)) {
-            fprintf(stdout, "MakeCursor failed\n");
+            fprintf(stdout, "XPT_MakeCursor failed for %s\n", name);
             return 1;
         }
         if (!XPT_DoHeader(cursor, &header)) {
-            fprintf(stdout, "DoHeader failed\n");
+            fprintf(stdout,
+                    "DoHeader failed for %s.  Is %s a valid .xpt file?\n",
+                    name, name);
             return 1;
         }
 
@@ -239,8 +244,9 @@ main(int argc, char **argv)
    
         if (param_problems) {
             fprintf(stdout, "\nWARNING: ParamDescriptors are present with "
-                    "bad in/out/retval flag information.\nThese have been marked "
-                    "with 'XXX'.\nRemember, retval params should always be marked as out!\n");
+                    "bad in/out/retval flag information.\n"
+                    "These have been marked with 'XXX'.\n"
+                    "Remember, retval params should always be marked as out!\n");
         }
 
         XPT_DestroyXDRState(state);

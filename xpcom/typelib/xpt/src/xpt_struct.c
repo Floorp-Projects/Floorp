@@ -158,6 +158,17 @@ XPT_DoHeader(XPTCursor *cursor, XPTHeader **headerp)
         if (!XPT_Do8(cursor, &header->magic[i]))
             goto error;
     }
+
+    if (mode == XPT_DECODE && 
+        strncmp((const char*)header->magic, XPT_MAGIC, 16) != 0)
+    {
+        /* Require that the header contain the proper magic */
+        fprintf(stderr,
+                "libxpt: bad magic header in input file; "
+                "found '%s', expected '%s'\n",
+                header->magic, XPT_MAGIC_STRING);
+        goto error;
+    }
     
     if(!XPT_Do8(cursor, &header->major_version) ||
        !XPT_Do8(cursor, &header->minor_version) ||
