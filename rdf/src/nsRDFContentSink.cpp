@@ -337,7 +337,8 @@ nsRDFContentSink::QueryInterface(REFNSIID iid, void** result)
         return NS_ERROR_NULL_POINTER;
 
     *result = NULL;
-    if (iid.Equals(kIXMLContentSinkIID) ||
+    if (iid.Equals(kIRDFContentSinkIID) ||
+        iid.Equals(kIXMLContentSinkIID) ||
         iid.Equals(kIContentSinkIID) ||
         iid.Equals(kISupportsIID)) {
         *result = static_cast<nsIXMLContentSink*>(this);
@@ -672,7 +673,7 @@ nsRDFContentSink::SplitQualifiedName(const nsString& aQualifiedName,
         rProperty.Cut(0, nsoffset+1);
     }
 
-    rNameSpaceURI = GetNameSpaceURI(nameSpace);
+    GetNameSpaceURI(nameSpace, rNameSpaceURI);
 }
 
 
@@ -840,32 +841,6 @@ nsRDFContentSink::OpenObject(const nsIParserNode& aNode)
     nsIRDFNode* rdfResource;
     if (NS_FAILED(rv = mRDFResourceManager->GetNode(uri, rdfResource)))
         return rv;
-
-#if 0
-    // Arbitrarily make the document root be the first container
-    // element in the RDF.
-    if (! mRootElement) {
-        nsIRDFContent* rdfElement;
-        if (NS_FAILED(rv = NS_NewRDFElement(&rdfElement)))
-            return rv;
-
-        if (NS_FAILED(rv = rdfElement->SetDocument(mDocument, PR_FALSE))) {
-            NS_RELEASE(rdfElement);
-            return rv;
-        }
-
-        if (NS_FAILED(rv = rdfElement->SetResource(uri))) {
-            NS_RELEASE(rdfElement);
-            return rv;
-        }
-
-        mRootElement = static_cast<nsIContent*>(rdfElement);
-        mDocument->SetRootContent(mRootElement);
-
-        // don't release the rdfElement since we're keeping
-        // a reference to it in mRootElement
-    }
-#endif
 
     // If we're in a member or property element, then this is the cue
     // that we need to hook the object up into the graph via the
@@ -1249,13 +1224,13 @@ nsRDFContentSink::OpenNameSpace(const nsString& aPrefix, const nsString& aURI)
     NS_IF_RELEASE(nameSpaceAtom);
 }
 
-const nsString&
-nsRDFContentSink::GetNameSpaceURI(const nsString& aPrefix)
+void
+nsRDFContentSink::GetNameSpaceURI(const nsString& aPrefix, nsString& rURI)
 {
-    nsAutoString uri;
+    rURI.Truncate();
 
     if (!mNameSpaces)
-        return uri; // empty
+        return; // empty
 
     nsIAtom* nameSpaceAtom = NULL;
     if (0 < aPrefix.Length())
@@ -1267,14 +1242,13 @@ nsRDFContentSink::GetNameSpaceURI(const nsString& aPrefix)
     
         if ((ns) && (ns->mPrefix == nameSpaceAtom)) {
             if (ns->mURI)
-                ns->mURI->ToString(uri);
+                ns->mURI->ToString(rURI);
 
             break;
         }
     }
 
     NS_IF_RELEASE(nameSpaceAtom);
-    return uri;
 }
 
 void    

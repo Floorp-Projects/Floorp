@@ -25,6 +25,7 @@
 #include "nsIPresContext.h"
 #include "nsICSSStyleSheet.h"
 #include "nsIRDFDocument.h"
+#include "nsIRDFContent.h"
 #include "nsIURL.h"
 #include "nsIWebShell.h"
 #include "nsLayoutCID.h"
@@ -56,6 +57,8 @@ public:
 
 protected:
     void StartLayout(void);
+
+    virtual nsresult OpenObject(const nsIParserNode& aNode);
 
     // Style sheets
     nsresult LoadStyleSheet(nsIURL* aURL,
@@ -367,6 +370,45 @@ static const char kCSSType[] = "text/css";
     }
 
     return rv;
+}
+
+
+nsresult
+nsRDFDocumentContentSink::OpenObject(const nsIParserNode& aNode)
+{
+    nsresult rv;
+
+    if (NS_FAILED(rv = nsRDFContentSink::OpenObject(aNode)))
+        return rv;
+
+    // Arbitrarily make the document root be the first container
+    // element in the RDF.
+    if (! mRootElement) {
+        nsAutoString uri;
+        if (NS_FAILED(rv = GetIdAboutAttribute(aNode, uri)))
+            return rv;
+
+        nsIRDFContent* rdfElement;
+        if (NS_FAILED(rv = NS_NewRDFElement(&rdfElement)))
+            return rv;
+
+        if (NS_FAILED(rv = rdfElement->SetDocument(mDocument, PR_FALSE))) {
+            NS_RELEASE(rdfElement);
+            return rv;
+        }
+
+        if (NS_FAILED(rv = rdfElement->SetResource(uri))) {
+            NS_RELEASE(rdfElement);
+            return rv;
+        }
+
+        mRootElement = static_cast<nsIContent*>(rdfElement);
+        mDocument->SetRootContent(mRootElement);
+
+        // don't release the rdfElement since we're keeping
+        // a reference to it in mRootElement
+    }
+    return NS_OK;
 }
 
 
