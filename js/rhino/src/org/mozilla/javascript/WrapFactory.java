@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  * Norris Boyd
+ * Igor Bukanov
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -105,8 +106,7 @@ public class WrapFactory {
      * @param obj the object to be wrapped
      * @return the wrapped value.
      */
-    public Scriptable wrapNewObject(Context cx, Scriptable scope, Object obj)
-    {
+    public Scriptable wrapNewObject(Context cx, Scriptable scope, Object obj) {
         if (obj instanceof Scriptable)
             return (Scriptable)obj;
         Class cls = obj.getClass();
