@@ -644,6 +644,7 @@ class NS_COM nsPersistentFileDescriptor
         void                    SetData(const nsSimpleCharString& inData);
         void                    GetData(nsSimpleCharString& outData, PRInt32& outSize) const;
         void                    SetData(const nsSimpleCharString& inData, PRInt32 inSize);
+        void                    SetData(const char* inData, PRInt32 inSize);
 
     //--------------------------------------------------
     // Data
