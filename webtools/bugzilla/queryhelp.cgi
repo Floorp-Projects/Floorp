@@ -275,7 +275,7 @@ will be marked with one of the following resolutions.
 
 <ul>
 <li><b>FIXED</b> - A fix for this bug is checked into the tree and tested.
-<li><b>INVALID</b> - The problem described is not a bug 
+<li><b>INVALID</b> - The problem described is not a bug. 
 <li><b>WONTFIX</b> - The problem described is a bug which will never be fixed.
 <li><b>LATER</b> - The problem described is a bug which will not be fixed in this
 version of the product.
