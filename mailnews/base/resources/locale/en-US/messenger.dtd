@@ -359,6 +359,18 @@ Rights Reserved.
 <!ENTITY addSenderToAddressBookCmd.accesskey "S">
 <!ENTITY addAllToAddressBookCmd.label ".Add All to Address Book">
 <!ENTITY addAllToAddressBookCmd.accesskey "A">
+<!ENTITY labelMenu.label "Label">
+<!ENTITY labelMenu.accesskey "l">
+<!ENTITY labelCmd1.label "1">
+<!ENTITY labelCmd1.accesskey "1">
+<!ENTITY labelCmd2.label "2">
+<!ENTITY labelCmd2.accesskey "2">
+<!ENTITY labelCmd3.label "3">
+<!ENTITY labelCmd3.accesskey "3">
+<!ENTITY labelCmd4.label "4">
+<!ENTITY labelCmd4.accesskey "4">
+<!ENTITY labelCmd5.label "5">
+<!ENTITY labelCmd5.accesskey "5">
 <!ENTITY markMenu.label "Mark">
 <!ENTITY markMenu.accesskey "k">
 <!ENTITY markAsReadCmd.label "As Read">

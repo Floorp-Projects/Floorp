@@ -23,6 +23,7 @@ Rights Reserved.
 <!ENTITY subjectColumn.label "Subject">
 <!ENTITY dateColumn.label "Date">
 <!ENTITY priorityColumn.label "Priority">
+<!ENTITY labelColumn.label "Label">
 <!ENTITY statusColumn.label "Status">
 <!ENTITY sizeColumn.label "Size">
 <!ENTITY linesColumn.label "Lines">
