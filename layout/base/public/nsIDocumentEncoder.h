@@ -98,7 +98,13 @@ public:
 
     // Encode entities when outputting to a string.
     // E.g. If set, we'll output &nbsp; if clear, we'll output 0xa0.
-    OutputEncodeEntities = 256
+    OutputEncodeEntities = 256,
+
+    // LineBreak processing: we can do either platform line breaks,
+    // CR, LF, or CRLF.  If neither of these flags is set, then we
+    // will use platform line breaks.
+    OutputCRLineBreak = 512,
+    OutputLFLineBreak = 1024
   };
   
   static const nsIID& GetIID() { static nsIID iid = NS_IDOCUMENT_ENCODER_IID; return iid; }

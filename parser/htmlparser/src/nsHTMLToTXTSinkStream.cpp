@@ -262,15 +262,20 @@ nsHTMLToTXTSinkStream::Initialize(nsIOutputStream* aOutStream,
     mCacheLine = PR_TRUE;
   }
     
+  // Set the line break character:
+  if ((mFlags & nsIDocumentEncoder::OutputCRLineBreak)
+      && (mFlags & nsIDocumentEncoder::OutputLFLineBreak)) // Windows/mail
+    mLineBreak.AssignWithConversion("\r\n");
+  else if (mFlags & nsIDocumentEncoder::OutputCRLineBreak) // Mac
+    mLineBreak.AssignWithConversion("\r");
+  else if (mFlags & nsIDocumentEncoder::OutputLFLineBreak) // Unix/DOM
+    mLineBreak.AssignWithConversion("\n");
+  else
+    mLineBreak.AssignWithConversion(NS_LINEBREAK);         // Platform/default
+
   return result;
 }
 
-/**
- * 
- * @update      gpk04/30/99
- * @param 
- * @return
- */
 NS_IMETHODIMP
 nsHTMLToTXTSinkStream::SetCharsetOverride(const nsString* aCharset)
 {
@@ -1179,7 +1184,7 @@ nsHTMLToTXTSinkStream::EndLine(PRBool softlinebreak)
       // Add the soft part of the soft linebreak (RFC 2646 4.1)
       mCurrentLine.AppendWithConversion(' ');
     }
-    mCurrentLine.AppendWithConversion(NS_LINEBREAK);
+    mCurrentLine.Append(mLineBreak);
     WriteSimple(mCurrentLine);
     mCurrentLine.Truncate();
     mCurrentLineWidth = 0;
@@ -1207,7 +1212,7 @@ nsHTMLToTXTSinkStream::EndLine(PRBool softlinebreak)
           (sig_delimiter != mCurrentLine))
       mCurrentLine.SetLength(--currentlinelength);
 
-    mCurrentLine.AppendWithConversion(NS_LINEBREAK);
+    mCurrentLine.Append(mLineBreak);
     WriteSimple(mCurrentLine);
     mCurrentLine.Truncate();
     mCurrentLineWidth = 0;

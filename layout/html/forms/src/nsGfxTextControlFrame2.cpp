@@ -100,15 +100,6 @@
 
 static NS_DEFINE_CID(kHTMLEditorCID, NS_HTMLEDITOR_CID);
 static NS_DEFINE_CID(kFrameSelectionCID, NS_FRAMESELECTION_CID);
-static void RemoveNewlines(nsString &aString);
-
-static void RemoveNewlines(nsString &aString)
-{
-  // strip CR/LF and null
-  static const char badChars[] = {10, 13, 0};
-  aString.StripChars(badChars);
-}
-
 
 //listen for the return key. kinda lame.
 //listen for onchange notifications
@@ -1703,8 +1694,6 @@ nsGfxTextControlFrame2::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
   aPresContext->GetCompatibilityMode(&mode); 
   PRBool navQuirksMode = eCompatibility_NavQuirks == mode && nameSpaceID == kNameSpaceID_HTML;
 
-  nsSize desiredSize;
-
   nsReflowStatus aStatus;
   nsMargin border;
   border.SizeTo(0, 0, 0, 0);
@@ -2238,7 +2227,7 @@ nsGfxTextControlFrame2::GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSe
 
 
 NS_IMETHODIMP
-nsGfxTextControlFrame2::GetSelectionController(nsISelectionController **aSelCon)
+nsGfxTextControlFrame2::GetSelectionContr(nsISelectionController **aSelCon)
 {
   NS_ENSURE_ARG_POINTER(aSelCon);
   NS_IF_ADDREF(*aSelCon = mSelCon);
@@ -2553,7 +2542,7 @@ void nsGfxTextControlFrame2::GetTextControlFrameState(nsString& aValue)
   if (mEditor) 
   {
     nsString format; format.AssignWithConversion("text/plain");
-    PRUint32 flags = 0;
+    PRUint32 flags = nsIDocumentEncoder::OutputLFLineBreak;;
 
     if (PR_TRUE==IsPlainTextControl()) {
       flags |= nsIDocumentEncoder::OutputBodyOnly;   // OutputNoDoctype if head info needed

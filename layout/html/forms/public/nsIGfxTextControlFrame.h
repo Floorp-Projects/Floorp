@@ -71,5 +71,5 @@ public:
   NS_IMETHOD    SetSelectionRange(PRInt32 aSelectionStart, PRInt32 aSelectionEnd) = 0;
   NS_IMETHOD    GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelectionEnd) = 0;
 
-  NS_IMETHOD    GetSelectionController(nsISelectionController **aSelCon) = 0;
+  NS_IMETHOD    GetSelectionContr(nsISelectionController **aSelCon) = 0;
 };

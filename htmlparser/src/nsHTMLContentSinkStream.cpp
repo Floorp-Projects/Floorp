@@ -64,7 +64,6 @@ static PRInt32 BreakBeforeClose(eHTMLTags aTag);
 static PRInt32 BreakAfterClose(eHTMLTags aTag);
 static PRBool IndentChildren(eHTMLTags aTag);
 
-
 /**
  *  This method gets called as part of our COM-like interfaces.
  *  Its purpose is to create an interface to parser object
@@ -143,6 +142,17 @@ nsHTMLContentSinkStream::Initialize(nsIOutputStream* aOutStream,
                                                                : PR_TRUE);
   mMaxColumn = 72;
   mFlags = aFlags;
+
+  // Set the line break character:
+  if ((mFlags & nsIDocumentEncoder::OutputCRLineBreak)
+      && (mFlags & nsIDocumentEncoder::OutputLFLineBreak)) // Windows/mail
+    mLineBreak.AssignWithConversion("\r\n");
+  else if (mFlags & nsIDocumentEncoder::OutputCRLineBreak) // Mac
+    mLineBreak.AssignWithConversion("\r");
+  else if (mFlags & nsIDocumentEncoder::OutputLFLineBreak) // Unix/DOM
+    mLineBreak.AssignWithConversion("\n");
+  else
+    mLineBreak.AssignWithConversion(NS_LINEBREAK);         // Platform/default
 
   mStream = aOutStream;
   mString = aOutString;
@@ -638,7 +648,7 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
   // If this turns out to be a problem, we could do this only if gMozDirty.
   else if (tag == eHTMLTag_br && mPreLevel > 0)
   {
-    Write(NS_LINEBREAK);
+    Write(mLineBreak);
     return;
   }
 
@@ -660,7 +670,7 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
   if ((mDoFormat || isDirty) && mPreLevel == 0 && mColPos != 0
       && BreakBeforeOpen(tag))
   {
-    Write(NS_LINEBREAK);
+    Write(mLineBreak);
     mColPos = 0;
   }
   if ((mDoFormat || isDirty) && mPreLevel == 0 && mColPos == 0)
@@ -677,7 +687,7 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
   if ((mDoFormat || isDirty) && mPreLevel == 0 && tag == eHTMLTag_style)
   {
     Write(kGreaterThan);
-    Write(NS_LINEBREAK);
+    Write(mLineBreak);
     const   nsString& data = aNode.GetSkippedContent();
     PRInt32 size = data.Length();
     char*   buffer = new char[size+1];
@@ -699,7 +709,7 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
 
   if (((mDoFormat || isDirty) && mPreLevel == 0 && BreakAfterOpen(tag)))
   {
-    Write(NS_LINEBREAK);
+    Write(mLineBreak);
     mColPos = 0;
   }
 
@@ -711,9 +721,9 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
     if(mDoHeader)
     {
       Write(gHeaderComment);
-      Write(NS_LINEBREAK);
+      Write(mLineBreak);
       Write(gDocTypeHeader);
-      Write(NS_LINEBREAK);
+      Write(mLineBreak);
     }
   }
 }
@@ -752,7 +762,7 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
     if (!(mFlags & nsIDocumentEncoder::OutputSelectionOnly))
     {
       Write(kGreaterThan);
-      Write(NS_LINEBREAK);
+      Write(mLineBreak);
     }
     if ( mHTMLTagStack[mHTMLStackPos-1] == eHTMLTag_markupDecl)
     {
@@ -781,7 +791,7 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
   {
     if (mColPos != 0)
     {
-      Write(NS_LINEBREAK);
+      Write(mLineBreak);
       mColPos = 0;
     }
   }
@@ -809,7 +819,7 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
   if (((mDoFormat || isDirty) && mPreLevel == 0 && BreakAfterClose(tag))
       || tag == eHTMLTag_body || tag == eHTMLTag_html)
   {
-    Write(NS_LINEBREAK);
+    Write(mLineBreak);
     mColPos = 0;
   }
   mHTMLTagStack[--mHTMLStackPos] = eHTMLTag_unknown;
@@ -898,7 +908,7 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode)
   {
     if (!mDoFormat || mPreLevel > 0)
     {
-      Write(NS_LINEBREAK);
+      Write(mLineBreak);
       mColPos = 0;
     }
   }
@@ -970,7 +980,7 @@ void nsHTMLContentSinkStream::WriteWrapped(const nsString& text)
         first.Truncate(indx);
   
         Write(first);
-        Write(NS_LINEBREAK);
+        Write(mLineBreak);
         mColPos = 0;
   
         // cut the string from the beginning to the index
@@ -1344,5 +1354,3 @@ static PRBool IndentChildren(eHTMLTags aTag)
   return result;  
 }
 
-
- 

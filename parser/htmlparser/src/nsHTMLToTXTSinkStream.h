@@ -18,7 +18,6 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /**
@@ -90,7 +89,6 @@ class nsHTMLToTXTSinkStream : public nsIHTMLToTXTSinkStream
                         PRUint32 aFlags);
 
   NS_IMETHOD SetCharsetOverride(const nsString* aCharset);
-
 
   // nsISupports
   NS_DECL_ISUPPORTS
@@ -206,6 +204,7 @@ protected:
 
   nsIUnicodeEncoder*  mUnicodeEncoder;
   nsString            mCharsetOverride;
+  nsString            mLineBreak;
   nsILineBreaker*     mLineBreaker;
 };
 
