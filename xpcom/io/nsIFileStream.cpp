@@ -78,7 +78,8 @@ class FileImpl
                                             mWriteCursor = nsnull;
                                             mWriteLimit  = nsnull;
 
-                                            Open(inFile, nsprMode, accessMode);
+                                            rv = Open(inFile, nsprMode, accessMode);
+                                            NS_ASSERTION(NS_SUCCEEDED(rv), "Open failed");
                                         }
         virtual                         ~FileImpl()
                                         {
