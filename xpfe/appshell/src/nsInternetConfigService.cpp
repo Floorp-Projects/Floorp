@@ -341,6 +341,40 @@ NS_IMETHODIMP nsInternetConfigService::GetMIMEInfoFromTypeCreator(PRUint32 aType
 }
 
 
+NS_IMETHODIMP nsInternetConfigService::GetFileMappingFlags(FSSpec* fsspec, PRBool lookupByExtensionFirst, PRInt32 *_retval)
+{
+  nsresult rv = NS_ERROR_FAILURE;
+  OSStatus err = noErr;
+
+  NS_ENSURE_ARG(_retval);
+  *_retval = -1;
+  
+  ICInstance instance = nsInternetConfig::GetInstance();
+  if ( instance )
+  {
+    ICMapEntry entry;
+    
+    if (lookupByExtensionFirst)
+      err = ::ICMapFilename( instance, fsspec->name, &entry );
+  
+    if (!lookupByExtensionFirst || err != noErr)
+    {
+      FInfo info;
+  		err = FSpGetFInfo (fsspec, &info);
+  		if (err == noErr)
+        err = ::ICMapTypeCreator( instance, info.fdType, info.fdCreator, fsspec->name, &entry );
+    }
+
+  	if (err == noErr)
+  	  *_retval = entry.flags;
+  	 
+  	 rv = NS_OK;
+  }
+	
+  return rv;
+}
+
+
 /* void GetDownloadFolder (out FSSpec fsspec); */
 NS_IMETHODIMP nsInternetConfigService::GetDownloadFolder(FSSpec *fsspec)
 {
