@@ -371,14 +371,14 @@ class nsTAString_CharT
     // array variable. Use AssignASCII for those.
 #ifdef NS_DISABLE_LITERAL_TEMPLATE
       void AssignLiteral( const char* str )
-                  { return AssignASCII(str); }
+                  { AssignASCII(str); }
 #else
       template<int N>
       void AssignLiteral( const char (&str)[N] )
-                  { return AssignASCII(str, N-1); }
+                  { AssignASCII(str, N-1); }
       template<int N>
       void AssignLiteral( char (&str)[N] )
-                  { return AssignASCII(str, N-1); }
+                  { AssignASCII(str, N-1); }
 #endif
 
         // copy-assignment operator.  I must define my own if I don't want the compiler to make me one
@@ -407,14 +407,14 @@ class nsTAString_CharT
     // array variable. Use AppendASCII for those.
 #ifdef NS_DISABLE_LITERAL_TEMPLATE
       void AppendLiteral( const char* str )
-                  { return AppendASCII(str); }
+                  { AppendASCII(str); }
 #else
       template<int N>
       void AppendLiteral( const char (&str)[N] )
-                  { return AppendASCII(str, N-1); }
+                  { AppendASCII(str, N-1); }
       template<int N>
       void AppendLiteral( char (&str)[N] )
-                  { return AppendASCII(str, N-1); }
+                  { AppendASCII(str, N-1); }
 #endif
 
       self_type& operator+=( const self_type& readable )                                            { Append(readable); return *this; }
