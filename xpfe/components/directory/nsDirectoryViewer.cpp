@@ -43,8 +43,6 @@
 #include "nsIDocumentViewer.h"
 #include "nsIEnumerator.h"
 #include "nsIGenericFactory.h"
-#include "nsIRDFContainer.h"
-#include "nsIRDFContainerUtils.h"
 #include "nsIRDFService.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
@@ -89,10 +87,12 @@ class nsHTTPIndexParser : public nsIStreamListener
 protected:
   static nsrefcnt gRefCntParser;
   static nsIRDFService* gRDF;
+  static nsITextToSubURI* gTextToSubURI;
   static nsIRDFResource* kHTTPIndex_Comment;
   static nsIRDFResource* kHTTPIndex_Filename;
   static nsIRDFResource* kHTTPIndex_Filetype;
   static nsIRDFResource* kHTTPIndex_Loading;
+  static nsIRDFResource* kNC_Child;
   static nsIRDFLiteral*  kTrueLiteral;
 
   static nsresult ParseLiteral(nsIRDFResource *arc, nsString& aValue, nsIRDFNode** aResult);
@@ -111,15 +111,15 @@ protected:
   nsIHTTPIndex* mHTTPIndex; // [WEAK]
 
   nsCOMPtr<nsIRDFDataSource> mDataSource;
-
-  nsCOMPtr<nsIURI> mDirectoryURI;
   nsCOMPtr<nsIRDFResource> mDirectory;
-  nsCOMPtr<nsIRDFContainer> mDirectoryContainer;
 
+  nsCString mURI;
   nsCString mBuf;
+  PRInt32   mLineStart;
+
   nsresult ProcessData(nsISupports *context);
   nsresult ParseFormat(const char* aFormatStr);
-  nsresult ParseData(const char* aDataStr, nsISupports *context);
+  nsresult ParseData(nsAutoString* values, const char *baseStr, const char *encodingStr, char* aDataStr, nsIRDFResource *parentRes);
 
   nsAutoString mComment;
 
@@ -152,10 +152,12 @@ nsIRDFService		*gRDF = nsnull;
 
 nsrefcnt nsHTTPIndexParser::gRefCntParser = 0;
 nsIRDFService* nsHTTPIndexParser::gRDF;
+nsITextToSubURI *nsHTTPIndexParser::gTextToSubURI;
 nsIRDFResource* nsHTTPIndexParser::kHTTPIndex_Comment;
 nsIRDFResource* nsHTTPIndexParser::kHTTPIndex_Filename;
 nsIRDFResource* nsHTTPIndexParser::kHTTPIndex_Filetype;
 nsIRDFResource* nsHTTPIndexParser::kHTTPIndex_Loading;
+nsIRDFResource* nsHTTPIndexParser::kNC_Child;
 nsIRDFLiteral*  nsHTTPIndexParser::kTrueLiteral;
 
 
@@ -175,6 +177,7 @@ nsHTTPIndexParser::gFieldTable[] = {
 
 nsHTTPIndexParser::nsHTTPIndexParser(nsHTTPIndex* aHTTPIndex, nsISupports* aContainer)
   : mHTTPIndex(aHTTPIndex),
+    mLineStart(0),
     mContainer(aContainer)
 {
   NS_INIT_REFCNT();
@@ -203,6 +206,11 @@ nsHTTPIndexParser::Init()
                                       NS_REINTERPRET_CAST(nsISupports**, &gRDF));
     if (NS_FAILED(rv)) return rv;
 
+    rv = nsServiceManager::GetService(NS_ITEXTTOSUBURI_PROGID,
+                                      NS_GET_IID(nsITextToSubURI),
+                                      NS_REINTERPRET_CAST(nsISupports**, &gTextToSubURI));
+    if (NS_FAILED(rv)) return rv;
+
     rv = gRDF->GetResource(HTTPINDEX_NAMESPACE_URI "Comment",  &kHTTPIndex_Comment);
     if (NS_FAILED(rv)) return rv;
 
@@ -213,6 +221,9 @@ nsHTTPIndexParser::Init()
     if (NS_FAILED(rv)) return rv;
 
     rv = gRDF->GetResource(HTTPINDEX_NAMESPACE_URI "loading",  &kHTTPIndex_Loading);
+    if (NS_FAILED(rv)) return rv;
+
+	rv = gRDF->GetResource(NC_NAMESPACE_URI "child",   &kNC_Child);
     if (NS_FAILED(rv)) return rv;
 
     rv = gRDF->GetLiteral(NS_ConvertASCIItoUCS2("true").GetUnicode(), &kTrueLiteral);
@@ -237,13 +248,23 @@ nsHTTPIndexParser::~nsHTTPIndexParser()
     NS_IF_RELEASE(kHTTPIndex_Filename);
     NS_IF_RELEASE(kHTTPIndex_Filetype);
     NS_IF_RELEASE(kHTTPIndex_Loading);
+    NS_IF_RELEASE(kNC_Child);
     NS_IF_RELEASE(kTrueLiteral);
 
     for (Field* field = gFieldTable; field->mName; ++field) {
       NS_IF_RELEASE(field->mProperty);
     }
 
-    nsServiceManager::ReleaseService("component://netscape/rdf/rdf-service", gRDF);
+    if (gRDF)
+    {
+        nsServiceManager::ReleaseService("component://netscape/rdf/rdf-service", gRDF);
+        gRDF = nsnull;
+    }
+    if (gTextToSubURI)
+    {
+        nsServiceManager::ReleaseService(NS_ITEXTTOSUBURI_PROGID, gTextToSubURI);
+        gTextToSubURI = nsnull;
+    }
   }
 }
 
@@ -336,6 +357,7 @@ nsHTTPIndexParser::OnStartRequest(nsIChannel* aChannel, nsISupports* aContext)
   }  
 
   // Save off some information about the stream we're about to parse.
+  nsCOMPtr<nsIURI> mDirectoryURI;
   rv = aChannel->GetURI(getter_AddRefs(mDirectoryURI));
   if (NS_FAILED(rv)) return rv;
 
@@ -345,19 +367,13 @@ nsHTTPIndexParser::OnStartRequest(nsIChannel* aChannel, nsISupports* aContext)
 
   // we know that this is a directory (due to being a HTTP-INDEX response)
   // so ensure it ends with a slash if its a FTP URL
-  nsAutoString	fullURI; fullURI.AssignWithConversion(uristr);
-  if ((fullURI.Find("ftp://", PR_TRUE) == 0) && (fullURI.Last() != (PRUnichar('/'))))
+  mURI.Assign(uristr);
+  if ((mURI.Find("ftp://", PR_TRUE) == 0) && (mURI.Last() != (PRUnichar('/'))))
   {
-  	fullURI.AppendWithConversion('/');
+  	mURI.Append('/');
   }
 
-  rv = gRDF->GetUnicodeResource(fullURI.GetUnicode(), getter_AddRefs(mDirectory));
-  if (NS_FAILED(rv)) return rv;
-
-  NS_WITH_SERVICE(nsIRDFContainerUtils, rdfc, "component://netscape/rdf/container-utils", &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = rdfc->MakeSeq(mDataSource, mDirectory, getter_AddRefs(mDirectoryContainer));
+  rv = gRDF->GetResource(mURI, getter_AddRefs(mDirectory));
   if (NS_FAILED(rv)) return rv;
 
   // Mark the directory as "loading"
@@ -384,8 +400,11 @@ nsHTTPIndexParser::OnStopRequest(nsIChannel* aChannel,
   // XXX Should we do anything different if aStatus != NS_OK?
 
   // Clean up any remaining data
-  if (mBuf.Length() > 0)
+  if (mBuf.Length() > (PRUint32) mLineStart)
     ProcessData(aContext);
+
+  // free up buffer after processing all the data
+  mBuf.Truncate();
 
   nsresult rv;
 
@@ -396,9 +415,8 @@ nsHTTPIndexParser::OnStopRequest(nsIChannel* aChannel,
   rv = mDataSource->Assert(mDirectory, kHTTPIndex_Comment, comment, PR_TRUE);
   if (NS_FAILED(rv)) return rv;
 
-  // Remove the 'loading' annotation.
-  rv = mDataSource->Unassert(mDirectory, kHTTPIndex_Loading, kTrueLiteral);
-  if (NS_FAILED(rv)) return rv;
+  // Remove the 'loading' annotation (ignore errors)
+  mDataSource->Unassert(mDirectory, kHTTPIndex_Loading, kTrueLiteral);
 
   return NS_OK;
 }
@@ -445,16 +463,44 @@ nsHTTPIndexParser::OnDataAvailable(nsIChannel* aChannel,
 nsresult
 nsHTTPIndexParser::ProcessData(nsISupports *context)
 {
+    nsXPIDLCString  encodingStr;
+	if (mHTTPIndex)
+	{
+	    mHTTPIndex->GetEncoding(getter_Copies(encodingStr));
+	}
+
+    nsCOMPtr<nsIRDFResource>	parentRes = do_QueryInterface(context);
+    if (!parentRes) return(NS_ERROR_UNEXPECTED);
+
+  // First, we'll iterate through the values and remember each (using
+  // an array of autostrings allocated on the stack, if possible). We
+  // have to do this, because we don't know up-front the filename for
+  // which this 201 refers.
+#define MAX_AUTO_VALUES 8
+
+  nsAutoString autovalues[MAX_AUTO_VALUES];
+  nsAutoString* values = autovalues;
+
+  if (mFormat.Count() > MAX_AUTO_VALUES) {
+    // Yeah, we really -do- want to create nsAutoStrings in the heap
+    // here, because most of the fields will be l.t. 32 characters:
+    // this avoids an extra allocation for the nsString's buffer.
+    values = new nsAutoString[mFormat.Count()];
+    if (! values)
+      return NS_ERROR_OUT_OF_MEMORY;
+  }
+
 	while(PR_TRUE)
 	{
-		PRInt32		eol = mBuf.FindCharInSet("\n\r");
+		PRInt32		eol = mBuf.FindCharInSet("\n\r", mLineStart);
 		if (eol < 0)	break;
-		
-		nsCAutoString	line;
-		mBuf.Left(line, eol);
-		mBuf.Cut(0, eol + 1);
+		mBuf.SetCharAt(PRUnichar('\0'), eol);
 
-		if (line.Length() >= 4)
+		const char  *line = &mBuf.mStr[mLineStart];
+        PRInt32     lineLen = eol - mLineStart;
+		mLineStart = eol + 1;
+
+		if (lineLen >= 4)
 		{
 			nsresult	rv;
 			const char	*buf = line;
@@ -492,7 +538,7 @@ nsHTTPIndexParser::ProcessData(nsISupports *context)
 					else if (buf[2] == '1' && buf[3] == ':')
 					{
 						// 201. Field data
-						rv = ParseData(buf + 4, context);
+						rv = ParseData(values, mURI, encodingStr, ((char *)buf) + 4, parentRes);
 						if (NS_FAILED(rv)) return rv;
 					}
 				}
@@ -509,6 +555,12 @@ nsHTTPIndexParser::ProcessData(nsISupports *context)
 			}
 		}
 	}
+
+  // If we needed to spill values onto the heap, make sure we clean up
+  // here.
+  if (values != autovalues)
+    delete[] values;
+
 	return(NS_OK);
 }
 
@@ -579,8 +631,12 @@ nsHTTPIndex::GetEncoding(char **encoding)
 
 
 
+
+
+
 nsresult
-nsHTTPIndexParser::ParseData(const char* aDataStr, nsISupports *context)
+nsHTTPIndexParser::ParseData(nsAutoString* values, const char *baseStr, const char *encodingStr,
+    register char* aDataStr, nsIRDFResource *parentRes)
 {
   // Parse a "201" data line, using the field ordering specified in
   // mFormat.
@@ -590,57 +646,10 @@ nsHTTPIndexParser::ParseData(const char* aDataStr, nsISupports *context)
     return NS_OK;
   }
 
-  // Because the 'file:' protocol won't do this for us, we need to
-  // make sure that the mDirectoryURI ends with a '/' before
-  // concatenating.
-  nsresult rv;
-  NS_WITH_SERVICE(nsITextToSubURI, textToSubURI, kTextToSubURICID, &rv);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get nsITextToSubURI service");
+  nsresult rv = NS_OK;
 
-  nsCOMPtr<nsIURI> realbase;
-
-  {
-      nsXPIDLCString orig;
-      rv = mDirectoryURI->GetSpec(getter_Copies(orig));
-      if (NS_FAILED(rv)) return rv;
-
-      nsCAutoString basestr(orig);
-      if (basestr.Last() != '/')
-        basestr.Append('/');
-
-      rv = NS_NewURI(getter_AddRefs(realbase), (const char*) basestr);
-      if (NS_FAILED(rv)) return rv;
-  }
-
-
-  // First, we'll iterate through the values and remember each (using
-  // an array of autostrings allocated on the stack, if possible). We
-  // have to do this, because we don't know up-front the filename for
-  // which this 201 refers.
-#define MAX_AUTO_VALUES 8
-
-  nsAutoString autovalues[MAX_AUTO_VALUES];
-  nsAutoString* values = autovalues;
-
-  if (mFormat.Count() > MAX_AUTO_VALUES) {
-    // Yeah, we really -do- want to create nsAutoStrings in the heap
-    // here, because most of the fields will be l.t. 32 characters:
-    // this avoids an extra allocation for the nsString's buffer.
-    values = new nsAutoString[mFormat.Count()];
-    if (! values)
-      return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  rv = NS_OK;
-  nsCOMPtr<nsIRDFResource> entry;
-
-    nsCAutoString	filename, filetype;
-    nsXPIDLCString  encodingStr;
-
-	if (mHTTPIndex)
-	{
-	    mHTTPIndex->GetEncoding(getter_Copies(encodingStr));
-	}
+  nsCAutoString	filename;
+  PRBool    isDirType = PR_FALSE;
 
   for (PRInt32 i = 0; i < mFormat.Count(); ++i) {
     // If we've exhausted the data before we run out of fields, just
@@ -648,21 +657,18 @@ nsHTTPIndexParser::ParseData(const char* aDataStr, nsISupports *context)
     if (! *aDataStr)
       break;
 
-    while (*aDataStr && nsCRT::IsAsciiSpace(PRUnichar(*aDataStr)))
+    while (*aDataStr && nsCRT::IsAsciiSpace(*aDataStr))
       ++aDataStr;
 
-    nsCAutoString	value;
-    PRInt32		len;
+    char    *value = aDataStr;
 
     if (*aDataStr == '"' || *aDataStr == '\'') {
       // it's a quoted string. snarf everything up to the next quote character
       const char quotechar = *(aDataStr++);
-      len = 0;
-      while (aDataStr[len] && (aDataStr[len] != quotechar))
-      	++len;
-      value.SetCapacity(len + 1);
-      value.Append(aDataStr, len);
-      aDataStr += len;
+      ++value;
+      while (*aDataStr && *aDataStr != quotechar)
+      	++aDataStr;
+      *aDataStr++ = '\0';
 
       if (! aDataStr) {
         NS_WARNING("quoted value not terminated");
@@ -670,32 +676,31 @@ nsHTTPIndexParser::ParseData(const char* aDataStr, nsISupports *context)
     }
     else {
       // it's unquoted. snarf until we see whitespace.
-      len = 0;
-      while (aDataStr[len] && !nsCRT::IsAsciiSpace(aDataStr[len]))
-        ++len;
-      value.SetCapacity(len + 1);
-      value.Append(aDataStr, len);
-      aDataStr += len;
+      value = aDataStr;
+      while (*aDataStr && (!nsCRT::IsAsciiSpace(*aDataStr)))
+        ++aDataStr;
+      *aDataStr++ = '\0';
     }
 
     Field* field = NS_STATIC_CAST(Field*, mFormat.ElementAt(i));
     if (field && field->mProperty == kHTTPIndex_Filename)
     {
         // don't unescape at this point, so that UnEscapeAndConvert() can
-        filename = value.mStr;
+        filename = value;
 
         PRBool  success = PR_FALSE;
 
         nsAutoString entryuri;
-        if (textToSubURI)
+
+        if (gTextToSubURI)
         {
             PRUnichar	*result = nsnull;
-            if (NS_SUCCEEDED(rv = textToSubURI->UnEscapeAndConvert(encodingStr, filename,
+            if (NS_SUCCEEDED(rv = gTextToSubURI->UnEscapeAndConvert(encodingStr, filename,
                 &result)) && (result))
             {
                 if (nsCRT::strlen(result) > 0)
                 {
-                    values[i].Append(result);
+                    values[i].Assign(result);
                     success = PR_TRUE;
                 }
                 Recycle(result);
@@ -709,39 +714,39 @@ nsHTTPIndexParser::ParseData(const char* aDataStr, nsISupports *context)
         if (success == PR_FALSE)
         {
             // if unsuccessfully at charset conversion, then
-            // just fallback to unescape'ing the nsStr (in place)
-            value.mLength = nsUnescapeCount(value.mStr);
-            values[i].AppendWithConversion(value);
+            // just fallback to unescape'ing in-place
+            nsUnescape(value);
+            values[i].AssignWithConversion(value);
         }
 
     }
     else
     {
-        // unescape the nsStr (in place)
-        value.mLength = nsUnescapeCount(value.mStr);
-        values[i].AppendWithConversion(value);
+        // unescape in-place
+        nsUnescape(value);
+        values[i].AssignWithConversion(value);
 
         if (field && field->mProperty == kHTTPIndex_Filetype)
         {
-            filetype = value.mStr;
+            if (!nsCRT::strcasecmp(value, "directory"))
+            {
+                isDirType = PR_TRUE;
+            }
         }
     }
   }
 
       // we found the filename; construct a resource for its entry
-
-        nsAutoString    entryuri;
-
-        rv = NS_MakeAbsoluteURI(entryuri, NS_ConvertASCIItoUCS2(filename), realbase);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable make absolute URI");
+      nsCAutoString entryuriC(baseStr);
+      entryuriC.Append(filename);
 
       // if its a directory, make sure it ends with a trailing slash
-      if (filetype.EqualsIgnoreCase("directory"))
+      if (isDirType == PR_TRUE)
       {
-            entryuri.Append(PRUnichar('/'));
+            entryuriC.Append('/');
       }
-      nsCAutoString entryuriC;
-      entryuriC.AssignWithConversion(entryuri);
+
+      nsCOMPtr<nsIRDFResource> entry;
       rv = gRDF->GetResource(entryuriC, getter_AddRefs(entry));
 
   // At this point, we'll (hopefully) have found the filename and
@@ -754,39 +759,19 @@ nsHTTPIndexParser::ParseData(const char* aDataStr, nsISupports *context)
       if (! field)
         continue;
 
-      nsCOMPtr<nsIRDFNode> value;
-      rv = (*field->mParse)(field->mProperty, values[indx], getter_AddRefs(value));
+      nsCOMPtr<nsIRDFNode> nodeValue;
+      rv = (*field->mParse)(field->mProperty, values[indx], getter_AddRefs(nodeValue));
       if (NS_FAILED(rv)) break;
-      if (value)
+      if (nodeValue)
       {
-        rv = mDataSource->Assert(entry, field->mProperty, value, PR_TRUE);
+        rv = mDataSource->Assert(entry, field->mProperty, nodeValue, PR_TRUE);
         if (NS_FAILED(rv)) break;
       }
     }
 
-	if (!mDirectoryContainer)
-	{
-		nsCOMPtr<nsIRDFResource>	parentRes = do_QueryInterface(context);
-		if (parentRes)
-		{
-			NS_WITH_SERVICE(nsIRDFContainerUtils, rdfc, "component://netscape/rdf/container-utils", &rv);
-			if (NS_FAILED(rv)) return rv;
-
-			rv = rdfc->MakeSeq(mDataSource, parentRes, getter_AddRefs(mDirectoryContainer));
-			if (NS_FAILED(rv)) return rv;
-		}
-	}
-
-	if (mDirectoryContainer)
-	{
-	    rv = mDirectoryContainer->AppendElement(entry);
-	}
+    rv = mDataSource->Assert(parentRes, kNC_Child, entry, PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
   }
-
-  // If we needed to spill values onto the heap, make sure we clean up
-  // here.
-  if (values != autovalues)
-    delete[] values;
 
   return rv;
 }
@@ -1275,11 +1260,7 @@ nsHTTPIndex::FireTimer(nsITimer* aTimer, void* aClosure)
         		}
         		if (NS_SUCCEEDED(rv) && (listener))
         		{
-					if (NS_SUCCEEDED(rv = channel->AsyncRead(listener, aSource)))
-					{
-					    // mark aSource as "loading"
-						rv = httpIndex->mInner->Assert(aSource, httpIndex->kNC_loading, httpIndex->kTrueLiteral, PR_TRUE);
-					}
+					rv = channel->AsyncRead(listener, aSource);
         		}
             }
         }
