@@ -341,56 +341,65 @@ char * PromptUserCallback(void *arg, char *prompt, void* clientContext, int isPa
     nsresult rv = NS_OK;
     PRUnichar *password;
     PRBool  value;
+    nsCOMPtr<nsIPrompt> proxyPrompt;
 
     nsIChannelSecurityInfo* csi = NS_STATIC_CAST(nsIChannelSecurityInfo*, clientContext);
     nsCOMPtr<nsIChannel> channel;
-    csi->GetChannel(getter_AddRefs(channel));
-    if (!channel) return nsnull;
+    if (csi) {
+      csi->GetChannel(getter_AddRefs(channel));
+      if (!channel) return nsnull;
 
-    nsCOMPtr<nsIInterfaceRequestor> callbacks;
-    channel->GetNotificationCallbacks(getter_AddRefs(callbacks));
-    if (!callbacks) return nsnull;
+      nsCOMPtr<nsIInterfaceRequestor> callbacks;
+      channel->GetNotificationCallbacks(getter_AddRefs(callbacks));
+      if (!callbacks) return nsnull;
 
-    // The notification callbacks object may not be safe, so
-    // proxy the call to get the nsIPrompt.
+      // The notification callbacks object may not be safe, so
+      // proxy the call to get the nsIPrompt.
 
-    nsCOMPtr<nsIProxyObjectManager> proxyman(do_GetService(NS_XPCOMPROXY_CONTRACTID));
-    if (!proxyman) return nsnull;
+      nsCOMPtr<nsIProxyObjectManager> proxyman(do_GetService(NS_XPCOMPROXY_CONTRACTID));
+      if (!proxyman) return nsnull;
 
-    nsCOMPtr<nsIInterfaceRequestor> proxiedCallbacks;
-    proxyman->GetProxyForObject(NS_UI_THREAD_EVENTQ,
-                                NS_GET_IID(nsIInterfaceRequestor),
-                                callbacks,
-                                PROXY_SYNC,
-                                getter_AddRefs(proxiedCallbacks));
-    if (!proxiedCallbacks) return nsnull;
+      nsCOMPtr<nsIInterfaceRequestor> proxiedCallbacks;
+      proxyman->GetProxyForObject(NS_UI_THREAD_EVENTQ,
+                                  NS_GET_IID(nsIInterfaceRequestor),
+                                  callbacks,
+                                  PROXY_SYNC,
+                                  getter_AddRefs(proxiedCallbacks));
+      if (!proxiedCallbacks) return nsnull;
 
-    nsCOMPtr<nsIPrompt> iprompt(do_GetInterface(proxiedCallbacks));
-    if (!iprompt) return nsnull;
+      nsCOMPtr<nsIPrompt> iprompt(do_GetInterface(proxiedCallbacks));
+      if (!iprompt) return nsnull;
 
-    // Finally, get a proxy for the nsIPrompt
+      // Finally, get a proxy for the nsIPrompt
 
-    nsCOMPtr<nsIPrompt> proxyPrompt;
-    proxyman->GetProxyForObject(NS_UI_THREAD_EVENTQ,
-                                NS_GET_IID(nsIPrompt),
-                                iprompt,
-                                PROXY_SYNC,
-                                getter_AddRefs(proxyPrompt));
+      proxyman->GetProxyForObject(NS_UI_THREAD_EVENTQ,
+                                  NS_GET_IID(nsIPrompt),
+                                  iprompt,
+                                  PROXY_SYNC,
+                                  getter_AddRefs(proxyPrompt));
 
-    if (!proxyPrompt) {
-      NS_ASSERTION(PR_FALSE, "callbacks does not implement nsIPrompt");
-      return nsnull;
+      if (!proxyPrompt) {
+        NS_ASSERTION(PR_FALSE, "callbacks does not implement nsIPrompt");
+        return nsnull;
+      }
+
+    } else {
+      NS_WITH_PROXIED_SERVICE(nsIPrompt, tmpPrompt, kNetSupportDialogCID, 
+                              NS_UI_THREAD_EVENTQ, &rv);
+      proxyPrompt = tmpPrompt;
+    
     }
+    if (proxyPrompt) {
+      rv = proxyPrompt->PromptPassword(nsnull, NS_ConvertASCIItoUCS2(prompt).GetUnicode(),
+                                       NS_LITERAL_STRING(" "),      // hostname
+                                       nsIPrompt::SAVE_PASSWORD_NEVER, &password, &value);
 
-    rv = proxyPrompt->PromptPassword(nsnull, NS_ConvertASCIItoUCS2(prompt).GetUnicode(),
-                                     NS_LITERAL_STRING(" "),      // hostname
-                                     nsIPrompt::SAVE_PASSWORD_NEVER, &password, &value);
-
+    }
     if (NS_SUCCEEDED(rv) && value) {
-        nsString a(password);
-        char* str = a.ToNewCString();
-        Recycle(password);
-        return str;
+      nsString a(password);
+      char* str = a.ToNewCString();
+      Recycle(password);
+      return str;
     }
 
     return nsnull;
