@@ -35,7 +35,6 @@
 
 class nsHashtable;
 class nsIWidget;
-class nsIPaletteOS2;
 
 // These were called `drawables' in os2fe.
 //
@@ -55,7 +54,6 @@ class nsDrawingSurfaceOS2 : public nsIDrawingSurface
    nsHashtable   *mHTFonts; // cache of fonthandle to lcid
    long           mNextID;  // next lcid to allocate
    long           mTopID;   // highest used lcid
-   nsIPaletteOS2 *mPalette; // palette
 
  public:
    nsDrawingSurfaceOS2();
@@ -71,13 +69,10 @@ class nsDrawingSurfaceOS2 : public nsIDrawingSurface
    void SelectFont( nsIFontMetrics *metrics);
    void FlushFontCache();
 
-   void SetPalette( nsIPaletteOS2 *aPalette);
-
    NS_IMETHOD GetBitmap( HBITMAP &aBitmap); // yuck (for blender, may go)
    NS_IMETHOD RequiresInvertedMask( PRBool *aBool); // double yuck (images)
 
  protected:
-   void DeselectPalette();
    void DisposeFonts();     // MUST be called before disposing of PS
 };
 

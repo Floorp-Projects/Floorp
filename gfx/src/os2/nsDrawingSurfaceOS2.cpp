@@ -25,7 +25,6 @@
 #include "nsIWidget.h"
 #include "nsDrawingSurfaceOS2.h"
 #include "nsFontMetricsOS2.h"
-#include "nsPaletteOS2.h"
 
 // Base class -- fonts, palette and xpcom -----------------------------------
 
@@ -35,7 +34,7 @@ NS_IMPL_ISUPPORTS(nsDrawingSurfaceOS2, NS_GET_IID(nsIDrawingSurface))
 // do testing with, and 0 is, of course, LCID_DEFAULT.
 
 nsDrawingSurfaceOS2::nsDrawingSurfaceOS2()
-                    : mNextID(2), mTopID(1), mPalette(0), mPS(0)
+                    : mNextID(2), mTopID(1), mPS(0)
 {
    NS_INIT_REFCNT();
    mHTFonts = new nsHashtable;
@@ -43,8 +42,6 @@ nsDrawingSurfaceOS2::nsDrawingSurfaceOS2()
 
 nsDrawingSurfaceOS2::~nsDrawingSurfaceOS2()
 {
-   // release palette; no harm if it's already been done by a subclass
-   DeselectPalette();
    DisposeFonts();
 }
 
@@ -97,23 +94,6 @@ void nsDrawingSurfaceOS2::FlushFontCache()
    mHTFonts->Reset();
    mNextID = 2;
    // leave mTopID where it is.
-}
-
-// Palette
-void nsDrawingSurfaceOS2::SetPalette( nsIPaletteOS2 *aPalette)
-{
-   NS_IF_RELEASE(mPalette);
-   mPalette = aPalette;
-   NS_ADDREF(mPalette);
-}
-
-void nsDrawingSurfaceOS2::DeselectPalette()
-{
-   if( mPalette)
-   {
-      mPalette->Deselect( mPS);
-      NS_RELEASE(mPalette); // this nulls out mPalette
-   }
 }
 
 // yuck.
@@ -203,7 +183,6 @@ nsOffscreenSurface::~nsOffscreenSurface()
          PMERROR( "GpiSetBitmap");
       if( !GpiDeleteBitmap( mBitmap))
          PMERROR( "GpiDeleteBitmap");
-      DeselectPalette();
 //
 //    Don't need to do this because the PS is a micro-one.
 //

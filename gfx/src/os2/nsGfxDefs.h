@@ -37,7 +37,6 @@
 void PMERROR(const char *str);
 
 class nsString;
-class nsIPaletteOS2;
 class nsIDeviceContext;
 
 // Module data
@@ -67,12 +66,6 @@ struct nsGfxModuleData
    // XXX XXX XXX end hack
 
    void Init();
-
-   // This addref's
-   nsIPaletteOS2 *GetUIPalette( nsIDeviceContext *aContext);
-
- protected:
-   nsIPaletteOS2 *uiPalette;
 };
 
 extern nsGfxModuleData gModuleData;

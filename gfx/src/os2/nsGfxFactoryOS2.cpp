@@ -43,7 +43,6 @@
 #include "nsDeviceContextOS2.h"
 #include "nsRegionOS2.h"
 #include "nsBlender.h"
-#include "nsPaletteOS2.h"
 #include "nsDeviceContextSpecOS2.h"
 #include "nsDeviceContextSpecFactoryO.h"
 //#include "nsScriptableRegion.h"
@@ -285,7 +284,7 @@ void PMERROR( const char *api)
 }
 
 nsGfxModuleData::nsGfxModuleData() : hModResources(0), hpsScreen(0),
-                                     lDisplayDepth(0), uiPalette(0)
+                                     lDisplayDepth(0)
 {}
 
 void nsGfxModuleData::Init()
@@ -336,18 +335,6 @@ nsGfxModuleData::~nsGfxModuleData()
    if( hModResources)
       DosFreeModule( hModResources);
    WinReleasePS( hpsScreen);
-
-   NS_IF_RELEASE(uiPalette);
-}
-
-nsIPaletteOS2 *nsGfxModuleData::GetUIPalette( nsIDeviceContext *aContext)
-{
-   if( !uiPalette)
-      NS_CreatePalette( aContext, uiPalette);
-
-   NS_ADDREF(uiPalette);
-
-   return uiPalette;
 }
 
 nsGfxModuleData gModuleData;

@@ -1,147 +1,123 @@
-/*
- * The contents of this file are subject to the Mozilla Public License
- * Version 1.1 (the "License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
- * License for the specific language governing rights and limitations
- * under the License.
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
  *
- * The Original Code is the Mozilla OS/2 libraries.
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
  *
- * The Initial Developer of the Original Code is John Fairhurst,
- * <john_fairhurst@iname.com>.  Portions created by John Fairhurst are
- * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
+ * The Original Code is mozilla.org code.
  *
- * Contributor(s):
- * This Original Code has been modified by IBM Corporation.
- * Modifications made by IBM described herein are
- * Copyright (c) International Business Machines
- * Corporation, 2000
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
  *
- * Modifications to Mozilla code or documentation
- * identified per MPL Section 3.3
- *
- * Date           Modified by     Description of modification
- * ----           -----------     ---------------------------
- * 03/28/2000     IBM Corp.       Changes to make os2.h file similar to windows.h file
- * 05/31/2000     IBM Corp.       Print changes.
- * 06/07/2000     IBM Corp.       Corrected querying of screen and client sizes
+ * Contributor(s): 
  */
 
-#ifndef _nsDeviceContextOS2_h
-#define _nsDeviceContextOS2_h
+#ifndef nsDeviceContextOS2_h___
+#define nsDeviceContextOS2_h___
 
 #include "nsDeviceContext.h"
-#include "nsRenderingContextOS2.h"
+#include "nsIScreenManager.h"
+#define INCL_GPI
+#define INCL_PM
+#define INCL_DOS
+#include <os2.h>
+#include "libprint.h"
 
-// Device contexts are either for windows or for printers.
-// If the former, the DeviceContextImpl member mWidget is set.
-// If the latter, the mPrintDC member here is set.
-// (yes, I know: eventually want to split these guys up)
-
-class nsIPaletteOS2;
-class nsDrawingSurfaceOS2;
+class nsIScreen;
 
 class nsDeviceContextOS2 : public DeviceContextImpl
 {
 public:
-   nsDeviceContextOS2();
+  nsDeviceContextOS2();
 
-   NS_IMETHOD Init( nsNativeWidget aWidget);
+  NS_IMETHOD  Init(nsNativeWidget aWidget);
 
-   NS_IMETHOD CreateRenderingContext( nsIRenderingContext *&aContext);
+  NS_IMETHOD  CreateRenderingContext(nsIRenderingContext *&aContext);
 
-   NS_IMETHOD SupportsNativeWidgets( PRBool &aSupportsWidgets);
+  NS_IMETHOD  SupportsNativeWidgets(PRBool &aSupportsWidgets);
 
-   NS_IMETHOD GetCanonicalPixelScale( float &aScale) const;
+  NS_IMETHOD  GetCanonicalPixelScale(float &aScale) const;
 
-   NS_IMETHOD GetScrollBarDimensions( float &aWidth, float &aHeight) const;
-   NS_IMETHOD GetSystemAttribute( nsSystemAttrID anID, SystemAttrStruct *aInfo) const;
+  NS_IMETHOD  GetScrollBarDimensions(float &aWidth, float &aHeight) const;
+  NS_IMETHOD  GetSystemAttribute(nsSystemAttrID anID, SystemAttrStruct * aInfo) const;
 
-   // get a low level drawing surface for rendering. the rendering context
-   // that is passed in is used to create the drawing surface if there isn't
-   // already one in the device context. the drawing surface is then cached
-   // in the device context for re-use.
-   NS_IMETHOD GetDrawingSurface( nsIRenderingContext &aContext, nsDrawingSurface &aSurface);
+  //get a low level drawing surface for rendering. the rendering context
+  //that is passed in is used to create the drawing surface if there isn't
+  //already one in the device context. the drawing surface is then cached
+  //in the device context for re-use.
+  NS_IMETHOD  GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface);
 
-   NS_IMETHOD CheckFontExistence( const nsString &aFontName);
+  NS_IMETHOD  CheckFontExistence(const nsString& aFontName);
 
-   NS_IMETHOD GetDepth( PRUint32 &aDepth);
+  NS_IMETHOD  GetDepth(PRUint32& aDepth);
 
-   NS_IMETHOD GetILColorSpace( IL_ColorSpace*& aColorSpace);
+  NS_IMETHOD  GetILColorSpace(IL_ColorSpace*& aColorSpace);
 
-   NS_IMETHOD GetPaletteInfo( nsPaletteInfo &);
+  NS_IMETHOD  GetPaletteInfo(nsPaletteInfo&);
 
-   NS_IMETHOD ConvertPixel( nscolor aColor, PRUint32 & aPixel);
+  NS_IMETHOD ConvertPixel(nscolor aColor, PRUint32 & aPixel);
 
-   NS_IMETHOD GetDeviceSurfaceDimensions( PRInt32 &aWidth, PRInt32 &aHeight);
+  NS_IMETHOD GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight);
+  NS_IMETHOD GetRect(nsRect &aRect);
+  NS_IMETHOD GetClientRect(nsRect &aRect);
 
-   NS_IMETHOD GetRect(nsRect &aRect);
+  NS_IMETHOD GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
+                                 nsIDeviceContext *&aContext);
 
-   NS_IMETHOD GetClientRect(nsRect &aRect);
+  NS_IMETHOD BeginDocument(void);
+  NS_IMETHOD EndDocument(void);
 
-   NS_IMETHOD GetDeviceContextFor( nsIDeviceContextSpec *aDevice,
-                                   nsIDeviceContext *&aContext);
+  NS_IMETHOD BeginPage(void);
+  NS_IMETHOD EndPage(void);
 
-   NS_IMETHOD BeginDocument(void);
-   NS_IMETHOD EndDocument(void);
+protected:
+  virtual ~nsDeviceContextOS2();
+  void CommonInit(HDC aDC);
+  nsresult Init(nsNativeDeviceContext aContext, nsIDeviceContext *aOrigContext);
+  void FindScreen ( nsIScreen** outScreen ) ;
+  void ComputeClientRectUsingScreen ( nsRect* outRect ) ;
+  void ComputeFullAreaUsingScreen ( nsRect* outRect ) ;
 
-   NS_IMETHOD BeginPage(void);
-   NS_IMETHOD EndPage(void);
+  PRBool mCachedClientRect;
+  PRBool mCachedFullRect;
 
-   // XXXX Copped from GTK version to remove warning about hidden virtual; nothing in Windows
-   NS_IMETHOD  CreateRenderingContext(nsIView *aView, nsIRenderingContext *&aContext) {return (DeviceContextImpl::CreateRenderingContext(aView,aContext));}
-   NS_IMETHOD  CreateRenderingContext(nsIWidget *aWidget, nsIRenderingContext *&aContext) {return (DeviceContextImpl::CreateRenderingContext(aWidget,aContext));}
+  nsDrawingSurface      mSurface;
+  PRUint32              mDepth;  // bit depth of device
+  nsPaletteInfo         mPaletteInfo;
+  float                 mPixelScale;
+  PRInt32               mWidth;
+  PRInt32               mHeight;
+  nsRect                mClientRect;
+  nsIDeviceContextSpec  *mSpec;
 
-   // OS2 specific methods
- public:
-   // Call to ensure colour table/palette is loaded and ready.
-   nsresult SetupColorMaps();
-   // Get the palette object for the device, used to pick colours.
-   // Release when done.
-   nsresult GetPalette( nsIPaletteOS2 *&apalette);
-   // Init from a HDC for printing purposes
-   void CommonInit(HDC aDC);
-   nsresult Init( nsNativeDeviceContext aContext,  nsIDeviceContext *aOrigContext);
+  nsCOMPtr<nsIScreenManager> mScreenManager;
+  static PRUint32 sNumberOfScreens;
 
-   // Needed by the fontmetrics - can't rely on having a widget.
-   HPS  GetRepresentativePS() const;
-   void ReleaseRepresentativePS( HPS aPS);
-   BOOL isPrintDC();
+public:
+  HDC                   mDC;
+  HPS                   mPS;
 
- protected:
-   virtual ~nsDeviceContextOS2();
+  static PRBool gRound;
+  static int    PrefChanged(const char* aPref, void* aClosure);
 
-   virtual nsresult CreateFontAliasTable();
+  enum nsPrintState
+  {
+     nsPrintState_ePreBeginDoc,
+     nsPrintState_eBegunDoc,
+     nsPrintState_eBegunFirstPage,
+     nsPrintState_eEndedDoc
+  } mPrintState;
 
-   void ComputeClientRectUsingScreen ( nsRect* outRect ) ;
-   void ComputeFullAreaUsingScreen ( nsRect* outRect ) ;
- 
-   PRBool mCachedClientRect;
-   PRBool mCachedFullRect;
-
-   nsDrawingSurfaceOS2  *mSurface;
-   PRUint32              mDepth;  // bit depth of device
-   nsPaletteInfo         mPaletteInfo;
-   float                 mPixelScale;
-   nsIPaletteOS2        *mPalette;
-   PRInt32               mWidth;
-   PRInt32               mHeight;
-   nsRect                mClientRect;
-   nsIDeviceContextSpec *mSpec;
-   HDC                   mPrintDC;         // PrintDC.  Owned by libprint.
-   HPS                   mPS;         // PrintPS.
-
-   enum nsPrintState
-   {
-      nsPrintState_ePreBeginDoc,
-      nsPrintState_eBegunDoc,
-      nsPrintState_eBegunFirstPage,
-      nsPrintState_eEndedDoc
-   } mPrintState;
+  BOOL isPrintDC();
+  nsresult nsDeviceContextOS2::CreateFontAliasTable();
 };
 
-#endif      /* nsDeviceContextOS2_h__ */
+#endif /* nsDeviceContextOS2_h___ */
