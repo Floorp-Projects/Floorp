@@ -24,7 +24,7 @@
 class nsIOutputStream;
 %}
 
-[scriptable, uuid(4DA56F10-99FE-11d2-8EBB-00805F29F370)]
+[uuid(4DA56F10-99FE-11d2-8EBB-00805F29F370)]
 interface nsIRDFXMLSource : nsISupports
 {
     void Serialize(in nsIOutputStreamPtr aStream);

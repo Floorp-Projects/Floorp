@@ -24,10 +24,10 @@
 [scriptable, uuid(6673cad0-072e-11d3-8d70-00805f8a6617)]
 interface nsIMsgFilterService : nsISupports {
 
-  nsIMsgFilterList OpenFilterList(in nsFileSpecPtr filterFile);
+  [noscript] nsIMsgFilterList OpenFilterList(in nsFileSpecPtr filterFile);
   void CloseFilterList(in nsIMsgFilterList filterList);
 
-  void SaveFilterList(in nsIMsgFilterList filterList,
+  [noscript] void SaveFilterList(in nsIMsgFilterList filterList,
                       in nsFileSpecPtr filterFile);
 
   void CancelFilterList(in nsIMsgFilterList filterList);

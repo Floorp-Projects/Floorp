@@ -34,10 +34,10 @@ interface nsIAddrDatabase : nsIAddrDBAnnouncer {
 
 	attribute nsFileSpec dbPath;
 
-	void Open(in nsFileSpec folderName, in boolean create, 
-			  out nsIAddrDatabase pCardDB, in boolean upgrading);
+	[noscript] void Open(in nsFileSpec folderName, in boolean create, 
+                       out nsIAddrDatabase pCardDB, in boolean upgrading);
 	void Close(in boolean forceCommit);
-	void OpenMDB(in nsFileSpec dbName, in boolean create);
+	[noscript] void OpenMDB(in nsFileSpec dbName, in boolean create);
 	void CloseMDB(in boolean commit);
 	void OpenAnonymousDB(out nsIAddrDatabase pCardDB);
 	void CloseAnonymousDB(in boolean forceCommit);

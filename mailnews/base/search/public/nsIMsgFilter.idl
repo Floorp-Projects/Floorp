@@ -34,24 +34,24 @@ interface nsIMsgFilter : nsISupports {
     attribute boolean enabled;
     attribute string filterName;
     attribute string filterDesc;
-    void AddTerm(in nsMsgSearchAttribute attrib,
-                 in nsMsgSearchOperator op,
-                 in nsMsgSearchValue value,
-                 in boolean BooleanAND,
-                 in string arbitraryHeader);
+    [noscript] void AddTerm(in nsMsgSearchAttribute attrib,
+                            in nsMsgSearchOperator op,
+                            in nsMsgSearchValue value,
+                            in boolean BooleanAND,
+                            in string arbitraryHeader);
 
     readonly attribute long numTerms;
-    void GetTerm(in long termIndex,
-                 out nsMsgSearchAttribute attrib,
-                 out nsMsgSearchOperator op,
-                 in nsMsgSearchValue value, // bad! using shared structure
-                 out boolean BooleanAND,
-                 out string arbitraryHeader);
+    [noscript] void GetTerm(in long termIndex,
+                            out nsMsgSearchAttribute attrib,
+                            out nsMsgSearchOperator op,
+                            in nsMsgSearchValue value, // bad! using shared structure
+                            out boolean BooleanAND,
+                            out string arbitraryHeader);
 
     attribute nsMsgSearchScopeTerm scope;
 
-    void SetAction(in nsMsgRuleActionType type, in voidStar value);
-    void GetAction(out nsMsgRuleActionType type, out voidStar value);
+    [noscript] void SetAction(in nsMsgRuleActionType type, in voidStar value);
+    [noscript] void GetAction(out nsMsgRuleActionType type, out voidStar value);
 
     void MatchHdr(in nsIMsgDBHdr msgHdr, in nsIMsgFolder folder,
                   in nsIMsgDatabase db, in string headers,

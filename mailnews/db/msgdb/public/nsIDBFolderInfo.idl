@@ -51,18 +51,19 @@ interface  nsIDBFolderInfo : nsISupports {
 	void SetUint32Property(in string propertyName, in unsigned long propertyValue);
 	unsigned long GetUint32Property(in string propertyName);
 
-	void GetCharacterSet(in nsString result);
-	void SetCharacterSet(in nsString result);
-	void GetLocale(in nsString result);
-	void SetLocale(in nsString locale);
+	[noscript] void GetCharacterSet(in nsString result);
+	[noscript] void SetCharacterSet(in nsString result);
+	[noscript] void GetLocale(in nsString result);
+	[noscript] void SetLocale(in nsString locale);
     
-	void SetMailboxName(in nsString newBoxName);
-	void GetMailboxName(in nsString boxName);
+	[noscript] void SetMailboxName(in nsString newBoxName);
+	[noscript] void GetMailboxName(in nsString boxName);
 
 
-	void GetProperty(in string propertyName, in nsString resultProperty);
-	void SetProperty(in string propertyName, in nsString propertyStr);
-	void SetKnownArtsSet(in nsString newsArtSet);
-	void GetKnownArtsSet(in nsString newsArtSet);
+	[noscript] void GetProperty(in string propertyName, in nsString resultProperty);
+	[noscript] void SetProperty(in string propertyName, in nsString propertyStr);
+	[noscript] void SetKnownArtsSet(in nsString newsArtSet);
+	[noscript] void GetKnownArtsSet(in nsString newsArtSet);
 };
+
 

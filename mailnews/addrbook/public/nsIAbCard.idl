@@ -76,12 +76,12 @@ interface nsIAbCard : nsISupports {
 	void SetCardValue(in string attrname, in string value);
 	void SetAbDatabase(in nsIAddrDatabase database);
 
-	void GetAnonymousStrAttrubutesList(out nsVoidArray attrlist);
-	void GetAnonymousStrValuesList(out nsVoidArray valuelist);
-	void GetAnonymousIntAttrubutesList(out nsVoidArray attrlist);
-	void GetAnonymousIntValuesList(out nsVoidArray valuelist);
-	void GetAnonymousBoolAttrubutesList(out nsVoidArray attrlist);
-	void GetAnonymousBoolValuesList(out nsVoidArray valuelist);
+	[noscript] void GetAnonymousStrAttrubutesList(out nsVoidArray attrlist);
+	[noscript] void GetAnonymousStrValuesList(out nsVoidArray valuelist);
+	[noscript] void GetAnonymousIntAttrubutesList(out nsVoidArray attrlist);
+	[noscript] void GetAnonymousIntValuesList(out nsVoidArray valuelist);
+	[noscript] void GetAnonymousBoolAttrubutesList(out nsVoidArray attrlist);
+	[noscript] void GetAnonymousBoolValuesList(out nsVoidArray valuelist);
 
 	void SetAnonymousStringAttribute(in string attrname, in string value);
 	void SetAnonymousIntAttribute(in string attrname, in unsigned long value);

@@ -36,5 +36,5 @@ interface nsIInputStream : nsIBaseStream
      *         bytes read, eof if 0. if an error occurs, the
      *         read count will be undefined
      */
-    unsigned long Read(in charStar buf, in unsigned long count);
+    [noscript] unsigned long Read(in charStar buf, in unsigned long count);
 };

@@ -44,9 +44,9 @@ interface nsIMailboxService : nsISupports {
    * pass in a mailbox  parser (the consumer). The url listener can be null
    * if you have no interest in tracking the url.
    */
-  nsIURI ParseMailbox(in nsFileSpec aMailboxPath,
-                      in nsIStreamListener aMailboxParser,
-                      in nsIUrlListener aUrlListener);
+  [noscript] nsIURI ParseMailbox(in nsFileSpec aMailboxPath,
+                                 in nsIStreamListener aMailboxParser,
+                                 in nsIUrlListener aUrlListener);
 
   /*
    * This is more of a convience function for testing purposes. We want

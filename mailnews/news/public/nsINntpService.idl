@@ -40,9 +40,9 @@ interface nsINntpService : nsISupports {
   
   string ConvertNewsgroupsString(in string newsgroupsStr);
 
-  nsIURI PostMessage (in nsFilePath pathToFile, in string newsgroupNames, in nsIUrlListener aUrlListener);
+  [noscript] nsIURI PostMessage (in nsFilePath pathToFile, in string newsgroupNames, in nsIUrlListener aUrlListener);
 
-  nsIURI RunNewsUrl (in nsString urlString, in nsString newsgroupName, in nsMsgKey aKey, in nsISupports aConsumer, in nsIUrlListener aUrlListener); 
+  [noscript] nsIURI RunNewsUrl (in nsString urlString, in nsString newsgroupName, in nsMsgKey aKey, in nsISupports aConsumer, in nsIUrlListener aUrlListener); 
 
   nsIURI GetNewNews (in nsINntpIncomingServer nntpServer, in string uri, in nsIUrlListener aUrlListener);
 

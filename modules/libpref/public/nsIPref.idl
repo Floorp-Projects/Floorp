@@ -71,7 +71,7 @@ interface nsIPref : nsISupports {
   /* Getters */
   long GetIntPref(in string pref);
   boolean GetBoolPref(in string pref);
-  void GetBinaryPref(in string pref, in voidStar buf, inout long buf_length);
+  [noscript] void GetBinaryPref(in string pref, in voidStar buf, inout long buf_length);
   void GetColorPref(in string pref, out octet red, out octet green, out octet blue);
 
   unsigned long GetColorPrefDWord(in string pref);
@@ -83,7 +83,7 @@ interface nsIPref : nsISupports {
   void SetCharPref(in string pref, in string value);
   void SetIntPref(in string pref, in long value);
   void SetBoolPref(in string pref, in boolean value);
-  void SetBinaryPref(in string pref, in voidStar value, in unsigned long size);
+  [noscript] void SetBinaryPref(in string pref, in voidStar value, in unsigned long size);
   void SetColorPref(in string pref,in octet red, in octet green,in octet blue);
   void SetColorPrefDWord(in string pref, in unsigned long colorref);
 
@@ -95,7 +95,7 @@ interface nsIPref : nsISupports {
   /* get defaults */
   long GetDefaultIntPref(in string pref);
   boolean GetDefaultBoolPref(in string pref);
-  void GetDefaultBinaryPref(in string pref, in voidStar value,
+  [noscript] void GetDefaultBinaryPref(in string pref, in voidStar value,
                             out long length);
   void GetDefaultColorPref(in string pref,
                            out octet red, out octet green, out octet blue);
@@ -109,7 +109,7 @@ interface nsIPref : nsISupports {
   void SetDefaultCharPref(in string pref, in string value);
   void SetDefaultIntPref(in string pref, in long value);
   void SetDefaultBoolPref(in string pref, in boolean value);
-  void SetDefaultBinaryPref(in string pref, in voidStar value, in unsigned long size);
+  [noscript] void SetDefaultBinaryPref(in string pref, in voidStar value, in unsigned long size);
   void SetDefaultColorPref(in string pref,in octet red, in octet green,in octet blue);
 
   void SetDefaultRectPref(in string pref,
@@ -118,10 +118,10 @@ interface nsIPref : nsISupports {
   
   /* copy versions of getters */
   string CopyCharPref(in string pref);
-  voidStar CopyBinaryPref(in string pref, out long size);
+  [noscript] voidStar CopyBinaryPref(in string pref, out long size);
   
   string CopyDefaultCharPref(in string pref);
-  voidStar CopyDefaultBinaryPref(in string pref, out long size);
+  [noscript] voidStar CopyDefaultBinaryPref(in string pref, out long size);
 
   nsIFileSpec GetFilePref(in string pref);
   void SetFilePref(in string pref, in nsIFileSpec value, in boolean setDefault);
@@ -131,10 +131,10 @@ interface nsIPref : nsISupports {
 
   void SavePrefFile();
 
-  void RegisterCallback(in string domain,
+  [noscript] void RegisterCallback(in string domain,
                         in PrefChangedFunc callback,
                         in voidStar closure);
-  void UnregisterCallback(in string domain,
+  [noscript] void UnregisterCallback(in string domain,
                           in PrefChangedFunc callback,
                           in voidStar closure);
 

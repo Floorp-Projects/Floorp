@@ -154,6 +154,7 @@ interface nsIMsgSend : nsISupports
   // NOTE: when aEditor is non-null, a multipart related MHTML message will 
   // be created
   //
+  [noscript]
   void CreateAndSendMessage(in nsIEditorShell               aEditor,      
                             in nsIMsgIdentity               aUserIdentity,
    						              in nsIMsgCompFields             fields,
@@ -169,6 +170,7 @@ interface nsIMsgSend : nsISupports
   						              in voidStar                     relatedPart,
                             in sendListenerPtr              aListenerArray); /* nsIMsgSendListener Array */
 
+  [noscript]
   void SendMessageFile(
                        in nsIMsgIdentity       aUserIdentity,
    						         in nsIMsgCompFields     fields,
@@ -179,6 +181,7 @@ interface nsIMsgSend : nsISupports
                        in nsIMessage           msgToReplace,
                        in sendListenerPtr      aListenerArray); /* nsIMsgSendListener Array */
 
+  [noscript]
   void SendWebPage(
                    in nsIMsgIdentity         aUserIdentity,
    						     in nsIMsgCompFields       fields,

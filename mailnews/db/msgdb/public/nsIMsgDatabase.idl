@@ -75,7 +75,7 @@ interface  nsIMsgDatabase : nsIDBChangeAnnouncer {
 
   nsIMsgDBHdr CopyHdrFromExistingHdr(in nsMsgKey key, in nsIMsgDBHdr existingHdr);
 
-  void ListAllKeys(in nsMsgKeyArrayRef outputKeys);
+  [noscript] void ListAllKeys(in nsMsgKeyArrayRef outputKeys);
 
   nsIEnumerator EnumerateMessages();
   nsIEnumerator EnumerateThreads();
@@ -123,11 +123,11 @@ interface  nsIMsgDatabase : nsIDBChangeAnnouncer {
   boolean IsMarked(in nsMsgKey key);
   boolean HasAttachments(in nsMsgKey key);
 
-  void MarkAllRead(in nsMsgKeyArrayPtr thoseMarked);
+  [noscript] void MarkAllRead(in nsMsgKeyArrayPtr thoseMarked);
 
-  void MarkReadByDate (in PRTime startDate, in PRTime endDate, in nsMsgKeyArrayPtr markedIds);
+  [noscript] void MarkReadByDate (in PRTime startDate, in PRTime endDate, in nsMsgKeyArrayPtr markedIds);
 
-  void DeleteMessages(in nsMsgKeyArrayPtr nsMsgKeys, in nsIDBChangeListener instigator);
+  [noscript] void DeleteMessages(in nsMsgKeyArrayPtr nsMsgKeys, in nsIDBChangeListener instigator);
   void DeleteMessage(in nsMsgKey key, 
                            in nsIDBChangeListener instigator,
                            in boolean commit);
@@ -143,7 +143,7 @@ interface  nsIMsgDatabase : nsIDBChangeAnnouncer {
                          in nsIDBChangeListener instigator);
 
   // returns NS_OK on success, NS_COMFALSE on failure
-  void AllMsgKeysImapDeleted(in nsMsgKeyArrayPtr keys);
+  [noscript] void AllMsgKeysImapDeleted(in nsMsgKeyArrayPtr keys);
 
   void MarkImapDeleted(in nsMsgKey key, in boolean deleted,
                              in nsIDBChangeListener instigator);
@@ -159,8 +159,8 @@ interface  nsIMsgDatabase : nsIDBChangeAnnouncer {
   void SetSummaryValid(in boolean valid);
 
   // offline operations
-  void ListAllOfflineOpIds(in nsMsgKeyArrayPtr offlineOpIds);
-  void ListAllOfflineDeletes(in nsMsgKeyArrayPtr offlineDeletes);
+  [noscript] void ListAllOfflineOpIds(in nsMsgKeyArrayPtr offlineOpIds);
+  [noscript] void ListAllOfflineDeletes(in nsMsgKeyArrayPtr offlineDeletes);
 
   readonly attribute nsMsgKey LowWaterArticleNum;
   readonly attribute nsMsgKey HighWaterArticleNum;

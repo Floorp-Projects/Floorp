@@ -85,7 +85,7 @@ interface nsIEcho : nsISupports {
                             inout string                p15,
                             inout wstring               p16);
     
-    void MethodWithNative(in long p1, in voidStar p2);
+    [noscript] void MethodWithNative(in long p1, in voidStar p2);
     void ReturnCode(in long code);
     void FailInJSTest(in long fail);
     void SharedString([retval, shared] out string str);

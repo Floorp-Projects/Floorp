@@ -28,6 +28,7 @@
 [scriptable, uuid(a819050a-0302-11d3-a50a-0060b0fc04b7)]
 interface nsIMsgSearchSession {
 
+    [noscript]
     void AddSearchTerm(in nsMsgSearchAttribute attrib, /* attribute for this term */
                        in nsMsgSearchOperator op,/* operator e.g. opContains */
                        in nsMsgSearchValue value, /* value e.g. "Dogbert" */
@@ -36,6 +37,7 @@ interface nsIMsgSearchSession {
 
     readonly attribute long numSearchTerms;
 
+    [noscript]
     void GetNthSearchTerm(in long whichTerm,
                           in nsMsgSearchAttribute attrib,
                           in nsMsgSearchOperator op,
@@ -43,6 +45,7 @@ interface nsIMsgSearchSession {
 
     long MSG_CountSearchScopes();
 
+    [noscript]
     voidStar MSG_GetNthSearchScope(in long which,
                                    in nsMsgSearchScopeAttribute scopeId);
 
@@ -51,13 +54,13 @@ interface nsIMsgSearchSession {
                       in nsIMsgFolder folder);
 
     /* special cases for LDAP since LDAP isn't really a folderInfo */
-    void AddLdapScope(in nsMsgDIRServer server);
+    [noscript] void AddLdapScope(in nsMsgDIRServer server);
     /* void AddAllLdapScopes(XP_List* dirServerList); */
 
     /* Call this function everytime the scope changes! It informs the FE if 
        the current scope support custom header use. FEs should not display the
        custom header dialog if custom headers are not supported */
-    boolean ScopeUsesCustomHeaders(in nsMsgSearchScopeAttribute scope,
+    [noscript] boolean ScopeUsesCustomHeaders(in nsMsgSearchScopeAttribute scope,
                                    /* could be a folder or server based on scope */
                                    in voidStar selection,
                                    in boolean forFilters);
@@ -71,11 +74,11 @@ interface nsIMsgSearchSession {
     void Search();
     void InterruptSearch();
     
-    readonly attribute voidStar searchParam;
+    [noscript] readonly attribute voidStar searchParam;
     readonly attribute nsMsgSearchType searchType;
     
-    nsMsgSearchType SetSearchParam(in nsMsgSearchType type,
-                                   in voidStar param);
+    [noscript] nsMsgSearchType SetSearchParam(in nsMsgSearchType type,
+                                              in voidStar param);
 
     readonly attribute long numResults;
     

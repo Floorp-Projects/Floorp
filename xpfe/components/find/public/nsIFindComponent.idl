@@ -70,8 +70,8 @@ interface nsIFindComponent : nsIAppShellComponent {
     | Clients do have to call Release() when they're no longer interested in   |
     | this search context.                                                     |
     --------------------------------------------------------------------------*/
-    nsISupports CreateContext( in nsIWebShell aWebShell,
-                               in nsIEditor   aEditor );
+    [noscript] nsISupports CreateContext( in nsIWebShell aWebShell,
+                                          in nsIEditor   aEditor );
 
     /*--------------------------------- Find -----------------------------------
     | Finds the "first" occurrence of a string in the given search context     |
@@ -109,9 +109,9 @@ interface nsIFindComponent : nsIAppShellComponent {
     | this will be the equivalent of calling Release() on the old context and  |
     | then creating a new one for aNewWebShell.                                |
     --------------------------------------------------------------------------*/
-    void ResetContext( in nsISupports aContext,
-                       in nsIWebShell aNewWebShell,
-                       in nsIEditor   aEditor );
+    [noscript] void ResetContext( in nsISupports aContext,
+                                  in nsIWebShell aNewWebShell,
+                                  in nsIEditor   aEditor );
 };
 
 %{C++

@@ -33,20 +33,20 @@ interface nsIPop3Sink : nsISupports {
   void AbortMailDelivery();
 
   /* returns a closure ? */
-  voidStar IncorporateBegin(in string uidlString, in nsIURI aURL,
-                            in unsigned long flags);
+  [noscript] voidStar IncorporateBegin(in string uidlString, in nsIURI aURL,
+                                       in unsigned long flags);
 
-  void IncorporateWrite(in voidStar closure, in string block,
-                        in long length);
+  [noscript] void IncorporateWrite(in voidStar closure, in string block,
+                                   in long length);
 
-  void IncorporateComplete(in voidStar closure);
-  void IncorporateAbort(in voidStar closure, in long status);
+  [noscript] void IncorporateComplete(in voidStar closure);
+  [noscript] void IncorporateAbort(in voidStar closure, in long status);
 
   void BiffGetNewMail();
 
   void SetBiffStateAndUpdateFE(in unsigned long biffState, in long numNewMessages);
 
-  void SetSenderAuthedFlag(in voidStar closure, in boolean authed);
+  [noscript] void SetSenderAuthedFlag(in voidStar closure, in boolean authed);
 
   attribute nsIPop3IncomingServer popServer;
   attribute nsIMsgFolder folder;

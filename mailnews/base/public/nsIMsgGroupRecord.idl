@@ -25,12 +25,12 @@ interface nsIMsgGroupRecord : nsISupports {
     /* making this a voidStar is really ugly, but it's a quick
      * solution right now
      */
-    void Init(in voidStar parent,
-              in string partname,
-              in long long time,
-              in long uniqueid,
-              in long fileoffset,
-              in char delimiter);
+    [noscript] void Init(in voidStar parent,
+                         in string partname,
+                         in long long time,
+                         in long uniqueid,
+                         in long fileoffset,
+                         in char delimiter);
     
     void InitFromParent(in nsIMsgGroupRecord parent,
                         in string saveline,

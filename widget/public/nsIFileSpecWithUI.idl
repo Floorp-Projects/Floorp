@@ -62,7 +62,7 @@ interface nsIFileSpecWithUI : nsIFileSpec
 	};
 	enum { kNumStandardFilters = 5 };
 %}
-	void chooseInputFile(
+	[noscript] void chooseInputFile(
 		in string title
 	,	in StandardFilterMask standardFilterMask
 	,	in string extraFilterTitle

@@ -57,16 +57,16 @@ interface nsIWindowMediator: nsIRDFDataSource
 	nsIDOMWindow ConvertISupportsToDOMWindow( in nsISupports inWindow );
 	
 	/* Add the webshellwindow to the list */
-	void RegisterWindow( in nsIWebShellWindow inWindow);
+	[noscript] void RegisterWindow( in nsIWebShellWindow inWindow);
 	
 	/* remove the window from the list */
-	void UnregisterWindow( in nsIWebShellWindow inWindow );
+	[noscript] void UnregisterWindow( in nsIWebShellWindow inWindow );
 	
 	/* Call when the window gains focus. Used to determine the most recent window */
-	void  UpdateWindowTimeStamp( in nsIWebShellWindow inWindow );
+	[noscript] void  UpdateWindowTimeStamp( in nsIWebShellWindow inWindow );
 	
 	/* */
-	void UpdateWindowTitle(in nsIWebShellWindow inWindow, in wstring inTitle );
+	[noscript] void UpdateWindowTitle(in nsIWebShellWindow inWindow, in wstring inTitle );
 
 };
 

@@ -73,8 +73,8 @@ interface nsIAppShellComponent : nsISupports {
     /*------------------------------ Initialize --------------------------------
     | Called at application startup.                                           |
     --------------------------------------------------------------------------*/
-    void Initialize( in nsIAppShellService anAppShell,
-	                 in nsICmdLineService args );
+    [noscript] void Initialize( in nsIAppShellService anAppShell,
+                                in nsICmdLineService args );
 
     /*------------------------------- Shutdown ---------------------------------
     | Called at application shutdown (if the component had registered as a     |

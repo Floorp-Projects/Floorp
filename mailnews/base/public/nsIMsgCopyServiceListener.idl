@@ -58,7 +58,7 @@ interface nsIMsgCopyServiceListener : nsISupports {
      * uniqueness.
      * aMessageId -
      */
-    void GetMessageId(in nsCString aMessageId);
+    [noscript] void GetMessageId(in nsCString aMessageId);
 
     /**
      * Notify the observer that the message copied operation has completed.  

@@ -31,17 +31,19 @@ class nsMsgSearchScopeTerm;
 
 [scriptable, uuid(66f4b80c-0fb5-11d3-a515-0060b0fc04b7)]
 interface nsIMsgSearchAdapter : nsISupports {
-    void Init(in nsMsgSearchScopeTerm scope, in nsMsgSearchTermArray terms);
+    [noscript] void Init(in nsMsgSearchScopeTerm scope,
+                         in nsMsgSearchTermArray terms);
     void ValidateTerms();
     void Search();
     void SendUrl();
-    void OpenResultElement(in nsMsgResultElement element);
-    void ModifyResultElement(in nsMsgResultElement element,
-                             in nsMsgSearchValue value);
+    [noscript] void OpenResultElement(in nsMsgResultElement element);
+    [noscript] void ModifyResultElement(in nsMsgResultElement element,
+                                        in nsMsgSearchValue value);
 
     readonly attribute string encoding;
     
-    nsIMsgFolder FindTargetFolder([const] in nsMsgResultElement element);
+    [noscript] nsIMsgFolder FindTargetFolder([const] in nsMsgResultElement
+                                             element);
     void Abort();
 };
 
