@@ -51,8 +51,8 @@
           <html:button cmd="nsCmd:BrowserPrint" style="background-color:rgb(192,192,192);">
                           <html:img src="resource:/res/toolbar/TB_Print.gif"/><html:BR/>Print
           </html:button>
-          <html:input cols=30 style="width: 295px;"></html:input>
-          <html:a style="position:relative; direction:rtl; right:3; top: 2px;" href="http://www.netscape.com">
+	      <html:input cols=30 style="width: 295px;"></html:input>          
+          <html:a style="position:absolute; direction:rtl; right:3; top: 7px;" href="http://www.netscape.com">
                   <html:img alt="Throbber!" border=0 src="resource:/res/throbber/anims00.gif"/>
           </html:a>
     </xul:toolbar>
