@@ -95,7 +95,7 @@
 #define APPSTART_CATEGORY "app-startup"
 #define PROFILE_CHANGE_EVENT "profile-after-change"
 
-static JSBool
+JS_STATIC_DLL_CALLBACK (JSBool)
 jsds_GCCallbackProc (JSContext *cx, JSGCStatus status);
 
 /*******************************************************************************
@@ -187,7 +187,7 @@ jsds_RemoveEphemeral (LiveEphemeral **listHead, LiveEphemeral *item)
  * c callbacks
  *******************************************************************************/
 
-static void
+JS_STATIC_DLL_CALLBACK (void)
 jsds_NotifyPendingDeadScripts (JSContext *cx)
 {
     nsCOMPtr<jsdIScriptHook> hook = 0;   
@@ -224,7 +224,7 @@ jsds_NotifyPendingDeadScripts (JSContext *cx)
     gDeadScripts = 0;
 }
 
-static JSBool
+JS_STATIC_DLL_CALLBACK (JSBool)
 jsds_GCCallbackProc (JSContext *cx, JSGCStatus status)
 {
     gGCStatus = status;
@@ -240,7 +240,7 @@ jsds_GCCallbackProc (JSContext *cx, JSGCStatus status)
     return JS_TRUE;
 }
 
-static JSBool
+JS_STATIC_DLL_CALLBACK (JSBool)
 jsds_EmptyCallHookProc (JSDContext* jsdc, JSDThreadState* jsdthreadstate,
                         uintN type, void* callerdata)
 {
@@ -250,7 +250,7 @@ jsds_EmptyCallHookProc (JSDContext* jsdc, JSDThreadState* jsdthreadstate,
 }
 
 
-static JSBool
+JS_STATIC_DLL_CALLBACK (JSBool)
 jsds_CallHookProc (JSDContext* jsdc, JSDThreadState* jsdthreadstate,
                    uintN type, void* callerdata)
 {
@@ -285,7 +285,7 @@ jsds_CallHookProc (JSDContext* jsdc, JSDThreadState* jsdthreadstate,
     return JS_TRUE;
 }
 
-static PRUint32
+JS_STATIC_DLL_CALLBACK (PRUint32)
 jsds_ExecutionHookProc (JSDContext* jsdc, JSDThreadState* jsdthreadstate,
                         uintN type, void* callerdata, jsval* rval)
 {
@@ -343,7 +343,7 @@ jsds_ExecutionHookProc (JSDContext* jsdc, JSDThreadState* jsdthreadstate,
     return hook_rv;
 }
 
-static void
+JS_STATIC_DLL_CALLBACK (void)
 jsds_ScriptHookProc (JSDContext* jsdc, JSDScript* jsdscript, JSBool creating,
                      void* callerdata)
 {
@@ -620,7 +620,7 @@ jsdScript::jsdScript (JSDContext *aCx, JSDScript *aScript) : mValid(PR_FALSE),
         mLineExtent = JSD_GetScriptLineExtent(mCx, mScript);
         JSD_UnlockScriptSubsystem(mCx);
         
-        mValid = true;
+        mValid = PR_TRUE;
     }
 }
 
