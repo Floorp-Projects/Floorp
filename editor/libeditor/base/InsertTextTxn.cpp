@@ -56,7 +56,8 @@ nsresult InsertTextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
     *aDidMerge=PR_FALSE;
   if ((nsnull!=aDidMerge) && (nsnull!=aTransaction))
   {
-    // if aTransaction isa InsertTextTxn, absorb it
+    // if aTransaction isa InsertTextTxn, and if the selection hasn't changed, 
+    // then absorb it
     nsCOMPtr<InsertTextTxn> otherTxn(aTransaction);
     nsresult result=NS_OK;// = aTransaction->QueryInterface(kInsertTextTxnIID, getter_AddRefs(otherTxn));
     if (NS_SUCCEEDED(result) && (otherTxn))
@@ -64,8 +65,8 @@ nsresult InsertTextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
       nsAutoString otherData;
       otherTxn->GetData(otherData);
       mStringToInsert += otherData;
+      *aDidMerge = PR_TRUE;
     }
-    *aDidMerge = PR_TRUE;
   }
   return NS_OK;
 }
