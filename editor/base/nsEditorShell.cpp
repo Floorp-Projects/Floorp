@@ -249,6 +249,7 @@ nsEditorShell::nsEditorShell()
 ,  mEditorController(nsnull)
 ,  mDocShell(nsnull)
 ,  mContentAreaDocShell(nsnull)
+,  mInitted(PR_FALSE)
 ,  mCloseWindowWhenLoaded(PR_FALSE)
 ,  mCantEditReason(eCantEditNoReason)
 ,  mEditorType(eUninitializedEditorType)
@@ -308,7 +309,11 @@ nsEditorShell::QueryInterface(REFNSIID aIID,void** aInstancePtr)
 
 NS_IMETHODIMP    
 nsEditorShell::Init()
-{  
+{
+  NS_ASSERTION(!mInitted, "Double init of nsEditorShell detected");
+  if (mInitted)
+    return NS_OK;
+  
   nsAutoString    editorType; editorType.AssignWithConversion("html");      // default to creating HTML editor
   mEditorTypeString = editorType;
   mEditorTypeString.ToLowerCase();
@@ -325,7 +330,8 @@ nsEditorShell::Init()
 
   // XXX: why are we returning NS_OK here rather than res?
   // is it ok to fail to get a string bundle?  if so, it should be documented.
-
+  mInitted = PR_TRUE;
+  
   return NS_OK;
 }
 
@@ -333,6 +339,13 @@ NS_IMETHODIMP
 nsEditorShell::Shutdown()
 {
   nsresult rv = NS_OK;
+  
+  nsCOMPtr<nsIEditor> editor(do_QueryInterface(mEditor));
+  if (editor)
+  {
+    editor->PreDestroy();
+  }
+  
   // Remove our document mouse event listener
   if (mMouseListenerP)
   {

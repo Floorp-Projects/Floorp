@@ -1089,6 +1089,12 @@ nsGfxTextControlFrame2::~nsGfxTextControlFrame2()
 NS_IMETHODIMP
 nsGfxTextControlFrame2::Destroy(nsIPresContext* aPresContext)
 {
+  // notify the editor that we are going away
+  if (mEditor)
+  {
+    mEditor->PreDestroy();
+  }
+  
   // Clean up the controller
   nsCOMPtr<nsIControllers> controllers;
   nsCOMPtr<nsIDOMNSHTMLInputElement> inputElement = do_QueryInterface(mContent);
@@ -1142,15 +1148,6 @@ nsGfxTextControlFrame2::Destroy(nsIPresContext* aPresContext)
     {
       erP->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMFocusListener  *,mTextListener), NS_GET_IID(nsIDOMFocusListener));
       erP->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMKeyListener*,mTextListener), NS_GET_IID(nsIDOMKeyListener));
-    }
-    nsCOMPtr<nsIPresShell> shell;
-    nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
-    if (NS_FAILED(rv) || !shell)
-      return rv?rv:NS_ERROR_FAILURE;
-
-    if (mEditor)
-    {
-      mEditor->RemoveEditorObserver(mTextListener);
     }
   }
   return nsBoxFrame::Destroy(aPresContext);

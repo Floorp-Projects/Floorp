@@ -212,6 +212,7 @@ class nsEditorShell :   public nsIEditorShell,
     // if we are in a frameset, this assumption is false.
     nsIDocShell         *mContentAreaDocShell;  // weak reference
 
+    PRPackedBool        mInitted;
     PRPackedBool        mCloseWindowWhenLoaded; // error on load. Close window when loaded
     ECantEditReason     mCantEditReason;
     

@@ -919,9 +919,6 @@ nsEditor::nsEditor()
 
 nsEditor::~nsEditor()
 {
-  // not sure if this needs to be called earlier.
-  NotifyDocumentListeners(eDocumentToBeDestroyed);
-
   delete mEditorObservers;   // no need to release observers; we didn't addref them
   mEditorObservers = 0;
   
@@ -1037,6 +1034,15 @@ nsEditor::PostCreate()
   // Call ResetInputState() for initialization
   ForceCompositionEnd();
 
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsEditor::PreDestroy()
+{
+  // tell our listeners that the doc is going away
+  NotifyDocumentListeners(eDocumentToBeDestroyed);
   return NS_OK;
 }
 

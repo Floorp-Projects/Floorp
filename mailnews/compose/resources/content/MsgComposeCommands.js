@@ -614,8 +614,13 @@ function ComposeStartup()
 		if (msgCompose)
 		{
 			//Creating a Editor Shell
-      var editorShell = Components.classes["@mozilla.org/editor/editorshell;1"].createInstance();
-      editorShell = editorShell.QueryInterface(Components.interfaces.nsIEditorShell);
+			var editorElement = document.getElementById("content-frame");
+			if (!editorElement)
+			{
+				dump("Failed to get editor element!\n");
+				return;
+			}
+			var editorShell = editorElement.editorShell;
 			if (!editorShell)
 			{
 				dump("Failed to create editorShell!\n");
@@ -624,7 +629,6 @@ function ComposeStartup()
 			
 			// save the editorShell in the window. The editor JS expects to find it there.
 			window.editorShell = editorShell;
-			window.editorShell.Init();
 			dump("Created editorShell\n");
 
 			// setEditorType MUST be call before setContentWindow
@@ -648,8 +652,8 @@ function ComposeStartup()
 			window.editorShell.webShellWindow = window;
 			window.editorShell.contentWindow = window._content;
 
-      // Do setup common to Message Composer and Web Composer
-      EditorSharedStartup();
+			// Do setup common to Message Composer and Web Composer
+			EditorSharedStartup();
 
 	    	var msgCompFields = msgCompose.compFields;
 	    	if (msgCompFields)
@@ -753,7 +757,6 @@ function ComposeUnload(calledFromExit)
 	msgCompose.UnregisterStateListener(stateListener);
 	if (msgCompose && msgComposeService)
 		msgComposeService.DisposeCompose(msgCompose, false);
-	//...and what's about the editor appcore, how can we release it?
 }
 
 function SetDocumentCharacterSet(aCharset)

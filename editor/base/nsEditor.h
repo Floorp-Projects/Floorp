@@ -215,6 +215,7 @@ public:
   /* ------------ nsIEditor methods -------------- */
   NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell, nsIContent *aRoot, nsISelectionController *aSelCon, PRUint32 aFlags);
   NS_IMETHOD PostCreate();
+  NS_IMETHOD PreDestroy();
   NS_IMETHOD GetFlags(PRUint32 *aFlags) = 0;
   NS_IMETHOD SetFlags(PRUint32 aFlags) = 0;
   NS_IMETHOD GetDocument(nsIDOMDocument **aDoc);
