@@ -63,6 +63,7 @@ class nsBrowserAppCore : public nsBaseAppCore,
 
     NS_IMETHOD    Back();
     NS_IMETHOD    Forward();
+    NS_IMETHOD    Stop();
 
     NS_IMETHOD    WalletEditor();
     NS_IMETHOD    WalletSafeFillin(nsIDOMWindow* aWin);

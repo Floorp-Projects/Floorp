@@ -39,9 +39,11 @@ public:
 
   NS_IMETHOD    Forward()=0;
 
+  NS_IMETHOD    Stop()=0;
+
   NS_IMETHOD    LoadUrl(const nsString& aUrl)=0;
 
-  NS_IMETHOD	LoadInitialPage()=0;
+  NS_IMETHOD    LoadInitialPage()=0;
 
   NS_IMETHOD    WalletEditor()=0;
 
@@ -84,8 +86,9 @@ public:
 #define NS_DECL_IDOMBROWSERAPPCORE   \
   NS_IMETHOD    Back();  \
   NS_IMETHOD    Forward();  \
+  NS_IMETHOD    Stop();  \
   NS_IMETHOD    LoadUrl(const nsString& aUrl);  \
-  NS_IMETHOD    LoadInitialPage();   \
+  NS_IMETHOD    LoadInitialPage();  \
   NS_IMETHOD    WalletEditor();  \
   NS_IMETHOD    WalletSafeFillin(nsIDOMWindow* aWin);  \
   NS_IMETHOD    WalletQuickFillin(nsIDOMWindow* aWin);  \
@@ -110,7 +113,9 @@ public:
 #define NS_FORWARD_IDOMBROWSERAPPCORE(_to)  \
   NS_IMETHOD    Back() { return _to Back(); }  \
   NS_IMETHOD    Forward() { return _to Forward(); }  \
+  NS_IMETHOD    Stop() { return _to Stop(); }  \
   NS_IMETHOD    LoadUrl(const nsString& aUrl) { return _to LoadUrl(aUrl); }  \
+  NS_IMETHOD    LoadInitialPage() { return _to LoadInitialPage(); }  \
   NS_IMETHOD    WalletEditor() { return _to WalletEditor(); }  \
   NS_IMETHOD    WalletSafeFillin(nsIDOMWindow* aWin) { return _to WalletSafeFillin(aWin); }  \
   NS_IMETHOD    WalletQuickFillin(nsIDOMWindow* aWin) { return _to WalletQuickFillin(aWin); }  \

@@ -310,14 +310,13 @@ nsBrowserAppCore::Forward()
 	return NS_OK;
 }
 
-#if 0
 NS_IMETHODIMP    
 nsBrowserAppCore::Stop()
 {
   mContentAreaWebShell->Stop();
+  setAttribute( mWebShell, "Browser:Throbber", "busy", "false" );
 	return NS_OK;
 }
-#endif   /*  0 */
 
 #ifdef ClientWallet
 //#define WALLET_EDITOR_URL "resource:/res/samples/walleted.html"
@@ -558,12 +557,6 @@ nsBrowserAppCore::LoadUrl(const nsString& aUrl)
 
   if (!urlstr)
     return NS_OK;
-
-#if NOT_YET
-  printf("Enabling stop button\n");
-  //Enable the Stop buton
-  setAttribute(mWebShell, "canStop", "disabled", "false");
-#endif  /* NOT_YET  */
 
   /* Ask nsWebShell to load the URl */
   nsString id;
@@ -816,6 +809,10 @@ nsBrowserAppCore::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURL* aURL, c
 {
   // Kick start the throbber
    setAttribute( mWebShell, "Browser:Throbber", "busy", "true" );
+
+  // Enable the Stop buton
+   setAttribute( mWebShell, "canStop", "disabled", "false" );
+
    return NS_OK;
 }
 
@@ -917,7 +914,7 @@ done:
     setAttribute(mWebShell, "canGoBack", "disabled", (rv == NS_OK) ? "" : "true");
 
 	//Disable the Stop button
-//	setAttribute(mWebShell, "canStop", "disabled", "true");
+	setAttribute( mWebShell, "canStop", "disabled", "true" );
 
     /* To satisfy a request from the QA group */
 	if (aStatus == NS_OK) {
@@ -1324,6 +1321,9 @@ nsBrowserAppCore::HandleUnknownContentType(nsIDocumentLoader* loader,
                                            const char *aContentType,
                                            const char *aCommand ) {
     nsresult rv = NS_OK;
+
+    // Turn off the indicators in the chrome.
+    setAttribute( mWebShell, "Browser:Throbber", "busy", "false" );
 
     // Note: The following code is broken.  It should rightfully be loading
     // some "unknown content type handler" component and giving it control.
