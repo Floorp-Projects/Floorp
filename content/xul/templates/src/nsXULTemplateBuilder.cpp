@@ -1509,76 +1509,107 @@ RDFGenericBuilderImpl::FindTemplate(nsIContent* aElement,
 
 	*aTemplate = nsnull;
 
-	PRInt32	count;
-	rv = mRoot->ChildCount(count);
-    if (NS_FAILED(rv)) return rv;
+	nsCOMPtr<nsIContent>	tmpl;
+	PRBool			foundTemplateFlag = PR_FALSE;
 
-	for (PRInt32 loop=0; loop<count; loop++)
+	nsAutoString	templateID;
+	if (NS_SUCCEEDED(rv = mRoot->GetAttribute(kNameSpaceID_None, kTemplateAtom, templateID))
+		&& (rv == NS_CONTENT_ATTR_HAS_VALUE))
 	{
-        nsCOMPtr<nsIContent> tmpl;
-		rv = mRoot->ChildAt(loop, *getter_AddRefs(tmpl));
-        if (NS_FAILED(rv)) return rv;
+		// first, check and see if the root has a template attribute
+		nsCOMPtr<nsIDOMXULDocument>	xulDoc;
+		xulDoc = do_QueryInterface(mDocument);
+                if (! xulDoc)	return(NS_ERROR_UNEXPECTED);
+		nsCOMPtr<nsIDOMElement>		domElement;
+                rv = xulDoc->GetElementById(templateID, getter_AddRefs(domElement));
+                NS_ASSERTION(NS_SUCCEEDED(rv), "unable to find template node");
+                if (NS_FAILED(rv))	return(rv);
+		tmpl = do_QueryInterface(domElement);
+		if (tmpl)	foundTemplateFlag = PR_TRUE;
+	}
 
-		PRInt32 nameSpaceID;
-		rv = tmpl->GetNameSpaceID(nameSpaceID);
-        if (NS_FAILED(rv)) return rv;
+	if (foundTemplateFlag == PR_FALSE)
+	{
+		// if root node has no template attribute, then
+		// look for a child node which is a template tag
+		PRInt32	count;
+		rv = mRoot->ChildCount(count);
+		if (NS_FAILED(rv)) return rv;
 
-		if (nameSpaceID != kNameSpaceID_XUL)
-			continue;
+		for (PRInt32 loop=0; loop<count; loop++)
+		{
+			rv = mRoot->ChildAt(loop, *getter_AddRefs(tmpl));
+			if (NS_FAILED(rv)) return rv;
 
-		nsCOMPtr<nsIAtom>	tag;
-		rv = tmpl->GetTag(*getter_AddRefs(tag));
-        if (NS_FAILED(rv)) return rv;
+			PRInt32 nameSpaceID;
+			rv = tmpl->GetNameSpaceID(nameSpaceID);
+			if (NS_FAILED(rv)) return rv;
 
-		if (tag.get() != kTemplateAtom)
-			continue;
+			if (nameSpaceID != kNameSpaceID_XUL)
+				continue;
 
+			nsCOMPtr<nsIAtom>	tag;
+			rv = tmpl->GetTag(*getter_AddRefs(tag));
+			if (NS_FAILED(rv)) return rv;
+
+			if (tag.get() != kTemplateAtom)
+				continue;
+
+			foundTemplateFlag = PR_TRUE;
+			break;
+		}
+	}
+
+	if (foundTemplateFlag == PR_TRUE)
+	{
 		// found a template; check against any (optional) rules
 		PRInt32		numRuleChildren, numRulesFound = 0;
 		rv = tmpl->ChildCount(numRuleChildren);
-        if (NS_FAILED(rv)) return rv;
+		if (NS_FAILED(rv)) return rv;
 
 		for (PRInt32 ruleLoop=0; ruleLoop<numRuleChildren; ruleLoop++)
 		{
 			nsCOMPtr<nsIContent>	aRule;
 			rv = tmpl->ChildAt(ruleLoop, *getter_AddRefs(aRule));
-            if (NS_FAILED(rv)) return rv;
+			if (NS_FAILED(rv)) return rv;
 
 			PRInt32	ruleNameSpaceID;
 			rv = aRule->GetNameSpaceID(ruleNameSpaceID);
-            if (NS_FAILED(rv)) return rv;
+			if (NS_FAILED(rv)) return rv;
 
 			if (ruleNameSpaceID != kNameSpaceID_XUL)
 				continue;
 
 			nsCOMPtr<nsIAtom>	ruleTag;
 			rv = aRule->GetTag(*getter_AddRefs(ruleTag));
-            if (NS_FAILED(rv)) return rv;
+			if (NS_FAILED(rv)) return rv;
 
-            if (ruleTag.get() == kRuleAtom) {
-                ++numRulesFound;
-                PRBool		isMatch = PR_FALSE;
-                rv = IsTemplateRuleMatch(aElement, aProperty, aChild, aRule, &isMatch);
-                if (NS_FAILED(rv)) return rv;
+			if (ruleTag.get() == kRuleAtom)
+			{
+				++numRulesFound;
+				PRBool		isMatch = PR_FALSE;
+				rv = IsTemplateRuleMatch(aElement, aProperty, aChild, aRule, &isMatch);
+				if (NS_FAILED(rv)) return rv;
 
-                if (isMatch) {
-                    // found a matching rule, use it as the template
-                    *aTemplate = aRule;
-                    NS_ADDREF(*aTemplate);
-                    return NS_OK;
-                }
-            }
+				if (isMatch)
+				{
+					// found a matching rule, use it as the template
+					*aTemplate = aRule;
+					NS_ADDREF(*aTemplate);
+					return NS_OK;
+				}
+			}
 		}
 
-		if (numRulesFound == 0) {
+		if (numRulesFound == 0)
+		{
 			// if no rules are specified in the template, just use it
 			*aTemplate = tmpl;
 			NS_ADDREF(*aTemplate);
-            return NS_OK;
+			return NS_OK;
 		}
 	}
-
-    return NS_ERROR_FAILURE;
+	return(NS_ERROR_FAILURE);
 }
 
 
@@ -1916,17 +1947,15 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
             }
 
             // We'll _already_ have added the unique elements.
-            if (! isUnique) {
-                // Add into content model, special casing treeitems.
-                //
-                // XXX I've hacked insertion sorting to be OFF for
-                // now, until I can figure out how to make the
-                // insertion sort go a bit faster.
-                if ((nsnull != gXULSortService) && (isResourceElement) && (tag.get() == kTreeItemAtom)) {
-                    rv = gXULSortService->InsertContainerNode(aRealNode, realKid, aNotify);
-                    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to insert element via sort service");
+            if (! isUnique)
+            {
+                rv = NS_ERROR_UNEXPECTED;
+                if ((nsnull != gXULSortService) && (isResourceElement) )
+                {
+                    rv = gXULSortService->InsertContainerNode(mDB, mRoot, aRealNode, realKid, aNotify);
                 }
-                else {
+                if (NS_FAILED(rv))
+                {
                     rv = aRealNode->AppendChildTo(realKid, aNotify);
                     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to insert element");
                 }
