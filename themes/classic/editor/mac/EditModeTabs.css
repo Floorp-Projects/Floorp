@@ -1,3 +1,5 @@
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
 /* ............. edit mode tabs ............... */  
 
 .tabs-bottom {
@@ -33,9 +35,9 @@
 }
 
 .tabs-bottom > tab[selected="true"] > .tab-box {
-  background-color: #ffffff;
+  background-color: -moz-Window;
   border-bottom: 1px solid threedshadow !important;
-  border-top: 1px solid #ffffff !important;
+  border-top: 1px solid -moz-Window !important;
 }
 
 /* ............. after selected ............... */
