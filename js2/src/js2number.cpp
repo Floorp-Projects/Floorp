@@ -55,7 +55,7 @@ namespace JavaScript {
 namespace MetaData {
 
 
-    static js2val Number_Constructor(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc)
+    js2val Number_Constructor(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc)
     {   
         js2val thatValue = OBJECT_TO_JS2VAL(new NumberInstance(meta->numberClass));
         NumberInstance *numInst = checked_cast<NumberInstance *>(JS2VAL_TO_OBJECT(thatValue));

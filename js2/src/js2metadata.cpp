@@ -4135,8 +4135,12 @@ deleteClassProperty:
             reportError(Exception::typeError, "Can't convert to Object", engine->errorPos());
         if (JS2VAL_IS_STRING(x))
             return String_Constructor(this, JS2VAL_NULL, &x, 1);
-        // XXX need more
-        return OBJECT_TO_JS2VAL(new PrototypeInstance(objectClass->prototype, objectClass));
+        if (JS2VAL_IS_BOOLEAN(x))
+            return Boolean_Constructor(this, JS2VAL_NULL, &x, 1);
+        if (JS2VAL_IS_NUMBER(x))
+            return Number_Constructor(this, JS2VAL_NULL, &x, 1);
+        NOT_REACHED("unsupported value type");
+        return JS2VAL_VOID;
     }
     
     // x is any js2val
@@ -4221,7 +4225,8 @@ deleteClassProperty:
     CompilationData *JS2Metadata::startCompilationUnit(BytecodeContainer *newBCon, const String &source, const String &sourceLocation)
     {
         CompilationData *result = new CompilationData();
-        result->bCon = bCon;
+        result->compilation_bCon = bCon;
+        result->execution_bCon = engine->bCon;
         bConList.push_back(bCon);
 
         if (newBCon)
@@ -4239,11 +4244,11 @@ deleteClassProperty:
     void JS2Metadata::restoreCompilationUnit(CompilationData *oldData)
     {
         BytecodeContainer *xbCon = bConList.back();
-        ASSERT(oldData->bCon == xbCon);
+        ASSERT(oldData->compilation_bCon == xbCon);
         bConList.pop_back();
 
-        bCon = oldData->bCon;
-        engine->bCon = bCon;
+        bCon = oldData->compilation_bCon;
+        engine->bCon = oldData->execution_bCon;
 
         delete oldData;
     }
@@ -4349,7 +4354,7 @@ deleteClassProperty:
         GCMARKOBJECT(prototype)
         GCMARKOBJECT(privateNamespace)
         JS2Object::mark(name);
-//        GCMARKVALUE(defaultValue);
+        GCMARKVALUE(defaultValue);
         InstanceBindingIterator ib, iend;
         for (ib = instanceReadBindings.begin(), iend = instanceReadBindings.end(); (ib != iend); ib++) {
             ib->second->content->mark();

@@ -77,6 +77,8 @@ extern js2val UriError_Constructor(JS2Metadata *meta, const js2val thisValue, js
 extern js2val String_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
 extern js2val RegExp_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
 extern js2val RegExp_exec(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
+extern js2val Boolean_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
+extern js2val Number_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
 
 extern uint32 getLength(JS2Metadata *meta, JS2Object *obj);
 extern js2val setLength(JS2Metadata *meta, JS2Object *obj, uint32 length);
@@ -558,6 +560,7 @@ public:
 //    Environment *env;             // The environment to pass to the call or construct procedure
     FunctionWrapper *fWrap;
 
+// Implemented as type->getName()
 //    const String  *typeofString;            // A string to return if typeof is invoked on this instance
     Slot        *slots;                     // A set of slots that hold this instance's fixed property values
     DynamicPropertyMap *dynamicProperties;  // A set of this instance's dynamic properties, or NULL if this is a fixed instance
@@ -993,7 +996,8 @@ struct MemberDescriptor {
 
 class CompilationData {
 public:
-    BytecodeContainer *bCon;
+    BytecodeContainer *compilation_bCon;
+    BytecodeContainer *execution_bCon;
 };
 
 class JS2Metadata {

@@ -55,7 +55,7 @@ namespace JavaScript {
 namespace MetaData {
 
 
-    static js2val Boolean_Constructor(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc)
+    js2val Boolean_Constructor(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc)
     {   
         js2val thatValue = OBJECT_TO_JS2VAL(new BooleanInstance(meta->booleanClass->prototype, meta->booleanClass));
         BooleanInstance *boolInst = checked_cast<BooleanInstance *>(JS2VAL_TO_OBJECT(thatValue));
@@ -132,16 +132,18 @@ namespace MetaData {
             fInst = new CallableInstance(meta->functionClass);
             fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code);
     /*
-    XXX not prototype object function properties, like ECMA3
-            meta->writeDynamicProperty(meta->booleanClass->prototype, new Multiname(meta->world.identifiers[pf->name], meta->publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
-    */
-    /*
     XXX not static members, since those can't be accessed from the instance
               Variable *v = new Variable(meta->functionClass, OBJECT_TO_JS2VAL(fInst), true);
               meta->defineStaticMember(&meta->env, &meta->world.identifiers[pf->name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
     */
             InstanceMember *m = new InstanceMethod(fInst);
             meta->defineInstanceMember(meta->booleanClass, &meta->cxt, &meta->world.identifiers[pf->name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, m, 0);
+
+    /*
+        Dynamic property of the prototype:
+    */
+            meta->writeDynamicProperty(meta->booleanClass->prototype, new Multiname(&meta->world.identifiers[pf->name], meta->publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
+            
             pf++;
         }
 
