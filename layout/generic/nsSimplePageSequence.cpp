@@ -100,6 +100,7 @@ nsSimplePageSequenceFrame::nsSimplePageSequenceFrame() :
     PRInt16 printType;
     printService->GetPrintRange(&printType);
     mIsPrintingSelection = nsIPrintOptions::kRangeSelection == printType;
+    printService->GetMarginInTwips(mMargin);
   }
   mSkipPageBegin = PR_FALSE;
   mSkipPageEnd   = PR_FALSE;
