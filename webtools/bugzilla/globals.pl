@@ -1523,10 +1523,10 @@ sub max {
 # Trim whitespace from front and back.
 
 sub trim {
-    ($_) = (@_);
-    s/^\s+//g;
-    s/\s+$//g;
-    return $_;
+    my ($str) = @_;
+    $str =~ s/^\s+//g;
+    $str =~ s/\s+$//g;
+    return $str;
 }
 
 1;
