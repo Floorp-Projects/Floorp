@@ -1550,7 +1550,7 @@ function ComposeLoad()
   catch (ex) {
     var errorTitle = sComposeMsgsBundle.getString("initErrorDlogTitle");
     var errorMsg = sComposeMsgsBundle.getFormattedString("initErrorDlogMessage",
-                                                         [ex]);
+                                                         [""]);
     if (gPromptService)
       gPromptService.alert(window, errorTitle, errorMsg);
     else
