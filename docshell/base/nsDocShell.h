@@ -106,6 +106,7 @@ protected:
    nsDocShell();
    virtual ~nsDocShell();
 
+   nsDocShellInitInfo* InitInfo();
    nsresult GetChildOffset(nsIDOMNode* aChild, nsIDOMNode* aParent, 
       PRInt32* aOffset);
    nsresult GetRootScrollableView(nsIScrollableView** aOutScrollView);
@@ -137,7 +138,7 @@ protected:
    nsString                   mName;
    nsVoidArray                mChildren;
    nsDSURIContentListener*    mContentListener;
-   nsDocShellInitInfo*        mBaseInitInfo;
+   nsDocShellInitInfo*        mInitInfo;
    nsCOMPtr<nsIContentViewer> mContentViewer;
    nsCOMPtr<nsIDocumentLoader>mDocLoader;
    nsCOMPtr<nsIDocumentLoaderObserver> mDocLoaderObserver;
