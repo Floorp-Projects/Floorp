@@ -933,6 +933,53 @@ si_GetUser(char* URLName, PRBool pickFirstUser, char* userText) {
 }
 
 /*
+ * Get a specific user node for a given URL
+ *
+ * This routine is called only when holding the signon lock!!!
+ *
+ * This routine is called only if signon pref is enabled!!!
+ */
+PRIVATE si_SignonUserStruct*
+si_GetSpecificUser(char* URLName, char* userName, char* userText) {
+  si_SignonURLStruct* url;
+  si_SignonUserStruct* user;
+  si_SignonDataStruct* data;
+
+  /* get to node for this URL */
+  url = si_GetURL(URLName);
+  if (url != NULL) {
+
+    /* step through set of user nodes for this URL looking for specified username */
+    PRInt32 userCount2 = LIST_COUNT(url->signonUser_list);
+    for (PRInt32 i2=0; i2<userCount2; i2++) {
+      user = NS_STATIC_CAST(si_SignonUserStruct*, url->signonUser_list->ElementAt(i2));
+      /* consider first data node to be the identifying item */
+      data = (si_SignonDataStruct *) (user->signonData_list->ElementAt(0));
+      if (PL_strcmp(data->name, userText)) {
+        /* desired username text does not match name in data node */
+        continue;
+      }
+      if (PL_strcmp(data->value, userName)) {
+        /* desired username value does not match value in data node */
+        continue;
+      }
+      return user;
+    }
+
+    /* if we don't remove the URL from the cache at this point, the
+     * cached copy will be brought containing the last-used username
+     * rather than the username that was just selected
+     */
+
+#ifdef junk
+    NET_RemoveURLFromCache(NET_CreateURLStruct((char *)URLName, NET_DONT_RELOAD));
+#endif
+
+  }
+  return NULL;
+}
+
+/*
  * Get the url and user for which a change-of-password is to be applied
  *
  * This routine is called only when holding the signon lock!!!
@@ -2136,7 +2183,11 @@ si_RestoreOldSignonDataFromBrowser
 
   /* get the data from previous time this URL was visited */
   si_lock_signon_list();
-  user = si_GetUser(URLName, pickFirstUser, "username");
+  if (*username != NULL) {
+    user = si_GetSpecificUser(URLName, *username, "username");
+  } else {
+    user = si_GetUser(URLName, pickFirstUser, "username");
+  }
   if (!user) {
     /* leave original username and password from caller unchanged */
     /* username = 0; */
@@ -2145,7 +2196,11 @@ si_RestoreOldSignonDataFromBrowser
     return;
   }
   SI_LoadSignonData(PR_TRUE); /* this destroys "user" so need to recalculate it */
-  user = si_GetUser(URLName, pickFirstUser, "username");
+  if (*username != NULL) {
+    user = si_GetSpecificUser(URLName, *username, "username");
+  } else {
+    user = si_GetUser(URLName, pickFirstUser, "username");
+  }
   if (!user) {
     si_unlock_signon_list();
     return;
