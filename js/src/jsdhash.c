@@ -172,9 +172,9 @@ JS_DHashTableInit(JSDHashTable *table, JSDHashTableOps *ops, void *data,
     uint32 nbytes;
 
 #ifdef DEBUG
-    if (entrySize > 6 * sizeof(void *)) {
+    if (entrySize > 10 * sizeof(void *)) {
         fprintf(stderr,
-                "jsdhash: for the table at address 0x%p, the given entrySize"
+                "jsdhash: for the table at address %p, the given entrySize"
                 " of %lu %s favors chaining over double hashing.\n",
                 (void *)table,
                 (unsigned long) entrySize,
@@ -607,8 +607,14 @@ JS_DHashTableEnumerate(JSDHashTable *table, JSDHashEnumerator etor, void *arg)
         entryAddr += entrySize;
     }
 
-    /* Shrink or compress if a quarter or more of all entries are removed. */
-    if (table->removedCount >= capacity >> 2) {
+    /*
+     * Shrink or compress if a quarter or more of all entries are removed, or
+     * if the table is underloaded according to the configured minimum alpha,
+     * and is not minimal-size already.
+     */
+    if (table->removedCount >= capacity >> 2 ||
+        (capacity > JS_DHASH_MIN_SIZE &&
+         table->entryCount <= MIN_LOAD(table, capacity))) {
         METER(table->stats.enumShrinks++);
         capacity = table->entryCount;
         capacity += capacity >> 1;
