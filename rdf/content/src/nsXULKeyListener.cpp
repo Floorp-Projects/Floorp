@@ -1318,36 +1318,41 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
           break;
         }
 
+        PRUint32 theChar;
+        
         nsAutoString keyName; // This should be phased out for keycode and charcode
         keyElement->GetAttribute(nsAutoString("key"), keyName);
+        if ( !keyName.IsEmpty() ) {
+	          aKeyEvent->GetCharCode(&theChar);
+		}
         //printf("Found key [%s] \n", keyName.ToNewCString()); // this leaks
 
-        PRUint32 theChar;
         nsAutoString code; // either keycode or charcode
         PRBool   gotCharCode = PR_FALSE;
         PRBool   gotKeyCode  = PR_FALSE;
-        keyElement->GetAttribute(nsAutoString("charcode"), code);
-        if(code.IsEmpty()) {
-          keyElement->GetAttribute(nsAutoString("keycode"), code);
-          if(code.IsEmpty()) {
-            // XXX HACK for temporary compatibility
-            if(aEventType == eKeyPress) {
-              //gotCharCode = PR_TRUE;
-              aKeyEvent->GetCharCode(&theChar);
-            }
-            else {
-              //gotKeyCode = PR_TRUE;
-              aKeyEvent->GetKeyCode(&theChar);
-            }
-          } else {
-            // We want a keycode
-            aKeyEvent->GetKeyCode(&theChar);
-            gotKeyCode = PR_TRUE;
-          }
-        } else {
-          // We want a charcode
-          aKeyEvent->GetCharCode(&theChar);
-          gotCharCode = PR_TRUE;
+        
+        if ( keyName.IsEmpty() )
+        {
+	        keyElement->GetAttribute(nsAutoString("charcode"), code);
+	        if(code.IsEmpty()) {
+	          keyElement->GetAttribute(nsAutoString("keycode"), code);
+	          if(code.IsEmpty()) {
+	            // HACK for temporary compatibility
+	            if(aEventType == eKeyPress)
+	              aKeyEvent->GetCharCode(&theChar);
+	            else
+	              aKeyEvent->GetKeyCode(&theChar);
+
+	          } else {
+	            // We want a keycode
+	            aKeyEvent->GetKeyCode(&theChar);
+	            gotKeyCode = PR_TRUE;
+	          }
+	        } else {
+	          // We want a charcode
+	          aKeyEvent->GetCharCode(&theChar);
+	          gotCharCode = PR_TRUE;
+	        }
         }
 
         char tempChar[2];
