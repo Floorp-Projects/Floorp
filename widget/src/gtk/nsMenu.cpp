@@ -335,25 +335,34 @@ NS_METHOD nsMenu::RemoveAll()
   for (int i = mMenuItemVoidArray.Count(); i > 0; i--) {
     if(nsnull != mMenuItemVoidArray[i-1]) {
       nsIMenuItem * menuitem = nsnull;
-      ((nsISupports*)mMenuItemVoidArray[i-1])->QueryInterface(kIMenuItemIID, (void**)&menuitem);
+      ((nsISupports*)mMenuItemVoidArray[i-1])->QueryInterface(kIMenuItemIID,
+                                                              (void**)&menuitem);
       if(menuitem) {
-        void * gtkmenuitem = nsnull;
+        void *gtkmenuitem = nsnull;
         menuitem->GetNativeData(gtkmenuitem);
-	if(gtkmenuitem){
-          gtk_container_remove (GTK_CONTAINER (mMenu), GTK_WIDGET(gtkmenuitem) );
-	}
-      }else{
-        nsIMenu * menu= nsnull;
-        ((nsISupports*)mMenuItemVoidArray[i-1])->QueryInterface(kIMenuIID, (void**)&menu);
-        if(menu){
-	  void * gtkmenu = nsnull;
-          menu->GetNativeData(&gtkmenu);
-	  if(gtkmenu){
-	    g_print("gtkmenu removed");
-            
-	    //gtk_menu_item_remove_submenu (GTK_MENU_ITEM (item));
-	  }
+        if (gtkmenuitem) {
+          gtk_widget_ref(gtkmenuitem);
+          gtk_widget_destroy(gtkmenuitem);
+          // gtk_container_remove (GTK_CONTAINER (mMenu), GTK_WIDGET(gtkmenuitem));
         }
+
+      } else {
+
+        nsIMenu * menu= nsnull;
+        ((nsISupports*)mMenuItemVoidArray[i-1])->QueryInterface(kIMenuIID,
+                                                                (void**)&menu);
+        if(menu)
+        {
+          void * gtkmenu = nsnull;
+          menu->GetNativeData(&gtkmenu);
+
+          if(gtkmenu){
+            g_print("gtkmenu removed");
+
+            //gtk_menu_item_remove_submenu (GTK_MENU_ITEM (item));
+          }
+        }
+
       }
     }
   }
