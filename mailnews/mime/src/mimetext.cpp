@@ -329,7 +329,7 @@ MimeInlineText_rotate_convert_and_parse_line(char *line, PRInt32 length,
 
     if (!input_charset)
     {
-      if (obj->options->override_charset && (*obj->options->default_charset))
+      if (obj->options->override_charset && obj->options->default_charset && *(obj->options->default_charset))
         input_charset = obj->options->default_charset;
       else if ( (text) && (text->charset) && (*(text->charset)) )
         input_charset = text->charset;
