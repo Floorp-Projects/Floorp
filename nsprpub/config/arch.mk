@@ -182,7 +182,15 @@ ifeq ($(OS_ARCH),Windows_95)
 	OS_ARCH   := Windows_NT
 	OS_TARGET := WIN95
 endif
+ifeq ($(OS_ARCH),Windows_98)
+	OS_ARCH   := Windows_NT
+	OS_TARGET := WIN95
+endif
 ifeq ($(OS_ARCH),CYGWIN_95-4.0)
+	OS_ARCH   := CYGWIN_NT-4.0
+	OS_TARGET := WIN95
+endif
+ifeq ($(OS_ARCH),CYGWIN_98-4.10)
 	OS_ARCH   := CYGWIN_NT-4.0
 	OS_TARGET := WIN95
 endif
