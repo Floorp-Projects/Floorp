@@ -40,6 +40,8 @@ PRLogModuleInfo* bcJavaGlobal::log = NULL;
 static int counter = 0;
 
 JNIEnv * bcJavaGlobal::GetJNIEnv(int *detachRequired) {
+    PRLogModuleInfo * l = GetLog();
+    PR_LOG(l,PR_LOG_DEBUG,("--bcJavaGlobal::GetJNIEnv\n"));
     JNIEnv * env;
     int res;
     *detachRequired = 1;
@@ -53,7 +55,7 @@ JNIEnv * bcJavaGlobal::GetJNIEnv(int *detachRequired) {
         } else {
             res = jvm->AttachCurrentThread(JNIENV &env,NULL);
 #ifdef DEBUG_idk
-            printf("--bcJavaGlobal::GetJNIEnv ++counter %d\n",++counter);
+            PR_LOG(l,PR_LOG_DEBUG,("--bcJavaGlobal::GetJNIEnv ++counter %d\n",++counter));
 #endif
         }
     }
@@ -61,11 +63,13 @@ JNIEnv * bcJavaGlobal::GetJNIEnv(int *detachRequired) {
 }
 
 void bcJavaGlobal::ReleaseJNIEnv() {
+    PRLogModuleInfo * l = GetLog();
+    PR_LOG(l,PR_LOG_DEBUG,("--bcJavaGlobal::ReleaseJNIEnv\n"));
     int res;
     if (jvm) {
         res = jvm->DetachCurrentThread();
 #ifdef DEBUG_idk
-        printf("--bcJavaGlobal::ReleaseJNIEnv --counter %d\n",--counter);
+        PR_LOG(l,PR_LOG_DEBUG,("--bcJavaGlobal::ReleaseJNIEnv --counter %d\n",--counter));
 #endif
     }
 }

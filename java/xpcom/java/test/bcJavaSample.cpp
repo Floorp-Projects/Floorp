@@ -137,28 +137,40 @@ NS_IMETHODIMP bcJavaSample::Test9(nsIID * *po) {
 
 static bcIJavaSample * javaSample = NULL;
 
+#if 1
 void thread_start( void *arg ) {   
-    printf("--thread_start currentThread=%p\n",PR_GetCurrentThread());
+    printf("--thread_start currentThread=%d\n",PR_GetCurrentThread());
+    nsresult r;
     if (javaSample == NULL) {
-        nsresult r;
         r = nsComponentManager::CreateInstance("bcJavaSample",
                                                nsnull,
                                                NS_GET_IID(bcIJavaSample),
                                                (void**)&javaSample);
-        //    } else {
-        bcIJavaSample *t;
-        javaSample->Test1((int)PR_GetCurrentThread());
-        printf("--thread_start after first invocation \n");
-        javaSample->Test1((int)PR_GetCurrentThread());
-        printf("--thread_start after second invocation \n");
     }
+    javaSample->Test1((int)PR_GetCurrentThread());
+    printf("--thread_start after first invocation \n");
+    javaSample->Test1((int)PR_GetCurrentThread());
+    printf("--thread_start after second invocation \n");
 }
+#endif 
+
+#if 0
+void thread_start( void *arg ) {   
+    printf("--thread_start currentThread=%p\n",PR_GetCurrentThread());
+    nsresult r;
+    bcIJavaSample *t;
+    javaSample->Test1((int)PR_GetCurrentThread());
+    printf("--thread_start after first invocation \n");
+}
+
+#endif 
 
 void test() {
     printf("--BlackConnect test start\n");
     nsresult r;
     bcIJavaSample *test;
     bcIJavaSample *a = new bcJavaSample();
+#if 0
     r = nsComponentManager::CreateInstance("bcJavaSample",
 					   nsnull,
 					   NS_GET_IID(bcIJavaSample),
@@ -167,11 +179,22 @@ void test() {
         printf("--[debug] can not load bcJavaSample\n");
         return;
     }
+#endif 
     //sigsend(P_PID, getpid(),SIGINT);
     //test->Test1(2000);
+    
 #if 1
     {
-        for (int i = 0; i < 1; i++) {
+        PRThread *thr = PR_CreateThread( PR_USER_THREAD,
+                                         thread_start,
+                                         test,
+                                         PR_PRIORITY_NORMAL,
+                                         PR_LOCAL_THREAD,
+                                         PR_JOINABLE_THREAD,
+                                         0);
+        PR_JoinThread(thr);
+
+        for (int i = 0; i < 200; i++) {
             printf("\n--we are creating threads i=%d\n",i);
             PRThread *thr = PR_CreateThread( PR_USER_THREAD,
                                              thread_start,
@@ -180,12 +203,17 @@ void test() {
                                              PR_LOCAL_THREAD,
                                              PR_JOINABLE_THREAD,
                                              0);
-            PR_JoinThread(thr);
+            //PR_JoinThread(thr);
         }
     }
-    return;
 #endif            
-    test->Test1(1000);
+    //thread_start(test); 
+    if (javaSample == NULL) {
+        return;
+    } 
+    test = javaSample;
+    test->Test1((int)PR_GetCurrentThread());
+    return;
     bcIJavaSample *test1;
     if (NS_FAILED(r)) {
         printf("failed to get component. try to restart test\n");

@@ -51,6 +51,7 @@ bcIJavaSample.java : bcIJavaSample.idl
 
 install-component: bcJavaSample.jar.comp bcJavaSample.jar.info
 	cp  bcJavaSample.jar.comp bcJavaSample.jar.info $(DEPTH)/dist/bin/components/
+	cp  bcIJavaSample.class $(DIST)/classes
 	
 clobber-java:
 	rm -f *.class *.jar

@@ -198,6 +198,7 @@ NS_IMETHODIMP bcJavaStubsAndProxies::GetOID(char *location, bcOID *oid) {
     //location[strlen(location)-5] = 0; //nb dirty hack. location is xyz.jar.info
     strcpy(location + strlen(location)-4,"comp");
     jstring jstr = env->NewStringUTF(location);
+    strcpy(location + strlen(location)-4,"info");
     jobject object = env->CallStaticObjectMethod(componentLoader, loadComponentID, jstr);
     bcIStub *stub = new bcJavaStub(object);
     NS_WITH_SERVICE(bcIORBComponent,_orb,kORBComponent,&result);
