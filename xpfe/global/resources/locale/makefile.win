@@ -21,23 +21,7 @@
 
 DEPTH=..\..\..\..
 
-DIRS=win
+DIRS=en-US
 
 include <$(DEPTH)\config\rules.mak>
 
-DISTBROWSER=$(DIST)\bin\chrome\global\locale\en-US
-
-
-install::
-	$(MAKE_INSTALL) globalOverlay.dtd $(DISTBROWSER)
-	$(MAKE_INSTALL) dialogOverlay.dtd $(DISTBROWSER)
-	$(MAKE_INSTALL) tasksOverlay.dtd $(DISTBROWSER)
-	$(MAKE_INSTALL) commonDialog.dtd $(DISTBROWSER)
-	$(MAKE_INSTALL) charsetOverlay.dtd $(DISTBROWSER)
-	$(MAKE_INSTALL) charsetDetectorsOverlay.dtd $(DISTBROWSER)
-  $(MAKE_INSTALL) wizardManager.properties $(DISTBROWSER)
-  $(MAKE_INSTALL) wizardOverlay.dtd $(DISTBROWSER)
-  $(MAKE_INSTALL) about.dtd $(DISTBROWSER)
-  
-clobber::
-  rm -f $(DIST)\bin\chrome\global\locale\en-US\*.*
