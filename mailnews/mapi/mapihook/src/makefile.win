@@ -59,6 +59,7 @@ REQUIRES        = xpcom \
 		  editor \
 		  msgdb \
 		  uriloader \
+                  unicharutil \
  	          appstartup \
 	$(NULL)
 
@@ -86,6 +87,7 @@ OBJS=   \
 LLIBS=                               \
  $(DIST)\lib\xpcom.lib               \
  $(DIST)\lib\msgbsutl.lib            \
+ $(DIST)\lib\unicharutil_s.lib	     \
  $(LIBNSPR)                          \
  $(NULL)
 
