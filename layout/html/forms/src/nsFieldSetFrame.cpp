@@ -206,7 +206,7 @@ nsFieldSetFrame::Paint(nsIPresContext& aPresContext,
 
         nscoord yoff = 0;
         
-        // if the border is bigger than the legend. Move the border down
+        // if the border is smaller than the legend. Move the border down
         // to be centered on the legend. 
         if (border.top < mLegendRect.height)
             yoff = (mLegendRect.height - border.top)/2;
@@ -299,6 +299,8 @@ nsFieldSetFrame::Reflow(nsIPresContext&          aPresContext,
   
   // get our border and padding
   const nsMargin &borderPadding = aReflowState.mComputedBorderPadding;
+  const nsMargin &padding       = aReflowState.mComputedPadding;
+  nsMargin border = borderPadding - padding;
 
   // Figure out how big the legend is if there is one. 
   nsMargin legendMargin(0,0,0,0);
@@ -329,77 +331,58 @@ nsFieldSetFrame::Reflow(nsIPresContext&          aPresContext,
     mLegendRect.height = aDesiredSize.height + legendMargin.top + legendMargin.bottom;
     mLegendRect.x = borderPadding.left;
     mLegendRect.y = 0;
-  }
+    mLegendSpace = 0;
+    if (mLegendRect.height > border.top) {
+        // center the border on the legend
+        mLegendSpace = mLegendRect.height - borderPadding.top;
+    } else {
+        mLegendRect.y = (border.top - mLegendRect.height)/2;
+    }
 
-  mLegendSpace = 0;
-  if (mLegendRect.height > borderPadding.top) {
-      // center the border on the legend
-      mLegendSpace = mLegendRect.height - borderPadding.top;
-  } else {
-      mLegendRect.y = (borderPadding.top - mLegendRect.height)/2;
-  }
-
-  // if we are contrained then remove the legend from our available height.
-  if (NS_INTRINSICSIZE != availSize.height) {
-     if (availSize.height >= mLegendSpace)
-         availSize.height -= mLegendSpace;
-  }
+    // if we are contrained then remove the legend from our available height.
+    if (NS_INTRINSICSIZE != availSize.height) {
+       if (availSize.height >= mLegendSpace)
+           availSize.height -= mLegendSpace;
+    }
   
-  // don't get any smaller than the legend
-  if (NS_INTRINSICSIZE != availSize.width) {
-     if (availSize.width < mLegendRect.width)
-         availSize.width = mLegendRect.width;
-  }
+    // don't get any smaller than the legend
+    if (NS_INTRINSICSIZE != availSize.width) {
+       if (availSize.width < mLegendRect.width)
+           availSize.width = mLegendRect.width;
+    }
   
-  /*
-  // get the content's margin
-  nsMargin contentMargin(0,0,0,0);
-  nsCOMPtr<nsIStyleContext> contentSC;
-  mContentFrame->GetStyleContext(getter_AddRefs(contentSC));
-  if (contentSC) {
-    const nsStyleSpacing* spacing =
-      (const nsStyleSpacing*)contentSC->GetStyleData(eStyleStruct_Spacing);
-    spacing->GetMargin(contentMargin);
   }
-
-  // remove it from our size if we are not intrinsic
-  if (NS_INTRINSICSIZE != availSize.height)
-     availSize.height -= (contentMargin.top + contentMargin.bottom);
-
-  
-  if (NS_INTRINSICSIZE != availSize.width)
-     availSize.width -= (contentMargin.left + contentMargin.right);
-*/
 
     // Try to reflow the area frame into the available space.
   nsHTMLReflowState contentReflowState(aPresContext, aReflowState,
                                        mContentFrame, availSize);
 
   ReflowChild(mContentFrame, aPresContext, aDesiredSize, contentReflowState, aStatus);
-  //aDesiredSize.width += contentMargin.left + contentMargin.right;
-  //aDesiredSize.height += contentMargin.top + contentMargin.bottom;
 
   // set the rect. make sure we add the margin back in.
   nsRect contentRect(borderPadding.left,borderPadding.top + mLegendSpace,aDesiredSize.width ,aDesiredSize.height);
 
-  PRInt32 align = ((nsLegendFrame*)mLegendFrame)->GetAlign();
- 
-  switch(align) {
-    case NS_STYLE_TEXT_ALIGN_RIGHT:
-      mLegendRect.x = contentRect.width - mLegendRect.width + borderPadding.left;
-      break;
-    case NS_STYLE_TEXT_ALIGN_CENTER:
-      mLegendRect.x = contentRect.width/2 - mLegendRect.width/2 + borderPadding.left;
-  }
-
   // Place the content area frame.
   mContentFrame->SetRect(contentRect);
 
-  // place the legend
-  nsRect actualLegendRect(mLegendRect);
-  actualLegendRect.Deflate(legendMargin);
-  mLegendFrame->SetRect(actualLegendRect);
-    
+  if (mLegendFrame) 
+  {
+    PRInt32 align = ((nsLegendFrame*)mLegendFrame)->GetAlign();
+ 
+    switch(align) {
+      case NS_STYLE_TEXT_ALIGN_RIGHT:
+        mLegendRect.x = contentRect.width - mLegendRect.width + borderPadding.left;
+        break;
+      case NS_STYLE_TEXT_ALIGN_CENTER:
+        mLegendRect.x = contentRect.width/2 - mLegendRect.width/2 + borderPadding.left;
+    }
+  
+    // place the legend
+    nsRect actualLegendRect(mLegendRect);
+    actualLegendRect.Deflate(legendMargin);
+    mLegendFrame->SetRect(actualLegendRect);
+  }
+  
   // Return our size and our result
   if (aReflowState.mComputedHeight == NS_INTRINSICSIZE) {
      aDesiredSize.height = mLegendSpace + 
