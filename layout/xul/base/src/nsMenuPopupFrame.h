@@ -41,6 +41,8 @@ class nsIViewManager;
 class nsIView;
 class nsIMenuParent;
 class nsIMenuFrame;
+class nsIDOMXULDocument;
+
 
 class nsMenuPopupFrame : public nsBoxFrame, public nsIMenuParent
 {
@@ -111,6 +113,11 @@ public:
 protected:
   // return true if the alignment is horizontal false if vertical
   virtual PRBool GetInitialAlignment(); 
+
+  // given x,y in client coordinates, compensate for nested documents like framesets.
+  void AdjustClientXYForNestedDocuments ( nsIDOMXULDocument* inPopupDoc, nsIPresShell* inPopupShell, 
+                                            PRInt32 inClientX, PRInt32 inClientY, 
+                                            PRInt32* outAdjX, PRInt32* outAdjY ) ;
 
   nsIMenuFrame* mCurrentMenu; // The current menu that is active.
   PRBool mIsCapturingMouseEvents; // Whether or not we're grabbing the mouse events.

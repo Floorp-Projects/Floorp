@@ -43,6 +43,8 @@
 #include "nsIDocument.h"
 #include "nsIDeviceContext.h"
 #include "nsRect.h"
+#include "nsIDOMXULDocument.h"
+
 
 const PRInt32 kMaxZ = 0x7fffffff; //XXX: Shouldn't there be a define somewhere for MaxInt for PRInt32
 
@@ -222,6 +224,73 @@ void GetWidgetForView(nsIView *aView, nsIWidget *&aWidget)
 }
 
 
+//
+// AdjustClientXYForNestedDocuments
+// 
+// almost certainly, the document where the mouse was clicked is not
+// the document that contains the popup, especially if we're viewing a page
+// with frames. Thus we need to make adjustments to the client coordinates to
+// take this into account and get them back into the relative coordinates of
+// this document.
+//
+void
+nsMenuPopupFrame :: AdjustClientXYForNestedDocuments ( nsIDOMXULDocument* inPopupDoc, nsIPresShell* inPopupShell, 
+                                                         PRInt32 inClientX, PRInt32 inClientY, 
+                                                         PRInt32* outAdjX, PRInt32* outAdjY )
+{
+  if ( !inPopupDoc || !outAdjX || !outAdjY )
+    return;
+
+  // Find the widget associated with the popup's document
+  nsCOMPtr<nsIWidget> popupDocumentWidget;
+  nsCOMPtr<nsIViewManager> viewManager;
+  inPopupShell->GetViewManager(getter_AddRefs(viewManager));
+  nsIView* rootView;
+  viewManager->GetRootView(rootView);
+  nscoord wOffsetX, wOffsetY;
+  rootView->GetOffsetFromWidget(&wOffsetX, &wOffsetY, *getter_AddRefs(popupDocumentWidget));
+  NS_WARN_IF_FALSE(popupDocumentWidget, "ACK, BAD WIDGET");
+  
+  // Find the widget associated with the target's document. Recall that we cached the
+  // target popup node in the document of the popup in the nsXULPopupListener.
+  nsCOMPtr<nsIDOMNode> targetNode;
+  inPopupDoc->GetPopupNode(getter_AddRefs(targetNode));
+  NS_WARN_IF_FALSE(targetNode, "ACK, BAD TARGET NODE");
+  nsCOMPtr<nsIContent> targetAsContent ( do_QueryInterface(targetNode) );
+  nsCOMPtr<nsIWidget> targetDocumentWidget;
+  if ( targetAsContent ) {
+    nsCOMPtr<nsIDocument> targetDocument;
+    targetAsContent->GetDocument(*getter_AddRefs(targetDocument));
+    nsCOMPtr<nsIPresShell> shell = targetDocument->GetShellAt(0);
+    nsCOMPtr<nsIViewManager> viewManager;
+    shell->GetViewManager(getter_AddRefs(viewManager));
+    nsIView* rootView;
+    viewManager->GetRootView(rootView);
+    nscoord wOffsetX, wOffsetY;
+    rootView->GetOffsetFromWidget(&wOffsetX, &wOffsetY, *getter_AddRefs(targetDocumentWidget));
+  }
+
+  // the offset we need is the difference between the upper left corner of the two widgets. Use
+  // screen coordinates to find the global offset between them.
+  nsRect popupDocTopLeft;
+  if ( popupDocumentWidget ) {
+    nsRect topLeftClient ( 0, 0, 10, 10 );
+    popupDocumentWidget->WidgetToScreen ( topLeftClient, popupDocTopLeft );
+  }
+  nsRect targetDocTopLeft;
+  if ( targetDocumentWidget ) {
+    nsRect topLeftClient ( 0, 0, 10, 10 );
+    targetDocumentWidget->WidgetToScreen ( topLeftClient, targetDocTopLeft );
+  }
+  nsPoint pixelOffset ( targetDocTopLeft.x - popupDocTopLeft.x, targetDocTopLeft.y - popupDocTopLeft.y );
+
+  *outAdjX = inClientX + pixelOffset.x;
+  *outAdjY = inClientY + pixelOffset.y;
+  
+} // AdjustClientXYForNestedDocuments
+
+
+
 nsresult 
 nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
                                     const nsString& aPopupAnchor,
@@ -271,16 +340,30 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
   nsCOMPtr<nsIDeviceContext> dx;
   viewManager->GetDeviceContext(*getter_AddRefs(dx));
   dx->GetAppUnitsToDevUnits(t2p);
+
+  // get the document and the global script object
+  nsCOMPtr<nsIPresShell> presShell;
+  aPresContext->GetShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIDocument> document;
+  presShell->GetDocument(getter_AddRefs(document));
+  nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject;
+  document->GetScriptGlobalObject(getter_AddRefs(scriptGlobalObject));
   
   // |xpos| and |ypos| hold the x and y positions of where the popup will be moved to,
   // in _twips_, in the coordinate system of the _parent view_.
   PRInt32 xpos = 0, ypos = 0;
 
   if (aXPos != -1 || aYPos != -1) {
-    xpos = NSIntPixelsToTwips(aXPos, p2t);
-    ypos = NSIntPixelsToTwips(aYPos, p2t);
-    xpos += offset.x;
-    ypos += offset.y;
+  
+    // for this case, we've been handed a specific x/y location (in client coordinates) for
+    // the popup. However, we may be deeply nested in a frameset, etc and so the client coordinates
+    // need some adjusting. 
+    nsCOMPtr<nsIDOMXULDocument> xulDoc ( do_QueryInterface(document) );
+    PRInt32 newXPos = 0, newYPos = 0;
+    AdjustClientXYForNestedDocuments ( xulDoc, presShell, aXPos, aYPos, &newXPos, &newYPos );
+
+    xpos = NSIntPixelsToTwips(newXPos, p2t);
+    ypos = NSIntPixelsToTwips(newYPos, p2t);
   } 
   else {
     xpos = parentPos.x + offset.x;
@@ -320,13 +403,6 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
   // At this point, we should be positioned where we're told. Ensure that we fit
   // on the screen. 
   //
-
-  nsCOMPtr<nsIPresShell> presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));
-  nsCOMPtr<nsIDocument> document;
-  presShell->GetDocument(getter_AddRefs(document));
-  nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject;
-  document->GetScriptGlobalObject(getter_AddRefs(scriptGlobalObject));
   
   nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(scriptGlobalObject));
   nsCOMPtr<nsIDOMScreen> screen;
