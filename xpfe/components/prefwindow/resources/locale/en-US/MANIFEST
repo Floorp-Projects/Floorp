@@ -14,6 +14,7 @@ pref-offline.dtd
 pref-proxies.dtd
 pref-proxy-manual.dtd
 pref-publish.dtd
+pref-search.dtd
 pref-smart_browsing.dtd
 pref-smartupdate.dtd
 PrefsWindow.dtd

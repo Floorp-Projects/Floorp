@@ -46,6 +46,8 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/pref-proxy-manual.xul \
 		$(srcdir)/pref-publish.xul \
 		$(srcdir)/pref-mousewheel.xul \
+		$(srcdir)/pref-search.js \
+		$(srcdir)/pref-search.xul \
 		$(srcdir)/pref-smart_browsing.xul \
 		$(srcdir)/pref-smartupdate.xul \
 		$(srcdir)/fontScalingOverlay.xul \
