@@ -39,6 +39,10 @@
 #include <errno.h>
 #ifdef HAVE_GETOPT_H
 #include <getopt.h>
+#else
+extern int  getopt(int argc, char *const *argv, const char *shortopts);
+extern char *optarg;
+extern int  optind;
 #endif
 #include <math.h>
 #include <time.h>
@@ -52,7 +56,9 @@
 
 static char   *program;
 static int    sort_by_direct = 0;
+static int    js_mode = 0;
 static int    do_tree_dump = 0;
+static int    unified_output = 0;
 static char   *function_dump = NULL;
 static int32  min_subtotal = 0;
 
@@ -156,7 +162,7 @@ typedef struct logevent {
             uint32  size;
         } alloc;
         struct {
-            struct nsTMStats tmstats;
+            nsTMStats tmstats;
             uint32 calltree_maxkids_parent;
             uint32 calltree_maxstack_top;
         } stats;
@@ -256,11 +262,14 @@ struct graphnode {
     PLHashEntry entry;          /* key is serial or name, value must be name */
     graphedge   *in;
     graphedge   *out;
-    graphnode   *up;
+    graphnode   *up;            /* parent in supergraph, e.g., JS for JS_*() */
+    graphnode   *down;          /* subgraph kids, declining bytes.total order */
+    graphnode   *next;          /* next kid in supergraph node's down list */
     int         low;            /* 0 or lowest current tree walk level */
     counts      bytes;          /* bytes (direct and total) allocated */
     counts      allocs;         /* number of allocations */
     double      sqsum;          /* sum of squared bytes.direct */
+    int         sort;           /* sorted index in node table, -1 if no table */
 };
 
 #define graphnode_name(node)    ((char*) (node)->entry.value)
@@ -343,11 +352,12 @@ static PLHashEntry *graphnode_allocentry(void *pool, const void *key)
     graphnode *node = (graphnode*) malloc(sizeof(graphnode));
     if (node) {
         node->in = node->out = NULL;
-        node->up = NULL;
+        node->up = node->down = node->next = NULL;
         node->low = 0;
         node->bytes.direct = node->bytes.total = 0;
         node->allocs.direct = node->allocs.total = 0;
         node->sqsum = 0;
+        node->sort = -1;
     }
     return &node->entry;
 }
@@ -495,11 +505,46 @@ static void walk_callsite_tree(callsite *site, int level, int kidnum, FILE *fp)
     }
 }
 
+/* Linked list bubble-sort (waterson and brendan went bald hacking this). */
+#define BUBBLE_SORT_LINKED_LIST(listp, nodetype)                              \
+    PR_BEGIN_MACRO                                                            \
+        nodetype *curr, **currp, *next, **nextp, *tmp;                        \
+                                                                              \
+        currp = listp;                                                        \
+        while ((curr = *currp) != NULL && curr->next) {                       \
+            nextp = &curr->next;                                              \
+            while ((next = *nextp) != NULL) {                                 \
+                if (curr->bytes.total < next->bytes.total) {                  \
+                    tmp = curr->next;                                         \
+                    *currp = tmp;                                             \
+                    if (tmp == next) {                                        \
+                        PR_ASSERT(nextp == &curr->next);                      \
+                        curr->next = next->next;                              \
+                        next->next = curr;                                    \
+                    } else {                                                  \
+                        *nextp = next->next;                                  \
+                        curr->next = next->next;                              \
+                        next->next = tmp;                                     \
+                        *currp = next;                                        \
+                        *nextp = curr;                                        \
+                        nextp = &curr->next;                                  \
+                    }                                                         \
+                    curr = next;                                              \
+                    continue;                                                 \
+                }                                                             \
+                nextp = &next->next;                                          \
+            }                                                                 \
+            currp = &curr->next;                                              \
+        }                                                                     \
+    PR_END_MACRO
+
 static PRIntn tabulate_node(PLHashEntry *he, PRIntn i, void *arg)
 {
+    graphnode *node = (graphnode*) he;
     graphnode **table = (graphnode**) arg;
 
-    table[i] = (graphnode*) he;
+    table[i] = node;
+    BUBBLE_SORT_LINKED_LIST(&node->down, graphnode);
     return HT_ENUMERATE_NEXT;
 }
 
@@ -561,58 +606,50 @@ static double percent(int32 num, int32 total)
     return ((double) num * 100) / (double) total;
 }
 
-/* Linked list bubble-sort (waterson and brendan went bald hacking this). */
-static void sort_graphedge_list(graphedge **currp)
+static void sort_graphedge_list(graphedge **listp)
 {
-    graphedge *curr, *next, **nextp, *tmp;
-
-    while ((curr = *currp) != NULL && curr->next) {
-        nextp = &curr->next;
-        while ((next = *nextp) != NULL) {
-            if (curr->bytes.total < next->bytes.total) {
-                tmp = curr->next;
-                *currp = tmp;
-                if (tmp == next) {
-                    PR_ASSERT(nextp == &curr->next);
-                    curr->next = next->next;
-                    next->next = curr;
-                } else {
-                    *nextp = next->next;
-                    curr->next = next->next;
-                    next->next = tmp;
-                    *currp = next;
-                    *nextp = curr;
-                    nextp = &curr->next;
-                }
-                curr = next;
-                continue;
-            }
-            nextp = &next->next;
-        }
-        currp = &curr->next;
-    }
+    BUBBLE_SORT_LINKED_LIST(listp, graphedge);
 }
 
-static void dump_graphedge_list(graphedge *list, FILE *fp)
+static void dump_graphedge_list(graphedge *list, const char *name, FILE *fp)
 {
-    int32 total;
+    counts bytes;
     graphedge *edge;
     char buf[16];
 
-    fputs("<td valign=top>", fp);
-    total = 0;
-    for (edge = list; edge; edge = edge->next)
-        total += edge->bytes.total;
+    bytes.direct = bytes.total = 0;
     for (edge = list; edge; edge = edge->next) {
-        fprintf(fp, "<a href='#%s'>%s&nbsp;(%1.2f%%)</a>\n",
-                graphnode_name(edge->node),
-                prettybig(edge->bytes.total, buf, sizeof buf),
-                percent(edge->bytes.total, total));
+        bytes.direct += edge->bytes.direct;
+        bytes.total += edge->bytes.total;
     }
-    fputs("</td>", fp);
+
+    if (js_mode) {
+        fprintf(fp,
+                "   %s:{dbytes:%ld, tbytes:%ld, edges:[\n",
+                name, (long) bytes.direct, (long) bytes.total);
+        for (edge = list; edge; edge = edge->next) {
+            fprintf(fp,
+                    "    {node:%d, dbytes:%ld, tbytes:%ld},\n",
+                    edge->node->sort,
+                    (long) edge->bytes.direct,
+                    (long) edge->bytes.total);
+        }
+        fputs("   ]},\n", fp);
+    } else {
+        fputs("<td valign=top>", fp);
+        for (edge = list; edge; edge = edge->next) {
+            fprintf(fp,
+                    "<a href='#%s'>%s&nbsp;(%1.2f%%)</a>\n",
+                    graphnode_name(edge->node),
+                    prettybig(edge->bytes.total, buf, sizeof buf),
+                    percent(edge->bytes.total, bytes.total));
+        }
+        fputs("</td>", fp);
+    }
 }
 
-static void dump_graph(PLHashTable *hashtbl, const char *title, FILE *fp)
+static void dump_graph(PLHashTable *hashtbl, const char *varname,
+                       const char *title, FILE *fp)
 {
     uint32 i, count;
     graphnode **table, *node;
@@ -629,17 +666,27 @@ static void dump_graph(PLHashTable *hashtbl, const char *title, FILE *fp)
     }
     PL_HashTableEnumerateEntries(hashtbl, tabulate_node, table);
     qsort(table, count, sizeof(graphnode*), node_table_compare);
+    for (i = 0; i < count; i++)
+        table[i]->sort = i;
 
-    fprintf(fp,
-            "<table border=1>\n"
-              "<tr>"
-                "<th>%s</th>"
-                "<th>Total/Direct (percents)</th>"
-                "<th>Allocations</th>"
-                "<th>Fan-in</th>"
-                "<th>Fan-out</th>"
-              "</tr>\n",
-            title);
+    if (js_mode) {
+        fprintf(fp,
+                "var %s = {\n name:'%s', title:'%s', nodes:[\n",
+                varname, varname, title);
+    } else {
+        fprintf(fp,
+                "<table border=1>\n"
+                  "<tr>"
+                    "<th>%s</th>"
+                    "<th>Down</th>"
+                    "<th>Next</th>"
+                    "<th>Total/Direct (percents)</th>"
+                    "<th>Allocations</th>"
+                    "<th>Fan-in</th>"
+                    "<th>Fan-out</th>"
+                  "</tr>\n",
+                title);
+    }
 
     for (i = 0; i < count; i++) {
         /* Don't bother with truly puny nodes. */
@@ -648,82 +695,113 @@ static void dump_graph(PLHashTable *hashtbl, const char *title, FILE *fp)
             break;
 
         name = graphnode_name(node);
-        namelen = strlen(name);
-        fprintf(fp,
-                "<tr>"
-                  "<td valign=top><a name='%s'>%.*s%s</td>"
-                  "<td valign=top>%s/%s (%1.2f%%/%1.2f%%)</td>"
-                  "<td valign=top>%s/%s (%1.2f%%/%1.2f%%)</td>",
-                name,
-                (namelen > 45) ? 45 : (int)namelen, name,
-                (namelen > 45) ? "<i>...</i>" : "",
-                prettybig(node->bytes.total, buf1, sizeof buf1),
-                prettybig(node->bytes.direct, buf2, sizeof buf2),
-                percent(node->bytes.total, calltree_root.bytes.total),
-                percent(node->bytes.direct, calltree_root.bytes.total),
-                prettybig(node->allocs.total, buf3, sizeof buf3),
-                prettybig(node->allocs.direct, buf4, sizeof buf4),
-                percent(node->allocs.total, calltree_root.allocs.total),
-                percent(node->allocs.direct, calltree_root.allocs.total));
+        if (js_mode) {
+            fprintf(fp,
+                    "  {name:'%s', dbytes:%ld, tbytes:%ld,"
+                                 " dallocs:%ld, tallocs:%ld,\n",
+                    name,
+                    (long) node->bytes.direct, (long) node->bytes.total,
+                    (long) node->allocs.direct, (long) node->allocs.total);
+        } else {
+            namelen = strlen(name);
+            fprintf(fp,
+                    "<tr>"
+                      "<td valign=top><a name='%s'>%.*s%s</a></td>",
+                    name,
+                    (namelen > 45) ? 45 : (int)namelen, name,
+                    (namelen > 45) ? "<i>...</i>" : "");
+            if (node->down) {
+                fprintf(fp,
+                      "<td valign=top><a href='#%s'><i>down</i></a></td>",
+                        graphnode_name(node->down));
+            } else {
+                fputs("<td></td>", fp);
+            }
+            if (node->next) {
+                fprintf(fp,
+                      "<td valign=top><a href='#%s'><i>next</i></a></td>",
+                        graphnode_name(node->next));
+            } else {
+                fputs("<td></td>", fp);
+            }
+            fprintf(fp,
+                      "<td valign=top>%s/%s (%1.2f%%/%1.2f%%)</td>"
+                      "<td valign=top>%s/%s (%1.2f%%/%1.2f%%)</td>",
+                    prettybig(node->bytes.total, buf1, sizeof buf1),
+                    prettybig(node->bytes.direct, buf2, sizeof buf2),
+                    percent(node->bytes.total, calltree_root.bytes.total),
+                    percent(node->bytes.direct, calltree_root.bytes.total),
+                    prettybig(node->allocs.total, buf3, sizeof buf3),
+                    prettybig(node->allocs.direct, buf4, sizeof buf4),
+                    percent(node->allocs.total, calltree_root.allocs.total),
+                    percent(node->allocs.direct, calltree_root.allocs.total));
+        }
 
         sort_graphedge_list(&node->in);
-        dump_graphedge_list(node->in, fp);
+        dump_graphedge_list(node->in, "fin", fp);   /* 'in' is a JS keyword! */
         sort_graphedge_list(&node->out);
-        dump_graphedge_list(node->out, fp);
+        dump_graphedge_list(node->out, "out", fp);
 
-        fputs("</tr>\n", fp);
-    }
-
-    fputs("</table>\n<hr>\n", fp);
-
-    qsort(table, count, sizeof(graphnode*), mean_size_compare);
-
-    fprintf(fp,
-            "<table border=1>\n"
-              "<tr><th colspan=4>Direct Allocators</th></tr>\n"
-              "<tr>"
-                "<th>%s</th>"
-                "<th>Mean&nbsp;Size</th>"
-                "<th>StdDev</th>"
-                "<th>Allocations<th>"
-              "</tr>\n",
-            title);
-
-    for (i = 0; i < count; i++) {
-        double allocs, bytes, mean, variance, sigma;
-
-        node = table[i];
-        allocs = (double)node->allocs.direct;
-        if (!allocs)
-            continue;
-
-        /* Compute direct-size mean and standard deviation. */
-        bytes = (double)node->bytes.direct;
-        mean = bytes / allocs;
-        variance = allocs * node->sqsum - bytes * bytes;
-        if (variance < 0 || allocs == 1)
-            variance = 0;
+        if (js_mode)
+            fputs("  },\n", fp);
         else
-            variance /= allocs * (allocs - 1);
-        sigma = sqrt(variance);
-
-        name = graphnode_name(node);
-        namelen = strlen(name);
-        fprintf(fp,
-                "<tr>"
-                  "<td valign=top>%.*s%s</td>"
-                  "<td valign=top>%s</td>"
-                  "<td valign=top>%s</td>"
-                  "<td valign=top>%s</td>"
-                "</tr>\n",
-                (namelen > 65) ? 45 : (int)namelen, name,
-                (namelen > 65) ? "<i>...</i>" : "",
-                prettybig((uint32)mean, buf1, sizeof buf1),
-                prettybig((uint32)sigma, buf2, sizeof buf2),
-                prettybig(node->allocs.direct, buf3, sizeof buf3));
+            fputs("</tr>\n", fp);
     }
 
-    fputs("</table>\n", fp);
+    if (js_mode) {
+        fputs("]};\n", fp);
+    } else {
+        fputs("</table>\n<hr>\n", fp);
+
+        qsort(table, count, sizeof(graphnode*), mean_size_compare);
+
+        fprintf(fp,
+                "<table border=1>\n"
+                  "<tr><th colspan=4>Direct Allocators</th></tr>\n"
+                  "<tr>"
+                    "<th>%s</th>"
+                    "<th>Mean&nbsp;Size</th>"
+                    "<th>StdDev</th>"
+                    "<th>Allocations<th>"
+                  "</tr>\n",
+                title);
+
+        for (i = 0; i < count; i++) {
+            double allocs, bytes, mean, variance, sigma;
+
+            node = table[i];
+            allocs = (double)node->allocs.direct;
+            if (!allocs)
+                continue;
+
+            /* Compute direct-size mean and standard deviation. */
+            bytes = (double)node->bytes.direct;
+            mean = bytes / allocs;
+            variance = allocs * node->sqsum - bytes * bytes;
+            if (variance < 0 || allocs == 1)
+                variance = 0;
+            else
+                variance /= allocs * (allocs - 1);
+            sigma = sqrt(variance);
+
+            name = graphnode_name(node);
+            namelen = strlen(name);
+            fprintf(fp,
+                    "<tr>"
+                      "<td valign=top>%.*s%s</td>"
+                      "<td valign=top>%s</td>"
+                      "<td valign=top>%s</td>"
+                      "<td valign=top>%s</td>"
+                    "</tr>\n",
+                    (namelen > 65) ? 45 : (int)namelen, name,
+                    (namelen > 65) ? "<i>...</i>" : "",
+                    prettybig((uint32)mean, buf1, sizeof buf1),
+                    prettybig((uint32)sigma, buf2, sizeof buf2),
+                    prettybig(node->allocs.direct, buf3, sizeof buf3));
+        }
+        fputs("</table>\n", fp);
+    }
+
     free((void*) table);
 }
 
@@ -820,11 +898,17 @@ static void process(const char *filename, FILE *fp)
                 key = (const void*) event.u.method.library;
                 hash = hash_serial(key);
                 lib = (graphnode*) *PL_HashTableRawLookup(libraries, hash, key);
-                comp->up = lib;
+                if (lib) {
+                    comp->up = lib;
+                    comp->next = lib->down;
+                    lib->down = comp;
+                }
             }
             *mark = save;
 
             meth->up = comp;
+            meth->next = comp->down;
+            comp->down = meth;
             break;
           }
 
@@ -944,6 +1028,8 @@ static void process(const char *filename, FILE *fp)
             break;
 
           case 'Z':
+            if (js_mode)
+                break;
             fprintf(stdout,
                     "<p><table border=1>"
                       "<tr><th>Counter</th><th>Value</th></tr>\n"
@@ -1031,22 +1117,10 @@ static void process(const char *filename, FILE *fp)
 
 int main(int argc, char **argv)
 {
-    time_t start;
     int c, i;
     FILE *fp;
 
     program = *argv;
-    start = time(NULL);
-    fprintf(stdout,
-            "<script language=\"JavaScript\">\n"
-            "function onload() {\n"
-            "  document.links[0].__proto__.onmouseover = new Function("
-                "\"window.status ="
-                " this.href.substring(this.href.lastIndexOf('#') + 1)\");\n"
-            "}\n"
-            "</script>\n");
-    fprintf(stdout, "%s starting at %s", program, ctime(&start));
-    fflush(stdout);
 
     libraries = PL_NewHashTable(100, hash_serial, PL_CompareValues,
                                 PL_CompareStrings, &graphnode_hashallocops,
@@ -1067,13 +1141,19 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-    while ((c = getopt(argc, argv, "dtf:m:")) != EOF) {
+    while ((c = getopt(argc, argv, "djtuf:m:")) != EOF) {
         switch (c) {
           case 'd':
             sort_by_direct = 1;
             break;
+          case 'j':
+            js_mode = 1;
+            break;
           case 't':
             do_tree_dump = 1;
+            break;
+          case 'u':
+            unified_output = 1;
             break;
           case 'f':
             function_dump = optarg;
@@ -1087,6 +1167,21 @@ int main(int argc, char **argv)
                     program);
             exit(2);
         }
+    }
+
+    if (!js_mode) {
+        time_t start = time(NULL);
+
+        fprintf(stdout,
+                "<script language=\"JavaScript\">\n"
+                "function onload() {\n"
+                "  document.links[0].__proto__.onmouseover = new Function("
+                    "\"window.status ="
+                    " this.href.substring(this.href.lastIndexOf('#') + 1)\");\n"
+                "}\n"
+                "</script>\n");
+        fprintf(stdout, "%s starting at %s", program, ctime(&start));
+        fflush(stdout);
     }
 
     argc -= optind;
@@ -1109,28 +1204,89 @@ int main(int argc, char **argv)
     compute_callsite_totals(&calltree_root);
     walk_callsite_tree(&calltree_root, 0, 0, stdout);
 
-    dump_graph(libraries, "Library", stdout);
-    fputs("<hr>\n", stdout);
-    dump_graph(components, "Class or Component", stdout);
-    if (function_dump) {
-        struct stat sb, fsb;
+    if (js_mode) {
+        fprintf(stdout,
+                "<script language='javascript'>\n"
+                "// direct and total byte and allocator-call counts\n"
+                "var dbytes = %ld, tbytes = %ld,"
+                   " dallocs = %ld, tallocs = %ld;\n",
+                (long) calltree_root.bytes.direct,
+                (long) calltree_root.bytes.total,
+                (long) calltree_root.allocs.direct,
+                (long) calltree_root.allocs.total);
+    }
 
-        fstat(fileno(stdout), &sb);
-        if (stat(function_dump, &fsb) == 0 &&
-            fsb.st_dev == sb.st_dev && fsb.st_ino == sb.st_ino) {
+    dump_graph(libraries, "libraries", "Library", stdout);
+    if (!js_mode)
+        fputs("<hr>\n", stdout);
+
+    dump_graph(components, "classes", "Class or Component", stdout);
+    if (js_mode || unified_output || function_dump) {
+        if (js_mode || unified_output || strcmp(function_dump, "-") == 0) {
             fp = stdout;
-            fputs("<hr>\n", fp);
+            if (!js_mode)
+                fputs("<hr>\n", fp);
         } else {
-            fp = fopen(function_dump, "w");
-            if (!fp) {
-                fprintf(stderr, "%s: can't open %s: %s\n",
-                        program, function_dump, strerror(errno));
-                exit(1);
+            struct stat sb, fsb;
+
+            fstat(fileno(stdout), &sb);
+            if (stat(function_dump, &fsb) == 0 &&
+                fsb.st_dev == sb.st_dev && fsb.st_ino == sb.st_ino) {
+                fp = stdout;
+                fputs("<hr>\n", fp);
+            } else {
+                fp = fopen(function_dump, "w");
+                if (!fp) {
+                    fprintf(stderr, "%s: can't open %s: %s\n",
+                            program, function_dump, strerror(errno));
+                    exit(1);
+                }
             }
         }
-        dump_graph(methods, "Function or Method", fp);
+
+        dump_graph(methods, "methods", "Function or Method", fp);
         if (fp != stdout)
             fclose(fp);
+
+        if (js_mode) {
+            fputs("function viewnode(graph, index) {\n"
+                  "  view.location = viewsrc();\n"
+                  "}\n"
+                  "function viewnodelink(graph, index) {\n"
+                  "  var node = graph.nodes[index];\n"
+                  "  return '<a href=\"javascript:viewnode('"
+                      " + graph.name.quote() + ', ' + node.sort"
+                      " + ')\" onmouseover=' + node.name.quote() + '>'"
+                      " + node.name + '</a>';\n"
+                  "}\n"
+                  "function search(expr) {\n"
+                  "  var re = new RegExp(expr);\n"
+                  "  var src = '';\n"
+                  "  var graphs = [libraries, classes, methods]\n"
+                  "  var nodes;\n"
+                  "  for (var n = 0; n < (nodes = graphs[n].nodes).length; n++) {\n"
+                  "    for (var i = 0; i < nodes.length; i++) {\n"
+                  "      if (re.test(nodes[i].name))\n"
+                  "        src += viewnodelink(graph, i) + '\\n';\n"
+                  "    }\n"
+                  "  }\n"
+                  "  view.location = viewsrc();\n"
+                  "}\n"
+                  "function ctrlsrc() {\n"
+                  "  return \"<form>\\n"
+                      "search: <input size=40 onchange='search(this.value)'>\\n"
+                      "</form>\\n\";\n"
+                  "}\n"
+                  "function viewsrc() {\n"
+                  "  return 'hiiiii'\n"
+                  "}\n"
+                  "</script>\n"
+                  "<frameset rows='10%,*'>\n"
+                  " <frame name='ctrl' src='javascript:top.ctrlsrc()'>\n"
+                  " <frame name='view' src='javascript:top.viewsrc()'>\n"
+                  "</frameset>\n",
+                  stdout);
+        }
     }
 
     exit(0);
