@@ -38,7 +38,7 @@ public:
 
   NS_IMETHOD  CreateRenderingContext(nsIView *aView, nsIRenderingContext *&aContext);
   NS_IMETHOD  CreateRenderingContext(nsIWidget *aWidget, nsIRenderingContext *&aContext);
-  //NS_IMETHOD  CreateRenderingContext(nsIRenderingContext *&aContext) = 0;
+  NS_IMETHOD  CreateRenderingContext(nsIRenderingContext *&aContext){return NS_ERROR_NOT_IMPLEMENTED;}
 
   NS_IMETHOD  InitRenderingContext(nsIRenderingContext *aContext, nsIWidget *aWindow);
 
