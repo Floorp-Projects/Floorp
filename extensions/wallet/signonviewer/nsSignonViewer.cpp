@@ -29,8 +29,6 @@
 #include "nsIServiceManager.h"
 #include "nsIDOMWindow.h"
 #include "nsCOMPtr.h"
-#include "nsIWebShell.h"
-#include "nsIWebShellWindow.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsSignonViewer.h"
 
