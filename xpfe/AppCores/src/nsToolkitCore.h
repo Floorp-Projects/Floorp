@@ -28,9 +28,15 @@
 #include "nsIDOMToolkitCore.h"
 #include "nsBaseAppCore.h"
 
+
 class nsIDOMWindow;
 class nsIScriptContext;
-class nsIWebShellWindow;
+
+// Cannot forward declare a class used with an nsCOMPtr.
+// see: http://www.mozilla.org/projects/xpcom/nsCOMPtr.html
+//class nsIWebShellWindow;
+
+#include "nsIWebShellWindow.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsToolbarCore:
