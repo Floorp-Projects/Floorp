@@ -269,7 +269,7 @@ function Startup()
 #endif
 
   var sidebarSplitter;
-  if (window.opener) {
+  if (window.opener && !window.opener.closed) {
     var openerSidebarBox = window.opener.document.getElementById("sidebar-box");
     // The opener can be the hidden window too, if we're coming from the state
     // where no windows are open, and the hidden window has no sidebar box. 
