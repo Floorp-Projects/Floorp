@@ -20,21 +20,15 @@
 #define nsRenderingContextMac_h___
 
 #include "nsIRenderingContext.h"
-#include "nsUnitConversion.h"
-#include "nsFont.h"
-#include "nsIFontMetrics.h"
-#include "nsPoint.h"
-#include "nsString.h"
+#include <QDOffscreen.h>
 #include "nsCRT.h"
-#include "nsTransform2D.h"
-#include "nsIViewManager.h"
-#include "nsIWidget.h"
-#include "nsRect.h"
-#include "nsImageMac.h"
-#include "nsIDeviceContext.h"
-#include "nsVoidArray.h"
-#include "nsIRegion.h"
-#include "nsDeviceContextMac.h"
+
+class nsIFontMetrics;
+class nsIDeviceContext;
+class nsIRegion;
+class nsFont;
+class nsTransform2D;
+class nsVoidArray;
 
 class GraphicState;
 
@@ -138,9 +132,6 @@ protected:
 	nsDrawingSurfaceMac		mFrontBuffer;		// screen port
 	nsDrawingSurfaceMac		mBackBuffer;		// offscreen port
 	nsDrawingSurfaceMac		mCurrentBuffer;		// current buffer to draw into (= mGS->mRenderingSurface)
-  
-	// cps - Weird hack
-	Rect					mMacScreenPortRelativeRect;
 
 	// graphic state management
 	GraphicState *			mGS;				// Pointer to the current graphic state, top of stack
