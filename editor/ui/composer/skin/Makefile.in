@@ -53,10 +53,7 @@ EXPORT_RESOURCE_TOOLBAR = \
 		$(srcdir)/images/anchor-in-doc.gif \
 		$(srcdir)/images/underline.gif \
 		$(srcdir)/images/undo.gif \
-		$(srcdir)/images/text-color.gif \
-		$(srcdir)/images/backcolor.gif \
-		$(srcdir)/images/back-color1.gif \
-		$(srcdir)/images/back-color2.gif \
+		$(srcdir)/images/color.gif \
 		$(srcdir)/images/align.gif \
 		$(srcdir)/images/object-popup.gif \
 		$(srcdir)/images/newfile.gif \

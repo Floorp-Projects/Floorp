@@ -20,9 +20,13 @@
  * Contributor(s): 
  */
 
+var textColor;
+var linkColor;
+var followedLinkColor;
+var activeLinkColor;
+var backgroundColor;
 
 //Cancel() is in EdDialogCommon.js
-
 // dialog initialization code
 function Startup()
 {
@@ -36,7 +40,31 @@ function Startup()
   //.focus();
 }
 
-function InitDialog() {
+function InitDialog()
+{
+}
+
+function getColor(ColorPickerID, ColorWellID)
+{
+  var color = getColorAndSetColorWell(ColorPickerID, ColorWellID);
+  switch( ColorPickerID )
+  {
+    case "textCP":
+      textColor = color;
+      break;
+    case "linkCP":
+      linkColor = color;
+      break;
+    case "followedCP":
+      followedLinkColor = color;
+      break;
+    case "activeCP":
+      activeLinkColor = color;
+      break;
+    case "backgroundCP":
+      backgroundColor = color;
+      break;
+  }
 }
 
 function onOK()

@@ -77,34 +77,49 @@ nsHTMLEditor::InsertTableCell(PRInt32 aNumber, PRBool aAfter)
 NS_IMETHODIMP
 nsHTMLEditor::InsertTableColumn(PRInt32 aNumber, PRBool aAfter)
 {
-  //TODO: HANDLE CASE OF aAfter = true
   nsCOMPtr<nsIDOMSelection> selection;
   nsCOMPtr<nsIDOMElement> table;
   nsCOMPtr<nsIDOMElement> cell;
   nsCOMPtr<nsIDOMNode> cellParent;
   PRInt32 cellOffset, startRow, startCol;
   nsresult res = GetCellContext(selection, table, cell, cellParent, cellOffset, startRow, startCol);
-  
-  if (NS_SUCCEEDED(res))
-  {
-    nsAutoEditBatch beginBatching(this);
+  if (NS_FAILED(res)) return res;
 
-    PRInt32 rowCount, colCount, row;
-    if (NS_FAILED(GetTableSize(table, rowCount, colCount)))
-      return NS_ERROR_FAILURE;
-    for ( row = 0; row < rowCount; row++)
+  // Get more data for current cell (we need ROWSPAN)
+  nsCOMPtr<nsIDOMElement> curCell;
+  PRInt32 curStartRow, curStartCol, rowSpan, colSpan;
+  PRBool  isSelected;
+  GetCellDataAt(table, startRow, startCol, *getter_AddRefs(curCell),
+                curStartRow, curStartCol, rowSpan, colSpan, isSelected);
+  if (!curCell) return NS_ERROR_FAILURE;
+
+  // Use column after current cell if requested
+  if (aAfter)
+    startCol += colSpan;
+   
+  PRInt32 rowCount, colCount, row;
+  if (NS_FAILED(GetTableSize(table, rowCount, colCount)))
+    return NS_ERROR_FAILURE;
+
+  PRInt32 lastColumn = colCount - 1;
+
+  nsAutoEditBatch beginBatching(this);
+
+  for ( row = 0; row < rowCount; row++)
+  {
+    if (startCol < colCount)
     {
-      nsCOMPtr<nsIDOMElement> curCell;
-      PRInt32 curStartRow, curStartCol, rowSpan, colSpan;
-      PRBool  curIsSelected;
-      res = GetCellDataAt(table, row, startCol, *getter_AddRefs(curCell),
-                          curStartRow, curStartCol, rowSpan, colSpan, curIsSelected);
-      if (NS_SUCCEEDED(res) && curCell)
+      // We are insert before an existing column
+      GetCellDataAt(table, row, startCol, *getter_AddRefs(curCell),
+                    curStartRow, curStartCol, rowSpan, colSpan, isSelected);
+      // Don't fail entire process if we fail to find a cell
+      //  (may fail just in particular rows with < adequate cells per row)
+      if (curCell)
       {
         if (curStartCol < startCol)
         {
           // We have a cell spanning this location
-          // Simply increase its rowspan to keep table rectangular
+          // Simply increase its colspan to keep table rectangular
           nsAutoString newColSpan;
           newColSpan.Append(colSpan+aNumber, 10);
           SetAttribute(curCell, "colspan", newColSpan);
@@ -116,9 +131,23 @@ nsHTMLEditor::InsertTableColumn(PRInt32 aNumber, PRBool aAfter)
           res = InsertTableCell(aNumber, PR_FALSE);
         }
       }
+    } else {
+      //TODO: A better strategy is to get the row at index "row"
+      //   and append a cell to the end of it.
+      // Need to write "GetRowAt()" to do this
+
+      // Get last cell in row and insert new cell after it
+      GetCellDataAt(table, row, lastColumn, *getter_AddRefs(curCell),
+                    curStartRow, curStartCol, rowSpan, colSpan, isSelected);
+      if( curCell)
+      {
+        selection->Collapse(curCell, 0);
+        res = InsertTableCell(aNumber, PR_TRUE);
+      }
     }
-    SetCaretAfterTableEdit(table, startRow, startCol, ePreviousColumn);  
   }
+  SetCaretAfterTableEdit(table, startRow, startCol, ePreviousColumn);  
+
   return res;
 }
 
@@ -131,12 +160,111 @@ nsHTMLEditor::InsertTableRow(PRInt32 aNumber, PRBool aAfter)
   nsCOMPtr<nsIDOMNode> cellParent;
   PRInt32 cellOffset, startRow, startCol;
   nsresult res = GetCellContext(selection, table, cell, cellParent, cellOffset, startRow, startCol);
+  if (NS_FAILED(res)) return res;
+
+  // Get more data for current cell in row we are inserting at (we need COLSPAN)
+  nsCOMPtr<nsIDOMElement> curCell;
+  PRInt32 curStartRow, curStartCol, rowSpan, colSpan;
+  PRBool  isSelected;
+  res = GetCellDataAt(table, startRow, startCol, *getter_AddRefs(curCell),
+                      curStartRow, curStartCol, rowSpan, colSpan, isSelected);
+  if (NS_FAILED(res)) return res;
+  if (!curCell) return NS_ERROR_FAILURE;
   
-  if (NS_SUCCEEDED(res))
+  // Use row after current cell if requested
+  if (aAfter)
+    startRow += rowSpan;
+
+  nsCOMPtr<nsIDOMElement> parentRow;
+  GetElementOrParentByTagName("tr", curCell, getter_AddRefs(parentRow));
+  if (!parentRow) return NS_ERROR_NULL_POINTER;
+
+  PRInt32 rowCount, colCount;
+  if (NS_FAILED(GetTableSize(table, rowCount, colCount)))
+    return NS_ERROR_FAILURE;
+
+  // Get the parent and offset where we will insert new row(s)
+  nsCOMPtr<nsIDOMNode> parentOfRow;
+  PRInt32 newRowOffset;
+  parentRow->GetParentNode(getter_AddRefs(parentOfRow));
+  if (!parentOfRow) return NS_ERROR_NULL_POINTER;
+  res = GetChildOffset(parentRow, parentOfRow, newRowOffset);
+  if (NS_FAILED(res)) return res;
+  if (!parentOfRow)   return NS_ERROR_NULL_POINTER;
+
+  // offset to use for new row insert
+  if (aAfter)
+    newRowOffset += rowSpan;
+
+  nsAutoEditBatch beginBatching(this);
+
+  PRInt32 cellsInRow = 0;
+  if (startRow < rowCount)
   {
-    nsAutoEditBatch beginBatching(this);
-    //TODO: FINISH ME! 
+    // We are inserting above an existing row
+    // Get each cell in the insert row to adjust for COLSPAN effects while we
+    //   count how many cells are needed
+    PRInt32 colIndex = 0;
+    // This returns NS_TABLELAYOUT_CELL_NOT_FOUND when we run past end of row,
+    //   which passes the NS_SUCCEEDED macro
+    while ( NS_OK == GetCellDataAt(table, newRowOffset, colIndex, *getter_AddRefs(curCell), 
+                                   curStartRow, curStartCol, rowSpan, colSpan, isSelected) )
+    {
+      if (curCell)
+      {
+        if (curStartRow < startRow)
+        {
+          // We have a cell spanning this location
+          // Simply increase its colspan to keep table rectangular
+          nsAutoString newRowSpan;
+          newRowSpan.Append(rowSpan+aNumber, 10);
+          SetAttribute(curCell, "rowspan", newRowSpan);
+        } else {
+          // Count the number of cells we need to add to the new row
+          cellsInRow++;
+        }
+      }
+      // Next cell in row
+      colIndex++;
+    }
+  } else {
+    // We are adding after existing rows, 
+    //  so use max number of cells in a row
+    cellsInRow = colCount;
   }
+
+  if (cellsInRow > 0)
+  {
+    for (PRInt32 row = 0; row < aNumber; row++)
+    {
+      // Create a new row
+      nsCOMPtr<nsIDOMElement> newRow;
+      res = CreateElementWithDefaults("tr", getter_AddRefs(newRow));
+      if (NS_SUCCEEDED(res))
+      {
+        if (!newRow) return NS_ERROR_FAILURE;
+      
+        for (PRInt32 i = 0; i < cellsInRow; i++)
+        {
+          nsCOMPtr<nsIDOMElement> newCell;
+          res = CreateElementWithDefaults("td", getter_AddRefs(newCell));
+          if (NS_FAILED(res)) return res;
+          if (!newCell) return NS_ERROR_FAILURE;
+
+          // Don't use transaction system yet! (not until entire row is inserted)
+          nsCOMPtr<nsIDOMNode>resultNode;
+          res = newRow->AppendChild(newCell, getter_AddRefs(resultNode));
+          if (NS_FAILED(res)) return res;
+        }
+        // Use transaction system to insert the entire row+cells
+        // (Note that rows are inserted at same childoffset each time)
+        res = nsEditor::InsertNode(newRow, parentOfRow, newRowOffset);
+        if (NS_FAILED(res)) return res;
+      }
+    }
+  }
+  SetCaretAfterTableEdit(table, startRow, startCol, ePreviousRow);
+
   return res;
 }
 
@@ -224,7 +352,7 @@ nsHTMLEditor::NormalizeTable(nsIDOMElement *aTable)
 }
 
 NS_IMETHODIMP 
-nsHTMLEditor::GetCellIndexes(nsIDOMElement *aCell, PRInt32 &aColIndex, PRInt32 &aRowIndex)
+nsHTMLEditor::GetCellIndexes(nsIDOMElement *aCell, PRInt32 &aRowIndex, PRInt32 &aColIndex)
 {
   nsresult res=NS_ERROR_NOT_INITIALIZED;
   aColIndex=0; // initialize out params

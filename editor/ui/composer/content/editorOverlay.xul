@@ -58,7 +58,6 @@
     <key id="boldkb"        xulkey="true" key="b" observes="Editor:Bold"/>
     <key id="italickb"      xulkey="true" key="i" observes="Editor:Italic"/>
     
-    
     <key id="underlinekb"   xulkey="true" key="u" onkeypress="EditorToggleStyle('underline')"/>
     <key id="navigatorkb"   xulkey="true" shift="true" key="n" onkeypress="Navigator()" />
     <key id="navvigatorkb"   xulkey="true" key="1" onkeypress="Navigator()" />
@@ -224,8 +223,13 @@
     </menu>
 
     <!-- view menu items -->
-      <menuitem id="compToolbarMenuitem" accesskey="&viewcompositiontb.accesskey;" observes="Editor:ToggleCompositionToolbar"/>
-      <menuitem id="formatToolbarMenuitem" accesskey="&viewformattingtb.accesskey;"  observes="Editor:ToggleFormattingToolbar"/>
+      <menu id="viewToolbar" value="&viewToolbarsMenu.label;" accesskey="viewToolbarsMenu.accesskey">
+        <menupopup> 
+          <menuitem id="compToolbarMenuitem" accesskey="&viewcompositiontb.accesskey;" observes="Editor:ToggleCompositionToolbar"/>
+          <menuitem id="formatToolbarMenuitem" accesskey="&viewformattingtb.accesskey;"  observes="Editor:ToggleFormattingToolbar"/>
+          <menuitem id="editorTaskBar" value="&showTaskbarCmd.label;" accesskey="&showTaskbarCmd.accesskey;" oncommand="goToggleToolbar('taskbar','cmd_viewtaskbar');" checked="true"/>
+        </menupopup>
+      </menu>
       <menuitem id="viewSourceMenuitem" value="&viewPageSource.label;" accesskey="&viewpagesource.accesskey;" oncommand="EditorViewSource();" />
 
       <menu  id="charsetMenu" value="&dcharMenu.label;" accesskey="&viewcharsetmenu.accesskey;">
@@ -446,18 +450,39 @@
     </menupopup>
     </menu>
 
+    <!-- Align submenu -->
+    <menu id="alignMenu" value="&alignMenu.label;" accesskey="&formatalignmenu.accesskey;">
+    <menupopup>
+      <menuitem value="&alignLeft.label;"    accesskey="&alignleft.accesskey;"    oncommand="EditorAlign('left')"/>
+      <menuitem value="&alignCenter.label;"  accesskey="&aligncenter.accesskey;"  oncommand="EditorAlign('center')"/>
+      <menuitem value="&alignRight.label;"   accesskey="&alignright.accesskey;"   oncommand="EditorAlign('right')"/>
+      <menuitem value="&alignJustify.label;" accesskey="&alignjustify.accesskey;" oncommand="EditorAlign('justify')"/>
+    </menupopup>
+    </menu>
+
+    <menuitem id="increaseIndent" value="&increaseIndent.label;" accesskey="&increaseindent.accesskey;" key="increaseindentkb" oncommand="EditorIndent('indent')"/>
+    <menuitem id="decreaseIndent" value="&decreaseIndent.label;" accesskey="&decreaseindent.accesskey;" key="decreaseindentkb" oncommand="EditorIndent('outdent')"/>
+
+    <menuitem id="pageProperties"      value="&pageProperties.label;"      accesskey="&pageproperties.accesskey;"      oncommand="EditorPageProperties('0')"/>
+    <menuitem id="colorsAndBackground" value="&colorsAndBackground.label;" accesskey="&colorsandbackground.accesskey;" oncommand="EditorPageProperties('1')"/>
+
     <!-- Random table menu items -->
-    <menuitem id="tableJoinCellsMenuitem" value="&tableJoinCells.label;" accesskey="&tablejoin.accesskey;"         oncommand="EditorJoinTableCells()"/>
+    <menuitem id="tableJoinCellsMenuitem"  value="&tableJoinCells.label;" accesskey="&tablejoin.accesskey;"    oncommand="EditorJoinTableCells()"/>
     <menuitem id="tablePropertiesMenuitem" value="&properties.label;"     accesskey="&properties.accesskey;"   oncommand="EditorInsertOrEditTable(false)"/>
 
-    <!-- Table insert submenu -->
+    <!-- Table insert submenu  TODO: Should we use "above", "below"; "before", "after" versions for rows and cols? -->
     <menu id="tableInsertMenu" value="&tableInsertMenu.label;" accesskey="&tableinsertmenu.accesskey;">
     <menupopup>
-        <menuitem value="&tableTable.label;"      accesskey="&tabletable.accesskey;"     oncommand="EditorInsertTable()"/>
-        <menuitem value="&tableRow.label;"        accesskey="&tablerow.accesskey;"       oncommand="EditorInsertTableRow()"/>
-        <menuitem value="&tableColumn.label;"     accesskey="&tablecolumn.accesskey;"    oncommand="EditorInsertTableColumn()"/>
-        <menuitem value="&tableCellBefore.label;" accesskey="&tablecell.accesskey;"      oncommand="EditorInsertTableCell(false)"/>
-        <menuitem value="&tableCellAfter.label;"  accesskey="&tablecellafter.accesskey;" oncommand="EditorInsertTableCell(true)"/>
+        <menuitem value="&tableTable.label;"        accesskey="&tabletable.accesskey;"       oncommand="EditorInsertTable()"/>
+        <menuseparator />
+        <menuitem value="&tableRowAbove.label;"     accesskey="&tablerow.accesskey;"         oncommand="EditorInsertTableRow(false)"/>
+        <menuitem value="&tableRowBelow.label;"     accesskey="&tablerowbelow.accesskey;"    oncommand="EditorInsertTableRow(true)"/>
+        <menuseparator />
+        <menuitem value="&tableColumnBefore.label;" accesskey="&tablecolumn.accesskey;"      oncommand="EditorInsertTableColumn(false)"/>
+        <menuitem value="&tableColumnAfter.label;"  accesskey="&tablecolumnafter.accesskey;" oncommand="EditorInsertTableColumn(true)"/>
+        <menuseparator />
+        <menuitem value="&tableCellBefore.label;"   accesskey="&tablecell.accesskey;"        oncommand="EditorInsertTableCell(false)"/>
+        <menuitem value="&tableCellAfter.label;"    accesskey="&tablecellafter.accesskey;"   oncommand="EditorInsertTableCell(true)"/>
     </menupopup>
     </menu>
 
@@ -471,45 +496,17 @@
     </menupopup>
     </menu>
 
-    <!-- Toolbar popups -->
-    <!-- TODO: REPLACE WITH COLOR WIDGET -->
-    <menupopup id="BackColorPopup">
-       <menuitem value="&colorBlackCmd.label;"     oncommand="EditorSetBackgroundColor('black')"/>
-       <menuitem value="&colorGrayCmd.label;"      oncommand="EditorSetBackgroundColor('gray')"/>
-       <menuitem value="&colorSilverCmd.label;"    oncommand="EditorSetBackgroundColor('silver')"/>
-       <menuitem value="&colorWhiteCmd.label;"     oncommand="EditorSetBackgroundColor('white')"/>
-       <menuitem value="&colorRedCmd.label;"       oncommand="EditorSetBackgroundColor('red')"/>
-       <menuitem value="&colorBlueCmd.label;"      oncommand="EditorSetBackgroundColor('blue')"/>
-       <menuitem value="&colorGreenCmd.label;"     oncommand="EditorSetBackgroundColor('green')"/>
-       <menuitem value="&colorCyanCmd.label;"      oncommand="EditorSetBackgroundColor('cyan')"/>
-       <menuitem value="&colorYellowCmd.label;"    oncommand="EditorSetBackgroundColor('yellow')"/>
-       <menuitem value="&colorMagentaCmd.label;"   oncommand="EditorSetBackgroundColor('magenta')"/>
-    </menupopup>
-   
-    <menupopup id="TextColorPopup">
-       <menuitem value="&colorBlackCmd.label;"     oncommand="EditorSetFontColor('black')"/>
-       <menuitem value="&colorGrayCmd.label;"      oncommand="EditorSetFontColor('gray')"/>
-       <menuitem value="&colorSilverCmd.label;"    oncommand="EditorSetFontColor('silver')"/>
-       <menuitem value="&colorWhiteCmd.label;"     oncommand="EditorSetFontColor('white')"/>
-       <menuitem value="&colorRedCmd.label;"       oncommand="EditorSetFontColor('red')"/>
-       <menuitem value="&colorBlueCmd.label;"      oncommand="EditorSetFontColor('blue')"/>
-       <menuitem value="&colorGreenCmd.label;"     oncommand="EditorSetFontColor('green')"/>
-       <menuitem value="&colorCyanCmd.label;"      oncommand="EditorSetFontColor('cyan')"/>
-       <menuitem value="&colorYellowCmd.label;"    oncommand="EditorSetFontColor('yellow')"/>
-       <menuitem value="&colorMagentaCmd.label;"   oncommand="EditorSetFontColor('magenta')"/>
-    </menupopup>
-
-    <menupopup id="TextColorPicker">
+    <popup id="TextColorPicker">
       <html:div id="TextColorCaption" class="color-caption" align="center">&textColorCaption.label;</html:div>
   		<!-- TODO: Add "Last color picked" button and text -->
-      <colorpicker palettename="standard" onclick="EditorSelectTextColor()"/>
-    </menupopup>
-    <menupopup id="BackColorPicker">
+      <colorpicker palettename="standard" onclick="EditorSelectTextColor(); window.close()"/>
+    </popup>
+    <popup id="BackColorPicker">
       <!-- Text Caption is filled in at runtime -->
   		<!-- TODO: Add "Last color picked" button and text -->
       <html:div id="BackColorCaption" class="color-caption" align="center">Background Color</html:div>
-  		<colorpicker palettename="standard" onclick="EditorSelectBackColor()"/>
-    </menupopup>
+  		<colorpicker palettename="standard" onclick="EditorSelectBackColor() window.close()"/>
+    </popup>
 
     <menupopup id="AlignmentPopup">
       <menuitem oncommand="EditorAlign('left')">
@@ -580,29 +577,11 @@
       <html:option>&size4Cmd.label;</html:option>
     </html:select>
 
-    <titledbutton id="TextColorPopupButton" class="popup"  popupanchor="bottomleft"/>
-    <titledbutton id="BackColorPopupButton" class="popup"  popupanchor="bottomleft"/>
-    
     <!-- The new Color Picker UI -->
-    <box id="ColorButtons" align="horizontal">
-      <box align="vertical">
-        <html:div><!-- Prevent boxes from mucking with button layout -->
-          <menu>
-            <titledbutton id="TextColorPopupButton1"/>
-            <menupopup id="TextColorPicker"/>
-          </menu>
-          <menu>
-            <titledbutton id="BackColorPopupButton2"/>
-          </menu>
-        </html:div>
-      </box>
-      <html:div>
-        <menu>
-          <titledbutton id="BackColorPopupButton1"/>
-          <menupopup id="BackColorPicker"/>
-        </menu>
-      </html:div>
-    </box>
+    <html:div id="ColorButtons">
+      <titledbutton id="TextColorPopupButton" popup="TextColorPicker" popupanchor="bottomleft"/>
+      <titledbutton id="BackColorPopupButton" popup="BackColorPicker" popupanchor="bottomleft"/>
+    </html:div>
 
     <titledbutton id="DecreaseFontSizeButton" onclick="EditorDecreaseFontSize()"/>
     <titledbutton id="IncreaseFontSizeButton" onclick="EditorIncreaseFontSize()"/>

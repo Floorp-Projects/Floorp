@@ -74,14 +74,19 @@
 
 <!-- View menu items -->
 <!ENTITY viewMenu.label "View">
+<!ENTITY viewToolbarsMenu.label "Toolbars"> 
+<!ENTITY viewToolbarsMenu.accesskey "t"> 
 <!ENTITY hideCompositionToolbarCmd.label ".Hide Composition Toolbar">
 <!ENTITY viewcompositiontb.accesskey "c">
 <!ENTITY showCompositionToolbarCmd.label ".Show Composition Toolbar">
 <!ENTITY hideFormattingToolbarCmd.label ".Hide Format Toolbar">
 <!ENTITY viewformattingtb.accesskey "f">
 <!ENTITY showFormattingToolbarCmd.label ".Show Format Toolbar">
+<!ENTITY showTaskbarCmd.label "Show Taskbar">  
+<!ENTITY showTaskbarCmd.accesskey "t"> 
 <!ENTITY viewPageSource.label "View Page Source">
 <!ENTITY viewpagesource.accesskey "s">
+
 
 <!-- Charset menu items -->
 <!ENTITY dcharMenu.label "Character Set  ISO">
@@ -337,19 +342,8 @@
 <!-- List menu items -->
 <!ENTITY listProps.label "List Properties...">
 <!ENTITY formatlistmenu.accesskey "l">
-<!ENTITY listNoneCmd.label "None">
-<!ENTITY listnone.accesskey "o">
-<!ENTITY listBullettedCmd.label "Bulletted">
-<!ENTITY listbulletted.accesskey "b">
-<!ENTITY listNumberedCmd.label "Numbered">
-<!ENTITY listnumbered.accesskey "n">
-<!ENTITY listDefinitionCmd.label "Definition">
-<!ENTITY listdefinition.accesskey "d">
 
-<!ENTITY alignMenu.label "Align">
-<!ENTITY formatlistmenu.accesskey "a">
-<!-- Align items shared with popup above -->
-
+<!-- Style Sheet submenu -->
 <!ENTITY stylesheetMenu.label "Apply Style Sheet">
 <!ENTITY formatstylesheetmenu.accesskey "e">
 <!ENTITY stylesheetEditorOneCmd.label "Editor Styles 1">
@@ -367,23 +361,52 @@
 <!ENTITY stylesheetSteelyCmd.label "Steely">
 <!ENTITY sssteely.accesskey "s">
 
+<!-- Align menu items -->
+<!ENTITY alignMenu.label "Align">
+<!ENTITY formatalignmenu.accesskey "a">
+<!ENTITY alignLeft.label "Left">
+<!ENTITY alignleft.accesskey "l">
+<!ENTITY alignCenter.label "Center">
+<!ENTITY aligncenter.accesskey "c">
+<!ENTITY alignRight.label "Right">
+<!ENTITY alignright.accesskey "r">
+<!ENTITY alignJustify.label "Justify">
+<!ENTITY alignjustify.accesskey "j">
+
+<!ENTITY increaseIndent.label "Increase indent">
+<!ENTITY increaseindent.accesskey "i">
+<!ENTITY decreaseIndent.label "Decrease indent">
+<!ENTITY decreaseindent.accesskey "d">
+
+<!ENTITY pageProperties.label "Page Title and Properties...">
+<!ENTITY pageproperties.accesskey "g">
+<!ENTITY colorsAndBackground.label "Page Colors and Background...">
+<!ENTITY colorsandbackground.accesskey "k">
+
 <!-- Table Menu -->
 <!-- Insert SubMenu -->
 <!ENTITY tableInsertMenu.label "Insert">
 <!ENTITY tableinsertmenu.accesskey "i">
 <!ENTITY tableTable.label "Table">
 <!ENTITY tabletable.accesskey "t">
-<!ENTITY tableRow.label ".Row">
+<!ENTITY tableRow.label "Row">
 <!ENTITY tablerow.accesskey "r">
+<!ENTITY tableRowAbove.label "Row above">
+<!-- uses tablerow.accesskey -->
+<!ENTITY tableRowBelow.label "Row below">
+<!ENTITY tablerowbelow.accesskey "b">
 <!ENTITY tableColumn.label "Column">
 <!ENTITY tablecolumn.accesskey "o">
+<!ENTITY tableColumnBefore.label "Column before">
+<!-- uses tablecolumn.accesskey -->
+<!ENTITY tableColumnAfter.label "Column after">
+<!ENTITY tablecolumnafter.accesskey "a">
 <!ENTITY tableCell.label "Cell">
 <!ENTITY tablecell.accesskey "c">
 <!ENTITY tableCellBefore.label "Cell before">
 <!-- uses tablecell.accesskey -->
 <!ENTITY tableCellAfter.label "Cell after">
-<!ENTITY tablecellafter.accesskey "a">
-
+<!ENTITY tablecellafter.accesskey "f">
 <!-- Delete SubMenu -->
 <!ENTITY tableDeleteMenu.label "Delete">
 <!ENTITY tabledeletemenu.accesskey "d">
@@ -448,10 +471,6 @@
 <!ENTITY formatToolbar.boldChar "B">
 <!ENTITY formatToolbar.italicChar "I">
 <!ENTITY formatToolbar.underlineChar "U">
-<!ENTITY alignLeft.label "Left">
-<!ENTITY alignCenter.label "Center">
-<!ENTITY alignRight.label "Right">
-<!ENTITY alignJustify.label "Justify">
 
 <!ENTITY tempNotification.label "[status message]">
 <!ENTITY tempDoneLoading.label "[Document loading message]">

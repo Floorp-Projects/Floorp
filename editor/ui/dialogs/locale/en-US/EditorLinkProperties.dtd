@@ -36,7 +36,6 @@
 <!-- These controls are in the Dimensions Fieldset of the advanced area -->
 <!ENTITY LinkURLFieldset.label "Link to">
 <!ENTITY LinkURLEditField.label "Enter a web page location or local file:">
-<!ENTITY LinkChooseFileButton.label "Choose File...">
 <!ENTITY RemoveLinkButton.label "Remove Link">
 <!ENTITY NamedAnchorMsg.label "or select a Named Anchor:">
 <!ENTITY HeadingMsg.label "or select a Heading:">

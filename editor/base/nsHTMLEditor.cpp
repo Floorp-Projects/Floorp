@@ -2696,7 +2696,7 @@ nsHTMLEditor::CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement*
     }
 #endif
   }
-  // ADD OTHER DEFAULT ATTRIBUTES HERE
+  // ADD OTHER TAGS HERE
 
   if (NS_SUCCEEDED(res))
   {

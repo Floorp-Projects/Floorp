@@ -460,24 +460,18 @@ function getContainer ()
      return null;
 }
 
-// setColorWell assumes the following UI pattern:
-/*
-<menu>
-	<titledbutton value="&????" class="popup" align="right"/>
-The colorWell:
-  <html:div style="width:30px; background-color:white"/> 
-	<menupopup>
-		<colorpicker palettename="standard" onclick="setColorWell(this.parentNode.parentNode);"/>
-	</menupopup>
-</menu>
-*/
-function setColorWell(menu)
+function getColorAndSetColorWell(ColorPickerID, ColorWellID)
 {
-  // Find the colorWell and colorPicker in the hierarchy.
-  var colorWell = menu.firstChild.nextSibling;
-  var colorPicker = menu.firstChild.nextSibling.nextSibling.firstChild;
+  var colorWell = document.getElementById(ColorWellID);
+  var colorPicker = document.getElementById(ColorPickerID);
 
   // Extract color from colorPicker and assign to colorWell.
   var color = colorPicker.getAttribute('color');
-  colorWell.style.backgroundColor = color;
+  dump("setColorWell: Color = "+color+"\n");
+
+  // Use setAttribute so colorwell can be a XUL element, such as titledbutton
+  colorWell.setAttribute("style", "background-color: " + color); 
+  //colorWell.style.backgroundColor = color;
+
+  return color;
 }

@@ -556,6 +556,7 @@ function EditorDecreaseFontSize()
 
 function EditorSelectTextColor()
 {
+  
   dump("EditorSelectTextColor\n");
 }
 
@@ -623,6 +624,12 @@ function EditorRemoveLinks()
 function EditorListProperties()
 {
   window.openDialog("chrome://editor/content/EdListProps.xul","_blank", "chrome,close,titlebar,modal");
+  contentWindow.focus();
+}
+
+function EditorPageProperties(startTab)
+{
+  window.openDialog("chrome://editor/content/EdPageProps.xul","_blank", "chrome,close,titlebar,modal", startTab);
   contentWindow.focus();
 }
 
@@ -804,9 +811,6 @@ function EditorIndent(indent)
 //   else use false to do nothing if not in a table
 function EditorInsertOrEditTable(insertAllowed)
 {
-  var selection = editorShell.editorSelection;
-  dump("Selection: Anchor: "+selection.anchorNode+selection.anchorOffset+" Focus: "+selection.focusNode+selection.focusOffset+"\n");
-
   var table = editorShell.GetElementOrParentByTagName("table", null);
   if (table) {
     // Edit properties of existing table
@@ -832,16 +836,15 @@ function EditorInsertTableCell(after)
   contentWindow.focus();
 }
 
-// Just insert before current row or column for now
-function EditorInsertTableRow()
+function EditorInsertTableRow(below)
 {
-  editorShell.InsertTableRow(1,false);
+  editorShell.InsertTableRow(1,below);
   contentWindow.focus();
 }
 
-function EditorInsertTableColumn()
+function EditorInsertTableColumn(after)
 {
-  editorShell.InsertTableColumn(1,false);
+  editorShell.InsertTableColumn(1,after);
   contentWindow.focus();
 }
 
