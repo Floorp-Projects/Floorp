@@ -77,6 +77,13 @@ function removeAllChildren()
   }
 }
 
+function removeChild(index)
+{
+  var it = document.getElementById("it");
+  var kids = it.childNodes;
+  it.removeChild(kids[index]);
+}
+
 function testAppend()
 {
   appendInline();  // case 3
@@ -85,10 +92,13 @@ function testAppend()
   appendBlock();   // case 1
   appendBlock();   // case 1
   appendInline();  // case 3
+  removeAllChildren();
 }
 
 function testInsert()
 {
+  testAppend();
+
   // first test inserting inlines
   insertInline(0); // case 1
   insertInline(3); // case 2
@@ -107,7 +117,6 @@ function testInsert()
   insertBlock(2);  // case 5
 
   // Remove all the children before doing block case 1
-  if (false) {
   removeAllChildren();
   appendInline();
   insertBlock(0);  // case 1
@@ -116,15 +125,45 @@ function testInsert()
   appendInline();
   appendInline();
   insertBlock(1);  // case 6
-  }
+
+  removeAllChildren();
 }
 
 function testRemove()
 {
+  appendInline();
+  removeChild(0);  // case 1
+
+  appendBlock();
+  removeChild(0);  // case 2
+
+  appendInline();
+  appendBlock();
+  appendInline();
+  appendBlock();
+  appendInline();
+  appendBlock();
+  appendInline();
+
+  removeChild(3);  // case 3
+  removeChild(2);  // case 6
+  removeChild(2);  // case 6
+  removeChild(1);  // case 5
+  removeAllChildren();
+
+  appendInline();
+  appendBlock();
+  appendInline();
+  appendInline();
+  appendBlock();
+  removeChild(4);  // case 4
+
+  removeAllChildren();
 }
 
 function runTest()
 {
+  dump("Testing inline incremental reflow\n");
   testAppend();
   testInsert();
   testRemove();
