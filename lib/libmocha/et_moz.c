@@ -3128,7 +3128,7 @@ ET_TweakTransclusion(MWContext * context, void *xmlFile, void *param_ptr,
     MozillaEvent_TweakTransclusion * event;
     event = PR_NEW(MozillaEvent_TweakTransclusion);
     if (event == NULL) 
-        return NULL;
+        return 0;
 
     PR_InitEvent(&event->ce.event, context,
 		 (PRHandleEventProc)et_HandleEvent_TweakTransclusion,
@@ -3139,6 +3139,54 @@ ET_TweakTransclusion(MWContext * context, void *xmlFile, void *param_ptr,
 	event->param_ptr = param_ptr;
     event->param_val = param_val;
 	event->xmlFile = xmlFile;
+
+    return (int)et_PostEvent(&event->ce, FALSE);
+}
+
+/* Signal reflow from DOM alteration */
+typedef struct {
+    ETEvent				ce;
+	LO_Element 			*element;
+    PRBool				reflow;
+} MozillaEvent_DOMReflow; 
+
+PR_STATIC_CALLBACK(int)
+et_HandleEvent_DOMReflow(MozillaEvent_DOMReflow* e)
+{
+    /* check that the doc_id is valid */
+    if(XP_DOCID(e->ce.context) != e->ce.doc_id)
+        return FALSE;
+
+    /*
+     * XXX we should check e->reflow and only `redraw' if the element just
+     * changed colour or something.
+     */
+    LO_RelayoutFromElement(e->ce.context, e->element);
+    return TRUE;
+}
+
+PR_STATIC_CALLBACK(void)
+et_DestroyEvent_DOMReflow(MozillaEvent_DOMReflow * event)
+{
+    XP_FREE(event);
+}
+
+int
+ET_DOMReflow(MWContext *context, LO_Element *element, PRBool reflow,
+             int32 doc_id)
+{
+    MozillaEvent_DOMReflow *event;
+    event = PR_NEW(MozillaEvent_DOMReflow);
+    if (!event)
+        return 0;
+
+    PR_InitEvent(&event->ce.event, context,
+		 (PRHandleEventProc)et_HandleEvent_DOMReflow,
+		 (PRDestroyEventProc)et_DestroyEvent_DOMReflow);
+    event->ce.context = context;
+    event->ce.doc_id = doc_id;
+    event->reflow = reflow;
+	event->element = element;
 
     return (int)et_PostEvent(&event->ce, FALSE);
 }

@@ -33,6 +33,18 @@
 /* #define DEBUG_shaver_verbose */
 #endif
 
+#define LAYLOCKED(code)                                                       \
+PR_BEGIN_MACRO                                                                \
+    LO_LockLayout();                                                          \
+    code;                                                                     \
+    LO_UnlockLayout();                                                        \
+PR_END_MACRO
+
+/* from et_moz.c */
+int
+ET_DOMReflow(MWContext *context, LO_Element *element, PRBool reflow,
+             int32 doc_id);
+
 static JSBool
 lm_DOMInsertBefore(JSContext *cx, DOM_Node *node, DOM_Node *child,
                    DOM_Node *ref, JSBool before)
@@ -87,6 +99,44 @@ DOM_NodeOps lm_NodeOps = {
     lm_DOMAppendChild, DOM_DestroyNodeStub, lm_DOMReflectNode
 };
 
+static JSBool
+lm_DOMSetAttributes(JSContext *cx, DOM_Element *element, const char *name,
+                    const char *value)
+{
+    JSBool ok = JS_FALSE;
+    MochaDecoder *decoder;
+    MWContext *context;
+    DOM_HTMLElementPrivate *priv;
+    LO_Element *ele;
+
+    decoder = (MochaDecoder *)JS_GetPrivate(cx, JS_GetGlobalObject(cx));
+    context = decoder->window_context;
+    priv = (DOM_HTMLElementPrivate *)element->node.data;
+
+    switch(priv->tagtype) {
+      case P_TABLE_DATA: {
+        lo_TableCell *cell;
+        cell = (lo_TableCell *)priv->ele_start;
+        ele = (LO_Element *)cell;
+        if (!XP_STRCASECMP("valign", name)) {
+            /* tweak vert alignment */
+        } else if (!XP_STRCASECMP("halign", name)) {
+            /* tweak horiz alignment */
+        } else if (!XP_STRCASECMP("bgcolor", name)) {
+            /* tweak bgcolor */
+        }
+        ok = JS_TRUE;
+      }
+      default:
+        ok = JS_FALSE;
+    }
+
+    if (ok)
+        ET_DOMReflow(context, ele, PR_TRUE, decoder->doc_id);
+
+    return ok;
+}
+
 DOM_ElementOps lm_ElementOps = {
     DOM_SetAttributeStub, DOM_GetAttributeStub, DOM_GetNumAttrsStub
 };
@@ -136,15 +186,13 @@ lm_CDataOp(JSContext *cx, DOM_CharacterData *cdata, DOM_CDataOperationCode op)
     /*
      * Tell layout to use the new text instead.
      */
-    LO_LockLayout();
-    ok = lo_ChangeText(text, data);
-    LO_UnlockLayout();
+    LAYLOCKED(ok = lo_ChangeText(text, data));
     if (!ok)
         return JS_FALSE;
 
-    LO_RelayoutFromElement(context, (LO_Element *)text);
-
-    return JS_TRUE;
+    return (JSBool)ET_DOMReflow(context, (LO_Element *)text, PR_TRUE,
+                                decoder->doc_id);
+                                 
 }
 
 static DOM_Node *
