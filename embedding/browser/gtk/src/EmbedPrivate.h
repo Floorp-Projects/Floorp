@@ -83,6 +83,9 @@ class EmbedPrivate {
   void        SetURI          (const char *aURI);
   void        LoadCurrentURI  (void);
 
+  void        SetChromeMask   (PRUint32 chromeMask);
+  void        ApplyChromeMask ();
+
   static void PushStartup     (void);
   static void PopStartup      (void);
   static void SetCompPath     (const char *aPath);

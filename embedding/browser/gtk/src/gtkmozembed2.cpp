@@ -1164,7 +1164,7 @@ gtk_moz_embed_set_chrome_mask(GtkMozEmbed *embed, guint32 flags)
 
   embedPrivate = (EmbedPrivate *)embed->data;
 
-  embedPrivate->mChromeMask = flags;
+  embedPrivate->SetChromeMask(flags);
 }
 
 guint32

@@ -61,6 +61,9 @@
 #include <nsIDOMWindowInternal.h>
 #include <nsIChromeEventHandler.h>
 
+// For seting scrollbar visibilty
+#include <nsIDOMBarProp.h>
+
 // for the focus hacking we need to do
 #include <nsIFocusController.h>
 
@@ -145,7 +148,7 @@ EmbedPrivate::EmbedPrivate(void)
   mContentListener  = nsnull;
   mEventListener    = nsnull;
   mStream           = nsnull;
-  mChromeMask       = 0;
+  mChromeMask       = nsIWebBrowserChrome::CHROME_ALL;
   mIsChrome         = PR_FALSE;
   mChromeLoaded     = PR_FALSE;
   mListenersAttached = PR_FALSE;
@@ -286,6 +289,9 @@ EmbedPrivate::Realize(PRBool *aAlreadyRealized)
   gdk_window_get_user_data(tmp_window, &data);
   mMozWindowWidget = NS_STATIC_CAST(GtkWidget *, data);
 
+  // Apply the current chrome mask
+  ApplyChromeMask();
+
   return NS_OK;
 }
 
@@ -402,6 +408,39 @@ EmbedPrivate::LoadCurrentURI(void)
                          nsnull,                            // Post data
                          nsnull);                           // extra headers
 }
+
+void
+EmbedPrivate::ApplyChromeMask()
+{
+   if (mWindow) {
+      nsCOMPtr<nsIWebBrowser> webBrowser;
+      mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
+
+      nsCOMPtr<nsIDOMWindow> domWindow;
+      webBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
+      if (domWindow) {
+
+         nsCOMPtr<nsIDOMBarProp> scrollbars;
+         domWindow->GetScrollbars(getter_AddRefs(scrollbars));
+         if (scrollbars) {
+
+            scrollbars->SetVisible
+               (mChromeMask & nsIWebBrowserChrome::CHROME_SCROLLBARS ? 
+                PR_TRUE : PR_FALSE);
+         }
+      }
+   }
+}
+
+
+void
+EmbedPrivate::SetChromeMask (PRUint32 aChromeMask)
+{
+   mChromeMask = aChromeMask;
+
+   ApplyChromeMask();
+}
+
 
 /* static */
 void
