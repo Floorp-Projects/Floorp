@@ -144,6 +144,8 @@ class nsWidget : public nsBaseWidget
     PRBool     ConvertStatus(nsEventStatus aStatus);
     PRBool     DispatchMouseEvent(nsMouseEvent& aEvent);
     PRBool     DispatchStandardEvent(PRUint32 aMsg);
+    PRBool     DispatchFocus(nsGUIEvent &aEvent);
+
   // are we a "top level" widget?
     PRBool     mIsToplevel;
 
@@ -199,6 +201,10 @@ class nsWidget : public nsBaseWidget
 
   void InstallButtonReleaseSignal(GtkWidget * aWidget);
 
+  void InstallFocusInSignal(GtkWidget * aWidget);
+
+  void InstallFocusOutSignal(GtkWidget * aWidget);
+
   void InstallRealizeSignal(GtkWidget * aWidget);
 
   void AddToEventMask(GtkWidget * aWidget,
@@ -217,6 +223,8 @@ class nsWidget : public nsBaseWidget
   virtual void OnLeaveNotifySignal(GdkEventCrossing * aGdkCrossingEvent);
   virtual void OnButtonPressSignal(GdkEventButton * aGdkButtonEvent);
   virtual void OnButtonReleaseSignal(GdkEventButton * aGdkButtonEvent);
+  virtual void OnFocusInSignal(GdkEventFocus * aGdkFocusEvent);
+  virtual void OnFocusOutSignal(GdkEventFocus * aGdkFocusEvent);
   virtual void OnRealize();
 
   virtual void OnDestroySignal(GtkWidget* aGtkWidget);
@@ -280,6 +288,14 @@ private:
                             gpointer         aData);
 
 
+  static gint FocusInSignal(GtkWidget *      aWidget, 
+                            GdkEventFocus *  aGdkFocusEvent, 
+                            gpointer         aData);
+
+  static gint FocusOutSignal(GtkWidget *      aWidget, 
+                             GdkEventFocus *  aGdkFocusEvent, 
+                             gpointer         aData);
+
 protected:
 
   //////////////////////////////////////////////////////////////////
@@ -301,7 +317,9 @@ protected:
 #ifdef DEBUG
   void DebugPrintEvent(nsGUIEvent & aEvent,
                        char *         sMessage,
-                       GtkWidget *    aGtkWidget);
+                       GtkWidget *    aGtkWidget,
+                       PRBool         aPrintCoords,
+                       PRBool         aPrintXID);
 #endif
 
     GtkWidget *mWidget;

@@ -385,6 +385,9 @@ void nsWindow::InitCallbacks(char * aName)
   InstallDragMotionSignal(mWidget);
   InstallDragDropSignal(mWidget);
 
+  // Focus
+  InstallFocusInSignal(mWidget);
+  InstallFocusOutSignal(mWidget);
 
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "draw",
@@ -402,14 +405,6 @@ void nsWindow::InitCallbacks(char * aName)
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "key_release_event",
                      GTK_SIGNAL_FUNC(handle_key_release_event),
-                     this);
-  gtk_signal_connect(GTK_OBJECT(mWidget),
-                     "focus_in_event",
-                     GTK_SIGNAL_FUNC(handle_focus_in_event),
-                     this);
-  gtk_signal_connect(GTK_OBJECT(mWidget),
-                     "focus_out_event",
-                     GTK_SIGNAL_FUNC(handle_focus_out_event),
                      this);
 }
 
@@ -588,15 +583,6 @@ PRBool nsWindow::OnResize(nsSizeEvent &aEvent)
 #endif
 
 PRBool nsWindow::OnKey(nsKeyEvent &aEvent)
-{
-  if (mEventCallback) {
-    return DispatchWindowEvent(&aEvent);
-  }
-  return PR_FALSE;
-}
-
-
-PRBool nsWindow::DispatchFocus(nsGUIEvent &aEvent)
 {
   if (mEventCallback) {
     return DispatchWindowEvent(&aEvent);

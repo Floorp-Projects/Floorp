@@ -953,6 +953,14 @@ PRBool nsWidget::DispatchStandardEvent(PRUint32 aMsg)
   return result;
 }
 
+PRBool nsWidget::DispatchFocus(nsGUIEvent &aEvent)
+{
+  if (mEventCallback) {
+    return DispatchWindowEvent(&aEvent);
+  }
+  return PR_FALSE;
+}
+
 
 //-------------------------------------------------------------------------
 //
@@ -1145,6 +1153,26 @@ nsWidget::InstallButtonReleaseSignal(GtkWidget * aWidget)
 }
 //////////////////////////////////////////////////////////////////
 void 
+nsWidget::InstallFocusInSignal(GtkWidget * aWidget)
+{
+  NS_ASSERTION( nsnull != aWidget, "widget is null");
+
+  InstallSignal(aWidget,
+				"focus_in_event",
+				GTK_SIGNAL_FUNC(nsWidget::FocusInSignal));
+}
+//////////////////////////////////////////////////////////////////
+void 
+nsWidget::InstallFocusOutSignal(GtkWidget * aWidget)
+{
+  NS_ASSERTION( nsnull != aWidget, "widget is null");
+
+  InstallSignal(aWidget,
+				"focus_out_event",
+				GTK_SIGNAL_FUNC(nsWidget::FocusOutSignal));
+}
+//////////////////////////////////////////////////////////////////
+void 
 nsWidget::InstallRealizeSignal(GtkWidget * aWidget)
 {
   NS_ASSERTION( nsnull != aWidget, "widget is null");
@@ -1166,17 +1194,23 @@ nsWidget::InstallRealizeSignal(GtkWidget * aWidget)
 // Turning TRACE_EVENTS on will cause printfs for all
 // mouse events that are dispatched.
 //
+// Motion events are extra noisy so they get their own
+// define: TRACE_EVENTS_MOTION
+//
 //////////////////////////////////////////////////////////////////
 
 #undef TRACE_EVENTS
+#undef TRACE_EVENTS_MOTION
 
 #ifdef DEBUG
 void
-nsWidget::DebugPrintEvent(nsGUIEvent & aEvent,
+nsWidget::DebugPrintEvent(nsGUIEvent &   aEvent,
                           char *         sMessage,
-                          GtkWidget *    aGtkWidget)
+                          GtkWidget *    aGtkWidget,
+                          PRBool         aPrintCoords,
+                          PRBool         aPrintXID)
 {
-  char * eventName = nsnull;
+  nsString eventName = "UNKNOWN";
 
   switch(aEvent.message)
   {
@@ -1256,20 +1290,54 @@ nsWidget::DebugPrintEvent(nsGUIEvent & aEvent,
     eventName = "NS_DRAGDROP_DROP";
     break;
 
+  case NS_GOTFOCUS:
+    eventName = "NS_GOTFOCUS";
+    break;
+
+  case NS_LOSTFOCUS:
+    eventName = "NS_LOSTFOCUS";
+    break;
+
   default: 
-    eventName = "UNKNOWN"; break;
+    {
+      char buf[32];
+      
+      sprintf(buf,"%d",aEvent.message);
+      
+      eventName = buf;
+    }
+    break;
   }
 
   static int sPrintCount=0;
 
-  printf("%4d %7s(this=%10p, name=%10s, event=%16s, (%3d, %3d)\n",
+  printf("%4d %-14s(this=%-8p , name=%-12s",
          sPrintCount++,
          sMessage,
          this,
-         gtk_widget_get_name(aGtkWidget),
-         eventName,
-         aEvent.point.x,
-         aEvent.point.y);
+         gtk_widget_get_name(aGtkWidget));
+         
+  if (aPrintXID)
+  {
+    printf(" , xid=%-8p",
+           GDK_WINDOW_XWINDOW(mWidget->window));
+  }
+
+  printf(" , event=%-16s",
+         (const char *) nsAutoCString(eventName));
+
+  if (aPrintCoords)
+  {
+    printf(" , x=%-3d, y=%d)",
+           aEvent.point.x,
+           aEvent.point.y);
+  }
+  else
+  {
+    printf(")");
+  }
+
+  printf("\n");
 }
 #endif // DEBUG
 //////////////////////////////////////////////////////////////////
@@ -1332,8 +1400,8 @@ nsWidget::OnMotionNotifySignal(GdkEventMotion * aGdkMotionEvent)
     event.time = aGdkMotionEvent->time;
   }
   
-#ifdef TRACE_EVENTS
-  DebugPrintEvent(event,"Motion",mWidget);
+#ifdef TRACE_EVENTS_MOTION
+  DebugPrintEvent(event,"Motion",mWidget,PR_FALSE,PR_TRUE);
 #endif
   
   AddRef();
@@ -1361,7 +1429,7 @@ nsWidget::OnDragMotionSignal(GdkDragContext *aGdkDragContext)
   event.point.y = 19;
 
 #ifdef TRACE_EVENTS
-  DebugPrintEvent(event,"Motion",mWidget);
+  DebugPrintEvent(event,"Motion",mWidget,PR_FALSE,PR_TRUE);
 #endif
   
   AddRef();
@@ -1382,7 +1450,7 @@ nsWidget::OnDragBeginSignal(GdkDragContext * aGdkDragContext)
   event.eventStructType = NS_MOUSE_EVENT;
   
 #ifdef TRACE_EVENTS
-  DebugPrintEvent(event,"Drag",mWidget);
+  DebugPrintEvent(event,"Drag",mWidget,PR_FALSE,PR_TRUE);
 #endif
   
   AddRef();
@@ -1408,7 +1476,7 @@ nsWidget::OnDragDropSignal(GdkDragContext *aDragContext)
   event.point.y = 19;
 
 #ifdef TRACE_EVENTS
-  DebugPrintEvent(event,"Drop",mWidget);
+  DebugPrintEvent(event,"Drop",mWidget,PR_FALSE,PR_TRUE);
 #endif
   
   AddRef();
@@ -1449,7 +1517,7 @@ nsWidget::OnEnterNotifySignal(GdkEventCrossing * aGdkCrossingEvent)
   }
 
 #ifdef TRACE_EVENTS
-  DebugPrintEvent(event,"Enter",mWidget);
+  DebugPrintEvent(event,"Enter",mWidget,PR_FALSE,PR_TRUE);
 #endif
 
   AddRef();
@@ -1488,7 +1556,7 @@ nsWidget::OnLeaveNotifySignal(GdkEventCrossing * aGdkCrossingEvent)
   }
 
 #ifdef TRACE_EVENTS
-  DebugPrintEvent(event,"Leave",mWidget);
+  DebugPrintEvent(event,"Leave",mWidget,PR_FALSE,PR_TRUE);
 #endif
 
   AddRef();
@@ -1567,7 +1635,7 @@ nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
   InitMouseEvent(aGdkButtonEvent, event, eventType);
 
 #ifdef TRACE_EVENTS
-  DebugPrintEvent(event,"ButtonPress",mWidget);
+  DebugPrintEvent(event,"ButtonPress",mWidget,PR_FALSE,PR_TRUE);
 #endif
 
   // Set the button motion target and remeber the widget and root coords
@@ -1615,7 +1683,7 @@ nsWidget::OnButtonReleaseSignal(GdkEventButton * aGdkButtonEvent)
   InitMouseEvent(aGdkButtonEvent, event, eventType);
 
 #ifdef TRACE_EVENTS
-  DebugPrintEvent(event,"ButtonRelease",mWidget);
+  DebugPrintEvent(event,"ButtonRelease",mWidget,PR_FALSE,PR_TRUE);
 #endif
 
   if (nsnull != sButtonMotionTarget)
@@ -1630,6 +1698,66 @@ nsWidget::OnButtonReleaseSignal(GdkEventButton * aGdkButtonEvent)
 
   DispatchMouseEvent(event);
 
+  Release();
+}
+//////////////////////////////////////////////////////////////////////
+/* virtual */ void
+nsWidget::OnFocusInSignal(GdkEventFocus * aGdkFocusEvent)
+{
+  if (mIsDestroying)
+    return;
+
+  nsGUIEvent event;
+  
+  event.message = NS_GOTFOCUS;
+  event.widget  = this;
+
+  event.eventStructType = NS_GUI_EVENT;
+
+//  event.time = aGdkFocusEvent->time;;
+//  event.time = PR_Now();
+  event.time = 0;
+  event.point.x = 0;
+  event.point.y = 0;
+
+#ifdef TRACE_EVENTS
+  DebugPrintEvent(event,"FocusIn",mWidget,PR_FALSE,PR_TRUE);
+#endif
+  
+  AddRef();
+  
+  DispatchFocus(event);
+  
+  Release();
+}
+//////////////////////////////////////////////////////////////////////
+/* virtual */ void
+nsWidget::OnFocusOutSignal(GdkEventFocus * aGdkFocusEvent)
+{
+  if (mIsDestroying)
+    return;
+
+  nsGUIEvent event;
+  
+  event.message = NS_LOSTFOCUS;
+  event.widget  = this;
+
+  event.eventStructType = NS_GUI_EVENT;
+
+//  event.time = aGdkFocusEvent->time;;
+//  event.time = PR_Now();
+  event.time = 0;
+  event.point.x = 0;
+  event.point.y = 0;
+
+#ifdef TRACE_EVENTS
+  DebugPrintEvent(event,"FocusOut",mWidget,PR_FALSE,PR_TRUE);
+#endif
+  
+  AddRef();
+  
+  DispatchFocus(event);
+  
   Release();
 }
 //////////////////////////////////////////////////////////////////////
@@ -1946,7 +2074,60 @@ nsWidget::RealizeSignal(GtkWidget *      aWidget,
   return PR_TRUE;
 }
 //////////////////////////////////////////////////////////////////////
+/* static */ gint
+nsWidget::FocusInSignal(GtkWidget *      aWidget, 
+                        GdkEventFocus *  aGdkFocusEvent, 
+                        gpointer         aData)
+{
+  //  printf("nsWidget::ButtonReleaseSignal(%p)\n",aData);
 
+  NS_ASSERTION( nsnull != aWidget, "widget is null");
+  NS_ASSERTION( nsnull != aGdkFocusEvent, "event is null");
+
+  nsWidget * widget = (nsWidget *) aData;
+
+  NS_ASSERTION( nsnull != widget, "instance pointer is null");
+
+//   if (widget->DropEvent(aWidget, aGdkFocusEvent->window))
+//   {
+// 	return PR_TRUE;
+//   }
+
+  widget->OnFocusInSignal(aGdkFocusEvent);
+
+  if (GTK_IS_WINDOW(aWidget))
+    gtk_signal_emit_stop_by_name(GTK_OBJECT(aWidget), "focus_in_event");
+  
+  return PR_TRUE;
+}
+//////////////////////////////////////////////////////////////////////
+/* static */ gint
+nsWidget::FocusOutSignal(GtkWidget *      aWidget, 
+                        GdkEventFocus *  aGdkFocusEvent, 
+                        gpointer         aData)
+{
+  //  printf("nsWidget::ButtonReleaseSignal(%p)\n",aData);
+
+  NS_ASSERTION( nsnull != aWidget, "widget is null");
+  NS_ASSERTION( nsnull != aGdkFocusEvent, "event is null");
+
+  nsWidget * widget = (nsWidget *) aData;
+
+  NS_ASSERTION( nsnull != widget, "instance pointer is null");
+
+//   if (widget->DropEvent(aWidget, aGdkFocusEvent->window))
+//   {
+// 	return PR_TRUE;
+//   }
+
+  widget->OnFocusOutSignal(aGdkFocusEvent);
+
+  if (GTK_IS_WINDOW(aWidget))
+    gtk_signal_emit_stop_by_name(GTK_OBJECT(aWidget), "focus_out_event");
+  
+  return PR_TRUE;
+}
+//////////////////////////////////////////////////////////////////////
 
 /* virtual */ GdkWindow *
 nsWidget::GetWindowForSetBackground()
