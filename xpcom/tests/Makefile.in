@@ -46,6 +46,8 @@ CPPSRCS		= \
 		TestObserverService.cpp \
 		TestPipes.cpp \
 		TestThreads.cpp \
+		TestStrings.cpp \
+		TestVoidBTree.cpp \
 		$(NULL)
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
