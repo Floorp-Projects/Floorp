@@ -272,7 +272,7 @@ char*                 URLName;
       break;
     nsXPIDLCString filePath;
     char* afilepath;
-    nsCAutoString path;
+    nsAutoString path;
 
 
     rv = dirEntry->GetPath(path);
