@@ -42,10 +42,10 @@ XP_BEGIN_PROTOS
 
 typedef void *  pw_ptr;
 
-typedef enum PW_WindowType {
+typedef enum {
 	pwApplicationModal,
 	pwStandard
-};
+} PW_WindowType;
 
 typedef void(*PW_CancelCallback) (void * closure);
 
