@@ -54,7 +54,6 @@
 #include "nsHTMLParts.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
-#include "nsViewsCID.h"
 #include "nsIDOMEvent.h"
 #include "nsIScrollableView.h"
 #include "nsWidgetsCID.h"
@@ -548,19 +547,13 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIFrame* aFrame,
   nsIView* parentView = parent->GetView();
   NS_ASSERTION(parentView, "no parent with view");
 
-  // Create a view
-  static NS_DEFINE_CID(kViewCID, NS_VIEW_CID);
-  nsIView* view;
-  nsresult result = CallCreateInstance(kViewCID, &view);
-  if (NS_FAILED(result)) {
-    return result;
-  }
-    
   nsIViewManager* viewManager = parentView->GetViewManager();
   NS_ASSERTION(viewManager, "null view manager");
     
-  // Initialize the view
-  view->Init(viewManager, aFrame->GetRect(), parentView);
+  // Create a view
+  nsIView* view = viewManager->CreateView(aFrame->GetRect(), parentView);
+  if (!view)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   SyncFrameViewProperties(aFrame->GetPresContext(), aFrame, nsnull, view);
 

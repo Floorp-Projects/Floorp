@@ -477,22 +477,15 @@ GeometryTest::GeometryTest(BasicTest *aDoc)
   }
   vm->Init(pc);
 
-  nsIView * rootView = nsnull;
-
-  // Create a view
-  static NS_DEFINE_IID(kScrollingViewCID, NS_SCROLL_PORT_VIEW_CID);
-
-  status = CallCreateInstance(kScrollingViewCID, &rootView);
+  nsRect bounds(0, 0, 10000, 10000);
+  nsIScrollableView * rootView = vm->CreateScrollableView(bounds, nsnull);
 
   if ((NS_FAILED(status)) ||  nsnull==rootView)
   {
     fprintf(out, "bad view");
     NS_ASSERTION(PR_FALSE, "bad view");
   }
-  nsRect bounds(0, 0, 10000, 10000);
-  rootView->Init(vm, bounds, nsnull);
-
-  vm->SetRootView(rootView);
+  vm->SetRootView(rootView->View());
 
   nsCOMPtr<nsIStyleSet> ss(do_CreateInstance(kStyleSetCID,&status));
   if ((NS_FAILED(status)))

@@ -51,7 +51,6 @@
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsWidgetsCID.h"
-#include "nsViewsCID.h"
 #include "nsHTMLAtoms.h"
 #include "nsIScrollableView.h"
 #include "nsStyleCoord.h"
@@ -297,8 +296,6 @@ nsHTMLFramesetFrame::FrameResizePrefCallback(const char* aPref, void* aClosure)
   return 0;
 }
 
-static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
-
 #define FRAMESET 0
 #define FRAME 1
 #define BLANK 2
@@ -329,13 +326,14 @@ nsHTMLFramesetFrame::Init(nsPresContext*  aPresContext,
   }
 
   // create the view. a view is needed since it needs to be a mouse grabber
-  nsIView* view;
-  nsresult result = CallCreateInstance(kViewCID, &view);
   nsIViewManager* viewMan = aPresContext->GetViewManager();
 
   nsIView *parView = GetAncestorWithView()->GetView();
   nsRect boundBox(0, 0, 0, 0); 
-  result = view->Init(viewMan, boundBox, parView);
+  nsIView* view = viewMan->CreateView(boundBox, parView);
+  if (!view)
+    return NS_ERROR_OUT_OF_MEMORY;
+
   // XXX Put it last in document order until we can do better
   viewMan->InsertChild(parView, view, nsnull, PR_TRUE);
   SetView(view);
@@ -351,7 +349,7 @@ nsHTMLFramesetFrame::Init(nsPresContext*  aPresContext,
   NS_ASSERTION(ourContent, "Someone gave us a broken frameset element!");
   const nsFramesetSpec* rowSpecs = nsnull;
   const nsFramesetSpec* colSpecs = nsnull;
-  result = ourContent->GetRowSpec(&mNumRows, &rowSpecs);
+  nsresult result = ourContent->GetRowSpec(&mNumRows, &rowSpecs);
   NS_ENSURE_SUCCESS(result, result);
   result = ourContent->GetColSpec(&mNumCols, &colSpecs);
   NS_ENSURE_SUCCESS(result, result);

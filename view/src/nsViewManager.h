@@ -126,7 +126,7 @@ class nsHashtable;
 class nsZPlaceholderView : public nsView
 {
 public:
-  nsZPlaceholderView() : nsView() {}
+  nsZPlaceholderView(nsViewManager* aViewManager) : nsView(aViewManager) {}
 
   void RemoveReparentedView() { mReparentedView = nsnull; }
   void SetReparentedView(nsView* aView) { mReparentedView = aView; }
@@ -154,6 +154,13 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD  Init(nsIDeviceContext* aContext);
+
+  NS_IMETHOD_(nsIView*) CreateView(const nsRect& aBounds,
+                                   const nsIView* aParent,
+                                   nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow);
+
+  NS_IMETHOD_(nsIScrollableView*) CreateScrollableView(const nsRect& aBounds,
+                                                       const nsIView* aParent);
 
   NS_IMETHOD  GetRootView(nsIView *&aView);
   NS_IMETHOD  SetRootView(nsIView *aView);

@@ -450,7 +450,6 @@ protected:
 // Class IDs
 static NS_DEFINE_CID(kViewManagerCID,       NS_VIEW_MANAGER_CID);
 static NS_DEFINE_CID(kWidgetCID,            NS_CHILD_CID);
-static NS_DEFINE_CID(kViewCID,              NS_VIEW_CID);
 
 //------------------------------------------------------------------
 nsresult
@@ -1853,13 +1852,6 @@ DocumentViewerImpl::MakeWindow(nsIWidget* aParentWidget,
   tbounds.y = 0;
 
   // Create a child window of the parent that is our "root view/window"
-  // Create a view
-
-  nsIView *view = nsnull;
-  rv = CallCreateInstance(kViewCID, &view);
-  if (NS_FAILED(rv))
-    return rv;
-
   // if aParentWidget has a view, we'll hook our view manager up to its view tree
   nsIView* containerView = nsView::GetViewFor(aParentWidget);
 
@@ -1894,9 +1886,10 @@ DocumentViewerImpl::MakeWindow(nsIWidget* aParentWidget,
     }
   }
 
-  rv = view->Init(mViewManager, tbounds, containerView);
-  if (NS_FAILED(rv))
-    return rv;
+  // Create a view
+  nsIView* view = mViewManager->CreateView(tbounds, containerView);
+  if (!view)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   // pass in a native widget to be the parent widget ONLY if the view hierarchy will stand alone.
   // otherwise the view will find its own parent widget and "do the right thing" to

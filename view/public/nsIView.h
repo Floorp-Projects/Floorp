@@ -60,8 +60,8 @@ enum nsViewVisibility {
 
 // IID for the nsIView interface
 #define NS_IVIEW_IID    \
-{ 0xf0a21c40, 0xa7e1, 0x11d1, \
-{ 0xa8, 0x24, 0x00, 0x40, 0x95, 0x9a, 0x28, 0xc9 } }
+{ 0x658f72ee, 0x32ef, 0x4e93, \
+{ 0xb8, 0x4e, 0x5f, 0x0f, 0x8f, 0x77, 0xe4, 0x22 } }
 
 // Public view flags are defined in this file
 #define NS_VIEW_FLAGS_PUBLIC              0x00FF
@@ -133,25 +133,6 @@ public:
    */
   nsIViewManager* GetViewManager() const
   { return NS_REINTERPRET_CAST(nsIViewManager*, mViewManager); }
-
-  /**
-   * Initialize the view
-   * @param aManager view manager that "owns" the view. The view does NOT
-   *        hold a reference to the view manager
-   * @param aBounds initial bounds for view
-   *        XXX We should eliminate this parameter; you can set the bounds after Init
-   * @param aParent intended parent for view. this is not actually set in the
-   *        nsIView through this method. it is only used by the initialization
-   *        code to walk up the view tree, if necessary, to find resources.
-   *        XXX We should eliminate this parameter!
-   * @param aVisibilityFlag initial visibility state of view
-   *        XXX We should eliminate this parameter; you can set it after Init
-   * @result The result of the initialization, NS_OK if no errors
-   */
-  nsresult Init(nsIViewManager* aManager,
-                const nsRect &aBounds,
-                const nsIView *aParent,
-                nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow);
 
   /**
    * Destroy the view.
