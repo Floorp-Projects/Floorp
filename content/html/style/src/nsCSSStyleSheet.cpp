@@ -76,6 +76,7 @@
 //#define DEBUG_RULES
 //#define EVENT_DEBUG
 
+static PRBool IsTextNode(nsIContent* aContent);
 
 // ----------------------
 // Rule hash key
@@ -2933,6 +2934,11 @@ static PRBool SelectorMatches(SelectorMatchesData &data,
 {
   PRBool  result = PR_FALSE;
 
+#ifdef DEBUG
+  nsCOMPtr<nsITextContent> isText = do_QueryInterface(data.mContent);
+  NS_ASSERTION(isText.get() == nsnull, "TextNode leaked into SelectorMatches!");
+#endif
+
   // Bail out early if we can
   if(kNameSpaceID_Unknown != aSelector->mNameSpace) {
     if(data.mNameSpaceID != aSelector->mNameSpace) {
@@ -3281,6 +3287,14 @@ CSSRuleProcessor::RulesMatching(nsIPresContext* aPresContext,
   NS_PRECONDITION(nsnull != aContent, "null arg");
   NS_PRECONDITION(nsnull != aResults, "null arg");
 
+  // first, exclude all text nodes since we cannot have style rules that apply to them
+  // NOTE: this assumption may change in the future, in which case we need to remove this check 
+  //       and the ASSERTION in SelectorMatches. This is here because it is a performance boost
+  //       to skip rule matching on text nodes, which cannot have any rules match them at this time.
+  if(IsTextNode(aContent)) {
+    return NS_OK;
+  }
+
   RuleCascadeData* cascade = GetRuleCascade(aMedium);
 
   if (cascade) {
@@ -3400,6 +3414,14 @@ CSSRuleProcessor::RulesMatching(nsIPresContext* aPresContext,
   NS_PRECONDITION(nsnull != aPseudoTag, "null arg");
   NS_PRECONDITION(nsnull != aResults, "null arg");
 
+  // first, exclude all text nodes since we cannot have style rules that apply to them
+  // NOTE: this assumption may change in the future, in which case we need to remove this check 
+  //       and the ASSERTION in SelectorMatches. This is here because it is a performance boost
+  //       to skip rule matching on text nodes, which cannot have any rules match them at this time.
+  if(IsTextNode(aParentContent)) {
+    return NS_OK;
+  }
+
   RuleCascadeData* cascade = GetRuleCascade(aMedium);
 
   if (cascade) {
@@ -3450,6 +3472,14 @@ CSSRuleProcessor::HasStateDependentStyle(nsIPresContext* aPresContext,
                                          nsIContent* aContent)
 {
   PRBool isStateful = PR_FALSE;
+
+  // first, exclude all text nodes since we cannot have style rules that apply to them
+  // NOTE: this assumption may change in the future, in which case we need to remove this check 
+  //       and the ASSERTION in SelectorMatches. This is here because it is a performance boost
+  //       to skip rule matching on text nodes, which cannot have any rules match them at this time.
+  if(IsTextNode(aContent)) {
+    return NS_COMFALSE; // XXX should be PR_FALSE;
+  }
 
   RuleCascadeData* cascade = GetRuleCascade(aMedium);
 
@@ -3795,4 +3825,32 @@ CSSRuleProcessor::GetRuleCascade(nsIAtom* aMedium)
     }
   }
   return cascade;
+}
+
+//static 
+PRBool IsTextNode(nsIContent* aContent)
+{
+  if(!aContent) return PR_FALSE;
+
+  // optimization: avoid QI on a XUL element by first checking for a XUL element
+  //  - QI on a XUL element is slow when the interface is not supported by the XUL element
+  //  - if the content element is a XUL element then it cannot be a text node
+#ifdef MOZ_XUL
+#ifndef DONT_OPTIMIZE_ISHTMLCONTENT_FOR_XUL
+  nsIXULContent *xc;
+  if (NS_SUCCEEDED(aContent->QueryInterface(NS_GET_IID(nsIXULContent), (void**)&xc))) {
+    NS_RELEASE(xc);
+    return PR_FALSE;
+  }
+#endif
+#endif
+
+  // check for a text node by seeing if the content supports nsITextContent
+  nsITextContent* isText;
+  if (NS_SUCCEEDED(aContent->QueryInterface(NS_GET_IID(nsITextContent), (void**)&isText)) &&
+      isText != nsnull) {
+    NS_RELEASE(isText);
+    return PR_TRUE;
+  }
+  return PR_FALSE;
 }
