@@ -195,6 +195,9 @@ void nsAccessibilityService::GetOwnerFor(nsIPresShell *aPresShell,
     *aOwnerShell = parentPresShell;
     NS_ADDREF(*aOwnerShell);
   }
+  else {
+    NS_WARNING("Cannot find content for sub document");
+  }
 }
 
 nsresult
@@ -457,6 +460,25 @@ nsAccessibilityService::CreateHTMLCheckboxAccessible(nsISupports *aFrame, nsIAcc
     return NS_ERROR_OUT_OF_MEMORY;
 
   NS_ADDREF(*_retval);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAccessibilityService::CreateHTMLCheckboxAccessibleXBL(nsIDOMNode *aNode, nsIAccessible **_retval)
+{
+#ifdef MOZ_XUL
+  nsCOMPtr<nsIWeakReference> weakShell;
+  GetShellFromNode(aNode, getter_AddRefs(weakShell));
+
+  // reusing the HTML accessible widget and enhancing for XUL
+  *_retval = new nsHTMLCheckboxAccessible(aNode, weakShell);
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
+#else
+  *_retval = nsnull;
+#endif // MOZ_XUL
   return NS_OK;
 }
 
@@ -1280,29 +1302,33 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessibleFor(nsIDOMNode *aNode,
 
   nsCOMPtr<nsIAccessible> newAcc;
 
-#ifdef MOZ_XUL
-  nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(aNode)); 
-  if (xulElement) {
 #ifdef DEBUG_aaronl
-    // Please leave this in for now, it's a convenient debugging method
-    nsAutoString name;
-    aNode->GetLocalName(name);
-    if (name.Equals(NS_LITERAL_STRING("dropmarker"))) 
-      printf("## aaronl debugging tag name\n");
+  // Please leave this in for now, it's a convenient debugging method
+  nsAutoString name;
+  aNode->GetLocalName(name);
+  if (name.Equals(NS_LITERAL_STRING("INPUT"))) 
+    printf("## aaronl debugging tag name\n");
 
-    nsAutoString className;
-    xulElement->GetAttribute(NS_LITERAL_STRING("class"), className);
-    if (className.Equals(NS_LITERAL_STRING("toolbarbutton-menubutton-dropmarker")))
+  nsAutoString attrib;
+  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(aNode));
+  if (element) {
+    element->GetAttribute(NS_LITERAL_STRING("type"), attrib);
+    if (attrib.Equals(NS_LITERAL_STRING("checkbox")))
       printf("## aaronl debugging attribute\n");
+  }
 #endif
-    nsCOMPtr<nsIAccessibleProvider> accProv(do_QueryInterface(aNode));
-    if (accProv) {
-      accProv->GetAccessible(_retval); 
-      if (*_retval)
-        return NS_OK;
-    }
+  nsCOMPtr<nsIAccessibleProvider> accProv(do_QueryInterface(aNode));
+  if (accProv) {
+    accProv->GetAccessible(_retval); 
+    if (*_retval)
+      return NS_OK;
     return NS_ERROR_FAILURE;
   }
+
+#ifdef MOZ_XUL
+  nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(aNode)); 
+  if (xulElement) 
+    return NS_ERROR_FAILURE;
 #endif // MOZ_XUL
 
   // ---- Get the document for this node  ----
