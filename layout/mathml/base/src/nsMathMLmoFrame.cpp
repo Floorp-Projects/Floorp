@@ -185,7 +185,10 @@ nsMathMLmoFrame::Init(nsIPresContext*  aPresContext,
   }
   // cache the operator
   mMathMLChar.SetData(aPresContext, aData);
-  ResolveMathMLCharStyle(aPresContext, mContent, mStyleContext, &mMathMLChar);
+  PRBool isMutable = ResolveMathMLCharStyle(aPresContext, mContent, mStyleContext, &mMathMLChar);
+  if (isMutable) {
+    mFlags |= NS_MATHML_OPERATOR_MUTABLE;
+  }
 
 #if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
   mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
@@ -291,14 +294,21 @@ void
 nsMathMLmoFrame::InitData(nsIPresContext* aPresContext)
 {
   nsresult rv = NS_OK;
-  mFlags = 0;
+
+  // Remember the mutable bit from Init().
+  // Some chars are listed under different forms in the dictionary,
+  // and there could be a form under which the char is mutable.
+  // If the char is the core of an embellished container, we will keep
+  // it mutable irrespective of the form of the embellished container
+  mFlags &= NS_MATHML_OPERATOR_MUTABLE;
 
   // find our form
   nsAutoString value;
   nsOperatorFlags aForm = NS_MATHML_OPERATOR_FORM_INFIX;
+
   nsIMathMLFrame* aMathMLFrame = nsnull;
-  nsIFrame* embellishAncestor = nsnull;
-  PRBool hasEmbellishAncestor = PR_FALSE;
+  nsEmbellishData embellishData;
+
   if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
                    nsMathMLAtoms::form_, value)) {
     if (value.EqualsWithConversion("prefix"))
@@ -306,25 +316,36 @@ nsMathMLmoFrame::InitData(nsIPresContext* aPresContext)
     else if (value.EqualsWithConversion("postfix"))
       aForm = NS_MATHML_OPERATOR_FORM_POSTFIX;
 
-    // flag if we have an embellished ancestor
-    if (IsEmbellishOperator(mParent))
-    {
-      hasEmbellishAncestor = PR_TRUE;
-      embellishAncestor = mParent;
+    // see if we have an embellished ancestor, and check that we are really
+    // the 'core' of the ancestor, not just a sibling of the core
+    rv = mParent->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&aMathMLFrame);
+    if (NS_SUCCEEDED(rv) && aMathMLFrame) {
+      aMathMLFrame->GetEmbellishData(embellishData);
+      if (embellishData.core == this) {
+        // flag if we have an embellished ancestor
+        mFlags |= NS_MATHML_OPERATOR_EMBELLISH_ANCESTOR;
+      }
     }
   }
   else {
     // Get our outermost embellished container and its parent
+    nsIFrame* embellishAncestor;
     nsIFrame* aParent = this;
-    embellishAncestor = this;
     do {
       embellishAncestor = aParent;
-      aParent->GetParent(&aParent);
-    } while (IsEmbellishOperator(aParent));
+      embellishAncestor->GetParent(&aParent);
+      rv = aParent->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&aMathMLFrame);
+      if (NS_SUCCEEDED(rv) && aMathMLFrame) {
+        aMathMLFrame->GetEmbellishData(embellishData);
+      }
+      else {
+      	embellishData.core = nsnull;
+      }
+    } while (embellishData.core == this);
     // flag if we have an embellished ancestor
     if (embellishAncestor != this)
     {
-      hasEmbellishAncestor = PR_TRUE;
+      mFlags |= NS_MATHML_OPERATOR_EMBELLISH_ANCESTOR;
     }
 
     // Find the position of our outermost embellished container w.r.t
@@ -364,29 +385,21 @@ nsMathMLmoFrame::InitData(nsIPresContext* aPresContext)
       aForm = NS_MATHML_OPERATOR_FORM_POSTFIX;
   }
 
-  // Check to see if we are really the 'core' of the ancestor, not just a sibling of the core
-  if (hasEmbellishAncestor && embellishAncestor) {
-    hasEmbellishAncestor = PR_FALSE;
-    rv = embellishAncestor->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&aMathMLFrame);
-    if (NS_SUCCEEDED(rv) && aMathMLFrame) {
-      nsEmbellishData embellishData;
-      aMathMLFrame->GetEmbellishData(embellishData);
-      if (embellishData.core == this) hasEmbellishAncestor = PR_TRUE;
-    }
-  }
-
   // Lookup the operator dictionary
   nsAutoString aData;
   mMathMLChar.GetData(aData);
   PRBool found = nsMathMLOperators::LookupOperator(aData, aForm,
                                                    &mFlags, &mLeftSpace, &mRightSpace);
-
   // All operators are symmetric. But this symmetric flag is *not* stored in
   // the Operator Dictionary ... Add it now
   mFlags |= NS_MATHML_OPERATOR_SYMMETRIC;
 
-  // If the operator exists in the dictionary and is stretchy, it is mutable
-  if (found && NS_MATHML_OPERATOR_IS_STRETCHY(mFlags))
+#if 0
+  // If the operator exists in the dictionary and is stretchy or largeop, 
+  // then it is mutable
+  if (found && 
+      (NS_MATHML_OPERATOR_IS_STRETCHY(mFlags) || 
+       NS_MATHML_OPERATOR_IS_LARGEOP(mFlags)))
   {
     mFlags |= NS_MATHML_OPERATOR_MUTABLE;
   }
@@ -395,9 +408,11 @@ nsMathMLmoFrame::InitData(nsIPresContext* aPresContext)
   if (hasEmbellishAncestor) {
     mFlags |= NS_MATHML_OPERATOR_EMBELLISH_ANCESTOR;
   }
+#endif
 
   // If we don't want too much extra space when we are a script
-  if (!hasEmbellishAncestor && 0 < mPresentationData.scriptLevel) {
+  if ((0 < mPresentationData.scriptLevel) &&
+      !NS_MATHML_OPERATOR_HAS_EMBELLISH_ANCESTOR(mFlags)) {
     mLeftSpace /= 2.0f;
     mRightSpace /= 2.0f;
   }
@@ -505,6 +520,19 @@ nsMathMLmoFrame::InitData(nsIPresContext* aPresContext)
         mMinSize = float(CalcLength(aPresContext, mStyleContext, cssValue));
         mFlags |= NS_MATHML_OPERATOR_MINSIZE_EXPLICIT;
       }
+
+      if ((eCSSUnit_Number == unit) || (eCSSUnit_Percent == unit)) {
+        // see if the multiplicative inheritance should be from <mstyle>
+        if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(nsnull, mPresentationData.mstyle,
+                         nsMathMLAtoms::minsize_, value)) {
+          if (ParseNumericValue(value, cssValue)) {
+            if (cssValue.IsLengthUnit()) {
+              mMinSize *= float(CalcLength(aPresContext, mStyleContext, cssValue));
+              mFlags |= NS_MATHML_OPERATOR_MINSIZE_EXPLICIT;
+            }
+          }
+        }
+      }
     }
   }
 
@@ -521,6 +549,19 @@ nsMathMLmoFrame::InitData(nsIPresContext* aPresContext)
       else if (eCSSUnit_Null != unit) {
         mMaxSize = float(CalcLength(aPresContext, mStyleContext, cssValue));
         mFlags |= NS_MATHML_OPERATOR_MAXSIZE_EXPLICIT;
+      }
+
+      if ((eCSSUnit_Number == unit) || (eCSSUnit_Percent == unit)) {
+        // see if the multiplicative inheritance should be from <mstyle>
+        if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(nsnull, mPresentationData.mstyle,
+                         nsMathMLAtoms::maxsize_, value)) {
+          if (ParseNumericValue(value, cssValue)) {
+            if (cssValue.IsLengthUnit()) {
+              mMaxSize *= float(CalcLength(aPresContext, mStyleContext, cssValue));
+              mFlags |= NS_MATHML_OPERATOR_MAXSIZE_EXPLICIT;
+            }
+          }
+        }
       }
     }
   }
@@ -559,7 +600,7 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
   nsCOMPtr<nsIFontMetrics> fm;
   aRenderingContext.SetFont(font.mFont);
   aRenderingContext.GetFontMetrics(*getter_AddRefs(fm));
-  nscoord fontAscent, fontDescent, axisHeight;
+  nscoord fontAscent, fontDescent, axisHeight, height;
   GetAxisHeight(aRenderingContext, fm, axisHeight);
   fm->GetMaxAscent(fontAscent);
   fm->GetMaxDescent(fontDescent);
@@ -577,6 +618,9 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
     nsBoundingMetrics initialSize = aDesiredStretchSize.mBoundingMetrics;
     nsBoundingMetrics container = initialSize;
 
+    PRBool isVertical = PR_FALSE;
+    PRInt32 stretchHint = NS_STRETCH_NORMAL;
+
     // see if it is okay to stretch
     if (NS_MATHML_OPERATOR_IS_MUTABLE(mFlags)) {
 
@@ -584,10 +628,14 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
 
       // some adjustments if the operator is symmetric and vertical
 
-      if (NS_MATHML_OPERATOR_IS_SYMMETRIC(mFlags) &&
-           ((aStretchDirection == NS_STRETCH_DIRECTION_VERTICAL) ||
-            (aStretchDirection == NS_STRETCH_DIRECTION_DEFAULT &&
-             mMathMLChar.GetStretchDirection() == NS_STRETCH_DIRECTION_VERTICAL)))
+      if (((aStretchDirection == NS_STRETCH_DIRECTION_VERTICAL) ||
+           (aStretchDirection == NS_STRETCH_DIRECTION_DEFAULT))  &&
+          (mMathMLChar.GetStretchDirection() == NS_STRETCH_DIRECTION_VERTICAL))
+      {
+        isVertical = PR_TRUE;
+      }
+
+      if (isVertical && NS_MATHML_OPERATOR_IS_SYMMETRIC(mFlags))
       {
         // we need to center about the axis
         nscoord delta = PR_MAX(container.ascent - axisHeight,
@@ -613,7 +661,7 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
           container.ascent =
             PR_MIN(container.ascent, nscoord(initialSize.ascent * aspect));
           container.descent =
-            PR_MIN(container.descent, nscoord(initialSize.descent * aspect));
+            PR_MIN(container.descent, nscoord(initialSize.descent * aspect)); 
           // below we use a type cast instead of a conversion to avoid a VC++ bug
           // see http://support.microsoft.com/support/kb/articles/Q115/7/05.ASP
           container.width =
@@ -626,6 +674,14 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
             PR_MIN(container.descent, nscoord(initialSize.descent * mMaxSize));
           container.width =
             PR_MIN(container.width, nscoord(initialSize.width * mMaxSize));
+        }
+
+        if (isVertical && !NS_MATHML_OPERATOR_IS_SYMMETRIC(mFlags))
+        {
+          // re-adjust to align the char with the bottom of the initial container
+          height = container.ascent + container.descent;
+          container.descent = aContainerSize.descent;	
+          container.ascent = height - container.descent;
         }
       }
 
@@ -650,28 +706,41 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
           container.width =
             PR_MAX(container.width, nscoord(initialSize.width * mMinSize));
         }
+
+        if (isVertical && !NS_MATHML_OPERATOR_IS_SYMMETRIC(mFlags))
+        {
+          // re-adjust to align the char with the bottom of the initial container
+          height = container.ascent + container.descent;
+          container.descent = aContainerSize.descent;	
+          container.ascent = height - container.descent;
+        }
       }
     }
 
     // let the MathMLChar stretch itself...
     charSize.Clear(); // this will tell stretch that we don't know the default size
     mMathMLChar.Stretch(aPresContext, aRenderingContext,
-                        aStretchDirection, container, charSize);
+                        aStretchDirection, container, charSize, stretchHint);
      // update our bounding metrics... it becomes that of our MathML char
     mMathMLChar.GetBoundingMetrics(mBoundingMetrics);
 
-    // For vertical operators we want to center about the axis of the container.
-    if (NS_MATHML_OPERATOR_IS_SYMMETRIC(mFlags) &&
-        ((aStretchDirection == NS_STRETCH_DIRECTION_VERTICAL) ||
-         (aStretchDirection == NS_STRETCH_DIRECTION_DEFAULT &&
-          mMathMLChar.GetStretchDirection() == NS_STRETCH_DIRECTION_VERTICAL)))
+    if (isVertical)
     {
       // the desired size returned by mMathMLChar maybe different
       // from the size of the container.
       // the mMathMLChar.mRect.y calculation is subtle, watch out!!!
-      nscoord height = mBoundingMetrics.ascent + mBoundingMetrics.descent;
-      mBoundingMetrics.ascent = height/2 + axisHeight;
-      mBoundingMetrics.descent = height - mBoundingMetrics.ascent;
+
+      height = mBoundingMetrics.ascent + mBoundingMetrics.descent;
+      if (NS_MATHML_OPERATOR_IS_SYMMETRIC(mFlags)) {
+        // For symmetric and vertical operators,
+        // we want to center about the axis of the container
+        mBoundingMetrics.descent = height/2 - axisHeight;
+      }
+      else {
+        // Otherwise, align the char with the bottom of the container
+        mBoundingMetrics.descent = container.descent;
+      }
+      mBoundingMetrics.ascent = height - mBoundingMetrics.descent;
     }
 
     // Prepare the metrics to return
@@ -684,7 +753,8 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
     nscoord dy = aDesiredStretchSize.ascent - mBoundingMetrics.ascent;
     if (mMathMLChar.GetEnum() == eMathMLChar_DONT_STRETCH)
     {
-      dy = (aDesiredStretchSize.ascent - charSize.ascent);
+      // reset
+      dy = aDesiredStretchSize.ascent - charSize.ascent;
       aDesiredStretchSize.mBoundingMetrics = mBoundingMetrics = charSize;
     }
 
