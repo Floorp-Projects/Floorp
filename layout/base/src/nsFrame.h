@@ -105,7 +105,7 @@ public:
   NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   // nsIFrame
-  NS_IMETHOD  DeleteFrame();
+  NS_IMETHOD  DeleteFrame(nsIPresContext& aPresContext);
   NS_IMETHOD  SizeOf(nsISizeOfHandler* aHandler) const;
   NS_IMETHOD  GetContent(nsIContent*& aContent) const;
   NS_IMETHOD  GetContentIndex(PRInt32& aIndexInParent) const;

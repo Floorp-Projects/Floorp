@@ -81,7 +81,7 @@ public:
                           const nsReflowState& aReflowState);
 
   // nsCSSContainerFrame
-  virtual PRBool DeleteNextInFlowsFor(nsIFrame* aChild);
+  virtual PRBool DeleteNextInFlowsFor(nsIPresContext& aPresContext, nsIFrame* aChild);
 
 protected:
   nsCSSInlineFrame(nsIContent* aContent, nsIFrame* aParent);

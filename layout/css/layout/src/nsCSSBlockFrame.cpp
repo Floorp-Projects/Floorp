@@ -107,6 +107,7 @@ public:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   // nsIFrame
+  NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
   NS_IMETHOD ChildCount(PRInt32& aChildCount) const;
   NS_IMETHOD ChildAt(PRInt32 aIndex, nsIFrame*& aFrame) const;
   NS_IMETHOD IndexOf(const nsIFrame* aChild, PRInt32& aIndex) const;
@@ -168,7 +169,7 @@ protected:
 
   PRBool GetLastContentIsComplete() const;
 #endif
-  virtual PRBool DeleteNextInFlowsFor(nsIFrame* aNextInFlow);
+  virtual PRBool DeleteNextInFlowsFor(nsIPresContext& aPresContext, nsIFrame* aNextInFlow);
 
   PRBool DrainOverflowLines();
 
@@ -550,7 +551,7 @@ VerifyChildCount(LineData* aLines, PRBool aEmptyOK = PR_FALSE)
 #endif
 
 static void
-DeleteLineList(LineData* aLine)
+DeleteLineList(nsIPresContext& aPresContext, LineData* aLine)
 {
   if (nsnull != aLine) {
     // Delete our child frames before doing anything else. In particular
@@ -559,7 +560,7 @@ DeleteLineList(LineData* aLine)
     for (nsIFrame* child = aLine->mFirstChild; child; ) {
       nsIFrame* nextChild;
       child->GetNextSibling(nextChild);
-      child->DeleteFrame();
+      child->DeleteFrame(aPresContext);
       child = nextChild;
     }
 
@@ -927,8 +928,6 @@ nsCSSBlockFrame::nsCSSBlockFrame(nsIContent* aContent, nsIFrame* aParent)
 
 nsCSSBlockFrame::~nsCSSBlockFrame()
 {
-  DeleteLineList(mLines);
-  DeleteLineList(mOverflowLines);
 //  if (nsnull != mRunInFloaters) {
 //    delete mRunInFloaters;
 //  }
@@ -956,6 +955,17 @@ nsCSSBlockFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     return NS_OK;
   }
   return nsCSSBlockFrameSuper::QueryInterface(aIID, aInstancePtr);
+}
+
+NS_IMETHODIMP
+nsCSSBlockFrame::DeleteFrame(nsIPresContext& aPresContext)
+{
+  DeleteLineList(aPresContext, mLines);
+  DeleteLineList(aPresContext, mOverflowLines);
+
+  nsCSSBlockFrameSuper::DeleteFrame(aPresContext);
+
+  return NS_OK;
 }
 
 PRBool
@@ -2347,7 +2357,7 @@ nsCSSBlockFrame::ReflowBlockFrame(nsCSSBlockReflowState& aState,
       // parent is not this because we are executing pullup code)
       nsIFrame* parent;
       aFrame->GetGeometricParent(parent);
-      ((nsCSSBlockFrame*)parent)->DeleteNextInFlowsFor(aFrame);
+      ((nsCSSBlockFrame*)parent)->DeleteNextInFlowsFor(*aState.mPresContext, aFrame);
     }
     aLine->SetLastContentIsComplete();
     aReflowResult = NS_FRAME_COMPLETE;
@@ -3327,7 +3337,7 @@ nsCSSBlockFrame::ContentDeleted(nsIPresShell*   aShell,
       if (nsnull != nextInFlow) {
         deadFrame->BreakFromNextFlow();
       }
-      deadFrame->DeleteFrame();
+      deadFrame->DeleteFrame(*aPresContext);
       deadFrame = nextInFlow;
 
       // If line is empty, remove it now
@@ -3409,7 +3419,7 @@ nsCSSBlockFrame::ContentDeleted(nsIPresShell*   aShell,
 }
 
 PRBool
-nsCSSBlockFrame::DeleteNextInFlowsFor(nsIFrame* aChild)
+nsCSSBlockFrame::DeleteNextInFlowsFor(nsIPresContext& aPresContext, nsIFrame* aChild)
 {
   NS_PRECONDITION(IsChild(aChild), "bad geometric parent");
 
@@ -3425,7 +3435,7 @@ nsCSSBlockFrame::DeleteNextInFlowsFor(nsIFrame* aChild)
   nsIFrame* nextNextInFlow;
   nextInFlow->GetNextInFlow(nextNextInFlow);
   if (nsnull != nextNextInFlow) {
-    parent->DeleteNextInFlowsFor(nextInFlow);
+    parent->DeleteNextInFlowsFor(aPresContext, nextInFlow);
   }
 
 #ifdef NS_DEBUG
@@ -3473,7 +3483,7 @@ nsCSSBlockFrame::DeleteNextInFlowsFor(nsIFrame* aChild)
 #endif
 
   // Delete the next-in-flow frame and adjust its parents child count
-  nextInFlow->DeleteFrame();
+  nextInFlow->DeleteFrame(aPresContext);
 
 #ifdef NS_DEBUG
   aChild->GetNextInFlow(nextInFlow);

@@ -21,6 +21,7 @@
 #include "nscoord.h"
 #include "nsContainerFrame.h"
 #include "nsIContent.h"
+#include "nsIPresContext.h"
 
 static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
 
@@ -128,7 +129,7 @@ public:
 
   // Allow public access to protected member functions
   void PushChildren(nsIFrame* aFromChild, nsIFrame* aPrevSibling, PRBool aLastIsComplete);
-  PRBool DeleteChildsNextInFlow(nsIFrame* aChild);
+  PRBool DeleteChildsNextInFlow(nsIPresContext& aPresContext, nsIFrame* aChild);
 };
 
 SimpleContainer::SimpleContainer(nsIContent* aContent)
@@ -150,9 +151,9 @@ void SimpleContainer::PushChildren(nsIFrame* aFromChild, nsIFrame* aPrevSibling,
   nsContainerFrame::PushChildren(aFromChild, aPrevSibling, aLastIsComplete);
 }
 
-PRBool SimpleContainer::DeleteChildsNextInFlow(nsIFrame* aChild)
+PRBool SimpleContainer::DeleteChildsNextInFlow(nsIPresContext& aPresContext, nsIFrame* aChild)
 {
-  return nsContainerFrame::DeleteChildsNextInFlow(aChild);
+  return nsContainerFrame::DeleteChildsNextInFlow(aPresContext, aChild);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -470,6 +471,9 @@ TestDeleteChildsNext()
   SimpleContent* childContent = new SimpleContent;
   nsFrame*       c1 = new SimpleSplittableFrame(childContent, f);
   nsFrame*       c11 = new SimpleSplittableFrame(childContent, f);
+  nsIPresContext *context;
+
+  NS_NewGalleyContext(&context);
 
   ///////////////////////////////////////////////////////////////////////////
   // #1a
@@ -480,7 +484,7 @@ TestDeleteChildsNext()
   f->SetFirstChild(c1, 2);
 
   // Delete the next-in-flow
-  f->DeleteChildsNextInFlow(c1);
+  f->DeleteChildsNextInFlow(*context, c1);
 
   // Verify the child count
   PRInt32 childCount;
@@ -532,7 +536,7 @@ TestDeleteChildsNext()
   f1->AppendToFlow(f);
 
   // Delete the next-in-flow
-  f->DeleteChildsNextInFlow(c1);
+  f->DeleteChildsNextInFlow(*context, c1);
 
   // Verify that the second container frame is empty
   nsIFrame* firstChild;
@@ -567,7 +571,7 @@ TestDeleteChildsNext()
   f->SetLastContentOffset(1);
 
   // Delete the next-in-flow
-  f->DeleteChildsNextInFlow(c1);
+  f->DeleteChildsNextInFlow(*context, c1);
 
   // Verify the child count
   f->ChildCount(childCount);
@@ -619,7 +623,7 @@ TestDeleteChildsNext()
   f1->AppendToFlow(f);
 
   // Delete the next-in-flow
-  f->DeleteChildsNextInFlow(c1);
+  f->DeleteChildsNextInFlow(*context, c1);
 
   // Verify the next-in-flow pointer is null
   c1->GetNextInFlow(nextInFlow);
@@ -669,7 +673,7 @@ TestDeleteChildsNext()
   f->SetLastContentOffset(1);
 
   // Delete the next-in-flow
-  f->DeleteChildsNextInFlow(c1);
+  f->DeleteChildsNextInFlow(*context, c1);
 
   // Verify the next-in-flow pointer is null
   c1->GetNextInFlow(nextInFlow);
@@ -709,6 +713,8 @@ TestDeleteChildsNext()
     printf("DeleteNextInFlow: bad next-in-flow (#3)\n");
     return PR_FALSE;
   }
+
+  NS_IF_RELEASE(context);
 
   return PR_TRUE;
 }

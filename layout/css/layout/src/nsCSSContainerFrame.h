@@ -24,7 +24,7 @@
 class nsCSSContainerFrame : public nsHTMLContainerFrame {
 public:
 
-  virtual PRBool DeleteNextInFlowsFor(nsIFrame* aChild) = 0;
+  virtual PRBool DeleteNextInFlowsFor(nsIPresContext& aPresContext, nsIFrame* aChild) = 0;
 
 protected:
   nsCSSContainerFrame(nsIContent* aContent, nsIFrame* aParent);

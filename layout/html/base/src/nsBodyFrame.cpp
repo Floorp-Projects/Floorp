@@ -225,7 +225,7 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext&      aPresContext,
       mFirstChild->GetNextInFlow(kidNextInFlow);
       if (nsnull != kidNextInFlow) {
         // Remove all of the childs next-in-flows
-        DeleteChildsNextInFlow(mFirstChild);
+        DeleteChildsNextInFlow(aPresContext, mFirstChild);
       }
     }
     else {
