@@ -297,20 +297,25 @@ NS_IMETHODIMP nsWebBrowser::GetParentURIContentListener(nsIURIContentListener**
    aParentContentListener)
 {
    NS_ENSURE_ARG_POINTER(aParentContentListener);
+   *aParentContentListener = nsnull;
 
-   nsCOMPtr<nsIURIContentListener> listener(do_QueryInterface(mDocShell));
-   NS_ASSERTION(listener, "docshell is no longer a content listner");
+   // get the interface from the docshell
+   nsCOMPtr<nsIURIContentListener> listener(do_GetInterface(mDocShell));
 
-   return listener->GetParentContentListener(aParentContentListener);
+   if (listener)
+       return listener->GetParentContentListener(aParentContentListener);
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsWebBrowser::SetParentURIContentListener(nsIURIContentListener*
    aParentContentListener)
 {
-   nsCOMPtr<nsIURIContentListener> listener(do_QueryInterface(mDocShell));
-   NS_ASSERTION(listener, "docshell is no longer a content listner");
+   // get the interface from the docshell
+   nsCOMPtr<nsIURIContentListener> listener(do_GetInterface(mDocShell));
 
-   return listener->SetParentContentListener(aParentContentListener);
+   if (listener)
+       return listener->SetParentContentListener(aParentContentListener);
+   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsWebBrowser::GetContentDOMWindow(nsIDOMWindow **_retval)
