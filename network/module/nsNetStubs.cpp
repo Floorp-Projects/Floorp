@@ -71,11 +71,15 @@ extern "C" {
 
 extern "C" {
 
-#if defined(XP_UNIX)
+#if defined(XP_UNIX) || defined(XP_MAC)
 DB *
 dbopen(const char *fname, int flags,int mode, DBTYPE type, 
        const void *openinfo)
 {
+#if defined(XP_MAC)
+	PR_ASSERT(FALSE);
+#endif
+
     return NULL;
 }
 #endif
