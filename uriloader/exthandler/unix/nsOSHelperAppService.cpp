@@ -22,6 +22,9 @@
  */
 
 #include "nsOSHelperAppService.h"
+#ifdef MOZ_WIDGET_GTK2
+#include "nsGNOMERegistry.h"
+#endif
 #include "nsISupports.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
@@ -63,6 +66,9 @@ IsNetscapeFormat(const nsAString& aBuffer);
 
 nsOSHelperAppService::nsOSHelperAppService() : nsExternalHelperAppService()
 {
+#ifdef MOZ_WIDGET_GTK2
+  nsGNOMERegistry::Startup();
+#endif
 }
 
 nsOSHelperAppService::~nsOSHelperAppService()
@@ -1262,6 +1268,13 @@ NS_IMETHODIMP nsOSHelperAppService::ExternalProtocolHandlerExists(const char * a
     *aHandlerExists = (NS_SUCCEEDED(rv1) && exists && NS_SUCCEEDED(rv2) && isExecutable);
     LOG(("   handler exists: %s\n", *aHandlerExists ? "yes" : "no"));
   }
+
+#ifdef MOZ_WIDGET_GTK2
+  // Check the GConf registry for a protocol handler
+  if (!*aHandlerExists)
+    *aHandlerExists = nsGNOMERegistry::HandlerExists(aProtocolScheme);
+#endif
+
   return NS_OK;
 }
 
@@ -1278,26 +1291,31 @@ NS_IMETHODIMP nsOSHelperAppService::LoadUrl(nsIURI * aURI)
 
   nsCOMPtr<nsIFile> appFile;
   rv = GetHandlerAppFromPrefs(scheme.get(), getter_AddRefs(appFile));
-  if (NS_FAILED(rv))
-    return rv;
+  if (NS_SUCCEEDED(rv)) {
+    // Let's not support passing arguments for now
+    nsCOMPtr<nsIProcess> proc(do_CreateInstance("@mozilla.org/process/util;1", &rv));
+    if (NS_FAILED(rv))
+      return rv;
 
-  // Let's not support passing arguments for now
-  nsCOMPtr<nsIProcess> proc(do_CreateInstance("@mozilla.org/process/util;1", &rv));
-  if (NS_FAILED(rv))
-    return rv;
+    rv = proc->Init(appFile);
+    if (NS_FAILED(rv))
+      return rv;
 
-  rv = proc->Init(appFile);
-  if (NS_FAILED(rv))
-    return rv;
+    nsCAutoString spec;
+    rv = aURI->GetAsciiSpec(spec);
+    if (NS_FAILED(rv))
+      return rv;
 
-  nsCAutoString spec;
-  rv = aURI->GetAsciiSpec(spec);
-  if (NS_FAILED(rv))
-    return rv;
+    const char* args[] = { spec.get() };
+    PRUint32 tmp;
+    return proc->Run(/*blocking*/PR_FALSE, args, NS_ARRAY_LENGTH(args), &tmp);
+  }
 
-  const char* args[] = { spec.get() };
-  PRUint32 tmp;
-  return proc->Run(/*blocking*/PR_FALSE, args, NS_ARRAY_LENGTH(args), &tmp);
+#ifdef MOZ_WIDGET_GTK2
+  return nsGNOMERegistry::LoadURL(aURI);
+#else
+  return rv;
+#endif
 }
 
 nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * platformAppPath, nsIFile ** aFile)
@@ -1369,6 +1387,14 @@ nsOSHelperAppService::GetFromExtension(const char *aFileExt) {
     return nsnull;
   
   LOG(("Here we do an extension lookup for '%s'\n", aFileExt));
+
+#ifdef MOZ_WIDGET_GTK2
+  nsIMIMEInfo *gnomeInfo = nsGNOMERegistry::GetFromExtension(aFileExt).get();
+  if (gnomeInfo) {
+    LOG(("Got MIMEInfo from GNOME registry\n"));
+    return gnomeInfo;
+  }
+#endif
 
   nsAutoString mimeType, majorType, minorType,
                mime_types_description, mailcap_description,
@@ -1444,6 +1470,15 @@ nsOSHelperAppService::GetFromType(const char *aMIMEType) {
     return nsnull;
   
   LOG(("Here we do a mimetype lookup for '%s'\n", aMIMEType));
+
+#ifdef MOZ_WIDGET_GTK2
+  nsIMIMEInfo *gnomeInfo = nsGNOMERegistry::GetFromType(aMIMEType).get();
+  if (gnomeInfo) {
+    LOG(("Got MIMEInfo from GNOME registry\n"));
+    return gnomeInfo;
+  }
+#endif
+
   // extract the major and minor types
   NS_ConvertASCIItoUTF16 mimeType(aMIMEType);
   nsAString::const_iterator start_iter, end_iter,
