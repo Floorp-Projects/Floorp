@@ -22,6 +22,10 @@
 #include "nsMsgKeySet.h"
 #include "nsCOMPtr.h"
 
+#if defined(DEBUG_seth) || defined(DEBUG_sspitzer)
+#define DEBUG_NEWS_DATABASE 1
+#endif
+
 nsNewsDatabase::nsNewsDatabase()
 {
   m_unreadSet = nsnull;
@@ -86,7 +90,7 @@ NS_IMETHODIMP nsNewsDatabase::Open(nsIFileSpec *aNewsgroupName, PRBool create, P
   nsNewsSummarySpec	        summarySpec(newsgroupName);
   nsresult                  err = NS_OK;
 
-#ifdef DEBUG_NEWS
+#ifdef DEBUG_NEWS_DATABASE
   printf("nsNewsDatabase::Open(%s, %s, %p, %s) -> %s\n",
            (const char*)newsgroupName, create ? "TRUE":"FALSE",
            pMessageDB, upgrading ? "TRUE":"FALSE", (const char *)summarySpec);
@@ -107,7 +111,7 @@ NS_IMETHODIMP nsNewsDatabase::Open(nsIFileSpec *aNewsgroupName, PRBool create, P
   newsDB = new nsNewsDatabase();
   
   if (!newsDB) {
-#ifdef DEBUG_NEWS
+#ifdef DEBUG_NEWS_DATABASE
     printf("NS_ERROR_OUT_OF_MEMORY\n");
 #endif
     return NS_ERROR_OUT_OF_MEMORY;
@@ -118,7 +122,7 @@ NS_IMETHODIMP nsNewsDatabase::Open(nsIFileSpec *aNewsgroupName, PRBool create, P
 
   err = newsDB->OpenMDB((const char *) summarySpec, create);
   if (NS_SUCCEEDED(err)) {
-#ifdef DEBUG_NEWS
+#ifdef DEBUG_NEWS_DATABASE
     printf("newsDB->OpenMDB succeeded!\n");
 #endif
 	*pMessageDB = newsDB;
@@ -127,7 +131,7 @@ NS_IMETHODIMP nsNewsDatabase::Open(nsIFileSpec *aNewsgroupName, PRBool create, P
 	}
   }
   else {
-#ifdef DEBUG_NEWS
+#ifdef DEBUG_NEWS_DATABASE
     printf("newsDB->OpenMDB failed!\n");
 #endif
     *pMessageDB = nsnull;
@@ -142,11 +146,11 @@ NS_IMETHODIMP nsNewsDatabase::Open(nsIFileSpec *aNewsgroupName, PRBool create, P
 
 nsresult nsNewsDatabase::Close(PRBool forceCommit)
 {
-#ifdef DEBUG_seth
+#ifdef DEBUG_NEWS_DATABASE
   if (m_unreadSet) {
     char *str = nsnull;
     str = m_unreadSet->Output();
-    printf("setStr is %s\n", str);
+    printf("on close, setStr is %s\n", str);
     delete [] str;
     str = nsnull;
   }
@@ -161,6 +165,15 @@ nsresult nsNewsDatabase::ForceClosed()
 
 nsresult nsNewsDatabase::Commit(nsMsgDBCommit commitType)
 {
+#ifdef DEBUG_NEWS_DATABASE
+  if (m_unreadSet) {
+    char *str = nsnull;
+    str = m_unreadSet->Output();
+    printf("on commit, setStr is %s\n", str);
+    delete [] str;
+    str = nsnull;
+  }
+#endif
   return nsMsgDatabase::Commit(commitType);
 }
 
