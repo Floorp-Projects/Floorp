@@ -251,6 +251,13 @@ wallet_DumpStopwatch() {
 /* The following data and procedures are for preference */
 /********************************************************/
 
+extern PRBool
+SI_GetBoolPref(char * prefname, PRBool defaultvalue);
+
+extern void
+SI_SetBoolPref(char * prefname, PRBool prefvalue);
+
+
 static const char *pref_captureForms =
     "wallet.captureForms";
 PRIVATE Bool wallet_captureForms = FALSE;
@@ -371,7 +378,7 @@ Wallet_Localize(char* genericString) {
     v = nsAutoString("Select the user whose password is being changed.");
   } else if (!PL_strcmp(genericString,"PasswordNotification1")){
     v = nsAutoString
-      ("For your convenience, the browser can remember your user names and passwords so that you won't have to re-type them when you return to a site.  ");
+      ("For your convenience, the browser can remember your user names and passwords so you won't have to re-type them when you return to a site.  ");
   } else if (!PL_strcmp(genericString,"PasswordNotification2")){
     v = nsAutoString
       ("Your passwords will be obscured before being saved on your hard drive.  Do you want this feature enabled?");
@@ -470,7 +477,7 @@ PRBool FE_Confirm(char * szMessage) {
 char * FE_GetString(char * szMessage) {
   nsAutoString v("");
   if (wallet_GetUsingDialogsPref()) {
-    fprintf(stdout, "%c%s", '\007', szMessage); // @@@
+    fprintf(stdout, "%c%s", '\007', szMessage);
     char c;
     for (;;) {
       c = getchar();
@@ -1641,7 +1648,6 @@ wallet_RequestToPrefill(XP_List * list) {
 
   /* start generating list of fillins */
   char * heading = Wallet_Localize("FollowingItemsCanBePrefilledForYou");
-//  StrAllocCopy (heading, XP_GetString(???); !!!HOW DO WE DO I18N IN RAPTOR???
   g += PR_snprintf(buffer+g, BUFLEN-g,
 "    function loadFillins(){\n"
 "      top.frames[title_frame].document.open();\n"
