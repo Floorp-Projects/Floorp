@@ -636,16 +636,14 @@ nsSVGSVGElement::DeSelectAll()
 NS_IMETHODIMP
 nsSVGSVGElement::CreateSVGNumber(nsIDOMSVGNumber **_retval)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_NewSVGNumber(_retval);
 }
 
 /* nsIDOMSVGLength createSVGLength (); */
 NS_IMETHODIMP
 nsSVGSVGElement::CreateSVGLength(nsIDOMSVGLength **_retval)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_NewSVGLength(NS_REINTERPRET_CAST(nsISVGLength**, _retval));
 }
 
 /* nsIDOMSVGAngle createSVGAngle (); */
