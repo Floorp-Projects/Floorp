@@ -68,6 +68,7 @@ REQUIRES	= xpcom \
 		  xpconnect \
 		  js \
 		  pref \
+		  docshell \
 		  $(NULL)
 
 EXPORTS		= \

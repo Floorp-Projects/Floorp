@@ -44,7 +44,7 @@
 #include "nsIFormControl.h"
 #include "nsIDOMNSHTMLFrameElement.h"
 #include "nsIChromeEventHandler.h"
-#include "nsIFrameLoader.h"
+#include "nsFrameLoader.h"
 
 class nsIDOMAttr;
 class nsIDOMEventListener;
@@ -862,16 +862,27 @@ protected:
 
 class nsGenericHTMLFrameElement : public nsGenericHTMLElement,
                                   public nsIDOMNSHTMLFrameElement,
-                                  public nsIChromeEventHandler,
-                                  public nsIFrameLoaderOwner
+                                  public nsIChromeEventHandler
 {
 public:
   nsGenericHTMLFrameElement(nsINodeInfo *aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
   {
   }
-  virtual ~nsGenericHTMLFrameElement();
 
+  static nsGenericHTMLFrameElement* FromContent(nsIContent *aContent)
+  {
+    if (aContent->IsContentOfType(eFRAME_ELEMENT))
+      return NS_STATIC_CAST(nsGenericHTMLFrameElement*, aContent);
+    return nsnull;
+  }
+
+  nsFrameLoader* GetFrameLoader()
+  {
+    return mFrameLoader;
+  }
+
+  // nsISupports
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 
   // nsIDOMNSHTMLFrameElement
@@ -879,10 +890,6 @@ public:
 
   // nsIChromeEventHandler
   NS_DECL_NSICHROMEEVENTHANDLER
-
-  // nsIFrameLoaderOwner
-  NS_IMETHOD GetFrameLoader(nsIFrameLoader **aFrameLoader);
-  NS_IMETHOD SetFrameLoader(nsIFrameLoader *aFrameLoader);
 
   // nsIContent
   virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
@@ -897,6 +904,7 @@ public:
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
                            PRBool aNotify);
+  virtual PRBool IsContentOfType(PRUint32 aFlags) const;
 
   // nsIDOMNSHTMLElement 
   NS_IMETHOD GetTabIndex(PRInt32 *aTabIndex);
@@ -909,7 +917,7 @@ protected:
   nsresult LoadSrc();
   nsresult GetContentDocument(nsIDOMDocument** aContentDocument);
 
-  nsCOMPtr<nsIFrameLoader> mFrameLoader;
+  nsRefPtr<nsFrameLoader> mFrameLoader;
 };
 
 //----------------------------------------------------------------------

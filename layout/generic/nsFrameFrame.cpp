@@ -69,7 +69,7 @@
 #include "nsIDOMHTMLFrameElement.h"
 #include "nsIDOMHTMLIFrameElement.h"
 #include "nsIDOMXULElement.h"
-#include "nsIFrameLoader.h"
+#include "nsFrameLoader.h"
 #include "nsLayoutAtoms.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsXPIDLString.h"
@@ -157,7 +157,7 @@ protected:
                               nsHTMLReflowMetrics& aDesiredSize);
   virtual PRIntn GetSkipSides() const;
 
-  nsCOMPtr<nsIFrameLoader> mFrameLoader;
+  nsRefPtr<nsFrameLoader> mFrameLoader;
   PRPackedBool mOwnsFrameLoader;
   PRPackedBool mIsInline;
   nsIView* mInnerView;
@@ -597,28 +597,21 @@ nsSubDocumentFrame::GetDocShell(nsIDocShell **aDocShell)
   }
 
   if (!mFrameLoader) {
-    nsCOMPtr<nsIFrameLoaderOwner> frame_loader_owner =
-      do_QueryInterface(content);
+    nsGenericHTMLFrameElement *frameElement =
+      nsGenericHTMLFrameElement::FromContent(content);
 
-    if (frame_loader_owner) {
-      frame_loader_owner->GetFrameLoader(getter_AddRefs(mFrameLoader));
+    if (frameElement) {
+      mFrameLoader = frameElement->GetFrameLoader();
     }
 
     if (!mFrameLoader) {
-      nsresult rv = NS_OK;
-
       // No frame loader available from the content, create our own...
-      mFrameLoader = do_CreateInstance(NS_FRAMELOADER_CONTRACTID, &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      // ... remember that we own this frame loader...
-      mOwnsFrameLoader = PR_TRUE;
-
-      // ... initialize it...
-      mFrameLoader->Init(content);
+      mFrameLoader = new nsFrameLoader(content);
+      if (!mFrameLoader)
+        return NS_ERROR_OUT_OF_MEMORY;
 
       // ... and tell it to start loading.
-      rv = mFrameLoader->LoadFrame();
+      nsresult rv = mFrameLoader->LoadFrame();
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
