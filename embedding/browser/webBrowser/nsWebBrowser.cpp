@@ -30,6 +30,7 @@
 #include "nsIDocShell.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsWebBrowser.h"
+#include "nsIWebNavigation.h"
 
 static NS_DEFINE_IID(kChildCID,               NS_CHILD_CID);
 static NS_DEFINE_IID(kDeviceContextCID,       NS_DEVICE_CONTEXT_CID);
@@ -271,7 +272,8 @@ NS_IMETHODIMP nsWebBrowser::GetDocument(nsIDOMDocument** document)
    NS_ENSURE_ARG_POINTER(document);
    NS_ENSURE_STATE(mDocShell);
 
-   NS_ENSURE_SUCCESS(mDocShell->GetDocument(document), NS_ERROR_FAILURE);
+   nsCOMPtr<nsIWebNavigation> shellAsNav = do_QueryInterface(mDocShell);
+   NS_ENSURE_SUCCESS(shellAsNav->GetDocument(document), NS_ERROR_FAILURE);
 
    return NS_OK;
 }
