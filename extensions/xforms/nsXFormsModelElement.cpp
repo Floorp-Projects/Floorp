@@ -387,7 +387,7 @@ nsXFormsModelElement::HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled)
   return rv;
 }
 
-NS_IMETHODIMP
+nsresult
 nsXFormsModelElement::ConstructDone()
 {
   InitializeControls();
