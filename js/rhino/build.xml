@@ -12,7 +12,7 @@ Requires Ant version 1.2 or later
     <property name="version" value="1_5R4pre"/>
     <property name="rhino.jar" value="js.jar"/>
   
-    <property name="debug" value="off"/>
+    <property name="debug" value="on"/>
   
     <property name="src.dir" value="src"/>
     <property name="toolsrc.dir" value="toolsrc"/>
