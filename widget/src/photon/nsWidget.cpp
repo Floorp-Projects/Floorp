@@ -74,10 +74,11 @@ nsWidget::nsWidget()
 
 nsWidget::~nsWidget()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::~nsWidget (%p)\n", this ));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::~nsWidget this=(%p) mWidget=<%p>\n", this, mWidget));
 
   mIsDestroying = PR_TRUE;
-  if (nsnull != mWidget) {
+  if (nsnull != mWidget)
+  {
     Destroy();
   }
 }
@@ -120,7 +121,7 @@ NS_METHOD nsWidget::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
 
 NS_IMETHODIMP nsWidget::Destroy(void)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Destroy this=<%p> mRefCnt=<%d>\n",this,mRefCnt));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Destroy this=<%p> mRefCnt=<%d> mWidget=<%p>\n",this,mRefCnt, mWidget));
 
   if( !mIsDestroying )
   {
@@ -131,6 +132,7 @@ NS_IMETHODIMP nsWidget::Destroy(void)
   if( mWidget )
   {
     mEventCallback = nsnull;
+	RemoveDamagedWidget(mWidget);
     PtDestroyWidget( mWidget );
     mWidget = nsnull;
 
@@ -147,7 +149,7 @@ NS_IMETHODIMP nsWidget::Destroy(void)
 
 void nsWidget::OnDestroy()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::OnDestroy mRefCnt=<%d>\n", mRefCnt));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::OnDestroy this=<%p> mRefCnt=<%d>\n", mRefCnt, this));
 
   mOnDestroyCalled = PR_TRUE;
 
@@ -1033,6 +1035,7 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
 
   if( mWidget )
   {
+    SetInstance(mWidget, this);
     PtAddCallback( mWidget, Pt_CB_GOT_FOCUS, GotFocusCallback, this );
     PtAddCallback( mWidget, Pt_CB_LOST_FOCUS, LostFocusCallback, this );
   }
@@ -1665,6 +1668,11 @@ int nsWidget::WorkProc( void *data )
       extent.lr.y = extent.ul.y + dqe->inst->mUpdateArea.height - 1;
 
       dqe->inst->mCreateHold = PR_FALSE;
+
+PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::WorkProc Photon Widget=<%p>\n", dqe->widget));
+nsWidget *pWid = (nsWidget *) GetInstance( dqe->widget );
+PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::WorkProc Mozilla Widget=<%p>\n", pWid));
+
       PtDamageExtent( dqe->widget, &extent );
       dqe->inst->mUpdateArea.SetRect(0,0,0,0);
 
@@ -1719,6 +1727,37 @@ void nsWidget::QueueWidgetDamage()
     }
   }
 }
+
+void nsWidget::RemoveDamagedWidget(PtWidget_t *aWidget)
+{
+  PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::RemoveDamagedWidget Photon Widget=<%p>\n", aWidget));
+
+    if( mDmgQueueInited )
+    {
+      DamageQueueEntry *dqe;
+      DamageQueueEntry *last_dqe = nsnull;
+  
+      dqe = mDmgQueue;
+
+      // If this widget is in the queue, remove it
+      while( dqe )
+      {
+        if( dqe->widget == aWidget )
+        {
+          if( last_dqe )
+            last_dqe->next = dqe->next;
+          else
+            mDmgQueue = dqe->next;
+
+          delete dqe;
+          break;
+        }
+        last_dqe = dqe;
+        dqe = dqe->next;
+      }
+    }
+}
+
 
 
 void nsWidget::UpdateWidgetDamage()
