@@ -224,7 +224,9 @@ static PRBool GetFilenameAndExtensionFromChannel(nsIChannel* aChannel,
         // Broken sites just send
         // Content-Disposition: filename="file"
         // without a disposition token... screen those out.
-        !dispToken.EqualsIgnoreCase("filename", 8))) 
+        !dispToken.EqualsIgnoreCase("filename", 8)) &&
+        // Also in use is Content-Disposition: name="file"
+        !dispToken.EqualsIgnoreCase("name", 4)) 
     {
       // We have a content-disposition of "attachment" or unknown
       handleExternally = PR_TRUE;
