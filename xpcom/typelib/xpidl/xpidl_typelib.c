@@ -42,7 +42,7 @@ struct priv_data {
 #define NEXT_CONST(state) (((struct priv_data *)state->priv)->next_const)
 
 #ifdef DEBUG_shaver
-#define DEBUG_shaver_sort
+/* #define DEBUG_shaver_sort */
 #endif
     
 /*
@@ -707,7 +707,7 @@ typelib_op_dcl(TreeState *state)
         if (!fill_pd_as_nsresult(meth->result))
             return FALSE;
     } else {
-#ifdef DEBUG_shaver
+#ifdef DEBUG_shaver_notxpcom
         fprintf(stderr, "%s is notxpcom\n", IDL_IDENT(op->ident).str);
 #endif
         if (!fill_pd_from_type(state, meth->result, XPT_PD_RETVAL,
