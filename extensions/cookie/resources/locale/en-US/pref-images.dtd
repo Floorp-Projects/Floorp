@@ -1,6 +1,6 @@
 <!ENTITY lHeader                        "Images">
 
-<!ENTITY imageBlocking.label            "Image Blocking">
+<!ENTITY imageBlocking.label            "Image Acceptance Policy">
 
 <!--LOCALIZATION NOTE (onStartLegend.label): Don't translate "&brandShortName;".
     Place "&brandShortName;" in the phrase where the name of the application should
