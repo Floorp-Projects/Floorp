@@ -1827,8 +1827,6 @@ NS_IMETHODIMP nsMsgDatabase::CreateNewHdr(nsMsgKey key, nsIMessage **pnewHdr)
 	nsIMdbRow		*hdrRow;
 	struct mdbOid allMsgHdrsTableOID;
 
-    printf("nsMsgDatabase::CreateNewHdr()\n");
-
 	if (!pnewHdr || !m_mdbAllMsgHeadersTable)
 		return NS_ERROR_NULL_POINTER;
 
@@ -2612,6 +2610,7 @@ nsresult	nsMsgDatabase::DumpThread(nsMsgKey threadId)
 				if (NS_FAILED(ret)) 
 					break;
 
+#ifdef DEBUG_bienvenu                    
 				if (pMessage)
 				{
 					nsMsgKey key;
@@ -2619,9 +2618,9 @@ nsresult	nsMsgDatabase::DumpThread(nsMsgKey threadId)
 					(void)pMessage->GetMessageKey(&key);
 					pMessage->GetSubject(subject);
 
-                    
 					printf("message in thread %u %s\n", key, (const char *) &nsAutoString(subject));
 				}
+#endif
 		//		NS_RELEASE(pMessage);
 				pMessage = nsnull;
 			}
