@@ -55,6 +55,8 @@ public:
     NS_IMETHOD GetContentLength(PRInt32 *len);
     NS_IMETHOD GetServerStatus(PRInt32 *status);  // make obsolete
     NS_IMETHOD ToString(PRUnichar* *aString) const;
+
+	NS_IMPL_CLASS_GETSET(RunningUrlFlag, PRBool, m_runningUrl);
   
     // from nsINetlibURL:
 
@@ -151,6 +153,7 @@ protected:
 	char		*m_errorMessage;
 
 	PRBool	    m_forcePlainText;
+	PRBool		m_runningUrl;
     
 	PRInt32 m_port;
     nsISupports*    m_container;

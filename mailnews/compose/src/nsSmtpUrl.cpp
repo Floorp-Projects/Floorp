@@ -69,6 +69,7 @@ nsSmtpUrl::nsSmtpUrl(nsISupports* aContainer, nsIURLGroup* aGroup) : m_fileName(
     m_spec = nsnull;
     m_search = nsnull;
 	m_errorMessage = nsnull;
+	m_runningUrl = PR_FALSE;
  
     m_container = aContainer;
     NS_IF_ADDREF(m_container);
