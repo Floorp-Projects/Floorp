@@ -170,24 +170,31 @@ nsXBLContentSink::FlushText(PRBool aCreateTextNode,
     return NS_OK;
   }
 
-  PRBool isWS = PR_TRUE;
-  if (mTextLength > 0) {
-    const PRUnichar* cp = mText;
-    const PRUnichar* end = mText + mTextLength;
-    while (cp < end) {
-      PRUnichar ch = *cp++;
-      if (!XP_IS_SPACE(ch)) {
-        isWS = PR_FALSE;
-        break;
+  nsIContent* content = GetCurrentContent();
+  if (content && (content->GetNodeInfo()->NamespaceEquals(kNameSpaceID_XBL) || (
+      content->IsContentOfType(nsIContent::eXUL) &&
+      content->Tag() != nsXULAtoms::label &&
+      content->Tag() != nsXULAtoms::description))) {
+
+    PRBool isWS = PR_TRUE;
+    if (mTextLength > 0) {
+      const PRUnichar* cp = mText;
+      const PRUnichar* end = mText + mTextLength;
+      while (cp < end) {
+        PRUnichar ch = *cp++;
+        if (!XP_IS_SPACE(ch)) {
+          isWS = PR_FALSE;
+          break;
+        }
       }
     }
-  }
 
-  if (isWS && mTextLength > 0) {
-    mTextLength = 0;
-    if (aDidFlush)
-      *aDidFlush = PR_TRUE;
-    return NS_OK;
+    if (isWS && mTextLength > 0) {
+      mTextLength = 0;
+      if (aDidFlush)
+        *aDidFlush = PR_TRUE;
+      return NS_OK;
+    }
   }
 
   return nsXMLContentSink::FlushText(aCreateTextNode, aDidFlush);
