@@ -33,7 +33,6 @@ Rights Reserved.
 
   <script src="aw-accounttype.js"/>
   <script src="aw-wizardAdapter.js"/>
-  <script src="resource:/res/samples/DumpDOM.js"/>
   <box class="box-header" value="&accountTypeTitle.label;"/>
 
   <html class="desc">&accountTypeDesc.label;</html>
