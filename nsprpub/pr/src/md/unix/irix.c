@@ -105,6 +105,7 @@ PRInt32 _pr_irix_process_exit = 0; /* process exiting due to call to
 
 int _pr_irix_primoridal_cpu_fd[2] = { -1, -1 };
 static void (*libc_exit)(int) = NULL;
+static void *libc_handle = NULL;
 
 #define _NSPR_DEF_INITUSERS		100	/* default value of CONF_INITUSERS */
 #define _NSPR_DEF_INITSIZE		(4 * 1024 * 1024)	/* 4 MB */
@@ -990,7 +991,6 @@ PRThread *me = _PR_MD_CURRENT_THREAD();
 	}
 }
 
-#if 0  /* wtc: comment out */
 /*
  * Override the exit() function in libc to cause the process to exit
  * when the primodial/main nspr thread calls exit. Calls to exit by any
@@ -1003,10 +1003,20 @@ void exit(int status)
 {
 PRThread *me, *thr;
 PRCList *qp;
-void __exit(int status);  /* XXX some IRIX machines don't have this symbol */
 
-	if (!_pr_initialized) 
-		__exit(status);
+	if (!_pr_initialized)  {
+		if (!libc_exit) {
+
+			if (!libc_handle)
+				libc_handle = dlopen("libc.so",RTLD_NOW);
+			if (libc_handle)
+				libc_exit = (void (*)(int)) dlsym(libc_handle, "exit");
+		}
+		if (libc_exit)
+			(*libc_exit)(status);
+		else
+			_exit(status);
+	}
 
 	me = _PR_MD_CURRENT_THREAD();
 
@@ -1081,7 +1091,6 @@ void __exit(int status);  /* XXX some IRIX machines don't have this symbol */
 		(*libc_exit)(status);
 	}
 }
-#endif /* 0 */
 
 
 void
@@ -1431,7 +1440,6 @@ void _MD_IrixInit()
 #if !defined(_PR_PTHREADS)
     struct sigaction sigact;
     PRThread *me = _PR_MD_CURRENT_THREAD();
-	void *libc_handle;
 	int rv;
 
 #ifndef IRIX5_3

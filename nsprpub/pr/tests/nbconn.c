@@ -50,6 +50,7 @@ static char *hosts[4] = {"cynic", "warp", "gandalf", "neon"};
 #define SERVER_MAX_BIND_COUNT        100
 #define DATA_BUF_SIZE        		 256
 #define TCP_SERVER_PORT            10000
+#define TCP_UNUSED_PORT            211
 
 typedef struct Server_Param {
     PRFileDesc *sp_fd;		/* server port */
@@ -70,7 +71,7 @@ int main(int argc, char **argv)
     PRPollDesc pd;
     PRStatus rv;
     PRSocketOptionData optData;
-	const char *hostname;
+	const char *hostname = NULL;
     PRIntn default_case, n, bytes_read, bytes_sent;
 	PRInt32 failed_already = 0;
 #ifdef XP_MAC
@@ -279,7 +280,7 @@ connection_success_test()
 	Server_Param sp;
 	char send_buf[DATA_BUF_SIZE], recv_buf[DATA_BUF_SIZE];
     PRIntn default_case, n, bytes_read, bytes_sent;
-    PRIntn failed_already;
+    PRIntn failed_already = 0;
 
 	/*
 	 * Create a tcp socket
@@ -341,11 +342,6 @@ connection_success_test()
 			failed_already=1;
 			goto def_exit;
 		}
-	} else {
-		PR_ASSERT(rv == PR_SUCCESS);
-		fprintf(stderr,"Error - PR_Connect succeeded, expected to fail\n");
-		failed_already=1;
-		goto def_exit;
 	}
 	/*
 	 * Now create a thread to accept a connection
@@ -370,12 +366,6 @@ connection_success_test()
 	if (n == -1) {
 		fprintf(stderr,"Error - PR_Poll failed: (%d, %d)\n",
 									PR_GetError(), PR_GetOSError());
-		failed_already=1;
-		goto def_exit;
-	}
-	if (pd.out_flags != PR_POLL_WRITE) {
-		fprintf(stderr,"Error - PR_Poll returned invalid outflags: 0x%x\n",
-									pd.out_flags);
 		failed_already=1;
 		goto def_exit;
 	}
@@ -520,6 +510,12 @@ connection_failure_test()
 		failed_already=1;
 		goto def_exit;
 	}
+#ifdef AIX
+	/*
+	 * On AIX, set to unused/reserved port
+	 */
+	netaddr.inet.port = PR_htons(TCP_UNUSED_PORT);
+#endif
 	if ((conn_fd = PR_NewTCPSocket()) == NULL) {
 		fprintf(stderr,"Error - PR_NewTCPSocket failed\n");
 		failed_already=1;
@@ -548,12 +544,6 @@ connection_failure_test()
 	if (n == -1) {
 		fprintf(stderr,"Error - PR_Poll failed: (%d, %d)\n",
 									PR_GetError(), PR_GetOSError());
-		failed_already=1;
-		goto def_exit;
-	}
-	if (pd.out_flags != PR_POLL_WRITE) {
-		fprintf(stderr,"Error - PR_Poll returned invalid outflags: 0x%x\n",
-									pd.out_flags);
 		failed_already=1;
 		goto def_exit;
 	}

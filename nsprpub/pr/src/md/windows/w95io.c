@@ -282,8 +282,7 @@ _PR_MD_FSYNC(PRFileDesc *fd)
      * to this bogosity, and if it was, I ignore the error.
      */
 
-    long handle = _get_osfhandle(fd->secret->md.osfd);
-    BOOL ok = FlushFileBuffers((HANDLE)handle);
+    BOOL ok = FlushFileBuffers((HANDLE)fd->secret->md.osfd);
 
     if (!ok) {
 	DWORD err = GetLastError();

@@ -35,11 +35,11 @@
 ** Note: on some platforms va_list is defined as an array,
 ** and requires array notation.
 */
-#if defined(MKLINUX) || defined(WIN16)
+#if (defined(LINUX) && defined(__powerpc__)) || defined(WIN16)
 #define VARARGS_ASSIGN(foo, bar) foo[0] = bar[0]
 #else
 #define VARARGS_ASSIGN(foo, bar) (foo) = (bar)
-#endif /*MKLINUX*/
+#endif
 
 /*
 ** WARNING: This code may *NOT* call PR_LOG (because PR_LOG calls it)

@@ -27,6 +27,8 @@
 #include "prmem.h"
 #include "prbit.h"
 #include "prlog.h"
+#include "prmon.h"
+#include "prinit.h"
 
 static PLArena *arena_freelist;
 
@@ -39,6 +41,48 @@ static PLArenaStats *arena_stats_list;
 #endif
 
 #define PL_ARENA_DEFAULT_ALIGN  sizeof(double)
+
+static PRMonitor    *arenaLock;
+static PRCallOnceType once;
+
+/*
+** InitializeArenas() -- Initialize arena operations.
+**
+** InitializeArenas() is called exactly once and only once from 
+** LockArena(). This function creates the arena protection 
+** monitor: arenaLock.
+**
+** Note: If the arenaLock cannot be created, InitializeArenas()
+** fails quietly, returning only PR_FAILURE. This percolates up
+** to the application using the Arena API. He gets no arena
+** from PL_ArenaAllocate(). It's up to him to fail gracefully
+** or recover.
+**
+*/
+static PRStatus InitializeArenas( void )
+{
+    PR_ASSERT( arenaLock == NULL );
+    arenaLock = PR_NewMonitor();
+    if ( arenaLock == NULL )
+        return PR_FAILURE;
+    else
+        return PR_SUCCESS;
+} /* end ArenaInitialize() */
+
+static PRStatus LockArena( void )
+{
+    PRStatus rc = PR_CallOnce( &once, InitializeArenas );
+
+    if ( PR_FAILURE != rc )
+        PR_EnterMonitor( arenaLock );
+    return(rc);
+} /* end LockArena() */
+
+static void UnlockArena( void )
+{
+    PR_ExitMonitor( arenaLock );
+    return;
+} /* end UnlockArena() */
 
 PR_IMPLEMENT(void) PL_InitArenaPool(
     PLArenaPool *pool, const char *name, PRUint32 size, PRUint32 align)
@@ -74,6 +118,8 @@ PR_IMPLEMENT(void *) PL_ArenaAllocate(PLArenaPool *pool, PRUint32 nb)
     if (nb >= 60000U)
         return 0;
 #endif  /* WIN16 */
+    if ( PR_FAILURE == LockArena())
+        return(0);
     ap = &arena_freelist;
     for (a = pool->current; a->avail + nb > a->limit; pool->current = a) {
         if (a->next) {                          /* move to next arena */
@@ -94,7 +140,10 @@ PR_IMPLEMENT(void *) PL_ArenaAllocate(PLArenaPool *pool, PRUint32 nb)
         sz += sizeof *a + pool->mask;           /* header and alignment slop */
         b = (PLArena*)PR_MALLOC(sz);
         if (!b)
+        {
+            UnlockArena();
             return 0;
+        }
         a = a->next = b;
         a->next = 0;
         a->limit = (PRUword)a + sz;
@@ -103,6 +152,7 @@ PR_IMPLEMENT(void *) PL_ArenaAllocate(PLArenaPool *pool, PRUint32 nb)
     claim:
         a->base = a->avail = (PRUword)PL_ARENA_ALIGN(pool, a + 1);
     }
+    UnlockArena();
     p = (void *)a->avail;
     a->avail += nb;
     return p;
@@ -153,9 +203,11 @@ static void FreeArenaList(PLArenaPool *pool, PLArena *head, PRBool reallyFree)
         do {
             ap = &(*ap)->next;
         } while (*ap);
+        LockArena();
         *ap = arena_freelist;
         arena_freelist = a;
         head->next = 0;
+        UnlockArena();
     }
 
     pool->current = head;
@@ -219,11 +271,13 @@ PR_IMPLEMENT(void) PL_ArenaFinish()
 {
     PLArena *a, *next;
 
+    LockArena();
     for (a = arena_freelist; a; a = next) {
         next = a->next;
         PR_DELETE(a);
     }
     arena_freelist = NULL;
+    UnlockArena();
 }
 
 #ifdef PL_ARENAMETER

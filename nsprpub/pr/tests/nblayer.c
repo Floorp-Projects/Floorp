@@ -100,6 +100,9 @@ static void PR_CALLBACK Client(void *arg)
     PRIntn bytes_read, bytes_sent;
     PRFileDesc *stack = (PRFileDesc*)arg;
 
+    /* Initialize the buffer so that Purify won't complain */
+    memset(buffer, 0, sizeof(buffer));
+
     rv = PR_Connect(stack, &server_address, PR_INTERVAL_NO_TIMEOUT);
     if ((PR_FAILURE == rv) && (PR_IN_PROGRESS_ERROR == PR_GetError()))
     {
@@ -299,9 +302,8 @@ static void PR_CALLBACK Server(void *arg)
     } while (0 != bytes_read);
 
     if (verbosity > quiet)
-        PR_fprintf(logFile, "Server shutting down and closing stack\n");
+        PR_fprintf(logFile, "Server shutting down stack\n");
     rv = PR_Shutdown(service, PR_SHUTDOWN_BOTH); PR_ASSERT(PR_SUCCESS == rv);
-    rv = PR_Close(service); PR_ASSERT(PR_SUCCESS == rv);
 
 }  /* Server */
 
@@ -630,4 +632,4 @@ PRIntn main(PRIntn argc, char **argv)
     return 0;
 }  /* main */
 
-/* layer.c */
+/* nblayer.c */

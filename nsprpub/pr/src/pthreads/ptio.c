@@ -749,7 +749,10 @@ recycle:
     
     if (NULL != pt_tq.tail)
     {
-        pt_tq.tail->status = pt_continuation_recycle;
+        if (pt_tq.tail->status != pt_continuation_abort)
+        {
+            pt_tq.tail->status = pt_continuation_recycle;
+        }
         PR_NotifyCondVar(pt_tq.tail->complete);
 #if defined(DEBUG)
         pt_debug.recyclesNeeded += 1;
@@ -789,7 +792,7 @@ static PRIntn pt_Continue(pt_Continuation *op)
             ** will certainly be times within the function when it gets
             ** released.
             */
-            pt_tq.thread = PR_GetCurrentThread();  /* I'm taking control */
+            pt_tq.thread = self;  /* I'm taking control */
             pt_ContinuationThreadInternal(op); /* go slash and burn */
             PR_ASSERT(pt_continuation_done == op->status);
             pt_tq.thread = NULL;  /* I'm abdicating my rule */
@@ -809,15 +812,36 @@ static PRIntn pt_Continue(pt_Continuation *op)
              * notice, this operation will be finished and the op's status
              * marked as pt_continuation_done.
              */
-            if ((PR_FAILURE == rv)  /* the wait failed */
-            && (pt_continuation_pending == op->status)  /* but the op hasn't */
-            && (PR_PENDING_INTERRUPT_ERROR == PR_GetError()))  /* was interrupted */
+            if ((PR_FAILURE == rv)  /* the wait was interrupted */
+            && (PR_PENDING_INTERRUPT_ERROR == PR_GetError()))
             {
-                op->status = pt_continuation_abort;  /* go around the loop again */
+                if (pt_continuation_done == op->status)
+                {
+                    /*
+                     * The op is done and has been removed
+                     * from the timed queue.  We must not
+                     * change op->status, otherwise this
+                     * thread will go around the loop again.
+                     *
+                     * It's harsh to mark the op failed with
+                     * interrupt error when the io is already
+                     * done, but we should indicate the fact
+                     * that the thread was interrupted.  So
+                     * we set the aborted flag to abort the
+                     * thread's next blocking call.  Is this
+                     * the right thing to do?
+                     */
+                    self->state |= PT_THREAD_ABORTED;
+                }
+                else
+                {
+                    /* go around the loop again */
+                    op->status = pt_continuation_abort;
+                }
             }
             /*
              * If we're to recycle, continue within this loop. This will
-             * cause this thread to be come the continuation thread.
+             * cause this thread to become the continuation thread.
              */
 
         }

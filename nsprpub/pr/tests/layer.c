@@ -84,6 +84,9 @@ static void PR_CALLBACK Client(void *arg)
     PRIntn bytes_read, bytes_sent;
     PRFileDesc *stack = (PRFileDesc*)arg;
 
+    /* Initialize the buffer so that Purify won't complain */
+    memset(buffer, 0, sizeof(buffer));
+
     rv = PR_Connect(stack, &server_address, PR_INTERVAL_NO_TIMEOUT);
     PR_ASSERT(PR_SUCCESS == rv);
     while (minor_iterations-- > 0)
@@ -157,7 +160,7 @@ static PRInt32 PR_CALLBACK MyRecv(
 {
     char *b = (char*)buf;
     PRFileDesc *lo = fd->lower;
-    PRInt32 rv, readin = 0, request;
+    PRInt32 rv, readin = 0, request = 0;
     rv = lo->methods->recv(lo, &request, sizeof(request), flags, timeout);
     if (verbosity > chatty) PR_fprintf(
         logFile, "MyRecv sending permission for %d bytes\n", request);

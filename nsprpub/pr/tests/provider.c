@@ -81,7 +81,7 @@
 #define SEND_FLAGS 0
 #define BUFFER_SIZE 1024
 #define DEFAULT_BACKLOG 5
-#define DEFAULT_PORT 12848
+#define DEFAULT_PORT 13000
 #define DEFAULT_CLIENTS 1
 #define ALLOWED_IN_ACCEPT 1
 #define DEFAULT_CLIPPING 1000
@@ -706,7 +706,7 @@ static PRStatus NewThread(
             PRThread *thread = PR_CreateThread(
                 PR_USER_THREAD, start, arg,
                 PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD,
-                PR_UNJOINABLE_THREAD, 0);
+                PR_JOINABLE_THREAD, 0);
             rv = (NULL == thread) ? PR_FAILURE : PR_SUCCESS;
         }
         break;
@@ -1070,6 +1070,7 @@ PRIntn main(PRIntn argc, char** argv)
     CSClient_t *client;
     PRStatus rv, joinStatus;
     CSServer_t *server = NULL;
+	char *thread_type;
 
     PRUintn backlog = DEFAULT_BACKLOG;
     PRUintn clients = DEFAULT_CLIENTS;
@@ -1094,6 +1095,16 @@ PRIntn main(PRIntn argc, char** argv)
 
     PLOptStatus os;
     PLOptState *opt = PL_CreateOptState(argc, argv, "GX6b:a:c:w:W:e:s:T:vdhp");
+
+#if defined(WIN32)
+	thread_provider = thread_win32;
+#elif defined(_PR_PTHREADS)
+	thread_provider = thread_pthread;
+#elif defined(IRIX)
+	thread_provider = thread_sproc;
+#else
+    thread_provider = thread_nspr;
+#endif
 
     debug_out = PR_GetSpecialFD(PR_StandardError);
 
@@ -1347,7 +1358,18 @@ PRIntn main(PRIntn argc, char** argv)
         cltsrv_log_file, TEST_LOG_ALWAYS, 
         ("main(0x%p): test complete\n", PR_CurrentThread()));
 
-    PT_FPrintStats(debug_out, "\nPThread Statistics\n");
+	if (thread_provider == thread_win32)
+		thread_type = "\nWin32 Thread Statistics\n";
+	else if (thread_provider == thread_pthread)
+		thread_type = "\npthread Statistics\n";
+	else if (thread_provider == thread_sproc)
+		thread_type = "\nsproc Statistics\n";
+    else {
+		PR_ASSERT(thread_provider == thread_nspr);
+		thread_type = "\nPRThread Statistics\nn";
+	}
+
+    PT_FPrintStats(debug_out, thread_type);
 
     TimeOfDayMessage("Test exiting at", PR_CurrentThread());
     return 0;

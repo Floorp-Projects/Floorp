@@ -425,7 +425,7 @@ int Tmocon(int argc, char **argv)
     PR_fprintf(
         PR_GetSpecialFD(PR_StandardError), "%s\n",
         ((shared->failed) ? "FAILED" : "PASSED"));
-    return (shared->failed) ? 0 : 1;
+    return (shared->failed) ? 1 : 0;
 }
 
 int main(int argc, char **argv)

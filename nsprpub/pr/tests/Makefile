@@ -62,6 +62,7 @@ CSRCS =             \
 	instrumt.c      \
 	intrupt.c       \
 	io_timeout.c    \
+	ioconthr.c      \
 	ipv6.c          \
 	join.c    		\
 	joinkk.c        \

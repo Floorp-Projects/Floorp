@@ -268,6 +268,8 @@ static _PR_HashStory MW_AddHashInternal(PRRecvWait *desc, _PRWaiterHash *hash)
     PRIntn rehash = _MW_REHASH_MAX;
     PRRecvWait **waiter;
     PRUintn hidx = _MW_HASH(desc->fd, hash->length);
+    PRUintn hoffset = 0;
+
     while (rehash-- > 0)
     {
         waiter = &hash->recv_wait;
@@ -294,7 +296,12 @@ static _PR_HashStory MW_AddHashInternal(PRRecvWait *desc, _PRWaiterHash *hash)
             "table[*%u:%u:%u]: 0x%x->0x%x\n",
             hidx, hash->count, hash->length, waiter[hidx], waiter[hidx]->fd);
 #endif
-        hidx = _MW_REHASH(desc->fd, hidx, hash->length);
+        if (0 == hoffset)
+        {
+            hoffset = _MW_HASH2(desc->fd, hash->length);
+            PR_ASSERT(0 != hoffset);
+        }
+        hidx = (hidx + hoffset) % (hash->length);
     }
     return _prmw_rehash;    
 }  /* MW_AddHashInternal */
@@ -302,56 +309,71 @@ static _PR_HashStory MW_AddHashInternal(PRRecvWait *desc, _PRWaiterHash *hash)
 static _PR_HashStory MW_ExpandHashInternal(PRWaitGroup *group)
 {
     PRRecvWait **desc;
-    PRUint32 pidx, length = 0;
+    PRUint32 pidx, length;
     _PRWaiterHash *newHash, *oldHash = group->waiter;
-    
+    PRBool retry;
+    _PR_HashStory hrv;
 
     static const PRInt32 prime_number[] = {
         _PR_DEFAULT_HASH_LENGTH, 179, 521, 907, 1427,
         2711, 3917, 5021, 8219, 11549, 18911, 26711, 33749, 44771};
-    PRUintn primes = (sizeof(prime_number) / sizeof(PRIntn));
+    PRUintn primes = (sizeof(prime_number) / sizeof(PRInt32));
 
     /* look up the next size we'd like to use for the hash table */
     for (pidx = 0; pidx < primes; ++pidx)
     {
         if (prime_number[pidx] == oldHash->length)
         {
-            length = prime_number[pidx + 1];
             break;
         }
     }
-    if (0 == length)
-    {
-        PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
-        return _prmw_error;  /* we're hosed */
-    }
+    /* table size must be one of the prime numbers */
+    PR_ASSERT(pidx < primes);
 
-    /* allocate the new hash table and fill it in with the old */
-    newHash = (_PRWaiterHash*)PR_CALLOC(
-        sizeof(_PRWaiterHash) + (length * sizeof(PRRecvWait*)));
-    if (NULL == newHash)
+    /* if pidx == primes - 1, we can't expand the table any more */
+    while (pidx < primes - 1)
     {
-        PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
-        return _prmw_error;
-    }
+        /* next size */
+        ++pidx;
+        length = prime_number[pidx];
 
-    newHash->length = length;
-    for (desc = &oldHash->recv_wait; newHash->count < oldHash->count; ++desc)
-    {
-        if (NULL != *desc)
+        /* allocate the new hash table and fill it in with the old */
+        newHash = (_PRWaiterHash*)PR_CALLOC(
+            sizeof(_PRWaiterHash) + (length * sizeof(PRRecvWait*)));
+        if (NULL == newHash)
         {
-            if (_prmw_success != MW_AddHashInternal(*desc, newHash))
+            PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
+            return _prmw_error;
+        }
+
+        newHash->length = length;
+        retry = PR_FALSE;
+        for (desc = &oldHash->recv_wait;
+            newHash->count < oldHash->count; ++desc)
+        {
+            PR_ASSERT(desc < &oldHash->recv_wait + oldHash->length);
+            if (NULL != *desc)
             {
-                PR_ASSERT(!"But, but, but ...");
-                PR_DELETE(newHash);
-                return _prmw_error;
+                hrv = MW_AddHashInternal(*desc, newHash);
+                PR_ASSERT(_prmw_error != hrv);
+                if (_prmw_success != hrv)
+                {
+                    PR_DELETE(newHash);
+                    retry = PR_TRUE;
+                    break;
+                }
             }
         }
+        if (retry) continue;
+
+        PR_DELETE(group->waiter);
+        group->waiter = newHash;
+        group->p_timestamp += 1;
+        return _prmw_success;
     }
-    PR_DELETE(group->waiter);
-    group->waiter = newHash;
-    group->p_timestamp += 1;
-    return _prmw_success;
+
+    PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
+    return _prmw_error;  /* we're hosed */
 }  /* MW_ExpandHashInternal */
 
 #ifndef WINNT
@@ -387,12 +409,18 @@ static PRRecvWait **_MW_LookupInternal(PRWaitGroup *group, PRFileDesc *fd)
     PRIntn rehash = _MW_REHASH_MAX;
     _PRWaiterHash *hash = group->waiter;
     PRUintn hidx = _MW_HASH(fd, hash->length);
+    PRUintn hoffset = 0;
     
     while (rehash-- > 0)
     {
         desc = (&hash->recv_wait) + hidx;
         if ((*desc != NULL) && ((*desc)->fd == fd)) return desc;
-        hidx = _MW_REHASH(fd, hidx, hash->length);
+        if (0 == hoffset)
+        {
+            hoffset = _MW_HASH2(fd, hash->length);
+            PR_ASSERT(0 != hoffset);
+        }
+        hidx = (hidx + hoffset) % (hash->length);
     }
     return NULL;
 }  /* _MW_LookupInternal */
@@ -849,6 +877,14 @@ PR_IMPLEMENT(PRRecvWait*) PR_WaitRecvReady(PRWaitGroup *group)
         me->state = _PR_RUNNING;
         PR_Lock(group->ml);
         _PR_MD_LOCK(&group->mdlock);
+        if (_PR_PENDING_INTERRUPT(me)) {
+            PR_REMOVE_LINK(&me->waitQLinks);
+            _PR_MD_UNLOCK(&group->mdlock);
+            me->flags &= ~_PR_INTERRUPT;
+            me->io_suspended = PR_FALSE;
+            PR_SetError(PR_PENDING_INTERRUPT_ERROR, 0);
+            goto aborted;
+        }
     }
     io_ready = PR_LIST_HEAD(&group->io_ready);
     PR_ASSERT(io_ready != NULL);
@@ -948,10 +984,11 @@ PR_IMPLEMENT(PRRecvWait*) PR_WaitRecvReady(PRWaitGroup *group)
         PR_REMOVE_LINK(io_ready);
     } while (NULL == io_ready);
 
-aborted:
 failed_poll:
 
 #endif
+
+aborted:
 
     group->waiting_threads -= 1;
 invalid_state:
@@ -1184,6 +1221,18 @@ PR_IMPLEMENT(PRRecvWait*) PR_CancelWaitGroup(PRWaitGroup *group)
         overlapped = (_MDOverlapped *)
             ((char *)head - offsetof(_MDOverlapped, data));
         head = &overlapped->data.mw.desc->internal;
+        if (NULL != overlapped->data.mw.timer)
+        {
+            PR_ASSERT(PR_INTERVAL_NO_TIMEOUT
+                != overlapped->data.mw.desc->timeout);
+            CancelTimer(overlapped->data.mw.timer);
+        }
+        else
+        {
+            PR_ASSERT(PR_INTERVAL_NO_TIMEOUT
+                == overlapped->data.mw.desc->timeout);
+        }
+        PR_DELETE(overlapped);
 #endif
         recv_wait = (PRRecvWait*)head;
     }

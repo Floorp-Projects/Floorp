@@ -32,6 +32,13 @@ PR_BEGIN_EXTERN_C
 **      [<sep><root_component><sep>]*(<component><sep>)<leaf_name>
 */
 
+PR_EXTERN(char) PR_GetDirectorySeparator(void);
+
+/*
+** OBSOLETE -- the function name is misspelled.
+** Use PR_GetDirectorySeparator instead.
+*/
+
 PR_EXTERN(char) PR_GetDirectorySepartor(void);
 
 

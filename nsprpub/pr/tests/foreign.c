@@ -212,6 +212,9 @@ static void PR_CALLBACK lazyEntry(void *arg)
 static void OneShot(void *arg)
 {
     PRUintn pdkey;
+    PRLock *lock;
+    PRFileDesc *fd;
+    PRDir *dir;
     PRFileDesc *pair[2];
     PRIntn test = (PRIntn)arg;
 
@@ -220,9 +223,10 @@ static void OneShot(void *arg)
     switch (test)
     {
         case 0:
-            (void)PR_NewLock(); 
+            lock = PR_NewLock(); 
 			DPRINTF((output,"Thread[0x%x] called PR_NewLock\n",
 			PR_GetCurrentThread()));
+            PR_DestroyLock(lock);
             break;
             
         case 1:
@@ -239,27 +243,31 @@ static void OneShot(void *arg)
             break;
             
         case 3:
-            (void)PR_Open("/usr/tmp/", PR_RDONLY, 0); 
+            fd = PR_Open("foreign.tmp", PR_CREATE_FILE | PR_RDWR, 0666); 
 			DPRINTF((output,"Thread[0x%x] called PR_Open\n",
 			PR_GetCurrentThread()));
+            PR_Close(fd);
             break;
             
         case 4:
-            (void)PR_NewUDPSocket(); 
+            fd = PR_NewUDPSocket(); 
 			DPRINTF((output,"Thread[0x%x] called PR_NewUDPSocket\n",
 			PR_GetCurrentThread()));
+            PR_Close(fd);
             break;
             
         case 5:
-            (void)PR_NewTCPSocket(); 
+            fd = PR_NewTCPSocket(); 
 			DPRINTF((output,"Thread[0x%x] called PR_NewTCPSocket\n",
 			PR_GetCurrentThread()));
+            PR_Close(fd);
             break;
             
         case 6:
-            (void)PR_OpenDir("/usr/tmp/"); 
+            dir = PR_OpenDir("/usr/tmp/"); 
 			DPRINTF((output,"Thread[0x%x] called PR_OpenDir\n",
 			PR_GetCurrentThread()));
+            PR_CloseDir(dir);
             break;
             
         case 7:
@@ -278,6 +286,8 @@ static void OneShot(void *arg)
             (void)PR_NewTCPSocketPair(pair);
 			DPRINTF((output,"Thread[0x%x] called PR_NewTCPSocketPair\n",
 			PR_GetCurrentThread()));
+            PR_Close(pair[0]);
+            PR_Close(pair[1]);
             break;
             
         case 10:

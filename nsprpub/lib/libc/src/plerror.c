@@ -96,6 +96,7 @@ static const char *tags[] =
     "PR_END_OF_FILE_ERROR",
     "PR_FILE_SEEK_ERROR",
     "PR_FILE_IS_BUSY_ERROR", 
+    "<unused error code>",
     "PR_IN_PROGRESS_ERROR",
     "PR_ALREADY_INITIATED_ERROR",
     "PR_GROUP_EMPTY_ERROR",

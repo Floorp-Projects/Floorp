@@ -19,6 +19,7 @@
 #undef _FILE_OFFSET_BITS
 
 #include "primpl.h"
+#include <sys/systeminfo.h>
 
 
 extern PRBool suspendAllOn;
@@ -58,8 +59,24 @@ PRIntervalTime _MD_Solaris_GetInterval(void)
 }
 
 #ifdef _PR_PTHREADS
+
+static PRInt32 _md_ultrasparc = 0;
+
 void _MD_EarlyInit(void)
 {
+#define MACHINE_NAME_LEN	32
+#define ULTRASPARC			"sun4u"
+char machine[MACHINE_NAME_LEN];
+int rv;
+
+	rv = sysinfo(SI_MACHINE, machine, MACHINE_NAME_LEN);
+	/*
+	 * detect an ultrasparc (Sparc V9) system
+	 */
+	if ((rv > 0) && (rv <= MACHINE_NAME_LEN)) {
+		if (!strncmp(machine,ULTRASPARC, strlen(ULTRASPARC)))
+			_md_ultrasparc = 1;
+	}
 }
 
 PRWord *_MD_HomeGCRegisters(PRThread *t, PRIntn isCurrent, PRIntn *np)
@@ -90,13 +107,22 @@ PRInt32
 _MD_AtomicIncrement(PRInt32 *val)
 {
     PRInt32 rv;
-    if (mutex_lock(&_solaris_atomic) != 0)
-        PR_ASSERT(0);
 
-    rv = ++(*val);
+#ifdef _PR_ULTRASPARC
+	if (_md_ultrasparc) {
+		rv = _pr_md_ultrasparc_inc(val);
+	} else {
+#endif
+		if (mutex_lock(&_solaris_atomic) != 0)
+			PR_ASSERT(0);
 
-    if (mutex_unlock(&_solaris_atomic) != 0)\
-        PR_ASSERT(0);
+		rv = ++(*val);
+
+		if (mutex_unlock(&_solaris_atomic) != 0)\
+			PR_ASSERT(0);
+#ifdef _PR_ULTRASPARC
+	}
+#endif
 
 	return rv;
 }
@@ -105,13 +131,22 @@ PRInt32
 _MD_AtomicAdd(PRInt32 *ptr, PRInt32 val)
 {
     PRInt32 rv;
-    if (mutex_lock(&_solaris_atomic) != 0)
-        PR_ASSERT(0);
 
-    rv = ((*ptr) += val);
+#ifdef _PR_ULTRASPARC
+	if (_md_ultrasparc) {
+		rv = _pr_md_ultrasparc_add(ptr, val);
+	} else {
+#endif
+		if (mutex_lock(&_solaris_atomic) != 0)
+			PR_ASSERT(0);
 
-    if (mutex_unlock(&_solaris_atomic) != 0)\
-        PR_ASSERT(0);
+		rv = ((*ptr) += val);
+
+		if (mutex_unlock(&_solaris_atomic) != 0)\
+			PR_ASSERT(0);
+#ifdef _PR_ULTRASPARC
+	}
+#endif
 
 	return rv;
 }
@@ -120,14 +155,22 @@ PRInt32
 _MD_AtomicDecrement(PRInt32 *val)
 {
     PRInt32 rv;
-    if (mutex_lock(&_solaris_atomic) != 0)
-        PR_ASSERT(0);
 
-    rv = --(*val);
+#ifdef _PR_ULTRASPARC
+	if (_md_ultrasparc) {
+		rv = _pr_md_ultrasparc_dec(val);
+	} else {
+#endif
+		if (mutex_lock(&_solaris_atomic) != 0)
+			PR_ASSERT(0);
 
-    if (mutex_unlock(&_solaris_atomic) != 0)\
-        PR_ASSERT(0);
+		rv = --(*val);
 
+		if (mutex_unlock(&_solaris_atomic) != 0)\
+			PR_ASSERT(0);
+#ifdef _PR_ULTRASPARC
+	}
+#endif
 	return rv;
 }
 
@@ -135,15 +178,23 @@ PRInt32
 _MD_AtomicSet(PRInt32 *val, PRInt32 newval)
 {
     PRInt32 rv;
-    if (mutex_lock(&_solaris_atomic) != 0)
-        PR_ASSERT(0);
 
-    rv = *val;
-    *val = newval;
+#ifdef _PR_ULTRASPARC
+	if (_md_ultrasparc) {
+		rv = _pr_md_ultrasparc_set(val, newval);
+	} else {
+#endif
+		if (mutex_lock(&_solaris_atomic) != 0)
+			PR_ASSERT(0);
 
-    if (mutex_unlock(&_solaris_atomic) != 0)\
-        PR_ASSERT(0);
+		rv = *val;
+		*val = newval;
 
+		if (mutex_unlock(&_solaris_atomic) != 0)\
+			PR_ASSERT(0);
+#ifdef _PR_ULTRASPARC
+	}
+#endif
 	return rv;
 }
 #endif  /* _PR_HAVE_ATOMIC_OPS */

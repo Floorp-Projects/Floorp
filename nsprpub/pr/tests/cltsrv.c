@@ -513,9 +513,10 @@ static PRStatus ProcessRequest(PRFileDesc *fd, CSServer_t *server)
     server->bytesTransferred += filebytes;
     PR_Unlock(server->ml);
 
-    rv = PR_Close(file); file = NULL;
+    rv = PR_Close(file);
     if (Aborted(rv)) goto aborted;
     TEST_ASSERT(PR_SUCCESS == rv);
+    file = NULL;
 
     TEST_LOG(
         cltsrv_log_file, TEST_LOG_VERBOSE,
@@ -596,9 +597,10 @@ static PRStatus ProcessRequest(PRFileDesc *fd, CSServer_t *server)
     rv = PR_Shutdown(fd, PR_SHUTDOWN_BOTH);
     if (Aborted(rv)) goto aborted;
 
-    rv = PR_Close(file); file = NULL;
+    rv = PR_Close(file);
     if (Aborted(rv)) goto aborted;
     TEST_ASSERT(PR_SUCCESS == rv);
+    file = NULL;
 
 aborted:
     PR_ClearInterrupt();

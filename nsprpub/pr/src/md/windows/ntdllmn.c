@@ -56,9 +56,11 @@ PRThread *me;
         case DLL_THREAD_ATTACH:
             break;
         case DLL_THREAD_DETACH:
-		me = _MD_GET_ATTACHED_THREAD();
-		if ((me != NULL) && (me->flags & _PR_ATTACHED))
-			_PRI_DetachThread();
+            if (_pr_initialized) {
+                me = _MD_GET_ATTACHED_THREAD();
+                if ((me != NULL) && (me->flags & _PR_ATTACHED))
+                    _PRI_DetachThread();
+            }
             break;
         case DLL_PROCESS_DETACH:
             break;

@@ -194,6 +194,14 @@ ifeq ($(OS_ARCH),SunOS)
     endif
 endif
 
+ifeq ($(OS_ARCH),SunOS)
+	ifneq ($(OS_RELEASE),4.1.3_U1)
+		ifeq ($(OS_TEST),sun4u)
+			ASFILES += os_$(OS_ARCH)_ultrasparc.s
+		endif
+	endif
+endif
+
 ifeq ($(OS_ARCH), SINIX)
     ASFILES   = os_ReliantUNIX.s
 endif

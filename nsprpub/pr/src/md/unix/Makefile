@@ -195,7 +195,7 @@ ifeq ($(OS_ARCH),SunOS)
     else
 	ifneq ($(OS_RELEASE),4.1.3_U1)
 	ifneq ($(LOCAL_THREADS_ONLY),1)
-		ASFILES = os_$(OS_ARCH).s
+		ASFILES += os_$(OS_ARCH).s
 	endif
 	endif
     endif
@@ -226,12 +226,10 @@ endif
 ifeq ($(OS_ARCH),SunOS)
 	ifneq ($(OS_RELEASE),4.1.3_U1)
 		ifeq ($(OS_TEST),sun4u)
-			LIBRARY_NAME = $(ULTRASPARC_LIBRARY)
-			LIBRARY_VERSION = $(MOD_VERSION)
 			ULTRASPARC_ASFILES = os_$(OS_ARCH)_ultrasparc.s
+			ASFILES += $(ULTRASPARC_ASFILES)
+			CFLAGS += -D_PR_ULTRASPARC
 			ULTRASPARC_ASOBJS = $(addprefix $(OBJDIR)/,$(ULTRASPARC_ASFILES:.s=.$(OBJ_SUFFIX)))
-			TARGETS		+= $(ULTRASPARC_ASOBJS) $(SHARED_LIBRARY)
-			RELEASE_LIBS = $(SHARED_LIBRARY)
 		endif
 	endif
 endif
@@ -252,10 +250,6 @@ export:: $(TARGETS)
 ifeq ($(OS_ARCH),SunOS)
 ifneq ($(OS_RELEASE),4.1.3_U1)
 ifeq ($(OS_TEST),sun4u)
-$(SHARED_LIBRARY): $(ULTRASPARC_ASOBJS)
-	$(LD) -G -z text -o $@ $(ULTRASPARC_ASOBJS)
-	$(INSTALL) -m 444 $(SHARED_LIBRARY) $(DIST)/lib
-
 $(ULTRASPARC_ASOBJS): $(ULTRASPARC_ASFILES)
 	/usr/ccs/bin/as -o $@ -K PIC -P -D_ASM -D__STDC__=0 -xarch=v8plus $<
 endif
