@@ -847,7 +847,9 @@ void nsTableRowGroupFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
   nscoord topInnerMargin = 0;
   nscoord bottomInnerMargin = 0;
   PRInt32 numRows;
-  ChildCount(numRows);
+  ChildCount(numRows);  //XXX: this doesn't work if we allow non-table row content.
+                        // we actually need to go through our content and count the
+                        // children that are display type == table row
   PRInt32 *rowHeights = new PRInt32[numRows];
   nsCRT::memset (rowHeights, 0, numRows*sizeof(PRInt32));
 

@@ -123,9 +123,9 @@ protected:
 
   // row-specific methods
 
-  void GetMinRowSpan();
+  void GetMinRowSpan(nsTableFrame *aTableFrame);
 
-  void FixMinCellHeight();
+  void FixMinCellHeight(nsTableFrame *aTableFrame);
 
   nsresult RecoverState(nsIPresContext& aPresContext,
                         RowReflowState& aState,

@@ -235,13 +235,13 @@ PRInt32 nsTableRowFrame::GetMaxColumns() const
 /* GetMinRowSpan is needed for deviant cases where every cell in a row has a rowspan > 1.
  * It sets mMinRowSpan, which is used in FixMinCellHeight and PlaceChild
  */
-void nsTableRowFrame::GetMinRowSpan()
+void nsTableRowFrame::GetMinRowSpan(nsTableFrame *aTableFrame)
 {
   PRInt32 minRowSpan=-1;
   nsIFrame *frame=mFirstChild;
   while (nsnull!=frame)
   {
-    PRInt32 rowSpan = ((nsTableCellFrame *)frame)->GetRowSpan();
+    PRInt32 rowSpan = aTableFrame->GetEffectiveRowSpan(mRowIndex, ((nsTableCellFrame *)frame));
     if (-1==minRowSpan)
       minRowSpan = rowSpan;
     else if (minRowSpan>rowSpan)
@@ -251,12 +251,12 @@ void nsTableRowFrame::GetMinRowSpan()
   mMinRowSpan = minRowSpan;
 }
 
-void nsTableRowFrame::FixMinCellHeight()
+void nsTableRowFrame::FixMinCellHeight(nsTableFrame *aTableFrame)
 {
   nsIFrame *frame=mFirstChild;
   while (nsnull!=frame)
   {
-    PRInt32 rowSpan = ((nsTableCellFrame *)frame)->GetRowSpan();
+    PRInt32 rowSpan = aTableFrame->GetEffectiveRowSpan(mRowIndex, ((nsTableCellFrame *)frame));
     if (mMinRowSpan==rowSpan)
     {
       nsRect rect;
@@ -289,7 +289,8 @@ void nsTableRowFrame::PlaceChild(nsIPresContext&    aPresContext,
   aState.x += aKidRect.width;
 
   // Update the maximum element size
-  PRInt32 rowSpan = ((nsTableCellFrame*)aKidFrame)->GetRowSpan();
+  PRInt32 rowSpan = aState.tableFrame->GetEffectiveRowSpan(mRowIndex, 
+                    ((nsTableCellFrame*)aKidFrame));
   if (nsnull != aMaxElementSize) 
   {
     aMaxElementSize->width += aKidMaxElementSize->width;
@@ -645,7 +646,7 @@ nsresult nsTableRowFrame::RecoverState(nsIPresContext& aPresContext,
       if (kidMargin.bottom > aMaxCellBottomMargin)
         aMaxCellBottomMargin = kidMargin.bottom;
 
-      PRInt32 rowSpan = ((nsTableCellFrame*)frame)->GetRowSpan();
+      PRInt32 rowSpan = aState.tableFrame->GetEffectiveRowSpan(mRowIndex, ((nsTableCellFrame *)frame));
       if (mMinRowSpan == rowSpan) {
         // Get the cell's desired height the last time it was reflowed
         nsSize  desiredSize = ((nsTableCellFrame *)frame)->GetDesiredSize();
@@ -875,8 +876,8 @@ nsTableRowFrame::Reflow(nsIPresContext&      aPresContext,
   case eReflowReason_Initial:
     NS_ASSERTION(nsnull == mFirstChild, "unexpected reflow reason");
     result = InitialReflow(aPresContext, state, aDesiredSize);
-    GetMinRowSpan();
-    FixMinCellHeight();
+    GetMinRowSpan(tableFrame);
+    FixMinCellHeight(tableFrame);
     break;
 
   case eReflowReason_Resize:
