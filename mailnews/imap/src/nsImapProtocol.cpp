@@ -7098,12 +7098,14 @@ NS_IMETHODIMP nsImapMockChannel::SetOwner(nsISupports * aPrincipal)
 
 NS_IMETHODIMP nsImapMockChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_IF_ADDREF(*aSecurityInfo = mSecurityInfo);
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsImapMockChannel::SetSecurityInfo(nsISupports *aSecurityInfo)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    mSecurityInfo = aSecurityInfo;
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
