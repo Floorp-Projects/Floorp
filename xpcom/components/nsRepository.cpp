@@ -35,6 +35,16 @@ nsComponentManager::FindFactory(const nsCID &aClass,
 }
 
 nsresult
+nsComponentManager::GetClassObject(const nsCID &aClass, const nsIID &aIID,
+                                   void **aResult)
+{
+    nsIComponentManager* cm;
+    nsresult rv = NS_GetGlobalComponentManager(&cm);
+    if (NS_FAILED(rv)) return rv;
+    return cm->GetClassObject(aClass, aIID, aResult);
+}
+
+nsresult
 nsComponentManager::ProgIDToCLSID(const char *aProgID,
                                   nsCID *aClass)
 {
