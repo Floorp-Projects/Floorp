@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   L. David Baron <dbaron@fas.harvard.edu>
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "plstr.h"
@@ -525,11 +526,11 @@ NS_IMETHODIMP
 nsDocumentChildNodes::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 {
   nsresult result = NS_OK;
-  nsIContent* content = nsnull;
+  nsCOMPtr<nsIContent> content;
 
   *aReturn = nsnull;
   if (nsnull != mDocument) {
-    result = mDocument->ChildAt(aIndex, content);
+    result = mDocument->ChildAt(aIndex, *getter_AddRefs(content));
     if ((NS_OK == result) && (nsnull != content)) {
       result = content->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)aReturn);
     }
@@ -616,8 +617,6 @@ nsDocument::nsDocument()
   mNameSpaceManager = nsnull;
   mHeaderData = nsnull;
   mLineBreaker = nsnull;
-  mProlog = nsnull;
-  mEpilog = nsnull;
   mChildNodes = nsnull;
   mWordBreaker = nsnull;
   mModCount = 0;
@@ -636,7 +635,7 @@ nsDocument::~nsDocument()
   // This notification will occur only after the reference has
   // been dropped.
   mInDestructor = PR_TRUE;
-  PRInt32 index, count;
+  PRInt32 index;
   for (index = 0; index < mObservers.Count(); index++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(index);
     observer->DocumentWillBeDestroyed(this);
@@ -662,7 +661,9 @@ nsDocument::~nsDocument()
     NS_RELEASE(subdoc);
   }
 
-  NS_IF_RELEASE(mRootContent);
+
+  mRootContent = nsnull;
+  mChildren->Clear();
 
   // Delete references to style sheets
   index = mStyleSheets.Count();
@@ -670,24 +671,6 @@ nsDocument::~nsDocument()
     nsIStyleSheet* sheet = (nsIStyleSheet*) mStyleSheets.ElementAt(index);
     sheet->SetOwningDocument(nsnull);
     NS_RELEASE(sheet);
-  }
-
-  nsIContent* content;
-  if (nsnull != mProlog) {
-    count = mProlog->Count();
-    for (index = 0; index < count; index++) {
-      content = (nsIContent*)mProlog->ElementAt(index);
-      NS_RELEASE(content);
-    }
-    delete mProlog;
-  }
-  if (nsnull != mEpilog) {
-    count = mEpilog->Count();
-    for (index = 0; index < count; index++) {
-      content = (nsIContent*)mEpilog->ElementAt(index);
-      NS_RELEASE(content);
-    }
-    delete mEpilog;
   }
 
   if (nsnull != mChildNodes) {
@@ -824,8 +807,13 @@ nsresult nsDocument::Init()
   if (mNameSpaceManager) {
     return NS_ERROR_ALREADY_INITIALIZED;
   }
+  nsresult rv;
 
-  nsresult rv = NS_NewHeapArena(&mArena, nsnull);
+  rv = NS_NewISupportsArray(getter_AddRefs(mChildren));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = NS_NewHeapArena(&mArena, nsnull);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = NS_NewNameSpaceManager(&mNameSpaceManager);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -866,36 +854,15 @@ nsDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
     NS_RELEASE(subdoc);
   }
 
-  nsIContent* content;
-  PRInt32 count;
-  if (nsnull != mProlog) {
-    count = mProlog->Count();
-    for (index = 0; index < count; index++) {
-      content = (nsIContent*)mProlog->ElementAt(index);
-      content->SetDocument(nsnull, PR_TRUE, PR_TRUE);
-      ContentRemoved(nsnull, content, index);
-      NS_RELEASE(content);
-    }
-    delete mProlog;
-    mProlog = nsnull;
+  mRootContent = nsnull;
+  PRUint32 count, i;
+  mChildren->Count(&count);
+  for (i = 0; i < count; i++) {
+    nsCOMPtr<nsIContent> content(dont_AddRef(NS_STATIC_CAST(nsIContent*,mChildren->ElementAt(i))));
+    content->SetDocument(nsnull, PR_TRUE, PR_TRUE);
+    ContentRemoved(nsnull, content, index);
   }
-  if (nsnull != mRootContent) {
-    // Ensure that document is nsnull to allow validity checks on content
-    mRootContent->SetDocument(nsnull, PR_TRUE, PR_TRUE);
-    ContentRemoved(nsnull, mRootContent, 0);
-    NS_IF_RELEASE(mRootContent);
-  }
-  if (nsnull != mEpilog) {
-    count = mEpilog->Count();
-    for (index = 0; index < count; index++) {
-      content = (nsIContent*)mEpilog->ElementAt(index);
-      content->SetDocument(nsnull, PR_TRUE, PR_TRUE);
-      ContentRemoved(nsnull, content, index);
-      NS_RELEASE(content);
-    }
-    delete mEpilog;
-    mEpilog = nsnull;
-  }
+  mChildren->Clear();
 
   // Delete references to style sheets
   index = mStyleSheets.Count();
@@ -1308,67 +1275,24 @@ nsIContent* nsDocument::GetRootContent()
 
 void nsDocument::SetRootContent(nsIContent* aRoot)
 {
-  NS_IF_RELEASE(mRootContent);
-  if (nsnull != aRoot) {
-    mRootContent = aRoot;
-    NS_ADDREF(aRoot);
+  if (mRootContent) {
+    PRInt32 index = mChildren->IndexOf(mRootContent);
+    if (aRoot) {
+      mChildren->ReplaceElementAt(aRoot, index);
+    } else {
+      mChildren->RemoveElementAt(index);
+    }
+  } else if (aRoot) {
+    mChildren->AppendElement(aRoot);
   }
-}
-
-NS_IMETHODIMP 
-nsDocument::AppendToProlog(nsIContent* aContent)
-{
-  if (nsnull == mProlog) {
-    mProlog = new nsVoidArray();
-  }
-
-  mProlog->AppendElement((void *)aContent);
-  NS_ADDREF(aContent);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsDocument::AppendToEpilog(nsIContent* aContent)
-{
-  if (nsnull == mEpilog) {
-    mEpilog = new nsVoidArray();
-  }
-
-  mEpilog->AppendElement((void *)aContent);
-  NS_ADDREF(aContent);
-
-  return NS_OK;
+  mRootContent = aRoot;
 }
 
 NS_IMETHODIMP 
 nsDocument::ChildAt(PRInt32 aIndex, nsIContent*& aResult) const
 {
-  nsIContent* content = nsnull;
-  PRInt32 prolog = 0;
-
-  if (nsnull != mProlog) {
-    prolog = mProlog->Count();
-    if (aIndex < prolog) {
-      // It's in the prolog
-      content = (nsIContent*)mProlog->ElementAt(aIndex);
-    }
-  }
-  
-  if ((aIndex == prolog) && mRootContent) {
-    // It's the document element
-    content = mRootContent;
-  }
-  else {
-    prolog += mRootContent?1:0;
-    if ((aIndex >= prolog) && (nsnull != mEpilog)) {
-      // It's in the epilog
-      content = (nsIContent*)mEpilog->ElementAt(aIndex-prolog);
-    }
-  }
-
-  NS_IF_ADDREF(content);
-  aResult = content;
+  nsCOMPtr<nsIContent> content( dont_AddRef(NS_STATIC_CAST(nsIContent*, mChildren->ElementAt(aIndex))) );
+  NS_IF_ADDREF(aResult = content);
 
   return NS_OK;
 }
@@ -1376,45 +1300,16 @@ nsDocument::ChildAt(PRInt32 aIndex, nsIContent*& aResult) const
 NS_IMETHODIMP 
 nsDocument::IndexOf(nsIContent* aPossibleChild, PRInt32& aIndex) const
 {
-  PRInt32 index = -1;
-  PRInt32 prolog = 0;
-
-  if (nsnull != mProlog) {
-    index = mProlog->IndexOf(aPossibleChild);
-    prolog = mProlog->Count();
-  }
-
-  if (-1 == index) {
-    if (aPossibleChild == mRootContent) {
-      index = prolog;
-    }
-    else if (nsnull != mEpilog) {
-      index = mEpilog->IndexOf(aPossibleChild);
-      if (-1 != index) {
-        index += (prolog+1);
-      }
-    }
-  }
-  
-  aIndex = index;
-  
+  aIndex = mChildren->IndexOf(aPossibleChild);
   return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsDocument::GetChildCount(PRInt32& aCount)
 {
-  aCount = 0;
-  if (nsnull != mRootContent) {
-    aCount++;
-  }
-  if (nsnull != mProlog) {
-    aCount += mProlog->Count();
-  }
-  if (nsnull != mEpilog) {
-    aCount += mEpilog->Count();
-  }
-
+  PRUint32 count;
+  mChildren->Count(&count);
+  aCount = NS_STATIC_CAST(PRInt32, count);
   return NS_OK;
 }
 
@@ -1674,24 +1569,11 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
   // actually set the script context owner to null so that the
   // content elements can remove references to their script objects.
   if (!aScriptGlobalObject) {
-    PRInt32 count, index;
-    nsIContent *content;
-    if (mProlog) {
-      count = mProlog->Count();
-      for (index = 0; index < count; index++) {
-        content = (nsIContent*)mProlog->ElementAt(index);
-        content->SetDocument(nsnull, PR_TRUE, PR_TRUE);
-      }
-    }
-    if (mRootContent) {
-      mRootContent->SetDocument(nsnull, PR_TRUE, PR_TRUE);
-    }
-    if (mEpilog) {
-      count = mEpilog->Count();
-      for (index = 0; index < count; index++) {
-        content = (nsIContent*)mEpilog->ElementAt(index);
-        content->SetDocument(nsnull, PR_TRUE, PR_TRUE);
-      }
+    PRUint32 ucount, index;
+    mChildren->Count(&ucount);
+    for (index = 0; index < ucount; index++) {
+      nsCOMPtr<nsIContent> content(dont_AddRef(NS_STATIC_CAST(nsIContent*,mChildren->ElementAt(index))));
+      content->SetDocument(nsnull, PR_TRUE, PR_TRUE);
     }
 
     // Propagate the out-of-band notification to each PresShell's
@@ -1699,6 +1581,7 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
     // accidental script references left in anonymous content keeping
     // the document alive. (While not strictly necessary -- the
     // PresShell owns us -- it's tidy.)
+    PRInt32 count;
     for (count = mPresShells.Count() - 1; count >= 0; --count) {
       nsIPresShell* shell = NS_STATIC_CAST(nsIPresShell*, mPresShells[count]);
       if (! shell)
@@ -2088,26 +1971,30 @@ nsDocument::GetDoctype(nsIDOMDocumentType** aDoctype)
 
   *aDoctype = nsnull;
 
-  if (mProlog) {
-    PRInt32 i, count = mProlog->Count();
+  PRUint32 i, count;
+  mChildren->Count(&count);
+  nsCOMPtr<nsIDOMNode> rootContentNode( do_QueryInterface(mRootContent) );
+  nsCOMPtr<nsIDOMNode> node;
 
-    for (i = 0; i < count; i++) {
-      nsIContent* content = (nsIContent *)mProlog->ElementAt(i);
+  for (i = 0; i < count; i++) {
+    mChildren->QueryElementAt(i, NS_GET_IID(nsIDOMNode), getter_AddRefs(node));
 
-      if (!content)
-        continue;
+    NS_ASSERTION(node, "null element of mChildren");
 
-      nsCOMPtr<nsIDOMNode> node(do_QueryInterface(content));
+    // doctype can't be after the root
+    // XXX Do we really want to enforce this when we don't enforce
+    // anything else?
+    if (node == rootContentNode)
+      return NS_OK;
 
-      if (node) {
-        PRUint16 nodeType;
+    if (node) {
+      PRUint16 nodeType;
 
-        node->GetNodeType(&nodeType);
+      node->GetNodeType(&nodeType);
 
-        if (nodeType == nsIDOMNode::DOCUMENT_TYPE_NODE) {
-          return node->QueryInterface(NS_GET_IID(nsIDOMDocumentType),
-                                      (void **)aDoctype);
-        }
+      if (nodeType == nsIDOMNode::DOCUMENT_TYPE_NODE) {
+        return node->QueryInterface(NS_GET_IID(nsIDOMDocumentType),
+                                    (void **)aDoctype);
       }
     }
   }
@@ -2640,9 +2527,10 @@ nsDocument::HasChildNodes(PRBool* aHasChildNodes)
 {
   NS_ENSURE_ARG(aHasChildNodes);
 
-  *aHasChildNodes =  (((nsnull != mProlog) && (0 != mProlog->Count())) ||
-                      (nsnull != mRootContent) ||
-                      ((nsnull != mEpilog) && (0 != mEpilog->Count())));
+  PRUint32 count;
+  mChildren->Count(&count);
+  *aHasChildNodes = (count != 0);
+
   return NS_OK;
 }
 
@@ -2661,22 +2549,13 @@ nsDocument::GetFirstChild(nsIDOMNode** aFirstChild)
 {
   nsresult result = NS_OK;
 
-  *aFirstChild = nsnull;
-  if ((nsnull != mProlog) && (0 != mProlog->Count())) {
-    nsIContent* content;
-    content = (nsIContent *)mProlog->ElementAt(0);
-
-    if (nsnull != content) {
-      result = content->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)aFirstChild);
-    }
-  }
-  else {
-    nsIDOMElement* element;
-    result = GetDocumentElement(&element);
-    if ((NS_OK == result) && element) {
-      result = element->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)aFirstChild);
-      NS_RELEASE(element);
-    }
+  PRUint32 count;
+  mChildren->Count(&count);
+  if (count) {
+    result = mChildren->QueryElementAt(0, NS_GET_IID(nsIDOMNode),
+                                     NS_REINTERPRET_CAST(void**, aFirstChild));
+  } else {
+    *aFirstChild = nsnull;
   }
 
   return result;
@@ -2687,20 +2566,13 @@ nsDocument::GetLastChild(nsIDOMNode** aLastChild)
 {
   nsresult result = NS_OK;
 
-  if ((nsnull != mEpilog) && (0 != mEpilog->Count())) {
-    nsIContent* content;
-    content = (nsIContent *)mEpilog->ElementAt(mEpilog->Count()-1);
-    if (nsnull != content) {
-      result = content->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)aLastChild);
-    }
-  }
-  else {
-    nsIDOMElement* element;
-    result = GetDocumentElement(&element);
-    if ((NS_OK == result) && element) {
-      result = element->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)aLastChild);
-      NS_RELEASE(element);
-    }
+  PRUint32 count;
+  mChildren->Count(&count);
+  if (count) {
+    result = mChildren->QueryElementAt(count-1, NS_GET_IID(nsIDOMNode),
+                                     NS_REINTERPRET_CAST(void**, aLastChild));
+  } else {
+    *aLastChild = nsnull;
   }
 
   return result;
@@ -2758,87 +2630,66 @@ NS_IMETHODIMP
 nsDocument::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn)
 {
   NS_ASSERTION(nsnull != aNewChild, "null ptr");
-  nsresult result = NS_OK;
   PRInt32 index;
   PRUint16 nodeType;
-  nsIContent *content, *refContent = nsnull;
+
+  *aReturn = nsnull; // Do we need to do this?
 
   if (nsnull == aNewChild) {
     return NS_ERROR_NULL_POINTER;
   }
 
+  // If it's a child type we can't handle (per DOM spec), or if it's an
+  // element and we already have a root (our addition to DOM spec), throw
+  // HIERARCHY_REQUEST_ERR.
   aNewChild->GetNodeType(&nodeType);
-  if ((COMMENT_NODE != nodeType) &&
-      (TEXT_NODE != nodeType) &&
-      (PROCESSING_INSTRUCTION_NODE != nodeType) &&
-      (DOCUMENT_TYPE_NODE != nodeType) &&
-      (ELEMENT_NODE != nodeType)) {
+  if (((COMMENT_NODE != nodeType) &&
+       (TEXT_NODE != nodeType) &&
+       (PROCESSING_INSTRUCTION_NODE != nodeType) &&
+       (DOCUMENT_TYPE_NODE != nodeType) &&
+       (ELEMENT_NODE != nodeType)) ||
+      ((ELEMENT_NODE == nodeType) && mRootContent)){
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
-  result = aNewChild->QueryInterface(NS_GET_IID(nsIContent), (void**)&content);
-  if (NS_OK != result) {
+  nsCOMPtr<nsIContent> content( do_QueryInterface(aNewChild) );
+  if (!content) {
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
-  if (ELEMENT_NODE == nodeType) {
-    if (mRootContent) {
-      return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
-    }
-    else {
-      SetRootContent(content);
-      ContentInserted(nsnull, content, 0);
-    }
-  }
-  else if (nsnull == aRefChild) {
-    if ((!mProlog || (mProlog && mProlog->Count())) && mRootContent) {
-      AppendToEpilog(content);
-    } else if (nodeType != ELEMENT_NODE) {
-      AppendToProlog(content);
-    } else {
-      return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
-    }
+  if (!aRefChild) {
+    PRUint32 count;
+    mChildren->Count(&count);
+    index = count;
+    mChildren->AppendElement(content);
   }
   else {
-    result = aRefChild->QueryInterface(NS_GET_IID(nsIContent), (void**)&refContent);
-    if (NS_OK != result) {
-      NS_RELEASE(content);
+    nsCOMPtr<nsIContent> refContent( do_QueryInterface(aRefChild) );
+
+    if (!refContent) {
       return NS_ERROR_DOM_NOT_FOUND_ERR;
     }
 
-    if ((nsnull != mProlog) && (0 != mProlog->Count())) {
-      index = mProlog->IndexOf(refContent);
-      if (-1 != index) {
-        mProlog->InsertElementAt(content, index);
-        NS_ADDREF(content);
-      }
+    index = mChildren->IndexOf(refContent);
+    if (index != -1) {
+      mChildren->InsertElementAt(content, index);
+    } else {
+      // couldn't find refChild
+      return NS_ERROR_DOM_NOT_FOUND_ERR;
     }
-
-    if (refContent == mRootContent) {
-      AppendToProlog(content);
-    }
-    else if ((nsnull != mEpilog) && (0 != mEpilog->Count())) {
-      index = mEpilog->IndexOf(refContent);
-      if (-1 != index) {
-        mEpilog->InsertElementAt(content, index);
-        NS_ADDREF(content);
-      }
-    }
-    NS_RELEASE(refContent);
   }
 
-  if (NS_OK == result) {
-    content->SetDocument(this, PR_TRUE, PR_TRUE);
-    *aReturn = aNewChild;
-    NS_ADDREF(aNewChild);
-  }
-  else {
-    *aReturn = nsnull;
-  }
+  // If we get here, we've succesfully inserted content into the
+  // index-th spot in mChildren.
+  if (ELEMENT_NODE == nodeType)
+    mRootContent = content;
+  ContentInserted(nsnull, content, index);
 
-  NS_RELEASE(content);  
+  content->SetDocument(this, PR_TRUE, PR_TRUE);
+  *aReturn = aNewChild;
+  NS_ADDREF(aNewChild);
 
-  return result;
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
@@ -2848,9 +2699,9 @@ nsDocument::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNod
   nsresult result = NS_OK;
   PRInt32 index;
   PRUint16 nodeType;
-  nsIContent *content, *refContent;
-  PRBool found = PR_FALSE;
   
+  *aReturn = nsnull; // is this necessary?
+
   if ((nsnull == aNewChild) || (nsnull == aOldChild)) {
     return NS_ERROR_NULL_POINTER;
   }
@@ -2865,75 +2716,39 @@ nsDocument::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNod
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
-  result = aNewChild->QueryInterface(NS_GET_IID(nsIContent), (void**)&content);
-  if (NS_OK != result) {
+  nsCOMPtr<nsIContent> content( do_QueryInterface(aNewChild) );
+  nsCOMPtr<nsIContent> refContent( do_QueryInterface(aOldChild) );
+  if (!content || !refContent) {
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
-  result = aOldChild->QueryInterface(NS_GET_IID(nsIContent), (void**)&refContent);
-  if (NS_OK != result) {
-    NS_RELEASE(content);
+  if ((ELEMENT_NODE == nodeType) &&
+      mRootContent &&
+      (mRootContent != refContent.get()))
+  {
+    // Caller attempted to add a second element as a child.
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
-
-  if ((nsnull != mProlog) && (0 != mProlog->Count())) {
-    index = mProlog->IndexOf(refContent);
-    if (-1 != index) {
-      nsIContent* oldContent;
-      oldContent = (nsIContent*)mProlog->ElementAt(index);
-      oldContent->SetDocument(nsnull, PR_TRUE, PR_TRUE);
-      ContentRemoved(nsnull, oldContent, index);
-      NS_RELEASE(oldContent);
-      mProlog->ReplaceElementAt(content, index);
-      ContentInserted(nsnull, content, index);
-      NS_ADDREF(content);
-      found = PR_TRUE;
-    }
+  
+  index = mChildren->IndexOf(refContent);
+  if (-1 == index) {
+    // The reference child is not a child of the document.
+    return NS_ERROR_DOM_NOT_FOUND_ERR;
   }
 
-  if (!found && (refContent == mRootContent)) {
-    if (ELEMENT_NODE == nodeType) {
-      // Out with the old
-      ContentRemoved(nsnull, mRootContent, mProlog ? mProlog->Count() : 0);
-      
-      // In with the new
-      SetRootContent(content);
-      ContentInserted(nsnull, content, mProlog ? mProlog->Count() : 0);
-      found = PR_TRUE;
-    }
-    else {
-      NS_RELEASE(refContent);
-      NS_RELEASE(content);
-      return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
-    }
-  }
-  else if (!found && (nsnull != mEpilog) && (0 != mEpilog->Count())) {
-    index = mEpilog->IndexOf(refContent);
-    if (-1 != index) {
-      nsIContent* oldContent;
-      oldContent = (nsIContent*)mEpilog->ElementAt(index);
-      ContentRemoved(nsnull, oldContent, (mProlog ? mProlog->Count() : 0) +(mRootContent?1:0)+index);
-      NS_RELEASE(oldContent);
-      mEpilog->ReplaceElementAt(content, index);
-      ContentInserted(nsnull, content, (mProlog ? mProlog->Count() : 0)+(mRootContent?1:0)+index);
-      NS_ADDREF(content);
-      found = PR_TRUE;
-    }
-  }
+  refContent->SetDocument(nsnull, PR_TRUE, PR_TRUE);
+  ContentRemoved(nsnull, refContent, index);
 
-  if (found) {
-    content->SetDocument(this, PR_TRUE, PR_TRUE);
-    refContent->SetDocument(nsnull, PR_TRUE, PR_TRUE);
-    *aReturn = aOldChild;
-    NS_ADDREF(aOldChild);
-  }
-  else {
-    *aReturn = nsnull;
-    result = NS_ERROR_DOM_NOT_FOUND_ERR;
-  }
+  mChildren->ReplaceElementAt(content, index);
+  // This is OK because we checked above.
+  if (ELEMENT_NODE == nodeType)
+    mRootContent = content;
 
-  NS_RELEASE(content);
-  NS_RELEASE(refContent);
+  ContentInserted(nsnull, content, index);
+  content->SetDocument(this, PR_TRUE, PR_TRUE);
+
+  *aReturn = aOldChild;
+  NS_ADDREF(aOldChild);
 
   return result;
 }
@@ -2942,63 +2757,35 @@ NS_IMETHODIMP
 nsDocument::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
 {
   NS_ASSERTION(nsnull != aOldChild, "null ptr");
-  nsresult result = NS_OK;
-  PRInt32 index;
-  nsIContent *content;
-  PRBool found = PR_FALSE;
   
+  *aReturn = nsnull; // do we need to do this?
+
   if (nsnull == aOldChild) {
     return NS_ERROR_NULL_POINTER;
   }
 
-  result = aOldChild->QueryInterface(NS_GET_IID(nsIContent), (void**)&content);
-  if (NS_OK != result) {
+  nsCOMPtr<nsIContent> content( do_QueryInterface(aOldChild) );
+  if (!content) {
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
-  if ((nsnull != mProlog) && (0 != mProlog->Count())) {
-    index = mProlog->IndexOf(content);
-    if (-1 != index) {
-      // Don't drop reference count since we're going
-      // to return this element anyway.
-      ContentRemoved(nsnull, content, index);
-      mProlog->RemoveElementAt(index);
-      found = PR_TRUE;
-    }
+  PRInt32 index = mChildren->IndexOf(content);
+  if (-1 == index) {
+    return NS_ERROR_DOM_NOT_FOUND_ERR;
   }
 
-  if (!found && (content == mRootContent)) {
-    // Out with the old
-    ContentRemoved(nsnull, mRootContent, mProlog ? mProlog->Count() : 0);
-    NS_ADDREF(mRootContent); // for return, since next line releases
-    SetRootContent(nsnull);
-    found = PR_TRUE;
-  }
-  else if (!found && (nsnull != mEpilog) && (0 != mEpilog->Count())) {
-    index = mEpilog->IndexOf(content);
-    if (-1 != index) {
-      // Don't drop reference count since we're going
-      // to return this element anyway.
-      ContentRemoved(nsnull, content, (mProlog ? mProlog->Count() : 0)+(mRootContent?1:0)+index);
-      mEpilog->RemoveElementAt(index);
-      found = PR_TRUE;
-    }
-  }
+  ContentRemoved(nsnull, content, index);
 
-  if (found) {
-    content->SetDocument(nsnull, PR_TRUE, PR_TRUE);
-    // The refcount return was AddRef'd / not released above.
-    *aReturn = aOldChild;
-    result = NS_OK;
-  }
-  else {
-    *aReturn = nsnull;
-    result = NS_ERROR_DOM_NOT_FOUND_ERR;
-  }
+  mChildren->RemoveElementAt(index);
+  if (content.get() == mRootContent)
+    mRootContent = nsnull;
 
-  NS_RELEASE(content);
+  content->SetDocument(nsnull, PR_TRUE, PR_TRUE);
+
+  *aReturn = aOldChild;
+  NS_ADDREF(aOldChild);
   
-  return result;
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
