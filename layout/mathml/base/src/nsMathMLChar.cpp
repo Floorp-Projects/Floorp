@@ -1901,17 +1901,20 @@ nsMathMLChar::Paint(nsIPresContext*      aPresContext,
     else if (mRect.width && mRect.height) {
       const nsStyleBorder *border = NS_STATIC_CAST(const nsStyleBorder*,
         styleContext->GetStyleData(eStyleStruct_Border));
+      const nsStylePadding *padding = NS_STATIC_CAST(const nsStylePadding*,
+        styleContext->GetStyleData(eStyleStruct_Padding));
       const nsStyleBackground *backg = NS_STATIC_CAST(const nsStyleBackground*,
         styleContext->GetStyleData(eStyleStruct_Background));
       nsRect rect(mRect); //0, 0, mRect.width, mRect.height);
       if (styleContext != parentContext.get() &&
           0 == (backg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT))
         nsCSSRendering::PaintBackgroundWithSC(aPresContext, aRenderingContext, aForFrame,
-                                              aDirtyRect, rect, *backg, *border, 0, 0);
+                                              aDirtyRect, rect, *backg, *border, *padding,
+                                              0, 0);
       //else
       //  our container frame will take care of painting its background
       //  nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, aForFrame,
-      //                                  aDirtyRect, rect, *border, 0, 0);
+      //                                  aDirtyRect, rect, *border, *padding, 0, 0);
 #if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
       // for visual debug
       PRIntn skipSides = 0; //aForFrame->GetSkipSides();

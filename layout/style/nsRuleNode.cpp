@@ -888,8 +888,10 @@ static const PropertyCheckData ColorCheckProperties[] = {
 static const PropertyCheckData BackgroundCheckProperties[] = {
   CHECKDATA_PROP(nsCSSColor, mBackAttachment, CHECKDATA_VALUE, PR_FALSE),
   CHECKDATA_PROP(nsCSSColor, mBackRepeat, CHECKDATA_VALUE, PR_FALSE),
+  CHECKDATA_PROP(nsCSSColor, mBackClip, CHECKDATA_VALUE, PR_FALSE),
   CHECKDATA_PROP(nsCSSColor, mBackColor, CHECKDATA_VALUE, PR_FALSE),
   CHECKDATA_PROP(nsCSSColor, mBackImage, CHECKDATA_VALUE, PR_FALSE),
+  CHECKDATA_PROP(nsCSSColor, mBackOrigin, CHECKDATA_VALUE, PR_FALSE),
   CHECKDATA_PROP(nsCSSColor, mBackPositionX, CHECKDATA_VALUE, PR_FALSE),
   CHECKDATA_PROP(nsCSSColor, mBackPositionY, CHECKDATA_VALUE, PR_FALSE)
 };
@@ -3190,6 +3192,28 @@ nsRuleNode::ComputeBackgroundData(nsStyleStruct* aStartStruct, const nsCSSStruct
   else if (eCSSUnit_Inherit == colorData.mBackAttachment.GetUnit()) {
     inherited = PR_TRUE;
     bg->mBackgroundAttachment = parentBG->mBackgroundAttachment;
+  }
+
+  // background-clip: enum, inherit, initial
+  if (eCSSUnit_Enumerated == colorData.mBackClip.GetUnit()) {
+    bg->mBackgroundClip = colorData.mBackClip.GetIntValue();
+  }
+  else if (eCSSUnit_Inherit == colorData.mBackClip.GetUnit()) {
+    bg->mBackgroundClip = parentBG->mBackgroundClip;
+  }
+  else if (eCSSUnit_Initial == colorData.mBackClip.GetUnit()) {
+    bg->mBackgroundClip = NS_STYLE_BG_CLIP_BORDER;
+  }
+
+  // background-origin: enum, inherit, initial
+  if (eCSSUnit_Enumerated == colorData.mBackOrigin.GetUnit()) {
+    bg->mBackgroundOrigin = colorData.mBackOrigin.GetIntValue();
+  }
+  else if (eCSSUnit_Inherit == colorData.mBackOrigin.GetUnit()) {
+    bg->mBackgroundOrigin = parentBG->mBackgroundOrigin;
+  }
+  else if (eCSSUnit_Initial == colorData.mBackOrigin.GetUnit()) {
+    bg->mBackgroundOrigin = NS_STYLE_BG_ORIGIN_PADDING;
   }
 
   // background-position: enum, length, percent (flags), inherit

@@ -2139,6 +2139,14 @@ MapColorForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsCS
       aColor.mBackPositionX = ourColor->mBackPositionX;
     if (aColor.mBackPositionY.GetUnit() == eCSSUnit_Null && ourColor->mBackPositionY.GetUnit() != eCSSUnit_Null)
       aColor.mBackPositionY = ourColor->mBackPositionY;
+
+    // background-clip: enum, inherit
+    if (aColor.mBackClip.GetUnit() == eCSSUnit_Null && ourColor->mBackClip.GetUnit() != eCSSUnit_Null)
+      aColor.mBackClip = ourColor->mBackClip;
+
+    // background-origin: enum, inherit
+    if (aColor.mBackOrigin.GetUnit() == eCSSUnit_Null && ourColor->mBackOrigin.GetUnit() != eCSSUnit_Null)
+      aColor.mBackOrigin = ourColor->mBackOrigin;
   }
 
   return NS_OK;

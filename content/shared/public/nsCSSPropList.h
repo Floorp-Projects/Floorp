@@ -109,8 +109,10 @@ CSS_PROP(-moz-outline-radius-bottomright, _moz_outline_radius_bottomRight, MozOu
 CSS_PROP(azimuth, azimuth, Azimuth, NS_STYLE_HINT_AURAL)
 CSS_PROP(background, background, Background, NS_STYLE_HINT_VISUAL)
 CSS_PROP(background-attachment, background_attachment, BackgroundAttachment, NS_STYLE_HINT_FRAMECHANGE)
+CSS_PROP(-moz-background-clip, _moz_background_clip, MozBackgroundClip, NS_STYLE_HINT_VISUAL)
 CSS_PROP(background-color, background_color, BackgroundColor, NS_STYLE_HINT_VISUAL)
 CSS_PROP(background-image, background_image, BackgroundImage, NS_STYLE_HINT_VISUAL)
+CSS_PROP(-moz-background-origin, _moz_background_origin, MozBackgroundOrigin, NS_STYLE_HINT_VISUAL)
 CSS_PROP(background-position, background_position, BackgroundPosition, NS_STYLE_HINT_VISUAL)
 CSS_PROP(background-repeat, background_repeat, BackgroundRepeat, NS_STYLE_HINT_VISUAL)
 CSS_PROP_INTERNAL(-x-background-x-position, background_x_position, BackgroundXPosition, NS_STYLE_HINT_VISUAL) // XXX bug 3935

@@ -418,13 +418,15 @@ nsTableCellFrame::PaintUnderlay(nsIPresContext&           aPresContext,
                                 PRUint32&                 aFlags,
                                 const nsStyleTableBorder& aCellTableStyle,
                                 const nsStyleBorder&      aStyleBorder,
+                                const nsStylePadding&     aStylePadding,
                                 PRBool                    aVisibleBackground,
                                 PRBool&                   aPaintChildren)
 {
   if (aVisibleBackground) {
     nsRect rect(0, 0, mRect.width, mRect.height);
     nsCSSRendering::PaintBackground(&aPresContext, aRenderingContext, this,
-                                    aDirtyRect, rect, aStyleBorder, 0, 0, PR_TRUE);
+                                    aDirtyRect, rect, aStyleBorder, aStylePadding,
+                                    0, 0, PR_TRUE);
     // draw the border only when there is content or showing empty cells
     if (!GetContentEmpty() || NS_STYLE_TABLE_EMPTY_CELLS_SHOW == aCellTableStyle.mEmptyCells) {
       PRIntn skipSides = GetSkipSides();
@@ -455,11 +457,15 @@ nsTableCellFrame::Paint(nsIPresContext*      aPresContext,
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
     PRBool paintBackground = PR_FALSE;
     const nsStyleBorder*      myBorder       = nsnull;
+    const nsStylePadding*     myPadding      = nsnull;
     const nsStyleTableBorder* cellTableStyle = nsnull;
     const nsStyleVisibility* vis = 
        (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
     if (vis->IsVisibleOrCollapsed()) {
-      myBorder = (const nsStyleBorder*)mStyleContext->GetStyleData(eStyleStruct_Border); NS_ENSURE_TRUE(myBorder, NS_ERROR_NULL_POINTER);
+      myBorder = (const nsStyleBorder*)mStyleContext->GetStyleData(eStyleStruct_Border);
+      NS_ENSURE_TRUE(myBorder, NS_ERROR_NULL_POINTER);
+      myPadding = (const nsStylePadding*)mStyleContext->GetStyleData(eStyleStruct_Border);
+      NS_ENSURE_TRUE(myPadding, NS_ERROR_NULL_POINTER);
 
       GetStyleData(eStyleStruct_TableBorder, ((const nsStyleStruct *&)cellTableStyle));
 
@@ -470,7 +476,7 @@ nsTableCellFrame::Paint(nsIPresContext*      aPresContext,
     }
   
     PaintUnderlay(*aPresContext, aRenderingContext, aDirtyRect, aFlags, *cellTableStyle,
-                  *myBorder, paintBackground, paintChildren);
+                  *myBorder, *myPadding, paintBackground, paintChildren);
 
     if (vis->IsVisibleOrCollapsed()) {
       const nsStyleBackground* myColor = 
@@ -1537,6 +1543,7 @@ nsBCTableCellFrame::PaintUnderlay(nsIPresContext&           aPresContext,
                                   PRUint32&                 aFlags,
                                   const nsStyleTableBorder& aCellTableStyle,
                                   const nsStyleBorder&      aStyleBorder,
+                                  const nsStylePadding&     aStylePadding,
                                   PRBool                    aVisibleBackground,
                                   PRBool&                   aPaintChildren)
 {
@@ -1561,7 +1568,8 @@ nsBCTableCellFrame::PaintUnderlay(nsIPresContext&           aPresContext,
 
     nsRect rect(0, 0, mRect.width, mRect.height);
     nsCSSRendering::PaintBackground(&aPresContext, aRenderingContext, this,
-                                    aDirtyRect, rect, myBorder, 0, 0, PR_TRUE);
+                                    aDirtyRect, rect, myBorder, aStylePadding,
+                                    0, 0, PR_TRUE);
     // borders are painted by nsTableFrame
   }
 

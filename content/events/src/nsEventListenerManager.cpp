@@ -89,6 +89,8 @@
 #include "nsIDOMNSDocument.h"
 #include "nsIWidget.h"
 #include "nsContentUtils.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 
 
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
@@ -395,6 +397,26 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
                                          PRInt32 aFlags)
 {
   NS_ENSURE_TRUE(aListener, NS_ERROR_FAILURE);
+
+  if (aSubType & NS_EVENT_BITS_CONTEXTMENU) {
+    nsCOMPtr<nsIPrefService> prefService =
+      do_GetService(NS_PREFSERVICE_CONTRACTID);
+
+    NS_ENSURE_TRUE(prefService, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsIPrefBranch> prefBranch;
+    prefService->GetBranch(nsnull, getter_AddRefs(prefBranch));
+
+    PRBool blockOnContextMenu = PR_FALSE;
+    // dom.disable.event.oncontextmenu   ???
+    prefBranch->GetBoolPref("pref.name.here", &blockOnContextMenu);
+
+    // Only chrome is allowed to add a context menu listener if our
+    // pref is set to true.
+    if (blockOnContextMenu && !nsContentUtils::IsCallerChrome()) {
+      return NS_OK;
+    }
+  }
 
   nsVoidArray* listeners = GetListenersByType(aType, aKey, PR_TRUE);
 

@@ -129,6 +129,8 @@ nsGroupBoxFrame::Paint(nsIPresContext*      aPresContext,
       PRIntn skipSides = GetSkipSides();
       const nsStyleBorder* borderStyleData =
         (const nsStyleBorder*)mStyleContext->GetStyleData(eStyleStruct_Border);
+      const nsStylePadding* paddingStyleData =
+        (const nsStylePadding*)mStyleContext->GetStyleData(eStyleStruct_Padding);
        
         nsMargin border;
         if (!borderStyleData->GetBorder(border)) {
@@ -162,7 +164,7 @@ nsGroupBoxFrame::Paint(nsIPresContext*      aPresContext,
 
         nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
                                         aDirtyRect, rect, *borderStyleData,
-                                        0, 0);
+                                        *paddingStyleData, 0, 0);
 
         if (groupBox) {
 

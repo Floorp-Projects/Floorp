@@ -3130,12 +3130,15 @@ nsTreeBodyFrame::PaintBackgroundLayer(nsIStyleContext* aStyleContext, nsIPresCon
       aStyleContext->GetStyleData(eStyleStruct_Background);
   const nsStyleBorder* myBorder = (const nsStyleBorder*)
       aStyleContext->GetStyleData(eStyleStruct_Border);
+  const nsStylePadding* myPadding = (const nsStylePadding*)
+      aStyleContext->GetStyleData(eStyleStruct_Padding);
   const nsStyleOutline* myOutline = (const nsStyleOutline*)
       aStyleContext->GetStyleData(eStyleStruct_Outline);
   
   nsCSSRendering::PaintBackgroundWithSC(aPresContext, aRenderingContext,
                                         this, aDirtyRect, aRect,
-                                        *myColor, *myBorder, 0, 0);
+                                        *myColor, *myBorder, *myPadding,
+                                        0, 0);
 
   nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                               aDirtyRect, aRect, *myBorder, mStyleContext, 0);

@@ -683,6 +683,30 @@ nsComputedDOMStyle::GetBackgroundAttachment(nsIFrame *aFrame,
 }
 
 nsresult
+nsComputedDOMStyle::GetBackgroundClip(nsIFrame *aFrame,
+                                      nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleBackground *background = nsnull;
+  GetStyleData(eStyleStruct_Background, (const nsStyleStruct*&)background, aFrame);
+
+  PRUint8 clip = NS_STYLE_BG_CLIP_BORDER;
+  if (background) {
+    clip = background->mBackgroundClip;
+  }
+
+  const nsAFlatCString& backgroundClip =
+    nsCSSProps::SearchKeywordTable(clip,
+                                   nsCSSProps::kBackgroundClipKTable);
+
+  val->SetIdent(backgroundClip);
+
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
 nsComputedDOMStyle::GetBackgroundColor(nsIFrame *aFrame,
                                        nsIDOMCSSValue** aValue)
 {
@@ -735,6 +759,30 @@ nsComputedDOMStyle::GetBackgroundImage(nsIFrame *aFrame,
   } else {
     val->SetIdent(NS_LITERAL_STRING("none"));
   }
+
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetBackgroundOrigin(nsIFrame *aFrame,
+                                        nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleBackground *background = nsnull;
+  GetStyleData(eStyleStruct_Background, (const nsStyleStruct*&)background, aFrame);
+
+  PRUint8 origin = NS_STYLE_BG_ORIGIN_PADDING;
+  if (background) {
+    origin = background->mBackgroundOrigin;
+  }
+
+  const nsAFlatCString& backgroundOrigin =
+    nsCSSProps::SearchKeywordTable(origin,
+                                   nsCSSProps::kBackgroundOriginKTable);
+
+  val->SetIdent(backgroundOrigin);
 
   return CallQueryInterface(val, aValue);
 }
@@ -3571,6 +3619,8 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     \* ******************************* */
 
     COMPUTED_STYLE_MAP_ENTRY(appearance,                    Appearance),
+    COMPUTED_STYLE_MAP_ENTRY(_moz_background_clip,          BackgroundClip),
+    COMPUTED_STYLE_MAP_ENTRY(_moz_background_origin,        BackgroundOrigin),
     COMPUTED_STYLE_MAP_ENTRY(binding,                       Binding),
     COMPUTED_STYLE_MAP_ENTRY(border_bottom_colors,          BorderBottomColors),
     COMPUTED_STYLE_MAP_ENTRY(border_left_colors,            BorderLeftColors),

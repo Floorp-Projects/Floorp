@@ -1606,12 +1606,15 @@ nsBoxFrame::Paint(nsIPresContext*      aPresContext,
       PRIntn skipSides = GetSkipSides();
       const nsStyleBorder* border = (const nsStyleBorder*)
         mStyleContext->GetStyleData(eStyleStruct_Border);
+      const nsStylePadding* padding = (const nsStylePadding*)
+        mStyleContext->GetStyleData(eStyleStruct_Padding);
       const nsStyleOutline* outline = (const nsStyleOutline*)
         mStyleContext->GetStyleData(eStyleStruct_Outline);
 
       nsRect  rect(0, 0, mRect.width, mRect.height);
       nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                      aDirtyRect, rect, *border, 0, 0);
+                                      aDirtyRect, rect, *border, *padding,
+                                      0, 0);
       nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                   aDirtyRect, rect, *border, mStyleContext, skipSides);
       nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
