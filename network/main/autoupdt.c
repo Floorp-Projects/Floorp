@@ -20,6 +20,7 @@
 #include "autoupdt.h"
 #include "client.h"
 #include "prefapi.h"
+#include "prio.h"
 
 #ifndef MAXPATHLEN
 #define  MAXPATHLEN   1024
@@ -37,6 +38,7 @@ static void  autoupdate_execute(AutoUpdateConnnection autoupdt);
 static void  autoupdate_flush(AutoUpdateConnnection autoupdt);
 static void  autoupdate_loadurl(AutoUpdateConnnection autoupdt);
 static void  autoupdate_TimerCallback(void* data);
+static char* autoupdate_AssureDir(char* path);
 
 AutoUpdateConnnection gAutoUpdateConnnection;
 
@@ -267,7 +269,18 @@ autoupdate_resume()
       autoupdate_TimerCallback((void *)gAutoUpdateConnnection);
 }
 
-
+static char*
+autoupdate_AssureDir(char* path)
+{
+  char *autoupdt_dir = PR_smprintf("%sautoupdt", path);
+  if (PR_SUCCESS != PR_Access(autoupdt_dir, PR_ACCESS_WRITE_OK)) {
+    if ((PR_MkDir(autoupdt_dir, 0777)) < 0) {
+      /* Creation of directory failed. Don't do autoupdate. */
+      return NULL;
+    }
+  }
+  return autoupdt_dir;
+}
 
 #ifdef	XP_MAC
 PR_PUBLIC_API(void)
@@ -289,6 +302,7 @@ checkForAutoUpdate(void *cx, char* url, int32 file_size)
   PRInt32 cur_size;
   AutoUpdateConnnection autoupdt;
   XP_Bool enabled;
+  char *autoupdt_dir;
 
   PREF_GetBoolPref( "autoupdate.background_download_enabled", &enabled);
   if (!enabled)
@@ -340,8 +354,11 @@ checkForAutoUpdate(void *cx, char* url, int32 file_size)
       fe_GetProgramDirectory( Path, MAXPATHLEN-1 );
     }
   }
-  autoupdt->outFile = PR_smprintf("%sautoupdt/%s", Path, filename);
-
+  autoupdt_dir = autoupdate_AssureDir(Path);
+  if (autoupdt_dir != NULL) {
+    autoupdt->outFile = PR_smprintf("%s/%s", autoupdt_dir, filename);
+    PR_FREEIF(autoupdt_dir);
+  }
 #elif defined(WIN32)
 
   if (directory) {
@@ -350,7 +367,11 @@ checkForAutoUpdate(void *cx, char* url, int32 file_size)
   } else {
     FE_GetProgramDirectory( Path, _MAX_PATH );
   }
-  autoupdt->outFile = PR_smprintf("%sautoupdt\\%s", Path, filename);
+  autoupdt_dir = autoupdate_AssureDir(Path);
+  if (autoupdt_dir != NULL) {
+    autoupdt->outFile = PR_smprintf("%s\\%s", autoupdt_dir, filename);
+    PR_FREEIF(autoupdt_dir);
+  } 
 
 #elif defined(MAC)
   /* XXX: Fix it for Mac with the correct folder */
