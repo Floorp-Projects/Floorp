@@ -446,6 +446,7 @@
 
 .insert-smile > .menu-iconic-left {
   list-style-image: url("chrome://editor/content/images/smile_n.gif");
+  -moz-image-region: auto; /* cut off inheritance */
 }
 
 .insert-tongue > .menu-iconic-left {
