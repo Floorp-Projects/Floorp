@@ -345,13 +345,11 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
   // prepare NPP_ calls params
   NPP npp;    
   mInst->GetNPP(&npp);
-  pluginInfo->GetURL(&mNPStream.url);
-  pluginInfo->GetLastModified((PRUint32*)&(mNPStream.lastmodified));
-
   PRInt32 streamOffset;
   pluginInfo->GetStreamOffset(&streamOffset);
   mPosition = streamOffset;
-  streamOffset += length; 
+  streamOffset += length;
+
   // Set new stream offset for the next ODA call
   // regardless of how following NPP_Write call will behave
   // we pretend to consume all data from the input stream.
@@ -361,6 +359,12 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
   // Note: there is a special case when data flow
   // should be temporarily stopped if NPP_WriteReady returns 0 (bug #89270)
   pluginInfo->SetStreamOffset(streamOffset);
+
+  // set new end in case the content is compressed
+  // initial end is less than end of decompressed stream
+  // and some plugins (e.g. acrobat) can fail. 
+  if ((PRInt32)mNPStream.end < streamOffset)
+    mNPStream.end = streamOffset;
 
   PRUint32 bytesToRead = mStreamBufferSize;
   if (length < mStreamBufferSize) {
@@ -467,7 +471,7 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
     } // end of for(;;)
   } while ((PRInt32)(length) > 0);
 
-  return rv;
+  return rv == NS_BASE_STREAM_WOULD_BLOCK ? NS_OK:rv;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -478,19 +482,13 @@ ns4xPluginStreamListener::OnFileAvailable(nsIPluginStreamInfo* pluginInfo,
   if(!mInst || !mInst->IsStarted())
     return NS_ERROR_FAILURE;
 
-  NPP npp;
   const NPPluginFuncs *callbacks = nsnull;
-
   mInst->GetCallbacks(&callbacks);
-  mInst->GetNPP(&npp);
-
-  if(!callbacks)
+  if(!callbacks && !callbacks->asfile)
     return NS_ERROR_FAILURE;
-
-  pluginInfo->GetURL(&mNPStream.url);
-
-  if (callbacks->asfile == NULL)
-    return NS_OK;
+  
+  NPP npp;
+  mInst->GetNPP(&npp);
 
   PRLibrary* lib = nsnull;
   lib = mInst->fLibrary;
@@ -515,11 +513,6 @@ ns4xPluginStreamListener::OnStopBinding(nsIPluginStreamInfo* pluginInfo,
 {
   if(!mInst || !mInst->IsStarted())
     return NS_ERROR_FAILURE;
-
-  if(pluginInfo) {
-    pluginInfo->GetURL(&mNPStream.url);
-    pluginInfo->GetLastModified((PRUint32*)&(mNPStream.lastmodified));
-  }
 
   // check if the stream is of seekable type and later its destruction
   // see bug 91140    
