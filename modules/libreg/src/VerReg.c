@@ -272,9 +272,13 @@ done:
 #ifdef XP_MAC
 #define VR_FILE_SEP ':'
 #endif
+#ifdef XP_BEOS
+#define VR_FILE_SEP '/'
+#endif
 #ifdef XP_UNIX
 #define VR_FILE_SEP '/'
 #endif
+
 static Bool vr_CompareDirs( char *dir1, char *dir2 )
 {
     int len1,len2;

@@ -87,8 +87,10 @@
 #include <windef.h>  /* for MAX_PATH */
 #elif defined(XP_MAC)
 #define MAX_PATH 512
+#elif defined(XP_BEOS)
+#include <limits.h>
+#define MAX_PATH PATH_MAX
 #endif
-
 
 /* NOTE! It is EXREMELY important that node names be in UTF-8; otherwise
  * backwards path search for delim char will fail for multi-byte/Unicode names
