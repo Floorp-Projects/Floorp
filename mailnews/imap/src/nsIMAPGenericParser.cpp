@@ -623,7 +623,7 @@ char *nsIMAPGenericParser::CreateParenGroup()
 					NS_ASSERTION(fNextToken, "out of memory?or invalid syntax");
 					if (fNextToken)
 					{
-						int tokenLen = PL_strlen(fNextToken);
+						tokenLen = PL_strlen(fNextToken);
 						if (fNextToken[tokenLen-1] == '}')
 						{
 							// ok, we're looking at a literal string here
