@@ -43,7 +43,7 @@
 
   <separator id="nameseparator" class="thin"/>
   
-  <grid>
+  <grid style="min-width:250px">
     <columns>
       <column/>
       <column flex="1"/>
