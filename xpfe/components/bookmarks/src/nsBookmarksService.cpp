@@ -1548,7 +1548,11 @@ nsBookmarksService::ReadBookmarks()
 
 	nsFileSpec bookmarksFile;
 	rv = GetBookmarksFile(&bookmarksFile);
-	if (NS_FAILED(rv)) return rv;
+
+	// Oh well, couldn't get the bookmarks file. Guess there
+	// aren't any bookmarks to read in.
+	if (NS_FAILED(rv))
+	    return NS_OK;
 
 	rv = gRDFC->MakeSeq(mInner, kNC_BookmarksRoot, nsnull);
 	NS_ASSERTION(NS_SUCCEEDED(rv), "Unable to make NC:BookmarksRoot a sequence");
@@ -1682,7 +1686,11 @@ nsBookmarksService::WriteBookmarks(nsIRDFDataSource *ds, nsIRDFResource *root)
 
 	nsFileSpec bookmarksFile;
 	rv = GetBookmarksFile(&bookmarksFile);
-	if (NS_FAILED(rv)) return rv;
+
+	// Oh well, couldn't get the bookmarks file. Guess there
+	// aren't any bookmarks for us to write out.
+	if (NS_FAILED(rv))
+	    return NS_OK;
 
 	rv = NS_ERROR_FAILURE;
 	nsOutputFileStream	strm(bookmarksFile);
