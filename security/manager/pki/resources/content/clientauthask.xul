@@ -65,7 +65,7 @@
   <button id="cancel-button" label="&cancel.label;"
           oncommand="doCancel();"/> 
   <button id="help-button" label="&help.label;"
-     style="width: 10ex" oncommand="openHelp('chrome://help/content/help.xul?which_cert');" /> 
+     style="width: 10ex" oncommand="openHelp('which_cert');" /> 
   </hbox>
 </vbox>
 </window>
