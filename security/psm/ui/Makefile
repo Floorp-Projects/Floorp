@@ -36,7 +36,7 @@
 # (1) Include initial platform-independent assignments (MANDATORY).   #
 #######################################################################
 
-CORE_DEPTH = ../../
+CORE_DEPTH = ../..
 
 # Instead of using a manifest, we want to incorporate every .properties.in
 # file in this directory.
