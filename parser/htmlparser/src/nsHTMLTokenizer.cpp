@@ -717,12 +717,15 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
         
         //if((eHTMLTag_style==theTag) || (eHTMLTag_script==theTag)) {
         if(gHTMLElements[theTag].CanContainType(kCDATA)) {
-          nsAutoString endTag; endTag.AssignWithConversion(nsHTMLTags::GetStringValue(theTag));
-          endTag.InsertWithConversion("</",0,2);
+          nsAutoString endText, endTagName; 
+          endTagName.AssignWithConversion(nsHTMLTags::GetStringValue(theTag));
+          endText.Assign(endTagName);
+          endText.InsertWithConversion("</",0,2);
+
           CToken* textToken=theAllocator->CreateTokenOfType(eToken_text,eHTMLTag_text);
-          result=((CTextToken*)textToken)->ConsumeUntil(0,PRBool(theTag!=eHTMLTag_script),aScanner,endTag,mParseMode,aFlushTokens);  //tell new token to finish consuming text...    
-          //endTag.Append(">");
-          CToken* endToken=theAllocator->CreateTokenOfType(eToken_end,theTag,endTag);
+          result=((CTextToken*)textToken)->ConsumeUntil(0,PRBool(theTag!=eHTMLTag_script),aScanner,endText,mParseMode,aFlushTokens);  //tell new token to finish consuming text...    
+
+          CToken* endToken=theAllocator->CreateTokenOfType(eToken_end,theTag,endTagName);
           AddToken(textToken,result,&mTokenDeque,theAllocator);
           AddToken(endToken,result,&mTokenDeque,theAllocator);
         }
