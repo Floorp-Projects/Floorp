@@ -162,3 +162,20 @@ button.plain:hover:active > .button-box {
   padding: 0px;
 }
 
+/* ::::: close button ::::: */
+
+.close-button {
+    border: none;
+    list-style-image: url("chrome://global/skin/close.png");
+}
+
+.close-button:hover > .toolbarbutton-box {
+    border: 1px solid transparent;
+}
+
+.close-button:hover:active,
+.close-button:hover:active > .toolbarbutton-box {
+    border: none;
+    list-style-image: url("chrome://global/skin/close-act.png");
+}
+

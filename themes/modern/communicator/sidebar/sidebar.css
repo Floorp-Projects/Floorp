@@ -73,14 +73,10 @@
   padding: 2px;
 }
 
-#sidebar-panel-picker {
-  -moz-box-direction: reverse;
-}
-
 #sidebar-panel-picker > .toolbarbutton-box > .toolbarbutton-dropmarker {
   list-style-image: url("chrome://communicator/skin/sidebar/sbpicker-arrow.gif");
-  padding-right: 0px;
-  padding-left: 4px;
+  padding-right: 2px;
+  padding-left: 2px;
 }
 
 /* ::::: loading info ::::: */
@@ -118,7 +114,7 @@ box[loadstate="stopped"] > box > box > .image-panel-loading {
 .sidebar-tab-text-box {
   padding: 5px 0px 0px 0px;
 }
-  
+
 .sidebar-tab-mid-1 {
   min-width: 90px;
 }
@@ -328,3 +324,4 @@ box[loadstate="stopped"] > box > box > .image-panel-loading {
 .box-texttab[first-panel-after-selected="true"] {
   border-top: 1px solid #D6E0EA;
 }
+

@@ -20,6 +20,7 @@
 
  
 <?xml-stylesheet href="chrome://communicator/content/sidebar/sidebarOverlay.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://global/skin/button.css" type="text/css"?> 
 <?xul-overlay href="chrome://communicator/content/contentAreaContextOverlay.xul"?>
 
 <!DOCTYPE window [
@@ -64,7 +65,7 @@
         <toolbarbutton type="menu" id="sidebar-panel-picker" menubuttontype="sidebar-panels"
           onpopupshowing="SidebarBuildPickerPopup();"
           label="&sidebar.picker.label;" >
-          <menupopup id="sidebar-panel-picker-popup" popupanchor="topright"
+          <menupopup id="sidebar-panel-picker-popup" popupanchor="bottomleft"
             datasources="rdf:null"
             ref="urn:sidebar:current-panel-list"
             oncommand="SidebarTogglePanel(event.target);" >
@@ -98,6 +99,8 @@
             <menuseparator />
           </menupopup>
         </toolbarbutton>
+        <toolbarbutton class="close-button" oncommand="SidebarShowHide();"
+                       tooltiptext="&sidebar.close.tooltip;"/>
       </sidebarheader>
   
       <vbox id="sidebar-panels"
@@ -125,7 +128,8 @@
             <action>
               <hbox uri="?panel" class="box-texttab texttab-sidebar"
                 oncommand="SidebarSelectPanel(this,false,false)"
-                hidden="true" label="?title" exclude="?exclude" context="sidebarPopup" />
+                hidden="true" label="?title" exclude="?exclude" 
+                context="sidebarPopup"/>
               <vbox uri="?panel" flex="1*" hidden="true"
                 loadstate="never loaded">
                 <vbox flex="1" class="iframe-panel loadarea">

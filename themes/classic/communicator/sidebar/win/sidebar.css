@@ -47,14 +47,14 @@
   }
 
 #sidebar-panel-picker {
-  -moz-box-direction: reverse;
   color: inherit;
 }
   
 #sidebar-panel-picker > .toolbarbutton-box > .toolbarbutton-dropmarker
   {
-    padding-left            : 4px;
-    list-style-image        : url("chrome://global/skin/menu-arrow-hover.gif");
+    padding-left            : 2px;
+    padding-right           : 2px;
+    list-style-image        : url("chrome://communicator/skin/sidebar/down-arrow.gif");
   }
 
 .sidebar-header-text  

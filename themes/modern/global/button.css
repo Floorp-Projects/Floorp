@@ -435,3 +435,19 @@ button.plain > .button-internal-box > .button.icon:hover:active
 .exit-dialog {
   font: menu;
 }
+
+/* ::::: close button ::::: */
+
+.close-button {
+    padding: 4px 2px 4px 2px;
+    border: none;
+    list-style-image: url("chrome://global/skin/button/close.gif");
+}
+
+.close-button:hover {
+    list-style-image: url("chrome://global/skin/button/close-hov.gif");
+}
+
+.close-button:hover:active {
+    list-style-image: url("chrome://global/skin/button/close-act.gif");
+}
