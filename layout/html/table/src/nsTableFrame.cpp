@@ -2455,12 +2455,12 @@ NS_METHOD nsTableFrame::IncrementalReflow(nsIPresContext* aPresContext,
   }
   reflowState.availableWidth = pass1Width;
 
-  // get margin + border + padding
-  nsMargin borderMarginPadding;
-  GetTableBorder (borderMarginPadding);
-  borderMarginPadding += aReflowState.mComputedMargin + aReflowState.mComputedPadding;
+  // get border + padding
+  nsMargin borderPadding;
+  GetTableBorder (borderPadding);
+  borderPadding += aReflowState.mComputedPadding;
 
-  InnerTableReflowState state(aPresContext, reflowState, borderMarginPadding);
+  InnerTableReflowState state(aPresContext, reflowState, borderPadding);
 
   // determine if this frame is the target or not
   nsIFrame *target=nsnull;
