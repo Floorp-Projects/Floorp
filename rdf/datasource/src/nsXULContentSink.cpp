@@ -1041,6 +1041,9 @@ XULContentSinkImpl::AddAttributes(const nsIParserNode& aNode,
         }
 #endif
 
+        if (nameSpaceID == kNameSpaceID_HTML)
+            attr.ToLowerCase();
+
         // Get the URI for the namespace, so we can construct a
         // fully-qualified property name.
         mNameSpaceManager->GetNameSpaceURI(nameSpaceID, k);
@@ -1075,6 +1078,7 @@ XULContentSinkImpl::OpenTag(const nsIParserNode& aNode)
 
     // HTML tags all need to be upper-cased
     if (nameSpaceID == kNameSpaceID_HTML) {
+        tag.ToLowerCase();
         if (tag.Equals("script")) {
             return OpenScript(aNode);
         }
