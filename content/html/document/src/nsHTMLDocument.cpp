@@ -437,14 +437,14 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     }
 
     nsXPIDLCString referrerHeader;
-    nsAutoString referrer;
     // The misspelled key 'referer' is as per the HTTP spec
     rv = httpChannel->GetRequestHeader("referer", 
                                        getter_Copies(referrerHeader));
 
     if (NS_SUCCEEDED(rv)) {
-      referrer.AssignWithConversion(NS_STATIC_CAST(const char*,
-                                                   referrerHeader));
+      nsAutoString referrer;
+      referrer.AssignWithConversion(referrerHeader);
+
       SetReferrer(referrer);
     }
 
@@ -459,29 +459,37 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
                                                         contenttypeheader));
 
         PRInt32 start = contentType.RFind("charset=", PR_TRUE ) ;
+
         if(start != kNotFound) {
           start += 8; // 8 = "charset=".length
           PRInt32 end = 0;
-          if(PRUnichar('"') == contentType.CharAt(start)) {
+          if (contentType.Length() >= (PRUint32)start &&
+              contentType.CharAt(start) == PRUnichar('"')) {
           	start++;
-          	end = contentType.FindCharInSet("\"", start  );
-	          if(kNotFound == end )
-	            end = contentType.Length();
-          } else {
-          	end = contentType.FindCharInSet(";\n\r ", start  );
-	          if(kNotFound == end )
-	            end = contentType.Length();
-          }
-          nsAutoString theCharset;
-          contentType.Mid(theCharset, start, end - start);
-          nsCOMPtr<nsICharsetAlias> calias(do_CreateInstance(kCharsetAliasCID,
-                                                             &rv));
+          	end = contentType.FindCharInSet("\"", start);
 
-          if(calias) {
+	          if (kNotFound == end) {
+	            end = contentType.Length();
+            }
+          } else {
+          	end = contentType.FindCharInSet(";\n\r ", start);
+
+	          if(kNotFound == end) {
+	            end = contentType.Length();
+            }
+          }
+
+          nsCOMPtr<nsICharsetAlias> calias =
+            do_CreateInstance(kCharsetAliasCID);
+
+          if (calias) {
+            nsAutoString theCharset;
+            contentType.Mid(theCharset, start, end - start);
+
             nsAutoString preferred;
             rv = calias->GetPreferred(theCharset, preferred);
 
-            if(NS_SUCCEEDED(rv)) {
+            if (NS_SUCCEEDED(rv)) {
 #ifdef DEBUG_charset
  							char* cCharset = charset.ToNewCString();
 							printf("From HTTP Header, charset = %s\n", cCharset);
