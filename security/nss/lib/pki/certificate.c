@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.22 $ $Date: 2002/01/03 20:09:23 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.23 $ $Date: 2002/01/08 18:51:16 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -79,8 +79,15 @@ NSSCertificate_Destroy
   NSSCertificate *c
 )
 {
+    PRBool destroyed;
     if (c) {
-	nssPKIObject_Destroy(&c->object);
+	nssDecodedCert *dc = c->decoding;
+	destroyed = nssPKIObject_Destroy(&c->object);
+	if (destroyed) {
+	    if (dc) {
+		nssDecodedCert_Destroy(dc);
+	    }
+	}
     }
     return PR_SUCCESS;
 }
@@ -178,8 +185,7 @@ nssCertificate_GetDecoding
 )
 {
     if (!c->decoding) {
-	c->decoding = nssDecodedCert_Create(c->object.arena, 
-	                                    &c->encoding, c->type);
+	c->decoding = nssDecodedCert_Create(NULL, &c->encoding, c->type);
     }
     return c->decoding;
 }
