@@ -364,11 +364,12 @@ public:
     ////////////////////////////////////////////////////////////////////////////
     // SimplePluginStreamListener specific methods:
 
-    SimplePluginStreamListener(SimplePluginInstance* inst);
+    SimplePluginStreamListener(SimplePluginInstance* inst, const char* url);
     virtual ~SimplePluginStreamListener(void);
 
 protected:
     SimplePluginInstance*       fInst;
+    const char*                 fMessageName;
 
 };
 
@@ -719,18 +720,18 @@ SimplePluginInstance::Start(void)
 #ifdef NEW_PLUGIN_STREAM_API
     // Try getting some streams:
     gPlugin->GetPluginManager()->GetURL(this, "http://warp", NULL,
-                                        new SimplePluginStreamListener(this));
+                                        new SimplePluginStreamListener(this, "http://warp (Normal)"));
 
     gPlugin->GetPluginManager()->GetURL(this, "http://home.netscape.com", NULL,
-                                        new SimplePluginStreamListener(this),
+                                        new SimplePluginStreamListener(this, "http://home.netscape.com (AsFile)"),
                                         nsPluginStreamType_AsFile);
 
     gPlugin->GetPluginManager()->GetURL(this, "http://warp/java", NULL,
-                                        new SimplePluginStreamListener(this),
+                                        new SimplePluginStreamListener(this, "http://warp/java (AsFileOnly)"),
                                         nsPluginStreamType_AsFileOnly);
 
     gPlugin->GetPluginManager()->GetURL(this, "http://warp/java/oji", NULL,
-                                        new SimplePluginStreamListener(this),
+                                        new SimplePluginStreamListener(this, "http://warp/java/oji (Seek)"),
                                         nsPluginStreamType_Seek);
 #endif
 
@@ -926,17 +927,23 @@ SimplePluginInstance::GetValue(nsPluginInstanceVariable variable, void *value)
 // SimplePluginStreamListener Methods
 ////////////////////////////////////////////////////////////////////////////////
 
-SimplePluginStreamListener::SimplePluginStreamListener(SimplePluginInstance* inst)
-    : fInst(inst)
+SimplePluginStreamListener::SimplePluginStreamListener(SimplePluginInstance* inst,
+                                                       const char* msgName)
+    : fInst(inst), fMessageName(msgName)
 {
     gPluginObjectCount++;
     NS_INIT_REFCNT();
+    char msg[256];
+    sprintf(msg, "### Creating SimplePluginStreamListener for %s\n", fMessageName);
+    fInst->DisplayJavaMessage(msg, -1);
 }
 
 SimplePluginStreamListener::~SimplePluginStreamListener(void)
 {
     gPluginObjectCount--;
-    fInst->DisplayJavaMessage("Calling SimplePluginStream destructor.", -1);
+    char msg[256];
+    sprintf(msg, "### Destroying SimplePluginStreamListener for %s\n", fMessageName);
+    fInst->DisplayJavaMessage(msg, -1);
 }
 
 // This macro produces a simple version of QueryInterface, AddRef and Release.
@@ -947,7 +954,9 @@ NS_IMPL_ISUPPORTS(SimplePluginStreamListener, kIPluginStreamListenerIID);
 NS_METHOD
 SimplePluginStreamListener::OnStartBinding(const char* url, const nsPluginStreamInfo* info)
 {
-    fInst->DisplayJavaMessage("Opening plugin stream.", -1); 
+    char msg[256];
+    sprintf(msg, "### Opening plugin stream for %s\n", fMessageName);
+    fInst->DisplayJavaMessage(msg, -1);
     return NS_OK;
 }
 
@@ -959,8 +968,11 @@ SimplePluginStreamListener::OnDataAvailable(const char* url, nsIPluginInputStrea
     if (buffer) {
         PRInt32 amountRead = 0;
         nsresult rslt = input->Read(buffer, offset, length, &amountRead);
-        if (rslt == NS_OK)
-            fInst->DisplayJavaMessage(buffer, amountRead); 
+        if (rslt == NS_OK) {
+            char msg[256];
+            sprintf(msg, "### Received %d bytes at %d for %s\n", length, offset, fMessageName);
+            fInst->DisplayJavaMessage(msg, -1);
+        }
         delete buffer;
     }
     return NS_OK;
@@ -969,14 +981,18 @@ SimplePluginStreamListener::OnDataAvailable(const char* url, nsIPluginInputStrea
 NS_METHOD
 SimplePluginStreamListener::OnFileAvailable(const char* url, const char* fileName)
 {
-    fInst->DisplayJavaMessage("Calling SimplePluginStreamListener::OnFileAvailable.", -1); 
+    char msg[256];
+    sprintf(msg, "### File available for %s: %s\n", fMessageName, fileName);
+    fInst->DisplayJavaMessage(msg, -1);
     return NS_OK;
 }
 
 NS_METHOD
 SimplePluginStreamListener::OnStopBinding(const char* url, nsresult status)
 {
-    fInst->DisplayJavaMessage("Closing plugin stream.", -1); 
+    char msg[256];
+    sprintf(msg, "### Closing plugin stream for %s\n", fMessageName);
+    fInst->DisplayJavaMessage(msg, -1);
     return NS_OK;
 }
 
@@ -1108,7 +1124,6 @@ SimplePluginInstance::DisplayJavaMessage(char* msg, int len)
 {
 #ifdef XP_PC
     OutputDebugString(msg);
-    OutputDebugString("\n");
 #endif
 
     Simple* javaPeer;   // instance of the java class (there's no package qualifier)
