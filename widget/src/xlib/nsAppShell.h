@@ -49,6 +49,7 @@ class nsAppShell : public nsIAppShell
   
  private:
   nsDispatchListener*     mDispatchListener;
+  void DispatchEvent(XEvent *event);
 
 protected:
   nsIEventQueueService * mEventQueueService;

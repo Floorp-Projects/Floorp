@@ -26,17 +26,6 @@ nsDialog::nsDialog() : nsWidget(), nsIDialog()
   NS_INIT_REFCNT();
 }
 
-NS_METHOD nsDialog::Create(nsIWidget *aParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
-{
-  return NS_OK;
-}
-
 nsDialog::~nsDialog()
 {
 }
@@ -80,7 +69,4 @@ PRBool nsDialog::OnResize(nsRect &aWindowRect)
   return PR_FALSE;
 }
 
-NS_METHOD nsDialog::GetBounds(nsRect &aRect)
-{
-  return NS_OK;
-}
+

@@ -60,7 +60,4 @@ PRBool nsTooltipWidget::AutoErase()
   return(PR_TRUE);
 }
 
-NS_METHOD nsTooltipWidget::GetBounds(nsRect &aRect)
-{
-  return NS_OK;
-}
+

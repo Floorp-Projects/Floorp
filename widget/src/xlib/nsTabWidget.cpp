@@ -64,9 +64,6 @@ PRBool nsTabWidget::OnResize(nsRect &aWindowRect)
     return PR_FALSE;
 }
 
-NS_METHOD nsTabWidget::GetBounds(nsRect &aRect)
-{
-  return NS_OK;
-}
+
 
 

@@ -165,7 +165,8 @@ private:
   nsIFontMetrics          *mFontMetrics;
   nsIDeviceContext        *mContext;
   void                    *mScriptObject;
-  Font                     mCurrentFont;
+  XFontStruct             *mCurrentFont;
+  float                    mP2T;
 };
 
 #endif

@@ -30,14 +30,6 @@ public:
   nsDialog();
   virtual ~nsDialog();
 
-  NS_IMETHOD    Create(nsIWidget *aParent,
-                       const nsRect &aRect,
-                       EVENT_CALLBACK aHandleEventFunction,
-                       nsIDeviceContext *aContext,
-                       nsIAppShell *aAppShell = nsnull,
-                       nsIToolkit *aToolkit = nsnull,
-                       nsWidgetInitData *aInitData = nsnull);
-
   // nsISupports
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);                           
   NS_IMETHOD_(nsrefcnt) AddRef(void);                                       
@@ -50,7 +42,6 @@ public:
   virtual PRBool OnMove(PRInt32 aX, PRInt32 aY);
   virtual PRBool OnPaint();
   virtual PRBool OnResize(nsRect &aWindowRect);
-  NS_IMETHOD     GetBounds(nsRect &aRect);
 
 protected:
 };

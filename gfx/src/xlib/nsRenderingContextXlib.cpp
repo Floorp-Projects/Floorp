@@ -17,6 +17,7 @@
  */
 
 #include "nsRenderingContextXlib.h"
+#include "nsFontMetricsXlib.h"
 #include "prmem.h"
 
 static NS_DEFINE_IID(kIDOMRenderingContextIID, NS_IDOMRENDERINGCONTEXT_IID);
@@ -32,7 +33,8 @@ nsRenderingContextXlib::nsRenderingContextXlib()
   mFontMetrics = nsnull;
   mContext = nsnull;
   mScriptObject = nsnull;
-  mCurrentFont = 0;
+  mCurrentFont = nsnull;
+  mP2T = 1.0f;
 }
 
 nsRenderingContextXlib::~nsRenderingContextXlib()
@@ -94,7 +96,14 @@ nsRenderingContextXlib::Init(nsIDeviceContext* aContext, nsIWidget *aWindow)
 
   mRenderingSurface = (nsDrawingSurfaceXlib *)new nsDrawingSurfaceXlib();
 
-  return CommonInit();
+  if (mRenderingSurface) {
+    Drawable win = (Drawable)aWindow->GetNativeData(NS_NATIVE_WINDOW);
+    GC gc        = (GC)aWindow->GetNativeData(NS_NATIVE_GRAPHIC);
+    mRenderingSurface->Init(win, gc);
+    NS_ADDREF(mRenderingSurface);
+  }
+
+  return (CommonInit());
 }
 
 NS_IMETHODIMP
@@ -117,6 +126,7 @@ nsRenderingContextXlib::Init(nsIDeviceContext* aContext, nsDrawingSurface aSurfa
 nsresult nsRenderingContextXlib::CommonInit(void)
 {
   // put common stuff in here.
+  mContext->GetDevUnitsToAppUnits(mP2T);
   return NS_OK;
 }
 
@@ -268,7 +278,7 @@ nsRenderingContextXlib::GetColor(nsString& aColor)
 NS_IMETHODIMP
 nsRenderingContextXlib::SetFont(const nsFont& aFont)
 {
-  printf("nsRenderingContextXlib::SetFont()\n");
+  printf("nsRenderingContextXlib::SetFont(nsFont)\n");
   NS_IF_RELEASE(mFontMetrics);
   mContext->GetMetricsFor(aFont, mFontMetrics);
   return SetFont(mFontMetrics);
@@ -277,7 +287,7 @@ nsRenderingContextXlib::SetFont(const nsFont& aFont)
 NS_IMETHODIMP
 nsRenderingContextXlib::SetFont(nsIFontMetrics *aFontMetrics)
 {
-  printf("nsRenderingContextXlib::SetFont()\n");
+  printf("nsRenderingContextXlib::SetFont(nsIFontMetrics)\n");
   NS_IF_RELEASE(mFontMetrics);
   mFontMetrics = aFontMetrics;
   NS_IF_ADDREF(mFontMetrics);
@@ -286,8 +296,8 @@ nsRenderingContextXlib::SetFont(nsIFontMetrics *aFontMetrics)
   {
     nsFontHandle  fontHandle;
     mFontMetrics->GetFontHandle(fontHandle);
-    mCurrentFont = (Font)fontHandle;
-    XSetFont(gDisplay, mRenderingSurface->GetGC(), mCurrentFont);
+    mCurrentFont = (XFontStruct *)fontHandle;
+    XSetFont(gDisplay, mRenderingSurface->GetGC(), mCurrentFont->fid);
   }
   return NS_OK;
 }
@@ -650,7 +660,7 @@ NS_IMETHODIMP
 nsRenderingContextXlib::GetWidth(char aC, nscoord& aWidth)
 {
   printf("nsRenderingContextXlib::GetWidth()\n");
-  return NS_OK;
+  return GetWidth(&aC, 1, aWidth);
 }
 
 NS_IMETHODIMP
@@ -658,7 +668,7 @@ nsRenderingContextXlib::GetWidth(PRUnichar aC, nscoord& aWidth,
                                  PRInt32 *aFontID)
 {
   printf("nsRenderingContextXlib::GetWidth()\n");
-  return NS_OK;
+  return GetWidth(&aC, 1, aWidth, aFontID);
 }
 
 NS_IMETHODIMP
@@ -666,20 +676,28 @@ nsRenderingContextXlib::GetWidth(const nsString& aString, nscoord& aWidth,
                                  PRInt32 *aFontID)
 {
   printf("nsRenderingContextXlib::GetWidth()\n");
-  return NS_OK;
+  return GetWidth(aString.GetUnicode(), aString.Length(), aWidth, aFontID);
 }
 
 NS_IMETHODIMP
 nsRenderingContextXlib::GetWidth(const char* aString, nscoord& aWidth)
 {
   printf("nsRenderingContextXlib::GetWidth()\n");
-  return NS_OK;
+  return GetWidth(aString, strlen(aString), aWidth);
 }
 
 NS_IMETHODIMP
 nsRenderingContextXlib::GetWidth(const char* aString, PRUint32 aLength, nscoord& aWidth)
 {
   printf("nsRenderingContextXlib::GetWidth()\n");
+  if (0 == aLength) {
+    aWidth = 0;
+  }
+  else {
+    // XXX fix this...
+    int rawWidth = XTextWidth16(mCurrentFont, (XChar2b *)aString, aLength / 2);
+    aWidth = NSToCoordRound(rawWidth * mP2T);
+  }  
   return NS_OK;
 }
 
@@ -688,6 +706,54 @@ nsRenderingContextXlib::GetWidth(const PRUnichar* aString, PRUint32 aLength,
                                  nscoord& aWidth, PRInt32 *aFontID)
 {
   printf("nsRenderingContextXlib::GetWidth()\n");
+  if (0 == aLength) {
+    aWidth = 0;
+  }
+  else {
+    nsFontMetricsXlib* metrics = (nsFontMetricsXlib*) mFontMetrics;
+    nsFontXlib *prevFont = nsnull;
+    int rawWidth = 0;
+    PRUint32 start = 0;
+    PRUint32 i;
+    for (i = 0; i < aLength; i++) {
+      PRUnichar c = aString[i];
+      nsFontXlib* currFont = nsnull;
+      nsFontXlib** font = metrics->mLoadedFonts;
+      nsFontXlib** end = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
+      while (font < end) {
+        if (FONT_HAS_GLYPH((*font)->mMap, c)) {
+          currFont = *font;
+          goto FoundFont; // for speed -- avoid "if" statement
+        }
+        font++;
+      }
+      currFont = metrics->FindFont(c);
+FoundFont:
+      // XXX avoid this test by duplicating code -- erik
+      if (prevFont) {
+        if (currFont != prevFont) {
+          rawWidth += nsFontMetricsXlib::GetWidth(prevFont, &aString[start],
+                                                  i - start);
+          prevFont = currFont;
+          start = i;
+        }
+      }
+      else {
+        prevFont = currFont;
+        start = i;
+      }
+    }
+
+    if (prevFont) {
+      rawWidth += nsFontMetricsXlib::GetWidth(prevFont, &aString[start],
+                                              i - start);
+    }
+
+    aWidth = NSToCoordRound(rawWidth * mP2T);
+  }
+  if (nsnull != aFontID)
+    *aFontID = 0;
+
   return NS_OK;
 }
 

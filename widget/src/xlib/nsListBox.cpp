@@ -142,7 +142,4 @@ PRBool nsListBox::AutoErase()
   return(PR_TRUE);
 }
 
-NS_METHOD nsListBox::GetBounds(nsRect &aRect)
-{
-   return NS_OK;
-}
+

@@ -60,7 +60,7 @@ struct nsFontXlib
 
   void LoadFont(nsFontCharSet* aCharSet, nsFontMetricsXlib* aMetrics);
 
-  Font                   mFont;
+  XFontStruct           *mFont;
   PRUint8*               mMap;
   nsFontCharSetInfo*     mCharSetInfo;
   char*                  mName;
@@ -135,7 +135,8 @@ protected:
 
   nsIDeviceContext    *mDeviceContext;
   nsFont              *mFont;
-  Font                mFontHandle;
+  XFontStruct         *mFontHandle;
+  XFontStruct         *mFontStruct;
 
   nscoord             mHeight;
   nscoord             mAscent;

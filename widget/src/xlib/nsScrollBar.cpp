@@ -107,8 +107,5 @@ PRBool nsScrollbar::OnScroll(PRUint32 scrollCode, int cPos)
   return PR_FALSE;
 }
 
-NS_METHOD nsScrollbar::GetBounds(nsRect &aRect)
-{
-  return NS_OK;
-}
+
 
