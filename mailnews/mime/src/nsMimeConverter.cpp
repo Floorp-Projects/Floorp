@@ -78,25 +78,35 @@ nsMimeConverter::DecodeMimePartIIStr(const nsString& header,
                                            nsString& charset, 
                                            nsString& decodedString)
 {
-  char charsetCstr[kMAX_CSNAME];
+  char charsetCstr[kMAX_CSNAME+1];
   char *encodedCstr;
   char *decodedCstr;
   nsresult res = NS_OK;
 
+  (void) charset.ToCString(charsetCstr, kMAX_CSNAME+1);
   encodedCstr = header.ToNewCString();
   if (nsnull != encodedCstr) {
+    PRUnichar *unichars;
+    PRInt32 unicharLength;
     // apply MIME decode.
     decodedCstr = MIME_DecodeMimePartIIStr((const char *) encodedCstr, charsetCstr);
-    delete [] encodedCstr;
     if (nsnull == decodedCstr) {
-      // no decode needed, set an input string
-      charset.SetString("");
-      decodedString=header;
+      // no decode needed and no default charset was specified
+      if (*charsetCstr == '\0') {
+        decodedString = header;
+      }
+      else {
+        // no MIME encoded, convert default charset to unicode
+        res = MIME_ConvertToUnicode(charsetCstr, (const char *) encodedCstr, 
+                                    (void **) &unichars, &unicharLength);      
+        if (NS_SUCCEEDED(res)) {
+          decodedString.SetString(unichars, unicharLength);
+          PR_Free(unichars);
+        }
+      }
     }
     else {
-      // convert to unicode
-      PRUnichar *unichars;
-      PRInt32 unicharLength;
+      // convert MIME charset to unicode
       res = MIME_ConvertToUnicode(charsetCstr, (const char *) decodedCstr, 
                                   (void **) &unichars, &unicharLength);      
       if (NS_SUCCEEDED(res)) {
@@ -106,6 +116,7 @@ nsMimeConverter::DecodeMimePartIIStr(const nsString& header,
       }
       PR_Free(decodedCstr);
     }
+    delete [] encodedCstr;
   }
   return res;
 }

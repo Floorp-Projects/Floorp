@@ -1702,7 +1702,7 @@ PRInt32 MIME_ConvertCharset(const PRBool autoDetection, const char* from_charset
 PRInt32 MIME_ConvertToUnicode(const char* from_charset, const char* inCstring,
                                void** uniBuffer, PRInt32* uniLength)
 {
-  char charset[kMAX_CSNAME];
+  char charset[kMAX_CSNAME+1];
   // Since we don't have a converter for us-ascii and the manager does not map, 
   // so we do the mapping here.
   PL_strcpy(charset, PL_strcasecmp(from_charset, "us-ascii") ? (char *) from_charset : "iso-8859-1");
@@ -1712,7 +1712,7 @@ PRInt32 MIME_ConvertToUnicode(const char* from_charset, const char* inCstring,
 PRInt32 MIME_ConvertFromUnicode(const char* to_charset, const void* uniBuffer, const PRInt32 uniLength,
                                  char** outCstring)
 {
-  char charset[kMAX_CSNAME];
+  char charset[kMAX_CSNAME+1];
   // Since we don't have a converter for us-ascii and the manager does not map, 
   // so we do the mapping here.
   PL_strcpy(charset, PL_strcasecmp(to_charset, "us-ascii") ? (char *) to_charset : "iso-8859-1");
@@ -1726,18 +1726,9 @@ extern "C" char *MIME_DecodeMimePartIIStr(const char *header, char *charset)
   if (header == 0)
     return nsnull;
 
-  // No MIME encoded, duplicate the input and put us-ascii as a charset
-  if (*header == '\0' || !intlmime_is_mime_part2_header(header)) {
-    result = PL_strdup(header);
-    PL_strcpy(charset, "us-ascii");
-  }
-  else {
-    char *header_copy = PL_strdup(header);  // avoid to modify the original string
-
-    if (header_copy) {
-      result = MIME_StripContinuations(intl_decode_mime_part2_str(header_copy, charset));
-      PR_Free(header_copy);
-    }
+  // If no MIME encoded then do nothing otherwise decode the input.
+  if (*header != '\0' && intlmime_is_mime_part2_header(header)) {
+     result = MIME_StripContinuations(intl_decode_mime_part2_str(header, charset));
   }
 
   return result;
