@@ -1006,7 +1006,11 @@ nsExpatDriver::WillBuildModel(const CParserContext& aParserContext,
   NS_ENSURE_TRUE(mSink, NS_ERROR_FAILURE);
 
   static const XML_Memory_Handling_Suite memsuite =
-    { PR_Malloc, PR_Realloc, PR_Free };
+    {
+      (void *(*)(size_t))PR_Malloc,
+      (void *(*)(void *, size_t))PR_Realloc,
+      PR_Free
+    };
 
   static const PRUnichar kExpatSeparator[] = { 0xFFFF, '\0' };
 
