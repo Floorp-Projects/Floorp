@@ -412,6 +412,7 @@ InstallAddDirectory(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
     if (argv[2] == JSVAL_NULL || !JSVAL_IS_OBJECT(argv[2])) //argv[2] MUST be a jsval
     {
       *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      nativeThis->SaveError(nsInstall::INVALID_ARGUMENTS);
       return JS_TRUE;
     }
 
@@ -419,6 +420,7 @@ InstallAddDirectory(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
     if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
     {
       *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      nativeThis->SaveError(nsInstall::INVALID_ARGUMENTS);
       return JS_TRUE;
     }
 
@@ -447,6 +449,7 @@ InstallAddDirectory(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
     if ((argv[3] == JSVAL_NULL) || !JSVAL_IS_OBJECT(argv[3])) //argv[3] MUST be a jsval
     {
       *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      nativeThis->SaveError(nsInstall::INVALID_ARGUMENTS);
       return JS_TRUE;
     }
     
@@ -454,6 +457,7 @@ InstallAddDirectory(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
     if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
     {
       *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      nativeThis->SaveError(nsInstall::INVALID_ARGUMENTS);
       return JS_TRUE; 
     }
     
@@ -484,6 +488,7 @@ InstallAddDirectory(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
     if ((argv[3] == JSVAL_NULL) || !JSVAL_IS_OBJECT(argv[3])) //argv[3] MUST be a jsval
     {
       *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      nativeThis->SaveError(nsInstall::INVALID_ARGUMENTS);
       return JS_TRUE;
     }
 
@@ -491,6 +496,7 @@ InstallAddDirectory(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
     if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
     {
       *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      nativeThis->SaveError(nsInstall::INVALID_ARGUMENTS);
       return JS_TRUE; 
     }
 
@@ -498,7 +504,6 @@ InstallAddDirectory(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
     {
       return JS_FALSE;
     }
-
 
 
     folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
@@ -561,6 +566,7 @@ InstallAddSubcomponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
     if ((argv[3] == JSVAL_NULL) || !JSVAL_IS_OBJECT(argv[3])) //argv[3] MUST be a jsval
     {
       *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      nativeThis->SaveError(nsInstall::INVALID_ARGUMENTS);
       return JS_TRUE;
     }
 
@@ -568,6 +574,7 @@ InstallAddSubcomponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
     if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
     {
       *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      nativeThis->SaveError(nsInstall::INVALID_ARGUMENTS);
       return JS_TRUE; 
     }
 
@@ -602,6 +609,7 @@ InstallAddSubcomponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
     if ((argv[3] == JSVAL_NULL) || !JSVAL_IS_OBJECT(argv[3])) //argv[3] MUST be a jsval
     {
       *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      nativeThis->SaveError(nsInstall::INVALID_ARGUMENTS);
       return JS_TRUE;
     }
 
@@ -610,6 +618,7 @@ InstallAddSubcomponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
     if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
     {
       *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      nativeThis->SaveError(nsInstall::INVALID_ARGUMENTS);
       return JS_TRUE; 
     }
 
@@ -636,6 +645,7 @@ InstallAddSubcomponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
     if ((argv[2] == JSVAL_NULL) || !JSVAL_IS_OBJECT(argv[2])) //argv[2] MUST be a jsval
     {
       *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      nativeThis->SaveError(nsInstall::INVALID_ARGUMENTS);
       return JS_TRUE;
     }
     
@@ -643,6 +653,7 @@ InstallAddSubcomponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
     if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
     {
       *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      nativeThis->SaveError(nsInstall::INVALID_ARGUMENTS);
       return JS_TRUE; 
     }
 
@@ -746,6 +757,7 @@ InstallDeleteFile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
     if ((argv[0] == JSVAL_NULL) || !JSVAL_IS_OBJECT(argv[0])) //argv[0] MUST be a jsval
     {
       *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      nativeThis->SaveError(nsInstall::INVALID_ARGUMENTS);
       return JS_TRUE;
     }
 
@@ -753,6 +765,7 @@ InstallDeleteFile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
     if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
     {
       *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      nativeThis->SaveError(nsInstall::INVALID_ARGUMENTS);
       return JS_TRUE; 
     }
 
@@ -1004,7 +1017,10 @@ InstallGetComponentFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
   // if we couldn't find one return null rval from here
   if(nsnull == folder)
+  {
+    nativeThis->SaveError(nsInstall::DOES_NOT_EXIST);
     return JS_TRUE;
+  }
   
   /* Now create the new JSObject */
   JSObject* fileSpecObject;
@@ -1057,6 +1073,7 @@ InstallGetFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
       if ((argv[0] == JSVAL_NULL) || !JSVAL_IS_OBJECT(argv[0])) //argv[0] MUST be a jsval
       {
         *rval = JSVAL_NULL;
+        nativeThis->SaveError(nsInstall::INVALID_ARGUMENTS);
         return JS_TRUE;
       }
 
@@ -1064,6 +1081,7 @@ InstallGetFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
       if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
       {
         *rval = JSVAL_NULL;
+        nativeThis->SaveError(nsInstall::INVALID_ARGUMENTS);
         return JS_TRUE; 
       }
 
@@ -1316,6 +1334,7 @@ InstallPatch(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     if ((argv[3] == JSVAL_NULL) || !JSVAL_IS_OBJECT(argv[3])) //argv[3] MUST be a jsval
     {
       *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      nativeThis->SaveError(nsInstall::INVALID_ARGUMENTS);
       return JS_TRUE;
     }
     
@@ -1323,6 +1342,7 @@ InstallPatch(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
     {
       *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      nativeThis->SaveError(nsInstall::INVALID_ARGUMENTS);
       return JS_TRUE;
     }
 
@@ -1349,6 +1369,7 @@ InstallPatch(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     if ((argv[2] == JSVAL_NULL) || !JSVAL_IS_OBJECT(argv[2])) //argv[2] MUST be a jsval
     {
       *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      nativeThis->SaveError(nsInstall::INVALID_ARGUMENTS);
       return JS_TRUE;
     }
     
@@ -1356,6 +1377,7 @@ InstallPatch(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
     {
       *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      nativeThis->SaveError(nsInstall::INVALID_ARGUMENTS);
       return JS_TRUE;
     }
 
@@ -1439,6 +1461,7 @@ InstallSetPackageFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
     if ((argv[0] == JSVAL_NULL)  || !JSVAL_IS_OBJECT(argv[0])) //argv[0] MUST be a jsval
     {
       *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      nativeThis->SaveError(nsInstall::INVALID_ARGUMENTS);
       return JS_TRUE;
     }
 
@@ -1446,6 +1469,7 @@ InstallSetPackageFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
     if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
     {
       *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      nativeThis->SaveError(nsInstall::INVALID_ARGUMENTS);
       return JS_TRUE; 
     }
 
@@ -1749,7 +1773,7 @@ InstallFileOpDirRename(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
     }
 
     *rval = INT_TO_JSVAL(nativeRet);
-  }
+ }
   else
   {
     JS_ReportError(cx, "Function DirRename requires 2 parameters");
