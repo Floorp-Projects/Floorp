@@ -4591,6 +4591,7 @@ nsBlockFrame::RemoveFirstLineFrame(nsIPresContext* aPresContext,
   }
   return NS_OK;
 }
+
 #endif
 
 void
@@ -5318,100 +5319,85 @@ nsBlockFrame::HandleEvent(nsIPresContext& aPresContext,
   if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN || aEvent->message == NS_MOUSE_MOVE ||
     aEvent->message == NS_MOUSE_LEFT_DOUBLECLICK ) {
     nsresult result;
-    nsIFrame *resultFrame = nsnull;
-/*    result = GetFrameForPoint(aEvent->point, &resultFrame);
-    if (resultFrame  && NS_SUCCEEDED(result))
-    {
-      return resultFrame->HandleEvent(aPresContext, aEvent, aEventStatus);
-    }
-    */
+    nsIFrame *resultFrame = nsnull;//this will be passed the handle event when we 
+                                   //can tell who to pass it to
     nsCOMPtr<nsILineIterator> it; 
-    result = QueryInterface(nsILineIterator::GetIID(),getter_AddRefs(it));
-    if (NS_FAILED(result))
-      return NS_OK;//do not handle
-    PRInt32 countLines;
-    result = it->GetNumLines(&countLines);
-    if (NS_FAILED(result))
-      return NS_OK;//do not handle
-    PRInt32 i;
-    PRInt32 lineFrameCount;
-    nsIFrame *firstFrame;
-    nsRect  rect;
-    PRInt32 closestLine = 0;
-    PRInt32 closestDistance = 999999; //some HUGE number that will always fail first comparison
-    for (i = 0; i< countLines;i++)
-    {
-      result = it->GetLine(i, &firstFrame, &lineFrameCount,rect);
-      if (NS_FAILED(result))
-        continue;//do not handle
-      if (rect.Contains(aEvent->point.x, aEvent->point.y))
-      {
-        closestLine = i;
-        break;
-      }
-      else
-      {
-        PRInt32 distance = PR_MIN(abs(rect.y - aEvent->point.y),abs((rect.y + rect.height) - aEvent->point.y));
-        if (distance < closestDistance)
-        {
-          closestDistance = distance;
-          closestLine = i;
-        }
-        else if (distance > closestDistance)
-          break;//done
-      }
-    }
+    nsIFrame *mainframe = this;
     nsCOMPtr<nsIPresShell> shell;
     aPresContext.GetShell(getter_AddRefs(shell));
     if (!shell)
       return NS_OK;
     nsCOMPtr<nsIFocusTracker> tracker;
     result = shell->QueryInterface(nsIFocusTracker::GetIID(),getter_AddRefs(tracker));
-    nsIContent *content;
-    PRInt32 contentOffset;
-    nsIFrame *returnFrame;
-    closestDistance = 999999;
-    PRInt32 distance;
-    nsPoint offsetPoint; //used for offset of result frame
-    nsIView * view; //used for call of get offset from view
-    result = nsFrame::GetNextPrevLineFromeBlockFrame(tracker,
-                                        eDirNext, 
-                                        this, 
-                                        closestLine-1, 
-                                        aEvent->point.x,
-                                        &content, 
-                                        &contentOffset,
-                                        0,
-                                        &returnFrame
-                                        );
 
-    if (NS_SUCCEEDED(result) && returnFrame){
-      returnFrame->GetOffsetFromView(offsetPoint, &view);
-      returnFrame->GetRect(rect);
-      rect.x = offsetPoint.x;
-      rect.y = offsetPoint.y;
-      closestDistance = PR_MIN(abs(rect.y - aEvent->point.y),abs((rect.y + rect.height) - aEvent->point.y));
-      resultFrame = returnFrame;
+    result = mainframe->QueryInterface(nsILineIterator::GetIID(),getter_AddRefs(it));
+    nsIView* parentWithView;
+    nsPoint origin;
+
+    while(NS_SUCCEEDED(result))
+    { //we are starting aloop to allow us to "drill down to the one we want" 
+      mainframe->GetOffsetFromView(origin, &parentWithView);
+
+      if (NS_FAILED(result))
+        return NS_OK;//do not handle
+      PRInt32 countLines;
+      result = it->GetNumLines(&countLines);
+      if (NS_FAILED(result))
+        return NS_OK;//do not handle
+      PRInt32 i;
+      PRInt32 lineFrameCount;
+      nsIFrame *firstFrame;
+      nsRect  rect;
+      PRInt32 closestLine = 0;
+      PRInt32 closestDistance = 999999; //some HUGE number that will always fail first comparison
+      //incase we hit another block frame.
+      for (i = 0; i< countLines;i++)
+      {
+        result = it->GetLine(i, &firstFrame, &lineFrameCount,rect);
+        if (NS_FAILED(result))
+          continue;//do not handle
+        rect+=origin;
+        if (rect.Contains(aEvent->point.x, aEvent->point.y))
+        {
+          closestLine = i;
+          break;
+        }
+        else
+        {
+          PRInt32 distance = PR_MIN(abs(rect.y - aEvent->point.y),abs((rect.y + rect.height) - aEvent->point.y));
+          if (distance < closestDistance)
+          {
+            closestDistance = distance;
+            closestLine = i;
+          }
+          else if (distance > closestDistance)
+            break;//done
+        }
+      }
+      nsIContent *content;
+      PRInt32 contentOffset;
+      //we will now ask where to go. if we cant find what we want"aka another block frame" 
+      //we drill down again
+      result = nsFrame::GetNextPrevLineFromeBlockFrame(tracker,
+                                          eDirNext, 
+                                          mainframe, 
+                                          closestLine-1, 
+                                          aEvent->point.x,
+                                          &content, 
+                                          &contentOffset,
+                                          0,
+                                          &resultFrame
+                                          );
+
+      if (NS_SUCCEEDED(result) && resultFrame){
+        result = resultFrame->QueryInterface(nsILineIterator::GetIID(),getter_AddRefs(it));
+        mainframe = resultFrame;
+      }
     }
-    result = nsFrame::GetNextPrevLineFromeBlockFrame(tracker,
-                                        eDirPrevious, 
-                                        this, 
-                                        closestLine, 
-                                        aEvent->point.x,
-                                        &content, 
-                                        &contentOffset,
-                                        0,
-                                        &returnFrame
-                                        );
-    if (NS_SUCCEEDED(result) && returnFrame){
-      returnFrame->GetOffsetFromView(offsetPoint, &view);
-      returnFrame->GetRect(rect);
-      rect.x = offsetPoint.x;
-      rect.y = offsetPoint.y;
-      distance = PR_MIN(abs(rect.y - aEvent->point.y),abs((rect.y + rect.height) - aEvent->point.y));
-      if (distance < closestDistance)
-        resultFrame = returnFrame;
-    }
+    //end while loop. if nssucceeded resutl then keep going that means
+    //we have successfully hit another block frame and we should keep going.
+
+
     if (resultFrame)
       return resultFrame->HandleEvent(aPresContext, aEvent, aEventStatus);
     else

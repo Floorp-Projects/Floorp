@@ -907,6 +907,9 @@ nsTextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
               aRenderingContext.SetColor(NS_RGB(128,0,255));
               aRenderingContext.FillRect(aX, aY + baseline - offset, aWidth, size);
                                 }break;
+          default:
+            NS_ASSERTION(0,"what type of selection do i not know about?");
+            break;
           }
 
         }
@@ -1977,11 +1980,6 @@ nsTextFrame::PeekOffset(nsIFocusTracker *aTracker,
   if (aStartOffset < mContentOffset){
     aStartOffset = mContentOffset;
   }
-  if (aAmount == eSelectLine)
-  {
-      return nsFrame::PeekOffset(aTracker, aDesiredX, aAmount, aDirection, aStartOffset,
-                        aResultContent, aContentOffset, aResultFrame,aEatingWS);
-  }
   if (aStartOffset > (mContentOffset + mContentLength)){
     nsIFrame *nextInFlow;
     nextInFlow = GetNextInFlow();
@@ -1993,6 +1991,11 @@ nsTextFrame::PeekOffset(nsIFocusTracker *aTracker,
                         aResultContent,aContentOffset,aResultFrame,aEatingWS);
   }
 
+  if (aAmount == eSelectLine)
+  {
+      return nsFrame::PeekOffset(aTracker, aDesiredX, aAmount, aDirection, aStartOffset,
+                        aResultContent, aContentOffset, aResultFrame,aEatingWS);
+  }
 
   PRUnichar wordBufMem[WORD_BUF_SIZE];
   PRUnichar paintBufMem[TEXT_BUF_SIZE];
