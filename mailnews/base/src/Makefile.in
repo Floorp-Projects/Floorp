@@ -43,6 +43,7 @@ CPPSRCS = \
 	nsMsgImapMailFolder.cpp \
 	nsNewsSet.cpp \
 	nsLocalFolderSummarySpec.cpp	\
+	nsMsgMD5.cpp \
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk
