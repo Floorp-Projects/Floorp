@@ -686,7 +686,7 @@ nsHttpChannel::ProcessResponse()
     // set cookies, if any exist
     SetCookie(mResponseHead->PeekHeader(nsHttp::Set_Cookie));
 
-    // notify nsIHttpNotify implementations
+    // notify "http-on-examine-response" observers
     gHttpHandler->OnExamineResponse(this);
 
     // handle unused username and password in url (see bug 232567)
@@ -1047,8 +1047,8 @@ nsHttpChannel::ProcessPartialContent()
     rv = UpdateExpirationTime();
     if (NS_FAILED(rv)) return rv;
 
-    // notify observers interested in looking at a reponse that has been
-    // merged with any cached headers
+    // notify observers interested in looking at a response that has been
+    // merged with any cached headers (http-on-examine-merged-response).
     gHttpHandler->OnExamineMergedResponse(this);
 
     // the cached content is valid, although incomplete.
@@ -3012,7 +3012,7 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     // fetch cookies, and add them to the request header
     AddCookiesToRequest();
 
-    // Notify nsIHttpNotify implementations
+    // notify "http-on-modify-request" observers
     gHttpHandler->OnModifyRequest(this);
     
     mIsPending = PR_TRUE;
@@ -3984,7 +3984,7 @@ nsHttpChannel::DoAuthRetry(nsAHttpConnection *conn)
     NS_ASSERTION(!mTransaction, "should not have a transaction");
     nsresult rv;
 
-    // toggle mIsPending to allow nsIHttpNotify implementations to modify
+    // toggle mIsPending to allow nsIObserver implementations to modify
     // the request headers (bug 95044).
     mIsPending = PR_FALSE;
 
@@ -3993,7 +3993,7 @@ nsHttpChannel::DoAuthRetry(nsAHttpConnection *conn)
     // this authentication attempt (bug 84794).
     AddCookiesToRequest();
 
-    // notify nsIHttpNotify implementations
+    // notify "http-on-modify-request" observers
     gHttpHandler->OnModifyRequest(this);
 
     mIsPending = PR_TRUE;
