@@ -32,8 +32,8 @@ import javax.mail.event.ConnectionListener;
 import javax.mail.event.FolderEvent;
 import javax.mail.event.FolderListener;
 
-import com.sun.java.swing.JOptionPane;
-import com.sun.java.swing.event.EventListenerList;
+import javax.swing.JOptionPane;
+import javax.swing.event.EventListenerList;
 
 import calypso.util.PreferencesFactory;
 
@@ -277,8 +277,7 @@ public class ViewedStoreBase extends ViewedFolderBase implements ViewedStore {
     }
   }
 
-  void notifyFolderCreated(Folder aFolder)
-    throws MessagingException {
+  void notifyFolderCreated(Folder aFolder) {
     if (aFolder.getParent() != null) {
       try {
         ViewedFolderBase parent =

@@ -17,6 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  *
  * Created: Will Scullin <scullin@netscape.com>,  2 Oct 1997.
+ * Modified: Jeff Galyan <jeffrey.galyan@sun.com>, 31 Dec 1998
  */
 
 package grendel.widgets;
@@ -29,14 +30,14 @@ import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Insets;
 
-import com.sun.java.swing.BorderFactory;
-import com.sun.java.swing.Icon;
-import com.sun.java.swing.JComponent;
-import com.sun.java.swing.UIManager;
-import com.sun.java.swing.basic.BasicGraphicsUtils;
-import com.sun.java.swing.border.BevelBorder;
-import com.sun.java.swing.border.Border;
-import com.sun.java.swing.border.EmptyBorder;
+import javax.swing.BorderFactory;
+import javax.swing.Icon;
+import javax.swing.JComponent;
+import javax.swing.UIManager;
+import javax.swing.plaf.basic.BasicGraphicsUtils;
+import javax.swing.border.BevelBorder;
+import javax.swing.border.Border;
+import javax.swing.border.EmptyBorder;
 
 /**
  * The default renderer for column headers. Handles text headers and

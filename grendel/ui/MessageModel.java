@@ -25,8 +25,8 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Vector;
 
-import com.sun.java.swing.Icon;
-import com.sun.java.swing.ImageIcon;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
 
 import javax.mail.Message;
 import javax.mail.MessagingException;

@@ -33,10 +33,10 @@ import java.awt.event.MouseMotionListener;
 
 import java.util.Enumeration;
 
-import com.sun.java.swing.CellRendererPane;
-import com.sun.java.swing.JComponent;
-import com.sun.java.swing.UIManager;
-import com.sun.java.swing.event.ChangeEvent;
+import javax.swing.CellRendererPane;
+import javax.swing.JComponent;
+import javax.swing.UIManager;
+import javax.swing.event.ChangeEvent;
 
 public class ColumnHeader extends JComponent implements ColumnModelListener {
   ColumnModel fColumnModel;

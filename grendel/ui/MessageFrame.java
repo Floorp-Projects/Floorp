@@ -17,6 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  *
  * Created: Will Scullin <scullin@netscape.com>, 18 Nov 1997.
+ * Modified: Jeff Galyan <jeffrey.galyan@sun.com>, 30 Dec 1998
  */
 
 package grendel.ui;
@@ -28,10 +29,10 @@ import java.util.Vector;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 
-import netscape.orion.toolbars.ToolbarFactory;
-import netscape.orion.toolbars.ToolBarLayout;
-import netscape.orion.uimanager.AbstractUICmd;
-import netscape.orion.uimanager.IUICmd;
+//import netscape.orion.toolbars.ToolbarFactory;
+//import netscape.orion.toolbars.ToolBarLayout;
+//import netscape.orion.uimanager.AbstractUICmd;
+//import netscape.orion.uimanager.IUICmd;
 
 public class MessageFrame extends GeneralFrame {
   static Vector fMessageFrames = new Vector();
@@ -53,14 +54,15 @@ public class MessageFrame extends GeneralFrame {
     fMessagePanel = new MessagePanel();
 
     fPanel.add(fMessagePanel);
-    fMenu = buildMenu("messageMain", Util.MergeActions(actions,
-                                                 fMessagePanel.getActions()));
+    //    fMenu = buildMenu("messageMain", Util.MergeActions(actions,
+    //                                           fMessagePanel.getActions()));
+    fMenu = buildMenu();
     getRootPane().setMenuBar(fMenu);
 
     fToolBar = fMessagePanel.getToolBar();
-    fToolBar.addItem(ToolbarFactory.MakeINSToolbarItem(ToolBarLayout.CreateSpring(),
-                                                       null));
-    fToolBar.addItem(ToolbarFactory.MakeINSToolbarItem(fAnimation, null));
+    //    fToolBar.addItem(ToolbarFactory.MakeINSToolbarItem(ToolBarLayout.CreateSpring(),
+    //                                                       null));
+//    fToolBar.addItem(ToolbarFactory.MakeINSToolbarItem(fAnimation, null));
     fToolBarPanel.add(fToolBar);
 
     fStatusBar = buildStatusBar();
@@ -124,6 +126,6 @@ public class MessageFrame extends GeneralFrame {
     return null;
   }
 
-  IUICmd actions[] = { ActionFactory.GetExitAction(),
+  Object actions[] = { ActionFactory.GetExitAction(),
                        ActionFactory.GetComposeMessageAction() };
 }

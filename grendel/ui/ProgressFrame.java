@@ -32,13 +32,13 @@ import java.awt.event.ActionEvent;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
-import com.sun.java.swing.AbstractAction;
-import com.sun.java.swing.Box;
-import com.sun.java.swing.JButton;
-import com.sun.java.swing.JFrame;
-import com.sun.java.swing.JLabel;
-import com.sun.java.swing.JProgressBar;
-import com.sun.java.swing.UIManager;
+import javax.swing.AbstractAction;
+import javax.swing.Box;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JProgressBar;
+import javax.swing.UIManager;
 
 public abstract class ProgressFrame extends GeneralFrame implements Runnable {
   int             fMax;

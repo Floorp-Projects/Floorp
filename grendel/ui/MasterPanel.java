@@ -17,6 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  *
  * Created: Will Scullin <scullin@netscape.com>,  3 Sep 1997.
+ * Modified: Jeff Galyan <jeffrey.galyan@sun.com>, 31 Dec 1998
  */
 
 package grendel.ui;
@@ -42,27 +43,28 @@ import java.util.ResourceBundle;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
-import com.sun.java.swing.BorderFactory;
-import com.sun.java.swing.BoxLayout;
-import com.sun.java.swing.Icon;
-import com.sun.java.swing.JOptionPane;
-import com.sun.java.swing.JPanel;
-import com.sun.java.swing.JScrollPane;
-import com.sun.java.swing.JViewport;
-import com.sun.java.swing.KeyStroke;
-import com.sun.java.swing.ToolTipManager;
-import com.sun.java.swing.event.ChangeEvent;
-import com.sun.java.swing.event.ChangeListener;
-//import com.sun.java.swing.plaf.BorderUIResource;
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.Icon;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JToolBar;
+import javax.swing.JViewport;
+import javax.swing.KeyStroke;
+import javax.swing.ToolTipManager;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+//import javax.swing.plaf.BorderUIResource;
 
 import calypso.util.ArrayEnumeration;
 import calypso.util.Assert;
 import calypso.util.Preferences;
 import calypso.util.PreferencesFactory;
 
-import netscape.orion.toolbars.NSToolbar;
-import netscape.orion.uimanager.AbstractUICmd;
-import netscape.orion.uimanager.IUICmd;
+//import netscape.orion.toolbars.NSToolbar;
+//import netscape.orion.uimanager.AbstractUICmd;
+//import netscape.orion.uimanager.IUICmd;
 
 import javax.mail.Folder;
 import javax.mail.MessagingException;
@@ -71,10 +73,12 @@ import javax.mail.Store;
 
 import grendel.storage.FolderExtraFactory;
 import grendel.storage.SearchResultsFolderFactory;
+import grendel.ui.UIAction;
 import grendel.view.ViewedFolder;
 import grendel.view.ViewedStore;
 import grendel.view.ViewedStoreEvent;
 import grendel.view.ViewedStoreListener;
+import grendel.widgets.CellEditor;
 import grendel.widgets.Column;
 import grendel.widgets.ColumnHeader;
 import grendel.widgets.ColumnModel;
@@ -105,7 +109,7 @@ public class MasterPanel extends GeneralPanel {
   StoreChangeListener fStoreChangeListener = null;
   ViewedStore         fStores[];
 
-  IUICmd              fActions[] = {ActionFactory.GetNewMailAction(),
+  UIAction            fActions[] = {ActionFactory.GetNewMailAction(),
                                     ActionFactory.GetComposeMessageAction(),
                                     new CopyToClipboardAction(),
                                     new PasteFromClipboardAction(),
@@ -181,7 +185,7 @@ public class MasterPanel extends GeneralPanel {
         System.out.println("*** software from JavaSoft).");
       } catch (java.io.IOException e) {
         System.out.println("*** Couldn't create empty mailcap file: " + e);
-        System.out.println("*** Immanent crash is likely due to buggy");
+        System.out.println("*** Imminent crash is likely due to buggy");
         System.out.println("*** javamail software from JavaSoft.");
       }
     }
@@ -216,7 +220,7 @@ public class MasterPanel extends GeneralPanel {
    * Returns the actions associated with this panel.
    */
 
-  public IUICmd[] getActions() {
+  public UIAction[] getActions() {
     return fActions;
   }
 
@@ -224,7 +228,7 @@ public class MasterPanel extends GeneralPanel {
    * Returns the toolbar associated with this panel.
    */
 
-  public NSToolbar getToolBar() {
+  public JToolBar getToolBar() {
     return buildToolBar("masterToolBar", fActions);
   }
 
@@ -329,10 +333,12 @@ public class MasterPanel extends GeneralPanel {
     }
   }
 
-  class NewFolderAction extends AbstractUICmd {
+  class NewFolderAction extends UIAction {
+
     NewFolderAction() {
       super("folderNew");
     }
+
 
     public void actionPerformed(ActionEvent aEvent) {
       new Thread(new NewFolderThread(), "NewFolder").start();
@@ -346,7 +352,7 @@ public class MasterPanel extends GeneralPanel {
     }
   }
 
-  class DeleteFolderAction extends AbstractUICmd {
+  class DeleteFolderAction extends UIAction {
     DeleteFolderAction() {
       super("folderDelete");
     }
@@ -372,7 +378,8 @@ public class MasterPanel extends GeneralPanel {
     }
   }
 
-  class CopyToClipboardAction extends AbstractUICmd {
+  class CopyToClipboardAction extends UIAction {
+
     CopyToClipboardAction() {
       super("copy-to-clipboard");
     }
@@ -389,7 +396,8 @@ public class MasterPanel extends GeneralPanel {
     }
   }
 
-  class PasteFromClipboardAction extends AbstractUICmd {
+  class PasteFromClipboardAction extends UIAction {
+
     PasteFromClipboardAction() {
       super("paste-from-clipboard");
     }
@@ -676,13 +684,17 @@ class FolderModel implements TreeTableDataModel {
   }
 
   public void setData(Object aNode, Object aID, Object aValue) {
+    Folder parent = null, node = null;
     if (aValue.equals(getData(aNode, aID))) {
       return;
     }
-    Folder node = getFolder(aNode);
+    try {
+    node = getFolder(aNode);
 
     if (aID == MasterPanel.kNameID) {
-      Folder parent = node.getParent();
+      
+        parent = node.getParent();
+    }
       String newName = (String) aValue;
 
       Folder newFolder = null;
@@ -709,6 +721,7 @@ class FolderModel implements TreeTableDataModel {
         System.err.println("setData: " + e);
       }
       if (newFolder != null) {
+        try {
         if (newFolder.exists()) {
           Object args[] = {newName};
           String err =
@@ -717,6 +730,9 @@ class FolderModel implements TreeTableDataModel {
           JOptionPane.showMessageDialog(null, err,
                                         fLabels.getString("folderCreateError"),
                                         JOptionPane.ERROR_MESSAGE);
+        }
+        } catch (MessagingException exc) {
+        }
         } else {
           try {
             node.renameTo(newFolder);
@@ -724,9 +740,10 @@ class FolderModel implements TreeTableDataModel {
             System.err.println("renameTo: " + e);
           }
         }
-      }
+    } catch (MessagingException e) {
     }
-  }
+    }
+  
 
   Folder getFolder(Object aObject) {
     Folder res = null;

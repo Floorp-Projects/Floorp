@@ -26,7 +26,7 @@ import java.util.Vector;
 import java.util.Enumeration;
 import java.util.StringTokenizer;
 
-import com.sun.java.swing.event.ChangeEvent;
+import javax.swing.event.ChangeEvent;
 
 public class ColumnModelImp implements ColumnModel, ColumnChangeListener {
   Vector              fColumns = new Vector();

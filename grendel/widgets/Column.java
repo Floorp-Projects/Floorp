@@ -23,8 +23,8 @@ package grendel.widgets;
 
 import java.util.Vector;
 
-import com.sun.java.swing.Icon;
-import com.sun.java.swing.event.ChangeEvent;
+import javax.swing.Icon;
+import javax.swing.event.ChangeEvent;
 
 /**
  * A Column is a vertical display unit for a table that maintains width, rendering,
@@ -276,7 +276,7 @@ public class Column {
    * Sets the column's header renderer. This renders the
    * column caption in a space provided by that object
    * @see getHeaderRenderer()
-   * @see com.sun.java.swing.CellRenderer
+   * @see javax.swing.CellRenderer
    */
 
   public void setHeaderRenderer(HeaderRenderer aRenderer) {

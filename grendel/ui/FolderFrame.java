@@ -31,13 +31,9 @@ import javax.mail.MessagingException;
 
 import grendel.view.ViewedMessage;
 
-import com.sun.java.swing.event.ChangeEvent;
+import javax.swing.event.ChangeEvent;
 
-import netscape.orion.toolbars.ToolbarFactory;
-import netscape.orion.toolbars.ToolBarLayout;
-import netscape.orion.uimanager.AbstractUICmd;
-import netscape.orion.uimanager.IUICmd;
-
+import grendel.ui.UIAction;
 import grendel.widgets.StatusEvent;
 import grendel.widgets.TreePath;
 
@@ -57,14 +53,15 @@ public class FolderFrame extends GeneralFrame {
     fFolderPanel = new FolderPanel();
     fFolderPanel.addFolderPanelListener(new MessageSelectionListener());
     fPanel.add(fFolderPanel);
-    fMenu = buildMenu("folderMain", Util.MergeActions(actions,
-                                                   fFolderPanel.getActions()));
+    //    fMenu = buildMenu("folderMain", Util.MergeActions(actions,
+    //                                             fFolderPanel.getActions()));
+    fMenu = buildMenu();
     getRootPane().setMenuBar(fMenu);
 
     fToolBar = fFolderPanel.getToolBar();
-    fToolBar.addItem(ToolbarFactory.MakeINSToolbarItem(ToolBarLayout.CreateSpring(),
-                                                       null));
-    fToolBar.addItem(ToolbarFactory.MakeINSToolbarItem(fAnimation, null));
+    //  fToolBar.addItem(ToolbarFactory.MakeINSToolbarItem(ToolBarLayout.CreateSpring(),
+    //                                                       null));
+// fToolBar.addItem(ToolbarFactory.MakeINSToolbarItem(fAnimation, null));
     fToolBarPanel.add(fToolBar);
 
     fStatusBar = buildStatusBar();
@@ -143,7 +140,7 @@ public class FolderFrame extends GeneralFrame {
       }
     }
   }
-  IUICmd actions[] = { ActionFactory.GetExitAction(),
+  UIAction actions[] = { ActionFactory.GetExitAction(),
                        ActionFactory.GetNewMailAction(),
                        ActionFactory.GetComposeMessageAction()};
 }

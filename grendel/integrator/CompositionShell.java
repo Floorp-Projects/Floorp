@@ -29,17 +29,17 @@ import java.util.Vector;
 
 import javax.activation.DataHandler;
 
-import com.sun.java.swing.AbstractAction;
-import com.sun.java.swing.event.EventListenerList;
+import javax.swing.AbstractAction;
+import javax.swing.event.EventListenerList;
 
 import calypso.util.NullJavaEnumeration;
 
-import netscape.orion.uimanager.AbstractUICmd;
+import grendel.ui.UIAction;
 
-import netscape.shell.IShellIntegrator;
-import netscape.shell.IShellView;
-import netscape.shell.IShellViewCtx;
-import netscape.shell.ShellViewCtxListener;
+//import netscape.shell.IShellIntegrator;
+//import netscape.shell.IShellView;
+//import netscape.shell.IShellViewCtx;
+//import netscape.shell.ShellViewCtxListener;
 
 import grendel.composition.CompositionPanel;
 import grendel.prefs.Prefs;
@@ -247,7 +247,7 @@ public class CompositionShell implements IShellViewCtx {
     return fDataHandler;
   }
 
-  class ComposeAction extends AbstractUICmd {
+  class ComposeAction extends UIAction {
     public ComposeAction() {
       super("msgNew");
 

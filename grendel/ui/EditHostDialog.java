@@ -17,6 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  *
  * Created: Will Scullin <scullin@netscape.com>, 26 Nov 1997.
+ * Modified: Jeff Galyan <jeffrey.galyan@sun.com>, 30 Dec 1998
  */
 
 package grendel.ui;
@@ -33,14 +34,14 @@ import java.util.ResourceBundle;
 
 import javax.mail.URLName;
 
-import com.sun.java.swing.JOptionPane;
+import javax.swing.JOptionPane;
 
-import netscape.orion.dialogs.AttrNotFoundException;
-import netscape.orion.dialogs.PageModel;
-import netscape.orion.dialogs.PageUI;
+//import netscape.orion.dialogs.AttrNotFoundException;
+//import netscape.orion.dialogs.PageModel;
+//import netscape.orion.dialogs.PageUI;
 
-import xml.tree.XMLNode;
-import xml.tree.TreeBuilder;
+//import xml.tree.XMLNode;
+//import xml.tree.TreeBuilder;
 
 public class EditHostDialog extends GeneralDialog {
   static final String kIMAPRadioKey="imapRadio";

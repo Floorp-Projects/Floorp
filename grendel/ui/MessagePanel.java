@@ -17,6 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  *
  * Created: Will Scullin <scullin@netscape.com>,  3 Sep 1997.
+ * Modified: Jeff Galyan <jeffrey.galyan@sun.com>, 30 Dec 1998
  */
 
 package grendel.ui;
@@ -38,19 +39,20 @@ import java.net.MalformedURLException;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
-import com.sun.java.swing.Action;
-import com.sun.java.swing.AbstractAction;
-import com.sun.java.swing.BorderFactory;
-import com.sun.java.swing.JPanel;
-import com.sun.java.swing.JScrollPane;
-import com.sun.java.swing.JTextArea;
-import com.sun.java.swing.UIManager;
-import com.sun.java.swing.event.ChangeEvent;
-import com.sun.java.swing.event.EventListenerList;
-import com.sun.java.swing.text.Document;
-import com.sun.java.swing.text.BadLocationException;
+import javax.swing.Action;
+import javax.swing.AbstractAction;
+import javax.swing.BorderFactory;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.JToolBar;
+import javax.swing.UIManager;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.EventListenerList;
+import javax.swing.text.Document;
+import javax.swing.text.BadLocationException;
 
-import netscape.orion.toolbars.NSToolbar;
+//import netscape.orion.toolbars.NSToolbar;
 
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -61,6 +63,7 @@ import grendel.mime.parser.MimeParserFactory;
 import grendel.mime.html.MimeHTMLOperatorFactory;
 import grendel.storage.MessageExtra;
 import grendel.storage.MessageExtraFactory;
+import grendel.ui.UIAction;
 import grendel.widgets.StatusEvent;
 
 /* ####
@@ -71,17 +74,17 @@ import calypso.util.ByteBuf;
 import calypso.util.Preferences;
 import calypso.util.PreferencesFactory;
 
-import netscape.orion.uimanager.IUICmd;
+//import netscape.orion.uimanager.IUICmd;
 
-import lego.document.HTMLDocument;
+//import lego.document.HTMLDocument;
 
-import mg.edge.embed.jfc.URLComponent;
-import mg.edge.embed.jfc.URLComponentFactory;
-import mg.magellan.document.IDocument;
+//import mg.edge.embed.jfc.URLComponent;
+//import mg.edge.embed.jfc.URLComponentFactory;
+//import mg.magellan.document.IDocument;
 
 public class MessagePanel extends GeneralPanel {
   JTextArea     fTextArea;
-  URLComponent  fViewer;
+  //  URLComponent  fViewer;
   Thread        fMessageLoadThread;
   Message       fMessage;
   MessageHeader fHeader;
@@ -91,7 +94,7 @@ public class MessagePanel extends GeneralPanel {
 
   EventListenerList fListeners = new EventListenerList();
 
-  IUICmd              fActions[] = {ActionFactory.GetNewMailAction(),
+  UIAction              fActions[] = {ActionFactory.GetNewMailAction(),
                                     ActionFactory.GetComposeMessageAction()};
   /**
    * Constructs a new message panel.
@@ -101,13 +104,14 @@ public class MessagePanel extends GeneralPanel {
     fPanel = this;
 
     Preferences prefs = PreferencesFactory.Get();
-    useMagellan = prefs.getBoolean("usemagellan", true);
+    //    useMagellan = prefs.getBoolean("usemagellan", true);
+    useMagellan = false;
     makeRealHTML = prefs.getBoolean("makerealhtml", true);
 
     if (useMagellan) {
-      fViewer = (URLComponent) URLComponentFactory.NewURLComponent(null);
-      Component viewComponent = fViewer.getComponent();
-      add(viewComponent);
+      //    fViewer = (URLComponent) URLComponentFactory.NewURLComponent(null);
+      // Component viewComponent = fViewer.getComponent();
+      // add(viewComponent);
     } else {
       fTextArea = new JTextArea();
       fTextArea.setEditable(false);
@@ -139,7 +143,7 @@ public class MessagePanel extends GeneralPanel {
    * Returns the toolbar associated with this panel.
    */
 
-  public NSToolbar getToolBar() {
+  public JToolBar getToolBar() {
     return buildToolBar("messageToolBar", fActions);
   }
 
@@ -289,14 +293,14 @@ public class MessagePanel extends GeneralPanel {
             in = new StringBufferInputStream("This space intentionally left blank");
           }
 
-          synchronized (fViewer) {
+          // synchronized (fViewer) {
 /* ####
             URL url = new URL("http://home.netscape.com/");
             URLSource source = new URLSource(url, null, in);
             IDocument doc = new HTMLDocument(source);
             fViewer.goTo(doc);
 */
-          }
+          //    }
         }
       } catch (Exception e) {
         notifyStatus(e.toString());

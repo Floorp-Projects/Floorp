@@ -20,7 +20,7 @@
 package grendel.composition;
 
 import java.util.Vector;
-import com.sun.java.swing.event.*;
+import javax.swing.event.*;
 import netscape.orion.misc.*;
 
 public class TestDataSource2 extends ATC_SourceAdapter {

@@ -17,6 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  *
  * Created: Will Scullin <scullin@netscape.com>,  8 Sep 1997.
+ * Modified: Jeff Galyan <jeffrey.galyan@sun.com>, 30 Dec 1998
  */
 
 package grendel.ui;
@@ -29,69 +30,72 @@ import java.text.MessageFormat;
 import java.util.Enumeration;
 import java.util.ResourceBundle;
 
-import com.sun.java.swing.JFrame;
-import com.sun.java.swing.ToolTipManager;
+import javax.swing.JFrame;
+import javax.swing.ToolTipManager;
 
 import calypso.util.Preferences;
 import calypso.util.PreferencesFactory;
 
-import netscape.orion.uimanager.AbstractUICmd;
-import netscape.orion.uimanager.IUICmd;
+//import netscape.orion.uimanager.AbstractUICmd;
+//import netscape.orion.uimanager.IUICmd;
 
 import grendel.storage.MailDrop;
 import grendel.search.SearchFrame;
 import grendel.filters.FilterMaster;
 
 import grendel.composition.Composition;
+import grendel.ui.UIAction;
 
 public class ActionFactory {
-  static IUICmd fExitAction = new ExitAction();
-  static IUICmd fNewMailAction = new NewMailAction();
-  static IUICmd fComposeMessageAction = new ComposeMessageAction();
-  static IUICmd fPrefsAction = new PreferencesAction();
-  static IUICmd fSearchAction = new SearchAction();
-  static IUICmd fRunFiltersAction = new RunFiltersAction();
-  static IUICmd fShowTooltipsAction = new ShowTooltipsAction();
+  static ExitAction fExitAction = new ExitAction();
+  static NewMailAction fNewMailAction = new NewMailAction();
+  static ComposeMessageAction fComposeMessageAction = new ComposeMessageAction();
+  static PreferencesAction fPrefsAction = new PreferencesAction();
+  static SearchAction fSearchAction = new SearchAction();
+  static RunFiltersAction fRunFiltersAction = new RunFiltersAction();
+  static ShowTooltipsAction fShowTooltipsAction = new ShowTooltipsAction();
 
-  static public IUICmd GetExitAction() {
+  static public ExitAction GetExitAction() {
     return fExitAction;
   }
 
-  static public IUICmd GetNewMailAction() {
+  static public NewMailAction GetNewMailAction() {
     return fNewMailAction;
   }
 
-  static public IUICmd GetComposeMessageAction() {
+  static public ComposeMessageAction GetComposeMessageAction() {
     return fComposeMessageAction;
   }
 
-  static public void SetComposeMessageAction(IUICmd aAction) {
+  static public void SetComposeMessageAction(ComposeMessageAction aAction) {
     fComposeMessageAction = aAction;
   }
 
-  static public IUICmd GetPreferencesAction() {
+  static public PreferencesAction GetPreferencesAction() {
     return fPrefsAction;
   }
 
-  static public IUICmd GetSearchAction() {
+  static public SearchAction GetSearchAction() {
     return fSearchAction;
   }
 
-  static public IUICmd GetRunFiltersAction() {
+  static public RunFiltersAction GetRunFiltersAction() {
     return fRunFiltersAction;
   }
 
-  static public IUICmd GetShowTooltipsAction() {
+  static public ShowTooltipsAction GetShowTooltipsAction() {
     return fShowTooltipsAction;
   }
 }
 
-class ExitAction extends AbstractUICmd {
+class ExitAction extends UIAction {
+
   public ExitAction() {
     super("appExit");
 
     setEnabled(true);
   }
+  
 
   public void actionPerformed(ActionEvent aEvent) {
     GeneralFrame.CloseAllFrames();
@@ -102,19 +106,22 @@ class ExitAction extends AbstractUICmd {
   }
 }
 
-class NewMailAction extends AbstractUICmd {
+class NewMailAction extends UIAction {
+
   public NewMailAction() {
     super("msgGetNew");
 
     setEnabled(true);
   }
+  
 
   public void actionPerformed(ActionEvent aEvent) {
     ProgressFactory.NewMailProgress();
   }
 }
 
-class ComposeMessageAction extends AbstractUICmd {
+class ComposeMessageAction extends UIAction {
+
   public ComposeMessageAction() {
     super("msgNew");
 
@@ -135,7 +142,7 @@ class ComposeMessageAction extends AbstractUICmd {
   }
 }
 
-class PreferencesAction extends AbstractUICmd {
+class PreferencesAction extends UIAction {
   PreferencesAction fThis;
 
   public PreferencesAction() {
@@ -170,7 +177,7 @@ class PreferencesAction extends AbstractUICmd {
   }
 }
 
-class SearchAction extends AbstractUICmd {
+class SearchAction extends UIAction {
   SearchAction() {
     super("appSearch");
   }
@@ -183,7 +190,8 @@ class SearchAction extends AbstractUICmd {
   }
 }
 
-class RunFiltersAction extends AbstractUICmd {
+class RunFiltersAction extends UIAction {
+
   RunFiltersAction() {
     super("appRunFilters");
   }
@@ -194,7 +202,8 @@ class RunFiltersAction extends AbstractUICmd {
   }
 }
 
-class ShowTooltipsAction extends AbstractUICmd {
+class ShowTooltipsAction extends UIAction {
+
   ShowTooltipsAction() {
     super("appShowTooltips");
 
@@ -202,13 +211,13 @@ class ShowTooltipsAction extends AbstractUICmd {
       PreferencesFactory.Get().getBoolean("app.tooltips", true);
     ToolTipManager.sharedInstance().setEnabled(enabled);
 
-    setSelected(enabled ? AbstractUICmd.kSelected : AbstractUICmd.kUnselected);
+    //    setSelected(enabled ? AbstractUICmd.kSelected : AbstractUICmd.kUnselected);
   }
 
   public void actionPerformed(ActionEvent aEvent) {
     boolean enabled = !ToolTipManager.sharedInstance().isEnabled();
     ToolTipManager.sharedInstance().setEnabled(enabled);
-    setSelected(enabled ? AbstractUICmd.kSelected : AbstractUICmd.kUnselected);
+    //    setSelected(enabled ? AbstractUICmd.kSelected : AbstractUICmd.kUnselected);
     PreferencesFactory.Get().putBoolean("app.tooltips", enabled);
   }
 }

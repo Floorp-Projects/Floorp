@@ -23,7 +23,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
 
-import com.sun.java.swing.*;
+import javax.swing.*;
 
 class NewCardDialog extends Dialog {
 

@@ -40,8 +40,8 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Vector;
 
-import com.sun.java.swing.JComponent;
-import com.sun.java.swing.UIManager;
+import javax.swing.JComponent;
+import javax.swing.UIManager;
 
 /**
  * This class is used to create a divided pane with moveable dividers (NYI)

@@ -17,6 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  *
  * Created: Will Scullin <scullin@netscape.com>,  3 Sep 1997.
+ * Modified: Jeff Galyan <jeffrey.galyan@sun.com>, 30 Dec 1998
  */
 
 package grendel.ui;
@@ -44,28 +45,30 @@ import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Flags;
 
-import com.sun.java.swing.BorderFactory;
-import com.sun.java.swing.Icon;
-import com.sun.java.swing.ImageIcon;
-import com.sun.java.swing.JMenu;
-import com.sun.java.swing.JMenuItem;
-import com.sun.java.swing.JPopupMenu;
-import com.sun.java.swing.JScrollPane;
-import com.sun.java.swing.KeyStroke;
-import com.sun.java.swing.ToolTipManager;
-import com.sun.java.swing.event.ChangeEvent;
-//import com.sun.java.swing.plaf.BorderUIResource;
+import javax.swing.BorderFactory;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
+import javax.swing.JScrollPane;
+import javax.swing.JToolBar;
+import javax.swing.KeyStroke;
+import javax.swing.ToolTipManager;
+import javax.swing.event.ChangeEvent;
+//import javax.swing.plaf.BorderUIResource;
 
 import calypso.util.Preferences;
 import calypso.util.PreferencesFactory;
 
-import netscape.orion.toolbars.NSToolbar;
-import netscape.orion.uimanager.AbstractUICmd;
-import netscape.orion.uimanager.IUICmd;
+//import netscape.orion.toolbars.NSToolbar;
+//import netscape.orion.uimanager.AbstractUICmd;
+//import netscape.orion.uimanager.IUICmd;
 
 import grendel.composition.Composition;
 import grendel.storage.MessageExtra;
 import grendel.storage.MessageExtraFactory;
+import grendel.ui.UIAction;
 import grendel.view.FolderView;
 import grendel.view.FolderViewFactory;
 import grendel.view.MessageSetView;
@@ -171,20 +174,20 @@ public class FolderPanel extends GeneralPanel {
   // Actions that can be enabled/disabled
   //
 
-  IUICmd fDeleteMessageAction = new DeleteMessageAction();
-  IUICmd fOpenMessageAction = new OpenMessageAction();
+  DeleteMessageAction fDeleteMessageAction = new DeleteMessageAction();
+  OpenMessageAction fOpenMessageAction = new OpenMessageAction();
 
-  IUICmd fReplyAction = new ReplyAction("msgReply", false);
-  IUICmd fReplyAllAction = new ReplyAction("msgReplyAll", true);
+  ReplyAction fReplyAction = new ReplyAction("msgReply", false);
+  ReplyAction fReplyAllAction = new ReplyAction("msgReplyAll", true);
 
-  IUICmd fMarkMsgReadAction = new MarkAction("markMsgRead", kMessage);
-  IUICmd fMarkThreadReadAction = new MarkAction("markThreadRead", kThread);
-  IUICmd fMarkAllReadAction = new MarkAction("markAllRead", kAll);
+  MarkAction fMarkMsgReadAction = new MarkAction("markMsgRead", kMessage);
+  MarkAction fMarkThreadReadAction = new MarkAction("markThreadRead", kThread);
+  MarkAction fMarkAllReadAction = new MarkAction("markAllRead", kAll);
 
-  IUICmd fThreadAction = new ThreadAction();
+  ThreadAction fThreadAction = new ThreadAction();
   // The big action list
 
-  IUICmd              fActions[] = {ActionFactory.GetNewMailAction(),
+  UIAction            fActions[] = {ActionFactory.GetNewMailAction(),
                                     ActionFactory.GetComposeMessageAction(),
                                     fDeleteMessageAction,
                                     fOpenMessageAction,
@@ -392,7 +395,7 @@ public class FolderPanel extends GeneralPanel {
    * Returns the actions available for this panel
    */
 
-  public IUICmd[] getActions() {
+  public UIAction[] getActions() {
     return Util.MergeActions(fActions, fSortActions);
   }
 
@@ -400,7 +403,7 @@ public class FolderPanel extends GeneralPanel {
    * Returns the toolbar associated with this panel.
    */
 
-  public NSToolbar getToolBar() {
+  public JToolBar getToolBar() {
     return buildToolBar("folderToolBar", getActions());
   }
 
@@ -439,12 +442,12 @@ public class FolderPanel extends GeneralPanel {
       if (order != null && order.length > 0) {
         for (int i = 0; i < fSortActions.length; i++) {
           if (fSortActions[i].getType() == order[0]) {
-            fSortActions[i].setSelected(IUICmd.kSelected);
+            fSortActions[i].setSelected(true);
           }
         }
       }
       fThreadAction.setSelected(fView.isThreaded() ?
-                                IUICmd.kSelected : IUICmd.kUnselected);
+                                true : false);
     }
   }
 
@@ -713,7 +716,8 @@ public class FolderPanel extends GeneralPanel {
     }
   }
 
-  class OpenMessageAction extends AbstractUICmd implements Runnable {
+  class OpenMessageAction extends UIAction implements Runnable {
+
     OpenMessageAction() {
       super("msgOpen");
     }
@@ -746,7 +750,8 @@ public class FolderPanel extends GeneralPanel {
   // DeleteMessageAction class
   //
 
-  class DeleteMessageAction extends AbstractUICmd {
+  class DeleteMessageAction extends UIAction {
+
     DeleteMessageAction() {
       super("msgDelete");
       setEnabled(false);
@@ -761,7 +766,8 @@ public class FolderPanel extends GeneralPanel {
   // CopyMessageAction class
   //
 
-  class CopyMessageAction extends AbstractUICmd {
+  class CopyMessageAction extends UIAction {
+
     Folder fDest;
 
     CopyMessageAction(Folder aFolder) {
@@ -779,7 +785,8 @@ public class FolderPanel extends GeneralPanel {
   // MoveMessageAction class
   //
 
-  class MoveMessageAction extends AbstractUICmd {
+  class MoveMessageAction extends UIAction {
+
     Folder fDest;
 
     MoveMessageAction(Folder aFolder) {
@@ -797,16 +804,23 @@ public class FolderPanel extends GeneralPanel {
   // ThreadAction class
   //
 
-  class ThreadAction extends AbstractUICmd {
+  class ThreadAction extends UIAction {
+
+    boolean selected;
+
     public ThreadAction() {
       super("toggleThreading");
+    }
+
+    public void setSelected(boolean isSelected) {
+      selected = isSelected;
     }
 
     public void actionPerformed(ActionEvent aEvent) {
       if (fView != null) {
         boolean selected = !fView.isThreaded();
         fView.setIsThreaded(selected);
-        setSelected(selected ? IUICmd.kSelected : IUICmd.kUnselected);
+        setSelected(selected ? true : false);
         fView.reThread();
       }
     }
@@ -816,8 +830,9 @@ public class FolderPanel extends GeneralPanel {
   // SortAction class
   //
 
-  class SortAction extends AbstractUICmd {
+  class SortAction extends UIAction {
     int fType;
+    boolean selected;
 
     public SortAction(String aAction, int aType) {
       super(aAction);
@@ -827,12 +842,16 @@ public class FolderPanel extends GeneralPanel {
     public int getType() {
       return fType;
     }
+    
+    public void setSelected(boolean isSelected) {
+      selected = isSelected;
+    }
 
     public void actionPerformed(ActionEvent aEvent) {
       String action = aEvent.getActionCommand();
       if (fView != null) {
         fView.prependSortOrder(fType);
-        setSelected(kSelected);
+        setSelected(true);
         fView.reThread();
       }
     }
@@ -842,7 +861,7 @@ public class FolderPanel extends GeneralPanel {
   // ReplyAction class
   //
 
-  class ReplyAction extends AbstractUICmd {
+  class ReplyAction extends UIAction {
     boolean replyall;
     public ReplyAction(String aAction, boolean r) {
       super(aAction);
@@ -850,6 +869,7 @@ public class FolderPanel extends GeneralPanel {
 
       replyall = r;
     }
+
     public void actionPerformed(ActionEvent aEvent) {
       Vector selection = getSelectedMessageVector();
       if (selection.size() != 1) {
@@ -867,7 +887,7 @@ public class FolderPanel extends GeneralPanel {
   // MarkAction class
   //
 
-  class MarkAction extends AbstractUICmd {
+  class MarkAction extends UIAction {
     int fScope;
 
     MarkAction(String aName, int aScope) {
@@ -932,17 +952,14 @@ public class FolderPanel extends GeneralPanel {
       //
       if (msgs != null) {
         try {
-          fFolder.setFlags(msgs, new Flags(Flags.SEEN), true);
-        } catch (MessagingException e) {
-          // #### pop up a dialog or something
-          synchronized(System.err) {
-            System.err.print("Error: ");
-            e.printStackTrace(System.err);
-          }
+          fFolder.setFlags(msgs, new Flags(Flags.Flag.SEEN), true);
+        } catch (MessagingException exc) {
+          exc.printStackTrace();
+        }
         }
       }
     }
-  }
+  
 
   //
   // Cut-n-paste stuff
@@ -954,7 +971,8 @@ public class FolderPanel extends GeneralPanel {
     }
   }
 
-  class CopyToClipboardAction extends AbstractUICmd {
+  class CopyToClipboardAction extends UIAction {
+
     CopyToClipboardAction() {
       super("copy-to-clipboard");
     }
@@ -971,7 +989,8 @@ public class FolderPanel extends GeneralPanel {
     }
   }
 
-  class PasteFromClipboardAction extends AbstractUICmd {
+  class PasteFromClipboardAction extends UIAction {
+
     PasteFromClipboardAction() {
       super("paste-from-clipboard");
     }

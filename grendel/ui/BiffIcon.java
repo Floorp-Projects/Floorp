@@ -21,11 +21,11 @@
 
 package grendel.ui;
 
-import com.sun.java.swing.Icon;
-import com.sun.java.swing.ImageIcon;
-import com.sun.java.swing.JLabel;
-import com.sun.java.swing.event.ChangeListener;
-import com.sun.java.swing.event.ChangeEvent;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
+import javax.swing.JLabel;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.ChangeEvent;
 
 import grendel.storage.MailDrop;
 

@@ -31,13 +31,13 @@ import java.awt.event.ItemListener;
 
 import javax.mail.search.SearchTerm;
 
-import com.sun.java.swing.JComboBox;
-import com.sun.java.swing.JLabel;
-import com.sun.java.swing.JList;
-import com.sun.java.swing.JPanel;
-import com.sun.java.swing.JTextField;
-import com.sun.java.swing.ListCellRenderer;
-import com.sun.java.swing.border.EmptyBorder;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.ListCellRenderer;
+import javax.swing.border.EmptyBorder;
 
 import grendel.widgets.SelectionManager;
 

@@ -23,7 +23,7 @@ package grendel.widgets;
 
 import java.awt.Component;
 
-import com.sun.java.swing.Renderer;
+import javax.swing.Renderer;
 
 public interface HeaderRenderer {
   public final static int NORMAL = 0;

@@ -23,7 +23,7 @@ package grendel.widgets;
 
 import java.util.EventListener;
 
-import com.sun.java.swing.event.ChangeEvent;
+import javax.swing.event.ChangeEvent;
 
 public interface ColumnModelListener extends EventListener {
   public void columnAdded(ColumnModelEvent e);

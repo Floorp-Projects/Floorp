@@ -26,7 +26,7 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Vector;
 
-import com.sun.java.swing.event.ChangeEvent;
+import javax.swing.event.ChangeEvent;
 
 public class MultiSelectionManager implements SelectionManager {
   Vector    fSelection = new Vector();

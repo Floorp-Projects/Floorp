@@ -15,6 +15,8 @@
  * The Initial Developer of the Original Code is Netscape Communications
  * Corporation.  Portions created by Netscape are Copyright (C) 1997
  * Netscape Communications Corporation.  All Rights Reserved.
+ *
+ * Modified: Jeff Galyan <jeffrey.galyan@sun.com>, 30 Dec 1998
  */
 
 package grendel.composition;
@@ -25,11 +27,11 @@ import java.awt.BorderLayout;
 import java.util.Properties;
 import java.util.Vector;
 
-//import com.sun.java.swing.*;
-import com.sun.java.swing.event.*;
+import javax.swing.*;
+import javax.swing.event.*;
 
-import netscape.orion.toolbars.*;
-import netscape.orion.menus.NsMenuManager;
+//import netscape.orion.toolbars.*;
+//import netscape.orion.menus.NsMenuManager;
 
 import grendel.storage.MessageExtra;
 import grendel.storage.MessageExtraFactory;
@@ -76,14 +78,16 @@ public class Composition extends GeneralFrame {
         mCompositionPanel.addCompositionPanelListener(new PanelListener());
 
         //create menubar (top)
-        fMenu = buildMenu("mainMenubar",
-                          mCompositionPanel.getActions());
+        //  fMenu = buildMenu("mainMenubar",
+        //                  mCompositionPanel.getActions());
+        fMenu = buildMenu();
+
         getRootPane().setMenuBar(fMenu);
 
         fToolBar = mCompositionPanel.getToolBar();
-        fToolBar.addItem(ToolbarFactory.MakeINSToolbarItem(ToolBarLayout.CreateSpring(),
-                                                       null));
-        fToolBar.addItem(ToolbarFactory.MakeINSToolbarItem(fAnimation, null));
+        //    fToolBar.addItem(ToolbarFactory.MakeINSToolbarItem(ToolBarLayout.CreateSpring(),
+        //                                                  null));
+//    fToolBar.addItem(ToolbarFactory.MakeINSToolbarItem(fAnimation, null));
 
         mAddressBar = mCompositionPanel.getAddressBar();
 
@@ -141,7 +145,7 @@ public class Composition extends GeneralFrame {
             for (int w=0 ; w<2 ; w++) {
                 Address list[] = null;
                 try {
-                    list = msg.getRecipients(w == 0 ? Message.TO : Message.CC);
+                    list = msg.getRecipients(w == 0 ? Message.RecipientType.TO : Message.RecipientType.CC);
                 } catch (MessagingException e) {
                 }
                 if (list != null) {

@@ -17,6 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  *
  * Created: Will Scullin <scullin@netscape.com>,  9 Sep 1997.
+ * Modified: Jeff Galyan <jeffrey.galyan@sun.com>, 31 Dec 1998
  */
 
 package grendel.ui;
@@ -35,18 +36,23 @@ import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeUtility;
 
-import netscape.orion.toolbars.NSButton;
-import netscape.orion.toolbars.NSToolbar;
-import netscape.orion.uimanager.AbstractUICmd;
-import netscape.orion.uimanager.IUICmd;
+//import netscape.orion.toolbars.NSButton;
+//import netscape.orion.toolbars.NSToolbar;
+//import netscape.orion.uimanager.AbstractUICmd;
+//import netscape.orion.uimanager.IUICmd;
 
-import com.sun.java.swing.JComponent;
-import com.sun.java.swing.JPopupMenu;
-import com.sun.java.swing.JScrollBar;
-import com.sun.java.swing.JScrollPane;
-import com.sun.java.swing.KeyStroke;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JPopupMenu;
+import javax.swing.JScrollBar;
+import javax.swing.JScrollPane;
+import javax.swing.JToolBar;
+import javax.swing.KeyStroke;
+
+import grendel.ui.UIAction;
 
 public class Util {
+  static final boolean DEBUG = true;
   public static final int LEFT = 0;
   public static final int CENTER = 0;
   public static final int RIGHT = 0;
@@ -100,17 +106,17 @@ public class Util {
     g.drawChars(fChars, first, length, x, y);
   }
 
-  static IUICmd FindAction(Vector aVector, String aAction) {
+  static UIAction FindAction(Vector aVector, String aAction) {
     for (int i = 0; i < aVector.size(); i++) {
-      IUICmd action = (IUICmd) aVector.elementAt(i);
-      if (action.getText(IUICmd.NAME).equals(aAction)) {
+      UIAction action = (UIAction)aVector.elementAt(i);
+      if (action.equals(aAction)) {
         return action;
       }
     }
     return null;
   }
 
-  static public IUICmd[] MergeActions(IUICmd aActions1[], IUICmd aActions2[]) {
+  static public UIAction[] MergeActions(UIAction aActions1[], UIAction aActions2[]) {
     Vector resVector = new Vector();
     int i;
     if (aActions1 != null) {
@@ -120,66 +126,79 @@ public class Util {
     }
     if (aActions2 != null) {
       for (i = 0; i < aActions2.length; i++) {
-        if (FindAction(resVector, aActions2[i].getText(IUICmd.NAME)) == null) {
+        if (FindAction(resVector, aActions2[i].toString()) == null) {
           resVector.addElement(aActions2[i]);
         }
       }
     }
-    IUICmd res[] = new IUICmd[resVector.size()];
+    UIAction res[] = new UIAction[resVector.size()];
     resVector.copyInto(res);
     return res;
   }
 
-  static public NSToolbar MergeToolBars(NSToolbar aBar1, NSToolbar aBar2) {
-    NSToolbar res = new NSToolbar();
-    int count1 = aBar1.getItemCount();
-    int count2 = aBar2.getItemCount();
+  static public JToolBar MergeToolBars(JToolBar aBar1, JToolBar aBar2) {
+    JToolBar res = new JToolBar();
+    Component barArray1[] = aBar1.getComponents();
+    Component barArray2[] = aBar2.getComponents();
+    int count1 = aBar1.getComponentCount();
+    int count2 = aBar2.getComponentCount();
     int i = 0, j = 0, k, l;
+    if (DEBUG) {
+      System.out.println("count1 = " + count1 + "; count2 = " + count2);
+    }
 
     while (i < count1) {
-      NSButton button1 = (NSButton) aBar1.getItemAt(i);
+      JButton button1 = (JButton) barArray1[i];
       if (j < count2) {
-        NSButton button2 = (NSButton) aBar2.getItemAt(j);
+        JButton button2 = (JButton) barArray2[j];
         if (button1.getActionCommand().equals(button2.getActionCommand())) {
-          res.addItem(button1);
+          res.add(button1);
           i++;
           j++;
-        } else {
-          boolean merge = false;
-          for (k = j; k < count2; k++) {
-            button2 = (NSButton) aBar2.getItemAt(k);
-            if (button1.getActionCommand().equals(button2.getActionCommand())) {
-              merge = true;
-              while (j < k) {
-                NSButton button3 = (NSButton) aBar2.getItemAt(j);
-                res.addItem(button3);
-                j++;
+       } else {
+            boolean merge = false;
+            for (k = j; k < count2; k++) {
+              button2 = (JButton) barArray2[k];
+              if (button1.getActionCommand().equals(button2.getActionCommand())) {
+                merge = true;
+                while (j < k) {
+                  JButton button3 = (JButton) barArray2[j];
+                  res.add(button3);
+                  j++;
+                }
+                break;
               }
-              break;
             }
-          }
           if (merge) {
-            res.addItem(button1);
+            res.add(button1);
             j++;
           } else {
-            res.addItem(button1);
+            res.add(button1);
           }
           i++;
         }
       } else {
-        res.addItem(button1);
+        res.add(button1);
         i++;
       }
     }
 
     while (j < count2) {
-      NSButton button2 = (NSButton) aBar2.getItemAt(j);
-      res.addItem(button2);
+      JButton button2 = null;
+      if (barArray2[j] != null)
+        {
+          button2 = (JButton) barArray2[j];
+        }
+      if (button2 != null) 
+        {
+          res.add(button2);
+        }
       j++;
     }
-
+    
     return res;
   }
+  
 
   public static void RegisterScrollingKeys(JScrollPane aScrollPane) {
     aScrollPane.registerKeyboardAction(new ScrollAction(aScrollPane, KeyEvent.VK_UP),
@@ -254,7 +273,7 @@ public class Util {
   }
 }
 
-class ScrollAction extends AbstractUICmd {
+class ScrollAction extends UIAction {
   JScrollPane fScrollPane;
   int         fAction;
 

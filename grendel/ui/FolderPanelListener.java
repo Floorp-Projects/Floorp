@@ -23,7 +23,7 @@ package grendel.ui;
 
 import java.util.EventListener;
 
-import com.sun.java.swing.event.ChangeEvent;
+import javax.swing.event.ChangeEvent;
 
 import grendel.widgets.StatusEvent;
 

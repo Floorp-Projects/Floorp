@@ -21,7 +21,7 @@
 
 package grendel.ui;
 
-import com.sun.java.swing.JComponent;
+import javax.swing.JComponent;
 
 import javax.mail.Message;
 

@@ -24,9 +24,9 @@ package grendel.integrator;
 import java.awt.Image;
 import java.text.MessageFormat;
 
-import netscape.shell.IShellIntegrator;
-import netscape.shell.IShellView;
-import netscape.shell.IShellViewCtx;
+//import netscape.shell.IShellIntegrator;
+//import netscape.shell.IShellView;
+//import netscape.shell.IShellViewCtx;
 
 import grendel.view.ViewedFolder;
 import grendel.view.ViewedStore;

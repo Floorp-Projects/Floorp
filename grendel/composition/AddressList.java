@@ -15,6 +15,8 @@
  * The Initial Developer of the Original Code is Netscape Communications
  * Corporation.  Portions created by Netscape are Copyright (C) 1997
  * Netscape Communications Corporation.  All Rights Reserved.
+ *
+ * Modified: Jeff Galyan <jeffrey.galyan@sun.com>, 30 Dec 1998
  */
 
 package grendel.composition;
@@ -30,10 +32,10 @@ import java.awt.event.*;
 import java.io.*;
 import java.util.*;
 
-import com.sun.java.swing.*;
-import com.sun.java.swing.JTable;
+import javax.swing.*;
+import javax.swing.JTable;
 
-import netscape.orion.misc.*;
+//import netscape.orion.misc.*;
 
 public class AddressList extends JScrollPane implements Serializable {
     protected AddressPanel mAddressPanel;
@@ -533,19 +535,20 @@ public class AddressList extends JScrollPane implements Serializable {
         }
     }
 
-//    public class AddressTextField extends JTextField implements FocusListener {
-    public class AddressTextField extends ATC_Field implements FocusListener {
+    public class AddressTextField extends JTextField implements FocusListener {
+  //    public class AddressTextField extends ATC_Field implements FocusListener {
         private final String ADDRESS_SEPERATORS = ",";
         private final String ADDRESS_QUOTES = "\"";
 
         private DeliveryButton mDeliveryButton;
 
         public AddressTextField (String aString, DeliveryButton aDeliveryButton) {
-        super (aString, new TestDataSource2());
+          super(aString);
+          //    super (aString, new TestDataSource2());
             mDeliveryButton = aDeliveryButton;
 
             //red completion text.
-            setCompletionColor (Color.red);
+            //         setCompletionColor (Color.red);
 
             //NO border.
             setBorder(null);
@@ -556,6 +559,10 @@ public class AddressList extends JScrollPane implements Serializable {
             //catch tabs and enters before anyone else.
             enableEvents (AWTEvent.KEY_EVENT_MASK); //see processKeyEvent
         }
+
+      public void setCompletionColor(Color c) {
+        
+      }
 
             /**
          * catch tabs before anyone else.

@@ -35,7 +35,7 @@ import javax.mail.search.SentDateTerm;
 import javax.mail.search.SubjectTerm;
 import javax.mail.search.SearchTerm;
 
-import com.sun.java.swing.JTextField;
+import javax.swing.JTextField;
 
 import grendel.ui.FolderCombo;
 import grendel.ui.FolderFrame;

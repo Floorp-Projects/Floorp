@@ -19,24 +19,22 @@
 
 package grendel.addressbook;
 
-import grendel.addressbook.AddressCard.*;
+import grendel.addressbook.addresscard.*;
 
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.util.*;
 
-import com.sun.java.swing.*;
-import com.sun.java.swing.text.*;
-import com.sun.java.swing.ImageIcon;
-import com.sun.java.swing.table.*;
-//import com.sun.java.swing.table.DefaultTableModel;
-import com.sun.java.swing.event.TableModelEvent;
-import com.sun.java.swing.border.EmptyBorder;
+import javax.swing.*;
+import javax.swing.text.*;
+import javax.swing.ImageIcon;
+import javax.swing.table.*;
+//import javax.swing.table.DefaultTableModel;
+import javax.swing.event.TableModelEvent;
+import javax.swing.border.EmptyBorder;
 
 import netscape.ldap.*;
-import netscape.orion.toolbars.*;
-import netscape.orion.menus.NsMenuManager;
 
 /**
  *

@@ -22,9 +22,9 @@ package grendel.ui;
 import java.io.IOException;
 import java.util.Enumeration;
 
-import com.sun.java.swing.event.ChangeEvent;
-import com.sun.java.swing.event.ChangeListener;
-import com.sun.java.swing.event.EventListenerList;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.EventListenerList;
 
 import calypso.util.PreferencesFactory;
 import calypso.util.Preferences;

@@ -17,6 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  *
  * Created: Will Scullin <scullin@netscape.com>,  6 Jan 1998.
+ * Modified: Jeff Galyan <jeffrey.galyan@sun.com>, 30 Dec 1998
  */
 
 package grendel.ui;
@@ -27,9 +28,9 @@ import java.util.ResourceBundle;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
-import com.sun.java.swing.JDialog;
-import com.sun.java.swing.SwingUtilities;
-import com.sun.java.swing.UIManager;
+import javax.swing.JDialog;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 
 public class GeneralDialog extends JDialog {
   static ResourceBundle fLabels = ResourceBundle.getBundle("grendel.ui.Labels",

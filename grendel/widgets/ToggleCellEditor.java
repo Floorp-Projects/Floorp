@@ -15,6 +15,8 @@
  * The Initial Developer of the Original Code is Netscape Communications
  * Corporation.  Portions created by Netscape are Copyright (C) 1997
  * Netscape Communications Corporation.  All Rights Reserved.
+ *
+ * Modified: Jeff Galyan <jeffrey.galyan@sun.com>, 30 Dec 1998
  */
 
 package grendel.widgets;
@@ -26,10 +28,10 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.util.EventObject;
 
-import com.sun.java.swing.CellEditorListener;
-import com.sun.java.swing.JCheckBox;
-import com.sun.java.swing.event.ChangeEvent;
-import com.sun.java.swing.UIManager;
+import javax.swing.event.CellEditorListener;
+import javax.swing.JCheckBox;
+import javax.swing.event.ChangeEvent;
+import javax.swing.UIManager;
 
 public class ToggleCellEditor implements CellEditor, ActionListener {
   JCheckBox fToggle;

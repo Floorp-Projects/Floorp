@@ -32,7 +32,7 @@ import java.awt.event.MouseEvent;
 
 import javax.mail.search.SearchTerm;
 
-import com.sun.java.swing.JPanel;
+import javax.swing.JPanel;
 
 import grendel.widgets.SelectionEvent;
 import grendel.widgets.SelectionListener;

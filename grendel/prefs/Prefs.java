@@ -25,8 +25,8 @@ import java.util.StringTokenizer;
 
 import javax.mail.URLName;
 
-import com.sun.java.swing.UIManager;
-import com.sun.java.swing.UnsupportedLookAndFeelException;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 
 import calypso.util.Preferences;
 import calypso.util.PreferencesFactory;

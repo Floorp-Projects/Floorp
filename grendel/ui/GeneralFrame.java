@@ -17,6 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  *
  * Created: Will Scullin <scullin@netscape.com>,  3 Sep 1997.
+ * Modified: Jeff Galyan <jeffrey.galyan@sun.com>, 30 Dec 1998
  */
 
 package grendel.ui;
@@ -40,31 +41,36 @@ import java.util.ResourceBundle;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
-import com.sun.java.swing.Action;
-import com.sun.java.swing.Icon;
-import com.sun.java.swing.ImageIcon;
-import com.sun.java.swing.JButton;
-import com.sun.java.swing.JFrame;
-import com.sun.java.swing.JLabel;
-import com.sun.java.swing.JMenuBar;
-import com.sun.java.swing.JOptionPane;
-import com.sun.java.swing.JPanel;
-import com.sun.java.swing.JToolBar;
-import com.sun.java.swing.SwingUtilities;
-import com.sun.java.swing.UIManager;
+import javax.swing.Action;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenuBar;
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JRadioButtonMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JToolBar;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import javax.swing.BoxLayout;
 
-import netscape.orion.toolbars.BarLayout;
-import netscape.orion.toolbars.CollapsibleToolbarPanel;
-import netscape.orion.toolbars.NSButton;
-import netscape.orion.toolbars.NSToolbar;
-import netscape.orion.toolbars.ToolBarLayout;
-import netscape.orion.uimanager.AbstractUICmd;
-import netscape.orion.uimanager.IUICmd;
-import netscape.orion.uimanager.IUIMMenuBar;
-import netscape.orion.uimanager.UIMConstants;
+//import netscape.orion.toolbars.BarLayout;
+//import netscape.orion.toolbars.CollapsibleToolbarPanel;
+//import netscape.orion.toolbars.NSButton;
+//import netscape.orion.toolbars.NSToolbar;
+//import netscape.orion.toolbars.ToolBarLayout;
+//import netscape.orion.uimanager.AbstractUICmd;
+//import netscape.orion.uimanager.IUICmd;
+//import netscape.orion.uimanager.IUIMMenuBar;
+//import netscape.orion.uimanager.UIMConstants;
 
-import xml.tree.TreeBuilder;
-import xml.tree.XMLNode;
+//import xml.tree.TreeBuilder;
+//import xml.tree.XMLNode;
 
 import calypso.util.Preferences;
 import calypso.util.PreferencesFactory;
@@ -80,14 +86,15 @@ public class GeneralFrame extends JFrame
   protected Container     fPanel;
   protected Animation     fAnimation;
   protected JMenuBar      fMenu;
-  protected CollapsibleToolbarPanel fToolBarPanel;
-  protected NSToolbar     fToolBar;
+  //  protected CollapsibleToolbarPanel fToolBarPanel;
+  protected JPanel        fToolBarPanel;
+  protected JToolBar      fToolBar;
   protected Component     fStatusBar;
   protected String        fResourceBase = "grendel.ui";
   protected String        fID;
   protected JLabel        fStatusLabel;
 
-  protected netscape.orion.uimanager.UIManager fUIManager;
+  //  protected netscape.orion.uimanager.UIManager fUIManager;
 
   private LAFListener     fLAFListener;
 
@@ -124,9 +131,10 @@ public class GeneralFrame extends JFrame
     fAnimation.setImageTemplate("/grendel/ui/images/animation/AnimHuge{0,number,00}.gif",
                                 40);
 
-    fToolBarPanel = new CollapsibleToolbarPanel(this);
+    //   fToolBarPanel = new CollapsibleToolbarPanel(this);
+    fToolBarPanel = new JPanel(true);
     fPanel.add(BorderLayout.NORTH, fToolBarPanel);
-    fUIManager = new netscape.orion.uimanager.UIManager(fToolBarPanel);
+    //    fUIManager = new netscape.orion.uimanager.UIManager(fToolBarPanel);
 
     // We need to use Class.forName because getClass() might return a child
     // class in another package.
@@ -151,7 +159,8 @@ public class GeneralFrame extends JFrame
     super.dispose();
 
     if (!sExternalShell && fFrameList.size() == 0) {
-      ActionFactory.GetExitAction().actionPerformed(null);
+      // ActionFactory.GetExitAction().actionPerformed(null);
+      System.out.println("Exiting...");
     }
 
     UIManager.removePropertyChangeListener(fLAFListener);
@@ -237,30 +246,187 @@ public class GeneralFrame extends JFrame
     }
   }
 
-  protected JMenuBar buildMenu(String aMenu, IUICmd aActions[]) {
-    JMenuBar res = null;
-    try {
-      IUIMMenuBar bar = fUIManager.getMenuBar(getID());
+  /** Creates the MenuBar. This method has been completely re-written by Jeff Galyan, 12/30/1998 */
+  protected JMenuBar buildMenu() {
+    JMenuBar res = new JMenuBar();
 
-      URL url = getClass().getResource("menus.xml");
-      XMLNode root = TreeBuilder.build(url, getClass());
-      XMLNode node = root.getChild(UIMConstants.kMenubarType,
-                                   UIMConstants.kIDAttribute,
-                                   getID());
+    JMenu fileMenu = new JMenu("File");
+    JMenu editMenu = new JMenu("Edit");
+    JMenu viewMenu = new JMenu("View");
+    JMenu sortMenu = new JMenu("Sort");
+    JMenu layoutMenu = new JMenu("Layout");
+    JMenu messageMenu = new JMenu("Message");
+    JMenu msgMarkMenu = new JMenu("Mark");
+    
+    fileMenu.setMnemonic('F');
+    editMenu.setMnemonic('E');
+    viewMenu.setMnemonic('V');
+    sortMenu.setMnemonic('S');
+    layoutMenu.setMnemonic('L');
+    messageMenu.setMnemonic('M');
+    msgMarkMenu.setMnemonic('M');
 
-      bar.addMenus(node, aActions, this);
-      bar.configureForOwner(this);
+    JMenuItem fileMsgNew = new JMenuItem("New Message");
+    fileMsgNew.setMnemonic('N');
+    
+    JMenuItem folderNew = new JMenuItem("New Folder...");
+    folderNew.setMnemonic('F');
+    
+    JMenuItem msgOpen = new JMenuItem("Open Message");
+    msgOpen.setMnemonic('M');
 
-      res = bar.getComponent();
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
+    JMenuItem msgSaveAs = new JMenuItem("Save As...");
+    msgSaveAs.setMnemonic('A');
+
+    JMenuItem msgGetNew = new JMenuItem("Get New Messages");
+    msgGetNew.setMnemonic('G');
+
+    JMenuItem appExit = new JMenuItem("Exit");
+    appExit.setMnemonic('x');
+
+    fileMenu.add(fileMsgNew);
+    fileMenu.add(folderNew);
+    fileMenu.add(msgOpen);
+    fileMenu.add(msgSaveAs);
+    fileMenu.addSeparator();
+    fileMenu.add(msgGetNew);
+    fileMenu.addSeparator();
+    fileMenu.add(appExit);
+    
+    res.add(fileMenu);
+
+    JMenuItem editUndo = new JMenuItem("Undo");
+    editUndo.setMnemonic('U');
+
+    JMenuItem editCut = new JMenuItem("Cut");
+    editCut.setMnemonic('t');
+
+    JMenuItem editCopy = new JMenuItem("Copy");
+    editCopy.setMnemonic('C');
+
+    JMenuItem editPaste = new JMenuItem("Paste");
+    editPaste.setMnemonic('P');
+
+    JMenuItem editFolderDelete = new JMenuItem("Delete Folder");
+    editFolderDelete.setMnemonic('D');
+
+    JMenuItem editAppSearch = new JMenuItem("Search");
+    editAppSearch.setMnemonic('S');
+
+    JMenuItem editAppRunFilters = new JMenuItem("Run Filters on TestInbox");
+    editAppRunFilters.setMnemonic('F');
+
+    JMenuItem editAppPrefs = new JMenuItem("Preferences...");
+    editAppPrefs.setMnemonic('r');
+
+    editMenu.add(editUndo);
+    editMenu.add(editCut);
+    editMenu.add(editCopy);
+    editMenu.add(editPaste);
+    editMenu.addSeparator();
+    editMenu.add(editFolderDelete);
+    editMenu.addSeparator();
+    editMenu.add(editAppSearch);
+    editMenu.add(editAppRunFilters);
+    editMenu.addSeparator();
+    editMenu.add(editAppPrefs);
+
+    res.add(editMenu);
+
+    JCheckBoxMenuItem toggleThreading = new JCheckBoxMenuItem("Toggle Threading");
+    toggleThreading.setMnemonic('T');
+
+    JRadioButtonMenuItem sortAuthor = new JRadioButtonMenuItem("by Author");
+    sortAuthor.setMnemonic('A');
+    
+    JRadioButtonMenuItem sortDate = new JRadioButtonMenuItem("by Date");
+    sortDate.setMnemonic('D');
+
+    JRadioButtonMenuItem sortNumber = new JRadioButtonMenuItem("by Number");
+    sortNumber.setMnemonic('N');
+
+    JRadioButtonMenuItem sortSubject = new JRadioButtonMenuItem("by Subject");
+    sortSubject.setMnemonic('S');
+
+    sortMenu.add(toggleThreading);
+    sortMenu.addSeparator();
+    sortMenu.add(sortAuthor);
+    sortMenu.add(sortDate);
+    sortMenu.add(sortNumber);
+    sortMenu.add(sortSubject);
+    
+    JRadioButtonMenuItem splitTop = new JRadioButtonMenuItem("Split Top");
+    splitTop.setMnemonic('T');
+
+    JRadioButtonMenuItem splitLeft = new JRadioButtonMenuItem("Split Left");
+    splitLeft.setMnemonic('L');
+    
+    JRadioButtonMenuItem splitRight = new JRadioButtonMenuItem("Split Right");
+    splitRight.setMnemonic('R');
+    
+    JRadioButtonMenuItem layoutStacked = new JRadioButtonMenuItem("Stacked");
+    layoutStacked.setMnemonic('S');
+
+    layoutMenu.add(splitTop);
+    layoutMenu.add(splitLeft);
+    layoutMenu.add(splitRight);
+    layoutMenu.add(layoutStacked);
+
+    JCheckBoxMenuItem viewAppShowToolTips = new JCheckBoxMenuItem("Show Tooltips");
+    viewAppShowToolTips.setMnemonic('T');
+
+    viewMenu.add(sortMenu);
+    viewMenu.add(layoutMenu);
+    viewMenu.addSeparator();
+    viewMenu.add(viewAppShowToolTips);
+
+    res.add(viewMenu);
+
+    JMenuItem msgNew = new JMenuItem("New Message");
+    msgNew.setMnemonic('N');
+
+    JMenuItem msgReply = new JMenuItem("Reply");
+    msgReply.setMnemonic('R');
+
+    JMenuItem msgReplyAll = new JMenuItem("Reply All");
+    msgReplyAll.setMnemonic('A');
+    
+    JMenuItem msgForward = new JMenuItem("Forward");
+    msgForward.setMnemonic('F');
+
+    JMenuItem msgForwardQuoted = new JMenuItem("Forward Quoted");
+    msgForwardQuoted.setMnemonic('Q');
+
+    JMenuItem markMsgRead = new JMenuItem("As Read");
+    markMsgRead.setMnemonic('R');
+
+    JMenuItem markThreadRead = new JMenuItem("Thread Read");
+    markThreadRead.setMnemonic('T');
+    
+    JMenuItem markAllRead = new JMenuItem("All Read");
+    markAllRead.setMnemonic('A');
+
+    msgMarkMenu.add(markMsgRead);
+    msgMarkMenu.add(markThreadRead);
+    msgMarkMenu.add(markAllRead);
+
+    messageMenu.add(msgNew);
+    messageMenu.addSeparator();
+    messageMenu.add(msgReply);
+    messageMenu.add(msgReplyAll);
+    messageMenu.add(msgForward);
+    messageMenu.add(msgForwardQuoted);
+    messageMenu.addSeparator();
+    messageMenu.add(msgMarkMenu);
+
+    res.add(messageMenu);
 
     return res;
   }
 
   protected Component buildStatusBar() {
-    JPanel res = new JPanel(new BarLayout());
+    JPanel res = new JPanel();
+    res.setLayout(new BoxLayout(res, BoxLayout.X_AXIS));
 
     fBiffIcon = new BiffIcon();
     fBiffIcon.setSize(fBiffIcon.getPreferredSize());
@@ -268,8 +434,8 @@ public class GeneralFrame extends JFrame
     fStatusLabel = new JLabel("Grendel");
     fStatusLabel.setFont(Font.decode("Dialog-12"));
 
-    res.add(fStatusLabel, BarLayout.kSpring);
-    res.add(fBiffIcon, BarLayout.kStrut);
+    res.add(fStatusLabel);
+    res.add(fBiffIcon);
 
     return res;
   }

@@ -17,36 +17,44 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  *
  * Created: Will Scullin <scullin@netscape.com>, 20 Nov 1997.
+ * Modified: Jeff Galyan <jeffrey.galyan@sun.com>, 31 Dec 1998
  */
 
 package grendel.ui;
 
 import java.awt.Dimension;
 import java.awt.Frame;
+import java.awt.GridBagLayout;
+import java.awt.GridBagConstraints;
 import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.net.URL;
 import java.text.MessageFormat;
 import java.util.Hashtable;
+import java.util.NoSuchElementException;
 
 import javax.mail.Folder;
 import javax.mail.MessagingException;
 
-import com.sun.java.swing.JOptionPane;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
 
-import netscape.orion.dialogs.AttrNotFoundException;
-import netscape.orion.dialogs.PageModel;
-import netscape.orion.dialogs.PageUI;
+//import netscape.orion.dialogs.AttrNotFoundException;
+//import netscape.orion.dialogs.PageModel;
+//import netscape.orion.dialogs.PageUI;
 
-import xml.tree.XMLNode;
-import xml.tree.TreeBuilder;
+//import xml.tree.XMLNode;
+//import xml.tree.TreeBuilder;
 
 import grendel.view.ViewedFolder;
 
 public class NewFolderDialog extends GeneralDialog {
-  PageUI     fPanel;
+  FolderPanel     fPanel;
 
+  JPanel newFolderDialogPanel;
   ViewedFolder fFolder;
   FolderCombo fParentCombo;
 
@@ -55,20 +63,20 @@ public class NewFolderDialog extends GeneralDialog {
   private static final String kFolderComboKey = "folderCombo";
   private static final String kNameKey = "nameField";
 
-  class NewFolderModel extends PageModel {
+  class NewFolderModel {
     public NewFolderModel(FolderCombo aCombo) {
       fValues = new Hashtable();
       fValues.put(kNameKey, "");
       fValues.put(kFolderComboKey, aCombo);
     }
 
-    public Object getAttribute(String aAttrib) throws AttrNotFoundException {
+    public Object getAttribute(String aAttrib) throws NoSuchElementException {
       Object res = fValues.get(aAttrib);
       if (res == null) {
         res = fLabels.getString(aAttrib);
       }
       if (res == null) {
-        throw new AttrNotFoundException(aAttrib);
+        throw new NoSuchElementException(aAttrib);
       }
       return res;
     }
@@ -95,19 +103,27 @@ public class NewFolderDialog extends GeneralDialog {
     NewFolderModel model = new NewFolderModel(fParentCombo);
 
     // use the XML parser to get the root XML node of the resource tree
-    XMLNode root = null;
-    URL url = getClass().getResource("dialogs.xml");
-    try {
-      root = xml.tree.TreeBuilder.build(url, getClass());
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
+    // XMLNode root = null;
+    // URL url = getClass().getResource("dialogs.xml");
+    // try {
+    //   root = xml.tree.TreeBuilder.build(url, getClass());
+    // } catch (Exception e) {
+    //    e.printStackTrace();
+    // }
 
-    XMLNode editHost = root.getChild("dialog", "id", "newFolderDialog");
+    //   XMLNode editHost = root.getChild("dialog", "id", "newFolderDialog");
 
-    fPanel = new PageUI(url, editHost, model);
+    newFolderDialogPanel = new JPanel(new GridBagLayout(), true);
 
-    JOptionPane actionPanel = new JOptionPane(fPanel,
+    JLabel parentPrompt = new JLabel("Parent:");
+    newFolderDialogPanel.add(parentPrompt, GridBagConstraints.WEST);
+    newFolderDialogPanel.add(fParentCombo, GridBagConstraints.REMAINDER);
+    JLabel namePrompt = new JLabel("Name:");
+    newFolderDialogPanel.add(namePrompt, GridBagConstraints.WEST);
+    JTextField nameField = new JTextField();
+    newFolderDialogPanel.add(nameField, GridBagConstraints.REMAINDER);
+    
+    JOptionPane actionPanel = new JOptionPane(newFolderDialogPanel,
                                               JOptionPane.PLAIN_MESSAGE,
                                               JOptionPane.OK_CANCEL_OPTION);
     actionPanel.addPropertyChangeListener(new OptionListener());
@@ -115,12 +131,11 @@ public class NewFolderDialog extends GeneralDialog {
 
     // XXX This is a stupid hack because PageUI doesn't to a resource lookup
     // on it's title. Bleh.
-    String title = fPanel.getTitle();
-    if (title.charAt(0) == '$') {
+    String title = null;
       try {
         title = (String) model.getAttribute(title.substring(1));
-      } catch (AttrNotFoundException e) {}
-    }
+      } catch (NoSuchElementException e) {}
+ 
     setTitle(title);
 
     Dimension size = getPreferredSize();
@@ -168,7 +183,7 @@ public class NewFolderDialog extends GeneralDialog {
         int value = ((Integer) aEvent.getNewValue()).intValue();
 
         if (value == JOptionPane.OK_OPTION) {
-          fPanel.saveAll();
+          //  fPanel.saveAll();
           setVisible(!createFolder());
         } else {
           setVisible(false);

@@ -41,13 +41,13 @@ import java.util.ResourceBundle;
 import javax.mail.Authenticator;
 import javax.mail.PasswordAuthentication;
 
-import com.sun.java.swing.JButton;
-import com.sun.java.swing.JCheckBox;
-import com.sun.java.swing.JLabel;
-import com.sun.java.swing.JOptionPane;
-import com.sun.java.swing.JPanel;
-import com.sun.java.swing.JTextField;
-import com.sun.java.swing.JPasswordField;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.JPasswordField;
 
 import calypso.util.Preferences;
 import calypso.util.PreferencesFactory;

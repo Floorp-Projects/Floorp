@@ -21,7 +21,7 @@
 
 package grendel.prefs;
 
-import com.sun.java.swing.LookAndFeel;
+import javax.swing.LookAndFeel;
 
 public class UIPrefs {
   LookAndFeel fLAF;

@@ -32,13 +32,13 @@ import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.Folder;
 
-import com.sun.java.swing.ImageIcon;
-import com.sun.java.swing.ListCellRenderer;
-import com.sun.java.swing.JComboBox;
-import com.sun.java.swing.JLabel;
-import com.sun.java.swing.JList;
-import com.sun.java.swing.border.EmptyBorder;
-import com.sun.java.swing.UIManager;
+import javax.swing.ImageIcon;
+import javax.swing.ListCellRenderer;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.border.EmptyBorder;
+import javax.swing.UIManager;
 
 import grendel.view.ViewedStore;
 import grendel.view.ViewedFolder;

@@ -15,20 +15,22 @@
  * The Initial Developer of the Original Code is Netscape Communications
  * Corporation.  Portions created by Netscape are Copyright (C) 1997
  * Netscape Communications Corporation.  All Rights Reserved.
+ *
+ * Modified: Jeff Galyan <jeffrey.galyan@sun.com>, 30 Dec 1998
  */
 
 package grendel.composition;
 
 import java.awt.*;
-import com.sun.java.swing.JTabbedPane;
-import com.sun.java.swing.basic.BasicTabbedPaneUI;
-import com.sun.java.swing.*;
-import com.sun.java.swing.plaf.*;
+import javax.swing.JTabbedPane;
+import javax.swing.plaf.basic.BasicTabbedPaneUI;
+import javax.swing.*;
+import javax.swing.plaf.*;
 
-import netscape.orion.toolbars.*;
-import pk.core.*;
+//import netscape.orion.toolbars.*;
+//import pk.core.*;
 
-public class NSTabbedPane extends BaseDelegate implements INSToolbar, IFloatingToolbar {
+public class NSTabbedPane extends JTabbedPane {
     protected JTabbedPane   fTabbedPane;
     protected Object        fID = null;
     protected String        fName = null;

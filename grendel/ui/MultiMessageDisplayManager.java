@@ -17,6 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  *
  * Created: Will Scullin <scullin@netscape.com>,  3 Sep 1997.
+ * Modified: Jeff Galyan <jeffrey.galyan@sun.com>, 1 Jan 1999
  */
 
 package grendel.ui;
@@ -25,15 +26,14 @@ import java.awt.BorderLayout;
 import java.util.Enumeration;
 import java.util.Vector;
 
-import com.sun.java.swing.event.ChangeEvent;
+import javax.swing.event.ChangeEvent;
 
 import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Store;
 
-import netscape.orion.uimanager.IUICmd;
-
+import grendel.ui.UIAction;
 import grendel.view.ViewedFolder;
 import grendel.view.ViewedMessage;
 import grendel.widgets.TreePath;
@@ -129,7 +129,8 @@ class MasterFrame extends GeneralFrame {
     fMasterPanel = new MasterPanel();
     fMasterPanel.addMasterPanelListener(new FolderSelectionListener());
     fPanel.add(fMasterPanel);
-    fMenu = buildMenu("masterMain", actions);
+    //    fMenu = buildMenu("masterMain", actions);
+    fMenu = buildMenu();
     getRootPane().setMenuBar(fMenu);
 
     fToolBar = fMasterPanel.getToolBar();
@@ -193,7 +194,7 @@ class MasterFrame extends GeneralFrame {
 
   // Action array
 
-  IUICmd actions[] = { ActionFactory.GetExitAction(),
+  UIAction actions[] = { ActionFactory.GetExitAction(),
                        ActionFactory.GetNewMailAction(),
                        ActionFactory.GetComposeMessageAction()};
 }

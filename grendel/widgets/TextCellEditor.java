@@ -17,6 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  *
  * Created: Will Scullin <scullin@netscape.com>, 30 Oct 1997.
+ * Modified: Jeff Galyan <jeffrey.galyan@sun.com>, 30 Dec 1998
  */
 
 package grendel.widgets;
@@ -33,16 +34,17 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.util.EventObject;
 
-import com.sun.java.swing.CellEditorListener;
-import com.sun.java.swing.JTextField;
-import com.sun.java.swing.KeyStroke;
-import com.sun.java.swing.event.ChangeEvent;
-import com.sun.java.swing.event.DocumentEvent;
-import com.sun.java.swing.event.DocumentListener;
+import javax.swing.event.CellEditorListener;
+import javax.swing.JTextField;
+import javax.swing.KeyStroke;
+//import javax.swing.CellEditor;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 public class TextCellEditor extends JTextField implements CellEditor,
 DocumentListener {
-  CellEditorListener fListener;
+  MyCellEditorListener fListener;
   boolean fSelected, fStopping;
   Dimension fSize = new Dimension();
 
@@ -105,7 +107,7 @@ DocumentListener {
   }
 
   public void addCellEditorListener(CellEditorListener aListener) {
-    fListener = aListener;
+    fListener = (MyCellEditorListener) aListener;
   }
 
   public void removeCellEditorListener(CellEditorListener aListener) {
@@ -131,6 +133,14 @@ DocumentListener {
 
   public void removeUpdate(DocumentEvent aEvent) {
     updateSize(getPreferredSize());
+  }
+
+  class MyCellEditorListener implements CellEditorListener {
+    public void editingCanceled(ChangeEvent evt) {
+    }
+
+    public void editingStopped(ChangeEvent evt) {
+    }
   }
 
   class CancelAction implements ActionListener {

@@ -27,10 +27,10 @@ import java.awt.LayoutManager2;
 import javax.mail.search.AndTerm;
 import javax.mail.search.SearchTerm;
 
-import com.sun.java.swing.JLabel;
-import com.sun.java.swing.JPanel;
-import com.sun.java.swing.border.BevelBorder;
-import com.sun.java.swing.border.TitledBorder;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.border.BevelBorder;
+import javax.swing.border.TitledBorder;
 
 import grendel.widgets.SelectionManager;
 

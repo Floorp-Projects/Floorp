@@ -15,16 +15,19 @@
  * The Initial Developer of the Original Code is Netscape Communications
  * Corporation.  Portions created by Netscape are Copyright (C) 1997
  * Netscape Communications Corporation.  All Rights Reserved.
+ *
+ * Modified: Jeff Galyan <jeffrey.galyan@sun.com>, 30 Dec 1998
  */
 
 package grendel.ui;
 
-import com.sun.java.swing.JFrame;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 
 import calypso.util.Preferences;
 import calypso.util.PreferencesFactory;
 
-import netscape.orion.propeditor.PropertyEditorDlg;
+//import netscape.orion.propeditor.PropertyEditorDlg;
 
 import grendel.prefs.Prefs;
 
@@ -43,9 +46,9 @@ public class PrefsDialog {
 
   public static void EditPrefs(JFrame aParent) {
     Object objs[] = {new Prefs()};
-    PropertyEditorDlg.Edit(aParent, objs, false, true, "",
-                           PropertyEditorDlg.UI_TREE);
-
+    //    PropertyEditorDlg.Edit(aParent, objs, false, true, "",
+    //                     PropertyEditorDlg.UI_TREE);
+    JOptionPane.showMessageDialog(aParent, "This part of the UI is\nstill being worked on.", "Under Construction", JOptionPane.INFORMATION_MESSAGE);
   }
 
   public static boolean ValidPrefs() {

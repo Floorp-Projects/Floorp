@@ -27,6 +27,7 @@ import java.util.ResourceBundle;
 import java.util.Vector;
 
 import javax.mail.Flags;
+import javax.mail.Flags.Flag;
 import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -151,7 +152,7 @@ class MoveMessageProgress extends ProgressFrame {
       try {
         Message mlist[] = { message };
         fDest.appendMessages(mlist);
-        message.setFlags(Flags.DeletedFlag, true);
+        message.setFlag(Flags.Flag.DELETED, true);
       } catch (MessagingException e) {
         System.err.println("DeleteMessageProgress: " + e);
       }

@@ -21,8 +21,8 @@ package grendel.widgets;
 
 import java.awt.Component;
 
-import com.sun.java.swing.JCheckBox;
-import com.sun.java.swing.UIManager;
+import javax.swing.JCheckBox;
+import javax.swing.UIManager;
 
 public class ToggleCellRenderer implements CellRenderer {
   JCheckBox fToggle = new JCheckBox();

@@ -28,13 +28,13 @@ import java.util.Vector;
 
 import javax.activation.DataHandler;
 
-import com.sun.java.swing.event.ChangeEvent;
-import com.sun.java.swing.event.EventListenerList;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.EventListenerList;
 
-import netscape.shell.IShellIntegrator;
-import netscape.shell.IShellView;
-import netscape.shell.IShellViewCtx;
-import netscape.shell.ShellViewCtxListener;
+//import netscape.shell.IShellIntegrator;
+//import netscape.shell.IShellView;
+//import netscape.shell.IShellViewCtx;
+//import netscape.shell.ShellViewCtxListener;
 
 import javax.mail.Folder;
 import javax.mail.MessagingException;

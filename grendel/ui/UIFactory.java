@@ -23,8 +23,8 @@ package grendel.ui;
 
 import java.awt.Image;
 
-import com.sun.java.swing.Icon;
-import com.sun.java.swing.ImageIcon;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
 
 import grendel.view.ViewedFolder;
 import grendel.view.ViewedStore;

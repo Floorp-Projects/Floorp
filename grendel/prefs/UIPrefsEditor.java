@@ -37,18 +37,18 @@ import java.util.Hashtable;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
-import com.sun.java.swing.AbstractListModel;
-import com.sun.java.swing.LookAndFeel;
-import com.sun.java.swing.UIManager;
+import javax.swing.AbstractListModel;
+import javax.swing.LookAndFeel;
+import javax.swing.UIManager;
 
-import netscape.orion.dialogs.AbstractCtrl;
-import netscape.orion.dialogs.AttrNotFoundException;
-import netscape.orion.dialogs.JLISTeditor;
-import netscape.orion.dialogs.PageModel;
-import netscape.orion.dialogs.PageUI;
+//import netscape.orion.dialogs.AbstractCtrl;
+//import netscape.orion.dialogs.AttrNotFoundException;
+//import netscape.orion.dialogs.JLISTeditor;
+//import netscape.orion.dialogs.PageModel;
+//import netscape.orion.dialogs.PageUI;
 
-import xml.tree.XMLNode;
-import xml.tree.TreeBuilder;
+//import xml.tree.XMLNode;
+//import xml.tree.TreeBuilder;
 
 public class UIPrefsEditor implements PropertyEditor {
   UIPrefs fPrefs = new UIPrefs();
@@ -195,9 +195,9 @@ public class UIPrefsEditor implements PropertyEditor {
       fLAFs = UIManager.getAuxiliaryLookAndFeels();
       */
       fLAFs = new LookAndFeel[] {
-        new com.sun.java.swing.jlf.JLFLookAndFeel(),
-        new com.sun.java.swing.motif.MotifLookAndFeel(),
-        new com.sun.java.swing.windows.WindowsLookAndFeel()
+        new javax.swing.jlf.JLFLookAndFeel(),
+        new javax.swing.motif.MotifLookAndFeel(),
+        new javax.swing.windows.WindowsLookAndFeel()
       };
     }
 

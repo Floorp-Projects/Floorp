@@ -23,7 +23,7 @@ package grendel.widgets;
 
 import java.util.Enumeration;
 
-import com.sun.java.swing.Icon;
+import javax.swing.Icon;
 
 /**
  * The <code>TreeTableDataModel</code> interface is used to mediate

@@ -22,7 +22,7 @@ package grendel.widgets;
 import java.util.EventObject;
 import java.awt.Component;
 
-public interface CellEditor extends com.sun.java.swing.CellEditor {
+public interface CellEditor extends javax.swing.CellEditor {
   void setValue(Object aObject, Object aData, boolean aSelected);
   boolean startCellEditing(EventObject aEvent);
   Component getCellEditorComponent();

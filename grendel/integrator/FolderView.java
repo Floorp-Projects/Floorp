@@ -34,28 +34,28 @@ import java.util.Vector;
 
 import javax.mail.Folder;
 
-import com.sun.java.swing.Action;
-import com.sun.java.swing.JMenu;
-import com.sun.java.swing.JMenuItem;
-import com.sun.java.swing.event.ChangeEvent;
+import javax.swing.Action;
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+import javax.swing.event.ChangeEvent;
 
-import netscape.orion.toolbars.NSToolbar;
-import netscape.orion.uimanager.UIMConstants;
-import netscape.orion.uimanager.IUICmd;
+//import netscape.orion.toolbars.NSToolbar;
+//import netscape.orion.uimanager.UIMConstants;
+//import netscape.orion.uimanager.IUICmd;
 
-import netscape.shell.IShellAnimation;
-import netscape.shell.IShellIntegrator;
-import netscape.shell.IShellView;
-import netscape.shell.IShellViewCtx;
+//import netscape.shell.IShellAnimation;
+//import netscape.shell.IShellIntegrator;
+//import netscape.shell.IShellView;
+//import netscape.shell.IShellViewCtx;
 
-import netscape.orion.uimanager.AbstractUICmd;
-import netscape.orion.uimanager.ConfigFormatException;
-import netscape.orion.uimanager.IUICmd;
-import netscape.orion.uimanager.IUIMMenuBar;
-import netscape.orion.uimanager.UIMConstants;
+//import netscape.orion.uimanager.AbstractUICmd;
+//import netscape.orion.uimanager.ConfigFormatException;
+//import netscape.orion.uimanager.IUICmd;
+//import netscape.orion.uimanager.IUIMMenuBar;
+//import netscape.orion.uimanager.UIMConstants;
 
-import xml.tree.TreeBuilder;
-import xml.tree.XMLNode;
+//import xml.tree.TreeBuilder;
+//import xml.tree.XMLNode;
 
 import grendel.ui.ActionFactory;
 import grendel.ui.FolderPanel;

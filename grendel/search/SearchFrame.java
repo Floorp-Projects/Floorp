@@ -17,6 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  *
  * Created: Will Scullin <scullin@netscape.com>,  9 Oct 1997.
+ * Modified: Jeff Galyan <jeffrey.galyan@sun.com>, 30 Dec 1998
  */
 
 package grendel.search;
@@ -28,16 +29,17 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 
-import com.sun.java.swing.Action;
-import com.sun.java.swing.AbstractAction;
-import com.sun.java.swing.JComponent;
-import com.sun.java.swing.JButton;
-import com.sun.java.swing.JLabel;
-import com.sun.java.swing.JPanel;
-import com.sun.java.swing.KeyStroke;
-import com.sun.java.swing.border.EmptyBorder;
+import javax.swing.Action;
+import javax.swing.AbstractAction;
+import javax.swing.BoxLayout;
+import javax.swing.JComponent;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.KeyStroke;
+import javax.swing.border.EmptyBorder;
 
-import netscape.orion.toolbars.BarLayout;
+//import netscape.orion.toolbars.BarLayout;
 
 import grendel.ui.GeneralFrame;
 
@@ -55,9 +57,9 @@ public class SearchFrame extends GeneralFrame {
     fSearchPanel = new SearchPanel(new MailSearch());
     getContentPane().add(fSearchPanel);
 
-    fActionPanel = new JPanel(new BarLayout(BarLayout.kHorizontal, 5), true);
+    fActionPanel = new JPanel(new BoxLayout(this, BoxLayout.X_AXIS), true);
     fActionPanel.setBorder(new EmptyBorder(5,5,5,5));
-    fActionPanel.add(new Canvas(), BarLayout.kSpring);
+    fActionPanel.add(new Canvas());
 
     fCloseButton = new JButton("Close");
     fCloseButton.addActionListener(new ActionListener() {
@@ -65,22 +67,20 @@ public class SearchFrame extends GeneralFrame {
         dispose();
       }
     });
-    fActionPanel.add(fCloseButton, BarLayout.kSheep);
+    fActionPanel.add(fCloseButton);
     fSearchButton = new JButton("Search");
     fSearchButton.addActionListener(new SearchAction());
-    fActionPanel.add(fSearchButton, BarLayout.kSheep);
+    fActionPanel.add(fSearchButton);
 
     fPanel.add(BorderLayout.SOUTH, fActionPanel);
 
-    fTargetPanel = new JPanel(new BarLayout(BarLayout.kHorizontal), true);
+    fTargetPanel = new JPanel(new BoxLayout(this, BoxLayout.X_AXIS), true);
     fTargetPanel.setBorder(new EmptyBorder(5,5,5,5));
 
-    fTargetPanel.add(new Canvas(), BarLayout.kSpring);
-    fTargetPanel.add(new JLabel("Search In: "),
-                     BarLayout.kVariable);
-    fTargetPanel.add(fSearchPanel.getSearchable().getTargetComponent(),
-                     BarLayout.kVariable);
-    fTargetPanel.add(new Canvas(), BarLayout.kSpring);
+    fTargetPanel.add(new Canvas());
+    fTargetPanel.add(new JLabel("Search In: "));
+    fTargetPanel.add(fSearchPanel.getSearchable().getTargetComponent());
+    fTargetPanel.add(new Canvas());
 
     fPanel.add(BorderLayout.NORTH, fTargetPanel);
 

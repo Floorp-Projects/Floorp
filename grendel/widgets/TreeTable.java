@@ -17,6 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  *
  * Created: Will Scullin <scullin@netscape.com>, 21 Aug 1997.
+ * Modified: Jeff Galyan <jeffrey.galyan@sun.com>, 30 Dec 1998
  */
 
 package grendel.widgets;
@@ -42,21 +43,21 @@ import java.awt.event.MouseEvent;
 import java.util.Enumeration;
 import java.util.Vector;
 
-import com.sun.java.swing.CellEditorListener;
-import com.sun.java.swing.CellRendererPane;
-import com.sun.java.swing.Icon;
-import com.sun.java.swing.ImageIcon;
-import com.sun.java.swing.JComponent;
-import com.sun.java.swing.JLabel;
-import com.sun.java.swing.JViewport;
-import com.sun.java.swing.KeyStroke;
-import com.sun.java.swing.Scrollable;
-import com.sun.java.swing.SwingConstants;
-import com.sun.java.swing.SwingUtilities;
-import com.sun.java.swing.UIManager;
-import com.sun.java.swing.basic.BasicGraphicsUtils;
-import com.sun.java.swing.event.ChangeEvent;
-import com.sun.java.swing.event.ListSelectionEvent;
+import javax.swing.event.CellEditorListener;
+import javax.swing.CellRendererPane;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JViewport;
+import javax.swing.KeyStroke;
+import javax.swing.Scrollable;
+import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import javax.swing.plaf.basic.BasicGraphicsUtils;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ListSelectionEvent;
 
 import grendel.dnd.DropTarget;
 import grendel.dnd.DropTargetComponent;

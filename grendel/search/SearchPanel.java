@@ -17,6 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  *
  * Created: Will Scullin <scullin@netscape.com>,  9 Oct 1997.
+ * Modified: Jeff Galyan <jeffrey.galyan@sun.com>, 31 Dec 1998
  */
 
 package grendel.search;
@@ -35,13 +36,12 @@ import java.util.Enumeration;
 
 import javax.mail.search.SearchTerm;
 
-import com.sun.java.swing.JComponent;
-import com.sun.java.swing.JButton;
-import com.sun.java.swing.JPanel;
-import com.sun.java.swing.JScrollPane;
-import com.sun.java.swing.border.EmptyBorder;
-
-import netscape.orion.toolbars.BarLayout;
+import javax.swing.BoxLayout;
+import javax.swing.JComponent;
+import javax.swing.JButton;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.border.EmptyBorder;
 
 import grendel.widgets.SelectionManager;
 import grendel.widgets.SingleSelectionManager;
@@ -76,20 +76,21 @@ public class SearchPanel extends JPanel {
     add(fQueryPanel);
 
     // Create Operator buttons
-    fOperatorPanel = new JPanel(new BarLayout(BarLayout.kVertical, 5), true);
+    fOperatorPanel = new JPanel();
+    fOperatorPanel.setLayout(new BoxLayout(fOperatorPanel, BoxLayout.Y_AXIS));
     fOperatorPanel.setBorder(new EmptyBorder(5,5,5,5));
 
     fAndButton = new JButton("And");
     fAndButton.addActionListener(new AndAction());
-    fOperatorPanel.add(fAndButton, BarLayout.kSheep);
+    fOperatorPanel.add(fAndButton);
 
     fOrButton = new JButton("Or");
     fOrButton.addActionListener(new OrAction());
-    fOperatorPanel.add(fOrButton, BarLayout.kSheep);
+    fOperatorPanel.add(fOrButton);
 
     fDeleteButton = new JButton("Delete");
     fDeleteButton.addActionListener(new DeleteAction());
-    fOperatorPanel.add(fDeleteButton, BarLayout.kSheep);
+    fOperatorPanel.add(fDeleteButton);
 
     add(BorderLayout.EAST, fOperatorPanel);
   }

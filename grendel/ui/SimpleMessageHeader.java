@@ -30,8 +30,8 @@ import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 
-import com.sun.java.swing.JLabel;
-import com.sun.java.swing.border.BevelBorder;
+import javax.swing.JLabel;
+import javax.swing.border.BevelBorder;
 
 public class SimpleMessageHeader extends MessageHeader {
   static final int kMargin = 3;
@@ -81,7 +81,7 @@ public class SimpleMessageHeader extends MessageHeader {
         StringBuffer fromString = new StringBuffer();
         String personal = null;
 
-        Address recipients[] = fMessage.getRecipients(Message.TO);
+        Address recipients[] = fMessage.getRecipients(Message.RecipientType.TO);
         Address sender[] = fMessage.getFrom();
 
         int i;

@@ -15,12 +15,14 @@
  * The Initial Developer of the Original Code is Netscape Communications
  * Corporation.  Portions created by Netscape are Copyright (C) 1997
  * Netscape Communications Corporation.  All Rights Reserved.
+ *
+ * Modified: Jeff Galyan <jeffrey.galyan@sun.com>, 30 Dec 1998
  */
 
 package grendel.composition;
 
 import java.awt.*;
-import com.sun.java.swing.*;
+import javax.swing.*;
 
 public class AddressBar extends NSTabbedPane {
     AddressList mAddressList;
@@ -28,19 +30,19 @@ public class AddressBar extends NSTabbedPane {
     OptionsPanel mOptionsPanel;
 
     public AddressBar() {
-      //address panel
+      // address panel
         ImageIcon addressIcon = new ImageIcon(getClass().getResource("images/small_address.gif"));
         mAddressList = new AddressList ();
 
-          //attachments panel
+          // attachments panel
         ImageIcon attachmentsIcon = new ImageIcon(getClass().getResource("images/small_attachments.gif"));
         mAttachmentsList = new AttachmentsList();
 
-          //otpions panel
+          // options panel
         ImageIcon optionsIcon = new ImageIcon(getClass().getResource("images/small_otpions.gif"));
         mOptionsPanel = new OptionsPanel();
 
-        //tabbed panel holds address, attachments and otpions.
+        // tabbed panel holds address, attachments and otpions.
         addTab("", addressIcon,        mAddressList);
         addTab("", attachmentsIcon,    mAttachmentsList);
         addTab("", optionsIcon,        mOptionsPanel);

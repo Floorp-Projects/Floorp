@@ -25,7 +25,7 @@ import java.awt.*;
 import java.awt.datatransfer.*;
 import java.awt.event.*;
 import java.util.*;
-import com.sun.java.swing.*;
+import javax.swing.*;
 
 public class DragSourceContext {
   static final int ACTION_MASK =

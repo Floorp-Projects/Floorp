@@ -26,6 +26,7 @@ package grendel.filters;
 import java.io.Reader;
 import javax.mail.Message;
 import javax.mail.Flags;
+import javax.mail.Flags.Flag;
 import javax.mail.MessagingException;
 
 import grendel.filters.IFilterAction;
@@ -46,7 +47,7 @@ public class DeleteFilterActionFactory extends Object
           }
           System.err.println("Message: " + subject + " -> discard;");
           try {
-                message.setFlags(Flags.DeletedFlag, true);
+                message.setFlag(Flags.Flag.DELETED, true);
           } catch (MessagingException e) {
                 System.err.println("DeleteFilterAction.exercise() failed: " + e);
           }

@@ -17,6 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  *
  * Created: Will Scullin <scullin@netscape.com>,  3 Sep 1997.
+ * Modified: Jeff Galyan <jeffrey.galyan@sun.com>, 31 Dec 1998
  */
 
 package grendel.ui;
@@ -26,28 +27,30 @@ import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.util.Enumeration;
 
-import com.sun.java.swing.BoxLayout;
-import com.sun.java.swing.Icon;
-import com.sun.java.swing.ImageIcon;
-import com.sun.java.swing.JComponent;
-import com.sun.java.swing.JFrame;
-import com.sun.java.swing.JMenuBar;
-import com.sun.java.swing.event.ChangeEvent;
+import javax.swing.BoxLayout;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JMenuBar;
+import javax.swing.JToolBar;
+import javax.swing.event.ChangeEvent;
 
 import calypso.util.Preferences;
 import calypso.util.PreferencesFactory;
 
-import netscape.orion.toolbars.NSToolbar;
-import netscape.orion.toolbars.ToolbarFactory;
-import netscape.orion.toolbars.ToolBarLayout;
-import netscape.orion.uimanager.AbstractUICmd;
-import netscape.orion.uimanager.IUICmd;
+//import netscape.orion.toolbars.NSToolbar;
+//import netscape.orion.toolbars.ToolbarFactory;
+//import netscape.orion.toolbars.ToolBarLayout;
+//import netscape.orion.uimanager.AbstractUICmd;
+//import netscape.orion.uimanager.IUICmd;
 
 import javax.mail.Store;
 import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 
+import grendel.ui.UIAction;
 import grendel.view.ViewedMessage;
 import grendel.widgets.Splitter;
 import grendel.widgets.StatusEvent;
@@ -131,11 +134,13 @@ public class UnifiedMessageDisplayManager extends MessageDisplayManager {
 }
 
 class UnifiedMessageFrame extends GeneralFrame {
+  private final boolean DEBUG = true;
   MasterPanel   fFolders = null;
   FolderPanel   fThreads = null;
   MessagePanel  fMessage = null;
   Splitter      splitter1 = null, splitter2 = null;
   String        fLayout = null;
+  JToolBar      fToolBar1 = null;
 
   public UnifiedMessageFrame() {
     super("appNameLabel", "mail.multi_pane");
@@ -159,26 +164,43 @@ class UnifiedMessageFrame extends GeneralFrame {
 
     layoutPanels(layout);
 
-    fMenu = buildMenu("multiMain",
-                      Util.MergeActions(actions,
-                        Util.MergeActions(fFolders.getActions(),
-                          Util.MergeActions(fThreads.getActions(),
-                                            fMessage.getActions()))));
+    fMenu = buildMenu();
 
     getRootPane().setMenuBar(fMenu);
 
-    NSToolbar masterToolBar = fFolders.getToolBar();
-    NSToolbar folderToolBar = fThreads.getToolBar();
-    NSToolbar messageToolBar = fMessage.getToolBar();
+    JToolBar masterToolBar = fFolders.getToolBar();
+    JToolBar folderToolBar = fThreads.getToolBar();
+    JToolBar messageToolBar = fMessage.getToolBar();
 
-    fToolBar = Util.MergeToolBars(masterToolBar,
-                                  Util.MergeToolBars(folderToolBar,
-                                                     messageToolBar));
+    fToolBar1 = Util.MergeToolBars(folderToolBar, messageToolBar);
+    if (DEBUG) {
+      System.out.println("MergeToolBars status:");
+      if (fToolBar1 == null) {
+        System.out.println("\tCreation of fToolBar1 failed.");
+      }
+      else {
+        System.out.println("\tfToolBar1 contains " + fToolBar1.getComponentCount() + " components.");
+      }
+    }
+    fToolBar = Util.MergeToolBars(masterToolBar, fToolBar1);
+    if (DEBUG) {
+      System.out.println("MergeToolBars status:");
+      if (fToolBar == null) {
+        System.out.println("\tCreation of fToolBar failed.");
+      }
+      else {
+        System.out.println("\tfToolBar contains " + fToolBar.getComponentCount() + " components.");
+      }
+    }
 
-    fToolBar.addItem(ToolbarFactory.MakeINSToolbarItem(ToolBarLayout.CreateSpring(),
-                                                       null));
-    fToolBar.addItem(ToolbarFactory.MakeINSToolbarItem(fAnimation, null));
-    fToolBarPanel.add(fToolBar);
+    //    fToolBar = Util.MergeToolBars(masterToolBar,
+    //                            Util.MergeToolBars(folderToolBar,
+    //                                               messageToolBar));
+
+    //    fToolBar.addItem(ToolbarFactory.MakeINSToolbarItem(ToolBarLayout.CreateSpring(),
+    //                                                       null));
+//    fToolBar.addItem(ToolbarFactory.MakeINSToolbarItem(fAnimation, null));
+      fToolBarPanel.add(fToolBar);
 
     fStatusBar = buildStatusBar();
     fPanel.add(BorderLayout.SOUTH, fStatusBar);
@@ -262,7 +284,7 @@ class UnifiedMessageFrame extends GeneralFrame {
       splitter1.add(splitter1.createSeparator(4));
       splitter1.add(fMessage, new Float(messageWeight));
 
-      fStackedLayoutAction.setSelected(IUICmd.kSelected);
+      //      fStackedLayoutAction.setSelected(IUICmd.kSelected);
     } else if (layout.equals(UnifiedMessageDisplayManager.SPLIT_LEFT)) {
       splitter1 = new Splitter(Splitter.HORIZONTAL);
 
@@ -275,7 +297,7 @@ class UnifiedMessageFrame extends GeneralFrame {
       splitter1.add(splitter1.createSeparator(4));
       splitter1.add(fMessage, new Float(messageWeight));
 
-      fSplitLeftLayoutAction.setSelected(IUICmd.kSelected);
+      //      fSplitLeftLayoutAction.setSelected(IUICmd.kSelected);
     } else if (layout.equals(UnifiedMessageDisplayManager.SPLIT_RIGHT)) {
 
       splitter2 = new Splitter(Splitter.VERTICAL);
@@ -288,7 +310,7 @@ class UnifiedMessageFrame extends GeneralFrame {
       splitter1.add(splitter1.createSeparator(4));
       splitter1.add(splitter2, new Float(splitWeight));
 
-      fSplitRightLayoutAction.setSelected(IUICmd.kSelected);
+      //      fSplitRightLayoutAction.setSelected(IUICmd.kSelected);
     } else { // Default: SPLIT_TOP
       splitter1 = new Splitter(Splitter.VERTICAL);
 
@@ -301,7 +323,7 @@ class UnifiedMessageFrame extends GeneralFrame {
       splitter1.add(splitter1.createSeparator(4));
       splitter1.add(fMessage, new Float(messageWeight));
 
-      fSplitTopLayoutAction.setSelected(IUICmd.kSelected);
+      //      fSplitTopLayoutAction.setSelected(IUICmd.kSelected);
     }
     fPanel.add("Center", splitter1);
 
@@ -311,16 +333,16 @@ class UnifiedMessageFrame extends GeneralFrame {
     fLayout = layout;
   }
 
-  IUICmd fSplitLeftLayoutAction =
+  LayoutAction fSplitLeftLayoutAction =
     new LayoutAction(UnifiedMessageDisplayManager.SPLIT_LEFT);
-  IUICmd fSplitRightLayoutAction =
+  LayoutAction fSplitRightLayoutAction =
     new LayoutAction(UnifiedMessageDisplayManager.SPLIT_RIGHT);
-  IUICmd fSplitTopLayoutAction =
+  LayoutAction fSplitTopLayoutAction =
     new LayoutAction(UnifiedMessageDisplayManager.SPLIT_TOP);
-  IUICmd fStackedLayoutAction =
+  LayoutAction fStackedLayoutAction =
     new LayoutAction(UnifiedMessageDisplayManager.STACKED);
 
-  IUICmd actions[] = { ActionFactory.GetExitAction(),
+  UIAction actions[] = { ActionFactory.GetExitAction(),
                        ActionFactory.GetNewMailAction(),
                        ActionFactory.GetComposeMessageAction(),
                        ActionFactory.GetPreferencesAction(),
@@ -444,7 +466,7 @@ class UnifiedMessageFrame extends GeneralFrame {
   // LayoutAction class
   //
 
-  class LayoutAction extends AbstractUICmd {
+  class LayoutAction extends UIAction {
     ImageIcon fIcon;
     public LayoutAction(String aAction) {
       super(aAction);

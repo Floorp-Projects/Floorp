@@ -36,13 +36,13 @@ import java.util.Hashtable;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
-import netscape.orion.dialogs.AbstractCtrl;
-import netscape.orion.dialogs.AttrNotFoundException;
-import netscape.orion.dialogs.PageModel;
-import netscape.orion.dialogs.PageUI;
+//import netscape.orion.dialogs.AbstractCtrl;
+//import netscape.orion.dialogs.AttrNotFoundException;
+//import netscape.orion.dialogs.PageModel;
+//import netscape.orion.dialogs.PageUI;
 
-import xml.tree.XMLNode;
-import xml.tree.TreeBuilder;
+//import xml.tree.XMLNode;
+//import xml.tree.TreeBuilder;
 
 public class UserPrefsEditor implements PropertyEditor {
   UserPrefs fPrefs = new UserPrefs();

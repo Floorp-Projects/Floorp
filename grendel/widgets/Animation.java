@@ -26,8 +26,8 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.text.MessageFormat;
 
-import com.sun.java.swing.Icon;
-import com.sun.java.swing.ImageIcon;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
 
 public class Animation extends Component implements Runnable
 {

@@ -17,6 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  *
  * Created: Will Scullin <scullin@netscape.com>, 20 Oct 1997.
+ * Modified: Jeff Galyan <jeffrey.galyan@sun.com>, 30 Dec 1998
  */
 
 package grendel.composition;
@@ -45,38 +46,37 @@ import java.util.Hashtable;
 import java.util.StringTokenizer;
 import java.util.Properties;
 
-import com.sun.java.swing.BorderFactory;
-import com.sun.java.swing.ImageIcon;
-import com.sun.java.swing.JButton;
-import com.sun.java.swing.JLabel;
-import com.sun.java.swing.JPanel;
-import com.sun.java.swing.JScrollPane;
-import com.sun.java.swing.JTextField;
-import com.sun.java.swing.JTextArea;
-import com.sun.java.swing.border.BevelBorder;
-import com.sun.java.swing.event.ChangeEvent;
-import com.sun.java.swing.event.EventListenerList;
-import com.sun.java.swing.text.BadLocationException;
-import com.sun.java.swing.text.Document;
-import com.sun.java.swing.text.JTextComponent;
-import com.sun.java.swing.text.TextAction;
+import javax.swing.AbstractAction;
+import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextField;
+import javax.swing.JTextArea;
+import javax.swing.JToolBar;
+import javax.swing.border.BevelBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.EventListenerList;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Document;
+import javax.swing.text.JTextComponent;
+import javax.swing.text.TextAction;
 
 import javax.mail.Address;
 import javax.mail.Session;
 import javax.mail.Message;
+import javax.mail.Transport;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.InternetAddress;
-
-import netscape.orion.toolbars.NSButton;
-import netscape.orion.toolbars.NSToolbar;
-import netscape.orion.uimanager.AbstractUICmd;
-import netscape.orion.uimanager.IUICmd;
 
 import grendel.storage.MessageExtra;
 import grendel.storage.MessageExtraFactory;
 import grendel.ui.ActionFactory;
 import grendel.ui.GeneralPanel;
+import grendel.ui.UIAction;
 
 public class CompositionPanel extends GeneralPanel {
   private Hashtable       mCommands;
@@ -134,7 +134,7 @@ public class CompositionPanel extends GeneralPanel {
    * of actions supported by the embedded JTextComponent
    * augmented with the actions defined locally.
    */
-  public IUICmd[] getActions() {
+  public UIAction[] getActions() {
     return defaultActions;
     // XXX WHS need to translate Actions to UICmds
     // return TextAction.augmentList(mEditor.getActions(), defaultActions);
@@ -273,7 +273,7 @@ public class CompositionPanel extends GeneralPanel {
   public static final String wrapLongLinesTag         ="wrapLongLines";
 
   // --- action implementations -----------------------------------
-  private IUICmd[] defaultActions = {
+  private UIAction[] defaultActions = {
     //"File" actions
 //        new SaveDraft(),
     new SaveAs(),
@@ -326,7 +326,7 @@ public class CompositionPanel extends GeneralPanel {
    * Try to save the message to the "draft" mailbox.
    * @see SaveAs
    */
-  class SaveDraft extends AbstractUICmd {
+  class SaveDraft extends UIAction {
     SaveDraft() {
       super(saveDraftTag);
       setEnabled(true);
@@ -338,7 +338,7 @@ public class CompositionPanel extends GeneralPanel {
    * Try to save the message to a text file.
    * @see SaveDraft
    */
-  class SaveAs extends AbstractUICmd {
+  class SaveAs extends UIAction {
     SaveAs() {
       super(saveAsTag);
       setEnabled(true);
@@ -376,7 +376,7 @@ public class CompositionPanel extends GeneralPanel {
   /**
    * Send the mail message now.
    */
-  class SendNow extends AbstractUICmd {
+  class SendNow extends UIAction {
     SendNow() {
       super(sendNowTag);
       setEnabled(true);
@@ -395,7 +395,7 @@ public class CompositionPanel extends GeneralPanel {
 
       //try to send the message
       //get the current list of recipients.
-      Addressee[] recipients = mAddressList.getAddresses ();
+      Addressee[] recipients = mAddressList.getAddresses();
 
       //Check that is at least one recipient.
       if (0 < recipients.length) {
@@ -417,19 +417,19 @@ public class CompositionPanel extends GeneralPanel {
               javax.mail.Address[] toAddress = new InternetAddress[1];
               toAddress[0] = new InternetAddress(recipients[i].getText());
 
-              int deliverMode = Message.TO;
+              Message.RecipientType deliverMode = Message.RecipientType.TO;
 
               //map grendel.composition.Addressee delivery modes
               //  into javax.mail.Message delivery modes.
               switch (recipients[i].getDelivery()) {
                 case Addressee.TO:
-                  deliverMode = Message.TO;
+                  deliverMode = Message.RecipientType.TO;
                   break;
                 case Addressee.CC:
-                  deliverMode = Message.CC;
+                  deliverMode = Message.RecipientType.CC;
                   break;
                 case Addressee.BCC:
-                  deliverMode = Message.BCC;
+                  deliverMode = Message.RecipientType.BCC;
                   break;
               }
               msg.addRecipients(deliverMode, toAddress);
@@ -439,7 +439,12 @@ public class CompositionPanel extends GeneralPanel {
                                                        //field.
             msg.setSentDate(new java.util.Date());     //set date to now.
             msg.setContent(messageText, "text/plain"); //contents.
-            msg.send();                                 //send the message.
+            try {
+              mSession.getTransport().send(msg);       // send the message.
+            } catch (MessagingException exc) {
+              exc.printStackTrace();
+            }
+                    
             success = true;
           } catch (javax.mail.SendFailedException sex) {
             sex.printStackTrace();
@@ -471,7 +476,7 @@ public class CompositionPanel extends GeneralPanel {
    * Quote the original text message into the editor.
    * @see PasteAsQuotation
    */
-  class QuoteOriginalText extends AbstractUICmd {
+  class QuoteOriginalText extends UIAction {
     QuoteOriginalText() {
       super(quoteOriginalTextTag);
       setEnabled(true);
@@ -485,6 +490,7 @@ public class CompositionPanel extends GeneralPanel {
       InputStream plaintext = null;
       try {
         plaintext = referredMsg.getInputStream();
+      } catch (IOException ioe) {
       } catch (MessagingException e) {
       }
       if (plaintext == null) return; // Or beep or whine??? ###
@@ -549,7 +555,7 @@ public class CompositionPanel extends GeneralPanel {
     }
   }
 
-  class SelectAddresses extends AbstractUICmd {
+  class SelectAddresses extends UIAction {
     SelectAddresses() {
       super(selectAddressesTag);
       setEnabled(true);
@@ -585,7 +591,7 @@ public class CompositionPanel extends GeneralPanel {
   //-----------------------
   // "file->attach" actions
   //-----------------------
-  class AttachFile extends AbstractUICmd {
+  class AttachFile extends UIAction {
     AttachFile() {
       super(fileTag);
       setEnabled(true);
@@ -606,7 +612,7 @@ public class CompositionPanel extends GeneralPanel {
    * Quote and paste whatever string that's on the clipboard into the editor.
    * @see QuoteOriginalText
    */
-  class PasteAsQuotation extends AbstractUICmd {
+  class PasteAsQuotation extends UIAction {
     PasteAsQuotation() {
       super(pasteAsQuotationTag);
       setEnabled(true);
@@ -637,7 +643,7 @@ public class CompositionPanel extends GeneralPanel {
           appendQuotaion = true;
           quotedString.append (token);
 
-          //if this token is a line then skip inserting a quotitona on the line
+          //if this token is a line then skip inserting a quotation on the line
           if (!token.equals ("\n"))
             appendQuotaion = false;
         }
@@ -661,7 +667,7 @@ public class CompositionPanel extends GeneralPanel {
   //"View" actions
   //-----------------------
 
-  class ViewAddress extends AbstractUICmd {
+  class ViewAddress extends UIAction {
     ViewAddress() {
       super(viewAddressTag);
       setEnabled(true);
@@ -672,7 +678,7 @@ public class CompositionPanel extends GeneralPanel {
     }
   }
 
-  class ViewAttachments extends AbstractUICmd {
+  class ViewAttachments extends UIAction {
     ViewAttachments() {
       super(viewAttachmentsTag);
       setEnabled(true);
@@ -683,7 +689,7 @@ public class CompositionPanel extends GeneralPanel {
     }
   }
 
-  class ViewOptions extends AbstractUICmd {
+  class ViewOptions extends UIAction {
     ViewOptions() {
       super(viewOptionsTag);
       setEnabled(true);
@@ -698,9 +704,9 @@ public class CompositionPanel extends GeneralPanel {
    * Create a Toolbar
    * @see addToolbarButton
    */
-  private NSToolbar createToolbar() {
+  private JToolBar createToolbar() {
 
-    NSToolbar toolBar = new NSToolbar();
+    JToolBar toolBar = new JToolBar();
     addToolbarButton(toolBar, new SendNow(),
                      "send",       "Send this message");
     addToolbarButton(toolBar, new QuoteOriginalText(),
@@ -730,11 +736,11 @@ public class CompositionPanel extends GeneralPanel {
    * @param aToolTip The buttons tool tip. like "Save the current file".
    * @see createToolbar
    */
-  public void addToolbarButton(NSToolbar aToolBar,
-                               IUICmd aActionListener,
+  public void addToolbarButton(JToolBar aToolBar,
+                               UIAction aActionListener,
                                String aImageName,
                                String aToolTip) {
-    NSButton b = new NSButton();
+    JButton b = new JButton();
 
     b.setHorizontalTextPosition(JButton.CENTER);
     b.setVerticalTextPosition(JButton.BOTTOM);
@@ -766,7 +772,7 @@ public class CompositionPanel extends GeneralPanel {
       b.setEnabled(false);
     }
 
-    aToolBar.addItem(b);
+    aToolBar.add(b);
   }
 
   /**

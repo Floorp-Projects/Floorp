@@ -33,20 +33,20 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.Properties;
 
-import com.sun.java.swing.Action;
-import com.sun.java.swing.JMenu;
-import com.sun.java.swing.JMenuItem;
-import com.sun.java.swing.event.ChangeEvent;
+import javax.swing.Action;
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+import javax.swing.event.ChangeEvent;
 
 import calypso.util.Preferences;
 import calypso.util.PreferencesFactory;
 
-import netscape.orion.toolbars.NSToolbar;
+//import netscape.orion.toolbars.NSToolbar;
 
-import netscape.shell.IShellAnimation;
-import netscape.shell.IShellIntegrator;
-import netscape.shell.IShellView;
-import netscape.shell.IShellViewCtx;
+//import netscape.shell.IShellAnimation;
+//import netscape.shell.IShellIntegrator;
+//import netscape.shell.IShellView;
+//import netscape.shell.IShellViewCtx;
 
 import grendel.composition.AddressBar;
 import grendel.composition.CompositionPanel;

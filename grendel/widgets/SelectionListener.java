@@ -24,7 +24,7 @@ package grendel.widgets;
 import java.awt.event.MouseEvent;
 import java.util.EventListener;
 
-import com.sun.java.swing.event.ChangeEvent;
+import javax.swing.event.ChangeEvent;
 
 public interface SelectionListener extends EventListener {
   void selectionChanged(SelectionEvent aEvent);

@@ -23,9 +23,9 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
 
-import com.sun.java.swing.*;
-import com.sun.java.swing.table.*;
-import com.sun.java.swing.border.*;
+import javax.swing.*;
+import javax.swing.table.*;
+import javax.swing.border.*;
 
 class AddressDialog extends Dialog implements ActionListener {
     private final int BUTTON_WIDTH  = 100;

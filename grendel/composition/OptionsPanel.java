@@ -15,14 +15,16 @@
  * The Initial Developer of the Original Code is Netscape Communications
  * Corporation.  Portions created by Netscape are Copyright (C) 1997
  * Netscape Communications Corporation.  All Rights Reserved.
+ *
+ * Modified: Jeff Galyan <jeffrey.galyan@sun.com>, 30 Dec 1998
  */
 
 package grendel.composition;
 
 import java.io.Serializable;
 import java.awt.*;
-import com.sun.java.swing.*;
-import com.sun.java.swing.border.*;
+import javax.swing.*;
+import javax.swing.border.*;
 
 public class OptionsPanel extends JPanel implements Serializable  {
     private final int BOX_WIDTH = 300;
@@ -69,7 +71,7 @@ public class OptionsPanel extends JPanel implements Serializable  {
                 JCheckBox checkButton = new JCheckBox(aLabel, isChecked);
 
             if (!aToolTip.equals ("")) checkButton.setToolTipText(aToolTip);
-        if (' ' != aAccelerator) checkButton.setKeyAccelerator(aAccelerator);
+        if (' ' != aAccelerator) checkButton.setMnemonic(aAccelerator);
 
         //create a fixed sized panel.
         add(new FixedSizedPanel (BOX_WIDTH, BOX_HEIGHT, checkButton));

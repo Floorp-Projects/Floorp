@@ -29,8 +29,8 @@
 
 package grendel.composition;
 
-import com.sun.java.swing.text.*;
-import com.sun.java.swing.*;
+import javax.swing.text.*;
+import javax.swing.*;
 
 import java.awt.event.*;
 import java.awt.*;

@@ -23,7 +23,7 @@ package grendel.composition;
 
 import java.util.EventListener;
 
-import com.sun.java.swing.event.ChangeEvent;
+import javax.swing.event.ChangeEvent;
 
 public interface CompositionPanelListener extends EventListener {
   public void sendingMail(ChangeEvent aEvent);
