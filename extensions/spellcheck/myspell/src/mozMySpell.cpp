@@ -21,6 +21,7 @@
  *
  * Contributor(s): David Einstein <Deinst@world.std.com>
  *                 Kevin Hendricks <kevin.hendricks@sympatico.ca>
+ *                 Michiel van Leeuwen <mvl@exedo.nl>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -58,18 +59,22 @@
 
 #include "mozMySpell.h"
 #include "nsReadableUtils.h"
-#include "nsIFile.h"
 #include "nsXPIDLString.h"
 #include "nsISimpleEnumerator.h"
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
 #include "mozISpellI18NManager.h"
+#include "nsICharsetConverterManager.h"
+#include "nsUnicharUtilCIID.h"
+#include "nsUnicharUtils.h"
+#include "nsCRT.h"
+#include <stdlib.h>
 
+const PRInt32 kFirstDirSize=8;
+static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
+static NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
 
 NS_IMPL_ISUPPORTS1(mozMySpell, mozISpellCheckingEngine)
-  
-const PRInt32 kFirstDirSize=8;
-
 
 mozMySpell::mozMySpell()
 {
@@ -77,176 +82,188 @@ mozMySpell::mozMySpell()
 
 mozMySpell::~mozMySpell()
 {
+  mPersonalDictionary = nsnull;
 }
 
 /* attribute wstring dictionary; */
-NS_IMETHODIMP mozMySpell::GetDictionary(PRUnichar * *aDictionary)
+NS_IMETHODIMP mozMySpell::GetDictionary(PRUnichar **aDictionary)
 {
-  nsresult res=NS_OK;
-  NS_PRECONDITION(aDictionary != nsnull, "null ptr");
-  if(!aDictionary){
-    res = NS_ERROR_NULL_POINTER;
-  }
-  else{
-    *aDictionary = ToNewUnicode(mDictionary);
-    if(!aDictionary) res = NS_ERROR_OUT_OF_MEMORY;
-  }
-  
-  return res;
+  NS_ENSURE_ARG_POINTER(aDictionary);
+
+  *aDictionary = ToNewUnicode(mDictionary);
+  return *aDictionary ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 /* set the Dictionary.
  * This also Loads the dictionary and initializes the converter using the dictionaries converter
  */
-NS_IMETHODIMP mozMySpell::SetDictionary(const PRUnichar * aDictionary)
+NS_IMETHODIMP mozMySpell::SetDictionary(const PRUnichar *aDictionary)
 {
-  if(!aDictionary)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(aDictionary);
 
-  nsresult res=NS_OK;
+  nsresult rv = NS_OK;
   
-  if (!mDictionary.Equals(aDictionary)&&!(*aDictionary == 0)){
+  if (*aDictionary && !mDictionary.Equals(aDictionary)) {
     mDictionary = aDictionary;
-    res=mAMgr.Load(mDictionary);
-    if(NS_FAILED(res)){
-      NS_WARNING("Dictionary load failed");
-      return res;
+
+    nsAutoString affFileName, dictFileName;
+
+    // XXX This isn't really good. nsIFile->Path isn't xp save etc.
+    // see nsIFile.idl
+    // A better way would be to QU ti nsILocalFile, and get a filehandle
+    // from there. Only problem is that myspell wants a path
+
+    nsCOMPtr<nsIFile> file;
+    nsresult rv = NS_GetSpecialDirectory(NS_XPCOM_COMPONENT_DIR, getter_AddRefs(file));
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!file)
+      return NS_ERROR_FAILURE;
+    rv = file->Append(NS_LITERAL_STRING("myspell"));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = file->Append(mDictionary + NS_LITERAL_STRING(".aff"));
+    NS_ENSURE_SUCCESS(rv, rv);
+    file->GetPath(affFileName);
+
+    rv = NS_GetSpecialDirectory(NS_XPCOM_COMPONENT_DIR, getter_AddRefs(file));
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!file)
+      return NS_ERROR_FAILURE;
+    rv = file->Append(NS_LITERAL_STRING("myspell"));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = file->Append(mDictionary + NS_LITERAL_STRING(".dic"));
+    NS_ENSURE_SUCCESS(rv, rv);
+    file->GetPath(dictFileName);
+
+    mMySpell = new MySpell(NS_ConvertUTF16toUTF8(affFileName).get(), NS_ConvertUTF16toUTF8(dictFileName).get());
+    if (!mMySpell)
+      return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsICharsetConverterManager> ccm = do_GetService(kCharsetConverterManagerCID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = ccm->GetUnicodeDecoder(mMySpell->get_dic_encoding(), getter_AddRefs(mDecoder));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = ccm->GetUnicodeEncoder(mMySpell->get_dic_encoding(), getter_AddRefs(mEncoder));
+    if (mEncoder && NS_SUCCEEDED(rv)) {
+      mEncoder->SetOutputErrorBehavior(mEncoder->kOnError_Signal, nsnull, '?');
     }
-    nsAutoString tryString;
-    mAMgr.get_try_string(tryString);
-    mSMgr.setup(tryString, 64, &mAMgr);
-    nsString language;
+
+    NS_ENSURE_SUCCESS(rv, rv);
+
     PRInt32 pos = mDictionary.FindChar('-');
-    if(pos == -1){
-      language.AssignLiteral("en");      
-    }
-    else{
-      language = Substring(mDictionary,0,pos);
-    }
-    nsCOMPtr<mozISpellI18NManager> serv(do_GetService("@mozilla.org/spellchecker/i18nmanager;1", &res));
-    if(serv && NS_SUCCEEDED(res)){
-      res = serv->GetUtil(language.get(),getter_AddRefs(mConverter));
-    }
+    if (pos == -1)
+      mLanguage.Assign(NS_LITERAL_STRING("en"));      
+    else
+      mLanguage = Substring(mDictionary, 0, pos);
   }
-  return res;
+  
+  return rv;
 }
 
 /* readonly attribute wstring language; */
-NS_IMETHODIMP mozMySpell::GetLanguage(PRUnichar * *aLanguage)
+NS_IMETHODIMP mozMySpell::GetLanguage(PRUnichar **aLanguage)
 {
-  nsresult res=NS_OK;
-  NS_PRECONDITION(aLanguage != nsnull, "null ptr");
-  if(!aLanguage){
-    res = NS_ERROR_NULL_POINTER;
-  }
-  else{
-    nsString language;
-    PRInt32 pos = mDictionary.FindChar('-');
-    if(pos == -1){
-      language.AssignLiteral("en");      
-    }
-    else{
-      language = Substring(mDictionary,0,pos);
-    }
-    *aLanguage = ToNewUnicode(language);
-    if(!aLanguage) res = NS_ERROR_OUT_OF_MEMORY;
-  }
-  return res;
+  NS_ENSURE_ARG_POINTER(aLanguage);
+
+  *aLanguage = ToNewUnicode(mLanguage);
+  return *aLanguage ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 /* readonly attribute boolean providesPersonalDictionary; */
 NS_IMETHODIMP mozMySpell::GetProvidesPersonalDictionary(PRBool *aProvidesPersonalDictionary)
 {
-  if(!aProvidesPersonalDictionary) return NS_ERROR_NULL_POINTER;
-  *aProvidesPersonalDictionary=PR_FALSE;
+  NS_ENSURE_ARG_POINTER(aProvidesPersonalDictionary);
+
+  *aProvidesPersonalDictionary = PR_FALSE;
   return NS_OK;
 }
 
 /* readonly attribute boolean providesWordUtils; */
 NS_IMETHODIMP mozMySpell::GetProvidesWordUtils(PRBool *aProvidesWordUtils)
 {
-  if(!aProvidesWordUtils) return NS_ERROR_NULL_POINTER;
-  *aProvidesWordUtils=PR_FALSE;
+  NS_ENSURE_ARG_POINTER(aProvidesWordUtils);
+
+  *aProvidesWordUtils = PR_FALSE;
   return NS_OK;
 }
 
 /* readonly attribute wstring name; */
 NS_IMETHODIMP mozMySpell::GetName(PRUnichar * *aName)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* readonly attribute wstring copyright; */
 NS_IMETHODIMP mozMySpell::GetCopyright(PRUnichar * *aCopyright)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
-
-
-
 
 /* attribute mozIPersonalDictionary personalDictionary; */
 NS_IMETHODIMP mozMySpell::GetPersonalDictionary(mozIPersonalDictionary * *aPersonalDictionary)
 {
-  return mAMgr.GetPersonalDictionary(aPersonalDictionary);
+  *aPersonalDictionary = mPersonalDictionary;
+  NS_IF_ADDREF(*aPersonalDictionary);
+  return NS_OK;
 }
+
 NS_IMETHODIMP mozMySpell::SetPersonalDictionary(mozIPersonalDictionary * aPersonalDictionary)
 {
-  return mAMgr.SetPersonalDictionary(aPersonalDictionary);
+  mPersonalDictionary = aPersonalDictionary;
+  return NS_OK;
 }
 
 /* void GetDictionaryList ([array, size_is (count)] out wstring dictionaries, out PRUint32 count); */
-NS_IMETHODIMP mozMySpell::GetDictionaryList(PRUnichar ***dictionaries, PRUint32 *count)
+NS_IMETHODIMP mozMySpell::GetDictionaryList(PRUnichar ***aDictionaries, PRUint32 *aCount)
 {
-  nsresult res;
-  if(!dictionaries || !count){
+  if (!aDictionaries || !aCount)
     return NS_ERROR_NULL_POINTER;
-  }
 
-  nsCOMPtr<nsIFile> aFile;
+  *aDictionaries = 0;
+  *aCount = 0;
+  PRInt32 tempCount=0, arraySize = kFirstDirSize;
+  PRUnichar **newPtr;
+
+  nsCOMPtr<nsIFile> file;
+  nsresult rv = NS_GetSpecialDirectory(NS_XPCOM_COMPONENT_DIR, getter_AddRefs(file));
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!file)
+    return NS_ERROR_FAILURE;
+
+  rv = file->Append(NS_LITERAL_STRING("myspell"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCOMPtr<nsISimpleEnumerator> dirEntries;
-  PRBool hasMore = PR_FALSE;
-  PRInt32  tempCount=0, i, arraySize = kFirstDirSize;;
-  PRUnichar **newPtr, **tmpPtr;
+  rv = file->GetDirectoryEntries(getter_AddRefs(dirEntries));
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!dirEntries)
+    return NS_ERROR_FAILURE;
 
-  res=NS_OK;
-  *dictionaries = 0;
-  *count=0;
-
-  res = NS_GetSpecialDirectory(NS_XPCOM_COMPONENT_DIR, getter_AddRefs(aFile));
-  if (NS_FAILED(res)) return res;
-  if(!aFile)return NS_ERROR_FAILURE;
-  res = aFile->Append(NS_LITERAL_STRING("myspell"));
-  if (NS_FAILED(res)) return res;
-  res = aFile->GetDirectoryEntries(getter_AddRefs(dirEntries));
-  if (NS_FAILED(res)) return  res;
-  if(!dirEntries)return NS_ERROR_FAILURE;
-
-  tmpPtr  = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *)*kFirstDirSize);
+  PRUnichar **tmpPtr = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * kFirstDirSize);
   if (!tmpPtr)
     return NS_ERROR_OUT_OF_MEMORY;
 
-
+  PRBool hasMore = PR_FALSE;
   while (NS_SUCCEEDED(dirEntries->HasMoreElements(&hasMore)) && hasMore) {
     nsCOMPtr<nsISupports> nextItem;
-    nsCOMPtr<nsIFile> theFile;
 
     dirEntries->GetNext(getter_AddRefs(nextItem));
-    theFile = do_QueryInterface(nextItem);
+    nsCOMPtr<nsIFile> theFile = do_QueryInterface(nextItem);
     
-    if(theFile){
-      nsString fileName;
+    if (theFile) {
+      nsAutoString fileName;
       theFile->GetLeafName(fileName);
       PRInt32 dotLocation = fileName.FindChar('.');
-      if((dotLocation != -1) && Substring(fileName,dotLocation,4).EqualsLiteral(".dic")){
-        if(tempCount >= arraySize){
+      if ((dotLocation != -1) &&
+          Substring(fileName,dotLocation,4).EqualsLiteral(".dic")) {
+        if (tempCount >= arraySize) {
           arraySize = 2 * tempCount;
           newPtr = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * arraySize);
-          if (! newPtr){
+          if (!newPtr){
             NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(tempCount, tmpPtr);
             return NS_ERROR_OUT_OF_MEMORY;
           }
-          for(i=0;i<tempCount;i++){
+          for (PRInt32 i = 0; i < tempCount; ++i){
             newPtr[i] = tmpPtr[i];
           }
           nsMemory::Free(tmpPtr);
@@ -256,9 +273,10 @@ NS_IMETHODIMP mozMySpell::GetDictionaryList(PRUnichar ***dictionaries, PRUint32 
       }
     }
   }
-  *dictionaries=tmpPtr;
-  *count=tempCount;
-  return res;
+
+  *aDictionaries = tmpPtr;
+  *aCount = tempCount;
+  return NS_OK;
 }
 
 /* boolean Check (in wstring word); */
@@ -266,20 +284,32 @@ NS_IMETHODIMP mozMySpell::Check(const PRUnichar *aWord, PRBool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aWord);
   NS_ENSURE_ARG_POINTER(aResult);
-  NS_ENSURE_ARG_POINTER(mConverter);
 
-  PRUnichar **tmpPtr;
-  PRUint32 count,i;
-  *aResult = PR_FALSE;
+  if (!mMySpell)
+    return NS_ERROR_FAILURE;
 
-  nsresult rv = mConverter->GetRootForm(aWord, mozISpellI18NUtil::kCheck, &tmpPtr, &count);
-  NS_ENSURE_SUCCESS(rv, rv);
-  for(i=0 ; i<count ; i++){
-    *aResult = mAMgr.check(nsDependentString(tmpPtr[i]));
-    if (*aResult) break;
+  PRInt32 inLength = nsCRT::strlen(aWord);
+  PRInt32 outLength;
+  nsresult rv = mEncoder->GetMaxLength(aWord, inLength, &outLength);
+  // NS_ERROR_UENC_NOMAPPING is a NS_SUCCESS, no error.
+  if (NS_FAILED(rv) || rv == NS_ERROR_UENC_NOMAPPING) {
+    // not a word in the current charset, so likely not
+    // a word in the current language
+    return PR_FALSE;
   }
-  NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(count, tmpPtr);
-  return rv;
+
+  char *charsetWord = (char *) nsMemory::Alloc(sizeof(char) * (outLength+1));
+  rv = mEncoder->Convert(aWord, &inLength, charsetWord, &outLength);
+  charsetWord[outLength] = '\0';
+
+  *aResult = mMySpell->spell(charsetWord);
+
+  if (!*aResult) {
+    rv = mPersonalDictionary->Check(aWord, mLanguage.get(), aResult);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  
+  return NS_OK;
 }
 
 /* void Suggest (in wstring word, [array, size_is (count)] out wstring suggestions, out PRUint32 count); */
@@ -287,26 +317,40 @@ NS_IMETHODIMP mozMySpell::Suggest(const PRUnichar *aWord, PRUnichar ***aSuggesti
 {
   NS_ENSURE_ARG_POINTER(aSuggestions);
   NS_ENSURE_ARG_POINTER(aSuggestionCount);
-  NS_ENSURE_ARG_POINTER(mConverter);
 
-  *aSuggestions = 0;
-  *aSuggestionCount=0;
-  PRUnichar **tmpPtr;
-  nsAutoString word(aWord);
-  PRUnichar **slst = nsnull;
-  PRUint32 count;
-  PRUint32 ccount=0;
+  if (!mMySpell)
+    return NS_ERROR_FAILURE;
 
-  nsresult rv = mConverter->GetRootForm(aWord, mozISpellI18NUtil::kSuggest, &tmpPtr, &count);
-  NS_ENSURE_SUCCESS(rv, rv);
+  *aSuggestionCount = 0;
 
-  for (PRUint32 i = 0; (i < count) && NS_SUCCEEDED(rv) ; i++){
-    rv = mSMgr.suggest(&slst, nsDependentString(tmpPtr[i]), &ccount); 
+  char ** wlst;
+  *aSuggestionCount = mMySpell->suggest(&wlst, NS_LossyConvertUCS2toASCII(aWord).get());
+
+  if (*aSuggestionCount) {
+    PRUnichar **tmpPtr = (PRUnichar **)nsMemory::Alloc(*aSuggestionCount * sizeof(PRUnichar *));
+    if (!tmpPtr)
+      return NS_ERROR_OUT_OF_MEMORY;
+    
+    for (PRUint32 i = 0; i < *aSuggestionCount; ++i) {
+      // Convert the suggestion to utf16     
+      PRInt32 inLength = PL_strlen(wlst[i]);
+      PRInt32 outLength;
+      nsresult rv = mDecoder->GetMaxLength(wlst[i], inLength, &outLength);
+      NS_ENSURE_SUCCESS(rv, rv);
+      PRUnichar *dest = (PRUnichar *)malloc(sizeof(PRUnichar) * (outLength + 1));
+      if (!dest)
+        return NS_ERROR_OUT_OF_MEMORY;
+      rv = mDecoder->Convert(wlst[i], &inLength, dest, &outLength);
+      NS_ENSURE_SUCCESS(rv, rv);
+      dest[outLength] = 0;
+      free(wlst[i]);
+
+      // XXX ewwww.
+      tmpPtr[i] = ToNewUnicode(nsDependentString(dest));
+      free(dest);
+    }
+    *aSuggestions = tmpPtr;
   }
-  NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(count, tmpPtr);
-  if (ccount)
-    rv=mConverter->FromRootForm(aWord, (const PRUnichar **)slst, ccount, aSuggestions, aSuggestionCount);
-  NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(ccount, slst);
-  return rv;
 
+  return NS_OK;
 }
