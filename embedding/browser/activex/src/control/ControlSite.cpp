@@ -416,6 +416,15 @@ void CControlSite::SetAmbientUserMode(BOOL bUserMode)
 
 
 ///////////////////////////////////////////////////////////////////////////////
+// IServiceProvider implementation
+
+HRESULT STDMETHODCALLTYPE CControlSite::QueryService(REFGUID guidService, REFIID riid, void** ppv)
+{
+    return E_NOINTERFACE;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
 // IDispatch implementation
 
 
@@ -823,7 +832,6 @@ HRESULT STDMETHODCALLTYPE CControlSite::GetDC(/* [in] */ LPCRECT pRect, /* [in] 
 HRESULT STDMETHODCALLTYPE CControlSite::ReleaseDC(/* [in] */ HDC hDC)
 {
     // Release the DC
-    NG_ASSERT(hDC);
     if (hDC == NULL || hDC != m_hDCBuffer)
     {
         return E_INVALIDARG;

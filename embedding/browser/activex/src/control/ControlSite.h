@@ -56,7 +56,8 @@
     COM_INTERFACE_ENTRY_IID(IID_IAdviseSink, IAdviseSinkEx) \
     COM_INTERFACE_ENTRY_IID(IID_IAdviseSink2, IAdviseSinkEx) \
     COM_INTERFACE_ENTRY_IID(IID_IAdviseSinkEx, IAdviseSinkEx) \
-    COM_INTERFACE_ENTRY(IOleCommandTarget)
+    COM_INTERFACE_ENTRY(IOleCommandTarget) \
+    COM_INTERFACE_ENTRY(IServiceProvider)
 
 
 //
@@ -88,6 +89,7 @@ class CControlSite :    public CComObjectRootEx<CComSingleThreadModel>,
                         public IOleControlSite,
                         public IAdviseSinkEx,
                         public IDispatch,
+                        public IServiceProvider,
                         public IOleCommandTargetImpl<CControlSite>
 {
 protected:
@@ -240,6 +242,9 @@ END_OLECOMMAND_TABLE()
     {
         return m_bInPlaceActive;
     }
+
+// IServiceProvider
+    virtual HRESULT STDMETHODCALLTYPE QueryService(REFGUID guidService, REFIID riid, void** ppv);
 
 // IDispatch
     virtual HRESULT STDMETHODCALLTYPE GetTypeInfoCount(/* [out] */ UINT __RPC_FAR *pctinfo);
