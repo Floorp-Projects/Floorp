@@ -394,9 +394,7 @@ function EditorInsertHLine()
 
 function EditorInsertNamedAnchor()
 {
-  if (window.editorShell) {
-    window.openDialog("chrome://editordlgs/content/EdNamedAnchorProps.xul", "dlg", "chrome", "");
-  }
+  window.openDialog("chrome://editordlgs/content/EdNamedAnchorProps.xul", "dlg", "chrome", "");
   contentWindow.focus();
 }
 
