@@ -247,7 +247,7 @@ Contributor(s): ______________________________________. -->
 <!ENTITY xptk9Cmd.label "XP Menus">
 
 <!-- DO not localize strresCmd.label; test case --> 
-<!ENTITY strresCmd.label "Strres Test">
+<!ENTITY strresCmd.label "StringBundle Test">
 
 <!ENTITY QA.label "QA">
 <!ENTITY QABugCmd.label "Bug Writing">
