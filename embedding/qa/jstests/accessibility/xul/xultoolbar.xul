@@ -57,17 +57,45 @@
   {
     var domNode = getDomNodeToolbar();
     accNode = getAccessibleNode(domNode);
-    if(accNode == "Exception")
-    {            
-      temp = "<table border cols=2 width='70%'>";
-      temp += "<tr>";
-      temp += "<td> The Node you selected is not an Accessible Node </td>";
-      temp += "<td> PASS </td>";
-      temp += "</tr>";
-      temp += "</table>";
-      res = res + temp;
-    }    
+    setTimeout("constructResults();", 2000);
+  }
+
+  function constructResults()
+  {
+    try{
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+    var name = getName();
+    var role = getRole();
+    var state = getState();
+    var value = getValue();
+    var newvalue = value.toString();
+
+    var expectedName          = "";
+    var expectedRole          = "22";
+    var expectedState         = "0";
+    var expectedValue         = "NS_ERROR_NOT_IMPLEMENTED";
+
+    var row0 = new Array("Property/Method", "Expected Values", "Actual Values", "Result");
+    var row1 = new Array("Name->", expectedName, name);
+    var row2 = new Array("Role->", expectedRole, role);
+    var row3 = new Array("State->", expectedState, state);
+    var row4 = new Array("Value->", expectedValue, value);
+
+    row = new Array(row0, row1, row2, row3, row4);
+
+    if (name == expectedName)                 row1[3] = "PASS"; else row1[3] = "FAIL";
+    if (role == expectedRole)                 row2[3] = "PASS"; else row2[3] = "FAIL";
+    if (state == expectedState)               row3[3] = "PASS"; else row3[3] = "FAIL";
+    if (newvalue.match(expectedValue))        row4[3] = "PASS"; else row4[3] = "FAIL";
+
+    appendTableRes();
     WriteResults(res);    
+   }
+   catch(e){
+    alert("Exception**: " + e);
+   }
   }
   
   ]]>
