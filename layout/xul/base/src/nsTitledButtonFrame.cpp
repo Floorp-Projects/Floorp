@@ -999,7 +999,7 @@ nsTitledButtonFrame::SetCurrentCheckState(CheckState aState)
 // If the state is mixed, then set it to off. You can't ever get back to mixed.
 //
 void 
-nsTitledButtonFrame::MouseClicked ( const nsIPresContext & aPresContext) 
+nsTitledButtonFrame::MouseClicked (nsIPresContext & aPresContext) 
 {
   // if we are not toggling then do nothing
   CheckState oldState = GetCurrentCheckState();

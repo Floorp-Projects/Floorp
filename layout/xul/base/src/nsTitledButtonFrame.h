@@ -91,7 +91,7 @@ protected:
   void SetCurrentCheckState(CheckState aState);
   
 
-  virtual void MouseClicked(const nsIPresContext & aPresContext);
+  virtual void MouseClicked(nsIPresContext & aPresContext);
  
 
   NS_IMETHOD  PaintTitle(nsIPresContext& aPresContext,
