@@ -42,8 +42,8 @@
 //static const char* kCallFindChar =  "For better performance, call FindChar() for targets whose length==1.";
 //static const char* kCallRFindChar = "For better performance, call RFindChar() for targets whose length==1.";
 
-static const PRUnichar gCommonEmptyBuffer[1] = {0};
-static nsresult gStringAcquiredMemory = NS_OK;
+static const  PRUnichar gCommonEmptyBuffer[1] = {0};
+static PRBool gStringAcquiredMemory = PR_TRUE;
 
 /**
  * This method initializes all the members of the nsStr structure 
@@ -667,7 +667,7 @@ PRBool nsStr::Realloc(nsStr& aDest,PRUint32 aCount){
  * Retrieve last memory error
  *
  * @update  gess 10/11/99
- * @return  memory error (usually returns NS_OK)
+ * @return  memory error (usually returns PR_TRUE)
  */
 PRBool nsStr::DidAcquireMemory(void) {
   return gStringAcquiredMemory;
