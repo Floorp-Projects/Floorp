@@ -20,6 +20,8 @@ IGNORE_MANIFEST=1
 DEPTH=..\..
 MODULE = xpcom 
 
+include <$(DEPTH)\config\config.mak>
+
 LIBNAME = .\$(OBJDIR)\xpcom
 DLL = $(LIBNAME).dll
 
