@@ -265,19 +265,22 @@ protected:
   PRInt32      mEndSelectionIndex;
 
   nsIComboboxControlFrame *mComboboxFrame;
-  PRPackedBool mChangesSinceDragStart;
-  PRPackedBool mButtonDown;
   nscoord      mMaxWidth;
   nscoord      mMaxHeight;
   PRInt32      mNumDisplayRows;
+  PRPackedBool mChangesSinceDragStart;
+  PRPackedBool mButtonDown;
 
-  PRBool       mIsAllContentHere;
+  PRPackedBool mIsAllContentHere;
   PRPackedBool mIsAllFramesHere;
   PRPackedBool mHasBeenInitialized;
   PRPackedBool mNeedToReset;
   PRPackedBool mPostChildrenLoadedReset;
 
   PRPackedBool mOverrideReflowOpt;
+
+  //bool value for multiple discontiguous selection
+  PRPackedBool mControlSelectMode;
 
   nsRefPtr<nsListEventListener> mEventListener;
 
