@@ -160,6 +160,20 @@ interface nsIX509CertDB : nsISupports {
   [noscript] void importEmailCertificate(in charPtr data,
                                      in unsigned long length,
                                      in nsIInterfaceRequestor ctx);
+
+  /*
+   * importEmailCertificate2
+   *
+   * Import a user certificate into the database.
+   * Scriptable version of importEmailCertificate.
+   *
+   * @param length - The number of bytes contained in the data array.
+   *
+   * @param data - Raw certificate data, containing the certificate to import.
+   */
+  void importEmailCertificate2(in unsigned long length,
+                              [array, size_is(length)] in octet data);
+
   /*
    * importCertificate
    *

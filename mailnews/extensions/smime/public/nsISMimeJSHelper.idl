@@ -48,6 +48,32 @@ interface nsIX509Cert;
 [scriptable, uuid(a54e3c8f-a000-4901-898f-fafb297b1546)]
 interface nsISMimeJSHelper : nsISupports 
 {
+  /**
+   * Obtains detailed information about the certificate availability
+   * status of email recipients.
+   *
+   * @param compFields - Attributes of the composed message
+   *
+   * @param count - The number of entries in returned arrays
+   *
+   * @param emailAddresses - The list of all recipient email addresses
+   *
+   * @param certVerification - The verification/validity status of recipient certs
+   *
+   * @param certIssuedInfos - If a recipient cert was found, when has it been issued?
+   *
+   * @param certExpiredInfos - If a recipient cert was found, when will it expire?
+   *
+   * @param certs - The recipient certificates, which can contain null for not found
+   *
+   * @param canEncrypt - whether valid certificates have been found for all recipients
+   *
+   * @exception NS_ERROR_FAILURE - unexptected failure
+   *
+   * @exception NS_ERROR_OUT_OF_MEMORY - could not create the out list
+   *
+   * @exception NS_ERROR_INVALID_ARG
+   */
   void getRecipientCertsInfo(in nsIMsgCompFields compFields,
                              out unsigned long count,
                              [array, size_is(count)] out wstring emailAddresses,
@@ -56,4 +82,24 @@ interface nsISMimeJSHelper : nsISupports
                              [array, size_is(count)] out wstring certExpiresInfos,
                              [array, size_is(count)] out nsIX509Cert certs,
                              out PRBool canEncrypt);
+
+  /**
+   * Obtains a list of email addresses where valid email recipient certificates
+   * are not yet available.
+   *
+   * @param compFields - Attributes of the composed message
+   *
+   * @param count - The number of returned email addresses
+   *
+   * @param emailAddresses - The list of email addresses without valid certs
+   *
+   * @exception NS_ERROR_FAILURE - unexptected failure
+   *
+   * @exception NS_ERROR_OUT_OF_MEMORY - could not create the out list
+   *
+   * @exception NS_ERROR_INVALID_ARG
+   */
+  void getNoCertAddresses(in nsIMsgCompFields compFields,
+                          out unsigned long count,
+                          [array, size_is(count)] out wstring emailAddresses);
 };

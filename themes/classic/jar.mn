@@ -287,6 +287,7 @@ classic.jar:
   skin/classic/messenger/smime/msgCompSecurityInfo.css                  (messenger/smime/msgCompSecurityInfo.css)
   skin/classic/messenger/smime/msgReadSMIMEOverlay.css                  (messenger/smime/msgReadSMIMEOverlay.css)
   skin/classic/messenger/smime/msgCompSMIMEOverlay.css                  (messenger/smime/msgCompSMIMEOverlay.css)
+  skin/classic/messenger/smime/certFetchingStatus.css                   (messenger/smime/certFetchingStatus.css)
   skin/classic/messenger/smime/msgHdrViewSMIMEOverlay.css               (messenger/smime/msgHdrViewSMIMEOverlay.css)
   skin/classic/messenger/smime/icons/smbtn1.gif                         (messenger/smime/icons/smbtn1.gif)
   skin/classic/messenger/smime/icons/sbSignOk.gif                       (messenger/smime/icons/sbSignOk.gif)

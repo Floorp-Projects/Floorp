@@ -386,6 +386,7 @@ modern.jar:
   skin/modern/messenger/smime/msgCompSecurityInfo.css              (messenger/smime/msgCompSecurityInfo.css)
   skin/modern/messenger/smime/msgReadSMIMEOverlay.css              (messenger/smime/msgReadSMIMEOverlay.css)
   skin/modern/messenger/smime/msgCompSMIMEOverlay.css              (messenger/smime/msgCompSMIMEOverlay.css)
+  skin/modern/messenger/smime/certFetchingStatus.css               (messenger/smime/certFetchingStatus.css)
   skin/modern/messenger/smime/msgHdrViewSMIMEOverlay.css           (messenger/smime/msgHdrViewSMIMEOverlay.css)
   skin/modern/messenger/smime/icons/smbtn1.gif                     (messenger/smime/icons/smbtn1.gif)
   skin/modern/messenger/smime/icons/sbSignOk.gif                   (messenger/smime/icons/sbSignOk.gif)

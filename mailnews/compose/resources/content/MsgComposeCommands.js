@@ -1648,6 +1648,10 @@ function GenericSendMessage( msgType )
       msgCompFields.subject = subject;
       Attachments2CompFields(msgCompFields);
 
+      var event = document.createEvent('Events');
+      event.initEvent('compose-send-message', false, true);
+      document.getElementById("msgcomposeWindow").dispatchEvent(event);
+
       if (msgType == nsIMsgCompDeliverMode.Now || msgType == nsIMsgCompDeliverMode.Later)
       {
         //Do we need to check the spelling?

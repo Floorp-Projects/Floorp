@@ -3202,6 +3202,13 @@ nsNSSCertificateDB::ImportCertificates(char * data, PRUint32 length,
   return nsrv;
 }
 
+
+NS_IMETHODIMP
+nsNSSCertificateDB::ImportEmailCertificate2(PRUint32 length, PRUint8 *data)
+{
+  return ImportEmailCertificate(NS_REINTERPRET_CAST(char*, data), length, nsnull);
+}
+
 /*
  *  [noscript] void importEmailCertificates(in charPtr data, in unsigned long length,
  *                                     in nsIInterfaceRequestor ctx);

@@ -899,12 +899,16 @@ nsresult nsMsgComposeSecure::MimeCryptoHackCerts(const char *aRecipients,
 
   pHeader->ExtractHeaderAddressMailboxes(nsnull,aRecipients, &all_mailboxes);
   pHeader->RemoveDuplicateAddresses(nsnull, all_mailboxes, 0, PR_FALSE /*removeAliasesToMe*/, &mailboxes);
-  PR_FREEIF(all_mailboxes);
+  if (all_mailboxes) {
+    nsMemory::Free(all_mailboxes);
+    all_mailboxes = nsnull;
+  }
 
   if (mailboxes) {
 	  pHeader->ParseHeaderAddresses (nsnull, mailboxes, 0, &mailbox_list, &count);
+    nsMemory::Free(mailboxes);
+    mailboxes = nsnull;
   }
-  PR_FREEIF(mailboxes);
   if (count < 0) return count;
 
   /* If the message is to be encrypted, then get the recipient certs */
@@ -954,6 +958,8 @@ nsresult nsMsgComposeSecure::MimeCryptoHackCerts(const char *aRecipients,
       }
 
       mCerts->AppendElement(cert);
+      // To understand this loop, especially the "+= strlen +1", look at the documentation
+      // of ParseHeaderAddresses. Basically, it returns a list of zero terminated strings.
 		  mailbox += strlen(mailbox) + 1;
 	  }
     
@@ -962,7 +968,9 @@ nsresult nsMsgComposeSecure::MimeCryptoHackCerts(const char *aRecipients,
     }
 	}
 FAIL:
-  PR_FREEIF(mailbox_list);
+  if (mailbox_list) {
+    nsMemory::Free(mailbox_list);
+  }
   return res;
 }
 

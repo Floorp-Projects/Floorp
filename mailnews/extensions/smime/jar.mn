@@ -11,6 +11,8 @@ messenger.jar:
     content/messenger-smime/msgCompSecurityInfo.js                   (resources/content/msgCompSecurityInfo.js)
     content/messenger-smime/msgReadSecurityInfo.xul                  (resources/content/msgReadSecurityInfo.xul)
     content/messenger-smime/msgReadSecurityInfo.js                   (resources/content/msgReadSecurityInfo.js)
+    content/messenger-smime/certFetchingStatus.xul                   (resources/content/certFetchingStatus.xul)
+    content/messenger-smime/certFetchingStatus.js                    (resources/content/certFetchingStatus.js)
     content/messenger-smime/contents.rdf                             (resources/content/contents.rdf)
 
 en-US.jar:

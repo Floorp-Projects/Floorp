@@ -80,71 +80,29 @@ NS_IMETHODIMP nsSMimeJSHelper::GetRecipientCertsInfo(
 
   NS_ENSURE_ARG_POINTER(compFields);
 
+  PRUint32 mailbox_count;
+  char *mailbox_list;
+
+  nsresult rv = getMailboxList(compFields, &mailbox_count, &mailbox_list);
+  if (NS_FAILED(rv))
+    return rv;
+
+  if (!mailbox_list)
+    return NS_ERROR_FAILURE;
+
   nsCOMPtr<nsIX509CertDB> certdb = do_GetService(NS_X509CERTDB_CONTRACTID);
-  nsresult res;
-  nsCOMPtr<nsIMsgHeaderParser> parser = do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID, &res);
-  NS_ENSURE_SUCCESS(res,res);
-
-  nsXPIDLString to, cc, bcc;
-  compFields->GetTo(getter_Copies(to));
-  compFields->GetCc(getter_Copies(cc));
-  compFields->GetBcc(getter_Copies(bcc));
-
-  nsXPIDLCString ng;
-  compFields->GetNewsgroups(getter_Copies(ng));
-
-  char *mailbox_list = nsnull;
-  PRUint32 mailbox_count = 0;
-  
-  {
-    nsCString all_recipients;
-
-    NS_LossyConvertUCS2toASCII ascii_to(to);
-    if (!ascii_to.IsEmpty()) {
-      all_recipients.Append(ascii_to.get());
-      all_recipients.Append(",");
-    }
-
-    NS_LossyConvertUCS2toASCII ascii_cc(cc);
-    if (!ascii_cc.IsEmpty()) {
-      all_recipients.Append(ascii_cc.get());
-      all_recipients.Append(",");
-    }
-
-    NS_LossyConvertUCS2toASCII ascii_bcc(bcc);
-    if (!ascii_bcc.IsEmpty()) {
-      all_recipients.Append(ascii_bcc.get());
-      all_recipients.Append(",");
-    }
-
-    all_recipients.Append(ng);
-
-    char *unique_mailboxes = nsnull;
-
-    {
-      char *all_mailboxes = nsnull;
-      parser->ExtractHeaderAddressMailboxes(nsnull, all_recipients.get(), &all_mailboxes);
-      parser->RemoveDuplicateAddresses(nsnull, all_mailboxes, 0, PR_FALSE /*removeAliasesToMe*/, &unique_mailboxes);
-      PR_FREEIF(all_mailboxes);
-    }
-    if (unique_mailboxes)
-    {
-      parser->ParseHeaderAddresses(nsnull, unique_mailboxes, 0, &mailbox_list, &mailbox_count);
-    }
-    PR_FREEIF(unique_mailboxes);
-  }
 
   *count = mailbox_count;
   *canEncrypt = PR_FALSE;
-  nsresult rv = NS_OK;
+  rv = NS_OK;
 
   if (mailbox_count)
   {
-    PRUnichar **outEA = (PRUnichar **)nsMemory::Alloc(mailbox_count * sizeof(PRUnichar *));
-    PRInt32 *outCV = (PRInt32 *)nsMemory::Alloc(mailbox_count * sizeof(PRInt32));
-    PRUnichar **outCII = (PRUnichar **)nsMemory::Alloc(mailbox_count * sizeof(PRUnichar *));
-    PRUnichar **outCEI = (PRUnichar **)nsMemory::Alloc(mailbox_count * sizeof(PRUnichar *));
-    nsIX509Cert **outCerts = (nsIX509Cert **)nsMemory::Alloc(mailbox_count * sizeof(nsIX509Cert *));
+    PRUnichar **outEA = NS_STATIC_CAST(PRUnichar **, nsMemory::Alloc(mailbox_count * sizeof(PRUnichar *)));
+    PRInt32 *outCV = NS_STATIC_CAST(PRInt32 *, nsMemory::Alloc(mailbox_count * sizeof(PRInt32)));
+    PRUnichar **outCII = NS_STATIC_CAST(PRUnichar **, nsMemory::Alloc(mailbox_count * sizeof(PRUnichar *)));
+    PRUnichar **outCEI = NS_STATIC_CAST(PRUnichar **, nsMemory::Alloc(mailbox_count * sizeof(PRUnichar *)));
+    nsIX509Cert **outCerts = NS_STATIC_CAST(nsIX509Cert **, nsMemory::Alloc(mailbox_count * sizeof(nsIX509Cert *)));
 
     if (!outEA || !outCV || !outCII || !outCEI || !outCerts)
     {
@@ -164,20 +122,32 @@ NS_IMETHODIMP nsSMimeJSHelper::GetRecipientCertsInfo(
       nsIX509Cert **iCert = outCerts;
 
       PRBool found_blocker = PR_FALSE;
+      PRBool memory_failure = PR_FALSE;
 
       const char *walk = mailbox_list;
 
+      // To understand this loop, especially the "+= strlen +1", look at the documentation
+      // of ParseHeaderAddresses. Basically, it returns a list of zero terminated strings.
       for (PRUint32 i = 0;
           i < mailbox_count;
           ++i, ++iEA, ++iCV, ++iCII, ++iCEI, ++iCert, walk += strlen(walk) + 1)
       {
-        nsDependentCString email(walk);
-        *iEA = ToNewUnicode(email);
-
         *iCert = nsnull;
         *iCV = 0;
         *iCII = nsnull;
         *iCEI = nsnull;
+
+        if (memory_failure) {
+          *iEA = nsnull;
+          continue;
+        }
+
+        nsDependentCString email(walk);
+        *iEA = ToNewUnicode(email);
+        if (!*iEA) {
+          memory_failure = PR_TRUE;
+          continue;
+        }
 
         nsCString email_lowercase;
         ToLowerCase(email, email_lowercase);
@@ -212,11 +182,19 @@ NS_IMETHODIMP nsSMimeJSHelper::GetRecipientCertsInfo(
           if (NS_SUCCEEDED(cert->GetIssuedDate(getter_Copies(id))))
           {
             *iCII = ToNewUnicode(id);
+            if (!*iCII) {
+              memory_failure = PR_TRUE;
+              continue;
+            }
           }
           
           if (NS_SUCCEEDED(cert->GetExpiresDate(getter_Copies(ed))))
           {
             *iCEI = ToNewUnicode(ed);
+            if (!*iCEI) {
+              memory_failure = PR_TRUE;
+              continue;
+            }
           }
         }
         else
@@ -224,20 +202,246 @@ NS_IMETHODIMP nsSMimeJSHelper::GetRecipientCertsInfo(
           found_blocker = PR_TRUE;
         }
       }
-      
-      if (mailbox_count > 0 && !found_blocker)
-      {
-        *canEncrypt = PR_TRUE;
-      }
 
-      *emailAddresses = outEA;
-      *certVerification = outCV;
-      *certIssuedInfos = outCII;
-      *certExpiresInfos = outCEI;
-      *certs = outCerts;
+      if (memory_failure) {
+        NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(mailbox_count, outEA);
+        NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(mailbox_count, outCII);
+        NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(mailbox_count, outCEI);
+        NS_FREE_XPCOM_ISUPPORTS_POINTER_ARRAY(mailbox_count, outCerts);
+        nsMemory::Free(outCV);
+        rv = NS_ERROR_OUT_OF_MEMORY;
+      }
+      else {
+        if (mailbox_count > 0 && !found_blocker)
+        {
+          *canEncrypt = PR_TRUE;
+        }
+
+        *emailAddresses = outEA;
+        *certVerification = outCV;
+        *certIssuedInfos = outCII;
+        *certExpiresInfos = outCEI;
+        *certs = outCerts;
+      }
     }
   }
 
-  PR_FREEIF(mailbox_list);
+  if (mailbox_list) {
+    nsMemory::Free(mailbox_list);
+  }
   return rv;
+}
+
+NS_IMETHODIMP nsSMimeJSHelper::GetNoCertAddresses(
+    nsIMsgCompFields *compFields, 
+    PRUint32 *count, 
+    PRUnichar ***emailAddresses)
+{
+  NS_ENSURE_ARG_POINTER(count);
+  *count = 0;
+  
+  NS_ENSURE_ARG_POINTER(emailAddresses);
+
+  NS_ENSURE_ARG_POINTER(compFields);
+
+  PRUint32 mailbox_count;
+  char *mailbox_list;
+
+  nsresult rv = getMailboxList(compFields, &mailbox_count, &mailbox_list);
+  if (NS_FAILED(rv))
+    return rv;
+
+  if (!mailbox_list)
+    return NS_ERROR_FAILURE;
+
+  if (!mailbox_count)
+  {
+    *count = 0;
+    *emailAddresses = nsnull;
+    if (mailbox_list) {
+      nsMemory::Free(mailbox_list);
+    }
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIX509CertDB> certdb = do_GetService(NS_X509CERTDB_CONTRACTID);
+
+  PRUint32 missing_count = 0;
+  PRBool *haveCert = new PRBool[mailbox_count];
+  if (!haveCert)
+  {
+    if (mailbox_list) {
+      nsMemory::Free(mailbox_list);
+    }
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  rv = NS_OK;
+
+  if (mailbox_count)
+  {
+    const char *walk = mailbox_list;
+
+    // To understand this loop, especially the "+= strlen +1", look at the documentation
+    // of ParseHeaderAddresses. Basically, it returns a list of zero terminated strings.
+    for (PRUint32 i = 0;
+        i < mailbox_count;
+        ++i, walk += strlen(walk) + 1)
+    {
+      haveCert[i] = PR_FALSE;
+
+      nsCOMPtr<nsIX509Cert> cert;
+      if (NS_SUCCEEDED(certdb->GetCertByEmailAddress(nsnull, walk, getter_AddRefs(cert))) 
+          && cert)
+      {
+        PRUint32 verification_result;
+
+        if (NS_SUCCEEDED(
+              cert->VerifyForUsage(nsIX509Cert::CERT_USAGE_EmailRecipient, &verification_result))
+            &&
+            nsIX509Cert::VERIFIED_OK == verification_result)
+        {
+          haveCert[i] = PR_TRUE;
+        }
+      }
+
+      if (!haveCert[i])
+        ++missing_count;
+    }
+  }
+
+  *count = missing_count;
+
+  if (missing_count)
+  {
+    PRUnichar **outEA = NS_STATIC_CAST(PRUnichar **, nsMemory::Alloc(missing_count * sizeof(PRUnichar *)));
+    if (!outEA )
+    {
+      rv = NS_ERROR_OUT_OF_MEMORY;
+    }
+    else
+    {
+      PRUnichar **iEA = outEA;
+      const char *walk = mailbox_list;
+
+      PRBool memory_failure = PR_FALSE;
+
+      // To understand this loop, especially the "+= strlen +1", look at the documentation
+      // of ParseHeaderAddresses. Basically, it returns a list of zero terminated strings.
+      for (PRUint32 i = 0;
+          i < mailbox_count;
+          ++i, walk += strlen(walk) + 1)
+      {
+        if (!haveCert[i])
+        {
+          if (memory_failure) {
+            *iEA = nsnull;
+          }
+          else {
+            *iEA = ToNewUnicode(nsDependentCString(walk));
+            if (!*iEA) {
+              memory_failure = PR_TRUE;
+            }
+          }
+          ++iEA;
+        }
+      }
+      
+      if (memory_failure) {
+        NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(missing_count, outEA);
+        rv = NS_ERROR_OUT_OF_MEMORY;
+      }
+      else {
+        *emailAddresses = outEA;
+      }
+    }
+  }
+  else
+  {
+    *emailAddresses = nsnull;
+  }
+
+  delete [] haveCert;
+  if (mailbox_list) {
+    nsMemory::Free(mailbox_list);
+  }
+  return rv;
+}
+
+nsresult nsSMimeJSHelper::getMailboxList(nsIMsgCompFields *compFields, PRUint32 *mailbox_count, char **mailbox_list)
+{
+  NS_ENSURE_ARG(mailbox_count);
+  NS_ENSURE_ARG(mailbox_list);
+
+  if (!compFields)
+    return NS_ERROR_INVALID_ARG;
+
+  nsresult res;
+  nsCOMPtr<nsIMsgHeaderParser> parser = do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID, &res);
+  if (NS_FAILED(res))
+    return res;
+
+  nsXPIDLString to, cc, bcc;
+  nsXPIDLCString ng;
+
+  res = compFields->GetTo(getter_Copies(to));
+  if (NS_FAILED(res))
+    return res;
+
+  res = compFields->GetCc(getter_Copies(cc));
+  if (NS_FAILED(res))
+    return res;
+
+  res = compFields->GetBcc(getter_Copies(bcc));
+  if (NS_FAILED(res))
+    return res;
+
+  res = compFields->GetNewsgroups(getter_Copies(ng));
+  if (NS_FAILED(res))
+    return res;
+
+  *mailbox_list = nsnull;
+  *mailbox_count = 0;
+  
+  {
+    nsCString all_recipients;
+    nsDependentCString comma(",");
+
+    NS_ConvertUCS2toUTF8 utf8_to(to);
+    if (!utf8_to.IsEmpty()) {
+      all_recipients += utf8_to + comma;
+    }
+
+    NS_ConvertUCS2toUTF8 utf8_cc(cc);
+    if (!utf8_cc.IsEmpty()) {
+      all_recipients += utf8_cc + comma;
+    }
+
+    NS_ConvertUCS2toUTF8 utf8_bcc(bcc);
+    if (!utf8_bcc.IsEmpty()) {
+      all_recipients += utf8_bcc + comma;
+    }
+
+    all_recipients += ng;
+
+    char *unique_mailboxes = nsnull;
+
+    {
+      char *all_mailboxes = nsnull;
+      parser->ExtractHeaderAddressMailboxes(nsnull, all_recipients.get(), &all_mailboxes);
+      parser->RemoveDuplicateAddresses(nsnull, all_mailboxes, 0, PR_FALSE /*removeAliasesToMe*/, &unique_mailboxes);
+      if (all_mailboxes) {
+        nsMemory::Free(all_mailboxes);
+      }
+    }
+    if (unique_mailboxes)
+    {
+      parser->ParseHeaderAddresses(nsnull, unique_mailboxes, 0, mailbox_list, mailbox_count);
+    }
+    if (unique_mailboxes) {
+      nsMemory::Free(unique_mailboxes);
+    }
+  }
+
+  return NS_OK;
 }

@@ -34,24 +34,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _nsSMimeJSHelper_H_
-#define _nsSMimeJSHelper_H_
+@import url("chrome://messenger/skin/");
 
-#include "nsISMimeJSHelper.h"
-#include "nsIX509Cert.h"
-#include "nsIMsgCompFields.h"
-
-class nsSMimeJSHelper : public nsISMimeJSHelper
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSISMIMEJSHELPER
-
-  nsSMimeJSHelper();
-  virtual ~nsSMimeJSHelper();
-
-private:
-  nsresult getMailboxList(nsIMsgCompFields *compFields, PRUint32 *mailbox_count, char **mailbox_list);
-};
-
-#endif
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");

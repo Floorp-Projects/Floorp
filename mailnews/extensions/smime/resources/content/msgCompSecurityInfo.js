@@ -99,22 +99,83 @@ function onLoad()
   gCount = new Object();
   var canEncrypt = new Object();
 
-  try
-  {
-    helper.getRecipientCertsInfo(
-      params.compFields,
-      gCount,
-      gEmailAddresses,
-      gCertStatusSummaries,
-      gCertIssuedInfos,
-      gCertExpiresInfos,
-      gCerts,
-      canEncrypt);
+  var allow_ldap_cert_fetching = false;
+
+  try {  
+    if (params.compFields.securityInfo.requireEncryptMessage) {
+      allow_ldap_cert_fetching = true;
+    }
   }
   catch (e)
   {
-    dump(e);
-    return;
+  }
+
+  while (true)
+  {
+    try
+    {
+      helper.getRecipientCertsInfo(
+        params.compFields,
+        gCount,
+        gEmailAddresses,
+        gCertStatusSummaries,
+        gCertIssuedInfos,
+        gCertExpiresInfos,
+        gCerts,
+        canEncrypt);
+    }
+    catch (e)
+    {
+      dump(e);
+      return;
+    }
+
+    if (!allow_ldap_cert_fetching)
+      break;
+
+    allow_ldap_cert_fetching = false;
+
+    var missing = new Array();
+
+    for (var j = gCount.value - 1; j >= 0; --j)
+    {
+      if (!gCerts.value[j])
+      {
+        missing[missing.length] = gEmailAddresses.value[j];
+      }
+    }
+
+    if (missing.length > 0)
+    {
+      var prefService = 
+        Components.classes["@mozilla.org/preferences-service;1"]
+          .getService(Components.interfaces.nsIPrefService);
+      var sPrefs = prefService.getBranch(null);
+
+      var autocompleteLdap = false;
+      autocompleteLdap = sPrefs.getBoolPref("ldap_2.autoComplete.useDirectory");
+
+      if (autocompleteLdap)
+      {
+        var autocompleteDirectory = null;
+        autocompleteDirectory = sPrefs.getCharPref(
+          "ldap_2.autoComplete.directoryServer");
+
+        if(params.currentIdentity.overrideGlobalPref) {
+          autocompleteDirectory = params.currentIdentity.directoryServer;
+        }
+
+        if (autocompleteDirectory)
+        {
+          window.openDialog('chrome://messenger-smime/content/certFetchingStatus.xul',
+            '',
+            'chrome,resizable=1,modal=1,dialog=1', 
+            autocompleteDirectory,
+            missing
+          );
+        }
+      }
+    }
   }
 
   if (gBundle)
