@@ -56,6 +56,7 @@ class nsIImage : public nsISupports
 {
 
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IIMAGE_IID)
 
   /**
    * Build and initialize the nsIImage

@@ -58,6 +58,8 @@ typedef struct
 class nsIRegion : public nsISupports
 {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IREGION_IID)
+
   virtual nsresult Init(void) = 0;
 
   /**
@@ -244,4 +246,4 @@ public:
   NS_IMETHOD GetRegionComplexity(nsRegionComplexity &aComplexity) const = 0;
 };
 
-#endif  // nsRIegion_h___ 
+#endif  // nsIRegion_h___ 

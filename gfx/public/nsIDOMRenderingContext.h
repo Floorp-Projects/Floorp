@@ -31,6 +31,7 @@
 
 class nsIDOMRenderingContext : public nsISupports {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMRENDERINGCONTEXT_IID)
 
   NS_IMETHOD    GetColor(nsString& aColor)=0;
   NS_IMETHOD    SetColor(const nsString& aColor)=0;

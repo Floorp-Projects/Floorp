@@ -110,7 +110,7 @@ typedef NI_ColorSpace IL_ColorSpace;
 class nsIDeviceContext : public nsISupports
 {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDEVICE_CONTEXT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDEVICE_CONTEXT_IID)
 
   /**
    * Initialize the device context from a widget

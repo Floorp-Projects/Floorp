@@ -34,6 +34,7 @@
 class nsIBlender : public nsISupports
 {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IBLENDER_IID)
 
   /**
    * Initialize the Blender

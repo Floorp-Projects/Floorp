@@ -54,6 +54,7 @@ typedef struct
 class nsIDrawingSurface : public nsISupports
 {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDRAWING_SURFACE_IID)
   /**
    * Lock a rect of a drawing surface and return a
    * pointer to the upper left hand corner of the

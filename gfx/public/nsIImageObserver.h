@@ -106,6 +106,8 @@ typedef enum {
  */
 class nsIImageRequestObserver : public nsISupports {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IIMAGEREQUESTOBSERVER_IID)
+
   /** 
    * Notify the observer of some significant image event. The parameter
    * values depend on the notification type as specified below.
@@ -154,6 +156,8 @@ public:
  */
 class nsIImageGroupObserver : public nsISupports {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IIMAGEGROUPOBSERVER_IID)
+
   /**
    *  Notify the observer of some significant image group event.
    *

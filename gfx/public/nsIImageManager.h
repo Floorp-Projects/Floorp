@@ -47,6 +47,8 @@ typedef enum
 class nsIImageManager : public nsISupports
 {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IIMAGEMANAGER_IID)
+
   /// Initialization method to be called before use
   virtual nsresult Init() = 0;
 

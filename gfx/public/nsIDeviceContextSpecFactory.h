@@ -30,6 +30,7 @@ class nsIDeviceContextSpec;
 class nsIDeviceContextSpecFactory : public nsISupports
 {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDEVICE_CONTEXT_SPEC_FACTORY_IID)
   /**
    * Initialize the device context spec factory
    * @return error status
