@@ -589,6 +589,21 @@ caseCompare(char *str, Input *input, HTMLState *state, unsigned short *ret)
 }
 
 static unsigned short
+endTag(void *a, Input *input, HTMLState *state)
+{
+	unsigned short	c;
+
+	c = htmlGetByte(input, state);
+	if (c == 256)
+	{
+		mark(input, -1);
+		reportHTML(a, input);
+	}
+
+	return c;
+}
+
+static unsigned short
 readTag(void *a, Input *input, HTMLState *state)
 {
 	unsigned short	c;
@@ -619,7 +634,7 @@ readTag(void *a, Input *input, HTMLState *state)
 							state);
 							if (c == '>')
 							{
-							    return htmlGetByte(input, state);
+							    return endTag(a, input, state);
 							}
 							else if (c == '-')
 							{
@@ -629,7 +644,7 @@ readTag(void *a, Input *input, HTMLState *state)
 							  } while (c == '-');
 							  if (c == '>')
 							  {
-							    return htmlGetByte(input, state);
+							    return endTag(a, input, state);
 							  }
 							}
 						}
@@ -642,7 +657,7 @@ readTag(void *a, Input *input, HTMLState *state)
 						c = htmlGetByte(input, state);
 						if (c == '>')
 						{
-						    return htmlGetByte(input, state);
+						    return endTag(a, input, state);
 						}
 						else if (c == 256)
 						{
@@ -709,7 +724,7 @@ readTag(void *a, Input *input, HTMLState *state)
 	}
 	else if (c == '>')
 	{
-		return htmlGetByte(input, state);
+		return endTag(a, input, state);
 	}
 	c = eatWhiteSpace(input, state, c);
 	if (c == 256)
@@ -718,7 +733,7 @@ readTag(void *a, Input *input, HTMLState *state)
 	}
 	else if (c == '>')
 	{
-		return htmlGetByte(input, state);
+		return endTag(a, input, state);
 	}
 	do
 	{
@@ -731,7 +746,7 @@ readTag(void *a, Input *input, HTMLState *state)
 	}
 	if (c == '>')
 	{
-		return htmlGetByte(input, state);
+		return endTag(a, input, state);
 	}
 
 	return c;
