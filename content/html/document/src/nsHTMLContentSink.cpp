@@ -230,7 +230,7 @@ public:
   NS_IMETHOD WillInterrupt(void);
   NS_IMETHOD WillResume(void);
   NS_IMETHOD SetParser(nsIParser* aParser);
-  NS_IMETHOD_(void) FlushContent(PRBool aNotify);
+  virtual void FlushContent(PRBool aNotify);
   NS_IMETHOD SetDocumentCharset(nsACString& aCharset);
 
   // nsIHTMLContentSink
