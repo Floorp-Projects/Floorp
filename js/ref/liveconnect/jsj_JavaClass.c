@@ -300,6 +300,8 @@ JavaClass_deleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     JSVersion version = JS_GetVersion(cx);
     
+    *vp = JSVAL_FALSE;
+
     if (!JSVERSION_IS_ECMA(version)) {
         JS_ReportError(cx, "Properties of JavaClass objects may not be deleted");
         return JS_FALSE;
