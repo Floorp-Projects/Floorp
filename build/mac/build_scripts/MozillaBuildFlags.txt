@@ -38,7 +38,7 @@ options_flags
 chrome_jars     1
 chrome_files    0
 use_jars        1
-transformiix    0
+transformiix    1
 mathml          0
 svg             0
 mng             1

@@ -1762,8 +1762,6 @@ sub BuildExtensionsProjects()
     if ($main::options{transformiix})
     {
         BuildOneProject(":mozilla:extensions:transformiix:macbuild:transformiix.mcp", "transformiix$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
-
-        print "Need to make a jar.mn file for transformiix\n";
     }
     
     # LDAP Client

@@ -3873,13 +3873,9 @@ MOZ_ARG_ENABLE_BOOL(svg,
   MOZ_SVG=1
   AC_DEFINE(MOZ_SVG))
 
-dnl
-dnl --enable xsl
-dnl
-MOZ_ARG_ENABLE_BOOL(xsl,
-[  --enable-xsl            Enable XSL (BROKEN)],
-  MOZ_XSL=1
-  AC_DEFINE(MOZ_XSL))
+dnl XSLT is now enabled by default.
+MOZ_XSL=1
+AC_DEFINE(MOZ_XSL)
 
 dnl Need the contents of config-defs.h in the build logs
 VERBOSE_CONFIG_DEFS=1
