@@ -1366,10 +1366,11 @@ nsEditor::ReplaceContainer(nsIDOMNode *inNode,
   inNode->HasChildNodes(&bHasMoreChildren);
   while (bHasMoreChildren)
   {
-    inNode->GetLastChild(getter_AddRefs(child));
+    inNode->GetFirstChild(getter_AddRefs(child));
     res = DeleteNode(child);
     if (NS_FAILED(res)) return res;
-    res = InsertNode(child, *outNode, 0);
+    nsCOMPtr<nsIDOMNode> unused;
+    res = (*outNode)->AppendChild(child, getter_AddRefs(unused));
     if (NS_FAILED(res)) return res;
     inNode->HasChildNodes(&bHasMoreChildren);
   }
@@ -1477,7 +1478,8 @@ nsEditor::InsertContainerAbove( nsIDOMNode *inNode,
   // put inNode in new parent, outNode
   res = DeleteNode(inNode);
   if (NS_FAILED(res)) return res;
-  res = InsertNode(inNode, *outNode, 0);
+  nsCOMPtr<nsIDOMNode> unused;
+  res = (*outNode)->AppendChild(inNode, getter_AddRefs(unused));
   if (NS_FAILED(res)) return res;
   
   // put new parent in doc
