@@ -439,37 +439,43 @@ sub CheckCanChangeField {
         return 1;
     }
     
-    # The reporter is a more complicated case...
-    if ($reporterid == $whoid) {
-        $PrivilegesRequired = 2;
+    # At this point, the user is either the reporter or an
+    # unprivileged user. We first check for fields the reporter
+    # is not allowed to change.
 
-        # The reporter may not:
-        # - reassign bugs, unless the bugs are assigned to him;
-        #   in that case we will have already returned 1 above
-        #   when checking for the owner of the bug.
-        if ($field eq "assigned_to") {
-            return 0;
-        }
-        # - change the QA contact
-        if ($field eq "qa_contact") {
-            return 0;
-        }
-        # - change the target milestone
-        if ($field eq "target_milestone") {
-            return 0;
-        }
-        # - change the priority (unless he could have set it originally)
-        if ($field eq "priority"
-            && !Param('letsubmitterchoosepriority'))
-        {
-            return 0;
-        }
-        # Allow the reporter to change anything else.
+    # The reporter may not:
+    # - reassign bugs, unless the bugs are assigned to him;
+    #   in that case we will have already returned 1 above
+    #   when checking for the owner of the bug.
+    if ($field eq "assigned_to") {
+        $PrivilegesRequired = 2;
+        return 0;
+    }
+    # - change the QA contact
+    if ($field eq "qa_contact") {
+        $PrivilegesRequired = 2;
+        return 0;
+    }
+    # - change the target milestone
+    if ($field eq "target_milestone") {
+        $PrivilegesRequired = 2;
+        return 0;
+    }
+    # - change the priority (unless he could have set it originally)
+    if ($field eq "priority"
+        && !Param('letsubmitterchoosepriority'))
+    {
+        $PrivilegesRequired = 2;
+        return 0;
+    }
+
+    # The reporter is allowed to change anything else.
+    if ($reporterid == $whoid) {
         return 1;
     }
 
-    # If we haven't returned by this point, then the user doesn't have the
-    # necessary permissions to change this field.
+    # If we haven't returned by this point, then the user doesn't
+    # have the necessary permissions to change this field.
     $PrivilegesRequired = 1;
     return 0;
 }
