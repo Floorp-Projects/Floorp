@@ -73,8 +73,10 @@
 
  */
 
-#include "nsFileSpec.h"
-#include "nsFileStream.h"
+#include "nsIFileStreams.h"
+#include "nsIOutputStream.h"
+#include "nsIFile.h"
+#include "nsIFileChannel.h"
 #include "nsIDTD.h"
 #include "nsIRDFPurgeableDataSource.h"
 #include "nsIInputStream.h"
@@ -239,7 +241,12 @@ protected:
     NameSpaceMap*       mNameSpaces;
     nsCOMPtr<nsIURI>    mURL;
     nsCOMPtr<nsIStreamListener> mParser;
-    char*               mURLSpec;
+
+    /**
+     * Cached copy of the original URL spec, kept around because
+     * opening the URL to read it may cause it to be re-written.
+     */
+    nsCString           mOriginalURLSpec;
 
     // pseudo-constants
     static PRInt32 gRefCnt;
@@ -484,8 +491,7 @@ RDFXMLDataSourceImpl::RDFXMLDataSourceImpl(void)
       mIsWritable(PR_TRUE),
       mIsDirty(PR_FALSE),
       mLoadState(eLoadState_Unloaded),
-      mNameSpaces(nsnull),
-      mURLSpec(nsnull)
+      mNameSpaces(nsnull)
 {
     NS_INIT_REFCNT();
 
@@ -558,9 +564,6 @@ RDFXMLDataSourceImpl::~RDFXMLDataSourceImpl(void)
         nsIRDFXMLSinkObserver* obs = NS_STATIC_CAST(nsIRDFXMLSinkObserver*, mObservers[i]);
         NS_RELEASE(obs);
     }
-
-    if (mURLSpec)
-        PL_strfree(mURLSpec);
 
     while (mNameSpaces) {
         NameSpaceMap* doomed = mNameSpaces;
@@ -708,20 +711,16 @@ static const char kResourceURIPrefix[] = "resource:";
 
     // XXX this is a hack: any "file:" URI is considered writable. All
     // others are considered read-only.
-    char* realURL;
-    mURL->GetSpec(&realURL);
-    if ((PL_strncmp(realURL, kFileURIPrefix, sizeof(kFileURIPrefix) - 1) != 0) &&
-        (PL_strncmp(realURL, kResourceURIPrefix, sizeof(kResourceURIPrefix) - 1) != 0)) {
+    nsXPIDLCString realURL;
+    mURL->GetSpec(getter_Copies(realURL));
+    if ((PL_strncmp(realURL.get(), kFileURIPrefix, sizeof(kFileURIPrefix) - 1) != 0) &&
+        (PL_strncmp(realURL.get(), kResourceURIPrefix, sizeof(kResourceURIPrefix) - 1) != 0)) {
         mIsWritable = PR_FALSE;
     }
 
     // XXX Keep a 'cached' copy of the URL; opening it may cause the
     // spec to be re-written.
-    if (mURLSpec)
-        PL_strfree(mURLSpec);
-
-    mURLSpec = PL_strdup(realURL);
-    nsCRT::free(realURL);
+    mOriginalURLSpec = realURL.get();
 
     rv = gRDFService->RegisterDataSource(this, PR_FALSE);
     if (NS_FAILED(rv)) return rv;
@@ -734,10 +733,10 @@ NS_IMETHODIMP
 RDFXMLDataSourceImpl::GetURI(char* *aURI)
 {
     *aURI = nsnull;
-    if (mURLSpec) {
+    if (mOriginalURLSpec.Length()) {
         // XXX We don't use the mURL, because it might get re-written
         // when it's actually opened.
-        *aURI = nsXPIDLCString::Copy(mURLSpec);
+        *aURI = nsXPIDLCString::Copy(mOriginalURLSpec.get());
         if (! *aURI)
             return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -863,12 +862,12 @@ RDFXMLDataSourceImpl::Flush(void)
     if (!mIsWritable || !mIsDirty)
         return NS_OK;
 
-    NS_PRECONDITION(mURLSpec != nsnull, "not initialized");
-    if (! mURLSpec)
+    NS_PRECONDITION(mOriginalURLSpec.Length(), "not initialized");
+    if (! mOriginalURLSpec.Length())
         return NS_ERROR_NOT_INITIALIZED;
 
     PR_LOG(gLog, PR_LOG_ALWAYS,
-           ("rdfxml[%p] flush(%s)", this, mURLSpec));
+           ("rdfxml[%p] flush(%s)", this, mOriginalURLSpec.get()));
 
     nsresult rv;
 
@@ -884,21 +883,25 @@ RDFXMLDataSourceImpl::Flush(void)
         }
     }
 
-    // XXX Replace this with channels someday soon...
-    nsFileURL url(mURLSpec, PR_TRUE);
-    nsFileSpec path(url);
+    // Is it a file? If so, we can write to it. Some day, it'd be nice
+    // if we didn't care what kind of stream this was...
+    nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(mURL);
+    if (fileURL) {
+        nsCOMPtr<nsIFile> file;
+        fileURL->GetFile(getter_AddRefs(file));
 
-    nsOutputFileStream out(path);
-    if (! out.is_open())
-        return NS_ERROR_FAILURE;
+        if (file) {
+            nsCOMPtr<nsIOutputStream> out;
+            NS_NewLocalFileOutputStream(getter_AddRefs(out), file);
 
-    nsCOMPtr<nsIOutputStream> outIStream = out.GetIStream();
-    if (NS_FAILED(rv = Serialize(outIStream)))
-        goto done;
+            if (out) {
+                rv = Serialize(out);
+                if (NS_FAILED(rv)) return rv;
+            }
+        }
+    }
 
     mIsDirty = PR_FALSE;
-
-done:
     return NS_OK;
 }
 
@@ -928,13 +931,15 @@ NS_IMETHODIMP
 RDFXMLDataSourceImpl::Refresh(PRBool aBlocking)
 {
     PR_LOG(gLog, PR_LOG_ALWAYS,
-           ("rdfxml[%p] refresh(%s) %sblocking", this, mURLSpec, (aBlocking ? "" : "non")));
+           ("rdfxml[%p] refresh(%s) %sblocking", this,
+            mOriginalURLSpec.get(), (aBlocking ? "" : "non")));
 
     // If an asynchronous load is already pending, then just let it do
     // the honors.
     if (IsLoading()) {
         PR_LOG(gLog, PR_LOG_ALWAYS,
-               ("rdfxml[%p] refresh(%s) a load was pending", this, mURLSpec));
+               ("rdfxml[%p] refresh(%s) a load was pending", this,
+                mOriginalURLSpec.get()));
 
         if (aBlocking) {
             NS_WARNING("blocking load requested when async load pending");
@@ -1002,7 +1007,7 @@ NS_IMETHODIMP
 RDFXMLDataSourceImpl::BeginLoad(void)
 {
     PR_LOG(gLog, PR_LOG_ALWAYS,
-           ("rdfxml[%p] begin-load(%s)", this, mURLSpec));
+           ("rdfxml[%p] begin-load(%s)", this, mOriginalURLSpec.get()));
 
     mLoadState = eLoadState_Loading;
     for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
@@ -1018,7 +1023,7 @@ NS_IMETHODIMP
 RDFXMLDataSourceImpl::Interrupt(void)
 {
     PR_LOG(gLog, PR_LOG_ALWAYS,
-           ("rdfxml[%p] interrupt(%s)", this, mURLSpec));
+           ("rdfxml[%p] interrupt(%s)", this, mOriginalURLSpec.get()));
 
     for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
         nsIRDFXMLSinkObserver* obs =
@@ -1033,7 +1038,7 @@ NS_IMETHODIMP
 RDFXMLDataSourceImpl::Resume(void)
 {
     PR_LOG(gLog, PR_LOG_ALWAYS,
-           ("rdfxml[%p] resume(%s)", this, mURLSpec));
+           ("rdfxml[%p] resume(%s)", this, mOriginalURLSpec.get()));
 
     for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
         nsIRDFXMLSinkObserver* obs =
@@ -1048,7 +1053,7 @@ NS_IMETHODIMP
 RDFXMLDataSourceImpl::EndLoad(void)
 {
     PR_LOG(gLog, PR_LOG_ALWAYS,
-           ("rdfxml[%p] end-load(%s)", this, mURLSpec));
+           ("rdfxml[%p] end-load(%s)", this, mOriginalURLSpec.get()));
 
     mLoadState = eLoadState_Loaded;
 
@@ -1375,7 +1380,7 @@ RDFXMLDataSourceImpl::SerializeAssertion(nsIOutputStream* aStream,
         nsXPIDLCString docURI;
 
         nsAutoString uri = NS_ConvertUTF8toUCS2(s);
-        rdf_MakeRelativeRef(NS_ConvertUTF8toUCS2(mURLSpec), uri);
+        rdf_MakeRelativeRef(NS_ConvertUTF8toUCS2(mOriginalURLSpec.get()), uri);
         rdf_EscapeAttributeValue(uri);
 
 static const char kRDFResource1[] = " resource=\"";
@@ -1466,7 +1471,7 @@ static const char kRDFDescription3[] = "  </RDF:Description>\n";
     if (NS_FAILED(rv)) return rv;
 
     nsAutoString uri = NS_ConvertUTF8toUCS2(s);
-    rdf_MakeRelativeRef(NS_ConvertUTF8toUCS2(mURLSpec), uri);
+    rdf_MakeRelativeRef(NS_ConvertUTF8toUCS2(mOriginalURLSpec.get()), uri);
     rdf_EscapeAttributeValue(uri);
 
     if (uri[0] == PRUnichar('#')) {
@@ -1552,7 +1557,7 @@ static const char kRDFLIResource1[] = "    <RDF:li resource=\"";
 static const char kRDFLIResource2[] = "\"/>\n";
 
             nsAutoString uri = NS_ConvertUTF8toUCS2(s);
-            rdf_MakeRelativeRef(NS_ConvertUTF8toUCS2(mURLSpec), uri);
+            rdf_MakeRelativeRef(NS_ConvertUTF8toUCS2(mOriginalURLSpec.get()), uri);
             rdf_EscapeAttributeValue(uri);
 
             rdf_BlockingWrite(aStream, kRDFLIResource1, sizeof(kRDFLIResource1) - 1);
@@ -1621,7 +1626,7 @@ RDFXMLDataSourceImpl::SerializeContainer(nsIOutputStream* aStream,
     nsXPIDLCString s;
     if (NS_SUCCEEDED(aContainer->GetValue( getter_Copies(s) ))) {
         nsAutoString uri = NS_ConvertUTF8toUCS2(s);
-        rdf_MakeRelativeRef(NS_ConvertUTF8toUCS2(mURLSpec), uri);
+        rdf_MakeRelativeRef(NS_ConvertUTF8toUCS2(mOriginalURLSpec.get()), uri);
 
         rdf_EscapeAttributeValue(uri);
 
