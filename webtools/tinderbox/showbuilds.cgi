@@ -37,7 +37,8 @@ if ($form{showall}) {
   $mindate = 0;
 }
 else {
-  $hours = 12;
+  $default_hours = 12;
+  $hours = $default_hours;
   $hours = $form{hours} if $form{hours};
   $mindate = $maxdate - ($hours*60*60);
 }
@@ -122,8 +123,9 @@ sub do_static {
                 ['flash.rdf',  'do_flash'],
                 ['panel.html', 'do_panel'] );
   
+  $rel_path = '../';
   while (($key, $value) = each %images) {
-    $images{$key} = "../$value";
+    $images{$key} = "$rel_path/$value";
   }
 
   my $oldfh = select;
@@ -169,6 +171,7 @@ sub print_page_head {
                          "tree: $treename ($now)");
 
   &print_javascript;
+
   print "$message_of_day\n";
   
   # Quote and Lengend
@@ -179,7 +182,7 @@ sub print_page_head {
       <table width="100%" cellpadding=0 cellspacing=0>
         <tr>
           <td valign=bottom>
-            <p><center><a href=addimage.cgi><img src="$imageurl"
+            <p><center><a href=addimage.cgi><img src="$rel_path$imageurl"
               width=$imagewidth height=$imageheight><br>
               $quote</a><br>
             </center>
@@ -316,7 +319,7 @@ sub print_table_row {
     # Build Log
     # 
     $buildname = &url_encode($buildname);
-    print "<A HREF='showlog.cgi?logfile=$logfile\&tree=$buildtree",
+    print "<A HREF='${rel_path}showlog.cgi?logfile=$logfile\&tree=$buildtree",
       "&errorparser=$errorparser&buildname=$buildname&buildtime=$buildtime' ",
       "onClick=\"return log_popup(event,$bn,'$logfile','$buildtime');\">";
     print "L</a>";
@@ -339,7 +342,7 @@ sub print_table_row {
       $binfile = "$buildtree/bin/$buildtime/$br->{buildname}/"
                 ."$br->{binaryname}";
       $binfile =~ s/ //g;
-      print " <a href=$binfile>B</a>";
+      print " <a href=$rel_path$binfile>B</a>";
     }
     print "</tt>\n</td>";
   }
@@ -357,8 +360,9 @@ sub print_table_header {
   $nspan = ($tree2 ne '' ? 4 : 1);
   print "<td colspan=$nspan><font size=-1>",
         "Click name to see what they did</font>";
-  print "<br><font size=-2><a href=showbuilds.cgi",make_cgi_args(),
-        "&rebuildguilty=1>Rebuild guilty list</a></td>";
+  print "<br><font size=-2>", 
+        &open_showbuilds_href(rebuildguilty=>'1'),
+        "Rebuild guilty list</a></td>";
 
   for ($ii=1; $ii <= $name_count; $ii++) {
 
@@ -404,9 +408,8 @@ sub print_table_footer {
   print "</table>\n";
 
   my $nextdate = $maxdate - $hours*60*60;
-  print "<a href='showbuilds.cgi",
-        "?tree=$tree&hours=$hours&maxdate=$nextdate&nocrap=1'>",
-        "Show next $hours hours</a>";
+  print &open_showbuilds_href(maxdate=>"$nextdate", nocrap=>'1')
+       ."Show next $hours hours</a>";
 
   if (open(FOOTER, "<$data_dir/footer.html")) {
     while (<FOOTER>) {
@@ -414,16 +417,33 @@ sub print_table_footer {
     }
     close FOOTER;
   }
-  print "<p><a href=admintree.cgi?tree=$tree>",
+  print "<p><a href='${rel_path}admintree.cgi?tree=$tree'>",
         "Administrate Tinderbox Trees</a><br>";
   print "<br><br>";
+}
+
+sub open_showbuilds_href {
+  my %args = (
+        nocrap => "$form{nocrap}",
+        @_
+  );
+
+  my $href = "<a href=${rel_path}showbuilds.cgi?tree=$form{tree}";
+  $href .= "&hours=$hours" if $hours ne $default_hours;
+  while (my ($key, $value) = each %args) {
+    $href .= "&$key=$value" if $value ne '';
+  }
+  $href .= ">";
+
+  return $href;
 }
 
 sub query_ref {
   my ($td, $mindate, $maxdate, $who) = @_;
   my $output = '';
 
-  $output = "<a href=../bonsai/cvsquery.cgi?module=$td->{cvs_module}";
+  $output = "<a href=${rel_path}../bonsai/cvsquery.cgi";
+  $output .= "?module=$td->{cvs_module}";
   $output .= "&branch=$td->{cvs_branch}"   if $td->{cvs_branch} ne 'HEAD';
   $output .= "&cvsroot=$td->{cvs_root}"    if $td->{cvs_root} ne $default_root;
   $output .= "&date=explicit&mindate=$mindate";
@@ -434,7 +454,7 @@ sub query_ref {
 
 sub query_ref2 {
   my ($td, $mindate, $maxdate, $who) = @_;
-  return "../bonsai/cvsquery.cgi?module=$td->{cvs_module}"
+  return "${rel_path}../bonsai/cvsquery.cgi?module=$td->{cvs_module}"
         ."&branch=$td->{cvs_branch}&cvsroot=$td->{cvs_root}"
         ."&date=explicit&mindate=$mindate&maxdate=$maxdate&who="
         . url_encode($who);
@@ -450,8 +470,8 @@ sub who_menu {
        ."&t1=". &url_encode("What has $who been checking in in the last day")
        ."&u1=". &url_encode( &query_ref2($td,$mindate,$maxdate,$who));
 
-  return "<a href='$qr' onclick=\"return js_who_menu($td->{num},'$who',"
-        ."event,$mindate,$maxdate);\">";
+  return "<a href='$rel_path$qr' onclick=\"return js_who_menu("
+        ."$td->{num},'$who',event,$mindate,$maxdate);\">";
 }
 
 # Check to see if anyone checked in during time slot.
@@ -605,16 +625,17 @@ sub print_javascript {
       q.visibility="show"; 
       q.document.write("<TABLE BORDER=1><TR><TD><B>"
         + build[buildindex] + "</B><BR>"
-        + "<A HREF=\"" + logurl + "\">View Brief Log</A><BR>"
-        + "<A HREF=\"" + logurl + "&fulltext=1" + "\">View Full Log</A><BR>"
-        + "<A HREF=\"" + commenturl + "\">Add a Comment</A><BR>"
+__ENDJS
+
+  print <<"__ENDJS";
+        + "<A HREF=$rel_path" + logurl + ">View Brief Log</A><BR>"
+        + "<A HREF=$rel_path" + logurl + "&fulltext=1"+">View Full Log</A><BR>"
+        + "<A HREF=$rel_path" + commenturl + ">Add a Comment</A><BR>"
 	+ "</TD></TR></TABLE>");
       q.document.close();
       return false;
     }
-__ENDJS
 
-  print <<"__ENDJS";
     function js_qr(tree,mindate, maxdate, who) {
       if (tree == 0) {
         return '../bonsai/cvsquery.cgi?module=${cvs_module}'
@@ -699,10 +720,7 @@ sub do_express {
   my $tm = &print_time(time);
   print "<table border=1 cellpadding=1 cellspacing=1><tr>";
   print "<th align=left colspan=$keycount>";
-  print "<a href=showbuilds.cgi?tree=$form{tree}";
-  print "&hours=$form{hours}" if $form{hours};
-  print "&nocrap=1"           if $form{nocrap};
-  print ">$tree as of $tm</a></tr><tr>\n";
+  print &open_showbuilds_href."$tree as of $tm</a></tr><tr>\n";
   foreach my $buildname (@keys) {
     print "<td bgcolor='$colormap{$build{$buildname}}'>$buildname</td>";
   }
@@ -729,10 +747,7 @@ sub do_panel {
     <body BGCOLOR="#FFFFFF" TEXT="#000000" 
           LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">
   );
-  print "<a href=http://cvs-mirror.mozilla.org/webtools/tinderbox/showbuilds.cgi?tree=$form{tree}";
-  print "&hours=$form{hours}" if $form{hours};
-  print "&nocrap=1" if $form{nocrap};
-  print ">$tree";
+  print &open_showbuilds_href."$tree";
   
   $bonsai_tree = '';
   require "$tree/treedata.pl";
