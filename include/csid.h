@@ -121,7 +121,8 @@
 #define CS_CP_874     (SINGLEBYTE         |  60) /*   60  PC Thai    */
 #define CS_CP_1257    (SINGLEBYTE         |  61) /*   61  Windows Baltic */
 #define CS_CP_1258    (SINGLEBYTE         |  62) /*   62  Windows Vietnamese */
-#define INTL_CHAR_SET_MAX                    63  /* must be highest + 1 */
+#define CS_ARMSCII8   (SINGLEBYTE         |  63) /*   63  Armenian ArmSCII-8 */
+#define INTL_CHAR_SET_MAX                    64  /* must be highest + 1 */
 
 
 #define CS_USER_DEFINED_ENCODING (SINGLEBYTE | 254) /* 254 */
@@ -180,10 +181,11 @@
 57   CS_CP_862  57
 58   CS_CP_864  58
 59   CS_CP_866  59
-59   CS_CP_874  60
-60   CS_CP_1257   61
-61   CS_CP_1258   62
-62   INTL_CHAR_SET_MAX  63
+60   CS_CP_874  60
+61   CS_CP_1257   61
+62   CS_CP_1258   62
+63   CS_ARMSCII8  63
+64   INTL_CHAR_SET_MAX  64
 254  CS_USER_DEFINED_ENCODING  254
 255  CS_UNKNOWN  255
 260  CS_SJIS   260
