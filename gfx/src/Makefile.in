@@ -87,8 +87,8 @@ CPPSRCS		= \
 		nsPrintOptionsImpl.cpp \
 		$(NULL)
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-CPPSRCS += \
+ifneq (,$(filter gtk xlib os2,$(MOZ_WIDGET_TOOLKIT)))
+CPPSRCS	+= \
 		nsRegion.cpp \
 		nsRegionImpl.cpp \
 		$(NULL)
