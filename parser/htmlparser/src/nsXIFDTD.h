@@ -230,7 +230,7 @@ class nsXIFDTD : public nsIDTD {
      * @param  aChild   child tag
      * @return PR_TRUE if valid container
      */
-    virtual PRBool CanContain(PRInt32 aParent, PRInt32 aChild);
+    virtual PRBool CanContain(PRInt32 aParent, PRInt32 aChild) const;
 
 
     /**
@@ -259,16 +259,6 @@ class nsXIFDTD : public nsIDTD {
      */
     virtual nsIContentSink* SetContentSink(nsIContentSink* aSink);
 
-    /**
-     *  This method is called to determine whether or not a tag
-     *  of one type can contain a tag of another type.
-     *  
-     *  @update  gpk 06/18/98
-     *  @param   aParent -- tag enum of parent container
-     *  @param   aChild -- tag enum of child container
-     *  @return  PR_TRUE if parent can contain child
-     */
-    virtual PRBool CanContain(eXIFTags aParent,eXIFTags aChild) const;
 
     /**
      *  This method is called to determine whether or not a tag
