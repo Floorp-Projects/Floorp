@@ -212,7 +212,7 @@ public:
   void* operator new(size_t size, nsIArena* aArena);
   void operator delete(void* ptr);
 
-  HTMLStyleSheetImpl(nsIURL* aURL, nsIDocument* aDocument);
+  HTMLStyleSheetImpl(void);
 
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
   NS_IMETHOD_(nsrefcnt) AddRef();
@@ -245,6 +245,7 @@ public:
                                 nsIStyleContext* aParentContext,
                                 nsISupportsArray* aResults);
 
+  NS_IMETHOD Init(nsIURL* aURL, nsIDocument* aDocument);
   NS_IMETHOD SetLinkColor(nscolor aColor);
   NS_IMETHOD SetActiveLinkColor(nscolor aColor);
   NS_IMETHOD SetVisitedLinkColor(nscolor aColor);
@@ -440,17 +441,16 @@ void HTMLStyleSheetImpl::operator delete(void* ptr)
 
 
 
-HTMLStyleSheetImpl::HTMLStyleSheetImpl(nsIURL* aURL, nsIDocument* aDocument)
+HTMLStyleSheetImpl::HTMLStyleSheetImpl(void)
   : nsIHTMLStyleSheet(),
-    mURL(aURL),
-    mDocument(aDocument),
+    mURL(nsnull),
+    mDocument(nsnull),
     mLinkRule(nsnull),
     mVisitedRule(nsnull),
     mActiveRule(nsnull),
     mRecycledAttrs(nsnull)
 {
   NS_INIT_REFCNT();
-  NS_ADDREF(mURL);
 }
 
 HTMLStyleSheetImpl::~HTMLStyleSheetImpl()
@@ -670,10 +670,24 @@ HTMLStyleSheetImpl::GetOwningDocument(nsIDocument*& aDocument) const
 NS_IMETHODIMP
 HTMLStyleSheetImpl::SetOwningDocument(nsIDocument* aDocument)
 {
-  mDocument = aDocument;
+  mDocument = aDocument; // not refcounted
   return NS_OK;
 }
 
+NS_IMETHODIMP HTMLStyleSheetImpl::Init(nsIURL* aURL, nsIDocument* aDocument)
+{
+  NS_PRECONDITION(aURL && aDocument, "null ptr");
+  if (! aURL || ! aDocument)
+    return NS_ERROR_NULL_POINTER;
+
+  if (mURL || mDocument)
+    return NS_ERROR_ALREADY_INITIALIZED;
+
+  mDocument = aDocument; // not refcounted!
+  mURL = aURL;
+  NS_ADDREF(mURL);
+  return NS_OK;
+}
 
 NS_IMETHODIMP HTMLStyleSheetImpl::SetLinkColor(nscolor aColor)
 {
@@ -2604,19 +2618,40 @@ void HTMLStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
 
 }
 
+// XXX For convenience and backwards compatibility
 NS_HTML nsresult
 NS_NewHTMLStyleSheet(nsIHTMLStyleSheet** aInstancePtrResult, nsIURL* aURL, 
                      nsIDocument* aDocument)
+{
+  nsresult rv;
+  nsIHTMLStyleSheet* sheet;
+  if (NS_FAILED(rv = NS_NewHTMLStyleSheet(&sheet)))
+    return rv;
+
+  if (NS_FAILED(rv = sheet->Init(aURL, aDocument))) {
+    NS_RELEASE(sheet);
+    return rv;
+  }
+
+  *aInstancePtrResult = sheet;
+  return NS_OK;
+}
+
+
+NS_HTML nsresult
+NS_NewHTMLStyleSheet(nsIHTMLStyleSheet** aInstancePtrResult)
 {
   if (aInstancePtrResult == nsnull) {
     return NS_ERROR_NULL_POINTER;
   }
 
-  HTMLStyleSheetImpl  *it = new HTMLStyleSheetImpl(aURL, aDocument);
+  HTMLStyleSheetImpl  *it = new HTMLStyleSheetImpl();
 
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return it->QueryInterface(kIHTMLStyleSheetIID, (void **) aInstancePtrResult);
+  NS_ADDREF(it);
+  *aInstancePtrResult = it;
+  return NS_OK;
 }

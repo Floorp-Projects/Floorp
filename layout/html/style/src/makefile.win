@@ -29,8 +29,9 @@ EXPORTS =			\
 	nsCSSValue.h 		\
 	nsICSSStyleRule.h 	\
 	nsICSSDeclaration.h 	\
-	nsHTMLValue.h 		\
 	nsIHTMLCSSStyleSheet.h 	\
+        nsIHTMLStyleSheet.h     \
+	nsHTMLValue.h 		\
 	nsDOMCSSDeclaration.h 	\
 	$(NULL)
 

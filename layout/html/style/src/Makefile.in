@@ -57,6 +57,7 @@ EXPORTS =				\
   nsICSSDeclaration.h \
   nsHTMLValue.h \
   nsIHTMLCSSStyleSheet.h \
+  nsIHTMLStyleSheet.h \
   $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
