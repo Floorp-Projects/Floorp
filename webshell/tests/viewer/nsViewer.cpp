@@ -929,7 +929,8 @@ void nsViewer::CleanupViewer(nsDocLoader* aDl)
   ReleaseMemory();
 }
 
-nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow)
+
+nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow, int argc, char **argv)
 {
 #ifdef XP_PC
   PL_InitializeEventsLib("");
@@ -961,7 +962,7 @@ nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow)
 
   // Create an application shell
   NSRepository::CreateInstance(kCAppShellCID, nsnull, kIAppShellIID, (void**)&gAppShell);
-  gAppShell->Create(nsnull,nsnull);
+  gAppShell->Create(&argc, argv);
   gAppShell->SetDispatchListener(this);
   
     // Create a top level window for the WebWidget

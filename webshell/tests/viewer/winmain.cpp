@@ -304,7 +304,7 @@ RunViewer(HANDLE instance, HANDLE prevInstance, LPSTR cmdParam, int nCmdShow, ns
   SetViewer(aViewer);
 
   nsIWidget *mainWindow = nsnull;
-  nsDocLoader* dl = aViewer->SetupViewer(&mainWindow);
+  nsDocLoader* dl = aViewer->SetupViewer(&mainWindow, 0, 0);
  
   // Process messages
   MSG msg;
