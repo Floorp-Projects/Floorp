@@ -1001,7 +1001,7 @@ NS_IMETHODIMP nsMsgNewsFolder::GetNewMessages()
 #ifdef DEBUG_NEWS
   printf("Getting new news articles....\n");
 #endif
-  rv = nntpService->GetNewNews(nntpServer, mURI, nsnull, nsnull);
+  rv = nntpService->GetNewNews(nntpServer, mURI, this, nsnull);
   return rv;
 }
 
