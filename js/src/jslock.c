@@ -69,7 +69,7 @@ js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
 	}
 }
 
-#elif defined(SOLARIS) && !defined(NSPR_LOCK)
+#elif defined(SOLARIS) && defined(sparc) && !defined(NSPR_LOCK)
 
 #ifndef ULTRA_SPARC
 JS_INLINE jsword
