@@ -37,8 +37,7 @@
     <key id="key_cut" key="&cutCmd.key;" modifiers="accel" command="cmd_cut"/>
     <key id="key_copy" key="&copyCmd.key;" modifiers="accel" command="cmd_copy"/>
     <key id="key_paste" key="&pasteCmd.key;" modifiers="accel" command="cmd_paste"/>
-    <key id="key_delete" key="&deleteCmd.key;" modifiers="accel" command="cmd_delete"/>
-    <key id="key_delete2" keycode="VK_DELETE" command="cmd_delete"/>
+    <key id="key_delete" keycode="VK_DELETE" command="cmd_delete"/>
     <key id="key_selectAll" key="&selectAllCmd.key;" modifiers="accel" command="cmd_selectAll"/>
     <key id="key_find" key="&findCmd.key;" modifiers="accel" command="cmd_find"/>
     <key id="key_findAgain" key="&findAgainCmd.key;" modifiers="accel" command="cmd_findAgain"/>
