@@ -30,6 +30,8 @@ MODULE		= layout
 LIBRARY_NAME	= raptorxulbase_s
 
 CPPSRCS		= \
+       nsScrollBoxObject.cpp \
+       nsScrollBoxFrame.cpp \
        nsTreeLayout.cpp \
        nsXULTreeCellFrame.cpp \
        nsXULTreeFrame.cpp \
@@ -41,6 +43,7 @@ CPPSRCS		= \
        nsEditorBoxObject.cpp \
        nsMenuBoxObject.cpp \
        nsTreeBoxObject.cpp \
+       nsScrollBoxObject.cpp \
        nsPopupSetBoxObject.cpp \
        nsBoxObject.cpp \
        nsGridLayout.cpp \

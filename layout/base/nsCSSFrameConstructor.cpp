@@ -170,6 +170,9 @@ NS_NewGfxListControlFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 
 
 nsresult
+NS_NewAutoRepeatBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+
+nsresult
 NS_NewRootBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
 nsresult
@@ -243,6 +246,9 @@ NS_NewMenuPopupFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 
 nsresult
 NS_NewPopupSetFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+
+nsresult
+NS_NewScrollBoxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
 nsresult
 NS_NewMenuFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRUint32 aFlags );
@@ -5513,7 +5519,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
     // Create a frame based on the tag
     // box is first because it is created the most.
       // BOX CONSTRUCTION
-    if (aTag == nsXULAtoms::box || aTag == nsXULAtoms::tabbox || 
+    if (aTag == nsXULAtoms::box || aTag == nsXULAtoms::vbox || aTag == nsXULAtoms::hbox || aTag == nsXULAtoms::tabbox || 
         aTag == nsXULAtoms::tabpage || aTag == nsXULAtoms::tabcontrol
 #ifdef XULTREE
         || aTag == nsXULAtoms::treecell  
@@ -5527,7 +5533,10 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
         rv = NS_NewXULTreeCellFrame(aPresShell, &newFrame);
       else
 #endif
-        rv = NS_NewBoxFrame(aPresShell, &newFrame);
+
+      // create a box. Its not root, its layout manager is default (nsnull) which is "sprocket" and
+      // its default orientation is horizontal for hbox and vertical for vbox
+      rv = NS_NewBoxFrame(aPresShell, &newFrame, PR_FALSE, nsnull, aTag != nsXULAtoms::vbox);
 
       const nsStyleDisplay* display = (const nsStyleDisplay*)
            aStyleContext->GetStyleData(eStyleStruct_Display);
@@ -5574,8 +5583,33 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
 
       } 
     } // End of BUTTON CONSTRUCTION logic
+ // BUTTON CONSTRUCTION
+    else if (aTag == nsXULAtoms::autorepeatbutton) {
+      processChildren = PR_TRUE;
+      isReplaced = PR_TRUE;
+      rv = NS_NewAutoRepeatBoxFrame(aPresShell, &newFrame);
 
-         // TITLED BUTTON CONSTRUCTION
+      const nsStyleDisplay* display = (const nsStyleDisplay*)
+           aStyleContext->GetStyleData(eStyleStruct_Display);
+
+      // Boxes can scroll.
+      if (IsScrollable(aPresContext, display)) {
+
+        // set the top to be the newly created scrollframe
+        BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
+                         topFrame, aStyleContext);
+
+        // we have a scrollframe so the parent becomes the scroll frame.
+        newFrame->GetParent(&aParentFrame);
+
+        primaryFrameSet = PR_TRUE;
+
+        frameHasBeenInitialized = PR_TRUE;
+
+      } 
+    } // End of BUTTON CONSTRUCTION logic
+
+    // TITLED BUTTON CONSTRUCTION
     else if (aTag == nsXULAtoms::titledbutton) {
 
       processChildren = PR_TRUE;
@@ -5831,6 +5865,13 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
 
             frameHasBeenInitialized = PR_TRUE;
           }
+    } 
+    else if (aTag == nsXULAtoms::scrollbox) {
+          rv = NS_NewScrollBoxFrame(aPresShell, &newFrame);
+ 
+          //ConstructTitledBoxFrame(aPresShell, aPresContext, aState, aContent, aParentFrame, aTag, aStyleContext, newFrame);
+          processChildren = PR_TRUE;
+          isReplaced = PR_TRUE;
     } 
     
     else if (aTag == nsXULAtoms::spinner)

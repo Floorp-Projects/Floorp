@@ -98,12 +98,18 @@ XUL_ATOM(titledbutton, "titledbutton")
 XUL_ATOM(crop, "crop")
 
 XUL_ATOM(mode, "mode")
+XUL_ATOM(equalsize, "equalsize")
 XUL_ATOM(box, "box")
+XUL_ATOM(hbox, "hbox")
+XUL_ATOM(vbox, "vbox")
+XUL_ATOM(scrollbox, "scrollbox")
 XUL_ATOM(mousethrough, "mousethrough")
 XUL_ATOM(flex, "flex")
 XUL_ATOM(spring, "spring")
 XUL_ATOM(orient, "orient")
 XUL_ATOM(autostretch, "autostretch")
+
+XUL_ATOM(autorepeatbutton, "autorepeatbutton")
 
 XUL_ATOM(titledbox, "titledbox")
 XUL_ATOM(title, "title")

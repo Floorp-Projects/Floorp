@@ -5,12 +5,6 @@
    xmlns:html="http://www.w3.org/1999/xhtml"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
-  <binding id="hbox" extends="xul:box"/>
-
-  <binding id="vbox" extends="xul:box">
-    <content orient="vertical"/>
-  </binding>
-
   <binding id="thumb" extends="xul:box">
     <content>
       <xul:spring flex="1"/>
@@ -308,9 +302,16 @@
 
   <binding id="popups">
     <content>
-      <xul:box class="popup-internal-box" orient="vertical" flex="1" style="overflow: auto">
+      <!--xul:box class="popup-internal-box" orient="vertical" flex="1" style="overflow: auto">
         <children/>
-      </xul:box>
+      </xul:box-->
+
+      <xul:arrowscrollbox flex="1" orient="vertical">
+		  <!--xul:box class="popup-internal-box" orient="vertical"-->
+			<children/>
+		  <!--/xul:box-->
+      </xul:arrowscrollbox>
+
     </content>
     <interface>
       <method name="openPopup">
@@ -580,6 +581,52 @@
      <content>
 	    <xul:text inherits="value"/>
 	 </content>
+  </binding>
+
+  <binding id="autorepeatbutton-up">
+     <content>
+	    <xul:image class="autorepeatbutton-up"/>
+	 </content>
+  </binding>
+
+  <binding id="autorepeatbutton-down">
+     <content>
+	    <xul:image class="autorepeatbutton-down"/>
+	 </content>
+  </binding>
+
+  <binding id="scrollbox">
+    <content>
+	  <xul:box class="scrollbox-innerbox" inherits="orient,autostretch,align,valign">
+	    <children/>
+	  </xul:box>
+	</content>
+  </binding>
+
+  <binding id="arrowscrollbox" extends="xul:stack">
+    <content>
+	  <xul:vbox 
+	  onunderflow="
+		  var button1 = this.firstChild;
+		  var button2 = this.childNodes[2];
+ 		  button1.setAttribute('collapsed', 'true');
+		  button2.setAttribute('collapsed', 'true');
+      " 
+	  onoverflow="
+		  var button1 = this.firstChild;
+		  var button2 = this.childNodes[2];
+ 		  button1.removeAttribute('collapsed');
+		  button2.removeAttribute('collapsed');
+      ">
+	  <xul:autorepeatbutton autostretch="never" class="up" collapsed="true" 
+	      oncommand="parentNode.childNodes[1].boxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject).scrollByIndex(-1);"/>
+	  <xul:scrollbox orient="vertical" flex="1">
+		 <children/>
+	  </xul:scrollbox>
+	  <xul:autorepeatbutton autostretch="never" class="down" collapsed="true" 
+	      oncommand="parentNode.childNodes[1].boxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject).scrollByIndex(1);"/>
+	  </xul:vbox>
+    </content>
   </binding>
 
 </bindings>

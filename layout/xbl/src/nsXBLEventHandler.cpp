@@ -275,6 +275,24 @@ nsresult nsXBLEventHandler::CommandUpdate(nsIDOMEvent* aEvent)
   return NS_OK;
 }
 
+nsresult nsXBLEventHandler::Overflow(nsIDOMEvent* aEvent)
+{
+  if (!mEventName.EqualsWithConversion("overflow"))
+    return NS_OK;
+
+  ExecuteHandler(NS_ConvertASCIItoUCS2("overflow"), aEvent);
+  return NS_OK;
+}
+
+nsresult nsXBLEventHandler::Underflow(nsIDOMEvent* aEvent)
+{
+  if (!mEventName.EqualsWithConversion("underflow"))
+    return NS_OK;
+
+  ExecuteHandler(NS_ConvertASCIItoUCS2("underflow"), aEvent);
+  return NS_OK;
+}
+
 nsresult nsXBLEventHandler::Destroy(nsIDOMEvent* aEvent)
 {
   if (!mEventName.EqualsWithConversion("destroy"))

@@ -32,6 +32,7 @@ XPIDLSRCS=      .\nsIBoxObject.idl                  \
                 .\nsIBoxLayoutManager.idl              \
                 .\nsIBoxPaintManager.idl               \
                 .\nsITreeBoxObject.idl \
+                .\nsIScrollBoxObject.idl \
                 .\nsIPopupSetBoxObject.idl \
                 .\nsIMenuBoxObject.idl \
                 .\nsIBrowserBoxObject.idl \

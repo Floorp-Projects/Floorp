@@ -22,108 +22,28 @@
 #ifndef nsScrollPortFrame_h___
 #define nsScrollPortFrame_h___
 
-#include "nsBoxFrame.h"
-#include "nsIStatefulFrame.h"
-
+#include "nsScrollBoxFrame.h"
 
 /**
  * The scroll frame creates and manages the scrolling view
  *
- * It only supports having a single child frame that typically is an area
- * frame, but doesn't have to be. The child frame must have a view, though
+ * This is a specialized subclass for HTML only.
  *
- * Scroll frames don't support incremental changes, i.e. you can't replace
- * or remove the scrolled frame
  */
-class nsScrollPortFrame : nsBoxFrame,
-                          public nsIStatefulFrame {
+class nsScrollPortFrame : public nsScrollBoxFrame {
+
 public:
   friend nsresult NS_NewScrollPortFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
-  NS_IMETHOD Init(nsIPresContext*  aPresContext,
-                  nsIContent*      aContent,
-                  nsIFrame*        aParent,
-                  nsIStyleContext* aContext,
-                  nsIFrame*        aPrevInFlow);
 
-  // Called to set the one and only child frame. Returns NS_ERROR_INVALID_ARG
-  // if the child frame is NULL, and NS_ERROR_UNEXPECTED if the child list
-  // contains more than one frame
-  NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
-                                 nsIAtom*        aListName,
-                                 nsIFrame*       aChildList);
-
-  // Because there can be only one child frame, these two function return
-  // NS_ERROR_FAILURE
-  NS_IMETHOD AppendFrames(nsIPresContext* aPresContext,
-                          nsIPresShell&   aPresShell,
-                          nsIAtom*        aListName,
-                          nsIFrame*       aFrameList);
-  NS_IMETHOD InsertFrames(nsIPresContext* aPresContext,
-                          nsIPresShell&   aPresShell,
-                          nsIAtom*        aListName,
-                          nsIFrame*       aPrevFrame,
-                          nsIFrame*       aFrameList);
-
-  // This function returns NS_ERROR_NOT_IMPLEMENTED
-  NS_IMETHOD RemoveFrame(nsIPresContext* aPresContext,
-                         nsIPresShell&   aPresShell,
-                         nsIAtom*        aListName,
-                         nsIFrame*       aOldFrame);
-
-
-  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect&        aDirtyRect,
-                   nsFramePaintLayer    aWhichLayer);
-
-  /**
-   * Get the "type" of the frame
-   *
-   * @see nsLayoutAtoms::scrollFrame
-   */
-  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
-  
 #ifdef NS_DEBUG
-  NS_IMETHOD GetFrameName(nsString& aResult) const;
+NS_IMETHOD GetFrameName(nsString& aResult) const;
 #endif
-
-  // nsIBox methods
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
-  NS_IMETHOD GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
-  NS_IMETHOD GetMaxSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
-  NS_IMETHOD GetAscent(nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent);
-  NS_IMETHOD Layout(nsBoxLayoutState& aBoxLayoutState);
-  NS_IMETHOD GetPadding(nsMargin& aMargin);
-  NS_IMETHOD GetBorder(nsMargin& aMargin);
-  NS_IMETHOD GetMargin(nsMargin& aMargin);
-
-  virtual nsresult GetContentOf(nsIContent** aContent);
-
-  //nsIStatefulFrame
-  NS_IMETHOD GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame::StateType* aStateType);
-  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsIPresState** aState);
-  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState);
-
 
 protected:
   nsScrollPortFrame(nsIPresShell* aShell);
-  virtual PRIntn GetSkipSides() const;
 
-   // Creation of the widget for the scrolling view is factored into a virtual method so
-   // that sub-classes may control widget creation.
-  virtual nsresult CreateScrollingViewWidget(nsIView* aView,const nsStylePosition* aPosition);
-   // Getting the view for scollframe may be overriden to provide a parent view for te scroll frame
-  virtual nsresult GetScrollingParentView(nsIPresContext* aPresContext,
-                                          nsIFrame* aParent,
-                                          nsIView** aParentView);
-
-private:
-  nsresult CreateScrollingView(nsIPresContext* aPresContext);
-  PRBool   IsInsideFormControlFrame();
-
+  virtual PRBool NeedsClipWidget();
 };
 
 #endif /* nsScrollPortFrame_h___ */

@@ -70,6 +70,8 @@ public:
   NS_IMETHOD Action(nsIDOMEvent* aEvent);
   NS_IMETHOD Broadcast(nsIDOMEvent* aEvent);
   NS_IMETHOD CommandUpdate(nsIDOMEvent* aEvent);
+  NS_IMETHOD Overflow(nsIDOMEvent* aEvent);
+  NS_IMETHOD Underflow(nsIDOMEvent* aEvent);
 
   NS_DECL_ISUPPORTS
 

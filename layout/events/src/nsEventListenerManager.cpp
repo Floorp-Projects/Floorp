@@ -450,6 +450,14 @@ nsresult nsEventListenerManager::GetIdentifiersForType(nsIAtom* aType, nsIID& aI
     aIID = kIDOMMenuListenerIID;
     *aFlags = NS_EVENT_BITS_XUL_COMMAND_UPDATE;
   }
+  else if (aType == nsLayoutAtoms::onoverflow) {
+    aIID = kIDOMMenuListenerIID;
+    *aFlags = NS_EVENT_BITS_SCROLLPORT_OVERFLOW;
+  }
+  else if (aType == nsLayoutAtoms::onunderflow) {
+    aIID = kIDOMMenuListenerIID;
+    *aFlags = NS_EVENT_BITS_SCROLLPORT_UNDERFLOW;
+  }
   else if (aType == nsLayoutAtoms::ondragenter) {
     aIID = NS_GET_IID(nsIDOMDragListener);
     *aFlags = NS_EVENT_BITS_DRAG_ENTER;
@@ -1479,6 +1487,8 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
     case NS_MENU_DESTROY:
     case NS_MENU_ACTION:
     case NS_XUL_BROADCAST:
+    case NS_SCROLLPORT_OVERFLOW:
+    case NS_SCROLLPORT_UNDERFLOW:
     case NS_XUL_COMMAND_UPDATE:
       if (nsnull != mMenuListeners) {
         if (nsnull == *aDOMEvent) {
@@ -1508,6 +1518,12 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                     break;
                   case NS_XUL_BROADCAST:
                     ret = mMenuListener->Broadcast(*aDOMEvent);
+                    break;
+                  case NS_SCROLLPORT_OVERFLOW:
+                    ret = mMenuListener->Overflow(*aDOMEvent);
+                    break;
+                  case NS_SCROLLPORT_UNDERFLOW:
+                    ret = mMenuListener->Underflow(*aDOMEvent);
                     break;
                   case NS_XUL_COMMAND_UPDATE:
                     ret = mMenuListener->CommandUpdate(*aDOMEvent);
@@ -1548,6 +1564,18 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                   case NS_XUL_BROADCAST:
                     subType = NS_EVENT_BITS_XUL_BROADCAST;
                     if (ls->mSubType & NS_EVENT_BITS_XUL_BROADCAST) {
+                      correctSubType = PR_TRUE;
+                    }
+                    break;
+                  case NS_SCROLLPORT_OVERFLOW:
+                    subType = NS_EVENT_BITS_SCROLLPORT_OVERFLOW;
+                    if (ls->mSubType & NS_EVENT_BITS_SCROLLPORT_OVERFLOW) {
+                      correctSubType = PR_TRUE;
+                    }
+                    break;
+                   case NS_SCROLLPORT_UNDERFLOW:
+                    subType = NS_EVENT_BITS_SCROLLPORT_UNDERFLOW;
+                    if (ls->mSubType & NS_EVENT_BITS_SCROLLPORT_UNDERFLOW) {
                       correctSubType = PR_TRUE;
                     }
                     break;

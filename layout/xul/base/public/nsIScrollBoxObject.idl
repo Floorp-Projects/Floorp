@@ -17,33 +17,33 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
+ * Original Author: Eric D. Vaughan (evaughan@netscape.com)
+ *
  * Contributor(s): 
  */
 
+#include "nsIBoxObject.idl"
+#include "domstubs.idl"
 
-#ifndef nsIDOMMenuListener_h__
-#define nsIDOMMenuListener_h__
-
-#include "nsIDOMEvent.h"
-#include "nsIDOMEventListener.h"
-
-// {0730C841-42F3-11d3-97FA-00400553EEF0}
-#define NS_IDOMMENULISTENER_IID \
-{ 0x730c841, 0x42f3, 0x11d3, { 0x97, 0xfa, 0x0, 0x40, 0x5, 0x53, 0xee, 0xf0 } }
-
-class nsIDOMMenuListener : public nsIDOMEventListener {
-
-public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMMENULISTENER_IID)
-
-  NS_IMETHOD Create(nsIDOMEvent* aEvent) = 0;
-  NS_IMETHOD Close(nsIDOMEvent* aEvent) = 0;
-  NS_IMETHOD Destroy(nsIDOMEvent* aEvent) = 0;
-  NS_IMETHOD Action(nsIDOMEvent* aEvent) = 0;
-  NS_IMETHOD Broadcast(nsIDOMEvent* aEvent) = 0;
-  NS_IMETHOD CommandUpdate(nsIDOMEvent* aEvent) = 0;
-  NS_IMETHOD Overflow(nsIDOMEvent* aEvent) = 0;
-  NS_IMETHOD Underflow(nsIDOMEvent* aEvent) = 0;
+[scriptable, uuid(56E2ADA8-4631-11d4-BA11-001083023C1E)]
+interface nsIScrollBoxObject : nsISupports
+{
+  void scrollTo(in long x, in long y);
+  void scrollBy(in long dx, in long dy);
+  void scrollByLine(in long dlines);
+  void scrollByIndex(in long dindexes);
+  void scrollToLine(in long line);
+  void scrollToElement(in nsIDOMElement child);
+  void scrollToIndex(in long index);
+  void getPosition(out long x, out long y);
+  void getScrolledSize(out long width, out long height);
+  void ensureElementIsVisible(in nsIDOMElement child);
+  void ensureIndexIsVisible(in long index);
+  void ensureLineIsVisible(in long line);
 };
 
-#endif // nsIDOMMenuListener_h__
+%{C++
+nsresult
+NS_NewScrollBoxObject(nsIBoxObject** aResult);
+
+%}

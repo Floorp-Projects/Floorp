@@ -151,6 +151,15 @@ struct nsScrollbarEvent : public nsGUIEvent {
     PRUint32        position; 
 };
 
+struct nsScrollPortEvent : public nsGUIEvent {
+  enum orientType {
+    vertical   = 0,
+    horizontal = 1,
+    both       = 2
+  };
+
+  orientType orient;
+};
 
 struct nsInputEvent : public nsGUIEvent {
                 /// PR_TRUE indicates the shift key is down
@@ -278,8 +287,8 @@ enum nsDragDropEventStatus {
 #define NS_COMPOSITION_END    15
 #define NS_MOUSE_SCROLL_EVENT 16
 #define NS_COMPOSITION_QUERY  17
+#define NS_SCROLLPORT_EVENT   18
 
- 
  /**
  * GUI MESSAGES
  */
@@ -410,6 +419,10 @@ enum nsDragDropEventStatus {
 // Scroll events
 #define NS_MOUSE_SCROLL_START         1600
 #define NS_MOUSE_SCROLL               (NS_MOUSE_SCROLL_START)
+
+#define NS_SCROLLPORT_START           1700
+#define NS_SCROLLPORT_UNDERFLOW       (NS_SCROLLPORT_START)
+#define NS_SCROLLPORT_OVERFLOW        (NS_SCROLLPORT_START+1)
 
 #define NS_IS_MOUSE_EVENT(evnt) \
        (((evnt)->message == NS_MOUSE_LEFT_BUTTON_DOWN) || \

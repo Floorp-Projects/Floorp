@@ -58,6 +58,7 @@ class nsHTMLInfo;
 #define NS_STATE_IS_COLLAPSED            0x10000000
 #define NS_STATE_DEFAULT_HORIZONTAL      0x20000000
 #define NS_STATE_STYLE_CHANGE            0x40000000
+#define NS_STATE_EQUAL_SIZE              0x80000000
 
 class nsBoxFrame : public nsHTMLContainerFrame, public nsContainerBox
 {
@@ -194,6 +195,7 @@ protected:
     virtual PRIntn GetSkipSides() const { return 0; }
 
 
+    virtual PRBool GetInitialEqualSize(PRBool& aEqualSize); 
     virtual PRBool GetInitialOrientation(PRBool& aIsHorizontal); 
     virtual PRBool GetInitialHAlignment(Halignment& aHalign); 
     virtual PRBool GetInitialVAlignment(Valignment& aValign); 

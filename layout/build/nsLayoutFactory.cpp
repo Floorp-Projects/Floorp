@@ -109,6 +109,7 @@ static NS_DEFINE_CID(kBindingManagerCID, NS_BINDINGMANAGER_CID);
 
 static NS_DEFINE_CID(kBoxObjectCID, NS_BOXOBJECT_CID);
 static NS_DEFINE_CID(kTreeBoxObjectCID, NS_TREEBOXOBJECT_CID);
+static NS_DEFINE_CID(kScrollBoxObjectCID, NS_SCROLLBOXOBJECT_CID);
 static NS_DEFINE_CID(kMenuBoxObjectCID, NS_MENUBOXOBJECT_CID);
 static NS_DEFINE_CID(kPopupSetBoxObjectCID, NS_POPUPSETBOXOBJECT_CID);
 static NS_DEFINE_CID(kBrowserBoxObjectCID, NS_BROWSERBOXOBJECT_CID);
@@ -148,6 +149,7 @@ extern nsresult NS_NewBindingManager(nsIBindingManager** aResult);
 
 extern nsresult NS_NewBoxObject(nsIBoxObject** aResult);
 extern nsresult NS_NewTreeBoxObject(nsIBoxObject** aResult);
+extern nsresult NS_NewScrollBoxObject(nsIBoxObject** aResult);
 extern nsresult NS_NewMenuBoxObject(nsIBoxObject** aResult);
 extern nsresult NS_NewEditorBoxObject(nsIBoxObject** aResult);
 extern nsresult NS_NewPopupSetBoxObject(nsIBoxObject** aResult);
@@ -512,6 +514,13 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
     res = NS_NewComputedDOMStyle((nsIComputedDOMStyle**) &inst);
     if (NS_FAILED(res)) {
       LOG_NEW_FAILURE("NS_NewComputedDOMStyle", res);
+      return res;
+    }
+  }
+  else if (mClassID.Equals(kScrollBoxObjectCID)) {
+    res = NS_NewScrollBoxObject((nsIBoxObject**) &inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewScrollBoxObject", res);
       return res;
     }
   }
