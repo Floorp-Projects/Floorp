@@ -204,7 +204,7 @@ JS_ArenaRelease(JSArenaPool *pool, char *mark)
     JSArena *a;
 
     for (a = pool->first.next; a; a = a->next) {
-	if (JS_UPTRDIFF(mark, a) < JS_UPTRDIFF(a->avail, a)) {
+	if (JS_UPTRDIFF(mark, a->base) < JS_UPTRDIFF(a->avail, a->base)) {
 	    a->avail = (jsuword)JS_ARENA_ALIGN(pool, mark);
 	    FreeArenaList(pool, a, JS_TRUE);
 	    return;
