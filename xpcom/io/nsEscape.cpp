@@ -222,3 +222,57 @@ nsEscapeHTML(const char * string)
 
 	return(rv);
 }
+
+NS_COM PRUnichar *
+nsEscapeHTML2(const PRUnichar * string)
+{
+  PRUnichar *rv = (PRUnichar *) nsMemory::Alloc(nsCRT::strlen(string)*6*sizeof(PRUnichar) + sizeof(PRUnichar));
+	PRUnichar *ptr = rv;
+
+	if(rv)
+	  {
+		for(; *string != 0; string++)
+		  {
+			if(*string == '<')
+			  {
+				*ptr++ = '&';
+				*ptr++ = 'l';
+				*ptr++ = 't';
+				*ptr++ = ';';
+			  }
+			else if(*string == '>')
+			  {
+				*ptr++ = '&';
+				*ptr++ = 'g';
+				*ptr++ = 't';
+				*ptr++ = ';';
+			  }
+			else if(*string == '&')
+			  {
+				*ptr++ = '&';
+				*ptr++ = 'a';
+				*ptr++ = 'm';
+				*ptr++ = 'p';
+				*ptr++ = ';';
+			  }
+			else if (*string == '"')
+			  {
+				*ptr++ = '&';
+				*ptr++ = 'q';
+				*ptr++ = 'u';
+				*ptr++ = 'o';
+				*ptr++ = 't';
+				*ptr++ = ';';
+			  }			
+			else
+			  {
+				*ptr++ = *string;
+			  }
+		  }
+		*ptr = 0;
+	  }
+
+	return(rv);
+}
+
+
