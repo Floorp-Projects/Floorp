@@ -166,8 +166,8 @@ function getHomePage()
 
 function UpdateBackForwardButtons()
 {
-  var backBroadcaster = document.getElementById("canGoBack");
-  var forwardBroadcaster = document.getElementById("canGoForward");
+  var backBroadcaster = document.getElementById("Browser:Back");
+  var forwardBroadcaster = document.getElementById("Browser:Forward");
   var webNavigation = getWebNavigation();
 
   // Avoid setting attributes on broadcasters if the value hasn't changed!
@@ -211,9 +211,9 @@ function RegisterTabOpenObserver()
 function Startup()
 {
   // init globals
-  gNavigatorBundle = document.getElementById("bundle_navigator");
+  gNavigatorBundle = document.getElementById("bundle_browser");
   gBrandBundle = document.getElementById("bundle_brand");
-  gNavigatorRegionBundle = document.getElementById("bundle_navigator_region");
+  gNavigatorRegionBundle = document.getElementById("bundle_browser_region");
   gBrandRegionBundle = document.getElementById("bundle_brand_region");
   gBrowser = document.getElementById("content");
   gURLBar = document.getElementById("urlbar");
@@ -254,9 +254,6 @@ function Startup()
   // Initialize browser instance..
   appCore.setWebShellWindow(window);
 
-  // Add a capturing event listener to the content area
-  // (rjc note: not the entire window, otherwise we'll get sidebar pane loads too!)
-  //  so we'll be notified when onloads complete.
   var contentArea = document.getElementById("content");
   contentArea.addEventListener("load", loadEventHandlers, false);
 
@@ -1016,7 +1013,7 @@ function hiddenWindowStartup()
 
   // Disable menus which are not appropriate
   var disabledItems = ['cmd_close', 'Browser:SendPage', 'Browser:EditPage', 'Browser:PrintSetup', /*'Browser:PrintPreview',*/
-                       'Browser:Print', 'canGoBack', 'canGoForward', 'Browser:Home', 'Browser:AddBookmark', 'cmd_undo',
+                       'Browser:Print', 'Browser:Back', 'Browser:Forward', 'Browser:Home', 'Browser:AddBookmark', 'cmd_undo',
                        'cmd_redo', 'cmd_cut', 'cmd_copy','cmd_paste', 'cmd_delete', 'cmd_selectAll', 'menu_textZoom'];
   for (var id in disabledItems) {
     var broadcaster = document.getElementById(disabledItems[id]);
@@ -3513,3 +3510,384 @@ var FullScreen =
   }
   
 };
+
+const NS_ERROR_MODULE_NETWORK = 2152398848;
+const NS_NET_STATUS_READ_FROM = NS_ERROR_MODULE_NETWORK + 8;
+const NS_NET_STATUS_WROTE_TO  = NS_ERROR_MODULE_NETWORK + 9;
+
+
+function nsBrowserStatusHandler()
+{
+  this.init();
+}
+
+nsBrowserStatusHandler.prototype =
+{
+  userTyped :
+  {
+    _value : false,
+    browser : null,
+
+    get value() {
+      if (this.browser != getBrowser().mCurrentBrowser)
+        this._value = false;
+      
+      return this._value;
+    },
+
+    set value(aValue) {
+      if (this._value != aValue) {
+        this._value = aValue;
+        this.browser = aValue ? getBrowser().mCurrentBrowser : null;
+      }
+
+      return aValue;
+    }
+  },
+
+  // Stored Status, Link and Loading values
+  status : "",
+  defaultStatus : "",
+  jsStatus : "",
+  jsDefaultStatus : "",
+  overLink : "",
+  startTime : 0,
+
+  statusTimeoutInEffect : false,
+
+  hideAboutBlank : true,
+
+  QueryInterface : function(aIID)
+  {
+    if (aIID.equals(Components.interfaces.nsIWebProgressListener) ||
+        aIID.equals(Components.interfaces.nsISupportsWeakReference) ||
+        aIID.equals(Components.interfaces.nsIXULBrowserWindow) ||
+        aIID.equals(Components.interfaces.nsISupports))
+      return this;
+    throw Components.results.NS_NOINTERFACE;
+  },
+
+  init : function()
+  {
+    // XXXjag is this still needed? It's currently just ""
+    this.defaultStatus = gNavigatorBundle.getString("defaultStatus");
+
+    this.urlBar          = document.getElementById("urlbar");
+    this.throbberElement = document.getElementById("navigator-throbber");
+    this.statusMeter     = document.getElementById("statusbar-icon");
+    this.stopCommand     = document.getElementById("Browser:Stop");
+    this.statusTextField = document.getElementById("statusbar-display");
+    this.isImage         = document.getElementById("isImage");
+    this.securityButton  = document.getElementById("security-button");
+
+    // Initialize the security button's state and tooltip text
+    const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
+    this.onSecurityChange(null, null, nsIWebProgressListener.STATE_IS_INSECURE);
+  },
+
+  destroy : function()
+  {
+    // XXXjag to avoid leaks :-/, see bug 60729
+    this.urlBar          = null;
+    this.throbberElement = null;
+    this.statusMeter     = null;
+    this.stopCommand     = null;
+    this.statusTextField = null;
+    this.isImage         = null;
+    this.securityButton  = null;
+    this.userTyped       = null;
+  },
+
+  setJSStatus : function(status)
+  {
+    this.jsStatus = status;
+    this.updateStatusField();
+  },
+
+  setJSDefaultStatus : function(status)
+  {
+    this.jsDefaultStatus = status;
+    this.updateStatusField();
+  },
+
+  setDefaultStatus : function(status)
+  {
+    this.defaultStatus = status;
+    this.updateStatusField();
+  },
+
+  setOverLink : function(link, b)
+  {
+    this.overLink = link;
+    this.updateStatusField();
+    if (link)
+      this.statusTextField.setAttribute('crop', 'center');
+    else
+      this.statusTextField.setAttribute('crop', 'end');
+  },
+
+  updateStatusField : function()
+  {
+    var text = this.overLink || this.status || this.jsStatus || this.jsDefaultStatus || this.defaultStatus;
+
+    // check the current value so we don't trigger an attribute change
+    // and cause needless (slow!) UI updates
+    if (this.statusTextField.label != text)
+      this.statusTextField.label = text;
+  },
+
+  mimeTypeIsTextBased : function(contentType)
+  {
+    return /^text\/|\+xml$/.test(contentType) ||
+           contentType == "application/x-javascript" ||
+           contentType == "application/xml" ||
+           contentType == "mozilla.application/cached-xul";
+  },
+
+  onLinkIconAvailable : function(aHref) {
+    if (gProxyFavIcon && pref.getBoolPref("browser.chrome.site_icons"))
+    {
+      gProxyFavIcon.setAttribute("src", aHref);
+
+      // update any bookmarks with new icon reference
+      if (!gBookmarksService)
+        gBookmarksService = Components.classes["@mozilla.org/browser/bookmarks-service;1"]
+                                      .getService(Components.interfaces.nsIBookmarksService);
+      gBookmarksService.updateBookmarkIcon(this.urlBar.value, aHref);
+    }
+  },
+
+  onProgressChange : function (aWebProgress, aRequest,
+                               aCurSelfProgress, aMaxSelfProgress,
+                               aCurTotalProgress, aMaxTotalProgress)
+  {
+    if (aMaxTotalProgress > 0) {
+      // This is highly optimized.  Don't touch this code unless
+      // you are intimately familiar with the cost of setting
+      // attrs on XUL elements. -- hyatt
+      var percentage = (aCurTotalProgress * 100) / aMaxTotalProgress;
+      this.statusMeter.value = percentage;
+    } 
+  },
+
+  onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus)
+  {  
+    const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
+    const nsIChannel = Components.interfaces.nsIChannel;
+    var ctype;
+    if (aStateFlags & nsIWebProgressListener.STATE_START) {
+      // If this is a network start or the first stray request (the first
+      // request outside of the document load), initialize the throbber and his
+      // friends.
+      if (aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK ||
+          (aStateFlags & nsIWebProgressListener.STATE_IS_REQUEST &&
+           !aWebProgress.isLoadingDocument &&
+           this.totalRequests == this.finishedRequests)) {
+
+        // Call start document load listeners (only if this is a network load)
+        if (aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK &&
+            aRequest && aWebProgress.DOMWindow == content)
+          this.startDocumentLoad(aRequest);
+
+        // Turn the throbber on.
+        if (this.throbberElement)
+          this.throbberElement.setAttribute("busy", true);
+
+        // XXX: This needs to be based on window activity...
+        this.stopCommand.removeAttribute("Browser:Stop");
+      }
+    }
+    else if (aStateFlags & nsIWebProgressListener.STATE_STOP) {
+      if (aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
+        if (aRequest) {
+          if (aWebProgress.DOMWindow == content)
+            this.endDocumentLoad(aRequest, aStatus);
+        }
+      }
+
+      // If this is a network stop or the last request stop outside of loading
+      // the document, stop throbbers and progress bars and such
+      if (aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK ||
+          (aStateFlags & nsIWebProgressListener.STATE_IS_REQUEST &&
+           !aWebProgress.isLoadingDocument &&
+           this.totalRequests == this.finishedRequests)) {
+
+        if (aRequest) {
+          var msg = "";
+          // Get the channel if the request is a channel
+          var channel;
+          try {
+            channel = aRequest.QueryInterface(nsIChannel);
+          }
+          catch(e) { };
+
+          if (channel) {
+            var location = channel.URI.spec;
+            if (location != "about:blank") {
+              const kErrorBindingAborted = 2152398850;
+              const kErrorNetTimeout = 2152398862;
+              switch (aStatus) {
+                case kErrorBindingAborted:
+                  msg = gNavigatorBundle.getString("nv_stopped");
+                  break;
+                case kErrorNetTimeout:
+                  msg = gNavigatorBundle.getString("nv_timeout");
+                  break;
+              }
+            }
+          }
+          // If msg is false then we did not have an error (channel may have
+          // been null, in the case of a stray image load).
+          if (!msg) {
+            msg = gNavigatorBundle.getString("nv_done");
+          }
+          this.status = "";
+          this.setDefaultStatus(msg);
+          if (channel) {
+            try {
+              ctype = channel.contentType;
+              if (this.mimeTypeIsTextBased(ctype))
+                this.isImage.removeAttribute('disabled');
+              else
+                this.isImage.setAttribute('disabled', 'true');
+            }
+            catch (e) {}
+          }
+        }
+
+        // Turn the progress meter and throbber off.
+        this.statusMeter.value = 0;  // be sure to clear the progress bar
+        this.throbberElement.removeAttribute("busy");
+
+        // XXX: These need to be based on window activity...
+        // XXXjag: <command id="cmd_stop"/> ?
+        this.stopCommand.setAttribute("disabled", "true");
+      }
+    }
+  },
+
+  onLocationChange : function(aWebProgress, aRequest, aLocation)
+  {
+    this.setOverLink("", null);
+
+    var location = aLocation.spec;
+
+    if (this.hideAboutBlank) {
+      this.hideAboutBlank = false;
+      if (location == "about:blank")
+        location = "";
+    }
+
+    // Disable menu entries for images, enable otherwise
+    if (content.document && this.mimeTypeIsTextBased(content.document.contentType))
+      this.isImage.removeAttribute('disabled');
+    else
+      this.isImage.setAttribute('disabled', 'true');
+
+    // We should probably not do this if the value has changed since the user
+    // searched
+    // Update urlbar only if a new page was loaded on the primary content area
+    // Do not update urlbar if there was a subframe navigation
+
+    if (aWebProgress.DOMWindow == content) {
+      if (!this.userTyped.value) {
+        // If the url has "wyciwyg://" as the protocol, strip it off.
+        // Nobody wants to see it on the urlbar for dynamically generated
+        // pages. 
+        if (/^\s*wyciwyg:\/\/\d+\//.test(location))
+          location = RegExp.rightContext;
+        this.urlBar.value = location;
+        // the above causes userTyped.value to become true, reset it
+        this.userTyped.value = false;
+      }
+
+      SetPageProxyState("valid", aLocation);
+    }
+    UpdateBackForwardButtons();
+  },
+
+  onStatusChange : function(aWebProgress, aRequest, aStatus, aMessage)
+  {
+    this.status = aMessage;
+    this.updateStatusField();
+  },
+
+  onSecurityChange : function(aWebProgress, aRequest, aState)
+  {
+    const wpl = Components.interfaces.nsIWebProgressListener;
+
+    switch (aState) {
+      case wpl.STATE_IS_SECURE | wpl.STATE_SECURE_HIGH:
+        this.securityButton.setAttribute("level", "high");
+        break;
+      case wpl.STATE_IS_SECURE | wpl.STATE_SECURE_LOW:
+        this.securityButton.setAttribute("level", "low");
+        break;
+      case wpl.STATE_IS_BROKEN:
+        this.securityButton.setAttribute("level", "broken");
+        break;
+      case wpl.STATE_IS_INSECURE:
+      default:
+        this.securityButton.removeAttribute("level");
+        break;
+    }
+
+    var securityUI = getBrowser().securityUI;
+    if (securityUI)
+      this.securityButton.setAttribute("tooltiptext", securityUI.tooltipText);
+    else
+      this.securityButton.removeAttribute("tooltiptext");
+  },
+
+  startDocumentLoad : function(aRequest)
+  {
+    // Reset so we can see if the user typed after the document load
+    // starting and the location changing.
+    this.userTyped.value = false;
+
+    const nsIChannel = Components.interfaces.nsIChannel;
+    var urlStr = aRequest.QueryInterface(nsIChannel).URI.spec;
+    var observerService = Components.classes["@mozilla.org/observer-service;1"]
+                                    .getService(Components.interfaces.nsIObserverService);
+    try {
+      observerService.notifyObservers(_content, "StartDocumentLoad", urlStr);
+    } catch (e) {
+    }
+  },
+
+  endDocumentLoad : function(aRequest, aStatus)
+  {
+    const nsIChannel = Components.interfaces.nsIChannel;
+    var urlStr = aRequest.QueryInterface(nsIChannel).originalURI.spec;
+
+    if (Components.isSuccessCode(aStatus))
+      dump("Document "+urlStr+" loaded successfully\n"); // per QA request
+    else {
+      // per QA request
+      var e = new Components.Exception("", aStatus);
+      var name = e.name;
+      dump("Error loading URL "+urlStr+" : "+
+           Number(aStatus).toString(16));
+      if (name)
+           dump(" ("+name+")");
+      dump('\n'); 
+    }
+
+    var observerService = Components.classes["@mozilla.org/observer-service;1"]
+                                    .getService(Components.interfaces.nsIObserverService);
+
+    var notification = Components.isSuccessCode(aStatus) ? "EndDocumentLoad" : "FailDocumentLoad";
+    try {
+      observerService.notifyObservers(_content, notification, urlStr);
+    } catch (e) {
+    }
+  }
+}
+
+function displayPageInfo()
+{
+    window.openDialog("chrome://navigator/content/pageInfo.xul", "_blank",
+                      "dialog=no", null, "securityTab");
+}
+
+

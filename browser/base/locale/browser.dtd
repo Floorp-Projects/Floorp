@@ -242,6 +242,6 @@
 <!ENTITY textZoomEnlargeCmd.commandkey  "+">
 <!ENTITY textZoomEnlargeCmd.commandkey2 "="> <!-- + is above this key on many keyboards -->
 
-<!ENTITY textZoomReduceCmd.label        "Reduce Text Size">
-<!ENTITY textZoomReduceCmd.accesskey    "R">
+<!ENTITY textZoomReduceCmd.label        "Decrease Text Size">
+<!ENTITY textZoomReduceCmd.accesskey    "D">
 <!ENTITY textZoomReduceCmd.commandkey   "-">
