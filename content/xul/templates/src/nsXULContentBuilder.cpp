@@ -1992,7 +1992,7 @@ nsXULContentBuilder::IsElementInBuilder(nsIContent *aContent)
     nsCOMPtr<nsIContent> content = dont_QueryInterface(aContent);
     do {
         nsCOMPtr<nsIXULTemplateBuilder> builder;
-        xuldoc->GetTemplateBuilderFor(aContent, getter_AddRefs(builder));
+        xuldoc->GetTemplateBuilderFor(content, getter_AddRefs(builder));
         if (builder) {
             if (builder == NS_STATIC_CAST(nsIXULTemplateBuilder *, this))
                 return PR_TRUE; // We're the builder for this element.
