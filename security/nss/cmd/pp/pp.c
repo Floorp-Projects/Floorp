@@ -35,7 +35,7 @@
  * Pretty-print some well-known BER or DER encoded data (e.g. certificates,
  * keys, pkcs7)
  *
- * $Id: pp.c,v 1.2 2000/10/06 21:40:52 nelsonb%netscape.com Exp $
+ * $Id: pp.c,v 1.3 2001/09/20 22:00:05 relyea%netscape.com Exp $
  */
 
 #include "secutil.h"
@@ -152,8 +152,10 @@ int main(int argc, char **argv)
 			     SECU_PrintCertificateRequest);
     } else if (PORT_Strcmp (typeTag, SEC_CT_CRL) == 0) {
 	rv = SECU_PrintSignedData (outFile, &data, "CRL", 0, SECU_PrintCrl);
+#ifdef HAVE_EPV_TEMPLATE
     } else if (PORT_Strcmp(typeTag, SEC_CT_PRIVATE_KEY) == 0) {
 	rv = SECU_PrintPrivateKey(outFile, &data, "Private Key", 0);
+#endif
     } else if (PORT_Strcmp(typeTag, SEC_CT_PUBLIC_KEY) == 0) {
 	rv = SECU_PrintPublicKey(outFile, &data, "Public Key", 0);
     } else if (PORT_Strcmp(typeTag, SEC_CT_PKCS7) == 0) {
