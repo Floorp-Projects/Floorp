@@ -60,19 +60,7 @@ nsresult
 nsMessengerBootstrap::Initialize(nsIAppShellService*,
                                  nsICmdLineService*)
 {
-#if 0
-    // not needed?
-	nsresult rv;
-
-    nsCOMPtr<nsISupports> bootstrapper;
-    rv = this->QueryInterface(kISupportsIID, getter_AddRefs(bootstrapper));
-    if (NS_SUCCEEDED(rv) && bootstrapper) {
-      rv = nsServiceManager::RegisterService(NS_MESSENGERBOOTSTRAP_PROGID, bootstrapper);
-    }
-	return rv;
-#else
     return NS_OK;
-#endif
 }
 
 nsresult

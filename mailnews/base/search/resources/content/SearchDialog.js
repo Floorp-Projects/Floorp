@@ -25,6 +25,8 @@ var folderDSProgID         = rdfDatasourcePrefix + "mailnewsfolders";
 var gSearchDatasource;
 
 var nsIMsgFolder = Components.interfaces.nsIMsgFolder;
+var nsIMsgWindow = Components.interfaces.nsIMsgWindow;
+var nsIMsgRDFDataSource = Components.interfaces.nsIMsgRDFDataSource;
 var nsMsgSearchScope = Components.interfaces.nsMsgSearchScope;
 
 var gFolderDatasource;
@@ -45,16 +47,16 @@ function searchOnLoad()
     
     onMore(null);
 
-    gThreadTree = document.getElementById("threadTree");
 }
 
 function initializeSearchWindowWidgets()
 {
     gFolderPicker = document.getElementById("searchableFolders");
-    gResultsTree = document.getElementById("threadTree");
+    gThreadTree = document.getElementById("threadTree");
 
-    msgWindow = Components.classes[msgWindowProgID].createInstance(Components.interfaces.nsIMsgWindow);
+    msgWindow = Components.classes[msgWindowProgID].createInstance(nsIMsgWindow);
     msgWindow.statusFeedback = gStatusFeedback;
+    msgWindow.SetDOMWindow(window);
 }
 
 
@@ -132,10 +134,14 @@ function onSearch(event)
     // tell the search session what the new scope is
     gSearchSession.addScopeTerm(GetScopeForFolder(gCurrentFolder),
                                 gCurrentFolder);
-    
+
+    // reflect the search widgets back into the search session
     saveSearchTerms(gSearchSession.searchTerms, gSearchSession);
 
     gSearchSession.search(msgWindow);
+    // refresh the tree after the search starts, because initiating the
+    // search will cause the datasource to clear itself
+    gThreadTree.setAttribute("ref", gThreadTree.getAttribute("ref"));
 }
 
 
@@ -153,17 +159,20 @@ function setupDatasource() {
     gSearchDatasource = Components.classes[rdfDatasourcePrefix + "msgsearch"].createInstance(Components.interfaces.nsIRDFDataSource);
 
     dump("The root is " + gSearchDatasource.URI + "\n");
-    gResultsTree.setAttribute("ref", gSearchDatasource.URI);
+    gThreadTree.setAttribute("ref", gSearchDatasource.URI);
     
     // the thread pane needs to use the search datasource (to get the
     // actual list of messages) and the message datasource (to get any
     // attributes about each message)
     gSearchSession = Components.classes[searchSessionProgID].createInstance(Components.interfaces.nsIMsgSearchSession);
     
-    gResultsTree.database.AddDataSource(gSearchDatasource);
+    setMsgDatasourceWindow(gSearchDatasource, msgWindow);
+    gThreadTree.database.AddDataSource(gSearchDatasource);
 
     var messageDatasource = Components.classes[rdfDatasourcePrefix + "mailnewsmessages"].createInstance(Components.interfaces.nsIRDFDataSource);
-    gResultsTree.database.AddDataSource(messageDatasource);
+    setMsgDatasourceWindow(messageDatasource, msgWindow);
+    
+    gThreadTree.database.AddDataSource(messageDatasource);
     
     // the datasource is a listener on the search results
     searchListener = gSearchDatasource.QueryInterface(Components.interfaces.nsIMsgSearchNotify);
@@ -210,4 +219,14 @@ function GetFolderDatasource()
 function IsThreadAndMessagePaneSplitterCollapsed()
 {
     return true;
+}
+
+function setMsgDatasourceWindow(ds, msgwindow)
+{
+    try {
+        var msgDatasource = ds.QueryInterface(nsIMsgRDFDataSource);
+        msgDatasource.window = msgwindow;
+    } catch (ex) {
+        dump("error setting DS on " + ds + ": " + ex + "\n");
+    }
 }

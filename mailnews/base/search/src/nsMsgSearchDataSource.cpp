@@ -111,6 +111,9 @@ nsMsgSearchDataSource::OnSearchDone(nsresult status)
 NS_IMETHODIMP
 nsMsgSearchDataSource::OnNewSearch()
 {
+    // we could individually unassert each of the arcs in the array,
+    // but as a speed optimization, we're going to let the front end
+    // handle that, probably by rerooting the tree
     mSearchResults->Clear();
     return NS_OK;
 }
@@ -131,7 +134,12 @@ nsMsgSearchDataSource::GetTargets(nsIRDFResource *aSource,
                                   PRBool aTruthValue,
                                   nsISimpleEnumerator **aResult)
 {
-    return NS_NewArrayEnumerator(aResult, mSearchResults);
+    PRUint32 count;
+    mSearchResults->Count(&count);
+    if (count == 0)
+        return NS_NewEmptyEnumerator(aResult);
+    else
+        return NS_NewArrayEnumerator(aResult, mSearchResults);
 }
 
 

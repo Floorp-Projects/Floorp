@@ -298,7 +298,12 @@ nsMsgRDFDataSource::GetIsThreaded(PRBool *threaded)
 	rv = GetMessageView(getter_AddRefs(messageView));
 	if (NS_FAILED(rv)) return rv;
 
+    if (messageView)
 	return messageView->GetShowThreads(threaded);
+    else
+        *threaded = PR_FALSE;
+    
+    return NS_OK;
 }
 
 nsresult

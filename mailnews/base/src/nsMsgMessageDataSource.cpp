@@ -486,16 +486,16 @@ NS_IMETHODIMP nsMsgMessageDataSource::GetTargets(nsIRDFResource* source,
 	{
 		nsCOMPtr<nsIMessageView> messageView;
 		rv = GetMessageView(getter_AddRefs(messageView));
-		if(NS_FAILED(rv))
-			return rv;
+    if (NS_SUCCEEDED(rv) && messageView) {
 
-		rv = messageView->GetMessages(source, mWindow, targets);
-		if(NS_FAILED(rv))
-			return rv;
-		//if we don't have any targets, we will have to continue.
-		if(NS_SUCCEEDED(rv) && *targets)
-			return rv;
-	}
+      rv = messageView->GetMessages(source, mWindow, targets);
+      if(NS_FAILED(rv))
+        return rv;
+      //if we don't have any targets, we will have to continue.
+      if(NS_SUCCEEDED(rv) && *targets)
+        return rv;
+    }
+  }
 
 	nsCOMPtr<nsIMessage> message(do_QueryInterface(source, &rv));
 	if (NS_SUCCEEDED(rv)) {
@@ -964,20 +964,16 @@ nsresult nsMsgMessageDataSource::OnChangeStatusString(nsIRDFResource *resource, 
 	nsCOMPtr<nsIRDFNode> newNode;
 
 	rv = createStatusNodeFromFlag(newFlag, getter_AddRefs(newNode), PR_FALSE);
-	if(NS_FAILED(rv))
-		return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
 	rv = NotifyPropertyChanged(resource, kNC_Status, newNode);
-
-	if(NS_FAILED(rv))
-		return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
 	rv = createStatusNodeFromFlag(newFlag, getter_AddRefs(newNode), PR_TRUE);
-
-	if(NS_FAILED(rv))
-		return rv;
+  NS_ENSURE_TRUE(rv, rv);
 
 	rv = NotifyPropertyChanged(resource, kNC_StatusString, newNode);
+  NS_ENSURE_TRUE(rv, rv);
 	
 	return rv;
 }
