@@ -37,7 +37,8 @@
 //
 
 #include "nsHTMLContainerFrame.h"
-
+#include "nsIStyleContext.h"
+#include "nsCOMPtr.h"
 
 class nsToolboxFrame : public nsHTMLContainerFrame
 {
@@ -53,14 +54,60 @@ public:
                     nsIRenderingContext& aRenderingContext,
                     const nsRect& aDirtyRect,
                     nsFramePaintLayer aWhichLayer);
+  NS_IMETHOD  HandleEvent(nsIPresContext& aPresContext, 
+                          nsGUIEvent*     aEvent,
+                          nsEventStatus&  aEventStatus);
+
+  NS_IMETHOD  ReResolveStyleContext ( nsIPresContext* aPresContext, 
+                                        nsIStyleContext* aParentContext) ;
+
+  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, // Overridden to capture events
+                              nsIFrame**     aFrame);
 
 protected:
+  enum { kGrippyWidthInTwips = 200 } ;
+  enum { kNoGrippyHilighted = -1 } ;
+
+  struct TabInfo {
+    TabInfo ( ) : mCollapsed(PR_TRUE), mToolbarHeight(0), mToolbar(nsnull) { };
+  
+    nsIFrame*             mToolbar;
+    nsRect                mBoundingRect;
+    PRBool                mCollapsed;
+    unsigned int          mToolbarHeight;
+  };
+  
   nsToolboxFrame();
   virtual ~nsToolboxFrame();
 
-  virtual PRIntn GetSkipSides() const;
+  PRIntn GetSkipSides() const;
 
-    // pass-by-value not allowed for a coordinator because it corresponds 1-to-1
+  void RefreshStyleContext(nsIPresContext* aPresContext,
+                            nsIAtom *         aNewContentPseudo,
+                            nsCOMPtr<nsIStyleContext>* aCurrentStyle,
+                            nsIContent *      aContent,
+                            nsIStyleContext*  aParentStyle) ;
+
+  void DrawGrippies ( nsIPresContext& aPresContext, nsIRenderingContext & aContext ) const ;
+  void DrawGrippy ( nsIPresContext& aPresContext, nsIRenderingContext & aContext, 
+                      const nsRect & aBoundingRect, PRBool aDrawHilighted ) const ;
+  void CollapseToolbar ( TabInfo & inTab ) ; 
+  void ExpandToolbar ( TabInfo & inTab ) ; 
+
+  void OnMouseMove ( nsPoint & aMouseLoc ) ;
+  void OnMouseExit ( ) ;
+  void OnMouseLeftClick ( nsPoint & aMouseLoc ) ;
+
+    // style context for the normal state and rollover state of grippies
+  nsCOMPtr<nsIStyleContext>    mGrippyNormalStyle;
+  nsCOMPtr<nsIStyleContext>    mGrippyRolloverStyle;
+
+  PRUint32 mSumOfToolbarHeights;
+  TabInfo  mGrippies[10];          //*** make this a list or something!!!!!!
+  PRUint32 mNumToolbars;
+  PRUint32 mGrippyHilighted;     // used to indicate which grippy the mouse is inside
+
+    // pass-by-value not allowed for a toolbox because it corresponds 1-to-1
     // with an element in the UI.
   nsToolboxFrame ( const nsToolboxFrame& aFrame ) ;	            // DO NOT IMPLEMENT
   nsToolboxFrame& operator= ( const nsToolboxFrame& aFrame ) ;  // DO NOT IMPLEMENT

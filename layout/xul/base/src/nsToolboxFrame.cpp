@@ -30,7 +30,8 @@
 #include "nsIHTMLReflow.h"
 #include "nsIReflowCommand.h"
 #include "nsHTMLIIDs.h"
-#include "nsCOMPtr.h"
+#include "nsIPresContext.h"
+#include "nsIWidget.h"
 
 
 //
@@ -58,6 +59,7 @@ NS_NewToolboxFrame ( nsIFrame*& aNewFrame )
 // Init, if necessary
 //
 nsToolboxFrame :: nsToolboxFrame ( )
+  : mSumOfToolbarHeights(0), mNumToolbars(0)
 {
 	//*** anything?
 }
@@ -75,6 +77,56 @@ nsToolboxFrame :: ~nsToolboxFrame ( )
 
 
 //
+// RefreshStyleContext
+//
+// Not exactly sure what this does ;)
+//
+void
+nsToolboxFrame :: RefreshStyleContext(nsIPresContext* aPresContext,
+                                            nsIAtom *         aNewContentPseudo,
+                                            nsCOMPtr<nsIStyleContext>* aCurrentStyle,
+                                            nsIContent *      aContent,
+                                            nsIStyleContext*  aParentStyle)
+{
+  nsCOMPtr<nsIStyleContext> newStyleContext ( dont_AddRef(aPresContext->ProbePseudoStyleContextFor(aContent,
+                                                                              aNewContentPseudo,
+                                                                              aParentStyle)) );
+  if (newStyleContext != *aCurrentStyle)
+    *aCurrentStyle = newStyleContext;
+    
+} // RefreshStyleContext
+
+
+//
+// ReResolveStyleContext
+//
+// When the style context changes, make sure that all of our styles are still up to date.
+//
+NS_IMETHODIMP
+nsToolboxFrame :: ReResolveStyleContext ( nsIPresContext* aPresContext, nsIStyleContext* aParentContext)
+{
+  nsCOMPtr<nsIStyleContext> old ( mStyleContext );
+  
+  // this re-resolves |mStyleContext|, so it may change
+  nsresult rv = nsFrame::ReResolveStyleContext(aPresContext, aParentContext); 
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if ( old != mStyleContext ) {
+    nsCOMPtr<nsIAtom> grippyRolloverPseudo ( dont_AddRef(NS_NewAtom(":TOOLBOX-ROLLOVER")) );
+    RefreshStyleContext(aPresContext, grippyRolloverPseudo, &mGrippyRolloverStyle, mContent, mStyleContext);
+
+    nsCOMPtr<nsIAtom> grippyNormalPseudo ( dont_AddRef(NS_NewAtom(":TOOLBOX-NORMAL")) );
+    RefreshStyleContext(aPresContext, grippyNormalPseudo, &mGrippyNormalStyle, mContent, mStyleContext);
+  }
+  
+  return NS_OK;
+  
+} // ReResolveStyleContext
+
+
+//
 // Paint
 //
 // Paint our background and border like normal frames, but before we draw the
@@ -86,35 +138,65 @@ nsToolboxFrame :: Paint ( nsIPresContext& aPresContext,
                             const nsRect& aDirtyRect,
                             nsFramePaintLayer aWhichLayer)
 {
-  if (eFramePaintLayer_Underlay == aWhichLayer) {
-    const nsStyleDisplay* disp = (const nsStyleDisplay*)
-      mStyleContext->GetStyleData(eStyleStruct_Display);
-    if (disp->mVisible && mRect.width && mRect.height) {
-      // Paint our background and border
-      PRIntn skipSides = GetSkipSides();
-      const nsStyleColor* color = (const nsStyleColor*)
-        mStyleContext->GetStyleData(eStyleStruct_Color);
-      const nsStyleSpacing* spacing = (const nsStyleSpacing*)
-        mStyleContext->GetStyleData(eStyleStruct_Spacing);
+  // take care of bg painting, borders and children
+  nsresult retVal = nsHTMLContainerFrame::Paint ( aPresContext, aRenderingContext, aDirtyRect, aWhichLayer );
 
-      nsRect  rect(0, 0, mRect.width, mRect.height);
-      nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                      aDirtyRect, rect, *color, *spacing, 0, 0);
-      nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                  aDirtyRect, rect, *spacing, mStyleContext, skipSides);
-    }
-  }
-
-  //*** draw grippies
-  //*** draw collapsed area under toolbars (is that a frame itself???)
+  // now draw what makes us special
+  DrawGrippies ( aPresContext, aRenderingContext );
+  // DrawCollapsedBar
   
-  // Now paint the toolbars. Note that child elements have the opportunity to
-  // override the visibility property and display even if their parent is
-  // hidden
-  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
-  return NS_OK;
+  return retVal;
   
 } // Paint
+
+
+//
+// DrawGrippies
+//
+// Redraws all the grippies in the toolbox by iterating over each toolbar in the DOM 
+// and figuring out how to draw the grippies based on size/visibility information
+// 
+void
+nsToolboxFrame :: DrawGrippies (  nsIPresContext& aPresContext, nsIRenderingContext & aRenderingContext ) const
+{
+  for ( int i = 0; i < mNumToolbars; ++i ) {
+    const TabInfo & grippy = mGrippies[i];
+    
+    PRBool hilight = (mGrippyHilighted == i) ? PR_TRUE : PR_FALSE;
+    DrawGrippy ( aPresContext, aRenderingContext, grippy.mBoundingRect, hilight );
+    
+  } // for each child
+
+} // DrawGrippies
+
+
+//
+// DrawGrippy
+//
+// Draw a single grippy in the given rectangle, either with or without rollover feedback.
+//
+void
+nsToolboxFrame :: DrawGrippy (  nsIPresContext& aPresContext, nsIRenderingContext & aRenderingContext,
+                                  const nsRect & aBoundingRect, PRBool aDrawHilighted ) const
+{
+  aRenderingContext.PushState();
+  
+  nsCOMPtr<nsIStyleContext> style ( aDrawHilighted ? mGrippyRolloverStyle : mGrippyNormalStyle ) ;
+  
+  const nsStyleColor*   grippyColor   = (const nsStyleColor*)style->GetStyleData(eStyleStruct_Color);
+  const nsStyleSpacing* grippySpacing = (const nsStyleSpacing*)style->GetStyleData(eStyleStruct_Spacing);
+  const nsStyleFont*    grippyFont    = (const nsStyleFont*)style->GetStyleData(eStyleStruct_Font);
+
+  nsToolboxFrame* nonConstSelf = NS_CONST_CAST(nsToolboxFrame*, this);
+  nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, nonConstSelf,
+                                    aBoundingRect, aBoundingRect, *grippyColor, *grippySpacing, 0, 0);
+  nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, nonConstSelf,
+                                aBoundingRect, aBoundingRect, *grippySpacing, style, 0);
+
+  PRBool clipState;
+  aRenderingContext.PopState(clipState);
+
+} // DrawGrippy
 
 
 //
@@ -143,14 +225,24 @@ nsToolboxFrame :: GetSkipSides() const
 // the toolbox for a "expando area" in which the grippies that represent the 
 // collapsed toolbars reside.
 //
+// *** IMPORTANT IMPORTANT IMPORTANT ***
+// We need a way to distinguish in the dom between a toolbar being hidden and a toolbar
+// being collapsed. Right now I'm using "visible" as "collapsed" since there is no
+// way to hide a toolbar from menus, etc.
+//
 NS_IMETHODIMP 
 nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
                               nsHTMLReflowMetrics&     aDesiredSize,
                               const nsHTMLReflowState& aReflowState,
                               nsReflowStatus&          aStatus)
 {
+  //*** This temporary and used to initialize the psuedo-styles we use. But where else
+  //*** should it go?
+  ReResolveStyleContext(&aPresContext, mStyleContext);
+
   // start with a reasonable desired size (in twips), which will be changed to 
   // the size of our children plus some other stuff below.
+  mSumOfToolbarHeights = 0;
   aDesiredSize.width = 6000;
   aDesiredSize.height = 3000;
   aDesiredSize.ascent = 3000;
@@ -160,9 +252,11 @@ nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
     aDesiredSize.maxElementSize->height = 0;
   }
 
-  // Resize our frame based on our children
+  // Resize our frame based on our children (remember to leave room for the grippy on the right)
   nsIFrame* childFrame = mFrames.FirstChild();
-  nsPoint offset ( 200, 0 );   // offset 10 pixels in to leave room for grippy
+  nsPoint offset ( kGrippyWidthInTwips, 0 );
+  PRUint32 grippyIndex = 0;
+  PRBool anyCollapsedToolbars = PR_FALSE;
   while ( childFrame ) {
       
     nsSize maxSize(aReflowState.availableWidth, aReflowState.availableHeight);
@@ -176,21 +270,43 @@ nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
       htmlReflow->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);  // XXX Should we be sending the DidReflow?
     }
 
+    // set the toolbar to be the width/height desired, then set it's corresponding grippy to match
     nsRect rect(offset.x, offset.y, aDesiredSize.width, aDesiredSize.height);
     childFrame->SetRect(rect);
+
+    nsRect grippyBounds(0, offset.y, kGrippyWidthInTwips, aDesiredSize.height);
+    TabInfo & grippy = mGrippies[grippyIndex];
+    grippy.mToolbar = childFrame;
+    grippy.mBoundingRect = nsRect(0, offset.y, kGrippyWidthInTwips, aDesiredSize.height);
+    grippy.mCollapsed = PR_FALSE;
+    grippy.mToolbarHeight = aDesiredSize.height;
 
     offset.y += aDesiredSize.height;
     
     // advance to the next child
     childFrame->GetNextSibling(childFrame);
+    ++grippyIndex;
     
   } // for each child
 
+  // If there are any collapsed toolbars, we need to fix up the positions of the
+  // tabs associated with them to lie horizontally (make them as wide as their
+  // corresponding toolbar is tall).
+  if ( anyCollapsedToolbars ) {
+  
+    //*** fix mBoundingRect to lie sideways
+  
+  }
+  
   // let our toolbox be as wide as our parent says we can be and as tall
-  // as our child toolbars
+  // as our child toolbars. If any of the toolbars are not visible (collapsed), 
+  // we need to add some extra room for the bottom bar.
   aDesiredSize.width = aReflowState.availableWidth - 50;
-  aDesiredSize.height = offset.y;
+  aDesiredSize.height = anyCollapsedToolbars ? offset.y + 200 : offset.y;
 
+  // remember how many toolbars we have
+  mNumToolbars = grippyIndex;
+  
   aStatus = NS_FRAME_COMPLETE;
 
   return NS_OK;
@@ -198,3 +314,186 @@ nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
 } // Reflow
 
 
+//
+// GetFrameForPoint
+//
+// Override to process events in our own frame
+//
+NS_IMETHODIMP
+nsToolboxFrame :: GetFrameForPoint(const nsPoint& aPoint, 
+                                  nsIFrame**     aFrame)
+{
+  nsIFrame* incoming = *aFrame;
+  nsresult retVal = nsHTMLContainerFrame::GetFrameForPoint(aPoint, aFrame);
+  
+  if ( retVal == NS_ERROR_FAILURE ) {
+    *aFrame = this;
+    retVal = NS_OK;
+  }
+    
+  return retVal;
+}
+
+
+//
+// HandleEvent
+//
+// 
+NS_IMETHODIMP
+nsToolboxFrame :: HandleEvent ( nsIPresContext& aPresContext, 
+                                   nsGUIEvent*     aEvent,
+                                   nsEventStatus&  aEventStatus)
+{
+  if ( !aEvent )
+    return nsEventStatus_eIgnore;
+ 
+  switch ( aEvent->message ) {
+
+//  case NS_MOUSE_LEFT_CLICK:
+    case NS_MOUSE_LEFT_BUTTON_UP:
+      OnMouseLeftClick ( aEvent->point );
+      break;
+    
+    case NS_MOUSE_MOVE:
+      OnMouseMove ( aEvent->point );
+      break;
+      
+    case NS_MOUSE_EXIT:
+      OnMouseExit ( );
+      break;
+
+  } // case of which event
+
+  return nsEventStatus_eIgnore;
+  
+} // HandleEvent
+
+
+//
+// OnMouseMove
+//
+// Handle mouse move events for hilighting and unhilighting the grippies
+//
+void
+nsToolboxFrame :: OnMouseMove ( nsPoint & aMouseLoc )
+{
+	for ( int i = 0; i < mNumToolbars; ++i ) {
+		if ( mGrippies[i].mBoundingRect.Contains(aMouseLoc) ) {
+			if ( i != mGrippyHilighted ) {
+				// unhilight the old one
+				if ( mGrippyHilighted != kNoGrippyHilighted )
+					Invalidate ( mGrippies[mGrippyHilighted].mBoundingRect, PR_FALSE );
+					
+				// hilight the new one and remember it
+				mGrippyHilighted = i;
+				Invalidate ( mGrippies[i].mBoundingRect, PR_FALSE );
+			} // if in a new tab
+		}
+	} // for each toolbar
+
+} // OnMouseMove
+
+
+//
+// OnMouseLeftClick
+//
+// Check if a click is in a grippy and expand/collapse appropriately.
+//
+void
+nsToolboxFrame :: OnMouseLeftClick ( nsPoint & aMouseLoc )
+{
+	for ( int i = 0; i < mNumToolbars; ++i ) {
+		if ( mGrippies[i].mBoundingRect.Contains(aMouseLoc) ) {
+			TabInfo & clickedTab = mGrippies[i];			
+			if ( clickedTab.mCollapsed )
+				ExpandToolbar ( clickedTab );
+			else
+				CollapseToolbar ( clickedTab );
+			
+			// don't keep repeating this process since toolbars have now be
+			// relaid out and a new toolbar may be under the current mouse
+			// location!
+			break;
+		}
+	}
+	
+} // OnMouseLeftClick
+
+
+//
+// OnMouseExit
+//
+// Update the grippies that may have been hilighted while the mouse was within the
+// manager.
+//
+void
+nsToolboxFrame :: OnMouseExit ( )
+{
+	if ( mGrippyHilighted != kNoGrippyHilighted ) {
+		Invalidate ( mGrippies[mGrippyHilighted].mBoundingRect, PR_FALSE );
+		mGrippyHilighted = kNoGrippyHilighted;
+	}
+
+} // OnMouseExit
+
+
+
+//
+// CollapseToolbar
+//
+// Given the tab that was clicked on, collapse its corresponding toolbar. This
+// assumes that the tab is expanded.
+//
+void
+nsToolboxFrame :: CollapseToolbar ( TabInfo & inTab ) 
+{
+#if 0
+  nsCOMPtr<nsIWidget> widget ( inTab.mToolbar );
+  if ( widget ) {
+    // mark the tab as collapsed. We don't actually have to set the new
+    // bounding rect because that will be done for us when the bars are
+    // relaid out.
+    inTab.mCollapsed = PR_TRUE;
+    ++mTabsCollapsed;
+    
+    // hide the toolbar
+    widget->Show(PR_FALSE);
+    
+    DoLayout();
+    
+    if ( mListener )
+      mListener->NotifyToolbarManagerChangedSize(this);
+  } 
+#endif
+ 
+} // CollapseToolbar
+
+
+//
+// ExpandToolbar
+//
+// Given the collapsed (horizontal) tab that was clicked on, expand its
+// corresponding toolbar. This assumes the tab is collapsed.
+//
+void
+nsToolboxFrame :: ExpandToolbar ( TabInfo & inTab ) 
+{
+#if 0
+  nsCOMPtr<nsIWidget> widget ( inTab.mToolbar );
+  if ( widget ) {
+    // mark the tab as expanded. We don't actually have to set the new
+    // bounding rect because that will be done for us when the bars are
+    // relaid out.
+    inTab.mCollapsed = PR_FALSE;
+    --mTabsCollapsed;
+    
+    // show the toolbar
+    widget->Show(PR_TRUE);
+    
+    DoLayout();
+    
+    if ( mListener )
+      mListener->NotifyToolbarManagerChangedSize(this);
+  } 
+#endif
+} // ExpandToolbar
