@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.276 $ ';
+$::UtilsVersion = '$Revision: 1.277 $ ';
 
 package TinderUtils;
 
@@ -363,8 +363,7 @@ sub SetupEnv {
         $ENV{BUILD_OFFICIAL}   = 1;
         $ENV{MOZILLA_OFFICIAL} = 1;
       if ($Settings::OS =~ /^WIN/) {
-          $ENV{MOZ_PROFILE}      = 1;
-          $ENV{PDBFILE}      = "NONE";
+          $ENV{MOZ_DEBUG_SYMBOLS}      = 1;
       }
     }
 
@@ -644,7 +643,7 @@ sub mail_build_started_message {
     close LOG;
 
     if ($Settings::blat ne "" && $Settings::use_blat) {
-        system("$Settings::blat $msg_log -t $Settings::Tinderbox_server");
+        system("$Settings::blat $msg_log -to $Settings::Tinderbox_server");
     } else {
         system "$Settings::mail $Settings::Tinderbox_server "
             ." < $msg_log";
@@ -748,7 +747,7 @@ sub mail_build_finished_message {
 
     if ($Settings::ReportStatus and $Settings::ReportFinalStatus) {
         if ($Settings::blat ne "" && $Settings::use_blat) {
-            system("$Settings::blat $logfile.last -t $Settings::Tinderbox_server");
+            system("$Settings::blat $logfile.last -to $Settings::Tinderbox_server");
         } else {
             system "$Settings::mail $Settings::Tinderbox_server "
                 ." < $logfile.last";
@@ -1102,15 +1101,11 @@ sub get_profile_dir {
             }
         }
         if ($Settings::VendorName) {
-          $profile_dir .= "\\$Settings::VendorName\\$Settings::ProductName\\Profiles\\$Settings::MozProfileName";
+          $profile_dir .= "\\$Settings::VendorName";
         }
-        else {
-          $profile_dir .= "\\$Settings::ProductName\\Profiles\\$Settings::MozProfileName";
-        }
+        $profile_dir .= "\\$Settings::ProductName\\Profiles\\";
         $profile_dir =~ s|\\|/|g;
-        if ($Settings::VendorName) {
-          ($profile_dir) = <"$profile_dir*">;
-        }
+        ($profile_dir) = <"$profile_dir*$Settings::MozProfileName*">;
     } elsif ($Settings::OS eq "BeOS") {
         $profile_dir = "/boot/home/config/settings/Mozilla/$Settings::MozProfileName";
     } elsif ($Settings::OS eq "Darwin") {
