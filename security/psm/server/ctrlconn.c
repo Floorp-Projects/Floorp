@@ -1115,8 +1115,9 @@ SSM_InitNSS(char* certpath, SSMControlConnection *ctrl, PRInt32 policy)
 	    if (SECMOD_AddNewModule(modName, fullModuleName, 0, 0) != SECSuccess) {
 	        SSM_DEBUG("Couldn't load the module at <%s>",fullModuleName);
 	    }
-	    //We want to keep the modName around in gLoadableRootsModule so that
-	    //we can delete it from secmod.db on the way out.
+	    /*We want to keep the modName around in gLoadableRootsModule 
+             *so that we can delete it from secmod.db on the way out.
+             */
 	    modName = NULL;
 	}
 
