@@ -198,8 +198,9 @@ sub RebuildHook {
 <B>Password:</B> <INPUT NAME=password TYPE=password> <BR>
 <INPUT TYPE=HIDDEN NAME=command VALUE=repophook>
 Repopulate the hook from scratch.<p>
-<font color=red size=+2>This can be very dangerous.</font>  You should
-usually only need to do this to populate a new Bonsai branch.
+<font color=red size=+2>This can be very dangerous.</font>
+<br>
+You should usually only need to do this to populate a new Bonsai branch.
 <p>
 <b>Use any checkin since:</b>
 <INPUT NAME=startfrom VALUE=\"$lg_timestamp\">
@@ -224,10 +225,9 @@ sub RebuildHistory {
 Recreate the entire list of every checkin ever done to the
 $::TreeInfo{$::TreeID}{repository} repository from scratch.
 <p>
-<font color=red size=+2>This can take an incredibly long time.</font>  You
-should
-usually only need to do this when first introducing an entire CVS repository
-into Bonsai.
+<font color=red size=+2>This can take an incredibly long time.</font>
+<br>
+You should usually only need to do this when first introducing an entire CVS repository into Bonsai.
 <p>
 <b>Ignore checkins earlier than:</b>
 <INPUT NAME=startfrom VALUE=\"$timestamp\">

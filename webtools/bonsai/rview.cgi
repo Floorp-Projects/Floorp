@@ -104,15 +104,16 @@ $dir_tail = "" unless defined $dir_tail;
 my $link_path = "";
 foreach my $path (split('/',$dir_head)) {
     $link_path .= $path;
-    $output .= "<A HREF='rview.cgi?dir=$link_path$rootstr$revstr'>$path</A>/ ";
+    $output .= "<A HREF='rview.cgi?dir=" . &url_quote($link_path) .
+        "$rootstr$revstr'>$path</A>/ ";
     $link_path .= '/';
 }
 chop ($output);
-$output .= " $dir_tail/ $s ";
+$output .= " " . &html_quote($dir_tail) . "/ $s ";
 $output .= "</DIV>";
 
-print $output;
-print '<table width="100%"><tr><td width="70%">';
+print "$output\n";
+print '<table width="100%"><tr><td width="70%" VALIGN=TOP><HR>';
 
 my $other_dir;
 
@@ -130,10 +131,10 @@ if (-d "$CVS_ROOT/$dir") {
 }
 
 print "
-<TABLE CELLPADDING=0 CELLSPACING=0>
-<TR><TD>
-Goto Directory:
-</TD><TD>
+<TABLE CELLPADDING=0 CELLSPACING=5>
+<TR>
+<TD>Goto Directory:</TD>
+<TD>
 <FORM action=rview.cgi method=get>
 <INPUT name=dir value='$dir' size=30>
 <INPUT name=rev value='$rev' type=hidden>
@@ -141,16 +142,19 @@ Goto Directory:
 <INPUT name=cvsroot value='$CVS_ROOT' type=hidden>
 <INPUT type=submit value='chdir'>
 </FORM>
-</TD></TR>
-Branch:
-</TD><TD>
-<FORM action=rview.cgi method=get><TR><TD>
+</TD>
+</TR>
+<TR>
+<TD>Branch:</TD>
+<TD>
+<FORM action=rview.cgi method=get>
 <INPUT name=rev value='$rev' size=30>
 <INPUT name=dir value='$dir' type=hidden>
 <INPUT name=module value='$::TreeID' type=hidden>
 <INPUT name=cvsroot value='$CVS_ROOT' type=hidden>
 <INPUT type=submit value='Set Branch'>
 </FORM>
+</TD>
 </TR>
 </TABLE>
 
@@ -174,8 +178,8 @@ my $split;
 if( @dirs != 0 ){
     $j = 1;
     $split = int(@dirs/4)+1;
-    print "<P><FONT SIZE=+1><B>Directories:</B></FONT><table><TR VALIGN=TOP><td>";
-
+    print "<P><FONT SIZE=+1><B>Directories:</B></FONT>\n";
+    print "<table>\n<TR VALIGN=TOP>\n<td>\n";
 
     for my $i (@dirs){
         $::FORM{"dir"} = ($dir ne "" ? "$dir/$i" : $i);
@@ -187,12 +191,11 @@ if( @dirs != 0 ){
         $j++;
     }
     $::FORM{"dir"} = $dir;
-    print "\n</tr></table>\n";
+    print "\n</tr>\n</table>\n";
 }
 
-
-print "<P><FONT SIZE=+1><B>Files:</B></FONT>";
-print "<table><TR VALIGN=TOP><td>";
+print "<P><FONT SIZE=+1><B>Files:</B></FONT>\n";
+print "<table>\n<TR VALIGN=TOP>\n<td>\n";
 my @files = <*,v>;
 $j = 1;
 $split = int(@files/4)+1;
@@ -200,16 +203,16 @@ $split = int(@files/4)+1;
 for $_ (@files){
     $_ =~ s/\,v//;
     print qq{<dt><a href="$registryurl/file.cgi?cvsroot=$CVS_ROOT&file=$_&dir=$dir$revstr"}
-          . " onclick=\"return js_file_menu('$dir','$_','$rev','$CVS_ROOT',event)\">\n";
+          . " onclick=\"return js_file_menu('$dir','$_','$rev','$CVS_ROOT',event)\">";
     print "$_</a>\n";
     if( $j % $split == 0 ){
-        print "\n</td><td>\n";
+        print "</td>\n<td>\n";
     }
     $j++;
 }
-print "\n</tr></table>\n</td><td>";
+print "</td>\n</tr></table>\n</td>\n<td>\n";
 cvsmenu("");
-print "\n</td></tr></table>\n";
+print "</td>\n</tr></table>\n";
 
 PutsTrailer();
 
