@@ -302,7 +302,7 @@ function GetPrintSettings()
   return gPrintSettings;
 }
 
-function AbPrintCard()
+function AbPrintCardInternal(doPrintPreview, msgType)
 {
   var selectedItems = GetSelectedAbCards();
   var numSelected = selectedItems.length;
@@ -340,9 +340,20 @@ function AbPrintCard()
 	printEngineWindow = window.openDialog("chrome://messenger/content/msgPrintEngine.xul",
 										"",
 										"chrome,dialog=no,all",
-										totalCard, selectionArray, statusFeedback, gPrintSettings);
+										totalCard, selectionArray, statusFeedback, 
+                    gPrintSettings, doPrintPreview, msgType);
 
 	return;
+}
+
+function AbPrintCard()
+{
+  AbPrintCardInternal(false, Components.interfaces.nsIMsgPrintEngine.MNAB_PRINT_AB_CARD);
+}
+
+function AbPrintPreviewCard()
+{
+  AbPrintCardInternal(true, Components.interfaces.nsIMsgPrintEngine.MNAB_PRINTPREVIEW_AB_CARD);
 }
 
 function CreatePrintCardUrl(card)
@@ -351,7 +362,7 @@ function CreatePrintCardUrl(card)
   return url;
 }
 
-function AbPrintAddressBook()
+function AbPrintAddressBookInternal(doPrintPreview, msgType)
 {
   var addressbook = Components.classes["@mozilla.org/addressbook;1"].createInstance(Components.interfaces.nsIAddressBook);
   var uri = GetAbViewURI();
@@ -377,9 +388,19 @@ function AbPrintAddressBook()
 	printEngineWindow = window.openDialog("chrome://messenger/content/msgPrintEngine.xul",
 										"",
 										"chrome,dialog=no,all",
-										1, [printUrl], statusFeedback, gPrintSettings);
+										1, [printUrl], statusFeedback, gPrintSettings, doPrintPreview, msgType);
 
 	return;
+}
+
+function AbPrintAddressBook()
+{
+  AbPrintAddressBookInternal(false, Components.interfaces.nsIMsgPrintEngine.MNAB_PRINT_ADDRBOOK);
+}
+
+function AbPrintPreviewAddressBook()
+{
+  AbPrintAddressBookInternal(true, Components.interfaces.nsIMsgPrintEngine.MNAB_PRINTPREVIEW_ADDRBOOK);
 }
 
 function AbExport()

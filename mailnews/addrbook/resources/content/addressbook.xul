@@ -57,6 +57,7 @@ Contributor(s):
   <stringbundleset id="stringbundleset">
     <stringbundle id="bundle_addressBook" src="chrome://messenger/locale/addressbook/addressBook.properties"/>
     <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
+    <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
   </stringbundleset>
 
 <script type="application/x-javascript" src="chrome://messenger/content/accountUtils.js"/>
@@ -64,6 +65,7 @@ Contributor(s):
 <script type="application/x-javascript" src="chrome://messenger/content/addressbook/addressbook.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abCommon.js"/>
 <script type="application/x-javascript" src="chrome://communicator/content/contentAreaClick.js"/>
+<script type="application/x-javascript" src="chrome://communicator/content/printing.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/msgPrintEngine.js"/>
 
   <commandset id="addressBook">
@@ -76,9 +78,11 @@ Contributor(s):
   <commandset id="globalEditMenuItems"/>
     <command id="cmd_newNavigator"/>
     <command id="cmd_newEditor"/>
-    <command id="cmd_printSetup" oncommand="goPageSetup()"/>
+    <command id="cmd_printSetup" oncommand="NSPrintSetup()"/>
     <command id="cmd_printCard" oncommand="AbPrintCard()"/>
+    <command id="cmd_printPreviewCard" oncommand="AbPrintPreviewCard()"/>
     <command id="cmd_printAddressBook" oncommand="AbPrintAddressBook()"/>
+    <command id="cmd_printPreviewAddressBook" oncommand="AbPrintPreviewAddressBook()"/>
     <command id="cmd_quit"/>
     <command id="cmd_close" oncommand="AbClose()"/>
     <command id="cmd_properties" oncommand="goDoCommand('button_edit');"/>
@@ -147,9 +151,12 @@ Contributor(s):
                 <menuitem id="menu_close"/>
                 <menuseparator/>
         <!--Page setup gets overlaid here from platformGlobalOverlay.xul / -->
+        <menuitem id="printSetupMenuItem" label="&printSetupCmd.label;" accesskey="&printSetupCmd.accesskey;" command="cmd_printSetup"/>
         <menuitem id="printMenuItem" label="&printCardViewCmd.label;" accesskey="&printCardViewCmd.accesskey;" key="key_printCard" command="cmd_printCard"/>
-        <menuitem id="printAddressBook" label="&printAddressBook.label;" accesskey="&printAddressBook.accesskey;"
-                  command="cmd_printAddressBook"/>
+        <menuitem id="printAddressBook" label="&printAddressBook.label;" accesskey="&printAddressBook.accesskey;" command="cmd_printAddressBook"/>
+                <menuseparator/>
+        <menuitem id="printPreviewMenuItem" label="&printPreviewCardViewCmd.label;" command="cmd_printPreviewCard"/>
+        <menuitem id="printPreviewAddressBook" label="&printPreviewAddressBook.label;" command="cmd_printPreviewAddressBook"/>
             </menupopup>
         </menu>
         

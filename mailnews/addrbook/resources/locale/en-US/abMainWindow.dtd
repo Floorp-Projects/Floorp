@@ -41,13 +41,16 @@ Rights Reserved.
 <!ENTITY importCmd.accesskey				"I"> 
 <!ENTITY exportCmd.label                                "Export...">  
 <!ENTITY exportCmd.accesskey				"E"> 
-<!ENTITY printPreviewCmd.label                          ".Print Preview">  
 <!ENTITY printCardViewCmd.label                         "Print Card...">
 <!ENTITY printCardViewCmd.accesskey                     "p">
+<!ENTITY printPreviewCardViewCmd.label                  "Print Preview Card">
 <!-- LOCALIZATION NOTE (printCardViewCmd.key) : DONT_TRANSLATE -->  
 <!ENTITY printCardViewCmd.key                           "P">
 <!ENTITY printAddressBook.label                         "Print Address Book..."> 
 <!ENTITY printAddressBook.accesskey                     "A"> 
+<!ENTITY printPreviewAddressBook.label                  "Print Preview Address Book"> 
+<!ENTITY printSetupCmd.label                            "Page Setup...">
+<!ENTITY printSetupCmd.accesskey                        "u">
 
 <!-- Edit Menu -->
 <!ENTITY deleteAbCmd.label                              "Delete Address Book">  

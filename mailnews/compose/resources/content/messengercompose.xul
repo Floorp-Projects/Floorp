@@ -67,6 +67,7 @@
   <stringbundle id="bundle_offlinePrompts" src="chrome://messenger/locale/offline.properties"/>
 </stringbundleset>
 
+<script type="application/x-javascript" src="chrome://communicator/content/printing.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/accountUtils.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/mail-offline.js"/>
@@ -230,7 +231,7 @@
           <menuitem label="&sendNowCmd.label;" accesskey="&sendNowCmd.accesskey;" key="key_send" command="cmd_sendNow" id="menu-item-send-now"/>
           <menuitem label="&sendLaterCmd.label;" accesskey="&sendLaterCmd.accesskey;" key="key_sendLater" command="cmd_sendLater"/>
           <menuseparator/>
-          <!--Page setup gets overlaid here from platformGlobalOverlay.xul / -->
+          <menuitem id="printSetupMenuItem" label="&printSetupCmd.label;" accesskey="&printSetupCmd.accesskey;" command="Browser:PrintSetup"/>
           <menuitem id="printMenuItem" label="&printCmd.label;" accesskey="&printCmd.accesskey;" key="key_print" command="cmd_print"/>
         </menupopup>
       </menu>
