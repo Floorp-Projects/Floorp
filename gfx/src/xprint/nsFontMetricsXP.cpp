@@ -123,9 +123,11 @@ static PRBool
 FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
 {
 #ifdef REALLY_NOISY_FONTS
+#ifdef DEBUG
   printf("font = '");
   fputs(aFamily, stdout);
   printf("'\n");
+#endif
 #endif
   nsFontMetricsXP* metrics = (nsFontMetricsXP*) aData;
   if (metrics->mFontsCount == metrics->mFontsAlloc) {
@@ -281,8 +283,10 @@ nsFontMetricsXP::PickAppropriateSize(char **names, XFontStruct *fonts,
   // If the closest smaller font is closer than the closest larger
   // font, use it.
 #ifdef NOISY_FONTS
+#ifdef DEBUG
   printf(" *** desiredPix=%d(%d) min=%d max=%d *** ",
          desiredPix, desired, closestMin, closestMax);
+#endif
 #endif
   if (desiredPix - closestMin <= closestMax - desiredPix) {
     return names[minIndex];
@@ -337,7 +341,9 @@ void nsFontMetricsXP::RealizeFont()
     {
       mXHeight = nscoord(pr * f);
 #ifdef REALLY_NOISY_FONTS
+#ifdef DEBUG
       printf("xHeight=%d\n", mXHeight);
+#endif
 #endif
     }
   }
@@ -348,7 +354,9 @@ void nsFontMetricsXP::RealizeFont()
      * fonts served by xfsft (not xfstt!) */
     mUnderlineOffset = -NSToIntRound(pr * f);
 #ifdef REALLY_NOISY_FONTS
+#ifdef DEBUG
     printf("underlineOffset=%d\n", mUnderlineOffset);
+#endif
 #endif
   }
   else
@@ -365,7 +373,9 @@ void nsFontMetricsXP::RealizeFont()
     /* this will only be provided from adobe .afm fonts */
     mUnderlineSize = nscoord(PR_MAX(f, NSToIntRound(pr * f)));
 #ifdef REALLY_NOISY_FONTS
+#ifdef DEBUG
     printf("underlineSize=%d\n", mUnderlineSize);
+#endif
 #endif
   }
   else
@@ -380,7 +390,9 @@ void nsFontMetricsXP::RealizeFont()
   {
     mSuperscriptOffset = nscoord(PR_MAX(f, NSToIntRound(pr * f)));
 #ifdef REALLY_NOISY_FONTS
+#ifdef DEBUG
     printf("superscriptOffset=%d\n", mSuperscriptOffset);
+#endif
 #endif
   }
   else
@@ -392,7 +404,9 @@ void nsFontMetricsXP::RealizeFont()
   {
     mSubscriptOffset = nscoord(PR_MAX(f, NSToIntRound(pr * f)));
 #ifdef REALLY_NOISY_FONTS
+#ifdef DEBUG
     printf("subscriptOffset=%d\n", mSubscriptOffset);
+#endif
 #endif
   }
   else
@@ -1810,6 +1824,7 @@ PickASizeAndLoad(nsFontSearch* aSearch, nsFontStretch* aStretch,
 #endif /* 1 */
 
 #ifdef REALLY_NOISY_FONTS
+#ifdef DEBUG
   nsFontXP* result = s;
   if ((begin != nsnull) && (end != nsnull)) {
     for (s = begin; s < end; s++) {
@@ -1819,6 +1834,7 @@ PickASizeAndLoad(nsFontSearch* aSearch, nsFontStretch* aStretch,
   printf("%s[%s]: desired %d chose %d\n", aSearch->mFont->mName,
          aSearch->mFont->mCharSetInfo->mCharSet,
          desiredSize, result->mActualSize);
+#endif
 #endif /* 0 */
 }
 
@@ -2041,7 +2057,9 @@ TryCharSet(nsFontSearch* aSearch, nsFontCharSet* aCharSet)
   nsFontStyle* style = aCharSet->mStyles[f->mStyleIndex];
   if (!style) {
 #ifdef REALLY_NOISY_FONTS
+#ifdef DEBUG
     printf(" ==> skiping style index %d\n", f->mStyleIndex);
+#endif
 #endif
     return; // skip dummy entries
   }
@@ -2091,8 +2109,10 @@ TryCharSet(nsFontSearch* aSearch, nsFontCharSet* aCharSet)
   }
 
 #ifdef REALLY_NOISY_FONTS
+#ifdef DEBUG
   printf("  ==> charset=%s weightIndex=%d strechIndex=%d\n", aCharSet->mInfo->mCharSet,
          weightIndex, f->mStretchIndex);
+#endif
 #endif
   PickASizeAndLoad(aSearch, weights[weightIndex]->mStretches[f->mStretchIndex],
     aCharSet);
@@ -2111,8 +2131,10 @@ SearchCharSet(PLHashEntry* he, PRIntn i, void* arg)
 #endif
   PRUnichar c = search->mChar;
 #ifdef REALLY_NOISY_FONTS
+#ifdef DEBUG
   printf("%s: searching for character c=0x%x (%d) '%c' in %s\n",
          search->mFont ? search->mFont->mName : "(no-name)", c, c, c, charSetInfo->mCharSet);
+#endif
 #endif
   if (charSetInfo->mCharSet) {
     if (!map) {
@@ -2133,7 +2155,9 @@ SearchCharSet(PLHashEntry* he, PRIntn i, void* arg)
     if (m->mFontsIndex >= m->mFontsCount) {
        if (!IS_REPRESENTABLE(map, c)) {
 #ifdef REALLY_NOISY_FONTS
+#ifdef DEBUG
          printf("  ==> character not representable, trying next character set\n");
+#endif
 #endif
          return HT_ENUMERATE_NEXT;
        }
@@ -2148,7 +2172,9 @@ SearchCharSet(PLHashEntry* he, PRIntn i, void* arg)
   TryCharSet(search, charSet);
   if (search->mFont) {
 #ifdef REALLY_NOISY_FONTS
+#ifdef DEBUG
     printf("  ==> found '%s'\n", search->mFont->mName);
+#endif
 #endif
     return HT_ENUMERATE_STOP;
   }
@@ -2272,7 +2298,9 @@ GetFontNames(char* aPattern)
     }
     if (!charSetInfo) {
 #ifdef NOISY_FONTS
+#ifdef DEBUG
       printf("cannot find charset %s\n", charSetName);
+#endif
 #endif
       continue;
     }
@@ -2347,7 +2375,9 @@ GetFontNames(char* aPattern)
     int weightNumber = (int) PL_HashTableLookup(gWeights, weightName);
     if (!weightNumber) {
 #ifdef NOISY_FONTS
+#ifdef DEBUG
       printf("cannot find weight %s\n", weightName);
+#endif
 #endif
       weightNumber = NS_FONT_WEIGHT_NORMAL;
     }
@@ -2364,7 +2394,9 @@ GetFontNames(char* aPattern)
     int stretchIndex = (int) PL_HashTableLookup(gStretches, setWidth);
     if (!stretchIndex) {
 #ifdef NOISY_FONTS
+#ifdef DEBUG
       printf("cannot find stretch %s\n", setWidth);
+#endif
 #endif
       stretchIndex = 5;
     }

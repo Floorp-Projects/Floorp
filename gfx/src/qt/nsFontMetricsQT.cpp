@@ -24,9 +24,6 @@
 #include "nsFontMetricsQT.h"
 #include "nspr.h"
 
-#undef NOISY_FONTS
-#undef REALLY_NOISY_FONTS
-
 static NS_DEFINE_IID(kIFontMetricsIID, NS_IFONT_METRICS_IID);
 
 nsFontMetricsQT::nsFontMetricsQT()
