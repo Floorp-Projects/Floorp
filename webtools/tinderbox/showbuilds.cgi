@@ -893,7 +893,7 @@ sub do_quickparse {
     tb_loadquickparseinfo($tt, \%build, \%times);
     
     foreach my $buildname (sort keys %build) {
-      print "Build|$t|$buildname|$build{$buildname}\n";
+      print "Build|$tt|$buildname|$build{$buildname}\n";
     }
   }
 }
