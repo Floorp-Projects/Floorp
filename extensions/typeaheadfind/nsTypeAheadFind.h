@@ -132,7 +132,7 @@ protected:
   PRBool IsRangeVisible(nsIPresShell *aPresShell, nsIPresContext *aPresContext, 
                          nsIDOMRange *aRange, PRBool aMustBeVisible, nsIDOMRange **aNewRange);
   nsresult FindItNow(PRBool aIsLinksOnly, PRBool aIsFirstVisiblePreferred, PRBool aIsBackspace);
-  nsresult GetSearchContainers(nsISupports *aContainer, PRBool aIsFirstVisiblePreferred, 
+  nsresult GetSearchContainers(nsISupports *aContainer, PRBool aIsFirstVisiblePreferred, PRBool aCanUseDocSelection,
                                nsIPresShell **aPresShell, nsIPresContext **aPresContext,
                                nsIDOMRange **aSearchRange, nsIDOMRange **aStartRange, nsIDOMRange **aEndRange);
   void DisplayStatus(PRBool aSuccess, PRBool aClearStatus);

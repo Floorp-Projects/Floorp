@@ -671,7 +671,7 @@ nsresult nsTypeAheadFind::FindItNow(PRBool aIsLinksOnly, PRBool aIsFirstVisibleP
 
   // ------------ Get ranges ready ----------------
   nsCOMPtr<nsIDOMRange> searchRange, startPointRange, endPointRange, returnRange;
-  if (NS_FAILED(GetSearchContainers(currentContainer, aIsFirstVisiblePreferred,
+  if (NS_FAILED(GetSearchContainers(currentContainer, aIsFirstVisiblePreferred, PR_TRUE,
                                     getter_AddRefs(presShell), getter_AddRefs(presContext), 
                                     getter_AddRefs(searchRange), getter_AddRefs(startPointRange), 
                                     getter_AddRefs(endPointRange))))
@@ -743,7 +743,7 @@ nsresult nsTypeAheadFind::FindItNow(PRBool aIsLinksOnly, PRBool aIsFirstVisibleP
     do {
       if (NS_SUCCEEDED(docShellEnumerator->HasMoreElements(&hasMoreDocShells)) && hasMoreDocShells) {
         docShellEnumerator->GetNext(getter_AddRefs(currentContainer));
-        if (NS_FAILED(GetSearchContainers(currentContainer, aIsFirstVisiblePreferred,
+        if (NS_FAILED(GetSearchContainers(currentContainer, aIsFirstVisiblePreferred, PR_FALSE,
                                           getter_AddRefs(presShell), getter_AddRefs(presContext), 
                                           getter_AddRefs(searchRange), getter_AddRefs(startPointRange), 
                                           getter_AddRefs(endPointRange))))
@@ -787,7 +787,8 @@ nsresult nsTypeAheadFind::FindItNow(PRBool aIsLinksOnly, PRBool aIsFirstVisibleP
 }
 
 
-nsresult nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer, PRBool aIsFirstVisiblePreferred, 
+nsresult nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer, 
+                                              PRBool aIsFirstVisiblePreferred, PRBool aCanUseDocSelection,
                                               nsIPresShell **aPresShell, nsIPresContext **aPresContext,
                                               nsIDOMRange **aSearchRange, nsIDOMRange **aStartPointRange, 
                                               nsIDOMRange **aEndPointRange)
@@ -831,7 +832,7 @@ nsresult nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer, PRBool aI
   // Consider current selection as null if it's not in the currently focused document
   nsCOMPtr<nsIDOMRange> currentSelectionRange;
   nsCOMPtr<nsIPresShell> selectionPresShell = do_QueryReferent(mFocusedWeakShell);
-  if (selectionPresShell == *aPresShell) 
+  if (selectionPresShell == *aPresShell && aCanUseDocSelection) 
     mFocusedDocSelection->GetRangeAt(0, getter_AddRefs(currentSelectionRange));
 
   if (!currentSelectionRange || aIsFirstVisiblePreferred) {
@@ -851,7 +852,7 @@ nsresult nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer, PRBool aI
     }
     if (!startNode) 
       startNode = rootNode;
-    startPointRange->SelectNode(startNode);
+    startPointRange->SetStart(startNode, startOffset);
     startPointRange->Collapse(PR_TRUE); // collapse to start
   }
 
