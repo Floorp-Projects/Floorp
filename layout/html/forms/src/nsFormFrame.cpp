@@ -490,24 +490,22 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
 
   // Notify observers that the form is being submitted.
   nsresult result = NS_OK;
-  nsIObserverService* theObserverService = nsnull;
-  result = nsServiceManager::GetService(NS_OBSERVERSERVICE_PROGID, nsIObserverService::GetIID(),
-                                      (nsISupports**) &theObserverService, nsnull);
-  if (NS_SUCCEEDED(result) && theObserverService){
-    nsString  theTopic(NS_FORMSUBMIT_SUBJECT);
-    nsIEnumerator* theEnum;
-    result = theObserverService->EnumerateObserverList(theTopic.GetUnicode(), &theEnum);
-    if (NS_SUCCEEDED(result) && theEnum){
-      nsIFormSubmitObserver* formSubmitObserver;
-      nsISupports *inst;
+  NS_WITH_SERVICE(nsIObserverService, service, NS_OBSERVERSERVICE_PROGID, &result);
+  if (NS_FAILED(result)) return result;
+
+  nsString  theTopic(NS_FORMSUBMIT_SUBJECT);
+  nsIEnumerator* theEnum;
+  result = service->EnumerateObserverList(theTopic.GetUnicode(), &theEnum);
+  if (NS_SUCCEEDED(result) && theEnum){
+    nsIFormSubmitObserver* formSubmitObserver;
+    nsISupports *inst;
       
-      for (theEnum->First(); theEnum->IsDone() != NS_OK; theEnum->Next()) {
-        result = theEnum->CurrentItem(&inst);
-        if (NS_SUCCEEDED(result) && inst) {
-          result = inst->QueryInterface(nsIFormSubmitObserver::GetIID(),(void**)&formSubmitObserver);
-          if (NS_SUCCEEDED(result) && formSubmitObserver) {
-            formSubmitObserver->Notify(mContent);
-	  }
+    for (theEnum->First(); theEnum->IsDone() != NS_OK; theEnum->Next()) {
+      result = theEnum->CurrentItem(&inst);
+      if (NS_SUCCEEDED(result) && inst) {
+        result = inst->QueryInterface(nsIFormSubmitObserver::GetIID(),(void**)&formSubmitObserver);
+        if (NS_SUCCEEDED(result) && formSubmitObserver) {
+          formSubmitObserver->Notify(mContent);
 	}
       }
     }
@@ -838,7 +836,7 @@ void nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData, nsIFormCon
     (nsISupports **)&service2);
   if ((NS_OK == res2) && (nsnull != service2)) {
     service2->WALLET_OKToCapture(&OKToCapture, count, URLName);
-    NS_RELEASE(service2);
+    nsServiceManager::ReleaseService(kWalletServiceCID, service2);
   }
 #endif
 
@@ -872,7 +870,7 @@ void nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData, nsIFormCon
                                                       (nsISupports **)&service);
           if ((NS_OK == res) && (nsnull != service)) {
             res = service->WALLET_Capture(doc, *names, *values, vcard);
-            NS_RELEASE(service);
+            nsServiceManager::ReleaseService(kWalletServiceCID, service);
           }
         }
 #endif
@@ -921,7 +919,7 @@ void nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData, nsIFormCon
   if ((NS_OK == res) && (nsnull != service)) {
 	  res = service->SI_RememberSignonData
 		(URLName, (char**)name_array, (char**)value_array, (char**)type_array, value_cnt);
-	  NS_RELEASE(service);
+	  nsServiceManager::ReleaseService(kWalletServiceCID, service);
   }
   while (value_cnt--) {
 	PR_FREEIF(name_array[value_cnt]);
