@@ -51,8 +51,13 @@
         
         <a href="report.cgi">Reports</a> 
         
-        | <a href="request.cgi">Requests</a>
-       
+        [% IF user.login %]
+          [% email = user.login FILTER url_quote %]
+          | <a href="request.cgi?requester=[% email %]&requestee=[% email %]&do_union=1&group=type">My Requests</a>
+        [% ELSE %]
+          | <a href="request.cgi">Requests</a>
+        [% END %]
+        
         [% IF user.login && Param('usevotes') %]
           | <a href="votes.cgi?action=show_user">My Votes</a>
         [% END %]      

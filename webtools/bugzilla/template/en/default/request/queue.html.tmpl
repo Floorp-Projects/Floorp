@@ -103,15 +103,6 @@
 </form>
 [% END %]
 
-[% PROCESS global/header.html.tmpl 
-  title="Request Queue"
-  h2=filter_form
-  style = "
-    table.requests th { text-align: left; }
-    table#filter th { text-align: right; }
-  "
-%]
-
 [% column_headers = { 
       "type"       => "Flag" , 
       "status"     => "Status" , 
@@ -127,6 +118,19 @@
            group_value     = ""
 %]
 
+
+[% PROCESS global/header.html.tmpl 
+  title="Request Queue"
+  h2=filter_form
+  style = "
+    table.requests th { text-align: left; }
+    table#filter th { text-align: right; }
+  "
+%]
+
+[% IF debug %]
+  <p>[% query FILTER html %]</p>
+[% END %]
 
 [% IF requests.size == 0 %]
   <p>

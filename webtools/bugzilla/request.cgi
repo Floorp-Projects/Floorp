@@ -117,6 +117,12 @@ sub queue {
       AND       flags.bug_id        = bugs.bug_id
     ";
     
+    # Limit query to pending requests.
+    $query .= " AND flags.status = '?' " unless $::FORM{'status'};
+
+    # The set of criteria by which we filter records to display in the queue.
+    my @criteria = ();
+    
     # A list of columns to exclude from the report because the report conditions
     # limit the data being displayed to exact matches for those columns.
     # In other words, if we are only displaying "pending" , we don't
@@ -126,36 +132,38 @@ sub queue {
     
     # Filter requests by status: "pending", "granted", "denied", "all" 
     # (which means any), or "fulfilled" (which means "granted" or "denied").
-    $::FORM{'status'} ||= "?";
-    if ($::FORM{'status'} eq "+-") {
-        $query .= " AND flags.status IN ('+', '-')";
-    }
-    elsif ($::FORM{'status'} ne "all") {
-        $query .= " AND flags.status = '$::FORM{'status'}'";
-        push(@excluded_columns, 'status');
+    if ($::FORM{'status'}) {
+        if ($::FORM{'status'} eq "+-") {
+            push(@criteria, "flags.status IN ('+', '-')");
+            push(@excluded_columns, 'status') unless $::FORM{'do_union'};
+        }
+        elsif ($::FORM{'status'} ne "all") {
+            push(@criteria, "flags.status = '$::FORM{'status'}'");
+            push(@excluded_columns, 'status') unless $::FORM{'do_union'};
+        }
     }
     
     # Filter results by exact email address of requester or requestee.
     if (defined($::FORM{'requester'}) && $::FORM{'requester'} ne "") {
-        $query .= " AND requesters.login_name = " . SqlQuote($::FORM{'requester'});
-        push(@excluded_columns, 'requester');
+        push(@criteria, "requesters.login_name = " . SqlQuote($::FORM{'requester'}));
+        push(@excluded_columns, 'requester') unless $::FORM{'do_union'};
     }
     if (defined($::FORM{'requestee'}) && $::FORM{'requestee'} ne "") {
-        $query .= " AND requestees.login_name = " . SqlQuote($::FORM{'requestee'});
-        push(@excluded_columns, 'requestee');
+        push(@criteria, "requestees.login_name = " . SqlQuote($::FORM{'requestee'}));
+        push(@excluded_columns, 'requestee') unless $::FORM{'do_union'};
     }
     
     # Filter results by exact product or component.
     if (defined($::FORM{'product'}) && $::FORM{'product'} ne "") {
         my $product_id = get_product_id($::FORM{'product'});
         if ($product_id) {
-            $query .= " AND bugs.product_id = $product_id";
-            push(@excluded_columns, 'product');
+            push(@criteria, "bugs.product_id = $product_id");
+            push(@excluded_columns, 'product') unless $::FORM{'do_union'};
             if (defined($::FORM{'component'}) && $::FORM{'component'} ne "") {
                 my $component_id = get_component_id($product_id, $::FORM{'component'});
                 if ($component_id) {
-                    $query .= " AND bugs.component_id = $component_id";
-                    push(@excluded_columns, 'component');
+                    push(@criteria, "bugs.component_id = $component_id");
+                    push(@excluded_columns, 'component') unless $::FORM{'do_union'};
                 }
                 else { ThrowCodeError("unknown_component", { %::FORM }) }
             }
@@ -177,9 +185,15 @@ sub queue {
         }
         if (!$has_attachment_type) { push(@excluded_columns, 'attachment') }
         
-        $query .= " AND flagtypes.name = " . SqlQuote($::FORM{'type'});
-        push(@excluded_columns, 'type');
+        push(@criteria, "flagtypes.name = " . SqlQuote($::FORM{'type'}));
+        push(@excluded_columns, 'type') unless $::FORM{'do_union'};
     }
+    
+    # Add the criteria to the query.  We do an intersection by default 
+    # but do a union if the "do_union" URL parameter (for which there is no UI 
+    # because it's an advanced feature that people won't usually want) is true.
+    my $and_or = $::FORM{'do_union'} ? " OR " : " AND ";
+    $query .= " AND (" . join($and_or, @criteria) . ") " if scalar(@criteria);
     
     # Group the records by flag ID so we don't get multiple rows of data
     # for each flag.  This is only necessary because of the code that
@@ -209,6 +223,7 @@ sub queue {
     
     # Pass the query to the template for use when debugging this script.
     $vars->{'query'} = $query;
+    $vars->{'debug'} = $::FORM{'debug'} ? 1 : 0;
     
     SendSQL($query);
     my @requests = ();
