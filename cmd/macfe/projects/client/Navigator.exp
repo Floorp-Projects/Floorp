@@ -1452,7 +1452,7 @@ INTL_CompoundStrFirstStr
 INTL_CompoundStrFromUnicode
 INTL_CompoundStrNextStr
 # INTL_ConvCharCode
-# INTL_ConvertLineWithoutAutoDetect
+INTL_ConvertLineWithoutAutoDetect
 # INTL_CreateCharCodeConverter
 # INTL_CreateDocumentCCC
 # INTL_CsidToCharsetNamePt
@@ -1465,6 +1465,7 @@ INTL_DefaultWinCharSetID
 INTL_FreeSingleByteTable
 # INTL_GetAcceptCharset
 # INTL_GetAcceptLanguage
+INTL_GetCharSetID
 # INTL_GetCSIDocCSID
 # INTL_GetCSIMetaDocCSID
 # INTL_GetCSIMimeCharset
