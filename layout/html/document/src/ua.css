@@ -651,13 +651,11 @@ button[pseudoclass~="focus"]:-moz-focus-inner {
 
 input[type=text] {
   border: 2px inset rgb(192, 192, 192);
-  margin-right: 10px; 
   background-color: white;
   color: black;
 }
 input[type=password] {
   border: 2px inset rgb(192, 192, 192);
-  margin-right: 10px; 
   background-color: white;
   color:black;
 }
