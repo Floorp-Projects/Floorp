@@ -98,9 +98,6 @@ RegisterGenericFactory(nsIComponentManager* compMgr, const nsCID& cid, const cha
     return rv;
 }
 
-extern "C" NS_EXPORT nsresult
-NS_RegistryGetFactory(nsISupports* servMgr, nsIFactory** aFactory);
-
 nsIServiceManager* nsServiceManager::mGlobalServiceManager = NULL;
 nsComponentManagerImpl* nsComponentManagerImpl::gComponentManager = NULL;
 
@@ -145,7 +142,7 @@ nsresult NS_InitXPCOM(nsIServiceManager* *result)
 
     // Registry
     nsIFactory *registryFactory = NULL;
-    rv = NS_RegistryGetFactory(servMgr, &registryFactory);
+    rv = NS_RegistryGetFactory(&registryFactory);
     if (NS_FAILED(rv)) return rv;
 
     NS_DEFINE_CID(kRegistryCID, NS_REGISTRY_CID);
