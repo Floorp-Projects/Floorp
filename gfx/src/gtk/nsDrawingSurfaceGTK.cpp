@@ -116,6 +116,14 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Lock(PRInt32 aX, PRInt32 aY,
   mLockHeight = aHeight;
   mLockFlags = aFlags;
 
+/*
+ i see. it might be that this does something that just isn't
+ possible directly with x11. you probably have to copy from the
+ gdkpixmap to a local gdkimage in lock(), do whatever is done to
+ the bits, and copy back in unlock(). if the display is local,
+ and shared pixmaps are supported, you don't need to do that.
+*/
+
   mImage = ::gdk_image_get(mPixmap, aX, aY, mLockWidth, mLockHeight);
  
  // aBits = &mImage->mem;
