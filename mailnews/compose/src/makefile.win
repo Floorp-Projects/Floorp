@@ -31,6 +31,8 @@ CPPSRCS=    nsMsgCompFields.cpp \
             nsSmtpUrl.cpp		\
 			nsSmtpProtocol.cpp	\
             MsgCompGlue.cpp     \
+			nsMsgSend.cpp		\
+			nsMsgSendPart.cpp	\
             $(NULL)
 
 CPP_OBJS=   .\$(OBJDIR)\nsMsgCompFields.obj \
@@ -38,6 +40,8 @@ CPP_OBJS=   .\$(OBJDIR)\nsMsgCompFields.obj \
             .\$(OBJDIR)\nsSmtpUrl.obj		\
             .\$(OBJDIR)\MsgCompGlue.obj     \
 			.\$(OBJDIR)\nsSmtpProtocol.obj	\
+			.\$(OBJDIR)\nsMsgSend.obj		\
+			.\$(OBJDIR)\nsMsgSendPart.obj	\
             $(NULL)
 
 

@@ -37,6 +37,11 @@ CPPSRCS = \
 	msgCompGlue.cpp	\
 	nsSmtpUrl.cpp \
 	nsSmtpProtocol.cpp \
+	msgCompGlue.cpp \
+	nsMsgCompFields.cpp \
+	nsMsgCompose.cpp \
+	nsMsgSend.cpp \
+	nsMsgSendPart.cpp \
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk
