@@ -1940,12 +1940,12 @@
 		};
 		F568C3CF023A4A5A010001CA = {
 			isa = PBXFileReference;
-			path = AboutBox.h;
+			path = CHAboutBox.h;
 			refType = 4;
 		};
 		F568C3D0023A4A5A010001CA = {
 			isa = PBXFileReference;
-			path = AboutBox.m;
+			path = CHAboutBox.m;
 			refType = 4;
 		};
 		F568C3D1023A4A5B010001CA = {
