@@ -165,7 +165,6 @@ NS_IMETHODIMP nsDeviceContextSpecBeOS::Init(nsIPrintSettings* aPS)
   }
 
   char      *path;
-  PRBool     canPrint       = PR_FALSE;
   PRBool     reversed       = PR_FALSE;
   PRBool     color          = PR_FALSE;
   PRBool     tofile         = PR_FALSE;
@@ -486,21 +485,20 @@ NS_IMETHODIMP nsPrinterEnumeratorBeOS::DisplayPropertiesDlg(const PRUnichar *aPr
 //----------------------------------------------------------------------
 nsresult GlobalPrinters::InitializeGlobalPrinters ()
 {
-  if (PrintersAreAllocated()) {
+  if (PrintersAreAllocated())
     return NS_OK;
-  }
 
   mGlobalNumPrinters = 0;
+
+#ifdef USE_POSTSCRIPT
   mGlobalPrinterList = new nsStringArray();
   if (!mGlobalPrinterList) 
     return NS_ERROR_OUT_OF_MEMORY;
 
-#ifdef USE_POSTSCRIPT      
   /* add an entry for the default printer (see nsPostScriptObj.cpp) */
   mGlobalPrinterList->AppendString(
     nsString(NS_ConvertASCIItoUCS2(NS_POSTSCRIPT_DRIVER_NAME "default")));
   mGlobalNumPrinters++;
-#endif /* USE_POSTSCRIPT */
 
   /* get the list of printers */
   char *printerList = nsnull;
@@ -525,7 +523,6 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
     if (!printerList)
       return NS_ERROR_OUT_OF_MEMORY;    
 
-#ifdef USE_POSTSCRIPT    
     for( name = PL_strtok_r(printerList, " ", &tok_lasts) ; 
          name != nsnull ; 
          name = PL_strtok_r(nsnull, " ", &tok_lasts) )
@@ -535,10 +532,10 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
         nsString(NS_ConvertASCIItoUCS2(name)));
       mGlobalNumPrinters++;      
     }
-#endif /* USE_POSTSCRIPT */
 
     free(printerList);
   }
+#endif /* USE_POSTSCRIPT */
       
   if (mGlobalNumPrinters == 0)
     return NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE; 
