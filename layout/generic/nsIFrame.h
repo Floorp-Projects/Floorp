@@ -278,7 +278,7 @@ public:
    * Deletes this frame and each of its child frames (recursively calls
    * DeleteFrame() for each child)
    */
-  NS_IMETHOD  DeleteFrame() = 0;
+  NS_IMETHOD  DeleteFrame(nsIPresContext& aPresContext) = 0;
 
   /**
    * Get the content object associated with this frame. Adds a reference to
