@@ -61,7 +61,11 @@ class nsFileWidget : public nsWindow
     // nsIFileWidget part
     virtual void            Show(PRBool bState);
     virtual void            GetFile(nsString& aFile);
-    virtual void            SetFilterList(PRUint32 aNumberOfFilters,const nsString aTitles[],const nsString aFilters[]);
+    virtual void            SetFilterList(PRUint32 aNumberOfFilters,
+                                          const nsString aTitles[],
+                                          const nsString aFilters[]);
+    virtual void            OnOk();
+    virtual void            OnCancel();
   
   protected:
 
@@ -106,6 +110,8 @@ class nsFileWidget : public nsWindow
                                             const nsString aFilters[]);
 
       virtual PRBool          Show();
+      virtual void            OnOk();
+      virtual void            OnCancel();
     };
     AggFileWidget mAggWidget;
 

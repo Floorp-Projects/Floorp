@@ -44,6 +44,7 @@ void nsFileWidget::Create(nsIWidget *aParent,
 }
 
 
+//-------------------------------------------------------------------------
 void   nsFileWidget:: Create(nsIWidget *aParent,
                                  nsString& aTitle,
                                  nsMode aMode,
@@ -69,11 +70,12 @@ void   nsFileWidget:: Create(nsIWidget *aParent,
   if (DBG) fprintf(stderr, "Parent 0x%x\n", parentWidget);
 
   mWidget = XmCreateFileSelectionDialog(parentWidget, "filesb", NULL, 0);
+  XtVaSetValues(mWidget, XmNdialogType, XmDIALOG_FULL_APPLICATION_MODAL, nsnull);
 
-  XtAddCallback(mWidget, XmNcancelCallback, nsXtWidget_FSBCancel_Callback, NULL);
-  XtAddCallback(mWidget, XmNokCallback, nsXtWidget_FSBOk_Callback, NULL);
+  XtAddCallback(mWidget, XmNcancelCallback, nsXtWidget_FSBCancel_Callback, this);
+  XtAddCallback(mWidget, XmNokCallback, nsXtWidget_FSBOk_Callback, this);
 
-  XtManageChild(mWidget);
+  //XtManageChild(mWidget);
 }
 
 void nsFileWidget::Create(nsNativeWindow aParent,
@@ -105,13 +107,34 @@ nsresult nsFileWidget::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 //-------------------------------------------------------------------------
 //
+// Ok's the dialog
+//
+//-------------------------------------------------------------------------
+void nsFileWidget::OnOk()
+{
+  XtUnmanageChild(mWidget);
+}
+
+//-------------------------------------------------------------------------
+//
+// Cancel the dialog
+//
+//-------------------------------------------------------------------------
+void nsFileWidget::OnCancel()
+{
+  XtUnmanageChild(mWidget);
+}
+
+
+//-------------------------------------------------------------------------
+//
 // Show - Display the file dialog
 //
 //-------------------------------------------------------------------------
-
 void nsFileWidget::Show(PRBool bState)
 {
   nsresult result = nsEventStatus_eIgnore;
+  XtManageChild(mWidget);
 
   /*char fileBuffer[MAX_PATH];
   fileBuffer[0] = '\0';
@@ -232,6 +255,16 @@ void nsFileWidget::AggFileWidget::Create( nsIWidget *aParent,
                                       void *aInitData = nsnull)
 {
   GET_OUTER()->Create(aParent, aTitle, aMode, aContext, aToolkit, aInitData);
+}
+
+void nsFileWidget::AggFileWidget::OnOk()
+{
+  GET_OUTER()->OnOk();
+}
+
+void nsFileWidget::AggFileWidget::OnCancel()
+{
+  GET_OUTER()->OnCancel();
 }
 
 void nsFileWidget::AggFileWidget::Show(PRBool bState)
