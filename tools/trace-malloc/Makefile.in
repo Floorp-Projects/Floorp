@@ -36,12 +36,17 @@ CSRCS		+= \
 
 SIMPLE_PROGRAMS	= $(CSRCS:.c=$(BIN_SUFFIX))
 
+ifeq ($(OS_ARCH),WINNT)
+LOCAL_INCLUDES	+= -I$(topsrcdir)/config/os2
+endif
+
 include $(topsrcdir)/config/config.mk
 
 LIBS		+= \
+		$(LIBS_DIR) \
+		tmreader.$(OBJ_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)xpcomds_s.$(LIB_SUFFIX) \
 		$(NSPR_LIBS) \
-		-lxpcomds_s \
-		tmreader.o \
 		$(NULL)
 
 ifdef HAVE_BOUTELL_GD
@@ -54,6 +59,6 @@ DEFINES		+= \
 		$(NULL)
 endif
 
-EXTRA_DEPS      = tmreader.o
+EXTRA_DEPS      = tmreader.$(OBJ_SUFFIX)
 
 include $(topsrcdir)/config/rules.mk
