@@ -983,6 +983,13 @@ nsGenericElement::SetScriptObject(void *aScriptObject)
   nsDOMSlots *slots = GetDOMSlots();
 
   slots->mScriptObject = aScriptObject;
+
+  if (!aScriptObject) {
+    if (mListenerManager) {
+      mListenerManager->RemoveAllListeners(PR_TRUE);
+    } 
+  }
+
   return NS_OK;
 }
 

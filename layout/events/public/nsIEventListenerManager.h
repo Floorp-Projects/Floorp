@@ -132,7 +132,7 @@ public:
   * manager.
   */
 
-  virtual nsresult RemoveAllListeners() = 0;
+  virtual nsresult RemoveAllListeners(PRBool aScriptOnly) = 0;
 };
 
 extern NS_HTML nsresult NS_NewEventListenerManager(nsIEventListenerManager** aInstancePtrResult); 
