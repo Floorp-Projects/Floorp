@@ -405,6 +405,17 @@ void CDragToolbar::UpdateURLBars(char* url)
 	m_pToolbar->UpdateURLBars(url);
 }
 
+BOOL CDragToolbar::MakeVisible(BOOL visible)
+{
+	return CWnd::ShowWindow(visible ? SW_SHOW : SW_HIDE);
+}
+
+BOOL CDragToolbar::WantsToBeVisible()
+{
+	return TRUE;
+}
+
+
 //////////////////////////////////////////////////////////////////////////
 //					Messages for CDragToolbar
 //////////////////////////////////////////////////////////////////////////
@@ -796,6 +807,8 @@ UINT CCustToolbarExternalTab::GetTabID(void)
 
 #define SPACE_BETWEEN_TOOLBARS 2
 
+IMPLEMENT_DYNAMIC(CCustToolbar,CControlBar)
+
 CCustToolbar::CCustToolbar(int nNumToolbars)
 {
 	m_bEraseBackground = TRUE;
@@ -996,35 +1009,43 @@ void CCustToolbar::AddNewWindowAtIndex(UINT nToolbarID, CToolbarWindow* pWindow,
 	CDragToolbar *pDragToolbar = CreateDragBar();
 	if(pDragToolbar->Create(this, pWindow))
 	{
-		m_nNumShowing++;
-		m_pToolbarArray[nPosition] = pDragToolbar;
-		pWindow->GetToolbar()->ShowWindow(SW_SHOW);
-		BOOL bIsOpen = pDragToolbar->GetOpen();
 		pDragToolbar->SetTabTip(tabTip);
 		pDragToolbar->SetToolbarID(nToolbarID);
-
-		if (bIsOpen)
+		if (pDragToolbar->WantsToBeVisible())
 		{
-			pDragToolbar->ShowWindow(SW_SHOW);
-			m_nNumOpen++;
-			if(nPosition < m_nAnimationPos || m_nAnimationPos == -1)
+			m_nNumShowing++;
+			m_pToolbarArray[nPosition] = pDragToolbar;
+			pWindow->GetToolbar()->ShowWindow(SW_SHOW);
+			BOOL bIsOpen = pDragToolbar->GetOpen();
+	//		pDragToolbar->SetTabTip(tabTip);
+	//		pDragToolbar->SetToolbarID(nToolbarID);
+
+			if (bIsOpen)
 			{
-				if(m_nAnimationPos != -1)
+				pDragToolbar->MakeVisible(TRUE);
+				m_nNumOpen++;
+				if(nPosition < m_nAnimationPos || m_nAnimationPos == -1)
 				{
-					m_pToolbarArray[m_nAnimationPos]->SetAnimation(NULL);
+					if(m_nAnimationPos != -1)
+					{
+						m_pToolbarArray[m_nAnimationPos]->SetAnimation(NULL);
+					}
+					m_pToolbarArray[nPosition]->SetAnimation(m_pAnimation);
+					if(m_pAnimation)
+						m_pAnimation->ShowWindow(SW_SHOW);
+					m_nAnimationPos = nPosition;
 				}
-				m_pToolbarArray[nPosition]->SetAnimation(m_pAnimation);
-				if(m_pAnimation)
-					m_pAnimation->ShowWindow(SW_SHOW);
-				m_nAnimationPos = nPosition;
-				
 			}
+
+			m_nActiveToolbars++;	// don't
+
+			m_pParent->RecalcLayout();
+
+		} else {
+			m_pHiddenToolbarArray[nPosition] = pDragToolbar;
+			pWindow->GetToolbar()->ShowWindow(SW_HIDE);
+			pDragToolbar->MakeVisible(FALSE);
 		}
-
-		m_nActiveToolbars++;
-
-
-		m_pParent->RecalcLayout();
 	}
 }
 
@@ -1051,7 +1072,7 @@ void CCustToolbar::AddNewWindowGuts(UINT nToolbarID, CToolbarWindow* pWindow, in
 
 		if(bIsOpen)
 		{
-			pDragToolbar->ShowWindow(SW_SHOW);
+			pDragToolbar->MakeVisible(TRUE);
 			m_nNumOpen++;
 			if(nPosition < m_nAnimationPos || m_nAnimationPos == -1)
 			{
@@ -1068,7 +1089,6 @@ void CCustToolbar::AddNewWindowGuts(UINT nToolbarID, CToolbarWindow* pWindow, in
 		}
 
 		m_nActiveToolbars++;
-
 
 		m_pParent->RecalcLayout();
 	}
@@ -1144,7 +1164,7 @@ void CCustToolbar::ShowDragToolbar(int nIndex, BOOL bShow)
 			m_pToolbarArray[nIndex]->GetToolbar()->ShowWindow(SW_SHOW);
 			if(m_pToolbarArray[nIndex]->GetOpen()){
 				CheckAnimationChangedToolbar(m_pToolbarArray[nIndex], nIndex, TRUE);
-				m_pToolbarArray[nIndex]->ShowWindow(SW_SHOW);
+				m_pToolbarArray[nIndex]->MakeVisible(TRUE);
 			}
 		}
 
@@ -1160,7 +1180,7 @@ void CCustToolbar::ShowDragToolbar(int nIndex, BOOL bShow)
 			m_nActiveToolbars--;
 			m_pHiddenToolbarArray[nIndex] = m_pToolbarArray[nIndex];
 			m_pToolbarArray[nIndex] = NULL;
-			m_pHiddenToolbarArray[nIndex]->ShowWindow(SW_HIDE);
+			m_pHiddenToolbarArray[nIndex]->MakeVisible(FALSE);
 			m_pHiddenToolbarArray[nIndex]->GetToolbar()->ShowWindow(SW_HIDE);
 			CheckAnimationChangedToolbar(m_pHiddenToolbarArray[nIndex], nIndex, FALSE);
 
@@ -1297,9 +1317,12 @@ void CCustToolbar::SetToolbarStyle(int nToolbarStyle)
 
 void CCustToolbar::BeActiveToolbar()
 {
-	for(int i = 0; i < m_nNumToolbars; i++)
+	for(int i = 0; i < m_nNumToolbars; i++) {
 		if(m_pToolbarArray[i] != NULL)
 			m_pToolbarArray[i]->BeActiveToolbar();
+		if(m_pHiddenToolbarArray[i] != NULL)
+			m_pHiddenToolbarArray[i]->BeActiveToolbar();
+	}
 }
 
 void CCustToolbar::OnUpdateCmdUI( CFrameWnd* pTarget, BOOL bDisableIfNoHndler )
@@ -1664,7 +1687,7 @@ LRESULT CCustToolbar::OnHideToolbar(WPARAM wParam, LPARAM lParam)
 	CDragToolbar *pToolbar = (CDragToolbar*)CWnd::FromHandlePermanent(hwnd);
 
 	pToolbar->SetOpen(FALSE);
-	pToolbar->ShowWindow(SW_HIDE);
+	pToolbar->MakeVisible(FALSE);
 	m_nNumOpen--;
 
 	int nIndex = FindIndex(pToolbar);
@@ -2266,7 +2289,7 @@ int CCustToolbar::FindDragToolbarFromID(UINT nToolbarID, CDragToolbar **pToolbar
 void CCustToolbar::OpenDragToolbar(int nIndex)
 {
 	m_pToolbarArray[nIndex]->SetOpen(TRUE);
-	m_pToolbarArray[nIndex]->ShowWindow(SW_SHOW);
+	m_pToolbarArray[nIndex]->MakeVisible(TRUE);
 
 	CheckAnimationChangedToolbar(m_pToolbarArray[nIndex], nIndex, TRUE);
 

@@ -163,6 +163,8 @@ public:
 	HTAB_BITMAP GetHTabType(void) { return m_eHTabType;}
 	void OnUpdateCmdUI( CFrameWnd* pTarget, BOOL bDisableIfNoHndler );
 	virtual void UpdateURLBars(char* url);
+	virtual BOOL MakeVisible(BOOL visible);
+	virtual BOOL WantsToBeVisible();
 
 	// Generated message map functions
 	//{{AFX_MSG(CDragToolbar)
@@ -214,6 +216,8 @@ public:
 class CRDFToolbar;
 
 class CCustToolbar : public CControlBar {
+
+	DECLARE_DYNAMIC(CCustToolbar)
 
 protected:
 	CFrameWnd *			m_pParent;

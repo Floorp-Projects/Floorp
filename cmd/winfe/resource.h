@@ -3147,6 +3147,13 @@
 #define ID_HIST_FILE_ADDTOTOOLBAR       43020
 #define ID_HIST_FILE_INTERNETSHORTCUT   43021
 #define ID_OTHER_FONTFACE               43022
+
+// toolbar menus are built dynamically. reserve some command IDs.
+#define ID_VIEW_FIRSTTOOLBAR		43100
+#define ID_VIEW_LASTTOOLBAR		43109
+#define IDS_SHOWTOOLBARMENUITEM		43100
+#define IDS_HIDETOOLBARMENUITEM		43101
+
 #define IDS_TRANSFER_STATUS             59142
 #define IDS_SECURITY_STATUS             59143
 #define IDS_SIGNED_STATUS               59144

@@ -1541,10 +1541,16 @@ static void toolbarNotifyProcedure (HT_Notification ns, HT_Resource n, HT_Event 
 		CRDFToolbar* theNewToolbar = CRDFToolbar::CreateUserToolbar(theView, theToolbarHolder->GetCachedParentWindow());
 		CButtonToolbarWindow *pWindow = new CButtonToolbarWindow(theNewToolbar, 
 										theApp.m_pToolbarStyle, 43, 27, eSMALL_HTAB);
-		
+
 		uint32 index = HT_GetViewIndex(theView);
-		
-		theToolbarHolder->AddNewWindowAtIndex(ID_PERSONAL_TOOLBAR+index, pWindow, index, 43, 27, 1, 
+
+		// note: first parameter is toolbar ID, which was ID_PERSONAL_TOOLBAR+index and is now
+		// (with the advent of RDF toolbars) theoretically ID_VIEW_FIRSTTOOLBAR+index.
+		// however, toolbar IDs aren't really used any more, so we're just using index alone.
+		// in fact, the old IDs are causing problems from other parts of the code that
+		// go looking for particular toolbars which don't necessarily exist any more.
+		// if there are problems with toolbar IDs, you've found the right place to start.
+		theToolbarHolder->AddNewWindowAtIndex(index, pWindow, index, 43, 27, 1, 
 				HT_GetNodeName(HT_TopNode(theNewToolbar->GetHTView())),theApp.m_pToolbarStyle);
 	}
 	else if (whatHappened == HT_EVENT_VIEW_DELETED)
@@ -2661,11 +2667,8 @@ int CRDFDragToolbar::Create(CWnd *pParent, CToolbarWindow *pToolbar)
 		CRDFToolbar* pToolbar = (CRDFToolbar*)m_pToolbar->GetToolbar();
 		HT_Resource top = HT_TopNode(pToolbar->GetHTView());
 		HT_GetNodeData(top, gNavCenter->toolbarCollapsed, HT_COLUMN_STRING, (void **)&data);
-		if (data)
-		{
-			if (data[0] == 'y' || data[0] == 'Y')
-				SetOpen(FALSE);
-		}
+		if (data && (data[0] == 'y' || data[0] == 'Y'))
+			SetOpen(FALSE);
 	}
 	return rtnval;
 }
@@ -2676,6 +2679,26 @@ void CRDFDragToolbar::SetOpen(BOOL bIsOpen)
 	CopySettingsToRDF();
 }
 
+BOOL CRDFDragToolbar::MakeVisible(BOOL visible)
+{
+	BOOL rtnval = CDragToolbar::MakeVisible(visible);
+	CopySettingsToRDF();
+	return rtnval;
+}
+
+BOOL CRDFDragToolbar::WantsToBeVisible()
+{
+	char *data;
+	CRDFToolbar* pToolbar = (CRDFToolbar*)m_pToolbar->GetToolbar();
+	HT_Resource top = HT_TopNode(pToolbar->GetHTView());
+	HT_GetNodeData(top, gNavCenter->toolbarVisible, HT_COLUMN_STRING, (void **)&data);
+	return !data || data[0] == 'y' || data[0] == 'Y';
+}
+
+
+// intended to be called when the parent window comes to the front, this ensures
+// the RDF toolbar settings reflect those of the topmost window, so when the app
+// is re-launched, it will come up with the settings of the last top window.
 void CRDFDragToolbar::BeActiveToolbar()
 {
 	CopySettingsToRDF();
@@ -2683,10 +2706,14 @@ void CRDFDragToolbar::BeActiveToolbar()
 
 void CRDFDragToolbar::CopySettingsToRDF(void)
 {
-	char	*data = GetOpen() ? "no" : "yes";
 	CRDFToolbar* pToolbar = (CRDFToolbar*)m_pToolbar->GetToolbar();
 	HT_Resource top = HT_TopNode(pToolbar->GetHTView());
+
+	char	*data = GetOpen() ? "no" : "yes";
 	HT_SetNodeData(top, gNavCenter->toolbarCollapsed, HT_COLUMN_STRING, data);
+
+	data = IsWindowVisible() ? "yes" : "no";
+	HT_SetNodeData(top, gNavCenter->toolbarVisible, HT_COLUMN_STRING, data);
 }
 
 void CRDFDragToolbar::OnPaint(void)
@@ -2789,12 +2816,15 @@ void CRDFDragToolbar::OnPaint(void)
 // The container of all the toolbars
 // ==========================================================
 
+IMPLEMENT_DYNAMIC(CRDFToolbarHolder,CCustToolbar)
+
 CRDFToolbarHolder::CRDFToolbarHolder(int maxToolbars, CFrameWnd* pParentWindow)
 :CCustToolbar(maxToolbars)
 {
 	m_pCachedParentWindow = pParentWindow;
 	m_pCurrentPopupButton = NULL;
 	m_pCurrentDockedButton = NULL;
+	SetSaveToolbarInfo(FALSE);	// stored in RDF, instead
 }
 
 CRDFToolbarHolder::~CRDFToolbarHolder()

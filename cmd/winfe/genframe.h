@@ -133,6 +133,7 @@ public:
 	virtual CFrameWnd *GetFrameWnd();
 	virtual void UpdateHistoryDialog();
 	void		 BuildHelpMenu(CMenu * pMenu);
+	void         BuildViewMenu(CMenu * pMenu);
 
     // override this only if you want to
     virtual void OnConstructWindowMenu ( CMenu * pMenu );
@@ -232,6 +233,7 @@ protected:
 
 	virtual ~CGenericFrame();
 	virtual void GetMessageString( UINT nID, CString& rMessage ) const;
+	void ToggleToolbarVisibility(UINT toolbarIndex);
 
 	// Generated message map functions
     afx_msg void OnEnterIdle(UINT nWhy, CWnd* pWho );

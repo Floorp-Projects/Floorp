@@ -360,6 +360,8 @@ public:
 	virtual int Create(CWnd *pParent, CToolbarWindow *pToolbar);
 	virtual void SetOpen(BOOL bIsOpen);
 	virtual void BeActiveToolbar();
+	virtual BOOL MakeVisible(BOOL visible);
+	virtual BOOL WantsToBeVisible();
 
 protected:
 	void CopySettingsToRDF(void);
@@ -375,6 +377,8 @@ public:
 
 class CRDFToolbarHolder : public CCustToolbar
 {
+	DECLARE_DYNAMIC(CRDFToolbarHolder)
+
 protected:
 	HT_Pane m_ToolbarPane;
 	CFrameWnd* m_pCachedParentWindow;

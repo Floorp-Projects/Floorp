@@ -1474,6 +1474,50 @@ void CGenericFrame::BuildHelpMenu(CMenu * pMenu)
 		pMenu->InsertMenu(idx,MF_BYPOSITION | MF_STRING,ID_COMMAND_ABOUT, aboutCommunicator);
 }
 
+void CGenericFrame::BuildViewMenu(CMenu *pMenu)
+{
+	if (GetMainContext() == NULL)
+		return;
+
+	pMenu->DeleteMenu(0, MF_BYPOSITION);	// kill the placeholder
+
+	CRDFToolbarHolder *bars;
+	HT_Pane rootPane;
+	uint	barCtr;
+	uint32	barCount;
+	IChrome *chrome = GetChrome();
+
+	// get the RDF toolbar holder. exit on failure.
+	bars = NULL;
+	if (chrome) {
+		CCustToolbar *basicBars = chrome->GetCustomizableToolbar();
+		if (basicBars->IsKindOf(RUNTIME_CLASS(CRDFToolbarHolder)))
+			bars = (CRDFToolbarHolder *) basicBars;
+	}
+	if (!bars)
+		return;
+
+	// insert a show/hide menu item for each toolbar
+	rootPane = bars->GetHTPane();
+	barCount = HT_GetViewListCount(rootPane);
+	if (barCount > ID_VIEW_LASTTOOLBAR - ID_VIEW_FIRSTTOOLBAR + 1)
+		barCount = ID_VIEW_LASTTOOLBAR - ID_VIEW_FIRSTTOOLBAR + 1;
+	for (barCtr = 0; barCtr < barCount; barCtr++) {
+		HT_View view = HT_GetNthView(rootPane, barCtr);
+		CRDFToolbar *bar = (CRDFToolbar *) HT_GetViewFEData(view);
+		char *name = HT_GetViewName(view);
+		if (!name)
+			name = "";
+		CString menuText;
+		if (bars->IsWindowShowing(bar))
+			menuText.Format(IDS_HIDETOOLBARMENUITEM, name);
+		else
+			menuText.Format(IDS_SHOWTOOLBARMENUITEM, name);
+		pMenu->InsertMenu(barCtr, MF_BYPOSITION | MF_STRING, ID_VIEW_FIRSTTOOLBAR+barCtr,
+			menuText);
+	}
+}
+
 /****************************************************************************
 *
 *       CGenericFrame::OnToolsWeb
@@ -1853,7 +1897,9 @@ void CGenericFrame::OnInitMenuPopup(CMenu * pPopup, UINT nIndex, BOOL bSysMenu)
 		else if (pPopup->GetMenuItemID(0) == IDC_FIRST_HELP_MENU_ID) 
 		{
 			BuildHelpMenu(pPopup);
-		} 
+		}
+		else if (pPopup->GetMenuItemID(0) == ID_VIEW_FIRSTTOOLBAR)
+			BuildViewMenu(pPopup);
 		else 
 		{
 			HT_Resource      pEntry;
@@ -3052,11 +3098,16 @@ BOOL CGenericFrame::OnCommand(UINT wParam,LONG lParam)
 #endif
 
     UINT nID = LOWORD(wParam);
-    if( nID >= ID_OPTIONS_ENCODING_1 && nID <= ID_OPTIONS_ENCODING_70)
-    {
+    if( nID >= ID_OPTIONS_ENCODING_1 && nID <= ID_OPTIONS_ENCODING_70) {
 	  OnToggleEncoding( nID );
 	  return TRUE;
     }
+
+	if (nID >= ID_VIEW_FIRSTTOOLBAR && nID <= ID_VIEW_LASTTOOLBAR) {
+		ToggleToolbarVisibility(nID - ID_VIEW_FIRSTTOOLBAR);
+		return TRUE;
+	}
+
     if (m_bDisableHotkeys && nCode==1) {
 	switch (LOWORD(wParam)) {
 	    case ID_SECURITY:
@@ -3117,6 +3168,33 @@ BOOL CGenericFrame::OnCommand(UINT wParam,LONG lParam)
 	}
 
 	return CommonCommand(wParam, lParam);
+}
+
+void CGenericFrame::ToggleToolbarVisibility(UINT toolbarIndex)
+{
+	CRDFToolbarHolder *bars;
+	HT_Pane rootPane;
+	IChrome *chrome = GetChrome();
+
+	// get the RDF toolbar holder. exit on failure.
+	bars = NULL;
+	if (chrome) {
+		CCustToolbar *basicBars = chrome->GetCustomizableToolbar();
+		if (basicBars->IsKindOf(RUNTIME_CLASS(CRDFToolbarHolder)))
+			bars = (CRDFToolbarHolder *) basicBars;
+	}
+	if (!bars)
+		return;
+
+	// assume menu item order is the same as RDF view order. toggle visibility
+	// for the nth RDF view. (this is a decent assumption, since the view menu
+	// is rebuilt each time it's pulled down, and it's build from the RDF views)
+	rootPane = bars->GetHTPane();
+	if (toolbarIndex < HT_GetViewListCount(rootPane)) {
+		HT_View view = HT_GetNthView(rootPane, toolbarIndex);
+		CRDFToolbar *bar = (CRDFToolbar *) HT_GetViewFEData(view);
+		bars->ShowToolbar(bar, !bars->IsWindowShowing(bar));
+	}
 }
 
 // returns TRUE if something was added to the folder, false otherwise

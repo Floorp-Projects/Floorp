@@ -564,9 +564,12 @@ void CMainFrame::OnShowWindow (BOOL bShow, UINT nStatus)
 void CMainFrame::OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized)
 {
 	CGenericFrame::OnActivate(nState, pWndOther, bMinimized);
-	IChrome *chrome = GetChrome();
-	if (chrome)
-		chrome->ToolbarActivation();
+	if (nState != WA_INACTIVE)
+	{
+		IChrome *chrome = GetChrome();
+		if (chrome)
+			chrome->ToolbarActivation();
+	}
 }
 
 // returns TRUE if something was added to the folder, false otherwise

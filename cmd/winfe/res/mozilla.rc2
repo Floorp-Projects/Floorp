@@ -218,6 +218,13 @@ BEGIN
 	IDS_NETSCAPE_TOOLBAR            "no"
 END
 
+// A template for the View/Hide Toolbars View Menu items
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_SHOWTOOLBARMENUITEM		"Show %s"
+	IDS_HIDETOOLBARMENUITEM		"Hide %s"
+END
+
 
 // Large and small versions of the animation.  The very first frame of the
 //   animation only shows up when the animation is resting.  The second through
@@ -797,9 +804,7 @@ END
 
 IDM_MAINFRAMEVIEWMENU MENU DISCARDABLE
 BEGIN
-	MENUITEM  "Show &Navigation Toolbar",	ID_VIEW_COMMANDTOOLBAR
-	MENUITEM  "Show &Location Toolbar",		ID_VIEW_LOCATIONTOOLBAR
-	MENUITEM  "Show &Personal Toolbar",		ID_VIEW_CUSTOMTOOLBAR
+	MENUITEM "placeholder",			ID_VIEW_FIRSTTOOLBAR
 	MENUITEM SEPARATOR
 	MENUITEM "In&crease Font\tCtrl+]"			ID_VIEW_INCREASEFONT
 	MENUITEM "&Decrease Font\tCtrl+["			ID_VIEW_DECREASEFONT
