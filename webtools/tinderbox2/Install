@@ -163,16 +163,22 @@ use are in the configuration files.
       and will avoids any day light savings problems.  This keeps the
 	archive of compressed build logs from growing without limit.
 
-*) set up the $prefix/bin/processmail* programs to receive the
-incoming tinderbox mail.  The process id which receives and process
-the mail must be the the same id which runs the tinderbox cron job to
-prepare the web pages.  Usually this set up is accomplished by having
-the MTA (Sendmail) pass mail for particular accounts into a script.
-This can be configured via a global configuration file (Sendmail alias
-file) or via a .forward file (each account gets the same user id but a
-different home directory, each home directory gets a .forward to cause
-incoming mail to be delivered through the correct tinderbox mail
-processing program).  
+*) you may recieve data into the $prefix/bin/processmail* programs via
+http post. Typically this means that these programs must be installed
+in the $cgi-bin directory and have a name which ends in *.cgi. Instead
+of mailling the logs to these programs, use the HTTPPost program to
+post the data to the correct URL.
+
+*) If using the mail system, set up the $prefix/bin/processmail*
+programs to receive the incoming tinderbox mail.  The process id which
+receives and process the mail must be the the same id which runs the
+tinderbox cron job to prepare the web pages.  Usually this set up is
+accomplished by having the MTA (Sendmail) pass mail for particular
+accounts into a script.  This can be configured via a global
+configuration file (Sendmail alias file) or via a .forward file (each
+account gets the same user id but a different home directory, each
+home directory gets a .forward to cause incoming mail to be delivered
+through the correct tinderbox mail processing program).
 
 I have used the following configurations for the mail server Postfix.
 The postfix aliases file /etc/postfix/aliases contains the following
