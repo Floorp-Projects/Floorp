@@ -447,12 +447,22 @@ nsNativeComponentLoader::SelfRegisterDll(nsDll *dll,
                ("nsNativeComponentLoader: %s using nsIModule to register self.",
                 dll->GetDisplayPath()));
         nsCOMPtr<nsIFile> fs;
-        res = dll->GetDllSpec(getter_AddRefs(fs));
-        if (NS_SUCCEEDED(res))
+        /*************************************************************
+         * WARNING: Why are use introducing 'res2' here and then     *
+         * later assigning it to 'res' rather than just using 'res'? *
+         * This is because this code turns up a code-generation bug  *
+         * in VC6 on NT. Assigning to 'res' on the next line causes  *
+         * the value of 'dll' to get nulled out! The two seem to be  *
+         * getting aliased together during compilation.              *
+         *************************************************************/
+        nsresult res2 = dll->GetDllSpec(getter_AddRefs(fs));    // don't change 'res2' -- see warning, above
+        if (NS_SUCCEEDED(res2)) {
             res = mobj->RegisterSelf(mCompMgr, fs, registryLocation,
                                      nativeComponentType);
+        }
         else
         {
+            res = res2;         // don't take this out -- see warning, above
             PR_LOG(nsComponentManagerLog, PR_LOG_ERROR, 
                    ("nsNativeComponentLoader: dll->GetDllSpec() on %s FAILED.",
                     dll->GetDisplayPath()));
