@@ -26,6 +26,11 @@ use strict;
 
 require "CGI.pl";
 
+$::CheckOptionValues = 0;       # It's OK if we have some bogus things in the
+                                # pop-up lists here, from a remembered query
+                                # that is no longer quite valid.  We don't
+                                # want to crap out in the query page.
+
 # Shut up misguided -w warnings about "used only once":
 
 use vars @::legal_resolution,
