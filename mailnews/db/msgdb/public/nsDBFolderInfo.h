@@ -69,6 +69,9 @@ public:
 	NS_IMETHOD			GetLocale(nsString &result) ;
 	NS_IMETHOD			SetLocale(nsString &locale) ;
 
+	NS_IMETHOD			SetMailboxName(nsString &newBoxName);
+	NS_IMETHOD			GetMailboxName(nsString &boxName);
+
 	NS_IMETHOD			SetVersion(PRUint32 version) ;
 	NS_IMETHOD			GetVersion(PRUint32 *result);
 
@@ -96,9 +99,6 @@ public:
 	PRInt32				GetNumLatered();
 	nsMsgKey			GetLateredAt(PRInt32 laterIndex, time_t *pUntil);
 	void				RemoveLateredAt(PRInt32 laterIndex);
-
-	virtual void		SetMailboxName(nsString &newBoxName);
-	virtual void		GetMailboxName(nsString &boxName);
 
 	void				SetViewType(PRInt32 viewType);
 	PRInt32				GetViewType();

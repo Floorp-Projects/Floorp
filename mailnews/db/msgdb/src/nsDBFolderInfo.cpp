@@ -349,14 +349,14 @@ void nsDBFolderInfo::RemoveLateredAt(PRInt32 laterIndex)
 {
 }
 
-void nsDBFolderInfo::SetMailboxName(nsString &newBoxName)
+NS_IMETHODIMP nsDBFolderInfo::SetMailboxName(nsString &newBoxName)
 {
-	SetPropertyWithToken(m_mailboxNameColumnToken, newBoxName);
+	return SetPropertyWithToken(m_mailboxNameColumnToken, newBoxName);
 }
 
-void nsDBFolderInfo::GetMailboxName(nsString &boxName)
+NS_IMETHODIMP nsDBFolderInfo::GetMailboxName(nsString &boxName)
 {
-	GetPropertyWithToken(m_mailboxNameColumnToken, boxName);
+	return GetPropertyWithToken(m_mailboxNameColumnToken, boxName);
 }
 
 void nsDBFolderInfo::SetViewType(PRInt32 viewType)

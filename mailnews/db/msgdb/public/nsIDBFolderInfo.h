@@ -56,6 +56,9 @@ public:
 	NS_IMETHOD			GetLocale(nsString &result) = 0;
 	NS_IMETHOD			SetLocale(nsString &locale) = 0;
     
+	NS_IMETHOD			SetMailboxName(nsString &newBoxName) = 0;
+	NS_IMETHOD			GetMailboxName(nsString &boxName) = 0;
+
 	NS_IMETHOD			SetVersion(PRUint32 version)  = 0;
 	NS_IMETHOD			GetVersion(PRUint32 *result) = 0;
 
