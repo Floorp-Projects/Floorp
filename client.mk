@@ -351,14 +351,42 @@ endif
 ####################################
 # CVS defines for Phoenix (pulled and built if MOZ_PHOENIX is set)
 #
-CVSCO_PHOENIX := $(CVSCO) $(CVS_CO_DATE_FLAGS) mozilla/toolkit mozilla/browser
+CVSCO_PHOENIX := $(CVSCO) $(CVS_CO_DATE_FLAGS) mozilla/browser
 
 ifdef MOZ_PHOENIX
 FASTUPDATE_PHOENIX := fast_update $(CVSCO_PHOENIX)
 CHECKOUT_PHOENIX := cvs_co $(CVSCO_PHOENIX)
+MOZ_XUL_APP = 1
 else
 CHECKOUT_PHOENIX := true
 FASTUPDATE_PHOENIX := true
+endif
+
+####################################
+# CVS defines for Thunderbird (pulled and built if MOZ_THUNDERBIRD is set)
+#
+
+CVSCO_THUNDERBIRD := $(CVSCO) $(CVS_CO_DATE_FLAGS) mozilla/mail
+ifdef MOZ_THUNDERBIRD
+FASTUPDATE_THUNDERBIRD := fast_update $(CVSCO_THUNDERBIRD)
+CHECKOUT_THUNDERBIRD := cvs_co $(CVSCO_THUNDERBIRD)
+MOZ_XUL_APP = 1
+else
+FASTUPDATE_THUNDERBIRD := true
+CHECKOUT_THUNDERBIRD := true
+endif
+
+####################################
+# CVS defines for mozilla/toolkit (pulled and built if MOZ_XUL_APP is set)
+#
+
+CVSCO_MOZTOOLKIT := $(CVSCO) $(CVS_CO_DATE_FLAGS) mozilla/toolkit
+ifdef MOZ_XUL_APP
+FASTUPDATE_MOZTOOLKIT := fast_update $(CVSCO_MOZTOOLKIT)
+CHECKOUT_MOZTOOLKIT := cvs_co $(CVSCO_MOZTOOLKIT)
+else
+FASTUPDATE_MOZTOOLKIT := true
+CHECKOUT_MOZTOOLKIT := true
 endif
 
 ####################################
@@ -441,7 +469,9 @@ real_checkout:
         cvs_co $(CVSCO_IMGLIB2) && \
 	cvs_co $(CVSCO_CALENDAR) && \
 	$(CHECKOUT_LIBART) && \
+	$(CHECKOUT_MOZTOOLKIT) && \
 	$(CHECKOUT_PHOENIX) && \
+	$(CHECKOUT_THUNDERBIRD) && \
 	$(CHECKOUT_CODESIGHS) && \
 	cvs_co $(CVSCO_SEAMONKEY)
 	@echo "checkout finish: "`date` | tee -a $(CVSCO_LOGFILE)
@@ -501,7 +531,9 @@ real_fast-update:
 	fast_update $(CVSCO_IMGLIB2) && \
 	fast_update $(CVSCO_CALENDAR) && \
 	$(FASTUPDATE_LIBART) && \
+	$(FASTUPDATE_MOZTOOLKIT) && \
 	$(FASTUPDATE_PHOENIX) && \
+	$(FASTUPDATE_THUNDERBIRD) && \
 	$(FASTUPDATE_CODESIGHS) && \
 	fast_update $(CVSCO_SEAMONKEY)
 	@echo "fast_update finish: "`date` | tee -a $(CVSCO_LOGFILE)

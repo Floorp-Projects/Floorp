@@ -857,6 +857,9 @@ browser/components/prefwindow/content/Makefile
 browser/components/prefwindow/locale/Makefile
 browser/components/search/Makefile
 browser/components/search/resources/Makefile
+"
+
+MAKEFILES_xulapp="
 toolkit/Makefile
 toolkit/components/autocomplete/Makefile
 toolkit/components/autocomplete/public/Makefile
@@ -872,11 +875,19 @@ toolkit/skin/win/Makefile
 toolkit/xre/Makefile
 "
 
-MAKEFILES_minotaur="
+MAKEFILES_thunderbird="
 mail/Makefile
+mail/app/Makefile
+mail/app/profile/Makefile
 mail/base/Makefile
 mail/components/Makefile
 mail/components/compose/Makefile
+mail/components/addrbook/Makefile
+mail/components/prefwindow/Makefile
+mail/extensions/Makefile
+mail/extensions/smime/Makefile
+mail/extensions/offline/Makefile
+xpfe/components/build2/Makefile
 "
 
 MAKEFILES_sql="
@@ -1298,8 +1309,12 @@ if test -n "$MOZ_PHOENIX"; then
     add_makefiles "$MAKEFILES_phoenix"
 fi
 
-if test -n "$MOZ_MINOTAUR"; then
-    add_makefiles "$MAKEFILES_minotaur"
+if test -n "$MOZ_XUL_APP"; then
+    add_makefiles "$MAKEFILES_xulapp"
+fi
+
+if test -n "$MOZ_THUNDERBIRD"; then
+    add_makefiles "$MAKEFILES_thunderbird"
 fi
 
 else

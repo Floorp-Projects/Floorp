@@ -263,6 +263,13 @@ endif
 
 ifdef MOZ_PHOENIX
 tier_99_dirs	+= browser
+endif
+
+ifdef MOZ_THUNDERBIRD
+tier_99_dirs	+= toolkit/xre mail
+endif
+
+ifdef MOZ_XUL_APP
 else
 ifneq (,$(MOZ_XPFE_COMPONENTS)$(MOZ_XUL))
 tier_99_dirs	+= xpfe/bootstrap
