@@ -1746,8 +1746,6 @@ nsMenuPopupFrame::HandleEvent(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsMenuPopupFrame::Destroy(nsIPresContext* aPresContext)
 {
-  //nsCOMPtr<nsIDOMEventReceiver> target = do_QueryInterface(mContent);
-  //target->RemoveEventListener("mousemove", mMenuPopupEntryListener, PR_TRUE);
   return nsBoxFrame::Destroy(aPresContext);
 }
 

@@ -1093,7 +1093,7 @@ GetChildListNameFor(nsIPresContext* aPresContext,
   }
 
   // Verify that the frame is actually in that child list
-#ifdef NS_DEBUG
+#ifdef NS_DEBUG 
   nsIFrame* firstChild;
   aParentFrame->FirstChild(aPresContext, listName, &firstChild);
 
@@ -8739,10 +8739,13 @@ DoDeletingFrameSubtree(nsIPresContext*  aPresContext,
         aFrameManager->SetPlaceholderFrameFor(outOfFlowFrame, nsnull);
         
         // Destroy the out-of-flow frame only if aRemovedFrame is _not_
-        // one of its ancestor frames. If aRemovedFrame is an ancestor
-        // of the out-of-flow frame, then the out-of-flow frame will be
-        // destroyed by aRemovedFrame.
-        if (!IsAncestorFrame(outOfFlowFrame, aRemovedFrame)) {
+        // one of its ancestor frames or if it is a popup frame. 
+        // If aRemovedFrame is an ancestor of the out-of-flow frame, then 
+        // the out-of-flow frame will be destroyed by aRemovedFrame.
+        const nsStyleDisplay* display;
+        outOfFlowFrame->GetStyleData(eStyleStruct_Display,
+                                     (const nsStyleStruct*&)display);
+        if (display->mDisplay == NS_STYLE_DISPLAY_POPUP || !IsAncestorFrame(outOfFlowFrame, aRemovedFrame)) {
           if (aDestroyQueue.IndexOf(outOfFlowFrame) < 0)
             aDestroyQueue.AppendElement(outOfFlowFrame);
         }
@@ -8806,18 +8809,41 @@ DeletingFrameSubtree(nsIPresContext*  aPresContext,
     for (PRInt32 i = destroyQueue.Count() - 1; i >= 0; --i) {
       nsIFrame* outOfFlowFrame = NS_STATIC_CAST(nsIFrame*, destroyQueue[i]);
 
-      // Get the out-of-flow frame's parent
-      nsIFrame* parentFrame;
-      outOfFlowFrame->GetParent(&parentFrame);
+      const nsStyleDisplay* display;
+      outOfFlowFrame->GetStyleData(eStyleStruct_Display,
+                                   (const nsStyleStruct*&)display);
+      if (display->mDisplay == NS_STYLE_DISPLAY_POPUP) {
+        // Locate the root popup set and remove ourselves from the popup set's list
+        // of popup frames.
+        nsIFrame* rootFrame;
+        aFrameManager->GetRootFrame(&rootFrame);
+        if (rootFrame)
+          rootFrame->FirstChild(aPresContext, nsnull, &rootFrame);   
+        nsCOMPtr<nsIRootBox> rootBox(do_QueryInterface(rootFrame));
+        if (rootBox) {
+          nsIFrame* popupSetFrame;
+          rootBox->GetPopupSetFrame(&popupSetFrame);
+          if (popupSetFrame) {
+            nsCOMPtr<nsIPopupSetFrame> popupSet(do_QueryInterface(popupSetFrame));
+            if (popupSet)
+              popupSet->RemovePopupFrame(outOfFlowFrame);
+          }
+        }
+      }
+      else {
+        // Get the out-of-flow frame's parent
+        nsIFrame* parentFrame;
+        outOfFlowFrame->GetParent(&parentFrame);
   
-      // Get the child list name for the out-of-flow frame
-      nsCOMPtr<nsIAtom> listName;
-      GetChildListNameFor(aPresContext, parentFrame, outOfFlowFrame,
-                          getter_AddRefs(listName));
+        // Get the child list name for the out-of-flow frame
+        nsCOMPtr<nsIAtom> listName;
+        GetChildListNameFor(aPresContext, parentFrame, outOfFlowFrame,
+                            getter_AddRefs(listName));
   
-      // Ask the parent to delete the out-of-flow frame
-      aFrameManager->RemoveFrame(aPresContext, *aPresShell, parentFrame,
-                                 listName, outOfFlowFrame);
+        // Ask the parent to delete the out-of-flow frame
+        aFrameManager->RemoveFrame(aPresContext, *aPresShell, parentFrame,
+                                   listName, outOfFlowFrame);
+      }
     }
   }
 
@@ -9080,27 +9106,41 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
     childFrame->GetStyleData(eStyleStruct_Display,
                              (const nsStyleStruct*&)display);
     if (display->mDisplay == NS_STYLE_DISPLAY_POPUP) {
-       // Get the placeholder frame
+      // Get the placeholder frame
       nsIFrame* placeholderFrame;
       frameManager->GetPlaceholderFrameFor(childFrame, &placeholderFrame);
 
       // Remove the mapping from the frame to its placeholder
       frameManager->SetPlaceholderFrameFor(childFrame, nsnull);
 
-      // Now we remove the popup frame
+      // Locate the root popup set and remove ourselves from the popup set's list
+      // of popup frames.
+      nsIFrame* rootFrame;
+      frameManager->GetRootFrame(&rootFrame);
+      if (rootFrame)
+        rootFrame->FirstChild(aPresContext, nsnull, &rootFrame);   
+      nsCOMPtr<nsIRootBox> rootBox(do_QueryInterface(rootFrame));
+      if (rootBox) {
+        nsIFrame* popupSetFrame;
+        rootBox->GetPopupSetFrame(&popupSetFrame);
+        if (popupSetFrame) {
+          nsCOMPtr<nsIPopupSetFrame> popupSet(do_QueryInterface(popupSetFrame));
+          if (popupSet)
+            popupSet->RemovePopupFrame(childFrame);
+        }
+      }
+
+      // Remove the placeholder frame first (XXX second for now) (so
+      // that it doesn't retain a dangling pointer to memory)
       if (placeholderFrame) {
         placeholderFrame->GetParent(&parentFrame);
         DeletingFrameSubtree(aPresContext, shell, frameManager, placeholderFrame);
         rv = frameManager->RemoveFrame(aPresContext, *shell, parentFrame,
                                        nsnull, placeholderFrame);
-
-        // Destroy the real frame.
-        childFrame->Destroy(aPresContext);
         return NS_OK;
       }
     }
-    
-    if (display->IsFloating()) {
+    else if (display->IsFloating()) {
 #ifdef NOISY_FIRST_LETTER
       printf("  ==> child display is still floating!\n");
 #endif

@@ -97,6 +97,7 @@ public:
   NS_IMETHOD DestroyPopup(nsIFrame* aPopup);
 
   NS_IMETHOD AddPopupFrame(nsIFrame* aPopup);
+  NS_IMETHOD RemovePopupFrame(nsIFrame* aPopup);
   
   PRBool OnCreate(nsIContent* aPopupContent);
   PRBool OnDestroy(nsIContent* aPopupContent);
