@@ -2254,6 +2254,9 @@ int StartIB(/*CString parms, WIDGET *curWidget*/)
 
 //  AfxMessageBox("set breakpoint",MB_OK);
 
+	// delete contents of output directory before creating customized installer
+	EraseDirectory(outputPath);
+
 	if (SearchPath(workspacePath, "NSCPXPI", NULL, 0, NULL, NULL))
 		nscpxpiPath = workspacePath + "\\NSCPXPI";
 	else
