@@ -228,6 +228,33 @@ PRBool INTL_stateful_charset(const char *charset)
   return (PL_strcasecmp(charset, "iso-2022-jp") == 0);
 }
 
+// Check 7bit in a given buffer.
+// This is expensive (both memory and performance).
+// The check would be very simple if applied to an unicode text (e.g. nsString or utf-8).
+// Possible optimazaion is to search ESC(0x1B) in case of iso-2022-jp and iso-2022-kr.
+PRBool INTL_7bit_data_part(const char *charset, const char *inString, const PRUint32 size)
+{
+  char *aCString;
+  nsString aCharset(charset);
+  nsString outString;
+  nsresult res;
+  
+  aCString = (char *) PR_Malloc(size + 1);
+  if (nsnull != aCString) {
+    PL_strncpy(aCString, inString, size); // make a C string
+    res = ConvertToUnicode(aCharset, aCString, outString);
+    PR_Free(aCString);
+    if (NS_SUCCEEDED(res)) {
+      for (PRInt32 i = 0; i < outString.Length(); i++) {
+        if (outString[i] > 127) {
+          return PR_FALSE;
+        }
+      }
+    }
+  }
+  return PR_TRUE;  // all 7 bit
+}
+
 // Obsolescent
 int					INTL_IsLeadByte(int charSetID,unsigned char ch) {return 0;}
 // Obsolescent

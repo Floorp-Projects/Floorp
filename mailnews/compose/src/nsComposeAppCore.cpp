@@ -304,6 +304,8 @@ nsresult nsComposeAppCore::SetDocumentCharset(class nsString const & aCharset)
 			NS_RELEASE(domDoc);
 		}
 	}
+  // Set charset, this will be used for the MIME charset labeling.
+  mMsgCompFields->SetCharacterSet(nsAutoCString(aCharset), NULL);
 	
 	return res;
 }
@@ -646,6 +648,10 @@ nsComposeAppCore::NewMessage(nsAutoString& aUrl,
                                    this,      // callbacks
                                    615,         // width
                                    650);        // height
+	
+  // Get the default charset from pref, use this as a mail charset.
+  // TODO: For reply/forward, original charset need to be used instead.
+  mMsgCompFields->SetCharacterSet(INTL_GetDefaultMailCharset(), NULL);
 
 	if (tree && nodeList && msgAppCore) {
 		nsCOMPtr<nsISupports> object;
@@ -752,11 +758,6 @@ NS_IMETHODIMP nsComposeAppCore::SendMessage(nsAutoString& aAddrTo,
 //	nsIMsgCompose *pMsgCompose; 
 	if (mMsgCompFields) 
 	{ 
-		// Get the default charset from pref, use this as a mail charset for now.
-		// TODO: For reply/forward, original charset need to be used instead.
-		// TODO: Also need to update charset for the charset menu.
-		mMsgCompFields->SetCharacterSet(INTL_GetDefaultMailCharset(), NULL);
-
 		nsString aString;
 		nsString aCharset(msgCompHeaderInternalCharset());
 		char *outCString;
