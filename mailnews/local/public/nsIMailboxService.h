@@ -84,8 +84,8 @@ public:
 	// It would be nice if we can figure this out for ourselves in the protocol but we can't do 
 	// that right now. 
 	//////////////////////////////////////////////////////////////////////////////////////////////
-	NS_IMETHOD DisplayMessage(const nsFileSpec& aMailboxPath, nsMsgKey aMessageKey, const char * aMessageID,
-		nsISupports * aDisplayConsumer, nsIUrlListener * aUrlListener, nsIURL ** aURL) = 0;
+	NS_IMETHOD DisplayMessage(const char* aMessageURI, nsISupports * aDisplayConsumer, 
+							  nsIUrlListener * aUrlListener, nsIURL ** aURL) = 0;
 
 	/////////////////////////////////////////////////////////////////////////////////////////////
 	// This is more of a convience function for testing purposes. We want to able to say: display 
