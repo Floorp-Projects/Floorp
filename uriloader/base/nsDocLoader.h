@@ -57,6 +57,7 @@
 #include "nsIHttpEventSink.h"
 #include "nsISecurityEventSink.h"
 #include "nsCOMPtr.h"
+#include "pldhash.h"
 
 struct nsRequestInfo;
 struct nsListenerInfo;
@@ -164,7 +165,7 @@ protected:
     PRInt32 mCurrentTotalProgress;
     PRInt32 mMaxTotalProgress;
 
-    nsAutoVoidArray mRequestInfoList;
+    PLDHashTable mRequestInfoHash;
 
 private:
     nsListenerInfo *GetListenerInfo(nsIWeakReference* aListener);
@@ -173,7 +174,7 @@ private:
 
     nsresult AddRequestInfo(nsIRequest* aRequest);
     nsRequestInfo *GetRequestInfo(nsIRequest* aRequest);
-    nsresult ClearRequestInfoList(void);
+    void ClearRequestInfoHash(void);
     void CalculateMaxProgress(PRInt32 *aMax);
 ///    void DumpChannelInfo(void);
 
