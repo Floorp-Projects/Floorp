@@ -381,6 +381,14 @@ Java_org_mozilla_jss_CryptoManager_initializeAllNative
     }
     JSS_javaVM = VMs[0];
 
+    /*
+     * Set up policy. We're always domestic now. Thanks to the US Government!
+     */
+    if( NSS_SetDomesticPolicy() != SECSuccess ) {
+        JSS_throwMsg(env, SECURITY_EXCEPTION, "Unable to set security policy");
+        goto finish;
+    }
+
     initialized = PR_TRUE;
 
 finish:
