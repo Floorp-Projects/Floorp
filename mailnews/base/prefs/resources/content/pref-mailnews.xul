@@ -72,7 +72,7 @@
 		</html:div>
 			
 		<html:div>
-			<html:input pref="true" preftype="bool" prefstring="mail.fixed_width_messages" prefindex="false" id="var_width" name="fontwidth" type="radio"/>
+            <html:input id="var_width" name="fontwidth" type="radio"/>
 			<html:label for="var_width">&variableWidth.label;</html:label>
 		</html:div>
 
