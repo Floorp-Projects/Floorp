@@ -1832,6 +1832,12 @@ nsSSLIOLayerSetOptions(PRFileDesc *fd, PRBool forTLSStepUp,
     }
   }
 
+  // Since we can't dumb down a connection through a proxy,
+  // let's not do TLS if we're connecting through a proxy.
+  if (proxyHost && SECSuccess != SSL_OptionSet(fd, SSL_ENABLE_TLS, PR_FALSE)){
+    return NS_ERROR_FAILURE;
+  }
+
   if (SECSuccess != SSL_OptionSet(fd, SSL_HANDSHAKE_AS_CLIENT, PR_TRUE)) {
     return NS_ERROR_FAILURE;
   }
@@ -1912,6 +1918,7 @@ nsSSLIOLayerAddToSocket(const char* host,
 
   rv = nsSSLIOLayerSetOptions(layer, forTLSStepUp, proxyHost, host, port,
                               infoObject);
+
   if (NS_FAILED(rv))
     goto loser;
 
