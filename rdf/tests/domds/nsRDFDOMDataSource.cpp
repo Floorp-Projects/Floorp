@@ -58,6 +58,7 @@ static NS_DEFINE_CID(kISupportsIID, NS_ISUPPORTS_IID);
 nsRDFDOMDataSource::nsRDFDOMDataSource():
     mURI(nsnull),
     mRDFService(nsnull),
+    mMode(nsIDOMDataSource::modeDOM),
     mObservers(nsnull)
 {
   NS_INIT_REFCNT();
@@ -80,50 +81,9 @@ nsRDFDOMDataSource::~nsRDFDOMDataSource()
                                                       mRDFService);
 }
 
-NS_IMPL_ADDREF(nsRDFDOMDataSource)
-NS_IMPL_RELEASE(nsRDFDOMDataSource)
-
-NS_IMETHODIMP
-nsRDFDOMDataSource::QueryInterface(const nsIID& iid, void **result)
-{
-  nsresult rv = NS_NOINTERFACE;
-  if (!result) return NS_ERROR_NULL_POINTER;
-
-  void *res=nsnull;
-
-  if (iid.Equals(nsIRDFDataSource::GetIID()) ||
-      iid.Equals(kISupportsIID)) {
-    res = NS_STATIC_CAST(nsIRDFDataSource*, this);
-  }
-  else if(iid.Equals(nsIDOMDataSource::GetIID())) {
-      res = NS_STATIC_CAST(nsIDOMDataSource*, this);
-  }
-  if (res) {
-      NS_ADDREF(this);
-      *result = res;
-      rv = NS_OK;
-  }
-
-  return rv;
-
-}
-
-
-/* void Init (in string uri); */
-NS_IMETHODIMP
-nsRDFDOMDataSource::Init(const char *uri)
-{
-    nsresult rv=NS_OK;
-
-    if (!mURI || PL_strcmp(uri, mURI) != 0)
-        mURI = PL_strdup(uri);
-    
-    
-    rv = getRDFService()->RegisterDataSource(this, PR_FALSE);
-    if (NS_FAILED(rv)) return rv;
-    
-    return rv;
-}
+NS_IMPL_ISUPPORTS2(nsRDFDOMDataSource,
+                   nsIRDFDataSource,
+                   nsIDOMDataSource);
 
 
 /* readonly attribute string URI; */
@@ -427,18 +387,24 @@ nsRDFDOMDataSource::ArcLabelsOut(nsIRDFResource *aSource, nsISimpleEnumerator **
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsRDFDOMDataSource::Change(nsIRDFResource *, nsIRDFResource *,
+                           nsIRDFNode *, nsIRDFNode*)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsRDFDOMDataSource::Move(nsIRDFResource *, nsIRDFResource *,
+                         nsIRDFResource *, nsIRDFNode*)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 
 /* nsISimpleEnumerator GetAllResources (); */
 NS_IMETHODIMP
 nsRDFDOMDataSource::GetAllResources(nsISimpleEnumerator **_retval)
-{
-    return NS_RDF_NO_VALUE;
-}
-
-
-/* void Flush (); */
-NS_IMETHODIMP
-nsRDFDOMDataSource::Flush()
 {
     return NS_RDF_NO_VALUE;
 }
@@ -539,6 +505,7 @@ nsRDFDOMDataSource::unassertEnumFunc(void *aElement, void *aData)
   return PR_TRUE;
 }
 
+// nsIDOMDataSource methods
 nsresult
 nsRDFDOMDataSource::SetWindow(nsIDOMWindow *window) {
   nsresult rv;
@@ -550,6 +517,19 @@ nsRDFDOMDataSource::SetWindow(nsIDOMWindow *window) {
   return rv;
 }
 
+nsresult
+nsRDFDOMDataSource::SetMode(PRInt32 aMode)
+{
+  mMode = aMode;
+  return NS_OK;
+}
+
+nsresult
+nsRDFDOMDataSource::GetMode(PRInt32 *aMode)
+{
+  *aMode = mMode;
+  return NS_OK;
+}
 
 
 NS_METHOD
