@@ -154,6 +154,7 @@ NS_IMETHODIMP imgRequestProxy::Cancel(nsresult status)
   LOG_SCOPE(gImgLog, "imgRequestProxy::Cancel");
 
   mCanceled = PR_TRUE;
+  mListener = nsnull;
 
   {
     nsAutoLock lock(mLock);
@@ -161,8 +162,6 @@ NS_IMETHODIMP imgRequestProxy::Cancel(nsresult status)
   }
 
   mOwner = nsnull;
-
-  mListener = nsnull;
 
   return NS_OK;
 }
