@@ -167,6 +167,9 @@ public:
   NS_IMETHOD SetIsRenderingOnlySelection(PRBool aVal) { mIsRenderingOnlySelection = aVal; return NS_OK; }
   NS_IMETHOD IsRenderingOnlySelection(PRBool* aResult);
 
+  NS_IMETHOD GetBackgroundDraw(PRBool &aCanDraw) { aCanDraw = mDrawBackground; return NS_OK; }
+  NS_IMETHOD SetBackgroundDraw(PRBool aCanDraw) { mDrawBackground = aCanDraw; return NS_OK; }
+
 #ifdef MOZ_REFLOW_PERF
   NS_IMETHOD CountReflows(const char * aName, PRUint32 aType, nsIFrame * aFrame);
   NS_IMETHOD PaintCount(const char * aName, nsIRenderingContext* aRenderingContext, nsIFrame * aFrame, PRUint32 aColor);
@@ -244,6 +247,7 @@ protected:
   nscoord               mDefaultBackgroundImageOffsetX;
   nscoord               mDefaultBackgroundImageOffsetY;
   PRUint8               mDefaultBackgroundImageAttachment;
+  PRBool				mDrawBackground;
 
   nsSupportsHashtable   mImageLoaders;
 

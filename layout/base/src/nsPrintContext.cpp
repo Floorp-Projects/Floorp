@@ -71,6 +71,7 @@ protected:
 PrintContext::PrintContext() :
   mPageDim(0,0,0,0)
 {
+  SetBackgroundDraw(PR_FALSE);
 }
 
 PrintContext::~PrintContext()
