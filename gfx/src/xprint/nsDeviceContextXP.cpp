@@ -217,8 +217,10 @@ NS_IMETHODIMP nsDeviceContextXp :: GetScrollBarDimensions(float &aWidth,
                                         float &aHeight) const
 {
   // XXX Oh, yeah.  These are hard coded.
-  aWidth  = 15.f * mPixelsToTwips;
-  aHeight = 15.f * mPixelsToTwips;
+  float scale;
+  GetCanonicalPixelScale(scale);
+  aWidth  = 15.f * mPixelsToTwips * scale;
+  aHeight = 15.f * mPixelsToTwips * scale;
 
   return NS_OK;
 }

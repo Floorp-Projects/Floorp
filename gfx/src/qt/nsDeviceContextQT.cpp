@@ -259,8 +259,10 @@ nsDeviceContextQT::SupportsNativeWidgets(PRBool &aSupportsWidgets)
 NS_IMETHODIMP nsDeviceContextQT::GetScrollBarDimensions(float &aWidth, 
                                                         float &aHeight) const
 {
-  aWidth = mScrollbarWidth * mPixelsToTwips;
-  aHeight = mScrollbarHeight * mPixelsToTwips;
+  float scale;
+  GetCanonicalPixelScale(scale);
+  aWidth = mScrollbarWidth * mPixelsToTwips * scale;
+  aHeight = mScrollbarHeight * mPixelsToTwips * scale;
   return NS_OK;
 }
 

@@ -5866,6 +5866,22 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsIPresShell* aPresShell,
                                                nsIFrame*&               aScrollableFrame,
                                                nsIFrame*                aScrollPortFrame)
 {
+  // Check to see the type of parent frame so we know whether we need to 
+  // turn off/on scaling for the scrollbars
+  //
+  // If the parent is a viewportFrame then we are the scrollbars for the UI
+  // if not then we are scrollbars inside the document.
+  PRBool noScalingOfTwips = PR_FALSE;
+  nsCOMPtr<nsIPrintPreviewContext> printPreviewContext(do_QueryInterface(aPresContext));
+  if (printPreviewContext) {
+    nsCOMPtr<nsIAtom> typeAtom;
+    aParentFrame->GetFrameType(getter_AddRefs(typeAtom));
+    noScalingOfTwips = typeAtom == nsLayoutAtoms::viewportFrame;
+    if (noScalingOfTwips) {
+      printPreviewContext->SetScalingOfTwips(PR_FALSE);
+    }
+  }
+
   nsIFrame* scrollFrame = nsnull;
   nsIFrame* parentFrame = nsnull;
   nsIFrame* gfxScrollFrame = nsnull;
@@ -5923,6 +5939,9 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsIPresShell* aPresShell,
 
   aScrolledChildStyle = scrolledPseudoStyle;
 
+  if (printPreviewContext && noScalingOfTwips) {
+    printPreviewContext->SetScalingOfTwips(PR_TRUE);
+  }
 
   return NS_OK;
 }
@@ -6011,6 +6030,22 @@ nsCSSFrameConstructor::BuildScrollFrame       (nsIPresShell* aPresShell,
                                                nsIStyleContext*&        aScrolledContentStyle,
                                                nsIFrame*                aScrollPortFrame)                                                                                                                                          
 {
+    // Check to see the type of parent frame so we know whether we need to 
+    // turn off/on scaling for the scrollbars
+    //
+    // If the parent is a viewportFrame then we are the scrollbars for the UI
+    // if not then we are scrollbars inside the document.
+    PRBool noScalingOfTwips = PR_FALSE;
+    nsCOMPtr<nsIPrintPreviewContext> printPreviewContext(do_QueryInterface(aPresContext));
+    if (printPreviewContext) {
+      nsCOMPtr<nsIAtom> typeAtom;
+      aParentFrame->GetFrameType(getter_AddRefs(typeAtom));
+      noScalingOfTwips = typeAtom == nsLayoutAtoms::viewportFrame;
+      if (noScalingOfTwips) {
+        printPreviewContext->SetScalingOfTwips(PR_FALSE);
+      }
+    }
+
     nsIFrame *scrollFrame;
 
     nsCOMPtr<nsIStyleContext> scrolledContentStyle;
@@ -6043,6 +6078,10 @@ nsCSSFrameConstructor::BuildScrollFrame       (nsIPresShell* aPresShell,
 
     // now set the primary frame to the ScrollFrame
     aState.mFrameManager->SetPrimaryFrameFor( aContent, aNewFrame );
+
+    if (noScalingOfTwips) {
+      printPreviewContext->SetScalingOfTwips(PR_TRUE);
+    }
 
     return NS_OK;
 

@@ -63,16 +63,20 @@ public:
   NS_IMETHOD SetPageDim(nsRect* aRect);
   NS_IMETHOD SetPrintSettings(nsIPrintSettings* aPS);
   NS_IMETHOD GetPrintSettings(nsIPrintSettings** aPS);
+  NS_IMETHOD GetScaledPixelsToTwips(float* aScale) const;
+  NS_IMETHOD SetScalingOfTwips(PRBool aOn) { mDoScaledTwips = aOn; return NS_OK; }
 
 protected:
   nsRect mPageDim;
   PRBool mCanPaginatedScroll;
   nsCOMPtr<nsIPrintSettings> mPrintSettings;
+  PRPackedBool mDoScaledTwips;
 };
 
 PrintPreviewContext::PrintPreviewContext() :
   mPageDim(-1,-1,-1,-1),
-  mCanPaginatedScroll(PR_TRUE)
+  mCanPaginatedScroll(PR_TRUE),
+  mDoScaledTwips(PR_TRUE)
 {
   SetBackgroundImageDraw(PR_FALSE);
   SetBackgroundColorDraw(PR_FALSE);
@@ -162,6 +166,30 @@ PrintPreviewContext::GetPrintSettings(nsIPrintSettings * *aPrintSettings)
   *aPrintSettings = mPrintSettings;
   NS_IF_ADDREF(*aPrintSettings);
 
+  return NS_OK;
+}
+
+//---------------------------------------------------------
+// The difference between this and GetScaledPixelsToTwips in nsPresContext
+// is here we check to see if we are scaling twips
+NS_IMETHODIMP
+PrintPreviewContext::GetScaledPixelsToTwips(float* aResult) const
+{
+  NS_PRECONDITION(aResult, "null out param");
+
+  float scale = 1.0f;
+  if (mDeviceContext)
+  {
+    float p2t;
+    mDeviceContext->GetDevUnitsToAppUnits(p2t);
+    if (mDoScaledTwips) {
+      mDeviceContext->GetCanonicalPixelScale(scale);
+      scale = p2t * scale;
+    } else {
+      scale = p2t;
+    }
+  }
+  *aResult = scale;
   return NS_OK;
 }
 

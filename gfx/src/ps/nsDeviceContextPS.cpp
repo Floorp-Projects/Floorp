@@ -228,8 +228,10 @@ NS_IMETHODIMP nsDeviceContextPS::GetScrollBarDimensions(float &aWidth, float &aH
   PR_LOG(nsDeviceContextPSLM, PR_LOG_DEBUG, ("nsDeviceContextPS::GetScrollBarDimensions()\n"));
 
   //XXX: Hardcoded values for Postscript
-  aWidth  = 20.f;
-  aHeight = 20.f;
+  float scale;
+  GetCanonicalPixelScale(scale);
+  aWidth  = 20.f * scale;
+  aHeight = 20.f * scale;
   return NS_OK;
 }
 

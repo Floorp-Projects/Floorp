@@ -269,6 +269,13 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext*          aPresContext,
     return NS_OK;
   }
 
+  // Turn on the scaling of twips so any of the scrollbars
+  // in the UI no longer get scaled
+  nsCOMPtr<nsIPrintPreviewContext> printPreviewContext(do_QueryInterface(aPresContext));
+  if (printPreviewContext) {
+    printPreviewContext->SetScalingOfTwips(PR_TRUE);
+  }
+
   nsCOMPtr<nsIPrintPreviewContext> ppContext = do_QueryInterface(aPresContext);
 
   // See if we can get a Print Settings from the Context
@@ -530,6 +537,12 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext*          aPresContext,
   // for the other reflows that happen
   mSize.width  = aDesiredSize.width;
   mSize.height = aDesiredSize.height;
+
+  // Turn off the scaling of twips so any of the scrollbars
+  // in the document get scaled
+  if (printPreviewContext) {
+    printPreviewContext->SetScalingOfTwips(PR_FALSE);
+  }
 
   NS_FRAME_TRACE_REFLOW_OUT("nsSimplePageSequeceFrame::Reflow", aStatus);
   return NS_OK;
