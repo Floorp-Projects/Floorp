@@ -1371,6 +1371,7 @@ private:
     nsDeque*          mJSContextStack;
     JSContext*        mSafeJSContext;
     xpcPerThreadData* mNextThread;
+    PRBool            mSafeContextIsFromSetter;
 
     static PRLock*           gLock;
     static xpcPerThreadData* gThreads;
