@@ -23,7 +23,6 @@
 /* Implementation of xptiInterfaceInfoManager. */
 
 #include "xptiprivate.h"
-#include "nsDirectoryServiceDefs.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(xptiInterfaceInfoManager, nsIInterfaceInfoManager)
 
@@ -89,50 +88,38 @@ xptiInterfaceInfoManager::xptiInterfaceInfoManager()
         mAutoRegLock(PR_NewLock())
 {
     NS_INIT_ISUPPORTS();
-
-#ifndef XPCOM_STANDALONE
-    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_PROGID);
-    if(prefs)
+    
+    const char* statsFilename = PR_GetEnv("MOZILLA_XPTI_STATS");
+    if(statsFilename)
     {
-        char* statsFilename;
-        if(NS_SUCCEEDED(prefs->CopyCharPref("xptinfo.logging.statsfilename",
-                                            &statsFilename)) && statsFilename)
+        mStatsLogFile = do_CreateInstance(NS_LOCAL_FILE_PROGID);         
+        if(mStatsLogFile && 
+           NS_SUCCEEDED(mStatsLogFile->InitWithPath(statsFilename)))
         {
-            mStatsLogFile = do_CreateInstance(NS_LOCAL_FILE_PROGID);         
-            if(mStatsLogFile && 
-               NS_SUCCEEDED(mStatsLogFile->InitWithPath(statsFilename)))
-            {
-#ifdef DEBUG
-                printf("***** logging xptinfo stats to: %s\n", statsFilename);
-#endif
-            }
-            else
-            {
-                mStatsLogFile = nsnull;
-            }
-            nsCRT::free(statsFilename);
+            printf("* Logging xptinfo stats to: %s\n", statsFilename);
         }
-
-        char* autoRegFilename;
-        if(NS_SUCCEEDED(prefs->CopyCharPref("xptinfo.logging.autoregfilename",
-                                            &autoRegFilename)) && autoRegFilename)
+        else
         {
-            mAutoRegLogFile = do_CreateInstance(NS_LOCAL_FILE_PROGID);         
-            if(mAutoRegLogFile && 
-               NS_SUCCEEDED(mAutoRegLogFile->InitWithPath(autoRegFilename)))
-            {
-#ifdef DEBUG
-                printf("***** logging xptinfo autoreg to: %s\n", autoRegFilename);
-#endif
-            }
-            else
-            {
-                mAutoRegLogFile = nsnull;
-            }
-            nsCRT::free(autoRegFilename);
+            printf("* Failed to create xptinfo stats file: %s\n", statsFilename);
+            mStatsLogFile = nsnull;
         }
     }
-#endif /* XPCOM_STANDALONE */
+
+    const char* autoRegFilename = PR_GetEnv("MOZILLA_XPTI_REGLOG");
+    if(autoRegFilename)
+    {
+        mAutoRegLogFile = do_CreateInstance(NS_LOCAL_FILE_PROGID);         
+        if(mAutoRegLogFile && 
+           NS_SUCCEEDED(mAutoRegLogFile->InitWithPath(autoRegFilename)))
+        {
+            printf("* Logging xptinfo autoreg to: %s\n", autoRegFilename);
+        }
+        else
+        {
+            printf("* Failed to create xptinfo autoreg file: %s\n", autoRegFilename);
+            mAutoRegLogFile = nsnull;
+        }
+    }
 }
 
 xptiInterfaceInfoManager::~xptiInterfaceInfoManager()
