@@ -3198,7 +3198,9 @@ js_Interpret(JSContext *cx, jsval *result)
                 NONINT_INCREMENT_OP_MIDDLE();
             }
 
+            fp->flags |= JSFRAME_ASSIGNING;
             CACHED_SET(OBJ_SET_PROPERTY(cx, obj, id, &rval));
+            fp->flags &= ~JSFRAME_ASSIGNING;
             if (!ok)
                 goto out;
             PUSH_OPND(rtmp);
