@@ -82,7 +82,16 @@ include <$(DEPTH)\config\rules.mak>
 install:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(MODULE).dll $(DIST)\bin
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(MODULE).lib $(DIST)\lib
+	$(MAKE_INSTALL) $(DLL) $(DIST)\bin
+	$(MAKE_INSTALL) ..\xul\MailAppShell.html     $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) ..\xul\MailAppShellNoTB.html $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) ..\xul\MailFrame.html        $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) ..\xul\MailToolbar.xml       $(DIST)\bin\res\samples
 
 clobber::
-        rm -f $(DIST)\lib\$(MODULE).lib
-        rm -f $(DIST)\bin\$(MODULE).dll
+	rm -f $(DIST)\lib\$(MODULE).lib
+	rm -f $(DIST)\bin\$(MODULE).dll
+	rm -f $(DIST)\res\samples\MailAppShell.html
+	rm -f $(DIST)\res\samples\MailAppShellNoTB.html
+	rm -f $(DIST)\res\samples\MailFrame.html
+	rm -f $(DIST)\res\samples\MailToolbar.xml

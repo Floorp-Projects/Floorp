@@ -1,0 +1,55 @@
+<?xml version="1.0"?> 
+<window xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"> 
+<?xml-stylesheet href="xul.css" type="text/css"?> 
+<!DOCTYPE window> 
+
+<window>
+  <xul:commands>
+    <xul:command name="nsCmd:MailSendMsg" onCommand="SendMailMessage()"/>
+    <xul:command name="nsCmd:BrowserForward" onCommand="window.forward();"/>
+    <xul:command name="nsCmd:BrowserReload" onCommand="window.reload();"/>
+    <xul:command name="nsCmd:BrowserStop" onCommand="window.stop();"/>
+    <xul:command name="nsCmd:BrowserHome" onCommand="window.home();"/>
+    <xul:command name="nsCmd:BrowserPrint" onCommand="window.print();"/>
+    <!-- other parameters of command are assumed to have
+      some useful initial value -->
+  </xul:commands>
+  
+  <xul:toolbox> 
+   
+    <xul:toolbar>
+          <html:button cmd="nsCmd:MailSendMsg" style="background-color:rgb(192,192,192);">
+                          <html:img src="resource:/res/toolbar/sendmsg.gif"/><html:BR/>Send
+          </html:button>
+          <html:button cmd="nsCmd:MailGetMsg" style="background-color:rgb(192,192,192);">
+                          <html:img src="resource:/res/toolbar/getmsg.gif"/><html:BR/>GetMsg
+          </html:button>
+          <html:button cmd="nsCmd:MailNewMsg" style="background-color:rgb(192,192,192);">
+                          <html:img src="resource:/res/toolbar/newmsg.gif"/><html:BR/>New Msg
+          </html:button>
+          <html:button cmd="nsCmd:MailReply" style="background-color:rgb(192,192,192);">
+                          <html:img src="resource:/res/toolbar/reply.gif"/><html:BR/>Reply
+          </html:button>
+          <html:button cmd="nsCmd:MailForward" style="background-color:rgb(192,192,192);">
+                          <html:img src="resource:/res/toolbar/forward.gif"/><html:BR/>Forward
+          </html:button>
+          <html:button cmd="nsCmd:BrowserPrint" style="background-color:rgb(192,192,192);">
+                          <html:img src="resource:/res/toolbar/TB_Print.gif"/><html:BR/>Print
+          </html:button>
+          <html:a style="position:relative; direction:rtl; right:3; top: 2px;" href="http://www.netscape.com">
+                  <html:img alt="Throbber!" border=0 src="resource:/res/throbber/anims00.gif"/>
+          </html:a>
+    </xul:toolbar>
+    
+    <xul:toolbar>
+		<html:FORM>
+    	<html:SELECT style="width:200px;">
+		<html:OPTION>INBOX</HTML:OPTION>
+		</html:SELECT>
+		</html:FORM>
+    </xul:toolbox>
+    
+  </xul:toolbox>
+  
+</window>
+

@@ -1,0 +1,138 @@
+<html>
+<head>
+
+<script LANGUAGE="JavaScript">
+<!-- 
+
+function SendMailMessage()
+{
+  var appCore = AppCoresManager.Find("MailCore");
+  if (appCore==null) {
+    appCore = new MailCore();
+    if (appCore != null) {
+      appCore.Init("MailCore");
+	    appCore.MailCompleteCallback("MailSent()");
+	    appCore.SetWindow(window);
+	    appCore.SendMail(document.forms[0].elements[1].value, document.forms[0].elements[2].value, document.forms[0].elements[4].value);
+    } 
+  } else {
+	  appCore.SendMail(document.forms[0].elements[1].value, document.forms[0].elements[2].value, document.forms[0].elements[4].value);
+  }
+  
+  appCore = AppCoresManager.Find("ToolbarCore");
+  if (appCore==null) {
+    appCore = new ToolbarCore();
+    if (appCore != null) {
+      appCore.Init("ToolbarCore");
+	    appCore.SetWindow(window.parent.frames[2]);
+	    appCore.SetStatus("Mail was Sent!");
+    } else {
+    }
+  } else {
+	  appCore.SetStatus("Mail was Sent!");
+  }
+}
+
+function MailSent()
+{
+
+	// Clear Them
+	  document.forms[0].elements[1].value = "";
+	  document.forms[0].elements[2].value = "";
+	  document.forms[0].elements[4].value = "";
+
+    /*dump("top name: "+top.name+"\n");
+	  if (window.parent.frames[2] != null) {
+		  dump("frame[2] name: "+window.parent.frames[2].name+"\n");
+		  var parent = window.parent.frames[0].parent;
+		  dump("parent name: "+parent.name+"\n");
+		  var doc = window.parent.frames[2].document;
+		  var win = window.parent.frames[2];
+		  if (doc != null) {
+		    //dump("Doc name: "+doc.name);
+		    doc.elements[8].value = "xxxxxx";
+		  } else {
+		    dump("doc was null\n");
+		  }
+      } else {
+	    dump("parent is null\n");
+	  }*/
+}
+
+// End -->
+</script>
+
+<style type="text/css">
+/* This style sheet should be in a seperate file */
+
+FIELDSET {
+    background-color: rgb(192, 192, 192);
+    border: 2px groove rgb(192, 192, 192);
+    display: inline; 
+    margin-left: 10px; 
+    padding: 2px;
+  }
+
+LEGEND {
+    background-color:rgb(192, 192, 192);  
+    border: none ; 
+    padding: 2px;
+  }
+
+
+BODY,TD {
+    font-family: Sans-Serif;
+    background-color: #C0C0C0;
+  }
+
+LABEL {
+    background-color: #C0C0C0;
+    margin: 0px 0px 0px 0px;
+	  padding-left: 0px;
+	  padding-right: 0px;
+  }
+
+BODY,TD,INPUT {
+    font-size: 9pt; 
+}
+
+BODY {
+    margin: 0px 0px 0px 0px;
+}
+
+</style>
+</head>
+<body>
+<center>
+<p><form ENCTYPE="text/plain" onSubmit="return submitForms()"></center>
+<TABLE bgcolor="#C0C0C0">
+<TR>
+<TD>
+<fieldset width="100%" height="100%" > 
+<legend align=left>&nbsp;Info&nbsp;</legend>
+<TABLE width="100%" height="100%">
+  <TR>
+    <TD>Address:</TD>
+    <TD width="100%"><input type="text" name="addrTo" ></TD>
+  </TR>
+  <TR>
+    <TD>Subject:</TD>
+    <TD><input type="text" name="subject" id="subject"></TD>
+  </TR>
+</TABLE>
+</fieldset>
+</TD>
+</TR>
+<TR>
+<TD>
+<fieldset width="100%" height="100%" > 
+	<legend align=left>&nbsp;Message&nbsp;</legend>
+	<TEXTAREA cols=40 rows=20 name="mailbody"></TEXTAREA>
+</fieldset>
+</TD>
+</TR></TABLE>
+</form>
+</center>
+
+</body>
+</html>
