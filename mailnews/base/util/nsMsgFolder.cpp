@@ -528,16 +528,17 @@ nsMsgFolder::parseURI(PRBool needServer)
     PRBool haveFirst=PR_FALSE;
     while (token) {
       // skip leading '/' (and other // style things)
-      if (nsCRT::strcmp(token, "")==0) continue;
+      if (nsCRT::strcmp(token, "")!=0) {
 
         // add .sbd onto the previous path
-      if (haveFirst) {
-	newPath+=".sbd";
-      	newPath += "/";
+        if (haveFirst) {
+          newPath+=".sbd";
+          newPath += "/";
+        }
+        
+        newPath += token;
+        haveFirst=PR_TRUE;
       }
-
-      newPath += token;
-      haveFirst=PR_TRUE;
 
       token = nsCRT::strtok(newStr, "/", &newStr);
     }
