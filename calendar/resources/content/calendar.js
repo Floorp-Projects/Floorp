@@ -156,7 +156,7 @@ function calendarInit()
    // find calendar's style sheet index
    for (var i=0; i<document.styleSheets.length; i++)
    {
-      if (document.styleSheets[i].href.indexOf( "/calendar.css" ) != -1 )
+      if (document.styleSheets[i].href.match(/chrome.*\/skin.*\/calendar.css$/))
 	  {
           gCalendarStyleSheet = document.styleSheets[i];
 		  break;

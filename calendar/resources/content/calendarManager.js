@@ -935,7 +935,7 @@ function calendarColorStyleRuleUpdate( ThisCalendarObject )
    var tempStyleSheets = document.styleSheets;
    for (var i=0; i<tempStyleSheets.length; i++)
    {
-      if (tempStyleSheets[i].href == "chrome://calendar/skin/calendar.css")
+      if (tempStyleSheets[i].href.match(/chrome.*\/skin.*\/calendar.css$/))
 	  {
           j = i;
           break;
