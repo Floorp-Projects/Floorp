@@ -48,6 +48,7 @@
 #import "Bookmark.h"
 #import "BookmarkToolbar.h"
 #import "BrowserTabBarView.h"
+#import "MainController.h"
 
 
 //////////////////////////
@@ -397,8 +398,8 @@
     // if there's no tabviewitem at the point within our view, check the tabbar as well.
     overTabViewItem = [mTabBar tabViewItemAtPoint:[sender draggingLocation]];
     
-  if ([pasteBoardTypes containsObject: @"MozBookmarkType"]) {
-    NSArray* draggedItems = [NSArray pointerArrayFromDataArrayForMozBookmarkDrop:[[sender draggingPasteboard] propertyListForType: @"MozBookmarkType"]];
+  if ([pasteBoardTypes containsObject:@"MozBookmarkType"]) {
+    NSArray *draggedItems = [NSArray pointerArrayFromDataArrayForMozBookmarkDrop:[[sender draggingPasteboard] propertyListForType: @"MozBookmarkType"]];
     if (draggedItems) {
       id aBookmark;
       if ([draggedItems count] == 1) {
@@ -423,18 +424,32 @@
       }
     }
   }
-  else if ([pasteBoardTypes containsObject: @"MozURLType"]) {
+  else if ([pasteBoardTypes containsObject:@"MozURLType"]) {
     // drag type is MozURLType
-    NSDictionary* data = [[sender draggingPasteboard] propertyListForType: @"MozURLType"];
+    NSDictionary *data = [[sender draggingPasteboard] propertyListForType:@"MozURLType"];
     if (data) {
-      NSString*	urlString = [data objectForKey:@"url"];
+      NSString *urlString = [data objectForKey:@"url"];
       return [self handleDropOnTab:overTabViewItem overContent:overContentArea withURL:urlString];
     }
-  } // check for NSFilenamesPboardType first so we always handle multiple filenames when we should
-  else if ([pasteBoardTypes containsObject: NSFilenamesPboardType]) {
+  } // check for NSFilenamesPboardType next so we always handle multiple filenames when we should
+  else if ([pasteBoardTypes containsObject:NSFilenamesPboardType]) {
     NSArray *files = [[sender draggingPasteboard] propertyListForType:NSFilenamesPboardType];
-    for (int i = 0; i < [files count]; i ++) {
-      NSString* urlString = [files objectAtIndex:i];
+    for (unsigned int i = 0; i < [files count]; i++) {
+      NSString *file = [files objectAtIndex:i];
+      NSString *ext = [file pathExtension];
+      NSString *urlString = nil;
+      
+      // Check whether the file is a .webloc, a .url, or some other kind of file.
+      if ([ext isEqualToString:@"webloc"]) // Webloc file
+        urlString = [MainController urlStringFromWebloc:file];
+      else if ([ext isEqualToString:@"url"]) // IE URL file
+        urlString = [MainController urlStringFromIEURLFile:file];
+      
+      // Use the filename if not a .webloc or .url file, or if either of the
+      // functions returns nil.
+      if (!urlString)
+        urlString = file;
+      
       if (i == 0) {
         // if we're over the content area, just load the first one
         if (overContentArea)
@@ -449,12 +464,12 @@
     }
     return YES;
   }
-  else if ([pasteBoardTypes containsObject: NSStringPboardType]) {
-    NSString*	urlString = [[sender draggingPasteboard] stringForType: NSStringPboardType];
+  else if ([pasteBoardTypes containsObject:NSStringPboardType]) {
+    NSString *urlString = [[sender draggingPasteboard] stringForType: NSStringPboardType];
     return [self handleDropOnTab:overTabViewItem overContent:overContentArea withURL:urlString];
   }
-  else if ([pasteBoardTypes containsObject: NSURLPboardType]) {
-    NSURL*	urlData = [NSURL URLFromPasteboard:[sender draggingPasteboard]];
+  else if ([pasteBoardTypes containsObject:NSURLPboardType]) {
+    NSURL *urlData = [NSURL URLFromPasteboard:[sender draggingPasteboard]];
     return [self handleDropOnTab:overTabViewItem overContent:overContentArea withURL:[urlData absoluteString]];
   }
   
@@ -476,7 +491,3 @@
 }
 
 @end
-
-
-
-

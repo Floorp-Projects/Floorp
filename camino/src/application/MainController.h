@@ -202,4 +202,8 @@ typedef enum EBookmarkOpenBehavior
 // prompts the user to reset the cache, then does it
 - (IBAction)emptyCache:(id)sender;
 
+// open different URL file types
++(NSString*)urlStringFromWebloc:(NSString*)inFile;
++(NSString*)urlStringFromIEURLFile:(NSString*)inFile;
+
 @end

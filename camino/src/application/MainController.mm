@@ -38,6 +38,7 @@
 
 #include <mach-o/dyld.h>
 #include <sys/utsname.h>
+#import <Carbon/Carbon.h>
 
 #import "NSString+Utils.h"
 
@@ -1494,6 +1495,57 @@ static int SortByProtocolAndName(NSDictionary* item1, NSDictionary* item2, void 
   service->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
   if (queue)
     queue->ProcessPendingEvents();
+}
+
+// Reads the URL from a .webloc . Returns nil on failure.
++(NSString*)urlStringFromWebloc:(NSString*)inFile
+{
+  FSRef ref;
+  FSSpec spec;
+  NSString *ret = nil;
+  
+  if (inFile && !FSPathMakeRef((UInt8 *)[inFile fileSystemRepresentation], &ref, NULL) && !FSGetCatalogInfo(&ref, kFSCatInfoNone, NULL, NULL, &spec, NULL)) {
+    short resRef;
+    
+    resRef = FSpOpenResFile(&spec, fsRdPerm);
+    
+    if (resRef != -1) { // Has resouce fork.
+      Handle urlResHandle;
+      
+      if ((urlResHandle = Get1Resource('url ', 256))) { // Has 'url ' resource with ID 256.
+        long size;
+        
+        size = GetMaxResourceSize(urlResHandle);
+        ret = [NSString stringWithCString:(char *)*urlResHandle length:size];
+      }
+      
+      CloseResFile(resRef);
+    }
+  }
+  
+  return ret;
+}
+
+// Reads the URL from a .url . Returns nil on failure.
++(NSString*)urlStringFromIEURLFile:(NSString*)inFile
+{
+  NSString *ret = nil;
+  
+  // Is this really an IE .url file? (Is this too strict?)
+  if (inFile) {
+    NSArray *contents = [[NSString stringWithContentsOfFile:inFile] componentsSeparatedByString:@"\r\n"];
+    unsigned idx = [contents indexOfObject:@"[InternetShortcut]"];
+    
+    if (idx != NSNotFound) {
+      NSString *urlline = [contents objectAtIndex:idx + 1];
+      
+      if ([urlline hasPrefix:@"URL="]) {
+        ret = [urlline substringFromIndex:4];
+      }
+    }
+  }
+  
+  return ret;
 }
 
 @end
