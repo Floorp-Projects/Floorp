@@ -262,7 +262,7 @@ nsNativeAppSupportMac::ReOpen()
       NS_ENSURE_TRUE(cmdLine, NS_ERROR_FAILURE);
 
       nsresult rv;
-      rv = cmdLine->Init(argv, 0, nsnull,
+      rv = cmdLine->Init(0, argv, nsnull,
                          nsICommandLine::STATE_REMOTE_EXPLICIT);
       NS_ENSURE_SUCCESS(rv, rv);
 
