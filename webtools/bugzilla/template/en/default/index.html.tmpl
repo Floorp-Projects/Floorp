@@ -19,6 +19,7 @@
   #
   # Contributor(s): Terry Weissman <terry@mozilla.org>
   #                 Jacob Steenhagen <jake@bugzilla.org>
+  #                 Vitaly Harisov  <vitaly@rathedg.com>
   #%]
 
 [%# INTERFACE:
@@ -30,6 +31,7 @@
 [% title = BLOCK %]
 [% terms.Bugzilla %] Main Page
 [% END %]
+[% style_urls = [ "skins/standard/index.css" ] %]
 [% PROCESS global/header.html.tmpl %]
 
 
@@ -54,42 +56,42 @@ function addSidebar() {
 </script>
 
 
-<table width="100%"><tr>
- <td>
+<div id="page-index">
+  <div class="intro"></div>
+
   <p>This is where we put in lots of nifty words explaining all about [% terms.Bugzilla %].</p>
 
-  But it all boils down to a choice of:
-  <p>
-  <a href="query.cgi">Search existing [% terms.bug %] reports</a><br>
-  <a href="enter_bug.cgi">Enter a new [% terms.bug %] report</a><br>
-  <a href="report.cgi">Summary reports and charts</a><br>
-  </p><p>
+  <p>But it all boils down to a choice of:</p>
+  <ul>
+    <li id="query"><a href="query.cgi">Search existing [% terms.bug %] reports</a></li>
+    <li id="enter-bug"><a href="enter_bug.cgi">Enter a new [% terms.bug %] report</a></li>
+    <li id="report"><a href="report.cgi">Summary reports and charts</a></li>
 [% IF user.id %]
-  <a href="userprefs.cgi">Change password or user preferences</a><br>
+    <li id="userprefs"><a href="userprefs.cgi">Change password or user preferences</a></li>
   [% IF user.get_flag('can_logout') %]
-    <a href="relogin.cgi">Logout [% user.login FILTER html %]</a><br>
+    <li id="logout"><a href="relogin.cgi">Logout [% user.login FILTER html %]</a></li>
   [% END %]
 [% ELSE %]
-  <a href="query.cgi?GoAheadAndLogIn=1">Log in to an existing account</a><br>
+    <li id="login"><a href="query.cgi?GoAheadAndLogIn=1">Log in to an existing account</a></li>
   [% IF Param('createemailregexp') %]
-    <a href="createaccount.cgi">Open a new [% terms.Bugzilla %] account</a><br>
+    <li id="account"><a href="createaccount.cgi">Open a new [% terms.Bugzilla %] account</a></li>
   [% END %]
 [% END %]
-  </p><p>
-  <a href="javascript:addSidebar()">Add to Sidebar</a> (Requires Mozilla or Netscape 6)<br>
-  </p>
-  <form name="f" action="show_bug.cgi" method="get"
+    <li id="sidebar"><a href="javascript:addSidebar()">Add to Sidebar</a> (Requires Mozilla or Netscape 6)</li>
+  </ul>
+
+  <form id="show-bug" name="f" action="show_bug.cgi" method="get"
       onsubmit="QuickSearch(f.id.value); return false;">
-  <p>
-  Enter [% terms.abug %] # or some search terms:<br>
-  <input type="text" name="id">
-  <input type="submit" value="Show">
-  <a href="quicksearch.html">[Help]</a>
-  </p>
+  <div>
+    <p>Enter [% terms.abug %] # or some search terms:</p>
+    <input id="text" type="text" name="id">
+    <input id="show" type="submit" value="Show">
+    <a href="quicksearch.html">[Help]</a>
+  </div>
   </form>
- </td>
- <td align="right"><img src="ant.jpg" width="329" height="220" border="2" alt="ant.jpg [8.5k]"></td>
-</tr></table>
+
+  <div class="outro"></div>
+</div>
 
 <script type="text/javascript" language="JavaScript" src="localconfig.js"></script>
 <script type="text/javascript" language="JavaScript" src="quicksearch.js"></script>
