@@ -716,6 +716,8 @@ namespace JavaScript {
         IdentifierList *packageIdList;  // The package name as a list of identifiers; may be nil
         BlockStmtNode *body;            // The package's body; non-nil only
 
+        JS2Runtime::JSObject *scope;    // the sematics/codegen passes stuff their data in here.
+
         PackageStmtNode(size_t pos, IdentifierList *packageIdList, BlockStmtNode *body):
                 StmtNode(pos, Package), packageIdList(packageIdList), body(body) {ASSERT(body);}
 

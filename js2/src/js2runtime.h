@@ -39,7 +39,6 @@
 #pragma warning(disable: 4786)
 #endif
 
-
 #include <vector>
 #include <stack>
 #include <map>
@@ -117,6 +116,7 @@ static const double two31 = 2147483648.0;
     extern JSType *Function_Type;
 
     extern JSType *Attribute_Type;      // used to define 'prototype' 'static' etc & Namespace values
+    extern JSType *Package_Type;
     extern JSType *NamedArgument_Type;
 
     extern JSType *Date_Type;
@@ -222,7 +222,7 @@ static const double two31 = 2147483648.0;
 
         int operator==(const JSValue& value) const;
     
-        /**
+	/**
         * Scans through the object, and copies all references.
         */
         Collector::size_type scan(Collector* collector)
@@ -631,7 +631,7 @@ XXX ...couldn't get this to work...
 
     protected:
         typedef Collector::InstanceOwner<JSObject> JSObjectOwner;
-        friend class JSObjectOwner;
+        friend class Collector::InstanceOwner<JSObject>;
         /**
         * Scans through the object, and copies all references.
         */
@@ -653,6 +653,7 @@ XXX ...couldn't get this to work...
         }
 
 #ifdef DEBUG
+    public:
         void* operator new(size_t s)    { void *t = STD::malloc(s); trace_alloc("JSObject", s, t); return t; }
         void operator delete(void* t)   { trace_release("JSObject", t); STD::free(t); }
 #endif
@@ -705,7 +706,7 @@ XXX ...couldn't get this to work...
 
     protected:
         typedef Collector::InstanceOwner<JSInstance> JSInstanceOwner;
-        friend class JSInstanceOwner;
+        friend class Collector::InstanceOwner<JSInstance>;
         /**
         * Scans through the object, and copies all references.
         */
@@ -727,6 +728,7 @@ XXX ...couldn't get this to work...
         }
 
 #ifdef DEBUG
+    public:
         void* operator new(size_t s)    { void *t = STD::malloc(s); trace_alloc("JSInstance", s, t); return t; }
         void operator delete(void* t)   { trace_release("JSInstance", t); STD::free(t); }
 #endif
@@ -856,7 +858,7 @@ XXX ...couldn't get this to work...
 
     protected:
         typedef Collector::InstanceOwner<JSType> JSTypeOwner;
-        friend class JSTypeOwner;
+        friend class Collector::InstanceOwner<JSType>;
         /**
         * Scans through the object, and copies all references.
         */
@@ -886,6 +888,7 @@ XXX ...couldn't get this to work...
         }
 
 #ifdef DEBUG
+    public:
         void* operator new(size_t s)    { void *t = STD::malloc(s); trace_alloc("JSType", s, t); return t; }
         void operator delete(void* t)   { trace_release("JSType", t); STD::free(t); }
 #endif
@@ -998,7 +1001,6 @@ XXX ...couldn't get this to work...
 
 
 
-
     // an Activation has two jobs:
     // 1. At compile time it handles the function/method being compiled and collects
     //      the local vars/consts being defined in that function. 
@@ -1086,8 +1088,6 @@ XXX ...couldn't get this to work...
     };
 
 
-    
-    
     class ScopeChain {
     public:
 
@@ -1283,6 +1283,8 @@ XXX ...couldn't get this to work...
         // Get a type from an ExprNode 
         JSType *extractType(ExprNode *t);
 
+	// concoct a package name from an id list
+	String ScopeChain::getPackageName(IdentifierList *packageIdList);
 
     };
 
@@ -1403,7 +1405,7 @@ XXX ...couldn't get this to work...
 
     protected:
         typedef Collector::InstanceOwner<JSFunction> JSFunctionOwner;
-        friend class JSFunctionOwner;
+        friend class Collector::InstanceOwner<JSFunction>;
         /**
         * Scans through the object, and copies all references.
         */
@@ -1425,6 +1427,7 @@ XXX ...couldn't get this to work...
         }
 
 #ifdef DEBUG
+    public:
         void* operator new(size_t s)    { void *t = STD::malloc(s); trace_alloc("JSFunction", s, t); return t; }
         void operator delete(void* t)   { trace_release("JSFunction", t); STD::free(t); }
 #endif
@@ -1495,7 +1498,7 @@ XXX ...couldn't get this to work...
 
     protected:
         typedef Collector::InstanceOwner<JSBoundFunction> JBoundFunctionOwner;
-        friend class JBoundFunctionOwner;
+        friend class Collector::InstanceOwner<JSBoundFunction>;
         /**
         * Scans through the object, and copies all references.
         */
@@ -1515,6 +1518,7 @@ XXX ...couldn't get this to work...
         }
 
 #ifdef DEBUG
+    public:
         void* operator new(size_t s)    { void *t = STD::malloc(s); trace_alloc("JSBoundFunction", s, t); return t; }
         void operator delete(void* t)   { trace_release("JSBoundFunction", t); STD::free(t); }
 #endif
@@ -1567,6 +1571,21 @@ XXX ...couldn't get this to work...
     extern JSValue RegExp_exec(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc);
 
     class Attribute;
+
+    class Package : public JSObject {
+    public:
+        typedef enum { OnItsWay, InHand } PackageStatus;
+        
+        Package(const String &name) : mName(name), mStatus(OnItsWay) { }
+
+        String mName;
+        PackageStatus mStatus;
+    };
+
+    typedef std::vector<Package *> PackageList;
+
+#define PACKAGE_NAME(pi) ((*pi)->mName)
+#define PACKAGE_STATUS(pi) ((*pi)->mStatus)
     
     class Context {
     public:
@@ -1801,10 +1820,10 @@ XXX ...couldn't get this to work...
             
         OperatorList mOperatorTable[OperatorCount];
         
-        typedef String PackageName;
-        typedef std::vector<PackageName> PackageList;
 
         PackageList mPackages;  // the currently loaded packages, mPackages.back() is the current package
+        bool checkForPackage(const String &packageName);    // return true if loaded, throw exception if loading
+        Package *loadPackage(const String &packageName, const String &filename);  // load package from file
 
         JSValue readEvalFile(const String& fileName);
         JSValue readEvalString(const String &str, const String& fileName, ScopeChain *scopeChain, const JSValue& thisValue);
@@ -1833,8 +1852,6 @@ XXX ...couldn't get this to work...
         // Get the type of the nth parameter.
         JSType *getParameterType(FunctionDefinition &function, int index);
 
-        // Get the number of parameters.
-        uint32 getParameterCount(FunctionDefinition &function);
 
         Reader *mReader;
 
@@ -1892,7 +1909,7 @@ XXX ...couldn't get this to work...
 
     protected:
         typedef Collector::InstanceOwner<NamedArgument> NamedArgumentOwner;
-        friend class NamedArgumentOwner;
+        friend class Collector::InstanceOwner<NamedArgument>;
         /**
         * Scans through the object, and copies all references.
         */
@@ -1911,6 +1928,7 @@ XXX ...couldn't get this to work...
         }
 
 #ifdef DEBUG
+    public:
         void* operator new(size_t s)    { void *t = STD::malloc(s); trace_alloc("NamedArgument", s, t); return t; }
         void operator delete(void* t)   { trace_release("NamedArgument", t); STD::free(t); }
 #endif
@@ -1930,7 +1948,7 @@ XXX ...couldn't get this to work...
 
     protected:
         typedef Collector::InstanceOwner<Attribute> AttributeOwner;
-        friend class AttributeOwner;
+        friend class Collector::InstanceOwner<Attribute>;
         /**
         * Scans through the object, and copies all references.
         */
@@ -1949,6 +1967,7 @@ XXX ...couldn't get this to work...
         }
 
 #ifdef DEBUG
+    public:
         void* operator new(size_t s)    { void *t = STD::malloc(s); trace_alloc("Attribute", s, t); return t; }
         void operator delete(void* t)   { trace_release("Attribute", t); STD::free(t); }
 #endif

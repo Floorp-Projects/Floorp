@@ -124,7 +124,7 @@ namespace JavaScript
     	enum { ARRAY_HEADER_SIZE = 4 };
         enum { ARRAY_HEADER_COUNT = 0 };
 #else
-        #warning "define me for your compiler."
+//        #warning "define me for your compiler."
     	enum { ARRAY_HEADER_SIZE = 4 };
         enum { ARRAY_HEADER_COUNT = 0 };
 #endif

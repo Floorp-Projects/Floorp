@@ -1389,6 +1389,8 @@ bool ByteCodeGen::genCodeForStatement(StmtNode *p, ByteCodeGen *static_cg, uint3
 
         }
         break;
+    case StmtNode::Package:
+    case StmtNode::Import:
     case StmtNode::Namespace:
         {
             // do anything at bytecodegen?

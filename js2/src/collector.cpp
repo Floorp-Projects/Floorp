@@ -170,9 +170,9 @@ struct ConsCell {
 
 private:
     typedef Collector::InstanceOwner<ConsCell> ConsCellOwner;
-    friend class ConsCellOwner;
+    friend class Collector::InstanceOwner<ConsCell>;
     typedef Collector::ArrayOwner<ConsCell> ConsCellArrayOwner;
-    friend class ConsCellArrayOwner;
+    friend class Collector::ArrayOwner<ConsCell>;
 
     /**
     * Scans through the object, and copies all references.
@@ -189,7 +189,9 @@ public:
         static ConsCellOwner owner;
         return gc.allocateObject(n, &owner);
     }
-    
+
+    void operator delete(void* ptr, Collector& gc) {}
+ 
     void* operator new[] (size_t n, Collector& gc)
     {
         static ConsCellArrayOwner owner;
@@ -197,14 +199,18 @@ public:
     }
 };
 
+#if 0
+
 struct ConsCellArray {
     ConsCell* cells;
     
-    ConsCellArray(size_t count, Collector& gc) : cells(new (gc) ConsCell[count]) {}
+    ConsCellArray(size_t count, Collector& gc) : cells(NULL) {
+        cells = new (gc) ConsCell[count];
+    }
 
 private:
     typedef Collector::InstanceOwner<ConsCellArray> ConsCellArrayOwner;
-    friend class ConsCellArrayOwner;
+    friend class Collector::InstanceOwner<ConsCellArray>;
 
     /**
     * Scans through the object, and copies all references.
@@ -221,7 +227,11 @@ public:
         static ConsCellArrayOwner owner;
         return gc.allocateObject(n, &owner);
     }
+
+    void operator delete(void* ptr, Collector& gc) {}
 };
+
+#endif
 
 void testCollector()
 {
