@@ -21,11 +21,12 @@
 <?xml-stylesheet href="chrome://profile/skin/profileManager.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://profile/locale/profileManager.dtd" >
-<window 
-xmlns:html="http://www.w3.org/TR/REC-html40"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="dialog"
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
+	class="dialog"
 	title="&windowtitle.label;"
-		width="500" height="500"> 
+	onload="loadElements();"
+	width="500" height="500"> 
       
 <html:script language="javascript" src="profileManager.js"/>
 	    

@@ -133,7 +133,7 @@ function onExit()
 		profile.forgetCurrentProfile();
 	}
 	catch (ex) {
-		dump("Failed to forget current profile.\n");
+		//dump("Failed to forget current profile.\n");
 	}
 	ExitApp();
 }
@@ -193,10 +193,12 @@ function addTreeItem(num, name, migrate)
   var elem = document.createElement('treecell');
 
   // Hack in a differentation for migration
-  if (migrate)
+  if (migrate) {
 	  var text = document.createTextNode('Migrate');
-  else
+  }
+  else {
 	  var text = document.createTextNode('');
+  }
 
   elem.appendChild(text);
   newrow.appendChild(elem);
@@ -287,8 +289,3 @@ function ConfirmMigrateAll()
     var win = window.openDialog('chrome://profile/content/profileManagerMigrateAll.xul', 'MigrateAll', 'chrome');
     return win;
 }
-
-
-// -------------------------------------------- begin Hack for OnLoad handling
-setTimeout('loadElements()', 0);
-// -------------------------------------------- end   Hack for OnLoad handling
