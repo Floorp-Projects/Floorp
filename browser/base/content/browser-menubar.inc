@@ -53,7 +53,7 @@
                 <menuitem id="menu_saveFrame" label="&saveFrameCmd.label;" accesskey="&saveFrameCmd.accesskey;" oncommand="saveFrameDocument();" hidden="true"/>
                 <menuitem id="menu_sendLink"  label="&sendPageCmd.label;"  accesskey="&sendPageCmd.accesskey;"  command="Browser:SendLink"/>
                 <menuseparator/>
-                <menuitem label="&printSetupCmd.label;" accesskey="&printSetupCmd.accesskey;" oncommand="PrintUtils.showPageSetup();"/>
+                <menuitem label="&printSetupCmd.label;" accesskey="&printSetupCmd.accesskey;" command="cmd_pageSetup"/>
 #ifndef XP_MACOSX
                 <menuitem label="&printPreviewCmd.label;" accesskey="&printPreviewCmd.accesskey;" oncommand="PrintUtils.printPreview(onEnterPrintPreview, onExitPrintPreview);"/>
 #endif
@@ -134,7 +134,7 @@
   
             <menu label="&viewMenu.label;" accesskey="&viewMenu.accesskey;">
               <menupopup id="menu_viewPopup">
-                <menu label="&viewToolbarsMenu.label;" accesskey="&viewToolbarsMenu.accesskey;"
+                <menu id="viewToolbarsMenu" label="&viewToolbarsMenu.label;" accesskey="&viewToolbarsMenu.accesskey;"
                       onpopupshowing="onViewToolbarsPopupShowing(event);">
                   <menupopup onpopupshowing="updateToolbarStates(this);"> 
                     <menuseparator/>
@@ -142,8 +142,9 @@
                                 command="cmd_CustomizeToolbars"/>             
                   </menupopup>
                 </menu>
-                <menuitem id="toggle_taskbar" label="&taskbarCmd.label;" accesskey="&taskbarCmd.accesskey;" type="checkbox" oncommand="goToggleToolbar('status-bar','toggle_taskbar');" checked="true" />
-                <menu label="&viewSidebarMenu.label;"
+                <menuitem id="toggle_taskbar" label="&taskbarCmd.label;" accesskey="&taskbarCmd.accesskey;" type="checkbox" command="cmd_toggleTaskbar" checked="true" />
+                <menu id="viewSidebarMenuMenu"
+                      label="&viewSidebarMenu.label;"
                       accesskey="&viewSidebarMenu.accesskey;">
                   <menupopup id="viewSidebarMenu">
                     <menuitem key="viewBookmarksSidebarKb" observes="viewBookmarksSidebar" accesskey="&bookmarksSidebarCmd.accesskey;"/>
@@ -152,9 +153,9 @@
                 </menu>            
                 <menuseparator/>
                 <menuitem label="&stopCmd.label;" accesskey="&stopCmd.accesskey;" command="Browser:Stop" key="key_stop"/>
-                <menuitem accesskey="&reloadCmd.accesskey;" key="key_reload" label="&reloadCmd.label;" oncommand="BrowserReload();"/>
+                <menuitem accesskey="&reloadCmd.accesskey;" key="key_reload" label="&reloadCmd.label;" command="Browser:Reload"/>
                 <menuseparator/>
-                <menu label="&textSize.label;" accesskey="&textSize.accesskey;">
+                <menu id="viewTextZoomMenu" label="&textSize.label;" accesskey="&textSize.accesskey;">
                   <menupopup>                    
                     <menuitem key="key_textZoomEnlarge" label="&textZoomEnlargeCmd.label;" accesskey="&textZoomEnlargeCmd.accesskey;"
                               command="cmd_textZoomEnlarge"/>
@@ -165,7 +166,7 @@
                               command="cmd_textZoomReset"/>
                   </menupopup>
                 </menu>
-                <menu label="&pageStyleMenu.label;" accesskey="&pageStyleMenu.accesskey;">
+                <menu id="pageStyleMenu" label="&pageStyleMenu.label;" accesskey="&pageStyleMenu.accesskey;">
                   <menupopup onpopupshowing="stylesheetFillPopup(this);"
                              oncommand="stylesheetSwitchAll(window._content, event.target.getAttribute('data')); setStyleDisabled(false);">
                     <menuitem label="&pageStyleNoStyle.label;" accesskey="&pageStyleNoStyle.accesskey;"
@@ -174,9 +175,14 @@
                     <menuseparator/>
                   </menupopup>
                 </menu>
-                <menu label="&charsetMenu.label;" accesskey="&charsetMenu.accesskey;"
-                      datasources="rdf:charset-menu" ref="NC:BrowserCharsetMenuRoot"
-                      oncommand="MultiplexHandler(event)" onpopupshowing="CreateMenu('browser');UpdateMenus(event)" onpopupshown="CreateMenu('more-menu');">
+                <menu id="charsetMenu"
+                      label="&charsetMenu.label;"
+                      accesskey="&charsetMenu.accesskey;"
+                      datasources="rdf:charset-menu"
+                      ref="NC:BrowserCharsetMenuRoot"
+                      oncommand="MultiplexHandler(event)"
+                      onpopupshowing="CreateMenu('browser');UpdateMenus(event)"
+                      onpopupshown="CreateMenu('more-menu');">
                     <template>
                         <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
                             <menupopup>

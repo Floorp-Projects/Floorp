@@ -21,6 +21,7 @@
 #
 # Contributor(s):
 #   David Hyatt <hyatt@mozilla.org> (Original Author)
+#   Asaf Romano <mozilla.mano@sent.com>
 #
 #ifdef XP_MACOSX
 
@@ -28,7 +29,8 @@
 
 <window id="main-window"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="nonBrowserWindowStartup();">
 
 </window>
 

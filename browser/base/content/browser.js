@@ -959,6 +959,56 @@ function Shutdown()
     appCore.close();
 }
 
+#ifdef XP_MACOSX
+// The following functions should be used by both hiddenWindow.xul
+// and any other windows which only have menus on Mac OS X
+function nonBrowserWindowStartup()
+{
+  // Disable inappropriate commands / submenus
+  var disabledItems = ['cmd_newNavigatorTab', 'cmd_close', 'Browser:SavePage', 'Browser:SendLink',
+                       'cmd_pageSetup', 'cmd_print', 'cmd_find', 'cmd_findAgain', 'viewToolbarsMenu',
+                       'cmd_toggleTaskbar', 'viewSidebarMenuMenu', 'Browser:Reload', 'viewTextZoomMenu',
+                       'pageStyleMenu', 'charsetMenu', 'View:PageSource', 'View:FullScreen',
+                       'viewHistorySidebar', 'Browser:AddBookmarkAs', 'Tools:Search', 'View:PageInfo'];
+  var element;
+
+  for (var id in disabledItems)
+  {
+    element = document.getElementById(disabledItems[id]);
+    if (element)
+      element.setAttribute("disabled", "true");
+  }
+
+  // If no windows are active (i.e. we're the hidden window), disable the minimize
+  // and zoom menu commands as well
+  if (window.location.href == "chrome://browser/content/hiddenWindow.xul")
+  {
+    element = document.getElementById("minimizeWindow");
+    element.setAttribute("disabled", "true");
+    element = document.getElementById("zoomWindow");
+    element.setAttribute("disabled", "true");
+    // also hide the window-list separator
+    element = document.getElementById("sep-window-list");
+    element.setAttribute("hidden", "true");
+  }
+
+  gNavigatorBundle = document.getElementById("bundle_browser");
+
+  setTimeout(nonBrowserWindowDelayedStartup, 0);
+}
+
+function nonBrowserWindowDelayedStartup()
+{
+  // loads the services
+  initServices();
+  initBMService();
+
+  // init global pref service
+  gPrefService = Components.classes["@mozilla.org/preferences-service;1"]
+                           .getService(Components.interfaces.nsIPrefBranch);
+}
+#endif
+ 
 function FormFillPrefListener()
 {
   gBrowser.attachFormFill();
@@ -1228,6 +1278,14 @@ function BrowserHomeClick(aEvent)
 
 function loadOneOrMoreURIs(aURIString)
 {
+#ifdef XP_MACOSX
+  // we're not a browser window, pass the URI string to a new browser window
+  if (window.location.href != getBrowserURL())
+  {
+    newWindow = openDialog(getBrowserURL(), "_blank", "all,dialog=no", aURIString);
+    return;
+  }
+#endif
   var urls = aURIString.split("|");
   loadURI(urls[0]);
   for (var i = 1; i < urls.length; ++i) {

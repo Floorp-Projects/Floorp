@@ -94,9 +94,11 @@
     <command id="Browser:ReadNews" oncommand="MailIntegration.readNews();"/>
 #endif
 
+    <command id="cmd_pageSetup" oncommand="PrintUtils.showPageSetup();"/>
     <command id="cmd_print" oncommand="PrintUtils.print();"/>
     <command id="cmd_close" oncommand="BrowserCloseTabOrWindow()"/>
     <command id="cmd_closeWindow" oncommand="BrowserTryToCloseWindow()"/>
+    <command id="cmd_toggleTaskbar" oncommand="goToggleToolbar('status-bar','toggle_taskbar');"/>
     <command id="cmd_CustomizeToolbars" oncommand="BrowserCustomizeToolbar()"/>
   
     <command id="cmd_copyLink"
@@ -145,6 +147,7 @@
     <command id="Browser:Back"    oncommand="BrowserBack();" disabled="true"/>
     <command id="Browser:Forward" oncommand="BrowserForward();" disabled="true"/>
     <command id="Browser:Stop"    oncommand="BrowserStop();" disabled="true"/>
+    <command id="Browser:Reload"  oncommand="BrowserReload();"/>
     <command id="cmd_textZoomReduce"  oncommand="ZoomManager.prototype.getInstance().reduce();"/>
     <command id="cmd_textZoomEnlarge" oncommand="ZoomManager.prototype.getInstance().enlarge();"/>
     <command id="cmd_textZoomReset" oncommand="ZoomManager.prototype.getInstance().reset();"/>
