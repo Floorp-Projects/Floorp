@@ -36,7 +36,8 @@ Sub Path=
 ; Default value is FALSE;
 Lock Path=FALSE
 
-Program Name=$MainExeFile$
+;Program Name=$MainExeFile$
+Program Name=xpcom.dll
 
 ; Program Folder Path values:
 ;   COMMON_STARTUP
@@ -520,7 +521,7 @@ Root Key=HKEY_LOCAL_MACHINE
 Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\$ProductName$ ($UserAgentShort$)
 Name=UninstallString
 ;*** LOCALIZE ME BABY ***
-Name Value=[WINDIR]\$UninstallFile$ /ua "$UserAgent$"
+Name Value=[WINDIR]\$UninstallFile$ /ua "$UserAgent$" /app $ProductName$User
 Type=REG_SZ
 Decrypt Key=FALSE
 Decrypt Name=FALSE
