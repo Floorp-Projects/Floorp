@@ -320,9 +320,6 @@ endif
 $(SHARED_LIBRARY): $(OBJS)
 	@$(MAKE_OBJDIR)
 	rm -f $@
-ifdef USE_AUTOCONF
-	$(MKSHLIB) $(OBJS) $(EXTRA_LIBS) $(OS_LIBS)
-else
 ifeq ($(OS_ARCH)$(OS_RELEASE), AIX4.1)
 	echo "#!" > $(OBJDIR)/lib$(LIBRARY_NAME)_syms
 	nm -B -C -g $(OBJS) \
@@ -372,12 +369,15 @@ ifeq ($(OS_TARGET), OpenVMS)
 	$(MKSHLIB) -o $@ $(OBJS) $(EXTRA_LIBS) $(OS_LIBS) $(OBJDIR)/VMSuni.opt
 	@echo "`translate $@`" > $(@:.$(DLL_SUFFIX)=.vms)
 else	# OpenVMS
+ifdef USE_AUTOCONF
+	$(MKSHLIB) $(OBJS) $(EXTRA_LIBS) $(OS_LIBS)
+else
 	$(MKSHLIB) -o $@ $(OBJS) $(EXTRA_LIBS) $(OS_LIBS)
+endif   # USE_AUTOCONF
 endif	# OpenVMS
 endif   # OS2
 endif	# WINNT
 endif	# AIX 4.1
-endif   # USE_AUTOCONF
 ifdef BUILD_OPT
 	$(STRIP) $@
 endif

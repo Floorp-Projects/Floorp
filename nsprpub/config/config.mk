@@ -70,7 +70,13 @@ NOMD_CFLAGS	= $(CC_ONLY_FLAGS) $(OPTIMIZER) $(NOMD_OS_CFLAGS)\
 NOMD_CCFLAGS	= $(CCC_ONLY_FLAGS) $(OPTIMIZER) $(NOMD_OS_CFLAGS)\
 		  $(XP_DEFINE) $(DEFINES) $(INCLUDES) $(XCFLAGS)
 
-NSINSTALL	= $(MOD_DEPTH)/config/$(OBJDIR_NAME)/nsinstall
+LDFLAGS		= $(OS_LDFLAGS)
+
+define MAKE_OBJDIR
+if test ! -d $(@D); then rm -rf $(@D); $(NSINSTALL) -D $(@D); fi
+endef
+
+LINK_DLL	= $(LD) $(OS_DLLFLAGS) $(DLLFLAGS)
 
 ifeq ($(NSDISTMODE),copy)
 # copy files, but preserve source mtime

@@ -67,7 +67,6 @@ HEADERS = \
 
 HEADERS := $(addprefix $(srcdir)/, $(HEADERS))
 
-ifndef USE_AUTOCONF
 ifeq ($(OS_ARCH), WINNT)
 ifeq ($(OS_TARGET), WIN16)
 # OS_CFLAGS = $(OS_EXE_CFLAGS)
@@ -90,7 +89,8 @@ endif
 endif
 endif
 
-else
+ifndef USE_AUTOCONF
+
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
 EXTRA_LIBS = $(DIST)/lib/nspr$(MOD_VERSION).$(LIB_SUFFIX)
 
