@@ -80,7 +80,7 @@ public:
 { 0x057b04d0, 0x0ccf, 0x11d2, \
   {0xbe, 0xba, 0x00, 0x80, 0x5f, 0x8a, 0x66, 0xdc} }
 
-extern "C" NS_WEB nsresult NS_NewDocumentLoaderFactory(nsIFactory** aFactory);
+extern "C" NS_WEB nsresult
+NS_NewDocumentLoaderFactory(nsIFactory** aFactory);
 
 #endif /* nsIDocumentLoader_h___ */
-
