@@ -39,6 +39,8 @@
 #include "nsICharsetAlias.h"
 #include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"
+#include "nsIOutputStream.h"
+#include "nsFileStream.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kIContentSinkIID, NS_ICONTENT_SINK_IID);
@@ -60,7 +62,19 @@ static PRBool IsBlockLevel(eHTMLTags aTag);
 nsresult nsHTMLToTXTSinkStream::InitEncoder(const nsString& aCharset)
 {
 
+ 
+
   nsresult res = NS_OK;
+  
+  
+  // If the converter is ucs2, then do not use a converter
+  nsString ucs2("ucs2");
+  if (aCharset.Equals(ucs2))
+  {
+    NS_IF_RELEASE(mUnicodeEncoder);
+    return res;
+  }
+
 
   nsICharsetAlias* calias = nsnull;
   res = nsServiceManager::GetService(kCharsetAliasCID,
@@ -141,39 +155,48 @@ NS_IMPL_RELEASE(nsHTMLToTXTSinkStream)
 
 
 /**
- *  This method is defined in nsIParser. It is used to 
- *  cause the COM-like construction of an nsParser.
+ *  This method creates a new sink, it sets the stream used
+ *  for the sink to aStream
  *  
- *  @update  gpk02/03/99
- *  @param   nsIParser** ptr to newly instantiated parser
- *  @return  NS_xxx error result
+ *  @update  gpk 04/30/99
  */
 NS_HTMLPARS nsresult
-NS_New_HTMLToTXT_SinkStream(nsIHTMLContentSink** aInstancePtrResult) {
-  nsHTMLToTXTSinkStream* it = new nsHTMLToTXTSinkStream();
+NS_New_HTMLToTXT_SinkStream(nsIHTMLContentSink** aInstancePtrResult, 
+                            nsIOutputStream* aStream,
+                            const nsString* aCharsetOverride) {
+
+  NS_ASSERTION(aStream != nsnull, "a valid stream is required");
+  nsHTMLToTXTSinkStream* it = new nsHTMLToTXTSinkStream(aStream,nsnull);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-
+  if (aCharsetOverride != nsnull)
+    it->SetCharsetOverride(aCharsetOverride);
   return it->QueryInterface(kIHTMLContentSinkIID, (void **)aInstancePtrResult);
 }
 
+
 /**
- * Construct a content sink stream.
- * @update	gpk02/03/99
- * @param 
- * @return
+ *  This method creates a new sink, it sets the stream used
+ *  for the sink to aStream
+ *  
+ *  @update  gpk 04/30/99
  */
-nsHTMLToTXTSinkStream::nsHTMLToTXTSinkStream()  {
-  NS_INIT_REFCNT();
-  mOutput=&cout;
-  mColPos = 0;
-  mIndent = 0;
-  mDoOutput = PR_FALSE;
-  mBufferSize = 0;
-  mBuffer = nsnull;
-  mUnicodeEncoder = nsnull;
+NS_HTMLPARS nsresult
+NS_New_HTMLToTXT_SinkStream(nsIHTMLContentSink** aInstancePtrResult, 
+                            nsString* aString) {
+
+  NS_ASSERTION(aString != nsnull, "a valid stream is required");
+  nsHTMLToTXTSinkStream* it = new nsHTMLToTXTSinkStream(nsnull,aString);
+  if (nsnull == it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  nsString ucs2("ucs2");
+  it->SetCharsetOverride(&ucs2);
+  return it->QueryInterface(kIHTMLContentSinkIID, (void **)aInstancePtrResult);
 }
+
+
 
 /**
  * Construct a content sink stream.
@@ -181,16 +204,20 @@ nsHTMLToTXTSinkStream::nsHTMLToTXTSinkStream()  {
  * @param 
  * @return
  */
-nsHTMLToTXTSinkStream::nsHTMLToTXTSinkStream(ostream& aStream)  {
+nsHTMLToTXTSinkStream::nsHTMLToTXTSinkStream(nsIOutputStream* aStream, nsString* aString)  {
   NS_INIT_REFCNT();
-  mOutput = &aStream;
+  mStream = aStream;
   mColPos = 0;
   mIndent = 0;
   mDoOutput = PR_FALSE;
   mBufferSize = 0;
+  mBufferLength = 0;
   mBuffer = nsnull;
   mUnicodeEncoder = nsnull;
+  mStream = aStream;
+  mString = aString;
 }
+
 
 
 /**
@@ -200,7 +227,6 @@ nsHTMLToTXTSinkStream::nsHTMLToTXTSinkStream(ostream& aStream)  {
  * @return
  */
 nsHTMLToTXTSinkStream::~nsHTMLToTXTSinkStream() {
-  mOutput=0;  //we don't own the stream we're given; just forget it.
   delete [] mBuffer;
   NS_IF_RELEASE(mUnicodeEncoder);
 }
@@ -208,48 +234,22 @@ nsHTMLToTXTSinkStream::~nsHTMLToTXTSinkStream() {
 
 /**
  * 
- * @update	gpk02/03/99
+ * @update	gpk04/30/99
  * @param 
  * @return
  */
-NS_IMETHODIMP_(void)
-nsHTMLToTXTSinkStream::SetOutputStream(ostream& aStream){
-  mOutput=&aStream;
+
+NS_IMETHODIMP
+nsHTMLToTXTSinkStream::SetCharsetOverride(const nsString* aCharset)
+{
+  if (aCharset)
+  {
+    mCharsetOverride = *aCharset;
+    InitEncoder(mCharsetOverride);
+  }
+  return NS_OK;
 }
 
-
-
-/**
- * 
- * @update	gpk02/03/99
- * @param 
- * @return
- */
-static
-void OpenTagWithAttributes(const char* theTag,const nsIParserNode& aNode,int tab,ostream& aStream,PRBool aNewline) {
-}
-
-
-/**
- * 
- * @update	gpk02/03/99
- * @param 
- * @return
- */
-static
-void OpenTag(const char* theTag,int tab,ostream& aStream,PRBool aNewline) {
-}
-
-
-/**
- * 
- * @update	gpk02/03/99
- * @param 
- * @return
- */
-static
-void CloseTag(const char* theTag,int tab,ostream& aStream) {
-}
 
 
 /**
@@ -463,38 +463,38 @@ void nsHTMLToTXTSinkStream::EnsureBufferSize(PRInt32 aNewSize)
     mBufferSize = 2*aNewSize+1; // make the twice as large
     mBuffer = new char[mBufferSize];
     mBuffer[0] = 0;
+    mBufferLength = 0;
   }
 }
 
 
 
-void nsHTMLToTXTSinkStream::UnicodeToTXTString(const nsString& aSrc)
+void nsHTMLToTXTSinkStream::EncodeToBuffer(const nsString& aSrc)
 {
-
+  
+  NS_ASSERTION(mUnicodeEncoder != nsnull,"The unicode encoder needs to be initialized");
+  if (mUnicodeEncoder == nsnull)
+    return;
 
 #define CH_NBSP 160
 
   PRInt32       length = aSrc.Length();
   nsresult      result;
-  PRInt32       bufferLength;
 
-  if (mUnicodeEncoder == nsnull)
-    InitEncoder("");
-
-  if (length > 0)
+  if (mUnicodeEncoder != nsnull && length > 0)
   {
     EnsureBufferSize(length);
-    bufferLength = mBufferSize;
+    mBufferLength = mBufferSize;
     
     mUnicodeEncoder->Reset();
-    result = mUnicodeEncoder->Convert(aSrc.GetUnicode(), &length, mBuffer, &bufferLength);
-    mBuffer[bufferLength] = 0;
-    PRInt32 temp = bufferLength;
+    result = mUnicodeEncoder->Convert(aSrc.GetUnicode(), &length, mBuffer, &mBufferLength);
+    mBuffer[mBufferLength] = 0;
+    PRInt32 temp = mBufferLength;
     if (NS_SUCCEEDED(result))
       result = mUnicodeEncoder->Finish(mBuffer,&temp);
 
 
-    for (PRInt32 i = 0; i < bufferLength; i++)
+    for (PRInt32 i = 0; i < mBufferLength; i++)
     {
       if (mBuffer[i] == char(CH_NBSP))
         mBuffer[i] = ' ';
@@ -504,76 +504,47 @@ void nsHTMLToTXTSinkStream::UnicodeToTXTString(const nsString& aSrc)
 }
 
 
-NS_IMETHODIMP
-nsHTMLToTXTSinkStream::GetStringBuffer(nsString & aStrBuffer) 
-{
-  aStrBuffer = mStrBuffer;
-  return NS_OK; 
-}
-
-
 
 /**
- *  This gets called by the parser when you want to add
- *  a leaf node to the current container in the content
- *  model.
+ *  Write places the contents of aString into either the output stream
+ *  or the output string.
+ *  When going to the stream, all data is run through the encoder
  *  
- *  @updated gpk 06/18/98
+ *  @updated gpk02/03/99
  *  @param   
  *  @return  
  */
-nsresult
-nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode, ostream& aStream)
+void nsHTMLToTXTSinkStream::Write(const nsString& aString)
 {
-  eHTMLTags type = (eHTMLTags)aNode.GetNodeType();
-  
-  const nsString& text = aNode.GetText();
 
-  if (mDoOutput == PR_FALSE)
-    return NS_OK;
-
-  if (type == eHTMLTag_text) {
-
-    UnicodeToTXTString(text);
-    aStream << mBuffer;
-    mStrBuffer.Append(mBuffer);
-    mColPos += text.Length();
-  } 
-  else if (type == eHTMLTag_entity)
+  // If a encoder is being used then convert first convert the input string
+  if (mUnicodeEncoder != nsnull)
   {
-    const nsString& text = aNode.GetText();
-    UnicodeToTXTString(text);
-    PRInt32 entity = NS_EntityToUnicode(mBuffer);
-    if (entity < 256)
+    EncodeToBuffer(aString);
+    if (mStream != nsnull)
     {
-      char ch = (char)entity;
-      aStream << ch;
-      mColPos++;
+      nsOutputStream out(mStream);
+      out.write(mBuffer,mBufferLength);
+    }
+    if (mString != nsnull)
+    {
+      mString->Append(mBuffer);
     }
   }
-  else if (type == eHTMLTag_whitespace)
+  else
   {
-    if (PR_TRUE)
+    if (mStream != nsnull)
     {
-      const nsString& text = aNode.GetText();
-      UnicodeToTXTString(text);
-      aStream << mBuffer;
-      mStrBuffer.Append(mBuffer);
-      mColPos += text.Length();
+      nsOutputStream out(mStream);
+      const PRUnichar* unicode = aString.GetUnicode();
+      PRUint32   length = aString.Length();
+      out.write(unicode,length);
+    }
+    else
+    {
+      mString->Append(aString);
     }
   }
-  else if (type == eHTMLTag_br)
-  {
-    if (PR_TRUE)
-    {
-      aStream << endl;
-      mStrBuffer.Append("\n");
-      mColPos += 1;
-    }
-  }
-
-
-  return NS_OK;
 }
 
 
@@ -628,7 +599,10 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode){
       const nsString& value=aNode.GetValueAt(i);
 
       if (key.Equals("charset"))
-        InitEncoder(value);
+      {
+        if (mCharsetOverride.Length() == 0)
+          InitEncoder(value);
+      }
     }
   }
 
@@ -657,9 +631,8 @@ nsHTMLToTXTSinkStream::CloseContainer(const nsIParserNode& aNode){
   {
     if (mColPos != 0)
     {  
-      if (mOutput)
-        *mOutput << endl;
-      mStrBuffer.Append("\n");
+      nsString temp("\n");
+      Write(temp);
       mColPos = 0;
     }
   }
@@ -677,11 +650,53 @@ nsHTMLToTXTSinkStream::CloseContainer(const nsIParserNode& aNode){
   */     
 NS_IMETHODIMP
 nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode){
-  nsresult result = NS_OK;
-  if(mOutput) {  
-    result = AddLeaf(aNode,*mOutput);
+   eHTMLTags type = (eHTMLTags)aNode.GetNodeType();
+  
+  const nsString& text = aNode.GetText();
+
+  if (mDoOutput == PR_FALSE)
+    return NS_OK;
+
+  if (type == eHTMLTag_text) {
+    Write(text);
+    mColPos += text.Length();
+  } 
+  else if (type == eHTMLTag_entity)
+  {
+    const nsString& text = aNode.GetText();
+    EncodeToBuffer(text);
+    PRUnichar entity = NS_EntityToUnicode(mBuffer);
+    nsString temp;
+    
+    temp.Append(entity);
+    Write(temp);
+
+    mColPos++;
   }
-  return result;
+  else if (type == eHTMLTag_whitespace)
+  {
+    if (PR_TRUE)
+    {
+      const nsString& text = aNode.GetText();
+      Write(text);
+      mColPos += text.Length();
+    }
+  }
+  else if (type == eHTMLTag_br)
+  {
+    nsString temp("\n");
+    Write(text);
+    mColPos++;
+  }
+  else if (type == eHTMLTag_newline)
+  {
+    nsString temp("\n");
+    Write(text);
+    mColPos++;
+  }
+
+
+  return NS_OK;
 }
 
 

@@ -42,6 +42,8 @@
 #include "nsICharsetAlias.h"
 #include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"
+#include "nsIOutputStream.h"
+#include "nsFileStream.h"
 
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
@@ -51,7 +53,6 @@ static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
 static char*          gHeaderComment = "<!-- This page was created by the Gecko output system. -->";
 static char*          gDocTypeHeader = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2//EN\">";
 const  int            gTabSize=2;
-static char           gBuffer[1024];
 
 static const char* UnicodeToEntity(PRInt32 aCode);
 
@@ -332,24 +333,55 @@ NS_IMPL_RELEASE(nsHTMLContentSinkStream)
 
 
 /**
- *  This method is defined in nsIParser. It is used to 
- *  cause the COM-like construction of an nsParser.
+ *  Create an new sink
  *  
- *  @update  gess 4/8/98
- *  @param   nsIParser** ptr to newly instantiated parser
+ *  @update  gpk 05/01/99
  *  @return  NS_xxx error result
  */
 NS_HTMLPARS nsresult
 NS_New_HTML_ContentSinkStream(nsIHTMLContentSink** aInstancePtrResult, 
-                              PRBool aDoFormat,
-                              PRBool aDoHeader) {
-  nsHTMLContentSinkStream* it = new nsHTMLContentSinkStream(aDoFormat,aDoHeader);
+                            nsIOutputStream* aOutStream,
+                            const nsString* aCharsetOverride,
+                            PRBool aDoFormat,
+                            PRBool aDoHeader)
+{
+  nsHTMLContentSinkStream* it = new nsHTMLContentSinkStream(aOutStream,
+                                                            nsnull,
+                                                            aCharsetOverride,
+                                                            aDoFormat,
+                                                            aDoHeader);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   return it->QueryInterface(kIHTMLContentSinkIID, (void **)aInstancePtrResult);
 }
+
+
+/**
+ *  Create an new sink
+ *  
+ *  @update  gpk 05/01/99
+ *  @return  NS_xxx error result
+ */
+NS_HTMLPARS nsresult
+NS_New_HTML_ContentSinkStream(nsIHTMLContentSink** aInstancePtrResult, 
+                            nsString* aOutString, 
+                            PRBool aDoFormat,
+                            PRBool aDoHeader)
+{
+  nsHTMLContentSinkStream* it = new nsHTMLContentSinkStream(nsnull,
+                                                            aOutString,
+                                                            nsnull,
+                                                            aDoFormat,
+                                                            aDoHeader);
+  if (nsnull == it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  return it->QueryInterface(kIHTMLContentSinkIID, (void **)aInstancePtrResult);
+}
+
 
 
 
@@ -409,9 +441,12 @@ nsresult nsHTMLContentSinkStream::InitEncoder(const nsString& aCharset)
  * @param 
  * @return
  */
-nsHTMLContentSinkStream::nsHTMLContentSinkStream(PRBool aDoFormat,PRBool aDoHeader)  {
+nsHTMLContentSinkStream::nsHTMLContentSinkStream(nsIOutputStream* aOutStream, 
+                                                 nsString* aOutString,
+                                                 const nsString* aCharsetOverride,
+                                                 PRBool aDoFormat,
+                                                 PRBool aDoHeader)  {
   NS_INIT_REFCNT();
-  mOutput=&cout;
   mLowerCaseTags = PR_TRUE;  
   memset(mHTMLTagStack,0,sizeof(mHTMLTagStack));
   mHTMLStackPos = 0;
@@ -422,27 +457,10 @@ nsHTMLContentSinkStream::nsHTMLContentSinkStream(PRBool aDoFormat,PRBool aDoHead
   mBuffer = nsnull;
   mBufferSize = 0;
   mUnicodeEncoder = nsnull;
-}
-
-/**
- * Construct a content sink stream.
- * @update	gess7/7/98
- * @param 
- * @return
- */
-nsHTMLContentSinkStream::nsHTMLContentSinkStream(ostream& aStream,PRBool aDoFormat,PRBool aDoHeader)  {
-  NS_INIT_REFCNT();
-  mOutput = &aStream;
-  mLowerCaseTags = PR_TRUE;  
-  memset(mHTMLTagStack,0,sizeof(mHTMLTagStack));
-  mHTMLStackPos = 0;
-  mColPos = 0;
-  mIndent = 0;
-  mDoFormat = aDoFormat;
-  mDoHeader = aDoHeader;
-  mBuffer = nsnull;
-  mBufferSize = 0;
-  mUnicodeEncoder = nsnull;
+  mStream = aOutStream;
+  mString = aOutString;
+  if (aCharsetOverride != nsnull)
+    mCharsetOverride = *aCharsetOverride;
 }
 
 
@@ -498,81 +516,118 @@ void nsHTMLContentSinkStream::EnsureBufferSize(PRInt32 aNewSize)
   }
 }
 
-void nsHTMLContentSinkStream::UnicodeToHTMLString(const nsString& aSrc)
+
+
+void nsHTMLContentSinkStream::EncodeToBuffer(const nsString& aSrc)
 {
-  PRInt32       length = aSrc.Length();
-  PRUnichar     ch; 
-  const char*   entity = nsnull;
-  PRUint32      offset = 0;
-  PRUint32      addedLength = 0;
-  nsAutoString  data;
-
-
+  
+  NS_ASSERTION(mUnicodeEncoder != nsnull,"The unicode encoder needs to be initialized");
   if (mUnicodeEncoder == nsnull)
-    InitEncoder("");
+    return;
 
-  if (length > 0)
+#define CH_NBSP 160
+
+  PRInt32       length = aSrc.Length();
+  nsresult      result;
+
+  if (mUnicodeEncoder != nsnull && length > 0)
   {
-    // Step 1. Convert anything that maps to character entity to 
-    // the entity value
     EnsureBufferSize(length);
-    for (PRInt32 i = 0; i < length; i++)
-    {
-      ch = aSrc.CharAt(i);
-      
-      entity = UnicodeToEntity(ch);
-      if (entity)
-      {
-        nsAutoString temp(entity);
-
-        temp.ToLowerCase();
-        data.Append('&');
-        data.Append(temp);
-        data.Append(';');
-      }
-      else
-      {
-        data.Append(ch);
-      }
-    }
-    
-    // Step 2. Run the result through the converter
-    length = data.Length();
-    EnsureBufferSize(length);
-    PRInt32 bufferLength = mBufferSize;
+    mBufferLength = mBufferSize;
     
     mUnicodeEncoder->Reset();
-    nsresult result = mUnicodeEncoder->Convert(data.GetUnicode(), &length, mBuffer, &bufferLength);
-    mBuffer[bufferLength] = 0;
-    PRInt32 temp = bufferLength;
+    result = mUnicodeEncoder->Convert(aSrc.GetUnicode(), &length, mBuffer, &mBufferLength);
+    mBuffer[mBufferLength] = 0;
+    PRInt32 temp = mBufferLength;
     if (NS_SUCCEEDED(result))
       result = mUnicodeEncoder->Finish(mBuffer,&temp);
- }
+
+
+    for (PRInt32 i = 0; i < mBufferLength; i++)
+    {
+      if (mBuffer[i] == char(CH_NBSP))
+        mBuffer[i] = ' ';
+    }
+  }
+  
 }
+
+
+void nsHTMLContentSinkStream::Write(const nsString& aString)
+{
+
+  // If a encoder is being used then convert first convert the input string
+  if (mUnicodeEncoder != nsnull)
+  {
+    EncodeToBuffer(aString);
+    if (mStream != nsnull)
+    {
+      nsOutputStream out(mStream);
+      out.write(mBuffer,mBufferLength);
+    }
+    if (mString != nsnull)
+    {
+      mString->Append(mBuffer);
+    }
+  }
+  else
+  {
+    if (mStream != nsnull)
+    {
+      nsOutputStream out(mStream);
+      const PRUnichar* unicode = aString.GetUnicode();
+      PRUint32   length = aString.Length();
+      out.write(unicode,length);
+    }
+    else
+    {
+      mString->Append(aString);
+    }
+  }
+}
+
+
+void nsHTMLContentSinkStream::Write(const char* aData)
+{
+  if (mStream)
+  {
+    nsOutputStream out(mStream);
+    out << aData;
+  }
+  if (mString)
+  {
+    mString->Append(aData);
+  }
+}
+
+void nsHTMLContentSinkStream::Write(char aData)
+{
+  if (mStream)
+  {
+    nsOutputStream out(mStream);
+    out << aData;
+  }
+  if (mString)
+  {
+    mString->Append(aData);
+  }
+}
+
+
+
+
 
 
 /**
  * 
- * @update	gess7/7/98
+ * @update	04/30/99 gpk
  * @param 
  * @return
  */
 nsHTMLContentSinkStream::~nsHTMLContentSinkStream() {
   NS_IF_RELEASE(mUnicodeEncoder);  
-  mOutput=0;  //we don't own the stream we're given; just forget it.
 }
 
-
-/**
- * 
- * @update	gess7/22/98
- * @param 
- * @return
- */
-NS_IMETHODIMP_(void)
-nsHTMLContentSinkStream::SetOutputStream(ostream& aStream){
-  mOutput=&aStream;
-}
 
 
 /**
@@ -581,7 +636,7 @@ nsHTMLContentSinkStream::SetOutputStream(ostream& aStream){
  * @param 
  * @return
  */
-void nsHTMLContentSinkStream::WriteAttributes(const nsIParserNode& aNode,ostream& aStream) {
+void nsHTMLContentSinkStream::WriteAttributes(const nsIParserNode& aNode) {
   int theCount=aNode.GetAttributeCount();
   if(theCount) {
     int i=0;
@@ -600,14 +655,20 @@ void nsHTMLContentSinkStream::WriteAttributes(const nsIParserNode& aNode,ostream
 
         EnsureBufferSize(key.Length());
         key.ToCString(mBuffer,mBufferSize);
-      
-        aStream << " " << mBuffer << char(kEqual);
+
+        // send to ouput " [KEY]="
+        Write(' ');
+        Write(mBuffer);
+        Write(char(kEqual));
         mColPos += 1 + strlen(mBuffer) + 1;
       
         const nsString& value=aNode.GetValueAt(i);
-        UnicodeToHTMLString(value);
+        
+         // send to ouput "\"[VALUE]\""
+        Write('\"');
+        Write(value);
+        Write('\"');
 
-        aStream << "\"" << mBuffer << "\"";
         mColPos += 1 + strlen(mBuffer) + 1;
       }
     }
@@ -615,85 +676,31 @@ void nsHTMLContentSinkStream::WriteAttributes(const nsIParserNode& aNode,ostream
 }
 
 
-/**
- * 
- * @update	gess7/5/98
- * @param 
- * @return
- */
-static
-void OpenTagWithAttributes(const char* theTag,const nsIParserNode& aNode,int tab,ostream& aStream,PRBool aNewline) {
-  int i=0;
-  for(i=0;i<tab*gTabSize;i++) 
-    aStream << " ";
-  aStream << (char)kLessThan << theTag;
-//  WriteAttributes(aNode,aStream);
-  aStream << (char)kGreaterThan;
-  if(aNewline)
-    aStream << endl;
-}
 
 
-/**
- * 
- * @update	gess7/5/98
- * @param 
- * @return
- */
-static
-void OpenTag(const char* theTag,int tab,ostream& aStream,PRBool aNewline) {
-  int i=0;
-  for(i=0;i<tab*gTabSize;i++) 
-    aStream << " ";
-  aStream << (char)kLessThan << theTag << (char)kGreaterThan;
-  if(aNewline)
-    aStream << endl;
-}
-
-
-/**
- * 
- * @update	gess7/5/98
- * @param 
- * @return
- */
-static
-void CloseTag(const char* theTag,int tab,ostream& aStream) {
-  int i=0;
-  for(i=0;i<tab*gTabSize;i++) 
-    aStream << " ";
-  aStream << (char)kLessThan << (char)kForwardSlash << theTag << (char)kGreaterThan << endl;
-}
-
-
-/**
- * 
- * @update	gess7/5/98
- * @param 
- * @return
- */
-static
-void WritePair(eHTMLTags aTag,const nsString& theContent,int tab,ostream& aStream) {
-  const char* titleStr = GetTagName(aTag);
-  OpenTag(titleStr,tab,aStream,PR_FALSE);  
-  theContent.ToCString(gBuffer,sizeof(gBuffer)-1);
-  aStream << gBuffer;
-  CloseTag(titleStr,0,aStream);
-}
 
 /**
   * This method gets called by the parser when it encounters
   * a title tag and wants to set the document title in the sink.
   *
-  * @update 4/1/98 gess
+  * @update	04/30/99 gpk
   * @param  nsString reference to new title value
   * @return PR_TRUE if successful. 
   */     
 NS_IMETHODIMP
 nsHTMLContentSinkStream::SetTitle(const nsString& aValue){
-  if(mOutput) {
-    WritePair(eHTMLTag_title,aValue,1+mTabLevel,*mOutput);
-  }
+    const char* tagName = GetTagName(eHTMLTag_title);
+    Write(kLessThan);
+    Write(tagName);
+    Write(kGreaterThan);
+
+    Write(aValue);
+
+    Write(kLessThan);
+    Write(kForwardSlash);
+    Write(tagName);
+    Write(kGreaterThan);
+
   return NS_OK;
 }
 
@@ -701,17 +708,15 @@ nsHTMLContentSinkStream::SetTitle(const nsString& aValue){
 /**
   * This method is used to open the outer HTML container.
   *
-  * @update 07/12/98 gpk
+  * @update	04/30/99 gpk
   * @param  nsIParserNode reference to parser node interface
   * @return PR_TRUE if successful. 
   */     
 NS_IMETHODIMP
 nsHTMLContentSinkStream::OpenHTML(const nsIParserNode& aNode){
-  if(mOutput) {
     eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
     if (tag == eHTMLTag_html)
-     AddStartTag(aNode,*mOutput);
-  }
+     AddStartTag(aNode);
   return NS_OK;
 }
 
@@ -719,18 +724,15 @@ nsHTMLContentSinkStream::OpenHTML(const nsIParserNode& aNode){
 /**
   * This method is used to close the outer HTML container.
   *
-  * @update 07/12/98 gpk
+  * @update	04/30/99 gpk
   * @param  nsIParserNode reference to parser node interface
   * @return PR_TRUE if successful. 
   */     
 NS_IMETHODIMP
 nsHTMLContentSinkStream::CloseHTML(const nsIParserNode& aNode){
-  if(mOutput) {
-    eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
-    if (tag == eHTMLTag_html)
-      AddEndTag(aNode,*mOutput);
-      mOutput->flush();
-  }
+  eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
+  if (tag == eHTMLTag_html)
+    AddEndTag(aNode);
   return NS_OK;
 }
 
@@ -738,17 +740,15 @@ nsHTMLContentSinkStream::CloseHTML(const nsIParserNode& aNode){
 /**
   * This method is used to open the only HEAD container.
   *
-  * @update 07/12/98 gpk
+  * @update	04/30/99 gpk
   * @param  nsIParserNode reference to parser node interface
   * @return PR_TRUE if successful. 
   */     
 NS_IMETHODIMP
 nsHTMLContentSinkStream::OpenHead(const nsIParserNode& aNode){
-  if(mOutput) {
-    eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
-    if (tag == eHTMLTag_head)
-     AddStartTag(aNode,*mOutput);
-  }
+  eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
+  if (tag == eHTMLTag_head)
+  AddStartTag(aNode);
   return NS_OK;
 }
 
@@ -756,17 +756,15 @@ nsHTMLContentSinkStream::OpenHead(const nsIParserNode& aNode){
 /**
   * This method is used to close the only HEAD container.
   *
-  * @update 07/12/98 gpk
+  * @update	04/30/99 gpk
   * @param  nsIParserNode reference to parser node interface
   * @return PR_TRUE if successful. 
   */     
 NS_IMETHODIMP
 nsHTMLContentSinkStream::CloseHead(const nsIParserNode& aNode){
-  if(mOutput) {
-    eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
-    if (tag == eHTMLTag_head)
-      AddEndTag(aNode,*mOutput);
-  }
+  eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
+  if (tag == eHTMLTag_head)
+    AddEndTag(aNode);
   return NS_OK;
 }
 
@@ -774,17 +772,15 @@ nsHTMLContentSinkStream::CloseHead(const nsIParserNode& aNode){
 /**
   * This method is used to open the main BODY container.
   *
-  * @update 07/12/98 gpk
+  * @update	04/30/99 gpk
   * @param  nsIParserNode reference to parser node interface
   * @return PR_TRUE if successful. 
   */     
 NS_IMETHODIMP
 nsHTMLContentSinkStream::OpenBody(const nsIParserNode& aNode){
-  if(mOutput) {
-    eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
-    if (tag == eHTMLTag_body)
-      AddStartTag(aNode,*mOutput);
-  }
+  eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
+  if (tag == eHTMLTag_body)
+    AddStartTag(aNode);
   return NS_OK;
 }
 
@@ -792,17 +788,15 @@ nsHTMLContentSinkStream::OpenBody(const nsIParserNode& aNode){
 /**
   * This method is used to close the main BODY container.
   *
-  * @update 07/12/98 gpk
+  * @update	04/30/99 gpk
   * @param  nsIParserNode reference to parser node interface
   * @return PR_TRUE if successful. 
   */     
 NS_IMETHODIMP
 nsHTMLContentSinkStream::CloseBody(const nsIParserNode& aNode){
-  if(mOutput) {
-    eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
-    if (tag == eHTMLTag_body)
-      AddEndTag(aNode,*mOutput);
-  }
+  eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
+  if (tag == eHTMLTag_body)
+    AddEndTag(aNode);
   return NS_OK;
 }
 
@@ -816,11 +810,9 @@ nsHTMLContentSinkStream::CloseBody(const nsIParserNode& aNode){
   */     
 NS_IMETHODIMP
 nsHTMLContentSinkStream::OpenForm(const nsIParserNode& aNode){
-  if(mOutput) {
-    eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
-    if (tag == eHTMLTag_form)
-      AddStartTag(aNode,*mOutput);
-  }
+  eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
+  if (tag == eHTMLTag_form)
+    AddStartTag(aNode);
   return NS_OK;
 }
 
@@ -834,11 +826,9 @@ nsHTMLContentSinkStream::OpenForm(const nsIParserNode& aNode){
   */     
 NS_IMETHODIMP
 nsHTMLContentSinkStream::CloseForm(const nsIParserNode& aNode){
-  if(mOutput) {
-    eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
-    if (tag == eHTMLTag_form)
-      AddEndTag(aNode,*mOutput);
-  }
+  eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
+  if (tag == eHTMLTag_form)
+    AddEndTag(aNode);
   return NS_OK;
 }
 
@@ -851,11 +841,9 @@ nsHTMLContentSinkStream::CloseForm(const nsIParserNode& aNode){
   */     
 NS_IMETHODIMP
 nsHTMLContentSinkStream::OpenMap(const nsIParserNode& aNode){
-  if(mOutput) {
-    eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
-    if (tag == eHTMLTag_map)
-      AddStartTag(aNode,*mOutput);
-  }
+  eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
+  if (tag == eHTMLTag_map)
+    AddStartTag(aNode);
   return NS_OK;
 }
 
@@ -869,12 +857,10 @@ nsHTMLContentSinkStream::OpenMap(const nsIParserNode& aNode){
   */     
 NS_IMETHODIMP
 nsHTMLContentSinkStream::CloseMap(const nsIParserNode& aNode){
-  if(mOutput) {
-    eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
-    if (tag == eHTMLTag_map)
-      AddEndTag(aNode,*mOutput);
-  }
-  return NS_OK;
+  eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
+  if (tag == eHTMLTag_map)
+    AddEndTag(aNode);
+return NS_OK;
 }
 
     
@@ -887,11 +873,9 @@ nsHTMLContentSinkStream::CloseMap(const nsIParserNode& aNode){
   */     
 NS_IMETHODIMP
 nsHTMLContentSinkStream::OpenFrameset(const nsIParserNode& aNode){
-  if(mOutput) {
-    eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
-    if (tag == eHTMLTag_frameset)
-      AddStartTag(aNode,*mOutput);
-  }
+  eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
+  if (tag == eHTMLTag_frameset)
+    AddStartTag(aNode);
   return NS_OK;
 }
 
@@ -905,27 +889,26 @@ nsHTMLContentSinkStream::OpenFrameset(const nsIParserNode& aNode){
   */     
 NS_IMETHODIMP
 nsHTMLContentSinkStream::CloseFrameset(const nsIParserNode& aNode){
-  if(mOutput) {
-    eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
-    if (tag == eHTMLTag_frameset)
-      AddEndTag(aNode,*mOutput);
-  }
+  eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
+  if (tag == eHTMLTag_frameset)
+    AddEndTag(aNode);
   return NS_OK;
 }
 
 
-void nsHTMLContentSinkStream::AddIndent(ostream& aStream)
+void nsHTMLContentSinkStream::AddIndent()
 {
+  nsString padding("  ");
   for (PRInt32 i = mIndent; --i >= 0; ) 
   {
-    aStream << "  ";
+    Write(padding);
     mColPos += 2;
   }
 }
 
 
 
-void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode, ostream& aStream)
+void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
 {
   eHTMLTags         tag = (eHTMLTags)aNode.GetNodeType();
   const nsString&   name = aNode.GetText();
@@ -942,37 +925,41 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode, ostream& a
   
   if (mColPos != 0 && BreakBeforeOpen(tag))
   {
-    aStream << endl;
+    Write('\n');
     mColPos = 0;
   }
 
   if (PermitWSBeforeOpen(tag))
-    AddIndent(aStream);
+    AddIndent();
 
-  tagName.ToCString(gBuffer,sizeof(gBuffer)-1);
-  aStream << (char)kLessThan << gBuffer;
+  EnsureBufferSize(tagName.Length());
+  tagName.ToCString(mBuffer,mBufferSize);
+
+  Write(kLessThan);
+  Write(mBuffer);
+
   mColPos += 1 + tagName.Length();
 
   if (tag == eHTMLTag_style)
   {
-    aStream << (char)kGreaterThan << endl;
+    Write(">\n");
     const   nsString& data = aNode.GetSkippedContent();
     PRInt32 size = data.Length();
     char*   buffer = new char[size+1];
     data.ToCString(buffer,size+1);
-    aStream << buffer;
+    Write(buffer);
     delete[] buffer;
   }
   else
   {
-    WriteAttributes(aNode,aStream);
-    aStream << (char)kGreaterThan;
+    WriteAttributes(aNode);
+    Write(kGreaterThan);
     mColPos += 1;
   }
 
   if (BreakAfterOpen(tag))
   {
-    aStream << endl;
+    Write('\n');
     mColPos = 0;
   }
 
@@ -983,7 +970,7 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode, ostream& a
 
 
 
-void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode, ostream& aStream)
+void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
 {
   eHTMLTags         tag = (eHTMLTags)aNode.GetNodeType();
 //  const nsString&   name = aNode.GetText();
@@ -1010,19 +997,25 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode, ostream& aSt
   {
     if (mColPos != 0)
     {
-      aStream << endl;
+      Write('\n');
       mColPos = 0;
     }
-    AddIndent(aStream);
+    AddIndent();
   }
 
-  tagName.ToCString(gBuffer,sizeof(gBuffer)-1);
-  aStream << (char)kLessThan << (char)kForwardSlash << gBuffer << (char)kGreaterThan;
-  mColPos += 1 + 1 + strlen(gBuffer) + 1;
+  EnsureBufferSize(tagName.Length());
+  tagName.ToCString(mBuffer,mBufferSize);
+  
+  Write(kLessThan);
+  Write(kForwardSlash);
+  Write(mBuffer);
+  Write(kGreaterThan);
+
+  mColPos += 1 + 1 + strlen(mBuffer) + 1;
   
   if (BreakAfterClose(tag))
   {
-    aStream << endl;
+    Write('\n');
     mColPos = 0;
   }
   mHTMLTagStack[--mHTMLStackPos] = eHTMLTag_unknown;
@@ -1040,7 +1033,7 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode, ostream& aSt
  *  @return  
  */
 nsresult
-nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode, ostream& aStream){
+nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode){
   eHTMLTags type = (eHTMLTags)aNode.GetNodeType();
   eHTMLTags tag = eHTMLTag_unknown;
   if (mHTMLStackPos > 0)
@@ -1062,14 +1055,16 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode, ostream& aStream){
       type == eHTMLTag_meta || 
       type == eHTMLTag_style)
   {
-    AddStartTag(aNode,aStream);
+    AddStartTag(aNode);
     mHTMLTagStack[--mHTMLStackPos] = eHTMLTag_unknown;
   }
   else if (type == eHTMLTag_entity)
   {
     const nsString& entity = aNode.GetText();
-    UnicodeToHTMLString(entity);
-    aStream << '&' << mBuffer << ';';
+    EncodeToBuffer(entity);
+    Write('&');
+    Write(mBuffer);
+    Write(';');
     mColPos += entity.Length() + 2;
   }
   else if (type == eHTMLTag_text)
@@ -1077,8 +1072,7 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode, ostream& aStream){
     const nsString& text = aNode.GetText();
     if ((mDoFormat == PR_FALSE) || preformatted == PR_TRUE)
     {
-      UnicodeToHTMLString(text);
-      aStream << mBuffer;
+      Write(text);
       mColPos += text.Length();
     }
     else
@@ -1092,8 +1086,7 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode, ostream& aStream){
       // than the max then just add it 
       if (mColPos + length < mMaxColumn)
       {
-        UnicodeToHTMLString(text);
-        aStream << mBuffer;
+        Write(text);
         mColPos += text.Length();
       }
       else
@@ -1115,8 +1108,7 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode, ostream& aStream){
           // if there is no break than just add it
           if (index == kNotFound)
           {
-            UnicodeToHTMLString(str);
-            aStream << mBuffer;
+            Write(str);
             mColPos += str.Length();
             done = PR_TRUE;
           }
@@ -1128,8 +1120,8 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode, ostream& aStream){
 
             first.Truncate(index);
   
-            UnicodeToHTMLString(first);
-            aStream << mBuffer << endl;
+            Write(first);
+            Write('\n');
             mColPos = 0;
   
             // cut the string from the beginning to the index
@@ -1145,8 +1137,7 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode, ostream& aStream){
     if ((mDoFormat == PR_FALSE) || preformatted || IgnoreWS(tag) == PR_FALSE)
     {
       const nsString& text = aNode.GetText();
-      UnicodeToHTMLString(text);
-      aStream << mBuffer;
+      Write(text);
       mColPos += text.Length();
     }
   }
@@ -1155,8 +1146,7 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode, ostream& aStream){
     if ((mDoFormat == PR_FALSE) || preformatted)
     {
       const nsString& text = aNode.GetText();
-      UnicodeToHTMLString(text);
-      aStream << mBuffer;
+      Write(text);
       mColPos = 0;
     }
   }
@@ -1215,25 +1205,26 @@ nsHTMLContentSinkStream::AddComment(const nsIParserNode& aNode){
   */     
 NS_IMETHODIMP
 nsHTMLContentSinkStream::OpenContainer(const nsIParserNode& aNode){
-  if(mOutput) 
+  
+  const nsString&   name = aNode.GetText();
+  if (name.Equals("XIF_DOC_INFO"))
   {
-    const nsString&   name = aNode.GetText();
-    if (name.Equals("XIF_DOC_INFO"))
+    PRInt32 count=aNode.GetAttributeCount();
+    for(PRInt32 i=0;i<count;i++)
     {
-      PRInt32 count=aNode.GetAttributeCount();
-      for(PRInt32 i=0;i<count;i++)
-      {
-        const nsString& key=aNode.GetKeyAt(i);
-        const nsString& value=aNode.GetValueAt(i);
+      const nsString& key=aNode.GetKeyAt(i);
+      const nsString& value=aNode.GetValueAt(i);
 
-        if (key.Equals("charset"))
+      if (key.Equals("charset"))
+      {
+        if (mCharsetOverride.Length() == 0)
           InitEncoder(value);
       }
     }
-    else
-    {
-      AddStartTag(aNode,*mOutput);
-    }
+  }
+  else
+  {
+    AddStartTag(aNode);
   }
   return NS_OK;
 }
@@ -1242,34 +1233,14 @@ nsHTMLContentSinkStream::OpenContainer(const nsIParserNode& aNode){
 /**
   * This method is used to close a generic container.
   *
-  * @update 07/12/98 gpk
+  * @update	04/30/99 gpk
   * @param  nsIParserNode reference to parser node interface
   * @return PR_TRUE if successful. 
   */     
 NS_IMETHODIMP
 nsHTMLContentSinkStream::CloseContainer(const nsIParserNode& aNode){
-  if(mOutput) {
-    AddEndTag(aNode,*mOutput);
-  }
+  AddEndTag(aNode);
   return NS_OK;
-}
-
-
-/**
-  * This method is used to add a leaf to the currently 
-  * open container.
-  *
-  * @update 07/12/98 gpk
-  * @param  nsIParserNode reference to parser node interface
-  * @return PR_TRUE if successful. 
-  */     
-NS_IMETHODIMP
-nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode){
-  nsresult result = NS_OK;
-  if(mOutput) {  
-    result = AddLeaf(aNode,*mOutput);
-  }
-  return result;
 }
 
 
@@ -1282,10 +1253,12 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode){
 NS_IMETHODIMP
 nsHTMLContentSinkStream::WillBuildModel(void){
   mTabLevel=-1;
-  if(mDoHeader && mOutput) {
-    (*mOutput) << gHeaderComment << endl;
-    (*mOutput) << gDocTypeHeader << endl;
-  }
+  if(mDoHeader) {
+    Write(gHeaderComment);
+    Write('\n');
+    Write(gDocTypeHeader);
+    Write('\n');
+   }
   return NS_OK;
 }
 
