@@ -233,6 +233,7 @@
     <command id="cmd_removeStyles"                    oncommand="goDoCommand('cmd_removeStyles')"/>
     <command id="cmd_removeLinks"                     oncommand="goDoCommand('cmd_removeLinks')"/>
     <command id="cmd_removeNamedAnchors"              oncommand="goDoCommand('cmd_removeNamedAnchors')"/>
+    <command id="cmd_updateStructToolbar"             oncommand="goDoCommand('cmd_updateStructToolbar')"/>
   </commandset>
 
   <!-- commands updated only when the menu gets created -->

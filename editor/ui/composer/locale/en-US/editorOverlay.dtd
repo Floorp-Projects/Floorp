@@ -585,5 +585,10 @@
 <!ENTITY smiley7Cmd.label "Undecided">
 <!ENTITY SmileButton.tooltip "Choose smiley face">
 
-
-
+<!-- Structure Toolbar Context Menu items -->
+<!ENTITY structSelect.label         "Select">
+<!ENTITY structSelect.accesskey     "s">
+<!ENTITY structRemoveTag.label      "Remove tag">
+<!ENTITY structRemoveTag.accesskey  "r">
+<!ENTITY structChangeTag.label      "Change tag">
+<!ENTITY structChangeTag.accesskey  "c">

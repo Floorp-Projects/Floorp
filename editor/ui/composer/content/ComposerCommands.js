@@ -206,6 +206,7 @@ function SetupComposerWindowCommands()
     commandManager.registerCommand("cmd_PreviewMode",        nsPreviewModeCommand);
     commandManager.registerCommand("cmd_FinishHTMLSource",   nsFinishHTMLSource);
     commandManager.registerCommand("cmd_CancelHTMLSource",   nsCancelHTMLSource);
+    commandManager.registerCommand("cmd_updateStructToolbar", nsUpdateStructToolbarCommand);
   }
 
   windowControllers.insertControllerAt(0, editorController);
@@ -407,6 +408,7 @@ function goUpdateCommandState(cmdController, command)
       case "cmd_backgroundColor":
       case "cmd_fontColor":
       case "cmd_fontFace":
+      case "cmd_updateStructToolbar":
         pokeMultiStateUI(command, params);
         break;
 
@@ -484,6 +486,7 @@ function goDoCommandParams(command, params)
       {
         controller.doCommand(command);
       }
+      ResetStructToolbar();
     }
   }
   catch (e)
@@ -529,6 +532,8 @@ function doStyleUICommand(cmdStr)
     goDoCommandParams(cmdStr, cmdParams);
     if (cmdParams)
       pokeStyleUI(cmdStr, cmdParams.getBooleanValue("state_all"));
+
+    ResetStructToolbar();
   } catch(e) {}
 }
 
@@ -571,6 +576,8 @@ function doStatefulCommand(commandID, newState)
     goDoCommandParams(commandID, cmdParams);
 
     pokeMultiStateUI(commandID, cmdParams);
+
+    ResetStructToolbar();
   } catch(e) { dump("error thrown in doStatefulCommand: "+e+"\n"); }
 }
 
@@ -660,6 +667,21 @@ var nsOpenCommand =
     }
   }
 };
+
+// STRUCTURE TOOLBAR
+//
+var nsUpdateStructToolbarCommand =
+{
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    UpdateStructToolbar();
+    return true;
+  },
+
+  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
+  doCommandParams: function(aCommand, aParams, aRefCon) {},
+  doCommand: function(aCommand)  {}
+}
 
 // ******* File output commands and utilities ******** //
 //-----------------------------------------------------------------------------------

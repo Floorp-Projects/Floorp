@@ -67,6 +67,7 @@
   <script type="application/x-javascript" src="chrome://editor/content/editor.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/EditorCommandsDebug.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/EditorContextMenu.js"/>
+  <script type="application/x-javascript" src="chrome://editor/content/StructBarContextMenu.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/editorApplicationOverlay.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/publishprefs.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaDD.js"/>
@@ -268,7 +269,10 @@
     <!-- Some of this is from globarOverlay.xul -->
     <statusbar class="chromeclass-status" id="status-bar">
       <statusbarpanel id="component-bar"/>
-      <statusbarpanel id="statusText" label="&statusText.label;" flex="1"/>
+      <statusbarpanel id="statusText" flex="1" align="left" style="min-height: 20px"
+                      observes="cmd_structToolBar">
+	    <label value=""/>
+      </statusbarpanel>
       <statusbarpanel class="statusbarpanel-iconic" id="offline-status"/>
     </statusbar>
     
