@@ -188,6 +188,10 @@ nsInterfaceInfoManager::indexify_file(const char *filename)
     int limit = header->num_interfaces;
     nsTypelibRecord *tlrecord = new nsTypelibRecord(limit, this->typelibRecords,
                                                     header, this->allocator);
+    if (tlrecord == NULL) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
     this->typelibRecords = tlrecord; // add it to the list of typelibs
 
     for (int i = 0; i < limit; i++) {

@@ -172,6 +172,10 @@ int main()
 {
   foo* a = new bar();
   baz* b = new baz();
+
+  /* here we make the global 'check for alloc failure' checker happy */
+  if(!a || !b)
+    return 1;
   
   foo* c = (foo*)b;
 
