@@ -70,7 +70,7 @@
 #include "nsIDocumentObserver.h"
 #include "nsIFormControl.h"
 #include "nsIHTMLContent.h"
-#include "nsIHTMLElementFactory.h"
+#include "nsIElementFactory.h"
 #include "nsIInputStream.h"
 #include "nsILoadGroup.h"
 #include "nsINameSpace.h"
@@ -96,7 +96,6 @@
 #include "nsIWebShell.h"
 #include "nsIBaseWindow.h"
 #include "nsIXMLContent.h"
-#include "nsIXMLElementFactory.h"
 #include "nsIXULContent.h"
 #include "nsIXULContentSink.h"
 #include "nsIXULContentUtils.h"
@@ -198,8 +197,8 @@ nsIRDFResource* nsXULDocument::kNC_persist;
 nsIRDFResource* nsXULDocument::kNC_attribute;
 nsIRDFResource* nsXULDocument::kNC_value;
 
-nsIHTMLElementFactory* nsXULDocument::gHTMLElementFactory;
-nsIXMLElementFactory*  nsXULDocument::gXMLElementFactory;
+nsIElementFactory* nsXULDocument::gHTMLElementFactory;
+nsIElementFactory*  nsXULDocument::gXMLElementFactory;
 
 nsINameSpaceManager* nsXULDocument::gNameSpaceManager;
 PRInt32 nsXULDocument::kNameSpaceID_XUL;
@@ -3359,7 +3358,7 @@ nsXULDocument::Init()
 
         rv = nsComponentManager::CreateInstance(kHTMLElementFactoryCID,
                                                 nsnull,
-                                                NS_GET_IID(nsIHTMLElementFactory),
+                                                NS_GET_IID(nsIElementFactory),
                                                 (void**) &gHTMLElementFactory);
 
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get HTML element factory");
@@ -3367,7 +3366,7 @@ nsXULDocument::Init()
 
         rv = nsComponentManager::CreateInstance(kXMLElementFactoryCID,
                                                 nsnull,
-                                                NS_GET_IID(nsIXMLElementFactory),
+                                                NS_GET_IID(nsIElementFactory),
                                                 (void**) &gXMLElementFactory);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get XML element factory");
         if (NS_FAILED(rv)) return rv;
@@ -3924,21 +3923,32 @@ nsXULDocument::CreateElement(PRInt32 aNameSpaceID,
     nsresult rv;
     nsCOMPtr<nsIContent> result;
 
-    if (aNameSpaceID == kNameSpaceID_HTML) {
-        nsCOMPtr<nsIHTMLContent> element;
+    if (aNameSpaceID == kNameSpaceID_XUL) {
+        rv = nsXULElement::Create(aNameSpaceID, aTag, getter_AddRefs(result));
+        if (NS_FAILED(rv)) return rv;
+    }
+    else if (aNameSpaceID == kNameSpaceID_HTML) {
         const PRUnichar *tagName;
         aTag->GetUnicode(&tagName);
 
-        rv = gHTMLElementFactory->CreateInstanceByTag(tagName, getter_AddRefs(element));
+        rv = gHTMLElementFactory->CreateInstanceByTag(tagName, getter_AddRefs(result));
         if (NS_FAILED(rv)) return rv;
 
-        result = do_QueryInterface(element);
         if (! result)
             return NS_ERROR_UNEXPECTED;
     }
     else {
-        rv = nsXULElement::Create(aNameSpaceID, aTag, getter_AddRefs(result));
+        const PRUnichar *tagName;
+        aTag->GetUnicode(&tagName);
+
+        nsCOMPtr<nsIElementFactory> elementFactory;
+        GetElementFactory(aNameSpaceID, getter_AddRefs(elementFactory));
+
+        rv = elementFactory->CreateInstanceByTag(tagName, getter_AddRefs(result));
         if (NS_FAILED(rv)) return rv;
+
+        if (! result)
+            return NS_ERROR_UNEXPECTED;
     }
 
     rv = result->SetDocument(this, PR_FALSE);
@@ -4355,7 +4365,7 @@ nsXULDocument::PrepareToWalk()
 
         // Create the document's "hidden form" element which will wrap all
         // HTML form elements that turn up.
-        nsCOMPtr<nsIHTMLContent> form;
+        nsCOMPtr<nsIContent> form;
         rv = gHTMLElementFactory->CreateInstanceByTag(nsAutoString("form"),
                                                       getter_AddRefs(form));
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create form element");
@@ -4934,11 +4944,9 @@ nsXULDocument::CreateElement(nsXULPrototypeElement* aPrototype, nsIContent** aRe
         rv = aPrototype->mTag->ToString(tagStr);
         if (NS_FAILED(rv)) return rv;
 
-        nsCOMPtr<nsIHTMLContent> element;
-        gHTMLElementFactory->CreateInstanceByTag(tagStr.GetUnicode(), getter_AddRefs(element));
+        gHTMLElementFactory->CreateInstanceByTag(tagStr.GetUnicode(), getter_AddRefs(result));
         if (NS_FAILED(rv)) return rv;
 
-        result = do_QueryInterface(element);
         if (! result)
             return NS_ERROR_UNEXPECTED;
 
@@ -4948,7 +4956,7 @@ nsXULDocument::CreateElement(nsXULPrototypeElement* aPrototype, nsIContent** aRe
         rv = AddAttributes(aPrototype, result);
         if (NS_FAILED(rv)) return rv;
 
-        nsCOMPtr<nsIFormControl> htmlformctrl = do_QueryInterface(element);
+        nsCOMPtr<nsIFormControl> htmlformctrl = do_QueryInterface(result);
         if (htmlformctrl) {
             nsCOMPtr<nsIDOMHTMLFormElement> docform;
             rv = GetForm(getter_AddRefs(docform));
@@ -4960,6 +4968,28 @@ nsXULDocument::CreateElement(nsXULPrototypeElement* aPrototype, nsIContent** aRe
 
             htmlformctrl->SetForm(docform);
         }
+    }
+    else if (aPrototype->mNameSpaceID != kNameSpaceID_XUL) {
+        // If it's not a XUL element, it's gonna be heavyweight no matter
+        // what. So we need to copy everything out of the prototype
+        // into the element.
+        nsAutoString tagStr;
+        rv = aPrototype->mTag->ToString(tagStr);
+        if (NS_FAILED(rv)) return rv;
+
+        nsCOMPtr<nsIElementFactory> elementFactory;
+        GetElementFactory(aPrototype->mNameSpaceID, getter_AddRefs(elementFactory));
+        elementFactory->CreateInstanceByTag(tagStr.GetUnicode(), getter_AddRefs(result));
+        if (NS_FAILED(rv)) return rv;
+
+        if (! result)
+            return NS_ERROR_UNEXPECTED;
+
+        rv = result->SetDocument(this, PR_FALSE);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = AddAttributes(aPrototype, result);
+        if (NS_FAILED(rv)) return rv;
     }
     else {
         // If it's a XUL element, it'll be lightweight until somebody
@@ -5607,6 +5637,26 @@ nsXULDocument::IsChromeURI(nsIURI* aURI)
     }
 
     return PR_FALSE;
+}
+
+void 
+nsXULDocument::GetElementFactory(PRInt32 aNameSpaceID, nsIElementFactory** aResult)
+{
+  nsresult rv;
+  nsAutoString nameSpace;
+  gNameSpaceManager->GetNameSpaceURI(aNameSpaceID, nameSpace);
+
+  nsCAutoString progID = NS_ELEMENT_FACTORY_PROGID_PREFIX;
+  progID += nameSpace;
+
+  // Retrieve the appropriate factory.
+  NS_WITH_SERVICE(nsIElementFactory, elementFactory, progID, &rv);
+
+  if (!elementFactory)
+    elementFactory = gXMLElementFactory; // Nothing found. Use generic XML element.
+
+  *aResult = elementFactory;
+  NS_IF_ADDREF(*aResult);
 }
 
 //----------------------------------------------------------------------

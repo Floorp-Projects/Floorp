@@ -48,7 +48,7 @@
 #include "nsIDOMXULElement.h"
 #include "nsIDocument.h"
 #include "nsIHTMLContent.h"
-#include "nsIHTMLElementFactory.h"
+#include "nsIElementFactory.h"
 #include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
 #include "nsIRDFCompositeDataSource.h"
@@ -110,7 +110,8 @@ static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,  NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kXULContentUtilsCID,        NS_XULCONTENTUTILS_CID);
 
 static NS_DEFINE_CID(kHTMLElementFactoryCID,  NS_HTML_ELEMENT_FACTORY_CID);
-static NS_DEFINE_CID(kIHTMLElementFactoryIID, NS_IHTML_ELEMENT_FACTORY_IID);
+static NS_DEFINE_CID(kXMLElementFactoryCID,   NS_XML_ELEMENT_FACTORY_CID);
+
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -289,6 +290,9 @@ public:
     static void
     ForceTreeReflow(nsITimer* aTimer, void* aClosure);
 
+    static void
+    GetElementFactory(PRInt32 aNameSpaceID, nsIElementFactory** aResult);
+
     nsresult
     AddDatabasePropertyToHTMLElement(nsIContent* aElement, nsIRDFCompositeDataSource* aDataBase);
 
@@ -337,7 +341,8 @@ protected:
     static nsIRDFService*         gRDFService;
     static nsIRDFContainerUtils*  gRDFContainerUtils;
     static nsINameSpaceManager*   gNameSpaceManager;
-    static nsIHTMLElementFactory* gHTMLElementFactory;
+    static nsIElementFactory*     gHTMLElementFactory;
+    static nsIElementFactory*  gXMLElementFactory;
     static nsIXULContentUtils*    gXULUtils;
 
     static nsIAtom* kContainerAtom;
@@ -421,7 +426,8 @@ PRInt32  RDFGenericBuilderImpl::kNameSpaceID_XUL;
 nsIRDFService*  RDFGenericBuilderImpl::gRDFService;
 nsIRDFContainerUtils* RDFGenericBuilderImpl::gRDFContainerUtils;
 nsINameSpaceManager* RDFGenericBuilderImpl::gNameSpaceManager;
-nsIHTMLElementFactory* RDFGenericBuilderImpl::gHTMLElementFactory;
+nsIElementFactory* RDFGenericBuilderImpl::gHTMLElementFactory;
+nsIElementFactory* RDFGenericBuilderImpl::gXMLElementFactory;
 nsIXULContentUtils* RDFGenericBuilderImpl::gXULUtils;
 
 nsIRDFResource* RDFGenericBuilderImpl::kNC_Title;
@@ -621,8 +627,14 @@ RDFGenericBuilderImpl::Init()
 
         rv = nsComponentManager::CreateInstance(kHTMLElementFactoryCID,
                                                 nsnull,
-                                                kIHTMLElementFactoryIID,
+                                                NS_GET_IID(nsIElementFactory),
                                                 (void**) &gHTMLElementFactory);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = nsComponentManager::CreateInstance(kXMLElementFactoryCID,
+                                                nsnull,
+                                                NS_GET_IID(nsIElementFactory),
+                                                (void**) &gXMLElementFactory);
         if (NS_FAILED(rv)) return rv;
 
         rv = nsServiceManager::GetService(kXULContentUtilsCID,
@@ -3176,21 +3188,31 @@ RDFGenericBuilderImpl::CreateElement(PRInt32 aNameSpaceID,
     nsresult rv;
     nsCOMPtr<nsIContent> result;
 
-    if (aNameSpaceID == kNameSpaceID_HTML) {
-        nsCOMPtr<nsIHTMLContent> element;
+    if (aNameSpaceID == kNameSpaceID_XUL) {
+        rv = nsXULElement::Create(aNameSpaceID, aTag, getter_AddRefs(result));
+        if (NS_FAILED(rv)) return rv;
+    }
+    else if (aNameSpaceID == kNameSpaceID_HTML) {
         const PRUnichar *tagName;
         aTag->GetUnicode(&tagName);
 
-        rv = gHTMLElementFactory->CreateInstanceByTag(tagName, getter_AddRefs(element));
+        rv = gHTMLElementFactory->CreateInstanceByTag(tagName, getter_AddRefs(result));
         if (NS_FAILED(rv)) return rv;
 
-        result = do_QueryInterface(element);
         if (! result)
             return NS_ERROR_UNEXPECTED;
     }
     else {
-        rv = nsXULElement::Create(aNameSpaceID, aTag, getter_AddRefs(result));
+        const PRUnichar *tagName;
+        aTag->GetUnicode(&tagName);
+
+        nsCOMPtr<nsIElementFactory> elementFactory;
+        GetElementFactory(aNameSpaceID, getter_AddRefs(elementFactory));
+        rv = elementFactory->CreateInstanceByTag(tagName, getter_AddRefs(result));
         if (NS_FAILED(rv)) return rv;
+
+        if (! result)
+            return NS_ERROR_UNEXPECTED;
     }
 
     rv = result->SetDocument(doc, PR_FALSE);
@@ -3220,6 +3242,26 @@ RDFGenericBuilderImpl::SetEmpty(nsIContent *element, PRBool empty)
 
     return NS_OK;
 
+}
+
+void 
+RDFGenericBuilderImpl::GetElementFactory(PRInt32 aNameSpaceID, nsIElementFactory** aResult)
+{
+  nsresult rv;
+  nsAutoString nameSpace;
+  gNameSpaceManager->GetNameSpaceURI(aNameSpaceID, nameSpace);
+
+  nsCAutoString progID = NS_ELEMENT_FACTORY_PROGID_PREFIX;
+  progID += nameSpace;
+
+  // Retrieve the appropriate factory.
+  NS_WITH_SERVICE(nsIElementFactory, elementFactory, progID, &rv);
+
+  if (!elementFactory)
+    elementFactory = gXMLElementFactory; // Nothing found. Use generic XML element.
+
+  *aResult = elementFactory;
+  NS_IF_ADDREF(*aResult);
 }
 
 #ifdef PR_LOGGING
