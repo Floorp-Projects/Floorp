@@ -40,14 +40,14 @@ public:
 
   // Decode routine
   NS_IMETHOD DecodeMimePartIIStr(const char *header, 
-                                 const char *charset, 
-                                 char *decodedString) = 0;
+                                 char       *charset, 
+                                 char **decodedString) = 0;
 
   // Encode routine
   NS_IMETHOD EncodeMimePartIIStr(const char *header, 
                                  const char *mailCharset, 
                                  PRInt32     encodedWordSize, 
-                                 char       *encodedString) = 0;
+                                 char       **encodedString) = 0;
 }; 
 
 #endif /* nsIMimeHeaderConverter_h_ */
