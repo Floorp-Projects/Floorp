@@ -31,7 +31,6 @@ LIBS		= \
 		-lxpcom \
 		-lmozreg \
 		-lmozjs \
-		-lsecfree \
 		$(TIMER_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)

@@ -60,7 +60,6 @@ LIBS		= \
 		-lmozreg \
 		-lpref \
 		-lmozjs \
-		-lsecfree \
 		-limg \
 		$(JPEG_LIBS) \
 		$(PNG_LIBS) \

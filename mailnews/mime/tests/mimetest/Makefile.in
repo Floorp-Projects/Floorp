@@ -31,12 +31,10 @@ BASE_LIBS	= \
 		-lmozreg \
 		-lmozjs \
 		-lxpcom \
-		-lsecfree \
 		-lmozutil \
 		$(NULL)
 
 GECKO_LIBS	= \
-		-lraptorhtmlpars \
 		-ljsdom \
 		-lraptorplugin \
 		$(NULL)

@@ -44,7 +44,6 @@ LIBS		= \
 		-lmozreg \
 		-lmozjs \
 		-lxpcom \
-		-lsecfree \
 		-lmozutil \
 		-lxpcom \
 		-lneckoutil_s \

@@ -59,6 +59,10 @@ CSRCS		+= prefapi.c
 
 CPPSRCS		+= nsPref.cpp
 
+EXTRA_DSO_LDOPTS =\
+				-L$(DIST)/bin -lsecfree \
+				$(NULL)
+
 include $(topsrcdir)/config/rules.mk
 
 #INCLUDES	+= -I$(srcdir)/unix -Iunix

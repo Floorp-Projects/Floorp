@@ -36,7 +36,6 @@ LIBS = \
 	-lmozjs	\
 	-ljsdom	\
 	-ljsurl	\
-	-lsecfree \
 	$(TIMER_LIBS) \
 	$(ZLIB_LIBS) \
 	$(NSPR_LIBS) \

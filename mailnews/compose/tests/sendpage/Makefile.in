@@ -49,7 +49,6 @@ LIBS		= \
 		-lmozjs \
 		-ljsdom \
 		-ljsurl \
-		-lsecfree \
 		$(ZLIB_LIBS) \
 		$(NSPR_LIBS) \
 		-lraptorgfx \

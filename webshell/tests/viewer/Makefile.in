@@ -94,7 +94,6 @@ BASE_LIBS		= \
 			-lmozreg \
 			-lmozjs \
 			-lxpcom \
-			-lsecfree \
 			-lmozutil \
 			$(NULL)
 

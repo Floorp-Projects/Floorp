@@ -73,7 +73,6 @@ LIBS		+= \
 		-lmozreg \
 		-ljsdom \
 		-ljsurl \
-		-lsecfree \
 		-lmozjs \
 		$(OJI_LIBS) \
 		-lpref \

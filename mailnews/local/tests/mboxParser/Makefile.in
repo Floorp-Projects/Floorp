@@ -45,7 +45,6 @@ LIBS		= \
 		-lxp \
 		-lpref \
 		-lmozjs \
-		-lsecfree \
 		$(ZLIB_LIBS) \
 		$(NSPR_LIBS) \
 		$(TK_LIBS) \

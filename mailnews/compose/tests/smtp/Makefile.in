@@ -32,13 +32,11 @@ LIBS = \
 	-lxp	\
 	-lpref	\
 	-lmozjs	\
-	-lraptorhtmlpars \
 	-ljsdom	\
 	-ljsurl	\
 	-limg	\
 	-lxp	\
 	-lmozutil \
-	-lsecfree \
 	-lmozreg \
 	$(TIMER_LIBS) \
 	$(ZLIB_LIBS) \
