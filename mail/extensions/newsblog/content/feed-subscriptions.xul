@@ -65,8 +65,7 @@
   <script type="application/x-javascript" src="feed-parser.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
-
-
+  
   <keyset id="extensionsKeys">
     <key id="key_close"   key="&cmd.close.commandKey;" modifiers="accel" oncommand="window.close();"/>
     <key id="key_close2"  keycode="VK_ESCAPE" oncommand="window.close();"/>
@@ -125,6 +124,10 @@
       <button id="removeFeed" disabled="true" 
               label="&button.removeFeed.label;" accesskey="&button.removeFeed.accesskey;"
               oncommand="gFeedSubscriptionsWindow.removeFeed();"/>
+	      
+      <button id="importOPML"  
+              label="&button.importOPML.label;" accesskey="&button.importOPML.accesskey;"
+              oncommand="gFeedSubscriptionsWindow.importOPML();"/>
     </hbox>
 
     <resizer dir="bottomright"/>

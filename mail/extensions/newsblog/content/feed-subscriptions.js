@@ -551,7 +551,7 @@ var gFeedSubscriptionsWindow = {
 //      } catch (e) { }
 //    }
   },
-
+  
   // aRootFolderURI --> optional argument. The folder to initially create the new feed under.
   addFeed: function(aFeedLocation, aRootFolderURI)
   {
@@ -570,9 +570,9 @@ var gFeedSubscriptionsWindow = {
     // if the user hit cancel, exit without doing anything
     if (!feedProperties.result)
       return;
-  
+
     if (!feedProperties.feedLocation)
-        return;
+      return;
 
     // before we go any further, make sure the user is not already subscribed to this feed.
     if (feedAlreadyExists(feedProperties.feedLocation, this.mRSSServer))
@@ -581,9 +581,23 @@ var gFeedSubscriptionsWindow = {
       promptService.alert(window, null, this.mBundle.getString("subscribe-feedAlreadySubscribed"));            
       return;
     }
+  
+    var feed = this.storeFeed(feedProperties);
+    if(!feed)
+      return;
 
+    // Now validate and start downloadng the feed....
+    updateStatusItem('statusText', document.getElementById("bundle_newsblog").getString('subscribe-validating'));
+    updateStatusItem('progressMeter', 0);
+    document.getElementById('addFeed').setAttribute('disabled', 'true');
+    feed.download(true, this.mFeedDownloadCallback);
+  },
+
+  // helper routine used by addFeed and importOPMLFile
+  storeFeed: function(feedProperties)
+  {
     var itemResource = rdf.GetResource(feedProperties.feedLocation);
-    feed = new Feed(itemResource);
+    feed = new Feed(itemResource, this.mRSSServer);
 
     // if the user specified a specific folder to add the feed too, then set it here
     if (feedProperties.folderURI)
@@ -597,22 +611,8 @@ var gFeedSubscriptionsWindow = {
       }
     }
 
-    // set the server for the feed
-    feed.server = this.mRSSServer;
     feed.quickMode = feedProperties.quickMode;
-
-    // update status text
-    updateStatusItem('statusText', document.getElementById("bundle_newsblog").getString('subscribe-validating'));
-    updateStatusItem('progressMeter', 0);
-
-    // validate the feed and download the articles
-    // we used to pass false which caused us to skip parsing then we'd 
-    // turn around and download the feed again so we could actually parse the items...
-    // But now that this operation is asynch, just kick it off once...if we change this back
-    // modify feedDownloadCallback.downloaded to parse the feed...
-    // Also, disable the Add button while we are subscribing.
-    document.getElementById('addFeed').setAttribute('disabled', 'true');
-    feed.download(true, this.mFeedDownloadCallback);
+    return feed;
   },
 
   editFeed: function() 
@@ -753,19 +753,14 @@ var gFeedSubscriptionsWindow = {
 
         // if we get here...we should always have a folder by now...either
         // in feed.folder or FeedItems created the folder for us....
-        var folder = feed.folder ? feed.folder : gFeedSubscriptionsWindow.mRSSServer.rootMsgFolder.getChildNamed(feed.name);
-
-        updateFolderFeedUrl(folder, feed.url, false);
+        updateFolderFeedUrl(feed.folder, feed.url, false);
 
         // add feed just adds the feed we have validated and downloaded to our datasource
         // it also flushes the subscription datasource
-        addFeed(feed.url, feed.name, folder); 
+        addFeed(feed.url, feed.name, feed.folder); 
 
         // now add the feed to our view
-        gFeedSubscriptionsWindow.loadSubscriptions();
-        gFeedSubscriptionsWindow.mTree.treeBoxObject.invalidate();
-        if (gFeedSubscriptionsWindow.mView.rowCount > 0) 
-          gFeedSubscriptionsWindow.mTree.view.selection.select(0);
+        refreshSubscriptionView();
       } 
       else if (aErrorCode == kNewsBlogInvalidFeed) //  the feed was bad...
         window.alert(gFeedSubscriptionsWindow.mBundle.getFormattedString('newsblog-invalidFeed', [feed.url]));
@@ -793,7 +788,97 @@ var gFeedSubscriptionsWindow = {
     {
       updateStatusItem('progressMeter', (aProgress * 100) / aProgressMax);
     },
-  }
+  },
+
+  importOPML: function()
+  {
+    var rv = pickOpen(this.mBundle.getString("subscribe-OPMLImportTitle"), '$xml $opml $all');
+    if(rv.reason == PICK_CANCEL)
+      return; 
+    
+    var file = new LocalFile(rv.file, MODE_RDONLY);
+    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(IPS);
+    
+    // return if we couldn't open the file at all...
+    if(!file)      
+      return promptService.alert(window, null, this.mBundle.getString("subscribe-errorOpeningFile"));
+
+    var text = file.read();  
+    var parser = new DOMParser();
+    var opmlDom = parser.parseFromString(text, 'text/xml');
+
+    // return if the user didn't give us an OPML file
+    if(!opmlDom || !(opmlDom.documentElement.tagName == "opml"))
+      return promptService.alert(window, null, this.mBundle.getFormattedString("subscribe-errorInvalidOPMLFile", [rv.file.leafName]));
+
+    var outlines = opmlDom.getElementsByTagName("body")[0].getElementsByTagName("outline");
+    var feedsAdded = false;
+ 
+    for (var index = 0; index < outlines.length; index++)
+    {
+      var outline = outlines[index];
+     
+      // XXX only dealing with flat OPML files for now. 
+      // We still need to add support for grouped files.      
+      if(outline.hasAttribute("xmlUrl") || outline.hasAttribute("url"))
+      {
+        var userAddedFeed = false; 
+        var newFeedUrl = outline.getAttribute("xmlUrl") || outline.getAttribute("url")
+        var defaultQuickMode = this.mRSSServer.getBoolAttribute('quickMode');
+        var feedProperties = { feedName: this.findOutlineTitle(outline),
+                               feedLocation: newFeedUrl, 
+                               serverURI: this.mRSSServer.serverURI, 
+                               serverPrettyName: this.mRSSServer.prettyName,  
+                               folderURI: "", 
+                               quickMode: this.mRSSServer.getBoolAttribute('quickMode')};
+
+        debug("importing feed: "+ feedProperties.feedName);
+       
+        // Silently skip feeds that are already subscribed to. 
+        if (!feedAlreadyExists(feedProperties.feedLocation, this.mRSSServer))
+        {
+          var feed = this.storeFeed(feedProperties);
+       
+          if(feed)
+          {
+            feed.title = feedProperties.feedName;
+            if(outline.hasAttribute("htmlUrl"))
+              feed.link = outline.getAttribute("htmlUrl");
+
+            feed.createFolder();
+            updateFolderFeedUrl(feed.folder, feed.url, false);
+            
+            // add feed adds the feed we have validated and downloaded to our datasource
+            // it also flushes the subscription datasource
+            addFeed(feed.url, feed.name, feed.folder); 
+            feedsAdded = true;
+          }
+        }
+      }
+    }
+
+    if (!outlines.length || !feedsAdded)
+      return promptService.alert(window, null, this.mBundle.getFormattedString("subscribe-errorInvalidOPMLFile", [rv.file.leafName]));
+
+    //add the new feeds to our view
+    refreshSubscriptionView();
+  },
+  
+  findOutlineTitle: function(anOutline)
+  {
+    var outlineTitle;
+
+    if (anOutline.hasAttribute("text"))
+      outlineTitle = anOutline.getAttribute("text");
+    else if (anOutline.hasAttribute("title"))
+      outlineTitle = anOutline.getAttribute("title");
+    else if (anOutline.hasAttribute("xmlUrl"))
+      outlineTitle = anOutline.getAttribute("xmlUrl");
+
+    return outlineTitle;
+
+  },
+
 };
 
 // opens the feed properties dialog
@@ -802,6 +887,14 @@ function openFeedEditor(aFeedProperties)
   window.openDialog('chrome://messenger-newsblog/content/feed-properties.xul', 'feedproperties', 'modal,titlebar,chrome,center', aFeedProperties);
   return aFeedProperties;
 } 
+
+function refreshSubscriptionView()
+{
+  gFeedSubscriptionsWindow.loadSubscriptions();
+  gFeedSubscriptionsWindow.mTree.treeBoxObject.invalidate();
+  if (gFeedSubscriptionsWindow.mView.rowCount > 0) 
+    gFeedSubscriptionsWindow.mTree.view.selection.select(0);
+}
 
 function processDrop()
 {
@@ -824,3 +917,6 @@ function clearStatusInfo()
   document.getElementById('statusText').value = "";
   document.getElementById('progressMeter').collapsed = true;
 }
+
+
+

@@ -360,9 +360,8 @@ var progressNotifier = {
     {
       // if we get here...we should always have a folder by now...either
       // in feed.folder or FeedItems created the folder for us....
-      var folder = feed.folder ? feed.folder : feed.server.rootMsgFolder.getChildNamed(feed.name);
-      updateFolderFeedUrl(folder, feed.url, false);        
-      addFeed(feed.url, feed.name, folder); // add feed just adds the feed to the subscription UI and flushes the datasource
+      updateFolderFeedUrl(feed.folder, feed.url, false);        
+      addFeed(feed.url, feed.name, feed.folder); // add feed just adds the feed to the subscription UI and flushes the datasource
     } 
 
     if (this.mStatusFeedback)

@@ -228,12 +228,6 @@ FeedItem.prototype =
     var server = this.feed.server;
     var folder = this.feed.folder;
 
-    try 
-    {
-      if (!folder)
-        folder = server.rootMsgFolder.getChildNamed(this.feed.name);
-    } catch(e) {}
-
     if (!folder) 
     {
       debug(this.feed.name + " folder doesn't exist; creating");
@@ -415,8 +409,7 @@ FeedItem.prototype =
     debug(this.identity + " is " + source.length + " characters long");
 
     // Get the folder and database storing the feed's messages and headers.
-    var folder = this.feed.folder ? this.feed.folder : server.rootMsgFolder.getChildNamed(this.feed.name);
-    folder = folder.QueryInterface(Components.interfaces.nsIMsgLocalMailFolder);
+    folder = this.feed.folder.QueryInterface(Components.interfaces.nsIMsgLocalMailFolder);
 
     // source is a unicode string, we want to save a char * string in the original charset. So convert back
     folder.addMessage(this.mUnicodeConverter.ConvertFromUnicode(source));

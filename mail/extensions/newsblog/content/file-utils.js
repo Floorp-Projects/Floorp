@@ -154,6 +154,9 @@ function futils_nosepicker(initialPath, typeList, attribs)
                 case "$xul":
                     picker.appendFilters(FILTER_XUL);
                     break;
+                case "$opml":
+                    picker.appendFilter('OPML Files', '*.opml');
+                    break;
 
                 default:
                     picker.appendFilter(typeList[i], typeList[i]);

@@ -84,11 +84,29 @@ Feed.prototype =
   description: null,
   author: null,
   request: null,
-  folder: null,
   server: null,
   downloadCallback: null,
   resource: null,
   items: new Array(),
+  mFolder: null,
+
+  get folder()
+  {
+    if (!this.mFolder)
+    {
+      try 
+      {
+        this.mFolder = this.server.rootMsgFolder.getChildNamed(this.name);
+      } catch (ex) {}
+    }
+
+    return this.mFolder;
+  },
+
+  set folder (aFolder) 
+  {
+    this.mFolder = aFolder;
+  },
 
   get name()
   {
@@ -212,7 +230,7 @@ Feed.prototype =
   set title (aNewTitle) 
   {
     var ds = getSubscriptionsDS(this.server);
-    aNewTitle = rdf.GetLiteral(aNewTitle || "");
+    aNewTitle = rdf.GetLiteral(aNewTitle);
     var old_title = ds.GetTarget(this.resource, DC_TITLE, true);
     if (old_title)
         ds.Change(this.resource, DC_TITLE, old_title, aNewTitle);
@@ -236,7 +254,7 @@ Feed.prototype =
   set quickMode (aNewQuickMode) 
   {
     var ds = getSubscriptionsDS(this.server);
-    aNewQuickMode = rdf.GetLiteral(aNewQuickMode || "");
+    aNewQuickMode = rdf.GetLiteral(aNewQuickMode);
     var old_quickMode = ds.GetTarget(this.resource, FZ_QUICKMODE, true);
     if (old_quickMode)
       ds.Change(this.resource, FZ_QUICKMODE, old_quickMode, aNewQuickMode);
@@ -322,6 +340,12 @@ Feed.prototype =
     }
   },
 
+  createFolder: function()
+  {   
+    if (!this.folder) 
+      this.server.rootMsgFolder.createSubfolder(this.name, null /* supposed to be a msg window */);      
+  },
+
   // gets the next item from gItemsToStore and forces that item to be stored
   // to the folder. If more items are left to be stored, fires a timer for the next one.
   // otherwise it triggers a download done notification to the UI
@@ -329,16 +353,7 @@ Feed.prototype =
   {
     if (!this.itemsToStore.length)
     {
-      // create a folder for the feed if one does not exist already...
-      var folder;
-
-      try {
-          folder = this.server.rootMsgFolder.getChildNamed(this.name);
-       } catch(e) {}
-
-      if (!folder) 
-        this.server.rootMsgFolder.createSubfolder(this.name, null /* supposed to be a msg window */);
-
+      this.createFolder();
       return this.cleanupParsingState(this);
     }
 
