@@ -39,7 +39,6 @@
 #define nsBaseHashtable_h__
 
 #include "nsTHashtable.h"
-#include NEW_H
 #include "prrwlock.h"
 #include "nsDebug.h"
 
