@@ -34,7 +34,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mplogic.c,v 1.10 2000/08/02 20:52:17 nelsonb%netscape.com Exp $
+ *  $Id: mplogic.c,v 1.11 2000/08/09 20:53:25 nelsonb%netscape.com Exp $
  */
 
 #include "mpi-priv.h"
@@ -414,7 +414,7 @@ mp_err mpl_get_bits(const mp_int *a, mp_size lsbNum, mp_size numBits)
   mp_digit   mask   = ((1 << numBits) - 1);
 
   ARGCHK(numBits < CHAR_BIT * sizeof mask, MP_BADARG);
-  ARGCHK(((lsbNum + MP_DIGIT_BIT - 1) / MP_DIGIT_BIT) <= MP_USED(a), MP_RANGE);
+  ARGCHK(MP_HOWMANY(lsbNum, MP_DIGIT_BIT) <= MP_USED(a), MP_RANGE);
 
   if ((numBits + lsbNum % MP_DIGIT_BIT <= MP_DIGIT_BIT) ||
       (lsWndx + 1 >= MP_USED(a))) {
