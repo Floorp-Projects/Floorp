@@ -99,3 +99,6 @@ _PR_ia64_AtomicSet:
         xchg4 r8 = [r32], r33
         br.ret.sptk.many b0
         .endp _PR_ia64_AtomicSet#
+
+/ Magic indicating no need for an executable stack
+.section .note.GNU-stack, "", @progbits ; .previous
