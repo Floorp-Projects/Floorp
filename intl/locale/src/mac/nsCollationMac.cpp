@@ -24,7 +24,9 @@
 #include "prmon.h"
 #include "nsIComponentManager.h"
 #include "nsLocaleCID.h"
+#include "nsIPlatformCharset.h"
 #include "nsIMacLocale.h"
+#include "nsCOMPtr.h"
 
 static NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);
 static NS_DEFINE_IID(kMacLocaleFactoryCID, NS_MACLOCALEFACTORY_CID);
@@ -129,8 +131,8 @@ nsresult nsCollationMac::Initialize(nsILocale* locale)
   }
 
   // locale -> script code + charset name
-  m_scriptcode = 0; //smRoman
-  mCharset.SetString("ISO-8859-1"); //TODO: should be "MacRoman"
+  m_scriptcode = smRoman;
+  mCharset.SetString("ISO-8859-1");
   if (locale != nsnull) {
     PRUnichar *aLocaleUnichar; 
     nsString aLocale;
@@ -138,18 +140,31 @@ nsresult nsCollationMac::Initialize(nsILocale* locale)
     nsresult res = locale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
     if (NS_SUCCEEDED(res)) {
       aLocale.SetString(aLocaleUnichar);
+      nsAllocator::Free(aLocaleUnichar);
 
-      //TODO: Get a charset name from a script code.
-      nsIMacLocale* macLocale = nsnull;
       short scriptcode, langcode, regioncode;
-      res = nsComponentManager::CreateInstance(kMacLocaleFactoryCID, NULL, kIMacLocaleIID, (void**)&macLocale);
-      if (NS_SUCCEEDED(res) && nsnull != macLocale) {
+      nsCOMPtr <nsIMacLocale> macLocale;
+      res = nsComponentManager::CreateInstance(kMacLocaleFactoryCID, NULL, 
+                                               nsIMacLocale::GetIID(), getter_AddRefs(macLocale));
+      if (NS_SUCCEEDED(res)) {
         if (NS_SUCCEEDED(res = macLocale->GetPlatformLocale(&aLocale, &scriptcode, &langcode, &regioncode))) {
           m_scriptcode = scriptcode;
         }
-        macLocale->Release();
+      }
+
+      nsCOMPtr <nsIPlatformCharset> platformCharset;
+      res = nsComponentManager::CreateInstance(kPlatformCharsetCID, NULL, 
+                                               nsIPlatformCharset::GetIID(), getter_AddRefs(platformCharset));
+      if (NS_SUCCEEDED(res)) {
+        PRUnichar* mappedCharset = NULL;
+        res = platformCharset->GetDefaultCharsetForLocale(aLocale.GetUnicode(), &mappedCharset);
+        if (NS_SUCCEEDED(res) && mappedCharset) {
+          mCharset.SetString(mappedCharset);
+          nsAllocator::Free(mappedCharset);
+        }
       }
     }
+
   }
 
   // Initialize a mapping table for the script code.
