@@ -273,7 +273,7 @@ Message=Preparing SmartUpdate, please wait...
 ;Destination=[SETUP PATH]\program
 
 ;Copy FileX sections
-[Copy File0]
+;[Copy File0]
 ;Timing=post launchapp
 ;Source=[JRE BIN PATH]\npjava*.dll
 ;Destination=[SETUP PATH]\Plugins
