@@ -53,10 +53,7 @@
 #include "nsIViewManager.h"
 #include "nsIWidget.h"
 #include "nsRect.h"
-#ifdef USE_XPRINT
-#include "nsXPrintContext.h"
-#endif /* USE_XPRINT */
-#include "nsDeviceContext.h"
+#include "nsDeviceContextX.h"
 #include "nsImageXlib.h"
 #include "nsVoidArray.h"
 #include "nsDrawingSurfaceXlib.h"
@@ -69,20 +66,7 @@
 class GraphicsState;
 class nsFontXlib;
 
-class nsDeviceContextX : public DeviceContextImpl
-{
-public:
-  nsDeviceContextX()
-    :  DeviceContextImpl()
-  { 
-  }
-  
-  virtual ~nsDeviceContextX() {}
-
-
-  NS_IMETHOD GetXlibRgbHandle(XlibRgbHandle *&aHandle) = 0;
-};
-
+/* Note |nsRenderingContextXp| may override some of these methods here */
 class nsRenderingContextXlib : public nsRenderingContextImpl
 {
  public:
@@ -292,47 +276,6 @@ protected:
   static nsGCCacheXlib *gcCache;
 };
 
-#ifdef USE_XPRINT
-/* Rendering context class to match the special needs of Xprint (X11 print
- * system). Nearly identical to nsRenderingContextXlib - except two details:
- * - "offscreen" drawing surfaces are not supported by printers, therefore
- *   we "disable" those functions here by overriding them with empty versions.
- * - images are handeled by nsXPrintContext class instead of nsImageXlib
- */
-class nsRenderingContextXp : public nsRenderingContextXlib
-{
- public:
-  nsRenderingContextXp();
-  virtual ~nsRenderingContextXp();
-   
-  NS_IMETHOD Init(nsIDeviceContext* aContext);
-  NS_IMETHOD Init(nsIDeviceContext* aContext, nsIWidget *aWindow);
-  NS_IMETHOD Init(nsIDeviceContext* aContext, nsDrawingSurface aSurface);
-
-  NS_IMETHOD LockDrawingSurface(PRInt32 aX, PRInt32 aY, PRUint32 aWidth, PRUint32 aHeight,
-                                void **aBits, PRInt32 *aStride, PRInt32 *aWidthBytes,
-                                PRUint32 aFlags);
-  NS_IMETHOD UnlockDrawingSurface(void);
-
-  NS_IMETHOD SelectOffScreenDrawingSurface(nsDrawingSurface aSurface);
-  NS_IMETHOD GetDrawingSurface(nsDrawingSurface *aSurface);
-
-  NS_IMETHOD CreateDrawingSurface(nsRect *aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface);
-  
-  NS_IMETHOD DrawImage(nsIImage *aImage, const nsRect& aRect);
-  NS_IMETHOD DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect);    
-  NS_IMETHOD DrawImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsPoint * aDestPoint);
-  NS_IMETHOD DrawScaledImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsRect * aDestRect);
-
-  NS_IMETHOD CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
-                               const nsRect &aDestBounds, PRUint32 aCopyFlags);
-                               
-protected:
-  nsXPrintContext *mPrintContext; /* identical to |mRenderingSurface|
-                                   * (except the different type) 
-                                   */
-};
-#endif /* USE_XPRINT */
 #endif /* !nsRenderingContextXlib_h___ */
 
 

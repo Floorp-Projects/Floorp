@@ -40,16 +40,10 @@
 #ifndef nsDeviceContextXp_h___
 #define nsDeviceContextXp_h___
 
-#include <X11/Xlib.h>
-#include "nsDeviceContext.h"
-#include "nsUnitConversion.h"
-#include "nsIWidget.h"
-#include "nsIView.h"
-#include "nsRenderingContextXlib.h"
-#include "nsVoidArray.h"
+#include "nsDeviceContextX.h"
+#include "nsRenderingContextXp.h"
 #include "nsIDeviceContextXPrint.h"
 #include "nsXPrintContext.h"
-#include "nsISupportsArray.h"
 
 class nsDeviceContextXp : public nsDeviceContextX,
                           public nsIDeviceContextXp

@@ -93,17 +93,7 @@ GraphicsState::~GraphicsState()
   NS_IF_RELEASE(mFontMetrics);
 }
 
-#ifdef USE_XPRINT
-nsRenderingContextXp::nsRenderingContextXp()
-  : nsRenderingContextXlib(),
-  mPrintContext(nsnull)
-{
-}
 
-nsRenderingContextXp::~nsRenderingContextXp()
-{
-}
-#endif /* USE_XPRINT */
 
 nsRenderingContextXlib::nsRenderingContextXlib()
 {
@@ -164,50 +154,6 @@ nsRenderingContextXlib::Shutdown()
   return NS_OK;
 }
 
-#ifdef USE_XPRINT
-NS_IMETHODIMP
-nsRenderingContextXp::Init(nsIDeviceContext* aContext)
-{
-  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::Init(nsIDeviceContext *)\n"));
-
-  mContext = do_QueryInterface(aContext);
-  NS_ASSERTION(nsnull != mContext, "Device context is null.");
-  if (mContext) {
-     nsIDeviceContext *dc = mContext;     
-     NS_STATIC_CAST(nsDeviceContextXp *,dc)->GetPrintContext(mPrintContext);
-  }
-  NS_ASSERTION(nsnull != mPrintContext, "mPrintContext is null.");
-
-  mPrintContext->GetXlibRgbHandle(mXlibRgbHandle);
-  mDisplay = xxlib_rgb_get_display(mXlibRgbHandle);
-  mScreen  = xxlib_rgb_get_screen(mXlibRgbHandle);
-  mVisual  = xxlib_rgb_get_visual(mXlibRgbHandle);
-  mDepth   = xxlib_rgb_get_depth(mXlibRgbHandle);
-
-  /* A printer usually does not support things like multiple drawing surfaces
-   * (nor "offscreen" drawing surfaces... would be quite difficult to 
-   * implement =:-) ...
-   * We just feed the nsXPContext object here directly - this is the only
-   * "surface" the printer can "draw" on ...  
-   */
-  Drawable drawable; mPrintContext->GetDrawable(drawable);
-  UpdateGC(drawable); // fill mGC
-  mPrintContext->SetGC(mGC);
-  mRenderingSurface = mPrintContext;
-
-  return CommonInit();
-}
-
-NS_IMETHODIMP nsRenderingContextXp::Init(nsIDeviceContext* aContext, nsIWidget *aWidget) 
-{ 
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsRenderingContextXp::Init(nsIDeviceContext* aContext, nsDrawingSurface aSurface)
-{
-  return NS_OK;
-}
-#endif /* USE_XPRINT */
 
 NS_IMETHODIMP
 nsRenderingContextXlib::Init(nsIDeviceContext* aContext, nsIWidget *aWindow)
@@ -317,29 +263,6 @@ nsRenderingContextXlib::GetDeviceContext(nsIDeviceContext *&aContext)
   return NS_OK;
 }
 
-#ifdef USE_XPRINT
-NS_IMETHODIMP
-nsRenderingContextXp::LockDrawingSurface(PRInt32 aX, PRInt32 aY,
-                                         PRUint32 aWidth, PRUint32 aHeight,
-                                         void **aBits,
-                                         PRInt32 *aStride,
-                                         PRInt32 *aWidthBytes,
-                                         PRUint32 aFlags)
-{
-  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::LockDrawingSurface()\n"));
-  PushState();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsRenderingContextXp::UnlockDrawingSurface(void)
-{
-  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::UnlockDrawingSurface()\n"));
-  PRBool clipstate;
-  PopState(clipstate);
-  return NS_OK;
-}
-#endif /* USE_XPRINT */
 
 NS_IMETHODIMP
 nsRenderingContextXlib::LockDrawingSurface(PRInt32 aX, PRInt32 aY,
@@ -364,23 +287,6 @@ nsRenderingContextXlib::UnlockDrawingSurface(void)
   mRenderingSurface->Unlock();
   return NS_OK;
 }
-
-#ifdef USE_XPRINT
-NS_IMETHODIMP
-nsRenderingContextXp::SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
-{
-  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::SelectOffScreenDrawingSurface()\n"));
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsRenderingContextXp::GetDrawingSurface(nsDrawingSurface *aSurface)
-{
-  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::GetDrawingSurface()\n"));
-  *aSurface = nsnull;
-  return NS_OK;
-}
-#endif /* USE_XPRINT */
 
 NS_IMETHODIMP
 nsRenderingContextXlib::SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
@@ -759,16 +665,6 @@ nsRenderingContextXlib::GetCurrentTransform(nsTransform2D *&aTransform)
   aTransform = mTranMatrix;
   return NS_OK;
 }
-
-#ifdef USE_XPRINT
-NS_IMETHODIMP
-nsRenderingContextXp::CreateDrawingSurface(nsRect *aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface)
-{
-  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::CreateDrawingSurface()\n"));
-  aSurface = nsnull;
-  return NS_OK;
-}
-#endif /* USE_XPRINT */
 
 NS_IMETHODIMP
 nsRenderingContextXlib::CreateDrawingSurface(nsRect *aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface)
@@ -1658,20 +1554,6 @@ nsRenderingContextXlib::DrawImage(nsIImage *aImage, nscoord aX, nscoord aY,
   return DrawImage(aImage, tr);
 }
 
-#ifdef USE_XPRINT
-NS_IMETHODIMP
-nsRenderingContextXp::DrawImage(nsIImage *aImage, const nsRect& aRect)
-{
-  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::DrawImage()\n"));
-
-  nsRect tr;
-  tr = aRect;
-  mTranMatrix->TransformCoord(&tr.x, &tr.y, &tr.width, &tr.height);
-  UpdateGC();
-  return mPrintContext->DrawImage(mGC, aImage, tr.x, tr.y, tr.width, tr.height);
-}
-#endif /* USE_XPRINT */
-
 NS_IMETHODIMP
 nsRenderingContextXlib::DrawImage(nsIImage *aImage, const nsRect& aRect)
 {
@@ -1683,32 +1565,6 @@ nsRenderingContextXlib::DrawImage(nsIImage *aImage, const nsRect& aRect)
   UpdateGC();
   return aImage->Draw(*this, mRenderingSurface, tr.x, tr.y, tr.width, tr.height);
 }
-
-#ifdef USE_XPRINT
-NS_IMETHODIMP
-nsRenderingContextXp::DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect)
-{
-  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::DrawImage()\n"));
-  nsRect sr,dr;
-  
-  sr = aSRect;
-  mTranMatrix->TransformCoord(&sr.x, &sr.y,
-                           &sr.width, &sr.height);
-  sr.x = aSRect.x;
-  sr.y = aSRect.y;
-  mTranMatrix->TransformNoXLateCoord(&sr.x, &sr.y);
-  
-  dr = aDRect;
-  mTranMatrix->TransformCoord(&dr.x, &dr.y,
-                           &dr.width, &dr.height);
-  UpdateGC();
-  return mPrintContext->DrawImage(mGC, aImage,
-                                  sr.x, sr.y,
-                                  sr.width, sr.height,
-                                  dr.x, dr.y,
-                                  dr.width, dr.height);
-}
-#endif /* USE_XPRINT */
 
 NS_IMETHODIMP
 nsRenderingContextXlib::DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect)
@@ -1747,86 +1603,6 @@ nsRenderingContextXlib::DrawTile(nsIImage *aImage,nscoord aX0,nscoord aY0,nscoor
   return NS_OK;
 }
 #endif
-
-#ifdef USE_XPRINT
-/* [noscript] void drawImage (in imgIContainer aImage, [const] in nsRect aSrcRect, [const] in nsPoint aDestPoint); */
-NS_IMETHODIMP nsRenderingContextXp::DrawImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsPoint * aDestPoint)
-{
-  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::DrawImage()\n"));
-  nsPoint pt;
-  nsRect  sr;
-
-  pt = *aDestPoint;
-  mTranMatrix->TransformCoord(&pt.x, &pt.y);
-
-  sr = *aSrcRect;
-  mTranMatrix->TransformNoXLateCoord(&sr.x, &sr.y);
-
-  nsCOMPtr<gfxIImageFrame> iframe;
-  aImage->GetCurrentFrame(getter_AddRefs(iframe));
-  if (!iframe)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIImage> img(do_GetInterface(iframe));
-  if (!img) 
-    return NS_ERROR_FAILURE;
-
-  UpdateGC();
-  // doesn't it seem like we should use more of the params here?
-  // img->Draw(*this, surface, sr.x, sr.y, sr.width, sr.height,
-  //           pt.x + sr.x, pt.y + sr.y, sr.width, sr.height);
-  return mPrintContext->DrawImage(mGC, img, pt.x, pt.y, sr.width, sr.height);
-}
-
-/* [noscript] void drawScaledImage (in imgIContainer aImage, [const] in nsRect aSrcRect, [const] in nsRect aDestRect); */
-NS_IMETHODIMP nsRenderingContextXp::DrawScaledImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsRect * aDestRect)
-{
-  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::DrawScaledImage()\n"));
-  nsRect dr;
-
-  dr = *aDestRect;
-  mTranMatrix->TransformCoord(&dr.x, &dr.y, &dr.width, &dr.height);
-
-  nsCOMPtr<gfxIImageFrame> iframe;
-  aImage->GetCurrentFrame(getter_AddRefs(iframe));
-  if (!iframe) 
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIImage> img(do_GetInterface(iframe));
-  if (!img) 
-    return NS_ERROR_FAILURE;
-
-  // doesn't it seem like we should use more of the params here?
-  // img->Draw(*this, surface, sr.x, sr.y, sr.width, sr.height, dr.x, dr.y, dr.width, dr.height);
-
-  nsRect sr;
-
-  sr = *aSrcRect;
-  mTranMatrix->TransformCoord(&sr.x, &sr.y, &sr.width, &sr.height);
-  sr.x = aSrcRect->x;
-  sr.y = aSrcRect->y;
-  mTranMatrix->TransformNoXLateCoord(&sr.x, &sr.y);
-
-  UpdateGC();
-  return mPrintContext->DrawImage(mGC, img,
-                                  sr.x, sr.y,
-                                  sr.width, sr.height,
-                                  dr.x, dr.y,
-                                  dr.width, dr.height);
-}
-#endif /* USE_XPRINT */
-
-#ifdef USE_XPRINT
-NS_IMETHODIMP
-nsRenderingContextXp::CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
-                                        const nsRect &aDestBounds, PRUint32 aCopyFlags)
-{
-  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::CopyOffScreenBits()\n"));
-
-  NS_NOTREACHED("nsRenderingContextXlib::CopyOffScreenBits() not yet implemented");
-  return NS_OK;
-}
-#endif /* USE_XPRINT */
 
 NS_IMETHODIMP
 nsRenderingContextXlib::CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,

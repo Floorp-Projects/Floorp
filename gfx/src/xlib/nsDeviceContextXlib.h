@@ -41,9 +41,8 @@
 #ifndef nsDeviceContextXlib_h__
 #define nsDeviceContextXlib_h__
 
-#include "nsDeviceContext.h"
+#include "nsDeviceContextX.h"
 #include "nsRenderingContextXlib.h"
-#include "xlibrgb.h"
 
 class nsDeviceContextXlib : public nsDeviceContextX
 {

@@ -52,6 +52,7 @@ CSRCS		= \
 		xprintutil_printtofile.c \
 		$(NULL)
 
+# nsDrawingSurfaceXlib only required for staticbuild 
 XLIB_LCPPSRCS	= \
 		nsDrawingSurfaceXlib.cpp \
 		nsFontMetricsXlib.cpp \
@@ -60,12 +61,12 @@ XLIB_LCPPSRCS	= \
 		nsGCCache.cpp \
 		$(NULL)
 
-# nsDrawingSurfaceXlib only required for staticbuild 
 CPPSRCS		= \
 		$(XLIB_LCPPSRCS) \
 		nsDeviceContextXP.cpp \
 		nsGfxFactoryXP.cpp \
 		nsXPrintContext.cpp \
+		nsRenderingContextXp.cpp \
 		$(NULL)
 
 EXPORTS		= \
