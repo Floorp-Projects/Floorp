@@ -2,7 +2,8 @@
 <HEAD>
 </HEAD>
 <BODY>
-<H1>SOAP call test</H1>
+<H1>SOAP Test: Is It a Prime Number</H1>
+Type slowly enough and the number will change color depending upon whether the soap call reports <font color="green">prime</font> or <font  color="red">nonprime</font>.
 <SCRIPT>
 
 // Passed in as the response handler in the asynchronous case
@@ -24,17 +25,17 @@ function oncompletion(resp, call, status) {
   else {
     var foo = new Object();
     var ret = resp.getParameters(false, foo);
-    var name = ret[0].name;
     var val = ret[0].value;
-    var retStr = "Success:\nName: " + name + "\nValue: " + val;
-    // In this case, we happen to know that the result value is an array
-    // and the 5th parameter is a struct. 
-    alert(retStr);
+    if (val == "true") {
+      document.getElementById("NUMBER").style.color="green"
+    } else {
+      document.getElementById("NUMBER").style.color="red"
+    }
   }
   return true;
 }
 
-function makeCall(syncCall) {
+function makeCall(syncCall, value) {
   var s = new SOAPCall();
   // The targetObjectURI, methodName and destinatioName are mandatory.
   // The actionURI is optional.
@@ -45,7 +46,7 @@ function makeCall(syncCall) {
   // the last parameter is an object that will be serialized into
   // a struct parameter. It does not have a parameter wrapper because 
   // we don't need it to be named
-  s.encode(0, "isPrimeNumber", "urn:SpheonJSOAPStatistics", 0, null, 1, new Array(new SOAPParameter(31,"number")));
+  s.encode(0, "isPrimeNumber", "urn:SpheonJSOAPStatistics", 0, null, 1, new Array(new SOAPParameter(value,"number")));
 
   if (syncCall) {
 	  var r = s.invoke();
@@ -58,7 +59,6 @@ function makeCall(syncCall) {
 </SCRIPT>
 <P>
 <FORM>
-<INPUT TYPE="button" VALUE="Sync call" onclick="makeCall(true, false);">
-<INPUT TYPE="button" VALUE="Async call" onclick="makeCall(false, false);">
+<INPUT ID=NUMBER TYPE="text" onkeyup="makeCall(true, value);">
 </BODY>
 </HTML>

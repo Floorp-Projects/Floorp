@@ -1001,8 +1001,8 @@ NS_IMETHODIMP nsDefaultEncoder::Decode(nsISOAPEncoding* aEncoding,
       rc = aSource->GetLocalName(name);
       if (NS_FAILED(rc)) return rc;
       nsCOMPtr<nsISchemaElement> element;
-//      rc = collection->GetElement(ns, name, getter_AddRefs(element));
-      if (NS_FAILED(rc)) return rc;
+      rc = collection->GetElement(ns, name, getter_AddRefs(element));
+//      if (NS_FAILED(rc)) return rc;
       if (element) {
         rc = element->GetType(getter_AddRefs(type));
         if (NS_FAILED(rc)) return rc;
