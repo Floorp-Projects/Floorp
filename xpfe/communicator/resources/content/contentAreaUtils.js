@@ -162,6 +162,13 @@ function saveURL(aURL, aFileName, aFilePickerTitleKey, aShouldBypassCache)
   saveInternal(aURL, null, aFileName, aFilePickerTitleKey, aShouldBypassCache);
 }
 
+function saveFrameDocument()
+{
+  var focusedWindow = document.commandDispatcher.focusedWindow;
+  if (isDocumentFrame(focusedWindow))
+    saveDocument(focusedWindow.document);
+}
+
 function saveDocument(aDocument)
 {
   // In both cases here, we want to use cached data because the 
