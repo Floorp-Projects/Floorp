@@ -1,0 +1,72 @@
+<script>
+
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+const factoryClass = Components.classes["@mozilla.org/xmlextras/proxy/webserviceproxyfactory;1"];
+const factoryID    = Components.interfaces.nsIWebServiceProxyFactory;
+
+var factory = factoryClass.getService(factoryID);
+
+const IDL_GENERATOR = 
+    new Components.Constructor("@mozilla.org/interfaceinfotoidl;1",
+                               "nsIInterfaceInfoToIDL");
+
+const IInfo = new Components.Constructor("@mozilla.org/scriptableInterfaceInfo;1",
+                                         "nsIScriptableInterfaceInfo",
+                                         "init");
+
+const IInfoNamed = new Components.Constructor("@mozilla.org/scriptableInterfaceInfo;1",
+                                              "nsIScriptableInterfaceInfo",
+                                              "initWithName");
+
+var listener = {
+    onLoad  : function(proxy) {
+        //alert("happy"); return;
+        
+        netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+        var gen = new IDL_GENERATOR();
+      
+        var IInfoNamedCtor = IInfoNamed;  
+
+        var primaryIface = new IInfo(proxy.primaryIID);
+        
+        // writing to our document whacks the preexisting stuff...
+        document.write("<pre>");
+
+        document.write(gen.generateIDL(proxy.primaryIID, true, true));
+
+        var list = gen.getReferencedInterfaceNames(proxy.primaryIID, {});
+
+        for(var i = 0; i < list.length; i++) {
+            var iface = new IInfoNamedCtor(list[i]);
+            if(iface.name == primaryIface.name)
+                continue;
+
+            document.write("\n//-------------------------------------\n");
+
+            document.write(gen.generateIDL(iface.interfaceID, false, false));
+        }
+        
+        document.write("</pre>");
+        document.close();
+    },
+    onError : function(e) {
+        // alert("sad");  return;
+        netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+        
+        // writing to our document whacks the preexisting stuff...
+        document.write(e);
+        document.close();
+    }
+};
+
+
+//const ISPRIMEURL = "http://green.nscp.aoltw.net/vidur/wsdl/statistics.wsdl";
+const ISPRIMEURL = "http://bugsfree.nscp.aoltw.net/pub/statistics.wsdl";
+//const ISPRIMEURL = "http://213.23.125.181:8080/statistics.wsdl";
+const ISPRIMEPORT = "SpheonJSAOPStatisticsPort";
+
+factory.createProxyAsync(ISPRIMEURL, ISPRIMEPORT, "foo", true, listener);
+//factory.createProxyAsync(ISPRIMEURL, ISPRIMEPORT, "foo", false, listener);
+</script>
