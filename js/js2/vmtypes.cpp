@@ -37,77 +37,79 @@
 namespace JavaScript {
 namespace VM {
 
-    using namespace JSTypes;
-    
-    Formatter& operator<< (Formatter& f, Instruction& i)
-    {
-        return i.print(f);
-    }
-    
-    Formatter& operator<< (Formatter& f, RegisterList& rl)
-    {
-        TypedRegister* e = rl.end();
-        
-        f << "(";
-        for (RegisterList::iterator r = rl.begin(); r != e; r++) {
-            f << "R" << r->first; 
-            if ((r + 1) != e)
-                f << ", ";
-        }
-        f << ")";
-        
-        return f;
-    }
+using namespace JSTypes;
 
-    Formatter& operator<< (Formatter& f, const ArgList& al)
-    {
-        const RegisterList& rl = al.mList;
-        const JSValues& registers = al.mRegisters;
-        f << "(";
-        RegisterList::const_iterator i = rl.begin(), e = rl.end();
-        if (i != e) {
-            TypedRegister r = *i++;
-            f << "R" << r.first << '=' << registers[r.first];
-            while (i != e) {
-                r = *i++;
-                f << ", R" << r.first << '=' << registers[r.first];
+#define OPCODE_NAMES
+#include "icode.h"
+
+Formatter& operator<< (Formatter& f, Instruction& i)
+{
+    return i.print(f);
+}
+
+Formatter& operator<< (Formatter& f, RegisterList& rl)
+{
+    TypedRegister* e = rl.end();
+    
+    f << "(";
+    for (RegisterList::iterator r = rl.begin(); r != e; r++) {
+        f << "R" << r->first; 
+        if ((r + 1) != e)
+            f << ", ";
+    }
+    f << ")";
+    
+    return f;
+}
+
+Formatter& operator<< (Formatter& f, const ArgList& al)
+{
+    const RegisterList& rl = al.mList;
+    const JSValues& registers = al.mRegisters;
+    f << "(";
+    RegisterList::const_iterator i = rl.begin(), e = rl.end();
+    if (i != e) {
+        TypedRegister r = *i++;
+        f << "R" << r.first << '=' << registers[r.first];
+        while (i != e) {
+            r = *i++;
+            f << ", R" << r.first << '=' << registers[r.first];
+        }
+    }
+    f << ")";
+    
+    return f;
+}
+
+Formatter& operator<< (Formatter &f, InstructionStream &is)
+{
+
+    for (InstructionIterator i = is.begin(); 
+         i != is.end(); i++) {
+        /*
+        bool isLabel = false;
+
+        for (LabelList::iterator k = labels.begin(); 
+             k != labels.end(); k++)
+            if ((ptrdiff_t)(*k)->mOffset == (i - is.begin())) {
+                f << "#" << (uint32)(i - is.begin()) << "\t";
+                isLabel = true;
+                break;
             }
-        }
-        f << ")";
-        
-        return f;
+
+        if (!isLabel)
+            f << "\t";
+
+        f << **i << "\n";
+        */
+
+        printFormat(stdOut, "%04u", (uint32)(i - is.begin()));
+        f << ": " << **i << "\n";
+    
     }
 
-    Formatter& operator<< (Formatter &f, InstructionStream &is)
-    {
-
-        for (InstructionIterator i = is.begin(); 
-             i != is.end(); i++) {
-            /*
-            bool isLabel = false;
-
-            for (LabelList::iterator k = labels.begin(); 
-                 k != labels.end(); k++)
-                if ((ptrdiff_t)(*k)->mOffset == (i - is.begin())) {
-                    f << "#" << (uint32)(i - is.begin()) << "\t";
-                    isLabel = true;
-                    break;
-                }
-
-            if (!isLabel)
-                f << "\t";
-
-            f << **i << "\n";
-            */
-
-            printFormat(stdOut, "%04u", (uint32)(i - is.begin()));
-            f << ": " << **i << "\n";
-        
-        }
-
-
-        return f;
-    }
+    return f;
+}
 
 } /* namespace VM */
 } /* namespace JavaScript */
