@@ -64,6 +64,7 @@ LIBS = \
 	-lexpat \
 	-lxmltok \
 	-ljsdom		\
+	-lraptorplugin	\
 	-ljsurl		\
 	-lraptorbase	\
 	-lsecfree	\
