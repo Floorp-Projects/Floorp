@@ -39,11 +39,24 @@
 
 #include "nsRepeater.h"
 
+#include "nsXPComCIID.h"
+#include "nsIEventQueueService.h"
+#include "nsIServiceManager.h"
+#include "plevent.h"
+#include "prthread.h"
+
 #include <MacWindows.h>
 #include <ToolUtils.h>
 #include <DiskInit.h>
 #include <LowMem.h>
-#include <PP_Types.h>
+
+#ifndef topLeft
+#define topLeft(r)	(((Point *) &(r))[0])
+#endif
+
+#ifndef botRight
+#define botRight(r)	(((Point *) &(r))[1])
+#endif
 
 #if DEBUG
 #include <SIOUX.h>
@@ -74,15 +87,15 @@ static long ConvertOSMenuResultToPPMenuResult(long menuResult)
 	// in our sample app, we use Constructor for resource editing
 	long menuID = HiWord(menuResult);
 	long menuItem = LoWord(menuResult);
-	Int16**	theMcmdH = (Int16**) ::GetResource('Mcmd', menuID);
+	SInt16**	theMcmdH = (SInt16**) ::GetResource('Mcmd', menuID);
 	if (theMcmdH != nil)
 	{
 		if (::GetHandleSize((Handle)theMcmdH) > 0)
 		{
-			Int16 numCommands = (*theMcmdH)[0];
+			SInt16 numCommands = (*theMcmdH)[0];
 			if (numCommands >= menuItem)
 			{
-				CommandT* theCommandNums = (CommandT*)(&(*theMcmdH)[1]);
+				SInt32* theCommandNums = (SInt32*)(&(*theMcmdH)[1]);
 				menuItem = theCommandNums[menuItem-1];
 			}
 		}
@@ -92,6 +105,8 @@ static long ConvertOSMenuResultToPPMenuResult(long menuResult)
 	return (menuResult);
 }
 
+static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 
 //=================================================================
 /*  Constructor
@@ -100,9 +115,18 @@ static long ConvertOSMenuResultToPPMenuResult(long menuResult)
  *  @return  NONE
  */
 nsMacMessagePump::nsMacMessagePump(nsToolkit *aToolkit, nsMacMessageSink* aSink)
-	: mToolkit(aToolkit), mMessageSink(aSink)
+	: mToolkit(aToolkit), mMessageSink(aSink), mEventQueue(NULL)
 {
 	mRunning = PR_FALSE;
+
+	nsIServiceManager* serviceManager = NULL;
+	if (nsServiceManager::GetGlobalServiceManager(&serviceManager) == NS_OK) {
+		nsIEventQueueService* eventService = NULL;
+		if (serviceManager->GetService(kEventQueueServiceCID, kIEventQueueServiceIID, (nsISupports **)&eventService) == NS_OK) {
+			eventService->GetThreadEventQueue(PR_GetCurrentThread(), &mEventQueue);
+			serviceManager->ReleaseService(kEventQueueServiceCID, eventService);
+		}
+	}
 }
 
 //=================================================================
@@ -306,8 +330,13 @@ void nsMacMessagePump::DispatchEvent(PRBool aRealEvent, EventRecord *anEvent)
 			Repeater::DoIdlers(*anEvent);
 	}
 
-	if (mRunning)
+	if (mRunning) {
 		Repeater::DoRepeaters(*anEvent);
+		
+		// always process one NSPR event per time through the loop.
+		if (PL_EventAvailable(mEventQueue))
+			PL_HandleEvent(PL_GetEvent(mEventQueue));
+	}
 }
 
 #pragma mark -
