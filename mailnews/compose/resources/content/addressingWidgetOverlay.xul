@@ -64,15 +64,16 @@ Rights Reserved.
 
 								<textfield id="msgRecipient#1"
 											flex="100%"
-											autocomplete="true"
 											class="addressingWidget"
 											style="width:0px"
 											onkeyup="if (event.which == 13) awReturnHit(this);"
-											onkeydown="if (event.which == 9) {awTabFromRecipient(this, event);}"
+											onkeyp="if (event.which == 9) {dump('TAB\n'); awTabFromRecipient(this, event);}"
 											onchange="contentChanged=true;"
 											onclick="awNotAnEmptyArea(event);"
+											autocomplete="true"
 											timeout="300"
 											searchSessionType="addrbook"
+											displayMenu="true"
 										    />
 							</treecell>
 						</treerow>
