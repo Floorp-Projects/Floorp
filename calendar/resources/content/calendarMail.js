@@ -183,8 +183,10 @@ function sendEvent()
 		// lets open a composer with fields and body prefilled
 		try
 		{
-                        if(Event.method == 0)
-                            Event.method = Event.ICAL_METHOD_PUBLISH;
+         Event.alarm = false;
+         
+         if(Event.method == 0)
+             Event.method = Event.ICAL_METHOD_PUBLISH;
 			saveCalendarObject(CalendarDataFilePath, Event.getIcalString());
 			nsIMsgAttachmentComponent = Components.classes["@mozilla.org/messengercompose/attachment;1"];
 			nsIMsgAttachment = nsIMsgAttachmentComponent.createInstance(Components.interfaces.nsIMsgAttachment);
