@@ -1826,3 +1826,4 @@ nsTableRowGroupFrame::GetNextSibling(nsIFrame*& aFrame, PRInt32 aLineNumber)
 }
 
 //end nsLineIterator methods
+
