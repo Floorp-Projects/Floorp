@@ -526,9 +526,10 @@ case "$target" in
 
 *-beos*)
     MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS)'
-    DSO_LDOPTS='-nostart -Xlinker --ignore-undefined'
+    DSO_LDOPTS='-nostart -Wl,-h -Wl,$@'
     TK_LIBS='-lbe -lroot'
     MOZ_TIMER_LIBS='$(DIST)/lib/libtimer_beos.so'
+    LIBS="$LIBS -lbe"
     _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wno-multichar"
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wno-multichar -Wno-ctor-dtor-privacy"
     ;;
