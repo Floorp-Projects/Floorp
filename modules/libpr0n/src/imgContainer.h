@@ -75,6 +75,7 @@ private:
   PRBool   mDoneDecoding;
   PRBool   mAnimating;
   PRUint16 mAnimationMode;
+  PRInt32  mLoopCount;
   
   nsWeakPtr mObserver;
 
