@@ -19,17 +19,14 @@
 #
 # Contributor(s): 
 
+MODULE = uconv
 
-
-MODULE=uconv
-
-DEPTH=..\..\..
+DEPTH = ..\..\..
 
 XPIDLSRCS =					\
-            .\nsITextToSubURI.idl		\
-            .\nsICurrentCharsetListener.idl	\
-            .\nsICharsetConverterManager2.idl	\
-            $(NULL)
-
+	.\nsITextToSubURI.idl			\
+	.\nsICurrentCharsetListener.idl		\
+	.\nsICharsetConverterManager2.idl	\
+	$(NULL)
 
 include <$(DEPTH)/config/rules.mak>
