@@ -36,7 +36,8 @@ package Support::Files;
 # XXX - this file should really be rewritten to use File::Find or similar
 $file = '*';
 @files = (glob($file), glob('Bugzilla/*.pm'), glob('Bugzilla/*/*.pm'),
-          glob('Bugzilla/*/*/*.pm'));
+          glob('Bugzilla/*/*/*.pm'), glob('Bugzilla/*/*/*/*.pm'),
+          glob('Bugzilla/*/*/*/*/*.pm'));
 
 sub have_pkg {
     my ($pkg) = @_;
