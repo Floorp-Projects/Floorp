@@ -221,11 +221,16 @@ nsWindow::nsWindow() : nsWidget()
   mWindowType = eWindowType_child;
   mBorderStyle = eBorderStyle_default;
   mIsToplevel = PR_FALSE;
+  
+  mScrollGC = nsnull;
 }
 
 
 nsWindow::~nsWindow()
 {
+  if (mScrollGC)
+    XFreeGC(mDisplay, mScrollGC);
+  
   // Release grab
   if (sGrabWindow == this)
   {
@@ -385,7 +390,7 @@ NS_IMETHODIMP nsWindow::SetFocus(PRBool aRaise)
    
   if (mBlockFocusEvents)
     return NS_OK;
-  
+   
   mBlockFocusEvents = PR_TRUE;
  
   event.message = NS_GOTFOCUS;
@@ -399,10 +404,7 @@ NS_IMETHODIMP nsWindow::SetFocus(PRBool aRaise)
   DispatchEvent(&event, status);
   Release();
   
-  
-
   event.message = NS_ACTIVATE;
-  
   event.widget  = this;
   event.eventStructType = NS_GUI_EVENT;
   event.time = 0;
@@ -460,10 +462,11 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth,
   nsWidget::Resize(aWidth, aHeight, aRepaint);
 
   nsSizeEvent sevent;
+  nsRect sevent_windowSize(0, 0, aWidth, aHeight);
   sevent.message = NS_SIZE;
   sevent.widget = this;
   sevent.eventStructType = NS_SIZE_EVENT;
-  sevent.windowSize = new nsRect (0, 0, aWidth, aHeight);
+  sevent.windowSize = &sevent_windowSize;
   sevent.point.x = 0;
   sevent.point.y = 0;
   sevent.mWinWidth = aWidth;
@@ -472,7 +475,6 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth,
   AddRef();
   OnResize(sevent);
   Release();
-  delete sevent.windowSize;
 
   if (NeedToShow)
     Show(PR_TRUE);
@@ -499,10 +501,11 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aX,
   nsWidget::Resize(aX, aY, aWidth, aHeight, aRepaint);
 
   nsSizeEvent sevent;
+  nsRect sevent_windowSize(0, 0, aWidth, aHeight);
   sevent.message = NS_SIZE;
   sevent.widget = this;
   sevent.eventStructType = NS_SIZE_EVENT;
-  sevent.windowSize = new nsRect (0, 0, aWidth, aHeight);
+  sevent.windowSize = &sevent_windowSize;
   sevent.point.x = 0;
   sevent.point.y = 0;
   sevent.mWinWidth = aWidth;
@@ -511,7 +514,6 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aX,
   AddRef();
   OnResize(sevent);
   Release();
-  delete sevent.windowSize;
   return NS_OK;
 }
 
@@ -551,7 +553,6 @@ NS_IMETHODIMP nsWindow::Invalidate(PRBool aIsSynchronous)
     Update();
   else
     QueueDraw();
-
 
   return NS_OK;
 }
@@ -657,9 +658,11 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 
   PRInt32 srcX = 0, srcY = 0, destX = 0, destY = 0, width = 0, height = 0;
   nsRect aRect;
-  GC gc;
-  gc = XCreateGC(mDisplay, mBaseWindow, 0, NULL);
-
+ 
+  /* only create GC for scolling once ... */
+  if (!mScrollGC)
+    mScrollGC = XCreateGC(mDisplay, mBaseWindow, 0, nsnull);   
+ 
   if (aDx < 0 || aDy < 0)
   {
     srcX = mBounds.x + ABS(aDx);
@@ -668,8 +671,8 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
     destY = mBounds.y;
     width = mBounds.width - ABS(aDx);
     height = mBounds.height - ABS(aDy);
-  } else
-  if (aDx > 0 || aDy > 0)
+  } 
+  else if (aDx > 0 || aDy > 0)
   {
     srcX = mBounds.x;
     srcY = mBounds.y;
@@ -679,10 +682,8 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
     height = mBounds.height - ABS(aDy);
   }
 
-  XCopyArea(mDisplay, mBaseWindow, mBaseWindow, gc,
+  XCopyArea(mDisplay, mBaseWindow, mBaseWindow, mScrollGC,
             srcX, srcY, width, height, destX, destY);
-
-  XFreeGC(mDisplay, gc);
 
   width = mBounds.width;
   height = mBounds.height;

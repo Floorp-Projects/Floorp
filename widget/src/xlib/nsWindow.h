@@ -128,6 +128,8 @@ protected:
   PRBool mIsUpdating;
   PRBool mBlockFocusEvents;
   PRBool mIsTooSmall;
+  
+  GC     mScrollGC; // GC used by nsWindow::Scroll()
 
   static PRBool    sIsGrabbing;
   static nsWindow  *sGrabWindow;
