@@ -144,7 +144,7 @@ NS_IMETHODIMP nsMailDatabase::Open(nsIFileSpec *aFolderName, PRBool create, PRBo
     err = NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE;
     deleteInvalidDB = PR_TRUE;
   }
-  
+
   if (deleteInvalidDB)
   {
     // this will make the db folder info release its ref to the mail db...
