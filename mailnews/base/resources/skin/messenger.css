@@ -18,6 +18,7 @@
  * Rights Reserved.
  */
 
+@import url(chrome://global/skin/);
 
 tree { 
 	border-left: 1px solid transparent;

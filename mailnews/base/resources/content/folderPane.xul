@@ -1,5 +1,8 @@
 <?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://messenger/skin/folderPane.css" type="text/css"?>
+
 <!--
  The contents of this file are subject to the Netscape Public
  License Version 1.1 (the "License"); you may not use this file
