@@ -23,15 +23,8 @@
 
 // The history window uses JavaScript in bookmarks.js too.
 
-function debug(msg)
-{
-    // Uncomment for noise
-    //dump(msg+"\n");
-}
-
 function HistoryInit() {
     var tree = document.getElementById("bookmarksTree");
-    debug("adding controller to tree\n");
     var historyController = new nsTreeController(tree);
 
     var children = document.getElementById('treechildren-bookmarks');
@@ -45,8 +38,7 @@ var historyDNDObserver = {
   {
     var title = aEvent.target.getAttribute("value");
     var uri = aEvent.target.parentNode.parentNode.id;
-    dump("*** title = " + title + "; uri = " + uri + "\n");
-    if ( aEvent.target.localName != "treecell" )     // make sure we have something to drag
+    if (aEvent.target.localName != "treecell")     // make sure we have something to drag
       return null;
       
     var htmlString = "<A HREF='" + uri + "'>" + title + "</A>";
@@ -71,4 +63,5 @@ function OpenURL(event, node, root)
     var url = node.id;
     
     window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", url);
+    return true;
 }
