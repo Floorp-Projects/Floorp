@@ -51,8 +51,6 @@ static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);/* XXX */
 // XXX for IsEmptyLine
 #include "nsTextFragment.h"
 
-// XXX TODO:
-
 // XXX get rid of the need for this
 #define SLOW_INCREMENTAL_REFLOW
 
@@ -384,23 +382,16 @@ nsBlockReflowState::~nsBlockReflowState()
 void
 nsBlockReflowState::GetAvailableSpace()
 {
-  nsISpaceManager* sm = mSpaceManager;
-
 #ifdef NS_DEBUG
   // Verify that the caller setup the coordinate system properly
   nscoord wx, wy;
-  sm->GetTranslation(wx, wy);
+  mSpaceManager->GetTranslation(wx, wy);
   NS_ASSERTION((wx == mSpaceManagerX) && (wy == mSpaceManagerY),
                "bad coord system");
 #endif
 
   mCurrentBand.GetAvailableSpace(mY - BorderPadding().top, mAvailSpaceRect);
 
-  NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
-     ("nsBlockReflowState::GetAvailableSpace: band={%d,%d,%d,%d} count=%d",
-      mAvailSpaceRect.x, mAvailSpaceRect.y,
-      mAvailSpaceRect.width, mAvailSpaceRect.height,
-      mCurrentBand.GetTrapezoidCount()));
 #ifdef NOISY_INCREMENTAL_REFLOW
   if (mReflowState.reason == eReflowReason_Incremental) {
     nsFrame::IndentBy(stdout, gNoiseIndent);
@@ -1148,9 +1139,11 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
     aMetrics.mCarriedOutBottomMargin = aState.mPrevBottomMargin;
   }
 
-#ifdef DEBUG_kipp
-  NS_ASSERTION((aMetrics.width > -200000) && (aMetrics.width < 200000) &&
-               (aMetrics.height > -200000) && (aMetrics.height < 200000), "?");
+#ifdef DEBUG
+  if (CRAZY_WIDTH(aMetrics.width) || CRAZY_HEIGHT(aMetrics.height)) {
+    ListTag(stdout);
+    printf(": WARNING: desired:%d,%d\n", aMetrics.width, aMetrics.height);
+  }
   if (aState.mComputeMaxElementSize &&
       ((maxWidth > aMetrics.width) || (maxHeight > aMetrics.height))) {
     ListTag(stdout);
@@ -1181,10 +1174,18 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
     nscoord y = line->mCombinedArea.y;
     nscoord xmost = x + line->mCombinedArea.width;
     nscoord ymost = y + line->mCombinedArea.height;
-    if (x < x0) x0 = x;
-    if (xmost > x1) x1 = xmost;
-    if (y < y0) y0 = y;
-    if (ymost > y1) y1 = ymost;
+    if (x < x0) {
+      x0 = x;
+    }
+    if (xmost > x1) {
+      x1 = xmost;
+    }
+    if (y < y0) {
+      y0 = y;
+    }
+    if (ymost > y1) {
+      y1 = ymost;
+    }
 
     // If the line has floaters, factor those in as well
     nsVoidArray* floaters = line->mFloaters;
@@ -1201,10 +1202,18 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
         y = r.y;
         xmost = x + r.width;
         ymost = y + r.height;
-        if (x < x0) x0 = x;
-        if (xmost > x1) x1 = xmost;
-        if (y < y0) y0 = y;
-        if (ymost > y1) y1 = ymost;
+        if (x < x0) {
+          x0 = x;
+        }
+        if (xmost > x1) {
+          x1 = xmost;
+        }
+        if (y < y0) {
+          y0 = y;
+        }
+        if (ymost > y1) {
+          y1 = ymost;
+        }
       }
     }
     line = line->mNext;
@@ -1404,8 +1413,11 @@ nsBlockFrame::RecoverStateFrom(nsBlockReflowState& aState,
   // Recover xmost
   nscoord xmost = aLine->mBounds.XMost();
   if (xmost > aState.mKidXMost) {
-#ifdef DEBUG_kipp
-    NS_ASSERTION((xmost > -200000) && (xmost < 200000), "oy");
+#ifdef DEBUG
+    if (CRAZY_WIDTH(xmost)) {
+      ListTag(stdout);
+      printf(": WARNING: xmost:%d\n", xmost);
+    }
 #endif
     aState.mKidXMost = xmost;
   }
@@ -2837,8 +2849,8 @@ nsBlockFrame::ShouldJustifyLine(nsBlockReflowState& aState, nsLineBox* aLine)
 
 nsresult
 nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
-                         nsLineBox* aLine,
-                         PRBool* aKeepReflowGoing)
+                        nsLineBox* aLine,
+                        PRBool* aKeepReflowGoing)
 {
   nsresult rv = NS_OK;
 
@@ -2868,8 +2880,12 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   }
   nsSize maxElementSize;
   lineLayout->VerticalAlignFrames(aLine->mBounds, maxElementSize);
-#ifdef DEBUG_kipp
-  NS_ASSERTION((aLine->mBounds.YMost()) < 200000 && (aLine->mBounds.y > -200000), "oy");
+#ifdef DEBUG
+  if (CRAZY_HEIGHT(aLine->mBounds.y)) {
+    nsFrame::ListTag(stdout);
+    printf(": line=%p y=%d line.bounds.height=%d\n",
+           aLine, aLine->mBounds.y, aLine->mBounds.height);
+  }
 #endif
 
   // Only block frames horizontally align their children because
@@ -3073,8 +3089,11 @@ nsBlockFrame::PostPlaceLine(nsBlockReflowState& aState,
   // Update xmost
   nscoord xmost = aLine->mBounds.XMost();
   if (xmost > aState.mKidXMost) {
-#ifdef DEBUG_kipp
-    NS_ASSERTION((xmost > -200000) && (xmost < 200000), "oy");
+#ifdef DEBUG
+    if (CRAZY_WIDTH(xmost)) {
+      ListTag(stdout);
+      printf(": line=%p xmost=%d\n", aLine, xmost);
+    }
 #endif
     aState.mKidXMost = xmost;
   }
