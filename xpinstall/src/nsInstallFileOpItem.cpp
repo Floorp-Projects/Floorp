@@ -807,6 +807,7 @@ nsInstallFileOpItem::NativeFileOpFileCopyComplete()
   PRBool flagIsFile, flagExists;
   char* leafName;
   nsCOMPtr<nsIFile> parent;
+  nsCOMPtr<nsIFile> tempTarget;
 
   mAction = nsInstallFileOpItem::ACTION_FAILED;
 
@@ -828,6 +829,14 @@ nsInstallFileOpItem::NativeFileOpFileCopyComplete()
     {
       rv = mSrc->GetLeafName(&leafName);
       if (NS_FAILED(rv)) return rv;
+      rv = mTarget->Clone(getter_AddRefs(tempTarget));
+      if (NS_FAILED(rv)) return rv;
+      rv = tempTarget->Append(leafName);
+      if (NS_FAILED(rv)) return rv;
+      tempTarget->Exists(&flagExists);
+      if (flagExists)
+        tempTarget->Delete(PR_FALSE);
+
       rv = mSrc->CopyTo(mTarget, leafName);
     }
   }
@@ -957,19 +966,37 @@ nsInstallFileOpItem::NativeFileOpFileExecuteComplete()
 PRInt32
 nsInstallFileOpItem::NativeFileOpFileMovePrepare()
 {
-  PRBool flagExists, flagIsFile;
+  PRBool flagExists, flagIsFile, flagIsWritable;
+  nsresult rv = NS_OK;
 
   mSrc->Exists(&flagExists);
   if(flagExists)
   {
     mTarget->Exists(&flagExists);
     if(!flagExists)
-      return nsInstall::DOES_NOT_EXIST;
+    {
+      //Assume mTarget is a file
+      //Make sure mTarget's parent exists otherwise, error.
+      nsCOMPtr<nsIFile> targetParent;
+
+      rv = mTarget->GetParent(getter_AddRefs(targetParent));
+      if(NS_FAILED(rv)) return rv;
+      rv = targetParent->Exists(&flagExists);
+      if(NS_FAILED(rv)) return rv;
+      if(!flagExists)
+        return nsInstall::DOES_NOT_EXIST;
+      else
+        return NativeFileOpFileCopyPrepare();
+    } 
     else
     {
       mTarget->IsFile(&flagIsFile);
       if(flagIsFile)
-        return nsInstall::IS_FILE;
+      {
+        mTarget->IsWritable(&flagIsWritable);
+        if (!flagIsWritable)
+          return nsInstall::ACCESS_DENIED;
+      }
       else
       {
         nsCOMPtr<nsIFile> tempVar;
@@ -981,10 +1008,13 @@ nsInstallFileOpItem::NativeFileOpFileMovePrepare()
 
         tempVar->Exists(&flagExists);
         if(flagExists)
-          return nsInstall::ALREADY_EXISTS;
-        else
-          return NativeFileOpFileCopyPrepare();
+        {
+          tempVar->IsWritable(&flagIsWritable);
+          if (!flagIsWritable)
+            return nsInstall::ACCESS_DENIED;
+        }
       }
+      return NativeFileOpFileCopyPrepare();
     }
   }
 
@@ -1001,11 +1031,6 @@ nsInstallFileOpItem::NativeFileOpFileMoveComplete()
   mSrc->Exists(&flagExists);
   if(flagExists)
   {
-    mTarget->Exists(&flagExists);
-    if(!flagExists)
-      ret = nsInstall::DOES_NOT_EXIST;
-    else
-    {
       PRInt32 ret2 = nsInstall::SUCCESS;
 
       ret = NativeFileOpFileCopyComplete();
@@ -1019,7 +1044,6 @@ nsInstallFileOpItem::NativeFileOpFileMoveComplete()
         if(nsInstall::REBOOT_NEEDED == ret2)
           ret = ret2;
       }
-    }
   }
   else
     ret = nsInstall::SOURCE_DOES_NOT_EXIST;
