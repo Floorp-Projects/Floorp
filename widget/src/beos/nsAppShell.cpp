@@ -172,6 +172,8 @@ NS_IMETHODIMP nsAppShell::Run()
 
   NS_ADDREF_THIS();
 
+  set_thread_priority( find_thread(NULL), B_DISPLAY_PRIORITY);
+
   if (!mEventQueue)
     Spinup();
 
