@@ -58,7 +58,7 @@ NS_IMETHODIMP_(nsrefcnt) xpctestNoisy::AddRef(void)
 {
   NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");
   ++mRefCnt;
-  NS_LOG_ADDREF(this, mRefCnt, __FILE__, __LINE__);
+  NS_LOG_ADDREF(this, mRefCnt, "xpctestNoisy");
   printf("Noisy %d - incremented refcount to %d\n", mID, mRefCnt);
   return mRefCnt;
 }
@@ -68,7 +68,7 @@ NS_IMETHODIMP_(nsrefcnt) xpctestNoisy::Release(void)
   NS_PRECONDITION(0 != mRefCnt, "dup release");
   --mRefCnt;
   printf("Noisy %d - decremented refcount to %d\n", mID, mRefCnt);
-  NS_LOG_RELEASE(this, mRefCnt, __FILE__, __LINE__);
+  NS_LOG_RELEASE(this, mRefCnt, "xpctestNoisy");
   if (mRefCnt == 0) {
     NS_DELETEXPCOM(this);
     return 0;

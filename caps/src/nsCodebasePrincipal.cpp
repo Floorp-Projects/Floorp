@@ -36,7 +36,7 @@ nsCodebasePrincipal::AddRef(void)
 {
     NS_PRECONDITION(PRInt32(mJSPrincipals.refcount) >= 0, "illegal refcnt");
     ++mJSPrincipals.refcount;
-    NS_LOG_ADDREF(this, mJSPrincipals.refcount, __FILE__, __LINE__);
+    NS_LOG_ADDREF(this, mJSPrincipals.refcount, "nsCodebasePrincipal");
     return mJSPrincipals.refcount;
 }
 
@@ -45,7 +45,7 @@ nsCodebasePrincipal::Release(void)
 {
     NS_PRECONDITION(0 != mJSPrincipals.refcount, "dup release");
     --mJSPrincipals.refcount;
-    NS_LOG_RELEASE(this, mJSPrincipals.refcount, __FILE__, __LINE__);
+    NS_LOG_RELEASE(this, mJSPrincipals.refcount, "nsCodebasePrincipal");
     if (mJSPrincipals.refcount == 0) {                                 
         NS_DELETEXPCOM(this);
         return 0;
