@@ -3676,7 +3676,7 @@ net_AboutCookiesDialogDone(XPDialogState* state, char** argv, int argc,
     return PR_FALSE;
 }
 
-PRIVATE BOOL
+PRIVATE Bool
 CookieCompare (net_CookieStruct * cookie1, net_CookieStruct * cookie2) {
     char * host1 = cookie1->host;
     char * host2 = cookie2->host;
