@@ -375,7 +375,8 @@ PRBool nsMacEventHandler::HandleOSEvent ( EventRecord& aOSEvent )
 				}
 				HandleActivateEvent(aOSEvent);
 			}
-			else {
+			else if (eventType == mouseMovedMessage)
+			{
 				if (! mInBackground)
 					retVal = HandleMouseMoveEvent(aOSEvent);
 			}
@@ -1086,8 +1087,7 @@ PRBool nsMacEventHandler::HandleUpdateEvent(EventRecord& aOSEvent)
 // HandleMouseDownEvent
 //
 //-------------------------------------------------------------------------
-PRBool nsMacEventHandler::HandleMouseDownEvent(
-														EventRecord&		aOSEvent)
+PRBool nsMacEventHandler::HandleMouseDownEvent(EventRecord&	aOSEvent)
 {
 	PRBool retVal = PR_FALSE;
 
