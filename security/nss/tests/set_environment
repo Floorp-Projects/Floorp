@@ -39,7 +39,7 @@ CVSROOT=:pserver:svbld@redcvs.red.iplanet.com:/m/src
 
 os_name=`uname -s`
 os_version=`uname -r`
-os_p=`uname -p`
+#os_p=`uname -p`
 os_full=""
 
 if [ -f /u/svbld/bin/nsarch  ]

@@ -15,7 +15,7 @@
 #
 # parameters
 # ----------
-#   nssversion (supported: 30b, 31, tip 32)
+#   nssversion (supported: 30b, 31, 332, tip 32)
 #   builddate (default - today)
 #
 # options
@@ -181,10 +181,18 @@ fi
                           # NOTE: following variables have to change 
                           # from release to release
 if [ -z "$BC_MASTER" ]    # master directory for backwardscompatibility testing
-then                      # a linux compiler bug prevents us from doing the 
-                          # testing against a rtm - so we rebuild the branch
-    BC_UX_MASTER=nss322/builds/20010820.1/y2sun2_Solaris8
-    BC_NT_MASTER=nss322/builds/20010820.1/blowfish_NT4.0_Win95
+then
+    RH="NO"
+    grep 7.1 /etc/redhat-release > /dev/null 2>/dev/null && RH="YES"
+
+    if [ "$RH" = "YES" ] 
+    then                      # NSS-3-3-1RTM
+        BC_UX_MASTER=nss331/builds/20010928.2.331-RTM/booboo_Solaris8
+        BC_NT_MASTER=nss331/builds/20010928.2.331-RTM/blowfish_NT4.0_Win95
+    else                      # NSS-3-2-2RTM
+        BC_UX_MASTER=nss322/builds/20010820.1/y2sun2_Solaris8
+        BC_NT_MASTER=nss322/builds/20010820.1/blowfish_NT4.0_Win95
+    fi
     BC_MASTER=$BC_UX_MASTER
 fi
 BC_RELEASE=3.2
@@ -839,8 +847,8 @@ eval_opts()
             NSSVER=$1
             if [ -z "$NSSVER" ]        
             then
-                NSSVER="tip"
-                Debug "NSS Version: Parameters missing - defaulting to tip!"
+                NSSVER="332"
+                Debug "NSS Version: Parameters missing - defaulting to 332!"
             else
                 BUILDDATE=$2
                 if [ -z "$BUILDDATE" ] 
@@ -867,8 +875,8 @@ eval_opts()
   fi
   if [ -z "$NSSVER" ]            
   then
-      NSSVER="tip"
-      Debug "NSS Version: Parameters missing - defaulting to tip!"
+      NSSVER="332"
+      Debug "NSS Version: Parameters missing - defaulting to 332!"
   fi
   
   Debug "Builddate $BUILDDATE NssVersion $NSSVER"
