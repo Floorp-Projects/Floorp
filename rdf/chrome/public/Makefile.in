@@ -23,8 +23,11 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= chrome
+XPIDL_MODULE= chrome
 
-EXPORTS		= $(srcdir)/nsIChromeRegistry.h
+XPIDLSRCS	= \
+			nsIChromeRegistry.idl \
+			$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
