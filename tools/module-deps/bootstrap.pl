@@ -21,7 +21,7 @@ sub get_system_cwd {
 
  # Pull core build stuff.
  print "Pulling core build files...\n";
- my $core_build_files = "mozilla/client.mk mozilla/config mozilla/configure mozilla/allmakefiles.sh mozilla/configure.in mozilla/Makefile.in mozilla/build mozilla/tools/module-deps";
+ my $core_build_files = "mozilla/client.mk mozilla/config mozilla/configure mozilla/allmakefiles.sh mozilla/configure.in mozilla/Makefile.in mozilla/build mozilla/include mozilla/tools/module-deps";
  system("cvs co $core_build_files");
 
 
