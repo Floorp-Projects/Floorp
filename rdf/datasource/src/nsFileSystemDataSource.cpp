@@ -1111,12 +1111,8 @@ FileSystemDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral **aResult)
 
 	nsFileURL		url(uri);
 	nsNativeFileSpec	native(url);
-	char			*baseFilename = native.GetLeafName();
-
-	if (! baseFilename)
-		return NS_ERROR_OUT_OF_MEMORY;
-
-	nsAutoString	name(baseFilename);
+	nsAutoString		name;
+	native.GetLeafName(name);
 
 #ifdef	XP_WIN
 
@@ -1168,7 +1164,6 @@ FileSystemDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral **aResult)
 	nsIRDFLiteral *literal;
 	gRDFService->GetLiteral(name.GetUnicode(), &literal);
 	*aResult = literal;
-	nsCRT::free(baseFilename);
 
 	return NS_OK;
 }

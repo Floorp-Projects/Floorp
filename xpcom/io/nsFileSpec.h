@@ -409,7 +409,10 @@ class NS_COM nsFileSpec
     //--------------------------------------------------
 
         char*                   GetLeafName() const; // Allocated.  Use nsCRT::free().
-        
+
+				// Unicode version of GetLeafName()
+	void			GetLeafName(nsString &nativePathString);
+
 #if 0
 // needs implementing
                                 // copy the leaf name into the supplied buffer, thus
