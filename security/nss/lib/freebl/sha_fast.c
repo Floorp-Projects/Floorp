@@ -137,7 +137,7 @@ void
 SHA1_End(SHA1Context *ctx, unsigned char *hashout,
          unsigned int *pDigestLen, unsigned int maxDigestLen)
 {
-  register unsigned long sizeHi, sizeLo;
+  register PRUint32 sizeHi, sizeLo;
   int i;
   static const unsigned char bulk_pad[64] = { 0x80,0,0,0,0,0,0,0,0,0,
           0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -172,7 +172,7 @@ SHA1_End(SHA1Context *ctx, unsigned char *hashout,
    */
 #if defined(IS_LITTLE_ENDIAN)
   for (i = 0; i < SHA1_LENGTH/4; i++) {
-    register unsigned long w   = ctx->H[i];
+    register PRUint32 w   = ctx->H[i];
     hashout[0] = ((unsigned char)(w >> 24));
     hashout[1] = ((unsigned char)(w >> 16));
     hashout[2] = ((unsigned char)(w >>  8));
@@ -197,7 +197,7 @@ static void
 shaCompress(SHA1Context *ctx) 
 {
   int t;
-  register unsigned long A,B,C,D,E;
+  register PRUint32 A,B,C,D,E;
 
 #if defined(IS_LITTLE_ENDIAN)
 #define MSK 0x00FF00FF
