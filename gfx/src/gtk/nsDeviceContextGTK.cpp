@@ -76,9 +76,11 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
     mGammaTable[cnt] = cnt;
   
   mWidget = aNativeWidget;
-  
-  // Calculate mTwipsToPixels as  (pixels/inch) / (twips/inch)
-  mTwipsToPixels = ((gdk_screen_width()/gdk_screen_width_mm()) * 25.4) / (float)NSIntPointsToTwips(72);
+
+// this is used for something odd.  who knows
+  mTwipsToPixels = (((float)::gdk_screen_width()) /
+                    ((float)::gdk_screen_width_mm()) * 25.4) /
+		     (float)NSIntPointsToTwips(72);
 
   mPixelsToTwips = 1.0f / mTwipsToPixels;
 
@@ -105,6 +107,7 @@ NS_IMETHODIMP nsDeviceContextGTK::CreateRenderingContext(nsIRenderingContext *&a
 NS_IMETHODIMP nsDeviceContextGTK::SupportsNativeWidgets(PRBool &aSupportsWidgets)
 {
   //XXX it is very critical that this not lie!! MMP
+  // read the comments in the mac code for this
   aSupportsWidgets = PR_TRUE;
 
   return NS_OK;
@@ -112,11 +115,12 @@ NS_IMETHODIMP nsDeviceContextGTK::SupportsNativeWidgets(PRBool &aSupportsWidgets
 
 NS_IMETHODIMP nsDeviceContextGTK::GetScrollBarDimensions(float &aWidth, float &aHeight) const
 {
-  // how are we going to get this? Must be set by the widget library FRV
+/* 11 + 2 + 2   (11 is the default scrollbar size, 2 is the y offset from the
+		 style code.  we should get this directly */
+  aWidth = 15.0 * mPixelsToTwips;
+  aHeight = 24.0 * mPixelsToTwips;
 //  aWidth = 11.0 * mTwipsToPixels;
 //  aHeight = 24.0 * mTwipsToPixels;
-  aWidth = 500.0;
-  aHeight = 500.0;
   return NS_OK;
 }
 
