@@ -1287,12 +1287,12 @@ PRBool nsString::IsASCII(const PRUnichar* aBuffer) {
  *
  */
 nsAutoString::nsAutoString() : nsString() {
-  nsStrPrivate::Initialize(*this,mBuffer,(sizeof(mBuffer)>>eTwoByte)-1,0,eTwoByte,PR_FALSE);
+  nsStrPrivate::Initialize(*this, (char*)mBuffer, (sizeof(mBuffer)/sizeof(mBuffer[0]))-1, 0, eTwoByte, PR_FALSE);
   AddNullTerminator(*this);
 }
 
 nsAutoString::nsAutoString(const PRUnichar* aString) : nsString() {
-  nsStrPrivate::Initialize(*this,mBuffer,(sizeof(mBuffer)>>eTwoByte)-1,0,eTwoByte,PR_FALSE);
+  nsStrPrivate::Initialize(*this, (char*)mBuffer, (sizeof(mBuffer)/sizeof(mBuffer[0]))-1, 0, eTwoByte, PR_FALSE);
   AddNullTerminator(*this);
   Append(aString);
 }
@@ -1303,7 +1303,7 @@ nsAutoString::nsAutoString(const PRUnichar* aString) : nsString() {
  * @param   aLength tells us how many chars to copy from aString
  */
 nsAutoString::nsAutoString(const PRUnichar* aString,PRInt32 aLength) : nsString() {
-  nsStrPrivate::Initialize(*this,mBuffer,(sizeof(mBuffer)>>eTwoByte)-1,0,eTwoByte,PR_FALSE);
+  nsStrPrivate::Initialize(*this, (char*)mBuffer, (sizeof(mBuffer)/sizeof(mBuffer[0]))-1, 0, eTwoByte, PR_FALSE);
   AddNullTerminator(*this);
   Append(aString,aLength);
 }
@@ -1311,7 +1311,7 @@ nsAutoString::nsAutoString(const PRUnichar* aString,PRInt32 aLength) : nsString(
 nsAutoString::nsAutoString( const nsString& aString )
   : nsString()
 {
-  nsStrPrivate::Initialize(*this, mBuffer, (sizeof(mBuffer)>>eTwoByte)-1, 0, eTwoByte, PR_FALSE);
+  nsStrPrivate::Initialize(*this, (char*)mBuffer, (sizeof(mBuffer)/sizeof(mBuffer[0]))-1, 0, eTwoByte, PR_FALSE);
   AddNullTerminator(*this);
   Append(aString);
 }
@@ -1319,7 +1319,7 @@ nsAutoString::nsAutoString( const nsString& aString )
 nsAutoString::nsAutoString( const nsAString& aString )
   : nsString()
 {
-  nsStrPrivate::Initialize(*this, mBuffer, (sizeof(mBuffer)>>eTwoByte)-1, 0, eTwoByte, PR_FALSE);
+  nsStrPrivate::Initialize(*this, (char*)mBuffer, (sizeof(mBuffer)/sizeof(mBuffer[0]))-1, 0, eTwoByte, PR_FALSE);
   AddNullTerminator(*this);
   Append(aString);
 }
@@ -1332,10 +1332,10 @@ nsAutoString::nsAutoString( const nsAString& aString )
  */
 nsAutoString::nsAutoString(const CBufDescriptor& aBuffer) : nsString() {
   if(!aBuffer.mBuffer) {
-    nsStrPrivate::Initialize(*this,mBuffer,(sizeof(mBuffer)>>eTwoByte)-1,0,eTwoByte,PR_FALSE);
+    nsStrPrivate::Initialize(*this, (char*)mBuffer, (sizeof(mBuffer)/sizeof(mBuffer[0]))-1, 0, eTwoByte, PR_FALSE);
   }
   else {
-    nsStrPrivate::Initialize(*this,aBuffer.mBuffer,aBuffer.mCapacity,aBuffer.mLength,aBuffer.mCharSize,!aBuffer.mStackBased);
+    nsStrPrivate::Initialize(*this, aBuffer.mBuffer, aBuffer.mCapacity, aBuffer.mLength, aBuffer.mCharSize, !aBuffer.mStackBased);
   }
   if(!aBuffer.mIsConst)
     AddNullTerminator(*this);
@@ -1448,7 +1448,7 @@ NS_ConvertUTF8toUCS2::Init( const nsACString& aCString )
  * Default copy constructor
  */
 nsAutoString::nsAutoString(const nsAutoString& aString) : nsString() {
-  nsStrPrivate::Initialize(*this,mBuffer,(sizeof(mBuffer)>>eTwoByte)-1,0,eTwoByte,PR_FALSE);
+  nsStrPrivate::Initialize(*this,(char*)mBuffer,(sizeof(mBuffer)/sizeof(mBuffer[0]))-1,0,eTwoByte,PR_FALSE);
   AddNullTerminator(*this);
   Append(aString);
 }
@@ -1459,16 +1459,9 @@ nsAutoString::nsAutoString(const nsAutoString& aString) : nsString() {
  * @param   
  */
 nsAutoString::nsAutoString(PRUnichar aChar) : nsString(){
-  nsStrPrivate::Initialize(*this,mBuffer,(sizeof(mBuffer)>>eTwoByte)-1,0,eTwoByte,PR_FALSE);
+  nsStrPrivate::Initialize(*this,(char*)mBuffer,(sizeof(mBuffer)/sizeof(mBuffer[0]))-1,0,eTwoByte,PR_FALSE);
   AddNullTerminator(*this);
   Append(aChar);
-}
-
-/**
- * deconstruct the autstring
- * @param   
- */
-nsAutoString::~nsAutoString(){
 }
 
 #ifdef DEBUG

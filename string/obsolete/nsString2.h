@@ -478,7 +478,8 @@ nsString::Right( self_type& aResult, size_type aLengthToCopy ) const
 class NS_COM nsAutoString : public nsString {
 public: 
 
-    virtual ~nsAutoString();
+    virtual ~nsAutoString() {}
+
     nsAutoString();
     nsAutoString(const nsAutoString& aString);
     explicit nsAutoString(const nsAString& aString);
@@ -505,7 +506,7 @@ public:
     virtual void SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
 #endif
     
-    char mBuffer[kDefaultStringSize<<eTwoByte];
+    PRUnichar mBuffer[kDefaultStringSize];
 };
 
 // NS_DEF_DERIVED_STRING_OPERATOR_PLUS(nsAutoString, PRUnichar)

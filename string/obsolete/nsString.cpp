@@ -1268,13 +1268,6 @@ nsCAutoString::nsCAutoString(const CBufDescriptor& aBuffer) : nsCString() {
 }
 
 
-/**
- * deconstructor
- * @param   
- */
-nsCAutoString::~nsCAutoString(){
-}
-
 #ifdef DEBUG
 void nsCAutoString::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const {
   if (aResult) {
