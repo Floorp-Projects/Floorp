@@ -524,7 +524,9 @@ var treeView =
    getCellText : function(row,column)
    {
       calendarEvent = gEventArray[row];
-      switch( column.id )
+
+      // Moz1.8 trees require column.id, moz1.7 and earlier trees use column.
+      switch( column.id || column )
       {
          case "unifinder-search-results-tree-col-title":
             return( calendarEvent.title );

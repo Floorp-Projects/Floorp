@@ -380,7 +380,8 @@ var toDoTreeView =
       if( !calendarToDo )
          return false;
 
-      switch( column.id )
+      // Moz1.8 trees require column.id, moz1.7 and earlier trees use column.
+      switch( column.id || column )
       {
          case "unifinder-todo-tree-col-completed":
             return( "" );
