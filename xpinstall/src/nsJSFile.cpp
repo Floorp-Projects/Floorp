@@ -466,6 +466,7 @@ InstallFileOpFileExecute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
   nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
   PRInt32 nativeRet;
   nsAutoString b1;
+  PRBool blocking = PR_FALSE;
   JSObject *jsObj;
   nsInstallFolder *folder;
 
@@ -477,12 +478,30 @@ InstallFileOpFileExecute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
     return JS_TRUE;
   }
 
-  if(argc >= 2)
+  if(argc >= 3)
   {
     //  public int FileExecute (nsInstallFolder aSourceFolder,
-    //                          String aParameters);
+    //                          String aParameters
+    //                          PRBool aBlocking);
 
     ConvertJSValToStr(b1, cx, argv[1]);
+    ConvertJSValToBool(&blocking, cx, argv[2]);
+  }
+  else if(argc >= 2)
+  {
+    if(JSVAL_IS_BOOLEAN(argv[1]))
+    {
+      //  public int FileExecute (nsInstallFolder aSourceFolder,
+      //                          PRBool aBlocking);
+      ConvertJSValToBool(&blocking, cx, argv[1]);
+      b1.SetLength(0);
+    }
+    else
+    {
+      //  public int FileExecute (nsInstallFolder aSourceFolder,
+      //                          String aParameters);
+      ConvertJSValToStr(b1, cx, argv[1]);
+    }
   }
   else
     b1.SetLength(0);
@@ -503,7 +522,7 @@ InstallFileOpFileExecute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 
   folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
 
-  if(NS_OK != nativeThis->FileOpFileExecute(*folder, b1, &nativeRet))
+  if(NS_OK != nativeThis->FileOpFileExecute(*folder, b1, blocking, &nativeRet))
   {
      return JS_TRUE;
   }

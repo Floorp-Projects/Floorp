@@ -77,6 +77,7 @@ class nsInstallFileOpItem : public nsInstallObject
                         PRInt32       aCommand,
                         nsIFile*      a1,
                         nsString&     a2,
+                        PRBool        aBlocking,
                         PRInt32*      aReturn);
 
     // used by:
@@ -121,6 +122,7 @@ class nsInstallFileOpItem : public nsInstallObject
     PRInt32             mIconId;
     PRInt32             mCommand;
     PRInt32             mAction;
+    PRBool              mBlocking;
     
     /* Private Methods */
 

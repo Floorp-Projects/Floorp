@@ -726,7 +726,7 @@ nsInstall::DiskSpaceAvailable(const nsString& aFolder, PRInt64* aReturn)
 }
 
 PRInt32    
-nsInstall::Execute(const nsString& aJarSource, const nsString& aArgs, PRInt32* aReturn)
+nsInstall::Execute(const nsString& aJarSource, const nsString& aArgs, PRBool aBlocking, PRInt32* aReturn)
 {
     PRInt32 result = SanityCheck();
 
@@ -736,7 +736,7 @@ nsInstall::Execute(const nsString& aJarSource, const nsString& aArgs, PRInt32* a
         return NS_OK;
     }
    
-    nsInstallExecute* ie = new nsInstallExecute(this, aJarSource, aArgs, &result);
+    nsInstallExecute* ie = new nsInstallExecute(this, aJarSource, aArgs, aBlocking, &result);
     
     if (ie == nsnull)
     {
@@ -753,11 +753,6 @@ nsInstall::Execute(const nsString& aJarSource, const nsString& aArgs, PRInt32* a
     return NS_OK;
 }
 
-PRInt32    
-nsInstall::Execute(const nsString& aJarSource, PRInt32* aReturn)
-{
-    return Execute(aJarSource, nsAutoString(), aReturn);
-}
 
 PRInt32    
 nsInstall::FinalizeInstall(PRInt32* aReturn)
@@ -1665,7 +1660,7 @@ nsInstall::FileOpDirRename(nsInstallFolder& aSrc, nsString& aTarget, PRInt32* aR
      return NS_OK;
   }
 
-  nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_DIR_RENAME, localFile, aTarget, aReturn);
+  nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_DIR_RENAME, localFile, aTarget, PR_FALSE, aReturn);
   if (ifop == nsnull)
   {
       *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
@@ -1768,7 +1763,7 @@ nsInstall::FileOpFileDelete(nsInstallFolder& aTarget, PRInt32 aFlags, PRInt32* a
 }
 
 PRInt32
-nsInstall::FileOpFileExecute(nsInstallFolder& aTarget, nsString& aParams, PRInt32* aReturn)
+nsInstall::FileOpFileExecute(nsInstallFolder& aTarget, nsString& aParams, PRBool aBlocking, PRInt32* aReturn)
 {
   nsCOMPtr<nsIFile> localFile = aTarget.GetFileSpec();
   if (localFile == nsnull)
@@ -1777,7 +1772,7 @@ nsInstall::FileOpFileExecute(nsInstallFolder& aTarget, nsString& aParams, PRInt3
      return NS_OK;
   }
 
-  nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_FILE_EXECUTE, localFile, aParams, aReturn);
+  nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_FILE_EXECUTE, localFile, aParams, aBlocking, aReturn);
   if (ifop == nsnull)
   {
       *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
@@ -1948,7 +1943,7 @@ nsInstall::FileOpFileRename(nsInstallFolder& aSrc, nsString& aTarget, PRInt32* a
      return NS_OK;
   }
 
-  nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_FILE_RENAME, localFile, aTarget, aReturn);
+  nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_FILE_RENAME, localFile, aTarget, PR_FALSE, aReturn);
   if (ifop == nsnull)
   {
       *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
