@@ -492,7 +492,7 @@ static JSPropertySpec ComposeAppCoreProperties[] =
 //
 static JSFunctionSpec ComposeAppCoreMethods[] = 
 {	
-//  {"Dispose",				ComposeAppCoreDispose,			0},
+  {"Dispose",				ComposeAppCoreDispose,			0},
   {"SetWindow",				ComposeAppCoreSetWindow,		1},
   {"SetEditor",				ComposeAppCoreSetEditor,		1},
   {"CompleteCallback",		ComposeAppCoreCompleteCallback,	1},
