@@ -340,6 +340,7 @@ nsChromeRegistry::OverlayListHash::GetArray(nsIURI* aBase)
 
 nsChromeRegistry::~nsChromeRegistry()
 {
+  PL_DHashTableFinish(&mPackagesHash);
   gChromeRegistry = nsnull;
 }
 
