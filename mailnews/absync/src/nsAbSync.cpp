@@ -1209,7 +1209,7 @@ nsAbSync::EndOfStream()
 nsresult        
 nsAbSync::ProcessOpReturn()
 {
-  char  *workLine;
+  char  *workLine = nsnull;
 
   while (workLine = ExtractCurrentLine())
   {
@@ -1221,7 +1221,8 @@ nsAbSync::ProcessOpReturn()
     if (!nsCRT::strncasecmp(workLine, SERVER_OP_RETURN_LOCALE, 
                             nsCRT::strlen(SERVER_OP_RETURN_LOCALE)))
     {
-      char *locale = workLine += nsCRT::strlen(SERVER_OP_RETURN_LOCALE);
+      char *locale = workLine;
+      locale += nsCRT::strlen(SERVER_OP_RETURN_LOCALE);
       if (*locale)
         mLocale = NS_ConvertASCIItoUCS2(locale);
     }
@@ -1245,8 +1246,7 @@ nsAbSync::ProcessOpReturn()
       }
     }
 
-    if (*workLine)
-      nsCRT::free(workLine);
+    PR_FREEIF(workLine);
   }
 
   return NS_OK;
@@ -2009,6 +2009,36 @@ nsAbSync::AddValueToNewCard(nsIAbCard *aCard, nsString *aTagName, nsString *aTag
 {
   nsresult  rv = NS_OK;
 
+  // 
+  // RICHIE_TODO: First, we are going to special case the phone entries because they seem to
+  // 
+/**
+#define ABSYNC_PAGER_PHONE_TYPE   "Pager:"
+#define ABSYNC_HOME_PHONE_TYPE    "Home:"
+#define ABSYNC_WORK_PHONE_TYPE    "Work:"
+#define ABSYNC_FAX_PHONE_TYPE     "Fax:"
+#define ABSYNC_CELL_PHONE_TYPE    "Cellular:"
+
+  if (!aTagName->CompareWithConversion(kServerWorkPhoneColumn))
+    aCard->SetWorkPhone(aTagValue->GetUnicode());
+
+  if (!aTagName->CompareWithConversion(kServerHomePhoneColumn))
+    aCard->SetHomePhone(aTagValue->GetUnicode());
+
+  if (!aTagName->CompareWithConversion(kServerFaxColumn))
+    aCard->SetFaxNumber(aTagValue->GetUnicode());
+
+  if (!aTagName->CompareWithConversion(kServerPagerColumn))
+    aCard->SetPagerNumber(aTagValue->GetUnicode());
+
+  if (!aTagName->CompareWithConversion(kServerCellularColumn))
+    aCard->SetCellularNumber(aTagValue->GetUnicode());
+
+
+******************************/
+
+
+
   // Ok, we need to figure out what the tag name from the server maps to and assign
   // this value the new nsIAbCard
   //
@@ -2034,21 +2064,6 @@ nsAbSync::AddValueToNewCard(nsIAbCard *aCard, nsString *aTagName, nsString *aTag
 
   if (!aTagName->CompareWithConversion(kServer2ndEmailColumn))
     aCard->SetSecondEmail(aTagValue->GetUnicode());
-
-  if (!aTagName->CompareWithConversion(kServerWorkPhoneColumn))
-    aCard->SetWorkPhone(aTagValue->GetUnicode());
-
-  if (!aTagName->CompareWithConversion(kServerHomePhoneColumn))
-    aCard->SetHomePhone(aTagValue->GetUnicode());
-
-  if (!aTagName->CompareWithConversion(kServerFaxColumn))
-    aCard->SetFaxNumber(aTagValue->GetUnicode());
-
-  if (!aTagName->CompareWithConversion(kServerPagerColumn))
-    aCard->SetPagerNumber(aTagValue->GetUnicode());
-
-  if (!aTagName->CompareWithConversion(kServerCellularColumn))
-    aCard->SetCellularNumber(aTagValue->GetUnicode());
 
   if (!aTagName->CompareWithConversion(kServerHomeAddressColumn))
     aCard->SetHomeAddress(aTagValue->GetUnicode());
@@ -2126,16 +2141,6 @@ nsAbSync::GetString(const PRUnichar *aStringName)
   else
     return nsCRT::strdup(aStringName);
 }
-
-/*********** RICHIE_TODO
-These are the types for the phone entries!
-
-Pager:
-Home:
-Work:
-Fax:
-Cellular:
-*****/
 
 /************ UNUSED FOR NOW
 aCard->SetDisplayName(aTagValue->GetUnicode());

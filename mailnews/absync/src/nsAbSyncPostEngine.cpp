@@ -317,18 +317,25 @@ nsAbSyncPostEngine::FireURLRequest(nsIURI *aURL, nsPostCompletionCallback  cb,
   // Tag the post stream onto the channel...but never seemed to work...so putting it
   // directly on the URL spec
   //
+
+  // Mark the channel as being a document URI...
+  nsLoadFlags loadAttribs = 0;
+  channel->GetLoadAttributes(&loadAttribs);
+  loadAttribs |= nsIChannel::LOAD_DOCUMENT_URI;
+  channel->SetLoadAttributes(loadAttribs);
+
   nsCOMPtr<nsIAtom> method = NS_NewAtom ("POST");
   nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(channel);
   if (!httpChannel)
     return NS_ERROR_FAILURE;
 
   httpChannel->SetRequestMethod(method);
-  httpChannel->SetUploadStream(postStream);
   if (NS_SUCCEEDED(rv = NS_NewPostDataStream(getter_AddRefs(postStream), PR_FALSE, postData, 0)))
   {
     httpChannel->SetUploadStream(postStream);
   }
-**/
+
+*****/
 
   // let's try uri dispatching...
   nsCOMPtr<nsIURILoader> pURILoader (do_GetService(NS_URI_LOADER_PROGID));
@@ -521,6 +528,7 @@ NS_IMETHODIMP nsAbSyncPostEngine::SendAbRequest(const char *aSpec, PRInt32 aPort
     return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the string */
 
   printf("POST: %s\n", aProtocolRequest);
+
   rv = nsEngineNewURI(&workURI, tSpec, nsnull);
   if (NS_FAILED(rv) || (!workURI))
     return NS_ERROR_FAILURE;
@@ -530,6 +538,7 @@ NS_IMETHODIMP nsAbSyncPostEngine::SendAbRequest(const char *aSpec, PRInt32 aPort
     workURI->SetPort(aPort);
 
   rv = FireURLRequest(workURI, PostDoneCallback, this, aProtocolRequest);
+
   mPostEngineState = nsIAbSyncPostEngineState::nsIAbSyncPostRunning;
   return rv;
 }

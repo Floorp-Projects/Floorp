@@ -86,6 +86,12 @@ typedef struct {
 #define ABSYNC_PROTOCOL          3
 #define ABSYNC_VERSION           "Demo"
 
+#define ABSYNC_PAGER_PHONE_TYPE   "Pager:"
+#define ABSYNC_HOME_PHONE_TYPE    "Home:"
+#define ABSYNC_WORK_PHONE_TYPE    "Work:"
+#define ABSYNC_FAX_PHONE_TYPE     "Fax:"
+#define ABSYNC_CELL_PHONE_TYPE    "Cellular:"
+
 #define SYNC_ESCAPE_ADDUSER             "op%3Dadd"
 #define SYNC_ESCAPE_MOD                 "op%3Dmod"
 #define SYNC_ESCAPE_DEL                 "op%3Ddel"
