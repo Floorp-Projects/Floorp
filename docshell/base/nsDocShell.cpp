@@ -5998,10 +5998,7 @@ NS_IMETHODIMP nsDocShell::EnsureFind()
         nsCOMPtr<nsIDOMWindowInternal> focussedWindow;
         focusController->GetFocusedWindow(getter_AddRefs(focussedWindow));
         if (focussedWindow)
-        {
-            rootWindow = focussedWindow;            // constrain to the focussed window.
             windowToSearch = focussedWindow;
-        }
     }
 
     nsCOMPtr<nsIWebBrowserFindInFrames> findInFrames = do_QueryInterface(mFind);
