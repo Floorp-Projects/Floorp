@@ -56,7 +56,7 @@ static NS_DEFINE_CID(kPlatformCharsetCID, NS_PLATFORMCHARSET_CID);
 #include "nsICharsetConverterManager.h"
 static NS_DEFINE_CID(kCharsetConverterManagerCID,
                      NS_ICHARSETCONVERTERMANAGER_CID);
-#include "xp_file.h"
+#include "xp_path.h"
 #include "nsIMIMEService.h"
 #include "nsCExternalHandlerService.h"
 #include "nsICharsetAlias.h"
