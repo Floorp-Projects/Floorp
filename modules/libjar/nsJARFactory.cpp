@@ -57,10 +57,6 @@ static NS_DEFINE_IID(kJAR_CID,  NS_JAR_CID);
 static NS_DEFINE_IID(kIJARFactory_IID, NS_IJARFactory_IID);
 static NS_DEFINE_IID(kJARFactory_CID,  NS_JARFactory_CID);
 
-static PRInt32 gInstanceCnt = 0;
-static PRInt32 gLockCnt     = 0;
-
-
 /*---------------------------------------------------------
  * nsJARFactory implementation
  *--------------------------------------------------------*/
