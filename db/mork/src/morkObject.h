@@ -94,20 +94,16 @@ public: // state is public because the entire Mork system is private
 public: // morkNode virtual methods
   virtual void CloseMorkNode(morkEnv* ev); // CloseObject() only if open
   virtual ~morkObject(); // assert that CloseObject() executed earlier
+#ifdef MORK_DEBUG_HEAP_STATS
   void operator delete(void* ioAddress, size_t size)
   { 
-#ifdef MORK_DEBUG_HEAP_STATS
     mork_u4* array = (mork_u4*) ioAddress;
     array -= 3;
     orkinHeap *heap = (orkinHeap *) *array;
     if (heap)
       heap->Free(nsnull, ioAddress);
-    else
-      ::delete array;
-#else
-    delete ioAddress;
-#endif
   }
+#endif
 
   NS_DECL_ISUPPORTS
 
