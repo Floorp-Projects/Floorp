@@ -8,6 +8,11 @@
 
 use Sys::Hostname;  # for ::hostname()
 
+# Location of this file.  Make sure that hand-runs and crontab-runs
+# of this script read/write the same data.
+my $script_dir = "/builds/tinderbox/mozilla/tools/tinderbox";  
+
+my $sheriff_string;
 
 # Send data to graph server.
 sub send_results_to_server {
@@ -51,14 +56,17 @@ sub is_tree_open {
 
   # Dump tbox page source into a file.
   print "HTTP...";
-  system ("wget", "-q", "-O", "tbox.source", $tbox_url);
+  system ("wget", "-q", "-O", "$script_dir/tbox.source", $tbox_url);
   print "done\n";
 
   my $rv = 0;
 
+  $sheriff_string = "";
+
   # Scan file, looking for line that starts with <a NAME="open">
-  open TBOX_FILE, "tbox.source";
+  open TBOX_FILE, "$script_dir/tbox.source";
   while (<TBOX_FILE>) {
+    # Scan for open string
     if(/^<a NAME="open">/) {
       # look for "open" string
       if (/open<\/font>$/) {
@@ -69,11 +77,49 @@ sub is_tree_open {
         $rv = 0;
       }
     }
+
+    # Scan for sheriff string & save it off for HTTP submit later.
+    if(/^<br><a NAME="sheriff"><\/a>/) {
+      chop;
+      $sheriff_string = $_;
+
+      # Strip out content to save space.
+
+      # Strip out permanent content.
+      $sheriff_string =~ s/^<br><a NAME="sheriff"><\/a>//;
+      
+      # Crude attempt at reducing the random html that shows up here.
+      # Order is important, pick off easy tags, then make it legal cgi,
+      # then shorten it up.
+      $sheriff_string =~ s/<[pP]>//g;
+      $sheriff_string =~ s/<br>//g;
+      $sheriff_string =~ s/<//g;
+      $sheriff_string =~ s/>//g;
+      $sheriff_string =~ s/"/ /g;
+      $sheriff_string =~ s/\///g;
+      $sheriff_string =~ s/\\//g;
+      $sheriff_string =~ s/#/[lb]/g;
+      $sheriff_string =~ s/mailto://g;
+      $sheriff_string =~ s/a href//g;
+      $sheriff_string =~ s/[sS]heriff//g;
+      $sheriff_string =~ s/^[tT]he //g;
+      $sheriff_string =~ s/\/a//g;
+      $sheriff_string =~ s/netscape.com/nscp/g;
+      $sheriff_string =~ s/mozilla.org/moz/g;
+      $sheriff_string =~ s/ is / /g;
+      $sheriff_string =~ s/ for / /g;
+      $sheriff_string =~ s/ on / /g;
+      $sheriff_string =~ s/ = / /g;
+      $sheriff_string =~ s/ - / /g;
+
+      $sheriff_string = substr($sheriff_string,0,60);
+      print "sheriff string = $sheriff_string\n";
+    }
   }
   close TBOX_FILE;
 
   # Clean up.
-  unlink("tbox.source");
+  unlink("$script_dir/tbox.source");
 
   return $rv;
 }
@@ -87,8 +133,8 @@ sub is_tree_open {
   if(is_tree_open()) {
 
     # Record tree open time if not set.
-    if (not (-e "timefile")) {
-      open TIMEFILE, ">timefile";
+    if (not (-e "$script_dir/timefile")) {
+      open TIMEFILE, ">$script_dir/timefile";
       print TIMEFILE time();
       close TIMEFILE;
     } else {
@@ -98,7 +144,7 @@ sub is_tree_open {
       my $time_tree_opened = 0;
       my $now = 0;
   
-      open TIMEFILE, "timefile";
+      open TIMEFILE, "$script_dir/timefile";
       while (<TIMEFILE>) {
         chomp;
         $time_tree_opened = $_;
@@ -109,24 +155,19 @@ sub is_tree_open {
       $now = time();
       print "now = $now\n";
 
-      # Debug: PRINT time since open in seconds.
-      my $tso_sec =  $now - $time_tree_opened;
-      print "time_since_open (sec) = $tso_sec\n";
-
-      # Report time in minutes.  Drop decimal and only use integer.
-      $time_since_open = (($now - $time_tree_opened) - ($now - $time_tree_opened)%60)/60;
-      print "time_since_open (min) = $time_since_open\n";
+      # Report time in hours.
+      $time_since_open = ($now - $time_tree_opened)/3600;
+      print "time_since_open (hours) = $time_since_open\n";
     }
     
   } else {
     # tree is closed, leave tree_open_time at zero.
 
     # Delete timefile if there is one.
-    if (-e "timefile") {
-      unlink("timefile");
+    if (-e "$script_dir/timefile") {
+      unlink("$script_dir/timefile");
     }
   }
 
-
-  send_results_to_server("$time_since_open", "--", "treeopen", ::hostname());
+  send_results_to_server("$time_since_open", "$sheriff_string", "treeopen", ::hostname());
 }
