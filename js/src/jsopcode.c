@@ -1248,28 +1248,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		    break;
 
 		  default:
-#if JS_BUG_SHORT_CIRCUIT
-		    {
-			/* top is the first clause in a disjunction (||). */
-			jsbytecode *ifeq;
-
-			lval = JS_strdup(cx, POP_STR());
-			if (!lval)
-			    return JS_FALSE;
-			ifeq = pc + len;
-			LOCAL_ASSERT(pc[oplen] == JSOP_TRUE);
-			pc += oplen + js_CodeSpec[JSOP_TRUE].length;
-			LOCAL_ASSERT(*pc == JSOP_GOTO);
-			oplen = js_CodeSpec[JSOP_GOTO].length;
-			done = pc + GET_JUMP_OFFSET(pc);
-			pc += oplen;
-			DECOMPILE_CODE(pc, done - ifeq);
-			rval = POP_STR();
-			todo = Sprint(&ss->sprinter, "%s || %s", lval, rval);
-			JS_free(cx, (void *)lval);
-			len = PTRDIFF(done, pc, jsbytecode);
-		    }
-#endif /* JS_BUG_SHORT_CIRCUIT */
 		    break;
 		}
 		break;
@@ -1286,32 +1264,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		    break;
 		}
 #endif /* JS_HAS_DO_WHILE_LOOP */
-
-#if JS_BUG_SHORT_CIRCUIT
-		{
-		    jsbytecode *ifne;
-
-		    /* This bytecode is used only for conjunction (&&). */
-		    lval = JS_strdup(cx, POP_STR());
-		    if (!lval)
-			return JS_FALSE;
-		    ifne = pc + GET_JUMP_OFFSET(pc);
-		    LOCAL_ASSERT(pc[oplen] == JSOP_FALSE);
-		    pc += len + js_CodeSpec[JSOP_FALSE].length;
-		    LOCAL_ASSERT(*pc == JSOP_GOTO);
-		    oplen = js_CodeSpec[JSOP_GOTO].length;
-		    done = pc + GET_JUMP_OFFSET(pc);
-		    pc += oplen;
-		    DECOMPILE_CODE(pc, done - ifne);
-		    rval = POP_STR();
-		    todo = Sprint(&ss->sprinter, "%s && %s", lval, rval);
-		    JS_free(cx, (void *)lval);
-		    len = PTRDIFF(done, pc, jsbytecode);
-		}
-#endif /* JS_BUG_SHORT_CIRCUIT */
 		break;
 
-#if !JS_BUG_SHORT_CIRCUIT
 	      case JSOP_OR:
 		/* Top of stack is the first clause in a disjunction (||). */
 		lval = JS_strdup(cx, POP_STR());
@@ -1339,7 +1293,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		todo = Sprint(&ss->sprinter, "%s && %s", lval, rval);
 		JS_free(cx, (char *)lval);
 		break;
-#endif
 
 	      case JSOP_FORARG:
 		atom = GetSlotAtom(jp, js_GetArgument, GET_ARGNO(pc));
