@@ -233,7 +233,7 @@ nsSocketTransport::~nsSocketTransport()
     }
     
     if (mService) {
-        PR_AtomicDecrement(&mService->mTotalTransports);
+        mService->OnTransportDestroyed();
         NS_RELEASE(mService);
     }
     
@@ -370,7 +370,7 @@ nsresult nsSocketTransport::Init(nsSocketTransportService* aService,
     
     // Update the active time for timeout purposes...
     mLastActiveTime = PR_IntervalNow();
-    PR_AtomicIncrement(&mService->mTotalTransports);
+    mService->OnTransportCreated();
     
     LOG(("nsSocketTransport: Initializing [%s:%d %x].  rv = %x",
         mHostName, mPort, this, rv));
@@ -460,8 +460,10 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
             //
             // A connection has been established with the server
             //
-            PR_AtomicIncrement(&mService->mConnectedTransports);
-            mWasConnected = PR_TRUE;
+            if (!mWasConnected) {
+                mService->OnTransportConnected(GetSocketHost(), mNetAddress);
+                mWasConnected = PR_TRUE;
+            }
 
             // Initialize select flags
             mSelectFlags = PR_POLL_EXCEPT;
@@ -719,39 +721,57 @@ nsresult nsSocketTransport::doResolveHost(void)
     // The hostname has not been resolved yet...
     //
     if (mNetAddress == nsnull) {
-        PR_ExitMonitor(mMonitor);
-
-        nsIDNSService* pDNSService = mService->GetCachedDNSService();
-        if (!pDNSService) {
-            return NS_ERROR_UNEXPECTED;
+        const char *host = GetSocketHost();
+        //
+        // Check the socket transport service's hostname database first.
+        //
+        PRIPv6Addr addr;
+        if (mService->LookupHost(host, &addr)) {
+            // found address!
+            mNetAddrList.Init(1);
+            mNetAddress = mNetAddrList.GetNext(nsnull);
+            PR_SetNetAddr(PR_IpAddrAny, PR_AF_INET6, GetSocketPort(), mNetAddress);
+            memcpy(&mNetAddress->ipv6.ip, &addr, sizeof(addr));
+#ifdef PR_LOGGING
+            char buf[128];
+            PR_NetAddrToString(mNetAddress, buf, sizeof(buf));
+            LOG((" -> using cached ip address [%s]\n", buf));
+#endif
         }
+        else {
+            PR_ExitMonitor(mMonitor);
 
-        //
-        // Give up the SocketTransport lock.  This allows the DNS thread to call the
-        // nsIDNSListener notifications without blocking...
-        //
-        rv = pDNSService->Lookup(GetSocketHost(), this, nsnull, 
-                                 getter_AddRefs(mDNSRequest));
-        //
-        // Aquire the SocketTransport lock again...
-        //
-        PR_EnterMonitor(mMonitor);
+            nsIDNSService* pDNSService = mService->GetCachedDNSService();
+            if (!pDNSService) {
+                return NS_ERROR_UNEXPECTED;
+            }
 
-        if (NS_SUCCEEDED(rv)) {
             //
-            // The DNS lookup has finished...  It has either failed or succeeded.
+            // Give up the SocketTransport lock.  This allows the DNS thread to call the
+            // nsIDNSListener notifications without blocking...
             //
-            if (NS_FAILED(mStatus) || mNetAddress) {
-                mDNSRequest = 0;
-                rv = mStatus;
-            } 
+            rv = pDNSService->Lookup(host, this, nsnull, getter_AddRefs(mDNSRequest));
             //
-            // The DNS lookup is being processed...  Mark the transport as waiting
-            // until the result is available...
+            // Aquire the SocketTransport lock again...
             //
-            else {
-                SetFlag(eSocketDNS_Wait);
-                rv = NS_BASE_STREAM_WOULD_BLOCK;
+            PR_EnterMonitor(mMonitor);
+
+            if (NS_SUCCEEDED(rv)) {
+                //
+                // The DNS lookup has finished...  It has either failed or succeeded.
+                //
+                if (NS_FAILED(mStatus) || mNetAddress) {
+                    mDNSRequest = 0;
+                    rv = mStatus;
+                } 
+                //
+                // The DNS lookup is being processed...  Mark the transport as waiting
+                // until the result is available...
+                //
+                else {
+                    SetFlag(eSocketDNS_Wait);
+                    rv = NS_BASE_STREAM_WOULD_BLOCK;
+                }
             }
         }
     }
@@ -1225,7 +1245,7 @@ nsresult nsSocketTransport::CloseConnection()
 
     if (mWasConnected) {
         if (mService)
-            PR_AtomicDecrement(&mService->mConnectedTransports);
+            mService->OnTransportClosed();
         mWasConnected = PR_FALSE;
     }
     

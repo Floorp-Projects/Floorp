@@ -42,11 +42,14 @@
 #include "nsAutoLock.h"
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
+#include "nsICategoryManager.h"
+#include "nsISupportsPrimitives.h"
 #include "nsProxiedService.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsNetCID.h"
 #include "prlog.h"
+#include "plstr.h"
 #include "nsProtocolProxyService.h"
 
 #if defined(PR_LOGGING)
@@ -212,13 +215,20 @@ nsSocketTransportService::Init(void)
     }
   }
 
-
+  //
+  // Cache the Event Queue service...
+  //
   if (NS_SUCCEEDED(rv) && !mEventQService) {
     mEventQService = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID);
     if (!mEventQService) {
       rv = NS_ERROR_UNEXPECTED;
     }
   }
+
+  //
+  // Initialize hostname database
+  //
+  PL_DHashTableInit(&mHostDB, &ops, nsnull, sizeof(nsHostEntry), 0);
 
   return rv;
 }
@@ -754,6 +764,10 @@ nsSocketTransportService::Shutdown(void)
     rv = NS_ERROR_FAILURE;
   }
 
+  // clear the hostname database (NOTE: this runs when the browser
+  // enters the offline state).
+  PL_DHashTableFinish(&mHostDB);
+
   LOG(("nsSocketTransportService::Shutdown END"));
 
   return rv;
@@ -836,4 +850,90 @@ nsSocketTransportService::GetNeckoStringByName (const char *aName, PRUnichar **a
 	}
 
 	return res;
+}
+
+//-----------------------------------------------------------------------------
+// hostname database impl
+//-----------------------------------------------------------------------------
+
+PLDHashTableOps nsSocketTransportService::ops =
+{
+    PL_DHashAllocTable,
+    PL_DHashFreeTable,
+    PL_DHashGetKeyStub,
+    PL_DHashStringKey,
+    nsSocketTransportService::MatchEntry,
+    PL_DHashMoveEntryStub,
+    nsSocketTransportService::ClearEntry,
+    PL_DHashFinalizeStub,
+    nsnull
+};
+
+PRBool PR_CALLBACK
+nsSocketTransportService::MatchEntry(PLDHashTable *table,
+                                     const PLDHashEntryHdr *entry,
+                                     const void *key)
+{
+    const nsSocketTransportService::nsHostEntry *he =
+        NS_REINTERPRET_CAST(const nsSocketTransportService::nsHostEntry *, entry);
+
+    return !strcmp(he->host(), (const char *) key);
+}
+
+void PR_CALLBACK
+nsSocketTransportService::ClearEntry(PLDHashTable *table,
+                                     PLDHashEntryHdr *entry)
+{
+    nsSocketTransportService::nsHostEntry *he =
+        NS_REINTERPRET_CAST(nsSocketTransportService::nsHostEntry *, entry);
+
+    PL_strfree((char *) he->key);
+    he->key = nsnull;
+    memset(&he->addr, 0, sizeof(he->addr));
+}
+
+PRBool
+nsSocketTransportService::LookupHost(const char *host, PRIPv6Addr *addr)
+{
+    NS_ASSERTION(host, "null host");
+    NS_ASSERTION(addr, "null addr");
+
+    PLDHashEntryHdr *hdr;
+
+    hdr = PL_DHashTableOperate(&mHostDB, host, PL_DHASH_LOOKUP);
+    if (PL_DHASH_ENTRY_IS_BUSY(hdr)) {
+        // found match
+        nsHostEntry *ent = NS_REINTERPRET_CAST(nsHostEntry *, hdr);
+        memcpy(addr, &ent->addr, sizeof(ent->addr));
+        return PR_TRUE;
+    }
+
+    return PR_FALSE;
+}
+
+void
+nsSocketTransportService::OnTransportConnected(const char *host, PRNetAddr *addr)
+{
+    // remember hostname
+
+    PLDHashEntryHdr *hdr;
+
+    hdr = PL_DHashTableOperate(&mHostDB, host, PL_DHASH_ADD);
+    if (!hdr)
+        return;
+
+    NS_ASSERTION(PL_DHASH_ENTRY_IS_BUSY(hdr), "entry not busy");
+
+    nsHostEntry *ent = NS_REINTERPRET_CAST(nsHostEntry *, hdr);
+    if (ent->key == nsnull) {
+        ent->key = (const void *) PL_strdup(host);
+        memcpy(&ent->addr, &addr->ipv6.ip, sizeof(ent->addr));
+    }
+#ifdef DEBUG
+    else {
+        // verify that the existing entry is in fact a perfect match
+        NS_ASSERTION(PL_strcmp(ent->host(), host) == 0, "bad match");
+        NS_ASSERTION(memcmp(&ent->addr, &addr->ipv6.ip, sizeof(ent->addr)) == 0, "bad match");
+    }
+#endif
 }

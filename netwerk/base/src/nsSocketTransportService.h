@@ -47,6 +47,8 @@
 #include "nsIStringBundle.h"
 #include "nsIDNSService.h"
 #include "nsIEventQueueService.h"
+#include "pldhash.h"
+#include "prio.h"
 
 #if defined(XP_PC) || defined(XP_UNIX) || defined(XP_BEOS) || defined(XP_MAC)
 //
@@ -93,29 +95,59 @@ public:
     
     nsresult AddToSelectList(nsSocketTransport* aTransport);
     nsresult RemoveFromSelectList(nsSocketTransport* aTransport);
-    
-    PRInt32   mConnectedTransports;
-    PRInt32   mTotalTransports;
+
+    //
+    // LookupHost checks to see if we've previously resolved the hostname
+    // during this session.  We remember all successful connections to prevent
+    // ip-address spoofing.  See bug 149943.
+    //
+    // Returns TRUE if found, and sets |result| to the cached value.
+    //
+    PRBool LookupHost(const char *host, PRIPv6Addr *result);
+
+    void OnTransportCreated()   { PR_AtomicIncrement(&mTotalTransports); }
+    void OnTransportConnected(const char *aHost, PRNetAddr *aAddr);
+    void OnTransportClosed()    { PR_AtomicDecrement(&mConnectedTransports); }
+    void OnTransportDestroyed() { PR_AtomicDecrement(&mTotalTransports); } 
     
     nsresult  GetNeckoStringByName (const char *aName, PRUnichar **aString);
 
-    nsIDNSService* GetCachedDNSService() { return mDNSService.get(); }
-    nsIEventQueueService* GetCachedEventQueueService() { return mEventQService.get(); }
+    nsIDNSService        *GetCachedDNSService()        { return mDNSService.get(); }
+    nsIEventQueueService *GetCachedEventQueueService() { return mEventQService.get(); }
 
 protected:
-    nsIThread*            mThread;
-    PRFileDesc*           mThreadEvent;
-    PRLock*               mThreadLock;
-    PRBool                mThreadRunning;
+    //
+    // mHostDB maps hostname -> nsHostEntry
+    //
+    struct nsHostEntry : PLDHashEntryStub
+    {
+        PRIPv6Addr  addr;
+        const char *host() const { return (const char *) key; }
+    };
+
+    static PLDHashTableOps ops;
+
+    static PRBool PR_CALLBACK MatchEntry(PLDHashTable *, const PLDHashEntryHdr *, const void *);
+    static void   PR_CALLBACK ClearEntry(PLDHashTable *, PLDHashEntryHdr *);
+
+    nsIThread                     *mThread;
+    PRFileDesc                    *mThreadEvent;
+    PRLock                        *mThreadLock;
+    PRBool                         mThreadRunning;
     
-    PRCList               mWorkQ;
+    PRCList                        mWorkQ;
+
+    PRInt32                        mConnectedTransports;
+    PRInt32                        mTotalTransports;
     
-    PRInt32               mSelectFDSetCount;
-    PRPollDesc*           mSelectFDSet;
-    nsSocketTransport**   mActiveTransportList;
-    nsCOMPtr<nsIStringBundle>   mStringBundle;
-    nsCOMPtr<nsIDNSService>     mDNSService;
-    nsCOMPtr<nsIEventQueueService>  mEventQService;
+    PRInt32                        mSelectFDSetCount;
+    PRPollDesc                    *mSelectFDSet;
+    nsSocketTransport            **mActiveTransportList;
+    nsCOMPtr<nsIStringBundle>      mStringBundle;
+    nsCOMPtr<nsIDNSService>        mDNSService;
+    nsCOMPtr<nsIEventQueueService> mEventQService;
+
+    PLDHashTable                   mHostDB;
 };
 
 
