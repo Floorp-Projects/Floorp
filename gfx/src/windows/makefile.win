@@ -31,9 +31,6 @@ DEFINES=-D_IMPL_NS_GFX -D_IMPL_NS_GFXNONXP -DWIN32_LEAN_AND_MEAN -DSTRICT
 DEFINES=$(DEFINES) -DNGLAYOUT_DDRAW
 !endif
 
-MISCDEP=                        \
- $(DIST)\lib\raptorgfx_s.lib
- 
 OBJS =                                  \
 	.\$(OBJDIR)\nsDeviceContextWin.obj   \
 	.\$(OBJDIR)\nsDrawingSurfaceWin.obj         \
@@ -75,7 +72,6 @@ LLIBS=				\
  $(DIST)\lib\img32$(VERSION_NUMBER).lib        \
  $(DIST)\lib\js32$(VERSION_NUMBER).lib        \
  $(DIST)\lib\util.lib           \
- $(DIST)\lib\plc3.lib       \
 !ifdef NECKO
  $(DIST)\lib\neckoutil_s.lib       \
 !else

@@ -25,7 +25,6 @@ LLIBS=				\
  $(DIST)\lib\raptorhtmlpars.lib	\
  $(DIST)\lib\xpcom.lib	\
  $(LIBNSPR)			\
- $(DIST)\lib\plc3.lib	\
 !ifndef NECKO
  $(DIST)\lib\netlib.lib \
 !endif

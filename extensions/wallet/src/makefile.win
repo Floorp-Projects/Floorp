@@ -40,7 +40,6 @@ EXPORTS= $(NULL)
 LLIBS=$(LLIBS)  $(LIBNSPR)		\
 	$(WALLETLIBS)			\
 	$(DIST)\lib\secfreenav32.lib	\
-	$(DIST)\lib\plc3.lib	\
 	$(DIST)\lib\xppref32.lib	\
 	$(DIST)\lib\xpcom.lib		\
 	$(DIST)\lib\xplib.lib		\

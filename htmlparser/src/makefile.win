@@ -144,7 +144,6 @@ LCFLAGS = \
 # These are the libraries we need to link with to create the dll
 LLIBS=        \
  $(DIST)\lib\xpcom.lib  \
- $(DIST)\lib\plc3.lib       \
  $(DIST)\lib\expat.lib			\
 !ifdef NECKO
  $(DIST)\lib\neckoutil_s.lib			\

@@ -56,7 +56,6 @@ LCFLAGS = \
 
 # These are the libraries we need to link with to create the dll
 LLIBS	= \
- $(DIST)\lib\plc3.lib \
  $(LIBNSPR) \
  $(DIST)\lib\js$(MOZ_BITS)$(VERSION_NUMBER).lib \
  $(DIST)\lib\xplib.lib		\

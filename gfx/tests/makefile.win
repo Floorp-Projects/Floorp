@@ -31,8 +31,7 @@ LINCS=-I$(XPDIST)\public\raptor -I$(XPDIST)\public\xpcom -I..\src
 LLIBS=				\
  $(DIST)\lib\raptorgfxwin.lib	\
  $(DIST)\lib\xpcom.lib	\
- $(LIBNSPR)			\
- $(DIST)\lib\plc3.lib
+ $(LIBNSPR)
 
 include <$(DEPTH)\config\rules.mak>
 
@@ -45,22 +44,6 @@ clobber::
 	rm -f $(DIST)\bin\TestRect.exe
 	rm -f $(DIST)\bin\TestColorNames.exe
 	rm -f $(DIST)\bin\DumpColors.exe
-
-# Move this into config/obj.inc when it's allowed
-.cpp{.\$(OBJDIR)\}.exe:
-    $(CC) @<<$(CFGFILE)
-        $(CFLAGS)
-        $(LCFLAGS)
-        $(LINCS)
-        $(LINCS_1)
-        $(INCS)
-        $(LLIBS)
-        $(OS_LIBS)
-        -Fd.\$(OBJDIR)\
-        -Fe.\$(OBJDIR)\
-        -Fo.\$(OBJDIR)\
-        $(CURDIR)$(*B).cpp
-<<
 
 $(PROG1): $(OBJDIR) TestRect.cpp
 
