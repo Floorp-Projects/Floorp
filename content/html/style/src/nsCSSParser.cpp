@@ -2409,7 +2409,7 @@ CSSParserImpl::ParseNegatedSimpleSelector(PRInt32&       aDataMask,
     return eSelectorParsingStatus_Error;
   }
 
-  if (! GetToken(aErrorCode, PR_FALSE)) { // premature eof
+  if (! GetToken(aErrorCode, PR_TRUE)) { // premature eof
     REPORT_UNEXPECTED_EOF(PENegationEOF);
     return eSelectorParsingStatus_Error;
   }
