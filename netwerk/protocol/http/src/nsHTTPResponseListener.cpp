@@ -59,7 +59,6 @@ static const int kMAX_HEADER_SIZE = 60000;
 nsHTTPResponseListener::nsHTTPResponseListener(nsHTTPChannel* aConnection):
     mFirstLineParsed(PR_FALSE),
     mHeadersDone(PR_FALSE),
-    mAborted(PR_FALSE),
     mResponse(nsnull),
     mBytesReceived(0)
 {
@@ -178,7 +177,7 @@ nsHTTPResponseListener::OnDataAvailable(nsIChannel* channel,
         // Abort the connection if the consumer has been released.  This will 
         // happen if a redirect has been processed...
         //
-        if (mAborted) {
+        if (!mResponseDataListener) {
             // XXX: What should the return code be?
             rv = NS_BINDING_ABORTED;
         }
@@ -247,23 +246,13 @@ nsHTTPResponseListener::OnStopRequest(nsIChannel* channel,
     // Notify the HTTPChannel that the response has completed...
     NS_ASSERTION(mChannel, "HTTPChannel is null.");
     if (mChannel) {
-        mChannel->ResponseCompleted(channel, i_Status, i_pMsg);
+        mChannel->ResponseCompleted(channel, mResponseDataListener, 
+                                    i_Status, i_pMsg);
+
+        // The HTTPChannel is no longer needed...
+        mChannel->mRawResponseListener = 0;
     }
 
-    // Call the consumer OnStopRequest(...) to end the request...
-    if (mResponseDataListener && !mAborted) {
-      rv = mResponseDataListener->OnStopRequest(mChannel, mChannel->mResponseContext, i_Status, i_pMsg);
-
-      if (NS_FAILED(rv)) {
-        PR_LOG(gHTTPLog, PR_LOG_ERROR, 
-               ("nsHTTPChannel::OnStopRequest(...) [this=%x]."
-                "\tOnStopRequest to consumer failed! Status:%x\n",
-                this, rv));
-      }
-    }
-
-    // The HTTPChannel is no longer needed...
-    mChannel->mRawResponseListener = 0;
     NS_IF_RELEASE(mChannel);
     NS_IF_RELEASE(mResponse);
 
@@ -273,6 +262,21 @@ nsHTTPResponseListener::OnStopRequest(nsIChannel* channel,
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTTPResponseListener methods:
 
+nsresult nsHTTPResponseListener::Abort()
+{
+  PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
+         ("nsHTTPResponseListener::Abort [this=%x].", this));
+
+  //
+  // Clearing the data consumer will cause the response to abort.  This
+  // also prevents any more notifications from being passed out to the consumer.
+  //
+  mResponseDataListener = 0;
+
+  return NS_OK;
+}
+
+
 nsresult nsHTTPResponseListener::FireSingleOnData(nsIStreamListener *aListener, nsISupports *aContext)
 {
     nsresult rv;
@@ -281,7 +285,7 @@ nsresult nsHTTPResponseListener::FireSingleOnData(nsIStreamListener *aListener, 
         rv = FinishedResponseHeaders();
         if (NS_FAILED(rv)) return rv;
         
-        if (mBytesReceived) {
+        if (mBytesReceived && mResponseDataListener) {
             rv = mResponseDataListener->OnDataAvailable(mChannel, mChannel->mResponseContext,
                                                         mDataStream, 0, mBytesReceived);
         }
@@ -499,7 +503,7 @@ nsresult nsHTTPResponseListener::FinishedResponseHeaders(void)
   //
   // Fire the OnStartRequest notification - now that user data is available
   //
-  if (NS_SUCCEEDED(rv) && mResponseDataListener && !mAborted) {
+  if (NS_SUCCEEDED(rv) && mResponseDataListener) {
     rv = mResponseDataListener->OnStartRequest(mChannel, mChannel->mResponseContext);
     if (NS_FAILED(rv)) {
       PR_LOG(gHTTPLog, PR_LOG_ERROR, 
