@@ -52,18 +52,25 @@ public:
 	NS_IMETHOD			OrFlags(PRInt32 flags, PRInt32 *result);
 	NS_IMETHOD			AndFlags(PRInt32 flags, PRInt32 *result);
 	NS_IMETHOD			SetHighWater(nsMsgKey highWater, PRBool force) ;
+	NS_IMETHOD			SetHighWater(nsMsgKey aHighWater);
 	NS_IMETHOD			GetHighWater(nsMsgKey *result) ;
 	NS_IMETHOD			SetExpiredMark(nsMsgKey expiredKey);
+	NS_IMETHOD			GetExpiredMark(nsMsgKey *aExpiredMark);
 	NS_IMETHOD			ChangeNumNewMessages(PRInt32 delta);
 	NS_IMETHOD			ChangeNumMessages(PRInt32 delta);
 	NS_IMETHOD			ChangeNumVisibleMessages(PRInt32 delta);
 	NS_IMETHOD			GetNumNewMessages(PRInt32 *result) ;
 	NS_IMETHOD			GetNumMessages(PRInt32 *result) ;
 	NS_IMETHOD			GetNumVisibleMessages(PRInt32 *result) ;
+	NS_IMETHOD			SetNumMessages(PRInt32 aNumMessages);
+	NS_IMETHOD			SetNumNewMessages(PRInt32 aNumNewMessages);
+	NS_IMETHOD			SetNumVisibleMessages(PRInt32 aNumVisibleMessages);
 	NS_IMETHOD			GetImapUidValidity(PRInt32 *result) ;
 	NS_IMETHOD			SetImapUidValidity(PRInt32 uidValidity) ;
 	NS_IMETHOD			GetImapTotalPendingMessages(PRInt32 *result) ;
 	NS_IMETHOD			GetImapUnreadPendingMessages(PRInt32 *result) ;
+	NS_IMETHOD			SetImapTotalPendingMessages(PRInt32 totalPending) ;
+	NS_IMETHOD			SetImapUnreadPendingMessages(PRInt32 unreadPending) ;
 	NS_IMETHOD			GetCharacterSet(nsString *result) ;
 	NS_IMETHOD			SetCharacterSet(nsString *charSet) ;
 	NS_IMETHOD			GetLocale(nsString *result) ;
@@ -80,17 +87,15 @@ public:
 
 	NS_IMETHOD			GetFolderSize(PRUint32 *size);
 	NS_IMETHOD			SetFolderSize(PRUint32 size);
-	NS_IMETHOD			GetFolderDate(time_t *date);
-	NS_IMETHOD			SetFolderDate(time_t date);
-
-    NS_IMETHOD			GetDiskVersion(int *version);
+	NS_IMETHOD			GetFolderDate(PRInt32 *date);
+	NS_IMETHOD			SetFolderDate(PRInt32 date);
 
     NS_IMETHOD			ChangeExpungedBytes(PRInt32 delta);
   
 	NS_IMETHOD			GetProperty(const char *propertyName, nsString *resultProperty);
 	NS_IMETHOD			SetProperty(const char *propertyName, nsString *propertyStr);
 	NS_IMETHOD			SetUint32Property(const char *propertyName, PRUint32 propertyValue);
-	NS_IMETHOD			GetUint32Property(const char *propertyName, PRUint32 &propertyValue);
+	NS_IMETHOD			GetUint32Property(const char *propertyName, PRUint32 *propertyValue);
 
 	NS_IMETHOD		    SetKnownArtsSet(nsString *newsArtSet);
 	NS_IMETHOD		    GetKnownArtsSet(nsString *newsArtSet);

@@ -38,6 +38,7 @@ EXPORTS= \
 		$(NULL)
 
 XPIDLSRCS = \
+		nsIDBFolderInfo.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk

@@ -18,7 +18,8 @@
 DEPTH=..\..\..\..
 MODULE=msgdb
 
-XPIDLSRCS =				\
+XPIDLSRCS =	\
+			.\nsIDBFolderInfo.idl		\
 			$(NULL)
 
 ################################################################################
@@ -39,3 +40,4 @@ EXPORTS =	 						\
 
 
 include <$(DEPTH)\config\rules.mak>
+include <$(DEPTH)\config\config.mak>

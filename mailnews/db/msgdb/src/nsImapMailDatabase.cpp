@@ -92,8 +92,8 @@ NS_IMETHODIMP nsImapMailDatabase::Open(nsFileSpec &folderName, PRBool create, ns
 		else
 		{
 			// compare current version of db versus filed out version info.
-            int version;
-            folderInfo->GetDiskVersion(&version);
+            PRUint32 version;
+            folderInfo->GetVersion(&version);
 			if (mailDB->GetCurVersion() != version)
 				err = NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE;
 			NS_RELEASE(folderInfo);

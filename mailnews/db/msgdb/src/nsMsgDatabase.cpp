@@ -276,7 +276,7 @@ void nsMsgDatabase::RemoveFromCache(nsMsgDatabase* pMessageDB)
 void nsMsgDatabase::DumpCache()
 {
     nsMsgDatabase* pMessageDB = nsnull;
-	for (PRUint32 i = 0; i < GetDBCache()->Count(); i++)
+	for (PRInt32 i = 0; i < GetDBCache()->Count(); i++)
 	{
 		pMessageDB = NS_STATIC_CAST(nsMsgDatabase*, GetDBCache()->ElementAt(i));
 	}
@@ -893,7 +893,7 @@ NS_IMETHODIMP nsMsgDatabase::DeleteMessages(nsMsgKeyArray* nsMsgKeys, nsIDBChang
 {
 	nsresult	err = NS_OK;
 
-    PRInt32 kindex;
+    PRUint32 kindex;
 	for (kindex = 0; kindex < nsMsgKeys->GetSize(); kindex++)
 	{
 		nsMsgKey key = nsMsgKeys->ElementAt(kindex);

@@ -95,6 +95,7 @@ NS_IMETHODIMP nsMailDatabase::Open(nsFileSpec &folderName, PRBool create, nsIMsg
 			{
 				PRInt32 numNewMessages;
                 PRUint32 folderSize;
+				PRInt32 folderDateInSeconds;
                 time_t  folderDate;
 				nsFileSpec::TimeStamp actualFolderTimeStamp;
 
@@ -103,15 +104,16 @@ NS_IMETHODIMP nsMailDatabase::Open(nsFileSpec &folderName, PRBool create, nsIMsg
 
 				folderInfo->GetNumNewMessages(&numNewMessages);
                 folderInfo->GetFolderSize(&folderSize);
-                folderInfo->GetFolderDate(&folderDate);
+                folderInfo->GetFolderDate(&folderDateInSeconds);
+				folderDate = folderDateInSeconds;
 				if (folderSize != mailDB->m_folderSpec->GetFileSize()||
                     folderDate != actualFolderTimeStamp ||
                     numNewMessages < 0)
 					err = NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE;
 			}
 			// compare current version of db versus filed out version info.
-            int version;
-            folderInfo->GetDiskVersion(&version);
+            PRUint32 version;
+            folderInfo->GetVersion(&version);
 			if (mailDB->GetCurVersion() != version)
 				err = NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE;
 			NS_RELEASE(folderInfo);
