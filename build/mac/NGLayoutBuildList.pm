@@ -781,6 +781,8 @@ sub MakeResourceAliases()
     # copy the chrome registry (don't alias it)
     _copy( ":mozilla:rdf:chrome:build:registry.rdf", "$chrome_dir" . "registry.rdf" );
             
+    _MakeAlias(":mozilla:xpcom:base:xpcom.properties",      "$globalLocale");   
+
     # install manifest RDF files
     _InstallManifestRDF(":mozilla:extensions:irc:xul:manifest.rdf", $dist_dir, $chrome_subdir, "packages:chatzilla:", "content");
     _InstallManifestRDF(":mozilla:extensions:irc:xul:manifest.rdf", $dist_dir, $chrome_subdir, "packages:chatzilla:", "locale");
