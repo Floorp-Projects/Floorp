@@ -171,8 +171,9 @@ public:
   void DoDebugRobot();
   void DoSiteWalker();
   nsEventStatus DispatchDebugMenu(PRInt32 aID);
-  void SetCompatibilityMode(PRBool aIsStandard);
 #endif
+  nsEventStatus DispatchStyleMenu(PRInt32 aID);
+  void SetCompatibilityMode(PRBool aIsStandard);
 
   nsEventStatus ProcessDialogEvent(nsGUIEvent *aEvent);
 

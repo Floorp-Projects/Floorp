@@ -387,12 +387,18 @@ HandleLocationEvent(nsGUIEvent *aEvent)
 nsEventStatus
 nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
 {
+  nsEventStatus result;
 #ifdef NS_DEBUG
-  nsEventStatus result = DispatchDebugMenu(aID);
+  result = DispatchDebugMenu(aID);
   if (nsEventStatus_eIgnore != result) {
     return result;
   }
 #endif
+  result = DispatchStyleMenu(aID);
+  if (nsEventStatus_eIgnore != result) {
+    return result;
+  }
+
   switch (aID) {
   case VIEWER_EXIT:
     mApp->Exit();
@@ -2822,16 +2828,6 @@ nsBrowserWindow::DoToggleSelection()
   }
 }
 
-void 
-nsBrowserWindow::SetCompatibilityMode(PRBool aIsStandard)
-{
-  if (nsnull != mPrefs) { 
-    int32 prefInt = (aIsStandard) ? eCompatibility_Standard : eCompatibility_NavQuirks;
-    mPrefs->SetIntPref("nglayout.compatibility.mode", prefInt);
-    mPrefs->SavePrefFile();
-  }
-}
-
 void
 nsBrowserWindow::DoDebugRobot()
 {
@@ -2928,16 +2924,120 @@ nsBrowserWindow::DispatchDebugMenu(PRInt32 aID)
   case VIEWER_TOP100:
     DoSiteWalker();
     break;
-
-  case VIEWER_NAV_QUIRKS_MODE:
-  case VIEWER_STANDARD_MODE:
-    SetCompatibilityMode(VIEWER_STANDARD_MODE == aID);
-    break;
   }
   return(result);
 }
 
 #endif // NS_DEBUG
+
+void 
+nsBrowserWindow::SetCompatibilityMode(PRBool aIsStandard)
+{
+  if (nsnull != mPrefs) { 
+    int32 prefInt = (aIsStandard) ? eCompatibility_Standard : eCompatibility_NavQuirks;
+    mPrefs->SetIntPref("nglayout.compatibility.mode", prefInt);
+    mPrefs->SavePrefFile();
+  }
+}
+
+
+nsEventStatus
+nsBrowserWindow::DispatchStyleMenu(PRInt32 aID)
+{
+  nsEventStatus result = nsEventStatus_eIgnore;
+
+  switch(aID) {
+  case VIEWER_SELECT_STYLE_LIST:
+    {
+      nsIPresShell* shell = GetPresShell();
+      if (nsnull != shell) {
+        nsAutoString  defaultStyle;
+        nsIDocument* doc = shell->GetDocument();
+        if (nsnull != doc) {
+          nsIAtom* defStyleAtom = NS_NewAtom("DEFAULT-STYLE");
+          doc->GetHeaderData(defStyleAtom, defaultStyle);
+          NS_RELEASE(defStyleAtom);
+          NS_RELEASE(doc);
+        }
+
+        nsStringArray titles;
+        shell->ListAlternateStyleSheets(titles);
+        nsAutoString  current;
+        shell->GetActiveAlternateStyleSheet(current);
+
+        PRInt32 count = titles.Count();
+        fprintf(stdout, "There %s %d alternate style sheet%s\n",  
+                ((1 == count) ? "is" : "are"),
+                count,
+                ((1 == count) ? "" : "s"));
+        PRInt32 index;
+        for (index = 0; index < count; index++) {
+          fprintf(stdout, "%d: \"", index + 1);
+          nsAutoString title;
+          titles.StringAt(index, title);
+          fputs(title, stdout);
+          fprintf(stdout, "\" %s%s\n", 
+                  ((title.EqualsIgnoreCase(current)) ? "<< current " : ""), 
+                  ((title.EqualsIgnoreCase(defaultStyle)) ? "** default" : ""));
+        }
+        NS_RELEASE(shell);
+      }
+    }
+    result = nsEventStatus_eConsumeNoDefault;
+    break;
+
+  case VIEWER_SELECT_STYLE_DEFAULT:
+    {
+      nsIPresShell* shell = GetPresShell();
+      if (nsnull != shell) {
+        nsIDocument* doc = shell->GetDocument();
+        if (nsnull != doc) {
+          nsAutoString  defaultStyle;
+          nsIAtom* defStyleAtom = NS_NewAtom("DEFAULT-STYLE");
+          doc->GetHeaderData(defStyleAtom, defaultStyle);
+          NS_RELEASE(defStyleAtom);
+          NS_RELEASE(doc);
+          fputs("Selecting default style sheet \"", stdout);
+          fputs(defaultStyle, stdout);
+          fputs("\"\n", stdout);
+          shell->SelectAlternateStyleSheet(defaultStyle);
+        }
+        NS_RELEASE(shell);
+      }
+    }
+    result = nsEventStatus_eConsumeNoDefault;
+    break;
+
+  case VIEWER_SELECT_STYLE_ONE:
+  case VIEWER_SELECT_STYLE_TWO:
+  case VIEWER_SELECT_STYLE_THREE:
+  case VIEWER_SELECT_STYLE_FOUR:
+    {
+      nsIPresShell* shell = GetPresShell();
+      if (nsnull != shell) {
+        nsStringArray titles;
+        shell->ListAlternateStyleSheets(titles);
+        nsAutoString  title;
+        titles.StringAt(aID - VIEWER_SELECT_STYLE_ONE, title);
+        fputs("Selecting alternate style sheet \"", stdout);
+        fputs(title, stdout);
+        fputs("\"\n", stdout);
+        shell->SelectAlternateStyleSheet(title);
+        NS_RELEASE(shell);
+      }
+    }
+    result = nsEventStatus_eConsumeNoDefault;
+    break;
+
+  case VIEWER_NAV_QUIRKS_MODE:
+  case VIEWER_STANDARD_MODE:
+    SetCompatibilityMode(VIEWER_STANDARD_MODE == aID);
+    result = nsEventStatus_eConsumeNoDefault;
+    break;
+  }
+  return result;
+}
+
 
 //----------------------------------------------------------------------
 

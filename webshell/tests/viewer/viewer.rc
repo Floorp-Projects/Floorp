@@ -89,14 +89,27 @@ VIEWER MENU DISCARDABLE
     MENUITEM "Debu&g Robot", VIEWER_DEBUGROBOT
     MENUITEM SEPARATOR
     MENUITEM "Show Content Quality", VIEWER_SHOW_CONTENT_QUALITY
-    MENUITEM SEPARATOR
+ }
+#endif
+  POPUP "&Style"
+  {
+    POPUP "Select &Style Sheet"
+    {
+      MENUITEM "List Availabe Sheets", VIEWER_SELECT_STYLE_LIST
+      MENUITEM SEPARATOR
+      MENUITEM "Select Default", VIEWER_SELECT_STYLE_DEFAULT
+      MENUITEM SEPARATOR
+      MENUITEM "Select Alternate 1", VIEWER_SELECT_STYLE_ONE
+      MENUITEM "Select Alternate 2", VIEWER_SELECT_STYLE_TWO
+      MENUITEM "Select Alternate 3", VIEWER_SELECT_STYLE_THREE
+      MENUITEM "Select Alternate 4", VIEWER_SELECT_STYLE_FOUR
+    }
     POPUP "&Compatibility Mode Pref"
     {
       MENUITEM "Nav Quirks", VIEWER_NAV_QUIRKS_MODE
       MENUITEM "Standard", VIEWER_STANDARD_MODE
     }
- }
-#endif
+  }
   POPUP "&Tools"
   {
     MENUITEM "&JavaScript Console", JS_CONSOLE
