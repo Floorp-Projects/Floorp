@@ -735,9 +735,8 @@ $table{fielddefs} =
 
 $table{versions} =
    'value tinytext,
-    program varchar(64) not null,
+    program varchar(64) not null';
 
-    unique(program)';
 
 $table{votes} =
    'who mediumint not null,
