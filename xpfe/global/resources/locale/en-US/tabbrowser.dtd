@@ -2,11 +2,13 @@
 <!ENTITY  newTab.label           "New Tab">
 <!ENTITY  newTab.accesskey       "N">
 <!ENTITY  closeTab.label         "Close Tab">
-<!ENTITY  closeTab.accesskey         "c">
+<!ENTITY  closeTab.accesskey         "C">
 <!ENTITY  closeOtherTabs.label   "Close Other Tabs">
 <!ENTITY  closeOtherTabs.accesskey         "O">
 <!ENTITY  reloadAllTabs.label    "Reload All Tabs">
 <!ENTITY  reloadAllTabs.accesskey         "A">
 <!ENTITY  reloadTab.label        "Reload Tab">
-<!ENTITY  reloadTab.accesskey         "r">
+<!ENTITY  reloadTab.accesskey         "R">
+<!ENTITY  bookmarkGroup.label    "Bookmark This Group of Tabs">
+<!ENTITY  bookmarkGroup.accesskey  "B">
 <!ENTITY  newTabButton.tooltip   "Open a new tab">
