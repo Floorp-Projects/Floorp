@@ -1,0 +1,145 @@
+<!-- <!DOCTYPE appendix PUBLIC "-//OASIS//DTD DocBook V4.1//EN"> -->
+<appendix id="install-perlmodules-manual">
+  <title>Manual Installation of Perl Modules</title>
+  
+  <section id="modules-manual-instructions">
+    <title>Instructions</title>
+    <para>If you need to install Perl modules manually, here's how it's done.
+    Download the module using the link given in the next section, and then
+    apply this magic incantation, as root:
+    </para>
+
+    <para>  
+      <screen><prompt>bash#</prompt> tar -xzvf &lt;module&gt;.tar.gz
+<prompt>bash#</prompt> cd &lt;module&gt;
+<prompt>bash#</prompt> perl Makefile.PL
+<prompt>bash#</prompt> make
+<prompt>bash#</prompt> make test
+<prompt>bash#</prompt> make install</screen>
+    </para>
+  </section>
+    
+  <section id="modules-manual-download">
+    <title>Download Locations</title>
+    
+    <para>Note: some modules are in the core distribution of
+    ActiveState Perl for Windows. Others are not available.
+    No PPM links have been provided in either of these two cases.
+    </para>
+    
+    <para>CGI:
+      <literallayout>
+        CPAN Download Page: <ulink url="http://search.cpan.org/dist/CGI.pm/"/>
+        PPM Download Link: <ulink url="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/CGI.zip"/>
+        Documentation: <ulink url="http://www.perldoc.com/perl5.8.0/lib/CGI.html"/>
+      </literallayout>
+    </para>
+
+    <para>TimeDate:
+      <literallayout>
+        CPAN Download Page: <ulink url="http://search.cpan.org/dist/TimeDate/"/>
+        PPM Download Link: <ulink url="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/TimeDate.zip"/>
+        Documentation: <ulink url="http://search.cpan.org/dist/TimeDate/lib/Date/Format.pm"/>
+      </literallayout>
+    </para>
+
+    <para>DBI:
+      <literallayout>
+        CPAN Download Page: <ulink url="http://search.cpan.org/dist/DBI/"/>
+        PPM Download Link: <ulink url="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/DBI.zip"/>
+        Documentation: <ulink url="http://dbi.perl.org/docs/"/>
+      </literallayout>
+    </para>
+
+    <para>DBD::mysql:
+      <literallayout>
+        CPAN Download Page: <ulink url="http://search.cpan.org/dist/DBD-mysql/"/>
+        PPM Download Link: <ulink url="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/DBD-Mysql.zip"/>
+        Documentation: <ulink url="http://search.cpan.org/dist/DBD-mysql/lib/DBD/mysql.pm"/>
+      </literallayout>
+    </para>
+
+    <para>File::Spec:
+      <literallayout>
+        CPAN Download Page: <ulink url="http://search.cpan.org/dist/File-Spec/"/>
+        PPM Download Page: <ulink url="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/File-Spec.zip"/>
+        Documentation: <ulink url="http://www.perldoc.com/perl5.8.0/lib/File/Spec.html"/>
+      </literallayout>
+    </para>
+
+    <para>File::Temp:
+      <literallayout>
+        CPAN Download Page: <ulink url="http://search.cpan.org/dist/File-Temp/"/>
+        Documentation: <ulink url="http://www.perldoc.com/perl5.8.0/lib/File/Temp.html"/>
+      </literallayout>
+    </para>
+
+    <para>Template Toolkit:
+      <literallayout>
+        CPAN Download Page: <ulink url="http://search.cpan.org/dist/Template-Toolkit/"/>
+        PPM Download Link: <ulink url="http://openinteract.sourceforge.net/ppmpackages/5.6/Template-Toolkit.tar.gz"/>
+        Documentation: <ulink url="http://www.template-toolkit.org/docs.html"/>
+      </literallayout>
+    </para>
+
+    <para>Text::Wrap:
+      <literallayout>
+        CPAN Download Page: <ulink url="http://search.cpan.org/dist/Text-Tabs+Wrap/"/>
+        Documentation: <ulink url="http://www.perldoc.com/perl5.8.0/lib/Text/Wrap.html"/>
+      </literallayout>
+    </para>
+ 
+    <para>GD:
+      <literallayout>
+        CPAN Download Page: <ulink url="http://search.cpan.org/dist/GD/"/>
+        PPM Download Link: <ulink url="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/GD.zip"/>
+        Documentation: <ulink url="http://stein.cshl.org/WWW/software/GD/"/>
+      </literallayout>
+    </para>
+
+    <para>Chart::Base:
+      <!-- TODO: Chart::Base doesn't seem to have any documentation -->
+      <literallayout>
+        CPAN Download Page: <ulink url="http://search.cpan.org/dist/Chart/"/>
+      </literallayout>
+    </para>
+
+     <para>GD::Graph:
+      <literallayout>
+        CPAN Download Page: <ulink url="http://search.cpan.org/dist/GDGraph/"/>
+        PPM Download Link: <ulink url="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/GDGraph.zip"/>
+        Documentation: <ulink url="http://search.cpan.org/dist/GDGraph/Graph.pm"/>
+      </literallayout>
+    </para>
+
+    <para>GD::Text::Align:
+      <literallayout>
+        CPAN Download Page: <ulink url="http://search.cpan.org/dist/GDTextUtil/"/>
+        PPM Download Page: <ulink url="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/GDTextUtil.zip"/>
+        Documentation: <ulink url="http://search.cpan.org/dist/GDTextUtil/Text/Align.pm"/>
+      </literallayout>
+    </para>
+
+    <para>MIME::Parser:
+      <literallayout>
+        CPAN Download Page: <ulink url="http://search.cpan.org/dist/MIME-tools/"/>
+        PPM Download Link: <ulink url="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/MIME-tools.zip"/>
+        Documentation: <ulink url="http://search.cpan.org/dist/MIME-tools/lib/MIME/Parser.pm"/>
+      </literallayout>
+    </para>
+
+   <para>XML::Parser:
+      <literallayout>
+        CPAN Download Page: <ulink url="http://search.cpan.org/dist/XML-Parser/"/>
+        Documentation: <ulink url="http://www.perldoc.com/perl5.6.1/lib/XML/Parser.html"/>
+      </literallayout>
+    </para>
+
+    <para>PatchReader:
+      <literallayout>
+        CPAN Download Page: <ulink url="http://search.cpan.org/author/JKEISER/PatchReader/"/>
+        Documentation: <ulink url="http://www.johnkeiser.com/mozilla/Patch_Viewer.html"/>
+      </literallayout>
+    </para>
+   </section>
+</appendix>  

@@ -16,7 +16,7 @@
   </blockquote>
 
   <section label="0" id="gfdl-0">
-    <title>PREAMBLE</title>
+    <title>Preamble</title>
 
     <para>The purpose of this License is to make a manual, textbook, or other
     written document "free" in the sense of freedom: to assure everyone the
@@ -41,7 +41,7 @@
   </section>
 
   <section label="1" id="gfdl-1">
-    <title>APPLICABILITY AND DEFINITIONS</title>
+    <title>Applicability and Definition</title>
 
     <para>This License applies to any manual or other work that contains a
     notice placed by the copyright holder saying it can be distributed under
@@ -101,7 +101,7 @@
   </section>
 
   <section label="2" id="gfdl-2">
-    <title>VERBATIM COPYING</title>
+    <title>Verbatim Copying</title>
 
     <para>You may copy and distribute the Document in any medium, either
     commercially or noncommercially, provided that this License, the
@@ -118,7 +118,7 @@
   </section>
 
   <section label="3" id="gfdl-3">
-    <title>COPYING IN QUANTITY</title>
+    <title>Copying in Quantity</title>
 
     <para>If you publish printed copies of the Document numbering more than
     100, and the Document's license notice requires Cover Texts, you must
@@ -157,7 +157,7 @@
   </section>
 
   <section label="4" id="gfdl-4">
-    <title>MODIFICATIONS</title>
+    <title>Modifications</title>
 
     <para>You may copy and distribute a Modified Version of the Document
     under the conditions of sections 2 and 3 above, provided that you release
@@ -287,7 +287,7 @@
   </section>
 
   <section label="5" id="gfdl-5">
-    <title>COMBINING DOCUMENTS</title>
+    <title>Combining Documents</title>
 
     <para>You may combine the Document with other documents released under
     this License, under the terms defined in section 4 above for modified
@@ -313,7 +313,7 @@
   </section>
 
   <section label="6" id="gfdl-6">
-    <title>COLLECTIONS OF DOCUMENTS</title>
+    <title>Collections of Documents</title>
 
     <para>You may make a collection consisting of the Document and other
     documents released under this License, and replace the individual copies
@@ -329,7 +329,7 @@
   </section>
 
   <section label="7" id="gfdl-7">
-    <title>AGGREGATION WITH INDEPENDENT WORKS</title>
+    <title>Aggregation with Independent Works</title>
 
     <para>A compilation of the Document or its derivatives with other
     separate and independent documents or works, in or on a volume of a
@@ -348,7 +348,7 @@
   </section>
 
   <section label="8" id="gfdl-8">
-    <title>TRANSLATION</title>
+    <title>Translation</title>
 
     <para>Translation is considered a kind of modification, so you may
     distribute translations of the Document under the terms of section 4.
@@ -363,7 +363,7 @@
   </section>
 
   <section label="9" id="gfdl-9">
-    <title>TERMINATION</title>
+    <title>Termination</title>
 
     <para>You may not copy, modify, sublicense, or distribute the Document
     except as expressly provided for under this License. Any other attempt to
@@ -375,7 +375,7 @@
   </section>
 
   <section label="10" id="gfdl-10">
-    <title>FUTURE REVISIONS OF THIS LICENSE</title>
+    <title>Future Revisions of this License</title>
 
     <para>The Free Software Foundation may publish new, revised versions of
     the GNU Free Documentation License from time to time. Such new versions

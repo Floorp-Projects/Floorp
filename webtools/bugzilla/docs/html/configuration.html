@@ -1,0 +1,1245 @@
+<HTML
+><HEAD
+><TITLE
+>Configuration</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
+"><LINK
+REL="HOME"
+TITLE="The Bugzilla Guide - 2.17.7 
+    Development Release"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Installing Bugzilla"
+HREF="installing-bugzilla.html"><LINK
+REL="PREVIOUS"
+TITLE="Installation"
+HREF="installation.html"><LINK
+REL="NEXT"
+TITLE="Optional Additional Configuration"
+HREF="extraconfig.html"></HEAD
+><BODY
+CLASS="section"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>The Bugzilla Guide - 2.17.7 
+    Development Release</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="installation.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 2. Installing Bugzilla</TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="extraconfig.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="section"
+><H1
+CLASS="section"
+><A
+NAME="configuration"
+></A
+>2.2. Configuration</H1
+><DIV
+CLASS="warning"
+><P
+></P
+><TABLE
+CLASS="warning"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/warning.gif"
+HSPACE="5"
+ALT="Warning"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>Poorly-configured MySQL and Bugzilla installations have
+      given attackers full access to systems in the past. Please take the
+      security parts of these guidelines seriously, even for Bugzilla 
+      machines hidden away behind your firewall.</P
+></TD
+></TR
+></TABLE
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="localconfig"
+></A
+>2.2.1. localconfig</H2
+><P
+>&#13;        Once you run <TT
+CLASS="filename"
+>checksetup.pl</TT
+> with all the correct 
+        modules installed, it displays a message about, and write out a 
+        file called, 
+        <TT
+CLASS="filename"
+>localconfig</TT
+>. This file contains the default
+        settings for a number of Bugzilla parameters.
+      </P
+><P
+>Load this file in your editor. The only value you 
+      <EM
+>need</EM
+> to change is $db_pass, the password for
+      the user you will create for your database.
+      Pick a strong password (for simplicity, it should not contain
+      single quote characters) and put it here.
+      </P
+><P
+>&#13;        The other options in the <TT
+CLASS="filename"
+>localconfig</TT
+> file
+        are documented by their accompanying comments. If you have a slightly
+        non-standard MySQL setup, you may wish to change one or more of
+        the other "$db_*" parameters. 
+      </P
+><P
+>&#13;        You may also wish to change the names of 
+        the priorities, severities, operating systems and platforms for your
+        installation. However, you can always change these after installation
+        has finished; if you then re-run 
+        <TT
+CLASS="filename"
+>checksetup.pl</TT
+>, the changes will get picked up.
+      </P
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="mysql"
+></A
+>2.2.2. MySQL</H2
+><DIV
+CLASS="section"
+><H3
+CLASS="section"
+><A
+NAME="security-mysql"
+></A
+>2.2.2.1. Security</H3
+><P
+>MySQL ships as insecure by default.
+        It allows anybody to on the local machine full administrative 
+        capabilities without requiring a password; the special
+        MySQL root account (note: this is <EM
+>not</EM
+> the same as
+        the system root) also has no password.
+        Also, many installations default to running
+        <SPAN
+CLASS="application"
+>mysqld</SPAN
+> as the system root.
+        </P
+><P
+></P
+><OL
+TYPE="1"
+><LI
+><P
+>To disable the anonymous user account
+            and set a password for the root user, execute the following. The
+            root user password should be different to the bugs user password
+            you set in 
+            <TT
+CLASS="filename"
+>localconfig</TT
+> in the previous section, 
+            and also different to
+            the password for the system root account on your machine.
+            </P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="screen"
+>  <TT
+CLASS="prompt"
+>bash$</TT
+> mysql mysql
+  <TT
+CLASS="prompt"
+>mysql&#62;</TT
+> DELETE FROM user WHERE user = '';
+  <TT
+CLASS="prompt"
+>mysql&#62;</TT
+> UPDATE user SET password = password('<TT
+CLASS="replaceable"
+><I
+>new_password</I
+></TT
+>') WHERE user = 'root';
+  <TT
+CLASS="prompt"
+>mysql&#62;</TT
+> FLUSH PRIVILEGES;</PRE
+></FONT
+></TD
+></TR
+></TABLE
+><P
+>From this point forward, to run the 
+            <TT
+CLASS="filename"
+>mysql</TT
+> command-line client, 
+            you will need to type
+            <B
+CLASS="command"
+>mysql -u root -p</B
+> and enter
+            <TT
+CLASS="replaceable"
+><I
+>new_password</I
+></TT
+> when prompted.
+            </P
+></LI
+><LI
+><P
+>If you run MySQL on the same machine as your web server, you
+            should disable remote access to MySQL by adding
+            the following to your <TT
+CLASS="filename"
+>/etc/my.conf</TT
+>:
+            </P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>  [myslqd]
+  # Prevent network access to MySQL.
+  skip-networking</PRE
+></FONT
+></TD
+></TR
+></TABLE
+></LI
+><LI
+><P
+>Consult the documentation that came with your system for
+            information on making <SPAN
+CLASS="application"
+>mysqld</SPAN
+> run as an
+            unprivileged user.
+            </P
+></LI
+><LI
+><P
+>For added security, you could also run MySQL, or even all 
+            of Bugzilla
+            in a chroot jail; however, instructions for doing that are beyond
+            the scope of this document.
+            </P
+></LI
+></OL
+></DIV
+><DIV
+CLASS="section"
+><H3
+CLASS="section"
+><A
+NAME="install-setupdatabase"
+></A
+>2.2.2.2. Allow large attachments</H3
+><P
+>You need to configure MySQL to accept large packets, if you
+        want to have attachments larger than 64K. Add the text
+        below to your
+        <TT
+CLASS="filename"
+>/etc/my.conf</TT
+>. 
+        There is also a parameter in Bugzilla
+        for setting the maximum allowable attachment size, (default 1MB).
+        Bugzilla will only accept attachments up to the lower of these two
+        sizes.
+        </P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="screen"
+>  [mysqld]
+  # Allow packets up to 1M
+  set-variable = max_allowed_packet=1M</PRE
+></FONT
+></TD
+></TR
+></TABLE
+></DIV
+><DIV
+CLASS="section"
+><H3
+CLASS="section"
+><A
+NAME="install-setupdatabase-adduser"
+></A
+>2.2.2.3. Add a user to MySQL</H3
+><P
+>You need to add a new MySQL user for
+        Bugzilla to use. (It's not safe to have Bugzilla use the MySQL root
+        account.) The following instructions assume the defaults in 
+        <TT
+CLASS="filename"
+>localconfig</TT
+>; 
+        if you changed those, you need to modify the 
+        SQL command appropriately. You will need the 
+        <TT
+CLASS="replaceable"
+><I
+>$db_pass</I
+></TT
+> password you set in
+        <TT
+CLASS="filename"
+>localconfig</TT
+> in 
+        <A
+HREF="configuration.html#localconfig"
+>Section 2.2.1</A
+>.
+        </P
+><P
+>We use an SQL <B
+CLASS="command"
+>GRANT</B
+> command to create a 
+        <SPAN
+CLASS="QUOTE"
+>"bugs"</SPAN
+>
+        user. This also restricts the 
+        <SPAN
+CLASS="QUOTE"
+>"bugs"</SPAN
+>
+        user to operations within a database called 
+        <SPAN
+CLASS="QUOTE"
+>"bugs"</SPAN
+>, and only allows the account to connect from 
+        <SPAN
+CLASS="QUOTE"
+>"localhost"</SPAN
+>. 
+        Modify it to reflect your setup if you will be connecting from
+        another machine or as a different user.</P
+><P
+>Run the <TT
+CLASS="filename"
+>mysql</TT
+> command-line client and
+        enter:</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="screen"
+>  <TT
+CLASS="prompt"
+>mysql&#62;</TT
+> GRANT SELECT,INSERT,UPDATE,DELETE,INDEX,ALTER,CREATE,
+         DROP,REFERENCES ON bugs.* TO bugs@localhost
+         IDENTIFIED BY '<TT
+CLASS="replaceable"
+><I
+>$db_pass</I
+></TT
+>';
+  <TT
+CLASS="prompt"
+>mysql&#62;</TT
+> FLUSH PRIVILEGES</PRE
+></FONT
+></TD
+></TR
+></TABLE
+><DIV
+CLASS="note"
+><P
+></P
+><TABLE
+CLASS="note"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>If you are using MySQL 4, you need to add
+          the <TT
+CLASS="computeroutput"
+>LOCK TABLES</TT
+> and 
+          <TT
+CLASS="computeroutput"
+>CREATE TEMPORARY TABLES</TT
+> permissions
+          to the list.
+          </P
+></TD
+></TR
+></TABLE
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="AEN400"
+></A
+>2.2.3. checksetup.pl</H2
+><P
+>&#13;        Next, rerun <TT
+CLASS="filename"
+>checksetup.pl</TT
+>. It reconfirms
+        that all the modules are present, and notices the altered 
+        localconfig file, which it assumes you have edited to your
+        satisfaction. It compiles the UI templates,
+        connects to the database using the 'bugs'
+        user you created and the password you defined, and creates the 
+        'bugs' database and the tables therein. 
+      </P
+><P
+>&#13;        After that, it asks for details of an administrator account. Bugzilla
+        can have multiple administrators - you can create more later - but
+        it needs one to start off with.
+        Enter the email address of an administrator, his or her full name, 
+        and a suitable Bugzilla password.
+      </P
+><P
+>&#13;        <TT
+CLASS="filename"
+>checksetup.pl</TT
+> will then finish. You may rerun
+        <TT
+CLASS="filename"
+>checksetup.pl</TT
+> at any time if you wish.
+      </P
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="http"
+></A
+>2.2.4. Web server</H2
+><P
+>Configure your web server according to the instructions in the
+      appropriate section. The Bugzilla Team recommends Apache.
+      </P
+><DIV
+CLASS="section"
+><H3
+CLASS="section"
+><A
+NAME="http-apache"
+></A
+>2.2.4.1. Apache <SPAN
+CLASS="productname"
+>httpd</SPAN
+></H3
+><P
+>Load <TT
+CLASS="filename"
+>httpd.conf</TT
+> in your editor.</P
+><P
+>Uncomment (or add) the following line. 
+          This configures Apache to run .cgi files outside the
+          <TT
+CLASS="filename"
+>cgi-bin</TT
+> directory.
+          </P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>  AddHandler cgi-script .cgi</PRE
+></FONT
+></TD
+></TR
+></TABLE
+><P
+>Apache uses <TT
+CLASS="computeroutput"
+>&#60;Directory&#62;</TT
+>
+          directives to permit fine-grained permission setting.
+          Add the following two lines to a 
+          <TT
+CLASS="computeroutput"
+>&#60;Directory&#62;</TT
+> directive that 
+          applies either to the Bugzilla directory or one of its parents
+          (e.g. the <TT
+CLASS="computeroutput"
+>&#60;Directory /var/www/html&#62;</TT
+>
+          directive).
+          This allows Bugzilla's <TT
+CLASS="filename"
+>.htaccess</TT
+> files to 
+          override global permissions, and allows .cgi files to run in the 
+          Bugzilla directory.
+          </P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>  Options +ExecCGI +FollowSymLinks
+  AllowOverride Limit</PRE
+></FONT
+></TD
+></TR
+></TABLE
+><P
+>Add <TT
+CLASS="filename"
+>index.cgi</TT
+> to the end
+          of the <TT
+CLASS="computeroutput"
+>DirectoryIndex</TT
+> 
+          line.</P
+><P
+><TT
+CLASS="filename"
+>checksetup.pl</TT
+> can set tighter permissions
+          on Bugzilla's files and directories if it knows what user the
+          webserver runs as. Look for the <TT
+CLASS="computeroutput"
+>User</TT
+>
+          line in <TT
+CLASS="filename"
+>httpd.conf</TT
+>, and place that value in
+          the <TT
+CLASS="replaceable"
+><I
+>$webservergroup</I
+></TT
+> variable in
+          <TT
+CLASS="filename"
+>localconfig</TT
+>. Then rerun
+          <TT
+CLASS="filename"
+>checksetup.pl</TT
+>.
+          </P
+></DIV
+><DIV
+CLASS="section"
+><H3
+CLASS="section"
+><A
+NAME="http-iis"
+></A
+>2.2.4.2. Microsoft <SPAN
+CLASS="productname"
+>Internet Information Services</SPAN
+></H3
+><P
+>If you need, or for some reason even want, to use Microsoft's
+        <SPAN
+CLASS="productname"
+>Internet Information Services</SPAN
+> or
+        <SPAN
+CLASS="productname"
+>Personal Web Server</SPAN
+> you should be able
+        to. You will need to configure them to know how to run CGI scripts.
+        This is described in Microsoft Knowledge Base article
+        <A
+HREF="http://support.microsoft.com/support/kb/articles/Q245/2/25.asp"
+TARGET="_top"
+>Q245225</A
+>
+        for <SPAN
+CLASS="productname"
+>Internet Information Services</SPAN
+> and
+        <A
+HREF="http://support.microsoft.com/support/kb/articles/Q231/9/98.asp"
+TARGET="_top"
+>Q231998</A
+>          
+        for <SPAN
+CLASS="productname"
+>Personal Web Server</SPAN
+>.
+        </P
+><P
+>Also, and this can't be stressed enough, make sure that files such as
+        <TT
+CLASS="filename"
+>localconfig</TT
+> and your <TT
+CLASS="filename"
+>data</TT
+>
+        directory are secured as described in <A
+HREF="configuration.html#security-access"
+>Section 2.2.4.4</A
+>.
+        </P
+></DIV
+><DIV
+CLASS="section"
+><H3
+CLASS="section"
+><A
+NAME="http-aol"
+></A
+>2.2.4.3. AOL Server</H3
+><P
+>Ben FrantzDale reported success using AOL Server with Bugzilla. He
+        reported his experience and what appears below is based on that.
+        </P
+><P
+>AOL Server will have to be configured to run
+        <A
+HREF="glossary.html#gloss-cgi"
+><I
+CLASS="glossterm"
+>CGI</I
+></A
+> scripts, please consult
+        the documentation that came with your server for more information on
+        how to do this.
+        </P
+><P
+>Because AOL Server doesn't support <TT
+CLASS="filename"
+>.htaccess</TT
+>
+        files, you'll have to create a <A
+HREF="glossary.html#gloss-tcl"
+><I
+CLASS="glossterm"
+>TCL</I
+></A
+>
+        script. You should create an <TT
+CLASS="filename"
+>aolserver/modules/tcl/filter.tcl</TT
+>
+        file (the filename shouldn't matter) with the following contents (change
+        <TT
+CLASS="computeroutput"
+>/bugzilla/</TT
+> to the web-based path to
+        your Bugzilla installation):
+        </P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>&#13;  ns_register_filter preauth GET /bugzilla/localconfig filter_deny
+  ns_register_filter preauth GET /bugzilla/localconfig~ filter_deny
+  ns_register_filter preauth GET /bugzilla/\#localconfig\# filter_deny
+  ns_register_filter preauth GET /bugzilla/*.pl filter_deny
+  ns_register_filter preauth GET /bugzilla/syncshadowdb filter_deny
+  ns_register_filter preauth GET /bugzilla/runtests.sh filter_deny
+  ns_register_filter preauth GET /bugzilla/data/* filter_deny
+  ns_register_filter preauth GET /bugzilla/template/* filter_deny
+
+  proc filter_deny { why } {
+      ns_log Notice "filter_deny"
+      return "filter_return"
+  }
+        </PRE
+></FONT
+></TD
+></TR
+></TABLE
+><DIV
+CLASS="warning"
+><P
+></P
+><TABLE
+CLASS="warning"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/warning.gif"
+HSPACE="5"
+ALT="Warning"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>This probably doesn't account for all possible editor backup
+          files so you may wish to add some additional variations of
+          <TT
+CLASS="filename"
+>localconfig</TT
+>. For more information, see 
+          <A
+HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=186383"
+TARGET="_top"
+>&#13;          bug 186383</A
+> or <A
+HREF="http://online.securityfocus.com/bid/6501"
+TARGET="_top"
+>Bugtraq ID 6501</A
+>.
+          </P
+></TD
+></TR
+></TABLE
+></DIV
+><DIV
+CLASS="note"
+><P
+></P
+><TABLE
+CLASS="note"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>If you are using webdot from research.att.com (the default
+          configuration for the <TT
+CLASS="option"
+>webdotbase</TT
+> paramater), you
+          will need to allow access to <TT
+CLASS="filename"
+>data/webdot/*.dot</TT
+>
+          for the reasearch.att.com machine.
+          </P
+><P
+>If you are using a local installation of <A
+HREF="http://www.graphviz.org"
+TARGET="_top"
+>GraphViz</A
+>, you will need to allow
+          everybody to access <TT
+CLASS="filename"
+>*.png</TT
+>,
+          <TT
+CLASS="filename"
+>*.gif</TT
+>, <TT
+CLASS="filename"
+>*.jpg</TT
+>, and
+          <TT
+CLASS="filename"
+>*.map</TT
+> in the
+          <TT
+CLASS="filename"
+>data/webdot</TT
+> directory.
+          </P
+></TD
+></TR
+></TABLE
+></DIV
+></DIV
+><DIV
+CLASS="section"
+><H3
+CLASS="section"
+><A
+NAME="security-access"
+></A
+>2.2.4.4. Web Server Access Controls</H3
+><P
+>Users of Apache can skip this section because
+        Bugzilla ships with <TT
+CLASS="filename"
+>.htaccess</TT
+> files which 
+        restrict access in the manner required. 
+        Users of other webservers, read on.
+        </P
+><P
+>There are several files in the Bugzilla directory
+        that should not be accessible from the web. You need to configure
+        your webserver so they they aren't. Not doing this may reveal
+        sensitive information such as database passwords.
+        </P
+><P
+></P
+><UL
+COMPACT="COMPACT"
+><LI
+><P
+>In the main Bugzilla directory, you should:</P
+><P
+></P
+><UL
+COMPACT="COMPACT"
+><LI
+><P
+>Block:
+                <TT
+CLASS="filename"
+>*.pl</TT
+>, <TT
+CLASS="filename"
+>*localconfig*</TT
+>, <TT
+CLASS="filename"
+>runtests.sh</TT
+>
+                </P
+></LI
+><LI
+><P
+>But allow:
+                <TT
+CLASS="filename"
+>localconfig.js</TT
+>, <TT
+CLASS="filename"
+>localconfig.rdf</TT
+>
+                </P
+></LI
+></UL
+></LI
+><LI
+><P
+>In <TT
+CLASS="filename"
+>data</TT
+>:</P
+><P
+></P
+><UL
+COMPACT="COMPACT"
+><LI
+><P
+>Block everything</P
+></LI
+><LI
+><P
+>But allow:
+                <TT
+CLASS="filename"
+>duplicates.rdf</TT
+>
+                </P
+></LI
+></UL
+></LI
+><LI
+><P
+>In <TT
+CLASS="filename"
+>data/webdot</TT
+>:</P
+><P
+></P
+><UL
+COMPACT="COMPACT"
+><LI
+><P
+>If you use a remote webdot server:</P
+><P
+></P
+><UL
+COMPACT="COMPACT"
+><LI
+><P
+>Block everything</P
+></LI
+><LI
+><P
+>But allow
+                    <TT
+CLASS="filename"
+>*.dot</TT
+>
+                    only for the remote webdot server</P
+></LI
+></UL
+></LI
+><LI
+><P
+>Otherwise, if you use a local GraphViz:</P
+><P
+></P
+><UL
+COMPACT="COMPACT"
+><LI
+><P
+>Block everything</P
+></LI
+><LI
+><P
+>But allow:
+                    <TT
+CLASS="filename"
+>*.png</TT
+>, <TT
+CLASS="filename"
+>*.gif</TT
+>, <TT
+CLASS="filename"
+>*.jpg</TT
+>, <TT
+CLASS="filename"
+>*.map</TT
+>
+                    </P
+></LI
+></UL
+></LI
+><LI
+><P
+>And if you don't use any dot:</P
+><P
+></P
+><UL
+COMPACT="COMPACT"
+><LI
+><P
+>Block everything</P
+></LI
+></UL
+></LI
+></UL
+></LI
+><LI
+><P
+>In <TT
+CLASS="filename"
+>Bugzilla</TT
+>:</P
+><P
+></P
+><UL
+COMPACT="COMPACT"
+><LI
+><P
+>Block everything</P
+></LI
+></UL
+></LI
+><LI
+><P
+>In <TT
+CLASS="filename"
+>template</TT
+>:</P
+><P
+></P
+><UL
+COMPACT="COMPACT"
+><LI
+><P
+>Block everything</P
+></LI
+></UL
+></LI
+></UL
+><P
+>You should test to make sure that the files mentioned above are
+        not accessible from the Internet, especially your
+        <TT
+CLASS="filename"
+>localconfig</TT
+> file which contains your database
+        password. To test, simply point your web browser at the file; for
+        example, to test mozilla.org's installation, we'd try to access
+        <A
+HREF="http://bugzilla.mozilla.org/localconfig"
+TARGET="_top"
+>http://bugzilla.mozilla.org/localconfig</A
+>. You should
+        get a <SPAN
+CLASS="errorcode"
+>403</SPAN
+> <SPAN
+CLASS="errorname"
+>Forbidden</SPAN
+>
+        error.
+        </P
+></DIV
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="install-config-bugzilla"
+></A
+>2.2.5. Bugzilla</H2
+><P
+>&#13;        Your Bugzilla should now be working. Access 
+        <TT
+CLASS="filename"
+>http://&#60;your-bugzilla-server&#62;/</TT
+> - 
+        you should see the Bugzilla
+        front page. If not, consult the Troubleshooting section,
+        <A
+HREF="troubleshooting.html"
+>Section 2.5</A
+>.
+      </P
+><P
+>&#13;        Log in with the administrator account you defined in the last 
+        <TT
+CLASS="filename"
+>checksetup.pl</TT
+> run. You should go through 
+        the parameters on the Edit Parameters page
+        (see link in the footer) and see if there are any you wish to
+        change. 
+        They key parameters are documented in <A
+HREF="parameters.html"
+>Section 3.1</A
+>;
+        you should certainly alter 
+        <B
+CLASS="command"
+>maintainer</B
+> and <B
+CLASS="command"
+>urlbase</B
+>; 
+        you may also want to alter 
+        <B
+CLASS="command"
+>cookiepath</B
+> or <B
+CLASS="command"
+>requirelogin</B
+>.
+      </P
+><P
+>&#13;        This would also be a good time to revisit the
+        <TT
+CLASS="filename"
+>localconfig</TT
+> file and make sure that the 
+        names of the priorities, severities, platforms and operating systems
+        are those you wish to use when you start creating bugs. Remember
+        to rerun <TT
+CLASS="filename"
+>checksetup.pl</TT
+> if you change it.
+      </P
+><P
+>&#13;        Bugzilla has several optional features which require extra 
+        configuration. You can read about those in
+        <A
+HREF="extraconfig.html"
+>Section 2.3</A
+>.
+      </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="installation.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="extraconfig.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Installation</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="installing-bugzilla.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Optional Additional Configuration</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -7,17 +7,20 @@ NAME="GENERATOR"
 CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
 "><LINK
 REL="HOME"
-TITLE="The Bugzilla Guide - 2.17.5 
+TITLE="The Bugzilla Guide - 2.17.7 
     Development Release"
 HREF="index.html"><LINK
+REL="UP"
+TITLE="Installing Bugzilla"
+HREF="installing-bugzilla.html"><LINK
 REL="PREVIOUS"
-TITLE="Reports"
-HREF="reporting.html"><LINK
+TITLE="Installing Bugzilla"
+HREF="installing-bugzilla.html"><LINK
 REL="NEXT"
-TITLE="Step-by-step Install"
-HREF="stepbystep.html"></HEAD
+TITLE="Configuration"
+HREF="configuration.html"></HEAD
 ><BODY
-CLASS="chapter"
+CLASS="section"
 BGCOLOR="#FFFFFF"
 TEXT="#000000"
 LINK="#0000FF"
@@ -35,7 +38,7 @@ CELLSPACING="0"
 ><TH
 COLSPAN="3"
 ALIGN="center"
->The Bugzilla Guide - 2.17.5 
+>The Bugzilla Guide - 2.17.7 
     Development Release</TH
 ></TR
 ><TR
@@ -44,7 +47,7 @@ WIDTH="10%"
 ALIGN="left"
 VALIGN="bottom"
 ><A
-HREF="reporting.html"
+HREF="installing-bugzilla.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -52,13 +55,13 @@ ACCESSKEY="P"
 WIDTH="80%"
 ALIGN="center"
 VALIGN="bottom"
-></TD
+>Chapter 2. Installing Bugzilla</TD
 ><TD
 WIDTH="10%"
 ALIGN="right"
 VALIGN="bottom"
 ><A
-HREF="stepbystep.html"
+HREF="configuration.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -68,235 +71,872 @@ ACCESSKEY="N"
 ALIGN="LEFT"
 WIDTH="100%"></DIV
 ><DIV
-CLASS="chapter"
+CLASS="section"
 ><H1
+CLASS="section"
 ><A
 NAME="installation"
 ></A
->Chapter 4. Installation</H1
+>2.1. Installation</H1
 ><DIV
-CLASS="TOC"
-><DL
-><DT
-><B
->Table of Contents</B
-></DT
-><DT
->4.1. <A
-HREF="stepbystep.html"
->Step-by-step Install</A
-></DT
-><DD
-><DL
-><DT
->4.1.1. <A
-HREF="stepbystep.html#install-perl"
->Perl</A
-></DT
-><DT
->4.1.2. <A
-HREF="stepbystep.html#install-mysql"
->MySQL</A
-></DT
-><DT
->4.1.3. <A
-HREF="stepbystep.html#install-webserver"
->HTTP Server</A
-></DT
-><DT
->4.1.4. <A
-HREF="stepbystep.html#install-bzfiles"
->Bugzilla</A
-></DT
-><DT
->4.1.5. <A
-HREF="stepbystep.html#AEN522"
-><TT
+CLASS="note"
+><P
+></P
+><TABLE
+CLASS="note"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>If you just want to <EM
+>use</EM
+> Bugzilla, 
+      you do not need to install it. None of this chapter is relevant to
+      you. Ask your Bugzilla administrator
+      for the URL to access it over the web.
+      </P
+></TD
+></TR
+></TABLE
+></DIV
+><P
+>The Bugzilla server software is usually installed on Linux or 
+    Solaris. 
+    If you are installing on another OS, check <A
+HREF="os-specific.html"
+>Section 2.4</A
+>
+    before you start your installation to see if there are any special
+    instructions.
+    </P
+><P
+>&#13;      As an alternative to following these instructions, you may wish to
+      try Arne Schirmacher's unofficial and unsupported 
+      <A
+HREF="http://www.softwaretesting.de/article/view/33/1/8/"
+TARGET="_top"
+>Bugzilla
+      Installer</A
+>, which installs Bugzilla and all its prerequisites
+      on Linux or Solaris systems.
+    </P
+><P
+>This guide assumes that you have administrative access to the
+    Bugzilla machine. It not possible to
+    install and run Bugzilla itself without administrative access except
+    in the very unlikely event that every single prerequisite is
+    already installed.
+    </P
+><DIV
+CLASS="warning"
+><P
+></P
+><TABLE
+CLASS="warning"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/warning.gif"
+HSPACE="5"
+ALT="Warning"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>The installation process may make your machine insecure for
+      short periods of time. Make sure there is a firewall between you
+      and the Internet.
+      </P
+></TD
+></TR
+></TABLE
+></DIV
+><P
+>&#13;    You are strongly recommended to make a backup of your system
+    before installing Bugzilla (and at regular intervals thereafter :-).
+    </P
+><P
+>In outline, the installation proceeds as follows:
+    </P
+><DIV
+CLASS="procedure"
+><OL
+TYPE="1"
+><LI
+><P
+><A
+HREF="installation.html#install-perl"
+>Install Perl</A
+>
+        (5.6.0 or above)
+        </P
+></LI
+><LI
+><P
+><A
+HREF="installation.html#install-mysql"
+>Install MySQL</A
+>
+        (3.23.41 or above)
+        </P
+></LI
+><LI
+><P
+><A
+HREF="installation.html#install-webserver"
+>Install a Webserver</A
+>
+        </P
+></LI
+><LI
+><P
+><A
+HREF="installation.html#install-bzfiles"
+>Install Bugzilla</A
+>
+        </P
+></LI
+><LI
+><P
+><A
+HREF="installation.html#install-perlmodules"
+>Install Perl modules</A
+>
+        </P
+></LI
+><LI
+><P
+>Configure all of the above.
+        </P
+></LI
+></OL
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="install-perl"
+></A
+>2.1.1. Perl</H2
+><P
+>Installed Version Test: <TT
+CLASS="filename"
+>perl -v</TT
+></P
+><P
+>Any machine that doesn't have Perl on it is a sad machine indeed.
+      If you don't have it and your OS doesn't provide official packages, 
+      visit <A
+HREF="http://www.perl.com"
+TARGET="_top"
+>http://www.perl.com</A
+>.
+      Although Bugzilla runs with Perl 5.6.0,
+      it's a good idea to be using the latest stable version. 
+      As of this writing, that is Perl 5.8.2.</P
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="install-mysql"
+></A
+>2.1.2. MySQL</H2
+><P
+>Installed Version Test: <TT
+CLASS="filename"
+>mysql -V</TT
+></P
+><P
+>&#13;      If you don't have it and your OS doesn't provide official packages, 
+      visit <A
+HREF="http://www.mysql.com"
+TARGET="_top"
+>http://www.mysql.com</A
+>. You need MySQL version
+      3.23.41 or higher.
+      </P
+><DIV
+CLASS="note"
+><P
+></P
+><TABLE
+CLASS="note"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+> Many of the binary
+        versions of MySQL store their data files in 
+        <TT
+CLASS="filename"
+>/var</TT
+>.
+        On some Unix systems, this is part of a smaller root partition,
+        and may not have room for your bug database. To change the data
+         directory, you have to build MySQL from source yourself, and
+         set it as an option to <TT
+CLASS="filename"
+>configure</TT
+>.</P
+></TD
+></TR
+></TABLE
+></DIV
+><P
+>If you install from something other than a packaging/installation
+      system (such as .rpm, .dep, .exe, or .msi) make sure the MySQL server
+      is started when the machine boots.
+      </P
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="install-webserver"
+></A
+>2.1.3. Web Server</H2
+><P
+>Installed Version Test: view the default welcome page at
+      http://&#60;your-machine&#62;/</P
+><P
+>You have freedom of choice here, pretty much any web server that
+      is capable of running <A
+HREF="glossary.html#gloss-cgi"
+><I
+CLASS="glossterm"
+>CGI</I
+></A
+>
+      scripts will work.
+       However, we strongly recommend using the Apache web server
+       (either 1.3.x or 2.x), and 
+       the installation instructions usually assume you are
+        using it. If you have got Bugzilla working using another webserver,
+        please share your experiences with us by filing a bug in <A
+HREF="http://bugzilla.mozilla.org/enter_bug.cgi?product=Bugzilla&component=Documentation"
+TARGET="_top"
+>Bugzilla Documentation</A
+>.
+      </P
+><P
+>&#13;      If you don't have Apache and your OS doesn't provide official packages, 
+      visit <A
+HREF="http://httpd.apache.org/"
+TARGET="_top"
+>http://httpd.apache.org/</A
+>.
+      </P
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="install-bzfiles"
+></A
+>2.1.4. Bugzilla</H2
+><P
+>&#13;        Download a Bugzilla tarball (or check it out from CVS) and place
+        it in a suitable directory, writable by the default web server user 
+        (probably <SPAN
+CLASS="QUOTE"
+>"nobody"</SPAN
+>). 
+        Good locations are either directly in the main web space for your
+        web server or perhaps in 
+        <TT
+CLASS="filename"
+>/usr/local</TT
+>
+        with a symbolic link from the web space.
+      </P
+><DIV
+CLASS="caution"
+><P
+></P
+><TABLE
+CLASS="caution"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/caution.gif"
+HSPACE="5"
+ALT="Caution"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>The default Bugzilla distribution is not designed to be placed
+        in a <TT
+CLASS="filename"
+>cgi-bin</TT
+> directory. This
+        includes any directory which is configured using the
+        <TT
+CLASS="option"
+>ScriptAlias</TT
+> directive of Apache.
+        </P
+></TD
+></TR
+></TABLE
+></DIV
+><P
+>Once all the files are in a web accessible directory, make that
+      directory writable by your webserver's user. This is a temporary step
+      until you run the 
+      <TT
 CLASS="filename"
 >checksetup.pl</TT
+>
+      script, which locks down your installation.</P
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="install-perlmodules"
 ></A
-></DT
-><DT
->4.1.6. <A
-HREF="stepbystep.html#install-perlmodules"
->Perl Modules</A
-></DT
-><DT
->4.1.7. <A
-HREF="stepbystep.html#AEN768"
->Configuring Bugzilla</A
-></DT
-></DL
-></DD
-><DT
->4.2. <A
-HREF="http.html"
->HTTP Server Configuration</A
-></DT
-><DD
-><DL
-><DT
->4.2.1. <A
-HREF="http.html#http-apache"
->Apache <SPAN
-CLASS="productname"
->httpd</SPAN
-></A
-></DT
-><DT
->4.2.2. <A
-HREF="http.html#http-iis"
->Microsoft <SPAN
-CLASS="productname"
->Internet Information Services</SPAN
-></A
-></DT
-><DT
->4.2.3. <A
-HREF="http.html#http-aol"
->AOL Server</A
-></DT
-></DL
-></DD
-><DT
->4.3. <A
-HREF="extraconfig.html"
->Optional Additional Configuration</A
-></DT
-><DD
-><DL
-><DT
->4.3.1. <A
-HREF="extraconfig.html#AEN843"
->Dependency Charts</A
-></DT
-><DT
->4.3.2. <A
-HREF="extraconfig.html#AEN858"
->Bug Graphs</A
-></DT
-><DT
->4.3.3. <A
-HREF="extraconfig.html#AEN871"
->The Whining Cron</A
-></DT
-><DT
->4.3.4. <A
-HREF="extraconfig.html#bzldap"
->LDAP Authentication</A
-></DT
-><DT
->4.3.5. <A
-HREF="extraconfig.html#content-type"
->Preventing untrusted Bugzilla content from executing malicious
-      Javascript code</A
-></DT
-><DT
->4.3.6. <A
-HREF="extraconfig.html#mod_perl"
->Bugzilla and <TT
+>2.1.5. Perl Modules</H2
+><P
+>Bugzilla's installation process is based
+      on a script called <TT
 CLASS="filename"
->mod_perl</TT
-></A
-></DT
-><DT
->4.3.7. <A
-HREF="extraconfig.html#mod-throttle"
+>checksetup.pl</TT
+>. 
+      The first thing it checks is whether you have appropriate 
+      versions of all the required
+      Perl modules. The aim of this section is to pass this check. 
+      When it passes, 
+      <EM
+>do not run it again</EM
+>, 
+      but proceed to <A
+HREF="configuration.html"
+>Section 2.2</A
+>.
+      </P
+><P
+>&#13;      At this point, you need to <TT
+CLASS="filename"
+>su</TT
+> to root. You should
+      remain as root until the end of the install. Then run:
+      </P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="screen"
 ><TT
+CLASS="prompt"
+>bash#</TT
+> ./checksetup.pl</PRE
+></FONT
+></TD
+></TR
+></TABLE
+><P
+>&#13;        <TT
 CLASS="filename"
->mod_throttle</TT
+>checksetup.pl</TT
+> will print out a list of the
+        required and optional Perl modules, together with the versions
+        (if any) installed on your machine.
+        The list of required modules is reasonably long; however, you 
+        may already have several of them installed.
+      </P
+><P
+>&#13;        There is a meta-module called Bundle::Bugzilla, 
+        which installs all the other 
+        modules with a single command. You should use this if you are running
+        Perl 5.6.1 or above.
+      </P
+><P
+>&#13;        The preferred way of installing Perl modules is via CPAN on Unix, 
+        or PPM on Windows (see <A
+HREF="os-specific.html#win32-perlmodules"
+>Section 2.4.1.2</A
+>). These
+        instructions assume you are using CPAN; if for some reason you need 
+        to install the Perl modules manually, see 
+        <A
+HREF="install-perlmodules-manual.html"
+>Appendix C</A
+>.
+      </P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="screen"
+><TT
+CLASS="prompt"
+>bash#</TT
+> perl -MCPAN -e 'install "&#60;modulename&#62;"'</PRE
+></FONT
+></TD
+></TR
+></TABLE
+><P
+>&#13;        If you using Bundle::Bugzilla, invoke the magic CPAN command on it.
+        Otherwise, you need to work down the 
+        list of modules that <TT
+CLASS="filename"
+>checksetup.pl</TT
+> says are
+        required, in the order given, invoking the command on each.
+      </P
+><DIV
+CLASS="tip"
+><P
+></P
+><TABLE
+CLASS="tip"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/tip.gif"
+HSPACE="5"
+ALT="Tip"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>Many people complain that Perl modules will not install for
+        them. Most times, the error messages complain that they are missing a
+        file in 
+        <SPAN
+CLASS="QUOTE"
+>"@INC"</SPAN
+>. 
+        Virtually every time, this error is due to permissions being set too
+        restrictively for you to compile Perl modules or not having the
+        necessary Perl development libraries installed on your system.
+        Consult your local UNIX systems administrator for help solving these
+        permissions issues; if you 
+        <EM
+>are</EM
+>
+        the local UNIX sysadmin, please consult the newsgroup/mailing list
+        for further assistance or hire someone to help you out.</P
+></TD
+></TR
+></TABLE
+></DIV
+><P
+>&#13;        Here is a complete list of modules and their minimum versions.
+        Some modules have special installation notes, which follow.
+      </P
+><P
+>Required Perl modules:
+      <P
+></P
+><OL
+TYPE="1"
+><LI
+><P
+>&#13;            AppConfig (1.52)
+          </P
+></LI
+><LI
+><P
+>&#13;            CGI (2.93)
+          </P
+></LI
+><LI
+><P
+>&#13;            Data::Dumper (any)
+          </P
+></LI
+><LI
+><P
+>&#13;            Date::Format (2.21)
+          </P
+></LI
+><LI
+><P
+>&#13;            DBI (1.32)
+          </P
+></LI
+><LI
+><P
+>&#13;            <A
+HREF="installation.html#install-modules-dbd-mysql"
+>DBD::mysql</A
+>
+            (2.1010)
+          </P
+></LI
+><LI
+><P
+>&#13;            File::Spec (0.82)
+          </P
+></LI
+><LI
+><P
+>&#13;            File::Temp (any)
+          </P
+></LI
+><LI
+><P
+>&#13;            <A
+HREF="installation.html#install-modules-template"
+>Template</A
+>
+            (2.08)
+          </P
+></LI
+><LI
+><P
+>&#13;            Text::Wrap (2001.0131)
+          </P
+></LI
+></OL
 >
 
-      and Security</A
-></DT
-></DL
-></DD
-><DT
->4.4. <A
-HREF="os-specific.html"
->OS Specific Installation Notes</A
-></DT
-><DD
-><DL
-><DT
->4.4.1. <A
-HREF="os-specific.html#os-win32"
->Microsoft Windows</A
-></DT
-><DT
->4.4.2. <A
-HREF="os-specific.html#os-macosx"
-><SPAN
-CLASS="productname"
->Mac OS X</SPAN
+      Optional Perl modules:
+      <P
+></P
+><OL
+TYPE="1"
+><LI
+><P
+>&#13;            <A
+HREF="installation.html#install-modules-gd"
+>GD</A
+>
+            (1.20) for bug charting
+          </P
+></LI
+><LI
+><P
+>&#13;            <A
+HREF="installation.html#install-modules-chart-base"
+>Chart::Base</A
+>
+            (0.99c) for bug charting
+          </P
+></LI
+><LI
+><P
+>&#13;            <A
+HREF="installation.html#install-modules-gd-graph"
+>GD::Graph</A
+>
+            (any) for bug charting
+          </P
+></LI
+><LI
+><P
+>&#13;            <A
+HREF="installation.html#install-modules-gd-text-align"
+>GD::Text::Align</A
+>
+            (any) for bug charting
+          </P
+></LI
+><LI
+><P
+>&#13;            <A
+HREF="installation.html#install-modules-xml-parser"
+>XML::Parser</A
+>
+            (any) for the XML interface
+          </P
+></LI
+><LI
+><P
+>&#13;            <A
+HREF="installation.html#install-modules-patchreader"
+>PatchReader</A
+>
+            (0.9.1) for pretty HTML view of patches
+          </P
+></LI
+><LI
+><P
+>&#13;            <A
+HREF="installation.html#install-modules-mime-parser"
+>MIME::Parser</A
+>
+            (any) for the optional email interface
+          </P
+></LI
+></OL
+>          
+      </P
+><DIV
+CLASS="section"
+><H3
+CLASS="section"
+><A
+NAME="install-modules-dbd-mysql"
 ></A
-></DT
-><DT
->4.4.3. <A
-HREF="os-specific.html#os-mandrake"
->Linux-Mandrake 8.0</A
-></DT
-></DL
-></DD
-><DT
->4.5. <A
-HREF="security.html"
->Bugzilla Security</A
-></DT
-><DD
-><DL
-><DT
->4.5.1. <A
-HREF="security.html#security-networking"
->TCP/IP Ports</A
-></DT
-><DT
->4.5.2. <A
-HREF="security.html#security-mysql"
->MySQL</A
-></DT
-><DT
->4.5.3. <A
-HREF="security.html#security-daemon"
->Daemon Accounts</A
-></DT
-><DT
->4.5.4. <A
-HREF="security.html#security-access"
->Web Server Access Controls</A
-></DT
-></DL
-></DD
-><DT
->4.6. <A
-HREF="troubleshooting.html"
->Troubleshooting</A
-></DT
-><DD
-><DL
-><DT
->4.6.1. <A
-HREF="troubleshooting.html#AEN1206"
->Bundle::Bugzilla makes me upgrade to Perl 5.6.1</A
-></DT
-><DT
->4.6.2. <A
-HREF="troubleshooting.html#AEN1211"
->DBD::Sponge::db prepare failed</A
-></DT
-><DT
->4.6.3. <A
-HREF="troubleshooting.html#paranoid-security"
->cannot chdir(/var/spool/mqueue)</A
-></DT
-><DT
->4.6.4. <A
-HREF="troubleshooting.html#trouble-filetemp"
->Your vendor has not defined Fcntl macro O_NOINHERIT</A
-></DT
-></DL
-></DD
-></DL
+>2.1.5.1. DBD::mysql</H3
+><P
+>The installation process will ask you a few questions about the
+        desired compilation target and your MySQL installation. For most of the
+        questions the provided default will be adequate, but when asked if your
+        desired target is the MySQL or mSQL packages, you should
+        select the MySQL-related ones. Later you will be asked if you wish to
+        provide backwards compatibility with the older MySQL packages; you
+        should answer YES to this question. The default is NO.</P
+><P
+>A host of 'localhost' should be fine. A testing user of 'test',
+        with a null password, should have sufficient access to run
+        tests on the 'test' database which MySQL creates upon installation.
+        </P
+></DIV
+><DIV
+CLASS="section"
+><H3
+CLASS="section"
+><A
+NAME="install-modules-template"
+></A
+>2.1.5.2. Template Toolkit (2.08)</H3
+><P
+>When you install Template Toolkit, you'll get asked various
+        questions about features to enable. The defaults are fine, except
+        that it is recommended you use the high speed XS Stash of the Template
+        Toolkit, in order to achieve best performance.
+        </P
+></DIV
+><DIV
+CLASS="section"
+><H3
+CLASS="section"
+><A
+NAME="install-modules-gd"
+></A
+>2.1.5.3. GD (1.20)</H3
+><P
+>The GD module is only required if you want graphical reports.
+        </P
+><DIV
+CLASS="note"
+><P
+></P
+><TABLE
+CLASS="note"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>The Perl GD module requires some other libraries that may or
+          may not be installed on your system, including 
+          <TT
+CLASS="classname"
+>libpng</TT
+>
+          and 
+          <TT
+CLASS="classname"
+>libgd</TT
+>. 
+          The full requirements are listed in the Perl GD module README.
+          If compiling GD fails, it's probably because you're
+          missing a required library.</P
+></TD
+></TR
+></TABLE
+></DIV
+><DIV
+CLASS="tip"
+><P
+></P
+><TABLE
+CLASS="tip"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/tip.gif"
+HSPACE="5"
+ALT="Tip"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>The version of the GD module you need is very closely tied
+          to the <TT
+CLASS="classname"
+>libgd</TT
+> version installed on your system.
+          If you have a version 1.x of <TT
+CLASS="classname"
+>libgd</TT
+> the 2.x
+          versions of the GD module won't work for you.
+         </P
+></TD
+></TR
+></TABLE
+></DIV
+></DIV
+><DIV
+CLASS="section"
+><H3
+CLASS="section"
+><A
+NAME="install-modules-chart-base"
+></A
+>2.1.5.4. Chart::Base (0.99c)</H3
+><P
+>The Chart::Base module is only required if you want graphical 
+        reports. 
+        Note that earlier versions that 0.99c used GIFs, which are no longer
+        supported by the latest versions of GD.</P
+></DIV
+><DIV
+CLASS="section"
+><H3
+CLASS="section"
+><A
+NAME="install-modules-gd-graph"
+></A
+>2.1.5.5. GD::Graph (any)</H3
+><P
+>The GD::Graph module is only required if you want graphical 
+        reports.
+        </P
+></DIV
+><DIV
+CLASS="section"
+><H3
+CLASS="section"
+><A
+NAME="install-modules-gd-text-align"
+></A
+>2.1.5.6. GD::Text::Align (any)</H3
+><P
+>The GD::Text::Align module is only required if you want graphical 
+        reports.
+        </P
+></DIV
+><DIV
+CLASS="section"
+><H3
+CLASS="section"
+><A
+NAME="install-modules-xml-parser"
+></A
+>2.1.5.7. XML::Parser (any)</H3
+><P
+>The XML::Parser module is only required if you want to import
+        XML bugs using the <TT
+CLASS="filename"
+>importxml.pl</TT
+>
+        script. This is required to use Bugzilla's "move bugs" feature;
+        you may also want to use it for migrating from another bug database.
+        XML::Parser requires that the
+        <TT
+CLASS="classname"
+>expat</TT
+> library is already installed on your machine.
+        </P
+></DIV
+><DIV
+CLASS="section"
+><H3
+CLASS="section"
+><A
+NAME="install-modules-mime-parser"
+></A
+>2.1.5.8. MIME::Parser (any)</H3
+><P
+>The MIME::Parser module is only required if you want to use the 
+        email interface
+        located in the <TT
+CLASS="filename"
+>contrib</TT
+> directory.
+        </P
+></DIV
+><DIV
+CLASS="section"
+><H3
+CLASS="section"
+><A
+NAME="install-modules-patchreader"
+></A
+>2.1.5.9. PatchReader (0.9.1)</H3
+><P
+>The PatchReader module is only required if you want to use 
+        Patch Viewer, a
+        Bugzilla feature to show code patches in your web browser in a more
+        readable form. 
+        </P
+></DIV
 ></DIV
 ></DIV
 ><DIV
@@ -315,7 +955,7 @@ WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
 ><A
-HREF="reporting.html"
+HREF="installing-bugzilla.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -333,7 +973,7 @@ WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
 ><A
-HREF="stepbystep.html"
+HREF="configuration.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -343,17 +983,21 @@ ACCESSKEY="N"
 WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
->Reports</TD
+>Installing Bugzilla</TD
 ><TD
 WIDTH="34%"
 ALIGN="center"
 VALIGN="top"
->&nbsp;</TD
+><A
+HREF="installing-bugzilla.html"
+ACCESSKEY="U"
+>Up</A
+></TD
 ><TD
 WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
->Step-by-step Install</TD
+>Configuration</TD
 ></TR
 ></TABLE
 ></DIV

@@ -7,17 +7,17 @@ NAME="GENERATOR"
 CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
 "><LINK
 REL="HOME"
-TITLE="The Bugzilla Guide - 2.17.5 
+TITLE="The Bugzilla Guide - 2.17.7 
     Development Release"
 HREF="index.html"><LINK
 REL="UP"
-TITLE="Installation"
-HREF="installation.html"><LINK
+TITLE="Installing Bugzilla"
+HREF="installing-bugzilla.html"><LINK
 REL="PREVIOUS"
-TITLE="HTTP Server Configuration"
-HREF="http.html"><LINK
+TITLE="Configuration"
+HREF="configuration.html"><LINK
 REL="NEXT"
-TITLE="OS Specific Installation Notes"
+TITLE="OS-Specific Installation Notes"
 HREF="os-specific.html"></HEAD
 ><BODY
 CLASS="section"
@@ -38,7 +38,7 @@ CELLSPACING="0"
 ><TH
 COLSPAN="3"
 ALIGN="center"
->The Bugzilla Guide - 2.17.5 
+>The Bugzilla Guide - 2.17.7 
     Development Release</TH
 ></TR
 ><TR
@@ -47,7 +47,7 @@ WIDTH="10%"
 ALIGN="left"
 VALIGN="bottom"
 ><A
-HREF="http.html"
+HREF="configuration.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -55,7 +55,7 @@ ACCESSKEY="P"
 WIDTH="80%"
 ALIGN="center"
 VALIGN="bottom"
->Chapter 4. Installation</TD
+>Chapter 2. Installing Bugzilla</TD
 ><TD
 WIDTH="10%"
 ALIGN="right"
@@ -77,18 +77,84 @@ CLASS="section"
 ><A
 NAME="extraconfig"
 ></A
->4.3. Optional Additional Configuration</H1
+>2.3. Optional Additional Configuration</H1
+><P
+>&#13;      Bugzilla has a number of optional features. This section describes how
+      to configure or enable them.
+    </P
 ><DIV
 CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN843"
+NAME="AEN584"
 ></A
->4.3.1. Dependency Charts</H2
+>2.3.1. Bug Graphs</H2
 ><P
->As well as the text-based dependency graphs, Bugzilla also
-      supports dependency graphing, using a package called 'dot'.
+>If you have installed the necessary Perl modules you
+      can start collecting statistics for the nifty Bugzilla 
+      graphs.</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="screen"
+><TT
+CLASS="prompt"
+>bash#</TT
+> <B
+CLASS="command"
+>crontab -e</B
+></PRE
+></FONT
+></TD
+></TR
+></TABLE
+><P
+>&#13;        This should bring up the crontab file in your editor. 
+        Add a cron entry like this to run 
+        <TT
+CLASS="filename"
+>collectstats.pl</TT
+> 
+        daily at 5 after midnight:
+      </P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>5 0 * * * cd &#60;your-bugzilla-directory&#62; ; ./collectstats.pl</PRE
+></FONT
+></TD
+></TR
+></TABLE
+><P
+>After two days have passed you'll be able to view bug graphs from
+      the Reports page.</P
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="AEN594"
+></A
+>2.3.2. Dependency Charts</H2
+><P
+>As well as the text-based dependency trees, Bugzilla also
+      supports a graphical view of dependency relationships, using a 
+      package called 'dot'.
       Exactly how this works is controlled by the 'webdotbase' parameter,
       which can have one of three values:
       </P
@@ -123,7 +189,7 @@ TARGET="_top"
 >
       </P
 ><P
->So, to get this working, install
+>The easiest way to get this working is to install
       <A
 HREF="http://www.graphviz.org/"
 TARGET="_top"
@@ -137,9 +203,14 @@ TARGET="_top"
       server-side image maps</A
 > in Apache.
       Alternatively, you could set up a webdot server, or use the AT&#38;T 
-      public webdot server (the
-      default for the webdotbase param). Note that AT&#38;T's server won't work
-      if Bugzilla is only accessible using HARTS.
+      public webdot server. This is the default for the webdotbase param, 
+      but it's often overloaded and slow. Note that AT&#38;T's server 
+      won't work
+      if Bugzilla is only accessible using HARTS. 
+      <EM
+>Editor's note: What the heck is HARTS? Google doesn't know...
+      </EM
+>
       </P
 ></DIV
 ><DIV
@@ -147,127 +218,22 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN858"
+NAME="AEN610"
 ></A
->4.3.2. Bug Graphs</H2
+>2.3.3. The Whining Cron</H2
 ><P
->As long as you installed the GD and Graph::Base Perl modules you
-      might as well turn on the nifty Bugzilla bug reporting graphs.</P
-><P
->Add a cron entry like this to run 
-      <TT
-CLASS="filename"
->collectstats.pl</TT
-> 
-      daily at 5 after midnight: 
-      <P
-></P
-><TABLE
-BORDER="0"
-><TBODY
-><TR
-><TD
->&#13;          <TT
-CLASS="computeroutput"
->&#13;            <TT
-CLASS="prompt"
->bash#</TT
->
-
-            <B
-CLASS="command"
->crontab -e</B
->
-          </TT
->
-        </TD
-></TR
-><TR
-><TD
->&#13;          <TT
-CLASS="computeroutput"
->5 0 * * * cd &#60;your-bugzilla-directory&#62; ;
-          ./collectstats.pl</TT
->
-        </TD
-></TR
-></TBODY
-></TABLE
-><P
-></P
->
-      </P
-><P
->After two days have passed you'll be able to view bug graphs from
-      the Bug Reports page.</P
-></DIV
-><DIV
-CLASS="section"
-><H2
-CLASS="section"
-><A
-NAME="AEN871"
-></A
->4.3.3. The Whining Cron</H2
-><P
->By now you have a fully functional Bugzilla, but what good are
-      bugs if they're not annoying? To help make those bugs more annoying you
+>What good are
+      bugs if they're not annoying? To help make them more so you
       can set up Bugzilla's automatic whining system to complain at engineers
       which leave their bugs in the NEW or REOPENED state without triaging them.
       </P
 ><P
->&#13;      This can be done by
-      adding the following command as a daily crontab entry (for help on that
-      see that crontab man page): 
-      <P
-></P
-><TABLE
-BORDER="0"
-><TBODY
-><TR
-><TD
->&#13;          <TT
-CLASS="computeroutput"
->&#13;            <B
-CLASS="command"
->cd &#60;your-bugzilla-directory&#62; ;
-            ./whineatnews.pl</B
->
-          </TT
->
-        </TD
-></TR
-></TBODY
-></TABLE
-><P
-></P
->
+>&#13;      
+      This can be done by
+      adding the following command as a daily crontab entry, in the same manner
+      as explained above for bug graphs. This example runs it at 12.55am. 
       </P
-><DIV
-CLASS="tip"
-><P
-></P
 ><TABLE
-CLASS="tip"
-WIDTH="100%"
-BORDER="0"
-><TR
-><TD
-WIDTH="25"
-ALIGN="CENTER"
-VALIGN="TOP"
-><IMG
-SRC="../images/tip.gif"
-HSPACE="5"
-ALT="Tip"></TD
-><TD
-ALIGN="LEFT"
-VALIGN="TOP"
-><P
->Depending on your system, crontab may have several manpages.
-        The following command should lead you to the most useful page for
-        this purpose: 
-        <TABLE
 BORDER="0"
 BGCOLOR="#E0E0E0"
 WIDTH="100%"
@@ -277,18 +243,66 @@ WIDTH="100%"
 COLOR="#000000"
 ><PRE
 CLASS="programlisting"
->&#13;man 5 crontab
-	</PRE
+>55 0 * * * cd &#60;your-bugzilla-directory&#62; ; ./whineatnews.pl</PRE
 ></FONT
 ></TD
 ></TR
 ></TABLE
->
-        </P
-></TD
-></TR
-></TABLE
 ></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="patch-viewer"
+></A
+>2.3.4. Patch Viewer</H2
+><P
+>&#13;        Patch Viewer is the engine behind Bugzilla's graphical display of
+        code patches. You can integrate this with copies of the
+        <TT
+CLASS="filename"
+>cvs</TT
+>, <TT
+CLASS="filename"
+>lxr</TT
+> and
+        <TT
+CLASS="filename"
+>bonsai</TT
+> tools if you have them, by giving
+        the locations of your installation of these tools in
+        <TT
+CLASS="filename"
+>editparams.cgi</TT
+>.
+      </P
+><P
+>&#13;        Patch Viewer also optionally will use the 
+        <TT
+CLASS="filename"
+>cvs</TT
+>, <TT
+CLASS="filename"
+>diff</TT
+> and 
+        <TT
+CLASS="filename"
+>interdiff</TT
+>
+        command-line utilities if they exist on the system.
+        Interdiff can be obtained from 
+        <A
+HREF="http://cyberelk.net/tim/patchutils/"
+TARGET="_top"
+>http://cyberelk.net/tim/patchutils/</A
+>.
+        If these programs are not in the system path, you can configure
+        their locations in <TT
+CLASS="filename"
+>localconfig</TT
+>.
+      </P
 ></DIV
 ><DIV
 CLASS="section"
@@ -297,7 +311,7 @@ CLASS="section"
 ><A
 NAME="bzldap"
 ></A
->4.3.4. LDAP Authentication</H2
+>2.3.5. LDAP Authentication</H2
 ><P
 >LDAP authentication is a module for Bugzilla's plugin 
       authentication architecture.
@@ -457,7 +471,7 @@ NAME="param-LDAPBaseDN"
 ><DD
 ><P
 >The LDAPBaseDN parameter should be set to the location in
-             your LDAP tree that you would like to search for e-mail addresses.
+             your LDAP tree that you would like to search for email addresses.
              Your uids should be unique under the DN specified here.
              </P
 ><P
@@ -492,7 +506,7 @@ NAME="param-LDAPmailattribute"
 ><DD
 ><P
 >The LDAPmailattribute parameter should be the name of the
-             attribute which contains the e-mail address your users will enter
+             attribute which contains the email address your users will enter
              into the Bugzilla login boxes.
              </P
 ><P
@@ -511,21 +525,19 @@ CLASS="section"
 ><A
 NAME="content-type"
 ></A
->4.3.5. Preventing untrusted Bugzilla content from executing malicious
-      Javascript code</H2
+>2.3.6. Prevent users injecting malicious
+      Javascript</H2
 ><P
->It is possible for a Bugzilla attachment to contain malicious 
-      Javascript
-      code, which would be executed in the domain of your Bugzilla, thereby
-      making it possible for the attacker to e.g. steal your login cookies. 
+>It is possible for a Bugzilla user to take advantage of character
+      set encoding ambiguities to inject HTML into Bugzilla comments. This
+      could include malicious scripts. 
       Due to internationalization concerns, we are unable to
-      incorporate by default the code changes necessary to fulfill the CERT 
-      advisory requirements mentioned in 
+      incorporate by default the code changes suggested by 
       <A
-HREF="http://www.cert.org/tech_tips/malicious_code_mitigation.html/#3"
+HREF="http://www.cert.org/tech_tips/malicious_code_mitigation.html#3"
 TARGET="_top"
->http://www.cert.org/tech_tips/malicious_code_mitigation.html/#3</A
->.
+>&#13;      the CERT advisory</A
+> on this issue.
       If your installation is for an English speaking audience only, making the
       change below will prevent this problem. 
       </P
@@ -545,8 +557,7 @@ WIDTH="100%"
 COLOR="#000000"
 ><PRE
 CLASS="programlisting"
->&#13;    $self-&#62;charset('');
-      </PRE
+>$self-&#62;charset('');</PRE
 ></FONT
 ></TD
 ></TR
@@ -563,8 +574,7 @@ WIDTH="100%"
 COLOR="#000000"
 ><PRE
 CLASS="programlisting"
->&#13;    $self-&#62;charset('ISO-8859-1');
-      </PRE
+>$self-&#62;charset('ISO-8859-1');</PRE
 ></FONT
 ></TD
 ></TR
@@ -577,42 +587,22 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="mod_perl"
-></A
->4.3.6. Bugzilla and <TT
-CLASS="filename"
->mod_perl</TT
-></H2
-><P
->Bugzilla is unsupported under mod_perl.  Effort is underway
-      to make it work cleanly in a mod_perl environment, but it is
-      slow going.
-      </P
-></DIV
-><DIV
-CLASS="section"
-><H2
-CLASS="section"
-><A
 NAME="mod-throttle"
 ></A
->4.3.7. <TT
+>2.3.7. <TT
 CLASS="filename"
 >mod_throttle</TT
->
-
-      and Security</H2
+></H2
 ><P
 >It is possible for a user, by mistake or on purpose, to access
       the database many times in a row which can result in very slow access
       speeds for other users. If your Bugzilla installation is experiencing
-      this problem , you may install the Apache module 
+      this problem, you may install the Apache module 
       <TT
 CLASS="filename"
 >mod_throttle</TT
 >
-
-      which can limit connections by ip-address. You may download this module
+      which can limit connections by IP address. You may download this module
       at 
       <A
 HREF="http://www.snert.com/Software/mod_throttle/"
@@ -624,20 +614,65 @@ TARGET="_top"
 >This module only functions with the Apache web
       server!</EM
 >
-      You may use the 
+      The command you need is 
       <B
 CLASS="command"
 >ThrottleClientIP</B
->
-
-      command provided by this module to accomplish this goal. See the 
+>. See the 
       <A
 HREF="http://www.snert.com/Software/mod_throttle/"
 TARGET="_top"
->Module
-      Instructions</A
+>documentation</A
 >
       for more information.</P
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="security-networking"
+></A
+>2.3.8. TCP/IP Ports</H2
+><P
+>A single-box Bugzilla only requires port 80, plus port 25 if
+      you are using the optional email interface. You should firewall all 
+      other ports and/or disable services listening on them.
+      </P
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="security-daemon"
+></A
+>2.3.9. Daemon Accounts</H2
+><P
+>Many daemons, such as Apache's httpd and MySQL's mysqld default to
+      running as either <SPAN
+CLASS="QUOTE"
+>"root"</SPAN
+> or <SPAN
+CLASS="QUOTE"
+>"nobody"</SPAN
+>. Running
+      as <SPAN
+CLASS="QUOTE"
+>"root"</SPAN
+> introduces obvious security problems, but the
+      problems introduced by running everything as <SPAN
+CLASS="QUOTE"
+>"nobody"</SPAN
+> may
+      not be so obvious. Basically, if you're running every daemon as
+      <SPAN
+CLASS="QUOTE"
+>"nobody"</SPAN
+> and one of them gets compromised, they all get
+      compromised. For this reason it is recommended that you create a user
+      account for each daemon.
+      </P
 ></DIV
 ></DIV
 ><DIV
@@ -656,7 +691,7 @@ WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
 ><A
-HREF="http.html"
+HREF="configuration.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -684,13 +719,13 @@ ACCESSKEY="N"
 WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
->HTTP Server Configuration</TD
+>Configuration</TD
 ><TD
 WIDTH="34%"
 ALIGN="center"
 VALIGN="top"
 ><A
-HREF="installation.html"
+HREF="installing-bugzilla.html"
 ACCESSKEY="U"
 >Up</A
 ></TD
@@ -698,7 +733,7 @@ ACCESSKEY="U"
 WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
->OS Specific Installation Notes</TD
+>OS-Specific Installation Notes</TD
 ></TR
 ></TABLE
 ></DIV

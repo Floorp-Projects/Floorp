@@ -11,13 +11,11 @@
 <!ENTITY administration SYSTEM "administration.xml">
 <!ENTITY using SYSTEM "using.xml">
 <!ENTITY integration SYSTEM "integration.xml">
-<!ENTITY future SYSTEM "future.xml">
 <!ENTITY index SYSTEM "index.xml">
 <!ENTITY customization SYSTEM "customization.xml">
 <!ENTITY patches SYSTEM "patches.xml">
-<!ENTITY variants SYSTEM "variants.xml">
 <!ENTITY introduction SYSTEM "introduction.xml">
-<!ENTITY revhistory SYSTEM "revhistory.xml">
+<!ENTITY modules SYSTEM "modules.xml">
 
 <!-- Things to change for a stable release:
      * bz-ver to current stable
@@ -32,9 +30,9 @@
      For a devel release, simple bump bz-ver and bz-date
 -->
 
-<!ENTITY bz-ver "2.17.5">
+<!ENTITY bz-ver "2.17.7">
 <!ENTITY bz-nextver "2.18">
-<!ENTITY bz-date "2004-01-15">
+<!ENTITY bz-date "2004-01-24">
 <!ENTITY % bz-devel "INCLUDE">
 
 <!ENTITY bz "http://www.bugzilla.org/">
@@ -54,7 +52,7 @@
 <!ENTITY min-dbd-mysql-ver "2.1010">
 <!ENTITY min-dbi-ver "1.32">
 <!ENTITY min-date-format-ver "2.21">
-<!ENTITY min-cgi-ver "2.88">
+<!ENTITY min-cgi-ver "2.93">
 <!-- Optional modules -->
 <!ENTITY min-gd-ver "1.20">
 <!ENTITY min-gd-graph-ver "any">
@@ -136,12 +134,6 @@
 <!-- About This Guide -->
 &about;
 
-<!-- Introduction -->
-&introduction;
-
-<!-- Using Bugzilla -->
-&using;
-
 <!-- Installing Bugzilla -->
 &installation;
 
@@ -151,11 +143,17 @@
 <!-- Customizing Bugzilla -->
 &customization;
 
+<!-- Using Bugzilla -->
+&using;
+
 <!-- Appendix: The Frequently Asked Questions -->
 &faq;
 
 <!-- Appendix: Custom Patches -->
 &patches;
+
+<!-- Appendix: Manually Installing Perl Modules -->
+&modules;
 
 <!-- Appendix: GNU Free Documentation License -->
 &gfdl;

@@ -295,7 +295,7 @@
       </para>
 
       <para>After untarring the localizations (or creating your own) in the 
-      <filename class="directory"><varname>BUGZILLA_ROOT</varname>/template</filename> directory,
+      <filename class="directory">BUGZILLA_ROOT/template</filename> directory,
       you must update the <option>languages</option> parameter to contain any
       localizations you'd like to permit. You may also wish to set the
       <option>defaultlanguage</option> parameter to something other than
@@ -345,12 +345,12 @@
       tool (e.g. <command>grep</command>) to search the standard templates
       for occurrences of <methodname>Hook.process</methodname> or browse
       the directory tree in
-      <filename><varname>BUGZILLA_ROOT</varname>/template/en/extension/hook/</filename>,
+      <filename>BUGZILLA_ROOT/template/en/extension/hook/</filename>,
       which contains a directory for each hook in the following location:
     </para>
 
     <para>
-      <filename><varname>BUGZILLA_ROOT</varname>/template/en/extension/hook/<varname>PATH_TO_STANDARD_TEMPLATE</varname>/<varname>STANDARD_TEMPLATE_NAME</varname>/<varname>HOOK_NAME</varname>/</filename>
+      <filename>BUGZILLA_ROOT/template/en/extension/hook/PATH_TO_STANDARD_TEMPLATE/STANDARD_TEMPLATE_NAME/HOOK_NAME/</filename>
     </para>
 
     <para>
@@ -375,7 +375,7 @@
       The Bugzilla reviewers will promptly review each hook request,
       name the hook, add it to the template, check the new version
       of the template into CVS, and create the corresponding directory in
-      <filename><varname>BUGZILLA_ROOT</varname>/template/en/extension/hook/</filename>.
+      <filename>BUGZILLA_ROOT/template/en/extension/hook/</filename>.
     </para>
 
     <para>
@@ -415,7 +415,7 @@
       <filename>useful-links.html.tmpl</filename>, which is located in
       the <filename>global/</filename> subdirectory on the standard Bugzilla 
       template path
-      <filename><varname>BUGZILLA_ROOT</varname>/template/en/default/</filename>.
+      <filename>BUGZILLA_ROOT/template/en/default/</filename>.
       Looking in <filename>useful-links.html.tmpl</filename>, you find
       the following hook at the end of the list of standard Bugzilla
       administration links:
@@ -429,7 +429,7 @@
 
     <para>
       The corresponding directory for this hook is
-      <filename><varname>BUGZILLA_ROOT</varname>/template/en/extension/hook/global/useful-links.html.tmpl/edit/</filename>.
+      <filename>BUGZILLA_ROOT/template/en/extension/hook/global/useful-links.html.tmpl/edit/</filename>.
     </para>
 
     <para>
@@ -454,7 +454,7 @@
         <para>
           You may want to prefix your extension template names
           with the name of your extension, e.g. 
-          <filename><literal>projman</literal>-foo.html.tmpl</filename>, 
+          <filename>projman-foo.html.tmpl</filename>, 
           so they do not conflict with the names of templates installed by
           other extensions.
         </para>
@@ -465,7 +465,7 @@
           If your extension includes entirely new templates in addition to
           extensions of standard templates, it should install those new
           templates into an extension-specific subdirectory of the
-          <filename><varname>BUGZILLA_ROOT</varname>/template/en/extension/</filename> 
+          <filename>BUGZILLA_ROOT/template/en/extension/</filename> 
           directory.  The <filename>extension/</filename> directory, like the 
           <filename>default/</filename> and <filename>custom/</filename>
           directories, is part of the template search path, so putting templates
@@ -494,9 +494,9 @@
         <para>
           Installation customizers can also take advantage of hooks when adding
           code to a Bugzilla template.  To do so, create directories in
-          <filename><varname>BUGZILLA_ROOT</varname>/template/en/custom/hook/</filename>
+          <filename>BUGZILLA_ROOT/template/en/custom/hook/</filename>
           equivalent to the directories in
-          <filename><varname>BUGZILLA_ROOT</varname>/template/en/extension/hook/</filename>          
+          <filename>BUGZILLA_ROOT/template/en/extension/hook/</filename>          
           for the hooks you want to use, then place your customization templates
           into those directories.
         </para>

@@ -1,7 +1,7 @@
 <HTML
 ><HEAD
 ><TITLE
->The Bugzilla Guide - 2.17.5 
+>The Bugzilla Guide - 2.17.7 
     Development Release</TITLE
 ><META
 NAME="GENERATOR"
@@ -47,14 +47,14 @@ CLASS="title"
 ><A
 NAME="AEN2"
 ></A
->The Bugzilla Guide - 2.17.5 
+>The Bugzilla Guide - 2.17.7 
     Development Release</H1
 ><H3
 CLASS="corpauthor"
 >The Bugzilla Team</H3
 ><P
 CLASS="pubdate"
->2004-01-15<BR></P
+>2004-01-24<BR></P
 ><DIV
 ><DIV
 CLASS="abstract"
@@ -127,211 +127,187 @@ HREF="conventions.html"
 ></DD
 ><DT
 >2. <A
-HREF="introduction.html"
->Introduction</A
+HREF="installing-bugzilla.html"
+>Installing Bugzilla</A
 ></DT
 ><DD
 ><DL
 ><DT
 >2.1. <A
-HREF="what-is-bugzilla.html"
->What is Bugzilla?</A
-></DT
-><DT
->2.2. <A
-HREF="why-tracking.html"
->Why use a bug-tracking system?</A
-></DT
-><DT
->2.3. <A
-HREF="why-bugzilla.html"
->Why use Bugzilla?</A
-></DT
-></DL
-></DD
-><DT
->3. <A
-HREF="using.html"
->Using Bugzilla</A
-></DT
-><DD
-><DL
-><DT
->3.1. <A
-HREF="using-intro.html"
->Introduction</A
-></DT
-><DT
->3.2. <A
-HREF="myaccount.html"
->Create a Bugzilla Account</A
-></DT
-><DT
->3.3. <A
-HREF="bug_page.html"
->Anatomy of a Bug</A
-></DT
-><DT
->3.4. <A
-HREF="query.html"
->Searching for Bugs</A
-></DT
-><DT
->3.5. <A
-HREF="list.html"
->Bug Lists</A
-></DT
-><DT
->3.6. <A
-HREF="bugreports.html"
->Filing Bugs</A
-></DT
-><DT
->3.7. <A
-HREF="patchviewer.html"
->Patch Viewer</A
-></DT
-><DT
->3.8. <A
-HREF="hintsandtips.html"
->Hints and Tips</A
-></DT
-><DT
->3.9. <A
-HREF="userpreferences.html"
->User Preferences</A
-></DT
-><DT
->3.10. <A
-HREF="reporting.html"
->Reports</A
-></DT
-></DL
-></DD
-><DT
->4. <A
 HREF="installation.html"
 >Installation</A
 ></DT
-><DD
-><DL
 ><DT
->4.1. <A
-HREF="stepbystep.html"
->Step-by-step Install</A
+>2.2. <A
+HREF="configuration.html"
+>Configuration</A
 ></DT
 ><DT
->4.2. <A
-HREF="http.html"
->HTTP Server Configuration</A
-></DT
-><DT
->4.3. <A
+>2.3. <A
 HREF="extraconfig.html"
 >Optional Additional Configuration</A
 ></DT
 ><DT
->4.4. <A
+>2.4. <A
 HREF="os-specific.html"
->OS Specific Installation Notes</A
+>OS-Specific Installation Notes</A
 ></DT
 ><DT
->4.5. <A
-HREF="security.html"
->Bugzilla Security</A
-></DT
-><DT
->4.6. <A
+>2.5. <A
 HREF="troubleshooting.html"
 >Troubleshooting</A
 ></DT
 ></DL
 ></DD
 ><DT
->5. <A
+>3. <A
 HREF="administration.html"
 >Administering Bugzilla</A
 ></DT
 ><DD
 ><DL
 ><DT
->5.1. <A
+>3.1. <A
 HREF="parameters.html"
 >Bugzilla Configuration</A
 ></DT
 ><DT
->5.2. <A
+>3.2. <A
 HREF="useradmin.html"
 >User Administration</A
 ></DT
 ><DT
->5.3. <A
+>3.3. <A
 HREF="products.html"
 >Products</A
 ></DT
 ><DT
->5.4. <A
+>3.4. <A
 HREF="components.html"
 >Components</A
 ></DT
 ><DT
->5.5. <A
+>3.5. <A
 HREF="versions.html"
 >Versions</A
 ></DT
 ><DT
->5.6. <A
+>3.6. <A
 HREF="milestones.html"
 >Milestones</A
 ></DT
 ><DT
->5.7. <A
+>3.7. <A
 HREF="voting.html"
 >Voting</A
 ></DT
 ><DT
->5.8. <A
+>3.8. <A
 HREF="groups.html"
 >Groups and Group Security</A
 ></DT
 ><DT
->5.9. <A
+>3.9. <A
 HREF="upgrading.html"
 >Upgrading to New Releases</A
 ></DT
 ></DL
 ></DD
 ><DT
->6. <A
+>4. <A
 HREF="customization.html"
 >Customising Bugzilla</A
 ></DT
 ><DD
 ><DL
 ><DT
->6.1. <A
+>4.1. <A
 HREF="cust-templates.html"
 >Template Customization</A
 ></DT
 ><DT
->6.2. <A
+>4.2. <A
+HREF="cust-hooks.html"
+>Template Hooks</A
+></DT
+><DT
+>4.3. <A
 HREF="cust-change-permissions.html"
 >Customizing Who Can Change What</A
 ></DT
 ><DT
->6.3. <A
+>4.4. <A
 HREF="dbmodify.html"
 >Modifying Your Running System</A
 ></DT
 ><DT
->6.4. <A
+>4.5. <A
 HREF="dbdoc.html"
 >MySQL Bugzilla Database Introduction</A
 ></DT
 ><DT
->6.5. <A
+>4.6. <A
 HREF="integration.html"
 >Integrating Bugzilla with Third-Party Tools</A
+></DT
+></DL
+></DD
+><DT
+>5. <A
+HREF="using.html"
+>Using Bugzilla</A
+></DT
+><DD
+><DL
+><DT
+>5.1. <A
+HREF="using-intro.html"
+>Introduction</A
+></DT
+><DT
+>5.2. <A
+HREF="myaccount.html"
+>Create a Bugzilla Account</A
+></DT
+><DT
+>5.3. <A
+HREF="bug_page.html"
+>Anatomy of a Bug</A
+></DT
+><DT
+>5.4. <A
+HREF="query.html"
+>Searching for Bugs</A
+></DT
+><DT
+>5.5. <A
+HREF="list.html"
+>Bug Lists</A
+></DT
+><DT
+>5.6. <A
+HREF="bugreports.html"
+>Filing Bugs</A
+></DT
+><DT
+>5.7. <A
+HREF="patchviewer.html"
+>Patch Viewer</A
+></DT
+><DT
+>5.8. <A
+HREF="hintsandtips.html"
+>Hints and Tips</A
+></DT
+><DT
+>5.9. <A
+HREF="userpreferences.html"
+>User Preferences</A
+></DT
+><DT
+>5.10. <A
+HREF="reporting.html"
+>Reports</A
 ></DT
 ></DL
 ></DD
@@ -356,6 +332,25 @@ HREF="cmdline.html"
 ></DD
 ><DT
 >C. <A
+HREF="install-perlmodules-manual.html"
+>Manual Installation of Perl Modules</A
+></DT
+><DD
+><DL
+><DT
+>C.1. <A
+HREF="modules-manual-instructions.html"
+>Instructions</A
+></DT
+><DT
+>C.2. <A
+HREF="modules-manual-download.html"
+>Download Locations</A
+></DT
+></DL
+></DD
+><DT
+>D. <A
 HREF="gfdl.html"
 >GNU Free Documentation License</A
 ></DT
@@ -364,57 +359,57 @@ HREF="gfdl.html"
 ><DT
 >0. <A
 HREF="gfdl-0.html"
->PREAMBLE</A
+>Preamble</A
 ></DT
 ><DT
 >1. <A
 HREF="gfdl-1.html"
->APPLICABILITY AND DEFINITIONS</A
+>Applicability and Definition</A
 ></DT
 ><DT
 >2. <A
 HREF="gfdl-2.html"
->VERBATIM COPYING</A
+>Verbatim Copying</A
 ></DT
 ><DT
 >3. <A
 HREF="gfdl-3.html"
->COPYING IN QUANTITY</A
+>Copying in Quantity</A
 ></DT
 ><DT
 >4. <A
 HREF="gfdl-4.html"
->MODIFICATIONS</A
+>Modifications</A
 ></DT
 ><DT
 >5. <A
 HREF="gfdl-5.html"
->COMBINING DOCUMENTS</A
+>Combining Documents</A
 ></DT
 ><DT
 >6. <A
 HREF="gfdl-6.html"
->COLLECTIONS OF DOCUMENTS</A
+>Collections of Documents</A
 ></DT
 ><DT
 >7. <A
 HREF="gfdl-7.html"
->AGGREGATION WITH INDEPENDENT WORKS</A
+>Aggregation with Independent Works</A
 ></DT
 ><DT
 >8. <A
 HREF="gfdl-8.html"
->TRANSLATION</A
+>Translation</A
 ></DT
 ><DT
 >9. <A
 HREF="gfdl-9.html"
->TERMINATION</A
+>Termination</A
 ></DT
 ><DT
 >10. <A
 HREF="gfdl-10.html"
->FUTURE REVISIONS OF THIS LICENSE</A
+>Future Revisions of this License</A
 ></DT
 ><DT
 ><A
@@ -436,50 +431,20 @@ CLASS="LOT"
 CLASS="LOT"
 ><DT
 ><B
->List of Figures</B
-></DT
-><DT
->4-1. <A
-HREF="stepbystep.html#install-mysql-packets"
->Set Max Packet Size in MySQL</A
-></DT
-><DT
->4-2. <A
-HREF="troubleshooting.html#trouble-filetemp-errors"
->Other File::Temp error messages</A
-></DT
-><DT
->4-3. <A
-HREF="troubleshooting.html#trouble-filetemp-patch"
->Patch for File::Temp in Perl 5.6.0</A
-></DT
-></DL
-></DIV
-><DIV
-CLASS="LOT"
-><DL
-CLASS="LOT"
-><DT
-><B
 >List of Examples</B
 ></DT
 ><DT
->4-1. <A
-HREF="stepbystep.html#install-perlmodules-cpan"
->Installing perl modules with CPAN</A
-></DT
-><DT
->5-1. <A
+>3-1. <A
 HREF="upgrading.html#upgrade-cvs"
 >Upgrading using CVS</A
 ></DT
 ><DT
->5-2. <A
+>3-2. <A
 HREF="upgrading.html#upgrade-tarball"
 >Upgrading using the tarball</A
 ></DT
 ><DT
->5-3. <A
+>3-3. <A
 HREF="upgrading.html#upgrade-patches"
 >Upgrading using patches</A
 ></DT

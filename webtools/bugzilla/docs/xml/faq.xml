@@ -217,6 +217,19 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 	</answer>
       </qandaentry>
       
+      <qandaentry>
+	<question id="faq-mod-perl">
+	  <para>
+	    Does bugzilla run under <filename>mod_perl</filename>?
+	  </para>
+	</question>
+	<answer>
+	  <para>
+	    At present, no. This is being worked on.
+	  </para>
+	</answer>
+      </qandaentry>
+      
     </qandadiv>
 
     <qandadiv id="faq-phb">

@@ -1,24 +1,24 @@
 <HTML
 ><HEAD
 ><TITLE
->Perforce SCM</TITLE
+>Instructions</TITLE
 ><META
 NAME="GENERATOR"
 CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
 "><LINK
 REL="HOME"
-TITLE="The Bugzilla Guide - 2.17.5 
+TITLE="The Bugzilla Guide - 2.17.7 
     Development Release"
 HREF="index.html"><LINK
 REL="UP"
-TITLE="Bugzilla Variants and Competitors"
-HREF="variants.html"><LINK
+TITLE="Manual Installation of Perl Modules"
+HREF="install-perlmodules-manual.html"><LINK
 REL="PREVIOUS"
-TITLE="Scarab"
-HREF="variant-scarab.html"><LINK
+TITLE="Manual Installation of Perl Modules"
+HREF="install-perlmodules-manual.html"><LINK
 REL="NEXT"
-TITLE="SourceForge"
-HREF="variant-sourceforge.html"></HEAD
+TITLE="Download Locations"
+HREF="modules-manual-download.html"></HEAD
 ><BODY
 CLASS="section"
 BGCOLOR="#FFFFFF"
@@ -38,7 +38,7 @@ CELLSPACING="0"
 ><TH
 COLSPAN="3"
 ALIGN="center"
->The Bugzilla Guide - 2.17.5 
+>The Bugzilla Guide - 2.17.7 
     Development Release</TH
 ></TR
 ><TR
@@ -47,7 +47,7 @@ WIDTH="10%"
 ALIGN="left"
 VALIGN="bottom"
 ><A
-HREF="variant-scarab.html"
+HREF="install-perlmodules-manual.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -55,13 +55,13 @@ ACCESSKEY="P"
 WIDTH="80%"
 ALIGN="center"
 VALIGN="bottom"
->Appendix D. Bugzilla Variants and Competitors</TD
+>Appendix C. Manual Installation of Perl Modules</TD
 ><TD
 WIDTH="10%"
 ALIGN="right"
 VALIGN="bottom"
 ><A
-HREF="variant-sourceforge.html"
+HREF="modules-manual-download.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -75,25 +75,56 @@ CLASS="section"
 ><H1
 CLASS="section"
 ><A
-NAME="variant-perforce"
+NAME="modules-manual-instructions"
 ></A
->D.5. Perforce SCM</H1
+>C.1. Instructions</H1
 ><P
->Although Perforce isn't really a bug tracker, it can be used as
-    such through the <SPAN
-CLASS="QUOTE"
->"jobs"</SPAN
->
-    functionality.</P
-><P
->URL: <A
-HREF="http://www.perforce.com/perforce/technotes/note052.html"
-TARGET="_top"
->http://www.perforce.com/perforce/technotes/note052.html</A
->
+>If you need to install Perl modules manually, here's how it's done.
+    Download the module using the link given in the next section, and then
+    apply this magic incantation, as root:
     </P
 ><P
->This section last updated 27 Jul 2002</P
+>  
+      <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="screen"
+><TT
+CLASS="prompt"
+>bash#</TT
+> tar -xzvf &#60;module&#62;.tar.gz
+<TT
+CLASS="prompt"
+>bash#</TT
+> cd &#60;module&#62;
+<TT
+CLASS="prompt"
+>bash#</TT
+> perl Makefile.PL
+<TT
+CLASS="prompt"
+>bash#</TT
+> make
+<TT
+CLASS="prompt"
+>bash#</TT
+> make test
+<TT
+CLASS="prompt"
+>bash#</TT
+> make install</PRE
+></FONT
+></TD
+></TR
+></TABLE
+>
+    </P
 ></DIV
 ><DIV
 CLASS="NAVFOOTER"
@@ -111,7 +142,7 @@ WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
 ><A
-HREF="variant-scarab.html"
+HREF="install-perlmodules-manual.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -129,7 +160,7 @@ WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
 ><A
-HREF="variant-sourceforge.html"
+HREF="modules-manual-download.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -139,13 +170,13 @@ ACCESSKEY="N"
 WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
->Scarab</TD
+>Manual Installation of Perl Modules</TD
 ><TD
 WIDTH="34%"
 ALIGN="center"
 VALIGN="top"
 ><A
-HREF="variants.html"
+HREF="install-perlmodules-manual.html"
 ACCESSKEY="U"
 >Up</A
 ></TD
@@ -153,7 +184,7 @@ ACCESSKEY="U"
 WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
->SourceForge</TD
+>Download Locations</TD
 ></TR
 ></TABLE
 ></DIV
