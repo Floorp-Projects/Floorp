@@ -120,7 +120,7 @@ nsresult rdf_InitRDFUtils()
     }
   
     if (nsnull == kRDF_type) {
-      rv = gRDF->GetResource("http://home.netscape.com/NC-rdf#type", 
+      rv = gRDF->GetResource("http://www.w3.org/1999/02/22-rdf-syntax-ns", 
 			     getter_AddRefs(kRDF_type));
       if (NS_FAILED(rv)) {
 	return rv;
