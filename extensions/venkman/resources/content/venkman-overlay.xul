@@ -55,10 +55,8 @@
 <!--
   This is the id that the menuitem will be appended to.  see tasksOverlay.xul
 -->
-<menupopup id="taskPopup">
-  <menuitem position="6"
-   label="&venkmanCmd.label;"
-     oncommand="start_venkman()"/>
+<menupopup id="toolsPopup">
+  <menuitem position="5" label="&venkmanCmd.label;" oncommand="start_venkman()"/>
 </menupopup>
 
 </overlay>
