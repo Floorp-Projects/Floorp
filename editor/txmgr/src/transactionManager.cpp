@@ -15,3 +15,42 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+
+#include "transactionManager.h"
+#include "COM_auto_ptr.h"
+
+nsTransactionManager::nsTransactionManager()
+{
+}
+
+nsTransactionManager::~nsTransactionManager()
+{
+}
+
+NS_IMPL_ADDREF(nsTransactionManager)
+NS_IMPL_RELEASE(nsTransactionManager)
+
+nsresult
+nsTransactionManager::Execute(nsITransaction *tx)
+{
+  return NS_OK;
+}
+
+nsresult
+nsTransactionManager::Undo(PRInt32 n)
+{
+  return NS_OK;
+}
+
+nsresult
+nsTransactionManager::Redo(PRInt32 n)
+{
+  return NS_OK;
+}
+
+nsresult
+nsTransactionManager::Write(nsIOutputStream *os)
+{
+  return NS_OK;
+}
+

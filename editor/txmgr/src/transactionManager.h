@@ -20,13 +20,31 @@
 #define transactionManager_h__
 
 #include "nsITransactionManager.h"
-#include "COM_auto_ptr.h"
 
 /** implementation of a transaction manager object.
  *
  */
-class TransactionManager : public nsITransactionManager
+class nsTransactionManager : public nsITransactionManager
 {
+public:
+
+  /** The default constructor.
+   */
+  nsTransactionManager();
+
+  /** The default destructor.
+   */
+  virtual ~nsTransactionManager();
+
+  /* Macro for AddRef(), Release(), and QueryInterface() */
+  NS_DECL_ISUPPORTS
+
+  virtual nsresult Execute(nsITransaction *tx);
+  virtual nsresult Undo(PRInt32 n);
+  virtual nsresult Redo(PRInt32 n);
+  virtual nsresult Write(nsIOutputStream *os);
+  // virtual nsresult AddListener(nsITransactionListener *l);
+  // virtual nsresult RemoveListener(nsITransactionListener *l);
 };
 
 #endif // transactionManager_h__
