@@ -28,6 +28,7 @@ class nsIFrameImageLoader;
 class nsImageMap;
 class nsIPresContext;
 class nsISizeOfHandler;
+class nsIURL;
 struct nsHTMLReflowState;
 struct nsHTMLReflowMetrics;
 struct nsSize;
@@ -53,22 +54,18 @@ public:
 
   nsIImage* GetImage();
 
-  nsresult SetURL(const nsString& aURLSpec);
+  nsresult SetURLSpec(const nsString& aURLSpec);
 
-  nsresult SetBaseHREF(const nsString& aBaseHREF);
+  nsresult SetBaseURL(nsIURL* aBaseURL);
 
-  void GetURL(nsString& aResult) {
+  void GetURLSpec(nsString& aResult) const {
+    aResult.Truncate();
     if (nsnull != mURLSpec) {
       aResult = *mURLSpec;
     }
   }
 
-  void GetBaseHREF(nsString& aResult) {
-    aResult.Truncate();
-    if (nsnull != mBaseHREF) {
-      aResult = *mBaseHREF;
-    }
-  }
+  void GetBaseURL(nsIURL*& aResult) const;
 
   nsresult StartLoadImage(nsIPresContext* aPresContext,
                           nsIFrame* aForFrame,
@@ -93,7 +90,7 @@ protected:
   PRPackedBool mLoadBrokenImageFailed;
 #endif
   nsString* mURLSpec;
-  nsString* mBaseHREF;
+  nsIURL*   mBaseURL;
 };
 
 //----------------------------------------------------------------------

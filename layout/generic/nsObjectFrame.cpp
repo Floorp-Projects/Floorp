@@ -32,6 +32,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsIDocument.h"
 #include "nsIURL.h"
+#include "nsIURLGroup.h"
 #include "nsIPluginInstanceOwner.h"
 #include "nsIHTMLContent.h"
 #include "nsISupportsArray.h"
@@ -154,7 +155,7 @@ public:
 
   //local methods
   nsresult CreateWidget(nscoord aWidth, nscoord aHeight, PRBool aViewOnly);
-  nsresult GetFullURL(nsString& aFullURL);
+  nsresult GetFullURL(nsIURL*& aFullURL);
 
 protected:
   virtual ~nsObjectFrame();
@@ -164,15 +165,11 @@ protected:
                               nsHTMLReflowMetrics& aDesiredSize);
 
 
-  nsresult SetURL(const nsString& aURLSpec);
-  nsresult SetBaseHREF(const nsString& aBaseHREF);
-  nsresult SetFullURL(const nsString& aURLSpec);
+  nsresult SetFullURL(nsIURL* aURL);
 
 private:
   nsPluginInstanceOwner *mInstanceOwner;
-  nsString              *mURLSpec;
-  nsString              *mBaseHREF;
-  nsString              *mFullURL;
+  nsIURL                *mFullURL;
   nsIFrame              *mFirstChild;
 };
 
@@ -180,28 +177,14 @@ nsObjectFrame::~nsObjectFrame()
 {
   NS_IF_RELEASE(mInstanceOwner);
 
-  if (nsnull != mURLSpec)
-  {
-    delete mURLSpec;
-    mURLSpec = nsnull;
-  }
-
-  if (nsnull != mBaseHREF)
-  {
-    delete mBaseHREF;
-    mBaseHREF = nsnull;
-  }
-
-  if (nsnull != mFullURL)
-  {
-    delete mFullURL;
-    mFullURL = nsnull;
-  }
+  NS_IF_RELEASE(mFullURL);
 }
 
 static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
 static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
+static NS_DEFINE_IID(kIHTMLContentIID, NS_IHTMLCONTENT_IID);
+static NS_DEFINE_IID(kILinkHandlerIID, NS_ILINKHANDLER_IID);
 
 nsresult
 nsObjectFrame::CreateWidget(nscoord aWidth, nscoord aHeight, PRBool aViewOnly)
@@ -385,8 +368,22 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
             PRInt32         buflen;
             nsPluginWindow  *window;
             float           t2p = aPresContext.GetTwipsToPixels();
-            nsAutoString    src, base, fullurl;
+            nsAutoString    src;
+            nsIURL* fullURL = nsnull;
+            nsIURL* baseURL = nsnull;
 
+            nsIHTMLContent* htmlContent;
+            if (NS_SUCCEEDED(mContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent))) {
+              htmlContent->GetBaseURL(baseURL);
+              NS_RELEASE(htmlContent);
+            }
+            else {
+              nsIDocument* doc = nsnull;
+              if (NS_SUCCEEDED(mContent->GetDocument(doc))) {
+                doc->GetBaseURL(baseURL);
+                NS_RELEASE(doc);
+              }
+            }
 
             mInstanceOwner->GetWindow(window);
 
@@ -395,23 +392,25 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
               PL_strcpy(buf, "application/x-java-vm");
 
               if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::code, src)) {
-                SetURL(src);
+                nsIURLGroup* group = nsnull;
+                if (nsnull != baseURL) {
+                  baseURL->GetURLGroup(&group);
+                }
 
-                if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::codebase, base))
-                  SetBaseHREF(base);
-
-                nsIPresShell  *shell = aPresContext.GetShell();
-                nsIDocument   *doc = shell->GetDocument();
-                nsIURL        *docURL = doc->GetDocumentURL();
+                nsAutoString codeBase;
+                if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::codebase, codeBase)) {
+                  nsIURL* codeBaseURL = nsnull;
+                  rv = NS_NewURL(&codeBaseURL, codeBase, baseURL, nsnull, group);
+                  NS_IF_RELEASE(baseURL);
+                  baseURL = codeBaseURL;
+                }
 
                 // Create an absolute URL
-                nsresult rv = NS_MakeAbsoluteURL(docURL, base, *mURLSpec, fullurl);
+                rv = NS_NewURL(&fullURL, src, baseURL, nsnull, group);
 
-                SetFullURL(fullurl);
+                SetFullURL(fullURL);
 
-                NS_RELEASE(shell);
-                NS_RELEASE(docURL);
-                NS_RELEASE(doc);
+                NS_IF_RELEASE(group);
               }
             }
             else {
@@ -429,23 +428,17 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
               //stream in the object source if there is one...
 
               if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src, src)) {
-                SetURL(src);
-
-                if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_baseHref, base))
-                  SetBaseHREF(base);
-
-                nsIPresShell  *shell = aPresContext.GetShell();
-                nsIDocument   *doc = shell->GetDocument();
-                nsIURL        *docURL = doc->GetDocumentURL();
+                nsIURLGroup* group = nsnull;
+                if (nsnull != baseURL) {
+                  baseURL->GetURLGroup(&group);
+                }
 
                 // Create an absolute URL
-                nsresult rv = NS_MakeAbsoluteURL(docURL, base, *mURLSpec, fullurl);
+                rv = NS_NewURL(&fullURL, src, baseURL, nsnull, group);
 
-                SetFullURL(fullurl);
+                SetFullURL(fullURL);
 
-                NS_RELEASE(shell);
-                NS_RELEASE(docURL);
-                NS_RELEASE(doc);
+                NS_IF_RELEASE(group);
               }
             }
 
@@ -478,7 +471,9 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 #ifdef XP_UNIX
             window->ws_info = nsnull;   //XXX need to figure out what this is. MMP
 #endif
-            rv = pm->InstantiatePlugin(buf, fullurl, mInstanceOwner);
+            rv = pm->InstantiatePlugin(buf, fullURL, mInstanceOwner);
+            NS_IF_RELEASE(fullURL);
+            NS_IF_RELEASE(baseURL);
 
             PR_Free((void *)buf);
 
@@ -583,57 +578,24 @@ nsObjectFrame::Paint(nsIPresContext& aPresContext,
 }
 
 nsresult
-nsObjectFrame::SetURL(const nsString& aURLSpec)
-{
-  if (nsnull != mURLSpec) {
-    delete mURLSpec;
-  }
-  mURLSpec = new nsString(aURLSpec);
-  if (nsnull == mURLSpec) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return NS_OK;
-}
-
-nsresult
-nsObjectFrame::SetFullURL(const nsString& aURLSpec)
-{
-  if (nsnull != mFullURL) {
-    delete mFullURL;
-  }
-  mFullURL = new nsString(aURLSpec);
-  if (nsnull == mFullURL) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return NS_OK;
-}
-
-nsresult
-nsObjectFrame::SetBaseHREF(const nsString& aBaseHREF)
-{
-  if (nsnull != mBaseHREF) {
-    delete mBaseHREF;
-  }
-  mBaseHREF = new nsString(aBaseHREF);
-  if (nsnull == mBaseHREF) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return NS_OK;
-}
-
-nsresult
 nsObjectFrame::Scrolled(nsIView *aView)
 {
   return NS_OK;
 }
 
-nsresult nsObjectFrame :: GetFullURL(nsString& aFullURL)
+nsresult
+nsObjectFrame::SetFullURL(nsIURL* aURL)
 {
-  if (nsnull != mFullURL)
-    aFullURL = *mFullURL;
-  else
-    aFullURL = nsString("");
+  NS_IF_RELEASE(mFullURL);
+  mFullURL = aURL;
+  NS_IF_ADDREF(mFullURL);
+  return NS_OK;
+}
 
+nsresult nsObjectFrame :: GetFullURL(nsIURL*& aFullURL)
+{
+  aFullURL = mFullURL;
+  NS_IF_ADDREF(aFullURL);
   return NS_OK;
 }
 
@@ -816,9 +778,6 @@ NS_IMETHODIMP nsPluginInstanceOwner :: GetMode(nsPluginMode *aMode)
   return NS_OK;
 }
 
-static NS_DEFINE_IID(kIHTMLContentIID, NS_IHTMLCONTENT_IID);
-static NS_DEFINE_IID(kILinkHandlerIID, NS_ILINKHANDLER_IID);
-
 NS_IMETHODIMP nsPluginInstanceOwner :: GetAttributes(PRUint16& n,
                                                      const char*const*& names,
                                                      const char*const*& values)
@@ -966,20 +925,15 @@ NS_IMETHODIMP nsPluginInstanceOwner :: GetURL(const char *aURL, const char *aTar
         {
           nsAutoString  uniurl = nsAutoString(aURL);
           nsAutoString  unitarget = nsAutoString(aTarget);
-          nsAutoString  base, fullurl;
+          nsAutoString  fullurl;
+          nsIURL* baseURL;
 
-          mOwner->GetFullURL(base);
-
-          nsIPresShell  *shell = mContext->GetShell();
-          nsIDocument   *doc = shell->GetDocument();
-          nsIURL        *docURL = doc->GetDocumentURL();
+          mOwner->GetFullURL(baseURL);
 
           // Create an absolute URL
-          rv = NS_MakeAbsoluteURL(docURL, base, uniurl, fullurl);
+          rv = NS_MakeAbsoluteURL(baseURL, nsString(), uniurl, fullurl);
 
-          NS_RELEASE(shell);
-          NS_RELEASE(docURL);
-          NS_RELEASE(doc);
+          NS_IF_RELEASE(baseURL);
 
           if (NS_OK == rv) {
             nsIContent* content = nsnull;

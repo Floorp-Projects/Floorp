@@ -72,7 +72,7 @@ nsHTMLImageLoader::nsHTMLImageLoader()
   mLoadBrokenImageFailed = PR_FALSE;
 #endif
   mURLSpec = nsnull;
-  mBaseHREF = nsnull;
+  mBaseURL = nsnull;
 }
 
 nsHTMLImageLoader::~nsHTMLImageLoader()
@@ -81,9 +81,7 @@ nsHTMLImageLoader::~nsHTMLImageLoader()
   if (nsnull != mURLSpec) {
     delete mURLSpec;
   }
-  if (nsnull != mBaseHREF) {
-    delete mBaseHREF;
-  }
+  NS_IF_RELEASE(mBaseURL);
 }
 
 void
@@ -109,7 +107,7 @@ nsHTMLImageLoader::GetImage()
 }
 
 nsresult
-nsHTMLImageLoader::SetURL(const nsString& aURLSpec)
+nsHTMLImageLoader::SetURLSpec(const nsString& aURLSpec)
 {
   if (nsnull != mURLSpec) {
     delete mURLSpec;
@@ -122,16 +120,18 @@ nsHTMLImageLoader::SetURL(const nsString& aURLSpec)
 }
 
 nsresult
-nsHTMLImageLoader::SetBaseHREF(const nsString& aBaseHREF)
+nsHTMLImageLoader::SetBaseURL(nsIURL* aBaseURL)
 {
-  if (nsnull != mBaseHREF) {
-    delete mBaseHREF;
-  }
-  mBaseHREF = new nsString(aBaseHREF);
-  if (nsnull == mBaseHREF) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  NS_IF_RELEASE(mBaseURL);
+  mBaseURL = aBaseURL;
+  NS_IF_ADDREF(mBaseURL);
   return NS_OK;
+}
+
+void
+nsHTMLImageLoader::GetBaseURL(nsIURL*& aResult) const {
+  aResult = mBaseURL;
+  NS_IF_ADDREF(aResult);
 }
 
 nsresult
@@ -154,24 +154,10 @@ nsHTMLImageLoader::StartLoadImage(nsIPresContext* aPresContext,
     src.Append(BROKEN_IMAGE_URL);
 #endif
   } else if (nsnull == mImageLoader) {
-    nsAutoString baseURL;
-    if (nsnull != mBaseHREF) {
-      baseURL = *mBaseHREF;
-    }
-
-    // Get documentURL
-    nsIPresShell* shell;
-    shell = aPresContext->GetShell();
-    nsIDocument* doc = shell->GetDocument();
-    nsIURL* docURL = doc->GetDocumentURL();
-
     // Create an absolute URL
-    nsresult rv = NS_MakeAbsoluteURL(docURL, baseURL, *mURLSpec, src);
+    nsString empty;
+    nsresult rv = NS_MakeAbsoluteURL(mBaseURL, empty, *mURLSpec, src);
 
-    // Release references
-    NS_RELEASE(shell);
-    NS_RELEASE(docURL);
-    NS_RELEASE(doc);
     if (NS_OK != rv) {
       return rv;
     }
@@ -351,14 +337,25 @@ nsImageFrame::Init(nsIPresContext&  aPresContext,
   nsresult  rv = nsLeafFrame::Init(aPresContext, aContent, aParent, aContext);
 
   // Set the image loader's source URL and base URL
-  nsAutoString src, base;
+  nsAutoString src;
   if ((NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src, src)) &&
       (src.Length() > 0)) {
-    mImageLoader.SetURL(src);
-    if (NS_CONTENT_ATTR_HAS_VALUE ==
-        mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_baseHref, base)) {
-      mImageLoader.SetBaseHREF(base);
+    mImageLoader.SetURLSpec(src);
+    nsIURL* baseURL = nsnull;
+    nsIHTMLContent* htmlContent;
+    if (NS_SUCCEEDED(mContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent))) {
+      htmlContent->GetBaseURL(baseURL);
+      NS_RELEASE(htmlContent);
     }
+    else {
+      nsIDocument* doc;
+      if (NS_SUCCEEDED(mContent->GetDocument(doc))) {
+        doc->GetBaseURL(baseURL);
+        NS_RELEASE(doc);
+      }
+    }
+    mImageLoader.SetBaseURL(baseURL);
+    NS_IF_RELEASE(baseURL);
   }
 
   return rv;
@@ -857,11 +854,24 @@ nsImageFrame::HandleEvent(nsIPresContext& aPresContext,
       }
       else {
         suppress = GetSuppress();
-        nsAutoString baseURL;
-        mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_baseHref, baseURL);
+        nsIURL* baseURL = nsnull;
+        nsIHTMLContent* htmlContent;
+        if (NS_SUCCEEDED(mContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent))) {
+          htmlContent->GetBaseURL(baseURL);
+          NS_RELEASE(htmlContent);
+        }
+        else {
+          nsIDocument* doc;
+          if (NS_SUCCEEDED(mContent->GetDocument(doc))) {
+            doc->GetBaseURL(baseURL);
+            NS_RELEASE(doc);
+          }
+        }
         nsAutoString src;
+        nsString empty;
         mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src, src);
-        NS_MakeAbsoluteURL(docURL, baseURL, src, absURL);
+        NS_MakeAbsoluteURL(baseURL, empty, src, absURL);
+        NS_IF_RELEASE(baseURL);
 
         // Note: We don't subtract out the border/padding here to remain
         // compatible with navigator. [ick]
@@ -944,7 +954,7 @@ nsImageFrame::AttributeChanged(nsIPresContext* aPresContext,
   }
   if (nsHTMLAtoms::src == aAttribute) {
     nsAutoString oldSRC;
-    mImageLoader.GetURL(oldSRC);
+    mImageLoader.GetURLSpec(oldSRC);
     nsAutoString newSRC;
 
     aChild->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src, newSRC);
@@ -965,7 +975,7 @@ nsImageFrame::AttributeChanged(nsIPresContext* aPresContext,
 
       // Fire up a new image load request
       PRIntn loadStatus;
-      mImageLoader.SetURL(newSRC);
+      mImageLoader.SetURLSpec(newSRC);
       mImageLoader.StartLoadImage(aPresContext, this, nsnull,
                                   PR_FALSE, loadStatus);
 
