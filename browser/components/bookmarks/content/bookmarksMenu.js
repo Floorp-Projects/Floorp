@@ -733,6 +733,18 @@ var BookmarksMenuDNDObserver = {
 
 var BookmarksToolbar = 
 {
+  ////////////////////////////////////////////////
+  // loads a bookmark with the mouse middle button
+  loadBookmarkMiddleClick: function (aEvent, aDS)
+  {
+    if (aEvent.button != 1)
+      return;
+    // unlike for command events, we have to close the menus manually
+    BookmarksMenuDNDObserver.mCurrentDragOverTarget = null;
+    BookmarksMenuDNDObserver.onDragCloseTarget();
+    BookmarksUtils.loadBookmarkBrowser(aEvent, aEvent.target, aDS);
+  },
+
   /////////////////////////////////////////////////////////////////////////////
   // returns the node of the last visible bookmark on the toolbar -->
   getLastVisibleBookmark: function ()
@@ -846,33 +858,3 @@ var BookmarksToolbarRDFObserver =
     setTimeout("function(){BookmarksToolbar.resizeFunc(null);BookmarksToolbarRDFObserver._overflowTimerInEffect=false;}", 0);
   }
 }
-
-/*
-constructor
-{
-        var hbox = (document.getAnonymousNodes(this))[0].firstChild;
-
-        var theToolbar = this;
-        this.resizeFunc = resizeFunc;
-        window.addEventListener("resize", resizeFunc, false);
-        hbox.database.AddObserver(this);
-}
-
-
-destructor
-{
-        var hbox = (document.getAnonymousNodes(this))[0].firstChild;
-        this.toolbar.controllers.removeController(this.commandController);
-        hbox.database.RemoveObserver(this);
-}
-
-      <property name="toolbar">
-        <getter><![CDATA[
-          return document.getAnonymousElementByAttribute(this, "anonid", "bookmarks-ptf");
-        ]]></getter>
-      </property>
-
-      <field name="resizeFunc">null</field>
-
-       
-*/
