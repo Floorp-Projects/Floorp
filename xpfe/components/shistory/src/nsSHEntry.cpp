@@ -193,23 +193,41 @@ NS_IMETHODIMP nsSHEntry::SetIsSubFrame(PRBool  aFlag)
    mIsFrameNavigation = aFlag;
    return NS_OK;
 }
+
+NS_IMETHODIMP nsSHEntry::GetCacheKey(nsISupports** aResult)
+{
+   NS_ENSURE_ARG_POINTER(aResult);
+
+   *aResult = mCacheKey;
+   NS_IF_ADDREF(*aResult);
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsSHEntry::SetCacheKey(nsISupports* aCacheKey)
+{
+   mCacheKey = aCacheKey;
+   return NS_OK;
+}
+
 nsresult
 nsSHEntry::Create(nsIURI * aURI, const PRUnichar * aTitle, nsIDOMDocument * aDOMDocument,
-			         nsIInputStream * aInputStream, nsILayoutHistoryState * aHistoryLayoutState)
+			         nsIInputStream * aInputStream, nsILayoutHistoryState * aHistoryLayoutState,
+               nsISupports * aCacheKey)
 {
-    SetURI(aURI);
+  SetURI(aURI);
 	SetTitle(aTitle);
 	SetDocument(aDOMDocument);
 	SetPostData(aInputStream);
 	SetLayoutHistoryState(aHistoryLayoutState);
-	
-    // Set the LoadType by default to loadHistory during creation
+	SetCacheKey(aCacheKey);
+
+  // Set the LoadType by default to loadHistory during creation
 	SetLoadType((PRInt32)nsIDocShellLoadInfo::loadHistory);
 
-    // By default all entries are set false for subframe flag. 
-    // nsDocShell::CloneAndReplace() which creates entries for
-    // all subframe navigations, sets the flag to true.
-    SetIsSubFrame(PR_FALSE);
+  // By default all entries are set false for subframe flag. 
+  // nsDocShell::CloneAndReplace() which creates entries for
+  // all subframe navigations, sets the flag to true.
+  SetIsSubFrame(PR_FALSE);
 
 	return NS_OK;
 	
