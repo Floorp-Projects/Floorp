@@ -2607,25 +2607,29 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO, PRBool aDoCalcShrink)
   // init it with the DC
   (aPO->mPresContext)->Init(mPrt->mPrintDocDC);
 
-  rv = mDocViewerPrint->CreateStyleSet(aPO->mDocument,
-                                       getter_Transfers(aPO->mStyleSet));
+  rv = mDocViewerPrint->CreateStyleSet(aPO->mDocument, &aPO->mStyleSet);
   NS_ENSURE_SUCCESS(rv, rv);
 
   aPO->mViewManager = do_CreateInstance(kViewManagerCID, &rv);
   if (NS_FAILED(rv)) {
+    delete aPO->mStyleSet;
     return rv;
   }
 
   rv = aPO->mViewManager->Init(mPrt->mPrintDocDC);
   if (NS_FAILED(rv)) {
+    delete aPO->mStyleSet;
     return rv;
   }
 
   rv = aPO->mDocument->CreateShell(aPO->mPresContext, aPO->mViewManager,
                                    aPO->mStyleSet, getter_AddRefs(aPO->mPresShell));
   if (NS_FAILED(rv)) {
+    delete aPO->mStyleSet;
     return rv;
   }
+
+  // The pres shell now owns the style set object.
 
   PRInt32 pageWidth, pageHeight;
   mPrt->mPrintDocDC->GetDeviceSurfaceDimensions(pageWidth, pageHeight);
