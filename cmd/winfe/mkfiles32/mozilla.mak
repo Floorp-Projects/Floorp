@@ -1032,6 +1032,7 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\lib\libmocha\et_moz.c
 	$(DEPTH)\lib\libmocha\lm_applt.c
 	$(DEPTH)\lib\libmocha\lm_bars.c
+	$(DEPTH)\lib\libmocha\lm_bkgrd.c
 	$(DEPTH)\lib\libmocha\lm_cmpnt.c
 	$(DEPTH)\lib\libmocha\lm_doc.c
 !ifdef DOM
