@@ -146,7 +146,8 @@ private:
     void     Clear();
     void     InvalidateCache(PRBool invalidateCachedFile = PR_TRUE);
 
-    PRBool   EncodeHost(const char *host, nsCString &result);
+    PRBool   EscapeIPv6(const char *host, nsCString &result);
+    PRBool   NormalizeIDN(const nsCSubstring &host, nsCString &result);
     void     CoalescePath(netCoalesceFlags coalesceFlag, char *path);
 
     PRUint32 AppendSegmentToBuf(char *, PRUint32, const char *, URLSegment &, const nsCString *esc=nsnull);

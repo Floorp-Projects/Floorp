@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:set ts=4 sw=4 sts=4 et cindent: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -370,7 +371,7 @@ nsStandardURL::InvalidateCache(PRBool invalidateCachedFile)
 }
 
 PRBool
-nsStandardURL::EncodeHost(const char *host, nsCString &result)
+nsStandardURL::EscapeIPv6(const char *host, nsCString &result)
 {
     // Escape IPv6 address literal by surrounding it with []'s
     if (host && (host[0] != '[') && PL_strchr(host, ':')) {
@@ -379,6 +380,45 @@ nsStandardURL::EncodeHost(const char *host, nsCString &result)
         result.Append(']');
         return PR_TRUE;
     }
+    return PR_FALSE;
+}
+
+PRBool
+nsStandardURL::NormalizeIDN(const nsCSubstring &host, nsCString &result)
+{
+    // If host is ACE, then convert to UTF-8.  Else, if host is already UTF-8,
+    // then make sure it is normalized per IDN.
+
+    // this function returns PR_TRUE iff it writes something to |result|.
+
+    // NOTE: As a side-effect this function sets mHostEncoding.  While it would
+    // be nice to avoid side-effects in this function, the implementation of
+    // this function is already somewhat bound to the behavior of the
+    // callsites.  Anyways, this function exists to avoid code duplication, so
+    // side-effects abound :-/
+
+    NS_ASSERTION(mHostEncoding == eEncoding_ASCII, "unexpected default encoding");
+
+    if (IsASCII(host)) {
+        PRBool isACE;
+        if (gIDNService &&
+            NS_SUCCEEDED(gIDNService->IsACE(host, &isACE)) && isACE &&
+            NS_SUCCEEDED(gIDNService->ConvertACEtoUTF8(host, result))) {
+            mHostEncoding = eEncoding_UTF8;
+            return PR_TRUE;
+        }
+    }
+    else {
+        mHostEncoding = eEncoding_UTF8;
+        if (gIDNService && NS_SUCCEEDED(gIDNService->Normalize(host, result))) {
+            // normalization could result in an ASCII only hostname
+            if (IsASCII(result))
+                mHostEncoding = eEncoding_ASCII;
+            return PR_TRUE;
+        }
+    }
+
+    result.Truncate();
     return PR_FALSE;
 }
 
@@ -474,18 +514,10 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
     if (mHost.mLen > 0) {
         const nsCSubstring& tempHost =
             Substring(spec + mHost.mPos, spec + mHost.mPos + mHost.mLen);
-        if (IsASCII(tempHost))
+        if (NormalizeIDN(tempHost, encHost))
+            approxLen += encHost.Length();
+        else
             approxLen += mHost.mLen;
-        else {
-            mHostEncoding = eEncoding_UTF8;
-            if (gIDNService &&
-                NS_SUCCEEDED(gIDNService->Normalize(tempHost, encHost)))
-                approxLen += encHost.Length();
-            else {
-                encHost.Truncate();
-                approxLen += mHost.mLen;
-            }
-        }
     }
 
     //
@@ -609,6 +641,10 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
 PRBool
 nsStandardURL::HostsAreEquivalent(nsStandardURL *that)
 {
+    // XXX now that hostnames are always normalized this special casing
+    // may be unnecessary.  we should be able to directly compare the
+    // contents of mSpec.
+
     // optimize for the non-IDN case...
     if ((this->mHostEncoding == eEncoding_ASCII) &&
         (that->mHostEncoding == eEncoding_ASCII))
@@ -1312,22 +1348,17 @@ nsStandardURL::SetHost(const nsACString &input)
 
     // handle IPv6 unescaped address literal
     PRInt32 len;
-    nsCAutoString escapedHost;
-    if (EncodeHost(host, escapedHost)) {
-        host = escapedHost.get();
-        len = escapedHost.Length();
+    nsCAutoString hostBuf;
+    if (EscapeIPv6(host, hostBuf)) {
+        host = hostBuf.get();
+        len = hostBuf.Length();
     }
-    else {
+    else if (NormalizeIDN(flat, hostBuf)) {
+        host = hostBuf.get();
+        len = hostBuf.Length();
+    }
+    else
         len = flat.Length();
-        if (!IsASCII(flat)) {
-            mHostEncoding = eEncoding_UTF8;
-            if (gIDNService &&
-                NS_SUCCEEDED(gIDNService->Normalize(flat, escapedHost))) {
-                host = escapedHost.get();
-                len = escapedHost.Length();
-            }
-        }
-    }
 
     if (mHost.mLen < 0) {
         mHost.mPos = mAuthority.mPos;
