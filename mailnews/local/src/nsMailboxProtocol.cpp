@@ -269,7 +269,7 @@ PRInt32 nsMailboxProtocol::DoneReadingMessage()
 
 	rv = m_runningUrl->GetMessageHeader(getter_AddRefs(msgHdr));
 	if (NS_SUCCEEDED(rv))
-		msgHdr->OrFlags(MSG_FLAG_READ, &flags);
+		msgHdr->MarkRead(PR_TRUE);
 
 	return rv;
 }
