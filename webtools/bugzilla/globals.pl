@@ -61,6 +61,7 @@ sub globals_pl_sillyness {
 # 
 
 $::db_host = "localhost";
+$::db_port = 3306;
 $::db_name = "bugs";
 $::db_user = "bugs";
 $::db_pass = "";
@@ -105,7 +106,7 @@ sub ConnectToDatabase {
             $name = Param("shadowdb");
             $::dbwritesallowed = 0;
         }
-        $::db = DBI->connect("DBI:mysql:host=$::db_host;database=$name", $::db_user, $::db_pass)
+        $::db = DBI->connect("DBI:mysql:host=$::db_host;database=$name;port=$::db_port", $::db_user, $::db_pass)
             || die "Bugzilla is currently broken. Please try again later. " . 
       "If the problem persists, please contact " . Param("maintainer") .
       ". The error you should quote is: " . $DBI::errstr;
