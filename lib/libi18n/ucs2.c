@@ -105,6 +105,34 @@ PRIVATE uint16 iso88591ToTbl[] = {
 #include "8859-1.ut"
 };
 /*--------------------------------------------------------------------------*/
+PRIVATE uint16 iso88595FromTbl[] = {
+#include "8859-5.uf"
+};
+PRIVATE uint16 iso88595ToTbl[] = {
+#include "8859-5.ut"
+};
+/*--------------------------------------------------------------------------*/
+PRIVATE uint16 iso88597FromTbl[] = {
+#include "8859-7.uf"
+};
+PRIVATE uint16 iso88597ToTbl[] = {
+#include "8859-7.ut"
+};
+/*--------------------------------------------------------------------------*/
+PRIVATE uint16 iso88599FromTbl[] = {
+#include "8859-9.uf"
+};
+PRIVATE uint16 iso88599ToTbl[] = {
+#include "8859-9.ut"
+};
+/*--------------------------------------------------------------------------*/
+PRIVATE uint16 koi8rFromTbl[] = {
+#include "koi8r.uf"
+};
+PRIVATE uint16 koi8rToTbl[] = {
+#include "koi8r.ut"
+};
+/*--------------------------------------------------------------------------*/
 /*	Japanese stuff */
 PRIVATE uint16 JIS0208FromTbl[] = {
 #include "jis0208.uf"
@@ -223,6 +251,18 @@ PRIVATE uTable* LoadToUCS2Table(uint16 csid)
 	case CS_LATIN1:
 		return (uTable*) iso88591ToTbl;
 		
+	case CS_8859_5:
+		return (uTable*) iso88595ToTbl;
+		
+	case CS_8859_7:
+		return (uTable*) iso88597ToTbl;
+		
+	case CS_8859_9:
+		return (uTable*) iso88599ToTbl;
+		
+	case CS_KOI8_R:
+		return (uTable*) koi8rToTbl;
+		
 	/*	Japanese */
 	case CS_JISX0208:
 		return (uTable*) JIS0208ToTbl;
@@ -286,6 +326,18 @@ PRIVATE uTable* LoadFromUCS2Table(uint16 csid)
 	/*	Latin stuff */
 	case CS_LATIN1:
 		return (uTable*) iso88591FromTbl;
+		
+	case CS_8859_5:
+		return (uTable*) iso88595FromTbl;
+		
+	case CS_8859_7:
+		return (uTable*) iso88597FromTbl;
+		
+	case CS_8859_9:
+		return (uTable*) iso88599FromTbl;
+		
+	case CS_KOI8_R:
+		return (uTable*) koi8rFromTbl;
 		
 	/*	Japanese */
 	case CS_JISX0208:
