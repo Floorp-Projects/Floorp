@@ -38,6 +38,7 @@
 
 #include "nsArray.h"
 #include "nsArrayEnumerator.h"
+#include "nsWeakReference.h"
 
 // used by IndexOf()
 struct findIndexOfClosure
@@ -105,9 +106,21 @@ nsArray::Enumerate(nsISimpleEnumerator **aResult)
 // nsIMutableArray implementation
 
 NS_IMETHODIMP
-nsArray::AppendElement(nsISupports* aElement)
+nsArray::AppendElement(nsISupports* aElement, PRBool aWeak)
 {
-    PRBool result = mArray.AppendObject(aElement);
+    nsCOMPtr<nsISupports> elementRef;
+    if (aWeak) {
+        elementRef =
+            getter_AddRefs(NS_STATIC_CAST(nsISupports*,
+                                          NS_GetWeakReference(aElement)));
+        NS_ASSERTION(elementRef, "AppendElement: Trying to use weak references on an object that doesn't support it");
+        if (!elementRef)
+            return NS_ERROR_FAILURE;
+        
+    } else {
+        elementRef = aElement;
+    }
+    PRBool result = mArray.AppendObject(elementRef);
     return result ? NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -119,9 +132,20 @@ nsArray::RemoveElementAt(PRUint32 aIndex)
 }
 
 NS_IMETHODIMP
-nsArray::InsertElementAt(nsISupports* element, PRUint32 aIndex)
+nsArray::InsertElementAt(nsISupports* aElement, PRUint32 aIndex, PRBool aWeak)
 {
-    PRBool result = mArray.InsertObjectAt(element, aIndex);
+    nsCOMPtr<nsISupports> elementRef;
+    if (aWeak) {
+        elementRef =
+            getter_AddRefs(NS_STATIC_CAST(nsISupports*,
+                                          NS_GetWeakReference(aElement)));
+        NS_ASSERTION(elementRef, "InsertElementAt: Trying to use weak references on an object that doesn't support it");
+        if (!elementRef)
+            return NS_ERROR_FAILURE;
+    } else {
+        elementRef = aElement;
+    }
+    PRBool result = mArray.InsertObjectAt(elementRef, aIndex);
     return result ? NS_OK : NS_ERROR_FAILURE;
 }
 
