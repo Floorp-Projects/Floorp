@@ -854,7 +854,7 @@ MenuHandle nsMenu::NSStringNewMenu(short menuID, nsString& menuTitle)
 	unicodeText = menuTitle.GetUnicode();
 	unicodeTextLengthInBytes = menuTitle.Length() * sizeof(PRUnichar);
 	scriptRunTextSizeInBytes = unicodeTextLengthInBytes * 2;
-	scriptRunText = new char[scriptRunTextSizeInBytes];
+	scriptRunText = new char[scriptRunTextSizeInBytes + 1];	// +1 for the null terminator.
 	
 	err = ::ConvertFromUnicodeToScriptCodeRun(mUnicodeTextRunConverter,
 				unicodeTextLengthInBytes,unicodeText,
