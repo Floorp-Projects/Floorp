@@ -284,14 +284,11 @@ output_row(gif_struct *gs)
             width = gs->width;
 
         if (width > 0)
+          if(gs->ic->imgdcb)
             gs->ic->imgdcb->ImgDCBHaveRow(gs->rowbuf, gs->rgbrow,
                     gs->x_offset, width, gs->y_offset + drow_start,
                     drow_end - drow_start + 1, draw_mode, gs->ipass);
-            /*
-            il_emit_row(gs->ic, gs->rowbuf, gs->rgbrow, gs->x_offset, width,
-                        gs->y_offset + drow_start, drow_end - drow_start + 1,
-                        draw_mode, gs->ipass);
-                        */
+           
     }
 
 	gs->rowp = gs->rowbuf;
@@ -537,7 +534,8 @@ il_gif_init_transparency(il_container *ic, int index)
         ic->src_header->transparent_pixel = src_trans_pixel;
 
         /* Initialize the destination image's transparent pixel. */
-        ic->imgdcb->ImgDCBInitTransparentPixel();
+        if(ic->imgdcb)
+          ic->imgdcb->ImgDCBInitTransparentPixel();
 
         /* Set the source image's transparent pixel color to be the preferred
            transparency color of the destination image. */
@@ -567,7 +565,8 @@ il_gif_destroy_transparency(il_container *ic)
         src_header->transparent_pixel = NULL;
 
         /* Destroy the destination image's transparent pixel. */
-        ic->imgdcb->ImgDCBDestroyTransparentPixel();
+        if(ic->imgdcb)
+          ic->imgdcb->ImgDCBDestroyTransparentPixel();
     }
 }
 
@@ -642,7 +641,8 @@ process_buffered_gif_input_data(gif_struct* gs)
             ic->loop_count = 0;
 
         il_gif_abort(ic);
-        ic->imgdcb->ImgDCBHaveImageAll();
+        if(ic->imgdcb)
+          ic->imgdcb->ImgDCBHaveImageAll();
     }
 }
 
@@ -747,13 +747,11 @@ gif_clear_screen(gif_struct *gs)
            pass number so that calls to il_flush_image_data()
            are done using a timer. */
         if (erase_width > 0)
+          if(gs->ic->imgdcb)
             gs->ic->imgdcb->ImgDCBHaveRow(gs->rowbuf, gs->rgbrow,
                     erase_x_offset, erase_width,
                     erase_y_offset,erase_height, ilErase, 2);
-            /*(gs->ic, gs->rowbuf, gs->rgbrow, erase_x_offset,
-                        erase_width, erase_y_offset, erase_height,
-                        ilErase, 2);
-            */
+           
         /* Reset the source image's transparent pixel to its former state. */
         il_gif_destroy_transparency(ic);
         src_header->transparent_pixel = saved_src_trans_pixel;
@@ -824,6 +822,7 @@ il_gif_write(il_container *ic, const uint8 *buf, int32 len)
 
             /* Now we know how many colors are in our colormap. */
             if (gs->is_local_colormap_defined || (gs->images_decoded == 0))
+              if(ic->imgdcb)
                 ic->imgdcb->ImgDCBSetupColorspaceConverter(); 
 
             status = gif_clear_screen(gs);
@@ -1235,7 +1234,8 @@ il_gif_write(il_container *ic, const uint8 *buf, int32 len)
 				ic->image->header.widthBytes = (ic->image->header.width * ic->image->header.color_space->pixmap_depth + 7)/8; 
 
 				ic->image->header.widthBytes = ROUNDUP(ic->image->header.widthBytes, 4);
-		status = ic->imgdcb->ImgDCBImageSize();
+        if(ic->imgdcb)
+		       status = ic->imgdcb->ImgDCBImageSize();
 
                 if (status < 0)
                 { 
@@ -1245,16 +1245,8 @@ il_gif_write(il_container *ic, const uint8 *buf, int32 len)
 						gs->state = gif_error;
 					break;
 				}
-#ifdef STANDALONE_IMAGE_LIB
-                ic->img_cx->img_cb->NewPixmap(ic->img_cx->dpy_cx,
-                                              ic->dest_width, 
-											  ic->dest_height, 
-											  ic->image, 
-											  ic->mask);
-#else
-				IMGCBIF_NewPixmap(ic->img_cx->img_cb, ic->img_cx->dpy_cx, ic->dest_width,
-                      		ic->dest_height, ic->image, ic->mask);
-#endif /* STANDALONE_IMAGE_LIB */
+        ic->img_cx->img_cb->NewPixmap(ic->img_cx->dpy_cx, ic->dest_width,
+            ic->dest_height, ic->image, ic->mask);
     
 				if((!ic->scalerow)||(!ic->image->bits)||(ic->mask && !ic->mask->bits)){
 					gs->state=gif_oom;
@@ -1351,7 +1343,8 @@ il_gif_write(il_container *ic, const uint8 *buf, int32 len)
                 cmap->num_colors = -num_colors;
 
                 /* Switch to the new local palette after it loads */
-                ic->imgdcb->ImgDCBResetPalette();
+                if(ic->imgdcb)
+                   ic->imgdcb->ImgDCBResetPalette();
 
                 gs->is_local_colormap_defined = TRUE;
                 GETN(gs->local_colormap_size * 3, gif_image_colormap);
@@ -1360,6 +1353,7 @@ il_gif_write(il_container *ic, const uint8 *buf, int32 len)
             {
                 /* Switch back to the global palette */
                 if (gs->is_local_colormap_defined)
+                  if(ic->imgdcb)
                     ic->imgdcb->ImgDCBResetPalette();
 
                 gs->is_local_colormap_defined = FALSE;
@@ -1430,9 +1424,10 @@ il_gif_write(il_container *ic, const uint8 *buf, int32 len)
             {
                 /* Flush the image data unconditionally, so that we can
                    notify observers that the current frame has completed. */
+              if(ic->imgdcb){
                 ic->imgdcb->ImgDCBFlushImage();
                 ic->imgdcb->ImgDCBHaveImageFrame();
-                
+              }
                 gs->images_decoded++;
 
                 /* An image can specify a delay time before which to display
@@ -1440,9 +1435,10 @@ il_gif_write(il_container *ic, const uint8 *buf, int32 len)
 				if(gs->delay_time < MINIMUM_DELAY_TIME )
 					gs->delay_time = MINIMUM_DELAY_TIME;
 				if (gs->delay_time){
+          if(ic->imgdcb){
               gs->delay_timeout = (void *)
                       ic->imgdcb->ImgDCBSetTimeout(gif_delay_time_callback, gs->ic, gs->delay_time);
-                      
+          }
                     /* Essentially, tell the decoder state machine to wait
                        forever.  The timeout callback routine will wake up the
                        state machine and force it to decode the next image. */
@@ -1544,7 +1540,7 @@ il_gif_complete(il_container *ic)
 {
     if (ic->ds)
     {
-		gif_struct *gs = (gif_struct*) ic->ds;
+		    gif_struct *gs = (gif_struct*) ic->ds;
 
         /* No more data in the stream, but we may still have work to do,
            so don't actually free any of the data structures. */
@@ -1594,6 +1590,7 @@ il_gif_abort(il_container *ic)
          * present, will be freed when the image container is
          * destroyed.
          */
+        
         if (gs->is_local_colormap_defined) {
             if (gs->global_colormap) {
                 PR_FREEIF(gs->global_colormap);
@@ -1605,6 +1602,7 @@ il_gif_abort(il_container *ic)
                 gs->local_colormap = NULL;
             }
         }
+       
 		PR_FREEIF(gs);
 		ic->ds = 0;
 	}
