@@ -101,13 +101,9 @@ class nsIMM
   typedef LONG (CALLBACK *GetCompStrPtr)  (HIMC, DWORD, LPVOID, DWORD);
   typedef LONG (CALLBACK *GetContextPtr)  (HWND);
   typedef LONG (CALLBACK *RelContextPtr)  (HWND, HIMC);
-  typedef LONG (CALLBACK *GetCStatusPtr)  (HIMC, LPDWORD, LPDWORD);
-  typedef LONG (CALLBACK *SetCStatusPtr)  (HIMC, DWORD, DWORD);
   typedef LONG (CALLBACK *NotifyIMEPtr)   (HIMC, DWORD, DWORD, DWORD);
   typedef LONG (CALLBACK *SetCandWindowPtr)(HIMC, LPCANDIDATEFORM);
   typedef LONG (CALLBACK *SetCompWindowPtr)(HIMC, LPCOMPOSITIONFORM);
-  typedef LONG (CALLBACK *GetCompFontPtr)  (HIMC, PLOGFONT);
-  typedef LONG (CALLBACK *SetCompFontPtr)  (HIMC, PLOGFONT);
   typedef LONG (CALLBACK *GetCompWindowPtr)(HIMC, LPCOMPOSITIONFORM);
   typedef LONG (CALLBACK *GetPropertyPtr)  (HKL, DWORD);
   typedef LONG (CALLBACK *GetDefaultIMEWndPtr) (HWND);
@@ -134,12 +130,6 @@ public:
     mReleaseContext=(mInstance) ? (RelContextPtr)GetProcAddress(mInstance, "ImmReleaseContext") : 0;
     NS_ASSERTION(mReleaseContext!=NULL, "nsIMM.ImmReleaseContext failed.");
 
-    mGetConversionStatus=(mInstance) ? (GetCStatusPtr)GetProcAddress(mInstance, "ImmGetConversionStatus") : 0;
-    NS_ASSERTION(mGetConversionStatus!=NULL, "nsIMM.ImmGetConversionStatus failed.");
-
-    mSetConversionStatus=(mInstance) ? (SetCStatusPtr)GetProcAddress(mInstance, "ImmSetConversionStatus") : 0;
-    NS_ASSERTION(mSetConversionStatus!=NULL, "nsIMM.ImmSetConversionStatus failed.");
-
     mNotifyIME=(mInstance) ? (NotifyIMEPtr)GetProcAddress(mInstance, "ImmNotifyIME") : 0;
     NS_ASSERTION(mNotifyIME!=NULL, "nsIMM.ImmNotifyIME failed.");
 
@@ -148,18 +138,6 @@ public:
 
     mGetCompositionWindow=(mInstance) ? (GetCompWindowPtr)GetProcAddress(mInstance, "ImmGetCompositionWindow") : 0;
     NS_ASSERTION(mGetCompositionWindow!=NULL, "nsIMM.ImmGetCompositionWindow failed.");
-
-    mGetCompositionFontA=(mInstance) ? (GetCompFontPtr)GetProcAddress(mInstance, "ImmGetCompositionFontA") : 0;
-    NS_ASSERTION(mGetCompositionFontA!=NULL, "nsIMM.ImmGetCompositionFontA failed.");
-
-    mGetCompositionFontW=(mInstance) ? (GetCompFontPtr)GetProcAddress(mInstance, "ImmGetCompositionFontW") : 0;
-    NS_ASSERTION(mGetCompositionFontW!=NULL, "nsIMM.ImmGetCompositionFontW failed.");
-
-    mSetCompositionFontA=(mInstance) ? (SetCompFontPtr)GetProcAddress(mInstance, "ImmSetCompositionFontA") : 0;
-    NS_ASSERTION(mSetCompositionFontA!=NULL, "nsIMM.ImmSetCompositionFontA failed.");
-
-    mSetCompositionFontW=(mInstance) ? (SetCompFontPtr)GetProcAddress(mInstance, "ImmSetCompositionFontW") : 0;
-    NS_ASSERTION(mSetCompositionFontW!=NULL, "nsIMM.ImmSetCompositionFontW failed.");
 
     mSetCompositionWindow=(mInstance) ? (SetCompWindowPtr)GetProcAddress(mInstance, "ImmSetCompositionWindow") : 0;
     NS_ASSERTION(mSetCompositionWindow!=NULL, "nsIMM.ImmSetCompositionWindow failed.");
@@ -179,16 +157,10 @@ public:
     mGetCompositionStringW=0;
     mGetContext=0;
     mReleaseContext=0;
-    mGetConversionStatus=0;
-    mSetConversionStatus=0;
     mNotifyIME=0;
     mSetCandiateWindow=0;
     mGetCompositionWindow=0;
     mSetCompositionWindow=0;
-    mGetCompositionFontA=0;
-    mGetCompositionFontA=0;
-    mSetCompositionFontW=0;
-    mSetCompositionFontW=0;
     mGetProperty=0;
     mGetDefaultIMEWnd=0;
   }
@@ -209,14 +181,6 @@ public:
     return (mReleaseContext) ? mReleaseContext(anHWND, anIMC) : 0L;
   }
 
-  LONG GetConversionStatus(HIMC h, LPDWORD w1, LPDWORD w2) {
-    return (mGetConversionStatus) ? mGetConversionStatus(h, w1, w2) : 0L;
-  }
-
-  LONG SetConversionStatus(HIMC h, DWORD d1, DWORD d2) {
-    return (mSetConversionStatus) ? mSetConversionStatus(h, d1, d2) : 0L;
-  }
-
   LONG NotifyIME(HIMC h, DWORD d1, DWORD d2, DWORD d3) {
     return (mNotifyIME) ? mNotifyIME(h, d1, d2, d3) : 0L;
   }
@@ -227,22 +191,6 @@ public:
 
   LONG SetCompositionWindow(HIMC h, LPCOMPOSITIONFORM l) {
     return (mSetCompositionWindow) ? mSetCompositionWindow(h, l) : 0L;
-  }
-
-  LONG GetCompositionFontA(HIMC h, PLOGFONT l) {
-    return (mGetCompositionFontA) ? mGetCompositionFontA(h, l) : 0L;
-  }
-
-  LONG GetCompositionFontW(HIMC h, PLOGFONT l) {
-    return (mGetCompositionFontW) ? mGetCompositionFontW(h, l) : 0L;
-  }
-
-  LONG SetCompositionFontA(HIMC h, PLOGFONT l) {
-    return (mSetCompositionFontA) ? mSetCompositionFontA(h, l) : 0L;
-  }
-
-  LONG SetCompositionFontW(HIMC h, PLOGFONT l) {
-    return (mSetCompositionFontW) ? mSetCompositionFontW(h, l) : 0L;
   }
 
   LONG GetCompositionWindow(HIMC h,LPCOMPOSITIONFORM l) {
@@ -264,15 +212,9 @@ private:
   GetCompStrPtr       mGetCompositionStringW;
   GetContextPtr       mGetContext;
   RelContextPtr       mReleaseContext;
-  GetCStatusPtr       mGetConversionStatus;
-  SetCStatusPtr       mSetConversionStatus;
   NotifyIMEPtr        mNotifyIME;
   SetCandWindowPtr    mSetCandiateWindow;
   SetCompWindowPtr    mSetCompositionWindow;
-  GetCompFontPtr      mGetCompositionFontA;
-  GetCompFontPtr      mGetCompositionFontW;
-  SetCompFontPtr      mSetCompositionFontA;
-  SetCompFontPtr      mSetCompositionFontW;
   GetCompWindowPtr    mGetCompositionWindow;
   GetPropertyPtr      mGetProperty;
   GetDefaultIMEWndPtr mGetDefaultIMEWnd;
@@ -484,6 +426,8 @@ protected:
   BOOL                    OnIMEStartComposition();
   BOOL                    OnIMEReconvert(LPARAM aData, LRESULT *oResult, PRBool aUseUnicode);
 
+  void                    GetCompositionString(HIMC aHIMC, DWORD aIndex, nsString* aStrUnicode, nsCString* aStrAnsi);
+
   virtual PRBool          DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode, UINT aVirtualCharCode, LPARAM aKeyCode);
 
   virtual PRBool          DispatchFocus(PRUint32 aEventType, PRBool isMozWindowTakingFocus);
@@ -503,7 +447,7 @@ protected:
   void HandleTextEvent(HIMC hIMEContext, PRBool aCheckAttr=PR_TRUE);
   BOOL HandleStartComposition(HIMC hIMEContext);
   void HandleEndComposition(void);
-  void MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthResult, nsTextRangeArray* textRangeListResult);
+  void GetTextRangeList(PRUint32* textRangeListLengthResult, nsTextRangeArray* textRangeListResult);
 
   void ConstrainZLevel(HWND *aAfter);
 
@@ -515,6 +459,28 @@ private:
 #endif
 
 protected:
+  // Count of nsWindow instances. Used to manage IME buffers
+  static PRUint32   sInstanceCount;
+
+  // For Input Method Support
+  // Only one set of IME buffers is needed for a process.
+  static PRBool     sIMEIsComposing;
+  static PRBool     sIMEIsStatusChanged;
+
+  static DWORD      sIMEProperty;
+  static nsString*  sIMECompUnicode;
+  static PRUint8*   sIMEAttributeArray;
+  static PRInt32    sIMEAttributeArrayLength;
+  static PRInt32    sIMEAttributeArraySize;
+  static PRUint32*  sIMECompClauseArray;
+  static PRInt32    sIMECompClauseArrayLength;
+  static PRInt32    sIMECompClauseArraySize;
+  static long       sIMECursorPosition;
+  static PRUnichar* sIMEReconvertUnicode; // reconvert string
+
+  // For describing composing frame
+  static RECT*      sIMECompCharPos;
+
   nsSize        mLastSize;
   static        nsWindow* gCurrentWindow;
   nsPoint       mLastPoint;
@@ -540,8 +506,6 @@ protected:
   PRPackedBool  mIsDestroying;
   PRPackedBool  mOnDestroyCalled;
   PRPackedBool  mIsVisible;
-  PRPackedBool  mIMEIsComposing;
-  PRPackedBool  mIMEIsStatusChanged;
   PRPackedBool  mIsInMouseCapture;
   PRPackedBool  mIsInMouseWheelProcessing;
   PRPackedBool  mUnicodeWidget;
@@ -561,22 +525,6 @@ protected:
     // Window styles used by this window before chrome was hidden
   DWORD         mOldStyle;
   DWORD         mOldExStyle;
-
-  // For Input Method Support
-  DWORD         mIMEProperty;
-  nsCString*    mIMECompString;
-  nsString*     mIMECompUnicode;
-  PRUint8*      mIMEAttributeString;
-  PRInt32       mIMEAttributeStringLength;
-  PRInt32       mIMEAttributeStringSize;
-  PRUint32*     mIMECompClauseString;
-  PRInt32       mIMECompClauseStringLength;
-  PRInt32       mIMECompClauseStringSize;
-  long          mIMECursorPosition;
-  PRUnichar*    mIMEReconvertUnicode; // reconvert string
-
-  // For describing composing frame
-  RECT*         mIMECompCharPos;
 
   static UINT   gCurrentKeyboardCP;
   static HKL    gKeyboardLayout;
