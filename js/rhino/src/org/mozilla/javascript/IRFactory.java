@@ -816,7 +816,7 @@ public class IRFactory {
                                 null, false);
     }
 
-    private Node createAssignment(int nodeOp, Node left, Node right,
+    private Node createAssignment(int assignOp, Node left, Node right,
                                   Class convert, boolean postfix)
     {
         int nodeType = left.getType();
@@ -824,7 +824,7 @@ public class IRFactory {
         Node id = null;
         switch (nodeType) {
           case Token.NAME:
-            return createSetName(nodeOp, left, right, convert, postfix);
+            return createSetName(assignOp, left, right, convert, postfix);
 
           case Token.GETPROP:
             idString = (String) left.getProp(Node.SPECIAL_PROP_PROP);
@@ -834,7 +834,7 @@ public class IRFactory {
           case Token.GETELEM:
             if (id == null)
                 id = left.getLastChild();
-            return createSetProp(nodeType, nodeOp, left.getFirstChild(),
+            return createSetProp(nodeType, assignOp, left.getFirstChild(),
                                  id, right, convert, postfix);
           default:
             // TODO: This should be a ReferenceError--but that's a runtime
@@ -852,10 +852,10 @@ public class IRFactory {
         return result;
     }
 
-    private Node createSetName(int nodeOp, Node left, Node right,
+    private Node createSetName(int assignOp, Node left, Node right,
                                Class convert, boolean postfix)
     {
-        if (nodeOp == Token.NOP) {
+        if (assignOp == Token.NOP) {
             left.setType(Token.BINDNAME);
             return new Node(Token.SETNAME, left, right);
         }
@@ -873,7 +873,7 @@ public class IRFactory {
             opLeft = createConvert(convert, opLeft);
         if (postfix)
             opLeft = createNewTemp(opLeft);
-        Node op = new Node(nodeOp, opLeft, right);
+        Node op = new Node(assignOp, opLeft, right);
 
         Node lvalueLeft = Node.newString(Token.BINDNAME, s);
         Node result = new Node(Token.SETNAME, lvalueLeft, op);
@@ -947,7 +947,7 @@ public class IRFactory {
         return false;
     }
 
-    private Node createSetProp(int nodeType, int nodeOp, Node obj, Node id,
+    private Node createSetProp(int nodeType, int assignOp, Node obj, Node id,
                                Node expr, Class convert, boolean postfix)
     {
         int type = nodeType == Token.GETPROP
@@ -963,7 +963,7 @@ public class IRFactory {
             }
         }
 
-        if (nodeOp == Token.NOP)
+        if (assignOp == Token.NOP)
             return new Node(type, obj, id, expr);
 /*
 *    If the RHS expression could modify the LHS we have
@@ -997,7 +997,7 @@ public class IRFactory {
             opLeft = createConvert(convert, opLeft);
         if (postfix)
             opLeft = createNewTemp(opLeft);
-        Node op = new Node(nodeOp, opLeft, expr);
+        Node op = new Node(assignOp, opLeft, expr);
 
         Node result = new Node(type, tmp1, tmp2, op);
         if (postfix) {
