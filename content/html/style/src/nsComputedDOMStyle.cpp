@@ -117,6 +117,9 @@ private:
   // z-index
   nsresult GetZIndex(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
 
+  // List properties
+  nsresult GetListStyleImage(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
+
   nsresult GetBehavior(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
 
   nsROCSSPrimitiveValue* GetROCSSPrimitiveValue();
@@ -367,6 +370,8 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAReadableString& aPropertyName,
     rv = GetBorderRightWidth(frame, *getter_AddRefs(val)); break;
   case eCSSProperty_z_index:
     rv = GetZIndex(frame, *getter_AddRefs(val)); break;
+  case eCSSProperty_list_style_image:
+    rv = GetListStyleImage(frame, *getter_AddRefs(val)); break;
   default :
     break;
   }
@@ -1036,6 +1041,27 @@ nsComputedDOMStyle::GetZIndex(nsIFrame *aFrame,
       }
       else {
         result=NS_ERROR_OUT_OF_MEMORY;
+      }
+    }
+  }
+  return result;
+}
+
+nsresult
+nsComputedDOMStyle::GetListStyleImage(nsIFrame *aFrame,
+                                      nsIDOMCSSPrimitiveValue*& aValue)
+{
+  nsresult result=NS_OK;
+  if(aFrame) {
+    const nsStyleList* list;
+    GetStyleData(eStyleStruct_List,(const nsStyleStruct*&)list,aFrame);
+    if(list) {
+      nsROCSSPrimitiveValue* val=GetROCSSPrimitiveValue();
+      if(val) {
+          val->SetString(list->mListStyleImage);
+          result = val->QueryInterface(NS_GET_IID(nsIDOMCSSPrimitiveValue),(void**)&aValue);
+      } else {
+        result = NS_ERROR_OUT_OF_MEMORY;
       }
     }
   }
