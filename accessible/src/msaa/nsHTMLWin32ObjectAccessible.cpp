@@ -42,33 +42,14 @@
 nsHTMLWin32ObjectAccessible::nsHTMLWin32ObjectAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell, void* aHwnd):
 nsAccessibleWrap(aNode, aShell)
 {
-  if (aHwnd) {
-    // XXX - when we get accessible plugins we may have to check here
-    //       for the proper window handle using Win32 APIs so we check
-    //       the proper IAccessible for the information we need.
-    mHwnd = aHwnd;
-  }
+  mHwnd = aHwnd ? ::GetWindow((HWND)aHwnd, GW_CHILD) : 0;
 }
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLWin32ObjectAccessible, nsAccessible, nsIAccessibleWin32Object)
 
-NS_IMETHODIMP
-nsHTMLWin32ObjectAccessible::GetHwnd(void **aHwnd) 
+NS_IMETHODIMP nsHTMLWin32ObjectAccessible::GetHwnd(void **aHwnd) 
 {
   *aHwnd = mHwnd;
-  if (mHwnd) {
-    // Check for NullPluginClass to avoid infinite loop bug 245878
-    // XXX We're going to be doing more work with NullPluginClass at some point to make it
-    // keyboard accessible (bug 245349, bug 83754 as well as other work going on in
-    // plugins to make them accessible like bug 93149).
-    // The eventual goal will be to get rid of this check here so we 
-    // can walk into the null plugin.
-    const LPCSTR kClassNameNullPlugin = "NullPluginClass";
-    HWND nullPluginChild = ::FindWindowEx((HWND)mHwnd, NULL, kClassNameNullPlugin, NULL);
-    if (nullPluginChild) {
-      *aHwnd = 0;    // Avoid infinite loop by not walking into null plugin
-    }
-  }
   return NS_OK;
 }
 
