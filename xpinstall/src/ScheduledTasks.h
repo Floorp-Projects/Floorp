@@ -38,6 +38,7 @@ PR_BEGIN_EXTERN_C
 PRInt32 DeleteFileNowOrSchedule(nsIFile* filename);
 PRInt32 ReplaceFileNowOrSchedule(nsIFile* tmpfile, nsIFile* target );
 PRInt32 ScheduleFileForDeletion(nsIFile* filename);
+char*   GetRegFilePath();
 
 
 void PerformScheduledTasks(HREG reg);

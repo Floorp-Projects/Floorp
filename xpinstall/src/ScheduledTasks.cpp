@@ -30,8 +30,11 @@
 #include "nsInstall.h" // for error codes
 #include "prmem.h"
 #include "ScheduledTasks.h"
+#include "InstallCleanupDefines.h"
 
-
+#include "nsSpecialSystemDirectory.h"
+#include "nsDirectoryService.h"
+#include "nsDirectoryServiceDefs.h"
 
 static nsresult 
 GetPersistentStringFromSpec(nsIFile* inSpec, char **string)
@@ -134,7 +137,33 @@ PRInt32 ReplaceExistingWindowsFile(nsIFile* currentSpec, nsIFile* finalSpec)
 }
 #endif
 
+char* GetRegFilePath()
+{
+    nsresult rv;
+    nsCOMPtr<nsILocalFile> iFileUtilityPath;
+    //Get the program directory
+    NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+    if (NS_FAILED(rv))
+        return nsnull;
 
+    directoryService->Get(NS_OS_CURRENT_PROCESS_DIR, 
+                          NS_GET_IID(nsIFile), 
+                          getter_AddRefs(iFileUtilityPath));
+    if (!iFileUtilityPath)
+        return nsnull;
+
+#if defined (XP_MAC)
+    iFileUtilityPath->Append(ESSENTIAL_FILES);
+#endif
+    iFileUtilityPath->Append(CLEANUP_REGISTRY);
+
+    //Yes, we know using GetPath is buggy on the Mac.
+    //When libreg is fixed to accept nsIFiles we'll change this to match.
+    char* regFilePath;
+    iFileUtilityPath->GetPath(&regFilePath);
+  
+    return regFilePath;
+}
 
 
 PRInt32 DeleteFileNowOrSchedule(nsIFile* filename)
@@ -159,7 +188,11 @@ PRInt32 ScheduleFileForDeletion(nsIFile *filename)
     REGERR  err;
     PRInt32 result = nsInstall::UNEXPECTED_ERROR;
 
-    err = NR_RegOpen("", &reg) ;
+    char* regFilePath = GetRegFilePath();
+    err = NR_RegOpen(regFilePath, &reg);
+    if (regFilePath)
+      nsCRT::free(regFilePath);
+
     if ( err == REGERR_OK )
     {
         err = NR_RegAddKey(reg,ROOTKEY_PRIVATE,REG_DELETE_LIST_KEY,&newkey);
@@ -328,7 +361,8 @@ PRInt32 ReplaceFileNowOrSchedule(nsIFile* replacementFile, nsIFile* doomedFile )
         HREG    reg;
         REGERR  err;
 
-        if ( REGERR_OK == NR_RegOpen("", &reg) ) 
+        char* regFilePath = GetRegFilePath();
+        if ( REGERR_OK == NR_RegOpen(regFilePath, &reg) ) 
         {
             err = NR_RegAddKey( reg, ROOTKEY_PRIVATE, REG_REPLACE_LIST_KEY, &listkey );
             if ( err == REGERR_OK ) 
@@ -373,9 +407,10 @@ PRInt32 ReplaceFileNowOrSchedule(nsIFile* replacementFile, nsIFile* doomedFile )
                     }
                 }
             }
-
             NR_RegClose(reg);
         }
+        if (regFilePath)
+            nsCRT::free(regFilePath);
     }
 
     return result;
@@ -524,3 +559,5 @@ void ReplaceScheduledFiles( HREG reg )
         }
     }
 }
+
+

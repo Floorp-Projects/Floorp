@@ -59,6 +59,7 @@
 #include "nsXPIProxy.h"
 #include "nsRegisterItem.h"
 #include "nsNetUtil.h"
+#include "ScheduledTasks.h"
 
 #include "nsIProxyObjectManager.h"
 #include "nsProxiedService.h"
@@ -854,7 +855,10 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
         if ( result == SUCCESS )
         {
             if ( rebootNeeded )
+            {
                 *aReturn = SaveError( REBOOT_NEEDED );
+                nsSoftwareUpdate::mNeedCleanup = PR_TRUE;
+            }
 
             // XXX for now all successful installs will trigger an Autoreg.
             // We eventually want to do this only when flagged.
