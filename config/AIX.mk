@@ -82,7 +82,7 @@ AIX_NSPR_LINK		= -L$(DIST)/bin -lnspr_shr -blibpath:/usr/local/lib/netscape:/usr
 AIX_NSPR_DIST_LINK	= -L$(DIST)/bin -lnspr_shr -blibpath:.:../dist/$(OBJDIR)/bin:../../dist/$(OBJDIR)/bin:../../../dist/$(OBJDIR)/bin:/usr/lib:/lib
 endif
 ifneq (,$(filter 4.2 4.3,$(OS_RELEASE)))
-PORT_FLAGS		+= -DSW_THREADS
+PORT_FLAGS		+= -DSW_THREADS -DHAVE_SNPRINTF
 OS_LIBS			+= -ldl 
 MKSHLIB			= $(LD) $(DSO_LDOPTS)
 DSO_LDOPTS		= -brtl -bM:SRE -bnoentry -bexpall -berok
