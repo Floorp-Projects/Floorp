@@ -32,6 +32,7 @@
 #include "nsWidgetsCID.h"
 #include "nsRepository.h"
 #include "nsIView.h"
+#include "nsHTMLParts.h"
 
 PRInt32 nsInputFileFrame::gSpacing = 40;
 nsString* nsInputFile::gFILE_TYPE = new nsString("file");
@@ -130,12 +131,16 @@ NS_IMETHODIMP nsInputFileFrame::Reflow(nsIPresContext&      aPresContext,
   nsIFrame* childFrame;
 
   if (0 == numChildren) {
+    // XXX This code should move to Init(), someday when the frame construction
+    // changes are all done and Init() is always getting called...
     nsInputText* textField = content->GetTextField();
     nsInput* browseButton = content->GetBrowseButton();
     if ((nsnull != textField) && (nsnull != browseButton))  {
-      textField->CreateFrame(&aPresContext, this, mStyleContext, childFrame);
+      NS_NewInputTextFrame(textField, this, childFrame);
+      childFrame->SetStyleContext(&aPresContext, mStyleContext);
       mFirstChild = childFrame;
-      browseButton->CreateFrame(&aPresContext, this, mStyleContext, childFrame);
+      NS_NewInputButtonFrame(browseButton, this, childFrame);
+      childFrame->SetStyleContext(&aPresContext, mStyleContext);
       mFirstChild->SetNextSibling(childFrame);
       mChildCount = 2;
     }
