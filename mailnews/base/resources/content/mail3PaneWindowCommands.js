@@ -869,7 +869,6 @@ function IsPropertiesEnabled(command)
    if (IsFakeAccount())
      return false;
 
-   var folderTree = GetFolderTree();
    var selection = folderTree.treeBoxObject.selection;
    return (selection.count == 1);
 }
