@@ -62,6 +62,53 @@ _OpenURL(NPP npp, const char *szURL, const char *szTarget, void *pNotifyData, co
         }
 
         CComBSTR url(szURL);
+        
+        HRESULT hr;
+
+        // Test if the input URL has a schema which means it's relative,
+        // otherwise consider it to be relative to the current URL
+
+        WCHAR szSchema[10];
+        const DWORD cbSchema = sizeof(szSchema) / sizeof(szSchema[0]);
+        DWORD cbSchemaUsed = 0;
+
+        memset(szSchema, 0, cbSchema);
+        hr = CoInternetParseUrl(url.m_str, PARSE_SCHEMA, 0,
+            szSchema, cbSchema, &cbSchemaUsed, 0);
+
+        if (hr != S_OK || cbSchemaUsed == 0)
+        {
+            // Convert relative URLs to absolute, so that they can be loaded
+            // by the Browser
+
+            CComBSTR bstrCurrentURL;
+            cpBrowser->get_LocationURL(&bstrCurrentURL);
+        
+            if (bstrCurrentURL.Length())
+            {
+                USES_CONVERSION;
+                DWORD cbNewURL = (url.Length() + bstrCurrentURL.Length() + 1) * sizeof(WCHAR);
+                DWORD cbNewURLUsed = 0;
+                WCHAR *pszNewURL = (WCHAR *) malloc(cbNewURL);
+                memset(pszNewURL, 0, cbNewURL);
+                ATLASSERT(pszNewURL);
+
+                CoInternetCombineUrl(
+                    bstrCurrentURL.m_str,
+                    url.m_str,
+                    0,
+                    pszNewURL,
+                    cbNewURL,
+                    &cbNewURLUsed,
+                    0);
+
+                ATLASSERT(cbNewURLUsed < cbNewURL);
+
+                url = pszNewURL;
+                free(pszNewURL);
+            }
+        }
+
         CComVariant vFlags;
         CComVariant vTarget(szTarget);
         CComVariant vPostData;
