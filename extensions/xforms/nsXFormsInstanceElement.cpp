@@ -40,6 +40,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOM3Node.h"
+#include "nsIDocument.h"
 #include "nsMemory.h"
 #include "nsXFormsAtoms.h"
 #include "nsString.h"
@@ -67,6 +68,7 @@ nsXFormsInstanceElement::OnDestroyed()
   if (rec)
     rec->RemoveEventListenerByIID(this, NS_GET_IID(nsIDOMLoadListener));
 
+  mElement = nsnull;
   return NS_OK;
 }
 
@@ -279,6 +281,14 @@ nsXFormsInstanceElement::CreateInstanceDocument()
   if (!doc) // could be we just aren't inserted yet, so don't warn
     return NS_ERROR_FAILURE;
 
+  // Do not try to load an instance document if the current document is not
+  // associated with a DOM window.  This could happen, for example, if some
+  // XForms document loaded itself as instance data (which is what the Forms
+  // 1.0 testsuite does).
+  nsCOMPtr<nsIDocument> d = do_QueryInterface(doc);
+  if (d && !d->GetScriptGlobalObject())
+    return NS_ERROR_FAILURE;
+
   nsCOMPtr<nsIDOMDOMImplementation> domImpl;
   rv = doc->GetImplementation(getter_AddRefs(domImpl));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -290,6 +300,12 @@ nsXFormsInstanceElement::CreateInstanceDocument()
 already_AddRefed<nsIModelElementPrivate>
 nsXFormsInstanceElement::GetModel()
 {
+  if (!mElement)
+  {
+    NS_WARNING("The XTF wrapper element has been destroyed");
+    return nsnull;
+  }
+
   nsCOMPtr<nsIDOMNode> parentNode;
   mElement->GetParentNode(getter_AddRefs(parentNode));
 

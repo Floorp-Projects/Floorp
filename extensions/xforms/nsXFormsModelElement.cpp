@@ -189,7 +189,8 @@ nsXFormsModelElement::DocumentChanged(nsIDOMDocument* aNewDocument)
     nsIScriptGlobalObject *window = doc->GetScriptGlobalObject();
 
     nsCOMPtr<nsIDOMEventTarget> targ = do_QueryInterface(window);
-    targ->AddEventListener(NS_LITERAL_STRING("load"), this, PR_TRUE);
+    if (targ)
+      targ->AddEventListener(NS_LITERAL_STRING("load"), this, PR_TRUE);
   }
 
   models->AppendElement(this);
