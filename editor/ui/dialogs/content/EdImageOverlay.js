@@ -524,7 +524,11 @@ function ValidateImage()
   var src = TrimString(gDialog.srcInput.value);
   globalElement.setAttribute("src", src);
 
-  globalElement.setAttribute("title", TrimString(gDialog.titleInput.value));
+  var title = TrimString(gDialog.titleInput.value);
+  if (title)
+    globalElement.setAttribute("title", title);
+  else
+    globalElement.removeAttribute("title");
 
   // Force user to enter Alt text only if "Alternate text" radio is checked
   // Don't allow just spaces in alt text
