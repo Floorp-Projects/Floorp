@@ -26,6 +26,7 @@
 
 #include "nspr.h"
 #include "nsCOMPtr.h"
+#include "nsICache.h"
 #include "nsICacheListener.h"
 
 
@@ -35,15 +36,17 @@ private:
     friend class nsCacheService;
     friend class nsCacheEntry;
 
-    nsCacheRequest( nsCString *        key, 
-                    nsICacheListener * listener,
-                    PRUint32           accessRequested,
-                    PRBool             streamBased)
+    nsCacheRequest( nsCString *           key, 
+                    nsICacheListener *    listener,
+                    nsCacheAccessMode     accessRequested,
+                    PRBool                streamBased,
+                    nsCacheStoragePolicy  storagePolicy)
 
         : mKey(key),
           mListener(listener),
           mAccessRequested(accessRequested),
-          mStreamBased(streamBased)
+          mStreamBased(streamBased),
+          mStoragePolicy(storagePolicy)
     {
         mRequestThread = PR_GetCurrentThread();
 
@@ -63,8 +66,9 @@ private:
 
     nsCString *                mKey;
     nsCOMPtr<nsICacheListener> mListener;
-    PRUint32                   mAccessRequested;
+    nsCacheAccessMode          mAccessRequested;
     PRBool                     mStreamBased;
+    nsCacheStoragePolicy       mStoragePolicy;
     PRThread *                 mRequestThread;
     PRCList                    mListLink;
 };
