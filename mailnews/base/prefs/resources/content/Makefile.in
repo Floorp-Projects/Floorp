@@ -40,6 +40,7 @@ EXPORT_RESOURCE_SAMPLES = \
 		am-copies.xul \
 		am-copies.js \
 		am-advanced.xul \
+		am-imap-advanced.xul \
 		am-smtp.xul \
 		pref-mailnews.xul \
 		pref-mailnews.js \

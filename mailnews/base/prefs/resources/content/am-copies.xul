@@ -1,5 +1,7 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
+
 <?xul-overlay href="chrome://messenger/content/msgFolderPickerOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/am-copies.dtd" >
@@ -17,7 +19,11 @@
 <html:input type="hidden" name="identity.stationeryFolder" id="identity.stationeryFolder"/>
 <html:input type="hidden" name="identity.email" id="identity.email"/>
 
-<html:div>&copyAndFolderTitle.label;</html:div>
+    <box class="header" align="horizontal">  
+    <titledbutton class="left-header-text" value="&copyAndFolderTitle.label;"/>
+      <spring class="header-spring" flex="1"/>
+      <titledbutton class="right-header-text" value=""/>
+    </box>
 <box align="vertical" flex="100%">
 <html:div>&sendingPrefix.label;</html:div>
 

@@ -17,7 +17,7 @@
 
 	<keyset id="keyset"/>
 
-	<box align="horizontal" flex="100%" style="padding: 10px">
+	<box align="horizontal" flex="100%" style="padding: 5px">
 		<box align="vertical" flex="25%">
          <tree rdf:datasources="rdf:msgaccountmanager" flex="100%"
           rdf:containment="http://home.netscape.com/NC-rdf#Settings"
@@ -45,6 +45,7 @@
            <titledbutton class="dialog push" disabled="true" value="&deleteButton.label;" onclick="onDeleteAccount();" id="deleteButton" flex="50%"/>
          </box>
 		</box>
+        <spring style="width: 5px"/>
         <box flex="70%">
            <tabcontrol flex="100%" align="vertical">
              <deck id="mydeck" flex="100%">

@@ -63,3 +63,12 @@ function setDivText(divname, value) {
         div.removeChild(div.firstChild);
     div.appendChild(document.createTextNode(value));
 }
+
+
+function openImapAdvanced()
+{
+    window.openDialog("chrome://messenger/content/am-imap-advanced.xul",
+                      "_blank",
+                      "chrome,modal");
+
+}

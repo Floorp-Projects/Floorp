@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/am-imap-advanced.dtd" >
+
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+      class="dialog"
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      style="padding: 10px"
+      align="vertical">
+
+<keyset id="keyset"/>
+
+<html:div>
+  <html:label for="serverDirectory">&serverDirectory.label;</html:label>
+  <html:input type="text" id="serverDirectory" name="serverDirectory"/>
+</html:div>
+
+<html:div>
+  <html:input type="checkbox" id="usingSubscription" name="usingSubscription"/>
+  <html:label for="usingSubscription">&usingSubscription.label;</html:label>
+</html:div>
+<html:div>
+  <html:input type="checkbox" id="dualUseFolders" name="dualUseFolders"/>
+  <html:label for="dualUseFolders">&dualUseFolders.label;</html:label>
+</html:div>
+<html:div>&namespaceDesc.label;</html:div>
+<html:table style="padding-left: 10px">
+  <html:tr>
+    <html:td><html:label for="personalNamespace">&personalNamespace.label;</html:label></html:td>
+    <html:td><html:input type="text" id="personalNamespace" name="personalNamespace"/></html:td>
+  </html:tr>
+  <html:tr>
+    <html:td><html:label for="publicNamespace">&publicNamespace.label;</html:label></html:td>
+    <html:td><html:input type="text" id="publicNamespace" name="publicNamespace"/></html:td>
+  </html:tr>
+  <html:tr>
+    <html:td><html:label for="otherUsersNamespace">&otherUsersNamespace.label;</html:label></html:td>
+    <html:td><html:input type="text" id="otherUsersNamespace" name="otherUsersNamespace"/></html:td>
+  </html:tr>
+</html:table>
+<html:div class="separator" align="horizontal"/>
+<box id="okCancelButtons"/>
+
+</window>

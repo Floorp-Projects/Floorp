@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/am-main.dtd" >
 
@@ -7,15 +8,20 @@
      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
      flex="100%"
      class="dialog"
-     align="vertical"> 
+     align="vertical">
 
-    <html:div class="pageTitle">&accountTitle.label;</html:div>
+    <box class="header" align="horizontal">  
+    <titledbutton class="left-header-text" value="&accountTitle.label;"/>
+      <spring class="header-spring" flex="1"/>
+      <titledbutton class="right-header-text" value=""/>
+    </box>
+
     <box align="vertical">
 	    <html:div class="secDesc">&accountSettingsDesc.label;</html:div>
 	    <html:div>&accountNameDesc.label;</html:div>
 	    <box align="horizontal">
 	      <html:div>&accountName.label;</html:div>
-	      <html:spacer/>
+          <html:spacer/>
 	      <html:input type="text" name="server.prettyName" flex="100%"/>
 	    </box>
     </box>

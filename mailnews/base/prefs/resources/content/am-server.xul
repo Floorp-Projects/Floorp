@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/am-server-top.dtd" >
 
@@ -14,9 +15,14 @@
   <html:input type="hidden" name="server.hostName" id="server.hostName"/>
   <html:input type="hidden" name="server.username" id="server.username"/>
 
-  <html:div>&serverSettings.label;</html:div>
+  <box class="header" align="horizontal">  
+  <titledbutton class="left-header-text" value="&serverSettings.label;"/>
+    <spring class="header-spring" flex="1"/>
+    <titledbutton class="right-header-text" value=""/>
+  </box>
   <box align="vertical">
-  <html:table width="100%">
+  <html:fieldset style="width:100%">
+  <html:table>
   <html:tr>
     <html:td>&serverType.label;</html:td>
     <html:td><html:div flex="80%" id="servertype.verbose"/></html:td>
@@ -32,7 +38,7 @@
       <html:td><html:div id="username.verbose"/></html:td>
     </html:tr>
   </html:table>
-
+  </html:fieldset>
   <html:div><html:input name="server.isSecure"
                         type="checkbox"/>&isSecure.label;</html:div>
   <html:div><html:input name="server.rememberPassword"
@@ -67,6 +73,12 @@
           &expungeOnExit.label;
         </html:div>
         <html:div><html:input name="imap.emptyTrashOnExit" type="checkbox"/>&emptyTrashOnExit.label;</html:div>
+        <box align="horizontal">
+          <spring flex="100"/>
+          <titledbutton class="dialog push"
+            value="&advancedButton.label;"
+            onclick="openImapAdvanced(event);"/>
+        </box>
       </box>
       <!-- News -->
       <box align="vertical" flex="100%">
