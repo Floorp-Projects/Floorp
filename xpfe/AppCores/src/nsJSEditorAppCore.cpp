@@ -26,6 +26,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIPtr.h"
 #include "nsString.h"
+#include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMSelection.h"
 #include "nsIDOMEditorAppCore.h"
@@ -38,11 +39,13 @@
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
+static NS_DEFINE_IID(kIElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kISelectionIID, NS_IDOMSELECTION_IID);
 static NS_DEFINE_IID(kIEditorAppCoreIID, NS_IDOMEDITORAPPCORE_IID);
 static NS_DEFINE_IID(kIWindowIID, NS_IDOMWINDOW_IID);
 
+NS_DEF_PTR(nsIDOMElement);
 NS_DEF_PTR(nsIDOMDocument);
 NS_DEF_PTR(nsIDOMSelection);
 NS_DEF_PTR(nsIDOMEditorAppCore);
@@ -764,6 +767,128 @@ EditorAppCoreInsertImage(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 
 
 //
+// Native method GetSelectedElement
+//
+PR_STATIC_CALLBACK(JSBool)
+EditorAppCoreGetSelectedElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsIDOMElement* nativeRet;
+  nsAutoString b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+    if (NS_OK != nativeThis->GetSelectedElement(b0, &nativeRet)) {
+      return JS_FALSE;
+    }
+
+    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
+  }
+  else {
+    JS_ReportError(cx, "Function getSelectedElement requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method CreateElementWithDefaults
+//
+PR_STATIC_CALLBACK(JSBool)
+EditorAppCoreCreateElementWithDefaults(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsIDOMElement* nativeRet;
+  nsAutoString b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+    if (NS_OK != nativeThis->CreateElementWithDefaults(b0, &nativeRet)) {
+      return JS_FALSE;
+    }
+
+    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
+  }
+  else {
+    JS_ReportError(cx, "Function createElementWithDefaults requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method InsertElement
+//
+PR_STATIC_CALLBACK(JSBool)
+EditorAppCoreInsertElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsIDOMElement* nativeRet;
+  nsIDOMElementPtr b0;
+  PRBool b1;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 2) {
+
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
+                                           kIElementIID,
+                                           "Element",
+                                           cx,
+                                           argv[0])) {
+      return JS_FALSE;
+    }
+
+    if (!nsJSUtils::nsConvertJSValToBool(&b1, cx, argv[1])) {
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->InsertElement(b0, b1, &nativeRet)) {
+      return JS_FALSE;
+    }
+
+    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
+  }
+  else {
+    JS_ReportError(cx, "Function insertElement requires 2 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method Exit
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -974,6 +1099,9 @@ static JSFunctionSpec EditorAppCoreMethods[] =
   {"insertText",          EditorAppCoreInsertText,     1},
   {"insertLink",          EditorAppCoreInsertLink,     0},
   {"insertImage",          EditorAppCoreInsertImage,     0},
+  {"getSelectedElement",          EditorAppCoreGetSelectedElement,     1},
+  {"createElementWithDefaults",          EditorAppCoreCreateElementWithDefaults,     1},
+  {"insertElement",          EditorAppCoreInsertElement,     2},
   {"exit",          EditorAppCoreExit,     0},
   {"setToolbarWindow",          EditorAppCoreSetToolbarWindow,     1},
   {"setContentWindow",          EditorAppCoreSetContentWindow,     1},
