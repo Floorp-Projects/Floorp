@@ -5,7 +5,7 @@
 <!ENTITY  LangHeader "Languages">
 <!ENTITY  prefLangDecript "Choose in order of preference the language(s) 
 			in which you prefer to view web pages. Web pages are sometimes 
-			available in several languages.  Naveigator presents pages in 
+			available in several languages.  Navigator presents pages in 
 			the available language you most prefer.">
 <!--LOCALIZATION NOTE (engOption.label): DONT_TRANSLATE -->
 <!ENTITY engOption.label  "English">
