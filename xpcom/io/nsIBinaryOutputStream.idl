@@ -68,6 +68,13 @@ interface nsIBinaryOutputStream : nsIOutputStream {
      * Write an opaque byte array to a binary stream.
      */
     void writeBytes([size_is(aLength)] in string aString, in PRUint32 aLength);
+
+    /**
+     * Write an opaque byte array to a binary stream.
+     */
+    void writeByteArray([array, size_is(aLength)] in PRUint8 aBytes,
+                        in PRUint32 aLength);
+
 };
 
 %{C++

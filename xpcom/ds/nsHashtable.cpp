@@ -797,7 +797,7 @@ nsOpaqueKey::nsOpaqueKey(nsIObjectInputStream* aStream, nsresult *aResult)
 {
     nsresult rv = aStream->Read32(&mBufLen);
     if (NS_SUCCEEDED(rv))
-        rv = aStream->ReadBytes(&mBuf, mBufLen);
+        rv = aStream->ReadBytes(mBufLen, &mBuf);
     *aResult = rv;
     MOZ_COUNT_CTOR(nsOpaqueKey);
 }

@@ -261,8 +261,8 @@ class nsFastLoadFileReader
 {
   public:
     nsFastLoadFileReader(nsIInputStream *aStream)
-      : nsBinaryInputStream(aStream),
-        mCurrentDocumentMapEntry(nsnull) {
+      : mCurrentDocumentMapEntry(nsnull) {
+        SetInputStream(aStream);
         MOZ_COUNT_CTOR(nsFastLoadFileReader);
     }
 
@@ -403,10 +403,10 @@ class nsFastLoadFileWriter
 {
   public:
     nsFastLoadFileWriter(nsIOutputStream *aStream, nsIFastLoadFileIO* aFileIO)
-      : nsBinaryOutputStream(aStream),
-        mCurrentDocumentMapEntry(nsnull),
+      : mCurrentDocumentMapEntry(nsnull),
         mFileIO(aFileIO)
     {
+        SetOutputStream(aStream);
         mHeader.mChecksum = 0;
         mIDMap.ops = mObjectMap.ops = mDocumentMap.ops = mURIMap.ops = nsnull;
         mDependencyMap.ops = nsnull;
