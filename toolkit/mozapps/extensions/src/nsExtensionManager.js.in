@@ -1001,7 +1001,7 @@ nsExtensionInstaller.prototype = {
     if (!aFile.isDirectory()) // .jar files
       fileURL = "jar:" + fileURL + "!/" + aPath;
     else                      // flat chrome hierarchies
-      fileURL = fileURL + "/" + aPath;
+      fileURL = fileURL + aPath;
     
     var cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
                        .getService(Components.interfaces.nsIXULChromeRegistry);
@@ -1033,29 +1033,22 @@ nsExtensionInstaller.prototype = {
       }
       type = this._writer.CHROME_TYPE_LOCALE;
     }
-    var providerNames = this._getProviderNames(aFile, aPath, type);
+    var providerNames = this._getProviderNames(fileURL, type);
     for (var i = 0; i < providerNames.length; ++i)
       this._writer.registerChrome(providerNames[i], type, this._isProfile);
   },
   
-  _getProviderNames: function nsExtensionInstaller__getProviderNames (aFile, aPath, aType)
+  _getProviderNames: function nsExtensionInstaller__getProviderNames (aBaseURL, aType)
   {
-    if (aPath.charAt(aPath.length-1) != "/")
-      aPath += "/";
-    var fileName = aPath + "contents.rdf";
+    if (aBaseURL.charAt(aBaseURL.length-1) != "/")
+      aBaseURL += "/";
+    var manifestURL = aBaseURL + "contents.rdf";
     
     var providerNames = [];
-    
-    var zipReader = Components.classes["@mozilla.org/libjar/zip-reader;1"]
-                              .createInstance(Components.interfaces.nsIZipReader);
-    zipReader.init(aFile);
-    zipReader.open();
 
     try {
-      zipReader.getEntry(fileName);
-      
-      // Extract the contents.rdf file at the location specified in the provider arc
-      // and discover the list of provider names to register for that location.
+      // Discover the list of provider names to register for the location 
+      // specified in the provider arc.
       //
       // The contents.rdf file will look like this:
       //
@@ -1068,18 +1061,10 @@ nsExtensionInstaller.prototype = {
       // We need to explicitly walk this list here, we don't need to do so
       // for nsIXULChromeRegistry's |installPackage| method since that does
       // this same thing itself.
-      var chromeManifest = getFile(this._extDirKey, 
-                                   [DIR_EXTENSIONS, DIR_TEMP, 
-                                    getRandomFileName("contents", "rdf")]);
-      if (chromeManifest.exists())
-        chromeManifest.remove(false);
-      chromeManifest.create(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0644);
-      zipReader.extract(fileName, chromeManifest);
       
       var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
                           .getService(Components.interfaces.nsIRDFService);
-      var fileURL = getURLSpecFromFile(chromeManifest);
-      var ds = rdf.GetDataSourceBlocking(fileURL);
+      var ds = rdf.GetDataSourceBlocking(manifestURL);
       
       var ctr = Components.classes["@mozilla.org/rdf/container;1"]
                           .createInstance(Components.interfaces.nsIRDFContainer);
@@ -1099,12 +1084,8 @@ nsExtensionInstaller.prototype = {
         }
         providerNames.push(name);
       }
-      
-      chromeManifest.remove(false);
     }
     catch (e) { }
-    
-    zipReader.close();
     
     return providerNames;
   }
