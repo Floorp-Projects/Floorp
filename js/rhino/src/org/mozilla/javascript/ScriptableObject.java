@@ -119,19 +119,9 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      * @param start the object in which the lookup began
      * @return true if and only if the property was found in the object
      */
-    public boolean has(String name, Scriptable start) {
-        // See comments in get about cache operations
-        Slot slot = lastAccess;
-        if (name != slot.stringKey || slot.wasDeleted != 0) {
-            slot = getSlot(name, name.hashCode());
-            if (slot == null) {
-                return false;
-            }
-
-            slot.stringKey = name;
-            lastAccess = slot;
-        }
-        return true;
+    public boolean has(String name, Scriptable start)
+    {
+        return null != getNamedSlot(name);
     }
 
     /**
@@ -141,8 +131,9 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      * @param start the object in which the lookup began
      * @return true if and only if the property was found in the object
      */
-    public boolean has(int index, Scriptable start) {
-        return getSlot(null, index) != null;
+    public boolean has(int index, Scriptable start)
+    {
+        return null != getSlot(null, index);
     }
 
     /**
@@ -155,22 +146,12 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      * @param start the object in which the lookup began
      * @return the value of the property (may be null), or NOT_FOUND
      */
-    public Object get(String name, Scriptable start) {
-        // Query last access cache and check that it was not deleted
-        Slot slot = lastAccess;
-        if (name != slot.stringKey || slot.wasDeleted != 0) {
-            slot = getSlot(name, name.hashCode());
-            if (slot == null) {
-                return Scriptable.NOT_FOUND;
-            }
-
-            // Update cache - here stringKey.equals(name) holds, but it can be
-            // that slot.stringKey != name. To make last name cache work, need
-            // to change the key
-            slot.stringKey = name;
-            lastAccess = slot;
+    public Object get(String name, Scriptable start)
+    {
+        Slot slot = getNamedSlot(name);
+        if (slot == null) {
+            return Scriptable.NOT_FOUND;
         }
-
         if ((slot.flags & Slot.HAS_GETTER) != 0) {
             return getByGetter((GetterSlot) slot, start);
         }
@@ -178,7 +159,8 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
         return slot.value;
     }
 
-    private Object getByGetter(GetterSlot slot, Scriptable start) {
+    private Object getByGetter(GetterSlot slot, Scriptable start)
+    {
         Object getterThis;
         Object[] args;
         if (slot.delegateTo == null) {
@@ -214,10 +196,12 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      * @param start the object in which the lookup began
      * @return the value of the property (may be null), or NOT_FOUND
      */
-    public Object get(int index, Scriptable start) {
+    public Object get(int index, Scriptable start)
+    {
         Slot slot = getSlot(null, index);
-        if (slot == null)
+        if (slot == null) {
             return Scriptable.NOT_FOUND;
+        }
         return slot.value;
     }
 
@@ -236,7 +220,8 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      * @param start the object whose property is being set
      * @param value value to set the property to
      */
-    public void put(String name, Scriptable start, Object value) {
+    public void put(String name, Scriptable start, Object value)
+    {
         Slot slot = lastAccess; // Get local copy
         if (name != slot.stringKey || slot.wasDeleted != 0) {
             int hash = name.hashCode();
@@ -246,7 +231,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
                     start.put(name, start, value);
                     return;
                 }
-                slot = getSlotToSet(name, hash);
+                slot = addSlot(name, hash, null);
             }
             // Note: cache is not updated in put
         }
@@ -267,7 +252,8 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
         }
     }
 
-    private void setBySetter(GetterSlot slot, Scriptable start, Object value) {
+    private void setBySetter(GetterSlot slot, Scriptable start, Object value)
+    {
         if (start != this) {
             if (slot.delegateTo != null
                 || !slot.setter.getDeclaringClass().isInstance(start))
@@ -332,14 +318,15 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      * @param start the object whose property is being set
      * @param value value to set the property to
      */
-    public void put(int index, Scriptable start, Object value) {
+    public void put(int index, Scriptable start, Object value)
+    {
         Slot slot = getSlot(null, index);
         if (slot == null) {
             if (start != this) {
                 start.put(index, start, value);
                 return;
             }
-            slot = getSlotToSet(null, index);
+            slot = addSlot(null, index, null);
         }
         if (start == this && isSealed()) {
             throw Context.reportRuntimeError1("msg.modify.sealed",
@@ -1580,13 +1567,37 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
         return Kit.initHash(h, key, value);
     }
 
-    private Slot getSlot(String id, int index) {
+    private Slot getNamedSlot(String name)
+    {
+        // Query last access cache and check that it was not deleted
+        Slot slot = lastAccess;
+        if (name == slot.stringKey && slot.wasDeleted == 0) {
+            return slot;
+        }
+        int hash = name.hashCode();
+        Slot[] slots = this.slots; // Get stable local reference
+        int i = getSlotPosition(slots, name, hash);
+        if (i < 0) {
+            return null;
+        }
+        slot = slots[i];
+        // Update cache - here stringKey.equals(name) holds, but it can be
+        // that slot.stringKey != name. To make last name cache work, need
+        // to change the key
+        slot.stringKey = name;
+        lastAccess = slot;
+        return slot;
+    }
+
+    private Slot getSlot(String id, int index)
+    {
         Slot[] slots = this.slots; // Get local copy
         int i = getSlotPosition(slots, id, index);
         return (i < 0) ? null : slots[i];
     }
 
-    private static int getSlotPosition(Slot[] slots, String id, int index) {
+    private static int getSlotPosition(Slot[] slots, String id, int index)
+    {
         if (slots != null) {
             int start = (index & 0x7fffffff) % slots.length;
             int i = start;
@@ -1594,9 +1605,9 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
                 Slot slot = slots[i];
                 if (slot == null)
                     break;
-                if (slot != REMOVED && slot.intKey == index &&
-                    (slot.stringKey == id || (id != null &&
-                                              id.equals(slot.stringKey))))
+                if (slot != REMOVED && slot.intKey == index
+                    && (slot.stringKey == id
+                        || (id != null && id.equals(slot.stringKey))))
                 {
                     return i;
                 }
@@ -1605,40 +1616,6 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
             } while (i != start);
         }
         return -1;
-    }
-
-    // First search for the existing slot without using synchronization
-    // and if not found, call addSlot which is synchronized
-    private Slot getSlotToSet(String id, int index) {
-        // Get stable reference
-        Slot[] array = slots;
-        if (array == null) {
-            return addSlot(id, index, null);
-        }
-        int start = (index & 0x7fffffff) % array.length;
-        boolean sawRemoved = false;
-        int i = start;
-        do {
-            Slot slot = array[i];
-            if (slot == null) {
-                return addSlot(id, index, null);
-            }
-            if (slot == REMOVED) {
-                sawRemoved = true;
-            } else if (slot.intKey == index &&
-                       (slot.stringKey == id ||
-                        (id != null && id.equals(slot.stringKey))))
-            {
-                return slot;
-            }
-            if (++i == array.length)
-                i = 0;
-        } while (i != start);
-        if (Context.check && !sawRemoved) Kit.codeBug();
-        // Table could be full, but with some REMOVED elements.
-        // Call to addSlot will use a slot currently taken by
-        // a REMOVED.
-        return addSlot(id, index, null);
     }
 
     /**
