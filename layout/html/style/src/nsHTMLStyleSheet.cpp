@@ -1160,6 +1160,7 @@ NS_IMETHODIMP HTMLStyleSheetImpl::ContentAppended(nsIPresContext* aPresContext,
                                        firstAppendedFrame);
       if (NS_SUCCEEDED(result)) {
         shell->AppendReflowCommand(reflowCmd);
+        NS_RELEASE(reflowCmd);
       }
       break;
     }
