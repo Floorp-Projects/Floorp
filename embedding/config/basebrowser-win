@@ -1,5 +1,5 @@
 ; Base Embedding Package File for Win32
-;
+; 
 ;
 ;
 
@@ -21,7 +21,6 @@
 ;
 mozctl.dll
 mozctlx.dll
-res\MozillaControl.html
 
 
 ; 
@@ -128,7 +127,6 @@ components\jsurl.xpt
 ; layout
 moz_art_lgpl.dll
 components\gkcontent.dll
-res\dtd\*
 components\gklayout.dll                   
 components\gkparser.dll                 
 components\gkview.dll                   
@@ -200,11 +198,8 @@ components\pipboot.dll
 components\pipboot.xpt
 components\pipnss.dll
 components\pipnss.xpt
-chrome\pipnss.jar
 components\pippki.dll
 components\pippki.xpt
-chrome\pippki.jar
-defaults\pref\security-prefs.js
 nss3.dll
 smime3.dll
 softokn3.dll
@@ -239,20 +234,8 @@ components\chardet.dll
 ; components\ucvtw2.dll for traditional chinese
 ; components\ucvibm.dll for ibm
 
-
-res\language.properties
-res\langGroups.properties
-res\charsetData.properties
-res\charsetalias.properties
-res\wincharset.properties
-; res\strres.properties 
-
 ; required i18n libs
 components\strres.dll
-
-; required prefs files
-defaults\pref\all.js
-defaults\pref\winpref.js
 
 ; uriloader
 components\urildr.dll
@@ -276,42 +259,8 @@ components\xpcom_nativeapp.xpt
 components\xpcom_thread.xpt
 components\xpcom_xpti.xpt
 
-; 
-; Widget-Toolkit and Res (consult hyatt@netscape.com before modifying):
-; 
-chrome\embed.jar
-
-; 
-; res:
-; 
-res\html.css   
-res\quirk.css
-res\viewsource.css
-res\ua.css
-res\forms.css
-res\arrow.gif
-res\arrowd.gif
-res\loading-image.gif
-res\broken-image.gif
-res\builtin\htmlBindings.xml
-res\builtin\platformHTMLBindings.xml
-res\entityTables\*
-res\fonts\*
-
 ;
 ; MathML
 ;
 components\ucvmath.dll
-res\mathml.css
 
-; needed for ftp:// dir listings etc
-res\html\gopher-audio.gif
-res\html\gopher-binary.gif
-res\html\gopher-find.gif
-res\html\gopher-image.gif
-res\html\gopher-menu.gif
-res\html\gopher-movie.gif
-res\html\gopher-sound.gif
-res\html\gopher-telnet.gif
-res\html\gopher-text.gif
-res\html\gopher-unknown.gif

@@ -1,0 +1,74 @@
+;
+; Base Embedding Package File for Win32
+; embedding resources. Please place any
+; references to res, prefs, chrome etc.
+; in this file
+;
+
+[Embed]
+
+;
+; ActiveX control
+;
+res\MozillaControl.html
+
+; layout
+res\dtd\*
+
+; psm2
+; Optional - only if you need PSM2 support
+chrome\pipnss.jar
+chrome\pippki.jar
+defaults\pref\security-prefs.js
+
+; required l10n resources
+
+res\language.properties
+res\langGroups.properties
+res\charsetData.properties
+res\charsetalias.properties
+res\wincharset.properties
+; res\strres.properties 
+
+; required prefs files
+defaults\pref\all.js
+defaults\pref\winpref.js
+
+; 
+; Widget-Toolkit and Res (consult hyatt@netscape.com before modifying):
+; 
+chrome\embed.jar
+
+; 
+; res:
+; 
+res\html.css   
+res\quirk.css
+res\viewsource.css
+res\ua.css
+res\forms.css
+res\arrow.gif
+res\arrowd.gif
+res\loading-image.gif
+res\broken-image.gif
+res\builtin\htmlBindings.xml
+res\builtin\platformHTMLBindings.xml
+res\entityTables\*
+res\fonts\*
+
+;
+; MathML
+;
+res\mathml.css
+
+; needed for ftp:// dir listings etc
+res\html\gopher-audio.gif
+res\html\gopher-binary.gif
+res\html\gopher-find.gif
+res\html\gopher-image.gif
+res\html\gopher-menu.gif
+res\html\gopher-movie.gif
+res\html\gopher-sound.gif
+res\html\gopher-telnet.gif
+res\html\gopher-text.gif
+res\html\gopher-unknown.gif
