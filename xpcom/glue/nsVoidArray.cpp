@@ -60,11 +60,13 @@ nsVoidArray::~nsVoidArray()
     delete [] mArray;
   }
 }
+
 void
-nsVoidArray::SizeOf(nsISizeOfHandler* aHandler) const
+nsVoidArray::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 {
-  aHandler->Add(sizeof(*this));
-  aHandler->Add(sizeof(void*) * mArraySize);
+  if (aResult) {
+    *aResult = sizeof(*this) + sizeof(void*) * mArraySize;
+  }
 }
 
 void* nsVoidArray::ElementAt(PRInt32 aIndex) const
@@ -261,13 +263,16 @@ nsStringArray::operator=(const nsStringArray& other)
 }
 
 void  
-nsStringArray::SizeOf(nsISizeOfHandler* aHandler) const
+nsStringArray::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 {
-  nsVoidArray::SizeOf(aHandler);
+  PRUint32 sum = 0;
+  nsVoidArray::SizeOf(aHandler, &sum);
   PRInt32 index = mCount;
   while (0 <= --index) {
     nsString* string = (nsString*)mArray[index];
-    string->SizeOf(aHandler);
+    PRUint32 size;
+    string->SizeOf(aHandler, &size);
+    sum += size;
   }
 }
 

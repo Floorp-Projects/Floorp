@@ -33,7 +33,7 @@ public:
 
   nsVoidArray& operator=(const nsVoidArray& other);
 
-  void  SizeOf(nsISizeOfHandler* aHandler) const;
+  void  SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
 
   PRInt32 Count() const {
     return mCount;
@@ -84,7 +84,7 @@ public:
 
   nsStringArray& operator=(const nsStringArray& other);
 
-  void  SizeOf(nsISizeOfHandler* aHandler) const;
+  void  SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
 
   PRInt32 Count(void) const {
     return mCount;
