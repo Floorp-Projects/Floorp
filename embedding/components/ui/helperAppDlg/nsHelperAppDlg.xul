@@ -50,7 +50,8 @@
     <vbox>
       <hbox flex="1">
         <vbox flex="1">
-          <html id="intro">&intro.label;</html>     
+          <html id="intro">&intro.label;</html>    
+          <description id="location" crop="center" value=""/>
           <separator orient="horizontal" class="thin"/>
           <html id="prompt">&prompt.label;</html>
         </vbox>
