@@ -30,6 +30,7 @@
 #   -m <mailinglist> - send filename to mailinglist (csl) only useful
 #       with -f
 #   -cron equivalient to -y -s -d -f $RESULTDIR/$HOST.<scriptname>
+#   -t  run on a tinderbox build that means: local, from the startlocation
 #
 # special strings
 # ---------------
@@ -81,6 +82,8 @@ O_CRON=OFF          # turned on by -cron cron use only
 O_CRONFILE=OFF      # turned on by -cron cron and -fcron
 O_LOCAL=OFF         # turned on by -l run on a local build in $MOZROOT
 O_MAIL=OFF          # turned on by -m - sends email
+O_TINDERBOX=OFF     # turned on by -t run on a tinderbox build
+                    # that means: local, from the startlocation
 
 if  [ -z "$DOMSUF" ]
 then
@@ -126,27 +129,29 @@ KILL_SELFSERV=OFF   # if sourcing script sets this to on cleanup will also
                     # kill the running selfserv processes
 
                     # Set the masterbuilds 
+if [ -z "$UX_MASTERBUILD" ]
+then                     
+    UX_MASTERBUILD=y2sun2_Solaris8
+fi
+if [ -z "$NT_MASTERBUILD" ]
+then                     
+    NT_MASTERBUILD=blowfish_NT4.0_Win95
+    NT_MB_WAS_SET=FALSE      # in this case later functions can override if
+                             # they find a different build that looks like NT
+else
+    NT_MB_WAS_SET=TRUE
+fi
 if [ -z "$MASTERBUILD" ]    
 then
-    MASTERBUILD=y2sun2_Solaris8
-    #MASTERBUILD=shame_Solaris2.6
-    MB_WAS_SET=FALSE
-else
-    MB_WAS_SET=TRUE
+    MASTERBUILD=$UX_MASTERBUILD
 fi
 
+                    # Set the default build
 if [ -z "$BUILDNUMBER" ]    
 then
     BUILDNUMBER=1
 fi
 export BUILDNUMBER
-if [ -z "$NT_MASTERBUILD" ]
-then                     
-    NT_MASTERBUILD=blowfish_NT4.0_Win95
-    NT_MB_WAS_SET=FALSE
-else
-    NT_MB_WAS_SET=TRUE
-fi
 O_LDIR=OFF          #local QA dir for NT, temporary
 
 if [ -z "$WIN_WAIT_FOREVER" ]    # header is global, some including scripts 
@@ -168,22 +173,16 @@ EARLY_EXIT=TRUE     #before the report file has been created, causes Exit to
 ########################################################################
 glob_init()
 {
-    if [ $O_PARAM = "ON" ]
-    then
-        eval_opts $*            # parse parameters and options - set flags
+    if [ $O_PARAM = "ON" ] ; then
+        eval_opts $*    # parse parameters and options - set flags
     fi
-    #if [ $O_CRON = "ON" ]      # if running from cron HOST needs to be
-    #then                       # known early, so the output file name
-        set_host                # can be constructed. If running interactive 
-    #fi                         # it needs to be called by sourcing script
+                        # if running from cron HOST needs to be known early, 
+    set_host            # so the output file name can be constructed. 
     . $QASCRIPT_DIR/set_environment #finds out if we are running on Windows
     Debug "OPerating system: $os_name $os_full"
-    if [ $O_WIN = "ON" ] 
-    then
-        #set_host
+    if [ $O_WIN = "ON" ] ; then
         write_to_tmpfile
-    else
-        Debug "Not a Windows OS"
+        MASTERBUILD=$NT_MASTERBUILD
     fi
     umask 0    
     set_dirs
@@ -219,7 +218,7 @@ set_vars()
     fi
 }
 
-################################### set_dirs ###########################
+########################## find_nt_masterbuild #########################
 # global shell function, sets the nt masterbuild directories, part of init 
 ########################################################################
 find_nt_masterbuild()
@@ -235,36 +234,50 @@ find_nt_masterbuild()
     Debug "NT_MASTERDIR $NT_MASTERDIR"
 }
 
+set_d2()
+{
+    if [ "$O_TINDERBOX" = "ON" ] ; then
+        D2="$TINDERBOX_D2"
+    else
+        D2=${D1}/builds/${QAYEAR}${BUILDDATE}.${BUILDNUMBER}
+    fi
+}
+
 ################################### set_dirs ###########################
 # global shell function, sets the directories, part of init 
 ########################################################################
 set_dirs()
 {
-    if [ "$O_WIN" = "ON" ]
-    then
-        win_set_dirs
+    if [ "$O_TINDERBOX" = "ON" ] ; then
+        TINDERBOX_D2=`cd ../../../..;pwd`
+        D1="${TINDERBOX_D2}/../.." 
+        BCDIST=/h/hs-sca15c/export/builds/mccrel/nss/nss$NSSVER/builds/${BC_MASTER}/${MASTERBUILD}/mozilla/dist
+    elif [ "$O_WIN" = "ON" ] ; then
+        win_set_d1
     else
         D1=/h/hs-sca15c/export/builds/mccrel/nss/nss$NSSVER
-        D3=${D2}/${MASTERBUILD}
-        UXDIST=${D3}/mozilla/dist
     fi
 
-    D2=${D1}/builds/${QAYEAR}${BUILDDATE}.${BUILDNUMBER}
+    set_d2
+
+    if [ -z "${BCDIST}" ] ; then
+        BCDIST=${D1}/builds/${BC_MASTER}/${MASTERBUILD}/mozilla/dist
+    fi
     UX_MASTERDIR=${D2}/${MASTERBUILD}
     find_nt_masterbuild
+
+    if [ "$O_WIN" = "ON" ]
+    then
+        MOZILLA_ROOT=${NT_MASTERDIR}/mozilla
+    else
+        MOZILLA_ROOT=${UX_MASTERDIR}/mozilla
+    fi
 
     UXDIST=${UX_MASTERDIR}/mozilla/dist
     NTDIST=${NT_MASTERDIR}/mozilla/dist
 
     RESULTDIR=${UX_MASTERDIR}/mozilla/tests_results/security
 
-    if [ "$O_WIN" = "ON" ]
-    then
-        MASTERBUILD=$NT_MASTERBUILD
-        MOZILLA_ROOT=${NT_MASTERDIR}/mozilla
-    else
-        MOZILLA_ROOT=${UX_MASTERDIR}/mozilla
-    fi
 
     TESTSCRIPTDIR=${MOZILLA_ROOT}/security/nss/tests
 
@@ -292,7 +305,7 @@ set_dirs()
     Debug "COMMON $COMMON"
     Debug "MOZILLA_ROOT $MOZILLA_ROOT"
         
-    export D1 D2 NTDIST UXDIST RESULTDIR TESTSCRIPTDIR 
+    export D1 D2 NTDIST UXDIST RESULTDIR TESTSCRIPTDIR BCDIST
     export UX_MASTERDIR NT_MASTERDIR COMMON MOZILLA_ROOT
 }
 
@@ -338,6 +351,18 @@ write_to_tmpfile()
     Debug "Writing output to $FILENAME"
 }
 
+############################# turn_on_cronoptions ######################
+# global shell function, turns on options needed for cron and tinderbox
+########################################################################
+turn_on_cronoptions()
+{
+    O_CRON=ON
+    O_SILENT=ON
+    O_DEBUG=ON                # FIXME take out!
+    O_ALWAYS_YES=ON
+    write_to_tmpfile
+}
+
 ################################### eval_opts ##########################
 # global shell function, evapuates options and parameters, sets flags
 # variables and defaults
@@ -348,13 +373,12 @@ eval_opts()
   do
     case $1 in
         -cron)
-            O_CRON=ON
-            O_SILENT=ON
-            O_DEBUG=ON                # FIXME take out!
-            O_ALWAYS_YES=ON
-            write_to_tmpfile
-            
-            export O_CRON
+            turn_on_cronoptions
+            ;;
+        -T*|-t*)
+            O_TINDERBOX=ON
+            turn_on_cronoptions
+            O_SILENT=OFF	#FIXME debug only
             ;;
         -S*|-s*)
             O_SILENT=ON
@@ -432,13 +456,14 @@ eval_opts()
   
   Debug "Builddate $BUILDDATE NssVersion $NSSVER"
   export BUILDDATE NSSVER
+  export O_CRON O_SILENT O_DEBUG O_ALWAYS_YES O_TINDERBOX
 }
 
-######################### win_set_dirs ################################
+######################### win_set_d1 ################################
 # global shell function, interactively finds the directories in case
 # windows can't get to the default
 ########################################################################
-win_set_dirs()
+win_set_d1()
 {
     Debug "set Windows Directories..."
     TMP=`echo "$TMP" | sed -e 's/\\\/\//g'`
@@ -563,12 +588,11 @@ set_objdir()
     OBJDIR=`cd ${TESTSCRIPTDIR}/common; gmake objdir_name`
     OS_ARCH=`cd ${TESTSCRIPTDIR}/common; gmake os_arch`
     
-    #at this point $MASTEBUILD is be either NT or unix
+    #at this point $MASTERBUILD needs to be either NT or unix
 
-    LOCALDIST=${D1}/builds/${QAYEAR}${BUILDDATE}.${BUILDNUMBER}/${MASTERBUILD}/mozilla/dist
-    BCDIST=${D1}/builds/${BC_MASTER}/${MASTERBUILD}/mozilla/dist
+    set_d2
+    LOCALDIST=${D2}/${MASTERBUILD}/mozilla/dist
     LOCALDIST_BIN=${LOCALDIST}/${OBJDIR}/bin
-
     DIST=$LOCALDIST
 
     if [ -z "${TEST_LEVEL}" ] ; then 
@@ -579,7 +603,7 @@ set_objdir()
     PATH_CONTAINS_BIN="TRUE"
     export PATH_CONTAINS_BIN
 
-    export OBJDIR OS_ARCH LOCALDIST LOCALDIST_BIN DIST PATH BCDIST
+    export OBJDIR OS_ARCH LOCALDIST LOCALDIST_BIN DIST PATH 
 }
 
 ########################### bc #########################################
@@ -602,7 +626,7 @@ bc()
       ;;
     1)
       TESTDIR=${RESULTDIR}/bc_libs
-     BC_ACTION="backward compatibility shlibs in $BC_MASTER to new binaries"
+      BC_ACTION="backward compatibility shlibs in $BC_MASTER to new binaries"
       LD_LIBRARY_PATH=${BCDIST}/${OBJDIR}/lib
       if [ "$O_WIN" = "ON" ] ; then
           if [ "$O_CYGNUS" = ON ] ; then
@@ -993,6 +1017,7 @@ opt_usage()
         Echo "         example sonmi,nelsonb,wtc) only useful with -f"
         Echo "    -cron equivalient to -y -s -d -f \$RESULTDIR/\$HOST.nssqa"
         Echo "    -l <mozroot> run on a local build"
+        Echo "    -t run on a tinderbox build (included -cron)"
     fi
     
 }

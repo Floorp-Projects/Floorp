@@ -464,14 +464,15 @@ platformlist()
             html_line passed >>$HTML_FILE
         fi
     done 
-    echo '</table>' >>$HTML_FILE
+    #echo '</table>' >>$HTML_FILE
+#can't be done here because the missing list needs to be integrated
 
 }
 
-############################ check_platforms ###########################
+############################ missing_platforms ###########################
 # local shell function, finds out if we ran on all required platforms
 ########################################################################
-check_platforms()
+missing_platforms()
 {
     QA_MISSING="QA report missing"
     MACHINE="0"
@@ -620,6 +621,7 @@ CURRENT_TABLE="BC"   #so html_line can determine which fields to write
                 sort -u > $ERRORLIST
 
   platformlist $ERRORLIST > $RFILE
+  echo '</table>' >>$HTML_FILE
 
   cat $BCERR | sed -e 's/<[^>]*>//g' -e "s/^/<br>/" 
 
@@ -631,7 +633,8 @@ qa_stat_init
 find_qa_systems 2>/dev/null
 qa_errorlist > $ERRORLIST
 platformlist $ERRORLIST > $RFILE
-check_platforms $RFILE 
+missing_platforms $RFILE 
+echo '</table>' >>$HTML_FILE
 echo '<a NAME="errorlist"></a>' >> $HTML_FILE
 cat $ERRORLIST  | sed -e "s/^/<br>/" >>$HTML_FILE
 cat $WARNING_FILE 2>/dev/null | sed -e "s/^/<br>/" >>$HTML_FILE 2>/dev/null
