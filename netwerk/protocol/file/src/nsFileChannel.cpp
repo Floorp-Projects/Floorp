@@ -49,11 +49,6 @@ static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
 
-#ifdef STREAM_CONVERTER_HACK
-#include "nsIStreamConverter.h"
-#include "nsIAllocator.h"
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////
 
 nsFileChannel::nsFileChannel()
@@ -260,51 +255,8 @@ nsFileChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
     if (mFileTransport)
         return NS_ERROR_IN_PROGRESS;
 
-    // mscott --  this is just one temporary hack until we have a legit stream converter
-    // story going....if the file we are opening is an rfc822 file then we want to 
-    // go out and convert the data into html before we try to load it. so I'm inserting
-    // code which if we are rfc-822 will cause us to literally insert a converter between
-    // the file channel stream of incoming data and the consumer at the other end of the
-    // AsyncRead call...
     mRealListener = listener;
-    nsCOMPtr<nsIStreamListener> tempListener;
-#ifdef STREAM_CONVERTER_HACK
-    nsXPIDLCString aContentType;
-
-    rv = GetContentType(getter_Copies(aContentType));
-    if (NS_SUCCEEDED(rv) && nsCRT::strcasecmp("message/rfc822", aContentType) == 0)
-    {
-        // okay we are an rfc822 message...
-        // (0) Create an instance of an RFC-822 stream converter...
-        // because I need this converter to be around for the lifetime of the channel,
-        // I'm making it a member variable.
-        // (1) create a proxied stream listener for the caller of this method
-        // (2) set this proxied listener as the listener on the output stream
-        // (3) create a proxied stream listener for the converter
-        // (4) set tempListener to be the stream converter's listener.
-
-        // (0) create a stream converter
-        // mscott - we could generalize this hack to work with other stream converters by simply
-        // using the content type of the file to generate a progid for a stream converter and use
-        // that instead of a class id...
-        if (!mStreamConverter) {
-            rv = nsComponentManager::CreateInstance(NS_ISTREAMCONVERTER_KEY "?from=message/rfc822?to=text/xul", 
-                                                    NULL, NS_GET_IID(nsIStreamConverter), 
-                                                    (void **) getter_AddRefs(mStreamConverter)); 
-            if (NS_FAILED(rv)) return rv;
-        }
-
-        // (3) set the stream converter as the listener on the channel
-        tempListener = mStreamConverter;
-
-        mStreamConverter->AsyncConvertData(nsnull, nsnull, this, (nsIChannel *) this);
-        mStreamConverterOutType = "text/xul";
-    }
-    else
-        tempListener = this;
-#else   
-    tempListener = this;
-#endif
+    nsCOMPtr<nsIStreamListener> tempListener = this;
 
     if (mLoadGroup) {
         nsCOMPtr<nsILoadGroupListenerFactory> factory;
@@ -376,16 +328,6 @@ NS_IMETHODIMP
 nsFileChannel::GetContentType(char * *aContentType)
 {
     nsresult rv = NS_OK;
-#ifdef STREAM_CONVERTER_HACK
-    // okay, if we already have a stream converter hooked up to the channel
-    // then we want to LIE about the content type...the content type is really
-    // the stream converter out type...
-    if (mStreamConverter) 
-    {
-        *aContentType = mStreamConverterOutType.ToNewCString();
-        return rv;
-    }
-#endif
 
     if (mSpec.IsDirectory()) {
         *aContentType = nsCRT::strdup("application/http-index-format");
