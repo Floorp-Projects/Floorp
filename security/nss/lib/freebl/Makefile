@@ -185,6 +185,20 @@ else
 endif
 endif
 endif
+else
+# Solaris x86
+    DEFINES += -DMP_USE_UINT_DIGIT
+ifdef NS_USE_GCC
+    LD = gcc
+    AS = as
+    ASFLAGS =
+    DSO_LDOPTS += -shared -Wl,-B,symbolic,-z,defs,-z,now,-z,text,-M,mapfile.Solaris
+#   ASFILES  = mpi_x86.s
+#   DEFINES += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE -DMP_ASSEMBLY_DIV_2DX1D
+else
+    MKSHLIB += -B symbolic -z defs -z now -z text -M mapfile.Solaris
+endif
+
 endif
 endif
 
