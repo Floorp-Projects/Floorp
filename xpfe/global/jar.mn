@@ -53,6 +53,7 @@ toolkit.jar:
         content/global/bindings/checkbox.xml        (resources/content/bindings/checkbox.xml)
         content/global/bindings/colorpicker.xml     (resources/content/bindings/colorpicker.xml)
         content/global/bindings/dialog.xml          (resources/content/bindings/dialog.xml)
+        content/global/bindings/editor.xml          (resources/content/bindings/editor.xml)
         content/global/bindings/general.xml         (resources/content/bindings/general.xml)
         content/global/bindings/groupbox.xml        (resources/content/bindings/groupbox.xml)
         content/global/bindings/listbox.xml         (resources/content/bindings/listbox.xml)

@@ -40,14 +40,10 @@
 
 interface nsIEditor;
 interface nsIDocShell;
-interface nsIEditorShell;
 
 [scriptable, uuid(14B3B669-3414-4548-AA03-EDF257D889C8)]
 interface nsIEditorBoxObject : nsISupports
 {
-  readonly attribute nsIEditor editor;
-  // nsIEditorShell is deprecated and will go away -- please don't use it!
-  readonly attribute nsIEditorShell editorShell;
   readonly attribute nsIDocShell docShell;
 };
 
