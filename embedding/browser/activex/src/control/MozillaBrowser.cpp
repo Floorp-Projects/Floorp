@@ -87,6 +87,7 @@ static HANDLE s_hHackedNonReentrancy = NULL;
 
 static NS_DEFINE_CID(kPromptServiceCID, NS_PROMPTSERVICE_CID);
 static NS_DEFINE_CID(kHelperAppLauncherDialogCID, NS_HELPERAPPLAUNCHERDIALOG_CID);
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 class PrintListener : public nsIWebProgressListener
 {
