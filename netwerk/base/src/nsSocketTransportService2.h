@@ -146,9 +146,11 @@ public:
     //
     nsresult AttachSocket(PRFileDesc *fd, nsASocketHandler *);
 
-private:
+protected:
 
     virtual ~nsSocketTransportService();
+
+private:
 
     //-------------------------------------------------------------------------
     // misc (any thread)
