@@ -19,9 +19,9 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-MODULE = mime
+MODULE = mimetype
 
-LIBRARY_NAME = mime
+LIBRARY_NAME = mimetype
 
 IS_COMPONENT = 1
 
