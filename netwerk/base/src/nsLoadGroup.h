@@ -64,7 +64,8 @@ protected:
     PRUint32                    mDefaultLoadAttributes;
     nsISupportsArray*           mChannels;
     nsISupportsArray*           mSubGroups;
-    nsWeakPtr                   mObserver;
+////    nsWeakPtr                   mObserver;
+    nsCOMPtr<nsIStreamObserver>                   mObserver;
     nsLoadGroup*                mParent;        // weak ref
     PRUint32                    mForegroundCount;
     PRBool                      mIsActive;
