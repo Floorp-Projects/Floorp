@@ -708,3 +708,4 @@ NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, Type, "type");
 // "mail.imap.new_mail_get_headers" for imap (it was global)
 // in 5.0, this will be per server, and it will be "download_on_biff"
 NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, DownloadOnBiff, "download_on_biff");
+NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, Valid, "valid");

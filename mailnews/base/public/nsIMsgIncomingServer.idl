@@ -134,6 +134,8 @@ interface nsIMsgIncomingServer : nsISupports {
 
   nsIFileSpec getFileValue(in string attr);
   void setFileValue(in string attr, in nsIFileSpec value);
+
+  attribute boolean valid;
   
   wstring toString();
 };

@@ -199,6 +199,7 @@ localDefPref("mailnews.message_window_rect",        "-1,-1,-1,-1");
 localDefPref("mailnews.thread_pane_height",         -1);
 localDefPref("mailnews.category_pane_width",        -1);
 pref("mailnews.reuse_thread_window",        true);
+pref("mailnews.reuse_thread_window2",        true);
 pref("mailnews.reuse_message_window",       true);
 pref("mailnews.message_in_thread_window",   true);
 pref("mailnews.javascript_enabled",         true);
@@ -350,6 +351,7 @@ pref("mailnews.start_page.enabled", true);
 
 /* default prefs for Mozilla 5.0 */
 pref("mail.identity.default.compose_html", true);
+pref("mail.identity.default.valid", true);
 
 pref("mail.update_compose_title_as_you_type", true);
 
@@ -364,7 +366,7 @@ pref("mail.server.default.limit_message_size", false);
 pref("mail.server.default.max_size", 50);
 pref("mail.server.default.auth_login", true);
 pref("mail.server.default.delete_mail_left_on_server", false);
-
+pref("mail.server.default.valid", true);
 pref("mail.server.default.abbreviate",true);
 
 pref("mail.convert_emoticons",true);

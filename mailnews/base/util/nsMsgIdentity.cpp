@@ -398,4 +398,5 @@ NS_IMPL_IDPREF_STR (DraftFolder, "draft_folder");
 NS_IMPL_IDPREF_STR (StationeryFolder, "stationery_folder");
 NS_IMPL_IDPREF_STR (JunkMailFolder, "spam_folder");
 
+NS_IMPL_IDPREF_BOOL(Valid, "valid");
 
