@@ -42,9 +42,6 @@ var gFields;
 // that they are associated with.
 var gProperties;
 
-// All the bookmarks datasource
-var gBookmarks;
-
 // The ID of the current shown bookmark
 var gBookmarkID;
 
@@ -63,7 +60,6 @@ function Init()
                  NC_NS + "ShortcutURL",
                  NC_NS + "Description"];
 
-  gBookmarks = RDF.GetDataSource("rdf:bookmarks");
   gBookmarkID = window.arguments[0];
 
   var i;
@@ -74,7 +70,7 @@ function Init()
   for (i = 0; i < gFields.length; ++i) {
     var field = document.getElementById(gFields[i]);
 
-    var value = gBookmarks.GetTarget(resource, RDF.GetResource(gProperties[i]), true);
+    var value = BMDS.GetTarget(resource, RDF.GetResource(gProperties[i]), true);
 
     if (value)
       value = value.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
@@ -90,7 +86,7 @@ function Init()
   propsWindow.setAttribute("title", title);
 
   // if its a container, disable some things
-  var isContainerFlag = RDFCU.IsContainer(gBookmarks, resource);
+  var isContainerFlag = RDFCU.IsContainer(BMDS, resource);
   if (!isContainerFlag) {
     // XXX To do: the "RDFCU.IsContainer" call above only works for RDF sequences;
     //            if its not a RDF sequence, we should to more checking to see if
@@ -110,7 +106,7 @@ function Init()
   }
 
   var showScheduling = false;
-  var url = gBookmarks.GetTarget(resource, RDF.GetResource(gProperties[1]), true);
+  var url = BMDS.GetTarget(resource, RDF.GetResource(gProperties[1]), true);
   if (url) {
     url = url.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
     if (url.substr(0, 7).toLowerCase() == "http://" ||
@@ -125,7 +121,7 @@ function Init()
   } else {
     // check bookmark schedule
     var scheduleArc = RDF.GetResource("http://home.netscape.com/WEB-rdf#Schedule");
-    value = gBookmarks.GetTarget(resource, scheduleArc, true);
+    value = BMDS.GetTarget(resource, scheduleArc, true);
   
     if (value) {
       value = value.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
@@ -222,9 +218,8 @@ function Commit()
       // Get the new value as a literal, using 'null' if the value is empty.
       var newvalue = field.value;
 
-      var oldvalue = gBookmarks.GetTarget(RDF.GetResource(gBookmarkID),
-                                         RDF.GetResource(gProperties[i]),
-                                         true);
+      var oldvalue = BMDS.GetTarget(RDF.GetResource(gBookmarkID),
+                                    RDF.GetResource(gProperties[i]), true);
 
       if (oldvalue)
         oldvalue = oldvalue.QueryInterface(Components.interfaces.nsIRDFLiteral);
@@ -255,8 +250,8 @@ function Commit()
   var schedulingHidden = scheduling.getAttribute("hidden");
   if (schedulingHidden != "true") {
     var scheduleRes = "http://home.netscape.com/WEB-rdf#Schedule";
-    oldvalue = gBookmarks.GetTarget(RDF.GetResource(gBookmarkID),
-                                   RDF.GetResource(scheduleRes), true);
+    oldvalue = BMDS.GetTarget(RDF.GetResource(gBookmarkID),
+                              RDF.GetResource(scheduleRes), true);
     newvalue = "";
     var dayRangeNode = document.getElementById("dayRange");
     var dayRange = dayRangeNode.selectedItem.getAttribute("value");
@@ -308,7 +303,7 @@ function Commit()
   }
 
   if (changed) {
-    var remote = gBookmarks.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
+    var remote = BMDS.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
     if (remote)
       remote.Flush();
   }
@@ -324,21 +319,16 @@ function updateAttribute(prop, oldvalue, newvalue)
   if (prop && (oldvalue || newvalue) && oldvalue != newvalue) {
 
     if (oldvalue && !newvalue) {
-      gBookmarks.Unassert(RDF.GetResource(gBookmarkID),
-                         RDF.GetResource(prop),
-                         oldvalue);
+      BMDS.Unassert(RDF.GetResource(gBookmarkID), 
+                    RDF.GetResource(prop), oldvalue);
     }
     else if (!oldvalue && newvalue) {
-      gBookmarks.Assert(RDF.GetResource(gBookmarkID),
-                       RDF.GetResource(prop),
-                       newvalue,
-                       true);
+      BMDS.Assert(RDF.GetResource(gBookmarkID),
+                  RDF.GetResource(prop), newvalue, true);
     }
     else /* if (oldvalue && newvalue) */ {
-      gBookmarks.Change(RDF.GetResource(gBookmarkID),
-                       RDF.GetResource(prop),
-                       oldvalue,
-                       newvalue);
+      BMDS.Change(RDF.GetResource(gBookmarkID), 
+                  RDF.GetResource(prop), oldvalue, newvalue);
     }
 
     changed = true;
