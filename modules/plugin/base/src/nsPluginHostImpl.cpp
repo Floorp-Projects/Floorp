@@ -2039,6 +2039,10 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
 
 #ifdef XP_WIN // actually load a dll on Windows
 
+#ifdef NS_DEBUG
+  printf("For %s found plugin %s\n", aMimeType, pluginTag->mFileName);
+#endif
+
     nsFileSpec file(pluginTag->mFileName);
 
     nsPluginFile pluginFile(file);
@@ -2186,7 +2190,7 @@ static PRBool areTheSameFileNames(char * name1, char * name2)
   if(PL_strlen(filename1) != PL_strlen(filename2))
     return PR_FALSE;
 
-  return (nsnull == PL_strncmp(filename1, filename2, PL_strlen(filename1)));
+  return (nsnull == PL_strncasecmp(filename1, filename2, PL_strlen(filename1)));
 }
 
 NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
