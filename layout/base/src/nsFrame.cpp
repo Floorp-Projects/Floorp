@@ -420,6 +420,7 @@ NS_METHOD nsFrame::Paint(nsIPresContext&      aPresContext,
   nsIContent * content;
   GetContent(content);
   if (content->ChildCount() > 0) {
+    NS_RELEASE(content);
     return NS_OK;
   }
 
