@@ -23,4 +23,3 @@ nsIHTMLEditor.h
 nsIEditRules.h
 nsIEditActionListener.h
 nsICiter.h
-nsIDocumentStateListener.h
