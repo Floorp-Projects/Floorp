@@ -1556,7 +1556,8 @@ PRIVATE void net_CacheAbort (NET_StreamClass *stream, int status)
     plus will also mark the object as partial. TODO - Gagan */
     /* CacheObject_Abort(obj->cache_object); */
     /* Call CacheObject_Synch() if something was written */
-    CacheObject_Destroy(obj->cache_object);
+    /* CacheObject_Destroy(obj->cache_object); */
+
     PR_REMOVE_LINK(&obj->links);
     PR_Free(obj);
 }
@@ -3481,13 +3482,8 @@ NET_DisplayCacheInfoAsHTML(ActiveEntry * cur_entry)
 #ifdef NU_CACHE
 {
     NET_StreamClass *stream;
-
-    if (cur_entry)
-    {
-     cur_entry->status = MK_UNABLE_TO_CONVERT;
-     return;
-    }
-
+    char buffer[1024];
+    
     StrAllocCopy(cur_entry->URL_s->content_type, TEXT_HTML);
 
     cur_entry->format_out = CLEAR_CACHE_BIT(cur_entry->format_out);
@@ -3497,16 +3493,18 @@ NET_DisplayCacheInfoAsHTML(ActiveEntry * cur_entry)
 
     if(!stream)
     {
-     cur_entry->status = MK_UNABLE_TO_CONVERT;
-     return;
+        cur_entry->status = MK_UNABLE_TO_CONVERT;
+        return;
     }
     
-    cur_entry->status = (*stream->put_block)(stream, "Just hang in there... ",23);
+    CacheManager_InfoAsHTML(buffer);
+
+    cur_entry->status = (*stream->put_block)(stream, buffer,PL_strlen(buffer));
 
     if(cur_entry->status < 0)
-     (*stream->abort)(stream, cur_entry->status);
+        (*stream->abort)(stream, cur_entry->status);
     else
-     (*stream->complete)(stream);
+        (*stream->complete)(stream);
 }
 #else
 {
