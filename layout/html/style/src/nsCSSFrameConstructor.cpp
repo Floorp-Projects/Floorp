@@ -1254,11 +1254,12 @@ GetChildListNameFor(nsIPresContext* aPresContext,
 //----------------------------------------------------------------------
 
 nsCSSFrameConstructor::nsCSSFrameConstructor(nsIDocument *aDocument)
-  : mDocument(aDocument),
-    mInitialContainingBlock(nsnull),
-    mFixedContainingBlock(nsnull),
-    mDocElementContainingBlock(nsnull),
-    mGfxScrollFrame(nsnull)
+  : mDocument(aDocument)
+  , mInitialContainingBlock(nsnull)
+  , mFixedContainingBlock(nsnull)
+  , mDocElementContainingBlock(nsnull)
+  , mGfxScrollFrame(nsnull)
+  , mUpdateCount(0)
 {
   if (!gGotXBLFormPrefs) {
     gGotXBLFormPrefs = PR_TRUE;
@@ -1333,6 +1334,13 @@ nsIXBLService * nsCSSFrameConstructor::GetXBLService()
   return gXBLService;
 }
 
+void
+nsCSSFrameConstructor::GeneratedContentFrameRemoved(nsIFrame* aFrame)
+{
+  if (mQuoteList.DestroyNodesFor(aFrame))
+    QuotesDirty();
+}
+
 nsresult
 nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContext,
                                                nsIDocument*          aDocument,
@@ -1344,6 +1352,9 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
                                                nsIFrame**            aFrame)
 {
   *aFrame = nsnull;  // initialize OUT parameter
+
+  // The QuoteList needs the content attached to the frame.
+  nsCOMPtr<nsIDOMCharacterData>* textPtr = nsnull;
 
   // Get the content value
   const nsStyleContentData &data = aStyleContent->ContentAt(aContentIndex);
@@ -1467,36 +1478,27 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
   
     case eStyleContentType_OpenQuote:
     case eStyleContentType_CloseQuote:
+    case eStyleContentType_NoOpenQuote:
+    case eStyleContentType_NoCloseQuote:
       {
-        const nsStyleQuotes* quotes = aStyleContext->GetStyleQuotes();
-        PRUint32  quotesCount = quotes->QuotesCount();
-        if (quotesCount > 0) {
-          nsAutoString  openQuote, closeQuote;
-  
-          // If the depth is greater than the number of pairs, the last pair
-          // is repeated
-          PRUint32  quoteDepth = 0;  // XXX really track the nested quotes...
-          if (quoteDepth > quotesCount) {
-            quoteDepth = quotesCount - 1;
-          }
-          quotes->GetQuotesAt(quoteDepth, openQuote, closeQuote);
-          if (eStyleContentType_OpenQuote == type) {
-            contentString = openQuote;
-          } else {
-            contentString = closeQuote;
-          }
-  
-        } else {
-          // XXX Don't assume default. Only use what is in 'quotes' property
-          contentString.Assign(PRUnichar('\"'));
-        }
+        nsQuoteListNode* node =
+          new nsQuoteListNode(type, aParentFrame, aContentIndex);
+        if (!node)
+          return NS_ERROR_OUT_OF_MEMORY;
+        mQuoteList.Insert(node);
+        if (!mQuoteList.IsLast(node))
+          QuotesDirty();
+
+        // Don't generate a text node or any text for 'no-open-quote' and
+        // 'no-close-quote'.
+        if (node->IsHiddenQuote())
+          return NS_OK;
+
+        textPtr = &node->mText; // Delayed storage of text node.
+        contentString = *node->Text();
       }
       break;
   
-    case eStyleContentType_NoOpenQuote:
-    case eStyleContentType_NoCloseQuote:
-      // XXX Adjust quote depth...
-      return NS_OK;
     } // switch
   
 
@@ -1506,8 +1508,10 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
     if (textContent) {
       // Set the text
       nsCOMPtr<nsIDOMCharacterData> domData = do_QueryInterface(textContent);
-      if (domData)
-        domData->SetData(contentString);
+      domData->SetData(contentString);
+
+      if (textPtr)
+        *textPtr = domData;
   
       // Set aContent as the parent content and set the document object. This
       // way event handling works
@@ -10042,6 +10046,24 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
   }
 
   return result;
+}
+
+void
+nsCSSFrameConstructor::EndUpdate()
+{
+  if (--mUpdateCount == 0) {
+    if (mQuotesDirty) {
+      mQuoteList.RecalcAll();
+      mQuotesDirty = PR_FALSE;
+    }
+  }
+}
+
+void
+nsCSSFrameConstructor::WillDestroyFrameTree()
+{
+  // Prevent frame tree destruction from being O(N^2)
+  mQuoteList.Clear();
 }
 
 //STATIC

@@ -910,6 +910,17 @@ struct nsStyleQuotes : public nsStyleStruct {
 
   
   PRUint32  QuotesCount(void) const { return mQuotesCount; } // [inherited]
+
+  const nsString* OpenQuoteAt(PRUint32 aIndex) const
+  {
+    NS_ASSERTION(aIndex < mQuotesCount, "out of range");
+    return mQuotes + (aIndex * 2);
+  }
+  const nsString* CloseQuoteAt(PRUint32 aIndex) const
+  {
+    NS_ASSERTION(aIndex < mQuotesCount, "out of range");
+    return mQuotes + (aIndex * 2 + 1);
+  }
   nsresult  GetQuotesAt(PRUint32 aIndex, nsString& aOpen, nsString& aClose) const {
     if (aIndex < mQuotesCount) {
       aIndex *= 2;

@@ -105,17 +105,38 @@ public:
                                       nsIAtom* aPseudoElement);
 
   /**
-   * CompareTreePosition determines whether aContent1 comes before or after aContent2 in
-   * a preorder traversal of the content tree.
+   * CompareTreePosition determines whether aContent1 comes before or
+   * after aContent2 in a preorder traversal of the content tree.
    * 
-   * @param aCommonAncestor either null, or a common ancestor of aContent1 and aContent2
-   * Actually this is only a hint; if it's not an ancestor of aContent1 or aContent2,
-   * this function will still work, but it will be slower than normal.
-   * @return < 0 if aContent1 is before aContent2, > 0 if aContent1 is after aContent2,
-   * 0 otherwise (meaning they're the same, or they're in different documents)
+   * @param aCommonAncestor either null, or a common ancestor of
+   *                        aContent1 and aContent2.  Actually this is
+   *                        only a hint; if it's not an ancestor of
+   *                        aContent1 or aContent2, this function will
+   *                        still work, but it will be slower than
+   *                        normal.
+   * @return < 0 if aContent1 is before aContent2
+   *         > 0 if aContent1 is after aContent2,
+   *         0 otherwise (meaning they're the same, or they're in
+   *           different documents)
    */
-  static PRInt32 CompareTreePosition(nsIContent* aContent1, nsIContent* aContent2,
-                                     nsIContent* aCommonAncestor = nsnull);
+  static PRInt32 CompareTreePosition(nsIContent* aContent1,
+                                     nsIContent* aContent2,
+                                     nsIContent* aCommonAncestor = nsnull)
+  {
+    return DoCompareTreePosition(aContent1, aContent2, -1, 1, aCommonAncestor);
+  }
+
+  /*
+   * More generic version of |CompareTreePosition|.  |aIf1Ancestor|
+   * gives the value to return when 1 is an ancestor of 2, and likewise
+   * for |aIf2Ancestor|.  Passing (-1, 1) gives preorder traversal
+   * order, and (1, -1) gives postorder traversal order.
+   */
+  static PRInt32 DoCompareTreePosition(nsIContent* aContent1,
+                                       nsIContent* aContent2,
+                                       PRInt32 aIf1Ancestor,
+                                       PRInt32 aIf2Ancestor,
+                                       nsIContent* aCommonAncestor = nsnull);
   
   /**
    * GetLastSibling simply finds the last sibling of aFrame, or returns nsnull if

@@ -1872,6 +1872,7 @@ PresShell::Destroy()
   }
 
   // Destroy the frame manager. This will destroy the frame hierarchy
+  mFrameConstructor->WillDestroyFrameTree();
   FrameManager()->Destroy();
 
   // Let the style set do its cleanup.
@@ -3547,6 +3548,8 @@ PresShell::BeginUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
 #ifdef DEBUG
   mUpdateCount++;
 #endif
+  mFrameConstructor->BeginUpdate();
+
   if (aUpdateType & UPDATE_STYLE)
     mStyleSet->BeginUpdate();
 }
@@ -3559,11 +3562,13 @@ PresShell::EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
   --mUpdateCount;
 #endif
 
-  if (aUpdateType & UPDATE_STYLE)
+  if (aUpdateType & UPDATE_STYLE) {
     mStyleSet->EndUpdate();
+    if (mStylesHaveChanged)
+      ReconstructStyleData();
+  }
 
-  if (mStylesHaveChanged && (aUpdateType & UPDATE_STYLE))
-    ReconstructStyleData();
+  mFrameConstructor->EndUpdate();
 }
 
 void

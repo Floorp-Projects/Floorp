@@ -40,6 +40,7 @@
 #include "nsCOMPtr.h"
 #include "nsILayoutHistoryState.h"
 #include "nsIXBLService.h"
+#include "nsQuoteList.h"
 
 class nsIDocument;
 struct nsFrameItems;
@@ -124,11 +125,18 @@ public:
                                 nsIContent*     aContent2,
                                 PRInt32         aStateMask);
 
+  void GeneratedContentFrameRemoved(nsIFrame* aFrame);
+
   nsresult AttributeChanged(nsIPresContext* aPresContext,
                             nsIContent*     aContent,
                             PRInt32         aNameSpaceID,
                             nsIAtom*        aAttribute,
                             PRInt32         aModType);
+
+  void BeginUpdate() { ++mUpdateCount; }
+  void EndUpdate();
+
+  void WillDestroyFrameTree();
 
   nsresult ProcessRestyledFrames(nsStyleChangeList& aRestyleArray, 
                                  nsIPresContext*    aPresContext);
@@ -173,7 +181,7 @@ public:
                                          nsIFrame*              aRemovedFrame,
                                          nsILayoutHistoryState* aFrameState);
 
-protected:
+private:
 
   nsresult ConstructPageFrame(nsIPresShell*   aPresShell, 
                               nsIPresContext* aPresContext,
@@ -1015,13 +1023,24 @@ protected:
                         PRUint8                aSiblingDisplay,
                         nsIContent&            aContent,
                         PRUint8&               aDisplay);
-protected:
+
+  void QuotesDirty() {
+    if (mUpdateCount != 0)
+      mQuotesDirty = PR_TRUE;
+    else
+      mQuoteList.RecalcAll();
+  }
+
+private:
   nsIDocument*        mDocument;
 
   nsIFrame*           mInitialContainingBlock;
   nsIFrame*           mFixedContainingBlock;
   nsIFrame*           mDocElementContainingBlock;
   nsIFrame*           mGfxScrollFrame;
+  nsQuoteList         mQuoteList;
+  PRUint16            mUpdateCount;
+  PRPackedBool        mQuotesDirty;
 
   nsCOMPtr<nsILayoutHistoryState> mTempFrameTreeState;
 
