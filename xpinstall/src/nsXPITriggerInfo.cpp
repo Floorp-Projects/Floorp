@@ -42,7 +42,7 @@ nsXPITriggerItem::nsXPITriggerItem( const PRUnichar* aName,
 {
     nsString URL(aURL);
 
-    PRInt32 pos = URL.Find('?');
+    PRInt32 pos = URL.FindChar('?');
     if ( pos == -1 ) {
         // no arguments
         mURL = URL;
