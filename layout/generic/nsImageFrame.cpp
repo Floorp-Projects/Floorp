@@ -184,46 +184,6 @@ if (NS_CONTENT_ATTR_HAS_VALUE == lowSrcResult && lowSrc.Length() > 0) {
   mImageLoader.Init(this, UpdateImageFrame, (void*)&mImageLoader, baseURL, src);
   NS_IF_RELEASE(baseURL);
 
-  nsAutoString usemap;
-  mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::usemap, usemap);    
-  if (usemap.Length()) {
-    //Image is an imagemap.  We need to get its maps and set the primary
-    //frame for its children to us.
-    usemap.StripWhitespace();
-
-    nsCOMPtr<nsIDocument> doc;
-    if (NS_SUCCEEDED(mContent->GetDocument(*getter_AddRefs(doc))) && doc) {
-      if (usemap.First() == '#') {
-        usemap.Cut(0, 1);
-      }
-
-      nsCOMPtr<nsIHTMLDocument> hdoc(do_QueryInterface(doc));
-      if (hdoc) {
-        nsCOMPtr<nsIDOMHTMLMapElement> hmap;
-        if (NS_SUCCEEDED(hdoc->GetImageMap(usemap, getter_AddRefs(hmap))) && hmap) {
-          nsCOMPtr<nsIContent> map(do_QueryInterface(hmap));
-          if (map) {
-            nsCOMPtr<nsIPresShell> presShell;
-            if (NS_SUCCEEDED(aPresContext->GetShell(getter_AddRefs(presShell))) &&
-                presShell) {
-              nsCOMPtr<nsIFrameManager> frameManager;
-              if (NS_SUCCEEDED(presShell->GetFrameManager(getter_AddRefs(frameManager))) &&
-                  frameManager) {
-                nsCOMPtr<nsIContent> childArea;
-                PRInt32 count, index;
-                map->ChildCount(count);
-                for (index = 0; index < count; index++) {
-                  map->ChildAt(index, *getter_AddRefs(childArea));
-                  frameManager->SetPrimaryFrameFor(childArea, this);
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
   mInitialLoadCompleted = PR_FALSE;
   return rv;
 }
@@ -670,7 +630,7 @@ nsImageFrame::Paint(nsIPresContext* aPresContext,
 
       }
 
-      nsImageMap* map = GetImageMap();
+      nsImageMap* map = GetImageMap(aPresContext);
       if (nsnull != map) {
         nsRect inner;
         GetInnerArea(aPresContext, inner);
@@ -686,7 +646,7 @@ nsImageFrame::Paint(nsIPresContext* aPresContext,
 #ifdef DEBUG
       if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) &&
           GetShowFrameBorders()) {
-        nsImageMap* map = GetImageMap();
+        nsImageMap* map = GetImageMap(aPresContext);
         if (nsnull != map) {
           nsRect inner;
           GetInnerArea(aPresContext, inner);
@@ -709,7 +669,7 @@ nsImageFrame::Paint(nsIPresContext* aPresContext,
 }
 
 nsImageMap*
-nsImageFrame::GetImageMap()
+nsImageFrame::GetImageMap(nsIPresContext* aPresContext)
 {
   if (nsnull == mImageMap) {
     nsAutoString usemap;
@@ -739,10 +699,13 @@ nsImageFrame::GetImageMap()
       rv = hdoc->GetImageMap(usemap, &map);
       NS_RELEASE(hdoc);
       if (NS_SUCCEEDED(rv)) {
+        nsCOMPtr<nsIPresShell> presShell;
+        aPresContext->GetShell(getter_AddRefs(presShell));
+
         mImageMap = new nsImageMap();
         if (nsnull != mImageMap) {
           NS_ADDREF(mImageMap);
-          mImageMap->Init(map);
+          mImageMap->Init(presShell, this, map);
         }
         NS_IF_RELEASE(map);
       }
@@ -896,7 +859,7 @@ nsImageFrame::GetContentForEvent(nsIPresContext* aPresContext,
 {
   NS_ENSURE_ARG_POINTER(aContent);
   nsImageMap* map;
-  map = GetImageMap();
+  map = GetImageMap(aPresContext);
 
   if (nsnull != map) {
     nsPoint p;
@@ -931,7 +894,7 @@ nsImageFrame::HandleEvent(nsIPresContext* aPresContext,
   case NS_MOUSE_LEFT_BUTTON_UP:
   case NS_MOUSE_MOVE:
     {
-      map = GetImageMap();
+      map = GetImageMap(aPresContext);
       PRBool isServerMap = IsServerImageMap();
       if ((nsnull != map) || isServerMap) {
         nsPoint p;
@@ -1008,7 +971,7 @@ nsImageFrame::GetCursor(nsIPresContext* aPresContext,
                         nsPoint& aPoint,
                         PRInt32& aCursor)
 {
-  nsImageMap* map = GetImageMap();
+  nsImageMap* map = GetImageMap(aPresContext);
   if (nsnull != map) {
     nsPoint p;
     TranslateEventCoords(aPresContext, aPoint, p);

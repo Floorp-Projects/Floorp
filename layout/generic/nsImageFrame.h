@@ -86,7 +86,7 @@ protected:
 
   nsresult UpdateImage(nsIPresContext* aPresContext, PRUint32 aStatus, void* aClosure);
 
-  nsImageMap* GetImageMap();
+  nsImageMap* GetImageMap(nsIPresContext* aPresContext);
 
   void TriggerLink(nsIPresContext* aPresContext,
                    const nsString& aURLSpec,
