@@ -75,6 +75,7 @@
 	#include "CSimpleDividedView.h"
 	#include "CKeyScrollAttachment.h"	
 	#include "CToolTipAttachment.h"	
+	#include "CTableTooltipPane.h"
 	#include "CDynamicTooltips.h"
 	#include "CPaneEnabler.h"
 	#include "CStringListToolTipPane.h"	
@@ -229,6 +230,8 @@ void RegisterAllBrowserClasses(void)
 	RegisterClass_(CKeyScrollAttachment);
 	RegisterClass_(CToolTipAttachment);
 	RegisterClass_(CDynamicTooltipPane);
+	RegisterClass_(CTableToolTipPane);
+	RegisterClass_(CTableToolTipAttachment);
 	RegisterClass_(CSharedToolTipAttachment);
 	RegisterClass_(CMenuTable);
 	RegisterClass_(CPaneEnabler);
