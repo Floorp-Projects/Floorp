@@ -226,11 +226,12 @@ sub check_netmask {
    name => 'enablequips',
    desc => 'Controls the appearance of quips at the top of buglists.<ul> ' .
            '<li>on - Bugzilla will display a quip, and lets users add to ' .
-           'the list.</li><li>frozen - Bugzilla will display a quip but ' .
-           'not permit new additions.</li><li>off - Bugzilla will not ' .
-           'display quips.</li></ul>',
+           'the list.</li><li>approved - quips can be entered, but need ' .
+           'be approved before shown</li><li>frozen - Bugzilla will display ' .
+           'a quip but not permit new additions.</li><li>off - Bugzilla ' .
+           'will not display quips.</li></ul>',
    type => 's',
-   choices => ['on','frozen','off'],
+   choices => ['on', 'approved', 'frozen', 'off'],
    default => 'on',
    checker => \&check_multi
   },

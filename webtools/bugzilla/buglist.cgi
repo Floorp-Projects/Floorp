@@ -191,7 +191,7 @@ sub GetQuip {
 
     my $quip;
 
-    SendSQL("SELECT quip FROM quips ORDER BY RAND() LIMIT 1");
+    SendSQL("SELECT quip FROM quips WHERE approved = 1 ORDER BY RAND() LIMIT 1");
 
     if (MoreSQLData()) {
         ($quip) = FetchSQLData();

@@ -21,6 +21,7 @@
 # Contributor(s): Owen Taylor <otaylor@redhat.com>
 #                 Gervase Markham <gerv@gerv.net>
 #                 David Fallon <davef@tetsubo.com>
+#                 Tobias Burnus <burnus@net-b.de>
 
 use strict;
 
@@ -46,18 +47,20 @@ my $action = $::FORM{'action'} || "";
 
 if ($action eq "show") {
     # Read in the entire quip list
-    SendSQL("SELECT quipid,userid,quip FROM quips");
+    SendSQL("SELECT quipid, userid, quip, approved FROM quips");
 
     my $quips;
     my @quipids;
     while (MoreSQLData()) {
-        my ($quipid, $userid, $quip) = FetchSQLData();
-        $quips->{$quipid} = {'userid' => $userid, 'quip' => $quip};
+        my ($quipid, $userid, $quip, $approved) = FetchSQLData();
+        $quips->{$quipid} = {'userid' => $userid, 'quip' => $quip, 
+                             'approved' => $approved};
         push(@quipids, $quipid);
     }
 
     my $users;
     foreach my $quipid (@quipids) {
+        my $userid = $quips->{$quipid}{'userid'};
         if (not defined $users->{$userid}) {
             SendSQL("SELECT login_name FROM profiles WHERE userid = $userid");
             $users->{$userid} = FetchSQLData();
@@ -70,16 +73,47 @@ if ($action eq "show") {
 }
 
 if ($action eq "add") {
-    (Param('enablequips') eq "on") || ThrowUserError("no_new_quips");
+    (Param('enablequips') eq "on" or Param('enablequips') eq "approved")
+      || ThrowUserError("no_new_quips");
     
     # Add the quip 
+    my $approved = (Param('enablequips') eq "on") ? '1' : '0';
+    $approved = 1 if(UserInGroup('admin'));
     my $comment = $::FORM{"quip"};
     $comment || ThrowUserError("need_quip");
     $comment !~ m/</ || ThrowUserError("no_html_in_quips");
 
-    SendSQL("INSERT INTO quips (userid, quip) VALUES (". $userid . ", " . SqlQuote($comment) . ")");
+    SendSQL("INSERT INTO quips (userid, quip, approved) VALUES " .
+           '(' . $userid . ', ' . SqlQuote($comment) . ', ' . $approved . ')');
 
     $vars->{'added_quip'} = $comment;
+}
+
+if ($action eq 'approve') {
+    # Read in the entire quip list
+    SendSQL("SELECT quipid, approved FROM quips");
+ 
+    my %quips;
+    while (MoreSQLData()) {
+        my ($quipid, $approved) = FetchSQLData();
+        $quips{$quipid} = $approved;
+    }
+
+    my @approved;
+    my @unapproved;
+    foreach my $quipid (keys %quips) {
+       my $form = ($::FORM{'quipid_'.$quipid}) ? 1 : 0;
+       if($quips{$quipid} ne $form) {
+           if($form) { push(@approved, $quipid); }
+           else { push(@unapproved, $quipid); }
+       }
+    }
+    SendSQL("UPDATE quips SET approved = 1 WHERE quipid IN (" .
+            join(",", @approved) . ")") if($#approved > -1);
+    SendSQL("UPDATE quips SET approved = 0 WHERE quipid IN (" .
+            join(",", @unapproved) . ")") if($#unapproved > -1);
+    $vars->{ 'approved' }   = \@approved;
+    $vars->{ 'unapproved' } = \@unapproved;
 }
 
 if ($action eq "delete") {

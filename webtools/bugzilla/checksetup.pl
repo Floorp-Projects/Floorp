@@ -3844,6 +3844,10 @@ if ($sth->rows == 0) {
     }
 }
 
+# 2003-01-11, burnus@net-b.de, bug 184309
+# Support for quips approval
+AddField('quips', 'approved', 'tinyint(1) NOT NULL  DEFAULT 1');
+ 
 # 2002-11-XX Bug 180870 - remove manual shadowdb replication code
 if (TableExists('shadowlog')) {
     print "Removing shadowlog table\n";

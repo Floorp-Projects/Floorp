@@ -35,6 +35,9 @@
   <p>
     <font color="red">
       Your quip '<tt>[% added_quip FILTER html %]</tt>' has been added.
+      [% IF Param("enablequips") == "approved" AND !UserInGroup('admin') %]
+        It will be used as soon as it gets approved.
+      [% END %]
     </font>
   </p>
 [% END %]
@@ -47,10 +50,17 @@
   </p>
 [% END %]
 
+[% IF approved or unapproved %]
+  <p>[% approved.size %] quips approved and [% unapproved.size %] quips unapproved</p>
+[% END %]
+
 <p>
   Bugzilla will pick a random quip for the headline on each bug list, and 
   you can extend the quip list. Type in something clever or funny or boring 
   (but not obscene or offensive, please) and bonk on the button.
+  [% IF Param("enablequips") == "approved" AND !UserInGroup('admin') %]
+    Note that your quip has to be approved before it is used.
+  [% END %]
 </p>
 
 <form method="post" action="quips.cgi">
@@ -67,35 +77,66 @@
       Existing quips:
     </h2>
     <ul>
-      [% FOREACH quip = quips %]
-        <li>[% quip FILTER html %]</li>
+      [% FOREACH quipid = quipids %]
+        [% NEXT IF NOT quips.$quipid.approved %]
+        <li>[% quips.$quipid.quip FILTER html %]</li>
       [% END %]
     </ul>
   [% ELSE %]
     <h2>Edit existing quips:</h2>
-    <table border="1">
-      <thead><tr>
-        <th>Quip</th>
-        <th>Author</th>
-        <th>Action</th>
-      </tr></thead><tbody>
-      [% FOREACH quipid = quipids %]
-        <tr>
-          <td>[% quips.$quipid.quip FILTER html %]</td>
-          <td>
-            [% userid = quips.$quipid.userid  %]
-            [% users.$userid FILTER html      %]
-            [% "Unknown" IF NOT users.$userid %]
-          </td>
-          <td>
-            <a href="quips.cgi?action=delete&amp;quipid=[% quipid FILTER uri%]">
-              Delete
-            </a>
-          </td>
-        </tr>
-      [% END %]
-      </tbody>
-    </table>
+    <p>
+      <strong>Note:</strong> Only approved quips will be shown.
+      If enablequips is set to <q>on</q>, entered quips are automatically
+      approved.
+    </p>
+    <form name="editform" method="post" action="quips.cgi">
+      <input type="hidden" name="action" value="approve">
+      <table border="1">
+        <thead><tr>
+          <th>Quip</th>
+          <th>Author</th>
+          <th>Action</th>
+          <th>Approved</th>
+        </tr></thead><tbody>
+        [% FOREACH quipid = quipids %]
+          <tr>
+            <td>[% quips.$quipid.quip FILTER html %]</td>
+            <td>
+              [% userid = quips.$quipid.userid  %]
+              [% users.$userid FILTER html      %]
+              [% "Unknown" IF NOT users.$userid %]
+            </td>
+            <td>
+              <a href="quips.cgi?action=delete&amp;quipid=[% quipid FILTER uri%]">
+                Delete
+              </a>
+            </td>
+            <td>
+              <input type="checkbox" name="quipid_[% quipid FILTER uri%]"
+                     id="quipid_[% quipid FILTER uri%]"
+                     [%- ' checked="checked"' IF quips.$quipid.approved %]>
+            </td>
+          </tr>
+        [% END %]
+        </tbody>
+      </table>
+      <script type="text/javascript" language="JavaScript"><!--
+        var numelements = document.forms.editform.elements.length;
+        function SetCheckboxes(value) {
+          var item;
+          for (var i=0 ; i<numelements ; i++) {
+            item = document.forms.editform.elements[i];
+            item.checked = value;
+          }
+        }
+        document.write(' <input type="button" name="uncheck_all" '
+                      +'value="Uncheck All" onclick="SetCheckboxes(false);">');
+        document.write(' <input type="button" name="check_all" '
+                      +'value="Check All" onclick="SetCheckboxes(true);">');
+        //--></script>
+
+      <input type="submit" value="Update">
+    </form>
     <br>
   [% END %]
 [% ELSE %]
