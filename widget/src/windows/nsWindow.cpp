@@ -251,6 +251,7 @@ PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
 void nsWindow::InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint)
 {
     event.widget = this;
+    NS_ADDREF(event.widget);
 
     if (nsnull == aPoint) {     // use the point from the event
       // get the message position in client coordinates and in twips
@@ -298,7 +299,7 @@ NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus
   if ((aStatus != nsEventStatus_eIgnore) && (nsnull != mEventListener)) {
     aStatus = mEventListener->ProcessEvent(*event);
   }
-
+  nsWindow * thisPtr = this;
   return NS_OK;
 }
 
@@ -322,7 +323,9 @@ PRBool nsWindow::DispatchStandardEvent(PRUint32 aMsg)
   event.eventStructType = NS_GUI_EVENT;
   InitEvent(event, aMsg);
 
-  return DispatchWindowEvent(&event);
+  PRBool result = DispatchWindowEvent(&event);
+  NS_RELEASE(event.widget);
+  return result;
 }
 
 //-------------------------------------------------------------------------
@@ -1176,7 +1179,9 @@ PRBool nsWindow::OnKey(PRUint32 aEventType, PRUint32 aKeyCode)
   event.isAlt     = mIsAltDown;
   event.eventStructType = NS_KEY_EVENT;
 
-  return DispatchWindowEvent(&event);
+  PRBool result = DispatchWindowEvent(&event);
+  NS_RELEASE(event.widget);
+  return result;
 }
 
 //-------------------------------------------------------------------------
@@ -1208,7 +1213,8 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             event.mCommand = LOWORD(wParam);
             event.eventStructType = NS_MENU_EVENT;
             InitEvent(event, NS_MENU_SELECTED);
-            result =  DispatchWindowEvent(&event);
+            result = DispatchWindowEvent(&event);
+            NS_RELEASE(event.widget);
           }
         }
         break;
@@ -1232,6 +1238,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
                   event.tipIndex = (PRUint32)wParam;
                   event.eventStructType = NS_TOOLTIP_EVENT;
                   result = DispatchWindowEvent(&event);
+                  NS_RELEASE(event.widget);
               }
               break;
 
@@ -1606,7 +1613,10 @@ PRBool nsWindow::OnMove(PRInt32 aX, PRInt32 aY)
   event.point.x = aX;
   event.point.y = aY;
   event.eventStructType = NS_GUI_EVENT;
-  return DispatchWindowEvent(&event);
+
+  PRBool result = DispatchWindowEvent(&event);
+  NS_RELEASE(event.widget);
+  return result;
 }
 
 //-------------------------------------------------------------------------
@@ -1642,14 +1652,15 @@ PRBool nsWindow::OnPaint()
             static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
             static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
 
-            if (NS_OK == nsRepository::CreateInstance(kRenderingContextCID, nsnull, kRenderingContextIID, (void **)&event.renderingContext))
-            {
+            if (NS_OK == nsRepository::CreateInstance(kRenderingContextCID, nsnull, kRenderingContextIID, (void **)&event.renderingContext)) {
               event.renderingContext->Init(mContext, this);
               result = DispatchWindowEvent(&event);
               NS_RELEASE(event.renderingContext);
-            }
-            else
+            } else {
               result = PR_FALSE;
+            }
+            NS_RELEASE(event.widget);
+
         }
         else
             ::EndPaint(mWnd, &ps);
@@ -1676,7 +1687,9 @@ PRBool nsWindow::OnResize(nsRect &aWindowRect)
     InitEvent(event, NS_SIZE);
     event.windowSize = &aWindowRect;
     event.eventStructType = NS_SIZE_EVENT;
-    return DispatchWindowEvent(&event);
+    PRBool result = DispatchWindowEvent(&event);
+    NS_RELEASE(event.widget);
+    return result;
   }
 
   return PR_FALSE;
@@ -1743,7 +1756,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint)
         gCurrentWindow = nsnull;
       }
     }
-
+    NS_RELEASE(event.widget);
     return result;
   }
 
@@ -1778,6 +1791,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint)
         break;
     } // switch
   } 
+  NS_RELEASE(event.widget);
   return result;
 }
 
