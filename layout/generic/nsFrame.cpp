@@ -786,8 +786,6 @@ nsFrame::HandleEvent(nsIPresContext* aPresContext,
       if (NS_SUCCEEDED(shell->GetFrameSelection(getter_AddRefs(frameselection))) && frameselection)
       {
         frameselection->SetMouseDownState( PR_TRUE);//not important if it fails here
-        if (!IsMouseCaptured(aPresContext))
-          CaptureMouse(aPresContext, PR_TRUE);
       }
       HandlePress(aPresContext, aEvent, aEventStatus);
     }break;
@@ -923,6 +921,8 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
                      nsGUIEvent*     aEvent,
                      nsEventStatus*  aEventStatus)
 {
+  if (!IsMouseCaptured(aPresContext))
+    CaptureMouse(aPresContext, PR_TRUE);
   if (!DisplaySelection(aPresContext)) {
     return NS_OK;
   }
@@ -952,8 +952,6 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
       if (NS_SUCCEEDED(shell->GetFrameSelection(getter_AddRefs(frameselection))) && frameselection)
       {
         frameselection->SetMouseDownState(PR_TRUE);//not important if it fails here
-        if (!IsMouseCaptured(aPresContext))
-          CaptureMouse(aPresContext, PR_TRUE);
 
         nsCOMPtr<nsIContent>parentContent;
         PRInt32  contentOffset;
@@ -1103,6 +1101,9 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsIPresContext* aPresContext,
                                      nsGUIEvent*     aEvent,
                                      nsEventStatus*  aEventStatus)
 {
+  if (IsMouseCaptured(aPresContext))
+    CaptureMouse(aPresContext, PR_FALSE);
+
   if (!DisplaySelection(aPresContext))
     return NS_OK;
 
@@ -1117,8 +1118,6 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsIPresContext* aPresContext,
     nsCOMPtr<nsIFrameSelection> frameselection;
 
     result = presShell->GetFrameSelection(getter_AddRefs(frameselection));
-    if (IsMouseCaptured(aPresContext))
-      CaptureMouse(aPresContext, PR_FALSE);
 
     if (NS_SUCCEEDED(result) && frameselection)
       frameselection->StopAutoScrollTimer();
