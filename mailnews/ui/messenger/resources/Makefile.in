@@ -29,30 +29,30 @@ include $(topsrcdir)/config/rules.mk
 SAMPLES_DIR = $(DIST)/bin/res/mailnews/messenger
 
 EXPORT_RESOURCE_SAMPLES = \
-	./mailshell.xul \
-	./msgBar.xul \
-	./folderPane.xul \
-	./folderPane.css \
-	./threadPane.xul \
-	./threadPane.css \
-	./message.html \
-	./widgetglue.js \
-	./commandglue.js \
-	./shareglue.js \
-	./3panemail.html \
-	./messagePane.xul \
-	./closedMailFolder.gif \
-	./openMailFolder.gif \
-	./localMailHost.gif \
-	./mailMessage.gif \
-	./closedInbox.gif \
-	./closedTrash.gif \
-	./closedOutbox.gif \
-	./getmsg.gif \
-	./newmsg.gif \
-	./reply.gif \
-	./forward.gif \
-	./trash.gif \
+	$(srcdir)/mailshell.xul \
+	$(srcdir)/msgBar.xul \
+	$(srcdir)/folderPane.xul \
+	$(srcdir)/folderPane.css \
+	$(srcdir)/threadPane.xul \
+	$(srcdir)/threadPane.css \
+	$(srcdir)/message.html \
+	$(srcdir)/widgetglue.js \
+	$(srcdir)/commandglue.js \
+	$(srcdir)/shareglue.js \
+	$(srcdir)/3panemail.html \
+	$(srcdir)/messagePane.xul \
+	$(srcdir)/closedMailFolder.gif \
+	$(srcdir)/openMailFolder.gif \
+	$(srcdir)/localMailHost.gif \
+	$(srcdir)/mailMessage.gif \
+	$(srcdir)/closedInbox.gif \
+	$(srcdir)/closedTrash.gif \
+	$(srcdir)/closedOutbox.gif \
+	$(srcdir)/getmsg.gif \
+	$(srcdir)/newmsg.gif \
+	$(srcdir)/reply.gif \
+	$(srcdir)/forward.gif \
+	$(srcdir)/trash.gif \
 	$(NULL)
 
 EXPORT_RESOURCE_SAMPLES_TO_REMOVE := $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
