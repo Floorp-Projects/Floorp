@@ -1445,13 +1445,13 @@ static nsGenericHTMLElement::EnumTable kAlignTable[] = {
   { "left", NS_STYLE_TEXT_ALIGN_LEFT },
   { "right", NS_STYLE_TEXT_ALIGN_RIGHT },
 
-  { "texttop", NS_STYLE_VERTICAL_ALIGN_TEXT_TOP },
-  { "baseline", NS_STYLE_VERTICAL_ALIGN_BASELINE },
+  { "texttop", NS_STYLE_VERTICAL_ALIGN_TEXT_TOP },// verified
+  { "baseline", NS_STYLE_VERTICAL_ALIGN_BASELINE },// verified
   { "center", NS_STYLE_VERTICAL_ALIGN_MIDDLE },
-  { "bottom", NS_STYLE_VERTICAL_ALIGN_BOTTOM },
-  { "top", NS_STYLE_VERTICAL_ALIGN_TOP },
-  { "middle", NS_STYLE_VERTICAL_ALIGN_MIDDLE },
-  { "absbottom", NS_STYLE_VERTICAL_ALIGN_BOTTOM },
+  { "bottom", NS_STYLE_VERTICAL_ALIGN_BASELINE },//verified
+  { "top", NS_STYLE_VERTICAL_ALIGN_TOP },//verified
+  { "middle", NS_STYLE_VERTICAL_ALIGN_MIDDLE },//verified
+  { "absbottom", NS_STYLE_VERTICAL_ALIGN_BOTTOM },//verified
   { "abscenter", NS_STYLE_VERTICAL_ALIGN_MIDDLE },/* XXX not the same as ebina */
   { "absmiddle", NS_STYLE_VERTICAL_ALIGN_MIDDLE },/* XXX ditto */
   { 0 }
