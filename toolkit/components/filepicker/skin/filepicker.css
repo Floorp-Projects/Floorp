@@ -41,11 +41,12 @@
 /* ::::: file/directory items ::::: */
 
 treechildren:-moz-tree-image(FilenameColumn, directory) {
-  list-style-image: url("chrome://global/skin/icons/folder-item.png") !important;
+  list-style-image: url("chrome://global/skin/icons/folder-item.png");
   -moz-image-region: rect(0px, 32px, 16px, 16px);
 }
 
 treechildren:-moz-tree-image(FilenameColumn, file) {
+  list-style-image: url("chrome://global/skin/icons/folder-item.png");
   -moz-image-region: rect(16px, 16px, 32px, 0px);
 }
 
@@ -53,25 +54,28 @@ treechildren:-moz-tree-image(FilenameColumn, file) {
 
 #directoryTree > treerows > .tree-bodybox {
   border: 1px solid transparent;
-} 
+}
 
 #directoryTree:focus > treerows > .tree-bodybox {
   border-color: #000000;
-} 
+}
 
 /* ::::: button items ::::: */
 
 .up-button {
-  list-style-image: url("chrome://global/skin/filepicker/folder-up.gif");
+  list-style-image: url("chrome://global/skin/Filepicker.png");
+  -moz-image-region: rect(0px 20px 20px 00px);
   max-width: 36px;
 }
 
 .home-button {
-  list-style-image: url("chrome://global/skin/filepicker/folder-home.gif");
+  list-style-image: url("chrome://global/skin/Filepicker.png");
+  -moz-image-region: rect(0px 40px 20px 20px);
   max-width: 36px;
 }
 
 .new-dir-button {
-  list-style-image: url("chrome://global/skin/filepicker/folder-new.gif");
+  list-style-image: url("chrome://global/skin/Filepicker.png");
+  -moz-image-region: rect(0px, 60px, 20px, 40px);
   max-width: 36px;
 }
