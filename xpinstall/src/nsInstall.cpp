@@ -1973,6 +1973,63 @@ nsInstall::FileOpFileRename(nsInstallFolder& aSrc, nsString& aTarget, PRInt32* a
   return NS_OK;
 }
 
+#ifdef _WINDOWS
+#include <winbase.h>
+#endif
+
+
+PRInt32
+nsInstall::FileOpFileWindowsGetShortName(nsInstallFolder& aTarget, nsString& aShortPathName)
+{
+#ifdef _WINDOWS
+
+  PRInt32             err;
+  PRBool              flagExists;
+  nsString            tmpNsString;
+  nsXPIDLCString      nativeTargetPath;
+  char                nativeShortPathName[MAX_PATH];
+  nsCOMPtr<nsIFile>   localTarget(aTarget.GetFileSpec());
+
+  if(localTarget == nsnull)
+    return NS_OK;
+
+  localTarget->Exists(&flagExists);
+  if(flagExists)
+  {
+    memset(nativeShortPathName, 0, MAX_PATH);
+    localTarget->GetPath(getter_Copies(nativeTargetPath));
+
+    err = GetShortPathName(nativeTargetPath, nativeShortPathName, MAX_PATH);
+    if((err > 0) && (*nativeShortPathName == '\0'))
+    {
+      // NativeShortPathName buffer not big enough.
+      // Reallocate and try again.
+      // err will have the required size.
+      char *nativeShortPathNameTmp = new char[err + 1];
+      if(nativeShortPathNameTmp == nsnull)
+        return NS_OK;
+
+      err = GetShortPathName(nativeTargetPath, nativeShortPathNameTmp, err + 1);
+      // Is it safe to assume that the second time around the buffer is big enough
+      // and not to worry about it unless it's a different problem?
+
+      // if err is 0, it's not a buffer size problem.  It's something else unexpected.
+      if(err != 0)
+        aShortPathName.AssignWithConversion(nativeShortPathNameTmp);
+
+      if(nativeShortPathNameTmp)
+        delete [] nativeShortPathNameTmp;
+    }
+    else if(err != 0)
+      // if err is 0, it's not a buffer size problem.  It's something else unexpected.
+      aShortPathName.AssignWithConversion(nativeShortPathName);
+  }
+
+#endif
+
+  return NS_OK;
+}
+
 PRInt32
 nsInstall::FileOpFileWindowsShortcut(nsIFile* aTarget, nsIFile* aShortcutPath, nsString& aDescription, nsIFile* aWorkingPath, nsString& aParams, nsIFile* aIcon, PRInt32 aIconId, PRInt32* aReturn)
 {
