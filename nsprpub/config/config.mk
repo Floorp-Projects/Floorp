@@ -77,9 +77,6 @@ endef
 LINK_DLL	= $(LD) $(OS_DLLFLAGS) $(DLLFLAGS)
 
 ifeq ($(OS_ARCH),Darwin)
-ifndef NSDISTMODE
-NSDISTMODE=absolute_symlink
-endif
 PWD := $(shell pwd)
 endif
 

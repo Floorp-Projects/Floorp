@@ -48,6 +48,12 @@ DIRS = config pr lib
 ifdef MOZILLA_CLIENT
 PR_CLIENT_BUILD = 1
 PR_CLIENT_BUILD_UNIX = 1
+ifeq ($(OS_ARCH),Darwin)
+ifndef NSDISTMODE
+NSDISTMODE=absolute_symlink
+export NSDISTMODE
+endif
+endif
 endif
 
 DIST_GARBAGE = config.cache config.log config.status
