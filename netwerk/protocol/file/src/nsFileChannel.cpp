@@ -47,6 +47,8 @@
 #include "nsITransport.h"
 #include "nsIFileURL.h"
 #include "nsIMIMEService.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 
 static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_CID(kStreamTransportServiceCID, NS_STREAMTRANSPORTSERVICE_CID);
@@ -58,18 +60,17 @@ nsFileChannel::nsFileChannel()
     , mUploadLength(-1)
     , mLoadFlags(LOAD_NORMAL)
     , mStatus(NS_OK)
-    , mConvertToHTML(PR_FALSE)
+    , mListFormat(FORMAT_HTML)
     , mIsDir(PR_FALSE)
     , mUploading(PR_FALSE)
 {
 }
 
 nsresult
-nsFileChannel::Init(nsIURI *uri, PRBool htmlDirs)
+nsFileChannel::Init(nsIURI *uri)
 {
     nsresult rv;
     mURL = do_QueryInterface(uri, &rv);
-    mConvertToHTML = htmlDirs;
     return rv;
 }
 
@@ -125,14 +126,15 @@ nsFileChannel::EnsureStream()
 //-----------------------------------------------------------------------------
 
 // XXX this only needs to be threadsafe because of bug 101252
-NS_IMPL_THREADSAFE_ISUPPORTS7(nsFileChannel,
+NS_IMPL_THREADSAFE_ISUPPORTS8(nsFileChannel,
                               nsIRequest,
                               nsIChannel,
                               nsIStreamListener,
                               nsIRequestObserver,
                               nsIUploadChannel,
                               nsIFileChannel,
-                              nsITransportEventSink)
+                              nsITransportEventSink,
+                              nsIDirectoryListing)
 
 //-----------------------------------------------------------------------------
 // nsIRequest
@@ -283,7 +285,7 @@ nsFileChannel::GetContentType(nsACString &aContentType)
     
     if (mContentType.IsEmpty()) {
         if (mIsDir) {
-            if (mConvertToHTML)
+            if (mListFormat == FORMAT_HTML)
                 mContentType = NS_LITERAL_CSTRING(TEXT_HTML);
             else
                 mContentType = NS_LITERAL_CSTRING(APPLICATION_HTTP_INDEX_FORMAT);
@@ -362,7 +364,7 @@ nsFileChannel::Open(nsIInputStream **result)
     rv = EnsureStream();
     if (NS_FAILED(rv)) return rv;
 
-    if (mIsDir && mConvertToHTML) {
+    if (mIsDir && mListFormat == FORMAT_HTML) {
         nsCOMPtr<nsIStreamConverterService> scs =
             do_GetService(kStreamConverterServiceCID, &rv);
         if (NS_FAILED(rv)) return rv;
@@ -458,7 +460,7 @@ nsFileChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx)
         //
         // push stream converter if opening a directory.
         //
-        if (mIsDir && mConvertToHTML) {
+        if (mIsDir && mListFormat == FORMAT_HTML) {
             nsCOMPtr<nsIStreamConverterService> scs =
                 do_GetService(kStreamConverterServiceCID, &rv);
             if (NS_FAILED(rv)) return rv;
@@ -610,6 +612,36 @@ nsFileChannel::OnTransportStatus(nsITransport *trans, nsresult status,
             mProgressSink->OnProgress(this, nsnull, progress, progressMax);
         }
     }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileChannel::SetListFormat(PRUint32 format)
+{
+    // Convert the pref value
+    if (format == FORMAT_PREF) {
+        format = FORMAT_HTML; // default
+        nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+        if (prefs) {
+            PRInt32 sFormat;
+            if (NS_SUCCEEDED(prefs->GetIntPref("network.dir.format", &sFormat)))
+                format = sFormat;
+        }
+    }
+    if (format != FORMAT_RAW &&
+        format != FORMAT_HTML &&
+        format != FORMAT_HTTP_INDEX) {
+        NS_WARNING("invalid directory format");
+        return NS_ERROR_FAILURE;
+    }
+    mListFormat = format;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileChannel::GetListFormat(PRUint32 *format)
+{
+    *format = mListFormat;
     return NS_OK;
 }
 
