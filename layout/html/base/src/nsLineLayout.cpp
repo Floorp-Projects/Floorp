@@ -858,7 +858,16 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   nsReflowReason reason = eReflowReason_Resize;
   if (NS_FRAME_FIRST_REFLOW & aFrame->GetStateBits()) {
     reason = eReflowReason_Initial;
-  }  
+  }
+  else if (rs->reason == eReflowReason_Initial &&
+           mBlockReflowState->reason == eReflowReason_StyleChange) {
+    // The frame we're about to reflow is an _old_ frame that was
+    // pushed inside a _new_ parent (overflow).
+
+    // So we propagate the same 'style change' that led to creating
+    // the new overflow parent to which this frame is now the child
+    reason = eReflowReason_StyleChange;
+  }
   else if (rs->reason == eReflowReason_Incremental) { // XXX
     // XXXwaterson (above) previously used mBlockReflowState rather
     // than psd->mReflowState.
