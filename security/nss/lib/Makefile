@@ -72,16 +72,16 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 # (7) Execute "local" rules. (OPTIONAL).                              #
 #######################################################################
 
-FILES=$(shell ls $(CORE_DEPTH)/../../ns/security/lib/crypto/*)
+ifdef MOZILLA_SECURITY_BUILD
+FILES=$(shell ls -d $(CORE_DEPTH)/../../ns/security/lib/crypto/*)
 
 export::
-ifdef MOZILLA_SECURITY_BUILD
 	if test -d $(CORE_DEPTH)/../../ns/security/lib/crypto; then \
-	   $(NSINSTALL) -D crypto; \
-	   for file in $(FILES) ; do \
+	    $(NSINSTALL) -D crypto; \
+	    for file in $(FILES) ; do \
 		if test -f $$file; then \
-   		    $(NSINSTALL) -m 444 $$file crypto; \
+		    $(NSINSTALL) -m 444 $$file crypto; \
 		fi; \
-	   done;  \
+	    done;  \
 	fi
 endif
