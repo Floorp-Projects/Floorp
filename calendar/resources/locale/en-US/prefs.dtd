@@ -21,6 +21,7 @@
    -
    - Contributor(s): Mike Potter <mikep@oeone.com>
    -                 ArentJan Banck <ajbanck@planet.nl>
+   -                 Eric Belhaire <belhaire@ief.u-psud.fr>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -67,6 +68,17 @@
 <!ENTITY pref.weekstarts.friday    "Friday" >
 <!ENTITY pref.weekstarts.saturday  "Saturday" >
 
+<!ENTITY pref.numberofweeks.label     "Default total number of Weeks:" >
+<!ENTITY pref.numberofweeks.0      "None" >
+<!ENTITY pref.numberofweeks.1      "1 Week" >
+<!ENTITY pref.numberofweeks.2      "2 Weeks" >
+<!ENTITY pref.numberofweeks.3      "3 Weeks" >
+<!ENTITY pref.numberofweeks.4      "4 Weeks" >
+<!ENTITY pref.numberofweeks.5      "5 Weeks" >
+<!ENTITY pref.numberofweeks.6      "6 Weeks" >
+<!ENTITY pref.numberofpreviousweeks.label     "Number of Previous Weeks:" >
+
+
 <!ENTITY pref.hour.help.description    "Overwritten if events are outside these times" >
 <!ENTITY pref.hour.00    "00:00" >
 <!ENTITY pref.hour.01    "01:00" >
@@ -95,6 +107,7 @@
 
 <!ENTITY pref.calendar.view.dayview.caption "Day View"> 
 <!ENTITY pref.calendar.view.weekview.caption "Week View"> 
+<!ENTITY pref.calendar.view.multiweekview.caption "Multiweek View"> 
 
 <!ENTITY pref.calendar.view.restrict.label "Restrict Views to "> 
 <!ENTITY pref.calendar.view.starttime.label "Start time:"> 

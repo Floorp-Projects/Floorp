@@ -20,6 +20,7 @@
  *
  * Contributor(s): Mike Potter <mikep@oeone.com>
  *                 ArentJan Banck <ajbanck@planet.nl>
+ *                 Eric Belhaire <belhaire@ief.u-psud.fr>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -56,7 +57,9 @@ calendarPrefObserver.prototype =
       {
       case "calendar.event.defaultstarthour":
       case "calendar.event.defaultendhour":
-         case "calendar.week.start" :
+      case "calendar.weeks.inview":
+      case "calendar.previousweeks.inview":
+      case "calendar.week.start":
             this.CalendarPreferences.calendarWindow.currentView.refresh();
             break;
 
@@ -105,5 +108,7 @@ function calendarPreferences( CalendarWindow )
    getIntPref( this.calendarPref, "event.defaultstarthour", categoriesStringBundle.GetStringFromName("defaultStartHour" ) );
    getIntPref( this.calendarPref, "event.defaultendhour", categoriesStringBundle.GetStringFromName("defaultEndHour" ) );
    getIntPref( this.calendarPref, "week.start", categoriesStringBundle.GetStringFromName("defaultWeekStart" ) );
+   getIntPref( this.calendarPref, "weeks.inview", categoriesStringBundle.GetStringFromName("defaultWeeksInView" ) );
+   getIntPref( this.calendarPref, "previousweeks.inview", categoriesStringBundle.GetStringFromName("defaultPreviousWeeksInView" ) );
 }
 

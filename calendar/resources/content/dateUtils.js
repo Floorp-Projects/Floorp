@@ -20,6 +20,7 @@
  *
  * Contributor(s): Garth Smedley <garths@oeone.com>
  *                 Mike Potter <mikep@oeone.com>
+ *                 Eric Belhaire <belhaire@ief.u-psud.fr>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -75,6 +76,72 @@ DateUtils.getLastDayOfMonth = function( year, month  )
    
    return lastDayOfMonth;
  
+}
+DateUtils.getWeekNumber = function(date)
+{
+  //ISO Week Number(01-53) for any date
+  //code adapted from http://www.pvv.org/~nsaa/ISO8601.html
+  ///////////////////
+  // Calculate some date for this Year
+  ///////////////////
+  var Year = date.getFullYear();
+  var FirstOfYear = new Date(Year,0,1) ;
+  var LastOfYear = new Date(Year,11,31) ;
+  var FirstDayNum = FirstOfYear.getDay() ;
+  // ISO weeks start on Monday (day 1) and ends on Sunday (day 7) 
+  var ISOFirstDayNum = (FirstDayNum ==0)? 7 : FirstDayNum ;
+  // Week 1 of any year is the week that contains the first Thursday
+  // in January : true if 1 Jan = mon - thu. WeekNumber is then 1
+  var IsFirstWeek = ( ( 7 - ISOFirstDayNum ) > 2 )? 1 : 0 ;
+  // The first Monday after 1 Jan this Year
+  var FirstMonday = 9 - ISOFirstDayNum ;
+  // Number of Days from 1 Jan to date
+  var msOffset = ( FirstOfYear.getTimezoneOffset() - date.getTimezoneOffset() ) * kDate_MillisecondsInMinute;
+  var DaysToDate = Math.floor((date.getTime()+msOffset-FirstOfYear.getTime())/kDate_MillisecondsInDay)+1 ;
+  // Number of Days in Year (either 365 or 366);
+  var DaysInYear =  (LastOfYear.getTime()-FirstOfYear.getTime())/kDate_MillisecondsInDay+1 ;
+  // Number of Weeks in Year. Most years have 52 weeks, but years that start on
+  // a Thursday and leapyears that starts on a Wednesday or a Thursday have 53 weeks
+  var NumberOfWeeksThisYear = 
+          (ISOFirstDayNum==4 || (ISOFirstDayNum==3 && DaysInYear==366)) ? 53 : 52;
+
+  // "***********************************";
+  // " Calculate some data for last Year ";
+  // "***********************************";
+  var FirstOfLastYear = new Date(Year-1,0,1) ;
+  var LastOfLastYear = new Date(Year-1,11,31) ;
+  var FirstDayNumLast = FirstOfLastYear.getDay() ;
+  // ISO weeks start on Monday (day 1) and ends on Sunday (day 7) 
+  var ISOFirstDayNumLast = (FirstDayNumLast ==0)? 7 : FirstDayNumLast ;
+  // Number of Days in Year (either 365 or 366);
+  var DaysInLastYear =  (LastOfLastYear.getTime()-FirstOfLastYear.getTime())/kDate_MillisecondsInDay+1 ;
+  // Number of Weeks in Year. Most years have 52 weeks, but years that start on
+  // a Thursday and leapyears that starts on a Wednesday or a Thursday have 53 weeks
+  var NumberOfWeeksLastYear = 
+          (ISOFirstDayNumLast==4 || (ISOFirstDayNumLast==3 && DaysInLastYear==366)) ? 53 : 52;
+  // "****************************";
+  // " Calculates the Week Number ";
+  // "****************************";
+  var DateDayNum = date.getDay() ;
+  var ISODateDayNum = (DateDayNum ==0)? 7 : DateDayNum ;
+  // Is Date in the last Week of last Year ?
+  if( (DaysToDate < FirstMonday) &&  (IsFirstWeek == 0) ) 
+     return(NumberOfWeeksLastYear) ;
+  // "Calculate number of Complete Weeks Between D and 1.jan";
+  var ComplNumWeeks = Math.floor((DaysToDate-FirstMonday)/7);
+  // "Are there remaining days?";
+  var RemainingDays = ( (DaysToDate+1-(FirstMonday+7*ComplNumWeeks))>0 );
+
+  var NumWeeks = IsFirstWeek+ComplNumWeeks+1;
+  if(RemainingDays) 
+  {
+      if(NumWeeks>52 && NumWeeks>NumberOfWeeksThisYear )
+	  return( 1 );
+      else
+	  return( NumWeeks );	  
+  }
+  else 
+      return( NumWeeks - 1 );	  
 }
 
 

@@ -24,6 +24,7 @@
  *                 Karl Guertin <grayrest@grayrest.com> 
  *                 Mike Norton <xor@ivwnet.com>
  *                 ArentJan Banck <ajbanck@planet.nl> 
+ *                 Eric Belhaire <belhaire@ief.u-psud.fr>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -89,6 +90,9 @@ var gHeaderDateItemArray = null;
 // Show event details on mouseover (sometimes this is false in the code)
 var showTooltip = true;
 
+//Show only the working days (changed in different menus)
+var gOnlyWorkdayChecked ;
+
 // DAY VIEW VARIABLES
 var kDayViewHourLeftStart = 105;
 
@@ -126,6 +130,10 @@ function calendarInit()
    
    //when you switch to a view, it takes care of refreshing the events, so that call is not needed.
    gCalendarWindow.currentView.switchTo( gCalendarWindow.currentView );
+
+   // set up the checkboxes variables
+   gOnlyWorkdayChecked = document.getElementById( "only-workday-checkbox-1" ).getAttribute("checked") ;
+   gDisplayToDoInViewChecked = document.getElementById( "display-todo-inview-checkbox-1" ).getAttribute("checked") ;
 
    // set up the unifinder
    
@@ -444,6 +452,60 @@ function monthEventBoxDoubleClickEvent( eventBox, event )
    gCalendarWindow.monthView.clearSelectedDate();
    
    editEvent( eventBox.calendarEventDisplay.event );
+
+   if ( event ) 
+   {
+      event.stopPropagation();
+   }
+}
+   
+
+/** 
+* Called on single click on an todo box in the multiweek view
+*
+* PARAMETERS
+*    todoBox - The XUL box clicked on
+*    event      - the click event
+*/
+
+function multiweekToDoBoxClickEvent( todoBox, event )
+{
+   //do this check, otherwise on double click you get into an infinite loop
+   if( event.detail == 1 )
+   {
+      gCalendarWindow.EventSelection.replaceSelection( todoBox.calendarToDo );
+      
+      var newDate = gCalendarWindow.getSelectedDate();
+
+      newDate.setDate( todoBox.calendarToDo.due.day );
+
+      gCalendarWindow.setSelectedDate( newDate, false );
+   }
+
+   if ( event ) 
+   {
+      event.stopPropagation();
+   }
+}
+
+
+/** 
+* Called on double click on an todo box in the multiweek view
+* launches the edit dialog on the event
+*
+* PARAMETERS
+*    todoBox - The XUL box clicked on
+*    event      - the click event
+*/
+
+function multiweekToDoBoxDoubleClickEvent( todoBox, event )
+{
+   // we only care about button 0 (left click) events
+   if (event.button != 0) return;
+   
+   gCalendarWindow.multiweekView.clearSelectedDate();
+   
+   editToDo( todoBox.calendarToDo );
 
    if ( event ) 
    {
@@ -911,6 +973,70 @@ function launchWizard()
    openDialog("chrome://calendar/content/wizard.xul", "caWizard", "chrome,modal", args );
 }
 
+/**
+*  Called when a user hovers over a todo element and the text for the mouse over is changed.
+*/
+
+function getPreviewTextForTask( calendarEventDisplay )
+{
+  var toDoItem = calendarEventDisplay ;
+
+   var HolderBox = document.createElement( "vbox" );
+
+   if( toDoItem )
+   {
+      showTooltip = true; //needed to show the tooltip.
+         
+      if (toDoItem.title)
+      {
+         var TitleHtml = document.createElement( "description" );
+         var TitleText = document.createTextNode( "Title: "+toDoItem.title );
+         TitleHtml.appendChild( TitleText );
+         HolderBox.appendChild( TitleHtml );
+      }
+   
+      var DateHtml = document.createElement( "description" );
+      var startDate = new Date( toDoItem.start.getTime() );
+      var DateText = document.createTextNode( "Start Date: "+gCalendarWindow.dateFormater.getFormatedDate( startDate ) );
+      DateHtml.appendChild( DateText );
+      HolderBox.appendChild( DateHtml );
+   
+      DateHtml = document.createElement( "description" );
+      var dueDate = new Date( toDoItem.due.getTime() );
+      DateText = document.createTextNode( "Due Date: "+gCalendarWindow.dateFormater.getFormatedDate( dueDate ) );
+      DateHtml.appendChild( DateText );
+      HolderBox.appendChild( DateHtml );
+   
+      if (toDoItem.description)
+      {
+	var text = "Description: "+toDoItem.description ;
+	var lines = text.split("\n");
+	var nbmaxlines = 5 ;
+	var nblines = lines.length ;
+	if( nblines > nbmaxlines ) {
+	  var nblines = nbmaxlines ;
+	  lines[ nblines - 1 ] = "..." ;
+	}
+	
+	for (var i = 0; i < nblines; i++) {
+	  var DescriptionHtml = document.createElement("description");
+	  var DescriptionText = document.createTextNode(lines[i]);
+	  DescriptionHtml.appendChild(DescriptionText);
+	  HolderBox.appendChild(DescriptionHtml);
+	}
+//          var DescriptionHtml = document.createElement( "description" );
+//          var DescriptionText = document.createTextNode( "Description: "+toDoItem.description );
+//          DescriptionHtml.appendChild( DescriptionText );
+//          HolderBox.appendChild( DescriptionHtml );
+      }
+      
+      return ( HolderBox );
+   } 
+   else
+   {
+      showTooltip = false; //Don't show the tooltip
+   }
+}
 
 /**
 *  Called when a user hovers over an element and the text for the mouse over is changed.
@@ -973,7 +1099,6 @@ function getPreviewTextForRepeatingEvent( calendarEventDisplay )
 
    return ( HolderBox );
 }
-
 
 function getNumberOfRepeatTimes( Event, DateToCompare )
 {
@@ -1186,4 +1311,52 @@ function SetUnicharPref(aPrefObj, aPrefName, aPrefValue)
       aPrefObj.setComplexValue(aPrefName, Components.interfaces.nsISupportsString, str);
     }
     catch(e) {}
+}
+
+/* Change the only-workday checkbox */
+function changeOnlyWorkdayCheckbox( menuindex ) {
+  var check = document.getElementById( "only-workday-checkbox-" + menuindex ).getAttribute("checked") ;
+  switch(menuindex){
+  case 1:
+    var changemenu = 2 ;
+    break;
+  case 2:
+    var changemenu = 1 ;
+    break;
+  default:
+    return(false);
+  }
+  if(check == "true") {
+    document.getElementById( "only-workday-checkbox-" + changemenu ).setAttribute("checked","true");
+    gOnlyWorkdayChecked = "true" ;
+  }
+  else {
+    document.getElementById( "only-workday-checkbox-" + changemenu ).removeAttribute("checked");
+    gOnlyWorkdayChecked = "false" ;
+  }
+  gCalendarWindow.currentView.refreshDisplay( );
+}
+
+/* Change the display-todo-inview checkbox */
+function changeDisplayToDoInViewCheckbox( menuindex ) {
+  var check = document.getElementById( "display-todo-inview-checkbox-" + menuindex ).getAttribute("checked") ;
+  switch(menuindex){
+  case 1:
+    var changemenu = 2 ;
+    break;
+  case 2:
+    var changemenu = 1 ;
+    break;
+  default:
+    return(false);
+  }
+  if(check == "true") {
+    document.getElementById( "display-todo-inview-checkbox-" + changemenu ).setAttribute("checked","true");
+    gDisplayToDoInViewChecked = "true" ;
+  }
+  else {
+    document.getElementById( "display-todo-inview-checkbox-" + changemenu ).removeAttribute("checked");
+    gDisplayToDoInViewChecked = "false" ;
+  }
+  gCalendarWindow.currentView.refreshEvents( );
 }

@@ -26,6 +26,7 @@
    -                 Karl Guertin <grayrest@grayrest.com> 
    -                 Dan Parent <danp@oeone.com> 
    -                 ArentJan Banck <ajbanck@planet.nl> 
+   -                 Eric Belhaire <belhaire@ief.u-psud.fr>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -55,6 +56,7 @@
 <?xul-overlay href="chrome://calendar/content/dayView.xul"?>
 <?xul-overlay href="chrome://calendar/content/weekView.xul"?>
 <?xul-overlay href="chrome://calendar/content/monthView.xul"?>
+<?xul-overlay href="chrome://calendar/content/multiweekView.xul"?>
 
 <!-- DTDs -->
 
@@ -111,6 +113,7 @@
    <command id="day_view_command"   oncommand="gCalendarWindow.switchToDayView()" disabled="true"/>
    <command id="week_view_command"  oncommand="gCalendarWindow.switchToWeekView()" disabled="true"/>
    <command id="month_view_command" oncommand="gCalendarWindow.switchToMonthView()" disabled="true"/>
+   <command id="multiweek_view_command" oncommand="gCalendarWindow.switchToMultiweekView()" disabled="false"/>
    
    <command id="import_command" oncommand="loadEventsFromFile()"/>
    <command id="export_command" oncommand="saveEventsToFile()" disabled="true" disabledwhennoeventsselected="true"/>
@@ -119,6 +122,9 @@
    <command id="publish_calendar" oncommand="publishEntireCalendar()"/>
 	<command id="publish_events_command" oncommand="publishCalendarData()" disabled="true" disabledwhennoeventsselected="true"/>
    
+<!--
+   <command id="change_display_todo_in_view" oncommand="" checked="true"/>
+-->   
    <command id="close_calendar_command" key="key_close" oncommand="closeCalendar()"/>
    
    <command id="wizard_command" oncommand="launchWizard()" collapsed="true"/>
@@ -142,6 +148,7 @@
   <key id="view_day_key"   keycode="VK_F1" observes="day_view_command"/>
   <key id="view_week_key"  keycode="VK_F2" observes="week_view_command"/>
   <key id="view_month_key" keycode="VK_F3" observes="month_view_command"/>
+  <key id="view_multiweek_key" keycode="VK_F4" observes="multiweek_view_command"/>
   
   <key id="go_forward_key" keycode="VK_PAGE_UP" observes="previous_command"/>
   <key id="go_backward_key" keycode="VK_PAGE_DOWN" observes="next_command"/>
@@ -214,6 +221,15 @@
    <menuitem label="&calendar.context.dayview.label;" accesskey="&calendar.context.dayview.accesskey;" observes="day_view_command"/>
    <menuitem label="&calendar.context.weekview.label;" accesskey="&calendar.context.weekview.accesskey;" observes="week_view_command"/>
    <menuitem label="&calendar.context.monthview.label;" accesskey="&calendar.context.monthview.accesskey;" observes="month_view_command"/>
+   <menuitem label="&calendar.context.multiweekview.label;" accesskey="&calendar.context.multiweekview.accesskey;" observes="multiweek_view_command"/>
+
+   <menuseparator/>
+   <menuitem id="only-workday-checkbox-2" type="checkbox" label="&calendar.onlyworkday.checkbox.label;" oncommand="changeOnlyWorkdayCheckbox(2);" persist="checked" disabled="true"/>
+   <menuitem id="display-todo-inview-checkbox-2" type="checkbox" label="&calendar.displaytodos.checkbox.label;" oncommand="changeDisplayToDoInViewCheckbox(2);" persist="checked" disabled="true"/>
+
+<!--
+   <menuitem label="test" observes="change_display_todo_in_view"  checked="true"/>
+-->   
 
    <menuseparator/>
    <menuitem label="&calendar.context.emailevent.label;" accesskey="&calendar.context.emailevent.accesskey;" observes="send_event_command"/>
@@ -276,11 +292,8 @@
 		<toolbarseparator class="toolbarseparator-primary"/>
 		<toolbarbutton class="toolbarbutton-1" id="calendar-day-view-button"       label="&calendar.dayview.button.label;"         tooltiptext="&calendar.dayview.button.tooltip;"      observes="day_view_command"/>
 		<toolbarbutton class="toolbarbutton-1" id="calendar-week-view-button"      label="&calendar.weekview.button.label;"        tooltiptext="&calendar.weekview.button.tooltip;"     observes="week_view_command"/>
+		<toolbarbutton class="toolbarbutton-2" id="calendar-multiweek-view-button"     label="&calendar.multiweekview.button.label;"       tooltiptext="&calendar.multiweekview.button.tooltip;"    observes="multiweek_view_command"/>
 		<toolbarbutton class="toolbarbutton-1" id="calendar-month-view-button"     label="&calendar.monthview.button.label;"       tooltiptext="&calendar.monthview.button.tooltip;"    observes="month_view_command"/>
-		<toolbarseparator class="toolbarseparator-primary" collapsed="true"/>
-      <hbox align="center" collapsed="true">
-			<checkbox id="only-workday-checkbox" label="&calendar.onlyworkday.checkbox.label;" flex="1" crop="end" oncommand="gCalendarWindow.currentView.refreshDisplay( )" persist="checked"/>
-      </hbox>
 
 		<spacer flex="1"/>
 		<hbox id="throbber-box" align="center">
@@ -369,7 +382,7 @@
             <box align="center">
                <checkbox id="only-completed-checkbox" label="&calendar.unifinder.hidecompletedtodos.label;" flex="1" crop="end" oncommand="toDoUnifinderRefresh( event )" persist="checked"/>
             </box>
-            <tree id="unifinder-todo-tree" flex="1" enableColumnDrag="false">
+            <tree id="unifinder-todo-tree" flex="1" enableColumnDrag="false" ondblclick="modifyToDoCommand( event )">
                <treecols id="unifinder-todo-tree-cols">
                   <treecol id="unifinder-todo-tree-col-completed"
                      persist="hidden ordinal width" width="18" cycler="true"
@@ -414,7 +427,6 @@
                   </treecols>
        
                   <treechildren tooltip="taskTooltip"
-                    ondblclick="modifyToDoCommand( event )"
                     onmousedown="unifinderMouseDownToDo( event )"
                     context="taskitem-context-menu"/>
                </tree>
@@ -523,6 +535,12 @@
             
                <!-- End: Calendar Day View -->
                       
+               <!-- Calendar Near Future View -->
+                
+               <vbox id="multiweek-view-box"/>
+             
+               <!-- End: Calendar Near Future View -->
+         
             </deck>  <!-- End: Day/Month/Week Deck -->
             
          </vbox>

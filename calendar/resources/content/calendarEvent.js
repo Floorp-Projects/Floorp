@@ -21,6 +21,7 @@
  * Contributor(s): Garth Smedley <garths@oeone.com>
  *                 Mike Potter <mikep@oeone.com>
  *                 Chris Allen <christopher.allen@mint.steelcase.com>
+ *                 Eric Belhaire <belhaire@ief.u-psud.fr>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -499,6 +500,11 @@ CalendarEventDataSource.prototype.makeNewEvent = function calEvent_makeNewEvent(
 
 
 /* TO DO STUFF */
+/* getAllToDos() 
+ * return all todos
+ *
+ *
+ */
 CalendarEventDataSource.prototype.getAllToDos = function calEvent_getAllToDos()
 {
    var eventList = this.gICalLib.getAllTodos( );
@@ -513,6 +519,38 @@ CalendarEventDataSource.prototype.getAllToDos = function calEvent_getAllToDos()
    }
    eventArray.sort( this.orderToDosByDueDate );
 
+   return eventArray;
+}
+/* getToDosForRange() 
+ * getToDosForRange 
+ * return the ToDos which due date is in the given date range
+ * return only the completed ones if the unifindertodo checkbox 
+ * is true
+ */
+CalendarEventDataSource.prototype.getToDosForRange = function calEvent_getToDosForRange( StartDate, EndDate )
+{
+   var Checked = document.getElementById( "only-completed-checkbox" ).checked;
+   
+   gICalLib.resetFilter();
+      
+   if( Checked === true )
+      gICalLib.filter.completed.setTime( new Date() );
+   
+   var eventList = this.gICalLib.getAllTodos( );
+   
+   var eventArray = new Array();
+   var EndDatePlusOne = new Date(EndDate.getFullYear(),EndDate.getMonth(),EndDate.getDate()+1) ;
+   while( eventList.hasMoreElements() )
+   {
+      var tmpevent = eventList.getNext().QueryInterface(Components.interfaces.oeIICalTodo);
+      var dueTime = tmpevent.due.getTime() ;
+     
+      if( (dueTime  >= StartDate.getTime()) &&  (dueTime < EndDatePlusOne.getTime()) )
+	{
+	  eventArray[ eventArray.length ] = tmpevent;
+	}
+   }
+   eventArray.sort( this.orderToDosByDueDate );
    return eventArray;
 }
 

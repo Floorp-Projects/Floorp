@@ -22,6 +22,7 @@
  *                 Mike Potter <mikep@oeone.com>
  *                 Karl Guertin <grayrest@grayrest.com> 
  *                 Colin Phillips <colinp@oeone.com> 
+ *                 Eric Belhaire <belhaire@ief.u-psud.fr>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -508,8 +509,7 @@ MonthView.prototype.refreshDisplay = function monthView_refreshDisplay( )
    
    var dayNumber = 1;
 
-   //Eric modification begin
-   var Checked = document.getElementById( "only-workday-checkbox" ).checked;
+   var Checked = gOnlyWorkdayChecked ;
 
    if( Checked === true )
    {

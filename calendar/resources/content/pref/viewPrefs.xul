@@ -21,6 +21,7 @@
    - Contributor(s):
    -  Mike Potter <mikep@oeone.com>
    -  ArentJan Banck <ajbanck@planet.nl>
+   -  Eric Belhaire <belhaire@ief.u-psud.fr>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -60,7 +61,7 @@
       */
        
       var _elementIDs = [
-          "weekstarts", "daystarthour", "dayendhour"
+          "nbofpreviousweeks", "nbofweeks", "weekstarts", "daystarthour", "dayendhour"
        ];
    </script>>
 
@@ -147,5 +148,31 @@
           </menupopup>
         </menulist>   
 </hbox>
+</groupbox>
+<groupbox>
+	<caption label="&pref.calendar.view.multiweekview.caption;"/>
+	<hbox  align="center">
+         <description>&pref.numberofweeks.label;</description>
+         <menulist id="nbofweeks" prefstring="calendar.weeks.inview">
+          <menupopup id="nbofweeks">
+            <menuitem label="&pref.numberofweeks.1;"   value="1"/>
+            <menuitem label="&pref.numberofweeks.2;"   value="2"/>
+            <menuitem label="&pref.numberofweeks.3;"   value="3"/>
+            <menuitem label="&pref.numberofweeks.4;"   value="4" selected="true"/>
+            <menuitem label="&pref.numberofweeks.5;"   value="5"/>
+            <menuitem label="&pref.numberofweeks.6;"   value="6"/>
+          </menupopup>
+         </menulist>   
+	</hbox>
+       	<hbox  align="center">
+         <description>&pref.numberofpreviousweeks.label;</description>
+         <menulist id="nbofpreviousweeks" preftype="int" prefstring="calendar.previousweeks.inview">
+          <menupopup id="nbofpreviousweeks">
+            <menuitem label="&pref.numberofweeks.0;"   value="0" selected="true"/>
+            <menuitem label="&pref.numberofweeks.1;"   value="1"/>
+            <menuitem label="&pref.numberofweeks.2;"   value="2"/>
+          </menupopup>
+        </menulist>   
+       </hbox>
 </groupbox>
 </page>

@@ -20,6 +20,7 @@
  *
  * Contributor(s): Garth Smedley <garths@oeone.com>
  *                 Mike Potter <mikep@oeone.com>
+ *                 Eric Belhaire <belhaire@ief.u-psud.fr>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -54,6 +55,7 @@
 *     monthView              - an instance of MonthView
 *     weekView               - an instance of WeekView
 *     dayView                - an instance of DayView
+*     multiweekView         - an instance of MultiweekView
 *   
 *     currentView            - the currently active view, one of the above three instances 
 *     
@@ -91,6 +93,7 @@ function CalendarWindow( )
    this.monthView = new MonthView( this );
    this.weekView = new WeekView( this );
    this.dayView = new DayView( this );
+   this.multiweekView = new MultiweekView( this );
    
    // we keep track of the selected date and the selected
    // event, start with selecting today.
@@ -115,6 +118,9 @@ function CalendarWindow( )
       case "2":
          this.currentView = this.dayView;
          document.getElementById( "day-tree-item-0" ).focus();
+         break;
+      case "3":
+         this.currentView = this.multiweekView;
          break;
       default:
          this.currentView = this.monthView;
@@ -249,6 +255,16 @@ CalendarWindow.prototype.switchToWeekView = function calWin_switchToWeekView( )
 CalendarWindow.prototype.switchToMonthView = function calWin_switchToMonthView( )
 {
    this.switchToView( this.monthView )
+}
+
+/** PUBLIC
+*
+*   Switch to the multiweek view if it isn't already the current view
+*/
+
+CalendarWindow.prototype.switchToMultiweekView = function calWin_switchToMultiweekView( )
+{
+   this.switchToView( this.multiweekView )
 }
 
 /** PUBLIC
@@ -445,7 +461,14 @@ CalendarWindow.prototype.changeMouseOverInfo = function calWin_changeMouseOverIn
       Html.removeChild( Html.firstChild ); 
    }
    
+   if(event.currentTarget.calendarToDo) 
+   {
+     var HolderBox = getPreviewTextForTask( event.currentTarget.calendarToDo );
+   }
+   else
+      {
    var HolderBox = getPreviewTextForRepeatingEvent( event.currentTarget.calendarEventDisplay );
+      }
    
    Html.appendChild( HolderBox );
 }
@@ -564,6 +587,7 @@ CalendarView.prototype.goToDay = function calView_goToDay( newDate, ShowEvent )
          }
          break;
    
+      case this.calendarWindow.multiweekView:
       case this.calendarWindow.weekView:
       case this.calendarWindow.dayView:
          if( newDate.getFullYear() != oldDate.getFullYear() ||

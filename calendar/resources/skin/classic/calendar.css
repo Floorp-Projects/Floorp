@@ -23,7 +23,8 @@
  *                 Karl Guertin <grayrest@grayrest.com> 
  *                 Colin Phillips <colinp@oeone.com> 
  *                 ArentJan Banck <ajbanck@planet.nl>
- *			 			 Mark Swaffer <swaff@fudo.org>
+ *			 			 Eric Belhaire <belhaire@ief.u-psud.fr>
+ *						 Mark Swaffer <swaff@fudo.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -194,6 +195,40 @@
 
 
 /*--------------------------------------------------------------------
+ *   Change to multiweek view button
+ *-------------------------------------------------------------------*/
+/* OLD
+    -moz-image-region: rect(42px 32px 63px 0px);
+    -moz-image-region: rect(42px 128px 63px 96px);
+    -moz-image-region: rect(42px 64px 63px 32px);
+*/
+.toolbarbutton-2 {
+  list-style-image: url("chrome://calendar/skin/btnwm1.gif");
+  min-width       : 47px ;
+  -moz-box-orient : vertical ;
+  padding-top     : 2px ;
+  padding-right   : 7px ;
+  padding-bottom  : 2px ;
+  padding-left    : 6px ;
+}
+
+#calendar-multiweek-view-button 
+  {
+    -moz-image-region: rect(1px 32px 21px 0px);
+  }
+#calendar-multiweek-view-button[disabled="true"],
+#calendar-multiweek-view-button[disabled="true"]:hover,
+#calendar-multiweek-view-button[disabled="true"]:hover:active,
+#calendar-multiweek-view-button:hover:active
+  {
+    -moz-image-region: rect(1px 128px 21px 96px);
+  }
+#calendar-multiweek-view-button:hover
+  {
+    -moz-image-region: rect(1px 64px 21px 32px);
+  }
+
+/*--------------------------------------------------------------------
  *   Change to month view button
  *-------------------------------------------------------------------*/
 
@@ -261,6 +296,137 @@
   {
     -moz-image-region: rect(0px 96px 21px 64px);
   }
+
+/*
+*****************************
+ MultiWeek
+*****************************
+*/
+#multiweek-grid{
+   border-right: 1px solid #3f7d91;
+}
+
+#multiweek-view-box{
+    -moz-box-align: center;
+    -moz-box-pack: center;
+    overflow: auto;
+    background-color: #FAFCFB;
+}
+
+#multiweek-title
+{
+    font-size:1.2em;
+    color: #3f7d91;
+    font-weight:bold;
+    margin:0px;
+    padding:0px;
+}
+
+.multiweek-leftcol-box-class{ 
+   display            : -moz-stack;
+   background-color   : #E7EEEC;
+}
+
+/*Right column*/
+.multiweek-rightcol-class{ 
+   background-color   : #E7EEEC;
+}
+/*Previous/Next Buttons*/
+.updownbuttons{
+    list-style-image: url("chrome://calendar/skin/pageupdown.gif");
+}
+#multiweek-next-button{
+    -moz-box-align:end;
+    -moz-image-region: rect(120px 30px 150px 0);
+    cursor:pointer;
+}
+#multiweek-next-button:hover{
+    -moz-image-region: rect(120px 60px 150px 30px);
+}
+#multiweek-next-button:hover:active{
+    -moz-image-region: rect(120px 90px 150px 60px);
+}
+#multiweek-previous-button{
+    -moz-box-align:start;
+    -moz-image-region: rect(90px 30px 120px 0);
+    cursor:pointer;
+}
+#multiweek-previous-button:hover{
+    -moz-image-region: rect(90px 60px 120px 30px);
+}
+#multiweek-previous-button:hover:active{
+    -moz-image-region: rect(90px 90px 120px 60px);
+}
+#multiweek-nextpage-button{
+    -moz-box-align:end;
+    -moz-image-region: rect(45px 30px 90px 0);
+    cursor:pointer;
+}
+#multiweek-nextpage-button:hover{
+    -moz-image-region: rect(45px 60px 90px 30px);
+}
+#multiweek-nextpage-button:hover:active{
+    -moz-image-region: rect(45px 90px 90px 60px);
+}
+#multiweek-previouspage-button{
+    -moz-box-align:start;
+    -moz-image-region: rect(0 30px 45px 0);
+    cursor:pointer;
+}
+#multiweek-previouspage-button:hover{
+    -moz-image-region: rect(0 60px 45px 30px);
+}
+#multiweek-previouspage-button:hover:active{
+    -moz-image-region: rect(0 90px 45px 60px);
+}
+
+/*--------------------------------------------------------------------
+ * Events in multiweek view are in a box
+ *-------------------------------------------------------------------*/
+
+.multiweek-day-event-text-class
+{
+   cursor               : pointer;
+}
+
+.multiweek-day-event-text-class[completed="true"]
+{
+   text-decoration        : line-through;
+}
+
+.multiweek-day-event-box-class
+{
+  border	       : 1px solid #F9F4FF;
+  background-color     : #F9F4FF;
+  text-align           : left; 	
+  font-size            : 0.9em;
+  font-family          : Arial, Helvetica;
+  cursor               : pointer;
+}
+
+.multiweek-day-event-box-class:hover
+{
+  background-color      : #F9F4FF;
+  border		: 1px solid #003366;
+}
+
+.multiweek-day-event-box-class[eventselected="true"]
+{
+   background-color     :  #D5E3F2;  
+   border-color         :  #003366;
+}
+
+.multiweek-view-event-dot-class
+{                  
+   margin-left             : 2px;
+   margin-top              : 2px;
+   list-style-image        : url("chrome://calendar/skin/dot.png");
+}
+
+.multiweek-view-event-dot-class[eventselected="true"]
+{
+   list-style-image        : url("chrome://calendar/skin/dot_selected.png");
+}
 
 
 /*<<-------------------------------------------------/\/\/\ Month*/
@@ -366,6 +532,31 @@
     border-right: 1px solid #3f7d91;
     border-bottom: 1px solid #3f7d91;
 }
+/*this rule is for the week number and surrounding box*/
+.month-leftcol-box-class{ 
+    border-top: 1px solid #3f7d91;
+    border-left: 1px solid #3f7d91;
+   display              : -moz-stack;
+   -moz-box-pack        : end;
+   -moz-box-align        : end;
+}
+.month-leftcol-number-class{
+   top                     : 0.75em;
+   left                    : 0.6em;
+   font-size               : 1.2em;
+   letter-spacing          : -0.15em;
+   font-weight             : bold;
+   color                   : #3f7d91;
+   margin                  : 0.15em;
+}
+.week-short-text{
+   top                     : 0.3em;
+   font-size               : 1.5em;
+   color                   : #9fCdE1;
+   font-weight             : bold;
+   margin                  : 0.1em;
+}
+
 /*this rule is for the day name and surrounding box*/
 .month-column-center-day-class{
     border-left: 1px solid #3f7d91;
@@ -410,7 +601,9 @@
 }
 /*the selected day box, since it's last, it has the highest priority*/
 .month-day-box-class[monthselected="true"],
-.month-day-box-class[monthselected="true"][weekend="true"]
+.month-day-box-class[monthselected="true"][weekend="true"],
+.month-day-box-class[multiweekselected="true"],
+.month-day-box-class[multiweekselected="true"][weekend="true"]
 {
    background-color: #d5e3f2;
 }
@@ -429,7 +622,10 @@
    font-family          : Arial, Helvetica;
    color                : #1d7ab5;
 }
-
+.month-day-number-class[withmonth=true]
+{
+  font-weight:bold;
+  }
 
 /*--------------------------------------------------------------------
  * Events in month view are in a box
@@ -447,7 +643,7 @@
    margin-left          : 2px;
    margin-right         : 2px;
    background-color     : #F9F4FF;
-   text-align           : center; 	
+   text-align           : left; 	
    font-size            : 0.9em;
    font-family          : Arial, Helvetica;
    cursor               : pointer;
@@ -1089,43 +1285,22 @@ treechildren:-moz-tree-cell-text(completed)
 
 /* TO DO LIST IMAGES */
 
+treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, completed),
 #unifinder-todo-tree-col-completed {
-   list-style-image      : url("chrome://global/skin/checkbox/cbox-check.gif");
+   list-style-image      : url("chrome://calendar/skin/unifinder/checkbox_checked.png");
 }
 
+treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, duetoday),
+treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, overdue),
 treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, inprogress) {
-   list-style-image      : url("chrome://global/skin/checkbox/cbox.gif");
-}
-
-treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, inprogress, current) {
-   list-style-image      : url("chrome://global/skin/checkbox/cbox-act.gif");
-}
-
-treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, overdue) {
-   list-style-image      : url("chrome://global/skin/checkbox/cbox.gif");
-}
-
-treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, duetoday) {
-   list-style-image      : url("chrome://global/skin/checkbox/cbox.gif");
-}
-
-treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, overdue, current) {
-   list-style-image      : url("chrome://global/skin/checkbox/cbox-act.gif");
-}
-
-treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, duetoday, current) {
-   list-style-image      : url("chrome://global/skin/checkbox/cbox-act.gif");
-}
-
-treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, completed) {
-   list-style-image      : url("chrome://global/skin/checkbox/cbox-check.gif");
-}
-
-treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, completed, current) {
-   list-style-image      : url("chrome://global/skin/checkbox/cbox-act-check.gif");
+   list-style-image      : url("chrome://calendar/skin/unifinder/checkbox_unchecked.png");
 }
 
 #unifinder-todo-tree-col-priority {
+   list-style-image      : url( "chrome://calendar/skin/unifinder/priority_header.png" )
+}
+
+treechildren:-moz-tree-image(unifinder-todo-tree-col-priority, mediumpriority) {
    list-style-image      : url( "chrome://calendar/skin/unifinder/priority_header.png" )
 }
 
@@ -1146,3 +1321,17 @@ treechildren:-moz-tree-cell-text(selected) {
    list-style-image     : url( "chrome://calendar/skin/synch_animated.gif" );
 }
 
+.todo-due-image-class
+{
+   list-style-image      : url( "chrome://calendar/skin/unifinder/priority_header.png" )
+}  
+
+.todo-due-image-class[highpriority="true"]
+{
+   list-style-image      : url( "chrome://calendar/skin/unifinder/priority_high.png" )
+}  
+
+.todo-due-image-class[lowpriority="true"]
+{
+   list-style-image      : url( "chrome://calendar/skin/unifinder/priority_low.png" )
+}  
