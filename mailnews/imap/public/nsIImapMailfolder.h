@@ -55,7 +55,7 @@ public:
     NS_IMETHOD OnlineFolderRename(nsIImapProtocol* aProtocol,
                                   folder_rename_struct* aStruct) = 0;
     NS_IMETHOD SubscribeUpgradeFinished(nsIImapProtocol* aProtocol,
-                         EIMAPSbuscriptionUpgradeState* aState) = 0;
+                        EIMAPSubscriptionUpgradeState* aState) = 0;
     NS_IMETHOD PromptUserForSubscribeUpdatePath(nsIImapProtocol* aProtocol,
                                                 PRBool* aBool) = 0;
     NS_IMETHOD FolderIsNoSelect(nsIImapProtocol* aProtocol,

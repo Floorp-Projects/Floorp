@@ -28,6 +28,10 @@
 
 /* include all of our event sink interfaces */
 #include "nsIImapLog.h"
+#include "nsIImapMailfolder.h"
+#include "nsIImapMessage.h"
+#include "nsIImapExtension.h"
+#include "nsIImapMiscellaneous.h"
 
 /* 21A89610-DC0D-11d2-806C-006008128C4E */
 
@@ -102,6 +106,20 @@ public:
 	NS_IMETHOD GetImapLog(nsIImapLog ** aImapLog) = 0;
 	NS_IMETHOD SetImapLog(nsIImapLog  * aImapLog) = 0;
 
+    NS_IMETHOD GetImapMailfolder(nsIImapMailfolder** aImapMailfolder) = 0;
+    NS_IMETHOD SetImapMailfolder(nsIImapMailfolder* aImapMailfolder) = 0;
+
+    NS_IMETHOD GetImapMessage(nsIImapMessage** aImapMessage) = 0;
+    NS_IMETHOD SetImapMessage(nsIImapMessage* aImapMessage) = 0;
+
+    NS_IMETHOD GetImapExtension(nsIImapExtension** aImapExtension) = 0;
+    NS_IMETHOD SetImapExtension(nsIImapExtension* aImapExtension) = 0;
+
+    NS_IMETHOD GetImapMiscellaneous(nsIImapMiscellaneous** aImapMiscellaneous)
+        = 0;
+    NS_IMETHOD SetImapMiscellaneous(nsIImapMiscellaneous* aImapMiscellaneous)
+        = 0;
+    
 	/////////////////////////////////////////////////////////////////////////////// 
 	// Getters and Setters for the imap url state
 	///////////////////////////////////////////////////////////////////////////////

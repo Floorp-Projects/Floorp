@@ -102,10 +102,11 @@ nsImapProtocol::nsImapProtocol()
     m_sinkEventQueue = nsnull;
     m_eventQueue = nsnull;
     m_thread = nsnull;
-    m_dataMonitor = nsnull;
+    m_dataAvailableMonitor = nsnull;
 	m_pseudoInterruptMonitor = nsnull;
 	m_dataMemberMonitor = nsnull;
 	m_threadDeathMonitor = nsnull;
+    m_eventCompletionMonitor = nsnull;
     m_imapThreadIsRunning = PR_FALSE;
     m_consumer = nsnull;
 	// not right, I'm just putting this in to find undefined symbols
@@ -124,9 +125,10 @@ nsImapProtocol::nsImapProtocol()
 nsresult nsImapProtocol::Initialize(PLEventQueue * aSinkEventQueue)
 {
 	NS_PRECONDITION(aSinkEventQueue, "oops...trying to initalize with a null sink event queue!");
-	if (aSinkEventQueue)
-		m_sinkEventQueue = aSinkEventQueue;
+	if (!aSinkEventQueue)
+        return NS_ERROR_NULL_POINTER;
 
+    m_sinkEventQueue = aSinkEventQueue;
 	return NS_OK;
 }
 
@@ -147,10 +149,10 @@ nsImapProtocol::~nsImapProtocol()
         m_eventQueue = nsnull;
     }
 
-    if (m_dataMonitor)
+    if (m_dataAvailableMonitor)
     {
-        PR_DestroyMonitor(m_dataMonitor);
-        m_dataMonitor = nsnull;
+        PR_DestroyMonitor(m_dataAvailableMonitor);
+        m_dataAvailableMonitor = nsnull;
     }
 	if (m_pseudoInterruptMonitor)
 	{
@@ -167,6 +169,11 @@ nsImapProtocol::~nsImapProtocol()
 		PR_DestroyMonitor(m_threadDeathMonitor);
 		m_threadDeathMonitor = nsnull;
 	}
+    if (m_eventCompletionMonitor)
+    {
+        PR_DestroyMonitor(m_eventCompletionMonitor);
+        m_eventCompletionMonitor = nsnull;
+    }
 }
 
 void nsImapProtocol::SetupWithUrl(nsIURL * aURL)
@@ -228,10 +235,11 @@ void nsImapProtocol::SetupWithUrl(nsIURL * aURL)
     // ******* Thread support *******
     if (m_thread == nsnull)
     {
-        m_dataMonitor = PR_NewMonitor();
+        m_dataAvailableMonitor = PR_NewMonitor();
 		m_pseudoInterruptMonitor = PR_NewMonitor();
 		m_dataMemberMonitor = PR_NewMonitor();
 		m_threadDeathMonitor = PR_NewMonitor();
+        m_eventCompletionMonitor = PR_NewMonitor();
 
         m_thread = PR_CreateThread(PR_USER_THREAD, ImapThreadMain, (void*)
                                    this, PR_PRIORITY_NORMAL, PR_LOCAL_THREAD,
@@ -293,9 +301,41 @@ nsImapProtocol::GetThreadEventQueue(PLEventQueue **aEventQueue)
     // *** should subclassing PLEventQueue and ref count it ***
     // *** need to find a way to prevent dangling pointer ***
     // *** a callback mechanism or a semaphor control thingy ***
+    PR_CEnterMonitor(this);
     if (aEventQueue)
         *aEventQueue = m_eventQueue;
+    PR_CExitMonitor(this);
     return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsImapProtocol::SetMessageDownloadOutputStream(nsIOutputStream *aOutputStream)
+{
+    NS_PRECONDITION(aOutputStream, "Yuk, null output stream");
+    PR_CEnterMonitor(this);
+    if(m_messageDownloadOutputStream)
+        NS_RELEASE(m_messageDownloadOutputStream);
+    m_messageDownloadOutputStream = aOutputStream;
+    NS_ADDREF(m_messageDownloadOutputStream);
+    PR_CExitMonitor(this);
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsImapProtocol::NotifyFEEventCompletion()
+{
+    PR_EnterMonitor(m_eventCompletionMonitor);
+    PR_Notify(m_eventCompletionMonitor);
+    PR_ExitMonitor(m_eventCompletionMonitor);
+    return NS_OK;
+}
+
+void
+nsImapProtocol::WaitForFEEventCompletion()
+{
+    PR_EnterMonitor(m_eventCompletionMonitor);
+    PR_Wait(m_eventCompletionMonitor, PR_INTERVAL_NO_TIMEOUT);
+    PR_ExitMonitor(m_eventCompletionMonitor);
 }
 
 void
@@ -304,13 +344,13 @@ nsImapProtocol::ImapThreadMainLoop()
     // ****** please implement PR_LOG 'ing ******
     while (ImapThreadIsRunning())
     {
-        PR_EnterMonitor(m_dataMonitor);
+        PR_EnterMonitor(m_dataAvailableMonitor);
 
-        PR_Wait(m_dataMonitor, PR_INTERVAL_NO_TIMEOUT);
+        PR_Wait(m_dataAvailableMonitor, PR_INTERVAL_NO_TIMEOUT);
 
         ProcessCurrentURL();
 
-        PR_ExitMonitor(m_dataMonitor);
+        PR_ExitMonitor(m_dataAvailableMonitor);
     }
 }
 
@@ -335,9 +375,10 @@ nsImapProtocol::ProcessCurrentURL()
         if (NS_SUCCEEDED(res) && aImapLog)
         {
             nsImapLogProxy *aProxy = 
-                new nsImapLogProxy(aImapLog, m_sinkEventQueue, m_thread);
+                new nsImapLogProxy(aImapLog, this, m_sinkEventQueue, m_thread);
             NS_ADDREF(aProxy);
             aProxy->HandleImapLogData(m_dataBuf);
+            WaitForFEEventCompletion();
             NS_RELEASE(aImapLog);
             NS_RELEASE(aProxy);
             // we are done running the imap log url so mark the url as done...
@@ -377,9 +418,9 @@ NS_IMETHODIMP nsImapProtocol::OnDataAvailable(nsIURL* aURL, nsIInputStream *aISt
         if (NS_SUCCEEDED(res))
         {
             m_dataBuf[len] = 0;
-			PR_EnterMonitor(m_dataMonitor);
-            PR_Notify(m_dataMonitor);
-			PR_ExitMonitor(m_dataMonitor);
+			PR_EnterMonitor(m_dataAvailableMonitor);
+            PR_Notify(m_dataAvailableMonitor);
+			PR_ExitMonitor(m_dataAvailableMonitor);
         }
         NS_RELEASE(aImapUrl);
     }

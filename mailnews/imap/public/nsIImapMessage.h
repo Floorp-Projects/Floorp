@@ -19,7 +19,7 @@
 #define nsIImapMessage_h__
 
 #include "nscore.h"
-#include "nsISuppports.h"
+#include "nsISupports.h"
 #include "nsImapCore.h"
 #include "nsIImapProtocol.h"
 

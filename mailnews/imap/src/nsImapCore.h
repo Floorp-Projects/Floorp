@@ -19,6 +19,8 @@
 #ifndef _nsImapCore_H_
 #define _nsImapCore_H_
 
+#include "MailNewsTypes.h"
+
 class nsIMAPNamespace;
 class nsImapProtocol;
 class nsImapFlagAndUidState;
@@ -61,7 +63,6 @@ typedef PRUint16 imapMessageFlagsType;
 #define kOnlineHierarchySeparatorUnknown '^'
 #define kOnlineHierarchySeparatorNil '|'
 
-
 // I think this should really go in an imap.h equivalent file
 typedef enum {
 	kPersonalNamespace = 0,
@@ -94,7 +95,7 @@ typedef enum {
 
 // this used to be part of the connection object class - maybe we should move it into 
 // something similar
-enum nsIMAPeFetchFields {
+typedef enum {
     kEveryThingRFC822,
     kEveryThingRFC822Peek,
     kHeadersRFC822andUid,
@@ -104,7 +105,7 @@ enum nsIMAPeFetchFields {
 	kRFC822HeadersOnly,
 	kMIMEPart,
     kMIMEHeader
-};
+} nsIMAPeFetchFields;
     
 // This class is currently only used for the one-time upgrade
 // process from a LIST view to the subscribe model.
@@ -156,5 +157,125 @@ typedef struct mailbox_spec mailbox_spec;
 const int kImapServerDisconnected = 1;
 const int kImapOutOfMemory = 2;
 const int kImapDownloadingMessage = 3;
+
+typedef struct _GenericInfo {
+	char *c, *hostName;
+	PRBool rv;
+} GenericInfo;
+
+typedef struct _StreamInfo {
+	PRUint32	size;
+	char	*content_type;
+	struct mailbox_spec *boxSpec;
+} StreamInfo;
+
+typedef struct _ProgressInfo {
+	char *message;
+	int percent;
+} ProgressInfo;
+
+typedef struct _FolderQueryInfo {
+	char *name, *hostName;
+	PRBool rv;
+} FolderQueryInfo;
+
+typedef struct _StatusMessageInfo {
+	PRUint32 msgID;
+	char * extraInfo;
+} StatusMessageInfo;
+
+typedef struct _UploadMessageInfo {
+	PRUint32 newMsgID;
+	// XP_File	fileId; *** need to be changed
+	char *dataBuffer;
+	PRInt32 bytesRemain;
+} UploadMessageInfo;
+
+typedef struct _utf_name_struct {
+	PRBool toUtf7Imap;
+	unsigned char *sourceString;
+	unsigned char *convertedString;
+} utf_name_struct;
+
+
+typedef struct _msg_line_info {
+    char   *adoptedMessageLine;
+    PRUint32 uidOfMessage;
+} msg_line_info;
+
+
+typedef struct _FlagsKeyStruct {
+    imapMessageFlagsType flags;
+    nsMsgKey key;
+} FlagsKeyStruct;
+
+typedef struct _TunnelInfo {
+	PRInt32 maxSize;
+	// NETSOCK		ioSocket; *** not yet ****
+	// char**		inputSocketBuffer;
+    // PRInt32*		inputBufferSize;
+	PRBool		fromHeaderSeenAlready;
+	const char	*xSenderInfo;
+	PRUint32		uidOfMessage;
+} TunnelInfo;
+
+typedef struct _delete_message_struct {
+	char *onlineFolderName;
+	XP_Bool		deleteAllMsgs;
+	char *msgIdString;
+} delete_message_struct;
+
+typedef enum {
+	kEverythingDone,
+	kBringUpSubscribeUI
+} EIMAPSubscriptionUpgradeState;
+
+typedef enum {
+	kInProgress,
+	kSuccessfulCopy,
+	kFailedCopy,
+	kSuccessfulDelete,
+	kFailedDelete,
+	kReadyForAppendData,
+	kFailedAppend,
+	kInterruptedState
+} ImapOnlineCopyState;
+
+typedef struct _folder_rename_struct {
+	char		*fHostName;
+	char 		*fOldName;
+	char		*fNewName;
+} folder_rename_struct;
+
+typedef enum {
+    	eContinue,
+		eContinueNew,
+    	eListMyChildren,
+    	eNewServerDirectory,
+    	eCancelled 
+} EMailboxDiscoverStatus;
+
+typedef struct _MessageSizeInfo
+{
+	char *id;
+	char *folderName;
+	XP_Bool idIsUid;
+	uint32 size;
+} MessageSizeInfo;
+
+
+// This class is only used for passing data
+// between the IMAP and mozilla threadns 
+class TIMAPACLRightsInfo
+{ 
+public:
+	char *hostName, *mailboxName, *userName, *rights;
+};
+
+typedef struct _uid_validity_info {
+	char *canonical_boxname;
+	const char *hostName;
+	int32 returnValidity;
+} uid_validity_info;
 
 #endif

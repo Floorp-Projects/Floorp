@@ -55,6 +55,11 @@ nsImapUrl::nsImapUrl()
     m_search = nsnull;
 	
 	m_imapLog = nsnull;
+    m_imapMailfolder = nsnull;
+    m_imapMessage = nsnull;
+    m_imapExtension = nsnull;
+    m_imapMiscellaneous = nsnull;
+
 	m_runningUrl = PR_FALSE;
 
 	nsComponentManager::CreateInstance(kUrlListenerManagerCID, nsnull, nsIUrlListenerManager::GetIID(), 
@@ -64,6 +69,11 @@ nsImapUrl::nsImapUrl()
 nsImapUrl::~nsImapUrl()
 {
 	NS_IF_RELEASE(m_imapLog);
+    NS_IF_RELEASE(m_imapMailfolder);
+    NS_IF_RELEASE(m_imapMessage);
+    NS_IF_RELEASE(m_imapExtension);
+    NS_IF_RELEASE(m_imapMiscellaneous);
+
 	NS_IF_RELEASE(m_urlListeners);
 	PR_FREEIF(m_errorMessage);
 
@@ -147,7 +157,102 @@ NS_IMETHODIMP nsImapUrl::SetImapLog(nsIImapLog  * aImapLog)
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsImapUrl::GetImapMailfolder(nsIImapMailfolder **
+                                           aImapMailfolder)
+{
+	if (aImapMailfolder)
+	{
+		*aImapMailfolder = m_imapMailfolder;
+		NS_IF_ADDREF(m_imapMailfolder);
+	}
 
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsImapUrl::SetImapMailfolder(nsIImapMailfolder  * aImapMailfolder)
+{
+	if (aImapMailfolder)
+	{
+		NS_IF_RELEASE(m_imapMailfolder);
+		m_imapMailfolder = aImapMailfolder;
+		NS_ADDREF(m_imapMailfolder);
+	}
+
+	return NS_OK;
+}
+ 
+NS_IMETHODIMP nsImapUrl::GetImapMessage(nsIImapMessage ** aImapMessage)
+{
+	if (aImapMessage)
+	{
+		*aImapMessage = m_imapMessage;
+		NS_IF_ADDREF(m_imapMessage);
+	}
+
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsImapUrl::SetImapMessage(nsIImapMessage  * aImapMessage)
+{
+	if (aImapMessage)
+	{
+		NS_IF_RELEASE(m_imapMessage);
+		m_imapMessage = aImapMessage;
+		NS_ADDREF(m_imapMessage);
+	}
+
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsImapUrl::GetImapExtension(nsIImapExtension ** aImapExtension)
+{
+	if (aImapExtension)
+	{
+		*aImapExtension = m_imapExtension;
+		NS_IF_ADDREF(m_imapExtension);
+	}
+
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsImapUrl::SetImapExtension(nsIImapExtension  * aImapExtension)
+{
+	if (aImapExtension)
+	{
+		NS_IF_RELEASE(m_imapExtension);
+		m_imapExtension = aImapExtension;
+		NS_ADDREF(m_imapExtension);
+	}
+
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsImapUrl::GetImapMiscellaneous(nsIImapMiscellaneous **
+                                              aImapMiscellaneous)
+{
+	if (aImapMiscellaneous)
+	{
+		*aImapMiscellaneous = m_imapMiscellaneous;
+		NS_IF_ADDREF(m_imapMiscellaneous);
+	}
+
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsImapUrl::SetImapMiscellaneous(nsIImapMiscellaneous  *
+                                              aImapMiscellaneous)
+{
+	if (aImapMiscellaneous)
+	{
+		NS_IF_RELEASE(m_imapMiscellaneous);
+		m_imapMiscellaneous = aImapMiscellaneous;
+		NS_ADDREF(m_imapMiscellaneous);
+	}
+
+	return NS_OK;
+}
+
+        
 ////////////////////////////////////////////////////////////////////////////////////
 // End nsIImapUrl specific support
 ////////////////////////////////////////////////////////////////////////////////////

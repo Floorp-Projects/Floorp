@@ -54,6 +54,10 @@ public:
 	NS_IMETHOD LoadUrl(nsIURL * aURL, nsISupports * aConsumer);
 	NS_IMETHOD Initialize(PLEventQueue * aSinkEventQueue);
     NS_IMETHOD GetThreadEventQueue(PLEventQueue **aEventQueue);
+    NS_IMETHOD SetMessageDownloadOutputStream(nsIOutputStream* aOutputStream);
+    // Notify FE Event has been completed
+    NS_IMETHOD NotifyFEEventCompletion();
+
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// we suppport the nsIStreamListener interface 
@@ -167,6 +171,8 @@ public:
 	// Clears all rights for a given folder, for all users.
 	void ClearAllFolderRights(const char *mailboxName);
 
+    void WaitForFEEventCompletion();
+
 private:
 	// the following flag is used to determine when a url is currently being run. It is cleared on calls
 	// to ::StopBinding and it is set whenever we call Load on a url
@@ -188,16 +194,19 @@ private:
     PLEventQueue *m_sinkEventQueue;
     PLEventQueue *m_eventQueue;
     PRThread     *m_thread;
-    PRMonitor    *m_dataMonitor;
+    PRMonitor    *m_dataAvailableMonitor;
 	PRMonitor	 *m_pseudoInterruptMonitor;
     PRMonitor	 *m_dataMemberMonitor;
 	PRMonitor	 *m_threadDeathMonitor;
+    PRMonitor    *m_eventCompletionMonitor;
 
     PRBool       m_imapThreadIsRunning;
     static void ImapThreadMain(void *aParm);
     void ImapThreadMainLoop(void);
     PRBool ImapThreadIsRunning();
     nsISupports* m_consumer;
+
+    nsIOutputStream *m_messageDownloadOutputStream;
     
     PRMonitor *GetDataMemberMonitor();
     // **** current protocol instance state ****

@@ -46,6 +46,18 @@ public:
 	NS_IMETHOD GetImapLog(nsIImapLog ** aImapLog);
 	NS_IMETHOD SetImapLog(nsIImapLog  * aImapLog);
 
+    NS_IMETHOD GetImapMailfolder(nsIImapMailfolder** aImapMailfolder);
+    NS_IMETHOD SetImapMailfolder(nsIImapMailfolder* aImapMailfolder);
+
+    NS_IMETHOD GetImapMessage(nsIImapMessage** aImapMessage);
+    NS_IMETHOD SetImapMessage(nsIImapMessage* aImapMessage);
+
+    NS_IMETHOD GetImapExtension(nsIImapExtension** aImapExtension);
+    NS_IMETHOD SetImapExtension(nsIImapExtension* aImapExtension);
+
+    NS_IMETHOD GetImapMiscellaneous(nsIImapMiscellaneous** aImapMiscellaneous);
+    NS_IMETHOD SetImapMiscellaneous(nsIImapMiscellaneous* aImapMiscellaneous);
+
 	NS_IMPL_CLASS_GETSET(ImapAction, nsImapAction, m_imapAction);
 
 	// from nsINetlibURL:
@@ -108,6 +120,10 @@ protected:
 
 	nsImapAction m_imapAction;
 	nsIImapLog  * m_imapLog;
+    nsIImapMailfolder* m_imapMailfolder;
+    nsIImapMessage* m_imapMessage;
+    nsIImapExtension* m_imapExtension;
+    nsIImapMiscellaneous* m_imapMiscellaneous;
 };
 
 #endif /* nsImapUrl_h___ */

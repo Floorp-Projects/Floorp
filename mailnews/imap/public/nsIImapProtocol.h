@@ -20,6 +20,7 @@
 #define nsIImapProtocol_h___
 
 #include "nsIStreamListener.h"
+#include "nsIOutputStream.h"
 #include "plevent.h"
 
 /* include all of our event sink interfaces */
@@ -62,6 +63,10 @@ public:
 	NS_IMETHOD Initialize(PLEventQueue * aSinkEventQueue) = 0;
 
     NS_IMETHOD GetThreadEventQueue(PLEventQueue **aEventQueue) = 0;
+    
+    NS_IMETHOD SetMessageDownloadOutputStream(nsIOutputStream *aOutputStream)
+        = 0;
+    NS_IMETHOD NotifyFEEventCompletion() = 0;
 };
 
 #endif /* nsIImapProtocol_h___ */

@@ -22,6 +22,7 @@
 #include "nsISupports.h"
 #include "nsImapCore.h"
 #include "nsIImapProtocol.h"
+#include "MailNewsTypes.h"
 
 /* 22e3e664-e789-11d2-af83-001083002da8 */
 
@@ -39,8 +40,8 @@ public:
 	}
 	
 	NS_IMETHOD AddSearchResult(nsIImapProtocol* aProtocol, 
-														 const chat* searchHitLine) = 0;
-	NS_IMETHOD GetArbutratyHeaders(nsIImapProtocol* aProtocol,
+														 const char* searchHitLine) = 0;
+	NS_IMETHOD GetArbitraryHeaders(nsIImapProtocol* aProtocol,
 																 GenericInfo* aInfo) = 0;
 	NS_IMETHOD GetShouldDownloadArbitraryHeaders(nsIImapProtocol* aProtocol,
 																							 GenericInfo* aInfo) = 0;
@@ -53,7 +54,7 @@ public:
 	NS_IMETHOD GetPasswordForUser(nsIImapProtocol* aProtocol,
 																const char* userName) = 0;
 	NS_IMETHOD SetBiffStateAndUpdate(nsIImapProtocol* aProtocol,
-																	 MSG_BIFF_STATE biffState) = 0;
+																	 nsMsgBiffState biffState) = 0;
 	NS_IMETHOD GetStoredUIDValidity(nsIImapProtocol* aProtocol,
 																	uid_validity_info* aInfo) = 0;
 	NS_IMETHOD LiteSelectUIDValidity(nsIImapProtocol* aProtocol,

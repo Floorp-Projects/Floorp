@@ -23,6 +23,14 @@ srcdir		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 EXPORTS= \
+			nsIImapUrl.h			\
+			nsIImapProtocol.h		\
+			nsIImapLog.h			\
+			nsIIMAPHostSessionList.h \
+			nsIImapMailfolder.h \
+			nsIImapMessage.h \
+			nsIImapExtension.h \
+			nsIImapMiscellaneous.h \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk
