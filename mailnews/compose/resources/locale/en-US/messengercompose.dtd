@@ -155,7 +155,6 @@
 <!ENTITY testDocumentCmd.label "Test Document">
 <!ENTITY showEmbeddedCmd.label "Show Embedded Objects">
 <!ENTITY dumpContentCmd.label "Dump Content Tree">
-<!ENTITY testDocumentCmd.label "Test Document">
 <!ENTITY runUnitTestsCmd.label "Run Unit Tests">
 <!ENTITY startLogCmd.label "Start Log">
 <!ENTITY stopLogCmd.label "Stop Log">

@@ -29,7 +29,6 @@ Rights Reserved.
 <!ENTITY boldItalic.label                 "Bold Italic">
 <!ENTITY size.label                       "Size:">
 <!ENTITY size.accesskey                   "s">
-<!ENTITY regular.label                    "Regular">
 <!ENTITY bigger.label                     "Bigger">
 <!ENTITY smaller.label                    "Smaller">
 <!ENTITY color.label                      "Color:">
