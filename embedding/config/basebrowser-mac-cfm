@@ -193,14 +193,11 @@ Components:shistory.xpt
 
 ; required l10n libraries
 
-Components:unicharutil.shlb
+Components:i18n.shlb
 Components:unicharutil.xpt
 Components:uconv.shlb
 Components:uconv.xpt
-Components:lwbrk.shlb
-Components:nslocale.shlb
 Components:nslocale.xpt
-Components:chardet.shlb
 Components:chardet.xpt
 Components:Universalchardet.shlb
 
@@ -212,7 +209,6 @@ res:charsetalias.properties
 res:maccharset.properties
 
 ; required i18n libs
-Components:strres.shlb
 Components:nsIStringBundle.xpt
 
 ; required prefs files

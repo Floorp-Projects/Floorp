@@ -181,13 +181,10 @@ components/shistory.xpt
 
 ; required l10n libraries
 
-components/libunicharutil.dylib
 components/libuconv.dylib
+components/libi18n.dylib
 components/uconv.xpt
-components/liblwbrk.dylib
-components/libnslocale.dylib
 components/unicharutil.xpt
-components/libchardet.dylib
 
 res/language.properties
 res/langGroups.properties
@@ -196,8 +193,6 @@ res/charsetalias.properties
 res/maccharset.properties
 ; res/strres.properties 
 
-; required i18n libs
-components/libstrres.dylib
 
 ; required prefs files
 defaults/pref/all.js
