@@ -603,10 +603,10 @@ cert_fips()
   certu -N -d "${PROFILEDIR}" -f "${R_FIPSPWFILE}" 2>&1
 
   echo "$SCRIPTNAME: Enable FIPS mode on database -----------------------"
+  CU_ACTION="Enable FIPS mode on database for ${CERTNAME}"
   modutil -dbdir ${PROFILEDIR} -fips true 2>&1 <<MODSCRIPT
 y
 MODSCRIPT
-  CU_ACTION="Enable FIPS mode on database for ${CERTNAME}"
   if [ "$?" -ne 0 ]; then
     html_failed "<TR><TD>${CU_ACTION} ($?) " 
     cert_log "ERROR: ${CU_ACTION} failed $?"
