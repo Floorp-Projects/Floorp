@@ -8,7 +8,7 @@ addDirectory( "resources" );
 
 addDirectory("", "components", getFolder( "Components" ), "" );
 
-addDirectory( "", "bin", getFolder( "Program" ), "" );
+addDirectory( "", "", "icons", getFolder( "Chrome", "icons" ), "", true );
 
 var err = getLastError();
   

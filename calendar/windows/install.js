@@ -1,4 +1,4 @@
-initInstall("Mozilla Calendar", "Mozilla/Calendar", "0.9");
+initInstall("Mozilla Calendar", "Mozilla/Calendar", "0.7");
 
 calendarDir = getFolder("Chrome","calendar");
 
@@ -7,6 +7,8 @@ setPackageFolder(calendarDir);
 addDirectory( "resources" );
 
 addDirectory("", "components", getFolder( "Components" ), "" );
+
+addDirectory( "", "", "icons", getFolder( "Chrome", "icons" ), "", true );
 
 var err = getLastError();
   
@@ -24,13 +26,12 @@ if ( err == SUCCESS ) {
    err = performInstall();
   
    if ( err == SUCCESS ) {
-      refreshPlugins();
       alert("The Mozilla Calendar has been succesfully installed. \n"
       +"Please restart your browser to continue.");
    }
    else if( err == "999" )
    {
-      alert("The Mozilla Calendar has been installed. \n You must exit quick launch and restart your browser to continue.");
+      alert("The Mozilla Calendar has been installed. \n You must restart your browser to continue.");
    }
    
    else { 
