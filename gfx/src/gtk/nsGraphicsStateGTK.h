@@ -54,11 +54,11 @@ public:
   static nsGraphicsState * GetNewGS();
   static void              ReleaseGS(nsGraphicsState* aGS);
   
-private:
   
   nsGraphicsStatePool();
   ~nsGraphicsStatePool();
   
+private:
   nsGraphicsState*	mFreeList;
   
   static nsGraphicsStatePool * PrivateGetPool();
