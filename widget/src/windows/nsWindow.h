@@ -18,7 +18,9 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Robert O'Callahan <roc+moz@cs.cmu.edu>
  */
+
 #ifndef Window_h__
 #define Window_h__
 
@@ -225,8 +227,6 @@ protected:
 #endif
 
     static PRBool ConvertStatus(nsEventStatus aStatus);
-    DWORD  GetWindowType(nsWindowType aWindowType);
-    DWORD  GetBorderStyle(nsBorderStyle aBorderStyle);
 
     PRBool DispatchStandardEvent(PRUint32 aMsg);
     void RelayMouseEvent(UINT aMsg, WPARAM wParam, LPARAM lParam);
@@ -322,7 +322,6 @@ public:
 
 protected:
     virtual DWORD           WindowStyle();
-    virtual DWORD           WindowExStyle() { return 0; }
 };
 
 

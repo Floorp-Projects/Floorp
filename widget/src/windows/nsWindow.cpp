@@ -20,6 +20,8 @@
  * Contributor(s): 
  *   Michael Lowe <michael.lowe@bigfoot.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Robert O'Callahan <roc+moz@cs.cmu.edu>
+ *   
  */
 
 #if defined(DEBUG_ftang)
@@ -729,22 +731,8 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
     BaseCreate(baseParent, aRect, aHandleEventFunction, aContext, 
        aAppShell, aToolkit, aInitData);
 
-      // See if the caller wants to explictly set clip children and clip siblings
-    DWORD style = WindowStyle();
-    if (nsnull != aInitData) {
-      if (aInitData->clipChildren) {
-        style |= WS_CLIPCHILDREN;
-      } else {
-        style &= ~WS_CLIPCHILDREN;
-      }
-      if (aInitData->clipSiblings) {
-        style |= WS_CLIPSIBLINGS;
-      }
-    }
-
     // Switch to the "main gui thread" if necessary... This method must
     // be executed on the "gui thread"...
-    //
   
     nsToolkit* toolkit = (nsToolkit *)mToolkit;
     if (toolkit) {
@@ -780,52 +768,27 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
        parent = (HWND)aNativeParent;
     }
 
-    DWORD extendedStyle = WindowExStyle();
     if (nsnull != aInitData) {
       SetWindowType(aInitData->mWindowType);
       SetBorderStyle(aInitData->mBorderStyle);
+    }
 
-      if (mWindowType == eWindowType_dialog) {
-        extendedStyle &= ~WS_EX_CLIENTEDGE;
-      } else if (mWindowType == eWindowType_popup) {
-        extendedStyle = WS_EX_TOPMOST;
-        style = WS_POPUP;
-        mBorderlessParent = parent;
-         // Don't set the parent of a popup window. 
-        parent = NULL;
-         // WS_EX_TOOLWINDOW prevents a button from being placed on 
-         // the taskbar for the popup window.
-        extendedStyle |= WS_EX_TOOLWINDOW;
+    DWORD style = WindowStyle();
+    DWORD extendedStyle = WindowExStyle();
+
+    if (mWindowType == eWindowType_popup) {
+      mBorderlessParent = parent;
+      // Don't set the parent of a popup window. 
+      parent = NULL;
+    } else if (nsnull != aInitData) {
+      // See if the caller wants to explictly set clip children and clip siblings
+      if (aInitData->clipChildren) {
+        style |= WS_CLIPCHILDREN;
+      } else {
+        style &= ~WS_CLIPCHILDREN;
       }
-
-      if (aInitData->mBorderStyle == eBorderStyle_default) {
-        if (mWindowType == eWindowType_dialog)
-          style &= ~(WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX);
-      } else if (aInitData->mBorderStyle != eBorderStyle_all) {
-        if (aInitData->mBorderStyle == eBorderStyle_none ||
-            !(aInitData->mBorderStyle & eBorderStyle_border))
-          style &= ~WS_BORDER;
-
-        if (aInitData->mBorderStyle == eBorderStyle_none ||
-            !(aInitData->mBorderStyle & eBorderStyle_title)) {
-          style &= ~WS_DLGFRAME;
-          style |= WS_POPUP;
-        }
-        if (aInitData->mBorderStyle == eBorderStyle_none ||
-            !(aInitData->mBorderStyle & (eBorderStyle_close | eBorderStyle_menu)))
-          style &= ~WS_SYSMENU;
-
-        if (aInitData->mBorderStyle == eBorderStyle_none ||
-            !(aInitData->mBorderStyle & eBorderStyle_resizeh))
-          style &= ~WS_THICKFRAME;
-
-        if (aInitData->mBorderStyle == eBorderStyle_none ||
-            !(aInitData->mBorderStyle & eBorderStyle_minimize))
-          style &= ~WS_MINIMIZEBOX;
-
-        if (aInitData->mBorderStyle == eBorderStyle_none ||
-            !(aInitData->mBorderStyle & eBorderStyle_maximize))
-          style &= ~WS_MAXIMIZEBOX;
+      if (aInitData->clipSiblings) {
+        style |= WS_CLIPSIBLINGS;
       }
     }
 
@@ -2686,7 +2649,72 @@ LPCTSTR nsWindow::WindowClass()
 //-------------------------------------------------------------------------
 DWORD nsWindow::WindowStyle()
 {
-    return WS_OVERLAPPEDWINDOW;
+  DWORD style;
+   
+  switch(mWindowType) {
+
+    case eWindowType_child:
+      style = WS_OVERLAPPED;
+      break;
+
+    case eWindowType_dialog:
+      if (mBorderStyle == eBorderStyle_default) {
+        style = WS_OVERLAPPED | WS_BORDER | WS_DLGFRAME | WS_SYSMENU |
+                DS_3DLOOK | DS_MODALFRAME;
+      } else {
+        style = WS_OVERLAPPED | WS_BORDER | WS_DLGFRAME | WS_SYSMENU |
+                DS_3DLOOK | DS_MODALFRAME |
+                WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
+      }
+      break;
+
+    case eWindowType_popup:
+      style = WS_OVERLAPPED | WS_POPUP;
+      break;
+
+    default:
+      NS_ASSERTION(0, "unknown border style");
+      // fall through
+
+    case eWindowType_toplevel:
+      style = WS_OVERLAPPED | WS_BORDER | WS_DLGFRAME | WS_SYSMENU |
+              WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
+      break;
+  }
+
+  if (mBorderStyle != eBorderStyle_default && mBorderStyle != eBorderStyle_all) {
+    if (mBorderStyle == eBorderStyle_none || !(mBorderStyle & eBorderStyle_border))
+      style &= ~WS_BORDER;
+    
+    if (mBorderStyle == eBorderStyle_none || !(mBorderStyle & eBorderStyle_title)) {
+      style &= ~WS_DLGFRAME;
+      style |= WS_POPUP;
+    }
+
+    if (mBorderStyle == eBorderStyle_none || !(mBorderStyle & eBorderStyle_close))
+      style &= ~0;
+    // XXX The close box can only be removed by changing the window class,
+    // as far as I know   --- roc+moz@cs.cmu.edu
+
+    if (mBorderStyle == eBorderStyle_none ||
+      !(mBorderStyle & (eBorderStyle_menu | eBorderStyle_close)))
+      style &= ~WS_SYSMENU;
+    // Looks like getting rid of the system menu also does away with the
+    // close box. So, we only get rid of the system menu if you want neither it
+    // nor the close box. How does the Windows "Dialog" window class get just
+    // closebox and no sysmenu? Who knows.
+    
+    if (mBorderStyle == eBorderStyle_none || !(mBorderStyle & eBorderStyle_resizeh))
+      style &= ~WS_THICKFRAME;
+    
+    if (mBorderStyle == eBorderStyle_none || !(mBorderStyle & eBorderStyle_minimize))
+      style &= ~WS_MINIMIZEBOX;
+    
+    if (mBorderStyle == eBorderStyle_none || !(mBorderStyle & eBorderStyle_maximize))
+      style &= ~WS_MAXIMIZEBOX;
+  }
+
+  return style;
 }
 
 
@@ -2697,7 +2725,24 @@ DWORD nsWindow::WindowStyle()
 //-------------------------------------------------------------------------
 DWORD nsWindow::WindowExStyle()
 {
-    return WS_EX_WINDOWEDGE;
+  switch(mWindowType)
+  {
+    case eWindowType_child:
+      return 0;
+
+    case eWindowType_dialog:
+      return WS_EX_WINDOWEDGE;
+
+    case eWindowType_popup:
+      return WS_EX_TOPMOST | WS_EX_TOOLWINDOW;
+
+    default:
+      NS_ASSERTION(0, "unknown border style");
+      // fall through
+
+    case eWindowType_toplevel:
+      return WS_EX_WINDOWEDGE;
+  }
 }
 
 
@@ -3186,17 +3231,6 @@ HBRUSH nsWindow::OnControlColor()
 
 //-------------------------------------------------------------------------
 //
-// return the style for a child nsWindow
-//
-//-------------------------------------------------------------------------
-DWORD ChildWindow::WindowStyle()
-{
-  //    return WS_CHILD | WS_CLIPCHILDREN | GetBorderStyle(mBorderStyle);
-  return WS_CHILD | WS_CLIPCHILDREN | GetWindowType(mWindowType);
-}
-
-//-------------------------------------------------------------------------
-//
 // Deal with all sort of mouse event
 //
 //-------------------------------------------------------------------------
@@ -3229,60 +3263,16 @@ PRBool ChildWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint)
   return nsWindow::DispatchMouseEvent(aEventType, aPoint);
 }
 
-DWORD nsWindow::GetWindowType(nsWindowType aWindowType)
+//-------------------------------------------------------------------------
+//
+// return the style for a child nsWindow
+//
+//-------------------------------------------------------------------------
+DWORD ChildWindow::WindowStyle()
 {
-  switch(aWindowType)
-  {
-    case eWindowType_child:
-      return(0);
-    break;
-
-    case eWindowType_dialog:
-     return(WS_DLGFRAME | DS_3DLOOK);
-    break;
-
-    case eWindowType_popup:
-      return(0);
-    break;
-
-    case eWindowType_toplevel:
-      return(0);
-    break;
-
-    default:
-      NS_ASSERTION(0, "unknown border style");
-      return(WS_OVERLAPPEDWINDOW);
-  }
+  return WS_CHILD | WS_CLIPCHILDREN | nsWindow::WindowStyle();
 }
 
-DWORD nsWindow::GetBorderStyle(nsBorderStyle aBorderStyle)
-{
-  return 0;
-  /*
-  switch(aBorderStyle)
-  {
-    case eBorderStyle_none:
-      return(0);
-    break;
-
-    case eBorderStyle_dialog:
-     return(WS_DLGFRAME | DS_3DLOOK);
-    break;
-
-    case eBorderStyle_BorderlessTopLevel:
-      return(0);
-    break;
-
-    case eBorderStyle_window:
-      return(0);
-    break;
-
-    default:
-      NS_ASSERTION(0, "unknown border style");
-      return(WS_OVERLAPPEDWINDOW);
-  }
-  */
-}
 
 static char* GetACPString(const nsString& aStr)
 {
