@@ -550,7 +550,7 @@ CAPTION "Save New Page"
 FONT 8, "MS Sans Serif"
 BEGIN
     ICON            "IDI_ASTERISK",IDC_INFO_ICON,7,6,21,20
-    LTEXT           "You must save this page locally before continuing with the requested action.",
+    LTEXT           "You must save this page before continuing with the requested action.",
                     IDC_STATIC,45,8,148,29
     DEFPUSHBUTTON   "Save...",IDOK,44,40,50,14,WS_GROUP
     PUSHBUTTON      "Cancel",IDCANCEL,105,40,50,14

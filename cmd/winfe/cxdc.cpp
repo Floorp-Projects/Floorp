@@ -3669,9 +3669,7 @@ void CDCCX::DisplayText(MWContext *pContext, int iLocation, LO_TextStruct *pText
 				wfe_GetSelectionColors(m_rgbBackgroundColor, &rgbColor, &textBackColor);
 			}
 
-            //cmanske: Why would we EVER want to draw opaque EXCEPT for selected text?
-            //  This messes up drawing text in tables when background color and/or image is set
-            if(pText->ele_attrmask & LO_ELE_SELECTED /*display_background_color*/)
+            if(display_background_color)
             {
                 rgbOldBackgroundColor = ::SetBkColor(hdc, textBackColor);
 			    ::SetBkMode(hdc, OPAQUE);

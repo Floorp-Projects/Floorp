@@ -2681,6 +2681,9 @@ BOOL CTargetDlg::OnInitDialog()
 
 	CDialog::OnInitDialog();
 
+    // Enable OK only if we have some text already
+    GetDlgItem(IDOK)->EnableWindow(!m_csName.IsEmpty());
+
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
 }
