@@ -227,8 +227,8 @@ public:
   PRUint32 mChromeMask;
   nsString mTitle;
 
-  nsIWidget* mWindow;
-  nsIDocShell* mDocShell;
+  nsCOMPtr<nsIWidget> mWindow;
+  nsCOMPtr<nsIDocShell> mDocShell;
   nsCOMPtr<nsIWebBrowser> mWebBrowser;
 
   nsFileSpec mOpenFileDirectory;
