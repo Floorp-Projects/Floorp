@@ -2224,13 +2224,13 @@
         <GROUP><NAME>protocol</NAME>
             <GROUP><NAME>data</NAME>
                 <FILEREF>
-                    <TARGETNAME>Necko.shlb</TARGETNAME>
+                    <TARGETNAME>Necko2.shlb</TARGETNAME>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsDataChannel.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <TARGETNAME>Necko.shlb</TARGETNAME>
+                    <TARGETNAME>Necko2.shlb</TARGETNAME>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsDataHandler.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
@@ -2238,7 +2238,7 @@
             </GROUP>
             <GROUP><NAME>keyword</NAME>
                 <FILEREF>
-                    <TARGETNAME>Necko.shlb</TARGETNAME>
+                    <TARGETNAME>Necko2.shlb</TARGETNAME>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsKeywordProtocolHandler.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
