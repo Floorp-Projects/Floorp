@@ -62,6 +62,11 @@ nsCollationOS2::~nsCollationOS2()
      delete mCollation;
 }
 
+/* Workaround for GCC problem */
+#ifndef LOCI_iCodepage
+#define LOCI_iCodepage 111
+#endif
+
 nsresult nsCollationOS2::Initialize(nsILocale *locale)
 {
 #define kPlatformLocaleLength 64
