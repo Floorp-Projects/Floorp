@@ -280,7 +280,7 @@ nsBrowserAppCore::SetDocumentCharset(const nsString& aCharset)
   nsIWebShell * webShell;
   globalObj->GetWebShell(&webShell);
   if (nsnull != webShell) {
-    webShell->SetDefaultCharacterSet( aCharset);
+    webShell->SetDefaultCharacterSet( aCharset.GetUnicode());
 
     NS_RELEASE(webShell);
   }
@@ -396,7 +396,7 @@ nsBrowserAppCore::WalletSafeFillin()
   nsIPresShell* shell;
   shell = nsnull;
   nsCOMPtr<nsIWebShell> webcontent; 
-  mWebShell->FindChildWithName(nsAutoString("content"), *getter_AddRefs(webcontent));
+  mWebShell->FindChildWithName(nsAutoString("content").GetUnicode(), *getter_AddRefs(webcontent));
   nsCOMPtr<nsIWebShell> webcontent2; 
   webcontent->ChildAt(1, (nsIWebShell*&)webcontent2); 
   shell = GetPresShellFor(webcontent2);
@@ -426,7 +426,7 @@ nsBrowserAppCore::WalletQuickFillin()
   nsIPresShell* shell;
   shell = nsnull;
   nsCOMPtr<nsIWebShell> webcontent; 
-  mWebShell->FindChildWithName(nsAutoString("content"), *getter_AddRefs(webcontent));
+  mWebShell->FindChildWithName(nsAutoString("content").GetUnicode(), *getter_AddRefs(webcontent));
   nsCOMPtr<nsIWebShell> webcontent2; 
   webcontent->ChildAt(1, (nsIWebShell*&)webcontent2); 
   shell = GetPresShellFor(webcontent2);
@@ -448,7 +448,7 @@ NS_IMETHODIMP
 nsBrowserAppCore::WalletSamples()
 {
   /* bring up the samples in a new window */
-  mContentAreaWebShell->LoadURL(nsString(WALLET_SAMPLES_URL), nsnull, nsnull);
+  mContentAreaWebShell->LoadURL(nsString(WALLET_SAMPLES_URL).GetUnicode(), nsnull, nsnull);
   return NS_OK;
 }
 
@@ -538,10 +538,10 @@ nsBrowserAppCore::LoadUrl(const nsString& aUrl)
   GetId(id);
   if ( id.Find("ViewSource") == 0 ) {
     // Viewing source, load with "view-source" command.
-    mContentAreaWebShell->LoadURL(nsString(urlstr), "view-source", nsnull, PR_FALSE );
+    mContentAreaWebShell->LoadURL(nsString(urlstr).GetUnicode(), "view-source", nsnull, PR_FALSE );
   } else {
     // Normal browser.
-    mContentAreaWebShell->LoadURL(nsString(urlstr));
+    mContentAreaWebShell->LoadURL(nsString(urlstr).GetUnicode());
   }
 
   delete[] urlstr;
@@ -1183,7 +1183,7 @@ nsCOMPtr<nsIAtom> atomFileName = nsDontQueryInterface<nsIAtom>( NS_NewAtom("file
         mFileName = fileName;
         mMode = kProgress;
         nsString progressXUL = "resource:/res/samples/downloadProgress.xul";
-        mWebShell->LoadURL( progressXUL );
+        mWebShell->LoadURL( progressXUL.GetUnicode() );
     }
     // Open output file stream.
     mOutput = new nsOutputFileStream( mFileName );
