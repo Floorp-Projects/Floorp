@@ -178,8 +178,6 @@ protected:
   nsString*       mValue;
   PRInt32         mSize;
   PRUint8         mAlign;
-  PRInt32         mWidth;
-  PRInt32         mHeight;
 
   // Aggregator class and instance variable used to aggregate in the
   // nsIFormControl interface to nsInput w/o using multiple
