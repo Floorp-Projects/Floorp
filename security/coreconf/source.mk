@@ -39,13 +39,17 @@
 # <user_source_tree> master import/export directory prefix
 #
 
+ifndef SOURCE_PREFIX
 SOURCE_PREFIX = $(CORE_DEPTH)/../dist
+endif
 
 #
 # <user_source_tree> cross-platform (xp) master import/export directory
 #
 
+ifndef SOURCE_XP_DIR
 SOURCE_XP_DIR        = $(SOURCE_PREFIX)
+endif
 
 #
 # <user_source_tree> cross-platform (xp) import/export directories
@@ -66,15 +70,28 @@ endif
 # <user_source_tree> machine-dependent (md) master import/export directory
 #
 
+ifndef SOURCE_MD_DIR
 SOURCE_MD_DIR        = $(SOURCE_PREFIX)/$(PLATFORM)
+endif
 
 #
 # <user_source_tree> machine-dependent (md) import/export directories
 #
 
+#This is where we install built executables and (for Windows only) DLLs.
+ifndef SOURCE_BIN_DIR
 SOURCE_BIN_DIR       = $(SOURCE_MD_DIR)/bin
+endif
+
+#This is where we install built libraries (.a, .so, .lib).
+ifndef SOURCE_LIB_DIR
 SOURCE_LIB_DIR       = $(SOURCE_MD_DIR)/lib
+endif
+
+# This is where NSPR header files are found.
+ifndef SOURCE_MDHEADERS_DIR
 SOURCE_MDHEADERS_DIR = $(SOURCE_MD_DIR)/include
+endif
 
 #######################################################################
 # Master <component>-specific source release directories and files    #
