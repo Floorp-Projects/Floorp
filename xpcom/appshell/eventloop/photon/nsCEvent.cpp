@@ -22,8 +22,12 @@
  */
 
 #include "nsCRT.h"
-
 #include "nsCEvent.h"
+
+#include <prlog.h>
+PRLogModuleInfo  *PhEventLog =  PR_NewLogModule("PhEventLog");
+
+#include "nsPhEventLog.h"
 
 //*****************************************************************************
 //***    nsCEvent: Object Management
@@ -31,26 +35,20 @@
 
 nsCEvent::nsCEvent(void* platformEventData)
 {
+  PR_LOG(PhEventLog, PR_LOG_DEBUG, ("nsCEvent::nsCEvent platformEventData=<%p>\n", platformEventData));
+  
 	NS_INIT_REFCNT();
-
-	if (platformEventData)
-	{
-		mEventBufferSz = PhGetMsgSize ( (PhEvent_t *) platformEventData );
-		m_msg = (PhEvent_t *) malloc( mEventBufferSz );
-		if (m_msg);
-		  nsCRT::memcpy(m_msg, platformEventData, mEventBufferSz);
-	}
-	else
-	{
-		mEventBufferSz = sizeof(PhEvent_t);
-		m_msg = (PhEvent_t *) malloc( mEventBufferSz );
-		if (m_msg);
-		  nsCRT::memset(m_msg, 0, mEventBufferSz);
-	}
+	m_msg = new nsCPhEvent( (PhEvent_t *) platformEventData);
 }
 
 nsCEvent::~nsCEvent()
 {
+  PR_LOG(PhEventLog, PR_LOG_DEBUG, ("nsCEvent::~nsCEvent\n"));
+
+  if (m_msg)
+  {
+	delete m_msg;
+  }	
 }
 
 //*****************************************************************************
@@ -66,35 +64,40 @@ NS_IMPL_ISUPPORTS1(nsCEvent, nsIEvent)
 NS_IMETHODIMP nsCEvent::GetNativeData(nsNativeEventDataType dataType, 
 	void** data)
 {
+  PR_LOG(PhEventLog, PR_LOG_DEBUG, ("nsCEvent::GetNativeData dataType=<%d> data=<%p>\n", dataType, data));
+
+
 	NS_ENSURE_ARG(nsNativeEventDataTypes::PhotonMsgStruct == dataType);
 	NS_ENSURE_ARG_POINTER(data);
 
 	*data = m_msg;
-
 	return NS_OK;
 }
 
 NS_IMETHODIMP nsCEvent::SetNativeData(nsNativeEventDataType dataType,
 	void* data)
 {
+  PR_LOG(PhEventLog, PR_LOG_DEBUG, ("nsCEvent::SetNativeData dataType=<%d>\n", dataType));
+
 	NS_ENSURE_ARG(nsNativeEventDataTypes::PhotonMsgStruct == dataType);
 
 	if(!data)
 	{
 		/* Get rid of the Event */
-		nsCRT::memset(m_msg, 0, mEventBufferSz);
+		if (m_msg)
+		  delete m_msg;
+	     m_msg = new nsCPhEvent(NULL);
 	}
 	else
 	{
-		unsigned long locEventBufferSz = PhGetMsgSize ( (PhEvent_t *) data );
-		if (locEventBufferSz > mEventBufferSz)
-		{
-		  mEventBufferSz = locEventBufferSz;
-		  m_msg = (PhEvent_t *) realloc( mEventBufferSz, mEventBufferSz );
-		  NS_ENSURE_ARG_POINTER(m_msg);
-		}
-		nsCRT::memcpy(m_msg, data, mEventBufferSz);
-	}
+		/* Get rid of the Event */
+		if (m_msg)
+		  delete m_msg;
+
+		nsCPhEvent *aEvent = (nsCPhEvent *) data;
+        m_msg = new nsCPhEvent(aEvent->m_msg);
+ 	}
 
 	return NS_OK;
 }
+	

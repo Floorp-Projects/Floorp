@@ -17,30 +17,27 @@
  * Copyright (C) 1999, Mozilla.  All Rights Reserved.
  * 
  * Contributor(s):
- *   Travis Bogard <travis@netscape.com>
  *   Jerry Kirk    <Jerry.Kirk@NexwareCorp.com>
  */
 
-#ifndef nsCEvent_h__
-#define nsCEvent_h__
+#ifndef nsCPhEvent_h__
+#define nsCPhEvent_h__
 
-#include "nsCPhEvent.h"
-#include "nsIEvent.h"
+#include "PhT.h"
 
-class nsCEvent : public nsIEvent
+class nsCPhEvent
 {
 public:
-	nsCEvent(void* platformEventData=nsnull);
-	
-	NS_DECL_ISUPPORTS
+    nsCPhEvent(PhEvent_t *platformEventData=nsnull);
+	virtual ~nsCPhEvent();
 
-	NS_DECL_NSIEVENT
+    unsigned long GetEventBufferSize();
+    unsigned long GetEventSize();
+    nsresult ResizeEvent(unsigned long aEventSize);
 	 
-protected:
-	virtual ~nsCEvent();
-
-protected:
-	nsCPhEvent *m_msg;
+public:
+	PhEvent_t      *m_msg;
+    unsigned long   mEventBufferSz;
 };
 
-#endif /* nsCEvent_h__ */
+#endif /* nsCPhEvent_h__ */
