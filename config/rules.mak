@@ -455,6 +455,7 @@ depend:: $(OBJDIR)
 $(LINCS)
 $(LINCS_1)
 $(INCS)
+-I$(MAKEDIR)
 $(OBJS)
 <<
 
