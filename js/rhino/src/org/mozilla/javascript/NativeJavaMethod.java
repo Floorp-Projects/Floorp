@@ -225,6 +225,12 @@ public class NativeJavaMethod extends NativeFunction implements Function {
                 printDebug("Calling ", meth, args);
             }
 
+            /**
+             * Due to a bug in Suns VM, public methods in private
+             * classes are not accessible by default (Sun Bug #4071593).
+             * We have to explicitly set the method accessible beforehand
+             */
+            meth.setAccessible(true);
             Object retval = meth.invoke(javaObject, args);
             Class staticType = meth.getReturnType();
 
