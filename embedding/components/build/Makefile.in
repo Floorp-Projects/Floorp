@@ -28,13 +28,14 @@ LIBRARY_NAME	= embedcomponents
 EXPORT_LIBRARY = 1
 SHORT_LIBNAME	= embedcmp
 IS_COMPONENT	= 1
-REQUIRES	= js xpcom string windowwatcher find embed_base dom txtsvc
+REQUIRES	= js xpcom string windowwatcher jsconsole find embed_base dom txtsvc
 
 CPPSRCS		= nsModule.cpp
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 EXTRA_DSO_LIBS	= \
 	windowwatcher_s \
+	jsconsole_s \
 	appstartupnotifier_s \
 	find_s \
 	$(NULL)
@@ -61,6 +62,7 @@ endif
 LOCAL_INCLUDES	= \
 	-I$(srcdir)/../windowwatcher/src  \
 	-I$(srcdir)/../appstartup/src  \
+	-I$(srcdir)/../jsconsole/src  \
 	-I$(srcdir)/../find/src  \
 	$(NULL)
 

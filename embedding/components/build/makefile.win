@@ -36,12 +36,14 @@ LLIBS = \
         $(DIST)\lib\js3250.lib \
 	$(DIST)\lib\xpcom.lib \
 	$(DIST)\lib\windowwatcher_s.lib \
+	$(DIST)\lib\jsconsole_s.lib \
 	$(DIST)\lib\appstartupnotifier_s.lib \
 	$(DIST)\lib\find_s.lib \
 	$(NULL)
 
 INCS = $(INCS) \
 	-I$(DEPTH)\embedding\components\windowwatcher\src \
+	-I$(DEPTH)\embedding\components\jsconsole\src \
 	-I$(DEPTH)\embedding\components\appstartup\src \
 	-I$(DEPTH)\embedding\components\find\src \
 	$(NULL)
