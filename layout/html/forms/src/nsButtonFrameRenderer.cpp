@@ -53,7 +53,7 @@ nsButtonFrameRenderer::isDisabled()
   // get the content
   nsCOMPtr<nsIContent> content;
   mFrame->GetContent(getter_AddRefs(content));
-  nsString value;
+  nsAutoString value;
   if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(mNameSpace, nsHTMLAtoms::disabled, value))
     return PR_TRUE;
 

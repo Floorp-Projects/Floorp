@@ -323,7 +323,7 @@ nsTitledButtonFrame::UpdateImage(nsIPresContext&  aPresContext)
 {
   // see if the source changed
   // get the old image src
-  nsString oldSrc ="";
+  nsAutoString oldSrc ="";
   mImageLoader.GetURLSpec(oldSrc);
 
   // get the new image src
@@ -520,12 +520,11 @@ nsTitledButtonFrame::GetTextSize(nsIPresContext& aPresContext, nsIRenderingConte
 {
   const nsStyleFont* fontStyle = (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
 
-  nsFont font(fontStyle->mFont);
   nsCOMPtr<nsIDeviceContext> deviceContext;
   aPresContext.GetDeviceContext(getter_AddRefs(deviceContext));
 
   nsCOMPtr<nsIFontMetrics> fontMet;
-  deviceContext->GetMetricsFor(font, *getter_AddRefs(fontMet));
+  deviceContext->GetMetricsFor(fontStyle->mFont, *getter_AddRefs(fontMet));
   fontMet->GetHeight(aSize.height);
   aRenderingContext.SetFont(fontMet);
   aRenderingContext.GetWidth(aString, aSize.width);
@@ -539,13 +538,11 @@ nsTitledButtonFrame::CalculateTitleForWidth(nsIPresContext& aPresContext, nsIRen
 
   const nsStyleFont* fontStyle = (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
 
-  nsFont font(fontStyle->mFont);
- 
   nsCOMPtr<nsIDeviceContext> deviceContext;
   aPresContext.GetDeviceContext(getter_AddRefs(deviceContext));
 
   nsCOMPtr<nsIFontMetrics> fontMet;
-  deviceContext->GetMetricsFor(font, *getter_AddRefs(fontMet));
+  deviceContext->GetMetricsFor(fontStyle->mFont, *getter_AddRefs(fontMet));
   aRenderingContext.SetFont(fontMet);
  
   // see if the text will completely fit in the width given
