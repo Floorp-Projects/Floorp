@@ -50,8 +50,7 @@ were integrated with Netscape Navigator versions 4.x and earlier.&nbsp; For info
 on LiveConnect version 1, which was used in Navigator versions 3 and 4, and Enterprise 
 Server 3, see <a href="http://developer.netscape.com/find/find.cgi?scope=LiveConnect&browse-category=&ui=sr&chunk-size=&page=1&taxonomy=DevEdge+Online">Netscape's 
 DevEdge site</a> or any number of 3rd-party publications.) 
-<h4>
-LiveConnect version 3 (10/31/98)</h4>
+<h4> LiveConnect version 3 (8/31/99)</h4>
 
 <ul>
   <li> In previous versions of LiveConnect, when more than one overloaded Java 
@@ -115,7 +114,17 @@ LiveConnect version 3 (10/31/98)</h4>
     a language feature that debuted in JavaScript 1.4.&nbsp; Now, when JavaScript 
     calls into Java, any Java exceptions are converted to JS exceptions which 
     can be caught using JS try-catch statements.&nbsp; Similarly, JS exceptions 
-    are propagated to Java wrapped in an instance of <i>netscape.javascript.JSException</i>.</li>
+    are propagated to Java wrapped in an instance of <i>netscape.javascript.JSException</i>.<BR>
+    <BR>
+  </li>
+  <li>JavaScript Array objects can now be passed to Java methods that expect a 
+    Java array as an argument. <BR>
+    LiveConnect will create a new Java array of the appropriate type with a length 
+    equal to that of the JS Array object. Each element of the Java array is filled 
+    in by converting the corresponding element of the JS array, including undefined 
+    elements, to an equivalent Java value. Note: Since the contents of the JS 
+    array are copied, side-effects made by the invoked Java method to the Java 
+    array will not be reflected in the JS array argument. </li>
 </ul>
 
 <h4>

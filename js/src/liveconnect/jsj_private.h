@@ -248,6 +248,7 @@ extern JSClass JavaMember_class;
  */
 extern jclass jlObject;                        /* java.lang.Object */
 extern jclass jlrConstructor;                  /* java.lang.reflect.Constructor */
+extern jclass jlrArray;                        /* java.lang.reflect.Array */
 extern jclass jlThrowable;                     /* java.lang.Throwable */
 extern jclass jlSystem;                        /* java.lang.System */
 extern jclass jlClass;                         /* java.lang.Class */
@@ -277,6 +278,8 @@ extern jmethodID jlrConstructor_getModifiers;  /* java.lang.reflect.Constructor.
 extern jmethodID jlrField_getName;             /* java.lang.reflect.Field.getName() */
 extern jmethodID jlrField_getType;             /* java.lang.reflect.Field.getType() */
 extern jmethodID jlrField_getModifiers;        /* java.lang.reflect.Field.getModifiers() */
+
+extern jmethodID jlrArray_newInstance;         /* java.lang.reflect.Array.newInstance() */
 
 extern jmethodID jlThrowable_getMessage;       /* java.lang.Throwable.getMessage() */
 extern jmethodID jlThrowable_toString;         /* java.lang.Throwable.toString() */
