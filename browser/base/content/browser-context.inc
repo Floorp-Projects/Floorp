@@ -72,10 +72,12 @@
                 accesskey="&viewImageCmd.accesskey;"
                 oncommand="gContextMenu.viewImage();"/>
 #ifndef XP_UNIX
+#ifndef XP_OS2
       <menuitem id="context-copyimage-contents"
                 label="&copyImageContentsCmd.label;"
                 accesskey="&copyImageContentsCmd.accesskey;"
                 command="cmd_copyImageContents"/>
+#endif
 #endif
       <menuitem id="context-copyimage"
                 label="&copyImageCmd.label;"
