@@ -394,22 +394,29 @@
              parentNode.currentItem = t.parentNode.parentNode;
            }
            else {
-             var selectedItems = parentNode.selectedItems;
-             var didSuppressSelect = false;
-             var i = 0;
-             while (i < selectedItems.length) {
-               if (selectedItems[i] != t.parentNode.parentNode) {
-                 if (!didSuppressSelect) {
-                   parentNode.suppressOnSelect = true;
-                   didSuppressSelect = true;
+             /* We want to deselect all the selected items except what was
+                clicked, UNLESS it was a right-click.  We have to do this
+                in click rather than mousedown so that you can drag a
+                selected group of items */
+
+             if (event.button == 1) {
+               var selectedItems = parentNode.selectedItems;
+               var didSuppressSelect = false;
+               var i = 0;
+               while (i < selectedItems.length) {
+                 if (selectedItems[i] != t.parentNode.parentNode) {
+                   if (!didSuppressSelect) {
+                     parentNode.suppressOnSelect = true;
+                     didSuppressSelect = true;
+                   }
+                   parentNode.removeItemFromSelection(selectedItems[i]);
                  }
-                 parentNode.removeItemFromSelection(selectedItems[i]);
+                 else
+                   i++;
                }
-               else
-                 i++;
+               if (didSuppressSelect)
+                 parentNode.suppressOnSelect = false;
              }
-             if (didSuppressSelect)
-               parentNode.suppressOnSelect = false;
            }
          }
       ]]>
