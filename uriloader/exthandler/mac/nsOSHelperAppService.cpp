@@ -31,6 +31,7 @@
 #include "nsIStringBundle.h"
 #include "nsIPromptService.h"
 #include "nsMemory.h"
+#include "nsCRT.h"
 
 #include "nsIInternetConfigService.h"
 
@@ -170,13 +171,52 @@ NS_IMETHODIMP nsOSHelperAppService::LoadUrl(nsIURI * aURL)
   return rv;
 }
 
-nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * platformAppPath, nsIFile ** aFile)
+nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * aPlatformAppPath, nsIFile ** aFile)
 {
-  nsCOMPtr<nsILocalFile> localFile (do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
-  if (!localFile)
-    return NS_ERROR_FAILURE;
-  
-  nsresult rv = localFile->InitWithPath(nsDependentString(platformAppPath));
+  nsresult rv;
+  nsCOMPtr<nsILocalFileMac> localFile (do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  CFURLRef pathAsCFURL;
+  CFStringRef pathAsCFString = ::CFStringCreateWithCharacters(NULL,
+                                                              aPlatformAppPath,
+                                                              nsCRT::strlen(aPlatformAppPath));
+  if (!pathAsCFString)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  if (::CFStringGetCharacterAtIndex(pathAsCFString, 0) == '/') {
+    // we have a Posix path
+    pathAsCFURL = ::CFURLCreateWithFileSystemPath(nsnull, pathAsCFString,
+                                                  kCFURLPOSIXPathStyle, PR_FALSE);
+    if (!pathAsCFURL) {
+      ::CFRelease(pathAsCFString);
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+  else {
+    // if it doesn't start with a / it's not an absolute Posix path
+    // let's check if it's a HFS path left over from old preferences
+
+    // If it starts with a ':' char, it's not an absolute HFS path
+    // so bail for that, and also if it's empty
+    if (::CFStringGetLength(pathAsCFString) == 0 ||
+        ::CFStringGetCharacterAtIndex(pathAsCFString, 0) == ':')
+    {
+      ::CFRelease(pathAsCFString);
+      return NS_ERROR_FILE_UNRECOGNIZED_PATH;
+    }
+
+    pathAsCFURL = ::CFURLCreateWithFileSystemPath(nsnull, pathAsCFString,
+                                                  kCFURLHFSPathStyle, PR_FALSE);
+    if (!pathAsCFURL) {
+      ::CFRelease(pathAsCFString);
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
+  rv = localFile->InitWithCFURL(pathAsCFURL);
+  ::CFRelease(pathAsCFString);
+  ::CFRelease(pathAsCFURL);
   if (NS_FAILED(rv))
     return rv;
   *aFile = localFile;
