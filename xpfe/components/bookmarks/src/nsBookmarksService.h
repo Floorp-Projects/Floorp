@@ -43,6 +43,7 @@
 #include "nsIStreamListener.h"
 #include "nsIRDFObserver.h"
 #include "nsISupportsArray.h"
+#include "nsCOMArray.h"
 #include "nsIStringBundle.h"
 #include "nsITimer.h"
 #include "nsIRDFNode.h"
@@ -74,7 +75,7 @@ class nsBookmarksService :
 protected:
     nsIRDFDataSource*               mInner;
     nsCOMPtr<nsIRDFResource>        busyResource;
-    nsCOMPtr<nsISupportsArray>      mObservers;
+    nsCOMArray<nsIRDFObserver>      mObservers;
     nsCOMPtr<nsIStringBundle>       mBundle;
     nsCOMPtr<nsITimer>              mTimer;
     nsCOMPtr<nsIIOService>          mNetService;
