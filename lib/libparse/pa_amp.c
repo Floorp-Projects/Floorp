@@ -189,6 +189,7 @@ static PA_N2U PA_Name2Unicode[] = {
 	{"yacute",	6,	0x00fd },
 	{"thorn",	5,	0x00fe },
 	{"yuml",	4,	0x00ff },
+	{"euro",	4,	0x20ac },
 
 	{NULL,		0,	0x0000 },
 };
