@@ -72,7 +72,7 @@ nsSocketState gStateTable[eSocketOperation_Max][eSocketState_Max] = {
     eSocketState_WaitDNS,       // Created        -> WaitDNS
     eSocketState_Closed,        // WaitDNS        -> Closed
     eSocketState_WaitConnect,   // Closed         -> WaitConnect
-    eSocketState_Connected,     // WaitConenct    -> Connected
+    eSocketState_Connected,     // WaitConnect    -> Connected
     eSocketState_WaitReadWrite, // Connected      -> WaitReadWrite
     eSocketState_Done,          // WaitReadWrite  -> Done
     eSocketState_Connected,     // Done           -> Connected
@@ -114,35 +114,32 @@ PRLogModuleInfo* gSocketLog = nsnull;
 
 #endif /* PR_LOGGING */
 
-nsSocketTransport::nsSocketTransport()
+nsSocketTransport::nsSocketTransport():
+    mCancelOperation(PR_FALSE),
+    mCloseConnectionOnceDone(PR_FALSE),
+    mCurrentState(eSocketState_Created),
+    mHostName(nsnull),
+    mLoadAttributes(LOAD_NORMAL),
+    mLock(nsnull),
+    mOperation(eSocketOperation_None),
+    mPort(0),
+    mPrintHost(nsnull),
+    mReadWriteState(0),
+    mSelectFlags(0),
+    mService(nsnull),
+    mSocketFD(nsnull),
+    mSocketType(nsnull),
+    mSourceOffset(0),
+    mStatus(NS_OK),
+    mSuspendCount(0),
+    mWriteCount(0)
 {
   NS_INIT_REFCNT();
 
   PR_INIT_CLIST(&mListLink);
 
-  mHostName     = nsnull;
-  mPort         = 0;
-  mSocketType   = nsnull;
-  mSocketFD     = nsnull;
-  mLock         = nsnull;
-
-  mSuspendCount = 0;
-  mCancelOperation = PR_FALSE;
-
-  mReadWriteState = 0;  
   SetReadType (eSocketRead_None);
   SetWriteType(eSocketWrite_None);
-
-  mCurrentState = eSocketState_Created;
-  mOperation    = eSocketOperation_None;
-  mSelectFlags  = 0;
-
-  mWriteCount     = 0;
-  mSourceOffset   = 0;
-  mService        = nsnull;
-  mLoadAttributes = LOAD_NORMAL;
-
-  mStatus = NS_OK;
 
   //
   // Set up Internet defaults...
@@ -203,6 +200,7 @@ nsSocketTransport::~nsSocketTransport()
 
   NS_IF_RELEASE(mService);
 
+  CRTFREEIF(mPrintHost);
   CRTFREEIF(mHostName);
   CRTFREEIF(mSocketType);
 
@@ -223,7 +221,8 @@ nsresult nsSocketTransport::Init(nsSocketTransportService* aService,
                                  const char* aHost, 
                                  PRInt32 aPort,
                                  const char* aSocketType,
-                                 nsIEventSinkGetter* eventSinkGetter)
+                                 nsIEventSinkGetter* eventSinkGetter,
+                                 const char* aPrintHost)
 {
   nsresult rv = NS_OK;
 
@@ -240,6 +239,13 @@ nsresult nsSocketTransport::Init(nsSocketTransportService* aService,
   // hostname was nsnull or empty...
   else {
     rv = NS_ERROR_FAILURE;
+  }
+
+  if (aPrintHost)
+  {
+      mPrintHost = nsCRT::strdup(aPrintHost);
+      if (!mPrintHost)
+          rv = NS_ERROR_OUT_OF_MEMORY;
   }
 
   if (NS_SUCCEEDED(rv) && aSocketType) {
@@ -418,6 +424,11 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
           mReadPipeOut = null_nsCOMPtr();
           SetReadType(eSocketRead_None);
           ClearFlag(eSocketRead_Done);
+
+          // When we have finished reading from the server
+          // close connection if required to do so...
+          if (mCloseConnectionOnceDone)
+            CloseConnection();
         }
 
         if (GetFlag(eSocketWrite_Done)) {
@@ -1073,11 +1084,16 @@ nsresult nsSocketTransport::doWriteFromStream(PRUint32 *aCount)
   return rv;  
 }
 
-
-nsresult nsSocketTransport::CloseConnection(void)
+nsresult nsSocketTransport::CloseConnection(PRBool bNow)
 {
   PRStatus status;
   nsresult rv = NS_OK;
+
+  if (!bNow) // close connection once done. 
+  {
+    mCloseConnectionOnceDone = PR_TRUE;
+    return NS_OK;
+  }
 
   if (!mSocketFD) {
     mCurrentState = eSocketState_Closed;
@@ -1753,7 +1769,10 @@ nsSocketTransport::fireStatus(PRUint32 aCode)
     nsresult rv = GetSocketErrorString(aCode, getter_Copies(tempmesg));
 
     nsAutoString mesg(tempmesg);
-    mesg.Append(mHostName);
+    if (mPrintHost)
+        mesg.Append(mPrintHost);
+    else
+        mesg.Append(mHostName);
 
     if (NS_FAILED(rv)) return rv;
 #ifndef BUG_16273_FIXED //TODO
@@ -1804,8 +1823,10 @@ nsSocketTransport::GetSocketErrorString(PRUint32 iCode,
             break;
         case eSocketState_WaitReadWrite:
             {
-                static nsAutoString mesg("Transfering data from ");
-                *oString = mesg.ToNewUnicode();
+                static nsAutoString frommesg("Transfering data from ");
+                static nsAutoString tomesg("Sending request to ");
+                *oString = (mWriteContext == nsnull) ? 
+                    frommesg.ToNewUnicode() : tomesg.ToNewUnicode();
                 if (!*oString) return NS_ERROR_OUT_OF_MEMORY;
                 rv = NS_OK;
             }

@@ -127,10 +127,13 @@ public:
                 const char* aHost, 
                 PRInt32 aPort,
                 const char* aSocketType,
-                nsIEventSinkGetter* eventSinkGetter);
+                nsIEventSinkGetter* eventSinkGetter,
+                const char* aPrintHost); // This host is used for status mesg
+
   nsresult Process(PRInt16 aSelectFlags);
 
-  nsresult CloseConnection(void);
+  // Close this socket either right away or once done with the transaction. 
+  nsresult CloseConnection(PRBool bNow=PR_TRUE);
 
   // Access methods used by the socket transport service...
   PRFileDesc* GetSocket(void)      { return mSocketFD;    }
@@ -139,6 +142,8 @@ public:
 
   static nsSocketTransport* GetInstance(PRCList* qp) { return (nsSocketTransport*)((char*)qp - offsetof(nsSocketTransport, mListLink)); }
 
+  PRBool CanBeReused(void) { return 
+    (mCurrentState != eSocketState_Error) && !mCloseConnectionOnceDone;}
 protected:
   nsresult doConnection(PRInt16 aSelectFlags);
   nsresult doResolveHost(void);
@@ -178,49 +183,41 @@ private:
 
 protected:
 
-
-  PRCList           mListLink;
-
-  PRLock*           mLock;
-  nsSocketState     mCurrentState;
-  nsSocketOperation mOperation;
-
-  PRUint32          mReadWriteState;
-
-  PRInt32           mSuspendCount;
-  PRBool            mCancelOperation;
-
-  PRFileDesc*   mSocketFD;
-  PRNetAddr     mNetAddress;
-  PRInt16       mSelectFlags;
-
-  char*         mHostName;
-  PRInt32       mPort;
-  char*         mSocketType;
-
-  nsCOMPtr<nsIStreamObserver>         mOpenObserver;
-  nsCOMPtr<nsISupports>               mOpenContext;
-
-  nsCOMPtr<nsISupports>       mReadContext;
-  nsCOMPtr<nsIStreamListener> mReadListener;
-  nsCOMPtr<nsIBufferInputStream>  mReadPipeIn;
-  nsCOMPtr<nsIBufferOutputStream> mReadPipeOut;
-
-  PRInt32                     mWriteCount;
-  nsCOMPtr<nsISupports>       mWriteContext;
-  nsCOMPtr<nsIStreamObserver> mWriteObserver;
-  nsCOMPtr<nsIInputStream>        mWriteFromStream;
-  nsCOMPtr<nsIBufferInputStream>  mWritePipeIn;
-  nsCOMPtr<nsIBufferOutputStream> mWritePipeOut;
-  PRUint32 mSourceOffset;
-  nsSocketTransportService* mService;
-  PRUint32                  mLoadAttributes;
-
-  nsCOMPtr<nsIRequest>      mDNSRequest;
-  nsresult                  mStatus;
-  nsCOMPtr<nsISupports>     mOwner;
-  // For tracking connection progress and status
+  PRBool                            mCancelOperation;
+  PRBool                            mCloseConnectionOnceDone;
+  nsSocketState                     mCurrentState;
+  nsCOMPtr<nsIRequest>              mDNSRequest;
   nsCOMPtr<nsIProgressEventSink>    mEventSink;
+  char*                             mHostName;
+  PRCList                           mListLink;
+  PRUint32                          mLoadAttributes;
+  PRLock*                           mLock;
+  PRNetAddr                         mNetAddress;
+  nsCOMPtr<nsISupports>             mOpenContext;
+  nsCOMPtr<nsIStreamObserver>       mOpenObserver;
+  nsSocketOperation                 mOperation;
+  nsCOMPtr<nsISupports>             mOwner;
+  PRInt32                           mPort;
+  char*                             mPrintHost; // not the proxy
+  nsCOMPtr<nsISupports>             mReadContext;
+  nsCOMPtr<nsIStreamListener>       mReadListener;
+  nsCOMPtr<nsIBufferInputStream>    mReadPipeIn;
+  nsCOMPtr<nsIBufferOutputStream>   mReadPipeOut;
+  PRUint32                          mReadWriteState;
+  PRInt16                           mSelectFlags;
+  nsSocketTransportService*         mService;
+  PRFileDesc*                       mSocketFD;
+  char*                             mSocketType;
+  PRUint32                          mSourceOffset;
+  nsresult                          mStatus;
+  PRInt32                           mSuspendCount;
+  PRInt32                           mWriteCount;
+  nsCOMPtr<nsISupports>             mWriteContext;
+  nsCOMPtr<nsIInputStream>          mWriteFromStream;
+  nsCOMPtr<nsIStreamObserver>       mWriteObserver;
+  nsCOMPtr<nsIBufferInputStream>    mWritePipeIn;
+  nsCOMPtr<nsIBufferOutputStream>   mWritePipeOut;
+
 };
 
 
