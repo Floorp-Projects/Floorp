@@ -902,10 +902,14 @@ nsNativeAppSupportWin::FindTopic( HSZ topic ) {
 // Utility function that determines if we're handling http Internet shortcuts.
 static PRBool isDefaultBrowser() 
 {
+#ifdef MOZ_PHOENIX
   nsCOMPtr<nsIShellService> shell(do_GetService("@mozilla.org/browser/shell-service;1"));
   PRBool isDefault;
   shell->IsDefaultBrowser(PR_FALSE, &isDefault);
   return isDefault;
+#else
+  return FALSE;
+#endif
 }
 
 // Utility function to delete a registry subkey.
