@@ -274,217 +274,246 @@ NS_IMETHODIMP nsEditorController::DoCommand(const PRUnichar *aCommand)
     return NS_OK;
   }
 
+  nsresult rv = NS_ERROR_NO_INTERFACE;
   if (PR_TRUE==mUndoString.Equals(aCommand))
   {
-    NS_ENSURE_SUCCESS(editor->Undo(1), NS_ERROR_FAILURE);
+    rv = editor->Undo(1);
   }
   else if (PR_TRUE==mRedoString.Equals(aCommand))
   {
-    NS_ENSURE_SUCCESS(editor->Redo(1), NS_ERROR_FAILURE);
+    rv = editor->Redo(1);
   }
   else if (PR_TRUE==mCutString.Equals(aCommand))
   { 
-    NS_ENSURE_SUCCESS(editor->Cut(), NS_ERROR_FAILURE);
+    rv = editor->Cut();
   }
   else if (PR_TRUE==mCopyString.Equals(aCommand))
   { 
-    NS_ENSURE_SUCCESS(editor->Copy(), NS_ERROR_FAILURE);
+    rv = editor->Copy();
   }
   else if (PR_TRUE==mPasteString.Equals(aCommand))
   { 
-    NS_ENSURE_SUCCESS(editor->Paste(), NS_ERROR_FAILURE);
+    rv = editor->Paste();
   }
   else if (PR_TRUE==mDeleteString.Equals(aCommand))
   { 
-    NS_ENSURE_SUCCESS(editor->DeleteSelection(nsIEditor::eNext), NS_ERROR_FAILURE);
+    rv = editor->DeleteSelection(nsIEditor::eNext);
   }
   else if (PR_TRUE==mSelectAllString.Equals(aCommand))    //SelectALL
   { 
-    NS_ENSURE_SUCCESS(editor->SelectAll(), NS_ERROR_FAILURE);
+    rv = editor->SelectAll();
   }
 
   else if (PR_TRUE==mDeleteCharForward.Equals(aCommand))
   {
-    NS_ENSURE_SUCCESS(editor->DeleteSelection(nsIEditor::eNext),
-                      NS_ERROR_FAILURE);
+    rv = editor->DeleteSelection(nsIEditor::eNext);
   }
   else if (PR_TRUE==mDeleteCharBackward.Equals(aCommand))
   { 
-    NS_ENSURE_SUCCESS(editor->DeleteSelection(nsIEditor::ePrevious),
-                      NS_ERROR_FAILURE);
+    rv = editor->DeleteSelection(nsIEditor::ePrevious);
   }
   else if (PR_TRUE==mDeleteWordForward.Equals(aCommand))
   { 
-    NS_ENSURE_SUCCESS(editor->DeleteSelection(nsIEditor::eNextWord),
-                      NS_ERROR_FAILURE);
+    rv = editor->DeleteSelection(nsIEditor::eNextWord);
   }
   else if (PR_TRUE==mDeleteWordBackward.Equals(aCommand))
   { 
-    NS_ENSURE_SUCCESS(editor->DeleteSelection(nsIEditor::ePreviousWord),
-                      NS_ERROR_FAILURE);
+    rv = editor->DeleteSelection(nsIEditor::ePreviousWord);
   }
 
   else if (PR_TRUE==mDeleteToBeginningOfLine.Equals(aCommand))
   {
-    NS_ENSURE_SUCCESS(editor->DeleteSelection(nsIEditor::eToBeginningOfLine),
-                      NS_ERROR_FAILURE);
+    rv = editor->DeleteSelection(nsIEditor::eToBeginningOfLine);
   }
   else if (PR_TRUE==mDeleteToEndOfLine.Equals(aCommand))
   { 
-    NS_ENSURE_SUCCESS(editor->DeleteSelection(nsIEditor::eToEndOfLine),
-                      NS_ERROR_FAILURE);
+    rv = editor->DeleteSelection(nsIEditor::eToEndOfLine);
   }
 
   else if (PR_TRUE==mScrollTopString.Equals(aCommand))    //ScrollTOP
   { 
-    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
-    return selCont->CompleteScroll(PR_FALSE);
+    rv = GetSelectionController(getter_AddRefs(selCont));
+    if (NS_SUCCEEDED(rv))
+      rv = selCont->CompleteScroll(PR_FALSE);
   }
   else if (PR_TRUE==mScrollBottomString.Equals(aCommand))    //ScrollBOTTOM
   { 
-    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
-    return selCont->CompleteScroll(PR_TRUE);
+    rv = GetSelectionController(getter_AddRefs(selCont));
+    if (NS_SUCCEEDED(rv))
+      rv = selCont->CompleteScroll(PR_TRUE);
   }
   else if (PR_TRUE==mMoveTopString.Equals(aCommand)) //MoveTop
   { 
-    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
-    return selCont->CompleteMove(PR_FALSE,PR_FALSE);
+    rv = GetSelectionController(getter_AddRefs(selCont));
+    if (NS_SUCCEEDED(rv))
+      rv = selCont->CompleteMove(PR_FALSE,PR_FALSE);
   }
   else if (PR_TRUE==mMoveBottomString.Equals(aCommand)) //MoveBottom
   { 
-    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
-    return selCont->CompleteMove(PR_TRUE,PR_FALSE);
+    rv = GetSelectionController(getter_AddRefs(selCont));
+    if (NS_SUCCEEDED(rv))
+      rv = selCont->CompleteMove(PR_TRUE,PR_FALSE);
   }
   else if (PR_TRUE==mSelectMoveTopString.Equals(aCommand)) // SelectMoveTop
   { 
-    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
-    return selCont->CompleteMove(PR_FALSE,PR_TRUE);
+    rv = GetSelectionController(getter_AddRefs(selCont));
+    if (NS_SUCCEEDED(rv))
+      rv = selCont->CompleteMove(PR_FALSE,PR_TRUE);
   }
   else if (PR_TRUE==mSelectMoveBottomString.Equals(aCommand)) //SelectMoveBottom
   { 
-    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
-    return selCont->CompleteMove(PR_TRUE,PR_TRUE);
+    rv = GetSelectionController(getter_AddRefs(selCont));
+    if (NS_SUCCEEDED(rv))
+      rv = selCont->CompleteMove(PR_TRUE,PR_TRUE);
   }
   else if (PR_TRUE==mLineNextString.Equals(aCommand))    //DOWN
   { 
-    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
-    return selCont->LineMove(PR_TRUE,PR_FALSE);
+    rv = GetSelectionController(getter_AddRefs(selCont));
+    if (NS_SUCCEEDED(rv))
+      rv = selCont->LineMove(PR_TRUE,PR_FALSE);
   }
   else if (PR_TRUE==mLinePreviousString.Equals(aCommand))    //UP
   { 
-    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
-    return selCont->LineMove(PR_FALSE,PR_FALSE);
+    rv = GetSelectionController(getter_AddRefs(selCont));
+    if (NS_SUCCEEDED(rv))
+      rv = selCont->LineMove(PR_FALSE,PR_FALSE);
   }
   else if (PR_TRUE==mSelectLineNextString.Equals(aCommand))    //SelectDown
   { 
-    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
-    return selCont->LineMove(PR_TRUE,PR_TRUE);
+    rv = GetSelectionController(getter_AddRefs(selCont));
+    if (NS_SUCCEEDED(rv))
+      rv = selCont->LineMove(PR_TRUE,PR_TRUE);
   }
   else if (PR_TRUE==mSelectLinePreviousString.Equals(aCommand))    //SelectUp
   { 
-    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
-    return selCont->LineMove(PR_FALSE,PR_TRUE);
+    rv = GetSelectionController(getter_AddRefs(selCont));
+    if (NS_SUCCEEDED(rv))
+      rv = selCont->LineMove(PR_FALSE,PR_TRUE);
   }
   else if (PR_TRUE==mLeftString.Equals(aCommand))    //LeftChar
   { 
-    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
-    return selCont->CharacterMove(PR_FALSE,PR_FALSE);
+    rv = GetSelectionController(getter_AddRefs(selCont));
+    if (NS_SUCCEEDED(rv))
+      rv = selCont->CharacterMove(PR_FALSE,PR_FALSE);
   }
   else if (PR_TRUE==mRightString.Equals(aCommand))    //Right char
   { 
-    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
-    return selCont->CharacterMove(PR_TRUE,PR_FALSE);
+    rv = GetSelectionController(getter_AddRefs(selCont));
+    if (NS_SUCCEEDED(rv))
+      rv = selCont->CharacterMove(PR_TRUE,PR_FALSE);
   }
   else if (PR_TRUE==mSelectLeftString.Equals(aCommand))    //SelectLeftChar
   { 
-    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
-    return selCont->CharacterMove(PR_FALSE,PR_TRUE);
+    rv = GetSelectionController(getter_AddRefs(selCont));
+    if (NS_SUCCEEDED(rv))
+      rv = selCont->CharacterMove(PR_FALSE,PR_TRUE);
   }
   else if (PR_TRUE==mSelectRightString.Equals(aCommand))    //SelectRightChar
   { 
-    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
-    return selCont->CharacterMove(PR_TRUE,PR_TRUE);
+    rv = GetSelectionController(getter_AddRefs(selCont));
+    if (NS_SUCCEEDED(rv))
+      rv = selCont->CharacterMove(PR_TRUE,PR_TRUE);
   }
   else if (PR_TRUE==mBeginLineString.Equals(aCommand))  //BeginLine 
   { 
-    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
-    return selCont->IntraLineMove(PR_FALSE,PR_FALSE);
+    rv = GetSelectionController(getter_AddRefs(selCont));
+    if (NS_SUCCEEDED(rv))
+      rv = selCont->IntraLineMove(PR_FALSE,PR_FALSE);
   }
   else if (PR_TRUE==mEndLineString.Equals(aCommand))    //EndLine
   { 
-    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
-    return selCont->IntraLineMove(PR_TRUE,PR_FALSE);
+    rv = GetSelectionController(getter_AddRefs(selCont));
+    if (NS_SUCCEEDED(rv))
+      rv = selCont->IntraLineMove(PR_TRUE,PR_FALSE);
   }
   else if (PR_TRUE==mSelectBeginLineString.Equals(aCommand))    //SelectBeginLine
   { 
-    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
-    return selCont->IntraLineMove(PR_FALSE,PR_TRUE);
+    rv = GetSelectionController(getter_AddRefs(selCont));
+    if (NS_SUCCEEDED(rv))
+      rv = selCont->IntraLineMove(PR_FALSE,PR_TRUE);
   }
   else if (PR_TRUE==mSelectEndLineString.Equals(aCommand))    //SelectEndLine
   { 
-    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
-    return selCont->IntraLineMove(PR_TRUE,PR_TRUE);
+    rv = GetSelectionController(getter_AddRefs(selCont));
+    if (NS_SUCCEEDED(rv))
+      rv = selCont->IntraLineMove(PR_TRUE,PR_TRUE);
   }
   else if (PR_TRUE==mWordLeftString.Equals(aCommand))  //LeftWord 
   { 
-    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
-    return selCont->WordMove(PR_FALSE,PR_FALSE);
+    rv = GetSelectionController(getter_AddRefs(selCont));
+    if (NS_SUCCEEDED(rv))
+      rv = selCont->WordMove(PR_FALSE,PR_FALSE);
   }
   else if (PR_TRUE==mWordRightString.Equals(aCommand))  //RightWord 
   { 
-    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
-    return selCont->WordMove(PR_TRUE,PR_FALSE);
+    rv = GetSelectionController(getter_AddRefs(selCont));
+    if (NS_SUCCEEDED(rv))
+      rv = selCont->WordMove(PR_TRUE,PR_FALSE);
   }
   else if (PR_TRUE==mSelectWordLeftString.Equals(aCommand))  //SelectLeftWord 
   { 
-    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
-    return selCont->WordMove(PR_FALSE,PR_TRUE);
+    rv = GetSelectionController(getter_AddRefs(selCont));
+    if (NS_SUCCEEDED(rv))
+      rv = selCont->WordMove(PR_FALSE,PR_TRUE);
   }
   else if (PR_TRUE==mSelectWordRightString.Equals(aCommand))  //SelectRightWord 
   { 
-    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
-    return selCont->WordMove(PR_TRUE,PR_TRUE);
+    rv = GetSelectionController(getter_AddRefs(selCont));
+    if (NS_SUCCEEDED(rv))
+      rv = selCont->WordMove(PR_TRUE,PR_TRUE);
   }
   else if (PR_TRUE==mScrollPageUp.Equals(aCommand))  //ScrollPageUp
   { 
-    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
-    return selCont->ScrollPage(PR_FALSE);
+    rv = GetSelectionController(getter_AddRefs(selCont));
+    if (NS_SUCCEEDED(rv))
+      rv = selCont->ScrollPage(PR_FALSE);
   }
   else if (PR_TRUE==mScrollPageDown.Equals(aCommand))  //ScrollPageDown
   { 
-    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
-    return selCont->ScrollPage(PR_TRUE);
+    rv = GetSelectionController(getter_AddRefs(selCont));
+    if (NS_SUCCEEDED(rv))
+      rv = selCont->ScrollPage(PR_TRUE);
   }
   else if (PR_TRUE==mScrollLineUp.Equals(aCommand))  //ScrollLineUp
   { 
-    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
-    return selCont->ScrollLine(PR_FALSE);
+    rv = GetSelectionController(getter_AddRefs(selCont));
+    if (NS_SUCCEEDED(rv))
+      rv = selCont->ScrollLine(PR_FALSE);
   }
   else if (PR_TRUE==mScrollLineDown.Equals(aCommand))  //ScrollLineDown
   { 
-    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
-    return selCont->ScrollLine(PR_TRUE);
+    rv = GetSelectionController(getter_AddRefs(selCont));
+    if (NS_SUCCEEDED(rv))
+      rv = selCont->ScrollLine(PR_TRUE);
   }
   else if (PR_TRUE==mMovePageUp.Equals(aCommand))  //MovePageUp
   { 
-    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
-    return selCont->PageMove(PR_FALSE,PR_FALSE);
+    rv = GetSelectionController(getter_AddRefs(selCont));
+    if (NS_SUCCEEDED(rv))
+      rv = selCont->PageMove(PR_FALSE,PR_FALSE);
   }
   else if (PR_TRUE==mMovePageDown.Equals(aCommand))  //MovePageDown
   { 
-    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
-    return selCont->PageMove(PR_TRUE,PR_FALSE);
+    rv = GetSelectionController(getter_AddRefs(selCont));
+    if (NS_SUCCEEDED(rv))
+      rv = selCont->PageMove(PR_TRUE,PR_FALSE);
   }
   else if (PR_TRUE==mSelectMovePageUp.Equals(aCommand))  //SelectMovePageUp
   { 
-    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
-    return selCont->PageMove(PR_FALSE,PR_TRUE);
+    rv = GetSelectionController(getter_AddRefs(selCont));
+    if (NS_SUCCEEDED(rv))
+      rv = selCont->PageMove(PR_FALSE,PR_TRUE);
   }
   else if (PR_TRUE==mSelectMovePageDown.Equals(aCommand))  //SelectMovePageDown
   { 
-    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
-    return selCont->PageMove(PR_TRUE,PR_TRUE);
+    rv = GetSelectionController(getter_AddRefs(selCont));
+    if (NS_SUCCEEDED(rv))
+      rv = selCont->PageMove(PR_TRUE,PR_TRUE);
   }
+
+  // For debug builds, we might want to print or return rv here.
+  // For release builds, though, we don't want to be spewing JS errors
+  // for things like "right arrow when already at end of line".
   return NS_OK;
 }
 
