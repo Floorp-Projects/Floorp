@@ -175,7 +175,7 @@ nsresult nsMsgPurgeService::PerformPurge()
     PR_LOG(MsgPurgeLogModule, PR_LOG_ALWAYS, ("%d servers", numServers));
     nsCOMPtr<nsIMsgFolder> folderToPurge;
     PRInt32 purgeIntervalToUse;
-    PRInt64 oldestPurgeTime = 0; // we're going to pick the least-recently purged folder
+    nsTime oldestPurgeTime = 0; // we're going to pick the least-recently purged folder
     for (PRUint32 serverIndex=0; serverIndex < numServers; serverIndex++)
     {
       nsCOMPtr <nsIMsgIncomingServer> server =
@@ -295,7 +295,7 @@ nsresult nsMsgPurgeService::PerformPurge()
             spamSettings->GetPurgeInterval(&purgeInterval);
             PR_LOG(MsgPurgeLogModule, PR_LOG_ALWAYS, ("[%d] purging! searching for messages older than %d days", serverIndex, purgeInterval));
 
-            if (!oldestPurgeTime || LL_CMP(oldestPurgeTime, >, lastPurgeTime))
+            if ((oldestPurgeTime == nsInt64(0)) || (oldestPurgeTime > lastPurgeTime))
             {
               oldestPurgeTime = lastPurgeTime;
               purgeIntervalToUse = purgeInterval;
