@@ -622,9 +622,6 @@ public:
   static NS_LAYOUT void ShowFrameBorders(PRBool aEnable);
   static NS_LAYOUT PRBool GetShowFrameBorders();
 
-protected:
-  static NS_LAYOUT PRLogModuleInfo* gLogModule;
-
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;
   NS_IMETHOD_(nsrefcnt) Release(void) = 0;
