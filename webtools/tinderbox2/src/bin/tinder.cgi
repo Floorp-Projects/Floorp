@@ -2,8 +2,8 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# $Revision: 1.28 $ 
-# $Date: 2002/05/01 02:49:26 $ 
+# $Revision: 1.29 $ 
+# $Date: 2002/05/07 20:37:43 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/tinder.cgi,v $ 
 # $Name:  $ 
@@ -494,8 +494,10 @@ sub cgi_main {
 sub write_stats {
 
  my ($end_time) = time();
- my ($run_time) = sprintf ("%.2f",         # round
-                           ($end_time - $TIME)/$main::SECONDS_PER_MINUTE);
+ my ($run_time) = main::round (
+                               ($end_time - $TIME)/
+                               $main::SECONDS_PER_MINUTE
+                               );
 
  if ($TinderConfig::LOG_PERFORMANCE) {
    print LOG "run_time: $run_time num_updates: $NUM_UPDATES\n";
