@@ -2021,7 +2021,7 @@ NS_IMETHODIMP mozXMLTermSession::AppendOutput(const nsString& aString,
         if (k < styleLength) {
           // Change style
           PRInt32 strLen = subString.Length();
-          if ((styleChanges = 1) &&
+          if ((styleChanges == 1) &&
               (currentStyle == LTERM_STDOUT_STYLE)         &&
               (strStyle[k] == LTERM_STDIN_STYLE)           &&
               ( ((strLen-10) == subString.RFind("password: ",PR_TRUE)) ||

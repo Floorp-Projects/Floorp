@@ -803,7 +803,7 @@ nsGenericElement::GetAttribute(const nsAReadableString& aName,
   nsresult rv = NS_STATIC_CAST(nsIContent *,
                                this)->GetAttribute(nsid, nameAtom, aReturn);
 
-  if (rv = NS_CONTENT_ATTR_NOT_THERE) {
+  if (rv == NS_CONTENT_ATTR_NOT_THERE) {
     // XXX: Null aReturn
   }
 

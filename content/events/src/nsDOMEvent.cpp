@@ -1180,7 +1180,7 @@ nsDOMEvent::InitMouseEvent(const nsAReadableString& aTypeArg, PRBool aCtrlKeyArg
   //mEvent->flags |= aCanBubbleArg ? NS_EVENT_FLAG_NONE : NS_EVENT_FLAG_CANT_BUBBLE;
   //mEvent->flags |= aCancelableArg ? NS_EVENT_FLAG_NONE : NS_EVENT_FLAG_CANT_CANCEL;
 
-  if (mEvent->eventStructType = NS_MOUSE_EVENT) {
+  if (mEvent->eventStructType == NS_MOUSE_EVENT) {
     nsMouseEvent* mouseEvent = NS_STATIC_CAST(nsMouseEvent*, mEvent);
     mouseEvent->isControl = aCtrlKeyArg;
     mouseEvent->isAlt = aAltKeyArg;
@@ -1208,7 +1208,7 @@ nsDOMEvent::InitKeyEvent(const nsAReadableString& aTypeArg, PRBool aCanBubbleArg
   mEvent->flags |= aCancelableArg ? NS_EVENT_FLAG_NONE : NS_EVENT_FLAG_CANT_CANCEL;
   mEvent->internalAppFlags |= NS_APP_EVENT_FLAG_NONE;
 
-  if (mEvent->eventStructType = NS_KEY_EVENT) {
+  if (mEvent->eventStructType == NS_KEY_EVENT) {
     nsKeyEvent* keyEvent = NS_STATIC_CAST(nsKeyEvent*, mEvent);
     keyEvent->isControl = aCtrlKeyArg;
     keyEvent->isAlt = aAltKeyArg;
