@@ -2416,6 +2416,16 @@ GlobalWindowImpl::GetFrames(nsIDOMWindow** aFrames)
 NS_IMETHODIMP
 GlobalWindowImpl::Close()
 {
+  nsCOMPtr<nsIDOMWindow> parent;
+  GetParent(getter_AddRefs(parent));
+
+  if (parent != NS_STATIC_CAST(nsIDOMWindow *, this)) {
+    // window.close() is called on a frame in a frameset, such calls
+    // are ignored.
+
+    return NS_OK;
+  }
+
   // Note: the basic security check, rejecting windows not opened through JS,
   // has been removed. This was approved long ago by ...you're going to call me
   // on this, aren't you... well it was. And anyway, a better means is coming.
