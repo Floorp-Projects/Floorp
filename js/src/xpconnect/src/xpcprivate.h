@@ -174,6 +174,7 @@ private:
 private:
     // Singleton instance
     static nsXPConnect* gSelf;
+    static JSBool gOnceAliveNowDead;
 
     XPCJSRuntime* mRuntime;
     nsIXPCScriptable* mArbitraryScriptable;

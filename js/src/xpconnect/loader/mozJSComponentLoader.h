@@ -64,7 +64,6 @@ public:
 
     nsIComponentManager* mCompMgr; // weak ref, should make it strong?
     nsCOMPtr<nsIRegistry> mRegistry;
-    nsCOMPtr<nsIXPConnect> mXPC;
     nsCOMPtr<nsIJSRuntimeService> mRuntimeService;
 #ifndef XPCONNECT_STANDALONE
     nsCOMPtr<nsIPrincipal> mSystemPrincipal;

@@ -971,9 +971,9 @@ XPCConvert::JSValToXPCException(JSContext* cx,
                 XPCContext* xpcc;
                 if(nsnull != (xpcc = nsXPConnect::GetContext(cx)))
                 {
-                    return (nsIXPCException*)
+                    return NS_REINTERPRET_CAST(nsIXPCException*, 
                         nsXPCWrappedJS::GetNewOrUsedWrapper(xpcc, obj,
-                                                NS_GET_IID(nsIXPCException));
+                                                NS_GET_IID(nsIXPCException)));
                 }
             }
 
