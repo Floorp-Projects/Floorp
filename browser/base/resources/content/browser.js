@@ -1099,7 +1099,7 @@ function BrowserViewSource()
 function BrowserViewSourceOfURL(url, charset)
 {
   // try to open a view-source window while inheriting the charset (if any)
-  openDialog("chrome://navigator/content/viewSource.xul",
+  openDialog("chrome://browser/content/viewSource.xul",
              "_blank",
              "scrollbars,resizable,chrome,dialog=no",
              url, charset);
@@ -1108,7 +1108,7 @@ function BrowserViewSourceOfURL(url, charset)
 // doc=null for regular page info, doc=owner document for frame info.
 function BrowserPageInfo(doc)
 {
-  window.openDialog("chrome://navigator/content/pageInfo.xul",
+  window.openDialog("chrome://browser/content/pageInfo.xul",
                     "_blank",
                     "chrome,dialog=no",
                     doc);

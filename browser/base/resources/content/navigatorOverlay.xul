@@ -28,10 +28,10 @@
 <?xul-overlay href="chrome://communicator/content/viewZoomOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/charsetOverlay.xul"?>
-<?xul-overlay href="chrome://navigator/content/platformNavigationBindings.xul"?>
+<?xul-overlay href="chrome://browser/content/platformNavigationBindings.xul"?>
 
 <!DOCTYPE window [
-<!ENTITY % navigatorDTD SYSTEM "chrome://navigator/locale/navigator.dtd" >
+<!ENTITY % navigatorDTD SYSTEM "chrome://browser/locale/navigator.dtd" >
 %navigatorDTD;
 <!ENTITY % contentAreaCommandsDTD SYSTEM "chrome://communicator/locale/contentAreaCommands.dtd" >
 %contentAreaCommandsDTD;

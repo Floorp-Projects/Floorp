@@ -23,8 +23,8 @@ Contributor(s): ______________________________________. -->
 
 <?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
 
-<?xul-overlay href="chrome://navigator/content/navigatorOverlay.xul"?>
-<?xul-overlay href="chrome://navigator/content/navExtraOverlay.xul"?>
+<?xul-overlay href="chrome://browser/content/navigatorOverlay.xul"?>
+<?xul-overlay href="chrome://browser/content/navExtraOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/sidebar/sidebarOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/securityOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/communicatorOverlay.xul"?>
@@ -36,7 +36,7 @@ Contributor(s): ______________________________________. -->
 %brandDTD;
 <!ENTITY % buildDTD SYSTEM "chrome://global/content/build.dtd" >
 %buildDTD;
-<!ENTITY % navigatorDTD SYSTEM "chrome://navigator/locale/navigator.dtd" >
+<!ENTITY % navigatorDTD SYSTEM "chrome://browser/locale/navigator.dtd" >
 %navigatorDTD;
 ]>
 
@@ -62,25 +62,26 @@ Contributor(s): ______________________________________. -->
   <script type="application/x-javascript" src="chrome://global/content/fullScreen.js"/>
   
   <!-- Content Area -->
-  <script type="application/x-javascript" src="chrome://navigator/content/nsBrowserStatusHandler.js"/>
-  <script type="application/x-javascript" src="chrome://navigator/content/nsBrowserContentListener.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/nsBrowserStatusHandler.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/nsBrowserContentListener.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaClick.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaDD.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/findUtils.js"/>
 
   <!-- Shared Bookmarks Utility Library -->
   <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarksOverlay.js"/>
-  <script type="application/x-javascript" src="chrome://navigator/content/personalToolbar.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/personalToolbar.js"/>
   
   <!-- Navigator -->
-  <script type="application/x-javascript" src="chrome://navigator/content/browser.js"/>
-  <script type="application/x-javascript" src="chrome://navigator/content/navigator.js"/>
-  <script type="application/x-javascript" src="chrome://navigator/content/navigatorDD.js"/>
-  <script type="application/x-javascript" src="chrome://navigator/content/sessionHistoryUI.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/browser.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/browser-2.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/navigator.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/navigatorDD.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/sessionHistoryUI.js"/>
 
   <!-- hook for stringbundle overlays -->
   <stringbundleset id="stringbundleset">
-    <stringbundle id="bundle_navigator" src="chrome://navigator/locale/navigator.properties"/>
+    <stringbundle id="bundle_navigator" src="chrome://browser/locale/navigator.properties"/>
     <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
     <stringbundle id="bundle_navigator_region" src="chrome://navigator-region/locale/region.properties"/>
     <stringbundle id="bundle_brand_region" src="chrome://global-region/locale/region.properties"/>

@@ -31,9 +31,9 @@
 <!DOCTYPE window [
   <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">
   %brandDTD;
-  <!ENTITY % navigatorDTD SYSTEM "chrome://navigator/locale/navigator.dtd">
+  <!ENTITY % navigatorDTD SYSTEM "chrome://browser/locale/navigator.dtd">
   %navigatorDTD;
-  <!ENTITY % pageInfoDTD SYSTEM "chrome://navigator/locale/pageInfo.dtd">
+  <!ENTITY % pageInfoDTD SYSTEM "chrome://browser/locale/pageInfo.dtd">
   %pageInfoDTD;
 ]>
 
@@ -47,7 +47,7 @@
   persist="screenX screenY width height sizemode">
 
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaUtils.js"/>
-  <script type="application/x-javascript" src="chrome://navigator/content/pageInfo.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/pageInfo.js"/>
 
   <keyset>
     <key id="closeWindow" key="&closeWindow;" modifiers="accel" oncommand="window.close()"/>
@@ -56,7 +56,7 @@
   <!-- keys are appended from the overlay -->
   <keyset id="dialogKeys"/>
 
-  <stringbundle id="pageinfobundle" src="chrome://navigator/locale/pageInfo.properties"/>
+  <stringbundle id="pageinfobundle" src="chrome://browser/locale/pageInfo.properties"/>
 
   <tabbox id="tabbox" flex="1">
     <tabs id="tabs">

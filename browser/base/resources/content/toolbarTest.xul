@@ -107,7 +107,7 @@
   </popupset>
   
   <toolbox id="main-toolbox"
-           datasources="chrome://navigator/content/toolbarTest.rdf rdf:bookmarks"
+           datasources="chrome://browser/content/toolbarTest.rdf rdf:bookmarks"
            ref="urn:mozilla:navigator:toolbars:root">
     <template>
     
@@ -241,7 +241,7 @@
   </toolbox>
 
 <!--  
-  <tree id="dispTree" datasources="rdf:bookmarks chrome://navigator/content/toolbarTest.rdf"
+  <tree id="dispTree" datasources="rdf:bookmarks chrome://browser/content/toolbarTest.rdf"
         ref="urn:mozilla:navigator:toolbars:root" 
         style="height: 0px; width: 0px;" flex="1">
         
