@@ -20,6 +20,8 @@
 
 #include <strstrea.h>
 #include <windows.h>
+#include "nscore.h"
+#include "nsString.h"
 
 
 // XXX BWEEP BWEEP This is ONLY TEMPORARY until the service manager
@@ -185,7 +187,25 @@ nsresult nsSelectionMgr::CopyToClipboard()
 
 nsresult nsSelectionMgr::PasteTextBlocking(nsString* aPastedText)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  HGLOBAL hglb; 
+  LPSTR   lpstr; 
+  
+  if (aPastedText && OpenClipboard(NULL))
+  {
+    // Just Grab TEXT for now, later we will grab HTML, XIF, etc.
+    hglb = GetClipboardData(CF_TEXT); 
+    lpstr = (LPSTR)GlobalLock(hglb);
+
+    aPastedText->SetString((char*)lpstr);
+    GlobalUnlock(hglb); 
+
+    CloseClipboard();
+  }
+  else
+  {
+    aPastedText = nsnull;
+  }
+  return NS_OK;
 }
 
 nsresult NS_NewSelectionMgr(nsISelectionMgr** aInstancePtrResult)
