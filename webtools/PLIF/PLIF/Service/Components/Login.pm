@@ -85,7 +85,7 @@ sub authenticateUser {
 sub reportInputVerificationError {
     my $self = shift;
     my($app) = @_;
-    $app->output->loginFailed(1); # 1 means 'invalid username/password'
+    $app->output->loginFailed(1); # 1 means 'unknown username/password'
 }
 
 # cmdSendPassword could also be called 'cmdNewUser'
@@ -102,6 +102,10 @@ sub cmdSendPassword {
             $password = $self->changePassword($app, $user);
         } else {
             ($user, $password) = $self->createUser($app, $protocol, $address);
+            if (not defined($user)) {
+                $app->output->loginFailed(2); # 2 means 'invalid protocol/username'
+                return;
+            }
         }
         $self->sendPassword($app, $user, $protocol, $password);
     } else {
@@ -156,7 +160,7 @@ sub outputLoginFailed {
     my $self = shift;
     my($app, $output, $tried) = @_;
     $output->output('login.failed', {
-        'tried' => $tried,
+        'tried' => $tried, # 0 = no username; 1 = unknown username; 2 = invalid username
         'contacts' => 0, # XXX should fill this in
     });   
 }
@@ -199,7 +203,7 @@ sub getDefaultString {
         if ($string eq 'login.accessDenied') {
             return ('COSES', '<text xmlns="http://bugzilla.mozilla.org/coses">Access Denied<br/></text>');
         } elsif ($string eq 'login.failed') {
-            return ('COSES', '<text xmlns="http://bugzilla.mozilla.org/coses"><if lvalue="(data.tried)" condition="=" rvalue="1">Wrong username or password.</if><else>You must give your username or password.</else><br/><!-- XXX offer to create an account or send the password --><br/></text>');
+            return ('COSES', '<text xmlns="http://bugzilla.mozilla.org/coses"><if lvalue="(data.tried)" condition="!=" rvalue="0">Wrong username or password.</if><else>You must give your username or password.</else><br/><!-- XXX offer to create an account or send the password --><br/></text>');
         } elsif ($string eq 'login.detailsSent') {
             return ('COSES', '<text xmlns="http://bugzilla.mozilla.org/coses">Login details were sent. (Protocol: <text value="(data.protocol)"/>; Address: <text value="(data.address)"/>)<br/></text>');
         }
@@ -207,7 +211,7 @@ sub getDefaultString {
         if ($string eq 'login.accessDenied') {
             return ('COSES', '<text xmlns="http://bugzilla.mozilla.org/coses">HTTP/1.1 401 Access Denied<br/>Content-Type: text/plain<br/><br/>Access Denied</text>');
         } elsif ($string eq 'login.failed') {
-            return ('COSES', '<text xmlns="http://bugzilla.mozilla.org/coses">HTTP/1.1 401 Login Required<br/>WWW-Authenticate: Basic realm="<text value="(data.app.name)"/>"<br/>Content-Type: text/plain<br/><br/><if lvalue="(data.tried)" condition="=" rvalue="1">Wrong username or password.</if><else>You must give your username or password.</else><br/><!-- XXX offer to create an account or send the password --></text>');
+            return ('COSES', '<text xmlns="http://bugzilla.mozilla.org/coses">HTTP/1.1 401 Login Required<br/>WWW-Authenticate: Basic realm="<text value="(data.app.name)"/>"<br/>Content-Type: text/plain<br/><br/><if lvalue="(data.tried)" condition="!=" rvalue="0">Wrong username or password.</if><else>You must give your username or password.</else><br/><!-- XXX offer to create an account or send the password --></text>');
         } elsif ($string eq 'login.detailsSent') {
             return ('COSES', '<text xmlns="http://bugzilla.mozilla.org/coses">HTTP/1.1 200 OK<br/>Content-Type: text/plain<br/><br/>Login details were sent.<br/>Protocol: <text value="(data.protocol)"/><br/>Address: <text value="(data.address)"/>)</text>');
         }
@@ -229,6 +233,10 @@ sub changePassword {
 sub createUser {
     my $self = shift;
     my($app, $protocol, $address) = @_;
+    my $validator = $app->getService('protocol.'.$protocol);
+    if ((defined($validator)) and (not $validator->checkAddress($address))) {
+        return (undef, undef);
+    }
     my($password, $crypt) = $app->getService('service.passwords')->newPassword();
     my $user = $app->getService('user.factory')->getNewUser($app, $crypt);
     $user->getField('contact', $protocol)->data($address);
