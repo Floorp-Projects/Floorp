@@ -530,7 +530,6 @@ public class Context {
     {
         Context cx = getCurrentContext();
         if (cx != null) {
-            cx.errorCount++;
             cx.getErrorReporter().error(message, sourceName, lineno,
                                         lineSource, lineOffset);
         } else {
@@ -571,7 +570,6 @@ public class Context {
     {
         Context cx = getCurrentContext();
         if (cx != null) {
-            cx.errorCount++;
             return cx.getErrorReporter().
                             runtimeError(message, sourceName, lineno,
                                          lineSource, lineOffset);
@@ -893,12 +891,8 @@ public class Context {
     {
         // no source name or source text manager, because we're just
         // going to throw away the result.
-        TokenStream ts = new TokenStream(null, source, false, null, 1);
-
-        // Temporarily set error reporter to always be the exception-throwing
-        // DefaultErrorReporter.
-        ErrorReporter currentReporter =
-            setErrorReporter(new DefaultErrorReporter());
+        TokenStream ts = new TokenStream(null, source, false, null, 1,
+                                         new DefaultErrorReporter());
 
         boolean errorseen = false;
         Interpreter compiler = new Interpreter();
@@ -911,9 +905,6 @@ public class Context {
             errorseen = true;
         } catch (EvaluatorException ee) {
             errorseen = true;
-        } finally {
-            // Restore the old error reporter.
-            setErrorReporter(currentReporter);
         }
         // Return false only if an error occurred as a result of reading past
         // the end of the file, i.e. if the source could be fixed by
@@ -1915,7 +1906,6 @@ public class Context {
         // One of sourceReader or sourceString has to be null
         if (!(sourceReader == null ^ sourceString == null)) Context.codeBug();
 
-        errorCount = 0;
         Interpreter compiler = createCompiler();
 
         if (securityController != null) {
@@ -1933,10 +1923,10 @@ public class Context {
         }
         boolean fromEval = (scope != null);
         TokenStream ts = new TokenStream(sourceReader, sourceString,
-                                         fromEval, sourceName, lineno);
+                                         fromEval, sourceName, lineno,
+                                         getErrorReporter());
         Parser p = createParser();
 
-        errorCount = 0;
         IRFactory irf = compiler.createIRFactory(this, ts);
         Decompiler decompiler = new Decompiler();
         ScriptOrFnNode tree = p.parse(ts, irf, decompiler);
@@ -1968,7 +1958,7 @@ public class Context {
             compiler.notifyDebuggerCompilationDone(this, result, sourceString);
         }
 
-        return errorCount == 0 ? result : null;
+        return ts.errorCount == 0 ? result : null;
     }
 
     private static Class codegenClass = ScriptRuntime.classOrNull(
@@ -2175,7 +2165,6 @@ public class Context {
     Object interpreterSecurityDomain;
 
     int version;
-    int errorCount;
 
     private SecurityController securityController;
     private ClassShutter classShutter;

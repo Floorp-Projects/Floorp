@@ -270,7 +270,8 @@ public class TokenStream {
     }
 
     public TokenStream(Reader sourceReader, String sourceString,
-                       boolean fromEval, String sourceName, int lineno)
+                       boolean fromEval, String sourceName, int lineno,
+                       ErrorReporter errorReporter)
     {
         this.fromEval = fromEval;
         this.pushbackToken = Token.EOF;
@@ -288,6 +289,7 @@ public class TokenStream {
             this.sourceEnd = sourceString.length();
         }
         this.sourceCursor = 0;
+        this.errorReporter = errorReporter;
     }
 
     public final void
@@ -313,17 +315,18 @@ public class TokenStream {
     {
         String message = Context.getMessage(messageProperty, args);
         if (isError) {
+            ++errorCount;
             if (fromEval) {
                 // We're probably in an eval. Need to throw an exception.
                 throw ScriptRuntime.constructError(
                     "SyntaxError", message, sourceName,
                     lineno, line, lineOffset);
             } else {
-                Context.reportError(message, sourceName,
+                errorReporter.error(message, sourceName,
                                     lineno, line, lineOffset);
             }
         } else {
-            Context.reportWarning(message, sourceName,
+            errorReporter.warning(message, sourceName,
                                   lineno, line, lineOffset);
         }
     }
@@ -1226,4 +1229,7 @@ public class TokenStream {
     private char[] sourceBuffer;
     private int sourceEnd;
     private int sourceCursor;
+
+    private ErrorReporter errorReporter;
+    int errorCount;
 }
