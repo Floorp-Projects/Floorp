@@ -1,9 +1,9 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 
 
-# $Revision: 1.20 $ 
-# $Date: 2002/05/03 02:05:12 $ 
-# $Author: mcafee%netscape.com $ 
+# $Revision: 1.21 $ 
+# $Date: 2002/05/07 22:47:36 $ 
+# $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/BuildStatus.pm,v $ 
 # $Name:  $ 
 
@@ -52,6 +52,8 @@ package BuildStatus;
 # color: to display it in on the buildpage
 # handler: to execute actions each time the status is reported.
 # description: to put in the legend
+# header_background_gif: a gif background image for the column header
+# hdml_char: a visible character to show the build state on text browsers
 # order: to show us the how well this build did compared with other builds, 
 #	bigger numbers means more progress
 
@@ -105,7 +107,7 @@ package BuildStatus;
            'building' => {
                            # for color blind people, we choose our colors 
                            # to be distinguishable.
-                          'html_color'=>  'yellow',
+                          #'html_color'=>  'yellow',
                           'html_color'=>  '#eeff00',
                           'hdml_char'=> '.',
                           'handler'=> \&main::null,
@@ -116,12 +118,15 @@ package BuildStatus;
            'build_failed' => {
                         # for color blind people, we choose our colors 
                         # to be distinguishable.
-                        'html_color' => 'red',
+                        #'html_color' => 'red',
                         'html_color' => '#ee0000',
                         'hdml_char'=> '!',
+
                         # People are really attached to the flame gif
-                        # for the header of broken builds
-                        'header_background'=> 'http://lounge.mozilla.org/tinderbox2/gif/1afi003r.gif',  
+                        # for the header of broken builds. If you
+                        # don't want it then remove this line.
+
+                        'header_background_gif'=> 'flames.gif',  
                         'handler' => \&main::null,
                         'description' => 'Build failed',
                         'order' => 2
@@ -130,9 +135,15 @@ package BuildStatus;
            'test_failed' => {
                              # for color blind people, we choose our colors 
                              # to be distinguishable.
-                            'html_color' => 'orange',
+                            #'html_color' => 'orange',
                             'html_color' => '#ffaa00',
                             'hdml_char'=> '~',
+                            
+                            # People are really attached to the flame gif
+                            # for the header of broken builds. If you
+                            # don't want it then remove this line.
+
+                            'header_background_gif'=> 'flames1.gif',  
                             'handler' => \&main::null,
                             'description' => 'Build succeeded but tests failed',
                             'order' => 3,
@@ -141,7 +152,7 @@ package BuildStatus;
            'success' => {
                           # for color blind people, we choose our colors 
                           # to be distinguishable.
-                         'html_color' => 'lime',
+                         #'html_color' => 'lime',
                          'html_color' => '#11dd11',
                          'hdml_char'=> '+',
                          'handler' => \&main::null,
@@ -326,13 +337,13 @@ sub status2handler {
     return @out;
 }
 
-sub status2header_background {
+sub status2header_background_gif {
   my (@latest_status) = @_;
   my (@out);
 
   for ($i=0; $i <= $#latest_status; $i++) {
     my ($status) = $latest_status[$i];
-    my ($out) = $STATUS{$status}{'header_background'};
+    my ($out) = $STATUS{$status}{'header_background_gif'};
     push @out, $out;
   }
 
