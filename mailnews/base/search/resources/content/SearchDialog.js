@@ -115,10 +115,10 @@ var gSearchNotificationListener =
     onNewSearch: function() 
     {
         gButton.setAttribute("value", Bundle.GetStringFromName("labelForStopButton"));
-        gStatusFeedback.ShowStatusString(Bundle.GetStringFromName("searchingMessage"));
         if (gThreadTree)
             gThreadTree.clearItemSelection();
         ThreadTreeUpdate_Search();
+        gStatusFeedback.ShowStatusString(Bundle.GetStringFromName("searchingMessage"));
     }
 }
 
