@@ -528,9 +528,9 @@ MangleTextToValidFilename(nsString & aText)
 
   aText.StripChars(FILE_PATH_SEPARATOR  FILE_ILLEGAL_CHARACTERS);
   aText.CompressWhitespace(PR_TRUE, PR_TRUE);
-  int nameLen;
-  for (int n = 0; n < NS_ARRAY_LENGTH(forbiddenNames); ++n) {
-    nameLen = strlen(forbiddenNames[n]);
+  PRUint32 nameLen;
+  for (size_t n = 0; n < NS_ARRAY_LENGTH(forbiddenNames); ++n) {
+    nameLen = (PRUint32) strlen(forbiddenNames[n]);
     if (aText.EqualsIgnoreCase(forbiddenNames[n], nameLen)) {
       // invalid name is either the entire string, or a prefix with a period
       if (aText.Length() == nameLen || aText.CharAt(nameLen) == PRUnichar('.')) {
