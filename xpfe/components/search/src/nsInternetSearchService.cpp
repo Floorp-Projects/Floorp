@@ -3068,7 +3068,8 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 				nsCOMPtr<nsIHTTPChannel>	httpChannel = do_QueryInterface(channel);
 				if (httpChannel)
 				{
-					httpChannel->SetRequestMethod(HM_POST);
+					nsCOMPtr<nsIAtom> method = NS_NewAtom ("POST");
+					httpChannel->SetRequestMethod(method);
 
 			        	// construct post data to send
 			        	nsAutoString	postStr;

@@ -2539,7 +2539,8 @@ NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI, nsIURI* aReferrerURI,
       // right now, this is only done for http channels.....
       if(aPostData)
          {
-         httpChannel->SetRequestMethod(HM_POST);
+	     nsCOMPtr<nsIAtom> method = NS_NewAtom ("POST");
+         httpChannel->SetRequestMethod(method);
          httpChannel->SetUploadStream(aPostData);
          }
       // Set the referrer explicitly

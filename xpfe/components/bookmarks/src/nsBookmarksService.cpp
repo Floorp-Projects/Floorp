@@ -2239,8 +2239,8 @@ nsBookmarksService::FireTimer(nsITimer* aTimer, void* aClosure)
 					{
 						bmks->htmlSize = 0;
 
-//						httpChannel->SetRequestMethod(HM_GET);
-						httpChannel->SetRequestMethod(HM_HEAD);
+						nsCOMPtr<nsIAtom> method = NS_NewAtom ("HEAD");
+						httpChannel->SetRequestMethod(method);
 						if (NS_SUCCEEDED(rv = channel->AsyncRead(bmks, nsnull)))
 						{
 							bmks->busySchedule = TRUE;
