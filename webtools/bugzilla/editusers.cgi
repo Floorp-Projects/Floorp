@@ -191,12 +191,10 @@ sub EmitFormElements ($$$$)
                 print ']' if ($isderived);
                 print "</TD><TD><B>";
                 print ucfirst($name) . "</B>: $description</TD>\n";
-                }
             }
         }
         print "</TR></TABLE></TD>\n";
-    print "</TR></TABLE></TD>\n";
-
+    }
 }
 
 
