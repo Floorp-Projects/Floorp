@@ -36,6 +36,8 @@ mailnews/mime/Makefile
 mailnews/mime/cthandlers/Makefile
 mailnews/mime/cthandlers/vcard/Makefile
 mailnews/mime/cthandlers/calendar/Makefile
+mailnews/mime/emitters/Makefile
+mailnews/mime/emitters/html/Makefile
 mailnews/mime/tests/Makefile
 mailnews/mime/tests/xpcomtest/Makefile
 mailnews/mime/public/Makefile
