@@ -88,7 +88,6 @@ void gdk_superwin_scroll (GdkSuperWin *superwin,
 void gdk_superwin_resize (GdkSuperWin *superwin,
                           gint         width,
                           gint         height);
-void gdk_superwin_destroy(GdkSuperWin *superwin);
 
 #ifdef __cplusplus
 }

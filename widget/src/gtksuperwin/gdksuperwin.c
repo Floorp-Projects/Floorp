@@ -24,6 +24,7 @@ static void gdk_superwin_expose_area  (GdkSuperWin *superwin,
                                        gint         y,
                                        gint         width,
                                        gint         height);
+static void gdk_superwin_destroy(GtkObject *object);
 
 static int  gdk_superwin_clear_rect_queue(GdkSuperWin *superwin, XEvent *xevent);
 static void gdk_superwin_clear_translate_queue(GdkSuperWin *superwin, unsigned long serial);
@@ -77,9 +78,8 @@ gdk_superwin_class_init(GdkSuperWinClass *klass)
   GtkObjectClass *object_class;
 
   object_class = GTK_OBJECT_CLASS(klass);
+  object_class->destroy = gdk_superwin_destroy;
 
-  /* XXX do we need a finalize in here to destroy the
-     window? */
 }
 
 static void
@@ -170,8 +170,18 @@ gdk_superwin_new (GdkWindow *parent_window,
 /* XXX this should really be part of the object... */
 /* XXX and it should chain up to the object's destructor */
 
-void gdk_superwin_destroy(GdkSuperWin *superwin)
+void gdk_superwin_destroy(GtkObject *object)
 {
+  
+  GdkSuperWin *superwin = NULL;
+
+  g_return_if_fail(object != NULL);
+  g_return_if_fail(GTK_IS_OBJECT(object));
+  g_return_if_fail(GTK_OBJECT_CONSTRUCTED(object));
+  g_return_if_fail(GDK_IS_SUPERWIN(object));
+
+  superwin = GDK_SUPERWIN(object);
+
   gdk_window_remove_filter(superwin->shell_window,
                            gdk_superwin_shell_filter,
                            superwin);

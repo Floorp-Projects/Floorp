@@ -107,7 +107,7 @@ gtk_mozarea_unrealize(GtkWidget *widget)
   mozarea = GTK_MOZAREA(widget);
   
   if (mozarea->superwin) {
-    gdk_superwin_destroy(mozarea->superwin);
+    gtk_object_unref(GTK_OBJECT(mozarea->superwin));
     mozarea->superwin = NULL;
   }
   GTK_WIDGET_CLASS(parent_class)->unrealize(widget);
