@@ -7,7 +7,7 @@ requires glib >= 1.2.0.
 libIDL builds for Linux and Win32 can be found, along with source tarballs,
 at http://www.rpi.edu/~veliaa/libIDL/, and Win32 users will need glib 1.1 and
 glib 1.1-dev from http://user.sgic.fi/~tml/gimp/win32/.  There are currently
-no Makefiles for Windows, but people _are_ building on this platform, so
+no projects for Mac, but people _are_ building on this platform, so
 hopefully they'll check their magic in soon.
 
 glib tarballs and RPMs for Linux can be found through http://www.gtk.org.
