@@ -390,7 +390,7 @@ nsXBLPrototypeBinding::SetBindingElement(nsIContent* aElement)
 {
   mBinding = aElement;
   nsAutoString inheritStyle;
-  mBinding->GetAttribute(kNameSpaceID_None, kInheritStyleAtom, inheritStyle);
+  mBinding->GetAttr(kNameSpaceID_None, kInheritStyleAtom, inheritStyle);
   if (inheritStyle == NS_LITERAL_STRING("false"))
     mInheritStyle = PR_FALSE;
 
@@ -490,7 +490,7 @@ nsXBLPrototypeBinding::LoadResources(PRBool* aResult)
       resource->GetTag(*getter_AddRefs(tag));
 
       nsAutoString src;
-      resource->GetAttribute(kNameSpaceID_None, kSrcAtom, src);
+      resource->GetAttr(kNameSpaceID_None, kSrcAtom, src);
         
       if (src.Length() == 0)
         continue;
@@ -528,7 +528,7 @@ nsXBLPrototypeBinding::LoadResources(PRBool* aResult)
         // Kick off the load of the stylesheet.
         PRBool doneLoading;
         nsAutoString empty, media;
-        resource->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::media, media);
+        resource->GetAttr(kNameSpaceID_None, nsHTMLAtoms::media, media);
         PRInt32 numSheets = 0;
         doc->GetNumberOfStyleSheets(&numSheets);
         rv = cssLoader->LoadStyleLink(nsnull, url, empty, media, kNameSpaceID_Unknown,
@@ -646,7 +646,7 @@ nsXBLPrototypeBinding::AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceI
     xblAttr->GetDstAttribute(getter_AddRefs(dstAttr));
 
     if (aRemoveFlag)
-      realElement->UnsetAttribute(aNameSpaceID, dstAttr, PR_TRUE);
+      realElement->UnsetAttr(aNameSpaceID, dstAttr, PR_TRUE);
     else {
       PRBool attrPresent = PR_TRUE;
       nsAutoString value;
@@ -662,13 +662,13 @@ nsXBLPrototypeBinding::AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceI
           attrPresent = PR_FALSE;
       }    
       else {
-        nsresult result = aChangedElement->GetAttribute(aNameSpaceID, aAttribute, value);
+        nsresult result = aChangedElement->GetAttr(aNameSpaceID, aAttribute, value);
         attrPresent = (result == NS_CONTENT_ATTR_NO_VALUE ||
                        result == NS_CONTENT_ATTR_HAS_VALUE);
       }
 
       if (attrPresent)
-        realElement->SetAttribute(aNameSpaceID, dstAttr, value, PR_TRUE);
+        realElement->SetAttr(aNameSpaceID, dstAttr, value, PR_TRUE);
     }
 
     // See if we're the <html> tag in XUL, and see if value is being
@@ -686,7 +686,7 @@ nsXBLPrototypeBinding::AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceI
       if (!aRemoveFlag) {
         // Construct a new text node and insert it.
         nsAutoString value;
-        aChangedElement->GetAttribute(aNameSpaceID, aAttribute, value);
+        aChangedElement->GetAttr(aNameSpaceID, aAttribute, value);
         if (!value.IsEmpty()) {
           nsCOMPtr<nsIDOMText> textNode;
           nsCOMPtr<nsIDocument> doc;
@@ -1086,7 +1086,7 @@ PRBool PR_CALLBACK SetAttrs(nsHashKey* aKey, void* aData, void* aClosure)
       attrPresent = PR_FALSE;
   }
   else {
-    nsresult result = changeData->mBoundElement->GetAttribute(kNameSpaceID_None, src, value);
+    nsresult result = changeData->mBoundElement->GetAttr(kNameSpaceID_None, src, value);
     attrPresent = (result == NS_CONTENT_ATTR_NO_VALUE ||
                    result == NS_CONTENT_ATTR_HAS_VALUE);
   }
@@ -1106,7 +1106,7 @@ PRBool PR_CALLBACK SetAttrs(nsHashKey* aKey, void* aData, void* aClosure)
       changeData->mProto->LocateInstance(changeData->mBoundElement,
                                          content, changeData->mContent, element, getter_AddRefs(realElement));
       if (realElement) {
-        realElement->SetAttribute(kNameSpaceID_None, dst, value, PR_FALSE);
+        realElement->SetAttr(kNameSpaceID_None, dst, value, PR_FALSE);
         nsCOMPtr<nsIAtom> tag;
         realElement->GetTag(*getter_AddRefs(tag));
         if (dst.get() == nsXBLPrototypeBinding::kXBLTextAtom ||
@@ -1176,7 +1176,7 @@ void
 nsXBLPrototypeBinding::ConstructAttributeTable(nsIContent* aElement)
 {
   nsAutoString inherits;
-  aElement->GetAttribute(kNameSpaceID_None, kInheritsAtom, inherits);
+  aElement->GetAttr(kNameSpaceID_None, kInheritsAtom, inherits);
   if (!inherits.IsEmpty()) {
     if (!mAttributeTable) {
       mAttributeTable = new nsSupportsHashtable(4);
@@ -1238,7 +1238,7 @@ nsXBLPrototypeBinding::ConstructAttributeTable(nsIContent* aElement)
       // Now remove the inherits attribute from the element so that it doesn't
       // show up on clones of the element.  It is used
       // by the template only, and we don't need it anymore.
-      aElement->UnsetAttribute(kNameSpaceID_None, kInheritsAtom, PR_FALSE);
+      aElement->UnsetAttr(kNameSpaceID_None, kInheritsAtom, PR_FALSE);
 
       token = nsCRT::strtok( newStr, ", ", &newStr );
     }
@@ -1282,7 +1282,7 @@ nsXBLPrototypeBinding::ConstructInsertionTable(nsIContent* aContent)
       nsXBLInsertionPointEntry* xblIns = nsXBLInsertionPointEntry::Create(parent);
 
       nsAutoString includes;
-      child->GetAttribute(kNameSpaceID_None, kIncludesAtom, includes);
+      child->GetAttr(kNameSpaceID_None, kIncludesAtom, includes);
       if (includes.IsEmpty()) {
         nsISupportsKey key(kChildrenAtom);
         mInsertionPointTable->Put(&key, xblIns);
@@ -1348,7 +1348,7 @@ void
 nsXBLPrototypeBinding::ConstructInterfaceTable(nsIContent* aElement)
 {
   nsAutoString impls;
-  aElement->GetAttribute(kNameSpaceID_None, kImplementsAtom, impls);
+  aElement->GetAttr(kNameSpaceID_None, kImplementsAtom, impls);
   if (!impls.IsEmpty()) {
     // Obtain the interface info manager that can tell us the IID
     // for a given interface name.

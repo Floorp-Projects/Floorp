@@ -269,8 +269,8 @@ NS_IMPL_STRING_ATTR(nsHTMLLabelElement, AccessKey, accesskey)
 NS_IMETHODIMP
 nsHTMLLabelElement::GetHtmlFor(nsAWritableString& aValue)
 {
-  nsGenericHTMLContainerFormElement::GetAttribute(kNameSpaceID_HTML,
-                                                  nsHTMLAtoms::_for, aValue);
+  nsGenericHTMLContainerFormElement::GetAttr(kNameSpaceID_HTML,
+                                             nsHTMLAtoms::_for, aValue);
   return NS_OK;                                                    
 }  
 
@@ -281,9 +281,9 @@ nsHTMLLabelElement::SetHtmlFor(const nsAReadableString& aValue)
   static char whitespace[] = " \r\n\t";
   nsAutoString value(aValue);
   value.Trim(whitespace, PR_TRUE, PR_TRUE);
-  return nsGenericHTMLContainerFormElement::SetAttribute(kNameSpaceID_HTML,
-                                                         nsHTMLAtoms::_for,
-                                                         value, PR_TRUE);
+  return nsGenericHTMLContainerFormElement::SetAttr(kNameSpaceID_HTML,
+                                                    nsHTMLAtoms::_for,
+                                                    value, PR_TRUE);
 }
 
 NS_IMETHODIMP

@@ -184,37 +184,37 @@ public:
   }
   NS_IMETHOD GetTag(nsIAtom*& aResult) const;
   NS_IMETHOD GetNodeInfo(nsINodeInfo*& aResult) const;
-  NS_IMETHOD NormalizeAttributeString(const nsAReadableString& aStr,
-                                      nsINodeInfo*& aNodeInfo) {
+  NS_IMETHOD NormalizeAttrString(const nsAReadableString& aStr,
+                                 nsINodeInfo*& aNodeInfo) {
     return mInner.NormalizeAttributeString(aStr, aNodeInfo);
   }
-  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
-                          nsAWritableString& aResult) const {
+  NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
+                     nsAWritableString& aResult) const {
     return mInner.GetAttribute(aNameSpaceID, aAttribute, aResult);
   }
-  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
-                          nsIAtom*& aPrefix, nsAWritableString& aResult) const {
+  NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
+                     nsIAtom*& aPrefix, nsAWritableString& aResult) const {
     return mInner.GetAttribute(aNameSpaceID, aAttribute, aPrefix, aResult);
   }
-  NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                          const nsAReadableString& aValue, PRBool aNotify) {
+  NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                     const nsAReadableString& aValue, PRBool aNotify) {
     return mInner.SetAttribute(aNameSpaceID, aAttribute, aValue, aNotify);
   }
-  NS_IMETHOD SetAttribute(nsINodeInfo* aNodeInfo,
-                          const nsAReadableString& aValue, PRBool aNotify) {
+  NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo,
+                     const nsAReadableString& aValue, PRBool aNotify) {
     return mInner.SetAttribute(aNodeInfo, aValue, aNotify);
   }
-  NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                            PRBool aNotify) {
+  NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                       PRBool aNotify) {
     return mInner.UnsetAttribute(aNameSpaceID, aAttribute, aNotify);
   }
-  NS_IMETHOD GetAttributeNameAt(PRInt32 aIndex,
-                                PRInt32& aNameSpaceID,
-                                nsIAtom*& aName,
-                                nsIAtom*& aPrefix) const {
+  NS_IMETHOD GetAttrNameAt(PRInt32 aIndex,
+                           PRInt32& aNameSpaceID,
+                           nsIAtom*& aName,
+                           nsIAtom*& aPrefix) const {
     return mInner.GetAttributeNameAt(aIndex, aNameSpaceID, aName, aPrefix);
   }
-  NS_IMETHOD GetAttributeCount(PRInt32& aResult) const {
+  NS_IMETHOD GetAttrCount(PRInt32& aResult) const {
     return mInner.GetAttributeCount(aResult);
   }
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;

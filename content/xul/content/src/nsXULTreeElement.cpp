@@ -228,7 +228,7 @@ nsXULTreeElement::ClearItemSelection()
     nsCOMPtr<nsIDOMNode> node;
     mSelectedItems->Item(0, getter_AddRefs(node));
     nsCOMPtr<nsIContent> content = do_QueryInterface(node);
-    content->UnsetAttribute(kNameSpaceID_None, kSelectedAtom, PR_TRUE);
+    content->UnsetAttr(kNameSpaceID_None, kSelectedAtom, PR_TRUE);
   }
   mSelectionStart = nsnull;
 
@@ -245,7 +245,7 @@ nsXULTreeElement::AddItemToSelection(nsIDOMXULElement* aTreeItem)
 
   // Without clearing the selection, perform the add.
   nsCOMPtr<nsIContent> content = do_QueryInterface(aTreeItem);
-  content->SetAttribute(kNameSpaceID_None, kSelectedAtom, NS_LITERAL_STRING("true"), PR_TRUE);
+  content->SetAttr(kNameSpaceID_None, kSelectedAtom, NS_LITERAL_STRING("true"), PR_TRUE);
 
   if (!mSuppressOnSelect)
     FireOnSelectHandler();
@@ -257,7 +257,7 @@ NS_IMETHODIMP
 nsXULTreeElement::RemoveItemFromSelection(nsIDOMXULElement* aTreeItem)
 {
   nsCOMPtr<nsIContent> content = do_QueryInterface(aTreeItem);
-  content->UnsetAttribute(kNameSpaceID_None, kSelectedAtom, PR_TRUE);
+  content->UnsetAttr(kNameSpaceID_None, kSelectedAtom, PR_TRUE);
   if (!mSuppressOnSelect)
     FireOnSelectHandler();
 
@@ -356,7 +356,7 @@ nsXULTreeElement::SelectItemRange(nsIDOMXULElement* aStartItem, nsIDOMXULElement
       content = do_QueryInterface(currentItem);
       content->GetTag(*getter_AddRefs(tag));
       if (tag && tag.get() == kTreeItemAtom)
-          content->SetAttribute(kNameSpaceID_None, kSelectedAtom, 
+          content->SetAttr(kNameSpaceID_None, kSelectedAtom, 
           trueString, /*aNotify*/ PR_TRUE);
       if (currentItem == aEndItem)
           break;
@@ -436,7 +436,7 @@ nsXULTreeElement::FireOnSelectHandler()
   // for us.  Look for that and bail if it's present.
   nsCOMPtr<nsIAtom> kSuppressSelectChange = dont_AddRef(NS_NewAtom("suppressonselect"));
   nsAutoString value;
-  content->GetAttribute(kNameSpaceID_None, kSuppressSelectChange, value);
+  content->GetAttr(kNameSpaceID_None, kSuppressSelectChange, value);
   if (value.EqualsWithConversion("true"))
     return NS_OK;
 
@@ -477,14 +477,14 @@ nsXULTreeElement::SetCurrentItem(nsIDOMXULElement* aCurrentItem)
   nsCOMPtr<nsIContent> current;
   if (mCurrentItem) {
     current = do_QueryInterface(mCurrentItem);
-    current->UnsetAttribute(kNameSpaceID_None, kCurrentAtom, PR_TRUE);
+    current->UnsetAttr(kNameSpaceID_None, kCurrentAtom, PR_TRUE);
     NS_RELEASE(mCurrentItem);
   }
   mCurrentItem = aCurrentItem;
   NS_IF_ADDREF(aCurrentItem);
   current = do_QueryInterface(mCurrentItem);
   if (current) 
-    current->SetAttribute(kNameSpaceID_None, kCurrentAtom, NS_LITERAL_STRING("true"), PR_TRUE);
+    current->SetAttr(kNameSpaceID_None, kCurrentAtom, NS_LITERAL_STRING("true"), PR_TRUE);
   return NS_OK;
 }
 

@@ -182,7 +182,7 @@ nsXMLElement::GetXMLBaseURI(nsIURI **aURI)
   nsCOMPtr<nsIContent> content(do_QueryInterface(NS_STATIC_CAST(nsIXMLContent*,this),&rv));
   while (NS_SUCCEEDED(rv) && content) {
     nsAutoString value;
-    rv = content->GetAttribute(kNameSpaceID_XML,kBaseAtom,value);
+    rv = content->GetAttr(kNameSpaceID_XML,kBaseAtom,value);
     PRInt32 value_len;
     if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
       PRInt32 colon = value.FindChar(':',PR_FALSE);
@@ -254,10 +254,19 @@ nsXMLElement::GetXMLBaseURI(nsIURI **aURI)
   return rv;
 }
 
+NS_IMETHODIMP
+nsXMLElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                      const nsAReadableString& aValue,
+                      PRBool aNotify)
+{
+  return nsGenericContainerElement::SetAttr(aNameSpaceID, aName, aValue,
+                                            aNotify);
+}
+
 NS_IMETHODIMP 
-nsXMLElement::SetAttribute(nsINodeInfo *aNodeInfo,
-                           const nsAReadableString& aValue,
-                           PRBool aNotify)
+nsXMLElement::SetAttr(nsINodeInfo *aNodeInfo,
+                      const nsAReadableString& aValue,
+                      PRBool aNotify)
 {
   NS_ENSURE_ARG_POINTER(aNodeInfo);
 
@@ -280,7 +289,7 @@ nsXMLElement::SetAttribute(nsINodeInfo *aNodeInfo,
     // We will check for actuate="onLoad" in MaybeTriggerAutoLink
   }
 
-  return nsGenericContainerElement::SetAttribute(aNodeInfo, aValue, aNotify);
+  return nsGenericContainerElement::SetAttr(aNodeInfo, aValue, aNotify);
 }
 
 static nsresult WebShellToPresContext(nsIWebShell *aShell,
@@ -358,16 +367,16 @@ nsXMLElement::MaybeTriggerAutoLink(nsIWebShell *aShell)
     do {
       // actuate="onLoad" ?
       nsAutoString value;
-      rv = nsGenericContainerElement::GetAttribute(kNameSpaceID_XLink,
-                                                   kActuateAtom,
-                                                   value);
+      rv = nsGenericContainerElement::GetAttr(kNameSpaceID_XLink,
+                                              kActuateAtom,
+                                              value);
       if (rv == NS_CONTENT_ATTR_HAS_VALUE &&
           value.EqualsAtom(kOnLoadAtom,PR_FALSE)) {
 
         // show= ?
         nsLinkVerb verb = eLinkVerb_Undefined;
-        rv = nsGenericContainerElement::GetAttribute(kNameSpaceID_XLink,
-                                                     kShowAtom, value);
+        rv = nsGenericContainerElement::GetAttr(kNameSpaceID_XLink,
+                                                kShowAtom, value);
         if (NS_FAILED(rv))
           break;
 
@@ -391,9 +400,9 @@ nsXMLElement::MaybeTriggerAutoLink(nsIWebShell *aShell)
           break;
 
         // href= ?
-        rv = nsGenericContainerElement::GetAttribute(kNameSpaceID_XLink,
-                                                     kHrefAtom,
-                                                     value);
+        rv = nsGenericContainerElement::GetAttr(kNameSpaceID_XLink,
+                                                kHrefAtom,
+                                                value);
         if (rv == NS_CONTENT_ATTR_HAS_VALUE && !value.IsEmpty()) {
           nsCOMPtr<nsIURI> uri;
           rv = CheckLoadURI(base,value,getter_AddRefs(uri));
@@ -449,17 +458,17 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
           nsAutoString show, href, target;
           nsIURI* baseURL = nsnull;
           nsLinkVerb verb = eLinkVerb_Undefined;
-          nsGenericContainerElement::GetAttribute(kNameSpaceID_XLink,
-                                                  kHrefAtom,
-                                                  href);
+          nsGenericContainerElement::GetAttr(kNameSpaceID_XLink,
+                                             kHrefAtom,
+                                             href);
           if (href.IsEmpty()) {
             *aEventStatus = nsEventStatus_eConsumeDoDefault; 
             break;
           }
 
-          nsGenericContainerElement::GetAttribute(kNameSpaceID_XLink,
-                                                  kShowAtom,
-                                                  show);
+          nsGenericContainerElement::GetAttr(kNameSpaceID_XLink,
+                                             kShowAtom,
+                                             show);
 
           // XXX Should probably do this using atoms 
           if (show.EqualsWithConversion("new")) {
@@ -489,8 +498,8 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
       {
         nsAutoString href, target;
         nsIURI* baseURL = nsnull;
-        nsGenericContainerElement::GetAttribute(kNameSpaceID_XLink, kHrefAtom,
-                                                href);
+        nsGenericContainerElement::GetAttr(kNameSpaceID_XLink, kHrefAtom,
+                                           href);
         if (href.IsEmpty()) {
           *aEventStatus = nsEventStatus_eConsumeDoDefault; 
           break;
@@ -672,8 +681,8 @@ nsXMLElement::GetID(nsIAtom*& aResult) const
   aResult = nsnull;
   if (NS_SUCCEEDED(rv) && atom) {
     nsAutoString value;
-    rv = nsGenericContainerElement::GetAttribute(kNameSpaceID_Unknown, atom,
-                                                 value);
+    rv = nsGenericContainerElement::GetAttr(kNameSpaceID_Unknown, atom,
+                                            value);
     if (NS_SUCCEEDED(rv))
       aResult = NS_NewAtom(value);
   }

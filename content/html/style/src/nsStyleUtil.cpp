@@ -676,12 +676,12 @@ PRBool nsStyleUtil::IsSimpleXlink(nsIContent *aContent, nsIPresContext *aPresCon
     if (xml) {
       // see if it is type=simple (we don't deal with other types)
       nsAutoString val;
-      aContent->GetAttribute(kNameSpaceID_XLink, nsHTMLAtoms::type, val);
+      aContent->GetAttr(kNameSpaceID_XLink, nsHTMLAtoms::type, val);
       if (val == NS_LITERAL_STRING("simple")) {
         // see if there is an xlink namespace'd href attribute: 
         // - get it if there is, if not no big deal, it is not required for xlinks
         // is it bad to re-use val here?
-        aContent->GetAttribute(kNameSpaceID_XLink, nsHTMLAtoms::href, val);
+        aContent->GetAttr(kNameSpaceID_XLink, nsHTMLAtoms::href, val);
 
         // It's an XLink. Resolve it relative to its document.
         nsCOMPtr<nsIURI> baseURI;

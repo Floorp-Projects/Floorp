@@ -430,7 +430,7 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
         tag->ToString(tagstr);
 
         nsAutoString templatestr;
-        aTemplateNode->GetAttribute(kNameSpaceID_None, nsXULAtoms::id, templatestr);
+        aTemplateNode->GetAttr(kNameSpaceID_None, nsXULAtoms::id, templatestr);
         nsCAutoString templatestrC,tagstrC;
         tagstrC.AssignWithConversion(tagstr);
         templatestrC.AssignWithConversion(templatestr);
@@ -505,7 +505,7 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
             // "uri='rdf:*'" attribute. (We also support the older
             // "uri='...'" syntax.)
             nsAutoString uri;
-            tmplKid->GetAttribute(kNameSpaceID_None, nsXULAtoms::uri, uri);
+            tmplKid->GetAttr(kNameSpaceID_None, nsXULAtoms::uri, uri);
 
             if ( !uri.IsEmpty() ) {
               if (aMatch->mRule && uri[0] == PRUnichar('?')) {
@@ -619,7 +619,7 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
             // compiler-generated temporary around.
             NS_ConvertUTF8toUCS2 x(uri);
             const nsAReadableString& id = x;
-            rv = realKid->SetAttribute(kNameSpaceID_None, nsXULAtoms::id, id, PR_FALSE);
+            rv = realKid->SetAttr(kNameSpaceID_None, nsXULAtoms::id, id, PR_FALSE);
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set id attribute");
             if (NS_FAILED(rv)) return rv;
 
@@ -656,16 +656,16 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
             if (NS_FAILED(rv)) return rv;
 
             if (iscontainer) {
-                realKid->SetAttribute(kNameSpaceID_None, nsXULAtoms::container,
-                                      NS_LITERAL_STRING("true"), PR_FALSE);
+                realKid->SetAttr(kNameSpaceID_None, nsXULAtoms::container,
+                                 NS_LITERAL_STRING("true"), PR_FALSE);
 
                 if (! (mFlags & eDontTestEmpty)) {
                     NS_NAMED_LITERAL_STRING(true_, "true");
                     NS_NAMED_LITERAL_STRING(false_, "false");
 
-                    realKid->SetAttribute(kNameSpaceID_None, nsXULAtoms::empty,
-                                          isempty ? true_ : false_,
-                                          PR_FALSE);
+                    realKid->SetAttr(kNameSpaceID_None, nsXULAtoms::empty,
+                                     isempty ? true_ : false_,
+                                     PR_FALSE);
                 }
             }
         }
@@ -675,7 +675,7 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
             // given node.
             PRUnichar attrbuf[128];
             nsAutoString attrValue(CBufDescriptor(attrbuf, PR_TRUE, sizeof(attrbuf) / sizeof(PRUnichar), 0));
-            rv = tmplKid->GetAttribute(kNameSpaceID_None, nsXULAtoms::value, attrValue);
+            rv = tmplKid->GetAttr(kNameSpaceID_None, nsXULAtoms::value, attrValue);
             if (NS_FAILED(rv)) return rv;
 
             if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && (attrValue.Length() > 0)) {
@@ -731,14 +731,14 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
             // Copy all attributes from the template to the new
             // element.
             PRInt32    numAttribs;
-            rv = tmplKid->GetAttributeCount(numAttribs);
+            rv = tmplKid->GetAttrCount(numAttribs);
             if (NS_FAILED(rv)) return rv;
 
             for (PRInt32 attr = 0; attr < numAttribs; attr++) {
                 PRInt32 attribNameSpaceID;
                 nsCOMPtr<nsIAtom> attribName, prefix;
 
-                rv = tmplKid->GetAttributeNameAt(attr, attribNameSpaceID, *getter_AddRefs(attribName), *getter_AddRefs(prefix));
+                rv = tmplKid->GetAttrNameAt(attr, attribNameSpaceID, *getter_AddRefs(attribName), *getter_AddRefs(prefix));
                 if (NS_FAILED(rv)) return rv;
 
                 if (! IsIgnoreableAttribute(attribNameSpaceID, attribName)) {
@@ -748,7 +748,7 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
                     // longish.
                     PRUnichar attrbuf[128];
                     nsAutoString attribValue(CBufDescriptor(attrbuf, PR_TRUE, sizeof(attrbuf) / sizeof(PRUnichar), 0));
-                    rv = tmplKid->GetAttribute(attribNameSpaceID, attribName, attribValue);
+                    rv = tmplKid->GetAttr(attribNameSpaceID, attribName, attribValue);
                     if (NS_FAILED(rv)) return rv;
 
                     if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
@@ -756,7 +756,7 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
                         rv = SubstituteText(*aMatch, attribValue, value);
                         if (NS_FAILED(rv)) return rv;
 
-                        rv = realKid->SetAttribute(attribNameSpaceID, attribName, value, PR_FALSE);
+                        rv = realKid->SetAttr(attribNameSpaceID, attribName, value, PR_FALSE);
                         if (NS_FAILED(rv)) return rv;
                     }
                 }
@@ -847,7 +847,7 @@ nsXULContentBuilder::AddPersistentAttributes(nsIContent* aTemplateNode,
     nsresult rv;
 
     nsAutoString persist;
-    rv = aTemplateNode->GetAttribute(kNameSpaceID_None, nsXULAtoms::persist, persist);
+    rv = aTemplateNode->GetAttr(kNameSpaceID_None, nsXULAtoms::persist, persist);
     if (NS_FAILED(rv)) return rv;
 
     if (rv != NS_CONTENT_ATTR_HAS_VALUE)
@@ -875,8 +875,8 @@ nsXULContentBuilder::AddPersistentAttributes(nsIContent* aTemplateNode,
         PRInt32 nameSpaceID;
         nsCOMPtr<nsIAtom> tag;
         nsCOMPtr<nsINodeInfo> ni;
-        rv = aTemplateNode->NormalizeAttributeString(attribute,
-                                                     *getter_AddRefs(ni));
+        rv = aTemplateNode->NormalizeAttrString(attribute,
+                                                *getter_AddRefs(ni));
         if (NS_FAILED(rv)) return rv;
 
         ni->GetNameAtom(*getter_AddRefs(tag));
@@ -902,7 +902,7 @@ nsXULContentBuilder::AddPersistentAttributes(nsIContent* aTemplateNode,
         rv = value->GetValueConst(&valueStr);
         if (NS_FAILED(rv)) return rv;
 
-        rv = aRealNode->SetAttribute(nameSpaceID, tag, nsAutoString(valueStr), PR_FALSE);
+        rv = aRealNode->SetAttr(nameSpaceID, tag, nsAutoString(valueStr), PR_FALSE);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -921,17 +921,17 @@ nsXULContentBuilder::SynchronizeUsingTemplate(nsIContent* aTemplateNode,
     // update the equivalent attribute on the content node
 
     PRInt32    numAttribs;
-    rv = aTemplateNode->GetAttributeCount(numAttribs);
+    rv = aTemplateNode->GetAttrCount(numAttribs);
     if (NS_FAILED(rv)) return rv;
 
     if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
         for (PRInt32 aLoop=0; aLoop<numAttribs; aLoop++) {
             PRInt32    attribNameSpaceID;
             nsCOMPtr<nsIAtom> attribName, prefix;
-            rv = aTemplateNode->GetAttributeNameAt(aLoop,
-                                                   attribNameSpaceID,
-                                                   *getter_AddRefs(attribName),
-                                                   *getter_AddRefs(prefix));
+            rv = aTemplateNode->GetAttrNameAt(aLoop,
+                                              attribNameSpaceID,
+                                              *getter_AddRefs(attribName),
+                                              *getter_AddRefs(prefix));
             if (NS_FAILED(rv)) break;
 
             // See if it's one of the attributes that we unilaterally
@@ -940,9 +940,9 @@ nsXULContentBuilder::SynchronizeUsingTemplate(nsIContent* aTemplateNode,
                 continue;
 
             nsAutoString attribValue;
-            rv = aTemplateNode->GetAttribute(attribNameSpaceID,
-                                             attribName,
-                                             attribValue);
+            rv = aTemplateNode->GetAttr(attribNameSpaceID,
+                                        attribName,
+                                        attribValue);
 
             if (! IsAttrImpactedByVars(aMatch, attribValue, aModifiedVars))
                 continue;
@@ -951,15 +951,15 @@ nsXULContentBuilder::SynchronizeUsingTemplate(nsIContent* aTemplateNode,
             SubstituteText(aMatch, attribValue, newvalue);
 
             if (newvalue.Length() > 0) {
-                aRealElement->SetAttribute(attribNameSpaceID,
-                                           attribName,
-                                           newvalue,
-                                           PR_TRUE);
+                aRealElement->SetAttr(attribNameSpaceID,
+                                      attribName,
+                                      newvalue,
+                                      PR_TRUE);
             }
             else {
-                aRealElement->UnsetAttribute(attribNameSpaceID,
-                                             attribName,
-                                             PR_TRUE);
+                aRealElement->UnsetAttr(attribNameSpaceID,
+                                        attribName,
+                                        PR_TRUE);
             }
         }
     }
@@ -1398,7 +1398,7 @@ nsXULContentBuilder::IsOpen(nsIContent* aElement)
       return PR_TRUE;
 
     nsAutoString value;
-    rv = aElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::open, value);
+    rv = aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::open, value);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get open attribute");
     if (NS_FAILED(rv)) return PR_FALSE;
 
@@ -1597,7 +1597,7 @@ nsXULContentBuilder::SetContainerAttrs(nsIContent *aElement, const nsTemplateMat
     aMatch->mAssignments.GetAssignmentFor(aMatch->mRule->GetContainerVariable(), &containerval);
 
     nsAutoString oldcontainer;
-    aElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::container, oldcontainer);
+    aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::container, oldcontainer);
 
     PRBool iscontainer, isempty;
     CheckContainer(VALUE_TO_IRDFRESOURCE(containerval), &iscontainer, &isempty);
@@ -1609,20 +1609,20 @@ nsXULContentBuilder::SetContainerAttrs(nsIContent *aElement, const nsTemplateMat
         iscontainer ? true_ : false_;
 
     if (oldcontainer != newcontainer) {
-        aElement->SetAttribute(kNameSpaceID_None, nsXULAtoms::container,
-                               newcontainer, PR_TRUE);
+        aElement->SetAttr(kNameSpaceID_None, nsXULAtoms::container,
+                          newcontainer, PR_TRUE);
     }
 
     if (! (mFlags & eDontTestEmpty)) {
         nsAutoString oldempty;
-        aElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::empty, oldempty);
+        aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::empty, oldempty);
 
         const nsAReadableString& newempty =
             (iscontainer && isempty) ? true_ : false_;
 
         if (oldempty != newempty) {
-            aElement->SetAttribute(kNameSpaceID_None, nsXULAtoms::empty,
-                                   newempty, PR_TRUE);
+            aElement->SetAttr(kNameSpaceID_None, nsXULAtoms::empty,
+                              newempty, PR_TRUE);
         }
     }
 
@@ -1787,7 +1787,7 @@ nsXULContentBuilder::AttributeChanged(nsIDocument* aDocument,
     if ((nameSpaceID == kNameSpaceID_XUL) && (aAttribute == nsXULAtoms::open)) {
         // We're on a XUL tag, and an ``open'' attribute changed.
         nsAutoString open;
-        aContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::open, open);
+        aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::open, open);
 
         if (open == NS_LITERAL_STRING("true"))
             OpenContainer(aContent);
@@ -2197,7 +2197,7 @@ nsXULContentBuilder::CompileContentCondition(nsTemplateRule* aRule,
 
     // uri
     nsAutoString uri;
-    aCondition->GetAttribute(kNameSpaceID_None, nsXULAtoms::uri, uri);
+    aCondition->GetAttr(kNameSpaceID_None, nsXULAtoms::uri, uri);
 
     if (uri[0] != PRUnichar('?')) {
         PR_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
@@ -2226,7 +2226,7 @@ nsXULContentBuilder::CompileContentCondition(nsTemplateRule* aRule,
     nsCOMPtr<nsIAtom> tag;
 
     nsAutoString tagstr;
-    aCondition->GetAttribute(kNameSpaceID_None, nsXULAtoms::tag, tagstr);
+    aCondition->GetAttr(kNameSpaceID_None, nsXULAtoms::tag, tagstr);
 
     if (tagstr.Length()) {
         tag = dont_AddRef(NS_NewAtom(tagstr));

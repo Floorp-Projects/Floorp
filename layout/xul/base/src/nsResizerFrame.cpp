@@ -315,7 +315,7 @@ nsResizerFrame::GetInitialDirection(eDirection& aDirection)
   if (!content)
      return PR_FALSE;
 
-  if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsXULAtoms::dir, value))
+  if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsXULAtoms::dir, value))
   {
 	   return EvalDirection(value,aDirection); 
   }  

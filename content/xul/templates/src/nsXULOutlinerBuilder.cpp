@@ -402,7 +402,7 @@ nsXULOutlinerBuilder::GetRowProperties(PRInt32 aIndex, nsISupportsArray* aProper
     GetTemplateActionRowFor(aIndex, getter_AddRefs(row));
     if (row) {
         nsAutoString raw;
-        row->GetAttribute(kNameSpaceID_None, nsXULAtoms::properties, raw);
+        row->GetAttr(kNameSpaceID_None, nsXULAtoms::properties, raw);
 
         if (raw.Length()) {
             nsAutoString cooked;
@@ -426,7 +426,7 @@ nsXULOutlinerBuilder::GetCellProperties(PRInt32 aRow, const PRUnichar* aColID, n
     GetTemplateActionCellFor(aRow, aColID, getter_AddRefs(cell));
     if (cell) {
         nsAutoString raw;
-        cell->GetAttribute(kNameSpaceID_None, nsXULAtoms::properties, raw);
+        cell->GetAttr(kNameSpaceID_None, nsXULAtoms::properties, raw);
 
         if (raw.Length()) {
             nsAutoString cooked;
@@ -573,7 +573,7 @@ nsXULOutlinerBuilder::GetCellText(PRInt32 aRow, const PRUnichar* aColID, PRUnich
     GetTemplateActionCellFor(aRow, aColID, getter_AddRefs(cell));
     if (cell) {
         nsAutoString raw;
-        cell->GetAttribute(kNameSpaceID_None, nsXULAtoms::label, raw);
+        cell->GetAttr(kNameSpaceID_None, nsXULAtoms::label, raw);
 
         nsAutoString cooked;
         SubstituteText(*(mRows[aRow]->mMatch), raw, cooked);
@@ -681,7 +681,7 @@ nsXULOutlinerBuilder::CycleHeader(const PRUnichar* aColID, nsIDOMElement* aEleme
         return NS_ERROR_FAILURE;
 
     nsAutoString sort;
-    header->GetAttribute(kNameSpaceID_None, nsXULAtoms::sort, sort);
+    header->GetAttr(kNameSpaceID_None, nsXULAtoms::sort, sort);
 
     if (sort.Length()) {
         // Grab the new sort variable
@@ -689,7 +689,7 @@ nsXULOutlinerBuilder::CycleHeader(const PRUnichar* aColID, nsIDOMElement* aEleme
 
         // Cycle the sort direction
         nsAutoString dir;
-        header->GetAttribute(kNameSpaceID_None, nsXULAtoms::sortDirection, dir);
+        header->GetAttr(kNameSpaceID_None, nsXULAtoms::sortDirection, dir);
 
         if (dir == NS_LITERAL_STRING("ascending")) {
             dir = NS_LITERAL_STRING("descending");
@@ -709,7 +709,7 @@ nsXULOutlinerBuilder::CycleHeader(const PRUnichar* aColID, nsIDOMElement* aEleme
         mRows.InvalidateCachedRow();
         mBoxObject->Invalidate();
 
-        header->SetAttribute(kNameSpaceID_None, nsXULAtoms::sortDirection, dir, PR_FALSE);
+        header->SetAttr(kNameSpaceID_None, nsXULAtoms::sortDirection, dir, PR_FALSE);
 
         // Unset sort attribute(s) on the other columns
         nsCOMPtr<nsIContent> parentContent;
@@ -727,8 +727,8 @@ nsXULOutlinerBuilder::CycleHeader(const PRUnichar* aColID, nsIDOMElement* aEleme
                     if (childContent) {
                         childContent->GetTag(*getter_AddRefs(childTag));
                         if (childTag.get() == nsXULAtoms::outlinercol && childContent != header) {
-                            childContent->UnsetAttribute(kNameSpaceID_None,
-                                                         nsXULAtoms::sortDirection, PR_FALSE);
+                            childContent->UnsetAttr(kNameSpaceID_None,
+                                                    nsXULAtoms::sortDirection, PR_FALSE);
                         }
                     }
                 }
@@ -1095,7 +1095,7 @@ nsXULOutlinerBuilder::GetSortVariables(VariableSet& aVariables)
             continue;
 
         nsAutoString sort;
-        child->GetAttribute(kNameSpaceID_None, nsXULAtoms::sort, sort);
+        child->GetAttr(kNameSpaceID_None, nsXULAtoms::sort, sort);
         if (! sort.Length())
             continue;
 
@@ -1103,10 +1103,10 @@ nsXULOutlinerBuilder::GetSortVariables(VariableSet& aVariables)
         aVariables.Add(var);
 
         nsAutoString active;
-        child->GetAttribute(kNameSpaceID_None, nsXULAtoms::sortActive, active);
+        child->GetAttr(kNameSpaceID_None, nsXULAtoms::sortActive, active);
         if (active == NS_LITERAL_STRING("true")) {
             nsAutoString dir;
-            child->GetAttribute(kNameSpaceID_None, nsXULAtoms::sortDirection, dir);
+            child->GetAttr(kNameSpaceID_None, nsXULAtoms::sortDirection, dir);
 
             if (dir == NS_LITERAL_STRING("none"))
                 mSortDirection = eDirection_Natural;
@@ -1196,7 +1196,7 @@ nsXULOutlinerBuilder::CompileOutlinerRowCondition(nsTemplateRule* aRule,
     // propogation. The ``uri'' attribute must be set.
 
     nsAutoString uri;
-    aCondition->GetAttribute(kNameSpaceID_None, nsXULAtoms::uri, uri);
+    aCondition->GetAttr(kNameSpaceID_None, nsXULAtoms::uri, uri);
 
     if (uri[0] != PRUnichar('?')) {
         PR_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
@@ -1275,7 +1275,7 @@ nsXULOutlinerBuilder::GetTemplateActionCellFor(PRInt32 aRow,
                 continue;
 
             nsAutoString ref;
-            child->GetAttribute(kNameSpaceID_None, nsXULAtoms::ref, ref);
+            child->GetAttr(kNameSpaceID_None, nsXULAtoms::ref, ref);
 
             if (ref.Equals(aColID)) {
                 NS_ADDREF(*aResult = child.get());

@@ -1545,8 +1545,8 @@ nsPlainTextSerializer::GetAttributeValue(nsIAtom* aName,
                                          nsString& aValueRet)
 {
   if (mContent) {
-    if (NS_CONTENT_ATTR_NOT_THERE != mContent->GetAttribute(kNameSpaceID_None,
-                                                            aName, aValueRet)) {
+    if (NS_CONTENT_ATTR_NOT_THERE != mContent->GetAttr(kNameSpaceID_None,
+                                                       aName, aValueRet)) {
       return NS_OK;
     }
   }

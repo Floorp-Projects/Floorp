@@ -114,7 +114,7 @@ nsDOMAttribute::GetValue(nsAWritableString& aValue)
     mNodeInfo->GetNamespaceID(nameSpaceID);
 
     nsAutoString tmpValue;
-    attrResult = mContent->GetAttribute(nameSpaceID, name, tmpValue);
+    attrResult = mContent->GetAttr(nameSpaceID, name, tmpValue);
     if (NS_CONTENT_ATTR_NOT_THERE != attrResult) {
       mValue = tmpValue;
     }
@@ -130,7 +130,7 @@ nsDOMAttribute::SetValue(const nsAReadableString& aValue)
 
   nsresult result = NS_OK;
   if (mContent) {
-    result = mContent->SetAttribute(mNodeInfo, aValue, PR_TRUE);
+    result = mContent->SetAttr(mNodeInfo, aValue, PR_TRUE);
   }
   mValue=aValue;
 
@@ -155,7 +155,7 @@ nsDOMAttribute::GetSpecified(PRBool* aSpecified)
     mNodeInfo->GetNameAtom(*getter_AddRefs(name));
     mNodeInfo->GetNamespaceID(nameSpaceID);
 
-    attrResult = mContent->GetAttribute(nameSpaceID, name, value);
+    attrResult = mContent->GetAttr(nameSpaceID, name, value);
     if (NS_CONTENT_ATTR_HAS_VALUE == attrResult) {
       *aSpecified = PR_TRUE;
     }
@@ -360,7 +360,7 @@ nsDOMAttribute::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
     mNodeInfo->GetNameAtom(*getter_AddRefs(name));
     mNodeInfo->GetNamespaceID(nameSpaceID);
   
-    mContent->GetAttribute(nameSpaceID, name, value);
+    mContent->GetAttr(nameSpaceID, name, value);
     newAttr = new nsDOMAttribute(nsnull, mNodeInfo, value); 
   }
   else {
@@ -431,11 +431,11 @@ nsDOMAttribute::SetPrefix(const nsAReadableString& aPrefix)
     mNodeInfo->GetNameAtom(*getter_AddRefs(name));
     mNodeInfo->GetNamespaceID(nameSpaceID);
 
-    rv = mContent->GetAttribute(nameSpaceID, name, tmpValue);
+    rv = mContent->GetAttr(nameSpaceID, name, tmpValue);
     if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-      mContent->UnsetAttribute(nameSpaceID, name, PR_TRUE);
+      mContent->UnsetAttr(nameSpaceID, name, PR_TRUE);
 
-      mContent->SetAttribute(newNodeInfo, tmpValue, PR_TRUE);
+      mContent->SetAttr(newNodeInfo, tmpValue, PR_TRUE);
     }
   }
 

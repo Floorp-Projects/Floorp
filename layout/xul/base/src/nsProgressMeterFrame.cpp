@@ -112,7 +112,7 @@ nsProgressMeterFrame::AttributeChanged(nsIPresContext* aPresContext,
       mContent->ChildAt(1, *getter_AddRefs(progressRemainder));
 
       nsAutoString value;
-      mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value);
+      mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, value);
 
       PRInt32 error;
       PRInt32 flex = value.ToInteger(&error);
@@ -124,8 +124,8 @@ nsProgressMeterFrame::AttributeChanged(nsIPresContext* aPresContext,
       nsAutoString leftFlex, rightFlex;
       leftFlex.AppendInt(flex);
       rightFlex.AppendInt(remainder);
-      progressBar->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, leftFlex, PR_TRUE);
-      progressRemainder->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, rightFlex, PR_TRUE);
+      progressBar->SetAttr(kNameSpaceID_None, nsXULAtoms::flex, leftFlex, PR_TRUE);
+      progressRemainder->SetAttr(kNameSpaceID_None, nsXULAtoms::flex, rightFlex, PR_TRUE);
     }
   }
   return NS_OK;

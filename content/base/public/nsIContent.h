@@ -98,8 +98,8 @@ public:
    * @param aName out parameter representing the complete name of the
    * attribute
    */
-  NS_IMETHOD NormalizeAttributeString(const nsAReadableString& aStr, 
-                                      nsINodeInfo*& aNodeInfo) = 0;
+  NS_IMETHOD NormalizeAttrString(const nsAReadableString& aStr, 
+                                 nsINodeInfo*& aNodeInfo) = 0;
 
   /**
    * Set attribute values. All attribute values are assumed to have a
@@ -115,9 +115,9 @@ public:
    * @param aUpdateMask specifies how whether or not the document should be
    * notified of the attribute change.
    */
-  NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                          const nsAReadableString& aValue,
-                          PRBool aNotify) = 0;
+  NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                     const nsAReadableString& aValue,
+                     PRBool aNotify) = 0;
 
   /**
    * Set attribute values. All attribute values are assumed to have a
@@ -133,9 +133,9 @@ public:
    * @param aNotify specifies whether or not the document should be
    * notified of the attribute change.
    */
-  NS_IMETHOD SetAttribute(nsINodeInfo* aNodeInfo,
-                          const nsAReadableString& aValue,
-                          PRBool aNotify) = 0;
+  NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo,
+                     const nsAReadableString& aValue,
+                     PRBool aNotify) = 0;
 
   /**
    * Get the current value of the attribute. This returns a form that is
@@ -154,8 +154,8 @@ public:
    *
    * </UL>
    */
-  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
-                          nsAWritableString& aResult) const = 0;
+  NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
+                     nsAWritableString& aResult) const = 0;
 
   /**
    * Get the current value and prefix of the attribute. This returns a form
@@ -177,8 +177,8 @@ public:
    * NOTE! aPrefix is an OUT parameter.
    */
 
-  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                          nsIAtom*& aPrefix, nsAWritableString& aResult) const = 0;
+  NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                     nsIAtom*& aPrefix, nsAWritableString& aResult) const = 0;
 
   /**
    * Remove an attribute so that it is no longer explicitly specified.
@@ -189,8 +189,8 @@ public:
    * notified of the attribute change
    *
    */
-  NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute, 
-                            PRBool aNotify) = 0;
+  NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute, 
+                       PRBool aNotify) = 0;
 
 
   /**
@@ -201,10 +201,10 @@ public:
    * @param aName an out param if the attribute name
    *
    */
-  NS_IMETHOD GetAttributeNameAt(PRInt32 aIndex,
-                                PRInt32& aNameSpaceID, 
-                                nsIAtom*& aName,
-                                nsIAtom*& aPrefix) const = 0;
+  NS_IMETHOD GetAttrNameAt(PRInt32 aIndex,
+                           PRInt32& aNameSpaceID, 
+                           nsIAtom*& aName,
+                           nsIAtom*& aPrefix) const = 0;
 
   /**
    * Get the number of all specified attributes.
@@ -213,7 +213,7 @@ public:
    *        the number of attributes
    *
    */
-  NS_IMETHOD GetAttributeCount(PRInt32& aCountResult) const = 0;
+  NS_IMETHOD GetAttrCount(PRInt32& aCountResult) const = 0;
 
   /**
    * Get the size of the content object. The size value should include

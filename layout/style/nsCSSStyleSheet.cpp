@@ -2761,7 +2761,7 @@ struct SelectorMatchesData {
   nsLinkState       mLinkState;     // if a link, this is the state, otherwise unknown
   PRBool            mIsQuirkMode;   // Possibly remove use of this in SelectorMatches?
   PRInt32           mEventState;    // if content, eventStateMgr->GetContentState()
-  PRBool            mHasAttributes; // if content, content->GetAttributeCount() > 0
+  PRBool            mHasAttributes; // if content, content->GetAttrCount() > 0
   PRInt32           mNameSpaceID;   // if content, content->GetNameSapce()
   SelectorMatchesData* mPreviousSiblingData;
   SelectorMatchesData* mParentData;
@@ -2827,7 +2827,7 @@ SelectorMatchesData::SelectorMatchesData(nsIPresContext* aPresContext, nsIConten
 
     // see if there are attributes for the content
     PRInt32 attrCount = 0;
-    aContent->GetAttributeCount(attrCount);
+    aContent->GetAttrCount(attrCount);
     mHasAttributes = PRBool(attrCount > 0);
 
     // check for HTMLContent and Link status
@@ -3157,7 +3157,7 @@ static PRBool SelectorMatches(SelectorMatchesData &data,
       nsAttrSelector* attr = aSelector->mAttrList;
       nsAutoString value;
       do {
-        nsresult  attrState = data.mContent->GetAttribute(attr->mNameSpace, attr->mAttr, value);
+        nsresult  attrState = data.mContent->GetAttr(attr->mNameSpace, attr->mAttr, value);
         if (NS_FAILED(attrState) || (NS_CONTENT_ATTR_NOT_THERE == attrState)) {
           result = localFalse;
         }

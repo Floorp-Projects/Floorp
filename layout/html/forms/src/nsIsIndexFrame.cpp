@@ -255,7 +255,7 @@ nsIsIndexFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   result = content->QueryInterface(NS_GET_IID(nsIHTMLContent),(void**)&mInputContent);
 
   if (NS_SUCCEEDED(result)) {
-    mInputContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, NS_ConvertASCIItoUCS2("text"), PR_FALSE);
+    mInputContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::type, NS_ConvertASCIItoUCS2("text"), PR_FALSE);
     aChildList.AppendElement(mInputContent);
 
     // Register as an event listener to submit on Enter press

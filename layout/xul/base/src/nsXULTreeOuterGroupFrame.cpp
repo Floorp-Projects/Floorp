@@ -319,13 +319,13 @@ nsXULTreeOuterGroupFrame::Init(nsIPresContext* aPresContext, nsIContent* aConten
   nsresult rv = nsXULTreeGroupFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
   nsAutoString value;
-  mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::treeitem, value);
+  mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::treeitem, value);
   if (!value.IsEmpty())
     mTreeItemTag = getter_AddRefs(NS_NewAtom(value));
-  mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::treerow, value);
+  mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::treerow, value);
   if (!value.IsEmpty())
     mTreeRowTag = getter_AddRefs(NS_NewAtom(value));
-  mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::treechildren, value);
+  mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::treechildren, value);
   if (!value.IsEmpty())
     mTreeChildrenTag = getter_AddRefs(NS_NewAtom(value));
 
@@ -384,7 +384,7 @@ nsXULTreeOuterGroupFrame::Init(nsIPresContext* aPresContext, nsIContent* aConten
 
   if ( parent ) {
     nsAutoString attr;
-    parent->GetAttribute ( kNameSpaceID_None, nsXULAtoms::ddNoDropBetweenRows, attr ); 
+    parent->GetAttr ( kNameSpaceID_None, nsXULAtoms::ddNoDropBetweenRows, attr ); 
     if ( attr.Equals(NS_ConvertASCIItoUCS2("true")) )
       mCanDropBetweenRows = PR_FALSE;
   }
@@ -434,11 +434,11 @@ nsXULTreeOuterGroupFrame::GetFixedRowSize()
   nsCOMPtr<nsIContent> parent;
   GetTreeContent(getter_AddRefs(parent));
   nsAutoString rows;
-  parent->GetAttribute(kNameSpaceID_None, nsXULAtoms::rows, rows);
+  parent->GetAttr(kNameSpaceID_None, nsXULAtoms::rows, rows);
   if (!rows.IsEmpty())
     return rows.ToInteger(&dummy);
  
-  parent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::size, rows);
+  parent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::size, rows);
 
   if (!rows.IsEmpty())
     return rows.ToInteger(&dummy);
@@ -455,9 +455,9 @@ nsXULTreeOuterGroupFrame::SetRowHeight(nscoord aRowHeight)
     nsCOMPtr<nsIContent> parent;
     GetTreeContent(getter_AddRefs(parent));
     nsAutoString rows;
-    parent->GetAttribute(kNameSpaceID_None, nsXULAtoms::rows, rows);
+    parent->GetAttr(kNameSpaceID_None, nsXULAtoms::rows, rows);
     if (rows.IsEmpty())
-      parent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::size, rows);
+      parent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::size, rows);
     
     if (!rows.IsEmpty()) {
       PRInt32 dummy;
@@ -467,7 +467,7 @@ nsXULTreeOuterGroupFrame::SetRowHeight(nscoord aRowHeight)
       PRInt32 rowHeight = NSTwipsToIntPixels(aRowHeight, t2p);
       nsAutoString value;
       value.AppendInt(rowHeight*count);
-      mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::minheight, value, PR_FALSE);
+      mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::minheight, value, PR_FALSE);
     }
 
     // signal we need to dirty everything 
@@ -562,7 +562,7 @@ nsXULTreeOuterGroupFrame::ComputeTotalRowCount(PRInt32& aCount, nsIContent* aPar
       nsAutoString isOpen;
       nsCOMPtr<nsIContent> parent;
       childContent->GetParent(*getter_AddRefs(parent));
-      parent->GetAttribute(kNameSpaceID_None, openAtom, isOpen);
+      parent->GetAttr(kNameSpaceID_None, openAtom, isOpen);
       if (isOpen.EqualsWithConversion("true"))
         ComputeTotalRowCount(aCount, childContent);
     }
@@ -1041,7 +1041,7 @@ nsXULTreeOuterGroupFrame::FindPreviousRowContent(PRInt32& aDelta, nsIContent* aU
       // If it's open, descend into its treechildren node first.
       nsCOMPtr<nsIAtom> openAtom = dont_AddRef(NS_NewAtom("open"));
       nsAutoString isOpen;
-      childContent->GetAttribute(kNameSpaceID_None, openAtom, isOpen);
+      childContent->GetAttr(kNameSpaceID_None, openAtom, isOpen);
       if (isOpen.EqualsWithConversion("true")) {
         // Find the <treechildren> node.
         PRInt32 childContentCount;
@@ -1137,7 +1137,7 @@ nsXULTreeOuterGroupFrame::FindNextRowContent(PRInt32& aDelta, nsIContent* aUpwar
       // If it's open, descend into its treechildren node first.
       nsCOMPtr<nsIAtom> openAtom = dont_AddRef(NS_NewAtom("open"));
       nsAutoString isOpen;
-      parentContent->GetAttribute(kNameSpaceID_None, openAtom, isOpen);
+      parentContent->GetAttr(kNameSpaceID_None, openAtom, isOpen);
       if (isOpen.EqualsWithConversion("true")) {
         FindNextRowContent(aDelta, nsnull, childContent, aResult);
         if (aDelta == 0)
@@ -1263,7 +1263,7 @@ nsXULTreeOuterGroupFrame::IndexOfItem(nsIContent* aRoot, nsIContent* aContent,
     // descend as normally, but remember that the parent is closed!
     else if (childTag == mTreeItemTag) {
       nsAutoString isOpen;
-      rv = child->GetAttribute(kNameSpaceID_None, nsXULAtoms::open, isOpen);
+      rv = child->GetAttr(kNameSpaceID_None, nsXULAtoms::open, isOpen);
 
       if (!isOpen.EqualsWithConversion("true"))
         parentIsOpen=PR_FALSE;
@@ -1679,7 +1679,7 @@ nsTreeScrollPortFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSi
   nsAutoString sizeMode;
   nsCOMPtr<nsIContent> content;
   outer->GetContent(getter_AddRefs(content));
-  content->GetAttribute(kNameSpaceID_None, nsXULAtoms::sizemode, sizeMode);
+  content->GetAttr(kNameSpaceID_None, nsXULAtoms::sizemode, sizeMode);
   if (!sizeMode.IsEmpty()) {  
     nsCOMPtr<nsIScrollableFrame> scrollFrame(do_QueryInterface(mParent));
     if (scrollFrame) {

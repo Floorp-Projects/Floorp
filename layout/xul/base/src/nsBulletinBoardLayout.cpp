@@ -198,7 +198,7 @@ nsBulletinBoardLayout::AddOffset(nsBoxLayoutState& aState, nsIBox* aChild, nsSiz
         nsAutoString value;
         PRInt32 error;
 
-        if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::left, value))
+        if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::left, value))
         {
             float p2t;
             presContext->GetScaledPixelsToTwips(&p2t);
@@ -208,7 +208,7 @@ nsBulletinBoardLayout::AddOffset(nsBoxLayoutState& aState, nsIBox* aChild, nsSiz
             offset.width = NSIntPixelsToTwips(value.ToInteger(&error), p2t);
         }
 
-        if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::top, value))
+        if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::top, value))
         {
             float p2t;
             presContext->GetScaledPixelsToTwips(&p2t);

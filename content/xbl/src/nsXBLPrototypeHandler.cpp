@@ -209,7 +209,7 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
   // This is a special-case optimization to make command handling fast.
   // It isn't really a part of XBL, but it helps speed things up.
   nsAutoString command;
-  mHandlerElement->GetAttribute(kNameSpaceID_None, kCommandAtom, command);
+  mHandlerElement->GetAttr(kNameSpaceID_None, kCommandAtom, command);
   
   if (!command.IsEmpty() && !isReceiverCommandElement) {
     // Make sure the XBL doc is chrome or resource
@@ -323,19 +323,19 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
   
   // Compile the event handler.
   nsAutoString handlerText;
-  mHandlerElement->GetAttribute(kNameSpaceID_None, kActionAtom, handlerText);
+  mHandlerElement->GetAttr(kNameSpaceID_None, kActionAtom, handlerText);
   if (handlerText.IsEmpty()) {
     // look to see if action content is contained by the handler element
     GetTextData(mHandlerElement, handlerText);
     if (handlerText.IsEmpty()) {
       // Try an oncommand attribute (used by XUL <key> elements, which
       // are implemented using this code).
-      mHandlerElement->GetAttribute(kNameSpaceID_None, kOnCommandAtom, handlerText);
+      mHandlerElement->GetAttr(kNameSpaceID_None, kOnCommandAtom, handlerText);
       if (handlerText.IsEmpty()) {
         // Maybe the receiver is a <command> elt.
         if (isReceiverCommandElement)
           // It is!  See if it has an oncommand attribute.
-          content->GetAttribute(kNameSpaceID_None, kOnCommandAtom, handlerText);
+          content->GetAttr(kNameSpaceID_None, kOnCommandAtom, handlerText);
         
         if (handlerText.IsEmpty())
           return NS_ERROR_FAILURE; // For whatever reason, they didn't give us anything to do.
@@ -916,7 +916,7 @@ PRInt32 nsXBLPrototypeHandler::KeyToMask(PRInt32 key)
 void
 nsXBLPrototypeHandler::GetEventType(nsAWritableString &type)
 {
-  mHandlerElement->GetAttribute(kNameSpaceID_None, kTypeAtom, type);
+  mHandlerElement->GetAttr(kNameSpaceID_None, kTypeAtom, type);
   
   if (type.IsEmpty()) {
     // If we're a XUL key element, let's assume that we're "keypress".
@@ -935,7 +935,7 @@ nsXBLPrototypeHandler::ConstructMask()
   mKeyMask = 0;
    
   nsAutoString type;
-  mHandlerElement->GetAttribute(kNameSpaceID_None, kTypeAtom, type);
+  mHandlerElement->GetAttr(kNameSpaceID_None, kTypeAtom, type);
   
   if (type.IsEmpty()) {
     // If we're a XUL key element, let's assume that we're "keypress".
@@ -949,8 +949,8 @@ nsXBLPrototypeHandler::ConstructMask()
   mEventName = getter_AddRefs(NS_NewAtom(type));
 
   nsAutoString buttonStr, clickCountStr;
-  mHandlerElement->GetAttribute(kNameSpaceID_None, kClickCountAtom, clickCountStr);
-  mHandlerElement->GetAttribute(kNameSpaceID_None, kButtonAtom, buttonStr);
+  mHandlerElement->GetAttr(kNameSpaceID_None, kClickCountAtom, clickCountStr);
+  mHandlerElement->GetAttr(kNameSpaceID_None, kButtonAtom, buttonStr);
 
   if (!buttonStr.IsEmpty()) {
     PRInt32 error;
@@ -963,7 +963,7 @@ nsXBLPrototypeHandler::ConstructMask()
   }
 
   nsAutoString modifiers;
-  mHandlerElement->GetAttribute(kNameSpaceID_None, kModifiersAtom, modifiers);
+  mHandlerElement->GetAttr(kNameSpaceID_None, kModifiersAtom, modifiers);
   if (!modifiers.IsEmpty()) {
     char* str = modifiers.ToNewCString();
     char* newStr;
@@ -989,9 +989,9 @@ nsXBLPrototypeHandler::ConstructMask()
   }
 
   nsAutoString key;
-  mHandlerElement->GetAttribute(kNameSpaceID_None, kKeyAtom, key);
+  mHandlerElement->GetAttr(kNameSpaceID_None, kKeyAtom, key);
   if (key.IsEmpty()) 
-    mHandlerElement->GetAttribute(kNameSpaceID_None, kCharCodeAtom, key);
+    mHandlerElement->GetAttr(kNameSpaceID_None, kCharCodeAtom, key);
   
   if (!key.IsEmpty()) {
 
@@ -1004,7 +1004,7 @@ nsXBLPrototypeHandler::ConstructMask()
     mDetail = key[0];
   }
   else {
-    mHandlerElement->GetAttribute(kNameSpaceID_None, kKeyCodeAtom, key);
+    mHandlerElement->GetAttr(kNameSpaceID_None, kKeyCodeAtom, key);
     if (!key.IsEmpty())
       mDetail = GetMatchingKeyCode(key);
   }

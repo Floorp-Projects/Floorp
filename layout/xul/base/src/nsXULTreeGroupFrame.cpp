@@ -731,12 +731,12 @@ nsXULTreeGroupFrame :: AttributeChanged ( nsIPresContext* aPresContext, nsIConte
   }
   else if ( aAttribute == nsXULAtoms::ddDropLocationCoord ) {
     nsAutoString attribute;
-    aChild->GetAttribute ( kNameSpaceID_None, aAttribute, attribute );
+    aChild->GetAttr ( kNameSpaceID_None, aAttribute, attribute );
     mYDropLoc = attribute.ToInteger(&ignore);
   }
   else if ( aAttribute == nsXULAtoms::ddDropOn ) {
     nsAutoString attribute;
-    aChild->GetAttribute ( kNameSpaceID_None, aAttribute, attribute );
+    aChild->GetAttr ( kNameSpaceID_None, aAttribute, attribute );
     attribute.ToLowerCase();
     mDropOnContainer = attribute.EqualsWithConversion("true");
   }

@@ -614,7 +614,7 @@ nsHTMLFrameInnerFrame::~nsHTMLFrameInnerFrame()
 PRBool nsHTMLFrameInnerFrame::GetURL(nsIContent* aContent, nsString& aResult)
 {
   aResult.SetLength(0);    
-  if (NS_CONTENT_ATTR_HAS_VALUE == (aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::src, aResult))) {
+  if (NS_CONTENT_ATTR_HAS_VALUE == (aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, aResult))) {
     if (aResult.Length() > 0) {
       return PR_TRUE;
     }
@@ -627,7 +627,7 @@ PRBool nsHTMLFrameInnerFrame::GetName(nsIContent* aContent, nsString& aResult)
 {
   aResult.SetLength(0);     
 
-  if (NS_CONTENT_ATTR_HAS_VALUE == (aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::name, aResult))) {
+  if (NS_CONTENT_ATTR_HAS_VALUE == (aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, aResult))) {
     if (aResult.Length() > 0) {
       return PR_TRUE;
     }
@@ -978,7 +978,7 @@ nsHTMLFrameInnerFrame::CreateDocShell(nsIPresContext* aPresContext,
       PRBool isContent;
 
       isContent = PR_FALSE;
-      if (NS_SUCCEEDED(parentContent->GetAttribute(kNameSpaceID_None,
+      if (NS_SUCCEEDED(parentContent->GetAttr(kNameSpaceID_None,
          typeAtom, value))) {
 
         // we accept "content" and "content-xxx" values.

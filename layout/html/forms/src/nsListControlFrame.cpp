@@ -1251,7 +1251,7 @@ void
 nsListControlFrame::DisplaySelected(nsIContent* aContent) 
 {
   // ignore return value, not much we can do if it fails
-  aContent->SetAttribute(kNameSpaceID_None, nsLayoutAtoms::optionSelectedPseudo, nsAutoString(), mIsAllFramesHere);
+  aContent->SetAttr(kNameSpaceID_None, nsLayoutAtoms::optionSelectedPseudo, nsAutoString(), mIsAllFramesHere);
 }
 
 //---------------------------------------------------------
@@ -1259,7 +1259,7 @@ void
 nsListControlFrame::DisplayDeselected(nsIContent* aContent) 
 {
   // ignore return value, not much we can do if it fails
-  aContent->UnsetAttribute(kNameSpaceID_None, nsLayoutAtoms::optionSelectedPseudo, mIsAllFramesHere);
+  aContent->UnsetAttr(kNameSpaceID_None, nsLayoutAtoms::optionSelectedPseudo, mIsAllFramesHere);
 }
 
 
@@ -1970,7 +1970,7 @@ nsListControlFrame::IsContentSelected(nsIContent* aContent)
 {
   nsString value; 
   //nsIAtom * selectedAtom = NS_NewAtom("selected");
-  nsresult result = aContent->GetAttribute(kNameSpaceID_None, nsLayoutAtoms::optionSelectedPseudo, value);
+  nsresult result = aContent->GetAttr(kNameSpaceID_None, nsLayoutAtoms::optionSelectedPseudo, value);
 
   return (NS_CONTENT_ATTR_NOT_THERE == result ? PR_FALSE : PR_TRUE);
 }

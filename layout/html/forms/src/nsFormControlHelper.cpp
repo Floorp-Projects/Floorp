@@ -434,7 +434,7 @@ nsFormControlHelper::CalculateSize (nsIPresContext*       aPresContext,
   nsAutoString valAttr;
   nsresult valStatus = NS_CONTENT_ATTR_NOT_THERE;
   if (nsnull != aSpec.mColValueAttr) {
-    valStatus = hContent->GetAttribute(kNameSpaceID_HTML, aSpec.mColValueAttr, valAttr);
+    valStatus = hContent->GetAttr(kNameSpaceID_HTML, aSpec.mColValueAttr, valAttr);
   }
   nsHTMLValue colAttr;
   nsresult colStatus = NS_CONTENT_ATTR_NOT_THERE;

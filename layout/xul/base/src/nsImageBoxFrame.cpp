@@ -192,7 +192,7 @@ void
 nsImageBoxFrame::GetImageSource(nsString& aResult)
 {
   // get the new image src
-  mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::src, aResult);
+  mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, aResult);
 
   // if the new image is empty
   if (aResult.IsEmpty()) {

@@ -411,22 +411,22 @@ nsGfxScrollFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
 
   nsCOMPtr<nsIContent> content;
   elementFactory->CreateInstanceByTag(nodeInfo, getter_AddRefs(content));
-  content->SetAttribute(kNameSpaceID_None, nsXULAtoms::orient,
-                        NS_LITERAL_STRING("horizontal"), PR_FALSE);
+  content->SetAttr(kNameSpaceID_None, nsXULAtoms::orient,
+                   NS_LITERAL_STRING("horizontal"), PR_FALSE);
 
-  content->SetAttribute(kNameSpaceID_None, nsXULAtoms::collapsed,
-                        NS_LITERAL_STRING("true"), PR_FALSE);
+  content->SetAttr(kNameSpaceID_None, nsXULAtoms::collapsed,
+                   NS_LITERAL_STRING("true"), PR_FALSE);
 
   aAnonymousChildren.AppendElement(content);
 
   // create vertical scrollbar
   content = nsnull;
   elementFactory->CreateInstanceByTag(nodeInfo, getter_AddRefs(content));
-  content->SetAttribute(kNameSpaceID_None, nsXULAtoms::orient,
-                        NS_LITERAL_STRING("vertical"), PR_FALSE);
+  content->SetAttr(kNameSpaceID_None, nsXULAtoms::orient,
+                   NS_LITERAL_STRING("vertical"), PR_FALSE);
 
-  content->SetAttribute(kNameSpaceID_None, nsXULAtoms::collapsed,
-                        NS_LITERAL_STRING("true"), PR_FALSE);
+  content->SetAttr(kNameSpaceID_None, nsXULAtoms::collapsed,
+                   NS_LITERAL_STRING("true"), PR_FALSE);
 
   aAnonymousChildren.AppendElement(content);
 
@@ -879,7 +879,7 @@ nsGfxScrollFrameInner::AttributeChanged(nsIDocument *aDocument,
         nscoord y = 0;
 
         nsAutoString value;
-        if (NS_CONTENT_ATTR_HAS_VALUE == hcontent->GetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, value))
+        if (NS_CONTENT_ATTR_HAS_VALUE == hcontent->GetAttr(kNameSpaceID_None, nsXULAtoms::curpos, value))
         {
            PRInt32 error;
 
@@ -887,7 +887,7 @@ nsGfxScrollFrameInner::AttributeChanged(nsIDocument *aDocument,
            x = value.ToInteger(&error);
         }
 
-        if (NS_CONTENT_ATTR_HAS_VALUE == vcontent->GetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, value))
+        if (NS_CONTENT_ATTR_HAS_VALUE == vcontent->GetAttr(kNameSpaceID_None, nsXULAtoms::curpos, value))
         {
            PRInt32 error;
 
@@ -1420,7 +1420,7 @@ nsGfxScrollFrameInner::SetAttribute(nsIBox* aBox, nsIAtom* aAtom, nscoord aSize,
       frame->GetContent(getter_AddRefs(content));
       nsAutoString newValue;
       newValue.AppendInt(aSize);
-      content->SetAttribute(kNameSpaceID_None, aAtom, newValue, aReflow);
+      content->SetAttr(kNameSpaceID_None, aAtom, newValue, aReflow);
       return PR_TRUE;
   }
 
@@ -1475,16 +1475,16 @@ nsGfxScrollFrameInner::SetScrollbarVisibility(nsIBox* aScrollbar, PRBool aVisibl
 
   nsAutoString value;
 
-  if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsXULAtoms::collapsed, value))
+  if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsXULAtoms::collapsed, value))
     old = PR_FALSE;
   
   if (aVisible == old)
     return;
 
   if (!aVisible)
-     content->SetAttribute(kNameSpaceID_None, nsXULAtoms::collapsed, NS_LITERAL_STRING("true"), PR_TRUE);
+     content->SetAttr(kNameSpaceID_None, nsXULAtoms::collapsed, NS_LITERAL_STRING("true"), PR_TRUE);
   else
-     content->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::collapsed, PR_TRUE);
+     content->UnsetAttr(kNameSpaceID_None, nsXULAtoms::collapsed, PR_TRUE);
 
   nsCOMPtr<nsIScrollbarFrame> scrollbar(do_QueryInterface(aScrollbar));
   if (scrollbar) {
@@ -1508,7 +1508,7 @@ nsGfxScrollFrameInner::GetIntegerAttribute(nsIBox* aBox, nsIAtom* atom, PRInt32 
     frame->GetContent(getter_AddRefs(content));
 
     nsAutoString value;
-    if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, atom, value))
+    if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, atom, value))
     {
       PRInt32 error;
 

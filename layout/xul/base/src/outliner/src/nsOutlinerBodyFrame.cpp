@@ -155,7 +155,7 @@ nsOutlinerColumn::nsOutlinerColumn(nsIContent* aColElement, nsIFrame* aFrame)
   mColElement = aColElement; 
 
   // Fetch the ID.
-  mColElement->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, mID);
+  mColElement->GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, mID);
 
   // Cache the ID as an atom.
   mIDAtom = getter_AddRefs(NS_NewAtom(mID));
@@ -166,7 +166,7 @@ nsOutlinerColumn::nsOutlinerColumn(nsIContent* aColElement, nsIFrame* aFrame)
   // Fetch the crop style.
   mCropStyle = 0;
   nsAutoString crop;
-  mColElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::crop, crop);
+  mColElement->GetAttr(kNameSpaceID_None, nsXULAtoms::crop, crop);
   if (crop.EqualsIgnoreCase("center"))
     mCropStyle = 1;
   else if (crop.EqualsIgnoreCase("left") || crop.EqualsIgnoreCase("start"))
@@ -189,7 +189,7 @@ nsOutlinerColumn::nsOutlinerColumn(nsIContent* aColElement, nsIFrame* aFrame)
   // and twisties drawn.
   mIsPrimaryCol = PR_FALSE;
   nsAutoString primary;
-  mColElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::primary, primary);
+  mColElement->GetAttr(kNameSpaceID_None, nsXULAtoms::primary, primary);
   if (primary.EqualsIgnoreCase("true"))
     mIsPrimaryCol = PR_TRUE;
 
@@ -197,7 +197,7 @@ nsOutlinerColumn::nsOutlinerColumn(nsIContent* aColElement, nsIFrame* aFrame)
   // to happen).
   mIsCyclerCol = PR_FALSE;
   nsAutoString cycler;
-  mColElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::cycler, cycler);
+  mColElement->GetAttr(kNameSpaceID_None, nsXULAtoms::cycler, cycler);
   if (cycler.EqualsIgnoreCase("true"))
     mIsCyclerCol = PR_TRUE;
 }
@@ -625,7 +625,7 @@ nsOutlinerBodyFrame::UpdateScrollbar()
 
   nsAutoString curPos;
   curPos.AppendInt(mTopRowIndex*rowHeightAsPixels);
-  scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, curPos, PR_TRUE);
+  scrollbarContent->SetAttr(kNameSpaceID_None, nsXULAtoms::curpos, curPos, PR_TRUE);
 }
 
 nsresult nsOutlinerBodyFrame::SetVisibleScrollbar(PRBool aSetVisible)
@@ -634,15 +634,15 @@ nsresult nsOutlinerBodyFrame::SetVisibleScrollbar(PRBool aSetVisible)
   mScrollbar->GetContent(getter_AddRefs(scrollbarContent));
 
   nsAutoString isCollapsed;
-  scrollbarContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::collapsed,
-                                 isCollapsed);
+  scrollbarContent->GetAttr(kNameSpaceID_None, nsXULAtoms::collapsed,
+                            isCollapsed);
   
   if (!isCollapsed.IsEmpty() && aSetVisible)
-    scrollbarContent->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::collapsed, 
-                                     PR_TRUE);
+    scrollbarContent->UnsetAttr(kNameSpaceID_None, nsXULAtoms::collapsed, 
+                                PR_TRUE);
   else if (isCollapsed.IsEmpty() && !aSetVisible)
-    scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::collapsed,
-                                   NS_LITERAL_STRING("true"), PR_TRUE);
+    scrollbarContent->SetAttr(kNameSpaceID_None, nsXULAtoms::collapsed,
+                              NS_LITERAL_STRING("true"), PR_TRUE);
 
   Invalidate();
 
@@ -680,13 +680,13 @@ NS_IMETHODIMP nsOutlinerBodyFrame::InvalidateScrollbar()
 
   PRInt32 size = rowHeightAsPixels*(rowCount-mPageCount);
   maxposStr.AppendInt(size);
-  scrollbar->SetAttribute(kNameSpaceID_None, nsXULAtoms::maxpos, maxposStr, PR_TRUE);
+  scrollbar->SetAttr(kNameSpaceID_None, nsXULAtoms::maxpos, maxposStr, PR_TRUE);
 
   // Also set our page increment and decrement.
   nscoord pageincrement = mPageCount*rowHeightAsPixels;
   nsAutoString pageStr;
   pageStr.AppendInt(pageincrement);
-  scrollbar->SetAttribute(kNameSpaceID_None, nsXULAtoms::pageincrement, pageStr, PR_TRUE);
+  scrollbar->SetAttr(kNameSpaceID_None, nsXULAtoms::pageincrement, pageStr, PR_TRUE);
 
   return NS_OK;
 }
@@ -2277,7 +2277,7 @@ nsOutlinerBodyFrame::PositionChanged(PRInt32 aOldIndex, PRInt32& aNewIndex)
   mScrollbar->GetContent(getter_AddRefs(scrollbarContent));
   nsAutoString curPos;
   curPos.AppendInt(aNewIndex);
-  scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, curPos, PR_TRUE);
+  scrollbarContent->SetAttr(kNameSpaceID_None, nsXULAtoms::curpos, curPos, PR_TRUE);
 
   return NS_OK;
 }

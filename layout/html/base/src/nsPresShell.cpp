@@ -4830,9 +4830,9 @@ PresShell::HandlePostedAttributeChanges()
       }
 
       if (node->type == eChangeType_Set)
-         node->content->SetAttribute(node->nameSpaceID, node->name, node->value, node->notify);   
+         node->content->SetAttr(node->nameSpaceID, node->name, node->value, node->notify);   
       else
-         node->content->UnsetAttribute(node->nameSpaceID, node->name, node->notify);   
+         node->content->UnsetAttr(node->nameSpaceID, node->name, node->notify);   
 
       NS_RELEASE(node->content);
       node->nsAttributeChangeRequest::~nsAttributeChangeRequest();

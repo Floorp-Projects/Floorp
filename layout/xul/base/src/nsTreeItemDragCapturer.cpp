@@ -280,9 +280,9 @@ nsTreeItemDragCapturer::DragOver(nsIDOMEvent* aDragEvent)
       char buffer[10];
 
       sprintf(buffer, "%d", yLoc);
-      content->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddDropLocationCoord, NS_ConvertASCIItoUCS2(buffer), PR_TRUE );
-      content->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddDropLocation, NS_ConvertASCIItoUCS2(beforeMe ? "true" : "false"), PR_FALSE );
-      content->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddDropOn, NS_ConvertASCIItoUCS2(onMe ? "true" : "false"), PR_TRUE );
+      content->SetAttr ( kNameSpaceID_None, nsXULAtoms::ddDropLocationCoord, NS_ConvertASCIItoUCS2(buffer), PR_TRUE );
+      content->SetAttr ( kNameSpaceID_None, nsXULAtoms::ddDropLocation, NS_ConvertASCIItoUCS2(beforeMe ? "true" : "false"), PR_FALSE );
+      content->SetAttr ( kNameSpaceID_None, nsXULAtoms::ddDropOn, NS_ConvertASCIItoUCS2(onMe ? "true" : "false"), PR_TRUE );
     }
     
     // cache the current drop location
@@ -313,10 +313,10 @@ nsTreeItemDragCapturer::DragExit(nsIDOMEvent* aDragEvent)
     // AttributeChanged() about that attribute.
     char buffer[10];
     sprintf(buffer, "%d", kNoDropLoc);
-    content->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddDropLocationCoord, NS_ConvertASCIItoUCS2(buffer), PR_TRUE );
-    content->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddDropLocation, NS_ConvertASCIItoUCS2("false"), PR_TRUE );
-    content->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddDropOn, NS_ConvertASCIItoUCS2("false"), PR_TRUE );
-    content->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddTriggerRepaintRestore, NS_ConvertASCIItoUCS2("1"), PR_TRUE );  
+    content->SetAttr ( kNameSpaceID_None, nsXULAtoms::ddDropLocationCoord, NS_ConvertASCIItoUCS2(buffer), PR_TRUE );
+    content->SetAttr ( kNameSpaceID_None, nsXULAtoms::ddDropLocation, NS_ConvertASCIItoUCS2("false"), PR_TRUE );
+    content->SetAttr ( kNameSpaceID_None, nsXULAtoms::ddDropOn, NS_ConvertASCIItoUCS2("false"), PR_TRUE );
+    content->SetAttr ( kNameSpaceID_None, nsXULAtoms::ddTriggerRepaintRestore, NS_ConvertASCIItoUCS2("1"), PR_TRUE );  
   }
   
   // cache the current drop location

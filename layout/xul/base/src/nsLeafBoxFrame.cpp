@@ -117,7 +117,7 @@ nsLeafBoxFrame::Init(nsIPresContext*  aPresContext,
 
   if (mContent) {
     nsAutoString value;
-    if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::mousethrough, value)) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::mousethrough, value)) {
         if (value.EqualsIgnoreCase("never")) 
             mMouseThrough = never;
         else if (value.EqualsIgnoreCase("always")) 

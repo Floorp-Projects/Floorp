@@ -759,12 +759,12 @@ nsXULTemplateBuilder::LoadDataSources()
 
 	// check for magical attributes. XXX move to ``flags''?
 	nsAutoString coalesce;
-	mRoot->GetAttribute(kNameSpaceID_None, nsXULAtoms::coalesceduplicatearcs, coalesce);
+	mRoot->GetAttr(kNameSpaceID_None, nsXULAtoms::coalesceduplicatearcs, coalesce);
     if (coalesce == NS_LITERAL_STRING("false"))
 		mDB->SetCoalesceDuplicateArcs(PR_FALSE);
 
     nsAutoString allowneg;
-    mRoot->GetAttribute(kNameSpaceID_None, nsXULAtoms::allownegativeassertions, allowneg);
+    mRoot->GetAttr(kNameSpaceID_None, nsXULAtoms::allownegativeassertions, allowneg);
     if (allowneg == NS_LITERAL_STRING("false"))
 		mDB->SetAllowNegativeAssertions(PR_FALSE);
 
@@ -802,7 +802,7 @@ nsXULTemplateBuilder::LoadDataSources()
     doc->GetDocumentURL(getter_AddRefs(docurl));
 
     nsAutoString datasources;
-    mRoot->GetAttribute(kNameSpaceID_None, nsXULAtoms::datasources, datasources);
+    mRoot->GetAttr(kNameSpaceID_None, nsXULAtoms::datasources, datasources);
 
     PRUint32 first = 0;
 
@@ -1376,7 +1376,7 @@ nsXULTemplateBuilder::ComputeContainmentProperties()
     mContainmentProperties.Clear();
 
     nsAutoString containment;
-    rv = mRoot->GetAttribute(kNameSpaceID_None, nsXULAtoms::containment, containment);
+    rv = mRoot->GetAttr(kNameSpaceID_None, nsXULAtoms::containment, containment);
     if (NS_FAILED(rv)) return rv;
 
     PRUint32 len = containment.Length();
@@ -1445,7 +1445,7 @@ nsXULTemplateBuilder::InitializeRuleNetwork()
     mFlags = 0;
 
     nsAutoString flags;
-    mRoot->GetAttribute(kNameSpaceID_None, nsXULAtoms::flags, flags);
+    mRoot->GetAttr(kNameSpaceID_None, nsXULAtoms::flags, flags);
 
     if (flags.Find(NS_LITERAL_STRING("dont-test-empty").get()) >= 0)
         mFlags |= eDontTestEmpty;
@@ -1478,7 +1478,7 @@ nsXULTemplateBuilder::GetTemplateRoot(nsIContent** aResult)
     //   </window>
     //
     nsAutoString templateID;
-    mRoot->GetAttribute(kNameSpaceID_None, nsXULAtoms::templateAtom, templateID);
+    mRoot->GetAttr(kNameSpaceID_None, nsXULAtoms::templateAtom, templateID);
 
     if (templateID.Length()) {
         nsCOMPtr<nsIDocument> doc;
@@ -1580,12 +1580,12 @@ nsXULTemplateBuilder::CompileRules()
     // Set the "container" and "member" variables, if the user has
     // specified them.
     mContainerSymbol.Truncate();
-    tmpl->GetAttribute(kNameSpaceID_None, nsXULAtoms::container, mContainerSymbol);
+    tmpl->GetAttr(kNameSpaceID_None, nsXULAtoms::container, mContainerSymbol);
     if (mContainerSymbol.Length())
         mRules.PutSymbol(mContainerSymbol.get(), mContainerVar);
 
     mMemberSymbol.Truncate();
-    tmpl->GetAttribute(kNameSpaceID_None, nsXULAtoms::member, mMemberSymbol);
+    tmpl->GetAttr(kNameSpaceID_None, nsXULAtoms::member, mMemberSymbol);
     if (mMemberSymbol.Length())
         mRules.PutSymbol(mMemberSymbol.get(), mMemberVar);
 
@@ -1701,7 +1701,7 @@ nsXULTemplateBuilder::CompileExtendedRule(nsIContent* aRuleElement,
             unvisited.RemoveElementAt(0);
 
             nsAutoString uri;
-            next->GetAttribute(kNameSpaceID_None, nsXULAtoms::uri, uri);
+            next->GetAttr(kNameSpaceID_None, nsXULAtoms::uri, uri);
 
             if (!uri.IsEmpty() && uri[0] == PRUnichar('?')) {
                 // Found it.
@@ -1869,7 +1869,7 @@ nsXULTemplateBuilder::CompileTripleCondition(nsTemplateRule* aRule,
 
     // subject
     nsAutoString subject;
-    aCondition->GetAttribute(kNameSpaceID_None, nsXULAtoms::subject, subject);
+    aCondition->GetAttr(kNameSpaceID_None, nsXULAtoms::subject, subject);
 
     PRInt32 svar = 0;
     nsCOMPtr<nsIRDFResource> sres;
@@ -1880,7 +1880,7 @@ nsXULTemplateBuilder::CompileTripleCondition(nsTemplateRule* aRule,
 
     // predicate
     nsAutoString predicate;
-    aCondition->GetAttribute(kNameSpaceID_None, nsXULAtoms::predicate, predicate);
+    aCondition->GetAttr(kNameSpaceID_None, nsXULAtoms::predicate, predicate);
 
     nsCOMPtr<nsIRDFResource> pres;
     if (predicate[0] == PRUnichar('?')) {
@@ -1895,7 +1895,7 @@ nsXULTemplateBuilder::CompileTripleCondition(nsTemplateRule* aRule,
 
     // object
     nsAutoString object;
-    aCondition->GetAttribute(kNameSpaceID_None, nsXULAtoms::object, object);
+    aCondition->GetAttr(kNameSpaceID_None, nsXULAtoms::object, object);
 
     PRInt32 ovar = 0;
     nsCOMPtr<nsIRDFNode> onode;
@@ -1954,7 +1954,7 @@ nsXULTemplateBuilder::CompileMemberCondition(nsTemplateRule* aRule,
 
     // container
     nsAutoString container;
-    aCondition->GetAttribute(kNameSpaceID_None, nsXULAtoms::container, container);
+    aCondition->GetAttr(kNameSpaceID_None, nsXULAtoms::container, container);
 
     if (container[0] != PRUnichar('?')) {
         PR_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
@@ -1967,7 +1967,7 @@ nsXULTemplateBuilder::CompileMemberCondition(nsTemplateRule* aRule,
 
     // child
     nsAutoString child;
-    aCondition->GetAttribute(kNameSpaceID_None, nsXULAtoms::child, child);
+    aCondition->GetAttr(kNameSpaceID_None, nsXULAtoms::child, child);
 
     if (child[0] != PRUnichar('?')) {
         PR_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
@@ -2051,7 +2051,7 @@ nsXULTemplateBuilder::CompileBinding(nsTemplateRule* aRule,
 
     // subject
     nsAutoString subject;
-    aBinding->GetAttribute(kNameSpaceID_None, nsXULAtoms::subject, subject);
+    aBinding->GetAttr(kNameSpaceID_None, nsXULAtoms::subject, subject);
 
     if (! subject.Length()) {
         PR_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
@@ -2073,7 +2073,7 @@ nsXULTemplateBuilder::CompileBinding(nsTemplateRule* aRule,
 
     // predicate
     nsAutoString predicate;
-    aBinding->GetAttribute(kNameSpaceID_None, nsXULAtoms::predicate, predicate);
+    aBinding->GetAttr(kNameSpaceID_None, nsXULAtoms::predicate, predicate);
     if (! predicate.Length()) {
         PR_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
                ("xultemplate[%p] <binding> requires `predicate'", this));
@@ -2094,7 +2094,7 @@ nsXULTemplateBuilder::CompileBinding(nsTemplateRule* aRule,
 
     // object
     nsAutoString object;
-    aBinding->GetAttribute(kNameSpaceID_None, nsXULAtoms::object, object);
+    aBinding->GetAttr(kNameSpaceID_None, nsXULAtoms::object, object);
 
     if (! object.Length()) {
         PR_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
@@ -2128,15 +2128,15 @@ nsXULTemplateBuilder::CompileSimpleRule(nsIContent* aRuleElement,
     PRBool hasContainerTest = PR_FALSE;
 
     PRInt32 count;
-    aRuleElement->GetAttributeCount(count);
+    aRuleElement->GetAttrCount(count);
 
     // Add constraints for the LHS
     for (PRInt32 i = 0; i < count; ++i) {
         PRInt32 attrNameSpaceID;
         nsCOMPtr<nsIAtom> attr, prefix;
-        rv = aRuleElement->GetAttributeNameAt(i, attrNameSpaceID,
-                                              *getter_AddRefs(attr),
-                                              *getter_AddRefs(prefix));
+        rv = aRuleElement->GetAttrNameAt(i, attrNameSpaceID,
+                                         *getter_AddRefs(attr),
+                                         *getter_AddRefs(prefix));
         if (NS_FAILED(rv)) return rv;
 
         // Note: some attributes must be skipped on XUL template rule subtree
@@ -2152,7 +2152,7 @@ nsXULTemplateBuilder::CompileSimpleRule(nsIContent* aRuleElement,
             continue;
 
         nsAutoString value;
-        rv = aRuleElement->GetAttribute(attrNameSpaceID, attr, value);
+        rv = aRuleElement->GetAttr(attrNameSpaceID, attr, value);
         if (NS_FAILED(rv)) return rv;
 
         TestNode* testnode = nsnull;
@@ -2171,7 +2171,7 @@ nsXULTemplateBuilder::CompileSimpleRule(nsIContent* aRuleElement,
             nsRDFConInstanceTestNode::Test iscontainer =
                 nsRDFConInstanceTestNode::eDontCare;
 
-            rv = aRuleElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::iscontainer, value);
+            rv = aRuleElement->GetAttr(kNameSpaceID_None, nsXULAtoms::iscontainer, value);
             if (NS_FAILED(rv)) return rv;
 
             if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
@@ -2186,7 +2186,7 @@ nsXULTemplateBuilder::CompileSimpleRule(nsIContent* aRuleElement,
             nsRDFConInstanceTestNode::Test isempty =
                 nsRDFConInstanceTestNode::eDontCare;
 
-            rv = aRuleElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::isempty, value);
+            rv = aRuleElement->GetAttr(kNameSpaceID_None, nsXULAtoms::isempty, value);
             if (NS_FAILED(rv)) return rv;
 
             if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
@@ -2298,17 +2298,17 @@ nsXULTemplateBuilder::AddSimpleRuleBindings(nsTemplateRule* aRule, nsIContent* a
         // Iterate through its attributes, looking for substitutions
         // that we need to add as bindings.
         PRInt32 count;
-        element->GetAttributeCount(count);
+        element->GetAttrCount(count);
 
         for (i = 0; i < count; ++i) {
             PRInt32 nameSpaceID;
             nsCOMPtr<nsIAtom> attr, prefix;
 
-            element->GetAttributeNameAt(i, nameSpaceID, *getter_AddRefs(attr),
-                                        *getter_AddRefs(prefix));
+            element->GetAttrNameAt(i, nameSpaceID, *getter_AddRefs(attr),
+                                   *getter_AddRefs(prefix));
 
             nsAutoString value;
-            element->GetAttribute(nameSpaceID, attr, value);
+            element->GetAttr(nameSpaceID, attr, value);
 
             // Scan the attribute for variables, adding a binding for
             // each one.

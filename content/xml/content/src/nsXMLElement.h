@@ -62,9 +62,12 @@ public:
   NS_IMETHOD GetID(nsIAtom*& aResult) const;
 
   // nsIContent
-  NS_IMETHOD SetAttribute(nsINodeInfo *aNodeInfo,
-                          const nsAReadableString& aValue,
-                          PRBool aNotify);
+  NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                     const nsAReadableString& aValue,
+                     PRBool aNotify);
+  NS_IMETHOD SetAttr(nsINodeInfo *aNodeInfo,
+                     const nsAReadableString& aValue,
+                     PRBool aNotify);
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,
                             nsEvent* aEvent,
                             nsIDOMEvent** aDOMEvent,

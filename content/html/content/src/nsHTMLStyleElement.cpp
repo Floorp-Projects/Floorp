@@ -72,17 +72,17 @@ public:
     return rv;
   }
  
-  NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                          const nsAReadableString& aValue, PRBool aNotify) {
-    nsresult rv = nsGenericHTMLContainerElement::SetAttribute(aNameSpaceID, aName,
-                                                              aValue, aNotify);
+  NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                     const nsAReadableString& aValue, PRBool aNotify) {
+    nsresult rv = nsGenericHTMLContainerElement::SetAttr(aNameSpaceID, aName,
+                                                         aValue, aNotify);
     UpdateStyleSheet(aNotify);
     return rv;
   }
-  NS_IMETHOD SetAttribute(nsINodeInfo* aNodeInfo,
-                          const nsAReadableString& aValue, PRBool aNotify) {
-    nsresult rv = nsGenericHTMLContainerElement::SetAttribute(aNodeInfo, aValue,
-                                                              aNotify);
+  NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo,
+                     const nsAReadableString& aValue, PRBool aNotify) {
+    nsresult rv = nsGenericHTMLContainerElement::SetAttr(aNodeInfo, aValue,
+                                                         aNotify);
 
     // nsGenericHTMLContainerElement::SetAttribute(nsINodeInfo* aNodeInfo,
     //                                             const nsAReadableString& aValue,
@@ -98,11 +98,11 @@ public:
 
     return rv;
   }
-  NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+  NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                             PRBool aNotify) {
-    nsresult rv = nsGenericHTMLContainerElement::UnsetAttribute(aNameSpaceID,
-                                                                aAttribute,
-                                                                aNotify);
+    nsresult rv = nsGenericHTMLContainerElement::UnsetAttr(aNameSpaceID,
+                                                           aAttribute,
+                                                           aNotify);
     UpdateStyleSheet(aNotify);
     return rv;
   }
@@ -252,8 +252,8 @@ nsHTMLStyleElement::GetHrefCString(char* &aBuf)
   nsAutoString relURLSpec;
 
   if (NS_CONTENT_ATTR_HAS_VALUE ==
-      nsGenericHTMLContainerElement::GetAttribute(kNameSpaceID_HTML,
-                                                  nsHTMLAtoms::src, relURLSpec)) {
+      nsGenericHTMLContainerElement::GetAttr(kNameSpaceID_HTML,
+                                             nsHTMLAtoms::src, relURLSpec)) {
     // Clean up any leading or trailing whitespace
     relURLSpec.Trim(" \t\n\r");
 

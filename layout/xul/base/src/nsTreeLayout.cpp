@@ -106,7 +106,7 @@ nsTreeLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSiz
     nsCOMPtr<nsIContent> content;
     frame->GetContent(getter_AddRefs(content));
     nsAutoString sizeMode;
-    content->GetAttribute(kNameSpaceID_None, nsXULAtoms::sizemode, sizeMode);
+    content->GetAttr(kNameSpaceID_None, nsXULAtoms::sizemode, sizeMode);
     if (!sizeMode.IsEmpty()) {
       nscoord width = frame->ComputeIntrinsicWidth(aBoxLayoutState);
       if (width > aSize.width)
@@ -134,7 +134,7 @@ nsTreeLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize
     nsCOMPtr<nsIContent> content;
     frame->GetContent(getter_AddRefs(content));
     nsAutoString sizeMode;
-    content->GetAttribute(kNameSpaceID_None, nsXULAtoms::sizemode, sizeMode);
+    content->GetAttr(kNameSpaceID_None, nsXULAtoms::sizemode, sizeMode);
     if (!sizeMode.IsEmpty()) {
       nscoord width = frame->ComputeIntrinsicWidth(aBoxLayoutState);
       if (width > aSize.width)

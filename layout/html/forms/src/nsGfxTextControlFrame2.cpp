@@ -1934,7 +1934,7 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
   // Set the neccessary style attributes on the text control.
 
   if (IsSingleLineTextControl())
-    rv = divContent->SetAttribute(kNameSpaceID_None,nsHTMLAtoms::style, NS_ConvertASCIItoUCS2(DIV_STRING_SINGLELINE), PR_FALSE);
+    rv = divContent->SetAttr(kNameSpaceID_None,nsHTMLAtoms::style, NS_ConvertASCIItoUCS2(DIV_STRING_SINGLELINE), PR_FALSE);
   else {
     nsAutoString divStr; divStr.AssignWithConversion(DIV_STRING);
     const nsStyleDisplay* disp = (const nsStyleDisplay*)
@@ -1944,13 +1944,13 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
     else if (disp->mOverflow == NS_STYLE_OVERFLOW_HIDDEN)
       divStr += NS_LITERAL_STRING("overflow:hidden;");
     else divStr += NS_LITERAL_STRING("overflow:auto;");
-    rv = divContent->SetAttribute(kNameSpaceID_None,nsHTMLAtoms::style, divStr, PR_FALSE);
+    rv = divContent->SetAttr(kNameSpaceID_None,nsHTMLAtoms::style, divStr, PR_FALSE);
   }
 
   if (NS_FAILED(rv))
     return rv;
 
-  // rv = divContent->SetAttribute(kNameSpaceID_None,nsXULAtoms::debug, NS_LITERAL_STRING("true"), PR_FALSE);
+  // rv = divContent->SetAttr(kNameSpaceID_None,nsXULAtoms::debug, NS_LITERAL_STRING("true"), PR_FALSE);
   rv = aChildList.AppendElement(divContent);
 
   if (NS_FAILED(rv))
@@ -2151,7 +2151,7 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
 
     // Check if the readonly attribute is set.
 
-    rv = mContent->GetAttribute(nameSpaceID, nsHTMLAtoms::readonly, resultValue);
+    rv = mContent->GetAttr(nameSpaceID, nsHTMLAtoms::readonly, resultValue);
 
     if (NS_FAILED(rv))
       return rv;
@@ -2161,7 +2161,7 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
 
     // Check if the disabled attribute is set.
 
-    rv = mContent->GetAttribute(nameSpaceID, nsHTMLAtoms::disabled, resultValue);
+    rv = mContent->GetAttr(nameSpaceID, nsHTMLAtoms::disabled, resultValue);
 
     if (NS_FAILED(rv))
       return rv;
@@ -2922,7 +2922,7 @@ nsGfxTextControlFrame2::AttributeChanged(nsIPresContext* aPresContext,
     if (mEditor && mContent)
     {
       nsString value;
-      mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::value, value);
+      mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::value, value);
       mEditor->EnableUndo(PR_FALSE);      // wipe out undo info
       SetTextControlFrameState(value);    // set new text value
       mEditor->EnableUndo(PR_TRUE);       // fire up a new txn stack

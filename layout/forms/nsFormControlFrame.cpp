@@ -550,7 +550,7 @@ nsFormControlFrame::RegUnRegAccessKey(nsIPresContext* aPresContext, nsIFrame * a
       PRInt32 nameSpaceID;
       content->GetNameSpaceID(nameSpaceID);
       nsAutoString resultValue;
-      rv = content->GetAttribute(nameSpaceID, nsHTMLAtoms::accesskey, accessKey);
+      rv = content->GetAttr(nameSpaceID, nsHTMLAtoms::accesskey, accessKey);
 #else
       nsCOMPtr<nsIDOMHTMLInputElement> inputElement(do_QueryInterface(content));
       if (inputElement) {

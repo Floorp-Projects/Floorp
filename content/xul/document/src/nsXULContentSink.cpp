@@ -1268,7 +1268,7 @@ XULContentSinkImpl::AddAttributes(const nsIParserNode& aNode, nsXULPrototypeElem
         nsAutoString value;
 
         // Compute the element's class list if the element has a 'class' attribute.
-        rv = aElement->GetAttribute(kNameSpaceID_None, kClassAtom, value);
+        rv = aElement->GetAttr(kNameSpaceID_None, kClassAtom, value);
         if (NS_FAILED(rv)) return rv;
 
         if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
@@ -1277,7 +1277,7 @@ XULContentSinkImpl::AddAttributes(const nsIParserNode& aNode, nsXULPrototypeElem
         }
 
         // Parse the element's 'style' attribute
-        rv = aElement->GetAttribute(kNameSpaceID_None, kStyleAtom, value);
+        rv = aElement->GetAttr(kNameSpaceID_None, kStyleAtom, value);
         if (NS_FAILED(rv)) return rv;
 
         if (rv == NS_CONTENT_ATTR_HAS_VALUE) {

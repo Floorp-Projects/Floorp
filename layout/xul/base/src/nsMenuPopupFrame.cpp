@@ -916,11 +916,11 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
   //viewManager->ResizeView(view, mRect.width, mRect.height);
   
   nsAutoString shouldDisplay, menuActive;
-  mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, menuActive);
+  mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::menuactive, menuActive);
   if (menuActive != NS_LITERAL_STRING("true")) {
-    mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::menutobedisplayed, shouldDisplay);
+    mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::menutobedisplayed, shouldDisplay);
     if ( shouldDisplay == NS_LITERAL_STRING("true") )
-      mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, NS_LITERAL_STRING("true"), PR_TRUE);
+      mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::menuactive, NS_LITERAL_STRING("true"), PR_TRUE);
   }
 
   return NS_OK;
@@ -1235,7 +1235,7 @@ nsMenuPopupFrame::FindMenuWithShortcut(PRUint32 aLetter)
     if (IsValidItem(current)) {
       // Get the shortcut attribute.
       nsAutoString shortcutKey;
-      current->GetAttribute(kNameSpaceID_None, nsXULAtoms::accesskey, shortcutKey);
+      current->GetAttr(kNameSpaceID_None, nsXULAtoms::accesskey, shortcutKey);
       if (shortcutKey.Length() > 0) {
         // We've got something.
         char tempChar[2];
@@ -1520,7 +1520,7 @@ PRBool
 nsMenuPopupFrame::IsDisabled(nsIContent* aContent)
 {
   nsString disabled;
-  aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, disabled);
+  aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, disabled);
   if (disabled == NS_LITERAL_STRING("true"))
     return PR_TRUE;
   return PR_FALSE;

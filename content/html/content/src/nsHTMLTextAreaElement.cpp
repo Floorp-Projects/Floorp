@@ -212,9 +212,9 @@ nsHTMLTextAreaElement::SetFocus(nsIPresContext* aPresContext)
   nsAutoString disabled;
 
   if (NS_CONTENT_ATTR_HAS_VALUE ==
-      nsGenericHTMLContainerFormElement::GetAttribute(kNameSpaceID_HTML,
-                                                      nsHTMLAtoms::disabled,
-                                                      disabled)) {
+      nsGenericHTMLContainerFormElement::GetAttr(kNameSpaceID_HTML,
+                                                 nsHTMLAtoms::disabled,
+                                                 disabled)) {
     return NS_OK;
   }
 
@@ -279,9 +279,9 @@ nsHTMLTextAreaElement::Select()
   // first see if we are disabled or not. If disabled then do nothing.
   nsAutoString disabled;
   if (NS_CONTENT_ATTR_HAS_VALUE ==
-      nsGenericHTMLContainerFormElement::GetAttribute(kNameSpaceID_HTML,
-                                                      nsHTMLAtoms::disabled,
-                                                      disabled)) {
+      nsGenericHTMLContainerFormElement::GetAttr(kNameSpaceID_HTML,
+                                                 nsHTMLAtoms::disabled,
+                                                 disabled)) {
     return rv;
   }
 
@@ -370,9 +370,9 @@ nsHTMLTextAreaElement::GetValue(nsAWritableString& aValue)
     return NS_OK;
   }
    //XXX: Should this ASSERT instead of getting the default value here?
-  return nsGenericHTMLContainerFormElement::GetAttribute(kNameSpaceID_HTML,
-                                                         nsHTMLAtoms::value,
-                                                         aValue); 
+  return nsGenericHTMLContainerFormElement::GetAttr(kNameSpaceID_HTML,
+                                                    nsHTMLAtoms::value,
+                                                    aValue); 
 }
 
 
@@ -392,8 +392,8 @@ nsHTMLTextAreaElement::SetValue(const nsAReadableString& aValue)
 
   // Set the attribute in the DOM too, we call SetAttribute with aNotify
   // false so that we don't generate unnecessary reflows.
-  nsGenericHTMLContainerFormElement::SetAttribute(kNameSpaceID_HTML,
-                                                  nsHTMLAtoms::value, aValue,
+  nsGenericHTMLContainerFormElement::SetAttr(kNameSpaceID_HTML,
+                                             nsHTMLAtoms::value, aValue,
                                                   PR_FALSE);
 
   return NS_OK;
@@ -402,9 +402,9 @@ nsHTMLTextAreaElement::SetValue(const nsAReadableString& aValue)
 NS_IMETHODIMP
 nsHTMLTextAreaElement::GetDefaultValue(nsAWritableString& aDefaultValue)
 {
-  nsGenericHTMLContainerFormElement::GetAttribute(kNameSpaceID_HTML,
-                                                  nsHTMLAtoms::defaultvalue,
-                                                  aDefaultValue);
+  nsGenericHTMLContainerFormElement::GetAttr(kNameSpaceID_HTML,
+                                             nsHTMLAtoms::defaultvalue,
+                                             aDefaultValue);
 
   return NS_OK;                                                    
 }  
@@ -424,12 +424,12 @@ nsHTMLTextAreaElement::SetDefaultValue(const nsAReadableString& aDefaultValue)
     defaultValue.Cut(0,1);
   }
 
-  nsGenericHTMLContainerFormElement::SetAttribute(kNameSpaceID_HTML,
-                                                  nsHTMLAtoms::defaultvalue,
-                                                  defaultValue, PR_TRUE);
-  nsGenericHTMLContainerFormElement::SetAttribute(kNameSpaceID_HTML,
-                                                  nsHTMLAtoms::value,
-                                                  defaultValue, PR_TRUE);
+  nsGenericHTMLContainerFormElement::SetAttr(kNameSpaceID_HTML,
+                                             nsHTMLAtoms::defaultvalue,
+                                             defaultValue, PR_TRUE);
+  nsGenericHTMLContainerFormElement::SetAttr(kNameSpaceID_HTML,
+                                             nsHTMLAtoms::value,
+                                             defaultValue, PR_TRUE);
   return NS_OK;
 }
 

@@ -144,7 +144,7 @@ nsXBLSpecialDocInfo::GetHandlers(nsIXBLDocumentInfo* aInfo,
         nsCOMPtr<nsIContent> child;
         root->ChildAt(i, *getter_AddRefs(child));
         nsAutoString id;
-        child->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, id);
+        child->GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, id);
         if (id.EqualsWithConversion(PromiseFlatCString(aRef).get())) {
           NS_NewXBLPrototypeBinding(aRef, child, aInfo, getter_AddRefs(binding));
           aInfo->SetPrototypeBinding(aRef, binding);
@@ -286,7 +286,7 @@ nsXBLWindowHandler::WalkHandlersInternal(nsIDOMEvent* aEvent, nsIAtom* aEventTyp
       if (mElement) {
         // We are.  Obtain our command attribute.
         nsAutoString command;
-        elt->GetAttribute(kNameSpaceID_None, nsXULAtoms::command, command);
+        elt->GetAttr(kNameSpaceID_None, nsXULAtoms::command, command);
         if (!command.IsEmpty()) {
           // Locate the command element in question.
           nsCOMPtr<nsIDocument> doc;

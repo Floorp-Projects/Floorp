@@ -221,8 +221,8 @@ protected:
   {
     nsAutoString tmp;
 
-    nsGenericHTMLLeafFormElement::GetAttribute(kNameSpaceID_HTML,
-                                               nsHTMLAtoms::type, tmp);
+    nsGenericHTMLLeafFormElement::GetAttr(kNameSpaceID_HTML,
+                                          nsHTMLAtoms::type, tmp);
 
     return tmp.EqualsIgnoreCase("image");
   }
@@ -332,17 +332,17 @@ nsHTMLInputElement::GetForm(nsIDOMHTMLFormElement** aForm)
 NS_IMETHODIMP 
 nsHTMLInputElement::GetDefaultValue(nsAWritableString& aDefaultValue)
 {
-  return nsGenericHTMLLeafFormElement::GetAttribute(kNameSpaceID_HTML,
-                                                    nsHTMLAtoms::value,
-                                                    aDefaultValue);
+  return nsGenericHTMLLeafFormElement::GetAttr(kNameSpaceID_HTML,
+                                               nsHTMLAtoms::value,
+                                               aDefaultValue);
 }
 
 NS_IMETHODIMP 
 nsHTMLInputElement::SetDefaultValue(const nsAReadableString& aDefaultValue)
 {
-  return nsGenericHTMLLeafFormElement::SetAttribute(kNameSpaceID_HTML,
-                                                    nsHTMLAtoms::value,
-                                                    aDefaultValue, PR_TRUE); 
+  return nsGenericHTMLLeafFormElement::SetAttr(kNameSpaceID_HTML,
+                                               nsHTMLAtoms::value,
+                                               aDefaultValue, PR_TRUE); 
 }
 
 NS_IMETHODIMP 
@@ -366,7 +366,7 @@ nsHTMLInputElement::SetDefaultChecked(PRBool aDefaultChecked)
   if (aDefaultChecked) {                                                     
     rv = SetHTMLAttribute(nsHTMLAtoms::checked, empty, PR_TRUE); 
   } else {                                                            
-    rv = UnsetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::checked, PR_TRUE);
+    rv = UnsetAttr(kNameSpaceID_HTML, nsHTMLAtoms::checked, PR_TRUE);
   }
 
   if (NS_SUCCEEDED(rv)) {
@@ -397,9 +397,9 @@ NS_IMPL_STRING_ATTR(nsHTMLInputElement, UseMap, usemap)
 NS_IMETHODIMP
 nsHTMLInputElement::GetType(nsAWritableString& aValue)
 {
-  nsresult rv = nsGenericHTMLLeafFormElement::GetAttribute(kNameSpaceID_HTML,
-                                                           nsHTMLAtoms::type,
-                                                           aValue);
+  nsresult rv = nsGenericHTMLLeafFormElement::GetAttr(kNameSpaceID_HTML,
+                                                      nsHTMLAtoms::type,
+                                                      aValue);
 
   if (rv == NS_CONTENT_ATTR_NOT_THERE)
     aValue.Assign(NS_LITERAL_STRING("text"));
@@ -410,9 +410,9 @@ nsHTMLInputElement::GetType(nsAWritableString& aValue)
 NS_IMETHODIMP
 nsHTMLInputElement::SetType(const nsAReadableString& aValue)
 {
-  return nsGenericHTMLLeafFormElement::SetAttribute(kNameSpaceID_HTML,
-                                                    nsHTMLAtoms::type, aValue,
-                                                    PR_TRUE);
+  return nsGenericHTMLLeafFormElement::SetAttr(kNameSpaceID_HTML,
+                                               nsHTMLAtoms::type, aValue,
+                                               PR_TRUE);
 }
 
 NS_IMETHODIMP 
@@ -443,9 +443,9 @@ nsHTMLInputElement::GetValue(nsAWritableString& aValue)
   }
 
   // Treat value == defaultValue for other input elements
-  nsresult rv = nsGenericHTMLLeafFormElement::GetAttribute(kNameSpaceID_HTML,
-                                                           nsHTMLAtoms::value,
-                                                           aValue);
+  nsresult rv = nsGenericHTMLLeafFormElement::GetAttr(kNameSpaceID_HTML,
+                                                      nsHTMLAtoms::value,
+                                                      aValue);
 
   if (rv == NS_CONTENT_ATTR_NOT_THERE && type == NS_FORM_INPUT_RADIO) {
     // The defauly value of a radio input is "on".
@@ -511,9 +511,9 @@ nsHTMLInputElement::SetValue(const nsAReadableString& aValue)
   }
 
   // Treat value == defaultValue for other input elements.
-  return nsGenericHTMLLeafFormElement::SetAttribute(kNameSpaceID_HTML,
-                                                    nsHTMLAtoms::value,
-                                                    aValue, PR_TRUE);
+  return nsGenericHTMLLeafFormElement::SetAttr(kNameSpaceID_HTML,
+                                               nsHTMLAtoms::value,
+                                               aValue, PR_TRUE);
 }
 
 NS_IMETHODIMP 
@@ -666,9 +666,9 @@ nsHTMLInputElement::SetFocus(nsIPresContext* aPresContext)
   // first see if we are disabled or not. If disabled then do nothing.
   nsAutoString disabled;
   if (NS_CONTENT_ATTR_HAS_VALUE ==
-      nsGenericHTMLLeafFormElement::GetAttribute(kNameSpaceID_HTML,
-                                                 nsHTMLAtoms::disabled,
-                                                 disabled)) {
+      nsGenericHTMLLeafFormElement::GetAttr(kNameSpaceID_HTML,
+                                            nsHTMLAtoms::disabled,
+                                            disabled)) {
     return NS_OK;
   }
  
@@ -754,9 +754,9 @@ nsHTMLInputElement::Select()
   // first see if we are disabled or not. If disabled then do nothing.
   nsAutoString disabled;
   if (NS_CONTENT_ATTR_HAS_VALUE ==
-      nsGenericHTMLLeafFormElement::GetAttribute(kNameSpaceID_HTML,
-                                                 nsHTMLAtoms::disabled,
-                                                 disabled)) {
+      nsGenericHTMLLeafFormElement::GetAttr(kNameSpaceID_HTML,
+                                            nsHTMLAtoms::disabled,
+                                            disabled)) {
     return rv;
   }
 
@@ -824,9 +824,9 @@ nsHTMLInputElement::Click()
   // first see if we are disabled or not. If disabled then do nothing.
   nsAutoString disabled;
   if (NS_CONTENT_ATTR_HAS_VALUE ==
-      nsGenericHTMLLeafFormElement::GetAttribute(kNameSpaceID_HTML,
-                                                 nsHTMLAtoms::disabled,
-                                                 disabled)) {
+      nsGenericHTMLLeafFormElement::GetAttr(kNameSpaceID_HTML,
+                                            nsHTMLAtoms::disabled,
+                                            disabled)) {
     return rv;
   }
 

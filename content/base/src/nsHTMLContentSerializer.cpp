@@ -281,13 +281,13 @@ nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
   PRInt32 namespaceID;
   nsCOMPtr<nsIAtom> attrName, attrPrefix;
 
-  aContent->GetAttributeCount(count);
+  aContent->GetAttrCount(count);
 
   for (index = 0; index < count; index++) {
-    aContent->GetAttributeNameAt(index, 
-                                 namespaceID,
-                                 *getter_AddRefs(attrName),
-                                 *getter_AddRefs(attrPrefix));
+    aContent->GetAttrNameAt(index, 
+                            namespaceID,
+                            *getter_AddRefs(attrName),
+                            *getter_AddRefs(attrPrefix));
 
     // Filter out any attribute starting with _moz
     const PRUnichar* sharedName;
@@ -298,7 +298,7 @@ nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
       continue;
     }
 
-    aContent->GetAttribute(namespaceID, attrName, valueStr);
+    aContent->GetAttr(namespaceID, attrName, valueStr);
 
     // 
     // Filter out special case of <br type="_moz"> or <br _moz*>,
@@ -408,7 +408,7 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
   if (name.get() == nsHTMLAtoms::textarea)
   {
     nsAutoString valueStr;
-    content->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::value, valueStr);
+    content->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::value, valueStr);
     AppendToString(valueStr, aStr);
   }
 
@@ -703,9 +703,9 @@ nsHTMLContentSerializer::HasDirtyAttr(nsIContent* aContent)
 {
   nsAutoString val;
 
-  if (NS_CONTENT_ATTR_NOT_THERE != aContent->GetAttribute(kNameSpaceID_None,
-                                                          nsLayoutAtoms::mozdirty,
-                                                          val)) {
+  if (NS_CONTENT_ATTR_NOT_THERE != aContent->GetAttr(kNameSpaceID_None,
+                                                     nsLayoutAtoms::mozdirty,
+                                                     val)) {
     return PR_TRUE;
   }
   else {

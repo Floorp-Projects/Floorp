@@ -1273,7 +1273,7 @@ nsHTMLDocument::AttributeChanged(nsIContent* aContent, PRInt32 aNameSpaceID,
   } else if (aAttribute == nsHTMLAtoms::id) {
     nsAutoString value;
 
-    aContent->GetAttribute(aNameSpaceID, nsHTMLAtoms::id, value);
+    aContent->GetAttr(aNameSpaceID, nsHTMLAtoms::id, value);
 
     if (!value.IsEmpty()) {
       nsresult rv = AddToIdTable(value, aContent, PR_TRUE);
@@ -1908,7 +1908,7 @@ nsHTMLDocument::MatchLinks(nsIContent *aContent, nsString* aData)
   
   if ((nsnull != name) && 
       ((nsHTMLAtoms::area == name) || (nsHTMLAtoms::a == name)) &&
-      (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, attr))) {
+      (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::href, attr))) {
       result = PR_TRUE;
   }
 
@@ -1943,7 +1943,7 @@ nsHTMLDocument::MatchAnchors(nsIContent *aContent, nsString* aData)
   
   if ((nsnull != name) && 
       (nsHTMLAtoms::a == name) &&
-      (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::name, attr))) {
+      (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::name, attr))) {
       result = PR_TRUE;
   }
 
@@ -2117,17 +2117,17 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
 
     count = 0;
 
-    mRootContent->GetAttributeCount(count);
+    mRootContent->GetAttrCount(count);
 
     // Remove all attributes from the root element
     while (--count >= 0) {
       nsCOMPtr<nsIAtom> name, prefix;
       PRInt32 nsid;
 
-      root->GetAttributeNameAt(count, nsid, *getter_AddRefs(name),
-                               *getter_AddRefs(prefix));
+      root->GetAttrNameAt(count, nsid, *getter_AddRefs(name),
+                          *getter_AddRefs(prefix));
 
-      root->UnsetAttribute(nsid, name, PR_FALSE);
+      root->UnsetAttr(nsid, name, PR_FALSE);
     }
 
     // Remove the root from the childlist
@@ -2473,8 +2473,8 @@ nsHTMLDocument::MatchId(nsIContent *aContent, const nsAReadableString& aId)
 {
   nsAutoString value;
 
-  nsresult rv = aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::id,
-                                       value);
+  nsresult rv = aContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::id,
+                                  value);
 
   if (rv == NS_CONTENT_ATTR_HAS_VALUE && aId.Equals(value)) {
     return aContent;
@@ -2569,8 +2569,8 @@ nsHTMLDocument::MatchNameAttribute(nsIContent* aContent, nsString* aData)
 {
   nsAutoString name;
 
-  nsresult rv = aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::name,
-                                       name);
+  nsresult rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::name,
+                                  name);
 
   if (NS_SUCCEEDED(rv) && aData && name.Equals(*aData)) {
     return PR_TRUE;
@@ -3156,7 +3156,7 @@ IsNamedItem(nsIContent* aContent, nsIAtom *aTag, nsAWritableString& aName)
   if ((aTag == nsHTMLAtoms::img) || (aTag == nsHTMLAtoms::form) ||
       (aTag == nsHTMLAtoms::applet) || (aTag == nsHTMLAtoms::embed) ||
       (aTag == nsHTMLAtoms::object)) {
-    aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::name, aName);
+    aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, aName);
 
     if (!aName.IsEmpty()) {
       return PR_TRUE;
@@ -3226,7 +3226,7 @@ nsHTMLDocument::RemoveFromIdTable(nsIContent *aContent)
 {
   nsAutoString value;
 
-  aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, value);
+  aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, value);
 
   if (value.IsEmpty()) {
     return NS_OK;
@@ -3310,7 +3310,7 @@ nsHTMLDocument::RegisterNamedItems(nsIContent *aContent)
     AddToNameTable(value, aContent);
   }
 
-  aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, value);
+  aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, value);
 
   if (!value.IsEmpty()) {
     nsresult rv = AddToIdTable(value, aContent, PR_FALSE);
@@ -3355,7 +3355,7 @@ nsHTMLDocument::FindNamedItems(const nsAReadableString& aName,
   if (IsNamedItem(aContent, tag, value) && value.Equals(aName)) {
     aList.AppendElement(aContent);
   } else {
-    aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, value);
+    aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, value);
 
     if (value.Equals(aName)) {
       AddToIdTable(value, aContent, PR_TRUE);

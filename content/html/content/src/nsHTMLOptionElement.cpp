@@ -333,7 +333,7 @@ nsHTMLOptionElement::SetDisabled(PRBool aDisabled)
       }
     }
   } else {
-    rv = UnsetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::selected, PR_TRUE);
+    rv = UnsetAttr(kNameSpaceID_HTML, nsHTMLAtoms::selected, PR_TRUE);
   }
 
   return NS_OK;
@@ -342,8 +342,8 @@ nsHTMLOptionElement::SetDisabled(PRBool aDisabled)
 NS_IMETHODIMP                                                      
 nsHTMLOptionElement::GetLabel(nsAWritableString& aValue)
 {                                                                  
-  nsGenericHTMLContainerElement::GetAttribute(kNameSpaceID_HTML,
-                                              nsHTMLAtoms::label, aValue);
+  nsGenericHTMLContainerElement::GetAttr(kNameSpaceID_HTML,
+                                         nsHTMLAtoms::label, aValue);
   return NS_OK;
 }         
                                                          
@@ -352,9 +352,9 @@ nsHTMLOptionElement::SetLabel(const nsAReadableString& aValue)
 {                                                                  
   nsresult result;
 
-  result = nsGenericHTMLContainerElement::SetAttribute(kNameSpaceID_HTML,
-                                                       nsHTMLAtoms::label,
-                                                       aValue, PR_TRUE); 
+  result = nsGenericHTMLContainerElement::SetAttr(kNameSpaceID_HTML,
+                                                  nsHTMLAtoms::label,
+                                                  aValue, PR_TRUE); 
   if (NS_SUCCEEDED(result)) {
     nsIFormControlFrame* fcFrame = nsnull;
 
@@ -395,7 +395,7 @@ nsHTMLOptionElement::SetDefaultSelected(PRBool aDefaultSelected)
   if (aDefaultSelected) {
     rv = SetHTMLAttribute(nsHTMLAtoms::selected, empty, PR_TRUE);
   } else {
-    rv = UnsetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::selected, PR_TRUE);
+    rv = UnsetAttr(kNameSpaceID_HTML, nsHTMLAtoms::selected, PR_TRUE);
   }
 
   if (NS_SUCCEEDED(rv)) {
@@ -716,9 +716,9 @@ nsHTMLOptionElement::Initialize(JSContext* aContext,
         nsAutoString value(NS_REINTERPRET_CAST(const PRUnichar*,
                                                JS_GetStringChars(jsstr)));
 
-        result = nsGenericHTMLContainerElement::SetAttribute(kNameSpaceID_HTML,
-                                                             nsHTMLAtoms::value,
-                                                             value, PR_FALSE);
+        result = nsGenericHTMLContainerElement::SetAttr(kNameSpaceID_HTML,
+                                                        nsHTMLAtoms::value,
+                                                        value, PR_FALSE);
         if (NS_FAILED(result)) {
           return result;
         }

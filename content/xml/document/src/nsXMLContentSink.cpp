@@ -514,7 +514,7 @@ nsXMLContentSink::AddAttributes(const nsIParserNode& aNode,
     NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
 
     // Add attribute to content
-    aContent->SetAttribute(ni, aNode.GetValueAt(i), PR_FALSE);
+    aContent->SetAttr(ni, aNode.GetValueAt(i), PR_FALSE);
   }
 
   // Give autoloading links a chance to fire
@@ -1128,13 +1128,13 @@ nsXMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
   nsAutoString type; 
   nsAutoString media; 
 
-  mStyleElement->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::title, title);
+  mStyleElement->GetAttr(kNameSpaceID_None, nsHTMLAtoms::title, title);
   title.CompressWhitespace();
 
-  mStyleElement->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, type);
+  mStyleElement->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, type);
   type.StripWhitespace();
 
-  mStyleElement->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::media, media);
+  mStyleElement->GetAttr(kNameSpaceID_None, nsHTMLAtoms::media, media);
   media.ToLowerCase();
 
   nsAutoString  mimeType;
@@ -1187,11 +1187,11 @@ nsXMLContentSink::ProcessBASETag()
   if (mDocument) {
     nsAutoString value;
   
-    if (NS_CONTENT_ATTR_HAS_VALUE == mBaseElement->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::target, value)) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == mBaseElement->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::target, value)) {
       mDocument->SetBaseTarget(value);
     }
 
-    if (NS_CONTENT_ATTR_HAS_VALUE == mBaseElement->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, value)) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == mBaseElement->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::href, value)) {
       nsCOMPtr<nsIURI> baseURI;
       rv = NS_NewURI(getter_AddRefs(baseURI), value, nsnull);
       if (NS_SUCCEEDED(rv)) {
@@ -1241,10 +1241,10 @@ nsXMLContentSink::ProcessMETATag()
 
   // set any HTTP-EQUIV data into document's header data as well as url
   nsAutoString header;
-  mMetaElement->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::httpEquiv, header);
+  mMetaElement->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::httpEquiv, header);
   if (header.Length() > 0) {
     nsAutoString result;
-    mMetaElement->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::content, result);
+    mMetaElement->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::content, result);
     if (result.Length() > 0) {
       header.ToLowerCase();
       nsCOMPtr<nsIAtom> fieldAtom(dont_AddRef(NS_NewAtom(header)));
