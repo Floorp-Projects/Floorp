@@ -626,6 +626,7 @@ NS_IMETHODIMP nsMsgDatabase::ForceClosed()
 {
 	nsresult	err = NS_OK;
 
+	NotifyAnnouncerGoingAway();
 	// OK, remove from cache first, because now with the new cache that warren put it,
 	// removing from the cache releases an object. That explains why close was
 	// never getting called. ARGGGHHH!
