@@ -18,7 +18,9 @@
 #ifndef nsDST_h___
 #define nsDST_h___
 
+#ifdef HAVE_MEMORY_H
 #include <memory.h>
+#endif
 #include "plarena.h"
 #ifdef NS_DEBUG
 #include <stdio.h>
