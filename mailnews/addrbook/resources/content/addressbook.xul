@@ -164,8 +164,8 @@ Rights Reserved.
 								  value="&showAbToolbarCmd.label;"
 								  accesskey="&showAbToolbarCmd.accesskey;"
 								  oncommand="goToggleToolbar('abToolbar', 'menu_showAbToolbar')"
-								  checked="true"/>
-						<menuitem id="menu_showTaskbar"/>
+								  checked="true" type="checkbox"/>
+						<menuitem id="menu_showTaskbar" type="checkbox"/>
 					</menupopup>
 				</menu>
 				<menuitem value="&showCardPane.label;" disabled="true" oncommand="AbShowCardPane()"/>
@@ -194,19 +194,19 @@ Rights Reserved.
 						<menuitem value="&sortByNameCmd.label;"
 								  id="cmd_SortByName"
 								  disabled="true"
-								  oncommand="top.SortResultPane('NameColumn', 'http://home.netscape.com/NC-rdf#DisplayName')"/>
+								  oncommand="top.SortResultPane('NameColumn', 'http://home.netscape.com/NC-rdf#DisplayName')" name="sortas" type="radio" checked="true"/>
 						<menuitem value="&sortByEmailCmd.label;"
 								  id="cmd_SortByEmail"
 								  disabled="true"
-								  oncommand="top.SortResultPane('EmailColumn', 'http://home.netscape.com/NC-rdf#PrimaryEmail')"/>
+								  oncommand="top.SortResultPane('EmailColumn', 'http://home.netscape.com/NC-rdf#PrimaryEmail')" name="sortas" type="radio"/>
 						<menuitem value="&sortByWorkPhoneCmd.label;"
 								  id="cmd_SortByWorkPhone"
 								  disabled="true"
-								  oncommand="top.SortResultPane('WorkPhoneColumn', 'http://home.netscape.com/NC-rdf#WorkPhone')"/>
+								  oncommand="top.SortResultPane('WorkPhoneColumn', 'http://home.netscape.com/NC-rdf#WorkPhone')" name="sortas" type="radio"/>
 						<menuitem value="&sortByOrganizationCmd.label;"
 								  id="cmd_SortByOrganization"
 								  disabled="true"
-								  oncommand="top.SortResultPane('OrganizationColumn', 'http://home.netscape.com/NC-rdf#Comapny')"/>
+								  oncommand="top.SortResultPane('OrganizationColumn', 'http://home.netscape.com/NC-rdf#Company')" name="sortas" type="radio"/>
 						<menuseparator/>
 						<menuitem value="&sortAscendingCmd.label;" disabled="true" oncommand="AbSortAscending()"/>
 						<menuitem value="&sortDescendingCmd.label;" disabled="true" oncommand="AbSortDescending()"/>
