@@ -453,7 +453,32 @@ nsHTTPServerListener::OnStopRequest(nsIChannel* channel,
                   ("nsHTTPServerListener::OnStopRequest [this=%x]. "
                    "Discarding 304 response\n", this));
         }
-        mChannel->ReleaseTransport(channel);
+        PRBool keepAlive = PR_FALSE;
+
+        if (mResponse)
+        {
+            HTTPVersion ver;
+            rv = mResponse -> GetServerVersion (&ver);
+            if (NS_SUCCEEDED (rv))
+            {
+                HTTPConnectionToken token = mResponse -> GetHttpConnectionToken ();
+
+                if (ver == HTTP_ONE_ONE )
+                {
+                    // ruslan: some older incorrect 1.1 servers may do this
+                    if (token != HTTP_CONNECTION_TOKEN_CLOSE)
+                        keepAlive = PR_TRUE;
+                }
+                else
+                if (ver == HTTP_ONE_ZERO)
+                {
+                    if (token == HTTP_CONNECTION_TOKEN_KEEPALIVE)
+                        keepAlive = PR_TRUE;
+                }
+            }
+        }
+
+        mChannel -> ReleaseTransport (channel, keepAlive);
     }
 
     NS_IF_RELEASE(mChannel);
