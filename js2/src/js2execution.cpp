@@ -1407,12 +1407,12 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
 
                     NamespaceList *t = a1->mNamespaceList;
                     while (t) {
-                        x->mNamespaceList = new NamespaceList(&t->mName, x->mNamespaceList);
+                        x->mNamespaceList = new NamespaceList(t->mName, x->mNamespaceList);
                         t = t->mNext;
                     }
                     t = a2->mNamespaceList;
                     while (t) {
-                        x->mNamespaceList = new NamespaceList(&t->mName, x->mNamespaceList);
+                        x->mNamespaceList = new NamespaceList(t->mName, x->mNamespaceList);
                         t = t->mNext;
                     }
                     if (a1->mExtendArgument)

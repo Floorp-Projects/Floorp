@@ -728,7 +728,7 @@ bool ByteCodeGen::genCodeForStatement(StmtNode *p, ByteCodeGen *static_cg, uint3
             VariableBinding *v = vs->bindings;
             bool isStatic = (vs->attributeValue->mTrueFlags & Property::Static) == Property::Static;
             while (v)  {
-                Reference *ref = mScopeChain->getName(*v->name, CURRENT_ATTR, Write);
+                Reference *ref = mScopeChain->getName(*v->name, vs->attributeValue->mNamespaceList, Write);
                 ASSERT(ref);    // must have been added previously by collectNames
                 if (v->initializer) {
                     if (isStatic && (static_cg != NULL)) {

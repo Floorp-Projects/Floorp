@@ -94,11 +94,9 @@ Attribute *Context::executeAttributes(ExprNode *attr)
 }
 
 
-
-// find a property by the given name, and then check to see if there's any
-// overlap between the supplied attribute list and the property's list.
-// ***** REWRITE ME -- matching attribute lists for inclusion is a bad idea.
-// XXX it's re-written a little bit, but is still doing linear searching (o^2) ...
+// Find a property with the given name, but make sure it's in
+// the supplied namespace. XXX speed up! XXX
+//
 PropertyIterator JSObject::findNamespacedProperty(const String &name, NamespaceList *names)
 {
     for (PropertyIterator i = mProperties.lower_bound(name), 
@@ -796,7 +794,7 @@ void ScopeChain::collectNames(StmtNode *p)
         {
             ClassStmtNode *classStmt = checked_cast<ClassStmtNode *>(p);
             const StringAtom *name = &classStmt->name;
-            JSType *thisClass = new JSType(name, NULL);
+            JSType *thisClass = new JSType(m_cx, name, NULL);
 
             m_cx->setAttributeValue(classStmt, 0);              // XXX default attribute for a class?
 
@@ -863,6 +861,12 @@ void ScopeChain::collectNames(StmtNode *p)
             if (p->getKind() == StmtNode::Const)
                 vs->attributeValue->mTrueFlags |= Property::Const;
             bool isStatic = (vs->attributeValue->mTrueFlags & Property::Static) == Property::Static;
+            if ((vs->attributeValue->mTrueFlags & Property::Private) == Property::Private) {
+                JSType *theClass = topClass();
+                if (theClass == NULL)
+                    m_cx->reportError(Exception::typeError, "Private can only be used inside a class");
+                vs->attributeValue->mNamespaceList = new NamespaceList(theClass->mPrivateNamespace, vs->attributeValue->mNamespaceList);
+            }
 
             while (v)  {
                 if (isStatic)
@@ -1229,12 +1233,13 @@ Reference *JSType::genReference(bool hasBase, const String& name, NamespaceList 
     return NULL;
 }
 
-JSType::JSType(const StringAtom *name, JSType *super) 
+JSType::JSType(Context *cx, const StringAtom *name, JSType *super) 
             : JSObject(Type_Type),
                     mSuperType(super), 
                     mVariableCount(0),
                     mInstanceInitializer(NULL),
                     mClassName(name),
+                    mPrivateNamespace(&cx->mWorld.identifiers[*name + " private"]),
                     mIsDynamic(false),
                     mUninitializedValue(kNullValue),
                     mPrototypeObject(NULL)
@@ -1255,6 +1260,7 @@ JSType::JSType(JSType *xClass)     // used for constructing the static component
                     mVariableCount(0),
                     mInstanceInitializer(NULL),
                     mClassName(NULL),
+                    mPrivateNamespace(NULL),
                     mIsDynamic(false),
                     mUninitializedValue(kNullValue),
                     mPrototypeObject(NULL)
@@ -1729,14 +1735,23 @@ void Context::assureStackSpace(uint32 s)
 void Context::initClass(JSType *type, ClassDef *cdef, PrototypeFunctions *pdef)
 {
     mScopeChain->addScope(type);
-    type->setDefaultConstructor(this, new JSFunction(cdef->defCon, Object_Type));
+    JSFunction *constructor = new JSFunction(cdef->defCon, Object_Type);
+    constructor->setClass(type);
+    FunctionName *fnName = new FunctionName();
+    fnName->name = type->mClassName;
+    constructor->setFunctionName(fnName);
+    type->setDefaultConstructor(this, constructor);
 
     // the prototype functions are defined in the prototype object...
     if (pdef) {
         for (uint32 i = 0; i < pdef->mCount; i++) {
             JSFunction *fun = new JSFunction(pdef->mDef[i].imp, pdef->mDef[i].result);
+            fun->setClass(type);
+            StringAtom *name = &mWorld.identifiers[widenCString(pdef->mDef[i].name)];
+            FunctionName *fnName = new FunctionName();
+            fun->setFunctionName(fnName);
             fun->setArgCounts(pdef->mDef[i].length, 0, false);
-            type->mPrototypeObject->defineVariable(this, widenCString(pdef->mDef[i].name), 
+            type->mPrototypeObject->defineVariable(this, *name, //widenCString(pdef->mDef[i].name), 
                                                (NamespaceList *)(NULL), 
                                                pdef->mDef[i].result, 
                                                JSValue(fun));
@@ -1770,21 +1785,21 @@ void Context::initBuiltins()
         { "NamedArgument",  NULL,                  &kNullValue    },
     };
 
-    Object_Type  = new JSType(&mWorld.identifiers[widenCString(builtInClasses[0].name)], NULL);
+    Object_Type  = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[0].name)], NULL);
     Object_Type->mIsDynamic = true;
     // XXX aren't all the built-ins thus?
 
-    Type_Type           = new JSType(&mWorld.identifiers[widenCString(builtInClasses[1].name)], Object_Type);
-    Function_Type       = new JSType(&mWorld.identifiers[widenCString(builtInClasses[2].name)], Object_Type);
-    Number_Type         = new JSType(&mWorld.identifiers[widenCString(builtInClasses[3].name)], Object_Type);
-    Integer_Type        = new JSType(&mWorld.identifiers[widenCString(builtInClasses[4].name)], Object_Type);
-    String_Type         = new JSStringType(&mWorld.identifiers[widenCString(builtInClasses[5].name)], Object_Type);
-    Array_Type          = new JSArrayType(&mWorld.identifiers[widenCString(builtInClasses[6].name)], Object_Type);
-    Boolean_Type        = new JSType(&mWorld.identifiers[widenCString(builtInClasses[7].name)], Object_Type);
-    Void_Type           = new JSType(&mWorld.identifiers[widenCString(builtInClasses[8].name)], Object_Type);
-    Unit_Type           = new JSType(&mWorld.identifiers[widenCString(builtInClasses[9].name)], Object_Type);
-    Attribute_Type      = new JSType(&mWorld.identifiers[widenCString(builtInClasses[10].name)], Object_Type);
-    NamedArgument_Type  = new JSType(&mWorld.identifiers[widenCString(builtInClasses[11].name)], Object_Type);
+    Type_Type           = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[1].name)], Object_Type);
+    Function_Type       = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[2].name)], Object_Type);
+    Number_Type         = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[3].name)], Object_Type);
+    Integer_Type        = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[4].name)], Object_Type);
+    String_Type         = new JSStringType(this, &mWorld.identifiers[widenCString(builtInClasses[5].name)], Object_Type);
+    Array_Type          = new JSArrayType(this, &mWorld.identifiers[widenCString(builtInClasses[6].name)], Object_Type);
+    Boolean_Type        = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[7].name)], Object_Type);
+    Void_Type           = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[8].name)], Object_Type);
+    Unit_Type           = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[9].name)], Object_Type);
+    Attribute_Type      = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[10].name)], Object_Type);
+    NamedArgument_Type  = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[11].name)], Object_Type);
 
 
     String_Type->defineVariable(this, widenCString("fromCharCode"), NULL, String_Type, JSValue(new JSFunction(String_fromCharCode, String_Type)));

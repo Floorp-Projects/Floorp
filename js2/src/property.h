@@ -131,9 +131,9 @@ namespace JS2Runtime {
     Formatter& operator<<(Formatter& f, const Property& prop);
    
     struct NamespaceList {
-        NamespaceList(const String *name, NamespaceList *next) : mName(*name), mNext(next) { }
+        NamespaceList(const StringAtom *name, NamespaceList *next) : mName(name), mNext(next) { }
 
-        const String mName;
+        const StringAtom *mName;
         NamespaceList *mNext;
     };
 

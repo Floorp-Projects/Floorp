@@ -678,7 +678,7 @@ XXX ...couldn't get this to work...
 
     class JSType : public JSObject {
     public:        
-        JSType(const StringAtom *name, JSType *super);
+        JSType(Context *cx, const StringAtom *name, JSType *super);
         JSType(JSType *xClass);     // used for constructing the static component type
 
         virtual ~JSType() { } // keeping gcc happy
@@ -768,6 +768,7 @@ XXX ...couldn't get this to work...
         // the 'vtable'
         MethodList          mMethods;
         const StringAtom    *mClassName;
+        const StringAtom    *mPrivateNamespace;
 
         JSFunction      *mUnaryOperators[OperatorCount];    // XXX too wasteful
 
@@ -775,6 +776,7 @@ XXX ...couldn't get this to work...
         JSValue         mUninitializedValue;            // the value for uninitialized vars
 
         JSObject        *mPrototypeObject;              // becomes the prototype for any instance
+
 
         void printSlotsNStuff(Formatter& f) const;
 
@@ -803,8 +805,8 @@ XXX ...couldn't get this to work...
 
     class JSArrayType : public JSType {
     public:
-        JSArrayType(const StringAtom *name, JSType *super) 
-            : JSType(name, super)
+        JSArrayType(Context *cx, const StringAtom *name, JSType *super) 
+            : JSType(cx, name, super)
         {
         }
         virtual ~JSArrayType() { } // keeping gcc happy
@@ -837,8 +839,8 @@ XXX ...couldn't get this to work...
 
     class JSStringType : public JSType {
     public:
-        JSStringType(const StringAtom *name, JSType *super) 
-            : JSType(name, super)
+        JSStringType(Context *cx, const StringAtom *name, JSType *super) 
+            : JSType(cx, name, super)
         {
         }
         virtual ~JSStringType() { } // keeping gcc happy
