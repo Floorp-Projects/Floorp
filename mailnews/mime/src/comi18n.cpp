@@ -67,7 +67,7 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
 // BEGIN EXTERNAL DEPENDANCY
 
 extern "C"  char * MIME_StripContinuations(char *original);
-
+static PRBool intl_is_legal_utf8(const char *input, unsigned len);
 
 ////////////////////////////////////////////////////////////////////////////////
 //  Pasted from the old code (xp_wrap.c)
@@ -295,10 +295,7 @@ static const char * intl_message_header_encoding(const char* charset)
 
 static PRBool stateful_encoding(const char* charset)
 {
-  if (!nsCRT::strcasecmp(charset, "ISO-2022-JP"))
-    return PR_TRUE;
-
-  return PR_FALSE;
+  return (nsCRT::strcasecmp(charset, "ISO-2022-JP") == 0);
 }
 
 // END EXTERNAL DEPENDANCY
@@ -606,45 +603,50 @@ static
 char * utf8_mime_encode_mail_address(char *charset, const char *src, int maxLineLen)
 {
   char *begin, *end;
-  char *retbuf = NULL, *srcbuf = NULL;
+  char *retbuf = nsnull, *srcbuf = nsnull;
   char sep = '\0';
-  char *sep_p = NULL;
-  int  retbufsize;
-  int line_len = 0;
-  int srclen;
-  int default_iThreshold;
-  int iThreshold;         /* how many bytes we can convert from the src */
-  int iEffectLen;         /* the maximum length we can convert from the src */
+  char *sep_p = nsnull;
+  PRInt32  retbufsize;
+  PRInt32 line_len = 0;
+  PRInt32 srclen;
+  PRInt32 default_iThreshold;
+  PRInt32 iThreshold;         /* how many bytes we can convert from the src */
+  PRInt32 iEffectLen;         /* the maximum length we can convert from the src */
+  PRInt32 mime2CharsLen;      /* length of charset name plus =? ?B? ?= chars  */
   PRBool bChop = PR_FALSE;
+  PRBool bBase64Encode = PR_FALSE;
 
-  if (src == NULL)
-    return NULL;
+  if (!src)
+    return nsnull;
 
   /* make a copy, so don't need touch original buffer */
   srcbuf = nsCRT::strdup(src);
-  if (srcbuf == NULL)
-    return NULL;
+  if (!srcbuf)
+    return nsnull;
   begin = srcbuf;
 
-  default_iThreshold = iEffectLen = ( maxLineLen - nsCRT::strlen(charset) - 7 ) * 3 / 4;
+  mime2CharsLen = strlen(charset) + 7;
+
+  default_iThreshold = iEffectLen = ( maxLineLen - mime2CharsLen ) * 3 / 4;
   iThreshold = default_iThreshold;
 
+  bBase64Encode = !nsCRT::strcasecmp(intl_message_header_encoding((const char *) charset), kMsgHeaderBEncoding);
 
   /* allocate enough buffer for conversion, this way it can avoid
      do another memory allocation which is expensive
    */
   retbufsize = nsCRT::strlen(srcbuf) * 3 + kMAX_CSNAME + 8;
   retbuf =  (char *) PR_Malloc(retbufsize);
-  if (retbuf == NULL) {  /* Give up if not enough memory */
+  if (!retbuf) {  /* Give up if not enough memory */
     PR_Free(srcbuf);
-    return NULL;
+    return nsnull;
   }
 
   *retbuf = '\0';
 
   // loop for separating encoded words by the separators
   // the input string is UTF-8 at this point
-  srclen = nsCRT::strlen(srcbuf);
+  srclen = strlen(srcbuf);
 
 convert_and_encode:
 
@@ -652,11 +654,11 @@ convert_and_encode:
   { /* get block of data between commas (and other separators) */
     char *p, *q;
     char *buf1, *buf2;
-    int len, newsize, convlen, retbuflen;
+    PRInt32 len, newsize, convlen, retbuflen;
     PRBool non_ascii;
 
-    retbuflen = nsCRT::strlen(retbuf);
-    end = NULL;
+    retbuflen = strlen(retbuf);
+    end = nsnull;
 
     /* scan for separator, conversion (and encode) happens on 8bit word between separators
        we need to exclude RFC822 special characters from encoded word 
@@ -687,8 +689,6 @@ convert_and_encode:
           {
             while ((p = intlmime_encode_next8bitword(q)) != NULL)
             {
-              if (p == NULL)
-                break;
               q = p;
               if (*p != ' ')
                  break;
@@ -706,7 +706,8 @@ convert_and_encode:
 
     // convert UTF-8 to mail charset
     /* get the to_be_converted_buffer's len */
-    len = nsCRT::strlen(begin);
+//    len = nsCRT::strlen(begin);
+    len = q - begin;
 
     if ( !intlmime_only_ascii_str(begin) )
     {
@@ -739,13 +740,20 @@ convert_and_encode:
 
       /* iEffectLen - the max byte-string length of JIS ( converted form S-JIS )
          name - such as "iso-2022-jp", the encoding name, MUST be shorter than 23 bytes
-         7    - is the "=?:?:?=" 
+         mime2CharsLen - is the "=?:?:?=" 
        */
-      iEffectLen = ( maxLineLen - line_len - nsCRT::strlen(charset) - 7 ) * 3 / 4;
+      iEffectLen = ( maxLineLen - line_len - mime2CharsLen ) * 3 / 4;
       while ( PR_TRUE ) {
-        int iBufLen;    /* converted buffer's length, not BASE64 */
+        PRInt32 iBufLen;    /* converted buffer's length, not BASE64 */
         if ( len > iThreshold )
+        {
           len = ResetLen(iThreshold, begin);
+          if (sep_p) {
+              *sep_p = sep; /*restore the original character */
+              sep = '\0';   /*to be processed with the rest  */
+              sep_p = nsnull; /*of this chunk in next iteration*/
+          }
+        }
 
         if ( iThreshold <= 1 )
         {
@@ -762,25 +770,25 @@ convert_and_encode:
           **    - bug #83204, an oldie but goodie.
           **    - jrm 98/03/25
           */
-          return NULL;
+          return nsnull;
         }
         // UTF-8 to mail charset conversion (or iso-8859-1 in case of us-ascii).
         nsresult rv = nsMsgI18NSaveAsCharset(TEXT_PLAIN, 
                                              !nsCRT::strcasecmp(charset, "us-ascii") ? "ISO-8859-1" : charset, 
                                              NS_ConvertUTF8toUCS2(begin, len).get(), &buf1);
-        if (NS_FAILED(rv) || NULL == buf1) {
+        if (NS_FAILED(rv) || !buf1) {
           PR_FREEIF(srcbuf);
           PR_FREEIF(retbuf);
-          return NULL; //error
+          return nsnull; //error
         }
-        iBufLen = nsCRT::strlen(buf1);
+        iBufLen = strlen(buf1);
 //        buf1 = (char *) cvtfunc(obj, (unsigned char *)begin, len);
 //        iBufLen = nsCRT::strlen( buf1 );
         if (iBufLen <= 0) {
-          if (NULL == end) {
+          if (!end) {
             PR_FREEIF(srcbuf);
             PR_FREEIF(retbuf);
-            return NULL; //error
+            return nsnull; //error
           }
           begin = end + 1;
           goto convert_and_encode;  // nothing was converted, skip this part
@@ -796,29 +804,28 @@ convert_and_encode:
           bChop = PR_TRUE;           /* append CRLFTAB */
           if (buf1 && (buf1 != begin)){
             PR_Free(buf1);
-            buf1 = NULL;
+            buf1 = nsnull;
           }
         } else {
           end = begin + len - 1;
           break;
         }
       }
-      if (bChop && (NULL!=sep_p)) {
+      if (bChop && sep_p) {
         *sep_p = sep;   /* we are length limited so we do not need this */
         sep = '\0';     /* artifical terminator. So, restore the original character */
-        sep_p = NULL;
+        sep_p = nsnull;
       }
 
       if (!buf1)
       {
         PR_Free(srcbuf);
         PR_Free(retbuf);
-        return NULL;
+        return nsnull;
       }
 
       // converted to mail charset, now apply MIME encode
-      const char *msgHeaderEncoding = intl_message_header_encoding((const char *) charset);
-      if (!nsCRT::strcasecmp(msgHeaderEncoding, kMsgHeaderBEncoding))
+      if (bBase64Encode)
       {
         /* converts to Base64 Encoding */
         buf2 = (char *)intlmime_encode_base64_buf(buf1, nsCRT::strlen(buf1));
@@ -833,28 +840,28 @@ convert_and_encode:
       if (buf1 && (buf1 != begin))
         PR_Free(buf1);
 
-      if (buf2 == NULL) /* QUIT if memory allocation failed */
+      if (!buf2) /* QUIT if memory allocation failed */
       {
         PR_Free(srcbuf);
         PR_Free(retbuf);
-        return NULL;
+        return nsnull;
       }
 
       /* realloc memory for retbuff if necessary,
-         7: =?...?B?..?=, 3: CR LF TAB */
-      convlen = nsCRT::strlen(buf2) + nsCRT::strlen(charset) + 7;
+         mime2CharsLen: =?<charset>?B?..?=, 3: CR LF TAB */
+      convlen = strlen(buf2) + mime2CharsLen;
       newsize = convlen + retbuflen + 3 + 2;  /* 2:SEP '\0', 3:CRLFTAB */
 
       if (newsize > retbufsize)
       {
         char *tempbuf;
         tempbuf = (char *) PR_Realloc(retbuf, newsize);
-        if (tempbuf == NULL)  /* QUIT, if not enough memory left */
+        if (!tempbuf)  /* QUIT, if not enough memory left */
         {
           PR_Free(buf2);
           PR_Free(srcbuf);
           PR_Free(retbuf);
-          return NULL;
+          return nsnull;
         }
         retbuf = tempbuf;
         retbufsize = newsize;
@@ -876,7 +883,7 @@ convert_and_encode:
       /* Add encoding tag for base64 and QP */
       PL_strcat(buf1, "=?");
       PL_strcat(buf1, charset );
-      if (!nsCRT::strcasecmp(msgHeaderEncoding, kMsgHeaderBEncoding))
+      if (bBase64Encode)
         PL_strcat(buf1, "?B?");
       else
         PL_strcat(buf1, "?Q?");
@@ -894,11 +901,11 @@ convert_and_encode:
       {
         char *tempbuf;
         tempbuf = (char *) PR_Realloc(retbuf, newsize);
-        if (tempbuf == NULL)
+        if (!tempbuf)
         {
           PR_Free(srcbuf);
           PR_Free(retbuf);
-          return NULL;
+          return nsnull;
         }
         retbuf = tempbuf;
         retbufsize = newsize;
@@ -964,16 +971,14 @@ convert_and_encode:
 static
 char *utf8_EncodeMimePartIIStr(const char *subject, char *charset, int maxLineLen)
 {
-  int iSrcLen;
   char *buf = NULL;
 
   if (subject == NULL)
     return NULL;
 
-  iSrcLen = nsCRT::strlen(subject);
-
   /* check to see if subject are all ascii or not */
   if((*subject == '\0') ||
+     (!intl_is_legal_utf8(subject, nsCRT::strlen(subject))) ||
     (!stateful_encoding((const char *) charset) && intlmime_only_ascii_str(subject)))
     return (char *) xp_word_wrap((unsigned char *) subject, maxLineLen, 0, " ", 1);
 
