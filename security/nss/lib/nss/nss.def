@@ -820,6 +820,7 @@ CERT_DecodeAuthKeyID;
 CERT_DecodeCRLDistributionPoints;
 CERT_DecodeNameConstraintsExtension;
 CERT_DecodePrivKeyUsagePeriodExtension;
+CERT_DestroyUserNotice;
 CERT_GetCertificateNames;
 CERT_GetNextGeneralName;
 CERT_GetNextNameConstraint;
