@@ -514,17 +514,22 @@ sub init {
          },
 
          "^component,(?!changed)" => sub {
-             my $table = "components_$chartid";
-             push(@supptables, "components $table");
-             push(@wherepart, "bugs.component_id = $table.id");
-             $f = $ff = "$table.name";
+             $f = $ff = "components.name";
+             $funcsbykey{",$t"}->();
+             $term = build_subselect("bugs.component_id",
+                                     "components.id",
+                                     "components",
+                                     $term);
          },
 
          "^product,(?!changed)" => sub {
-             my $table = "products_$chartid";
-             push(@supptables, "products $table");
-             push(@wherepart, "bugs.product_id = $table.id");
-             $f = $ff = "$table.name";
+             # Generate the restriction condition
+             $f = $ff = "products.name";
+             $funcsbykey{",$t"}->();
+             $term = build_subselect("bugs.product_id",
+                                     "products.id",
+                                     "products",
+                                     $term);
          },
 
          "^keywords," => sub {
@@ -591,8 +596,11 @@ sub init {
          ",casesubstring" => sub {
              $term = "INSTR($ff, $q)";
          },
-         ",(substring|substr)" => sub {
+         ",substring" => sub {
              $term = "INSTR(LOWER($ff), " . lc($q) . ")";
+         },
+         ",substr" => sub {
+             $funcsbykey{",substring"}->();
          },
          ",notsubstring" => sub {
              $term = "INSTR(LOWER($ff), " . lc($q) . ") = 0";
@@ -1014,6 +1022,19 @@ sub ListIDsForEmail {
     $self->{"emailcache"}{"$type,$email"} = $list;
     return undef if ($list eq "---");
     return $list;
+}
+
+sub build_subselect {
+    my ($outer, $inner, $table, $cond) = @_;
+    my $q = "SELECT $inner FROM $table WHERE $cond";
+    #return "$outer IN ($q)";
+    &::SendSQL($q);
+    my @list;
+    while (&::MoreSQLData()) {
+        push (@list, &::FetchOneColumn());
+    }
+    return "1=2" unless @list; # Could use boolean type on dbs which support it
+    return "$outer IN (" . join(',', @list) . ")";
 }
 
 sub GetByWordList {
