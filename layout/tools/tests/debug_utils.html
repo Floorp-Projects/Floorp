@@ -6,54 +6,54 @@
 </head>
 <script type="application/x-javascript" language="Javascript">
 
-const nsIFrameDebugObject = Components.interfaces.nsIFrameDebugObject;
+const nsILayoutRegressionTester = Components.interfaces.nsILayoutRegressionTester;
 
 function SetShowFrameBorders(inShow)
 {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var debugObject = Components.classes["@mozilla.org/layout_debug/framedebugobject;1"].createInstance(nsIFrameDebugObject);
+  var debugObject = Components.classes["@mozilla.org/layout_debug/regressiontester;1"].createInstance(nsILayoutRegressionTester);
   debugObject.showFrameBorders = inShow;
 }
 
 function SetShowEventTargetBorders(inShow)
 {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var debugObject = Components.classes["@mozilla.org/layout_debug/framedebugobject;1"].createInstance(nsIFrameDebugObject);
+  var debugObject = Components.classes["@mozilla.org/layout_debug/regressiontester;1"].createInstance(nsILayoutRegressionTester);
   debugObject.showEventTargetFrameBorder = inShow;
 }
 
 function SetShowReflowStats(theWindow, inShow)
 {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var debugObject = Components.classes["@mozilla.org/layout_debug/framedebugobject;1"].createInstance(nsIFrameDebugObject);
+  var debugObject = Components.classes["@mozilla.org/layout_debug/regressiontester;1"].createInstance(nsILayoutRegressionTester);
   debugObject.setShowReflowStats(theWindow, inShow);
 }
 
 function DumpFrames()
 {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var debugObject = Components.classes["@mozilla.org/layout_debug/framedebugobject;1"].createInstance(nsIFrameDebugObject);
+  var debugObject = Components.classes["@mozilla.org/layout_debug/regressiontester;1"].createInstance(nsILayoutRegressionTester);
   debugObject.dumpFrames(window, null);
 }
 
 function DumpContent()
 {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var debugObject = Components.classes["@mozilla.org/layout_debug/framedebugobject;1"].createInstance(nsIFrameDebugObject);
+  var debugObject = Components.classes["@mozilla.org/layout_debug/regressiontester;1"].createInstance(nsILayoutRegressionTester);
   debugObject.dumpContent(window, null);
 }
 
 function DumpViews()
 {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var debugObject = Components.classes["@mozilla.org/layout_debug/framedebugobject;1"].createInstance(nsIFrameDebugObject);
+  var debugObject = Components.classes["@mozilla.org/layout_debug/regressiontester;1"].createInstance(nsILayoutRegressionTester);
   debugObject.dumpViews(window, null);
 }
 
 function DumpWebShells()
 {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var debugObject = Components.classes["@mozilla.org/layout_debug/framedebugobject;1"].createInstance(nsIFrameDebugObject);
+  var debugObject = Components.classes["@mozilla.org/layout_debug/regressiontester;1"].createInstance(nsILayoutRegressionTester);
   debugObject.dumpWebShells(window, null);
 }
 

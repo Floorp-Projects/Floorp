@@ -1,7 +1,7 @@
 
 
 const nsIFilePicker = Components.interfaces.nsIFilePicker;
-const nsIFrameDebugObject = Components.interfaces.nsIFrameDebugObject;
+const nsILayoutRegressionTester = Components.interfaces.nsILayoutRegressionTester;
 
 const kTestTypeBaseline         = 1;
 const kTestTypeVerify           = 2;
@@ -320,7 +320,7 @@ function ChooseOutputDirectory(inputElementID)
 
 function CompareFrameDumps(testFileBasename, baselineDir, baselineExt, verifyDir, verifyExt)
 {
-  var debugObject = Components.classes["@mozilla.org/layout_debug/framedebugobject;1"].createInstance(nsIFrameDebugObject);
+  var debugObject = Components.classes["@mozilla.org/layout_debug/regressiontester;1"].createInstance(nsILayoutRegressionTester);
   
   var baseFile = baselineDir.clone();
   baseFile.append(testFileBasename + baselineExt);
@@ -328,7 +328,7 @@ function CompareFrameDumps(testFileBasename, baselineDir, baselineExt, verifyDir
   var verifyFile = verifyDir.clone();
   verifyFile.append(testFileBasename + verifyExt);
   
-  var filesDiffer = debugObject.compareFrameModels(baseFile, verifyFile, nsIFrameDebugObject.COMPARE_FLAGS_BRIEF);
+  var filesDiffer = debugObject.compareFrameModels(baseFile, verifyFile, nsILayoutRegressionTester.COMPARE_FLAGS_BRIEF);
   if (filesDiffer)
   {
     WriteOutput("Test file '" + baseFile.leafName + "' failed", false, "red");
@@ -341,13 +341,13 @@ function CompareFrameDumps(testFileBasename, baselineDir, baselineExt, verifyDir
 
 function DumpFrames(testWindow, testFileName, outputDir, outputFileExtension)
 {
-  var debugObject = Components.classes["@mozilla.org/layout_debug/framedebugobject;1"].createInstance(nsIFrameDebugObject);
+  var debugObject = Components.classes["@mozilla.org/layout_debug/regressiontester;1"].createInstance(nsILayoutRegressionTester);
 
   var outputFile = outputDir.clone();
   outputFile.append(testFileName.replace(".html", outputFileExtension));
 
   dump("Dumping frame model for " + testFileName + " to " + outputFile.leafName + "\n");
-  var result = debugObject.dumpFrameModel(testWindow, outputFile, nsIFrameDebugObject.DUMP_FLAGS_MASK_DEFAULT);
+  var result = debugObject.dumpFrameModel(testWindow, outputFile, nsILayoutRegressionTester.DUMP_FLAGS_MASK_DEFAULT);
   if (result != 0)
   {
     WriteOutput("dumpFrameModel for " + testFileName + " failed", false, "orange");

@@ -38,7 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.h"
-#include "nsDebugObject.h"
+#include "nsRegressionTester.h"
 
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
@@ -74,18 +74,18 @@ static NS_DEFINE_CID(kFrameUtilCID, NS_FRAME_UTIL_CID);
 static NS_DEFINE_CID(kLayoutDebuggerCID, NS_LAYOUT_DEBUGGER_CID);
 
 
-nsDebugObject::nsDebugObject()
+nsRegressionTester::nsRegressionTester()
 {
 }
 
-nsDebugObject::~nsDebugObject() 
+nsRegressionTester::~nsRegressionTester() 
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsDebugObject, nsIFrameDebugObject)
+NS_IMPL_ISUPPORTS1(nsRegressionTester, nsILayoutRegressionTester)
 
 NS_IMETHODIMP
-nsDebugObject::OutputTextToFile(nsILocalFile *aFile, PRBool aTruncateFile, const char *aOutputString) 
+nsRegressionTester::OutputTextToFile(nsILocalFile *aFile, PRBool aTruncateFile, const char *aOutputString) 
 {
   NS_ENSURE_ARG(aOutputString);
 
@@ -106,7 +106,7 @@ nsDebugObject::OutputTextToFile(nsILocalFile *aFile, PRBool aTruncateFile, const
 
 
 NS_IMETHODIMP
-nsDebugObject::DumpFrameModel(nsIDOMWindow *aWindowToDump, nsILocalFile *aDestFile, PRUint32 aFlagsMask, PRInt32 *aResult) 
+nsRegressionTester::DumpFrameModel(nsIDOMWindow *aWindowToDump, nsILocalFile *aDestFile, PRUint32 aFlagsMask, PRInt32 *aResult) 
 {
   NS_ENSURE_ARG(aWindowToDump);
   NS_ENSURE_ARG_POINTER(aResult);
@@ -162,7 +162,7 @@ nsDebugObject::DumpFrameModel(nsIDOMWindow *aWindowToDump, nsILocalFile *aDestFi
 
 /* void dumpContent (in nsIDOMWindow aWindow, in nsILocalFile aDestFile); */
 NS_IMETHODIMP
-nsDebugObject::DumpContent(nsIDOMWindow *aWindow, nsILocalFile *aDestFile)
+nsRegressionTester::DumpContent(nsIDOMWindow *aWindow, nsILocalFile *aDestFile)
 {
   NS_ENSURE_ARG(aWindow);
 
@@ -187,7 +187,7 @@ nsDebugObject::DumpContent(nsIDOMWindow *aWindow, nsILocalFile *aDestFile)
 
 /* void dumpFrames (in nsIDOMWindow aWindow, in nsILocalFile aDestFile); */
 NS_IMETHODIMP
-nsDebugObject::DumpFrames(nsIDOMWindow *aWindow, nsILocalFile *aDestFile)
+nsRegressionTester::DumpFrames(nsIDOMWindow *aWindow, nsILocalFile *aDestFile)
 {
   NS_ENSURE_ARG(aWindow);
 
@@ -211,7 +211,7 @@ nsDebugObject::DumpFrames(nsIDOMWindow *aWindow, nsILocalFile *aDestFile)
 }
 
 NS_IMETHODIMP
-nsDebugObject::DumpViews(nsIDOMWindow *aWindow, nsILocalFile *aDestFile)
+nsRegressionTester::DumpViews(nsIDOMWindow *aWindow, nsILocalFile *aDestFile)
 {
   NS_ENSURE_ARG(aWindow);
 
@@ -236,7 +236,7 @@ nsDebugObject::DumpViews(nsIDOMWindow *aWindow, nsILocalFile *aDestFile)
 
 /* void dumpWebShells (in nsIDOMWindow aWindow, in nsILocalFile aDestFile); */
 NS_IMETHODIMP
-nsDebugObject::DumpWebShells(nsIDOMWindow *aWindow, nsILocalFile *aDestFile)
+nsRegressionTester::DumpWebShells(nsIDOMWindow *aWindow, nsILocalFile *aDestFile)
 {
   NS_ENSURE_ARG(aWindow);
 
@@ -260,7 +260,7 @@ nsDebugObject::DumpWebShells(nsIDOMWindow *aWindow, nsILocalFile *aDestFile)
 }
 
 NS_IMETHODIMP
-nsDebugObject::DumpStyleSheets(nsIDOMWindow *aWindow, nsILocalFile *aDestFile)
+nsRegressionTester::DumpStyleSheets(nsIDOMWindow *aWindow, nsILocalFile *aDestFile)
 {
   NS_ENSURE_ARG(aWindow);
 
@@ -288,7 +288,7 @@ nsDebugObject::DumpStyleSheets(nsIDOMWindow *aWindow, nsILocalFile *aDestFile)
 }
 
 NS_IMETHODIMP
-nsDebugObject::DumpStyleContexts(nsIDOMWindow *aWindow, nsILocalFile *aDestFile)
+nsRegressionTester::DumpStyleContexts(nsIDOMWindow *aWindow, nsILocalFile *aDestFile)
 {
   NS_ENSURE_ARG(aWindow);
 
@@ -324,7 +324,7 @@ nsDebugObject::DumpStyleContexts(nsIDOMWindow *aWindow, nsILocalFile *aDestFile)
 
 /* void dumpReflowStats (in nsIDOMWindow aWindow, in nsILocalFile aDestFile); */
 NS_IMETHODIMP
-nsDebugObject::DumpReflowStats(nsIDOMWindow *aWindow, nsILocalFile* /* aDestFile */)
+nsRegressionTester::DumpReflowStats(nsIDOMWindow *aWindow, nsILocalFile* /* aDestFile */)
 {
   NS_ENSURE_ARG(aWindow);
 
@@ -344,7 +344,7 @@ nsDebugObject::DumpReflowStats(nsIDOMWindow *aWindow, nsILocalFile* /* aDestFile
 }
 
 NS_IMETHODIMP
-nsDebugObject::CompareFrameModels(nsILocalFile *aBaseFile, nsILocalFile *aVerFile, PRUint32 aFlags, PRInt32 *aResult) 
+nsRegressionTester::CompareFrameModels(nsILocalFile *aBaseFile, nsILocalFile *aVerFile, PRUint32 aFlags, PRInt32 *aResult) 
 {
   NS_ENSURE_ARG(aBaseFile);
   NS_ENSURE_ARG(aVerFile);
@@ -378,7 +378,7 @@ nsDebugObject::CompareFrameModels(nsILocalFile *aBaseFile, nsILocalFile *aVerFil
 }
 
 NS_IMETHODIMP
-nsDebugObject::GetShowFrameBorders(PRBool *aShowFrameBorders)
+nsRegressionTester::GetShowFrameBorders(PRBool *aShowFrameBorders)
 {
   NS_ENSURE_ARG_POINTER(aShowFrameBorders);
   NS_ENSURE_SUCCESS(EnsureLayoutDebugger(), NS_ERROR_FAILURE);
@@ -386,7 +386,7 @@ nsDebugObject::GetShowFrameBorders(PRBool *aShowFrameBorders)
 }
 
 NS_IMETHODIMP
-nsDebugObject::SetShowFrameBorders(PRBool aShowFrameBorders)
+nsRegressionTester::SetShowFrameBorders(PRBool aShowFrameBorders)
 {
   NS_ENSURE_SUCCESS(EnsureLayoutDebugger(), NS_ERROR_FAILURE);
   nsresult rv = mLayoutDebugger->SetShowFrameBorders(aShowFrameBorders);
@@ -395,7 +395,7 @@ nsDebugObject::SetShowFrameBorders(PRBool aShowFrameBorders)
 }
 
 NS_IMETHODIMP
-nsDebugObject::GetShowEventTargetFrameBorder(PRBool *aShowEventTargetFrameBorder)
+nsRegressionTester::GetShowEventTargetFrameBorder(PRBool *aShowEventTargetFrameBorder)
 {
   NS_ENSURE_ARG_POINTER(aShowEventTargetFrameBorder);
   NS_ENSURE_SUCCESS(EnsureLayoutDebugger(), NS_ERROR_FAILURE);
@@ -403,7 +403,7 @@ nsDebugObject::GetShowEventTargetFrameBorder(PRBool *aShowEventTargetFrameBorder
 }
 
 NS_IMETHODIMP
-nsDebugObject::SetShowEventTargetFrameBorder(PRBool aShowEventTargetFrameBorder)
+nsRegressionTester::SetShowEventTargetFrameBorder(PRBool aShowEventTargetFrameBorder)
 {
   NS_ENSURE_SUCCESS(EnsureLayoutDebugger(), NS_ERROR_FAILURE);
   nsresult rv = mLayoutDebugger->SetShowEventTargetFrameBorder(aShowEventTargetFrameBorder);
@@ -412,7 +412,7 @@ nsDebugObject::SetShowEventTargetFrameBorder(PRBool aShowEventTargetFrameBorder)
 }
 
 NS_IMETHODIMP
-nsDebugObject::SetShowReflowStats(nsIDOMWindow *aWindow, PRBool inShow)
+nsRegressionTester::SetShowReflowStats(nsIDOMWindow *aWindow, PRBool inShow)
 {
   nsCOMPtr<nsIPresShell> presShell;
   nsresult rv = GetPresShellFromWindow(aWindow, getter_AddRefs(presShell));
@@ -430,7 +430,7 @@ nsDebugObject::SetShowReflowStats(nsIDOMWindow *aWindow, PRBool inShow)
 }
 
 nsresult
-nsDebugObject::EnsureLayoutDebugger()
+nsRegressionTester::EnsureLayoutDebugger()
 {
   if (!mLayoutDebugger)
   {
@@ -444,7 +444,7 @@ nsDebugObject::EnsureLayoutDebugger()
 }
 
 nsresult
-nsDebugObject::RefreshAllWindows()
+nsRegressionTester::RefreshAllWindows()
 {
   nsresult rv;
   // hack. Toggle the underline links pref to get stuff to redisplay
@@ -464,7 +464,7 @@ nsDebugObject::RefreshAllWindows()
 
 
 nsresult
-nsDebugObject::GetDocShellFromWindow(nsIDOMWindow* inWindow, nsIDocShell** outShell)
+nsRegressionTester::GetDocShellFromWindow(nsIDOMWindow* inWindow, nsIDocShell** outShell)
 {
   nsCOMPtr<nsIScriptGlobalObject> scriptObj(do_QueryInterface(inWindow));
   if (!scriptObj) return NS_ERROR_FAILURE;
@@ -474,7 +474,7 @@ nsDebugObject::GetDocShellFromWindow(nsIDOMWindow* inWindow, nsIDocShell** outSh
 
 
 nsresult
-nsDebugObject::GetPresShellFromWindow(nsIDOMWindow* inWindow, nsIPresShell** outShell)
+nsRegressionTester::GetPresShellFromWindow(nsIDOMWindow* inWindow, nsIPresShell** outShell)
 {
   nsCOMPtr<nsIDocShell> docShell;
   GetDocShellFromWindow(inWindow, getter_AddRefs(docShell));
@@ -492,7 +492,7 @@ nsDebugObject::GetPresShellFromWindow(nsIDOMWindow* inWindow, nsIPresShell** out
 #endif
 
 void 
-nsDebugObject::DumpMultipleWebShells(nsIDOMWindow* aWindow, FILE* aOut)
+nsRegressionTester::DumpMultipleWebShells(nsIDOMWindow* aWindow, FILE* aOut)
 {
   nsCOMPtr<nsIDocShell> docShell;
   GetDocShellFromWindow(aWindow, getter_AddRefs(docShell));
@@ -512,7 +512,7 @@ nsDebugObject::DumpMultipleWebShells(nsIDOMWindow* aWindow, FILE* aOut)
 
 
 void
-nsDebugObject::DumpAWebShell(nsIDocShellTreeItem* aShellItem, FILE* aOut, PRInt32 aIndent)
+nsRegressionTester::DumpAWebShell(nsIDocShellTreeItem* aShellItem, FILE* aOut, PRInt32 aIndent)
 {
   nsXPIDLString name;
   nsAutoString str;
@@ -547,7 +547,7 @@ nsDebugObject::DumpAWebShell(nsIDocShellTreeItem* aShellItem, FILE* aOut, PRInt3
 
 
 void
-nsDebugObject::DumpContentRecurse(nsIDocShell* inDocShell, FILE* inDestFile)
+nsRegressionTester::DumpContentRecurse(nsIDocShell* inDocShell, FILE* inDestFile)
 {
   if (inDocShell)
   {
@@ -588,7 +588,7 @@ nsDebugObject::DumpContentRecurse(nsIDocShell* inDocShell, FILE* inDestFile)
 
 
 void
-nsDebugObject::DumpFramesRecurse(nsIDocShell* aDocShell, FILE* inDestFile)
+nsRegressionTester::DumpFramesRecurse(nsIDocShell* aDocShell, FILE* inDestFile)
 {
   if (aDocShell)
   {
@@ -633,7 +633,7 @@ nsDebugObject::DumpFramesRecurse(nsIDocShell* aDocShell, FILE* inDestFile)
 
 
 void
-nsDebugObject::DumpViewsRecurse(nsIDocShell* aDocShell, FILE* inDestFile)
+nsRegressionTester::DumpViewsRecurse(nsIDocShell* aDocShell, FILE* inDestFile)
 {
   if (aDocShell)
   {
