@@ -248,6 +248,7 @@ CNetscapeView::~CNetscapeView()
 #ifdef EDITOR
     if ( wfe_pClipboardFormats )
         delete [] wfe_pClipboardFormats;
+    wfe_pClibpoardFormats = 0;
 #endif
 }
 
