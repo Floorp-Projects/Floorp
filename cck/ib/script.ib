@@ -1,6 +1,6 @@
 configure(GENERAL,Product Name,%InstallerScreenText1%)
-configure(GENERAL,Setup Title0,%InstallerScreenText1%)
-configure(GENERAL,Setup Title1,%InstallerScreenText2%)
+configure(GENERAL,Setup Title1,%InstallerScreenText1%)
+configure(GENERAL,Setup Title2,%InstallerScreenText2%)
 configure(GENERAL,Program Folder Name,%ProgramFolderName%)
 replaceXPI(core.xpi,bin/chrome/global/skin/default/animthrob.gif,%SmallAnimPath%)
 replaceXPI(core.xpi,bin/chrome/global/skin/default/animthrob_single.gif,%SmallStillPath%)
