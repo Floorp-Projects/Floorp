@@ -370,6 +370,12 @@ void CnsIChannelTests::AsyncOpenTest(nsIChannel *theChannel, PRInt16 displayMode
 	if (!theSupports)
 	   QAOutput("Didn't get the nsISupports object. AsyncOpen() failed.", displayMode);
 
+	if (theSupports == theChannel)
+	   QAOutput("Supports = Channel.", displayMode);
+	else
+	   QAOutput("Supports != Channel.", displayMode);
+
+
 	rv = theChannel->AsyncOpen(listener, theSupports);
 	RvTestResult(rv, "AsyncOpen()", displayMode);
 	if (displayMode == 1)
@@ -489,8 +495,7 @@ void CnsIChannelTests::RunAllTests()
 		SetNotificationsTest(theChannel, 1);
 		GetNotificationsTest(theChannel, 1);
 		AsyncOpenTest(theChannel, 1);
-	 // PostAsyncOpenTests() called from nsIRequestObservor::OnStartRequest (in BrowserImpl.cpp)
-		OpenTest(theChannel, 1);
+	 // PostAsyncOpenTests() called from nsIRequestObserver::OnStartRequest (in BrowserImpl.cpp)
 		QAOutput("\n");
 	}
 }
