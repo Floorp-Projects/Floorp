@@ -210,10 +210,10 @@ NS_IMETHODIMP
 nsXULPrototypeCache::PutXBLDocument(nsIDocument *aDocument)
 {
     nsCOMPtr<nsIURI> uri(aDocument->GetDocumentURL());
-    char* aString;
-    uri->GetSpec(&aString);
+    nsXPIDLCString str;
+    uri->GetSpec(getter_Copies(str));
 
-    nsStringKey key(aString);
+    nsStringKey key((const char*)str);
     mXBLDocTable.Put(&key, aDocument);
 
     return NS_OK;
@@ -231,10 +231,10 @@ NS_IMETHODIMP
 nsXULPrototypeCache::PutXBLDocScriptAccess(nsIDocument *aDocument)
 {
     nsCOMPtr<nsIURI> uri(aDocument->GetDocumentURL());
-    char* aString;
-    uri->GetSpec(&aString);
+    nsXPIDLCString str;
+    uri->GetSpec(getter_Copies(str));
 
-    nsStringKey key(aString);
+    nsStringKey key((const char*)str);
     mScriptAccessTable.Put(&key, aDocument);
 
     return NS_OK;
