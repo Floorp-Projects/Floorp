@@ -34,8 +34,8 @@
 
 <popupset id="editorContentContextSet">
  <popup id="editorContentContext"   
-   oncreate="return fillContentContextMenu(this);" 
-	 ondestroy="cleanupContextMenu(this); contextMenu.onDestroy(); contextMenu = null;">
+   oncreate="return fillContentContextMenu(event, this);" 
+	 ondestroy="cleanupContextMenu(event, this); contextMenu.onDestroy(); contextMenu = null;">
 		<menuitem id="menu_undo_cm" observes="cmd_undo"/>
 		<menuitem id="menu_redo_cm" observes="cmd_redo"/>
 		<menuseparator id="undoredo-separator"/>
