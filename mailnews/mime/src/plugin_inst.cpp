@@ -81,9 +81,9 @@ NS_IMPL_RELEASE(MimePluginInstance);
 
 MimePluginInstance::MimePluginInstance(void)
 {
-    OutStream = NULL;
-    first_write = PR_FALSE;
-    NS_INIT_REFCNT();
+  NS_INIT_REFCNT();  
+  OutStream = NULL;
+  first_write = PR_FALSE;
 }
 
 MimePluginInstance::~MimePluginInstance(void)
@@ -94,7 +94,6 @@ NS_METHOD
 MimePluginInstance::Initialize(nsINetOStream* stream)
 {
     OutStream = stream;
-
     return NS_OK;
 }
 
@@ -124,7 +123,7 @@ MimePluginInstance::Destroy(void)
     return NS_OK;
 }
 
-nsresult MimePluginInstance :: Complete(void)
+nsresult MimePluginInstance::Complete(void)
 {
 	nsINetOStream *stream = OutStream;
 
@@ -140,7 +139,7 @@ nsresult MimePluginInstance :: Complete(void)
 	return NS_OK;
 }
 
-nsresult MimePluginInstance :: Abort(PRInt32 status)
+nsresult MimePluginInstance::Abort(PRInt32 status)
 {
 	nsINetOStream *stream = OutStream;
 
@@ -151,7 +150,7 @@ nsresult MimePluginInstance :: Abort(PRInt32 status)
 	return NS_OK;
 }
 
-nsresult MimePluginInstance :: WriteReady(PRUint32 *aReadyCount)
+nsresult MimePluginInstance::WriteReady(PRUint32 *aReadyCount)
 {
 	nsINetOStream *stream = OutStream;
 
@@ -162,7 +161,7 @@ nsresult MimePluginInstance :: WriteReady(PRUint32 *aReadyCount)
 	return NS_OK;
 }
 
-nsresult MimePluginInstance :: Write(const char* aBuf, PRUint32 aOffset, PRUint32 aCount, PRUint32 *aWriteCount)
+nsresult MimePluginInstance::Write(const char* aBuf, PRUint32 aOffset, PRUint32 aCount, PRUint32 *aWriteCount)
 {
 	nsINetOStream *stream = OutStream;
 
