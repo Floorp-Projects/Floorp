@@ -41,7 +41,6 @@
 var gDialog;
 var gPrintSettings = null;
 var gStringBundle  = null;
-var gPaperArray;
 
 var gPrintSettingsInterface = Components.interfaces.nsIPrintSettings;
 var gDoDebug = false;
@@ -51,9 +50,6 @@ function initDialog()
 {
   gDialog = new Object;
 
-  gDialog.paperList       = document.getElementById("paperList");
-  gDialog.paperGroup      = document.getElementById("paperGroup");
-  
   gDialog.orientation     = document.getElementById("orientation");
   gDialog.printBGColors   = document.getElementById("printBGColors");
   gDialog.printBGImages   = document.getElementById("printBGImages");
@@ -97,86 +93,8 @@ function getDoubleStr(val, dec)
 }
 
 //---------------------------------------------------
-function listElement(aListElement)
-  {
-    this.listElement = aListElement;
-  }
-
-listElement.prototype =
-  {
-    clearList:
-      function ()
-        {
-          // remove the menupopup node child of the menulist.
-          this.listElement.removeChild(this.listElement.firstChild);
-        },
-
-    appendPaperNames: 
-      function (aDataObject) 
-        { 
-          var popupNode = document.createElement("menupopup"); 
-          for (var i=0;i<aDataObject.length;i++)  {
-            var paperObj = aDataObject[i];
-            var itemNode = document.createElement("menuitem");
-            try {
-              var label = gStringBundle.GetStringFromName(paperObj.name)
-              itemNode.setAttribute("label", label);
-              itemNode.setAttribute("value", i);
-              popupNode.appendChild(itemNode);
-            } catch (e) {}
-          }
-          this.listElement.appendChild(popupNode); 
-        } 
-  };
-
-//---------------------------------------------------
-function createPaperArray()
-{
-  var paperNames   = ["letterSize", "legalSize", "exectiveSize", "a4Size", "a3Size"];
-  //var paperNames   = ["&letterRadio.label;", "&legalRadio.label;", "&exectiveRadio.label;", "&a4Radio.label;", "&a3Radio.label;"];
-  var paperWidths  = [8.5, 8.5, 7.25, 210.0, 287.0];
-  var paperHeights = [11.0, 14.0, 10.5, 297.0, 420.0];
-  var paperInches  = [true, true, true, false, false];
-  // this is deprecated
-  var paperEnums  = [0, 1, 2, 3, 4];
-
-  gPaperArray = new Array();
-
-  for (var i=0;i<paperNames.length;i++) {
-    var obj    = new Object();
-    obj.name   = paperNames[i];
-    obj.width  = paperWidths[i];
-    obj.height = paperHeights[i];
-    obj.inches = paperInches[i];
-    obj.paperSize = paperEnums[i]; // deprecated
-    gPaperArray[i] = obj;
-  }
-}
-
-//---------------------------------------------------
-function createPaperSizeList(selectedInx)
-{
-  gStringBundle = srGetStrBundle("chrome://communicator/locale/printPageSetup.properties");
-
-  var selectElement = new listElement(gDialog.paperList);
-  selectElement.clearList();
-
-  selectElement.appendPaperNames(gPaperArray);
-
-  if (selectedInx > -1) {
-    selectElement.listElement.selectedIndex = selectedInx;
-  }
-
-  //gDialog.paperList = selectElement;
-}   
-
-//---------------------------------------------------
 function loadDialog()
 {
-  var print_paper_type    = 0;
-  var print_paper_unit    = 0;
-  var print_paper_width   = 0.0;
-  var print_paper_height  = 0.0;
   var print_orientation   = 0;
   var print_margin_top    = 0.5;
   var print_margin_left   = 0.5;
@@ -184,10 +102,6 @@ function loadDialog()
   var print_margin_right  = 0.5;
 
   if (gPrintSettings) {
-    print_paper_type   = gPrintSettings.paperSizeType;
-    print_paper_unit   = gPrintSettings.paperSizeUnit;
-    print_paper_width  = gPrintSettings.paperWidth;
-    print_paper_height = gPrintSettings.paperHeight;
     print_orientation  = gPrintSettings.orientation;
 
     print_margin_top    = gPrintSettings.marginTop;
@@ -197,9 +111,6 @@ function loadDialog()
   }
 
   if (gDoDebug) {
-    dump("paperSizeType "+print_paper_unit+"\n");
-    dump("paperWidth    "+print_paper_width+"\n");
-    dump("paperHeight   "+print_paper_height+"\n");
     dump("orientation   "+print_orientation+"\n");
 
     dump("print_margin_top    "+print_margin_top+"\n");
@@ -207,17 +118,6 @@ function loadDialog()
     dump("print_margin_right  "+print_margin_right+"\n");
     dump("print_margin_bottom "+print_margin_bottom+"\n");
   }
-
-  createPaperArray();
-
-  var selectedInx = 0;
-  for (var i=0;i<gPaperArray.length;i++) {
-    if (print_paper_width == gPaperArray[i].width && print_paper_height == gPaperArray[i].height) {
-      selectedInx = i;
-      break;
-    }
-  }
-  createPaperSizeList(selectedInx);
 
   gDialog.printBGColors.checked = gPrintSettings.printBGColors;
   gDialog.printBGImages.checked = gPrintSettings.printBGImages;
@@ -271,27 +171,8 @@ function onLoad()
 //---------------------------------------------------
 function onAccept()
 {
-  var print_paper_type   = gPrintSettingsInterface.kPaperSizeDefined;
-  var print_paper_unit   = gPrintSettingsInterface.kPaperSizeInches;
-  var print_paper_width  = 8.5;
-  var print_paper_height = 11.0;
 
   if (gPrintSettings) {
-    var selectedInx = gDialog.paperList.selectedIndex;
-    if (gPaperArray[selectedInx].inches) {
-      print_paper_unit = gPrintSettingsInterface.kPaperSizeInches;
-    } else {
-      print_paper_unit = gPrintSettingsInterface.kPaperSizeMillimeters;
-    }
-    print_paper_width  = gPaperArray[selectedInx].width;
-    print_paper_height = gPaperArray[selectedInx].height;
-    gPrintSettings.paperSize = gPaperArray[selectedInx].paperSize; // deprecated
-
-    gPrintSettings.paperSizeType = print_paper_type;
-    gPrintSettings.paperSizeUnit = print_paper_unit;
-    gPrintSettings.paperWidth    = print_paper_width;
-    gPrintSettings.paperHeight   = print_paper_height;
-
     gPrintSettings.orientation = gDialog.orientation.selectedIndex;
 
     // save these out so they can be picked up by the device spec
@@ -321,12 +202,6 @@ function onAccept()
 
     if (gDoDebug) {
       dump("******* Page Setup Accepting ******\n");
-      dump("paperSize     "+gPrintSettings.paperSize+" (deprecated)\n");
-      dump("paperSizeType "+print_paper_type+" (should be 1)\n");
-      dump("paperSizeUnit "+print_paper_unit+"\n");
-      dump("paperWidth    "+print_paper_width+"\n");
-      dump("paperHeight   "+print_paper_height+"\n");
-
       dump("print_margin_top    "+gDialog.topInput.value+"\n");
       dump("print_margin_left   "+gDialog.leftInput.value+"\n");
       dump("print_margin_right  "+gDialog.bottomInput.value+"\n");
