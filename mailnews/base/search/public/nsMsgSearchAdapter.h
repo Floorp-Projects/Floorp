@@ -28,7 +28,7 @@
 #include "nsIMsgSearchAdapter.h"
 #include "nsIMsgSearchValidityTable.h"
 #include "nsIMsgSearchValidityManager.h"
-
+#include "nsIMsgSearchTerm.h"
 #include "nsMsgSearchArray.h"
 class nsIMsgSearchScopeTerm;
 class nsINNTPHost;
@@ -53,35 +53,26 @@ inline PRBool IsStringAttribute (nsMsgSearchAttribValue a)
 class nsMsgSearchAdapter : public nsIMsgSearchAdapter
 {
 public:
-	nsMsgSearchAdapter (nsIMsgSearchScopeTerm*, nsMsgSearchTermArray&);
+	nsMsgSearchAdapter (nsIMsgSearchScopeTerm*, nsISupportsArray *);
 	virtual ~nsMsgSearchAdapter ();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMSGSEARCHADAPTER
-//	NS_IMETHOD ValidateTerms ();
-//	NS_IMETHOD Search () { return NS_OK; }
-//	NS_IMETHOD SendUrl () { return NS_OK; }
-//	NS_IMETHOD OpenResultElement (nsMsgResultElement *);
-//	NS_IMETHOD ModifyResultElement (nsMsgResultElement*, nsMsgSearchValue*);
-//	NS_IMETHOD GetEncoding (char **encoding) { return NS_OK; }
-
-//	NS_IMETHOD FindTargetFolder (const nsMsgResultElement*, nsIMsgFolder **aFolder);
-//	NS_IMETHOD Abort ();
 
 	nsIMsgSearchScopeTerm		*m_scope;
-	nsMsgSearchTermArray &m_searchTerms;
+    nsCOMPtr<nsISupportsArray> m_searchTerms;       /* linked list of criteria terms */
 
 	PRBool m_abortCalled;
 
 	static nsresult EncodeImap (char **ppEncoding, 
-									   nsMsgSearchTermArray &searchTerms,  
+									   nsISupportsArray *searchTerms,  
 									   const PRUnichar *srcCharset, 
 									   const PRUnichar *destCharset,
 									   PRBool reallyDredd = PR_FALSE);
 	
 	static nsresult EncodeImapValue(char *encoding, const char *value, PRBool useQuotes, PRBool reallyDredd);
 
-	static char *TryToConvertCharset(char *sourceStr, const PRUnichar *srcCharset, const PRUnichar *destCharset, PRBool useMIME2Style);
+	static char *TryToConvertCharset(const char *sourceStr, const PRUnichar *srcCharset, const PRUnichar *destCharset, PRBool useMIME2Style);
 	static char *GetImapCharsetParam(const PRUnichar *destCharset);
 	void GetSearchCharsets(nsString &srcCharset, nsString &destCharset);
   static char *EscapeSearchUrl (const char *nntpCommand);
@@ -123,7 +114,7 @@ protected:
 	char *TransformSpacesToStars (const char *, msg_TransformType transformType);
 	nsresult OpenNewsResultInUnknownGroup (nsMsgResultElement*);
 
-	static nsresult EncodeImapTerm (nsMsgSearchTerm *, PRBool reallyDredd, const PRUnichar *srcCharset, const PRUnichar *destCharset, char **ppOutTerm);
+	static nsresult EncodeImapTerm (nsIMsgSearchTerm *, PRBool reallyDredd, const PRUnichar *srcCharset, const PRUnichar *destCharset, char **ppOutTerm);
 };
 
 //-----------------------------------------------------------------------------

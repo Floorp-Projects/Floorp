@@ -28,6 +28,7 @@
 
 // inherit base implementation
 #include "nsMsgSearchAdapter.h"
+#include "nsISimpleEnumerator.h"
 
 class nsIMsgDBHdr;
 class nsMsgMailboxParser;
@@ -36,13 +37,14 @@ class nsIMsgSearchScopeTerm;
 class nsMsgSearchOfflineMail : public nsMsgSearchAdapter
 {
 public:
-	nsMsgSearchOfflineMail (nsIMsgSearchScopeTerm*, nsMsgSearchTermArray&);
+	nsMsgSearchOfflineMail (nsIMsgSearchScopeTerm*, nsISupportsArray *);
 	virtual ~nsMsgSearchOfflineMail ();
 
-	NS_IMETHOD ValidateTerms ();
-	NS_IMETHOD Search ();
-	NS_IMETHOD Abort ();
-	NS_IMETHOD AddResultElement (nsIMsgDBHdr *);
+  NS_IMETHOD ValidateTerms ();
+  NS_IMETHOD Search (PRBool *aDone);
+  NS_IMETHOD Abort ();
+  NS_IMETHOD AddResultElement (nsIMsgDBHdr *);
+
 	static nsresult  MatchTermsForFilter(nsIMsgDBHdr * msgToMatch,
                                          nsISupportsArray *termList,
                                          nsIMsgSearchScopeTerm *scope, 
@@ -71,9 +73,8 @@ protected:
                                 PRUint32 headerSize,
                                 PRBool ForFilters,
 								PRBool *pResult);
-	struct ListContext *m_cursor;
 	nsIMsgDatabase *m_db;
-	struct ListContext *m_listContext;
+	nsCOMPtr<nsISimpleEnumerator> m_listContext;
 
 	enum
 	{
@@ -90,7 +91,7 @@ protected:
 class nsMsgSearchIMAPOfflineMail : public nsMsgSearchOfflineMail
 {
 public:
-	nsMsgSearchIMAPOfflineMail (nsIMsgSearchScopeTerm*, nsMsgSearchTermArray&);
+	nsMsgSearchIMAPOfflineMail (nsIMsgSearchScopeTerm*, nsISupportsArray *);
 	virtual ~nsMsgSearchIMAPOfflineMail ();
 
 	NS_IMETHOD ValidateTerms ();
@@ -101,7 +102,7 @@ public:
 class nsMsgSearchOfflineNews : public nsMsgSearchOfflineMail
 {
 public:
-	nsMsgSearchOfflineNews (nsIMsgSearchScopeTerm*, nsMsgSearchTermArray&);
+	nsMsgSearchOfflineNews (nsIMsgSearchScopeTerm*, nsISupportsArray *);
 	virtual ~nsMsgSearchOfflineNews ();
 	NS_IMETHOD ValidateTerms ();
 

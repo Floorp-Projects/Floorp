@@ -48,7 +48,7 @@ public:
 	PRBool IsOfflineIMAPMail();  // added by mscott 
 	nsresult TimeSlice (PRBool *aDone);
 
-	nsresult InitializeAdapter (nsMsgSearchTermArray &termList);
+	nsresult InitializeAdapter (nsISupportsArray *termList);
 
 	char *GetStatusBarName ();
 

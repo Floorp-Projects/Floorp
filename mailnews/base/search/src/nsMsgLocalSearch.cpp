@@ -236,7 +236,7 @@ PRInt32 nsMsgSearchBoolExpression::GenerateEncodeStr(nsCString * buffer)
 
 //---------------- Adapter class for searching offline IMAP folders -----------
 //-----------------------------------------------------------------------------
-nsMsgSearchIMAPOfflineMail::nsMsgSearchIMAPOfflineMail (nsIMsgSearchScopeTerm *scope, nsMsgSearchTermArray &termList) : nsMsgSearchOfflineMail(scope, termList)
+nsMsgSearchIMAPOfflineMail::nsMsgSearchIMAPOfflineMail (nsIMsgSearchScopeTerm *scope, nsISupportsArray  *termList) : nsMsgSearchOfflineMail(scope, termList)
 { 
 
 }                                                                                                                                                                                                                                                                                                                                                                                                                                   
@@ -291,7 +291,7 @@ nsresult nsMsgSearchIMAPOfflineMail::ValidateTerms ()
 //-----------------------------------------------------------------------------
 
 
-nsMsgSearchOfflineMail::nsMsgSearchOfflineMail (nsIMsgSearchScopeTerm *scope, nsMsgSearchTermArray &termList) : nsMsgSearchAdapter (scope, termList)
+nsMsgSearchOfflineMail::nsMsgSearchOfflineMail (nsIMsgSearchScopeTerm *scope, nsISupportsArray *termList) : nsMsgSearchAdapter (scope, termList)
 {
     m_db = nsnull;
     m_listContext = nsnull;
@@ -643,82 +643,85 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
 }
 
 
-nsresult nsMsgSearchOfflineMail::Search ()
+nsresult nsMsgSearchOfflineMail::Search (PRBool *aDone)
 {
-    nsresult err = NS_OK;
-#ifdef HAVE_SEARCH_PORT
-    nsIMsgDBHdr *pHeaders = nsnull;
+  nsresult err = NS_OK;
 
-    nsresult dbErr = NS_OK;
+  NS_ENSURE_ARG(aDone);
+  nsresult dbErr = NS_OK;
+	nsCOMPtr<nsIMsgDBHdr> msgDBHdr;
 
-    // If we need to parse the mailbox before searching it, give another time
-    // slice to the parser
-    if (m_mailboxParser)
-        err = BuildSummaryFile ();
-    else
-        // Try to open the DB lazily. This will set up a parser if one is required
-        if (!m_db)
-            err = OpenSummaryFile ();
-    // Reparsing is unnecessary or completed
-    if (m_mailboxParser == nsnull && err == NS_OK)
+  // If we need to parse the mailbox before searching it, give another time
+  // slice to the parser
+  if (m_mailboxParser)
+    err = BuildSummaryFile ();
+  else
+    // Try to open the DB lazily. This will set up a parser if one is required
+    if (!m_db)
+      err = OpenSummaryFile ();
+  // Reparsing is unnecessary or completed
+  if (m_mailboxParser == nsnull && NS_SUCCEEDED(err))
+  {
+    NS_ASSERTION (m_db, "unable to open db for search");
+
+    if (!m_listContext)
+      dbErr = m_db->EnumerateMessages (getter_AddRefs(m_listContext));
+    if (NS_SUCCEEDED(dbErr) && m_listContext)
     {
-        NS_ASSERTION (m_db, "unable to open db for search");
+	    nsCOMPtr<nsISupports> currentItem;
 
-        if (!m_listContext)
-            dbErr = m_db->ListFirst (&m_listContext, &pHeaders);
-        else
-            dbErr = m_db->ListNext (m_listContext, &pHeaders);
-        if (eSUCCESS != dbErr)      
-            err = SearchError_ScopeDone; //###phil dbErr is dropped on the floor. just note that we did have an error so we'll clean up later
-        else
-        {
-            // Is this message a hit?
-            err = MatchTermsForSearch (pHeaders, m_searchTerms, m_scope, m_db);
-
-            // Add search hits to the results list
-            if (NS_OK == err)
-                AddResultElement (pHeaders);
-
-            m_scope->m_frame->IncrementOfflineProgress();
-
-            // Unrefer the header because holding it would hold the DB
-            // open which would prevent the user from moving, renaming, or deleting 
-            // the summary file
-            if (nsnull != pHeaders)
-                pHeaders->unrefer();
-        }
-
+	    dbErr = m_listContext->GetNext(getter_AddRefs(currentItem));
+	    if(NS_SUCCEEDED(dbErr))
+	    {
+		    msgDBHdr = do_QueryInterface(currentItem, &dbErr);
+	    }
     }
+    if (!NS_SUCCEEDED(dbErr))      
+      *aDone = PR_TRUE; //###phil dbErr is dropped on the floor. just note that we did have an error so we'll clean up later
     else
-        err = SearchError_ScopeDone; // we couldn't open up the DB. This is an unrecoverable error so mark the scope as done.
+    {
+      PRBool match = PR_FALSE;
+      // Is this message a hit?
+      err = MatchTermsForSearch (msgDBHdr, m_searchTerms, m_scope, m_db, &match);
 
-    // in the past an error here would cause an "infinite" search because the url would continue to run...
-    // i.e. if we couldn't open the database, it returns an error code but the caller of this function says, oh,
-    // we did not finish so continue...what we really want is to treat this current scope as done
-    if (err == SearchError_ScopeDone)
-        CleanUpScope(); // Do clean up for end-of-scope processing
-#endif // HAVE_SEARCH_PORT
-    return err;
+      // Add search hits to the results list
+      if (NS_SUCCEEDED(err) && match)
+        AddResultElement (msgDBHdr);
+
+//      m_scope->m_frame->IncrementOfflineProgress();
+    }
+
+  }
+  else
+      *aDone = PR_TRUE; // we couldn't open up the DB. This is an unrecoverable error so mark the scope as done.
+
+  // in the past an error here would cause an "infinite" search because the url would continue to run...
+  // i.e. if we couldn't open the database, it returns an error code but the caller of this function says, oh,
+  // we did not finish so continue...what we really want is to treat this current scope as done
+  if (*aDone)
+      CleanUpScope(); // Do clean up for end-of-scope processing
+  return err;
 }
 
 void nsMsgSearchOfflineMail::CleanUpScope()
 {
-#ifdef HAVE_SEARCH_PORT
     // Let go of the DB when we're done with it so we don't kill the db cache
     if (m_db)
     {
-        m_db->ListDone (m_listContext);
-        m_db->Close();
+        m_listContext = nsnull; 
+        m_db->Close(PR_FALSE);
     }
     
     m_db = nsnull;
 
+    nsCOMPtr<nsIInputStream> scopeFileStream;
+    nsresult rv = m_scope->GetFileStream(getter_AddRefs(scopeFileStream));
     // If we were searching the body of the message, close the folder
-    if (m_scope->m_file)
-        XP_FileClose (m_scope->m_file);
-    
-    m_scope->m_file = nsnull;
-#endif // HAVE_SEARCH_PORT
+    if (NS_SUCCEEDED(rv) && scopeFileStream)
+    {
+        scopeFileStream->Close();
+        m_scope->SetFileStream(nsnull);
+    }
 }
 
 NS_IMETHODIMP nsMsgSearchOfflineMail::AddResultElement (nsIMsgDBHdr *pHeaders)

@@ -30,16 +30,16 @@
 class nsMsgSearchNews : public nsMsgSearchAdapter
 {
 public:
-	nsMsgSearchNews (nsMsgSearchScopeTerm *scope, nsMsgSearchTermArray &termList);
+	nsMsgSearchNews (nsMsgSearchScopeTerm *scope, nsISupportsArray *termList);
 	virtual ~nsMsgSearchNews ();
 
-	NS_IMETHOD ValidateTerms ();
-	NS_IMETHOD Search ();
-	NS_IMETHOD GetEncoding (char **result);
+  NS_IMETHOD ValidateTerms ();
+  NS_IMETHOD Search (PRBool *aDone);
+  NS_IMETHOD GetEncoding (char **result);
   NS_IMETHOD AddHit(nsMsgKey key);
 
 	virtual nsresult Encode (nsCString *outEncoding);
-	virtual char *EncodeTerm (nsMsgSearchTerm *);
+	virtual char *EncodeTerm (nsIMsgSearchTerm *);
 	char *EncodeValue (const char *);
 	
     PRBool DuplicateHit(PRUint32 artNum) ;
@@ -65,11 +65,11 @@ protected:
 class nsMsgSearchNewsEx : public nsMsgSearchNews
 {
 public:
-	nsMsgSearchNewsEx (nsMsgSearchScopeTerm *scope, nsMsgSearchTermArray &termList);
+	nsMsgSearchNewsEx (nsMsgSearchScopeTerm *scope, nsISupportsArray *termList);
 	virtual ~nsMsgSearchNewsEx ();
 
 	NS_IMETHOD ValidateTerms ();
-	NS_IMETHOD Search ();
+	NS_IMETHOD Search (PRBool *aDone);
 	virtual nsresult Encode (nsCString *pEncoding /*out*/);
 
 	nsresult SaveProfile (const char *profileName);

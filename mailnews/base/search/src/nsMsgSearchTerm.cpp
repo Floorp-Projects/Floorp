@@ -1347,7 +1347,7 @@ nsresult nsMsgSearchScopeTerm::TimeSlice (PRBool *aDone)
 }
 
 
-nsresult nsMsgSearchScopeTerm::InitializeAdapter (nsMsgSearchTermArray &termList)
+nsresult nsMsgSearchScopeTerm::InitializeAdapter (nsISupportsArray *termList)
 {
 	NS_ASSERTION (m_adapter == nsnull, "already initialized");
 	nsresult err = NS_OK;

@@ -42,7 +42,7 @@ interface nsIMsgSearchSession :  nsISupports {
                        in boolean BooleanAND, /* set to true if associated boolean operator is AND */
                        in string arbitraryHeader); /* user defined arbitrary header. ignored unless attrib = attribOtherHeader */
 
-    readonly attribute long numSearchTerms;
+    readonly attribute unsigned long numSearchTerms;
 
 	readonly attribute nsIMsgSearchAdapter runningAdapter;
 

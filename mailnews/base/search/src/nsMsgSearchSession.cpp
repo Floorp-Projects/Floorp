@@ -66,16 +66,15 @@ nsMsgSearchSession::AddSearchTerm(nsMsgSearchAttribValue attrib,
 	nsMsgSearchTerm *pTerm = new nsMsgSearchTerm (attrib, op, value, nsMsgSearchBooleanOp::BooleanAND, arbitraryHeader);
 	if (nsnull == pTerm)
 		return NS_ERROR_OUT_OF_MEMORY;
-	m_termList.AppendElement (pTerm);
+	m_termList->AppendElement (pTerm);
 	return NS_OK;
 }
 
 /* readonly attribute long numSearchTerms; */
-NS_IMETHODIMP nsMsgSearchSession::GetNumSearchTerms(PRInt32 *aNumSearchTerms)
+NS_IMETHODIMP nsMsgSearchSession::GetNumSearchTerms(PRUint32 *aNumSearchTerms)
 {
   NS_ENSURE_ARG(aNumSearchTerms);
-  *aNumSearchTerms = m_termList.Count();
-  return NS_OK;
+  return m_termList->Count(aNumSearchTerms);
 }
 
 /* [noscript] void GetNthSearchTerm (in long whichTerm, in nsMsgSearchAttribute attrib, in nsMsgSearchOperator op, in nsMsgSearchValue value); */
@@ -304,9 +303,11 @@ nsresult nsMsgSearchSession::Initialize()
 	nsMsgSearchScopeTerm *scopeTerm = nsnull;
 	nsresult err = NS_OK;
 
+  PRUint32 numTerms;
+  m_termList->Count(&numTerms);
 	// Ensure that the FE has added scopes and terms to this search
-	NS_ASSERTION(m_termList.Count() > 0, "no terms to search!");
-	if (m_termList.Count() == 0)
+	NS_ASSERTION(numTerms > 0, "no terms to search!");
+	if (numTerms == 0)
 		return NS_MSG_ERROR_NO_SEARCH_VALUES;
 
 	// if we don't have any search scopes to search, return that code. 
@@ -497,13 +498,7 @@ void nsMsgSearchSession::DestroyScopeList()
 
 void nsMsgSearchSession::DestroyTermList ()
 {
-	nsMsgSearchTerm *term = NULL;
-	for (int i = 0; i < m_termList.Count(); i++)
-	{
-		term = m_termList.ElementAt(i);
-//		NS_ASSERTION (term->IsValid(), "invalid search term");
-		delete term;
-	}
+  m_termList->Clear();
 }
 
 nsMsgSearchScopeTerm *nsMsgSearchSession::GetRunningScope()

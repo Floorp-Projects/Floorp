@@ -45,7 +45,7 @@ const char *nsMsgSearchNews::m_kNntpSubject = "SUBJECT ";
 const char *nsMsgSearchNews::m_kTermSeparator = "/";
 
 
-nsMsgSearchNews::nsMsgSearchNews (nsMsgSearchScopeTerm *scope, nsMsgSearchTermArray &termList) : nsMsgSearchAdapter (scope, termList)
+nsMsgSearchNews::nsMsgSearchNews (nsMsgSearchScopeTerm *scope, nsISupportsArray *termList) : nsMsgSearchAdapter (scope, termList)
 {
 }
 
@@ -67,7 +67,7 @@ nsresult nsMsgSearchNews::ValidateTerms ()
 }
 
 
-nsresult nsMsgSearchNews::Search ()
+nsresult nsMsgSearchNews::Search (PRBool *aDone)
 {
 	// the state machine runs in the news: handler
 	nsresult err = NS_ERROR_NOT_IMPLEMENTED;
@@ -104,7 +104,7 @@ char *nsMsgSearchNews::EncodeValue (const char *value)
 }
 
 
-char *nsMsgSearchNews::EncodeTerm (nsMsgSearchTerm *term)
+char *nsMsgSearchNews::EncodeTerm (nsIMsgSearchTerm *term)
 {
 	// Develop an XPAT-style encoding for the search term
 
@@ -114,7 +114,11 @@ char *nsMsgSearchNews::EncodeTerm (nsMsgSearchTerm *term)
 
 	// Find a string to represent the attribute
 	const char *attribEncoding = nsnull;
-	switch (term->m_attribute)
+  nsMsgSearchAttribValue attrib;
+
+  term->GetAttrib(&attrib);
+
+	switch (attrib)
 	{
 	case nsMsgSearchAttrib::Sender:
 		attribEncoding = m_kNntpFrom;
@@ -131,7 +135,10 @@ char *nsMsgSearchNews::EncodeTerm (nsMsgSearchTerm *term)
 	PRBool leadingStar = PR_FALSE;
 	PRBool trailingStar = PR_FALSE;
 	int overhead = 1; // null terminator
-	switch (term->m_operator)
+  nsMsgSearchOpValue op;
+  term->GetOp(&op);
+
+	switch (op)
 	{
 	case nsMsgSearchOp::Contains:
 		leadingStar = PR_TRUE;
@@ -158,8 +165,16 @@ char *nsMsgSearchNews::EncodeTerm (nsMsgSearchTerm *term)
 
 	// Do INTL_FormatNNTPXPATInRFC1522Format trick for non-ASCII string
 //	unsigned char *intlNonRFC1522Value = INTL_FormatNNTPXPATInNonRFC1522Format (wincsid, (unsigned char*)term->m_value.u.string);
-    char *intlNonRFC1522Value = nsCRT::strdup((const char*)term->m_value.string);
-	if (!intlNonRFC1522Value)
+  nsCOMPtr <nsIMsgSearchValue> searchValue;
+
+  nsresult rv = term->GetValue(getter_AddRefs(searchValue));
+  if (!NS_SUCCEEDED(rv) || !searchValue)
+    return nsnull;
+
+
+  char *intlNonRFC1522Value = nsnull;
+  rv = searchValue->GetStr(&intlNonRFC1522Value);
+	if (!NS_SUCCEEDED(rv) || !intlNonRFC1522Value)
 		return nsnull;
 		
 	char *caseInsensitiveValue = EncodeValue ((char*)intlNonRFC1522Value);
@@ -227,20 +242,27 @@ nsresult nsMsgSearchNews::Encode (nsCString *outEncoding)
 
 	nsresult err = NS_OK;
 
-	char **intermediateEncodings = new char * [m_searchTerms.Count()];
+  PRUint32 numTerms;
+
+  m_searchTerms->Count(&numTerms);
+	char **intermediateEncodings = new char * [numTerms];
 	if (intermediateEncodings)
 	{
 		// Build an XPAT command for each term
 		int encodingLength = 0;
-		int i;
-		for (i = 0; i < m_searchTerms.Count(); i++)
+		PRUint32 i;
+		for (i = 0; i < numTerms; i++)
 		{
-			nsMsgSearchTerm * term = m_searchTerms.ElementAt(i);
+      nsCOMPtr<nsIMsgSearchTerm> pTerm;
+      m_searchTerms->QueryElementAt(i, NS_GET_IID(nsIMsgSearchTerm),
+                               (void **)getter_AddRefs(pTerm));
 			// set boolean OR term if any of the search terms are an OR...this only works if we are using
 			// homogeneous boolean operators.
-			m_ORSearch = !(term->IsBooleanOpAND());
+      PRBool isBooleanOpAnd;
+      pTerm->GetBooleanAnd(&isBooleanOpAnd);
+			m_ORSearch = !isBooleanOpAnd;
 		
-			intermediateEncodings[i] = EncodeTerm (m_searchTerms.ElementAt(i));	
+			intermediateEncodings[i] = EncodeTerm (pTerm);	
 			if (intermediateEncodings[i])
 				encodingLength += nsCRT::strlen(intermediateEncodings[i]) + nsCRT::strlen(m_kTermSeparator);
 		}
@@ -250,7 +272,11 @@ nsresult nsMsgSearchNews::Encode (nsCString *outEncoding)
 		if (encoding)
 		{
 			PL_strcpy (encoding, "?search");
-			for (i = 0; i < m_searchTerms.Count(); i++)
+      PRUint32 numTerms;
+
+      m_searchTerms->Count(&numTerms);
+
+			for (i = 0; i < numTerms; i++)
 			{
 				if (intermediateEncodings[i])
 				{
@@ -277,16 +303,7 @@ NS_IMETHODIMP nsMsgSearchNews::AddHit(nsMsgKey key)
   return NS_OK;
 }
 
-#if 0
-// Callback from libnet
-void MSG_AddNewsXpatHit (MWContext *context, uint32 artNum)
-{
-	MSG_SearchFrame *frame = MSG_SearchFrame::FromContext(context);
-	nsMsgSearchNews *adapter = (nsMsgSearchNews*) frame->GetRunningAdapter();
-	adapter->AddHit (artNum);
-}
-
-
+#if 0 // need to switch this to a notify stop loading handler, I think.
 void nsMsgSearchNews::PreExitFunction (URL_Struct * /*url*/, int status, MWContext *context)
 {
 	MSG_SearchFrame *frame = MSG_SearchFrame::FromContext (context);
@@ -307,7 +324,6 @@ void nsMsgSearchNews::PreExitFunction (URL_Struct * /*url*/, int status, MWConte
 	}
 }
 #endif // 0
-
 PRBool nsMsgSearchNews::DuplicateHit(PRUint32 artNum)  
 // ASSUMES m_hits is sorted!!
 {
@@ -354,8 +370,9 @@ void nsMsgSearchNews::CollateHits ()
 	// commands (one per search term), the article number must appear 3 times.
 	// If it appears less than 3 times, it matched some search terms, but not all
 
-	int termCount = m_searchTerms.Count();
-	int candidateCount = 0;
+	PRUint32 termCount;
+  m_searchTerms->Count(&termCount);
+	PRUint32 candidateCount = 0;
 	while (index < size)
 	{
 		if (candidate == m_candidateHits.ElementAt(index))
@@ -521,7 +538,7 @@ int nsMsgSearchNews::CompareArticleNumbers (const void *v1, const void *v2, void
 const char *nsMsgSearchNewsEx::m_kSearchTemplate = "?search/SEARCH HEADER NEWSGROUPS %s %s";
 const char *nsMsgSearchNewsEx::m_kProfileTemplate = "%s/dummy?profile/PROFILE NEW %s HEADER NEWSGROUPS %s %s";
 
-nsMsgSearchNewsEx::nsMsgSearchNewsEx (nsMsgSearchScopeTerm *scope, nsMsgSearchTermArray &termList) : nsMsgSearchNews (scope, termList) 
+nsMsgSearchNewsEx::nsMsgSearchNewsEx (nsMsgSearchScopeTerm *scope, nsISupportsArray *termList) : nsMsgSearchNews (scope, termList) 
 {
 }
 
@@ -540,7 +557,7 @@ nsresult nsMsgSearchNewsEx::ValidateTerms ()
 	return err;
 }
 
-nsresult nsMsgSearchNewsEx::Search ()
+nsresult nsMsgSearchNewsEx::Search (PRBool *aDone)
 {
 	// State machine runs in mknews.c?
 	return NS_ERROR_NOT_IMPLEMENTED;

@@ -77,7 +77,7 @@ NS_IMETHODIMP nsMsgSearchAdapter::OpenResultElement(nsMsgResultElement *)
 
 NS_IMPL_ISUPPORTS1(nsMsgSearchAdapter, nsIMsgSearchAdapter)
 
-nsMsgSearchAdapter::nsMsgSearchAdapter(nsIMsgSearchScopeTerm *scope, nsMsgSearchTermArray &searchTerms) 
+nsMsgSearchAdapter::nsMsgSearchAdapter(nsIMsgSearchScopeTerm *scope, nsISupportsArray *searchTerms) 
 	: m_searchTerms(searchTerms)
 {
   NS_INIT_ISUPPORTS();
@@ -99,7 +99,7 @@ NS_IMETHODIMP nsMsgSearchAdapter::Abort ()
 	return NS_ERROR_NOT_IMPLEMENTED;
 
 }
-NS_IMETHODIMP nsMsgSearchAdapter::Search () 
+NS_IMETHODIMP nsMsgSearchAdapter::Search (PRBool *aDone) 
 {
   return NS_OK; 
 }
@@ -129,7 +129,7 @@ NS_IMETHODIMP nsMsgSearchAdapter::AddHit(nsMsgKey key)
 
 
 char *
-nsMsgSearchAdapter::TryToConvertCharset(char *sourceStr, const PRUnichar *srcCharset, const PRUnichar * destCharset, PRBool useMime2)
+nsMsgSearchAdapter::TryToConvertCharset(const char *sourceStr, const PRUnichar *srcCharset, const PRUnichar * destCharset, PRBool useMime2)
 {
 	char *result = nsnull;
 
@@ -371,7 +371,7 @@ nsMsgSearchAdapter::GetSearchCharsets(nsString &srcCharset, nsString& dstCharset
 	}
 }
 
-nsresult nsMsgSearchAdapter::EncodeImapTerm (nsMsgSearchTerm *term, PRBool reallyDredd, const PRUnichar *srcCharset, const PRUnichar *destCharset, char **ppOutTerm)
+nsresult nsMsgSearchAdapter::EncodeImapTerm (nsIMsgSearchTerm *term, PRBool reallyDredd, const PRUnichar *srcCharset, const PRUnichar *destCharset, char **ppOutTerm)
 {
 	nsresult err = NS_OK;
 	PRBool useNot = PR_FALSE;
@@ -384,10 +384,19 @@ nsresult nsMsgSearchAdapter::EncodeImapTerm (nsMsgSearchTerm *term, PRBool reall
 
 	*ppOutTerm = nsnull;
 
-	if (term->m_operator == nsMsgSearchOp::DoesntContain || term->m_operator == nsMsgSearchOp::Isnt)
+  nsCOMPtr <nsIMsgSearchValue> searchValue;
+  nsresult rv = term->GetValue(getter_AddRefs(searchValue));
+
+  nsMsgSearchOpValue op;
+  term->GetOp(&op);
+
+	if (op == nsMsgSearchOp::DoesntContain || op == nsMsgSearchOp::Isnt)
 		useNot = PR_TRUE;
 
-	switch (term->m_attribute)
+  nsMsgSearchAttribValue attrib;
+  term->GetAttrib(&attrib);
+
+	switch (attrib)
 	{
 	case nsMsgSearchAttrib::ToOrCC:
 		orHeaderMnemonic = m_kImapCC;
@@ -409,24 +418,28 @@ nsresult nsMsgSearchAdapter::EncodeImapTerm (nsMsgSearchTerm *term, PRBool reall
 		excludeHeader = PR_TRUE;
 		break;
 	case nsMsgSearchAttrib::OtherHeader:  // arbitrary header? if so create arbitrary header string
-		if (term->m_arbitraryHeader.Length() > 0)
-		{
-			arbitraryHeader = new char [nsCRT::strlen(term->m_arbitraryHeader) + 6];  // 6 bytes for SPACE \" .... \" SPACE
-			if (!arbitraryHeader)
-				return NS_ERROR_OUT_OF_MEMORY;
-			arbitraryHeader[0] = '\0';
-			PL_strcat(arbitraryHeader, " \"");
-			PL_strcat(arbitraryHeader, term->m_arbitraryHeader);
-			PL_strcat(arbitraryHeader, "\" ");
-			whichMnemonic = arbitraryHeader;
-		}
-		else
-			return NS_ERROR_FAILURE;
+    {
+      nsXPIDLCString arbitraryHeaderTerm;
+      term->GetArbitraryHeader(getter_Copies(arbitraryHeaderTerm));
+      if (nsCRT::strlen((const char *) arbitraryHeaderTerm) > 0)
+		  {
+			  arbitraryHeader = new char [nsCRT::strlen((const char *)arbitraryHeaderTerm) + 6];  // 6 bytes for SPACE \" .... \" SPACE
+			  if (!arbitraryHeader)
+				  return NS_ERROR_OUT_OF_MEMORY;
+			  arbitraryHeader[0] = '\0';
+			  PL_strcat(arbitraryHeader, " \"");
+			  PL_strcat(arbitraryHeader, (const char *)arbitraryHeaderTerm);
+			  PL_strcat(arbitraryHeader, "\" ");
+			  whichMnemonic = arbitraryHeader;
+		  }
+		  else
+			  return NS_ERROR_FAILURE;
+    }
 		break;
 	case nsMsgSearchAttrib::AgeInDays:  // added for searching online for age in days...
 		// for AgeInDays, we are actually going to perform a search by date, so convert the operations for age
 		// to the IMAP mnemonics that we would use for date!
-		switch (term->m_operator)
+		switch (op)
 		{
 		case nsMsgSearchOp::IsGreaterThan:
 			whichMnemonic = m_kImapBefore;
@@ -444,7 +457,7 @@ nsresult nsMsgSearchAdapter::EncodeImapTerm (nsMsgSearchTerm *term, PRBool reall
 		excludeHeader = PR_TRUE;
 		break;
 	case nsMsgSearchAttrib::Date:
-		switch (term->m_operator)
+		switch (op)
 		{
 		case nsMsgSearchOp::IsBefore:
 			whichMnemonic = m_kImapBefore;
@@ -473,13 +486,16 @@ nsresult nsMsgSearchAdapter::EncodeImapTerm (nsMsgSearchTerm *term, PRBool reall
 		useNot = PR_FALSE; // bizarrely, NOT SEEN is wrong, but UNSEEN is right.
 		ignoreValue = PR_TRUE; // the mnemonic is all we need
 		excludeHeader = PR_TRUE;
-		switch (term->m_value.u.msgStatus)
+    PRUint32 status;
+    searchValue->GetStatus(&status);
+
+		switch (status)
 		{
 		case MSG_FLAG_READ:
-			whichMnemonic = term->m_operator == nsMsgSearchOp::Is ? m_kImapSeen : m_kImapNotSeen;
+			whichMnemonic = op == nsMsgSearchOp::Is ? m_kImapSeen : m_kImapNotSeen;
 			break;
 		case MSG_FLAG_REPLIED:
-			whichMnemonic = term->m_operator == nsMsgSearchOp::Is ? m_kImapAnswered : m_kImapNotAnswered;
+			whichMnemonic = op == nsMsgSearchOp::Is ? m_kImapAnswered : m_kImapNotAnswered;
 			break;
 		default:
 			NS_ASSERTION(PR_FALSE, "invalid search operator");
@@ -496,14 +512,15 @@ nsresult nsMsgSearchAdapter::EncodeImapTerm (nsMsgSearchTerm *term, PRBool reall
 	dateBuf[0] = '\0';
 	
 	PRBool valueWasAllocated = PR_FALSE;
-	if (term->m_attribute == nsMsgSearchAttrib::Date)
+	if (attrib == nsMsgSearchAttrib::Date)
 	{
 		// note that there used to be code here that encoded an RFC822 date for imap searches.
 		// The IMAP RFC 2060 is misleading to the point that it looks like it requires an RFC822
 		// date but really it expects dd-mmm-yyyy, like dredd, and refers to the RFC822 date only in that the
 		// dd-mmm-yyyy date will match the RFC822 date within the message.
 
-		PRTime adjustedDate = term->m_value.u.date;
+		PRTime adjustedDate;
+    searchValue->GetDate(&adjustedDate);
 		if (whichMnemonic == m_kImapSince)
 		{
 			// it looks like the IMAP server searches on Since includes the date in question...
@@ -522,7 +539,7 @@ nsresult nsMsgSearchAdapter::EncodeImapTerm (nsMsgSearchTerm *term, PRBool reall
 	}
 	else
 	{
-		if (term->m_attribute == nsMsgSearchAttrib::AgeInDays)
+		if (attrib == nsMsgSearchAttrib::AgeInDays)
 		{
 			// okay, take the current date, subtract off the age in days, then do an appropriate Date search on 
 			// the resulting day.
@@ -537,10 +554,11 @@ nsresult nsMsgSearchAdapter::EncodeImapTerm (nsMsgSearchTerm *term, PRBool reall
 		}
 		else
 
-		if (IsStringAttribute(term->m_attribute))
+		if (IsStringAttribute(attrib))
 		{
 			char *unconvertedValue; // = reallyDredd ? MSG_EscapeSearchUrl (term->m_value.u.string) : msg_EscapeImapSearchProtocol(term->m_value.u.string);
-
+      nsXPIDLCString searchTermValue;
+      searchValue->GetStr(getter_Copies(searchTermValue));
 			// Ugly switch for Korean mail/news charsets.
 			// We want to do this here because here is where
 			// we know what charset we want to use.
@@ -551,12 +569,12 @@ nsresult nsMsgSearchAdapter::EncodeImapTerm (nsMsgSearchTerm *term, PRBool reall
 				dest_csid = INTL_DefaultMailCharSetID(dest_csid);
 #endif
 
-			unconvertedValue = TryToConvertCharset(term->m_value.string,
+			unconvertedValue = TryToConvertCharset((const char *) searchTermValue,
 										srcCharset,
 										destCharset,
 										reallyDredd);
 			if (!unconvertedValue)
-				unconvertedValue = nsCRT::strdup(term->m_value.string); // couldn't convert, send as is
+				unconvertedValue = nsCRT::strdup((const char *) searchTermValue); // couldn't convert, send as is
 
 			value = reallyDredd ? EscapeSearchUrl (unconvertedValue) : EscapeImapSearchProtocol(unconvertedValue);
 			PR_Free(unconvertedValue);
@@ -640,7 +658,7 @@ nsresult nsMsgSearchAdapter::EncodeImapValue(char *encoding, const char *value, 
 }
 
 
-nsresult nsMsgSearchAdapter::EncodeImap (char **ppOutEncoding, nsMsgSearchTermArray &searchTerms, const PRUnichar *srcCharset, const PRUnichar *destCharset, PRBool reallyDredd)
+nsresult nsMsgSearchAdapter::EncodeImap (char **ppOutEncoding, nsISupportsArray *searchTerms, const PRUnichar *srcCharset, const PRUnichar *destCharset, PRBool reallyDredd)
 {
 	// i've left the old code (before using CBoolExpression for debugging purposes to make sure that
 	// the new code generates the same encoding string as the old code.....
@@ -648,8 +666,9 @@ nsresult nsMsgSearchAdapter::EncodeImap (char **ppOutEncoding, nsMsgSearchTermAr
 	nsresult err = NS_OK;
 	*ppOutEncoding = nsnull;
 
-	int termCount = searchTerms.Count();
-	int i = 0;
+	PRUint32 termCount;
+  searchTerms->Count(&termCount);
+	PRUint32 i = 0;
 	int encodingLength = 0;
 
 	// Build up an array of encodings, one per query term
@@ -663,11 +682,14 @@ nsresult nsMsgSearchAdapter::EncodeImap (char **ppOutEncoding, nsMsgSearchTermAr
 
 	for (i = 0; i < termCount && NS_SUCCEEDED(err); i++)
 	{
-		err = EncodeImapTerm (searchTerms.ElementAt(i), reallyDredd, srcCharset, destCharset, &termEncodings[i]);
+    nsCOMPtr<nsIMsgSearchTerm> pTerm;
+    searchTerms->QueryElementAt(i, NS_GET_IID(nsIMsgSearchTerm),
+                             (void **)getter_AddRefs(pTerm));
+		err = EncodeImapTerm (pTerm, reallyDredd, srcCharset, destCharset, &termEncodings[i]);
 		if (NS_SUCCEEDED(err) && nsnull != termEncodings[i])
 		{
 			encodingLength += nsCRT::strlen(termEncodings[i]) + 1;
-			expression = expression->AddSearchTerm(searchTerms.ElementAt(i),termEncodings[i]);
+			expression = expression->AddSearchTerm(pTerm,termEncodings[i]);
 		}
 	}
 

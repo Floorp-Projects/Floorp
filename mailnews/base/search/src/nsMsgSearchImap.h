@@ -30,15 +30,15 @@
 class nsMsgSearchOnlineMail : public nsMsgSearchAdapter
 {
 public:
-	nsMsgSearchOnlineMail (nsMsgSearchScopeTerm *scope, nsMsgSearchTermArray &termList);
+	nsMsgSearchOnlineMail (nsMsgSearchScopeTerm *scope, nsISupportsArray *termList);
 	virtual ~nsMsgSearchOnlineMail ();
 
 	NS_IMETHOD ValidateTerms ();
-	NS_IMETHOD Search ();
+	NS_IMETHOD Search (PRBool *aDone);
 	NS_IMETHOD GetEncoding (char **result);
 	NS_IMETHOD AddResultElement (nsIMsgDBHdr *);
 
-	static nsresult Encode (nsCString *ppEncoding, nsMsgSearchTermArray &searchTerms, const PRUnichar *srcCharset, const PRUnichar *destCharset);
+	static nsresult Encode (nsCString *ppEncoding, nsISupportsArray *searchTerms, const PRUnichar *srcCharset, const PRUnichar *destCharset);
 	
 
 protected:

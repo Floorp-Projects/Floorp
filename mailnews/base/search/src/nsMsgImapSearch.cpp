@@ -30,7 +30,7 @@
 // Implementation of search for IMAP mail folders
 
 
-nsMsgSearchOnlineMail::nsMsgSearchOnlineMail (nsMsgSearchScopeTerm *scope, nsMsgSearchTermArray &termList) : nsMsgSearchAdapter (scope, termList)
+nsMsgSearchOnlineMail::nsMsgSearchOnlineMail (nsMsgSearchScopeTerm *scope, nsISupportsArray *termList) : nsMsgSearchAdapter (scope, termList)
 {
 }
 
@@ -229,7 +229,7 @@ void MSG_AddImapSearchHit (MWContext *context, const char *resultLine)
 }
 #endif // 0
 
-nsresult nsMsgSearchOnlineMail::Search ()
+nsresult nsMsgSearchOnlineMail::Search (PRBool *aDone)
 {
     // we should never end up here for a purely online
     // folder.  We might for an offline IMAP folder.
@@ -239,7 +239,7 @@ nsresult nsMsgSearchOnlineMail::Search ()
 }
 
 
-nsresult nsMsgSearchOnlineMail::Encode (nsCString *pEncoding, nsMsgSearchTermArray &searchTerms, const PRUnichar *srcCharset, const PRUnichar *destCharset)
+nsresult nsMsgSearchOnlineMail::Encode (nsCString *pEncoding, nsISupportsArray *searchTerms, const PRUnichar *srcCharset, const PRUnichar *destCharset)
 {
     char *imapTerms = nsnull;
 
@@ -249,15 +249,31 @@ nsresult nsMsgSearchOnlineMail::Encode (nsCString *pEncoding, nsMsgSearchTermArr
 
 	if (PR_TRUE) // !(srcCharset & CODESET_MASK == STATEFUL || srcCharset & CODESET_MASK == WIDECHAR) )   //assume all single/multiple bytes charset has ascii as subset
 	{
-		int termCount = searchTerms.Count();
-		int i = 0;
+		PRUint32 termCount;
+    searchTerms->Count(&termCount);
+		PRUint32 i = 0;
 
 		for (i = 0; i < termCount && asciiOnly; i++)
 		{
-			nsMsgSearchTerm *term = searchTerms.ElementAt(i);
-			if (IsStringAttribute(term->m_attribute))
+      nsCOMPtr<nsIMsgSearchTerm> pTerm;
+      searchTerms->QueryElementAt(i, NS_GET_IID(nsIMsgSearchTerm),
+                               (void **)getter_AddRefs(pTerm));
+
+      nsMsgSearchAttribValue attribute;
+      pTerm->GetAttrib(&attribute);
+			if (IsStringAttribute(attribute))
 			{
-				char *pchar = term->m_value.string;
+				char *pchar;
+        nsCOMPtr <nsIMsgSearchValue> searchValue;
+
+        nsresult rv = pTerm->GetValue(getter_AddRefs(searchValue));
+        if (!NS_SUCCEEDED(rv) || !searchValue)
+          continue;
+
+
+        rv = searchValue->GetStr(&pchar);
+      	if (!NS_SUCCEEDED(rv) || !pchar)
+      		continue;
 				for (; *pchar ; pchar++)
 				{
 					if (*pchar & 0x80)
@@ -266,6 +282,7 @@ nsresult nsMsgSearchOnlineMail::Encode (nsCString *pEncoding, nsMsgSearchTermArr
 						break;
 					}
 				}
+        nsCRT::free(pchar);
 			}
 		}
 	}

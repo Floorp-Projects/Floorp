@@ -30,6 +30,7 @@
 #include "nsIMsgWindow.h"
 #include "nsITimer.h"
 #include "nsMsgSearchArray.h"
+#include "nsISupportsArray.h"
 
 class nsMsgSearchAdapter;
 
@@ -58,7 +59,7 @@ protected:
 	nsresult GetNextUrl();
 
 	nsMsgSearchScopeTermArray m_scopeList;
-	nsMsgSearchTermArray m_termList;
+	nsCOMPtr <nsISupportsArray> m_termList;
 	nsMsgResultArray m_resultList;
 
 	void DestroyTermList ();
