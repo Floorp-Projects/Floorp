@@ -104,11 +104,11 @@ nsSVGDocument::GetDomain(nsAWritableString& aDomain) {
   if (!mDocumentURL) {
     aDomain.Truncate();
   } else {
-    nsXPIDLCString domain;
-    nsresult rv = mDocumentURL->GetHost(getter_Copies(domain));
+    nsCAutoString domain;
+    nsresult rv = mDocumentURL->GetHost(domain);
     if (NS_FAILED(rv)) return rv;
     
-    aDomain.Assign(NS_ConvertASCIItoUCS2(domain));
+    aDomain.Assign(NS_ConvertUTF8toUCS2(domain));
   }
   
   return NS_OK;
@@ -119,10 +119,10 @@ nsSVGDocument::GetURL(nsAWritableString& aURL) {
   if (!mDocumentURL) {
     aURL.Truncate();
   } else {
-    nsXPIDLCString url;
-    nsresult rv = mDocumentURL->GetSpec(getter_Copies(url));
+    nsCAutoString url;
+    nsresult rv = mDocumentURL->GetSpec(url);
     if (NS_FAILED(rv)) return rv;    
-    aURL.Assign(NS_ConvertASCIItoUCS2(url));
+    aURL.Assign(NS_ConvertUTF8toUCS2(url));
   }
   
   return NS_OK;
