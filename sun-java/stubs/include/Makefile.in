@@ -17,32 +17,35 @@
 
 DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
 
 MODULE		= java
 
-EXPORTS		= bool.h \
-		  interpreter.h \
-		  javaString.h \
-		  javaThreads.h \
-		  jmc.h \
-		  jni.h \
-		  jni_md.h \
-		  jri.h \
-		  jri_md.h \
-		  jriext.h \
-		  jritypes.h \
-		  nspr_md.h \
-		  oobj.h \
-		  sysmacros_md.h \
-		  tree.h \
-		  typedefs.h \
-		  typedefs_md.h \
-		  zip.h \
-		  $(NULL)
+EXPORTS		= \
+		bool.h \
+		interpreter.h \
+		javaString.h \
+		javaThreads.h \
+		jmc.h \
+		jni.h \
+		jni_md.h \
+		jri.h \
+		jri_md.h \
+		jriext.h \
+		jritypes.h \
+		nspr_md.h \
+		oobj.h \
+		sysmacros_md.h \
+		tree.h \
+		typedefs.h \
+		typedefs_md.h \
+		zip.h \
+		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
-include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
+
