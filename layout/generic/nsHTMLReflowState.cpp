@@ -1100,20 +1100,8 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
           // For a replaced element we use the intrinsic size
           mComputedWidth = NS_INTRINSICSIZE;
         } else {
-          // The width is shrink-to-fit but constrained by the containing block width
+          // The width is shrink-to-fit
           mComputedWidth = NS_SHRINKWRAPWIDTH;
-          
-          PRInt32 maxWidth = containingBlockWidth;
-          if (NS_UNCONSTRAINEDSIZE != maxWidth) {
-            maxWidth -= mComputedOffsets.left + mComputedMargin.left + mComputedBorderPadding.left +
-                        mComputedBorderPadding.right + mComputedMargin.right + mComputedOffsets.right;
-          }
-          if (maxWidth <= 0) {
-            maxWidth = 1;
-          }
-          if (mComputedMaxWidth > maxWidth) {
-            mComputedMaxWidth = maxWidth;
-          }
         }
 
         if (leftIsAuto) {
