@@ -15,203 +15,68 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 #
-##########################################################################
+######################################################################
 #
-# Makefile for the Mozilla X front end.
-#
-# There are N dimensions to a full complement of netscape binaries:
-#
-#	- target architecture
-#	- debug vs optimize
-#	- normal vs vendor-cobranded version (number, anim, etc)
-#	- normal vs purified
-#
-# A directory is needed for each of the first two dimensions (target
-# and debug) but executables for all of the others will then be built
-# in the same directory from the same .o files.  The files have names
-# as follows:
-#
-#	netscape-export			2.0
-#	netscape-nis-export		2.0  (SunOS 4 only)
-#	netscape-sgi-export		2.0S (Irix5 only)
-#	netscape-export.pure		2.0  (SunOS 4 and Solaris only)
-#	 ...etc...
-#
-# The only difference in the executables is which version of config-*.o
-# is linked in, and whether or not -lresolv is used.
-#
-# The "release" target will create a release/ subdirectory, and N subdirs
-# of that in which the various tar files will go.  The tar files will be
-# uniquely named, though the executables in them are all called "netscape".
-#
-# The exception to this is that the -nis versions don't get their own tar
-# files, they are lumped in with the normal SunOS 4 package with the names
-# "netscape" (for the NIS version) and "netscape_dns" (for the -lresolv
-# version.)
+# Makefile for tubbed-out FE, modeled after XFE Makefile.
 #
 
 DEPTH		= ../..
 
 MODULE		= moz
 
-USE_3PANE	= 1
-USE_SPELLCHECK	= 1
+REQUIRES	= \
+	addr \
+	applet \
+	img \
+	edtplug \
+	jtools \
+	lay \
+	layer \
+	js \
+	libfont \
+	mariner \
+	msg \
+	java \
+	plds \
+    nspr20 \
+	parse \
+    plug \
+	plugimpl \
+	hook \
+	pref \
+	rdf \
+	security \
+	softupdt \
+	libreg \
+	style \
+	util \
+	$(NULL)
 
-REQUIRES	= addr \
-		  applet \
-		  img \
-		  edtplug \
-		  jtools \
-		  lay \
-		  layer \
-		  js \
-		  libfont \
-		  mariner \
-		  msg \
-		  $(NULL)
-ifdef NSPR20
-REQUIRES          += plds \
-		  nspr20 \
-		  $(NULL)
-else
-REQUIRES          += nspr \
-		  $(NULL)
-endif
-REQUIRES          += parse \
-		  plug \
-		  hook \
-		  pref \
-		  rdf \
-		  security \
-		  softupdt \
-		  libreg \
-		  style \
-		  util \
-		  java \
-		  ldap \
-		  $(NULL)
+CSRCS = \
+	main.c \
+	stubbm.c \
+	stubctxt.c \
+	stubdlgs.c \
+	stubedit.c \
+	stubenc.c \
+	stubform.c \
+	stubgrid.c \
+	stubhelp.c \
+	stubimg.c \
+	stublay.c \
+	stubloc.c \
+	stubmail.c \
+	stubmisc.c \
+	stubplug.c \
+	stubps.c \
+	stubrdf.c \
+	stubrgn.c \
+	stubsec.c \
+	stubstr.c \
+	stubtime.c \
+	$(NULL)
 
-CSRCS		= \
-		  main.c \
-		  stubbm.c \
-		  stubctxt.c \
-		  stubdlgs.c \
-		  stubedit.c \
-		  stubenc.c \
-		  stubform.c \
-		  stubgrid.c \
-		  stubhelp.c \
-		  stubimg.c \
-		  stublay.c \
-		  stubloc.c \
-		  stubmail.c \
-		  stubplug.c \
-		  stubps.c \
-		  stubrdf.c \
-		  stubrgn.c \
-		  stubsec.c \
-		  stubstr.c \
-		  stubtime.c \
-		  $(NULL)
-
-ifndef MOZ_LITE
-XFE_PROGNAME	:= mozilla
-DSO_PROGNAME	:= moz
-PRODUCT_NAME	:= Communicator
-NETHELP_DIR	:= comm
-else
-XFE_PROGNAME	:= mozilla-lite
-DSO_PROGNAME	:= moz-lite
-PRODUCT_NAME	:= Navigator
-NETHELP_DIR	:= ratbert
-CSRCS		+= rat_stubs.c
-endif
-
-X_RELEASES	= release-YYY \
-		  release-net-YYY \
-		  release-sgi-YYY \
-		  $(NULL)
-
-EXPORT_RELEASES	= $(subst YYY,export,$(X_RELEASES))
-FRANCE_RELEASES	= $(subst YYY,france,$(X_RELEASES))
-US_RELEASES	= $(subst YYY,us,$(X_RELEASES))
-
-RELEASES	= $(EXPORT_RELEASES) $(FRANCE_RELEASES) $(US_RELEASES)
-
-GUESS_CONFIG	:= $(shell $(DEPTH)/config/config.guess | sed 's/i[23456]86/x86/')
-
-ifdef BUILD_INTL
-README_FILE	= $(DEPTH)/l10n/us/xfe/README.intl
-else
-README_FILE	= $(OBJDIR)/README
-endif
-
-BUILD_NUMBER	= $(DEPTH)/build/build_number
-LICENSE_DIR	= $(DEPTH)/l10n/us/xp
-
-LICENSES	= $(LICENSE_DIR)/LICENSE-alpha \
-		  $(LICENSE_DIR)/LICENSE-export-beta \
-		  $(LICENSE_DIR)/LICENSE-export \
-		  $(NULL)
-
-COMMON_REL_DEPS	= versionn.h \
-		  make-release \
-		  $(OBJDIR)/LICENSE \
-		  $(EXTRA_REL_FILES) \
-		  $(TEST_PLUGIN) \
-		  $(AUTOADMIN_DSO) \
-		  $(README_FILE) \
-		  $(DEPTH)/tpubs/$(NETHELP_DIR)/nethelp.tar.gz \
-		  $(DIST)/bin/zigbert$(BIN_SUFFIX)
-
-ifdef USE_SPELLCHECK
-COMMON_REL_DEPS	+= \
-		  $(DEPTH)/modules/spellchk/data/spellchk.tar.gz \
-		  $(NULL)
-endif
-
-MOZILLA_ZIP	= java/applet \
-		  java/awt \
-		  java/awt/image \
-		  java/awt/peer \
-		  java/io \
-		  java/lang \
-		  java/lang/reflect \
-		  java/net \
-		  java/util \
-		  java/text \
-		  java/text/resources \
-		  netscape/context \
-		  netscape/applet \
-		  netscape/console \
-		  netscape/debug \
-		  netscape/plugin \
-		  netscape/javascript \
-		  netscape/util \
-		  netscape/application \
-		  netscape/constructor \
-		  netscape/security \
-		  netscape/softupdate \
-		  netscape/net \
-		  netscape/misc \
-		  netscape/ldap/ber/stream \
-		  netscape/ldap/util \
-		  netscape/ldap/client/opers \
-		  netscape/ldap/client \
-		  netscape/ldap \
-		  sun/io \
-		  sun/audio \
-		  sun/awt \
-		  sun/awt/image \
-		  sun/awt/motif \
-		  sun/misc/Cache.class \
-		  sun/misc/Ref.class \
-		  META-INF \
-		  $(NULL)
-
-ALL_CLASS_DEPS	= $(shell find $(XPDIST)/classes -type f \( -name "*.class" -o -name "*.gif" -o -name "*.mf" -o -name "*.sf" -o -name "*.rsa" -o -name "*.properties*" \) -print)
-
-#######################################################################
+######################################################################
 
 include $(DEPTH)/config/config.mk
 
@@ -219,89 +84,69 @@ CCLD		= $(CCC)
 LDFLAGS		= $(CFLAGS)
 NOMD_LDFLAGS	= $(NOMD_CFLAGS)
 
-ifdef MOZILLA_GPROF
-CSRCS		+= gmon.c
-LDFLAGS		= $(OPTIMIZER)
-$(OBJDIR)/gmon.o:	gmon.c gmon.h
-	$(CC) -O -c -o $@ $<
-endif
-
-ifeq ($(OS_ARCH),HP-UX)
-
-# HP requires C++ programs to have main() in a C++ file.
-CPPSRCS		= cplusplusmain.cc
-CFLAGS		+= -DCPLUSPLUS_LINKAGE
-
-ifeq ($(OS_RELEASE),B.10)
-HPUX_EXTRA_DIRS	= Xmu
-endif 
-
-endif
-
 OBJS		= $(CSRCS:.c=.o) $(CPPSRCS:.cc=.o)
 
-GARBAGE		+= $(wildcard java_40*) e_kit_resources.h cxxlink-filter
-
-ifdef FORTEZZA
-CI_LIB		= $(DIST)/lib/libci.a
-else
-CI_LIB		=
-endif
-
-SEC_LIBS	= $(DIST)/lib/lib$(LITE_PREFIX)secnav.a \
-		  $(DIST)/lib/libssl.a \
-		  $(DIST)/lib/libcert.a \
-		  $(DIST)/lib/libpkcs12.a \
-		  $(DIST)/lib/libpkcs7.a \
-		  $(DIST)/lib/libsecmod.a \
-		  $(DIST)/lib/libkey.a \
-		  $(DIST)/lib/libcrypto.a \
-		  $(DIST)/lib/libsecutil.a \
-		  $(DIST)/lib/libhash.a \
-		  $(DIST)/lib/libhtmldlgs.a \
-		  $(NULL)
-
-ifndef MOZ_LITE
-SEC_LIBS	+= $(DIST)/lib/libldap.a $(DIST)/lib/liblber.a
-endif
-
-SEC_LIBS	+= $(CI_LIB)
-
-US_LIB		= $(SEC_LIBS) $(DIST)/lib/libdomestic.a
-EXPORT_LIB	= $(SEC_LIBS) $(DIST)/lib/libexport.a 
-FRANCE_LIB	= $(SEC_LIBS) $(DIST)/lib/libfrance.a 
-
-ifeq ($(OS_ARCH),AIX)
-NSPR_LIB	= 
-else
-ifdef NSPR20
-NSPR_LIB	= $(DIST)/lib/libplds21.a
-NSPR_LIB	+= $(DIST)/lib/libplc21.a
-NSPR_LIB	+= $(DIST)/lib/libmsgc21.a
-NSPR_LIB	+= $(DIST)/lib/libnspr21.a
-else
-NSPR_LIB	= $(DIST)/lib/libnspr.a
-endif
-endif
+NSPR_LIB	= $(DIST)/lib/libplds21.a \
+	$(DIST)/lib/libplc21.a \
+	$(DIST)/lib/libmsgc21.a \
+	$(DIST)/lib/libnspr21.a
 
 ifdef DBMALLOC
 NSPR_LIB	+= $(DIST)/lib/libdbmalloc.a
 endif
 
-ifndef DISABLE_MARINER
 CFLAGS		+= -DENABLE_MARINER
-endif
+
 
 #
 # We need libnet.a in there twice because libmsg and libnet have circular
 # dependencies on functions.
 #
-BASIC_LIBS	= $(DIST)/lib/lib$(LITE_PREFIX)net.a \
+BASIC_LIBS	= \
+		  $(XFE2_LIB) \
+		  $(MICROLINE_LIB) \
+		  $(ICONS_LIB) \
+		  $(DTWIDGETS_LIB) \
+		  $(XFE_WIDGETS_BM_LIB) \
+		  $(XFE_WIDGETS_LIB) \
+		  $(DIST)/lib/libnetcnvts.a	\
+		  $(DIST)/lib/libnetwork.a	\
+		  $(DIST)/lib/libnetcache.a	\
+		  $(DIST)/lib/libnetutil.a      \
+		  $(DIST)/lib/libcnetinit.a	\
+		  $(DIST)/lib/libabouturl.a	\
+		  $(DIST)/lib/libdataurl.a	\
+		  $(DIST)/lib/libnetcnvts.a	\
+		  $(DIST)/lib/libfileurl.a	\
+		  $(DIST)/lib/libftpurl.a	\
+		  $(DIST)/lib/libgophurl.a	\
+		  $(DIST)/lib/libhttpurl.a	\
+		  $(DIST)/lib/libjsurl.a	\
+		  $(DIST)/lib/libmarimurl.a	\
+		  $(DIST)/lib/libremoturl.a	\
+		  $(DIST)/lib/libnetwork.a	\
+		  $(DIST)/lib/libmimetype.a \
+		  $(DIST)/lib/lib$(LITE_PREFIX)rdf.a \
+		  $(DIST)/lib/lib$(LITE_PREFIX)xml.a \
 		  $(DIST)/lib/lib$(LITE_PREFIX)lay.a \
-		  $(DIST)/lib/libimg.a \
+		  $(DIST)/lib/libxlate.a \
 		  $(DIST)/lib/libpng.a \
-		  $(DIST)/lib/libli.a \
-		  $(DIST)/lib/libjmc.a \
+		  $(DIST)/lib/libmariner.a \
+		  $(DIST)/lib/libimg.a \
+		  $(DIST)/lib/libprivacy.a \
+		  $(NULL)
+
+ifdef MOZ_LOC_INDEP
+BASIC_LIBS	+= $(DIST)/lib/libli.a
+endif
+
+ifdef JAVA_OR_NSJVM
+JAVA_JMC = $(DIST)/lib/libjmc.a      # XXX To be removed...
+endif
+
+BASIC_LIBS	+= \
+		  $(DIST)/lib/libpng.a \
+		  $(JAVA_JMC) \
 		  $(DIST)/lib/libjpeg.a \
 		  $(DIST)/lib/libhook.a \
 		  $(DIST)/lib/libparse.a \
@@ -309,90 +154,202 @@ BASIC_LIBS	= $(DIST)/lib/lib$(LITE_PREFIX)net.a \
 		  $(DIST)/lib/lib$(LITE_PREFIX)i18n.a \
 		  $(DIST)/lib/libpics.a \
 		  $(DIST)/lib/libpwcac.a \
-		  $(DIST)/lib/libdbm.a
-
-ifndef MOZ_LITE
-BASIC_LIBS	+= $(DIST)/lib/libmsg.a \
-		  $(DIST)/lib/libnet.a \
-		  $(DIST)/lib/libmisc.a \
-		  $(DIST)/lib/libaddr.a \
-		  $(DIST)/lib/libneo.a \
-		  $(DIST)/lib/libmime.a \
+		  $(DIST)/lib/libreg.a \
 		  $(NULL)
-else
-BASIC_LIBS	+= $(DIST)/lib/lib$(LITE_PREFIX)misc.a
+
+BASIC_LIBS_2	= \
+		  $(DIST)/lib/lib$(LITE_PREFIX)xp.a \
+		  $(DIST)/lib/libdbm.a \
+		  $(DIST)/lib/libcaps.a \
+		  $(DIST)/lib/libxpcom.a \
+		  $(DIST)/lib/lib$(LITE_PREFIX)rdf.a \
+		  $(NULL)
+
+
+# jwz: link in libmime all the time.
+# but it needs to be before libnetutil, and I don't know how to do that,
+# so just link against libnetutil twice.
+
+BASIC_LIBS	+= \
+		  $(DIST)/lib/libmime.a		\
+		  $(DIST)/lib/libnetutil.a      \
+		  $(NULL)
+
+
+ifdef MOZ_MAIL_NEWS
+ifdef MOZ_SECURITY
+BASIC_LIBS	+= \
+		  $(DIST)/lib/libns_mime.a \
+		  $(NULL)
+endif
+BASIC_LIBS_2	+= \
+		  $(DIST)/lib/libldap.a \
+		  $(NULL)
+
 endif
 
-BASIC_LIBS	+= $(DIST)/lib/libxlate.a \
-		   $(DIST)/lib/lib$(LITE_PREFIX)plug.a \
-		   $(DIST)/lib/libutil.a \
-		   $(NULL)
+BASIC_LIBS	+= \
+		  $(DIST)/lib/libmisc.a \
+		  $(DIST)/lib/libprgrss.a \
+		  $(NULL)
 
-ifndef MOZ_LITE
-ifdef USE_SPELLCHECK_STATIC
-BASIC_LIBS	+= $(DIST)/lib/libspellchk.a
+ifdef MOZ_LDAP
+BASIC_LIBS	+= \
+		$(DIST)/lib/libldap.a \
+		$(DIST)/lib/liblber.a \
+		$(NULL)
+endif
+
+ifdef MOZ_MAIL_NEWS
+BASIC_LIBS	+= \
+		  $(DIST)/lib/libmozmsg.a \
+		  $(NULL)
+ifdef MOZ_SECURITY
+BASIC_LIBS	+= $(DIST)/lib/libmsg.a \
+		$(NULL)
+endif
+BASIC_LIBS	+= $(DIST)/lib/libaddr.a \
+		  $(DIST)/lib/libneo.a \
+		  $(DIST)/lib/libaddr.a \
+		  $(NULL)
+endif
+
+ifdef MOZ_MAIL_NEWS
+BASIC_LIBS	+= $(DIST)/lib/libnntpurl.a \
+		  $(DIST)/lib/libsmtpurl.a	\
+		  $(DIST)/lib/libimap4url.a	\
+		  $(DIST)/lib/libpop3url.a	\
+		  $(DIST)/lib/libmailbxurl.a	\
+		  $(DIST)/lib/libcrtldurl.a	\
+		  $(NULL)
+endif
+
+ifdef MOZ_MAIL_NEWS
+ifdef MOZ_LDAP
+BASIC_LIBS	+= $(DIST)/lib/libldapurl.a \
+		  $(NULL)
 endif
 endif
 
-BASIC_LIBS	+= $(DIST)/lib/libfont.a \
-		  $(DIST)/lib/libprgrss.a
+ifdef MOZ_CALENDAR
+BASIC_LIBS	+= \
+		  $(DIST)/lib/libjulian.a \
+		  $(DIST)/lib/libnscnv30.a \
+		  $(DIST)/lib/libnsuni30.a \
+		  $(DIST)/lib/libnsfmt30.a \
+		  $(NULL)
+endif
+
+BASIC_LIBS	+= \
+		  $(DIST)/lib/lib$(LITE_PREFIX)plug.a \
+		  $(DIST)/lib/libutil.a \
+		  $(DIST)/lib/libfont.a \
+		  $(NULL)
 
 ifndef NO_LAYERS
 BASIC_LIBS	+= $(DIST)/lib/liblayer.a
 endif
 
-ifndef NO_JAVA
+########################################################################
+# Java
+#
 
+ifdef MOZ_JAVA
+#
+# Monolithic Java
+#
 
-BASIC_LIBS	+= $(DIST)/lib/lib$(LITE_PREFIX)applet.a \
+BASIC_LIBS	+= \
+		  $(DIST)/lib/lib$(LITE_PREFIX)applet.a \
 		  $(DIST)/lib/libjrt.a \
 		  $(DIST)/lib/libjmd.a \
 		  $(NULL)
 
-ifndef MOZ_LITE
+ifdef EDITOR
 BASIC_LIBS	+= $(DIST)/lib/libedtplug.a
 endif
 
-BASIC_LIBS	+= $(DIST)/lib/libnsn.a \
-		  $(DIST)/lib/libjsl.a \
+BASIC_LIBS	+= \
+		  $(DIST)/lib/libnsn.a \
 		  $(DIST)/lib/libnsc.a \
 		  $(DIST)/lib/libjpw.a \
 		  $(DIST)/lib/libzpw.a \
-		  $(DIST)/lib/libreg.a \
+		  $(DIST)/lib/libiawt.a \
 		  $(DIST)/lib/libmmedia.a \
 		  $(DIST)/lib/libsoftupdate.a \
+		  $(DIST)/lib/libprgrss.a \
 		  $(DIST)/lib/libcon.a \
 		  $(DIST)/lib/libjbn.a \
-		  $(DIST)/lib/lib$(LITE_PREFIX)xp.a \
-		  $(DIST)/lib/librdf.a \
-		  $(DIST)/lib/libmariner.a \
 		  $(NULL)
 
-BASIC_LIBS	+= $(DIST)/lib/libzlib.a \
-		$(NULL)
+ifdef MOZ_SECURITY
+BASIC_LIBS	+= $(DIST)/lib/libjsl.a
 endif
 
+ifdef MOZ_MAIL_NEWS
+BASIC_LIBS	+= $(DIST)/lib/libjsl.a
+endif
+
+BASIC_LIBS	+= $(DIST)/lib/libjrt.a
+
+else # !MOZ_JAVA
+
+#
+# OJI
+#
+
+ifdef MOZ_OJI
+
+BASIC_LIBS      += $(DIST)/lib/liboji.a
+
+ifdef NSJVM
+
+ifdef EDITOR
+BASIC_LIBS	+= $(DIST)/lib/libedtplug.a
+endif
+BASIC_LIBS      += $(DIST)/lib/libsoftupdate.a
+else # !NSJVM
+BASIC_LIBS	+= \
+		  $(DIST)/lib/libstubsj.a \
+		  $(DIST)/lib/libstubnj.a \
+		  $(NULL)
+endif # !NSJVM
+
+BASIC_LIBS      += $(DIST)/lib/libprgrss.a \
+		   $(NULL)
+
+else  # !MOZ_OJI
+# No Monolithic Java, no OJI, just stubs.
+
+BASIC_LIBS	+= \
+		  $(DIST)/lib/libstubsj.a \
+		  $(DIST)/lib/libstubnj.a \
+		  $(NULL)
+
+endif  # !MOZ_OJI
+endif  # !MOZ_JAVA
+
+# XXX To a DSO...
+BASIC_LIBS	+= $(DIST)/lib/libzlib.a
+BASIC_DSOS      += -lzlib
+
 ifndef NO_MOCHA
-BASIC_LIBS	+= $(DIST)/lib/libjs.a $(DIST)/lib/libjsj.a $(DIST)/lib/libmocha.a $(DIST)/lib/libimg.a \
-		   $(DIST)/lib/lib$(LITE_PREFIX)lay.a
+# XXX To a DSO...
+BASIC_LIBS      += $(DIST)/lib/libjs.a $(DIST)/lib/libjsj.a 
+BASIC_DSOS      += -ljs -ljsj
+BASIC_LIBS	+= $(DIST)/lib/libmocha.a
 endif
 
 # Post-Java libs
-BASIC_LIBS	+= $(DIST)/lib/libstyle.a $(DIST)/lib/libjar.a
+BASIC_LIBS	+= $(DIST)/lib/libstyle.a $(DIST)/lib/libreg.a
 
-ifndef NO_UNIX_LDAP
-BASIC_LIBS	+= $(DIST)/lib/libldap.a $(DIST)/lib/liblber.a 
+
+ifdef MOZ_SECURITY
+BASIC_LIBS	+= $(DIST)/lib/libjar.a
+else
+EXPORT_LIB	= $(DIST)/lib/libhtmldlgs.a $(DIST)/lib/libsecfree.a 
 endif
 
-LOCALES		= $(LOCALE_MAP) $(MAIL_IM_HACK) $(NEWS_IM_HACK)
-
-ALL_US_LIBS	= $(BASIC_LIBS) $(US_LIB) $(BASIC_LIBS_2) $(NSPR_LIB)
-ALL_EXPORT_LIBS	= $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LIB)
-ALL_FRANCE_LIBS	= $(BASIC_LIBS) $(FRANCE_LIB) $(BASIC_LIBS_2) $(NSPR_LIB)
-
-ALL_US_DSOS	= $(ALL_US_LIBS:$(DIST)/lib/lib%.a=-l%)
-ALL_EXPORT_DSOS	= $(ALL_EXPORT_LIBS:$(DIST)/lib/lib%.a=-l%)
-ALL_FRANCE_DSOS	= $(ALL_FRANCE_LIBS:$(DIST)/lib/lib%.a=-l%)
 
 PLUGIN_DSO	= $(DIST)/bin/libnullplugin.so
 WEBFONT_DSO	= $(DIST)/bin/libTrueDoc.so
@@ -401,56 +358,9 @@ ifndef MOZ_LITE
 JSD_DSO		= $(DIST)/bin/libjsd.$(DLL_SUFFIX)
 endif
 
-ifdef BUILD_UNIX_PLUGINS
-ifdef BUILD_OFFICIAL
-EXTRA_REL_FILES	+= $(PLUGIN_DSO)
-ifdef MKSHLIB
-EXTRA_REL_FILES	+= $(JSD_DSO)
-endif
-AUTOADMIN_DSO	= $(DIST)/bin/libAutoAdmin.so
-endif
-TEST_PLUGIN	= $(DIST)/bin/libtextplugin.so
-endif
+TARGETS		+= $(OBJDIR)/stubfe
 
-#
-# Only build the export binary by default, so the Security folks
-# will be happy.  Release builds will build all three binaries.
-#
-# Defining NO_BUILD_EXPORT will _disable_ export builds, and
-# defining BUILD_FRANCE and BUILD_US will enable france and us
-# builds, respectively.  These can be set in the environment,
-# on the command-line, or in myconfig.mk.
-#
-ifdef BUILD_OFFICIAL
-BUILD_FRANCE	= 1
-BUILD_US	= 1
-endif
-
-ifdef MKSHLIB
-ifndef NO_NETSCAPE_SHARED
-ifndef NO_BUILD_EXPORT
-TARGETS		+= $(OBJDIR)/$(DSO_PROGNAME)-export
-endif
-ifdef BUILD_FRANCE
-TARGETS		+= $(OBJDIR)/$(DSO_PROGNAME)-france
-endif
-ifdef BUILD_US
-TARGETS		+= $(OBJDIR)/$(DSO_PROGNAME)-us
-endif
-endif
-endif
-
-ifndef NO_NETSCAPE_STATIC
-ifndef NO_BUILD_EXPORT
-TARGETS		+= $(OBJDIR)/$(XFE_PROGNAME)-export
-endif
-ifdef BUILD_FRANCE
-TARGETS		+= $(OBJDIR)/$(XFE_PROGNAME)-france
-endif
-ifdef BUILD_US
-TARGETS		+= $(OBJDIR)/$(XFE_PROGNAME)-us
-endif
-endif
+ALL_TARGETS = $(TARGETS)
 
 #######################################################################
 
@@ -466,14 +376,6 @@ DEFINES		+= -DNEW_DECODERS
 
 ifdef BUILD_OFFICIAL
 EXTRA_REL_FILES	+= $(DIST)/bin/vreg $(DEPTH)/l10n/us/xp/bookmark.htm
-endif
-
-ifndef BUILD_OFFICIAL
-#
-# Developers won't need libTrueDoc.so.  No point having a dependency
-# on this when only official builds (release builds) need this.
-#
-NO_WEBFONTS	= 1
 endif
 
 # Only SunOS4 needs two versions NIS and DNS.
@@ -497,15 +399,8 @@ EXTRA_POST_LINK_CMD	= echo
 EXPORT_LDFLAGS	= $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(OTHER_LIBS) $(NSPR_LIB)
 EXPORT_DEPLIBS	= $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LIB)
 
-FRANCE_LDFLAGS	= $(BASIC_LIBS) $(FRANCE_LIB) $(BASIC_LIBS_2) $(OTHER_LIBS) $(NSPR_LIB)
-FRANCE_DEPLIBS	= $(BASIC_LIBS) $(FRANCE_LIB) $(BASIC_LIBS_2) $(NSPR_LIB)
-
-US_LDFLAGS	= $(BASIC_LIBS) $(US_LIB) $(BASIC_LIBS_2) $(OTHER_LIBS) $(NSPR_LIB)
-US_DEPLIBS	= $(BASIC_LIBS) $(US_LIB) $(BASIC_LIBS_2) $(NSPR_LIB)
 
 DSO_EX_LIBS	= $(EXPORT_LDFLAGS:$(DIST)/lib/lib%.a=-l%)
-DSO_EX_LIBS	= $(FRANCE_LDFLAGS:$(DIST)/lib/lib%.a=-l%)
-DSO_US_LIBS	= $(US_LDFLAGS:$(DIST)/lib/lib%.a=-l%)
 
 #######################################################################
 #
@@ -612,7 +507,7 @@ CCLD		= CC
 ifdef USE_GTSCC
 ifndef NO_GTSCC
 CCLD		= $(DIST)/bin/gtscc $(GTSCC_LD_OPTIONS) -gtsfile $(DEPTH)/config/$(OBJDIR)/db.gts -gtsrootdir $(DEPTH)
-TARGETS		= $(OBJDIR)/$(XFE_PROGNAME)-export
+TARGETS		= $(OBJDIR)/stubfe
 endif
 endif
 
@@ -712,14 +607,6 @@ ifeq ($(OS_ARCH),SunOS)
 
 ifeq ($(OS_RELEASE),4.1)
 
-ALL_TARGETS  += $(OBJDIR)/$(XFE_PROGNAME)-nis-export	\
-		$(OBJDIR)/$(XFE_PROGNAME)-nis-net-export \
-		$(OBJDIR)/$(XFE_PROGNAME)-nis-france	\
-		$(OBJDIR)/$(XFE_PROGNAME)-nis-net-france \
-		$(OBJDIR)/$(XFE_PROGNAME)-nis-us	\
-		$(OBJDIR)/$(XFE_PROGNAME)-nis-net-us \
-		$(NULL)
-
 OTHER_LIBS	= 
 
 ifndef NO_WEBFONTS
@@ -781,6 +668,8 @@ OTHER_LIBS	= $(OS_LIBS) -lm
 LDFLAGS		= $(NOMD_CFLAGS)
 endif
 
+OTHER_LIBS += -L/usr/dt/lib -lXm
+
 US_LDFLAGS	= -z defs -L$(USRLIBDIR) \
 		  -R$(USRLIBDIR) $(BASIC_LIBS) $(US_LIB) $(BASIC_LIBS_2) \
 		  $(OTHER_LIBS) $(NSPR_LIB)
@@ -822,476 +711,22 @@ $(TARGETS): $(OBJS)
 #
 
 
-#######################################################################
-# Rules to build config*.o files
-
-#- export
-
-$(OBJDIR)/$(LITE_PREFIX)config-export.o: config.c versionn.h Makefile $(OBJS) $(EXPORT_DEPLIBS)
-	@echo Generating $@ from config.c...;				      \
-	X=' ';								      \
-	VN=`sed -n$$X 's/^#define VERSION_NUMBER[ 	]*\(.*\)$$/\1/p' versionn.h` ; \
-	$(CC) -c $(CFLAGS) -o $@ config.c				      \
-		-DCONFIG="$(GUESS_CONFIG)"				      \
-		-DDATE="`date +%d-%h-%y`"				      \
-		-DVERSION=$${VN}					      \
-		-UHAVE_NIS -UFRANCE_VERSION -DEXPORT_VERSION -UUS_VERSION -UVENDOR_ANIM
-
-$(OBJDIR)/config-net-export.o: config.c versionn.h Makefile $(OBJS) $(EXPORT_DEPLIBS)
-	@echo Generating $@ from config.c...;				      \
-	X=' ';								      \
-	VN=`sed -n$$X 's/^#define VERSION_NUMBER[ 	]*\(.*\)$$/\1/p' versionn.h` ; \
-	$(CC) -c $(CFLAGS) -o $@ config.c				      \
-		-DCONFIG="$(GUESS_CONFIG)"				      \
-		-DDATE="`date +%d-%h-%y`"				      \
-		-DVERSION=$${VN}N					      \
-		-UHAVE_NIS -UFRANCE_VERSION -DEXPORT_VERSION -UUS_VERSION -UVENDOR_ANIM
-
-$(OBJDIR)/$(LITE_PREFIX)config-nis-export.o: config.c versionn.h Makefile $(OBJS) $(NIS_OBJS) $(EXPORT_DEPLIBS)
-	@echo Generating $@ from config.c...;				      \
-	X=' ';								      \
-	VN=`sed -n$$X 's/^#define VERSION_NUMBER[ 	]*\(.*\)$$/\1/p' versionn.h` ; \
-	$(CC) -c $(CFLAGS) -o $@ config.c				      \
-		-DCONFIG="$(GUESS_CONFIG)"				      \
-		-DDATE="`date +%d-%h-%y`"				      \
-		-DVERSION=$${VN}					      \
-		-DHAVE_NIS -UFRANCE_VERSION -DEXPORT_VERSION -UUS_VERSION -UVENDOR_ANIM
-
-$(OBJDIR)/config-nis-net-export.o: config.c versionn.h Makefile $(OBJS) $(NIS_OBJS) $(EXPORT_DEPLIBS)
-	@echo Generating $@ from config.c...;				      \
-	X=' ';								      \
-	VN=`sed -n$$X 's/^#define VERSION_NUMBER[ 	]*\(.*\)$$/\1/p' versionn.h` ; \
-	$(CC) -c $(CFLAGS) -o $@ config.c				      \
-		-DCONFIG="$(GUESS_CONFIG)"				      \
-		-DDATE="`date +%d-%h-%y`"				      \
-		-DVERSION=$${VN}N					      \
-		-DHAVE_NIS -UFRANCE_VERSION -DEXPORT_VERSION -UUS_VERSION -UVENDOR_ANIM
-
-$(OBJDIR)/config-sgi-export.o: config.c versionn.h Makefile $(OBJS) $(EXPORT_DEPLIBS)
-	@echo Generating $@ from config.c...;				      \
-	X=' ';								      \
-	VN=`sed -n$$X 's/^#define VERSION_NUMBER[ 	]*\(.*\)$$/\1/p' versionn.h` ; \
-	$(CC) -c $(CFLAGS) -o $@ config.c				      \
-		-DCONFIG="$(GUESS_CONFIG)"				      \
-		-DDATE="`date +%d-%h-%y`"				      \
-		-DVERSION=$${VN}S					      \
-		-UHAVE_NIS -UFRANCE_VERSION -DEXPORT_VERSION -UUS_VERSION -DVENDOR_ANIM
-
-#- france
-
-$(OBJDIR)/$(LITE_PREFIX)config-france.o: config.c versionn.h Makefile $(OBJS) $(FRANCE_DEPLIBS)
-	@echo Generating $@ from config.c...;				      \
-	X=' ';								      \
-	VN=`sed -n$$X 's/^#define VERSION_NUMBER[ 	]*\(.*\)$$/\1/p' versionn.h` ; \
-	$(CC) -c $(CFLAGS) -o $@ config.c				      \
-		-DCONFIG="$(GUESS_CONFIG)"				      \
-		-DDATE="`date +%d-%h-%y`"				      \
-		-DVERSION=$${VN}					      \
-		-UHAVE_NIS -DFRANCE_VERSION -UEXPORT_VERSION -UUS_VERSION -UVENDOR_ANIM
-
-$(OBJDIR)/config-net-france.o: config.c versionn.h Makefile $(OBJS) $(FRANCE_DEPLIBS)
-	@echo Generating $@ from config.c...;				      \
-	X=' ';								      \
-	VN=`sed -n$$X 's/^#define VERSION_NUMBER[ 	]*\(.*\)$$/\1/p' versionn.h` ; \
-	$(CC) -c $(CFLAGS) -o $@ config.c				      \
-		-DCONFIG="$(GUESS_CONFIG)"				      \
-		-DDATE="`date +%d-%h-%y`"				      \
-		-DVERSION=$${VN}N					      \
-		-UHAVE_NIS -DFRANCE_VERSION -UEXPORT_VERSION -UUS_VERSION -UVENDOR_ANIM
-
-$(OBJDIR)/$(LITE_PREFIX)config-nis-france.o: config.c versionn.h Makefile $(OBJS) $(NIS_OBJS) $(FRANCE_DEPLIBS)
-	@echo Generating $@ from config.c...;				      \
-	X=' ';								      \
-	VN=`sed -n$$X 's/^#define VERSION_NUMBER[ 	]*\(.*\)$$/\1/p' versionn.h` ; \
-	$(CC) -c $(CFLAGS) -o $@ config.c				      \
-		-DCONFIG="$(GUESS_CONFIG)"				      \
-		-DDATE="`date +%d-%h-%y`"				      \
-		-DVERSION=$${VN}					      \
-		-DHAVE_NIS -DFRANCE_VERSION -UEXPORT_VERSION -UUS_VERSION -UVENDOR_ANIM
-
-$(OBJDIR)/config-nis-net-france.o: config.c versionn.h Makefile $(OBJS) $(NIS_OBJS) $(FRANCE_DEPLIBS)
-	@echo Generating $@ from config.c...;				      \
-	X=' ';								      \
-	VN=`sed -n$$X 's/^#define VERSION_NUMBER[ 	]*\(.*\)$$/\1/p' versionn.h` ; \
-	$(CC) -c $(CFLAGS) -o $@ config.c				      \
-		-DCONFIG="$(GUESS_CONFIG)"				      \
-		-DDATE="`date +%d-%h-%y`"				      \
-		-DVERSION=$${VN}N					      \
-		-DHAVE_NIS -DFRANCE_VERSION -UEXPORT_VERSION -UUS_VERSION -UVENDOR_ANIM
-
-$(OBJDIR)/config-sgi-france.o: config.c versionn.h Makefile $(OBJS) $(FRANCE_DEPLIBS)
-	@echo Generating $@ from config.c...;				      \
-	X=' ';								      \
-	VN=`sed -n$$X 's/^#define VERSION_NUMBER[ 	]*\(.*\)$$/\1/p' versionn.h` ; \
-	$(CC) -c $(CFLAGS) -o $@ config.c				      \
-		-DCONFIG="$(GUESS_CONFIG)"				      \
-		-DDATE="`date +%d-%h-%y`"				      \
-		-DVERSION=$${VN}S					      \
-		-UHAVE_NIS -DFRANCE_VERSION -UEXPORT_VERSION -UUS_VERSION -DVENDOR_ANIM
-
-#- us
-
-$(OBJDIR)/$(LITE_PREFIX)config-us.o: config.c versionn.h Makefile $(OBJS) $(US_DEPLIBS)
-	@echo Generating $@ from config.c...;				      \
-	X=' ';								      \
-	VN=`sed -n$$X 's/^#define VERSION_NUMBER[ 	]*\(.*\)$$/\1/p' versionn.h` ; \
-	$(CC) -c $(CFLAGS) -o $@ config.c				      \
-		-DCONFIG="$(GUESS_CONFIG)"				      \
-		-DDATE="`date +%d-%h-%y`"				      \
-		-DVERSION=$${VN}					      \
-		-UHAVE_NIS -UFRANCE_VERSION -UEXPORT_VERSION -DUS_VERSION -UVENDOR_ANIM
-
-$(OBJDIR)/config-net-us.o: config.c versionn.h Makefile $(OBJS) $(US_DEPLIBS)
-	@echo Generating $@ from config.c...;				      \
-	X=' ';								      \
-	VN=`sed -n$$X 's/^#define VERSION_NUMBER[ 	]*\(.*\)$$/\1/p' versionn.h` ; \
-	$(CC) -c $(CFLAGS) -o $@ config.c				      \
-		-DCONFIG="$(GUESS_CONFIG)"				      \
-		-DDATE="`date +%d-%h-%y`"				      \
-		-DVERSION=$${VN}N					      \
-		-UHAVE_NIS -UFRANCE_VERSION -UEXPORT_VERSION -DUS_VERSION -UVENDOR_ANIM
-
-$(OBJDIR)/$(LITE_PREFIX)config-nis-us.o: config.c versionn.h Makefile $(OBJS) $(NIS_OBJS) $(US_DEPLIBS)
-	@echo Generating $@ from config.c...;				      \
-	X=' ';								      \
-	VN=`sed -n$$X 's/^#define VERSION_NUMBER[ 	]*\(.*\)$$/\1/p' versionn.h` ; \
-	$(CC) -c $(CFLAGS) -o $@ config.c				      \
-		-DCONFIG="$(GUESS_CONFIG)"				      \
-		-DDATE="`date +%d-%h-%y`"				      \
-		-DVERSION=$${VN}					      \
-		-DHAVE_NIS -UFRANCE_VERSION -UEXPORT_VERSION -DUS_VERSION -UVENDOR_ANIM
-
-$(OBJDIR)/config-nis-net-us.o: config.c versionn.h Makefile $(OBJS) $(NIS_OBJS) $(US_DEPLIBS)
-	@echo Generating $@ from config.c...;				      \
-	X=' ';								      \
-	VN=`sed -n$$X 's/^#define VERSION_NUMBER[ 	]*\(.*\)$$/\1/p' versionn.h` ; \
-	$(CC) -c $(CFLAGS) -o $@ config.c				      \
-		-DCONFIG="$(GUESS_CONFIG)"				      \
-		-DDATE="`date +%d-%h-%y`"				      \
-		-DVERSION=$${VN}N					      \
-		-DHAVE_NIS -UFRANCE_VERSION -UEXPORT_VERSION -DUS_VERSION -UVENDOR_ANIM
-
-$(OBJDIR)/config-sgi-us.o: config.c versionn.h Makefile $(OBJS) $(US_DEPLIBS)
-	@echo Generating $@ from config.c...;				      \
-	X=' ';								      \
-	VN=`sed -n$$X 's/^#define VERSION_NUMBER[ 	]*\(.*\)$$/\1/p' versionn.h` ; \
-	$(CC) -c $(CFLAGS) -o $@ config.c				      \
-		-DCONFIG="$(GUESS_CONFIG)"				      \
-		-DDATE="`date +%d-%h-%y`"				      \
-		-DVERSION=$${VN}S					      \
-		-UHAVE_NIS -UFRANCE_VERSION -UEXPORT_VERSION -DUS_VERSION -DVENDOR_ANIM
-
-#######################################################################
-# Rules to build license.o files
-
-$(OBJDIR)/license.o: $(OBJDIR)/LICENSE.c Makefile
-	$(CC) -c -o $@ $<
-
-$(OBJDIR)/LICENSE.c: Makefile $(LICENSES) make-license
-	@./make-license $@ $(LICENSE_DIR) "" export
-
-$(OBJDIR)/LICENSE: $(OBJDIR)/license.o make-license
-	@./make-license $@ $(LICENSE_DIR) "" export
-
-#######################################################################
-# Rules to build README files ( release specific )
-
-$(OBJDIR)/README: README.tmpl versionn.h
-	@rm -f $@
-	@echo "Generating $@ from $<...";				\
-	CLASS="Netscape";						\
-	NAME="Netscape";						\
-	PROGNAME="netscape";						\
-	PRODUCT="$(PRODUCT_NAME)";					\
-	VN=`sed -n 's/^#define VERSION_NUMBER *\(.*\)$$/\1/p' versionn.h`; \
-	VERS=`echo $$VN$$vsuffix`;					\
-	sed 	"s/@NAME@/$$NAME/g;					\
-		 s/@CLASS@/$$CLASS/g;					\
-		 s/@PROGNAME@/$$PROGNAME/g;				\
-		 s/@PRODUCT@/$$PRODUCT/g;				\
-		 s/@VERSION@/$$VERS/g;					\
-		 s/@URLVERSION@/$$VERS/g" $< > $@
 
 #######################################################################
 # Rules to build resources
 
 .SUFFIXES: .ad
 
-# DO NOT CHANGE THE ORDER OF THE DEPENDENCIES.  Add new ones to the end.
-resources-%.o: RESOURCES-%.c Makefile
-	$(CC) -c $(HPUX_RESOURCE_HACK) -o $@ $<
+stubfe:	$(OBJDIR)/stubfe
 
-RESOURCES-%.c: Netscape-%.ad ad2c Makefile
-	@echo 'char *fe_fallbackResources[] = {' > $@; \
-	./ad2c $< >> $@; \
-	echo '0};' >> $@
-
-# Explicit dependency list to ensure that e_kit_resources.h gets built.
-$(OBJDIR)/e_kit.o:	e_kit.c e_kit_resources.h
-
-# Turn ekit app-defaults into a C file
-e_kit_resources.h: e_kit.ad
-	@echo 'char* fe_ekitDefaultDatabase = ' > $@
-	cat $< | tr '[\001-\272]' '[\106-\377]' | \
-        od -b | sed 's/^[0-7][0-7]* *\(.*\)/\\\1/; \
-		s/ /\\/g;s/\(.*\)/ "\1"/;s/^ *"\\"$$//' >> $@
-	@echo ';' >> $@
-
-#- export
-
-$(OBJDIR)/Netscape-nis-export.ad $(OBJDIR)/Netscape-export.ad: Makefile resources versionn.h strs make-resources $(LOCALE_MAP)
-	@./make-resources $@ Netscape Netscape "" export $(LOCALES)
-
-$(OBJDIR)/Netscape-nis-net-export.ad $(OBJDIR)/Netscape-net-export.ad: Makefile resources versionn.h strs make-resources $(LOCALE_MAP)
-	@./make-resources $@ Netscape Netscape "N" export $(LOCALES)
-
-$(OBJDIR)/Netscape-sgi-export.ad: Makefile resources versionn.h strs make-resources $(LOCALE_MAP)
-	@./make-resources $@ Netscape Netscape "S" export $(LOCALES)
-
-#- france
-
-$(OBJDIR)/Netscape-nis-france.ad $(OBJDIR)/Netscape-france.ad: Makefile resources versionn.h strs make-resources $(LOCALE_MAP)
-	@./make-resources $@ Netscape Netscape "" france $(LOCALES)
-
-$(OBJDIR)/Netscape-nis-net-france.ad $(OBJDIR)/Netscape-net-france.ad: Makefile resources versionn.h strs make-resources $(LOCALE_MAP)
-	@./make-resources $@ Netscape Netscape "N" france $(LOCALES)
-
-$(OBJDIR)/Netscape-sgi-france.ad: Makefile resources versionn.h strs make-resources $(LOCALE_MAP)
-	@./make-resources $@ Netscape Netscape "S" france $(LOCALES)
-
-#- us
-
-$(OBJDIR)/Netscape-nis-us.ad $(OBJDIR)/Netscape-us.ad: Makefile resources versionn.h strs make-resources $(LOCALE_MAP)
-	@./make-resources $@ Netscape Netscape "" us $(LOCALES)
-
-$(OBJDIR)/Netscape-nis-net-us.ad $(OBJDIR)/Netscape-net-us.ad: Makefile resources versionn.h strs make-resources $(LOCALE_MAP)
-	@./make-resources $@ Netscape Netscape "N" us $(LOCALES)
-
-$(OBJDIR)/Netscape-sgi-us.ad: Makefile resources versionn.h strs make-resources $(LOCALE_MAP)
-	@./make-resources $@ Netscape Netscape "S" us $(LOCALES)
-
-#######################################################################
-# 		The "-export"  DSO targets follow 
-
-$(OBJDIR)/$(DSO_PROGNAME)-export: $(OBJS) $(EXPORT_OBJS) $(EXPORT_DEPLIBS)
-	@$(MAKE_OBJDIR)
-	rm -f $@
-	$(CCLD) -o $@ $(LDFLAGS) $(OBJS) $(EXPORT_OBJS) -L$(DIST)/bin -L$(DIST)/lib $(DSO_EX_LIBS) $(DNS_LIB)
-	@$(EXTRA_POST_LINK_CMD) $@
-
-$(OBJDIR)/$(DSO_PROGNAME)-export.mcv: $(OBJS) $(EXPORT_OBJS) $(EXPORT_DEPLIBS)
-	@$(MAKE_OBJDIR)
-	rm -f $@
-	$(CCLD) -o $@ $(CFLAGS) $(OBJS) $(EXPORT_OBJS) -L$(DIST)/bin -L$(DIST)/lib $(DSO_EX_LIBS) $(DNS_LIB) -lmalloc_cv
-	@$(EXTRA_POST_LINK_CMD) $@
-
-$(OBJDIR)/$(DSO_PROGNAME)-export.pure: $(OBJS) $(EXPORT_OBJS) $(EXPORT_DEPLIBS)
-	@$(MAKE_OBJDIR)
-	rm -f $@
-	$(PURIFY) $(CCLD) -o $@ $(LDFLAGS) $(OBJS) $(EXPORT_OBJS) -L$(DIST)/bin -L$(DIST)/lib $(DSO_EX_LIBS) $(DNS_LIB)
-	@$(EXTRA_POST_LINK_CMD) $@
-
-$(OBJDIR)/$(DSO_PROGNAME)-export.quantify: $(OBJS) $(EXPORT_OBJS) $(EXPORT_DEPLIBS)
-	@$(MAKE_OBJDIR)
-	rm -f $@
-	$(QUANTIFY) $(CCLD) -o $@ $(LDFLAGS) $(OBJS) $(EXPORT_OBJS) -L$(DIST)/bin -L$(DIST)/lib $(DSO_EX_LIBS) $(DNS_LIB)
-	@$(EXTRA_POST_LINK_CMD) $@
-
-#------------------ the "-us" DSO link targets follow ------------------- #
-
-$(OBJDIR)/$(DSO_PROGNAME)-us: $(OBJS) $(US_OBJS) $(US_DEPLIBS)
-	@$(MAKE_OBJDIR)
-	rm -f $@
-	$(CCLD) -o $@ $(LDFLAGS) $(OBJS) $(US_OBJS) -L$(DIST)/bin -L$(DIST)/lib $(DSO_US_LIBS) $(DNS_LIB)
-	@$(EXTRA_POST_LINK_CMD) $@
-
-$(OBJDIR)/$(DSO_PROGNAME)-us.pure: $(OBJS) $(US_OBJS) $(US_DEPLIBS)
-	@$(MAKE_OBJDIR)
-	rm -f $@
-	$(PURIFY) $(CCLD) -o $@ $(LDFLAGS) $(OBJS) $(US_OBJS) -L$(DIST)/bin -L$(DIST)/lib $(DSO_US_LIBS) $(DNS_LIB) @$(EXTRA_POST_LINK_CMD) $@
-
-#------------------ the "-export" XFE link targets follow ------------------- #
-
-$(OBJDIR)/$(XFE_PROGNAME)-export: $(OBJS) $(EXPORT_OBJS) $(EXPORT_DEPLIBS)
+$(OBJDIR)/stubfe: $(OBJS) $(EXPORT_OBJS) $(EXPORT_DEPLIBS)
 	@$(MAKE_OBJDIR)
 	rm -f $@
 	$(CCLD) -o $@ $(LDFLAGS) $(OBJS) $(EXPORT_OBJS) $(EXPORT_LDFLAGS) $(DNS_LIB)
 	@$(EXTRA_POST_LINK_CMD) $@
 
-$(OBJDIR)/$(XFE_PROGNAME)-export.pure: $(OBJS) $(EXPORT_OBJS) $(EXPORT_DEPLIBS)
-	@$(MAKE_OBJDIR)
-	rm -f $@
-	$(PURIFY) $(CCLD) -o $@ $(NOMD_LDFLAGS) $(OBJS) $(EXPORT_OBJS) $(EXPORT_LDFLAGS) $(DNS_LIB)
-	@$(EXTRA_POST_LINK_CMD) $@
 
-$(OBJDIR)/$(XFE_PROGNAME)-export.quantify: $(OBJS) $(EXPORT_OBJS) $(EXPORT_DEPLIBS)
-	@$(MAKE_OBJDIR)
-	rm -f $@
-	$(QUANTIFY) $(CCLD) -o $@ $(NOMD_LDFLAGS) $(OBJS) $(EXPORT_OBJS) $(EXPORT_LDFLAGS) $(DNS_LIB)
-	@$(EXTRA_POST_LINK_CMD) $@
-
-$(OBJDIR)/$(XFE_PROGNAME)-export.prof: $(OBJS) $(EXPORT_OBJS) $(EXPORT_DEPLIBS)
-	@$(MAKE_OBJDIR)
-	rm -f $@
-	$(CCLD) -p -o $@ $(LDFLAGS) $(OBJS) $(EXPORT_OBJS) $(EXPORT_LDFLAGS) $(DNS_LIB)
-	@$(EXTRA_POST_LINK_CMD) $@
-
-#------------------ the "-france" XFE targets follow ---------------- #
-
-ifndef USE_WACKER
-
-$(OBJDIR)/$(XFE_PROGNAME)-france: $(OBJS) $(FRANCE_OBJS) $(FRANCE_DEPLIBS)
-	@$(MAKE_OBJDIR)
-	rm -f $@
-	$(CCLD) -o $@ $(LDFLAGS) $(OBJS) $(FRANCE_OBJS) $(FRANCE_LDFLAGS) $(DNS_LIB)
-	@$(EXTRA_POST_LINK_CMD) $@
-
-else
-
-$(OBJDIR)/$(XFE_PROGNAME)-france: $(OBJDIR)/$(XFE_PROGNAME)-export $(XPDIST)/xpdist/france.txt $(DIST)/bin/patcher
-	@$(MAKE_OBJDIR)
-	rm -f $@
-	$(DIST)/bin/patcher $(XPDIST)/xpdist/france.txt $(OBJDIR)/$(XFE_PROGNAME)-export $@
-
-endif
-
-#------------------ the "-us" link XFE targets follow ------------------- #
-
-$(OBJDIR)/$(XFE_PROGNAME)-us: $(OBJS) $(US_OBJS) $(US_DEPLIBS)
-	@$(MAKE_OBJDIR)
-	rm -f $@
-	$(CCLD) -o $@ $(LDFLAGS) $(OBJS) $(US_OBJS) $(US_LDFLAGS) $(DNS_LIB)
-	@$(EXTRA_POST_LINK_CMD) $@
-
-$(OBJDIR)/$(XFE_PROGNAME)-us-ld: $(OBJS) $(US_OBJS) $(US_DEPLIBS)
-	@$(MAKE_OBJDIR)
-	rm -f $@
-	$(LD) -o $@ $(OBJS) $(US_OBJS) $(US_LDFLAGS) $(DNS_LIB)
-	@$(EXTRA_POST_LINK_CMD) $@
-
-$(OBJDIR)/$(XFE_PROGNAME)-us.pure: $(OBJS) $(US_OBJS) $(US_DEPLIBS)
-	@$(MAKE_OBJDIR)
-	rm -f $@
-	$(PURIFY) $(CCLD) -o $@ $(NOMD_LDFLAGS) $(OBJS) $(US_OBJS) $(US_LDFLAGS) $(DNS_LIB)
-	@$(EXTRA_POST_LINK_CMD) $@
-
-#------------------ the "-net" XFE link targets follow ------------------- #
-
-
-$(OBJDIR)/$(XFE_PROGNAME)-net-export: $(OBJS) $(NET_EXPORT_OBJS) $(EXPORT_DEPLIBS)
-	@$(MAKE_OBJDIR)
-	rm -f $@
-	$(CCLD) -o $@ $(LDFLAGS) $(OBJS) $(NET_EXPORT_OBJS) $(EXPORT_LDFLAGS) $(DNS_LIB)
-	@$(EXTRA_POST_LINK_CMD) $@
-
-$(OBJDIR)/$(XFE_PROGNAME)-net-us: $(OBJS) $(NET_US_OBJS) $(US_DEPLIBS)
-	@$(MAKE_OBJDIR)
-	rm -f $@
-	$(CCLD) -o $@ $(LDFLAGS) $(OBJS) $(NET_US_OBJS) $(US_LDFLAGS) $(DNS_LIB)
-	@$(EXTRA_POST_LINK_CMD) $@
-
-ifndef USE_WACKER
-
-$(OBJDIR)/$(XFE_PROGNAME)-net-france: $(OBJS) $(NET_FRANCE_OBJS) $(FRANCE_DEPLIBS)
-	@$(MAKE_OBJDIR)
-	rm -f $@
-	$(CCLD) -o $@ $(LDFLAGS) $(OBJS) $(NET_FRANCE_OBJS) $(FRANCE_LDFLAGS) $(DNS_LIB)
-	@$(EXTRA_POST_LINK_CMD) $@
-
-else
-
-$(OBJDIR)/$(XFE_PROGNAME)-net-france: $(OBJDIR)/$(XFE_PROGNAME)-net-export $(XPDIST)/xpdist/france.txt $(DIST)/bin/patcher
-	@$(MAKE_OBJDIR)
-	rm -f $@
-	$(DIST)/bin/patcher $(XPDIST)/xpdist/france.txt $(OBJDIR)/$(XFE_PROGNAME)-net-export $@
-
-endif
-
-#------------------ the "-nis" XFE link targets follow ------------------- #
-
-$(OBJDIR)/$(XFE_PROGNAME)-nis-export: $(OBJS) $(NIS_EXPORT_OBJS) $(NIS_OBJS) $(EXPORT_DEPLIBS)
-	@$(MAKE_OBJDIR)
-	rm -f $@
-	$(CCLD) -o $@ $(LDFLAGS) $(OBJS) $(NIS_EXPORT_OBJS) $(EXPORT_LDFLAGS) $(NIS_LIB)
-	@$(EXTRA_POST_LINK_CMD) $@
-
-$(OBJDIR)/$(XFE_PROGNAME)-nis-france: $(OBJS) $(NIS_FRANCE_OBJS) $(NIS_OBJS) $(FRANCE_DEPLIBS)
-	@$(MAKE_OBJDIR)
-	rm -f $@
-	$(CCLD) -o $@ $(LDFLAGS) $(OBJS) $(NIS_FRANCE_OBJS) $(EXPORT_LDFLAGS) $(NIS_LIB)
-	@$(EXTRA_POST_LINK_CMD) $@
-
-$(OBJDIR)/$(XFE_PROGNAME)-nis-us: $(OBJS) $(NIS_US_OBJS) $(NIS_OBJS) $(US_DEPLIBS)
-	@$(MAKE_OBJDIR)
-	rm -f $@
-	$(CCLD) -o $@ $(LDFLAGS) $(OBJS) $(NIS_US_OBJS) $(US_LDFLAGS) $(NIS_LIB)
-	@$(EXTRA_POST_LINK_CMD) $@
-
-$(OBJDIR)/$(XFE_PROGNAME)-nis-net-export: $(OBJS) $(NIS_EXPORT_OBJS) $(NIS_OBJS) $(EXPORT_DEPLIBS)
-	@$(MAKE_OBJDIR)
-	rm -f $@
-	$(CCLD) -o $@ $(LDFLAGS) $(OBJS) $(NIS_EXPORT_OBJS) $(EXPORT_LDFLAGS) $(NIS_LIB)
-	@$(EXTRA_POST_LINK_CMD) $@
-
-#------------------ the "-nis-net" XFE link targets follow ---------------- #
-
-$(OBJDIR)/$(XFE_PROGNAME)-nis-net-us: $(OBJS) $(NIS_US_OBJS) $(NIS_OBJS) $(US_DEPLIBS)
-	@$(MAKE_OBJDIR)
-	rm -f $@
-	$(CCLD) -o $@ $(LDFLAGS) $(OBJS) $(NIS_US_OBJS) $(US_LDFLAGS) $(NIS_LIB)
-	@$(EXTRA_POST_LINK_CMD) $@
-
-#-------------- SGI versions of the navigator (no nis, no net) ------------#
-
-$(OBJDIR)/$(XFE_PROGNAME)-sgi-export: $(OBJS) $(SGI_EXPORT_OBJS) $(EXPORT_DEPLIBS)
-	@$(MAKE_OBJDIR)
-	rm -f $@
-	$(CCLD) -o $@ $(LDFLAGS) $(OBJS) $(SGI_EXPORT_OBJS) $(EXPORT_LDFLAGS) $(DNS_LIB)
-	@$(EXTRA_POST_LINK_CMD) $@
-
-$(OBJDIR)/$(XFE_PROGNAME)-sgi-us: $(OBJS) $(SGI_US_OBJS) $(US_DEPLIBS)
-	@$(MAKE_OBJDIR)
-	rm -f $@
-	$(CCLD) -o $@ $(LDFLAGS) $(OBJS) $(SGI_US_OBJS) $(US_LDFLAGS) $(DNS_LIB)
-	@$(EXTRA_POST_LINK_CMD) $@
-
-ifndef USE_WACKER
-
-$(OBJDIR)/$(XFE_PROGNAME)-sgi-france: $(OBJS) $(SGI_FRANCE_OBJS) $(FRANCE_DEPLIBS)
-	@$(MAKE_OBJDIR)
-	rm -f $@
-	$(CCLD) -o $@ $(LDFLAGS) $(OBJS) $(SGI_FRANCE_OBJS) $(FRANCE_LDFLAGS) $(DNS_LIB)
-	@$(EXTRA_POST_LINK_CMD) $@
-
-else
-
-$(OBJDIR)/$(XFE_PROGNAME)-sgi-france: $(OBJDIR)/$(XFE_PROGNAME)-sgi-export $(XPDIST)/xpdist/france.txt $(DIST)/bin/patcher
-	@$(MAKE_OBJDIR)
-	rm -f $@
-	$(DIST)/bin/patcher $(XPDIST)/xpdist/france.txt $(OBJDIR)/$(XFE_PROGNAME)-sgi-export $@
-
-endif
-
-#---------------- Misc link targets follow ----------------------#
-
-# Make a dynamic export executable using malloc_cv by default.
-mcv:	$(OBJDIR)/$(DSO_PROGNAME)-export $(OBJDIR)/$(DSO_PROGNAME)-export.mcv
-
-# Make a purified, static export executable by default.
-pure:	$(OBJDIR)/$(XFE_PROGNAME)-export $(OBJDIR)/$(XFE_PROGNAME)-export.pure
-
-# Trying out quantify.
-quantify:	$(OBJDIR)/$(XFE_PROGNAME)-export $(OBJDIR)/$(XFE_PROGNAME)-export.quantify
-
-# Use gtscc to find dead code globals.
-unreferenced: $(OBJS) $(NET_EXPORT_OBJS) $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LIB) $(DIST)/bin/gtscc 
-	@$(MAKE_OBJDIR)
-	rm -f $@
-	$(DIST)/bin/gtscc -gtsrootdir $(DEPTH) -gtsdump -gtsnorecompile -gtsnolink $(DEPTH) $(OBJS) $(NET_EXPORT_OBJS) $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LIB) | awk -n '/ 0 0 / { print $$5 " " $$1 }' | sort > $@
-
-# Some dependencies that -MDupdate isn't getting.
-$(OBJDIR)/strids.o:	xfe_err.h
-$(OBJDIR)/strings.o:	xfe_err.h
+install:: $(TARGETS)
 
 ifeq ($(OS_ARCH),AIX)
 AIX_HACK	:= $(notdir $(AIX_NSPR))
@@ -1301,110 +736,8 @@ $(AIX_HACK): $(AIX_NSPR)
 	$(INSTALL) -m 644 $< .
 endif
 
-install:: $(AIX_HACK) $(EXTRA_REL_FILES) $(TARGETS)
-ifdef TARGETS
-	$(INSTALL) $(TARGETS) $(DIST)/bin
-endif
-
-#######################################################################
-# Release target
-
-ifdef AUTOADMIN_DSO
-$(AUTOADMIN_DSO):
-	@cd $(DEPTH)/modules/libpref/admin; $(MAKE) POLARIS=1 polaris
-endif
-
-$(PLUGIN_DSO):
-	@cd plugins/nullplugin; $(MAKE)
-
-ifdef TEST_PLUGIN
-$(TEST_PLUGIN):
-	@cd plugins/textplugin; $(MAKE)
-endif
-
-$(DIST)/bin/zigbert$(BIN_SUFFIX):
-	@cd $(DEPTH)/security/cmd/lib; $(MAKE)
-	@cd $(DEPTH)/security/cmd/jar; $(MAKE)
-
-$(DEPTH)/tpubs/$(NETHELP_DIR)/nethelp.tar.gz:
-	@cd $(DEPTH)/tpubs/$(NETHELP_DIR); $(MAKE) release
-
-ifdef USE_SPELLCHECK
-$(DEPTH)/modules/spellchk/data/spellchk.tar.gz:
-	@cd $(DEPTH)/modules/spellchk/data; $(MAKE) release
-endif
-
-release:: $(RELEASES)
-
-release-us: $(XFE_PROGNAME)-us $(EXTRA_US_OBJS) $(COMMON_REL_DEPS)
-	./make-release $(OBJDIR) $(XFE_PROGNAME) Netscape "" us $(GUESS_CONFIG) $(NEED_YP_VERSION) "$(MCS_CMD)" $(NEED_NLS) "$(EXTRA_US_BINARY) $(EXTRA_REL_FILES)" $(README_FILE)
-
-release-export: $(XFE_PROGNAME)-export $(EXTRA_EXPORT_OBJS) $(COMMON_REL_DEPS)
-	./make-release $(OBJDIR) $(XFE_PROGNAME) Netscape "" export $(GUESS_CONFIG) $(NEED_YP_VERSION) "$(MCS_CMD)" $(NEED_NLS) "$(EXTRA_EXPORT_BINARY) $(EXTRA_REL_FILES)" $(README_FILE)
-
-release-france: $(XFE_PROGNAME)-france $(EXTRA_FRANCE_OBJS) $(COMMON_REL_DEPS)
-	./make-release $(OBJDIR) $(XFE_PROGNAME) Netscape "" france $(GUESS_CONFIG) $(NEED_YP_VERSION) "$(MCS_CMD)" $(NEED_NLS) "$(EXTRA_FRANCE_BINARY) $(EXTRA_REL_FILES)" $(README_FILE)
-
-#---------------- release-net targets follow --------------------#
-
-release-net-us: $(XFE_PROGNAME)-net-us $(COMMON_REL_DEPS)
-	./make-release $(OBJDIR) $(XFE_PROGNAME) Netscape "N" net-us $(GUESS_CONFIG) $(NEED_YP_VERSION) "$(MCS_CMD)" $(NEED_NLS) "$(EXTRA_REL_FILES)" $(README_FILE)
-
-release-net-export: $(XFE_PROGNAME)-net-export $(EXTRA_NETEXPORT_OBJS) $(COMMON_REL_DEPS)
-	./make-release $(OBJDIR) $(XFE_PROGNAME) Netscape "N" net-export $(GUESS_CONFIG) $(NEED_YP_VERSION) "$(MCS_CMD)" $(NEED_NLS) "$(EXTRA_REL_FILES)" $(README_FILE)
-
-release-net-france: $(XFE_PROGNAME)-net-france $(EXTRA_NETEXPORT_OBJS) $(COMMON_REL_DEPS)
-	./make-release $(OBJDIR) $(XFE_PROGNAME) Netscape "N" net-france $(GUESS_CONFIG) $(NEED_YP_VERSION) "$(MCS_CMD)" $(NEED_NLS) "$(EXTRA_REL_FILES)" $(README_FILE)
-
-#---------------- release-sgi targets follow --------------------#
-
-release-sgi-us: $(XFE_PROGNAME)-sgi-us $(COMMON_REL_DEPS)
-	./make-release $(OBJDIR) $(XFE_PROGNAME) Netscape "S" sgi-us $(GUESS_CONFIG) $(NEED_YP_VERSION) "$(MCS_CMD)" $(NEED_NLS) $(EXTRA_REL_FILES) $(README_FILE)
-
-release-sgi-export: $(XFE_PROGNAME)-sgi-export $(COMMON_REL_DEPS)
-	./make-release $(OBJDIR) $(XFE_PROGNAME) Netscape "S" sgi-export $(GUESS_CONFIG) $(NEED_YP_VERSION) "$(MCS_CMD)" $(NEED_NLS) "$(EXTRA_REL_FILES)" $(README_FILE)
-
-release-sgi-france: $(XFE_PROGNAME)-sgi-france $(COMMON_REL_DEPS)
-	./make-release $(OBJDIR) $(XFE_PROGNAME) Netscape "S" sgi-france $(GUESS_CONFIG) $(NEED_YP_VERSION) "$(MCS_CMD)" $(NEED_NLS) "$(EXTRA_REL_FILES)" $(README_FILE)
-
-#######################################################################
-# Java Jar File
-#
-# The definative shipping JAR files are now made in the win32 build
-# this is just for developers
-
-zips: $(JAR_NAME)
-
-$(XPDIST)/classes/$(JAR_NAME): $(BUILD_NUMBER) Makefile $(ALL_CLASS_DEPS)
-	@rm -rf $@
-	@echo "Building `basename $@`"
-	cd $(XPDIST)/classes;					\
-	if test ! -d META-INF; then mkdir META-INF; fi;		\
-	for d in $(MOZILLA_ZIP); do				\
-		files=`find $$d \( -name '*.class' -o -name '*.gif' -o -name '*.props' -o -name '*.mf' -o -name '*.sf' -o -name '*.rsa' -o -name '*.properties*' \) -print`;			\
-		if test -n $${files:-''}; then $(ZIP) $@ $$files ; fi;	\
-	done;							\
-
-$(JAR_NAME): $(XPDIST)/classes/$(JAR_NAME)
-
-#
-# symbols.gts for Irix, used by gtscc driver. The file needs to
-# be stored in ns/config/symbols.gts. There should be a version
-# checked in there. Use this rule only if you get link errors for
-# C++ members functions which you reference globally.
-# This rule is designed to work on IRIX or Solaris. If it works
-# elsewhere fine, but...  djw Feb/14/97
-#
-$(OBJDIR)/symbols.gts: $(OBJS) $(US_OBJS) $(US_DEPLIBS)
-	@$(MAKE_OBJDIR)
-	rm -f $@
-	nm -p $(OBJS) $(US_OBJS) $(US_DEPLIBS) > $(OBJDIR)/gts_a
-	sed -n 's%.* T \(.*\)%\1%p' $(OBJDIR)/gts_a | sort -u > $(OBJDIR)/gts_d
-	sed -n 's%.* U \(.*\)%\1%p' $(OBJDIR)/gts_a | sort -u > $(OBJDIR)/gts_u
-	comm -23 $(OBJDIR)/gts_d $(OBJDIR)/gts_u > $@
-	rm -f $(OBJDIR)/gts_d $(OBJDIR)/gts_u $(OBJDIR)/gts_a
-
-symbols.gts: $(OBJDIR)/symbols.gts
+# Skip java50.jar creation
+java50.jar:
 
 export:: $(JAR_NAME)
 
@@ -1413,6 +746,7 @@ $(VERSION_OBJS): versionn.h
 everything:	all $(ALL_TARGETS)
 
 symbols:
-	@echo "ALL_TARGETS = $(ALL_TARGETS)"
+	@echo "TARGETS = $(TARGETS)"
 	@echo "RELEASES    = $(RELEASES)"
 	@echo "OS_ARCH     = $(OS_ARCH)"
+	@echo "OTHER_LIBS  = $(OTHER_LIBS)
