@@ -196,26 +196,3 @@ NS_IMETHODIMP nsBaseDragService::EndDragSession ()
   return NS_OK;
 }
 
-
-NS_IMETHODIMP
-nsBaseDragService :: StartTracking ( nsIDragTracker *aScroller )
-{
-  StopTracking();  
-  mCurrentlyTracking = aScroller;
-
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsBaseDragService :: StopTracking()
-{
-  if ( mCurrentlyTracking ) {
-    mCurrentlyTracking->StopTracking();
-    mCurrentlyTracking = nsnull;
-  }
-
-  return NS_OK;
-  
-} // StopTracking
-
