@@ -41,6 +41,7 @@ class nsIView;
 class nsStyleContext;
 class nsIHTMLContent;
 class nsIListControlFrame;
+class nsIPresState;
 
 /**
  * Child list name indices
@@ -154,8 +155,8 @@ public:
 
   //nsIStatefulFrame
   NS_IMETHOD GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame::StateType* aStateType);
-  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsISupports** aState);
-  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsISupports* aState);
+  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsIPresState** aState);
+  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState);
 
   //nsIRollupListener
   NS_IMETHOD Rollup();

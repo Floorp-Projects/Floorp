@@ -32,6 +32,7 @@
 #include "nsIHTMLContent.h"
 #include "nsHTMLIIDs.h"
 #include "nsHTMLAtoms.h"
+#include "nsIPresState.h"
 #include "nsIFileWidget.h"
 #include "nsWidgetsCID.h"
 #include "nsIComponentManager.h"
@@ -547,37 +548,25 @@ nsFileControlFrame::GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame:
 }
 
 NS_IMETHODIMP
-nsFileControlFrame::SaveState(nsIPresContext* aPresContext, nsISupports** aState)
+nsFileControlFrame::SaveState(nsIPresContext* aPresContext, nsIPresState** aState)
 {
-  nsISupportsString* value = nsnull;
-  nsAutoString string;
-  nsresult res = GetProperty(nsHTMLAtoms::value, string);
-  if (NS_SUCCEEDED(res)) {
-    char* chars = string.ToNewCString();
-    if (chars) {
-      res = nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_PROGID, nsnull, 
-                                           NS_GET_IID(nsISupportsString), (void**)&value);
-      if (NS_SUCCEEDED(res) && value) {
-        value->SetData(chars);
-      }
-      nsCRT::free(chars);
-    } else {
-      res = NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-  *aState = (nsISupports*)value;
-  return res;
+  // Construct a pres state.
+  NS_NewPresState(aState); // The addref happens here.
+  
+  // This string will hold a single item, whether or not we're checked.
+  nsAutoString stateString;
+  GetProperty(nsHTMLAtoms::value, stateString);
+  (*aState)->SetStateProperty("checked", stateString);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFileControlFrame::RestoreState(nsIPresContext* aPresContext, nsISupports* aState)
+nsFileControlFrame::RestoreState(nsIPresContext* aPresContext, nsIPresState* aState)
 {
-  char* chars = nsnull;
-  nsresult res = ((nsISupportsString*)aState)->GetData(&chars);
-  if (NS_SUCCEEDED(res) && chars) {
-    nsAutoString value(chars);
-    SetProperty(aPresContext, nsHTMLAtoms::value, value);
-    nsCRT::free(chars);
-  }
-  return res;
+  nsAutoString string;
+  aState->GetStateProperty("checked", string);
+  SetProperty(aPresContext, nsHTMLAtoms::value, string);
+  return NS_OK;
+
 }

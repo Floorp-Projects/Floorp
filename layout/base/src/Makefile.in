@@ -54,6 +54,7 @@ CPPSRCS		= \
 		nsNameSpaceManager.cpp \
 		nsPluginViewer.cpp \
 		nsPresContext.cpp \
+		nsPresState.cpp \
 		nsPrintContext.cpp \
 		nsPrintPreviewContext.cpp \
 		nsRange.cpp \

@@ -58,6 +58,7 @@
 #include "nsISupportsArray.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIComponentManager.h"
+#include "nsIPresState.h"
 
 static NS_DEFINE_IID(kIDOMHTMLSelectElementIID, NS_IDOMHTMLSELECTELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLOptionElementIID, NS_IDOMHTMLOPTIONELEMENT_IID);
@@ -161,8 +162,8 @@ public:
 
   //nsIStatefulFrame
   NS_IMETHOD GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame::StateType* aStateType);
-  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsISupports** aState);
-  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsISupports* aState);
+  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsIPresState** aState);
+  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState);
 
 protected:
   PRInt32 mNumRows;
@@ -1559,65 +1560,14 @@ nsNativeSelectControlFrame::GetStateType(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsNativeSelectControlFrame::SaveState(nsIPresContext* aPresContext, nsISupports** aState)
+nsNativeSelectControlFrame::SaveState(nsIPresContext* aPresContext, nsIPresState** aState)
 {
-  nsISupportsArray* value = nsnull;
-  nsresult res = NS_NewISupportsArray(&value);
-  if (NS_SUCCEEDED(res) && value) {
-    PRInt32 j=0;
-    PRInt32 i;
-    for (i=0; i<mNumOptions; i++) {
-      PRBool selected = PR_FALSE;
-      res = GetOptionSelected(i, &selected);
-      if (NS_SUCCEEDED(res) && selected) {
-        nsISupportsPRInt32* thisVal = nsnull;
-        res = nsComponentManager::CreateInstance(NS_SUPPORTS_PRINT32_PROGID,
-	                       nsnull, NS_GET_IID(nsISupportsPRInt32), (void**)&thisVal);
-        if (NS_SUCCEEDED(res) && thisVal) {
-          res = thisVal->SetData(i);
-	  if (NS_SUCCEEDED(res)) {
-            PRBool okay = value->InsertElementAt((nsISupports *)thisVal, j++);
-	    if (!okay) res = NS_ERROR_OUT_OF_MEMORY; // Most likely cause;
-	  }
-          if (!NS_SUCCEEDED(res)) NS_RELEASE(thisVal);
-	}
-      }
-      if (!NS_SUCCEEDED(res)) break;
-    }
-    if (i<mNumOptions)
-      NS_RELEASE(value);
-  }
-  *aState = (nsISupports*)value;  // Set to null if not successful
-  return res;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNativeSelectControlFrame::RestoreState(nsIPresContext* aPresContext, nsISupports* aState)
+nsNativeSelectControlFrame::RestoreState(nsIPresContext* aPresContext, nsIPresState* aState)
 {
-  nsISupportsArray* value = (nsISupportsArray *)aState;
-  nsresult res = NS_ERROR_NULL_POINTER;
-  if (value) {
-    res = Deselect();
-    if (NS_SUCCEEDED(res)) {
-      PRUint32 count = 0;
-      res = value->Count(&count);
-      if (NS_SUCCEEDED(res)) {
-        nsISupportsPRInt32* thisVal = nsnull;
-        PRInt32 j=0;
-        for (PRUint32 k=0; k<count; k++) {
-          thisVal = (nsISupportsPRInt32*) value->ElementAt(k);
-          if (thisVal) {
-            res = thisVal->GetData(&j);
-	    if (NS_SUCCEEDED(res)) {
-              res = SetOptionSelected(j, PR_TRUE);
-	    }
-	  } else {
-	    res = NS_ERROR_UNEXPECTED;
-	  }
-	  if (!NS_SUCCEEDED(res)) break;
-	}
-      }
-    }
-  }
-  return res;
+  // Doesn't matter.
+  return NS_OK;
 }

@@ -12,8 +12,14 @@ class nsIPresState : public nsISupports {
 public: 
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPRESSTATE_IID)
 
-  NS_IMETHOD GetStateProperty(nsString& aProperty) = 0;
-  NS_IMETHOD SetStateProperty(const nsString& aProperty) = 0;
+  NS_IMETHOD GetStatePropertyAsSupports(const nsString& aName, nsISupports** aResult) = 0;
+  NS_IMETHOD SetStatePropertyAsSupports(const nsString& aName, nsISupports* aValue) = 0;
+
+  NS_IMETHOD GetStateProperty(const nsString& aName, nsString& aResult) = 0;
+  NS_IMETHOD SetStateProperty(const nsString& aProperty, const nsString& aValue) = 0;
 };
+
+extern nsresult
+NS_NewPresState(nsIPresState** aResult);
 
 #endif /* _nsIPresState_h */

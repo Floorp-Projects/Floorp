@@ -2299,21 +2299,29 @@ PresShell::GetHistoryState(nsILayoutHistoryState** aState)
 
   NS_PRECONDITION(nsnull != aState, "null state pointer");
 
-  // Create the document state object
-  rv = NS_NewLayoutHistoryState(aState);
+  if (!mHistoryState) {
+    // Create the document state object
+    rv = NS_NewLayoutHistoryState(aState); // This addrefs
   
-  if (NS_FAILED(rv)) { 
-    *aState = nsnull;
-    return rv;
+    if (NS_FAILED(rv)) { 
+      *aState = nsnull;
+      return rv;
+    }
+
+    // Capture frame state for the entire frame hierarchy
+    nsIFrame* rootFrame = nsnull;
+    rv = GetRootFrame(&rootFrame);
+    if (NS_FAILED(rv) || nsnull == rootFrame) return rv;
+
+    rv = mFrameManager->CaptureFrameState(mPresContext, rootFrame, *aState);
+
+    mHistoryState = *aState;
+    return NS_OK;
   }
-
-  // Capture frame state for the entire frame hierarchy
-  nsIFrame* rootFrame = nsnull;
-  rv = GetRootFrame(&rootFrame);
-  if (NS_FAILED(rv) || nsnull == rootFrame) return rv;
-
-  rv = mFrameManager->CaptureFrameState(mPresContext, rootFrame, *aState);
-
+  
+  *aState = mHistoryState;
+  NS_IF_ADDREF(mHistoryState);
+ 
   return rv;
 }
 

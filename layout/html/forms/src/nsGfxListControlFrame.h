@@ -38,6 +38,7 @@ class nsIDOMHTMLOptionElement;
 class nsIComboboxControlFrame;
 class nsIViewManager;
 class nsIPresContext;
+class nsIPresState;
 
 /**
  * Frame-based listbox.
@@ -134,8 +135,8 @@ public:
 
   //nsIStatefulFrame
   NS_IMETHOD GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame::StateType* aStateType);
-  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsISupports** aState);
-  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsISupports* aState);
+  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsIPresState** aState);
+  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState);
 
   //nsIDOMEventListener
   virtual nsresult MouseDown(nsIDOMEvent* aMouseEvent);

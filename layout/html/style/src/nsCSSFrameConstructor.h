@@ -901,13 +901,7 @@ protected:
   nsIFrame*           mDocElementContainingBlock;
   nsIFrame*           mGfxScrollFrame;
 
-  // XXX This is an interface into a hashtable that holds frame state objects
-  // for saving/restoring state as frame trees are deleted and created in 
-  // RecreateFramesForContent() and ReconstructDocElementHierarchy().  
-  // These state objects should be stored in the hashtable maintained by the 
-  // session history, but since the session history API is undergoing a re-write, 
-  // we'll start using session history once that re-write is done.
-  nsCOMPtr<nsILayoutHistoryState>  mTempFrameTreeState;
+  nsCOMPtr<nsILayoutHistoryState> mTempFrameTreeState;
 };
 
 #endif /* nsCSSFrameConstructor_h___ */

@@ -25,6 +25,8 @@
 #include "nsNativeFormControlFrame.h"
 #include "nsIStatefulFrame.h"
 
+class nsIPresState;
+
 //
 // nsCheckboxControlFrame
 //
@@ -96,8 +98,8 @@ public:
 
    // nsIStatefulFrame
   NS_IMETHOD GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame::StateType* aStateType);
-  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsISupports** aState);
-  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsISupports* aState);
+  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsIPresState** aState);
+  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState);
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
 protected:

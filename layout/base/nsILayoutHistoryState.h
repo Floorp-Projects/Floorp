@@ -3,6 +3,7 @@
 
 #include "nsISupports.h"
 #include "nsIStatefulFrame.h" // Get StateType enum
+#include "nsIPresState.h"
 
 #define NS_ILAYOUTHISTORYSTATE_IID_STR "306c8ca0-5f0c-11d3-a9fb-000064657374"
 
@@ -14,8 +15,9 @@ class nsILayoutHistoryState : public nsISupports {
  public: 
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ILAYOUTHISTORYSTATE_IID)
 
-  NS_IMETHOD AddState(PRUint32 aContentID, nsISupports* aState, nsIStatefulFrame::StateType aStateType) = 0;
-  NS_IMETHOD GetState(PRUint32 aContentID, nsISupports** aState,  nsIStatefulFrame::StateType aStateType) = 0;
+  NS_IMETHOD AddState(PRUint32 aContentID, nsIPresState* aState, nsIStatefulFrame::StateType aStateType) = 0;
+  NS_IMETHOD GetState(PRUint32 aContentID, nsIPresState** aState,  nsIStatefulFrame::StateType aStateType) = 0;
+  NS_IMETHOD RemoveState(PRUint32 aContentID, nsIStatefulFrame::StateType aStateType) = 0;
 };
 
 nsresult

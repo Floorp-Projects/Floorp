@@ -2832,10 +2832,10 @@ nsListControlFrame::GetStateType(nsIPresContext* aPresContext,
 
 NS_IMETHODIMP
 nsListControlFrame::SaveState(nsIPresContext* aPresContext,
-                              nsISupports** aState)
+                              nsIPresState** aState)
 {
-  nsISupportsArray* value = nsnull;
-  nsresult res = NS_NewISupportsArray(&value);
+  nsCOMPtr<nsISupportsArray> value;
+  nsresult res = NS_NewISupportsArray(getter_AddRefs(value));
   if (NS_SUCCEEDED(res) && value) {
     PRInt32 j=0;
     PRInt32 length = 0;
@@ -2845,55 +2845,61 @@ nsListControlFrame::SaveState(nsIPresContext* aPresContext,
       PRBool selected = PR_FALSE;
       res = GetOptionSelected(i, &selected);
       if (NS_SUCCEEDED(res) && selected) {
-        nsISupportsPRInt32* thisVal = nsnull;
+        nsCOMPtr<nsISupportsPRInt32> thisVal;
         res = nsComponentManager::CreateInstance(NS_SUPPORTS_PRINT32_PROGID,
-	                       nsnull, NS_GET_IID(nsISupportsPRInt32), (void**)&thisVal);
+	                       nsnull, NS_GET_IID(nsISupportsPRInt32), (void**)getter_AddRefs(thisVal));
         if (NS_SUCCEEDED(res) && thisVal) {
           res = thisVal->SetData(i);
-	  if (NS_SUCCEEDED(res)) {
+	        if (NS_SUCCEEDED(res)) {
             PRBool okay = value->InsertElementAt((nsISupports *)thisVal, j++);
-	    if (!okay) res = NS_ERROR_OUT_OF_MEMORY; // Most likely cause;
-	  }
-	  if (!NS_SUCCEEDED(res)) NS_RELEASE(thisVal);
-	}
+	          if (!okay) res = NS_ERROR_OUT_OF_MEMORY; // Most likely cause;
+          }
+	      }
       }
       if (!NS_SUCCEEDED(res)) break;
     }
-    if (i<length)
-      NS_RELEASE(value);
   }
-  *aState = (nsISupports*)value;  // Set to null if not successful
+  
+  NS_NewPresState(aState);
+  (*aState)->SetStatePropertyAsSupports("selecteditems", value);
   return res;
 }
 
 NS_IMETHODIMP
 nsListControlFrame::RestoreState(nsIPresContext* aPresContext,
-                                 nsISupports* aState)
+                                 nsIPresState* aState)
 {
-  nsISupportsArray* value = (nsISupportsArray *)aState;
+  nsCOMPtr<nsISupports> supp;
+  aState->GetStatePropertyAsSupports("selecteditems", getter_AddRefs(supp));
+
   nsresult res = NS_ERROR_NULL_POINTER;
-  if (value) {
-    res = Deselect();
-    if (NS_SUCCEEDED(res)) {
-      PRUint32 count = 0;
-      res = value->Count(&count);
+  if (!supp)
+    return res;
+
+  nsCOMPtr<nsISupportsArray> value = do_QueryInterface(supp);
+  if (!value)
+    return res;
+
+  Deselect();
+  
+  PRUint32 count = 0;
+  value->Count(&count);
+  
+  nsCOMPtr<nsISupportsPRInt32> thisVal;
+  PRInt32 j=0;
+  for (PRUint32 i=0; i<count; i++) {
+    nsCOMPtr<nsISupports> suppval = getter_AddRefs(value->ElementAt(i));
+    thisVal = do_QueryInterface(suppval);
+    if (thisVal) {
+      res = thisVal->GetData(&j);
       if (NS_SUCCEEDED(res)) {
-        nsISupportsPRInt32* thisVal = nsnull;
-        PRInt32 j=0;
-        for (PRUint32 i=0; i<count; i++) {
-          thisVal = (nsISupportsPRInt32*) value->ElementAt(i);
-          if (thisVal) {
-            res = thisVal->GetData(&j);
-            if (NS_SUCCEEDED(res)) {
-              res = SetOptionSelected(j, PR_TRUE);
-            }
-          } else {
-            res = NS_ERROR_UNEXPECTED;
-          }
-          if (!NS_SUCCEEDED(res)) break;
-        }
+        res = SetOptionSelected(j, PR_TRUE);
       }
+    } else {
+      res = NS_ERROR_UNEXPECTED;
     }
+    if (!NS_SUCCEEDED(res)) break;
   }
+    
   return res;
 }

@@ -4,6 +4,7 @@
 #include "nsISupports.h"
 
 class nsIPresContext;
+class nsIPresState;
 
 #define NS_ISTATEFULFRAME_IID_STR "306c8ca0-5f0c-11d3-a9fb-000064657374"
 
@@ -21,9 +22,8 @@ class nsIStatefulFrame : public nsISupports {
                 eTextType, eNumStateTypes};
 
   NS_IMETHOD GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame::StateType* aStateType) = 0;
-  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsISupports** aState) = 0;
-  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsISupports* aState) = 0;
-
+  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsIPresState** aState) = 0;
+  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState) = 0;
 };
 
 #endif /* _nsIStatefulFrame_h */

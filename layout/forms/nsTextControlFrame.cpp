@@ -362,9 +362,11 @@ nsTextControlFrame::GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame:
 }
 
 NS_IMETHODIMP
-nsTextControlFrame::SaveState(nsIPresContext* aPresContext, nsISupports** aState)
+nsTextControlFrame::SaveState(nsIPresContext* aPresContext, nsIPresState** aState)
 {
-  nsISupportsString* theValue = nsnull;
+  // Construct a pres state.
+  NS_NewPresState(aState); // The addref happens here.
+  
   nsAutoString theString;
   nsresult res = GetProperty(nsHTMLAtoms::value, theString);
   if (NS_SUCCEEDED(res)) {
@@ -379,29 +381,24 @@ nsTextControlFrame::SaveState(nsIPresContext* aPresContext, nsISupports** aState
         nsCRT::free(chars);
         chars = newChars;
       }
-      res = nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_PROGID, nsnull, 
-                                           NS_GET_IID(nsISupportsString), (void**)&theValue);
-      if (NS_SUCCEEDED(res) && theValue) {
-        theValue->SetData(chars);
-      }
+      
+      (*aState)->SetStateProperty("value", nsAutoString(chars));
+
       nsCRT::free(chars);
     } else {
       res = NS_ERROR_OUT_OF_MEMORY;
     }
   }
-  *aState = (nsISupports*)theValue;
+
+  (*aState)->SetStateProperty("value", theString);
   return res;
 }
 
 NS_IMETHODIMP
-nsTextControlFrame::RestoreState(nsIPresContext* aPresContext, nsISupports* aState)
+nsTextControlFrame::RestoreState(nsIPresContext* aPresContext, nsIPresState* aState)
 {
-  char* chars = nsnull;
-  nsresult res = ((nsISupportsString*)aState)->GetData(&chars);
-  if (NS_SUCCEEDED(res) && chars) {
-    nsAutoString theString(chars);
-    res = SetProperty(aPresContext, nsHTMLAtoms::value, theString);
-    nsCRT::free(chars);
-  }
+  nsAutoString stateString;
+  aState->GetStateProperty("value", stateString);
+  nsresult res = SetProperty(aPresContext, nsHTMLAtoms::value, stateString);
   return res;
 }

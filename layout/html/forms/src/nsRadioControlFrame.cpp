@@ -282,36 +282,24 @@ nsRadioControlFrame::GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame
 }
 
 NS_IMETHODIMP
-nsRadioControlFrame::SaveState(nsIPresContext* aPresContext, nsISupports** aState)
+nsRadioControlFrame::SaveState(nsIPresContext* aPresContext, nsIPresState** aState)
 {
-  nsISupportsString* value = nsnull;
-  nsresult res = NS_OK;
-  nsAutoString string;
-  GetRadioControlFrameState(string);
-  char* chars = string.ToNewCString();
-  if (chars) {
-    res = nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_PROGID, nsnull, 
-                                         NS_GET_IID(nsISupportsString), (void**)&value);
-    if (NS_SUCCEEDED(res) && value) {
-      value->SetData(chars);
-    }
-    nsCRT::free(chars);
-  } else {
-    res = NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aState = (nsISupports*)value;
+  // Construct a pres state.
+  NS_NewPresState(aState); // The addref happens here.
+  
+  // This string will hold a single item, whether or not we're checked.
+  nsAutoString stateString;
+  GetRadioControlFrameState(stateString);
+  (*aState)->SetStateProperty("checked", stateString);
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsRadioControlFrame::RestoreState(nsIPresContext* aPresContext, nsISupports* aState)
+nsRadioControlFrame::RestoreState(nsIPresContext* aPresContext, nsIPresState* aState)
 {
-  char* chars = nsnull;
-  nsresult res = ((nsISupportsString*)aState)->GetData(&chars);
-  if (NS_SUCCEEDED(res) && chars) {
-    nsAutoString string(chars);
-    SetRadioControlFrameState(aPresContext, string);
-    nsCRT::free(chars);
-  }
-  return res;
+  nsAutoString string;
+  aState->GetStateProperty("checked", string);
+  SetRadioControlFrameState(aPresContext, string);
+  return NS_OK;
 }

@@ -37,6 +37,7 @@
 #include "nsIDOMHTMLSelectElement.h" 
 #include "nsIDOMHTMLOptionElement.h" 
 #include "nsIPresShell.h"
+#include "nsIPresState.h"
 #include "nsISupportsArray.h"
 #include "nsIDeviceContext.h"
 #include "nsIView.h"
@@ -1485,7 +1486,7 @@ nsComboboxControlFrame::GetStateType(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsComboboxControlFrame::SaveState(nsIPresContext* aPresContext, nsISupports** aState)
+nsComboboxControlFrame::SaveState(nsIPresContext* aPresContext, nsIPresState** aState)
 {
   if (!mListControlFrame) return NS_ERROR_UNEXPECTED;
   nsIStatefulFrame* sFrame = nsnull;
@@ -1499,7 +1500,7 @@ nsComboboxControlFrame::SaveState(nsIPresContext* aPresContext, nsISupports** aS
 }
 
 NS_IMETHODIMP
-nsComboboxControlFrame::RestoreState(nsIPresContext* aPresContext, nsISupports* aState)
+nsComboboxControlFrame::RestoreState(nsIPresContext* aPresContext, nsIPresState* aState)
 {
   if (!mListControlFrame) return NS_ERROR_UNEXPECTED;
   nsIStatefulFrame* sFrame = nsnull;

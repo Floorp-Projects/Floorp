@@ -67,11 +67,14 @@ public:
 
   // nsILayoutHistoryState
   NS_IMETHOD AddState(PRUint32 aContentID,
-    nsISupports* aState,
+    nsIPresState* aState,
     nsIStatefulFrame::StateType aStateType = nsIStatefulFrame::eNoType);
   NS_IMETHOD GetState(PRUint32 aContentID,
-    nsISupports** aState,
+    nsIPresState** aState,
     nsIStatefulFrame::StateType aStateType = nsIStatefulFrame::eNoType);
+  NS_IMETHOD RemoveState(PRUint32 aContentID,
+    nsIStatefulFrame::StateType aStateType = nsIStatefulFrame::eNoType);
+
 
 private:
   nsSupportsHashtable mStates;
@@ -108,7 +111,7 @@ NS_IMPL_ISUPPORTS(nsLayoutHistoryState,
 
 NS_IMETHODIMP
 nsLayoutHistoryState::AddState(PRUint32 aContentID,                                
-                               nsISupports* aState, 
+                               nsIPresState* aState, 
                                nsIStatefulFrame::StateType aStateType)
 {
   nsresult rv = NS_OK;
@@ -130,7 +133,7 @@ nsLayoutHistoryState::AddState(PRUint32 aContentID,
 
 NS_IMETHODIMP
 nsLayoutHistoryState::GetState(PRUint32 aContentID,                                
-                               nsISupports** aState,
+                               nsIPresState** aState,
                                nsIStatefulFrame::StateType aStateType)
 {
   nsresult rv = NS_OK;
@@ -138,12 +141,23 @@ nsLayoutHistoryState::GetState(PRUint32 aContentID,
   void * state = nsnull;
   state = mStates.Get(&key);
   if (state) {
-    *aState = (nsISupports *)state;
+    *aState = (nsIPresState *)state;
   }
   else {
     printf("nsLayoutHistoryState::GetState, ERROR getting History state for the key\n");
     *aState = nsnull;
     rv = NS_ERROR_NULL_POINTER;
   }
+  return rv;
+}
+
+NS_IMETHODIMP
+nsLayoutHistoryState::RemoveState(PRUint32 aContentID,                                
+                                  nsIStatefulFrame::StateType aStateType)
+{
+  nsresult rv = NS_OK;
+  HistoryKey key(aContentID, aStateType);
+  void * state = nsnull;
+  state = mStates.Remove(&key);
   return rv;
 }

@@ -527,7 +527,6 @@ nsCSSFrameConstructor::nsCSSFrameConstructor(void)
     mGfxScrollFrame(nsnull)
 {
   NS_INIT_REFCNT();
-  NS_NewLayoutHistoryState(getter_AddRefs(mTempFrameTreeState));
 }
 
 nsCSSFrameConstructor::~nsCSSFrameConstructor(void)
@@ -2198,6 +2197,9 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
      AreaFrame or BoxFrame (InitialContainingBlock)
           
 */    
+
+  if (!mTempFrameTreeState)
+    aPresShell->GetHistoryState(getter_AddRefs(mTempFrameTreeState));
 
   // ----- reattach gfx scrollbars ------
   // Gfx scrollframes were created in the root frame but the primary frame map may have been destroyed if a 
@@ -6745,7 +6747,7 @@ nsCSSFrameConstructor::RemoveMappingsForFrameSubtree(nsIPresContext* aPresContex
   presShell->GetFrameManager(getter_AddRefs(frameManager));
   
   // Save the frame tree's state before deleting it
-  CaptureStateFor(aPresContext, aRemovedFrame, aFrameState);
+  CaptureStateFor(aPresContext, aRemovedFrame, mTempFrameTreeState);
 
   return DeletingFrameSubtree(aPresContext, presShell, frameManager, aRemovedFrame);
 }
@@ -9649,7 +9651,7 @@ nsCSSFrameConstructor::CreateTreeWidgetContent(nsIPresContext* aPresContext,
     nsFrameConstructorState state(aPresContext, mFixedContainingBlock,
                                   GetAbsoluteContainingBlock(aPresContext, aParentFrame),
                                   GetFloaterContainingBlock(aPresContext, aParentFrame), 
-                                  aFrameState);
+                                  mTempFrameTreeState);
 
     // Get the element's tag
     nsCOMPtr<nsIAtom>  tag;

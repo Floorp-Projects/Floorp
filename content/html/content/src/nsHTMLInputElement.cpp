@@ -49,6 +49,8 @@
 #include "nsIEventStateManager.h"
 #include "nsISizeOfHandler.h"
 
+#include "nsIPresState.h"
+
 // XXX align=left, hspace, vspace, border? other nav4 attrs
 
 static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
@@ -400,8 +402,20 @@ nsHTMLInputElement::GetValue(nsString& aValue)
       if (nsnull != formControlFrame) {
         formControlFrame->GetProperty(nsHTMLAtoms::value, aValue);
       }
-      return NS_OK;
     }
+    else {
+      // Retrieve the presentation state instead.
+      nsCOMPtr<nsIPresState> presState;
+      nsGenericHTMLElement::GetPrimaryPresState(this, nsIStatefulFrame::eTextType, getter_AddRefs(presState));
+
+      // Obtain the value property from the presentation state.
+      if (presState) {
+        nsAutoString value;
+        presState->GetStateProperty("value", aValue);
+      }
+    }
+      
+    return NS_OK;
   }
   // Treat value == defaultValue for other input elements
   return mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::value, aValue); 
@@ -422,9 +436,20 @@ nsHTMLInputElement::SetValue(const nsString& aValue)
         formControlFrame->SetProperty(presContext, nsHTMLAtoms::value, aValue);
         NS_IF_RELEASE(presContext);
       }
-      return NS_OK;
     }
+    else {
+      // Retrieve the presentation state instead.
+      nsCOMPtr<nsIPresState> presState;
+      nsGenericHTMLElement::GetPrimaryPresState(this, nsIStatefulFrame::eTextType, getter_AddRefs(presState));
+
+      // Obtain the value property from the presentation state.
+      if (presState) {
+        presState->SetStateProperty("value", aValue);
+      }
+    }
+    return NS_OK;
   }
+
   // Treat value == defaultValue for other input elements.
   return mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::value, aValue, PR_TRUE);
 }
