@@ -24,42 +24,72 @@
 #include "plstr.h"
 #include "prmem.h"
 
+// for CRLF
+#include "fe_proto.h" 
+
 static NS_DEFINE_IID(kINNTPNewsgroupPostIID, NS_INNTPNEWSGROUPPOST_IID);
+
+#define HEADER_RELAYVERSION		0
+#define HEADER_POSTINGVERSION	1
+#define HEADER_FROM				2
+#define HEADER_DATE				3
+#define HEADER_NEWSGROUPS		4
+#define HEADER_MESSAGEID		5
+#define HEADER_SUBJECT			6
+#define HEADER_PATH				7
+
+// set this to the last required header
+#define HEADER_LAST_REQUIRED	HEADER_PATH
+
+#define HEADER_REPLYTO			8
+#define HEADER_SENDER			9
+#define HEADER_FOLLOWUPTO		10
+#define HEADER_DATERECEIVED		11
+#define HEADER_EXPIRES			12
+#define HEADER_CONTROL			13
+#define HEADER_DISTRIBUTION		14
+#define HEADER_ORGANIZATION		15
+#define HEADER_REFERENCES		16
+
+// keep this in sync with the above
+#define HEADER_TOTAL            HEADER_REFERENCES+1
+
 
 class nsNNTPNewsgroupPost : nsINNTPNewsgroupPost {
     
 public:
     nsNNTPNewsgroupPost();
-
+    virtual ~nsNNTPNewsgroupPost();
+    
     NS_DECL_ISUPPORTS
     
     // Required headers
-    NS_IMPL_CLASS_GETSET_STR(RelayVersion, m_relayVersion);
-    NS_IMPL_CLASS_GETSET_STR(PostingVersion, m_postingVersion);
-    NS_IMPL_CLASS_GETSET_STR(From, m_from);
-    NS_IMPL_CLASS_GETSET_STR(Date, m_date);
-    NS_IMPL_CLASS_GETSET_STR(Subject, m_subject);
+    NS_IMPL_CLASS_GETSET_STR(RelayVersion, m_header[HEADER_RELAYVERSION]);
+    NS_IMPL_CLASS_GETSET_STR(PostingVersion, m_header[HEADER_POSTINGVERSION]);
+    NS_IMPL_CLASS_GETSET_STR(From, m_header[HEADER_FROM]);
+    NS_IMPL_CLASS_GETSET_STR(Date, m_header[HEADER_DATE]);
+    NS_IMPL_CLASS_GETSET_STR(Subject, m_header[HEADER_SUBJECT]);
     
     NS_IMETHOD AddNewsgroup(const char *newsgroupName);
-    NS_IMPL_CLASS_GETTER_STR(GetNewsgroups, m_newsgroups);
+    NS_IMPL_CLASS_GETTER_STR(GetNewsgroups, m_header[HEADER_NEWSGROUPS]);
     
     NS_IMETHOD GetMessageID(char * *aMessageID);
     
-    NS_IMPL_CLASS_GETSET_STR(Path, m_path);
+    NS_IMPL_CLASS_GETSET_STR(Path, m_header[HEADER_PATH]);
 
     // Optional Headers
-    NS_IMPL_CLASS_GETSET_STR(ReplyTo, m_replyTo);
-    NS_IMPL_CLASS_GETSET_STR(Sender, m_sender);
-    NS_IMPL_CLASS_GETSET_STR(FollowupTo, m_followupTo);
-    NS_IMPL_CLASS_GETSET_STR(DateRecieved, m_dateRecieved);
-    NS_IMPL_CLASS_GETSET_STR(Expires, m_expires);
-    NS_IMPL_CLASS_GETSET_STR(Control, m_control);
-    NS_IMPL_CLASS_GETSET_STR(Distribution, m_distribution);
-    NS_IMPL_CLASS_GETSET_STR(Organization, m_organization);
+    NS_IMPL_CLASS_GETSET_STR(ReplyTo, m_header[HEADER_REPLYTO]);
+    NS_IMPL_CLASS_GETSET_STR(Sender, m_header[HEADER_SENDER]);
+    NS_IMPL_CLASS_GETSET_STR(FollowupTo, m_header[HEADER_FOLLOWUPTO]);
+    NS_IMPL_CLASS_GETSET_STR(DateRecieved, m_header[HEADER_DATERECEIVED]);
+    NS_IMPL_CLASS_GETSET_STR(Expires, m_header[HEADER_EXPIRES]);
+    NS_IMPL_CLASS_GETSET_STR(Control, m_header[HEADER_CONTROL]);
+    NS_IMPL_CLASS_GETSET_STR(Distribution, m_header[HEADER_DISTRIBUTION]);
+    NS_IMPL_CLASS_GETSET_STR(Organization, m_header[HEADER_ORGANIZATION]);
     NS_IMPL_CLASS_GETSET_STR(Body, m_body);    
 
     NS_IMETHOD AddReference(const char *referenceID);
-    NS_IMPL_CLASS_GETTER_STR(GetReferences, m_references);
+    NS_IMPL_CLASS_GETTER_STR(GetReferences, m_header[HEADER_REFERENCES]);
 
 
     NS_IMETHOD isValid(PRBool *_retval);
@@ -74,57 +104,59 @@ public:
     static char *appendAndAlloc(char *string, const char *newSubstring,
                                 PRBool withComma);
 private:
-
     
-    char *m_relayVersion;
-    char *m_postingVersion;
-    char *m_from;
-    char *m_date;
-    char *m_newsgroups;
-    char *m_messageID;
-    char *m_subject;
-    char *m_path;
-
+    char *m_header[HEADER_TOTAL];
+    static const char *m_headerName[HEADER_TOTAL];
     
-    char *m_replyTo;
-    char *m_sender;
-    char *m_followupTo;
-    char *m_dateRecieved;
-    char *m_expires;
-    char *m_control;
-    char *m_distribution;
-    char *m_organization;
-    char *m_references;
     char *m_body;
-    
-    char *m_fullMessage;
-
+    char *m_messageBuffer;
     PRBool m_isControl;
 };
 
+const char* nsNNTPNewsgroupPost::m_headerName[HEADER_TOTAL]=
+{
+    "Relay-Version: ",
+    "Posting-Version: ",
+    "From: ",
+    "Date: ",
+    "Newsgroups: ",
+    "Message-ID: ",
+    "Subject: ",
+    "Path: ",
+    
+    "Reply-To: ",
+    "Sender: ",
+    "Followup-To: ",
+    "Date-Received: ",
+    "Expires: ",
+    "Control: ",
+    "Distribution: ",
+    "Organization: ",
+    "References: ",
+};
+    
 NS_IMPL_ISUPPORTS(nsNNTPNewsgroupPost, kINNTPNewsgroupPostIID);
 
 nsNNTPNewsgroupPost::nsNNTPNewsgroupPost()
 {
-    m_relayVersion=nsnull;
-    m_postingVersion=nsnull;
-    m_from=nsnull;
-    m_date=nsnull;
-    m_subject=nsnull;
-    m_path=nsnull;
-    m_replyTo=nsnull;
-    m_sender=nsnull;
-    m_followupTo=nsnull;
-    m_dateRecieved=nsnull;
-    m_expires=nsnull;
-    m_control=nsnull;
-    m_distribution=nsnull;
-    m_organization=nsnull;
+    int i;
+    for (i=0; i < HEADER_TOTAL; i++)
+        m_header[i]=nsnull;
+
     m_body=nsnull;
-
-    m_fullMessage=nsnull;
+    m_messageBuffer=nsnull;
+    
     m_isControl=PR_FALSE;
+}
 
+nsNNTPNewsgroupPost::~nsNNTPNewsgroupPost()
+{
+    int i;
+    for (i=0; i< HEADER_TOTAL; i++)
+        if (m_header[i]) PR_FREEIF(m_header[i]);
+
+    PR_FREEIF(m_body);
+    PR_FREEIF(m_messageBuffer);
 }
 
 nsresult
@@ -132,15 +164,22 @@ nsNNTPNewsgroupPost::isValid(PRBool *_retval)
 {
     if (!_retval) return NS_OK;
 
-    // check if required headers exist
-    *_retval = (m_relayVersion &&
-                m_postingVersion &&
-                m_from &&
-                m_date &&
-                m_subject &&
-                m_newsgroups &&
-                m_messageID &&
-                m_path);
+    // hack to get lazy-generated message ID to work
+    char *messageid;
+    GetMessageID(&messageid);
+
+    PRBool valid=PR_TRUE;
+    int i;
+    for (i=0; i<=HEADER_LAST_REQUIRED;i++) {
+        if (!m_header[i]) {
+            valid=PR_FALSE;
+            break;
+        }
+    }
+
+    *_retval=valid;
+    printf("nsNNTPNewsgroupPost::isValid() -> %s (%d is first invalid)\n",
+           *_retval ? "TRUE": "FALSE", i);
     return NS_OK;
 }
 
@@ -168,7 +207,38 @@ nsNNTPNewsgroupPost::GetFullMessage(char **message)
     isValid(&valid);
     if (!valid) return NS_ERROR_NOT_INITIALIZED;
 
-    *message="";
+    int len=0;
+    int i;
+    for (i=0; i< HEADER_TOTAL; i++) {
+        if (m_header[i]) {
+            len+=PL_strlen(m_headerName[i]);
+            len+=PL_strlen(m_header[i]);
+            len+=2;
+        }
+    }
+    len += PL_strlen(m_body);
+
+    // for trailing \0 and CRLF between headers and message
+    len+= PL_strlen(CRLF)+1;
+
+    PR_FREEIF(m_messageBuffer);
+    m_messageBuffer = (char *)PR_Calloc(len, sizeof(char));
+
+    PL_strcpy(m_messageBuffer,"");
+    for (i=0; i<=HEADER_TOTAL; i++) {
+        if (m_header[i]) {
+            PL_strcat(m_messageBuffer, m_headerName[i]);
+            PL_strcat(m_messageBuffer, m_header[i]);
+            PL_strcat(m_messageBuffer, CRLF);
+        }
+    }
+    
+    PL_strcat(m_messageBuffer, CRLF);
+    PL_strcat(m_messageBuffer, m_body);
+    
+    *message=m_messageBuffer;
+
+    printf("Assembled message:\n%s\n",m_messageBuffer);
     return NS_OK;
 }
 
@@ -200,13 +270,13 @@ nsNNTPNewsgroupPost::appendAndAlloc(char *string,
 nsresult
 nsNNTPNewsgroupPost::AddNewsgroup(const char *newsgroup)
 {
-    m_newsgroups=appendAndAlloc(m_newsgroups, newsgroup, PR_TRUE);
+    m_header[HEADER_NEWSGROUPS]=appendAndAlloc(m_header[HEADER_NEWSGROUPS], newsgroup, PR_TRUE);
     return NS_OK;
 }
 nsresult
 nsNNTPNewsgroupPost::AddReference(const char *reference)
 {
-    m_references=appendAndAlloc(m_references, reference, PR_FALSE);
+    m_header[HEADER_REFERENCES]=appendAndAlloc(m_header[HEADER_REFERENCES], reference, PR_FALSE);
     return NS_OK;
 }
 
@@ -215,8 +285,10 @@ nsNNTPNewsgroupPost::GetMessageID(char **messageID)
 {
     // hack - this is where we will somehow generate the ID
     static char *fakeID = "ABCDEFG@mcom.com";
-    if (!messageID) return NS_ERROR_NULL_POINTER;
+    m_header[HEADER_MESSAGEID] = fakeID;
+    
     *messageID = fakeID;
+    if (!messageID) return NS_ERROR_NULL_POINTER;
     return NS_OK;
 }
 
