@@ -226,7 +226,12 @@ public:
   NS_IMETHOD ScrollSelectionIntoView(SelectionType aType, SelectionRegion aRegion);
   NS_IMETHOD RepaintSelection(nsIPresContext* aPresContext, SelectionType aType);
   NS_IMETHOD GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, nsIFrame **aReturnFrame);
-/*END nsIFrameSelection interfacse*/
+  NS_IMETHOD CharacterMove(PRBool aForward, PRBool aExtend);
+  NS_IMETHOD WordMove(PRBool aForward, PRBool aExtend);
+  NS_IMETHOD LineMove(PRBool aForward, PRBool aExtend);
+  NS_IMETHOD IntraLineMove(PRBool aForward, PRBool aExtend);
+  NS_IMETHOD SelectAll();
+  /*END nsIFrameSelection interfacse*/
 
 
 
@@ -250,6 +255,8 @@ private:
 #endif /* DEBUG */
 
   void ResizeBuffer(PRUint32 aNewBufSize);
+/*HELPER METHODS*/
+  nsresult     MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aAmount);
 
   nscoord      FetchDesiredX(); //the x position requested by the Key Handling for up down
   void         InvalidateDesiredX(); //do not listen to mDesiredX you must get another.
@@ -1111,6 +1118,116 @@ nsRangeList::HandleTextEvent(nsGUIEvent *aGUIEvent)
 }
 
 
+nsresult
+nsRangeList::MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aAmount)
+{
+  nsCOMPtr<nsIPresContext> context;
+  nsresult result = mTracker->GetPresContext(getter_AddRefs(context));
+  if (NS_FAILED(result) || !context)
+    return result?result:NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMNode> weakNodeUsed;
+  PRInt32 offsetused = 0;
+
+  PRBool isCollapsed;
+  nscoord desiredX; //we must keep this around and revalidate it when its just UP/DOWN
+
+  result = mDomSelections[SELECTION_NORMAL]->GetIsCollapsed(&isCollapsed);
+  if (NS_FAILED(result))
+    return result;
+  if (aKeycode == nsIDOMKeyEvent::DOM_VK_UP || aKeycode == nsIDOMKeyEvent::DOM_VK_DOWN)
+  {
+    desiredX= FetchDesiredX();
+    SetDesiredX(desiredX);
+  }
+
+  if (!isCollapsed && !aContinue) {
+    switch (aKeycode){
+      case nsIDOMKeyEvent::DOM_VK_LEFT  : 
+      case nsIDOMKeyEvent::DOM_VK_UP    : {
+          if ((mDomSelections[SELECTION_NORMAL]->GetDirection() == eDirPrevious)) { //f,a
+            offsetused = mDomSelections[SELECTION_NORMAL]->FetchFocusOffset();
+            weakNodeUsed = mDomSelections[SELECTION_NORMAL]->FetchFocusNode();
+          }
+          else {
+            offsetused = mDomSelections[SELECTION_NORMAL]->FetchAnchorOffset();
+            weakNodeUsed = mDomSelections[SELECTION_NORMAL]->FetchAnchorNode();
+          }
+          result = mDomSelections[SELECTION_NORMAL]->Collapse(weakNodeUsed,offsetused);
+          return NS_OK;
+         } break;
+      case nsIDOMKeyEvent::DOM_VK_RIGHT : 
+      case nsIDOMKeyEvent::DOM_VK_DOWN  : {
+          if ((mDomSelections[SELECTION_NORMAL]->GetDirection() == eDirPrevious)) { //f,a
+            offsetused = mDomSelections[SELECTION_NORMAL]->FetchAnchorOffset();
+            weakNodeUsed = mDomSelections[SELECTION_NORMAL]->FetchAnchorNode();
+          }
+          else {
+            offsetused = mDomSelections[SELECTION_NORMAL]->FetchFocusOffset();
+            weakNodeUsed = mDomSelections[SELECTION_NORMAL]->FetchFocusNode();
+          }
+          result = mDomSelections[SELECTION_NORMAL]->Collapse(weakNodeUsed,offsetused);
+          return NS_OK;
+         } break;
+      
+    }
+//      if (keyEvent->keyCode == nsIDOMKeyEvent::DOM_VK_UP || keyEvent->keyCode == nsIDOMKeyEvent::DOM_VK_DOWN)
+//        SetDesiredX(desiredX);
+  }
+
+  offsetused = mDomSelections[SELECTION_NORMAL]->FetchFocusOffset();
+  weakNodeUsed = mDomSelections[SELECTION_NORMAL]->FetchFocusNode();
+
+  nsIFrame *frame;
+  result = mDomSelections[SELECTION_NORMAL]->GetPrimaryFrameForFocusNode(&frame);
+  if (NS_FAILED(result))
+    return result;
+  nsPeekOffsetStruct pos;
+  pos.SetData(mTracker, desiredX, aAmount, eDirPrevious, offsetused, PR_FALSE,PR_TRUE, PR_TRUE);
+  switch (aKeycode){
+    case nsIDOMKeyEvent::DOM_VK_RIGHT : 
+        InvalidateDesiredX();
+        pos.mDirection = eDirNext;
+        mHint = HINTLEFT;//stick to this line
+      break;
+    case nsIDOMKeyEvent::DOM_VK_LEFT  : //no break
+        InvalidateDesiredX();
+        mHint = HINTRIGHT;//stick to opposite of movement
+      break;
+    case nsIDOMKeyEvent::DOM_VK_DOWN : 
+        pos.mAmount = eSelectLine;
+        pos.mDirection = eDirNext;//no break here
+      break;
+    case nsIDOMKeyEvent::DOM_VK_UP : 
+        pos.mAmount = eSelectLine;
+      break;
+    case nsIDOMKeyEvent::DOM_VK_HOME :
+        InvalidateDesiredX();
+        pos.mAmount = eSelectBeginLine;
+        InvalidateDesiredX();
+        mHint = HINTRIGHT;//stick to opposite of movement
+      break;
+    case nsIDOMKeyEvent::DOM_VK_END :
+        InvalidateDesiredX();
+        pos.mAmount = eSelectEndLine;
+        InvalidateDesiredX();
+        mHint = HINTLEFT;//stick to this line
+     break;
+  default :return NS_ERROR_FAILURE;
+  }
+  pos.mPreferLeft = mHint;
+  if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(context, &pos)) && pos.mResultContent)
+  {
+    mHint = (HINT)pos.mPreferLeft;
+    result = TakeFocus(pos.mResultContent, pos.mContentOffset, pos.mContentOffset, aContinue, PR_FALSE);
+  }
+  if (NS_SUCCEEDED(result))
+    result = mDomSelections[SELECTION_NORMAL]->ScrollIntoView();
+
+  return result;
+}
+
+
 
 /** This raises a question, if this method is called and the aFrame does not reflect the current
  *  focus  DomNode, it is invalid?  The answer now is yes.
@@ -1145,108 +1262,10 @@ nsRangeList::HandleKeyEvent(nsIPresContext* aPresContext, nsGUIEvent *aGuiEvent)
       return NS_ERROR_FAILURE;
     }
 #endif
-
-    nsCOMPtr<nsIDOMNode> weakNodeUsed;
-    PRInt32 offsetused = 0;
     nsSelectionAmount amount = eSelectCharacter;
     if (keyEvent->isControl)
       amount = eSelectWord;
-
-    PRBool isCollapsed;
-    nscoord desiredX; //we must keep this around and revalidate it when its just UP/DOWN
-
-    result = mDomSelections[SELECTION_NORMAL]->GetIsCollapsed(&isCollapsed);
-    if (NS_FAILED(result))
-      return result;
-    if (keyEvent->keyCode == nsIDOMKeyEvent::DOM_VK_UP || keyEvent->keyCode == nsIDOMKeyEvent::DOM_VK_DOWN)
-    {
-      desiredX= FetchDesiredX();
-      SetDesiredX(desiredX);
-    }
-
-    if (!isCollapsed && !keyEvent->isShift) {
-      switch (keyEvent->keyCode){
-        case nsIDOMKeyEvent::DOM_VK_LEFT  : 
-        case nsIDOMKeyEvent::DOM_VK_UP    : {
-            if ((mDomSelections[SELECTION_NORMAL]->GetDirection() == eDirPrevious)) { //f,a
-              offsetused = mDomSelections[SELECTION_NORMAL]->FetchFocusOffset();
-              weakNodeUsed = mDomSelections[SELECTION_NORMAL]->FetchFocusNode();
-            }
-            else {
-              offsetused = mDomSelections[SELECTION_NORMAL]->FetchAnchorOffset();
-              weakNodeUsed = mDomSelections[SELECTION_NORMAL]->FetchAnchorNode();
-            }
-            result = mDomSelections[SELECTION_NORMAL]->Collapse(weakNodeUsed,offsetused);
-            return NS_OK;
-           } break;
-        case nsIDOMKeyEvent::DOM_VK_RIGHT : 
-        case nsIDOMKeyEvent::DOM_VK_DOWN  : {
-            if ((mDomSelections[SELECTION_NORMAL]->GetDirection() == eDirPrevious)) { //f,a
-              offsetused = mDomSelections[SELECTION_NORMAL]->FetchAnchorOffset();
-              weakNodeUsed = mDomSelections[SELECTION_NORMAL]->FetchAnchorNode();
-            }
-            else {
-              offsetused = mDomSelections[SELECTION_NORMAL]->FetchFocusOffset();
-              weakNodeUsed = mDomSelections[SELECTION_NORMAL]->FetchFocusNode();
-            }
-            result = mDomSelections[SELECTION_NORMAL]->Collapse(weakNodeUsed,offsetused);
-            return NS_OK;
-           } break;
-        
-      }
-//      if (keyEvent->keyCode == nsIDOMKeyEvent::DOM_VK_UP || keyEvent->keyCode == nsIDOMKeyEvent::DOM_VK_DOWN)
-//        SetDesiredX(desiredX);
-    }
-
-    offsetused = mDomSelections[SELECTION_NORMAL]->FetchFocusOffset();
-    weakNodeUsed = mDomSelections[SELECTION_NORMAL]->FetchFocusNode();
-
-    nsIFrame *frame;
-    result = mDomSelections[SELECTION_NORMAL]->GetPrimaryFrameForFocusNode(&frame);
-    if (NS_FAILED(result))
-      return result;
-    nsPeekOffsetStruct pos;
-    pos.SetData(mTracker, desiredX, amount, eDirPrevious, offsetused, PR_FALSE,PR_TRUE, PR_TRUE);
-    switch (keyEvent->keyCode){
-      case nsIDOMKeyEvent::DOM_VK_RIGHT : 
-          InvalidateDesiredX();
-          pos.mDirection = eDirNext;
-          mHint = HINTLEFT;//stick to this line
-        break;
-      case nsIDOMKeyEvent::DOM_VK_LEFT  : //no break
-          InvalidateDesiredX();
-          mHint = HINTRIGHT;//stick to opposite of movement
-        break;
-      case nsIDOMKeyEvent::DOM_VK_DOWN : 
-          pos.mAmount = eSelectLine;
-          pos.mDirection = eDirNext;//no break here
-        break;
-      case nsIDOMKeyEvent::DOM_VK_UP : 
-          pos.mAmount = eSelectLine;
-        break;
-      case nsIDOMKeyEvent::DOM_VK_HOME :
-          InvalidateDesiredX();
-          pos.mAmount = eSelectBeginLine;
-          InvalidateDesiredX();
-          mHint = HINTRIGHT;//stick to opposite of movement
-        break;
-      case nsIDOMKeyEvent::DOM_VK_END :
-          InvalidateDesiredX();
-          pos.mAmount = eSelectEndLine;
-          InvalidateDesiredX();
-          mHint = HINTLEFT;//stick to this line
-       break;
-    default :return NS_ERROR_FAILURE;
-    }
-    pos.mPreferLeft = mHint;
-    if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(aPresContext, &pos)) && pos.mResultContent)
-    {
-      mHint = (HINT)pos.mPreferLeft;
-      result = TakeFocus(pos.mResultContent, pos.mContentOffset, pos.mContentOffset, keyEvent->isShift, PR_FALSE);
-    }
-    if (NS_SUCCEEDED(result))
-      result = mDomSelections[SELECTION_NORMAL]->ScrollIntoView();
-
+    return MoveCaret(keyEvent->keyCode, keyEvent->isShift, amount);
   }
   return result;
 }
@@ -1558,6 +1577,46 @@ nsRangeList::GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, nsIFrame 
 }
 
 
+NS_IMETHODIMP 
+nsRangeList::CharacterMove(PRBool aForward, PRBool aExtend)
+{
+  if (aForward)
+    return MoveCaret(nsIDOMKeyEvent::DOM_VK_RIGHT,aExtend,eSelectCharacter);
+  else
+    return MoveCaret(nsIDOMKeyEvent::DOM_VK_LEFT,aExtend,eSelectCharacter);
+}
+
+NS_IMETHODIMP
+nsRangeList::WordMove(PRBool aForward, PRBool aExtend)
+{
+  if (aForward)
+    return MoveCaret(nsIDOMKeyEvent::DOM_VK_RIGHT,aExtend,eSelectWord);
+  else
+    return MoveCaret(nsIDOMKeyEvent::DOM_VK_LEFT,aExtend,eSelectWord);
+}
+
+NS_IMETHODIMP
+nsRangeList::LineMove(PRBool aForward, PRBool aExtend)
+{
+  if (aForward)
+    return MoveCaret(nsIDOMKeyEvent::DOM_VK_DOWN,aExtend,eSelectLine);
+  else
+    return MoveCaret(nsIDOMKeyEvent::DOM_VK_UP,aExtend,eSelectLine);
+}
+
+NS_IMETHODIMP
+nsRangeList::IntraLineMove(PRBool aForward, PRBool aExtend)
+{
+  if (aForward)
+    return MoveCaret(nsIDOMKeyEvent::DOM_VK_END,aExtend,eSelectLine);
+  else
+    return MoveCaret(nsIDOMKeyEvent::DOM_VK_HOME,aExtend,eSelectLine);
+}
+
+NS_IMETHODIMP nsRangeList::SelectAll()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 //////////END FRAMESELECTION
 NS_METHOD
