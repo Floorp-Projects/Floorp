@@ -41,6 +41,14 @@
 #include "nsIPluginStreamListener.h"
 #endif
 
+#define NS_IPLUGININSTANCE_IID                       \
+{ /* ebe00f40-0199-11d2-815b-006008119d7a */         \
+    0xebe00f40,                                      \
+    0x0199,                                          \
+    0x11d2,                                          \
+    {0x81, 0x5b, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Plugin Instance Interface
 
@@ -63,7 +71,8 @@
  */
 class nsIPluginInstance : public nsISupports {
 public:
-
+	NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPLUGININSTANCE_IID)
+	
     /**
      * Initializes a newly created plugin instance, passing to it the plugin
      * instance peer which it should use for all communication back to the browser.
@@ -218,14 +227,6 @@ public:
     NS_IMETHOD
     HandleEvent(nsPluginEvent* event, PRBool* handled) = 0;
 };
-
-#define NS_IPLUGININSTANCE_IID                       \
-{ /* ebe00f40-0199-11d2-815b-006008119d7a */         \
-    0xebe00f40,                                      \
-    0x0199,                                          \
-    0x11d2,                                          \
-    {0x81, 0x5b, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
