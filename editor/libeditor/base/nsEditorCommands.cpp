@@ -416,16 +416,7 @@ nsPasteCommand::DoCommand(const char *aCommandName, nsISupports *aCommandRefCon)
   if (!editor)
     return NS_ERROR_FAILURE;
   
-  if (!nsCRT::strcmp("cmd_paste",aCommandName))
-    return editor->Paste(nsIClipboard::kGlobalClipboard);
-  else if (!nsCRT::strcmp("cmd_pasteQuote",aCommandName))
-  {
-    nsCOMPtr<nsIEditorMailSupport> mailEditor = do_QueryInterface(editor);
-    if (mailEditor)
-      return mailEditor->PasteAsQuotation(nsIClipboard::kGlobalClipboard);
-  }
-    
-  return NS_ERROR_FAILURE;
+  return editor->Paste(nsIClipboard::kGlobalClipboard);
 }
 
 NS_IMETHODIMP 
@@ -772,11 +763,15 @@ nsPasteQuotationCommand::IsCommandEnabled(const char * aCommandName,
 
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
   nsCOMPtr<nsIEditorMailSupport>  mailEditor = do_QueryInterface(refCon);
-  if (editor && mailEditor)
-    return editor->CanPaste(nsIClipboard::kGlobalClipboard, outCmdEnabled);
+  if (editor && mailEditor) {
+    PRUint32 flags;
+    editor->GetFlags(&flags);
+    if (!(flags & nsIPlaintextEditor::eEditorSingleLineMask))
+      return editor->CanPaste(nsIClipboard::kGlobalClipboard, outCmdEnabled);
+  }
 
   *outCmdEnabled = PR_FALSE;
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_OK;
 }
 
 
