@@ -17,6 +17,9 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
+#error "You should now include <strstream.h> from CWPro4"
+
+#include "xp_mcom.h"
 #include <sstream.h>
 
 typedef  basic_ostringstream<char, char_traits<char> > template_ostrstream;
@@ -24,5 +27,10 @@ typedef  basic_ostringstream<char, char_traits<char> > template_ostrstream;
 class ostrstream : public template_ostrstream
 {
 public:
-    inline const char* str() const {return template_ostrstream::str().c_str();};
+    inline const char* str() const
+    	{
+    		string astr = template_ostrstream::str();
+    		const char* cstr = astr.c_str();
+    		return XP_STRDUP(cstr);
+    	};
 };
