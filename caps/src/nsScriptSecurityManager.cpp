@@ -1134,6 +1134,11 @@ nsScriptSecurityManager::SetCanEnableCapability(const char* certificateID,
         rv = directoryService->Get("system.OS_CurrentProcessDirectory", NS_GET_IID(nsIFile), 
                               getter_AddRefs(systemCertFile));
         if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+#ifdef XP_MAC
+        // On Mac, this file will be located in the Essential Files folder
+        systemCertFile->Append("Essential Files");
+        if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+#endif
         systemCertFile->Append("systemSignature.jar");
         if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
         nsCOMPtr<nsIZipReader> systemCertJar;
