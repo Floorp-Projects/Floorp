@@ -756,7 +756,7 @@ GetOSXFolderType(short aDomain, OSType aFolderType, nsILocalFile **localFile)
     err = ::FSFindFolder(aDomain, aFolderType, kCreateFolder, &fsRef);
     if (err == noErr)
     {
-        NS_NewLocalFile(EmptyString(), PR_TRUE, localFile);
+        NS_NewLocalFile(nsString(), PR_TRUE, localFile);
         nsCOMPtr<nsILocalFileMac> localMacFile(do_QueryInterface(*localFile));
         if (localMacFile)
             rv = localMacFile->InitWithFSRef(&fsRef);
