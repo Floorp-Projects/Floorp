@@ -84,8 +84,8 @@ endif
 
 # Add the CVS root to CVS_CO_FLAGS if needed
 CVS_ROOT_IN_TREE  := $(shell cat $(TOPSRCDIR)/CVS/Root 2>/dev/null)
-ifneq ($(MOZ_CVS_ROOT),)
-ifneq ($(MOZ_CVS_ROOT),$(CVSROOT))
+ifneq ($(CVS_ROOT_IN_TREE),)
+ifneq ($(CVS_ROOT_IN_TREE),$(CVSROOT))
   MOZ_CVS_FLAGS := $(MOZ_CVS_FLAGS) -d $(CVS_ROOT_IN_TREE)
 endif
 endif
