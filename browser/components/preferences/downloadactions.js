@@ -91,13 +91,10 @@ var gDownloadActionsWindow = {
     this._bundle = document.getElementById("bundlePreferences");
     this._tree = document.getElementById("fileHandlersList");
     this._loadView();
-    this._tree.treeBoxObject.view = this._view;  
     // Determine any exclusions being applied - e.g. don't show types for which
     // only a plugin handler exists, don't show types lacking extensions, etc. 
-    // This must be called *after* the view is attached, otherwise the tree code
-    // will throw assertions about the row count being out of sync, because it
-    // has no view to ask about it!
-    this._updateExclusions();    
+    this._view._rowCount = this._updateExclusions();    
+    this._tree.treeBoxObject.view = this._view;  
 
     var indexToSelect = parseInt(this._tree.getAttribute("lastSelected"));
     if (indexToSelect < this._tree.view.rowCount)
@@ -119,7 +116,15 @@ var gDownloadActionsWindow = {
 
     this._loadPluginData();
     this._loadMIMERegistryData();
-    this._view._rowCount = this._actions.length;
+  },
+  
+  _updateRowCount: function (aNewRowCount)
+  {
+    var oldCount = this._view._rowCount;
+    this._view._rowCount = 0;
+    this._tree.treeBoxObject.rowCountChanged(0, -oldCount);
+    this._view._rowCount = aNewRowCount;
+    this._tree.treeBoxObject.rowCountChanged(0, aNewRowCount);
   },
   
   uninit: function ()
@@ -133,10 +138,8 @@ var gDownloadActionsWindow = {
   observe: function (aSubject, aTopic, aData)
   {
     if (aTopic == "nsPref:changed" &&
-        (aData == kShowPluginsInList || aData == kHideTypesWithoutExtensions)) {
-      this._updateExclusions();
-      this._tree.treeBoxObject.invalidate();    
-    }
+        (aData == kShowPluginsInList || aData == kHideTypesWithoutExtensions))
+      this._updateRowCount(this._updateExclusions());
   },
   
   _updateExclusions: function ()
@@ -144,9 +147,8 @@ var gDownloadActionsWindow = {
     this._excludingPlugins = !this._pref.getBoolPref(kShowPluginsInList);
     this._excludingMissingExtensions = this._pref.getBoolPref(kHideTypesWithoutExtensions);    
     this._view._exclusionSet = [].concat(this._actions);
-    var usingExclusionSet = false;
     if (this._excludingMissingExtensions) {
-      usingExclusionSet = true;
+      this._view._usingExclusionSet = true;
       for (var i = 0; i < this._view._exclusionSet.length;) {
         if (!this._view._exclusionSet[i].hasExtension)
           this._view._exclusionSet.splice(i, 1);
@@ -155,7 +157,7 @@ var gDownloadActionsWindow = {
       }
     }
     if (this._excludingPlugins) {
-      usingExclusionSet = true;
+      this._view._usingExclusionSet = true;
       for (i = 0; i < this._view._exclusionSet.length;) {
         if (this._view._exclusionSet[i].handledOnlyByPlugin)
           this._view._exclusionSet.splice(i, 1);
@@ -163,19 +165,10 @@ var gDownloadActionsWindow = {
           ++i        
       }      
     }
-    var oldRowCount = this._view._rowCount;
-    this._view._rowCount = 0;
-    this._tree.treeBoxObject.rowCountChanged(0, -oldRowCount);
-    if (usingExclusionSet) {
-      this._view._usingExclusionSet = true;
-      this._view._rowCount = this._view._exclusionSet.length;
-    }
-    else {
-      this._view._usingExclusionSet = false;
-      this._view._rowCount = this._view._filtered ? this._view._filterSet.length 
-                                                  : this._actions.length;
-    }
-    this._tree.treeBoxObject.rowCountChanged(0, this._view._rowCount);
+
+    return this._view._usingExclusionSet ? this._view._exclusionSet.length 
+                                         : this._view._filtered ? this._view._filterSet.length 
+                                                                : this._actions.length;
   },
   
   _loadPluginData: function ()
@@ -507,15 +500,10 @@ var gDownloadActionsWindow = {
     if (mimeDSDirty && 
         this._mimeDS instanceof Components.interfaces.nsIRDFRemoteDataSource)
       this._mimeDS.Flush();
-        
-    var oldCount = this._view.rowCount;
-    this._view._rowCount = 0;
-    this._tree.treeBoxObject.rowCountChanged(0, -oldCount);
-
+    
     // Just reload the list to make sure deletions are respected
     this._loadView();
-    this._updateExclusions();    
-    this._tree.treeBoxObject.rowCountChanged(0, this._view.rowCount);
+    this._updateRowCount(this._updateExclusions());
 
     selection.select(lastSelected);
   },
@@ -756,14 +744,11 @@ var gDownloadActionsWindow = {
     // Clear the Filter and the Tree Display
     document.getElementById("filter").value = "";
     this._view._filtered = false;
-    this._view._rowCount = 0;
-    this._tree.treeBoxObject.rowCountChanged(0, -this._view._filterSet.length);
     this._view._filterSet = [];
 
     // Just reload the list to make sure deletions are respected
     this._loadView();
-    this._updateExclusions();
-    this._tree.treeBoxObject.rowCountChanged(0, this._view.rowCount);
+    this._updateRowCount(this._updateExclusions());
 
     // Restore selection
     this._view.selection.clearSelection();
@@ -835,12 +820,7 @@ var gDownloadActionsWindow = {
       }
 
       // Clear the display
-      var oldCount = view._rowCount;
-      view._rowCount = 0;
-      gDownloadActionsWindow._tree.treeBoxObject.rowCountChanged(0, -oldCount);
-      // Set up the filtered display
-      view._rowCount = view._filterSet.length;
-      gDownloadActionsWindow._tree.treeBoxObject.rowCountChanged(0, view.rowCount);
+      gDownloadActionsWindow._updateRowCount(view._filterSet.length);
       
       view.selection.select(0);
       document.getElementById("actionsIntro").value = gDownloadActionsWindow._bundle.getString("actionsFiltered");
