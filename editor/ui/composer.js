@@ -41,7 +41,7 @@ pref("editor.hrule.align",                  0);         // match types in edttyp
 pref("editor.table.maintain_structure", true);
 pref("editor.table.delete_key", 0);
 
-pref("editor.prettyprint_html", 1);
+pref("editor.prettyprint", true);
 
 pref("editor.throbber.url","chrome://editor/locale/editor.properties");
 
@@ -52,24 +52,4 @@ pref("editor.html_editor",                  "");
 pref("editor.use_image_editor",             0);
 pref("editor.image_editor",                 "");
 
-pref("editor.url_history.TITLE_0", "");
-pref("editor.url_history.TITLE_1", "");
-pref("editor.url_history.TITLE_2", "");
-pref("editor.url_history.TITLE_3", "");
-pref("editor.url_history.TITLE_4", "");
-pref("editor.url_history.TITLE_5", "");
-pref("editor.url_history.TITLE_6", "");
-pref("editor.url_history.TITLE_7", "");
-pref("editor.url_history.TITLE_8", "");
-pref("editor.url_history.TITLE_9", "");
-
-pref("editor.url_history.URL_0", "");
-pref("editor.url_history.URL_1", "");
-pref("editor.url_history.URL_2", "");
-pref("editor.url_history.URL_3", "");
-pref("editor.url_history.URL_4", "");
-pref("editor.url_history.URL_5", "");
-pref("editor.url_history.URL_6", "");
-pref("editor.url_history.URL_7", "");
-pref("editor.url_history.URL_8", "");
-pref("editor.url_history.URL_9", "");
+pref("editor.history.url_maximum", 10);
