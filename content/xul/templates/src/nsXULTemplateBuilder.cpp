@@ -262,7 +262,10 @@ nsXULTemplateBuilder::Refresh()
         }
     }
 
-    return Rebuild();
+    // XXXbsmedberg: it would be kinda nice to install an async nsIRDFXMLSink
+    // observer and call rebuild() once the load is complete. See bug 254600.
+
+    return NS_OK;
 }   
 
 NS_IMETHODIMP
