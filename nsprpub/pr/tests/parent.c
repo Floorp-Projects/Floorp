@@ -34,7 +34,7 @@ typedef struct Child
     PRProcessAttr *attr;
 } Child;
 
-static PrintUsage(void)
+static void PrintUsage(void)
 {
     PR_fprintf(PR_GetSpecialFD(PR_StandardError),
         "Usage: parent [-d] child [options]\n");
