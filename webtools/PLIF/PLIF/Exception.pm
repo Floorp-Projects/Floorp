@@ -465,7 +465,7 @@ sub handle {
 
 sub DESTROY {
     my $self = shift;
-    return $self->SUPER::DESTROY(@_) if $self->{'resolved'};
+    return if $self->{'resolved'};
     my $parts = 0x00;
     $parts |= 0x01 if scalar(@{$self->{'handlers'}});
     $parts |= 0x02 if defined($self->{'except'});
@@ -497,7 +497,7 @@ sub create {
 
 sub DESTROY {
     my $self = shift;
-    return $self->SUPER::DESTROY(@_) if $self->{'resolved'};
+    return if $self->{'resolved'};
     warn "Incorrectly used \"with\" operator at $self->{'filename'} line $self->{'line'}\n"; # XXX can't raise an exception in a destructor
 }
 
@@ -515,7 +515,7 @@ sub create {
 
 sub DESTROY {
     my $self = shift;
-    return $self->SUPER::DESTROY(@_) if $self->{'resolved'};
+    return if $self->{'resolved'};
     warn "Incorrectly used \"fallthrough\" function at $self->{'filename'} line $self->{'line'}\n"; # XXX can't raise an exception in a destructor
 }
 
