@@ -7,43 +7,29 @@
 /* outer frame */
   button 
     {
-      border              : 1px solid #CCCCCC;
+      border              : 1px solid #000000;
       -moz-border-radius  : 3px 2px 2px 3px;
       margin              : 1px 5px 2px 5px;
-    }
-
-  button:hover 
-    {
-      border              : 1px solid #000000;
-    }
-
-  button:hover:active
-    {
-      border              : 1px solid #000000;
+      background-color    : #CCCCCC;
     }
   
   button[disabled="true"],
   button[disabled="true"]:hover,
   button[disabled="true"]:active 
     {
-      border              : 1px solid #CCCCCC;
+      border              : 1px solid #999999;
+      color               : #999999;
     }
-    
+        
 /* internal frame */
   button > .internal-box 
     {
-      vertical-align      : center;
+      vertical-align      : middle;
       text-align          : center;
       border              : 1px outset #CCCCCC;
       padding             : 2px;
-      -moz-border-radius  : 3px 2px 2px 3px;
     }
     
-  button:hover > .internal-box
-    {
-      -moz-border-radius  : 0px;
-    }
-
   button:active > .internal-box 
     {
       border              : 1px inset #CCCCCC;
@@ -54,9 +40,8 @@
   button[disabled="true"]:hover > .internal-box,
   button[disabled="true"]:active > .internal-box 
     {
-      border              : 1px solid gray;
-      -moz-border-radius  : 3px 2px 2px 3px;
-      color               : gray;
+      border              : 1px outset #CCCCCC;
+      -moz-border-radius  : 0px;
       padding             : 2px;
     }
 
@@ -77,7 +62,7 @@
     {
       padding             : 2px 2px 0px 2px;
     }
-
+  
 /** Styles for "DEFAULT" buttons (usually 'OK' or equivalent in dialogs. 
  *  To activate, set 'default' attribute on button.
  **/
@@ -92,6 +77,11 @@
       behavior            : url(resource:/chrome/xulBindings.xml#buttonright);
       font-weight         : bold;
 	    list-style-image    : url("chrome://global/skin/return.gif");
+    }
+  
+  button[default][disabled="true"]
+    {
+      list-style-image    : url("chrome://global/skin/return-disabled.gif");
     }
     
 /** Styles for 'dialog' buttons (usually any command button in a dialog)
@@ -116,6 +106,16 @@
  *  editor's formatting toolbar or toolbars wanting a button similar to a command
  *  button but without an initial outset frame.
  **/ 
+  button.borderless 
+    {
+      border              : 1px solid #CCCCCC;
+    }
+  
+  button.borderless:hover
+    {
+      border              : 1px solid #000000;
+    }
+    
   button.borderless > .internal-box 
     {
       border              : 1px solid #CCCCCC;
@@ -184,11 +184,13 @@
   button.large-toolbar:active > .internal-box
     {
       border              : none;
+      vertical-align      : middle;
     }
     
   button.large-toolbar > .internal-box > .text-container 
     {
       display             : none;
+      text-align          : center;
     }
     
 /** Styles for the standard 'large' toolbar button, these buttons are used for
@@ -237,6 +239,7 @@
   button.key-toolbar[disabled="true"]:active > .internal-box
     {
       border              : none;
+      vertical-align      : middle;
     }
       
   button.key-toolbar > .internal-box,
@@ -250,6 +253,7 @@
   button.key-toolbar > .internal-box > .text-container 
     {
       padding-top         : 3px;
+      text-align          : center;
     }
 
 /** Styles for the less important toolbar buttons. These buttons are used for 
@@ -304,11 +308,50 @@
   button.toolbar:active > .internal-box
     {
       border              : none;
+      vertical-align      : middle;
     }
 
 /* text wrapper frame */
   button.toolbar > .internal-box > .text-container 
     {
       padding-top         : 3px;
+      text-align          : center;
     }
 
+/** Expanding Region Button **/
+
+/* outer frame */
+  button.expander
+    {
+      border              : none;
+      padding             : none;
+      margin              : 1px 5px 3px 1px;
+      background-color    : inherit;
+      list-style-image    : url("chrome://global/skin/closedtwisty.gif");
+    }
+    
+  button[open="true"].expander 
+    {
+      list-style-image    : url("chrome://global/skin/opentwisty.gif");
+    }
+    
+/* internal frame */
+  button.expander > .internal-box
+    {
+      border              : none;
+      background-color    : inherit;
+      padding             : none;
+      margin              : none;
+    }
+
+/* text frame */
+  button.expander > .internal-box > .text-container > text
+    {
+      color               : #0000FF;
+      text-decoration     : underline;
+    }
+    
+  button.expander:hover > .internal-box > .text-container > text
+    {
+      color               : #FF0000;
+    }

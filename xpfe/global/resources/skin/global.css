@@ -14,6 +14,8 @@
 @import url(chrome://global/skin/tree.css);
 @import url(chrome://global/skin/menubutton.css);
 @import url(chrome://global/skin/menulist.css);
+@import url(chrome://global/skin/colors.css);
+@import url(chrome://global/skin/textfield.css);
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to HTML */
 @namespace html url("http://www.w3.org/TR/REC-html40"); /* namespace for XUL elements */
@@ -37,15 +39,11 @@ window[wait-cursor] { cursor: wait !important; }
 /**
  * This is a special class of window used for dialogs
  */
-window.dialog { 
-  background-color: #CCCCCC;
-  /* There is a bug preventing this so this will not work property.
-  padding-left: 11px;
-  padding-right: 10px;
-  padding-top: 10px;
-  padding-bottom: 11px;
-  */
-}
+window.dialog 
+  { 
+    background-color      : #CCCCCC;
+    padding               : 5px;
+  }
 
 /**********************************
  * XUL widgets
@@ -1203,6 +1201,10 @@ tab:hover:active {
   text-decoration: none;
 }
 
+tabbox {
+  padding: 0px 2px 0px 2px;
+}
+
     /* top tabs */
 tabcontrol[align="vertical"] tabbox[align="horizontal"] tab { 
   border-bottom: none;
@@ -1245,12 +1247,19 @@ tabcontrol {
   border: none; 
 }
 
-deck.tabpanel, tabpanel {
+/* border on bottom only, no padding (used in search) */
+tabpanel.light {
+  border: none;
+  border-bottom: 1px outset #CCCCCC;
+  padding: 0px;
+}
+
+tabpanel {
   border-top: 1px solid white;
   border-bottom: 1px solid #666666;
   border-left: 1px solid white;
   border-right: 1px solid #666666;
-  padding: 5px;
+  padding: 0px;
 }
 
 /**********************************
@@ -1364,75 +1373,6 @@ html|label {
 	padding-bottom: 4px;
 	background-color: transparent;
 	white-space: nowrap;
-}
-
-html|textarea {
-  font-family: inherit;
-  font-size: inherit;
-  border-top: 1px solid #666666;
-  border-bottom: 1px solid white;
-  border-left: 1px solid #666666;
-  border-right: 1px solid white;
-  padding-top: 1px;
-  padding-bottom: 2px;
-  padding-left: 4px;
-  padding-right: 3px;
-  margin-top: 1px;
-  margin-bottom: 2px;
-  margin-left: 4px;
-  margin-right: 3px;
-  background-color: white;
-  color: black;
-  cursor: text;
-}
-
-html|textarea:active { cursor: text; }
-
-html|textarea:hover { cursor: text; }
-
-html|textarea:focus { cursor: text; }
-
-
-html|input[type=text] {
-  font-family: inherit;
-  font-size: inherit;
-  border-top: 1px solid #666666;
-  border-bottom: 1px solid white;
-  border-left: 1px solid #666666;
-  border-right: 1px solid white;
-  padding: 1px;
-  margin: 0px 3px 2px 4px;
-  background-color: white;
-  color: black;
-  min-height: 1.6em;
-  cursor: text;
-}
-
-html|input[type=text]:active { cursor: text; }
-
-html|input[type=text]:hover { cursor: text; }
-
-html|input[type=text]:focus { cursor: text; }
-
-html|input[type=text][disabled] { color: #999999; }
-
-
-html|input[type=password] {
-  border-top: 1px solid #666666;
-  border-bottom: 1px solid white;
-  border-left: 1px solid #666666;
-  border-right: 1px solid white;
-  padding-top: 3px;
-  padding-bottom: 2px;
-  padding-left: 4px;
-  padding-right: 3px;
-  margin-top: 1px;
-  margin-bottom: 2px;
-  margin-left: 4px;
-  margin-right: 3px;
-  background-color: white;
-  color: black;
-  min-height: 1.75em;
 }
 
 html|input {
@@ -1836,6 +1776,20 @@ separator[type="groove"][orient="vertical"] {
   margin-right: 0.4em;
 }
 
+separator.groove-thin {
+  border-top: 2px groove #CCCCCC;
+  height: 0px;
+}
+
+separator.groove-thin {
+  border-left: 2px groove #CCCCCC;
+}
+
+/* NEW WIDGET LANDING: <text> rules */
+text.label {
+  margin: 1px 5px 2px 5px;
+}
+
 html {
   margin: 5px;
   cursor: default;
@@ -1845,31 +1799,22 @@ html.header {
   font-weight: bold;
 }
 
-.inset {
-  border: 1px inset #CCCCCC;
-}
-
-/* NEW WIDGET LANDING: <box> rules */
-box[autostretch="never"], box[autostretch="never"][orient="horizontal"] {
-  vertical-align: middle;
-}
-
-/* NEW WIDGET LANDING: <text> rules */
-text.label {
-  margin: 1px 5px 2px 5px;
-}
-
 progressmeter {
   margin: 0px 4px 0px 4px;
 }
 
 /* NEW WIDGETS <box> formatting */
-box[autostretch="never"] {
+box[autostretch="never"][valign="center"] {
   vertical-align: middle;
 }
 
-box[autostretch="never"][orient="vertical"] {
+box[autostretch="never"][orient="vertical"][halign="center"] {
   text-align: center;
 }
+
+text[disabled="true"] 
+  {
+    color                 : #999999;
+  }
 
 

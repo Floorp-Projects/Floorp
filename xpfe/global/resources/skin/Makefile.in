@@ -31,6 +31,8 @@ DIRS		= unix
 EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/tasksOverlay.css \
 		$(srcdir)/global.css \
+		$(srcdir)/colors.css \
+		$(srcdir)/textfield.css \
 		$(srcdir)/button.css \
 		$(srcdir)/checkbox.css \
 		$(srcdir)/menubutton.css \
@@ -78,6 +80,7 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/message-icon.gif \
 		$(srcdir)/question-icon.gif \
 		$(srcdir)/return.gif \
+		$(srcdir)/return-disabled.gif \
 		$(srcdir)/print.gif \
 		$(srcdir)/stop.gif \
 		$(srcdir)/grippy-horizontal-after.gif \
@@ -130,7 +133,9 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/sortAscending.gif \
 		$(srcdir)/sortDescending.gif \
 		$(srcdir)/check-check.gif \
+		$(srcdir)/check-check-disabled.gif \
 		$(srcdir)/check-radio.gif \
+		$(srcdir)/check-radio-disabled.gif \
 		$(NULL)
 
 EXPORT_CHROME	= $(srcdir)/xul.css \

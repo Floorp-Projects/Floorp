@@ -1,78 +1,79 @@
 /* stylesheet for XUL <radio> element */
 
 /* default radio for dialogs */
-radio {
-  margin: 3px 5px 3px 5px;
-}
+/* outer frame */
+  radio 
+    {
+      margin: 3px 5px 3px 5px;
+    }
 
-radio > .internal-box > .checkmark-box {
-  border: 1px solid #CCCCCC;
-  -moz-border-radius: 50%;
-}
-radio > .internal-box > .checkmark-box > image {
-  border: 1px outset #CCCCCC;
-  width: 8px;
-  height: 8px;
-  -moz-border-radius: 50%;
-}
 
-radio[checked="true"] > .internal-box > .checkmark-box > image {
-  list-style-image: url(chrome://global/skin/check-radio.gif);
-}
+/* checkmark outer frame */
+  radio > .internal-box > .checkmark-box 
+    {
+      border: 1px solid #000000;
+      -moz-border-radius: 50%;
+      margin-top: 2px;
+    }
 
-radio[value] > .internal-box > html,
-radio.iconic > .internal-box > .icon {
-  margin-left: 4px;
-  padding: 0px;
-}
+  radio[disabled="true"] > .internal-box > .checkmark-box,
+  radio[disabled="true"]:hover > .internal-box > .checkmark-box 
+    {
+      border: 1px solid #999999;
+    }
+    
+/* checkmark inner frame */
+  radio > .internal-box > .checkmark-box > image 
+    {
+      border: 1px outset #CCCCCC;
+      width: 8px;
+      height: 8px;
+      -moz-border-radius: 50%;
+    }
 
-radio.iconic > .internal-box > html {
-  margin-left: 4px;
-}
+  radio[checked="true"] > .internal-box > .checkmark-box > image 
+    {
+      list-style-image: url(chrome://global/skin/check-radio.gif);
+    }
+  
+  radio[checked="true"][disabled="true"] > .internal-box > .checkmark-box > image
+    {
+      list-style-image: url(chrome://global/skin/check-radio-disabled.gif);
+    }
 
-radio:hover > .internal-box > .checkmark-box {
-  border: 1px solid #000000;
-}
+  radio:hover:active > .internal-box > .checkmark-box > image 
+    {
+      border: 1px inset #CCCCCC;
+    }
 
-radio:hover:active > .internal-box > .checkmark-box > image {
-  border: 1px inset #CCCCCC;
-}
+  radio[disabled="true"] > .internal-box > .checkmark-box > image,
+  radio[disabled="true"]:active > .internal-box > .checkmark-box > image 
+    {
+      border: 1px outset #CCCCCC;
+    }
 
-/* radio for trees/lists */
-radio.tree {
-  margin: 1px 5px 1px 5px;
-}
+/* text/icon frames */
+  radio[value] > .internal-box > html,
+  radio.iconic > .internal-box > .icon 
+    {
+      margin: 0px 0px 0px 4px;
+      padding: 1px;
+    }
 
-radio.tree > .internal-box > .checkmark-box {
-  border: 1px solid #000000;
-  background-color: #CCCCCC;
-}
-
-radio.tree > .internal-box > .checkmark-box > image {
-  border: 1px solid inherit;
-  width: 8px;
-  height: 8px;
-}
-
-radio.tree[checked="true"] > .checkmark-box > image {
-  list-style-image: url(chrome://global/skin/check-radio.gif);
-}
-
-radio.tree:hover:active > .internal-box > .checkmark-box > image {
-  border: 1px solid inherit;
-}
-
-/* disabled radioes */
-radio[disabled="true"] > .internal-box > .checkmark-box > image,
-radio[disabled="true"]:active > .internal-box > .checkmark-box > image {
-  border: 1px solid gray;
-}
-
-radio[disabled="true"] > .internal-box > .checkmark-box,
-radio[disabled="true"]:hover > .internal-box > .checkmark-box {
-  border: 1px solid #CCCCCC;
-}
-
-radio[disabled="true"][value] > .internal-box > html {
-  color: gray;
-}
+  radio.iconic > .internal-box > html 
+    {
+      margin-left: 4px;
+    }
+    
+  radio[disabled="true"][value] > .internal-box > html 
+    {
+      color: #999999;
+    }
+  
+  radio:focus > .internal-box > html
+    { 
+      border              : 1px dotted black;
+      padding             : 0px;
+    }
+    
+    

@@ -1,85 +1,78 @@
 /* stylesheet for XUL <checkbox> element */
 
 /* default checkbox for dialogs */
-checkbox {
-  margin: 3px 5px 3px 5px;
-}
 
-checkbox > .internal-box > .checkmark-box {
-  border: 1px solid #CCCCCC;
-  -moz-border-radius: 3px 2px 2px 3px;
-}
-checkbox > .internal-box > .checkmark-box > image {
-  border: 1px outset #CCCCCC;
-  width: 8px;
-  height: 8px;
-  -moz-border-radius: 3px 2px 2px 3px;
-}
+/* outer checkbox frame */
+  checkbox 
+    {
+      margin: 3px 5px 3px 5px;
+    }
 
-checkbox[checked="true"] > .internal-box > .checkmark-box > image {
-  list-style-image: url(chrome://global/skin/check-check.gif);
-}
+/* checkmark outer frame */
+  checkbox > .internal-box > .checkmark-box 
+    {
+      border: 1px solid #000000;
+      -moz-border-radius: 3px 2px 2px 3px;
+      background-color: #CCCCCC;
+      margin-top: 2px;
+    }
 
-checkbox[value] > .internal-box > html,
-checkbox.iconic > .internal-box > .icon {
-  margin-left: 4px;
-  padding: 0px;
-}
+  checkbox[disabled="true"] > .internal-box > .checkmark-box,
+  checkbox[disabled="true"]:hover > .internal-box > .checkmark-box 
+    {
+      border: 1px solid #999999;
+    }
+    
+/* checkmark inner frame */
+  checkbox > .internal-box > .checkmark-box > image 
+    {
+      border: 1px outset #CCCCCC;
+      width: 8px;
+      height: 8px;
+    }
+  
+  checkbox[checked="true"] > .internal-box > .checkmark-box > image 
+    {
+      list-style-image: url(chrome://global/skin/check-check.gif);
+    }
+    
+  checkbox[checked="true"][disabled="true"] > .internal-box > .checkmark-box > image
+    {
+      list-style-image: url(chrome://global/skin/check-check-disabled.gif);
+    }  
 
-checkbox.iconic > .internal-box > html {
-  margin-left: 4px;
-}
+  checkbox:hover:active > .internal-box > .checkmark-box > image 
+    {
+      border: 1px inset #CCCCCC;
+    }
+  
+  checkbox[disabled="true"] > .internal-box > .checkmark-box > image,
+  checkbox[disabled="true"]:active > .internal-box > .checkmark-box > image 
+    {
+      border: 1px outset #CCCCCC;
+      -moz-border-radius: 0px;
+    }
 
-checkbox:hover > .internal-box > .checkmark-box {
-  border: 1px solid #000000;
-}
+/* checkmark label/icon frame */
+  checkbox[value] > .internal-box > html,
+  checkbox.iconic > .internal-box > .icon 
+    {
+      margin: 0px 0px 0px 4px;
+      padding: 1px;
+    }
 
-checkbox:hover > .internal-box > .checkmark-box > image {
-  -moz-border-radius: 0px;
-}
+  checkbox.iconic > .internal-box > html 
+    {
+      margin-left: 4px;
+    }
 
-checkbox:hover:active > .internal-box > .checkmark-box > image {
-  border: 1px inset #CCCCCC;
-}
-
-/* checkbox for trees/lists */
-checkbox.tree {
-  margin: 1px 5px 1px 5px;
-}
-
-checkbox.tree > .internal-box > .checkmark-box {
-  border: 1px solid #000000;
-  background-color: #CCCCCC;
-  -moz-border-radius: 3px 2px 2px 3px;
-}
-
-checkbox.tree > .internal-box > .checkmark-box > image {
-  border: 1px solid inherit;
-  width: 8px;
-  height: 8px;
-  -moz-border-radius: 0px;
-}
-
-checkbox.tree[checked="true"] > .checkmark-box > image {
-  list-style-image: url(chrome://global/skin/check-check.gif);
-}
-
-checkbox.tree:hover:active > .internal-box > .checkmark-box > image {
-  border: 1px solid inherit;
-}
-
-/* disabled checkboxes */
-checkbox[disabled="true"] > .internal-box > .checkmark-box > image,
-checkbox[disabled="true"]:active > .internal-box > .checkmark-box > image {
-  border: 1px solid gray;
-  -moz-border-radius: 3px 2px 2px 3px;
-}
-
-checkbox[disabled="true"] > .internal-box > .checkmark-box,
-checkbox[disabled="true"]:hover > .internal-box > .checkmark-box {
-  border: 1px solid #CCCCCC;
-}
-
-checkbox[disabled="true"][value] > .internal-box > html {
-  color: gray;
-}
+  checkbox[disabled="true"][value] > .internal-box > html 
+    {
+      color: #999999;
+    }
+    
+  checkbox:focus > .internal-box > html 
+    {
+      border              : 1px dotted black;
+      padding             : 0px;
+    }
