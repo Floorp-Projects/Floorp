@@ -22,7 +22,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = base content document forms style table #tests
+DIRS = base content document forms style table tests
 
 include $(topsrcdir)/config/config.mk
 
