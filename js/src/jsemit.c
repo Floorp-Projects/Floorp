@@ -1299,7 +1299,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     return JS_FALSE;
                 pn3->pn_op = op;
                 if (pn3->pn_slot >= 0) {
-                    if (pn2->pn_attrs & JSPROP_READONLY)
+                    if (pn3->pn_attrs & JSPROP_READONLY)
                         op = JSOP_GETVAR;
                     atomIndex = (jsatomid) pn3->pn_slot;
                     EMIT_ATOM_INDEX_OP(op, atomIndex);
