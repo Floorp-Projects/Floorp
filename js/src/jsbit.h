@@ -65,23 +65,23 @@ extern JS_PUBLIC_API(JSIntn) JS_FloorLog2(JSUint32 i);
 ** Macro version of JS_CeilingLog2: Compute the log of the least power of
 ** 2 greater than or equal to _n. The result is returned in _log2.
 */
-#define JS_CEILING_LOG2(_log2,_n)   \
-  JS_BEGIN_MACRO                    \
-    JSUint32 j_ = (JSUint32)(_n); 	\
-    (_log2) = 0;                    \
-    if ((j_) & ((j_)-1))            \
-	(_log2) += 1;               \
-    if ((j_) >> 16)                 \
-	(_log2) += 16, (j_) >>= 16; \
-    if ((j_) >> 8)                  \
-	(_log2) += 8, (j_) >>= 8;   \
-    if ((j_) >> 4)                  \
-	(_log2) += 4, (j_) >>= 4;   \
-    if ((j_) >> 2)                  \
-	(_log2) += 2, (j_) >>= 2;   \
-    if ((j_) >> 1)                  \
-	(_log2) += 1;               \
-  JS_END_MACRO
+#define JS_CEILING_LOG2(_log2,_n)                                             \
+    JS_BEGIN_MACRO                                                            \
+        JSUint32 j_ = (JSUint32)(_n);                                         \
+        (_log2) = 0;                                                          \
+        if ((j_) & ((j_)-1))                                                  \
+            (_log2) += 1;                                                     \
+        if ((j_) >> 16)                                                       \
+            (_log2) += 16, (j_) >>= 16;                                       \
+        if ((j_) >> 8)                                                        \
+            (_log2) += 8, (j_) >>= 8;                                         \
+        if ((j_) >> 4)                                                        \
+            (_log2) += 4, (j_) >>= 4;                                         \
+        if ((j_) >> 2)                                                        \
+            (_log2) += 2, (j_) >>= 2;                                         \
+        if ((j_) >> 1)                                                        \
+            (_log2) += 1;                                                     \
+    JS_END_MACRO
 
 /*
 ** Macro version of JS_FloorLog2: Compute the log of the greatest power of
@@ -89,21 +89,21 @@ extern JS_PUBLIC_API(JSIntn) JS_FloorLog2(JSUint32 i);
 **
 ** This is equivalent to finding the highest set bit in the word.
 */
-#define JS_FLOOR_LOG2(_log2,_n)   \
-  JS_BEGIN_MACRO                    \
-    JSUint32 j_ = (JSUint32)(_n); 	\
-    (_log2) = 0;                    \
-    if ((j_) >> 16)                 \
-	(_log2) += 16, (j_) >>= 16; \
-    if ((j_) >> 8)                  \
-	(_log2) += 8, (j_) >>= 8;   \
-    if ((j_) >> 4)                  \
-	(_log2) += 4, (j_) >>= 4;   \
-    if ((j_) >> 2)                  \
-	(_log2) += 2, (j_) >>= 2;   \
-    if ((j_) >> 1)                  \
-	(_log2) += 1;               \
-  JS_END_MACRO
+#define JS_FLOOR_LOG2(_log2,_n)                                               \
+    JS_BEGIN_MACRO                                                            \
+        JSUint32 j_ = (JSUint32)(_n);                                         \
+        (_log2) = 0;                                                          \
+        if ((j_) >> 16)                                                       \
+            (_log2) += 16, (j_) >>= 16;                                       \
+        if ((j_) >> 8)                                                        \
+            (_log2) += 8, (j_) >>= 8;                                         \
+        if ((j_) >> 4)                                                        \
+            (_log2) += 4, (j_) >>= 4;                                         \
+        if ((j_) >> 2)                                                        \
+            (_log2) += 2, (j_) >>= 2;                                         \
+        if ((j_) >> 1)                                                        \
+            (_log2) += 1;                                                     \
+    JS_END_MACRO
 
 JS_END_EXTERN_C
 #endif /* jsbit_h___ */
