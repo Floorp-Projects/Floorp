@@ -197,7 +197,14 @@ interface nsIHTMLEditor : nsISupports
   void insertHTML(in AString aInputString);
 
 
-  /** Rebuild the entire document from source HTML
+  /** 
+    * Paste the text in the OS clipboard at the cursor position, replacing
+    * the selected text (if any), but strip out any HTML styles and formatting
+    */
+  void pasteNoFormatting(in long aSelectionType);
+
+  /** 
+   *  Rebuild the entire document from source HTML
    *  Needed to be able to edit HEAD and other outside-of-BODY content
    *
    *  @param aSourceString   HTML source string of the entire new document
@@ -217,7 +224,8 @@ interface nsIHTMLEditor : nsISupports
                              in AString aCharset);
 
 
-  /** Insert an element, which may have child nodes, at the selection
+  /** 
+    * Insert an element, which may have child nodes, at the selection
     * Used primarily to insert a new element for various insert element dialogs,
     *   but it enforces the HTML 4.0 DTD "CanContain" rules, so it should
     *   be useful for other elements.
@@ -238,13 +246,15 @@ interface nsIHTMLEditor : nsISupports
   /* ------------ Selection manipulation -------------- */
   /* Should these be moved to nsISelection? */
   
-  /** Set the selection at the suppled element
+  /** 
+    * Set the selection at the suppled element
     *
     * @param aElement   An element in the document
     */
   void selectElement(in nsIDOMElement aElement);
 
-  /** Create a collapsed selection just after aElement
+  /** 
+    * Create a collapsed selection just after aElement
     * 
     * XXX could we parameterize SelectElement(before/select/after>?
     *
@@ -363,7 +373,8 @@ interface nsIHTMLEditor : nsISupports
    */
   void  align(in AString aAlign);
 
-  /** Return the input node or a parent matching the given aTagName,
+  /** 
+    * Return the input node or a parent matching the given aTagName,
     *   starting the search at the supplied node.
     * An example of use is for testing if a node is in a table cell
     *   given a selection anchor node.
@@ -385,7 +396,8 @@ interface nsIHTMLEditor : nsISupports
   nsIDOMElement getElementOrParentByTagName(in AString aTagName,
                                             in nsIDOMNode aNode);
 
-  /** Return an element only if it is the only node selected,
+  /** 
+    * Return an element only if it is the only node selected,
     *    such as an image, horizontal rule, etc.
     * The exception is a link, which is more like a text attribute:
     *    The Anchor tag is returned if the selection is within the textnode(s)
@@ -405,15 +417,18 @@ interface nsIHTMLEditor : nsISupports
     */
   nsIDOMElement getSelectedElement(in AString aTagName);
 
-  /** Output the contents of the <HEAD> section as text/HTML format
+  /** 
+    * Output the contents of the <HEAD> section as text/HTML format
     */
   AString getHeadContentsAsHTML();
 
-  /** Replace all children of <HEAD> with string of HTML source
+  /** 
+    * Replace all children of <HEAD> with string of HTML source
     */
   void replaceHeadContentsWithHTML(in AString aSourceToInsert);
 
-  /** Return a new element with default attribute values
+  /** 
+    * Return a new element with default attribute values
     * 
     * This does not rely on the selection, and is not sensitive to context.
     * 
@@ -431,20 +446,23 @@ interface nsIHTMLEditor : nsISupports
     */
   nsIDOMElement createElementWithDefaults(in AString aTagName);
 
-  /** Insert an link element as the parent of the current selection
+  /** 
+    * Insert an link element as the parent of the current selection
     *
     * @param aElement   An "A" element with a non-empty "href" attribute
     */
   void insertLinkAroundSelection(in nsIDOMElement aAnchorElement);
 
-  /** Set the value of the "bgcolor" attribute on the document's <body> element
+  /** 
+    * Set the value of the "bgcolor" attribute on the document's <body> element
     *
     * @param aColor  The HTML color string, such as "#ffccff" or "yellow"
     */
   void setBackgroundColor(in AString aColor);
 
 
-  /** Set an attribute on the document's <body> element
+  /** 
+    * Set an attribute on the document's <body> element
     *    such as text, link, background colors
     *
     * 8/31/00 THIS ISN'T BEING USED? SHOULD WE DROP IT?
@@ -454,7 +472,8 @@ interface nsIHTMLEditor : nsISupports
     */
   void setBodyAttribute(in AString aAttr, in AString aValue);
   
-  /** XXX Used to suppress spurious drag/drop events to workaround bug 50703
+  /** 
+    * XXX Used to suppress spurious drag/drop events to workaround bug 50703
     * Don't use this method! It will go away after first release!
     */
   void ignoreSpuriousDragEvent(in boolean aIgnoreSpuriousDragEvent);
@@ -468,7 +487,8 @@ interface nsIHTMLEditor : nsISupports
    */
   nsISupportsArray getLinkedObjects();
 
-  /** A boolean which is true is the HTMLEditor has been instantiated
+  /** 
+    * A boolean which is true is the HTMLEditor has been instantiated
     * with CSS knowledge and if the CSS pref is currently checked
     *
     * @return    true if CSS handled and enabled

@@ -358,6 +358,7 @@ function goUpdateCommandState(command)
    || command == "cmd_cut"
    || command == "cmd_copy"
    || command == "cmd_paste"
+   || command == "cmd_pasteNoFormatting"
    || command == "cmd_pasteQuote"
    || command == "cmd_delete"
    || command == "cmd_selectAll"
@@ -438,7 +439,7 @@ function goUpdateComposerMenuItems(commandset)
   
   for (var i = 0; i < commandset.childNodes.length; i++)
   {
-    var commandID = commandset.childNodes[i].getAttribute("id");
+    var commandID = commandset.childNodes[i].id;
     if (commandID)
     {
       goUpdateCommand(commandID);  // enable or disable

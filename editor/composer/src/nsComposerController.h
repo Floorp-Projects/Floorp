@@ -52,7 +52,7 @@
 #include "nsWeakPtr.h"
 
 // the editor controller is used for composer only (and other HTML compose
-// areas). The refCon that gets passed to its commands is an nsIEditorShell.
+// areas). The refCon that gets passed to its commands is an nsIEditor.
 
 class nsComposerController : public nsIController,
                              public nsICommandController,

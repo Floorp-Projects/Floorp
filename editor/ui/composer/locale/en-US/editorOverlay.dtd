@@ -78,6 +78,8 @@
 <!-- Edit menu items -->
 <!ENTITY editMenu.label "Edit">
 <!ENTITY editmenu.accesskey "e">
+<!ENTITY pasteNoFormatting.label "Paste Without Formatting">
+<!ENTITY pasteNoFormatting.accesskey "W">
 <!ENTITY pasteAs.label "Paste As">
 <!ENTITY pasteAs.accesskey "a">
 <!ENTITY publishSettings.label "Publishing Site Settings...">

@@ -1402,6 +1402,14 @@ NS_IMETHODIMP nsHTMLEditor::Paste(PRInt32 aSelectionType)
   return rv;
 }
 
+// 
+// HTML PasteNoFormatting. Ignore any HTML styles and formating in paste source
+//
+NS_IMETHODIMP nsHTMLEditor::PasteNoFormatting(PRInt32 aSelectionType)
+{
+  ///XXX Joe Francis will write this part: bug 64647
+  return Paste(aSelectionType);
+}
 
 NS_IMETHODIMP nsHTMLEditor::CanPaste(PRInt32 aSelectionType, PRBool *aCanPaste)
 {
