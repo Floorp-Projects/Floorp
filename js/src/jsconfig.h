@@ -94,6 +94,7 @@
 #define JS_HAS_UNEVAL           0       /* has uneval() top-level function */
 #define JS_HAS_CONST            0       /* has JS2 const as alternative var */
 #define JS_HAS_FUN_EXPR_STMT    0       /* has function expression statement */
+#define JS_HAS_LVALUE_RETURN    0       /* has o.item(i) = j; for native item */
 
 #elif JS_VERSION == 110
 
@@ -150,6 +151,7 @@
 #define JS_HAS_UNEVAL           0       /* has uneval() top-level function */
 #define JS_HAS_CONST            0       /* has JS2 const as alternative var */
 #define JS_HAS_FUN_EXPR_STMT    0       /* has function expression statement */
+#define JS_HAS_LVALUE_RETURN    0       /* has o.item(i) = j; for native item */
 
 #elif JS_VERSION == 120
 
@@ -206,6 +208,7 @@
 #define JS_HAS_UNEVAL           0       /* has uneval() top-level function */
 #define JS_HAS_CONST            0       /* has JS2 const as alternative var */
 #define JS_HAS_FUN_EXPR_STMT    0       /* has function expression statement */
+#define JS_HAS_LVALUE_RETURN    0       /* has o.item(i) = j; for native item */
 
 #elif JS_VERSION == 130
 
@@ -262,6 +265,7 @@
 #define JS_HAS_UNEVAL           0       /* has uneval() top-level function */
 #define JS_HAS_CONST            0       /* has JS2 const as alternative var */
 #define JS_HAS_FUN_EXPR_STMT    0       /* has function expression statement */
+#define JS_HAS_LVALUE_RETURN    0       /* has o.item(i) = j; for native item */
 
 #elif JS_VERSION == 140
 
@@ -318,6 +322,7 @@
 #define JS_HAS_UNEVAL           0       /* has uneval() top-level function */
 #define JS_HAS_CONST            0       /* has JS2 const as alternative var */
 #define JS_HAS_FUN_EXPR_STMT    0       /* has function expression statement */
+#define JS_HAS_LVALUE_RETURN    0       /* has o.item(i) = j; for native item */
 
 #elif JS_VERSION == 150
 
@@ -374,6 +379,7 @@
 #define JS_HAS_UNEVAL           1       /* has uneval() top-level function */
 #define JS_HAS_CONST            1       /* has JS2 const as alternative var */
 #define JS_HAS_FUN_EXPR_STMT    1       /* has function expression statement */
+#define JS_HAS_LVALUE_RETURN    1       /* has o.item(i) = j; for native item */
 
 #else
 

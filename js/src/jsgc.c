@@ -917,8 +917,10 @@ restart:
 	if (acx->throwing && JSVAL_IS_GCTHING(acx->exception))
 	    GC_MARK(cx, JSVAL_TO_GCTHING(acx->exception), "exception", NULL);
 #endif
+#if JS_HAS_LVALUE_RETURN
         if (acx->rval2set && JSVAL_IS_GCTHING(acx->rval2))
             GC_MARK(cx, JSVAL_TO_GCTHING(acx->rval2), "rval2", NULL);
+#endif
     }
 
     /*

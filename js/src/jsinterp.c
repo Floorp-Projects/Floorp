@@ -61,6 +61,10 @@
 #include "jsscript.h"
 #include "jsstr.h"
 
+#if JS_HAS_JIT
+#include "jsjit.h"
+#endif
+
 void
 js_FlushPropertyCache(JSContext *cx)
 {
@@ -500,6 +504,12 @@ ComputeThis(JSContext *cx, JSObject *thisp, JSStackFrame *fp)
     return JS_TRUE;
 }
 
+#ifdef DEBUG
+# define METER_INVOCATION(rt, which) JS_ATOMIC_ADDREF(&(rt)->which, 1)
+#else
+# define METER_INVOCATION(rt, which) ((void)0)
+#endif
+
 /*
  * Find a function reference and its 'this' object implicit first parameter
  * under argc arguments on cx's stack, and call the function.  Push missing
@@ -710,13 +720,16 @@ have_fun:
 
     /* Call the function, either a native method or an interpreted script. */
     if (native) {
+#if JS_HAS_LVALUE_RETURN
         /* Set by JS_SetCallReturnValue2, used to return reference types. */
         cx->rval2set = JS_FALSE;
+#endif
 
         /* If native, use caller varobj and scopeChain for eval. */
         frame.varobj = fp->varobj;
         frame.scopeChain = fp->scopeChain;
         ok = native(cx, frame.thisp, argc, frame.argv, &frame.rval);
+        METER_INVOCATION(cx->runtime, nativeCalls);
     } else if (script) {
         /* Use parent scope so js_GetCallObject can find the right "Call". */
         frame.scopeChain = parent;
@@ -1119,10 +1132,6 @@ js_Interpret(JSContext *cx, jsval *result)
 #endif
 #if JS_HAS_GETTER_SETTER
     JSPropertyOp getter, setter;
-#endif
-#if JS_HAS_EXCEPTIONS
-    JSTryNote *tn;
-    ptrdiff_t offset;
 #endif
 
     if (cx->interpLevel == MAX_INTERP_LEVEL) {
@@ -2216,6 +2225,7 @@ js_Interpret(JSContext *cx, jsval *result)
                 goto out;
             }
             obj = JSVAL_TO_OBJECT(rval);
+            METER_INVOCATION(rt, constructs);
             break;
 
           case JSOP_DELNAME:
@@ -2443,6 +2453,13 @@ js_Interpret(JSContext *cx, jsval *result)
                     return JS_FALSE;
                 }
 
+#if JS_HAS_JIT
+                /* ZZZbe should do this only if interpreted often enough. */
+                ok = jsjit_Compile(cx, fun);
+                if (!ok)
+                    goto out;
+#endif
+
                 /* Compute the number of stack slots needed for fun. */
                 nframeslots = (sizeof(JSInlineFrame) + sizeof(jsval) - 1)
                               / sizeof(jsval);
@@ -2508,6 +2525,7 @@ js_Interpret(JSContext *cx, jsval *result)
                 pc = script->code;
                 endpc = pc + script->length;
                 inlineCallCount++;
+                METER_INVOCATION(rt, inlineCalls);
                 continue;
 
               bad_inline_call:
@@ -2521,6 +2539,8 @@ js_Interpret(JSContext *cx, jsval *result)
             RESTORE_SP(fp);
             if (!ok)
                 goto out;
+            METER_INVOCATION(rt, nonInlineCalls);
+#if JS_HAS_LVALUE_RETURN
             if (cx->rval2set) {
                 /*
                  * Sneaky: use the stack depth we didn't claim in our budget,
@@ -2541,9 +2561,11 @@ js_Interpret(JSContext *cx, jsval *result)
                 ELEMENT_OP(CACHED_GET(OBJ_GET_PROPERTY(cx, obj, id, &rval)));
                 PUSH_OPND(rval);
             }
+#endif
             obj = NULL;
             break;
 
+#if JS_HAS_LVALUE_RETURN
           case JSOP_SETCALL:
             argc = GET_ARGC(pc);
             SAVE_SP(fp);
@@ -2561,6 +2583,7 @@ js_Interpret(JSContext *cx, jsval *result)
             cx->rval2set = JS_FALSE;
             obj = NULL;
             break;
+#endif
 
           case JSOP_NAME:
             atom = GET_ATOM(cx, script, pc);
@@ -2662,7 +2685,7 @@ js_Interpret(JSContext *cx, jsval *result)
 
             /*
              * ECMAv2 forbids conversion of discriminant, so we will skip to
-             * the default case if the discriminant isn't an int jsval.
+             * the default case if the discriminant isn't already an int jsval.
              * (This opcode is emitted only for dense jsint-domain switches.)
              */
             if (cx->version == JSVERSION_DEFAULT ||
@@ -2685,7 +2708,7 @@ js_Interpret(JSContext *cx, jsval *result)
             high = GET_JUMP_OFFSET(pc2);
 
             i -= low;
-            if ((jsuint)i <= (jsuint)(high - low)) {
+            if ((jsuint)i < (jsuint)(high - low + 1)) {
                 pc2 += JUMP_OFFSET_LEN + JUMP_OFFSET_LEN * i;
                 off = (jsint) GET_JUMP_OFFSET(pc2);
                 if (off)
@@ -3323,6 +3346,11 @@ js_Interpret(JSContext *cx, jsval *result)
 #endif /* JS_HAS_INITIALIZERS */
 
 #if JS_HAS_EXCEPTIONS
+          /* No-ops for ease of decompilation and jit'ing. */
+          case JSOP_TRY:
+          case JSOP_FINALLY:
+            break;
+
           /* Reset the stack to the given depth. */
           case JSOP_SETSP:
             i = (jsint) GET_ATOM_INDEX(pc);
@@ -3501,18 +3529,12 @@ out:
         /*
          * Look for a try block within this frame that can catch the exception.
          */
-        tn = script->trynotes;
-        if (tn) {
-            offset = PTRDIFF(pc, script->main, jsbytecode);
-            while (JS_UPTRDIFF(offset, tn->start) >= (jsuword)tn->length)
-                tn++;
-            if (tn->catchStart) {
-                pc = script->main + tn->catchStart;
-                len = 0;
-                cx->throwing = JS_FALSE; /* caught */
-                ok = JS_TRUE;
-                goto advance_pc;
-            }
+        JSSCRIPT_FIND_CATCH_START(script, pc, pc);
+        if (pc) {
+            len = 0;
+            cx->throwing = JS_FALSE;    /* caught */
+            ok = JS_TRUE;
+            goto advance_pc;
         }
     }
 no_catch:
