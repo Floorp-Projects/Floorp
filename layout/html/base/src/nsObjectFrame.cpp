@@ -775,11 +775,12 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 
               //stream in the object source if there is one...
 
-              if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src, src)) {
+              if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src, src) ||
+		  NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::data, src)) 
+	      {
                 nsIURLGroup* group = nsnull;
-                if (nsnull != baseURL) {
-                  baseURL->GetURLGroup(&group);
-                }
+                if (nsnull != baseURL) 
+		    baseURL->GetURLGroup(&group);
 
                 // Create an absolute URL
                 rv = NS_NewURL(&fullURL, src, baseURL, nsnull, group);
@@ -787,14 +788,16 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
                 SetFullURL(fullURL);
 
                 NS_IF_RELEASE(group);
-			  }
-            }
+	      }
+	    }
 
 			// if there's no fullURL at this point, we need to set one
-			if(!fullURL && baseURL)
-			  SetFullURL(baseURL); 
-      
-			nsIView *parentWithView;
+	    if(!fullURL && baseURL)
+	    {
+		SetFullURL(baseURL); 
+		fullURL = baseURL;
+	    }
+	    nsIView *parentWithView;
             nsPoint origin;
 
             // we need to recalculate this now that we have access to the nsPluginInstanceOwner
@@ -946,7 +949,7 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 
 	    if(pluginHost->IsPluginEnabledForType("application/x-oleobject") == NS_OK)
 		  rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState, pluginHost, "application/x-oleobject", fullURL);
-     	else if(pluginHost->IsPluginEnabledForType("application/oleobject") == NS_OK)
+     	    else if(pluginHost->IsPluginEnabledForType("application/oleobject") == NS_OK)
 		  rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState, pluginHost, "application/oleobject", fullURL);
 		else if(pluginHost->IsPluginEnabledForType("*") == NS_OK)
 		  rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState, pluginHost, "*", fullURL);
@@ -1063,7 +1066,7 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 
 		delete [] cString;
 
-		pluginHost->IsPluginAvailableForExtension(extension, mimeType);
+		pluginHost->IsPluginEnabledForExtension(extension, mimeType);
 	  }
 
 	  InstantiatePlugin(aPresContext, aMetrics, aReflowState, pluginHost, mimeType, fullURL);
