@@ -123,6 +123,17 @@ pattern = /^(\S+)+(\d+)$/;
     string = 'asdldflkj1111111aaa1'; 
     actualmatch = string.match(pattern);
     expectedmatch = Array(string, 'asdldflkj1111111aaa', '1'); 
+    addThis();
+
+
+/* 
+ * This one comes from Stephen Ostermiller. 
+ * See http://bugzilla.mozilla.org/show_bug.cgi?id=69989
+ */
+pattern = /^[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)+$/;
+    string = 'some.host.tld';
+    actualmatch = string.match(pattern);
+    expectedmatch = Array(string, '.tld', '.'); 
     addThis(); 
 
 
