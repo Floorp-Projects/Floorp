@@ -114,11 +114,15 @@ NS_IMETHODIMP nsSound::PlaySystemSound(const char *aSoundAlias)
 printf( "\n\n\nnsSound::PlaySystemSound aSoundAlias=%s\n\n", aSoundAlias );
 #endif
 
-	char *soundfile;
+	const char *soundfile;
 
 	if( !strcmp( "_moz_mailbeep", aSoundAlias ) )
 		soundfile = "/usr/share/mozilla/gotmail.wav";
-	else soundfile = "/usr/share/mozilla/rest.wav";
+	else {
+		if( !access( aSoundAlias, F_OK ) ) /* the aSoundAlias is the fullpath to the soundfile */
+			soundfile = aSoundAlias;
+		else soundfile = "/usr/share/mozilla/rest.wav";
+		}
 
 	const char* argv[] = { "/opt/Mozilla/mozilla/wave", soundfile, NULL };
 	PtSpawn( "/opt/Mozilla/mozilla/wave", ( const char ** ) argv, NULL, NULL, child_exit, NULL, NULL );
