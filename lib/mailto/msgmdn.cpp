@@ -620,13 +620,9 @@ MSG_ProcessMdnNeededState::CreateFirstPart()
 	win_csid = INTL_DefaultWinCharSetID(m_pane->GetContext());
 	m_csid = INTL_DefaultMailCharSetID(win_csid);
 
-#ifndef NSPR20
-    PRTime now;
-    PR_ExplodeTime(&now, PR_Now());
-#else
+
     PRExplodedTime now;
     PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &now);
-#endif /* NSPR20 */
 
 	/* Use PR_FormatTimeUSEnglish() to format the date in US English format,
 	   then figure out what our local GMT offset is, and append it (since

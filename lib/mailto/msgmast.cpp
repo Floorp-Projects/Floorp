@@ -49,11 +49,7 @@ extern "C" {
 	extern int MK_POP3_PASSWORD_UNDEFINED;
 }
 
-#ifndef NSPR20
-PR_LOG_DEFINE(IMAP);
-#else
 PRLogModuleInfo *IMAP;
-#endif
 
 MSG_Master::MSG_Master(MSG_Prefs* prefs)
 {
@@ -66,11 +62,8 @@ MSG_Master::MSG_Master(MSG_Prefs* prefs)
 	m_prefs = prefs;
 	m_prefs->AddNotify(this);
 	
-#ifndef NSPR20
-	PR_LogInit(&IMAPLog);
-#else
+
 	IMAP = PR_NewLogModule("IMAP");
-#endif
 	// on the mac, use this java script preference
 	// as an alternate to setenv
 	XP_Bool imapIOlogging;
