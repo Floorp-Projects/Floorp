@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.54 $ $Date: 2002/05/10 18:10:26 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.55 $ $Date: 2002/05/21 21:22:55 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -152,7 +152,9 @@ STAN_RemoveModuleFromDefaultTrustDomain
     for (i=0; i<module->slotCount; i++) {
 	token = PK11Slot_GetNSSToken(module->slots[i]);
 	if (token) {
+	    nssToken_NotifyCertsNotVisible(token);
 	    nssList_Remove(td->tokenList, token);
+	    PK11Slot_SetNSSToken(module->slots[i], NULL);
 	    nssToken_Destroy(token);
  	}
     }
