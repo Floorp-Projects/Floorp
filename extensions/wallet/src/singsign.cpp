@@ -1136,6 +1136,7 @@ SI_DeleteAll() {
     }
   }
   si_PartiallyLoaded = PR_FALSE;
+  si_signon_list_changed = PR_TRUE;
   si_SaveSignonDataLocked();
 }
 
