@@ -439,7 +439,7 @@ endif
 # We need to know where to find the libraries we
 # put on the link line for binaries, and should
 # we link statically or dynamic?  Assuming dynamic for now.
-LIBS_DIR = -L$(DIST)/bin
+LIBS_DIR	= -L$(DIST)/bin -L$(DIST)/lib
 
 # all public include files go in subdirectories of PUBLIC:
 PUBLIC		= $(XPDIST)/public
