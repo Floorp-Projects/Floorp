@@ -76,6 +76,7 @@ interface nsIMsgImapMailFolder : nsISupports {
   void folderPrivileges(in nsIMsgWindow aWindow);
   nsIMsgImapMailFolder findOnlineSubFolder(in string onlineName);
   void addFolderRights(in string userName, in string rights);
+  void refreshFolderRights();
   attribute boolean verifiedAsOnlineFolder;
   attribute boolean explicitlyVerify;
   attribute wchar hierarchyDelimiter;

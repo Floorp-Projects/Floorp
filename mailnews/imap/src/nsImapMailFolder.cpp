@@ -96,6 +96,7 @@
 #include "nsNetUtil.h"
 #include "nsIMAPNamespace.h"
 #include "nsHashtable.h"
+#include "nsMsgMessageFlags.h"
 
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -1054,6 +1055,7 @@ NS_IMETHODIMP nsImapMailFolder::GetNoSelect(PRBool *aResult)
   NS_ENSURE_ARG_POINTER(aResult);
   return GetFlag(MSG_FOLDER_FLAG_IMAP_NOSELECT, aResult);
 }
+
 NS_IMETHODIMP nsImapMailFolder::Compact(nsIUrlListener *aListener, nsIMsgWindow *aMsgWindow)
 {
   nsresult rv;
@@ -2899,6 +2901,10 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWindo
             nsMsgLabelValue filterLabel;
             filter->GetActionLabel(&filterLabel);
             msgHdr->SetLabel(filterLabel);
+            nsMsgKeyArray keysToFlag;
+
+            keysToFlag.Add(msgKey);
+            StoreImapFlags((filterLabel << 9), PR_TRUE, keysToFlag.GetArray(), keysToFlag.GetSize());
         }
       default:
         break;
@@ -3424,7 +3430,7 @@ void nsImapMailFolder::TweakHeaderFlags(nsIImapProtocol* aProtocol, nsIMsgDBHdr 
     if (NS_SUCCEEDED(res) && foundIt)
     {
       // make a mask and clear these message flags
-      PRUint32 mask = MSG_FLAG_READ | MSG_FLAG_REPLIED | MSG_FLAG_MARKED | MSG_FLAG_IMAP_DELETED;
+      PRUint32 mask = MSG_FLAG_READ | MSG_FLAG_REPLIED | MSG_FLAG_MARKED | MSG_FLAG_IMAP_DELETED | MSG_FLAG_LABELS;
       PRUint32 dbHdrFlags;
 
       tweakMe->GetFlags(&dbHdrFlags);
@@ -3472,6 +3478,11 @@ void nsImapMailFolder::TweakHeaderFlags(nsIImapProtocol* aProtocol, nsIMsgDBHdr 
         newFlags |= MSG_FLAG_IMAP_DELETED;
       if (imap_flags & kImapMsgForwardedFlag)
         newFlags |= MSG_FLAG_FORWARDED;
+
+      // db label flags are 0x0E000000 and imap label flags are 0x0E00
+      // so we need to shift 16 bits to the left to convert them.
+      if (imap_flags & kImapMsgLabelFlags)
+        newFlags |= (imap_flags & kImapMsgLabelFlags) << 16;
 
       if (newFlags)
         tweakMe->OrFlags(newFlags, &dbHdrFlags);
@@ -3792,25 +3803,32 @@ nsImapMailFolder::NotifyMessageFlags(PRUint32 flags, nsMsgKey msgKey)
 {
   if (NS_SUCCEEDED(GetDatabase(nsnull)) && mDatabase)
   {
-		nsCOMPtr<nsIMsgDBHdr> dbHdr;
-		nsresult rv;
-		PRBool containsKey;
-
-		rv = mDatabase->ContainsKey(msgKey , &containsKey);
-		// if we don't have the header, don't diddle the flags.
-		// GetMsgHdrForKey will create the header if it doesn't exist.
-		if (NS_FAILED(rv) || !containsKey)
-			return rv;
-
-		rv = mDatabase->GetMsgHdrForKey(msgKey, getter_AddRefs(dbHdr));
-
-		if(NS_SUCCEEDED(rv) && dbHdr)
-		{
-	    mDatabase->MarkHdrRead(dbHdr, (flags & kImapMsgSeenFlag) != 0, nsnull);
-		  mDatabase->MarkHdrReplied(dbHdr, (flags & kImapMsgAnsweredFlag) != 0, nsnull);
-			mDatabase->MarkHdrMarked(dbHdr, (flags & kImapMsgFlaggedFlag) != 0, nsnull);
-            mDatabase->MarkImapDeleted(msgKey, (flags & kImapMsgDeletedFlag) != 0, nsnull);
-		}
+    nsCOMPtr<nsIMsgDBHdr> dbHdr;
+    nsresult rv;
+    PRBool containsKey;
+    
+    rv = mDatabase->ContainsKey(msgKey , &containsKey);
+    // if we don't have the header, don't diddle the flags.
+    // GetMsgHdrForKey will create the header if it doesn't exist.
+    if (NS_FAILED(rv) || !containsKey)
+      return rv;
+    
+    rv = mDatabase->GetMsgHdrForKey(msgKey, getter_AddRefs(dbHdr));
+    
+    if(NS_SUCCEEDED(rv) && dbHdr)
+    {
+      mDatabase->MarkHdrRead(dbHdr, (flags & kImapMsgSeenFlag) != 0, nsnull);
+      mDatabase->MarkHdrReplied(dbHdr, (flags & kImapMsgAnsweredFlag) != 0, nsnull);
+      mDatabase->MarkHdrMarked(dbHdr, (flags & kImapMsgFlaggedFlag) != 0, nsnull);
+      mDatabase->MarkImapDeleted(msgKey, (flags & kImapMsgDeletedFlag) != 0, nsnull);
+      // this turns on labels, but it doesn't handle the case where the user
+      // unlabels a message on one machine, and expects it to be unlabeled
+      // on their other machines. If I turn that on, I'll be removing all the labels
+      // that were assigned before we started storing them on the server, which will
+      // make some people very unhappy.
+      if (flags & kImapMsgLabelFlags)
+        mDatabase->SetLabel(msgKey, (flags & kImapMsgLabelFlags) >> 9);
+    }
   }
   
   return NS_OK;
@@ -4418,8 +4436,7 @@ nsImapMailFolder::AddFolderRights(const char *userName, const char *rights)
 }
 
 NS_IMETHODIMP
-nsImapMailFolder::RefreshFolderRights(nsIImapProtocol* aProtocol,
-                                      nsIMAPACLRightsInfo* aclRights)
+nsImapMailFolder::RefreshFolderRights()
 {
   if (GetFolderACL()->GetIsFolderShared())
   {

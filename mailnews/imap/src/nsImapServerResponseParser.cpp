@@ -1498,6 +1498,20 @@ void nsImapServerResponseParser::flags()
 					 && !PL_strncasecmp(fNextToken, "$Forwarded",10))
 				messageFlags |= kImapMsgForwardedFlag;
 				break;
+                        case 'L':
+                                if (fSupportsUserDefinedFlags & kImapMsgSupportUserFlag
+					 && !PL_strncasecmp(fNextToken, "$Label", 6))
+                                {
+                                  PRInt32 labelValue = fNextToken[6];
+                                  if (labelValue > '0')
+                                  {
+                                    // turn off any previous label flags
+                                    messageFlags &= ~kImapMsgLabelFlags;
+                                    // turn on this label flag
+                                    messageFlags |= (labelValue - '0') << 9;
+                                  }
+                                }
+				break;
 			default:
 				break;
 			}
@@ -1673,6 +1687,7 @@ void nsImapServerResponseParser::resp_text_code()
 					 fSupportsUserDefinedFlags |= kImapMsgSupportUserFlag;
 					 fSupportsUserDefinedFlags |= kImapMsgSupportForwardedFlag;
 					 fSupportsUserDefinedFlags |= kImapMsgSupportMDNSentFlag;
+                                         fSupportsUserDefinedFlags |= kImapMsgLabelFlags;
 				}
 			} while (!at_end_of_line() && ContinueParse());
 			if (fFlagState)

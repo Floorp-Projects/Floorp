@@ -304,6 +304,7 @@ public:
 	void AddFolderRightsForUser(const char *mailboxName, const char *userName, const char *rights);
 	// Clears all rights for a given folder, for all users.
 	void ClearAllFolderRights(const char *mailboxName, nsIMAPNamespace *nsForMailbox);
+        void RefreshFolderACLView(const char *mailboxName, nsIMAPNamespace *nsForMailbox);
 
         nsresult SetFolderAdminUrl(const char *mailboxName);
   void WaitForFEEventCompletion();

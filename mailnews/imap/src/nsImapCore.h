@@ -66,22 +66,22 @@ typedef PRUint16 imapMessageFlagsType;
 
 /* flags for individual messages */
 /* currently the ui only offers \Seen and \Flagged */
-#define kNoImapMsgFlag			0x0000
-#define kImapMsgSeenFlag		0x0001
-#define kImapMsgAnsweredFlag	0x0002
-#define kImapMsgFlaggedFlag		0x0004
-#define kImapMsgDeletedFlag		0x0008
-#define kImapMsgDraftFlag		0x0010
-#define kImapMsgRecentFlag		0x0020
-#define	kImapMsgForwardedFlag	0x0040		/* Not always supported, check mailbox folder */
-#define kImapMsgMDNSentFlag		0x0080		/* Not always supported. check mailbox folder */
-
-#define kImapMsgSupportMDNSentFlag 0x2000
-#define kImapMsgSupportForwardedFlag 0x4000
-#define kImapMsgSupportUserFlag 0x8000		/* This seems to be the most cost effective way of
-											 * piggying back the server support user flag
-											 * info.
-											 */
+#define kNoImapMsgFlag                0x0000
+#define kImapMsgSeenFlag              0x0001
+#define kImapMsgAnsweredFlag          0x0002
+#define kImapMsgFlaggedFlag           0x0004
+#define kImapMsgDeletedFlag           0x0008
+#define kImapMsgDraftFlag             0x0010
+#define kImapMsgRecentFlag            0x0020
+#define	kImapMsgForwardedFlag         0x0040		/* Not always supported, check mailbox folder */
+#define kImapMsgMDNSentFlag           0x0080		/* Not always supported. check mailbox folder */
+#define kImapMsgLabelFlags            0x0E00            /* supports 5 labels only supported if the folder supports keywords */
+#define kImapMsgSupportMDNSentFlag    0x2000
+#define kImapMsgSupportForwardedFlag  0x4000
+#define kImapMsgSupportUserFlag       0x8000		
+/* This seems to be the most cost effective way of
+* piggying back the server support user flag info.
+*/
 
 /* if a url creator does not know the hierarchySeparator, use this */
 #define kOnlineHierarchySeparatorUnknown '^'

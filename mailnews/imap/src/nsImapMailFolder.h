@@ -308,8 +308,6 @@ public:
   NS_IMETHOD ClearFolderRights(nsIImapProtocol* aProtocol,
                                nsIMAPACLRightsInfo* aclRights);
 
-  NS_IMETHOD RefreshFolderRights(nsIImapProtocol* aProtocol,
-                                 nsIMAPACLRightsInfo* aclRights);
   NS_IMETHOD SetCopyResponseUid(nsIImapProtocol* aProtocol,
                                 nsMsgKeyArray* keyArray,
                                 const char* msgIdString,

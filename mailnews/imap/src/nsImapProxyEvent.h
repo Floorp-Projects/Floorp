@@ -81,8 +81,6 @@ public:
   
     NS_IMETHOD ClearFolderRights(nsIImapProtocol* aProtocol,
                                  nsIMAPACLRightsInfo* aclRights);
-    NS_IMETHOD RefreshFolderRights(nsIImapProtocol* aProtocol,
-                                   nsIMAPACLRightsInfo* aclRights);
     NS_IMETHOD SetCopyResponseUid(nsIImapProtocol* aProtocol,
                                   nsMsgKeyArray* aKeyArray,
                                   const char* msgIdString,
@@ -161,15 +159,6 @@ struct ClearFolderRightsProxyEvent : nsImapExtensionSinkProxyEvent
     ClearFolderRightsProxyEvent(nsImapExtensionSinkProxy* aProxy,
                                 nsIMAPACLRightsInfo* aclRights);
     virtual ~ClearFolderRightsProxyEvent();
-    NS_IMETHOD HandleEvent();
-    nsIMAPACLRightsInfo m_aclRightsInfo;
-};
-
-struct RefreshFolderRightsProxyEvent : nsImapExtensionSinkProxyEvent
-{
-    RefreshFolderRightsProxyEvent(nsImapExtensionSinkProxy* aProxy,
-                                nsIMAPACLRightsInfo* aclRights);
-    virtual ~RefreshFolderRightsProxyEvent();
     NS_IMETHOD HandleEvent();
     nsIMAPACLRightsInfo m_aclRightsInfo;
 };

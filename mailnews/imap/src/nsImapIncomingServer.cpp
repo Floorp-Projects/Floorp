@@ -1330,6 +1330,24 @@ NS_IMETHODIMP nsImapIncomingServer::FolderNeedsACLInitialized(const char *folder
   return NS_OK;
 }
 
+NS_IMETHODIMP nsImapIncomingServer::RefreshFolderRights(const char *folderPath)
+{
+  nsCOMPtr <nsIFolder> rootFolder;
+  nsresult rv = GetRootFolder(getter_AddRefs(rootFolder));
+  if(NS_SUCCEEDED(rv) && rootFolder)
+  {
+    nsCOMPtr <nsIMsgImapMailFolder> imapRoot = do_QueryInterface(rootFolder);
+    if (imapRoot)
+    {
+      nsCOMPtr <nsIMsgImapMailFolder> foundFolder;
+      rv = imapRoot->FindOnlineSubFolder(folderPath, getter_AddRefs(foundFolder));
+      if (NS_SUCCEEDED(rv) && foundFolder)
+        return foundFolder->RefreshFolderRights();
+    }
+  }
+  return rv;
+}
+
 NS_IMETHODIMP nsImapIncomingServer::GetRedirectorType(char **redirectorType)
 {
   nsresult rv;
@@ -2879,30 +2897,30 @@ nsImapIncomingServer::GetSubscribeListener(nsISubscribeListener **aListener)
 NS_IMETHODIMP
 nsImapIncomingServer::Subscribe(const PRUnichar *aName)
 {
-	return SubscribeToFolder(aName, PR_TRUE);
+  return SubscribeToFolder(aName, PR_TRUE);
 }
 
 NS_IMETHODIMP
 nsImapIncomingServer::Unsubscribe(const PRUnichar *aName)
 {
-	return SubscribeToFolder(aName, PR_FALSE);
+  return SubscribeToFolder(aName, PR_FALSE);
 }
 
 nsresult
 nsImapIncomingServer::SubscribeToFolder(const PRUnichar *aName, PRBool subscribe)
 {
-	nsresult rv;
-	nsCOMPtr<nsIImapService> imapService = do_GetService(kImapServiceCID, &rv);
-	if (NS_FAILED(rv)) return rv;
-	if (!imapService) return NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsIFolder> rootFolder;
-    rv = GetRootFolder(getter_AddRefs(rootFolder));
-	if (NS_FAILED(rv)) return rv;
-    nsCOMPtr<nsIMsgFolder> rootMsgFolder = do_QueryInterface(rootFolder, &rv);
-	if (NS_FAILED(rv)) return rv;
-    if (!rootMsgFolder) return NS_ERROR_FAILURE;
-
+  nsresult rv;
+  nsCOMPtr<nsIImapService> imapService = do_GetService(kImapServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+  if (!imapService) return NS_ERROR_FAILURE;
+  
+  nsCOMPtr<nsIFolder> rootFolder;
+  rv = GetRootFolder(getter_AddRefs(rootFolder));
+  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIMsgFolder> rootMsgFolder = do_QueryInterface(rootFolder, &rv);
+  if (NS_FAILED(rv)) return rv;
+  if (!rootMsgFolder) return NS_ERROR_FAILURE;
+  
   // Locate the folder so that the correct hierarchical delimiter is used in the
   // folder pathnames, otherwise root's (ie, '^') is used and this is wrong.
   nsCAutoString folderCName;
@@ -2915,47 +2933,45 @@ nsImapIncomingServer::SubscribeToFolder(const PRUnichar *aName, PRBool subscribe
     if (NS_SUCCEEDED(rv))
       msgFolder = do_QueryInterface(subFolder);
   }
+  
+  nsCOMPtr<nsIEventQueue> queue;
+  // get the Event Queue for this thread...
+  nsCOMPtr<nsIEventQueueService> pEventQService = 
+    do_GetService(kEventQueueServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+  
+  rv = pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
+  if (NS_FAILED(rv)) return rv;
 
-	nsCOMPtr<nsIEventQueue> queue;
-    // get the Event Queue for this thread...
-    nsCOMPtr<nsIEventQueueService> pEventQService = 
-             do_GetService(kEventQueueServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
-    if (NS_FAILED(rv)) return rv;
-
-	if (subscribe) {
-			rv = imapService->SubscribeFolder(queue,
-                               msgFolder,
-                               aName,
-                               nsnull, nsnull);
-	}
-	else {
-			rv = imapService->UnsubscribeFolder(queue,
-                               msgFolder,
-                               aName,
-                               nsnull, nsnull);
-	}
-
-	if (NS_FAILED(rv)) return rv;
-	return NS_OK;
+  // ok, aName is really a fake unicode name,
+  // just a utf-7 encoded ascii string 0 byte extended to unicode. So convert it 
+  // to real unicode, and pass that into the subscribe routines.
+  nsXPIDLString unicodeName;
+  CreateUnicodeStringFromUtf7(folderCName.get(), getter_Copies(unicodeName));
+  // we need to convert aName, which is utf-7 encoded, to unicode
+  if (subscribe)
+    rv = imapService->SubscribeFolder(queue, msgFolder, unicodeName.get(), nsnull, nsnull);
+  else 
+    rv = imapService->UnsubscribeFolder(queue, msgFolder, unicodeName.get(), nsnull, nsnull);
+  
+  if (NS_FAILED(rv)) return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsImapIncomingServer::SetDoingLsub(PRBool doingLsub)
 {
-	mDoingLsub = doingLsub;
-	return NS_OK;
+  mDoingLsub = doingLsub;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsImapIncomingServer::GetDoingLsub(PRBool *doingLsub)
 {
-	if (!doingLsub) return NS_ERROR_NULL_POINTER;
-
-	*doingLsub = mDoingLsub;
-	return NS_OK;
+  if (!doingLsub) return NS_ERROR_NULL_POINTER;
+  
+  *doingLsub = mDoingLsub;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

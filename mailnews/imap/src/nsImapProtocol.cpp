@@ -3659,50 +3659,49 @@ PRBool nsImapProtocol::GetIOTunnellingEnabled()
 // if userName is NULL, it means "me," or MYRIGHTS.
 void nsImapProtocol::AddFolderRightsForUser(const char *mailboxName, const char *userName, const char *rights)
 {
-    nsIMAPACLRightsInfo *aclRightsInfo = new nsIMAPACLRightsInfo();
+  nsIMAPACLRightsInfo *aclRightsInfo = new nsIMAPACLRightsInfo();
   if (aclRightsInfo)
   {
     nsIMAPNamespace *namespaceForFolder = nsnull;
-        const char *userName = GetImapUserName();
-        NS_ASSERTION (m_hostSessionList, "fatal ... null host session list");
-        if (m_hostSessionList)
-            m_hostSessionList->GetNamespaceForMailboxForHost(
-                GetImapServerKey(), mailboxName,
-                namespaceForFolder);
-
+    NS_ASSERTION (m_hostSessionList, "fatal ... null host session list");
+    if (m_hostSessionList)
+      m_hostSessionList->GetNamespaceForMailboxForHost(
+      GetImapServerKey(), mailboxName,
+      namespaceForFolder);
+    
     aclRightsInfo->hostName = PL_strdup(GetImapHostName());
-
+    
     if (namespaceForFolder)
-            m_runningUrl->AllocateCanonicalPath(
-                mailboxName,
-                namespaceForFolder->GetDelimiter(), 
-                &aclRightsInfo->mailboxName);
+      m_runningUrl->AllocateCanonicalPath(
+      mailboxName,
+      namespaceForFolder->GetDelimiter(), 
+      &aclRightsInfo->mailboxName);
     else
-            m_runningUrl->AllocateCanonicalPath(mailboxName,
-                          kOnlineHierarchySeparatorUnknown, 
-                          &aclRightsInfo->mailboxName);
-
+      m_runningUrl->AllocateCanonicalPath(mailboxName,
+      kOnlineHierarchySeparatorUnknown, 
+      &aclRightsInfo->mailboxName);
+    
     if (userName)
       aclRightsInfo->userName = PL_strdup(userName);
     else
       aclRightsInfo->userName = NULL;
     aclRightsInfo->rights = PL_strdup(rights);
     
-
+    
     if (aclRightsInfo->hostName && 
-            aclRightsInfo->mailboxName && aclRightsInfo->rights && 
+      aclRightsInfo->mailboxName && aclRightsInfo->rights && 
       userName ? (aclRightsInfo->userName != NULL) : PR_TRUE)
     {
-            if (m_imapServerSink)
-            {
-                m_imapServerSink->AddFolderRights(mailboxName, userName, rights);
-            }
-        }
-        PR_FREEIF(aclRightsInfo->hostName);
-        PR_FREEIF(aclRightsInfo->mailboxName);
-        PR_FREEIF(aclRightsInfo->rights);
-        PR_FREEIF(aclRightsInfo->userName);
-
+      if (m_imapServerSink)
+      {
+        m_imapServerSink->AddFolderRights(mailboxName, userName, rights);
+      }
+    }
+    PR_FREEIF(aclRightsInfo->hostName);
+    PR_FREEIF(aclRightsInfo->mailboxName);
+    PR_FREEIF(aclRightsInfo->rights);
+    PR_FREEIF(aclRightsInfo->userName);
+    
     delete aclRightsInfo;
   }
   else
@@ -5000,9 +4999,7 @@ void nsImapProtocol::RefreshACLForFolder(const char *mailboxName)
       // Now, get the new one.
       GetACLForFolder(mailboxName);
       // We're all done, refresh the icon/flags for this folder
-#ifdef REFRESHING_VIEW
       RefreshFolderACLView(mailboxName, ns);
-#endif
       break;
     default:
       // We know it's a public folder or other user's folder.
@@ -5013,9 +5010,7 @@ void nsImapProtocol::RefreshACLForFolder(const char *mailboxName)
       // Now, get the new one.
       GetMyRightsForFolder(mailboxName);
       // We're all done, refresh the icon/flags for this folder
-#ifdef REFRESHING_VIEW
       RefreshFolderACLView(mailboxName, ns);
-#endif
       break;
     }
   }
@@ -5024,6 +5019,24 @@ void nsImapProtocol::RefreshACLForFolder(const char *mailboxName)
     // no namespace, not even default... can this happen?
     NS_ASSERTION(PR_FALSE, "couldn't get namespace");
   }
+}
+
+void nsImapProtocol::RefreshFolderACLView(const char *mailboxName, nsIMAPNamespace *nsForMailbox)
+{
+  char *nonUTF7ConvertedName = CreateUtf7ConvertedString(mailboxName, FALSE);
+  nsXPIDLCString canonicalMailboxName;
+  if (nonUTF7ConvertedName)
+    mailboxName = nonUTF7ConvertedName;
+  
+  if (nsForMailbox)
+    m_runningUrl->AllocateCanonicalPath(mailboxName, nsForMailbox->GetDelimiter(), getter_Copies(canonicalMailboxName));
+  else
+    m_runningUrl->AllocateCanonicalPath(mailboxName, kOnlineHierarchySeparatorUnknown, getter_Copies(canonicalMailboxName));
+  
+
+  PR_Free(nonUTF7ConvertedName);
+  if (m_imapServerSink)
+    m_imapServerSink->RefreshFolderRights(canonicalMailboxName);
 }
 
 void nsImapProtocol::GetACLForFolder(const char *mailboxName)
@@ -5045,37 +5058,37 @@ void nsImapProtocol::GetACLForFolder(const char *mailboxName)
 
 void nsImapProtocol::OnRefreshAllACLs()
 {
-	m_hierarchyNameState = kListingForInfoOnly;
-	nsIMAPMailboxInfo *mb = NULL;
-
-	// This will fill in the list
-	List("*", PR_TRUE);
-
-	PRInt32 total = m_listedMailboxList.Count(), count = 0;
-	GetServerStateParser().SetReportingErrors(PR_FALSE);
-    for (PRInt32 i = 0; i < total; i++)
-	{
-		mb = (nsIMAPMailboxInfo *) m_listedMailboxList.ElementAt(i);
-		if (mb) // paranoia
-		{
-			char *onlineName = nsnull;
-            m_runningUrl->AllocateServerPath(mb->GetMailboxName(),
-                                             mb->GetDelimiter(), &onlineName);
-			if (onlineName)
-			{
-				RefreshACLForFolder(onlineName);
-				nsCRT::free(onlineName);
-			}
-			PercentProgressUpdateEvent(NULL, count, total);
-			delete mb;
-			count++;
-		}
-	}
-    m_listedMailboxList.Clear();
-	
-	PercentProgressUpdateEvent(NULL, 100, 100);
-	GetServerStateParser().SetReportingErrors(PR_TRUE);
-	m_hierarchyNameState = kNoOperationInProgress;
+  m_hierarchyNameState = kListingForInfoOnly;
+  nsIMAPMailboxInfo *mb = NULL;
+  
+  // This will fill in the list
+  List("*", PR_TRUE);
+  
+  PRInt32 total = m_listedMailboxList.Count(), count = 0;
+  GetServerStateParser().SetReportingErrors(PR_FALSE);
+  for (PRInt32 i = 0; i < total; i++)
+  {
+    mb = (nsIMAPMailboxInfo *) m_listedMailboxList.ElementAt(i);
+    if (mb) // paranoia
+    {
+      char *onlineName = nsnull;
+      m_runningUrl->AllocateServerPath(mb->GetMailboxName(),
+        mb->GetDelimiter(), &onlineName);
+      if (onlineName)
+      {
+        RefreshACLForFolder(onlineName);
+        nsCRT::free(onlineName);
+      }
+      PercentProgressUpdateEvent(NULL, count, total);
+      delete mb;
+      count++;
+    }
+  }
+  m_listedMailboxList.Clear();
+  
+  PercentProgressUpdateEvent(NULL, 100, 100);
+  GetServerStateParser().SetReportingErrors(PR_TRUE);
+  m_hierarchyNameState = kNoOperationInProgress;
 }
 
 // any state commands
@@ -6524,6 +6537,14 @@ void nsImapProtocol::SetupMessageFlagsString(nsCString& flagString,
         userFlags & kImapMsgSupportMDNSentFlag))
         flagString.Append("$MDNSent "); // Not always available
     
+    if ((flags & kImapMsgLabelFlags) && (userFlags & kImapMsgSupportUserFlag))
+    {
+      // turn into a number from 1-5
+      PRUint32 labelValue = (flags & kImapMsgLabelFlags) >> 9;
+      flagString.Append("$Label");
+      flagString.AppendInt(labelValue);
+      flagString.Append(" ");
+    }
     // eat the last space
     if (flagString.Length() > 0)
         flagString.SetLength(flagString.Length()-1);
@@ -6534,15 +6555,12 @@ void nsImapProtocol::ProcessStoreFlags(const char * messageIdsString,
                                                  imapMessageFlagsType flags,
                                                  PRBool addFlags)
 {
-  if (!flags)
-    return;
-    
   nsCString flagString;
 
   uint16 userFlags = GetServerStateParser().SupportsUserFlags();
   uint16 settableFlags = GetServerStateParser().SettablePermanentFlags();
 
-  if (!(flags & userFlags) && !(flags & settableFlags))
+  if (!addFlags && (flags & userFlags) && !(flags & settableFlags))
     return;         // if cannot set any of the flags bail out
     
   if (addFlags)
@@ -6565,10 +6583,26 @@ void nsImapProtocol::ProcessStoreFlags(const char * messageIdsString,
   if (flags & kImapMsgMDNSentFlag && kImapMsgSupportMDNSentFlag & userFlags)
         flagString .Append("$MDNSent ");  // if supported
 
-    // replace the final space with ')'
-    flagString.SetCharAt(')',flagString.Length() - 1);
-    
-    Store(messageIdsString, flagString.get(), idsAreUids);
+  if (userFlags & kImapMsgSupportUserFlag)
+  {
+    if ((flags & kImapMsgLabelFlags))
+    {
+      // turn into a number from 1-5
+      PRUint32 labelValue = (flags & kImapMsgLabelFlags) >> 9;
+      flagString.Append("$Label");
+      flagString.AppendInt(labelValue);
+      flagString.Append(" ");
+    }
+    // only turn off all labels if the caller has said to turn off flags
+    // and passed in 0 as the flag value. There is at least one situation
+    // where client code attempts to add flags of 0
+    else if (!flags && !addFlags)// we must be turning off labels, so subtract them all 
+      flagString.Append("$Label1 $Label2 $Label3 $Label4 $Label5 ");
+  }
+  // replace the final space with ')'
+  flagString.SetCharAt(')',flagString.Length() - 1);
+  
+  Store(messageIdsString, flagString.get(), idsAreUids);
 }
 
 

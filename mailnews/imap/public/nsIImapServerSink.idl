@@ -47,6 +47,7 @@ interface nsIImapServerSink : nsISupports {
   boolean possibleImapMailbox(in string folderPath, in wchar hierarchyDelim, in long boxFlags);
   boolean folderNeedsACLInitialized(in string folderPath);
   void addFolderRights(in string folderPath, in string userName, in string rights);
+  void refreshFolderRights(in string folderPath);
   void discoveryDone();
   void onlineFolderDelete(in string aFolderName);
   void onlineFolderCreateFailed(in string aFolderName);
