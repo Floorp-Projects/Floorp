@@ -4186,6 +4186,9 @@ nsFontMetricsGTK::TryNode(nsCString* aName, PRUnichar aChar)
   //
   // check the specified font (foundry-family-registry-encoding)
   //
+  if (aName->IsEmpty()) {
+    return nsnull;
+  }
   nsFontGTK* font;
  
   nsCStringKey key(*aName);
@@ -4247,6 +4250,9 @@ nsFontMetricsGTK::TryLangGroup(nsIAtom* aLangGroup, nsCString* aName, PRUnichar 
   //
   FIND_FONT_PRINTF(("      TryLangGroup lang group = %s, aName = %s", 
                             atomToName(aLangGroup), (*aName).get()));
+  if (aName->IsEmpty()) {
+    return nsnull;
+  }
   nsFontGTK* font = FindLangGroupFont(aLangGroup, aChar, aName);
   return font;
 }
@@ -4392,7 +4398,7 @@ PrefEnumCallback(const char* aName, void* aClosure)
   nsXPIDLCString value;
   gPref->CopyCharPref(aName, getter_Copies(value));
   nsCAutoString name;
-  if (value) {
+  if (value.get()) {
     name = value;
     FIND_FONT_PRINTF(("       PrefEnumCallback"));
     s->mFont = s->mMetrics->TryNode(&name, s->mChar);
@@ -4400,14 +4406,14 @@ PrefEnumCallback(const char* aName, void* aClosure)
       NS_ASSERTION(s->mFont->SupportsChar(s->mChar), "font supposed to support this char");
       return;
     }
-  }
-  s->mFont = s->mMetrics->TryLangGroup(s->mMetrics->mLangGroup, &name, s->mChar);
-  if (s->mFont) {
-    NS_ASSERTION(s->mFont->SupportsChar(s->mChar), "font supposed to support this char");
-    return;
+    s->mFont = s->mMetrics->TryLangGroup(s->mMetrics->mLangGroup, &name, s->mChar);
+    if (s->mFont) {
+      NS_ASSERTION(s->mFont->SupportsChar(s->mChar), "font supposed to support this char");
+      return;
+    }
   }
   gPref->CopyDefaultCharPref(aName, getter_Copies(value));
-  if ((value) && (!name.Equals(value))) {
+  if (value.get() && (!name.Equals(value))) {
     name = value;
     FIND_FONT_PRINTF(("       PrefEnumCallback:default"));
     s->mFont = s->mMetrics->TryNode(&name, s->mChar);
