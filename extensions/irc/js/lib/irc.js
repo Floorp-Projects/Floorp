@@ -1813,6 +1813,8 @@ function chan_modestr (f)
         str += "n";
     if (!this.publicTopic)
         str += "t";
+    if (this.secret)
+        str += "s";
     if (this.pvt)
         str += "p";
     if (this.key)
