@@ -146,6 +146,8 @@ morkWriter::morkWriter(morkEnv* ev, const morkUsage& inUsage,
 , mWriter_DidStartDict( morkBool_kFalse )
 , mWriter_DidEndDict( morkBool_kTrue )
 
+, mWriter_SuppressDirtyRowNewline( morkBool_kFalse )
+
 , mWriter_TableRowArrayPos( 0 )
 
 // empty constructors for map iterators:
@@ -977,8 +979,8 @@ morkWriter::PutTableDict(morkEnv* ev, morkTable* ioTable)
   mWriter_DictForm = mWriter_TableForm;
   mWriter_DictAtomScope = mWriter_TableAtomScope;
   
-  if ( ev->Good() )
-    this->StartDict(ev);
+  // if ( ev->Good() )
+  //  this->StartDict(ev); // delay as long as possible
 
   if ( ev->Good() )
   {
@@ -1017,33 +1019,47 @@ morkWriter::WriteTokenToTokenMetaCell(morkEnv* ev,
   mork_token inCol, mork_token inValue)
 {
   morkStream* stream = mWriter_Stream;
+  mork_bool isKindCol = ( morkStore_kKindColumn == inCol );
+  mork_u1 valSep = ( isKindCol )? '^' : '=';
+  
+  char buf[ 128 ]; // buffer for staging the two hex IDs
+  char* p = buf;
 
   if ( inCol < 0x80 )
   {
     stream->Putc(ev, '(');
     stream->Putc(ev, (char) inCol);
-    stream->Putc(ev, '=');
+    stream->Putc(ev, valSep);
   }
   else
   {
-    char buf[ 128 ]; // buffer for staging the two hex IDs
-    char* p = buf;
     *p++ = '('; // we always start with open paren
     
     *p++ = '^'; // indicates col is hex ID
     mork_size colSize = ev->TokenAsHex(p, inCol);
     p += colSize;
-    *p++ = '=';
+    *p++ = (char) valSep;
     mWriter_LineSize += stream->Write(ev, buf, colSize + 3);
   }
 
-  this->IndentAsNeeded(ev, morkWriter_kTableMetaCellValueDepth);
-  mdbYarn* yarn = &mWriter_ColYarn;
-  // mork_u1* yarnBuf = (mork_u1*) yarn->mYarn_Buf;
-  mWriter_Store->TokenToString(ev, inValue, yarn);
-  this->WriteYarn(ev, yarn);
-  stream->Putc(ev, ')');
-  ++mWriter_LineSize;
+	if ( isKindCol )
+	{
+		p = buf;
+    mork_size valSize = ev->TokenAsHex(p, inValue);
+    p += valSize;
+    *p++ = ')';
+    mWriter_LineSize += stream->Write(ev, buf, valSize + 1);
+	}
+	else
+	{
+	  this->IndentAsNeeded(ev, morkWriter_kTableMetaCellValueDepth);
+	  mdbYarn* yarn = &mWriter_ColYarn;
+	  // mork_u1* yarnBuf = (mork_u1*) yarn->mYarn_Buf;
+	  mWriter_Store->TokenToString(ev, inValue, yarn);
+	  this->WriteYarn(ev, yarn);
+	  stream->Putc(ev, ')');
+	  ++mWriter_LineSize;
+	}
   
   // mork_fill fill = yarn->mYarn_Fill;
   // yarnBuf[ fill ] = ')'; // append terminator
@@ -1194,13 +1210,22 @@ morkWriter::StartTable(morkEnv* ev, morkTable* ioTable)
     if ( r )
     {
       if ( r->IsRow() )
+      {
+      	mWriter_SuppressDirtyRowNewline = morkBool_kTrue;
         this->PutRow(ev, r);
+      }
       else
         r->NonRowTypeError(ev);
     }
     
     stream->Putc(ev, '}'); // end meta
     ++mWriter_LineSize;
+    
+    if ( mWriter_LineSize < mWriter_MaxIndent )
+    {
+	    stream->Putc(ev, ' '); // nice white space
+	    ++mWriter_LineSize;
+    }
     
     // mWriter_LineSize = stream->PutIndent(ev, morkWriter_kRowDepth);
   }
@@ -1221,6 +1246,7 @@ morkWriter::PutRowDict(morkEnv* ev, morkRow* ioRow)
   if ( cells )
   {
     morkStream* stream = mWriter_Stream;
+	  mdbYarn yarn; // to ref content inside atom
     char buf[ 64 ]; // buffer for staging the dict alias hex ID
     char* idBuf = buf + 1; // where the id always starts
     buf[ 0 ] = '('; // we always start with open paren
@@ -1234,6 +1260,12 @@ morkWriter::PutRowDict(morkEnv* ev, morkRow* ioRow)
       {
         if ( atom->IsBook() ) // is it possible to write atom ID?
         {
+        	if ( !this->DidStartDict() )
+        	{
+				    this->StartDict(ev);
+				    if ( ev->Bad() )
+				    	break;
+        	}
           atom->mAtom_Change = morkChange_kNil; // neutralize change
           
           this->IndentAsNeeded(ev, morkWriter_kDictAliasDepth);
@@ -1241,14 +1273,25 @@ morkWriter::PutRowDict(morkEnv* ev, morkRow* ioRow)
           mork_size size = ev->TokenAsHex(idBuf, ba->mBookAtom_Id);
           mWriter_LineSize += stream->Write(ev, buf, size+1); // '('
 
-          this->IndentAsNeeded(ev, morkWriter_kDictAliasValueDepth);
-          stream->Putc(ev, '='); // start value
-          ++mWriter_LineSize;
+				  if ( atom->AliasYarn(&yarn) )
+				  {
+				    if ( mWriter_DidStartDict && yarn.mYarn_Form != mWriter_DictForm )
+				      this->ChangeDictForm(ev, yarn.mYarn_Form);  
       
-          this->WriteAtom(ev, atom);
-          stream->Putc(ev, ')'); // end alias
-          ++mWriter_LineSize;
-          
+						mork_size pending = yarn.mYarn_Fill + morkWriter_kYarnEscapeSlop + 1;
+	          this->IndentOverMaxLine(ev, pending, morkWriter_kDictAliasValueDepth);
+				      
+	          stream->Putc(ev, '='); // start value
+	          ++mWriter_LineSize;
+      
+				    this->WriteYarn(ev, &yarn);
+
+	          stream->Putc(ev, ')'); // end value
+	          ++mWriter_LineSize;
+				  }
+				  else
+				    atom->BadAtomKindError(ev);
+				              
           ++mWriter_DoneCount;
         }
       }
@@ -1375,7 +1418,10 @@ morkWriter::PutRow(morkEnv* ev, morkRow* ioRow)
 
   if ( ioRow->IsRowDirty() )
   {
-    mWriter_LineSize = stream->PutIndent(ev, morkWriter_kRowDepth);
+  	if ( mWriter_SuppressDirtyRowNewline )
+  		mWriter_SuppressDirtyRowNewline = morkBool_kFalse;
+  	else
+	    mWriter_LineSize = stream->PutIndent(ev, morkWriter_kRowDepth);
     
     ioRow->SetRowClean();
     mork_rid rid = roid->mOid_Id;
