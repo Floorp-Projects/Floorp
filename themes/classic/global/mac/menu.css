@@ -42,10 +42,12 @@ menuitem[default="true"] {
   font-weight: bold;
 }  
   
-menu[disabled="true"], menuitem[disabled="true"],
+menu[disabled="true"],
+menuitem[disabled="true"],
 menu[menuactive="true"][disabled="true"],
 menuitem[menuactive="true"][disabled="true"] {
-  color: GrayText;
+  background-color: transparent !important;
+  color: GrayText !important;
 }
 
 /* ..... internal content .... */

@@ -35,7 +35,7 @@ outliner {
   -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
   -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
   -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
-  background-color: -moz-Dialog;
+  background-color: #EEEEEE;
   color: -moz-DialogText;
 }
 

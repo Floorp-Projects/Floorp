@@ -38,7 +38,7 @@ splitter {
   -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
   -moz-border-bottom-colors: ThreeDShadow ThreeDLightShadow;
   -moz-border-left-colors: ThreeDDarkShadow ThreeDHighlight;
-  width: 8px;
+  min-width: 8px;
   background-color: ThreeDFace;
 }
 
@@ -54,7 +54,7 @@ splitter[orient="vertical"] {
   -moz-border-right-colors: ThreeDShadow ThreeDLightShadow;
   -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow;
   -moz-border-left-colors: ThreeDHighlight ThreeDLightShadow;
-  height: 8px;
+  min-height: 8px;
 }
 
 /* ::::: splitter grippy ::::: */
@@ -63,8 +63,8 @@ grippy {
   cursor: pointer;
   border-top: 1px solid ThreeDShadow;
   border-bottom: 1px solid ThreeDShadow;
-  width: 4px;
-  height: 115px;
+  min-width: 4px;
+  min-height: 115px;
   background-color: transparent;
   background-repeat: no-repeat;
 }
@@ -78,8 +78,8 @@ splitter[orient="vertical"] > grippy {
   border-right: 1px solid ThreeDShadow;
   border-bottom: none;
   border-left: 1px solid ThreeDShadow;;
-  width: 115px;
-  height: 4px;
+  min-width: 115px;
+  min-height: 4px;
 }
   
 /* ..... normal state ..... */

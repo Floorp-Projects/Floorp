@@ -39,10 +39,10 @@ button {
   -moz-border-bottom-colors: transparent transparent transparent #000000 #777777 #AAAAAA;
   -moz-border-left-colors:transparent transparent transparent  #000000 #CCCCCC #FFFFFF;
   -moz-border-radius: 5px;
-  padding: 2px;
+  padding: 0px 4px;
   background-color: #CCCCCC;
   color: #000000;
-  font: message-box;
+  font: menu;
 }
 
 .button-text {
