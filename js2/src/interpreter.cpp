@@ -43,12 +43,15 @@ namespace Interpreter {
 #define op1(i) (i->o1())
 #define op2(i) (i->o2())
 #define op3(i) (i->o3())
+#define op4(i) (i->o4())
 
 // mnemonic names for operands.
 #define dst(i)  op1(i)
 #define src1(i) op2(i)
 #define src2(i) op3(i)
 #define ofs(i)  (i->getOffset())
+#define val3(i)  op3(i)
+#define val4(i)  op4(i)
 
 using namespace ICG;
 using namespace JSTypes;
@@ -396,31 +399,74 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                 break;
             case SUBTRACT:
                 {
-                    // XXX should use toNumber().
                     Arithmetic* sub = static_cast<Arithmetic*>(instruction);
-                    (*registers)[dst(sub)] = 
-                        JSValue((*registers)[src1(sub)].f64 -
-                                (*registers)[src2(sub)].f64);
+                    JSValue& dest = (*registers)[dst(sub)];
+                    JSValue& r1 = (*registers)[src1(sub)];
+                    JSValue& r2 = (*registers)[src2(sub)];
+                    JSValue num1(r1.toNumber());
+                    JSValue num2(r2.toNumber());
+                    dest = num1.f64 - num2.f64;
                 }
                 break;
             case MULTIPLY:
                 {
-                    // XXX should use toNumber().
                     Arithmetic* mul = static_cast<Arithmetic*>(instruction);
-                    (*registers)[dst(mul)] =
-                        JSValue((*registers)[src1(mul)].f64 *
-                                (*registers)[src2(mul)].f64);
+                    JSValue& dest = (*registers)[dst(mul)];
+                    JSValue& r1 = (*registers)[src1(mul)];
+                    JSValue& r2 = (*registers)[src2(mul)];
+                    JSValue num1(r1.toNumber());
+                    JSValue num2(r2.toNumber());
+                    dest = num1.f64 * num2.f64;
                 }
                 break;
             case DIVIDE:
                 {
-                    // XXX should use toNumber().
                     Arithmetic* div = static_cast<Arithmetic*>(instruction);
-                    (*registers)[dst(div)] = 
-                        JSValue((*registers)[src1(div)].f64 /
-                                (*registers)[src2(div)].f64);
+                    JSValue& dest = (*registers)[dst(div)];
+                    JSValue& r1 = (*registers)[src1(div)];
+                    JSValue& r2 = (*registers)[src2(div)];
+                    JSValue num1(r1.toNumber());
+                    JSValue num2(r2.toNumber());
+                    dest = num1.f64 / num2.f64;
                 }
                 break;
+            case REMAINDER:
+                {
+                    Arithmetic* rem = static_cast<Arithmetic*>(instruction);
+                    JSValue& dest = (*registers)[dst(rem)];
+                    JSValue& r1 = (*registers)[src1(rem)];
+                    JSValue& r2 = (*registers)[src2(rem)];
+                    JSValue num1(r1.toNumber());
+                    JSValue num2(r2.toNumber());
+                    dest = fmod(num1.f64, num2.f64);
+                }
+                break;
+
+            case PROP_XCR:
+                {
+                    PropXcr *px = static_cast<PropXcr*>(instruction);
+                    JSValue& dest = (*registers)[dst(px)];
+                    JSValue& base = (*registers)[src1(px)];
+                    JSObject *object = base.object;
+                    JSValue r = object->getProperty(*src2(px)).toNumber();
+                    dest = r;
+                    r.f64 += val4(px);
+                    object->setProperty(*src2(px), r);
+                }
+                break;
+
+            case NAME_XCR:
+                {
+                    NameXcr *nx = static_cast<NameXcr*>(instruction);
+                    JSValue& dest = (*registers)[dst(nx)];
+                    JSValue r = mGlobal->getVariable(*src1(nx)).toNumber();
+                    dest = r;
+                    r.f64 += val3(nx);
+                    mGlobal->setVariable(*src1(nx), dest);
+                }
+                break;
+
+
             case COMPARE_LT:
             case COMPARE_LE:
             case COMPARE_EQ:

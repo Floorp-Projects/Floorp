@@ -95,7 +95,9 @@ namespace JSTypes {
         explicit JSValue(JSArray* array) : array(array), tag(array_tag) {}
         explicit JSValue(JSFunction* function) : function(function), tag(function_tag) {}
         explicit JSValue(JSString* string) : string(string), tag(string_tag) {}
-        
+
+        JSValue(float64 a, float64 b);
+               
         int32& operator=(int32 i32)                     { return (tag = i32_tag, this->i32 = i32); }
         float64& operator=(float64 f64)                 { return (tag = f64_tag, this->f64 = f64); }
         JSObject*& operator=(JSObject* object)          { return (tag = object_tag, this->object = object); }
@@ -106,9 +108,10 @@ namespace JSTypes {
         bool isString() const                           { return (tag == string_tag); }
         bool isNumber() const                           { return ((tag == f64_tag) || (tag == i32_tag)); }
 
-        JSValue toString()                              { return (isString() ? *this : valueToString(*this)); }
-        JSValue toNumber()                              { return (isNumber() ? *this : valueToNumber(*this)); }
+        JSValue toString() const                        { return (isString() ? *this : valueToString(*this)); }
+        JSValue toNumber() const                        { return (isNumber() ? *this : valueToNumber(*this)); }
 
+        
         static JSValue valueToString(const JSValue& value);
         static JSValue valueToNumber(const JSValue& value);
 
@@ -136,6 +139,7 @@ namespace JSTypes {
     typedef std::vector<JSValue, gc_allocator<JSValue> > JSValues;
 
     extern const JSValue kUndefinedValue;
+    extern const JSValue kNaN;
 
     /**
      * Basic behavior of all JS objects, mapping a name to a value,

@@ -173,6 +173,8 @@ namespace ICG {
         return dest;
     }
 
+
+
     Register ICodeGenerator::loadName(const StringAtom &name)
     {
         Register dest = getRegister();
@@ -187,6 +189,24 @@ namespace ICG {
         iCode->push_back(instr);
     }
 
+    Register ICodeGenerator::nameInc(const StringAtom &name)
+    {
+        Register dest = getRegister();
+        NameXcr *instr = new NameXcr(dest, &name, 1.0);
+        iCode->push_back(instr);
+        return dest;
+    }
+    
+    Register ICodeGenerator::nameDec(const StringAtom &name)
+    {
+        Register dest = getRegister();
+        NameXcr *instr = new NameXcr(dest, &name, -1.0);
+        iCode->push_back(instr);
+        return dest;
+    }
+    
+
+    
     Register ICodeGenerator::getProperty(Register base, const StringAtom &name)
     {
         Register dest = getRegister();
@@ -202,6 +222,24 @@ namespace ICG {
         iCode->push_back(instr);
     }
 
+    Register ICodeGenerator::propertyInc(Register base, const StringAtom &name)
+    {
+        Register dest = getRegister();
+        PropXcr *instr = new PropXcr(dest, base, &name, 1.0);
+        iCode->push_back(instr);
+        return dest;
+    }
+
+    Register ICodeGenerator::propertyDec(Register base, const StringAtom &name)
+    {
+        Register dest = getRegister();
+        PropXcr *instr = new PropXcr(dest, base, &name, -1.0);
+        iCode->push_back(instr);
+        return dest;
+    }
+
+
+    
     Register ICodeGenerator::getElement(Register base, Register index)
     {
         Register dest = getRegister();

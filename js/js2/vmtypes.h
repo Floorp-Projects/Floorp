@@ -74,6 +74,7 @@ namespace VM {
         LOAD_STRING, /* dest, immediate value (string) */
         MOVE, /* dest, source */
         MULTIPLY, /* dest, source1, source2 */
+        NAME_XCR, /* dest, name, value */
         NEGATE, /* dest, source */
         NEW_ARRAY, /* dest */
         NEW_OBJECT, /* dest */
@@ -81,6 +82,7 @@ namespace VM {
         NOT, /* dest, source */
         OR, /* dest, source1, source2 */
         POSATE, /* dest, source */
+        PROP_XCR, /* dest, source, name, value */
         REMAINDER, /* dest, source1, source2 */
         RETURN, /* return value */
         RETURN_VOID, /* Return without a value */
@@ -97,14 +99,15 @@ namespace VM {
         TRYIN, /* catch target, finally target */
         TRYOUT, /* mmm, there is no try, only do */
         USHIFTRIGHT, /* dest, source1, source2 */
+        VAR_XCR, /* dest, source, value */
         WITHIN, /* within this object */
         WITHOUT, /* without this object */
-        XOR /* dest, source1, source2 */
+        XOR, /* dest, source1, source2 */
     };
 
-    
+
     /********************************************************************/
-   
+
     static char *opcodeNames[] = {
         "ADD           ",
         "AND           ",
@@ -134,6 +137,7 @@ namespace VM {
         "LOAD_STRING   ",
         "MOVE          ",
         "MULTIPLY      ",
+        "NAME_XCR      ",
         "NEGATE        ",
         "NEW_ARRAY     ",
         "NEW_OBJECT    ",
@@ -141,6 +145,7 @@ namespace VM {
         "NOT           ",
         "OR            ",
         "POSATE        ",
+        "PROP_XCR      ",
         "REMAINDER     ",
         "RETURN        ",
         "RETURN_VOID   ",
@@ -157,12 +162,15 @@ namespace VM {
         "TRYIN         ",
         "TRYOUT        ",
         "USHIFTRIGHT   ",
+        "VAR_XCR       ",
         "WITHIN        ",
         "WITHOUT       ",
         "XOR           ",
     };
 
+    
     /********************************************************************/
+   
 
     /* super-class for all instructions */
     class Instruction
@@ -289,6 +297,26 @@ namespace VM {
         Operand1 mOp1;
         Operand2 mOp2;
         Operand3 mOp3;
+    };
+    
+    template <typename Operand1, typename Operand2, typename Operand3, typename Operand4>
+    class Instruction_4 : public Instruction {
+    public:
+        Instruction_4(ICodeOp aOpcode, Operand1 aOp1, Operand2 aOp2,
+                      Operand3 aOp3, Operand4 aOp4) :
+            Instruction(aOpcode), mOp1(aOp1), mOp2(aOp2), mOp3(aOp3), mOp4(aOp4) { }
+        Operand1& o1() { return mOp1; }
+        Operand2& o2() { return mOp2; }
+        Operand3& o3() { return mOp3; }
+        Operand4& o4() { return mOp4; }
+
+        virtual int32 count() { return 4; }
+        
+    protected:
+        Operand1 mOp1;
+        Operand2 mOp2;
+        Operand3 mOp3;
+        Operand4 mOp4;
     };
     
     /********************************************************************/
@@ -679,6 +707,22 @@ namespace VM {
         /* print() and printOperands() inherited from Arithmetic */
     };
 
+    class NameXcr : public Instruction_3<Register, const StringAtom*, double> {
+    public:
+        /* dest, name, value */
+        NameXcr (Register aOp1, const StringAtom* aOp2, double aOp3) :
+            Instruction_3<Register, const StringAtom*, double>
+            (NAME_XCR, aOp1, aOp2, aOp3) {};
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[NAME_XCR] << "\t" << "R" << mOp1 << ", " << "'" << *mOp2 << "'" << ", " << mOp3;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << "R" << mOp1 << '=' << registers[mOp1];
+            return f;
+        }
+    };
+
     class Negate : public Instruction_2<Register, Register> {
     public:
         /* dest, source */
@@ -775,6 +819,22 @@ namespace VM {
             (POSATE, aOp1, aOp2) {};
         virtual Formatter& print(Formatter& f) {
             f << opcodeNames[POSATE] << "\t" << "R" << mOp1 << ", " << "R" << mOp2;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << "R" << mOp1 << '=' << registers[mOp1] << ", " << "R" << mOp2 << '=' << registers[mOp2];
+            return f;
+        }
+    };
+
+    class PropXcr : public Instruction_4<Register, Register, const StringAtom*, double> {
+    public:
+        /* dest, source, name, value */
+        PropXcr (Register aOp1, Register aOp2, const StringAtom* aOp3, double aOp4) :
+            Instruction_4<Register, Register, const StringAtom*, double>
+            (PROP_XCR, aOp1, aOp2, aOp3, aOp4) {};
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[PROP_XCR] << "\t" << "R" << mOp1 << ", " << "R" << mOp2 << ", " << "'" << *mOp3 << "'" << ", " << mOp4;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -986,6 +1046,22 @@ namespace VM {
         /* print() and printOperands() inherited from Arithmetic */
     };
 
+    class VarXcr : public Instruction_3<Register, Register, double> {
+    public:
+        /* dest, source, value */
+        VarXcr (Register aOp1, Register aOp2, double aOp3) :
+            Instruction_3<Register, Register, double>
+            (VAR_XCR, aOp1, aOp2, aOp3) {};
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[VAR_XCR] << "\t" << "R" << mOp1 << ", " << "R" << mOp2 << ", " << mOp3;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << "R" << mOp1 << '=' << registers[mOp1] << ", " << "R" << mOp2 << '=' << registers[mOp2];
+            return f;
+        }
+    };
+
     class Within : public Instruction_1<Register> {
     public:
         /* within this object */
@@ -1025,6 +1101,7 @@ namespace VM {
             (XOR, aOp1, aOp2, aOp3) {};
         /* print() and printOperands() inherited from Arithmetic */
     };
+
 
 
 } /* namespace VM */
