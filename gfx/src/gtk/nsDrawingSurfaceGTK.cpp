@@ -397,6 +397,13 @@ GdkDrawable *nsDrawingSurfaceGTK::GetDrawable(void)
   return mPixmap;
 }
 
+
+void nsDrawingSurfaceGTK::GetSize(PRUint32 *aWidth, PRUint32 *aHeight)
+{
+  *aWidth = mWidth;
+  *aHeight = mHeight;
+}
+
 PRUint8 
 nsDrawingSurfaceGTK::ConvertMaskToCount(unsigned long val)
 {

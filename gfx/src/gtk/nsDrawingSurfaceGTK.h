@@ -67,6 +67,9 @@ public:
   GdkGC *GetGC(void);
   GdkDrawable *GetDrawable(void);
 
+  void GetSize(PRUint32 *aWidth, PRUint32 *aHeight);
+
+
 protected:
   PRUint8 ConvertMaskToCount(unsigned long val);
 
