@@ -141,6 +141,7 @@ protected:
   char * mDataBuffer;
 
   nsresult SetUpTempFile(nsIChannel * aChannel);
+  nsresult PromptForSaveToFile(nsILocalFile ** aNewFile, const PRUnichar * aDefaultFile);
 };
 
 #endif // nsExternalHelperAppService_h__

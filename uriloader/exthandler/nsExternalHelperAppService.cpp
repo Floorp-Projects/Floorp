@@ -42,6 +42,7 @@
 #include "nsIMIMEInfo.h"
 
 #include "nsIHelperAppLauncherDialog.h"
+#include "nsIFilePicker.h"
 
 #include "nsCExternalHandlerService.h" // contains progids for the helper app service
 
@@ -566,24 +567,61 @@ NS_IMETHODIMP nsExternalAppHandler::GetMIMEInfo(nsIMIMEInfo ** aMIMEInfo)
   return NS_OK;
 }
 
+nsresult nsExternalAppHandler::PromptForSaveToFile(nsILocalFile ** aNewFile, const PRUnichar * aDefaultFile)
+{
+  // I'm thinking the best thing to do here is to pass this call through to 
+  // someone else and let them bring up the dialog. This keeps dialog dependencies out
+  // of the uriloader...
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIFilePicker> filePicker = do_CreateInstance("component://mozilla/filepicker", &rv);
+  if (filePicker)
+  {
+    // HACK!! Find a string bundle to extract this string from.
+     filePicker->Init(nsnull, NS_LITERAL_STRING("Enter name of file to save to"), nsIFilePicker::modeSave);
+     filePicker->SetDefaultString(aDefaultFile);
+     filePicker->AppendFilter(NS_ConvertASCIItoUCS2(mTempFileExtension), NS_ConvertASCIItoUCS2(mTempFileExtension));
+     filePicker->AppendFilters(nsIFilePicker::filterAll);
+
+     PRInt16 dialogResult;
+     filePicker->Show(&dialogResult);
+     if (dialogResult == nsIFilePicker::returnCancel)
+       rv = NS_ERROR_FAILURE;
+     else          
+       rv = filePicker->GetFile(aNewFile);
+  }
+
+  return rv;
+}
+
 NS_IMETHODIMP nsExternalAppHandler::SaveToDisk(nsIFile * aNewFileLocation, PRBool aRememberThisPreference)
 {
   nsresult rv = NS_OK;
   mReceivedDispostionInfo = PR_TRUE;
   if (mStopRequestIssued)
   {
-    if (aNewFileLocation)
+    nsCOMPtr<nsILocalFile> fileToUse;
+    if (!aNewFileLocation)
+    {
+      nsXPIDLString leafName;
+      mTempFile->GetUnicodeLeafName(getter_Copies(leafName));
+      rv = PromptForSaveToFile(getter_AddRefs(fileToUse), leafName);
+    }
+    else
+      fileToUse = do_QueryInterface(aNewFileLocation);
+    if (NS_SUCCEEDED(rv) && fileToUse)
     {
        // extract the new leaf name from the file location
        nsXPIDLCString fileName;
-       aNewFileLocation->GetLeafName(getter_Copies(fileName));
+       fileToUse->GetLeafName(getter_Copies(fileName));
        nsCOMPtr<nsIFile> directoryLocation;
-       aNewFileLocation->GetParent(getter_AddRefs(directoryLocation));
+       fileToUse->GetParent(getter_AddRefs(directoryLocation));
        if (directoryLocation)
        {
          rv = mTempFile->MoveTo(directoryLocation, fileName);
        }
     }
+    else
+      Cancel(); // call cancel if we failed to save the file to disk.
   }
   // o.t. remember the new file location to save to.
   else
