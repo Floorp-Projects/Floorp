@@ -1518,6 +1518,56 @@ Seal(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_SealObject(cx, target, deep);
 }
 
+static JSBool
+GetPDA(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    JSObject *vobj, *aobj, *pdobj;
+    JSBool ok;
+    JSPropertyDescArray pda;
+    JSPropertyDesc *pd;
+    uint32 i;
+    jsval v;
+
+    if (!JS_ValueToObject(cx, argv[0], &vobj))
+        return JS_FALSE;
+    if (!vobj)
+        return JS_TRUE;
+
+    aobj = JS_NewArrayObject(cx, 0, NULL);
+    if (!aobj)
+        return JS_FALSE;
+    *rval = OBJECT_TO_JSVAL(aobj);
+
+    ok = JS_GetPropertyDescArray(cx, vobj, &pda);
+    if (!ok)
+        return JS_FALSE;
+    pd = pda.array;
+    for (i = 0; i < pda.length; i++) {
+        pdobj = JS_NewObject(cx, NULL, NULL, NULL);
+        if (!pdobj) {
+            ok = JS_FALSE;
+            break;
+        }
+
+        ok = JS_SetProperty(cx, pdobj, "id", &pd->id) &&
+             JS_SetProperty(cx, pdobj, "value", &pd->value) &&
+             (v = INT_TO_JSVAL(pd->flags),
+              JS_SetProperty(cx, pdobj, "flags", &v)) &&
+             (v = INT_TO_JSVAL(pd->slot),
+              JS_SetProperty(cx, pdobj, "slot", &v)) &&
+             JS_SetProperty(cx, pdobj, "alias", &pd->alias);
+        if (!ok)
+            break;
+
+        v = OBJECT_TO_JSVAL(pdobj);
+        ok = JS_SetElement(cx, aobj, i, &v);
+        if (!ok)
+            break;
+    }
+    JS_PutPropertyDescArray(cx, &pda);
+    return ok;
+}
+
 static JSFunctionSpec shell_functions[] = {
     {"version",         Version,        0},
     {"options",         Options,        0},
@@ -1548,6 +1598,7 @@ static JSFunctionSpec shell_functions[] = {
     {"intern",          Intern,         1},
     {"clone",           Clone,          1},
     {"seal",            Seal,           1, 0, 1},
+    {"getpda",          GetPDA,         1},
     {0}
 };
 
@@ -1583,6 +1634,7 @@ static char *shell_help_messages[] = {
     "intern(str)            Internalize str in the atom table",
     "clone(fun[, scope])    Clone function object",
     "seal(obj[, deep])      Seal object, or object graph if deep",
+    "getpda(obj)            Get the property descriptors for obj",
     0
 };
 
