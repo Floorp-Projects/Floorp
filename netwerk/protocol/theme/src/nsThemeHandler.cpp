@@ -344,6 +344,56 @@ static nsresult drawThemeButton(Arguments& args, nsIInputStream **result, PRInt3
     return rv;
 }
 
+static nsresult drawThemeScrollbarThumb(TempGWorld& world, ThemeTrackDrawInfo& drawInfo,
+                                        nsIInputStream **result, PRInt32 *length)
+{
+    nsresult rv = NS_ERROR_OUT_OF_MEMORY;
+    RgnHandle thumbRgn = ::NewRgn();
+    if (thumbRgn != NULL) {
+        OSStatus status = ::GetThemeTrackThumbRgn(&drawInfo, thumbRgn);
+        Rect srcBounds = (**thumbRgn).rgnBBox;
+        Rect thumbBounds = { 0, 0, srcBounds.bottom - srcBounds.top, srcBounds.right - srcBounds.left };
+        ::OffsetRgn(thumbRgn, -srcBounds.left, -srcBounds.top);
+        TempGWorld thumbWorld(thumbBounds);
+        if (thumbWorld.valid()) {
+            thumbWorld.fill(0xFF000000);
+            thumbWorld.copy(world, srcBounds, thumbBounds, thumbRgn);
+            thumbWorld.xorFill(0xFF000000);
+            rv = encodeGWorld(thumbWorld, 'PNGf', result, length);
+        }
+        ::DisposeRgn(thumbRgn);
+    }
+    return rv;
+}
+
+static nsresult drawThemeScrollbarArrow(TempGWorld& world, Rect& scrollbarBounds, Rect& trackBounds,
+                                        bool isLeftOrTopArrow, bool isHorizontal,
+                                        nsIInputStream **result, PRInt32 *length)
+{
+    nsresult rv = NS_ERROR_OUT_OF_MEMORY;
+    Rect srcBounds = scrollbarBounds;
+    if (isHorizontal) {
+        if (isLeftOrTopArrow)
+            srcBounds.right = trackBounds.left + 1;
+        else
+            srcBounds.left = trackBounds.right - 1;
+    } else {
+        if (isLeftOrTopArrow)
+            srcBounds.bottom = trackBounds.top + 1;
+        else
+            srcBounds.top = trackBounds.bottom - 1;
+    }
+    Rect arrowBounds = { 0, 0, srcBounds.bottom - srcBounds.top, srcBounds.right - srcBounds.left };
+    TempGWorld arrowWorld(arrowBounds);
+    if (arrowWorld.valid()) {
+        arrowWorld.fill(0xFF000000);
+        arrowWorld.copy(world, srcBounds, arrowBounds);
+        arrowWorld.xorFill(0xFF000000);
+        rv = encodeGWorld(arrowWorld, 'PNGf', result, length);
+    }
+    return rv;
+}
+
 static nsresult drawThemeScrollbar(Arguments& args, nsIInputStream **result, PRInt32 *length)
 {
     bool isHorizontal = getBoolArgument(args, "horizontal", true);
@@ -387,21 +437,19 @@ static nsresult drawThemeScrollbar(Arguments& args, nsIInputStream **result, PRI
         // now, encode the image as a 'PNGf' image, and return the encoded image
         // as an nsIInputStream.
         const char* part = getArgument(args, "part", NULL);
-        if (part != NULL && nsCRT::strcasecmp(part, "thumb") == 0) {
-            RgnHandle thumbRgn = ::NewRgn();
-            if (thumbRgn != NULL) {
-                status = ::GetThemeTrackThumbRgn(&drawInfo, thumbRgn);
-                Rect srcBounds = (**thumbRgn).rgnBBox;
-                Rect thumbBounds = { 0, 0, srcBounds.bottom - srcBounds.top, srcBounds.right - srcBounds.left };
-                ::OffsetRgn(thumbRgn, -srcBounds.left, -srcBounds.top);
-                TempGWorld thumbWorld(thumbBounds);
-                if (thumbWorld.valid()) {
-                    thumbWorld.fill(0xFF000000);
-                    thumbWorld.copy(world, srcBounds, thumbBounds, thumbRgn);
-                    thumbWorld.xorFill(0xFF000000);
-                    rv = encodeGWorld(thumbWorld, 'PNGf', result, length);
-                }
-                ::DisposeRgn(thumbRgn);
+        if (part != NULL) {
+            if (::strcmp(part, "thumb") == 0) {
+                rv = drawThemeScrollbarThumb(world, drawInfo, result, length);
+            } else
+            if (::strcmp(part, "leftArrow") == 0 || ::strcmp(part, "topArrow") == 0) {
+                rv = drawThemeScrollbarArrow(world, scrollbarBounds, drawInfo.bounds,
+                                             true, isHorizontal,
+                                             result, length);
+            } else
+            if (::strcmp(part, "rightArrow") == 0 || ::strcmp(part, "bottomArrow") == 0) {
+                rv = drawThemeScrollbarArrow(world, scrollbarBounds, drawInfo.bounds,
+                                             false, isHorizontal,
+                                             result, length);
             }
         } else {
             // now, for all pixels that aren't 0xFF000000, turn on the alpha channel,
