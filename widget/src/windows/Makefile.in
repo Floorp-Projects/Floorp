@@ -67,6 +67,7 @@ CPPSRCS		= \
 	nsSound.cpp          \
 	nsImageClipboard.cpp \
 	nsBidiKeyboard.cpp   \
+	nsFullScreen.cpp     \
 	$(NULL)
 
 ifdef ACCESSIBILITY
