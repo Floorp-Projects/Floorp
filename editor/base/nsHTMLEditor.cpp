@@ -1272,11 +1272,27 @@ NS_IMETHODIMP nsHTMLEditor::InsertHTML(const nsString& aInputString)
   nsAutoEditBatch beginBatching(this);
 
   nsresult res;
+
+  nsCOMPtr<nsIDOMSelection>selection;
+
+  // Call the rules code in case there's anything we need to do first
+  // (e.g. delete the bogus node):
+  // Call the rules code in case there's anything we need to do first
+  // (e.g. delete the bogus node):
+  if (!mRules) return NS_ERROR_NOT_INITIALIZED;
+
+  res = GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(res)) return res;
+
+  nsTextRulesInfo ruleInfo(nsHTMLEditRules::kInsertElement);
+  PRBool cancel, handled;
+  res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
+  if (NS_FAILED(res)) return res;
+
   nsCOMPtr<nsIDOMNode> parentNode;
   PRInt32 offsetOfNewNode;
   res = DeleteSelectionAndPrepareToCreateNode(parentNode, offsetOfNewNode);
 
-  nsCOMPtr<nsIDOMSelection>selection;
   res = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
   if (!selection) return NS_ERROR_NULL_POINTER;
