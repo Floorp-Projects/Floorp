@@ -649,8 +649,6 @@ protected:
     nsVoidArray           mNodeStack;
     nsVoidArray           mTokenStack;
 
-    fstream*              mOut;
-
     PRInt32               mHTMLStackPos;
     eHTMLTags             mHTMLTagStack[512];
     nsAutoString*         mHTMLNameStack[512];

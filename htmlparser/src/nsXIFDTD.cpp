@@ -412,14 +412,6 @@ nsresult nsXIFDTD::WillBuildModel(nsString& aFileName,PRBool aNotifySink){
 
   if(mSink)
   {
-#if defined(WIN32)
-  const char* filename="c:\\temp\\save.html";
-  mOut = new fstream(filename,ios::out);
-
-  ((nsHTMLContentSinkStream*)mSink)->SetOutputStream(*mOut);
-
-#endif
-
     mSink->WillBuildModel();
   }
 
@@ -438,13 +430,6 @@ nsresult nsXIFDTD::DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySink){
   if(mSink) 
   {
     result = mSink->DidBuildModel(anErrorCode);
-    
-    if (mOut != nsnull)
-    {
-      mOut->close();
-      delete mOut;
-    }
-
   }
 
   return result;

@@ -43,6 +43,30 @@ static char*    gDocTypeHeader = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2//
 const  int      gTabSize=2;
 static char     gBuffer[500];
 
+
+
+
+ /** PRETTY PRINTING PROTOTYPES **/
+ 
+PRBool IsInline(eHTMLTags aTag);
+PRBool IsBlockLevel(eHTMLTags aTag);
+PRInt32 BreakBeforeOpen(eHTMLTags aTag);
+PRInt32 BreakAfterOpen(eHTMLTags aTag);
+PRInt32 BreakBeforeClose(eHTMLTags aTag);
+PRInt32 BreakAfterClose(eHTMLTags aTag);
+PRBool IndentChildren(eHTMLTags aTag);
+PRBool PreformattedChildren(eHTMLTags aTag);
+PRBool EatOpen(eHTMLTags aTag);
+PRBool EatClose(eHTMLTags aTag);
+PRBool PermitWSBeforeOpen(eHTMLTags aTag);
+PRBool PermitWSAfterOpen(eHTMLTags aTag);
+PRBool PermitWSBeforeClose(eHTMLTags aTag);
+PRBool PermitWSAfterClose(eHTMLTags aTag);
+PRBool IgnoreWS(eHTMLTags aTag);
+
+
+
+
 /**
  *  This method gets called as part of our COM-like interfaces.
  *  Its purpose is to create an interface to parser object
@@ -90,8 +114,10 @@ NS_IMPL_RELEASE(nsHTMLContentSinkStream)
  *  @return  NS_xxx error result
  */
 NS_HTMLPARS nsresult
-NS_New_HTML_ContentSinkStream(nsIHTMLContentSink** aInstancePtrResult) {
-  nsHTMLContentSinkStream* it = new nsHTMLContentSinkStream();
+NS_New_HTML_ContentSinkStream(nsIHTMLContentSink** aInstancePtrResult, 
+                              PRBool aDoFormat,
+                              PRBool aDoHeader) {
+  nsHTMLContentSinkStream* it = new nsHTMLContentSinkStream(aDoFormat,aDoHeader);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -105,13 +131,15 @@ NS_New_HTML_ContentSinkStream(nsIHTMLContentSink** aInstancePtrResult) {
  * @param 
  * @return
  */
-nsHTMLContentSinkStream::nsHTMLContentSinkStream()  {
+nsHTMLContentSinkStream::nsHTMLContentSinkStream(PRBool aDoFormat,PRBool aDoHeader)  {
   mOutput=&cout;
   mLowerCaseTags = PR_TRUE;  
   memset(mHTMLTagStack,0,sizeof(mHTMLTagStack));
   mHTMLStackPos = 0;
   mColPos = 0;
   mIndent = 0;
+  mDoFormat = aDoFormat;
+  mDoHeader = aDoHeader;
 }
 
 /**
@@ -120,13 +148,15 @@ nsHTMLContentSinkStream::nsHTMLContentSinkStream()  {
  * @param 
  * @return
  */
-nsHTMLContentSinkStream::nsHTMLContentSinkStream(ostream& aStream)  {
+nsHTMLContentSinkStream::nsHTMLContentSinkStream(ostream& aStream,PRBool aDoFormat,PRBool aDoHeader)  {
   mOutput = &aStream;
   mLowerCaseTags = PR_TRUE;  
   memset(mHTMLTagStack,0,sizeof(mHTMLTagStack));
   mHTMLStackPos = 0;
   mColPos = 0;
   mIndent = 0;
+  mDoFormat = aDoFormat;
+  mDoHeader = aDoHeader;
 }
 
 
@@ -147,7 +177,8 @@ nsHTMLContentSinkStream::~nsHTMLContentSinkStream() {
  * @param 
  * @return
  */
-void nsHTMLContentSinkStream::SetOutputStream(ostream& aStream){
+NS_IMETHODIMP_(void)
+nsHTMLContentSinkStream::SetOutputStream(ostream& aStream){
   mOutput=&aStream;
 }
 
@@ -164,23 +195,28 @@ void nsHTMLContentSinkStream::WriteAttributes(const nsIParserNode& aNode,ostream
     int i=0;
     for(i=0;i<theCount;i++){
       const nsString& temp=aNode.GetKeyAt(i);
-      nsString key = temp;
       
-      if (mLowerCaseTags == PR_TRUE)
-        key.ToLowerCase();
-      else
-        key.ToUpperCase();
+      if (!temp.Equals(nsString("Steve's unbelievable hack attribute")))
+      {      
+        nsString key = temp;
+
+        if (mLowerCaseTags == PR_TRUE)
+          key.ToLowerCase();
+        else
+          key.ToUpperCase();
 
 
-      key.ToCString(gBuffer,sizeof(gBuffer)-1);
+
+        key.ToCString(gBuffer,sizeof(gBuffer)-1);
       
-      aStream << " " << gBuffer << char(kEqual);
-      mColPos += 1 + strlen(gBuffer) + 1;
+        aStream << " " << gBuffer << char(kEqual);
+        mColPos += 1 + strlen(gBuffer) + 1;
       
-      const nsString& value=aNode.GetValueAt(i);
-      value.ToCString(gBuffer,sizeof(gBuffer)-1);
-      aStream << "\"" << gBuffer << "\"";
-      mColPos += 1 + strlen(gBuffer) + 1;
+        const nsString& value=aNode.GetValueAt(i);
+        value.ToCString(gBuffer,sizeof(gBuffer)-1);
+        aStream << "\"" << gBuffer << "\"";
+        mColPos += 1 + strlen(gBuffer) + 1;
+      }
     }
   }
 }
@@ -616,7 +652,9 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode, ostream& aSt
 nsresult
 nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode, ostream& aStream){
   eHTMLTags type = (eHTMLTags)aNode.GetNodeType();
-  eHTMLTags tag = mHTMLTagStack[mHTMLStackPos-1];
+  eHTMLTags tag = eHTMLTag_unknown;
+  if (mHTMLStackPos > 0)
+    tag = mHTMLTagStack[mHTMLStackPos-1];
   
   PRBool    preformatted = PR_FALSE;
 
@@ -640,7 +678,7 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode, ostream& aStream){
   if (type == eHTMLTag_text)
   {
     const nsString& text = aNode.GetText();
-    if (preformatted == PR_TRUE)
+    if ((mDoFormat == PR_FALSE) || preformatted == PR_TRUE)
     {
       text.ToCString(gBuffer,sizeof(gBuffer)-1);
       aStream << gBuffer;
@@ -707,7 +745,7 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode, ostream& aStream){
   }
   else if (type == eHTMLTag_whitespace)
   {
-    if (preformatted || IgnoreWS(tag) == PR_FALSE)
+    if ((mDoFormat == PR_FALSE) || preformatted || IgnoreWS(tag) == PR_FALSE)
     {
       const nsString& text = aNode.GetText();
       text.ToCString(gBuffer,sizeof(gBuffer)-1);
@@ -717,7 +755,7 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode, ostream& aStream){
   }
   else if (type == eHTMLTag_newline)
   {
-    if (preformatted)
+    if ((mDoFormat == PR_FALSE) || preformatted)
     {
       const nsString& text = aNode.GetText();
       text.ToCString(gBuffer,sizeof(gBuffer)-1);
@@ -792,7 +830,7 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode){
 NS_IMETHODIMP
 nsHTMLContentSinkStream::WillBuildModel(void){
   mTabLevel=-1;
-  if(mOutput) {
+  if(mDoHeader && mOutput) {
     (*mOutput) << gHeaderComment << endl;
     (*mOutput) << gDocTypeHeader << endl;
   }
@@ -848,7 +886,7 @@ nsHTMLContentSinkStream::WillResume(void) {
  
 
 
-PRBool nsHTMLContentSinkStream::IsInline(eHTMLTags aTag) const
+PRBool IsInline(eHTMLTags aTag)
 {
   PRBool  result = PR_FALSE;
 
@@ -894,7 +932,7 @@ PRBool nsHTMLContentSinkStream::IsInline(eHTMLTags aTag) const
   return result;
 }
 
-PRBool nsHTMLContentSinkStream::IsBlockLevel(eHTMLTags aTag) const
+PRBool IsBlockLevel(eHTMLTags aTag) 
 {
   return !IsInline(aTag);
 }
@@ -903,7 +941,7 @@ PRBool nsHTMLContentSinkStream::IsBlockLevel(eHTMLTags aTag) const
 /**
   * Desired line break state before the open tag.
   */
-PRBool nsHTMLContentSinkStream::BreakBeforeOpen(eHTMLTags aTag) const {
+PRBool BreakBeforeOpen(eHTMLTags aTag)  {
  PRBool  result = PR_FALSE;
   switch (aTag)
   {
@@ -920,7 +958,7 @@ PRBool nsHTMLContentSinkStream::BreakBeforeOpen(eHTMLTags aTag) const {
 /**
   * Desired line break state after the open tag.
   */
-PRBool nsHTMLContentSinkStream::BreakAfterOpen(eHTMLTags aTag) const {
+PRBool BreakAfterOpen(eHTMLTags aTag)  {
   PRBool  result = PR_FALSE;
   switch (aTag)
   {
@@ -944,7 +982,7 @@ PRBool nsHTMLContentSinkStream::BreakAfterOpen(eHTMLTags aTag) const {
 /**
   * Desired line break state before the close tag.
   */
-PRBool nsHTMLContentSinkStream::BreakBeforeClose(eHTMLTags aTag) const {
+PRBool BreakBeforeClose(eHTMLTags aTag)  {
   PRBool  result = PR_FALSE;
 
   switch (aTag)
@@ -970,7 +1008,7 @@ PRBool nsHTMLContentSinkStream::BreakBeforeClose(eHTMLTags aTag) const {
 /**
   * Desired line break state after the close tag.
   */
-PRBool nsHTMLContentSinkStream::BreakAfterClose(eHTMLTags aTag) const {
+PRBool BreakAfterClose(eHTMLTags aTag)  {
   PRBool  result = PR_FALSE;
 
   switch (aTag)
@@ -990,7 +1028,7 @@ PRBool nsHTMLContentSinkStream::BreakAfterClose(eHTMLTags aTag) const {
   * This implies that BreakAfterOpen() and BreakBeforeClose()
   * are true no matter what those methods return.
   */
-PRBool nsHTMLContentSinkStream::IndentChildren(eHTMLTags aTag) const {
+PRBool IndentChildren(eHTMLTags aTag)  {
   
   PRBool result = PR_FALSE;
 
@@ -1016,7 +1054,7 @@ PRBool nsHTMLContentSinkStream::IndentChildren(eHTMLTags aTag) const {
   * All tags after this tag and before the closing tag will be output with no
   * formatting.
   */
-PRBool nsHTMLContentSinkStream::PreformattedChildren(eHTMLTags aTag) const {
+PRBool PreformattedChildren(eHTMLTags aTag)  {
   PRBool result = PR_FALSE;
   if (aTag == eHTMLTag_pre)
   {
@@ -1028,14 +1066,14 @@ PRBool nsHTMLContentSinkStream::PreformattedChildren(eHTMLTags aTag) const {
 /**
   * Eat the open tag.  Pretty much just for <P*>.
   */
-PRBool nsHTMLContentSinkStream::EatOpen(eHTMLTags aTag) const {
+PRBool EatOpen(eHTMLTags aTag)  {
   return PR_FALSE;
 }
 
 /**
   * Eat the close tag.  Pretty much just for </P>.
   */
-PRBool nsHTMLContentSinkStream::EatClose(eHTMLTags aTag) const {
+PRBool EatClose(eHTMLTags aTag)  {
   return PR_FALSE;
 }
 
@@ -1047,13 +1085,13 @@ PRBool nsHTMLContentSinkStream::EatClose(eHTMLTags aTag) const {
   * e.g. there is already WS there or we are after a tag that
   * has PermitWSAfter*().
   */
-PRBool nsHTMLContentSinkStream::PermitWSBeforeOpen(eHTMLTags aTag) const {
+PRBool PermitWSBeforeOpen(eHTMLTags aTag)  {
   PRBool result = IsInline(aTag) == PR_FALSE;
   return result;
 }
 
 /** @see PermitWSBeforeOpen */
-PRBool nsHTMLContentSinkStream::PermitWSAfterOpen(eHTMLTags aTag) const {
+PRBool PermitWSAfterOpen(eHTMLTags aTag)  {
   if (aTag == eHTMLTag_pre)
   {
     return PR_FALSE;
@@ -1062,7 +1100,7 @@ PRBool nsHTMLContentSinkStream::PermitWSAfterOpen(eHTMLTags aTag) const {
 }
 
 /** @see PermitWSBeforeOpen */
-PRBool nsHTMLContentSinkStream::PermitWSBeforeClose(eHTMLTags aTag) const {
+PRBool PermitWSBeforeClose(eHTMLTags aTag)  {
   if (aTag == eHTMLTag_pre)
   {
     return PR_FALSE;
@@ -1071,13 +1109,13 @@ PRBool nsHTMLContentSinkStream::PermitWSBeforeClose(eHTMLTags aTag) const {
 }
 
 /** @see PermitWSBeforeOpen */
-PRBool nsHTMLContentSinkStream::PermitWSAfterClose(eHTMLTags aTag) const {
+PRBool PermitWSAfterClose(eHTMLTags aTag)  {
   return PR_TRUE;
 }
 
 
 /** @see PermitWSBeforeOpen */
-PRBool nsHTMLContentSinkStream::IgnoreWS(eHTMLTags aTag) const {
+PRBool IgnoreWS(eHTMLTags aTag)  {
   PRBool result = PR_FALSE;
 
   switch (aTag)
