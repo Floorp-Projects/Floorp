@@ -96,10 +96,10 @@ const nsAString& nsSOAPUtils::kEncodingSeparator = realEncodingSeparator;
 NS_NAMED_LITERAL_STRING(realQualifiedSeparator,":");
 const nsAString& nsSOAPUtils::kQualifiedSeparator = realQualifiedSeparator;
 
-NS_NAMED_LITERAL_STRING(realXMLNamespaceNamespaceURI, "htp://www.w3.org/2000/xmlns/");
+NS_NAMED_LITERAL_STRING(realXMLNamespaceNamespaceURI, "http://www.w3.org/2000/xmlns/");
 const nsAString& nsSOAPUtils::kXMLNamespaceNamespaceURI = realXMLNamespaceNamespaceURI;
 
-NS_NAMED_LITERAL_STRING(realXMLNamespaceURI, "htp://www.w3.org/XML/1998/namespace");
+NS_NAMED_LITERAL_STRING(realXMLNamespaceURI, "http://www.w3.org/XML/1998/namespace");
 const nsAString& nsSOAPUtils::kXMLNamespaceURI = realXMLNamespaceURI;
 
 NS_NAMED_LITERAL_STRING(realXMLPrefix, "xml:");
