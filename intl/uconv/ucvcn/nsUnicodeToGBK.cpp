@@ -149,6 +149,32 @@ NS_IMETHODIMP nsUnicodeToGB18030::GetMaxLength(const PRUnichar * aSrc,
   *aDestLength = 4 * aSrcLength;
   return NS_OK;
 }
+#define IS_HIGH_SURROGATE(u) (((PRUnichar)0xD800 <= (u)) && ((u) <= (PRUnichar)0xDBFF))
+#define IS_LOW_SURROGATE(u) (((PRUnichar)0xDC00 <= (u)) && ((u) <= (PRUnichar)0xDFFF))
+PRBool nsUnicodeToGB18030::EncodeSurrogate(
+  PRUnichar aSurrogateHigh,
+  PRUnichar aSurrogateLow,
+  char* aOut)
+{
+  if( IS_HIGH_SURROGATE(aSurrogateHigh) && 
+      IS_LOW_SURROGATE(aSurrogateLow) )
+  {
+    // notice that idx does not include the 0x10000 
+    PRUint32 idx = ((aSurrogateHigh - (PRUnichar)0xD800) << 10 ) |
+                   (aSurrogateLow - (PRUnichar) 0xDC00);
+
+    unsigned char *out = (unsigned char*) aOut;
+    // notice this is from 0x90 for supplment planes
+    out[0] = (idx / (10*126*10)) + 0x90; 
+    idx %= (10*126*10);
+    out[1] = (idx / (10*126)) + 0x30;
+    idx %= (10*126);
+    out[2] = (idx / (10)) + 0x81;
+    out[3] = (idx % 10) + 0x30;
+    return PR_TRUE;
+  } 
+  return PR_FALSE; 
+} 
 //-----------------------------------------------------------------------
 //  nsUnicodeToGB18030Font0
 //-----------------------------------------------------------------------
@@ -219,6 +245,7 @@ nsUnicodeToGBK::nsUnicodeToGBK()
   mExtensionEncoder = nsnull;
   m4BytesEncoder = nsnull;
   mUtil.InitToGBKTable();
+  mSurrogateHigh = 0;
 }
 void nsUnicodeToGBK::CreateExtensionEncoder()
 {
@@ -234,6 +261,12 @@ PRBool nsUnicodeToGBK::TryExtensionEncoder(
   PRInt32 *aOutLen
 )
 {
+  if( IS_HIGH_SURROGATE(aChar) || 
+      IS_LOW_SURROGATE(aChar) )
+  {
+    // performance tune for surrogate characters
+    return PR_FALSE;
+  }
   if(! mExtensionEncoder )
     CreateExtensionEncoder();
   if(mExtensionEncoder) 
@@ -253,6 +286,12 @@ PRBool nsUnicodeToGBK::Try4BytesEncoder(
   PRInt32 *aOutLen
 )
 {
+  if( IS_HIGH_SURROGATE(aChar) || 
+      IS_LOW_SURROGATE(aChar) )
+  {
+    // performance tune for surrogate characters
+    return PR_FALSE;
+  }
   if(! m4BytesEncoder )
     Create4BytesEncoder();
   if(m4BytesEncoder) 
@@ -267,6 +306,13 @@ PRBool nsUnicodeToGBK::Try4BytesEncoder(
   }
   return PR_FALSE;
 }
+PRBool nsUnicodeToGBK::EncodeSurrogate(
+  PRUnichar aSurrogateHigh,
+  PRUnichar aSurrogateLow,
+  char* aOut)
+{
+  return PR_FALSE; // GBK cannot encode Surrogate, let the subclass encode it.
+} 
 
 NS_IMETHODIMP nsUnicodeToGBK::ConvertNoBuff(
   const PRUnichar * aSrc, 
@@ -327,20 +373,62 @@ NS_IMETHODIMP nsUnicodeToGBK::ConvertNoBuff(
           // we still cannot map. Let's try to
           // call the delegated GB18030 4 byte converter 
           aOutLen = 4;
-          if(Try4BytesEncoder(unicode, aDest, &aOutLen))
+          if( IS_HIGH_SURROGATE(unicode) )
           {
-            NS_ASSERTION((aOutLen == 4), "we should always generate 4 bytes here");
-            iDestLength += aOutLen;
-            aDest += aOutLen;
+            if((iSrcLength+1) < *aSrcLength ) {
+              if(EncodeSurrogate(aSrc[0],aSrc[1], aDest)) {
+                // since we got a surrogate pair, we need to increment src.
+                iSrcLength++ ; 
+                aSrc++;
+                iDestLength += aOutLen;
+                aDest += aOutLen;
+              } else {
+                // only get a high surrogate, but not a low surrogate
+                res = NS_ERROR_UENC_NOMAPPING;
+                iSrcLength++;   // include length of the unmapped character
+                break;
+              }
+            } else {
+              mSurrogateHigh = aSrc[0];
+              break; // this will go to afterwhileloop
+            }
           } else {
-            res = NS_ERROR_UENC_NOMAPPING;
-            iSrcLength++;   // include length of the unmapped character
-            break;
+            if( IS_LOW_SURROGATE(unicode) )
+            {
+              if(IS_HIGH_SURROGATE(mSurrogateHigh)) {
+                if(EncodeSurrogate(mSurrogateHigh, aSrc[0], aDest)) {
+                  iDestLength += aOutLen;
+                  aDest += aOutLen;
+                } else {
+                  // only get a high surrogate, but not a low surrogate
+                  res = NS_ERROR_UENC_NOMAPPING;
+                  iSrcLength++;   // include length of the unmapped character
+                  break;
+                }
+              } else {
+                // only get a low surrogate, but not a low surrogate
+                res = NS_ERROR_UENC_NOMAPPING;
+                iSrcLength++;   // include length of the unmapped character
+                break;
+              }
+            } else {
+              if(Try4BytesEncoder(unicode, aDest, &aOutLen))
+              {
+                NS_ASSERTION((aOutLen == 4), "we should always generate 4 bytes here");
+                iDestLength += aOutLen;
+                aDest += aOutLen;
+              } else {
+                res = NS_ERROR_UENC_NOMAPPING;
+                iSrcLength++;   // include length of the unmapped character
+                break;
+              }
+            }
           }
         }
       } 
     }
     iSrcLength++ ; // Each unicode char just count as one in PRUnichar string;  	  
+    mSurrogateHigh = 0;
     aSrc++;
     if ( iDestLength >= (*aDestLength) && (iSrcLength < *aSrcLength) )
     {
@@ -348,6 +436,7 @@ NS_IMETHODIMP nsUnicodeToGBK::ConvertNoBuff(
       break;
     }
   }
+//afterwhileloop:
   *aDestLength = iDestLength;
   *aSrcLength = iSrcLength;
   return res;
