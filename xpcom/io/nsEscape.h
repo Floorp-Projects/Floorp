@@ -35,7 +35,7 @@ typedef enum {
 extern "C" {
 #endif
 NS_COM char * nsEscape(const char * str, nsEscapeMask mask);
-	/* Caller must use delete [] on the result */
+	/* Caller must use nsCRT::free() on the result */
 
 NS_COM char * nsUnescape(char * str);
 	/* decode % escaped hex codes into character values,
@@ -45,7 +45,7 @@ NS_COM char * nsUnescape(char * str);
 NS_COM char * nsEscapeCount(const char * str, PRInt32 len, nsEscapeMask mask, PRInt32* out_len);
 	/* Like nsEscape, but if out_len is non-null, return result string length
 	 * in *out_len, and uses len instead of NUL termination.
-	 * Caller must use delete [] on the result.
+	 * Caller must use nsCRT::free() on the result.
 	 */
 NS_COM PRInt32 nsUnescapeCount (char * str);
 	/* decode % escaped hex codes into character values,
