@@ -1184,7 +1184,7 @@ NS_METHOD nsWindow::Resize(PRInt32 aX,
 
       if( !SetWindowPos( 0, ptl.x, ptl.y, w, GetHeight(h), SWP_MOVE | SWP_SIZE))
          if( aRepaint)
-            Update();
+            Invalidate(PR_FALSE);
 
 #if DEBUG_sobotka
    printf("+++++++++++Resized 0x%lx at %ld, %ld to %ld x %ld\n\n", mWnd, ptl.x, ptl.y, w, GetHeight(h));
