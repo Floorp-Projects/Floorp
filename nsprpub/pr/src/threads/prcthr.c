@@ -171,7 +171,7 @@ PR_IMPLEMENT(PRStatus) PR_Interrupt(PRThread *thread)
     thread->flags |= _PR_INTERRUPT;
     victim = thread->wait.cvar;
     _PR_THREAD_UNLOCK(thread);
-    if ((NULL != victim) && !thread->interrupt_blocked) {
+    if (NULL != victim) {
         int haveLock = (victim->lock->owner == _PR_MD_CURRENT_THREAD());
 
         if (!haveLock) PR_Lock(victim->lock);
@@ -194,8 +194,7 @@ PR_IMPLEMENT(PRStatus) PR_Interrupt(PRThread *thread)
                          * call is made with thread locked;
                          * on return lock is released
                          */
-						if (!thread->interrupt_blocked)
-                        	_PR_NotifyLockedThread(thread);
+                        _PR_NotifyLockedThread(thread);
                         break;
                 case _PR_IO_WAIT:
                         /*
@@ -204,8 +203,7 @@ PR_IMPLEMENT(PRStatus) PR_Interrupt(PRThread *thread)
                          * released. 
                          */
 #if defined(XP_UNIX) || defined(WINNT) || defined(WIN16)
-						if (!thread->interrupt_blocked)
-                        	_PR_Unblock_IO_Wait(thread);
+                        _PR_Unblock_IO_Wait(thread);
 #else
                         _PR_THREAD_UNLOCK(thread);
 #endif
