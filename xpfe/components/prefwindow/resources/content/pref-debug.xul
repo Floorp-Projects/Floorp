@@ -62,14 +62,14 @@
     <checkbox id="nglayoutDebugDisableXULCache" label="&debugDisableXULCache.label;"
               pref="true" preftype="bool" prefstring="nglayout.debug.disable_xul_cache"
               prefattribute="checked"/>
+    <checkbox id="browserEnableDiskCache" label="&debugEnableDiskCache.label;"
+              pref="true" preftype="bool" prefstring="browser.cache.disk.enable"
+              prefattribute="checked"/>
     <checkbox id="browserEnableCache" label="&debugEnableMemCache.label;"
               pref="true" preftype="bool" prefstring="browser.enable.cache"
               prefattribute="checked"/>
     <checkbox id="browserEnableTBDnD" label="&debugEnableTBDnD.label;"
               pref="true" preftype="bool" prefstring="browser.enable.tb_dnd"
-              prefattribute="checked"/>
-    <checkbox id="browserEnableDiskCache" label="&debugEnableDiskCache.label;"
-              pref="true" preftype="bool" prefstring="browser.cache.disk.enable"
               prefattribute="checked"/>
     <checkbox id="nglayoutDebugEnableXPCOMRefcntLog" label="&debugEnableXPCOMRefcntLog.label;"
               pref="true" preftype="bool" prefstring="nglayout.debug.enable_xpcom_refcnt_log"
