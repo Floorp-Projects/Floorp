@@ -62,11 +62,12 @@ public:
   NS_IMETHOD CastToRowGroupLayout(nsGridRowGroupLayout** aRowGroup);
   NS_IMETHOD CastToGridLayout(nsGridLayout2** aGrid);
   NS_IMETHOD GetGrid(nsIBox* aBox, nsGrid** aList, PRInt32* aIndex, nsGridRowLayout* aRequestor=nsnull);
-  NS_IMETHOD GetParentGridPart(nsIBox* aBox, nsCOMPtr<nsIBox>& aParentBox, nsIGridPart** aParentGridRow);
+  NS_IMETHOD GetParentGridPart(nsIBox* aBox, nsIBox** aParentBox, nsIGridPart** aParentGridRow);
   NS_IMETHOD ChildrenInserted(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aPrevBox, nsIBox* aChildList);
   NS_IMETHOD ChildrenAppended(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChildList);
   NS_IMETHOD ChildrenRemoved(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChildList);
   NS_IMETHOD ChildrenSet(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChildList);
+  NS_IMETHOD GetTotalMargin(nsIBox* aBox, nsMargin& aMargin, PRBool aIsRow);
 
 protected:
   NS_IMETHOD ChildAddedOrRemoved(nsIBox* aBox, nsBoxLayoutState& aState)=0;

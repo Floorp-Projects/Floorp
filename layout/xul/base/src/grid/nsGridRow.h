@@ -66,6 +66,7 @@ public:
    virtual PRBool IsMinSet()  { return (mMin  != -1); }
    virtual PRBool IsMaxSet()  { return (mMax  != -1); } 
    virtual PRBool IsFlexSet() { return (mFlex != -1); }
+   virtual PRBool IsOffsetSet() { return (mTop != -1 && mBottom != -1); }
 
 public:
 
@@ -75,6 +76,11 @@ public:
    nscoord mPref;
    nscoord mMin;
    nscoord mMax;
+   nscoord mTop;
+   nscoord mBottom;
+   nscoord mTopMargin;
+   nscoord mBottomMargin;
+
 };
 
 

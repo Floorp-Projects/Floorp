@@ -61,11 +61,14 @@ public:
   NS_IMETHOD CastToRowGroupLayout(nsGridRowGroupLayout** aRowGroup)=0;
   NS_IMETHOD CastToGridLayout(nsGridLayout2** aGrid)=0;
   NS_IMETHOD GetGrid(nsIBox* aBox, nsGrid** aList, PRInt32* aIndex, nsGridRowLayout* aRequestor=nsnull)=0;
-  NS_IMETHOD GetParentGridPart(nsIBox* aBox, nsCOMPtr<nsIBox>& aParentBox, nsIGridPart** aParentGridRow)=0;
+  NS_IMETHOD GetParentGridPart(nsIBox* aBox, nsIBox** aParentBox, nsIGridPart** aParentGridRow)=0;
   NS_IMETHOD CountRowsColumns(nsIBox* aBox, PRInt32& aRowCount, PRInt32& aComputedColumnCount)=0;
   NS_IMETHOD DirtyRows(nsIBox* aBox, nsBoxLayoutState& aState)=0;
   NS_IMETHOD BuildRows(nsIBox* aBox, nsGridRow* aRows, PRInt32* aCount)=0;
+  NS_IMETHOD GetTotalMargin(nsIBox* aBox, nsMargin& aMargin, PRBool aIsRow)=0;
+  NS_IMETHOD GetRowCount(PRInt32& aRowCount)=0;
 };
+
 
 #endif
 

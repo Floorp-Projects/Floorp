@@ -50,7 +50,11 @@ nsGridRow::nsGridRow():mBox(nsnull),
                        mFlex(-1),
                        mPref(-1),
                        mMin(-1),
-                       mMax(-1)
+                       mMax(-1),
+                       mTop(-1),
+                       mBottom(-1), 
+                       mTopMargin(0),
+                       mBottomMargin(0)
 
 {
     MOZ_COUNT_CTOR(nsGridRow);
@@ -61,6 +65,14 @@ nsGridRow::Init(nsIBox* aBox, PRBool aIsBogus)
 {
   mBox = aBox;
   mIsBogus = aIsBogus;
+  mFlex = -1;
+  mPref = -1;
+  mMin = -1;
+  mMax = -1;
+  mTop = -1;
+  mBottom = -1;
+  mTopMargin = 0;
+  mBottomMargin = 0;
 }
 
 nsGridRow::~nsGridRow()
@@ -74,6 +86,9 @@ nsGridRow::MarkDirty(nsBoxLayoutState& aState)
   mPref = -1;
   mMin = -1;
   mMax = -1;
+  mFlex = -1;
+  mTop = -1;
+  mBottom = -1;
 
   if (mBox) 
     mBox->MarkDirty(aState);

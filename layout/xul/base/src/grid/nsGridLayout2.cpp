@@ -82,7 +82,7 @@ nsGridLayout2::GetGrid(nsIBox* aBox, nsGrid** aGrid, PRInt32* aIndex, nsGridRowL
 }
 
 NS_IMETHODIMP
-nsGridLayout2::GetParentGridPart(nsIBox* aBox, nsCOMPtr<nsIBox>& aParentBox, nsIGridPart** aParentGridRow)
+nsGridLayout2::GetParentGridPart(nsIBox* aBox, nsIBox** aParentBox, nsIGridPart** aParentGridRow)
 {
   NS_ERROR("Should not be called");
   return NS_ERROR_FAILURE;
@@ -140,6 +140,25 @@ nsGridLayout2::CastToGridLayout(nsGridLayout2** aGridLayout)
   (*aGridLayout) = this;
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsGridLayout2::GetTotalMargin(nsIBox* aBox, nsMargin& aMargin, PRBool aIsRow)
+{
+  aMargin.left = 0;
+  aMargin.right = 0;
+  aMargin.top = 0;
+  aMargin.bottom = 0;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGridLayout2::GetRowCount(PRInt32& aRowCount)
+{
+  NS_ERROR("Should not be called");
+  return NS_OK;
+}
+
 
 NS_IMPL_ADDREF_INHERITED(nsGridLayout2, nsStackLayout);
 NS_IMPL_RELEASE_INHERITED(nsGridLayout2, nsStackLayout);

@@ -65,6 +65,7 @@ public:
   NS_IMETHOD CountRowsColumns(nsIBox* aBox, PRInt32& aRowCount, PRInt32& aComputedColumnCount);
   NS_IMETHOD DirtyRows(nsIBox* aBox, nsBoxLayoutState& aState);
   NS_IMETHOD BuildRows(nsIBox* aBox, nsGridRow* aRows, PRInt32* aCount);
+  NS_IMETHOD GetRowCount(PRInt32& aRowCount);
 
 protected:
 
@@ -78,6 +79,7 @@ protected:
 
   nsGridRowLeafLayout(nsIPresShell* aShell);
   virtual ~nsGridRowLeafLayout();
+  //virtual void AddBorderAndPadding(nsIBox* aBox, nsSize& aSize);
 
 private:
 

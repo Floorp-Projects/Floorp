@@ -54,57 +54,66 @@ class nsGridRowLayout;
 class nsBoxLayoutState;
 class nsGridCell;
 
+//#define DEBUG_grid 1
+
 class nsGrid
 {
 public:
   nsGrid();
   ~nsGrid();
 
-  virtual void NeedsRebuild(nsBoxLayoutState& aBoxLayoutState);
-  virtual nsGridRow* GetColumnAt(PRInt32 aIndex, PRBool aIsRow = PR_TRUE);
-  virtual nsGridRow* GetRowAt(PRInt32 aIndex, PRBool aIsRow = PR_TRUE);
-  virtual nsGridCell* GetCellAt(PRInt32 aX, PRInt32 aY);
-  virtual void RebuildIfNeeded();
+  nsGridRow* GetColumnAt(PRInt32 aIndex, PRBool aIsRow = PR_TRUE);
+  nsGridRow* GetRowAt(PRInt32 aIndex, PRBool aIsRow = PR_TRUE);
+  nsGridCell* GetCellAt(PRInt32 aX, PRInt32 aY);
 
-  virtual nsresult GetPrefRowSize(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nsSize& aSize, PRBool aIsRow = PR_TRUE);
-  virtual nsresult GetMinRowSize(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nsSize& aSize, PRBool aIsRow = PR_TRUE);
-  virtual nsresult GetMaxRowSize(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nsSize& aSize, PRBool aIsRow = PR_TRUE);
-  virtual nsresult GetRowFlex(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nscoord& aSize, PRBool aIsRow = PR_TRUE);
+  void NeedsRebuild(nsBoxLayoutState& aBoxLayoutState);
+  void RebuildIfNeeded();
 
-  virtual nsresult GetPrefRowHeight(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nscoord& aHeight, PRBool aIsRow = PR_TRUE);
-  virtual nsresult GetMinRowHeight(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nscoord& aHeight, PRBool aIsRow = PR_TRUE);
-  virtual nsresult GetMaxRowHeight(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nscoord& aHeight, PRBool aIsRow = PR_TRUE);
+  nsresult GetPrefRowSize(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nsSize& aSize, PRBool aIsRow = PR_TRUE);
+  nsresult GetMinRowSize(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nsSize& aSize, PRBool aIsRow = PR_TRUE);
+  nsresult GetMaxRowSize(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nsSize& aSize, PRBool aIsRow = PR_TRUE);
+  nsresult GetRowFlex(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nscoord& aSize, PRBool aIsRow = PR_TRUE);
 
-  virtual void RowChildIsDirty(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, PRInt32 aColumnIndex, PRBool aIsRow = PR_TRUE);
-  virtual void RowIsDirty(nsBoxLayoutState& aBoxLayoutState, PRInt32 aIndex, PRBool aIsRow = PR_TRUE);
-  virtual void RowAddedOrRemoved(nsBoxLayoutState& aBoxLayoutState, PRInt32 aIndex, PRBool aIsRow = PR_TRUE);
-  virtual void CellAddedOrRemoved(nsBoxLayoutState& aBoxLayoutState, PRInt32 aIndex, PRBool aIsRow = PR_TRUE);
-  virtual void DirtyRows(nsIBox* aRowBox, nsBoxLayoutState& aState);
+  nsresult GetPrefRowHeight(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nscoord& aHeight, PRBool aIsRow = PR_TRUE);
+  nsresult GetMinRowHeight(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nscoord& aHeight, PRBool aIsRow = PR_TRUE);
+  nsresult GetMaxRowHeight(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nscoord& aHeight, PRBool aIsRow = PR_TRUE);
+  void GetRowOffsets(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aTop, nscoord& aBottom, PRBool aIsRow = PR_TRUE);
+
+  void RowChildIsDirty(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, PRInt32 aColumnIndex, PRBool aIsRow = PR_TRUE);
+  void RowIsDirty(nsBoxLayoutState& aBoxLayoutState, PRInt32 aIndex, PRBool aIsRow = PR_TRUE);
+  void RowAddedOrRemoved(nsBoxLayoutState& aBoxLayoutState, PRInt32 aIndex, PRBool aIsRow = PR_TRUE);
+  void CellAddedOrRemoved(nsBoxLayoutState& aBoxLayoutState, PRInt32 aIndex, PRBool aIsRow = PR_TRUE);
+  void DirtyRows(nsIBox* aRowBox, nsBoxLayoutState& aState);
 #ifdef DEBUG_grid
-  virtual void PrintCellMap();
+  void PrintCellMap();
 #endif
-  virtual PRInt32 GetExtraColumnCount(PRBool aIsRow = PR_TRUE);
-  virtual PRInt32 GetExtraRowCount(PRBool aIsRow = PR_TRUE);
+  PRInt32 GetExtraColumnCount(PRBool aIsRow = PR_TRUE);
+  PRInt32 GetExtraRowCount(PRBool aIsRow = PR_TRUE);
 
 // accessors
-  virtual void SetBox(nsIBox* aBox) { mBox = aBox; }
-  virtual nsIBox* GetBox() { return mBox; }
-  virtual nsGridRow* GetColumns();
-  virtual nsGridRow* GetRows();
-  virtual PRInt32 GetRowCount(PRInt32 aIsRow);
-  virtual PRInt32 GetColumnCount(PRInt32 aIsRow);
+  void SetBox(nsIBox* aBox) { mBox = aBox; }
+  nsIBox* GetBox() { return mBox; }
+  nsGridRow* GetColumns();
+  nsGridRow* GetRows();
+  PRInt32 GetRowCount(PRInt32 aIsRow = PR_TRUE);
+  PRInt32 GetColumnCount(PRInt32 aIsRow = PR_TRUE);
 
-protected:
-  virtual void FreeMap();
-  virtual void FindRowsAndColumns(nsIBox** aRows, nsIBox** aColumns);
-  virtual void BuildRows(nsIBox* aBox, PRBool aSize, nsGridRow** aColumnsRows, PRBool aIsRow = PR_TRUE);
-  virtual void BuildCellMap(PRInt32 aRows, PRInt32 aColumns, nsGridCell** aCells);
-  virtual void PopulateCellMap(nsGridRow* aRows, nsGridRow* aColumns, PRInt32 aRowCount, PRInt32 aColumnCount, PRBool aIsRow = PR_TRUE);
-  virtual void CountRowsColumns(nsIBox* aBox, PRInt32& aRowCount, PRInt32& aComputedColumnCount);
-  virtual void SetLargestSize(nsSize& aSize, nscoord aHeight, PRBool aIsRow = PR_TRUE);
-  virtual void SetSmallestSize(nsSize& aSize, nscoord aHeight, PRBool aIsRow = PR_TRUE);
+  static nsIBox* GetScrolledBox(nsIBox* aChild);
+  static nsIBox* GetScrollBox(nsIBox* aChild);
 
 private:
+  void GetPartFromBox(nsIBox* aBox, nsIGridPart** aPart);
+  void GetBoxTotalMargin(nsIBox* aBox, nsMargin& aMargin, PRBool aIsRow = PR_TRUE);
+
+  void FreeMap();
+  void FindRowsAndColumns(nsIBox** aRows, nsIBox** aColumns);
+  void BuildRows(nsIBox* aBox, PRBool aSize, nsGridRow** aColumnsRows, PRBool aIsRow = PR_TRUE);
+  void BuildCellMap(PRInt32 aRows, PRInt32 aColumns, nsGridCell** aCells);
+  void PopulateCellMap(nsGridRow* aRows, nsGridRow* aColumns, PRInt32 aRowCount, PRInt32 aColumnCount, PRBool aIsRow = PR_TRUE);
+  void CountRowsColumns(nsIBox* aBox, PRInt32& aRowCount, PRInt32& aComputedColumnCount);
+  void SetLargestSize(nsSize& aSize, nscoord aHeight, PRBool aIsRow = PR_TRUE);
+  void SetSmallestSize(nsSize& aSize, nscoord aHeight, PRBool aIsRow = PR_TRUE);
+  PRBool IsGrid(nsIBox* aBox);
 
   // the box that implement the <grid> tag
   nsIBox* mBox;

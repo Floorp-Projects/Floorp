@@ -70,13 +70,15 @@ public:
   NS_IMETHOD CastToRowGroupLayout(nsGridRowGroupLayout** aRowGroup);
   NS_IMETHOD CastToGridLayout(nsGridLayout2** aGrid);
   NS_IMETHOD GetGrid(nsIBox* aBox, nsGrid** aList, PRInt32* aIndex, nsGridRowLayout* aRequestor=nsnull);
-  NS_IMETHOD GetParentGridPart(nsIBox* aBox, nsCOMPtr<nsIBox>& aParentBox, nsIGridPart** aParentGridPart);
+  NS_IMETHOD GetParentGridPart(nsIBox* aBox, nsIBox** aParentBox, nsIGridPart** aParentGridPart);
   NS_IMETHOD GetMinSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
   NS_IMETHOD GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
   NS_IMETHOD GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
   NS_IMETHOD CountRowsColumns(nsIBox* aBox, PRInt32& aRowCount, PRInt32& aComputedColumnCount);
   NS_IMETHOD DirtyRows(nsIBox* aBox, nsBoxLayoutState& aState);
   NS_IMETHOD BuildRows(nsIBox* aBox, nsGridRow* aRows, PRInt32* aCount);
+  NS_IMETHOD GetTotalMargin(nsIBox* aBox, nsMargin& aMargin, PRBool aIsRow);
+  NS_IMETHOD GetRowCount(PRInt32& aRowCount);
 
 protected:
   nsGridLayout2(nsIPresShell* aShell);
