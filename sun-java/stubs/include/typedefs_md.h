@@ -43,7 +43,7 @@ typedef uint32 uint32_t;
 
 typedef prword_t uintVP_t; /* unsigned that is same size as a void pointer */
 
-#if !defined(BSDI) && !defined(IRIX6_2) && !defined(IRIX6_3) && !defined(LINUX) && !defined(SOLARIS2_6) && !defined(HPUX10_20) && !defined(HPUX10_30) && !defined(HPUX11) && !defined(RHAPSODY)
+#if !defined(BSDI) && !defined(IRIX6_2) && !defined(IRIX6_3) && !defined(LINUX) && !defined(SOLARIS2_6) && !defined(HPUX10_20) && !defined(HPUX10_30) && !defined(HPUX11) && !defined(RHAPSODY) && !defined(NETBSD)
 typedef int64 int64_t;
 #else
 /*
