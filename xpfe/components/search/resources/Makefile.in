@@ -37,6 +37,7 @@ FILES = \
 	internet.js		\
 	internet.xul		\
 	internetresults.css	\
+	internetresults.js	\
 	internetresults.xul	\
 	$(NULL)
 

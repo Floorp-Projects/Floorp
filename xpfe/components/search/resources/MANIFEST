@@ -1,5 +1,5 @@
-search.js
 search.css
+search.js
 search.xul
 shared.js
 find.js
@@ -10,4 +10,5 @@ internet.css
 internet.js
 internet.xul
 internetresults.css
+internetresults.js
 internetresults.xul
