@@ -530,7 +530,7 @@ main()
 				cout << "foo1p allowed compare with in" << endl;
 #endif
 
-      cout << endl << "### Test 14: how about when two |nsCOMPtr|s refering to the same object go out of scope?" << endl;
+      cout << endl << "### Test 14: how about when two |nsCOMPtr|s referring to the same object go out of scope?" << endl;
     }
 
     {

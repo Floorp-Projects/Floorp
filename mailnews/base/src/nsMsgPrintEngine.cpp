@@ -556,7 +556,7 @@ nsMsgPrintEngine::FireThatLoadOperation(nsString *uri)
     if (webNav)
       rv = webNav->LoadURI(uri->get(),                        // URI string
                            nsIWebNavigation::LOAD_FLAGS_NONE, // Load flags
-                           nsnull,                            // Refering URI
+                           nsnull,                            // Referring URI
                            nsnull,                            // Post data
                            nsnull);                           // Extra headers
   }

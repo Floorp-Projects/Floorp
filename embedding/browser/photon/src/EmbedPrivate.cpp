@@ -348,7 +348,7 @@ EmbedPrivate::LoadCurrentURI(void)
   if (mURI.Length())
 	mNavigation->LoadURI(mURI.get(),                        // URI string
                      nsIWebNavigation::LOAD_FLAGS_NONE, // Load flags
-                     nsnull,                            // Refering URI
+                     nsnull,                            // Referring URI
                      nsnull,                            // Post data
                      nsnull);                           // extra headers
 }

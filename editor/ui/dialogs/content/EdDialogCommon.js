@@ -209,7 +209,7 @@ function ShowInputErrorMessage(message)
 }
 
 // Get the text appropriate to parent container
-//  to determine what a "%" value is refering to.
+//  to determine what a "%" value is referring to.
 // elementForAtt is element we are actually setting attributes on
 //  (a temporary copy of element in the doc to allow canceling),
 //  but elementInDoc is needed to find parent context in document

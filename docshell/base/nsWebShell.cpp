@@ -379,7 +379,7 @@ nsWebShell::LoadDocument(const char* aURL,
           mCharsetReloadState = eCharsetReloadRequested;
           LoadURI(NS_ConvertASCIItoUCS2(aURL).get(),  // URI string
                   LOAD_FLAGS_NONE,                    // Load flags
-                  nsnull,                             // Refering URI
+                  nsnull,                             // Referring URI
                   nsnull,                             // Post data stream
                   nsnull);                            // Header stream
         }
@@ -939,7 +939,7 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
 
           return LoadURI(newSpecW.get(),      // URI string
                          LOAD_FLAGS_NONE, // Load flags
-                         nsnull,          // Refering URI
+                         nsnull,          // Referring URI
                          nsnull,          // Post data stream
                          nsnull);         // Headers stream
         }
@@ -1048,7 +1048,7 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
                postDataSeekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
             }
             InternalLoad(url,                               // URI
-                         referrer,                          // Refering URI
+                         referrer,                          // Referring URI
                          nsnull,                            // Owner
                          PR_TRUE,                           // Inherit owner
                          nsnull,                            // No window target

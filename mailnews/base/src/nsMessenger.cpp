@@ -579,7 +579,7 @@ nsMessenger::OpenURL(const char *aURL)
     if(webNav)
       rv = webNav->LoadURI(NS_ConvertASCIItoUCS2(unescapedUrl).get(), // URI string
       nsIWebNavigation::LOAD_FLAGS_NONE,  // Load flags
-      nsnull,                             // Refering URI
+      nsnull,                             // Referring URI
       nsnull,                             // Post stream
       nsnull);                            // Extra headers
   }
