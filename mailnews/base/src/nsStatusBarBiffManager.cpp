@@ -128,10 +128,10 @@ nsresult nsStatusBarBiffManager::PlayBiffSound()
     rv = pref->GetCharPref(PREF_NEW_MAIL_SOUND_URL, getter_Copies(soundURLSpec));
     if (NS_SUCCEEDED(rv) && !soundURLSpec.IsEmpty()) {
       if (!strncmp(soundURLSpec.get(), "file://", 7)) {
-        nsCOMPtr<nsIFileURL> soundURL = do_CreateInstance(NS_STANDARDURL_CONTRACTID, &rv);
+        nsCOMPtr<nsIURI> fileURI;
+        rv = NS_NewURI(getter_AddRefs(fileURI), soundURLSpec);
         NS_ENSURE_SUCCESS(rv,rv);
-        
-        rv = soundURL->SetSpec(soundURLSpec);                                       
+        nsCOMPtr<nsIFileURL> soundURL = do_QueryInterface(fileURI,&rv);
         if (NS_SUCCEEDED(rv)) {
           nsCOMPtr<nsIFile> soundFile;
           rv = soundURL->GetFile(getter_AddRefs(soundFile));
