@@ -61,8 +61,7 @@ nsLiveconnect::nsLiveconnect()
 
 nsLiveconnect::~nsLiveconnect()
 {
-    if (mJavaScriptMonitor != NULL)
-        delete mJavaScriptMonitor;
+    delete mJavaScriptMonitor;
 }
 
 static char* u2c(const jchar *ustr, jsize length)
@@ -87,8 +86,11 @@ nsLiveconnect::Eval(JNIEnv *env, jsobject obj, const jchar *script, jsize length
     MRJPluginInstance* pluginInstance = (MRJPluginInstance*) obj;
     nsIPluginStreamListener* listener = this;
 
-    if (mJavaScriptMonitor == NULL)
+    if (!mJavaScriptMonitor) {
         mJavaScriptMonitor = new MRJMonitor(pluginInstance->getSession());
+        if (!mJavaScriptMonitor)
+            return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     mJavaScriptMonitor->enter();
 
@@ -96,36 +98,45 @@ nsLiveconnect::Eval(JNIEnv *env, jsobject obj, const jchar *script, jsize length
         // some other thread is evaluating a script.
         mJavaScriptMonitor->wait();
     }
-    
+
+    nsresult rv = NS_OK;    
     // convert the script to ASCII, construct a "javascript:" URL.
     char* cscript = u2c(script, length);
-    mScript = new char[strlen(kJavaScriptPrefix) + length + 1];
-    strcpy(mScript, kJavaScriptPrefix);
-    strcat(mScript, cscript);
-    delete[] cscript;
-    nsresult result = thePluginManager->GetURL((nsIPluginInstance*)pluginInstance, mScript, NULL, listener);
-    
-    // need to block until the result is ready.
-    mJavaScriptMonitor->wait();
-    
-    // default result is NULL, in case JavaScript returns undefined value.
-    *outResult = NULL;
+    if (!cscript) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+    } else {
+        mScript = new char[strlen(kJavaScriptPrefix) + length + 1];
+        if (!mScript) {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+        } else {
+            strcpy(mScript, kJavaScriptPrefix);
+            strcat(mScript, cscript);
+            delete[] cscript;
+            rv = thePluginManager->GetURL((nsIPluginInstance*)pluginInstance, mScript, NULL, listener);
 
-    // result should now be ready, convert it to a Java string and return.
-    if (mResult != NULL) {
-        *outResult = env->NewStringUTF(mResult);
-        delete[] mResult;
-        mResult = NULL;
+            // need to block until the result is ready.
+            mJavaScriptMonitor->wait();
+
+            // default result is NULL, in case JavaScript returns undefined value.
+            *outResult = NULL;
+
+            // result should now be ready, convert it to a Java string and return.
+            if (mResult != NULL) {
+                *outResult = env->NewStringUTF(mResult);
+                delete[] mResult;
+                mResult = NULL;
+            }
+
+            delete[] mScript;
+            mScript = NULL;
+        }
     }
-    
-    delete[] mScript;
-    mScript = NULL;
-    
+
     mJavaScriptMonitor->notifyAll();
-    
+
     mJavaScriptMonitor->exit();
-    
-    return NS_OK;
+
+    return rv;
 }
 
 NS_METHOD nsLiveconnect::OnDataAvailable(nsIPluginStreamInfo* pluginInfo, nsIInputStream* input, PRUint32 length)
@@ -135,7 +146,7 @@ NS_METHOD nsLiveconnect::OnDataAvailable(nsIPluginStreamInfo* pluginInfo, nsIInp
     if (mResult != NULL) {
         if (input->Read(mResult, length, &length) == NS_OK) {
             // We've delayed processing the applet tag, because we
-            // don't know the location of the curren document yet.
+            // don't know the location of the current document yet.
             mResult[length] = '\0';
         }
     }

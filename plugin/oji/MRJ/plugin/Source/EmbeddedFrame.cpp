@@ -135,19 +135,21 @@ EmbeddedFrame::EmbeddedFrame(MRJPluginInstance* pluginInstance, JMFrameRef frame
 	int screenX = mBounds.left;
 	int screenY = mBounds.top;
 
-	char* script = new char[::strlen(kEmbeddedFrameScript) + 100];
-	::sprintf(script, kEmbeddedFrameScript, ++embeddedFrameCounter, width, height, screenX, screenY, width, height, this);
+    char* script = new char[::strlen(kEmbeddedFrameScript) + 100];
+    if (script)
+        ::sprintf(script, kEmbeddedFrameScript, ++embeddedFrameCounter, width, height, screenX, screenY, width, height, this);
 
-	JSEvaluator* evaluator = new JSEvaluator(pluginInstance);
-	evaluator->AddRef();
-	
-	// create the window. It will have been created after returning from eval.
-	const char* result = evaluator->eval(script);
-	
-	evaluator->Release();
-	
-	delete[] script;
+        JSEvaluator* evaluator = new JSEvaluator(pluginInstance);
+        if (evaluator) {
+            NS_ADDREF(evaluator);
 
+            // create the window. It will have been created after returning from eval.
+            const char* result = evaluator->eval(script);
+
+            NS_RELEASE(evaluator);
+        }
+        delete[] script;
+    }
 #endif
 
 	if (mWindow != NULL) {
