@@ -1261,6 +1261,8 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aA
 
   offsetused = mDomSelections[index]->FetchFocusOffset();
   weakNodeUsed = mDomSelections[index]->FetchFocusNode();
+
+    
   nsIFrame *frame;
   result = mDomSelections[index]->GetPrimaryFrameForFocusNode(&frame);
 
@@ -1269,8 +1271,12 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aA
   nsCOMPtr<nsIContent> content;
   result = frame->GetContent(getter_AddRefs(content));
   nsCOMPtr<nsIDOMNode> node = do_QueryInterface(content);
-  if (node != weakNodeUsed) //we are not pointing to same node! offset is meaningless
-    offsetused = 0;//0 because when grabbing a child content we grab the IDX'th object or: body has 2 children, 
+  nsCOMPtr<nsIDOMNode> parentNode;
+  //we also need to check to see if the result frame's content's parent is equal to the weaknode used of course.
+
+  result = node->GetParentNode(getter_AddRefs(parentNode));
+  if ((NS_FAILED(result) || parentNode != weakNodeUsed) && node != weakNodeUsed) //we are not pointing to same node! offset is meaningless
+    offsetused = -1;//0 because when grabbing a child content we grab the IDX'th object or: body has 2 children, 
                    //index 0 of parent is the first child so if we say the first child is the frame then say offset is 0 we are correct
   
   nsPeekOffsetStruct pos;
@@ -4163,6 +4169,10 @@ nsDOMSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
   nsresult res;
   NS_NewRange(getter_AddRefs(difRange));
   nsCOMPtr<nsIDOMRange> range;
+
+  if (FetchFocusNode() ==  aParentNode && FetchFocusOffset() == aOffset)
+    return NS_ERROR_FAILURE;//same node nothing to do!
+
   res = mAnchorFocusRange->Clone(getter_AddRefs(range));
   //range = mAnchorFocusRange;
 
