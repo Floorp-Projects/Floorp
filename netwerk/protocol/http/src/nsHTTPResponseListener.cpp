@@ -66,13 +66,14 @@ nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
                                         PRUint32 i_SourceOffset,
                                         PRUint32 i_Length)
 {
+    nsresult rv = NS_OK;
     // Should I save this as a member variable? yes... todo
     nsIHTTPEventSink* pSink= nsnull;
     m_pConnection->GetEventSink(&pSink);
     NS_VERIFY(pSink, "No HTTP Event Sink!");
 
     NS_ASSERTION(i_pStream, "Fake stream!");
-    NS_ASSERTION(i_SourceOffset == 0, "Source shifted already?!");
+///    NS_ASSERTION(i_SourceOffset == 0, "Source shifted already?!");
     // Set up the response
     if (!m_pResponse)
     {
@@ -99,22 +100,33 @@ nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
         PRUint32 length;
 
         nsCOMPtr<nsIBuffer> pBuffer;
-        nsresult stat = i_pStream->GetBuffer(getter_AddRefs(pBuffer));
-        if (NS_FAILED(stat)) return stat;
+        rv = i_pStream->GetBuffer(getter_AddRefs(pBuffer));
+        if (NS_FAILED(rv)) return rv;
     
+        const char* headerTerminationStr;
         PRBool bFoundEnd = PR_FALSE;
         PRUint32 offsetSearchedTo = 260;
-        stat = pBuffer->Search("\r\n\r\n", PR_FALSE, &bFoundEnd, &offsetSearchedTo);
-        if (NS_FAILED(stat)) return stat;
+
+        headerTerminationStr = "\r\n\r\n";
+        rv = pBuffer->Search(headerTerminationStr, PR_FALSE, &bFoundEnd, &offsetSearchedTo);
+        if (NS_FAILED(rv)) return rv;
         if (!bFoundEnd)
         {
-            stat = pBuffer->Search("\n\n", PR_FALSE, &bFoundEnd, &offsetSearchedTo);
-            if (NS_FAILED(stat)) return stat;
+            headerTerminationStr = "\n\n";
+            rv = pBuffer->Search("\n\n", PR_FALSE, &bFoundEnd, &offsetSearchedTo);
+            if (NS_FAILED(rv)) return rv;
+        }
+        //
+        // If the end of the headers was found then adjust the offset to include
+        // the termination characters...
+        //
+        if (bFoundEnd) {
+            offsetSearchedTo += PL_strlen(headerTerminationStr);
         }
 
         //if (bFoundEnd) // how does this matter if offset is all we care about anyway?
         //{
-            stat = pBuffer->Read(buffer, offsetSearchedTo, &length);
+            rv = pBuffer->Read(buffer, offsetSearchedTo, &length);
             length = offsetSearchedTo;
             char* p = buffer;
             while (buffer+length > p)
@@ -126,7 +138,7 @@ nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
 
                     //TODO process headers here. 
 
-                    pSink->OnHeadersAvailable(context);
+                    FireOnHeadersAvailable(context);
 
                     break; // break off this buffer while
                 }
@@ -180,7 +192,108 @@ nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
 
     if (m_bHeadersDone)
     {
-        nsresult rv;
+        nsIStreamListener* internalListener = nsnull;
+        // Get our end of the pipe between us and the user's GetInputStream()
+        rv = m_pConnection->GetResponseDataListener(&internalListener);
+        if (internalListener) {
+            // post the data to the stream listener
+            // XXX this is the wrong data and offsets I think.
+            rv = internalListener->OnDataAvailable(context, i_pStream, 0, i_Length);
+            NS_RELEASE(internalListener);
+            if (NS_FAILED(rv))
+                return rv;
+        }
+
+        // do whatever we want for the event sink
+        rv = pSink->OnDataAvailable(context, i_pStream, 0, i_Length);
+        return rv;
+
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPResponseListener::OnStartBinding(nsISupports* i_pContext)
+{
+    nsresult rv;
+    nsIHTTPEventSink* pSink= nsnull;
+
+    //TODO globally replace printf with trace calls. 
+    //printf("nsHTTPResponseListener::OnStartBinding...\n");
+
+    // Initialize header varaibles...  
+    m_bHeadersDone     = PR_FALSE;
+    m_bFirstLineParsed = PR_FALSE;
+
+    if (i_pContext) {
+        rv = i_pContext->QueryInterface(nsIHTTPChannel::GetIID(), 
+                                        (void**)&m_pConnection);
+    } else {
+        rv = NS_ERROR_NULL_POINTER;
+    }
+
+    if (NS_SUCCEEDED(rv)) {
+        // XXX:  EventSink(...) should AddRef the returned pointer...
+        rv = m_pConnection->GetEventSink(&pSink);
+
+        if (NS_FAILED(rv)) {
+            NS_ERROR("No HTTP Event Sink!");
+        }
+    }
+
+    if (NS_SUCCEEDED(rv)) {
+        rv = pSink->OnStartBinding(i_pContext);
+    }
+
+    return rv;
+}
+
+NS_IMETHODIMP
+nsHTTPResponseListener::OnStopBinding(nsISupports* i_pContext,
+                                 nsresult i_Status,
+                                 const PRUnichar* i_pMsg)
+{
+    //printf("nsHTTPResponseListener::OnStopBinding...\n");
+    //NS_ASSERTION(m_pResponse, "Response object not created yet or died?!");
+    // Should I save this as a member variable? yes... todo
+    nsIHTTPEventSink* pSink= nsnull;
+    nsresult rv = m_pConnection->GetEventSink(&pSink);
+    if (NS_FAILED(rv))
+        NS_ERROR("No HTTP Event Sink!");
+    
+    rv = pSink->OnStopBinding(i_pContext, i_Status,i_pMsg);
+
+    return rv;
+}
+
+NS_IMETHODIMP
+nsHTTPResponseListener::OnStartRequest(nsISupports* i_pContext)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsHTTPResponseListener::OnStopRequest(nsISupports* i_pContext,
+                                      nsresult iStatus,
+                                      const PRUnichar* i_pMsg)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+nsresult nsHTTPResponseListener::FireOnHeadersAvailable(nsISupports* aContext)
+{
+    nsresult rv;
+
+    NS_ASSERTION(m_bHeadersDone, "Headers have not been received!");
+
+    if (m_bHeadersDone) {
+
+        // Notify the event sink that response headers are available...
+        nsIHTTPEventSink* pSink= nsnull;
+        m_pConnection->GetEventSink(&pSink);
+        pSink->OnHeadersAvailable(aContext);
 
         // Check for any modules that want to receive headers once they've arrived.
         NS_WITH_SERVICE(nsINetModuleMgr, pNetModuleMgr, kNetModuleMgrCID, &rv);
@@ -271,92 +384,9 @@ nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
         NS_RELEASE(pModules);
         NS_IF_RELEASE(proxyObjectManager);
 
-        nsIStreamListener* internalListener = nsnull;
-        // Get our end of the pipe between us and the user's GetInputStream()
-        rv = m_pConnection->GetResponseDataListener(&internalListener);
-        if (internalListener) {
-            // post the data to the stream listener
-            // XXX this is the wrong data and offsets I think.
-            rv = internalListener->OnDataAvailable(context, i_pStream, 0, i_Length);
-            NS_RELEASE(internalListener);
-            if (NS_FAILED(rv))
-                return rv;
-        }
-
-        // do whatever we want for the event sink
-        rv = pSink->OnDataAvailable(context, i_pStream, 0, i_Length);
-        return rv;
-
-    }
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTTPResponseListener::OnStartBinding(nsISupports* i_pContext)
-{
-    nsresult rv;
-    nsIHTTPEventSink* pSink= nsnull;
-
-    //TODO globally replace printf with trace calls. 
-    //printf("nsHTTPResponseListener::OnStartBinding...\n");
-
-    // Initialize header varaibles...  
-    m_bHeadersDone     = PR_FALSE;
-    m_bFirstLineParsed = PR_FALSE;
-
-    if (i_pContext) {
-        rv = i_pContext->QueryInterface(nsIHTTPChannel::GetIID(), 
-                                        (void**)&m_pConnection);
     } else {
-        rv = NS_ERROR_NULL_POINTER;
-    }
-
-    if (NS_SUCCEEDED(rv)) {
-        // XXX:  EventSink(...) should AddRef the returned pointer...
-        rv = m_pConnection->GetEventSink(&pSink);
-
-        if (NS_FAILED(rv)) {
-            NS_ERROR("No HTTP Event Sink!");
-        }
-    }
-
-    if (NS_SUCCEEDED(rv)) {
-        rv = pSink->OnStartBinding(i_pContext);
+        rv = NS_ERROR_FAILURE;
     }
 
     return rv;
 }
-
-NS_IMETHODIMP
-nsHTTPResponseListener::OnStopBinding(nsISupports* i_pContext,
-                                 nsresult i_Status,
-                                 const PRUnichar* i_pMsg)
-{
-    //printf("nsHTTPResponseListener::OnStopBinding...\n");
-    //NS_ASSERTION(m_pResponse, "Response object not created yet or died?!");
-    // Should I save this as a member variable? yes... todo
-    nsIHTTPEventSink* pSink= nsnull;
-    nsresult rv = m_pConnection->GetEventSink(&pSink);
-    if (NS_FAILED(rv))
-        NS_ERROR("No HTTP Event Sink!");
-    
-    rv = pSink->OnStopBinding(i_pContext, i_Status,i_pMsg);
-
-    return rv;
-}
-
-NS_IMETHODIMP
-nsHTTPResponseListener::OnStartRequest(nsISupports* i_pContext)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsHTTPResponseListener::OnStopRequest(nsISupports* i_pContext,
-                                      nsresult iStatus,
-                                      const PRUnichar* i_pMsg)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
