@@ -276,7 +276,7 @@ NS_IMETHODIMP
 nsHTMLInputElement::GetDefaultChecked(PRBool* aDefaultChecked)
 {
   nsHTMLValue val;                                                 
-  nsresult rv = mInner.GetHTMLAttribute(nsHTMLAtoms::defaultchecked, val);       
+  nsresult rv = mInner.GetHTMLAttribute(nsHTMLAtoms::checked, val);       
   *aDefaultChecked = (NS_CONTENT_ATTR_NOT_THERE != rv);                        
   return NS_OK;                                                     
 }
@@ -286,7 +286,7 @@ nsHTMLInputElement::SetDefaultChecked(PRBool aDefaultChecked)
 {
   nsHTMLValue empty(eHTMLUnit_Empty);
   if (aDefaultChecked) {                                                     
-    return mInner.SetHTMLAttribute(nsHTMLAtoms::defaultchecked, empty, PR_TRUE); 
+    return mInner.SetHTMLAttribute(nsHTMLAtoms::checked, empty, PR_TRUE); 
   } else {                                                            
     mInner.UnsetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::defaultchecked, PR_TRUE);             
     return NS_OK;                                                   
