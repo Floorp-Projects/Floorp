@@ -425,20 +425,15 @@ nsHTMLFragmentContentSink::OpenContainer(const nsIParserNode& aNode)
       }
     }
 
-    switch(nodeType) {
-      case eHTMLTag_table:
-      case eHTMLTag_thead:
-      case eHTMLTag_tbody:
-      case eHTMLTag_tfoot:
-      case eHTMLTag_tr:
-      case eHTMLTag_td:
-      case eHTMLTag_th:
-        // XXX if navigator_quirks_mode (only body in html supports background)
-        AddBaseTagInfo(content);     
-        break;
-      default:  // eliminate warnings
-        break;
-    }
+    if (nodeType == eHTMLTag_table
+        || nodeType == eHTMLTag_thead
+        || nodeType == eHTMLTag_tbody
+        || nodeType == eHTMLTag_tfoot
+        || nodeType == eHTMLTag_tr
+        || nodeType == eHTMLTag_td
+        || nodeType == eHTMLTag_th)
+      // XXX if navigator_quirks_mode (only body in html supports background)
+      AddBaseTagInfo(content);     
   }
 
   return result;
@@ -485,18 +480,11 @@ nsHTMLFragmentContentSink::AddLeaf(const nsIParserNode& aNode)
           }
         }
 
-        switch(nodeType) {
-          case eHTMLTag_img:    // elements with 'SRC='
-          case eHTMLTag_frame:
-          case eHTMLTag_input:
-            AddBaseTagInfo(content);     
-            break;
-          case eHTMLTag_base:
+        if (nodeType == eHTMLTag_img || nodeType == eHTMLTag_frame
+            || nodeType == eHTMLTag_input)    // elements with 'SRC='
+            AddBaseTagInfo(content);
+        else if (nodeType == eHTMLTag_base)
             ProcessBaseTag(content);
-            break;
-          default: // eliminate warnings
-            break;
-        }
       }
       break;
     case eToken_text:
