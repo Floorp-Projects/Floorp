@@ -14,7 +14,7 @@
 
 <menupopup id="taskPopup">
 	<menuitem
-        position="5"
+        position="6"
         value="XMLterm"
         oncommand="toXMLterm()"/>
 </menupopup>
