@@ -40,8 +40,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.37 $ 
-# $Date: 2002/05/04 01:51:46 $ 
+# $Revision: 1.38 $ 
+# $Date: 2002/05/06 18:15:57 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_Bonsai.pm,v $ 
 # $Name:  $ 
@@ -101,7 +101,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.37 $ )[1];
+$VERSION = ( qw $Revision: 1.38 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -113,6 +113,41 @@ $VC_BUGNUM_REGEXP = $TinderConfig::VC_BUGNUM_REGEXP ||
     "(\d\d\d+)";
 
 $EMPTY_TABLE_CELL = $HTMLPopUp::EMPTY_TABLE_CELL;
+
+
+# Print out the Database in a visually useful form so that I can
+# debug timing problems.  This is not called by any code. I use this
+# in the debugger.
+
+sub debug_database {
+  my ($self, $tree) = (@_);
+
+  # sort numerically descending
+  my (@times) = sort {$b <=> $a} keys %{ $DATABASE{$tree} };
+
+
+  my $last_treestate = '';
+  foreach $time (@times) {
+
+      if (defined($DATABASE{$tree}{$time}{'treestate'})) {
+          $localtime = localtime($time);
+          $tree_state = $DATABASE{$tree}{$time}{'treestate'};
+
+#          ($tree_state eq $last_treestate) && next;
+          print "$localtime:\t $tree_state \n";
+          $last_treestate = $tree_state;
+      }
+
+      if ( defined($DATABASE{$tree}{$time}{'author'}) ) {
+          $localtime = localtime($time);
+          @authors = sort (keys %{ $DATABASE{$tree}{$time}{'author'} });
+          print "$localtime:\t\t @authors \n";
+      }
+
+  }
+
+  return ;
+}
 
 
 # Return the most recent times that we recieved treestate and checkin
@@ -339,16 +374,24 @@ sub status_table_start {
 # no data.
 
 sub is_break_cell {
-    my ($tree,$time,$last_treestate) = @_;
+    my ($tree,$time,$next_time,$last_treestate) = @_;
 
-    $is_state_same = (
-                      !(defined($DATABASE{$tree}{$time}{'treestate'})) ||
-                      ($last_treestate eq $DATABASE{$tree}{$time}{'treestate'})
-                      );
+
+    my $is_state1_same = (
+                          !(defined($DATABASE{$tree}{$next_time}{'treestate'})) ||
+                          ($last_treestate eq $DATABASE{$tree}{$next_time}{'treestate'})
+                          );
+
+    my $is_state2_same = (
+                          !(defined($DATABASE{$tree}{$time}{'treestate'})) ||
+                          ($last_treestate eq $DATABASE{$tree}{$time}{'treestate'})
+                          );
+
+    $is_state_same = $is_state1_same && $is_state2_same;
     
-    $is_author_data = defined($DATABASE{$tree}{$time}{'author'});
-
-    $is_break_cell = ( !($is_state_same) || ($is_author_data) );
+    my  $is_author_data = defined($DATABASE{$tree}{$time}{'author'});
+    
+    my $is_break_cell = ( !($is_state_same) || ($is_author_data) );
     
     return $is_break_cell;
 }
@@ -365,7 +408,7 @@ sub status_table_row {
 
   if ( $NEXT_ROW{$tree} !=  $row_index ) {
       
-      push @outrow, ("\t<!-- skipping: VC_Bonsai: ".
+      push @outrow, ("\t<!-- VC_Bonsai: skipping. ".
                      "tree: $tree, ".
                      "additional_skips: ".
                      ($NEXT_ROW{$tree} -  $row_index).", ".
@@ -411,16 +454,20 @@ sub status_table_row {
 
 
   while (!(
-         is_break_cell($tree,$next_time,$LAST_TREESTATE)
+         is_break_cell($tree,$DB_TIMES[$next_index],$DB_TIMES[$next_index+1],$LAST_TREESTATE)
          )) {
-      $next_time = $DB_TIMES[$next_index];
       $next_index++;
 
   }
 
+  $next_time = $DB_TIMES[$next_index];
+
   # Do we need a multiline empty cell or do we have data?
 
-  if ( $next_time < $row_times->[$row_index] ) {
+  if ( 
+       (defined($DATABASE{$tree}{$next_time}{'author'})) &&
+       ($next_time < $row_times->[$row_index] ) &&
+       1) {
       
       # now convert the break time to a rowspan.
 
@@ -437,7 +484,7 @@ sub status_table_row {
                             "bgcolor=$cell_color ");
       my ($lc_time) = localtime($next_time);
 
-      push @outrow, ("\t<!-- empty data: VC_Bonsai ".
+      push @outrow, ("\t<!-- VC_Bonsai: empty data. ".
                      "tree: $tree, ".
                      "Next_End: $lc_time, ".
                      "-->\n".
@@ -656,13 +703,13 @@ sub status_table_row {
     $query_links.=  "\t\t".$text_browser_color_string."\n";
 
     @outrow = (
-               "\t<!-- VC_Bonsai -->\n".               
+               "\t<!-- VC_Bonsai: authors -->\n".               
                "\t<td align=center $cell_options>\n".
                $query_links.
                "\t</td>\n".
                "");
     
-  } 
+  }
 
   return @outrow; 
 }
