@@ -117,7 +117,7 @@ sub print_script_preview {
       <link rel="stylesheet" type="text/css" href="http://www.mozilla.org/css/base/template.css"  media="screen">
       <link rel="stylesheet" type="text/css" href="http://www.mozilla.org/css/cavendish/template.css" title="Cavendish" media="screen">
       <link rel="icon" href="http://www.mozilla.org/images/mozilla-16.png" type="image/png">
-      <style type="text/css">textarea { border: 1px solid black; }</style>
+      <style type="text/css">textarea { border: 1px solid black; padding: 2px; }</style>
     </HEAD>
     <body>
 
@@ -142,13 +142,14 @@ sub print_script_preview {
     }
 
   my $script = &print_script;
+  $script =~ s/^[\n\s]*|[\n\s]*$//g;
 
       print qq(
 <!--
       <pre class="code">$script</pre>
 -->
   
-      <textarea name="code-to-save" cols="60">$script</textarea>
+      <textarea name="code-to-save" cols="60" rows="10">$script</textarea>
       <p><input type='submit' value='Save the script'>
 	</form>
 
