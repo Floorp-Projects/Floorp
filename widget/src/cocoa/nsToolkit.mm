@@ -96,7 +96,7 @@ static PRUintn gToolkitTLSIndex = 0;
   mEventQueueService = service.get();
   NS_IF_ADDREF(mEventQueueService);  
 
-  mEventTimer = [NSTimer scheduledTimerWithTimeInterval:0.1 target:self selector:@selector(eventTimer:) userInfo:nil
+  mEventTimer = [NSTimer scheduledTimerWithTimeInterval:0.01 target:self selector:@selector(eventTimer:) userInfo:nil
                            repeats:YES];
   NS_ASSERTION(mEventTimer, "UH OH! couldn't create periodic event processing timer");
   
