@@ -73,6 +73,13 @@ template <class CharT> class basic_nsAReadableString;
 template <class CharT> class basic_nsAWritableString;
   // ...because we sometimes use them as `out' params
 
+#ifdef _MSC_VER
+    // Under VC++, at the highest warning level, we are overwhelmed  with warnings
+    //  about a possible error when |operator->()| is used against something that
+    //  doesn't have members, e.g., a |PRUnichar|.  This is to be expected with
+    //  templates, so we disable the warning.
+  #pragma warning( disable: 4284 )
+#endif
 
 template <class CharT>
 class nsReadingIterator
