@@ -27,8 +27,15 @@ SIMPLE_PROGRAMS	= TestXPTCInvoke
 
 CPPSRCS		= TestXPTCInvoke.cpp
 
+ifdef NO_LD_ARCHIVE_FLAGS
+LOST_SYM_LIBS	= -lxpcomds_s -lxptinfo -lmozreg_s
+endif
+
 LIBS		= \
+		-L$(DIST)/bin \
+		-L$(DIST)/lib \
 		-lxpcom \
+		$(LOST_SYM_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 
