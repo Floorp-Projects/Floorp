@@ -581,7 +581,7 @@ progressmeter {
 /********* XP Menus ***********/
 
 menubar {
-	background-color: #EEEEEE;
+	background-color: white;
 }
 
 menu {
@@ -602,12 +602,12 @@ menuitem[disabled="true"] {
 
 /* XXX menupopups have to have a color explicitly specified. this is a bug */
 menupopup, popup {
-  background-color: #EEEEEE;
-  border: 1px white outset;
+  background-color: #CCCCCC;
+  border: 1px solid #336699;
 }
 
 popup {
-  background-color: white;
+  background-color: #CCCCCC;
 }
 
 menupopup > menu {
@@ -647,8 +647,7 @@ popup > menuitem {
 }
 
 menuseparator {
-  border-bottom: 1px white solid; 
-  border-top: 1px gray solid; 
+  border-bottom: 1px #336699 solid; 
   margin: 2px;
 }
 
@@ -684,31 +683,32 @@ popup > menuitem {
 }
 
 menubar > menu[menuactive="true"] {
-  border: 1px outset white;
-  color:#333366;
+  background-color: #CCCCCC;
 }
 
 menubar > menu[menuactive="true"][open="true"] {
-  border: 1px inset;
+  border: 1px solid #336699;
+  border-bottom: 1px solid transparent;
+  background-color: #CCCCCC;
 }
 
 menupopup > menu[menuactive="true"] {
-  background-color: #003366;
+  background-color: #336699;
   color: white;
 }
 
 popup > menu[menuactive="true"] {
-  background-color: #003366;
+  background-color: #336699;
   color: white;
 }
 
 menupopup > menuitem[menuactive="true"] {
-  background-color: #003366;
+  background-color: #336699;
   color: white;
 }
 
 popup > menuitem[menuactive="true"] {
-  background-color: #003366;
+  background-color: #336699;
   color: white;
 }
 
@@ -789,6 +789,41 @@ menu[disabled="true"] > .menu-right {
 
 menu[menuactive="true"] > .menu-right {
   list-style-image: url("chrome://global/skin/menu-arrow-hover.gif");
+}
+
+/******** Rules for menus on the standard toolbars ***************/
+
+menu.standard {
+  color: #99CCCC;
+}
+
+menu.standard > .menu-right {
+  list-style-image: url("chrome://global/skin/menu-arrow-hover.gif");
+}
+
+menuitem.standard {
+  color: #99CCCC;
+}
+
+menuseparator.standard {
+  border-top: none;
+  border-bottom: 1px #99CCCC solid; 
+}
+
+menupopup.standard {
+  color: #99CCCC;
+  background-color: #003366;
+  border: 1px #99CCCC solid; 
+}
+
+menupopup > menu[menuactive="true"].standard {
+  color: #003366;
+  background-color: #99CCCC;
+}
+
+menupopup > menuitem[menuactive="true"].standard {
+  color: #003366;
+  background-color: #99CCCC;
 }
 
 
