@@ -33,6 +33,8 @@ struct nsStyleTable;
 /** SpanInfo is a transient data structure that holds info about 
   * cells that have col spans.  Used during column balancing.
   */
+// TODO: collapse this data structure with ColSpanStruct.  They both (incompletely) describe 
+//       the same situation with slightly different data.  
 struct SpanInfo
 {
   PRInt32 span;
@@ -83,12 +85,16 @@ public:
   /** destructor */
   virtual ~BasicTableLayoutStrategy();
 
-  /** call once every time any table thing changes (content, structure, or style) 
+  /** call every time any table thing changes that might effect the width of any column
+    * in the table (content, structure, or style) 
     * @param aMaxElementSize  [OUT] if not null, the max element size is computed and returned in this param
     * @param aNumCols         the total number of columns in the table
     */
   virtual PRBool Initialize(nsSize* aMaxElementSize, PRInt32 aNumCols);
 
+  /** compute the max element size of the table.
+    * assumes that Initialize has been called
+    */
   virtual void SetMaxElementSize(nsSize* aMaxElementSize);
 
   /** Called during resize reflow to determine the new column widths
@@ -121,13 +127,16 @@ protected:
     */
   virtual PRBool AssignPreliminaryColumnWidths();
 
+  /** compute the min and max width of this table.  Assumes AssignPreliminaryColumnWidths
+    * has been called.  Sets mMinTableWidth and mMaxTableWidth as a side effect.
+    */
   virtual void SetMinAndMaxTableWidths();
 
-  /** assign widths for each column that has proportional width inside a table that 
-    * has auto width (width set by the content and available space.)
-    * Sets mColumnWidths as a side effect.
+  /** assign widths for each column within a particular context.
+    * The context is given by each of the parameters.
+    * Sets mTableFrame->mColumnWidths as a side effect.
     *
-    * @param aTableStyle          the resolved style for the table
+    * @param aReflowState         the reflow state
     * @param aAvailWidth          the remaining amount of horizontal space available
     * @param aMaxWidth            the total amount of horizontal space available
     * @param aTableSpecifiedWidth the width of the table based on its attributes and its parent's width
@@ -142,19 +151,19 @@ protected:
                                             nscoord aTableSpecifiedWidth,
                                             PRBool  aTableIsAutoWidth);
 
-  /** assign the minimum allowed width for each column that has proportional width.
+  /** assign the minimum legal width for each column that has proportional width.
     * Typically called when the min table width doesn't fit in the available space.
-    * Sets mColumnWidths as a side effect.
-    *
+    * Sets mTableFrame->mColumnWidths as a side effect.
     *
     * @return PR_TRUE if all is well, PR_FALSE if there was an unrecoverable error
     */
   virtual PRBool BalanceColumnsTableDoesNotFit();
 
-  /** assign the maximum allowed width for each column that has proportional width.
-    * Typically called when the desired max table width fits in the available space.
-    * Sets mColumnWidths as a side effect.
+  /** assign the maximum allowed width for each column.
+    * Typically called when the desired max table width is less than or equal to the available space.
+    * Sets mTableFrame->mColumnWidths as a side effect.
     *
+    * @param aReflowState         the reflow state
     * @param aAvailWidth          the remaining amount of horizontal space available
     * @param aMaxWidth            the total amount of horizontal space available
     * @param aTableSpecifiedWidth the specified width of the table.  If there is none,
@@ -169,20 +178,17 @@ protected:
                                          nscoord aTableSpecifiedWidth,
                                          PRBool  aTableIsAutoWidth);
 
-  /** assign widths for each column that has proportional width inside a table that 
-    * has auto width (width set by the content and available space) according to the
-    * HTML 4 specification.
-    * Sets mColumnWidths as a side effect.
+  /** for each column, assign a width between the column's minimum and maximum width.
+    * Typically called when the desired max table width is greater the available space.
+    * Sets mTableFrame->mColumnWidths as a side effect.
     *
-    * @param aTableStyle      the resolved style for the table
-    * @param aAvailWidth      the remaining amount of horizontal space available
-    * @param aMaxWidth        the total amount of horizontal space available
-    * @param aMinTableWidth   the min possible table width
-    * @param aMaxTableWidth   the max table width
+    * @param aReflowState       the reflow state
+    * @param aAvailWidth        the remaining amount of horizontal space available
+    * @param aMaxWidth          the total amount of horizontal space available
+    * @param aTableIsAutoWidth  PR_TRUE if the table is auto-width
     *
     * @return PR_TRUE if all is well, PR_FALSE if there was an unrecoverable error
     *
-    * TODO: rename this method to reflect that it is a Nav4 compatibility method
     */
   virtual PRBool BalanceColumnsConstrained(const nsHTMLReflowState& aReflowState,
                                            nscoord aAvailWidth,
@@ -193,7 +199,7 @@ protected:
     *
     * @param aColSpanList         a list of fixed-width columns that have colspans
     *
-    * NOTE: does not yet properly handle overlapping col spans
+    * NOTE: does not yet properly handle overlapping col spans in all cases
     *
     * @return void
     */  
@@ -201,12 +207,11 @@ protected:
 
   /** starting with a partially balanced table, compute the amount
     * of space to pad each column by to completely balance the table.
-    * set the column widths in mTableFrame based on these computations.
+    * Sets mTableFrame->mColumnWidths as a side effect.
     *
     * @param aAvailWidth          the space still to be allocated within the table
     * @param aTableWidth          the sum of all columns widths
     * @param aWidthOfFixedTableColumns the sum of the widths of fixed-width columns
-    * @param aColWidths           the effective column widths (ignoring col span cells)
     *
     * @return void
     */
@@ -226,7 +231,8 @@ protected:
     *                             OUT:the width of the table after this step.
     * @param aTableIsAutoWidth    TRUE if the table style indicates it is autoWidth
     * @param aRecursionControl    IN: must be a PRInt32 set to 0
-    *                             OUT: the number of iterations.  Not generally useful to the caller.
+    *                             OUT: the number of iterations.  Not generally useful to the caller,
+    *                                  but useful for limiting the number of iterations in bizarre cases.
     *
     * @return void
     */
