@@ -50,6 +50,7 @@ class nsIComboboxControlFrame;
 class nsIViewManager;
 class nsIPresContext;
 class nsVoidArray;
+class nsIScrollableView;
 
 /**
  * Frame-based listbox.
@@ -165,7 +166,7 @@ public:
 
   //nsIDOMEventMotionListener
   virtual nsresult MouseMove(nsIDOMEvent* aMouseEvent);
-  virtual nsresult DragMove(nsIDOMEvent* aMouseEvent) { return NS_OK; }
+  virtual nsresult DragMove(nsIDOMEvent* aMouseEvent);
 
   //nsIDOMKeyListener
   virtual nsresult KeyDown(nsIDOMEvent* aKeyEvent);
@@ -234,6 +235,8 @@ protected:
   void     HandleListSelection(nsIDOMEvent * aDOMEvent);
   PRInt32  GetSelectedIndexFromFrame(nsIFrame *aHitFrame);
   PRBool   IsLeftButton(nsIDOMEvent* aMouseEvent);
+
+  void     GetScrollableView(nsIScrollableView*& aScrollableView);
 
   // onChange detection
   nsresult SelectionChanged(nsIContent* aContent);

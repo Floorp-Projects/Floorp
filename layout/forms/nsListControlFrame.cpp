@@ -2752,6 +2752,18 @@ nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
   return rv;
 }
 
+void
+nsListControlFrame::GetScrollableView(nsIScrollableView*& aScrollableView)
+{
+  aScrollableView = nsnull;
+
+  nsIView * scrollView;
+  GetView(mPresContext, &scrollView);
+  nsIScrollableView * scrollableView = nsnull;
+  nsresult rv = scrollView->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollableView);
+  NS_ASSERTION(NS_SUCCEEDED(rv) && scrollableView, "We must be able to get a ScrollableView");
+}
+
 //----------------------------------------------------------------------
 nsresult
 nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
@@ -2896,26 +2908,70 @@ nsListControlFrame::MouseMove(nsIDOMEvent* aMouseEvent)
         }
       }
     }
-  } else {
-#if 0 // XXX - this is a partial fix for Bug 29990
+  } else {// XXX - temporary until we get drag events
     if (mButtonDown) {
+      return DragMove(aMouseEvent);
+    }
+  }
+  return NS_OK;
+}
+
+nsresult
+nsListControlFrame::DragMove(nsIDOMEvent* aMouseEvent)
+{
+  NS_ASSERTION(aMouseEvent != nsnull, "aMouseEvent is null.");
+
+  if (!mComboboxFrame) { // Synonym for IsInDropDownMode()
+    // check to make sure we are a mulitple select list
     PRBool multipleSelections = PR_FALSE;
     GetMultiple(&multipleSelections);
     if (multipleSelections) {
+      // get the currently moused over item
       PRInt32 oldIndex;
       PRInt32 curIndex = mSelectedIndex;
       if (NS_SUCCEEDED(GetIndexFromDOMEvent(aMouseEvent, oldIndex, curIndex))) {
-        PRBool optionIsDisabled;
-        if (NS_OK == IsTargetOptionDisabled(optionIsDisabled)) {
-          if (!optionIsDisabled) {
+        if (curIndex != oldIndex) {
+          // select down the list
+          if (curIndex > oldIndex) {
+            PRInt32 startInx = oldIndex > mStartExtendedIndex?oldIndex+1:oldIndex;
+            PRInt32 endInx   = curIndex > mStartExtendedIndex?curIndex+1:curIndex;
+            PRInt32 i;
+            for (i=startInx;i<endInx;i++) {
+              if (i != mStartExtendedIndex) { // skip the starting clicked on node
+                PRBool optionIsDisabled;
+                if (NS_OK == IsTargetOptionDisabled(optionIsDisabled)) {
+                  if (!optionIsDisabled) {
+                    mSelectedIndex = i;
+                    SetContentSelected(mSelectedIndex, i > mStartExtendedIndex);
+                  }
+                }
+              }
+            }
             mSelectedIndex = curIndex;
-            SetContentSelected(mSelectedIndex, PR_TRUE);
+          } else {
+            // select up the list
+            PRInt32 startInx = oldIndex >= mStartExtendedIndex?oldIndex:oldIndex-1;
+            PRInt32 endInx   = curIndex >= mStartExtendedIndex?curIndex:curIndex-1;
+            PRInt32 i;
+            for (i=startInx;i>endInx;i--) {
+              if (i != mStartExtendedIndex) { // skip the starting clicked on node
+                PRBool optionIsDisabled;
+                if (NS_OK == IsTargetOptionDisabled(optionIsDisabled)) {
+                  if (!optionIsDisabled) {
+                    mSelectedIndex = i;
+                    SetContentSelected(mSelectedIndex, i < mStartExtendedIndex);
+                  }
+                }
+              }
+            }
+            mSelectedIndex = curIndex;
           }
+        } else {
+          //mOldSelectedIndex = oldIndex;
+          mSelectedIndex    = curIndex;
         }
       }
     }
-  }
-#endif
   }
   return NS_OK;
 }
@@ -2933,63 +2989,61 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
 nsresult
 nsListControlFrame::ScrollToFrame(nsIContent* aOptElement)
 {
-  nsIView * scrollView;
-  GetView(mPresContext, &scrollView);
-  nsIScrollableView * scrollableView = nsnull;
-  nsresult rv = scrollView->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollableView);
+  nsIScrollableView * scrollableView;
+  GetScrollableView(scrollableView);
 
-  // if null is passed in we scroll to 0,0
-  if (nsnull == aOptElement) {
-    if (NS_SUCCEEDED(rv) && scrollableView) {
+  if (scrollableView) {
+    // if null is passed in we scroll to 0,0
+    if (nsnull == aOptElement) {
       scrollableView->ScrollTo(0, 0, PR_TRUE);
+      return NS_OK;
     }
-    return NS_OK;
-  }
   
-  // otherwise we find the content's frame and scroll to it
-  nsIFrame * childframe;
-  nsresult result;
-  if (aOptElement) {
-    nsCOMPtr<nsIPresShell> presShell;
-    mPresContext->GetShell(getter_AddRefs(presShell));
-    result = presShell->GetPrimaryFrameFor(aOptElement, &childframe);
-  } else {
-    return NS_ERROR_FAILURE;
-  }
+    // otherwise we find the content's frame and scroll to it
+    nsIFrame * childframe;
+    nsresult result;
+    if (aOptElement) {
+      nsCOMPtr<nsIPresShell> presShell;
+      mPresContext->GetShell(getter_AddRefs(presShell));
+      result = presShell->GetPrimaryFrameFor(aOptElement, &childframe);
+    } else {
+      return NS_ERROR_FAILURE;
+    }
 
-  if (childframe) {
-    if (NS_SUCCEEDED(rv) && scrollableView) {
-      const nsIView * clippedView;
-      scrollableView->GetClipView(&clippedView);
-      nscoord x;
-      nscoord y;
-      scrollableView->GetScrollPosition(x,y);
-      // get the clipped rect
-      nsRect rect;
-      clippedView->GetBounds(rect);
-      // now move it by the offset of the scroll position
-      rect.x = 0;
-      rect.y = 0;
-      rect.MoveBy(x,y);
+    if (childframe) {
+      if (NS_SUCCEEDED(result) && scrollableView) {
+        const nsIView * clippedView;
+        scrollableView->GetClipView(&clippedView);
+        nscoord x;
+        nscoord y;
+        scrollableView->GetScrollPosition(x,y);
+        // get the clipped rect
+        nsRect rect;
+        clippedView->GetBounds(rect);
+        // now move it by the offset of the scroll position
+        rect.x = 0;
+        rect.y = 0;
+        rect.MoveBy(x,y);
 
-      // get the child
-      nsRect fRect;
-      childframe->GetRect(fRect);
-      nsPoint pnt;
-      nsIView * view;
-      childframe->GetOffsetFromView(mPresContext, pnt, &view);
+        // get the child
+        nsRect fRect;
+        childframe->GetRect(fRect);
+        nsPoint pnt;
+        nsIView * view;
+        childframe->GetOffsetFromView(mPresContext, pnt, &view);
 
-      // see if the selected frame is inside the scrolled area
-      if (!rect.Contains(fRect)) {
-        // figure out which direction we are going
-        if (fRect.y+fRect.height >= rect.y+rect.height) {
-          y = fRect.y-(rect.height-fRect.height);
-        } else {
-          y = fRect.y;
+        // see if the selected frame is inside the scrolled area
+        if (!rect.Contains(fRect)) {
+          // figure out which direction we are going
+          if (fRect.y+fRect.height >= rect.y+rect.height) {
+            y = fRect.y-(rect.height-fRect.height);
+          } else {
+            y = fRect.y;
+          }
+          scrollableView->ScrollTo(pnt.x, y, PR_TRUE);
         }
-        scrollableView->ScrollTo(pnt.x, y, PR_TRUE);
-      }
 
+      }
     }
   }
   return NS_OK;
@@ -3009,7 +3063,14 @@ nsListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
     //uiEvent->GetCharCode(&code);
     //REFLOW_DEBUG_MSG3("%c %d   ", code, code);
     keyEvent->GetKeyCode(&code);
-    REFLOW_DEBUG_MSG3("KeyCode: %c %d\n", code, code);
+#ifdef DO_REFLOW_DEBUG
+    if (code >= 32) {
+      REFLOW_DEBUG_MSG3("KeyCode: %c %d\n", code, code);
+    }
+#endif
+
+    PRBool isShift;
+    keyEvent->GetShiftKey(&isShift);
 
     nsresult rv = NS_ERROR_FAILURE; 
     nsCOMPtr<nsIDOMHTMLCollection> options = getter_AddRefs(GetOptions(mContent));
@@ -3030,11 +3091,26 @@ nsListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
             if (mSelectedIndex > 0) {
               mOldSelectedIndex = mSelectedIndex;
               mSelectedIndex--;
-              SingleSelection();
-              if (nsnull != mComboboxFrame && mIsAllFramesHere) {
-                mComboboxFrame->UpdateSelection(PR_FALSE, PR_TRUE, mSelectedIndex); // don't dispatch event
+              PRBool multipleSelections = PR_FALSE;
+              GetMultiple(&multipleSelections);
+              if (multipleSelections && isShift) {
+                REFLOW_DEBUG_MSG2("mStartExtendedIndex: %d\n", mStartExtendedIndex);
+
+                if (mSelectedIndex < mStartExtendedIndex) {
+                  SetContentSelected(mSelectedIndex, PR_TRUE);
+                } else {
+                  SetContentSelected(mSelectedIndex, PR_TRUE);
+                  SetContentSelected(mOldSelectedIndex, PR_FALSE);
+                }
               } else {
-                UpdateSelection(PR_TRUE, PR_FALSE, GetOptionContent(mSelectedIndex)); // dispatch event
+                SingleSelection();
+                if (nsnull != mComboboxFrame && mIsAllFramesHere) {
+                  mComboboxFrame->UpdateSelection(PR_FALSE, PR_TRUE, mSelectedIndex); // don't dispatch event
+                } else {
+                  UpdateSelection(PR_TRUE, PR_FALSE, GetOptionContent(mSelectedIndex)); // dispatch event
+                }
+                mStartExtendedIndex = mSelectedIndex;
+                mEndExtendedIndex   = kNothingSelected;
               }
             }
             REFLOW_DEBUG_MSG2("  After: %d\n", mSelectedIndex);
@@ -3046,11 +3122,24 @@ nsListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
             if ((mSelectedIndex+1) < (PRInt32)numOptions) {
               mOldSelectedIndex = mSelectedIndex;
               mSelectedIndex++;
-              SingleSelection();
-              if (nsnull != mComboboxFrame && mIsAllFramesHere) {
-                mComboboxFrame->UpdateSelection(PR_FALSE, PR_TRUE, mSelectedIndex); // don't dispatch event
+              PRBool multipleSelections = PR_FALSE;
+              GetMultiple(&multipleSelections);
+              if (multipleSelections && isShift) {
+                if (mSelectedIndex > mStartExtendedIndex) {
+                  SetContentSelected(mSelectedIndex, PR_TRUE);
+                } else {
+                  SetContentSelected(mSelectedIndex, PR_TRUE);
+                  SetContentSelected(mOldSelectedIndex, PR_FALSE);
+                }
               } else {
-                UpdateSelection(PR_TRUE, PR_FALSE, GetOptionContent(mSelectedIndex)); // dispatch event
+                SingleSelection();
+                if (nsnull != mComboboxFrame) {
+                  mComboboxFrame->UpdateSelection(PR_FALSE, PR_TRUE, mSelectedIndex); // don't dispatch event
+                } else {
+                  UpdateSelection(PR_TRUE, PR_FALSE, GetOptionContent(mSelectedIndex)); // dispatch event
+                }
+                mStartExtendedIndex = mSelectedIndex;
+                mEndExtendedIndex   = kNothingSelected;
               }
             }
             REFLOW_DEBUG_MSG2("  After: %d\n", mSelectedIndex);
@@ -3069,6 +3158,17 @@ nsListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
               ResetSelectedItem();
               mComboboxFrame->ListWasSelected(mPresContext); 
             } 
+            } break;
+
+          case nsIDOMKeyEvent::DOM_VK_PAGE_UP:
+          case nsIDOMKeyEvent::DOM_VK_PAGE_DOWN: {
+
+            nsIScrollableView * scrollableView;
+            GetScrollableView(scrollableView);
+            if (scrollableView) {
+              scrollableView->ScrollByPages(code == nsIDOMKeyEvent::DOM_VK_PAGE_UP?-1:1);
+
+            }
             } break;
 
           default: { // Select option with this as the first character
